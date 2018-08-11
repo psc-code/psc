@@ -48,7 +48,7 @@ template<typename DIM, typename _Mfields, typename PUSHP, typename ORDER,
 	 typename BNDP = BndParticles_<typename PUSHP::Mparticles>,
 	 typename PUSHF = PushFields<typename PUSHP::MfieldsState>,
 	 typename BND = Bnd_<typename PUSHP::MfieldsState>,
-	 typename MOMENT_N = ItemMomentLoopPatches<Moment_n_1st<typename PUSHP::Mparticles, typename PUSHP::MfieldsState>>>
+	 typename MOMENT_N = ItemMomentLoopPatches<Moment_n_1st<typename PUSHP::Mparticles, _Mfields>>>
 struct TestConfig
 {
   using dim = DIM;
@@ -84,7 +84,7 @@ using TestConfig1vbec3dSingleXZ = TestConfig<dim_xz, MfieldsSingle,
 					     checks_order_1st>;
 
 using TestConfigVpic = TestConfig<dim_xyz,
-				  void,
+				  MfieldsSingle, // FIXME, this is not real nice, but might work...
 				  PushParticlesVpic,
 				  checks_order_1st,
 				  Checks_<MparticlesVpic, MfieldsStateVpic, void, checks_order_1st>,
@@ -189,7 +189,7 @@ struct PushParticlesTest : ::testing::Test
     make_psc(kinds);
 
     // init fields
-    mflds = new MfieldsState{grid(), NR_FIELDS, ibn};
+    mflds = new MfieldsState{grid(), ibn};
     SetupFields<MfieldsState>::set(*mflds, init_fields);
 
     // init particle
@@ -234,7 +234,7 @@ struct PushParticlesTest : ::testing::Test
   
   void checkCurrent(std::vector<CurrentReference>& curr_ref)
   {
-    auto mflds_ref = MfieldsState{grid(), NR_FIELDS, ibn};
+    auto mflds_ref = MfieldsState{grid(), ibn};
     auto flds_ref = mflds_ref[0];
     for (auto& ref : curr_ref) {
       if (dim::InvarX::value) { ref.pos[0] = 0; }

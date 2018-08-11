@@ -91,12 +91,11 @@ struct MfieldsStateVpic : MfieldsStateBase
     N_COMP = 20,
   };
 
-  MfieldsStateVpic(const Grid_t& grid, int n_fields, Int3 ibn)
-    : MfieldsStateBase{grid, n_fields, ibn}
+  MfieldsStateVpic(const Grid_t& grid, Int3 ibn)
+    : MfieldsStateBase{grid, N_COMP, ibn}
   {
     assert(grid.n_patches() == 1);
     assert((ibn == Int3{ 1, 1, 1 }));
-    assert(n_fields == N_COMP);
 
     Simulation* sim;
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
