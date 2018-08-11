@@ -1,30 +1,21 @@
 
-#ifndef PSC_INTERPOLATOR_H
-#define PSC_INTERPOLATOR_H
+#pragma once
 
 // ======================================================================
-// PscInterpolator
+// PscInterpolatorOps
 
-template<class InterpolatorBase, class FA>
-struct PscInterpolator : InterpolatorBase
+template<typename Interpolator, typename FieldArray>
+struct PscInterpolatorOps
 {
-  typedef InterpolatorBase Base;
-  typedef FA FieldArray;
-  using typename Base::Grid;
-
-  using Base::grid;
-
-  using Base::Base;
-
   // ----------------------------------------------------------------------
   // load
   
-  void do_load(/*const*/ FieldArray& fa)
+  static void do_load(Interpolator& ip, /*const*/ FieldArray& fa)
   {
     Field3D<FieldArray> F(fa);
-    Field3D<Base> I(*this);
+    Field3D<Interpolator> I(ip);
 
-    const Grid* g = grid();
+    auto g = ip.grid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     const float fourth = 0.25;
     const float half   = 0.5;
@@ -87,11 +78,23 @@ struct PscInterpolator : InterpolatorBase
     }
   }
   
-  void load(FieldArray& fa)
+  static void load(Interpolator& ip, FieldArray& fa)
   {
-    TIC do_load(fa); TOC(load_interpolator, 1);
+    TIC do_load(ip, fa); TOC(load_interpolator, 1);
   }
+  
 };
 
-#endif
+// ======================================================================
+// PscInterpolator
 
+template<class InterpolatorBase, class FieldArray>
+struct PscInterpolator : InterpolatorBase
+{
+  using Base = InterpolatorBase;
+  using Self = PscInterpolator<InterpolatorBase, FieldArray>;
+
+  using Base::Base;
+
+  void load(FieldArray& fa) { PscInterpolatorOps<Self, FieldArray>::load(*this, fa); }
+};

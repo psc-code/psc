@@ -2,19 +2,27 @@
 #ifndef VPIC_INTERPOLATOR_H
 #define VPIC_INTERPOLATOR_H
 
-template<class InterpolatorBase, class FA>
+// ======================================================================
+// VpicInterpolatorOps
+
+template<typename Interpolator, typename FieldArray>
+struct VpicInterpolatorOps
+{
+  static void load(Interpolator& ip, FieldArray& fa)
+  {
+    TIC ::load_interpolator_array(&ip, &fa); TOC(load_interpolator, 1);
+  }
+};
+
+template<class InterpolatorBase, class FieldArray>
 struct VpicInterpolator : InterpolatorBase
 {
-  typedef InterpolatorBase Base;
-  typedef FA FieldArray;
-  using typename Base::Grid;
+  using Base = InterpolatorBase;
+  using Self = VpicInterpolator<InterpolatorBase, FieldArray>;
 
   using Base::Base;
 
-  void load(FieldArray& fa)
-  {
-    TIC ::load_interpolator_array(this, &fa); TOC(load_interpolator, 1);
-  }
+  void load(FieldArray& fa) { VpicInterpolatorOps<Self, FieldArray>::load(*this, fa); }
 };
 
 #endif
