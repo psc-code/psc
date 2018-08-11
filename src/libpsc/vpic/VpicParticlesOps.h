@@ -11,16 +11,16 @@ struct VpicParticlesOps
   typedef typename Particles::Accumulator Accumulator;
   typedef typename Particles::ParticleBcList ParticleBcList;
   
-  void advance_p(Particles& vmprts, Accumulator& accumulator,
-		 Interpolator& interpolator)
+  static void advance_p(Particles& vmprts, Accumulator& accumulator,
+			Interpolator& interpolator)
   {
     for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
       TIC ::advance_p(&*sp, &accumulator, &interpolator); TOC(advance_p, 1);
     }
   }
   
-  void boundary_p(const ParticleBcList &pbc_list, Particles& vmprts, FieldArray& fa,
-		  Accumulator& accumulator)
+  static void boundary_p(const ParticleBcList &pbc_list, Particles& vmprts, FieldArray& fa,
+			 Accumulator& accumulator)
   {
     const particle_bc_t *pbc = pbc_list;
     ::boundary_p(const_cast<particle_bc_t*>(pbc), vmprts.head(), &fa, &accumulator);
@@ -33,7 +33,7 @@ struct VpicParticlesOps
     }
   }
 
-  void accumulate_rhob(FieldArray& fa, const particle_t* p, float qsp)
+  static void accumulate_rhob(FieldArray& fa, const particle_t* p, float qsp)
   {
     ::accumulate_rhob(fa.f, p, fa.g, qsp);
   }

@@ -76,10 +76,10 @@ struct PscParticlesOps {
 
   // High performance variant based on SPE accelerated version
 
-  int move_p(Particle      * RESTRICT ALIGNED(128) p,
-	     ParticleMover * RESTRICT ALIGNED(16)  pm,
-	     AccumulatorBlock acc_block,
-	     const Grid* g, const float qsp)
+  static int move_p(Particle      * RESTRICT ALIGNED(128) p,
+		    ParticleMover * RESTRICT ALIGNED(16)  pm,
+		    AccumulatorBlock acc_block,
+		    const Grid* g, const float qsp)
   {
 
     using namespace v4;
@@ -262,10 +262,10 @@ struct PscParticlesOps {
 
 #else
 
-  int move_p(Particle      * ALIGNED(128) p0,
-	     ParticleMover * ALIGNED(16)  pm,
-	     AccumulatorBlock acc_block,
-	     const Grid* g, float qsp)
+  static int move_p(Particle      * ALIGNED(128) p0,
+		    ParticleMover * ALIGNED(16)  pm,
+		    AccumulatorBlock acc_block,
+		    const Grid* g, float qsp)
   {
     float s_midx, s_midy, s_midz;
     float s_dispx, s_dispy, s_dispz;
@@ -395,12 +395,12 @@ struct PscParticlesOps {
     int n_ignored;                      // Number of movers ignored
   } particle_mover_seg_t;
 
-  void advance_p_pipeline(typename Particles::iterator sp,
-			  AccumulatorBlock acc_block,
-			  Interpolator& interpolator,
-			  particle_mover_seg_t *seg,
-			  Particle * ALIGNED(128) p, int n,
-			  ParticleMover * ALIGNED(16) pm, int max_nm)
+  static void advance_p_pipeline(typename Particles::iterator sp,
+				 AccumulatorBlock acc_block,
+				 Interpolator& interpolator,
+				 particle_mover_seg_t *seg,
+				 Particle * ALIGNED(128) p, int n,
+				 ParticleMover * ALIGNED(16) pm, int max_nm)
   {
     Particle* ALIGNED(128) p0 = sp->p;
     const Grid* g = sp->grid();
@@ -535,12 +535,12 @@ struct PscParticlesOps {
 
 #if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
 
-  void advance_p_pipeline_v4(typename Particles::iterator sp,
-			     AccumulatorBlock acc_block,
-			     Interpolator& interpolator,
-			     particle_mover_seg_t *seg,
-			     Particle * ALIGNED(128) p, int n,
-			     ParticleMover * ALIGNED(16) pm, int max_nm)
+  static void advance_p_pipeline_v4(typename Particles::iterator sp,
+				    AccumulatorBlock acc_block,
+				    Interpolator& interpolator,
+				    particle_mover_seg_t *seg,
+				    Particle * ALIGNED(128) p, int n,
+				    ParticleMover * ALIGNED(16) pm, int max_nm)
   {
     using namespace v4;
 
@@ -716,7 +716,7 @@ struct PscParticlesOps {
 
 #endif
           
-  void advance_p(typename Particles::iterator sp, Accumulator& accumulator, Interpolator& interpolator)
+  static void advance_p(typename Particles::iterator sp, Accumulator& accumulator, Interpolator& interpolator)
   {
     DECLARE_ALIGNED_ARRAY( particle_mover_seg_t, 128, seg, 1 );
 
@@ -749,8 +749,8 @@ struct PscParticlesOps {
   }
 
 
-  void advance_p(Particles& vmprts, Accumulator& accumulator,
-		 Interpolator& interpolator)
+  static void advance_p(Particles& vmprts, Accumulator& accumulator,
+			Interpolator& interpolator)
   {
     for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
       TIC advance_p(sp, accumulator, interpolator); TOC(advance_p, 1);
@@ -760,8 +760,8 @@ struct PscParticlesOps {
   // ----------------------------------------------------------------------
   // boundary_p
 
-  void boundary_p_(const ParticleBcList &pbc_list, Particles& vmprts, FieldArray& fa,
-		   AccumulatorBlock acc_block)
+  static void boundary_p_(const ParticleBcList &pbc_list, Particles& vmprts, FieldArray& fa,
+			  AccumulatorBlock acc_block)
   {
 #ifdef V4_ACCELERATION
     using namespace v4;
@@ -1093,8 +1093,8 @@ struct PscParticlesOps {
   }
   
   
-  void boundary_p(const ParticleBcList& pbc_list, Particles& vmprts, FieldArray& fa,
-		  Accumulator& accumulator)
+  static void boundary_p(const ParticleBcList& pbc_list, Particles& vmprts, FieldArray& fa,
+			 Accumulator& accumulator)
   {
     boundary_p_(pbc_list, vmprts, fa, accumulator[0]);
   }
@@ -1163,7 +1163,7 @@ struct PscParticlesOps {
   // ----------------------------------------------------------------------
   // accumulate_rhob
 
-  void accumulate_rhob(FieldArray& fa, const Particle* p, float qsp)
+  static void accumulate_rhob(FieldArray& fa, const Particle* p, float qsp)
   {
     float w0 = p->dx, w1 = p->dy, w2, w3, w4, w5, w6, w7, dz = p->dz;
     const Grid* g = fa.grid();
@@ -1210,7 +1210,7 @@ struct PscParticlesOps {
   // ----------------------------------------------------------------------
   // drop_p
 
-  void drop_p(Particles& vmprts, FieldArray& vmflds)
+  static void drop_p(Particles& vmprts, FieldArray& vmflds)
   {
     for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
       if (sp->nm) {
@@ -1231,7 +1231,7 @@ struct PscParticlesOps {
 	int i = pm->i; // particle index we are removing
 	p0[i].i >>= 3; // shift particle voxel down
 	// accumulate the particle's charge to the mesh
-	this->accumulate_rhob(vmflds, p0 + i, sp->q);
+	accumulate_rhob(vmflds, p0 + i, sp->q);
 	p0[i] = p0[sp->np - 1]; // put the last particle into position i
 	sp->np--; // decrement the number of particles
       }
