@@ -64,8 +64,6 @@ struct psc {
   int timestep;	///< the current timestep
   ///@}
 
-  int n_state_fields;           ///< How many field components do we need in ::flds
-
   ///The domain partitioner.
   ///
   ///Use this to access the global list of patches \sa \ref patches

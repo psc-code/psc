@@ -52,8 +52,6 @@ static struct select_init {
 } select_initializer;
 
 static struct param psc_descr[] = {
-  { "n_state_fields", VAR(n_state_fields)         , MRC_VAR_INT },
-
   { "method"                  , VAR(method)                  , MRC_VAR_OBJ(psc_method) },
   { "diag"                    , VAR(diag)                    , MRC_VAR_OBJ(psc_diag) },
   { "output_particles"        , VAR(output_particles)        , MRC_VAR_OBJ(psc_output_particles) },
@@ -75,9 +73,6 @@ _psc_create(struct psc *psc)
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   srandom(rank);
-  
-  // default 9 state fields (J,E,B)
-  psc->n_state_fields = NR_FIELDS;
 }
 
 // ======================================================================

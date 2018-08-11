@@ -349,7 +349,6 @@ Psc<PscConfig>::Simulation* setup_simulation(psc* psc_, const globals_physics& p
   int interval = (int) (params.t_intervali / (phys_.wci * grid.dt));
   sim->newDiag(interval);
   
-  psc_->n_state_fields = MfieldsStateVpic::N_COMP;
   psc_->ibn[0] = psc_->ibn[1] = psc_->ibn[2] = 1;
   
   psc_method_set_param_ptr(psc_->method, "sim", sim);
