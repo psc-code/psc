@@ -21,7 +21,8 @@ struct PushParticlesVpic : PushParticlesBase
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
   }
 
-  void push_mprts(Mparticles& mprts, MfieldsState& mflds, Interpolator& interpolator)
+  void push_mprts(Mparticles& mprts, MfieldsState& mflds, Interpolator& interpolator,
+		  Accumulator& accumulator)
   {
     auto& vmprts = mprts.vmprts_;
     auto& vmflds = mflds.vmflds();
@@ -34,8 +35,8 @@ struct PushParticlesVpic : PushParticlesBase
     // empty and all particles should be inside the local computational domain.
     // Advance the particle lists.
     if (!vmprts.empty()) {
-      TIC sim_->accumulator_->clear(); TOC(clear_accumulators, 1);
-      ParticlesOps::advance_p(vmprts, *sim_->accumulator_, interpolator);
+      TIC accumulator.clear(); TOC(clear_accumulators, 1);
+      ParticlesOps::advance_p(vmprts, accumulator, interpolator);
     }
 
     // Because the partial position push when injecting aged particles might
@@ -48,7 +49,7 @@ struct PushParticlesVpic : PushParticlesBase
     // This should be after the emission and injection to allow for the
     // possibility of thread parallelizing these operations
     if (!vmprts.empty()) {
-      TIC sim_->accumulator_->reduce(); TOC(reduce_accumulators, 1);
+      TIC accumulator.reduce(); TOC(reduce_accumulators, 1);
     }
     
     // At this point, most particle positions are at r_1 and u_{1/2}. Particles
@@ -57,7 +58,7 @@ struct PushParticlesVpic : PushParticlesBase
     // local accumulation).
     TIC
       for(int round = 0; round < sim_->num_comm_round_; round++) {
-	ParticlesOps::boundary_p(sim_->particle_bc_list_, vmprts, vmflds, *sim_->accumulator_);
+	ParticlesOps::boundary_p(sim_->particle_bc_list_, vmprts, vmflds, accumulator);
       } TOC(boundary_p, sim_->num_comm_round_);
     
     // Drop the particles that have unprocessed movers at this point
@@ -68,7 +69,7 @@ struct PushParticlesVpic : PushParticlesBase
     // Convert the accumulators into currents.
     TIC AccumulateOps::clear_jf(vmflds); TOC(clear_jf, 1);
     if (!vmprts.empty()) {
-      TIC sim_->accumulator_->unload(vmflds); TOC(unload_accumulator, 1);
+      TIC accumulator.unload(vmflds); TOC(unload_accumulator, 1);
     }
     TIC AccumulateOps::synchronize_jf(vmflds); TOC(synchronize_jf, 1);
 
