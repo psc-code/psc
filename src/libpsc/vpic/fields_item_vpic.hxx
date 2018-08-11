@@ -42,9 +42,11 @@ struct Item_vpic_fields
 
 struct Moment_vpic_hydro
 {
-  using Mfields = MfieldsSingle;
-  using Mparticles = MparticlesVpic;
-  using Fields = Fields3d<typename Mfields::fields_t>;
+  struct Result {
+    MfieldsSingle& mflds;
+    const char* name;
+    std::vector<std::string> comp_names;
+  };
   
   constexpr static fld_names_t fld_names() {
     return { "jx_nc", "jy_nc", "jz_nc", "rho_nc",
@@ -57,22 +59,7 @@ struct Moment_vpic_hydro
     : mflds_res_{grid, MfieldsHydroVpic::N_COMP * int(grid.kinds.size()), {1,1,1}}
   {}
 
-  std::vector<std::string> comp_names()
-  {
-    auto& grid = mflds_res_.grid();
-    
-    std::vector<std::string> comp_names;
-    comp_names.reserve(mflds_res_.n_comps());
-
-    for (int kind = 0; kind < grid.kinds.size(); kind++) {
-      for (int m = 0; m < MfieldsHydroVpic::N_COMP; m++) {
-	comp_names.emplace_back(std::string(fld_names()[m]) + "_" + grid.kinds[kind].name);
-      }
-    }
-    return comp_names;
-  }
-  
-  MfieldsSingle& run(MparticlesVpic& mprts, MfieldsHydroVpic& mflds_hydro)
+  Result operator()(MparticlesVpic& mprts, MfieldsHydroVpic& mflds_hydro)
   {
     // This relies on load_interpolator_array() having been called earlier
 
@@ -81,15 +68,20 @@ struct Moment_vpic_hydro
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
     
     Particles& vmprts = mprts.vmprts_;
+    HydroArray& vmflds = *mflds_hydro.vmflds_hydro;
+
+    std::vector<std::string> comp_names;
+    comp_names.reserve(mflds_res_.n_comps());
+
     
     for (int kind = 0; kind < grid.kinds.size(); ++kind) {
-      mflds_hydro.vmflds_hydro->clear();
+      vmflds.clear();
       
       // FIXME, just iterate over species instead?
       typename Particles::const_iterator sp = vmprts.find(kind);
-      vmprts.accumulate_hydro_p(*mflds_hydro.vmflds_hydro, sp, *sim->interpolator_);
+      vmprts.accumulate_hydro_p(vmflds, sp, *sim->interpolator_);
       
-      mflds_hydro.vmflds_hydro->synchronize();
+      vmflds.synchronize();
       
       for (int p = 0; p < mflds_res_.n_patches(); p++) {
 	auto res = mflds_res_[p];
@@ -100,9 +92,13 @@ struct Moment_vpic_hydro
 	    }
 	  });
       }
+
+      for (int m = 0; m < MfieldsHydroVpic::N_COMP; m++) {
+	comp_names.emplace_back(std::string(fld_names()[m]) + "_" + grid.kinds[kind].name);
+      }
     }
 
-    return mflds_res_;
+    return {mflds_res_, "hydro_vpic", comp_names};
   }
 
 private:

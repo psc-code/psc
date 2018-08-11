@@ -819,11 +819,10 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       }
 
       {
-	// FIXME, would be better to keep this around
+	// FIXME, would be better to keep "moment" around
 	Moment_vpic_hydro moment{grid};
-
-	auto& mflds_res = moment.run(mprts_, hydro_);
-	io_pfd_.write_mflds(mflds_res, "hydro_vpic", moment.comp_names());
+	auto result = moment(mprts_, hydro_);
+	io_pfd_.write_mflds(result.mflds, result.name, result.comp_names);
       }
       mrc_io_close(io_pfd_.io_);
     }
