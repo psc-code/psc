@@ -29,20 +29,26 @@ struct PushFieldsVpic : PushFieldsBase
 
   void push_E(MfieldsStateBase& mflds_base, double dt_fac) override
   {
+    assert(0);
+#if 0
     // needs J, E, B, TCA, material
     auto& mflds = mflds_base.get_as<MfieldsStateVpic>(JXI, MfieldsStateVpic::N_COMP);
     push_E(mflds, dt_fac);
     // updates E, TCA, and B ghost points FIXME 9 == TCAX
     mflds_base.put_as(mflds, EX, 9 + 3);
+#endif
   }
 
   void push_H(MfieldsStateBase& mflds_base, double dt_fac) override
   {
+    assert(0);
+#if 0
     // needs E, B
     auto& mflds = mflds_base.get_as<MfieldsStateVpic>(EX, HX + 6);
     push_H(mflds, dt_fac);
     // updates B
     mflds_base.put_as(mflds, HX, HX + 3);
+#endif
   }
 
 private:

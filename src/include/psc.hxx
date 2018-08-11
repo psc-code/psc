@@ -360,9 +360,12 @@ private:
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
       sim_->runDiag(mprts_.vmprts_, mflds_.vmflds(), interpolator_, *hydro_.vmflds_hydro);
     }
-#endif
+#else
+    // FIXME
     psc_diag_run(psc_->diag, psc_, mprts_, mflds_);
+    // FIXME
     outf_(mflds_, mprts_);
+#endif
     PscOutputParticlesBase{psc_->output_particles}.run(mprts_);
   }
 

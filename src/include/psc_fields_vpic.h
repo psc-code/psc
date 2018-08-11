@@ -59,42 +59,36 @@ struct Mfields_traits<MfieldsHydroVpic>
   static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
 };
 
-struct MfieldsStateVpic : MfieldsStateBase
+struct MfieldsStateVpic// : MfieldsStateBase
 {
   using real_t = float;
   using fields_t = fields_vpic_t;
   
   enum {
-    EX = 0,
-    EY = 1,
-    EZ = 2,
-    DIV_E_ERR = 3,
-    BX = 4,
-    BY = 5,
-    BZ = 6,
-    DIV_B_ERR = 7,
-    TCAX = 8,
-    TCAY = 9,
-    TCAZ = 10,
-    RHOB = 11,
-    JFX = 12,
-    JFY = 13,
-    JFZ = 14,
-    RHOF = 15,
+    EX = 0, EY = 1, EZ = 2, DIV_E_ERR = 3,
+    BX = 4, BY = 5, BZ = 6, DIV_B_ERR = 7,
+    TCAX = 8, TCAY = 9, TCAZ = 10, RHOB = 11,
+    JFX = 12, JFY = 13, JFZ = 14, RHOF = 15,
     N_COMP = 20,
   };
 
-  MfieldsStateVpic(const Grid_t& grid)
-    : MfieldsStateBase{grid, N_COMP, {1, 1, 1}}
+  MfieldsStateVpic(const Grid_t& grid, const MaterialList& material_list)
+    //: MfieldsStateBase{grid, N_COMP, {1, 1, 1}}
+    : grid_{grid}
   {
     assert(grid.n_patches() == 1);
 
     Simulation* sim;
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
     
-    vmflds_fields_ = FieldArray::create(sim->grid_, sim->material_list_, 0.);
+    vmflds_fields_ = FieldArray::create(sim->grid_, material_list, 0.);
   }
 
+  const Grid_t& grid() const { return grid_; }
+  int n_patches() const { return grid_.n_patches(); }
+  int n_comps() const { return N_COMP; }
+  Int3 ibn() const { return {1,1,1}; }
+  
   fields_vpic_t operator[](int p)
   {
     assert(p == 0);
@@ -105,12 +99,13 @@ struct MfieldsStateVpic : MfieldsStateBase
 
   FieldArray& vmflds() { return *vmflds_fields_; }
 
-  static const Convert convert_to_, convert_from_;
-  const Convert& convert_to() override { return convert_to_; }
-  const Convert& convert_from() override { return convert_from_; }
+  // static const Convert convert_to_, convert_from_;
+  // const Convert& convert_to() override { return convert_to_; }
+  // const Convert& convert_from() override { return convert_from_; }
 
 private:
   FieldArray* vmflds_fields_;
+  const Grid_t& grid_;
 };
 
 template<>

@@ -13,6 +13,8 @@
 
 #include "vpic_iface.h"
 
+#if 0
+
 using Fields = Fields3d<fields_vpic_t>;
 using FieldsS = Fields3d<fields_single_t>;
 
@@ -91,3 +93,4 @@ const MfieldsStateBase::Convert MfieldsStateVpic::convert_from_ = {
   { std::type_index(typeid(MfieldsStateSingle)), MfieldsStateVpic_copy_from_single },
 };
 
+#endif
