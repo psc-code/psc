@@ -87,6 +87,9 @@ struct Psc
       psc_{psc},
       mprts_{psc->grid()},
       mflds_{psc->grid()},
+#ifdef VPIC
+      hydro_{psc->grid(), 16, psc->ibn},
+#endif
       balance_{p_.balance_interval, p_.balance_factor_fields, p_.balance_print_loads, p_.balance_write_loads},
       collision_{psc_comm(psc), p_.collision_interval, p_.collision_nu},
       bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn},
@@ -325,6 +328,9 @@ protected:
 
   Mparticles_t mprts_;
   MfieldsState mflds_;
+#ifdef VPIC
+  MfieldsHydroVpic hydro_;
+#endif
 
   Balance_t balance_;
   Sort_t sort_;
