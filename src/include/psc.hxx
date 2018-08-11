@@ -88,6 +88,7 @@ struct Psc
 #ifdef VPIC
       hydro_{psc->grid(), 16, psc->ibn},
       interpolator_{sim_->grid_},
+      accumulator_{sim_->grid_},
 #endif
       balance_{p_.balance_interval, p_.balance_factor_fields, p_.balance_print_loads, p_.balance_write_loads},
       collision_{psc_comm(psc), p_.collision_interval, p_.collision_nu},
@@ -96,9 +97,7 @@ struct Psc
       checks_{psc_->grid(), psc_comm(psc), p_.checks_params},
       marder_(psc_comm(psc), p_.marder_diffusion, p_.marder_loop, p_.marder_dump),
       outf_{psc_comm(psc), p_.outf_params}
-  {
-    sim_->accumulator_ = new Accumulator{sim_->grid_};
-  }
+  {}
 
   // ----------------------------------------------------------------------
   // dtor
@@ -393,6 +392,7 @@ protected:
 #ifdef VPIC
   MfieldsHydroVpic hydro_;
   Interpolator interpolator_;
+  Accumulator accumulator_;
 #endif
 
   Balance_t balance_;
