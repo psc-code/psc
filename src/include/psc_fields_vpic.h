@@ -16,7 +16,7 @@ struct fields_vpic_t : fields3d<float, LayoutAOS>
   using Base::Base;
 };
 
-struct MfieldsHydroVpic// : MfieldsBase
+struct MfieldsHydroVpic
 {
   using real_t = float;
   using fields_t = fields_vpic_t;
