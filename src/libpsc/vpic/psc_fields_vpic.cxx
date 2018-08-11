@@ -30,41 +30,6 @@ static const int map_psc2vpic[MfieldsStateVpic::N_COMP] = {
 // ======================================================================
 // convert from/to "single"
 
-static void MfieldsHydroVpic_copy_from_single(MfieldsBase& mflds, MfieldsBase& mflds_single, int mb, int me)
-{
-  if (mb != me) {
-    assert(0);
-  }
-}
-
-static void MfieldsHydroVpic_copy_to_single(MfieldsBase& mflds, MfieldsBase& mflds_single, int mb, int me)
-{
-  auto& mf_single = dynamic_cast<MfieldsSingle&>(mflds_single);
-  auto& mf = dynamic_cast<MfieldsHydroVpic&>(mflds);
-  for (int p = 0; p < mf.n_patches(); p++) {
-    fields_vpic_t flds = mf[p];
-    fields_single_t flds_single = mf_single[p];
-    FieldsS F_s(flds_single);
-
-    int ib[3], ie[3];
-    for (int d = 0; d < 3; d++) {
-      ib[d] = MAX(flds.ib_[d], flds_single.ib_[d]);
-      ie[d] = MIN(flds.ib_[d] + flds.im_[d], flds_single.ib_[d] + flds_single.im_[d]);
-    }
-
-    assert(mf.n_comps() == MfieldsHydroVpic::N_COMP);
-    for (int m = mb; m < me; m++) {
-      for (int jz = ib[2]; jz < ie[2]; jz++) {
-	for (int jy = ib[1]; jy < ie[1]; jy++) {
-	  for (int jx = ib[0]; jx < ie[0]; jx++) {
-	    F_s(m, jx,jy,jz) = flds(m, jx,jy,jz);
-	  }
-	}
-      }
-    }
-  }
-}
-
 static void MfieldsStateVpic_copy_from_single(MfieldsStateBase& mflds, MfieldsStateBase& mflds_single, int mb, int me)
 {
   auto& mf_single = dynamic_cast<MfieldsSingle&>(mflds_single);
@@ -117,14 +82,6 @@ static void MfieldsStateVpic_copy_to_single(MfieldsStateBase& mflds, MfieldsStat
 }
 
 // ======================================================================
-
-const MfieldsBase::Convert MfieldsHydroVpic::convert_to_ = {
-  { std::type_index(typeid(MfieldsSingle)), MfieldsHydroVpic_copy_to_single },
-};
-
-const MfieldsBase::Convert MfieldsHydroVpic::convert_from_ = {
-  { std::type_index(typeid(MfieldsSingle)), MfieldsHydroVpic_copy_from_single },
-};
 
 const MfieldsStateBase::Convert MfieldsStateVpic::convert_to_ = {
   { std::type_index(typeid(MfieldsStateSingle)), MfieldsStateVpic_copy_to_single },

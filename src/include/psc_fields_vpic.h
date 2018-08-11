@@ -16,7 +16,7 @@ struct fields_vpic_t : fields3d<float, LayoutAOS>
   using Base::Base;
 };
 
-struct MfieldsHydroVpic : MfieldsBase
+struct MfieldsHydroVpic// : MfieldsBase
 {
   using real_t = float;
   using fields_t = fields_vpic_t;
@@ -26,7 +26,7 @@ struct MfieldsHydroVpic : MfieldsBase
   };
 
   MfieldsHydroVpic(const Grid_t& grid, int n_fields, Int3 ibn)
-    : MfieldsBase(grid, n_fields, ibn)
+    : grid_{grid}
   {
     assert(grid.n_patches() == 1);
     assert((ibn == Int3{ 1, 1, 1 }));
@@ -36,6 +36,9 @@ struct MfieldsHydroVpic : MfieldsBase
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
     vmflds_hydro = sim->hydro_array_;
   }
+
+  int n_patches() const { return grid_.n_patches(); }
+  int n_comps() const { return N_COMP; }
   
   fields_vpic_t operator[](int p)
   {
@@ -44,19 +47,9 @@ struct MfieldsHydroVpic : MfieldsBase
     return fields_vpic_t(ib, im, N_COMP, data);
   }
 
-  void zero_comp(int m) override { assert(0); }
-  void set_comp(int m, double val) override { assert(0); }
-  void scale_comp(int m, double val) override { assert(0); }
-  void axpy_comp(int m_y, double alpha, MfieldsBase& x_base, int m_x) override { assert(0); }
-  void copy_comp(int mto, MfieldsBase& from, int mfrom) override { assert(0); }
-  double max_comp(int m) override { assert(0); }
-
-  static const Convert convert_to_, convert_from_;
-  const Convert& convert_to() override { return convert_to_; }
-  const Convert& convert_from() override { return convert_from_; }
-
- public:
   HydroArray *vmflds_hydro;
+private:
+  const Grid_t& grid_;
 };
 
 template<>
