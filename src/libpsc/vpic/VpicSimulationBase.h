@@ -28,11 +28,6 @@ public:
     return *reinterpret_cast<Grid **>(&grid);
   }
 
-  Particles& getParticles()
-  {
-    return *reinterpret_cast<Particles *>(&species_list);
-  }
-  
   void initialization(int argc, char **argv)
   {
     TIC user_initialization(argc, argv); TOC(user_initialization, 1);

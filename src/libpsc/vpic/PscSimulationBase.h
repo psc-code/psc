@@ -14,7 +14,6 @@ public:
   }
   
   Grid*& getGrid()                    { return grid_; }
-  Particles& getParticles()           { return particles_; }
   
   void getParams(int& num_step_,
 		 int& clean_div_e_interval_,
@@ -64,7 +63,6 @@ public:
 
 private:
   Grid* grid_;
-  Particles particles_;
 };
 
 
