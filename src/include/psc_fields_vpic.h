@@ -99,6 +99,7 @@ struct MfieldsStateVpic : MfieldsStateBase
     Simulation* sim;
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
     
+    sim->field_array_ = FieldArray::create(sim->grid_, sim->material_list_, 0.);
     vmflds_fields_ = sim->field_array_;
   }
 

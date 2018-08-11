@@ -312,7 +312,6 @@ static void setup_fields(Simulation* sim, psc* psc_)
   sim->define_field_array();
 
   assert(!sim->material_list_.empty());
-  sim->field_array_ = FieldArray::create(sim->grid_, sim->material_list_, 0.);
   
   // Note: define_material defaults to isotropic materials with mu=1,sigma=0
   // Tensor electronic, magnetic and conductive materials are supported
@@ -973,7 +972,7 @@ PscHarris* PscHarrisBuilder::makePsc()
   psc_setup_domain(psc_, grid_domain, grid_bc, kinds, coeff, dt);
 
   auto sim = setup_simulation(psc_, phys, p, params);
-  
+
   return new PscHarris{p, params, sim, psc_, phys};
 }
 
