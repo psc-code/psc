@@ -110,6 +110,7 @@ typedef PscInterpolatorBase<Grid> InterpolatorBase;
 typedef PscInterpolator<InterpolatorBase, FieldArray> Interpolator;
 
 typedef PscAccumulatorBase<Grid> AccumulatorBase;
+using AccumulatorOps = PscAccumulatorOps<AccumulatorBase, FieldArray>;
 typedef PscAccumulator<AccumulatorBase, FieldArray> Accumulator;
 
 typedef PscHydroArrayBase<Grid> HydroArrayBase;

@@ -13,12 +13,6 @@ struct VpicAccumulatorOps
 template<class AccumulatorBase, class FieldArray>
 struct VpicAccumulator : AccumulatorBase
 {
-  using Self = VpicAccumulator<AccumulatorBase, FieldArray>;
-  using Base = AccumulatorBase;
-
-  void clear() { VpicAccumulatorOps<Self, FieldArray>::clear(*this); }
-  void reduce() { VpicAccumulatorOps<Self, FieldArray>::reduce(*this); }
-  void unload(FieldArray& fa) { VpicAccumulatorOps<Self, FieldArray>::unload(*this, fa); }
 };
 
 #endif

@@ -96,14 +96,9 @@ struct PscAccumulatorOps
 template<class AccumulatorBase, class FieldArray>
 struct PscAccumulator : AccumulatorBase
 {
-  using Self = PscAccumulator<AccumulatorBase, FieldArray>;
   using Base = AccumulatorBase;
   
   using Base::Base;
-
-  void clear() { PscAccumulatorOps<Self, FieldArray>::clear(*this); }
-  void reduce() { PscAccumulatorOps<Self, FieldArray>::reduce(*this); }
-  void unload(FieldArray& fa) { PscAccumulatorOps<Self, FieldArray>::unload(*this, fa); }
 };
 
 

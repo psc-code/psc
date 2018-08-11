@@ -35,7 +35,7 @@ struct PushParticlesVpic : PushParticlesBase
     // empty and all particles should be inside the local computational domain.
     // Advance the particle lists.
     if (!vmprts.empty()) {
-      TIC accumulator.clear(); TOC(clear_accumulators, 1);
+      TIC AccumulatorOps::clear(accumulator); TOC(clear_accumulators, 1);
       ParticlesOps::advance_p(vmprts, accumulator, interpolator);
     }
 
@@ -49,7 +49,7 @@ struct PushParticlesVpic : PushParticlesBase
     // This should be after the emission and injection to allow for the
     // possibility of thread parallelizing these operations
     if (!vmprts.empty()) {
-      TIC accumulator.reduce(); TOC(reduce_accumulators, 1);
+      TIC AccumulatorOps::reduce(accumulator); TOC(reduce_accumulators, 1);
     }
     
     // At this point, most particle positions are at r_1 and u_{1/2}. Particles
@@ -69,7 +69,7 @@ struct PushParticlesVpic : PushParticlesBase
     // Convert the accumulators into currents.
     TIC AccumulateOps::clear_jf(vmflds); TOC(clear_jf, 1);
     if (!vmprts.empty()) {
-      TIC accumulator.unload(vmflds); TOC(unload_accumulator, 1);
+      TIC AccumulatorOps::unload(accumulator, vmflds); TOC(unload_accumulator, 1);
     }
     TIC AccumulateOps::synchronize_jf(vmflds); TOC(synchronize_jf, 1);
 
