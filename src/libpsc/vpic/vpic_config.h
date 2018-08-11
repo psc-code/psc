@@ -124,13 +124,13 @@ using ParticleBcList = VpicParticleBcList;
 typedef PscParticlesBase<Grid, ParticleBcList> ParticlesBase;
 typedef PscParticles<ParticlesBase, FieldArray, Interpolator, Accumulator, HydroArray> Particles;
 #if 1
-typedef PscParticlesOps<Particles> ParticlesOps;
+typedef PscParticlesOps<Particles, HydroArray> ParticlesOps;
 #else
-typedef VpicParticlesOps<Particles> ParticlesOps;
+typedef VpicParticlesOps<Particles. HydroArray> ParticlesOps;
 #endif
 
 #if 1
-typedef VpicDiagMixin<Particles, DiagOps, HydroArrayOps> DiagMixin;
+typedef VpicDiagMixin<Particles, DiagOps, ParticlesOps, HydroArrayOps> DiagMixin;
 #else
 typedef NoneDiagMixin<Particles> DiagMixin;
 #endif

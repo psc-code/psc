@@ -1,11 +1,9 @@
 
-#ifndef VPIC_PARTICLES_OPS
-#define VPIC_PARTICLES_OPS
+#pragma once
 
-template<class P>
+template<typename Particles, typename HydroArray>
 struct VpicParticlesOps
 {
-  typedef P Particles;
   typedef typename Particles::FieldArray FieldArray;
   typedef typename Particles::Interpolator Interpolator;
   typedef typename Particles::Accumulator Accumulator;
@@ -69,6 +67,12 @@ struct VpicParticlesOps
       sp->nm = 0;
     }
   }
+
+  static void accumulate_hydro_p(HydroArray& ha, typename Particles::const_iterator sp,
+				 const Interpolator& interpolator)
+  {
+    ::accumulate_hydro_p(&ha, &*sp, &interpolator);
+  }
 };
 
 
@@ -85,12 +89,6 @@ struct VpicParticles : ParticlesBase
   using typename Base::iterator;
   using typename Base::const_iterator;
 
-  static void accumulate_hydro_p(HydroArray& ha, const_iterator sp,
-				 const Interpolator& interpolator)
-  {
-    ::accumulate_hydro_p(&ha, &*sp, &interpolator);
-  }
-
   static void uncenter_p(species_t *sp, const Interpolator& interpolator)
   {
     ::uncenter_p(sp, &interpolator);
@@ -106,6 +104,4 @@ struct VpicParticles : ParticlesBase
     return ::energy_p(&*sp, &interpolator);
   }
 };
-
-#endif
 

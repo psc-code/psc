@@ -66,7 +66,7 @@ struct OutputHydroVpic
       
       // FIXME, just iterate over species instead?
       typename Particles::const_iterator sp = vmprts.find(kind);
-      vmprts.accumulate_hydro_p(vmflds, sp, interpolator);
+      ParticlesOps::accumulate_hydro_p(vmflds, sp, interpolator);
       
       HydroArrayOps::synchronize(vmflds);
       
