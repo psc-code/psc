@@ -173,8 +173,5 @@ struct PscHydroArray : HydroArrayBase
   using Base::grid;
 
   using Base::Base;
-
-  void clear() { return PscHydroArrayOps<Self>::clear(*this); }
-  void synchronize() { return PscHydroArrayOps<Self>::synchronize(*this); }
 };
 

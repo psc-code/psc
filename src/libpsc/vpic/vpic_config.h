@@ -114,6 +114,7 @@ using AccumulatorOps = PscAccumulatorOps<Accumulator, FieldArray>;
 
 typedef PscHydroArrayBase<Grid> HydroArrayBase;
 typedef PscHydroArray<HydroArrayBase> HydroArray;
+using HydroArrayOps = PscHydroArrayOps<HydroArray>;
 
 #if 1
 typedef PscParticleBcList ParticleBcList;
@@ -130,7 +131,7 @@ typedef VpicParticlesOps<Particles> ParticlesOps;
 #endif
 
 #if 1
-typedef VpicDiagMixin<Particles, DiagOps> DiagMixin;
+typedef VpicDiagMixin<Particles, DiagOps, HydroArrayOps> DiagMixin;
 #else
 typedef NoneDiagMixin<Particles> DiagMixin;
 #endif

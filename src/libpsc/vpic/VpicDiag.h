@@ -112,7 +112,7 @@ static HydroInfo hydroInfo[5] = {
     }                                                  \
   } while(0)
 
-template<class Particles, class DiagOps>
+template<class Particles, class DiagOps, class HydroArrayOps>
 struct VpicDiagMixin
 {
   typedef typename Particles::FieldArray FieldArray;
@@ -645,9 +645,9 @@ struct VpicDiagMixin
     typename Particles::const_iterator sp = vmprts->find(speciesname);
     if (sp == vmprts->cend()) LOG_ERROR("Invalid species name: %s", speciesname);
 
-    hydro_array->clear();
+    HydroArrayOps::clear(*hydro_array);
     Particles::accumulate_hydro_p(*hydro_array, sp, *interpolator);
-    hydro_array->synchronize();
+    HydroArrayOps::synchronize(*hydro_array);
   
     // convenience
     const size_t istride(dumpParams.stride_x);

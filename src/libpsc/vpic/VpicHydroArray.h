@@ -22,8 +22,5 @@ struct VpicHydroArray : HydroArrayBase
   using typename Base::Grid;
 
   using Base::Base;
-  
-  void clear() { return VpicHydroArrayOps<Self>::clear(*this); }
-  void synchronize() { return VpicHydroArrayOps<Self>::synchronize(*this); }
 };
 
