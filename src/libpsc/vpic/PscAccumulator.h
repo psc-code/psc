@@ -1,6 +1,5 @@
 
-#ifndef PSC_ACCUMULATOR_H
-#define PSC_ACCUMULATOR_H
+#pragma once
 
 template<typename Accumulator, typename FieldArray>
 struct PscAccumulatorOps
@@ -90,16 +89,5 @@ struct PscAccumulatorOps
       }
     }
   }
-  
 };
 
-template<class AccumulatorBase, class FieldArray>
-struct PscAccumulator : AccumulatorBase
-{
-  using Base = AccumulatorBase;
-  
-  using Base::Base;
-};
-
-
-#endif

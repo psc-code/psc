@@ -109,9 +109,8 @@ using CleanDivOps = VpicCleanDivOps<FieldArray>;
 typedef PscInterpolatorBase<Grid> InterpolatorBase;
 typedef PscInterpolator<InterpolatorBase, FieldArray> Interpolator;
 
-typedef PscAccumulatorBase<Grid> AccumulatorBase;
-using AccumulatorOps = PscAccumulatorOps<AccumulatorBase, FieldArray>;
-typedef PscAccumulator<AccumulatorBase, FieldArray> Accumulator;
+using Accumulator = PscAccumulatorBase<Grid>;
+using AccumulatorOps = PscAccumulatorOps<Accumulator, FieldArray>;
 
 typedef PscHydroArrayBase<Grid> HydroArrayBase;
 typedef PscHydroArray<HydroArrayBase> HydroArray;

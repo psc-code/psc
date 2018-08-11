@@ -1,6 +1,5 @@
 
-#ifndef VPIC_ACCUMULATOR_H
-#define VPIC_ACCUMULATOR_H
+#pragma once
 
 template<typename Accumulator, typename FieldArray>
 struct VpicAccumulatorOps
@@ -10,9 +9,3 @@ struct VpicAccumulatorOps
   static void unload(const Accumulator& acc, FieldArray* fa) { ::unload_accumulator_array(&fa, &acc); }
 };
 
-template<class AccumulatorBase, class FieldArray>
-struct VpicAccumulator : AccumulatorBase
-{
-};
-
-#endif
