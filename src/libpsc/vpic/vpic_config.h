@@ -121,8 +121,7 @@ using ParticleBcList = PscParticleBcList;
 using ParticleBcList = VpicParticleBcList;
 #endif
 
-typedef PscParticlesBase<Grid, ParticleBcList> ParticlesBase;
-typedef PscParticles<ParticlesBase> Particles;
+using Particles = PscParticlesBase<Grid, ParticleBcList>;
 #if 1
 using ParticlesOps = PscParticlesOps<Particles, FieldArray, Interpolator, Accumulator, HydroArray>;
 #else

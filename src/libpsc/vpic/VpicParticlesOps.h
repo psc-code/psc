@@ -87,12 +87,3 @@ struct VpicParticlesOps
   }
 };
 
-
-template<class ParticlesBase>
-struct VpicParticles : ParticlesBase
-{
-  typedef ParticlesBase Base;
-
-  using Base::Base;
-};
-

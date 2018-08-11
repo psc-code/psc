@@ -1735,4 +1735,3 @@ struct PscParticlesOps
 
 };
 
-#include "PscParticles.h"
