@@ -33,16 +33,6 @@ public:
     return *reinterpret_cast<Grid **>(&grid);
   }
 
-  Interpolator*& getInterpolator()
-  {
-    return *reinterpret_cast<Interpolator **>(&interpolator_array);
-  }
-  
-  Accumulator*& getAccumulator()
-  {
-    return *reinterpret_cast<Accumulator **>(&accumulator_array);
-  }
-
   Particles& getParticles()
   {
     return *reinterpret_cast<Particles *>(&species_list);

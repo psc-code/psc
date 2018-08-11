@@ -20,8 +20,6 @@ public:
   }
   
   Grid*& getGrid()                    { return grid_; }
-  Interpolator*& getInterpolator()    { return interpolator_; }
-  Accumulator*& getAccumulator()      { return accumulator_; }
   Particles& getParticles()           { return particles_; }
   ParticleBcList& getParticleBcList() { return particle_bc_list_; }
   
@@ -73,8 +71,6 @@ public:
 
 private:
   Grid* grid_;
-  Interpolator *interpolator_;
-  Accumulator *accumulator_;
   Particles particles_;
   ParticleBcList particle_bc_list_;
 };
