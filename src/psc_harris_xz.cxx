@@ -52,11 +52,18 @@ static inline double trunc_granular( double a, double b )
 // ----------------------------------------------------------------------
 // define_material
 
-struct material * define_material(Simulation* sim, const char *name,
-				  double eps, double mu,
-				  double sigma, double zeta)
+struct material* define_material(Simulation* sim, const char *name,
+				 double eps, double mu=1.,
+				 double sigma=0., double zeta=0.)
 {
-  return reinterpret_cast<struct material*>(sim->define_material(name, eps, mu, sigma, zeta));
+  Simulation::Material *m = sim->material_list_.create(name,
+				      eps,   eps,   eps,
+				      mu,    mu,    mu,
+				      sigma, sigma, sigma,
+				      zeta,  zeta,  zeta);
+  m = sim->material_list_.append(m);
+
+  return reinterpret_cast<struct material*>(m);
 }
 
 void grid_setup_communication(Grid* grid_)
