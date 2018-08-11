@@ -38,9 +38,9 @@ struct Item_vpic_fields
 };
 
 // ----------------------------------------------------------------------
-// Moment_vpic_hydro
+// OutputHydroVpic
 
-struct Moment_vpic_hydro
+struct OutputHydroVpic
 {
   struct Result {
     MfieldsSingle& mflds;
@@ -55,7 +55,7 @@ struct Moment_vpic_hydro
 	"tzx_nc", "txy_nc", "_pad0", "_pad1" };
   }
 
-  Moment_vpic_hydro(const Grid_t& grid)
+  OutputHydroVpic(const Grid_t& grid)
     : mflds_res_{grid, MfieldsHydroVpic::N_COMP * int(grid.kinds.size()), {1,1,1}}
   {}
 
