@@ -119,9 +119,9 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
     DiagMixin::diagnostics_setup();
   }
 
-  void runDiag(Particles& particles, FieldArray& fa, HydroArray& ha)
+  void runDiag(Particles& particles, FieldArray& fa, Interpolator& ia, HydroArray& ha)
   {
-    DiagMixin::diagnostics_run(fa, particles, *interpolator_, ha, np_);
+    DiagMixin::diagnostics_run(fa, particles, ia, ha, np_);
   }
 
   // ======================================================================
@@ -136,21 +136,6 @@ struct VpicSimulation : SimulationMixin, ParticlesOps, DiagMixin
   // field_injection
   
   using SimulationMixin::field_injection;
-
-  // ----------------------------------------------------------------------
-  // push_mprts_prep
-  
-  void push_mprts_prep(Particles& particles, FieldArray& vmflds)
-  {
-    // At end of step:
-    // Fields are updated ... load the interpolator for next time step and
-    // particle diagnostics in user_diagnostics if there are any particle
-    // species to worry about
-    
-    if (!particles.empty()) {
-      interpolator_->load(vmflds);
-    }
-  }
 
   int num_comm_round_;
   
