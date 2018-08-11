@@ -83,13 +83,16 @@ struct Psc
       p_{params},
       sim_{sim},
       psc_{psc},
-      mprts_{psc->grid()},
-      mflds_{psc->grid()},
+      material_list_{sim->material_list_},
 #ifdef VPIC
+      mflds_{psc->grid(), material_list_},
       hydro_{psc->grid(), 16, psc->ibn},
       interpolator_{sim_->grid_},
       accumulator_{sim_->grid_},
+#else
+      mflds_{psc->grid()},
 #endif
+      mprts_{psc->grid()},
       balance_{p_.balance_interval, p_.balance_factor_fields, p_.balance_print_loads, p_.balance_write_loads},
       collision_{psc_comm(psc), p_.collision_interval, p_.collision_nu},
       bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn},
@@ -390,13 +393,16 @@ protected:
   Simulation* sim_;
   psc* psc_;
 
-  Mparticles_t mprts_;
+#ifdef VPIC
+  MaterialList material_list_;
+#endif
   MfieldsState mflds_;
 #ifdef VPIC
   MfieldsHydroVpic hydro_;
   Interpolator interpolator_;
   Accumulator accumulator_;
 #endif
+  Mparticles_t mprts_;
 
   Balance_t balance_;
   Sort_t sort_;
