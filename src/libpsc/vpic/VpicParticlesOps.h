@@ -73,6 +73,21 @@ struct VpicParticlesOps
   {
     ::accumulate_hydro_p(&ha, &*sp, &interpolator);
   }
+
+  static void uncenter_p(species_t *sp, const Interpolator& interpolator)
+  {
+    ::uncenter_p(sp, &interpolator);
+  }
+
+  static void sort_p(species_t *sp)
+  {
+    ::sort_p(sp);
+  }
+
+  static double energy_p(typename Particles::const_iterator sp, const Interpolator& interpolator)
+  {
+    return ::energy_p(&*sp, &interpolator);
+  }
 };
 
 
@@ -86,22 +101,5 @@ struct VpicParticles : ParticlesBase
   typedef HA HydroArray;
 
   using Base::Base;
-  using typename Base::iterator;
-  using typename Base::const_iterator;
-
-  static void uncenter_p(species_t *sp, const Interpolator& interpolator)
-  {
-    ::uncenter_p(sp, &interpolator);
-  }
-  
-  static void sort_p(species_t *sp)
-  {
-    ::sort_p(sp);
-  }
-
-  static double energy_p(const_iterator sp, const Interpolator& interpolator)
-  {
-    return ::energy_p(&*sp, &interpolator);
-  }
 };
 

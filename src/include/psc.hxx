@@ -344,7 +344,7 @@ private:
       TIC InterpolatorOps::load(interpolator_, mflds.vmflds()); TOC(load_interpolator, 1);
       
       for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
-	TIC vmprts.uncenter_p(&*sp, interpolator_); TOC(uncenter_p, 1);
+	TIC ParticlesOps::uncenter_p(&*sp, interpolator_); TOC(uncenter_p, 1);
       }
     }
   }
