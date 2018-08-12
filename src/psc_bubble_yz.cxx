@@ -303,7 +303,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     if (p_.collision_interval > 0 && timestep % p_.collision_interval == 0) {
       mpi_printf(comm, "***** Performing collisions...\n");
       prof_start(pr_collision);
-      collision_(mprts_);
+      (*collision_)(mprts_);
       prof_stop(pr_collision);
     }
     
