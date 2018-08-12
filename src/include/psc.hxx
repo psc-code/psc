@@ -236,6 +236,38 @@ struct Psc
   }
   
   // ----------------------------------------------------------------------
+  // set_domain_field_bc
+  
+  void set_domain_field_bc(int boundary, int bc)
+  {
+#ifdef VPIC
+    int fbc;
+    switch (bc) {
+    case BND_FLD_CONDUCTING_WALL: fbc = Grid::pec_fields   ; break;
+    case BND_FLD_ABSORBING:       fbc = Grid::absorb_fields; break;
+    default: assert(0);
+    }
+    vgrid_->set_fbc(boundary, fbc);
+#endif
+  }
+
+  // ----------------------------------------------------------------------
+  // set_domain_particle_bc
+  
+  void set_domain_particle_bc(int boundary, int bc)
+  {
+#ifdef VPIC
+    int pbc;
+    switch (bc) {
+    case BND_PRT_REFLECTING: pbc = Grid::reflect_particles; break;
+    case BND_PRT_ABSORBING:  pbc = Grid::absorb_particles ; break;
+    default: assert(0);
+    }
+    vgrid_->set_pbc(boundary, pbc);
+#endif
+  }
+
+  // ----------------------------------------------------------------------
   // set_dt
   
   static double set_dt(const PscParams& p, const Grid_t::Domain& domain)
