@@ -424,8 +424,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   //
   // FIXME: can only use 1st order pushers with current conducting wall b.c.
   
-  PscHarris(psc* psc)
-    : Psc{{}, psc},
+  PscHarris()
+    : Psc{{}, psc_create(MPI_COMM_WORLD)},
       io_pfd_{"pfd"}
   {
     auto comm = psc_comm(psc_);
@@ -545,11 +545,11 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // -- Collision
     int collision_interval = 0;
     double collision_nu = .1; // FIXME, != 0 needed to avoid crash
-    collision_.reset(new Collision_t{psc_comm(psc), collision_interval, collision_nu});
+    collision_.reset(new Collision_t{comm, collision_interval, collision_nu});
 
     // -- Checks
     ChecksParams checks_params;
-    checks_.reset(new Checks_t{psc_->grid(), psc_comm(psc), checks_params});
+    checks_.reset(new Checks_t{psc_->grid(), comm, checks_params});
 
     // -- Marder correction
     // FIXME, these are ignored for vpic (?)
@@ -570,7 +570,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     psc_marder_set_param_int(psc_->marder, "num_div_b_round", 2);
 #endif
   
-    marder_.reset(new Marder_t(psc_comm(psc), marder_diffusion, marder_loop, marder_dump));
+    marder_.reset(new Marder_t(comm, marder_diffusion, marder_loop, marder_dump));
 
     // -- output fields
     OutputFieldsCParams outf_params;
@@ -1055,10 +1055,7 @@ struct PscHarrisBuilder
 
 PscHarris* PscHarrisBuilder::makePsc()
 {
-  auto psc_ = psc_create(MPI_COMM_WORLD);
-  MPI_Comm comm = psc_comm(psc_);
-  
-  return new PscHarris{psc_};
+  return new PscHarris{};
 }
 
 // ======================================================================
