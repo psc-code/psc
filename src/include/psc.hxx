@@ -80,7 +80,6 @@ struct Psc
 #endif
       mprts_{psc->grid()}
   {
-    balance_.reset(new Balance_t{p_.balance_interval, p_.balance_factor_fields, p_.balance_print_loads, p_.balance_write_loads});
     sort_.reset(new Sort_t{});
     pushp_.reset(new PushParticles_t{});
     pushf_.reset(new PushFields_t{});

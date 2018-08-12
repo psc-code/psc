@@ -449,6 +449,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   {
     auto comm = psc_comm(psc_);
     
+    // -- Balance
+    balance_.reset(new Balance_t{p_.balance_interval, p_.balance_factor_fields, p_.balance_print_loads, p_.balance_write_loads});
+
     // -- Sort
     // FIXME, needs a way to make it gets set?
     // FIXME: the "vpic" sort actually keeps track of per-species sorting intervals
