@@ -447,10 +447,13 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       phys_{phys},
       io_pfd_{"pfd"}
   {
+    auto comm = psc_comm(psc_);
+    
+    outf_.reset(new OutputFieldsC{comm, p_.outf_params});
+
     // FIXME? this used to be part of define_fields, ie., after constructing the various field arrays
     grid_setup_communication(sim->grid_);
     
-    MPI_Comm comm = psc_comm(psc_);
     const auto& grid = psc->grid();
 
     //////////////////////////////////////////////////////////////////////////////

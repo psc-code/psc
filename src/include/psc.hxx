@@ -100,9 +100,6 @@ struct Psc
       checks_{psc_->grid(), psc_comm(psc), p_.checks_params},
       marder_(psc_comm(psc), p_.marder_diffusion, p_.marder_loop, p_.marder_dump)
   {
-    auto comm = psc_comm(psc_);
-    
-    outf_.reset(new OutputFieldsC{comm, p_.outf_params});
   }
 
   // ----------------------------------------------------------------------

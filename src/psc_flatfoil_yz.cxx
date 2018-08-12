@@ -211,7 +211,9 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
       heating_{heating_interval, heating_kind, heating_spot},
       inject_{psc_comm(psc), inject_interval, inject_tau, inject_kind_n, inject_target}
   {
-    MPI_Comm comm = psc_comm(psc_);
+    auto comm = psc_comm(psc_);
+    
+    outf_.reset(new OutputFieldsC{comm, p_.outf_params});
 
     // --- partition particles and initial balancing
     mpi_printf(comm, "**** Partitioning...\n");

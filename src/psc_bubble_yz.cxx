@@ -56,7 +56,9 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     : Psc{p, psc},
       PscBubbleParams(params)
   {
-    MPI_Comm comm = psc_comm(psc_);
+    auto comm = psc_comm(psc_);
+    
+    outf_.reset(new OutputFieldsC{comm, p_.outf_params});
 
     // --- partition particles and initial balancing
     mpi_printf(comm, "**** Partitioning...\n");
