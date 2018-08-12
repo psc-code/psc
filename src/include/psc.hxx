@@ -94,6 +94,11 @@ struct Psc
     interpolator_.reset(new Interpolator{vgrid_});
     accumulator_.reset(new Accumulator{vgrid_});
 #endif
+
+    // FIXME this is here because this is the order that vpic did things in,
+    // but I don't see why this shouldn't go to the end of grid setup
+    grid_setup_communication();
+    
     mprts_.reset(new Mparticles_t{grid()});
     sort_.reset(new Sort_t{});
     pushp_.reset(new PushParticles_t{});
@@ -292,6 +297,36 @@ struct Psc
     return material_list_.append(m);
   }
 #endif
+
+  void grid_setup_communication()
+  {
+#ifdef VPIC
+    assert(vgrid_->nx && vgrid_->ny && vgrid_->ny);
+    
+    // Pre-size communications buffers. This is done to get most memory
+    // allocation over with before the simulation starts running
+    // FIXME, this isn't a great place. First, we shouldn't call mp
+    // functions (semi-)directly. 2nd, whether we need these buffers depends
+    // on b.c., which aren't yet known.
+    
+    // FIXME, this really isn't a good place to do this, as it requires layer breaking knowledge of
+    // which communication will need the largest buffers...
+    int nx1 = vgrid_->nx+1, ny1 = vgrid_->ny+1, nz1 = vgrid_->nz+1;
+    vgrid_->mp_size_recv_buffer(BOUNDARY(-1, 0, 0), ny1*nz1*sizeof(typename HydroArray::Element));
+    vgrid_->mp_size_recv_buffer(BOUNDARY( 1, 0, 0), ny1*nz1*sizeof(typename HydroArray::Element));
+    vgrid_->mp_size_recv_buffer(BOUNDARY( 0,-1, 0), nz1*nx1*sizeof(typename HydroArray::Element));
+    vgrid_->mp_size_recv_buffer(BOUNDARY( 0, 1, 0), nz1*nx1*sizeof(typename HydroArray::Element));
+    vgrid_->mp_size_recv_buffer(BOUNDARY( 0, 0,-1), nx1*ny1*sizeof(typename HydroArray::Element));
+    vgrid_->mp_size_recv_buffer(BOUNDARY( 0, 0, 1), nx1*ny1*sizeof(typename HydroArray::Element));
+    
+    vgrid_->mp_size_send_buffer(BOUNDARY(-1, 0, 0), ny1*nz1*sizeof(typename HydroArray::Element));
+    vgrid_->mp_size_send_buffer(BOUNDARY( 1, 0, 0), ny1*nz1*sizeof(typename HydroArray::Element));
+    vgrid_->mp_size_send_buffer(BOUNDARY( 0,-1, 0), nz1*nx1*sizeof(typename HydroArray::Element));
+    vgrid_->mp_size_send_buffer(BOUNDARY( 0, 1, 0), nz1*nx1*sizeof(typename HydroArray::Element));
+    vgrid_->mp_size_send_buffer(BOUNDARY( 0, 0,-1), nx1*ny1*sizeof(typename HydroArray::Element));
+    vgrid_->mp_size_send_buffer(BOUNDARY( 0, 0, 1), nx1*ny1*sizeof(typename HydroArray::Element));
+#endif
+  }
 
   // ----------------------------------------------------------------------
   // set_dt
