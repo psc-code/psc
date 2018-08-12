@@ -526,10 +526,10 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     mpi_printf(comm, "**** Partitioning...\n");
     auto n_prts_by_patch_old = setup_initial_partition();
     auto n_prts_by_patch_new = balance_->initial(psc_, n_prts_by_patch_old);
-    mprts_.reset(psc_->grid());
+    mprts_->reset(psc_->grid());
     
     mpi_printf(comm, "**** Setting up particles...\n");
-    setup_initial_particles(mprts_, n_prts_by_patch_new);
+    setup_initial_particles(*mprts_, n_prts_by_patch_new);
     
     setup_initial_fields(mflds_);
 
@@ -560,9 +560,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     double nmovers = .1 * nmax;
     double sort_method = 1;   // 0=in place and 1=out of place
     
-    mprts_.define_species("electron", -phys_.ec, phys_.me, nmax, nmovers,
+    mprts_->define_species("electron", -phys_.ec, phys_.me, nmax, nmovers,
 			  electron_sort_interval, sort_method);
-    mprts_.define_species("ion", phys_.ec, phys_.mi, nmax, nmovers,
+    mprts_->define_species("ion", phys_.ec, phys_.mi, nmax, nmovers,
 			  ion_sort_interval, sort_method);
   }
 
@@ -640,7 +640,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   
   void setup_initial_particles(Mparticles_t& mprts, std::vector<uint>& n_prts_by_patch)
   {
-    mprts_.reserve_all(n_prts_by_patch.data());
+    mprts_->reserve_all(n_prts_by_patch.data());
     setup_particles(n_prts_by_patch, false);
   }
   
@@ -718,7 +718,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       prt.u[0] = ux; prt.u[1] = uy; prt.u[2] = uz;
       prt.w = weight_s;
       prt.kind = KIND_ELECTRON;
-      mprts_.inject_reweight(0, prt);
+      mprts_->inject_reweight(0, prt);
 
       ux = Rng_normal(rng, 0, vthi);
       uy = Rng_normal(rng, 0, vthi);
@@ -729,7 +729,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
       prt.u[0] = ux; prt.u[1] = uy; prt.u[2] = uz;
       prt.kind = KIND_ION;
-      mprts_.inject_reweight(0, prt);
+      mprts_->inject_reweight(0, prt);
     }
 
     mpi_printf(comm, "-> Background Population\n");
@@ -746,13 +746,13 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       prt.u[2] = Rng_normal(rng, 0, vtheb);
       prt.w = weight_b;
       prt.kind = KIND_ELECTRON;
-      mprts_.inject_reweight(0, prt);
+      mprts_->inject_reweight(0, prt);
     
       prt.u[0] = Rng_normal(rng, 0, vthib);
       prt.u[1] = Rng_normal(rng, 0, vthib);
       prt.u[2] = Rng_normal(rng, 0, vthib);
       prt.kind = KIND_ION;
-      mprts_.inject_reweight(0, prt);
+      mprts_->inject_reweight(0, prt);
     }
 
     mpi_printf(comm, "Finished loading particles\n");
@@ -835,8 +835,10 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     int timestep = psc_->timestep;
 
+    auto& mprts = *mprts_;
+
     if (balance_interval > 0 && timestep % balance_interval == 0) {
-      (*balance_)(psc_, mprts_);
+      (*balance_)(psc_, mprts);
     }
 
     prof_start(pr_time_step_no_comm);
@@ -845,24 +847,24 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     if (sort_interval > 0 && timestep % sort_interval == 0) {
       //mpi_printf(comm, "***** Sorting...\n");
       prof_start(pr_sort);
-      (*sort_)(mprts_);
+      (*sort_)(mprts);
       prof_stop(pr_sort);
     }
     
     if (collision_->interval() > 0 && timestep % collision_->interval() == 0) {
       mpi_printf(comm, "***** Performing collisions...\n");
       prof_start(pr_collision);
-      (*collision_)(mprts_);
+      (*collision_)(mprts);
       prof_stop(pr_collision);
     }
     
     //psc_bnd_particles_open_calc_moments(psc_->bnd_particles, psc_->particles);
 
-    checks_->continuity_before_particle_push(psc_, mprts_);
+    checks_->continuity_before_particle_push(psc_, mprts);
 
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
     prof_start(pr_push_prts);
-    pushp_->push_mprts(mprts_, mflds_, interpolator_, accumulator_);
+    pushp_->push_mprts(mprts, mflds_, interpolator_, accumulator_);
     prof_stop(pr_push_prts);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
 
@@ -871,7 +873,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
     prof_start(pr_bndp);
-    (*bndp_)(mprts_);
+    (*bndp_)(mprts);
     prof_stop(pr_bndp);
 
     // field propagation E^{n+1/2} -> E^{n+3/2}
@@ -909,7 +911,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     //}
     // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 
-    checks_->continuity_after_particle_push(psc_, mprts_, mflds_);
+    checks_->continuity_after_particle_push(psc_, mprts, mflds_);
 
     // E at t^{n+3/2}, particles at t^{n+3/2}
     // B at t^{n+3/2} (Note: that is not it's natural time,
@@ -917,14 +919,14 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     if (marder_interval > 0 && timestep % marder_interval == 0) {
       //mpi_printf(comm, "***** Performing Marder correction...\n");
       prof_start(pr_marder);
-      (*marder_)(mflds_, mprts_);
+      (*marder_)(mflds_, mprts);
       prof_stop(pr_marder);
     }
     
-    checks_->gauss(psc_, mprts_, mflds_);
+    checks_->gauss(psc_, mprts, mflds_);
 
 #ifdef VPIC
-    pushp_->prep(mprts_, mflds_, interpolator_);
+    pushp_->prep(mprts, mflds_, interpolator_);
 #endif
   }
 
@@ -948,7 +950,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       {
 	// FIXME, would be better to keep "out_hydro" around
 	OutputHydroVpic out_hydro{grid};
-	auto result = out_hydro(mprts_, hydro_, interpolator_);
+	auto result = out_hydro(*mprts_, hydro_, interpolator_);
 	io_pfd_.write_mflds(result.mflds, result.name, result.comp_names);
       }
       mrc_io_close(io_pfd_.io_);

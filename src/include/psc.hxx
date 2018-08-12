@@ -69,12 +69,12 @@ struct Psc
       mflds_{psc->grid(), material_list_},
       hydro_{psc->grid(), 16, psc->ibn},
       interpolator_{sim_->grid_},
-      accumulator_{sim_->grid_},
+      accumulator_{sim_->grid_}
 #else
-      mflds_{psc->grid()},
+      mflds_{psc->grid()}
 #endif
-      mprts_{psc->grid()}
   {
+    mprts_.reset(new Mparticles_t{psc->grid()});
     sort_.reset(new Sort_t{});
     pushp_.reset(new PushParticles_t{});
     pushf_.reset(new PushFields_t{});
@@ -113,14 +113,14 @@ struct Psc
   void initialize()
   {
     psc_view(psc_);
-    mprts_.view();
+    mprts_->view();
 
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
 #ifdef VPIC
       initialize_vpic();
 #endif
     } else {
-      initialize_default(psc_->method, psc_, mflds_, mprts_);
+      initialize_default(psc_->method, psc_, mflds_, *mprts_);
     }
 
     // initial output / stats
@@ -176,7 +176,7 @@ struct Psc
       psc_stats_stop(st_time_step);
       prof_stop(pr);
 
-      psc_stats_val[st_nr_particles] = mprts_.get_n_prts();
+      psc_stats_val[st_nr_particles] = mprts_->get_n_prts();
 
       if (psc_->timestep % p_.stats_every == 0) {
 	print_status();
@@ -284,7 +284,7 @@ private:
     // FIXME, just change the uses
     auto sim = sim_;
     auto psc = psc_;
-    auto& mprts = mprts_;
+    auto& mprts = *mprts_;
     auto& mflds = mflds_;
     // Do some consistency checks on user initialized fields
     
@@ -342,15 +342,15 @@ private:
   {
 #ifdef VPIC
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-      sim_->runDiag(mprts_.vmprts_, mflds_.vmflds(), interpolator_, *hydro_.vmflds_hydro, ppsc->grid().domain.np);
+      sim_->runDiag(mprts_->vmprts_, mflds_.vmflds(), interpolator_, *hydro_.vmflds_hydro, ppsc->grid().domain.np);
     }
 #else
     // FIXME
-    psc_diag_run(psc_->diag, psc_, mprts_, mflds_);
+    psc_diag_run(psc_->diag, psc_, *mprts_, mflds_);
     // FIXME
-    (*outf_)(mflds_, mprts_);
+    (*outf_)(mflds_, *mprts_);
 #endif
-    PscOutputParticlesBase{psc_->output_particles}.run(mprts_);
+    PscOutputParticlesBase{psc_->output_particles}.run(*mprts_);
   }
 
   // ----------------------------------------------------------------------
@@ -383,7 +383,7 @@ protected:
   Interpolator interpolator_;
   Accumulator accumulator_;
 #endif
-  Mparticles_t mprts_;
+  std::unique_ptr<Mparticles_t> mprts_;
 
   std::unique_ptr<Balance_t> balance_;
   std::unique_ptr<Sort_t> sort_;

@@ -277,15 +277,15 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     auto n_prts_by_patch_new = balance_->initial(psc_, n_prts_by_patch_old);
     // balance::initial does not rebalance particles, because the old way of doing this
     // does't even have the particle data structure created yet -- FIXME?
-    mprts_.reset(psc_->grid());
+    mprts_->reset(psc_->grid());
     
     mpi_printf(comm, "**** Setting up particles...\n");
-    setup_initial_particles(mprts_, n_prts_by_patch_new);
+    setup_initial_particles(*mprts_, n_prts_by_patch_new);
     
     mpi_printf(comm, "**** Setting up fields...\n");
     setup_initial_fields(mflds_);
 
-    checks_->gauss(mprts_, mflds_);
+    checks_->gauss(*mprts_, mflds_);
     psc_setup_member_objs(psc_);
 
     initialize_stats();
@@ -406,34 +406,36 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     MPI_Comm comm = psc_comm(psc_);
     int timestep = psc_->timestep;
 
+    auto& mprts = *mprts_;
+
     if (balance_interval > 0 && timestep % balance_interval == 0) {
-      (*balance_)(psc_, mprts_);
+      (*balance_)(psc_, mprts);
     }
 
     if (sort_interval > 0 && timestep % sort_interval == 0) {
       mpi_printf(comm, "***** Sorting...\n");
       prof_start(pr_sort);
-      (*sort_)(mprts_);
+      (*sort_)(mprts);
       prof_stop(pr_sort);
     }
     
     if (collision_->interval() > 0 && timestep % collision_->interval() == 0) {
       mpi_printf(comm, "***** Performing collisions...\n");
       prof_start(pr_collision);
-      (*collision_)(mprts_);
+      (*collision_)(mprts);
       prof_stop(pr_collision);
     }
     
     if (checks_->continuity_every_step > 0 && timestep % checks_->continuity_every_step == 0) {
       mpi_printf(comm, "***** Checking continuity...\n");
       prof_start(pr_checks);
-      checks_->continuity_before_particle_push(mprts_);
+      checks_->continuity_before_particle_push(mprts);
       prof_stop(pr_checks);
     }
 
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
     prof_start(pr_push_prts);
-    pushp_->push_mprts(mprts_, mflds_);
+    pushp_->push_mprts(mprts, mflds_);
     prof_stop(pr_push_prts);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
 
@@ -456,7 +458,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     if (inject_interval > 0 && timestep % inject_interval == 0) {
       mpi_printf(comm, "***** Performing injection...\n");
       prof_start(pr_inject);
-      inject_(mprts_);
+      inject_(mprts);
       prof_stop(pr_inject);
     }
       
@@ -465,7 +467,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
 	heating_interval > 0 && timestep % heating_interval == 0) {
       mpi_printf(comm, "***** Performing heating...\n");
       prof_start(pr_heating);
-      heating_(mprts_);
+      heating_(mprts);
       prof_stop(pr_heating);
     }
 
@@ -476,7 +478,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
 #endif
     
     prof_start(pr_bndp);
-    (*bndp_)(mprts_);
+    (*bndp_)(mprts);
     prof_stop(pr_bndp);
 
     // === field propagation E^{n+1/2} -> E^{n+3/2}
@@ -534,7 +536,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     
     if (checks_->continuity_every_step > 0 && timestep % checks_->continuity_every_step == 0) {
       prof_restart(pr_checks);
-      checks_->continuity_after_particle_push(mprts_, mflds_);
+      checks_->continuity_after_particle_push(mprts, mflds_);
       prof_stop(pr_checks);
     }
     
@@ -544,13 +546,13 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     if (marder_interval > 0 && timestep % marder_interval == 0) {
       mpi_printf(comm, "***** Performing Marder correction...\n");
       prof_start(pr_marder);
-      (*marder_)(mflds_, mprts_);
+      (*marder_)(mflds_, mprts);
       prof_stop(pr_marder);
     }
     
     if (checks_->gauss_every_step > 0 && timestep % checks_->gauss_every_step == 0) {
       prof_restart(pr_checks);
-      checks_->gauss(mprts_, mflds_);
+      checks_->gauss(mprts, mflds_);
       prof_stop(pr_checks);
     }
     
