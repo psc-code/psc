@@ -424,14 +424,53 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   //
   // FIXME: can only use 1st order pushers with current conducting wall b.c.
   
-  PscHarris(const PscParams& p, const PscHarrisParams& params,
-	    psc* psc)
-    : Psc{p, psc},
-      PscHarrisParams(params),
+  PscHarris(psc* psc)
+    : Psc{{}, psc},
       io_pfd_{"pfd"}
   {
     auto comm = psc_comm(psc_);
 
+    mpi_printf(comm, "*** Setting up...\n");
+
+    PscHarrisParams params;
+
+    params.wpedt_max = .36;
+    params.wpe_wce = 2.;
+    params.mi_me = 25.;
+    
+    params.Lx_di = 40.;
+    params.Ly_di = 1.;
+    params.Lz_di = 10.;
+    
+    params.electron_sort_interval = 25;
+    params.ion_sort_interval = 25;
+    
+    params.taui = 40.;
+    params.t_intervali = 1.;
+    params.output_particle_interval = 10.;
+    
+    params.overalloc = 2.;
+    
+    params.gdims = {512, 1, 128};
+    params.np = { 4, 1, 1 };
+    
+    params.L_di = .5;
+    params.Ti_Te = 5.;
+    params.nb_n0 = .05;
+    params.Tbe_Te = .333;
+    params.Tbi_Ti = .333;
+    
+    params.bg = 0.;
+    params.theta = 0.;
+    
+    params.Lpert_Lx = 1.;
+    params.dbz_b0 = .03;
+    params.nppc = 10;
+    params.open_bc_x = false;
+    params.driven_bc_z = false;
+
+    static_cast<PscHarrisParams&>(*this) = params;
+    
     mpi_printf(psc_comm(psc_), "*** Initializing\n" );
 
     psc_set_from_options(psc_);
@@ -454,7 +493,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 			       { phys_.ec, phys_.mi, "i"}};
     
     // Determine the time step
-    double dt = ::set_dt(grid_domain, p.cfl, phys_, params);
+    double dt = ::set_dt(grid_domain, p_.cfl, phys_, params);
     
     auto norm_params = Grid_t::NormalizationParams::dimensionless();
     norm_params.nicell = 1;
@@ -474,9 +513,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     sim_->grid_ = Grid::create();
     // set high level VPIC simulation parameters
     // FIXME, will be unneeded eventually
-    sim_->setParams(p.nmax, p.stats_every,
-		    p.stats_every / 2, p.stats_every / 2,
-		    p.stats_every / 2);
+    sim_->setParams(p_.nmax, p_.stats_every,
+		    p_.stats_every / 2, p_.stats_every / 2,
+		    p_.stats_every / 2);
     setup_domain(sim_, grid().domain, psc_, phys_, params);
     setup_fields(sim_, psc_);
   
@@ -1019,48 +1058,7 @@ PscHarris* PscHarrisBuilder::makePsc()
   auto psc_ = psc_create(MPI_COMM_WORLD);
   MPI_Comm comm = psc_comm(psc_);
   
-  mpi_printf(comm, "*** Setting up...\n");
-
-  PscParams p{};
-
-  PscHarrisParams params;
-
-  params.wpedt_max = .36;
-  params.wpe_wce = 2.;
-  params.mi_me = 25.;
-
-  params.Lx_di = 40.;
-  params.Ly_di = 1.;
-  params.Lz_di = 10.;
-
-  params.electron_sort_interval = 25;
-  params.ion_sort_interval = 25;
-  
-  params.taui = 40.;
-  params.t_intervali = 1.;
-  params.output_particle_interval = 10.;
-
-  params.overalloc = 2.;
-
-  params.gdims = {512, 1, 128};
-  params.np = { 4, 1, 1 };
-  
-  params.L_di = .5;
-  params.Ti_Te = 5.;
-  params.nb_n0 = .05;
-  params.Tbe_Te = .333;
-  params.Tbi_Ti = .333;
-
-  params.bg = 0.;
-  params.theta = 0.;
-
-  params.Lpert_Lx = 1.;
-  params.dbz_b0 = .03;
-  params.nppc = 10;
-  params.open_bc_x = false;
-  params.driven_bc_z = false;
-  
-  return new PscHarris{p, params, psc_};
+  return new PscHarris{psc_};
 }
 
 // ======================================================================
