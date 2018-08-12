@@ -78,9 +78,9 @@ struct Psc
 #else
       mflds_{psc->grid()},
 #endif
-      mprts_{psc->grid()},
-      balance_{p_.balance_interval, p_.balance_factor_fields, p_.balance_print_loads, p_.balance_write_loads}
+      mprts_{psc->grid()}
   {
+    balance_.reset(new Balance_t{p_.balance_interval, p_.balance_factor_fields, p_.balance_print_loads, p_.balance_write_loads});
     sort_.reset(new Sort_t{});
     pushp_.reset(new PushParticles_t{});
     pushf_.reset(new PushFields_t{});
@@ -391,8 +391,7 @@ protected:
 #endif
   Mparticles_t mprts_;
 
-  Balance_t balance_;
-
+  std::unique_ptr<Balance_t> balance_;
   std::unique_ptr<Sort_t> sort_;
   std::unique_ptr<Collision_t> collision_;
   std::unique_ptr<PushParticles_t> pushp_;

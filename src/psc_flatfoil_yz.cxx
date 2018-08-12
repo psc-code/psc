@@ -266,7 +266,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     // --- partition particles and initial balancing
     mpi_printf(comm, "**** Partitioning...\n");
     auto n_prts_by_patch_old = setup_initial_partition();
-    auto n_prts_by_patch_new = balance_.initial(psc_, n_prts_by_patch_old);
+    auto n_prts_by_patch_new = balance_->initial(psc_, n_prts_by_patch_old);
     // balance::initial does not rebalance particles, because the old way of doing this
     // does't even have the particle data structure created yet -- FIXME?
     mprts_.reset(psc_->grid());
@@ -399,7 +399,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     int timestep = psc_->timestep;
 
     if (p_.balance_interval > 0 && timestep % p_.balance_interval == 0) {
-      balance_(psc_, mprts_);
+      (*balance_)(psc_, mprts_);
     }
 
     if (sort_interval > 0 && timestep % sort_interval == 0) {

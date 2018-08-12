@@ -517,7 +517,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // --- partition particles and initial balancing
     mpi_printf(comm, "**** Partitioning...\n");
     auto n_prts_by_patch_old = setup_initial_partition();
-    auto n_prts_by_patch_new = balance_.initial(psc_, n_prts_by_patch_old);
+    auto n_prts_by_patch_new = balance_->initial(psc_, n_prts_by_patch_old);
     mprts_.reset(psc_->grid());
     
     mpi_printf(comm, "**** Setting up particles...\n");
@@ -828,7 +828,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     int timestep = psc_->timestep;
 
     if (p_.balance_interval > 0 && timestep % p_.balance_interval == 0) {
-      balance_(psc_, mprts_);
+      (*balance_)(psc_, mprts_);
     }
 
     prof_start(pr_time_step_no_comm);
