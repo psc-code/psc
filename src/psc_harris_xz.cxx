@@ -310,6 +310,20 @@ struct globals_physics
 };
 
 // ----------------------------------------------------------------------
+// set_dt
+
+static double set_dt(const Grid_t::Domain& domain, double cfl, const globals_physics& phys,
+		     const PscHarrisParams& params)
+{
+  double dg = courant_length(domain.length, domain.gdims);
+  double dt = cfl * dg / phys.c; // courant limited time step
+  if (phys.wpe * dt > params.wpedt_max) {
+    dt = params.wpedt_max / phys.wpe;  // override timestep if plasma frequency limited
+  }
+  return dt;
+}
+
+// ----------------------------------------------------------------------
 // setup_domain
 
 static void setup_domain(Simulation* sim, const Grid_t::Domain& domain,
@@ -416,6 +430,27 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     mpi_printf(psc_comm(psc_), "*** Initializing\n" );
 
+    auto grid_domain = Grid_t::Domain{params.gdims,
+				      {phys.Lx, phys.Ly, phys.Lz},
+				      {0., -.5 * phys.Ly, -.5 * phys.Lz}, params.np};
+    
+    auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
+			  { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
+			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING },
+			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING }};
+    
+    auto kinds = Grid_t::Kinds{{-phys.ec, phys.me, "e"},
+			       { phys.ec, phys.mi, "i"}};
+    
+    // Determine the time step
+    double dt = ::set_dt(grid_domain, p.cfl, phys, params);
+    
+    auto norm_params = Grid_t::NormalizationParams::dimensionless();
+    norm_params.nicell = 1;
+    
+    auto coeff = Grid_t::Normalization{norm_params};
+    psc_setup_domain(psc_, grid_domain, grid_bc, kinds, coeff, dt);
+    
     grid_ = &psc_->grid();
 
     // create sim_
@@ -488,7 +523,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     OutputFieldsCParams outf_params;
     double output_field_interval = 1.;
     outf_params.output_fields = nullptr;
-    outf_params.pfield_step = int((output_field_interval / (phys.wci*dt())));
+    outf_params.pfield_step = int((output_field_interval / (phys.wci*dt)));
     outf_.reset(new OutputFieldsC{comm, outf_params});
 
     // FIXME? this used to be part of define_fields, ie., after constructing the various field arrays
@@ -531,7 +566,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     if (output_particle_interval > 0) {
       psc_output_particles_set_param_int(psc_->output_particles, "every_step",
-					 (int) (output_particle_interval / (phys_.wci*dt())));
+					 (int) (output_particle_interval / (phys_.wci*dt)));
     }
   
     mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
@@ -954,20 +989,6 @@ private:
   MrcIo io_pfd_;
 };
 
-// ----------------------------------------------------------------------
-// set_dt
-
-static double set_dt(const Grid_t::Domain& domain, double cfl, const globals_physics& phys,
-		     const PscHarrisParams& params)
-{
-  double dg = courant_length(domain.length, domain.gdims);
-  double dt = cfl * dg / phys.c; // courant limited time step
-  if (phys.wpe * dt > params.wpedt_max) {
-    dt = params.wpedt_max / phys.wpe;  // override timestep if plasma frequency limited
-  }
-  return dt;
-}
-
 // ======================================================================
 // PscHarrisBuilder
 
@@ -1025,8 +1046,6 @@ PscHarris* PscHarrisBuilder::makePsc()
   params.open_bc_x = false;
   params.driven_bc_z = false;
   
-  auto norm_params = Grid_t::NormalizationParams::dimensionless();
-  norm_params.nicell = 1;
   p.cfl = 0.99;
 
   p.stats_every = 100;
@@ -1040,24 +1059,6 @@ PscHarris* PscHarrisBuilder::makePsc()
   psc_set_from_options(psc_);
 
   globals_physics phys{params};
-
-  auto grid_domain = Grid_t::Domain{params.gdims,
-				    {phys.Lx, phys.Ly, phys.Lz},
-				    {0., -.5 * phys.Ly, -.5 * phys.Lz}, params.np};
-  
-  auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
-			{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
-			{ BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING },
-			{ BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING }};
-  
-  auto kinds = Grid_t::Kinds{{-phys.ec, phys.me, "e"},
-			     { phys.ec, phys.mi, "i"}};
-  
-  // Determine the time step
-  double dt = set_dt(grid_domain, p.cfl, phys, params);
-  
-  auto coeff = Grid_t::Normalization{norm_params};
-  psc_setup_domain(psc_, grid_domain, grid_bc, kinds, coeff, dt);
 
   return new PscHarris{p, params, psc_, phys};
 }
