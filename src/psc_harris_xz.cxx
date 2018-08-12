@@ -448,7 +448,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     psc_method_set_param_ptr(psc_->method, "sim", sim_);
 #endif
 
-    sim_->vgrid_ = Grid::create();
+    vgrid_ = Grid::create();
+    sim_->vgrid_ = vgrid_;
     // set high level VPIC simulation parameters
     // FIXME, will be unneeded eventually
     sim_->setParams(p_.nmax, p_.stats_every,
@@ -521,9 +522,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     outf_params.pfield_step = int((output_field_interval / (phys_.wci*dt)));
     outf_.reset(new OutputFieldsC{comm, outf_params});
 
-    // FIXME? this used to be part of define_fields, ie., after constructing the various field arrays
-    grid_setup_communication(sim_->vgrid_);
-    
     //////////////////////////////////////////////////////////////////////////////
     // Finalize Field Advance
     
@@ -637,6 +635,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // Tensor electronic, magnetic and conductive materials are supported
     // though. See "shapes" for how to define them and assign them to regions.
     // Also, space is initially filled with the first material defined.
+
+    grid_setup_communication(vgrid_);
   }
 
   // ----------------------------------------------------------------------

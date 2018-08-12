@@ -81,8 +81,8 @@ struct Psc
       
 #ifdef VPIC
     hydro_.reset(new MfieldsHydroVpic{grid(), 16, psc_->ibn});
-    interpolator_.reset(new Interpolator{sim_->vgrid_});
-    accumulator_.reset(new Accumulator{sim_->vgrid_});
+    interpolator_.reset(new Interpolator{vgrid_});
+    accumulator_.reset(new Accumulator{vgrid_});
 #endif
     mprts_.reset(new Mparticles_t{grid()});
     sort_.reset(new Sort_t{});
@@ -386,6 +386,9 @@ protected:
   PscParams p_;
   const Grid_t* grid_;
   Simulation* sim_;
+#ifdef VPIC
+  Grid* vgrid_;
+#endif
   psc* psc_;
 
 #ifdef VPIC
