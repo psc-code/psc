@@ -40,9 +40,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-using MaterialList = FieldArray::MaterialList;
-using Material = MaterialList::Material;
-
 static RngPool *rngpool; // FIXME, should be member (of struct psc, really)
 
 // FIXME, helper should go somewhere...
@@ -50,21 +47,6 @@ static RngPool *rngpool; // FIXME, should be member (of struct psc, really)
 static inline double trunc_granular( double a, double b )
 {
   return b * (int)(a/b);
-}
-
-// ----------------------------------------------------------------------
-// define_material
-
-Material* define_material(MaterialList& ml, const char *name,
-			  double eps, double mu=1.,
-			  double sigma=0., double zeta=0.)
-{
-  Material *m = ml.create(name,
-			  eps,   eps,   eps,
-			  mu,    mu,    mu,
-			  sigma, sigma, sigma,
-			  zeta,  zeta,  zeta);
-  return ml.append(m);
 }
 
 void grid_setup_communication(Grid* grid_)
@@ -579,15 +561,12 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // -- set up MaterialList
     material_list_.reset(new MaterialList{});
 
-    define_material(*material_list_, "vacuum", 1., 1., 0., 0.);
+    define_material("vacuum", 1., 1., 0., 0.);
 #if 0
     struct material *resistive =
-      define_material(*material_list_, "resistive", 1., 1., 1., 0.);
+      define_material("resistive", 1., 1., 1., 0.);
 #endif
 
-    // FIXME, mv
-    assert(!material_list_->empty());
-    
     // Note: define_material defaults to isotropic materials with mu=1,sigma=0
     // Tensor electronic, magnetic and conductive materials are supported
     // though. See "shapes" for how to define them and assign them to regions.

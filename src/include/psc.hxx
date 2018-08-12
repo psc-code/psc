@@ -56,6 +56,11 @@ struct Psc
   using Marder_t = typename PscConfig::Marder_t;
   using Simulation = typename PscConfig::Simulation;
 
+#ifdef VPIC
+  using MaterialList = FieldArray::MaterialList;
+  using Material = MaterialList::Material;
+#endif
+  
   // ----------------------------------------------------------------------
   // ctor
 
@@ -77,6 +82,8 @@ struct Psc
   void init()
   {
 #ifdef VPIC
+    // FIXME, mv assert innto MfieldsState ctor
+    assert(!material_list_->empty());
     mflds_.reset(new MfieldsState{grid(), *material_list_});
 #else
     mflds_.reset(new MfieldsState{grid()});
@@ -222,6 +229,23 @@ struct Psc
   }
 
   virtual void step() = 0;
+
+  // ----------------------------------------------------------------------
+  // define_material
+
+#ifdef VPIC
+  Material* define_material(const char *name,
+			    double eps, double mu=1.,
+			    double sigma=0., double zeta=0.)
+  {
+    auto m = material_list_->create(name,
+		       eps,   eps,   eps,
+		       mu,    mu,    mu,
+		       sigma, sigma, sigma,
+		       zeta,  zeta,  zeta);
+    return material_list_->append(m);
+  }
+#endif
 
   // ----------------------------------------------------------------------
   // define_periodic_grid
