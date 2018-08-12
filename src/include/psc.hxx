@@ -66,13 +66,13 @@ struct Psc
       psc_{psc},
 #ifdef VPIC
       material_list_{sim->material_list_},
-      mflds_{psc->grid(), material_list_},
-      hydro_{psc->grid(), 16, psc->ibn}
+      mflds_{psc->grid(), material_list_}
 #else
       mflds_{psc->grid()}
 #endif
   {
 #ifdef VPIC
+    hydro_.reset(new MfieldsHydroVpic{psc->grid(), 16, psc->ibn});
     interpolator_.reset(new Interpolator{sim_->grid_});
     accumulator_.reset(new Accumulator{sim_->grid_});
 #endif
@@ -344,7 +344,7 @@ private:
   {
 #ifdef VPIC
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-      sim_->runDiag(mprts_->vmprts_, mflds_.vmflds(), *interpolator_, *hydro_.vmflds_hydro, ppsc->grid().domain.np);
+      sim_->runDiag(mprts_->vmprts_, mflds_.vmflds(), *interpolator_, *hydro_->vmflds_hydro, ppsc->grid().domain.np);
     }
 #else
     // FIXME
@@ -381,7 +381,7 @@ protected:
 #endif
   MfieldsState mflds_;
 #ifdef VPIC
-  MfieldsHydroVpic hydro_;
+  std::unique_ptr<MfieldsHydroVpic> hydro_;
   std::unique_ptr<Interpolator> interpolator_;
   std::unique_ptr<Accumulator> accumulator_;
 #endif

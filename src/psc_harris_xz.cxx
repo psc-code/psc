@@ -950,7 +950,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       {
 	// FIXME, would be better to keep "out_hydro" around
 	OutputHydroVpic out_hydro{grid};
-	auto result = out_hydro(*mprts_, hydro_, *interpolator_);
+	auto result = out_hydro(*mprts_, *hydro_, *interpolator_);
 	io_pfd_.write_mflds(result.mflds, result.name, result.comp_names);
       }
       mrc_io_close(io_pfd_.io_);
