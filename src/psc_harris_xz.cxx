@@ -53,16 +53,6 @@ static inline double trunc_granular( double a, double b )
 }
 
 // ----------------------------------------------------------------------
-// define_periodic_grid
-
-void define_periodic_grid(Grid* vgrid, double xl[3], double xh[3], const int gdims[3], const int np[3])
-{
-  // SimulationMixin::setTopology(np[0], np[1], np[2]); FIXME, needed for vpic_simulation,
-  // I believe only because this info is written out in diagnostics_run
-  vgrid->partition_periodic_box(xl, xh, gdims, np);
-}
-
-// ----------------------------------------------------------------------
 // set_domain_field_bc
 
 void set_domain_field_bc(Grid* vgrid, int boundary, int bc)
@@ -568,7 +558,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     vgrid_->setup(dx, grid().dt, phys_.c, phys_.eps0);
     
     // Define the grid
-    define_periodic_grid(vgrid_, xl, xh, domain.gdims, domain.np);
+    define_periodic_grid(xl, xh, domain.gdims, domain.np);
     
     int p = 0;
     bool left = psc_at_boundary_lo(psc_, p, 0);

@@ -70,7 +70,6 @@ struct Psc
     vgrid_ = Grid::create();
 #endif
   }
-  
 
   // ----------------------------------------------------------------------
   // init
@@ -224,6 +223,18 @@ struct Psc
 
   virtual void step() = 0;
 
+  // ----------------------------------------------------------------------
+  // define_periodic_grid
+  
+  void define_periodic_grid(double xl[3], double xh[3], const int gdims[3], const int np[3])
+  {
+#ifdef VPIC
+    // SimulationMixin::setTopology(np[0], np[1], np[2]); FIXME, needed for vpic_simulation,
+    // I believe only because this info is written out in diagnostics_run
+    vgrid_->partition_periodic_box(xl, xh, gdims, np);
+#endif
+  }
+  
   // ----------------------------------------------------------------------
   // set_dt
   
