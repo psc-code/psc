@@ -216,6 +216,66 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   {
     auto comm = psc_comm(psc_);
 
+    // --- setup domain
+    Grid_t::Real3 LL = { 1., 400.*4, 400. }; // domain size (in d_e)
+    Int3 gdims = { 1, 4096, 1024 }; // global number of grid points
+    Int3 np = { 1, 64, 16 }; // division into patches
+    
+#if TEST == TEST_4_SHOCK_3D
+    LL = { 256., 256., 512. }; // domain size (in d_e)
+    gdims = { 256, 256, 512 }; // global number of grid points
+    np = { 16, 16, 32 }; // division into patches
+#endif
+    
+#if TEST == TEST_3_NILSON_3D
+    LL = { 400., 200., 800. }; // domain size (in d_e)
+    gdims = { 64, 32, 128 }; // global number of grid points
+    np = { 2, 1, 4 }; // division into patches
+#endif
+  
+#if TEST == TEST_2_FLATFOIL_3D
+    LL = { 400., 400.*4, 400. }; // domain size (in d_e)
+    gdims = { 16, 64, 16 }; // global number of grid points
+    np = { 1, 4, 1 }; // division into patches
+#endif
+  
+#if TEST == TEST_1_HEATING_3D
+    LL = { 2., 2., 2. }; // domain size (in d_e)
+    gdims = { 8, 8, 8 }; // global number of grid points
+    np = { 1, 1, 1 }; // division into patches
+#endif
+  
+    auto grid_domain = Grid_t::Domain{gdims, LL, -.5 * LL, np};
+    
+    auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
+			  { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
+			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC },
+			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC }};
+
+    // FIXME, duplicated
+    // -- setup particle kinds
+    // last population ("e") is neutralizing
+    // FIXME, hardcoded mass ratio 100
+#if TEST == TEST_4_SHOCK_3D
+    Grid_t::Kinds kinds = {{params.Zi, 100.*params.Zi, "i"}, { -1., 1., "e"}};
+#else
+    Grid_t::Kinds kinds = {{params.Zi, 100.*params.Zi, "i"}, { -1., 1., "e"}};
+#endif
+  
+    // --- generic setup
+    auto norm_params = Grid_t::NormalizationParams::dimensionless();
+    norm_params.nicell = 100;
+#if TEST == TEST_4_SHOCK_3D
+    norm_params.nicell = 100;
+#endif
+#if TEST == TEST_3_NILSON_3D
+    norm_params.nicell = 50;
+#endif
+
+    auto coeff = Grid_t::Normalization{norm_params};
+    double dt = PscFlatfoil::set_dt(p, grid_domain);
+    psc_setup_domain(psc_, grid_domain, grid_bc, kinds, coeff, dt);
+
     grid_ = &psc_->grid();
 
     init();
@@ -592,47 +652,8 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
   PscParams p;
   PscFlatfoilParams params;
 
-  auto norm_params = Grid_t::NormalizationParams::dimensionless();
-  norm_params.nicell = 100;
-
   p.nmax = 5001;
   p.cfl = 0.75;
-
-  // --- setup domain
-  Grid_t::Real3 LL = { 1., 400.*4, 400. }; // domain size (in d_e)
-  Int3 gdims = { 1, 4096, 1024 }; // global number of grid points
-  Int3 np = { 1, 64, 16 }; // division into patches
-
-#if TEST == TEST_4_SHOCK_3D
-  LL = { 256., 256., 512. }; // domain size (in d_e)
-  gdims = { 256, 256, 512 }; // global number of grid points
-  np = { 16, 16, 32 }; // division into patches
-#endif
-  
-#if TEST == TEST_3_NILSON_3D
-  LL = { 400., 200., 800. }; // domain size (in d_e)
-  gdims = { 64, 32, 128 }; // global number of grid points
-  np = { 2, 1, 4 }; // division into patches
-#endif
-  
-#if TEST == TEST_2_FLATFOIL_3D
-  LL = { 400., 400.*4, 400. }; // domain size (in d_e)
-  gdims = { 16, 64, 16 }; // global number of grid points
-  np = { 1, 4, 1 }; // division into patches
-#endif
-  
-#if TEST == TEST_1_HEATING_3D
-  LL = { 2., 2., 2. }; // domain size (in d_e)
-  gdims = { 8, 8, 8 }; // global number of grid points
-  np = { 1, 1, 1 }; // division into patches
-#endif
-  
-  auto grid_domain = Grid_t::Domain{gdims, LL, -.5 * LL, np};
-
-  auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
-			{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
-			{ BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC },
-			{ BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC }};
 
   psc_set_from_options(psc_);
 
@@ -711,7 +732,6 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
 
 #if TEST == TEST_4_SHOCK_3D
   p.nmax = 100002;
-  norm_params.nicell = 100;
   params.BB = 0.02;
   params.background_n = .01;
   params.background_Te = .002;
@@ -721,7 +741,6 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
   
 #if TEST == TEST_3_NILSON_3D
   p.nmax = 101;
-  norm_params.nicell = 50;
   params.background_n = .02;
   params.inject_interval = 0;
 #endif
@@ -747,11 +766,6 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
   params.checks_params.gauss_threshold = 1e-10;
   params.checks_params.gauss_verbose = true;
 #endif
-
-  // --- generic setup
-  auto coeff = Grid_t::Normalization{norm_params};
-  double dt = PscFlatfoil::set_dt(p, grid_domain);
-  psc_setup_domain(psc_, grid_domain, grid_bc, kinds, coeff, dt);
 
   return new PscFlatfoil{p, params, psc_};
 }

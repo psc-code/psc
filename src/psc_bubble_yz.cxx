@@ -61,6 +61,30 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   {
     auto comm = psc_comm(psc_);
 
+    auto grid_domain = Grid_t::Domain{{1, 128, 512},
+				      {params.LLn, params.LLy, params.LLz},
+				      {0., -.5 * params.LLy, -.5 * params.LLz},
+				      {1, 1, 4}};
+    
+    auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
+			  { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
+			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC },
+			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC }};
+    
+    auto kinds = Grid_t::Kinds{{ -1., 1., "e"}, { 1., 100., "i" }};
+    
+    psc_set_from_options(psc_);
+    
+    mpi_printf(comm, "lambda_D = %g\n", sqrt(params.TTe));
+    
+    // --- generic setup
+    auto norm_params = Grid_t::NormalizationParams::dimensionless();
+    norm_params.nicell = 100;
+
+    auto coeff = Grid_t::Normalization{norm_params};
+    double dt = PscBubble::set_dt(p, grid_domain);
+    psc_setup_domain(psc_, grid_domain, grid_bc, kinds, coeff, dt);
+    
     grid_ = &psc_->grid();
 
     init();
@@ -466,9 +490,6 @@ PscBubble* PscBubbleBuilder::makePsc()
   PscParams p;
   PscBubbleParams params;
 
-  auto norm_params = Grid_t::NormalizationParams::dimensionless();
-  norm_params.nicell = 100;
-
   params.BB = .07;
   params.nnb = .1;
   params.nn0 = 1.;
@@ -481,31 +502,10 @@ PscBubble* PscBubbleBuilder::makePsc()
     
   p.nmax = 1000; //32000;
 
-  params.LLy = 2. * params.LLn;
-  params.LLz = 3. * params.LLn;
-
-  auto grid_domain = Grid_t::Domain{{1, 128, 512},
-				    {params.LLn, params.LLy, params.LLz},
-				    {0., -.5 * params.LLy, -.5 * params.LLz},
-				    {1, 1, 4}};
-  
-  auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
-			{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
-			{ BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC },
-			{ BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC }};
-
-  auto kinds = Grid_t::Kinds{{ -1., 1., "e"}, { 1., 100., "i" }};
-  
-  psc_set_from_options(psc_);
-
   p.stats_every = 100;
   
-  mpi_printf(comm, "lambda_D = %g\n", sqrt(params.TTe));
-  
-  // --- generic setup
-  auto coeff = Grid_t::Normalization{norm_params};
-  double dt = PscBubble::set_dt(p, grid_domain);
-  psc_setup_domain(psc_, grid_domain, grid_bc, kinds, coeff, dt);
+  params.LLy = 2. * params.LLn;
+  params.LLz = 3. * params.LLn;
 
   return new PscBubble{p, params, psc_};
 }
