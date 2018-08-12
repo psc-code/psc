@@ -22,7 +22,8 @@ struct PushParticlesVpic : PushParticlesBase
   }
 
   void push_mprts(Mparticles& mprts, MfieldsState& mflds, Interpolator& interpolator,
-		  Accumulator& accumulator, ParticleBcList& particle_bc_list)
+		  Accumulator& accumulator, ParticleBcList& particle_bc_list,
+		  int num_comm_round)
   {
     auto& vmprts = mprts.vmprts_;
     auto& vmflds = mflds.vmflds();
@@ -57,9 +58,9 @@ struct PushParticlesVpic : PushParticlesBase
     // guard lists. Particles that absorbed are added to rhob (using a corrected
     // local accumulation).
     TIC
-      for(int round = 0; round < sim_->num_comm_round_; round++) {
+      for(int round = 0; round < num_comm_round; round++) {
 	ParticlesOps::boundary_p(particle_bc_list, vmprts, vmflds, accumulator);
-      } TOC(boundary_p, sim_->num_comm_round_);
+      } TOC(boundary_p, num_comm_round);
     
     // Drop the particles that have unprocessed movers at this point
     ParticlesOps::drop_p(vmprts, vmflds);

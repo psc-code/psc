@@ -418,6 +418,8 @@ protected:
   int balance_interval;
   int sort_interval;
   int marder_interval;
+
+  int num_comm_round = {3};
   
   int st_nr_particles;
   int st_time_step;

@@ -19,8 +19,7 @@ struct VpicSimulation : SimulationMixin, DiagMixin
 
   VpicSimulation()
     : SimulationMixin(),
-      DiagMixin(),
-      num_comm_round_(3)
+      DiagMixin()
   {}
 
   // ----------------------------------------------------------------------
@@ -54,8 +53,6 @@ struct VpicSimulation : SimulationMixin, DiagMixin
   
   using SimulationMixin::field_injection;
 
-  int num_comm_round_;
-  
   //private:
   Grid* grid_;
 };
