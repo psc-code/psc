@@ -34,11 +34,6 @@ struct PscParams
 
   bool detailed_profiling; // output profiling info for each process separately
   int stats_every;         // output timing and other info every so many steps
-
-  int balance_interval;
-  double balance_factor_fields;
-  bool balance_print_loads;
-  bool balance_write_loads;
 };
   
 // ======================================================================
@@ -402,6 +397,9 @@ protected:
   std::unique_ptr<Marder_t> marder_;
   std::unique_ptr<OutputFieldsC> outf_;
 
+  // FIXME, maybe should be private
+  // need to make sure derived class sets these (? -- or just leave them off by default)
+  int balance_interval;
   int sort_interval;
   int marder_interval;
   

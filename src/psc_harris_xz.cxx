@@ -450,7 +450,12 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     auto comm = psc_comm(psc_);
     
     // -- Balance
-    balance_.reset(new Balance_t{p_.balance_interval, p_.balance_factor_fields, p_.balance_print_loads, p_.balance_write_loads});
+    balance_interval = 0;
+    double balance_factor_fields = 1.;
+    bool balance_print_loads = false;
+    bool balance_write_loads = false;
+    balance_.reset(new Balance_t{balance_interval, balance_factor_fields,
+	  balance_print_loads, balance_write_loads});
 
     // -- Sort
     // FIXME, needs a way to make it gets set?
@@ -830,7 +835,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     int timestep = psc_->timestep;
 
-    if (p_.balance_interval > 0 && timestep % p_.balance_interval == 0) {
+    if (balance_interval > 0 && timestep % balance_interval == 0) {
       (*balance_)(psc_, mprts_);
     }
 
@@ -991,12 +996,6 @@ PscHarris* PscHarrisBuilder::makePsc()
 
   PscParams p{};
 
-  // --- balancing
-  p.balance_interval = 0;
-  p.balance_factor_fields = 1.;
-  p.balance_print_loads = false;
-  p.balance_write_loads = false;
-  
   PscHarrisParams params;
 
   params.wpedt_max = .36;

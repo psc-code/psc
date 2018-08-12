@@ -217,7 +217,12 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     auto comm = psc_comm(psc_);
 
     // -- Balance
-    balance_.reset(new Balance_t{p_.balance_interval, p_.balance_factor_fields, p_.balance_print_loads, p_.balance_write_loads});
+    balance_interval = 0;
+    double balance_factor_fields = .1;
+    bool balance_print_loads = true;
+    bool balance_write_loads = false;
+    balance_.reset(new Balance_t{balance_interval, balance_factor_fields,
+	  balance_print_loads, balance_write_loads});
 
     // -- Sort
     // FIXME, needs a way to make it gets set?
@@ -401,7 +406,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     MPI_Comm comm = psc_comm(psc_);
     int timestep = psc_->timestep;
 
-    if (p_.balance_interval > 0 && timestep % p_.balance_interval == 0) {
+    if (balance_interval > 0 && timestep % balance_interval == 0) {
       (*balance_)(psc_, mprts_);
     }
 
@@ -696,12 +701,6 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
   params.inject_kind_n = MY_ELECTRON;
   params.inject_interval = 20;
   params.inject_tau = 40;
-
-  // --- balancing
-  p.balance_interval = 0;
-  p.balance_factor_fields = 0.1;
-  p.balance_print_loads = true;
-  p.balance_write_loads = false;
 
 #if TEST == TEST_4_SHOCK_3D
   p.nmax = 100002;
