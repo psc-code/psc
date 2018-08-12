@@ -208,11 +208,11 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   // ----------------------------------------------------------------------
   // ctor
   
-  PscFlatfoil(psc *psc)
-    : Psc{{}, psc},
+  PscFlatfoil()
+    : Psc{{}, psc_create(MPI_COMM_WORLD)},
       // FIXME, this is broken because these params haven't yet been set
       heating_{heating_interval, heating_kind, heating_spot},
-      inject_{psc_comm(psc), inject_interval, inject_tau, inject_kind_n, inject_target}
+      inject_{psc_comm(psc_), inject_interval, inject_tau, inject_kind_n, inject_target}
   {
     auto comm = psc_comm(psc_);
 
@@ -419,7 +419,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
 #if TEST == TEST_1_HEATING_3D
     collision_interval = 0;
 #endif
-    collision_.reset(new Collision_t{psc_comm(psc), collision_interval, collision_nu});
+    collision_.reset(new Collision_t{comm, collision_interval, collision_nu});
 
     // -- Checks
     ChecksParams checks_params;
@@ -434,14 +434,14 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     checks_params.gauss_verbose = true;
     checks_params.gauss_dump_always = false;
 
-    checks_.reset(new Checks_t{psc_->grid(), psc_comm(psc), checks_params});
+    checks_.reset(new Checks_t{psc_->grid(), comm, checks_params});
 
     // -- Marder correction
     double marder_diffusion = 0.9;
     int marder_loop = 3;
     bool marder_dump = false;
     marder_interval = 0*5;
-    marder_.reset(new Marder_t(psc_comm(psc), marder_diffusion, marder_loop, marder_dump));
+    marder_.reset(new Marder_t(comm, marder_diffusion, marder_loop, marder_dump));
 
     // -- output fields
     OutputFieldsCParams outf_params;
@@ -742,26 +742,6 @@ protected:
 };
 
 // ======================================================================
-// PscFlatfoilBuilder
-
-struct PscFlatfoilBuilder
-{
-  using Heating_t = PscFlatfoil::Heating_t;
-
-  PscFlatfoil* makePsc();
-};
-
-// ----------------------------------------------------------------------
-// PscFlatfoilBuilder::makePsc
-
-PscFlatfoil* PscFlatfoilBuilder::makePsc()
-{
-  auto psc_ = psc_create(MPI_COMM_WORLD);
-  
-  return new PscFlatfoil{psc_};
-}
-
-// ======================================================================
 // main
 
 int
@@ -775,8 +755,7 @@ main(int argc, char **argv)
   libmrc_params_init(argc, argv);
   mrc_set_flags(MRC_FLAG_SUPPRESS_UNPREFIXED_OPTION_WARNING);
 
-  auto builder = PscFlatfoilBuilder{};
-  auto psc = builder.makePsc();
+  auto psc = new PscFlatfoil;
 
   psc->initialize();
   psc->integrate();

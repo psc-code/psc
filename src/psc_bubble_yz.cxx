@@ -55,8 +55,8 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   // ----------------------------------------------------------------------
   // ctor
 
-  PscBubble(psc *psc)
-    : Psc{{}, psc}
+  PscBubble()
+    : Psc{{}, psc_create(MPI_COMM_WORLD)}
   {
     auto comm = psc_comm(psc_);
 
@@ -125,7 +125,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     // -- Collision
     int collision_interval = 10;
     double collision_nu = .1;
-    collision_.reset(new Collision_t{psc_comm(psc), collision_interval, collision_nu});
+    collision_.reset(new Collision_t{comm, collision_interval, collision_nu});
 
     // -- Checks
     ChecksParams checks_params;
@@ -140,14 +140,14 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     checks_params.gauss_verbose = true;
     checks_params.gauss_dump_always = false;
 
-    checks_.reset(new Checks_t{psc_->grid(), psc_comm(psc), checks_params});
+    checks_.reset(new Checks_t{psc_->grid(), comm, checks_params});
 
     // -- Marder correction
     double marder_diffusion = 0.9;
     int marder_loop = 3;
     bool marder_dump = false;
     marder_interval = 0*5;
-    marder_.reset(new Marder_t(psc_comm(psc), marder_diffusion, marder_loop, marder_dump));
+    marder_.reset(new Marder_t(comm, marder_diffusion, marder_loop, marder_dump));
 
     // -- output fields
     OutputFieldsCParams outf_params;
@@ -491,24 +491,6 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
 };
 
 // ======================================================================
-// PscBubbleBuilder
-
-struct PscBubbleBuilder
-{
-  PscBubble* makePsc();
-};
-
-// ----------------------------------------------------------------------
-// PscBubbleBuilder::makePsc
-
-PscBubble* PscBubbleBuilder::makePsc()
-{
-  auto psc_ = psc_create(MPI_COMM_WORLD);
-  
-  return new PscBubble{psc_};
-}
-
-// ======================================================================
 // main
 
 int
@@ -522,8 +504,7 @@ main(int argc, char **argv)
   libmrc_params_init(argc, argv);
   mrc_set_flags(MRC_FLAG_SUPPRESS_UNPREFIXED_OPTION_WARNING);
 
-  auto builder = PscBubbleBuilder{};
-  auto psc = builder.makePsc();
+  auto psc = new PscBubble;
 
   psc->initialize();
   psc->integrate();
