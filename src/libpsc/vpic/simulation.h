@@ -58,7 +58,6 @@ struct VpicSimulation : SimulationMixin, DiagMixin
   
   //private:
   Grid* grid_;
-  MaterialList material_list_;
   ParticleBcList particle_bc_list_;
 };
 

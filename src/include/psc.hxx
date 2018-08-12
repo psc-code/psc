@@ -74,7 +74,6 @@ struct Psc
   void init()
   {
 #ifdef VPIC
-    material_list_.reset(new MaterialList{sim_->material_list_});
     mflds_.reset(new MfieldsState{grid(), *material_list_});
 #else
     mflds_.reset(new MfieldsState{grid()});
@@ -390,6 +389,7 @@ protected:
   psc* psc_;
 
 #ifdef VPIC
+  // FIXME? MaterialList would be perfectly fine as actual member
   std::unique_ptr<MaterialList> material_list_;
 #endif
   std::unique_ptr<MfieldsState> mflds_;

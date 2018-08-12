@@ -385,29 +385,6 @@ static void setup_domain(Simulation* sim, const Grid_t::Domain& domain,
   }
 }
 
-// ----------------------------------------------------------------------
-// setup_fields
-
-static void setup_fields(Simulation* sim, psc* psc_)
-{
-  MPI_Comm comm = psc_comm(psc_);
-  
-  mpi_printf(comm, "Setting up materials.\n");
-  
-  define_material(sim->material_list_, "vacuum", 1., 1., 0., 0.);
-#if 0
-  struct material *resistive =
-    define_material(sim->material_list_, "resistive", 1., 1., 1., 0.);
-#endif
-
-  assert(!sim->material_list_.empty());
-  
-  // Note: define_material defaults to isotropic materials with mu=1,sigma=0
-  // Tensor electronic, magnetic and conductive materials are supported
-  // though. See "shapes" for how to define them and assign them to regions.
-  // Also, space is initially filled with the first material defined.
-}
-
 #ifdef VPIC
 using PscConfig = PscConfigVpic;
 #else
@@ -479,7 +456,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 		    p_.stats_every / 2);
 
     setup_domain(sim_, grid().domain, psc_, phys_, *this);
-    setup_fields(sim_, psc_);
+    setup_fields();
   
     int interval = (int) (t_intervali / (phys_.wci * grid().dt));
     sim_->newDiag(interval);
@@ -635,6 +612,33 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     static_cast<PscHarrisParams&>(*this) = params;
   }
   
+  // ----------------------------------------------------------------------
+  // setup_fields
+  
+  void setup_fields()
+  {
+    MPI_Comm comm = psc_comm(psc_);
+    
+    mpi_printf(comm, "Setting up materials.\n");
+    
+    // -- set up MaterialList
+    material_list_.reset(new MaterialList{});
+
+    define_material(*material_list_, "vacuum", 1., 1., 0., 0.);
+#if 0
+    struct material *resistive =
+      define_material(*material_list_, "resistive", 1., 1., 1., 0.);
+#endif
+
+    // FIXME, mv
+    assert(!material_list_->empty());
+    
+    // Note: define_material defaults to isotropic materials with mu=1,sigma=0
+    // Tensor electronic, magnetic and conductive materials are supported
+    // though. See "shapes" for how to define them and assign them to regions.
+    // Also, space is initially filled with the first material defined.
+  }
+
   // ----------------------------------------------------------------------
   // setup_species
   
