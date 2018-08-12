@@ -183,7 +183,6 @@ struct PscHarrisParams
 
   double taui;                     // simulation wci's to run
   double t_intervali;              // output interval in terms of 1/wci
-  double output_field_interval;    // field output interval in terms of 1/wci
   double output_particle_interval; // particle output interval in terms of 1/wci
 
   double overalloc;                // Overallocation factor (> 1) for particle arrays
@@ -483,9 +482,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     // -- output fields
     OutputFieldsCParams outf_params;
-    double field_interval = 1.;
+    double output_field_interval = 1.;
     outf_params.output_fields = nullptr;
-    outf_params.pfield_step = int((params.output_field_interval / (phys.wci*dt())));
+    outf_params.pfield_step = int((output_field_interval / (phys.wci*dt())));
     outf_.reset(new OutputFieldsC{comm, outf_params});
 
     // FIXME? this used to be part of define_fields, ie., after constructing the various field arrays
@@ -922,7 +921,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   {
     MPI_Comm comm = psc_comm(psc_);
     const Grid_t& grid = psc_->grid();
-    
+
     int timestep = psc_->timestep;
     if (outf_->pfield_step > 0 && timestep % outf_->pfield_step == 0) {
       mpi_printf(comm, "***** Writing PFD output\n");
