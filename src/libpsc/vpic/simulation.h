@@ -54,7 +54,7 @@ struct VpicSimulation : SimulationMixin, DiagMixin
   using SimulationMixin::field_injection;
 
   //private:
-  Grid* grid_;
+  Grid* vgrid_;
 };
 
 #endif

@@ -148,7 +148,7 @@ struct MparticlesVpic : MparticlesBase
     if (ppsc) {
       Simulation* sim;
       psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
-      vgrid_ = sim->grid_;
+      vgrid_ = sim->vgrid_;
     }
     assert(vgrid_);
   }

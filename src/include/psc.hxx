@@ -81,8 +81,8 @@ struct Psc
       
 #ifdef VPIC
     hydro_.reset(new MfieldsHydroVpic{grid(), 16, psc_->ibn});
-    interpolator_.reset(new Interpolator{sim_->grid_});
-    accumulator_.reset(new Accumulator{sim_->grid_});
+    interpolator_.reset(new Interpolator{sim_->vgrid_});
+    accumulator_.reset(new Accumulator{sim_->vgrid_});
 #endif
     mprts_.reset(new Mparticles_t{grid()});
     sort_.reset(new Sort_t{});

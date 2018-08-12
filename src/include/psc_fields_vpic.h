@@ -34,7 +34,7 @@ struct MfieldsHydroVpic
 
     Simulation* sim;
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
-    vmflds_hydro = new HydroArray{sim->grid_};
+    vmflds_hydro = new HydroArray{sim->vgrid_};
   }
 
   int n_patches() const { return grid_.n_patches(); }
@@ -81,7 +81,7 @@ struct MfieldsStateVpic// : MfieldsStateBase
     Simulation* sim;
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
     
-    vmflds_fields_ = FieldArray::create(sim->grid_, material_list, 0.);
+    vmflds_fields_ = FieldArray::create(sim->vgrid_, material_list, 0.);
   }
 
   const Grid_t& grid() const { return grid_; }

@@ -344,7 +344,7 @@ static void setup_domain(Simulation* sim, const Grid_t::Domain& domain,
     xh[d] = xl[d] + domain.length[d];
   }
 
-  auto vgrid = sim->grid_;
+  auto vgrid = sim->vgrid_;
   vgrid->setup(dx, grid.dt, phys_.c, phys_.eps0);
   
   // Define the grid
@@ -448,7 +448,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     psc_method_set_param_ptr(psc_->method, "sim", sim_);
 #endif
 
-    sim_->grid_ = Grid::create();
+    sim_->vgrid_ = Grid::create();
     // set high level VPIC simulation parameters
     // FIXME, will be unneeded eventually
     sim_->setParams(p_.nmax, p_.stats_every,
@@ -522,7 +522,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     outf_.reset(new OutputFieldsC{comm, outf_params});
 
     // FIXME? this used to be part of define_fields, ie., after constructing the various field arrays
-    grid_setup_communication(sim_->grid_);
+    grid_setup_communication(sim_->vgrid_);
     
     //////////////////////////////////////////////////////////////////////////////
     // Finalize Field Advance
