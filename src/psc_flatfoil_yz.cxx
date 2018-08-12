@@ -209,9 +209,6 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   // ctor
   
   PscFlatfoil()
-    : // FIXME, this is broken because these params haven't yet been set
-      heating_{heating_interval, heating_kind, heating_spot},
-      inject_{psc_comm(psc_), inject_interval, inject_tau, inject_kind_n, inject_target}
   {
     auto comm = psc_comm(psc_);
 
@@ -440,6 +437,12 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     marder_interval = 0*5;
     marder_.reset(new Marder_t(comm, marder_diffusion, marder_loop, marder_dump));
 
+    // -- Heating
+    heating_.reset(new Heating_t{heating_interval, heating_kind, heating_spot});
+
+    // -- Particle injection
+    inject_.reset(new Inject_t{comm, inject_interval, inject_tau, inject_kind_n, inject_target});
+    
     // -- output fields
     OutputFieldsCParams outf_params;
     outf_.reset(new OutputFieldsC{comm, outf_params});
@@ -632,7 +635,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     if (inject_interval > 0 && timestep % inject_interval == 0) {
       mpi_printf(comm, "***** Performing injection...\n");
       prof_start(pr_inject);
-      inject_(mprts);
+      (*inject_)(mprts);
       prof_stop(pr_inject);
     }
       
@@ -641,7 +644,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
 	heating_interval > 0 && timestep % heating_interval == 0) {
       mpi_printf(comm, "***** Performing heating...\n");
       prof_start(pr_heating);
-      heating_(mprts);
+      (*heating_)(mprts);
       prof_stop(pr_heating);
     }
 
@@ -734,8 +737,8 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   }
 
 protected:
-  Heating_t heating_;
-  Inject_t inject_;
+  std::unique_ptr<Heating_t> heating_;
+  std::unique_ptr<Inject_t> inject_;
 };
 
 // ======================================================================
