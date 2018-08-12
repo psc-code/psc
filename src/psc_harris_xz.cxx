@@ -245,6 +245,9 @@ struct globals_physics
   // ----------------------------------------------------------------------
   // ctor
 
+  // FIXME, do we want to keep this?
+  globals_physics() {}
+
   globals_physics(const PscHarrisParams& p)
   {
     assert(p.np[2] <= 2); // For load balance, keep "1" or "2" for Harris sheet
@@ -420,30 +423,31 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   // PscHarris ctor
   
   PscHarris(const PscParams& p, const PscHarrisParams& params,
-	    psc* psc, const globals_physics& phys)
+	    psc* psc)
     : Psc{p, psc},
       PscHarrisParams(params),
-      phys_{phys},
       io_pfd_{"pfd"}
   {
     auto comm = psc_comm(psc_);
 
     mpi_printf(psc_comm(psc_), "*** Initializing\n" );
 
+    phys_ = globals_physics{params};
+
     auto grid_domain = Grid_t::Domain{params.gdims,
-				      {phys.Lx, phys.Ly, phys.Lz},
-				      {0., -.5 * phys.Ly, -.5 * phys.Lz}, params.np};
+				      {phys_.Lx, phys_.Ly, phys_.Lz},
+				      {0., -.5 * phys_.Ly, -.5 * phys_.Lz}, params.np};
     
     auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
 			  { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
 			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING },
 			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING }};
     
-    auto kinds = Grid_t::Kinds{{-phys.ec, phys.me, "e"},
-			       { phys.ec, phys.mi, "i"}};
+    auto kinds = Grid_t::Kinds{{-phys_.ec, phys_.me, "e"},
+			       { phys_.ec, phys_.mi, "i"}};
     
     // Determine the time step
-    double dt = ::set_dt(grid_domain, p.cfl, phys, params);
+    double dt = ::set_dt(grid_domain, p.cfl, phys_, params);
     
     auto norm_params = Grid_t::NormalizationParams::dimensionless();
     norm_params.nicell = 1;
@@ -469,7 +473,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     int interval = (int) (params.t_intervali / (phys_.wci * grid().dt));
     sim_->newDiag(interval);
 
-    p_.nmax = int(params.taui / (phys.wci*grid().dt)); // number of steps from taui
+    p_.nmax = int(params.taui / (phys_.wci*grid().dt)); // number of steps from taui
   
     psc_->ibn[0] = psc_->ibn[1] = psc_->ibn[2] = 1;
   
@@ -523,7 +527,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     OutputFieldsCParams outf_params;
     double output_field_interval = 1.;
     outf_params.output_fields = nullptr;
-    outf_params.pfield_step = int((output_field_interval / (phys.wci*dt)));
+    outf_params.pfield_step = int((output_field_interval / (phys_.wci*dt)));
     outf_.reset(new OutputFieldsC{comm, outf_params});
 
     // FIXME? this used to be part of define_fields, ie., after constructing the various field arrays
@@ -1058,9 +1062,7 @@ PscHarris* PscHarrisBuilder::makePsc()
 
   psc_set_from_options(psc_);
 
-  globals_physics phys{params};
-
-  return new PscHarris{p, params, psc_, phys};
+  return new PscHarris{p, params, psc_};
 }
 
 // ======================================================================
