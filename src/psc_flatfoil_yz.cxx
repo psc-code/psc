@@ -209,8 +209,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   // ctor
   
   PscFlatfoil()
-    : Psc{{}, psc_create(MPI_COMM_WORLD)},
-      // FIXME, this is broken because these params haven't yet been set
+    : // FIXME, this is broken because these params haven't yet been set
       heating_{heating_interval, heating_kind, heating_spot},
       inject_{psc_comm(psc_), inject_interval, inject_tau, inject_kind_n, inject_target}
   {

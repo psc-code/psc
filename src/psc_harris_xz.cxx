@@ -425,8 +425,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   // FIXME: can only use 1st order pushers with current conducting wall b.c.
   
   PscHarris()
-    : Psc{{}, psc_create(MPI_COMM_WORLD)},
-      io_pfd_{"pfd"}
+    : io_pfd_{"pfd"}
   {
     auto comm = psc_comm(psc_);
 

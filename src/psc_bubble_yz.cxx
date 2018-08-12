@@ -56,7 +56,6 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   // ctor
 
   PscBubble()
-    : Psc{{}, psc_create(MPI_COMM_WORLD)}
   {
     auto comm = psc_comm(psc_);
 

@@ -59,11 +59,13 @@ struct Psc
   // ----------------------------------------------------------------------
   // ctor
 
-  Psc(const PscParams& params, psc* psc)
-    : time_start_{MPI_Wtime()},
-      p_{params},
-      psc_{psc}
-  {}
+  Psc()
+  {
+    time_start_ = MPI_Wtime();
+    
+    psc_ = psc_create(MPI_COMM_WORLD);
+  }
+  
 
   // ----------------------------------------------------------------------
   // init
