@@ -67,13 +67,15 @@ struct Psc
 #ifdef VPIC
       material_list_{sim->material_list_},
       mflds_{psc->grid(), material_list_},
-      hydro_{psc->grid(), 16, psc->ibn},
-      interpolator_{sim_->grid_},
-      accumulator_{sim_->grid_}
+      hydro_{psc->grid(), 16, psc->ibn}
 #else
       mflds_{psc->grid()}
 #endif
   {
+#ifdef VPIC
+    interpolator_.reset(new Interpolator{sim_->grid_});
+    accumulator_.reset(new Accumulator{sim_->grid_});
+#endif
     mprts_.reset(new Mparticles_t{psc->grid()});
     sort_.reset(new Sort_t{});
     pushp_.reset(new PushParticles_t{});
@@ -325,10 +327,10 @@ private:
     mpi_printf(psc_comm(psc), "Uncentering particles\n");
     auto& vmprts = mprts.vmprts_;
     if (!vmprts.empty()) {
-      TIC InterpolatorOps::load(interpolator_, mflds.vmflds()); TOC(load_interpolator, 1);
+      TIC InterpolatorOps::load(*interpolator_, mflds.vmflds()); TOC(load_interpolator, 1);
       
       for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
-	TIC ParticlesOps::uncenter_p(&*sp, interpolator_); TOC(uncenter_p, 1);
+	TIC ParticlesOps::uncenter_p(&*sp, *interpolator_); TOC(uncenter_p, 1);
       }
     }
   }
@@ -342,7 +344,7 @@ private:
   {
 #ifdef VPIC
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-      sim_->runDiag(mprts_->vmprts_, mflds_.vmflds(), interpolator_, *hydro_.vmflds_hydro, ppsc->grid().domain.np);
+      sim_->runDiag(mprts_->vmprts_, mflds_.vmflds(), *interpolator_, *hydro_.vmflds_hydro, ppsc->grid().domain.np);
     }
 #else
     // FIXME
@@ -380,8 +382,8 @@ protected:
   MfieldsState mflds_;
 #ifdef VPIC
   MfieldsHydroVpic hydro_;
-  Interpolator interpolator_;
-  Accumulator accumulator_;
+  std::unique_ptr<Interpolator> interpolator_;
+  std::unique_ptr<Accumulator> accumulator_;
 #endif
   std::unique_ptr<Mparticles_t> mprts_;
 

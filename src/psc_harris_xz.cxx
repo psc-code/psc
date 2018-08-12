@@ -864,7 +864,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
     prof_start(pr_push_prts);
-    pushp_->push_mprts(mprts, mflds_, interpolator_, accumulator_);
+    pushp_->push_mprts(mprts, mflds_, *interpolator_, *accumulator_);
     prof_stop(pr_push_prts);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
 
@@ -926,7 +926,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     checks_->gauss(psc_, mprts, mflds_);
 
 #ifdef VPIC
-    pushp_->prep(mprts, mflds_, interpolator_);
+    pushp_->prep(mprts, mflds_, *interpolator_);
 #endif
   }
 
@@ -950,7 +950,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       {
 	// FIXME, would be better to keep "out_hydro" around
 	OutputHydroVpic out_hydro{grid};
-	auto result = out_hydro(*mprts_, hydro_, interpolator_);
+	auto result = out_hydro(*mprts_, hydro_, *interpolator_);
 	io_pfd_.write_mflds(result.mflds, result.name, result.comp_names);
       }
       mrc_io_close(io_pfd_.io_);
