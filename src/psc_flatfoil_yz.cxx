@@ -378,7 +378,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     norm_params.nicell = 50;
 #endif
 
-    double dt = PscFlatfoil::set_dt(p_, grid_domain);
+    double dt = set_dt(grid_domain);
     define_grid(grid_domain, grid_bc, kinds, dt, norm_params);
 
     define_field_array();

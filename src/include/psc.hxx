@@ -352,7 +352,7 @@ struct Psc
   // ----------------------------------------------------------------------
   // set_dt
   
-  static double set_dt(const PscParams& p, const Grid_t::Domain& domain)
+  double set_dt(const Grid_t::Domain& domain)
   {
     double inv_sum = 0.;
     for (int d = 0; d < 3; d++) {
@@ -363,7 +363,7 @@ struct Psc
     if (!inv_sum) { // simulation has 0 dimensions
       inv_sum = 1.;
     }
-    return p.cfl * sqrt(1./inv_sum);
+    return p_.cfl * sqrt(1./inv_sum);
   }
   
   // ----------------------------------------------------------------------

@@ -228,20 +228,6 @@ struct globals_physics
   }
 };
 
-// ----------------------------------------------------------------------
-// set_dt
-
-static double set_dt(const Grid_t::Domain& domain, double cfl, const globals_physics& phys,
-		     const PscHarrisParams& params)
-{
-  double dg = courant_length(domain.length, domain.gdims);
-  double dt = cfl * dg / phys.c; // courant limited time step
-  if (phys.wpe * dt > params.wpedt_max) {
-    dt = params.wpedt_max / phys.wpe;  // override timestep if plasma frequency limited
-  }
-  return dt;
-}
-
 #ifdef VPIC
 using PscConfig = PscConfigVpic;
 #else
@@ -287,7 +273,11 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 			       { phys_.ec, phys_.mi, "i"}};
     
     // Determine the time step
-    double dt = ::set_dt(grid_domain, p_.cfl, phys_, *this);
+    double dg = courant_length(grid_domain.length, grid_domain.gdims);
+    double dt = p_.cfl * dg / phys_.c; // courant limited time step
+    if (phys_.wpe * dt > wpedt_max) {
+      dt = wpedt_max / phys_.wpe;  // override timestep if plasma frequency limited
+    }
     
     auto norm_params = Grid_t::NormalizationParams::dimensionless();
     norm_params.nicell = 1;
