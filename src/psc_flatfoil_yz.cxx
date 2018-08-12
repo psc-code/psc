@@ -216,6 +216,10 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   {
     auto comm = psc_comm(psc_);
 
+    // -- Sort
+    // FIXME, needs a way to make it gets set?
+    sort_interval = 10;
+
     // -- Collision
     int collision_interval = 10;
     double collision_nu = .1;
@@ -398,7 +402,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
       balance_(psc_, mprts_);
     }
 
-    if (p_.sort_interval > 0 && timestep % p_.sort_interval == 0) {
+    if (sort_interval > 0 && timestep % sort_interval == 0) {
       mpi_printf(comm, "***** Sorting...\n");
       prof_start(pr_sort);
       (*sort_)(mprts_);
@@ -638,9 +642,6 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
 
   mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
   mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(params.background_Te));
-
-  // sort
-  p.sort_interval = 10;
 
   // --- setup heating
   double heating_zl = -1.;

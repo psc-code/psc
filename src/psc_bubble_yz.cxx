@@ -61,6 +61,10 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   {
     auto comm = psc_comm(psc_);
 
+    // -- Sort
+    // FIXME, needs a way to make it gets set?
+    sort_interval = 10;
+
     // -- Collision
     int collision_interval = 10;
     double collision_nu = .1;
@@ -298,7 +302,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
       balance_(psc_, mprts_);
     }
 
-    if (p_.sort_interval > 0 && timestep % p_.sort_interval == 0) {
+    if (sort_interval > 0 && timestep % sort_interval == 0) {
       mpi_printf(comm, "***** Sorting...\n");
       prof_start(pr_sort);
       (*sort_)(mprts_);
@@ -478,9 +482,6 @@ PscBubble* PscBubbleBuilder::makePsc()
   auto kinds = Grid_t::Kinds{{ -1., 1., "e"}, { 1., 100., "i" }};
   
   psc_set_from_options(psc_);
-
-  // sort
-  p.sort_interval = 10;
 
   // --- balancing
   p.balance_interval = 0;

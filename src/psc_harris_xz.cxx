@@ -449,6 +449,12 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   {
     auto comm = psc_comm(psc_);
     
+    // -- Sort
+    // FIXME, needs a way to make it gets set?
+    // FIXME: the "vpic" sort actually keeps track of per-species sorting intervals
+    // internally, so it needs to be called every step
+    sort_interval = 1;
+
     // -- Collision
     int collision_interval = 0;
     double collision_nu = .1; // FIXME, != 0 needed to avoid crash
@@ -828,7 +834,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     prof_start(pr_time_step_no_comm);
     prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
 
-    if (p_.sort_interval > 0 && timestep % p_.sort_interval == 0) {
+    if (sort_interval > 0 && timestep % sort_interval == 0) {
       //mpi_printf(comm, "***** Sorting...\n");
       prof_start(pr_sort);
       (*sort_)(mprts_);
@@ -998,9 +1004,6 @@ PscHarris* PscHarrisBuilder::makePsc()
   params.Ly_di = 1.;
   params.Lz_di = 10.;
 
-  // FIXME: the "vpic" sort actually keeps track of per-species sorting intervals
-  // internally, so it needs to be called every step
-  p.sort_interval = 1;
   params.electron_sort_interval = 25;
   params.ion_sort_interval = 25;
   

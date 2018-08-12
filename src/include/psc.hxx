@@ -39,8 +39,6 @@ struct PscParams
   double balance_factor_fields;
   bool balance_print_loads;
   bool balance_write_loads;
-
-  int sort_interval;
 };
   
 // ======================================================================
@@ -406,6 +404,7 @@ protected:
   std::unique_ptr<Marder_t> marder_;
   std::unique_ptr<OutputFieldsC> outf_;
 
+  int sort_interval;
   int marder_interval;
   
   int st_nr_particles;
