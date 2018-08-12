@@ -542,28 +542,28 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // ***** Set Field Boundary Conditions *****
     if (open_bc_x) {
       mpi_printf(comm, "Absorbing fields on X-boundaries\n");
-      if (left ) set_domain_field_bc(BOUNDARY(-1,0,0), BND_FLD_ABSORBING);
-      if (right) set_domain_field_bc(BOUNDARY( 1,0,0), BND_FLD_ABSORBING);
+      if (left ) set_domain_field_bc({-1,0,0}, BND_FLD_ABSORBING);
+      if (right) set_domain_field_bc({ 1,0,0}, BND_FLD_ABSORBING);
     }
     
     mpi_printf(comm, "Conducting fields on Z-boundaries\n");
-    if (bottom) set_domain_field_bc(BOUNDARY(0,0,-1), BND_FLD_CONDUCTING_WALL);
-    if (top   ) set_domain_field_bc(BOUNDARY(0,0, 1), BND_FLD_CONDUCTING_WALL);
+    if (bottom) set_domain_field_bc({0,0,-1}, BND_FLD_CONDUCTING_WALL);
+    if (top   ) set_domain_field_bc({0,0, 1}, BND_FLD_CONDUCTING_WALL);
     
     // ***** Set Particle Boundary Conditions *****
     if (driven_bc_z) {
       mpi_printf(comm, "Absorb particles on Z-boundaries\n");
-      if (bottom) set_domain_particle_bc(BOUNDARY(0,0,-1), BND_PRT_ABSORBING);
-      if (top   ) set_domain_particle_bc(BOUNDARY(0,0, 1), BND_PRT_ABSORBING);
+      if (bottom) set_domain_particle_bc({0,0,-1}, BND_PRT_ABSORBING);
+      if (top   ) set_domain_particle_bc({0,0, 1}, BND_PRT_ABSORBING);
     } else {
       mpi_printf(comm, "Reflect particles on Z-boundaries\n");
-      if (bottom) set_domain_particle_bc(BOUNDARY(0,0,-1), BND_PRT_REFLECTING);
-      if (top   ) set_domain_particle_bc(BOUNDARY(0,0, 1), BND_PRT_REFLECTING);
+      if (bottom) set_domain_particle_bc({0,0,-1}, BND_PRT_REFLECTING);
+      if (top   ) set_domain_particle_bc({0,0, 1}, BND_PRT_REFLECTING);
     }
     if (open_bc_x) {
       mpi_printf(comm, "Absorb particles on X-boundaries\n");
-      if (left)   set_domain_particle_bc(BOUNDARY(-1,0,0), BND_PRT_ABSORBING);
-      if (right)  set_domain_particle_bc(BOUNDARY( 1,0,0), BND_PRT_ABSORBING);
+      if (left)   set_domain_particle_bc({-1,0,0}, BND_PRT_ABSORBING);
+      if (right)  set_domain_particle_bc({ 1,0,0}, BND_PRT_ABSORBING);
     }
   }
   

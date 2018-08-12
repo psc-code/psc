@@ -238,9 +238,10 @@ struct Psc
   // ----------------------------------------------------------------------
   // set_domain_field_bc
   
-  void set_domain_field_bc(int boundary, int bc)
+  void set_domain_field_bc(Int3 bnd, int bc)
   {
 #ifdef VPIC
+    int boundary = BOUNDARY(bnd[0], bnd[1], bnd[2]);
     int fbc;
     switch (bc) {
     case BND_FLD_CONDUCTING_WALL: fbc = Grid::pec_fields   ; break;
@@ -254,9 +255,10 @@ struct Psc
   // ----------------------------------------------------------------------
   // set_domain_particle_bc
   
-  void set_domain_particle_bc(int boundary, int bc)
+  void set_domain_particle_bc(Int3 bnd, int bc)
   {
 #ifdef VPIC
+    int boundary = BOUNDARY(bnd[0], bnd[1], bnd[2]);
     int pbc;
     switch (bc) {
     case BND_PRT_REFLECTING: pbc = Grid::reflect_particles; break;
