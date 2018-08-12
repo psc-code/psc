@@ -51,8 +51,6 @@ struct PscParams
   double marder_diffusion;
   int marder_loop;
   bool marder_dump;
-
-  OutputFieldsCParams outf_params;
 };
   
 // ======================================================================

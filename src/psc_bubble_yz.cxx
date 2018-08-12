@@ -58,7 +58,11 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   {
     auto comm = psc_comm(psc_);
     
-    outf_.reset(new OutputFieldsC{comm, p_.outf_params});
+    // -- output fields
+    OutputFieldsCParams outf_params;
+    outf_params.output_fields = "e,h,j,n_1st_single,v_1st_single";
+    outf_params.pfield_step = 10;
+    outf_.reset(new OutputFieldsC{comm, outf_params});
 
     // --- partition particles and initial balancing
     mpi_printf(comm, "**** Partitioning...\n");
@@ -475,10 +479,6 @@ PscBubble* PscBubbleBuilder::makePsc()
   p.balance_print_loads = true;
   p.balance_write_loads = false;
 
-  // -- output fields
-  p.outf_params.output_fields = "e,h,j,n_1st_single,v_1st_single";
-  p.outf_params.pfield_step = 10;
-  
   p.stats_every = 100;
   
   mpi_printf(comm, "lambda_D = %g\n", sqrt(params.TTe));

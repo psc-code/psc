@@ -449,7 +449,12 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   {
     auto comm = psc_comm(psc_);
     
-    outf_.reset(new OutputFieldsC{comm, p_.outf_params});
+    // -- output fields
+    OutputFieldsCParams outf_params;
+    double field_interval = 1.;
+    outf_params.output_fields = nullptr;
+    outf_params.pfield_step = int((params.output_field_interval / (phys.wci*dt())));
+    outf_.reset(new OutputFieldsC{comm, outf_params});
 
     // FIXME? this used to be part of define_fields, ie., after constructing the various field arrays
     grid_setup_communication(sim->grid_);
@@ -886,7 +891,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     const Grid_t& grid = psc_->grid();
     
     int timestep = psc_->timestep;
-    if (p_.outf_params.pfield_step > 0 && timestep % p_.outf_params.pfield_step == 0) {
+    if (outf_->pfield_step > 0 && timestep % outf_->pfield_step == 0) {
       mpi_printf(comm, "***** Writing PFD output\n");
       io_pfd_.open();
 
@@ -1041,10 +1046,6 @@ PscHarris* PscHarrisBuilder::makePsc()
   double dt = set_dt(grid_domain, p.cfl, phys, params);
   
   p.nmax = (int) (params.taui / (phys.wci*dt)); // number of steps from taui
-  
-  params.output_field_interval = 1.; // FIXME, no need to be in params
-  p.outf_params.output_fields = nullptr;//"fields_vpic_single,hydro_vpic";
-  p.outf_params.pfield_step = int((params.output_field_interval / (phys.wci*dt)));
   
   auto coeff = Grid_t::Normalization{norm_params};
   psc_setup_domain(psc_, grid_domain, grid_bc, kinds, coeff, dt);

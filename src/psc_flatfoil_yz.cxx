@@ -213,7 +213,9 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   {
     auto comm = psc_comm(psc_);
     
-    outf_.reset(new OutputFieldsC{comm, p_.outf_params});
+    // -- output fields
+    OutputFieldsCParams outf_params;
+    outf_.reset(new OutputFieldsC{comm, outf_params});
 
     // --- partition particles and initial balancing
     mpi_printf(comm, "**** Partitioning...\n");
