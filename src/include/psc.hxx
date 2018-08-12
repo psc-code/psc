@@ -83,8 +83,8 @@ struct Psc
       p_{params},
       sim_{sim},
       psc_{psc},
-      material_list_{sim->material_list_},
 #ifdef VPIC
+      material_list_{sim->material_list_},
       mflds_{psc->grid(), material_list_},
       hydro_{psc->grid(), 16, psc->ibn},
       interpolator_{sim_->grid_},
