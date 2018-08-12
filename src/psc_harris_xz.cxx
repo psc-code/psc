@@ -429,57 +429,20 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   {
     auto comm = psc_comm(psc_);
 
-    mpi_printf(comm, "*** Setting up...\n");
+    mpi_printf(psc_comm(psc_), "*** Setting up simulation\n" );
 
-    PscHarrisParams params;
-
-    params.wpedt_max = .36;
-    params.wpe_wce = 2.;
-    params.mi_me = 25.;
+    setup_params();
     
-    params.Lx_di = 40.;
-    params.Ly_di = 1.;
-    params.Lz_di = 10.;
-    
-    params.electron_sort_interval = 25;
-    params.ion_sort_interval = 25;
-    
-    params.taui = 40.;
-    params.t_intervali = 1.;
-    params.output_particle_interval = 10.;
-    
-    params.overalloc = 2.;
-    
-    params.gdims = {512, 1, 128};
-    params.np = { 4, 1, 1 };
-    
-    params.L_di = .5;
-    params.Ti_Te = 5.;
-    params.nb_n0 = .05;
-    params.Tbe_Te = .333;
-    params.Tbi_Ti = .333;
-    
-    params.bg = 0.;
-    params.theta = 0.;
-    
-    params.Lpert_Lx = 1.;
-    params.dbz_b0 = .03;
-    params.nppc = 10;
-    params.open_bc_x = false;
-    params.driven_bc_z = false;
-
-    static_cast<PscHarrisParams&>(*this) = params;
-    
-    mpi_printf(psc_comm(psc_), "*** Initializing\n" );
-
     p_.cfl = 0.99;
     p_.stats_every = 100;
 
-    phys_ = globals_physics{params};
+    phys_ = globals_physics{*this};
 
-    auto grid_domain = Grid_t::Domain{params.gdims,
+    // --- create Grid_t
+    
+    auto grid_domain = Grid_t::Domain{gdims,
 				      {phys_.Lx, phys_.Ly, phys_.Lz},
-				      {0., -.5 * phys_.Ly, -.5 * phys_.Lz}, params.np};
+				      {0., -.5 * phys_.Ly, -.5 * phys_.Lz}, np};
     
     auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
 			  { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
@@ -490,7 +453,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 			       { phys_.ec, phys_.mi, "i"}};
     
     // Determine the time step
-    double dt = ::set_dt(grid_domain, p_.cfl, phys_, params);
+    double dt = ::set_dt(grid_domain, p_.cfl, phys_, *this);
     
     auto norm_params = Grid_t::NormalizationParams::dimensionless();
     norm_params.nicell = 1;
@@ -500,7 +463,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     
     grid_ = &psc_->grid();
 
-    // create sim_
+    // --- create Simulation
+    
     sim_ = new Simulation();
 #ifdef VPIC
     psc_method_set_type(psc_->method, "vpic");
@@ -513,16 +477,20 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     sim_->setParams(p_.nmax, p_.stats_every,
 		    p_.stats_every / 2, p_.stats_every / 2,
 		    p_.stats_every / 2);
-    setup_domain(sim_, grid().domain, psc_, phys_, params);
+
+    setup_domain(sim_, grid().domain, psc_, phys_, *this);
     setup_fields(sim_, psc_);
   
-    int interval = (int) (params.t_intervali / (phys_.wci * grid().dt));
+    int interval = (int) (t_intervali / (phys_.wci * grid().dt));
     sim_->newDiag(interval);
 
-    p_.nmax = int(params.taui / (phys_.wci*grid().dt)); // number of steps from taui
+    p_.nmax = int(taui / (phys_.wci*grid().dt)); // number of steps from taui
   
     psc_->ibn[0] = psc_->ibn[1] = psc_->ibn[2] = 1;
-  
+
+    // ----------------------------------------------------------------------
+    // -- Base class remaining init FIXME mv to end
+    
     init();
     
     // -- Balance
@@ -622,6 +590,51 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
   }
 
+  // ----------------------------------------------------------------------
+  // setup_params()
+  
+  void setup_params()
+  {
+    PscHarrisParams params;
+
+    params.wpedt_max = .36;
+    params.wpe_wce = 2.;
+    params.mi_me = 25.;
+    
+    params.Lx_di = 40.;
+    params.Ly_di = 1.;
+    params.Lz_di = 10.;
+    
+    params.electron_sort_interval = 25;
+    params.ion_sort_interval = 25;
+    
+    params.taui = 40.;
+    params.t_intervali = 1.;
+    params.output_particle_interval = 10.;
+    
+    params.overalloc = 2.;
+    
+    params.gdims = {512, 1, 128};
+    params.np = { 4, 1, 1 };
+    
+    params.L_di = .5;
+    params.Ti_Te = 5.;
+    params.nb_n0 = .05;
+    params.Tbe_Te = .333;
+    params.Tbi_Ti = .333;
+    
+    params.bg = 0.;
+    params.theta = 0.;
+    
+    params.Lpert_Lx = 1.;
+    params.dbz_b0 = .03;
+    params.nppc = 10;
+    params.open_bc_x = false;
+    params.driven_bc_z = false;
+
+    static_cast<PscHarrisParams&>(*this) = params;
+  }
+  
   // ----------------------------------------------------------------------
   // setup_species
   
