@@ -397,6 +397,7 @@ protected:
   std::unique_ptr<MfieldsHydroVpic> hydro_;
   std::unique_ptr<Interpolator> interpolator_;
   std::unique_ptr<Accumulator> accumulator_;
+  ParticleBcList particle_bc_list_;
 #endif
   std::unique_ptr<Mparticles_t> mprts_;
 
