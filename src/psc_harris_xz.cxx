@@ -559,8 +559,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     mpi_printf(comm, "Setting up materials.\n");
     
     // -- set up MaterialList
-    material_list_.reset(new MaterialList{});
-
     define_material("vacuum", 1., 1., 0., 0.);
 #if 0
     struct material *resistive =

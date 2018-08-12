@@ -83,8 +83,8 @@ struct Psc
   {
 #ifdef VPIC
     // FIXME, mv assert innto MfieldsState ctor
-    assert(!material_list_->empty());
-    mflds_.reset(new MfieldsState{grid(), *material_list_});
+    assert(!material_list_.empty());
+    mflds_.reset(new MfieldsState{grid(), material_list_});
 #else
     mflds_.reset(new MfieldsState{grid()});
 #endif
@@ -231,23 +231,6 @@ struct Psc
   virtual void step() = 0;
 
   // ----------------------------------------------------------------------
-  // define_material
-
-#ifdef VPIC
-  Material* define_material(const char *name,
-			    double eps, double mu=1.,
-			    double sigma=0., double zeta=0.)
-  {
-    auto m = material_list_->create(name,
-		       eps,   eps,   eps,
-		       mu,    mu,    mu,
-		       sigma, sigma, sigma,
-		       zeta,  zeta,  zeta);
-    return material_list_->append(m);
-  }
-#endif
-
-  // ----------------------------------------------------------------------
   // define_periodic_grid
   
   void define_periodic_grid(double xl[3], double xh[3], const int gdims[3], const int np[3])
@@ -292,6 +275,23 @@ struct Psc
     vgrid_->set_pbc(boundary, pbc);
 #endif
   }
+
+  // ----------------------------------------------------------------------
+  // define_material
+
+#ifdef VPIC
+  Material* define_material(const char *name,
+			    double eps, double mu=1.,
+			    double sigma=0., double zeta=0.)
+  {
+    auto m = material_list_.create(name,
+		       eps,   eps,   eps,
+		       mu,    mu,    mu,
+		       sigma, sigma, sigma,
+		       zeta,  zeta,  zeta);
+    return material_list_.append(m);
+  }
+#endif
 
   // ----------------------------------------------------------------------
   // set_dt
@@ -465,8 +465,7 @@ protected:
   psc* psc_;
 
 #ifdef VPIC
-  // FIXME? MaterialList would be perfectly fine as actual member
-  std::unique_ptr<MaterialList> material_list_;
+  MaterialList material_list_;
 #endif
   std::unique_ptr<MfieldsState> mflds_;
 #ifdef VPIC
