@@ -10,7 +10,6 @@ class PscSimulationMixin
 public:
   PscSimulationMixin()
   {
-    grid_ = Grid::create();
   }
   
   Grid*& getGrid()                    { return grid_; }

@@ -410,6 +410,8 @@ Psc<PscConfig>::Simulation* setup_simulation(psc* psc_, const globals_physics& p
   const auto& grid = psc_->grid();
   mpi_printf(psc_comm(psc_), "*** Initializing\n" );
   auto sim = new Simulation();
+
+  sim->grid_ = Grid::create();
   // set high level VPIC simulation parameters
   // FIXME, will be unneeded eventually
   sim->setParams(p.nmax, p.stats_every,
