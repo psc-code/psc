@@ -313,7 +313,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 		    p_.stats_every / 2);
 
     setup_domain(grid().domain);
-    setup_fields();
+    setup_materials();
     define_field_array();
   
     int interval = (int) (t_intervali / (phys_.wci * grid().dt));
@@ -523,9 +523,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   }
   
   // ----------------------------------------------------------------------
-  // setup_fields
+  // setup_materials
   
-  void setup_fields()
+  void setup_materials()
   {
     MPI_Comm comm = psc_comm(psc_);
     
