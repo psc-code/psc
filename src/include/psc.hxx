@@ -65,16 +65,22 @@ struct Psc
       grid_{psc->grid()},
       sim_{sim},
       psc_{psc}
+  {}
+
+  // ----------------------------------------------------------------------
+  // init
+
+  void init()
   {
 #ifdef VPIC
-    material_list_.reset(new MaterialList{sim->material_list_});
+    material_list_.reset(new MaterialList{sim_->material_list_});
     mflds_.reset(new MfieldsState{grid(), *material_list_});
 #else
     mflds_.reset(new MfieldsState{grid()});
 #endif
       
 #ifdef VPIC
-    hydro_.reset(new MfieldsHydroVpic{grid(), 16, psc->ibn});
+    hydro_.reset(new MfieldsHydroVpic{grid(), 16, psc_->ibn});
     interpolator_.reset(new Interpolator{sim_->grid_});
     accumulator_.reset(new Accumulator{sim_->grid_});
 #endif

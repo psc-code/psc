@@ -61,6 +61,8 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   {
     auto comm = psc_comm(psc_);
 
+    init();
+
     // -- Balance
     balance_interval = 0;
     double balance_factor_fields = .1;

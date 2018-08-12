@@ -448,6 +448,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       io_pfd_{"pfd"}
   {
     auto comm = psc_comm(psc_);
+
+    init();
     
     // -- Balance
     balance_interval = 0;
