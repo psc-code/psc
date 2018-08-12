@@ -59,11 +59,10 @@ struct Psc
   // ----------------------------------------------------------------------
   // ctor
 
-  Psc(const PscParams& params, psc* psc, Simulation* sim = nullptr)
+  Psc(const PscParams& params, psc* psc)
     : time_start_{MPI_Wtime()},
       p_{params},
       grid_{psc->grid()},
-      sim_{sim},
       psc_{psc}
   {}
 

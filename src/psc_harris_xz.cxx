@@ -442,13 +442,15 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   
   PscHarris(const PscParams& p, const PscHarrisParams& params,
 	    psc* psc, const globals_physics& phys)
-    : Psc{p, psc, setup_simulation(psc, phys, p, params)},
+    : Psc{p, psc},
       PscHarrisParams(params),
       phys_{phys},
       io_pfd_{"pfd"}
   {
     auto comm = psc_comm(psc_);
 
+    sim_ = setup_simulation(psc, phys, p, params);
+    
     init();
     
     // -- Balance
