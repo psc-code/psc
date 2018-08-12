@@ -62,7 +62,19 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     auto comm = psc_comm(psc_);
 
     // -- Checks
-    checks_.reset(new Checks_t{psc_->grid(), psc_comm(psc), p_.checks_params});
+    ChecksParams checks_params;
+
+    checks_params.continuity_every_step = -1;
+    checks_params.continuity_threshold = 1e-6;
+    checks_params.continuity_verbose = true;
+    checks_params.continuity_dump_always = false;
+    
+    checks_params.gauss_every_step = -1;
+    checks_params.gauss_threshold = 1e-6;
+    checks_params.gauss_verbose = true;
+    checks_params.gauss_dump_always = false;
+
+    checks_.reset(new Checks_t{psc_->grid(), psc_comm(psc), checks_params});
 
     // -- Marder correction
     double marder_diffusion = 0.9;
@@ -295,7 +307,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
       prof_stop(pr_collision);
     }
     
-    if (p_.checks_params.continuity_every_step > 0 && timestep % p_.checks_params.continuity_every_step == 0) {
+    if (checks_->continuity_every_step > 0 && timestep % checks_->continuity_every_step == 0) {
       mpi_printf(comm, "***** Checking continuity...\n");
       prof_start(pr_checks);
       checks_->continuity_before_particle_push(mprts_);
@@ -383,7 +395,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     prof_stop(pr_sync5);
 #endif
     
-    if (p_.checks_params.continuity_every_step > 0 && timestep % p_.checks_params.continuity_every_step == 0) {
+    if (checks_->continuity_every_step > 0 && timestep % checks_->continuity_every_step == 0) {
       prof_restart(pr_checks);
       checks_->continuity_after_particle_push(mprts_, mflds_);
       prof_stop(pr_checks);
@@ -399,7 +411,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
       prof_stop(pr_marder);
     }
     
-    if (p_.checks_params.gauss_every_step > 0 && timestep % p_.checks_params.gauss_every_step == 0) {
+    if (checks_->continuity_every_step > 0 && timestep % checks_->continuity_every_step == 0) {
       prof_restart(pr_checks);
       checks_->gauss(mprts_, mflds_);
       prof_stop(pr_checks);
@@ -468,17 +480,6 @@ PscBubble* PscBubbleBuilder::makePsc()
   // collisions
   p.collision_interval = 10;
   p.collision_nu = .1;
-
-  // --- checks
-  p.checks_params.continuity_every_step = -1;
-  p.checks_params.continuity_threshold = 1e-6;
-  p.checks_params.continuity_verbose = true;
-  p.checks_params.continuity_dump_always = false;
-
-  p.checks_params.gauss_every_step = -1;
-  p.checks_params.gauss_threshold = 1e-6;
-  p.checks_params.gauss_verbose = true;
-  p.checks_params.gauss_dump_always = false;
 
   // --- balancing
   p.balance_interval = 0;

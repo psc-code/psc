@@ -44,8 +44,6 @@ struct PscParams
 
   int collision_interval;
   double collision_nu;
-
-  ChecksParams checks_params;
 };
   
 // ======================================================================
