@@ -216,6 +216,23 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   {
     auto comm = psc_comm(psc_);
 
+    // -- Collision
+    int collision_interval = 10;
+    double collision_nu = .1;
+#if TEST == TEST_4_SHOCK_3D
+    collision_interval = 0;
+#endif
+#if TEST == TEST_3_NILSON_3D
+    collision_interval = 0;
+#endif
+#if TEST == TEST_2_FLATFOIL_3D
+    collision_interval = 0;
+#endif
+#if TEST == TEST_1_HEATING_3D
+    collision_interval = 0;
+#endif
+    collision_.reset(new Collision_t{psc_comm(psc), collision_interval, collision_nu});
+
     // -- Checks
     ChecksParams checks_params;
 
@@ -388,7 +405,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
       prof_stop(pr_sort);
     }
     
-    if (p_.collision_interval > 0 && timestep % p_.collision_interval == 0) {
+    if (collision_->interval() > 0 && timestep % collision_->interval() == 0) {
       mpi_printf(comm, "***** Performing collisions...\n");
       prof_start(pr_collision);
       (*collision_)(mprts_);
@@ -625,10 +642,6 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
   // sort
   p.sort_interval = 10;
 
-  // collisions
-  p.collision_interval = 10;
-  p.collision_nu = .1;
-
   // --- setup heating
   double heating_zl = -1.;
   double heating_zh =  1.;
@@ -693,7 +706,6 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
   params.background_n = .01;
   params.background_Te = .002;
   params.background_Ti = .002;
-  p.collision_interval = 0;
   params.inject_interval = 0;
 #endif
   
@@ -701,12 +713,10 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
   p.nmax = 101;
   norm_params.nicell = 50;
   params.background_n = .02;
-  p.collision_interval = 0;
   params.inject_interval = 0;
 #endif
   
 #if TEST == TEST_2_FLATFOIL_3D
-  p.collision_interval = 0;
   params.heating_interval = 0;
   params.inject_interval = 5;
 #endif

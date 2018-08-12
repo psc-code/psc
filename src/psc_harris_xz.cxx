@@ -449,6 +449,11 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   {
     auto comm = psc_comm(psc_);
     
+    // -- Collision
+    int collision_interval = 0;
+    double collision_nu = .1; // FIXME, != 0 needed to avoid crash
+    collision_.reset(new Collision_t{psc_comm(psc), collision_interval, collision_nu});
+
     // -- Checks
     ChecksParams checks_params;
     checks_.reset(new Checks_t{psc_->grid(), psc_comm(psc), checks_params});
@@ -830,7 +835,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       prof_stop(pr_sort);
     }
     
-    if (p_.collision_interval > 0 && timestep % p_.collision_interval == 0) {
+    if (collision_->interval() > 0 && timestep % collision_->interval() == 0) {
       mpi_printf(comm, "***** Performing collisions...\n");
       prof_start(pr_collision);
       (*collision_)(mprts_);
@@ -976,10 +981,6 @@ PscHarris* PscHarrisBuilder::makePsc()
   mpi_printf(comm, "*** Setting up...\n");
 
   PscParams p{};
-
-  // collisions
-  p.collision_interval = 0;
-  p.collision_nu = .1; // FIXME, != 0 needed to avoid crash
 
   // --- balancing
   p.balance_interval = 0;

@@ -61,6 +61,11 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   {
     auto comm = psc_comm(psc_);
 
+    // -- Collision
+    int collision_interval = 10;
+    double collision_nu = .1;
+    collision_.reset(new Collision_t{psc_comm(psc), collision_interval, collision_nu});
+
     // -- Checks
     ChecksParams checks_params;
 
@@ -300,7 +305,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
       prof_stop(pr_sort);
     }
     
-    if (p_.collision_interval > 0 && timestep % p_.collision_interval == 0) {
+    if (collision_->interval() > 0 && timestep % collision_->interval() == 0) {
       mpi_printf(comm, "***** Performing collisions...\n");
       prof_start(pr_collision);
       (*collision_)(mprts_);
@@ -476,10 +481,6 @@ PscBubble* PscBubbleBuilder::makePsc()
 
   // sort
   p.sort_interval = 10;
-
-  // collisions
-  p.collision_interval = 10;
-  p.collision_nu = .1;
 
   // --- balancing
   p.balance_interval = 0;

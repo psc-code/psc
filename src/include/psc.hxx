@@ -41,9 +41,6 @@ struct PscParams
   bool balance_write_loads;
 
   int sort_interval;
-
-  int collision_interval;
-  double collision_nu;
 };
   
 // ======================================================================
@@ -86,7 +83,6 @@ struct Psc
       mprts_{psc->grid()},
       balance_{p_.balance_interval, p_.balance_factor_fields, p_.balance_print_loads, p_.balance_write_loads}
   {
-    collision_.reset(new Collision_t{psc_comm(psc), p_.collision_interval, p_.collision_nu});
     pushp_.reset(new PushParticles_t{});
     pushf_.reset(new PushFields_t{});
     bnd_.reset(new Bnd_t{psc_->grid(), psc_->mrc_domain_, psc_->ibn});

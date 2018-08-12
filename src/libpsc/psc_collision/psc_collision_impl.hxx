@@ -276,6 +276,8 @@ struct CollisionHost
     return bc(prt1, prt2, nudt1, rng);
   }
 
+  int interval() const { return interval_; }
+  
 private:
   // parameters
   double nu_;
