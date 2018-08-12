@@ -440,9 +440,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   // ----------------------------------------------------------------------
   // PscHarris ctor
   
-  PscHarris(const PscParams& p, const PscHarrisParams& params, Simulation* sim,
+  PscHarris(const PscParams& p, const PscHarrisParams& params,
 	    psc* psc, const globals_physics& phys)
-    : Psc{p, psc, sim},
+    : Psc{p, psc, setup_simulation(psc, phys, p, params)},
       PscHarrisParams(params),
       phys_{phys},
       io_pfd_{"pfd"}
@@ -501,7 +501,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     outf_.reset(new OutputFieldsC{comm, outf_params});
 
     // FIXME? this used to be part of define_fields, ie., after constructing the various field arrays
-    grid_setup_communication(sim->grid_);
+    grid_setup_communication(sim_->grid_);
     
     //////////////////////////////////////////////////////////////////////////////
     // Finalize Field Advance
@@ -1070,9 +1070,7 @@ PscHarris* PscHarrisBuilder::makePsc()
   auto coeff = Grid_t::Normalization{norm_params};
   psc_setup_domain(psc_, grid_domain, grid_bc, kinds, coeff, dt);
 
-  auto sim = setup_simulation(psc_, phys, p, params);
-
-  return new PscHarris{p, params, sim, psc_, phys};
+  return new PscHarris{p, params, psc_, phys};
 }
 
 // ======================================================================
