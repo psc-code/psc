@@ -52,12 +52,18 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
 {
   using DIM = PscConfig::dim_t;
 
+  // ----------------------------------------------------------------------
+  // ctor
+
   PscBubble(const PscParams& p, const PscBubbleParams& params, psc *psc)
     : Psc{p, psc},
       PscBubbleParams(params)
   {
     auto comm = psc_comm(psc_);
-    
+
+    // -- Marder correction
+    marder_.reset(new Marder_t(psc_comm(psc), p_.marder_diffusion, p_.marder_loop, p_.marder_dump));
+
     // -- output fields
     OutputFieldsCParams outf_params;
     outf_params.output_fields = "e,h,j,n_1st_single,v_1st_single";

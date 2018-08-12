@@ -97,7 +97,6 @@ struct Psc
       bndp_{psc_->mrc_domain_, psc_->grid()},
       checks_{psc_->grid(), psc_comm(psc), p_.checks_params}
   {
-    marder_.reset(new Marder_t(psc_comm(psc), p_.marder_diffusion, p_.marder_loop, p_.marder_dump));
   }
 
   // ----------------------------------------------------------------------

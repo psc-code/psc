@@ -204,6 +204,9 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   using DIM = PscConfig::dim_t;
   using Heating_t = typename HeatingSelector<Mparticles_t>::Heating;
   using Inject_t = typename InjectSelector<Mparticles_t, MfieldsState, InjectFoil, DIM>::Inject;
+
+  // ----------------------------------------------------------------------
+  // ctor
   
   PscFlatfoil(const PscParams& p, const PscFlatfoilParams& params, psc *psc)
     : Psc{p, psc},
@@ -213,6 +216,9 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   {
     auto comm = psc_comm(psc_);
     
+    // -- Marder correction
+    marder_.reset(new Marder_t(psc_comm(psc), p_.marder_diffusion, p_.marder_loop, p_.marder_dump));
+
     // -- output fields
     OutputFieldsCParams outf_params;
     outf_.reset(new OutputFieldsC{comm, outf_params});

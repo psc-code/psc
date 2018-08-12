@@ -449,6 +449,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   {
     auto comm = psc_comm(psc_);
     
+    // -- Marder correction
+    marder_.reset(new Marder_t(psc_comm(psc), p_.marder_diffusion, p_.marder_loop, p_.marder_dump));
+
     // -- output fields
     OutputFieldsCParams outf_params;
     double field_interval = 1.;
