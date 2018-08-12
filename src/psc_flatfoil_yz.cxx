@@ -208,26 +208,135 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   // ----------------------------------------------------------------------
   // ctor
   
-  PscFlatfoil(const PscFlatfoilParams& params, psc *psc)
+  PscFlatfoil(psc *psc)
     : Psc{{}, psc},
-      PscFlatfoilParams(params),
+      // FIXME, this is broken because these params haven't yet been set
       heating_{heating_interval, heating_kind, heating_spot},
       inject_{psc_comm(psc), inject_interval, inject_tau, inject_kind_n, inject_target}
   {
     auto comm = psc_comm(psc_);
 
+    mpi_printf(comm, "*** Setting up...\n");
+
+    psc_set_from_options(psc_);
+
     p_.nmax = 5001;
     p_.cfl = 0.75;
 
+    PscFlatfoilParams params;
+
+    params.BB = 0.;
+    params.Zi = 1.;
+    
+    // --- for background plasma
+    params.background_n  = .002;
+    params.background_Te = .001;
+    params.background_Ti = .001;
+    
+    // -- setup particle kinds
+    // last population ("e") is neutralizing
+    // FIXME, hardcoded mass ratio 100
 #if TEST == TEST_4_SHOCK_3D
+    Grid_t::Kinds kinds = {{params.Zi, 100.*params.Zi, "i"}, { -1., 1., "e"}};
+#else
+    Grid_t::Kinds kinds = {{params.Zi, 100.*params.Zi, "i"}, { -1., 1., "e"}};
+#endif
+    
+    double d_i = sqrt(kinds[MY_ION].m / kinds[MY_ION].q);
+    
+    mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
+    mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(params.background_Te));
+    
+    // --- setup heating
+    double heating_zl = -1.;
+    double heating_zh =  1.;
+    double heating_xc = 0.;
+    double heating_yc = 0.;
+#if TEST == TEST_4_SHOCK_3D
+    double heating_rH = 100000.;
+#else
+    double heating_rH = 3.;
+#endif
+    auto heating_foil_params = HeatingSpotFoilParams{};
+    heating_foil_params.zl = heating_zl * d_i;
+    heating_foil_params.zh = heating_zh * d_i;
+    heating_foil_params.xc = heating_xc * d_i;
+    heating_foil_params.yc = heating_yc * d_i;
+    heating_foil_params.rH = heating_rH * d_i;
+#if TEST == TEST_4_SHOCK_3D
+    heating_foil_params.T  = .06;
+#else
+    heating_foil_params.T  = .04;
+#endif
+    heating_foil_params.Mi = kinds[MY_ION].m;
+    params.heating_spot = HeatingSpotFoil{heating_foil_params};
+    params.heating_interval = 20;
+    params.heating_begin = 0;
+    params.heating_end = 10000000;
+    params.heating_kind = MY_ELECTRON;
+    
+    // -- setup injection
+    double target_yl     = -100000.;
+    double target_yh     =  100000.;
+    double target_zwidth =  1.;
+    auto inject_foil_params = InjectFoilParams{};
+    inject_foil_params.yl =   target_yl * d_i;
+    inject_foil_params.yh =   target_yh * d_i;
+    inject_foil_params.zl = - target_zwidth * d_i;
+    inject_foil_params.zh =   target_zwidth * d_i;
+#if TEST == TEST_4_SHOCK_3D
+    inject_foil_params.n  = 2.5;
+    inject_foil_params.Te = .002;
+    inject_foil_params.Ti = .002;
+#else
+    inject_foil_params.n  = 1.;
+    inject_foil_params.Te = .001;
+    inject_foil_params.Ti = .001;
+#endif
+    params.inject_target = InjectFoil{inject_foil_params};
+    params.inject_kind_n = MY_ELECTRON;
+    params.inject_interval = 20;
+    params.inject_tau = 40;
+    
+#if TEST == TEST_4_SHOCK_3D
+    params.BB = 0.02;
+    params.background_n = .01;
+    params.background_Te = .002;
+    params.background_Ti = .002;
+    params.inject_interval = 0;
     p_.nmax = 100002;
 #endif
+    
 #if TEST == TEST_3_NILSON_3D
+    params.background_n = .02;
+    params.inject_interval = 0;
     p_.nmax = 101;
 #endif
+    
+#if TEST == TEST_2_FLATFOIL_3D
+    params.heating_interval = 0;
+    params.inject_interval = 5;
+#endif
+    
 #if TEST == TEST_1_HEATING_3D
+    params.background_n  = 1.0;
+    
+    params.heating_interval = 0;
+    params.inject_interval = 0;
+    
+    params.checks_params.continuity_every_step = 1;
+    params.checks_params.continuity_threshold = 1e-12;
+    params.checks_params.continuity_verbose = true;
+    
+    params.checks_params.gauss_every_step = 1;
+    // eventually, errors accumulate above 1e-10, but it should take a long time
+    params.checks_params.gauss_threshold = 1e-10;
+    params.checks_params.gauss_verbose = true;
+
     p_.collision_interval = 0;
 #endif
+
+    static_cast<PscFlatfoilParams&>(*this) = params;
   
     // --- setup domain
     Grid_t::Real3 LL = { 1., 400.*4, 400. }; // domain size (in d_e)
@@ -265,16 +374,6 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
 			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC },
 			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC }};
 
-    // FIXME, duplicated
-    // -- setup particle kinds
-    // last population ("e") is neutralizing
-    // FIXME, hardcoded mass ratio 100
-#if TEST == TEST_4_SHOCK_3D
-    Grid_t::Kinds kinds = {{params.Zi, 100.*params.Zi, "i"}, { -1., 1., "e"}};
-#else
-    Grid_t::Kinds kinds = {{params.Zi, 100.*params.Zi, "i"}, { -1., 1., "e"}};
-#endif
-  
     // --- generic setup
     auto norm_params = Grid_t::NormalizationParams::dimensionless();
     norm_params.nicell = 100;
@@ -658,122 +757,8 @@ struct PscFlatfoilBuilder
 PscFlatfoil* PscFlatfoilBuilder::makePsc()
 {
   auto psc_ = psc_create(MPI_COMM_WORLD);
-  MPI_Comm comm = psc_comm(psc_);
   
-  mpi_printf(comm, "*** Setting up...\n");
-
-  PscFlatfoilParams params;
-
-  psc_set_from_options(psc_);
-
-  params.BB = 0.;
-  params.Zi = 1.;
-
-  // --- for background plasma
-  params.background_n  = .002;
-  params.background_Te = .001;
-  params.background_Ti = .001;
-  
-  // -- setup particle kinds
-  // last population ("e") is neutralizing
- // FIXME, hardcoded mass ratio 100
-#if TEST == TEST_4_SHOCK_3D
-  Grid_t::Kinds kinds = {{params.Zi, 100.*params.Zi, "i"}, { -1., 1., "e"}};
-#else
-  Grid_t::Kinds kinds = {{params.Zi, 100.*params.Zi, "i"}, { -1., 1., "e"}};
-#endif
-  
-  double d_i = sqrt(kinds[MY_ION].m / kinds[MY_ION].q);
-
-  mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
-  mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(params.background_Te));
-
-  // --- setup heating
-  double heating_zl = -1.;
-  double heating_zh =  1.;
-  double heating_xc = 0.;
-  double heating_yc = 0.;
-#if TEST == TEST_4_SHOCK_3D
-  double heating_rH = 100000.;
-#else
-  double heating_rH = 3.;
-#endif
-  auto heating_foil_params = HeatingSpotFoilParams{};
-  heating_foil_params.zl = heating_zl * d_i;
-  heating_foil_params.zh = heating_zh * d_i;
-  heating_foil_params.xc = heating_xc * d_i;
-  heating_foil_params.yc = heating_yc * d_i;
-  heating_foil_params.rH = heating_rH * d_i;
-#if TEST == TEST_4_SHOCK_3D
-  heating_foil_params.T  = .06;
-#else
-  heating_foil_params.T  = .04;
-#endif
-  heating_foil_params.Mi = kinds[MY_ION].m;
-  params.heating_spot = HeatingSpotFoil{heating_foil_params};
-  params.heating_interval = 20;
-  params.heating_begin = 0;
-  params.heating_end = 10000000;
-  params.heating_kind = MY_ELECTRON;
-
-  // -- setup injection
-  double target_yl     = -100000.;
-  double target_yh     =  100000.;
-  double target_zwidth =  1.;
-  auto inject_foil_params = InjectFoilParams{};
-  inject_foil_params.yl =   target_yl * d_i;
-  inject_foil_params.yh =   target_yh * d_i;
-  inject_foil_params.zl = - target_zwidth * d_i;
-  inject_foil_params.zh =   target_zwidth * d_i;
-#if TEST == TEST_4_SHOCK_3D
-  inject_foil_params.n  = 2.5;
-  inject_foil_params.Te = .002;
-  inject_foil_params.Ti = .002;
-#else
-  inject_foil_params.n  = 1.;
-  inject_foil_params.Te = .001;
-  inject_foil_params.Ti = .001;
-#endif
-  params.inject_target = InjectFoil{inject_foil_params};
-  params.inject_kind_n = MY_ELECTRON;
-  params.inject_interval = 20;
-  params.inject_tau = 40;
-
-#if TEST == TEST_4_SHOCK_3D
-  params.BB = 0.02;
-  params.background_n = .01;
-  params.background_Te = .002;
-  params.background_Ti = .002;
-  params.inject_interval = 0;
-#endif
-  
-#if TEST == TEST_3_NILSON_3D
-  params.background_n = .02;
-  params.inject_interval = 0;
-#endif
-  
-#if TEST == TEST_2_FLATFOIL_3D
-  params.heating_interval = 0;
-  params.inject_interval = 5;
-#endif
-  
-#if TEST == TEST_1_HEATING_3D
-  params.background_n  = 1.0;
-
-  params.heating_interval = 0;
-  params.inject_interval = 0;
-  
-  params.checks_params.continuity_every_step = 1;
-  params.checks_params.continuity_threshold = 1e-12;
-  params.checks_params.continuity_verbose = true;
-
-  params.checks_params.gauss_every_step = 1;
-  // eventually, errors accumulate above 1e-10, but it should take a long time
-  params.checks_params.gauss_threshold = 1e-10;
-  params.checks_params.gauss_verbose = true;
-#endif
-
-  return new PscFlatfoil{params, psc_};
+  return new PscFlatfoil{psc_};
 }
 
 // ======================================================================

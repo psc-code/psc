@@ -55,11 +55,29 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   // ----------------------------------------------------------------------
   // ctor
 
-  PscBubble(const PscBubbleParams& params, psc *psc)
-    : Psc{{}, psc},
-      PscBubbleParams(params)
+  PscBubble(psc *psc)
+    : Psc{{}, psc}
   {
     auto comm = psc_comm(psc_);
+
+    mpi_printf(comm, "*** Setting up...\n");
+
+    PscBubbleParams params;
+    
+    params.BB = .07;
+    params.nnb = .1;
+    params.nn0 = 1.;
+    params.MMach = 3.;
+    params.LLn = 200.;
+    params.LLB = 200./6.;
+    params.TTe = .02;
+    params.TTi = .02;
+    params.MMi = 100.;
+    
+    params.LLy = 2. * params.LLn;
+    params.LLz = 3. * params.LLn;
+
+    static_cast<PscBubbleParams&>(*this) = params;
 
     p_.nmax = 1000; //32000;
     p_.stats_every = 100;
@@ -486,26 +504,8 @@ struct PscBubbleBuilder
 PscBubble* PscBubbleBuilder::makePsc()
 {
   auto psc_ = psc_create(MPI_COMM_WORLD);
-  MPI_Comm comm = psc_comm(psc_);
   
-  mpi_printf(comm, "*** Setting up...\n");
-
-  PscBubbleParams params;
-
-  params.BB = .07;
-  params.nnb = .1;
-  params.nn0 = 1.;
-  params.MMach = 3.;
-  params.LLn = 200.;
-  params.LLB = 200./6.;
-  params.TTe = .02;
-  params.TTi = .02;
-  params.MMi = 100.;
-    
-  params.LLy = 2. * params.LLn;
-  params.LLz = 3. * params.LLn;
-
-  return new PscBubble{params, psc_};
+  return new PscBubble{psc_};
 }
 
 // ======================================================================
