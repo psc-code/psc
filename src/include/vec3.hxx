@@ -27,7 +27,7 @@ struct Vec3 : std::array<T, 3>
   // ----------------------------------------------------------------------
   // construct by broadcasting single value
 
-  Vec3(T val)
+  explicit Vec3(T val)
   {
     for (int i = 0; i < 3; i++) {
       new (&(*this)[i])	T(val); // placement new -- not really necessary
