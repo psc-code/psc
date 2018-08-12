@@ -64,12 +64,10 @@ struct Psc
       p_{params},
       sim_{sim},
       psc_{psc}
-#ifdef VPIC
-    ,material_list_{sim->material_list_}
-#endif
   {
 #ifdef VPIC
-    mflds_.reset(new MfieldsState{psc->grid(), material_list_});
+    material_list_.reset(new MaterialList{sim->material_list_});
+    mflds_.reset(new MfieldsState{psc->grid(), *material_list_});
 #else
     mflds_.reset(new MfieldsState{psc->grid()});
 #endif
@@ -380,7 +378,7 @@ protected:
   psc* psc_;
 
 #ifdef VPIC
-  MaterialList material_list_;
+  std::unique_ptr<MaterialList> material_list_;
 #endif
   std::unique_ptr<MfieldsState> mflds_;
 #ifdef VPIC
