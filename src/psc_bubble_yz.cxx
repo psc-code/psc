@@ -316,7 +316,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
 
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
     prof_start(pr_push_prts);
-    pushp_.push_mprts(mprts_, mflds_);
+    pushp_->push_mprts(mprts_, mflds_);
     prof_stop(pr_push_prts);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
 
@@ -328,7 +328,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     
     // === field propagation B^{n+1/2} -> B^{n+1}
     prof_start(pr_push_flds);
-    pushf_.push_H(mflds_, .5, DIM{});
+    pushf_->push_H(mflds_, .5, DIM{});
     prof_stop(pr_push_flds);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
@@ -359,7 +359,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
 #endif
     
     prof_restart(pr_push_flds);
-    pushf_.push_E(mflds_, 1., DIM{});
+    pushf_->push_E(mflds_, 1., DIM{});
     prof_stop(pr_push_flds);
     
 #if 0
@@ -378,7 +378,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
       
     // === field propagation B^{n+1} -> B^{n+3/2}
     prof_restart(pr_push_flds);
-    pushf_.push_H(mflds_, .5, DIM{});
+    pushf_->push_H(mflds_, .5, DIM{});
     prof_stop(pr_push_flds);
 
 #if 1

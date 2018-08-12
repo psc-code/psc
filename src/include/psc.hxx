@@ -87,6 +87,8 @@ struct Psc
       balance_{p_.balance_interval, p_.balance_factor_fields, p_.balance_print_loads, p_.balance_write_loads},
       collision_{psc_comm(psc), p_.collision_interval, p_.collision_nu}
   {
+    pushp_.reset(new PushParticles_t{});
+    pushf_.reset(new PushFields_t{});
     bnd_.reset(new Bnd_t{psc_->grid(), psc_->mrc_domain_, psc_->ibn});
     bndf_.reset(new BndFields_t{});
     bndp_.reset(new BndParticles_t{psc_->mrc_domain_, psc_->grid()});
@@ -397,9 +399,9 @@ protected:
   Balance_t balance_;
   Sort_t sort_;
   Collision_t collision_;
-  PushParticles_t pushp_;
-  PushFields_t pushf_;
 
+  std::unique_ptr<PushParticles_t> pushp_;
+  std::unique_ptr<PushFields_t> pushf_;
   std::unique_ptr<Bnd_t> bnd_;
   std::unique_ptr<BndFields_t> bndf_;
   std::unique_ptr<BndParticles_t> bndp_;

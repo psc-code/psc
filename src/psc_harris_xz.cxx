@@ -843,12 +843,12 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
     prof_start(pr_push_prts);
-    pushp_.push_mprts(mprts_, mflds_, interpolator_, accumulator_);
+    pushp_->push_mprts(mprts_, mflds_, interpolator_, accumulator_);
     prof_stop(pr_push_prts);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
 
     // field propagation B^{n+1/2} -> B^{n+1}
-    pushf_.push_H(mflds_, .5);
+    pushf_->push_H(mflds_, .5);
     // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
     prof_start(pr_bndp);
@@ -867,7 +867,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     bnd_->fill_ghosts(mflds_, JXI, JXI + 3);
     
     // push E
-    pushf_.push_E(mflds_, 1.);
+    pushf_->push_E(mflds_, 1.);
 
     bndf_->fill_ghosts_E(mflds_);
     //if (pushf_->variant == 0) {
@@ -882,7 +882,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     //    }
     
     // push H
-    pushf_.push_H(mflds_, .5);
+    pushf_->push_H(mflds_, .5);
 
     bndf_->fill_ghosts_H(mflds_);
     //if (pushf_->variant == 0) {
@@ -905,7 +905,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     checks_->gauss(psc_, mprts_, mflds_);
 
 #ifdef VPIC
-    pushp_.prep(mprts_, mflds_, interpolator_);
+    pushp_->prep(mprts_, mflds_, interpolator_);
 #endif
   }
 
