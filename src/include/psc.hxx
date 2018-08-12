@@ -46,8 +46,6 @@ struct PscParams
   double collision_nu;
 
   ChecksParams checks_params;
-
-  int marder_interval;
 };
   
 // ======================================================================
@@ -411,6 +409,8 @@ protected:
   std::unique_ptr<Marder_t> marder_;
   std::unique_ptr<OutputFieldsC> outf_;
 
+  int marder_interval;
+  
   int st_nr_particles;
   int st_time_step;
 };

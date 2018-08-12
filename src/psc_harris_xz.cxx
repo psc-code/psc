@@ -454,6 +454,20 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     double marder_diffusion = 0.9;
     int marder_loop = 3;
     bool marder_dump = false;
+    // FIXME, how do we make sure that we don't forget to set this?
+    // (maybe make it part of the Marder object, or provide a base class interface
+    // define_marder() that takes the object and the interval
+    marder_interval = 1;
+#if 0
+    // FIXME, marder "vpic" manages its own cleaning intervals
+    psc_marder_set_param_int(psc_->marder, "every_step", 1);
+    psc_marder_set_param_int(psc_->marder, "clean_div_e_interval", 50);
+    psc_marder_set_param_int(psc_->marder, "clean_div_b_interval", 50);
+    psc_marder_set_param_int(psc_->marder, "sync_shared_interval", 50);
+    psc_marder_set_param_int(psc_->marder, "num_div_e_round", 2);
+    psc_marder_set_param_int(psc_->marder, "num_div_b_round", 2);
+#endif
+  
     marder_.reset(new Marder_t(psc_comm(psc), marder_diffusion, marder_loop, marder_dump));
 
     // -- output fields
@@ -877,7 +891,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // E at t^{n+3/2}, particles at t^{n+3/2}
     // B at t^{n+3/2} (Note: that is not it's natural time,
     // but div B should be == 0 at any time...)
-    if (p_.marder_interval > 0 && timestep % p_.marder_interval == 0) {
+    if (marder_interval > 0 && timestep % marder_interval == 0) {
       //mpi_printf(comm, "***** Performing Marder correction...\n");
       prof_start(pr_marder);
       (*marder_)(mflds_, mprts_);
@@ -968,18 +982,6 @@ PscHarris* PscHarrisBuilder::makePsc()
   p.balance_factor_fields = 1.;
   p.balance_print_loads = false;
   p.balance_write_loads = false;
-  
-  // --- marder
-  p.marder_interval = 1;
-#if 0
-  // FIXME, marder "vpic" manages its own cleaning intervals
-  psc_marder_set_param_int(psc_->marder, "every_step", 1);
-  psc_marder_set_param_int(psc_->marder, "clean_div_e_interval", 50);
-  psc_marder_set_param_int(psc_->marder, "clean_div_b_interval", 50);
-  psc_marder_set_param_int(psc_->marder, "sync_shared_interval", 50);
-  psc_marder_set_param_int(psc_->marder, "num_div_e_round", 2);
-  psc_marder_set_param_int(psc_->marder, "num_div_b_round", 2);
-#endif
   
   PscHarrisParams params;
 
