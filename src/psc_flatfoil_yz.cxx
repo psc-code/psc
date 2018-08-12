@@ -401,7 +401,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     if (p_.sort_interval > 0 && timestep % p_.sort_interval == 0) {
       mpi_printf(comm, "***** Sorting...\n");
       prof_start(pr_sort);
-      sort_(mprts_);
+      (*sort_)(mprts_);
       prof_stop(pr_sort);
     }
     
