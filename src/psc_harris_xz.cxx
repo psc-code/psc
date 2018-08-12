@@ -503,8 +503,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // FIXME? this used to be part of define_fields, ie., after constructing the various field arrays
     grid_setup_communication(sim->grid_);
     
-    const auto& grid = psc->grid();
-
     //////////////////////////////////////////////////////////////////////////////
     // Finalize Field Advance
     

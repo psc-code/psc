@@ -62,22 +62,23 @@ struct Psc
   Psc(const PscParams& params, psc* psc, Simulation* sim = nullptr)
     : time_start_{MPI_Wtime()},
       p_{params},
+      grid_{psc->grid()},
       sim_{sim},
       psc_{psc}
   {
 #ifdef VPIC
     material_list_.reset(new MaterialList{sim->material_list_});
-    mflds_.reset(new MfieldsState{psc->grid(), *material_list_});
+    mflds_.reset(new MfieldsState{grid(), *material_list_});
 #else
-    mflds_.reset(new MfieldsState{psc->grid()});
+    mflds_.reset(new MfieldsState{grid()});
 #endif
       
 #ifdef VPIC
-    hydro_.reset(new MfieldsHydroVpic{psc->grid(), 16, psc->ibn});
+    hydro_.reset(new MfieldsHydroVpic{grid(), 16, psc->ibn});
     interpolator_.reset(new Interpolator{sim_->grid_});
     accumulator_.reset(new Accumulator{sim_->grid_});
 #endif
-    mprts_.reset(new Mparticles_t{psc->grid()});
+    mprts_.reset(new Mparticles_t{grid()});
     sort_.reset(new Sort_t{});
     pushp_.reset(new PushParticles_t{});
     pushf_.reset(new PushFields_t{});
@@ -345,7 +346,7 @@ private:
   {
 #ifdef VPIC
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-      sim_->runDiag(mprts_->vmprts_, mflds_->vmflds(), *interpolator_, *hydro_->vmflds_hydro, ppsc->grid().domain.np);
+      sim_->runDiag(mprts_->vmprts_, mflds_->vmflds(), *interpolator_, *hydro_->vmflds_hydro, grid().domain.np);
     }
 #else
     // FIXME
@@ -370,10 +371,13 @@ private:
     print_profiling();
   }
 
+  const Grid_t& grid() { return grid_; }
+
 protected:
   double time_start_;
 
   PscParams p_;
+  const Grid_t& grid_;
   Simulation* sim_;
   psc* psc_;
 
