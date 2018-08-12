@@ -852,41 +852,41 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
     prof_start(pr_bndp);
-    bndp_(mprts_);
+    (*bndp_)(mprts_);
     prof_stop(pr_bndp);
 
     // field propagation E^{n+1/2} -> E^{n+3/2}
 
     // fill ghosts for H
-    bndf_.fill_ghosts_H(mflds_);
-    bnd_.fill_ghosts(mflds_, HX, HX + 3);
+    bndf_->fill_ghosts_H(mflds_);
+    bnd_->fill_ghosts(mflds_, HX, HX + 3);
     
     // add and fill ghost for J
-    bndf_.add_ghosts_J(mflds_);
-    bnd_.add_ghosts(mflds_, JXI, JXI + 3);
-    bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
+    bndf_->add_ghosts_J(mflds_);
+    bnd_->add_ghosts(mflds_, JXI, JXI + 3);
+    bnd_->fill_ghosts(mflds_, JXI, JXI + 3);
     
     // push E
     pushf_.push_E(mflds_, 1.);
 
-    bndf_.fill_ghosts_E(mflds_);
+    bndf_->fill_ghosts_E(mflds_);
     //if (pushf_->variant == 0) {
-    bnd_.fill_ghosts(mflds_, EX, EX + 3);
+    bnd_->fill_ghosts(mflds_, EX, EX + 3);
     //}
     // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
 
     // field propagation B^{n+1} -> B^{n+3/2}
     //if (pushf_->variant == 0) {
-    bndf_.fill_ghosts_E(mflds_);
-    bnd_.fill_ghosts(mflds_, EX, EX + 3);
+    bndf_->fill_ghosts_E(mflds_);
+    bnd_->fill_ghosts(mflds_, EX, EX + 3);
     //    }
     
     // push H
     pushf_.push_H(mflds_, .5);
 
-    bndf_.fill_ghosts_H(mflds_);
+    bndf_->fill_ghosts_H(mflds_);
     //if (pushf_->variant == 0) {
-    bnd_.fill_ghosts(mflds_, HX, HX + 3);
+    bnd_->fill_ghosts(mflds_, HX, HX + 3);
     //}
     // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 

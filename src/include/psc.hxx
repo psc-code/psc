@@ -85,10 +85,11 @@ struct Psc
 #endif
       mprts_{psc->grid()},
       balance_{p_.balance_interval, p_.balance_factor_fields, p_.balance_print_loads, p_.balance_write_loads},
-      collision_{psc_comm(psc), p_.collision_interval, p_.collision_nu},
-      bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn},
-      bndp_{psc_->mrc_domain_, psc_->grid()}
+      collision_{psc_comm(psc), p_.collision_interval, p_.collision_nu}
   {
+    bnd_.reset(new Bnd_t{psc_->grid(), psc_->mrc_domain_, psc_->ibn});
+    bndf_.reset(new BndFields_t{});
+    bndp_.reset(new BndParticles_t{psc_->mrc_domain_, psc_->grid()});
   }
 
   // ----------------------------------------------------------------------
@@ -398,10 +399,10 @@ protected:
   Collision_t collision_;
   PushParticles_t pushp_;
   PushFields_t pushf_;
-  Bnd_t bnd_;
-  BndFields_t bndf_;
-  BndParticles_t bndp_;
 
+  std::unique_ptr<Bnd_t> bnd_;
+  std::unique_ptr<BndFields_t> bndf_;
+  std::unique_ptr<BndParticles_t> bndp_;
   std::unique_ptr<Checks_t> checks_;
   std::unique_ptr<Marder_t> marder_;
   std::unique_ptr<OutputFieldsC> outf_;

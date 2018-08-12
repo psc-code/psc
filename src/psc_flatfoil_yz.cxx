@@ -447,19 +447,19 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
 #endif
     
     prof_start(pr_bndp);
-    bndp_(mprts_);
+    (*bndp_)(mprts_);
     prof_stop(pr_bndp);
 
     // === field propagation E^{n+1/2} -> E^{n+3/2}
 #if 0
     prof_start(pr_bndf);
-    bndf_.fill_ghosts_H(mflds_);
-    bnd_.fill_ghosts(mflds_, HX, HX + 3);
+    bndf_->fill_ghosts_H(mflds_);
+    bnd_->fill_ghosts(mflds_, HX, HX + 3);
 #endif
     
-    bndf_.add_ghosts_J(mflds_);
-    bnd_.add_ghosts(mflds_, JXI, JXI + 3);
-    bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
+    bndf_->add_ghosts_J(mflds_);
+    bnd_->add_ghosts(mflds_, JXI, JXI + 3);
+    bnd_->fill_ghosts(mflds_, JXI, JXI + 3);
     prof_stop(pr_bndf);
 
 #if 1
@@ -478,8 +478,8 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
 
 #if 0
     prof_restart(pr_bndf);
-    bndf_.fill_ghosts_E(mflds_);
-    bnd_.fill_ghosts(mflds_, EX, EX + 3);
+    bndf_->fill_ghosts_E(mflds_);
+    bnd_->fill_ghosts(mflds_, EX, EX + 3);
     prof_stop(pr_bndf);
 #endif
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
@@ -491,8 +491,8 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
 
 #if 0
     prof_start(pr_bndf);
-    bndf_.fill_ghosts_H(mflds_);
-    bnd_.fill_ghosts(mflds_, HX, HX + 3);
+    bndf_->fill_ghosts_H(mflds_);
+    bnd_->fill_ghosts(mflds_, HX, HX + 3);
     prof_stop(pr_bndf);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 #endif
