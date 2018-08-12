@@ -118,9 +118,9 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     setup_initial_particles(*mprts_, n_prts_by_patch_new);
     
     mpi_printf(comm, "**** Setting up fields...\n");
-    setup_initial_fields(mflds_);
+    setup_initial_fields(*mflds_);
 
-    checks_->gauss(*mprts_, mflds_);
+    checks_->gauss(*mprts_, *mflds_);
     psc_setup_member_objs(psc_);
   
     initialize_stats();
@@ -307,6 +307,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     int timestep = psc_->timestep;
 
     auto& mprts = *mprts_;
+    auto& mflds = *mflds_;
 
     if (balance_interval > 0 && timestep % balance_interval == 0) {
       (*balance_)(psc_, mprts);
@@ -335,7 +336,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
 
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
     prof_start(pr_push_prts);
-    pushp_->push_mprts(mprts, mflds_);
+    pushp_->push_mprts(mprts, mflds);
     prof_stop(pr_push_prts);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
 
@@ -347,7 +348,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     
     // === field propagation B^{n+1/2} -> B^{n+1}
     prof_start(pr_push_flds);
-    pushf_->push_H(mflds_, .5, DIM{});
+    pushf_->push_H(mflds, .5, DIM{});
     prof_stop(pr_push_flds);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
@@ -362,13 +363,13 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     // === field propagation E^{n+1/2} -> E^{n+3/2}
 #if 1
     prof_start(pr_bndf);
-    bndf_->fill_ghosts_H(mflds_);
-    bnd_->fill_ghosts(mflds_, HX, HX + 3);
+    bndf_->fill_ghosts_H(mflds);
+    bnd_->fill_ghosts(mflds, HX, HX + 3);
 #endif
 
-    bndf_->add_ghosts_J(mflds_);
-    bnd_->add_ghosts(mflds_, JXI, JXI + 3);
-    bnd_->fill_ghosts(mflds_, JXI, JXI + 3);
+    bndf_->add_ghosts_J(mflds);
+    bnd_->add_ghosts(mflds, JXI, JXI + 3);
+    bnd_->fill_ghosts(mflds, JXI, JXI + 3);
     prof_stop(pr_bndf);
     
 #if 1
@@ -378,7 +379,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
 #endif
     
     prof_restart(pr_push_flds);
-    pushf_->push_E(mflds_, 1., DIM{});
+    pushf_->push_E(mflds, 1., DIM{});
     prof_stop(pr_push_flds);
     
 #if 0
@@ -389,21 +390,21 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
 
 #if 1
     prof_restart(pr_bndf);
-    bndf_->fill_ghosts_E(mflds_);
-    bnd_->fill_ghosts(mflds_, EX, EX + 3);
+    bndf_->fill_ghosts_E(mflds);
+    bnd_->fill_ghosts(mflds, EX, EX + 3);
     prof_stop(pr_bndf);
 #endif
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
       
     // === field propagation B^{n+1} -> B^{n+3/2}
     prof_restart(pr_push_flds);
-    pushf_->push_H(mflds_, .5, DIM{});
+    pushf_->push_H(mflds, .5, DIM{});
     prof_stop(pr_push_flds);
 
 #if 1
     prof_start(pr_bndf);
-    bndf_->fill_ghosts_H(mflds_);
-    bnd_->fill_ghosts(mflds_, HX, HX + 3);
+    bndf_->fill_ghosts_H(mflds);
+    bnd_->fill_ghosts(mflds, HX, HX + 3);
     prof_stop(pr_bndf);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 #endif
@@ -416,7 +417,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     
     if (checks_->continuity_every_step > 0 && timestep % checks_->continuity_every_step == 0) {
       prof_restart(pr_checks);
-      checks_->continuity_after_particle_push(mprts, mflds_);
+      checks_->continuity_after_particle_push(mprts, mflds);
       prof_stop(pr_checks);
     }
     
@@ -426,13 +427,13 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     if (marder_interval > 0 && timestep % marder_interval == 0) {
       mpi_printf(comm, "***** Performing Marder correction...\n");
       prof_start(pr_marder);
-      (*marder_)(mflds_, mprts);
+      (*marder_)(mflds, mprts);
       prof_stop(pr_marder);
     }
     
     if (checks_->continuity_every_step > 0 && timestep % checks_->continuity_every_step == 0) {
       prof_restart(pr_checks);
-      checks_->gauss(mprts, mflds_);
+      checks_->gauss(mprts, mflds);
       prof_stop(pr_checks);
     }
     

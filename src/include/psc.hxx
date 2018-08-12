@@ -63,14 +63,17 @@ struct Psc
     : time_start_{MPI_Wtime()},
       p_{params},
       sim_{sim},
-      psc_{psc},
+      psc_{psc}
 #ifdef VPIC
-      material_list_{sim->material_list_},
-      mflds_{psc->grid(), material_list_}
-#else
-      mflds_{psc->grid()}
+    ,material_list_{sim->material_list_}
 #endif
   {
+#ifdef VPIC
+    mflds_.reset(new MfieldsState{psc->grid(), material_list_});
+#else
+    mflds_.reset(new MfieldsState{psc->grid()});
+#endif
+      
 #ifdef VPIC
     hydro_.reset(new MfieldsHydroVpic{psc->grid(), 16, psc->ibn});
     interpolator_.reset(new Interpolator{sim_->grid_});
@@ -122,7 +125,7 @@ struct Psc
       initialize_vpic();
 #endif
     } else {
-      initialize_default(psc_->method, psc_, mflds_, *mprts_);
+      initialize_default(psc_->method, psc_, *mflds_, *mprts_);
     }
 
     // initial output / stats
@@ -292,42 +295,42 @@ private:
     
     mpi_printf(psc_comm(psc), "Checking interdomain synchronization\n");
     double err;
-    TIC err = CleanDivOps::synchronize_tang_e_norm_b(mflds.vmflds()); TOC(synchronize_tang_e_norm_b, 1);
+    TIC err = CleanDivOps::synchronize_tang_e_norm_b(mflds->vmflds()); TOC(synchronize_tang_e_norm_b, 1);
     mpi_printf(psc_comm(psc), "Error = %g (arb units)\n", err);
     
     mpi_printf(psc_comm(psc), "Checking magnetic field divergence\n");
-    TIC CleanDivOps::compute_div_b_err(mflds.vmflds()); TOC(compute_div_b_err, 1);
-    TIC err = CleanDivOps::compute_rms_div_b_err(mflds.vmflds()); TOC(compute_rms_div_b_err, 1);
+    TIC CleanDivOps::compute_div_b_err(mflds->vmflds()); TOC(compute_div_b_err, 1);
+    TIC err = CleanDivOps::compute_rms_div_b_err(mflds->vmflds()); TOC(compute_rms_div_b_err, 1);
     mpi_printf(psc_comm(psc), "RMS error = %e (charge/volume)\n", err);
-    TIC CleanDivOps::clean_div_b(mflds.vmflds()); TOC(clean_div_b, 1);
+    TIC CleanDivOps::clean_div_b(mflds->vmflds()); TOC(clean_div_b, 1);
     
     // Load fields not initialized by the user
     
     mpi_printf(psc_comm(psc), "Initializing radiation damping fields\n");
-    TIC AccumulateOps::compute_curl_b(mflds.vmflds()); TOC(compute_curl_b, 1);
+    TIC AccumulateOps::compute_curl_b(mflds->vmflds()); TOC(compute_curl_b, 1);
     
     mpi_printf(psc_comm(psc), "Initializing bound charge density\n");
-    TIC CleanDivOps::clear_rhof(mflds.vmflds()); TOC(clear_rhof, 1);
-    ParticlesOps::accumulate_rho_p(mprts.vmprts_, mflds.vmflds());
-    CleanDivOps::synchronize_rho(mflds.vmflds());
-    TIC AccumulateOps::compute_rhob(mflds.vmflds()); TOC(compute_rhob, 1);
+    TIC CleanDivOps::clear_rhof(mflds->vmflds()); TOC(clear_rhof, 1);
+    ParticlesOps::accumulate_rho_p(mprts.vmprts_, mflds->vmflds());
+    CleanDivOps::synchronize_rho(mflds->vmflds());
+    TIC AccumulateOps::compute_rhob(mflds->vmflds()); TOC(compute_rhob, 1);
     
     // Internal sanity checks
     
     mpi_printf(psc_comm(psc), "Checking electric field divergence\n");
-    TIC CleanDivOps::compute_div_e_err(mflds.vmflds()); TOC(compute_div_e_err, 1);
-    TIC err = CleanDivOps::compute_rms_div_e_err(mflds.vmflds()); TOC(compute_rms_div_e_err, 1);
+    TIC CleanDivOps::compute_div_e_err(mflds->vmflds()); TOC(compute_div_e_err, 1);
+    TIC err = CleanDivOps::compute_rms_div_e_err(mflds->vmflds()); TOC(compute_rms_div_e_err, 1);
     mpi_printf(psc_comm(psc), "RMS error = %e (charge/volume)\n", err);
-    TIC CleanDivOps::clean_div_e(mflds.vmflds()); TOC(clean_div_e, 1);
+    TIC CleanDivOps::clean_div_e(mflds->vmflds()); TOC(clean_div_e, 1);
     
     mpi_printf(psc_comm(psc), "Rechecking interdomain synchronization\n");
-    TIC err = CleanDivOps::synchronize_tang_e_norm_b(mflds.vmflds()); TOC(synchronize_tang_e_norm_b, 1);
+    TIC err = CleanDivOps::synchronize_tang_e_norm_b(mflds->vmflds()); TOC(synchronize_tang_e_norm_b, 1);
     mpi_printf(psc_comm(psc), "Error = %e (arb units)\n", err);
     
     mpi_printf(psc_comm(psc), "Uncentering particles\n");
     auto& vmprts = mprts.vmprts_;
     if (!vmprts.empty()) {
-      TIC InterpolatorOps::load(*interpolator_, mflds.vmflds()); TOC(load_interpolator, 1);
+      TIC InterpolatorOps::load(*interpolator_, mflds->vmflds()); TOC(load_interpolator, 1);
       
       for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
 	TIC ParticlesOps::uncenter_p(&*sp, *interpolator_); TOC(uncenter_p, 1);
@@ -344,13 +347,13 @@ private:
   {
 #ifdef VPIC
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-      sim_->runDiag(mprts_->vmprts_, mflds_.vmflds(), *interpolator_, *hydro_->vmflds_hydro, ppsc->grid().domain.np);
+      sim_->runDiag(mprts_->vmprts_, mflds_->vmflds(), *interpolator_, *hydro_->vmflds_hydro, ppsc->grid().domain.np);
     }
 #else
     // FIXME
-    psc_diag_run(psc_->diag, psc_, *mprts_, mflds_);
+    psc_diag_run(psc_->diag, psc_, *mprts_, *mflds_);
     // FIXME
-    (*outf_)(mflds_, *mprts_);
+    (*outf_)(*mflds_, *mprts_);
 #endif
     PscOutputParticlesBase{psc_->output_particles}.run(*mprts_);
   }
@@ -379,7 +382,7 @@ protected:
 #ifdef VPIC
   MaterialList material_list_;
 #endif
-  MfieldsState mflds_;
+  std::unique_ptr<MfieldsState> mflds_;
 #ifdef VPIC
   std::unique_ptr<MfieldsHydroVpic> hydro_;
   std::unique_ptr<Interpolator> interpolator_;

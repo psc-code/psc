@@ -531,7 +531,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     mpi_printf(comm, "**** Setting up particles...\n");
     setup_initial_particles(*mprts_, n_prts_by_patch_new);
     
-    setup_initial_fields(mflds_);
+    setup_initial_fields(*mflds_);
 
     setup_diagnostics();
 
@@ -836,6 +836,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     int timestep = psc_->timestep;
 
     auto& mprts = *mprts_;
+    auto& mflds = *mflds_;
 
     if (balance_interval > 0 && timestep % balance_interval == 0) {
       (*balance_)(psc_, mprts);
@@ -864,12 +865,12 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
     prof_start(pr_push_prts);
-    pushp_->push_mprts(mprts, mflds_, *interpolator_, *accumulator_);
+    pushp_->push_mprts(mprts, mflds, *interpolator_, *accumulator_);
     prof_stop(pr_push_prts);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
 
     // field propagation B^{n+1/2} -> B^{n+1}
-    pushf_->push_H(mflds_, .5);
+    pushf_->push_H(mflds, .5);
     // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
     prof_start(pr_bndp);
@@ -879,39 +880,39 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // field propagation E^{n+1/2} -> E^{n+3/2}
 
     // fill ghosts for H
-    bndf_->fill_ghosts_H(mflds_);
-    bnd_->fill_ghosts(mflds_, HX, HX + 3);
+    bndf_->fill_ghosts_H(mflds);
+    bnd_->fill_ghosts(mflds, HX, HX + 3);
     
     // add and fill ghost for J
-    bndf_->add_ghosts_J(mflds_);
-    bnd_->add_ghosts(mflds_, JXI, JXI + 3);
-    bnd_->fill_ghosts(mflds_, JXI, JXI + 3);
+    bndf_->add_ghosts_J(mflds);
+    bnd_->add_ghosts(mflds, JXI, JXI + 3);
+    bnd_->fill_ghosts(mflds, JXI, JXI + 3);
     
     // push E
-    pushf_->push_E(mflds_, 1.);
+    pushf_->push_E(mflds, 1.);
 
-    bndf_->fill_ghosts_E(mflds_);
+    bndf_->fill_ghosts_E(mflds);
     //if (pushf_->variant == 0) {
-    bnd_->fill_ghosts(mflds_, EX, EX + 3);
+    bnd_->fill_ghosts(mflds, EX, EX + 3);
     //}
     // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
 
     // field propagation B^{n+1} -> B^{n+3/2}
     //if (pushf_->variant == 0) {
-    bndf_->fill_ghosts_E(mflds_);
-    bnd_->fill_ghosts(mflds_, EX, EX + 3);
+    bndf_->fill_ghosts_E(mflds);
+    bnd_->fill_ghosts(mflds, EX, EX + 3);
     //    }
     
     // push H
-    pushf_->push_H(mflds_, .5);
+    pushf_->push_H(mflds, .5);
 
-    bndf_->fill_ghosts_H(mflds_);
+    bndf_->fill_ghosts_H(mflds);
     //if (pushf_->variant == 0) {
-    bnd_->fill_ghosts(mflds_, HX, HX + 3);
+    bnd_->fill_ghosts(mflds, HX, HX + 3);
     //}
     // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 
-    checks_->continuity_after_particle_push(psc_, mprts, mflds_);
+    checks_->continuity_after_particle_push(psc_, mprts, mflds);
 
     // E at t^{n+3/2}, particles at t^{n+3/2}
     // B at t^{n+3/2} (Note: that is not it's natural time,
@@ -919,14 +920,14 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     if (marder_interval > 0 && timestep % marder_interval == 0) {
       //mpi_printf(comm, "***** Performing Marder correction...\n");
       prof_start(pr_marder);
-      (*marder_)(mflds_, mprts);
+      (*marder_)(mflds, mprts);
       prof_stop(pr_marder);
     }
     
-    checks_->gauss(psc_, mprts, mflds_);
+    checks_->gauss(psc_, mprts, mflds);
 
 #ifdef VPIC
-    pushp_->prep(mprts, mflds_, *interpolator_);
+    pushp_->prep(mprts, mflds, *interpolator_);
 #endif
   }
 
@@ -943,7 +944,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
       {
 	OutputFieldsVpic out_fields;
-	auto result = out_fields(mflds_);
+	auto result = out_fields(*mflds_);
 	io_pfd_.write_mflds(result.mflds, result.name, result.comp_names);
       }
 
