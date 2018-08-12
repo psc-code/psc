@@ -9,23 +9,19 @@
 // ======================================================================
 // class VpicSimulation
 
-template<class P, class FieldArray, class Interpolator, class HydroArray, class RP, class SimulationMixin, class DiagMixin>
+template<class Particles, class FieldArray, class Interpolator, class HydroArray,
+	 class RP, class SimulationMixin, class DiagMixin>
 struct VpicSimulation : SimulationMixin, DiagMixin
 {
-  typedef P Particles;
-  typedef typename Particles::Grid Grid;
-  typedef typename Particles::Species Species;
-  typedef typename Particles::ParticleBcList ParticleBcList;
-  typedef typename FieldArray::MaterialList MaterialList;
-  typedef typename MaterialList::Material Material;
-  typedef RP RngPool;
+  using Grid = typename Particles::Grid;
+  using ParticleBcList = typename Particles::ParticleBcList;
+  using MaterialList = typename FieldArray::MaterialList;
 
   VpicSimulation()
     : SimulationMixin(),
       DiagMixin(),
       num_comm_round_(3)
-  {
-  }
+  {}
 
   // ----------------------------------------------------------------------
   // DiagMixin
