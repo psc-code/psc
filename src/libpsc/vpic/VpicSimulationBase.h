@@ -23,11 +23,6 @@ public:
     simulation = this;
   }
 
-  Grid*& getGrid()
-  {
-    return *reinterpret_cast<Grid **>(&grid);
-  }
-
   void initialization(int argc, char **argv)
   {
     TIC user_initialization(argc, argv); TOC(user_initialization, 1);
