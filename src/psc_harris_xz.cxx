@@ -431,6 +431,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   
     int interval = (int) (params.t_intervali / (phys_.wci * grid().dt));
     sim_->newDiag(interval);
+
+    p_.nmax = int(params.taui / (phys.wci*grid().dt)); // number of steps from taui
   
     psc_->ibn[0] = psc_->ibn[1] = psc_->ibn[2] = 1;
   
@@ -1051,8 +1053,6 @@ PscHarris* PscHarrisBuilder::makePsc()
   
   // Determine the time step
   double dt = set_dt(grid_domain, p.cfl, phys, params);
-  
-  p.nmax = (int) (params.taui / (phys.wci*dt)); // number of steps from taui
   
   auto coeff = Grid_t::Normalization{norm_params};
   psc_setup_domain(psc_, grid_domain, grid_bc, kinds, coeff, dt);
