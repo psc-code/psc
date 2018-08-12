@@ -22,7 +22,7 @@ struct PushParticlesVpic : PushParticlesBase
   }
 
   void push_mprts(Mparticles& mprts, MfieldsState& mflds, Interpolator& interpolator,
-		  Accumulator& accumulator)
+		  Accumulator& accumulator, ParticleBcList& particle_bc_list)
   {
     auto& vmprts = mprts.vmprts_;
     auto& vmflds = mflds.vmflds();
@@ -58,7 +58,7 @@ struct PushParticlesVpic : PushParticlesBase
     // local accumulation).
     TIC
       for(int round = 0; round < sim_->num_comm_round_; round++) {
-	ParticlesOps::boundary_p(sim_->particle_bc_list_, vmprts, vmflds, accumulator);
+	ParticlesOps::boundary_p(particle_bc_list, vmprts, vmflds, accumulator);
       } TOC(boundary_p, sim_->num_comm_round_);
     
     // Drop the particles that have unprocessed movers at this point
