@@ -62,7 +62,6 @@ struct Psc
   Psc(const PscParams& params, psc* psc)
     : time_start_{MPI_Wtime()},
       p_{params},
-      grid_{psc->grid()},
       psc_{psc}
   {}
 
@@ -377,13 +376,13 @@ private:
   }
 
 public:
-  const Grid_t& grid() { return grid_; }
+  const Grid_t& grid() { return *grid_; }
 
 protected:
   double time_start_;
 
   PscParams p_;
-  const Grid_t& grid_;
+  const Grid_t* grid_;
   Simulation* sim_;
   psc* psc_;
 

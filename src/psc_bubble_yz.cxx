@@ -61,6 +61,8 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   {
     auto comm = psc_comm(psc_);
 
+    grid_ = &psc_->grid();
+
     init();
 
     // -- Balance

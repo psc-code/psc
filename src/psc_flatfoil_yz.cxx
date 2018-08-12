@@ -216,6 +216,8 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   {
     auto comm = psc_comm(psc_);
 
+    grid_ = &psc_->grid();
+
     init();
 
     // -- Balance

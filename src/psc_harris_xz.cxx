@@ -416,6 +416,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     mpi_printf(psc_comm(psc_), "*** Initializing\n" );
 
+    grid_ = &psc_->grid();
+
     // create sim_
     sim_ = new Simulation();
     psc_method_set_param_ptr(psc_->method, "sim", sim_);
