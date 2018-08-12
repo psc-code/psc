@@ -421,6 +421,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 {
   // ----------------------------------------------------------------------
   // PscHarris ctor
+  //
+  // FIXME: can only use 1st order pushers with current conducting wall b.c.
   
   PscHarris(const PscParams& p, const PscHarrisParams& params,
 	    psc* psc)
@@ -431,6 +433,11 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     auto comm = psc_comm(psc_);
 
     mpi_printf(psc_comm(psc_), "*** Initializing\n" );
+
+    psc_set_from_options(psc_);
+  
+    p_.cfl = 0.99;
+    p_.stats_every = 100;
 
     phys_ = globals_physics{params};
 
@@ -459,7 +466,10 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     // create sim_
     sim_ = new Simulation();
+#ifdef VPIC
+    psc_method_set_type(psc_->method, "vpic");
     psc_method_set_param_ptr(psc_->method, "sim", sim_);
+#endif
 
     sim_->grid_ = Grid::create();
     // set high level VPIC simulation parameters
@@ -1050,18 +1060,6 @@ PscHarris* PscHarrisBuilder::makePsc()
   params.open_bc_x = false;
   params.driven_bc_z = false;
   
-  p.cfl = 0.99;
-
-  p.stats_every = 100;
-
-#ifdef VPIC
-  psc_method_set_type(psc_->method, "vpic");
-#endif
-  
-  // FIXME: can only use 1st order pushers with current conducting wall b.c.
-
-  psc_set_from_options(psc_);
-
   return new PscHarris{p, params, psc_};
 }
 
