@@ -215,7 +215,10 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
       inject_{psc_comm(psc), inject_interval, inject_tau, inject_kind_n, inject_target}
   {
     auto comm = psc_comm(psc_);
-    
+
+    // -- Checks
+    checks_.reset(new Checks_t{psc_->grid(), psc_comm(psc), p_.checks_params});
+
     // -- Marder correction
     double marder_diffusion = 0.9;
     int marder_loop = 3;

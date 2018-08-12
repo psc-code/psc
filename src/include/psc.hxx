@@ -91,7 +91,6 @@ struct Psc
       bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn},
       bndp_{psc_->mrc_domain_, psc_->grid()}
   {
-    checks_.reset(new Checks_t{psc_->grid(), psc_comm(psc), p_.checks_params});
   }
 
   // ----------------------------------------------------------------------

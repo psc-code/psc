@@ -61,6 +61,9 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   {
     auto comm = psc_comm(psc_);
 
+    // -- Checks
+    checks_.reset(new Checks_t{psc_->grid(), psc_comm(psc), p_.checks_params});
+
     // -- Marder correction
     double marder_diffusion = 0.9;
     int marder_loop = 3;
