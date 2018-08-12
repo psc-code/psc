@@ -398,40 +398,6 @@ using PscConfig = PscConfigVpic;
 using PscConfig = PscConfig1vbecSingle<dim_xz>;
 #endif
 
-// ----------------------------------------------------------------------
-// setup_simulation
-
-Psc<PscConfig>::Simulation* setup_simulation(psc* psc_, const globals_physics& phys_,
-					     const PscParams& p, const PscHarrisParams& params)
-{
-  using Simulation = Psc<PscConfig>::Simulation;
-
-#ifdef VPIC
-  const auto& grid = psc_->grid();
-  mpi_printf(psc_comm(psc_), "*** Initializing\n" );
-  auto sim = new Simulation();
-
-  sim->grid_ = Grid::create();
-  // set high level VPIC simulation parameters
-  // FIXME, will be unneeded eventually
-  sim->setParams(p.nmax, p.stats_every,
-		 p.stats_every / 2, p.stats_every / 2,
-		 p.stats_every / 2);
-  setup_domain(sim, grid.domain, psc_, phys_, params);
-  setup_fields(sim, psc_);
-  
-  int interval = (int) (params.t_intervali / (phys_.wci * grid.dt));
-  sim->newDiag(interval);
-  
-  psc_->ibn[0] = psc_->ibn[1] = psc_->ibn[2] = 1;
-  
-  psc_method_set_param_ptr(psc_->method, "sim", sim);
-  return sim;
-#else
-  return nullptr;
-#endif
-}
-
 // ======================================================================
 // PscHarris
 
@@ -449,8 +415,26 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   {
     auto comm = psc_comm(psc_);
 
-    sim_ = setup_simulation(psc, phys, p, params);
-    
+    mpi_printf(psc_comm(psc_), "*** Initializing\n" );
+
+    // create sim_
+    sim_ = new Simulation();
+    psc_method_set_param_ptr(psc_->method, "sim", sim_);
+
+    sim_->grid_ = Grid::create();
+    // set high level VPIC simulation parameters
+    // FIXME, will be unneeded eventually
+    sim_->setParams(p.nmax, p.stats_every,
+		    p.stats_every / 2, p.stats_every / 2,
+		    p.stats_every / 2);
+    setup_domain(sim_, grid().domain, psc_, phys_, params);
+    setup_fields(sim_, psc_);
+  
+    int interval = (int) (params.t_intervali / (phys_.wci * grid().dt));
+    sim_->newDiag(interval);
+  
+    psc_->ibn[0] = psc_->ibn[1] = psc_->ibn[2] = 1;
+  
     init();
     
     // -- Balance

@@ -376,6 +376,7 @@ private:
     print_profiling();
   }
 
+public:
   const Grid_t& grid() { return grid_; }
 
 protected:
