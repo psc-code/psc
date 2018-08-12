@@ -98,9 +98,12 @@ struct Psc
       bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn},
       bndp_{psc_->mrc_domain_, psc_->grid()},
       checks_{psc_->grid(), psc_comm(psc), p_.checks_params},
-      marder_(psc_comm(psc), p_.marder_diffusion, p_.marder_loop, p_.marder_dump),
-      outf_{psc_comm(psc), p_.outf_params}
-  {}
+      marder_(psc_comm(psc), p_.marder_diffusion, p_.marder_loop, p_.marder_dump)
+  {
+    auto comm = psc_comm(psc_);
+    
+    outf_.reset(new OutputFieldsC{comm, p_.outf_params});
+  }
 
   // ----------------------------------------------------------------------
   // dtor
@@ -367,7 +370,7 @@ private:
     // FIXME
     psc_diag_run(psc_->diag, psc_, mprts_, mflds_);
     // FIXME
-    outf_(mflds_, mprts_);
+    (*outf_)(mflds_, mprts_);
 #endif
     PscOutputParticlesBase{psc_->output_particles}.run(mprts_);
   }
@@ -415,7 +418,7 @@ protected:
   Checks_t checks_;
   Marder_t marder_;
 
-  OutputFieldsC outf_;
+  std::unique_ptr<OutputFieldsC> outf_;
 
   int st_nr_particles;
   int st_time_step;
