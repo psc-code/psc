@@ -90,8 +90,7 @@ struct Psc
 #endif
 
 #ifdef VPIC
-    // FIXME, pass damp
-    mflds_.reset(new MfieldsState{grid(), material_list_});
+    mflds_.reset(new MfieldsState{grid(), material_list_, damp});
 #else
     mflds_.reset(new MfieldsState{grid()});
 #endif

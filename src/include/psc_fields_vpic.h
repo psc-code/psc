@@ -72,8 +72,7 @@ struct MfieldsStateVpic// : MfieldsStateBase
     N_COMP = 20,
   };
 
-  MfieldsStateVpic(const Grid_t& grid, const MaterialList& material_list)
-    //: MfieldsStateBase{grid, N_COMP, {1, 1, 1}}
+  MfieldsStateVpic(const Grid_t& grid, const MaterialList& material_list, double damp = 0.)
     : grid_{grid}
   {
     assert(grid.n_patches() == 1);
@@ -81,7 +80,7 @@ struct MfieldsStateVpic// : MfieldsStateBase
     Simulation* sim;
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
     
-    vmflds_fields_ = FieldArray::create(sim->vgrid_, material_list, 0.);
+    vmflds_fields_ = FieldArray::create(sim->vgrid_, material_list, damp);
   }
 
   const Grid_t& grid() const { return grid_; }
