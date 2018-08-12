@@ -291,9 +291,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     
     auto norm_params = Grid_t::NormalizationParams::dimensionless();
     norm_params.nicell = 1;
-    
-    auto coeff = Grid_t::Normalization{norm_params};
-    grid_ = psc_setup_domain(psc_, grid_domain, grid_bc, kinds, coeff, dt);
+
+    define_grid(grid_domain, grid_bc, kinds, dt, norm_params);
 
     // --- create Simulation
     

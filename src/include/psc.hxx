@@ -76,7 +76,16 @@ struct Psc
 #endif
   }
 
+  // ----------------------------------------------------------------------
+  // define_grid
 
+  void define_grid(Grid_t::Domain& domain, GridBc& bc, Grid_t::Kinds& kinds,
+		   double dt, Grid_t::NormalizationParams& norm_params)
+  {
+    auto coeff = Grid_t::Normalization{norm_params};
+    grid_ = psc_setup_domain(psc_, domain, bc, kinds, coeff, dt);
+  }
+  
   // ----------------------------------------------------------------------
   // define_field_array
 
