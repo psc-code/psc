@@ -217,8 +217,6 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
 
     mpi_printf(comm, "*** Setting up...\n");
 
-    psc_set_from_options(psc_);
-
     p_.nmax = 5001;
     p_.cfl = 0.75;
 

@@ -93,8 +93,6 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     
     auto kinds = Grid_t::Kinds{{ -1., 1., "e"}, { 1., 100., "i" }};
     
-    psc_set_from_options(psc_);
-    
     mpi_printf(comm, "lambda_D = %g\n", sqrt(params.TTe));
     
     // --- generic setup

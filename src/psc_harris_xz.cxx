@@ -472,8 +472,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     
     mpi_printf(psc_comm(psc_), "*** Initializing\n" );
 
-    psc_set_from_options(psc_);
-  
     p_.cfl = 0.99;
     p_.stats_every = 100;
 

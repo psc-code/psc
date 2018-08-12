@@ -64,6 +64,7 @@ struct Psc
     time_start_ = MPI_Wtime();
     
     psc_ = psc_create(MPI_COMM_WORLD);
+    psc_set_from_options(psc_);
   }
   
 
