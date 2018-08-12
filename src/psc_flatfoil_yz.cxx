@@ -380,9 +380,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
 
     auto coeff = Grid_t::Normalization{norm_params};
     double dt = PscFlatfoil::set_dt(p_, grid_domain);
-    psc_setup_domain(psc_, grid_domain, grid_bc, kinds, coeff, dt);
-
-    grid_ = &psc_->grid();
+    grid_ = psc_setup_domain(psc_, grid_domain, grid_bc, kinds, coeff, dt);
 
     define_field_array();
     init();
