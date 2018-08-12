@@ -89,9 +89,9 @@ struct Psc
       balance_{p_.balance_interval, p_.balance_factor_fields, p_.balance_print_loads, p_.balance_write_loads},
       collision_{psc_comm(psc), p_.collision_interval, p_.collision_nu},
       bnd_{psc_->grid(), psc_->mrc_domain_, psc_->ibn},
-      bndp_{psc_->mrc_domain_, psc_->grid()},
-      checks_{psc_->grid(), psc_comm(psc), p_.checks_params}
+      bndp_{psc_->mrc_domain_, psc_->grid()}
   {
+    checks_.reset(new Checks_t{psc_->grid(), psc_comm(psc), p_.checks_params});
   }
 
   // ----------------------------------------------------------------------
@@ -404,8 +404,8 @@ protected:
   Bnd_t bnd_;
   BndFields_t bndf_;
   BndParticles_t bndp_;
-  Checks_t checks_;
 
+  std::unique_ptr<Checks_t> checks_;
   std::unique_ptr<Marder_t> marder_;
   std::unique_ptr<OutputFieldsC> outf_;
 

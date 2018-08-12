@@ -88,7 +88,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     mpi_printf(comm, "**** Setting up fields...\n");
     setup_initial_fields(mflds_);
 
-    checks_.gauss(mprts_, mflds_);
+    checks_->gauss(mprts_, mflds_);
     psc_setup_member_objs(psc_);
   
     initialize_stats();
@@ -295,7 +295,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     if (p_.checks_params.continuity_every_step > 0 && timestep % p_.checks_params.continuity_every_step == 0) {
       mpi_printf(comm, "***** Checking continuity...\n");
       prof_start(pr_checks);
-      checks_.continuity_before_particle_push(mprts_);
+      checks_->continuity_before_particle_push(mprts_);
       prof_stop(pr_checks);
     }
 
@@ -382,7 +382,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     
     if (p_.checks_params.continuity_every_step > 0 && timestep % p_.checks_params.continuity_every_step == 0) {
       prof_restart(pr_checks);
-      checks_.continuity_after_particle_push(mprts_, mflds_);
+      checks_->continuity_after_particle_push(mprts_, mflds_);
       prof_stop(pr_checks);
     }
     
@@ -398,7 +398,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     
     if (p_.checks_params.gauss_every_step > 0 && timestep % p_.checks_params.gauss_every_step == 0) {
       prof_restart(pr_checks);
-      checks_.gauss(mprts_, mflds_);
+      checks_->gauss(mprts_, mflds_);
       prof_stop(pr_checks);
     }
     
