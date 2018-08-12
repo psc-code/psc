@@ -99,7 +99,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     auto norm_params = Grid_t::NormalizationParams::dimensionless();
     norm_params.nicell = 100;
 
-    double dt = set_dt(grid_domain);
+    double dt = p_.cfl * courant_length(grid_domain);
     define_grid(grid_domain, grid_bc, kinds, dt, norm_params);
 
     define_field_array();

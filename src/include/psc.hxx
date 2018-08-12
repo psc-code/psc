@@ -367,14 +367,6 @@ struct Psc
   }
  
   // ----------------------------------------------------------------------
-  // set_dt
-  
-  double set_dt(const Grid_t::Domain& domain)
-  {
-    return p_.cfl * courant_length(domain);
-  }
-  
-  // ----------------------------------------------------------------------
   // setup_diagnostics
 
   void setup_diagnostics()
