@@ -321,8 +321,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     p_.nmax = int(taui / (phys_.wci*grid().dt)); // number of steps from taui
   
-    psc_->ibn[0] = psc_->ibn[1] = psc_->ibn[2] = 1;
-
     // ----------------------------------------------------------------------
     // -- Base class remaining init FIXME mv to end
     

@@ -85,6 +85,8 @@ struct Psc
 #ifdef VPIC
     // FIXME, mv assert innto MfieldsState ctor
     assert(!material_list_.empty());
+
+    psc_->ibn[0] = psc_->ibn[1] = psc_->ibn[2] = 1;
 #endif
 
 #ifdef VPIC
