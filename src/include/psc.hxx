@@ -350,9 +350,9 @@ struct Psc
   }
 
   // ----------------------------------------------------------------------
-  // set_dt
+  // courant length
   
-  double set_dt(const Grid_t::Domain& domain)
+  double courant_length(const Grid_t::Domain& domain)
   {
     double inv_sum = 0.;
     for (int d = 0; d < 3; d++) {
@@ -360,10 +360,18 @@ struct Psc
 	inv_sum += 1. / sqr(domain.dx[d]);
       }
     }
-    if (!inv_sum) { // simulation has 0 dimensions
+    if (!inv_sum) { // simulation has 0 dimensions (happens in some test?)
       inv_sum = 1.;
     }
-    return p_.cfl * sqrt(1./inv_sum);
+    return sqrt(1. / inv_sum);
+  }
+ 
+  // ----------------------------------------------------------------------
+  // set_dt
+  
+  double set_dt(const Grid_t::Domain& domain)
+  {
+    return p_.cfl * courant_length(domain);
   }
   
   // ----------------------------------------------------------------------

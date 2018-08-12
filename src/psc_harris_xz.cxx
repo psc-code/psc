@@ -49,23 +49,6 @@ static inline double trunc_granular( double a, double b )
   return b * (int)(a/b);
 }
 
-// ----------------------------------------------------------------------
-// courant length
-//
-// FIXME, the dt calculating should be consolidated with what regular PSC does
-
-static inline double
-courant_length(Vec3<double> length, Int3 gdims)
-{
-  double inv_sum = 0.;
-  for (int d = 0; d < 3; d++) {
-    if (gdims[d] > 1) {
-      inv_sum += sqr(gdims[d] / length[d]);
-    }
-  }
-  return sqrt(1. / inv_sum);
-}
- 
 // ======================================================================
 // PscHarrisParams
 
@@ -273,7 +256,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 			       { phys_.ec, phys_.mi, "i"}};
     
     // Determine the time step
-    double dg = courant_length(grid_domain.length, grid_domain.gdims);
+    double dg = courant_length(grid_domain);
     double dt = p_.cfl * dg / phys_.c; // courant limited time step
     if (phys_.wpe * dt > wpedt_max) {
       dt = wpedt_max / phys_.wpe;  // override timestep if plasma frequency limited
