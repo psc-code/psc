@@ -873,7 +873,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     if (p_.marder_interval > 0 && timestep % p_.marder_interval == 0) {
       //mpi_printf(comm, "***** Performing Marder correction...\n");
       prof_start(pr_marder);
-      marder_(mflds_, mprts_);
+      (*marder_)(mflds_, mprts_);
       prof_stop(pr_marder);
     }
     
