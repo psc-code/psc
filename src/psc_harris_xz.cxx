@@ -314,6 +314,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     setup_domain(grid().domain);
     setup_fields();
+    define_field_array();
   
     int interval = (int) (t_intervali / (phys_.wci * grid().dt));
     sim_->newDiag(interval);

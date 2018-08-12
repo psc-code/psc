@@ -384,6 +384,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
 
     grid_ = &psc_->grid();
 
+    define_field_array();
     init();
 
     // -- Balance

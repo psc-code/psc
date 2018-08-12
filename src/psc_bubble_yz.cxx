@@ -105,6 +105,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     
     grid_ = &psc_->grid();
 
+    define_field_array();
     init();
 
     // -- Balance

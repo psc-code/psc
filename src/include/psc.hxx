@@ -76,19 +76,24 @@ struct Psc
 #endif
   }
 
-  // ----------------------------------------------------------------------
-  // init
 
-  void init()
+  // ----------------------------------------------------------------------
+  // define_field_array
+
+  void define_field_array(double damp = 0.)
   {
 #ifdef VPIC
     // FIXME, mv assert innto MfieldsState ctor
     assert(!material_list_.empty());
+#endif
+
+#ifdef VPIC
+    // FIXME, pass damp
     mflds_.reset(new MfieldsState{grid(), material_list_});
 #else
     mflds_.reset(new MfieldsState{grid()});
 #endif
-      
+
 #ifdef VPIC
     hydro_.reset(new MfieldsHydroVpic{grid(), 16, psc_->ibn});
     interpolator_.reset(new Interpolator{vgrid_});
@@ -98,7 +103,13 @@ struct Psc
     // FIXME this is here because this is the order that vpic did things in,
     // but I don't see why this shouldn't go to the end of grid setup
     grid_setup_communication();
-    
+  }
+  
+  // ----------------------------------------------------------------------
+  // init
+
+  void init()
+  {
     mprts_.reset(new Mparticles_t{grid()});
     sort_.reset(new Sort_t{});
     pushp_.reset(new PushParticles_t{});
