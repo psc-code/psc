@@ -1043,22 +1043,6 @@ private:
 };
 
 // ======================================================================
-// PscHarrisBuilder
-
-struct PscHarrisBuilder
-{
-  PscHarris* makePsc();
-};
-
-// ----------------------------------------------------------------------
-// PscHarrisBuilder::makePsc
-
-PscHarris* PscHarrisBuilder::makePsc()
-{
-  return new PscHarris{};
-}
-
-// ======================================================================
 // main
 
 int
@@ -1072,8 +1056,7 @@ main(int argc, char **argv)
   libmrc_params_init(argc, argv);
   mrc_set_flags(MRC_FLAG_SUPPRESS_UNPREFIXED_OPTION_WARNING);
 
-  auto builder = PscHarrisBuilder{};
-  auto psc = builder.makePsc();
+  auto psc = new PscHarris;
 
   psc->initialize();
   psc->integrate();
