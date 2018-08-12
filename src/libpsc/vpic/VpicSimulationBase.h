@@ -23,11 +23,6 @@ public:
     simulation = this;
   }
 
-  void initialization(int argc, char **argv)
-  {
-    TIC user_initialization(argc, argv); TOC(user_initialization, 1);
-  }
-
   void diagnostics()
   {
     TIC user_diagnostics(); TOC(user_diagnostics, 1);
