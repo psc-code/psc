@@ -450,7 +450,11 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     auto comm = psc_comm(psc_);
     
     // -- Marder correction
-    marder_.reset(new Marder_t(psc_comm(psc), p_.marder_diffusion, p_.marder_loop, p_.marder_dump));
+    // FIXME, these are ignored for vpic (?)
+    double marder_diffusion = 0.9;
+    int marder_loop = 3;
+    bool marder_dump = false;
+    marder_.reset(new Marder_t(psc_comm(psc), marder_diffusion, marder_loop, marder_dump));
 
     // -- output fields
     OutputFieldsCParams outf_params;

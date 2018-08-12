@@ -217,7 +217,10 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     auto comm = psc_comm(psc_);
     
     // -- Marder correction
-    marder_.reset(new Marder_t(psc_comm(psc), p_.marder_diffusion, p_.marder_loop, p_.marder_dump));
+    double marder_diffusion = 0.9;
+    int marder_loop = 3;
+    bool marder_dump = false;
+    marder_.reset(new Marder_t(psc_comm(psc), marder_diffusion, marder_loop, marder_dump));
 
     // -- output fields
     OutputFieldsCParams outf_params;
@@ -674,9 +677,6 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
 
   // --- marder
   p.marder_interval = 0*5;
-  p.marder_diffusion = 0.9;
-  p.marder_loop = 3;
-  p.marder_dump = false;
 
   // --- balancing
   p.balance_interval = 0;
