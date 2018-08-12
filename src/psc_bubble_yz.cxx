@@ -55,12 +55,15 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   // ----------------------------------------------------------------------
   // ctor
 
-  PscBubble(const PscParams& p, const PscBubbleParams& params, psc *psc)
-    : Psc{p, psc},
+  PscBubble(const PscBubbleParams& params, psc *psc)
+    : Psc{{}, psc},
       PscBubbleParams(params)
   {
     auto comm = psc_comm(psc_);
 
+    p_.nmax = 1000; //32000;
+    p_.stats_every = 100;
+  
     auto grid_domain = Grid_t::Domain{{1, 128, 512},
 				      {params.LLn, params.LLy, params.LLz},
 				      {0., -.5 * params.LLy, -.5 * params.LLz},
@@ -82,7 +85,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     norm_params.nicell = 100;
 
     auto coeff = Grid_t::Normalization{norm_params};
-    double dt = PscBubble::set_dt(p, grid_domain);
+    double dt = PscBubble::set_dt(p_, grid_domain);
     psc_setup_domain(psc_, grid_domain, grid_bc, kinds, coeff, dt);
     
     grid_ = &psc_->grid();
@@ -487,7 +490,6 @@ PscBubble* PscBubbleBuilder::makePsc()
   
   mpi_printf(comm, "*** Setting up...\n");
 
-  PscParams p;
   PscBubbleParams params;
 
   params.BB = .07;
@@ -500,14 +502,10 @@ PscBubble* PscBubbleBuilder::makePsc()
   params.TTi = .02;
   params.MMi = 100.;
     
-  p.nmax = 1000; //32000;
-
-  p.stats_every = 100;
-  
   params.LLy = 2. * params.LLn;
   params.LLz = 3. * params.LLn;
 
-  return new PscBubble{p, params, psc_};
+  return new PscBubble{params, psc_};
 }
 
 // ======================================================================

@@ -208,14 +208,27 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   // ----------------------------------------------------------------------
   // ctor
   
-  PscFlatfoil(const PscParams& p, const PscFlatfoilParams& params, psc *psc)
-    : Psc{p, psc},
+  PscFlatfoil(const PscFlatfoilParams& params, psc *psc)
+    : Psc{{}, psc},
       PscFlatfoilParams(params),
       heating_{heating_interval, heating_kind, heating_spot},
       inject_{psc_comm(psc), inject_interval, inject_tau, inject_kind_n, inject_target}
   {
     auto comm = psc_comm(psc_);
 
+    p_.nmax = 5001;
+    p_.cfl = 0.75;
+
+#if TEST == TEST_4_SHOCK_3D
+    p_.nmax = 100002;
+#endif
+#if TEST == TEST_3_NILSON_3D
+    p_.nmax = 101;
+#endif
+#if TEST == TEST_1_HEATING_3D
+    p_.collision_interval = 0;
+#endif
+  
     // --- setup domain
     Grid_t::Real3 LL = { 1., 400.*4, 400. }; // domain size (in d_e)
     Int3 gdims = { 1, 4096, 1024 }; // global number of grid points
@@ -273,7 +286,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
 #endif
 
     auto coeff = Grid_t::Normalization{norm_params};
-    double dt = PscFlatfoil::set_dt(p, grid_domain);
+    double dt = PscFlatfoil::set_dt(p_, grid_domain);
     psc_setup_domain(psc_, grid_domain, grid_bc, kinds, coeff, dt);
 
     grid_ = &psc_->grid();
@@ -649,11 +662,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
   
   mpi_printf(comm, "*** Setting up...\n");
 
-  PscParams p;
   PscFlatfoilParams params;
-
-  p.nmax = 5001;
-  p.cfl = 0.75;
 
   psc_set_from_options(psc_);
 
@@ -731,7 +740,6 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
   params.inject_tau = 40;
 
 #if TEST == TEST_4_SHOCK_3D
-  p.nmax = 100002;
   params.BB = 0.02;
   params.background_n = .01;
   params.background_Te = .002;
@@ -740,7 +748,6 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
 #endif
   
 #if TEST == TEST_3_NILSON_3D
-  p.nmax = 101;
   params.background_n = .02;
   params.inject_interval = 0;
 #endif
@@ -753,7 +760,6 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
 #if TEST == TEST_1_HEATING_3D
   params.background_n  = 1.0;
 
-  p.collision_interval = 0;
   params.heating_interval = 0;
   params.inject_interval = 0;
   
@@ -767,7 +773,7 @@ PscFlatfoil* PscFlatfoilBuilder::makePsc()
   params.checks_params.gauss_verbose = true;
 #endif
 
-  return new PscFlatfoil{p, params, psc_};
+  return new PscFlatfoil{params, psc_};
 }
 
 // ======================================================================
