@@ -65,6 +65,10 @@ struct Psc
     
     psc_ = psc_create(MPI_COMM_WORLD);
     psc_set_from_options(psc_);
+
+#ifdef VPIC
+    vgrid_ = Grid::create();
+#endif
   }
   
 

@@ -448,7 +448,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     psc_method_set_param_ptr(psc_->method, "sim", sim_);
 #endif
 
-    vgrid_ = Grid::create();
     sim_->vgrid_ = vgrid_;
     // set high level VPIC simulation parameters
     // FIXME, will be unneeded eventually
