@@ -261,21 +261,16 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     if (phys_.wpe * dt > wpedt_max) {
       dt = wpedt_max / phys_.wpe;  // override timestep if plasma frequency limited
     }
-    
+
+    assert(phys_.c == 1. && phys_.eps0 == 1.);
     auto norm_params = Grid_t::NormalizationParams::dimensionless();
     norm_params.nicell = 1;
 
     define_grid(grid_domain, grid_bc, kinds, dt, norm_params);
 
-    // Setup basic grid parameters
-    double xl[3], xh[3];
-    for (int d = 0; d < 3; d++) {
-      xl[d] = grid_domain.corner[d];
-      xh[d] = xl[d] + grid_domain.length[d];
-    }
-    
     // Define the grid
-    define_periodic_grid(xl, xh, grid_domain.gdims, grid_domain.np);
+    define_periodic_grid(grid_domain.corner, grid_domain.corner + grid_domain.length,
+			 grid_domain.gdims, grid_domain.np);
     
     int p = 0;
     bool left = psc_at_boundary_lo(psc_, p, 0);
