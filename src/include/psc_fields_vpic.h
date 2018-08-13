@@ -9,17 +9,10 @@
 
 #include "../libpsc/vpic/vpic_iface.h" // FIXME path
 
-struct fields_vpic_t : fields3d<float, LayoutAOS>
-{
-  using Base = fields3d<float, LayoutAOS>;
-
-  using Base::Base;
-};
-
 struct MfieldsHydroVpic
 {
   using real_t = float;
-  using fields_t = fields_vpic_t;
+  using fields_t = fields3d<float, LayoutAOS>;
 
   enum {
     N_COMP = 16,
@@ -43,12 +36,12 @@ struct MfieldsHydroVpic
   int n_patches() const { return grid_.n_patches(); }
   int n_comps() const { return N_COMP; }
   
-  fields_vpic_t operator[](int p)
+  fields_t operator[](int p)
   {
     assert(p == 0);
     int ib[3], im[3];
     float* data = vhydro_->getData(ib, im);
-    return fields_vpic_t(ib, im, N_COMP, data);
+    return fields_t{ib, im, N_COMP, data};
   }
 
   HydroArray& vhydro() { return *vhydro_; }
@@ -58,11 +51,11 @@ private:
   const Grid_t& grid_;
 };
 
-template<>
-struct Mfields_traits<MfieldsHydroVpic>
+struct fields_vpic_t : fields3d<float, LayoutAOS>
 {
-  static constexpr const char* name = "vpic";
-  static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
+  using Base = fields3d<float, LayoutAOS>;
+
+  using Base::Base;
 };
 
 struct MfieldsStateVpic
