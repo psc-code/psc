@@ -34,7 +34,7 @@ struct MfieldsHydroVpic_
   real_t* data() { return data_; }
   fields_t operator[](int p) { return {ib_, im_, N_COMP, data_}; }
 
-  const Grid* vgrid() const { return vgrid_; }
+  Grid* vgrid() { return vgrid_; }
 
   HydroArray& vhydro() { return *vhydro_; }
 
@@ -42,7 +42,7 @@ private:
   HydroArray* vhydro_;
   real_t* data_;
   Int3 ib_, im_;
-  const Grid* vgrid_;
+  Grid* vgrid_;
   const Grid_t& grid_;
 };
 

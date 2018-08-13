@@ -99,14 +99,14 @@ struct PscHydroArrayOps
     }
   };
 
-  static void synchronize(HydroArray& ha)
+  static void synchronize(MfieldsHydro& hydro)
   {
     int face, bc, x, y, z;
     Element* h;
 
-    auto g = ha.grid();
+    auto g = hydro.vgrid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;
-    Field3D<HydroArray> H(ha);
+    Field3D<HydroArray> H(hydro.vhydro());
 
     // Note: synchronize_hydro assumes that hydro has not been adjusted
     // at the local domain boundary. Because hydro fields are purely
@@ -147,7 +147,7 @@ struct PscHydroArrayOps
 
 # undef ADJUST_HYDRO
 
-    CommHydro<Grid, Field3D<HydroArray>> comm(ha.grid());
+    CommHydro<Grid, Field3D<HydroArray>> comm{hydro.vgrid()};
 
     for (int dir = 0; dir < 3; dir++) {
       comm.begin(dir, H);

@@ -646,7 +646,7 @@ struct VpicDiagMixin
 
     HydroArrayOps::clear(mflds_hydro);
     ParticlesOps::accumulate_hydro_p(mflds_hydro.vhydro(), sp, *interpolator);
-    HydroArrayOps::synchronize(mflds_hydro.vhydro());
+    HydroArrayOps::synchronize(mflds_hydro);
   
     // convenience
     const size_t istride(dumpParams.stride_x);

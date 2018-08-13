@@ -68,7 +68,7 @@ struct OutputHydroVpic
       typename Particles::const_iterator sp = vmprts.find(kind);
       ParticlesOps::accumulate_hydro_p(vmflds, sp, interpolator);
       
-      HydroArrayOps::synchronize(vmflds);
+      HydroArrayOps::synchronize(mflds_hydro);
       
       for (int p = 0; p < mflds_res_.n_patches(); p++) {
 	auto res = mflds_res_[p];
