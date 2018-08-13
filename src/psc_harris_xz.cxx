@@ -367,10 +367,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   
     marder_.reset(new Marder_t(comm, marder_diffusion, marder_loop, marder_dump));
 
-    // -- Base class remaining init FIXME mv to end
-    
-    init();
-
     // ---
 
     int interval = (int) (t_intervali / (phys_.wci * grid().dt));
@@ -402,6 +398,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     psc_setup_member_objs(psc_);
 
     initialize_stats();
+
+    init();
+
     setup_log();
 
     if (output_particle_interval > 0) {

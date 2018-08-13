@@ -385,8 +385,6 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
 
     mprts_.reset(new Mparticles_t{grid()});
 
-    init();
-
     // -- Balance
     balance_interval = 0;
     double balance_factor_fields = .1;
@@ -466,6 +464,8 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     psc_setup_member_objs(psc_);
 
     initialize_stats();
+
+    init();
   }
 
   void init_npt(int kind, double crd[3], psc_particle_npt& npt)
