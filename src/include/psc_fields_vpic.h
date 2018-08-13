@@ -25,12 +25,10 @@ struct MfieldsHydroVpic
     N_COMP = 16,
   };
 
-  MfieldsHydroVpic(const Grid_t& grid, int n_fields, Int3 ibn)
+  MfieldsHydroVpic(const Grid_t& grid)
     : grid_{grid}
   {
     assert(grid.n_patches() == 1);
-    assert((ibn == Int3{ 1, 1, 1 }));
-    assert(n_fields == N_COMP);
 
     Simulation* sim;
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
@@ -42,6 +40,7 @@ struct MfieldsHydroVpic
   
   fields_vpic_t operator[](int p)
   {
+    assert(p == 0);
     int ib[3], im[3];
     float* data = vmflds_hydro->getData(ib, im);
     return fields_vpic_t(ib, im, N_COMP, data);
@@ -59,7 +58,7 @@ struct Mfields_traits<MfieldsHydroVpic>
   static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
 };
 
-struct MfieldsStateVpic// : MfieldsStateBase
+struct MfieldsStateVpic
 {
   using real_t = float;
   using fields_t = fields_vpic_t;

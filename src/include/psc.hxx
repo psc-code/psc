@@ -155,7 +155,7 @@ struct Psc
 #endif
 
 #ifdef VPIC
-    hydro_.reset(new MfieldsHydroVpic{grid(), 16, psc_->ibn});
+    hydro_.reset(new MfieldsHydroVpic{grid()});
     interpolator_.reset(new Interpolator{vgrid_});
     accumulator_.reset(new Accumulator{vgrid_});
 #endif
