@@ -323,11 +323,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     mprts_.reset(new Mparticles_t{grid()});
     setup_species();
 
-    // ---
-
-    int interval = (int) (t_intervali / (phys_.wci * grid().dt));
-    sim_->newDiag(interval);
-
     // -- Balance
     balance_interval = 0;
     double balance_factor_fields = 1.;
@@ -376,6 +371,11 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // -- Base class remaining init FIXME mv to end
     
     init();
+
+    // ---
+
+    int interval = (int) (t_intervali / (phys_.wci * grid().dt));
+    create_diagnostics(interval);
 
     // -- output fields
     OutputFieldsCParams outf_params;

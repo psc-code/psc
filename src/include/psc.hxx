@@ -412,7 +412,17 @@ struct Psc
     }
     return sqrt(1. / inv_sum);
   }
- 
+
+  // ----------------------------------------------------------------------
+  // create_diagnotics
+
+  void create_diagnostics(int interval)
+  {
+#ifdef VPIC
+    sim_->newDiag(interval);
+#endif
+  }
+  
   // ----------------------------------------------------------------------
   // setup_diagnostics
 
