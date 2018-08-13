@@ -15,9 +15,10 @@
 // ======================================================================
 // PscHydroArrayOps
 
-template<typename HydroArray, typename MfieldsHydro>
+template<typename MfieldsHydro>
 struct PscHydroArrayOps
 {
+  using HydroArray = typename MfieldsHydro::HydroArray;
   using Grid = typename HydroArray::Grid;
   using Element = typename HydroArray::Element;
   

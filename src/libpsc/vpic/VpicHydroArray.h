@@ -4,7 +4,7 @@
 // ======================================================================
 // VpicHydroArrayOps
 
-template<typename HydroArray, typename MfieldsHydro>
+template<typename MfieldsHydro>
 struct VpicHydroArrayOps
 {
   static void clear(MfieldsHydro& hydro)       { clear_hydro_array(&hydro.vhydro()); }
