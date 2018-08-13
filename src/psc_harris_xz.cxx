@@ -284,6 +284,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     define_grid(grid_domain, grid_bc, kinds, dt, norm_params);
 
+    p_.nmax = int(taui / (phys_.wci*grid().dt)); // number of steps from taui
+  
     // --- setup materials
 
     setup_materials();
@@ -326,8 +328,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     int interval = (int) (t_intervali / (phys_.wci * grid().dt));
     sim_->newDiag(interval);
 
-    p_.nmax = int(taui / (phys_.wci*grid().dt)); // number of steps from taui
-  
     // -- Balance
     balance_interval = 0;
     double balance_factor_fields = 1.;
