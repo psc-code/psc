@@ -40,6 +40,7 @@
 
 #include "PscHydroArrayBase.h"
 #include "PscHydroArray.h"
+#include "mfields_hydro.hxx"
 
 #include "NoneDiag.h"
 
@@ -113,6 +114,7 @@ using Accumulator = PscAccumulatorBase<Grid>;
 using AccumulatorOps = PscAccumulatorOps<Accumulator, FieldArray>;
 
 using HydroArray = PscHydroArrayBase<Grid>;
+using MfieldsHydro = MfieldsHydroVpic_<Grid, HydroArray>;
 using HydroArrayOps = PscHydroArrayOps<HydroArray>;
 
 #if 1

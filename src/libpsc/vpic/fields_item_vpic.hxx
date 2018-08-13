@@ -43,10 +43,10 @@ struct OutputHydroVpic
   }
 
   OutputHydroVpic(const Grid_t& grid)
-    : mflds_res_{grid, MfieldsHydroVpic::N_COMP * int(grid.kinds.size()), {1,1,1}}
+    : mflds_res_{grid, MfieldsHydro::N_COMP * int(grid.kinds.size()), {1,1,1}}
   {}
 
-  Result operator()(MparticlesVpic& mprts, MfieldsHydroVpic& mflds_hydro, Interpolator& interpolator)
+  Result operator()(MparticlesVpic& mprts, MfieldsHydro& mflds_hydro, Interpolator& interpolator)
   {
     // This relies on load_interpolator_array() having been called earlier
 
@@ -74,13 +74,13 @@ struct OutputHydroVpic
 	auto res = mflds_res_[p];
 	auto H = mflds_hydro[p];
 	grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-	    for (int m = 0; m < MfieldsHydroVpic::N_COMP; m++) {
-	      res(m + kind * MfieldsHydroVpic::N_COMP, i,j,k) = H(m, i,j,k);
+	    for (int m = 0; m < MfieldsHydro::N_COMP; m++) {
+	      res(m + kind * MfieldsHydro::N_COMP, i,j,k) = H(m, i,j,k);
 	    }
 	  });
       }
 
-      for (int m = 0; m < MfieldsHydroVpic::N_COMP; m++) {
+      for (int m = 0; m < MfieldsHydro::N_COMP; m++) {
 	comp_names.emplace_back(std::string(fld_names()[m]) + "_" + grid.kinds[kind].name);
       }
     }

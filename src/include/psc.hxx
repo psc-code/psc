@@ -14,7 +14,6 @@
 #include <output_fields_c.hxx>
 
 #ifdef VPIC
-#include <mfields_hydro.h>
 #include <psc_fields_vpic.h>
 #include <psc_particles_vpic.h>
 
@@ -156,7 +155,7 @@ struct Psc
 #endif
 
 #ifdef VPIC
-    hydro_.reset(new MfieldsHydroVpic{grid(), vgrid_});
+    hydro_.reset(new MfieldsHydro{grid(), vgrid_});
     interpolator_.reset(new Interpolator{vgrid_});
     accumulator_.reset(new Accumulator{vgrid_});
 #endif
@@ -581,7 +580,7 @@ protected:
 #endif
   std::unique_ptr<MfieldsState> mflds_;
 #ifdef VPIC
-  std::unique_ptr<MfieldsHydroVpic> hydro_;
+  std::unique_ptr<MfieldsHydro> hydro_;
   std::unique_ptr<Interpolator> interpolator_;
   std::unique_ptr<Accumulator> accumulator_;
   ParticleBcList particle_bc_list_;
