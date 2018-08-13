@@ -268,14 +268,11 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     define_grid(grid_domain, grid_bc, kinds, dt, norm_params);
 
     // Setup basic grid parameters
-    double dx[3], xl[3], xh[3];
+    double xl[3], xh[3];
     for (int d = 0; d < 3; d++) {
-      dx[d] = grid_domain.length[d] / grid_domain.gdims[d];
       xl[d] = grid_domain.corner[d];
       xh[d] = xl[d] + grid_domain.length[d];
     }
-    
-    vgrid_->setup(dx, grid().dt, phys_.c, phys_.eps0);
     
     // Define the grid
     define_periodic_grid(xl, xh, grid_domain.gdims, grid_domain.np);

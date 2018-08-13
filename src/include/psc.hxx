@@ -70,10 +70,6 @@ struct Psc
     
     psc_ = psc_create(MPI_COMM_WORLD);
     psc_set_from_options(psc_);
-
-#ifdef VPIC
-    vgrid_ = Grid::create();
-#endif
   }
 
   // ----------------------------------------------------------------------
@@ -84,6 +80,11 @@ struct Psc
   {
     auto coeff = Grid_t::Normalization{norm_params};
     grid_ = psc_setup_domain(psc_, domain, bc, kinds, coeff, dt);
+
+#ifdef VPIC
+    vgrid_ = Grid::create();
+    vgrid_->setup(domain.dx, dt, norm_params.cc, norm_params.eps0);
+#endif
   }
   
   // ----------------------------------------------------------------------
