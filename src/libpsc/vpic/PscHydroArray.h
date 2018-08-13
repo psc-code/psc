@@ -27,7 +27,7 @@ struct PscHydroArrayOps
   static void clear(MfieldsHydro& hydro)
   {
     auto h = hydro.data();
-    memset(h, 0, hydro.vgrid()->nv * sizeof(*h));
+    memset(h, 0, hydro.vgrid()->nv * sizeof(*h) * MfieldsHydro::N_COMP);
   }
 
   static void clear(HydroArray& ha)

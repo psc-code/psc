@@ -62,7 +62,7 @@ struct OutputHydroVpic
 
     
     for (int kind = 0; kind < grid.kinds.size(); ++kind) {
-      HydroArrayOps::clear(vmflds);
+      HydroArrayOps::clear(mflds_hydro);
       
       // FIXME, just iterate over species instead?
       typename Particles::const_iterator sp = vmprts.find(kind);
