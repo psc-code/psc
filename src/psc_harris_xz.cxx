@@ -267,6 +267,53 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     define_grid(grid_domain, grid_bc, kinds, dt, norm_params);
 
+    // Setup basic grid parameters
+    double dx[3], xl[3], xh[3];
+    for (int d = 0; d < 3; d++) {
+      dx[d] = grid_domain.length[d] / grid_domain.gdims[d];
+      xl[d] = grid_domain.corner[d];
+      xh[d] = xl[d] + grid_domain.length[d];
+    }
+    
+    vgrid_->setup(dx, grid().dt, phys_.c, phys_.eps0);
+    
+    // Define the grid
+    define_periodic_grid(xl, xh, grid_domain.gdims, grid_domain.np);
+    
+    int p = 0;
+    bool left = psc_at_boundary_lo(psc_, p, 0);
+    bool right = psc_at_boundary_hi(psc_, p, 0);
+    
+    bool bottom = psc_at_boundary_lo(psc_, p, 2);
+    bool top = psc_at_boundary_hi(psc_, p, 2);
+    
+    // ***** Set Field Boundary Conditions *****
+    if (open_bc_x) {
+      mpi_printf(comm, "Absorbing fields on X-boundaries\n");
+      if (left ) set_domain_field_bc({-1,0,0}, BND_FLD_ABSORBING);
+      if (right) set_domain_field_bc({ 1,0,0}, BND_FLD_ABSORBING);
+    }
+    
+    mpi_printf(comm, "Conducting fields on Z-boundaries\n");
+    if (bottom) set_domain_field_bc({0,0,-1}, BND_FLD_CONDUCTING_WALL);
+    if (top   ) set_domain_field_bc({0,0, 1}, BND_FLD_CONDUCTING_WALL);
+    
+    // ***** Set Particle Boundary Conditions *****
+    if (driven_bc_z) {
+      mpi_printf(comm, "Absorb particles on Z-boundaries\n");
+      if (bottom) set_domain_particle_bc({0,0,-1}, BND_PRT_ABSORBING);
+      if (top   ) set_domain_particle_bc({0,0, 1}, BND_PRT_ABSORBING);
+    } else {
+      mpi_printf(comm, "Reflect particles on Z-boundaries\n");
+      if (bottom) set_domain_particle_bc({0,0,-1}, BND_PRT_REFLECTING);
+      if (top   ) set_domain_particle_bc({0,0, 1}, BND_PRT_REFLECTING);
+    }
+    if (open_bc_x) {
+      mpi_printf(comm, "Absorb particles on X-boundaries\n");
+      if (left)   set_domain_particle_bc({-1,0,0}, BND_PRT_ABSORBING);
+      if (right)  set_domain_particle_bc({ 1,0,0}, BND_PRT_ABSORBING);
+    }
+
     // --- create Simulation
     
     sim_ = new Simulation();
@@ -282,7 +329,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 		    p_.stats_every / 2, p_.stats_every / 2,
 		    p_.stats_every / 2);
 
-    setup_domain(grid().domain);
     setup_materials();
     define_field_array();
   
@@ -433,61 +479,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     params.driven_bc_z = false;
 
     static_cast<PscHarrisParams&>(*this) = params;
-  }
-  
-  // ----------------------------------------------------------------------
-  // setup_domain
-  
-  void setup_domain(const Grid_t::Domain& domain)
-  {
-    MPI_Comm comm = psc_comm(psc_);
-    
-    // Setup basic grid parameters
-    double dx[3], xl[3], xh[3];
-    for (int d = 0; d < 3; d++) {
-      dx[d] = domain.length[d] / domain.gdims[d];
-      xl[d] = domain.corner[d];
-      xh[d] = xl[d] + domain.length[d];
-    }
-    
-    vgrid_->setup(dx, grid().dt, phys_.c, phys_.eps0);
-    
-    // Define the grid
-    define_periodic_grid(xl, xh, domain.gdims, domain.np);
-    
-    int p = 0;
-    bool left = psc_at_boundary_lo(psc_, p, 0);
-    bool right = psc_at_boundary_hi(psc_, p, 0);
-    
-    bool bottom = psc_at_boundary_lo(psc_, p, 2);
-    bool top = psc_at_boundary_hi(psc_, p, 2);
-    
-    // ***** Set Field Boundary Conditions *****
-    if (open_bc_x) {
-      mpi_printf(comm, "Absorbing fields on X-boundaries\n");
-      if (left ) set_domain_field_bc({-1,0,0}, BND_FLD_ABSORBING);
-      if (right) set_domain_field_bc({ 1,0,0}, BND_FLD_ABSORBING);
-    }
-    
-    mpi_printf(comm, "Conducting fields on Z-boundaries\n");
-    if (bottom) set_domain_field_bc({0,0,-1}, BND_FLD_CONDUCTING_WALL);
-    if (top   ) set_domain_field_bc({0,0, 1}, BND_FLD_CONDUCTING_WALL);
-    
-    // ***** Set Particle Boundary Conditions *****
-    if (driven_bc_z) {
-      mpi_printf(comm, "Absorb particles on Z-boundaries\n");
-      if (bottom) set_domain_particle_bc({0,0,-1}, BND_PRT_ABSORBING);
-      if (top   ) set_domain_particle_bc({0,0, 1}, BND_PRT_ABSORBING);
-    } else {
-      mpi_printf(comm, "Reflect particles on Z-boundaries\n");
-      if (bottom) set_domain_particle_bc({0,0,-1}, BND_PRT_REFLECTING);
-      if (top   ) set_domain_particle_bc({0,0, 1}, BND_PRT_REFLECTING);
-    }
-    if (open_bc_x) {
-      mpi_printf(comm, "Absorb particles on X-boundaries\n");
-      if (left)   set_domain_particle_bc({-1,0,0}, BND_PRT_ABSORBING);
-      if (right)  set_domain_particle_bc({ 1,0,0}, BND_PRT_ABSORBING);
-    }
   }
   
   // ----------------------------------------------------------------------
