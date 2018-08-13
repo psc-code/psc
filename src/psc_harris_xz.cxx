@@ -241,7 +241,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     phys_ = globals_physics{*this};
 
-    // --- create Grid_t
+    // --- setup domain
     
     auto grid_domain = Grid_t::Domain{gdims,
 				      {phys_.Lx, phys_.Ly, phys_.Lz},
@@ -284,6 +284,10 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     define_grid(grid_domain, grid_bc, kinds, dt, norm_params);
 
+    // --- setup materials
+
+    setup_materials();
+
     // --- create Simulation
     
     sim_ = new Simulation();
@@ -291,7 +295,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     psc_method_set_type(psc_->method, "vpic");
     psc_method_set_param_ptr(psc_->method, "sim", sim_);
 #endif
-
     sim_->vgrid_ = vgrid_;
     // set high level VPIC simulation parameters
     // FIXME, will be unneeded eventually
@@ -299,7 +302,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 		    p_.stats_every / 2, p_.stats_every / 2,
 		    p_.stats_every / 2);
 
-    setup_materials();
+    // --- setup field data structures
+
     define_field_array();
   
     int interval = (int) (t_intervali / (phys_.wci * grid().dt));
