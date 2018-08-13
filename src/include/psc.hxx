@@ -131,6 +131,8 @@ struct Psc
 	}
       }
     }
+
+    grid_setup_communication();
 #endif
   }
   
@@ -157,10 +159,6 @@ struct Psc
     interpolator_.reset(new Interpolator{vgrid_});
     accumulator_.reset(new Accumulator{vgrid_});
 #endif
-
-    // FIXME this is here because this is the order that vpic did things in,
-    // but I don't see why this shouldn't go to the end of grid setup
-    grid_setup_communication();
   }
   
   // ----------------------------------------------------------------------
