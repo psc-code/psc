@@ -32,7 +32,12 @@ struct MfieldsHydroVpic
 
     Simulation* sim;
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
-    vmflds_hydro = new HydroArray{sim->vgrid_};
+    vhydro_ = new HydroArray{sim->vgrid_};
+  }
+
+  ~MfieldsHydroVpic()
+  {
+    delete vhydro_;
   }
 
   int n_patches() const { return grid_.n_patches(); }
@@ -42,12 +47,14 @@ struct MfieldsHydroVpic
   {
     assert(p == 0);
     int ib[3], im[3];
-    float* data = vmflds_hydro->getData(ib, im);
+    float* data = vhydro_->getData(ib, im);
     return fields_vpic_t(ib, im, N_COMP, data);
   }
 
-  HydroArray *vmflds_hydro;
+  HydroArray& vhydro() { return *vhydro_; }
+
 private:
+  HydroArray* vhydro_;
   const Grid_t& grid_;
 };
 

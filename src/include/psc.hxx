@@ -536,7 +536,7 @@ private:
   {
 #ifdef VPIC
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-      sim_->runDiag(mprts_->vmprts_, mflds_->vmflds(), *interpolator_, *hydro_->vmflds_hydro, grid().domain.np);
+      sim_->runDiag(mprts_->vmprts_, mflds_->vmflds(), *interpolator_, hydro_->vhydro(), grid().domain.np);
     }
 #else
     // FIXME
