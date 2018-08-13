@@ -3,12 +3,13 @@
 
 #include <fields3d.hxx>
 
-template<typename Grid, typename HydroArray>
+template<typename Grid, typename _HydroArray>
 struct MfieldsHydroVpic_
 {
   using real_t = float;
   using fields_t = fields3d<float, LayoutAOS>;
-
+  using HydroArray = _HydroArray;
+  
   enum {
     N_COMP = 16,
   };

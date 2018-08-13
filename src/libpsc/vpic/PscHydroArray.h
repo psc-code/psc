@@ -30,12 +30,6 @@ struct PscHydroArrayOps
     memset(h, 0, hydro.vgrid()->nv * sizeof(*h) * MfieldsHydro::N_COMP);
   }
 
-  static void clear(HydroArray& ha)
-  {
-    auto h = ha.data();
-    memset(h, 0, ha.grid()->nv * sizeof(*h));
-  }
-
   // ----------------------------------------------------------------------
   // synchronize
   

@@ -112,7 +112,7 @@ static HydroInfo hydroInfo[5] = {
     }                                                  \
   } while(0)
 
-template<class Particles, class FieldArray, class Interpolator, class HydroArray,
+template<class Particles, class FieldArray, class Interpolator, class MfieldsHydro,
 	 class DiagOps, class ParticlesOps, class HydroArrayOps>
 struct VpicDiagMixin
 {
@@ -222,7 +222,7 @@ struct VpicDiagMixin
   (diag_.x##_interval>0 && remainder(step, diag_.x##_interval) == 0)
 
   void diagnostics_run(FieldArray& fa, Particles& particles,
-		       Interpolator& interpolator, HydroArray& hydro_array, int np[3])
+		       Interpolator& interpolator, MfieldsHydro& mflds_hydro, int np[3])
   {
     TIC {
       const Grid* g = fa.grid();
@@ -255,8 +255,8 @@ struct VpicDiagMixin
       
       // Species moment output
       
-      if(should_dump(ehydro)) hydro_dump(&particles, &interpolator, &hydro_array, "electron", diag_.hedParams);
-      if(should_dump(Hhydro)) hydro_dump(&particles, &interpolator, &hydro_array, "ion", diag_.hHdParams);
+      if(should_dump(ehydro)) hydro_dump(&particles, &interpolator, mflds_hydro, "electron", diag_.hedParams);
+      if(should_dump(Hhydro)) hydro_dump(&particles, &interpolator, mflds_hydro, "ion", diag_.hHdParams);
 
 #if 0
       if(step && !(step % diag->restart_interval)) {
@@ -615,11 +615,12 @@ struct VpicDiagMixin
   // ----------------------------------------------------------------------
   // hydro_dump
   
-  void hydro_dump(Particles *vmprts, Interpolator* interpolator, HydroArray* hydro_array,
-		  const char * speciesname, DumpParameters & dumpParams )
+  void hydro_dump(Particles *vmprts, Interpolator* interpolator, MfieldsHydro& mflds_hydro,
+		  const char * speciesname, DumpParameters& dumpParams )
   {
-    Field3D<HydroArray> H(*hydro_array);
-    Grid* grid = hydro_array->grid();
+    using HydroArray = typename MfieldsHydro::HydroArray;
+    Field3D<HydroArray> H(mflds_hydro.vhydro());
+    const Grid* grid = mflds_hydro.vgrid();
     int64_t step = grid->step;
     int rank = psc_world_rank;
     int nproc = psc_world_size;
@@ -643,9 +644,9 @@ struct VpicDiagMixin
     typename Particles::const_iterator sp = vmprts->find(speciesname);
     if (sp == vmprts->cend()) LOG_ERROR("Invalid species name: %s", speciesname);
 
-    HydroArrayOps::clear(*hydro_array);
-    ParticlesOps::accumulate_hydro_p(*hydro_array, sp, *interpolator);
-    HydroArrayOps::synchronize(*hydro_array);
+    HydroArrayOps::clear(mflds_hydro);
+    ParticlesOps::accumulate_hydro_p(mflds_hydro.vhydro(), sp, *interpolator);
+    HydroArrayOps::synchronize(mflds_hydro.vhydro());
   
     // convenience
     const size_t istride(dumpParams.stride_x);
