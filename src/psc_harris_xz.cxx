@@ -248,6 +248,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 				      {0., -.5 * phys_.Ly, -.5 * phys_.Lz}, np};
     
     mpi_printf(comm, "Conducting fields on Z-boundaries\n");
+    mpi_printf(comm, "Reflect particles on Z-boundaries\n");
     auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
 			  { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
 			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING },
@@ -256,6 +257,15 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       mpi_printf(comm, "Absorbing fields on X-boundaries\n");
       grid_bc.fld_lo[0] = BND_FLD_ABSORBING;
       grid_bc.fld_hi[0] = BND_FLD_ABSORBING;
+      mpi_printf(comm, "Absorb particles on X-boundaries\n");
+      grid_bc.prt_lo[1] = BND_PRT_ABSORBING;
+      grid_bc.prt_hi[1] = BND_PRT_ABSORBING;
+    }
+
+    if (driven_bc_z) {
+      mpi_printf(comm, "Absorb particles on Z-boundaries\n");
+      grid_bc.prt_lo[2] = BND_PRT_ABSORBING;
+      grid_bc.prt_hi[2] = BND_PRT_ABSORBING;
     }
     
     auto kinds = Grid_t::Kinds{{-phys_.ec, phys_.me, "e"},
@@ -273,29 +283,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     norm_params.nicell = 1;
 
     define_grid(grid_domain, grid_bc, kinds, dt, norm_params);
-
-    int p = 0;
-    bool left = psc_at_boundary_lo(psc_, p, 0);
-    bool right = psc_at_boundary_hi(psc_, p, 0);
-    
-    bool bottom = psc_at_boundary_lo(psc_, p, 2);
-    bool top = psc_at_boundary_hi(psc_, p, 2);
-    
-    // ***** Set Particle Boundary Conditions *****
-    if (driven_bc_z) {
-      mpi_printf(comm, "Absorb particles on Z-boundaries\n");
-      if (bottom) set_domain_particle_bc({0,0,-1}, BND_PRT_ABSORBING);
-      if (top   ) set_domain_particle_bc({0,0, 1}, BND_PRT_ABSORBING);
-    } else {
-      mpi_printf(comm, "Reflect particles on Z-boundaries\n");
-      if (bottom) set_domain_particle_bc({0,0,-1}, BND_PRT_REFLECTING);
-      if (top   ) set_domain_particle_bc({0,0, 1}, BND_PRT_REFLECTING);
-    }
-    if (open_bc_x) {
-      mpi_printf(comm, "Absorb particles on X-boundaries\n");
-      if (left)   set_domain_particle_bc({-1,0,0}, BND_PRT_ABSORBING);
-      if (right)  set_domain_particle_bc({ 1,0,0}, BND_PRT_ABSORBING);
-    }
 
     // --- create Simulation
     
