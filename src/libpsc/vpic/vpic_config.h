@@ -83,11 +83,12 @@
 
 #endif
 
+//#define DO_VPIC 1
 
-#if 1
-typedef PscGridBase Grid;
+#ifdef DO_VPIC
+using Grid = VpicGridBase;
 #else
-typedef VpicGridBase Grid;
+using Grid = PscGridBase;
 #endif
 
 #if 1
