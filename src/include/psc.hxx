@@ -174,6 +174,9 @@ struct Psc
     bnd_.reset(new Bnd_t{psc_->grid(), psc_->mrc_domain_, psc_->ibn});
     bndf_.reset(new BndFields_t{});
     bndp_.reset(new BndParticles_t{psc_->mrc_domain_, psc_->grid()});
+
+    psc_setup_member_objs(psc_);
+    initialize_stats();
   }
 
   // ----------------------------------------------------------------------

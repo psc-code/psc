@@ -395,10 +395,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     setup_diagnostics();
 
-    psc_setup_member_objs(psc_);
-
-    initialize_stats();
-
     init();
 
     setup_log();

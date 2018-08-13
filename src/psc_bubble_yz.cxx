@@ -166,10 +166,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     setup_initial_fields(*mflds_);
 
     checks_->gauss(*mprts_, *mflds_);
-    psc_setup_member_objs(psc_);
   
-    initialize_stats();
-
     init();
   }
 
