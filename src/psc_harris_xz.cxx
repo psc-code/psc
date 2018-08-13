@@ -247,10 +247,16 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 				      {phys_.Lx, phys_.Ly, phys_.Lz},
 				      {0., -.5 * phys_.Ly, -.5 * phys_.Lz}, np};
     
+    mpi_printf(comm, "Conducting fields on Z-boundaries\n");
     auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
 			  { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
 			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING },
 			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING }};
+    if (open_bc_x) {
+      mpi_printf(comm, "Absorbing fields on X-boundaries\n");
+      grid_bc.fld_lo[0] = BND_FLD_ABSORBING;
+      grid_bc.fld_hi[0] = BND_FLD_ABSORBING;
+    }
     
     auto kinds = Grid_t::Kinds{{-phys_.ec, phys_.me, "e"},
 			       { phys_.ec, phys_.mi, "i"}};
@@ -274,17 +280,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     
     bool bottom = psc_at_boundary_lo(psc_, p, 2);
     bool top = psc_at_boundary_hi(psc_, p, 2);
-    
-    // ***** Set Field Boundary Conditions *****
-    if (open_bc_x) {
-      mpi_printf(comm, "Absorbing fields on X-boundaries\n");
-      if (left ) set_domain_field_bc({-1,0,0}, BND_FLD_ABSORBING);
-      if (right) set_domain_field_bc({ 1,0,0}, BND_FLD_ABSORBING);
-    }
-    
-    mpi_printf(comm, "Conducting fields on Z-boundaries\n");
-    if (bottom) set_domain_field_bc({0,0,-1}, BND_FLD_CONDUCTING_WALL);
-    if (top   ) set_domain_field_bc({0,0, 1}, BND_FLD_CONDUCTING_WALL);
     
     // ***** Set Particle Boundary Conditions *****
     if (driven_bc_z) {
