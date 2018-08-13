@@ -165,8 +165,6 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     mpi_printf(comm, "**** Setting up fields...\n");
     setup_initial_fields(*mflds_);
 
-    checks_->gauss(*mprts_, *mflds_);
-  
     init();
   }
 

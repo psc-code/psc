@@ -209,13 +209,11 @@ struct Psc
     psc_view(psc_);
     mprts_->view();
 
-    if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
 #ifdef VPIC
-      initialize_vpic();
+    initialize_vpic();
+#else
+    initialize_default();
 #endif
-    } else {
-      initialize_default(psc_->method, psc_, *mflds_, *mprts_);
-    }
 
     // initial output / stats
     mpi_printf(psc_comm(psc_), "Performing initial diagnostics.\n");
@@ -458,15 +456,17 @@ private:
     }
   }
   
-
+#ifndef VPIC
   // ----------------------------------------------------------------------
   // initialize_default
   
-  static void initialize_default(struct psc_method *method, struct psc *psc,
-				 MfieldsState& mflds, Mparticles_t& mprts)
+  void initialize_default()
   {
     //pushp_.stagger(mprts, mflds); FIXME, vpic does it
+
+    checks_->gauss(*mprts_, *mflds_);
   }
+#endif
 
 #ifdef VPIC
 
