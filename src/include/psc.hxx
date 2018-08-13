@@ -84,6 +84,11 @@ struct Psc
 #ifdef VPIC
     vgrid_ = Grid::create();
     vgrid_->setup(domain.dx, dt, norm_params.cc, norm_params.eps0);
+
+    // Define the grid
+    define_periodic_grid(domain.corner, domain.corner + domain.length,
+			 domain.gdims, domain.np);
+    
 #endif
   }
   

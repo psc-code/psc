@@ -268,10 +268,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     define_grid(grid_domain, grid_bc, kinds, dt, norm_params);
 
-    // Define the grid
-    define_periodic_grid(grid_domain.corner, grid_domain.corner + grid_domain.length,
-			 grid_domain.gdims, grid_domain.np);
-    
     int p = 0;
     bool left = psc_at_boundary_lo(psc_, p, 0);
     bool right = psc_at_boundary_hi(psc_, p, 0);
