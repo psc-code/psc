@@ -14,11 +14,12 @@ struct MfieldsHydroVpic_
   };
 
   MfieldsHydroVpic_(const Grid_t& grid, Grid* vgrid)
-    : grid_{grid}
+    : grid_{grid}, vgrid_{vgrid}
   {
     assert(grid.n_patches() == 1);
 
     vhydro_ = new HydroArray{vgrid};
+    data_ = vhydro_->getData(ib_, im_);
   }
 
   ~MfieldsHydroVpic_()
@@ -28,6 +29,8 @@ struct MfieldsHydroVpic_
 
   int n_patches() const { return grid_.n_patches(); }
   int n_comps() const { return N_COMP; }
+
+  real_t* data() { return data_; }
   
   fields_t operator[](int p)
   {
@@ -37,10 +40,15 @@ struct MfieldsHydroVpic_
     return fields_t{ib, im, N_COMP, data};
   }
 
+  const Grid* vgrid() const { return vgrid_; }
+
   HydroArray& vhydro() { return *vhydro_; }
 
 private:
   HydroArray* vhydro_;
+  real_t* data_;
+  Int3 ib_, im_;
+  const Grid* vgrid_;
   const Grid_t& grid_;
 };
 

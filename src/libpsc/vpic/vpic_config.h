@@ -115,7 +115,7 @@ using AccumulatorOps = PscAccumulatorOps<Accumulator, FieldArray>;
 
 using HydroArray = PscHydroArrayBase<Grid>;
 using MfieldsHydro = MfieldsHydroVpic_<Grid, HydroArray>;
-using HydroArrayOps = PscHydroArrayOps<HydroArray>;
+using HydroArrayOps = PscHydroArrayOps<HydroArray, MfieldsHydro>;
 
 #if 1
 using ParticleBcList = PscParticleBcList;

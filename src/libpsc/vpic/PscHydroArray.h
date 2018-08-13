@@ -15,7 +15,7 @@
 // ======================================================================
 // PscHydroArrayOps
 
-template<typename HydroArray>
+template<typename HydroArray, typename MfieldsHydro>
 struct PscHydroArrayOps
 {
   using Grid = typename HydroArray::Grid;
@@ -24,6 +24,12 @@ struct PscHydroArrayOps
   // ----------------------------------------------------------------------
   // clear
   
+  static void clear(MfieldsHydro& hydro)
+  {
+    auto h = hydro.data();
+    memset(h, 0, hydro.vgrid()->nv * sizeof(*h));
+  }
+
   static void clear(HydroArray& ha)
   {
     auto h = ha.data();
