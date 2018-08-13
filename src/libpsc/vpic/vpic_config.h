@@ -48,8 +48,6 @@
 
 #ifdef HAVE_VPIC
 
-#define particle_t __vpic_particle_t
-
 #include "VpicRng.h"
 
 #include "VpicGridBase.h"
@@ -114,9 +112,15 @@ using InterpolatorOps = PscInterpolatorOps<Interpolator, FieldArray>;
 using Accumulator = PscAccumulatorBase<Grid>;
 using AccumulatorOps = PscAccumulatorOps<Accumulator, FieldArray>;
 
+#ifdef DO_VPIC
+using HydroArray = VpicHydroArrayBase<Grid>;
+using MfieldsHydro = MfieldsHydroVpic_<Grid, HydroArray>;
+using HydroArrayOps = VpicHydroArrayOps<HydroArray, MfieldsHydro>;
+#else
 using HydroArray = PscHydroArrayBase<Grid>;
 using MfieldsHydro = MfieldsHydroVpic_<Grid, HydroArray>;
 using HydroArrayOps = PscHydroArrayOps<HydroArray, MfieldsHydro>;
+#endif
 
 #if 1
 using ParticleBcList = PscParticleBcList;
