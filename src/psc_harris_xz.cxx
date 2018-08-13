@@ -535,9 +535,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     mpi_printf(comm, "Ne_sheet = %g\n", phys_.Ne_sheet);
     mpi_printf(comm, "Ne_back = %g\n", phys_.Ne_back);
     mpi_printf(comm, "total # of particles = %g\n", 2*phys_.Ne);
-    mpi_printf(comm, "dt*wpe = %g\n", phys_.wpe*dt());
-    mpi_printf(comm, "dt*wce = %g\n", phys_.wce*dt());
-    mpi_printf(comm, "dt*wci = %g\n", phys_.wci*dt());
+    mpi_printf(comm, "dt*wpe = %g\n", phys_.wpe*grid().dt);
+    mpi_printf(comm, "dt*wce = %g\n", phys_.wce*grid().dt);
+    mpi_printf(comm, "dt*wci = %g\n", phys_.wci*grid().dt);
     mpi_printf(comm, "dx/de = %g\n", phys_.Lx/(phys_.de*gdims[0]));
     mpi_printf(comm, "dy/de = %g\n", phys_.Ly/(phys_.de*gdims[1]));
     mpi_printf(comm, "dz/de = %g\n", phys_.Lz/(phys_.de*gdims[2]));

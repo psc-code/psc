@@ -250,7 +250,7 @@ struct Psc
       first_iteration = false;
 
       mpi_printf(psc_comm(psc_), "**** Step %d / %d, Code Time %g, Wall Time %g\n", psc_->timestep + 1,
-		 p_.nmax, psc_->timestep * dt(), MPI_Wtime() - time_start_);
+		 p_.nmax, psc_->timestep * grid().dt, MPI_Wtime() - time_start_);
 
       prof_start(pr_time_step_no_comm);
       prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
@@ -432,9 +432,6 @@ struct Psc
     sim_->setupDiag();
 #endif
   }
-
-protected:
-  double dt() const { return psc_->grid().dt; }
 
 private:
 
