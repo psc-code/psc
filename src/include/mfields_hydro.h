@@ -1,7 +1,7 @@
 
 #pragma once
 
-template<typename HydroArray, typename Simulation>
+template<typename Grid, typename HydroArray>
 struct MfieldsHydro
 {
   using real_t = float;
@@ -11,14 +11,12 @@ struct MfieldsHydro
     N_COMP = 16,
   };
 
-  MfieldsHydro(const Grid_t& grid)
+  MfieldsHydro(const Grid_t& grid, Grid* vgrid)
     : grid_{grid}
   {
     assert(grid.n_patches() == 1);
 
-    Simulation* sim;
-    psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
-    vhydro_ = new HydroArray{sim->vgrid_};
+    vhydro_ = new HydroArray{vgrid};
   }
 
   ~MfieldsHydro()
@@ -46,4 +44,4 @@ private:
 
 #include "../libpsc/vpic/vpic_iface.h"
 
-using MfieldsHydroVpic = MfieldsHydro<HydroArray, Simulation>;
+using MfieldsHydroVpic = MfieldsHydro<Grid, HydroArray>;
