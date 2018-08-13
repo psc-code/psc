@@ -241,7 +241,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     phys_ = globals_physics{*this};
 
-    // --- setup domain
+    // --- set up domain
     
     auto grid_domain = Grid_t::Domain{gdims,
 				      {phys_.Lx, phys_.Ly, phys_.Lz},
@@ -271,7 +271,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     auto kinds = Grid_t::Kinds{{-phys_.ec, phys_.me, "e"},
 			       { phys_.ec, phys_.mi, "i"}};
     
-    // Determine the time step
+    // determine the time step
     double dg = courant_length(grid_domain);
     double dt = p_.cfl * dg / phys_.c; // courant limited time step
     if (phys_.wpe * dt > wpedt_max) {
@@ -306,6 +306,23 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     define_field_array();
   
+    // --- finalize field advance
+    
+    mpi_printf(comm, "*** Finalizing Field Advance\n");
+#if 0
+    assert(psc_->nr_patches > 0);
+    struct globals_physics *phys = &sub->phys;
+    Simulation_set_region_resistive_harris(sub->sim, &sub->prm, phys, psc_->patch[0].dx,
+					   0., resistive);
+#endif
+
+    // --- setup species
+    // FIXME, half-redundant to the PSC species setup
+    mprts_.reset(new Mparticles_t{grid()});
+    setup_species();
+
+    // ---
+
     int interval = (int) (t_intervali / (phys_.wci * grid().dt));
     sim_->newDiag(interval);
 
@@ -366,23 +383,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     outf_params.output_fields = nullptr;
     outf_params.pfield_step = int((output_field_interval / (phys_.wci*dt)));
     outf_.reset(new OutputFieldsC{comm, outf_params});
-
-    //////////////////////////////////////////////////////////////////////////////
-    // Finalize Field Advance
-    
-    mpi_printf(comm, "*** Finalizing Field Advance\n");
-    
-#if 0
-    assert(psc_->nr_patches > 0);
-    struct globals_physics *phys = &sub->phys;
-    Simulation_set_region_resistive_harris(sub->sim, &sub->prm, phys, psc_->patch[0].dx,
-					   0., resistive);
-#endif
-
-    // -- setup species
-    // FIXME, taken out of setup_simulation, so in odd order,
-    // and half-redundant to the PSC species setup
-    setup_species();
 
     // --- partition particles and initial balancing
     mpi_printf(comm, "**** Partitioning...\n");

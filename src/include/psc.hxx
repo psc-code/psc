@@ -168,7 +168,6 @@ struct Psc
 
   void init()
   {
-    mprts_.reset(new Mparticles_t{grid()});
     sort_.reset(new Sort_t{});
     pushp_.reset(new PushParticles_t{});
     pushf_.reset(new PushFields_t{});

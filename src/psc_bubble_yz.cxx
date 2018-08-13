@@ -103,6 +103,9 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     define_grid(grid_domain, grid_bc, kinds, dt, norm_params);
 
     define_field_array();
+
+    mprts_.reset(new Mparticles_t{grid()});
+
     init();
 
     // -- Balance
