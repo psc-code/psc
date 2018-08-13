@@ -1,7 +1,8 @@
 
 #pragma once
 
-struct MfieldsHydroVpic
+template<typename HydroArray, typename Simulation>
+struct MfieldsHydro
 {
   using real_t = float;
   using fields_t = fields3d<float, LayoutAOS>;
@@ -10,7 +11,7 @@ struct MfieldsHydroVpic
     N_COMP = 16,
   };
 
-  MfieldsHydroVpic(const Grid_t& grid)
+  MfieldsHydro(const Grid_t& grid)
     : grid_{grid}
   {
     assert(grid.n_patches() == 1);
@@ -20,7 +21,7 @@ struct MfieldsHydroVpic
     vhydro_ = new HydroArray{sim->vgrid_};
   }
 
-  ~MfieldsHydroVpic()
+  ~MfieldsHydro()
   {
     delete vhydro_;
   }
@@ -42,3 +43,7 @@ private:
   HydroArray* vhydro_;
   const Grid_t& grid_;
 };
+
+#include "../libpsc/vpic/vpic_iface.h"
+
+using MfieldsHydroVpic = MfieldsHydro<HydroArray, Simulation>;
