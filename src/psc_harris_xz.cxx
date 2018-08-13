@@ -311,11 +311,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     p_.nmax = int(taui / (phys_.wci*grid().dt)); // number of steps from taui
   
-    // ----------------------------------------------------------------------
-    // -- Base class remaining init FIXME mv to end
-    
-    init();
-    
     // -- Balance
     balance_interval = 0;
     double balance_factor_fields = 1.;
@@ -359,6 +354,11 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 #endif
   
     marder_.reset(new Marder_t(comm, marder_diffusion, marder_loop, marder_dump));
+
+    // ----------------------------------------------------------------------
+    // -- Base class remaining init FIXME mv to end
+    
+    init();
 
     // -- output fields
     OutputFieldsCParams outf_params;
