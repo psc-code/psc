@@ -367,7 +367,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   
     marder_.reset(new Marder_t(comm, marder_diffusion, marder_loop, marder_dump));
 
-    // ----------------------------------------------------------------------
     // -- Base class remaining init FIXME mv to end
     
     init();
@@ -383,6 +382,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     outf_params.output_fields = nullptr;
     outf_params.pfield_step = int((output_field_interval / (phys_.wci*dt)));
     outf_.reset(new OutputFieldsC{comm, outf_params});
+
+    // ----------------------------------------------------------------------
+    // rebalance and actually initialize particles / fields
 
     // --- partition particles and initial balancing
     mpi_printf(comm, "**** Partitioning...\n");
