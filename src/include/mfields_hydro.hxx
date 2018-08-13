@@ -31,14 +31,7 @@ struct MfieldsHydroVpic_
   int n_comps() const { return N_COMP; }
 
   real_t* data() { return data_; }
-  
-  fields_t operator[](int p)
-  {
-    assert(p == 0);
-    int ib[3], im[3];
-    float* data = vhydro_->getData(ib, im);
-    return fields_t{ib, im, N_COMP, data};
-  }
+  fields_t operator[](int p) { return {ib_, im_, N_COMP, data_}; }
 
   const Grid* vgrid() const { return vgrid_; }
 
