@@ -64,29 +64,6 @@ struct VpicFieldArrayBase : field_array_t {
   
   Grid* grid() { return static_cast<Grid*>(g); }
   SfaParams& params() { return *static_cast<SfaParams*>(field_array_t::params); }
-  
-  // I'm keeping these for now, because I tink they're a nice interface,
-  // but it doesn't scale well to other kinds of fields (as one can tell
-  // from the macro use...)
-#define MK_COMP_ACCESSOR(cbx)			\
-  float cbx(int i, int j, int k) const		\
-  {						\
-    const int nx = g->nx, ny = g->ny;		\
-    return f[VOXEL(i,j,k, nx,ny,nz)].cbx;	\
-  }						\
-						\
-  float& cbx(int i, int j, int k)		\
-  {						\
-    const int nx = g->nx, ny = g->ny;		\
-    return f[VOXEL(i,j,k, nx,ny,nz)].cbx;	\
-  }
-
-  MK_COMP_ACCESSOR(cbx)
-  MK_COMP_ACCESSOR(cby)
-  MK_COMP_ACCESSOR(cbz)
-  MK_COMP_ACCESSOR(ex)
-  MK_COMP_ACCESSOR(ey)
-  MK_COMP_ACCESSOR(ez)
 };
 
 
