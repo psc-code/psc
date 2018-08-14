@@ -496,13 +496,13 @@ private:
     // Load fields not initialized by the user
     
     mpi_printf(psc_comm(psc), "Initializing radiation damping fields\n");
-    TIC AccumulateOps::compute_curl_b(mflds->vmflds()); TOC(compute_curl_b, 1);
+    TIC AccumulateOps::compute_curl_b(*mflds_); TOC(compute_curl_b, 1);
     
     mpi_printf(psc_comm(psc), "Initializing bound charge density\n");
     TIC CleanDivOps::clear_rhof(*mflds_); TOC(clear_rhof, 1);
     ParticlesOps::accumulate_rho_p(mprts.vmprts_, *mflds_);
     CleanDivOps::synchronize_rho(*mflds_);
-    TIC AccumulateOps::compute_rhob(mflds->vmflds()); TOC(compute_rhob, 1);
+    TIC AccumulateOps::compute_rhob(*mflds_); TOC(compute_rhob, 1);
     
     // Internal sanity checks
     

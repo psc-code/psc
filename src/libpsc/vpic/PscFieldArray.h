@@ -674,8 +674,9 @@ struct PscAccumulateOps
   // ----------------------------------------------------------------------
   // compute_rhob
 
-  static void compute_rhob(FieldArray& fa)
+  static void compute_rhob(MfieldsState& mflds)
   {
+    auto& fa = mflds.vmflds();
     auto& prm = fa.params();
     assert(prm.size() == 1);
     const MaterialCoefficient* m = prm[0];
@@ -723,8 +724,9 @@ struct PscAccumulateOps
   // ----------------------------------------------------------------------
   // compute_curl_b
   
-  static void vacuum_compute_curl_b(FieldArray& fa)
+  static void vacuum_compute_curl_b(MfieldsState& mflds)
   {
+    auto& fa = mflds.vmflds();
     auto& prm = fa.params();
     assert(prm.size() == 1);
     const MaterialCoefficient* m = prm[0];
@@ -781,11 +783,10 @@ struct PscAccumulateOps
     LocalOps::local_adjust_tang_e(fa); // FIXME, is this right here?
   }
 
-  static void compute_curl_b(FieldArray& fa)
+  static void compute_curl_b(MfieldsState& mflds)
   {
-    vacuum_compute_curl_b(fa);
+    vacuum_compute_curl_b(mflds);
   }
-
 };
 
 // ======================================================================

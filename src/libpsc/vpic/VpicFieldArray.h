@@ -27,10 +27,10 @@ struct VpicAccumulateOps
 {
   using Grid = typename MfieldsVpic::Grid;
   
-  static void clear_jf(MfieldsVpic& mflds) { FieldArray* fa = mflds; fa->kernel->clear_jf(fa); }
-  static void synchronize_jf(MfieldsVpic& mflds) { FieldArray* fa = mflds; fa->kernel->synchronize_jf(fa); }
-  static void compute_rhob(FieldArray& fa) { fa.kernel->compute_rhob(&fa); }
-  static void compute_curl_b(FieldArray& fa) { fa.kernel->compute_curl_b(&fa); }
+  static void clear_jf(FieldArray* fa) { fa->kernel->clear_jf(fa); }
+  static void synchronize_jf(FieldArray* fa) { fa->kernel->synchronize_jf(fa); }
+  static void compute_rhob(FieldArray* fa) { fa->kernel->compute_rhob(fa); }
+  static void compute_curl_b(FieldArray* fa) { fa->kernel->compute_curl_b(fa); }
 };
 
 // ======================================================================
