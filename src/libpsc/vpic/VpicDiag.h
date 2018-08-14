@@ -224,9 +224,8 @@ struct VpicDiagMixin
   void diagnostics_run(MfieldsState& mflds, Particles& particles,
 		       Interpolator& interpolator, MfieldsHydro& mflds_hydro, int np[3])
   {
-    auto& fa = mflds.vmflds();
     TIC {
-      const Grid* g = fa.grid();
+      const Grid* g = mflds.vgrid();
       int64_t step = g->step;
       
       // Normal rundata dump
@@ -247,12 +246,12 @@ struct VpicDiagMixin
 
       // Normal rundata energies dump
       if(should_dump(energies)) {
-      	dump_energies("rundata/energies", step != 0, fa, particles, interpolator);
+      	dump_energies("rundata/energies", step != 0, mflds, particles, interpolator);
       }
       
       // Field data output
 
-      if(should_dump(fields)) field_dump(fa, diag_.fdParams);
+      if(should_dump(fields)) field_dump(mflds, diag_.fdParams);
       
       // Species moment output
       
@@ -467,11 +466,11 @@ struct VpicDiagMixin
   // dump_energies
 
   void dump_energies(const char *fname, int append,
-		     FieldArray& fa, Particles& particles,
+		     MfieldsState& mflds, Particles& particles,
 		     Interpolator& interpolator)
   {
     double en_f[6], en_p;
-    const Grid* g = fa.grid();
+    const Grid* g = mflds.vgrid();
     FileIO fileIO;
     FileIOStatus status(fail);
 
@@ -495,7 +494,7 @@ struct VpicDiagMixin
       }
     }
 
-    DiagOps::energy_f(fa, en_f);
+    DiagOps::energy_f(mflds.vmflds(), en_f);
     if (rank==0 && status!=fail )
       fileIO.print( " %e %e %e %e %e %e",
 		    en_f[0], en_f[1], en_f[2],
@@ -515,10 +514,11 @@ struct VpicDiagMixin
   // ----------------------------------------------------------------------
   // field_dump
   
-  void field_dump(FieldArray& fa, DumpParameters& dumpParams)
+  void field_dump(MfieldsState& mflds, DumpParameters& dumpParams)
   {
+    const Grid* grid = mflds.vgrid();
+    auto& fa = mflds.getPatch(0);
     Field3D<FieldArray> F(fa);
-    const Grid* grid = fa.grid();
     int64_t step = grid->step;
     int rank = psc_world_rank;
     int nproc = psc_world_size;
