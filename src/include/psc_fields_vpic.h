@@ -115,6 +115,8 @@ struct MfieldsStateVpic
   operator FieldArray*() { return vmflds_fields_; }
   FieldArray& vmflds() { return *vmflds_fields_; }
 
+  Grid* vgrid() { return vmflds_fields_->grid(); }
+
   // static const Convert convert_to_, convert_from_;
   // const Convert& convert_to() override { return convert_to_; }
   // const Convert& convert_from() override { return convert_from_; }

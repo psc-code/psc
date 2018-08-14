@@ -759,7 +759,6 @@ struct PscParticlesOps
   static void boundary_p_(const ParticleBcList &pbc_list, Particles& vmprts, MfieldsState& mflds,
 			  AccumulatorBlock acc_block)
   {
-    auto& fa = mflds.vmflds();
 #ifdef V4_ACCELERATION
     using namespace v4;
 #endif
@@ -805,8 +804,7 @@ struct PscParticlesOps
 
     // Unpack fields
 
-    Grid* RESTRICT g = fa.grid();
-
+    Grid* RESTRICT g = mflds.vgrid();
     // Unpack the grid
 
     const int64_t * RESTRICT ALIGNED(128) neighbor = g->neighbor;
@@ -899,7 +897,7 @@ struct PscParticlesOps
 	  if( nn==Grid::absorb_particles ) {
 	    // Ideally, we would batch all rhob accumulations together
 	    // for efficiency
-	    accumulate_rhob(fa, p0+i, sp_q );
+	    accumulate_rhob(mflds, p0+i, sp_q );
 	    goto backfill;
 	  }
 
@@ -1160,8 +1158,9 @@ struct PscParticlesOps
   // ----------------------------------------------------------------------
   // accumulate_rhob
 
-  static void accumulate_rhob(FieldArray& fa, const Particle* p, float qsp)
+  static void accumulate_rhob(MfieldsState& mflds, const Particle* p, float qsp)
   {
+    auto& fa = mflds.vmflds();
     float w0 = p->dx, w1 = p->dy, w2, w3, w4, w5, w6, w7, dz = p->dz;
     const Grid* g = fa.grid();
     int v = p->i, x, y, z, sy = g->sy, sz = g->sz;
@@ -1229,7 +1228,7 @@ struct PscParticlesOps
 	int i = pm->i; // particle index we are removing
 	p0[i].i >>= 3; // shift particle voxel down
 	// accumulate the particle's charge to the mesh
-	accumulate_rhob(mflds.vmflds(), p0 + i, sp->q);
+	accumulate_rhob(mflds, p0 + i, sp->q);
 	p0[i] = p0[sp->np - 1]; // put the last particle into position i
 	sp->np--; // decrement the number of particles
       }
