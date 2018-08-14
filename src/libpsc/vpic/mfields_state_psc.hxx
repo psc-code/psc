@@ -200,18 +200,13 @@ struct MfieldsStatePsc
     using Element = Element;
 
     Patch(Grid* vgrid)
-      : fa_{new FieldArray(vgrid)}
+      : fa_{vgrid}
     {}
 
-    ~Patch()
-    {
-      delete fa_;
-    }
-    
-    Element* data() { return fa_->data(); }
-    Grid* grid() { return fa_->grid(); }
-    Element  operator[](int idx) const { return (*fa_)[idx]; }
-    Element& operator[](int idx)       { return (*fa_)[idx]; }
+    Element* data() { return fa_.data(); }
+    Grid* grid() { return fa_.grid(); }
+    Element  operator[](int idx) const { return fa_[idx]; }
+    Element& operator[](int idx)       { return fa_[idx]; }
 
     // These operators can be used to access the field directly,
     // though the performance isn't great, so one should use Field3D
@@ -230,10 +225,10 @@ struct MfieldsStatePsc
       return f[VOXEL(i,j,k, grid()->nx,grid()->ny,grid()->nz) * N_COMP + m];
     }
     
-    operator FieldArray*() { return fa_; }
+    operator FieldArray*() { return &fa_; }
 
   private:
-    FieldArray* fa_;
+    FieldArray fa_;
   };
   
   using fields_t = fields3d<float, LayoutAOS>;
@@ -241,7 +236,7 @@ struct MfieldsStatePsc
   MfieldsStatePsc(const Grid_t& grid, Grid* vgrid, const MaterialList& material_list, double damp = 0.)
     : grid_{grid},
       patch_{vgrid},
-      params_{new SfaParams{vgrid, material_list, real_t(damp)}}
+      params_{vgrid, material_list, real_t(damp)}
   {
     assert(grid.n_patches() == 1);
 
@@ -250,16 +245,11 @@ struct MfieldsStatePsc
     ib_ = { -B, -B, -B };
   }
 
-  ~MfieldsStatePsc()
-  {
-    delete params_;
-  }
-
   real_t* data() { return reinterpret_cast<real_t*>(patch_.data()); }
   fields_t operator[](int p) { return {ib_, im_, N_COMP, data()}; }
   Patch& getPatch(int p) { return patch_; }
 
-  SfaParams& params() { return *params_; }
+  SfaParams& params() { return params_; }
   Grid* vgrid() { return patch_.grid(); }
 
   const Grid_t& grid() const { return grid_; }
@@ -273,7 +263,7 @@ private:
   const Grid_t& grid_;
   Patch patch_;
   Int3 ib_, im_;
-  SfaParams* params_;
+  SfaParams params_;
 };
 
 
