@@ -40,7 +40,6 @@
 #include "PscAccumulatorBase.h"
 #include "PscAccumulator.h"
 
-#include "PscHydroArrayBase.h"
 #include "PscHydroArray.h"
 #include "mfields_hydro.hxx"
 
