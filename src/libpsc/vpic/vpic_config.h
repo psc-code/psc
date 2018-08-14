@@ -53,7 +53,6 @@
 #include "VpicGridBase.h"
 #include "VpicMaterial.h"
 
-#include "VpicFieldArrayBase.h"
 #include "VpicFieldArrayLocalOps.h"
 #include "VpicFieldArrayRemoteOps.h"
 #include "VpicFieldArray.h"
@@ -70,7 +69,6 @@
 #include "VpicAccumulatorBase.h"
 #include "VpicAccumulator.h"
 
-#include "VpicHydroArrayBase.h"
 #include "VpicHydroArray.h"
 
 #include "VpicDiag.h"
@@ -113,12 +111,10 @@ using Accumulator = PscAccumulatorBase<Grid>;
 using AccumulatorOps = PscAccumulatorOps<Accumulator, FieldArray>;
 
 #ifdef DO_VPIC
-using HydroArray = VpicHydroArrayBase<Grid>;
 using MfieldsHydro = MfieldsHydroVpic;
 using HydroArrayOps = VpicHydroArrayOps<MfieldsHydro>;
 #else
-using HydroArray = PscHydroArrayBase<Grid>;
-using MfieldsHydro = MfieldsHydroVpic_<Grid, HydroArray>;
+using MfieldsHydro = MfieldsHydroVpic_<Grid, PscHydroArrayBase<Grid>>;
 using HydroArrayOps = PscHydroArrayOps<MfieldsHydro>;
 #endif
 

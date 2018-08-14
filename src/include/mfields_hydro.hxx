@@ -65,6 +65,7 @@ struct MfieldsHydroVpic
   using Grid = VpicGridBase;
   using HydroArray = VpicHydroArrayBase<Grid>;
   using real_t = float;
+  using Element = typename HydroArray::Element;
   using fields_t = fields3d<float, LayoutAOS>;
   using Patch = HydroArray;
     
