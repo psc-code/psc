@@ -55,7 +55,6 @@
 #include "VpicGridBase.h"
 #include "VpicMaterial.h"
 
-#include "VpicFieldArrayBase.h"
 #include "VpicFieldArrayLocalOps.h"
 #include "VpicFieldArrayRemoteOps.h"
 #include "VpicFieldArray.h"
