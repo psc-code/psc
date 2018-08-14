@@ -58,11 +58,11 @@ struct PushParticlesVpic : PushParticlesBase
     // local accumulation).
     TIC
       for(int round = 0; round < num_comm_round; round++) {
-	ParticlesOps::boundary_p(particle_bc_list, vmprts, vmflds, accumulator);
+	ParticlesOps::boundary_p(particle_bc_list, vmprts, mflds, accumulator);
       } TOC(boundary_p, num_comm_round);
     
     // Drop the particles that have unprocessed movers at this point
-    ParticlesOps::drop_p(vmprts, vmflds);
+    ParticlesOps::drop_p(vmprts, mflds);
 
     // At this point, all particle positions are at r_1 and u_{1/2}, the
     // guard lists are empty and the accumulators on each processor are current.

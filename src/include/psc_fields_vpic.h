@@ -108,10 +108,11 @@ struct MfieldsStateVpic
   {
     assert(p == 0);
     int ib[3], im[3];
-    float* data = vmflds().getData(ib, im);
+    float* data = vmflds_fields_->getData(ib, im);
     return {ib, im, N_COMP, data};
   }
 
+  operator FieldArray*() { return vmflds_fields_; }
   FieldArray& vmflds() { return *vmflds_fields_; }
 
   // static const Convert convert_to_, convert_from_;

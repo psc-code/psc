@@ -16,7 +16,7 @@ struct ParticleInjector
   SpeciesId sp_id;           // Species of particle
 };
 
-template<typename Particles, typename FieldArray, typename Interpolator, typename MfieldsAccumulator, typename MfieldsHydro>
+template<typename Particles, typename MfieldsState, typename FieldArray, typename Interpolator, typename MfieldsAccumulator, typename MfieldsHydro>
 struct PscParticlesOps
 {
   typedef typename Particles::Grid Grid;
@@ -1089,10 +1089,10 @@ struct PscParticlesOps
   }
   
   
-  static void boundary_p(const ParticleBcList& pbc_list, Particles& vmprts, FieldArray& fa,
+  static void boundary_p(const ParticleBcList& pbc_list, Particles& vmprts, MfieldsState& mflds,
 			 MfieldsAccumulator& accumulator)
   {
-    boundary_p_(pbc_list, vmprts, fa, accumulator[0]);
+    boundary_p_(pbc_list, vmprts, mflds.vmflds(), accumulator[0]);
   }
 
   // ----------------------------------------------------------------------
@@ -1206,8 +1206,9 @@ struct PscParticlesOps
   // ----------------------------------------------------------------------
   // drop_p
 
-  static void drop_p(Particles& vmprts, FieldArray& vmflds)
+  static void drop_p(Particles& vmprts, MfieldsState& mflds)
   {
+    auto& vmflds = mflds.vmflds();
     for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
       if (sp->nm) {
 	LOG_WARN("Removing %i particles associated with unprocessed %s movers (increase num_comm_round)",

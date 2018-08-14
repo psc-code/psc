@@ -1,7 +1,7 @@
 
 #pragma once
 
-template<typename Particles, typename FieldArray, typename Interpolator, typename MfieldsAccumulator, typename MfieldsHydro>
+template<typename Particles, typename MfieldsState, typename FieldArray, typename Interpolator, typename MfieldsAccumulator, typename MfieldsHydro>
 struct VpicParticlesOps
 {
   typedef typename Particles::ParticleBcList ParticleBcList;
@@ -15,11 +15,11 @@ struct VpicParticlesOps
     }
   }
   
-  static void boundary_p(const ParticleBcList &pbc_list, Particles& vmprts, FieldArray& fa,
+  static void boundary_p(const ParticleBcList &pbc_list, Particles& vmprts, MfieldsState& mflds,
 			 MfieldsAccumulator& accumulator)
   {
     const particle_bc_t *pbc = pbc_list;
-    ::boundary_p(const_cast<particle_bc_t*>(pbc), vmprts.head(), &fa, &accumulator);
+    ::boundary_p(const_cast<particle_bc_t*>(pbc), vmprts.head(), mflds, &accumulator);
   }
   
   static void accumulate_rho_p(Particles& vmprts, FieldArray &vmflds)
@@ -37,8 +37,9 @@ struct VpicParticlesOps
   // ----------------------------------------------------------------------
   // drop_p
 
-  void drop_p(Particles& vmprts, FieldArray& vmflds)
+  void drop_p(Particles& vmprts, MfieldsState& mflds)
   {
+    auto& vmflds = mflds.vmflds();
     for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
       if (sp->nm) {
 	LOG_WARN("Removing %i particles associated with unprocessed %s movers (increase num_comm_round)",
