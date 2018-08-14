@@ -57,12 +57,6 @@ struct VpicFieldArrayBase : field_array_t {
     return f_[VOXEL(i,j,k, g->nx,g->ny,g->nz) * N_COMP + m];
   }
 
-  Element  operator[](int idx) const { return f[idx]; }
-  Element& operator[](int idx)       { return f[idx]; }
-
-  Element* data() { return f; }
-  
-  Grid* grid() { return static_cast<Grid*>(g); }
   SfaParams& params() { return *static_cast<SfaParams*>(field_array_t::params); }
 };
 
@@ -89,10 +83,10 @@ struct MfieldsStateVpic
   {
     using Element = field_t;
     
-    Element* data() { return fa->data(); }
-    Grid* grid() { return fa->grid(); }
-    field_t  operator[](int idx) const { return (*fa)[idx]; }
-    field_t& operator[](int idx)       { return (*fa)[idx]; }
+    Element* data() { return fa->f; }
+    Grid* grid() { return static_cast<Grid*>(fa->g); }
+    field_t  operator[](int idx) const { return fa->f[idx]; }
+    field_t& operator[](int idx)       { return fa->f[idx]; }
     
     FieldArray* fa;
   };
