@@ -3,26 +3,6 @@
 
 #include "PscFieldBase.h"
 
-struct PscAccumulatorT
-{
-  float jx[4];   // jx0@(0,-1,-1),jx1@(0,1,-1),jx2@(0,-1,1),jx3@(0,1,1)
-  float jy[4];   // jy0@(-1,0,-1),jy1@(-1,0,1),jy2@(1,0,-1),jy3@(1,0,1)
-  float jz[4];   // jz0@(-1,-1,0),jz1@(1,-1,0),jz2@(-1,1,0),jz3@(1,1,0)
-};
-
-// ======================================================================
-// PscAccumulatorBlock
-
-template<class G>
-struct PscAccumulatorBlock : PscFieldBase<PscAccumulatorT, G>
-{
-  typedef PscFieldBase<PscAccumulatorT, G> Base;
-  using typename Base::Element;
-  using typename Base::Grid;
-
-  using Base::Base;
-};
-  
 // ======================================================================
 // MfieldsAccumulatorPsc
 
@@ -30,9 +10,28 @@ template<typename _Grid>
 struct MfieldsAccumulatorPsc
 {
   using Grid = _Grid;
-  typedef PscAccumulatorBlock<Grid> Block;
-  typedef typename Block::Element Element;
 
+  // ======================================================================
+  // MfieldsAccumulatorPsc::Element
+
+  struct Element
+  {
+    float jx[4];   // jx0@(0,-1,-1),jx1@(0,1,-1),jx2@(0,-1,1),jx3@(0,1,1)
+    float jy[4];   // jy0@(-1,0,-1),jy1@(-1,0,1),jy2@(1,0,-1),jy3@(1,0,1)
+    float jz[4];   // jz0@(-1,-1,0),jz1@(1,-1,0),jz2@(-1,1,0),jz3@(1,1,0)
+  };
+
+  // ======================================================================
+  // MfieldsAccumulatorPsc::Block
+
+  struct Block : PscFieldBase<Element, Grid>
+  {
+    using Base = PscFieldBase<Element, Grid>;
+
+    using Base::Base;
+  };
+  
+  
   MfieldsAccumulatorPsc(Grid *grid)
     : g_(grid)
   {
