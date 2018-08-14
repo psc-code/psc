@@ -45,8 +45,6 @@ struct MfieldsHydroVpic_
   
   Grid* vgrid() { return vgrid_; }
 
-  HydroArray& vhydro() { return *vhydro_; }
-
 private:
   const Grid_t& grid_;
   Grid* vgrid_;

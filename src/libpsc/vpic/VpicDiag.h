@@ -618,8 +618,7 @@ struct VpicDiagMixin
   void hydro_dump(Particles *vmprts, Interpolator* interpolator, MfieldsHydro& mflds_hydro,
 		  const char * speciesname, DumpParameters& dumpParams )
   {
-    using HydroArray = typename MfieldsHydro::HydroArray;
-    Field3D<HydroArray> H(mflds_hydro.vhydro());
+    Field3D<typename MfieldsHydro::Patch> H{mflds_hydro.getPatch(0)};
     const Grid* grid = mflds_hydro.vgrid();
     int64_t step = grid->step;
     int rank = psc_world_rank;
