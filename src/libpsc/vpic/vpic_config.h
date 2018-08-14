@@ -2,7 +2,7 @@
 #ifndef VPIC_CONFIG_H
 #define VPIC_CONFIG_H
 
-//#define DO_VPIC 1
+#define DO_VPIC 1
 
 #define HAVE_VPIC
 
@@ -108,7 +108,11 @@ using CleanDivOps = VpicCleanDivOps<FieldArray>;
 using Interpolator = PscInterpolatorBase<Grid>;
 using InterpolatorOps = PscInterpolatorOps<Interpolator, FieldArray>;
 
+#ifdef DO_VPIC
+using MfieldsAccumulator = MfieldsAccumulatorVpic;
+#else
 using MfieldsAccumulator = MfieldsAccumulatorPsc<Grid>;
+#endif
 using AccumulatorOps = PscAccumulatorOps<MfieldsAccumulator, FieldArray>;
 
 #ifdef DO_VPIC
