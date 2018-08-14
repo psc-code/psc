@@ -23,7 +23,7 @@
 #define y_FACE_LOOP(y) XYZ_LOOP(1,nx,y,y,1,nz)
 #define z_FACE_LOOP(z) XYZ_LOOP(1,nx,1,ny,z,z)
 
-template<typename MfieldsState, class FieldArray>
+template<typename MfieldsState>
 struct PscFieldArrayLocalOps
 {
   using Grid = typename MfieldsState::Grid;
@@ -110,10 +110,11 @@ struct PscFieldArrayLocalOps
   // absorbing boundary conditions.  Thus, ghost norm e value is
   // irrevelant.
 
-  static void local_ghost_norm_e(FieldArray& fa)
+  static void local_ghost_norm_e(MfieldsState& mflds)
   {
-    Field3D<FieldArray> F(fa);
-    const Grid* g = fa.grid();
+    const Grid* g = mflds.vgrid();
+    auto& fa = mflds.getPatch(0);
+    F3D F(fa);
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     int bc, face, x, y, z;
     FieldT * ALIGNED(16) f0, * ALIGNED(16) f1, * ALIGNED(16) f2;
@@ -164,10 +165,11 @@ struct PscFieldArrayLocalOps
     APPLY_LOCAL_NORM_E( 0, 0, 1,z,x,y);
   }
 
-  static void local_ghost_div_b(FieldArray& fa)
+  static void local_ghost_div_b(MfieldsState& mflds)
   {
-    Field3D<FieldArray> F(fa);
-    const Grid* g = fa.grid();
+    const Grid* g = mflds.vgrid();
+    auto& fa = mflds.getPatch(0);
+    F3D F(fa);
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     int bc, face, x, y, z;
 
@@ -282,10 +284,11 @@ struct PscFieldArrayLocalOps
     ADJUST_NORM_B( 0, 0, 1,z,x,y);
   }
 
-  static void local_adjust_div_e(FieldArray& fa)
+  static void local_adjust_div_e(MfieldsState& mflds)
   {
-    Field3D<FieldArray> F(fa);
-    const Grid* g = fa.grid();
+    const Grid* g = mflds.vgrid();
+    auto& fa = mflds.getPatch(0);
+    F3D F(fa);
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     int bc, face, x, y, z;
 
@@ -363,10 +366,11 @@ struct PscFieldArrayLocalOps
   // absorbing      => No image charges, half cell accumulation (double rhof)
   // (rhob/jf_norm account for particles that hit the boundary)
 
-  static void local_adjust_rhof(FieldArray& fa)
+  static void local_adjust_rhof(MfieldsState& mflds)
   {
-    Field3D<FieldArray> F(fa);
-    const Grid* g = fa.grid();
+    const Grid* g = mflds.vgrid();
+    auto& fa = mflds.getPatch(0);
+    F3D F(fa);
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     int bc, face, x, y, z;
 
@@ -402,10 +406,11 @@ struct PscFieldArrayLocalOps
     // absorbing      => No image charges, half cell accumulation (rhob already
     //                   correct)
 
-  static void local_adjust_rhob(FieldArray& fa)
+  static void local_adjust_rhob(MfieldsState& mflds)
   {
-    Field3D<FieldArray> F(fa);
-    const Grid* g = fa.grid();
+    const Grid* g = mflds.vgrid();
+    auto& fa = mflds.getPatch(0);
+    F3D F(fa);
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     int bc, face, x, y, z;
 

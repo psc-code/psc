@@ -12,14 +12,15 @@ struct PscCleanDivOps
 {
   using Grid = typename FieldArray::Grid;
   using MaterialCoefficient = typename FieldArray::MaterialCoefficient;
+  using F3D = Field3D<typename MfieldsState::Patch>;
   
   // ----------------------------------------------------------------------
   // clear_rhof
 
   static void clear_rhof(MfieldsState& mflds)
   {
-    auto& fa = mflds.vmflds();
-    const int nv = fa.grid()->nv;
+    auto& fa = mflds.getPatch(0);
+    const int nv = mflds.vgrid()->nv;
 
     for (int v = 0; v < nv; v++) {
       fa[v].rhof = 0;
@@ -94,12 +95,12 @@ struct PscCleanDivOps
 
   static void synchronize_rho(MfieldsState& mflds)
   {
-    auto& fa = mflds.vmflds();
-    Field3D<FieldArray> F(fa);
-    CommRho<Grid, Field3D<FieldArray>> comm(fa.grid());
+    auto& fa = mflds.getPatch(0);
+    F3D F(fa);
+    CommRho<Grid, F3D> comm(mflds.vgrid());
 
-    LocalOps::local_adjust_rhof(fa);
-    LocalOps::local_adjust_rhob(fa);
+    LocalOps::local_adjust_rhof(mflds);
+    LocalOps::local_adjust_rhob(mflds);
 
     for (int dir = 0; dir < 3; dir++) {
       comm.begin(dir, F);
@@ -112,13 +113,8 @@ struct PscCleanDivOps
   
   static void compute_div_e_err(MfieldsState& mflds)
   {
-    auto& fa = mflds.vmflds();
-    auto& prm = mflds.params();
-    assert(prm.size() == 1);
-    const MaterialCoefficient* m = prm[0];
-
     struct CalcDivE {
-      CalcDivE(FieldArray& fa, const MaterialCoefficient* m)
+      CalcDivE(typename MfieldsState::Patch& fa, const MaterialCoefficient* m)
 	: F(fa),
 	  nc(m->nonconductive),
 	  px(fa.grid()->nx > 1 ? fa.grid()->eps0 * fa.grid()->rdx : 0),
@@ -136,26 +132,31 @@ struct PscCleanDivOps
 				 cj * (F(i,j,k).rhof + F(i,j,k).rhob));
       }
 
-      Field3D<FieldArray> F;
+      F3D F;
       const float nc, px, py, pz, cj;
     };
+
+    auto& fa = mflds.getPatch(0);
+    auto& prm = mflds.params();
+    assert(prm.size() == 1);
+    const MaterialCoefficient* m = prm[0];
 
     CalcDivE updater(fa, m);
     
     // Begin setting normal e ghosts
-    RemoteOps::begin_remote_ghost_norm_e(fa);
+    RemoteOps::begin_remote_ghost_norm_e(mflds);
 
     // Overlap local computation
-    LocalOps::local_ghost_norm_e(fa);
-    foreach_nc_interior(updater, fa.grid());
+    LocalOps::local_ghost_norm_e(mflds);
+    foreach_nc_interior(updater, mflds.vgrid());
 
     // Finish setting normal e ghosts
-    RemoteOps::end_remote_ghost_norm_e(fa);
+    RemoteOps::end_remote_ghost_norm_e(mflds);
 
     // Now do points on boundary
-    foreach_nc_boundary(updater, fa.grid());
+    foreach_nc_boundary(updater, mflds.vgrid());
 
-    LocalOps::local_adjust_div_e(fa);
+    LocalOps::local_adjust_div_e(mflds);
   }
 
   // ----------------------------------------------------------------------
@@ -166,9 +167,9 @@ struct PscCleanDivOps
   
   static double compute_rms_div_e_err(MfieldsState& mflds)
   {
-    auto& fa = mflds.vmflds();
-    Field3D<FieldArray> F(fa);
-    const Grid* g = fa.grid();
+    const Grid* g = mflds.vgrid();
+    auto& fa = mflds.getPatch(0);
+    F3D F(fa);
     const int nx = g->nx, ny = g->ny, nz = g->nz;
 
     // Interior points
@@ -257,13 +258,14 @@ struct PscCleanDivOps
 
   static void vacuum_clean_div_e(MfieldsState& mflds)
   {
-    auto& fa = mflds.vmflds();
+    const Grid* g = mflds.vgrid();
+    auto& fa = mflds.getPatch(0);
+    F3D F(fa);
+
     auto& prm = mflds.params();
     assert(prm.size() == 1);
     const MaterialCoefficient* m = prm[0];
 
-    Field3D<FieldArray> F(fa);
-    const Grid* g = fa.grid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;
 
     const float _rdx = (nx>1) ? g->rdx : 0;
@@ -335,9 +337,10 @@ struct PscCleanDivOps
   
   static void compute_div_b_err(MfieldsState& mflds)
   {
-    auto& fa = mflds.vmflds();
-    Field3D<FieldArray> F(fa);
-    const Grid* g = fa.grid();
+    const Grid* g = mflds.vgrid();
+    auto& fa = mflds.getPatch(0);
+    F3D F(fa);
+
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     const float px = (nx>1) ? g->rdx : 0;  // FIXME, should be based on global dims
     const float py = (ny>1) ? g->rdy : 0;
@@ -361,9 +364,10 @@ struct PscCleanDivOps
 
   static double compute_rms_div_b_err(MfieldsState& mflds)
   {
-    auto& fa = mflds.vmflds();
-    Field3D<FieldArray> F(fa);
-    const Grid* g = fa.grid();
+    const Grid* g = mflds.vgrid();
+    auto& fa = mflds.getPatch(0);
+    F3D F(fa);
+
     const int nx = g->nx, ny = g->ny, nz = g->nz;
 
     double err = 0;
@@ -391,9 +395,10 @@ struct PscCleanDivOps
 
   static void clean_div_b(MfieldsState& mflds)
   {
-    auto& fa = mflds.vmflds();
-    Field3D<FieldArray> F(fa);
-    const Grid* g = fa.grid();
+    const Grid* g = mflds.vgrid();
+    auto& fa = mflds.getPatch(0);
+    F3D F(fa);
+
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     float px = (nx>1) ? g->rdx : 0;
     float py = (ny>1) ? g->rdy : 0;
@@ -407,8 +412,8 @@ struct PscCleanDivOps
     // stragglers.
 
     // Begin setting ghosts
-    RemoteOps::begin_remote_ghost_div_b(fa);
-    LocalOps::local_ghost_div_b(fa);
+    RemoteOps::begin_remote_ghost_div_b(mflds);
+    LocalOps::local_ghost_div_b(mflds);
 
     // Interior
     for (int k = 2; k <= nz; k++) {
@@ -461,7 +466,7 @@ struct PscCleanDivOps
 
     // Finish setting derr ghosts
   
-    RemoteOps::end_remote_ghost_div_b(fa);
+    RemoteOps::end_remote_ghost_div_b(mflds);
 
     // Do Marder pass in exterior
 
@@ -570,9 +575,10 @@ struct PscCleanDivOps
 
   static double synchronize_tang_e_norm_b(MfieldsState& mflds)
   {
-    auto& fa = mflds.vmflds();
-    Field3D<FieldArray> F(fa);
-    CommTangENormB<Grid, Field3D<FieldArray>> comm(fa.grid());
+    const Grid* g = mflds.vgrid();
+    auto& fa = mflds.getPatch(0);
+    F3D F(fa);
+    CommTangENormB<Grid, F3D> comm(mflds.vgrid());
     
     LocalOps::local_adjust_tang_e(mflds);
     LocalOps::local_adjust_norm_b(mflds);
@@ -597,6 +603,7 @@ struct PscAccumulateOps
 {
   using Grid = typename MfieldsState::Grid;
   using MaterialCoefficient = typename FieldArray::MaterialCoefficient;
+  using F3D = Field3D<typename MfieldsState::Patch>;
   
   // ----------------------------------------------------------------------
   // clear_jf
@@ -676,13 +683,8 @@ struct PscAccumulateOps
 
   static void compute_rhob(MfieldsState& mflds)
   {
-    auto& fa = mflds.vmflds();
-    auto& prm = mflds.params();
-    assert(prm.size() == 1);
-    const MaterialCoefficient* m = prm[0];
-
     struct CalcRhoB {
-      CalcRhoB(FieldArray& fa, const MaterialCoefficient* m)
+      CalcRhoB(typename MfieldsState::Patch& fa, const MaterialCoefficient* m)
 	: F(fa),
 	  nc(m->nonconductive),
 	  px(fa.grid()->nx > 1 ? fa.grid()->eps0 * m->epsx * fa.grid()->rdx : 0),
@@ -699,26 +701,31 @@ struct PscAccumulateOps
 			    F(i,j,k).rhof);
       }
 
-      Field3D<FieldArray> F;
+      F3D F;
       const float nc, px, py, pz;
     };
+
+    auto& fa = mflds.getPatch(0);
+    auto& prm = mflds.params();
+    assert(prm.size() == 1);
+    const MaterialCoefficient* m = prm[0];
 
     CalcRhoB updater(fa, m);
 
     // Begin setting normal e ghosts
-    RemoteOps::begin_remote_ghost_norm_e(fa);
+    RemoteOps::begin_remote_ghost_norm_e(mflds);
 
     // Overlap local computation
-    LocalOps::local_ghost_norm_e(fa);
-    foreach_nc_interior(updater, fa.grid());
+    LocalOps::local_ghost_norm_e(mflds);
+    foreach_nc_interior(updater, mflds.vgrid());
     
     // Finish setting normal e ghosts
-    RemoteOps::end_remote_ghost_norm_e(fa);
+    RemoteOps::end_remote_ghost_norm_e(mflds);
 
     // Now do points on boundary
-    foreach_nc_boundary(updater, fa.grid());
+    foreach_nc_boundary(updater, mflds.vgrid());
 
-    LocalOps::local_adjust_rhob(fa);
+    LocalOps::local_adjust_rhob(mflds);
   }
 
   // ----------------------------------------------------------------------
@@ -726,18 +733,13 @@ struct PscAccumulateOps
   
   static void vacuum_compute_curl_b(MfieldsState& mflds)
   {
-    auto& fa = mflds.vmflds();
-    auto& prm = mflds.params();
-    assert(prm.size() == 1);
-    const MaterialCoefficient* m = prm[0];
-
     // Update interior fields
     // Note: ex all (1:nx,  1:ny+1,1,nz+1) interior (1:nx,2:ny,2:nz)
     // Note: ey all (1:nx+1,1:ny,  1:nz+1) interior (2:nx,1:ny,2:nz)
     // Note: ez all (1:nx+1,1:ny+1,1:nz ) interior (1:nx,1:ny,2:nz)
 
     struct CurlB {
-      CurlB(FieldArray& fa, const Grid *g, const MaterialCoefficient* m)
+      CurlB(typename MfieldsState::Patch& fa, const Grid *g, const MaterialCoefficient* m)
 	: F(fa),
 	  px_muz(g->nx > 1 ? g->cvac*g->dt*g->rdx*m->rmuz : 0),
 	  px_muy(g->nx > 1 ? g->cvac*g->dt*g->rdx*m->rmuy : 0),
@@ -766,11 +768,16 @@ struct PscAccumulateOps
 			 py_mux*(F(i,j,k).cbx - F(i,j-1,k).cbx));
       }
 
-      Field3D<FieldArray> F;
+      F3D F;
       const float px_muz, px_muy, py_mux, py_muz, pz_muy, pz_mux;
     };
 
-    CurlB curlB(fa, fa.grid(), m);
+    auto& fa = mflds.getPatch(0);
+    auto& prm = mflds.params();
+    assert(prm.size() == 1);
+    const MaterialCoefficient* m = prm[0];
+
+    CurlB curlB(fa, mflds.vgrid(), m);
       
     RemoteOps::begin_remote_ghost_tang_b(mflds);
 
@@ -796,19 +803,21 @@ template<typename MfieldsState, typename FieldArray>
 struct PscDiagOps
 {
   using Grid = typename MfieldsState::Grid;
+  using F3D = Field3D<typename MfieldsState::Patch>;
   
   // ----------------------------------------------------------------------
   // vacuum_energy_f
 
   static void vacuum_energy_f(MfieldsState& mflds, double global[6])
   {
-    auto& fa = mflds.vmflds();
+    const Grid* g = mflds.vgrid();
+    auto& fa = mflds.getPatch(0);
+    F3D F(fa);
+
     auto& prm = mflds.params();
     assert(prm.size() == 1);
     auto m = prm[0];
 
-    Field3D<FieldArray> F(fa);
-    const Grid* g = fa.grid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;
 
     const float qepsx = 0.25*m->epsx;

@@ -4,12 +4,13 @@
 // ======================================================================
 // PscPushFieldOps
 
-template<typename MfieldsState, typename FieldArray, typename LocalOps, typename RemoteOps>
+template<typename MfieldsState, typename LocalOps, typename RemoteOps>
 struct PscPushFieldsOps
 {
-  using Grid = typename FieldArray::Grid;
-  using SfaParams = typename FieldArray::SfaParams;
-  using MaterialCoefficient = typename FieldArray::MaterialCoefficient;
+  using Grid = typename MfieldsState::Grid;
+  using SfaParams = typename MfieldsState::SfaParams;
+  using MaterialCoefficient = typename MfieldsState::MaterialCoefficient;
+  using F3D = Field3D<typename MfieldsState::Patch>;
 
   // FIXME, uses enum-based components vs struct-based components, should
   // settle on one or the other
@@ -17,12 +18,12 @@ struct PscPushFieldsOps
   // ----------------------------------------------------------------------
   // advance_b
   
-#define CBX FieldArray::CBX
-#define CBY FieldArray::CBY
-#define CBZ FieldArray::CBZ
-#define EX FieldArray::EX
-#define EY FieldArray::EY
-#define EZ FieldArray::EZ
+#define CBX MfieldsState::CBX
+#define CBY MfieldsState::CBY
+#define CBZ MfieldsState::CBZ
+#define EX MfieldsState::EX
+#define EY MfieldsState::EY
+#define EZ MfieldsState::EZ
 
 #define UPDATE_CBX() F(CBX, i,j,k) -= (py*(F(EZ, i,j+1,k) - F(EZ ,i,j,k)) - pz*(F(EY, i,j,k+1) - F(EY, i,j,k)))
 #define UPDATE_CBY() F(CBY, i,j,k) -= (pz*(F(EX, i,j,k+1) - F(EX ,i,j,k)) - px*(F(EZ, i+1,j,k) - F(EZ, i,j,k)))
@@ -30,9 +31,9 @@ struct PscPushFieldsOps
 
   static void advance_b(MfieldsState& mflds, double frac)
   {
-    auto& fa = mflds.vmflds();
-    Field3D<FieldArray> F(fa);
-    const Grid* g = fa.grid();
+    const Grid* g = mflds.vgrid();
+    auto& fa = mflds.getPatch(0);
+    F3D F(fa);
     int nx = g->nx, ny = g->ny, nz = g->nz;
 
     // FIXME, invariant should be based on global dims

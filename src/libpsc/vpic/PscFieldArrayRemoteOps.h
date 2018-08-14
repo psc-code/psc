@@ -7,7 +7,7 @@
 // ======================================================================
 // PscFieldArrayRemoteOps
 
-template<typename MfieldsState, class FieldArray>
+template<typename MfieldsState>
 struct PscFieldArrayRemoteOps
 {
   using Grid = typename MfieldsState::Grid;
@@ -107,18 +107,20 @@ struct PscFieldArrayRemoteOps
     }
   };
   
-  static void begin_remote_ghost_norm_e(FieldArray &fa)
+  static void begin_remote_ghost_norm_e(MfieldsState &mflds)
   {
-    Field3D<FieldArray> F(fa);
-    CommNC<Grid, Field3D<FieldArray>> comm(fa.grid());
+    auto& fa = mflds.getPatch(0);
+    F3D F(fa);
+    CommNC<Grid, F3D> comm(mflds.vgrid());
 
     comm.begin(F);
   }
 
-  static void end_remote_ghost_norm_e(FieldArray& fa)
+  static void end_remote_ghost_norm_e(MfieldsState& mflds)
   {
-    Field3D<FieldArray> F(fa);
-    CommNC<Grid, Field3D<FieldArray>> comm(fa.grid());
+    auto& fa = mflds.getPatch(0);
+    F3D F(fa);
+    CommNC<Grid, F3D> comm(mflds.vgrid());
 
     comm.end(F);
   }
@@ -159,18 +161,20 @@ struct PscFieldArrayRemoteOps
     }
   };
      
-  static void begin_remote_ghost_div_b(FieldArray& fa)
+  static void begin_remote_ghost_div_b(MfieldsState& mflds)
   {
-    Field3D<FieldArray> F(fa);
-    CommCC<Grid, Field3D<FieldArray>> comm(fa.grid());
+    auto& fa = mflds.getPatch(0);
+    F3D F(fa);
+    CommCC<Grid, F3D> comm(mflds.vgrid());
 
     comm.begin(F);
   }
 
-  static void end_remote_ghost_div_b(FieldArray& fa)
+  static void end_remote_ghost_div_b(MfieldsState& mflds)
   {
-    Field3D<FieldArray> F(fa);
-    CommCC<Grid, Field3D<FieldArray>> comm(fa.grid());
+    auto& fa = mflds.getPatch(0);
+    F3D F(fa);
+    CommCC<Grid, F3D> comm(mflds.vgrid());
 
     comm.end(F);
   }

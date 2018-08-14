@@ -185,7 +185,15 @@ struct MfieldsStatePsc
   using Grid = typename FieldArray::Grid;
   using MaterialList = typename FieldArray::MaterialList;
   using SfaParams = typename FieldArray::SfaParams;
+  using MaterialCoefficient = typename SfaParams::MaterialCoefficient;
   using Element = typename FieldArray::Element;
+
+  // FIXME, have to settle on BX or CBX...
+  enum {
+    CBX = 4,
+    CBY = 5,
+    CBZ = 6,
+  };
 
   enum {
     EX = 0, EY = 1, EZ = 2, DIV_E_ERR = 3,
@@ -225,8 +233,6 @@ struct MfieldsStatePsc
       return f[VOXEL(i,j,k, grid()->nx,grid()->ny,grid()->nz) * N_COMP + m];
     }
     
-    operator FieldArray*() { return &fa_; }
-
   private:
     FieldArray fa_;
   };
@@ -257,8 +263,6 @@ struct MfieldsStatePsc
   int n_comps() const { return N_COMP; }
   Int3 ibn() const { return {1,1,1}; }
   
-  FieldArray& vmflds() { return *static_cast<FieldArray*>(patch_); }
-
 private:
   const Grid_t& grid_;
   Patch patch_;
