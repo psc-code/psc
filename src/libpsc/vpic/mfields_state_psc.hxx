@@ -134,59 +134,26 @@ private:
 };
 
 // ======================================================================
-
-struct PscFieldT
-{
-  float ex,   ey,   ez,   div_e_err;     // Electric field and div E error
-  float cbx,  cby,  cbz,  div_b_err;     // Magnetic field and div B error
-  float tcax, tcay, tcaz, rhob;          // TCA fields and bound charge density
-  float jfx,  jfy,  jfz,  rhof;          // Free current and charge density
-  MaterialId ematx, ematy, ematz, nmat; // Material at edge centers and nodes
-  MaterialId fmatx, fmaty, fmatz, cmat; // Material at face and cell centers
-};
-
-// ======================================================================
-// PscFieldArrayBase
+// MfieldsStatePsc
 
 template<typename _Grid, typename _MaterialList>
-struct PscFieldArrayBase : PscFieldBase<PscFieldT, _Grid>
+struct MfieldsStatePsc
 {
-  using Base = PscFieldBase<PscFieldT, _Grid>;
   using Grid = _Grid;
   using MaterialList = _MaterialList;
   using SfaParams = PscSfaParams<Grid, MaterialList>;
   using MaterialCoefficient = typename SfaParams::MaterialCoefficient;
-  using typename Base::Element;
-
-  using Base::Base;
-  
-  enum {
-    EX  = 0,
-    EY  = 1,
-    EZ  = 2,
-    CBX = 4,
-    CBY = 5,
-    CBZ = 6,
-    N_COMP = sizeof(Element) / sizeof(float),
-  };
-
-  using Base::grid;
-  using Base::arr_;
-};
-
-
-// ======================================================================
-// MfieldsStatePsc
-
-template<typename FieldArray>
-struct MfieldsStatePsc
-{
   using real_t = float;
-  using Grid = typename FieldArray::Grid;
-  using MaterialList = typename FieldArray::MaterialList;
-  using SfaParams = typename FieldArray::SfaParams;
-  using MaterialCoefficient = typename SfaParams::MaterialCoefficient;
-  using Element = typename FieldArray::Element;
+
+  struct Element
+  {
+    float ex,   ey,   ez,   div_e_err;     // Electric field and div E error
+    float cbx,  cby,  cbz,  div_b_err;     // Magnetic field and div B error
+    float tcax, tcay, tcaz, rhob;          // TCA fields and bound charge density
+    float jfx,  jfy,  jfz,  rhof;          // Free current and charge density
+    MaterialId ematx, ematy, ematz, nmat; // Material at edge centers and nodes
+    MaterialId fmatx, fmaty, fmatz, cmat; // Material at face and cell centers
+  };
 
   // FIXME, have to settle on BX or CBX...
   enum {
@@ -234,7 +201,7 @@ struct MfieldsStatePsc
     }
     
   private:
-    FieldArray fa_;
+    PscFieldBase<Element, Grid> fa_;
   };
   
   using fields_t = fields3d<float, LayoutAOS>;
