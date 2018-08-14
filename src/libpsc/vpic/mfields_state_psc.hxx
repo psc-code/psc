@@ -1,6 +1,5 @@
 
-#ifndef PSC_FIELD_ARRAY_BASE_H
-#define PSC_FIELD_ARRAY_BASE_H
+#pragma once
 
 #include "psc_vpic_bits.h"
 #include "PscFieldBase.h"
@@ -226,7 +225,4 @@ protected:
   SfaParams* params_;
 };
 
-
-
-#endif
 
