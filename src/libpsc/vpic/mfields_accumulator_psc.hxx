@@ -24,16 +24,16 @@ struct PscAccumulatorBlock : PscFieldBase<PscAccumulatorT, G>
 };
   
 // ======================================================================
-// PscAccumulatorBase
+// MfieldsAccumulatorPsc
 
-template<class G>
-struct PscAccumulatorBase
+template<typename _Grid>
+struct MfieldsAccumulatorPsc
 {
-  typedef G Grid;
+  using Grid = _Grid;
   typedef PscAccumulatorBlock<Grid> Block;
   typedef typename Block::Element Element;
 
-  PscAccumulatorBase(Grid *grid)
+  MfieldsAccumulatorPsc(Grid *grid)
     : g_(grid)
   {
     n_pipeline_ = aa_n_pipeline();
@@ -41,7 +41,7 @@ struct PscAccumulatorBase
     arr_ = new Element[(n_pipeline_ + 1) * stride_]();
   }
 
-  ~PscAccumulatorBase()
+  ~MfieldsAccumulatorPsc()
   {
     delete[] arr_;
   }
@@ -90,15 +90,3 @@ protected:
   int stride_;     // Stride be each pipeline's accumulator array
   Grid* g_;
 };
-
-// ======================================================================
-// MfieldsAccumulatorPsc
-
-template<typename Grid>
-struct MfieldsAccumulatorPsc : PscAccumulatorBase<Grid>
-{
-  using Base = PscAccumulatorBase<Grid>;
-
-  using Base::Base;
-};
-
