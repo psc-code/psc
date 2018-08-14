@@ -69,12 +69,12 @@ struct PscAccumulatorOps
   
   static void unload( /*const*/ MfieldsAccumulator& acc, MfieldsState& mflds)
   {
-    FieldArray& fa = mflds.vmflds();
     auto g = acc.grid();
     float cx = 0.25 * g->rdy * g->rdz / g->dt;
     float cy = 0.25 * g->rdz * g->rdx / g->dt;
     float cz = 0.25 * g->rdx * g->rdy / g->dt;
     
+    auto& fa = mflds.getPatch(0);
     Field3D<FieldArray> F(fa);
     Field3D<MfieldsAccumulator> A(acc);
 

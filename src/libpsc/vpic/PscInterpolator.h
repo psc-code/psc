@@ -12,7 +12,7 @@ struct PscInterpolatorOps
   
   static void load(Interpolator& ip, /*const*/ MfieldsState& mflds)
   {
-    auto& fa = mflds.vmflds();
+    auto& fa = mflds.getPatch(0);
     Field3D<FieldArray> F(fa);
     Field3D<Interpolator> I(ip);
 

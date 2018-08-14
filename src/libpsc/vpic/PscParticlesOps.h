@@ -1097,7 +1097,7 @@ struct PscParticlesOps
   // ----------------------------------------------------------------------
   // accumulate_rho_p
 
-  static void accumulate_rho_p(FieldArray& fa, typename Particles::const_iterator sp)
+  static void accumulate_rho_p(MfieldsState& mflds, typename Particles::const_iterator sp)
   {
     const Particle * RESTRICT ALIGNED(128) p = sp->p;
 
@@ -1141,6 +1141,7 @@ struct PscParticlesOps
 
       // Reduce the particle charge to rhof
 
+      auto& fa = mflds.getPatch(0);
       fa[v      ].rhof += w0; fa[v      +1].rhof += w1;
       fa[v   +sy].rhof += w2; fa[v   +sy+1].rhof += w3;
       fa[v+sz   ].rhof += w4; fa[v+sz   +1].rhof += w5;
@@ -1151,7 +1152,7 @@ struct PscParticlesOps
   static void accumulate_rho_p(Particles& vmprts, MfieldsState &mflds)
   {
     for (auto sp = vmprts.cbegin(); sp != vmprts.cend(); ++sp) {
-      TIC accumulate_rho_p(mflds.vmflds(), sp); TOC(accumulate_rho_p, 1);
+      TIC accumulate_rho_p(mflds, sp); TOC(accumulate_rho_p, 1);
     }
   }
 
@@ -1208,7 +1209,6 @@ struct PscParticlesOps
 
   static void drop_p(Particles& vmprts, MfieldsState& mflds)
   {
-    auto& fa = mflds.vmflds();
     for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
       if (sp->nm) {
 	LOG_WARN("Removing %i particles associated with unprocessed %s movers (increase num_comm_round)",
