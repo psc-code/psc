@@ -10,9 +10,8 @@
 struct MfieldsHydroVpic
 {
   using Grid = VpicGridBase;
-  using HydroArray = VpicHydroArrayBase<Grid>;
   using real_t = float;
-  using Element = typename HydroArray::Element;
+  using Element = hydro_t;
   using fields_t = fields3d<float, LayoutAOS>;
 
   struct Patch
@@ -23,14 +22,14 @@ struct MfieldsHydroVpic
       : vgrid_{vgrid}
     {}
 
-    Element* data() { return ha->data(); }
+    Element* data() { return ha->h; }
     
     Element  operator[](int idx) const { return ha->h[idx]; }
     Element& operator[](int idx)       { return ha->h[idx]; }
 
     Grid* grid() { return vgrid_; }
     
-    HydroArray* ha;
+    hydro_array_t* ha;
   private:
     Grid* vgrid_;
  };
@@ -45,8 +44,12 @@ struct MfieldsHydroVpic
   {
     assert(grid.n_patches() == 1);
 
-    patch_.ha = static_cast<HydroArray*>(::new_hydro_array(vgrid));
-    data_ = patch_.ha->getData(ib_, im_);
+    patch_.ha = ::new_hydro_array(vgrid);
+
+    const int B = 1; // VPIC always uses one ghost cell (on c.c. grid)
+    im_ = { vgrid->nx + 2*B, vgrid->ny + 2*B, vgrid->nz + 2*B };
+    ib_ = { -B, -B, -B };
+    data_ = &patch_.ha->h[0].jx;
 
     ::clear_hydro_array(patch_.ha);
   }
@@ -65,7 +68,7 @@ struct MfieldsHydroVpic
 
   Grid* vgrid() { return patch_.grid(); }
 
-  operator HydroArray*() { return patch_.ha; }
+  operator hydro_array_t*() { return patch_.ha; }
 
 private:
   real_t* data_;
