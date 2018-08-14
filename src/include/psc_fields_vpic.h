@@ -111,7 +111,6 @@ struct MfieldsStateVpic
   Patch& getPatch(int p) { return *vmflds_fields_; }
 
   operator FieldArray*() { return vmflds_fields_; }
-  FieldArray& vmflds() { return *vmflds_fields_; }
 
   Grid* vgrid() { return vmflds_fields_->grid(); }
 
