@@ -1250,7 +1250,7 @@ struct PscParticlesOps
   static void accumulate_hydro_p(MfieldsHydro& hydro, typename Particles::const_iterator sp,
 				 /*const*/ Interpolator& IP)
   {
-    HydroArray& ha = hydro.vhydro();
+    auto ha = hydro.getPatch(0);
     float c, qsp, mspc, qdt_2mc, qdt_4mc2, r8V;
     int np, stride_10, stride_21, stride_43;
 
