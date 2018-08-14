@@ -16,7 +16,7 @@ struct ParticleInjector
   SpeciesId sp_id;           // Species of particle
 };
 
-template<typename Particles, typename FieldArray, typename Interpolator, typename Accumulator, typename HydroArray>
+template<typename Particles, typename FieldArray, typename Interpolator, typename Accumulator, typename MfieldsHydro>
 struct PscParticlesOps
 {
   typedef typename Particles::Grid Grid;
@@ -25,6 +25,7 @@ struct PscParticlesOps
   typedef typename Particles::ParticleMover ParticleMover;
   typedef typename Particles::ParticleBcList ParticleBcList;
   typedef typename Accumulator::Block AccumulatorBlock;
+  using HydroArray = typename MfieldsHydro::HydroArray;
   
   // ----------------------------------------------------------------------
   // move_p
@@ -1246,9 +1247,10 @@ struct PscParticlesOps
   // hydro jx,jy,jz are for diagnostic purposes only; they are not
   // accumulated with a charge conserving algorithm.
 
-  static void accumulate_hydro_p(HydroArray& ha, typename Particles::const_iterator sp,
+  static void accumulate_hydro_p(MfieldsHydro& hydro, typename Particles::const_iterator sp,
 				 /*const*/ Interpolator& IP)
   {
+    HydroArray& ha = hydro.vhydro();
     float c, qsp, mspc, qdt_2mc, qdt_4mc2, r8V;
     int np, stride_10, stride_21, stride_43;
 

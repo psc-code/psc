@@ -59,14 +59,13 @@ struct OutputHydroVpic
 
     std::vector<std::string> comp_names;
     comp_names.reserve(mflds_res_.n_comps());
-
     
     for (int kind = 0; kind < grid.kinds.size(); ++kind) {
       HydroArrayOps::clear(mflds_hydro);
       
       // FIXME, just iterate over species instead?
       typename Particles::const_iterator sp = vmprts.find(kind);
-      ParticlesOps::accumulate_hydro_p(vmflds, sp, interpolator);
+      ParticlesOps::accumulate_hydro_p(mflds_hydro, sp, interpolator);
       
       HydroArrayOps::synchronize(mflds_hydro);
       

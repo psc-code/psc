@@ -1,10 +1,11 @@
 
 #pragma once
 
-template<typename Particles, typename FieldArray, typename Interpolator, typename Accumulator, typename HydroArray>
+template<typename Particles, typename FieldArray, typename Interpolator, typename Accumulator, typename MfieldsHydro>
 struct VpicParticlesOps
 {
   typedef typename Particles::ParticleBcList ParticleBcList;
+  using HydroArray = typename MfieldsHydro::HydroArray;
   
   static void advance_p(Particles& vmprts, Accumulator& accumulator,
 			Interpolator& interpolator)
@@ -65,10 +66,10 @@ struct VpicParticlesOps
     }
   }
 
-  static void accumulate_hydro_p(HydroArray& ha, typename Particles::const_iterator sp,
+  static void accumulate_hydro_p(MfieldsHydro& hydro, typename Particles::const_iterator sp,
 				 const Interpolator& interpolator)
   {
-    ::accumulate_hydro_p(&ha, &*sp, &interpolator);
+    ::accumulate_hydro_p(&hydro.vhydro(), &*sp, &interpolator);
   }
 
   static void uncenter_p(species_t *sp, const Interpolator& interpolator)
