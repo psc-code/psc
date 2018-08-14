@@ -187,20 +187,8 @@ struct PscFieldArrayBase : PscFieldBase<PscFieldT, _Grid>
   }
 
 public:
-  float* getData(int* ib, int* im)
-  {
-    const int B = 1; // VPIC always uses one ghost cell (on c.c. grid)
-    im[0] = g_->nx + 2*B;
-    im[1] = g_->ny + 2*B;
-    im[2] = g_->nz + 2*B;
-    ib[0] = -B;
-    ib[1] = -B;
-    ib[2] = -B;
-    return &arr_[0].ex;
-  }
-
   // These operators can be used to access the field directly,
-  // though the performance isn't great, so one you use Field3D
+  // though the performance isn't great, so one should use Field3D
   // when performance is important
   float operator()(int m, int i, int j, int k) const
   {
@@ -264,37 +252,31 @@ struct MfieldsStatePsc
   MfieldsStatePsc(const Grid_t& grid, Grid* vgrid, const MaterialList& material_list, double damp = 0.)
     : grid_{grid}
   {
+    patch_.fa = FieldArray::create(vgrid, material_list, damp);
     assert(grid.n_patches() == 1);
 
-    patch_.fa = FieldArray::create(vgrid, material_list, damp);
+    const int B = 1; // VPIC always uses one ghost cell (on c.c. grid)
+    im_ = { vgrid->nx + 2*B, vgrid->ny + 2*B, vgrid->nz + 2*B };
+    ib_ = { -B, -B, -B };
   }
+
+  real_t* data() { return reinterpret_cast<real_t*>(patch_.data()); }
+  fields_t operator[](int p) { return {ib_, im_, N_COMP, data()}; }
+  Patch& getPatch(int p) { return patch_; }
+
+  Grid* vgrid() { return patch_.grid(); }
 
   const Grid_t& grid() const { return grid_; }
   int n_patches() const { return grid_.n_patches(); }
   int n_comps() const { return N_COMP; }
   Int3 ibn() const { return {1,1,1}; }
   
-  fields_t operator[](int p)
-  {
-    assert(p == 0);
-    int ib[3], im[3];
-    float* data = patch_.fa->getData(ib, im);
-    return {ib, im, N_COMP, data};
-  }
-
-  Patch& getPatch(int p) { return patch_; }
-
   FieldArray& vmflds() { return *patch_.fa; }
-
-  Grid* vgrid() { return patch_.fa->grid(); }
-
-  // static const Convert convert_to_, convert_from_;
-  // const Convert& convert_to() override { return convert_to_; }
-  // const Convert& convert_from() override { return convert_from_; }
 
 private:
   const Grid_t& grid_;
   Patch patch_;
+  Int3 ib_, im_;
 };
 
 
