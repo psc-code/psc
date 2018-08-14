@@ -29,10 +29,17 @@ struct MfieldsAccumulatorVpic
   
   Element* data() { return aa_->a; }
   
-  Element& operator()(int arr, int i, int j, int k) { return (*aa_)(arr, i, j, k); }
+  // FIXME, not a great interface with arr just another index
+  Element& operator()(int arr, int i, int j, int k)
+  {
+    return aa_->a[arr * aa_->stride + VOXEL(i,j,k, aa_->g->nx,aa_->g->ny,aa_->g->nz)];
+  }
 
-  Block operator[](int arr) { return (*aa_)[arr]; }
-
+  Block operator[](int arr)
+  {
+    return Block(aa_->a + arr * aa_->stride, grid());
+  }
+  
 private:
   Accumulator* aa_;
 };
