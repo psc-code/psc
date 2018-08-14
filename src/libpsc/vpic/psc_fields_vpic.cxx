@@ -15,7 +15,7 @@
 
 #if 0
 
-using Fields = Fields3d<fields_vpic_t>;
+using Fields = Fields3d<MfieldsStateVpic::fields_t>;
 using FieldsS = Fields3d<fields_single_t>;
 
 static const int map_psc2vpic[MfieldsStateVpic::N_COMP] = {
