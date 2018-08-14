@@ -56,8 +56,6 @@ struct VpicFieldArrayBase : field_array_t {
     float *f_ = &f[0].ex;
     return f_[VOXEL(i,j,k, g->nx,g->ny,g->nz) * N_COMP + m];
   }
-
-  SfaParams& params() { return *static_cast<SfaParams*>(field_array_t::params); }
 };
 
 
@@ -70,6 +68,7 @@ struct MfieldsStateVpic
   using Grid = VpicGridBase;
   using MaterialList = VpicMaterialList;
   using FieldArray = VpicFieldArrayBase<Grid, MaterialList>;
+  using SfaParams = FieldArray::SfaParams;
 
   enum {
     EX = 0, EY = 1, EZ = 2, DIV_E_ERR = 3,
@@ -97,6 +96,8 @@ struct MfieldsStateVpic
     field_t  operator[](int idx) const { return fa_->f[idx]; }
     field_t& operator[](int idx)       { return fa_->f[idx]; }
 
+    SfaParams& params() { return *static_cast<SfaParams*>(fa_->params); }
+
     operator FieldArray* () { return fa_; }
 
   private:
@@ -120,6 +121,7 @@ struct MfieldsStateVpic
   fields_t operator[](int p) { return {ib_, im_, N_COMP, data()}; }
   Patch& getPatch(int p) { return patch_; }
 
+  SfaParams& params() { return patch_.params(); }
   Grid* vgrid() { return patch_.grid(); }
 
   operator FieldArray*() { return patch_; }

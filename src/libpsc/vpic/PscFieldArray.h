@@ -113,7 +113,7 @@ struct PscCleanDivOps
   static void compute_div_e_err(MfieldsState& mflds)
   {
     auto& fa = mflds.vmflds();
-    auto& prm = fa.params();
+    auto& prm = mflds.params();
     assert(prm.size() == 1);
     const MaterialCoefficient* m = prm[0];
 
@@ -258,7 +258,7 @@ struct PscCleanDivOps
   static void vacuum_clean_div_e(MfieldsState& mflds)
   {
     auto& fa = mflds.vmflds();
-    auto& prm = fa.params();
+    auto& prm = mflds.params();
     assert(prm.size() == 1);
     const MaterialCoefficient* m = prm[0];
 
@@ -677,7 +677,7 @@ struct PscAccumulateOps
   static void compute_rhob(MfieldsState& mflds)
   {
     auto& fa = mflds.vmflds();
-    auto& prm = fa.params();
+    auto& prm = mflds.params();
     assert(prm.size() == 1);
     const MaterialCoefficient* m = prm[0];
 
@@ -727,7 +727,7 @@ struct PscAccumulateOps
   static void vacuum_compute_curl_b(MfieldsState& mflds)
   {
     auto& fa = mflds.vmflds();
-    auto& prm = fa.params();
+    auto& prm = mflds.params();
     assert(prm.size() == 1);
     const MaterialCoefficient* m = prm[0];
 
@@ -803,7 +803,7 @@ struct PscDiagOps
   static void vacuum_energy_f(MfieldsState& mflds, double global[6])
   {
     auto& fa = mflds.vmflds();
-    auto& prm = fa.params();
+    auto& prm = mflds.params();
     assert(prm.size() == 1);
     auto m = prm[0];
 

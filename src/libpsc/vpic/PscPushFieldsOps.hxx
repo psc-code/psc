@@ -94,7 +94,7 @@ struct PscPushFieldsOps
     auto& fa = mflds.vmflds();
     assert(frac == 1.);
 
-    SfaParams& prm = fa.params();
+    SfaParams& prm = mflds.params();
     assert(prm.size() == 1);
     const MaterialCoefficient* m = prm[0];
 

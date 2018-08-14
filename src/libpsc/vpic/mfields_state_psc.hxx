@@ -198,13 +198,12 @@ public:
 
   using Base::grid;
 
-  SfaParams& params() { return *params_; }
-
 private:
   using Base::arr_;
 
 protected:
   using Base::g_;
+public:
   SfaParams* params_;
 };
 
@@ -218,7 +217,7 @@ struct MfieldsStatePsc
   using real_t = float;
   using Grid = typename FieldArray::Grid;
   using MaterialList = typename FieldArray::MaterialList;
-
+  using SfaParams = typename FieldArray::SfaParams;
   using Element = typename FieldArray::Element;
 
   enum {
@@ -247,6 +246,8 @@ struct MfieldsStatePsc
     Element  operator[](int idx) const { return (*fa_)[idx]; }
     Element& operator[](int idx)       { return (*fa_)[idx]; }
 
+    SfaParams& params() { return *fa_->params_; }
+    
     operator FieldArray*() { return fa_; }
 
   private:
@@ -270,6 +271,7 @@ struct MfieldsStatePsc
   fields_t operator[](int p) { return {ib_, im_, N_COMP, data()}; }
   Patch& getPatch(int p) { return patch_; }
 
+  SfaParams& params() { return patch_.params(); }
   Grid* vgrid() { return patch_.grid(); }
 
   const Grid_t& grid() const { return grid_; }
