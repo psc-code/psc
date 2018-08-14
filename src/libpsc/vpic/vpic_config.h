@@ -2,6 +2,8 @@
 #ifndef VPIC_CONFIG_H
 #define VPIC_CONFIG_H
 
+#define DO_VPIC 1
+
 #define HAVE_VPIC
 
 #ifdef HAVE_VPIC
@@ -75,11 +77,11 @@
 
 #include "VpicSimulationBase.h"
 
+#include "mfields_hydro_vpic.hxx"
+
 #undef particle_t
 
 #endif
-
-//#define DO_VPIC 1
 
 #ifdef DO_VPIC
 using Grid = VpicGridBase;
@@ -114,7 +116,7 @@ using AccumulatorOps = PscAccumulatorOps<Accumulator, FieldArray>;
 using MfieldsHydro = MfieldsHydroVpic;
 using HydroArrayOps = VpicHydroArrayOps<MfieldsHydro>;
 #else
-using MfieldsHydro = MfieldsHydroVpic_<Grid, PscHydroArrayBase<Grid>>;
+using MfieldsHydro = MfieldsHydroPsc<Grid>;
 using HydroArrayOps = PscHydroArrayOps<MfieldsHydro>;
 #endif
 
