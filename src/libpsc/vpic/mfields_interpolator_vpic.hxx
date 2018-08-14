@@ -18,6 +18,8 @@ struct MfieldsInterpolator_
     delete ip_;
   }
 
+  Interpolator& getPatch(int p) { return *ip_; }
+  
   Interpolator& vip() { return *ip_; }
   
 private:

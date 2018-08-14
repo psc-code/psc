@@ -501,7 +501,7 @@ struct VpicDiagMixin
 		    en_f[3], en_f[4], en_f[5] );
  
     for (auto sp = particles.cbegin(); sp != particles.cend(); ++sp) {
-      en_p = ParticlesOps::energy_p(sp, interpolator.vip());
+      en_p = ParticlesOps::energy_p(sp, interpolator);
       if (rank==0 && status != fail) fileIO.print(" %e", en_p);
     }
  
@@ -645,7 +645,7 @@ struct VpicDiagMixin
     if (sp == vmprts->cend()) LOG_ERROR("Invalid species name: %s", speciesname);
 
     HydroArrayOps::clear(mflds_hydro);
-    ParticlesOps::accumulate_hydro_p(mflds_hydro, sp, interpolator.vip());
+    ParticlesOps::accumulate_hydro_p(mflds_hydro, sp, interpolator);
     HydroArrayOps::synchronize(mflds_hydro);
   
     // convenience

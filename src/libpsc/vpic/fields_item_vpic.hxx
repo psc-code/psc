@@ -46,7 +46,7 @@ struct OutputHydroVpic
     : mflds_res_{grid, MfieldsHydro::N_COMP * int(grid.kinds.size()), {1,1,1}}
   {}
 
-  Result operator()(MparticlesVpic& mprts, MfieldsHydro& mflds_hydro, Interpolator& interpolator)
+  Result operator()(MparticlesVpic& mprts, MfieldsHydro& mflds_hydro, MfieldsInterpolator& interpolator)
   {
     // This relies on load_interpolator_array() having been called earlier
 

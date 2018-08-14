@@ -393,14 +393,15 @@ struct PscParticlesOps
 
   static void advance_p_pipeline(typename Particles::iterator sp,
 				 AccumulatorBlock acc_block,
-				 Interpolator& interpolator,
+				 MfieldsInterpolator& interpolator,
 				 particle_mover_seg_t *seg,
 				 Particle * ALIGNED(128) p, int n,
 				 ParticleMover * ALIGNED(16) pm, int max_nm)
   {
     Particle* ALIGNED(128) p0 = sp->p;
     const Grid* g = sp->grid();
-
+    auto& ip = interpolator.getPatch(0);
+    
     const typename Interpolator::Element * ALIGNED(16)  f;
     float                * ALIGNED(16)  a;
 
@@ -432,7 +433,7 @@ struct PscParticlesOps
       dy   = p->dy;
       dz   = p->dz;
       ii   = p->i;
-      f    = &interpolator[ii];                 // Interpolate E
+      f    = &ip[ii];                 // Interpolate E
       hax  = qdt_2mc*(    ( f->ex    + dy*f->dexdy    ) +
 			  dz*( f->dexdz + dy*f->d2exdydz ) );
       hay  = qdt_2mc*(    ( f->ey    + dz*f->deydz    ) +
@@ -722,10 +723,10 @@ struct PscParticlesOps
     Particle* p = sp->p;
     int n = sp->np & ~15;
 #if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
-    advance_p_pipeline_v4(sp, accumulator[1], interpolator.vip(), seg, p, n,
+    advance_p_pipeline_v4(sp, accumulator[1], interpolator, seg, p, n,
 			  sp->pm + sp->nm, sp->max_nm - sp->nm);
 #else
-    advance_p_pipeline(sp, accumulator[1], interpolator.vip(), seg, p, n,
+    advance_p_pipeline(sp, accumulator[1], interpolator, seg, p, n,
 		       sp->pm + sp->nm, sp->max_nm - sp->nm);
 #endif
     sp->nm += seg->nm;
@@ -736,7 +737,7 @@ struct PscParticlesOps
   
     p += n;
     n = sp->np - n;
-    advance_p_pipeline(sp, accumulator[0], interpolator.vip(), seg, p, n,
+    advance_p_pipeline(sp, accumulator[0], interpolator, seg, p, n,
 		       sp->pm + sp->nm, sp->max_nm - sp->nm);
     sp->nm += seg->nm;
 
@@ -1249,9 +1250,10 @@ struct PscParticlesOps
   // accumulated with a charge conserving algorithm.
 
   static void accumulate_hydro_p(MfieldsHydro& hydro, typename Particles::const_iterator sp,
-				 /*const*/ Interpolator& IP)
+				 /*const*/ MfieldsInterpolator& interpolator)
   {
     auto& ha = hydro.getPatch(0);
+    auto& IP = interpolator.getPatch(0);
     float c, qsp, mspc, qdt_2mc, qdt_4mc2, r8V;
     int np, stride_10, stride_21, stride_43;
 
@@ -1610,11 +1612,12 @@ struct PscParticlesOps
   // energy_p
 
   static double energy_p_pipeline(typename Particles::const_iterator sp,
-				  Interpolator &interpolator,
+				  MfieldsInterpolator &interpolator,
 				  int n0, int n1)
   {
     const Grid* g = sp->grid();
-    const typename Interpolator::Element * RESTRICT ALIGNED(128) f = interpolator.data();
+    auto& ip = interpolator.getPatch(0);
+    const typename Interpolator::Element * RESTRICT ALIGNED(128) f = ip.data();
     const Particle       * RESTRICT ALIGNED(32)  p = sp->p;
     const float qdt_2mc = (sp->q*g->dt)/(2*sp->m*g->cvac);
     const float msp     = sp->m;
@@ -1721,7 +1724,7 @@ struct PscParticlesOps
 
 #endif
 
-  static double energy_p(typename Particles::const_iterator sp, Interpolator& interpolator)
+  static double energy_p(typename Particles::const_iterator sp, MfieldsInterpolator& interpolator)
   {
     const Grid* g = sp->grid();
     int cnt = sp->np & ~15;
