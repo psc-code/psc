@@ -2,7 +2,7 @@
 #ifndef VPIC_CONFIG_H
 #define VPIC_CONFIG_H
 
-#define DO_VPIC 1
+//#define DO_VPIC 1
 
 #define HAVE_VPIC
 
@@ -38,7 +38,7 @@
 #include "PscInterpolator.h"
 
 #include "PscAccumulator.h"
-#include "mfields_accumulator_vpic.hxx"
+#include "mfields_accumulator_psc.hxx"
 
 #include "PscHydroArray.h"
 #include "mfields_hydro.hxx"
@@ -76,6 +76,7 @@
 #include "VpicSimulationBase.h"
 
 #include "mfields_hydro_vpic.hxx"
+#include "mfields_accumulator_vpic.hxx"
 
 #undef particle_t
 
