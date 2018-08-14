@@ -3,12 +3,12 @@
 #define PSC_FIELDS_VPIC_H
 
 #include "fields3d.hxx"
-#include "fields_traits.hxx"
 
-#include <psc_method.h>
+// ======================================================================
+// MfieldsStatePsc
 
 template<typename FieldArray>
-struct MfieldsState_
+struct MfieldsStatePsc
 {
   using real_t = float;
   using Grid = typename FieldArray::Grid;
@@ -29,7 +29,7 @@ struct MfieldsState_
     using Base::Base;
   };
 
-  MfieldsState_(const Grid_t& grid, Grid* vgrid, const MaterialList& material_list, double damp = 0.)
+  MfieldsStatePsc(const Grid_t& grid, Grid* vgrid, const MaterialList& material_list, double damp = 0.)
     : grid_{grid}
   {
     assert(grid.n_patches() == 1);

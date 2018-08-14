@@ -101,7 +101,7 @@ using CleanDivOps = VpicCleanDivOps<FieldArray>;
 #else
 using MaterialList = PscMaterialList;
 using FieldArray = PscFieldArrayBase<Grid, MaterialList>;
-using MfieldsState = MfieldsState_<FieldArray>;
+using MfieldsState = MfieldsStatePsc<GFieldArray>;
 using FieldArrayLocalOps = PscFieldArrayLocalOps<FieldArray>;
 using FieldArrayRemoteOps = PscFieldArrayRemoteOps<FieldArray>;
 using PushFieldsOps = PscPushFieldsOps<FieldArray, FieldArrayLocalOps, FieldArrayRemoteOps>;
