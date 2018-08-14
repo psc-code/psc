@@ -16,7 +16,8 @@ struct ParticleInjector
   SpeciesId sp_id;           // Species of particle
 };
 
-template<typename Particles, typename MfieldsState, typename MfieldsInterpolator, typename Interpolator, typename MfieldsAccumulator, typename MfieldsHydro>
+template<typename Particles, typename MfieldsState, typename MfieldsInterpolator,
+  typename MfieldsAccumulator, typename MfieldsHydro>
 struct PscParticlesOps
 {
   typedef typename Particles::Grid Grid;

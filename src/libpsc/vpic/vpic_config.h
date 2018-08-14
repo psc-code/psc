@@ -112,8 +112,7 @@ using MfieldsInterpolator = MfieldsInterpolatorVpic;
 #else
 using MfieldsInterpolator = MfieldsInterpolatorPsc<Grid>;
 #endif
-using Interpolator = void;
-using InterpolatorOps = PscInterpolatorOps<MfieldsInterpolator, Interpolator, MfieldsState>;
+using InterpolatorOps = PscInterpolatorOps<MfieldsInterpolator, MfieldsState>;
 
 #ifdef DO_VPIC
 using MfieldsAccumulator = MfieldsAccumulatorVpic;
@@ -140,7 +139,7 @@ using Particles = PscParticlesBase<Grid, ParticleBcList>;
 #if 0//def DO_VPIC
 using ParticlesOps = VpicParticlesOps<Particles, MfieldsState, Interpolator, MfieldsAccumulator, MfieldsHydro>;
 #else
-using ParticlesOps = PscParticlesOps<Particles, MfieldsState, MfieldsInterpolator, Interpolator, MfieldsAccumulator, MfieldsHydro>;
+using ParticlesOps = PscParticlesOps<Particles, MfieldsState, MfieldsInterpolator, MfieldsAccumulator, MfieldsHydro>;
 #endif
 
 #if 1
