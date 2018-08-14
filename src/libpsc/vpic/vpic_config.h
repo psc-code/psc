@@ -37,8 +37,8 @@
 #include "PscInterpolatorBase.h"
 #include "PscInterpolator.h"
 
-#include "PscAccumulatorBase.h"
 #include "PscAccumulator.h"
+#include "mfields_accumulator_vpic.hxx"
 
 #include "PscHydroArray.h"
 #include "mfields_hydro.hxx"
@@ -109,6 +109,7 @@ using Interpolator = PscInterpolatorBase<Grid>;
 using InterpolatorOps = PscInterpolatorOps<Interpolator, FieldArray>;
 
 using Accumulator = PscAccumulatorBase<Grid>;
+using MfieldsAccumulator = PscAccumulatorBase<Grid>;
 using AccumulatorOps = PscAccumulatorOps<Accumulator, FieldArray>;
 
 #ifdef DO_VPIC
