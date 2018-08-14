@@ -147,15 +147,15 @@ struct PscFieldT
 // ======================================================================
 // PscFieldArrayBase
 
-template<class G, class ML>
-struct PscFieldArrayBase : PscFieldBase<PscFieldT, G>
+template<typename _Grid, typename _MaterialList>
+struct PscFieldArrayBase : PscFieldBase<PscFieldT, _Grid>
 {
-  typedef PscFieldBase<PscFieldT, G> Base;
-  typedef ML MaterialList;
-  typedef PscSfaParams<G, ML> SfaParams;
-  typedef typename SfaParams::MaterialCoefficient MaterialCoefficient;
+  using Base = PscFieldBase<PscFieldT, _Grid>;
+  using Grid = _Grid;
+  using MaterialList = _MaterialList;
+  using SfaParams = PscSfaParams<Grid, MaterialList>;
+  using MaterialCoefficient = typename SfaParams::MaterialCoefficient;
 
-  using typename Base::Grid;
   using typename Base::Element;
   
   enum {
