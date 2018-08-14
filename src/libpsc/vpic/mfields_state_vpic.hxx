@@ -14,50 +14,12 @@
 #include <cassert>
 
 // ======================================================================
-// VpicSfaParams
-
-struct VpicSfaParams: sfa_params_t
-{
-};
-
-// ======================================================================
 // VpicFieldArrayBase
 
 template<class G, class ML>
-struct VpicFieldArrayBase : field_array_t {
-  typedef G Grid;
-  typedef ML MaterialList;
-  typedef field_t Element;
-  typedef VpicSfaParams SfaParams;
-  typedef material_coefficient_t MaterialCoefficient;
-  
-  enum {
-    EX  = 0,
-    EY  = 1,
-    EZ  = 2,
-    CBX = 4,
-    CBY = 5,
-    CBZ = 6,
-    N_COMP = sizeof(field_t) / sizeof(float),
-  };
-
- public:
-  // These operators can be used to access the field directly,
-  // though the performance isn't great, so one you use Field3D
-  // when performance is important
-  float operator()(int m, int i, int j, int k) const
-  {
-    float *f_ = &f[0].ex;
-    return f_[VOXEL(i,j,k, g->nx,g->ny,g->nz) * N_COMP + m];
-  }
-  
-  float& operator()(int m, int i, int j, int k)
-  {
-    float *f_ = &f[0].ex;
-    return f_[VOXEL(i,j,k, g->nx,g->ny,g->nz) * N_COMP + m];
-  }
+struct VpicFieldArrayBase : field_array_t
+{
 };
-
 
 // ======================================================================
 // MfieldsStateVpic
@@ -68,7 +30,7 @@ struct MfieldsStateVpic
   using Grid = VpicGridBase;
   using MaterialList = VpicMaterialList;
   using FieldArray = VpicFieldArrayBase<Grid, MaterialList>;
-  using SfaParams = FieldArray::SfaParams;
+  using SfaParams = sfa_params_t;
 
   enum {
     EX = 0, EY = 1, EZ = 2, DIV_E_ERR = 3,
@@ -95,6 +57,23 @@ struct MfieldsStateVpic
     Grid* grid() { return static_cast<Grid*>(fa_->g); }
     field_t  operator[](int idx) const { return fa_->f[idx]; }
     field_t& operator[](int idx)       { return fa_->f[idx]; }
+
+    // These operators can be used to access the field directly,
+    // though the performance isn't optimal, so one should use Field3D
+    // when performance is important
+    static const int N_COMP = sizeof(field_t) / sizeof(float);
+    
+    float operator()(int m, int i, int j, int k) const
+    {
+      float *f = reinterpret_cast<real_t*>(fa_->f);
+      return f[VOXEL(i,j,k, fa_->g->nx,fa_->g->ny,fa_->g->nz) * N_COMP + m];
+    }
+    
+    float& operator()(int m, int i, int j, int k)
+    {
+      float *f = reinterpret_cast<real_t*>(fa_->f);
+      return f[VOXEL(i,j,k, fa_->g->nx,fa_->g->ny,fa_->g->nz) * N_COMP + m];
+    }
 
     SfaParams& params() { return *static_cast<SfaParams*>(fa_->params); }
 
