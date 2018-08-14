@@ -1,6 +1,4 @@
 
-#include "psc_fields_vpic.h"
-
 #include "psc_fields_c.h"
 #include "psc_fields_single.h"
 #include "psc.h"

@@ -5,7 +5,6 @@
 #include "vpic_iface.h"
 #include "psc_method.h"
 
-#include "psc_fields_vpic.h"
 #include "psc_particles_vpic.h"
 
 // ======================================================================

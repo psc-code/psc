@@ -2,7 +2,6 @@
 #pragma once
 
 #include "marder.hxx"
-#include "psc_fields_vpic.h"
 #include "psc_particles_vpic.h"
 
 // ======================================================================

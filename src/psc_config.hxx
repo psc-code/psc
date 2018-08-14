@@ -163,7 +163,6 @@ struct PscConfig1vbecCuda<dim_xyz> : PscConfig_<dim_xyz, MparticlesCuda<BS444>, 
 #ifdef USE_VPIC
 
 #include <psc_particles_vpic.h>
-#include <psc_fields_vpic.h>
 #include "../libpsc/vpic/sort_vpic.hxx"
 #include "../libpsc/vpic/collision_vpic.hxx"
 #include "../libpsc/vpic/push_particles_vpic.hxx"

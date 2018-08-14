@@ -4,7 +4,6 @@
 #include "push_fields.hxx"
 #include "vpic_iface.h"
 #include "psc_method.h"
-#include "psc_fields_vpic.h"
 
 // ======================================================================
 // PushFieldsVpic
