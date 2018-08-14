@@ -322,7 +322,7 @@ struct PscCleanDivOps
       }
     }
 
-    LocalOps::local_adjust_tang_e(fa);
+    LocalOps::local_adjust_tang_e(mflds);
   }
 
   static void clean_div_e(MfieldsState& mflds)
@@ -501,7 +501,7 @@ struct PscCleanDivOps
       }
     }
 
-    LocalOps::local_adjust_norm_b(fa);
+    LocalOps::local_adjust_norm_b(mflds);
   }
 
   // ----------------------------------------------------------------------
@@ -574,8 +574,8 @@ struct PscCleanDivOps
     Field3D<FieldArray> F(fa);
     CommTangENormB<Grid, Field3D<FieldArray>> comm(fa.grid());
     
-    LocalOps::local_adjust_tang_e(fa);
-    LocalOps::local_adjust_norm_b(fa);
+    LocalOps::local_adjust_tang_e(mflds);
+    LocalOps::local_adjust_norm_b(mflds);
 
     for (int dir = 0; dir < 3; dir++) {
       comm.begin(dir, F);
@@ -772,15 +772,15 @@ struct PscAccumulateOps
 
     CurlB curlB(fa, fa.grid(), m);
       
-    RemoteOps::begin_remote_ghost_tang_b(fa);
+    RemoteOps::begin_remote_ghost_tang_b(mflds);
 
-    LocalOps::local_ghost_tang_b(fa);
-    foreach_ec_interior(curlB, fa.grid());
+    LocalOps::local_ghost_tang_b(mflds);
+    foreach_ec_interior(curlB, mflds.vgrid());
 
-    RemoteOps::end_remote_ghost_tang_b(fa);
+    RemoteOps::end_remote_ghost_tang_b(mflds);
 
-    foreach_ec_boundary(curlB, fa.grid());
-    LocalOps::local_adjust_tang_e(fa); // FIXME, is this right here?
+    foreach_ec_boundary(curlB, mflds.vgrid());
+    LocalOps::local_adjust_tang_e(mflds); // FIXME, is this right here?
   }
 
   static void compute_curl_b(MfieldsState& mflds)

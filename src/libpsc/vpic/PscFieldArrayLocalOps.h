@@ -28,11 +28,13 @@ struct PscFieldArrayLocalOps
 {
   using Grid = typename MfieldsState::Grid;
   using FieldT = typename MfieldsState::Element;
+  using F3D = Field3D<typename MfieldsState::Patch>;
 
-  static void local_ghost_tang_b(FieldArray& fa)
+  static void local_ghost_tang_b(MfieldsState& mflds)
   {
-    Field3D<FieldArray> F(fa);
-    const Grid* g = fa.grid();
+    const Grid* g = mflds.vgrid();
+    auto& fa = mflds.getPatch(0);
+    F3D F(fa);
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     const float cdt_dx = g->cvac*g->dt*g->rdx;
     const float cdt_dy = g->cvac*g->dt*g->rdy;
@@ -202,10 +204,11 @@ struct PscFieldArrayLocalOps
   // FIXME: Specialty edge loops should be added to zero e_tang on local
   // edges exclusively to handle concave domain geometries
   
-  static void local_adjust_tang_e(FieldArray& fa)
+  static void local_adjust_tang_e(MfieldsState& mflds)
   {
-    Field3D<FieldArray> F(fa);
-    const Grid* g = fa.grid();
+    const Grid* g = mflds.vgrid();
+    auto &fa = mflds.getPatch(0);
+    F3D F(fa);
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     int bc, face, x, y, z;
     FieldT* fs;
@@ -245,10 +248,11 @@ struct PscFieldArrayLocalOps
     ADJUST_TANG_E( 0, 0, 1,z,x,y);
   }
 
-  static void local_adjust_norm_b(FieldArray& fa)
+  static void local_adjust_norm_b(MfieldsState& mflds)
   {
-    Field3D<FieldArray> F(fa);
-    const Grid* g = fa.grid();
+    const Grid* g = mflds.vgrid();
+    auto& fa = mflds.getPatch(0);
+    F3D F(fa);
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     int bc, face, x, y, z;
 

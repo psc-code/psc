@@ -76,7 +76,7 @@ struct PscPushFieldsOps
       }
     }
     
-    LocalOps::local_adjust_norm_b(fa);
+    LocalOps::local_adjust_norm_b(mflds);
   }
 
 #undef CBX
@@ -91,21 +91,14 @@ struct PscPushFieldsOps
   
   static void vacuum_advance_e(MfieldsState& mflds, double frac)
   {
-    auto& fa = mflds.vmflds();
-    assert(frac == 1.);
-
-    SfaParams& prm = mflds.params();
-    assert(prm.size() == 1);
-    const MaterialCoefficient* m = prm[0];
-
     // Update interior fields
     // Note: ex all (1:nx,  1:ny+1,1,nz+1) interior (1:nx,2:ny,2:nz)
     // Note: ey all (1:nx+1,1:ny,  1:nz+1) interior (2:nx,1:ny,2:nz)
     // Note: ez all (1:nx+1,1:ny+1,1:nz ) interior (1:nx,1:ny,2:nz)
 
-
-    struct AdvanceE {
-      AdvanceE(FieldArray& fa, const Grid *g, const MaterialCoefficient* m,
+    struct AdvanceE
+    {
+      AdvanceE(typename MfieldsState::Patch& fa, const Grid *g, const MaterialCoefficient* m,
 	       const double damp_)
 	: F(fa),
 	  decayx(m->decayx),
@@ -149,23 +142,30 @@ struct PscPushFieldsOps
 	F(i,j,k).ez   = decayz*F(i,j,k).ez + drivez*(F(i,j,k).tcaz - cj*F(i,j,k).jfz);
       }
 
-      Field3D<FieldArray> F;
+      Field3D<typename MfieldsState::Patch> F;
       const float decayx, decayy, decayz, drivex, drivey, drivez;
       const float px_muz, px_muy, py_mux, py_muz, pz_muy, pz_mux;
       const float damp, cj;
     };
 
-    AdvanceE advanceE(fa, fa.grid(), m, prm.damp);
+    auto& fa = mflds.getPatch(0);
+    assert(frac == 1.);
 
-    RemoteOps::begin_remote_ghost_tang_b(fa);
+    SfaParams& prm = mflds.params();
+    assert(prm.size() == 1);
+    const MaterialCoefficient* m = prm[0];
 
-    LocalOps::local_ghost_tang_b(fa);
-    foreach_ec_interior(advanceE, fa.grid());
+    AdvanceE advanceE(fa, mflds.vgrid(), m, prm.damp);
 
-    RemoteOps::end_remote_ghost_tang_b(fa);
+    RemoteOps::begin_remote_ghost_tang_b(mflds);
 
-    foreach_ec_boundary(advanceE, fa.grid());
-    LocalOps::local_adjust_tang_e(fa);
+    LocalOps::local_ghost_tang_b(mflds);
+    foreach_ec_interior(advanceE, mflds.vgrid());
+
+    RemoteOps::end_remote_ghost_tang_b(mflds);
+
+    foreach_ec_boundary(advanceE, mflds.vgrid());
+    LocalOps::local_adjust_tang_e(mflds);
   }
 
   // ----------------------------------------------------------------------

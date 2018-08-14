@@ -7,10 +7,11 @@
 // ======================================================================
 // PscFieldArrayRemoteOps
 
-template<class FieldArray>
+template<typename MfieldsState, class FieldArray>
 struct PscFieldArrayRemoteOps
 {
-  using Grid = typename FieldArray::Grid;
+  using Grid = typename MfieldsState::Grid;
+  using F3D = Field3D<typename MfieldsState::Patch>;
 
   // ----------------------------------------------------------------------
   // CommEC
@@ -52,18 +53,20 @@ struct PscFieldArrayRemoteOps
     }
   };
 
-  static void begin_remote_ghost_tang_b(FieldArray& fa)
+  static void begin_remote_ghost_tang_b(MfieldsState &mflds)
   {
-    Field3D<FieldArray> F(fa);
-    CommEC<Grid, Field3D<FieldArray>> comm(fa.grid());
+    auto& fa = mflds.getPatch(0);
+    F3D F(fa);
+    CommEC<Grid, F3D> comm(mflds.vgrid());
 
     comm.begin(F);
   }
 
-  static void end_remote_ghost_tang_b(FieldArray& fa)
+  static void end_remote_ghost_tang_b(MfieldsState& mflds)
   {
-    Field3D<FieldArray> F(fa);
-    CommEC<Grid, Field3D<FieldArray>> comm(fa.grid());
+    auto& fa = mflds.getPatch(0);
+    F3D F(fa);
+    CommEC<Grid, F3D> comm(mflds.vgrid());
     
     comm.end(F);
   }
