@@ -169,12 +169,6 @@ struct PscFieldArrayBase : PscFieldBase<PscFieldT, _Grid>
     N_COMP = sizeof(typename Base::Element) / sizeof(float),
   };
 
-  static PscFieldArrayBase* create(Grid *grid, const MaterialList& material_list, float damp)
-  {
-    return new PscFieldArrayBase(grid, material_list, damp);
-  }
-
- private:
   PscFieldArrayBase(Grid* grid, const MaterialList& material_list, float damp)
     : Base(grid)
   {
@@ -252,7 +246,7 @@ struct MfieldsStatePsc
   MfieldsStatePsc(const Grid_t& grid, Grid* vgrid, const MaterialList& material_list, double damp = 0.)
     : grid_{grid}
   {
-    patch_.fa = FieldArray::create(vgrid, material_list, damp);
+    patch_.fa = new FieldArray(vgrid, material_list, damp);
     assert(grid.n_patches() == 1);
 
     const int B = 1; // VPIC always uses one ghost cell (on c.c. grid)
