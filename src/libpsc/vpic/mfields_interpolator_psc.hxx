@@ -22,7 +22,6 @@ struct MfieldsInterpolatorPsc
 {
   using Grid = _Grid;
   using Element = PscInterpolatorT;
-  using Interpolator = PscFieldBase<Element, Grid>;
 
   struct Patch
   {
@@ -38,7 +37,7 @@ struct MfieldsInterpolatorPsc
 
     Grid* grid() { return ip_.grid(); }
 
-    Interpolator ip_;
+    PscFieldBase<Element, Grid> ip_;
   };
 
   MfieldsInterpolatorPsc(Grid* vgrid)
