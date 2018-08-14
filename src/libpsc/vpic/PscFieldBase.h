@@ -16,7 +16,14 @@ struct PscFieldBase
 
   PscFieldBase(Grid* grid, Element* arr)
     : arr_(arr), g_(grid), is_owner_(false)
+  {}
+
+  PscFieldBase(const PscFieldBase& other)
+    : arr_{other.arr_}, g_{other.g_}, is_owner_{other.is_owner_}
   {
+    // FIXME, copying leaves us with two owners of the same data, which
+    // can't be good
+    assert(!is_owner_);
   }
 
   ~PscFieldBase()
