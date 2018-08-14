@@ -14,6 +14,8 @@ struct MfieldsStatePsc
   using Grid = typename FieldArray::Grid;
   using MaterialList = typename FieldArray::MaterialList;
 
+  using Element = typename FieldArray::Element;
+
   enum {
     EX = 0, EY = 1, EZ = 2, DIV_E_ERR = 3,
     BX = 4, BY = 5, BZ = 6, DIV_B_ERR = 7,
@@ -22,15 +24,26 @@ struct MfieldsStatePsc
     N_COMP = 20,
   };
 
+  struct Patch
+  {
+    using Element = Element;
+    
+    Element* data() { return fa->data(); }
+    Grid* grid() { return fa->grid(); }
+    Element  operator[](int idx) const { return (*fa)[idx]; }
+    Element& operator[](int idx)       { return (*fa)[idx]; }
+
+    FieldArray* fa;
+  };
+  
   using fields_t = fields3d<float, LayoutAOS>;
-  using Patch = FieldArray;
 
   MfieldsStatePsc(const Grid_t& grid, Grid* vgrid, const MaterialList& material_list, double damp = 0.)
     : grid_{grid}
   {
     assert(grid.n_patches() == 1);
 
-    vmflds_fields_ = FieldArray::create(vgrid, material_list, damp);
+    patch_.fa = FieldArray::create(vgrid, material_list, damp);
   }
 
   const Grid_t& grid() const { return grid_; }
@@ -42,23 +55,23 @@ struct MfieldsStatePsc
   {
     assert(p == 0);
     int ib[3], im[3];
-    float* data = vmflds().getData(ib, im);
+    float* data = patch_.fa->getData(ib, im);
     return {ib, im, N_COMP, data};
   }
 
-  Patch& getPatch(int p) { return *vmflds_fields_; }
+  Patch& getPatch(int p) { return patch_; }
 
-  FieldArray& vmflds() { return *vmflds_fields_; }
+  FieldArray& vmflds() { return *patch_.fa; }
 
-  Grid* vgrid() { return vmflds_fields_->grid(); }
+  Grid* vgrid() { return patch_.fa->grid(); }
 
   // static const Convert convert_to_, convert_from_;
   // const Convert& convert_to() override { return convert_to_; }
   // const Convert& convert_from() override { return convert_from_; }
 
 private:
-  FieldArray* vmflds_fields_;
   const Grid_t& grid_;
+  Patch patch_;
 };
 
 

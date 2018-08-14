@@ -84,13 +84,13 @@
 
 #endif
 
-#if 1//def DO_VPIC
+#ifdef DO_VPIC
 using Grid = VpicGridBase;
 #else
 using Grid = PscGridBase;
 #endif
 
-#if 1//def DO_VPIC
+#ifdef DO_VPIC
 using MaterialList = VpicMaterialList;
 using FieldArray = VpicFieldArrayBase<Grid, VpicMaterialList>;
 using MfieldsState = MfieldsStateVpic;
