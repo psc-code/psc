@@ -91,7 +91,6 @@ using Grid = PscGridBase;
 
 #ifdef DO_VPIC
 using MaterialList = VpicMaterialList;
-using FieldArray = VpicFieldArrayBase<Grid, VpicMaterialList>;
 using MfieldsState = MfieldsStateVpic;
 using PushFieldsOps = VpicPushFieldsOps<MfieldsState>;
 using DiagOps = VpicDiagOps<MfieldsState>;
@@ -101,23 +100,22 @@ using CleanDivOps = VpicCleanDivOps<MfieldsState>;
 using MaterialList = PscMaterialList;
 using MfieldsState = MfieldsStatePsc<PscFieldArrayBase<Grid, MaterialList>>;
 using FieldArrayLocalOps = PscFieldArrayLocalOps<MfieldsState>;
-using FieldArray = PscFieldArrayBase<Grid, MaterialList>;
 using FieldArrayRemoteOps = PscFieldArrayRemoteOps<MfieldsState>;
 using PushFieldsOps = PscPushFieldsOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
-using DiagOps = PscDiagOps<MfieldsState, FieldArray>;
-using AccumulateOps = PscAccumulateOps<MfieldsState, FieldArray, FieldArrayLocalOps, FieldArrayRemoteOps>;
-using CleanDivOps = PscCleanDivOps<MfieldsState, FieldArray, FieldArrayLocalOps, FieldArrayRemoteOps>;
+using DiagOps = PscDiagOps<MfieldsState>;
+using AccumulateOps = PscAccumulateOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
+using CleanDivOps = PscCleanDivOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
 #endif
 
 using Interpolator = PscInterpolatorBase<Grid>;
-using InterpolatorOps = PscInterpolatorOps<Interpolator, MfieldsState, FieldArray>;
+using InterpolatorOps = PscInterpolatorOps<Interpolator, MfieldsState>;
 
 #ifdef DO_VPIC
 using MfieldsAccumulator = MfieldsAccumulatorVpic;
 #else
 using MfieldsAccumulator = MfieldsAccumulatorPsc<Grid>;
 #endif
-using AccumulatorOps = PscAccumulatorOps<MfieldsAccumulator, MfieldsState, FieldArray>;
+using AccumulatorOps = PscAccumulatorOps<MfieldsAccumulator, MfieldsState>;
 
 #ifdef DO_VPIC
 using MfieldsHydro = MfieldsHydroVpic;
@@ -135,13 +133,13 @@ using ParticleBcList = VpicParticleBcList;
 
 using Particles = PscParticlesBase<Grid, ParticleBcList>;
 #if 0//def DO_VPIC
-using ParticlesOps = VpicParticlesOps<Particles, MfieldsState, FieldArray, Interpolator, MfieldsAccumulator, MfieldsHydro>;
+using ParticlesOps = VpicParticlesOps<Particles, MfieldsState, Interpolator, MfieldsAccumulator, MfieldsHydro>;
 #else
-using ParticlesOps = PscParticlesOps<Particles, MfieldsState, FieldArray, Interpolator, MfieldsAccumulator, MfieldsHydro>;
+using ParticlesOps = PscParticlesOps<Particles, MfieldsState, Interpolator, MfieldsAccumulator, MfieldsHydro>;
 #endif
 
 #if 1
-typedef VpicDiagMixin<Particles, MfieldsState, FieldArray, Interpolator, MfieldsHydro,
+typedef VpicDiagMixin<Particles, MfieldsState, Interpolator, MfieldsHydro,
 		      DiagOps, ParticlesOps, HydroArrayOps> DiagMixin;
 #else
 typedef NoneDiagMixin<Particles> DiagMixin;
@@ -161,7 +159,7 @@ typedef VpicRng Rng;
 typedef VpicRngPool<Rng> RngPool;
 #endif
 
-typedef VpicSimulation<Particles, MfieldsState, FieldArray, Interpolator, MfieldsHydro, RngPool, SimulationMixin, DiagMixin> Simulation;
+typedef VpicSimulation<Particles, MfieldsState, Interpolator, MfieldsHydro, RngPool, SimulationMixin, DiagMixin> Simulation;
 
 #endif
 

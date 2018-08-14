@@ -56,8 +56,8 @@ struct Psc
   using Simulation = typename PscConfig::Simulation;
 
 #ifdef VPIC
-  using MaterialList = FieldArray::MaterialList;
-  using Material = MaterialList::Material;
+  using MaterialList = typename MfieldsState::MaterialList;
+  using Material = typename MaterialList::Material;
 #endif
   
   // ----------------------------------------------------------------------

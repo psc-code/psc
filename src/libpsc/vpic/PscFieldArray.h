@@ -7,11 +7,11 @@
 // ======================================================================
 // PscCleanDivOps
 
-template<typename MfieldsState, typename FieldArray, typename LocalOps, typename RemoteOps>
+template<typename MfieldsState, typename LocalOps, typename RemoteOps>
 struct PscCleanDivOps
 {
-  using Grid = typename FieldArray::Grid;
-  using MaterialCoefficient = typename FieldArray::MaterialCoefficient;
+  using Grid = typename MfieldsState::Grid;
+  using MaterialCoefficient = typename MfieldsState::MaterialCoefficient;
   using F3D = Field3D<typename MfieldsState::Patch>;
   
   // ----------------------------------------------------------------------
@@ -598,11 +598,11 @@ struct PscCleanDivOps
 // ======================================================================
 // PscAccumulateOps
 
-template<typename MfieldsState, typename FieldArray, typename LocalOps, typename RemoteOps>
+template<typename MfieldsState, typename LocalOps, typename RemoteOps>
 struct PscAccumulateOps
 {
   using Grid = typename MfieldsState::Grid;
-  using MaterialCoefficient = typename FieldArray::MaterialCoefficient;
+  using MaterialCoefficient = typename MfieldsState::MaterialCoefficient;
   using F3D = Field3D<typename MfieldsState::Patch>;
   
   // ----------------------------------------------------------------------
@@ -799,7 +799,7 @@ struct PscAccumulateOps
 // ======================================================================
 // PscDiagOps
 
-template<typename MfieldsState, typename FieldArray>
+template<typename MfieldsState>
 struct PscDiagOps
 {
   using Grid = typename MfieldsState::Grid;

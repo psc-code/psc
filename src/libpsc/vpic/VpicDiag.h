@@ -112,7 +112,7 @@ static HydroInfo hydroInfo[5] = {
     }                                                  \
   } while(0)
 
-template<class Particles, class MfieldsState, class FieldArray, class Interpolator, class MfieldsHydro,
+template<class Particles, class MfieldsState, class Interpolator, class MfieldsHydro,
 	 class DiagOps, class ParticlesOps, class HydroArrayOps>
 struct VpicDiagMixin
 {

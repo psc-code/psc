@@ -4,7 +4,7 @@
 // ======================================================================
 // PscInterpolatorOps
 
-template<typename Interpolator, typename MfieldsState, typename FieldArray>
+template<typename Interpolator, typename MfieldsState>
 struct PscInterpolatorOps
 {
   // ----------------------------------------------------------------------

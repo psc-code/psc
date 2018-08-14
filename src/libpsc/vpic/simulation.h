@@ -9,13 +9,13 @@
 // ======================================================================
 // class VpicSimulation
 
-template<class Particles, class MfieldsState, class FieldArray, class Interpolator, class MfieldsHydro,
+template<class Particles, class MfieldsState, class Interpolator, class MfieldsHydro,
 	 class RP, class SimulationMixin, class DiagMixin>
 struct VpicSimulation : SimulationMixin, DiagMixin
 {
   using Grid = typename Particles::Grid;
   using ParticleBcList = typename Particles::ParticleBcList;
-  using MaterialList = typename FieldArray::MaterialList;
+  using MaterialList = typename MfieldsState::MaterialList;
 
   VpicSimulation()
     : SimulationMixin(),
