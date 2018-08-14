@@ -112,7 +112,7 @@ static HydroInfo hydroInfo[5] = {
     }                                                  \
   } while(0)
 
-template<class Particles, class FieldArray, class Interpolator, class MfieldsHydro,
+template<class Particles, class MfieldsState, class FieldArray, class Interpolator, class MfieldsHydro,
 	 class DiagOps, class ParticlesOps, class HydroArrayOps>
 struct VpicDiagMixin
 {
@@ -221,9 +221,10 @@ struct VpicDiagMixin
 #define should_dump(x)                                                  \
   (diag_.x##_interval>0 && remainder(step, diag_.x##_interval) == 0)
 
-  void diagnostics_run(FieldArray& fa, Particles& particles,
+  void diagnostics_run(MfieldsState& mflds, Particles& particles,
 		       Interpolator& interpolator, MfieldsHydro& mflds_hydro, int np[3])
   {
+    auto& fa = mflds.vmflds();
     TIC {
       const Grid* g = fa.grid();
       int64_t step = g->step;

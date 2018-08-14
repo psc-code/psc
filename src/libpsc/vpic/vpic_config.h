@@ -142,7 +142,7 @@ using ParticlesOps = PscParticlesOps<Particles, MfieldsState, FieldArray, Interp
 #endif
 
 #if 1
-typedef VpicDiagMixin<Particles, FieldArray, Interpolator, MfieldsHydro,
+typedef VpicDiagMixin<Particles, MfieldsState, FieldArray, Interpolator, MfieldsHydro,
 		      DiagOps, ParticlesOps, HydroArrayOps> DiagMixin;
 #else
 typedef NoneDiagMixin<Particles> DiagMixin;
@@ -162,7 +162,7 @@ typedef VpicRng Rng;
 typedef VpicRngPool<Rng> RngPool;
 #endif
 
-typedef VpicSimulation<Particles, FieldArray, Interpolator, MfieldsHydro, RngPool, SimulationMixin, DiagMixin> Simulation;
+typedef VpicSimulation<Particles, MfieldsState, FieldArray, Interpolator, MfieldsHydro, RngPool, SimulationMixin, DiagMixin> Simulation;
 
 #endif
 

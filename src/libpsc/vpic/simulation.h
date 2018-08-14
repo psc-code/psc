@@ -9,7 +9,7 @@
 // ======================================================================
 // class VpicSimulation
 
-template<class Particles, class FieldArray, class Interpolator, class MfieldsHydro,
+template<class Particles, class MfieldsState, class FieldArray, class Interpolator, class MfieldsHydro,
 	 class RP, class SimulationMixin, class DiagMixin>
 struct VpicSimulation : SimulationMixin, DiagMixin
 {
@@ -35,9 +35,9 @@ struct VpicSimulation : SimulationMixin, DiagMixin
     DiagMixin::diagnostics_setup();
   }
 
-  void runDiag(Particles& particles, FieldArray& fa, Interpolator& ia, MfieldsHydro& ha, Int3 np)
+  void runDiag(Particles& particles, MfieldsState& mflds, Interpolator& ia, MfieldsHydro& ha, Int3 np)
   {
-    DiagMixin::diagnostics_run(fa, particles, ia, ha, np);
+    DiagMixin::diagnostics_run(mflds, particles, ia, ha, np);
   }
 
   // ======================================================================
