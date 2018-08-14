@@ -97,7 +97,7 @@ using MfieldsState = MfieldsStateVpic;
 using PushFieldsOps = VpicPushFieldsOps<MfieldsState, FieldArray>;
 using DiagOps = VpicDiagOps<FieldArray>;
 using AccumulateOps = VpicAccumulateOps<MfieldsState, FieldArray>;
-using CleanDivOps = VpicCleanDivOps<FieldArray>;
+using CleanDivOps = VpicCleanDivOps<MfieldsState, FieldArray>;
 #else
 using MaterialList = PscMaterialList;
 using FieldArray = PscFieldArrayBase<Grid, MaterialList>;
@@ -107,7 +107,7 @@ using FieldArrayRemoteOps = PscFieldArrayRemoteOps<FieldArray>;
 using PushFieldsOps = PscPushFieldsOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
 using DiagOps = PscDiagOps<FieldArray>;
 using AccumulateOps = PscAccumulateOps<MfieldsState, FieldArray, FieldArrayLocalOps, FieldArrayRemoteOps>;
-using CleanDivOps = PscCleanDivOps<FieldArray, FieldArrayLocalOps, FieldArrayRemoteOps>;
+using CleanDivOps = PscCleanDivOps<MfieldsState, FieldArray, FieldArrayLocalOps, FieldArrayRemoteOps>;
 #endif
 
 using Interpolator = PscInterpolatorBase<Grid>;

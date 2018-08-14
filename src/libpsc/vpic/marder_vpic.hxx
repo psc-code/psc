@@ -23,7 +23,7 @@ struct MarderVpic : MarderBase
   {
     mpi_printf(comm_, "Divergence cleaning electric field\n");
   
-    TIC CleanDivOps::clear_rhof(mflds.vmflds()); TOC(clear_rhof, 1);
+    TIC CleanDivOps::clear_rhof(mflds); TOC(clear_rhof, 1);
     ParticlesOps::accumulate_rho_p(mprts.vmprts_, mflds.vmflds());
     CleanDivOps::synchronize_rho(mflds.vmflds());
 

@@ -7,7 +7,7 @@
 // ======================================================================
 // PscCleanDivOps
 
-template<typename FieldArray, typename LocalOps, typename RemoteOps>
+template<typename MfieldsState, typename FieldArray, typename LocalOps, typename RemoteOps>
 struct PscCleanDivOps
 {
   using Grid = typename FieldArray::Grid;
@@ -16,8 +16,9 @@ struct PscCleanDivOps
   // ----------------------------------------------------------------------
   // clear_rhof
 
-  static void clear_rhof(FieldArray& fa)
+  static void clear_rhof(MfieldsState& mflds)
   {
+    auto& fa = mflds.vmflds();
     const int nv = fa.grid()->nv;
 
     for (int v = 0; v < nv; v++) {
