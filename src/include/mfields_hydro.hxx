@@ -69,7 +69,8 @@ struct MfieldsHydroVpic_<VpicGridBase, VpicHydroArrayBase<VpicGridBase>>
   using HydroArray = VpicHydroArrayBase<Grid>;
   using real_t = float;
   using fields_t = fields3d<float, LayoutAOS>;
-  
+  using Patch = HydroArray;
+    
   enum {
     N_COMP = 16,
   };
@@ -95,6 +96,7 @@ struct MfieldsHydroVpic_<VpicGridBase, VpicHydroArrayBase<VpicGridBase>>
 
   real_t* data() { return data_; }
   fields_t operator[](int p) { return {ib_, im_, N_COMP, data_}; }
+  Patch& getPatch(int p) { return *vhydro_; }
 
   Grid* vgrid() { return vgrid_; }
 
