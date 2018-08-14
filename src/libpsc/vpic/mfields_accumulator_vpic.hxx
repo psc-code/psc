@@ -2,7 +2,6 @@
 #pragma once
 
 #include "VpicGridBase.h"
-#include "VpicAccumulatorBase.h"
 
 // ======================================================================
 // MfieldsAccumulatorVpic
@@ -10,12 +9,27 @@
 struct MfieldsAccumulatorVpic
 {
   using Grid = VpicGridBase;
-  using Accumulator = VpicAccumulatorBase<VpicGridBase>;
   using Element = accumulator_t;
-  using Block = Accumulator::Block;
+
+  struct Block
+  {
+    using Grid = Grid;
+    using Element = Element;
+    
+    Block(Element *arr, Grid *g)
+      : arr_{arr}, g_{g}
+    {}
+    
+    Element  operator[](int idx) const { return arr_[idx]; }
+    Element& operator[](int idx)       { return arr_[idx]; }
+    
+  private:
+    Element *arr_;
+    Grid *g_;
+  };
   
   MfieldsAccumulatorVpic(Grid* vgrid)
-    : aa_{reinterpret_cast<Accumulator*>(::new_accumulator_array(vgrid))}
+    : aa_{::new_accumulator_array(vgrid)}
   {}
 
   ~MfieldsAccumulatorVpic()
@@ -41,7 +55,7 @@ struct MfieldsAccumulatorVpic
   }
   
 private:
-  Accumulator* aa_;
+  accumulator_array_t* aa_;
 };
 
 #include "PscAccumulatorBase.h"

@@ -67,7 +67,6 @@
 #include "VpicInterpolatorBase.h"
 #include "VpicInterpolator.h"
 
-#include "VpicAccumulatorBase.h"
 #include "VpicAccumulator.h"
 
 #include "VpicHydroArray.h"

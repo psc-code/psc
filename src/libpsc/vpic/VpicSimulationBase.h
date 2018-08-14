@@ -3,7 +3,6 @@
 #define VPIC_SIMULATION_BASE_H
 
 #include "VpicInterpolatorBase.h"
-#include "VpicAccumulatorBase.h"
 #include "VpicParticlesBase.h"
 #include "VpicDiag.h"
 
