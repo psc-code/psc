@@ -22,12 +22,8 @@ struct MfieldsStatePsc
     N_COMP = 20,
   };
 
-  struct fields_t : fields3d<float, LayoutAOS>
-  {
-    using Base = fields3d<float, LayoutAOS>;
-    
-    using Base::Base;
-  };
+  using fields_t = fields3d<float, LayoutAOS>;
+  using Patch = FieldArray;
 
   MfieldsStatePsc(const Grid_t& grid, Grid* vgrid, const MaterialList& material_list, double damp = 0.)
     : grid_{grid}
@@ -50,7 +46,11 @@ struct MfieldsStatePsc
     return {ib, im, N_COMP, data};
   }
 
+  Patch& getPatch(int p) { return *vmflds_fields_; }
+
   FieldArray& vmflds() { return *vmflds_fields_; }
+
+  Grid* vgrid() { return vmflds_fields_->grid(); }
 
   // static const Convert convert_to_, convert_from_;
   // const Convert& convert_to() override { return convert_to_; }
@@ -84,12 +84,8 @@ struct MfieldsStateVpic
     N_COMP = 20,
   };
 
-  struct fields_t : fields3d<float, LayoutAOS>
-  {
-    using Base = fields3d<float, LayoutAOS>;
-    
-    using Base::Base;
-  };
+  using fields_t = fields3d<float, LayoutAOS>;
+  using Patch = FieldArray;
 
   MfieldsStateVpic(const Grid_t& grid, Grid* vgrid, const MaterialList& material_list, double damp = 0.)
     : grid_{grid}
@@ -111,6 +107,8 @@ struct MfieldsStateVpic
     float* data = vmflds_fields_->getData(ib, im);
     return {ib, im, N_COMP, data};
   }
+
+  Patch& getPatch(int p) { return *vmflds_fields_; }
 
   operator FieldArray*() { return vmflds_fields_; }
   FieldArray& vmflds() { return *vmflds_fields_; }

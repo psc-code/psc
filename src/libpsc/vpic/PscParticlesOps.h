@@ -1160,9 +1160,8 @@ struct PscParticlesOps
 
   static void accumulate_rhob(MfieldsState& mflds, const Particle* p, float qsp)
   {
-    auto& fa = mflds.vmflds();
     float w0 = p->dx, w1 = p->dy, w2, w3, w4, w5, w6, w7, dz = p->dz;
-    const Grid* g = fa.grid();
+    const Grid* g = mflds.vgrid();
     int v = p->i, x, y, z, sy = g->sy, sz = g->sz;
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     w7 = (qsp * g->r8V) * p->w;
@@ -1197,6 +1196,7 @@ struct PscParticlesOps
 
     // Reduce the particle charge to rhob
 
+    auto& fa = mflds.getPatch(0);
     fa[v      ].rhob += w0; fa[v      +1].rhob += w1;
     fa[v   +sy].rhob += w2; fa[v   +sy+1].rhob += w3;
     fa[v+sz   ].rhob += w4; fa[v+sz   +1].rhob += w5;
