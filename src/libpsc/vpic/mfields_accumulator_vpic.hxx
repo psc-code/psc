@@ -53,6 +53,8 @@ struct MfieldsAccumulatorVpic
   {
     return Block(aa_->a + arr * aa_->stride, grid());
   }
+
+  operator accumulator_array_t* () { return aa_; }
   
 private:
   accumulator_array_t* aa_;
