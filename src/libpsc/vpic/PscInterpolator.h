@@ -4,14 +4,15 @@
 // ======================================================================
 // PscInterpolatorOps
 
-template<typename Interpolator, typename FieldArray>
+template<typename Interpolator, typename MfieldsState, typename FieldArray>
 struct PscInterpolatorOps
 {
   // ----------------------------------------------------------------------
   // load
   
-  static void load(Interpolator& ip, /*const*/ FieldArray& fa)
+  static void load(Interpolator& ip, /*const*/ MfieldsState& mflds)
   {
+    auto& fa = mflds.vmflds();
     Field3D<FieldArray> F(fa);
     Field3D<Interpolator> I(ip);
 
