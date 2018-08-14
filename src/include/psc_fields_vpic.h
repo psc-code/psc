@@ -7,12 +7,12 @@
 
 #include <psc_method.h>
 
-#include "../libpsc/vpic/vpic_iface.h" // FIXME path
-
-
-struct MfieldsStateVpic
+template<typename FieldArray>
+struct MfieldsState_
 {
   using real_t = float;
+  using Grid = typename FieldArray::Grid;
+  using MaterialList = typename FieldArray::MaterialList;
 
   enum {
     EX = 0, EY = 1, EZ = 2, DIV_E_ERR = 3,
@@ -29,7 +29,7 @@ struct MfieldsStateVpic
     using Base::Base;
   };
 
-MfieldsStateVpic(const Grid_t& grid, Grid* vgrid, const MaterialList& material_list, double damp = 0.)
+  MfieldsState_(const Grid_t& grid, Grid* vgrid, const MaterialList& material_list, double damp = 0.)
     : grid_{grid}
   {
     assert(grid.n_patches() == 1);
@@ -61,11 +61,8 @@ private:
   const Grid_t& grid_;
 };
 
-template<>
-struct Mfields_traits<MfieldsStateVpic>
-{
-  static constexpr const char* name = "vpic";
-  static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
-};
+#include "../libpsc/vpic/vpic_iface.h"
+
+using MfieldsStateVpic = MfieldsState_<FieldArray>;
 
 #endif
