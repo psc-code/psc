@@ -39,16 +39,6 @@ struct VpicAccumulatorBase : accumulator_array_t {
   typedef G Grid;
   typedef VpicAccumulatorBlock<Grid> Block;
 
-  static VpicAccumulatorBase* create(Grid *grid)
-  {
-    return reinterpret_cast<VpicAccumulatorBase*>(new_accumulator_array(grid));
-  }
-  
-  Element* data()
-  {
-    return a;
-  }
-  
   // FIXME, not a great interface with arr just another index
   Element& operator()(int arr, int idx)
   {
@@ -58,17 +48,13 @@ struct VpicAccumulatorBase : accumulator_array_t {
   // FIXME, not a great interface with arr just another index
   Element& operator()(int arr, int i, int j, int k)
   {
-    return a[arr * stride() + VOXEL(i,j,k, g->nx,g->ny,g->nz)];
+    return a[arr * stride + VOXEL(i,j,k, g->nx,g->ny,g->nz)];
   }
 
   Block operator[](int arr)
   {
-    return Block(a + arr * stride(), grid());
+    return Block(a + arr * stride, static_cast<Grid*>(g));
   }
-
-  int n_pipeline() { return accumulator_array_t::n_pipeline; }
-  int stride() { return accumulator_array_t::stride; }
-  Grid* grid() { return static_cast<Grid*>(g); }  
 };
 
 #endif

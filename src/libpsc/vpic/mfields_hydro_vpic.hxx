@@ -24,8 +24,7 @@ struct MfieldsHydroVpic
     using Element = Element;
 
     Patch(Grid* vgrid)
-      : vgrid_{vgrid},
-	ha_{::new_hydro_array(vgrid)}
+      : ha_{::new_hydro_array(vgrid)}
     {
       ::clear_hydro_array(ha_);
     }
@@ -40,7 +39,7 @@ struct MfieldsHydroVpic
     Element  operator[](int idx) const { return ha_->h[idx]; }
     Element& operator[](int idx)       { return ha_->h[idx]; }
 
-    Grid* grid() { return vgrid_; }
+    Grid* grid() { return static_cast<Grid*>(ha_->g); }
 
     operator hydro_array_t*() { return ha_; }
     

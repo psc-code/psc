@@ -11,11 +11,11 @@ struct MfieldsAccumulatorVpic
 {
   using Grid = VpicGridBase;
   using Accumulator = VpicAccumulatorBase<VpicGridBase>;
-  using Element = Accumulator::Element;
+  using Element = accumulator_t;
   using Block = Accumulator::Block;
   
   MfieldsAccumulatorVpic(Grid* vgrid)
-    : aa_{Accumulator::create(vgrid)}
+    : aa_{reinterpret_cast<Accumulator*>(::new_accumulator_array(vgrid))}
   {}
 
   ~MfieldsAccumulatorVpic()
@@ -23,11 +23,11 @@ struct MfieldsAccumulatorVpic
     ::delete_accumulator_array(aa_);
   }
 
-  Grid* grid() { return aa_->grid(); }
-  int n_pipeline() const { return aa_->n_pipeline(); }
-  int stride() const { return aa_->stride(); }
+  Grid* grid() { return static_cast<Grid*>(aa_->g); }  
+  int n_pipeline() { return aa_->n_pipeline; }
+  int stride() { return aa_->stride; }
   
-  Element* data() { return aa_->data(); }
+  Element* data() { return aa_->a; }
   
   Element& operator()(int arr, int i, int j, int k) { return (*aa_)(arr, i, j, k); }
 
