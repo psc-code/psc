@@ -64,7 +64,6 @@
 #include "VpicParticlesBase.h"
 #include "VpicParticlesOps.h"
 
-#include "VpicInterpolatorBase.h"
 #include "VpicInterpolator.h"
 
 #include "VpicAccumulator.h"

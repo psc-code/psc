@@ -1,8 +1,6 @@
 
 #pragma once
 
-#include "VpicInterpolatorBase.h"
-
 // ======================================================================
 // MfieldsInterpolatorVpic
 
