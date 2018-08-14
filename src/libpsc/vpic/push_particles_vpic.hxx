@@ -25,7 +25,6 @@ struct PushParticlesVpic : PushParticlesBase
 		  int num_comm_round)
   {
     auto& vmprts = mprts.vmprts_;
-    auto& vmflds = mflds.vmflds();
     
     // For this to work, interpolator needs to have been set from vmflds E/B before,
     // ie., we're not using vmflds for E and B here at all.
