@@ -2,7 +2,7 @@
 #ifndef VPIC_CONFIG_H
 #define VPIC_CONFIG_H
 
-//#define DO_VPIC 1
+#define DO_VPIC 1
 
 #define HAVE_VPIC
 
@@ -93,7 +93,7 @@ using Grid = PscGridBase;
 #ifdef DO_VPIC
 using MaterialList = VpicMaterialList;
 using FieldArray = VpicFieldArrayBase<Grid, VpicMaterialList>;
-using MfieldsState = MfieldsState_<FieldArray>;
+using MfieldsState = MfieldsStateVpic;
 using PushFieldsOps = VpicPushFieldsOps<FieldArray>;
 using DiagOps = VpicDiagOps<FieldArray>;
 using AccumulateOps = VpicAccumulateOps<FieldArray>;
