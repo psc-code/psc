@@ -155,7 +155,7 @@ struct Psc
 
 #ifdef VPIC
     hydro_.reset(new MfieldsHydro{grid(), vgrid_});
-    interpolator_.reset(new Interpolator{vgrid_});
+    interpolator_.reset(new MfieldsInterpolator{vgrid_});
     accumulator_.reset(new MfieldsAccumulator{vgrid_});
 #endif
   }
@@ -521,7 +521,7 @@ private:
       TIC InterpolatorOps::load(*interpolator_, *mflds_); TOC(load_interpolator, 1);
       
       for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
-	TIC ParticlesOps::uncenter_p(&*sp, *interpolator_); TOC(uncenter_p, 1);
+	TIC ParticlesOps::uncenter_p(&*sp, interpolator_->vip()); TOC(uncenter_p, 1);
       }
     }
   }
@@ -535,7 +535,7 @@ private:
   {
 #ifdef VPIC
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-      sim_->runDiag(mprts_->vmprts_, *mflds_, *interpolator_, *hydro_, grid().domain.np);
+      sim_->runDiag(mprts_->vmprts_, *mflds_, interpolator_->vip(), *hydro_, grid().domain.np);
     }
 #else
     // FIXME
@@ -580,7 +580,7 @@ protected:
   std::unique_ptr<MfieldsState> mflds_;
 #ifdef VPIC
   std::unique_ptr<MfieldsHydro> hydro_;
-  std::unique_ptr<Interpolator> interpolator_;
+  std::unique_ptr<MfieldsInterpolator> interpolator_;
   std::unique_ptr<MfieldsAccumulator> accumulator_;
   ParticleBcList particle_bc_list_;
 #endif

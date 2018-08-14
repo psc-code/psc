@@ -77,6 +77,7 @@
 
 #include "mfields_state_vpic.hxx"
 #include "mfields_hydro_vpic.hxx"
+#include "mfields_interpolator_vpic.hxx"
 #include "mfields_accumulator_vpic.hxx"
 
 #undef particle_t
@@ -107,8 +108,13 @@ using AccumulateOps = PscAccumulateOps<MfieldsState, FieldArrayLocalOps, FieldAr
 using CleanDivOps = PscCleanDivOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
 #endif
 
+#ifdef DO_VPIC
+using Interpolator = VpicInterpolatorBase<Grid>;
+#else
 using Interpolator = PscInterpolatorBase<Grid>;
-using InterpolatorOps = PscInterpolatorOps<Interpolator, MfieldsState>;
+using MfieldsInterpolator = MfieldsInterpolatorPsc<Grid>;
+#endif
+using InterpolatorOps = PscInterpolatorOps<MfieldsInterpolator, Interpolator, MfieldsState>;
 
 #ifdef DO_VPIC
 using MfieldsAccumulator = MfieldsAccumulatorVpic;
@@ -135,7 +141,7 @@ using Particles = PscParticlesBase<Grid, ParticleBcList>;
 #if 0//def DO_VPIC
 using ParticlesOps = VpicParticlesOps<Particles, MfieldsState, Interpolator, MfieldsAccumulator, MfieldsHydro>;
 #else
-using ParticlesOps = PscParticlesOps<Particles, MfieldsState, Interpolator, MfieldsAccumulator, MfieldsHydro>;
+using ParticlesOps = PscParticlesOps<Particles, MfieldsState, MfieldsInterpolator, Interpolator, MfieldsAccumulator, MfieldsHydro>;
 #endif
 
 #if 1

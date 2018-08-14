@@ -4,14 +4,15 @@
 // ======================================================================
 // PscInterpolatorOps
 
-template<typename Interpolator, typename MfieldsState>
+template<typename MfieldsInterpolator, typename Interpolator, typename MfieldsState>
 struct PscInterpolatorOps
 {
   // ----------------------------------------------------------------------
   // load
   
-  static void load(Interpolator& ip, /*const*/ MfieldsState& mflds)
+  static void load(MfieldsInterpolator& interpolator, /*const*/ MfieldsState& mflds)
   {
+    auto& ip = interpolator.vip();
     auto& fa = mflds.getPatch(0);
     Field3D<typename MfieldsState::Patch> F(fa);
     Field3D<Interpolator> I(ip);

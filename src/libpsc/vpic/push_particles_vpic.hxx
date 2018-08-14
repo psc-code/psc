@@ -19,7 +19,7 @@ struct PushParticlesVpic : PushParticlesBase
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
   }
 
-  void push_mprts(Mparticles& mprts, MfieldsState& mflds, Interpolator& interpolator,
+  void push_mprts(Mparticles& mprts, MfieldsState& mflds, MfieldsInterpolator& interpolator,
 		  MfieldsAccumulator& accumulator, ParticleBcList& particle_bc_list,
 		  int num_comm_round)
   {
@@ -80,7 +80,7 @@ struct PushParticlesVpic : PushParticlesBase
     TIC sim_->current_injection(); TOC(user_current_injection, 1);
   }
 
-  void prep(Mparticles& mprts, MfieldsState& mflds, Interpolator& interpolator)
+  void prep(Mparticles& mprts, MfieldsState& mflds, MfieldsInterpolator& interpolator)
   {
     // At end of step:
     // Fields are updated ... load the interpolator for next time step and

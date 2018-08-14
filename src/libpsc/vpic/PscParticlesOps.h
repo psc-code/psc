@@ -16,7 +16,7 @@ struct ParticleInjector
   SpeciesId sp_id;           // Species of particle
 };
 
-template<typename Particles, typename MfieldsState, typename Interpolator, typename MfieldsAccumulator, typename MfieldsHydro>
+template<typename Particles, typename MfieldsState, typename MfieldsInterpolator, typename Interpolator, typename MfieldsAccumulator, typename MfieldsHydro>
 struct PscParticlesOps
 {
   typedef typename Particles::Grid Grid;
@@ -712,7 +712,8 @@ struct PscParticlesOps
 
 #endif
           
-  static void advance_p(typename Particles::iterator sp, MfieldsAccumulator& accumulator, Interpolator& interpolator)
+  static void advance_p(typename Particles::iterator sp, MfieldsAccumulator& accumulator,
+			MfieldsInterpolator& interpolator)
   {
     DECLARE_ALIGNED_ARRAY( particle_mover_seg_t, 128, seg, 1 );
 
@@ -721,10 +722,10 @@ struct PscParticlesOps
     Particle* p = sp->p;
     int n = sp->np & ~15;
 #if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
-    advance_p_pipeline_v4(sp, accumulator[1], interpolator, seg, p, n,
+    advance_p_pipeline_v4(sp, accumulator[1], interpolator.vip(), seg, p, n,
 			  sp->pm + sp->nm, sp->max_nm - sp->nm);
 #else
-    advance_p_pipeline(sp, accumulator[1], interpolator, seg, p, n,
+    advance_p_pipeline(sp, accumulator[1], interpolator.vip(), seg, p, n,
 		       sp->pm + sp->nm, sp->max_nm - sp->nm);
 #endif
     sp->nm += seg->nm;
@@ -735,7 +736,7 @@ struct PscParticlesOps
   
     p += n;
     n = sp->np - n;
-    advance_p_pipeline(sp, accumulator[0], interpolator, seg, p, n,
+    advance_p_pipeline(sp, accumulator[0], interpolator.vip(), seg, p, n,
 		       sp->pm + sp->nm, sp->max_nm - sp->nm);
     sp->nm += seg->nm;
 
@@ -746,7 +747,7 @@ struct PscParticlesOps
 
 
   static void advance_p(Particles& vmprts, MfieldsAccumulator& accumulator,
-			Interpolator& interpolator)
+			MfieldsInterpolator& interpolator)
   {
     for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
       TIC advance_p(sp, accumulator, interpolator); TOC(advance_p, 1);
