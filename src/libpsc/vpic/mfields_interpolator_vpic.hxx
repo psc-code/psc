@@ -4,10 +4,14 @@
 #include "PscInterpolatorBase.h"
 #include "VpicInterpolatorBase.h"
 
-template<typename Interpolator>
-struct MfieldsInterpolator_
+// ======================================================================
+// MfieldsInterpolatorPsc
+
+template<typename _Grid>
+struct MfieldsInterpolatorPsc
 {
-  using Grid = typename Interpolator::Grid;
+  using Grid = _Grid;
+  using Interpolator = PscInterpolatorBase<Grid>;
   using Element = typename Interpolator::Element;
 
   struct Patch
@@ -32,7 +36,7 @@ struct MfieldsInterpolator_
     Interpolator *ip_;
   };
 
-  MfieldsInterpolator_(Grid* vgrid)
+  MfieldsInterpolatorPsc(Grid* vgrid)
     : patch_{vgrid}
   {}
 
@@ -41,12 +45,6 @@ struct MfieldsInterpolator_
 private:
   Patch patch_;
 };
-
-// ======================================================================
-// MfieldsInterpolatorPsc
-
-template<typename Grid>
-using MfieldsInterpolatorPsc = MfieldsInterpolator_<PscInterpolatorBase<Grid>>;
 
 // ======================================================================
 // MfieldsInterpolatorVpic

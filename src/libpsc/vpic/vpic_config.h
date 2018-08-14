@@ -110,6 +110,7 @@ using CleanDivOps = PscCleanDivOps<MfieldsState, FieldArrayLocalOps, FieldArrayR
 
 #ifdef DO_VPIC
 using Interpolator = VpicInterpolatorBase<Grid>;
+using MfieldsInterpolator = MfieldsInterpolatorVpic;
 #else
 using Interpolator = PscInterpolatorBase<Grid>;
 using MfieldsInterpolator = MfieldsInterpolatorPsc<Grid>;
