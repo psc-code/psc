@@ -10,7 +10,7 @@
 
 struct MarderVpic : MarderBase
 {
-  using real_t = MfieldsStateVpic::real_t;
+  using real_t = MfieldsState::real_t;
   
   MarderVpic(MPI_Comm comm, real_t diffusion, int loop, bool dump)
     : comm_{comm}
@@ -19,7 +19,7 @@ struct MarderVpic : MarderBase
   // ----------------------------------------------------------------------
   // psc_marder_vpic_clean_div_e
 
-  void psc_marder_vpic_clean_div_e(MfieldsStateVpic& mflds, MparticlesVpic& mprts)
+  void psc_marder_vpic_clean_div_e(MfieldsState& mflds, MparticlesVpic& mprts)
   {
     mpi_printf(comm_, "Divergence cleaning electric field\n");
   
@@ -42,7 +42,7 @@ struct MarderVpic : MarderBase
   // ----------------------------------------------------------------------
   // psc_marder_vpic_clean_div_b
 
-  void psc_marder_vpic_clean_div_b(MfieldsStateVpic& mflds)
+  void psc_marder_vpic_clean_div_b(MfieldsState& mflds)
   {
     mpi_printf(comm_, "Divergence cleaning magnetic field\n");
   
@@ -67,7 +67,7 @@ struct MarderVpic : MarderBase
     assert(0);
   }
   
-  void operator()(MfieldsStateVpic& mflds, MparticlesVpic& mprts)
+  void operator()(MfieldsState& mflds, MparticlesVpic& mprts)
   {
     struct psc *psc = ppsc; // FIXME
 

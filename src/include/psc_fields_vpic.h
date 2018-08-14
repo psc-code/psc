@@ -61,8 +61,4 @@ private:
   const Grid_t& grid_;
 };
 
-#include "../libpsc/vpic/vpic_iface.h"
-
-using MfieldsStateVpic = MfieldsState_<FieldArray>;
-
 #endif

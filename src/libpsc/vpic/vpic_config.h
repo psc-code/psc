@@ -24,6 +24,7 @@
 #include "PscMaterial.h"
 
 #include "mfields_state_psc.hxx"
+#include "psc_fields_vpic.h"
 #include "PscFieldArrayLocalOps.h"
 #include "PscFieldArrayRemoteOps.h"
 #include "PscFieldArray.h"
@@ -92,6 +93,7 @@ using Grid = PscGridBase;
 #ifdef DO_VPIC
 using MaterialList = VpicMaterialList;
 using FieldArray = VpicFieldArrayBase<Grid, VpicMaterialList>;
+using MfieldsState = MfieldsState_<FieldArray>;
 using PushFieldsOps = VpicPushFieldsOps<FieldArray>;
 using DiagOps = VpicDiagOps<FieldArray>;
 using AccumulateOps = VpicAccumulateOps<FieldArray>;
@@ -99,6 +101,7 @@ using CleanDivOps = VpicCleanDivOps<FieldArray>;
 #else
 using MaterialList = PscMaterialList;
 using FieldArray = PscFieldArrayBase<Grid, MaterialList>;
+using MfieldsState = MfieldsState_<FieldArray>;
 using FieldArrayLocalOps = PscFieldArrayLocalOps<FieldArray>;
 using FieldArrayRemoteOps = PscFieldArrayRemoteOps<FieldArray>;
 using PushFieldsOps = PscPushFieldsOps<FieldArray, FieldArrayLocalOps, FieldArrayRemoteOps>;

@@ -177,7 +177,7 @@ struct PscConfig1vbecCuda<dim_xyz> : PscConfig_<dim_xyz, MparticlesCuda<BS444>, 
 struct PscConfigVpic
 {
   using Mparticles_t = MparticlesVpic;
-  using MfieldsState = MfieldsStateVpic;
+  using MfieldsState = MfieldsState;
   using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Sort_t = SortVpic;
   using Collision_t = PscCollisionVpic;

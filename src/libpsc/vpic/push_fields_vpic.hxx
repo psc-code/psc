@@ -16,13 +16,13 @@ struct PushFieldsVpic : PushFieldsBase
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
   }
 
-  void push_E(MfieldsStateVpic& mflds, double dt_fac)
+  void push_E(MfieldsState& mflds, double dt_fac)
   {
     TIC PushFieldsOps::advance_e(mflds.vmflds(), dt_fac); TOC(advance_e, 1);
     sim_->field_injection();
   }
 
-  void push_H(MfieldsStateVpic& mflds, double dt_fac)
+  void push_H(MfieldsState& mflds, double dt_fac)
   {
     TIC PushFieldsOps::advance_b(mflds.vmflds(), dt_fac); TOC(advance_b, 1);
   }

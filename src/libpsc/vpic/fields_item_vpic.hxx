@@ -8,12 +8,12 @@ struct OutputFieldsVpic
 {
   struct Result
   {
-    MfieldsStateVpic& mflds;
+    MfieldsState& mflds;
     const char* name;
     std::vector<std::string> comp_names;
   };
   
-  Result operator()(MfieldsStateVpic& mflds)
+  Result operator()(MfieldsState& mflds)
   {
     std::vector<std::string> comp_names = { "ex_ec", "ey_ec", "ez_ec", "div_e_err_nc",
 					    "hx_fc", "hy_fc", "hz_fc", "div_b_err_cc"

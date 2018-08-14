@@ -9,13 +9,12 @@
 // SetupFields
 
 template<>
-struct SetupFields<MfieldsStateVpic>
+struct SetupFields<MfieldsState>
 {
-  using Mfields = MfieldsStateVpic;
-  using Fields = typename Mfields::fields_t;
+  using Fields = typename MfieldsState::fields_t;
 
   template<typename FUNC>
-  static void set(Mfields& mf, FUNC func)
+  static void set(MfieldsState& mf, FUNC func)
   {
     for (int p = 0; p < mf.n_patches(); ++p) {
       auto& patch = mf.grid().patches[p];
@@ -35,13 +34,13 @@ struct SetupFields<MfieldsStateVpic>
 	  double ncn[3] = { x_nc, y_cc, z_nc };
 	  double nnc[3] = { x_nc, y_nc, z_cc };
 	  
-	  F(MfieldsStateVpic::BX, jx,jy,jz) += func(HX, ncc);
-	  F(MfieldsStateVpic::BY, jx,jy,jz) += func(HY, cnc);
-	  F(MfieldsStateVpic::BZ, jx,jy,jz) += func(HZ, ccn);
+	  F(MfieldsState::BX, jx,jy,jz) += func(HX, ncc);
+	  F(MfieldsState::BY, jx,jy,jz) += func(HY, cnc);
+	  F(MfieldsState::BZ, jx,jy,jz) += func(HZ, ccn);
 	  
-	  F(MfieldsStateVpic::EX, jx,jy,jz) += func(EX, cnn);
-	  F(MfieldsStateVpic::EY, jx,jy,jz) += func(EY, ncn);
-	  F(MfieldsStateVpic::EZ, jx,jy,jz) += func(EZ, nnc);
+	  F(MfieldsState::EX, jx,jy,jz) += func(EX, cnn);
+	  F(MfieldsState::EY, jx,jy,jz) += func(EY, ncn);
+	  F(MfieldsState::EZ, jx,jy,jz) += func(EZ, nnc);
 	});
     }
   }
