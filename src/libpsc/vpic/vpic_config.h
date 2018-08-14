@@ -135,10 +135,10 @@ using ParticleBcList = VpicParticleBcList;
 #endif
 
 using Particles = PscParticlesBase<Grid, ParticleBcList>;
-#if 1
-using ParticlesOps = PscParticlesOps<Particles, MfieldsState, FieldArray, Interpolator, MfieldsAccumulator, MfieldsHydro>;
+#if 0//def DO_VPIC
+using ParticlesOps = VpicParticlesOps<Particles, MfieldsState, FieldArray, Interpolator, MfieldsAccumulator, MfieldsHydro>;
 #else
-using ParticlesOps = VpicParticlesOps<Particles. MfieldsState, FieldArray, Interpolator, MfieldsAccumulator, MfieldsHydro>;
+using ParticlesOps = PscParticlesOps<Particles, MfieldsState, FieldArray, Interpolator, MfieldsAccumulator, MfieldsHydro>;
 #endif
 
 #if 1

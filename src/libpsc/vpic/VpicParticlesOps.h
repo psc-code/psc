@@ -5,7 +5,6 @@ template<typename Particles, typename MfieldsState, typename FieldArray, typenam
 struct VpicParticlesOps
 {
   typedef typename Particles::ParticleBcList ParticleBcList;
-  using HydroArray = typename MfieldsHydro::HydroArray;
   
   static void advance_p(Particles& vmprts, MfieldsAccumulator& accumulator,
 			Interpolator& interpolator)
