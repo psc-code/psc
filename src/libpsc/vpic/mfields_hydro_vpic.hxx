@@ -14,7 +14,20 @@ struct MfieldsHydroVpic
   using real_t = float;
   using Element = typename HydroArray::Element;
   using fields_t = fields3d<float, LayoutAOS>;
-  using Patch = HydroArray;
+
+  struct Patch
+  {
+    using Element = Element;
+
+    Element* data() { return ha->data(); }
+    
+    Element  operator[](int idx) const { return ha->h[idx]; }
+    Element& operator[](int idx)       { return ha->h[idx]; }
+
+    Grid* grid() { return ha->grid(); }
+    
+    HydroArray* ha;
+ };
     
   enum {
     N_COMP = 16,
@@ -26,6 +39,7 @@ struct MfieldsHydroVpic
     assert(grid.n_patches() == 1);
 
     vhydro_ = static_cast<HydroArray*>(::new_hydro_array(vgrid));
+    patch_.ha = vhydro_;
     data_ = vhydro_->getData(ib_, im_);
 
     ::clear_hydro_array(vhydro_);
@@ -41,7 +55,7 @@ struct MfieldsHydroVpic
 
   real_t* data() { return data_; }
   fields_t operator[](int p) { return {ib_, im_, N_COMP, data_}; }
-  Patch& getPatch(int p) { return *vhydro_; }
+  Patch& getPatch(int p) { return patch_; }
 
   Grid* vgrid() { return vgrid_; }
 
@@ -53,5 +67,6 @@ private:
   Int3 ib_, im_;
   Grid* vgrid_;
   const Grid_t& grid_;
+  Patch patch_;
 };
 
