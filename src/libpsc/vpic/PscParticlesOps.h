@@ -16,7 +16,7 @@ struct ParticleInjector
   SpeciesId sp_id;           // Species of particle
 };
 
-template<typename Particles, typename FieldArray, typename Interpolator, typename Accumulator, typename MfieldsHydro>
+template<typename Particles, typename FieldArray, typename Interpolator, typename MfieldsAccumulator, typename MfieldsHydro>
 struct PscParticlesOps
 {
   typedef typename Particles::Grid Grid;
@@ -24,7 +24,7 @@ struct PscParticlesOps
   typedef typename Particles::Particle Particle;
   typedef typename Particles::ParticleMover ParticleMover;
   typedef typename Particles::ParticleBcList ParticleBcList;
-  typedef typename Accumulator::Block AccumulatorBlock;
+  typedef typename MfieldsAccumulator::Block AccumulatorBlock;
   
   // ----------------------------------------------------------------------
   // move_p
@@ -712,7 +712,7 @@ struct PscParticlesOps
 
 #endif
           
-  static void advance_p(typename Particles::iterator sp, Accumulator& accumulator, Interpolator& interpolator)
+  static void advance_p(typename Particles::iterator sp, MfieldsAccumulator& accumulator, Interpolator& interpolator)
   {
     DECLARE_ALIGNED_ARRAY( particle_mover_seg_t, 128, seg, 1 );
 
@@ -745,7 +745,7 @@ struct PscParticlesOps
   }
 
 
-  static void advance_p(Particles& vmprts, Accumulator& accumulator,
+  static void advance_p(Particles& vmprts, MfieldsAccumulator& accumulator,
 			Interpolator& interpolator)
   {
     for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
@@ -1090,7 +1090,7 @@ struct PscParticlesOps
   
   
   static void boundary_p(const ParticleBcList& pbc_list, Particles& vmprts, FieldArray& fa,
-			 Accumulator& accumulator)
+			 MfieldsAccumulator& accumulator)
   {
     boundary_p_(pbc_list, vmprts, fa, accumulator[0]);
   }

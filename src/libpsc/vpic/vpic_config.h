@@ -2,7 +2,7 @@
 #ifndef VPIC_CONFIG_H
 #define VPIC_CONFIG_H
 
-#define DO_VPIC 1
+//#define DO_VPIC 1
 
 #define HAVE_VPIC
 
@@ -110,7 +110,7 @@ using InterpolatorOps = PscInterpolatorOps<Interpolator, FieldArray>;
 
 using Accumulator = PscAccumulatorBase<Grid>;
 using MfieldsAccumulator = PscAccumulatorBase<Grid>;
-using AccumulatorOps = PscAccumulatorOps<Accumulator, FieldArray>;
+using AccumulatorOps = PscAccumulatorOps<MfieldsAccumulator, FieldArray>;
 
 #ifdef DO_VPIC
 using MfieldsHydro = MfieldsHydroVpic;
@@ -128,9 +128,9 @@ using ParticleBcList = VpicParticleBcList;
 
 using Particles = PscParticlesBase<Grid, ParticleBcList>;
 #if 1
-using ParticlesOps = PscParticlesOps<Particles, FieldArray, Interpolator, Accumulator, MfieldsHydro>;
+using ParticlesOps = PscParticlesOps<Particles, FieldArray, Interpolator, MfieldsAccumulator, MfieldsHydro>;
 #else
-using ParticlesOps = VpicParticlesOps<Particles. FieldArray, Interpolator, Accumulator, MfieldsHydro>;
+using ParticlesOps = VpicParticlesOps<Particles. FieldArray, Interpolator, MfieldsAccumulator, MfieldsHydro>;
 #endif
 
 #if 1

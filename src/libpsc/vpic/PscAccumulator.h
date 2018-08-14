@@ -1,15 +1,15 @@
 
 #pragma once
 
-template<typename Accumulator, typename FieldArray>
+template<typename MfieldsAccumulator, typename FieldArray>
 struct PscAccumulatorOps
 {
-  using Grid = typename Accumulator::Grid;
+  using Grid = typename MfieldsAccumulator::Grid;
   
   // ----------------------------------------------------------------------
   // clear
 
-  static void clear(Accumulator& acc)
+  static void clear(MfieldsAccumulator& acc)
   {
     auto g = acc.grid();
     int n_array = acc.n_pipeline() + 1;
@@ -28,10 +28,10 @@ struct PscAccumulatorOps
   // ----------------------------------------------------------------------
   // reduce
   
-  static void reduce(Accumulator& acc)
+  static void reduce(MfieldsAccumulator& acc)
   {
     auto g = acc.grid();
-    int si = sizeof(typename Accumulator::Element) / sizeof(float);
+    int si = sizeof(typename MfieldsAccumulator::Element) / sizeof(float);
     int nr = acc.n_pipeline() + 1 - 1;
     int sr = si * acc.stride();
 
@@ -67,7 +67,7 @@ struct PscAccumulatorOps
   // ----------------------------------------------------------------------
   // unload
   
-  static void unload( /*const*/ Accumulator& acc, FieldArray& fa)
+  static void unload( /*const*/ MfieldsAccumulator& acc, FieldArray& fa)
   {
     auto g = acc.grid();
     float cx = 0.25 * g->rdy * g->rdz / g->dt;
@@ -75,7 +75,7 @@ struct PscAccumulatorOps
     float cz = 0.25 * g->rdx * g->rdy / g->dt;
     
     Field3D<FieldArray> F(fa);
-    Field3D<Accumulator> A(acc);
+    Field3D<MfieldsAccumulator> A(acc);
 
     int nx = g->nx, ny = g->ny, nz = g->nz;
     // FIXME, these limits seem to go too far out compared to what we zeroed before

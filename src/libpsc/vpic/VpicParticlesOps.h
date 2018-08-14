@@ -1,13 +1,13 @@
 
 #pragma once
 
-template<typename Particles, typename FieldArray, typename Interpolator, typename Accumulator, typename MfieldsHydro>
+template<typename Particles, typename FieldArray, typename Interpolator, typename MfieldsAccumulator, typename MfieldsHydro>
 struct VpicParticlesOps
 {
   typedef typename Particles::ParticleBcList ParticleBcList;
   using HydroArray = typename MfieldsHydro::HydroArray;
   
-  static void advance_p(Particles& vmprts, Accumulator& accumulator,
+  static void advance_p(Particles& vmprts, MfieldsAccumulator& accumulator,
 			Interpolator& interpolator)
   {
     for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
@@ -16,7 +16,7 @@ struct VpicParticlesOps
   }
   
   static void boundary_p(const ParticleBcList &pbc_list, Particles& vmprts, FieldArray& fa,
-			 Accumulator& accumulator)
+			 MfieldsAccumulator& accumulator)
   {
     const particle_bc_t *pbc = pbc_list;
     ::boundary_p(const_cast<particle_bc_t*>(pbc), vmprts.head(), &fa, &accumulator);
