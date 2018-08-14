@@ -8,20 +8,29 @@ template<typename Interpolator>
 struct MfieldsInterpolator_
 {
   using Grid = typename Interpolator::Grid;
-  
+
+  struct Patch
+  {
+    Patch(Grid* vgrid)
+      : ip_{new Interpolator{vgrid}}
+    {}
+
+    ~Patch()
+    {
+      delete ip_;
+    }
+
+    Interpolator *ip_;
+  };
+
   MfieldsInterpolator_(Grid* vgrid)
-  : ip_{new Interpolator{vgrid}}
+    : patch_{vgrid}
   {}
 
-  ~MfieldsInterpolator_()
-  {
-    delete ip_;
-  }
-
-  Interpolator& getPatch(int p) { return *ip_; }
+  Interpolator& getPatch(int p) { return *patch_.ip_; }
   
 private:
-  Interpolator *ip_;
+  Patch patch_;
 };
 
 // ======================================================================
