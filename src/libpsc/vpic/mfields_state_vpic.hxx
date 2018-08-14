@@ -1,18 +1,19 @@
 
-#ifndef PSC_FIELDS_VPIC_H
-#define PSC_FIELDS_VPIC_H
+#pragma once
 
-#include "fields3d.hxx"
+#include "../libpsc/vpic/VpicGridBase.h"
+#include "../libpsc/vpic/VpicMaterial.h"
+#include "../libpsc/vpic/VpicFieldArrayBase.h"
 
 // ======================================================================
-// MfieldsStatePsc
+// MfieldsStateVpic
 
-template<typename FieldArray>
-struct MfieldsStatePsc
+struct MfieldsStateVpic
 {
   using real_t = float;
-  using Grid = typename FieldArray::Grid;
-  using MaterialList = typename FieldArray::MaterialList;
+  using Grid = VpicGridBase;
+  using MaterialList = VpicMaterialList;
+  using FieldArray = VpicFieldArrayBase<Grid, MaterialList>;
 
   enum {
     EX = 0, EY = 1, EZ = 2, DIV_E_ERR = 3,
@@ -25,7 +26,7 @@ struct MfieldsStatePsc
   using fields_t = fields3d<float, LayoutAOS>;
   using Patch = FieldArray;
 
-  MfieldsStatePsc(const Grid_t& grid, Grid* vgrid, const MaterialList& material_list, double damp = 0.)
+  MfieldsStateVpic(const Grid_t& grid, Grid* vgrid, const MaterialList& material_list, double damp = 0.)
     : grid_{grid}
   {
     assert(grid.n_patches() == 1);
@@ -42,24 +43,17 @@ struct MfieldsStatePsc
   {
     assert(p == 0);
     int ib[3], im[3];
-    float* data = vmflds().getData(ib, im);
+    float* data = vmflds_fields_->getData(ib, im);
     return {ib, im, N_COMP, data};
   }
 
   Patch& getPatch(int p) { return *vmflds_fields_; }
-
-  FieldArray& vmflds() { return *vmflds_fields_; }
-
   Grid* vgrid() { return vmflds_fields_->grid(); }
 
-  // static const Convert convert_to_, convert_from_;
-  // const Convert& convert_to() override { return convert_to_; }
-  // const Convert& convert_from() override { return convert_from_; }
+  operator FieldArray*() { return vmflds_fields_; }
 
 private:
   FieldArray* vmflds_fields_;
   const Grid_t& grid_;
 };
 
-
-#endif

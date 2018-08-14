@@ -77,6 +77,7 @@
 
 #include "VpicSimulationBase.h"
 
+#include "mfields_state_vpic.hxx"
 #include "mfields_hydro_vpic.hxx"
 #include "mfields_accumulator_vpic.hxx"
 
