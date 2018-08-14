@@ -402,7 +402,7 @@ struct PscParticlesOps
     const Grid* g = sp->grid();
     auto& ip = interpolator.getPatch(0);
     
-    const typename Interpolator::Element * ALIGNED(16)  f;
+    const typename MfieldsInterpolator::Element * ALIGNED(16)  f;
     float                * ALIGNED(16)  a;
 
     const float qdt_2mc  = (sp->q*g->dt)/(2*sp->m*g->cvac);
@@ -1394,7 +1394,7 @@ struct PscParticlesOps
   {
     const Grid* g = sp->grid();
     auto& ip = interpolator.getPatch(0);
-    const typename Interpolator::Element* f;
+    const typename MfieldsInterpolator::Element* f;
     // For backward half advance
     const float qdt_2mc = -(sp->q * g->dt) / (2*sp->m * g->cvac);
     const float qdt_4mc = 0.5 * qdt_2mc; // For backward half rotate
@@ -1617,7 +1617,7 @@ struct PscParticlesOps
   {
     const Grid* g = sp->grid();
     auto& ip = interpolator.getPatch(0);
-    const typename Interpolator::Element * RESTRICT ALIGNED(128) f = ip.data();
+    const typename MfieldsInterpolator::Element * RESTRICT ALIGNED(128) f = ip.data();
     const Particle       * RESTRICT ALIGNED(32)  p = sp->p;
     const float qdt_2mc = (sp->q*g->dt)/(2*sp->m*g->cvac);
     const float msp     = sp->m;

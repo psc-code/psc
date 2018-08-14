@@ -15,27 +15,14 @@ struct PscInterpolatorT
 };
 
 // ======================================================================
-// PscInterpolatorBase
-
-template<class G>
-struct PscInterpolatorBase : PscFieldBase<PscInterpolatorT, G>
-{
-  typedef PscFieldBase<PscInterpolatorT, G> Base;
-  using typename Base::Grid;
-  using typename Base::Element;
-
-  using Base::Base;
-};
-
-// ======================================================================
 // MfieldsInterpolatorPsc
 
 template<typename _Grid>
 struct MfieldsInterpolatorPsc
 {
   using Grid = _Grid;
-  using Interpolator = PscInterpolatorBase<Grid>;
-  using Element = typename Interpolator::Element;
+  using Element = PscInterpolatorT;
+  using Interpolator = PscFieldBase<Element, Grid>;
 
   struct Patch
   {
