@@ -69,7 +69,7 @@ struct PushParticlesVpic : PushParticlesBase
     // Convert the accumulators into currents.
     TIC AccumulateOps::clear_jf(mflds); TOC(clear_jf, 1);
     if (!vmprts.empty()) {
-      TIC AccumulatorOps::unload(accumulator, vmflds); TOC(unload_accumulator, 1);
+      TIC AccumulatorOps::unload(accumulator, mflds); TOC(unload_accumulator, 1);
     }
     TIC AccumulateOps::synchronize_jf(mflds); TOC(synchronize_jf, 1);
 

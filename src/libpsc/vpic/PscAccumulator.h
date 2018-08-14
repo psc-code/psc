@@ -1,7 +1,7 @@
 
 #pragma once
 
-template<typename MfieldsAccumulator, typename FieldArray>
+template<typename MfieldsAccumulator, typename MfieldsState, typename FieldArray>
 struct PscAccumulatorOps
 {
   using Grid = typename MfieldsAccumulator::Grid;
@@ -67,8 +67,9 @@ struct PscAccumulatorOps
   // ----------------------------------------------------------------------
   // unload
   
-  static void unload( /*const*/ MfieldsAccumulator& acc, FieldArray& fa)
+  static void unload( /*const*/ MfieldsAccumulator& acc, MfieldsState& mflds)
   {
+    FieldArray& fa = mflds.vmflds();
     auto g = acc.grid();
     float cx = 0.25 * g->rdy * g->rdz / g->dt;
     float cy = 0.25 * g->rdz * g->rdx / g->dt;

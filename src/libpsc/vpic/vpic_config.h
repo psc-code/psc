@@ -118,7 +118,7 @@ using MfieldsAccumulator = MfieldsAccumulatorVpic;
 #else
 using MfieldsAccumulator = MfieldsAccumulatorPsc<Grid>;
 #endif
-using AccumulatorOps = PscAccumulatorOps<MfieldsAccumulator, FieldArray>;
+using AccumulatorOps = PscAccumulatorOps<MfieldsAccumulator, MfieldsState, FieldArray>;
 
 #ifdef DO_VPIC
 using MfieldsHydro = MfieldsHydroVpic;
