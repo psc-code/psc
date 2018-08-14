@@ -14,14 +14,6 @@
 #include <cassert>
 
 // ======================================================================
-// VpicFieldArrayBase
-
-template<class G, class ML>
-struct VpicFieldArrayBase : field_array_t
-{
-};
-
-// ======================================================================
 // MfieldsStateVpic
 
 struct MfieldsStateVpic
@@ -29,7 +21,7 @@ struct MfieldsStateVpic
   using real_t = float;
   using Grid = VpicGridBase;
   using MaterialList = VpicMaterialList;
-  using FieldArray = VpicFieldArrayBase<Grid, MaterialList>;
+  using FieldArray = field_array_t;
   using SfaParams = sfa_params_t;
 
   enum {
@@ -45,7 +37,7 @@ struct MfieldsStateVpic
     using Element = field_t;
     
     Patch(Grid* vgrid, const MaterialList& material_list, double damp = 0.)
-      : fa_{static_cast<FieldArray*>(::new_standard_field_array(vgrid, material_list, damp))}
+      : fa_{::new_standard_field_array(vgrid, material_list, damp)}
     {}
 
     ~Patch()
@@ -77,10 +69,10 @@ struct MfieldsStateVpic
 
     SfaParams& params() { return *static_cast<SfaParams*>(fa_->params); }
 
-    operator FieldArray* () { return fa_; }
+    operator field_array_t* () { return fa_; }
 
   private:
-    FieldArray* fa_;
+    field_array_t* fa_;
   };
     
   using fields_t = fields3d<float, LayoutAOS>;
