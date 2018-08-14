@@ -583,17 +583,18 @@ struct PscCleanDivOps
 // ======================================================================
 // PscAccumulateOps
 
-template<typename FieldArray, typename LocalOps, typename RemoteOps>
+template<typename MfieldsState, typename FieldArray, typename LocalOps, typename RemoteOps>
 struct PscAccumulateOps
 {
-  using Grid = typename FieldArray::Grid;
+  using Grid = typename MfieldsState::Grid;
   using MaterialCoefficient = typename FieldArray::MaterialCoefficient;
   
   // ----------------------------------------------------------------------
   // clear_jf
 
-  static void clear_jf(FieldArray& fa)
+  static void clear_jf(MfieldsState& mflds)
   {
+    auto& fa = mflds.vmflds();
     const int nv = fa.grid()->nv;
 
     for (int v = 0; v < nv; v++) {
@@ -647,8 +648,9 @@ struct PscAccumulateOps
   // ----------------------------------------------------------------------
   // synchronize_jf
   
-  static void synchronize_jf(FieldArray& fa)
+  static void synchronize_jf(MfieldsState& mflds)
   {
+    FieldArray& fa = mflds.vmflds();
     Field3D<FieldArray> F(fa);
     CommJf<Grid, Field3D<FieldArray>> comm(fa.grid());
 

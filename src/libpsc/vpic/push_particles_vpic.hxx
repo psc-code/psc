@@ -67,11 +67,11 @@ struct PushParticlesVpic : PushParticlesBase
     // At this point, all particle positions are at r_1 and u_{1/2}, the
     // guard lists are empty and the accumulators on each processor are current.
     // Convert the accumulators into currents.
-    TIC AccumulateOps::clear_jf(vmflds); TOC(clear_jf, 1);
+    TIC AccumulateOps::clear_jf(mflds); TOC(clear_jf, 1);
     if (!vmprts.empty()) {
       TIC AccumulatorOps::unload(accumulator, vmflds); TOC(unload_accumulator, 1);
     }
-    TIC AccumulateOps::synchronize_jf(vmflds); TOC(synchronize_jf, 1);
+    TIC AccumulateOps::synchronize_jf(mflds); TOC(synchronize_jf, 1);
 
     // At this point, the particle currents are known at jf_{1/2}.
     // Let the user add their own current contributions. It is the users
