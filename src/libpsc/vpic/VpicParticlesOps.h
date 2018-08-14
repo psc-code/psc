@@ -69,7 +69,7 @@ struct VpicParticlesOps
   static void accumulate_hydro_p(MfieldsHydro& hydro, typename Particles::const_iterator sp,
 				 const Interpolator& interpolator)
   {
-    ::accumulate_hydro_p(&hydro.vhydro(), &*sp, &interpolator);
+    ::accumulate_hydro_p(&hydro, &*sp, &interpolator);
   }
 
   static void uncenter_p(species_t *sp, const Interpolator& interpolator)

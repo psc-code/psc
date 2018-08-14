@@ -93,7 +93,7 @@ struct MfieldsHydroVpic_<VpicGridBase, VpicHydroArrayBase<VpicGridBase>>
 
   Grid* vgrid() { return vgrid_; }
 
-  HydroArray& vhydro() { return *vhydro_; }
+  operator HydroArray*() { return vhydro_; }
 
 private:
   HydroArray* vhydro_;

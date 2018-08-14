@@ -55,7 +55,6 @@ struct OutputHydroVpic
     psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
     
     Particles& vmprts = mprts.vmprts_;
-    HydroArray& vmflds = mflds_hydro.vhydro();
 
     std::vector<std::string> comp_names;
     comp_names.reserve(mflds_res_.n_comps());
