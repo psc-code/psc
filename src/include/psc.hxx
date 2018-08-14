@@ -521,7 +521,7 @@ private:
       TIC InterpolatorOps::load(*interpolator_, *mflds_); TOC(load_interpolator, 1);
       
       for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
-	TIC ParticlesOps::uncenter_p(&*sp, interpolator_->vip()); TOC(uncenter_p, 1);
+	TIC ParticlesOps::uncenter_p(&*sp, *interpolator_); TOC(uncenter_p, 1);
       }
     }
   }
@@ -535,7 +535,7 @@ private:
   {
 #ifdef VPIC
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-      sim_->runDiag(mprts_->vmprts_, *mflds_, interpolator_->vip(), *hydro_, grid().domain.np);
+      sim_->runDiag(mprts_->vmprts_, *mflds_, *interpolator_, *hydro_, grid().domain.np);
     }
 #else
     // FIXME

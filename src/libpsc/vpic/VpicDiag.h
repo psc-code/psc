@@ -112,7 +112,7 @@ static HydroInfo hydroInfo[5] = {
     }                                                  \
   } while(0)
 
-template<class Particles, class MfieldsState, class Interpolator, class MfieldsHydro,
+template<class Particles, class MfieldsState, class MfieldsInterpolator, class MfieldsHydro,
 	 class DiagOps, class ParticlesOps, class HydroArrayOps>
 struct VpicDiagMixin
 {
@@ -222,7 +222,7 @@ struct VpicDiagMixin
   (diag_.x##_interval>0 && remainder(step, diag_.x##_interval) == 0)
 
   void diagnostics_run(MfieldsState& mflds, Particles& particles,
-		       Interpolator& interpolator, MfieldsHydro& mflds_hydro, int np[3])
+		       MfieldsInterpolator& interpolator, MfieldsHydro& mflds_hydro, int np[3])
   {
     TIC {
       const Grid* g = mflds.vgrid();
@@ -255,8 +255,8 @@ struct VpicDiagMixin
       
       // Species moment output
       
-      if(should_dump(ehydro)) hydro_dump(&particles, &interpolator, mflds_hydro, "electron", diag_.hedParams);
-      if(should_dump(Hhydro)) hydro_dump(&particles, &interpolator, mflds_hydro, "ion", diag_.hHdParams);
+      if(should_dump(ehydro)) hydro_dump(&particles, interpolator, mflds_hydro, "electron", diag_.hedParams);
+      if(should_dump(Hhydro)) hydro_dump(&particles, interpolator, mflds_hydro, "ion", diag_.hHdParams);
 
 #if 0
       if(step && !(step % diag->restart_interval)) {
@@ -467,7 +467,7 @@ struct VpicDiagMixin
 
   void dump_energies(const char *fname, int append,
 		     MfieldsState& mflds, Particles& particles,
-		     Interpolator& interpolator)
+		     MfieldsInterpolator& interpolator)
   {
     double en_f[6], en_p;
     const Grid* g = mflds.vgrid();
@@ -501,7 +501,7 @@ struct VpicDiagMixin
 		    en_f[3], en_f[4], en_f[5] );
  
     for (auto sp = particles.cbegin(); sp != particles.cend(); ++sp) {
-      en_p = ParticlesOps::energy_p(sp, interpolator);
+      en_p = ParticlesOps::energy_p(sp, interpolator.vip());
       if (rank==0 && status != fail) fileIO.print(" %e", en_p);
     }
  
@@ -616,7 +616,7 @@ struct VpicDiagMixin
   // ----------------------------------------------------------------------
   // hydro_dump
   
-  void hydro_dump(Particles *vmprts, Interpolator* interpolator, MfieldsHydro& mflds_hydro,
+  void hydro_dump(Particles *vmprts, MfieldsInterpolator& interpolator, MfieldsHydro& mflds_hydro,
 		  const char * speciesname, DumpParameters& dumpParams )
   {
     Field3D<typename MfieldsHydro::Patch> H{mflds_hydro.getPatch(0)};
@@ -645,7 +645,7 @@ struct VpicDiagMixin
     if (sp == vmprts->cend()) LOG_ERROR("Invalid species name: %s", speciesname);
 
     HydroArrayOps::clear(mflds_hydro);
-    ParticlesOps::accumulate_hydro_p(mflds_hydro, sp, *interpolator);
+    ParticlesOps::accumulate_hydro_p(mflds_hydro, sp, interpolator.vip());
     HydroArrayOps::synchronize(mflds_hydro);
   
     // convenience

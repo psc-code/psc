@@ -1387,10 +1387,11 @@ struct PscParticlesOps
   // ----------------------------------------------------------------------
   // uncenter_p
   
-  static void uncenter_p_pipeline(Species* sp, /*const*/ Interpolator& interpolator,
+  static void uncenter_p_pipeline(Species* sp, /*const*/ MfieldsInterpolator& interpolator,
 				  int off, int cnt)
   {
     const Grid* g = sp->grid();
+    auto& ip = interpolator.vip();
     const typename Interpolator::Element* f;
     // For backward half advance
     const float qdt_2mc = -(sp->q * g->dt) / (2*sp->m * g->cvac);
@@ -1415,7 +1416,7 @@ struct PscParticlesOps
       dy   = p->dy;
       dz   = p->dz;
       ii   = p->i;
-      f    = &interpolator[ii];                // Interpolate E
+      f    = &ip[ii];                // Interpolate E
       hax  = qdt_2mc*(    ( f->ex    + dy*f->dexdy    ) +
 		       dz*( f->dexdz + dy*f->d2exdydz ) );
       hay  = qdt_2mc*(    ( f->ey    + dz*f->deydz    ) +
@@ -1526,7 +1527,7 @@ struct PscParticlesOps
 
 #endif
   
-  static void uncenter_p(Species* sp, Interpolator& interpolator)
+  static void uncenter_p(Species* sp, MfieldsInterpolator& interpolator)
   {
     int cnt = sp->np & ~15;
 #if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
