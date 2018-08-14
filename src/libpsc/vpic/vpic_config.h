@@ -2,7 +2,7 @@
 #ifndef VPIC_CONFIG_H
 #define VPIC_CONFIG_H
 
-#define DO_VPIC 1
+//#define DO_VPIC 1
 
 #define HAVE_VPIC
 
@@ -84,13 +84,13 @@
 
 #endif
 
-#ifdef DO_VPIC
+#if 1//def DO_VPIC
 using Grid = VpicGridBase;
 #else
 using Grid = PscGridBase;
 #endif
 
-#ifdef DO_VPIC
+#if 1//def DO_VPIC
 using MaterialList = VpicMaterialList;
 using FieldArray = VpicFieldArrayBase<Grid, VpicMaterialList>;
 using MfieldsState = MfieldsStateVpic;

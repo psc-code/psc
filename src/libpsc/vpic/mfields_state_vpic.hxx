@@ -41,24 +41,7 @@ struct VpicFieldArrayBase : field_array_t {
     N_COMP = sizeof(field_t) / sizeof(float),
   };
 
-  static VpicFieldArrayBase* create(Grid *grid, const MaterialList& material_list, float damp)
-  {
-    return static_cast<VpicFieldArrayBase*>(::new_standard_field_array(grid, material_list, damp));
-  }
-
  public:
-  float* getData(int* ib, int* im)
-  {
-    const int B = 1; // VPIC always uses one ghost cell (on c.c. grid)
-    im[0] = g->nx + 2*B;
-    im[1] = g->ny + 2*B;
-    im[2] = g->nz + 2*B;
-    ib[0] = -B;
-    ib[1] = -B;
-    ib[2] = -B;
-    return &f[0].ex;
-  }
-
   // These operators can be used to access the field directly,
   // though the performance isn't great, so one you use Field3D
   // when performance is important
@@ -131,31 +114,30 @@ struct MfieldsStateVpic
   MfieldsStateVpic(const Grid_t& grid, Grid* vgrid, const MaterialList& material_list, double damp = 0.)
     : grid_{grid}
   {
+    vmflds_fields_ = static_cast<FieldArray*>(::new_standard_field_array(vgrid, material_list, damp));
     assert(grid.n_patches() == 1);
 
-    vmflds_fields_ = FieldArray::create(vgrid, material_list, damp);
+    const int B = 1; // VPIC always uses one ghost cell (on c.c. grid)
+    im_ = { vgrid->nx + 2*B, vgrid->ny + 2*B, vgrid->nz + 2*B };
+    ib_ = { -B, -B, -B };
   }
+
+  real_t* data() { return reinterpret_cast<real_t*>(vmflds_fields_->data()); }
+  fields_t operator[](int p) { return {ib_, im_, N_COMP, data()}; }
+  Patch& getPatch(int p) { return *vmflds_fields_; }
+
+  Grid* vgrid() { return vmflds_fields_->grid(); }
+
+  operator FieldArray*() { return vmflds_fields_; }
 
   const Grid_t& grid() const { return grid_; }
   int n_patches() const { return grid_.n_patches(); }
   int n_comps() const { return N_COMP; }
   Int3 ibn() const { return {1,1,1}; }
   
-  fields_t operator[](int p)
-  {
-    assert(p == 0);
-    int ib[3], im[3];
-    float* data = vmflds_fields_->getData(ib, im);
-    return {ib, im, N_COMP, data};
-  }
-
-  Patch& getPatch(int p) { return *vmflds_fields_; }
-  Grid* vgrid() { return vmflds_fields_->grid(); }
-
-  operator FieldArray*() { return vmflds_fields_; }
-
 private:
-  FieldArray* vmflds_fields_;
   const Grid_t& grid_;
+  FieldArray* vmflds_fields_;
+  Int3 ib_, im_;
 };
 
