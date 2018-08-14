@@ -4,7 +4,7 @@
 // ======================================================================
 // PscPushFieldOps
 
-template<typename FieldArray, typename LocalOps, typename RemoteOps>
+template<typename MfieldsState, typename FieldArray, typename LocalOps, typename RemoteOps>
 struct PscPushFieldsOps
 {
   using Grid = typename FieldArray::Grid;
@@ -28,8 +28,9 @@ struct PscPushFieldsOps
 #define UPDATE_CBY() F(CBY, i,j,k) -= (pz*(F(EX, i,j,k+1) - F(EX ,i,j,k)) - px*(F(EZ, i+1,j,k) - F(EZ, i,j,k)))
 #define UPDATE_CBZ() F(CBZ, i,j,k) -= (px*(F(EY, i+1,j,k) - F(EY, i,j,k)) - py*(F(EX, i,j+1,k) - F(EX, i,j,k)))
 
-  static void advance_b(FieldArray&fa, double frac)
+  static void advance_b(MfieldsState& mflds, double frac)
   {
+    auto& fa = mflds.vmflds();
     Field3D<FieldArray> F(fa);
     const Grid* g = fa.grid();
     int nx = g->nx, ny = g->ny, nz = g->nz;
@@ -88,8 +89,9 @@ struct PscPushFieldsOps
   // ----------------------------------------------------------------------
   // vacuum_advance_e
   
-  static void vacuum_advance_e(FieldArray& fa, double frac)
+  static void vacuum_advance_e(MfieldsState& mflds, double frac)
   {
+    auto& fa = mflds.vmflds();
     assert(frac == 1.);
 
     SfaParams& prm = fa.params();
@@ -169,10 +171,10 @@ struct PscPushFieldsOps
   // ----------------------------------------------------------------------
   // advance_e
   
-  static void advance_e(FieldArray& fa, double frac)
+  static void advance_e(MfieldsState& mflds, double frac)
   {
     // FIXME vacuum hardcoded
-    return vacuum_advance_e(fa, frac);
+    return vacuum_advance_e(mflds, frac);
   }
 };
 
