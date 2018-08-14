@@ -36,10 +36,10 @@ struct VpicAccumulateOps
 // ======================================================================
 // VpicDiagOps
 
-template<typename FieldArray>
+template<typename MfieldsState, typename FieldArray>
 struct VpicDiagOps
 {
-  static void energy_f(FieldArray& fa, double en[6]) { fa.kernel->energy_f(en, &fa); }
+  static void energy_f(FieldArray* fa, double en[6]) { fa->kernel->energy_f(en, fa); }
 };
 
 #endif

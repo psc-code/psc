@@ -791,16 +791,17 @@ struct PscAccumulateOps
 // ======================================================================
 // PscDiagOps
 
-template<typename FieldArray>
+template<typename MfieldsState, typename FieldArray>
 struct PscDiagOps
 {
-  using Grid = typename FieldArray::Grid;
+  using Grid = typename MfieldsState::Grid;
   
   // ----------------------------------------------------------------------
   // vacuum_energy_f
 
-  static void vacuum_energy_f(FieldArray& fa, double global[6])
+  static void vacuum_energy_f(MfieldsState& mflds, double global[6])
   {
+    auto& fa = mflds.vmflds();
     auto& prm = fa.params();
     assert(prm.size() == 1);
     auto m = prm[0];
@@ -855,9 +856,9 @@ struct PscDiagOps
   // ----------------------------------------------------------------------
   // energy_f
 
-  static void energy_f(FieldArray& fa, double en[6])
+  static void energy_f(MfieldsState& mflds, double en[6])
   {
-    vacuum_energy_f(fa, en);
+    vacuum_energy_f(mflds, en);
   }
   
 };

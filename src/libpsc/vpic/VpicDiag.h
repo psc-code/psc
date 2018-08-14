@@ -494,7 +494,7 @@ struct VpicDiagMixin
       }
     }
 
-    DiagOps::energy_f(mflds.vmflds(), en_f);
+    DiagOps::energy_f(mflds, en_f);
     if (rank==0 && status!=fail )
       fileIO.print( " %e %e %e %e %e %e",
 		    en_f[0], en_f[1], en_f[2],
