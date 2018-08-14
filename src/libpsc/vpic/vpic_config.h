@@ -108,8 +108,7 @@ using CleanDivOps = VpicCleanDivOps<FieldArray>;
 using Interpolator = PscInterpolatorBase<Grid>;
 using InterpolatorOps = PscInterpolatorOps<Interpolator, FieldArray>;
 
-using Accumulator = PscAccumulatorBase<Grid>;
-using MfieldsAccumulator = PscAccumulatorBase<Grid>;
+using MfieldsAccumulator = MfieldsAccumulatorPsc<Grid>;
 using AccumulatorOps = PscAccumulatorOps<MfieldsAccumulator, FieldArray>;
 
 #ifdef DO_VPIC

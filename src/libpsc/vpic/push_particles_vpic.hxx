@@ -22,7 +22,7 @@ struct PushParticlesVpic : PushParticlesBase
   }
 
   void push_mprts(Mparticles& mprts, MfieldsState& mflds, Interpolator& interpolator,
-		  Accumulator& accumulator, ParticleBcList& particle_bc_list,
+		  MfieldsAccumulator& accumulator, ParticleBcList& particle_bc_list,
 		  int num_comm_round)
   {
     auto& vmprts = mprts.vmprts_;

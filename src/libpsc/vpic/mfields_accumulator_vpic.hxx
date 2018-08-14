@@ -9,6 +9,9 @@
 
 struct MfieldsAccumulatorVpic : VpicAccumulatorBase<VpicGridBase>
 {
+  using Base = VpicAccumulatorBase<Grid>;
+
+  using Base::Base;
 };
 
 #include "PscAccumulatorBase.h"
@@ -19,5 +22,8 @@ struct MfieldsAccumulatorVpic : VpicAccumulatorBase<VpicGridBase>
 template<typename Grid>
 struct MfieldsAccumulatorPsc : PscAccumulatorBase<Grid>
 {
+  using Base = PscAccumulatorBase<Grid>;
+
+  using Base::Base;
 };
 

@@ -157,7 +157,7 @@ struct Psc
 #ifdef VPIC
     hydro_.reset(new MfieldsHydro{grid(), vgrid_});
     interpolator_.reset(new Interpolator{vgrid_});
-    accumulator_.reset(new Accumulator{vgrid_});
+    accumulator_.reset(new MfieldsAccumulator{vgrid_});
 #endif
   }
   
@@ -582,7 +582,7 @@ protected:
 #ifdef VPIC
   std::unique_ptr<MfieldsHydro> hydro_;
   std::unique_ptr<Interpolator> interpolator_;
-  std::unique_ptr<Accumulator> accumulator_;
+  std::unique_ptr<MfieldsAccumulator> accumulator_;
   ParticleBcList particle_bc_list_;
 #endif
   std::unique_ptr<Mparticles_t> mprts_;
