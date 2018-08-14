@@ -29,21 +29,16 @@ struct MfieldsInterpolatorPsc
     using Element = Element;
     
     Patch(Grid* vgrid)
-      : ip_{new Interpolator{vgrid}}
+      : ip_{vgrid}
     {}
 
-    ~Patch()
-    {
-      delete ip_;
-    }
-    
-    Element* data() { return ip_->data(); }
-    Element  operator[](int idx) const { return (*ip_)[idx]; }
-    Element& operator[](int idx)       { return (*ip_)[idx]; }
+    Element* data() { return ip_.data(); }
+    Element  operator[](int idx) const { return ip_[idx]; }
+    Element& operator[](int idx)       { return ip_[idx]; }
 
-    Grid* grid() { return ip_->grid(); }
+    Grid* grid() { return ip_.grid(); }
 
-    Interpolator *ip_;
+    Interpolator ip_;
   };
 
   MfieldsInterpolatorPsc(Grid* vgrid)
