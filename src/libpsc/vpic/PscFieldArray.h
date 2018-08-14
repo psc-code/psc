@@ -92,8 +92,9 @@ struct PscCleanDivOps
     }
   };
 
-  static void synchronize_rho(FieldArray& fa)
+  static void synchronize_rho(MfieldsState& mflds)
   {
+    auto& fa = mflds.vmflds();
     Field3D<FieldArray> F(fa);
     CommRho<Grid, Field3D<FieldArray>> comm(fa.grid());
 
@@ -109,8 +110,9 @@ struct PscCleanDivOps
   // ----------------------------------------------------------------------
   // compute_div_e_err
   
-  static void compute_div_e_err(FieldArray& fa)
+  static void compute_div_e_err(MfieldsState& mflds)
   {
+    auto& fa = mflds.vmflds();
     auto& prm = fa.params();
     assert(prm.size() == 1);
     const MaterialCoefficient* m = prm[0];
@@ -162,8 +164,9 @@ struct PscCleanDivOps
   // OPT: doing this at the same time as compute_div_e_err might be
   // advantageous (faster)
   
-  static double compute_rms_div_e_err(FieldArray& fa)
+  static double compute_rms_div_e_err(MfieldsState& mflds)
   {
+    auto& fa = mflds.vmflds();
     Field3D<FieldArray> F(fa);
     const Grid* g = fa.grid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;
@@ -252,8 +255,9 @@ struct PscCleanDivOps
 #define MARDER_EY(i,j,k) F(i,j,k).ey += py * (F(i,j+1,k).div_e_err - F(i,j,k).div_e_err)
 #define MARDER_EZ(i,j,k) F(i,j,k).ez += pz * (F(i,j,k+1).div_e_err - F(i,j,k).div_e_err)
 
-  static void vacuum_clean_div_e(FieldArray& fa)
+  static void vacuum_clean_div_e(MfieldsState& mflds)
   {
+    auto& fa = mflds.vmflds();
     auto& prm = fa.params();
     assert(prm.size() == 1);
     const MaterialCoefficient* m = prm[0];
@@ -321,16 +325,17 @@ struct PscCleanDivOps
     LocalOps::local_adjust_tang_e(fa);
   }
 
-  static void clean_div_e(FieldArray& fa)
+  static void clean_div_e(MfieldsState& mflds)
   {
-    vacuum_clean_div_e(fa);
+    vacuum_clean_div_e(mflds);
   }
 
   // ----------------------------------------------------------------------
   // compute_div_b_err
   
-  static void compute_div_b_err(FieldArray& fa)
+  static void compute_div_b_err(MfieldsState& mflds)
   {
+    auto& fa = mflds.vmflds();
     Field3D<FieldArray> F(fa);
     const Grid* g = fa.grid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;
@@ -354,8 +359,9 @@ struct PscCleanDivOps
   //
   // OPT: doing that at the same time as div_b should be faster
 
-  static double compute_rms_div_b_err(FieldArray& fa)
+  static double compute_rms_div_b_err(MfieldsState& mflds)
   {
+    auto& fa = mflds.vmflds();
     Field3D<FieldArray> F(fa);
     const Grid* g = fa.grid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;
@@ -383,8 +389,9 @@ struct PscCleanDivOps
 #define MARDER_CBY(i,j,k) F(i,j,k).cby += py * (F(i,j,k).div_b_err - F(i,j-1,k).div_b_err)
 #define MARDER_CBZ(i,j,k) F(i,j,k).cbz += pz * (F(i,j,k).div_b_err - F(i,j,k-1).div_b_err)
 
-  static void clean_div_b(FieldArray& fa)
+  static void clean_div_b(MfieldsState& mflds)
   {
+    auto& fa = mflds.vmflds();
     Field3D<FieldArray> F(fa);
     const Grid* g = fa.grid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;
@@ -561,8 +568,9 @@ struct PscCleanDivOps
     double err;
   };
 
-  static double synchronize_tang_e_norm_b(FieldArray& fa)
+  static double synchronize_tang_e_norm_b(MfieldsState& mflds)
   {
+    auto& fa = mflds.vmflds();
     Field3D<FieldArray> F(fa);
     CommTangENormB<Grid, Field3D<FieldArray>> comm(fa.grid());
     

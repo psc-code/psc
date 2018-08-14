@@ -1150,10 +1150,10 @@ struct PscParticlesOps
     }
   }
 
-  static void accumulate_rho_p(Particles& vmprts, FieldArray &vmflds)
+  static void accumulate_rho_p(Particles& vmprts, MfieldsState &mflds)
   {
     for (auto sp = vmprts.cbegin(); sp != vmprts.cend(); ++sp) {
-      TIC accumulate_rho_p(vmflds, sp); TOC(accumulate_rho_p, 1);
+      TIC accumulate_rho_p(mflds.vmflds(), sp); TOC(accumulate_rho_p, 1);
     }
   }
 
