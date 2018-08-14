@@ -156,8 +156,9 @@ struct PscFieldArrayBase : PscFieldBase<PscFieldT, _Grid>
   using MaterialList = _MaterialList;
   using SfaParams = PscSfaParams<Grid, MaterialList>;
   using MaterialCoefficient = typename SfaParams::MaterialCoefficient;
-
   using typename Base::Element;
+
+  using Base::Base;
   
   enum {
     EX  = 0,
@@ -166,37 +167,11 @@ struct PscFieldArrayBase : PscFieldBase<PscFieldT, _Grid>
     CBX = 4,
     CBY = 5,
     CBZ = 6,
-    N_COMP = sizeof(typename Base::Element) / sizeof(float),
+    N_COMP = sizeof(Element) / sizeof(float),
   };
 
-  PscFieldArrayBase(Grid* vgrid)
-    : Base(vgrid)
-  {}
-  
-public:
-  // These operators can be used to access the field directly,
-  // though the performance isn't great, so one should use Field3D
-  // when performance is important
-  float operator()(int m, int i, int j, int k) const
-  {
-    float *ff = &arr_[0].ex;
-    return ff[VOXEL(i,j,k, g_->nx,g_->ny,g_->nz) * N_COMP + m];
-  }
-  
-  float& operator()(int m, int i, int j, int k)
-  {
-    float *ff = &arr_[0].ex;
-    return ff[VOXEL(i,j,k, g_->nx,g_->ny,g_->nz) * N_COMP + m];
-  }
-
   using Base::grid;
-
-private:
   using Base::arr_;
-
-protected:
-  using Base::g_;
-public:
 };
 
 
@@ -238,6 +213,23 @@ struct MfieldsStatePsc
     Element  operator[](int idx) const { return (*fa_)[idx]; }
     Element& operator[](int idx)       { return (*fa_)[idx]; }
 
+    // These operators can be used to access the field directly,
+    // though the performance isn't great, so one should use Field3D
+    // when performance is important
+    static const int N_COMP = sizeof(Element) / sizeof(float);
+
+    float operator()(int m, int i, int j, int k) const
+    {
+      float *f = reinterpret_cast<float*>(data());
+      return f[VOXEL(i,j,k, grid()->nx,grid()->ny,grid()->nz) * N_COMP + m];
+    }
+    
+    float& operator()(int m, int i, int j, int k)
+    {
+      float *f = reinterpret_cast<float*>(data());
+      return f[VOXEL(i,j,k, grid()->nx,grid()->ny,grid()->nz) * N_COMP + m];
+    }
+    
     operator FieldArray*() { return fa_; }
 
   private:
