@@ -5,7 +5,6 @@
 // MfieldsHydroVpic
 
 #include "../libpsc/vpic/VpicGridBase.h"
-#include "../libpsc/vpic/VpicHydroArrayBase.h"
 
 struct MfieldsHydroVpic
 {
