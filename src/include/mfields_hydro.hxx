@@ -1,19 +1,27 @@
 
 #pragma once
 
-#include "../libpsc/vpic/PscHydroArrayBase.h"
 #include <fields3d.hxx>
 
 // ======================================================================
 // MfieldsHydroPsc
 
-template<typename Grid>
+template<typename _Grid>
 struct MfieldsHydroPsc
 {
-  using HydroArray = PscHydroArrayBase<Grid>;
+  using Grid = _Grid;
   using real_t = float;
-  using Element = typename HydroArray::Element;
   using fields_t = fields3d<real_t, LayoutAOS>;
+
+  struct Element
+  {
+    float jx, jy, jz, rho; // Current and charge density => <q v_i f>, <q f>
+    float px, py, pz, ke;  // Momentum and K.E. density  => <p_i f>, <m c^2 (gamma-1) f>
+    float txx, tyy, tzz;   // Stress diagonal            => <p_i v_j f>, i==j
+    float tyz, tzx, txy;   // Stress off-diagonal        => <p_i v_j f>, i!=j
+    float _pad[2];         // 16-byte align
+  };
+
   using Patch = PscFieldBase<Element, Grid>;
   
   enum {
@@ -22,16 +30,13 @@ struct MfieldsHydroPsc
 
   MfieldsHydroPsc(const Grid_t& grid, Grid* vgrid)
     : grid_{grid},
-      vhydro_{new HydroArray{vgrid}},
-      patch_{vgrid, vhydro_->data()}
+      patch_{vgrid}
   {
-    vhydro_->getData(ib_, im_);
     assert(grid.n_patches() == 1);
-  }
 
-  ~MfieldsHydroPsc()
-  {
-    delete vhydro_;
+    const int B = 1; // VPIC always uses one ghost cell (on c.c. grid)
+    im_ = { vgrid->nx + 2*B, vgrid->ny + 2*B, vgrid->nz + 2*B };
+    ib_ = { -B, -B, -B };
   }
 
   int n_patches() const { return grid_.n_patches(); }
@@ -47,8 +52,7 @@ struct MfieldsHydroPsc
 
 private:
   const Grid_t& grid_;
-  HydroArray* vhydro_;
-  Int3 ib_, im_;
   Patch patch_;
+  Int3 ib_, im_;
 };
 
