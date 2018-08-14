@@ -2,7 +2,7 @@
 #ifndef VPIC_CONFIG_H
 #define VPIC_CONFIG_H
 
-#define DO_VPIC 1
+//#define DO_VPIC 1
 
 #define HAVE_VPIC
 
@@ -54,6 +54,7 @@
 #include "VpicGridBase.h"
 #include "VpicMaterial.h"
 
+#include "VpicFieldArrayBase.h"
 #include "VpicFieldArrayLocalOps.h"
 #include "VpicFieldArrayRemoteOps.h"
 #include "VpicFieldArray.h"
@@ -88,7 +89,14 @@ using Grid = VpicGridBase;
 using Grid = PscGridBase;
 #endif
 
-#if 1
+#ifdef DO_VPIC
+using MaterialList = VpicMaterialList;
+using FieldArray = VpicFieldArrayBase<Grid, VpicMaterialList>;
+using PushFieldsOps = VpicPushFieldsOps<FieldArray>;
+using DiagOps = VpicDiagOps<FieldArray>;
+using AccumulateOps = VpicAccumulateOps<FieldArray>;
+using CleanDivOps = VpicCleanDivOps<FieldArray>;
+#else
 using MaterialList = PscMaterialList;
 using FieldArray = PscFieldArrayBase<Grid, MaterialList>;
 using FieldArrayLocalOps = PscFieldArrayLocalOps<FieldArray>;
@@ -97,12 +105,6 @@ using PushFieldsOps = PscPushFieldsOps<FieldArray, FieldArrayLocalOps, FieldArra
 using DiagOps = PscDiagOps<FieldArray>;
 using AccumulateOps = PscAccumulateOps<FieldArray, FieldArrayLocalOps, FieldArrayRemoteOps>;
 using CleanDivOps = PscCleanDivOps<FieldArray, FieldArrayLocalOps, FieldArrayRemoteOps>;
-#else
-using FieldArray = VpicFieldArrayBase<Grid, VpicMaterialList>;
-using PushFieldsOps = VpicPushFieldsOps<FieldArray>;
-using DiagOps = VpicDiagOps<FieldArray>;
-using AccumulateOps = VpicAccumulateOps<FieldArray>;
-using CleanDivOps = VpicCleanDivOps<FieldArray>;
 #endif
 
 using Interpolator = PscInterpolatorBase<Grid>;
