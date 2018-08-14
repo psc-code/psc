@@ -26,8 +26,8 @@ struct PushParticlesVpic : PushParticlesBase
   {
     auto& vmprts = mprts.vmprts_;
     
-    // For this to work, interpolator needs to have been set from vmflds E/B before,
-    // ie., we're not using vmflds for E and B here at all.
+    // For this to work, interpolator needs to have been set from mflds E/B before,
+    // ie., we're not using mflds for E and B here at all.
     
     // At this point, fields are at E_0 and B_0 and the particle positions
     // are at r_0 and u_{-1/2}.  Further the mover lists for the particles should

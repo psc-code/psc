@@ -29,9 +29,10 @@ struct VpicParticlesOps
     }
   }
 
-  static void accumulate_rhob(FieldArray& fa, const particle_t* p, float qsp)
+  static void accumulate_rhob(MfieldsState& mflds, const particle_t* p, float qsp)
   {
-    ::accumulate_rhob(fa.f, p, fa.g, qsp);
+    FieldArray* fa = mflds;
+    ::accumulate_rhob(fa->f, p, fa->g, qsp);
   }
 
   // ----------------------------------------------------------------------
@@ -39,7 +40,6 @@ struct VpicParticlesOps
 
   void drop_p(Particles& vmprts, MfieldsState& mflds)
   {
-    auto& vmflds = mflds.vmflds();
     for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
       if (sp->nm) {
 	LOG_WARN("Removing %i particles associated with unprocessed %s movers (increase num_comm_round)",
@@ -59,7 +59,7 @@ struct VpicParticlesOps
 	int i = pm->i; // particle index we are removing
 	p0[i].i >>= 3; // shift particle voxel down
 	// accumulate the particle's charge to the mesh
-	this->accumulate_rhob(vmflds, p0 + i, sp->q);
+	this->accumulate_rhob(mflds, p0 + i, sp->q);
 	p0[i] = p0[sp->np - 1]; // put the last particle into position i
 	sp->np--; // decrement the number of particles
       }

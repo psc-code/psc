@@ -756,9 +756,10 @@ struct PscParticlesOps
   // ----------------------------------------------------------------------
   // boundary_p
 
-  static void boundary_p_(const ParticleBcList &pbc_list, Particles& vmprts, FieldArray& fa,
+  static void boundary_p_(const ParticleBcList &pbc_list, Particles& vmprts, MfieldsState& mflds,
 			  AccumulatorBlock acc_block)
   {
+    auto& fa = mflds.vmflds();
 #ifdef V4_ACCELERATION
     using namespace v4;
 #endif
@@ -1092,7 +1093,7 @@ struct PscParticlesOps
   static void boundary_p(const ParticleBcList& pbc_list, Particles& vmprts, MfieldsState& mflds,
 			 MfieldsAccumulator& accumulator)
   {
-    boundary_p_(pbc_list, vmprts, mflds.vmflds(), accumulator[0]);
+    boundary_p_(pbc_list, vmprts, mflds, accumulator[0]);
   }
 
   // ----------------------------------------------------------------------
@@ -1208,7 +1209,7 @@ struct PscParticlesOps
 
   static void drop_p(Particles& vmprts, MfieldsState& mflds)
   {
-    auto& vmflds = mflds.vmflds();
+    auto& fa = mflds.vmflds();
     for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
       if (sp->nm) {
 	LOG_WARN("Removing %i particles associated with unprocessed %s movers (increase num_comm_round)",
@@ -1228,7 +1229,7 @@ struct PscParticlesOps
 	int i = pm->i; // particle index we are removing
 	p0[i].i >>= 3; // shift particle voxel down
 	// accumulate the particle's charge to the mesh
-	accumulate_rhob(vmflds, p0 + i, sp->q);
+	accumulate_rhob(mflds.vmflds(), p0 + i, sp->q);
 	p0[i] = p0[sp->np - 1]; // put the last particle into position i
 	sp->np--; // decrement the number of particles
       }
