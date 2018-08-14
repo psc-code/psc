@@ -34,7 +34,7 @@
 #include "PscParticlesBase.h"
 #include "PscParticlesOps.h"
 
-#include "PscInterpolatorBase.h"
+#include "mfields_interpolator_psc.hxx"
 #include "PscInterpolator.h"
 
 #include "PscAccumulator.h"
