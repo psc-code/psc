@@ -15,7 +15,7 @@ struct PscInterpolatorOps
     auto& ip = interpolator.getPatch(0);
     auto& fa = mflds.getPatch(0);
     Field3D<typename MfieldsState::Patch> F(fa);
-    Field3D<Interpolator> I(ip);
+    Field3D<typename MfieldsInterpolator::Patch> I(ip);
 
     auto g = ip.grid();
     const int nx = g->nx, ny = g->ny, nz = g->nz;
