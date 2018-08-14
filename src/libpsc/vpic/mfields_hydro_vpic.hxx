@@ -19,14 +19,20 @@ struct MfieldsHydroVpic
   {
     using Element = Element;
 
+    Patch(Grid* vgrid)
+      : vgrid_{vgrid}
+    {}
+
     Element* data() { return ha->data(); }
     
     Element  operator[](int idx) const { return ha->h[idx]; }
     Element& operator[](int idx)       { return ha->h[idx]; }
 
-    Grid* grid() { return ha->grid(); }
+    Grid* grid() { return vgrid_; }
     
     HydroArray* ha;
+  private:
+    Grid* vgrid_;
  };
     
   enum {
@@ -34,20 +40,20 @@ struct MfieldsHydroVpic
   };
 
   MfieldsHydroVpic(const Grid_t& grid, Grid* vgrid)
-    : grid_{grid}, vgrid_{vgrid}
+    : grid_{grid},
+      patch_{vgrid}
   {
     assert(grid.n_patches() == 1);
 
-    vhydro_ = static_cast<HydroArray*>(::new_hydro_array(vgrid));
-    patch_.ha = vhydro_;
-    data_ = vhydro_->getData(ib_, im_);
+    patch_.ha = static_cast<HydroArray*>(::new_hydro_array(vgrid));
+    data_ = patch_.ha->getData(ib_, im_);
 
-    ::clear_hydro_array(vhydro_);
+    ::clear_hydro_array(patch_.ha);
   }
 
   ~MfieldsHydroVpic()
   {
-    ::delete_hydro_array(vhydro_);
+    ::delete_hydro_array(patch_.ha);
   }
 
   int n_patches() const { return grid_.n_patches(); }
@@ -57,15 +63,13 @@ struct MfieldsHydroVpic
   fields_t operator[](int p) { return {ib_, im_, N_COMP, data_}; }
   Patch& getPatch(int p) { return patch_; }
 
-  Grid* vgrid() { return vgrid_; }
+  Grid* vgrid() { return patch_.grid(); }
 
-  operator HydroArray*() { return vhydro_; }
+  operator HydroArray*() { return patch_.ha; }
 
 private:
-  HydroArray* vhydro_;
   real_t* data_;
   Int3 ib_, im_;
-  Grid* vgrid_;
   const Grid_t& grid_;
   Patch patch_;
 };
