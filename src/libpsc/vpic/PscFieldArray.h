@@ -603,8 +603,8 @@ struct PscAccumulateOps
 
   static void clear_jf(MfieldsState& mflds)
   {
-    auto& fa = mflds.vmflds();
-    const int nv = fa.grid()->nv;
+    auto& fa = mflds.getPatch(0);
+    const int nv = mflds.vgrid()->nv;
 
     for (int v = 0; v < nv; v++) {
       fa[v].jfx = 0;
@@ -659,11 +659,11 @@ struct PscAccumulateOps
   
   static void synchronize_jf(MfieldsState& mflds)
   {
-    FieldArray& fa = mflds.vmflds();
-    Field3D<FieldArray> F(fa);
-    CommJf<Grid, Field3D<FieldArray>> comm(fa.grid());
+    auto& fa = mflds.getPatch(0);
+    Field3D<typename MfieldsState::Patch> F(fa);
+    CommJf<Grid, Field3D<typename MfieldsState::Patch>> comm(mflds.vgrid());
 
-    LocalOps::local_adjust_jf(fa);
+    LocalOps::local_adjust_jf(mflds);
 
     for (int dir = 0; dir < 3; dir++) {
       comm.begin(dir, F);

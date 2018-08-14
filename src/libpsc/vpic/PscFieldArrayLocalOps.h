@@ -23,11 +23,11 @@
 #define y_FACE_LOOP(y) XYZ_LOOP(1,nx,y,y,1,nz)
 #define z_FACE_LOOP(z) XYZ_LOOP(1,nx,1,ny,z,z)
 
-template<class FieldArray>
+template<typename MfieldsState, class FieldArray>
 struct PscFieldArrayLocalOps
 {
-  using Grid = typename FieldArray::Grid;
-  using FieldT = typename FieldArray::Element;
+  using Grid = typename MfieldsState::Grid;
+  using FieldT = typename MfieldsState::Element;
 
   static void local_ghost_tang_b(FieldArray& fa)
   {
@@ -316,10 +316,11 @@ struct PscFieldArrayLocalOps
   // absorbing      => No image charges, half cell accumulation (double jf_tang)
   // (rhob/jf_norm account for particles that hit boundary and reflect/stick)
 
-  static void local_adjust_jf(FieldArray& fa)
+  static void local_adjust_jf(MfieldsState& mflds)
   {
-    Field3D<FieldArray> F(fa);
-    const Grid* g = fa.grid();
+    const Grid* g = mflds.vgrid();
+    auto& fa = mflds.getPatch(0);
+    Field3D<typename MfieldsState::Patch> F(fa);
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     int bc, face, x, y, z;
 
