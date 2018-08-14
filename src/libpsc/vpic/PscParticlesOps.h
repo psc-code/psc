@@ -25,7 +25,6 @@ struct PscParticlesOps
   typedef typename Particles::ParticleMover ParticleMover;
   typedef typename Particles::ParticleBcList ParticleBcList;
   typedef typename Accumulator::Block AccumulatorBlock;
-  using HydroArray = typename MfieldsHydro::HydroArray;
   
   // ----------------------------------------------------------------------
   // move_p

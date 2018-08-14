@@ -55,15 +55,12 @@ private:
 };
 
 // ======================================================================
-// MfieldsHydroVpic_
-//
-// specialized for HydroArray == VpicHydroArray
+// MfieldsHydroVpic
 
 #include "../libpsc/vpic/VpicGridBase.h"
 #include "../libpsc/vpic/VpicHydroArrayBase.h"
 
-template<>
-struct MfieldsHydroVpic_<VpicGridBase, VpicHydroArrayBase<VpicGridBase>>
+struct MfieldsHydroVpic
 {
   using Grid = VpicGridBase;
   using HydroArray = VpicHydroArrayBase<Grid>;
@@ -75,7 +72,7 @@ struct MfieldsHydroVpic_<VpicGridBase, VpicHydroArrayBase<VpicGridBase>>
     N_COMP = 16,
   };
 
-  MfieldsHydroVpic_(const Grid_t& grid, Grid* vgrid)
+  MfieldsHydroVpic(const Grid_t& grid, Grid* vgrid)
     : grid_{grid}, vgrid_{vgrid}
   {
     assert(grid.n_patches() == 1);
@@ -86,7 +83,7 @@ struct MfieldsHydroVpic_<VpicGridBase, VpicHydroArrayBase<VpicGridBase>>
     ::clear_hydro_array(vhydro_);
   }
 
-  ~MfieldsHydroVpic_()
+  ~MfieldsHydroVpic()
   {
     ::delete_hydro_array(vhydro_);
   }

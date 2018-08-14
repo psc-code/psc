@@ -114,7 +114,7 @@ using AccumulatorOps = PscAccumulatorOps<Accumulator, FieldArray>;
 
 #ifdef DO_VPIC
 using HydroArray = VpicHydroArrayBase<Grid>;
-using MfieldsHydro = MfieldsHydroVpic_<Grid, HydroArray>;
+using MfieldsHydro = MfieldsHydroVpic;
 using HydroArrayOps = VpicHydroArrayOps<MfieldsHydro>;
 #else
 using HydroArray = PscHydroArrayBase<Grid>;
