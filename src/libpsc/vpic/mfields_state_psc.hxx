@@ -169,17 +169,10 @@ struct PscFieldArrayBase : PscFieldBase<PscFieldT, _Grid>
     N_COMP = sizeof(typename Base::Element) / sizeof(float),
   };
 
-  PscFieldArrayBase(Grid* grid, const MaterialList& material_list, float damp)
-    : Base(grid)
-  {
-    params_ = new SfaParams(grid, material_list, damp);
-  }
+  PscFieldArrayBase(Grid* vgrid)
+    : Base(vgrid)
+  {}
   
-  ~PscFieldArrayBase()
-  {
-    delete params_;
-  }
-
 public:
   // These operators can be used to access the field directly,
   // though the performance isn't great, so one should use Field3D
@@ -204,7 +197,6 @@ private:
 protected:
   using Base::g_;
 public:
-  SfaParams* params_;
 };
 
 
@@ -232,8 +224,8 @@ struct MfieldsStatePsc
   {
     using Element = Element;
 
-    Patch(Grid* vgrid, const MaterialList& material_list, double damp = 0.)
-      : fa_{new FieldArray(vgrid, material_list, damp)}
+    Patch(Grid* vgrid)
+      : fa_{new FieldArray(vgrid)}
     {}
 
     ~Patch()
@@ -246,8 +238,6 @@ struct MfieldsStatePsc
     Element  operator[](int idx) const { return (*fa_)[idx]; }
     Element& operator[](int idx)       { return (*fa_)[idx]; }
 
-    SfaParams& params() { return *fa_->params_; }
-    
     operator FieldArray*() { return fa_; }
 
   private:
@@ -258,7 +248,8 @@ struct MfieldsStatePsc
 
   MfieldsStatePsc(const Grid_t& grid, Grid* vgrid, const MaterialList& material_list, double damp = 0.)
     : grid_{grid},
-      patch_{vgrid, material_list, damp}
+      patch_{vgrid},
+      params_{new SfaParams{vgrid, material_list, real_t(damp)}}
   {
     assert(grid.n_patches() == 1);
 
@@ -267,11 +258,16 @@ struct MfieldsStatePsc
     ib_ = { -B, -B, -B };
   }
 
+  ~MfieldsStatePsc()
+  {
+    delete params_;
+  }
+
   real_t* data() { return reinterpret_cast<real_t*>(patch_.data()); }
   fields_t operator[](int p) { return {ib_, im_, N_COMP, data()}; }
   Patch& getPatch(int p) { return patch_; }
 
-  SfaParams& params() { return patch_.params(); }
+  SfaParams& params() { return *params_; }
   Grid* vgrid() { return patch_.grid(); }
 
   const Grid_t& grid() const { return grid_; }
@@ -285,6 +281,7 @@ private:
   const Grid_t& grid_;
   Patch patch_;
   Int3 ib_, im_;
+  SfaParams* params_;
 };
 
 
