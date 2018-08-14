@@ -149,7 +149,7 @@ struct Psc
 #endif
 
 #ifdef VPIC
-    mflds_.reset(new MfieldsState{grid(), material_list_, damp});
+    mflds_.reset(new MfieldsState{grid(), vgrid_, material_list_, damp});
 #else
     mflds_.reset(new MfieldsState{grid()});
 #endif
