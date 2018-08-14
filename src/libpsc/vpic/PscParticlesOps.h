@@ -1393,7 +1393,7 @@ struct PscParticlesOps
 				  int off, int cnt)
   {
     const Grid* g = sp->grid();
-    auto& ip = interpolator.vip();
+    auto& ip = interpolator.getPatch(0);
     const typename Interpolator::Element* f;
     // For backward half advance
     const float qdt_2mc = -(sp->q * g->dt) / (2*sp->m * g->cvac);

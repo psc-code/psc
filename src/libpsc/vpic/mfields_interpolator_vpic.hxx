@@ -20,8 +20,6 @@ struct MfieldsInterpolator_
 
   Interpolator& getPatch(int p) { return *ip_; }
   
-  Interpolator& vip() { return *ip_; }
-  
 private:
   Interpolator *ip_;
 };
