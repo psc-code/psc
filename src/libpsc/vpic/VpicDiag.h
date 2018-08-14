@@ -518,7 +518,7 @@ struct VpicDiagMixin
   {
     const Grid* grid = mflds.vgrid();
     auto& fa = mflds.getPatch(0);
-    Field3D<FieldArray> F(fa);
+    Field3D<typename MfieldsState::Patch> F(fa);
     int64_t step = grid->step;
     int rank = psc_world_rank;
     int nproc = psc_world_size;

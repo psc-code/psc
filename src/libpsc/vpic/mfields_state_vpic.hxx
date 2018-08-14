@@ -108,13 +108,24 @@ struct MfieldsStateVpic
     N_COMP = 20,
   };
 
+  struct Patch
+  {
+    using Element = field_t;
+    
+    Element* data() { return fa->data(); }
+    Grid* grid() { return fa->grid(); }
+    field_t  operator[](int idx) const { return (*fa)[idx]; }
+    field_t& operator[](int idx)       { return (*fa)[idx]; }
+    
+    FieldArray* fa;
+  };
+    
   using fields_t = fields3d<float, LayoutAOS>;
-  using Patch = FieldArray;
 
   MfieldsStateVpic(const Grid_t& grid, Grid* vgrid, const MaterialList& material_list, double damp = 0.)
     : grid_{grid}
   {
-    vmflds_fields_ = static_cast<FieldArray*>(::new_standard_field_array(vgrid, material_list, damp));
+    patch_.fa = static_cast<FieldArray*>(::new_standard_field_array(vgrid, material_list, damp));
     assert(grid.n_patches() == 1);
 
     const int B = 1; // VPIC always uses one ghost cell (on c.c. grid)
@@ -122,13 +133,13 @@ struct MfieldsStateVpic
     ib_ = { -B, -B, -B };
   }
 
-  real_t* data() { return reinterpret_cast<real_t*>(vmflds_fields_->data()); }
+  real_t* data() { return reinterpret_cast<real_t*>(patch_.data()); }
   fields_t operator[](int p) { return {ib_, im_, N_COMP, data()}; }
-  Patch& getPatch(int p) { return *vmflds_fields_; }
+  Patch& getPatch(int p) { return patch_; }
 
-  Grid* vgrid() { return vmflds_fields_->grid(); }
+  Grid* vgrid() { return patch_.grid(); }
 
-  operator FieldArray*() { return vmflds_fields_; }
+  operator FieldArray*() { return patch_.fa; }
 
   const Grid_t& grid() const { return grid_; }
   int n_patches() const { return grid_.n_patches(); }
@@ -137,7 +148,7 @@ struct MfieldsStateVpic
   
 private:
   const Grid_t& grid_;
-  FieldArray* vmflds_fields_;
+  Patch patch_;
   Int3 ib_, im_;
 };
 

@@ -75,7 +75,7 @@ struct PscAccumulatorOps
     float cz = 0.25 * g->rdx * g->rdy / g->dt;
     
     auto& fa = mflds.getPatch(0);
-    Field3D<FieldArray> F(fa);
+    Field3D<typename MfieldsState::Patch> F(fa);
     Field3D<MfieldsAccumulator> A(acc);
 
     int nx = g->nx, ny = g->ny, nz = g->nz;
