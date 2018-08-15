@@ -7,25 +7,31 @@
 
 #include "particles.hxx"
 #include "particles_traits.hxx"
-
-#include "../libpsc/vpic/vpic_iface.h" // FIXME path
-
-#include "psc_method.h"
+#include "../libpsc/vpic/psc_vpic_bits.h"
 
 struct particle_vpic_t
 {
   using real_t = float;
 };
 
-struct MparticlesVpic;
+struct vpic_mparticles_prt
+{
+  float dx[3];
+  int i;
+  float ux[3];
+  float w;
+  int kind;
+};
 
 // ======================================================================
 // MparticlesVpic
 
-struct MparticlesVpic : MparticlesBase
+template<typename Particles>
+struct MparticlesVpic_ : MparticlesBase
 {
   using real_t = float;
-
+  using Grid = typename Particles::Grid;
+  
   // ======================================================================
   // Patch
 
@@ -34,13 +40,13 @@ struct MparticlesVpic : MparticlesBase
     using real_t = float;
     using Real3 = Vec3<real_t>;
     using Double3 = Vec3<double>;
-  
+    
     struct const_accessor
     {
-    const_accessor(const Particles::const_iterator sp, uint n)
-    : sp_{sp}, n_{n}
+      const_accessor(const typename Particles::const_iterator sp, uint n)
+	: sp_{sp}, n_{n}
       {}
-
+      
       Real3 u()  const { return {prt().ux, prt().uy, prt().uz}; }
       real_t w() const { return prt().w * sp_->grid()->dV; }
       int kind() const { return sp_->id; }
@@ -72,12 +78,9 @@ struct MparticlesVpic : MparticlesBase
       }
     
     private:
-      const Particles::Particle& prt() const
-      {
-	return sp_->p[n_];
-      }
+      const typename Particles::Particle& prt() const { return sp_->p[n_]; }
     
-      Particles::const_iterator sp_;
+      typename Particles::const_iterator sp_;
       uint n_;
     };
   
@@ -90,7 +93,7 @@ struct MparticlesVpic : MparticlesBase
 	const_accessor&> // reference type
 					   
       {
-      const_iterator(const Patch& prts, const Particles::const_iterator sp, uint n)
+      const_iterator(const Patch& prts, const typename Particles::const_iterator sp, uint n)
 	: prts_{prts}, sp_{sp}, n_{n}
 	{}
       
@@ -112,7 +115,7 @@ struct MparticlesVpic : MparticlesBase
 
       private:
 	const Patch& prts_;
-	Particles::const_iterator sp_;
+	typename Particles::const_iterator sp_;
 	uint n_;
       };
     
@@ -127,7 +130,7 @@ struct MparticlesVpic : MparticlesBase
       const Patch& prts_;
     };
 
-    Patch(MparticlesVpic& mprts)
+    Patch(MparticlesVpic_& mprts)
       : mprts_{mprts}
     {}
     
@@ -135,23 +138,17 @@ struct MparticlesVpic : MparticlesBase
     const_accessor_range get() const { return {*this}; }
   
   private:
-    MparticlesVpic& mprts_;
+    MparticlesVpic_& mprts_;
   };
 
   // ----------------------------------------------------------------------
   // ctor
 
-  MparticlesVpic(const Grid_t& grid, Grid* vgrid = nullptr)
+  MparticlesVpic_(const Grid_t& grid, Grid* vgrid)
     : MparticlesBase(grid),
       vgrid_(vgrid)
   {
     assert(grid.n_patches() == 1);
-    if (ppsc) {
-      Simulation* sim;
-      psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim);
-      vgrid_ = sim->vgrid_;
-    }
-    assert(vgrid_);
   }
 
   // ----------------------------------------------------------------------
@@ -248,7 +245,7 @@ struct MparticlesVpic : MparticlesBase
       if (sp->id == prt->kind) {
 	assert(sp->np < sp->max_np);
 	// the below is inject_particle_raw()
-	Particles::Particle * RESTRICT p = sp->p + (sp->np++);
+	typename Particles::Particle * RESTRICT p = sp->p + (sp->np++);
 	p->dx = prt->dx[0]; p->dy = prt->dx[1]; p->dz = prt->dx[2]; p->i = prt->i;
 	p->ux = prt->ux[0]; p->uy = prt->ux[1]; p->uz = prt->ux[2]; p->w = prt->w;
 	return;
@@ -260,9 +257,9 @@ struct MparticlesVpic : MparticlesBase
   
   Patch operator[](int p) { assert(p == 0); return Patch{*this}; }
 
-  Particles::Species* define_species(const char *name, double q, double m,
-				     double max_local_np, double max_local_nm,
-				     double sort_interval, double sort_out_of_place)
+  typename Particles::Species* define_species(const char *name, double q, double m,
+					      double max_local_np, double max_local_nm,
+					      double sort_interval, double sort_out_of_place)
   {
     // Compute a reasonble number of movers if user did not specify
     // Based on the twice the number of particles expected to hit the boundary
@@ -291,6 +288,10 @@ private:
   Particles vmprts_;
   Grid* vgrid_;
 };
+
+#include "../libpsc/vpic/vpic_iface.h"
+
+using MparticlesVpic = MparticlesVpic_<Particles>;
 
 template<>
 struct Mparticles_traits<MparticlesVpic>

@@ -14,14 +14,6 @@
 // ----------------------------------------------------------------------
 // vpic_mparticles
 
-struct vpic_mparticles_prt {
-  float dx[3];
-  int i;
-  float ux[3];
-  float w;
-  int kind;
-};
-
 struct psc_particle_inject;
 
 template <typename F>

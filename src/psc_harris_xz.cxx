@@ -320,7 +320,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     // --- setup species
     // FIXME, half-redundant to the PSC species setup
-    mprts_.reset(new Mparticles_t{grid()});
+    mprts_.reset(new Mparticles_t{grid(), vgrid_});
     setup_species();
 
     // -- Balance
