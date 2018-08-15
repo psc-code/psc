@@ -763,8 +763,6 @@ struct PscParticlesOps
   static void boundary_p_(const ParticleBcList &pbc_list, Mparticles& mprts, MfieldsState& mflds,
 			  AccumulatorBlock acc_block)
   {
-    auto& vmprts = mprts.vmprts();
-    
 #ifdef V4_ACCELERATION
     using namespace v4;
 #endif
@@ -847,7 +845,7 @@ struct PscParticlesOps
       // beam simulations, is one buffer gets all the movers).
     
       int nm = 0;
-      for (auto& sp : vmprts) { // FIXME, should use const iterator
+      for (auto& sp : mprts) { // FIXME, should use const iterator
 	nm += sp.nm;
       }
 
@@ -867,7 +865,7 @@ struct PscParticlesOps
 
       // For each species, load the movers
 
-      for (auto& sp : vmprts) {
+      for (auto& sp : mprts) {
 	const float   sp_q  = sp.q;
 	const int32_t sp_id = sp.id;
 
@@ -992,10 +990,10 @@ struct PscParticlesOps
       int sp_max_np[MAX_SP], n_dropped_particles[MAX_SP];
       int sp_max_nm[MAX_SP], n_dropped_movers[MAX_SP];
 
-      if (vmprts.getNumSpecies() > MAX_SP) {
+      if (mprts.getNumSpecies() > MAX_SP) {
 	LOG_ERROR("Update this to support more species");
       }
-      for (auto& sp : vmprts) {
+      for (auto& sp : mprts) {
 	sp_p[  sp.id ] = sp.p;
 	sp_pm[ sp.id ] = sp.pm;
 	sp_q[  sp.id ] = sp.q;
@@ -1068,7 +1066,7 @@ struct PscParticlesOps
 	}
       } while (face != 5);
   
-      for (auto& sp : vmprts) {
+      for (auto& sp : mprts) {
 	if (n_dropped_particles[sp.id])
 	  LOG_WARN("Dropped %i particles from species \"%s\".  Use a larger "
 		   "local particle allocation in your simulation setup for "

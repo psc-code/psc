@@ -276,6 +276,7 @@ struct MparticlesVpic_ : MparticlesBase
   bool empty() const { return vmprts_.empty(); }
   iterator begin() { return vmprts_.begin(); }
   iterator end() { return vmprts_.end(); }
+  int getNumSpecies() { return vmprts_.getNumSpecies(); } // FIXME should be const
 
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
