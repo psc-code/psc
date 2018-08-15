@@ -31,7 +31,7 @@ struct PushParticlesVpic : PushParticlesBase
     // are at r_0 and u_{-1/2}.  Further the mover lists for the particles should
     // empty and all particles should be inside the local computational domain.
     // Advance the particle lists.
-    if (!vmprts.empty()) {
+    if (!mprts.empty()) {
       TIC AccumulatorOps::clear(accumulator); TOC(clear_accumulators, 1);
       ParticlesOps::advance_p(vmprts, accumulator, interpolator);
     }
@@ -45,7 +45,7 @@ struct PushParticlesVpic : PushParticlesBase
 
     // This should be after the emission and injection to allow for the
     // possibility of thread parallelizing these operations
-    if (!vmprts.empty()) {
+    if (!mprts.empty()) {
       TIC AccumulatorOps::reduce(accumulator); TOC(reduce_accumulators, 1);
     }
     
@@ -55,7 +55,7 @@ struct PushParticlesVpic : PushParticlesBase
     // local accumulation).
     TIC
       for(int round = 0; round < num_comm_round; round++) {
-	ParticlesOps::boundary_p(particle_bc_list, vmprts, mflds, accumulator);
+	ParticlesOps::boundary_p(particle_bc_list, mprts, mflds, accumulator);
       } TOC(boundary_p, num_comm_round);
     
     // Drop the particles that have unprocessed movers at this point
@@ -65,7 +65,7 @@ struct PushParticlesVpic : PushParticlesBase
     // guard lists are empty and the accumulators on each processor are current.
     // Convert the accumulators into currents.
     TIC AccumulateOps::clear_jf(mflds); TOC(clear_jf, 1);
-    if (!vmprts.empty()) {
+    if (!mprts.empty()) {
       TIC AccumulatorOps::unload(accumulator, mflds); TOC(unload_accumulator, 1);
     }
     TIC AccumulateOps::synchronize_jf(mflds); TOC(synchronize_jf, 1);
@@ -86,7 +86,7 @@ struct PushParticlesVpic : PushParticlesBase
     // particle diagnostics in user_diagnostics if there are any particle
     // species to worry about
     
-    if (!mprts.vmprts().empty()) {
+    if (!mprts.empty()) {
       TIC InterpolatorOps::load(interpolator, mflds); TOC(load_interpolator, 1);
     }
   }

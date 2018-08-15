@@ -16,10 +16,11 @@ struct ParticleInjector
   SpeciesId sp_id;           // Species of particle
 };
 
-template<typename Particles, typename MfieldsState, typename MfieldsInterpolator,
+template<typename Mparticles, typename MfieldsState, typename MfieldsInterpolator,
   typename MfieldsAccumulator, typename MfieldsHydro>
 struct PscParticlesOps
 {
+  using Particles = typename Mparticles::Particles;
   typedef typename Particles::Grid Grid;
   typedef typename Particles::Species Species;
   typedef typename Particles::Particle Particle;
@@ -759,9 +760,11 @@ struct PscParticlesOps
   // ----------------------------------------------------------------------
   // boundary_p
 
-  static void boundary_p_(const ParticleBcList &pbc_list, Particles& vmprts, MfieldsState& mflds,
+  static void boundary_p_(const ParticleBcList &pbc_list, Mparticles& mprts, MfieldsState& mflds,
 			  AccumulatorBlock acc_block)
   {
+    auto& vmprts = mprts.vmprts();
+    
 #ifdef V4_ACCELERATION
     using namespace v4;
 #endif
@@ -801,7 +804,7 @@ struct PscParticlesOps
 
     // Check input args 
 
-    if (vmprts.empty()) return; // Nothing to do if no species 
+    if (mprts.empty()) return; // Nothing to do if no species 
 
     assert(pbc_list.empty());
 
@@ -1091,10 +1094,10 @@ struct PscParticlesOps
   }
   
   
-  static void boundary_p(const ParticleBcList& pbc_list, Particles& vmprts, MfieldsState& mflds,
+  static void boundary_p(const ParticleBcList& pbc_list, Mparticles& mprts, MfieldsState& mflds,
 			 MfieldsAccumulator& accumulator)
   {
-    boundary_p_(pbc_list, vmprts, mflds, accumulator[0]);
+    boundary_p_(pbc_list, mprts, mflds, accumulator[0]);
   }
 
   // ----------------------------------------------------------------------

@@ -18,11 +18,12 @@ struct vpic_mparticles_prt
 // ======================================================================
 // MparticlesVpic
 
-template<typename Particles>
+template<typename _Particles>
 struct MparticlesVpic_ : MparticlesBase
 {
-  using real_t = float;
+  using Particles = _Particles;
   using Grid = typename Particles::Grid;
+  using real_t = float;
   
   // ======================================================================
   // Patch
@@ -269,6 +270,8 @@ struct MparticlesVpic_ : MparticlesBase
 			     sort_interval, sort_out_of_place, vgrid_);
     return vmprts_.append(sp);
   }
+
+  bool empty() const { return vmprts_.empty(); }
 
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
