@@ -22,6 +22,8 @@ template<typename _Particles>
 struct MparticlesVpic_ : MparticlesBase
 {
   using Particles = _Particles;
+  using Species = typename Particles::Species;
+  using iterator = typename Particles::iterator;
   using Grid = typename Particles::Grid;
   using real_t = float;
   
@@ -250,9 +252,9 @@ struct MparticlesVpic_ : MparticlesBase
   
   Patch operator[](int p) { assert(p == 0); return Patch{*this}; }
 
-  typename Particles::Species* define_species(const char *name, double q, double m,
-					      double max_local_np, double max_local_nm,
-					      double sort_interval, double sort_out_of_place)
+  Species* define_species(const char *name, double q, double m,
+			  double max_local_np, double max_local_nm,
+			  double sort_interval, double sort_out_of_place)
   {
     // Compute a reasonble number of movers if user did not specify
     // Based on the twice the number of particles expected to hit the boundary
@@ -272,6 +274,8 @@ struct MparticlesVpic_ : MparticlesBase
   }
 
   bool empty() const { return vmprts_.empty(); }
+  iterator begin() { return vmprts_.begin(); }
+  iterator end() { return vmprts_.end(); }
 
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }

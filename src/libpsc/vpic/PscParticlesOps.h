@@ -393,25 +393,25 @@ struct PscParticlesOps
     int n_ignored;                      // Number of movers ignored
   } particle_mover_seg_t;
 
-  static void advance_p_pipeline(typename Particles::iterator sp,
+  static void advance_p_pipeline(typename Mparticles::Species& sp,
 				 AccumulatorBlock acc_block,
 				 MfieldsInterpolator& interpolator,
 				 particle_mover_seg_t *seg,
 				 Particle * ALIGNED(128) p, int n,
 				 ParticleMover * ALIGNED(16) pm, int max_nm)
   {
-    Particle* ALIGNED(128) p0 = sp->p;
-    const Grid* g = sp->grid();
+    Particle* ALIGNED(128) p0 = sp.p;
+    const Grid* g = sp.grid();
     auto& ip = interpolator.getPatch(0);
     
     const typename MfieldsInterpolator::Element * ALIGNED(16)  f;
     float                * ALIGNED(16)  a;
 
-    const float qdt_2mc  = (sp->q*g->dt)/(2*sp->m*g->cvac);
+    const float qdt_2mc  = (sp.q*g->dt)/(2*sp.m*g->cvac);
     const float cdt_dx   = g->cvac*g->dt*g->rdx;
     const float cdt_dy   = g->cvac*g->dt*g->rdy;
     const float cdt_dz   = g->cvac*g->dt*g->rdz;
-    const float qsp      = sp->q;
+    const float qsp      = sp.q;
 
     const float one            = 1.;
     const float one_third      = 1./3.;
@@ -534,7 +534,7 @@ struct PscParticlesOps
 
 #if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
 
-  static void advance_p_pipeline_v4(typename Particles::iterator sp,
+  static void advance_p_pipeline_v4(typename Mparticles::Species& sp,
 				    AccumulatorBlock acc_block,
 				    Interpolator& interpolator,
 				    particle_mover_seg_t *seg,
@@ -543,26 +543,26 @@ struct PscParticlesOps
   {
     using namespace v4;
 
-    Particle             * ALIGNED(128) p0 = sp->p;
-    const Grid* g = sp->grid();
+    Particle             * ALIGNED(128) p0 = sp.p;
+    const Grid* g = sp.grid();
 
     float                * ALIGNED(16)  vp0;
     float                * ALIGNED(16)  vp1;
     float                * ALIGNED(16)  vp2;
     float                * ALIGNED(16)  vp3;
 
-    const v4float qdt_2mc  = (sp->q*g->dt)/(2*sp->m*g->cvac);
+    const v4float qdt_2mc  = (sp.q*g->dt)/(2*sp.m*g->cvac);
     const v4float cdt_dx   = g->cvac*g->dt*g->rdx;
     const v4float cdt_dy   = g->cvac*g->dt*g->rdy;
     const v4float cdt_dz   = g->cvac*g->dt*g->rdz;
-    const v4float qsp      = sp->q;
+    const v4float qsp      = sp.q;
 
     const v4float one = 1.;
     const v4float one_third = 1./3.;
     const v4float two_fifteenths = 2./15.;
     const v4float neg_one = -1.;
 
-    const float _qsp = sp->q;
+    const float _qsp = sp.q;
 
     v4float dx, dy, dz, ux, uy, uz, q;
     v4float hax, hay, haz, cbx, cby, cbz;
@@ -715,33 +715,33 @@ struct PscParticlesOps
 
 #endif
           
-  static void advance_p(typename Particles::iterator sp, MfieldsAccumulator& accumulator,
+  static void advance_p(typename Mparticles::Species& sp, MfieldsAccumulator& accumulator,
 			MfieldsInterpolator& interpolator)
   {
     DECLARE_ALIGNED_ARRAY( particle_mover_seg_t, 128, seg, 1 );
 
-    sp->nm = 0;
+    sp.nm = 0;
 
-    Particle* p = sp->p;
-    int n = sp->np & ~15;
+    Particle* p = sp.p;
+    int n = sp.np & ~15;
 #if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
     advance_p_pipeline_v4(sp, accumulator[1], interpolator, seg, p, n,
-			  sp->pm + sp->nm, sp->max_nm - sp->nm);
+			  sp.pm + sp.nm, sp.max_nm - sp.nm);
 #else
     advance_p_pipeline(sp, accumulator[1], interpolator, seg, p, n,
-		       sp->pm + sp->nm, sp->max_nm - sp->nm);
+		       sp.pm + sp.nm, sp.max_nm - sp.nm);
 #endif
-    sp->nm += seg->nm;
+    sp.nm += seg->nm;
 
     if (seg->n_ignored)
       LOG_WARN("Pipeline %i ran out of storage for %i movers",
 	       0, seg->n_ignored);
   
     p += n;
-    n = sp->np - n;
+    n = sp.np - n;
     advance_p_pipeline(sp, accumulator[0], interpolator, seg, p, n,
-		       sp->pm + sp->nm, sp->max_nm - sp->nm);
-    sp->nm += seg->nm;
+		       sp.pm + sp.nm, sp.max_nm - sp.nm);
+    sp.nm += seg->nm;
 
     if (seg->n_ignored)
       LOG_WARN("Pipeline %i ran out of storage for %i movers",
@@ -749,10 +749,10 @@ struct PscParticlesOps
   }
 
 
-  static void advance_p(Particles& vmprts, MfieldsAccumulator& accumulator,
+  static void advance_p(Mparticles& mprts, MfieldsAccumulator& accumulator,
 			MfieldsInterpolator& interpolator)
   {
-    for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
+    for (auto& sp : mprts) {
       TIC advance_p(sp, accumulator, interpolator); TOC(advance_p, 1);
     }
   }
@@ -847,8 +847,8 @@ struct PscParticlesOps
       // beam simulations, is one buffer gets all the movers).
     
       int nm = 0;
-      for (auto sp = vmprts.cbegin(); sp != vmprts.cend(); ++sp) {
-	nm += sp->nm;
+      for (auto& sp : vmprts) { // FIXME, should use const iterator
+	nm += sp.nm;
       }
 
       for( face=0; face<6; face++ )
@@ -867,15 +867,15 @@ struct PscParticlesOps
 
       // For each species, load the movers
 
-      for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
-	const float   sp_q  = sp->q;
-	const int32_t sp_id = sp->id;
+      for (auto& sp : vmprts) {
+	const float   sp_q  = sp.q;
+	const int32_t sp_id = sp.id;
 
-	Particle* RESTRICT ALIGNED(128) p0 = sp->p;
-	int np = sp->np;
+	Particle* RESTRICT ALIGNED(128) p0 = sp.p;
+	int np = sp.np;
 
-	ParticleMover* RESTRICT ALIGNED(16)  pm = sp->pm + sp->nm - 1;
-	nm = sp->nm;
+	ParticleMover* RESTRICT ALIGNED(16)  pm = sp.pm + sp.nm - 1;
+	nm = sp.nm;
 
 	ParticleInjector* RESTRICT ALIGNED(16) pi;
 	int i, voxel;
@@ -931,7 +931,7 @@ struct PscParticlesOps
 	  // Uh-oh: We fell through
 
 	  LOG_WARN("Unknown boundary interaction ... dropping particle "
-		   "(species=%s)", sp->name);
+		   "(species=%s)", sp.name);
 
 	backfill:
 
@@ -945,8 +945,8 @@ struct PscParticlesOps
 
 	}
       
-	sp->np = np;
-	sp->nm = 0;
+	sp.np = np;
+	sp.nm = 0;
       }
 
     } while(0);
@@ -995,14 +995,14 @@ struct PscParticlesOps
       if (vmprts.getNumSpecies() > MAX_SP) {
 	LOG_ERROR("Update this to support more species");
       }
-      for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
-	sp_p[  sp->id ] = sp->p;
-	sp_pm[ sp->id ] = sp->pm;
-	sp_q[  sp->id ] = sp->q;
-	sp_np[ sp->id ] = sp->np;
-	sp_nm[ sp->id ] = sp->nm;
-	sp_max_np[sp->id]=sp->max_np; n_dropped_particles[sp->id]=0;
-	sp_max_nm[sp->id]=sp->max_nm; n_dropped_movers[sp->id]=0;
+      for (auto& sp : vmprts) {
+	sp_p[  sp.id ] = sp.p;
+	sp_pm[ sp.id ] = sp.pm;
+	sp_q[  sp.id ] = sp.q;
+	sp_np[ sp.id ] = sp.np;
+	sp_nm[ sp.id ] = sp.nm;
+	sp_max_np[sp.id]=sp.max_np; n_dropped_particles[sp.id]=0;
+	sp_max_nm[sp.id]=sp.max_nm; n_dropped_movers[sp.id]=0;
       }
 
       // Inject particles.  We do custom local injection first to
@@ -1068,20 +1068,20 @@ struct PscParticlesOps
 	}
       } while (face != 5);
   
-      for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
-	if (n_dropped_particles[sp->id])
+      for (auto& sp : vmprts) {
+	if (n_dropped_particles[sp.id])
 	  LOG_WARN("Dropped %i particles from species \"%s\".  Use a larger "
 		   "local particle allocation in your simulation setup for "
 		   "this species on this node.",
-		   n_dropped_particles[sp->id], sp->name);
-	if (n_dropped_movers[sp->id])
+		   n_dropped_particles[sp.id], sp.name);
+	if (n_dropped_movers[sp.id])
 	  LOG_WARN("%i particles were not completed moved to their final "
 		   "location this timestep for species \"%s\".  Use a larger "
 		   "local particle mover buffer in your simulation setup "
 		   "for this species on this node.",
-		   n_dropped_movers[sp->id], sp->name);
-	sp->np = sp_np[sp->id];
-	sp->nm = sp_nm[sp->id];
+		   n_dropped_movers[sp.id], sp.name);
+	sp.np = sp_np[sp.id];
+	sp.nm = sp_nm[sp.id];
       }
 
     } while(0);
@@ -1213,12 +1213,12 @@ struct PscParticlesOps
   // ----------------------------------------------------------------------
   // drop_p
 
-  static void drop_p(Particles& vmprts, MfieldsState& mflds)
+  static void drop_p(Mparticles& mprts, MfieldsState& mflds)
   {
-    for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
-      if (sp->nm) {
+    for (auto& sp : mprts) {
+      if (sp.nm) {
 	LOG_WARN("Removing %i particles associated with unprocessed %s movers (increase num_comm_round)",
-		 sp->nm, sp->name);
+		 sp.nm, sp.name);
       }
       // Drop the particles that have unprocessed movers due to a user defined
       // boundary condition. Particles of this type with unprocessed movers are
@@ -1227,18 +1227,18 @@ struct PscParticlesOps
       // in fact go out of bounds of the voxel indexing space. Removal is in
       // reverse order for back filling. Particle charge is accumulated to the
       // mesh before removing the particle.
-      int nm = sp->nm;
-      ParticleMover * RESTRICT ALIGNED(16)  pm = sp->pm + sp->nm - 1;
-      Particle * RESTRICT ALIGNED(128) p0 = sp->p;
+      int nm = sp.nm;
+      ParticleMover * RESTRICT ALIGNED(16)  pm = sp.pm + sp.nm - 1;
+      Particle * RESTRICT ALIGNED(128) p0 = sp.p;
       for (; nm; nm--, pm--) {
 	int i = pm->i; // particle index we are removing
 	p0[i].i >>= 3; // shift particle voxel down
 	// accumulate the particle's charge to the mesh
-	accumulate_rhob(mflds, p0 + i, sp->q);
-	p0[i] = p0[sp->np - 1]; // put the last particle into position i
-	sp->np--; // decrement the number of particles
+	accumulate_rhob(mflds, p0 + i, sp.q);
+	p0[i] = p0[sp.np - 1]; // put the last particle into position i
+	sp.np--; // decrement the number of particles
       }
-      sp->nm = 0;
+      sp.nm = 0;
     }
   }
   

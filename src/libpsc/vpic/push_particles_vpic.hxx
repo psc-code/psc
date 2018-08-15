@@ -22,8 +22,6 @@ struct PushParticlesVpic : PushParticlesBase
 		  MfieldsAccumulator& accumulator, ParticleBcList& particle_bc_list,
 		  int num_comm_round)
   {
-    auto& vmprts = mprts.vmprts();
-    
     // For this to work, interpolator needs to have been set from mflds E/B before,
     // ie., we're not using mflds for E and B here at all.
     
@@ -33,7 +31,7 @@ struct PushParticlesVpic : PushParticlesBase
     // Advance the particle lists.
     if (!mprts.empty()) {
       TIC AccumulatorOps::clear(accumulator); TOC(clear_accumulators, 1);
-      ParticlesOps::advance_p(vmprts, accumulator, interpolator);
+      ParticlesOps::advance_p(mprts, accumulator, interpolator);
     }
 
     // Because the partial position push when injecting aged particles might
@@ -59,7 +57,7 @@ struct PushParticlesVpic : PushParticlesBase
       } TOC(boundary_p, num_comm_round);
     
     // Drop the particles that have unprocessed movers at this point
-    ParticlesOps::drop_p(vmprts, mflds);
+    ParticlesOps::drop_p(mprts, mflds);
 
     // At this point, all particle positions are at r_1 and u_{1/2}, the
     // guard lists are empty and the accumulators on each processor are current.
