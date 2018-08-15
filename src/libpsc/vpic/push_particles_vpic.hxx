@@ -13,6 +13,7 @@
 struct PushParticlesVpic : PushParticlesBase
 {
   using Mparticles = MparticlesVpic;
+  using MfieldsState = MfieldsState;
   
   PushParticlesVpic()
   {
