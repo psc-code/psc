@@ -1613,16 +1613,15 @@ struct PscParticlesOps
   // ----------------------------------------------------------------------
   // energy_p
 
-  static double energy_p_pipeline(typename Particles::const_iterator sp,
-				  MfieldsInterpolator &interpolator,
+  static double energy_p_pipeline(typename Mparticles::Species& sp, MfieldsInterpolator &interpolator,
 				  int n0, int n1)
   {
-    const Grid* g = sp->grid();
+    const Grid* g = sp.grid();
     auto& ip = interpolator.getPatch(0);
     const typename MfieldsInterpolator::Element * RESTRICT ALIGNED(128) f = ip.data();
-    const Particle       * RESTRICT ALIGNED(32)  p = sp->p;
-    const float qdt_2mc = (sp->q*g->dt)/(2*sp->m*g->cvac);
-    const float msp     = sp->m;
+    const Particle       * RESTRICT ALIGNED(32)  p = sp.p;
+    const float qdt_2mc = (sp.q*g->dt)/(2*sp.m*g->cvac);
+    const float msp     = sp.m;
     const float one     = 1;
 
     float dx, dy, dz;
@@ -1657,13 +1656,12 @@ struct PscParticlesOps
 
 #if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
 
-  static double energy_p_pipeline_v4(const_iterator sp,
-				     Interpolator &interpolator,
+  static double energy_p_pipeline_v4(Mparticles::Species& sp, Interpolator &interpolator,
 				     int n0, int n1)
   {
     using namespace v4;
 
-    const Grid* g = sp->grid();
+    const Grid* g = sp.grid();
 
     const typename Interpolator::Element * RESTRICT ALIGNED(128) f = interpolator.data();
 
@@ -1672,8 +1670,8 @@ struct PscParticlesOps
     const float          * RESTRICT ALIGNED(16)  vp2;
     const float          * RESTRICT ALIGNED(16)  vp3;
 
-    const v4float qdt_2mc((sp->q*g->dt)/(2*sp->m*g->cvac));
-    const v4float msp(sp->m);
+    const v4float qdt_2mc((sp.q*g->dt)/(2*sp.m*g->cvac));
+    const v4float msp(sp.m);
     const v4float one(1.);
 
     v4float dx, dy, dz;
@@ -1685,7 +1683,7 @@ struct PscParticlesOps
 
     // Determine which particle quads this pipeline processes
 
-    const Particle * RESTRICT ALIGNED(32)  p = sp->p + n0;
+    const Particle * RESTRICT ALIGNED(32)  p = sp.p + n0;
     int nq = n1 >> 2;
 
     // Process the particle quads for this pipeline
@@ -1726,16 +1724,16 @@ struct PscParticlesOps
 
 #endif
 
-  static double energy_p(typename Particles::const_iterator sp, MfieldsInterpolator& interpolator)
+  static double energy_p(typename Mparticles::Species& sp, MfieldsInterpolator& interpolator)
   {
-    const Grid* g = sp->grid();
-    int cnt = sp->np & ~15;
+    const Grid* g = sp.grid();
+    int cnt = sp.np & ~15;
 #if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
     double local = energy_p_pipeline_v4(sp, interpolator, 0, cnt);
 #else
     double local = energy_p_pipeline(sp, interpolator, 0, cnt);
 #endif
-    local += energy_p_pipeline(sp, interpolator, cnt, sp->np - cnt);
+    local += energy_p_pipeline(sp, interpolator, cnt, sp.np - cnt);
 
     double global;
     MPI_Allreduce(&local, &global, 1, MPI_DOUBLE, MPI_SUM, psc_comm_world);

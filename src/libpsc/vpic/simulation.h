@@ -9,10 +9,11 @@
 // ======================================================================
 // class VpicSimulation
 
-template<class Particles, class MfieldsState, class MfieldsInterpolator, class MfieldsHydro,
+template<class Mparticles, class MfieldsState, class MfieldsInterpolator, class MfieldsHydro,
 	 class RP, class SimulationMixin, class DiagMixin>
 struct VpicSimulation : SimulationMixin, DiagMixin
 {
+  using Particles = typename Mparticles::Particles;
   using Grid = typename Particles::Grid;
   using ParticleBcList = typename Particles::ParticleBcList;
   using MaterialList = typename MfieldsState::MaterialList;
@@ -35,10 +36,10 @@ struct VpicSimulation : SimulationMixin, DiagMixin
     DiagMixin::diagnostics_setup();
   }
 
-  void runDiag(Particles& particles, MfieldsState& mflds, MfieldsInterpolator& interpolator,
+  void runDiag(Mparticles& mprts, MfieldsState& mflds, MfieldsInterpolator& interpolator,
 	       MfieldsHydro& hydro, Int3 np)
   {
-    DiagMixin::diagnostics_run(mflds, particles, interpolator, hydro, np);
+    DiagMixin::diagnostics_run(mprts, mflds, interpolator, hydro, np);
   }
 
   // ======================================================================

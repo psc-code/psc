@@ -191,6 +191,19 @@ struct PscParticlesBase : public VpicListBase<PscSpecies<G>>
     /* 			[&id](const Species &sp) { return sp.id == id; }); */
   }
   
+  const_iterator find(const char *name) const
+  {
+    assert(name);
+    for (auto sp = begin(); sp != end(); ++sp) {
+      if (strcmp(sp->name, name) == 0) {
+	return sp;
+      }
+    }
+    return end();
+    /* return std::find_if(begin(), end(), */
+    /* 			[&name](const Species &sp) { return strcmp(sp.name, name) == 0; }); */
+  }
+  
   iterator find(int id)
   {
     for (auto sp = begin(); sp != end(); ++sp) {

@@ -279,6 +279,7 @@ struct MparticlesVpic_ : MparticlesBase
   iterator end() { return vmprts_.end(); }
   int getNumSpecies() { return vmprts_.getNumSpecies(); } // FIXME should be const
   const_iterator find(int id) const { return vmprts_.find(id); }
+  const_iterator find(const char* name) const { return vmprts_.find(name); }
 
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }

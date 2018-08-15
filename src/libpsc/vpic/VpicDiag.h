@@ -112,12 +112,12 @@ static HydroInfo hydroInfo[5] = {
     }                                                  \
   } while(0)
 
-template<class Particles, class MfieldsState, class MfieldsInterpolator, class MfieldsHydro,
+template<class Mparticles, class MfieldsState, class MfieldsInterpolator, class MfieldsHydro,
 	 class DiagOps, class ParticlesOps, class HydroArrayOps>
 struct VpicDiagMixin
 {
-  typedef typename Particles::Grid Grid;
-  
+  using Particles = typename Mparticles::Particles;
+  using Grid = typename Particles::Grid;
   
   void diagnostics_init(int interval_)
   {
@@ -221,7 +221,7 @@ struct VpicDiagMixin
 #define should_dump(x)                                                  \
   (diag_.x##_interval>0 && remainder(step, diag_.x##_interval) == 0)
 
-  void diagnostics_run(MfieldsState& mflds, Particles& particles,
+  void diagnostics_run(Mparticles& mprts, MfieldsState& mflds,
 		       MfieldsInterpolator& interpolator, MfieldsHydro& mflds_hydro, int np[3])
   {
     TIC {
@@ -246,7 +246,7 @@ struct VpicDiagMixin
 
       // Normal rundata energies dump
       if(should_dump(energies)) {
-      	dump_energies("rundata/energies", step != 0, mflds, particles, interpolator);
+      	dump_energies("rundata/energies", step != 0, mprts, mflds, interpolator);
       }
       
       // Field data output
@@ -255,8 +255,8 @@ struct VpicDiagMixin
       
       // Species moment output
       
-      if(should_dump(ehydro)) hydro_dump(&particles, interpolator, mflds_hydro, "electron", diag_.hedParams);
-      if(should_dump(Hhydro)) hydro_dump(&particles, interpolator, mflds_hydro, "ion", diag_.hHdParams);
+      if(should_dump(ehydro)) hydro_dump(mprts, interpolator, mflds_hydro, "electron", diag_.hedParams);
+      if(should_dump(Hhydro)) hydro_dump(mprts, interpolator, mflds_hydro, "ion", diag_.hHdParams);
 
 #if 0
       if(step && !(step % diag->restart_interval)) {
@@ -466,8 +466,7 @@ struct VpicDiagMixin
   // dump_energies
 
   void dump_energies(const char *fname, int append,
-		     MfieldsState& mflds, Particles& particles,
-		     MfieldsInterpolator& interpolator)
+		     Mparticles& mprts, MfieldsState& mflds, MfieldsInterpolator& interpolator)
   {
     double en_f[6], en_p;
     const Grid* g = mflds.vgrid();
@@ -484,8 +483,8 @@ struct VpicDiagMixin
       else {
 	if (append==0) {
 	  fileIO.print("%% Layout\n%% step ex ey ez bx by bz" );
-	  for (auto sp = particles.cbegin(); sp != particles.cend(); ++sp) {
-	    fileIO.print(" \"%s\"", sp->name);
+	  for (auto& sp : mprts) {
+	    fileIO.print(" \"%s\"", sp.name);
 	  }
 	  fileIO.print("\n");
 	  fileIO.print("%% timestep = %e\n", g->dt);
@@ -500,7 +499,7 @@ struct VpicDiagMixin
 		    en_f[0], en_f[1], en_f[2],
 		    en_f[3], en_f[4], en_f[5] );
  
-    for (auto sp = particles.cbegin(); sp != particles.cend(); ++sp) {
+    for (auto& sp : mprts) {
       en_p = ParticlesOps::energy_p(sp, interpolator);
       if (rank==0 && status != fail) fileIO.print(" %e", en_p);
     }
@@ -616,7 +615,7 @@ struct VpicDiagMixin
   // ----------------------------------------------------------------------
   // hydro_dump
   
-  void hydro_dump(Particles *vmprts, MfieldsInterpolator& interpolator, MfieldsHydro& mflds_hydro,
+  void hydro_dump(Mparticles& mprts, MfieldsInterpolator& interpolator, MfieldsHydro& mflds_hydro,
 		  const char * speciesname, DumpParameters& dumpParams )
   {
     Field3D<typename MfieldsHydro::Patch> H{mflds_hydro.getPatch(0)};
@@ -641,11 +640,10 @@ struct VpicDiagMixin
     status = fileIO.open(filename, io_write);
     if(status == fail) LOG_ERROR("Failed opening file: %s", filename);
 
-    typename Particles::const_iterator sp = vmprts->find(speciesname);
-    if (sp == vmprts->cend()) LOG_ERROR("Invalid species name: %s", speciesname);
+    auto& sp = *mprts.find(speciesname);
 
     HydroArrayOps::clear(mflds_hydro);
-    ParticlesOps::accumulate_hydro_p(mflds_hydro, *sp, interpolator);
+    ParticlesOps::accumulate_hydro_p(mflds_hydro, sp, interpolator);
     HydroArrayOps::synchronize(mflds_hydro);
   
     // convenience
@@ -673,7 +671,7 @@ struct VpicDiagMixin
   
     assert(dumpParams.format == band);
     
-    _WRITE_HEADER_V0(dump_type::hydro_dump, sp->id, sp->q/sp->m, fileIO);
+    _WRITE_HEADER_V0(dump_type::hydro_dump, sp.id, sp.q/sp.m, fileIO);
     
     dim[0] = nxout+2;
     dim[1] = nyout+2;
