@@ -174,46 +174,43 @@ struct PscParticlesBase : public VpicListBase<PscSpecies<G>>
 		       sort_interval, sort_out_of_place, grid);
   }
 
-  size_t getNumSpecies()
-  {
-    return size();
-  }
+  size_t getNumSpecies() { return size(); }
 
   const_iterator find(int id) const
   {
-    for (auto sp = begin(); sp != end(); ++sp) {
-      if (sp->id == id) {
-	return sp;
-      }
-    }
-    return end();
-    /* return std::find_if(begin(), end(), */
-    /* 			[&id](const Species &sp) { return sp.id == id; }); */
+    /* for (auto sp = begin(); sp != end(); ++sp) { */
+    /*   if (sp->id == id) { */
+    /* 	return sp; */
+    /*   } */
+    /* } */
+    /* return end(); */
+    return std::find_if(begin(), end(),
+    			[&id](const Species &sp) { return sp.id == id; });
   }
   
   const_iterator find(const char *name) const
   {
-    assert(name);
-    for (auto sp = begin(); sp != end(); ++sp) {
-      if (strcmp(sp->name, name) == 0) {
-	return sp;
-      }
-    }
-    return end();
-    /* return std::find_if(begin(), end(), */
-    /* 			[&name](const Species &sp) { return strcmp(sp.name, name) == 0; }); */
+    /* assert(name); */
+    /* for (auto sp = begin(); sp != end(); ++sp) { */
+    /*   if (strcmp(sp->name, name) == 0) { */
+    /* 	return sp; */
+    /*   } */
+    /* } */
+    /* return end(); */
+    return std::find_if(begin(), end(),
+    			[&name](const Species &sp) { return strcmp(sp.name, name) == 0; });
   }
   
   iterator find(int id)
   {
-    for (auto sp = begin(); sp != end(); ++sp) {
-      if (sp->id == id) {
-	return sp;
-      }
-    }
-    return end();
-    /* return std::find_if(begin(), end(), */
-    /* 			[&id](const Species &sp) { return sp.id == id; }); */
+    /* for (auto sp = begin(); sp != end(); ++sp) { */
+    /*   if (sp->id == id) { */
+    /* 	return sp; */
+    /*   } */
+    /* } */
+    /* return end(); */
+    return std::find_if(begin(), end(),
+    			[&id](const Species &sp) { return sp.id == id; });
   }
   
   iterator find(const char *name)
