@@ -31,6 +31,7 @@
 
 #include "PscParticleBc.h"
 
+#include "mparticles_vpic.hxx"
 #include "PscParticlesBase.h"
 #include "PscParticlesOps.h"
 
