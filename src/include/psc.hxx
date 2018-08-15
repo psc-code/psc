@@ -14,8 +14,7 @@
 #include <output_fields_c.hxx>
 
 #ifdef VPIC
-#include <psc_particles_vpic.h>
-
+#include "../libpsc/vpic/vpic_iface.h"
 void psc_method_vpic_inc_step(struct psc_method *method, int timestep); // FIXME
 void psc_method_vpic_print_status(struct psc_method *method); // FIXME
 #endif

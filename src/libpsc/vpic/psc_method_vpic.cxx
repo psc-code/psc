@@ -1,8 +1,6 @@
 
 #include "psc_method_private.h"
 
-#include <psc_particles_vpic.h>
-
 #include <setup_particles.hxx>
 #include <psc_particles_double.h>
 

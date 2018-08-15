@@ -1,8 +1,6 @@
 
 #pragma once
 
-#include "psc_particles_vpic.h"
-
 struct SortVpic
 {
   using Mparticles = MparticlesVpic;

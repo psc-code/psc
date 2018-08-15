@@ -2,7 +2,6 @@
 #pragma once
 
 #include "bnd_particles.hxx"
-#include "psc_particles_vpic.h"
 
 struct BndParticlesVpic : BndParticlesBase
 {

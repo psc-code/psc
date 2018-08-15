@@ -3,7 +3,6 @@
 #include "psc_fields_single.h"
 #include "psc.h"
 #include "psc_method.h"
-#include "psc_particles_vpic.h"
 #include "fields.hxx"
 
 #include "mrc_domain.h"
