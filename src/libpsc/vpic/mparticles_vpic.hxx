@@ -24,6 +24,7 @@ struct MparticlesVpic_ : MparticlesBase
   using Particles = _Particles;
   using Species = typename Particles::Species;
   using iterator = typename Particles::iterator;
+  using const_iterator = typename Particles::const_iterator;
   using Grid = typename Particles::Grid;
   using real_t = float;
   
@@ -277,6 +278,7 @@ struct MparticlesVpic_ : MparticlesBase
   iterator begin() { return vmprts_.begin(); }
   iterator end() { return vmprts_.end(); }
   int getNumSpecies() { return vmprts_.getNumSpecies(); } // FIXME should be const
+  const_iterator find(int id) const { return vmprts_.find(id); }
 
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }

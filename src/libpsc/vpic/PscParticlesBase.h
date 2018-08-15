@@ -179,9 +179,21 @@ struct PscParticlesBase : public VpicListBase<PscSpecies<G>>
     return size();
   }
 
+  const_iterator find(int id) const
+  {
+    for (auto sp = begin(); sp != end(); ++sp) {
+      if (sp->id == id) {
+	return sp;
+      }
+    }
+    return end();
+    /* return std::find_if(begin(), end(), */
+    /* 			[&id](const Species &sp) { return sp.id == id; }); */
+  }
+  
   iterator find(int id)
   {
-    for (iterator sp = begin(); sp != end(); ++sp) {
+    for (auto sp = begin(); sp != end(); ++sp) {
       if (sp->id == id) {
 	return sp;
       }

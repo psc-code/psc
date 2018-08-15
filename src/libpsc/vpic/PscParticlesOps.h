@@ -1101,13 +1101,13 @@ struct PscParticlesOps
   // ----------------------------------------------------------------------
   // accumulate_rho_p
 
-  static void accumulate_rho_p(MfieldsState& mflds, typename Particles::const_iterator sp)
+  static void accumulate_rho_p(MfieldsState& mflds, typename Mparticles::Species& sp)
   {
-    const Particle * RESTRICT ALIGNED(128) p = sp->p;
+    const Particle * RESTRICT ALIGNED(128) p = sp.p;
 
-    const Grid* g = sp->grid();
-    const float q_8V = sp->q*g->r8V;
-    const int np = sp->np;
+    const Grid* g = sp.grid();
+    const float q_8V = sp.q*g->r8V;
+    const int np = sp.np;
     const int sy = g->sy;
     const int sz = g->sz;
 
@@ -1153,9 +1153,9 @@ struct PscParticlesOps
     }
   }
 
-  static void accumulate_rho_p(Particles& vmprts, MfieldsState &mflds)
+  static void accumulate_rho_p(Mparticles& mprts, MfieldsState &mflds)
   {
-    for (auto sp = vmprts.cbegin(); sp != vmprts.cend(); ++sp) {
+    for (auto& sp : mprts) {
       TIC accumulate_rho_p(mflds, sp); TOC(accumulate_rho_p, 1);
     }
   }
@@ -1251,7 +1251,7 @@ struct PscParticlesOps
   // hydro jx,jy,jz are for diagnostic purposes only; they are not
   // accumulated with a charge conserving algorithm.
 
-  static void accumulate_hydro_p(MfieldsHydro& hydro, typename Particles::const_iterator sp,
+  static void accumulate_hydro_p(MfieldsHydro& hydro, const typename Mparticles::Species& sp,
 				 /*const*/ MfieldsInterpolator& interpolator)
   {
     auto& ha = hydro.getPatch(0);
@@ -1263,17 +1263,17 @@ struct PscParticlesOps
     float w0, w1, w2, w3, w4, w5, w6, w7, t;
     int i, n;
 
-    const Grid* g = sp->grid();
-    const Particle *p = sp->p;
+    const Grid* g = sp.grid();
+    const Particle *p = sp.p;
 
     c        = g->cvac;
-    qsp      = sp->q;
-    mspc     = sp->m*c;
+    qsp      = sp.q;
+    mspc     = sp.m*c;
     qdt_2mc  = (qsp*g->dt)/(2*mspc);
     qdt_4mc2 = qdt_2mc / (2*c);
     r8V      = g->r8V;
 
-    np        = sp->np;
+    np        = sp.np;
     stride_10 = (VOXEL(1,0,0, g->nx,g->ny,g->nz) -
 		 VOXEL(0,0,0, g->nx,g->ny,g->nz));
     stride_21 = (VOXEL(0,1,0, g->nx,g->ny,g->nz) -
