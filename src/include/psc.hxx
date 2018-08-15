@@ -499,7 +499,7 @@ private:
     
     mpi_printf(psc_comm(psc), "Initializing bound charge density\n");
     TIC CleanDivOps::clear_rhof(*mflds_); TOC(clear_rhof, 1);
-    ParticlesOps::accumulate_rho_p(mprts.vmprts_, *mflds_);
+    ParticlesOps::accumulate_rho_p(mprts.vmprts(), *mflds_);
     CleanDivOps::synchronize_rho(*mflds_);
     TIC AccumulateOps::compute_rhob(*mflds_); TOC(compute_rhob, 1);
     
@@ -516,7 +516,7 @@ private:
     mpi_printf(psc_comm(psc), "Error = %e (arb units)\n", err);
     
     mpi_printf(psc_comm(psc), "Uncentering particles\n");
-    auto& vmprts = mprts.vmprts_;
+    auto& vmprts = mprts.vmprts();
     if (!vmprts.empty()) {
       TIC InterpolatorOps::load(*interpolator_, *mflds_); TOC(load_interpolator, 1);
       
@@ -535,7 +535,7 @@ private:
   {
 #ifdef VPIC
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-      sim_->runDiag(mprts_->vmprts_, *mflds_, *interpolator_, *hydro_, grid().domain.np);
+      sim_->runDiag(mprts_->vmprts(), *mflds_, *interpolator_, *hydro_, grid().domain.np);
     }
 #else
     // FIXME

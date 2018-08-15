@@ -285,8 +285,10 @@ struct MparticlesVpic : MparticlesBase
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
 
-  Particles vmprts_;
+  Particles& vmprts() { return vmprts_; }
+
 private:
+  Particles vmprts_;
   Grid* vgrid_;
 };
 

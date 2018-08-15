@@ -9,7 +9,7 @@ struct SortVpic
 
   void operator()(Mparticles& mprts)
   {
-    auto vmprts = mprts.vmprts_;
+    auto vmprts = mprts.vmprts();
     auto step = ppsc->timestep;
     // Sort the particles for performance if desired.
     

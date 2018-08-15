@@ -51,7 +51,7 @@ struct OutputHydroVpic
     // This relies on load_interpolator_array() having been called earlier
 
     auto& grid = mflds_res_.grid();
-    Particles& vmprts = mprts.vmprts_;
+    Particles& vmprts = mprts.vmprts();
 
     std::vector<std::string> comp_names;
     comp_names.reserve(mflds_res_.n_comps());

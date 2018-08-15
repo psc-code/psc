@@ -173,7 +173,7 @@ struct ConvertFromVpic<MparticlesSingleByKind> : ConvertVpic<MparticlesSingleByK
 template<typename MP>
 void copy_to(MparticlesVpic& mprts_from, MP& mprts_to)
 {
-  Particles& vmprts = mprts_from.vmprts_;
+  Particles& vmprts = mprts_from.vmprts();
   int n_patches = mprts_to.n_patches();
   uint n_prts_by_patch[n_patches];
   mprts_from.get_size_all(n_prts_by_patch);
@@ -193,7 +193,7 @@ void copy_to(MparticlesVpic& mprts_from, MP& mprts_to)
 template<>
 void copy_from(MparticlesVpic& mprts_to, MparticlesSingle& mprts_from)
 {
-  Particles& vmprts = mprts_to.vmprts_;
+  Particles& vmprts = mprts_to.vmprts();
   int n_patches = mprts_to.n_patches();
   uint n_prts_by_patch[n_patches];
   // reset particle counts to zero, then use push_back to add back new particles
@@ -220,7 +220,7 @@ void copy_from(MparticlesVpic& mprts_to, MparticlesSingle& mprts_from)
 template<>
 void copy_from(MparticlesVpic& mprts_to, MparticlesSingleByKind& mprts_from)
 {
-  Particles& vmprts = mprts_to.vmprts_;
+  Particles& vmprts = mprts_to.vmprts();
   int n_patches = mprts_to.n_patches();
   uint n_prts_by_patch[n_patches];
   mprts_from.get_size_all(n_prts_by_patch);

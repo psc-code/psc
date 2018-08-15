@@ -24,7 +24,7 @@ struct PushParticlesVpic : PushParticlesBase
 		  MfieldsAccumulator& accumulator, ParticleBcList& particle_bc_list,
 		  int num_comm_round)
   {
-    auto& vmprts = mprts.vmprts_;
+    auto& vmprts = mprts.vmprts();
     
     // For this to work, interpolator needs to have been set from mflds E/B before,
     // ie., we're not using mflds for E and B here at all.
@@ -88,7 +88,7 @@ struct PushParticlesVpic : PushParticlesBase
     // particle diagnostics in user_diagnostics if there are any particle
     // species to worry about
     
-    if (!mprts.vmprts_.empty()) {
+    if (!mprts.vmprts().empty()) {
       TIC InterpolatorOps::load(interpolator, mflds); TOC(load_interpolator, 1);
     }
   }
