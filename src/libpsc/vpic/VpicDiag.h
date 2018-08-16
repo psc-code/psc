@@ -640,7 +640,8 @@ struct VpicDiagMixin
     status = fileIO.open(filename, io_write);
     if(status == fail) LOG_ERROR("Failed opening file: %s", filename);
 
-    auto& sp = *mprts.find(speciesname);
+    auto& sp = *std::find_if(mprts.begin(), mprts.end(),
+			     [&](const typename Mparticles::Species &sp) { return strcmp(sp.name, speciesname) == 0; });
 
     HydroArrayOps::clear(mflds_hydro);
     ParticlesOps::accumulate_hydro_p(mflds_hydro, sp, interpolator);
