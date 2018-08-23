@@ -7,7 +7,8 @@
 
 #include "psc_particles_single.h"
 #include "psc_particles_double.h"
-#include "psc_particles_vpic.h"
+#include "../libpsc/vpic/mparticles_vpic.hxx"
+#include "../libpsc/vpic/vpic_iface.h"
 #ifdef USE_CUDA
 #include "../libpsc/cuda/psc_particles_cuda.h"
 #endif

@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "vpic_iface.h"
+
 struct SortVpic
 {
   using Mparticles = MparticlesVpic;

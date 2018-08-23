@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "psc_vpic_bits.h"
+
 struct particle_vpic_t
 {
   using real_t = float;
