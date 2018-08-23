@@ -13,9 +13,8 @@
 #include <output_particles.hxx>
 #include <output_fields_c.hxx>
 
-#ifdef VPIC
+ #ifdef VPIC
 #include "../libpsc/vpic/vpic_iface.h"
-void psc_method_vpic_print_status(struct psc_method *method); // FIXME
 #endif
 
 // ======================================================================
@@ -253,10 +252,8 @@ struct Psc
     
       psc_->timestep++; // FIXME, too hacky
 #ifdef VPIC
-      if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-	vgrid_->step++;
-	assert(vgrid_->step == psc_->timestep);
-      }
+      vgrid_->step++;
+      assert(vgrid_->step == psc_->timestep);
 #endif
       
       diagnostics();
@@ -532,9 +529,7 @@ private:
 #if 0
     TIC user_diagnostics(); TOC(user_diagnostics, 1);
 #endif
-    if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-      diag_mixin_.diagnostics_run(*mprts_, *mflds_, *interpolator_, *hydro_, grid().domain.np);
-    }
+    diag_mixin_.diagnostics_run(*mprts_, *mflds_, *interpolator_, *hydro_, grid().domain.np);
 #else
     // FIXME
     psc_diag_run(psc_->diag, psc_, *mprts_, *mflds_);
@@ -550,9 +545,11 @@ private:
   void print_status()
   {
 #ifdef VPIC
-    if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-      psc_method_vpic_print_status(psc_->method);
-    }
+#ifdef HAVE_VPIC
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  update_profile(rank == 0);
+#endif
 #endif
     psc_stats_log(psc_->timestep);
     print_profiling();
