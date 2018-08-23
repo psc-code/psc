@@ -10,18 +10,9 @@
 // psc_method "vpic"
 
 struct psc_method_vpic {
-  // state
-  Simulation *sim;
 };
 
 #define psc_method_vpic(method) mrc_to_subobj(method, struct psc_method_vpic)
-
-#define VAR(x) (void *)offsetof(struct psc_method_vpic, x)
-static struct param psc_method_vpic_descr[] = {
-  { "sim"                   , VAR(sim)                            , PARAM_PTR(NULL)   },
-  {},
-};
-#undef VAR
 
 // ----------------------------------------------------------------------
 // psc_method_vpic_print_status
@@ -39,25 +30,11 @@ psc_method_vpic_print_status(struct psc_method *method)
 }
 
 // ----------------------------------------------------------------------
-// psc_method_vpic_inc_step
-
-void
-psc_method_vpic_inc_step(struct psc_method *method, int timestep)
-{
-  struct psc_method_vpic *sub = psc_method_vpic(method);
-  Simulation* sim = sub->sim;
-
-  sim->vgrid_->step++;
-  assert(sim->vgrid_->step == timestep);
-}
-
-// ----------------------------------------------------------------------
 // psc_method "vpic"
 
 struct psc_method_ops_vpic : psc_method_ops {
   psc_method_ops_vpic() {
     name                          = "vpic";
     size                          = sizeof(struct psc_method_vpic);
-    param_descr                   = psc_method_vpic_descr;
   }
 } psc_method_ops_vpic;

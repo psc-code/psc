@@ -49,8 +49,7 @@ void vpic_base_init(int *pargc, char ***pargv)
 
 // ======================================================================
 
-void Simulation_set_region_resistive_harris(Simulation *sim,
-					    vpic_harris_params *prm,
+void Simulation_set_region_resistive_harris(vpic_harris_params *prm,
 					    globals_physics *phys,
 					    double dx[3],
 					    double thickness,

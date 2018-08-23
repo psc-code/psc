@@ -15,7 +15,6 @@
 
 #ifdef VPIC
 #include "../libpsc/vpic/vpic_iface.h"
-void psc_method_vpic_inc_step(struct psc_method *method, int timestep); // FIXME
 void psc_method_vpic_print_status(struct psc_method *method); // FIXME
 #endif
 
@@ -52,7 +51,6 @@ struct Psc
   using BndParticles_t = typename PscConfig::BndParticles_t;
   using Checks_t = typename PscConfig::Checks_t;
   using Marder_t = typename PscConfig::Marder_t;
-  using Simulation = typename PscConfig::Simulation;
 
 #ifdef VPIC
   using MaterialList = typename MfieldsState::MaterialList;
@@ -181,7 +179,6 @@ struct Psc
   ~Psc()
   {
     psc_destroy(psc_);
-    delete sim_;
   }
   
   // ----------------------------------------------------------------------
@@ -257,7 +254,8 @@ struct Psc
       psc_->timestep++; // FIXME, too hacky
 #ifdef VPIC
       if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-	psc_method_vpic_inc_step(psc_->method, psc_->timestep);
+	vgrid_->step++;
+	assert(vgrid_->step == psc_->timestep);
       }
 #endif
       
@@ -568,7 +566,6 @@ protected:
 
   PscParams p_;
   const Grid_t* grid_;
-  Simulation* sim_;
 #ifdef VPIC
   Grid* vgrid_;
 #endif

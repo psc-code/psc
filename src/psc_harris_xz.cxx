@@ -292,12 +292,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     // --- create Simulation
     
-    sim_ = new Simulation();
 #ifdef VPIC
     psc_method_set_type(psc_->method, "vpic");
-    psc_method_set_param_ptr(psc_->method, "sim", sim_);
 #endif
-    sim_->vgrid_ = vgrid_;
 #if 0
     // set high level VPIC simulation parameters
     // FIXME, will be unneeded eventually

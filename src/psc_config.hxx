@@ -186,7 +186,6 @@ struct PscConfigVpic
   using BndParticles_t = BndParticlesVpic;
   using Checks_t = ChecksVpic;
   using Marder_t = MarderVpic;
-  using Simulation = Simulation;
 };
 
 #endif

@@ -30,8 +30,7 @@ struct vpic_simulation_info;
 struct field_array;
 
 // Harris specific
-void Simulation_set_region_resistive_harris(Simulation *sim,
-					    struct vpic_harris_params *prm,
+void Simulation_set_region_resistive_harris(struct vpic_harris_params *prm,
 					    struct globals_physics *phys,
 					    double dx[3],
 					    double thickness,

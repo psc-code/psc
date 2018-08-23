@@ -16,8 +16,6 @@
 #define TOC(a, b)
 #endif
 
-#include "simulation.h"
-
 #include "PscRng.h"
 
 #include "PscGridBase.h"
@@ -154,8 +152,6 @@ typedef PscRngPool<Rng> RngPool;
 typedef VpicRng Rng;
 typedef VpicRngPool<Rng> RngPool;
 #endif
-
-typedef VpicSimulation<MparticlesVpic, MfieldsState, MfieldsInterpolator, MfieldsHydro, RngPool, DiagMixin> Simulation;
 
 #endif
 
