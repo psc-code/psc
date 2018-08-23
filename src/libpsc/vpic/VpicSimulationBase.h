@@ -20,23 +20,6 @@ public:
     assert(!simulation);
     simulation = this;
   }
-
-  void setParams(int num_step_, int status_interval_,
-		 int sync_shared_interval_, int clean_div_e_interval_,
-		 int clean_div_b_interval_)
-  {
-    num_step             = num_step_;
-    status_interval      = status_interval_;
-    sync_shared_interval = sync_shared_interval_;
-    clean_div_e_interval = clean_div_e_interval_;
-    clean_div_b_interval = clean_div_b_interval_;
-  }
-
-  void setTopology(int px_, int py_, int pz_)
-  {
-    px = px_; py = py_; pz = pz_;
-  }
-
 };
 
 

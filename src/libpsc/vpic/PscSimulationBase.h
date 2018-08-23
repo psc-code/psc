@@ -12,16 +12,6 @@ public:
   {
   }
   
-  void setParams(int num_step_, int status_interval_,
-		 int sync_shared_interval_, int clean_div_e_interval_,
-		 int clean_div_b_interval_)
-  {
-  }
-
-  void setTopology(int px_, int py_, int pz_)
-  {
-  }
-
 };
 
 

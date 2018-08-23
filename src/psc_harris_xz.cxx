@@ -298,12 +298,14 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     psc_method_set_param_ptr(psc_->method, "sim", sim_);
 #endif
     sim_->vgrid_ = vgrid_;
+#if 0
     // set high level VPIC simulation parameters
     // FIXME, will be unneeded eventually
-    sim_->setParams(p_.nmax, p_.stats_every,
-		    p_.stats_every / 2, p_.stats_every / 2,
-		    p_.stats_every / 2);
-
+    setParams(p_.nmax, p_.stats_every,
+	      p_.stats_every / 2, p_.stats_every / 2,
+	      p_.stats_every / 2);
+#endif
+    
     // --- setup field data structures
 
     define_field_array();
