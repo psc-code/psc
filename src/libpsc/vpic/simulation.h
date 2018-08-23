@@ -13,33 +13,7 @@ template<class Mparticles, class MfieldsState, class MfieldsInterpolator, class 
 	 class RP, class DiagMixin>
 struct VpicSimulation : DiagMixin
 {
-  using Particles = typename Mparticles::Particles;
-  using Grid = typename Particles::Grid;
-  using ParticleBcList = typename Particles::ParticleBcList;
-  using MaterialList = typename MfieldsState::MaterialList;
-
-  VpicSimulation()
-    : DiagMixin()
-  {}
-
-  // ----------------------------------------------------------------------
-  // DiagMixin
-  
-  void newDiag(int interval)
-  {
-    DiagMixin::diagnostics_init(interval);
-  }
-
-  void setupDiag()
-  {
-    DiagMixin::diagnostics_setup();
-  }
-
-  void runDiag(Mparticles& mprts, MfieldsState& mflds, MfieldsInterpolator& interpolator,
-	       MfieldsHydro& hydro, Int3 np)
-  {
-    DiagMixin::diagnostics_run(mprts, mflds, interpolator, hydro, np);
-  }
+  using Grid = typename Mparticles::Grid;
 
   //private:
   Grid* vgrid_;

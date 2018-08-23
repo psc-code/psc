@@ -222,7 +222,7 @@ struct VpicDiagMixin
   (diag_.x##_interval>0 && remainder(step, diag_.x##_interval) == 0)
 
   void diagnostics_run(Mparticles& mprts, MfieldsState& mflds,
-		       MfieldsInterpolator& interpolator, MfieldsHydro& mflds_hydro, int np[3])
+		       MfieldsInterpolator& interpolator, MfieldsHydro& mflds_hydro, const int np[3])
   {
     TIC {
       const Grid* g = mflds.vgrid();
@@ -334,7 +334,7 @@ struct VpicDiagMixin
   // ----------------------------------------------------------------------
   // global_header
 
-  void global_header(const Grid *grid, int *np, const char * base, std::vector<DumpParameters*> dumpParams)
+  void global_header(const Grid *grid, const int *np, const char * base, std::vector<DumpParameters*> dumpParams)
   {
     int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     if (rank != 0) return;

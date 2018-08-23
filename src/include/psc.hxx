@@ -416,7 +416,7 @@ struct Psc
   void create_diagnostics(int interval)
   {
 #ifdef VPIC
-    sim_->newDiag(interval);
+    diag_mixin_.diagnostics_init(interval);
 #endif
   }
   
@@ -426,7 +426,7 @@ struct Psc
   void setup_diagnostics()
   {
 #ifdef VPIC
-    sim_->setupDiag();
+    diag_mixin_.diagnostics_setup();
 #endif
   }
 
@@ -536,7 +536,7 @@ private:
     TIC user_diagnostics(); TOC(user_diagnostics, 1);
 #endif
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
-      sim_->runDiag(*mprts_, *mflds_, *interpolator_, *hydro_, grid().domain.np);
+      diag_mixin_.diagnostics_run(*mprts_, *mflds_, *interpolator_, *hydro_, grid().domain.np);
     }
 #else
     // FIXME
@@ -598,6 +598,10 @@ protected:
   std::unique_ptr<Checks_t> checks_;
   std::unique_ptr<Marder_t> marder_;
   std::unique_ptr<OutputFieldsC> outf_;
+
+#ifdef VPIC
+  DiagMixin diag_mixin_;
+#endif
 
   // FIXME, maybe should be private
   // need to make sure derived class sets these (? -- or just leave them off by default)
