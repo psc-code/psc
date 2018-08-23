@@ -855,6 +855,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 #if 1
   void diagnostics() override
   {
+    run_diagnostics();
+    
     MPI_Comm comm = psc_comm(psc_);
     const Grid_t& grid = psc_->grid();
 

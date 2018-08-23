@@ -423,6 +423,16 @@ struct Psc
 #endif
   }
 
+  // ----------------------------------------------------------------------
+  // run_diagnostics
+  
+  void run_diagnostics()
+  {
+#ifdef VPIC
+    diag_mixin_.diagnostics_run(*mprts_, *mflds_, *interpolator_, *hydro_, grid().domain.np);
+#endif
+  }
+
 private:
 
   // ----------------------------------------------------------------------
@@ -527,7 +537,6 @@ private:
 #if 0
     TIC user_diagnostics(); TOC(user_diagnostics, 1);
 #endif
-    diag_mixin_.diagnostics_run(*mprts_, *mflds_, *interpolator_, *hydro_, grid().domain.np);
 #else
     // FIXME
     psc_diag_run(psc_->diag, psc_, *mprts_, *mflds_);
