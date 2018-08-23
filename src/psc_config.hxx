@@ -186,6 +186,13 @@ struct PscConfigVpic
   using BndParticles_t = BndParticlesVpic;
   using Checks_t = ChecksVpic;
   using Marder_t = MarderVpic;
+
+#if 0
+  using DiagMixin = VpicDiagMixin<MparticlesVpic, MfieldsState, MfieldsInterpolator, MfieldsHydro,
+				  DiagOps, ParticlesOps, HydroArrayOps>;
+#else
+  using DiagMixin = NoneDiagMixin<MparticlesVpic, MfieldsState, MfieldsInterpolator, MfieldsHydro>;
+#endif
 };
 
 #endif

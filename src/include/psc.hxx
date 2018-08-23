@@ -52,6 +52,7 @@ struct Psc
 #ifdef VPIC
   using MaterialList = typename MfieldsState::MaterialList;
   using Material = typename MaterialList::Material;
+  using DiagMixin = typename PscConfig::DiagMixin;
 #endif
   
   // ----------------------------------------------------------------------

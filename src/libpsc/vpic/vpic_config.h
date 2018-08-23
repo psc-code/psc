@@ -138,13 +138,6 @@ using ParticlesOps = VpicParticlesOps<Particles, MfieldsState, Interpolator, Mfi
 using ParticlesOps = PscParticlesOps<MparticlesVpic, MfieldsState, MfieldsInterpolator, MfieldsAccumulator, MfieldsHydro>;
 #endif
 
-#if 0
-using DiagMixin = VpicDiagMixin<MparticlesVpic, MfieldsState, MfieldsInterpolator, MfieldsHydro,
-				DiagOps, ParticlesOps, HydroArrayOps>;
-#else
-using DiagMixin = NoneDiagMixin<MparticlesVpic, MfieldsState, MfieldsInterpolator, MfieldsHydro>;
-#endif
-
 #if 1
 typedef PscRng Rng;
 typedef PscRngPool<Rng> RngPool;
