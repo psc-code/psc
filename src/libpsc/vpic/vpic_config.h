@@ -46,8 +46,6 @@
 
 #include "NoneDiag.h"
 
-#include "PscSimulationBase.h"
-
 #ifdef HAVE_VPIC
 
 #include "VpicRng.h"
@@ -72,8 +70,6 @@
 #include "VpicHydroArray.h"
 
 #include "VpicDiag.h"
-
-#include "VpicSimulationBase.h"
 
 #include "mfields_state_vpic.hxx"
 #include "mfields_hydro_vpic.hxx"
@@ -152,12 +148,6 @@ typedef NoneDiagMixin<Particles> DiagMixin;
 #endif
 
 #if 1
-typedef PscSimulationMixin<Particles, MaterialList> SimulationMixin;
-#else
-typedef VpicSimulationMixin<Particles> SimulationMixin;
-#endif
-
-#if 1
 typedef PscRng Rng;
 typedef PscRngPool<Rng> RngPool;
 #else
@@ -165,7 +155,7 @@ typedef VpicRng Rng;
 typedef VpicRngPool<Rng> RngPool;
 #endif
 
-typedef VpicSimulation<MparticlesVpic, MfieldsState, MfieldsInterpolator, MfieldsHydro, RngPool, SimulationMixin, DiagMixin> Simulation;
+typedef VpicSimulation<MparticlesVpic, MfieldsState, MfieldsInterpolator, MfieldsHydro, RngPool, DiagMixin> Simulation;
 
 #endif
 

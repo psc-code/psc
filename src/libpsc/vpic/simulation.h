@@ -10,8 +10,8 @@
 // class VpicSimulation
 
 template<class Mparticles, class MfieldsState, class MfieldsInterpolator, class MfieldsHydro,
-	 class RP, class SimulationMixin, class DiagMixin>
-struct VpicSimulation : SimulationMixin, DiagMixin
+	 class RP, class DiagMixin>
+struct VpicSimulation : DiagMixin
 {
   using Particles = typename Mparticles::Particles;
   using Grid = typename Particles::Grid;
@@ -19,8 +19,7 @@ struct VpicSimulation : SimulationMixin, DiagMixin
   using MaterialList = typename MfieldsState::MaterialList;
 
   VpicSimulation()
-    : SimulationMixin(),
-      DiagMixin()
+    : DiagMixin()
   {}
 
   // ----------------------------------------------------------------------
