@@ -1,6 +1,5 @@
 
 #include "psc.h"
-#include "psc_method.h"
 #include "psc_diag.h"
 #include "psc_output_particles.h"
 #include "psc_fields_as_c.h"
@@ -52,7 +51,6 @@ static struct select_init {
 } select_initializer;
 
 static struct param psc_descr[] = {
-  { "method"                  , VAR(method)                  , MRC_VAR_OBJ(psc_method) },
   { "diag"                    , VAR(diag)                    , MRC_VAR_OBJ(psc_diag) },
   { "output_particles"        , VAR(output_particles)        , MRC_VAR_OBJ(psc_output_particles) },
 

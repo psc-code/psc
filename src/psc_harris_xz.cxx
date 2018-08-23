@@ -7,7 +7,6 @@
 #include <psc.hxx>
 #include "psc_config.hxx"
 
-#include <psc_method.h>
 #include <psc_output_particles.h>
 
 #include <push_particles.hxx>
@@ -292,9 +291,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     // --- create Simulation
     
-#ifdef VPIC
-    psc_method_set_type(psc_->method, "vpic");
-#endif
 #if 0
     // set high level VPIC simulation parameters
     // FIXME, will be unneeded eventually

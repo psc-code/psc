@@ -3,7 +3,6 @@
 
 #include "collision.hxx"
 #include "vpic_iface.h"
-#include "psc_method.h"
 
 // ======================================================================
 // PscCollisionVpic

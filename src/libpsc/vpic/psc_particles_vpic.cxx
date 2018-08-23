@@ -3,7 +3,6 @@
 
 #include <psc_particles_single.h>
 #include <psc_particles_single_by_kind.h>
-#include <psc_method.h>
 
 
 // ======================================================================

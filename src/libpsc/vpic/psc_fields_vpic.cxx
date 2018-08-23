@@ -2,7 +2,6 @@
 #include "psc_fields_c.h"
 #include "psc_fields_single.h"
 #include "psc.h"
-#include "psc_method.h"
 #include "fields.hxx"
 
 #include "mrc_domain.h"

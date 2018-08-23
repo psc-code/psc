@@ -1,6 +1,5 @@
 
 #include "psc.h"
-#include "psc_method.h"
 #include "balance.hxx"
 #include "particles.hxx"
 #include "push_particles.hxx"

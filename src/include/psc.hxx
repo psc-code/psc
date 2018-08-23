@@ -1,9 +1,7 @@
 
 #pragma once
 
-#include <psc_method.h>
 #include <mrc_profile.h>
-#include <psc_method.h>
 #include <psc_diag.h>
 
 #include <particles.hxx>

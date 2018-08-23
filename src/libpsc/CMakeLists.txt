@@ -8,8 +8,6 @@ add_library(psc
   psc_checkpoint.cxx
   psc_fields_c.cxx
   psc_fields_single.cxx
-  psc_method.cxx
-  psc_method_default.cxx
   psc_particles_impl.cxx
   psc_stats.cxx
   rngpool.cxx

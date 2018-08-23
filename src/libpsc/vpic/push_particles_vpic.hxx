@@ -3,7 +3,6 @@
 
 #include "push_particles.hxx"
 #include "vpic_iface.h"
-#include "psc_method.h"
 
 // ======================================================================
 // PushParticlesVpic
