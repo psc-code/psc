@@ -21,18 +21,6 @@ public:
     simulation = this;
   }
 
-  void emitter()
-  {
-    if (emitter_list)
-      TIC ::apply_emitter_list(emitter_list); TOC(emission_model, 1);
-    TIC user_particle_injection(); TOC(user_particle_injection, 1);
-  }
-
-  void current_injection()
-  {
-    user_current_injection();
-  }
-
   void setParams(int num_step_, int status_interval_,
 		 int sync_shared_interval_, int clean_div_e_interval_,
 		 int clean_div_b_interval_)

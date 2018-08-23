@@ -22,13 +22,6 @@ public:
   {
   }
 
-  void emitter()
-  {
-  }
-
-  void current_injection()
-  {
-  }
 };
 
 

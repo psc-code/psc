@@ -39,8 +39,13 @@ struct PushParticlesVpic : PushParticlesBase
     // because advance_p requires an empty guard list, particle injection must
     // be done after advance_p and before guard list processing. Note:
     // user_particle_injection should be a stub if sl_ is empty.
-    sim_->emitter();
-
+#if 0
+    if (emitter_list) {
+      TIC ::apply_emitter_list(emitter_list); TOC(emission_model, 1);
+    }
+    TIC user_particle_injection(); TOC(user_particle_injection, 1);
+#endif
+    
     // This should be after the emission and injection to allow for the
     // possibility of thread parallelizing these operations
     if (!mprts.empty()) {
@@ -74,7 +79,9 @@ struct PushParticlesVpic : PushParticlesBase
     // It is also the users responsibility to update rhob according to
     // rhob_1 = rhob_0 + div juser_{1/2} (corrected local accumulation) if
     // the user wants electric field divergence cleaning to work.
-    TIC sim_->current_injection(); TOC(user_current_injection, 1);
+#if 0
+    TIC user_current_injection(); TOC(user_current_injection, 1);
+#endif
   }
 
   void prep(Mparticles& mprts, MfieldsState& mflds, MfieldsInterpolator& interpolator)
