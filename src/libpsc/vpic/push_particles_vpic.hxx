@@ -13,11 +13,6 @@ struct PushParticlesVpic : PushParticlesBase
   using Mparticles = MparticlesVpic;
   using MfieldsState = MfieldsState;
   
-  PushParticlesVpic()
-  {
-    psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
-  }
-
   void push_mprts(Mparticles& mprts, MfieldsState& mflds, MfieldsInterpolator& interpolator,
 		  MfieldsAccumulator& accumulator, ParticleBcList& particle_bc_list,
 		  int num_comm_round)
@@ -124,8 +119,5 @@ struct PushParticlesVpic : PushParticlesBase
     mprts_base.put_as(mprts);
 #endif
   }
-
-private:
-  Simulation* sim_;
 };
 

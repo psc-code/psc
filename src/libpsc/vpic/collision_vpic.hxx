@@ -15,10 +15,7 @@ public:
 
   PscCollisionVpic(MPI_Comm comm, int interval, double nu)
     : interval_{interval}
-  {
-    
-    psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
-  }
+  {}
 
   void operator()(MparticlesBase& mprts_base) override
   {
@@ -47,6 +44,5 @@ public:
   
 private:
   int interval_;
-  Simulation *sim_;
 };
 

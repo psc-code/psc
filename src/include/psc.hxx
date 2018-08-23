@@ -474,7 +474,6 @@ private:
   void initialize_vpic()
   {
     // FIXME, just change the uses
-    auto sim = sim_;
     auto psc = psc_;
     auto& mprts = *mprts_;
     auto& mflds = mflds_;

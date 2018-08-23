@@ -10,11 +10,6 @@
 
 struct PushFieldsVpic : PushFieldsBase
 {
-  PushFieldsVpic()
-  {
-    psc_method_get_param_ptr(ppsc->method, "sim", (void **) &sim_);
-  }
-
   void push_E(MfieldsState& mflds, double dt_fac)
   {
     TIC PushFieldsOps::advance_e(mflds, dt_fac); TOC(advance_e, 1);
@@ -51,8 +46,5 @@ struct PushFieldsVpic : PushFieldsBase
     mflds_base.put_as(mflds, HX, HX + 3);
 #endif
   }
-
-private:
-  Simulation *sim_;
 };
 
