@@ -42,14 +42,6 @@ struct VpicSimulation : SimulationMixin, DiagMixin
     DiagMixin::diagnostics_run(mprts, mflds, interpolator, hydro, np);
   }
 
-  // ======================================================================
-  // substeps of a time integration step
-
-  // ----------------------------------------------------------------------
-  // field_injection
-  
-  using SimulationMixin::field_injection;
-
   //private:
   Grid* vgrid_;
 };

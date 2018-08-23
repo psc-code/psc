@@ -22,20 +22,11 @@ public:
   {
   }
 
-  //FIXME, those should probably be in a separate mixin...
-  void diagnostics()
-  {
-  }
-  
   void emitter()
   {
   }
 
   void current_injection()
-  {
-  }
-
-  void field_injection()
   {
   }
 };

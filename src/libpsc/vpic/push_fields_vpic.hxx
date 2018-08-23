@@ -18,7 +18,9 @@ struct PushFieldsVpic : PushFieldsBase
   void push_E(MfieldsState& mflds, double dt_fac)
   {
     TIC PushFieldsOps::advance_e(mflds, dt_fac); TOC(advance_e, 1);
-    sim_->field_injection();
+#if 0
+    user_field_injection();
+#endif
   }
 
   void push_H(MfieldsState& mflds, double dt_fac)

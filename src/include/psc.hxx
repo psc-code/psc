@@ -532,6 +532,9 @@ private:
   virtual void diagnostics()
   {
 #ifdef VPIC
+#if 0
+    TIC user_diagnostics(); TOC(user_diagnostics, 1);
+#endif
     if (strcmp(psc_method_type(psc_->method), "vpic") == 0) {
       sim_->runDiag(*mprts_, *mflds_, *interpolator_, *hydro_, grid().domain.np);
     }

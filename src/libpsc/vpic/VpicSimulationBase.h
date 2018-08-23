@@ -21,11 +21,6 @@ public:
     simulation = this;
   }
 
-  void diagnostics()
-  {
-    TIC user_diagnostics(); TOC(user_diagnostics, 1);
-  }
-  
   void emitter()
   {
     if (emitter_list)
@@ -38,11 +33,6 @@ public:
     user_current_injection();
   }
 
-  void field_injection()
-  {
-    user_field_injection();
-  }
-  
   void setParams(int num_step_, int status_interval_,
 		 int sync_shared_interval_, int clean_div_e_interval_,
 		 int clean_div_b_interval_)
