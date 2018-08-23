@@ -31,10 +31,6 @@ public:
   {
   }
 
-  void collision_run()
-  {
-  }
-
   void current_injection()
   {
   }

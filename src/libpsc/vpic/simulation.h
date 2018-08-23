@@ -46,11 +46,6 @@ struct VpicSimulation : SimulationMixin, DiagMixin
   // substeps of a time integration step
 
   // ----------------------------------------------------------------------
-  // collision_run
-  
-  using SimulationMixin::collision_run;
-
-  // ----------------------------------------------------------------------
   // field_injection
   
   using SimulationMixin::field_injection;
