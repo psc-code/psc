@@ -138,11 +138,11 @@ using ParticlesOps = VpicParticlesOps<Particles, MfieldsState, Interpolator, Mfi
 using ParticlesOps = PscParticlesOps<MparticlesVpic, MfieldsState, MfieldsInterpolator, MfieldsAccumulator, MfieldsHydro>;
 #endif
 
-#if 1
-typedef VpicDiagMixin<MparticlesVpic, MfieldsState, MfieldsInterpolator, MfieldsHydro,
-		      DiagOps, ParticlesOps, HydroArrayOps> DiagMixin;
+#if 0
+using DiagMixin = VpicDiagMixin<MparticlesVpic, MfieldsState, MfieldsInterpolator, MfieldsHydro,
+				DiagOps, ParticlesOps, HydroArrayOps>;
 #else
-typedef NoneDiagMixin<Particles> DiagMixin;
+using DiagMixin = NoneDiagMixin<MparticlesVpic, MfieldsState, MfieldsInterpolator, MfieldsHydro>;
 #endif
 
 #if 1
