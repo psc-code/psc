@@ -8,15 +8,11 @@
 // psc_method_init
 
 extern struct psc_method_ops psc_method_ops_default;
-extern struct psc_method_ops psc_method_ops_vpic;
 
 static void
 psc_method_init(void)
 {
   mrc_class_register_subclass(&mrc_class_psc_method, &psc_method_ops_default);
-#ifdef USE_VPIC
-  mrc_class_register_subclass(&mrc_class_psc_method, &psc_method_ops_vpic);
-#endif
 }
 
 // ----------------------------------------------------------------------

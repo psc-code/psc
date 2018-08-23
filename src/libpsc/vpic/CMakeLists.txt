@@ -2,7 +2,6 @@
 add_library(pscvpic
   psc_fields_vpic.cxx
   psc_particles_vpic.cxx
-  psc_method_vpic.cxx
   psc_vpic_bits.cxx
   vpic_base.cxx
   )
