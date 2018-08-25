@@ -147,8 +147,11 @@ struct Grid_
   const MrcDomain& mrc_domain() const { assert(mrc_domain_); return *mrc_domain_; }
 
   MPI_Comm comm() const { return mrc_domain().comm(); }
+  int nGlobalPatches() const { return mrc_domain().nGlobalPatches(); }
   void neighborRankPatch(int p, int dir[3], int* nei_rank, int* nei_patch) const { mrc_domain().neighborRankPatch(p, dir, nei_rank, nei_patch); }
-  
+  mrc_patch_info globalPatchInfo(int p) const { return mrc_domain().globalPatchInfo(p); }
+  mrc_patch_info localPatchInfo(int p) const { return mrc_domain().localPatchInfo(p); }
+
   const MrcDomain* mrc_domain_ = {};
 };
 
