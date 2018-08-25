@@ -111,6 +111,35 @@ struct Grid_
     }
   }
 
+  // FIXME, one ctor with default args should be better
+  Grid_(const Domain& domain, const GridBc& bc, const Kinds& kinds, const Normalization& norm,
+	double dt, int n_patches = -1)
+    : domain{domain},
+      ldims{domain.ldims},
+      bc{bc},
+      kinds{kinds},
+      norm{norm},
+      dt{dt},
+      mrc_domain_{make_mrc_domain(domain, bc, n_patches)}
+  {
+    for (auto off : mrc_domain_.offs()) {
+      patches.push_back(Patch(off,
+			      Vec3<double>(off        ) * domain.dx + domain.corner,
+			      Vec3<double>(off + ldims) * domain.dx + domain.corner,
+			      domain.dx));
+    }
+
+    for (int d = 0; d < 3; d++) {
+      if (isInvar(d)) {
+	// if invariant in this direction: set bnd to periodic (FIXME?)
+	this->bc.fld_lo[d] = BND_FLD_PERIODIC;
+	this->bc.fld_hi[d] = BND_FLD_PERIODIC;
+	this->bc.prt_lo[d] = BND_PRT_PERIODIC;
+	this->bc.prt_hi[d] = BND_PRT_PERIODIC;
+      }
+    }
+  }
+  
   ~Grid_()
   {
     mrc_domain_destroy(mrc_domain_.domain_);
@@ -195,31 +224,7 @@ struct Grid_
   static Grid_* make_grid(const Domain& domain, const GridBc& bc,
 			  const Kinds& kinds, const Normalization& coeff, double dt, int n_patches = -1)
   {
-    auto mrc_domain = make_mrc_domain(domain, bc, n_patches);
-
-    auto offs = mrc_domain.offs();
-    
-    auto grid = new Grid_(domain, offs);
-    
-    grid->kinds = kinds;
-    
-    grid->bc = bc;
-    for (int d = 0; d < 3; d++) {
-      if (grid->isInvar(d)) {
-	// if invariant in this direction: set bnd to periodic (FIXME?)
-	grid->bc.fld_lo[d] = BND_FLD_PERIODIC;
-	grid->bc.fld_hi[d] = BND_FLD_PERIODIC;
-	grid->bc.prt_lo[d] = BND_PRT_PERIODIC;
-	grid->bc.prt_hi[d] = BND_PRT_PERIODIC;
-      }
-    }
-    
-    grid->norm = coeff;
-    grid->dt = dt;
-    
-    grid->mrc_domain_ = mrc_domain;
-    
-    return grid;
+    return new Grid_(domain, bc, kinds, coeff, dt, n_patches);
   }
 
   MrcDomain mrc_domain() const { return mrc_domain_; }
