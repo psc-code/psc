@@ -111,6 +111,11 @@ struct Grid_
     }
   }
 
+  ~Grid_()
+  {
+    mrc_domain_destroy(mrc_domain_.domain_);
+  }
+  
   int n_patches() const { return patches.size(); }
 
   bool isInvar(int d) const { return domain.isInvar(d); }
