@@ -118,8 +118,6 @@ psc_setup_mrc_domain(const Grid_t::Domain& grid_domain, const GridBc& grid_bc, i
 Grid_t* psc::make_grid(struct mrc_domain* mrc_domain, const Grid_t::Domain& domain, const GridBc& bc,
 		       const Grid_t::Kinds& kinds, Grid_t::Normalization coeff, double dt)
 {
-  Int3 gdims;
-  mrc_domain_get_global_dims(mrc_domain, gdims);
   int n_patches;
   mrc_patch *patches = mrc_domain_get_patches(mrc_domain, &n_patches);
   assert(n_patches > 0);
