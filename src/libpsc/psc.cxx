@@ -177,12 +177,12 @@ Grid_t* psc_setup_domain(struct psc *psc, const Grid_t::Domain& domain, GridBc& 
     }
   }
 
-  psc->mrc_domain_ = psc_setup_mrc_domain(domain, bc, -1);
-  psc->grid_ = psc->make_grid(psc->mrc_domain_, domain, bc, kinds, norm, dt);
+  psc->mrc_domain_.domain_ = psc_setup_mrc_domain(domain, bc, -1);
+  psc->grid_ = psc->make_grid(psc->mrc_domain_.domain_, domain, bc, kinds, norm, dt);
 
   // make sure that np isn't overridden on the command line
   Int3 np;
-  mrc_domain_get_param_int3(psc->mrc_domain_, "np", np);
+  psc->mrc_domain_.get_param_int3("np", np);
   assert(np == domain.np);
 
   return psc->grid_;
@@ -194,8 +194,6 @@ Grid_t* psc_setup_domain(struct psc *psc, const Grid_t::Domain& domain, GridBc& 
 static void
 _psc_destroy(struct psc *psc)
 {
-  mrc_domain_destroy(psc->mrc_domain_);
-
   ppsc = NULL;
 }
 
@@ -217,10 +215,10 @@ _psc_write(struct psc *psc, struct mrc_io *io)
     mrc_io_write_double(io, psc, s, psc->kinds_[k].m);
     mrc_io_write_string(io, psc, s, psc->kinds_[k].name);
   }
-#endif
   mrc_io_write_ref(io, psc, "mrc_domain", psc->mrc_domain_);
-  //mrc_io_write_ref(io, psc, "mparticles", psc->particles_);
-  //mrc_io_write_ref(io, psc, "mfields", psc->flds);
+  mrc_io_write_ref(io, psc, "mparticles", psc->particles_);
+  mrc_io_write_ref(io, psc, "mfields", psc->flds);
+#endif
 }
 
 // ----------------------------------------------------------------------
@@ -246,9 +244,9 @@ _psc_read(struct psc *psc, struct mrc_io *io)
     mrc_io_read_double(io, psc, s, &psc->kinds_[k].m);
     mrc_io_read_string(io, psc, s, &psc->kinds_[k].name);
   }
-#endif
   
   psc->mrc_domain_ = mrc_io_read_ref(io, psc, "mrc_domain", mrc_domain);
+#endif
   //psc_setup_domain(psc, psc->domain_, psc->bc_, psc->kinds_);
 #ifdef USE_FORTRAN
   psc_setup_fortran(psc);
@@ -266,10 +264,10 @@ _psc_read(struct psc *psc, struct mrc_io *io)
 static void
 _psc_view(struct psc *psc)
 {
-  const auto& kinds = psc->grid().kinds;
-  mrc_domain_view(psc->mrc_domain_);
+  psc->mrc_domain_.view();
 
   MPI_Comm comm = psc_comm(psc);
+  const auto& kinds = psc->grid().kinds;
   mpi_printf(comm, "%20s|\n", "particle kinds");
   for (int k = 0; k < kinds.size(); k++) {
     mpi_printf(comm, "%19s | q = %g m = %g\n",

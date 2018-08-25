@@ -52,7 +52,7 @@ struct Bnd_ : BndBase
   {
     // FIXME, not really a pretty way of doing this
     this->~Bnd_();
-    new(this) Bnd_(ppsc->grid(), ppsc->mrc_domain_, ppsc->ibn);
+    new(this) Bnd_(ppsc->grid(), ppsc->mrc_domain_.domain_, ppsc->ibn);
   }
   
   // ----------------------------------------------------------------------

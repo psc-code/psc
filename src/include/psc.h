@@ -7,6 +7,7 @@
 
 #include "psc_bits.h"
 #include "psc_particles.h"
+#include "mrc_domain.hxx"
 #include "grid.hxx"
 #include "particles.hxx"
 
@@ -67,7 +68,7 @@ struct psc {
   ///
   ///Use this to access the global list of patches \sa \ref patches
 
-  struct mrc_domain *mrc_domain_;
+  MrcDomain mrc_domain_;
 
   static Grid_t* make_grid(struct mrc_domain* mrc_domain, const Grid_t::Domain& domain, const GridBc& bc,
 			   const Grid_t::Kinds& kinds, Grid_t::Normalization coeff, double dt);

@@ -28,7 +28,7 @@ struct MrcIo
   void open(Int3 rn = {}, Int3 rx = {1000000, 1000000, 1000000})
   {
     int gdims[3];
-    mrc_domain_get_global_dims(ppsc->mrc_domain_, gdims);
+    ppsc->mrc_domain_.get_global_dims(gdims);
     int slab_off[3], slab_dims[3];
     for (int d = 0; d < 3; d++) {
       if (rx[d] > gdims[d])
@@ -77,7 +77,7 @@ struct MrcIo
     // but this way allows us to write fewer components, useful to hack around 16-bit vpic material ids,
     // stored together as AOS with floats...
     
-    mrc_fld* fld = mrc_domain_m3_create(ppsc->mrc_domain_);
+    mrc_fld* fld = ppsc->mrc_domain_.m3_create();
     mrc_fld_set_name(fld, name.c_str());
     mrc_fld_set_param_int(fld, "nr_ghosts", 0);
     mrc_fld_set_param_int(fld, "nr_comps", n_comps);
