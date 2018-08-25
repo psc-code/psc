@@ -121,8 +121,7 @@ void psc_view(struct psc *psc);
 void psc_destroy(struct psc *psc);
 
 Grid_t* psc_setup_domain(struct psc *psc, const Grid_t::Domain& domain, GridBc& bc, const Grid_t::Kinds& kinds,
-		      const Grid_t::Normalization& norm, double dt);
-struct mrc_domain *psc_setup_mrc_domain(const Grid_t::Domain&, const GridBc& grid_bc, int nr_patches);
+			 const Grid_t::Normalization& norm, double dt);
 
 struct psc *psc_read_checkpoint(MPI_Comm comm, int n);
 void psc_write_checkpoint(struct psc *psc);
