@@ -49,7 +49,7 @@ struct BndParticlesCommon : BndParticlesBase
   void reset()
   {
     delete ddcp;
-    ddcp = new ddcp_t{ppsc->grid(), ppsc->mrc_domain_};
+    ddcp = new ddcp_t{ppsc->grid()};
     balance_generation_cnt_ = psc_balance_generation_cnt;
   }
 

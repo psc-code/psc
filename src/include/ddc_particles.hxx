@@ -18,7 +18,7 @@ struct ddc_particles
   using buf_t = typename Mparticles::buf_t;
   using real_t = typename Mparticles::real_t;
   
-  ddc_particles(const Grid_t& grid, const MrcDomain& domain);
+  ddc_particles(const Grid_t& grid);
 
   void comm(std::vector<buf_t*>& bufs);
 
@@ -68,18 +68,13 @@ struct ddc_particles
   int n_ranks;
   std::vector<MPI_Request> send_reqs_;
   std::vector<MPI_Request> recv_reqs_;
-
-  const MrcDomain& domain;
-  const Grid_t& grid_;
 };
 
 // ----------------------------------------------------------------------
 // ctor
 
 template<typename MP>
-inline ddc_particles<MP>::ddc_particles(const Grid_t& grid, const MrcDomain& _domain)
-  : grid_{grid},
-    domain{_domain}
+inline ddc_particles<MP>::ddc_particles(const Grid_t& grid)
 {
   std::memset(this, 0, sizeof(*this));
 
@@ -106,7 +101,7 @@ inline ddc_particles<MP>::ddc_particles(const Grid_t& grid, const MrcDomain& _do
     }
   }
 
-  MPI_Comm comm = domain.comm();
+  MPI_Comm comm = grid.comm();
   int rank, size;
   MPI_Comm_rank(comm, &rank);
   MPI_Comm_size(comm, &size);
