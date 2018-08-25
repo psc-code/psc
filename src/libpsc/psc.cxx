@@ -104,8 +104,7 @@ Grid_t* psc_setup_domain(struct psc *psc, const Grid_t::Domain& domain, GridBc& 
     }
   }
 
-  auto mrc_domain = Grid_t::make_mrc_domain(domain, bc, -1);
-  psc->grid_ = Grid_t::make_grid(mrc_domain, domain, bc, kinds, norm, dt);
+  psc->grid_ = Grid_t::make_grid(domain, bc, kinds, norm, dt);
 
   return psc->grid_;
 }

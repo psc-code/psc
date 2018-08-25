@@ -815,9 +815,8 @@ private:
     auto loads_all = gather_loads(domain_old, loads);
     int n_patches_new = find_best_mapping(domain_old, loads_all);
 
-    auto domain_new = Grid_t::make_mrc_domain(psc->grid().domain, psc->grid().bc, n_patches_new);
-    auto new_grid = Grid_t::make_grid(domain_new, psc->grid().domain, psc->grid().bc, psc->grid().kinds,
-				   psc->grid().norm, psc->grid().dt);
+    auto new_grid = Grid_t::make_grid(psc->grid().domain, psc->grid().bc, psc->grid().kinds,
+				      psc->grid().norm, psc->grid().dt, n_patches_new);
     
     prof_stop(pr_bal_load);
     if (n_patches_new < 0) { // unchanged mapping, nothing tbd
@@ -828,7 +827,7 @@ private:
     psc_balance_comp_time_by_patch = new double[new_grid->n_patches()];
     
     prof_start(pr_bal_ctx);
-    communicate_ctx ctx(domain_old, domain_new);
+    communicate_ctx ctx(domain_old, new_grid->mrc_domain());
     prof_stop(pr_bal_ctx);
 
     // particles
