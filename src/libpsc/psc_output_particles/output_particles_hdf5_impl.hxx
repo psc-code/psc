@@ -351,7 +351,7 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
 
       int *remote_sz = (int *) calloc(size, sizeof(*remote_sz));
       for (int p = 0; p < nr_global_patches; p++) {
-	ppsc->mrc_domain_.get_global_patch_info(p, &info);
+	info = ppsc->mrc_domain_.globalPatchInfo(p);
 	if (info.rank == rank) { // skip local patches
 	  continue;
 	}
@@ -362,7 +362,7 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
 
       // build global idx array, local part
       for (int p = 0; p < mprts.n_patches(); p++) {
-	ppsc->mrc_domain_.get_local_patch_info(p, &info);
+	info = ppsc->mrc_domain_.localPatchInfo(p);
 	int ilo[3], ihi[3], ld[3];
 	int sz = find_patch_bounds(info.ldims, info.off, ilo, ihi, ld);
       
@@ -402,7 +402,7 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
 
       // build global idx array, remote part
       for (int p = 0; p < nr_global_patches; p++) {
-	ppsc->mrc_domain_.get_global_patch_info(p, &info);
+	info = ppsc->mrc_domain_.globalPatchInfo(p);
 	if (info.rank == rank) { // skip local patches
 	  continue;
 	}

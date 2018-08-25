@@ -77,16 +77,14 @@ struct communicate_ctx {
     recv_info = (struct recv_info *) calloc(nr_patches_new, sizeof(*recv_info));
 
     for (int p = 0; p < nr_patches_old; p++) {
-      struct mrc_patch_info info_old, info_new;
-      domain_old.get_local_patch_info(p, &info_old);
-      domain_new.get_level_idx3_patch_info(info_old.level, info_old.idx3, &info_new);
+      auto info_old = domain_old.localPatchInfo(p);
+      auto info_new = domain_new.levelIdx3PatchInfo(info_old.level, info_old.idx3);
       send_info[p].rank  = info_new.rank;
       send_info[p].patch = info_new.patch;
     }
     for (int p = 0; p < nr_patches_new; p++) {
-      struct mrc_patch_info info_old, info_new;
-      domain_new.get_local_patch_info(p, &info_new);
-      domain_old.get_level_idx3_patch_info(info_new.level, info_new.idx3, &info_old);
+      auto info_new = domain_new.localPatchInfo(p);
+      auto info_old = domain_old.levelIdx3PatchInfo(info_new.level, info_new.idx3);
       recv_info[p].rank  = info_old.rank;
       recv_info[p].patch = info_old.patch;
     }
