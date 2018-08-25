@@ -189,6 +189,45 @@ struct Grid_
     return domain;
   }
 
+  // ----------------------------------------------------------------------
+  // make_grid
+  
+  static Grid_* make_grid(const MrcDomain& mrc_domain, const Domain& domain, const GridBc& bc,
+			  const Kinds& kinds, const Normalization& coeff, double dt)
+  {
+    int n_patches;
+    auto patches = mrc_domain.getPatches(&n_patches);
+    assert(n_patches > 0);
+    Int3 ldims = patches[0].ldims;
+    std::vector<Int3> offs;
+    for (int p = 0; p < n_patches; p++) {
+      assert(ldims == Int3(patches[p].ldims));
+      offs.push_back(patches[p].off);
+    }
+    
+    auto grid = new Grid_(domain, offs);
+    
+    grid->kinds = kinds;
+    
+    grid->bc = bc;
+    for (int d = 0; d < 3; d++) {
+      if (grid->isInvar(d)) {
+	// if invariant in this direction: set bnd to periodic (FIXME?)
+	grid->bc.fld_lo[d] = BND_FLD_PERIODIC;
+	grid->bc.fld_hi[d] = BND_FLD_PERIODIC;
+	grid->bc.prt_lo[d] = BND_PRT_PERIODIC;
+	grid->bc.prt_hi[d] = BND_PRT_PERIODIC;
+      }
+    }
+    
+    grid->norm = coeff;
+    grid->dt = dt;
+    
+    grid->mrc_domain_ = mrc_domain;
+    
+    return grid;
+  }
+
   MrcDomain mrc_domain() const { return mrc_domain_; }
 
   MPI_Comm comm() const { return mrc_domain().comm(); }

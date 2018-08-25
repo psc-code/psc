@@ -816,7 +816,7 @@ private:
     int n_patches_new = find_best_mapping(domain_old, loads_all);
 
     auto domain_new = Grid_t::make_mrc_domain(psc->grid().domain, psc->grid().bc, n_patches_new);
-    auto new_grid = psc->make_grid(domain_new, psc->grid().domain, psc->grid().bc, psc->grid().kinds,
+    auto new_grid = Grid_t::make_grid(domain_new, psc->grid().domain, psc->grid().bc, psc->grid().kinds,
 				   psc->grid().norm, psc->grid().dt);
     
     prof_stop(pr_bal_load);

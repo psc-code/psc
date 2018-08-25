@@ -68,9 +68,6 @@ struct psc {
   ///
   ///Use this to access the global list of patches \sa \ref patches
 
-  static Grid_t* make_grid(const MrcDomain& mrc_domain, const Grid_t::Domain& domain, const GridBc& bc,
-			   const Grid_t::Kinds& kinds, Grid_t::Normalization coeff, double dt);
-
   int ibn[3];         ///< number of ghost points
 
   const Grid_t& grid() const { assert(grid_); return *grid_; }
