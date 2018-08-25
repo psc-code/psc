@@ -37,7 +37,7 @@ struct MrcDomain
 
   mrc_fld* m3_create() const { return mrc_domain_m3_create(domain_); }
   mrc_ddc* create_ddc() const { return mrc_domain_create_ddc(domain_); }
-
-  //private:
+  
+private:
   mrc_domain* domain_;
 };
