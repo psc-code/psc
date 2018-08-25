@@ -18,7 +18,7 @@ struct ddc_particles
   using buf_t = typename Mparticles::buf_t;
   using real_t = typename Mparticles::real_t;
   
-  ddc_particles(const MrcDomain& domain);
+  ddc_particles(const Grid_t& grid, const MrcDomain& domain);
 
   void comm(std::vector<buf_t*>& bufs);
 
@@ -70,14 +70,16 @@ struct ddc_particles
   std::vector<MPI_Request> recv_reqs_;
 
   const MrcDomain& domain;
+  const Grid_t& grid_;
 };
 
 // ----------------------------------------------------------------------
 // ctor
 
 template<typename MP>
-inline ddc_particles<MP>::ddc_particles(const MrcDomain& _domain)
-  : domain{_domain}
+inline ddc_particles<MP>::ddc_particles(const Grid_t& grid, const MrcDomain& _domain)
+  : grid_{grid},
+    domain{_domain}
 {
   std::memset(this, 0, sizeof(*this));
 
