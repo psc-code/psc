@@ -17,6 +17,7 @@ struct MrcDomain
     return *this;
   }
 
+  MPI_Comm comm() const { return mrc_domain_comm(domain_); }
   void view() const { mrc_domain_view(domain_); }
 
   void reset(mrc_domain* domain_new)
@@ -31,6 +32,8 @@ struct MrcDomain
   void get_global_patch_info(int p, mrc_patch_info* info) const { mrc_domain_get_global_patch_info(domain_, p, info); }
   void get_local_patch_info(int p, mrc_patch_info* info) const { mrc_domain_get_local_patch_info(domain_, p, info); }
   mrc_patch* get_patches(int* n_patches) const { return mrc_domain_get_patches(domain_, n_patches); }
+  void get_neighbor_rank_patch(int p, int dir[3], int* nei_rank, int* nei_patch) const { mrc_domain_get_neighbor_rank_patch(domain_, p, dir, nei_rank, nei_patch); }
+  void get_level_idx3_patch_info(int level, int idx[3], mrc_patch_info *info) const { mrc_domain_get_level_idx3_patch_info(domain_, level, idx, info); }
 
   mrc_fld* m3_create() const { return mrc_domain_m3_create(domain_); }
   mrc_ddc* create_ddc() const { return mrc_domain_create_ddc(domain_); }

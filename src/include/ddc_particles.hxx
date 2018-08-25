@@ -97,14 +97,14 @@ inline ddc_particles<MP>::ddc_particles(const MrcDomain& _domain)
 	    // use this one as buffer for particles that stay in the same patch
 	    nei->rank = -1;
 	  } else {
-	    mrc_domain_get_neighbor_rank_patch(domain.domain_, p, dir, &nei->rank, &nei->patch);
+	    domain.get_neighbor_rank_patch(p, dir, &nei->rank, &nei->patch);
 	  }
 	}
       }
     }
   }
 
-  MPI_Comm comm = mrc_domain_comm(domain.domain_);
+  MPI_Comm comm = domain.comm();
   int rank, size;
   MPI_Comm_rank(comm, &rank);
   MPI_Comm_size(comm, &size);

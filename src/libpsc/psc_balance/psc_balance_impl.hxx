@@ -64,29 +64,29 @@ struct communicate_ctx {
   int nr_recv_ranks;
   struct by_ri *recv_by_ri;
 
-  communicate_ctx(mrc_domain *domain_old, mrc_domain *domain_new)
+  communicate_ctx(const MrcDomain& domain_old, const MrcDomain& domain_new)
   {
-    comm = mrc_domain_comm(domain_old);
+    comm = domain_old.comm();
     MPI_Comm_rank(comm, &mpi_rank);
     MPI_Comm_size(comm, &mpi_size);
 
-    mrc_domain_get_patches(domain_old, &nr_patches_old);
-    mrc_domain_get_patches(domain_new, &nr_patches_new);
+    domain_old.get_patches(&nr_patches_old);
+    domain_new.get_patches(&nr_patches_new);
 
     send_info = (struct send_info *) calloc(nr_patches_old, sizeof(*send_info));
     recv_info = (struct recv_info *) calloc(nr_patches_new, sizeof(*recv_info));
 
     for (int p = 0; p < nr_patches_old; p++) {
       struct mrc_patch_info info_old, info_new;
-      mrc_domain_get_local_patch_info(domain_old, p, &info_old);
-      mrc_domain_get_level_idx3_patch_info(domain_new, info_old.level, info_old.idx3, &info_new);
+      domain_old.get_local_patch_info(p, &info_old);
+      domain_new.get_level_idx3_patch_info(info_old.level, info_old.idx3, &info_new);
       send_info[p].rank  = info_new.rank;
       send_info[p].patch = info_new.patch;
     }
     for (int p = 0; p < nr_patches_new; p++) {
       struct mrc_patch_info info_old, info_new;
-      mrc_domain_get_local_patch_info(domain_new, p, &info_new);
-      mrc_domain_get_level_idx3_patch_info(domain_old, info_new.level, info_new.idx3, &info_old);
+      domain_new.get_local_patch_info(p, &info_new);
+      domain_old.get_level_idx3_patch_info(info_new.level, info_new.idx3, &info_old);
       recv_info[p].rank  = info_old.rank;
       recv_info[p].patch = info_old.patch;
     }
@@ -392,9 +392,9 @@ private:
     return loads;
   }
 
-  std::vector<double> gather_loads(struct mrc_domain *domain, std::vector<double> loads)
+  std::vector<double> gather_loads(const MrcDomain& domain, std::vector<double> loads)
   {
-    MPI_Comm comm = mrc_domain_comm(domain);
+    MPI_Comm comm = domain.comm();
     int rank, size;
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &size);
@@ -418,7 +418,7 @@ private:
 	off += nr_patches_all[i];
       }
       int n_global_patches;
-      mrc_domain_get_nr_global_patches(domain, &n_global_patches);
+      domain.get_nr_global_patches(&n_global_patches);
 	  
       loads_all.resize(n_global_patches);
     }
@@ -445,15 +445,15 @@ private:
     return loads_all;
   }
 
-  int find_best_mapping(mrc_domain *domain, const std::vector<double>& loads_all)
+  int find_best_mapping(const MrcDomain& domain, const std::vector<double>& loads_all)
   {
-    MPI_Comm comm = mrc_domain_comm(domain);
+    MPI_Comm comm = domain.comm();
     int rank, size;
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &size);
 
     int nr_patches_old;
-    mrc_domain_get_patches(domain, &nr_patches_old);
+    domain.get_patches(&nr_patches_old);
 
     std::vector<int> nr_patches_all_old(size);
     MPI_Allgather(&nr_patches_old, 1, MPI_INT, nr_patches_all_old.data(), 1, MPI_INT, comm);
@@ -817,8 +817,8 @@ private:
     prof_start(pr_bal_load);
     auto& domain_old = psc->mrc_domain_;
     
-    auto loads_all = gather_loads(domain_old.domain_, loads);
-    int n_patches_new = find_best_mapping(domain_old.domain_, loads_all);
+    auto loads_all = gather_loads(domain_old, loads);
+    int n_patches_new = find_best_mapping(domain_old, loads_all);
 
     MrcDomain domain_new{psc_setup_mrc_domain(psc->grid().domain, psc->grid().bc, n_patches_new)};
     auto& new_grid = *psc->make_grid(domain_new, psc->grid().domain, psc->grid().bc, psc->grid().kinds,
@@ -833,7 +833,7 @@ private:
     psc_balance_comp_time_by_patch = new double[new_grid.n_patches()];
     
     prof_start(pr_bal_ctx);
-    communicate_ctx ctx(domain_old.domain_, domain_new.domain_);
+    communicate_ctx ctx(domain_old, domain_new);
     prof_stop(pr_bal_ctx);
 
     // particles
