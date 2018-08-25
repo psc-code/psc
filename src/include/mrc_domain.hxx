@@ -26,7 +26,6 @@ struct MrcDomain
     domain_ = domain_new;
   }
   
-  void get_global_dims(int gdims[3]) const { mrc_domain_get_global_dims(domain_, gdims); }
   void get_nr_global_patches(int* nr_global_patches) const { return mrc_domain_get_nr_global_patches(domain_, nr_global_patches); }
   void get_param_int3(const char*name, int val[3]) const { mrc_domain_get_param_int3(domain_, name, val); }
   void get_global_patch_info(int p, mrc_patch_info* info) const { mrc_domain_get_global_patch_info(domain_, p, info); }

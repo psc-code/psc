@@ -27,8 +27,8 @@ struct MrcIo
 
   void open(Int3 rn = {}, Int3 rx = {1000000, 1000000, 1000000})
   {
-    int gdims[3];
-    ppsc->mrc_domain_.get_global_dims(gdims);
+    const auto& grid = ppsc->grid();
+    auto gdims = grid.domain.gdims;
     int slab_off[3], slab_dims[3];
     for (int d = 0; d < 3; d++) {
       if (rx[d] > gdims[d])
