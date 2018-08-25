@@ -18,7 +18,7 @@ struct ddc_particles
   using buf_t = typename Mparticles::buf_t;
   using real_t = typename Mparticles::real_t;
   
-  ddc_particles(struct mrc_domain *domain);
+  ddc_particles(const MrcDomain& domain);
 
   void comm(std::vector<buf_t*>& bufs);
 
@@ -69,19 +69,19 @@ struct ddc_particles
   std::vector<MPI_Request> send_reqs_;
   std::vector<MPI_Request> recv_reqs_;
 
-  struct mrc_domain *domain;
+  const MrcDomain& domain;
 };
 
 // ----------------------------------------------------------------------
 // ctor
 
 template<typename MP>
-inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
+inline ddc_particles<MP>::ddc_particles(const MrcDomain& _domain)
+  : domain{_domain}
 {
   std::memset(this, 0, sizeof(*this));
 
-  domain = _domain;
-  mrc_domain_get_patches(domain, &nr_patches);
+  domain.get_patches(&nr_patches);
   patches_.resize(nr_patches);
   for (int p = 0; p < nr_patches; p++) {
     patch *patch = &patches_[p];
@@ -97,14 +97,14 @@ inline ddc_particles<MP>::ddc_particles(struct mrc_domain *_domain)
 	    // use this one as buffer for particles that stay in the same patch
 	    nei->rank = -1;
 	  } else {
-	    mrc_domain_get_neighbor_rank_patch(domain, p, dir, &nei->rank, &nei->patch);
+	    mrc_domain_get_neighbor_rank_patch(domain.domain_, p, dir, &nei->rank, &nei->patch);
 	  }
 	}
       }
     }
   }
 
-  MPI_Comm comm = mrc_domain_comm(domain);
+  MPI_Comm comm = mrc_domain_comm(domain.domain_);
   int rank, size;
   MPI_Comm_rank(comm, &rank);
   MPI_Comm_size(comm, &size);
