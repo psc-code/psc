@@ -61,7 +61,7 @@ TYPED_TEST(PushParticlesTest, Accel)
 
   // run test
   PushParticles pushp_;
-  BndParticles bndp_{ppsc->mrc_domain_, grid};
+  BndParticles bndp_{grid};
   Bnd bnd_{grid, ppsc->mrc_domain_, this->ibn};
   ChecksParams checks_params{};
   checks_params.continuity_threshold = 1e-10;
@@ -131,7 +131,7 @@ TYPED_TEST(PushParticlesTest, Cyclo)
 
   // run test
   PushParticles pushp_;
-  BndParticles bndp_{ppsc->mrc_domain_, grid};
+  BndParticles bndp_{grid};
   Bnd bnd_{grid, ppsc->mrc_domain_, this->ibn};
   ChecksParams checks_params{};
   checks_params.continuity_threshold = 1e-10;

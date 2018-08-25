@@ -6,9 +6,9 @@
 // ctor
 
 template<typename Mparticles, typename DIM>
-BndParticlesCuda<Mparticles, DIM>::BndParticlesCuda(struct mrc_domain *domain, const Grid_t& grid)
-  : Base(domain, grid),
-  cbndp_(new cuda_bndp<typename Mparticles::CudaMparticles, DIM>(grid))
+BndParticlesCuda<Mparticles, DIM>::BndParticlesCuda(const Grid_t& grid)
+  : Base(grid),
+    cbndp_(new cuda_bndp<typename Mparticles::CudaMparticles, DIM>(grid))
 {}
 
 // ----------------------------------------------------------------------

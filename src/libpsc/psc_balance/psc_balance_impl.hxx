@@ -815,12 +815,12 @@ private:
     }
 
     prof_start(pr_bal_load);
-    auto domain_old = psc->mrc_domain_;
+    auto& domain_old = psc->mrc_domain_;
     
     auto loads_all = gather_loads(domain_old.domain_, loads);
     int n_patches_new = find_best_mapping(domain_old.domain_, loads_all);
 
-    auto domain_new = psc_setup_mrc_domain(psc->grid().domain, psc->grid().bc, n_patches_new);
+    MrcDomain domain_new{psc_setup_mrc_domain(psc->grid().domain, psc->grid().bc, n_patches_new)};
     auto& new_grid = *psc->make_grid(domain_new, psc->grid().domain, psc->grid().bc, psc->grid().kinds,
 				     psc->grid().norm, psc->grid().dt);
     
@@ -833,7 +833,7 @@ private:
     psc_balance_comp_time_by_patch = new double[new_grid.n_patches()];
     
     prof_start(pr_bal_ctx);
-    communicate_ctx ctx(domain_old.domain_, domain_new);
+    communicate_ctx ctx(domain_old.domain_, domain_new.domain_);
     prof_stop(pr_bal_ctx);
 
     // particles
@@ -854,7 +854,7 @@ private:
     prof_stop(pr_bal_flds);
 
     // update psc etc
-    psc->mrc_domain_.reset(domain_new);
+    psc->mrc_domain_ = std::move(domain_new);
     delete psc->grid_;
     psc->grid_ = &new_grid;
     psc_balance_generation_cnt++;

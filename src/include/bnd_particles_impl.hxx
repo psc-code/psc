@@ -28,7 +28,7 @@ struct BndParticlesCommon : BndParticlesBase
   // ----------------------------------------------------------------------
   // ctor
 
-  BndParticlesCommon(struct mrc_domain *domain, const Grid_t& grid)
+  BndParticlesCommon(const Grid_t& grid)
     : ddcp{},
       balance_generation_cnt_{-1}
   {

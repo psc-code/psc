@@ -5,7 +5,7 @@
 
 struct BndVpic : BndBase
 {
-  BndVpic(const Grid_t& grid, mrc_domain *domain, int ibn[3])
+  BndVpic(const Grid_t& grid, const MrcDomain& domain, int ibn[3])
   {}
 
   void fill_ghosts(MfieldsState& mflds, int mb, int me) {}

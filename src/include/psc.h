@@ -70,7 +70,7 @@ struct psc {
 
   MrcDomain mrc_domain_;
 
-  static Grid_t* make_grid(struct mrc_domain* mrc_domain, const Grid_t::Domain& domain, const GridBc& bc,
+  static Grid_t* make_grid(const MrcDomain& mrc_domain, const Grid_t::Domain& domain, const GridBc& bc,
 			   const Grid_t::Kinds& kinds, Grid_t::Normalization coeff, double dt);
 
   int ibn[3];         ///< number of ghost points

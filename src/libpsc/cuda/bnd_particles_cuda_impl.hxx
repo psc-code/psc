@@ -12,7 +12,7 @@ struct BndParticlesCuda : BndParticlesCommon<Mparticles>
 {
   using Base = BndParticlesCommon<Mparticles>;
 
-  BndParticlesCuda(struct mrc_domain *domain, const Grid_t& grid);
+  BndParticlesCuda(const Grid_t& grid);
   ~BndParticlesCuda();
 
   void reset();
