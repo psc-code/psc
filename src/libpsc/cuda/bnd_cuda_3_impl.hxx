@@ -15,7 +15,7 @@ struct BndCuda3 : BndBase
 {
   using Mfields = MF;
 
-  BndCuda3(const Grid_t& grid, mrc_domain* domain, int ibn[3]);
+  BndCuda3(const Grid_t& grid, int ibn[3]);
   ~BndCuda3();
   
   void reset();

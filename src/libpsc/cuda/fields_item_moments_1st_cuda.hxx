@@ -24,7 +24,7 @@ struct Moment_rho_1st_nc_cuda : ItemMomentCRTP<Moment_rho_1st_nc_cuda<BS, dim>, 
 
   Moment_rho_1st_nc_cuda(const Grid_t& grid, MPI_Comm comm)
     : Base(grid, comm),
-      bnd_{grid, ppsc->mrc_domain_, ppsc->ibn}
+      bnd_{grid, ppsc->ibn}
   {}
 
   void run(MparticlesCuda<BS>& mprts)
@@ -61,7 +61,7 @@ struct Moment_n_1st_cuda : ItemMomentCRTP<Moment_n_1st_cuda<BS, dim>, MfieldsCud
 
   Moment_n_1st_cuda(const Grid_t& grid, MPI_Comm comm)
     : Base(grid, comm),
-      bnd_{grid, ppsc->mrc_domain_, ppsc->ibn}
+      bnd_{grid, ppsc->ibn}
   {}
 
   void run(MparticlesCuda<BS>& mprts)

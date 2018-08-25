@@ -7,8 +7,8 @@
 // ctor
 
 template<typename MF>
-BndCuda3<MF>::BndCuda3(const Grid_t& grid, mrc_domain* domain, int ibn[3])
-  : cbnd_{new CudaBnd{grid, domain, ibn}},
+BndCuda3<MF>::BndCuda3(const Grid_t& grid, int ibn[3])
+  : cbnd_{new CudaBnd{grid, ibn}},
     balance_generation_cnt_{psc_balance_generation_cnt}
 {}
 
@@ -29,7 +29,7 @@ void BndCuda3<MF>::reset()
 {
   // FIXME, not really a pretty way of doing this
   delete cbnd_;
-  cbnd_ = new CudaBnd{ppsc->grid(), ppsc->mrc_domain_, ppsc->ibn};
+  cbnd_ = new CudaBnd{ppsc->grid(), ppsc->ibn};
 }
   
 // ----------------------------------------------------------------------
