@@ -20,7 +20,7 @@ struct Bnd_ : BndBase
   // ----------------------------------------------------------------------
   // ctor
 
-  Bnd_(const Grid_t& grid, const MrcDomain& domain, int ibn[3])
+  Bnd_(const Grid_t& grid, int ibn[3])
   {
     static struct mrc_ddc_funcs ddc_funcs = {
       .copy_to_buf   = copy_to_buf,
@@ -28,7 +28,7 @@ struct Bnd_ : BndBase
       .add_from_buf  = add_from_buf,
     };
 
-    ddc_ = domain.create_ddc();
+    ddc_ = grid.create_ddc();
     mrc_ddc_set_funcs(ddc_, &ddc_funcs);
     mrc_ddc_set_param_int3(ddc_, "ibn", ibn);
     mrc_ddc_set_param_int(ddc_, "max_n_fields", 24);
@@ -52,7 +52,7 @@ struct Bnd_ : BndBase
   {
     // FIXME, not really a pretty way of doing this
     this->~Bnd_();
-    new(this) Bnd_(ppsc->grid(), ppsc->mrc_domain_, ppsc->ibn);
+    new(this) Bnd_(ppsc->grid(), ppsc->ibn);
   }
   
   // ----------------------------------------------------------------------

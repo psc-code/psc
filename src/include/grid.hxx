@@ -151,6 +151,7 @@ struct Grid_
   void neighborRankPatch(int p, int dir[3], int* nei_rank, int* nei_patch) const { mrc_domain().neighborRankPatch(p, dir, nei_rank, nei_patch); }
   mrc_patch_info globalPatchInfo(int p) const { return mrc_domain().globalPatchInfo(p); }
   mrc_patch_info localPatchInfo(int p) const { return mrc_domain().localPatchInfo(p); }
+  mrc_ddc* create_ddc() const { return mrc_domain().create_ddc(); }
 
   const MrcDomain* mrc_domain_ = {};
 };

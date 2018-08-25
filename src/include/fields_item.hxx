@@ -238,7 +238,7 @@ struct ItemMomentLoopPatches : ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, t
 
   ItemMomentLoopPatches(const Grid_t& grid, MPI_Comm comm)
     : Base{grid, comm},
-      bnd_{grid, ppsc->mrc_domain_, ppsc->ibn}
+      bnd_{grid, ppsc->ibn}
   {}
 
   void run(Mparticles& mprts)

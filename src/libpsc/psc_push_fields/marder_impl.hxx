@@ -24,7 +24,7 @@ struct Marder_ : MarderBase
       diffusion_{diffusion},
       loop_{loop},
       dump_{dump},
-      bnd_{ppsc->grid(), ppsc->mrc_domain_, ppsc->ibn},
+      bnd_{ppsc->grid(), ppsc->ibn},
       item_rho_{ppsc->grid(), comm},
       item_dive_{ppsc->grid(), comm}
   {

@@ -163,7 +163,7 @@ struct Psc
     sort_.reset(new Sort_t{});
     pushp_.reset(new PushParticles_t{});
     pushf_.reset(new PushFields_t{});
-    bnd_.reset(new Bnd_t{psc_->grid(), psc_->mrc_domain_, psc_->ibn});
+    bnd_.reset(new Bnd_t{psc_->grid(), psc_->ibn});
     bndf_.reset(new BndFields_t{});
     bndp_.reset(new BndParticles_t{psc_->grid()});
 

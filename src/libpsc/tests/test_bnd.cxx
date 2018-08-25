@@ -165,7 +165,7 @@ TYPED_TEST(BndTest, FillGhosts)
       });
   }
 
-  Bnd bnd{grid, grid_domain.domain, ibn};
+  Bnd bnd{grid, ibn};
   bnd.fill_ghosts(mflds, 0, 1);
 
   //Mfields_dump(mflds, B);
@@ -212,7 +212,7 @@ TYPED_TEST(BndTest, AddGhosts)
 
   //Mfields_dump(mflds, B);
 
-  Bnd bnd{grid, grid_domain.domain, ibn};
+  Bnd bnd{grid, ibn};
   bnd.add_ghosts(mflds, 0, 1);
 
   //Mfields_dump(mflds, 0*B);
