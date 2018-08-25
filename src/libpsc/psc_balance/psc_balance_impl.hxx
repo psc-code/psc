@@ -810,7 +810,7 @@ private:
     }
 
     prof_start(pr_bal_load);
-    auto& domain_old = psc->mrc_domain_;
+    auto& domain_old = psc->grid().mrc_domain();
     
     auto loads_all = gather_loads(domain_old, loads);
     int n_patches_new = find_best_mapping(domain_old, loads_all);

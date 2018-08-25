@@ -184,9 +184,9 @@ Grid_t* psc_setup_domain(struct psc *psc, const Grid_t::Domain& domain, GridBc& 
     }
   }
 
-  psc->mrc_domain_.reset(psc_setup_mrc_domain(domain, bc, -1));
+  auto mrc_domain = psc_setup_mrc_domain(domain, bc, -1);
+  psc->mrc_domain_.reset(mrc_domain);
   psc->grid_ = psc->make_grid(psc->mrc_domain_, domain, bc, kinds, norm, dt);
-
 
   return psc->grid_;
 }
@@ -267,7 +267,7 @@ _psc_read(struct psc *psc, struct mrc_io *io)
 static void
 _psc_view(struct psc *psc)
 {
-  psc->mrc_domain_.view();
+  psc->grid().mrc_domain().view();
 
   MPI_Comm comm = psc_comm(psc);
   const auto& kinds = psc->grid().kinds;
