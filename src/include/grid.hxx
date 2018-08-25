@@ -144,7 +144,7 @@ struct Grid_
   std::vector<Patch> patches;
   std::vector<Kind> kinds;
 
-  MrcDomain mrc_domain() const { assert(mrc_domain_); return {mrc_domain_}; }
+  MrcDomain mrc_domain() const { return mrc_domain_; }
 
   MPI_Comm comm() const { return mrc_domain().comm(); }
   int nGlobalPatches() const { return mrc_domain().nGlobalPatches(); }
@@ -153,7 +153,7 @@ struct Grid_
   mrc_patch_info localPatchInfo(int p) const { return mrc_domain().localPatchInfo(p); }
   mrc_ddc* create_ddc() const { return mrc_domain().create_ddc(); }
 
-  struct mrc_domain* mrc_domain_ = {};
+  MrcDomain mrc_domain_;
 };
 
 // ======================================================================
