@@ -152,7 +152,7 @@ struct Grid_
 // ----------------------------------------------------------------------
 // make_mrc_domain
 
-  static mrc_domain *make_mrc_domain(const Domain& grid_domain, const GridBc& grid_bc, int nr_patches)
+  static MrcDomain make_mrc_domain(const Domain& grid_domain, const GridBc& grid_bc, int nr_patches)
   {
     // FIXME, should be split to create, set_from_options, setup time?
     struct mrc_domain *domain = mrc_domain_create(MPI_COMM_WORLD);
@@ -192,10 +192,11 @@ struct Grid_
   // ----------------------------------------------------------------------
   // make_grid
   
-  static Grid_* make_grid(const MrcDomain& mrc_domain, const Domain& domain, const GridBc& bc,
-			  const Kinds& kinds, const Normalization& coeff, double dt)
+  static Grid_* make_grid(const Domain& domain, const GridBc& bc,
+			  const Kinds& kinds, const Normalization& coeff, double dt, int n_patches = -1)
   {
-    int n_patches;
+    auto mrc_domain = make_mrc_domain(domain, bc, n_patches);
+
     auto patches = mrc_domain.getPatches(&n_patches);
     assert(n_patches > 0);
     Int3 ldims = patches[0].ldims;
@@ -226,13 +227,6 @@ struct Grid_
     grid->mrc_domain_ = mrc_domain;
     
     return grid;
-  }
-
-  static Grid_* make_grid(const Domain& domain, const GridBc& bc,
-			  const Kinds& kinds, const Normalization& coeff, double dt, int n_patches = -1)
-  {
-    auto mrc_domain = make_mrc_domain(domain, bc, n_patches);
-    return make_grid(mrc_domain, domain, bc, kinds, coeff, dt);
   }
 
   MrcDomain mrc_domain() const { return mrc_domain_; }
