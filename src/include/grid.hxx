@@ -218,15 +218,6 @@ struct Grid_
     return domain;
   }
 
-  // ----------------------------------------------------------------------
-  // make_grid
-  
-  static Grid_* make_grid(const Domain& domain, const GridBc& bc,
-			  const Kinds& kinds, const Normalization& coeff, double dt, int n_patches = -1)
-  {
-    return new Grid_(domain, bc, kinds, coeff, dt, n_patches);
-  }
-
   MrcDomain mrc_domain() const { return mrc_domain_; }
 
   MPI_Comm comm() const { return mrc_domain().comm(); }

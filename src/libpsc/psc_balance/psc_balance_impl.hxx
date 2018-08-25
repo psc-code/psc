@@ -810,13 +810,14 @@ private:
     }
 
     prof_start(pr_bal_load);
-    auto domain_old = psc->grid().mrc_domain();
+    auto old_grid = psc->grid_;
+    auto domain_old = old_grid->mrc_domain();
     
     auto loads_all = gather_loads(domain_old, loads);
     int n_patches_new = find_best_mapping(domain_old, loads_all);
 
-    auto new_grid = Grid_t::make_grid(psc->grid().domain, psc->grid().bc, psc->grid().kinds,
-				      psc->grid().norm, psc->grid().dt, n_patches_new);
+    auto new_grid = new Grid_t{old_grid->domain, old_grid->bc, old_grid->kinds,
+			       old_grid->norm, old_grid->dt, n_patches_new};
     
     prof_stop(pr_bal_load);
     if (n_patches_new < 0) { // unchanged mapping, nothing tbd

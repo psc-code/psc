@@ -64,10 +64,6 @@ struct psc {
   int timestep;	///< the current timestep
   ///@}
 
-  ///The domain partitioner.
-  ///
-  ///Use this to access the global list of patches \sa \ref patches
-
   int ibn[3];         ///< number of ghost points
 
   const Grid_t& grid() const { assert(grid_); return *grid_; }
