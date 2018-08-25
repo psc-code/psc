@@ -849,8 +849,8 @@ private:
     prof_stop(pr_bal_flds);
 
     // update psc etc
-    mrc_domain_destroy(psc->mrc_domain_.domain_);
-    psc->mrc_domain_ = domain_new;
+    mrc_domain_destroy(psc->mrc_domain_);
+    psc->mrc_domain_ = domain_new.domain_;
     delete psc->grid_;
     psc->grid_ = &new_grid;
     psc_balance_generation_cnt++;
