@@ -70,8 +70,8 @@ struct communicate_ctx {
     MPI_Comm_rank(comm, &mpi_rank);
     MPI_Comm_size(comm, &mpi_size);
 
-    domain_old.get_patches(&nr_patches_old);
-    domain_new.get_patches(&nr_patches_new);
+    nr_patches_old = domain_old.nPatches();
+    nr_patches_new = domain_new.nPatches();
 
     send_info = (struct send_info *) calloc(nr_patches_old, sizeof(*send_info));
     recv_info = (struct recv_info *) calloc(nr_patches_new, sizeof(*recv_info));
@@ -417,9 +417,7 @@ private:
 	displs[i] = off;
 	off += nr_patches_all[i];
       }
-      int n_global_patches;
-      domain.get_nr_global_patches(&n_global_patches);
-	  
+      int n_global_patches = domain.nGlobalPatches();
       loads_all.resize(n_global_patches);
     }
     MPI_Gatherv(loads.data(), n_patches, MPI_DOUBLE, loads_all.data(), nr_patches_all, displs,
@@ -452,8 +450,7 @@ private:
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &size);
 
-    int nr_patches_old;
-    domain.get_patches(&nr_patches_old);
+    int nr_patches_old = domain.nPatches();
 
     std::vector<int> nr_patches_all_old(size);
     MPI_Allgather(&nr_patches_old, 1, MPI_INT, nr_patches_all_old.data(), 1, MPI_INT, comm);

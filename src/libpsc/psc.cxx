@@ -119,7 +119,7 @@ Grid_t* psc::make_grid(const MrcDomain& mrc_domain, const Grid_t::Domain& domain
 		       const Grid_t::Kinds& kinds, Grid_t::Normalization coeff, double dt)
 {
   int n_patches;
-  mrc_patch *patches = mrc_domain.get_patches(&n_patches);
+  auto patches = mrc_domain.getPatches(&n_patches);
   assert(n_patches > 0);
   Int3 ldims = patches[0].ldims;
   std::vector<Int3> offs;

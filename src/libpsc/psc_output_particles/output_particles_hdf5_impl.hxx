@@ -347,8 +347,7 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
 
     prof_start(pr_B);
     if (rank == 0) {
-      int nr_global_patches;
-      ppsc->mrc_domain_.get_nr_global_patches(&nr_global_patches);
+      int nr_global_patches = ppsc->mrc_domain_.nGlobalPatches();
 
       int *remote_sz = (int *) calloc(size, sizeof(*remote_sz));
       for (int p = 0; p < nr_global_patches; p++) {

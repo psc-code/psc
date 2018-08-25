@@ -81,7 +81,7 @@ inline ddc_particles<MP>::ddc_particles(const MrcDomain& _domain)
 {
   std::memset(this, 0, sizeof(*this));
 
-  domain.get_patches(&nr_patches);
+  nr_patches = domain.nPatches();
   patches_.resize(nr_patches);
   for (int p = 0; p < nr_patches; p++) {
     patch *patch = &patches_[p];
