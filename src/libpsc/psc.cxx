@@ -146,6 +146,8 @@ Grid_t* psc::make_grid(const MrcDomain& mrc_domain, const Grid_t::Domain& domain
   grid->norm = coeff;
   grid->dt = dt;
 
+  grid->mrc_domain_ = &mrc_domain;
+
   return grid;
 }
 

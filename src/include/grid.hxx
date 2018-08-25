@@ -4,6 +4,7 @@
 
 #include "vec3.hxx"
 #include "psc_bits.h"
+#include "mrc_domain.hxx"
 
 #include <vector>
 #include <cstring>
@@ -142,6 +143,10 @@ struct Grid_
   real_t dt = { 1. };
   std::vector<Patch> patches;
   std::vector<Kind> kinds;
+
+  const MrcDomain& mrc_domain() { assert(mrc_domain_); return *mrc_domain_; }
+  
+  const MrcDomain* mrc_domain_ = {};
 };
 
 // ======================================================================
