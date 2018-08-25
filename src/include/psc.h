@@ -60,7 +60,6 @@ struct psc {
   ///@}
 
   // other parameters / constants
-  double p2A, p2B;
   int timestep;	///< the current timestep
   ///@}
 
