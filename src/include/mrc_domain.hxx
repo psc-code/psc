@@ -3,6 +3,11 @@
 
 #include <mrc_domain.h>
 
+#include <vector>
+
+// ======================================================================
+// MrcDomain
+
 struct MrcDomain
 {
   MrcDomain(mrc_domain *domain = {}) : domain_{domain} {}
@@ -18,6 +23,22 @@ struct MrcDomain
   const mrc_patch* getPatches(int* n_patches) const { return mrc_domain_get_patches(domain_, n_patches); }
   void neighborRankPatch(int p, int dir[3], int* nei_rank, int* nei_patch) const { mrc_domain_get_neighbor_rank_patch(domain_, p, dir, nei_rank, nei_patch); }
 
+  std::vector<Int3> offs() const
+  {
+    std::vector<Int3> offs(nPatches());;
+
+    int n_patches;
+    auto patches = getPatches(&n_patches);
+    assert(n_patches > 0);
+    Int3 ldims = patches[0].ldims;
+    for (int p = 0; p < n_patches; p++) {
+      assert(ldims == Int3(patches[p].ldims));
+      offs.push_back(patches[p].off);
+    }
+
+    return offs;
+  }
+  
   mrc_fld* m3_create() const { return mrc_domain_m3_create(domain_); }
   mrc_ddc* create_ddc() const { return mrc_domain_create_ddc(domain_); }
   

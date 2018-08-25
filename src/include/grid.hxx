@@ -197,14 +197,7 @@ struct Grid_
   {
     auto mrc_domain = make_mrc_domain(domain, bc, n_patches);
 
-    auto patches = mrc_domain.getPatches(&n_patches);
-    assert(n_patches > 0);
-    Int3 ldims = patches[0].ldims;
-    std::vector<Int3> offs;
-    for (int p = 0; p < n_patches; p++) {
-      assert(ldims == Int3(patches[p].ldims));
-      offs.push_back(patches[p].off);
-    }
+    auto offs = mrc_domain.offs();
     
     auto grid = new Grid_(domain, offs);
     
