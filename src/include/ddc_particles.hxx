@@ -83,7 +83,7 @@ inline ddc_particles<MP>::ddc_particles(const Grid_t& grid, const MrcDomain& _do
 {
   std::memset(this, 0, sizeof(*this));
 
-  nr_patches = domain.nPatches();
+  nr_patches = grid.n_patches();
   patches_.resize(nr_patches);
   for (int p = 0; p < nr_patches; p++) {
     patch *patch = &patches_[p];
@@ -99,7 +99,7 @@ inline ddc_particles<MP>::ddc_particles(const Grid_t& grid, const MrcDomain& _do
 	    // use this one as buffer for particles that stay in the same patch
 	    nei->rank = -1;
 	  } else {
-	    domain.get_neighbor_rank_patch(p, dir, &nei->rank, &nei->patch);
+	    grid.neighborRankPatch(p, dir, &nei->rank, &nei->patch);
 	  }
 	}
       }

@@ -144,7 +144,9 @@ struct Grid_
   std::vector<Patch> patches;
   std::vector<Kind> kinds;
 
-  const MrcDomain& mrc_domain() { assert(mrc_domain_); return *mrc_domain_; }
+  const MrcDomain& mrc_domain() const { assert(mrc_domain_); return *mrc_domain_; }
+
+  void neighborRankPatch(int p, int dir[3], int* nei_rank, int* nei_patch) const { mrc_domain().neighborRankPatch(p, dir, nei_rank, nei_patch); }
   
   const MrcDomain* mrc_domain_ = {};
 };
