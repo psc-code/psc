@@ -551,7 +551,7 @@ private:
     // FIXME
     (*outf_)(*mflds_, *mprts_);
 #endif
-    PscOutputParticlesBase{psc_->output_particles}.run(*mprts_);
+    PscOutputParticlesBase{outp_}.run(*mprts_);
   }
 
   // ----------------------------------------------------------------------
@@ -610,7 +610,8 @@ protected:
 #ifdef VPIC
   DiagMixin diag_mixin_;
 #endif
-  psc_diag* diag_;                	///< timeseries diagnostics
+  psc_diag* diag_;             ///< timeseries diagnostics
+  psc_output_particles* outp_; ///< particle output
 
   // FIXME, maybe should be private
   // need to make sure derived class sets these (? -- or just leave them off by default)

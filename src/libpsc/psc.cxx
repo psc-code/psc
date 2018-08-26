@@ -50,12 +50,6 @@ static struct select_init {
   }
 } select_initializer;
 
-static struct param psc_descr[] = {
-  { "output_particles"        , VAR(output_particles)        , MRC_VAR_OBJ(psc_output_particles) },
-
-  {},
-};
-
 #undef VAR
 
 // ----------------------------------------------------------------------
@@ -202,7 +196,6 @@ struct mrc_class_psc_ : mrc_class_psc {
   mrc_class_psc_() {
     name             = "psc";
     size             = sizeof(struct psc);
-    param_descr      = psc_descr;
     create           = _psc_create;
     view             = _psc_view;
     destroy          = _psc_destroy;
