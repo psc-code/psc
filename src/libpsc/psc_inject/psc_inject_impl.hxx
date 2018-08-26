@@ -66,14 +66,12 @@ struct Inject_ : InjectBase
       for (int jz = 0; jz < ldims[2]; jz++) {
 	for (int jy = 0; jy < ldims[1]; jy++) {
 	  for (int jx = 0; jx < ldims[0]; jx++) {
-	    double xx[3] = { .5 * (CRDX(p, jx) + CRDX(p, jx+1)),
-			     .5 * (CRDY(p, jy) + CRDY(p, jy+1)),
-			     .5 * (CRDZ(p, jz) + CRDZ(p, jz+1)) };
+	    double xx[3] = {grid.patches[p].x_cc(jx), grid.patches[p].y_cc(jy), grid.patches[p].z_cc(jz)};
 	    // FIXME, the issue really is that (2nd order) particle pushers
 	    // don't handle the invariant dim right
-	    if (grid.isInvar(0) == 1) xx[0] = CRDX(p, jx);
-	    if (grid.isInvar(1) == 1) xx[1] = CRDY(p, jy);
-	    if (grid.isInvar(2) == 1) xx[2] = CRDZ(p, jz);
+	    if (grid.isInvar(0) == 1) xx[0] = grid.patches[p].x_nc(jx);
+	    if (grid.isInvar(1) == 1) xx[1] = grid.patches[p].y_nc(jy);
+	    if (grid.isInvar(2) == 1) xx[2] = grid.patches[p].z_nc(jz);
 
 	    if (!target_.is_inside(xx)) {
 	      continue;
