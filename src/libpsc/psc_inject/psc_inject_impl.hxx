@@ -100,7 +100,7 @@ struct Inject_ : InjectBase
 		    // statistically right...
 		    n_in_cell = npt.n *fac;		}
 		} else {
-		  n_in_cell = setup_particles.get_n_in_cell(psc, &npt);
+		  n_in_cell = setup_particles.get_n_in_cell(grid, &npt);
 		}
 		n_q_in_cell += npt.q * n_in_cell;
 	      } else {
@@ -112,7 +112,7 @@ struct Inject_ : InjectBase
 		assert(setup_particles.fractional_n_particles_per_cell);
 		real_t wni = 1.; // ??? FIXME
 		auto prt = particle_t{{}, {}, wni, npt.kind};
-		setup_particles.setup_particle(psc, &prt, &npt, p, xx);
+		setup_particles.setup_particle(grid, &prt, &npt, p, xx);
 
 		mprts[p].push_back(prt);
 	      }

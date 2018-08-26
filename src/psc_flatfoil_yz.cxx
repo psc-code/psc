@@ -495,7 +495,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     SetupParticles<Mparticles_t> setup_particles;
     setup_particles.fractional_n_particles_per_cell = true; // FIXME, should use same setup_particles for partition/setup
     setup_particles.neutralizing_population = MY_ELECTRON;
-    return setup_particles.setup_partition(psc_, [&](int kind, double crd[3], psc_particle_npt& npt) {
+    return setup_particles.setup_partition(grid(), [&](int kind, double crd[3], psc_particle_npt& npt) {
 	this->init_npt(kind, crd, npt);
       });
   }

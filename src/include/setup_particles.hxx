@@ -15,10 +15,8 @@ struct SetupParticles
   //
   // helper function for partition / particle setup
   
-  int get_n_in_cell(struct psc *psc, struct psc_particle_npt *npt)
+  int get_n_in_cell(const Grid_t& grid, struct psc_particle_npt *npt)
   {
-    const auto& grid = *psc->grid_;
-    
     if (const_num_particles_per_cell) {
       return 1. / grid.norm.cori;
     }
@@ -40,10 +38,9 @@ struct SetupParticles
   // ----------------------------------------------------------------------
   // setup_particle
   
-  void setup_particle(struct psc *psc, particle_t *prt, struct psc_particle_npt *npt,
+  void setup_particle(const Grid_t& grid, particle_t *prt, struct psc_particle_npt *npt,
 		      int p, double xx[3])
   {
-    const auto& grid = *psc->grid_;
     auto& kinds = grid.kinds;
     double beta = grid.norm.beta;
     
@@ -137,7 +134,7 @@ struct SetupParticles
 
 	      int n_in_cell;
 	      if (kind != neutralizing_population) {
-		n_in_cell = get_n_in_cell(psc, &npt);
+		n_in_cell = get_n_in_cell(grid, &npt);
 		n_q_in_cell += npt.q * n_in_cell;
 	      } else {
 		// FIXME, should handle the case where not the last population is neutralizing
@@ -154,7 +151,7 @@ struct SetupParticles
 		  wni = npt.n / (n_in_cell * grid.norm.cori);
 		}
 		particle_t prt{{}, {}, wni, kind};
-		setup_particle(psc, &prt, &npt, p, xx);
+		setup_particle(grid, &prt, &npt, p, xx);
 		//p->lni = particle_label_offset + 1;
 		mprts[p].push_back(prt);
 	      }
@@ -172,9 +169,8 @@ struct SetupParticles
   // setup_partition
 
   template<typename FUNC>
-  std::vector<uint> setup_partition(psc* psc, FUNC func)
+  std::vector<uint> setup_partition(const Grid_t& grid, FUNC func)
   {
-    const auto& grid = *psc->grid_;
     const auto& kinds = grid.kinds;
     std::vector<uint> n_prts_by_patch(grid.n_patches());
     
@@ -184,14 +180,12 @@ struct SetupParticles
       for (int jz = ilo[2]; jz < ihi[2]; jz++) {
 	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
 	  for (int jx = ilo[0]; jx < ihi[0]; jx++) {
-	    double xx[3] = { .5 * (CRDX(p, jx) + CRDX(p, jx+1)),
-			     .5 * (CRDY(p, jy) + CRDY(p, jy+1)),
-			     .5 * (CRDZ(p, jz) + CRDZ(p, jz+1)) };
+	    double xx[3] = {grid.patches[p].x_cc(jx), grid.patches[p].y_cc(jy), grid.patches[p].z_cc(jz)};
 	    // FIXME, the issue really is that (2nd order) particle pushers
 	    // don't handle the invariant dim right
-	    if (grid.isInvar(0) == 1) xx[0] = CRDX(p, jx);
-	    if (grid.isInvar(1) == 1) xx[1] = CRDY(p, jy);
-	    if (grid.isInvar(2) == 1) xx[2] = CRDZ(p, jz);
+	    if (grid.isInvar(0) == 1) xx[0] = grid.patches[p].x_nc(jx);
+	    if (grid.isInvar(1) == 1) xx[1] = grid.patches[p].y_nc(jy);
+	    if (grid.isInvar(2) == 1) xx[2] = grid.patches[p].z_nc(jz);
 	  
 	    int n_q_in_cell = 0;
 	    for (int kind = 0; kind < kinds.size(); kind++) {
@@ -205,7 +199,7 @@ struct SetupParticles
 
 	      int n_in_cell;
 	      if (kind != neutralizing_population) {
-		n_in_cell = get_n_in_cell(psc, &npt);
+		n_in_cell = get_n_in_cell(grid, &npt);
 		n_q_in_cell += npt.q * n_in_cell;
 	      } else {
 		// FIXME, should handle the case where not the last population is neutralizing
