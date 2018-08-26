@@ -31,11 +31,10 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
   using Particles = typename Mparticles::patch_t;
   using real_t = typename Mparticles::real_t;
 
-  psc_output_particles_hdf5(const OutputParticlesParams& params)
-    : OutputParticlesParams(params),
-      comm_{psc_comm(ppsc)}
+  psc_output_particles_hdf5(const Grid_t& grid, const OutputParticlesParams& params)
+    : OutputParticlesParams{params},
+      grid_{grid}
   {
-    const auto& grid = *ppsc->grid_;
     hid_t id = H5Tcreate(H5T_COMPOUND, sizeof(struct hdf5_prt));
     H5Tinsert(id, "x" , HOFFSET(struct hdf5_prt, x) , H5T_NATIVE_FLOAT);
     H5Tinsert(id, "y" , HOFFSET(struct hdf5_prt, y) , H5T_NATIVE_FLOAT);
@@ -146,7 +145,6 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
   int find_patch_bounds(const int ldims[3], const int off[3],
 			int ilo[3], int ihi[3], int ld[3])
   {
-    const auto& grid = *ppsc->grid_;
     for (int d = 0; d < 3; d++) {
       ilo[d] = MIN(ldims[d], MAX(0, lo[d] - off[d]));
       ihi[d] = MAX(0, MIN(ldims[d], hi[d] - off[d]));
@@ -154,7 +152,7 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
       ihi[d] = MIN(ldims[d], hi[d] - off[d]);
       ld[d] = ihi[d] - ilo[d];
     }
-    return grid.kinds.size() * ld[0] * ld[1] * ld[2];
+    return grid_.kinds.size() * ld[0] * ld[1] * ld[2];
   }
 
   // ----------------------------------------------------------------------
@@ -186,8 +184,8 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
 
     assert(sizeof(size_t) == sizeof(unsigned long));
     size_t n_total, n_off = 0;
-    MPI_Allreduce(&n_write, &n_total, 1, MPI_LONG, MPI_SUM, comm_);
-    MPI_Exscan(&n_write, &n_off, 1, MPI_LONG, MPI_SUM, comm_);
+    MPI_Allreduce(&n_write, &n_total, 1, MPI_LONG, MPI_SUM, grid_.comm());
+    MPI_Exscan(&n_write, &n_off, 1, MPI_LONG, MPI_SUM, grid_.comm());
 
     struct hdf5_prt *arr = (struct hdf5_prt *) malloc(n_write * sizeof(*arr));
 
@@ -257,11 +255,10 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
 
   void write_idx(size_t *gidx_begin, size_t *gidx_end, hid_t group, hid_t dxpl)
   {
-    const auto& grid = *ppsc->grid_;
     herr_t ierr;
 
     hsize_t fdims[4];
-    fdims[0] = grid.kinds.size();
+    fdims[0] = grid_.kinds.size();
     fdims[1] = wdims[2];
     fdims[2] = wdims[1];
     fdims[3] = wdims[0];
@@ -270,7 +267,7 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
 
     assert(sizeof(size_t) == sizeof(hsize_t));
     int rank;
-    MPI_Comm_rank(comm_, &rank);
+    MPI_Comm_rank(grid_.comm(), &rank);
     if (rank == 0) {
       memspace = H5Screate_simple(4, fdims, NULL); H5_CHK(memspace);
     } else {
@@ -312,8 +309,8 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
 
     prof_start(pr_A);
     int rank, size;
-    MPI_Comm_rank(comm_, &rank);
-    MPI_Comm_size(comm_, &size);
+    MPI_Comm_rank(grid_.comm(), &rank);
+    MPI_Comm_size(grid_.comm(), &size);
 
     struct mrc_patch_info info;
     int nr_kinds = mprts.grid().kinds.size();
@@ -397,7 +394,7 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
 	}
 	recv_buf[r] = (size_t *) malloc(2 * remote_sz[r] * sizeof(*recv_buf[r]));
 	recv_buf_p[r] = recv_buf[r];
-	MPI_Irecv(recv_buf[r], 2 * remote_sz[r], MPI_LONG, r, 0x4000, comm_,
+	MPI_Irecv(recv_buf[r], 2 * remote_sz[r], MPI_LONG, r, 0x4000, grid_.comm(),
 		  &recv_req[r]);
       }
       MPI_Waitall(size, recv_req, MPI_STATUSES_IGNORE);
@@ -455,7 +452,7 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
 	l_idx_p += 2 * sz;
       }
 
-      MPI_Send(l_idx, 2 * local_sz, MPI_LONG, 0, 0x4000, comm_);
+      MPI_Send(l_idx, 2 * local_sz, MPI_LONG, 0, 0x4000, grid_.comm());
 
       free(l_idx);
     }
@@ -477,7 +474,7 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
     if (romio_ds_write) {
       MPI_Info_set(mpi_info, "romio_ds_write", romio_ds_write);
     }
-    H5Pset_fapl_mpio(plist, comm_, mpi_info);
+    H5Pset_fapl_mpio(plist, grid_.comm(), mpi_info);
 #endif
 
     hid_t file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, plist); H5_CHK(file);
@@ -548,5 +545,5 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
   // private:
   hid_t prt_type;
   Int3 wdims; // dimensions of the subdomain we're actually writing
-  MPI_Comm comm_;
+  const Grid_t& grid_;
 };

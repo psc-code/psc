@@ -63,7 +63,7 @@ public:
   static void setup(struct psc_output_particles *_outp)
   {
     PscOutputParticles<OutputParticles_t> outp(_outp);
-    new(outp.sub()) OutputParticles_t{_outp->params};
+    new(outp.sub()) OutputParticles_t{*ppsc->grid_, _outp->params};
   }
 
   static void destroy(struct psc_output_particles *_outp)

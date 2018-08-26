@@ -168,7 +168,7 @@ struct ItemLoopPatches : ItemPatch
     for (int p = 0; p < mres.n_patches(); p++) {
       Fields F(mflds[p]), R(mres[p]);
       grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-	  ItemPatch::set(R, F, i,j,k);
+	  ItemPatch::set(grid, R, F, i,j,k);
 	});
     }
   }

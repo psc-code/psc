@@ -4,7 +4,7 @@
 
 struct psc_output_particles_none : OutputParticlesParams, OutputParticlesBase
 {
-  psc_output_particles_none(const OutputParticlesParams& params)
+  psc_output_particles_none(const Grid_t& grid, const OutputParticlesParams& params)
     : OutputParticlesParams(params)
   {}
 
