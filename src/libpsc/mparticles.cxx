@@ -55,7 +55,7 @@ psc_mparticles_check(MparticlesBase& mprts_base)
     auto& patch = grid.patches[p];
     auto& prts = mprts[p];
 
-    f_real xb[3], xe[3];
+    double xb[3], xe[3];
     
     // New-style boundary requirements.
     // These will need revisiting when it comes to non-periodic domains.

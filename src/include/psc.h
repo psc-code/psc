@@ -30,11 +30,6 @@ enum {
   NR_FIELDS,
 };
 
-// Fortran types
-
-typedef double f_real;
-typedef int f_int;
-
 // ----------------------------------------------------------------------
 // general info / parameters for the code
 
