@@ -19,14 +19,14 @@ struct Marder_ : MarderBase
   using Fields = Fields3d<fields_t>;
   using Moment_t = Moment_rho_1st_nc<Mparticles, Mfields>;
 
-  Marder_(MPI_Comm comm, real_t diffusion, int loop, bool dump)
-    : comm_{comm},
+  Marder_(const Grid_t& grid, real_t diffusion, int loop, bool dump)
+    : grid_{grid},
       diffusion_{diffusion},
       loop_{loop},
       dump_{dump},
-      bnd_{*ppsc->grid_, ppsc->grid_->ibn},
-      item_rho_{*ppsc->grid_, comm},
-      item_dive_{*ppsc->grid_, comm}
+      bnd_{grid, grid.ibn},
+      item_rho_{grid, grid.comm()},
+      item_dive_{grid, grid.comm()}
   {
     if (dump_) {
       io_ = mrc_io_create(psc_comm(ppsc));
@@ -179,8 +179,8 @@ struct Marder_ : MarderBase
       correct_patch(mf[p], mf_div_e[p], p, max_err);
     }
 
-    MPI_Allreduce(MPI_IN_PLACE, &max_err, 1, Mfields_traits<Mfields>::mpi_dtype(), MPI_MAX, comm_);
-    mpi_printf(comm_, "marder: err %g\n", max_err);
+    MPI_Allreduce(MPI_IN_PLACE, &max_err, 1, Mfields_traits<Mfields>::mpi_dtype(), MPI_MAX, grid_.comm());
+    mpi_printf(grid_.comm(), "marder: err %g\n", max_err);
   }
 
   // ----------------------------------------------------------------------
@@ -222,7 +222,7 @@ private:
   int loop_; //< execute this many relaxation steps in a loop
   bool dump_; //< dump div_E, rho
 
-  MPI_Comm comm_;
+  const Grid_t& grid_;
   Bnd_<Mfields> bnd_;
   ItemMomentLoopPatches<Moment_t> item_rho_;
   FieldsItemFields<ItemLoopPatches<Item_dive<MfieldsState, Mfields>>> item_dive_;

@@ -142,7 +142,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     int marder_loop = 3;
     bool marder_dump = false;
     marder_interval = 0*5;
-    marder_.reset(new Marder_t(comm, marder_diffusion, marder_loop, marder_dump));
+    marder_.reset(new Marder_t(grid(), marder_diffusion, marder_loop, marder_dump));
 
     // -- output fields
     OutputFieldsCParams outf_params;

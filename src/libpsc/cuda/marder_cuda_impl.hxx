@@ -14,13 +14,14 @@ struct MarderCuda : MarderBase
 {
   using real_t = MfieldsStateCuda::fields_t::real_t;
   
-  MarderCuda(MPI_Comm comm, real_t diffusion, int loop, bool dump)
-    : diffusion_{diffusion},
+  MarderCuda(const Grid_t& grid, real_t diffusion, int loop, bool dump)
+    : grid_{grid},
+      diffusion_{diffusion},
       loop_{loop},
       dump_{dump}
   {
 #if 0
-    bnd_ = psc_bnd_create(comm);
+    bnd_ = psc_bnd_create(grid.comm());
     psc_bnd_set_name(bnd_, "marder_bnd");
     psc_bnd_set_type(bnd_, "cuda");
     psc_bnd_set_psc(bnd_, ppsc);
@@ -168,6 +169,7 @@ struct MarderCuda : MarderBase
   }
 
 private:
+  const Grid_t& grid_;
   real_t diffusion_; //< diffusion coefficient for Marder correction
   int loop_; //< execute this many relaxation steps in a loop
   bool dump_; //< dump div_E, rho
