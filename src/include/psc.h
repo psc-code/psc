@@ -61,8 +61,6 @@ struct psc {
   int timestep;	///< the current timestep
   ///@}
 
-  int ibn[3];         ///< number of ghost points
-
   const Grid_t& grid() const { assert(grid_); return *grid_; }
 
   Grid_t* grid_ = {};
@@ -111,7 +109,7 @@ void psc_view(struct psc *psc);
 void psc_destroy(struct psc *psc);
 
 Grid_t* psc_setup_domain(struct psc *psc, const Grid_t::Domain& domain, GridBc& bc, const Grid_t::Kinds& kinds,
-			 const Grid_t::Normalization& norm, double dt);
+			 const Grid_t::Normalization& norm, double dt, Int3 ibn);
 
 struct psc *psc_read_checkpoint(MPI_Comm comm, int n);
 void psc_write_checkpoint(struct psc *psc);

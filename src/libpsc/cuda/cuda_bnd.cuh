@@ -99,7 +99,7 @@ struct CudaBnd
   // ----------------------------------------------------------------------
   // ctor
   
-  CudaBnd(const Grid_t& grid, int ibn[3])
+  CudaBnd(const Grid_t& grid, Int3 ibn)
   {
     static struct mrc_ddc_funcs ddc_funcs;
 

@@ -500,8 +500,8 @@ struct MfieldsStateFromMfields : MfieldsStateBase
   using real_t = typename Mfields::real_t;
 
   MfieldsStateFromMfields(const Grid_t& grid)
-    : MfieldsStateBase{grid, NR_FIELDS, ppsc->ibn}, // FIXME, still hacky ibn handling...
-      mflds_{grid, NR_FIELDS, ppsc->ibn}
+    : MfieldsStateBase{grid, NR_FIELDS, grid.ibn}, // FIXME, still hacky ibn handling...
+      mflds_{grid, NR_FIELDS, grid.ibn}
   {}
 
   fields_t operator[](int p) { return mflds_[p]; }

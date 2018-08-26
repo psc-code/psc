@@ -63,8 +63,8 @@ struct CollisionHost
   CollisionHost(MPI_Comm comm, int interval, double nu)
     : interval_{interval},
       nu_{nu},
-      mflds_stats_{ppsc->grid(), NR_STATS, ppsc->ibn},
-      mflds_rei_{ppsc->grid(), NR_STATS, ppsc->ibn}
+      mflds_stats_{ppsc->grid(), NR_STATS, ppsc->grid().ibn},
+      mflds_rei_{ppsc->grid(), NR_STATS, ppsc->grid().ibn}
   {
     assert(nu_ > 0.);
     global_collision = this;

@@ -116,7 +116,7 @@ struct FieldsItemFields : FieldsItemBase
   }
  
   FieldsItemFields(const Grid_t& grid, MPI_Comm comm)
-    : mres_{ppsc->grid(), Item::n_comps, ppsc->ibn}
+    : mres_{ppsc->grid(), Item::n_comps, ppsc->grid().ibn}
   {}
 
   void operator()(MfieldsState& mflds)
@@ -191,7 +191,7 @@ struct ItemMomentCRTP
   using Mfields = MF;
   
   ItemMomentCRTP(const Grid_t& grid, MPI_Comm comm)
-    : mres_{grid, int(Derived::n_comps * ((Derived::flags & POFI_BY_KIND) ? grid.kinds.size() : 1)), ppsc->ibn}
+    : mres_{grid, int(Derived::n_comps * ((Derived::flags & POFI_BY_KIND) ? grid.kinds.size() : 1)), ppsc->grid().ibn}
   {
     auto n_comps = Derived::n_comps;
     auto fld_names = Derived::fld_names();
@@ -238,7 +238,7 @@ struct ItemMomentLoopPatches : ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, t
 
   ItemMomentLoopPatches(const Grid_t& grid, MPI_Comm comm)
     : Base{grid, comm},
-      bnd_{grid, ppsc->ibn}
+      bnd_{grid, grid.ibn}
   {}
 
   void run(Mparticles& mprts)

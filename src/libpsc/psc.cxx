@@ -73,7 +73,7 @@ _psc_create(struct psc *psc)
 // psc_setup_domain
 
 Grid_t* psc_setup_domain(struct psc *psc, const Grid_t::Domain& domain, GridBc& bc, const Grid_t::Kinds& kinds,
-			 const Grid_t::Normalization& norm, double dt)
+			 const Grid_t::Normalization& norm, double dt, Int3 ibn)
 {
 #if 0
   mpi_printf(MPI_COMM_WORLD, "::: dt      = %g\n", dt);
@@ -85,19 +85,20 @@ Grid_t* psc_setup_domain(struct psc *psc, const Grid_t::Domain& domain, GridBc& 
   assert(domain.dx[2] > 0.);
   
   for (int d = 0; d < 3; d++) {
-    if (psc->ibn[d] != 0) {
+    if (ibn[d] != 0) {
       continue;
     }
     // FIXME, old-style particle pushers need 3 ghost points still
     if (domain.gdims[d] == 1) {
       // no ghost points
-      psc->ibn[d] = 0;
+      ibn[d] = 0;
     } else {
-      psc->ibn[d] = 2;
+      ibn[d] = 2;
     }
   }
 
   psc->grid_ = new Grid_t{domain, bc, kinds, norm, dt};
+  psc->grid_->ibn = ibn;
 
   return psc->grid_;
 }

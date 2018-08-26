@@ -51,7 +51,7 @@ struct BndCuda2 : BndBase
   {
     // FIXME, not really a pretty way of doing this
     this->~BndCuda2();
-    new(this) BndCuda2(ppsc->grid(), ppsc->ibn);
+    new(this) BndCuda2(ppsc->grid(), ppsc->grid().ibn);
   }
   
   // ----------------------------------------------------------------------

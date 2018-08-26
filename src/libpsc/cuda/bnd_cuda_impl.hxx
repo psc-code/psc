@@ -25,7 +25,7 @@ struct BndCuda : BndBase
   // ----------------------------------------------------------------------
   // ctor
 
-  BndCuda(const Grid_t& grid, int ibn[3])
+  BndCuda(const Grid_t& grid, Int3 ibn)
   {
     ddc_ = grid.mrc_domain().create_ddc();
     mrc_ddc_set_funcs(ddc_, &ddc_funcs);

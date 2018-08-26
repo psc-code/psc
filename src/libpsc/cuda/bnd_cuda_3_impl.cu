@@ -29,7 +29,7 @@ void BndCuda3<MF>::reset()
 {
   // FIXME, not really a pretty way of doing this
   delete cbnd_;
-  cbnd_ = new CudaBnd{ppsc->grid(), ppsc->ibn};
+  cbnd_ = new CudaBnd{ppsc->grid(), ppsc->grid().ibn};
 }
   
 // ----------------------------------------------------------------------

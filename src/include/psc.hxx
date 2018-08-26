@@ -67,6 +67,9 @@ struct Psc
 
     diag_ = psc_diag_create(MPI_COMM_WORLD);
     psc_diag_set_from_options(diag_);
+
+    outp_ = psc_output_particles_create(MPI_COMM_WORLD);
+    psc_output_particles_set_from_options(outp_);
   }
 
   // ----------------------------------------------------------------------
@@ -76,7 +79,7 @@ struct Psc
 		   double dt, Grid_t::NormalizationParams& norm_params)
   {
     auto coeff = Grid_t::Normalization{norm_params};
-    grid_ = psc_setup_domain(psc_, domain, bc, kinds, coeff, dt);
+    grid_ = psc_setup_domain(psc_, domain, bc, kinds, coeff, dt, ibn);
 
 #ifdef VPIC
     vgrid_ = Grid::create();
@@ -142,7 +145,7 @@ struct Psc
     // FIXME, mv assert innto MfieldsState ctor
     assert(!material_list_.empty());
 
-    psc_->ibn[0] = psc_->ibn[1] = psc_->ibn[2] = 1;
+    ibn = {1, 1, 1};
 #endif
 
 #ifdef VPIC
@@ -166,12 +169,13 @@ struct Psc
     sort_.reset(new Sort_t{});
     pushp_.reset(new PushParticles_t{});
     pushf_.reset(new PushFields_t{});
-    bnd_.reset(new Bnd_t{psc_->grid(), psc_->ibn});
+    bnd_.reset(new Bnd_t{psc_->grid(), ibn});
     bndf_.reset(new BndFields_t{});
     bndp_.reset(new BndParticles_t{psc_->grid()});
 
     psc_setup_member_objs(psc_);
     psc_diag_setup(diag_);
+    psc_output_particles_setup(outp_);
     initialize_stats();
   }
 
@@ -620,6 +624,7 @@ protected:
   int marder_interval;
 
   int num_comm_round = {3};
+  Int3 ibn = {};
   
   int st_nr_particles;
   int st_time_step;

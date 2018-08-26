@@ -73,7 +73,7 @@ static void make_psc(const Grid_t::Kinds& kinds)
   norm_params.nicell = 200;
   auto coeff = Grid_t::Normalization{norm_params};
   auto psc = psc_create(MPI_COMM_WORLD); // to create ppsc, mostly
-  psc_setup_domain(psc, grid_domain, grid_bc, kinds, coeff, 1.);
+  psc_setup_domain(psc, grid_domain, grid_bc, kinds, coeff, 1., {});
 }
 
 // ======================================================================

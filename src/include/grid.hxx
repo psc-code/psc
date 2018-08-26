@@ -177,9 +177,10 @@ struct Grid_
   real_t dt = { 1. };
   std::vector<Patch> patches;
   std::vector<Kind> kinds;
+  Int3 ibn; // FIXME
 
-// ----------------------------------------------------------------------
-// make_mrc_domain
+  // ----------------------------------------------------------------------
+  // make_mrc_domain
 
   static MrcDomain make_mrc_domain(const Domain& grid_domain, const GridBc& grid_bc, int nr_patches)
   {

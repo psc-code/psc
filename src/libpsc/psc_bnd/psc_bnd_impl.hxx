@@ -20,7 +20,7 @@ struct Bnd_ : BndBase
   // ----------------------------------------------------------------------
   // ctor
 
-  Bnd_(const Grid_t& grid, int ibn[3])
+  Bnd_(const Grid_t& grid, const int ibn[3])
   {
     static struct mrc_ddc_funcs ddc_funcs = {
       .copy_to_buf   = copy_to_buf,
@@ -52,7 +52,7 @@ struct Bnd_ : BndBase
   {
     // FIXME, not really a pretty way of doing this
     this->~Bnd_();
-    new(this) Bnd_(ppsc->grid(), ppsc->ibn);
+    new(this) Bnd_(ppsc->grid(), ppsc->grid().ibn);
   }
   
   // ----------------------------------------------------------------------
