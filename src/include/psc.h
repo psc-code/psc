@@ -73,12 +73,6 @@ struct psc_particle_npt {
   int particles_per_cell; ///< desired number of particles per cell per unit density. If not specified, the global nicell is used.
 };
 
-struct psc_ops {
-  MRC_SUBCLASS_OPS(struct psc);
-};
-
-#define psc_ops(psc) ((struct psc_ops *)((psc)->obj.ops))
-
 #define psc_foreach_3d_g(psc, p, ix, iy, iz) {				\
   int __ilo[3] = { -psc->ibn[0], -psc->ibn[1], -psc->ibn[2] };		\
   int __ihi[3] = { psc->grid().ldims[0] + psc->ibn[0],			\
@@ -98,18 +92,8 @@ extern struct psc *ppsc;
 
 extern int pr_time_step_no_comm;
 
-struct psc *psc_create(MPI_Comm comm);
-void psc_set_from_options(struct psc *psc);
-void psc_view(struct psc *psc);
-void psc_destroy(struct psc *psc);
-
 Grid_t* psc_setup_domain(struct psc *psc, const Grid_t::Domain& domain, GridBc& bc, const Grid_t::Kinds& kinds,
 			 const Grid_t::Normalization& norm, double dt, Int3 ibn);
-
-struct psc *psc_read_checkpoint(MPI_Comm comm, int n);
-void psc_write_checkpoint(struct psc *psc);
-
-void psc_setup_fortran(struct psc *psc);
 
 static inline bool psc_at_boundary_lo(struct psc *psc, int p, int d)
 {

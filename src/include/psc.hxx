@@ -248,7 +248,7 @@ struct Psc
       if (!first_iteration &&
 	  p_.write_checkpoint_every_step > 0 &&
 	  psc_->timestep % p_.write_checkpoint_every_step == 0) {
-	psc_write_checkpoint(psc_);
+	//psc_write_checkpoint(psc_);
       }
       first_iteration = false;
 
@@ -291,7 +291,7 @@ struct Psc
     }
 
     if (p_.write_checkpoint) {
-      psc_write_checkpoint(psc_);
+      //psc_write_checkpoint(psc_);
     }
 
     // FIXME, merge with existing handling of wallclock time
