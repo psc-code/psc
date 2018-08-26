@@ -17,11 +17,11 @@ struct Heating__ : HeatingBase
   // ctor
 
   template<typename FUNC>
-  Heating__(int interval, int kind, FUNC get_H)
+  Heating__(const Grid_t& grid, int interval, int kind, FUNC get_H)
     : kind_{kind},
       get_H_{get_H}
   {
-    heating_dt_ = interval * ppsc->grid_->dt;
+    heating_dt_ = interval * grid.dt;
   }
   
   // ----------------------------------------------------------------------

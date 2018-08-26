@@ -27,11 +27,12 @@ struct Inject_ : InjectBase
   // ----------------------------------------------------------------------
   // ctor
   
-  Inject_(MPI_Comm comm, int interval, int tau, int kind_n,
+  Inject_(const Grid_t& grid, int interval, int tau, int kind_n,
 	  Target_t target)
     : InjectBase{interval, tau, kind_n},
       target_{target},
-      moment_n_{*ppsc->grid_, comm}
+      moment_n_{grid, grid.comm()},
+      grid_{grid}
   {}
 
   // ----------------------------------------------------------------------
@@ -125,5 +126,6 @@ struct Inject_ : InjectBase
 private:
   Target_t target_;
   ItemMoment_t moment_n_;
+  const Grid_t& grid_;
 };
 

@@ -411,7 +411,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
 #if TEST == TEST_1_HEATING_3D
     collision_interval = 0;
 #endif
-    collision_.reset(new Collision_t{comm, collision_interval, collision_nu});
+    collision_.reset(new Collision_t{grid(), collision_interval, collision_nu});
 
     // -- Checks
     ChecksParams checks_params;
@@ -436,10 +436,10 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     marder_.reset(new Marder_t(grid(), marder_diffusion, marder_loop, marder_dump));
 
     // -- Heating
-    heating_.reset(new Heating_t{heating_interval, heating_kind, heating_spot});
+    heating_.reset(new Heating_t{grid(), heating_interval, heating_kind, heating_spot});
 
     // -- Particle injection
-    inject_.reset(new Inject_t{comm, inject_interval, inject_tau, inject_kind_n, inject_target});
+    inject_.reset(new Inject_t{grid(), inject_interval, inject_tau, inject_kind_n, inject_target});
     
     // -- output fields
     OutputFieldsCParams outf_params;

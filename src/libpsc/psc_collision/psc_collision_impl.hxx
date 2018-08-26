@@ -60,11 +60,11 @@ struct CollisionHost
     particles_t& prts_;
   };
   
-  CollisionHost(MPI_Comm comm, int interval, double nu)
+  CollisionHost(const Grid_t& grid, int interval, double nu)
     : interval_{interval},
       nu_{nu},
-      mflds_stats_{*ppsc->grid_, NR_STATS, ppsc->grid_->ibn},
-      mflds_rei_{*ppsc->grid_, NR_STATS, ppsc->grid_->ibn}
+      mflds_stats_{grid, NR_STATS, grid.ibn},
+      mflds_rei_{grid, NR_STATS, grid.ibn}
   {
     assert(nu_ > 0.);
     global_collision = this;

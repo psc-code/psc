@@ -127,7 +127,7 @@ TYPED_TEST(CollisionTest, Test1)
   mprts.inject(0, prt0);
   mprts.inject(0, prt1);
 
-  auto collision = Collision(psc_comm(ppsc), 1, 1.);
+  auto collision = Collision(grid, 1, 1.);
 
   collision(mprts);
 
