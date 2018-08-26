@@ -390,8 +390,9 @@ private:
     return loads;
   }
 
-  std::vector<double> gather_loads(const MrcDomain& domain, std::vector<double> loads)
+  std::vector<double> gather_loads(const Grid_t& grid, std::vector<double> loads)
   {
+    const MrcDomain& domain = grid.mrc_domain_;
     MPI_Comm comm = domain.comm();
     int rank, size;
     MPI_Comm_rank(comm, &rank);
@@ -441,8 +442,10 @@ private:
     return loads_all;
   }
 
-  int find_best_mapping(const MrcDomain& domain, const std::vector<double>& loads_all)
+  int find_best_mapping(const Grid_t& grid, const std::vector<double>& loads_all)
   {
+    const MrcDomain& domain = grid.mrc_domain_;
+    
     MPI_Comm comm = domain.comm();
     int rank, size;
     MPI_Comm_rank(comm, &rank);
@@ -811,10 +814,9 @@ private:
 
     prof_start(pr_bal_load);
     auto old_grid = psc->grid_;
-    auto domain_old = old_grid->mrc_domain();
     
-    auto loads_all = gather_loads(domain_old, loads);
-    int n_patches_new = find_best_mapping(domain_old, loads_all);
+    auto loads_all = gather_loads(*old_grid, loads);
+    int n_patches_new = find_best_mapping(*old_grid, loads_all);
 
     auto new_grid = new Grid_t{old_grid->domain, old_grid->bc, old_grid->kinds,
 			       old_grid->norm, old_grid->dt, n_patches_new};
@@ -828,7 +830,7 @@ private:
     psc_balance_comp_time_by_patch = new double[new_grid->n_patches()];
     
     prof_start(pr_bal_ctx);
-    communicate_ctx ctx(domain_old, new_grid->mrc_domain());
+    communicate_ctx ctx(old_grid->mrc_domain(), new_grid->mrc_domain());
     prof_stop(pr_bal_ctx);
 
     // particles
