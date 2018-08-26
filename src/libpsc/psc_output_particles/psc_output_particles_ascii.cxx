@@ -22,8 +22,8 @@ struct psc_output_particles_ascii : OutputParticlesParams, OutputParticlesBase
 
   void run(MparticlesBase& mprts_base) override
   {
-    if (every_step < 0 ||
-	ppsc->timestep % every_step != 0) {
+    const auto& grid = mprts_base.grid();
+    if (every_step < 0 || grid.timestep() % every_step != 0) {
       return;
     }
     
@@ -31,10 +31,9 @@ struct psc_output_particles_ascii : OutputParticlesParams, OutputParticlesBase
     MPI_Comm_rank(comm_, &rank);
     char filename[strlen(data_dir) + strlen(basename) + 19];
     sprintf(filename, "%s/%s.%06d_p%06d.asc", data_dir,
-	    basename, ppsc->timestep, rank);
+	    basename, grid.timestep(), rank);
     
     auto& mprts = mprts_base.get_as<MparticlesDouble>();
-    auto& grid = mprts.grid();
     
     FILE *file = fopen(filename, "w");
     for (int p = 0; p < mprts.n_patches(); p++) {

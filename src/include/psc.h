@@ -53,7 +53,7 @@ struct psc {
   ///@}
 
   // other parameters / constants
-  int timestep;	///< the current timestep
+  int timestep__;	///< the current timestep
   ///@}
 
   const Grid_t& grid() const { assert(grid_); return *grid_; }

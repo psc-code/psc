@@ -100,6 +100,8 @@ Grid_t* psc_setup_domain(struct psc *psc, const Grid_t::Domain& domain, GridBc& 
   psc->grid_ = new Grid_t{domain, bc, kinds, norm, dt};
   psc->grid_->ibn = ibn;
 
+  psc->grid_->timestep_ = &psc->timestep__;
+
   return psc->grid_;
 }
 
@@ -118,8 +120,8 @@ _psc_destroy(struct psc *psc)
 static void
 _psc_write(struct psc *psc, struct mrc_io *io)
 {
-  mrc_io_write_int(io, psc, "timestep", psc->timestep);
 #if 0
+  mrc_io_write_int(io, psc, "timestep", psc->timestep);
   mrc_io_write_int(io, psc, "nr_kinds", psc->nr_kinds_);
 
   for (int k = 0; k < psc->nr_kinds_; k++) {
@@ -147,8 +149,8 @@ _psc_read(struct psc *psc, struct mrc_io *io)
 
   //psc_setup_coeff(psc->norm_params);
 
-  mrc_io_read_int(io, psc, "timestep", &psc->timestep);
 #if 0
+  mrc_io_read_int(io, psc, "timestep", &psc->timestep);
   mrc_io_read_int(io, psc, "nr_kinds", &psc->nr_kinds_);
   psc->kinds_ = new psc_kind[psc->nr_kinds_]();
   for (int k = 0; k < psc->nr_kinds_; k++) {

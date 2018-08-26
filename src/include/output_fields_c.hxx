@@ -113,19 +113,20 @@ struct OutputFieldsC : public OutputFieldsCParams
     }
     prof_start(pr);
 
+    auto timestep = grid.timestep();
     bool doaccum_tfield = tfield_step > 0 && 
-      (((psc->timestep >= (tfield_next - tfield_length + 1)) &&
-	psc->timestep % tfield_every == 0) ||
-       psc->timestep == 0);
+      (((timestep >= (tfield_next - tfield_length + 1)) &&
+	timestep % tfield_every == 0) ||
+       timestep == 0);
     
-    if ((pfield_step > 0 && psc->timestep >= pfield_next) ||
+    if ((pfield_step > 0 && timestep >= pfield_next) ||
 	(tfield_step > 0 && doaccum_tfield)) {
       for (auto item : items) {
 	item.item(mflds, mprts);
       }
     }
     
-    if (pfield_step > 0 && psc->timestep >= pfield_next) {
+    if (pfield_step > 0 && timestep >= pfield_next) {
       mpi_printf(MPI_COMM_WORLD, "***** Writing PFD output\n"); // FIXME
       pfield_next += pfield_step;
       
@@ -144,7 +145,7 @@ struct OutputFieldsC : public OutputFieldsCParams
 	}
 	naccum++;
       }
-      if (psc->timestep >= tfield_next) {
+      if (timestep >= tfield_next) {
 	mpi_printf(MPI_COMM_WORLD, "***** Writing TFD output\n"); // FIXME
 	tfield_next += tfield_step;
 	

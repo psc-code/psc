@@ -90,7 +90,7 @@ struct Inject_ : InjectBase
 	    
 	      int n_in_cell;
 	      if (kind != setup_particles.neutralizing_population) {
-		if (psc->timestep >= 0) {
+		if (grid.timestep() >= 0) {
 		  npt.n -= N(kind_n, jx,jy,jz);
 		  if (npt.n < 0) {
 		    n_in_cell = 0;

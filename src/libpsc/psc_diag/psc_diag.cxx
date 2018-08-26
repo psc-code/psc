@@ -65,8 +65,10 @@ void
 psc_diag_run(struct psc_diag *diag, struct psc *psc,
 	     MparticlesBase& mprts, MfieldsStateBase& mflds)
 {
+  const auto& grid = mprts.grid();
+  
   if (diag->every_step < 0 || 
-      psc->timestep % diag->every_step != 0)
+      grid.timestep() % diag->every_step != 0)
     return;
 
   int rank;
@@ -74,7 +76,7 @@ psc_diag_run(struct psc_diag *diag, struct psc *psc,
 
   struct psc_diag_item *item;
   if (rank == 0) {
-    fprintf(diag->file, "%g", psc->timestep * psc->grid().dt);
+    fprintf(diag->file, "%g", grid.timestep() * grid.dt);
   }
   mrc_obj_for_each_child(item, diag, struct psc_diag_item) {
     int nr_values = psc_diag_item_nr_values(item);

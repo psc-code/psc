@@ -526,7 +526,7 @@ private:
 
       if (write_loads_) {
 	int gp = 0;
-	char s[20]; sprintf(s, "loads2-%06d.asc", ppsc->timestep);
+	char s[20]; sprintf(s, "loads2-%06d.asc", ppsc->grid().timestep());
 	FILE *f = fopen(s, "w");
 	for (int r = 0; r < size; r++) {
 	  for (int p = 0; p < nr_patches_all_new[r]; p++) {

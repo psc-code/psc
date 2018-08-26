@@ -345,7 +345,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
 
     // state is at: x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
     MPI_Comm comm = psc_comm(psc_);
-    int timestep = psc_->timestep;
+    int timestep = grid().timestep();
 
     auto& mprts = *mprts_;
     auto& mflds = *mflds_;

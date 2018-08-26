@@ -37,15 +37,15 @@ struct MrcIo
       slab_dims[d] = rx[d] - rn[d];
     }
     
-    mrc_io_open(io_, "w", ppsc->timestep, ppsc->timestep * ppsc->grid().dt);
+    mrc_io_open(io_, "w", grid.timestep(), grid.timestep() * grid.dt);
     
     // save some basic info about the run in the output file
     struct mrc_obj *obj = mrc_obj_create(mrc_io_comm(io_));
     mrc_obj_set_name(obj, "psc");
-    mrc_obj_dict_add_int(obj, "timestep", ppsc->timestep);
-    mrc_obj_dict_add_float(obj, "time", ppsc->timestep * ppsc->grid().dt);
-    mrc_obj_dict_add_float(obj, "cc", ppsc->grid().norm.cc);
-    mrc_obj_dict_add_float(obj, "dt", ppsc->grid().dt);
+    mrc_obj_dict_add_int(obj, "timestep", grid.timestep());
+    mrc_obj_dict_add_float(obj, "time", grid.timestep() * grid.dt);
+    mrc_obj_dict_add_float(obj, "cc", grid.norm.cc);
+    mrc_obj_dict_add_float(obj, "dt", grid.dt);
     mrc_obj_write(obj, io_);
     mrc_obj_destroy(obj);
     

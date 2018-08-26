@@ -69,9 +69,10 @@ struct MarderVpic : MarderBase
   {
     struct psc *psc = ppsc; // FIXME
 
-    bool clean_div_e = (clean_div_e_interval_ > 0 && psc->timestep % clean_div_e_interval_ == 0);
-    bool clean_div_b = (clean_div_b_interval_ > 0 && psc->timestep % clean_div_b_interval_ == 0);
-    bool sync_shared = (sync_shared_interval_ > 0 && psc->timestep % sync_shared_interval_ == 0);
+    const auto& grid = mflds.grid();
+    bool clean_div_e = (clean_div_e_interval_ > 0 && grid.timestep() % clean_div_e_interval_ == 0);
+    bool clean_div_b = (clean_div_b_interval_ > 0 && grid.timestep() % clean_div_b_interval_ == 0);
+    bool sync_shared = (sync_shared_interval_ > 0 && grid.timestep() % sync_shared_interval_ == 0);
 
     if (!(clean_div_e || clean_div_b || sync_shared)) {
       return;

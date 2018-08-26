@@ -241,29 +241,29 @@ struct Psc
     double elapsed = MPI_Wtime();
 
     bool first_iteration = true;
-    while (psc_->timestep < p_.nmax) {
+    while (grid().timestep() < p_.nmax) {
       prof_start(pr);
       psc_stats_start(st_time_step);
 
       if (!first_iteration &&
 	  p_.write_checkpoint_every_step > 0 &&
-	  psc_->timestep % p_.write_checkpoint_every_step == 0) {
+	  grid().timestep() % p_.write_checkpoint_every_step == 0) {
 	//psc_write_checkpoint(psc_);
       }
       first_iteration = false;
 
-      mpi_printf(psc_comm(psc_), "**** Step %d / %d, Code Time %g, Wall Time %g\n", psc_->timestep + 1,
-		 p_.nmax, psc_->timestep * grid().dt, MPI_Wtime() - time_start_);
+      mpi_printf(psc_comm(psc_), "**** Step %d / %d, Code Time %g, Wall Time %g\n", grid().timestep() + 1,
+		 p_.nmax, grid().timestep() * grid().dt, MPI_Wtime() - time_start_);
 
       prof_start(pr_time_step_no_comm);
       prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
 
       step();
     
-      psc_->timestep++; // FIXME, too hacky
+      psc_->timestep__++; // FIXME, too hacky
 #ifdef VPIC
       vgrid_->step++;
-      assert(vgrid_->step == psc_->timestep);
+      assert(vgrid_->step == grid().timestep());
 #endif
       
       diagnostics();
@@ -273,7 +273,7 @@ struct Psc
 
       psc_stats_val[st_nr_particles] = mprts_->get_n_prts();
 
-      if (psc_->timestep % p_.stats_every == 0) {
+      if (grid().timestep() % p_.stats_every == 0) {
 	print_status();
       }
 
@@ -570,7 +570,7 @@ private:
   update_profile(rank == 0);
 #endif
 #endif
-    psc_stats_log(psc_->timestep);
+  psc_stats_log(grid().timestep());
     print_profiling();
   }
 

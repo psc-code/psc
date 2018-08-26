@@ -750,7 +750,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     // x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
 
-    int timestep = psc_->timestep;
+    int timestep = grid().timestep();
 
     auto& mprts = *mprts_;
     auto& mflds = *mflds_;
@@ -856,7 +856,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     MPI_Comm comm = psc_comm(psc_);
     const Grid_t& grid = psc_->grid();
 
-    int timestep = psc_->timestep;
+    int timestep = grid.timestep();
     if (outf_->pfield_step > 0 && timestep % outf_->pfield_step == 0) {
       mpi_printf(comm, "***** Writing PFD output\n");
       io_pfd_.open(grid);

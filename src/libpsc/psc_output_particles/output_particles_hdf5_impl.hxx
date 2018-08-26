@@ -461,7 +461,7 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
     prof_start(pr_C);
     char filename[strlen(data_dir) + strlen(basename) + 20];
     sprintf(filename, "%s/%s.%06d_p%06d.h5", data_dir,
-	    basename, ppsc->timestep, 0);
+	    basename, grid.timestep(), 0);
 
     hid_t plist = H5Pcreate(H5P_FILE_ACCESS);
 
@@ -532,7 +532,8 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
 
   void run(MparticlesBase& mprts_base) override
   {
-    if (every_step <= 0 || ppsc->timestep % every_step != 0) {
+    const auto& grid = mprts_base.grid();
+    if (every_step <= 0 || grid.timestep() % every_step != 0) {
       return;
     }
 
