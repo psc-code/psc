@@ -425,7 +425,7 @@ private:
     if (rank == 0) {
 #if 0
       int rl = 0;
-      char s[20]; sprintf(s, "loads-%06d.asc", ppsc->timestep);
+      char s[20]; sprintf(s, "loads-%06d.asc", grid.timestep());
       FILE *f = fopen(s, "w");
       for (int p = 0; p < *p_nr_global_patches; p++) {
 	if (rl < size - 1 && p >= displs[rl+1]) {
@@ -529,7 +529,7 @@ private:
 
       if (write_loads_) {
 	int gp = 0;
-	char s[20]; sprintf(s, "loads2-%06d.asc", ppsc->grid_->timestep());
+	char s[20]; sprintf(s, "loads2-%06d.asc", grid.timestep());
 	FILE *f = fopen(s, "w");
 	for (int r = 0; r < size; r++) {
 	  for (int p = 0; p < nr_patches_all_new[r]; p++) {
