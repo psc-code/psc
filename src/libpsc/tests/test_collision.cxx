@@ -54,7 +54,7 @@ TEST(BinaryCollision, Test1)
 // FIXME, duplicated in various testing environments
 
 template<typename dim>
-static void make_psc(const Grid_t::Kinds& kinds)
+static Grid_t& make_psc(const Grid_t::Kinds& kinds)
 {
   Int3 gdims = {16, 16, 16};
   Int3 ibn = {2, 2, 2};
@@ -74,6 +74,7 @@ static void make_psc(const Grid_t::Kinds& kinds)
   auto coeff = Grid_t::Normalization{norm_params};
   auto psc = psc_create(MPI_COMM_WORLD); // to create ppsc, mostly
   psc_setup_domain(psc, grid_domain, grid_bc, kinds, coeff, 1., {});
+  return *psc->grid_;
 }
 
 // ======================================================================
@@ -116,8 +117,7 @@ TYPED_TEST(CollisionTest, Test1)
   const typename Mparticles::real_t eps = 1e-5;
 
   auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
-  make_psc<dim>(kinds);
-  const auto& grid = *ppsc->grid_;
+  const auto& grid = make_psc<dim>(kinds);
   
   // init particles
   auto prt0 = particle_inject{{5., 5., 5.}, {1., 0., 0.}, 1., 0};

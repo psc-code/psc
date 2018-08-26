@@ -173,12 +173,13 @@ struct PushParticlesTest : ::testing::Test
 
     auto psc = psc_create(MPI_COMM_WORLD); // to create ppsc, mostly
     psc_setup_domain(psc, grid_domain, grid_bc, kinds, coeff, 1., {});
+    grid_ = psc->grid_;
   }
   
   const Grid_t& grid()
   {
-    assert(ppsc);
-    return *ppsc->grid_;
+    assert(grid_);
+    return *grid_;
   }
 
   template<typename FUNC>
@@ -267,6 +268,7 @@ struct PushParticlesTest : ::testing::Test
     return xi1;
   }
 
+  Grid_t* grid_ = {};
   Mparticles* mprts = {};
   MfieldsState* mflds = {};
 };
