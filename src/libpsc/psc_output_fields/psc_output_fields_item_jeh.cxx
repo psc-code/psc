@@ -17,10 +17,11 @@ using FieldsState = Fields3d<MfieldsState_t::fields_t>;
 
 // ======================================================================
 
-#define define_dxdydz(dx, dy, dz)			       \
-  int dx _mrc_unused = (ppsc->grid().isInvar(0)) ? 0 : 1;      \
-  int dy _mrc_unused = (ppsc->grid().isInvar(1)) ? 0 : 1;      \
-  int dz _mrc_unused = (ppsc->grid().isInvar(2)) ? 0 : 1
+#define define_dxdydz(dx, dy, dz)		       \
+  const auto& grid = *ppsc->grid_;		       \
+  int dx _mrc_unused = (grid.isInvar(0)) ? 0 : 1;      \
+  int dy _mrc_unused = (grid.isInvar(1)) ? 0 : 1;      \
+  int dz _mrc_unused = (grid.isInvar(2)) ? 0 : 1
 
 // ======================================================================
 
@@ -359,9 +360,9 @@ struct Item_divb
   {
     define_dxdydz(dx, dy, dz);
     R(0, i,j,k) = 
-      ((F(HX, i+dx,j,k) - F(HX, i,j,k)) / ppsc->grid().domain.dx[0] +
-       (F(HY, i,j+dy,k) - F(HY, i,j,k)) / ppsc->grid().domain.dx[1] +
-       (F(HZ, i,j,k+dz) - F(HZ, i,j,k)) / ppsc->grid().domain.dx[2]);
+      ((F(HX, i+dx,j,k) - F(HX, i,j,k)) / grid.domain.dx[0] +
+       (F(HY, i,j+dy,k) - F(HY, i,j,k)) / grid.domain.dx[1] +
+       (F(HZ, i,j,k+dz) - F(HZ, i,j,k)) / grid.domain.dx[2]);
   }
 };
 
@@ -382,9 +383,9 @@ struct Item_divj
   {
     define_dxdydz(dx, dy, dz);
     R(0, i,j,k) = 
-      ((F(JXI, i,j,k) - F(JXI, i-dx,j,k)) / ppsc->grid().domain.dx[0] +
-       (F(JYI, i,j,k) - F(JYI, i,j-dy,k)) / ppsc->grid().domain.dx[1] +
-       (F(JZI, i,j,k) - F(JZI, i,j,k-dz)) / ppsc->grid().domain.dx[2]);
+      ((F(JXI, i,j,k) - F(JXI, i-dx,j,k)) / grid.domain.dx[0] +
+       (F(JYI, i,j,k) - F(JYI, i,j-dy,k)) / grid.domain.dx[1] +
+       (F(JZI, i,j,k) - F(JZI, i,j,k-dz)) / grid.domain.dx[2]);
   }
 };
 

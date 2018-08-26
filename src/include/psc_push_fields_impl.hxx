@@ -14,7 +14,8 @@
 template<class F>
 static void Foreach_3d(F f, int l, int r)
 {
-  ppsc->grid().Foreach_3d(l, r, [&](int i, int j, int k) {
+  const auto& grid = *ppsc->grid_;
+  grid.Foreach_3d(l, r, [&](int i, int j, int k) {
       f.x(i,j,k);
       f.y(i,j,k);
       f.z(i,j,k);
@@ -33,7 +34,7 @@ public:
   
   PushBase(struct psc* psc, double dt_fac)
   {
-    const Grid_t& grid = psc->grid();
+    const Grid_t& grid = *psc->grid_;
     
     dth = dt_fac * grid.dt;
 

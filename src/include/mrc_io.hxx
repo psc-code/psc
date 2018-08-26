@@ -76,7 +76,7 @@ struct MrcIo
     // but this way allows us to write fewer components, useful to hack around 16-bit vpic material ids,
     // stored together as AOS with floats...
     
-    mrc_fld* fld = ppsc->grid().mrc_domain().m3_create();
+    mrc_fld* fld = mflds.grid().mrc_domain().m3_create();
     mrc_fld_set_name(fld, name.c_str());
     mrc_fld_set_param_int(fld, "nr_ghosts", 0);
     mrc_fld_set_param_int(fld, "nr_comps", n_comps);

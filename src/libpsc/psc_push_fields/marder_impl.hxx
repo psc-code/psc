@@ -24,9 +24,9 @@ struct Marder_ : MarderBase
       diffusion_{diffusion},
       loop_{loop},
       dump_{dump},
-      bnd_{ppsc->grid(), ppsc->grid().ibn},
-      item_rho_{ppsc->grid(), comm},
-      item_dive_{ppsc->grid(), comm}
+      bnd_{*ppsc->grid_, ppsc->grid_->ibn},
+      item_rho_{*ppsc->grid_, comm},
+      item_dive_{*ppsc->grid_, comm}
   {
     if (dump_) {
       io_ = mrc_io_create(psc_comm(ppsc));
@@ -76,15 +76,16 @@ struct Marder_ : MarderBase
   // Do the modified marder correction (See eq.(5, 7, 9, 10) in Mardahl and Verboncoeur, CPC, 1997)
 
 #define define_dxdydz(dx, dy, dz)				\
-  int dx _mrc_unused = (ppsc->grid().isInvar(0)) ? 0 : 1;	\
-  int dy _mrc_unused = (ppsc->grid().isInvar(1)) ? 0 : 1;	\
-  int dz _mrc_unused = (ppsc->grid().isInvar(2)) ? 0 : 1
+  const auto& grid = flds.grid();				\
+  int dx _mrc_unused = (grid.isInvar(0)) ? 0 : 1;		\
+  int dy _mrc_unused = (grid.isInvar(1)) ? 0 : 1;		\
+  int dz _mrc_unused = (grid.isInvar(2)) ? 0 : 1
 
 #define psc_foreach_3d_more(psc, p, ix, iy, iz, l, r) {	\
   int __ilo[3] = { -l[0], -l[1], -l[2] };		\
-  int __ihi[3] = { psc->grid().ldims[0] + r[0],		\
-		   psc->grid().ldims[1] + r[1],		\
-		   psc->grid().ldims[2] + r[2] };	\
+  int __ihi[3] = { grid.ldims[0] + r[0],		\
+		   grid.ldims[1] + r[1],		\
+		   grid.ldims[2] + r[2] };		\
   for (int iz = __ilo[2]; iz < __ihi[2]; iz++) {	\
   for (int iy = __ilo[1]; iy < __ihi[1]; iy++) {	\
   for (int ix = __ilo[0]; ix < __ihi[0]; ix++)
@@ -99,17 +100,16 @@ struct Marder_ : MarderBase
 
     // FIXME: how to choose diffusion parameter properly?
     //double deltax = ppsc->patch[p].dx[0];
-    double deltay = ppsc->grid().domain.dx[1]; // FIXME double/float
-    double deltaz = ppsc->grid().domain.dx[2];
+    double deltay = grid.domain.dx[1]; // FIXME double/float
+    double deltaz = grid.domain.dx[2];
     double inv_sum = 0.;
     int nr_levels;
-    const auto& grid = ppsc->grid();
     for (int d = 0; d < 3; d++) {
       if (!grid.isInvar(d)) {
 	inv_sum += 1. / sqr(grid.domain.dx[d]);
       }
     }
-    double diffusion_max = 1. / 2. / (.5 * ppsc->grid().dt) / inv_sum;
+    double diffusion_max = 1. / 2. / (.5 * grid.dt) / inv_sum;
     double diffusion     = diffusion_max * diffusion_;
 
     int l_cc[3] = {0, 0, 0}, r_cc[3] = {0, 0, 0};
@@ -140,7 +140,7 @@ struct Marder_ : MarderBase
     } psc_foreach_3d_more_end;
 #endif
 
-    assert(ppsc->grid().isInvar(0));
+    assert(grid.isInvar(0));
 
     {
       int l[3] = { l_nc[0], l_cc[1], l_nc[2] };

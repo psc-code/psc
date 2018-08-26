@@ -17,7 +17,7 @@ struct SetupParticles
   
   int get_n_in_cell(struct psc *psc, struct psc_particle_npt *npt)
   {
-    const auto& grid = psc->grid();
+    const auto& grid = *psc->grid_;
     
     if (const_num_particles_per_cell) {
       return 1. / grid.norm.cori;
@@ -43,8 +43,9 @@ struct SetupParticles
   void setup_particle(struct psc *psc, particle_t *prt, struct psc_particle_npt *npt,
 		      int p, double xx[3])
   {
-    auto& kinds = psc->grid().kinds;
-    double beta = psc->grid().norm.beta;
+    const auto& grid = *psc->grid_;
+    auto& kinds = grid.kinds;
+    double beta = grid.norm.beta;
     
     float ran1, ran2, ran3, ran4, ran5, ran6;
     do {
@@ -80,9 +81,9 @@ struct SetupParticles
     assert(npt->m == kinds[prt->kind].m);
     /* prt->qni = kinds[prt->kind].q; */
     /* prt->mni = kinds[prt->kind].m; */
-    prt->x[0] = xx[0] - psc->grid().patches[p].xb[0];
-    prt->x[1] = xx[1] - psc->grid().patches[p].xb[1];
-    prt->x[2] = xx[2] - psc->grid().patches[p].xb[2];
+    prt->x[0] = xx[0] - grid.patches[p].xb[0];
+    prt->x[1] = xx[1] - grid.patches[p].xb[1];
+    prt->x[2] = xx[2] - grid.patches[p].xb[2];
     prt->p[0] = pxi;
     prt->p[1] = pyi;
     prt->p[2] = pzi;
@@ -173,7 +174,7 @@ struct SetupParticles
   template<typename FUNC>
   std::vector<uint> setup_partition(psc* psc, FUNC func)
   {
-    const auto& grid = psc->grid();
+    const auto& grid = *psc->grid_;
     const auto& kinds = grid.kinds;
     std::vector<uint> n_prts_by_patch(grid.n_patches());
     

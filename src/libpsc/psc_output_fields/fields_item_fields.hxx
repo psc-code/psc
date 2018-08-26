@@ -5,9 +5,10 @@
 #include "fields_item.hxx"
 
 #define define_dxdydz(dx, dy, dz)			       \
-  int dx _mrc_unused = (ppsc->grid().isInvar(0)) ? 0 : 1;      \
-  int dy _mrc_unused = (ppsc->grid().isInvar(1)) ? 0 : 1;      \
-  int dz _mrc_unused = (ppsc->grid().isInvar(2)) ? 0 : 1
+  auto& grid = *ppsc->grid_;				       \
+  int dx _mrc_unused = (grid.isInvar(0)) ? 0 : 1;	       \
+  int dy _mrc_unused = (grid.isInvar(1)) ? 0 : 1;	       \
+  int dz _mrc_unused = (grid.isInvar(2)) ? 0 : 1
 
 // ======================================================================
 // Item_dive
@@ -27,7 +28,6 @@ struct Item_dive
 
   static void set(Fields& R, FieldsState& F, int i, int j, int k)
   {
-    auto& grid = ppsc->grid();
     define_dxdydz(dx, dy, dz);
     R(0, i,j,k) = ((F(EX, i,j,k) - F(EX, i-dx,j,k)) / grid.domain.dx[0] +
 		   (F(EY, i,j,k) - F(EY, i,j-dy,k)) / grid.domain.dx[1] +
@@ -54,7 +54,6 @@ struct Item_divj
   
   static void set(Fields& R, Fields&F, int i, int j, int k)
   {
-    auto& grid = ppsc->grid();
     define_dxdydz(dx, dy, dz);
     R(0, i,j,k) = ((F(JXI, i,j,k) - F(JXI, i-dx,j,k)) / grid.domain.dx[0] +
 		   (F(JYI, i,j,k) - F(JYI, i,j-dy,k)) / grid.domain.dx[1] +
@@ -62,3 +61,4 @@ struct Item_divj
   }
 };
 
+#undef define_dxdydz

@@ -49,7 +49,7 @@ struct BndParticlesCommon : BndParticlesBase
   void reset()
   {
     delete ddcp;
-    ddcp = new ddcp_t{ppsc->grid()};
+    ddcp = new ddcp_t{*ppsc->grid_};
     balance_generation_cnt_ = psc_balance_generation_cnt;
   }
 
@@ -99,7 +99,7 @@ void BndParticlesCommon<MP>::process_patch(const ParticleIndexer<real_t>& pi, bu
   // New-style boundary requirements.
   // These will need revisiting when it comes to non-periodic domains.
 
-  const auto& grid = psc->grid();
+  const auto& grid = *ppsc->grid_;
   const auto& gpatch = grid.patches[p];
   const Int3& ldims = pi.ldims();
   real_t xm[3];

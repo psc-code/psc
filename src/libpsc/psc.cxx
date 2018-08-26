@@ -173,23 +173,6 @@ _psc_read(struct psc *psc, struct mrc_io *io)
   psc_read_member_objs(psc, io);
 }
 
-// ----------------------------------------------------------------------
-// _psc_view
-
-static void
-_psc_view(struct psc *psc)
-{
-  psc->grid().mrc_domain().view();
-
-  MPI_Comm comm = psc_comm(psc);
-  const auto& kinds = psc->grid().kinds;
-  mpi_printf(comm, "%20s|\n", "particle kinds");
-  for (int k = 0; k < kinds.size(); k++) {
-    mpi_printf(comm, "%19s | q = %g m = %g\n",
-	       kinds[k].name, kinds[k].q, kinds[k].m);
-  }
-}
-
 // ======================================================================
 // psc class
 
@@ -198,7 +181,6 @@ struct mrc_class_psc_ : mrc_class_psc {
     name             = "psc";
     size             = sizeof(struct psc);
     create           = _psc_create;
-    view             = _psc_view;
     destroy          = _psc_destroy;
     write            = _psc_write;
     read             = _psc_read;

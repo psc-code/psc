@@ -35,6 +35,7 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
     : OutputParticlesParams(params),
       comm_{psc_comm(ppsc)}
   {
+    const auto& grid = *ppsc->grid_;
     hid_t id = H5Tcreate(H5T_COMPOUND, sizeof(struct hdf5_prt));
     H5Tinsert(id, "x" , HOFFSET(struct hdf5_prt, x) , H5T_NATIVE_FLOAT);
     H5Tinsert(id, "y" , HOFFSET(struct hdf5_prt, y) , H5T_NATIVE_FLOAT);
@@ -52,9 +53,9 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
     for (int d = 0; d < 3; d++) {
       assert(lo[d] >= 0);
       if (hi[d] == 0) {
-	hi[d] = ppsc->grid().domain.gdims[d];
+	hi[d] = grid.domain.gdims[d];
       }
-      assert(hi[d] <= ppsc->grid().domain.gdims[d]);
+      assert(hi[d] <= grid.domain.gdims[d]);
       wdims[d] = hi[d] - lo[d];
     }
   }
@@ -77,7 +78,7 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
   static inline int
   get_sort_index(Particles& prts, particle_t *part)
   {
-    const Grid_t& grid = ppsc->grid();
+    const Grid_t& grid = prts.grid();
     const int *ldims = grid.ldims;
   
     int j0 = prts.cellPosition(part->x[0], 0);
@@ -105,7 +106,7 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
     int nr_kinds = mprts.grid().kinds.size();
 
     for (int p = 0; p < mprts.n_patches(); p++) {
-      const int *ldims = ppsc->grid().ldims;
+      const int *ldims = mprts.grid().ldims;
       int nr_indices = ldims[0] * ldims[1] * ldims[2] * nr_kinds;
       off[p] = (int *) calloc(nr_indices + 1, sizeof(*off[p]));
       Particles& prts = mprts[p];
@@ -145,6 +146,7 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
   int find_patch_bounds(const int ldims[3], const int off[3],
 			int ilo[3], int ihi[3], int ld[3])
   {
+    const auto& grid = *ppsc->grid_;
     for (int d = 0; d < 3; d++) {
       ilo[d] = MIN(ldims[d], MAX(0, lo[d] - off[d]));
       ihi[d] = MAX(0, MIN(ldims[d], hi[d] - off[d]));
@@ -152,7 +154,7 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
       ihi[d] = MIN(ldims[d], hi[d] - off[d]);
       ld[d] = ihi[d] - ilo[d];
     }
-    return ppsc->grid().kinds.size() * ld[0] * ld[1] * ld[2];
+    return grid.kinds.size() * ld[0] * ld[1] * ld[2];
   }
 
   // ----------------------------------------------------------------------
@@ -193,7 +195,7 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
     int nn = 0;
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto& prts = mprts[p];
-      const auto& patch = ppsc->grid().patches[p];
+      const auto& patch = grid.patches[p];
       int ilo[3], ihi[3], ld[3];
       int sz = find_patch_bounds(grid.ldims, patch.off, ilo, ihi, ld);
       idx[p] = (size_t *) malloc(2 * sz * sizeof(*idx));
@@ -255,10 +257,11 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
 
   void write_idx(size_t *gidx_begin, size_t *gidx_end, hid_t group, hid_t dxpl)
   {
+    const auto& grid = *ppsc->grid_;
     herr_t ierr;
 
     hsize_t fdims[4];
-    fdims[0] = ppsc->grid().kinds.size();
+    fdims[0] = grid.kinds.size();
     fdims[1] = wdims[2];
     fdims[2] = wdims[1];
     fdims[3] = wdims[0];
@@ -295,7 +298,7 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
 
   void operator()(Mparticles& mprts)
   {
-    const auto& grid = ppsc->grid();
+    const auto& grid = mprts.grid();
     herr_t ierr;
 
     static int pr_A, pr_B, pr_C, pr_D, pr_E;

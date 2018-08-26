@@ -25,11 +25,11 @@ BndCuda3<MF>::~BndCuda3()
 // reset
 
 template<typename MF>
-void BndCuda3<MF>::reset()
+void BndCuda3<MF>::reset(const Grid_t& grid)
 {
   // FIXME, not really a pretty way of doing this
   delete cbnd_;
-  cbnd_ = new CudaBnd{ppsc->grid(), ppsc->grid().ibn};
+  cbnd_ = new CudaBnd{grid, grid.ibn};
 }
   
 // ----------------------------------------------------------------------
@@ -39,7 +39,7 @@ template<typename MF>
 void BndCuda3<MF>::add_ghosts(Mfields& mflds, int mb, int me)
 {
   if (psc_balance_generation_cnt != balance_generation_cnt_) {
-    reset();
+    reset(mflds.grid());
     balance_generation_cnt_ = psc_balance_generation_cnt;
   }
   cbnd_->add_ghosts(mflds, mb, me);
@@ -52,7 +52,7 @@ template<typename MF>
 void BndCuda3<MF>::fill_ghosts(Mfields& mflds, int mb, int me)
 {
   if (psc_balance_generation_cnt != balance_generation_cnt_) {
-    reset();
+    reset(mflds.grid());
     balance_generation_cnt_ = psc_balance_generation_cnt;
   }
   cbnd_->fill_ghosts(mflds, mb, me);

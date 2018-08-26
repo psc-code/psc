@@ -24,11 +24,11 @@ BndParticlesCuda<Mparticles, DIM>::~BndParticlesCuda()
 // reset
 
 template<typename Mparticles, typename DIM>
-void BndParticlesCuda<Mparticles, DIM>::reset()
+void BndParticlesCuda<Mparticles, DIM>::reset(const Grid_t& grid)
 {
   Base::reset();
   delete(cbndp_);
-  cbndp_ = new cuda_bndp<typename Mparticles::CudaMparticles, DIM>(ppsc->grid());
+  cbndp_ = new cuda_bndp<typename Mparticles::CudaMparticles, DIM>(grid);
 }
 
 // ----------------------------------------------------------------------
@@ -38,7 +38,7 @@ template<typename Mparticles, typename DIM>
 void BndParticlesCuda<Mparticles, DIM>::operator()(Mparticles& mprts)
 {
   if (psc_balance_generation_cnt > this->balance_generation_cnt_) {
-    reset();
+    reset(mprts.grid());
   }
   
   static int pr_A, pr_B;

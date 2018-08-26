@@ -15,7 +15,7 @@ struct BndParticlesCuda : BndParticlesCommon<Mparticles>
   BndParticlesCuda(const Grid_t& grid);
   ~BndParticlesCuda();
 
-  void reset();
+  void reset(const Grid_t& grid);
   void operator()(Mparticles& mprts);
   void exchange_particles(MparticlesBase& mprts_base) override;
 

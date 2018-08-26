@@ -308,7 +308,7 @@ template<typename BS>
 template<typename FUNC>
 HeatingCuda<BS>::HeatingCuda(int interval, int kind, FUNC get_H)
 {
-  foil_ = new cuda_heating_foil{get_H, kind, interval * ppsc->grid().dt};
+  foil_ = new cuda_heating_foil{get_H, kind, interval * ppsc->grid_->dt};
 }
 
 template<typename BS>

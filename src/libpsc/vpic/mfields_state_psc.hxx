@@ -219,7 +219,7 @@ struct MfieldsStatePsc
   }
 
   real_t* data() { return reinterpret_cast<real_t*>(patch_.data()); }
-  fields_t operator[](int p) { return {ib_, im_, N_COMP, data()}; }
+  fields_t operator[](int p) { return {grid_, ib_, im_, N_COMP, data()}; }
   Patch& getPatch(int p) { return patch_; }
 
   SfaParams& params() { return params_; }

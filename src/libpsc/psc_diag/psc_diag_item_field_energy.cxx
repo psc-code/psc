@@ -13,7 +13,7 @@ psc_diag_item_field_energy_run(struct psc_diag_item *item,
 			       struct psc *psc, MparticlesBase& mprts,
 			       MfieldsStateBase& mflds_base, double *EH2)
 {
-  const Grid_t& grid = psc->grid();
+  const Grid_t& grid = mprts.grid();
   auto& mf = mflds_base.get_as<MfieldsStateDouble>(EX, HX + 3);
   for (int p = 0; p < grid.n_patches(); p++) {
     double fac = grid.domain.dx[0] * grid.domain.dx[1] * grid.domain.dx[2];

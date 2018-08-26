@@ -37,7 +37,7 @@ TYPED_TEST(PushParticlesTest, Moment1)
       return prt0;
     });
 
-  Moment_n moment_n{ppsc->grid(), ppsc->obj.comm};
+  Moment_n moment_n{grid, ppsc->obj.comm};
   moment_n.run(mprts);
   auto& mres = moment_n.result();
   for (int p = 0; p < grid.n_patches(); p++) {
@@ -81,7 +81,7 @@ TYPED_TEST(PushParticlesTest, Moment2) // FIXME, mostly copied
   int i0 = 2;
   if (PushParticlesTest<TypeParam>::dim::InvarX::value) i0 = 0;
   
-  Moment_n moment_n{ppsc->grid(), ppsc->obj.comm};
+  Moment_n moment_n{grid, ppsc->obj.comm};
   moment_n.run(mprts);
   auto& mres = moment_n.result();
   for (int p = 0; p < grid.n_patches(); p++) {

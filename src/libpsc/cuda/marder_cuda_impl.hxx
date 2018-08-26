@@ -87,7 +87,7 @@ struct MarderCuda : MarderBase
   {
     assert(mflds_base.grid().isInvar(0));
 
-    const Grid_t& grid = ppsc->grid();
+    const Grid_t& grid = mflds_base.grid();
     // FIXME: how to choose diffusion parameter properly?
     float dx[3];
     for (int d = 0; d < 3; d++) {
@@ -99,13 +99,13 @@ struct MarderCuda : MarderBase
 	inv_sum += 1. / sqr(grid.domain.dx[d]);
       }
     }
-    float diffusion_max = 1. / 2. / (.5 * ppsc->grid().dt) / inv_sum;
+    float diffusion_max = 1. / 2. / (.5 * grid.dt) / inv_sum;
     float diffusion     = diffusion_max * diffusion_;
     
     float fac[3];
     fac[0] = 0.f;
-    fac[1] = .5 * ppsc->grid().dt * diffusion / dx[1];
-    fac[2] = .5 * ppsc->grid().dt * diffusion / dx[2];
+    fac[1] = .5 * grid.dt * diffusion / dx[1];
+    fac[2] = .5 * grid.dt * diffusion / dx[2];
 
     auto& mflds = mflds_base.get_as<MfieldsStateCuda>(EX, EX + 3);
     auto& mf = mf_base.get_as<MfieldsCuda>(0, 1);
@@ -127,7 +127,7 @@ struct MarderCuda : MarderBase
 	}
       }
     
-      const int *ldims = ppsc->grid().ldims;
+      const int *ldims = grid.ldims;
     
       int ly[3] = { l_nc[0], l_cc[1], l_nc[2] };
       int ry[3] = { r_nc[0] + ldims[0], r_cc[1] + ldims[1], r_nc[2] + ldims[2] };

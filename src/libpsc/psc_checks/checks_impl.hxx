@@ -55,7 +55,8 @@ struct Checks_ : ChecksParams, ChecksBase
 
   void continuity_before_particle_push(psc *psc, MparticlesBase& mprts_base) override
   {
-    if (continuity_every_step <= 0 || psc->grid().timestep() % continuity_every_step != 0) {
+    const auto& grid = mprts_base.grid();
+    if (continuity_every_step <= 0 || grid.timestep() % continuity_every_step != 0) {
       return;
     }
 
@@ -75,7 +76,8 @@ struct Checks_ : ChecksParams, ChecksBase
   void continuity_after_particle_push(psc *psc, MparticlesBase& mprts_base,
 				      MfieldsStateBase& mflds_base) override
   {
-    if (continuity_every_step <= 0 || psc->grid().timestep() % continuity_every_step != 0) {
+    const auto& grid = mprts_base.grid();
+    if (continuity_every_step <= 0 || grid.timestep() % continuity_every_step != 0) {
       return;
     }
 
@@ -135,7 +137,7 @@ struct Checks_ : ChecksParams, ChecksBase
 	mrc_io_setup(io);
 	mrc_io_view(io);
       }
-      mrc_io_open(io, "w", ppsc->grid().timestep(), ppsc->grid().timestep() * ppsc->grid().dt);
+      mrc_io_open(io, "w", grid.timestep(), grid.timestep() * grid.dt);
       div_j.write_as_mrc_fld(io, "div_j", {"div_j"});
       d_rho.write_as_mrc_fld(io, "d_rho", {"d_rho"});
       mrc_io_close(io);

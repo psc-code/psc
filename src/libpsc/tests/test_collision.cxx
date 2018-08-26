@@ -117,7 +117,7 @@ TYPED_TEST(CollisionTest, Test1)
 
   auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
   make_psc<dim>(kinds);
-  const auto& grid = ppsc->grid();
+  const auto& grid = *ppsc->grid_;
   
   // init particles
   auto prt0 = particle_inject{{5., 5., 5.}, {1., 0., 0.}, 1., 0};

@@ -8,7 +8,7 @@
 
 template<typename Mparticles, typename RngState>
 CollisionCuda<Mparticles, RngState>::CollisionCuda(MPI_Comm comm, int interval, double nu)
-  : fwd_{new CudaCollision<typename Mparticles::CudaMparticles, RngState>{interval, nu, int(1. / ppsc->grid().norm.cori + .5), ppsc->grid().dt}} // FIXME nicell hack
+  : fwd_{new CudaCollision<typename Mparticles::CudaMparticles, RngState>{interval, nu, int(1. / ppsc->grid_->norm.cori + .5), ppsc->grid_->dt}} // FIXME nicell hack
 {}
 
 template<typename Mparticles, typename RngState>

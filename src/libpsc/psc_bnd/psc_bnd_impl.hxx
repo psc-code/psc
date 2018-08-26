@@ -48,11 +48,11 @@ struct Bnd_ : BndBase
   // ----------------------------------------------------------------------
   // reset
   
-  void reset()
+  void reset(const Grid_t& grid)
   {
     // FIXME, not really a pretty way of doing this
     this->~Bnd_();
-    new(this) Bnd_(ppsc->grid(), ppsc->grid().ibn);
+    new(this) Bnd_(grid, grid.ibn);
   }
   
   // ----------------------------------------------------------------------
@@ -61,7 +61,7 @@ struct Bnd_ : BndBase
   void add_ghosts(Mfields& mflds, int mb, int me)
   {
     if (psc_balance_generation_cnt != balance_generation_cnt_) {
-      reset();
+      reset(mflds.grid());
     }
     mrc_ddc_add_ghosts(ddc_, mb, me, &mflds);
   }
@@ -82,7 +82,7 @@ struct Bnd_ : BndBase
   void fill_ghosts(Mfields& mflds, int mb, int me)
   {
     if (psc_balance_generation_cnt != balance_generation_cnt_) {
-      reset();
+      reset(mflds.grid());
     }
     // FIXME
     // I don't think we need as many points, and only stencil star

@@ -40,9 +40,9 @@ enum {
   NR_KINDS,
 };
 
-#define CRDX(p, jx) (psc->grid().domain.dx[0] * (jx) + psc->grid().patches[p].xb[0])
-#define CRDY(p, jy) (psc->grid().domain.dx[1] * (jy) + psc->grid().patches[p].xb[1])
-#define CRDZ(p, jz) (psc->grid().domain.dx[2] * (jz) + psc->grid().patches[p].xb[2])
+#define CRDX(p, jx) (psc->grid_->domain.dx[0] * (jx) + psc->grid_->patches[p].xb[0])
+#define CRDY(p, jy) (psc->grid_->domain.dx[1] * (jy) + psc->grid_->patches[p].xb[1])
+#define CRDZ(p, jz) (psc->grid_->domain.dx[2] * (jz) + psc->grid_->patches[p].xb[2])
 
 ///This structure holds all the interfaces for the given configuration.
 ///
@@ -51,8 +51,6 @@ struct psc {
   ///@defgroup interfaces Interfaces @{
   struct mrc_obj obj;
   ///@}
-
-  const Grid_t& grid() const { assert(grid_); return *grid_; }
 
   Grid_t* grid_ = {};
 };

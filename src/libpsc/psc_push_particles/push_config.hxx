@@ -20,7 +20,7 @@ struct curr_cache_t : fields_t
   using real_t = typename fields_t::real_t;
   
   curr_cache_t(const fields_t& f)
-    : fields_t(f.ib(), f.im(), f.n_comps(), f.data_)
+    : fields_t(f.grid_, f.ib(), f.im(), f.n_comps(), f.data_)
   {}
   
   void add(int m, int i, int j, int k, real_t val)

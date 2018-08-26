@@ -333,7 +333,7 @@ struct Balance_ : BalanceBase
   
   std::vector<uint> initial(psc* psc, const std::vector<uint>& n_prts_by_patch_old) override
   {
-    auto loads = get_loads_initial(psc->grid(), n_prts_by_patch_old);
+    auto loads = get_loads_initial(*psc->grid_, n_prts_by_patch_old);
     return balance(psc, loads, nullptr, n_prts_by_patch_old);
   }
 
@@ -345,7 +345,7 @@ struct Balance_ : BalanceBase
     }
 
     psc_stats_start(st_time_balance);
-    auto loads = get_loads(psc->grid(), mp);
+    auto loads = get_loads(mp.grid(), mp);
     balance(psc, loads, &mp);
     psc_stats_stop(st_time_balance);
   }
@@ -526,7 +526,7 @@ private:
 
       if (write_loads_) {
 	int gp = 0;
-	char s[20]; sprintf(s, "loads2-%06d.asc", ppsc->grid().timestep());
+	char s[20]; sprintf(s, "loads2-%06d.asc", ppsc->grid_->timestep());
 	FILE *f = fopen(s, "w");
 	for (int r = 0; r < size; r++) {
 	  for (int p = 0; p < nr_patches_all_new[r]; p++) {

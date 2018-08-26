@@ -27,13 +27,13 @@
     real_t g1z = h3;							\
     									\
     int jxd = 1, jyd = 1, jzd = 1;					\
-    if (ppsc->grid().isInvar(0)) {					\
+    if (flds.grid().isInvar(0)) {					\
       jx = 0; g0x = 1.; g1x = 0.; jxd = 0;				\
     }									\
-    if (ppsc->grid().isInvar(1)) {					\
+    if (flds.grid().isInvar(1)) {					\
       jy = 0; g0y = 1.; g1y = 0.; jyd = 0;				\
     }									\
-    if (ppsc->grid().isInvar(2)) {					\
+    if (flds.grid().isInvar(2)) {					\
       jz = 0; g0z = 1.; g1z = 0.; jzd = 0;				\
     }									\
     									\
@@ -75,13 +75,13 @@
     real_t g1z = h3;							\
     									\
     int jxd = 1, jyd = 1, jzd = 1;					\
-    if (ppsc->grid().isInvar(0)) {					\
+    if (grid.isInvar(0)) {						\
       jx = 0; g0x = 1.; g1x = 0.; jxd = 0;				\
     }									\
-    if (ppsc->grid().isInvar(1)) {					\
+    if (grid.isInvar(1)) {					\
       jy = 0; g0y = 1.; g1y = 0.; jyd = 0;				\
     }									\
-    if (ppsc->grid().isInvar(2)) {					\
+    if (grid.isInvar(2)) {					\
       jz = 0; g0z = 1.; g1z = 0.; jzd = 0;				\
     }									\
     									\

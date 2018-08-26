@@ -54,6 +54,7 @@ struct OutputFieldsC : public OutputFieldsCParams
     pfield_next = pfield_first;
     tfield_next = tfield_first;
 
+    const auto& grid = *ppsc->grid_;
     struct psc *psc = ppsc;
 
     if (output_fields) {
@@ -72,7 +73,7 @@ struct OutputFieldsC : public OutputFieldsCParams
 	MfieldsBase& mflds_pfd = PscFieldsItemBase{item}->mres();
 	
 	// tfd -- FIXME?! always MfieldsC
-	MfieldsBase& mflds_tfd = *new MfieldsC{psc->grid(), mflds_pfd.n_comps(), psc->grid().ibn};
+	MfieldsBase& mflds_tfd = *new MfieldsC{grid, mflds_pfd.n_comps(), grid.ibn};
 	items.emplace_back(PscFieldsItemBase{item}, p, comp_names, mflds_pfd, mflds_tfd);
       }
       free(s_orig);

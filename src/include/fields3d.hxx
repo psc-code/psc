@@ -36,8 +36,9 @@ struct fields3d {
   using real_t = R;
   using layout = L;
 
-  fields3d(Int3 ib, Int3 im, int n_comps, real_t* data=nullptr)
-    : ib_{ib}, im_{im},
+  fields3d(const Grid_t& grid, Int3 ib, Int3 im, int n_comps, real_t* data=nullptr)
+    : grid_{grid},
+      ib_{ib}, im_{im},
       n_comps_{n_comps},
       data_{data}
   {
@@ -150,9 +151,12 @@ struct fields3d {
     }
   }
 
+  const Grid_t& grid() const { return grid_; }
+
   real_t* data_;
   Int3 ib_, im_; //> lower bounds and length per direction
   int n_comps_; // # of components
+  const Grid_t& grid_;
 };
 
 template<typename R, typename L>
@@ -425,7 +429,7 @@ struct Mfields : MfieldsBase
   
   fields_t operator[](int p)
   {
-    return fields_t(ib, im, n_fields_, data[p].get());
+    return fields_t(grid(), ib, im, n_fields_, data[p].get());
   }
 
   void zero_comp(int m) override

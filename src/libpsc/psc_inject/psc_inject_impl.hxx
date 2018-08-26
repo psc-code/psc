@@ -31,7 +31,7 @@ struct Inject_ : InjectBase
 	  Target_t target)
     : InjectBase{interval, tau, kind_n},
       target_{target},
-      moment_n_{ppsc->grid(), comm}
+      moment_n_{*ppsc->grid_, comm}
   {}
 
   // ----------------------------------------------------------------------
@@ -60,7 +60,7 @@ struct Inject_ : InjectBase
 
     for (int p = 0; p < grid.n_patches(); p++) {
       Fields N(mf_n[p]);
-      const int *ldims = psc->grid().ldims;
+      const int *ldims = grid.ldims;
     
       for (int jz = 0; jz < ldims[2]; jz++) {
 	for (int jy = 0; jy < ldims[1]; jy++) {

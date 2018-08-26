@@ -426,7 +426,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     checks_params.gauss_verbose = true;
     checks_params.gauss_dump_always = false;
 
-    checks_.reset(new Checks_t{psc_->grid(), comm, checks_params});
+    checks_.reset(new Checks_t{grid(), comm, checks_params});
 
     // -- Marder correction
     double marder_diffusion = 0.9;
@@ -451,7 +451,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     auto n_prts_by_patch_new = balance_->initial(psc_, n_prts_by_patch_old);
     // balance::initial does not rebalance particles, because the old way of doing this
     // does't even have the particle data structure created yet -- FIXME?
-    mprts_->reset(psc_->grid());
+    mprts_->reset(grid());
     
     mpi_printf(comm, "**** Setting up particles...\n");
     setup_initial_particles(*mprts_, n_prts_by_patch_new);

@@ -63,8 +63,8 @@ struct CollisionHost
   CollisionHost(MPI_Comm comm, int interval, double nu)
     : interval_{interval},
       nu_{nu},
-      mflds_stats_{ppsc->grid(), NR_STATS, ppsc->grid().ibn},
-      mflds_rei_{ppsc->grid(), NR_STATS, ppsc->grid().ibn}
+      mflds_stats_{*ppsc->grid_, NR_STATS, ppsc->grid_->ibn},
+      mflds_rei_{*ppsc->grid_, NR_STATS, ppsc->grid_->ibn}
   {
     assert(nu_ > 0.);
     global_collision = this;
@@ -80,7 +80,7 @@ struct CollisionHost
     for (int p = 0; p < mprts.n_patches(); p++) {
       particles_t& prts = mprts[p];
   
-      const int *ldims = ppsc->grid().ldims;
+      const int *ldims = grid.ldims;
       int nr_cells = ldims[0] * ldims[1] * ldims[2];
       int *offsets = (int *) calloc(nr_cells + 1, sizeof(*offsets));
       struct psc_collision_stats stats_total = {};
@@ -162,7 +162,7 @@ struct CollisionHost
 
   static void find_cell_offsets(int offsets[], particles_t& prts)
   {
-    const int *ldims = ppsc->grid().ldims;
+    const int *ldims = prts.grid().ldims;
     int last = 0;
     offsets[last] = 0;
     int n_prts = prts.size();
@@ -248,7 +248,7 @@ struct CollisionHost
 
     // all particles need to have same weight!
     real_t wni = prts.prt_wni(prts[n_start]);
-    real_t nudt1 = wni * ppsc->grid().norm.cori * nn * this->interval_ * grid.dt * nu_;
+    real_t nudt1 = wni * grid.norm.cori * nn * this->interval_ * grid.dt * nu_;
 
     real_t *nudts = (real_t *) malloc((nn / 2 + 2) * sizeof(*nudts));
     int cnt = 0;

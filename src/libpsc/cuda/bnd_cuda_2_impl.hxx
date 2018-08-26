@@ -47,11 +47,11 @@ struct BndCuda2 : BndBase
   // ----------------------------------------------------------------------
   // reset
   
-  void reset()
+  void reset(const Grid_t& grid)
   {
     // FIXME, not really a pretty way of doing this
     this->~BndCuda2();
-    new(this) BndCuda2(ppsc->grid(), ppsc->grid().ibn);
+    new(this) BndCuda2(grid, grid.ibn);
   }
   
   // ----------------------------------------------------------------------

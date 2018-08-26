@@ -169,9 +169,9 @@ struct Psc
     sort_.reset(new Sort_t{});
     pushp_.reset(new PushParticles_t{});
     pushf_.reset(new PushFields_t{});
-    bnd_.reset(new Bnd_t{psc_->grid(), ibn});
+    bnd_.reset(new Bnd_t{grid(), ibn});
     bndf_.reset(new BndFields_t{});
-    bndp_.reset(new BndParticles_t{psc_->grid()});
+    bndp_.reset(new BndParticles_t{grid()});
 
     psc_setup_member_objs(psc_);
     psc_diag_setup(diag_);

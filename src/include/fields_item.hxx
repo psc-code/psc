@@ -70,7 +70,7 @@ public:
   static void setup(psc_output_fields_item* _item)
   {
     PscFieldsItem<FieldsItem> item(_item);
-    new(item.sub()) FieldsItem(ppsc->grid(), psc_output_fields_item_comm(_item));
+    new(item.sub()) FieldsItem(*ppsc->grid_, psc_output_fields_item_comm(_item));
   }
 
   static void destroy(psc_output_fields_item* _item)
@@ -116,7 +116,7 @@ struct FieldsItemFields : FieldsItemBase
   }
  
   FieldsItemFields(const Grid_t& grid, MPI_Comm comm)
-    : mres_{ppsc->grid(), Item::n_comps, ppsc->grid().ibn}
+    : mres_{grid, Item::n_comps, grid.ibn}
   {}
 
   void operator()(MfieldsState& mflds)
@@ -191,7 +191,7 @@ struct ItemMomentCRTP
   using Mfields = MF;
   
   ItemMomentCRTP(const Grid_t& grid, MPI_Comm comm)
-    : mres_{grid, int(Derived::n_comps * ((Derived::flags & POFI_BY_KIND) ? grid.kinds.size() : 1)), ppsc->grid().ibn}
+    : mres_{grid, int(Derived::n_comps * ((Derived::flags & POFI_BY_KIND) ? grid.kinds.size() : 1)), grid.ibn}
   {
     auto n_comps = Derived::n_comps;
     auto fld_names = Derived::fld_names();
@@ -259,7 +259,7 @@ struct ItemMomentLoopPatches : ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, t
   static void add_ghosts_reflecting_lo(fields_t flds, int p, int d, int mb, int me)
   {
     Fields F(flds);
-    const int *ldims = ppsc->grid().ldims;
+    const int *ldims = flds.grid().ldims;
 
     int bx = ldims[0] == 1 ? 0 : 1;
     if (d == 1) {
@@ -290,7 +290,7 @@ struct ItemMomentLoopPatches : ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, t
   static void add_ghosts_reflecting_hi(fields_t flds, int p, int d, int mb, int me)
   {
     Fields F(flds);
-    const int *ldims = ppsc->grid().ldims;
+    const int *ldims = flds.grid().ldims;
 
     int bx = ldims[0] == 1 ? 0 : 1;
     if (d == 1) {
@@ -320,7 +320,7 @@ struct ItemMomentLoopPatches : ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, t
 
   static void add_ghosts_boundary(fields_t res, int p, int mb, int me)
   {
-    const auto& grid = ppsc->grid();
+    const auto& grid = res.grid();
     // lo
     for (int d = 0; d < 3; d++) {
       if (grid.atBoundaryLo(p, d)) {

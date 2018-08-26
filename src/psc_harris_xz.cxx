@@ -339,7 +339,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     // -- Checks
     ChecksParams checks_params;
-    checks_.reset(new Checks_t{psc_->grid(), comm, checks_params});
+    checks_.reset(new Checks_t{grid(), comm, checks_params});
 
     // -- Marder correction
     // FIXME, these are ignored for vpic (?)
@@ -381,7 +381,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     mpi_printf(comm, "**** Partitioning...\n");
     auto n_prts_by_patch_old = setup_initial_partition();
     auto n_prts_by_patch_new = balance_->initial(psc_, n_prts_by_patch_old);
-    mprts_->reset(psc_->grid());
+    mprts_->reset(grid());
     
     mpi_printf(comm, "**** Setting up particles...\n");
     setup_initial_particles(*mprts_, n_prts_by_patch_new);
@@ -551,7 +551,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   
   std::vector<uint> setup_initial_partition()
   {
-    std::vector<uint> n_prts_by_patch_old(psc_->grid().n_patches());
+    std::vector<uint> n_prts_by_patch_old(grid().n_patches());
     setup_particles(n_prts_by_patch_old, true);
     return n_prts_by_patch_old;
   }
@@ -572,7 +572,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
   void setup_particles(std::vector<uint>& nr_particles_by_patch, bool count_only)
   {
-    const auto& grid = psc_->grid();
+    const auto& grid = this->grid();
     MPI_Comm comm = psc_comm(psc_);
 
     double cs = cos(theta), sn = sin(theta);
@@ -854,7 +854,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     run_diagnostics();
     
     MPI_Comm comm = psc_comm(psc_);
-    const Grid_t& grid = psc_->grid();
+    const auto& grid = this->grid();
 
     int timestep = grid.timestep();
     if (outf_->pfield_step > 0 && timestep % outf_->pfield_step == 0) {

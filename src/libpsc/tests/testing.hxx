@@ -178,7 +178,7 @@ struct PushParticlesTest : ::testing::Test
   const Grid_t& grid()
   {
     assert(ppsc);
-    return ppsc->grid();
+    return *ppsc->grid_;
   }
 
   template<typename FUNC>
