@@ -32,7 +32,7 @@ struct BndParticlesCommon : BndParticlesBase
     : ddcp{},
       balance_generation_cnt_{-1}
   {
-    reset();
+    reset(grid);
   }
 
   // ----------------------------------------------------------------------
@@ -46,10 +46,10 @@ struct BndParticlesCommon : BndParticlesBase
   // ----------------------------------------------------------------------
   // reset
 
-  void reset()
+  void reset(const Grid_t& grid)
   {
     delete ddcp;
-    ddcp = new ddcp_t{*ppsc->grid_};
+    ddcp = new ddcp_t{grid};
     balance_generation_cnt_ = psc_balance_generation_cnt;
   }
 
@@ -69,7 +69,7 @@ struct BndParticlesCommon : BndParticlesBase
 #pragma omp parallel for
     for (int p = 0; p < ddcp->nr_patches; p++) {
       if (psc_balance_comp_time_by_patch) psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
-      process_patch(mprts[p].particleIndexer(), *bufs[p], p);
+      process_patch(mprts.grid(), mprts[p].particleIndexer(), *bufs[p], p);
       if (psc_balance_comp_time_by_patch) psc_balance_comp_time_by_patch[p] += MPI_Wtime();
     }
     prof_stop(pr_B);
@@ -81,7 +81,7 @@ struct BndParticlesCommon : BndParticlesBase
   }
   
 protected:
-  void process_patch(const ParticleIndexer<real_t>& pi, buf_t& buf, int p);
+  void process_patch(const Grid_t& grid, const ParticleIndexer<real_t>& pi, buf_t& buf, int p);
 
 protected:
   ddcp_t* ddcp;
@@ -92,14 +92,11 @@ protected:
 // BndParticlesCommon::process_patch
 
 template<typename MP>
-void BndParticlesCommon<MP>::process_patch(const ParticleIndexer<real_t>& pi, buf_t& buf, int p)
+void BndParticlesCommon<MP>::process_patch(const Grid_t& grid, const ParticleIndexer<real_t>& pi, buf_t& buf, int p)
 {
-  struct psc *psc = ppsc;
-
   // New-style boundary requirements.
   // These will need revisiting when it comes to non-periodic domains.
 
-  const auto& grid = *ppsc->grid_;
   const auto& gpatch = grid.patches[p];
   const Int3& ldims = pi.ldims();
   real_t xm[3];
@@ -233,7 +230,7 @@ struct BndParticles_ : BndParticlesCommon<MP>
   void operator()(Mparticles& mprts)
   {
     if (psc_balance_generation_cnt > this->balance_generation_cnt_) {
-      this->reset();
+      this->reset(mprts.grid());
     }
 
     std::vector<buf_t*> bufs;

@@ -26,7 +26,7 @@ BndParticlesCuda<Mparticles, DIM>::~BndParticlesCuda()
 template<typename Mparticles, typename DIM>
 void BndParticlesCuda<Mparticles, DIM>::reset(const Grid_t& grid)
 {
-  Base::reset();
+  Base::reset(grid);
   delete(cbndp_);
   cbndp_ = new cuda_bndp<typename Mparticles::CudaMparticles, DIM>(grid);
 }

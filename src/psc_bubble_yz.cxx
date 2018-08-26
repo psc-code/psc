@@ -148,7 +148,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     OutputFieldsCParams outf_params;
     outf_params.output_fields = "e,h,j,n_1st_single,v_1st_single";
     outf_params.pfield_step = 10;
-    outf_.reset(new OutputFieldsC{comm, outf_params});
+    outf_.reset(new OutputFieldsC{grid(), outf_params});
 
     // --- partition particles and initial balancing
     mpi_printf(comm, "**** Partitioning...\n");

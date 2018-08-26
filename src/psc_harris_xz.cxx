@@ -372,7 +372,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     double output_field_interval = 1.;
     outf_params.output_fields = nullptr;
     outf_params.pfield_step = int((output_field_interval / (phys_.wci*dt)));
-    outf_.reset(new OutputFieldsC{comm, outf_params});
+    outf_.reset(new OutputFieldsC{grid(), outf_params});
 
     // ----------------------------------------------------------------------
     // rebalance and actually initialize particles / fields

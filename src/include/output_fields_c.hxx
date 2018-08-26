@@ -48,14 +48,11 @@ struct OutputFieldsC : public OutputFieldsCParams
   // ----------------------------------------------------------------------
   // ctor
 
-  OutputFieldsC(MPI_Comm comm, const OutputFieldsCParams& prm)
+  OutputFieldsC(const Grid_t& grid, const OutputFieldsCParams& prm)
     : OutputFieldsCParams{prm}
   {
     pfield_next = pfield_first;
     tfield_next = tfield_first;
-
-    const auto& grid = *ppsc->grid_;
-    struct psc *psc = ppsc;
 
     if (output_fields) {
       // setup pfd according to output_fields as given
@@ -64,7 +61,7 @@ struct OutputFieldsC : public OutputFieldsCParams
       char *s_orig = strdup(output_fields), *p, *s = s_orig;
       while ((p = strsep(&s, ", "))) {
 	struct psc_output_fields_item *item =
-	  psc_output_fields_item_create(comm);
+	  psc_output_fields_item_create(grid.comm());
 	psc_output_fields_item_set_type(item, p);
 	psc_output_fields_item_setup(item);
 	

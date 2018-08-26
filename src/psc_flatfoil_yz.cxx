@@ -443,7 +443,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     
     // -- output fields
     OutputFieldsCParams outf_params;
-    outf_.reset(new OutputFieldsC{comm, outf_params});
+    outf_.reset(new OutputFieldsC{grid(), outf_params});
 
     // --- partition particles and initial balancing
     mpi_printf(comm, "**** Partitioning...\n");
