@@ -55,7 +55,6 @@ enum {
 struct psc {
   ///@defgroup interfaces Interfaces @{
   struct mrc_obj obj;
-  struct psc_diag *diag;                	///< timeseries diagnostics
   struct psc_output_particles *output_particles;///< particle output
   ///@}
 
