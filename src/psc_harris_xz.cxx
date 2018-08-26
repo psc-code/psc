@@ -859,7 +859,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     int timestep = psc_->timestep;
     if (outf_->pfield_step > 0 && timestep % outf_->pfield_step == 0) {
       mpi_printf(comm, "***** Writing PFD output\n");
-      io_pfd_.open();
+      io_pfd_.open(grid);
 
       {
 	OutputFieldsVpic out_fields;

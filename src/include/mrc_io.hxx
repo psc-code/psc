@@ -25,9 +25,8 @@ struct MrcIo
     mrc_io_destroy(io_);
   }
 
-  void open(Int3 rn = {}, Int3 rx = {1000000, 1000000, 1000000})
+  void open(const Grid_t& grid, Int3 rn = {}, Int3 rx = {1000000, 1000000, 1000000})
   {
-    const auto& grid = ppsc->grid();
     auto gdims = grid.domain.gdims;
     int slab_off[3], slab_dims[3];
     for (int d = 0; d < 3; d++) {

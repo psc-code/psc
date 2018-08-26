@@ -7,6 +7,8 @@
 #include <errno.h>
 #include <stdlib.h>
 
+#if 0
+
 // ----------------------------------------------------------------------
 // psc_read_checkpoint
 
@@ -69,3 +71,4 @@ psc_write_checkpoint(struct psc *psc)
   mrc_io_destroy(io);
 }
 
+#endif

@@ -104,6 +104,7 @@ struct OutputFieldsC : public OutputFieldsCParams
 
   void operator()(MfieldsStateBase& mflds, MparticlesBase& mprts)
   {
+    const auto& grid = mflds.grid();
     auto psc = ppsc;
     
     static int pr;
@@ -128,7 +129,7 @@ struct OutputFieldsC : public OutputFieldsCParams
       mpi_printf(MPI_COMM_WORLD, "***** Writing PFD output\n"); // FIXME
       pfield_next += pfield_step;
       
-      io_pfd_->open(rn, rx);
+      io_pfd_->open(grid, rn, rx);
       for (auto& item : items) {
 	item.pfd.write_as_mrc_fld(io_pfd_->io_, item.name, item.comp_names);
       }
@@ -147,7 +148,7 @@ struct OutputFieldsC : public OutputFieldsCParams
 	mpi_printf(MPI_COMM_WORLD, "***** Writing TFD output\n"); // FIXME
 	tfield_next += tfield_step;
 	
-	io_tfd_->open(rn, rx);
+	io_tfd_->open(grid, rn, rx);
 	
 	// convert accumulated values to correct temporal mean
 	for (auto& item : items) {
