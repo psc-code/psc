@@ -12,9 +12,8 @@
 // Foreach_3d
 
 template<class F>
-static void Foreach_3d(F f, int l, int r)
+static void Foreach_3d(const Grid_t& grid, F f, int l, int r)
 {
-  const auto& grid = *ppsc->grid_;
   grid.Foreach_3d(l, r, [&](int i, int j, int k) {
       f.x(i,j,k);
       f.y(i,j,k);
@@ -32,10 +31,8 @@ public:
   using fields_t = typename Fields::fields_t;
   using dim = typename Fields::dim;
   
-  PushBase(struct psc* psc, double dt_fac)
+  PushBase(const Grid_t& grid, double dt_fac)
   {
-    const Grid_t& grid = *psc->grid_;
-    
     dth = dt_fac * grid.dt;
 
     // FIXME, it'd be even better to not even calculate derivates
@@ -58,8 +55,8 @@ public:
   using typename Base::real_t;
   using typename Base::fields_t;
   
-  PushE(const fields_t& flds, struct psc* psc, double dt_fac)
-    : Base(psc, dt_fac),
+  PushE(const fields_t& flds, double dt_fac)
+    : Base(flds.grid(), dt_fac),
       F(flds)
   {
   }
@@ -98,8 +95,8 @@ public:
   using typename Base::real_t;
   using typename Base::fields_t;
   
-  PushH(const fields_t& flds, struct psc* psc, double dt_fac)
-    : Base(psc, dt_fac),
+  PushH(const fields_t& flds, double dt_fac)
+    : Base(flds.grid(), dt_fac),
       F(flds)
   {}
   
@@ -144,8 +141,8 @@ public:
     using Fields = Fields3d<typename MfieldsState::fields_t, dim>;
     
     for (int p = 0; p < mflds.n_patches(); p++) {
-      PushE<Fields> push_E(mflds[p], ppsc, dt_fac);
-      Foreach_3d(push_E, 1, 2);
+      PushE<Fields> push_E(mflds[p], dt_fac);
+      Foreach_3d(mflds.grid(), push_E, 1, 2);
     }
   }
   
@@ -158,8 +155,8 @@ public:
     using Fields = Fields3d<typename MfieldsState::fields_t, dim>;
 
     for (int p = 0; p < mflds.n_patches(); p++) {
-      PushH<Fields> push_H(mflds[p], ppsc, dt_fac);
-      Foreach_3d(push_H, 2, 1);
+      PushH<Fields> push_H(mflds[p], dt_fac);
+      Foreach_3d(mflds.grid(), push_H, 2, 1);
     }
   }
 
