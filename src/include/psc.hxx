@@ -192,6 +192,9 @@ struct Psc
     st_time_field = psc_stats_register("time field update");
     st_time_comm = psc_stats_register("time communication");
     st_time_output = psc_stats_register("time output");
+
+    // FIXME not quite the right place
+    pr_time_step_no_comm = prof_register("time step w/o comm", 1., 0, 0);
   }
   
   // ----------------------------------------------------------------------

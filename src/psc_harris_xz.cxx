@@ -746,10 +746,6 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       pr_sync4b = prof_register("step_sync4b", 1., 0, 0);
     }
 
-    if (!pr_time_step_no_comm) {
-      pr_time_step_no_comm = prof_register("time step w/o comm", 1., 0, 0);
-    }
-
     MPI_Comm comm = psc_comm(psc_);
 
     // x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
