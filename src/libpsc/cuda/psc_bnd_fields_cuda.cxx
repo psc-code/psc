@@ -28,10 +28,10 @@ struct BndFieldsCuda : BndFieldsBase
 	grid.bc.fld_lo[2] == BND_FLD_PERIODIC) {
       int d = 1;
       for (int p = 0; p < mflds.n_patches(); p++) {
-	if (psc_at_boundary_lo(ppsc, p, d)) {
+	if (grid.atBoundaryLo(p, d)) {
 	  cuda_conducting_wall_E_lo_y(mflds.cmflds, p);
 	}
-	if (psc_at_boundary_hi(ppsc, p, d)) {
+	if (grid.atBoundaryHi(p, d)) {
 	  cuda_conducting_wall_E_hi_y(mflds.cmflds, p);
 	}
       }
@@ -60,10 +60,10 @@ struct BndFieldsCuda : BndFieldsBase
 	grid.bc.fld_lo[2] == BND_FLD_PERIODIC) {
       int d = 1;
       for (int p = 0; p < mflds.n_patches(); p++) {
-	if (psc_at_boundary_lo(ppsc, p, d)) {
+	if (grid.atBoundaryLo(p, d)) {
 	  cuda_conducting_wall_H_lo_y(mflds.cmflds, p);
 	}
-	if (psc_at_boundary_hi(ppsc, p, d)) {
+	if (grid.atBoundaryHi(p, d)) {
 	  cuda_conducting_wall_H_hi_y(mflds.cmflds, p);
 
 	}
@@ -93,10 +93,10 @@ struct BndFieldsCuda : BndFieldsBase
 	grid.bc.fld_lo[2] == BND_FLD_PERIODIC) {
       int d = 1;
       for (int p = 0; p < mflds.n_patches(); p++) {
-	if (psc_at_boundary_lo(ppsc, p, d)) {
+	if (grid.atBoundaryLo(p, d)) {
 	  cuda_conducting_wall_J_lo_y(mflds.cmflds, p);
 	}
-	if (psc_at_boundary_hi(ppsc, p, d)) {
+	if (grid.atBoundaryHi(p, d)) {
 	  cuda_conducting_wall_J_hi_y(mflds.cmflds, p);
 	}
       }

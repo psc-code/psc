@@ -323,7 +323,7 @@ struct ItemMomentLoopPatches : ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, t
     const auto& grid = ppsc->grid();
     // lo
     for (int d = 0; d < 3; d++) {
-      if (psc_at_boundary_lo(ppsc, p, d)) {
+      if (grid.atBoundaryLo(p, d)) {
 	if (grid.bc.prt_lo[d] == BND_PRT_REFLECTING ||
 	    grid.bc.prt_lo[d] == BND_PRT_OPEN) {
 	  add_ghosts_reflecting_lo(res, p, d, mb, me);
@@ -332,7 +332,7 @@ struct ItemMomentLoopPatches : ItemMomentCRTP<ItemMomentLoopPatches<Moment_t>, t
     }
     // hi
     for (int d = 0; d < 3; d++) {
-      if (psc_at_boundary_hi(ppsc, p, d)) {
+      if (grid.atBoundaryHi(p, d)) {
 	if (grid.bc.prt_hi[d] == BND_PRT_REFLECTING ||
 	    grid.bc.prt_hi[d] == BND_PRT_OPEN) {
 	  add_ghosts_reflecting_hi(res, p, d, mb, me);

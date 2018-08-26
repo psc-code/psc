@@ -94,8 +94,8 @@ struct Psc
     for (int p = 0; p < grid().n_patches(); p++) {
       assert(p == 0);
       for (int d = 0; d < 3; d++) {
-	bool lo = psc_at_boundary_lo(psc_, p, d);
-	bool hi = psc_at_boundary_hi(psc_, p, d);
+	bool lo = grid().atBoundaryLo(p, d);
+	bool hi = grid().atBoundaryHi(p, d);
 
 	if (lo && bc.fld_lo[d] != BND_FLD_PERIODIC) {
 	  Int3 bnd = {0, 0, 0};
@@ -115,8 +115,8 @@ struct Psc
     for (int p = 0; p < grid().n_patches(); p++) {
       assert(p == 0);
       for (int d = 0; d < 3; d++) {
-	bool lo = psc_at_boundary_lo(psc_, p, d);
-	bool hi = psc_at_boundary_hi(psc_, p, d);
+	bool lo = grid().atBoundaryLo(p, d);
+	bool hi = grid().atBoundaryHi(p, d);
 
 	if (lo && bc.prt_lo[d] != BND_PRT_PERIODIC) {
 	  Int3 bnd = {0, 0, 0};

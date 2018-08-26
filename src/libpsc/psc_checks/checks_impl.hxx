@@ -183,8 +183,7 @@ struct Checks_ : ChecksParams, ChecksBase
 
       int l[3] = {0, 0, 0}, r[3] = {0, 0, 0};
       for (int d = 0; d < 3; d++) {
-	if (grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL &&
-	    psc_at_boundary_lo(ppsc, p, d)) {
+	if (grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL && grid.atBoundaryLo(p, d)) {
 	  l[d] = 1;
 	}
       }

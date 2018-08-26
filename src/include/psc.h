@@ -91,14 +91,4 @@ extern int pr_time_step_no_comm;
 Grid_t* psc_setup_domain(struct psc *psc, const Grid_t::Domain& domain, GridBc& bc, const Grid_t::Kinds& kinds,
 			 const Grid_t::Normalization& norm, double dt, Int3 ibn);
 
-static inline bool psc_at_boundary_lo(struct psc *psc, int p, int d)
-{
-  return psc->grid().patches[p].off[d] == 0;
-}
-
-static inline bool psc_at_boundary_hi(struct psc *psc, int p, int d)
-{
-  return psc->grid().patches[p].off[d] + psc->grid().ldims[d] == psc->grid().domain.gdims[d];
-}
-
 #endif

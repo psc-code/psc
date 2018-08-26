@@ -149,6 +149,9 @@ struct Grid_
 
   bool isInvar(int d) const { return domain.isInvar(d); }
 
+  bool atBoundaryLo(int p, int d) const { return patches[p].off[d] == 0; }
+  bool atBoundaryHi(int p, int d) const { return patches[p].off[d] + ldims[d] == domain.gdims[d]; }
+
   template<typename FUNC>
   void Foreach_3d(int l, int r, FUNC F) const
   {

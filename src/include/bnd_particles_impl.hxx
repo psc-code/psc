@@ -140,7 +140,7 @@ void BndParticlesCommon<MP>::process_patch(const ParticleIndexer<real_t>& pi, bu
     int dir[3];
     for (int d = 0; d < 3; d++) {
       if (pos[d] < 0) {
-	if (!psc_at_boundary_lo(ppsc, p, d) || grid.bc.prt_lo[d] == BND_PRT_PERIODIC) {
+	if (!grid.atBoundaryLo(p, d) || grid.bc.prt_lo[d] == BND_PRT_PERIODIC) {
 	  xi[d] += xm[d];
 	  dir[d] = -1;
 	  int ci = pi.cellPosition(xi[d], d);
@@ -163,7 +163,7 @@ void BndParticlesCommon<MP>::process_patch(const ParticleIndexer<real_t>& pi, bu
 	  }
 	}
       } else if (pos[d] >= ldims[d]) {
-	if (!psc_at_boundary_hi(ppsc, p, d) || grid.bc.prt_hi[d] == BND_PRT_PERIODIC) {
+	if (!grid.atBoundaryHi(p, d) || grid.bc.prt_hi[d] == BND_PRT_PERIODIC) {
 	  xi[d] -= xm[d];
 	  dir[d] = +1;
 	  int ci = pi.cellPosition(xi[d], d);
