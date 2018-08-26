@@ -179,8 +179,8 @@ struct Grid_
   std::vector<Kind> kinds;
   Int3 ibn; // FIXME
 
-  int timestep() const { return *timestep_; }
-  int* timestep_;
+  int timestep() const { return timestep_; }
+  int timestep_ = 0;
 
   // ----------------------------------------------------------------------
   // make_mrc_domain

@@ -52,10 +52,6 @@ struct psc {
   struct mrc_obj obj;
   ///@}
 
-  // other parameters / constants
-  int timestep__;	///< the current timestep
-  ///@}
-
   const Grid_t& grid() const { assert(grid_); return *grid_; }
 
   Grid_t* grid_ = {};

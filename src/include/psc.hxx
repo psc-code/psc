@@ -260,7 +260,7 @@ struct Psc
 
       step();
     
-      psc_->timestep__++; // FIXME, too hacky
+      grid_->timestep_++; // FIXME, too hacky
 #ifdef VPIC
       vgrid_->step++;
       assert(vgrid_->step == grid().timestep());
@@ -581,7 +581,7 @@ protected:
   double time_start_;
 
   PscParams p_;
-  const Grid_t* grid_;
+  Grid_t* grid_;
 #ifdef VPIC
   Grid* vgrid_;
 #endif
