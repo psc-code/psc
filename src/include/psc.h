@@ -40,17 +40,6 @@ enum {
   NR_KINDS,
 };
 
-///This structure holds all the interfaces for the given configuration.
-///
-///
-struct psc {
-  ///@defgroup interfaces Interfaces @{
-  struct mrc_obj obj;
-  ///@}
-};
-
-MRC_CLASS_DECLARE(psc, struct psc);
-
 struct psc_particle_npt {
   int kind; ///< particle kind
   double q; ///< charge
@@ -75,8 +64,6 @@ struct psc_particle_npt {
 
 // ----------------------------------------------------------------------
 // we keep this info global for now.
-
-extern struct psc *ppsc;
 
 extern Grid_t* ggrid;
 

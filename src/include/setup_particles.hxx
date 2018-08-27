@@ -90,16 +90,16 @@ struct SetupParticles
   // setup_particles
 
   template<typename FUNC>
-  void setup_particles(MparticlesBase& mprts_base, psc* psc, std::vector<uint>& n_prts_by_patch,
+  void setup_particles(MparticlesBase& mprts_base, std::vector<uint>& n_prts_by_patch,
 		       FUNC func)
   {
     auto& mprts = mprts_base.get_as<Mparticles>(MP_DONT_COPY | MP_DONT_RESIZE);
-    setup_particles(mprts, psc, n_prts_by_patch, func);
+    setup_particles(mprts, n_prts_by_patch, func);
     mprts_base.put_as(mprts);
   }
 
   template<typename FUNC>
-  void setup_particles(Mparticles& mprts, psc* psc, std::vector<uint>& n_prts_by_patch,
+  void setup_particles(Mparticles& mprts, std::vector<uint>& n_prts_by_patch,
 		       FUNC func)
   {
     const auto& grid = mprts.grid();
@@ -217,8 +217,8 @@ struct SetupParticles
   }
 
   template<typename FUNC>
-  static void setup_particles(Mparticles& mprts, std::vector<uint>& n_prts_by_patch,
-			      FUNC func)
+  static void setup_particles2(Mparticles& mprts, std::vector<uint>& n_prts_by_patch,
+			       FUNC func)
   {
     mprts.reserve_all(n_prts_by_patch.data());
     for (int p = 0; p < mprts.n_patches(); p++) {

@@ -67,8 +67,6 @@ struct MarderVpic : MarderBase
   
   void operator()(MfieldsState& mflds, MparticlesVpic& mprts)
   {
-    struct psc *psc = ppsc; // FIXME
-
     const auto& grid = mflds.grid();
     bool clean_div_e = (clean_div_e_interval_ > 0 && grid.timestep() % clean_div_e_interval_ == 0);
     bool clean_div_b = (clean_div_b_interval_ > 0 && grid.timestep() % clean_div_b_interval_ == 0);

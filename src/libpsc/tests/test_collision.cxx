@@ -143,8 +143,6 @@ TYPED_TEST(CollisionTest, Test1)
   EXPECT_NEAR(prtf1.u()[0],  0.03773088, eps);
   EXPECT_NEAR(prtf1.u()[1], -0.        , eps);
   EXPECT_NEAR(prtf1.u()[2],  0.17342988, eps);
-  
-  ppsc = NULL; // FIXME
 }
 
 // ======================================================================

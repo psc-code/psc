@@ -246,7 +246,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     };
 #else
     SetupParticles<Mparticles_t> setup_particles;
-    setup_particles.setup_particles(mprts, nullptr /*FIXME*/, n_prts_by_patch, [&](int kind, double crd[3], psc_particle_npt& npt) {
+    setup_particles.setup_particles(mprts, n_prts_by_patch, [&](int kind, double crd[3], psc_particle_npt& npt) {
 	this->init_npt(kind, crd, npt);
       });
 #endif

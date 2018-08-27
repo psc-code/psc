@@ -22,53 +22,7 @@
 using Mfields_t = MfieldsC;
 using Fields = Fields3d<Mfields_t::fields_t>;
 
-struct psc *ppsc;
 Grid_t* ggrid;
-
-#define VAR(x) (void *)(offsetof(struct psc, x))
-#define VAR_(x, n) (void *)(offsetof(struct psc, x) + n*sizeof(int))
-
-static mrc_param_select bnd_fld_descr[3];
-static mrc_param_select bnd_prt_descr[4];
-
-static struct select_init {
-  select_init() {
-    bnd_fld_descr[0].str = "open";
-    bnd_fld_descr[0].val = BND_FLD_OPEN;
-    bnd_fld_descr[1].str = "periodic";
-    bnd_fld_descr[1].val = BND_FLD_PERIODIC;
-    bnd_fld_descr[2].str = "conducting_wall";
-    bnd_fld_descr[2].val = BND_FLD_CONDUCTING_WALL;
-
-    bnd_prt_descr[0].str = "reflecting";
-    bnd_prt_descr[0].val = BND_PRT_REFLECTING;
-    bnd_prt_descr[1].str = "periodic";
-    bnd_prt_descr[1].val = BND_PRT_PERIODIC;
-    bnd_prt_descr[2].str = "absorbing";
-    bnd_prt_descr[2].val = BND_PRT_ABSORBING;
-    bnd_prt_descr[3].str = "open";
-    bnd_prt_descr[3].val = BND_PRT_OPEN;
-  }
-} select_initializer;
-
-#undef VAR
-
-// ----------------------------------------------------------------------
-// psc_create
-
-static void
-_psc_create(struct psc *psc)
-{
-  assert(!ppsc);
-  ppsc = psc;
-
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  srandom(rank);
-}
-
-// ======================================================================
-// psc_setup
 
 // ----------------------------------------------------------------------
 // psc_setup_domain
@@ -105,15 +59,6 @@ Grid_t* psc_setup_domain(const Grid_t::Domain& domain, GridBc& bc, const Grid_t:
 }
 
 // ----------------------------------------------------------------------
-// psc_destroy
-
-static void
-_psc_destroy(struct psc *psc)
-{
-  ppsc = NULL;
-}
-
-// ----------------------------------------------------------------------
 // _psc_write
 
 static void
@@ -143,9 +88,6 @@ _psc_write(struct psc *psc, struct mrc_io *io)
 static void
 _psc_read(struct psc *psc, struct mrc_io *io)
 {
-  assert(!ppsc);
-  ppsc = psc;
-
   //psc_setup_coeff(psc->norm_params);
 
 #if 0
@@ -173,18 +115,4 @@ _psc_read(struct psc *psc, struct mrc_io *io)
 
   //psc_read_member_objs(psc, io);
 }
-
-// ======================================================================
-// psc class
-
-struct mrc_class_psc_ : mrc_class_psc {
-  mrc_class_psc_() {
-    name             = "psc";
-    size             = sizeof(struct psc);
-    create           = _psc_create;
-    destroy          = _psc_destroy;
-    write            = _psc_write;
-    read             = _psc_read;
-  }
-} mrc_class_psc;
 

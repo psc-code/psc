@@ -61,7 +61,12 @@ struct Psc
   Psc()
   {
     time_start_ = MPI_Wtime();
-    
+
+    // FIXME, we should use RngPool consistently throughout
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    srandom(rank);
+
     diag_ = psc_diag_create(MPI_COMM_WORLD);
     psc_diag_set_from_options(diag_);
 

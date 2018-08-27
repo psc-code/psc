@@ -47,7 +47,6 @@ struct Inject_ : InjectBase
   
   void operator()(Mparticles& mprts)
   {
-    struct psc *psc = ppsc;
     const auto& grid = mprts.grid();
     const auto& kinds = grid.kinds;
 

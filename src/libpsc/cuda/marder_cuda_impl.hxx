@@ -30,16 +30,16 @@ struct MarderCuda : MarderBase
     assert(0);
 
     // FIXME, output_fields should be taking care of their own psc_bnd?
-    item_div_e = psc_output_fields_item_create(psc_comm(ppsc));
+    item_div_e = psc_output_fields_item_create(grid.comm());
     psc_output_fields_item_set_type(item_div_e, "dive_cuda");
     psc_output_fields_item_setup(item_div_e);
 
-    item_rho = psc_output_fields_item_create(psc_comm(ppsc));
+    item_rho = psc_output_fields_item_create(grid.comm());
     psc_output_fields_item_set_type(item_rho, "rho_1st_nc_cuda");
     psc_output_fields_item_setup(item_rho);
 
     if (dump_) {
-      io_ = mrc_io_create(psc_comm(ppsc));
+      io_ = mrc_io_create(grid.comm());
       mrc_io_set_type(io_, "xdmf_collective");
       mrc_io_set_name(io_, "mrc_io_marder");
       mrc_io_set_param_string(io_, "basename", "marder");

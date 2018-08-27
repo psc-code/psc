@@ -33,11 +33,11 @@ TYPED_TEST(PushParticlesTest, Moment1)
 
   auto n_prts_by_patch = std::vector<uint>{1};
   Mparticles mprts{grid};
-  SetupParticles<Mparticles>::setup_particles(mprts, n_prts_by_patch, [&](int p, int n) -> typename Mparticles::particle_t {
+  SetupParticles<Mparticles>::setup_particles2(mprts, n_prts_by_patch, [&](int p, int n) -> typename Mparticles::particle_t {
       return prt0;
     });
 
-  Moment_n moment_n{grid, ppsc->obj.comm};
+  Moment_n moment_n{grid, grid.comm()};
   moment_n.run(mprts);
   auto& mres = moment_n.result();
   for (int p = 0; p < grid.n_patches(); p++) {
@@ -74,14 +74,14 @@ TYPED_TEST(PushParticlesTest, Moment2) // FIXME, mostly copied
 
   auto n_prts_by_patch = std::vector<uint>{1};
   Mparticles mprts{grid};
-  SetupParticles<Mparticles>::setup_particles(mprts, n_prts_by_patch, [&](int p, int n) -> typename Mparticles::particle_t {
+  SetupParticles<Mparticles>::setup_particles2(mprts, n_prts_by_patch, [&](int p, int n) -> typename Mparticles::particle_t {
       return prt0;
     });
 
   int i0 = 2;
   if (PushParticlesTest<TypeParam>::dim::InvarX::value) i0 = 0;
   
-  Moment_n moment_n{grid, ppsc->obj.comm};
+  Moment_n moment_n{grid, grid.comm()};
   moment_n.run(mprts);
   auto& mres = moment_n.result();
   for (int p = 0; p < grid.n_patches(); p++) {

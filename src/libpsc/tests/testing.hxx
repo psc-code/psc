@@ -149,7 +149,6 @@ struct PushParticlesTest : ::testing::Test
   
   ~PushParticlesTest()
   {
-    ppsc = NULL; // FIXME, should use psc_destroy(ppsc), or really, get rid of ppsc...
     delete mprts;
     delete mflds;
   }
