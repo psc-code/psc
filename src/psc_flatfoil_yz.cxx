@@ -41,8 +41,6 @@
 #include "../libpsc/psc_checks/checks_impl.hxx"
 
 #ifdef USE_CUDA
-#include "../libpsc/cuda/inject_cuda_impl.hxx"
-#include "../libpsc/cuda/heating_cuda_impl.hxx"
 #include "../libpsc/cuda/setup_fields_cuda.hxx"
 #include "../libpsc/cuda/setup_particles_cuda.hxx"
 #endif
@@ -50,57 +48,6 @@
 #include "psc_config.hxx"
 
 #include "heating_spot_foil.hxx"
-
-// ======================================================================
-// HeatingSelector
-
-template<typename Mparticles>
-struct HeatingSelector
-{
-  using Heating = Heating__<Mparticles>;
-};
-
-#ifdef USE_CUDA
-
-// FIXME, enable_if for any BS
-template<>
-struct HeatingSelector<MparticlesCuda<BS444>>
-{
-  using Mparticles = MparticlesCuda<BS444>;
-  using Heating = HeatingCuda<typename Mparticles::BS>;
-};
-
-template<>
-struct HeatingSelector<MparticlesCuda<BS144>>
-{
-  using Mparticles = MparticlesCuda<BS144>;
-  using Heating = HeatingCuda<typename Mparticles::BS>;
-};
-
-#endif
-
-// ======================================================================
-// InjectSelector
-
-template<typename Mparticles, typename Mfields, typename InjectShape, typename Dim>
-struct InjectSelector
-{
-  using Inject = Inject_<Mparticles, MfieldsC, InjectShape>; // FIXME, shouldn't always use MfieldsC
-};
-
-#ifdef USE_CUDA
-
-// FIXME, this should really be condition to Mparticles == MparticlesCuda<BS>, not
-// Mfields == MfieldsCuda
-template<typename Mparticles, typename InjectShape, typename Dim>
-struct InjectSelector<Mparticles, MfieldsCuda, InjectShape, Dim>
-{
-  using Mfields = MfieldsCuda;
-  using Inject = InjectCuda<typename Mparticles::BS, Dim, InjectShape>;
-};
-
-#endif
-
 
 enum {
   MY_ION,

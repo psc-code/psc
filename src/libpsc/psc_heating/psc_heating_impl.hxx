@@ -90,3 +90,36 @@ private:
   std::function<double(const double*)> get_H_;
 };
 
+
+// ======================================================================
+// HeatingSelector
+//
+// FIXME, this should become unnecessary
+
+template<typename Mparticles>
+struct HeatingSelector
+{
+  using Heating = Heating__<Mparticles>;
+};
+
+#ifdef USE_CUDA
+
+#include "../libpsc/cuda/heating_cuda_impl.hxx"
+
+// FIXME, enable_if for any BS
+template<>
+struct HeatingSelector<MparticlesCuda<BS444>>
+{
+  using Mparticles = MparticlesCuda<BS444>;
+  using Heating = HeatingCuda<typename Mparticles::BS>;
+};
+
+template<>
+struct HeatingSelector<MparticlesCuda<BS144>>
+{
+  using Mparticles = MparticlesCuda<BS144>;
+  using Heating = HeatingCuda<typename Mparticles::BS>;
+};
+
+#endif
+

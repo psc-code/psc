@@ -126,3 +126,31 @@ private:
   const Grid_t& grid_;
 };
 
+
+// ======================================================================
+// InjectSelector
+//
+// FIXME, should go away eventually
+
+template<typename Mparticles, typename Mfields, typename InjectShape, typename Dim>
+struct InjectSelector
+{
+  using Inject = Inject_<Mparticles, MfieldsC, InjectShape>; // FIXME, shouldn't always use MfieldsC
+};
+
+#ifdef USE_CUDA
+
+#include "../libpsc/cuda/inject_cuda_impl.hxx"
+
+// FIXME, this should really be conditional to Mparticles == MparticlesCuda<BS>, not
+// Mfields == MfieldsCuda
+template<typename Mparticles, typename InjectShape, typename Dim>
+struct InjectSelector<Mparticles, MfieldsCuda, InjectShape, Dim>
+{
+  using Mfields = MfieldsCuda;
+  using Inject = InjectCuda<typename Mparticles::BS, Dim, InjectShape>;
+};
+
+#endif
+
+
