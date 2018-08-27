@@ -47,8 +47,6 @@ struct psc {
   ///@defgroup interfaces Interfaces @{
   struct mrc_obj obj;
   ///@}
-
-  Grid_t* grid_ = {};
 };
 
 MRC_CLASS_DECLARE(psc, struct psc);

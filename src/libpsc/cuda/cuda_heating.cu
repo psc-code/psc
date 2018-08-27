@@ -306,9 +306,9 @@ k_heating_run_foil(cuda_heating_foil d_foil, DMparticlesCuda<BS> dmprts, struct 
 
 template<typename BS>
 template<typename FUNC>
-HeatingCuda<BS>::HeatingCuda(int interval, int kind, FUNC get_H)
+HeatingCuda<BS>::HeatingCuda(const Grid_t& grid, int interval, int kind, FUNC get_H)
 {
-  foil_ = new cuda_heating_foil{get_H, kind, interval * ppsc->grid_->dt};
+  foil_ = new cuda_heating_foil{get_H, kind, interval * grid.dt};
 }
 
 template<typename BS>
@@ -326,7 +326,7 @@ void HeatingCuda<BS>::operator()(MparticlesCuda<BS>& mprts)
 // ======================================================================
 
 template struct HeatingCuda<BS144>;
-template HeatingCuda<BS144>::HeatingCuda(int interval, int kind, HeatingSpotFoil get_H);
+template HeatingCuda<BS144>::HeatingCuda(const Grid_t& grid, int interval, int kind, HeatingSpotFoil get_H);
 
 template struct HeatingCuda<BS444>;
-template HeatingCuda<BS444>::HeatingCuda(int interval, int kind, HeatingSpotFoil get_H);
+template HeatingCuda<BS444>::HeatingCuda(const Grid_t& grid, int interval, int kind, HeatingSpotFoil get_H);

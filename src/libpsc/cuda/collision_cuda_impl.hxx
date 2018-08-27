@@ -18,7 +18,7 @@ struct CollisionCuda : CollisionBase
 {
   using Mparticles = MP;
   
-  CollisionCuda(MPI_Comm comm, int interval, double nu);
+  CollisionCuda(const Grid_t& grid, int interval, double nu);
   
   void operator()(MparticlesBase& mprts_base) override { assert(0); }
 

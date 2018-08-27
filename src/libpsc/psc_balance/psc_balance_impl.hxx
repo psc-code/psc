@@ -853,7 +853,6 @@ private:
     // update psc etc
     delete ggrid;
     ggrid = new_grid;
-    psc->grid_ = ggrid;
     psc_balance_generation_cnt++;
 
     return n_prts_by_patch_new;
