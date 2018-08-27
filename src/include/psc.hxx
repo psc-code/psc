@@ -79,7 +79,7 @@ struct Psc
 		   double dt, Grid_t::NormalizationParams& norm_params)
   {
     auto coeff = Grid_t::Normalization{norm_params};
-    grid_ = psc_setup_domain(psc_, domain, bc, kinds, coeff, dt, ibn);
+    grid_ = psc_setup_domain(domain, bc, kinds, coeff, dt, ibn);
 
 #ifdef VPIC
     vgrid_ = Grid::create();
