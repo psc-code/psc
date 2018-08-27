@@ -53,7 +53,7 @@ struct Checks_ : ChecksParams, ChecksBase
   // ----------------------------------------------------------------------
   // continuity_before_particle_push
 
-  void continuity_before_particle_push(psc *psc, MparticlesBase& mprts_base) override
+  void continuity_before_particle_push(MparticlesBase& mprts_base) override
   {
     const auto& grid = mprts_base.grid();
     if (continuity_every_step <= 0 || grid.timestep() % continuity_every_step != 0) {
@@ -73,7 +73,7 @@ struct Checks_ : ChecksParams, ChecksBase
   // ----------------------------------------------------------------------
   // continuity_after_particle_push
 
-  void continuity_after_particle_push(psc *psc, MparticlesBase& mprts_base,
+  void continuity_after_particle_push(MparticlesBase& mprts_base,
 				      MfieldsStateBase& mflds_base) override
   {
     const auto& grid = mprts_base.grid();
@@ -152,7 +152,7 @@ struct Checks_ : ChecksParams, ChecksBase
   // ----------------------------------------------------------------------
   // gauss
 
-  void gauss(psc* psc, MparticlesBase& mprts_base, MfieldsStateBase& mflds_base) override
+  void gauss(MparticlesBase& mprts_base, MfieldsStateBase& mflds_base) override
   {
     const auto& grid = mprts_base.grid();
     if (gauss_every_step <= 0 || grid.timestep() % gauss_every_step != 0) {

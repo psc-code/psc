@@ -331,13 +331,13 @@ struct Balance_ : BalanceBase
     delete[] psc_balance_comp_time_by_patch;
   }
   
-  std::vector<uint> initial(psc* psc, const std::vector<uint>& n_prts_by_patch_old) override
+  std::vector<uint> initial(const std::vector<uint>& n_prts_by_patch_old) override
   {
     auto loads = get_loads_initial(*ggrid, n_prts_by_patch_old);
-    return balance(psc, loads, nullptr, n_prts_by_patch_old);
+    return balance(loads, nullptr, n_prts_by_patch_old);
   }
 
-  void operator()(psc* psc, MparticlesBase& mp) override
+  void operator()(MparticlesBase& mp) override
   {
     static int st_time_balance;
     if (!st_time_balance) {
@@ -346,7 +346,7 @@ struct Balance_ : BalanceBase
 
     psc_stats_start(st_time_balance);
     auto loads = get_loads(mp.grid(), mp);
-    balance(psc, loads, &mp);
+    balance(loads, &mp);
     psc_stats_stop(st_time_balance);
   }
 
@@ -801,7 +801,7 @@ private:
     }
   }
   
-  std::vector<uint> balance(psc* psc, std::vector<double> loads, MparticlesBase *mp,
+  std::vector<uint> balance(std::vector<double> loads, MparticlesBase *mp,
 			    std::vector<uint> n_prts_by_patch_old = {})
   {
     static int pr_bal_load, pr_bal_ctx, pr_bal_prts, pr_bal_flds;

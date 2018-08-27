@@ -550,7 +550,7 @@ private:
 #endif
 #else
     // FIXME
-    psc_diag_run(diag_, psc_, *mprts_, *mflds_);
+    psc_diag_run(diag_, *mprts_, *mflds_);
     // FIXME
     (*outf_)(*mflds_, *mprts_);
 #endif

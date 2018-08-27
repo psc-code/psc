@@ -62,8 +62,7 @@ _psc_diag_destroy(struct psc_diag *diag)
 // psc_diag_run
 
 void
-psc_diag_run(struct psc_diag *diag, struct psc *psc,
-	     MparticlesBase& mprts, MfieldsStateBase& mflds)
+psc_diag_run(struct psc_diag *diag, MparticlesBase& mprts, MfieldsStateBase& mflds)
 {
   const auto& grid = mprts.grid();
   
@@ -81,7 +80,7 @@ psc_diag_run(struct psc_diag *diag, struct psc *psc,
   mrc_obj_for_each_child(item, diag, struct psc_diag_item) {
     int nr_values = psc_diag_item_nr_values(item);
     double *result = (double *) calloc(nr_values, sizeof(*result));
-    psc_diag_item_run(item, psc, mprts, mflds, result);
+    psc_diag_item_run(item, mprts, mflds, result);
     if (rank == 0) {
       MPI_Reduce(MPI_IN_PLACE, result, nr_values, MPI_DOUBLE, MPI_SUM, 0, grid.comm());
     } else {

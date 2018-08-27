@@ -7,11 +7,11 @@ struct ChecksVpic : ChecksParams, ChecksBase
     : ChecksParams(params)
   {}
   
-  void continuity_before_particle_push(psc* psc, MparticlesVpic& mprts) {}
-  void continuity_after_particle_push(psc* psc, MparticlesVpic& mprts, MfieldsState& mflds) {}
-  void gauss(psc* psc, MparticlesVpic& mprts, MfieldsState& mflds) {}
+  void continuity_before_particle_push(MparticlesVpic& mprts) {}
+  void continuity_after_particle_push(MparticlesVpic& mprts, MfieldsState& mflds) {}
+  void gauss(MparticlesVpic& mprts, MfieldsState& mflds) {}
 
-  void continuity_before_particle_push(psc* psc, MparticlesBase& mprts) override {}
-  void continuity_after_particle_push(psc* psc, MparticlesBase& mprts, MfieldsStateBase& mflds) override {}
-  void gauss(psc* psc, MparticlesBase& mprts, MfieldsStateBase& mflds) override {}
+  void continuity_before_particle_push(MparticlesBase& mprts) override {}
+  void continuity_after_particle_push(MparticlesBase& mprts, MfieldsStateBase& mflds) override {}
+  void gauss(MparticlesBase& mprts, MfieldsStateBase& mflds) override {}
 };

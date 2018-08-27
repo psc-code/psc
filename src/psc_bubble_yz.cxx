@@ -153,7 +153,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     // --- partition particles and initial balancing
     mpi_printf(comm, "**** Partitioning...\n");
     auto n_prts_by_patch_old = setup_initial_partition();
-    auto n_prts_by_patch_new = balance_->initial(psc_, n_prts_by_patch_old);
+    auto n_prts_by_patch_new = balance_->initial(n_prts_by_patch_old);
     // balance::initial does not rebalance particles, because the old way of doing this
     // does't even have the particle data structure created yet -- FIXME?
     mprts_->reset(grid());
@@ -246,7 +246,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     };
 #else
     SetupParticles<Mparticles_t> setup_particles;
-    setup_particles.setup_particles(mprts, psc_, n_prts_by_patch, [&](int kind, double crd[3], psc_particle_npt& npt) {
+    setup_particles.setup_particles(mprts, nullptr /*FIXME*/, n_prts_by_patch, [&](int kind, double crd[3], psc_particle_npt& npt) {
 	this->init_npt(kind, crd, npt);
       });
 #endif
@@ -351,7 +351,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     auto& mflds = *mflds_;
 
     if (balance_interval > 0 && timestep % balance_interval == 0) {
-      (*balance_)(psc_, mprts);
+      (*balance_)(mprts);
     }
 
     if (sort_interval > 0 && timestep % sort_interval == 0) {

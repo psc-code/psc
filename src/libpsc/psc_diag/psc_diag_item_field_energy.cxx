@@ -10,7 +10,7 @@ using Fields = Fields3d<MfieldsC::fields_t, dim_xyz>;
 
 static void
 psc_diag_item_field_energy_run(struct psc_diag_item *item,
-			       struct psc *psc, MparticlesBase& mprts,
+			       MparticlesBase& mprts,
 			       MfieldsStateBase& mflds_base, double *EH2)
 {
   const Grid_t& grid = mprts.grid();

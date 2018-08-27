@@ -380,7 +380,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // --- partition particles and initial balancing
     mpi_printf(comm, "**** Partitioning...\n");
     auto n_prts_by_patch_old = setup_initial_partition();
-    auto n_prts_by_patch_new = balance_->initial(psc_, n_prts_by_patch_old);
+    auto n_prts_by_patch_new = balance_->initial(n_prts_by_patch_old);
     mprts_->reset(grid());
     
     mpi_printf(comm, "**** Setting up particles...\n");
@@ -756,7 +756,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     auto& mflds = *mflds_;
 
     if (balance_interval > 0 && timestep % balance_interval == 0) {
-      (*balance_)(psc_, mprts);
+      (*balance_)(mprts);
     }
 
     prof_start(pr_time_step_no_comm);
@@ -778,7 +778,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     
     //psc_bnd_particles_open_calc_moments(psc_->bnd_particles, psc_->particles);
 
-    checks_->continuity_before_particle_push(psc_, mprts);
+    checks_->continuity_before_particle_push(mprts);
 
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
     prof_start(pr_push_prts);
@@ -829,7 +829,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     //}
     // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 
-    checks_->continuity_after_particle_push(psc_, mprts, mflds);
+    checks_->continuity_after_particle_push(mprts, mflds);
 
     // E at t^{n+3/2}, particles at t^{n+3/2}
     // B at t^{n+3/2} (Note: that is not it's natural time,
@@ -841,7 +841,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       prof_stop(pr_marder);
     }
     
-    checks_->gauss(psc_, mprts, mflds);
+    checks_->gauss(mprts, mflds);
 
 #ifdef VPIC
     pushp_->prep(mprts, mflds, *interpolator_);

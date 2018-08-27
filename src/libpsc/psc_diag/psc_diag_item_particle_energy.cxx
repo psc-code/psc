@@ -5,7 +5,7 @@
 #include <math.h>
 
 static void
-psc_diag_item_particle_energy_run(struct psc_diag_item *item, struct psc *psc,
+psc_diag_item_particle_energy_run(struct psc_diag_item *item,
 				  MparticlesBase& mprts_base, MfieldsStateBase& mflds_base,
 				  double *result)
 {
