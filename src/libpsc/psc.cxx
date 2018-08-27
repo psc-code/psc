@@ -23,6 +23,7 @@ using Mfields_t = MfieldsC;
 using Fields = Fields3d<Mfields_t::fields_t>;
 
 struct psc *ppsc;
+Grid_t* ggrid;
 
 #define VAR(x) (void *)(offsetof(struct psc, x))
 #define VAR_(x, n) (void *)(offsetof(struct psc, x) + n*sizeof(int))
@@ -97,10 +98,11 @@ Grid_t* psc_setup_domain(struct psc *psc, const Grid_t::Domain& domain, GridBc& 
     }
   }
 
-  psc->grid_ = new Grid_t{domain, bc, kinds, norm, dt};
-  psc->grid_->ibn = ibn;
+  ggrid = new Grid_t{domain, bc, kinds, norm, dt};
+  ggrid->ibn = ibn;
+  psc->grid_ = ggrid;
 
-  return psc->grid_;
+  return ggrid;
 }
 
 // ----------------------------------------------------------------------

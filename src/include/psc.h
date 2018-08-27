@@ -80,6 +80,8 @@ struct psc_particle_npt {
 
 extern struct psc *ppsc;
 
+extern Grid_t* ggrid;
+
 extern int pr_time_step_no_comm;
 
 Grid_t* psc_setup_domain(struct psc *psc, const Grid_t::Domain& domain, GridBc& bc, const Grid_t::Kinds& kinds,

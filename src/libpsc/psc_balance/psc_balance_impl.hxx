@@ -333,7 +333,7 @@ struct Balance_ : BalanceBase
   
   std::vector<uint> initial(psc* psc, const std::vector<uint>& n_prts_by_patch_old) override
   {
-    auto loads = get_loads_initial(*psc->grid_, n_prts_by_patch_old);
+    auto loads = get_loads_initial(*ggrid, n_prts_by_patch_old);
     return balance(psc, loads, nullptr, n_prts_by_patch_old);
   }
 
@@ -813,7 +813,7 @@ private:
     }
 
     prof_start(pr_bal_load);
-    auto old_grid = psc->grid_;
+    auto old_grid = ggrid;
     
     auto loads_all = gather_loads(*old_grid, loads);
     int n_patches_new = find_best_mapping(*old_grid, loads_all);
@@ -851,8 +851,9 @@ private:
     prof_stop(pr_bal_flds);
 
     // update psc etc
-    delete psc->grid_;
-    psc->grid_ = new_grid;
+    delete ggrid;
+    ggrid = new_grid;
+    psc->grid_ = ggrid;
     psc_balance_generation_cnt++;
 
     return n_prts_by_patch_new;

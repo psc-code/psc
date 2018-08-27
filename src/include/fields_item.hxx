@@ -70,7 +70,7 @@ public:
   static void setup(psc_output_fields_item* _item)
   {
     PscFieldsItem<FieldsItem> item(_item);
-    new(item.sub()) FieldsItem(*ppsc->grid_, psc_output_fields_item_comm(_item));
+    new(item.sub()) FieldsItem(*ggrid, psc_output_fields_item_comm(_item));
   }
 
   static void destroy(psc_output_fields_item* _item)
