@@ -29,7 +29,7 @@ struct Marder_ : MarderBase
       item_dive_{grid, grid.comm()}
   {
     if (dump_) {
-      io_ = mrc_io_create(psc_comm(ppsc));
+      io_ = mrc_io_create(grid.comm());
       mrc_io_set_type(io_, "xdmf_collective");
       mrc_io_set_name(io_, "mrc_io_marder");
       mrc_io_set_param_string(io_, "basename", "marder");

@@ -14,7 +14,7 @@ struct psc_output_particles_ascii : OutputParticlesParams, OutputParticlesBase
 {
   psc_output_particles_ascii(const Grid_t& grid, const OutputParticlesParams& params)
     : OutputParticlesParams(params),
-      comm_{psc_comm(ppsc)}
+      comm_{grid.comm()}
   {}
 
   // ----------------------------------------------------------------------

@@ -229,9 +229,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   PscHarris()
     : io_pfd_{"pfd"}
   {
-    auto comm = psc_comm(psc_);
+    auto comm = grid().comm();
 
-    mpi_printf(psc_comm(psc_), "*** Setting up simulation\n" );
+    mpi_printf(comm, "*** Setting up simulation\n" );
 
     setup_params();
     
@@ -452,7 +452,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   
   void setup_materials()
   {
-    MPI_Comm comm = psc_comm(psc_);
+    MPI_Comm comm = grid().comm();
     
     mpi_printf(comm, "Setting up materials.\n");
     
@@ -474,7 +474,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   
   void setup_species()
   {
-    MPI_Comm comm = psc_comm(psc_);
+    MPI_Comm comm = grid().comm();
     
     mpi_printf(comm, "Setting up species.\n");
     double nmax = overalloc * phys_.Ne / phys_.n_global_patches;
@@ -492,7 +492,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
   void setup_log()
   {
-    MPI_Comm comm = psc_comm(psc_);
+    MPI_Comm comm = grid().comm();
 
     mpi_printf(comm, "***********************************************\n");
     mpi_printf(comm, "* Topology: %d x %d x %d\n", np[0], np[1], np[2]);
@@ -572,8 +572,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
   void setup_particles(std::vector<uint>& nr_particles_by_patch, bool count_only)
   {
+    MPI_Comm comm = grid().comm();
     const auto& grid = this->grid();
-    MPI_Comm comm = psc_comm(psc_);
 
     double cs = cos(theta), sn = sin(theta);
     double Ne_sheet = phys_.Ne_sheet, vthe = phys_.vthe, vthi = phys_.vthi;
@@ -746,7 +746,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       pr_sync4b = prof_register("step_sync4b", 1., 0, 0);
     }
 
-    MPI_Comm comm = psc_comm(psc_);
+    MPI_Comm comm = grid().comm();
 
     // x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
 
@@ -853,7 +853,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   {
     run_diagnostics();
     
-    MPI_Comm comm = psc_comm(psc_);
+    MPI_Comm comm = grid().comm();
     const auto& grid = this->grid();
 
     int timestep = grid.timestep();

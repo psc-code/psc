@@ -173,9 +173,9 @@ struct Psc
     bndf_.reset(new BndFields_t{});
     bndp_.reset(new BndParticles_t{grid()});
 
-    psc_setup_member_objs(psc_);
     psc_diag_setup(diag_);
     psc_output_particles_setup(outp_);
+
     initialize_stats();
   }
 
@@ -210,9 +210,6 @@ struct Psc
 
   void initialize()
   {
-    psc_view(psc_);
-    mprts_->view();
-
 #ifdef VPIC
     initialize_vpic();
 #else
@@ -220,11 +217,11 @@ struct Psc
 #endif
 
     // initial output / stats
-    mpi_printf(psc_comm(psc_), "Performing initial diagnostics.\n");
+    mpi_printf(grid().comm(), "Performing initial diagnostics.\n");
     diagnostics();
     print_status();
 
-    mpi_printf(psc_comm(psc_), "Initialization complete.\n");
+    mpi_printf(grid().comm(), "Initialization complete.\n");
   }
 
   // ----------------------------------------------------------------------
@@ -237,7 +234,7 @@ struct Psc
       pr = prof_register("psc_step", 1., 0, 0);
     }
 
-    mpi_printf(psc_comm(psc_), "*** Advancing\n");
+    mpi_printf(grid().comm(), "*** Advancing\n");
     double elapsed = MPI_Wtime();
 
     bool first_iteration = true;
@@ -252,7 +249,7 @@ struct Psc
       }
       first_iteration = false;
 
-      mpi_printf(psc_comm(psc_), "**** Step %d / %d, Code Time %g, Wall Time %g\n", grid().timestep() + 1,
+      mpi_printf(grid().comm(), "**** Step %d / %d, Code Time %g, Wall Time %g\n", grid().timestep() + 1,
 		 p_.nmax, grid().timestep() * grid().dt, MPI_Wtime() - time_start_);
 
       prof_start(pr_time_step_no_comm);
@@ -299,7 +296,7 @@ struct Psc
 
     int  s = (int)elapsed, m  = s/60, h  = m/60, d  = h/24, w = d/ 7;
     /**/ s -= m*60,        m -= h*60, h -= d*24, d -= w*7;
-    mpi_printf(psc_comm(psc_), "*** Finished (%gs / %iw:%id:%ih:%im:%is elapsed)\n",
+    mpi_printf(grid().comm(), "*** Finished (%gs / %iw:%id:%ih:%im:%is elapsed)\n",
 	       elapsed, w, d, h, m, s );
   }
 
@@ -488,29 +485,31 @@ private:
   
   void initialize_vpic()
   {
+    MPI_Comm comm = grid().comm();
+    
     // FIXME, just change the uses
     auto psc = psc_;
     auto& mprts = *mprts_;
     auto& mflds = mflds_;
     // Do some consistency checks on user initialized fields
     
-    mpi_printf(psc_comm(psc), "Checking interdomain synchronization\n");
+    mpi_printf(comm, "Checking interdomain synchronization\n");
     double err;
     TIC err = CleanDivOps::synchronize_tang_e_norm_b(*mflds_); TOC(synchronize_tang_e_norm_b, 1);
-    mpi_printf(psc_comm(psc), "Error = %g (arb units)\n", err);
+    mpi_printf(comm, "Error = %g (arb units)\n", err);
     
-    mpi_printf(psc_comm(psc), "Checking magnetic field divergence\n");
+    mpi_printf(comm, "Checking magnetic field divergence\n");
     TIC CleanDivOps::compute_div_b_err(*mflds_); TOC(compute_div_b_err, 1);
     TIC err = CleanDivOps::compute_rms_div_b_err(*mflds_); TOC(compute_rms_div_b_err, 1);
-    mpi_printf(psc_comm(psc), "RMS error = %e (charge/volume)\n", err);
+    mpi_printf(comm, "RMS error = %e (charge/volume)\n", err);
     TIC CleanDivOps::clean_div_b(*mflds_); TOC(clean_div_b, 1);
     
     // Load fields not initialized by the user
     
-    mpi_printf(psc_comm(psc), "Initializing radiation damping fields\n");
+    mpi_printf(comm, "Initializing radiation damping fields\n");
     TIC AccumulateOps::compute_curl_b(*mflds_); TOC(compute_curl_b, 1);
     
-    mpi_printf(psc_comm(psc), "Initializing bound charge density\n");
+    mpi_printf(comm, "Initializing bound charge density\n");
     TIC CleanDivOps::clear_rhof(*mflds_); TOC(clear_rhof, 1);
     ParticlesOps::accumulate_rho_p(*mprts_, *mflds_);
     CleanDivOps::synchronize_rho(*mflds_);
@@ -518,17 +517,17 @@ private:
     
     // Internal sanity checks
     
-    mpi_printf(psc_comm(psc), "Checking electric field divergence\n");
+    mpi_printf(comm, "Checking electric field divergence\n");
     TIC CleanDivOps::compute_div_e_err(*mflds_); TOC(compute_div_e_err, 1);
     TIC err = CleanDivOps::compute_rms_div_e_err(*mflds_); TOC(compute_rms_div_e_err, 1);
-    mpi_printf(psc_comm(psc), "RMS error = %e (charge/volume)\n", err);
+    mpi_printf(comm, "RMS error = %e (charge/volume)\n", err);
     TIC CleanDivOps::clean_div_e(*mflds_); TOC(clean_div_e, 1);
     
-    mpi_printf(psc_comm(psc), "Rechecking interdomain synchronization\n");
+    mpi_printf(comm, "Rechecking interdomain synchronization\n");
     TIC err = CleanDivOps::synchronize_tang_e_norm_b(*mflds_); TOC(synchronize_tang_e_norm_b, 1);
-    mpi_printf(psc_comm(psc), "Error = %e (arb units)\n", err);
+    mpi_printf(comm, "Error = %e (arb units)\n", err);
     
-    mpi_printf(psc_comm(psc), "Uncentering particles\n");
+    mpi_printf(comm, "Uncentering particles\n");
     if (!mprts_->empty()) {
       TIC InterpolatorOps::load(*interpolator_, *mflds_); TOC(load_interpolator, 1);
       

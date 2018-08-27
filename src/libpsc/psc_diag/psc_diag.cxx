@@ -83,9 +83,9 @@ psc_diag_run(struct psc_diag *diag, struct psc *psc,
     double *result = (double *) calloc(nr_values, sizeof(*result));
     psc_diag_item_run(item, psc, mprts, mflds, result);
     if (rank == 0) {
-      MPI_Reduce(MPI_IN_PLACE, result, nr_values, MPI_DOUBLE, MPI_SUM, 0, psc_comm(psc));
+      MPI_Reduce(MPI_IN_PLACE, result, nr_values, MPI_DOUBLE, MPI_SUM, 0, grid.comm());
     } else {
-      MPI_Reduce(result, NULL, nr_values, MPI_DOUBLE, MPI_SUM, 0, psc_comm(psc));
+      MPI_Reduce(result, NULL, nr_values, MPI_DOUBLE, MPI_SUM, 0, grid.comm());
     }
     if (rank == 0) {
       for (int i = 0; i < nr_values; i++) {

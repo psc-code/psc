@@ -209,7 +209,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   
   PscFlatfoil()
   {
-    auto comm = psc_comm(psc_);
+    auto comm = grid().comm();
 
     mpi_printf(comm, "*** Setting up...\n");
 
@@ -574,7 +574,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     }
 
     // state is at: x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
-    MPI_Comm comm = psc_comm(psc_);
+    MPI_Comm comm = grid().comm();
     int timestep = grid().timestep();
 
     auto& mprts = *mprts_;

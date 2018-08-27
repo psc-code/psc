@@ -227,7 +227,7 @@ struct Grid_
 
   MrcDomain mrc_domain() const { return mrc_domain_; }
 
-  MPI_Comm comm() const { return mrc_domain().comm(); }
+  MPI_Comm comm() const { return MPI_COMM_WORLD; }
   int nGlobalPatches() const { return mrc_domain().nGlobalPatches(); }
   void neighborRankPatch(int p, int dir[3], int* nei_rank, int* nei_patch) const { mrc_domain().neighborRankPatch(p, dir, nei_rank, nei_patch); }
   mrc_patch_info globalPatchInfo(int p) const { return mrc_domain().globalPatchInfo(p); }
