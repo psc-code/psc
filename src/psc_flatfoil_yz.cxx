@@ -474,16 +474,14 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   }
 
   // ----------------------------------------------------------------------
-  // step
-  //
-  // things are missing from the generic step():
-  // - pushp prep
+  // step_psc
 
-  void step()
+  void step_psc()
   {
+    using DIM = typename PscConfig::dim_t;
+
     static int pr_sort, pr_collision, pr_checks, pr_push_prts, pr_push_flds,
-      pr_bndp, pr_bndf, pr_marder, pr_inject, pr_heating,
-      pr_sync1, pr_sync2, pr_sync3, pr_sync4, pr_sync5, pr_sync4a, pr_sync4b;
+      pr_bndp, pr_bndf, pr_marder, pr_inject, pr_heating;
     if (!pr_sort) {
       pr_sort = prof_register("step_sort", 1., 0, 0);
       pr_collision = prof_register("step_collision", 1., 0, 0);
@@ -495,13 +493,6 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
       pr_marder = prof_register("step_marder", 1., 0, 0);
       pr_inject = prof_register("step_inject", 1., 0, 0);
       pr_heating = prof_register("step_heating", 1., 0, 0);
-      pr_sync1 = prof_register("step_sync1", 1., 0, 0);
-      pr_sync2 = prof_register("step_sync2", 1., 0, 0);
-      pr_sync3 = prof_register("step_sync3", 1., 0, 0);
-      pr_sync4 = prof_register("step_sync4", 1., 0, 0);
-      pr_sync5 = prof_register("step_sync5", 1., 0, 0);
-      pr_sync4a = prof_register("step_sync4a", 1., 0, 0);
-      pr_sync4b = prof_register("step_sync4b", 1., 0, 0);
     }
 
     // state is at: x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
@@ -542,22 +533,12 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     prof_stop(pr_push_prts);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
 
-#if 0
-    prof_start(pr_sync1);
-    MPI_Barrier(comm);
-    prof_stop(pr_sync1);
-#endif
-    
     // === field propagation B^{n+1/2} -> B^{n+1}
     prof_start(pr_push_flds);
     pushf_->push_H(mflds, .5, DIM{});
     prof_stop(pr_push_flds);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
-    prof_start(pr_sync3);
-    MPI_Barrier(comm);
-    prof_stop(pr_sync3);
-    
     if (inject_interval > 0 && timestep % inject_interval == 0) {
       mpi_printf(comm, "***** Performing injection...\n");
       prof_start(pr_inject);
@@ -574,12 +555,6 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
       prof_stop(pr_heating);
     }
 
-#if 1
-    prof_start(pr_sync4);
-    MPI_Barrier(comm);
-    prof_stop(pr_sync4);
-#endif
-    
     prof_start(pr_bndp);
     (*bndp_)(mprts);
     prof_stop(pr_bndp);
@@ -595,21 +570,11 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     bnd_->add_ghosts(mflds, JXI, JXI + 3);
     bnd_->fill_ghosts(mflds, JXI, JXI + 3);
     prof_stop(pr_bndf);
-
-#if 1
-    prof_start(pr_sync4a);
-    MPI_Barrier(comm);
-    prof_stop(pr_sync4a);
-#endif
     
     prof_restart(pr_push_flds);
     pushf_->push_E(mflds, 1., DIM{});
     prof_stop(pr_push_flds);
     
-    prof_start(pr_sync4b);
-    MPI_Barrier(comm);
-    prof_stop(pr_sync4b);
-
 #if 0
     prof_restart(pr_bndf);
     bndf_->fill_ghosts_E(mflds);
@@ -631,12 +596,6 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 #endif
 
-#if 0
-    prof_start(pr_sync5);
-    MPI_Barrier(comm);
-    prof_stop(pr_sync5);
-#endif
-    
     if (checks_->continuity_every_step > 0 && timestep % checks_->continuity_every_step == 0) {
       prof_restart(pr_checks);
       checks_->continuity_after_particle_push(mprts, mflds);
@@ -662,6 +621,11 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     //psc_push_particles_prep(psc->push_particles, psc->particles, psc->flds);
   }
 
+  void step() override
+  {
+    return step_psc();
+  }
+  
 protected:
   std::unique_ptr<Heating_t> heating_;
   std::unique_ptr<Inject_t> inject_;
