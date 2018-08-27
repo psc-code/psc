@@ -295,7 +295,141 @@ struct Psc
 	       elapsed, w, d, h, m, s );
   }
 
-  virtual void step() = 0;
+#ifdef VPIC
+  void step_vpic()
+  {
+    static int pr_sort, pr_collision, pr_checks, pr_push_prts, pr_push_flds,
+      pr_bndp, pr_bndf, pr_marder, pr_inject, pr_heating,
+      pr_sync1, pr_sync2, pr_sync3, pr_sync4, pr_sync5, pr_sync4a, pr_sync4b;
+    if (!pr_sort) {
+      pr_sort = prof_register("step_sort", 1., 0, 0);
+      pr_collision = prof_register("step_collision", 1., 0, 0);
+      pr_push_prts = prof_register("step_push_prts", 1., 0, 0);
+      pr_push_flds = prof_register("step_push_flds", 1., 0, 0);
+      pr_bndp = prof_register("step_bnd_prts", 1., 0, 0);
+      pr_bndf = prof_register("step_bnd_flds", 1., 0, 0);
+      pr_checks = prof_register("step_checks", 1., 0, 0);
+      pr_marder = prof_register("step_marder", 1., 0, 0);
+      pr_inject = prof_register("step_inject", 1., 0, 0);
+      pr_heating = prof_register("step_heating", 1., 0, 0);
+      pr_sync1 = prof_register("step_sync1", 1., 0, 0);
+      pr_sync2 = prof_register("step_sync2", 1., 0, 0);
+      pr_sync3 = prof_register("step_sync3", 1., 0, 0);
+      pr_sync4 = prof_register("step_sync4", 1., 0, 0);
+      pr_sync5 = prof_register("step_sync5", 1., 0, 0);
+      pr_sync4a = prof_register("step_sync4a", 1., 0, 0);
+      pr_sync4b = prof_register("step_sync4b", 1., 0, 0);
+    }
+
+    MPI_Comm comm = grid().comm();
+
+    // x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
+
+    int timestep = grid().timestep();
+
+    auto& mprts = *mprts_;
+    auto& mflds = *mflds_;
+
+    if (balance_interval > 0 && timestep % balance_interval == 0) {
+      (*balance_)(mprts);
+    }
+
+    prof_start(pr_time_step_no_comm);
+    prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
+
+    if (sort_interval > 0 && timestep % sort_interval == 0) {
+      //mpi_printf(comm, "***** Sorting...\n");
+      prof_start(pr_sort);
+      (*sort_)(mprts);
+      prof_stop(pr_sort);
+    }
+    
+    if (collision_->interval() > 0 && timestep % collision_->interval() == 0) {
+      mpi_printf(comm, "***** Performing collisions...\n");
+      prof_start(pr_collision);
+      (*collision_)(mprts);
+      prof_stop(pr_collision);
+    }
+    
+    //psc_bnd_particles_open_calc_moments(psc_->bnd_particles, psc_->particles);
+
+    checks_->continuity_before_particle_push(mprts);
+
+    // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
+    prof_start(pr_push_prts);
+    pushp_->push_mprts(mprts, mflds, *interpolator_, *accumulator_, particle_bc_list_, num_comm_round);
+    prof_stop(pr_push_prts);
+    // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
+
+    // field propagation B^{n+1/2} -> B^{n+1}
+    pushf_->push_H(mflds, .5);
+    // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
+
+    prof_start(pr_bndp);
+    (*bndp_)(mprts);
+    prof_stop(pr_bndp);
+
+    // field propagation E^{n+1/2} -> E^{n+3/2}
+
+    // fill ghosts for H
+    bndf_->fill_ghosts_H(mflds);
+    bnd_->fill_ghosts(mflds, HX, HX + 3);
+    
+    // add and fill ghost for J
+    bndf_->add_ghosts_J(mflds);
+    bnd_->add_ghosts(mflds, JXI, JXI + 3);
+    bnd_->fill_ghosts(mflds, JXI, JXI + 3);
+    
+    // push E
+    pushf_->push_E(mflds, 1.);
+
+    bndf_->fill_ghosts_E(mflds);
+    //if (pushf_->variant == 0) {
+    bnd_->fill_ghosts(mflds, EX, EX + 3);
+    //}
+    // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
+
+    // field propagation B^{n+1} -> B^{n+3/2}
+    //if (pushf_->variant == 0) {
+    bndf_->fill_ghosts_E(mflds);
+    bnd_->fill_ghosts(mflds, EX, EX + 3);
+    //    }
+    
+    // push H
+    pushf_->push_H(mflds, .5);
+
+    bndf_->fill_ghosts_H(mflds);
+    //if (pushf_->variant == 0) {
+    bnd_->fill_ghosts(mflds, HX, HX + 3);
+    //}
+    // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
+
+    checks_->continuity_after_particle_push(mprts, mflds);
+
+    // E at t^{n+3/2}, particles at t^{n+3/2}
+    // B at t^{n+3/2} (Note: that is not it's natural time,
+    // but div B should be == 0 at any time...)
+    if (marder_interval > 0 && timestep % marder_interval == 0) {
+      //mpi_printf(comm, "***** Performing Marder correction...\n");
+      prof_start(pr_marder);
+      (*marder_)(mflds, mprts);
+      prof_stop(pr_marder);
+    }
+    
+    checks_->gauss(mprts, mflds);
+
+#ifdef VPIC
+    pushp_->prep(mprts, mflds, *interpolator_);
+#endif
+  }
+#endif
+
+  virtual void step()
+  {
+#ifdef VPIC
+    step_vpic();
+#endif
+  }
 
   // ----------------------------------------------------------------------
   // define_periodic_grid
