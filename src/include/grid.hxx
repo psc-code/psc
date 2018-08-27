@@ -186,6 +186,40 @@ struct Grid_
   int timestep_ = 0;
 
   // ----------------------------------------------------------------------
+  // psc_make_grid
+  
+  static Grid_* psc_make_grid(const Domain& domain, GridBc& bc, const Kinds& kinds,
+			      const Normalization& norm, double dt, Int3 ibn)
+  {
+#if 0
+    mpi_printf(MPI_COMM_WORLD, "::: dt      = %g\n", dt);
+    mpi_printf(MPI_COMM_WORLD, "::: dx      = %g %g %g\n", domain.dx[0], domain.dx[1], domain.dx[2]);
+#endif
+    
+    assert(domain.dx[0] > 0.);
+    assert(domain.dx[1] > 0.);
+    assert(domain.dx[2] > 0.);
+    
+    for (int d = 0; d < 3; d++) {
+      if (ibn[d] != 0) {
+	continue;
+      }
+      // FIXME, old-style particle pushers need 3 ghost points still
+      if (domain.gdims[d] == 1) {
+	// no ghost points
+	ibn[d] = 0;
+      } else {
+	ibn[d] = 2;
+      }
+    }
+
+    auto grid = new Grid_{domain, bc, kinds, norm, dt};
+    grid->ibn = ibn;
+    
+    return grid;
+}
+
+  // ----------------------------------------------------------------------
   // make_mrc_domain
 
   static MrcDomain make_mrc_domain(const Domain& grid_domain, const GridBc& grid_bc, int nr_patches)

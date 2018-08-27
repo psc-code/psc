@@ -72,7 +72,7 @@ static Grid_t& make_psc(const Grid_t::Kinds& kinds)
   auto norm_params = Grid_t::NormalizationParams::dimensionless();
   norm_params.nicell = 200;
   auto coeff = Grid_t::Normalization{norm_params};
-  return *psc_setup_domain(grid_domain, grid_bc, kinds, coeff, 1., {});
+  return *Grid_t::psc_make_grid(grid_domain, grid_bc, kinds, coeff, 1., {});
 }
 
 // ======================================================================

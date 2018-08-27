@@ -25,40 +25,6 @@ using Fields = Fields3d<Mfields_t::fields_t>;
 Grid_t* ggrid;
 
 // ----------------------------------------------------------------------
-// psc_setup_domain
-
-Grid_t* psc_setup_domain(const Grid_t::Domain& domain, GridBc& bc, const Grid_t::Kinds& kinds,
-			 const Grid_t::Normalization& norm, double dt, Int3 ibn)
-{
-#if 0
-  mpi_printf(MPI_COMM_WORLD, "::: dt      = %g\n", dt);
-  mpi_printf(MPI_COMM_WORLD, "::: dx      = %g %g %g\n", domain.dx[0], domain.dx[1], domain.dx[2]);
-#endif
-
-  assert(domain.dx[0] > 0.);
-  assert(domain.dx[1] > 0.);
-  assert(domain.dx[2] > 0.);
-  
-  for (int d = 0; d < 3; d++) {
-    if (ibn[d] != 0) {
-      continue;
-    }
-    // FIXME, old-style particle pushers need 3 ghost points still
-    if (domain.gdims[d] == 1) {
-      // no ghost points
-      ibn[d] = 0;
-    } else {
-      ibn[d] = 2;
-    }
-  }
-
-  ggrid = new Grid_t{domain, bc, kinds, norm, dt};
-  ggrid->ibn = ibn;
-
-  return ggrid;
-}
-
-// ----------------------------------------------------------------------
 // _psc_write
 
 static void
