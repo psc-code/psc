@@ -62,9 +62,6 @@ struct Psc
   {
     time_start_ = MPI_Wtime();
     
-    psc_ = psc_create(MPI_COMM_WORLD);
-    psc_set_from_options(psc_);
-
     diag_ = psc_diag_create(MPI_COMM_WORLD);
     psc_diag_set_from_options(diag_);
 
@@ -179,14 +176,6 @@ struct Psc
     initialize_stats();
   }
 
-  // ----------------------------------------------------------------------
-  // dtor
-
-  ~Psc()
-  {
-    psc_destroy(psc_);
-  }
-  
   // ----------------------------------------------------------------------
   // initialize_stats
   
@@ -488,7 +477,6 @@ private:
     MPI_Comm comm = grid().comm();
     
     // FIXME, just change the uses
-    auto psc = psc_;
     auto& mprts = *mprts_;
     auto& mflds = mflds_;
     // Do some consistency checks on user initialized fields
@@ -584,7 +572,6 @@ protected:
 #ifdef VPIC
   Grid* vgrid_;
 #endif
-  psc* psc_;
 
 #ifdef VPIC
   MaterialList material_list_;
