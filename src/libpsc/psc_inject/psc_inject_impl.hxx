@@ -51,6 +51,10 @@ struct Inject_ : InjectBase
     const auto& kinds = grid.kinds;
 
     SetupParticles<Mparticles> setup_particles;
+    // FIXME, this is taken from and kinda specific to psc_flatfoil_yz.cxx,
+    // and really shouldn't be replicated so many times anyway
+    setup_particles.fractional_n_particles_per_cell = true;
+    setup_particles.neutralizing_population = 1;// MY_ELECTRON;
     
     real_t fac = 1. / grid.norm.cori * 
       (interval * grid.dt / tau) / (1. + interval * grid.dt / tau);

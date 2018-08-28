@@ -135,8 +135,8 @@ struct PscFlatfoil : Psc<PscConfig>
     
     // --- setup domain
     Grid_t::Real3 LL = { 1., 400.*4, 400. }; // domain size (in d_e)
-    Int3 gdims = { 1, 4096, 1024 }; // global number of grid points
-    Int3 np = { 1, 64, 16 }; // division into patches
+    Int3 gdims = { 1, 1024, 256 }; // global number of grid points
+    Int3 np = { 1, 4, 1 }; // division into patches
     
     auto grid_domain = Grid_t::Domain{gdims, LL, -.5 * LL, np};
     
@@ -215,6 +215,8 @@ struct PscFlatfoil : Psc<PscConfig>
     
     // -- output fields
     OutputFieldsCParams outf_params;
+    outf_params.output_fields = "e,h,j,n_1st_single,v_1st_single,T_1st_single";
+    outf_params.pfield_step = 100;
     outf_.reset(new OutputFieldsC{grid(), outf_params});
 
     // --- partition particles and initial balancing

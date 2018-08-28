@@ -20,14 +20,14 @@
 
 struct PscParams
 {
-  double cfl = { .75 };            // CFL number used to determine time step
-  int nmax;                        // Number of timesteps to run
-  double wallclock_limit = { 0. }; // Maximum wallclock time to run
-  bool write_checkpoint = { false };
-  int write_checkpoint_every_step = { 0 };
+  double cfl = .75;            // CFL number used to determine time step
+  int nmax;                    // Number of timesteps to run
+  double wallclock_limit = 0.; // Maximum wallclock time to run
+  bool write_checkpoint = false;
+  int write_checkpoint_every_step = 0;
 
-  bool detailed_profiling; // output profiling info for each process separately
-  int stats_every;         // output timing and other info every so many steps
+  bool detailed_profiling = false; // output profiling info for each process separately
+  int stats_every = 10;    // output timing and other info every so many steps
 };
   
 // ======================================================================
@@ -251,7 +251,6 @@ struct Psc
       prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
 
       step();
-    
       grid_->timestep_++; // FIXME, too hacky
 #ifdef VPIC
       vgrid_->step++;
