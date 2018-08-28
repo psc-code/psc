@@ -481,18 +481,17 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     using DIM = typename PscConfig::dim_t;
 
     static int pr_sort, pr_collision, pr_checks, pr_push_prts, pr_push_flds,
-      pr_bndp, pr_bndf, pr_marder, pr_inject, pr_heating;
+      pr_bndp, pr_bndf, pr_marder, pr_inject_prts;
     if (!pr_sort) {
       pr_sort = prof_register("step_sort", 1., 0, 0);
       pr_collision = prof_register("step_collision", 1., 0, 0);
       pr_push_prts = prof_register("step_push_prts", 1., 0, 0);
+      pr_inject_prts = prof_register("step_inject_prts", 1., 0, 0);
       pr_push_flds = prof_register("step_push_flds", 1., 0, 0);
       pr_bndp = prof_register("step_bnd_prts", 1., 0, 0);
       pr_bndf = prof_register("step_bnd_flds", 1., 0, 0);
       pr_checks = prof_register("step_checks", 1., 0, 0);
       pr_marder = prof_register("step_marder", 1., 0, 0);
-      pr_inject = prof_register("step_inject", 1., 0, 0);
-      pr_heating = prof_register("step_heating", 1., 0, 0);
     }
 
     // state is at: x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
@@ -533,21 +532,10 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     prof_stop(pr_push_prts);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
 
-    if (inject_interval > 0 && timestep % inject_interval == 0) {
-      mpi_printf(comm, "***** Performing injection...\n");
-      prof_start(pr_inject);
-      (*inject_)(mprts);
-      prof_stop(pr_inject);
-    }
-      
-    // only heating between heating_tb and heating_te
-    if (timestep >= heating_begin && timestep < heating_end &&
-	heating_interval > 0 && timestep % heating_interval == 0) {
-      mpi_printf(comm, "***** Performing heating...\n");
-      prof_start(pr_heating);
-      (*heating_)(mprts);
-      prof_stop(pr_heating);
-    }
+    // === particle injection
+    prof_start(pr_inject_prts);
+    inject_particles();
+    prof_stop(pr_inject_prts);
 
     // === field propagation B^{n+1/2} -> B^{n+1}
     prof_start(pr_push_flds);
@@ -625,11 +613,40 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   {
     return step_psc();
   }
-  
+
+  void inject_particles()
+  {
+    static int pr_inject, pr_heating;
+    if (!pr_inject) {
+      pr_inject = prof_register("inject", 1., 0, 0);
+      pr_heating = prof_register("heating", 1., 0, 0);
+    }
+
+    auto comm = grid().comm();
+    auto timestep = grid().timestep();
+    
+    if (inject_interval > 0 && timestep % inject_interval == 0) {
+      mpi_printf(comm, "***** Performing injection...\n");
+      prof_start(pr_inject);
+      (*inject_)(*mprts_);
+      prof_stop(pr_inject);
+    }
+      
+    // only heating between heating_tb and heating_te
+    if (timestep >= heating_begin && timestep < heating_end &&
+	heating_interval > 0 && timestep % heating_interval == 0) {
+      mpi_printf(comm, "***** Performing heating...\n");
+      prof_start(pr_heating);
+      (*heating_)(*mprts_);
+      prof_stop(pr_heating);
+    }
+  }
+
 protected:
   std::unique_ptr<Heating_t> heating_;
   std::unique_ptr<Inject_t> inject_;
 };
+
 
 // ======================================================================
 // main
