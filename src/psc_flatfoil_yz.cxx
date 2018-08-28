@@ -111,13 +111,6 @@ struct InjectFoil : InjectFoilParams
 
 struct PscFlatfoilParams
 {
-  double BB;
-  double Zi;
-
-  double background_n;
-  double background_Te;
-  double background_Ti;
-
   bool inject_enable;
   int inject_kind_n;
   int inject_interval;
@@ -159,27 +152,27 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
 
     PscFlatfoilParams params;
 
-    params.BB = 0.;
-    params.Zi = 1.;
+    BB = 0.;
+    Zi = 1.;
     
     // --- for background plasma
-    params.background_n  = .002;
-    params.background_Te = .001;
-    params.background_Ti = .001;
+    background_n  = .002;
+    background_Te = .001;
+    background_Ti = .001;
     
     // -- setup particle kinds
     // last population ("e") is neutralizing
     // FIXME, hardcoded mass ratio 100
 #if TEST == TEST_4_SHOCK_3D
-    Grid_t::Kinds kinds = {{params.Zi, 100.*params.Zi, "i"}, { -1., 1., "e"}};
+    Grid_t::Kinds kinds = {{Zi, 100.*Zi, "i"}, { -1., 1., "e"}};
 #else
-    Grid_t::Kinds kinds = {{params.Zi, 100.*params.Zi, "i"}, { -1., 1., "e"}};
+    Grid_t::Kinds kinds = {{Zi, 100.*Zi, "i"}, { -1., 1., "e"}};
 #endif
     
     double d_i = sqrt(kinds[MY_ION].m / kinds[MY_ION].q);
     
     mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
-    mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(params.background_Te));
+    mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(background_Te));
     
     // -- setup injection
     double target_yl     = -100000.;
@@ -205,29 +198,27 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     params.inject_tau = 40;
     
 #if TEST == TEST_4_SHOCK_3D
-    params.BB = 0.02;
-    params.background_n = .01;
-    params.background_Te = .002;
-    params.background_Ti = .002;
+    BB = 0.02;
+    background_n = .01;
+    background_Te = .002;
+    background_Ti = .002;
     params.inject_interval = 0;
     p_.nmax = 100002;
 #endif
     
 #if TEST == TEST_3_NILSON_3D
-    params.background_n = .02;
+    background_n = .02;
     params.inject_interval = 0;
     p_.nmax = 101;
 #endif
     
 #if TEST == TEST_2_FLATFOIL_3D
-    params.heating_interval = 0;
     params.inject_interval = 5;
 #endif
     
 #if TEST == TEST_1_HEATING_3D
-    params.background_n  = 1.0;
+    background_n  = 1.0;
     
-    params.heating_interval = 0;
     params.inject_interval = 0;
     
     params.checks_params.continuity_every_step = 1;
@@ -349,7 +340,6 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     marder_.reset(new Marder_t(grid(), marder_diffusion, marder_loop, marder_dump));
 
     // -- Heating
-    // --- setup heating
     auto heating_foil_params = HeatingSpotFoilParams{};
     heating_foil_params.zl = -1. * d_i;
     heating_foil_params.zh =  1. * d_i;
@@ -366,7 +356,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     auto heating_spot = HeatingSpotFoil{heating_foil_params};
 
     heating_interval = 20;
-#if TEST == TEST_1_HEATING_3D
+#if TEST == TEST_1_HEATING_3D || TEST == TEST_2_FLATFOIL_3D
     heating_interval = 0;
 #endif
     heating_begin = 0;
@@ -494,6 +484,13 @@ protected:
   std::unique_ptr<Inject_t> inject_;
 
 public: // these don't need to be public, but oh well...
+  double BB;
+  double Zi;
+
+  double background_n;
+  double background_Te;
+  double background_Ti;
+
   int heating_begin;
   int heating_end;
   int heating_interval;
