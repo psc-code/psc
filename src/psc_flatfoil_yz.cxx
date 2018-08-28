@@ -145,45 +145,43 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     p_.nmax = 5001;
     p_.cfl = 0.75;
 
-    PscFlatfoilParams params;
-
-    BB = 0.;
-    Zi = 1.;
+    BB_ = 0.;
+    Zi_ = 1.;
     
     // --- for background plasma
-    background_n  = .002;
-    background_Te = .001;
-    background_Ti = .001;
+    background_n_  = .002;
+    background_Te_ = .001;
+    background_Ti_ = .001;
     
     // -- setup particle kinds
     // last population ("e") is neutralizing
     // FIXME, hardcoded mass ratio 100
 #if TEST == TEST_4_SHOCK_3D
-    Grid_t::Kinds kinds = {{Zi, 100.*Zi, "i"}, { -1., 1., "e"}};
+    Grid_t::Kinds kinds = {{Zi_, 100.*Zi_, "i"}, { -1., 1., "e"}};
 #else
-    Grid_t::Kinds kinds = {{Zi, 100.*Zi, "i"}, { -1., 1., "e"}};
+    Grid_t::Kinds kinds = {{Zi_, 100.*Zi_, "i"}, { -1., 1., "e"}};
 #endif
     
     double d_i = sqrt(kinds[MY_ION].m / kinds[MY_ION].q);
     
     mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
-    mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(background_Te));
+    mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(background_Te_));
     
 #if TEST == TEST_4_SHOCK_3D
-    BB = 0.02;
-    background_n = .01;
-    background_Te = .002;
-    background_Ti = .002;
+    BB_ = 0.02;
+    background_n_ = .01;
+    background_Te_ = .002;
+    background_Ti_ = .002;
     p_.nmax = 100002;
 #endif
 
 #if TEST == TEST_3_NILSON_3D
-    background_n = .02;
+    background_n_ = .02;
     p_.nmax = 101;
 #endif
     
 #if TEST == TEST_1_HEATING_3D
-    background_n  = 1.0;
+    background_n_  = 1.0;
     
     params.checks_params.continuity_every_step = 1;
     params.checks_params.continuity_threshold = 1e-12;
@@ -197,8 +195,6 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     p_.collision_interval = 0;
 #endif
 
-    static_cast<PscFlatfoilParams&>(*this) = params;
-  
     // --- setup domain
     Grid_t::Real3 LL = { 1., 400.*4, 400. }; // domain size (in d_e)
     Int3 gdims = { 1, 4096, 1024 }; // global number of grid points
@@ -319,13 +315,13 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     heating_foil_params.Mi = kinds[MY_ION].m;
     auto heating_spot = HeatingSpotFoil{heating_foil_params};
 
-    heating_interval = 20;
+    heating_interval_ = 20;
 #if TEST == TEST_1_HEATING_3D || TEST == TEST_2_FLATFOIL_3D
-    heating_interval = 0;
+    heating_interval_ = 0;
 #endif
-    heating_begin = 0;
-    heating_end = 10000000;
-    heating_.reset(new Heating_t{grid(), heating_interval, MY_ELECTRON, heating_spot});
+    heating_begin_ = 0;
+    heating_end_ = 10000000;
+    heating_.reset(new Heating_t{grid(), heating_interval_, MY_ELECTRON, heating_spot});
 
     // -- Particle injection
     // -- setup injection
@@ -344,18 +340,17 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     inject_foil_params.Te = .001;
     inject_foil_params.Ti = .001;
 #endif
-    inject_target = InjectFoil{inject_foil_params};
-    inject_interval = 20;
+    inject_target_ = InjectFoil{inject_foil_params};
+    inject_interval_ = 20;
 #if TEST == TEST_4_SHOCK_3D || TEST == TEST_3_NILSON_3D || TEST == TEST_1_HEATING_3D
-    inject_interval = 0;
+    inject_interval_ = 0;
 #endif
 #if TEST == TEST_2_FLATFOIL_3D
-    inject_interval = 5;
+    inject_interval_ = 5;
 #endif
     
-    
     int inject_tau = 40;
-    inject_.reset(new Inject_t{grid(), inject_interval, inject_tau, MY_ELECTRON, inject_target});
+    inject_.reset(new Inject_t{grid(), inject_interval_, inject_tau, MY_ELECTRON, inject_target_});
     
     // -- output fields
     OutputFieldsCParams outf_params;
@@ -382,24 +377,24 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   {
     switch (kind) {
     case MY_ION:
-      npt.n    = background_n;
-      npt.T[0] = background_Ti;
-      npt.T[1] = background_Ti;
-      npt.T[2] = background_Ti;
+      npt.n    = background_n_;
+      npt.T[0] = background_Ti_;
+      npt.T[1] = background_Ti_;
+      npt.T[2] = background_Ti_;
       break;
     case MY_ELECTRON:
-      npt.n    = background_n;
-      npt.T[0] = background_Te;
-      npt.T[1] = background_Te;
-      npt.T[2] = background_Te;
+      npt.n    = background_n_;
+      npt.T[0] = background_Te_;
+      npt.T[1] = background_Te_;
+      npt.T[2] = background_Te_;
       break;
     default:
       assert(0);
     }
       
-    if (inject_target.is_inside(crd)) {
+    if (inject_target_.is_inside(crd)) {
       // replace values above by target values
-      inject_target.init_npt(kind, crd, &npt);
+      inject_target_.init_npt(kind, crd, &npt);
     }
   }
   
@@ -436,7 +431,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
   {
     SetupFields<MfieldsState>::set(mflds, [&](int m, double crd[3]) {
 	switch (m) {
-	case HY: return BB;
+	case HY: return BB_;
 	default: return 0.;
 	}
       });
@@ -453,7 +448,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     auto comm = grid().comm();
     auto timestep = grid().timestep();
     
-    if (inject_interval > 0 && timestep % inject_interval == 0) {
+    if (inject_interval_ > 0 && timestep % inject_interval_ == 0) {
       mpi_printf(comm, "***** Performing injection...\n");
       prof_start(pr_inject);
       (*inject_)(*mprts_);
@@ -461,8 +456,8 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     }
       
     // only heating between heating_tb and heating_te
-    if (timestep >= heating_begin && timestep < heating_end &&
-	heating_interval > 0 && timestep % heating_interval == 0) {
+    if (timestep >= heating_begin_ && timestep < heating_end_ &&
+	heating_interval_ > 0 && timestep % heating_interval_ == 0) {
       mpi_printf(comm, "***** Performing heating...\n");
       prof_start(pr_heating);
       (*heating_)(*mprts_);
@@ -474,20 +469,20 @@ protected:
   std::unique_ptr<Heating_t> heating_;
   std::unique_ptr<Inject_t> inject_;
 
-public: // these don't need to be public, but oh well...
-  double BB;
-  double Zi;
+private:
+  double BB_;
+  double Zi_;
 
-  double background_n;
-  double background_Te;
-  double background_Ti;
+  double background_n_;
+  double background_Te_;
+  double background_Ti_;
 
-  int inject_interval;
-  InjectFoil inject_target;
+  int inject_interval_;
+  InjectFoil inject_target_;
 
-  int heating_begin;
-  int heating_end;
-  int heating_interval;
+  int heating_begin_;
+  int heating_end_;
+  int heating_interval_;
 };
 
 
