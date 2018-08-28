@@ -123,10 +123,6 @@ struct PscFlatfoilParams
   int inject_interval;
   int inject_tau;
   InjectFoil inject_target;
-
-  int heating_begin;
-  int heating_end;
-  int heating_interval;
 };
 
 // EDIT to change order / floating point type / cuda / 2d/3d
@@ -496,6 +492,11 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
 protected:
   std::unique_ptr<Heating_t> heating_;
   std::unique_ptr<Inject_t> inject_;
+
+public: // these don't need to be public, but oh well...
+  int heating_begin;
+  int heating_end;
+  int heating_interval;
 };
 
 
