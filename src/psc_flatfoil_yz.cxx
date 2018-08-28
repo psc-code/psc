@@ -614,7 +614,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     return step_psc();
   }
 
-  void inject_particles()
+  void inject_particles() override
   {
     static int pr_inject, pr_heating;
     if (!pr_inject) {

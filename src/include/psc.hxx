@@ -427,18 +427,17 @@ struct Psc
     using DIM = typename PscConfig::dim_t;
 
     static int pr_sort, pr_collision, pr_checks, pr_push_prts, pr_push_flds,
-      pr_bndp, pr_bndf, pr_marder, pr_inject, pr_heating;
+      pr_bndp, pr_bndf, pr_marder, pr_inject_prts;
     if (!pr_sort) {
       pr_sort = prof_register("step_sort", 1., 0, 0);
       pr_collision = prof_register("step_collision", 1., 0, 0);
       pr_push_prts = prof_register("step_push_prts", 1., 0, 0);
+      pr_inject_prts = prof_register("step_inject_prts", 1., 0, 0);
       pr_push_flds = prof_register("step_push_flds", 1., 0, 0);
       pr_bndp = prof_register("step_bnd_prts", 1., 0, 0);
       pr_bndf = prof_register("step_bnd_flds", 1., 0, 0);
       pr_checks = prof_register("step_checks", 1., 0, 0);
       pr_marder = prof_register("step_marder", 1., 0, 0);
-      pr_inject = prof_register("step_inject", 1., 0, 0);
-      pr_heating = prof_register("step_heating", 1., 0, 0);
     }
 
     // state is at: x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
@@ -478,6 +477,11 @@ struct Psc
     pushp_->push_mprts(mprts, mflds);
     prof_stop(pr_push_prts);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
+
+    // === particle injection
+    prof_start(pr_inject_prts);
+    inject_particles();
+    prof_stop(pr_inject_prts);
 
     // === field propagation B^{n+1/2} -> B^{n+1}
     prof_start(pr_push_flds);
@@ -560,6 +564,12 @@ struct Psc
 #endif
   }
 
+  // ----------------------------------------------------------------------
+  // inject_particles
+
+  virtual void inject_particles()
+  {}
+  
   // ----------------------------------------------------------------------
   // define_periodic_grid
   
