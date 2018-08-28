@@ -55,11 +55,6 @@ struct Checks_ : ChecksParams, ChecksBase
 
   void continuity_before_particle_push(MparticlesBase& mprts_base) override
   {
-    const auto& grid = mprts_base.grid();
-    if (continuity_every_step <= 0 || grid.timestep() % continuity_every_step != 0) {
-      return;
-    }
-
     auto mprts = mprts_base.get_as<Mparticles>();
     continuity_before_particle_push(mprts);
     mprts_base.put_as(mprts, MP_DONT_COPY);
@@ -67,6 +62,11 @@ struct Checks_ : ChecksParams, ChecksBase
 
   void continuity_before_particle_push(Mparticles& mprts)
   {
+    const auto& grid = mprts.grid();
+    if (continuity_every_step <= 0 || grid.timestep() % continuity_every_step != 0) {
+      return;
+    }
+
     item_rho_m_.run(mprts);
   }
 
@@ -76,11 +76,6 @@ struct Checks_ : ChecksParams, ChecksBase
   void continuity_after_particle_push(MparticlesBase& mprts_base,
 				      MfieldsStateBase& mflds_base) override
   {
-    const auto& grid = mprts_base.grid();
-    if (continuity_every_step <= 0 || grid.timestep() % continuity_every_step != 0) {
-      return;
-    }
-
     auto& mprts = mprts_base.get_as<Mparticles>();
     auto& mflds = mflds_base.get_as<MfieldsState>(0, mflds_base.n_comps());
     continuity_after_particle_push(mprts, mflds);
@@ -91,7 +86,10 @@ struct Checks_ : ChecksParams, ChecksBase
   void continuity_after_particle_push(Mparticles& mprts, MfieldsState& mflds)
   {
     const auto& grid = mprts.grid();
-    
+    if (continuity_every_step <= 0 || grid.timestep() % continuity_every_step != 0) {
+      return;
+    }
+
     item_rho_p_.run(mprts);
     item_divj_(mflds);
 
@@ -154,11 +152,6 @@ struct Checks_ : ChecksParams, ChecksBase
 
   void gauss(MparticlesBase& mprts_base, MfieldsStateBase& mflds_base) override
   {
-    const auto& grid = mprts_base.grid();
-    if (gauss_every_step <= 0 || grid.timestep() % gauss_every_step != 0) {
-      return;
-    }
-    
     auto& mflds = mflds_base.get_as<MfieldsState>(EX, EX+3);
     auto& mprts = mprts_base.get_as<Mparticles>();
 
@@ -171,6 +164,9 @@ struct Checks_ : ChecksParams, ChecksBase
   void gauss(Mparticles& mprts, MfieldsState& mflds)
   {
     const auto& grid = mprts.grid();
+    if (gauss_every_step <= 0 || grid.timestep() % gauss_every_step != 0) {
+      return;
+    }
 
     item_rho_.run(mprts);
     item_dive_(mflds);
