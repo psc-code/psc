@@ -467,14 +467,8 @@ private:
 int
 main(int argc, char **argv)
 {
-#ifdef USE_VPIC
-  vpic_base_init(&argc, &argv);
-#else
-  MPI_Init(&argc, &argv);
-#endif
-  libmrc_params_init(argc, argv);
-  mrc_set_flags(MRC_FLAG_SUPPRESS_UNPREFIXED_OPTION_WARNING);
-
+  psc_init(argc, argv);
+  
   auto psc = new PscFlatfoil;
 
   psc->initialize();

@@ -72,8 +72,6 @@ struct vpic_simulation_info {
   int status_interval;
 };
 
-void vpic_base_init(int *pargc, char ***pargv);
-
 // FIXME, replicated
 #define BOUNDARY(i,j,k) (13+(i)+3*(j)+9*(k)) /* FORTRAN -1:1,-1:1,-1:1 */
 

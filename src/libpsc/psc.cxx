@@ -82,3 +82,18 @@ _psc_read(struct psc *psc, struct mrc_io *io)
   //psc_read_member_objs(psc, io);
 }
 
+#ifdef USE_VPIC
+// FIXME
+void vpic_base_init(int *pargc, char ***pargv);
+#endif
+
+void psc_init(int& argc, char**& argv)
+{
+#ifdef USE_VPIC
+  vpic_base_init(&argc, &argv);
+#else
+  MPI_Init(&argc, &argv);
+#endif
+  libmrc_params_init(argc, argv);
+  mrc_set_flags(MRC_FLAG_SUPPRESS_UNPREFIXED_OPTION_WARNING);
+}

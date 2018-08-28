@@ -69,4 +69,6 @@ extern Grid_t* ggrid;
 
 extern int pr_time_step_no_comm;
 
+void psc_init(int& argc, char**& argv);
+
 #endif
