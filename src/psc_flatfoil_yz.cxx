@@ -127,8 +127,6 @@ struct PscFlatfoilParams
   int heating_begin;
   int heating_end;
   int heating_interval;
-  int heating_kind;
-  HeatingSpotFoil heating_spot;
 };
 
 // EDIT to change order / floating point type / cuda / 2d/3d
@@ -186,34 +184,6 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     
     mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
     mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(params.background_Te));
-    
-    // --- setup heating
-    double heating_zl = -1.;
-    double heating_zh =  1.;
-    double heating_xc = 0.;
-    double heating_yc = 0.;
-#if TEST == TEST_4_SHOCK_3D
-    double heating_rH = 100000.;
-#else
-    double heating_rH = 3.;
-#endif
-    auto heating_foil_params = HeatingSpotFoilParams{};
-    heating_foil_params.zl = heating_zl * d_i;
-    heating_foil_params.zh = heating_zh * d_i;
-    heating_foil_params.xc = heating_xc * d_i;
-    heating_foil_params.yc = heating_yc * d_i;
-    heating_foil_params.rH = heating_rH * d_i;
-#if TEST == TEST_4_SHOCK_3D
-    heating_foil_params.T  = .06;
-#else
-    heating_foil_params.T  = .04;
-#endif
-    heating_foil_params.Mi = kinds[MY_ION].m;
-    params.heating_spot = HeatingSpotFoil{heating_foil_params};
-    params.heating_interval = 20;
-    params.heating_begin = 0;
-    params.heating_end = 10000000;
-    params.heating_kind = MY_ELECTRON;
     
     // -- setup injection
     double target_yl     = -100000.;
@@ -383,7 +353,29 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     marder_.reset(new Marder_t(grid(), marder_diffusion, marder_loop, marder_dump));
 
     // -- Heating
-    heating_.reset(new Heating_t{grid(), heating_interval, heating_kind, heating_spot});
+    // --- setup heating
+    auto heating_foil_params = HeatingSpotFoilParams{};
+    heating_foil_params.zl = -1. * d_i;
+    heating_foil_params.zh =  1. * d_i;
+    heating_foil_params.xc =  0. * d_i;
+    heating_foil_params.yc =  0. * d_i;
+#if TEST == TEST_4_SHOCK_3D
+    heating_foil_params.rH = 100000 * d_i;
+    heating_foil_params.T  = .06;
+#else
+    heating_foil_params.rH = 3. * d_i;
+    heating_foil_params.T  = .04;
+#endif
+    heating_foil_params.Mi = kinds[MY_ION].m;
+    auto heating_spot = HeatingSpotFoil{heating_foil_params};
+
+    heating_interval = 20;
+#if TEST == TEST_1_HEATING_3D
+    heating_interval = 0;
+#endif
+    heating_begin = 0;
+    heating_end = 10000000;
+    heating_.reset(new Heating_t{grid(), heating_interval, MY_ELECTRON, heating_spot});
 
     // -- Particle injection
     inject_.reset(new Inject_t{grid(), inject_interval, inject_tau, inject_kind_n, inject_target});
