@@ -4,22 +4,6 @@
 #include <psc.h>
 #include <psc.hxx>
 
-// small 3d box (heating)
-#define TEST_1_HEATING_3D 1
-#define TEST_2_FLATFOIL_3D 2
-#define TEST_3_NILSON_3D 3
-#define TEST_4_SHOCK_3D 4
-
-// EDIT to change test we're running (if TEST is not defined, default is regular 2d flatfoil)
-//#define TEST TEST_1_HEATING_3D
-//#define TEST TEST_2_FLATFOIL_3D
-//#define TEST TEST_3_NILSON_3D
-#define TEST TEST_4_SHOCK_3D
-
-#ifdef USE_VPIC
-#include "../libpsc/vpic/vpic_iface.h"
-#endif
-
 #include <balance.hxx>
 #include <particles.hxx>
 #include <fields3d.hxx>
@@ -107,11 +91,7 @@ struct InjectFoil : InjectFoilParams
 };
 
 // EDIT to change order / floating point type / cuda / 2d/3d
-#if TEST == TEST_1_HEATING_3D || TEST == TEST_2_FLATFOIL_3D || TEST == TEST_3_NILSON_3D || TEST == TEST_4_SHOCK_3D
-using dim_t = dim_xyz;
-#else
 using dim_t = dim_yz;
-#endif
 using PscConfig = PscConfig1vbecSingle<dim_t>;
 
 // ======================================================================
@@ -146,74 +126,18 @@ struct PscFlatfoil : Psc<PscConfig>
     // -- setup particle kinds
     // last population ("e") is neutralizing
     // FIXME, hardcoded mass ratio 100
-#if TEST == TEST_4_SHOCK_3D
     Grid_t::Kinds kinds = {{Zi_, 100.*Zi_, "i"}, { -1., 1., "e"}};
-#else
-    Grid_t::Kinds kinds = {{Zi_, 100.*Zi_, "i"}, { -1., 1., "e"}};
-#endif
     
     double d_i = sqrt(kinds[MY_ION].m / kinds[MY_ION].q);
     
     mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
     mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(background_Te_));
     
-#if TEST == TEST_4_SHOCK_3D
-    BB_ = 0.02;
-    background_n_ = .01;
-    background_Te_ = .002;
-    background_Ti_ = .002;
-    p_.nmax = 100002;
-#endif
-
-#if TEST == TEST_3_NILSON_3D
-    background_n_ = .02;
-    p_.nmax = 101;
-#endif
-    
-#if TEST == TEST_1_HEATING_3D
-    background_n_  = 1.0;
-    
-    params.checks_params.continuity_every_step = 1;
-    params.checks_params.continuity_threshold = 1e-12;
-    params.checks_params.continuity_verbose = true;
-    
-    params.checks_params.gauss_every_step = 1;
-    // eventually, errors accumulate above 1e-10, but it should take a long time
-    params.checks_params.gauss_threshold = 1e-10;
-    params.checks_params.gauss_verbose = true;
-
-    p_.collision_interval = 0;
-#endif
-
     // --- setup domain
     Grid_t::Real3 LL = { 1., 400.*4, 400. }; // domain size (in d_e)
     Int3 gdims = { 1, 4096, 1024 }; // global number of grid points
     Int3 np = { 1, 64, 16 }; // division into patches
     
-#if TEST == TEST_4_SHOCK_3D
-    LL = { 256., 256., 512. }; // domain size (in d_e)
-    gdims = { 256, 256, 512 }; // global number of grid points
-    np = { 16, 16, 32 }; // division into patches
-#endif
-    
-#if TEST == TEST_3_NILSON_3D
-    LL = { 400., 200., 800. }; // domain size (in d_e)
-    gdims = { 64, 32, 128 }; // global number of grid points
-    np = { 2, 1, 4 }; // division into patches
-#endif
-  
-#if TEST == TEST_2_FLATFOIL_3D
-    LL = { 400., 400.*4, 400. }; // domain size (in d_e)
-    gdims = { 16, 64, 16 }; // global number of grid points
-    np = { 1, 4, 1 }; // division into patches
-#endif
-  
-#if TEST == TEST_1_HEATING_3D
-    LL = { 2., 2., 2. }; // domain size (in d_e)
-    gdims = { 8, 8, 8 }; // global number of grid points
-    np = { 1, 1, 1 }; // division into patches
-#endif
-  
     auto grid_domain = Grid_t::Domain{gdims, LL, -.5 * LL, np};
     
     auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
@@ -224,12 +148,6 @@ struct PscFlatfoil : Psc<PscConfig>
     // --- generic setup
     auto norm_params = Grid_t::NormalizationParams::dimensionless();
     norm_params.nicell = 100;
-#if TEST == TEST_4_SHOCK_3D
-    norm_params.nicell = 100;
-#endif
-#if TEST == TEST_3_NILSON_3D
-    norm_params.nicell = 50;
-#endif
 
     double dt = p_.cfl * courant_length(grid_domain);
     define_grid(grid_domain, grid_bc, kinds, dt, norm_params);
@@ -249,18 +167,6 @@ struct PscFlatfoil : Psc<PscConfig>
     // -- Collision
     int collision_interval = 10;
     double collision_nu = .1;
-#if TEST == TEST_4_SHOCK_3D
-    collision_interval = 0;
-#endif
-#if TEST == TEST_3_NILSON_3D
-    collision_interval = 0;
-#endif
-#if TEST == TEST_2_FLATFOIL_3D
-    collision_interval = 0;
-#endif
-#if TEST == TEST_1_HEATING_3D
-    collision_interval = 0;
-#endif
     collision_.reset(new Collision_t{grid(), collision_interval, collision_nu});
 
     // -- Checks
@@ -280,20 +186,12 @@ struct PscFlatfoil : Psc<PscConfig>
     heating_foil_params.zh =  1. * d_i;
     heating_foil_params.xc =  0. * d_i;
     heating_foil_params.yc =  0. * d_i;
-#if TEST == TEST_4_SHOCK_3D
-    heating_foil_params.rH = 100000 * d_i;
-    heating_foil_params.T  = .06;
-#else
     heating_foil_params.rH = 3. * d_i;
     heating_foil_params.T  = .04;
-#endif
     heating_foil_params.Mi = kinds[MY_ION].m;
     auto heating_spot = HeatingSpotFoil{heating_foil_params};
 
     heating_interval_ = 20;
-#if TEST == TEST_1_HEATING_3D || TEST == TEST_2_FLATFOIL_3D
-    heating_interval_ = 0;
-#endif
     heating_begin_ = 0;
     heating_end_ = 10000000;
     heating_.reset(new Heating_t{grid(), heating_interval_, MY_ELECTRON, heating_spot});
@@ -306,23 +204,11 @@ struct PscFlatfoil : Psc<PscConfig>
     double target_zwidth =  1.;
     inject_foil_params.zl = - target_zwidth * d_i;
     inject_foil_params.zh =   target_zwidth * d_i;
-#if TEST == TEST_4_SHOCK_3D
-    inject_foil_params.n  = 2.5;
-    inject_foil_params.Te = .002;
-    inject_foil_params.Ti = .002;
-#else
     inject_foil_params.n  = 1.;
     inject_foil_params.Te = .001;
     inject_foil_params.Ti = .001;
-#endif
     inject_target_ = InjectFoil{inject_foil_params};
     inject_interval_ = 20;
-#if TEST == TEST_4_SHOCK_3D || TEST == TEST_3_NILSON_3D || TEST == TEST_1_HEATING_3D
-    inject_interval_ = 0;
-#endif
-#if TEST == TEST_2_FLATFOIL_3D
-    inject_interval_ = 5;
-#endif
     
     int inject_tau = 40;
     inject_.reset(new Inject_t{grid(), inject_interval_, inject_tau, MY_ELECTRON, inject_target_});
