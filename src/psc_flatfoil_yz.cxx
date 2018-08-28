@@ -106,13 +106,6 @@ struct InjectFoil : InjectFoilParams
   }
 };
 
-// ======================================================================
-// PscFlatfoilParams
-
-struct PscFlatfoilParams
-{
-};
-
 // EDIT to change order / floating point type / cuda / 2d/3d
 #if TEST == TEST_1_HEATING_3D || TEST == TEST_2_FLATFOIL_3D || TEST == TEST_3_NILSON_3D || TEST == TEST_4_SHOCK_3D
 using dim_t = dim_xyz;
@@ -123,11 +116,8 @@ using PscConfig = PscConfig1vbecSingle<dim_t>;
 
 // ======================================================================
 // PscFlatfoil
-//
-// eventually, a Psc replacement / derived class, but for now just
-// pretending to be something like that
 
-struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
+struct PscFlatfoil : Psc<PscConfig>
 {
   using DIM = PscConfig::dim_t;
   using Heating_t = typename HeatingSelector<Mparticles_t>::Heating;
