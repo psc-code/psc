@@ -338,7 +338,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     collision_.reset(new Collision_t{comm, collision_interval, collision_nu});
 
     // -- Checks
-    ChecksParams checks_params;
+    ChecksParams checks_params{};
     checks_.reset(new Checks_t{grid(), comm, checks_params});
 
     // -- Marder correction

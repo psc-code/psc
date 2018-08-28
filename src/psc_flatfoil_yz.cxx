@@ -268,18 +268,7 @@ struct PscFlatfoil : Psc<PscConfig>
     collision_.reset(new Collision_t{grid(), collision_interval, collision_nu});
 
     // -- Checks
-    ChecksParams checks_params;
-
-    checks_params.continuity_every_step = -1;
-    checks_params.continuity_threshold = 1e-6;
-    checks_params.continuity_verbose = true;
-    checks_params.continuity_dump_always = false;
-    
-    checks_params.gauss_every_step = -1;
-    checks_params.gauss_threshold = 1e-6;
-    checks_params.gauss_verbose = true;
-    checks_params.gauss_dump_always = false;
-
+    ChecksParams checks_params{};
     checks_.reset(new Checks_t{grid(), comm, checks_params});
 
     // -- Marder correction
