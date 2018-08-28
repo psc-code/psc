@@ -111,11 +111,6 @@ struct InjectFoil : InjectFoilParams
 
 struct PscFlatfoilParams
 {
-  bool inject_enable;
-  int inject_kind_n;
-  int inject_interval;
-  int inject_tau;
-  InjectFoil inject_target;
 };
 
 // EDIT to change order / floating point type / cuda / 2d/3d
@@ -174,52 +169,21 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
     mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(background_Te));
     
-    // -- setup injection
-    double target_yl     = -100000.;
-    double target_yh     =  100000.;
-    double target_zwidth =  1.;
-    auto inject_foil_params = InjectFoilParams{};
-    inject_foil_params.yl =   target_yl * d_i;
-    inject_foil_params.yh =   target_yh * d_i;
-    inject_foil_params.zl = - target_zwidth * d_i;
-    inject_foil_params.zh =   target_zwidth * d_i;
-#if TEST == TEST_4_SHOCK_3D
-    inject_foil_params.n  = 2.5;
-    inject_foil_params.Te = .002;
-    inject_foil_params.Ti = .002;
-#else
-    inject_foil_params.n  = 1.;
-    inject_foil_params.Te = .001;
-    inject_foil_params.Ti = .001;
-#endif
-    params.inject_target = InjectFoil{inject_foil_params};
-    params.inject_kind_n = MY_ELECTRON;
-    params.inject_interval = 20;
-    params.inject_tau = 40;
-    
 #if TEST == TEST_4_SHOCK_3D
     BB = 0.02;
     background_n = .01;
     background_Te = .002;
     background_Ti = .002;
-    params.inject_interval = 0;
     p_.nmax = 100002;
 #endif
-    
+
 #if TEST == TEST_3_NILSON_3D
     background_n = .02;
-    params.inject_interval = 0;
     p_.nmax = 101;
-#endif
-    
-#if TEST == TEST_2_FLATFOIL_3D
-    params.inject_interval = 5;
 #endif
     
 #if TEST == TEST_1_HEATING_3D
     background_n  = 1.0;
-    
-    params.inject_interval = 0;
     
     params.checks_params.continuity_every_step = 1;
     params.checks_params.continuity_threshold = 1e-12;
@@ -364,7 +328,34 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     heating_.reset(new Heating_t{grid(), heating_interval, MY_ELECTRON, heating_spot});
 
     // -- Particle injection
-    inject_.reset(new Inject_t{grid(), inject_interval, inject_tau, inject_kind_n, inject_target});
+    // -- setup injection
+    auto inject_foil_params = InjectFoilParams{};
+    inject_foil_params.yl = -100000. * d_i;
+    inject_foil_params.yh =  100000. * d_i;
+    double target_zwidth =  1.;
+    inject_foil_params.zl = - target_zwidth * d_i;
+    inject_foil_params.zh =   target_zwidth * d_i;
+#if TEST == TEST_4_SHOCK_3D
+    inject_foil_params.n  = 2.5;
+    inject_foil_params.Te = .002;
+    inject_foil_params.Ti = .002;
+#else
+    inject_foil_params.n  = 1.;
+    inject_foil_params.Te = .001;
+    inject_foil_params.Ti = .001;
+#endif
+    inject_target = InjectFoil{inject_foil_params};
+    inject_interval = 20;
+#if TEST == TEST_4_SHOCK_3D || TEST == TEST_3_NILSON_3D || TEST == TEST_1_HEATING_3D
+    inject_interval = 0;
+#endif
+#if TEST == TEST_2_FLATFOIL_3D
+    inject_interval = 5;
+#endif
+    
+    
+    int inject_tau = 40;
+    inject_.reset(new Inject_t{grid(), inject_interval, inject_tau, MY_ELECTRON, inject_target});
     
     // -- output fields
     OutputFieldsCParams outf_params;
@@ -490,6 +481,9 @@ public: // these don't need to be public, but oh well...
   double background_n;
   double background_Te;
   double background_Ti;
+
+  int inject_interval;
+  InjectFoil inject_target;
 
   int heating_begin;
   int heating_end;
