@@ -533,12 +533,6 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     prof_stop(pr_push_prts);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
 
-    // === field propagation B^{n+1/2} -> B^{n+1}
-    prof_start(pr_push_flds);
-    pushf_->push_H(mflds, .5, DIM{});
-    prof_stop(pr_push_flds);
-    // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
-
     if (inject_interval > 0 && timestep % inject_interval == 0) {
       mpi_printf(comm, "***** Performing injection...\n");
       prof_start(pr_inject);
@@ -554,6 +548,12 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
       (*heating_)(mprts);
       prof_stop(pr_heating);
     }
+
+    // === field propagation B^{n+1/2} -> B^{n+1}
+    prof_start(pr_push_flds);
+    pushf_->push_H(mflds, .5, DIM{});
+    prof_stop(pr_push_flds);
+    // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
     prof_start(pr_bndp);
     (*bndp_)(mprts);
