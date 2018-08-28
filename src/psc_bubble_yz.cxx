@@ -107,11 +107,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
 
     // -- Balance
     balance_interval = 0;
-    double balance_factor_fields = .1;
-    bool balance_print_loads = true;
-    bool balance_write_loads = false;
-    balance_.reset(new Balance_t{balance_interval, balance_factor_fields,
-	  balance_print_loads, balance_write_loads});
+    balance_.reset(new Balance_t{balance_interval, .1,});
 
     // -- Sort
     // FIXME, needs a way to make it gets set?
