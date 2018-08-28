@@ -548,8 +548,8 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     prof_stop(pr_bndp);
 
     // === field propagation E^{n+1/2} -> E^{n+3/2}
-#if 0
     prof_start(pr_bndf);
+#if 1
     bndf_->fill_ghosts_H(mflds);
     bnd_->fill_ghosts(mflds, HX, HX + 3);
 #endif
@@ -563,7 +563,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     pushf_->push_E(mflds, 1., DIM{});
     prof_stop(pr_push_flds);
     
-#if 0
+#if 1
     prof_restart(pr_bndf);
     bndf_->fill_ghosts_E(mflds);
     bnd_->fill_ghosts(mflds, EX, EX + 3);
@@ -576,7 +576,7 @@ struct PscFlatfoil : Psc<PscConfig>, PscFlatfoilParams
     pushf_->push_H(mflds, .5, DIM{});
     prof_stop(pr_push_flds);
 
-#if 0
+#if 1
     prof_start(pr_bndf);
     bndf_->fill_ghosts_H(mflds);
     bnd_->fill_ghosts(mflds, HX, HX + 3);

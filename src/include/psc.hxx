@@ -494,8 +494,8 @@ struct Psc
     prof_stop(pr_bndp);
 
     // === field propagation E^{n+1/2} -> E^{n+3/2}
-#if 1
     prof_start(pr_bndf);
+#if 1
     bndf_->fill_ghosts_H(mflds);
     bnd_->fill_ghosts(mflds, HX, HX + 3);
 #endif
