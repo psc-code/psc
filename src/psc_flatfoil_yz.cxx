@@ -300,6 +300,9 @@ struct PscFlatfoil : Psc<PscConfig>
       });
   }
 
+  // ----------------------------------------------------------------------
+  // inject_particles
+
   void inject_particles() override
   {
     static int pr_inject, pr_heating;
