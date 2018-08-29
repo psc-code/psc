@@ -111,7 +111,7 @@ struct Checks_ : ChecksParams, ChecksBase
 	  double div_j = Div_J(0, jx,jy,jz);
 	  max_err = fmax(max_err, fabs(d_rho + div_j));
 	  if (fabs(d_rho + div_j) > eps) {
-	    mprintf("(%d,%d,%d): %g -- %g diff %g\n", jx, jy, jz,
+	    mprintf("p%d (%d,%d,%d): %g -- %g diff %g\n", p, jx, jy, jz,
 		    d_rho, -div_j, d_rho + div_j);
 	  }
 	});
