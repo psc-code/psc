@@ -888,7 +888,7 @@ protected:
   int marder_interval;
 
   int num_comm_round = {3};
-  Int3 ibn = {};
+  Int3 ibn = {2, 2, 2}; // FIXME
   
   int st_nr_particles;
   int st_time_step;

@@ -33,6 +33,7 @@ struct Bnd_ : BndBase
     mrc_ddc_set_param_int3(ddc_, "ibn", ibn);
     mrc_ddc_set_param_int(ddc_, "max_n_fields", 24);
     mrc_ddc_set_param_int(ddc_, "size_of_type", sizeof(real_t));
+    assert(ibn[0] > 0 || ibn[1] > 0 || ibn[2] > 0);
     mrc_ddc_setup(ddc_);
     balance_generation_cnt_ = psc_balance_generation_cnt;
   }
