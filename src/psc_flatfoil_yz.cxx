@@ -191,7 +191,7 @@ struct PscFlatfoil : Psc<PscConfig>
     heating_foil_params.Mi = kinds[MY_ION].m;
     auto heating_spot = HeatingSpotFoil{heating_foil_params};
 
-    heating_interval_ = 20;
+    heating_interval_ = 0;
     heating_begin_ = 0;
     heating_end_ = 10000000;
     heating_.reset(new Heating_t{grid(), heating_interval_, MY_ELECTRON, heating_spot});
@@ -208,7 +208,7 @@ struct PscFlatfoil : Psc<PscConfig>
     inject_foil_params.Te = .001;
     inject_foil_params.Ti = .001;
     inject_target_ = InjectFoil{inject_foil_params};
-    inject_interval_ = 20;
+    inject_interval_ = 0;
     
     int inject_tau = 40;
     inject_.reset(new Inject_t{grid(), inject_interval_, inject_tau, MY_ELECTRON, inject_target_});
