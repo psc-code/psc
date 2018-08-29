@@ -148,6 +148,10 @@ template<typename dim>
 using PscConfig1vbecSingle = PscConfig_<dim, MparticlesSingle, MfieldsStateSingle, MfieldsSingle,
 					PscConfigPushParticles1vbec>;
 
+template<typename dim>
+using PscConfig1vbecDouble = PscConfig_<dim, MparticlesDouble, MfieldsStateDouble, MfieldsC,
+					PscConfigPushParticles1vbec>;
+
 #ifdef USE_CUDA
 
 template<typename dim>
