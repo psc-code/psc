@@ -136,7 +136,7 @@ struct PscFlatfoil : Psc<PscConfig>
     // --- setup domain
     Grid_t::Real3 LL = { 1., 400.*4, 400. }; // domain size (in d_e)
     Int3 gdims = { 1, 1024, 256 }; // global number of grid points
-    Int3 np = { 1, 16, 4 }; // division into patches
+    Int3 np = { 1, 4, 1 }; // division into patches
     
     auto grid_domain = Grid_t::Domain{gdims, LL, -.5 * LL, np};
     
@@ -171,6 +171,8 @@ struct PscFlatfoil : Psc<PscConfig>
 
     // -- Checks
     ChecksParams checks_params{};
+    checks_params.continuity_every_step = 1;
+    checks_params.continuity_threshold = 1e-4;
     checks_.reset(new Checks_t{grid(), comm, checks_params});
 
     // -- Marder correction
@@ -279,12 +281,22 @@ struct PscFlatfoil : Psc<PscConfig>
   
   void setup_initial_particles(Mparticles_t& mprts, std::vector<uint>& n_prts_by_patch)
   {
+    particle_inject prt;
+    
+    prt.x[0] = 0.; prt.x[1] = -799.9; prt.x[2] = -200. + .5*grid().domain.dx[2];
+    prt.u[0] = 0.; prt.u[1] = -1.; prt.u[2] = 0.;
+    prt.w = 1.;
+    prt.kind = MY_ELECTRON;
+    mprts.inject(0, prt);
+
+#if 0
     SetupParticles<Mparticles_t> setup_particles; // FIXME, injection uses another setup_particles, which won't have those settings
     setup_particles.fractional_n_particles_per_cell = true;
     setup_particles.neutralizing_population = MY_ELECTRON;
     setup_particles.setup_particles(mprts, n_prts_by_patch, [&](int kind, double crd[3], psc_particle_npt& npt) {
 	this->init_npt(kind, crd, npt);
       });
+#endif
   }
 
   // ----------------------------------------------------------------------
