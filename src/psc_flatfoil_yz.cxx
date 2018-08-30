@@ -92,7 +92,7 @@ struct InjectFoil : InjectFoilParams
 
 // EDIT to change order / floating point type / cuda / 2d/3d
 using dim_t = dim_yz;
-using PscConfig = PscConfig1vbecDouble<dim_t>;
+using PscConfig = PscConfig1vbecSingle<dim_t>;
 
 // ======================================================================
 // PscFlatfoil
@@ -161,7 +161,7 @@ struct PscFlatfoil : Psc<PscConfig>
     balance_.reset(new Balance_t{balance_interval, .1});
 
     // -- Sort
-    // FIXME, needs a way to make it gets set?
+    // FIXME, needs a way to make sure it gets set?
     sort_interval = 10;
 
     // -- Collision
@@ -171,6 +171,8 @@ struct PscFlatfoil : Psc<PscConfig>
 
     // -- Checks
     ChecksParams checks_params{};
+    checks_params.continuity_every_step = 20;
+    checks_params.continuity_threshold = 1e-6;
     checks_.reset(new Checks_t{grid(), comm, checks_params});
 
     // -- Marder correction
@@ -191,7 +193,7 @@ struct PscFlatfoil : Psc<PscConfig>
     heating_foil_params.Mi = kinds[MY_ION].m;
     auto heating_spot = HeatingSpotFoil{heating_foil_params};
 
-    heating_interval_ = 0;
+    heating_interval_ = 20;
     heating_begin_ = 0;
     heating_end_ = 10000000;
     heating_.reset(new Heating_t{grid(), heating_interval_, MY_ELECTRON, heating_spot});
@@ -208,7 +210,7 @@ struct PscFlatfoil : Psc<PscConfig>
     inject_foil_params.Te = .001;
     inject_foil_params.Ti = .001;
     inject_target_ = InjectFoil{inject_foil_params};
-    inject_interval_ = 0;
+    inject_interval_ = 20;
     
     int inject_tau = 40;
     inject_.reset(new Inject_t{grid(), inject_interval_, inject_tau, MY_ELECTRON, inject_target_});
