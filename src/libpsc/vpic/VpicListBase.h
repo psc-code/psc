@@ -20,7 +20,7 @@ public:
   // ----------------------------------------------------------------------
   // class iterator
   
-  class iterator : public std::iterator<std::output_iterator_tag, T>
+  class iterator : public std::iterator<std::forward_iterator_tag, T>
   {
     friend class VpicListBase<T>;
 
