@@ -157,8 +157,8 @@ struct PscFlatfoil : Psc<PscConfig>
     mprts_.reset(new Mparticles_t{grid()});
 
     // -- Balance
-    balance_interval = 0;
-    balance_.reset(new Balance_t{balance_interval, .1});
+    balance_interval = 5;
+    balance_.reset(new Balance_t{balance_interval, .1, true});
 
     // -- Sort
     // FIXME, needs a way to make sure it gets set?
