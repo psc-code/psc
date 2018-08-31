@@ -105,6 +105,7 @@ struct ConvertFromVpic<MparticlesSingle> : ConvertVpic<MparticlesSingle>
   }
 };
 
+#if 0
 // ----------------------------------------------------------------------
 // conversion to "single_by_kind"
 
@@ -168,6 +169,7 @@ struct ConvertFromVpic<MparticlesSingleByKind> : ConvertVpic<MparticlesSingleByK
     part->kind  = prt->kind;
   }
 };
+#endif
   
 template<typename MP>
 void copy_to(MparticlesVpic& mprts_from, MP& mprts_to)
@@ -216,6 +218,7 @@ void copy_from(MparticlesVpic& mprts_to, MparticlesSingle& mprts_from)
   }
 }
 
+#if 0
 template<>
 void copy_from(MparticlesVpic& mprts_to, MparticlesSingleByKind& mprts_from)
 {
@@ -235,6 +238,7 @@ void copy_from(MparticlesVpic& mprts_to, MparticlesSingleByKind& mprts_from)
     off += n_prts;
   }
 }
+#endif
 
 template<typename MP>
 static void psc_mparticles_vpic_copy_from(MparticlesBase& mp,
@@ -256,12 +260,12 @@ static void psc_mparticles_vpic_copy_to(MparticlesBase& mp,
 template<>
 const MparticlesVpic::Convert MparticlesVpic::convert_to_ = {
   { std::type_index(typeid(MparticlesSingle)), psc_mparticles_vpic_copy_to<MparticlesSingle> },
-  { std::type_index(typeid(MparticlesSingleByKind)), psc_mparticles_vpic_copy_to<MparticlesSingleByKind> },
+  //  { std::type_index(typeid(MparticlesSingleByKind)), psc_mparticles_vpic_copy_to<MparticlesSingleByKind> },
 };
 
 template<>
 const MparticlesVpic::Convert MparticlesVpic::convert_from_ = {
   { std::type_index(typeid(MparticlesSingle)), psc_mparticles_vpic_copy_from<MparticlesSingle> },
-  { std::type_index(typeid(MparticlesSingleByKind)), psc_mparticles_vpic_copy_from<MparticlesSingleByKind> },
+  //  { std::type_index(typeid(MparticlesSingleByKind)), psc_mparticles_vpic_copy_from<MparticlesSingleByKind> },
 };
 
