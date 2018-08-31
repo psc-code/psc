@@ -69,7 +69,7 @@ struct Heating__ : HeatingBase
 	  prt.x[2] + patch.xb[2],
 	};
 
-	double H = this->get_H_(xx);
+	double H = get_H_(xx);
 	if (H > 0) {
 	  kick_particle(prt, H);
 	}
