@@ -24,6 +24,19 @@ TEST(Grid, CtorDomainOffs)
   EXPECT_EQ(grid.patches[1].xe, Grid_t::Real3({  40.,   0., 20. }));
 }
 
+TEST(Grid, CtorComplete)
+{
+  auto domain = Grid_t::Domain{{8, 4, 2},
+			       {80.,  40., 20.}, {-40., -20., 0.},
+			       {2, 2, 1}};
+  auto bc = GridBc{};
+  auto kinds = Grid_t::Kinds{};
+  auto norm = Grid_t::Normalization{};
+  double dt = .1;
+  int n_patches = -1;
+  auto grid = Grid_t{domain, bc, kinds, norm, dt, n_patches};
+}
+
 TEST(Grid, Kinds)
 {
   auto grid = MakeTestGrid{}();
@@ -38,5 +51,14 @@ TEST(Grid, CopyCtor)
   auto grid2 = grid;
 }
   
+// ======================================================================
+// main
 
-
+int main(int argc, char **argv)
+{
+  MPI_Init(&argc, &argv);
+  ::testing::InitGoogleTest(&argc, argv);
+  int rc = RUN_ALL_TESTS();
+  MPI_Finalize();
+  return rc;
+}
