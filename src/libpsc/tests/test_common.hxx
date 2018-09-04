@@ -14,8 +14,11 @@ struct MakeTestGrid1
   {
     auto domain = Grid_t::Domain{{8, 4, 2},
 				 {10., 10., 10.}};
-    std::vector<Int3> offs = { { 0, 0, 0 } };
-    return Grid_t{domain, offs};
+    auto bc = GridBc{};
+    auto kinds = Grid_t::Kinds{};
+    auto norm = Grid_t::Normalization{};
+    double dt = .1;
+    return Grid_t{domain, bc, kinds, norm, dt};
   }
 };
 
@@ -34,8 +37,11 @@ struct MakeTestGridYZ
     auto domain = Grid_t::Domain{{1, 8, 16},
 				 {10., 80., 160.}, {0., -40., -80.},
 				 {1, 2, 2}};
-    std::vector<Int3> offs = {{0, 0, 0}, {0, 0, 4}};
-    return Grid_t{domain, offs};
+    auto bc = GridBc{};
+    auto kinds = Grid_t::Kinds{};
+    auto norm = Grid_t::Normalization{};
+    double dt = .1;
+    return Grid_t{domain, bc, kinds, norm, dt};
   }
 };
 
@@ -52,8 +58,11 @@ struct MakeTestGridYZ1
     auto domain = Grid_t::Domain{{1, 8, 16},
 				 {10., 80., 160.}, {0., -40., -80.},
 				 {1, 1, 1}};
-    std::vector<Int3> offs = {{0, 0, 0}};
-    return Grid_t{domain, offs};
+    auto bc = GridBc{};
+    auto kinds = Grid_t::Kinds{};
+    auto norm = Grid_t::Normalization{};
+    double dt = .1;
+    return Grid_t{domain, bc, kinds, norm, dt};
   }
 };
 
