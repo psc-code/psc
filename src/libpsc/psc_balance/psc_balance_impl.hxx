@@ -852,8 +852,8 @@ private:
     prof_stop(pr_bal_flds);
 
     // update psc etc
-    delete ggrid;
-    ggrid = new_grid;
+    *ggrid = std::move(*new_grid);
+    delete new_grid;
     psc_balance_generation_cnt++;
 
     return n_prts_by_patch_new;
