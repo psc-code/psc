@@ -50,6 +50,24 @@ TEST(Grid, MoveCtor)
   auto grid2 = std::move(grid);
 }
   
+TEST(Grid, MoveAssign)
+{
+  auto domain = Grid_t::Domain{{8, 4, 2},
+			       {80.,  40., 20.}, {-40., -20., 0.},
+			       {2, 2, 1}};
+  auto offs = std::vector<Int3>{{0, 0, 0}, {4, 0, 0}};
+  auto bc = GridBc{};
+  auto kinds = Grid_t::Kinds{};
+  auto norm = Grid_t::Normalization{};
+  double dt = .1;
+  int n_patches = -1;
+
+  auto grid = Grid_t{domain, bc, kinds, norm, dt, n_patches};
+  auto grid2 = Grid_t{domain, bc, kinds, norm, dt, n_patches};
+
+  grid2 = std::move(grid);
+}
+  
 TEST(Grid, Kinds)
 {
   auto kinds = Grid_t::Kinds{};

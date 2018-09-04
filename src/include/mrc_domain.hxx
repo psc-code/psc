@@ -16,12 +16,23 @@ struct MrcDomain
   MrcDomain(MrcDomain&& other)
     : domain_{other.domain_}
   {
-    domain_ = nullptr;
+    other.domain_ = nullptr;
   }
 
   ~MrcDomain()
   {
     mrc_domain_destroy(domain_);
+  }
+
+  MrcDomain& operator=(MrcDomain&& other)
+  {
+    if (this != &other) {
+      mrc_domain_destroy(domain_);
+      domain_ = other.domain_;
+      other.domain_ = nullptr;
+    }
+
+    return *this;
   }
 
   MPI_Comm comm() const { return mrc_domain_comm(domain_); }
