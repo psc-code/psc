@@ -139,6 +139,9 @@ struct Grid_
       }
     }
   }
+
+  Grid_(const Grid_& other) = delete;
+  Grid_(Grid_&& other) = default;
   
   ~Grid_()
   {

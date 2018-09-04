@@ -50,10 +50,10 @@ TEST(Grid, CopyCtor)
   int n_patches = -1;
 
   auto grid = Grid_t{domain, offs};
-  auto grid2 = grid;
+  //auto grid2 = grid;
 
   auto grid3 = Grid_t{domain, bc, kinds, norm, dt, n_patches};
-  auto grid4 = grid3;
+  //auto grid4 = grid3;
 }
   
 TEST(Grid, Kinds)
