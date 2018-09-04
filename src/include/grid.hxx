@@ -91,19 +91,9 @@ struct Grid_
     Real3 dx_;
   };
 
-  Grid_(const Domain& domain, const std::vector<Int3>& offs)
-    : domain{domain},
-      ldims{domain.ldims}
-  {
-    for (auto off : offs) {
-      patches.push_back(Patch(off,
-			      Vec3<double>(off        ) * domain.dx + domain.corner,
-			      Vec3<double>(off + ldims) * domain.dx + domain.corner,
-			      domain.dx));
-    }
-  }
-
-  // FIXME, one ctor with default args should be better
+  // ----------------------------------------------------------------------
+  // ctor
+  
   Grid_(const Domain& domain, const GridBc& bc, const Kinds& kinds, const Normalization& norm,
 	double dt, int n_patches = -1)
     : domain{domain},
