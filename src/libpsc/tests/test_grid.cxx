@@ -58,10 +58,9 @@ TEST(Grid, MoveCtor)
   
 TEST(Grid, Kinds)
 {
-  auto grid = MakeTestGrid{}();
-
-  grid.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
-  EXPECT_EQ(grid.kinds.size(), 1);
+  auto kinds = Grid_t::Kinds{};
+  kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
+  EXPECT_EQ(kinds.size(), 1);
 }
 
 // ======================================================================
