@@ -122,6 +122,13 @@ struct Grid_
     }
   }
 
+  void view() const
+  {
+    mprintf("Grid_::view()\n");
+    domain.view();
+    mprintf("Grid_: ldims %d x %d x %d\n", ldims[0], ldims[1], ldims[2]);
+  }
+
   int n_patches() const { return patches.size(); }
 
   bool isInvar(int d) const { return domain.isInvar(d); }
@@ -263,6 +270,11 @@ struct Grid_<T>::Domain
     dx = length / Real3(gdims);
   }
 
+  void view() const
+  {
+    mprintf("Grid_::Domain: gdims %d x %d x %d\n", gdims[0], gdims[1], gdims[2]);
+  }
+  
   bool isInvar(int d) const { return gdims[d] == 1; }
   
   Int3 gdims;		///<Number of grid-points in each dimension
