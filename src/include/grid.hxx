@@ -91,19 +91,6 @@ struct Grid_
     Real3 dx_;
   };
 
-  // Construct a single patch covering the whole domain
-  // Args: global dimensions, and length of the domain in all 3 dims
-  // -- mostly useful for testing
-  //
-  // Maybe the named ctor idiom would be good here (but right now
-  // can't be done since the copy ctor is deleted.
-  Grid_(const Domain& domain)
-    : domain{domain},
-      ldims{domain.ldims}
-  {
-    patches.emplace_back(Patch({ 0, 0, 0 }, { 0., 0., 0.}, domain.length, domain.dx));
-  }
-
   Grid_(const Domain& domain, const std::vector<Int3>& offs)
     : domain{domain},
       ldims{domain.ldims}
