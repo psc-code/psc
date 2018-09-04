@@ -86,9 +86,9 @@ struct Grid_
     Real3 dx_;
   };
 
-  // Construct a single≈≈ patch covering the whole domain
+  // Construct a single patch covering the whole domain
   // Args: global dimensions, and length of the domain in all 3 dims
-  // -- mostly useful ≈for testing
+  // -- mostly useful for testing
   //
   // Maybe the named ctor idiom would be good here (but right now
   // can't be done since the copy ctor is deleted.
@@ -217,7 +217,7 @@ struct Grid_
     grid->ibn = ibn;
     
     return grid;
-}
+  }
 
   // ----------------------------------------------------------------------
   // make_mrc_domain
