@@ -13,49 +13,26 @@
 #include "psc_fields_single.h"
 #include "psc_fields_c.h"
 
-struct GridDomain { Grid_t grid; mrc_domain* domain; };
-
-static GridDomain make_grid(Int3 gdims, Vec3<double> length)
+static Grid_t make_grid(Int3 gdims, Vec3<double> length)
 {
-  auto domain = Grid_t::Domain{gdims, length, {},
-			       {1, 2, 1}};
+  auto domain = Grid_t::Domain{gdims, length, {}, {1, 2, 1}};
+  auto bc = GridBc{};
+  auto kinds = Grid_t::Kinds{};
+  auto norm = Grid_t::Normalization{};
+  double dt = .1;
+  int n_patches = -1;
 
-  mrc_domain* mrc_domain = mrc_domain_create(MPI_COMM_WORLD);
-  mrc_domain_set_type(mrc_domain, "multi");
-  mrc_domain_set_param_int3(mrc_domain, "m", domain.gdims);
-  mrc_domain_set_param_int3(mrc_domain, "np", domain.np);
-  mrc_domain_set_param_int(mrc_domain, "bcx", BC_PERIODIC);
-  mrc_domain_set_param_int(mrc_domain, "bcy", BC_PERIODIC);
-  mrc_domain_set_param_int(mrc_domain, "bcz", BC_PERIODIC);
-
-  struct mrc_crds *crds = mrc_domain_get_crds(mrc_domain);
-  mrc_crds_set_type(crds, "uniform");
-  mrc_crds_set_param_int(crds, "sw", 2);
-  mrc_crds_set_param_double3(crds, "l", domain.corner);
-  mrc_crds_set_param_double3(crds, "h", domain.corner + domain.length);
-  
-  mrc_domain_setup(mrc_domain);
-  //mrc_domain_view(mrc_domain);
-
-  int n_patches;
-  auto *mrc_patches = mrc_domain_get_patches(mrc_domain, &n_patches);
-
-  std::vector<Int3> offs;
-  for (int p = 0; p < n_patches; p++) {
-    offs.emplace_back(mrc_patches[p].off);
-  }
-  
-  return { Grid_t(domain, offs), mrc_domain };
+  return Grid_t{domain, bc, kinds, norm, dt, n_patches};
 }
 
 template<typename DIM>
-static GridDomain make_grid()
+static Grid_t make_grid()
 {
   return make_grid({1, 8, 4}, {10., 80., 40.});
 }
 
 template<>
-GridDomain make_grid<dim_xyz>()
+Grid_t make_grid<dim_xyz>()
 {
   return make_grid({2, 8, 4}, {20., 80., 40.});
 }
@@ -76,8 +53,7 @@ static void Mfields_dump(Mfields& mflds, int B)
 
 TEST(Bnd, MakeGrid)
 {
-  auto grid_domain = make_grid<dim_yz>();
-  Grid_t& grid = grid_domain.grid;
+  auto grid = make_grid<dim_yz>();
     
   EXPECT_EQ(grid.domain.gdims, Int3({1, 8, 4}));
   EXPECT_EQ(grid.ldims, Int3({1, 4, 4 }));
@@ -130,8 +106,7 @@ TYPED_TEST(BndTest, FillGhosts)
   using dim = typename Base::dim;
   using Mfields = typename Bnd::Mfields;
 
-  auto grid_domain = make_grid<dim>();
-  auto& grid = grid_domain.grid;
+  auto grid = make_grid<dim>();
   auto ibn = Int3{B, B, B};
   if (dim::InvarX::value) ibn[0] = 0;
   auto mflds = Mfields{grid, 1, ibn};
@@ -193,8 +168,7 @@ TYPED_TEST(BndTest, AddGhosts)
   using dim = typename Base::dim;
   using Mfields = typename Bnd::Mfields;
 
-  auto grid_domain = make_grid<dim>();
-  auto& grid = grid_domain.grid;
+  auto grid = make_grid<dim>();
   auto ibn = Int3{B, B, B};
   if (dim::InvarX::value) ibn[0] = 0;
   auto mflds = Mfields{grid, 1, ibn};

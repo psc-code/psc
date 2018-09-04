@@ -35,8 +35,13 @@ enum {
 
 struct GridBc
 {
-  GridBc() = default; // FIXME
-  
+  GridBc()
+    : fld_lo{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
+      fld_hi{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
+      prt_lo{BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC},
+      prt_hi{BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC}
+  {}
+
   GridBc(Int3 fld_lo, Int3 fld_hi, Int3 prt_lo, Int3 prt_hi)
     : fld_lo(fld_lo), fld_hi(fld_hi),
       prt_lo(prt_lo), prt_hi(prt_hi)
