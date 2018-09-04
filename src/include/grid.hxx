@@ -140,23 +140,6 @@ struct Grid_
     }
   }
 
-  // ----------------------------------------------------------------------
-  // no copy ctor
-
-  Grid_(const Grid_& other) = delete;
-
-  // ----------------------------------------------------------------------
-  // move ctor
-  
-  Grid_(Grid_&& other)
-    : ldims{other.ldims}, domain{other.domain}, bc{other.bc},
-      norm{other.norm}, dt{other.dt},
-      patches{std::move(other.patches)},
-      kinds{std::move(other.kinds)},
-      ibn{other.ibn}, timestep_{other.timestep_},
-      mrc_domain_{std::move(other.mrc_domain_)}
-  {}
-
   int n_patches() const { return patches.size(); }
 
   bool isInvar(int d) const { return domain.isInvar(d); }
