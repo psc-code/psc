@@ -852,6 +852,7 @@ private:
     prof_stop(pr_bal_flds);
 
     // update psc etc
+    new_grid.ibn = ggrid->ibn;
     *ggrid = std::move(new_grid);
     psc_balance_generation_cnt++;
 
