@@ -140,8 +140,27 @@ struct Grid_
     }
   }
 
+  // ----------------------------------------------------------------------
+  // no copy ctor
+
   Grid_(const Grid_& other) = delete;
-  Grid_(Grid_&& other) = default;
+
+  // ----------------------------------------------------------------------
+  // move ctor
+  
+  Grid_(Grid_&& other)
+    : ldims{other.ldims}, domain{other.domain}, bc{other.bc},
+      norm{other.norm}, dt{other.dt},
+      patches{std::move(other.patches)},
+      kinds{std::move(other.kinds)},
+      ibn{other.ibn}, timestep_{other.timestep_},
+      mrc_domain_{other.mrc_domain_}
+  {
+    mrc_domain_ = NULL;
+  }
+
+  // ----------------------------------------------------------------------
+  // dtor
   
   ~Grid_()
   {
@@ -154,6 +173,8 @@ struct Grid_
 
   bool atBoundaryLo(int p, int d) const { return patches[p].off[d] == 0; }
   bool atBoundaryHi(int p, int d) const { return patches[p].off[d] + ldims[d] == domain.gdims[d]; }
+
+  int timestep() const { return timestep_; }
 
   template<typename FUNC>
   void Foreach_3d(int l, int r, FUNC F) const
@@ -184,8 +205,6 @@ struct Grid_
   std::vector<Patch> patches;
   std::vector<Kind> kinds;
   Int3 ibn; // FIXME
-
-  int timestep() const { return timestep_; }
   int timestep_ = 0;
 
   // ----------------------------------------------------------------------
