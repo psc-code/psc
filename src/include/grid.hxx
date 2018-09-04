@@ -154,10 +154,8 @@ struct Grid_
       patches{std::move(other.patches)},
       kinds{std::move(other.kinds)},
       ibn{other.ibn}, timestep_{other.timestep_},
-      mrc_domain_{other.mrc_domain_}
-  {
-    mrc_domain_ = NULL;
-  }
+      mrc_domain_{std::move(other.mrc_domain_)}
+  {}
 
   // ----------------------------------------------------------------------
   // dtor
@@ -206,6 +204,7 @@ struct Grid_
   std::vector<Kind> kinds;
   Int3 ibn; // FIXME
   int timestep_ = 0;
+  MrcDomain mrc_domain_;
 
   // ----------------------------------------------------------------------
   // psc_make_grid
@@ -281,7 +280,7 @@ struct Grid_
     return domain;
   }
 
-  MrcDomain mrc_domain() const { return mrc_domain_; }
+  const MrcDomain& mrc_domain() const { return mrc_domain_; }
 
   MPI_Comm comm() const { return MPI_COMM_WORLD; }
   int nGlobalPatches() const { return mrc_domain().nGlobalPatches(); }
@@ -289,8 +288,6 @@ struct Grid_
   mrc_patch_info globalPatchInfo(int p) const { return mrc_domain().globalPatchInfo(p); }
   mrc_patch_info localPatchInfo(int p) const { return mrc_domain().localPatchInfo(p); }
   mrc_ddc* create_ddc() const { return mrc_domain().create_ddc(); }
-
-  MrcDomain mrc_domain_;
 };
 
 // ======================================================================

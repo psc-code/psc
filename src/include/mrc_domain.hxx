@@ -11,6 +11,12 @@
 struct MrcDomain
 {
   MrcDomain(mrc_domain *domain = {}) : domain_{domain} {}
+  MrcDomain(const MrcDomain&) = delete;
+  MrcDomain(MrcDomain&& other)
+    : domain_{other.domain_}
+  {
+    domain_ = nullptr;
+  }
 
   MPI_Comm comm() const { return mrc_domain_comm(domain_); }
   void view() const { mrc_domain_view(domain_); }
