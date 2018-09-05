@@ -357,9 +357,8 @@ private:
     loads.reserve(n_prts_by_patch.size());
 
     const int *ldims = grid.ldims;
-    int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     for (auto n_prts : n_prts_by_patch) {
-      loads.push_back(1000000*rank + n_prts + factor_fields_ * ldims[0] * ldims[1] * ldims[2]);
+      loads.push_back(n_prts + factor_fields_ * ldims[0] * ldims[1] * ldims[2]);
     }
 
     return loads;

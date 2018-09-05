@@ -157,7 +157,7 @@ struct PscFlatfoil : Psc<PscConfig>
     mprts_.reset(new Mparticles_t{grid()});
 
     // -- Balance
-    balance_interval = 5;
+    balance_interval = 50;
     balance_.reset(new Balance_t{balance_interval, .1, true});
 
     // -- Sort
