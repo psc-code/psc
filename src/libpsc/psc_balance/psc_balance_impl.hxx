@@ -853,8 +853,8 @@ private:
 
     // update psc etc
     new_grid->ibn = ggrid->ibn;
-    *ggrid = std::move(*new_grid);
-    delete new_grid;
+    delete ggrid;
+    ggrid = new_grid;
     psc_balance_generation_cnt++;
 
     return n_prts_by_patch_new;
