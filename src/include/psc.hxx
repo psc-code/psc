@@ -888,7 +888,7 @@ protected:
   int marder_interval;
 
   int num_comm_round = {3};
-  Int3 ibn = {2, 2, 2}; // FIXME
+  Int3 ibn = {2, 2, 2}; // FIXME!!! need to factor in invar dims (but not in vpic...)
   
   int st_nr_particles;
   int st_time_step;
