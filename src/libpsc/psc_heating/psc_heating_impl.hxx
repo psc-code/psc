@@ -1,6 +1,7 @@
 
 #include "heating.hxx"
 
+#include <functional>
 #include <stdlib.h>
 
 // ======================================================================
