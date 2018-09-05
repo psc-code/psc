@@ -782,23 +782,32 @@ private:
   
   void balance_state_field(communicate_ctx& ctx, const Grid_t& new_grid, MfieldsStateBase& mf_base)
   {
-    if (typeid(mf_base) != typeid(Mfields)) {
-      auto& mf_old = *new MfieldsState{mf_base.grid(), mf_base.n_comps(), mf_base.ibn()};
+    if (typeid(mf_base) != typeid(MfieldsState)) {
+      assert(0);
+#if 0
+      auto& mf_old = *new MfieldsState{mf_base.grid()};
       MfieldsStateBase::convert(mf_base, mf_old, 0, mf_old.n_comps());
       mf_base.reset(new_grid); // free old memory
 
-      auto mf_new = Mfields{new_grid, mf_base.n_comps(), mf_base.ibn()};
-      communicate_fields(&ctx, mf_old, mf_new);
+      auto mf_new = MfieldsState{new_grid};
+      communicate_fields(&ctx, mf_old.mflds(), mf_new.mflds());
       delete &mf_old; // delete as early as possible
       
-      MfieldsBase::convert(mf_new, mf_base, 0, mf_base.n_comps());
+      MfieldsBase::convert(mf_new.mflds(), mf_base.mflds(), 0, mf_base.n_comps());
+#endif
     } else {
-      auto mf_new = Mfields{new_grid, mf_base.n_comps(), mf_base.ibn()};
-      auto &mf_old = dynamic_cast<Mfields&>(mf_base);
+      // for now MfieldsStateFromMfields will have its underlying Mfields rebalanced, anyway, so all we need ot do
+      // is reset the grid.
+      // FIXME, that his however broken if using MfieldsState that isn't MfieldsStateFromMfields...
+      mf_base.reset(new_grid);
+#if 0
+      auto mf_new = MfieldsState{new_grid};
+      auto &mf_old = dynamic_cast<MfieldsState&>(mf_base);
 
-      communicate_fields(&ctx, mf_old, mf_new);
+      communicate_fields(&ctx, mf_old.mflds(), mf_new.mflds());
 
       mf_old = std::move(mf_new);
+#endif
     }
   }
   
@@ -821,6 +830,7 @@ private:
 
     auto new_grid = new Grid_t{old_grid->domain, old_grid->bc, old_grid->kinds,
 			       old_grid->norm, old_grid->dt, n_patches_new};
+    new_grid->ibn = old_grid->ibn; // FIXME, sucky ibn handling...
     
     prof_stop(pr_bal_load);
     if (n_patches_new < 0) { // unchanged mapping, nothing tbd
@@ -844,15 +854,19 @@ private:
       n_prts_by_patch_new = ctx.new_n_prts(n_prts_by_patch_old);
     }
 
-    // fields
     prof_start(pr_bal_flds);
+    // state field
+    for (auto mf : MfieldsStateBase::instances) {
+      balance_state_field(ctx, *new_grid, *mf);
+    }
+    
+    // fields
     for (auto mf : MfieldsBase::instances) {
       balance_field(ctx, *new_grid, *mf);
     }
     prof_stop(pr_bal_flds);
 
     // update psc etc
-    new_grid->ibn = ggrid->ibn;
     delete ggrid;
     ggrid = new_grid;
     psc_balance_generation_cnt++;
