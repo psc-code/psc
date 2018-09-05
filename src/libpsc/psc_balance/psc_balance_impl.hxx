@@ -819,8 +819,8 @@ private:
     auto loads_all = gather_loads(*old_grid, loads);
     int n_patches_new = find_best_mapping(*old_grid, loads_all);
 
-    auto new_grid = Grid_t{old_grid->domain, old_grid->bc, old_grid->kinds,
-			   old_grid->norm, old_grid->dt, n_patches_new};
+    auto new_grid = new Grid_t{old_grid->domain, old_grid->bc, old_grid->kinds,
+			       old_grid->norm, old_grid->dt, n_patches_new};
     
     prof_stop(pr_bal_load);
     if (n_patches_new < 0) { // unchanged mapping, nothing tbd
@@ -828,17 +828,17 @@ private:
     }
 
     delete[] psc_balance_comp_time_by_patch;
-    psc_balance_comp_time_by_patch = new double[new_grid.n_patches()];
+    psc_balance_comp_time_by_patch = new double[new_grid->n_patches()];
     
     prof_start(pr_bal_ctx);
-    communicate_ctx ctx(old_grid->mrc_domain(), new_grid.mrc_domain());
+    communicate_ctx ctx(old_grid->mrc_domain(), new_grid->mrc_domain());
     prof_stop(pr_bal_ctx);
 
     // particles
     std::vector<uint> n_prts_by_patch_new;
     if (mp) {
       prof_start(pr_bal_prts);
-      balance_particles(ctx, new_grid, *mp);
+      balance_particles(ctx, *new_grid, *mp);
       prof_stop(pr_bal_prts);
     } else {
       n_prts_by_patch_new = ctx.new_n_prts(n_prts_by_patch_old);
@@ -847,13 +847,14 @@ private:
     // fields
     prof_start(pr_bal_flds);
     for (auto mf : MfieldsBase::instances) {
-      balance_field(ctx, new_grid, *mf);
+      balance_field(ctx, *new_grid, *mf);
     }
     prof_stop(pr_bal_flds);
 
     // update psc etc
-    new_grid.ibn = ggrid->ibn;
-    *ggrid = std::move(new_grid);
+    new_grid->ibn = ggrid->ibn;
+    *ggrid = std::move(*new_grid);
+    delete new_grid;
     psc_balance_generation_cnt++;
 
     return n_prts_by_patch_new;
