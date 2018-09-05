@@ -514,6 +514,8 @@ struct MfieldsStateFromMfields : MfieldsStateBase
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
 
+  Mfields& mflds() { return mflds_; }
+
 private:
   Mfields mflds_;
 };
