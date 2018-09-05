@@ -59,6 +59,7 @@ struct Psc
   // ctor
 
   Psc()
+    : grid_{ggrid}
   {
     time_start_ = MPI_Wtime();
 
@@ -82,7 +83,6 @@ struct Psc
   {
     auto coeff = Grid_t::Normalization{norm_params};
     grid_ = Grid_t::psc_make_grid(domain, bc, kinds, coeff, dt, ibn);
-    ggrid = grid_;
 
 #ifdef VPIC
     vgrid_ = Grid::create();
@@ -846,7 +846,7 @@ protected:
   double time_start_;
 
   PscParams p_;
-  Grid_t* grid_;
+  Grid_t*& grid_;
 #ifdef VPIC
   Grid* vgrid_;
 #endif
