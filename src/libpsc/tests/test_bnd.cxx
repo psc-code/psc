@@ -212,7 +212,11 @@ TYPED_TEST(BndTest, AddGhosts)
   }
 }
 
-int main(int argc, char **argv) {
+// ======================================================================
+// main
+
+int main(int argc, char **argv)
+{
   MPI_Init(&argc, &argv);
   ::testing::InitGoogleTest(&argc, argv);
   int rc = RUN_ALL_TESTS();

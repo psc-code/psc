@@ -158,10 +158,14 @@ TYPED_TEST(PushParticlesTest, Cyclo)
   }
 }
 
+// ======================================================================
+// main
+
 int main(int argc, char **argv)
 {
   MPI_Init(&argc, &argv);
   ::testing::InitGoogleTest(&argc, argv);
+  pr_time_step_no_comm = prof_register("time step w/o comm", 1., 0, 0);
   int rc = RUN_ALL_TESTS();
   MPI_Finalize();
   return rc;

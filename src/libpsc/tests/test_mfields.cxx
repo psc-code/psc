@@ -131,3 +131,14 @@ TYPED_TEST(MfieldsTest, ZeroComp)
   EXPECT_EQ(mflds[0](EY,  4, 2, 2), 0.);
   EXPECT_EQ(mflds[0](EZ, -1,-1,-1), 5.);
 }
+
+// ======================================================================
+// main
+
+int main(int argc, char **argv) {
+  MPI_Init(&argc, &argv);
+  ::testing::InitGoogleTest(&argc, argv);
+  int rc = RUN_ALL_TESTS();
+  MPI_Finalize();
+  return rc;
+}
