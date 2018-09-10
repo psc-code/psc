@@ -93,7 +93,7 @@ struct MfieldsStateCuda : MfieldsBase
   void scale_comp(int m, double val) override { assert(0); }
   void axpy_comp(int m_y, double alpha, MfieldsBase& x, int m_x) override { assert(0); }
   void copy_comp(int mto, MfieldsStateBase& from, int mfrom) override { assert(0); }
-  double max_comp(int m)  override { assert(0); }
+  double max_comp(int m)  override { assert(0); return -1.; }
 
 private:
   MfieldsCuda mflds_;
