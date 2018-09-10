@@ -25,9 +25,9 @@ struct BndCuda : BndBase
   // ----------------------------------------------------------------------
   // ctor
 
-  BndCuda(const Grid_t& grid, mrc_domain *domain, int ibn[3])
+  BndCuda(const Grid_t& grid, const MrcDomain& domain, int ibn[3])
   {
-    ddc_ = mrc_domain_create_ddc(domain);
+    ddc_ = domain.create_ddc();
     mrc_ddc_set_funcs(ddc_, &ddc_funcs);
     mrc_ddc_set_param_int3(ddc_, "ibn", ibn);
     mrc_ddc_set_param_int(ddc_, "max_n_fields", 6);
