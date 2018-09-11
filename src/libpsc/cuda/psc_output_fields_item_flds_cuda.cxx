@@ -18,7 +18,7 @@ struct Item_dive_cuda
   static void run(MfieldsState& mflds, Mfields& mres)
   {
     for (int p = 0; p < mres.n_patches(); p++) {
-      cuda_mfields_calc_dive_yz(mflds.cmflds(), mres.cmflds, p);
+      cuda_mfields_calc_dive_yz(mflds.cmflds(), mres.cmflds(), p);
     }
   }
 };

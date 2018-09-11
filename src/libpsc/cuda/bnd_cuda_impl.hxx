@@ -15,10 +15,11 @@ static struct mrc_ddc_funcs ddc_funcs = {
   .add_from_buf  = psc_bnd_fld_cuda_add_from_buf,
 };
 
+template<typename _Mfields>
 struct BndCuda : BndBase
 {
-  using Mfields = MfieldsCuda;
-  using real_t = MfieldsCuda::fields_t::real_t;
+  using Mfields = _Mfields;
+  using real_t = typename Mfields::real_t;
 
   struct cuda_mfields_bnd *cbnd;
 
@@ -89,7 +90,7 @@ struct BndCuda : BndBase
   // ----------------------------------------------------------------------
   // add_ghosts
 
-  void add_ghosts(MfieldsCuda& mflds, int mb, int me)
+  void add_ghosts(Mfields& mflds, int mb, int me)
   {
     const auto& grid = mflds.grid();
 
@@ -100,15 +101,15 @@ struct BndCuda : BndBase
 	grid.bc.fld_lo[1] == BND_FLD_PERIODIC &&
 	grid.bc.fld_lo[2] == BND_FLD_PERIODIC) {
       // double periodic single patch
-      cuda_add_ghosts_periodic_yz(mflds.cmflds, 0, mb, me);
+      cuda_add_ghosts_periodic_yz(mflds.cmflds(), 0, mb, me);
     } else if (size == 1 && mflds.n_patches() == 1 && // FIXME !!!
 	       grid.bc.fld_lo[0] == BND_FLD_PERIODIC &&
 	       grid.bc.fld_lo[1] != BND_FLD_PERIODIC &&
 	       grid.bc.fld_lo[2] == BND_FLD_PERIODIC) {
       // z-periodic single patch
-      cuda_add_ghosts_periodic_z(mflds.cmflds, 0, mb, me);
+      cuda_add_ghosts_periodic_z(mflds.cmflds(), 0, mb, me);
     } else {
-      cuda_mfields_bnd_from_device_inside(cbnd, mflds.cmflds, mb, me);
+      cuda_mfields_bnd_from_device_inside(cbnd, mflds.cmflds(), mb, me);
       mrc_ddc_add_ghosts(ddc_, 0, me - mb, this);
 #if 0
       struct cuda_mfields_bnd_patch *cf = cuda_mfields_bnd_get_patch(cbnd, 0);
@@ -121,21 +122,24 @@ struct BndCuda : BndBase
 	}
       }
 #endif
-      cuda_mfields_bnd_to_device_inside(cbnd, mflds.cmflds, mb, me);
+      cuda_mfields_bnd_to_device_inside(cbnd, mflds.cmflds(), mb, me);
     }
   }
 
   void add_ghosts(MfieldsBase& mflds_base, int mb, int me) override
   {
-    auto& mflds = mflds_base.get_as<MfieldsCuda>(mb, me);
+    assert(0);
+#if 0
+    auto& mflds = mflds_base.get_as<Mfields>(mb, me);
     add_ghosts(mflds, mb, me);
     mflds_base.put_as(mflds, mb, me);
+#endif
   }
 
   // ----------------------------------------------------------------------
   // fill_ghosts
 
-  void fill_ghosts(MfieldsCuda& mflds, int mb, int me)
+  void fill_ghosts(Mfields& mflds, int mb, int me)
   {
     static int pr1, pr2, pr3, pr4, pr5;
     if (!pr1) {
@@ -156,16 +160,16 @@ struct BndCuda : BndBase
 	grid.bc.fld_lo[1] == BND_FLD_PERIODIC &&
 	grid.bc.fld_lo[2] == BND_FLD_PERIODIC) {
       // double periodic single patch
-      cuda_fill_ghosts_periodic_yz(mflds.cmflds, 0, mb, me);
+      cuda_fill_ghosts_periodic_yz(mflds.cmflds(), 0, mb, me);
     } else if (size == 1 && mflds.n_patches() == 1 && // FIXME !!!
 	       grid.bc.fld_lo[0] == BND_FLD_PERIODIC &&
 	       grid.bc.fld_lo[1] != BND_FLD_PERIODIC &&
 	       grid.bc.fld_lo[2] == BND_FLD_PERIODIC) {
       // z-periodic single patch
-      cuda_fill_ghosts_periodic_z(mflds.cmflds, 0, mb, me);
+      cuda_fill_ghosts_periodic_z(mflds.cmflds(), 0, mb, me);
     } else {
       prof_start(pr1);
-      cuda_mfields_bnd_from_device_inside(cbnd, mflds.cmflds, mb, me); // FIXME _only
+      cuda_mfields_bnd_from_device_inside(cbnd, mflds.cmflds(), mb, me); // FIXME _only
       prof_stop(pr1);
       
       prof_start(pr2);
@@ -176,7 +180,7 @@ struct BndCuda : BndBase
       mrc_ddc_fill_ghosts_local(ddc_, 0, me - mb, this);
 #endif
 #if 1
-      cuda_mfields_bnd_fill_ghosts_local(cbnd, mflds.cmflds, mb, me);
+      cuda_mfields_bnd_fill_ghosts_local(cbnd, mflds.cmflds(), mb, me);
 #endif
       prof_stop(pr3);
       prof_start(pr4);
@@ -184,16 +188,19 @@ struct BndCuda : BndBase
       prof_stop(pr4);
       
       prof_start(pr5);
-      cuda_mfields_bnd_to_device_outside(cbnd, mflds.cmflds, mb, me);
+      cuda_mfields_bnd_to_device_outside(cbnd, mflds.cmflds(), mb, me);
       prof_stop(pr5);
     }
   }
 
   void fill_ghosts(MfieldsBase& mflds_base, int mb, int me) override
   {
-    auto& mflds = mflds_base.get_as<MfieldsCuda>(mb, me);
+    assert(0);
+#if 0
+    auto& mflds = mflds_base.get_as<Mfields>(mb, me);
     fill_ghosts(mflds, mb, me);
     mflds_base.put_as(mflds, mb, me);
+#endif
   }
 
 private:
@@ -206,7 +213,7 @@ private:
 static void
 psc_bnd_fld_cuda_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
 {
-  BndCuda* bnd = (BndCuda*) _ctx;
+  BndCuda<MfieldsCuda>* bnd = (BndCuda<MfieldsCuda>*) _ctx;
   struct cuda_mfields_bnd *cbnd = bnd->cbnd;
   struct cuda_mfields_bnd_patch *cf = cuda_mfields_bnd_get_patch(cbnd, p);
   fields_cuda_real_t *buf = (fields_cuda_real_t *) _buf;
@@ -227,7 +234,7 @@ psc_bnd_fld_cuda_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void
 static void
 psc_bnd_fld_cuda_add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
 {
-  BndCuda* bnd = (BndCuda*) _ctx;
+  BndCuda<MfieldsCuda>* bnd = (BndCuda<MfieldsCuda>*) _ctx;
   struct cuda_mfields_bnd *cbnd = bnd->cbnd;
   struct cuda_mfields_bnd_patch *cf = cuda_mfields_bnd_get_patch(cbnd, p);
   fields_cuda_real_t *buf = (fields_cuda_real_t *) _buf;
@@ -248,7 +255,7 @@ psc_bnd_fld_cuda_add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], voi
 static void
 psc_bnd_fld_cuda_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
 {
-  BndCuda* bnd = (BndCuda*) _ctx;
+  BndCuda<MfieldsCuda>* bnd = (BndCuda<MfieldsCuda>*) _ctx;
   struct cuda_mfields_bnd *cbnd = bnd->cbnd;
   struct cuda_mfields_bnd_patch *cf = cuda_mfields_bnd_get_patch(cbnd, p);
   fields_cuda_real_t *buf = (fields_cuda_real_t *) _buf;

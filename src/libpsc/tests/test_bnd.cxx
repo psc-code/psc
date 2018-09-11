@@ -89,7 +89,7 @@ struct BndTest : public ::testing::Test
 using BndTestTypes = ::testing::Types<TestConfigBnd<Bnd_<MfieldsSingle>, dim_yz>,
 				      TestConfigBnd<Bnd_<MfieldsC>, dim_yz>,
 #ifdef USE_CUDA
-				      TestConfigBnd<BndCuda, dim_yz>,
+				      TestConfigBnd<BndCuda<MfieldsCuda>, dim_yz>,
 				      TestConfigBnd<BndCuda2<MfieldsCuda>, dim_xyz>,
 				      TestConfigBnd<BndCuda3<MfieldsCuda>, dim_xyz>,
 #endif

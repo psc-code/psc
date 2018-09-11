@@ -19,7 +19,7 @@ struct BndCuda2 : BndBase
   // ----------------------------------------------------------------------
   // ctor
 
-  BndCuda2(const Grid_t& grid, mrc_domain* domain, int ibn[3])
+  BndCuda2(const Grid_t& grid, Int3 ibn)
   {
     static struct mrc_ddc_funcs ddc_funcs = {
       .copy_to_buf   = copy_to_buf,
@@ -27,7 +27,7 @@ struct BndCuda2 : BndBase
       .add_from_buf  = add_from_buf,
     };
 
-    ddc_ = mrc_domain_create_ddc(domain);
+    ddc_ = grid.mrc_domain().create_ddc();
     mrc_ddc_set_funcs(ddc_, &ddc_funcs);
     mrc_ddc_set_param_int3(ddc_, "ibn", ibn);
     mrc_ddc_set_param_int(ddc_, "max_n_fields", 24);
@@ -60,7 +60,7 @@ struct BndCuda2 : BndBase
   void add_ghosts(Mfields& mflds, int mb, int me)
   {
     if (psc_balance_generation_cnt != balance_generation_cnt_) {
-      reset();
+      reset(mflds.grid());
     }
     auto& mflds_single = mflds.template get_as<MfieldsSingle>(mb, me);
     mrc_ddc_add_ghosts(ddc_, mb, me, &mflds_single);
@@ -80,7 +80,7 @@ struct BndCuda2 : BndBase
   void fill_ghosts(Mfields& mflds, int mb, int me)
   {
     if (psc_balance_generation_cnt != balance_generation_cnt_) {
-      reset();
+      reset(mflds.grid());
     }
     // FIXME
     // I don't think we need as many points, and only stencil star

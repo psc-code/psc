@@ -172,7 +172,7 @@ struct CudaBnd
       pr_ddc_sync2 = prof_register("ddc_sync2", 1., 0, 0);
     }
 
-    cuda_mfields& cmflds = *mflds.cmflds;
+    cuda_mfields& cmflds = *mflds.cmflds();
 
 #if 0
     prof_start(pr_ddc_sync1);

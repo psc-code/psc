@@ -88,7 +88,11 @@ struct CudaMparticlesTest : TestBase<CudaMparticles>, ::testing::Test
   void SetUp()
   {
     auto domain = Grid_t::Domain{{1, 8, 4}, {1., 80., 40.}};
-    grid_.reset(new Grid_t(domain));
+    auto bc = GridBc{};
+    auto kinds = Grid_t::Kinds{};
+    auto norm = Grid_t::Normalization{};
+    double dt = .1;
+    grid_.reset(new Grid_t{domain, bc, kinds, norm, dt});
   }
 };
 

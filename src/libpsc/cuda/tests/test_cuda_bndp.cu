@@ -33,7 +33,12 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
     auto domain = Grid_t::Domain{{1, 32, 32}, {1., 320., 320.}, {0., 0., 0.},
 				 {1, 2, 2}};
     std::vector<Int3> offs = {{0, 0, 0}, {0, 16, 0}};
-    grid.reset(new Grid_t(domain, offs));
+    assert(0);
+    auto bc = GridBc{};
+    auto kinds = Grid_t::Kinds{};
+    auto norm = Grid_t::Normalization{};
+    double dt = .1;
+    grid.reset(new Grid_t(domain, bc, kinds, norm, dt));
 
     grid->kinds.push_back(Grid_t::Kind(1., 1., "test species"));
 

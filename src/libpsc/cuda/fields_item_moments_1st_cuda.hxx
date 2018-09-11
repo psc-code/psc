@@ -15,7 +15,7 @@ struct Moment_rho_1st_nc_cuda : ItemMomentCRTP<Moment_rho_1st_nc_cuda<BS, dim>, 
   using Base = ItemMomentCRTP<Moment_rho_1st_nc_cuda, MfieldsCuda>;
   using Mfields = MfieldsCuda;
   using Mparticles = MparticlesCuda<BS>;
-  using Bnd = BndCuda;
+  using Bnd = BndCuda<Mfields>;
   
   constexpr static const char* name = "rho_1st_nc";
   constexpr static int n_comps = 1;
@@ -31,7 +31,7 @@ struct Moment_rho_1st_nc_cuda : ItemMomentCRTP<Moment_rho_1st_nc_cuda<BS, dim>, 
   {
     Mfields& mres  = this->mres_;
     auto& cmprts = *mprts.cmprts();
-    cuda_mfields *cmres = mres.cmflds;
+    cuda_mfields *cmres = mres.cmflds();
     
     mres.zero();
     CudaMoments1stNcRho<cuda_mparticles<BS>, dim> cmoments;
@@ -52,7 +52,7 @@ struct Moment_n_1st_cuda : ItemMomentCRTP<Moment_n_1st_cuda<BS, dim>, MfieldsCud
   using Base = ItemMomentCRTP<Moment_n_1st_cuda, MfieldsCuda>;
   using Mfields = MfieldsCuda;
   using Mparticles = MparticlesCuda<BS>;
-  using Bnd = BndCuda;
+  using Bnd = BndCuda<Mfields>;
   
   constexpr static const char* name = "n_1st";
   constexpr static int n_comps = 1;
@@ -68,7 +68,7 @@ struct Moment_n_1st_cuda : ItemMomentCRTP<Moment_n_1st_cuda<BS, dim>, MfieldsCud
   {
     Mfields& mres = this->mres_;
     auto& cmprts = *mprts.cmprts();
-    cuda_mfields *cmres = mres.cmflds;
+    cuda_mfields *cmres = mres.cmflds();
     
     mres.zero();
     CudaMoments1stNcN<cuda_mparticles<BS>, dim> cmoments;

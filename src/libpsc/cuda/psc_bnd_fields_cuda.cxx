@@ -29,10 +29,10 @@ struct BndFieldsCuda : BndFieldsBase
       int d = 1;
       for (int p = 0; p < mflds.n_patches(); p++) {
 	if (grid.atBoundaryLo(p, d)) {
-	  cuda_conducting_wall_E_lo_y(mflds.cmflds, p);
+	  cuda_conducting_wall_E_lo_y(mflds.cmflds(), p);
 	}
 	if (grid.atBoundaryHi(p, d)) {
-	  cuda_conducting_wall_E_hi_y(mflds.cmflds, p);
+	  cuda_conducting_wall_E_hi_y(mflds.cmflds(), p);
 	}
       }
     } else {
@@ -61,10 +61,10 @@ struct BndFieldsCuda : BndFieldsBase
       int d = 1;
       for (int p = 0; p < mflds.n_patches(); p++) {
 	if (grid.atBoundaryLo(p, d)) {
-	  cuda_conducting_wall_H_lo_y(mflds.cmflds, p);
+	  cuda_conducting_wall_H_lo_y(mflds.cmflds(), p);
 	}
 	if (grid.atBoundaryHi(p, d)) {
-	  cuda_conducting_wall_H_hi_y(mflds.cmflds, p);
+	  cuda_conducting_wall_H_hi_y(mflds.cmflds(), p);
 
 	}
       }
@@ -94,10 +94,10 @@ struct BndFieldsCuda : BndFieldsBase
       int d = 1;
       for (int p = 0; p < mflds.n_patches(); p++) {
 	if (grid.atBoundaryLo(p, d)) {
-	  cuda_conducting_wall_J_lo_y(mflds.cmflds, p);
+	  cuda_conducting_wall_J_lo_y(mflds.cmflds(), p);
 	}
 	if (grid.atBoundaryHi(p, d)) {
-	  cuda_conducting_wall_J_hi_y(mflds.cmflds, p);
+	  cuda_conducting_wall_J_hi_y(mflds.cmflds(), p);
 	}
       }
     } else {

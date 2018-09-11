@@ -50,6 +50,8 @@ struct MfieldsCuda : MfieldsBase
   MfieldsCuda(MfieldsCuda&&) = default;
   ~MfieldsCuda();
 
+  struct cuda_mfields* cmflds() { return cmflds_; }
+
   void reset(const Grid_t& new_grid) override;
   void zero_comp(int m) override;
   void set_comp(int m, double val) override { assert(0); }
@@ -73,7 +75,7 @@ struct MfieldsCuda : MfieldsBase
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
   
-  struct cuda_mfields *cmflds;
+  cuda_mfields* cmflds_;
 };
 
 // ======================================================================
@@ -82,14 +84,21 @@ struct MfieldsCuda : MfieldsBase
 struct MfieldsStateCuda : MfieldsStateBase
 {
   using fields_t = MfieldsCuda::fields_t;
+  using real_t = MfieldsCuda::real_t;
   
   MfieldsStateCuda(const Grid_t& grid)
     : MfieldsStateBase{grid, NR_FIELDS, grid.ibn},
       mflds_{grid, NR_FIELDS, grid.ibn}
   {}
 
-  cuda_mfields* cmflds() { return mflds_.cmflds; }
+  cuda_mfields* cmflds() { return mflds_.cmflds(); }
 
+  fields_single_t get_host_fields();
+  void copy_to_device(int p, fields_single_t h_flds, int mb, int me);
+  void copy_from_device(int p, fields_single_t h_flds, int mb, int me);
+
+  MfieldsCuda::Patch operator[](int p) { return mflds_[p]; }
+  
 private:
   MfieldsCuda mflds_;
 };

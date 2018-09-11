@@ -111,7 +111,7 @@ struct MarderCuda : MarderBase
     auto& mflds = mflds_base.get_as<MfieldsStateCuda>(EX, EX + 3);
     auto& mf = mf_base.get_as<MfieldsCuda>(0, 1);
     cuda_mfields *cmflds = mflds.cmflds();
-    cuda_mfields *cmf = mf.cmflds;
+    cuda_mfields *cmf = mf.cmflds();
 
     // OPT, do all patches in one kernel
     for (int p = 0; p < mf.n_patches(); p++) {

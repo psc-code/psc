@@ -5,7 +5,7 @@
 
 template<>
 template<typename FUNC>
-void SetupFields<MfieldsCuda>::set(Mfields& mf, FUNC func)
+void SetupFields<MfieldsStateCuda>::set(Mfields& mf, FUNC func)
 {
   for (int p = 0; p < mf.n_patches(); ++p) {
     auto& patch = mf.grid().patches[p];

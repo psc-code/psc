@@ -16,47 +16,47 @@ MfieldsCuda::MfieldsCuda(const Grid_t& grid, int n_fields, Int3 ibn)
   : MfieldsBase(grid, n_fields, ibn)
 {
   dprintf("CMFLDS: ctor\n");
-  cmflds = new cuda_mfields(grid, n_fields, ibn);
+  cmflds_ = new cuda_mfields(grid, n_fields, ibn);
 }
 
 MfieldsCuda::~MfieldsCuda()
 {
   dprintf("CMFLDS: dtor\n");
-  delete cmflds;
+  delete cmflds_;
 }
 
 void MfieldsCuda::reset(const Grid_t& new_grid)
 {
   dprintf("CMFLDS: reset\n");
   MfieldsBase::reset(new_grid);
-  Int3 ibn = -cmflds->ib;
-  int n_fields = cmflds->n_fields;
-  delete cmflds;
-  cmflds = new cuda_mfields(new_grid, n_fields, ibn);
+  Int3 ibn = -cmflds()->ib;
+  int n_fields = cmflds()->n_fields;
+  delete cmflds_;
+  cmflds_ = new cuda_mfields(new_grid, n_fields, ibn);
 }
 
 fields_single_t MfieldsCuda::get_host_fields()
 {
   dprintf("CMFLDS: get_host_fields\n");
-  return cmflds->get_host_fields();
+  return cmflds()->get_host_fields();
 }
 
 void MfieldsCuda::copy_to_device(int p, fields_single_t h_flds, int mb, int me)
 {
   dprintf("CMFLDS: copy_to_device\n");
-  cmflds->copy_to_device(p, h_flds, mb, me);
+  cmflds()->copy_to_device(p, h_flds, mb, me);
 }
 
 void MfieldsCuda::copy_from_device(int p, fields_single_t h_flds, int mb, int me)
 {
   dprintf("CMFLDS: copy_from_device\n");
-  cmflds->copy_from_device(p, h_flds, mb, me);
+  cmflds()->copy_from_device(p, h_flds, mb, me);
 }
 
 void MfieldsCuda::axpy_comp_yz(int ym, float a, MfieldsCuda& mflds_x, int xm)
 {
   dprintf("CMFLDS: axpy_comp_yz\n");
-  cmflds->axpy_comp_yz(ym, a, mflds_x.cmflds, xm);
+  cmflds()->axpy_comp_yz(ym, a, mflds_x.cmflds(), xm);
 }
 
 void MfieldsCuda::zero_comp(int m)
@@ -65,23 +65,23 @@ void MfieldsCuda::zero_comp(int m)
   assert(!grid_->isInvar(1));
   assert(!grid_->isInvar(2));
   if (grid_->isInvar(0)) {
-    cmflds->zero_comp(m, dim_yz{});
+    cmflds()->zero_comp(m, dim_yz{});
   } else {
-    cmflds->zero_comp(m, dim_xyz{});
+    cmflds()->zero_comp(m, dim_xyz{});
   }
 }
 
 void MfieldsCuda::zero()
 {
   dprintf("CMFLDS: zero\n");
-  for (int m = 0; m < cmflds->n_fields; m++) {
+  for (int m = 0; m < cmflds()->n_fields; m++) {
     zero_comp(m);
   }
 }
 
 int MfieldsCuda::index(int m, int i, int j, int k, int p) const
 {
-  return cmflds->index(m, i, j, k, p);
+  return cmflds_->index(m, i, j, k, p);
 }
 
 void MfieldsCuda::write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names)
@@ -106,18 +106,18 @@ MfieldsCuda::Accessor::Accessor(MfieldsCuda& mflds, int idx)
 
 MfieldsCuda::Accessor::operator real_t() const
 {
-  return mflds_.cmflds->get_value(idx_);
+  return mflds_.cmflds_->get_value(idx_);
 }
 
 MfieldsCuda::real_t MfieldsCuda::Accessor::operator=(real_t val)
 {
-  mflds_.cmflds->set_value(idx_, val);
+  mflds_.cmflds_->set_value(idx_, val);
   return val;
 }
 
 MfieldsCuda::real_t MfieldsCuda::Accessor::operator+=(real_t val)
 {
-  val += mflds_.cmflds->get_value(idx_);
-  mflds_.cmflds->set_value(idx_, val);
+  val += mflds_.cmflds_->get_value(idx_);
+  mflds_.cmflds_->set_value(idx_, val);
   return val;
 }  
