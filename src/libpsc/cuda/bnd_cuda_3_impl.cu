@@ -42,7 +42,7 @@ void BndCuda3<MF>::add_ghosts(Mfields& mflds, int mb, int me)
     reset(mflds.grid());
     balance_generation_cnt_ = psc_balance_generation_cnt;
   }
-  cbnd_->add_ghosts(mflds, mb, me);
+  cbnd_->add_ghosts(*mflds.cmflds(), mb, me);
 }
 
 // ----------------------------------------------------------------------
@@ -55,7 +55,8 @@ void BndCuda3<MF>::fill_ghosts(Mfields& mflds, int mb, int me)
     reset(mflds.grid());
     balance_generation_cnt_ = psc_balance_generation_cnt;
   }
-  cbnd_->fill_ghosts(mflds, mb, me);
+  cbnd_->fill_ghosts(*mflds.cmflds(), mb, me);
 }
 
 template struct BndCuda3<MfieldsCuda>;
+template struct BndCuda3<MfieldsStateCuda>;

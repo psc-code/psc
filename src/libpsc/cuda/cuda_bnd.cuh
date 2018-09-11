@@ -162,7 +162,7 @@ struct CudaBnd
   // run
 
   template<typename T>
-  void run(Mfields& mflds, int mb, int me, mrc_ddc_pattern2* patt2, std::unordered_map<int, Maps>& maps,
+  void run(cuda_mfields& cmflds, int mb, int me, mrc_ddc_pattern2* patt2, std::unordered_map<int, Maps>& maps,
 	   T scatter)
   {
     static int pr_ddc_run, pr_ddc_sync1, pr_ddc_sync2;
@@ -171,8 +171,6 @@ struct CudaBnd
       pr_ddc_sync1 = prof_register("ddc_sync1", 1., 0, 0);
       pr_ddc_sync2 = prof_register("ddc_sync2", 1., 0, 0);
     }
-
-    cuda_mfields& cmflds = *mflds.cmflds();
 
 #if 0
     prof_start(pr_ddc_sync1);
@@ -201,24 +199,24 @@ struct CudaBnd
   // ----------------------------------------------------------------------
   // add_ghosts
 
-  void add_ghosts(Mfields& mflds, int mb, int me)
+  void add_ghosts(cuda_mfields& cmflds, int mb, int me)
   {
     mrc_ddc_multi* sub = mrc_ddc_multi(ddc_);
 
-    run(mflds, mb, me, &sub->add_ghosts2, maps_add_, ScatterAdd{});
+    run(cmflds, mb, me, &sub->add_ghosts2, maps_add_, ScatterAdd{});
   }
   
   // ----------------------------------------------------------------------
   // fill_ghosts
 
-  void fill_ghosts(Mfields& mflds, int mb, int me)
+  void fill_ghosts(cuda_mfields& cmflds, int mb, int me)
   {
     // FIXME
     // I don't think we need as many points, and only stencil star
     // rather then box
     mrc_ddc_multi* sub = mrc_ddc_multi(ddc_);
     
-    run(mflds, mb, me, &sub->fill_ghosts2, maps_fill_, Scatter{});
+    run(cmflds, mb, me, &sub->fill_ghosts2, maps_fill_, Scatter{});
   }
 
   // ----------------------------------------------------------------------

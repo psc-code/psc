@@ -93,9 +93,20 @@ struct MfieldsStateCuda : MfieldsStateBase
 
   cuda_mfields* cmflds() { return mflds_.cmflds(); }
 
-  fields_single_t get_host_fields();
-  void copy_to_device(int p, fields_single_t h_flds, int mb, int me);
-  void copy_from_device(int p, fields_single_t h_flds, int mb, int me);
+  fields_single_t get_host_fields()
+  {
+    return mflds_.get_host_fields();
+  }
+
+  void copy_to_device(int p, fields_single_t h_flds, int mb, int me)
+  {
+    mflds_.copy_to_device(p, h_flds, mb, me);
+  }
+
+  void copy_from_device(int p, fields_single_t h_flds, int mb, int me)
+  {
+    mflds_.copy_from_device(p, h_flds, mb, me);
+  }
 
   MfieldsCuda::Patch operator[](int p) { return mflds_[p]; }
   
