@@ -8,12 +8,13 @@
 
 template<>
 template<typename FUNC>
-void SetupParticles<MparticlesCuda<BS144>>::setup_particles(Mparticles& mprts, psc* psc,
-							    std::vector<uint>& n_prts_by_patch,
-							    FUNC func)
+void SetupParticles<MparticlesCuda<BS144>>::setup_particles2(Mparticles& mprts,
+							     std::vector<uint>& n_prts_by_patch,
+							     FUNC func)
 {
   auto& mp = mprts.get_as<MparticlesSingle>();
-  SetupParticles<MparticlesSingle>::setup_particles(mp, psc, n_prts_by_patch, func);
+  assert(0);
+  //SetupParticles<MparticlesSingle>::setup_particles(mp, psc, n_prts_by_patch, func);
   mprts.put_as(mp);
 }
 
@@ -44,12 +45,13 @@ void SetupParticles<MparticlesCuda<BS144>>::setup_particles(MparticlesCuda<BS144
 
 template<>
 template<typename FUNC>
-void SetupParticles<MparticlesCuda<BS444>>::setup_particles(Mparticles& mprts, psc* psc,
+void SetupParticles<MparticlesCuda<BS444>>::setup_particles2(Mparticles& mprts,
 							    std::vector<uint>& n_prts_by_patch,
 							    FUNC func)
 {
   auto& mp = mprts.get_as<MparticlesSingle>();
-  SetupParticles<MparticlesSingle>::setup_particles(mp, psc, n_prts_by_patch, func);
+  assert(0);
+  //SetupParticles<MparticlesSingle>::setup_particles(mp, psc, n_prts_by_patch, func);
   mprts.put_as(mp);
 }
 

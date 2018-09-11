@@ -19,7 +19,7 @@ struct InjectCuda : InjectBase
 	     Target_t target)
     : InjectBase(interval, tau, kind_n),
       target_{target},
-      moment_n_{ppsc->grid(), comm}
+      moment_n_{*ggrid, comm}
   {}
 
   // ----------------------------------------------------------------------
@@ -37,7 +37,7 @@ struct InjectCuda : InjectBase
 
   int get_n_in_cell(struct psc *psc, struct psc_particle_npt *npt)
   {
-    const auto& grid = psc->grid();
+    const auto& grid = *ggrid;
     
     if (const_num_particles_per_cell) {
       return 1. / grid.norm.cori;
@@ -62,7 +62,7 @@ struct InjectCuda : InjectBase
   void _psc_setup_particle(struct psc *psc, struct cuda_mparticles_prt *cprt,
 			   struct psc_particle_npt *npt, int p, double xx[3])
   {
-    const auto& grid = psc->grid();
+    const auto& grid = *ggrid;
     const auto& kinds = grid.kinds;
     double beta = grid.norm.beta;
 
@@ -113,8 +113,7 @@ struct InjectCuda : InjectBase
 
   void operator()(MparticlesCuda<BS>& mprts)
   {
-    struct psc *psc = ppsc;
-    const auto& grid = psc->grid();
+    const auto& grid = *ggrid;
     const auto& kinds = grid.kinds;
 
     float fac = 1. / grid.norm.cori * 
@@ -142,14 +141,12 @@ struct InjectCuda : InjectBase
       for (int jz = 0; jz < ldims[2]; jz++) {
 	for (int jy = 0; jy < ldims[1]; jy++) {
 	  for (int jx = 0; jx < ldims[0]; jx++) {
-	    double xx[3] = { .5 * (CRDX(p, jx) + CRDX(p, jx+1)),
-			     .5 * (CRDY(p, jy) + CRDY(p, jy+1)),
-			     .5 * (CRDZ(p, jz) + CRDZ(p, jz+1)) };
+	    double xx[3] = {grid.patches[p].x_cc(jx), grid.patches[p].y_cc(jy), grid.patches[p].z_cc(jz)};
 	    // FIXME, the issue really is that (2nd order) particle pushers
 	    // don't handle the invariant dim right
-	    if (grid.isInvar(0) == 1) xx[0] = CRDX(p, jx);
-	    if (grid.isInvar(1) == 1) xx[1] = CRDY(p, jy);
-	    if (grid.isInvar(2) == 1) xx[2] = CRDZ(p, jz);
+	    if (grid.isInvar(0) == 1) xx[0] = grid.patches[p].x_nc(jx);
+	    if (grid.isInvar(1) == 1) xx[1] = grid.patches[p].y_nc(jy);
+	    if (grid.isInvar(2) == 1) xx[2] = grid.patches[p].z_nc(jz);
 
 	    if (!target_.is_inside(xx)) {
 	      continue;
@@ -167,7 +164,7 @@ struct InjectCuda : InjectBase
 	    
 	      int n_in_cell;
 	      if (kind != neutralizing_population) {
-		if (psc->timestep >= 0) {
+		if (grid.timestep() >= 0) {
 		  npt.n -= N(kind_n, jx,jy,jz);
 		  if (npt.n < 0) {
 		    n_in_cell = 0;
@@ -176,7 +173,7 @@ struct InjectCuda : InjectBase
 		    // statistically right...
 		    n_in_cell = npt.n *fac;		}
 		} else {
-		  n_in_cell = get_n_in_cell(psc, &npt);
+		  n_in_cell = get_n_in_cell(&npt);
 		}
 		n_q_in_cell += npt.q * n_in_cell;
 	      } else {
@@ -190,7 +187,7 @@ struct InjectCuda : InjectBase
 		buf = (struct cuda_mparticles_prt *) realloc(buf, buf_n_alloced * sizeof(*buf));
 	      }
 	      for (int cnt = 0; cnt < n_in_cell; cnt++) {
-		_psc_setup_particle(psc, &buf[buf_n + cnt], &npt, p, xx);
+		_psc_setup_particle(&buf[buf_n + cnt], &npt, p, xx);
 		assert(fractional_n_particles_per_cell);
 	      }
 	      buf_n += n_in_cell;
