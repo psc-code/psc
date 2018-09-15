@@ -67,7 +67,7 @@ TYPED_TEST(MparticlesCudaTest, Inject)
   
   auto mprts = this->mk_mprts();
 
-  EXPECT_EQ(mprts.n_patches(), 2);
+  EXPECT_EQ(mprts.n_patches(), 4);
 
   int nn = 0;
   for (int p = 0; p < mprts.n_patches(); ++p) {
@@ -83,11 +83,11 @@ TYPED_TEST(MparticlesCudaTest, Inject)
     }
   }
 
-  EXPECT_EQ(mprts.get_n_prts(), 2);
+  EXPECT_EQ(mprts.get_n_prts(), 4);
   
   std::vector<uint> n_prts_by_patch(mprts.n_patches());
   mprts.get_size_all(n_prts_by_patch.data());
-  EXPECT_EQ(n_prts_by_patch, std::vector<uint>({n_prts, n_prts}));
+  EXPECT_EQ(n_prts_by_patch, std::vector<uint>({n_prts, n_prts, n_prts, n_prts}));
 
   // check internal representation
   nn = 0;

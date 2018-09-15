@@ -32,10 +32,11 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
   {
     auto domain = Grid_t::Domain{{1, 32, 32}, {1., 320., 320.}, {0., 0., 0.},
 				 {1, 2, 2}};
-    std::vector<Int3> offs = {{0, 0, 0}, {0, 16, 0}};
-    assert(0);
     auto bc = GridBc{};
-    auto kinds = Grid_t::Kinds{};
+    auto kinds = Grid_t::Kinds{Grid_t::Kind{1., 1., "k0"},
+			       Grid_t::Kind{1., 1., "k1"},
+			       Grid_t::Kind{1., 1., "k2"},
+			       Grid_t::Kind{1., 1., "k3"}};
     auto norm = Grid_t::Normalization{};
     double dt = .1;
     grid.reset(new Grid_t(domain, bc, kinds, norm, dt));
@@ -54,17 +55,13 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
       {{ .5, 155., 5.}, {}, 0., 3},
     };
 
-    uint n_prts_by_patch[cmprts->n_patches];
-    n_prts_by_patch[0] = 2;
-    n_prts_by_patch[1] = 2;
+    std::vector<uint> n_prts_by_patch = {2, 2, 0, 0};
     
     // FIXME eventually shouldn't have to reserve additional room for sending here
-    uint n_prts_reserve_by_patch[cmprts->n_patches];
-    n_prts_reserve_by_patch[0] = 2;
-    n_prts_reserve_by_patch[1] = 4;
+    std::vector<uint> n_prts_reserve_by_patch = {2, 4, 0, 0};
     
-    cmprts->reserve_all(n_prts_reserve_by_patch);
-    cmprts->inject_buf(prts.data(), n_prts_by_patch);
+    cmprts->reserve_all(n_prts_reserve_by_patch.data());
+    cmprts->inject_buf(prts.data(), n_prts_by_patch.data());
 
     // move every particle one full cell to the right (+y, that is)
     // (position doesn't actually matter since we'll only look at bidx)
@@ -184,7 +181,7 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 
   for (int p = 0; p < cmprts->n_patches; p++) {
     //printf("p %d: n_send %d\n", p, cmprts->bpatch[p].n_send);
-    EXPECT_EQ(cbndp->bpatch[p].n_send, 1);
+    EXPECT_EQ(cbndp->bpatch[p].n_send, p < 2 ? 1 : 0);
   }
   EXPECT_EQ(cbndp->n_prts_send, 2);
 
@@ -397,3 +394,16 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
 #endif
 }
 
+// ======================================================================
+// main
+
+int main(int argc, char **argv)
+{
+  MPI_Init(&argc, &argv);
+
+  ::testing::InitGoogleTest(&argc, argv);
+  int rc = RUN_ALL_TESTS();
+
+  MPI_Finalize();
+  return rc;
+}

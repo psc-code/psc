@@ -61,7 +61,7 @@ struct PushMprtsTest : TestBase<CudaMparticles>, ::testing::Test
     auto bc = GridBc{};
     auto kinds = Grid_t::Kinds{};
     auto norm = Grid_t::Normalization{};
-    double dt = .1;
+    double dt = 1.;
     grid_.reset(new Grid_t{domain, bc, kinds, norm, dt});
   }
 

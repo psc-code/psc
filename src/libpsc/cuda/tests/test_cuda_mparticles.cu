@@ -118,13 +118,13 @@ TEST_F(CudaMparticlesTest, SetParticles)
   // check that particles are in C order
   int n = 0;
   for (auto prt: cmprts->get_particles(0)) {
-    int k = n % grid_->ldims[2]; n /= grid_->ldims[2];
-    int j = n % grid_->ldims[1]; n /= grid_->ldims[1];
-    int i = n;
+    int nn = n++;
+    int k = nn % grid_->ldims[2]; nn /= grid_->ldims[2];
+    int j = nn % grid_->ldims[1]; nn /= grid_->ldims[1];
+    int i = nn;
     EXPECT_FLOAT_EQ(prt.x[0], (i + .5) * grid_->domain.dx[0]);
     EXPECT_FLOAT_EQ(prt.x[1], (j + .5) * grid_->domain.dx[1]);
     EXPECT_FLOAT_EQ(prt.x[2], (k + .5) * grid_->domain.dx[2]);
-    n++;
   }
 }
 
@@ -344,3 +344,16 @@ TEST_F(CudaMparticlesTest, CudaCollision)
   }
 }
 
+// ======================================================================
+// main
+
+int main(int argc, char **argv)
+{
+  MPI_Init(&argc, &argv);
+
+  ::testing::InitGoogleTest(&argc, argv);
+  int rc = RUN_ALL_TESTS();
+
+  MPI_Finalize();
+  return rc;
+}

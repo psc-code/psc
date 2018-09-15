@@ -13,8 +13,7 @@ void SetupParticles<MparticlesCuda<BS144>>::setup_particles2(Mparticles& mprts,
 							     FUNC func)
 {
   auto& mp = mprts.get_as<MparticlesSingle>();
-  assert(0);
-  //SetupParticles<MparticlesSingle>::setup_particles(mp, psc, n_prts_by_patch, func);
+  SetupParticles<MparticlesSingle>::setup_particles2(mp, n_prts_by_patch, func);
   mprts.put_as(mp);
 }
 
@@ -50,8 +49,7 @@ void SetupParticles<MparticlesCuda<BS444>>::setup_particles2(Mparticles& mprts,
 							    FUNC func)
 {
   auto& mp = mprts.get_as<MparticlesSingle>();
-  assert(0);
-  //SetupParticles<MparticlesSingle>::setup_particles(mp, psc, n_prts_by_patch, func);
+  SetupParticles<MparticlesSingle>::setup_particles2(mp, n_prts_by_patch, func);
   mprts.put_as(mp);
 }
 
