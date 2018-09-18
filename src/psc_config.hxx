@@ -106,8 +106,8 @@ struct PscConfig_<DIM, Mparticles, _MfieldsState, _Mfields, PscConfigPushParticl
   using Collision_t = CollisionCuda<Mparticles>;
   using PushFields_t = PushFieldsCuda;
   using BndParticles_t = BndParticlesCuda<Mparticles, dim_t>;
-  using Bnd_t = BndCuda3<Mfields>;
-  using BndFields_t = BndFieldsNone<Mfields>;
+  using Bnd_t = BndCuda3<MfieldsState>;
+  using BndFields_t = BndFieldsNone<MfieldsState>;
   using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Checks_t = ChecksCuda<Mparticles>;
   using Marder_t = MarderCuda<BS>;
@@ -126,8 +126,8 @@ struct PscConfig_<dim_xyz, Mparticles, _MfieldsState, _Mfields, PscConfigPushPar
   using Collision_t = CollisionCuda<Mparticles>;
   using PushFields_t = PushFieldsCuda;
   using BndParticles_t = BndParticlesCuda<Mparticles, dim_t>;
-  using Bnd_t = BndCuda3<Mfields>;
-  using BndFields_t = BndFieldsNone<Mfields>;
+  using Bnd_t = BndCuda3<MfieldsState>;
+  using BndFields_t = BndFieldsNone<MfieldsState>;
   using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Checks_t = ChecksCuda<Mparticles>;
   using Marder_t = MarderCuda<BS>;
