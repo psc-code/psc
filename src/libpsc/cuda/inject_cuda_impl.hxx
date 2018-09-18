@@ -15,11 +15,10 @@ struct InjectCuda : InjectBase
   using fields_t = MfieldsSingle::fields_t;
   using Fields = Fields3d<fields_t>;
 
-  InjectCuda(MPI_Comm comm, int interval, int tau, int kind_n,
-	     Target_t target)
+  InjectCuda(const Grid_t& grid, int interval, int tau, int kind_n, Target_t target)
     : InjectBase(interval, tau, kind_n),
       target_{target},
-      moment_n_{*ggrid, comm}
+      moment_n_{grid, grid.comm()} // FIXME, should just take grid
   {}
 
   // ----------------------------------------------------------------------
@@ -35,7 +34,7 @@ struct InjectCuda : InjectBase
   //
   // helper function for partition / particle setup FIXME duplicated
 
-  int get_n_in_cell(struct psc *psc, struct psc_particle_npt *npt)
+  int get_n_in_cell(struct psc_particle_npt *npt)
   {
     const auto& grid = *ggrid;
     
@@ -59,7 +58,7 @@ struct InjectCuda : InjectBase
 
   // FIXME duplicated
 
-  void _psc_setup_particle(struct psc *psc, struct cuda_mparticles_prt *cprt,
+  void _psc_setup_particle(struct cuda_mparticles_prt *cprt,
 			   struct psc_particle_npt *npt, int p, double xx[3])
   {
     const auto& grid = *ggrid;

@@ -149,9 +149,9 @@ struct InjectSelector
 // FIXME, this should really be conditional to Mparticles == MparticlesCuda<BS>, not
 // Mfields == MfieldsCuda
 template<typename Mparticles, typename InjectShape, typename Dim>
-struct InjectSelector<Mparticles, MfieldsCuda, InjectShape, Dim>
+struct InjectSelector<Mparticles, MfieldsStateCuda, InjectShape, Dim>
 {
-  using Mfields = MfieldsCuda;
+  using Mfields = MfieldsStateCuda; // MfieldsState
   using Inject = InjectCuda<typename Mparticles::BS, Dim, InjectShape>;
 };
 
