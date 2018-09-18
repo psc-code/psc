@@ -27,6 +27,8 @@ struct MarderCuda : MarderBase
     psc_bnd_set_psc(bnd_, ppsc);
     psc_bnd_setup(bnd_);
 #endif
+    MHERE;
+    return;
     assert(0);
 
     // FIXME, output_fields should be taking care of their own psc_bnd?
