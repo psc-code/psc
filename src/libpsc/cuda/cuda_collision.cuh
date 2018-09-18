@@ -161,6 +161,11 @@ struct CudaCollision
   CudaCollision(int interval, double nu, int nicell, double dt)
     : interval_{interval}, nu_{nu}, nicell_(nicell), dt_(dt)
   {}
+
+  int interval() const
+  {
+    return interval_;
+  }
   
   void operator()(cuda_mparticles& cmprts)
   {

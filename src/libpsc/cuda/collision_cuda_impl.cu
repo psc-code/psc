@@ -17,6 +17,12 @@ void CollisionCuda<Mparticles, RngState>::operator()(Mparticles& _mprts)
   (*fwd_)(*_mprts.cmprts());
 }
 
+template<typename Mparticles, typename RngState>
+int CollisionCuda<Mparticles, RngState>::interval() const
+{
+  return fwd_->interval();
+}
+
 template struct CollisionCuda<MparticlesCuda<BS144>>;
 template struct CollisionCuda<MparticlesCuda<BS444>>;
 
