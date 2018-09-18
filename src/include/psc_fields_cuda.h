@@ -109,6 +109,10 @@ struct MfieldsStateCuda : MfieldsStateBase
   }
 
   MfieldsCuda::Patch operator[](int p) { return mflds_[p]; }
+
+  static const Convert convert_to_, convert_from_;
+  const Convert& convert_to() override { return convert_to_; }
+  const Convert& convert_from() override { return convert_from_; }
   
 private:
   MfieldsCuda mflds_;
