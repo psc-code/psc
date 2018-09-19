@@ -14,7 +14,8 @@ struct InjectCuda : InjectBase
   using Self = InjectCuda;
   using fields_t = MfieldsSingle::fields_t;
   using Fields = Fields3d<fields_t>;
-
+  using ItemMoment_t = Moment_n_1st_cuda<BS, dim>;
+  
   InjectCuda(const Grid_t& grid, int interval, int tau, int kind_n, Target_t target)
     : InjectBase(interval, tau, kind_n),
       target_{target},
@@ -214,7 +215,7 @@ struct InjectCuda : InjectBase
   
 private:
   Target_t target_;
-  Moment_n_1st_cuda<BS, dim> moment_n_;
+  ItemMoment_t moment_n_;
 
   // FIXME
   bool const_num_particles_per_cell = { false };

@@ -69,7 +69,7 @@ struct InjectTest : ::testing::Test
 };
 
 using InjectTestTypes = ::testing::Types<
-#if 0//def USE_CUDA
+#ifdef USE_CUDA
 						TestConfig1vbec3dCudaYZ,
 #endif
 						TestConfig1vbec3dSingleYZ>;
@@ -82,9 +82,10 @@ TYPED_TEST_CASE(InjectTest, InjectTestTypes);
 TYPED_TEST(InjectTest, Test1)
 {
   using Mparticles = typename TypeParam::Mparticles;
-  using Mfields = typename TypeParam::Mfields;
+  using MfieldsState = typename TypeParam::MfieldsState;
   using PushParticles = typename TypeParam::PushParticles;
-  using Inject = typename InjectSelector<Mparticles, Mfields, InjectTestTarget, typename TypeParam::dim>::Inject;
+  using Inject = typename InjectSelector<Mparticles, MfieldsState, InjectTestTarget,
+					 typename TypeParam::dim>::Inject;
   using ItemMoment = typename Inject::ItemMoment_t;
   using real_t = typename Mparticles::real_t;
 
@@ -97,7 +98,7 @@ TYPED_TEST(InjectTest, Test1)
   const int inject_interval = 1;
   const int inject_tau = 10;
   auto target = InjectTestTarget{};
-  auto inject = Inject{grid, 1, 10, 0, target};
+  Inject inject{grid, 1, 10, 0, target}; // FIXME, can't use "auto inject = Inject{...}", though I want to
 
   // let's start with no particles
   Mparticles mprts{grid};
