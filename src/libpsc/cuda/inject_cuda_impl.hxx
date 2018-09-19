@@ -19,7 +19,8 @@ struct InjectCuda : InjectBase
   InjectCuda(const Grid_t& grid, int interval, int tau, int kind_n, Target_t target)
     : InjectBase(interval, tau, kind_n),
       target_{target},
-      moment_n_{grid, grid.comm()} // FIXME, should just take grid
+      moment_n_{grid, grid.comm()}, // FIXME, should just take grid
+      grid_{grid}
   {}
 
   // ----------------------------------------------------------------------
@@ -37,24 +38,22 @@ struct InjectCuda : InjectBase
 
   int get_n_in_cell(struct psc_particle_npt *npt)
   {
-    const auto& grid = *ggrid;
-    
     if (const_num_particles_per_cell) {
-      return 1. / grid.norm.cori;
+      return 1. / grid_.norm.cori;
     }
     if (npt->particles_per_cell) {
       return npt->n * npt->particles_per_cell + .5;
     }
     if (fractional_n_particles_per_cell) {
-      int n_prts = npt->n / grid.norm.cori;
-      float rmndr = npt->n / grid.norm.cori - n_prts;
+      int n_prts = npt->n / grid_.norm.cori;
+      float rmndr = npt->n / grid_.norm.cori - n_prts;
       float ran = random() / ((float) RAND_MAX + 1);
       if (ran < rmndr) {
 	n_prts++;
       }
       return n_prts;
     }
-    return npt->n / grid.norm.cori + .5;
+    return npt->n / grid_.norm.cori + .5;
   }
 
   // FIXME duplicated
@@ -62,9 +61,8 @@ struct InjectCuda : InjectBase
   void _psc_setup_particle(struct cuda_mparticles_prt *cprt,
 			   struct psc_particle_npt *npt, int p, double xx[3])
   {
-    const auto& grid = *ggrid;
-    const auto& kinds = grid.kinds;
-    double beta = grid.norm.beta;
+    const auto& kinds = grid_.kinds;
+    double beta = grid_.norm.beta;
 
     float ran1, ran2, ran3, ran4, ran5, ran6;
     do {
@@ -98,9 +96,9 @@ struct InjectCuda : InjectBase
     assert(npt->q == kinds[npt->kind].q);
     assert(npt->m == kinds[npt->kind].m);
 
-    cprt->x[0] = xx[0] - grid.patches[p].xb[0];
-    cprt->x[1] = xx[1] - grid.patches[p].xb[1];
-    cprt->x[2] = xx[2] - grid.patches[p].xb[2];
+    cprt->x[0] = xx[0] - grid_.patches[p].xb[0];
+    cprt->x[1] = xx[1] - grid_.patches[p].xb[1];
+    cprt->x[2] = xx[2] - grid_.patches[p].xb[2];
     cprt->p[0] = pxi;
     cprt->p[1] = pyi;
     cprt->p[2] = pzi;
@@ -113,11 +111,10 @@ struct InjectCuda : InjectBase
 
   void operator()(MparticlesCuda<BS>& mprts)
   {
-    const auto& grid = *ggrid;
-    const auto& kinds = grid.kinds;
+    const auto& kinds = grid_.kinds;
 
-    float fac = 1. / grid.norm.cori * 
-      (interval * grid.dt / tau) / (1. + interval * grid.dt / tau);
+    float fac = 1. / grid_.norm.cori * 
+      (interval * grid_.dt / tau) / (1. + interval * grid_.dt / tau);
 
     moment_n_.run(mprts);
 
@@ -130,23 +127,23 @@ struct InjectCuda : InjectBase
       buf_n_alloced = 1000;
       buf = (struct cuda_mparticles_prt *) calloc(buf_n_alloced, sizeof(*buf));
     }
-    uint buf_n_by_patch[grid.n_patches()];
+    uint buf_n_by_patch[grid_.n_patches()];
 
     uint buf_n = 0;
-    for (int p = 0; p < grid.n_patches(); p++) {
+    for (int p = 0; p < grid_.n_patches(); p++) {
       buf_n_by_patch[p] = 0;
       Fields N(mf_n[p]);
-      const int *ldims = grid.ldims;
+      const int *ldims = grid_.ldims;
     
       for (int jz = 0; jz < ldims[2]; jz++) {
 	for (int jy = 0; jy < ldims[1]; jy++) {
 	  for (int jx = 0; jx < ldims[0]; jx++) {
-	    double xx[3] = {grid.patches[p].x_cc(jx), grid.patches[p].y_cc(jy), grid.patches[p].z_cc(jz)};
+	    double xx[3] = {grid_.patches[p].x_cc(jx), grid_.patches[p].y_cc(jy), grid_.patches[p].z_cc(jz)};
 	    // FIXME, the issue really is that (2nd order) particle pushers
 	    // don't handle the invariant dim right
-	    if (grid.isInvar(0) == 1) xx[0] = grid.patches[p].x_nc(jx);
-	    if (grid.isInvar(1) == 1) xx[1] = grid.patches[p].y_nc(jy);
-	    if (grid.isInvar(2) == 1) xx[2] = grid.patches[p].z_nc(jz);
+	    if (grid_.isInvar(0) == 1) xx[0] = grid_.patches[p].x_nc(jx);
+	    if (grid_.isInvar(1) == 1) xx[1] = grid_.patches[p].y_nc(jy);
+	    if (grid_.isInvar(2) == 1) xx[2] = grid_.patches[p].z_nc(jz);
 
 	    if (!target_.is_inside(xx)) {
 	      continue;
@@ -164,7 +161,7 @@ struct InjectCuda : InjectBase
 	    
 	      int n_in_cell;
 	      if (kind != neutralizing_population) {
-		if (grid.timestep() >= 0) {
+		if (grid_.timestep() >= 0) {
 		  npt.n -= N(kind_n, jx,jy,jz);
 		  if (npt.n < 0) {
 		    n_in_cell = 0;
@@ -216,6 +213,7 @@ struct InjectCuda : InjectBase
 private:
   Target_t target_;
   ItemMoment_t moment_n_;
+  const Grid_t& grid_;
 
   // FIXME
   bool const_num_particles_per_cell = { false };

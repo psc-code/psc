@@ -125,7 +125,7 @@ TYPED_TEST(InjectTest, Test1)
     (inject_interval * grid.dt / inject_tau) / (1. + inject_interval * grid.dt / inject_tau);
   real_t n_injected = int(fac) * grid.norm.cori;
   // FIXME, it's worth noting that given the wrong choice of interval / tau / nicell, one may end up never injecting anything because the # particles to be injected turns out to be < 1 and we always round down
-  mprintf("fac = %g, n_injected = %g\n", fac, n_injected);
+  //mprintf("fac = %g, n_injected = %g\n", fac, n_injected);
   
   moment_n.run(mprts);
   for (int p = 0; p < grid.n_patches(); p++) {
