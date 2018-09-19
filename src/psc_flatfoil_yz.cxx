@@ -213,7 +213,7 @@ struct PscFlatfoil : Psc<PscConfig>
     inject_foil_params.Te = .001;
     inject_foil_params.Ti = .001;
     inject_target_ = InjectFoil{inject_foil_params};
-    inject_interval_ = 0;20;
+    inject_interval_ = 20;
     
     int inject_tau = 40;
     inject_.reset(new Inject_t{grid(), inject_interval_, inject_tau, MY_ELECTRON, inject_target_});
