@@ -135,9 +135,9 @@ struct PscFlatfoil : Psc<PscConfig>
     mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(background_Te_));
     
     // --- setup domain
-    Grid_t::Real3 LL = { 1., 400.*4, 400. }; // domain size (in d_e)
-    Int3 gdims = { 1, 1024, 256 }; // global number of grid points
-    Int3 np = { 1, 16, 4 }; // division into patches
+    Grid_t::Real3 LL = { 1., 800., 400.*6 }; // domain size (in d_e)
+    Int3 gdims = { 1, 800, 2400}; // global number of grid points
+    Int3 np = { 1, 80, 4 }; // division into patches
 
     ibn[0] = 0; // FIXME, wrong place, should be based on Dim, not for VPIC...
     
@@ -150,7 +150,7 @@ struct PscFlatfoil : Psc<PscConfig>
 
     // --- generic setup
     auto norm_params = Grid_t::NormalizationParams::dimensionless();
-    norm_params.nicell = 100;
+    norm_params.nicell = 50;
 
     double dt = p_.cfl * courant_length(grid_domain);
     define_grid(grid_domain, grid_bc, kinds, dt, norm_params);
@@ -175,7 +175,7 @@ struct PscFlatfoil : Psc<PscConfig>
     // -- Checks
     ChecksParams checks_params{};
     checks_params.continuity_every_step = 20;
-    checks_params.continuity_threshold = 1e-6;
+    checks_params.continuity_threshold = 1e-5;
     checks_.reset(new Checks_t{grid(), comm, checks_params});
 
     // -- Marder correction
