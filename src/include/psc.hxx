@@ -464,6 +464,11 @@ struct Psc
       prof_stop(pr_collision);
     }
     
+    // === particle injection
+    prof_start(pr_inject_prts);
+    inject_particles();
+    prof_stop(pr_inject_prts);
+
     if (checks_->continuity_every_step > 0 && timestep % checks_->continuity_every_step == 0) {
       mpi_printf(comm, "***** Checking continuity...\n");
       prof_start(pr_checks);
@@ -476,11 +481,6 @@ struct Psc
     pushp_->push_mprts(mprts, mflds);
     prof_stop(pr_push_prts);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
-
-    // === particle injection
-    prof_start(pr_inject_prts);
-    inject_particles();
-    prof_stop(pr_inject_prts);
 
     // === field propagation B^{n+1/2} -> B^{n+1}
     prof_start(pr_push_flds);
