@@ -92,8 +92,8 @@ struct InjectFoil : InjectFoilParams
 
 // EDIT to change order / floating point type / cuda / 2d/3d
 using dim_t = dim_yz;
-//using PscConfig = PscConfig1vbecSingle<dim_t>;
-using PscConfig = PscConfig1vbecCuda<dim_t>;
+using PscConfig = PscConfig1vbecSingle<dim_t>;
+//using PscConfig = PscConfig1vbecCuda<dim_t>;
 
 // ======================================================================
 // PscFlatfoil
@@ -202,7 +202,6 @@ struct PscFlatfoil : Psc<PscConfig>
     heating_.reset(new Heating_t{grid(), heating_interval_, MY_ELECTRON, heating_spot});
 
     // -- Particle injection
-    // -- setup injection
     auto inject_foil_params = InjectFoilParams{};
     inject_foil_params.yl = -100000. * d_i;
     inject_foil_params.yh =  100000. * d_i;
