@@ -830,12 +830,15 @@ private:
     auto new_grid = new Grid_t{old_grid->domain, old_grid->bc, old_grid->kinds,
 			       old_grid->norm, old_grid->dt, n_patches_new};
     new_grid->ibn = old_grid->ibn; // FIXME, sucky ibn handling...
+    new_grid->timestep_ = old_grid->timestep_;
     
     prof_stop(pr_bal_load);
     if (n_patches_new < 0) { // unchanged mapping, nothing tbd
+      mpi_printf(old_grid->comm(), "***** Balance: decomposition unchanged\n");
       return n_prts_by_patch_old;
     }
 
+    mpi_printf(old_grid->comm(), "***** Balance: new decomposition: balancing\n");
     delete[] psc_balance_comp_time_by_patch;
     psc_balance_comp_time_by_patch = new double[new_grid->n_patches()];
     
