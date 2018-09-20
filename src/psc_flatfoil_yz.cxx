@@ -137,7 +137,7 @@ struct PscFlatfoil : Psc<PscConfig>
     // --- setup domain
     Grid_t::Real3 LL = { 1., 800., 400.*6 }; // domain size (in d_e)
     Int3 gdims = { 1, 800, 2400}; // global number of grid points
-    Int3 np = { 1, 80, 4 }; // division into patches
+    Int3 np = { 1, 10, 30 }; // division into patches
 
     ibn[0] = 0; // FIXME, wrong place, should be based on Dim, not for VPIC...
     
