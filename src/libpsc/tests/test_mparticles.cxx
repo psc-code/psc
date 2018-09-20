@@ -1,14 +1,14 @@
 
 #include <gtest/gtest.h>
 
-#define VPIC
-
 #include "test_common.hxx"
 
 #include "psc_particles_single.h"
 #include "psc_particles_double.h"
 #include "../libpsc/vpic/mparticles_vpic.hxx"
+#ifdef USE_VPIC
 #include "../libpsc/vpic/vpic_iface.h"
+#endif
 #ifdef USE_CUDA
 #include "../libpsc/cuda/psc_particles_cuda.h"
 #endif
@@ -22,7 +22,7 @@ struct Config
 
 using MparticlesTestTypes = ::testing::Types<Config<MparticlesSingle>
 					    ,Config<MparticlesDouble>
-#ifdef VPIC
+#ifdef USE_VPIC
 					    ,Config<MparticlesVpic>
 #endif
 #ifdef USE_CUDA
@@ -58,10 +58,12 @@ struct MparticlesTest : ::testing::Test
       xh[d] = xl[d] + domain.length[d];
     }
 
+#ifdef USE_VPIC
     vgrid_.setup(dx, grid_.dt, 1., 1.);
   
     // Define the grid
     vgrid_.partition_periodic_box(xl, xh, domain.gdims, domain.np);
+#endif
   }
 
   template<typename tag>
@@ -73,6 +75,7 @@ struct MparticlesTest : ::testing::Test
     return mprts;
   }
 
+#ifdef USE_VPIC
   Mparticles mk_mprts(MparticlesVpic* dummy)
   {
     Mparticles mprts(grid_, &vgrid_);
@@ -80,6 +83,7 @@ struct MparticlesTest : ::testing::Test
 			 10, 0);
     return mprts;
   }
+#endif
 
   Mparticles mk_mprts()
   {
@@ -107,7 +111,9 @@ struct MparticlesTest : ::testing::Test
 
 private:
   Grid_t grid_;
+#ifdef USE_VPIC
   Grid vgrid_;
+#endif
 };
 
 // -----------------------------------------------------------------------
@@ -164,9 +170,11 @@ TYPED_TEST(MparticlesTest, setParticles)
 int main(int argc, char **argv)
 {
   MPI_Init(&argc, &argv);
+#ifdef USE_VPIC
   MPI_Comm_dup(MPI_COMM_WORLD, &psc_comm_world);
   MPI_Comm_rank(psc_comm_world, &psc_world_rank);
   MPI_Comm_size(psc_comm_world, &psc_world_size);
+#endif
 
   ::testing::InitGoogleTest(&argc, argv);
   int rc = RUN_ALL_TESTS();

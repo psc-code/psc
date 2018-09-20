@@ -16,8 +16,10 @@
 #include "setup_fields.hxx"
 #include "setup_particles.hxx"
 
+#ifdef USE_VPIC
 #include "../libpsc/vpic/push_particles_vpic.hxx"
 #include "../libpsc/vpic/bnd_particles_vpic.hxx"
+#endif
 
 #ifdef USE_CUDA
 #include "../libpsc/cuda/push_particles_cuda_impl.hxx"
@@ -83,12 +85,14 @@ using TestConfig1vbec3dSingleXZ = TestConfig<dim_xz, MfieldsSingle,
 					     PushParticles1vb<Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_xz>>,
 					     checks_order_1st>;
 
+#ifdef USE_VPIC
 using TestConfigVpic = TestConfig<dim_xyz,
 				  MfieldsSingle, // FIXME, this is not real nice, but might work...
 				  PushParticlesVpic,
 				  checks_order_1st,
 				  Checks_<MparticlesVpic, MfieldsStateVpic, void, checks_order_1st>,
 				  BndParticlesVpic>;
+#endif
 
 #ifdef USE_CUDA
 using TestConfig1vbec3dCuda = TestConfig<dim_xyz, MfieldsCuda,
