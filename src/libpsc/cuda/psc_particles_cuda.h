@@ -81,7 +81,11 @@ struct MparticlesCuda : MparticlesBase
   void resize_all(const uint *n_prts_by_patch) override;
   void reset(const Grid_t& grid) override;
 
-  void inject(int p, const particle_inject& new_prt) override;
+  void inject(int p, const particle_inject& new_prt) override
+  {
+    (*this)[p].inject(new_prt);
+  }
+  
   void inject_buf(cuda_mparticles_prt *buf, uint *buf_n_by_patch);
   void dump(const std::string& filename);
   void push_back(int p, const particle_t& prt);
@@ -175,6 +179,7 @@ struct MparticlesCuda : MparticlesBase
     const ParticleIndexer<real_t>& particleIndexer() const { return mp_.pi_; }
 
     void push_back(const particle_t& prt) { assert(0); }
+    void inject(const particle_inject& new_prt);
 
     cuda_mparticles_prt get_particle(int n) const
     {
