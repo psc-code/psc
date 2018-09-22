@@ -183,7 +183,6 @@ struct SetupParticles
     cprt->p[1] = pyi;
     cprt->p[2] = pzi;
     cprt->kind = npt->kind;
-    cprt->w = 1.; // FIXME? hardcoded weight
   }
 #endif
 

@@ -104,12 +104,18 @@ struct InjectCuda : InjectBase
 	      }
 
 	      for (int cnt = 0; cnt < n_in_cell; cnt++) {
+		double wni = 1.; // ??? FIXME
+
 		cuda_mparticles_prt prt;
+		prt.w = wni;
 		setup_particles.setup_particle(grid, &prt, &npt, p, xx);
 		buf.push_back(prt);
+
 		particle_inject prt2;
+		prt2.w = wni;
 		setup_particles.setup_particle(grid, &prt2, &npt, p, xx);
 		buf2.push_back(prt2);
+
 		assert(fractional_n_particles_per_cell);
 	      }
 	      buf_n_by_patch[p] += n_in_cell;
