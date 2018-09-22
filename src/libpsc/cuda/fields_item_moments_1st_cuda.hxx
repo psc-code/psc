@@ -57,7 +57,7 @@ struct Moment_n_1st_cuda : ItemMomentCRTP<Moment_n_1st_cuda<BS, dim>, MfieldsCud
   constexpr static const char* name = "n_1st";
   constexpr static int n_comps = 1;
   constexpr static fld_names_t fld_names() { return { "n_1st_cuda" }; }
-  constexpr static int flags = 0;
+  constexpr static int flags = POFI_BY_KIND;
 
   Moment_n_1st_cuda(const Grid_t& grid, MPI_Comm comm)
     : Base(grid, comm),
