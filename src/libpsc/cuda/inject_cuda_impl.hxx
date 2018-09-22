@@ -31,25 +31,6 @@ struct InjectCuda : InjectBase
     // FIXME, more cleanup needed
   }
   
-  // ----------------------------------------------------------------------
-  // get_n_in_cell
-  //
-  // helper function for partition / particle setup FIXME duplicated
-
-  int get_n_in_cell(struct psc_particle_npt *npt)
-  {
-    if (fractional_n_particles_per_cell) {
-      int n_prts = npt->n / grid_.norm.cori;
-      float rmndr = npt->n / grid_.norm.cori - n_prts;
-      float ran = random() / ((float) RAND_MAX + 1);
-      if (ran < rmndr) {
-	n_prts++;
-      }
-      return n_prts;
-    }
-    return npt->n / grid_.norm.cori + .5;
-  }
-
   // FIXME duplicated
 
   void _psc_setup_particle(struct cuda_mparticles_prt *cprt,
@@ -105,7 +86,10 @@ struct InjectCuda : InjectBase
 
   void operator()(MparticlesCuda<BS>& mprts)
   {
+    const auto& grid = mprts.grid();
     const auto& kinds = grid_.kinds;
+
+    SetupParticles<MparticlesCuda<BS>> setup_particles;
 
     float fac = 1. / grid_.norm.cori * 
       (interval * grid_.dt / tau) / (1. + interval * grid_.dt / tau);
@@ -164,7 +148,7 @@ struct InjectCuda : InjectBase
 		    // statistically right...
 		    n_in_cell = npt.n *fac;		}
 		} else {
-		  n_in_cell = get_n_in_cell(&npt);
+		  n_in_cell = setup_particles.get_n_in_cell(grid, &npt);
 		}
 		n_q_in_cell += npt.q * n_in_cell;
 	      } else {
