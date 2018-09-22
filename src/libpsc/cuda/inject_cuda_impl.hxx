@@ -49,12 +49,10 @@ struct InjectCuda : InjectBase
     MfieldsCuda& mres = moment_n_.result();
     auto& mf_n = mres.get_as<MfieldsSingle>(kind_n, kind_n+1);
 
-    static std::vector<cuda_mparticles_prt> buf;
     static std::vector<particle_inject> buf2;
 
     uint buf_n_by_patch[grid_.n_patches()];
 
-    buf.clear();
     buf2.clear();
     for (int p = 0; p < grid_.n_patches(); p++) {
       buf_n_by_patch[p] = 0;
@@ -104,15 +102,8 @@ struct InjectCuda : InjectBase
 	      }
 
 	      for (int cnt = 0; cnt < n_in_cell; cnt++) {
-		double wni = 1.; // ??? FIXME
-
-		cuda_mparticles_prt prt;
-		prt.w = wni;
-		setup_particles.setup_particle(grid, &prt, &npt, p, xx);
-		buf.push_back(prt);
-
 		particle_inject prt2;
-		prt2.w = wni;
+		prt2.w = 1.; // ??? FIXME
 		setup_particles.setup_particle(grid, &prt2, &npt, p, xx);
 		buf2.push_back(prt2);
 
@@ -131,6 +122,8 @@ struct InjectCuda : InjectBase
     using Real3 = Vec3<real_t>;
     using Double3 = Vec3<double>;
     
+    static std::vector<cuda_mparticles_prt> buf;
+
     auto cur = buf2.cbegin();
     buf.clear();
     for (int p = 0; p < mprts.n_patches(); p++) {
