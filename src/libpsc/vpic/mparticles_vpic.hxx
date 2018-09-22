@@ -134,7 +134,21 @@ struct MparticlesVpic_ : MparticlesBase
     
     uint size() const { return mprts_.get_n_prts(); }
     const_accessor_range get() const { return {*this}; }
-  
+
+    void inject_reweight(const particle_inject& prt)
+    {
+      mprts_.vmprts_.inject_particle(mprts_.vmprts_, prt); // FIXME why pass vmprts?
+    }
+
+    void inject(const particle_inject& prt)
+    {
+      particle_inject prt_reweighted = prt;
+      auto vgrid = mprts_.vmprts_.grid();
+      float dVi = 1.f / (vgrid->dx * vgrid->dy * vgrid->dz);
+      prt_reweighted.w *= dVi;
+      inject_reweight(prt_reweighted);
+    }
+    
   private:
     MparticlesVpic_& mprts_;
   };
@@ -224,17 +238,12 @@ struct MparticlesVpic_ : MparticlesBase
 
   void inject(int p, const particle_inject& prt) override
   {
-    particle_inject prt_reweighted = prt;
-    auto vgrid = vmprts_.grid();
-    float dVi = 1.f / (vgrid->dx * vgrid->dy * vgrid->dz);
-    prt_reweighted.w *= dVi;
-    inject_reweight(p, prt_reweighted);
+    (*this)[p].inject(prt);
   }
 
   void inject_reweight(int p, const particle_inject& prt) override
   {
-    assert(p == 0);
-    vmprts_.inject_particle(vmprts_, prt);
+    (*this)[p].inject_reweight(prt);
   }
 
   void push_back(const vpic_mparticles_prt *prt)
