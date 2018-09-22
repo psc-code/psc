@@ -92,8 +92,8 @@ struct InjectFoil : InjectFoilParams
 
 // EDIT to change order / floating point type / cuda / 2d/3d
 using dim_t = dim_yz;
-using PscConfig = PscConfig1vbecSingle<dim_t>;
-//using PscConfig = PscConfig1vbecCuda<dim_t>;
+//using PscConfig = PscConfig1vbecSingle<dim_t>;
+using PscConfig = PscConfig1vbecCuda<dim_t>;
 
 // ======================================================================
 // PscFlatfoil
@@ -136,8 +136,8 @@ struct PscFlatfoil : Psc<PscConfig>
     
     // --- setup domain
     Grid_t::Real3 LL = { 1., 800., 400.*6 }; // domain size (in d_e)
-    Int3 gdims = { 1, 800, 2400}; // global number of grid points
-    Int3 np = { 1, 10, 30 }; // division into patches
+    Int3 gdims = { 1, 16, 96}; // global number of grid points
+    Int3 np = { 1, 1, 6 }; // division into patches
 
     ibn[0] = 0; // FIXME, wrong place, should be based on Dim, not for VPIC...
     
