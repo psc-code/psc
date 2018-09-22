@@ -112,7 +112,7 @@ struct InjectCuda : InjectBase
 		buf = (struct cuda_mparticles_prt *) realloc(buf, buf_n_alloced * sizeof(*buf));
 	      }
 	      for (int cnt = 0; cnt < n_in_cell; cnt++) {
-		setup_particles._psc_setup_particle(grid, &buf[buf_n + cnt], &npt, p, xx);
+		setup_particles.setup_particle(grid, &buf[buf_n + cnt], &npt, p, xx);
 		assert(fractional_n_particles_per_cell);
 	      }
 	      buf_n += n_in_cell;

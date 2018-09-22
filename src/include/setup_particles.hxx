@@ -19,7 +19,7 @@ struct SetupParticles
   //
   // helper function for partition / particle setup
   
-  int get_n_in_cell(const Grid_t& grid, struct psc_particle_npt *npt)
+  int get_n_in_cell(const Grid_t& grid, psc_particle_npt *npt)
   {
     if (fractional_n_particles_per_cell) {
       int n_prts = npt->n / grid.norm.cori;
@@ -36,7 +36,7 @@ struct SetupParticles
   // ----------------------------------------------------------------------
   // setup_particle
   
-  void setup_particle(const Grid_t& grid, particle_t *prt, struct psc_particle_npt *npt,
+  void setup_particle(const Grid_t& grid, particle_t *prt, psc_particle_npt *npt,
 		      int p, double xx[3])
   {
     auto& kinds = grid.kinds;
@@ -87,8 +87,8 @@ struct SetupParticles
 #ifdef USE_CUDA
   // FIXME duplicated
 
-  void _psc_setup_particle(const Grid_t& grid, struct cuda_mparticles_prt *cprt,
-			   struct psc_particle_npt *npt, int p, double xx[3])
+  void setup_particle(const Grid_t& grid, cuda_mparticles_prt *cprt, psc_particle_npt *npt,
+		      int p, double xx[3])
   {
     const auto& kinds = grid.kinds;
     double beta = grid.norm.beta;
