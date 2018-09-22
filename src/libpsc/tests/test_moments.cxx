@@ -29,13 +29,8 @@ TYPED_TEST(PushParticlesTest, Moment1)
   const auto& grid = this->grid();
   
   // init particles
-  auto prt0 = particle_t{{5., 5., 5.}, {0., 0., 1.}, 1., 0};
-
-  auto n_prts_by_patch = std::vector<uint>{1};
   Mparticles mprts{grid};
-  SetupParticles<Mparticles>::setup_particles2(mprts, n_prts_by_patch, [&](int p, int n) -> typename Mparticles::particle_t {
-      return prt0;
-    });
+  mprts.inject(0, particle_inject{{5., 5., 5.}, {0., 0., 1.}, 1., 0});
 
   Moment_n moment_n{grid, grid.comm()};
   moment_n.run(mprts);
@@ -70,13 +65,8 @@ TYPED_TEST(PushParticlesTest, Moment2) // FIXME, mostly copied
   const auto& grid = this->grid();
   
   // init particles
-  auto prt0 = particle_t{{25., 5., 5.}, {0., 0., 1.}, 1., 0};
-
-  auto n_prts_by_patch = std::vector<uint>{1};
   Mparticles mprts{grid};
-  SetupParticles<Mparticles>::setup_particles2(mprts, n_prts_by_patch, [&](int p, int n) -> typename Mparticles::particle_t {
-      return prt0;
-    });
+  mprts.inject(0, particle_inject{{25., 5., 5.}, {0., 0., 1.}, 1., 0});
 
   int i0 = 2;
   if (PushParticlesTest<TypeParam>::dim::InvarX::value) i0 = 0;
