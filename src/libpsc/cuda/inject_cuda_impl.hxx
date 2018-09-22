@@ -50,10 +50,12 @@ struct InjectCuda : InjectBase
     auto& mf_n = mres.get_as<MfieldsSingle>(kind_n, kind_n+1);
 
     static std::vector<cuda_mparticles_prt> buf;
+    static std::vector<particle_inject> buf2;
 
     uint buf_n_by_patch[grid_.n_patches()];
 
     buf.clear();
+    buf2.clear();
     for (int p = 0; p < grid_.n_patches(); p++) {
       buf_n_by_patch[p] = 0;
       Fields N(mf_n[p]);
@@ -105,6 +107,9 @@ struct InjectCuda : InjectBase
 		cuda_mparticles_prt prt;
 		setup_particles.setup_particle(grid, &prt, &npt, p, xx);
 		buf.push_back(prt);
+		particle_inject prt2;
+		setup_particles.setup_particle(grid, &prt2, &npt, p, xx);
+		buf2.push_back(prt2);
 		assert(fractional_n_particles_per_cell);
 	      }
 	      buf_n_by_patch[p] += n_in_cell;
@@ -115,6 +120,23 @@ struct InjectCuda : InjectBase
     }
 
     mres.put_as(mf_n, 0, 0);
+
+    using real_t = cuda_mparticles_prt::real_t;
+    using Real3 = Vec3<real_t>;
+    using Double3 = Vec3<double>;
+    
+    auto cur = buf2.cbegin();
+    buf.clear();
+    for (int p = 0; p < mprts.n_patches(); p++) {
+      const auto& patch = grid.patches[p];
+      for (int n = 0; n < buf_n_by_patch[p]; n++) {
+	const auto& prt2 = *cur++;
+	auto x = Double3{prt2.x} - patch.xb;
+	auto prt = cuda_mparticles_prt{Real3{x}, Real3{Double3{prt2.u}},
+				       real_t(prt2.w), prt2.kind};
+	buf.push_back(prt);
+      }
+    }
 
     mprts.inject_buf(buf.data(), buf_n_by_patch);
     mprintf("**** Inject: %ld particles added\n", buf.size());
