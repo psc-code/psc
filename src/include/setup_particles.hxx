@@ -1,10 +1,6 @@
 
 #pragma once
 
-#ifdef USE_CUDA
-#include "../libpsc/cuda/psc_particles_cuda.h"
-#endif
-
 // ======================================================================
 // SetupParticles
 
@@ -134,57 +130,6 @@ struct SetupParticles
     prt->p[1] = pyi;
     prt->p[2] = pzi;
   }	      
-
-#ifdef USE_CUDA
-  // FIXME duplicated
-
-  void setup_particle(const Grid_t& grid, cuda_mparticles_prt *cprt, psc_particle_npt *npt,
-		      int p, double xx[3])
-  {
-    const auto& kinds = grid.kinds;
-    double beta = grid.norm.beta;
-
-    float ran1, ran2, ran3, ran4, ran5, ran6;
-    do {
-      ran1 = random() / ((float) RAND_MAX + 1);
-      ran2 = random() / ((float) RAND_MAX + 1);
-      ran3 = random() / ((float) RAND_MAX + 1);
-      ran4 = random() / ((float) RAND_MAX + 1);
-      ran5 = random() / ((float) RAND_MAX + 1);
-      ran6 = random() / ((float) RAND_MAX + 1);
-    } while (ran1 >= 1.f || ran2 >= 1.f || ran3 >= 1.f ||
-	     ran4 >= 1.f || ran5 >= 1.f || ran6 >= 1.f);
-	      
-    double pxi = npt->p[0] +
-      sqrtf(-2.f*npt->T[0]/npt->m*sqr(beta)*logf(1.0-ran1)) * cosf(2.f*M_PI*ran2);
-    double pyi = npt->p[1] +
-      sqrtf(-2.f*npt->T[1]/npt->m*sqr(beta)*logf(1.0-ran3)) * cosf(2.f*M_PI*ran4);
-    double pzi = npt->p[2] +
-      sqrtf(-2.f*npt->T[2]/npt->m*sqr(beta)*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6);
-
-    if (initial_momentum_gamma_correction) {
-      double gam;
-      if (sqr(pxi) + sqr(pyi) + sqr(pzi) < 1.) {
-	gam = 1. / sqrt(1. - sqr(pxi) - sqr(pyi) - sqr(pzi));
-	pxi *= gam;
-	pyi *= gam;
-	pzi *= gam;
-      }
-    }
-  
-    assert(npt->kind >= 0 && npt->kind < kinds.size());
-    assert(npt->q == kinds[npt->kind].q);
-    assert(npt->m == kinds[npt->kind].m);
-
-    cprt->x[0] = xx[0] - grid.patches[p].xb[0];
-    cprt->x[1] = xx[1] - grid.patches[p].xb[1];
-    cprt->x[2] = xx[2] - grid.patches[p].xb[2];
-    cprt->p[0] = pxi;
-    cprt->p[1] = pyi;
-    cprt->p[2] = pzi;
-    cprt->kind = npt->kind;
-  }
-#endif
 
   // ----------------------------------------------------------------------
   // setup_particles
