@@ -15,7 +15,6 @@
 template<typename MP, typename MF, typename Target_t>
 struct Inject_ : InjectBase
 {
-  using Self = Inject_<MP, MF, Target_t>;
   using Mfields = MF;
   using Mparticles = MP;
   using fields_t = typename Mfields::fields_t;
@@ -31,20 +30,13 @@ struct Inject_ : InjectBase
 	  Target_t target)
     : InjectBase{interval, tau, kind_n},
       target_{target},
-      moment_n_{grid, grid.comm()},
+      moment_n_{grid, grid.comm()}, // FIXME, should just take grid
       grid_{grid}
   {}
 
   // ----------------------------------------------------------------------
-  // run
+  // operator()
 
-  void run(MparticlesBase& mprts_base, MfieldsBase& mflds_base) override
-  {
-    auto& mprts = mprts_base.get_as<Mparticles>();
-    (*this)(mprts);
-    mprts_base.put_as(mprts);
-  }
-  
   void operator()(Mparticles& mprts)
   {
     const auto& grid = mprts.grid();
@@ -62,7 +54,7 @@ struct Inject_ : InjectBase
     moment_n_.run(mprts);
     auto& mf_n = moment_n_.result();
 
-    for (int p = 0; p < grid.n_patches(); p++) {
+    for (int p = 0; p < mprts.n_patches(); p++) {
       Fields N(mf_n[p]);
       const int *ldims = grid.ldims;
     
@@ -83,11 +75,9 @@ struct Inject_ : InjectBase
 	    int n_q_in_cell = 0;
 	    for (int kind = 0; kind < kinds.size(); kind++) {
 	      struct psc_particle_npt npt = {};
-	      if (kind < kinds.size()) {
-		npt.kind = kind;
-		npt.q    = kinds[kind].q;
-		npt.m    = kinds[kind].m;
-	      };
+	      npt.kind = kind;
+	      npt.q    = kinds[kind].q;
+	      npt.m    = kinds[kind].m;
 	      target_.init_npt(kind, xx, &npt);
 	    
 	      int n_in_cell;
@@ -109,6 +99,7 @@ struct Inject_ : InjectBase
 		assert(setup_particles.neutralizing_population == kinds.size() - 1);
 		n_in_cell = -n_q_in_cell / npt.q;
 	      }
+
 	      for (int cnt = 0; cnt < n_in_cell; cnt++) {
 		assert(setup_particles.fractional_n_particles_per_cell);
 		real_t wni = 1.; // ??? FIXME
@@ -124,6 +115,17 @@ struct Inject_ : InjectBase
     }
   }
 
+
+  // ----------------------------------------------------------------------
+  // run
+  
+  void run(MparticlesBase& mprts_base, MfieldsBase& mflds_base) override
+  {
+    auto& mprts = mprts_base.get_as<Mparticles>();
+    (*this)(mprts);
+    mprts_base.put_as(mprts);
+  }
+  
 private:
   Target_t target_;
   ItemMoment_t moment_n_;

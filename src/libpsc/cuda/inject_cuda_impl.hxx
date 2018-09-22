@@ -11,10 +11,14 @@
 template<typename BS, typename dim, typename Target_t>
 struct InjectCuda : InjectBase
 {
-  using Self = InjectCuda;
+  using Mparticles = MparticlesCuda<BS>;
   using fields_t = MfieldsSingle::fields_t;
   using Fields = Fields3d<fields_t>;
+  using real_t = typename Mparticles::real_t;
   using ItemMoment_t = Moment_n_1st_cuda<BS, dim>;
+  
+  // ----------------------------------------------------------------------
+  // ctor
   
   InjectCuda(const Grid_t& grid, int interval, int tau, int kind_n, Target_t target)
     : InjectBase(interval, tau, kind_n),
@@ -34,15 +38,19 @@ struct InjectCuda : InjectBase
   // ----------------------------------------------------------------------
   // operator()
 
-  void operator()(MparticlesCuda<BS>& mprts)
+  void operator()(Mparticles& mprts)
   {
     const auto& grid = mprts.grid();
-    const auto& kinds = grid_.kinds;
+    const auto& kinds = grid.kinds;
 
-    SetupParticles<MparticlesCuda<BS>> setup_particles;
-
-    float fac = 1. / grid_.norm.cori * 
-      (interval * grid_.dt / tau) / (1. + interval * grid_.dt / tau);
+    SetupParticles<Mparticles> setup_particles;
+    // FIXME, this is taken from and kinda specific to psc_flatfoil_yz.cxx,
+    // and really shouldn't be replicated so many times anyway
+    setup_particles.fractional_n_particles_per_cell = true;
+    setup_particles.neutralizing_population = 1;// MY_ELECTRON;
+    
+    real_t fac = 1. / grid.norm.cori * 
+      (interval * grid.dt / tau) / (1. + interval * grid.dt / tau);
 
     moment_n_.run(mprts);
 
@@ -51,23 +59,23 @@ struct InjectCuda : InjectBase
 
     static std::vector<particle_inject> buf2;
 
-    uint buf_n_by_patch[grid_.n_patches()];
+    uint buf_n_by_patch[mprts.n_patches()];
 
     buf2.clear();
-    for (int p = 0; p < grid_.n_patches(); p++) {
+    for (int p = 0; p < mprts.n_patches(); p++) {
       buf_n_by_patch[p] = 0;
       Fields N(mf_n[p]);
-      const int *ldims = grid_.ldims;
+      const int *ldims = grid.ldims;
     
       for (int jz = 0; jz < ldims[2]; jz++) {
 	for (int jy = 0; jy < ldims[1]; jy++) {
 	  for (int jx = 0; jx < ldims[0]; jx++) {
-	    double xx[3] = {grid_.patches[p].x_cc(jx), grid_.patches[p].y_cc(jy), grid_.patches[p].z_cc(jz)};
+	    double xx[3] = {grid.patches[p].x_cc(jx), grid.patches[p].y_cc(jy), grid.patches[p].z_cc(jz)};
 	    // FIXME, the issue really is that (2nd order) particle pushers
 	    // don't handle the invariant dim right
-	    if (grid_.isInvar(0) == 1) xx[0] = grid_.patches[p].x_nc(jx);
-	    if (grid_.isInvar(1) == 1) xx[1] = grid_.patches[p].y_nc(jy);
-	    if (grid_.isInvar(2) == 1) xx[2] = grid_.patches[p].z_nc(jz);
+	    if (grid.isInvar(0) == 1) xx[0] = grid.patches[p].x_nc(jx);
+	    if (grid.isInvar(1) == 1) xx[1] = grid.patches[p].y_nc(jy);
+	    if (grid.isInvar(2) == 1) xx[2] = grid.patches[p].z_nc(jz);
 
 	    if (!target_.is_inside(xx)) {
 	      continue;
@@ -82,8 +90,8 @@ struct InjectCuda : InjectBase
 	      target_.init_npt(kind, xx, &npt);
 	    
 	      int n_in_cell;
-	      if (kind != neutralizing_population) {
-		if (grid_.timestep() >= 0) {
+	      if (kind != setup_particles.neutralizing_population) {
+		if (grid.timestep() >= 0) {
 		  npt.n -= N(kind_n, jx,jy,jz);
 		  if (npt.n < 0) {
 		    n_in_cell = 0;
@@ -97,17 +105,15 @@ struct InjectCuda : InjectBase
 		n_q_in_cell += npt.q * n_in_cell;
 	      } else {
 		// FIXME, should handle the case where not the last population is neutralizing
-		assert(neutralizing_population == kinds.size() - 1);
+		assert(setup_particles.neutralizing_population == kinds.size() - 1);
 		n_in_cell = -n_q_in_cell / npt.q;
 	      }
 
 	      for (int cnt = 0; cnt < n_in_cell; cnt++) {
-		particle_inject prt2;
-		prt2.w = 1.; // ??? FIXME
-		setup_particles.setup_particle(grid, &prt2, &npt, p, xx);
-		buf2.push_back(prt2);
-
-		assert(fractional_n_particles_per_cell);
+		real_t wni = 1.; // ??? FIXME
+		auto prt = particle_inject{{}, {}, wni, npt.kind};
+		setup_particles.setup_particle(grid, &prt, &npt, p, xx);
+		buf2.push_back(prt);
 	      }
 	      buf_n_by_patch[p] += n_in_cell;
 	    }
@@ -118,7 +124,6 @@ struct InjectCuda : InjectBase
 
     mres.put_as(mf_n, 0, 0);
 
-    using real_t = cuda_mparticles_prt::real_t;
     using Real3 = Vec3<real_t>;
     using Double3 = Vec3<double>;
     
@@ -155,10 +160,5 @@ private:
   Target_t target_;
   ItemMoment_t moment_n_;
   const Grid_t& grid_;
-
-  // FIXME
-  bool fractional_n_particles_per_cell = { true };
-  bool initial_momentum_gamma_correction = { false };
-  int neutralizing_population = { 1 };
 };
 
