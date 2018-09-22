@@ -81,57 +81,6 @@ struct SetupParticles
   }	      
 
   // ----------------------------------------------------------------------
-  // setup_particle
-  
-  void setup_particle(const Grid_t& grid, particle_t *prt, psc_particle_npt *npt,
-		      int p, double xx[3])
-  {
-    auto& kinds = grid.kinds;
-    double beta = grid.norm.beta;
-    
-    float ran1, ran2, ran3, ran4, ran5, ran6;
-    do {
-      ran1 = random() / ((float) RAND_MAX + 1);
-      ran2 = random() / ((float) RAND_MAX + 1);
-      ran3 = random() / ((float) RAND_MAX + 1);
-      ran4 = random() / ((float) RAND_MAX + 1);
-      ran5 = random() / ((float) RAND_MAX + 1);
-      ran6 = random() / ((float) RAND_MAX + 1);
-    } while (ran1 >= 1.f || ran2 >= 1.f || ran3 >= 1.f ||
-	     ran4 >= 1.f || ran5 >= 1.f || ran6 >= 1.f);
-	      
-    double pxi = npt->p[0] +
-      sqrtf(-2.f*npt->T[0]/npt->m*sqr(beta)*logf(1.0-ran1)) * cosf(2.f*M_PI*ran2);
-    double pyi = npt->p[1] +
-      sqrtf(-2.f*npt->T[1]/npt->m*sqr(beta)*logf(1.0-ran3)) * cosf(2.f*M_PI*ran4);
-    double pzi = npt->p[2] +
-      sqrtf(-2.f*npt->T[2]/npt->m*sqr(beta)*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6);
-
-    if (initial_momentum_gamma_correction) {
-      double gam;
-      if (sqr(pxi) + sqr(pyi) + sqr(pzi) < 1.) {
-	gam = 1. / sqrt(1. - sqr(pxi) - sqr(pyi) - sqr(pzi));
-	pxi *= gam;
-	pyi *= gam;
-	pzi *= gam;
-      }
-    }
-  
-    assert(npt->kind >= 0 && npt->kind < kinds.size());
-    prt->kind = npt->kind;
-    assert(npt->q == kinds[prt->kind].q);
-    assert(npt->m == kinds[prt->kind].m);
-    /* prt->qni = kinds[prt->kind].q; */
-    /* prt->mni = kinds[prt->kind].m; */
-    prt->x[0] = xx[0] - grid.patches[p].xb[0];
-    prt->x[1] = xx[1] - grid.patches[p].xb[1];
-    prt->x[2] = xx[2] - grid.patches[p].xb[2];
-    prt->p[0] = pxi;
-    prt->p[1] = pyi;
-    prt->p[2] = pzi;
-  }	      
-
-  // ----------------------------------------------------------------------
   // setup_particles
 
   template<typename FUNC>
