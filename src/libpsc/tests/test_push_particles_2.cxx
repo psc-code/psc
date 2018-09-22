@@ -52,7 +52,7 @@ TYPED_TEST(PushParticlesTest, Accel)
 
   Mparticles mprts{grid};
   for (int n = 0; n < n_prts; n++) {
-    mprts.inject(0, {{rng->uniform(0, this->L),
+    mprts[0].inject({{rng->uniform(0, this->L),
 	              rng->uniform(0, this->L),
 	              rng->uniform(0, this->L)},
 	              {},
@@ -122,7 +122,7 @@ TYPED_TEST(PushParticlesTest, Cyclo)
 
   Mparticles mprts{grid};
   for (int n = 0; n < n_prts; n++) {
-    mprts.inject(0, {{rng->uniform(0, this->L),
+    mprts[0].inject({{rng->uniform(0, this->L),
 	              rng->uniform(0, this->L),
 	              rng->uniform(0, this->L)},
 	              {1., 1., 1.},

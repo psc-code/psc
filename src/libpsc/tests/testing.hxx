@@ -196,7 +196,7 @@ struct PushParticlesTest : ::testing::Test
 
     // init particle
     mprts = new Mparticles{grid()};
-    mprts->inject(0, prt0);
+    (*mprts)[0].inject(prt0);
 
     //mprts->dump("mprts.dump");
   

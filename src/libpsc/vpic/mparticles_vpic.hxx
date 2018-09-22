@@ -236,11 +236,6 @@ struct MparticlesVpic_ : MparticlesBase
     }
   }
 
-  void inject(int p, const particle_inject& prt)
-  {
-    (*this)[p].inject(prt);
-  }
-
   void inject_reweight(int p, const particle_inject& prt) override
   {
     (*this)[p].inject_reweight(prt);

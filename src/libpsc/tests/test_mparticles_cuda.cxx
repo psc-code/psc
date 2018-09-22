@@ -78,7 +78,7 @@ TYPED_TEST(MparticlesCudaTest, Inject)
       auto x = .5 * (patch.xb + patch.xe);
       int kind = 0;
       // use weight to store particle number for testing
-      mprts.inject(p, {{x[0], x[1], x[2]}, {}, double(nn), kind});
+      mprts[p].inject({{x[0], x[1], x[2]}, {}, double(nn), kind});
       nn++;
     }
   }

@@ -104,7 +104,7 @@ struct MparticlesTest : ::testing::Test
 	prt.x[2] = patch.xb[2] + nn * L[2];
 	prt.kind = 0;
 	prt.w = 1.;
-	mprts.inject(p, prt);
+	mprts[p].inject(prt);
       }
     }
   }
