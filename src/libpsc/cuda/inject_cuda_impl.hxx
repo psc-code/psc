@@ -49,12 +49,9 @@ struct InjectCuda : InjectBase
     MfieldsCuda& mres = moment_n_.result();
     auto& mf_n = mres.get_as<MfieldsSingle>(kind_n, kind_n+1);
 
-    static struct cuda_mparticles_prt *buf;
-    static uint buf_n_alloced;
-    if (!buf) {
-      buf_n_alloced = 1000;
-      buf = (struct cuda_mparticles_prt *) calloc(buf_n_alloced, sizeof(*buf));
-    }
+    static std::vector<cuda_mparticles_prt> buf(1000);
+    // FIXME, no good reason for so much initial buffer space (1000)...
+
     uint buf_n_by_patch[grid_.n_patches()];
 
     uint buf_n = 0;
@@ -107,10 +104,7 @@ struct InjectCuda : InjectBase
 		n_in_cell = -n_q_in_cell / npt.q;
 	      }
 
-	      if (buf_n + n_in_cell > buf_n_alloced) {
-		buf_n_alloced = 2 * (buf_n + n_in_cell);
-		buf = (struct cuda_mparticles_prt *) realloc(buf, buf_n_alloced * sizeof(*buf));
-	      }
+	      buf.resize(buf_n + n_in_cell);
 	      for (int cnt = 0; cnt < n_in_cell; cnt++) {
 		setup_particles.setup_particle(grid, &buf[buf_n + cnt], &npt, p, xx);
 		assert(fractional_n_particles_per_cell);
@@ -125,7 +119,7 @@ struct InjectCuda : InjectBase
 
     mres.put_as(mf_n, 0, 0);
 
-    mprts.inject_buf(buf, buf_n_by_patch);
+    mprts.inject_buf(buf.data(), buf_n_by_patch);
   }
 
   // ----------------------------------------------------------------------

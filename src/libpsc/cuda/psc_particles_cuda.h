@@ -36,6 +36,8 @@ struct cuda_mparticles_prt
   using real_t = float;
   using Real3 = Vec3<real_t>;
 
+  cuda_mparticles_prt() = default; // FIXME? needed to use std::vector
+
   cuda_mparticles_prt(Real3 x, Real3 p, real_t w, int kind)
     : x(x), p(p), w(w), kind(kind)
   {}
