@@ -38,12 +38,6 @@ struct InjectCuda : InjectBase
 
   int get_n_in_cell(struct psc_particle_npt *npt)
   {
-    if (const_num_particles_per_cell) {
-      return 1. / grid_.norm.cori;
-    }
-    if (npt->particles_per_cell) {
-      return npt->n * npt->particles_per_cell + .5;
-    }
     if (fractional_n_particles_per_cell) {
       int n_prts = npt->n / grid_.norm.cori;
       float rmndr = npt->n / grid_.norm.cori - n_prts;
@@ -216,7 +210,6 @@ private:
   const Grid_t& grid_;
 
   // FIXME
-  bool const_num_particles_per_cell = { false };
   bool fractional_n_particles_per_cell = { true };
   bool initial_momentum_gamma_correction = { false };
   int neutralizing_population = { 1 };

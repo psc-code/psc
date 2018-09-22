@@ -47,7 +47,6 @@ struct psc_particle_npt {
   double n; ///< density
   double p[3]; ///< momentum
   double T[3]; ///< temperature
-  int particles_per_cell; ///< desired number of particles per cell per unit density. If not specified, the global nicell is used.
 };
 
 #define psc_foreach_3d_g(psc, p, ix, iy, iz) {				\

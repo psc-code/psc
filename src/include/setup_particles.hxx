@@ -17,12 +17,6 @@ struct SetupParticles
   
   int get_n_in_cell(const Grid_t& grid, struct psc_particle_npt *npt)
   {
-    if (const_num_particles_per_cell) {
-      return 1. / grid.norm.cori;
-    }
-    if (npt->particles_per_cell) {
-      return npt->n * npt->particles_per_cell + .5;
-    }
     if (fractional_n_particles_per_cell) {
       int n_prts = npt->n / grid.norm.cori;
       float rmndr = npt->n / grid.norm.cori - n_prts;
@@ -210,12 +204,6 @@ struct SetupParticles
   // the initial number of particles in a cell for this population will be st so that it achieves neutrality  
   int neutralizing_population = { -1 };
   bool fractional_n_particles_per_cell = { false };
-  // by default, we put the # of particles per cell according to the
-  // density, using the weights (~ 1) only to fine-tune to the
-  // right density.
-  // if this parameter is set, we always use nicell particles / cell,
-  // and adjust to the right density via the weights.
-  bool const_num_particles_per_cell = { false };
   bool initial_momentum_gamma_correction = { false };
 };
 
