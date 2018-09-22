@@ -76,11 +76,9 @@ struct InjectCuda : InjectBase
 	    int n_q_in_cell = 0;
 	    for (int kind = 0; kind < kinds.size(); kind++) {
 	      struct psc_particle_npt npt = {};
-	      if (kind < kinds.size()) {
-		npt.kind = kind;
-		npt.q    = kinds[kind].q;
-		npt.m    = kinds[kind].m;
-	      };
+	      npt.kind = kind;
+	      npt.q    = kinds[kind].q;
+	      npt.m    = kinds[kind].m;
 	      target_.init_npt(kind, xx, &npt);
 	    
 	      int n_in_cell;
