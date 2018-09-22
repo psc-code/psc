@@ -216,19 +216,6 @@ struct SetupParticles
     return n_prts_by_patch;
   }
 
-  template<typename FUNC>
-  static void setup_particles2(Mparticles& mprts, std::vector<uint>& n_prts_by_patch,
-			       FUNC func)
-  {
-    mprts.reserve_all(n_prts_by_patch.data());
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      for (int n = 0; n < n_prts_by_patch[p]; n++) {
-	typename Mparticles::particle_t prt = func(p, n); // FIXME, should pass to push_back directly
-	mprts[p].push_back(prt);
-      }
-    }
-  }
-
   // the initial number of particles in a cell for this population will be st so that it achieves neutrality  
   int neutralizing_population = { -1 };
   bool fractional_n_particles_per_cell = { false };
