@@ -48,7 +48,6 @@ struct MparticlesBase
   virtual void get_size_all(uint *n_prts_by_patch) const = 0;
   virtual void reserve_all(const uint *n_prts_by_patch) = 0;
   virtual void resize_all(const uint *n_prts_by_patch) = 0;
-  virtual void inject_reweight(int p, const particle_inject& new_prt) { assert(0); }
 
   template<typename MP>
   MP& get_as(uint flags = 0)

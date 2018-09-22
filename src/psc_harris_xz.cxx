@@ -635,7 +635,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       prt.u[0] = ux; prt.u[1] = uy; prt.u[2] = uz;
       prt.w = weight_s;
       prt.kind = KIND_ELECTRON;
-      mprts_->inject_reweight(0, prt);
+      (*mprts_)[0].inject_reweight(prt);
 
       ux = Rng_normal(rng, 0, vthi);
       uy = Rng_normal(rng, 0, vthi);
@@ -646,7 +646,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
       prt.u[0] = ux; prt.u[1] = uy; prt.u[2] = uz;
       prt.kind = KIND_ION;
-      mprts_->inject_reweight(0, prt);
+      (*mprts_)[0].inject_reweight(prt);
     }
 
     mpi_printf(comm, "-> Background Population\n");
@@ -663,13 +663,13 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       prt.u[2] = Rng_normal(rng, 0, vtheb);
       prt.w = weight_b;
       prt.kind = KIND_ELECTRON;
-      mprts_->inject_reweight(0, prt);
+      (*mprts_)[0].inject_reweight(prt);
     
       prt.u[0] = Rng_normal(rng, 0, vthib);
       prt.u[1] = Rng_normal(rng, 0, vthib);
       prt.u[2] = Rng_normal(rng, 0, vthib);
       prt.kind = KIND_ION;
-      mprts_->inject_reweight(0, prt);
+      (*mprts_)[0].inject_reweight(prt);
     }
 
     mpi_printf(comm, "Finished loading particles\n");

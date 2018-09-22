@@ -422,16 +422,6 @@ struct Mparticles : MparticlesBase
     }
   }
 
-  void inject(int p, const particle_inject& new_prt)
-  {
-    (*this)[p].inject(new_prt);
-  }
-  
-  void inject_reweight(int p, const particle_inject& new_prt) override
-  {
-    (*this)[p].inject_reweight(new_prt);
-  }
-
   void dump(const std::string& filename)
   {
     FILE* file = fopen(filename.c_str(), "w");
