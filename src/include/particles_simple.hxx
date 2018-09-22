@@ -276,6 +276,22 @@ struct mparticles_patch
     buf.push_back(prt);
   }
 
+  void inject(const particle_inject& new_prt)
+  {
+    const Grid_t::Patch& patch = grid().patches[p_];
+    for (int d = 0; d < 3; d++) {
+      assert(new_prt.x[d] >= patch.xb[d]);
+      assert(new_prt.x[d] <= patch.xe[d]);
+    }
+    
+    auto prt = particle_t{{real_t(new_prt.x[0] - patch.xb[0]), real_t(new_prt.x[1] - patch.xb[1]), real_t(new_prt.x[2] - patch.xb[2])},
+			  {real_t(new_prt.u[0]), real_t(new_prt.u[1]), real_t(new_prt.u[2])},
+			  real_t(new_prt.w),
+			  new_prt.kind};
+
+    push_back(prt);
+  }
+  
   void resize(unsigned int new_size)
   {
     assert(new_size <= buf.capacity());
@@ -390,22 +406,7 @@ struct Mparticles : MparticlesBase
 
   void inject(int p, const particle_inject& new_prt) override
   {
-    using real_t = typename particle_t::real_t;
-    
-    int kind = new_prt.kind;
-
-    const Grid_t::Patch& patch = grid_->patches[p];
-    for (int d = 0; d < 3; d++) {
-      assert(new_prt.x[d] >= patch.xb[d]);
-      assert(new_prt.x[d] <= patch.xe[d]);
-    }
-    
-    auto prt = particle_t{{real_t(new_prt.x[0] - patch.xb[0]), real_t(new_prt.x[1] - patch.xb[1]), real_t(new_prt.x[2] - patch.xb[2])},
-			  {real_t(new_prt.u[0]), real_t(new_prt.u[1]), real_t(new_prt.u[2])},
-			  real_t(new_prt.w),
-			  kind};
-    
-    (*this)[p].push_back(prt);
+    return (*this)[p].inject(new_prt);
   }
   
   void inject_reweight(int p, const particle_inject& new_prt) override
