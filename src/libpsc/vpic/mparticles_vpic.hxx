@@ -236,7 +236,7 @@ struct MparticlesVpic_ : MparticlesBase
     }
   }
 
-  void inject(int p, const particle_inject& prt) override
+  void inject(int p, const particle_inject& prt)
   {
     (*this)[p].inject(prt);
   }

@@ -404,9 +404,9 @@ struct Mparticles : MparticlesBase
     }
   }
 
-  void inject(int p, const particle_inject& new_prt) override
+  void inject(int p, const particle_inject& new_prt)
   {
-    return (*this)[p].inject(new_prt);
+    (*this)[p].inject(new_prt);
   }
   
   void inject_reweight(int p, const particle_inject& new_prt) override

@@ -81,7 +81,7 @@ struct MparticlesCuda : MparticlesBase
   void resize_all(const uint *n_prts_by_patch) override;
   void reset(const Grid_t& grid) override;
 
-  void inject(int p, const particle_inject& new_prt) override
+  void inject(int p, const particle_inject& new_prt)
   {
     (*this)[p].inject(new_prt);
   }
