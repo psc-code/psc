@@ -291,6 +291,24 @@ struct mparticles_patch
 
     push_back(prt);
   }
+
+  void inject_reweight(const particle_inject& new_prt)
+  {
+    const Grid_t::Patch& patch = grid_->patches[p_];
+    for (int d = 0; d < 3; d++) {
+      assert(new_prt.x[d] >= patch.xb[d]);
+      assert(new_prt.x[d] <= patch.xe[d]);
+    }
+    
+    float dVi = 1.f / (grid_->domain.dx[0] * grid_->domain.dx[1] * grid_->domain.dx[2]);
+    
+    auto prt = particle_t{{real_t(new_prt.x[0] - patch.xb[0]), real_t(new_prt.x[1] - patch.xb[1]), real_t(new_prt.x[2] - patch.xb[2])},
+			  {real_t(new_prt.u[0]), real_t(new_prt.u[1]), real_t(new_prt.u[2])},
+			  real_t(new_prt.w),
+			  new_prt.kind};
+    
+    push_back(prt);
+  }
   
   void resize(unsigned int new_size)
   {
@@ -411,24 +429,7 @@ struct Mparticles : MparticlesBase
   
   void inject_reweight(int p, const particle_inject& new_prt) override
   {
-    using real_t = typename particle_t::real_t;
-    
-    int kind = new_prt.kind;
-
-    const Grid_t::Patch& patch = grid_->patches[p];
-    for (int d = 0; d < 3; d++) {
-      assert(new_prt.x[d] >= patch.xb[d]);
-      assert(new_prt.x[d] <= patch.xe[d]);
-    }
-    
-    float dVi = 1.f / (grid_->domain.dx[0] * grid_->domain.dx[1] * grid_->domain.dx[2]);
-    
-    auto prt = particle_t{{real_t(new_prt.x[0] - patch.xb[0]), real_t(new_prt.x[1] - patch.xb[1]), real_t(new_prt.x[2] - patch.xb[2])},
-			  {real_t(new_prt.u[0]), real_t(new_prt.u[1]), real_t(new_prt.u[2])},
-			  real_t(new_prt.w),
-			  kind};
-    
-    (*this)[p].push_back(prt);
+    (*this)[p].inject_reweight(new_prt);
   }
 
   void dump(const std::string& filename)
