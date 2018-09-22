@@ -30,8 +30,7 @@ struct Inject_ : InjectBase
 	  Target_t target)
     : InjectBase{interval, tau, kind_n},
       target_{target},
-      moment_n_{grid, grid.comm()}, // FIXME, should just take grid
-      grid_{grid}
+      moment_n_{grid, grid.comm()} // FIXME, should just take grid
   {}
 
   // ----------------------------------------------------------------------
@@ -129,7 +128,6 @@ struct Inject_ : InjectBase
 private:
   Target_t target_;
   ItemMoment_t moment_n_;
-  const Grid_t& grid_;
 };
 
 
