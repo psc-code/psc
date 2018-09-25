@@ -139,7 +139,7 @@ struct PscFlatfoil : Psc<PscConfig>
     Int3 gdims = { 8, 16, 96}; // global number of grid points
     Int3 np = { 1, 1, 6 }; // division into patches
 
-    //ibn[0] = 0; // FIXME, wrong place, should be based on Dim, not for VPIC...
+    if (dim::InvarX::value) { ibn[0] = 0; } // FIXME, wrong place, not for VPIC...
     
     auto grid_domain = Grid_t::Domain{gdims, LL, -.5 * LL, np};
     
