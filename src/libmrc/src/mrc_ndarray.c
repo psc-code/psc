@@ -144,7 +144,7 @@ _mrc_ndarray_setup(struct mrc_ndarray *nd)
   }
 
   mrc_vec_set_type(nd->vec, get_vec_type(nd));
-  assert(nd->len < 0x8000000); // FIXME, should support 64-bit for real
+  assert(nd->len < 0x80000000); // FIXME, should support 64-bit for real
   mrc_vec_set_param_int(nd->vec, "len", nd->len);
   mprintf("nd len %ld\n", nd->len);
   mrc_vec_setup(nd->vec);

@@ -945,6 +945,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
     }
 
     ctx->send_bufs[writer] = malloc(buf_sizes[writer] * m3->_nd->size_of_type);
+    assert(ctx->send_bufs[writer]);
     buf_sizes[writer] = 0;
 
     // fill buf per writer
@@ -990,7 +991,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       	assert(0);
       }
       }
-      size_t len = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
+      size_t len = (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
       buf_sizes[writer] += len;
     }
 
@@ -1064,7 +1065,7 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
     if (!has_intersection) {
       continue;
     }
-    size_t len = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
+    size_t len = (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
     buf_sizes[info.rank] += len;
   }
 
@@ -1078,6 +1079,7 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
 
     // alloc aggregate recv buffers
     ctx->recv_bufs[rank] = malloc(buf_sizes[rank] * m3->_nd->size_of_type);
+    assert(ctx->recv_bufs[rank]);
  
    MPI_Datatype mpi_dtype;
    switch (mrc_fld_data_type(m3)) {
@@ -1141,7 +1143,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
       continue;
     }
     
-    size_t len = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
+    size_t len = (size_t)(ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
 
     //mprintf("B recv_fld_end gp %d\n", gp);
     switch (mrc_fld_data_type(m3)) {
