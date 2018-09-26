@@ -1,4 +1,7 @@
 
+#define BOUNDS_CHECK
+#define BOUNDSCHECK
+
 #include <mrc_io_private.h>
 #include <mrc_params.h>
 #include "mrc_io_xdmf_lib.h"
@@ -1108,6 +1111,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
 			struct mrc_io *io, struct mrc_ndarray *nd,
 			struct mrc_fld *m3, int m)
 {
+  MHERE;
   MPI_Waitall(io->size, ctx->recv_reqs, MPI_STATUSES_IGNORE);
 
   int nr_global_patches;
@@ -1117,6 +1121,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
   int *buf_sizes = calloc(io->size, sizeof(*buf_sizes));
 
   for (int gp = 0; gp < nr_global_patches; gp++) {
+    //mprintf("A recv_fld_end gp %d\n", gp);
     struct mrc_patch_info info;
     mrc_domain_get_global_patch_info(m3->_domain, gp, &info);
     // only consider recvs from remote ranks
@@ -1138,13 +1143,18 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
     
     int len = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
 
+    //mprintf("B recv_fld_end gp %d\n", gp);
     switch (mrc_fld_data_type(m3)) {
     case MRC_NT_FLOAT:
     {
       float *buf_ptr = (float *) ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
+      mprintf("pid %d ilohi %d:%d %d:%d %d:%d\n", getpid(), ilo[0], ihi[0], ilo[1], ihi[1], ilo[2], ihi[2]);
       BUFLOOP(ix, iy, iz, ilo, ihi) {
+	//mprintf("address %p\n", &MRC_S3(nd, ix,iy,iz));
+	volatile float val = MRC_S3(nd, ix,iy,iz);
       	MRC_S3(nd, ix,iy,iz) = *buf_ptr++;
       } BUFLOOP_END
+	  MHERE;
       break;
     }
     case MRC_NT_DOUBLE:
@@ -1170,14 +1180,17 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
     }    
     buf_sizes[info.rank] += len;
     rr++;
+    //mprintf("C recv_fld_end gp %d\n", gp);
   }
 
+  MHERE;
   free(ctx->recv_reqs);
   for (int rank = 0; rank < io->size; rank++) {
     free(ctx->recv_bufs[rank]);
   }
   free(ctx->recv_bufs);
   free(buf_sizes);
+  MHERE;
 }
 
 // ----------------------------------------------------------------------
@@ -1340,6 +1353,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
   }
 
   if (xdmf->is_writer) {
+    MHERE;
     int writer;
     MPI_Comm_rank(xdmf->comm_writers, &writer);
     int writer_dims[3], writer_off[3];
@@ -1348,6 +1362,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     /* 	    writer_off[0], writer_off[1], writer_off[2], */
     /* 	    writer_dims[0], writer_dims[1], writer_dims[2]); */
 
+    MHERE;
     struct mrc_ndarray *nd = mrc_ndarray_create(MPI_COMM_NULL);
     switch (mrc_fld_data_type(m3)) {
     case MRC_NT_FLOAT: mrc_ndarray_set_type(nd, "float"); break;
@@ -1355,9 +1370,12 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     case MRC_NT_INT: mrc_ndarray_set_type(nd, "int"); break;
     default: assert(0);
     }
+    mprintf("writer_dims %d %d %d\n", writer_dims[0], writer_dims[1], writer_dims[2]);
+    mprintf("writer_off %d %d %d\n", writer_off[0], writer_off[1], writer_off[2]);
     mrc_ndarray_set_param_int_array(nd, "dims", 3, writer_dims);
     mrc_ndarray_set_param_int_array(nd, "offs", 3, writer_off);
     mrc_ndarray_setup(nd);
+    MHERE;
 
     hid_t group0;
     if (H5Lexists(file->h5_file, path, H5P_DEFAULT) > 0) {
@@ -1374,13 +1392,16 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
       collective_recv_fld_begin(&ctx, io, nd, m3_soa);
       collective_send_fld_begin(&ctx, io, m3_soa, m);
       collective_recv_fld_local(&ctx, io, nd, m3_soa, m);
+    MHERE;
       collective_recv_fld_end(&ctx, io, nd, m3_soa, m);
+    MHERE;
       collective_write_fld(&ctx, io, path, nd, m, m3, xs, group0);
       collective_send_fld_end(&ctx, io, m3, m);
     }
 
     H5Gclose(group0);
     mrc_ndarray_destroy(nd);
+    MHERE;
   } else {
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
       collective_send_fld_begin(&ctx, io, m3_soa, m);

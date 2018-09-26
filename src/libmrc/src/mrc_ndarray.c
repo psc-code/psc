@@ -145,6 +145,7 @@ _mrc_ndarray_setup(struct mrc_ndarray *nd)
 
   mrc_vec_set_type(nd->vec, get_vec_type(nd));
   mrc_vec_set_param_int(nd->vec, "len", nd->len);
+  mprintf("nd len %d\n", nd->len);
   mrc_vec_setup(nd->vec);
 
   // set up arr
@@ -156,6 +157,7 @@ _mrc_ndarray_setup(struct mrc_ndarray *nd)
   for (int d = 0; d < n_dims; d++) {
     off += nd->start[d] * nd->nd_acc.stride[d];
   }
+  mprintf("off %d\n", off);
   nd->nd_acc.arr_off = nd->arr - off * nd->size_of_type;
 
   // store more info in nd_acc so we can do bounds checking
