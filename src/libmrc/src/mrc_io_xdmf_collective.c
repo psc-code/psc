@@ -10,6 +10,7 @@
 #include <hdf5_hl.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #define H5_CHK(ierr) assert(ierr >= 0)
 #define CE assert(ierr == 0)
