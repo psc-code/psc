@@ -834,7 +834,6 @@ struct collective_m3_entry {
 struct collective_m3_ctx {
   int gdims[3];
   int slab_dims[3], slab_off[3];
-  int writer_dims[3], writer_off[3];
   int nr_patches, nr_global_patches;
   int slow_dim;
   int slow_indices_per_writer;
