@@ -29,7 +29,7 @@ enum {
 struct mrc_ndarray_access {
   void *arr_off; //< same as the data pointer (arr), but shifted by
 		 //precalculated offset for faster access
-  int stride[MRC_NDARRAY_MAXDIMS];
+  size_t stride[MRC_NDARRAY_MAXDIMS];
   int beg[MRC_NDARRAY_MAXDIMS];
   int end[MRC_NDARRAY_MAXDIMS];
   int data_type;
@@ -101,7 +101,7 @@ struct mrc_ndarray {
   int n_dims;
   int size_of_type;
   int data_type;
-  int len; // number of data values in this ndarray
+  size_t len; // number of data values in this ndarray
   struct mrc_vec *vec; //< underlying mrc_vec that manages memory alloc/free (could be petsc)
 
   // parameters

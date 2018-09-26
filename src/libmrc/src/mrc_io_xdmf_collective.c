@@ -911,7 +911,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(m3->_domain, &nr_patches);
 
-  int *buf_sizes = calloc(xdmf->nr_writers, sizeof(*buf_sizes));
+  size_t *buf_sizes = calloc(xdmf->nr_writers, sizeof(*buf_sizes));
   ctx->send_bufs = calloc(xdmf->nr_writers, sizeof(*ctx->send_bufs));
   ctx->send_reqs = calloc(xdmf->nr_writers, sizeof(*ctx->send_reqs));
 
@@ -933,7 +933,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       if (!has_intersection)
 	continue;
 
-      int len = m3->_dims.vals[0] * m3->_dims.vals[1] * m3->_dims.vals[2];
+      size_t len = m3->_dims.vals[0] * m3->_dims.vals[1] * m3->_dims.vals[2];
       buf_sizes[writer] += len;
     }
 
@@ -990,7 +990,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       	assert(0);
       }
       }
-      int len = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
+      size_t len = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
       buf_sizes[writer] += len;
     }
 
@@ -1050,7 +1050,7 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
   mrc_domain_get_nr_global_patches(m3->_domain, &nr_global_patches);
   ctx->nr_recvs = 0;
   ctx->recv_bufs = calloc(io->size, sizeof(*ctx->recv_bufs));
-  int *buf_sizes = calloc(io->size, sizeof(*buf_sizes));
+  size_t *buf_sizes = calloc(io->size, sizeof(*buf_sizes));
   for (int gp = 0; gp < nr_global_patches; gp++) {
     struct mrc_patch_info info;
     mrc_domain_get_global_patch_info(m3->_domain, gp, &info);
@@ -1064,7 +1064,7 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
     if (!has_intersection) {
       continue;
     }
-    int len = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
+    size_t len = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
     buf_sizes[info.rank] += len;
   }
 
@@ -1118,7 +1118,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
   mrc_domain_get_nr_global_patches(m3->_domain, &nr_global_patches);
   int rr = 0;
 
-  int *buf_sizes = calloc(io->size, sizeof(*buf_sizes));
+  size_t *buf_sizes = calloc(io->size, sizeof(*buf_sizes));
 
   for (int gp = 0; gp < nr_global_patches; gp++) {
     //mprintf("A recv_fld_end gp %d\n", gp);
@@ -1141,7 +1141,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
       continue;
     }
     
-    int len = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
+    size_t len = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
 
     //mprintf("B recv_fld_end gp %d\n", gp);
     switch (mrc_fld_data_type(m3)) {
