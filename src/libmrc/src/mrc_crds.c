@@ -262,6 +262,7 @@ _mrc_crds_setup(struct mrc_crds *crds)
       int off = patches[p].off[d];
 
       mrc_m1_foreach(crds->crd[d], i, sw, sw) {
+	mprintf("sw %d i %d d %d\n", sw, i, d);
         MRC_DMCRD(crds, d, i, p) = MRC_D2(x, i + off, 0);
         MRC_MCRD(crds, d, i, p) = MRC_DMCRD(crds, d, i, p);
       } mrc_m1_foreach_end;
