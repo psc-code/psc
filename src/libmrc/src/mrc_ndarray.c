@@ -157,7 +157,7 @@ _mrc_ndarray_setup(struct mrc_ndarray *nd)
   for (int d = 0; d < n_dims; d++) {
     off += nd->start[d] * nd->nd_acc.stride[d];
   }
-  mprintf("off %ld\n", off);
+  //mprintf("off %ld\n", off);
   nd->nd_acc.arr_off = nd->arr - off * nd->size_of_type;
 
   // store more info in nd_acc so we can do bounds checking
