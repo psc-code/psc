@@ -150,7 +150,7 @@ struct PscFlatfoil : Psc<PscConfig>
 
     // --- generic setup
     auto norm_params = Grid_t::NormalizationParams::dimensionless();
-    norm_params.nicell = 50;
+    norm_params.nicell = 5;
 
     double dt = p_.cfl * courant_length(grid_domain);
     define_grid(grid_domain, grid_bc, kinds, dt, norm_params);
