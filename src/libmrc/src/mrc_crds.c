@@ -261,6 +261,8 @@ _mrc_crds_setup(struct mrc_crds *crds)
       // shift to beginning of local domain
       int off = patches[p].off[d];
 
+      MHERE;
+      mprintf("CCC %p\n", crds->crd[d]);
       mrc_m1_foreach(crds->crd[d], i, sw, sw) {
 	mprintf("sw %d i %d d %d\n", sw, i, d);
         MRC_DMCRD(crds, d, i, p) = MRC_D2(x, i + off, 0);
