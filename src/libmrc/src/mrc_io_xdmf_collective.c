@@ -1068,6 +1068,11 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
     size_t len = (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
     buf_sizes[info.rank] += len;
   }
+  for (int r = 0; r < io->size; r++) {
+    if (buf_sizes[r]) {
+      mprintf("buf_sizes[%d] = %ld\n", r, buf_sizes[r]);
+    }
+  }
 
   ctx->recv_reqs = calloc(io->size, sizeof(*ctx->recv_reqs));
   for (int rank = 0; rank < io->size; rank++) {
@@ -1116,9 +1121,9 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
   MHERE;
   MPI_Waitall(io->size, ctx->recv_reqs, MPI_STATUSES_IGNORE);
 
+  MHERE;
   int nr_global_patches;
   mrc_domain_get_nr_global_patches(m3->_domain, &nr_global_patches);
-  int rr = 0;
 
   size_t *buf_sizes = calloc(io->size, sizeof(*buf_sizes));
 
@@ -1181,7 +1186,6 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
     }
     }    
     buf_sizes[info.rank] += len;
-    rr++;
     //mprintf("C recv_fld_end gp %d\n", gp);
   }
 
@@ -1203,6 +1207,7 @@ collective_recv_fld_local(struct collective_m3_ctx *ctx,
 			  struct mrc_io *io, struct mrc_ndarray *nd,
 			  struct mrc_fld *m3, int m)
 {
+  MHERE;
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(m3->_domain, &nr_patches);
 
@@ -1355,16 +1360,14 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
   }
 
   if (xdmf->is_writer) {
-    MHERE;
     int writer;
     MPI_Comm_rank(xdmf->comm_writers, &writer);
     int writer_dims[3], writer_off[3];
     get_writer_off_dims(&ctx, writer, writer_off, writer_dims);
-    /* mprintf("writer_off %d %d %d dims %d %d %d\n", */
-    /* 	    writer_off[0], writer_off[1], writer_off[2], */
-    /* 	    writer_dims[0], writer_dims[1], writer_dims[2]); */
+    mprintf("writer_off %d %d %d dims %d %d %d\n",
+    	    writer_off[0], writer_off[1], writer_off[2],
+    	    writer_dims[0], writer_dims[1], writer_dims[2]);
 
-    MHERE;
     struct mrc_ndarray *nd = mrc_ndarray_create(MPI_COMM_NULL);
     switch (mrc_fld_data_type(m3)) {
     case MRC_NT_FLOAT: mrc_ndarray_set_type(nd, "float"); break;
@@ -1372,12 +1375,9 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     case MRC_NT_INT: mrc_ndarray_set_type(nd, "int"); break;
     default: assert(0);
     }
-    mprintf("writer_dims %d %d %d\n", writer_dims[0], writer_dims[1], writer_dims[2]);
-    mprintf("writer_off %d %d %d\n", writer_off[0], writer_off[1], writer_off[2]);
     mrc_ndarray_set_param_int_array(nd, "dims", 3, writer_dims);
     mrc_ndarray_set_param_int_array(nd, "offs", 3, writer_off);
     mrc_ndarray_setup(nd);
-    MHERE;
 
     hid_t group0;
     if (H5Lexists(file->h5_file, path, H5P_DEFAULT) > 0) {
@@ -1394,9 +1394,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
       collective_recv_fld_begin(&ctx, io, nd, m3_soa);
       collective_send_fld_begin(&ctx, io, m3_soa, m);
       collective_recv_fld_local(&ctx, io, nd, m3_soa, m);
-    MHERE;
       collective_recv_fld_end(&ctx, io, nd, m3_soa, m);
-    MHERE;
       collective_write_fld(&ctx, io, path, nd, m, m3, xs, group0);
       collective_send_fld_end(&ctx, io, m3, m);
     }
