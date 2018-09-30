@@ -231,6 +231,7 @@ _mrc_crds_setup(struct mrc_crds *crds)
   int nr_patches;
   struct mrc_patch *patches;
 
+  MHERE;
   crds->xnorm = crds->norm_length / crds->norm_length_scale;
 
   for (int d = 0; d < 3; d ++) {
@@ -241,12 +242,14 @@ _mrc_crds_setup(struct mrc_crds *crds)
   mrc_crds_setup_alloc_only(crds);
   mrc_crds_setup_alloc_global_array(crds);
 
+  MHERE;
   mrc_domain_get_global_dims(crds->domain, gdims);
   patches = mrc_domain_get_patches(crds->domain, &nr_patches);
 
   int sw = crds->sw;
 
   for (int d = 0; d < 3; d ++) {
+  MHERE;
     struct mrc_ndarray *x = crds->global_crd[d];
 
     struct mrc_crds_gen *gen = crds->crds_gen[d];
@@ -283,6 +286,7 @@ _mrc_crds_setup(struct mrc_crds *crds)
       } mrc_m1_foreach_end;
     }
   }
+  MHERE;
 }
 
 static void
