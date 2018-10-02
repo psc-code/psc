@@ -131,221 +131,8 @@ struct Psc
     // initial output / stats
     mpi_printf(grid().comm(), "Performing initial diagnostics.\n");
     diagnostics();
-    print_status();
 
     mpi_printf(grid().comm(), "Initialization complete.\n");
-  }
-
-  // ----------------------------------------------------------------------
-  // integrate
-
-  void integrate()
-  {
-    static int pr;
-    if (!pr) {
-      pr = prof_register("psc_step", 1., 0, 0);
-    }
-
-    mpi_printf(grid().comm(), "*** Advancing\n");
-    double elapsed = MPI_Wtime();
-
-    bool first_iteration = true;
-    while (grid().timestep() < p_.nmax) {
-      prof_start(pr);
-      psc_stats_start(st_time_step);
-
-      if (!first_iteration &&
-	  p_.write_checkpoint_every_step > 0 &&
-	  grid().timestep() % p_.write_checkpoint_every_step == 0) {
-	//psc_write_checkpoint(psc_);
-      }
-      first_iteration = false;
-
-      mpi_printf(grid().comm(), "**** Step %d / %d, Code Time %g, Wall Time %g\n", grid().timestep() + 1,
-		 p_.nmax, grid().timestep() * grid().dt, MPI_Wtime() - time_start_);
-
-      prof_start(pr_time_step_no_comm);
-      prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
-
-      step();
-      grid_->timestep_++; // FIXME, too hacky
-      
-      diagnostics();
-
-      psc_stats_stop(st_time_step);
-      prof_stop(pr);
-
-      psc_stats_val[st_nr_particles] = mprts_->get_n_prts();
-
-      if (grid().timestep() % p_.stats_every == 0) {
-	print_status();
-      }
-
-      if (p_.wallclock_limit > 0.) {
-	double wallclock_elapsed = MPI_Wtime() - time_start_;
-	double wallclock_elapsed_max;
-	MPI_Allreduce(&wallclock_elapsed, &wallclock_elapsed_max, 1, MPI_DOUBLE, MPI_MAX,
-		      MPI_COMM_WORLD);
-      
-	if (wallclock_elapsed_max > p_.wallclock_limit) {
-	  mpi_printf(MPI_COMM_WORLD, "WARNING: Max wallclock time elapsed!\n");
-	  break;
-	}
-      }
-    }
-
-    if (p_.write_checkpoint) {
-      //psc_write_checkpoint(psc_);
-    }
-
-    // FIXME, merge with existing handling of wallclock time
-    elapsed = MPI_Wtime() - elapsed;
-
-    int  s = (int)elapsed, m  = s/60, h  = m/60, d  = h/24, w = d/ 7;
-    /**/ s -= m*60,        m -= h*60, h -= d*24, d -= w*7;
-    mpi_printf(grid().comm(), "*** Finished (%gs / %iw:%id:%ih:%im:%is elapsed)\n",
-	       elapsed, w, d, h, m, s );
-  }
-
-  // ----------------------------------------------------------------------
-  // step_psc
-
-  void step_psc()
-  {
-    using DIM = typename PscConfig::dim_t;
-
-    static int pr_sort, pr_collision, pr_checks, pr_push_prts, pr_push_flds,
-      pr_bndp, pr_bndf, pr_marder, pr_inject_prts;
-    if (!pr_sort) {
-      pr_sort = prof_register("step_sort", 1., 0, 0);
-      pr_collision = prof_register("step_collision", 1., 0, 0);
-      pr_push_prts = prof_register("step_push_prts", 1., 0, 0);
-      pr_inject_prts = prof_register("step_inject_prts", 1., 0, 0);
-      pr_push_flds = prof_register("step_push_flds", 1., 0, 0);
-      pr_bndp = prof_register("step_bnd_prts", 1., 0, 0);
-      pr_bndf = prof_register("step_bnd_flds", 1., 0, 0);
-      pr_checks = prof_register("step_checks", 1., 0, 0);
-      pr_marder = prof_register("step_marder", 1., 0, 0);
-    }
-
-    // state is at: x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
-    MPI_Comm comm = grid().comm();
-    int timestep = grid().timestep();
-
-    auto& mprts = *mprts_;
-    auto& mflds = *mflds_;
-
-    if (balance_interval > 0 && timestep % balance_interval == 0) {
-      (*balance_)(mprts);
-    }
-
-    if (sort_interval > 0 && timestep % sort_interval == 0) {
-      mpi_printf(comm, "***** Sorting...\n");
-      prof_start(pr_sort);
-      (*sort_)(mprts);
-      prof_stop(pr_sort);
-    }
-    
-    if (collision_->interval() > 0 && timestep % collision_->interval() == 0) {
-      mpi_printf(comm, "***** Performing collisions...\n");
-      prof_start(pr_collision);
-      (*collision_)(mprts);
-      prof_stop(pr_collision);
-    }
-    
-    // === particle injection
-    prof_start(pr_inject_prts);
-    inject_particles();
-    prof_stop(pr_inject_prts);
-
-    if (checks_->continuity_every_step > 0 && timestep % checks_->continuity_every_step == 0) {
-      mpi_printf(comm, "***** Checking continuity...\n");
-      prof_start(pr_checks);
-      checks_->continuity_before_particle_push(mprts);
-      prof_stop(pr_checks);
-    }
-
-    // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
-    prof_start(pr_push_prts);
-    pushp_->push_mprts(mprts, mflds);
-    prof_stop(pr_push_prts);
-    // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
-
-    // === field propagation B^{n+1/2} -> B^{n+1}
-    prof_start(pr_push_flds);
-    pushf_->push_H(mflds, .5, DIM{});
-    prof_stop(pr_push_flds);
-    // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
-
-    prof_start(pr_bndp);
-    (*bndp_)(mprts);
-    prof_stop(pr_bndp);
-
-    // === field propagation E^{n+1/2} -> E^{n+3/2}
-    prof_start(pr_bndf);
-#if 1
-    bndf_->fill_ghosts_H(mflds);
-    bnd_->fill_ghosts(mflds, HX, HX + 3);
-#endif
-    
-    bndf_->add_ghosts_J(mflds);
-    bnd_->add_ghosts(mflds, JXI, JXI + 3);
-    bnd_->fill_ghosts(mflds, JXI, JXI + 3);
-    prof_stop(pr_bndf);
-    
-    prof_restart(pr_push_flds);
-    pushf_->push_E(mflds, 1., DIM{});
-    prof_stop(pr_push_flds);
-    
-#if 1
-    prof_restart(pr_bndf);
-    bndf_->fill_ghosts_E(mflds);
-    bnd_->fill_ghosts(mflds, EX, EX + 3);
-    prof_stop(pr_bndf);
-#endif
-    // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
-      
-    // === field propagation B^{n+1} -> B^{n+3/2}
-    prof_restart(pr_push_flds);
-    pushf_->push_H(mflds, .5, DIM{});
-    prof_stop(pr_push_flds);
-
-#if 1
-    prof_start(pr_bndf);
-    bndf_->fill_ghosts_H(mflds);
-    bnd_->fill_ghosts(mflds, HX, HX + 3);
-    prof_stop(pr_bndf);
-    // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
-#endif
-
-    if (checks_->continuity_every_step > 0 && timestep % checks_->continuity_every_step == 0) {
-      prof_restart(pr_checks);
-      checks_->continuity_after_particle_push(mprts, mflds);
-      prof_stop(pr_checks);
-    }
-    
-    // E at t^{n+3/2}, particles at t^{n+3/2}
-    // B at t^{n+3/2} (Note: that is not its natural time,
-    // but div B should be == 0 at any time...)
-    if (marder_interval > 0 && timestep % marder_interval == 0) {
-      mpi_printf(comm, "***** Performing Marder correction...\n");
-      prof_start(pr_marder);
-      (*marder_)(mflds, mprts);
-      prof_stop(pr_marder);
-    }
-    
-    if (checks_->gauss_every_step > 0 && timestep % checks_->gauss_every_step == 0) {
-      prof_restart(pr_checks);
-      checks_->gauss(mprts, mflds);
-      prof_stop(pr_checks);
-    }
-    
-    //psc_push_particles_prep(psc->push_particles, psc->particles, psc->flds);
-  }
-
-  virtual void step()
-  {
-    step_psc();
   }
 
   // ----------------------------------------------------------------------
@@ -354,31 +141,6 @@ struct Psc
   virtual void inject_particles()
   {}
   
-  // ----------------------------------------------------------------------
-  // define_periodic_grid
-  
-  void define_periodic_grid(double xl[3], double xh[3], const int gdims[3], const int np[3])
-  {
-  }
-  
-  // ----------------------------------------------------------------------
-  // set_domain_field_bc
-  
-  void set_domain_field_bc(Int3 bnd, int bc)
-  {
-  }
-
-  // ----------------------------------------------------------------------
-  // set_domain_particle_bc
-  
-  void set_domain_particle_bc(Int3 bnd, int bc)
-  {
-  }
-
-  void grid_setup_communication()
-  {
-  }
-
   // ----------------------------------------------------------------------
   // courant length
   
@@ -396,51 +158,8 @@ struct Psc
     return sqrt(1. / inv_sum);
   }
 
-  // ----------------------------------------------------------------------
-  // create_diagnotics
-
-  void create_diagnostics(int interval)
-  {
-  }
-  
-  // ----------------------------------------------------------------------
-  // setup_diagnostics
-
-  void setup_diagnostics()
-  {
-  }
-
-  // ----------------------------------------------------------------------
-  // run_diagnostics
-  
-  void run_diagnostics()
-  {
-  }
-
 private:
 
-  // ----------------------------------------------------------------------
-  // print_profiling
-
-  void print_profiling()
-  {
-    int size;
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
-    if (!p_.detailed_profiling) {
-      prof_print_mpi(MPI_COMM_WORLD);
-    } else {
-      int rank;
-      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-      for (int i = 0; i < size; i++) {
-	if (i == rank) {
-	  mprintf("profile\n");
-	  prof_print();
-	}
-	MPI_Barrier(MPI_COMM_WORLD);
-      }
-    }
-  }
-  
   // ----------------------------------------------------------------------
   // initialize_default
   
@@ -465,12 +184,6 @@ private:
 
   // ----------------------------------------------------------------------
   // print_status
-
-  void print_status()
-  {
-    psc_stats_log(grid().timestep());
-    print_profiling();
-  }
 
 public:
   const Grid_t& grid() { return *grid_; }
@@ -663,7 +376,6 @@ main(int argc, char **argv)
   auto psc = new PscTestIo;
 
   psc->initialize();
-  psc->integrate();
 
   delete psc;
   
