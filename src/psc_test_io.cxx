@@ -41,9 +41,6 @@ struct Psc
   using Collision_t = typename PscConfig::Collision_t;
   using PushParticles_t = typename PscConfig::PushParticles_t;
   using PushFields_t = typename PscConfig::PushFields_t;
-  using Bnd_t = typename PscConfig::Bnd_t;
-  using BndFields_t = typename PscConfig::BndFields_t;
-  using BndParticles_t = typename PscConfig::BndParticles_t;
 
   // ----------------------------------------------------------------------
   // ctor
@@ -91,9 +88,6 @@ struct Psc
     sort_.reset(new Sort_t{});
     pushp_.reset(new PushParticles_t{});
     pushf_.reset(new PushFields_t{});
-    bnd_.reset(new Bnd_t{grid(), ibn});
-    bndf_.reset(new BndFields_t{});
-    bndp_.reset(new BndParticles_t{grid()});
 
     psc_diag_setup(diag_);
     psc_output_particles_setup(outp_);
@@ -188,9 +182,6 @@ protected:
   std::unique_ptr<Collision_t> collision_;
   std::unique_ptr<PushParticles_t> pushp_;
   std::unique_ptr<PushFields_t> pushf_;
-  std::unique_ptr<Bnd_t> bnd_;
-  std::unique_ptr<BndFields_t> bndf_;
-  std::unique_ptr<BndParticles_t> bndp_;
   std::unique_ptr<OutputFieldsC> outf_;
 
   psc_diag* diag_;             ///< timeseries diagnostics
