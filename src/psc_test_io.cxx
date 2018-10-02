@@ -158,20 +158,10 @@ struct PscTestIo : Psc<PscConfig>
     BB_ = 0.;
     Zi_ = 1.;
     
-    // --- for background plasma
-    background_n_  = .002;
-    background_Te_ = .001;
-    background_Ti_ = .001;
-    
     // -- setup particle kinds
     // last population ("e") is neutralizing
     // FIXME, hardcoded mass ratio 100
     Grid_t::Kinds kinds = {{Zi_, 100.*Zi_, "i"}, { -1., 1., "e"}};
-    
-    double d_i = sqrt(kinds[MY_ION].m / kinds[MY_ION].q);
-    
-    mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
-    mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(background_Te_));
     
     // --- setup domain
     Grid_t::Real3 LL = { 400., 800., 400.*6 }; // domain size (in d_e)
@@ -226,10 +216,6 @@ struct PscTestIo : Psc<PscConfig>
 private:
   double BB_;
   double Zi_;
-
-  double background_n_;
-  double background_Te_;
-  double background_Ti_;
 };
 
 
