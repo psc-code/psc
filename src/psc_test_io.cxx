@@ -44,8 +44,6 @@ struct Psc
   using Bnd_t = typename PscConfig::Bnd_t;
   using BndFields_t = typename PscConfig::BndFields_t;
   using BndParticles_t = typename PscConfig::BndParticles_t;
-  using Checks_t = typename PscConfig::Checks_t;
-  using Marder_t = typename PscConfig::Marder_t;
 
   // ----------------------------------------------------------------------
   // ctor
@@ -126,8 +124,6 @@ struct Psc
 
   void initialize()
   {
-    initialize_default();
-
     // initial output / stats
     mpi_printf(grid().comm(), "Performing initial diagnostics.\n");
     diagnostics();
@@ -159,16 +155,6 @@ struct Psc
   }
 
 private:
-
-  // ----------------------------------------------------------------------
-  // initialize_default
-  
-  void initialize_default()
-  {
-    //pushp_.stagger(mprts, mflds); FIXME, vpic does it
-
-    checks_->gauss(*mprts_, *mflds_);
-  }
 
   // ----------------------------------------------------------------------
   // diagnostics
@@ -205,8 +191,6 @@ protected:
   std::unique_ptr<Bnd_t> bnd_;
   std::unique_ptr<BndFields_t> bndf_;
   std::unique_ptr<BndParticles_t> bndp_;
-  std::unique_ptr<Checks_t> checks_;
-  std::unique_ptr<Marder_t> marder_;
   std::unique_ptr<OutputFieldsC> outf_;
 
   psc_diag* diag_;             ///< timeseries diagnostics
@@ -323,12 +307,6 @@ struct PscTestIo : Psc<PscConfig>
     // -- Balance
     balance_interval = 50;
     balance_.reset(new Balance_t{balance_interval, .1, true});
-
-    // -- Checks
-    ChecksParams checks_params{};
-    checks_params.continuity_every_step = 20;
-    checks_params.continuity_threshold = 1e-5;
-    checks_.reset(new Checks_t{grid(), comm, checks_params});
 
     // -- output fields
     OutputFieldsCParams outf_params;
