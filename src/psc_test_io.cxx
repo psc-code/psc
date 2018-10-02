@@ -60,9 +60,6 @@ struct Psc
   
   void initialize_stats()
   {
-    st_nr_particles = psc_stats_register("nr particles");
-    st_time_step = psc_stats_register("time entire step");
-
     // generic stats categories
     st_time_particle = psc_stats_register("time particle update");
     st_time_field = psc_stats_register("time field update");
@@ -83,29 +80,6 @@ struct Psc
     diagnostics();
 
     mpi_printf(grid().comm(), "Initialization complete.\n");
-  }
-
-  // ----------------------------------------------------------------------
-  // inject_particles
-
-  virtual void inject_particles()
-  {}
-  
-  // ----------------------------------------------------------------------
-  // courant length
-  
-  double courant_length(const Grid_t::Domain& domain)
-  {
-    double inv_sum = 0.;
-    for (int d = 0; d < 3; d++) {
-      if (!domain.isInvar(d)) {
-	inv_sum += 1. / sqr(domain.dx[d]);
-      }
-    }
-    if (!inv_sum) { // simulation has 0 dimensions (happens in some test?)
-      inv_sum = 1.;
-    }
-    return sqrt(1. / inv_sum);
   }
 
 private:
@@ -129,17 +103,7 @@ protected:
 
   std::unique_ptr<OutputFieldsC> outf_;
 
-  // FIXME, maybe should be private
-  // need to make sure derived class sets these (? -- or just leave them off by default)
-  int balance_interval;
-  int sort_interval;
-  int marder_interval;
-
-  int num_comm_round = {3};
   Int3 ibn = {2, 2, 2}; // FIXME!!! need to factor in invar dims (but not in vpic...)
-  
-  int st_nr_particles;
-  int st_time_step;
 };
 
 #include <balance.hxx>
