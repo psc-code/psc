@@ -56,6 +56,7 @@ struct PscTestIo
 {
   using Mparticles = PscConfig::Mparticles_t;
   using MfieldsState = PscConfig::MfieldsState;
+  using Mfields = MfieldsSingle;
   using DIM = PscConfig::dim_t;
 
   // ----------------------------------------------------------------------
@@ -143,7 +144,8 @@ struct PscTestIo
 
     auto comp_names = PscFieldsItemBase{item_}->comp_names();
     auto& pfd = PscFieldsItemBase{item_}->mres();
-    pfd.write_as_mrc_fld(io_pfd.io_, name, comp_names);
+    auto mres = Mfields{grid(), 3, grid().ibn};
+    mres.write_as_mrc_fld(io_pfd.io_, name, comp_names);
 
     io_pfd.close();
 
