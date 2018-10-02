@@ -132,53 +132,12 @@ struct PscTestIo : Psc<PscConfig>
     outf_params.pfield_step = 100;
     outf_.reset(new OutputFieldsC{grid(), outf_params});
 
-    // --- partition particles and initial balancing
-    mpi_printf(comm, "**** Partitioning...\n");
-    auto n_prts_by_patch_old = setup_initial_partition();
-    auto n_prts_by_patch_new = balance_->initial(n_prts_by_patch_old);
-    // balance::initial does not rebalance particles, because the old way of doing this
-    // does't even have the particle data structure created yet -- FIXME?
-    mprts_->reset(grid());
-    
     mpi_printf(comm, "**** Setting up fields...\n");
     setup_initial_fields(*mflds_);
 
     init();
   }
 
-  void init_npt(int kind, double crd[3], psc_particle_npt& npt)
-  {
-    switch (kind) {
-    case MY_ION:
-      npt.n    = background_n_;
-      npt.T[0] = background_Ti_;
-      npt.T[1] = background_Ti_;
-      npt.T[2] = background_Ti_;
-      break;
-    case MY_ELECTRON:
-      npt.n    = background_n_;
-      npt.T[0] = background_Te_;
-      npt.T[1] = background_Te_;
-      npt.T[2] = background_Te_;
-      break;
-    default:
-      assert(0);
-    }
-  }
-  
-  // ----------------------------------------------------------------------
-  // setup_initial_partition
-  
-  std::vector<uint> setup_initial_partition()
-  {
-    SetupParticles<Mparticles_t> setup_particles;
-    setup_particles.fractional_n_particles_per_cell = true; // FIXME, should use same setup_particles for partition/setup
-    setup_particles.neutralizing_population = MY_ELECTRON;
-    return setup_particles.setup_partition(grid(), [&](int kind, double crd[3], psc_particle_npt& npt) {
-	this->init_npt(kind, crd, npt);
-      });
-  }
-  
   // ----------------------------------------------------------------------
   // setup_initial_fields
   
