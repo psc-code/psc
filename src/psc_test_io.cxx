@@ -130,7 +130,7 @@ struct PscTestIo
     psc_output_fields_item_set_type(item_, "e");
     psc_output_fields_item_setup(item_);
 
-    //PscFieldsItemBase{item_}(*mflds_, *mprts_);
+    PscFieldsItemBase{item_}(*mflds_, *mprts_);
     
     mpi_printf(MPI_COMM_WORLD, "***** Writing PFD output\n");
 
