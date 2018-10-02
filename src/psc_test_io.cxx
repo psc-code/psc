@@ -140,9 +140,6 @@ struct PscTestIo : Psc<PscConfig>
     // does't even have the particle data structure created yet -- FIXME?
     mprts_->reset(grid());
     
-    mpi_printf(comm, "**** Setting up particles...\n");
-    setup_initial_particles(*mprts_, n_prts_by_patch_new);
-    
     mpi_printf(comm, "**** Setting up fields...\n");
     setup_initial_fields(*mflds_);
 
@@ -182,19 +179,6 @@ struct PscTestIo : Psc<PscConfig>
       });
   }
   
-  // ----------------------------------------------------------------------
-  // setup_initial_particles
-  
-  void setup_initial_particles(Mparticles_t& mprts, std::vector<uint>& n_prts_by_patch)
-  {
-    SetupParticles<Mparticles_t> setup_particles; // FIXME, injection uses another setup_particles, which won't have those settings
-    setup_particles.fractional_n_particles_per_cell = true;
-    setup_particles.neutralizing_population = MY_ELECTRON;
-    setup_particles.setup_particles(mprts, n_prts_by_patch, [&](int kind, double crd[3], psc_particle_npt& npt) {
-	this->init_npt(kind, crd, npt);
-      });
-  }
-
   // ----------------------------------------------------------------------
   // setup_initial_fields
   
