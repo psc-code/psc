@@ -14,7 +14,6 @@
 #include <bnd_particles.hxx>
 #include <bnd.hxx>
 #include <bnd_fields.hxx>
-#include <marder.hxx>
 #include <setup_particles.hxx>
 #include <setup_fields.hxx>
 
@@ -118,13 +117,6 @@ struct PscTestIo : Psc<PscConfig>
     checks_params.continuity_every_step = 20;
     checks_params.continuity_threshold = 1e-5;
     checks_.reset(new Checks_t{grid(), comm, checks_params});
-
-    // -- Marder correction
-    double marder_diffusion = 0.9;
-    int marder_loop = 3;
-    bool marder_dump = false;
-    marder_interval = 0*5;
-    marder_.reset(new Marder_t(grid(), marder_diffusion, marder_loop, marder_dump));
 
     // -- output fields
     OutputFieldsCParams outf_params;
