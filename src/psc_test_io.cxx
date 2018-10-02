@@ -37,14 +37,12 @@ struct OutputFieldsC : public OutputFieldsCParams
   struct Item
   {
     Item(PscFieldsItemBase item, const std::string& name,
-	 std::vector<std::string>& comp_names, MfieldsBase& pfd,
-	 MfieldsBase& tfd)
-      : item(item), name(name), comp_names(comp_names), pfd(pfd), tfd(tfd)
+	 std::vector<std::string>& comp_names, MfieldsBase& pfd)
+      : item(item), name(name), comp_names(comp_names), pfd(pfd)
     {}
     
     PscFieldsItemBase item;
     MfieldsBase& pfd;
-    MfieldsBase& tfd;
     std::string name;
     std::vector<std::string> comp_names;
   };
@@ -66,9 +64,7 @@ struct OutputFieldsC : public OutputFieldsCParams
     std::vector<std::string> comp_names = PscFieldsItemBase{item}->comp_names();
     MfieldsBase& mflds_pfd = PscFieldsItemBase{item}->mres();
     
-    // tfd -- FIXME?! always MfieldsC
-    MfieldsBase& mflds_tfd = *new MfieldsC{grid, mflds_pfd.n_comps(), grid.ibn};
-    items.emplace_back(PscFieldsItemBase{item}, "e", comp_names, mflds_pfd, mflds_tfd);
+    items.emplace_back(PscFieldsItemBase{item}, "e", comp_names, mflds_pfd);
     
     if (pfield_step > 0) {
       io_pfd_.reset(new MrcIo{"pfd", "."});
@@ -82,7 +78,6 @@ struct OutputFieldsC : public OutputFieldsCParams
   {
     for (auto& item : items) {
       psc_output_fields_item_destroy(item.item.item());
-      delete &item.tfd;
     }
   }
 
