@@ -103,15 +103,6 @@ struct PscTestIo : Psc<PscConfig>
     balance_interval = 50;
     balance_.reset(new Balance_t{balance_interval, .1, true});
 
-    // -- Sort
-    // FIXME, needs a way to make sure it gets set?
-    sort_interval = 10;
-
-    // -- Collision
-    int collision_interval = 10;
-    double collision_nu = .1;
-    collision_.reset(new Collision_t{grid(), collision_interval, collision_nu});
-
     // -- Checks
     ChecksParams checks_params{};
     checks_params.continuity_every_step = 20;
