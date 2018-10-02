@@ -99,16 +99,6 @@ struct PscTestIo : Psc<PscConfig>
 
     mprts_.reset(new Mparticles_t{grid()});
 
-    // -- Balance
-    balance_interval = 50;
-    balance_.reset(new Balance_t{balance_interval, .1, true});
-
-    // -- Checks
-    ChecksParams checks_params{};
-    checks_params.continuity_every_step = 20;
-    checks_params.continuity_threshold = 1e-5;
-    checks_.reset(new Checks_t{grid(), comm, checks_params});
-
     // -- output fields
     OutputFieldsCParams outf_params;
     outf_params.output_fields = "e,h,j,n_1st_single,v_1st_single,T_1st_single";
