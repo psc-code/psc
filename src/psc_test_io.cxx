@@ -27,18 +27,7 @@ struct Psc
 
   Psc()
     : grid_{ggrid}
-  {
-    // FIXME, we should use RngPool consistently throughout
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    srandom(rank);
-
-    diag_ = psc_diag_create(MPI_COMM_WORLD);
-    psc_diag_set_from_options(diag_);
-
-    outp_ = psc_output_particles_create(MPI_COMM_WORLD);
-    psc_output_particles_set_from_options(outp_);
-  }
+  {}
 
   // ----------------------------------------------------------------------
   // define_grid
@@ -63,9 +52,6 @@ struct Psc
 
   void init()
   {
-    psc_diag_setup(diag_);
-    psc_output_particles_setup(outp_);
-
     initialize_stats();
   }
 
@@ -129,15 +115,8 @@ private:
 
   virtual void diagnostics()
   {
-    // FIXME
-    psc_diag_run(diag_, *mprts_, *mflds_);
-    // FIXME
     (*outf_)(*mflds_, *mprts_);
-    PscOutputParticlesBase{outp_}.run(*mprts_);
   }
-
-  // ----------------------------------------------------------------------
-  // print_status
 
 public:
   const Grid_t& grid() { return *grid_; }
@@ -149,9 +128,6 @@ protected:
   std::unique_ptr<Mparticles_t> mprts_;
 
   std::unique_ptr<OutputFieldsC> outf_;
-
-  psc_diag* diag_;             ///< timeseries diagnostics
-  psc_output_particles* outp_; ///< particle output
 
   // FIXME, maybe should be private
   // need to make sure derived class sets these (? -- or just leave them off by default)
