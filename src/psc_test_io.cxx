@@ -39,16 +39,16 @@ using PscConfig = PscConfig1vbecSingle<dim_t>;
 //using PscConfig = PscConfig1vbecCuda<dim_t>;
 
 // ======================================================================
-// PscFlatfoil
+// PscTestIo
 
-struct PscFlatfoil : Psc<PscConfig>
+struct PscTestIo : Psc<PscConfig>
 {
   using DIM = PscConfig::dim_t;
 
   // ----------------------------------------------------------------------
   // ctor
   
-  PscFlatfoil()
+  PscTestIo()
   {
     auto comm = grid().comm();
 
@@ -226,7 +226,7 @@ main(int argc, char **argv)
 {
   psc_init(argc, argv);
   
-  auto psc = new PscFlatfoil;
+  auto psc = new PscTestIo;
 
   psc->initialize();
   psc->integrate();
