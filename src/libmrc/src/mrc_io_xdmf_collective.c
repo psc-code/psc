@@ -1068,11 +1068,11 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
     size_t len = (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
     buf_sizes[info.rank] += len;
   }
-  for (int r = 0; r < io->size; r++) {
-    if (buf_sizes[r]) {
-      mprintf("buf_sizes[%d] = %ld\n", r, buf_sizes[r]);
-    }
-  }
+  /* for (int r = 0; r < io->size; r++) { */
+  /*   if (buf_sizes[r]) { */
+  /*     mprintf("buf_sizes[%d] = %ld\n", r, buf_sizes[r]); */
+  /*   } */
+  /* } */
 
   ctx->recv_reqs = calloc(io->size, sizeof(*ctx->recv_reqs));
   for (int rank = 0; rank < io->size; rank++) {
@@ -1118,10 +1118,10 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
 			struct mrc_io *io, struct mrc_ndarray *nd,
 			struct mrc_fld *m3, int m)
 {
-  MHERE;
+  //MHERE;
   MPI_Waitall(io->size, ctx->recv_reqs, MPI_STATUSES_IGNORE);
 
-  MHERE;
+  //MHERE;
   int nr_global_patches;
   mrc_domain_get_nr_global_patches(m3->_domain, &nr_global_patches);
 
@@ -1155,13 +1155,13 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
     case MRC_NT_FLOAT:
     {
       float *buf_ptr = (float *) ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
-      mprintf("pid %d ilohi %d:%d %d:%d %d:%d\n", getpid(), ilo[0], ihi[0], ilo[1], ihi[1], ilo[2], ihi[2]);
+      //mprintf("pid %d ilohi %d:%d %d:%d %d:%d\n", getpid(), ilo[0], ihi[0], ilo[1], ihi[1], ilo[2], ihi[2]);
       BUFLOOP(ix, iy, iz, ilo, ihi) {
 	//mprintf("address %p\n", &MRC_S3(nd, ix,iy,iz));
 	volatile float val = MRC_S3(nd, ix,iy,iz);
       	MRC_S3(nd, ix,iy,iz) = *buf_ptr++;
       } BUFLOOP_END
-	  MHERE;
+	  //MHERE;
       break;
     }
     case MRC_NT_DOUBLE:
@@ -1189,14 +1189,14 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
     //mprintf("C recv_fld_end gp %d\n", gp);
   }
 
-  MHERE;
+  //MHERE;
   free(ctx->recv_reqs);
   for (int rank = 0; rank < io->size; rank++) {
     free(ctx->recv_bufs[rank]);
   }
   free(ctx->recv_bufs);
   free(buf_sizes);
-  MHERE;
+  //MHERE;
 }
 
 // ----------------------------------------------------------------------
@@ -1207,7 +1207,7 @@ collective_recv_fld_local(struct collective_m3_ctx *ctx,
 			  struct mrc_io *io, struct mrc_ndarray *nd,
 			  struct mrc_fld *m3, int m)
 {
-  MHERE;
+  //MHERE;
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(m3->_domain, &nr_patches);
 
@@ -1401,7 +1401,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
 
     H5Gclose(group0);
     mrc_ndarray_destroy(nd);
-    MHERE;
+    //MHERE;
   } else {
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
       collective_send_fld_begin(&ctx, io, m3_soa, m);
