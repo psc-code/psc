@@ -126,10 +126,8 @@ struct PscTestIo
     // initial output / stats
     mpi_printf(grid().comm(), "Performing initial diagnostics.\n");
 
-    std::string name = "e";
-
     auto item_ = psc_output_fields_item_create(grid().comm());
-    psc_output_fields_item_set_type(item_, name.c_str());
+    psc_output_fields_item_set_type(item_, "e");
     psc_output_fields_item_setup(item_);
 
     PscFieldsItemBase{item_}(*mflds_, *mprts_);
@@ -142,10 +140,8 @@ struct PscTestIo
     auto io_pfd = MrcIo{"pfd", "."};
     io_pfd.open(grid(), rn, rx);
 
-    auto comp_names = PscFieldsItemBase{item_}->comp_names();
-    auto& pfd = PscFieldsItemBase{item_}->mres();
     auto mres = Mfields{grid(), 3, grid().ibn};
-    mres.write_as_mrc_fld(io_pfd.io_, name, comp_names);
+    mres.write_as_mrc_fld(io_pfd.io_, "e", {"ex", "ey", "ez"});
 
     io_pfd.close();
 
