@@ -18,21 +18,9 @@
 #include <mrc_io.hxx>
 
 // ======================================================================
-// OutputFieldsCParams
-
-struct OutputFieldsCParams
-{
-  int pfield_step = 0;
-  int pfield_first = 0;
-
-  Int3 rn = {};
-  Int3 rx = {1000000, 1000000, 100000};
-};
-
-// ======================================================================
 // OutputFieldsC
 
-struct OutputFieldsC : public OutputFieldsCParams
+struct OutputFieldsC
 {
   struct Item
   {
@@ -50,11 +38,8 @@ struct OutputFieldsC : public OutputFieldsCParams
   // ----------------------------------------------------------------------
   // ctor
 
-  OutputFieldsC(const Grid_t& grid, const OutputFieldsCParams& prm)
-    : OutputFieldsCParams{prm}
+  OutputFieldsC(const Grid_t& grid)
   {
-    pfield_next = pfield_first;
-
     struct psc_output_fields_item *item =
       psc_output_fields_item_create(grid.comm());
     psc_output_fields_item_set_type(item, "e");
@@ -66,9 +51,7 @@ struct OutputFieldsC : public OutputFieldsCParams
     
     items.emplace_back(PscFieldsItemBase{item}, "e", comp_names, mflds_pfd);
     
-    if (pfield_step > 0) {
-      io_pfd_.reset(new MrcIo{"pfd", "."});
-    }
+    io_pfd_.reset(new MrcIo{"pfd", "."});
   }
 
   // ----------------------------------------------------------------------
@@ -88,40 +71,27 @@ struct OutputFieldsC : public OutputFieldsCParams
   {
     const auto& grid = mflds.grid();
     
-    static int pr;
-    if (!pr) {
-      pr = prof_register("output_c_field", 1., 0, 0);
-    }
-    prof_start(pr);
-
-    auto timestep = grid.timestep();
-    
-    if ((pfield_step > 0 && timestep >= pfield_next)) {
-      for (auto item : items) {
-	item.item(mflds, mprts);
-      }
+    for (auto item : items) {
+      item.item(mflds, mprts);
     }
     
-    if (pfield_step > 0 && timestep >= pfield_next) {
-      mpi_printf(MPI_COMM_WORLD, "***** Writing PFD output\n"); // FIXME
-      pfield_next += pfield_step;
-      
-      io_pfd_->open(grid, rn, rx);
-      for (auto& item : items) {
-	item.pfd.write_as_mrc_fld(io_pfd_->io_, item.name, item.comp_names);
-      }
-      io_pfd_->close();
-    }
+    mpi_printf(MPI_COMM_WORLD, "***** Writing PFD output\n");
     
-    prof_stop(pr);
+    io_pfd_->open(grid, rn, rx);
+    for (auto& item : items) {
+      item.pfd.write_as_mrc_fld(io_pfd_->io_, item.name, item.comp_names);
+    }
+    io_pfd_->close();
   };
 
 public:
-  int pfield_next;
   // storage for output
   std::vector<Item> items;
 private:
   std::unique_ptr<MrcIo> io_pfd_;
+
+  Int3 rn = {};
+  Int3 rx = {1000000, 1000000, 100000};
 };
 
 
@@ -209,9 +179,7 @@ struct PscTestIo
     mprts_.reset(new Mparticles{grid()});
 
     // -- output fields
-    OutputFieldsCParams outf_params;
-    outf_params.pfield_step = 100;
-    outf_.reset(new OutputFieldsC{grid(), outf_params});
+    outf_.reset(new OutputFieldsC{grid()});
 
     mpi_printf(comm, "**** Setting up fields...\n");
     setup_initial_fields(*mflds_);
