@@ -22,34 +22,20 @@
 
 struct OutputFieldsC
 {
-  struct Item
-  {
-    Item(PscFieldsItemBase item, const std::string& name,
-	 std::vector<std::string>& comp_names, MfieldsBase& pfd)
-      : item(item), name(name), comp_names(comp_names), pfd(pfd)
-    {}
-    
-    PscFieldsItemBase item;
-    MfieldsBase& pfd;
-    std::string name;
-    std::vector<std::string> comp_names;
-  };
-
   // ----------------------------------------------------------------------
   // ctor
 
   OutputFieldsC(const Grid_t& grid)
   {
-    struct psc_output_fields_item *item =
-      psc_output_fields_item_create(grid.comm());
-    psc_output_fields_item_set_type(item, "e");
-    psc_output_fields_item_setup(item);
+    name_ = "e";
+
+    item_ = psc_output_fields_item_create(grid.comm());
+    psc_output_fields_item_set_type(item_, name_.c_str());
+    psc_output_fields_item_setup(item_);
 	
     // pfd
-    std::vector<std::string> comp_names = PscFieldsItemBase{item}->comp_names();
-    MfieldsBase& mflds_pfd = PscFieldsItemBase{item}->mres();
-    
-    item_ = new Item{PscFieldsItemBase{item}, "e", comp_names, mflds_pfd};
+    comp_names_ = PscFieldsItemBase{item_}->comp_names();
+    pfd_ = &PscFieldsItemBase{item_}->mres();
     
     io_pfd_.reset(new MrcIo{"pfd", "."});
   }
@@ -59,7 +45,7 @@ struct OutputFieldsC
 
   ~OutputFieldsC()
   {
-    psc_output_fields_item_destroy(item_->item.item());
+    psc_output_fields_item_destroy(item_);
   }
 
   // ----------------------------------------------------------------------
@@ -69,17 +55,20 @@ struct OutputFieldsC
   {
     const auto& grid = mflds.grid();
     
-    item_->item(mflds, mprts);
+    PscFieldsItemBase{item_}(mflds, mprts);
     
     mpi_printf(MPI_COMM_WORLD, "***** Writing PFD output\n");
     
     io_pfd_->open(grid, rn, rx);
-    item_->pfd.write_as_mrc_fld(io_pfd_->io_, item_->name, item_->comp_names);
+    pfd_->write_as_mrc_fld(io_pfd_->io_, name_, comp_names_);
     io_pfd_->close();
   };
 
 private:
-  Item* item_;
+  psc_output_fields_item* item_;
+  std::vector<std::string> comp_names_;
+  std::string name_;
+  MfieldsBase* pfd_;
 
   std::unique_ptr<MrcIo> io_pfd_;
 
