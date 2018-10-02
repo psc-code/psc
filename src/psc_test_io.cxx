@@ -13,76 +13,6 @@
 #include <output_particles.hxx>
 #include <output_fields_c.hxx>
 
-// ======================================================================
-// Psc
-
-template<typename PscConfig>
-struct Psc
-{
-  using Mparticles_t = typename PscConfig::Mparticles_t;
-  using MfieldsState = typename PscConfig::MfieldsState;
-
-  // ----------------------------------------------------------------------
-  // ctor
-
-  Psc()
-    : grid_{ggrid}
-  {}
-
-  // ----------------------------------------------------------------------
-  // define_grid
-
-  void define_grid(Grid_t::Domain& domain, GridBc& bc, Grid_t::Kinds& kinds,
-		   double dt, Grid_t::NormalizationParams& norm_params)
-  {
-    auto coeff = Grid_t::Normalization{norm_params};
-    grid_ = Grid_t::psc_make_grid(domain, bc, kinds, coeff, dt, ibn);
-  }
-  
-  // ----------------------------------------------------------------------
-  // define_field_array
-
-  void define_field_array(double damp = 0.)
-  {
-    mflds_.reset(new MfieldsState{grid()});
-  }
-  
-  // ----------------------------------------------------------------------
-  // initialize
-
-  void initialize()
-  {
-    // initial output / stats
-    mpi_printf(grid().comm(), "Performing initial diagnostics.\n");
-    diagnostics();
-
-    mpi_printf(grid().comm(), "Initialization complete.\n");
-  }
-
-private:
-
-  // ----------------------------------------------------------------------
-  // diagnostics
-
-  virtual void diagnostics()
-  {
-    (*outf_)(*mflds_, *mprts_);
-  }
-
-public:
-  const Grid_t& grid() { return *grid_; }
-
-protected:
-  Grid_t*& grid_;
-
-  std::unique_ptr<MfieldsState> mflds_;
-  std::unique_ptr<Mparticles_t> mprts_;
-
-  std::unique_ptr<OutputFieldsC> outf_;
-
-  Int3 ibn = {2, 2, 2}; // FIXME!!! need to factor in invar dims (but not in vpic...)
-};
-
 #include <balance.hxx>
 #include <particles.hxx>
 #include <fields3d.hxx>
@@ -114,19 +44,21 @@ enum {
 // EDIT to change order / floating point type / cuda / 2d/3d
 using dim_t = dim_xyz;
 using PscConfig = PscConfig1vbecSingle<dim_t>;
-//using PscConfig = PscConfig1vbecCuda<dim_t>;
 
 // ======================================================================
 // PscTestIo
 
-struct PscTestIo : Psc<PscConfig>
+struct PscTestIo
 {
+  using Mparticles = PscConfig::Mparticles_t;
+  using MfieldsState = PscConfig::MfieldsState;
   using DIM = PscConfig::dim_t;
 
   // ----------------------------------------------------------------------
   // ctor
   
   PscTestIo()
+    : grid_{ggrid}
   {
     auto comm = grid().comm();
 
@@ -159,11 +91,11 @@ struct PscTestIo : Psc<PscConfig>
     norm_params.nicell = 5;
 
     double dt = .99;
-    define_grid(grid_domain, grid_bc, kinds, dt, norm_params);
+    auto coeff = Grid_t::Normalization{norm_params};
+    grid_ = Grid_t::psc_make_grid(grid_domain, grid_bc, kinds, coeff, dt, ibn);
 
-    define_field_array();
-
-    mprts_.reset(new Mparticles_t{grid()});
+    mflds_.reset(new MfieldsState{grid()});
+    mprts_.reset(new Mparticles{grid()});
 
     // -- output fields
     OutputFieldsCParams outf_params;
@@ -188,9 +120,31 @@ struct PscTestIo : Psc<PscConfig>
       });
   }
 
+  // ----------------------------------------------------------------------
+  // initialize
+
+  void initialize()
+  {
+    // initial output / stats
+    mpi_printf(grid().comm(), "Performing initial diagnostics.\n");
+    (*outf_)(*mflds_, *mprts_);
+    mpi_printf(grid().comm(), "Initialization complete.\n");
+  }
+
+  const Grid_t& grid() { return *grid_; }
+
 private:
   double BB_;
   double Zi_;
+
+protected:
+  Grid_t*& grid_;
+  std::unique_ptr<MfieldsState> mflds_;
+  std::unique_ptr<Mparticles> mprts_;
+
+  std::unique_ptr<OutputFieldsC> outf_;
+
+  Int3 ibn = {2, 2, 2}; // FIXME!!! need to factor in invar dims (but not in vpic...)
 };
 
 
