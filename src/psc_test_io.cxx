@@ -36,7 +36,6 @@ struct Psc
 {
   using Mparticles_t = typename PscConfig::Mparticles_t;
   using MfieldsState = typename PscConfig::MfieldsState;
-  using Balance_t = typename PscConfig::Balance_t;
 
   // ----------------------------------------------------------------------
   // ctor
@@ -169,7 +168,6 @@ protected:
   std::unique_ptr<MfieldsState> mflds_;
   std::unique_ptr<Mparticles_t> mprts_;
 
-  std::unique_ptr<Balance_t> balance_;
   std::unique_ptr<OutputFieldsC> outf_;
 
   psc_diag* diag_;             ///< timeseries diagnostics
@@ -282,10 +280,6 @@ struct PscTestIo : Psc<PscConfig>
     define_field_array();
 
     mprts_.reset(new Mparticles_t{grid()});
-
-    // -- Balance
-    balance_interval = 50;
-    balance_.reset(new Balance_t{balance_interval, .1, true});
 
     // -- output fields
     OutputFieldsCParams outf_params;
