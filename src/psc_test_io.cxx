@@ -15,12 +15,10 @@
 #include <bnd.hxx>
 #include <bnd_fields.hxx>
 #include <marder.hxx>
-#include <inject.hxx>
 #include <heating.hxx>
 #include <setup_particles.hxx>
 #include <setup_fields.hxx>
 
-#include "../libpsc/psc_inject/psc_inject_impl.hxx"
 #include "../libpsc/psc_heating/psc_heating_impl.hxx"
 #include "../libpsc/psc_checks/checks_impl.hxx"
 
@@ -39,57 +37,6 @@ enum {
   N_MY_KINDS,
 };
 
-// ======================================================================
-// InjectFoil
-
-struct InjectFoilParams
-{
-  double yl, yh;
-  double zl, zh;
-  double n;
-  double Te, Ti;
-};
-
-struct InjectFoil : InjectFoilParams
-{
-  InjectFoil() = default;
-  
-  InjectFoil(const InjectFoilParams& params)
-    : InjectFoilParams(params)
-  {}
-
-  bool is_inside(double crd[3])
-  {
-    return (crd[1] >= yl && crd[1] <= yh &&
-	    crd[2] >= zl && crd[2] <= zh);
-  }
-
-  void init_npt(int pop, double crd[3], struct psc_particle_npt *npt)
-  {
-    if (!is_inside(crd)) {
-      npt->n = 0;
-      return;
-    }
-    
-    switch (pop) {
-    case MY_ION:
-      npt->n    = n;
-      npt->T[0] = Ti;
-      npt->T[1] = Ti;
-      npt->T[2] = Ti;
-      break;
-    case MY_ELECTRON:
-      npt->n    = n;
-      npt->T[0] = Te;
-      npt->T[1] = Te;
-      npt->T[2] = Te;
-      break;
-    default:
-      assert(0);
-    }
-  }
-};
-
 // EDIT to change order / floating point type / cuda / 2d/3d
 using dim_t = dim_xyz;
 using PscConfig = PscConfig1vbecSingle<dim_t>;
@@ -102,7 +49,6 @@ struct PscFlatfoil : Psc<PscConfig>
 {
   using DIM = PscConfig::dim_t;
   using Heating_t = typename HeatingSelector<Mparticles_t>::Heating;
-  using Inject_t = typename InjectSelector<Mparticles_t, MfieldsState, InjectFoil, DIM>::Inject;
 
   // ----------------------------------------------------------------------
   // ctor
@@ -201,22 +147,6 @@ struct PscFlatfoil : Psc<PscConfig>
     heating_end_ = 10000000;
     heating_.reset(new Heating_t{grid(), heating_interval_, MY_ELECTRON, heating_spot});
 
-    // -- Particle injection
-    auto inject_foil_params = InjectFoilParams{};
-    inject_foil_params.yl = -100000. * d_i;
-    inject_foil_params.yh =  100000. * d_i;
-    double target_zwidth =  1.;
-    inject_foil_params.zl = - target_zwidth * d_i;
-    inject_foil_params.zh =   target_zwidth * d_i;
-    inject_foil_params.n  = 1.;
-    inject_foil_params.Te = .001;
-    inject_foil_params.Ti = .001;
-    inject_target_ = InjectFoil{inject_foil_params};
-    inject_interval_ = 20;
-    
-    int inject_tau = 40;
-    inject_.reset(new Inject_t{grid(), inject_interval_, inject_tau, MY_ELECTRON, inject_target_});
-    
     // -- output fields
     OutputFieldsCParams outf_params;
     outf_params.output_fields = "e,h,j,n_1st_single,v_1st_single,T_1st_single";
@@ -257,11 +187,6 @@ struct PscFlatfoil : Psc<PscConfig>
       break;
     default:
       assert(0);
-    }
-      
-    if (inject_target_.is_inside(crd)) {
-      // replace values above by target values
-      inject_target_.init_npt(kind, crd, &npt);
     }
   }
   
@@ -318,13 +243,6 @@ struct PscFlatfoil : Psc<PscConfig>
     auto comm = grid().comm();
     auto timestep = grid().timestep();
     
-    if (inject_interval_ > 0 && timestep % inject_interval_ == 0) {
-      mpi_printf(comm, "***** Performing injection...\n");
-      prof_start(pr_inject);
-      (*inject_)(*mprts_);
-      prof_stop(pr_inject);
-    }
-      
     // only heating between heating_tb and heating_te
     if (timestep >= heating_begin_ && timestep < heating_end_ &&
 	heating_interval_ > 0 && timestep % heating_interval_ == 0) {
@@ -337,7 +255,6 @@ struct PscFlatfoil : Psc<PscConfig>
 
 protected:
   std::unique_ptr<Heating_t> heating_;
-  std::unique_ptr<Inject_t> inject_;
 
 private:
   double BB_;
@@ -346,9 +263,6 @@ private:
   double background_n_;
   double background_Te_;
   double background_Ti_;
-
-  int inject_interval_;
-  InjectFoil inject_target_;
 
   int heating_begin_;
   int heating_end_;

@@ -2,6 +2,8 @@
 #pragma once
 
 #include "heating.hxx"
+#include "psc_particles_cuda.h"
+#include "psc_fields_cuda.h"
 
 // ======================================================================
 // psc_heating subclass "cuda"
