@@ -65,12 +65,11 @@ struct PscTestIo
     mpi_printf(comm, "*** Setting up...\n");
 
     BB_ = 0.;
-    Zi_ = 1.;
     
     // -- setup particle kinds
     // last population ("e") is neutralizing
     // FIXME, hardcoded mass ratio 100
-    Grid_t::Kinds kinds = {{Zi_, 100.*Zi_, "i"}, { -1., 1., "e"}};
+    Grid_t::Kinds kinds = {{1., 100., "i"}, { -1., 1., "e"}};
     
     // --- setup domain
     Grid_t::Real3 LL = { 400., 800., 400.*6 }; // domain size (in d_e)
@@ -135,7 +134,6 @@ struct PscTestIo
 
 private:
   double BB_;
-  double Zi_;
 
 protected:
   Grid_t*& grid_;
