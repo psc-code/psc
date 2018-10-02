@@ -49,7 +49,7 @@ struct OutputFieldsC
     std::vector<std::string> comp_names = PscFieldsItemBase{item}->comp_names();
     MfieldsBase& mflds_pfd = PscFieldsItemBase{item}->mres();
     
-    items.emplace_back(PscFieldsItemBase{item}, "e", comp_names, mflds_pfd);
+    item_ = new Item{PscFieldsItemBase{item}, "e", comp_names, mflds_pfd};
     
     io_pfd_.reset(new MrcIo{"pfd", "."});
   }
@@ -59,9 +59,7 @@ struct OutputFieldsC
 
   ~OutputFieldsC()
   {
-    for (auto& item : items) {
-      psc_output_fields_item_destroy(item.item.item());
-    }
+    psc_output_fields_item_destroy(item_->item.item());
   }
 
   // ----------------------------------------------------------------------
@@ -71,23 +69,18 @@ struct OutputFieldsC
   {
     const auto& grid = mflds.grid();
     
-    for (auto item : items) {
-      item.item(mflds, mprts);
-    }
+    item_->item(mflds, mprts);
     
     mpi_printf(MPI_COMM_WORLD, "***** Writing PFD output\n");
     
     io_pfd_->open(grid, rn, rx);
-    for (auto& item : items) {
-      item.pfd.write_as_mrc_fld(io_pfd_->io_, item.name, item.comp_names);
-    }
+    item_->pfd.write_as_mrc_fld(io_pfd_->io_, item_->name, item_->comp_names);
     io_pfd_->close();
   };
 
-public:
-  // storage for output
-  std::vector<Item> items;
 private:
+  Item* item_;
+
   std::unique_ptr<MrcIo> io_pfd_;
 
   Int3 rn = {};
