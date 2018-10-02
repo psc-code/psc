@@ -27,17 +27,6 @@ struct OutputFieldsC
 
   OutputFieldsC(const Grid_t& grid)
   {
-    name_ = "e";
-
-    item_ = psc_output_fields_item_create(grid.comm());
-    psc_output_fields_item_set_type(item_, name_.c_str());
-    psc_output_fields_item_setup(item_);
-	
-    // pfd
-    comp_names_ = PscFieldsItemBase{item_}->comp_names();
-    pfd_ = &PscFieldsItemBase{item_}->mres();
-    
-    io_pfd_.reset(new MrcIo{"pfd", "."});
   }
 
   // ----------------------------------------------------------------------
@@ -45,7 +34,6 @@ struct OutputFieldsC
 
   ~OutputFieldsC()
   {
-    psc_output_fields_item_destroy(item_);
   }
 
   // ----------------------------------------------------------------------
@@ -55,25 +43,30 @@ struct OutputFieldsC
   {
     const auto& grid = mflds.grid();
     
+    std::string name = "e";
+
+    auto item_ = psc_output_fields_item_create(grid.comm());
+    psc_output_fields_item_set_type(item_, name.c_str());
+    psc_output_fields_item_setup(item_);
+
     PscFieldsItemBase{item_}(mflds, mprts);
     
     mpi_printf(MPI_COMM_WORLD, "***** Writing PFD output\n");
-    
-    io_pfd_->open(grid, rn, rx);
-    pfd_->write_as_mrc_fld(io_pfd_->io_, name_, comp_names_);
-    io_pfd_->close();
+
+    Int3 rn = {};
+    Int3 rx = {1000000, 1000000, 100000};
+
+    auto io_pfd = MrcIo{"pfd", "."};
+    io_pfd.open(grid, rn, rx);
+
+    auto comp_names = PscFieldsItemBase{item_}->comp_names();
+    auto& pfd = PscFieldsItemBase{item_}->mres();
+    pfd.write_as_mrc_fld(io_pfd.io_, name, comp_names);
+
+    io_pfd.close();
+
+    psc_output_fields_item_destroy(item_);
   };
-
-private:
-  psc_output_fields_item* item_;
-  std::vector<std::string> comp_names_;
-  std::string name_;
-  MfieldsBase* pfd_;
-
-  std::unique_ptr<MrcIo> io_pfd_;
-
-  Int3 rn = {};
-  Int3 rx = {1000000, 1000000, 100000};
 };
 
 
