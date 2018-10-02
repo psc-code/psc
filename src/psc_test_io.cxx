@@ -14,21 +14,6 @@
 #include <output_fields_c.hxx>
 
 // ======================================================================
-// PscParams
-
-struct PscParams
-{
-  double cfl = .75;            // CFL number used to determine time step
-  int nmax;                    // Number of timesteps to run
-  double wallclock_limit = 0.; // Maximum wallclock time to run
-  bool write_checkpoint = false;
-  int write_checkpoint_every_step = 0;
-
-  bool detailed_profiling = false; // output profiling info for each process separately
-  int stats_every = 10;    // output timing and other info every so many steps
-};
-  
-// ======================================================================
 // Psc
 
 template<typename PscConfig>
@@ -43,8 +28,6 @@ struct Psc
   Psc()
     : grid_{ggrid}
   {
-    time_start_ = MPI_Wtime();
-
     // FIXME, we should use RngPool consistently throughout
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -160,9 +143,6 @@ public:
   const Grid_t& grid() { return *grid_; }
 
 protected:
-  double time_start_;
-
-  PscParams p_;
   Grid_t*& grid_;
 
   std::unique_ptr<MfieldsState> mflds_;
@@ -235,9 +215,6 @@ struct PscTestIo : Psc<PscConfig>
 
     mpi_printf(comm, "*** Setting up...\n");
 
-    p_.nmax = 5001;
-    p_.cfl = 0.75;
-
     BB_ = 0.;
     Zi_ = 1.;
     
@@ -274,7 +251,7 @@ struct PscTestIo : Psc<PscConfig>
     auto norm_params = Grid_t::NormalizationParams::dimensionless();
     norm_params.nicell = 5;
 
-    double dt = p_.cfl * courant_length(grid_domain);
+    double dt = .99;
     define_grid(grid_domain, grid_bc, kinds, dt, norm_params);
 
     define_field_array();
