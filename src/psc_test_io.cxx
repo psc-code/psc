@@ -17,59 +17,6 @@
 
 #include <mrc_io.hxx>
 
-// ======================================================================
-// OutputFieldsC
-
-struct OutputFieldsC
-{
-  // ----------------------------------------------------------------------
-  // ctor
-
-  OutputFieldsC(const Grid_t& grid)
-  {
-  }
-
-  // ----------------------------------------------------------------------
-  // dtor
-
-  ~OutputFieldsC()
-  {
-  }
-
-  // ----------------------------------------------------------------------
-  // operator()
-
-  void operator()(MfieldsStateBase& mflds, MparticlesBase& mprts)
-  {
-    const auto& grid = mflds.grid();
-    
-    std::string name = "e";
-
-    auto item_ = psc_output_fields_item_create(grid.comm());
-    psc_output_fields_item_set_type(item_, name.c_str());
-    psc_output_fields_item_setup(item_);
-
-    PscFieldsItemBase{item_}(mflds, mprts);
-    
-    mpi_printf(MPI_COMM_WORLD, "***** Writing PFD output\n");
-
-    Int3 rn = {};
-    Int3 rx = {1000000, 1000000, 100000};
-
-    auto io_pfd = MrcIo{"pfd", "."};
-    io_pfd.open(grid, rn, rx);
-
-    auto comp_names = PscFieldsItemBase{item_}->comp_names();
-    auto& pfd = PscFieldsItemBase{item_}->mres();
-    pfd.write_as_mrc_fld(io_pfd.io_, name, comp_names);
-
-    io_pfd.close();
-
-    psc_output_fields_item_destroy(item_);
-  };
-};
-
-
 #include <balance.hxx>
 #include <particles.hxx>
 #include <fields3d.hxx>
@@ -153,9 +100,6 @@ struct PscTestIo
     mflds_.reset(new MfieldsState{grid()});
     mprts_.reset(new Mparticles{grid()});
 
-    // -- output fields
-    outf_.reset(new OutputFieldsC{grid()});
-
     mpi_printf(comm, "**** Setting up fields...\n");
     setup_initial_fields(*mflds_);
   }
@@ -180,7 +124,31 @@ struct PscTestIo
   {
     // initial output / stats
     mpi_printf(grid().comm(), "Performing initial diagnostics.\n");
-    (*outf_)(*mflds_, *mprts_);
+
+    std::string name = "e";
+
+    auto item_ = psc_output_fields_item_create(grid().comm());
+    psc_output_fields_item_set_type(item_, name.c_str());
+    psc_output_fields_item_setup(item_);
+
+    PscFieldsItemBase{item_}(*mflds_, *mprts_);
+    
+    mpi_printf(MPI_COMM_WORLD, "***** Writing PFD output\n");
+
+    Int3 rn = {};
+    Int3 rx = {1000000, 1000000, 100000};
+
+    auto io_pfd = MrcIo{"pfd", "."};
+    io_pfd.open(grid(), rn, rx);
+
+    auto comp_names = PscFieldsItemBase{item_}->comp_names();
+    auto& pfd = PscFieldsItemBase{item_}->mres();
+    pfd.write_as_mrc_fld(io_pfd.io_, name, comp_names);
+
+    io_pfd.close();
+
+    psc_output_fields_item_destroy(item_);
+
     mpi_printf(grid().comm(), "Initialization complete.\n");
   }
 
@@ -193,8 +161,6 @@ protected:
   Grid_t*& grid_;
   std::unique_ptr<MfieldsState> mflds_;
   std::unique_ptr<Mparticles> mprts_;
-
-  std::unique_ptr<OutputFieldsC> outf_;
 
   Int3 ibn = {2, 2, 2}; // FIXME!!! need to factor in invar dims (but not in vpic...)
 };
