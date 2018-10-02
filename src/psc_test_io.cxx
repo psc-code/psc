@@ -15,11 +15,9 @@
 #include <bnd.hxx>
 #include <bnd_fields.hxx>
 #include <marder.hxx>
-#include <heating.hxx>
 #include <setup_particles.hxx>
 #include <setup_fields.hxx>
 
-#include "../libpsc/psc_heating/psc_heating_impl.hxx"
 #include "../libpsc/psc_checks/checks_impl.hxx"
 
 #ifdef USE_CUDA
@@ -28,8 +26,6 @@
 #endif
 
 #include "psc_config.hxx"
-
-#include "heating_spot_foil.hxx"
 
 enum {
   MY_ION,
@@ -48,7 +44,6 @@ using PscConfig = PscConfig1vbecSingle<dim_t>;
 struct PscFlatfoil : Psc<PscConfig>
 {
   using DIM = PscConfig::dim_t;
-  using Heating_t = typename HeatingSelector<Mparticles_t>::Heating;
 
   // ----------------------------------------------------------------------
   // ctor
@@ -130,22 +125,6 @@ struct PscFlatfoil : Psc<PscConfig>
     bool marder_dump = false;
     marder_interval = 0*5;
     marder_.reset(new Marder_t(grid(), marder_diffusion, marder_loop, marder_dump));
-
-    // -- Heating
-    auto heating_foil_params = HeatingSpotFoilParams{};
-    heating_foil_params.zl = -1. * d_i;
-    heating_foil_params.zh =  1. * d_i;
-    heating_foil_params.xc =  0. * d_i;
-    heating_foil_params.yc =  0. * d_i;
-    heating_foil_params.rH = 3. * d_i;
-    heating_foil_params.T  = .04;
-    heating_foil_params.Mi = kinds[MY_ION].m;
-    auto heating_spot = HeatingSpotFoil{heating_foil_params};
-
-    heating_interval_ = 20;
-    heating_begin_ = 0;
-    heating_end_ = 10000000;
-    heating_.reset(new Heating_t{grid(), heating_interval_, MY_ELECTRON, heating_spot});
 
     // -- output fields
     OutputFieldsCParams outf_params;
@@ -229,33 +208,6 @@ struct PscFlatfoil : Psc<PscConfig>
       });
   }
 
-  // ----------------------------------------------------------------------
-  // inject_particles
-
-  void inject_particles() override
-  {
-    static int pr_inject, pr_heating;
-    if (!pr_inject) {
-      pr_inject = prof_register("inject", 1., 0, 0);
-      pr_heating = prof_register("heating", 1., 0, 0);
-    }
-
-    auto comm = grid().comm();
-    auto timestep = grid().timestep();
-    
-    // only heating between heating_tb and heating_te
-    if (timestep >= heating_begin_ && timestep < heating_end_ &&
-	heating_interval_ > 0 && timestep % heating_interval_ == 0) {
-      mpi_printf(comm, "***** Performing heating...\n");
-      prof_start(pr_heating);
-      (*heating_)(*mprts_);
-      prof_stop(pr_heating);
-    }
-  }
-
-protected:
-  std::unique_ptr<Heating_t> heating_;
-
 private:
   double BB_;
   double Zi_;
@@ -263,10 +215,6 @@ private:
   double background_n_;
   double background_Te_;
   double background_Ti_;
-
-  int heating_begin_;
-  int heating_end_;
-  int heating_interval_;
 };
 
 

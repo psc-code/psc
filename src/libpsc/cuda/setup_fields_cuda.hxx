@@ -2,6 +2,7 @@
 #pragma once
 
 #include "setup_fields.hxx"
+#include "psc_fields_cuda.h"
 
 template<>
 template<typename FUNC>
