@@ -841,6 +841,7 @@ struct collective_m3_peer {
   struct collective_m3_recv_patch *begin;
   struct collective_m3_recv_patch *end;
   void *recv_buf;
+  size_t buf_size;
 };
 
 struct collective_m3_ctx {
@@ -1164,21 +1165,28 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
 			  struct mrc_fld *m3)
 {
   for (struct collective_m3_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
-    // skip local patches for now
+    // skip local patches
+    if (peer->rank == io->rank) {
+      continue;
+    }
+
+    peer->buf_size = 0;
+    for (struct collective_m3_recv_patch *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
+      int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
+      peer->buf_size += (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
+    }
+    
+    // alloc aggregate recv buffers
+    peer->recv_buf = malloc(peer->buf_size * m3->_nd->size_of_type);
+  }
+  
+  for (struct collective_m3_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
+    // skip local patches
     if (peer->rank == io->rank) {
       ctx->recv_reqs[peer - ctx->peers] = MPI_REQUEST_NULL;
       continue;
     }
 
-    size_t buf_size = 0;
-    for (struct collective_m3_recv_patch *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
-      int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
-      buf_size += (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
-    }
-
-    // alloc aggregate recv buffers
-    peer->recv_buf = malloc(buf_size * m3->_nd->size_of_type);
-    
     MPI_Datatype mpi_dtype;
     switch (mrc_fld_data_type(m3)) {
     case MRC_NT_FLOAT:
@@ -1195,7 +1203,7 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
     }
     
     // recv aggregate buffers
-    MPI_Irecv(peer->recv_buf, buf_size, mpi_dtype, peer->rank, 0x1000, mrc_io_comm(io),
+    MPI_Irecv(peer->recv_buf, peer->buf_size, mpi_dtype, peer->rank, 0x1000, mrc_io_comm(io),
 	      &ctx->recv_reqs[peer - ctx->peers]);
   }
 }
