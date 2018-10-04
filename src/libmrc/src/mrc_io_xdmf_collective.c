@@ -1211,21 +1211,14 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
 
   size_t *buf_sizes = calloc(io->size, sizeof(*buf_sizes));
   
-  for (int rank = 0; rank < io->size; rank++) {
-    struct collective_m3_recv_patch *begin = ctx->recv_patches_by_rank[rank];
-    struct collective_m3_recv_patch *end   = ctx->recv_patches_by_rank[rank+1];
-
-    // skip if no patches
-    if (begin == end) {
-      continue;
-    }
-
+  for (struct collective_m3_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
     // skip local patches
-    if (rank == io->rank) {
+    if (peer->rank == io->rank) {
       continue;
     }
-      
-    for (struct collective_m3_recv_patch *recv_patch = begin; recv_patch < end; recv_patch++) {
+
+    int rank = peer->rank;
+    for (struct collective_m3_recv_patch *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
       int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
       
       switch (mrc_fld_data_type(m3)) {
