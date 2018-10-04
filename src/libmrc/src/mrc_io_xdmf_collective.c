@@ -1222,15 +1222,14 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
       continue;
     }
 
-    int rank = peer->rank;
-    size_t buf_size = 0;
+    void *buf = peer->recv_buf;
     for (struct collective_m3_recv_patch *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
       int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
       
       switch (mrc_fld_data_type(m3)) {
       case MRC_NT_FLOAT:
 	{
-	  float *buf_ptr = (float *) peer->recv_buf + buf_size;
+	  float *buf_ptr = (float *) buf;
 	  BUFLOOP(ix, iy, iz, ilo, ihi) {
 	    volatile float val = MRC_S3(nd, ix,iy,iz);
 	    MRC_S3(nd, ix,iy,iz) = *buf_ptr++;
@@ -1239,7 +1238,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
 	}
       case MRC_NT_DOUBLE:
 	{
-	  double *buf_ptr = (double *) peer->recv_buf + buf_size;
+	  double *buf_ptr = (double *) buf;
 	  BUFLOOP(ix, iy, iz, ilo, ihi) {
 	    MRC_D3(nd, ix,iy,iz) = *buf_ptr++;
 	  } BUFLOOP_END
@@ -1247,7 +1246,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
 	}
       case MRC_NT_INT:
 	{
-	  int *buf_ptr = (int *) peer->recv_buf + buf_size;
+	  int *buf_ptr = (int *) buf;
 	  BUFLOOP(ix, iy, iz, ilo, ihi) {
 	    MRC_I3(nd, ix,iy,iz) = *buf_ptr++;
 	  } BUFLOOP_END
@@ -1258,7 +1257,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
 	  assert(0);
 	}
       }    
-      buf_size += (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
+      buf += (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]) * m3->_nd->size_of_type;
     }
   }
 }
