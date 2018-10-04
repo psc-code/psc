@@ -110,8 +110,8 @@ struct PscTestIo
     Int3 gdims = { 400, 800, 2400}; // global number of grid points
     Int3 np = { 40, 80, 4 }; // division into patches
 #else
-    Int3 gdims = { 40, 80, 24}; // global number of grid points
-    Int3 np = { 4, 8, 4 }; // division into patches
+    Int3 gdims = { 20, 20, 80}; // global number of grid points
+    Int3 np = { 2, 2, 8 }; // division into patches
 #endif
     
     if (dim::InvarX::value) { ibn[0] = 0; } // FIXME, wrong place, not for VPIC...
