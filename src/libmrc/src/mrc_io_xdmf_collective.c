@@ -1116,13 +1116,13 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
   size_t *buf_sizes = calloc(io->size, sizeof(*buf_sizes));
 
   for (int rank = 0; rank < io->size; rank++) {
+    // skip local patches for now
+    if (rank == io->rank) {
+      continue;
+    }
+      
     for (struct collective_m3_recv_patch *recv_patch = ctx->recv_patches_by_rank[rank];
 	 recv_patch < ctx->recv_patches_by_rank[rank+1]; recv_patch++) {
-      // skip local patches for now
-      if (rank == io->rank) {
-	continue;
-      }
-      
       int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
       size_t len = (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
       buf_sizes[rank] += len;
@@ -1181,17 +1181,17 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
   size_t *buf_sizes = calloc(io->size, sizeof(*buf_sizes));
   
   for (int rank = 0; rank < io->size; rank++) {
+    // only consider recvs from remote ranks
+    if (rank == io->rank) {
+      continue;
+    }
+    // no patches at all expected from this rank, so don't have to check this patch
+    if (!ctx->recv_bufs[rank]) {
+      continue;
+    }
+      
     for (struct collective_m3_recv_patch *recv_patch = ctx->recv_patches_by_rank[rank];
 	 recv_patch < ctx->recv_patches_by_rank[rank+1]; recv_patch++) {
-      // only consider recvs from remote ranks
-      if (rank == io->rank) {
-	continue;
-      }
-      // no patches at all expected from this rank, so don't have to check this patch
-      if (!ctx->recv_bufs[rank]) {
-	continue;
-      }
-      
       int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
       
       switch (mrc_fld_data_type(m3)) {
