@@ -108,7 +108,7 @@ struct PscTestIo
     Grid_t::Real3 LL = { 400., 800., 400.*6 }; // domain size (in d_e)
 #if 1
     Int3 gdims = { 400, 800, 2400}; // global number of grid points
-    Int3 np = { 40, 80, 4 }; // division into patches
+    Int3 np = { 8, 16, 48 }; // division into patches
 #else
     Int3 gdims = { 20, 20, 80}; // global number of grid points
     Int3 np = { 2, 2, 8 }; // division into patches
