@@ -37,6 +37,32 @@
 #include "../libpsc/cuda/setup_particles_cuda.hxx"
 #endif
 
+#define define_dxdydz(dx, dy, dz)		       \
+  int dx _mrc_unused = (grid.isInvar(0)) ? 0 : 1;      \
+  int dy _mrc_unused = (grid.isInvar(1)) ? 0 : 1;      \
+  int dz _mrc_unused = (grid.isInvar(2)) ? 0 : 1
+
+struct Item_e_ec
+{
+  using MfieldsState = MfieldsStateSingle;
+  using Mfields = MfieldsSingle;
+  using Fields = Fields3d<MfieldsSingle::fields_t>;
+  
+  constexpr static char const* name = "e_ec";
+  constexpr static int n_comps = 3;
+  static fld_names_t fld_names() { return { "ex_ec", "ey_ec", "ez_ec" }; }
+  
+  static void set(const Grid_t& grid, Fields& R, Fields&F, int i, int j, int k)
+  {
+    define_dxdydz(dx, dy, dz);
+    R(0, i,j,k) = F(EX, i,j,k);
+    R(1, i,j,k) = F(EY, i,j,k);
+    R(2, i,j,k) = F(EZ, i,j,k);
+  }
+};
+
+#undef define_dxdydz
+
 #include "psc_config.hxx"
 
 enum {
@@ -130,6 +156,8 @@ struct PscTestIo
     psc_output_fields_item_set_type(item_, "e");
     psc_output_fields_item_setup(item_);
 
+    FieldsItemFields<ItemLoopPatches<Item_e_ec>> item_e{grid(), grid().comm()};
+    item_e(*mflds_);
     PscFieldsItemBase{item_}(*mflds_, *mprts_);
     
     mpi_printf(MPI_COMM_WORLD, "***** Writing PFD output\n");
