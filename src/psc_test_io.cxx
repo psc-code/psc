@@ -127,7 +127,6 @@ struct PscTestIo
     grid_ = Grid_t::psc_make_grid(grid_domain, grid_bc, kinds, coeff, dt, ibn);
 
     mflds_.reset(new MfieldsState{grid()});
-    mprts_.reset(new Mparticles{grid()});
 
     mpi_printf(comm, "**** Setting up fields...\n");
     setup_initial_fields(*mflds_);
@@ -155,13 +154,8 @@ struct PscTestIo
     mpi_printf(grid().comm(), "Performing initial diagnostics.\n");
 
 #if 0
-    auto item_ = psc_output_fields_item_create(grid().comm());
-    psc_output_fields_item_set_type(item_, "e");
-    psc_output_fields_item_setup(item_);
-
     FieldsItemFields<ItemLoopPatches<Item_e_ec>> item_e{grid(), grid().comm()};
     item_e(*mflds_);
-    PscFieldsItemBase{item_}(*mflds_, *mprts_);
 #endif
 
     mpi_printf(MPI_COMM_WORLD, "***** Writing PFD output\n");
@@ -177,10 +171,6 @@ struct PscTestIo
 
     io_pfd.close();
 
-#if 0
-    psc_output_fields_item_destroy(item_);
-#endif
-
     mpi_printf(grid().comm(), "Initialization complete.\n");
   }
 
@@ -192,7 +182,6 @@ private:
 protected:
   Grid_t*& grid_;
   std::unique_ptr<MfieldsState> mflds_;
-  std::unique_ptr<Mparticles> mprts_;
 
   Int3 ibn = {2, 2, 2}; // FIXME!!! need to factor in invar dims (but not in vpic...)
 };
