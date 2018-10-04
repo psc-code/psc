@@ -836,6 +836,12 @@ struct collective_m3_recv_patch {
   int ihi[3]; // intersection high
 };
 
+struct collective_m3_peer {
+  int rank;
+  struct collective_m3_recv_patch *begin;
+  struct collective_m3_recv_patch *end;
+};
+
 struct collective_m3_ctx {
   int gdims[3];
   int slab_dims[3], slab_off[3];
@@ -848,6 +854,9 @@ struct collective_m3_ctx {
   int n_recv_patches;
 
   struct collective_m3_recv_patch **recv_patches_by_rank;
+
+  struct collective_m3_peer *peers;
+  int n_peers;
 
   struct collective_m3_entry *sends;
   void **send_bufs; // one for each writer
@@ -1112,6 +1121,7 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
     mprintf("rank %d patches start at %d\n", cur_rank, ctx->n_recv_patches);
   }
 
+  ctx->n_peers = 0;
   for (int rank = 0; rank < io->size; rank++) {
     struct collective_m3_recv_patch *begin = ctx->recv_patches_by_rank[rank];
     struct collective_m3_recv_patch *end   = ctx->recv_patches_by_rank[rank+1];
@@ -1120,11 +1130,27 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
       continue;
     }
 
-    mprintf("partner rank %d # = %ld\n", rank, end - begin);
+    mprintf("peer rank %d # = %ld\n", rank, end - begin);
+    ctx->n_peers++;
   }
-    
+  mprintf("n_peers %d\n", ctx->n_peers);
 
-  
+  ctx->peers = calloc(ctx->n_peers, sizeof(*ctx->peers));
+  ctx->n_peers = 0;
+  for (int rank = 0; rank < io->size; rank++) {
+    struct collective_m3_recv_patch *begin = ctx->recv_patches_by_rank[rank];
+    struct collective_m3_recv_patch *end   = ctx->recv_patches_by_rank[rank+1];
+
+    if (begin == end) {
+      continue;
+    }
+
+    ctx->peers[ctx->n_peers].rank = rank;
+    ctx->peers[ctx->n_peers].begin = begin;
+    ctx->peers[ctx->n_peers].end = end;
+    ctx->n_peers++;
+  }
+
   ctx->recv_bufs = calloc(io->size, sizeof(*ctx->recv_bufs));
   size_t *buf_sizes = calloc(io->size, sizeof(*buf_sizes));
 
@@ -1261,6 +1287,8 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
   free(buf_sizes);
 
   free(ctx->recv_patches);
+  free(ctx->recv_patches_by_rank);
+  free(ctx->peers);
 }
 
 // ----------------------------------------------------------------------
