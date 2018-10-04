@@ -1154,16 +1154,7 @@ collective_recv_fld_init(struct collective_m3_ctx *ctx,
   free(recv_patches_by_rank);
 
   ctx->recv_reqs = calloc(ctx->n_peers, sizeof(*ctx->recv_reqs));
-}
 
-// ----------------------------------------------------------------------
-// collective_recv_fld_begin
-
-static void
-collective_recv_fld_begin(struct collective_m3_ctx *ctx,
-			  struct mrc_io *io, struct mrc_ndarray *nd,
-			  struct mrc_fld *m3)
-{
   for (struct collective_m3_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
     // skip local patches
     if (peer->rank == io->rank) {
@@ -1179,7 +1170,16 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
     // alloc aggregate recv buffers
     peer->recv_buf = malloc(peer->buf_size * m3->_nd->size_of_type);
   }
-  
+}
+
+// ----------------------------------------------------------------------
+// collective_recv_fld_begin
+
+static void
+collective_recv_fld_begin(struct collective_m3_ctx *ctx,
+			  struct mrc_io *io, struct mrc_ndarray *nd,
+			  struct mrc_fld *m3)
+{
   for (struct collective_m3_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
     // skip local patches
     if (peer->rank == io->rank) {
@@ -1266,10 +1266,6 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
       buf_size += (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
     }
   }
-  
-  for (struct collective_m3_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
-    free(peer->recv_buf);
-  }
 }
 
 // ----------------------------------------------------------------------
@@ -1281,8 +1277,13 @@ collective_recv_fld_destroy(struct collective_m3_ctx *ctx,
 			    struct mrc_fld *m3)
 {
   free(ctx->recv_reqs);
-  free(ctx->recv_patches);
+  
+  for (struct collective_m3_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
+    free(peer->recv_buf);
+  }
   free(ctx->peers);
+
+  free(ctx->recv_patches);
 }
 
 // ----------------------------------------------------------------------
