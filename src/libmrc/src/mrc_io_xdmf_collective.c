@@ -1151,14 +1151,12 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
   }
   free(recv_patches_by_rank);
 
-  ctx->recv_reqs = calloc(io->size, sizeof(*ctx->recv_reqs));
-  for (int rank = 0; rank < io->size; rank++) {
-    ctx->recv_reqs[rank] = MPI_REQUEST_NULL;
-  }
+  ctx->recv_reqs = calloc(ctx->n_peers, sizeof(*ctx->recv_reqs));
   
   for (struct collective_m3_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
     // skip local patches for now
     if (peer->rank == io->rank) {
+      ctx->recv_reqs[peer - ctx->peers] = MPI_REQUEST_NULL;
       continue;
     }
 
@@ -1188,7 +1186,7 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
     
     // recv aggregate buffers
     MPI_Irecv(peer->recv_buf, buf_size, mpi_dtype, peer->rank, 0x1000, mrc_io_comm(io),
-	      &ctx->recv_reqs[peer->rank]);
+	      &ctx->recv_reqs[peer - ctx->peers]);
   }
   
 }
@@ -1201,7 +1199,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
 			struct mrc_io *io, struct mrc_ndarray *nd,
 			struct mrc_fld *m3, int m)
 {
-  MPI_Waitall(io->size, ctx->recv_reqs, MPI_STATUSES_IGNORE);
+  MPI_Waitall(ctx->n_peers, ctx->recv_reqs, MPI_STATUSES_IGNORE);
 
   int nr_global_patches;
   mrc_domain_get_nr_global_patches(m3->_domain, &nr_global_patches);
