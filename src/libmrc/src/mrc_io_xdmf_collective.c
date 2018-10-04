@@ -1054,12 +1054,12 @@ collective_send_fld_end(struct collective_m3_ctx *ctx, struct mrc_io *io,
 }
     
 // ----------------------------------------------------------------------
-// collective_recv_fld_init
+// writer_comm_init
 
 static void
-collective_recv_fld_init(struct collective_m3_ctx *ctx,
-			 struct mrc_io *io, struct mrc_ndarray *nd,
-			 struct mrc_domain *domain, int size_of_type)
+writer_comm_init(struct collective_m3_ctx *ctx,
+		 struct mrc_io *io, struct mrc_ndarray *nd,
+		 struct mrc_domain *domain, int size_of_type)
 {
   // find out who's sending, OPT: this way is not very scalable
   // could also be optimized by just looking at slow_dim
@@ -1171,12 +1171,11 @@ collective_recv_fld_init(struct collective_m3_ctx *ctx,
 }
 
 // ----------------------------------------------------------------------
-// collective_recv_fld_begin
+// writer_comm_begin
 
 static void
-collective_recv_fld_begin(struct collective_m3_ctx *ctx,
-			  struct mrc_io *io, struct mrc_ndarray *nd,
-			  struct mrc_fld *m3)
+writer_comm_begin(struct collective_m3_ctx *ctx, struct mrc_io *io, struct mrc_ndarray *nd,
+		  struct mrc_fld *m3)
 {
   for (struct collective_m3_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
     // skip local patches
@@ -1207,12 +1206,11 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
 }
 
 // ----------------------------------------------------------------------
-// collective_recv_fld_end
+// writer_comm_end
 
 static void
-collective_recv_fld_end(struct collective_m3_ctx *ctx,
-			struct mrc_io *io, struct mrc_ndarray *nd,
-			struct mrc_fld *m3, int m)
+writer_comm_end(struct collective_m3_ctx *ctx, struct mrc_io *io, struct mrc_ndarray *nd,
+		struct mrc_fld *m3, int m)
 {
   MPI_Waitall(ctx->n_peers, ctx->recv_reqs, MPI_STATUSES_IGNORE);
 
@@ -1260,10 +1258,10 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
 }
 
 // ----------------------------------------------------------------------
-// collective_recv_fld_destroy
+// writer_comm_destroy
 
 static void
-collective_recv_fld_destroy(struct collective_m3_ctx *ctx)
+writer_comm_destroy(struct collective_m3_ctx *ctx)
 {
   free(ctx->recv_reqs);
   
@@ -1276,14 +1274,12 @@ collective_recv_fld_destroy(struct collective_m3_ctx *ctx)
 }
 
 // ----------------------------------------------------------------------
-// collective_recv_fld_local
+// writer_comm_local
 
 static void
-collective_recv_fld_local(struct collective_m3_ctx *ctx,
-			  struct mrc_io *io, struct mrc_ndarray *nd,
-			  struct mrc_fld *m3, int m)
+writer_comm_local(struct collective_m3_ctx *ctx, struct mrc_io *io, struct mrc_ndarray *nd,
+		  struct mrc_fld *m3, int m)
 {
-  //MHERE;
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(m3->_domain, &nr_patches);
 
@@ -1466,16 +1462,16 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     int nr_1 = 1;
     H5LTset_attribute_int(group0, ".", "nr_patches", &nr_1, 1);
 
-    collective_recv_fld_init(&ctx, io, nd, m3_soa->_domain, m3_soa->_nd->size_of_type);
+    writer_comm_init(&ctx, io, nd, m3_soa->_domain, m3_soa->_nd->size_of_type);
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
-      collective_recv_fld_begin(&ctx, io, nd, m3_soa);
+      writer_comm_begin(&ctx, io, nd, m3_soa);
       collective_send_fld_begin(&ctx, io, m3_soa, m);
-      collective_recv_fld_local(&ctx, io, nd, m3_soa, m);
-      collective_recv_fld_end(&ctx, io, nd, m3_soa, m);
+      writer_comm_local(&ctx, io, nd, m3_soa, m);
+      writer_comm_end(&ctx, io, nd, m3_soa, m);
       collective_write_fld(&ctx, io, path, nd, m, m3, xs, group0);
       collective_send_fld_end(&ctx, io, m3, m);
     }
-    collective_recv_fld_destroy(&ctx);
+    writer_comm_destroy(&ctx);
 
     H5Gclose(group0);
     mrc_ndarray_destroy(nd);
