@@ -1146,30 +1146,28 @@ collective_recv_fld_init(struct collective_m3_ctx *ctx,
       continue;
     }
 
-    ctx->peers[ctx->n_peers].rank = rank;
-    ctx->peers[ctx->n_peers].begin = begin;
-    ctx->peers[ctx->n_peers].end = end;
+    struct collective_m3_peer *peer = &ctx->peers[ctx->n_peers];
+    peer->rank = rank;
+    peer->begin = begin;
+    peer->end = end;
+
+    // for remote patches, allocate buffer
+    if (peer->rank != io->rank) {
+      peer->buf_size = 0;
+      for (struct collective_m3_recv_patch *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
+	int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
+	peer->buf_size += (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
+      }
+      
+      // alloc aggregate recv buffers
+      peer->recv_buf = malloc(peer->buf_size * m3->_nd->size_of_type);
+    }
+
     ctx->n_peers++;
   }
   free(recv_patches_by_rank);
 
   ctx->recv_reqs = calloc(ctx->n_peers, sizeof(*ctx->recv_reqs));
-
-  for (struct collective_m3_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
-    // skip local patches
-    if (peer->rank == io->rank) {
-      continue;
-    }
-
-    peer->buf_size = 0;
-    for (struct collective_m3_recv_patch *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
-      int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
-      peer->buf_size += (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
-    }
-    
-    // alloc aggregate recv buffers
-    peer->recv_buf = malloc(peer->buf_size * m3->_nd->size_of_type);
-  }
 }
 
 // ----------------------------------------------------------------------
@@ -1217,9 +1215,6 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
 			struct mrc_fld *m3, int m)
 {
   MPI_Waitall(ctx->n_peers, ctx->recv_reqs, MPI_STATUSES_IGNORE);
-
-  int nr_global_patches;
-  mrc_domain_get_nr_global_patches(m3->_domain, &nr_global_patches);
 
   for (struct collective_m3_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
     // skip local patches
