@@ -171,8 +171,8 @@ struct PscTestIo
     auto io_pfd = MrcIo{"pfd", "."};
     io_pfd.open(grid(), rn, rx);
 
-    auto mres = Mfields{grid(), 1, grid().ibn};
-    mres.write_as_mrc_fld(io_pfd.io_, "e", {"ex"});
+    auto mres = Mfields{grid(), 2, grid().ibn};
+    mres.write_as_mrc_fld(io_pfd.io_, "e", {"ex", "ey"});
 
     io_pfd.close();
 
