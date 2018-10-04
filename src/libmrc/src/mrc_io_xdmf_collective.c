@@ -840,6 +840,7 @@ struct collective_m3_peer {
   int rank;
   struct collective_m3_recv_patch *begin;
   struct collective_m3_recv_patch *end;
+  void *recv_buf;
 };
 
 struct collective_m3_ctx {
@@ -853,8 +854,6 @@ struct collective_m3_ctx {
   struct collective_m3_recv_patch *recv_patches;
   int n_recv_patches;
 
-  struct collective_m3_recv_patch **recv_patches_by_rank;
-
   struct collective_m3_peer *peers;
   int n_peers;
 
@@ -864,7 +863,6 @@ struct collective_m3_ctx {
   int nr_sends;
 
   struct collective_m3_entry *recvs;
-  void **recv_bufs; // one for each rank
   MPI_Request *recv_reqs;
   int nr_recvs;
 };
@@ -1086,9 +1084,10 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
   mprintf("n_recv_patches %d\n", ctx->n_recv_patches);
   ctx->recv_patches = calloc(ctx->n_recv_patches, sizeof(*ctx->recv_patches));
 
-  ctx->n_recv_patches = 0;
-  ctx->recv_patches_by_rank = calloc(io->size + 1, sizeof(*ctx->recv_patches_by_rank));
+  struct collective_m3_recv_patch **recv_patches_by_rank = calloc(io->size + 1, sizeof(*recv_patches_by_rank));
+
   int cur_rank = -1;
+  ctx->n_recv_patches = 0;
   for (int gp = 0; gp < nr_global_patches; gp++) {
     struct mrc_patch_info info;
     mrc_domain_get_global_patch_info(m3->_domain, gp, &info);
@@ -1103,7 +1102,7 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
     assert(info.rank >= cur_rank);
     while (cur_rank < info.rank) {
       cur_rank++;
-      ctx->recv_patches_by_rank[cur_rank] = &ctx->recv_patches[ctx->n_recv_patches];
+      recv_patches_by_rank[cur_rank] = &ctx->recv_patches[ctx->n_recv_patches];
       mprintf("rank %d patches start at %d\n", cur_rank, ctx->n_recv_patches);
     }
 
@@ -1117,14 +1116,14 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
 
   while (cur_rank < io->size) {
     cur_rank++;
-    ctx->recv_patches_by_rank[cur_rank] = &ctx->recv_patches[ctx->n_recv_patches];
+    recv_patches_by_rank[cur_rank] = &ctx->recv_patches[ctx->n_recv_patches];
     mprintf("rank %d patches start at %d\n", cur_rank, ctx->n_recv_patches);
   }
 
   ctx->n_peers = 0;
   for (int rank = 0; rank < io->size; rank++) {
-    struct collective_m3_recv_patch *begin = ctx->recv_patches_by_rank[rank];
-    struct collective_m3_recv_patch *end   = ctx->recv_patches_by_rank[rank+1];
+    struct collective_m3_recv_patch *begin = recv_patches_by_rank[rank];
+    struct collective_m3_recv_patch *end   = recv_patches_by_rank[rank+1];
 
     if (begin == end) {
       continue;
@@ -1138,8 +1137,8 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
   ctx->peers = calloc(ctx->n_peers, sizeof(*ctx->peers));
   ctx->n_peers = 0;
   for (int rank = 0; rank < io->size; rank++) {
-    struct collective_m3_recv_patch *begin = ctx->recv_patches_by_rank[rank];
-    struct collective_m3_recv_patch *end   = ctx->recv_patches_by_rank[rank+1];
+    struct collective_m3_recv_patch *begin = recv_patches_by_rank[rank];
+    struct collective_m3_recv_patch *end   = recv_patches_by_rank[rank+1];
 
     if (begin == end) {
       continue;
@@ -1150,8 +1149,7 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
     ctx->peers[ctx->n_peers].end = end;
     ctx->n_peers++;
   }
-
-  ctx->recv_bufs = calloc(io->size, sizeof(*ctx->recv_bufs));
+  free(recv_patches_by_rank);
 
   ctx->recv_reqs = calloc(io->size, sizeof(*ctx->recv_reqs));
   for (int rank = 0; rank < io->size; rank++) {
@@ -1171,7 +1169,7 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
     }
 
     // alloc aggregate recv buffers
-    ctx->recv_bufs[peer->rank] = malloc(buf_size * m3->_nd->size_of_type);
+    peer->recv_buf = malloc(buf_size * m3->_nd->size_of_type);
     
     MPI_Datatype mpi_dtype;
     switch (mrc_fld_data_type(m3)) {
@@ -1189,8 +1187,7 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
     }
     
     // recv aggregate buffers
-    MPI_Irecv(ctx->recv_bufs[peer->rank], buf_size, mpi_dtype,
-	      peer->rank, 0x1000, mrc_io_comm(io),
+    MPI_Irecv(peer->recv_buf, buf_size, mpi_dtype, peer->rank, 0x1000, mrc_io_comm(io),
 	      &ctx->recv_reqs[peer->rank]);
   }
   
@@ -1209,8 +1206,6 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
   int nr_global_patches;
   mrc_domain_get_nr_global_patches(m3->_domain, &nr_global_patches);
 
-  size_t *buf_sizes = calloc(io->size, sizeof(*buf_sizes));
-  
   for (struct collective_m3_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
     // skip local patches
     if (peer->rank == io->rank) {
@@ -1218,13 +1213,14 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
     }
 
     int rank = peer->rank;
+    size_t buf_size = 0;
     for (struct collective_m3_recv_patch *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
       int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
       
       switch (mrc_fld_data_type(m3)) {
       case MRC_NT_FLOAT:
 	{
-	  float *buf_ptr = (float *) ctx->recv_bufs[rank] + buf_sizes[rank];
+	  float *buf_ptr = (float *) peer->recv_buf + buf_size;
 	  BUFLOOP(ix, iy, iz, ilo, ihi) {
 	    volatile float val = MRC_S3(nd, ix,iy,iz);
 	    MRC_S3(nd, ix,iy,iz) = *buf_ptr++;
@@ -1233,7 +1229,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
 	}
       case MRC_NT_DOUBLE:
 	{
-	  double *buf_ptr = (double *) ctx->recv_bufs[rank] + buf_sizes[rank];
+	  double *buf_ptr = (double *) peer->recv_buf + buf_size;
 	  BUFLOOP(ix, iy, iz, ilo, ihi) {
 	    MRC_D3(nd, ix,iy,iz) = *buf_ptr++;
 	  } BUFLOOP_END
@@ -1241,7 +1237,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
 	}
       case MRC_NT_INT:
 	{
-	  int *buf_ptr = (int *) ctx->recv_bufs[rank] + buf_sizes[rank];
+	  int *buf_ptr = (int *) peer->recv_buf + buf_size;
 	  BUFLOOP(ix, iy, iz, ilo, ihi) {
 	    MRC_I3(nd, ix,iy,iz) = *buf_ptr++;
 	  } BUFLOOP_END
@@ -1252,20 +1248,16 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
 	  assert(0);
 	}
       }    
-      size_t len = (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
-      buf_sizes[rank] += len;
+      buf_size += (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
     }
   }
   
   free(ctx->recv_reqs);
-  for (int rank = 0; rank < io->size; rank++) {
-    free(ctx->recv_bufs[rank]);
+  for (struct collective_m3_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
+    free(peer->recv_buf);
   }
-  free(ctx->recv_bufs);
-  free(buf_sizes);
 
   free(ctx->recv_patches);
-  free(ctx->recv_patches_by_rank);
   free(ctx->peers);
 }
 
