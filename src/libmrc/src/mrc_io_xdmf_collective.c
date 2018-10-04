@@ -849,6 +849,8 @@ struct collective_m3_ctx {
   struct collective_m3_recv_patch *recv_patches;
   int n_recv_patches;
 
+  struct collective_m3_recv_patch **recv_patches_by_rank;
+
   struct collective_m3_entry *sends;
   void **send_bufs; // one for each writer
   MPI_Request *send_reqs;
@@ -1078,6 +1080,8 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
   ctx->recv_patches = calloc(ctx->n_recv_patches, sizeof(*ctx->recv_patches));
 
   ctx->n_recv_patches = 0;
+  ctx->recv_patches_by_rank = calloc(io->size + 1, sizeof(*ctx->recv_patches_by_rank));
+  int cur_rank = -1;
   for (int gp = 0; gp < nr_global_patches; gp++) {
     struct mrc_patch_info info;
     mrc_domain_get_global_patch_info(m3->_domain, gp, &info);
@@ -1089,6 +1093,13 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
       continue;
     }
 
+    assert(info.rank >= cur_rank);
+    while (cur_rank < info.rank) {
+      cur_rank++;
+      ctx->recv_patches_by_rank[cur_rank] = &ctx->recv_patches[ctx->n_recv_patches];
+      mprintf("rank %d patches start at %d\n", cur_rank, ctx->n_recv_patches);
+    }
+
     struct collective_m3_recv_patch *recv_patch = &ctx->recv_patches[ctx->n_recv_patches];
     recv_patch->global_patch = gp;
     recv_patch->rank = info.rank;
@@ -1097,6 +1108,12 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
       recv_patch->ihi[d] = ihi[d];
     }
     ctx->n_recv_patches++;
+  }
+
+  while (cur_rank < io->size) {
+    cur_rank++;
+    ctx->recv_patches_by_rank[cur_rank] = &ctx->recv_patches[ctx->n_recv_patches];
+    mprintf("rank %d patches start at %d\n", cur_rank, ctx->n_recv_patches);
   }
   
   ctx->recv_bufs = calloc(io->size, sizeof(*ctx->recv_bufs));
