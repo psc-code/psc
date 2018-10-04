@@ -1105,7 +1105,7 @@ collective_recv_fld_init(struct collective_m3_ctx *ctx,
     while (cur_rank < info.rank) {
       cur_rank++;
       recv_patches_by_rank[cur_rank] = &ctx->recv_patches[ctx->n_recv_patches];
-      mprintf("rank %d patches start at %d\n", cur_rank, ctx->n_recv_patches);
+      //mprintf("rank %d patches start at %d\n", cur_rank, ctx->n_recv_patches);
     }
 
     struct collective_m3_recv_patch *recv_patch = &ctx->recv_patches[ctx->n_recv_patches];
@@ -1119,7 +1119,7 @@ collective_recv_fld_init(struct collective_m3_ctx *ctx,
   while (cur_rank < io->size) {
     cur_rank++;
     recv_patches_by_rank[cur_rank] = &ctx->recv_patches[ctx->n_recv_patches];
-    mprintf("rank %d patches start at %d\n", cur_rank, ctx->n_recv_patches);
+    //mprintf("rank %d patches start at %d\n", cur_rank, ctx->n_recv_patches);
   }
 
   ctx->n_peers = 0;
@@ -1131,7 +1131,7 @@ collective_recv_fld_init(struct collective_m3_ctx *ctx,
       continue;
     }
 
-    mprintf("peer rank %d # = %ld\n", rank, end - begin);
+    //mprintf("peer rank %d # = %ld\n", rank, end - begin);
     ctx->n_peers++;
   }
   mprintf("n_peers %d\n", ctx->n_peers);
