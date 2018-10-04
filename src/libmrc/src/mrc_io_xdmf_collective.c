@@ -834,6 +834,8 @@ struct collective_m3_entry {
 struct collective_m3_recv_patch {
   int global_patch; // global patch number
   int rank; // which proc it lives on
+  int ilo[3]; // intersection low
+  int ihi[3]; // intersection high
 };
 
 struct collective_m3_ctx {
@@ -1062,10 +1064,7 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
   for (int gp = 0; gp < nr_global_patches; gp++) {
     struct mrc_patch_info info;
     mrc_domain_get_global_patch_info(m3->_domain, gp, &info);
-    // skip local patches for now
-    if (info.rank == io->rank) {
-      continue;
-    }
+
     int ilo[3], ihi[3];
     int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
 					     mrc_ndarray_offs(nd), mrc_ndarray_dims(nd));
@@ -1082,10 +1081,7 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
   for (int gp = 0; gp < nr_global_patches; gp++) {
     struct mrc_patch_info info;
     mrc_domain_get_global_patch_info(m3->_domain, gp, &info);
-    // skip local patches for now
-    if (info.rank == io->rank) {
-      continue;
-    }
+
     int ilo[3], ihi[3];
     int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
 					     mrc_ndarray_offs(nd), mrc_ndarray_dims(nd));
@@ -1096,33 +1092,28 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
     struct collective_m3_recv_patch *recv_patch = &ctx->recv_patches[ctx->n_recv_patches];
     recv_patch->global_patch = gp;
     recv_patch->rank = info.rank;
+    for (int d = 0; d < 3; d++) {
+      recv_patch->ilo[d] = ilo[d];
+      recv_patch->ihi[d] = ihi[d];
+    }
     ctx->n_recv_patches++;
   }
   
   ctx->recv_bufs = calloc(io->size, sizeof(*ctx->recv_bufs));
   size_t *buf_sizes = calloc(io->size, sizeof(*buf_sizes));
-  for (int gp = 0; gp < nr_global_patches; gp++) {
-    struct mrc_patch_info info;
-    mrc_domain_get_global_patch_info(m3->_domain, gp, &info);
-    // skip local patches for now
-    if (info.rank == io->rank) {
-      continue;
-    }
-    int ilo[3], ihi[3];
-    int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
-					     mrc_ndarray_offs(nd), mrc_ndarray_dims(nd));
-    if (!has_intersection) {
-      continue;
-    }
-    size_t len = (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
-    buf_sizes[info.rank] += len;
-  }
-  /* for (int r = 0; r < io->size; r++) { */
-  /*   if (buf_sizes[r]) { */
-  /*     mprintf("buf_sizes[%d] = %ld\n", r, buf_sizes[r]); */
-  /*   } */
-  /* } */
 
+  for (struct collective_m3_recv_patch *recv_patch = ctx->recv_patches;
+       recv_patch < ctx->recv_patches + ctx->n_recv_patches; recv_patch++) {
+    // skip local patches for now
+    if (recv_patch->rank == io->rank) {
+      continue;
+    }
+
+    int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
+    size_t len = (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
+    buf_sizes[recv_patch->rank] += len;
+  }
+  
   // !!!
   free(ctx->recv_patches);
   
