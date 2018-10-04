@@ -1078,10 +1078,27 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
   mprintf("n_recv_patches %d\n", ctx->n_recv_patches);
   ctx->recv_patches = calloc(ctx->n_recv_patches, sizeof(*ctx->recv_patches));
 
-  // !!!
-  free(ctx->recv_patches);
+  ctx->n_recv_patches = 0;
+  for (int gp = 0; gp < nr_global_patches; gp++) {
+    struct mrc_patch_info info;
+    mrc_domain_get_global_patch_info(m3->_domain, gp, &info);
+    // skip local patches for now
+    if (info.rank == io->rank) {
+      continue;
+    }
+    int ilo[3], ihi[3];
+    int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
+					     mrc_ndarray_offs(nd), mrc_ndarray_dims(nd));
+    if (!has_intersection) {
+      continue;
+    }
+
+    struct collective_m3_recv_patch *recv_patch = &ctx->recv_patches[ctx->n_recv_patches];
+    recv_patch->global_patch = gp;
+    recv_patch->rank = info.rank;
+    ctx->n_recv_patches++;
+  }
   
-  ctx->nr_recvs = 0;
   ctx->recv_bufs = calloc(io->size, sizeof(*ctx->recv_bufs));
   size_t *buf_sizes = calloc(io->size, sizeof(*buf_sizes));
   for (int gp = 0; gp < nr_global_patches; gp++) {
@@ -1106,6 +1123,9 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
   /*   } */
   /* } */
 
+  // !!!
+  free(ctx->recv_patches);
+  
   ctx->recv_reqs = calloc(io->size, sizeof(*ctx->recv_reqs));
   for (int rank = 0; rank < io->size; rank++) {
     //mprintf("recv buf_sizes[%d] = %d\n", rank, buf_sizes[rank]);
