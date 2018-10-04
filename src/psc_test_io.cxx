@@ -37,6 +37,8 @@
 #include "../libpsc/cuda/setup_particles_cuda.hxx"
 #endif
 
+#include "psc_fields_single.h"
+
 #define define_dxdydz(dx, dy, dz)		       \
   int dx _mrc_unused = (grid.isInvar(0)) ? 0 : 1;      \
   int dy _mrc_unused = (grid.isInvar(1)) ? 0 : 1;      \
