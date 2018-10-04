@@ -1059,19 +1059,19 @@ collective_send_fld_end(struct collective_m3_ctx *ctx, struct mrc_io *io,
 static void
 collective_recv_fld_init(struct collective_m3_ctx *ctx,
 			 struct mrc_io *io, struct mrc_ndarray *nd,
-			 struct mrc_fld *m3)
+			 struct mrc_domain *domain, int size_of_type)
 {
   // find out who's sending, OPT: this way is not very scalable
   // could also be optimized by just looking at slow_dim
   // FIXME, figure out pattern and cache, at least across components
 
   int nr_global_patches;
-  mrc_domain_get_nr_global_patches(m3->_domain, &nr_global_patches);
+  mrc_domain_get_nr_global_patches(domain, &nr_global_patches);
 
   ctx->n_recv_patches = 0;
   for (int gp = 0; gp < nr_global_patches; gp++) {
     struct mrc_patch_info info;
-    mrc_domain_get_global_patch_info(m3->_domain, gp, &info);
+    mrc_domain_get_global_patch_info(domain, gp, &info);
 
     int ilo[3], ihi[3];
     int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
@@ -1092,7 +1092,7 @@ collective_recv_fld_init(struct collective_m3_ctx *ctx,
   ctx->n_recv_patches = 0;
   for (int gp = 0; gp < nr_global_patches; gp++) {
     struct mrc_patch_info info;
-    mrc_domain_get_global_patch_info(m3->_domain, gp, &info);
+    mrc_domain_get_global_patch_info(domain, gp, &info);
 
     int ilo[3], ihi[3];
     int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
@@ -1160,7 +1160,7 @@ collective_recv_fld_init(struct collective_m3_ctx *ctx,
       }
       
       // alloc aggregate recv buffers
-      peer->recv_buf = malloc(peer->buf_size * m3->_nd->size_of_type);
+      peer->recv_buf = malloc(peer->buf_size * size_of_type);
     }
 
     ctx->n_peers++;
@@ -1263,9 +1263,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
 // collective_recv_fld_destroy
 
 static void
-collective_recv_fld_destroy(struct collective_m3_ctx *ctx,
-			    struct mrc_io *io, struct mrc_ndarray *nd,
-			    struct mrc_fld *m3)
+collective_recv_fld_destroy(struct collective_m3_ctx *ctx)
 {
   free(ctx->recv_reqs);
   
@@ -1468,7 +1466,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     int nr_1 = 1;
     H5LTset_attribute_int(group0, ".", "nr_patches", &nr_1, 1);
 
-    collective_recv_fld_init(&ctx, io, nd, m3_soa);
+    collective_recv_fld_init(&ctx, io, nd, m3_soa->_domain, m3_soa->_nd->size_of_type);
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
       collective_recv_fld_begin(&ctx, io, nd, m3_soa);
       collective_send_fld_begin(&ctx, io, m3_soa, m);
@@ -1477,7 +1475,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
       collective_write_fld(&ctx, io, path, nd, m, m3, xs, group0);
       collective_send_fld_end(&ctx, io, m3, m);
     }
-    collective_recv_fld_destroy(&ctx, io, nd, m3_soa);
+    collective_recv_fld_destroy(&ctx);
 
     H5Gclose(group0);
     mrc_ndarray_destroy(nd);
