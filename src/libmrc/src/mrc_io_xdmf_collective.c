@@ -1477,16 +1477,16 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     int nr_1 = 1;
     H5LTset_attribute_int(group0, ".", "nr_patches", &nr_1, 1);
 
+    collective_recv_fld_init(&ctx, io, nd, m3_soa);
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
-      collective_recv_fld_init(&ctx, io, nd, m3_soa);
       collective_recv_fld_begin(&ctx, io, nd, m3_soa);
       collective_send_fld_begin(&ctx, io, m3_soa, m);
       collective_recv_fld_local(&ctx, io, nd, m3_soa, m);
       collective_recv_fld_end(&ctx, io, nd, m3_soa, m);
       collective_write_fld(&ctx, io, path, nd, m, m3, xs, group0);
       collective_send_fld_end(&ctx, io, m3, m);
-      collective_recv_fld_destroy(&ctx, io, nd, m3_soa);
     }
+    collective_recv_fld_destroy(&ctx, io, nd, m3_soa);
 
     H5Gclose(group0);
     mrc_ndarray_destroy(nd);
