@@ -832,8 +832,6 @@ struct collective_m3_entry {
 };
 
 struct collective_m3_recv_patch {
-  int global_patch; // global patch number
-  int rank; // which proc it lives on
   int ilo[3]; // intersection low
   int ihi[3]; // intersection high
 };
@@ -1101,8 +1099,6 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
     }
 
     struct collective_m3_recv_patch *recv_patch = &ctx->recv_patches[ctx->n_recv_patches];
-    recv_patch->global_patch = gp;
-    recv_patch->rank = info.rank;
     for (int d = 0; d < 3; d++) {
       recv_patch->ilo[d] = ilo[d];
       recv_patch->ihi[d] = ihi[d];
@@ -1119,16 +1115,18 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
   ctx->recv_bufs = calloc(io->size, sizeof(*ctx->recv_bufs));
   size_t *buf_sizes = calloc(io->size, sizeof(*buf_sizes));
 
-  for (struct collective_m3_recv_patch *recv_patch = ctx->recv_patches;
-       recv_patch < ctx->recv_patches + ctx->n_recv_patches; recv_patch++) {
-    // skip local patches for now
-    if (recv_patch->rank == io->rank) {
-      continue;
+  for (int rank = 0; rank < io->size; rank++) {
+    for (struct collective_m3_recv_patch *recv_patch = ctx->recv_patches_by_rank[rank];
+	 recv_patch < ctx->recv_patches_by_rank[rank+1]; recv_patch++) {
+      // skip local patches for now
+      if (rank == io->rank) {
+	continue;
+      }
+      
+      int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
+      size_t len = (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
+      buf_sizes[rank] += len;
     }
-
-    int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
-    size_t len = (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
-    buf_sizes[recv_patch->rank] += len;
   }
   
   ctx->recv_reqs = calloc(io->size, sizeof(*ctx->recv_reqs));
@@ -1182,54 +1180,56 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
 
   size_t *buf_sizes = calloc(io->size, sizeof(*buf_sizes));
   
-  for (struct collective_m3_recv_patch *recv_patch = ctx->recv_patches;
-       recv_patch < ctx->recv_patches + ctx->n_recv_patches; recv_patch++) {
-    // only consider recvs from remote ranks
-    if (recv_patch->rank == io->rank) {
-      continue;
-    }
-    // no patches at all expected from this rank, so don't have to check this patch
-    if (!ctx->recv_bufs[recv_patch->rank]) {
-      continue;
-    }
+  for (int rank = 0; rank < io->size; rank++) {
+    for (struct collective_m3_recv_patch *recv_patch = ctx->recv_patches_by_rank[rank];
+	 recv_patch < ctx->recv_patches_by_rank[rank+1]; recv_patch++) {
+      // only consider recvs from remote ranks
+      if (rank == io->rank) {
+	continue;
+      }
+      // no patches at all expected from this rank, so don't have to check this patch
+      if (!ctx->recv_bufs[rank]) {
+	continue;
+      }
       
-    int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
-
-    switch (mrc_fld_data_type(m3)) {
-    case MRC_NT_FLOAT:
-    {
-      float *buf_ptr = (float *) ctx->recv_bufs[recv_patch->rank] + buf_sizes[recv_patch->rank];
-      BUFLOOP(ix, iy, iz, ilo, ihi) {
-	volatile float val = MRC_S3(nd, ix,iy,iz);
-      	MRC_S3(nd, ix,iy,iz) = *buf_ptr++;
-      } BUFLOOP_END
-      break;
+      int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
+      
+      switch (mrc_fld_data_type(m3)) {
+      case MRC_NT_FLOAT:
+	{
+	  float *buf_ptr = (float *) ctx->recv_bufs[rank] + buf_sizes[rank];
+	  BUFLOOP(ix, iy, iz, ilo, ihi) {
+	    volatile float val = MRC_S3(nd, ix,iy,iz);
+	    MRC_S3(nd, ix,iy,iz) = *buf_ptr++;
+	  } BUFLOOP_END
+	      break;
+	}
+      case MRC_NT_DOUBLE:
+	{
+	  double *buf_ptr = (double *) ctx->recv_bufs[rank] + buf_sizes[rank];
+	  BUFLOOP(ix, iy, iz, ilo, ihi) {
+	    MRC_D3(nd, ix,iy,iz) = *buf_ptr++;
+	  } BUFLOOP_END
+	      break;     
+	}
+      case MRC_NT_INT:
+	{
+	  int *buf_ptr = (int *) ctx->recv_bufs[rank] + buf_sizes[rank];
+	  BUFLOOP(ix, iy, iz, ilo, ihi) {
+	    MRC_I3(nd, ix,iy,iz) = *buf_ptr++;
+	  } BUFLOOP_END
+	      break;
+	}
+      default:
+	{
+	  assert(0);
+	}
+      }    
+      size_t len = (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
+      buf_sizes[rank] += len;
     }
-    case MRC_NT_DOUBLE:
-    {
-      double *buf_ptr = (double *) ctx->recv_bufs[recv_patch->rank] + buf_sizes[recv_patch->rank];
-      BUFLOOP(ix, iy, iz, ilo, ihi) {
-      	MRC_D3(nd, ix,iy,iz) = *buf_ptr++;
-      } BUFLOOP_END
-      break;     
-    }
-    case MRC_NT_INT:
-    {
-     int *buf_ptr = (int *) ctx->recv_bufs[recv_patch->rank] + buf_sizes[recv_patch->rank];
-      BUFLOOP(ix, iy, iz, ilo, ihi) {
-      	MRC_I3(nd, ix,iy,iz) = *buf_ptr++;
-      } BUFLOOP_END
-      break;
-    }
-    default:
-    {
-      	assert(0);
-    }
-    }    
-    size_t len = (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
-    buf_sizes[recv_patch->rank] += len;
   }
-
+  
   free(ctx->recv_reqs);
   for (int rank = 0; rank < io->size; rank++) {
     free(ctx->recv_bufs[rank]);
