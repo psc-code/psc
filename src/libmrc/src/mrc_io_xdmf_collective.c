@@ -831,6 +831,11 @@ struct collective_m3_entry {
   int rank; //< of peer
 };
 
+struct collective_m3_recv_patch {
+  int global_patch; // global patch number
+  int rank; // which proc it lives on
+};
+
 struct collective_m3_ctx {
   int gdims[3];
   int slab_dims[3], slab_off[3];
@@ -838,6 +843,9 @@ struct collective_m3_ctx {
   int slow_dim;
   int slow_indices_per_writer;
   int slow_indices_rmndr;
+
+  struct collective_m3_recv_patch *recv_patches;
+  int n_recv_patches;
 
   struct collective_m3_entry *sends;
   void **send_bufs; // one for each writer
@@ -1049,6 +1057,30 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
 
   int nr_global_patches;
   mrc_domain_get_nr_global_patches(m3->_domain, &nr_global_patches);
+
+  ctx->n_recv_patches = 0;
+  for (int gp = 0; gp < nr_global_patches; gp++) {
+    struct mrc_patch_info info;
+    mrc_domain_get_global_patch_info(m3->_domain, gp, &info);
+    // skip local patches for now
+    if (info.rank == io->rank) {
+      continue;
+    }
+    int ilo[3], ihi[3];
+    int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
+					     mrc_ndarray_offs(nd), mrc_ndarray_dims(nd));
+    if (!has_intersection) {
+      continue;
+    }
+
+    ctx->n_recv_patches++;
+  }
+  mprintf("n_recv_patches %d\n", ctx->n_recv_patches);
+  ctx->recv_patches = calloc(ctx->n_recv_patches, sizeof(*ctx->recv_patches));
+
+  // !!!
+  free(ctx->recv_patches);
+  
   ctx->nr_recvs = 0;
   ctx->recv_bufs = calloc(io->size, sizeof(*ctx->recv_bufs));
   size_t *buf_sizes = calloc(io->size, sizeof(*buf_sizes));
