@@ -1111,18 +1111,38 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
     ctx->recv_patches_by_rank[cur_rank] = &ctx->recv_patches[ctx->n_recv_patches];
     mprintf("rank %d patches start at %d\n", cur_rank, ctx->n_recv_patches);
   }
+
+  for (int rank = 0; rank < io->size; rank++) {
+    struct collective_m3_recv_patch *begin = ctx->recv_patches_by_rank[rank];
+    struct collective_m3_recv_patch *end   = ctx->recv_patches_by_rank[rank+1];
+
+    if (begin == end) {
+      continue;
+    }
+
+    mprintf("partner rank %d # = %ld\n", rank, end - begin);
+  }
+    
+
   
   ctx->recv_bufs = calloc(io->size, sizeof(*ctx->recv_bufs));
   size_t *buf_sizes = calloc(io->size, sizeof(*buf_sizes));
 
   for (int rank = 0; rank < io->size; rank++) {
+    struct collective_m3_recv_patch *begin = ctx->recv_patches_by_rank[rank];
+    struct collective_m3_recv_patch *end   = ctx->recv_patches_by_rank[rank+1];
+    
+    // skip if no patches
+    if (begin == end) {
+      continue;
+    }
+
     // skip local patches for now
     if (rank == io->rank) {
       continue;
     }
       
-    for (struct collective_m3_recv_patch *recv_patch = ctx->recv_patches_by_rank[rank];
-	 recv_patch < ctx->recv_patches_by_rank[rank+1]; recv_patch++) {
+    for (struct collective_m3_recv_patch *recv_patch = begin; recv_patch < end; recv_patch++) {
       int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
       size_t len = (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
       buf_sizes[rank] += len;
@@ -1181,17 +1201,20 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
   size_t *buf_sizes = calloc(io->size, sizeof(*buf_sizes));
   
   for (int rank = 0; rank < io->size; rank++) {
-    // only consider recvs from remote ranks
+    struct collective_m3_recv_patch *begin = ctx->recv_patches_by_rank[rank];
+    struct collective_m3_recv_patch *end   = ctx->recv_patches_by_rank[rank+1];
+
+    // skip if no patches
+    if (begin == end) {
+      continue;
+    }
+
+    // skip local patches
     if (rank == io->rank) {
       continue;
     }
-    // no patches at all expected from this rank, so don't have to check this patch
-    if (!ctx->recv_bufs[rank]) {
-      continue;
-    }
       
-    for (struct collective_m3_recv_patch *recv_patch = ctx->recv_patches_by_rank[rank];
-	 recv_patch < ctx->recv_patches_by_rank[rank+1]; recv_patch++) {
+    for (struct collective_m3_recv_patch *recv_patch = begin; recv_patch < end; recv_patch++) {
       int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
       
       switch (mrc_fld_data_type(m3)) {
