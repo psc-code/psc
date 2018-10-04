@@ -1075,6 +1075,7 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
   /* } */
 
   ctx->recv_reqs = calloc(io->size, sizeof(*ctx->recv_reqs));
+  int nn = 0;
   for (int rank = 0; rank < io->size; rank++) {
     //mprintf("recv buf_sizes[%d] = %d\n", rank, buf_sizes[rank]);
     if (buf_sizes[rank] == 0) {
@@ -1101,6 +1102,7 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
       assert(0);
     }
 
+   mprintf("irecv nn %d\n", nn++);
     // recv aggregate buffers
     MPI_Irecv(ctx->recv_bufs[rank], buf_sizes[rank], mpi_dtype,
 	      rank, 0x1000, mrc_io_comm(io),
