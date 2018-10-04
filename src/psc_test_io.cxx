@@ -154,6 +154,7 @@ struct PscTestIo
     // initial output / stats
     mpi_printf(grid().comm(), "Performing initial diagnostics.\n");
 
+#if 0
     auto item_ = psc_output_fields_item_create(grid().comm());
     psc_output_fields_item_set_type(item_, "e");
     psc_output_fields_item_setup(item_);
@@ -161,7 +162,8 @@ struct PscTestIo
     FieldsItemFields<ItemLoopPatches<Item_e_ec>> item_e{grid(), grid().comm()};
     item_e(*mflds_);
     PscFieldsItemBase{item_}(*mflds_, *mprts_);
-    
+#endif
+
     mpi_printf(MPI_COMM_WORLD, "***** Writing PFD output\n");
 
     Int3 rn = {};
@@ -175,7 +177,9 @@ struct PscTestIo
 
     io_pfd.close();
 
+#if 0
     psc_output_fields_item_destroy(item_);
+#endif
 
     mpi_printf(grid().comm(), "Initialization complete.\n");
   }
