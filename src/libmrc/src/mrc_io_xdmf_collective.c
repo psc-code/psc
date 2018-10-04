@@ -1212,7 +1212,9 @@ static void
 writer_comm_end(struct collective_m3_ctx *ctx, struct mrc_io *io, struct mrc_ndarray *nd,
 		struct mrc_fld *m3, int m)
 {
+  MHERE;
   MPI_Waitall(ctx->n_peers, ctx->recv_reqs, MPI_STATUSES_IGNORE);
+  MHERE;
 
   for (struct collective_m3_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
     // skip local patches
