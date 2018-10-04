@@ -1114,9 +1114,6 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
     buf_sizes[recv_patch->rank] += len;
   }
   
-  // !!!
-  free(ctx->recv_patches);
-  
   ctx->recv_reqs = calloc(io->size, sizeof(*ctx->recv_reqs));
   for (int rank = 0; rank < io->size; rank++) {
     //mprintf("recv buf_sizes[%d] = %d\n", rank, buf_sizes[rank]);
@@ -1161,17 +1158,14 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
 			struct mrc_io *io, struct mrc_ndarray *nd,
 			struct mrc_fld *m3, int m)
 {
-  //MHERE;
   MPI_Waitall(io->size, ctx->recv_reqs, MPI_STATUSES_IGNORE);
 
-  //MHERE;
   int nr_global_patches;
   mrc_domain_get_nr_global_patches(m3->_domain, &nr_global_patches);
 
   size_t *buf_sizes = calloc(io->size, sizeof(*buf_sizes));
 
   for (int gp = 0; gp < nr_global_patches; gp++) {
-    //mprintf("A recv_fld_end gp %d\n", gp);
     struct mrc_patch_info info;
     mrc_domain_get_global_patch_info(m3->_domain, gp, &info);
     // only consider recvs from remote ranks
@@ -1193,18 +1187,14 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
     
     size_t len = (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
 
-    //mprintf("B recv_fld_end gp %d\n", gp);
     switch (mrc_fld_data_type(m3)) {
     case MRC_NT_FLOAT:
     {
       float *buf_ptr = (float *) ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
-      //mprintf("pid %d ilohi %d:%d %d:%d %d:%d\n", getpid(), ilo[0], ihi[0], ilo[1], ihi[1], ilo[2], ihi[2]);
       BUFLOOP(ix, iy, iz, ilo, ihi) {
-	//mprintf("address %p\n", &MRC_S3(nd, ix,iy,iz));
 	volatile float val = MRC_S3(nd, ix,iy,iz);
       	MRC_S3(nd, ix,iy,iz) = *buf_ptr++;
       } BUFLOOP_END
-	  //MHERE;
       break;
     }
     case MRC_NT_DOUBLE:
@@ -1229,17 +1219,16 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
     }
     }    
     buf_sizes[info.rank] += len;
-    //mprintf("C recv_fld_end gp %d\n", gp);
   }
 
-  //MHERE;
   free(ctx->recv_reqs);
   for (int rank = 0; rank < io->size; rank++) {
     free(ctx->recv_bufs[rank]);
   }
   free(ctx->recv_bufs);
   free(buf_sizes);
-  //MHERE;
+
+  free(ctx->recv_patches);
 }
 
 // ----------------------------------------------------------------------
