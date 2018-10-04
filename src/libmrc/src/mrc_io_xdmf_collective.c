@@ -1222,43 +1222,40 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
       continue;
     }
 
-    void *buf = peer->recv_buf;
-    for (struct collective_m3_recv_patch *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
-      int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
-      
-      switch (mrc_fld_data_type(m3)) {
-      case MRC_NT_FLOAT:
-	{
-	  float *buf_ptr = (float *) buf;
-	  BUFLOOP(ix, iy, iz, ilo, ihi) {
-	    volatile float val = MRC_S3(nd, ix,iy,iz);
-	    MRC_S3(nd, ix,iy,iz) = *buf_ptr++;
-	  } BUFLOOP_END
-	      break;
-	}
-      case MRC_NT_DOUBLE:
-	{
-	  double *buf_ptr = (double *) buf;
-	  BUFLOOP(ix, iy, iz, ilo, ihi) {
-	    MRC_D3(nd, ix,iy,iz) = *buf_ptr++;
-	  } BUFLOOP_END
-	      break;     
-	}
-      case MRC_NT_INT:
-	{
-	  int *buf_ptr = (int *) buf;
-	  BUFLOOP(ix, iy, iz, ilo, ihi) {
-	    MRC_I3(nd, ix,iy,iz) = *buf_ptr++;
-	  } BUFLOOP_END
-	      break;
-	}
-      default:
-	{
-	  assert(0);
-	}
-      }    
-      buf += (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]) * m3->_nd->size_of_type;
+    switch (mrc_fld_data_type(m3)) {
+    case MRC_NT_FLOAT: {
+      float *buf = peer->recv_buf;
+      for (struct collective_m3_recv_patch *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
+	int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
+	BUFLOOP(ix, iy, iz, ilo, ihi) {
+	  MRC_S3(nd, ix,iy,iz) = *buf++;
+	} BUFLOOP_END;
+      }
+      break;
     }
+    case MRC_NT_DOUBLE: {
+      double *buf = peer->recv_buf;
+      for (struct collective_m3_recv_patch *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
+	int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
+	BUFLOOP(ix, iy, iz, ilo, ihi) {
+	  MRC_D3(nd, ix,iy,iz) = *buf++;
+	} BUFLOOP_END;
+      }
+      break;
+    }
+    case MRC_NT_INT: {
+      int *buf = peer->recv_buf;
+      for (struct collective_m3_recv_patch *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
+	int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
+	BUFLOOP(ix, iy, iz, ilo, ihi) {
+	  MRC_I3(nd, ix,iy,iz) = *buf++;
+	} BUFLOOP_END;
+      }
+      break;
+    }
+    default:
+      assert(0);
+    }    
   }
 }
 
