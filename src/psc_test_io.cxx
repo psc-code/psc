@@ -42,10 +42,10 @@ struct PscTestIo
     // --- generic setup
     auto norm_params = Grid_t::NormalizationParams::dimensionless();
     norm_params.nicell = 5;
-
+    
     double dt = .99;
-    auto coeff = Grid_t::Normalization{norm_params};
-    grid_ = Grid_t::psc_make_grid(grid_domain, grid_bc, kinds, coeff, dt, ibn);
+    auto norm = Grid_t::Normalization{norm_params};
+    grid_ = new Grid_t{grid_domain, grid_bc, kinds, norm, dt};
   }
 
   // ----------------------------------------------------------------------
@@ -62,7 +62,7 @@ struct PscTestIo
     auto io_pfd = MrcIo{"pfd", "."};
     io_pfd.open(grid(), rn, rx);
 
-    auto mres = MfieldsSingle{grid(), 2, grid().ibn};
+    auto mres = MfieldsSingle{grid(), 2, {2, 2, 2}};
     mres.write_as_mrc_fld(io_pfd.io_, "e", {"ex", "ey"});
 
     io_pfd.close();
@@ -74,8 +74,6 @@ struct PscTestIo
 
 protected:
   Grid_t* grid_;
-
-  Int3 ibn = {2, 2, 2}; // FIXME!!! need to factor in invar dims (but not in vpic...)
 };
 
 
