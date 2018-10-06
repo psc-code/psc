@@ -12,10 +12,7 @@
 
 struct PscTestIo
 {
-  // ----------------------------------------------------------------------
-  // ctor
-  
-  PscTestIo()
+  static void run()
   {
     mpi_printf(MPI_COMM_WORLD, "*** Setting up...\n");
 
@@ -73,7 +70,7 @@ main(int argc, char **argv)
 {
   MPI_Init(&argc, &argv);
 
-  auto psc = PscTestIo{};
+  PscTestIo::run();
   
   MPI_Finalize();
   return 0;
