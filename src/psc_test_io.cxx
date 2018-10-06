@@ -1,11 +1,11 @@
 
-#include <psc.h>
-
 #include "dim.hxx"
+#include "grid.hxx"
+#include "psc_fields_single.h"
 
 #include <mrc_io.hxx>
 
-#include "psc_fields_single.h"
+#include <string>
 
 // ======================================================================
 // PscTestIo
@@ -24,7 +24,7 @@ struct PscTestIo
     
     // --- setup domain
     Grid_t::Real3 LL = { 400., 800., 400.*6 }; // domain size (in d_e)
-#if 1
+#if 0
     Int3 gdims = { 400, 800, 2400}; // global number of grid points
     Int3 np = { 8, 16, 48 }; // division into patches
 #else
@@ -46,14 +46,7 @@ struct PscTestIo
     double dt = .99;
     auto norm = Grid_t::Normalization{norm_params};
     grid_ = new Grid_t{grid_domain, grid_bc, kinds, norm, dt};
-  }
 
-  // ----------------------------------------------------------------------
-  // initialize
-
-  void initialize()
-  {
-    // initial output / stats
     mpi_printf(MPI_COMM_WORLD, "***** Testing output\n");
 
     Int3 rn = {};
@@ -83,16 +76,10 @@ protected:
 int
 main(int argc, char **argv)
 {
-  psc_init(argc, argv);
-  
-  auto psc = new PscTestIo;
+  MPI_Init(&argc, &argv);
 
-  psc->initialize();
-
-  delete psc;
+  auto psc = PscTestIo{};
   
-  libmrc_params_finalize();
   MPI_Finalize();
-
   return 0;
 }
