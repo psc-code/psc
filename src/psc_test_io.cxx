@@ -1,41 +1,15 @@
 
-#include <psc_config.h>
-
 #include <psc.h>
 
 #include <mrc_profile.h>
-#include <psc_diag.h>
 
 #include <particles.hxx>
-
-#include <push_particles.hxx>
-#include <checks.hxx>
-#include <output_particles.hxx>
-
 
 #include "fields_item.hxx"
 
 #include <mrc_io.hxx>
 
-#include <balance.hxx>
-#include <particles.hxx>
-#include <fields3d.hxx>
-#include <push_particles.hxx>
-#include <push_fields.hxx>
-#include <sort.hxx>
-#include <collision.hxx>
-#include <bnd_particles.hxx>
-#include <bnd.hxx>
-#include <bnd_fields.hxx>
-#include <setup_particles.hxx>
 #include <setup_fields.hxx>
-
-#include "../libpsc/psc_checks/checks_impl.hxx"
-
-#ifdef USE_CUDA
-#include "../libpsc/cuda/setup_fields_cuda.hxx"
-#include "../libpsc/cuda/setup_particles_cuda.hxx"
-#endif
 
 #include "psc_fields_single.h"
 
@@ -65,27 +39,14 @@ struct Item_e_ec
 
 #undef define_dxdydz
 
-#include "psc_config.hxx"
-
-enum {
-  MY_ION,
-  MY_ELECTRON,
-  N_MY_KINDS,
-};
-
-// EDIT to change order / floating point type / cuda / 2d/3d
-using dim_t = dim_xyz;
-using PscConfig = PscConfig1vbecSingle<dim_t>;
-
 // ======================================================================
 // PscTestIo
 
 struct PscTestIo
 {
-  using Mparticles = PscConfig::Mparticles_t;
-  using MfieldsState = PscConfig::MfieldsState;
+  using MfieldsState = MfieldsStateSingle;
   using Mfields = MfieldsSingle;
-  using DIM = PscConfig::dim_t;
+  using DIM = dim_xyz;
 
   // ----------------------------------------------------------------------
   // ctor
@@ -114,7 +75,7 @@ struct PscTestIo
     Int3 np = { 2, 2, 8 }; // division into patches
 #endif
     
-    if (dim::InvarX::value) { ibn[0] = 0; } // FIXME, wrong place, not for VPIC...
+    if (DIM::InvarX::value) { ibn[0] = 0; } // FIXME, wrong place, not for VPIC...
     
     auto grid_domain = Grid_t::Domain{gdims, LL, -.5 * LL, np};
     
