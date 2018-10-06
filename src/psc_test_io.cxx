@@ -69,9 +69,11 @@ int
 main(int argc, char **argv)
 {
   MPI_Init(&argc, &argv);
+  libmrc_params_init(argc, argv);
 
   PscTestIo::run();
-  
+
+  libmrc_params_finalize();
   MPI_Finalize();
   return 0;
 }
