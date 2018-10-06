@@ -45,7 +45,7 @@ struct PscTestIo
     
     double dt = .99;
     auto norm = Grid_t::Normalization{norm_params};
-    grid_ = new Grid_t{grid_domain, grid_bc, kinds, norm, dt};
+    auto grid = Grid_t{grid_domain, grid_bc, kinds, norm, dt};
 
     mpi_printf(MPI_COMM_WORLD, "***** Testing output\n");
 
@@ -53,20 +53,15 @@ struct PscTestIo
     Int3 rx = {1000000, 1000000, 100000};
 
     auto io_pfd = MrcIo{"pfd", "."};
-    io_pfd.open(grid(), rn, rx);
+    io_pfd.open(grid, rn, rx);
 
-    auto mres = MfieldsSingle{grid(), 2, {2, 2, 2}};
+    auto mres = MfieldsSingle{grid, 2, {2, 2, 2}};
     mres.write_as_mrc_fld(io_pfd.io_, "e", {"ex", "ey"});
 
     io_pfd.close();
 
     mpi_printf(MPI_COMM_WORLD, "***** Testing output done\n");
   }
-
-  const Grid_t& grid() { return *grid_; }
-
-protected:
-  Grid_t* grid_;
 };
 
 
