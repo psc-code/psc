@@ -1467,11 +1467,11 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     writer_comm_init(&ctx, io, nd, m3_soa->_domain, m3_soa->_nd->size_of_type);
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
       writer_comm_begin(&ctx, io, nd, m3_soa);
-      collective_send_fld_begin(&ctx, io, m3_soa, m);
-      writer_comm_local(&ctx, io, nd, m3_soa, m);
-      writer_comm_end(&ctx, io, nd, m3_soa, m);
+      collective_send_fld_begin(&ctx, io, m3_soa, 0);
+      writer_comm_local(&ctx, io, nd, m3_soa, 0);
+      writer_comm_end(&ctx, io, nd, m3_soa, 0);
       collective_write_fld(&ctx, io, path, nd, m, m3, xs, group0);
-      collective_send_fld_end(&ctx, io, m3, m);
+      collective_send_fld_end(&ctx, io, m3, 0);
     }
     writer_comm_destroy(&ctx);
 
