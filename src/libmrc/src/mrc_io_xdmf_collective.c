@@ -489,6 +489,7 @@ collective_m1_send_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
 static void
 collective_m1_send_end(struct mrc_io *io, struct collective_m1_ctx *ctx)
 {
+  MHERE;
   MPI_Waitall(ctx->nr_send_reqs, ctx->send_reqs, MPI_STATUSES_IGNORE);
   free(ctx->send_reqs);
 }
@@ -543,6 +544,7 @@ collective_m1_recv_end(struct mrc_io *io, struct collective_m1_ctx *ctx)
   if (io->rank != xdmf->writers[0])
     return;
 
+  MHERE;
   MPI_Waitall(ctx->nr_recv_reqs, ctx->recv_reqs, MPI_STATUSES_IGNORE);
   free(ctx->recv_reqs);
 }
@@ -640,6 +642,7 @@ static void
 collective_m1_read_recv_end(struct mrc_io *io, struct collective_m1_ctx *ctx,
 			    struct mrc_fld *m1, int m)
 {
+  MHERE;
   MPI_Waitall(ctx->nr_recv_reqs, ctx->recv_reqs, MPI_STATUSES_IGNORE);
   free(ctx->recv_reqs);
   mrc_fld_set_comp_name(m1, m, ctx->comp_name);
@@ -682,6 +685,7 @@ collective_m1_read_send_end(struct mrc_io *io, struct collective_m1_ctx *ctx)
   if (io->rank != xdmf->writers[0])
     return;
 
+  MHERE;
   MPI_Waitall(ctx->nr_send_reqs, ctx->send_reqs, MPI_STATUSES_IGNORE);
   free(ctx->send_reqs);
 }
@@ -1046,6 +1050,7 @@ collective_send_fld_end(struct collective_m3_ctx *ctx, struct mrc_io *io,
 {
   struct xdmf *xdmf = to_xdmf(io);
 
+  MHERE;
   MPI_Waitall(xdmf->nr_writers, ctx->send_reqs, MPI_STATUSES_IGNORE);
 
   for (int writer = 0; writer < xdmf->nr_writers; writer++) {
@@ -1217,7 +1222,6 @@ writer_comm_end(struct collective_m3_ctx *ctx, struct mrc_io *io, struct mrc_nda
 {
   MHERE;
   MPI_Waitall(ctx->n_peers, ctx->recv_reqs, MPI_STATUSES_IGNORE);
-  MHERE;
 
   for (struct collective_m3_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
     // skip local patches
@@ -1595,6 +1599,7 @@ collective_m3_send_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
 static void
 collective_m3_send_end(struct mrc_io *io, struct collective_m3_ctx *ctx)
 {
+  MHERE;
   MPI_Waitall(ctx->nr_sends, ctx->send_reqs, MPI_STATUSES_IGNORE);
   for (int i = 0; i < ctx->nr_sends; i++) {
     mrc_fld_destroy(ctx->sends[i].fld);
@@ -1697,6 +1702,7 @@ static void
 collective_m3_recv_end(struct mrc_io *io, struct collective_m3_ctx *ctx,
 		       struct mrc_domain *domain, struct mrc_fld *m3)
 {
+  MHERE;
   MPI_Waitall(ctx->nr_recvs, ctx->recv_reqs, MPI_STATUSES_IGNORE);
   
   for (int i = 0; i < ctx->nr_recvs; i++) {
