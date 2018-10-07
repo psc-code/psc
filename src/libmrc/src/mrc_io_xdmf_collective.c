@@ -964,6 +964,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
 
     ctx->send_bufs[writer] = malloc(buf_sizes[writer] * m3->_nd->size_of_type);
     assert(ctx->send_bufs[writer]);
+#if 0
     buf_sizes[writer] = 0;
 
     // fill buf per writer
@@ -1012,7 +1013,8 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       size_t len = (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
       buf_sizes[writer] += len;
     }
-
+#endif
+    
     MPI_Datatype mpi_dtype;
     switch (mrc_fld_data_type(m3)) {
     case MRC_NT_FLOAT:
