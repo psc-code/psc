@@ -4,6 +4,8 @@
 
 #include <mrc_obj.h>
 
+BEGIN_C_DECLS
+
 // ======================================================================
 // mrc_ndarray, as one might guess from the name, is somewhat modeled after numpy.
 // It's a n_dims array (up to MRC_FLD_MAXDIMS). The underlying data may not be
@@ -223,6 +225,8 @@ mrc_ndarray_it_next(struct mrc_ndarray_it *it)
  done:
   ;
 }
+
+END_C_DECLS
 
 #endif
 
