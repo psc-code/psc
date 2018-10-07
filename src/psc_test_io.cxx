@@ -46,15 +46,21 @@ struct PscTestIo
 
     mpi_printf(MPI_COMM_WORLD, "***** Testing output\n");
 
-    Int3 rn = {};
-    Int3 rx = {1000000, 1000000, 100000};
-
     auto io_pfd = MrcIo{"pfd", "."};
-    io_pfd.open(grid, rn, rx);
-
-    auto mres = MfieldsSingle{grid, 2, {2, 2, 2}};
-
     auto io = io_pfd.io_;
+
+    mrc_io_open(io_pfd.io_, "w", grid.timestep(), grid.timestep() * grid.dt);
+    
+    // save some basic info about the run in the output file
+    struct mrc_obj *obj = mrc_obj_create(mrc_io_comm(io));
+    mrc_obj_set_name(obj, "psc");
+    mrc_obj_dict_add_int(obj, "timestep", grid.timestep());
+    mrc_obj_dict_add_float(obj, "time", grid.timestep() * grid.dt);
+    mrc_obj_dict_add_float(obj, "cc", grid.norm.cc);
+    mrc_obj_dict_add_float(obj, "dt", grid.dt);
+    mrc_obj_write(obj, io);
+    mrc_obj_destroy(obj);
+    
     mrc_fld* fld = grid.mrc_domain().m3_create();
     mrc_fld_set_name(fld, "e");
     mrc_fld_set_param_int(fld, "nr_ghosts", 0);
@@ -75,7 +81,7 @@ struct PscTestIo
     mrc_fld_write(fld, io);
     mrc_fld_destroy(fld);
 
-    io_pfd.close();
+    mrc_io_close(io);
 
     mpi_printf(MPI_COMM_WORLD, "***** Testing output done\n");
   }
