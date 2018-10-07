@@ -21,7 +21,7 @@ struct PscTestIo
     
     // --- setup domain
     Grid_t::Real3 LL = { 400., 800., 400.*6 }; // domain size (in d_e)
-#if 1
+#if 0
     Int3 gdims = { 400, 800, 2400}; // global number of grid points
     Int3 np = { 8, 16, 48 }; // division into patches
 #else
@@ -53,7 +53,27 @@ struct PscTestIo
     io_pfd.open(grid, rn, rx);
 
     auto mres = MfieldsSingle{grid, 2, {2, 2, 2}};
-    mres.write_as_mrc_fld(io_pfd.io_, "e", {"ex", "ey"});
+
+    auto io = io_pfd.io_;
+    mrc_fld* fld = grid.mrc_domain().m3_create();
+    mrc_fld_set_name(fld, "e");
+    mrc_fld_set_param_int(fld, "nr_ghosts", 0);
+    mrc_fld_set_param_int(fld, "nr_comps", 2);
+    mrc_fld_setup(fld);
+    mrc_fld_set_comp_name(fld, 0, "ex");
+    mrc_fld_set_comp_name(fld, 1, "ey");
+    
+    for (int p = 0; p < grid.n_patches(); p++) {
+      mrc_fld_patch *m3p = mrc_fld_patch_get(fld, p);
+      mrc_fld_foreach(fld, i,j,k, 0,0) {
+	MRC_M3(m3p, 0, i,j,k) = i;
+	MRC_M3(m3p, 1, i,j,k) = j;
+      } mrc_fld_foreach_end;
+      mrc_fld_patch_put(fld);
+    }
+    
+    mrc_fld_write(fld, io);
+    mrc_fld_destroy(fld);
 
     io_pfd.close();
 
