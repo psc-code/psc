@@ -267,12 +267,7 @@ get_writer_off_dims(struct collective_m3_ctx *ctx, int writer,
 
 // ----------------------------------------------------------------------
 // collective_send_fld_begin
-#define BUFLOOP(ix, iy, iz, ilo, hi) \
-      for (int iz = ilo[2]; iz < ihi[2]; iz++) {\
-	for (int iy = ilo[1]; iy < ihi[1]; iy++) {\
-	  for (int ix = ilo[0]; ix < ihi[0]; ix++)
 
-#define BUFLOOP_END }}
 static void
 collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
 			  struct mrc_fld *m3, int m)
@@ -504,17 +499,7 @@ writer_comm_end(struct collective_m3_ctx *ctx, struct mrc_io *io, struct mrc_nda
       continue;
     }
 
-    assert(mrc_fld_data_type(m3) == MRC_NT_FLOAT);
-    {
-      float *buf = peer->recv_buf;
-      for (struct collective_m3_recv_patch *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
-	int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
-	BUFLOOP(ix, iy, iz, ilo, ihi) {
-	  MRC_S3(nd, ix,iy,iz) = *buf++;
-	} BUFLOOP_END;
-      }
-      break;
-    }
+    // copy
   }
 }
 
@@ -532,59 +517,6 @@ writer_comm_destroy(struct collective_m3_ctx *ctx)
   free(ctx->peers);
 
   free(ctx->recv_patches);
-}
-
-// ----------------------------------------------------------------------
-// writer_comm_local
-
-static void
-writer_comm_local(struct collective_m3_ctx *ctx, struct mrc_io *io, struct mrc_ndarray *nd,
-		  struct mrc_fld *m3, int m)
-{
-  int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(m3->_domain, &nr_patches);
-
-  for (int p = 0; p < nr_patches; p++) {
-    struct mrc_patch *patch = &patches[p];
-    int *off = patch->off, *ldims = patch->ldims;
-
-    int ilo[3], ihi[3];
-    bool has_intersection =
-      find_intersection(ilo, ihi, off, ldims, mrc_ndarray_offs(nd), mrc_ndarray_dims(nd));
-    if (!has_intersection) {
-      continue;
-    }
-    switch (mrc_fld_data_type(m3)) {
-    case MRC_NT_FLOAT:
-    {
-      BUFLOOP(ix, iy, iz, ilo, ihi) {
-        MRC_S3(nd, ix,iy,iz) =
-          MRC_S5(m3, ix - off[0], iy - off[1], iz - off[2], m, p);
-      } BUFLOOP_END
-      break;
-    }
-    case MRC_NT_DOUBLE:
-    {
-      BUFLOOP(ix, iy, iz, ilo, ihi) {
-        MRC_D3(nd, ix,iy,iz) =
-          MRC_D5(m3, ix - off[0], iy - off[1], iz - off[2], m, p);
-      } BUFLOOP_END
-      break;     
-    }
-    case MRC_NT_INT:
-    {
-      BUFLOOP(ix, iy, iz, ilo, ihi) {
-        MRC_I3(nd, ix,iy,iz) =
-          MRC_I5(m3, ix - off[0], iy - off[1], iz - off[2], m, p);
-      } BUFLOOP_END
-      break;
-    }
-    default:
-    {
-      	assert(0);
-    }
-    }    
-  }
 }
 
 // ----------------------------------------------------------------------
@@ -727,7 +659,6 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
       writer_comm_begin(&ctx, io, nd, m3_soa);
       collective_send_fld_begin(&ctx, io, m3_soa, 0);
-      writer_comm_local(&ctx, io, nd, m3_soa, 0);
       writer_comm_end(&ctx, io, nd, m3_soa, 0);
       //collective_write_fld(&ctx, io, path, nd, m, m3, xs, group0);
       collective_send_fld_end(&ctx, io, m3, 0);
