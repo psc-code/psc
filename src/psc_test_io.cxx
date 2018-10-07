@@ -34,6 +34,16 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[],
   return ierr;
 }
 
+static unsigned long
+mrc_obj_uid(struct mrc_obj *obj)
+{
+  unsigned long uid = (unsigned long) obj;
+  if (obj->comm != MPI_COMM_NULL) {
+    MPI_Bcast(&uid, 1, MPI_LONG, 0, obj->comm);
+  }
+  return uid;
+}
+
 // ======================================================================
 // PscTestIo
 
@@ -109,7 +119,12 @@ struct PscTestIo
       mrc_fld_patch_put(fld);
     }
     
-    mrc_fld_write(fld, io);
+    char path[strlen(obj->name) + 20];
+    sprintf(path, "%s-uid-%#lx", obj->name, mrc_obj_uid(obj));
+    if (mrc_io_add_obj(io, obj, path) == 1) {
+      MHERE;
+    }
+    mrc_io_write_fld(io, path, fld);
     mrc_fld_destroy(fld);
 
     mrc_io_close(io);
