@@ -3,9 +3,16 @@
 #include "grid.hxx"
 #include "psc_fields_single.h"
 
-#include <mrc_io.hxx>
+#include "mrc_io_private.h"
 
 #include <string>
+
+static inline struct mrc_io_ops *
+mrc_io_ops(struct mrc_io *io)
+{
+  return (struct mrc_io_ops *) io->obj.ops;
+}
+
 
 int MPI_Irecv(void *buf, int count, MPI_Datatype datatype, int source,
 	      int tag, MPI_Comm comm, MPI_Request *request)
@@ -124,11 +131,11 @@ struct PscTestIo
     if (mrc_io_add_obj(io, obj, path) == 1) {
       MHERE;
     }
-    mrc_io_write_fld(io, path, fld);
+    struct mrc_io_ops *ops = mrc_io_ops(io);
+    ops->write_m3(io, path, fld);
+
     mrc_fld_destroy(fld);
-
     mrc_io_close(io);
-
     mrc_io_destroy(io);
 
     mpi_printf(MPI_COMM_WORLD, "***** Testing output done\n");
