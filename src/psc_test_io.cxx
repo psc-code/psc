@@ -46,10 +46,14 @@ struct PscTestIo
 
     mpi_printf(MPI_COMM_WORLD, "***** Testing output\n");
 
-    auto io_pfd = MrcIo{"pfd", "."};
-    auto io = io_pfd.io_;
+    auto io = mrc_io_create(MPI_COMM_WORLD);
+    mrc_io_set_param_string(io, "basename", "pfd");
+    mrc_io_set_param_string(io, "outdir", ".");
+    mrc_io_set_from_options(io);
+    mrc_io_setup(io);
+    mrc_io_view(io);
 
-    mrc_io_open(io_pfd.io_, "w", grid.timestep(), grid.timestep() * grid.dt);
+    mrc_io_open(io, "w", grid.timestep(), grid.timestep() * grid.dt);
     
     // save some basic info about the run in the output file
     struct mrc_obj *obj = mrc_obj_create(mrc_io_comm(io));
@@ -82,6 +86,8 @@ struct PscTestIo
     mrc_fld_destroy(fld);
 
     mrc_io_close(io);
+
+    mrc_io_destroy(io);
 
     mpi_printf(MPI_COMM_WORLD, "***** Testing output done\n");
   }
