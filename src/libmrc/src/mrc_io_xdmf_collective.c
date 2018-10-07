@@ -1470,7 +1470,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
       collective_send_fld_begin(&ctx, io, m3_soa, 0);
       writer_comm_local(&ctx, io, nd, m3_soa, 0);
       writer_comm_end(&ctx, io, nd, m3_soa, 0);
-      collective_write_fld(&ctx, io, path, nd, m, m3, xs, group0);
+      //collective_write_fld(&ctx, io, path, nd, m, m3, xs, group0);
       collective_send_fld_end(&ctx, io, m3, 0);
     }
     writer_comm_destroy(&ctx);
