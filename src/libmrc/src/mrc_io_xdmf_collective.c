@@ -1170,6 +1170,7 @@ writer_comm_init(struct collective_m3_ctx *ctx,
   free(recv_patches_by_rank);
 
   ctx->recv_reqs = calloc(ctx->n_peers, sizeof(*ctx->recv_reqs));
+  mprintf("recv_reqs %p\n", ctx->recv_reqs);
 }
 
 // ----------------------------------------------------------------------
