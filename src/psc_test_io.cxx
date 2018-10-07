@@ -7,13 +7,6 @@
 
 #include <string>
 
-static inline struct mrc_io_ops *
-mrc_io_ops(struct mrc_io *io)
-{
-  return (struct mrc_io_ops *) io->obj.ops;
-}
-
-
 int MPI_Irecv(void *buf, int count, MPI_Datatype datatype, int source,
 	      int tag, MPI_Comm comm, MPI_Request *request)
 {
@@ -50,6 +43,16 @@ mrc_obj_uid(struct mrc_obj *obj)
   }
   return uid;
 }
+
+static inline struct mrc_io_ops *
+mrc_io_ops(struct mrc_io *io)
+{
+  return (struct mrc_io_ops *) io->obj.ops;
+}
+
+
+
+extern "C" void xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3);
 
 // ======================================================================
 // PscTestIo
@@ -132,7 +135,8 @@ struct PscTestIo
       MHERE;
     }
     struct mrc_io_ops *ops = mrc_io_ops(io);
-    ops->write_m3(io, path, fld);
+    //ops->write_m3(io, path, fld);
+    xdmf_collective_write_m3(io, path, fld);
 
     mrc_fld_destroy(fld);
     mrc_io_close(io);
