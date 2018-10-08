@@ -1,9 +1,8 @@
 
-#include "dim.hxx"
-#include "grid.hxx"
-#include "psc_fields_single.h"
-
+#include "vec3.hxx"
 #include "psc_test_io_xdmf.h"
+
+#include <mrc_domain.h>
 
 #include <string>
 
@@ -43,11 +42,7 @@ struct PscTestIo
   {
     mpi_printf(MPI_COMM_WORLD, "*** Setting up...\n");
 
-    // -- setup particle kinds
-    Grid_t::Kinds kinds = {};
-    
     // --- setup domain
-    Grid_t::Real3 LL = { 400., 800., 400.*6 }; // domain size (in d_e)
 #if 0
     Int3 gdims = { 400, 800, 2400}; // global number of grid points
     Int3 np = { 8, 16, 48 }; // division into patches
@@ -56,34 +51,13 @@ struct PscTestIo
     Int3 np = { 2, 2, 8 }; // division into patches
 #endif
     
-    auto grid_domain = Grid_t::Domain{gdims, LL, -.5 * LL, np};
-    
-    auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
-			  { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
-			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC },
-			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC }};
-
-    // --- generic setup
-    auto norm_params = Grid_t::NormalizationParams::dimensionless();
-    norm_params.nicell = 5;
-    
-    double dt = .99;
-    auto norm = Grid_t::Normalization{norm_params};
-    auto grid = Grid_t{grid_domain, grid_bc, kinds, norm, dt};
-
     struct mrc_domain *domain = mrc_domain_create(MPI_COMM_WORLD);
     mrc_domain_set_type(domain, "multi");
-    mrc_domain_set_param_int3(domain, "m", grid_domain.gdims);
+    mrc_domain_set_param_int3(domain, "m", gdims);
     mrc_domain_set_param_int(domain, "bcx", BC_PERIODIC);
     mrc_domain_set_param_int(domain, "bcy", BC_PERIODIC);
     mrc_domain_set_param_int(domain, "bcz", BC_PERIODIC);
-    mrc_domain_set_param_int3(domain, "np", grid_domain.np);
-    
-    struct mrc_crds *crds = mrc_domain_get_crds(domain);
-    mrc_crds_set_type(crds, "uniform");
-    mrc_crds_set_param_int(crds, "sw", 2);
-    mrc_crds_set_param_double3(crds, "l", grid_domain.corner);
-    mrc_crds_set_param_double3(crds, "h", grid_domain.corner + grid_domain.length);
+    mrc_domain_set_param_int3(domain, "np", np);
     
     mrc_domain_set_from_options(domain);
     mrc_domain_setup(domain);
