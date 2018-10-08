@@ -155,9 +155,6 @@ find_intersection(int *ilo, int *ihi, const int *ib1, const int *im1,
 // ----------------------------------------------------------------------
 // collective helper context
 
-struct collective_m3_entry {
-};
-
 struct collective_m3_recv_patch {
   int ilo[3]; // intersection low
   int ihi[3]; // intersection high
@@ -182,25 +179,22 @@ struct collective_m3_ctx {
   struct collective_m3_recv_patch *recv_patches;
   int n_recv_patches;
 
+  MPI_Request *recv_reqs;
   struct collective_m3_peer *peers;
   int n_peers;
 
-  struct collective_m3_entry *sends;
   void **send_bufs; // one for each writer
   MPI_Request *send_reqs;
   int nr_sends;
 
-  struct collective_m3_entry *recvs;
-  MPI_Request *recv_reqs;
-  int nr_recvs;
+  int rank;
+  int size;
 };
 
 static void
-collective_m3_init(struct mrc_io *io, struct collective_m3_ctx *ctx,
+collective_m3_init(struct xdmf *xdmf, struct collective_m3_ctx *ctx,
 		   struct mrc_domain *domain)
 {
-  struct xdmf *xdmf = to_xdmf(io);
-
   mrc_domain_get_global_dims(domain, ctx->gdims);
   mrc_domain_get_patches(domain, &ctx->nr_patches);
   mrc_domain_get_nr_global_patches(domain, &ctx->nr_global_patches);
@@ -220,6 +214,10 @@ collective_m3_init(struct mrc_io *io, struct collective_m3_ctx *ctx,
   int total_slow_indices = ctx->slab_dims[ctx->slow_dim];
   ctx->slow_indices_per_writer = total_slow_indices / xdmf->nr_writers;
   ctx->slow_indices_rmndr = total_slow_indices % xdmf->nr_writers;
+
+  MPI_Comm comm = mrc_domain_comm(domain);
+  MPI_Comm_rank(comm, &ctx->rank);
+  MPI_Comm_size(comm, &ctx->size);
 }
 
 static void
@@ -502,7 +500,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
   struct xdmf *xdmf = to_xdmf(io);
 
   struct collective_m3_ctx ctx;
-  collective_m3_init(io, &ctx, m3->_domain);
+  collective_m3_init(xdmf, &ctx, m3->_domain);
 
   if (xdmf->is_writer) {
     int writer;
