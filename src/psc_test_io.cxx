@@ -36,8 +36,6 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[],
 
 
 extern "C" void xdmf_collective_setup(struct mrc_io *io);
-extern "C" void xdmf_collective_open(struct mrc_io *io, const char *mode);
-extern "C" void xdmf_collective_close(struct mrc_io *io);
 extern "C" void xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3);
 
 // ======================================================================
@@ -83,8 +81,6 @@ struct PscTestIo
     mrc_io_set_from_options(io);
     xdmf_collective_setup(io);
 
-    xdmf_collective_open(io, "w");
-    
     mrc_fld* fld = grid.mrc_domain().m3_create();
     mrc_fld_set_name(fld, "e");
     mrc_fld_set_param_int(fld, "nr_ghosts", 0);
@@ -105,7 +101,6 @@ struct PscTestIo
     xdmf_collective_write_m3(io, "testpath", fld);
 
     mrc_fld_destroy(fld);
-    xdmf_collective_close(io);
     mrc_io_destroy(io);
 
     mpi_printf(MPI_COMM_WORLD, "***** Testing output done\n");

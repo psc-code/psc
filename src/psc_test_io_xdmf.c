@@ -73,65 +73,6 @@ xdmf_collective_destroy(struct mrc_io *io)
   }
 }
 
-// ----------------------------------------------------------------------
-// xdmf_collective_open
-
-void
-xdmf_collective_open(struct mrc_io *io, const char *mode)
-{
-  struct xdmf *xdmf = to_xdmf(io);
-  struct xdmf_file *file = &xdmf->file;
-  xdmf->mode = strdup(mode);
-  //  assert(strcmp(mode, "w") == 0);
-
-  char filename[strlen(io->par.outdir) + strlen(io->par.basename) + 20];
-  sprintf(filename, "%s/%s.%06d_p%06d.h5", io->par.outdir, io->par.basename,
-	  io->step, 0);
-
-  if (xdmf->is_writer) {
-    hid_t plist = H5Pcreate(H5P_FILE_ACCESS);
-    MPI_Info info;
-    MPI_Info_create(&info);
-    if (xdmf->romio_cb_write) {
-      MPI_Info_set(info, "romio_cb_write", xdmf->romio_cb_write);
-    }
-    if (xdmf->romio_ds_write) {
-      MPI_Info_set(info, "romio_ds_write", xdmf->romio_ds_write);
-    }
-#ifdef H5_HAVE_PARALLEL
-    H5Pset_fapl_mpio(plist, xdmf->comm_writers, info);
-#endif
-    if (strcmp(mode, "w") == 0) {
-      file->h5_file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, plist);
-    } else if (strcmp(mode, "r") == 0) {
-      file->h5_file = H5Fopen(filename, H5F_ACC_RDONLY, plist);
-    } else {
-      assert(0);
-    }
-    H5Pclose(plist);
-    MPI_Info_free(&info);
-  }
-  xdmf_spatial_open(&file->xdmf_spatial_list);
-}
-
-// ----------------------------------------------------------------------
-// xdmf_collective_close
-
-void
-xdmf_collective_close(struct mrc_io *io)
-{
-  struct xdmf *xdmf = to_xdmf(io);
-  struct xdmf_file *file = &xdmf->file;
-
-  xdmf_spatial_close(&file->xdmf_spatial_list, io, xdmf->xdmf_temporal);
-  if (xdmf->is_writer) {
-    H5Fclose(file->h5_file);
-    memset(file, 0, sizeof(*file));
-  }
-  free(xdmf->mode);
-  xdmf->mode = NULL;
-}
-
 // ======================================================================
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
