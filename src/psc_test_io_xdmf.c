@@ -69,7 +69,7 @@ struct collective_m3_peer {
   int rank;
   struct collective_m3_recv_patch *begin;
   struct collective_m3_recv_patch *end;
-  void *recv_buf;
+  float *recv_buf;
   size_t buf_size;
 };
 
@@ -88,7 +88,7 @@ struct collective_m3_ctx {
   struct collective_m3_peer *peers;
   int n_peers;
 
-  void **send_bufs; // one for each writer
+  float **send_bufs; // one for each writer
   MPI_Request *send_reqs;
   int nr_sends;
 
@@ -182,7 +182,7 @@ collective_send_fld_begin(struct xdmf *xdmf, struct collective_m3_ctx *ctx,
       continue;
     }
 
-    ctx->send_bufs[writer] = malloc(buf_sizes[writer] * m3->_nd->size_of_type);
+    ctx->send_bufs[writer] = malloc(buf_sizes[writer] * sizeof(*ctx->send_bufs[writer]));
     assert(ctx->send_bufs[writer]);
     
     MPI_Isend(ctx->send_bufs[writer], buf_sizes[writer], MPI_FLOAT,
@@ -315,7 +315,7 @@ writer_comm_init(struct collective_m3_ctx *ctx, struct mrc_ndarray *nd,
       }
       
       // alloc aggregate recv buffers
-      peer->recv_buf = malloc(peer->buf_size * size_of_type);
+      peer->recv_buf = malloc(peer->buf_size * sizeof(*peer->recv_buf));
     }
 
     ctx->n_peers++;
