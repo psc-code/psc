@@ -20,12 +20,8 @@ xdmf_collective_setup(struct xdmf *xdmf)
   int rank; MPI_Comm_rank(comm, &rank);
   int size; MPI_Comm_size(comm, &size);
 
-  xdmf->writers = calloc(xdmf->nr_writers, sizeof(*xdmf->writers));
-
-  for (int i = 0; i < xdmf->nr_writers; i++) {
-    xdmf->writers[i] = i;
-    if (i == rank)
-      xdmf->is_writer = 1;
+  if (rank < xdmf->nr_writers) {
+    xdmf->is_writer = 1;
   }
   MPI_Comm_split(comm, xdmf->is_writer, rank, &xdmf->comm_writers);
 }
@@ -36,7 +32,6 @@ xdmf_collective_setup(struct xdmf *xdmf)
 void
 xdmf_collective_destroy(struct xdmf *xdmf)
 {
-  free(xdmf->writers);
   if (xdmf->comm_writers) {
     MPI_Comm_free(&xdmf->comm_writers);
   }
@@ -160,7 +155,7 @@ collective_send_fld_begin(struct xdmf *xdmf, struct collective_m3_ctx *ctx,
 
   for (int writer = 0; writer < xdmf->nr_writers; writer++) {
     // don't send to self
-    if (xdmf->writers[writer] == ctx->rank) {
+    if (writer == ctx->rank) {
       ctx->send_reqs[writer] = MPI_REQUEST_NULL;
       continue;
     }
@@ -191,7 +186,7 @@ collective_send_fld_begin(struct xdmf *xdmf, struct collective_m3_ctx *ctx,
     assert(ctx->send_bufs[writer]);
     
     MPI_Isend(ctx->send_bufs[writer], buf_sizes[writer], MPI_FLOAT,
-	      xdmf->writers[writer], 0x1000, ctx->comm,
+	      writer, 0x1000, ctx->comm,
 	      &ctx->send_reqs[writer]);
   }
   free(buf_sizes);

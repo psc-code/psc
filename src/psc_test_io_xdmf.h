@@ -14,7 +14,6 @@ struct xdmf {
   int slab_off[3];
   int nr_writers;
   MPI_Comm comm_writers; //< communicator for only the writers
-  int *writers;          //< rank (in mrc_io comm) for each writer
   int is_writer;         //< this rank is a writer
 };
 
