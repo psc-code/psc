@@ -2,37 +2,17 @@
 #define BOUNDS_CHECK
 #define BOUNDSCHECK
 
+#include "psc_test_io_xdmf.h"
+
 #include <mrc_io_private.h>
 #include <mrc_params.h>
 
-#include <hdf5.h>
-#include <hdf5_hl.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 #define H5_CHK(ierr) assert(ierr >= 0)
 #define CE assert(ierr == 0)
-
-struct xdmf_file {
-  hid_t h5_file;
-  list_t xdmf_spatial_list;
-};
-
-struct xdmf {
-  int slab_dims[3];
-  int slab_off[3];
-  struct xdmf_file file;
-  struct xdmf_temporal *xdmf_temporal;
-  bool use_independent_io;
-  char *romio_cb_write;
-  char *romio_ds_write;
-  int nr_writers;
-  MPI_Comm comm_writers; //< communicator for only the writers
-  int *writers;          //< rank (in mrc_io comm) for each writer
-  int is_writer;         //< this rank is a writer
-  char *mode;            //< open mode, "r" or "w"
-};
 
 #define to_xdmf(io) mrc_to_subobj(io, struct xdmf)
 

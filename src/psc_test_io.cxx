@@ -5,6 +5,8 @@
 
 #include "mrc_io_private.h"
 
+#include "psc_test_io_xdmf.h"
+
 #include <string>
 
 int MPI_Irecv(void *buf, int count, MPI_Datatype datatype, int source,
@@ -35,10 +37,6 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[],
 }
 
 #define xdmf(io) mrc_to_subobj(io, struct xdmf)
-
-extern "C" void xdmf_collective_setup(struct xdmf *xdmf);
-extern "C" void xdmf_collective_destroy(struct xdmf *xdmf);
-extern "C" void xdmf_collective_write_m3(struct xdmf *xdmf, const char *path, struct mrc_fld *m3);
 
 // ======================================================================
 // PscTestIo
