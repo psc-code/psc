@@ -73,7 +73,7 @@ struct PscTestIo
 
     mpi_printf(MPI_COMM_WORLD, "***** Testing output\n");
 
-    mrc_fld* fld = grid.mrc_domain().m3_create();
+    mrc_fld* fld = mrc_domain_m3_create(grid.mrc_domain().domain_);
     mrc_fld_set_name(fld, "e");
     mrc_fld_set_param_int(fld, "nr_ghosts", 0);
     mrc_fld_set_param_int(fld, "nr_comps", 2);
