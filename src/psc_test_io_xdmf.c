@@ -46,17 +46,17 @@ xdmf_collective_setup(struct mrc_io *io)
   struct xdmf *xdmf = to_xdmf(io);
 
   MPI_Comm comm = mrc_io_comm(io);
-  MPI_Comm_rank(comm, &io->rank);
-  MPI_Comm_size(comm, &io->size);
+  int rank; MPI_Comm_rank(comm, &rank);
+  int size; MPI_Comm_size(comm, &size);
 
   xdmf->writers = calloc(xdmf->nr_writers, sizeof(*xdmf->writers));
 
   for (int i = 0; i < xdmf->nr_writers; i++) {
     xdmf->writers[i] = i;
-    if (i == io->rank)
+    if (i == rank)
       xdmf->is_writer = 1;
   }
-  MPI_Comm_split(comm, xdmf->is_writer, io->rank, &xdmf->comm_writers);
+  MPI_Comm_split(comm, xdmf->is_writer, rank, &xdmf->comm_writers);
 }
 
 // ----------------------------------------------------------------------
@@ -255,7 +255,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
 
   for (int writer = 0; writer < xdmf->nr_writers; writer++) {
     // don't send to self
-    if (xdmf->writers[writer] == io->rank) {
+    if (xdmf->writers[writer] == ctx->rank) {
       ctx->send_reqs[writer] = MPI_REQUEST_NULL;
       continue;
     }
@@ -347,7 +347,7 @@ writer_comm_init(struct collective_m3_ctx *ctx,
 
   ctx->recv_patches = calloc(ctx->n_recv_patches, sizeof(*ctx->recv_patches));
 
-  struct collective_m3_recv_patch **recv_patches_by_rank = calloc(io->size + 1, sizeof(*recv_patches_by_rank));
+  struct collective_m3_recv_patch **recv_patches_by_rank = calloc(ctx->size + 1, sizeof(*recv_patches_by_rank));
 
   int cur_rank = -1;
   ctx->n_recv_patches = 0;
@@ -377,14 +377,14 @@ writer_comm_init(struct collective_m3_ctx *ctx,
     ctx->n_recv_patches++;
   }
 
-  while (cur_rank < io->size) {
+  while (cur_rank < ctx->size) {
     cur_rank++;
     recv_patches_by_rank[cur_rank] = &ctx->recv_patches[ctx->n_recv_patches];
     //mprintf("rank %d patches start at %d\n", cur_rank, ctx->n_recv_patches);
   }
 
   ctx->n_peers = 0;
-  for (int rank = 0; rank < io->size; rank++) {
+  for (int rank = 0; rank < ctx->size; rank++) {
     struct collective_m3_recv_patch *begin = recv_patches_by_rank[rank];
     struct collective_m3_recv_patch *end   = recv_patches_by_rank[rank+1];
 
@@ -399,7 +399,7 @@ writer_comm_init(struct collective_m3_ctx *ctx,
 
   ctx->peers = calloc(ctx->n_peers, sizeof(*ctx->peers));
   ctx->n_peers = 0;
-  for (int rank = 0; rank < io->size; rank++) {
+  for (int rank = 0; rank < ctx->size; rank++) {
     struct collective_m3_recv_patch *begin = recv_patches_by_rank[rank];
     struct collective_m3_recv_patch *end   = recv_patches_by_rank[rank+1];
 
@@ -413,7 +413,7 @@ writer_comm_init(struct collective_m3_ctx *ctx,
     peer->end = end;
 
     // for remote patches, allocate buffer
-    if (peer->rank != io->rank) {
+    if (peer->rank != ctx->rank) {
       peer->buf_size = 0;
       for (struct collective_m3_recv_patch *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
 	int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
@@ -441,7 +441,7 @@ writer_comm_begin(struct collective_m3_ctx *ctx, struct mrc_io *io, struct mrc_n
 {
   for (struct collective_m3_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
     // skip local patches
-    if (peer->rank == io->rank) {
+    if (peer->rank == ctx->rank) {
       ctx->recv_reqs[peer - ctx->peers] = MPI_REQUEST_NULL;
       continue;
     }
@@ -467,7 +467,7 @@ writer_comm_end(struct collective_m3_ctx *ctx, struct mrc_io *io, struct mrc_nda
 
   for (struct collective_m3_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
     // skip local patches
-    if (peer->rank == io->rank) {
+    if (peer->rank == ctx->rank) {
       continue;
     }
 
