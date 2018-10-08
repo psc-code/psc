@@ -141,12 +141,8 @@ collective_m3_init(struct xdmf *xdmf, struct collective_m3_ctx *ctx,
   mrc_domain_get_patches(domain, &ctx->nr_patches);
   mrc_domain_get_nr_global_patches(domain, &ctx->nr_global_patches);
   for (int d = 0; d < 3; d++) {
-    if (xdmf->slab_dims[d]) {
-      ctx->slab_dims[d] = xdmf->slab_dims[d];
-    } else {
-      ctx->slab_dims[d] = ctx->gdims[d];
-    }
-    ctx->slab_off[d] = xdmf->slab_off[d];
+    ctx->slab_dims[d] = ctx->gdims[d];
+    ctx->slab_off[d] = 0;
   }
   ctx->slow_dim = 2;
   while (ctx->gdims[ctx->slow_dim] == 1) {
