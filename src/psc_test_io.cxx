@@ -3,8 +3,6 @@
 #include "grid.hxx"
 #include "psc_fields_single.h"
 
-#include "mrc_io_private.h"
-
 #include "psc_test_io_xdmf.h"
 
 #include <string>
@@ -35,8 +33,6 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[],
   int ierr = PMPI_Waitall(count, array_of_requests, array_of_statuses);
   return ierr;
 }
-
-#define xdmf(io) mrc_to_subobj(io, struct xdmf)
 
 // ======================================================================
 // PscTestIo
@@ -77,11 +73,6 @@ struct PscTestIo
 
     mpi_printf(MPI_COMM_WORLD, "***** Testing output\n");
 
-    auto io = mrc_io_create(MPI_COMM_WORLD);
-    mrc_io_set_from_options(io);
-    auto xdmf = xdmf(io);
-    xdmf_collective_setup(xdmf);
-
     mrc_fld* fld = grid.mrc_domain().m3_create();
     mrc_fld_set_name(fld, "e");
     mrc_fld_set_param_int(fld, "nr_ghosts", 0);
@@ -99,10 +90,13 @@ struct PscTestIo
       mrc_fld_patch_put(fld);
     }
     
+    xdmf xdmf[1] = {};
+    xdmf->nr_writers = 2;
+    xdmf_collective_setup(xdmf);
     xdmf_collective_write_m3(xdmf, "testpath", fld);
+    xdmf_collective_destroy(xdmf);
 
     mrc_fld_destroy(fld);
-    xdmf_collective_destroy(xdmf);
 
     mpi_printf(MPI_COMM_WORLD, "***** Testing output done\n");
   }

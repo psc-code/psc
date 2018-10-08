@@ -4,8 +4,7 @@
 
 #include "psc_test_io_xdmf.h"
 
-#include <mrc_io_private.h>
-#include <mrc_params.h>
+#include <mrc_domain.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -369,7 +368,8 @@ writer_comm_end(struct collective_m3_ctx *ctx, struct mrc_ndarray *nd,
 {
   MHERE;
   MPI_Waitall(ctx->n_peers, ctx->recv_reqs, MPI_STATUSES_IGNORE);
-
+  MHERE;
+  
   for (struct collective_m3_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
     // skip local patches
     if (peer->rank == ctx->rank) {
