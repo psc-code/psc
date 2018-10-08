@@ -40,33 +40,23 @@ struct xdmf {
 // ----------------------------------------------------------------------
 // xdmf_collective_setup
 
-static void
+void
 xdmf_collective_setup(struct mrc_io *io)
 {
-  mrc_io_setup_super(io);
-
   struct xdmf *xdmf = to_xdmf(io);
 
-  char filename[strlen(io->par.outdir) + strlen(io->par.basename) + 7];
-  sprintf(filename, "%s/%s.xdmf", io->par.outdir, io->par.basename);
-  xdmf->xdmf_temporal = xdmf_temporal_create(filename);
+  MPI_Comm comm = mrc_io_comm(io);
+  MPI_Comm_rank(comm, &io->rank);
+  MPI_Comm_size(comm, &io->size);
 
-#ifndef H5_HAVE_PARALLEL
-  assert(xdmf->nr_writers == 1);
-#endif
-  
-  if (xdmf->nr_writers > io->size) {
-    xdmf->nr_writers = io->size;
-  }
   xdmf->writers = calloc(xdmf->nr_writers, sizeof(*xdmf->writers));
-  // setup writers, just use first nr_writers ranks,
-  // could do something fancier in the future
+
   for (int i = 0; i < xdmf->nr_writers; i++) {
     xdmf->writers[i] = i;
     if (i == io->rank)
       xdmf->is_writer = 1;
   }
-  MPI_Comm_split(mrc_io_comm(io), xdmf->is_writer, io->rank, &xdmf->comm_writers);
+  MPI_Comm_split(comm, xdmf->is_writer, io->rank, &xdmf->comm_writers);
 }
 
 // ----------------------------------------------------------------------
@@ -80,10 +70,6 @@ xdmf_collective_destroy(struct mrc_io *io)
   free(xdmf->writers);
   if (xdmf->comm_writers) {
     MPI_Comm_free(&xdmf->comm_writers);
-  }
-
-  if (xdmf->xdmf_temporal) {
-    xdmf_temporal_destroy(xdmf->xdmf_temporal);
   }
 }
 

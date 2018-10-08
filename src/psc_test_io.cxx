@@ -35,6 +35,7 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[],
 }
 
 
+extern "C" void xdmf_collective_setup(struct mrc_io *io);
 extern "C" void xdmf_collective_open(struct mrc_io *io, const char *mode);
 extern "C" void xdmf_collective_close(struct mrc_io *io);
 extern "C" void xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3);
@@ -80,8 +81,7 @@ struct PscTestIo
 
     auto io = mrc_io_create(MPI_COMM_WORLD);
     mrc_io_set_from_options(io);
-    mrc_io_setup(io);
-    mrc_io_view(io);
+    xdmf_collective_setup(io);
 
     xdmf_collective_open(io, "w");
     
