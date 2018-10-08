@@ -52,6 +52,8 @@ mrc_io_ops(struct mrc_io *io)
 
 
 
+extern "C" void xdmf_collective_open(struct mrc_io *io, const char *mode);
+extern "C" void xdmf_collective_close(struct mrc_io *io);
 extern "C" void xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3);
 
 // ======================================================================
@@ -100,7 +102,8 @@ struct PscTestIo
     mrc_io_setup(io);
     mrc_io_view(io);
 
-    mrc_io_open(io, "w", 0, 0.);
+    INIT_LIST_HEAD(&io->obj_list);
+    xdmf_collective_open(io, "w");
     
     // save some basic info about the run in the output file
     struct mrc_obj *obj = mrc_obj_create(mrc_io_comm(io));
@@ -139,7 +142,7 @@ struct PscTestIo
     xdmf_collective_write_m3(io, path, fld);
 
     mrc_fld_destroy(fld);
-    mrc_io_close(io);
+    xdmf_collective_close(io);
     mrc_io_destroy(io);
 
     mpi_printf(MPI_COMM_WORLD, "***** Testing output done\n");

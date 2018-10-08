@@ -35,18 +35,6 @@ struct xdmf {
   char *mode;            //< open mode, "r" or "w"
 };
 
-#define VAR(x) (void *)offsetof(struct xdmf, x)
-static struct param xdmf_collective_descr[] = {
-  { "use_independent_io"     , VAR(use_independent_io)      , PARAM_BOOL(false)      },
-  { "nr_writers"             , VAR(nr_writers)              , PARAM_INT(1)           },
-  { "romio_cb_write"         , VAR(romio_cb_write)          , PARAM_STRING(NULL)     },
-  { "romio_ds_write"         , VAR(romio_ds_write)          , PARAM_STRING(NULL)     },
-  { "slab_dims"              , VAR(slab_dims)               , PARAM_INT3(0, 0, 0)    },
-  { "slab_off"               , VAR(slab_off)                , PARAM_INT3(0, 0, 0)    },
-  {},
-};
-#undef VAR
-
 #define to_xdmf(io) mrc_to_subobj(io, struct xdmf)
 
 // ----------------------------------------------------------------------
@@ -102,7 +90,7 @@ xdmf_collective_destroy(struct mrc_io *io)
 // ----------------------------------------------------------------------
 // xdmf_collective_open
 
-static void
+void
 xdmf_collective_open(struct mrc_io *io, const char *mode)
 {
   struct xdmf *xdmf = to_xdmf(io);
@@ -143,7 +131,7 @@ xdmf_collective_open(struct mrc_io *io, const char *mode)
 // ----------------------------------------------------------------------
 // xdmf_collective_close
 
-static void
+void
 xdmf_collective_close(struct mrc_io *io)
 {
   struct xdmf *xdmf = to_xdmf(io);
