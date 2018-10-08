@@ -223,10 +223,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *_io,
     ctx->send_bufs[writer] = malloc(buf_sizes[writer] * m3->_nd->size_of_type);
     assert(ctx->send_bufs[writer]);
     
-    assert(mrc_fld_data_type(m3) == MRC_NT_FLOAT);
-    MPI_Datatype mpi_dtype = MPI_FLOAT;
-
-    MPI_Isend(ctx->send_bufs[writer], buf_sizes[writer], mpi_dtype,
+    MPI_Isend(ctx->send_bufs[writer], buf_sizes[writer], MPI_FLOAT,
 	      xdmf->writers[writer], 0x1000, ctx->comm,
 	      &ctx->send_reqs[writer]);
   }
