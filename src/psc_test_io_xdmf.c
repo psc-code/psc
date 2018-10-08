@@ -613,17 +613,6 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
 					 ctx.slab_off, ctx.slab_dims, io);
   }
 
-  // If we have an aos field, we need to get it as soa for collection and writing
-  struct mrc_fld *m3_soa = m3;
-  if (m3->_aos) {
-    switch (mrc_fld_data_type(m3)) {
-      case MRC_NT_FLOAT: m3_soa = mrc_fld_get_as(m3, "float"); break;
-      case MRC_NT_DOUBLE: m3_soa = mrc_fld_get_as(m3, "double"); break;
-      case MRC_NT_INT: m3_soa = mrc_fld_get_as(m3, "int"); break;
-      default: assert(0);
-    }
-  }
-
   if (xdmf->is_writer) {
     int writer;
     MPI_Comm_rank(xdmf->comm_writers, &writer);
@@ -655,11 +644,11 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     int nr_1 = 1;
     H5LTset_attribute_int(group0, ".", "nr_patches", &nr_1, 1);
 
-    writer_comm_init(&ctx, io, nd, m3_soa->_domain, m3_soa->_nd->size_of_type);
+    writer_comm_init(&ctx, io, nd, m3->_domain, m3->_nd->size_of_type);
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
-      writer_comm_begin(&ctx, io, nd, m3_soa);
-      collective_send_fld_begin(&ctx, io, m3_soa, 0);
-      writer_comm_end(&ctx, io, nd, m3_soa, 0);
+      writer_comm_begin(&ctx, io, nd, m3);
+      collective_send_fld_begin(&ctx, io, m3, 0);
+      writer_comm_end(&ctx, io, nd, m3, 0);
       //collective_write_fld(&ctx, io, path, nd, m, m3, xs, group0);
       collective_send_fld_end(&ctx, io, m3, 0);
     }
@@ -669,13 +658,9 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     mrc_ndarray_destroy(nd);
   } else {
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
-      collective_send_fld_begin(&ctx, io, m3_soa, m);
-      collective_send_fld_end(&ctx, io, m3_soa, m);
+      collective_send_fld_begin(&ctx, io, m3, m);
+      collective_send_fld_end(&ctx, io, m3, m);
     }
-  }
-
-  if (m3->_aos) {
-    mrc_fld_put_as(m3_soa, m3);
   }
 }
 
