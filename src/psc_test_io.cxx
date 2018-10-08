@@ -71,9 +71,26 @@ struct PscTestIo
     auto norm = Grid_t::Normalization{norm_params};
     auto grid = Grid_t{grid_domain, grid_bc, kinds, norm, dt};
 
+    struct mrc_domain *domain = mrc_domain_create(MPI_COMM_WORLD);
+    mrc_domain_set_type(domain, "multi");
+    mrc_domain_set_param_int3(domain, "m", grid_domain.gdims);
+    mrc_domain_set_param_int(domain, "bcx", BC_PERIODIC);
+    mrc_domain_set_param_int(domain, "bcy", BC_PERIODIC);
+    mrc_domain_set_param_int(domain, "bcz", BC_PERIODIC);
+    mrc_domain_set_param_int3(domain, "np", grid_domain.np);
+    
+    struct mrc_crds *crds = mrc_domain_get_crds(domain);
+    mrc_crds_set_type(crds, "uniform");
+    mrc_crds_set_param_int(crds, "sw", 2);
+    mrc_crds_set_param_double3(crds, "l", grid_domain.corner);
+    mrc_crds_set_param_double3(crds, "h", grid_domain.corner + grid_domain.length);
+    
+    mrc_domain_set_from_options(domain);
+    mrc_domain_setup(domain);
+    
     mpi_printf(MPI_COMM_WORLD, "***** Testing output\n");
 
-    mrc_fld* fld = mrc_domain_m3_create(grid.mrc_domain().domain_);
+    mrc_fld* fld = mrc_domain_m3_create(domain);
     mrc_fld_set_name(fld, "e");
     mrc_fld_set_param_int(fld, "nr_ghosts", 0);
     mrc_fld_set_param_int(fld, "nr_comps", 2);
@@ -97,6 +114,7 @@ struct PscTestIo
     xdmf_collective_destroy(xdmf);
 
     mrc_fld_destroy(fld);
+    mrc_domain_destroy(domain);
 
     mpi_printf(MPI_COMM_WORLD, "***** Testing output done\n");
   }
