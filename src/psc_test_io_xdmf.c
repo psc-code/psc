@@ -603,16 +603,6 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
   struct collective_m3_ctx ctx;
   collective_m3_init(io, &ctx, m3->_domain);
 
-  struct xdmf_file *file = &xdmf->file;
-  struct xdmf_spatial *xs = xdmf_spatial_find(&file->xdmf_spatial_list,
-					      mrc_domain_name(m3->_domain));
-  if (!xs) {
-    xs = xdmf_spatial_create_m3_parallel(&file->xdmf_spatial_list,
-					 mrc_domain_name(m3->_domain),
-					 m3->_domain,
-					 ctx.slab_off, ctx.slab_dims, io);
-  }
-
   if (xdmf->is_writer) {
     int writer;
     MPI_Comm_rank(xdmf->comm_writers, &writer);
@@ -623,38 +613,21 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     	    writer_dims[0], writer_dims[1], writer_dims[2]);
 
     struct mrc_ndarray *nd = mrc_ndarray_create(MPI_COMM_NULL);
-    switch (mrc_fld_data_type(m3)) {
-    case MRC_NT_FLOAT: mrc_ndarray_set_type(nd, "float"); break;
-    case MRC_NT_DOUBLE: mrc_ndarray_set_type(nd, "double"); break;
-    case MRC_NT_INT: mrc_ndarray_set_type(nd, "int"); break;
-    default: assert(0);
-    }
+    assert(mrc_fld_data_type(m3) == MRC_NT_FLOAT);
+    mrc_ndarray_set_type(nd, "float");
     mrc_ndarray_set_param_int_array(nd, "dims", 3, writer_dims);
     mrc_ndarray_set_param_int_array(nd, "offs", 3, writer_off);
     mrc_ndarray_setup(nd);
-
-    hid_t group0;
-    if (H5Lexists(file->h5_file, path, H5P_DEFAULT) > 0) {
-      group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT);
-    } else {
-      assert(0); // FIXME, can this happen?
-      group0 = H5Gcreate(file->h5_file, path, H5P_DEFAULT,
-			 H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group0);
-    }
-    int nr_1 = 1;
-    H5LTset_attribute_int(group0, ".", "nr_patches", &nr_1, 1);
 
     writer_comm_init(&ctx, io, nd, m3->_domain, m3->_nd->size_of_type);
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
       writer_comm_begin(&ctx, io, nd, m3);
       collective_send_fld_begin(&ctx, io, m3, 0);
       writer_comm_end(&ctx, io, nd, m3, 0);
-      //collective_write_fld(&ctx, io, path, nd, m, m3, xs, group0);
       collective_send_fld_end(&ctx, io, m3, 0);
     }
     writer_comm_destroy(&ctx);
 
-    H5Gclose(group0);
     mrc_ndarray_destroy(nd);
   } else {
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
