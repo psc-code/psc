@@ -81,7 +81,7 @@ struct PscTestIo
     mrc_fld_set_comp_name(fld, 0, "ex");
     mrc_fld_set_comp_name(fld, 1, "ey");
     
-    for (int p = 0; p < grid.n_patches(); p++) {
+    for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
       mrc_fld_patch *m3p = mrc_fld_patch_get(fld, p);
       mrc_fld_foreach(fld, i,j,k, 0,0) {
 	MRC_M3(m3p, 0, i,j,k) = i;
