@@ -34,23 +34,6 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[],
   return ierr;
 }
 
-static unsigned long
-mrc_obj_uid(struct mrc_obj *obj)
-{
-  unsigned long uid = (unsigned long) obj;
-  if (obj->comm != MPI_COMM_NULL) {
-    MPI_Bcast(&uid, 1, MPI_LONG, 0, obj->comm);
-  }
-  return uid;
-}
-
-static inline struct mrc_io_ops *
-mrc_io_ops(struct mrc_io *io)
-{
-  return (struct mrc_io_ops *) io->obj.ops;
-}
-
-
 
 extern "C" void xdmf_collective_open(struct mrc_io *io, const char *mode);
 extern "C" void xdmf_collective_close(struct mrc_io *io);
@@ -96,24 +79,11 @@ struct PscTestIo
     mpi_printf(MPI_COMM_WORLD, "***** Testing output\n");
 
     auto io = mrc_io_create(MPI_COMM_WORLD);
-    mrc_io_set_param_string(io, "basename", "pfd");
-    mrc_io_set_param_string(io, "outdir", ".");
     mrc_io_set_from_options(io);
     mrc_io_setup(io);
     mrc_io_view(io);
 
-    INIT_LIST_HEAD(&io->obj_list);
     xdmf_collective_open(io, "w");
-    
-    // save some basic info about the run in the output file
-    struct mrc_obj *obj = mrc_obj_create(mrc_io_comm(io));
-    mrc_obj_set_name(obj, "psc");
-    mrc_obj_dict_add_int(obj, "timestep", 0);
-    mrc_obj_dict_add_float(obj, "time", 0.);
-    mrc_obj_dict_add_float(obj, "cc", 100.);
-    mrc_obj_dict_add_float(obj, "dt", .99);
-    mrc_obj_write(obj, io);
-    mrc_obj_destroy(obj);
     
     mrc_fld* fld = grid.mrc_domain().m3_create();
     mrc_fld_set_name(fld, "e");
@@ -132,14 +102,7 @@ struct PscTestIo
       mrc_fld_patch_put(fld);
     }
     
-    char path[strlen(obj->name) + 20];
-    sprintf(path, "%s-uid-%#lx", obj->name, mrc_obj_uid(obj));
-    if (mrc_io_add_obj(io, obj, path) == 1) {
-      MHERE;
-    }
-    struct mrc_io_ops *ops = mrc_io_ops(io);
-    //ops->write_m3(io, path, fld);
-    xdmf_collective_write_m3(io, path, fld);
+    xdmf_collective_write_m3(io, "testpath", fld);
 
     mrc_fld_destroy(fld);
     xdmf_collective_close(io);
