@@ -34,9 +34,11 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[],
   return ierr;
 }
 
+#define xdmf(io) mrc_to_subobj(io, struct xdmf)
 
-extern "C" void xdmf_collective_setup(struct mrc_io *io);
-extern "C" void xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3);
+extern "C" void xdmf_collective_setup(struct xdmf *xdmf);
+extern "C" void xdmf_collective_destroy(struct xdmf *xdmf);
+extern "C" void xdmf_collective_write_m3(struct xdmf *xdmf, const char *path, struct mrc_fld *m3);
 
 // ======================================================================
 // PscTestIo
@@ -79,7 +81,8 @@ struct PscTestIo
 
     auto io = mrc_io_create(MPI_COMM_WORLD);
     mrc_io_set_from_options(io);
-    xdmf_collective_setup(io);
+    auto xdmf = xdmf(io);
+    xdmf_collective_setup(xdmf);
 
     mrc_fld* fld = grid.mrc_domain().m3_create();
     mrc_fld_set_name(fld, "e");
@@ -98,10 +101,10 @@ struct PscTestIo
       mrc_fld_patch_put(fld);
     }
     
-    xdmf_collective_write_m3(io, "testpath", fld);
+    xdmf_collective_write_m3(xdmf, "testpath", fld);
 
     mrc_fld_destroy(fld);
-    mrc_io_destroy(io);
+    xdmf_collective_destroy(xdmf);
 
     mpi_printf(MPI_COMM_WORLD, "***** Testing output done\n");
   }

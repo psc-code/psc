@@ -4,7 +4,6 @@
 
 #include <mrc_io_private.h>
 #include <mrc_params.h>
-#include "../src/mrc_io_xdmf_lib.h"
 
 #include <hdf5.h>
 #include <hdf5_hl.h>
@@ -41,10 +40,8 @@ struct xdmf {
 // xdmf_collective_setup
 
 void
-xdmf_collective_setup(struct mrc_io *io)
+xdmf_collective_setup(struct xdmf *xdmf)
 {
-  struct xdmf *xdmf = to_xdmf(io);
-
   MPI_Comm comm = MPI_COMM_WORLD;
   int rank; MPI_Comm_rank(comm, &rank);
   int size; MPI_Comm_size(comm, &size);
@@ -62,11 +59,9 @@ xdmf_collective_setup(struct mrc_io *io)
 // ----------------------------------------------------------------------
 // xdmf_collective_destroy
 
-static void
-xdmf_collective_destroy(struct mrc_io *io)
+void
+xdmf_collective_destroy(struct xdmf *xdmf)
 {
-  struct xdmf *xdmf = to_xdmf(io);
-  
   free(xdmf->writers);
   if (xdmf->comm_writers) {
     MPI_Comm_free(&xdmf->comm_writers);
@@ -179,11 +174,9 @@ get_writer_off_dims(struct collective_m3_ctx *ctx, int writer,
 // collective_send_fld_begin
 
 static void
-collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *_io,
+collective_send_fld_begin(struct xdmf *xdmf, struct collective_m3_ctx *ctx,
 			  struct mrc_fld *m3, int m)
 {
-  struct xdmf *xdmf = to_xdmf(_io);
-
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(m3->_domain, &nr_patches);
 
@@ -234,11 +227,9 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *_io,
 // collective_send_fld_end
 
 static void
-collective_send_fld_end(struct collective_m3_ctx *ctx, struct mrc_io *io,
+collective_send_fld_end(struct xdmf *xdmf, struct collective_m3_ctx *ctx,
 			struct mrc_fld *m3, int m)
 {
-  struct xdmf *xdmf = to_xdmf(io);
-
   MHERE;
   MPI_Waitall(xdmf->nr_writers, ctx->send_reqs, MPI_STATUSES_IGNORE);
 
@@ -253,8 +244,7 @@ collective_send_fld_end(struct collective_m3_ctx *ctx, struct mrc_io *io,
 // writer_comm_init
 
 static void
-writer_comm_init(struct collective_m3_ctx *ctx,
-		 struct mrc_io *io, struct mrc_ndarray *nd,
+writer_comm_init(struct collective_m3_ctx *ctx, struct mrc_ndarray *nd,
 		 struct mrc_domain *domain, int size_of_type)
 {
   // find out who's sending, OPT: this way is not very scalable
@@ -371,7 +361,7 @@ writer_comm_init(struct collective_m3_ctx *ctx,
 // writer_comm_begin
 
 static void
-writer_comm_begin(struct collective_m3_ctx *ctx, struct mrc_io *io, struct mrc_ndarray *nd,
+writer_comm_begin(struct collective_m3_ctx *ctx, struct mrc_ndarray *nd,
 		  struct mrc_fld *m3)
 {
   for (struct collective_m3_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
@@ -394,7 +384,7 @@ writer_comm_begin(struct collective_m3_ctx *ctx, struct mrc_io *io, struct mrc_n
 // writer_comm_end
 
 static void
-writer_comm_end(struct collective_m3_ctx *ctx, struct mrc_io *io, struct mrc_ndarray *nd,
+writer_comm_end(struct collective_m3_ctx *ctx, struct mrc_ndarray *nd,
 		struct mrc_fld *m3, int m)
 {
   MHERE;
@@ -430,10 +420,8 @@ writer_comm_destroy(struct collective_m3_ctx *ctx)
 // xdmf_collective_write_m3
 
 void
-xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3)
+xdmf_collective_write_m3(struct xdmf* xdmf, const char *path, struct mrc_fld *m3)
 {
-  struct xdmf *xdmf = to_xdmf(io);
-
   struct collective_m3_ctx ctx;
   collective_m3_init(xdmf, &ctx, m3->_domain);
 
@@ -453,20 +441,20 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     mrc_ndarray_set_param_int_array(nd, "offs", 3, writer_off);
     mrc_ndarray_setup(nd);
 
-    writer_comm_init(&ctx, io, nd, m3->_domain, m3->_nd->size_of_type);
+    writer_comm_init(&ctx, nd, m3->_domain, m3->_nd->size_of_type);
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
-      writer_comm_begin(&ctx, io, nd, m3);
-      collective_send_fld_begin(&ctx, io, m3, 0);
-      writer_comm_end(&ctx, io, nd, m3, 0);
-      collective_send_fld_end(&ctx, io, m3, 0);
+      writer_comm_begin(&ctx, nd, m3);
+      collective_send_fld_begin(xdmf, &ctx, m3, 0);
+      writer_comm_end(&ctx, nd, m3, 0);
+      collective_send_fld_end(xdmf, &ctx, m3, 0);
     }
     writer_comm_destroy(&ctx);
 
     mrc_ndarray_destroy(nd);
   } else {
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
-      collective_send_fld_begin(&ctx, io, m3, m);
-      collective_send_fld_end(&ctx, io, m3, m);
+      collective_send_fld_begin(xdmf, &ctx, m3, m);
+      collective_send_fld_end(xdmf, &ctx, m3, m);
     }
   }
 }
