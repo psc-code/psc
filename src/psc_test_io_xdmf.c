@@ -45,7 +45,7 @@ xdmf_collective_setup(struct mrc_io *io)
 {
   struct xdmf *xdmf = to_xdmf(io);
 
-  MPI_Comm comm = mrc_io_comm(io);
+  MPI_Comm comm = MPI_COMM_WORLD;
   int rank; MPI_Comm_rank(comm, &rank);
   int size; MPI_Comm_size(comm, &size);
 
@@ -128,6 +128,7 @@ struct collective_m3_ctx {
   MPI_Request *send_reqs;
   int nr_sends;
 
+  MPI_Comm comm;
   int rank;
   int size;
 };
@@ -156,9 +157,9 @@ collective_m3_init(struct xdmf *xdmf, struct collective_m3_ctx *ctx,
   ctx->slow_indices_per_writer = total_slow_indices / xdmf->nr_writers;
   ctx->slow_indices_rmndr = total_slow_indices % xdmf->nr_writers;
 
-  MPI_Comm comm = mrc_domain_comm(domain);
-  MPI_Comm_rank(comm, &ctx->rank);
-  MPI_Comm_size(comm, &ctx->size);
+  ctx->comm = MPI_COMM_WORLD;
+  MPI_Comm_rank(ctx->comm, &ctx->rank);
+  MPI_Comm_size(ctx->comm, &ctx->size);
 }
 
 static void
@@ -182,10 +183,10 @@ get_writer_off_dims(struct collective_m3_ctx *ctx, int writer,
 // collective_send_fld_begin
 
 static void
-collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
+collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *_io,
 			  struct mrc_fld *m3, int m)
 {
-  struct xdmf *xdmf = to_xdmf(io);
+  struct xdmf *xdmf = to_xdmf(_io);
 
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(m3->_domain, &nr_patches);
@@ -230,7 +231,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
     MPI_Datatype mpi_dtype = MPI_FLOAT;
 
     MPI_Isend(ctx->send_bufs[writer], buf_sizes[writer], mpi_dtype,
-	      xdmf->writers[writer], 0x1000, mrc_io_comm(io),
+	      xdmf->writers[writer], 0x1000, ctx->comm,
 	      &ctx->send_reqs[writer]);
   }
   free(buf_sizes);
@@ -391,7 +392,7 @@ writer_comm_begin(struct collective_m3_ctx *ctx, struct mrc_io *io, struct mrc_n
     MPI_Datatype mpi_dtype = MPI_FLOAT;
     
     // recv aggregate buffers
-    MPI_Irecv(peer->recv_buf, peer->buf_size, mpi_dtype, peer->rank, 0x1000, mrc_io_comm(io),
+    MPI_Irecv(peer->recv_buf, peer->buf_size, mpi_dtype, peer->rank, 0x1000, ctx->comm,
 	      &ctx->recv_reqs[peer - ctx->peers]);
   }
 }
