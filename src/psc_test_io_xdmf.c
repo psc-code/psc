@@ -10,11 +10,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#define H5_CHK(ierr) assert(ierr >= 0)
-#define CE assert(ierr == 0)
-
-#define to_xdmf(io) mrc_to_subobj(io, struct xdmf)
-
 // ----------------------------------------------------------------------
 // xdmf_collective_setup
 
