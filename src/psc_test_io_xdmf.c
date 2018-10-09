@@ -15,6 +15,9 @@
 void
 mock_domain_init(struct mock_domain *mock, struct mrc_domain *domain)
 {
+  int rank;
+  MPI_Comm_rank(mrc_domain_comm(domain), &rank);
+  
   mock->domain = domain;
   mrc_domain_get_global_dims(domain, mock->gdims);
   mrc_domain_get_nr_global_patches(domain, &mock->nr_global_patches);
@@ -31,15 +34,21 @@ mock_domain_init(struct mock_domain *mock, struct mrc_domain *domain)
     mock->patch_info[gp].rank = info.rank;
   }
 
-  struct mrc_patch *patches = mrc_domain_get_patches(domain, &mock->nr_patches);
-
-  // FIXME, leaked
-  mock->patches = calloc(mock->nr_patches, sizeof(*mock->patches));
-  for (int p = 0; p < mock->nr_patches; p++) {
-    for (int d = 0; d < 3; d++) {
-      mock->patches[p].off[d] = patches[p].off[d];
-      mock->patches[p].ldims[d] = patches[p].ldims[d];
+  mock->patches = NULL;
+  for (int gp = 0; gp < mock->nr_global_patches; gp++) {
+    if (mock->patch_info[gp].rank == rank) {
+      mock->patches = &mock->patch_info[gp];
+      break;
     }
+  }
+  assert(mock->patches);
+
+  mock->nr_patches = 0;
+  for (struct mock_patch *pp = mock->patches; pp < mock->patch_info + mock->nr_global_patches; pp++) {
+    if (pp->rank != rank) {
+      break;
+    }
+    mock->nr_patches++;
   }
 }
 
