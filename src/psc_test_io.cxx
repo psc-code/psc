@@ -62,12 +62,15 @@ struct PscTestIo
     mrc_domain_set_from_options(domain);
     mrc_domain_setup(domain);
     
+    struct mock_domain mock[1];
+    mock_domain_init(mock, domain);
+
     mpi_printf(MPI_COMM_WORLD, "***** Testing output\n");
 
     xdmf xdmf[1] = {};
     xdmf->nr_writers = 2;
     xdmf_collective_setup(xdmf);
-    xdmf_collective_write_m3(xdmf, "testpath", domain);
+    xdmf_collective_write_m3(xdmf, mock);
     xdmf_collective_destroy(xdmf);
 
     mrc_domain_destroy(domain);

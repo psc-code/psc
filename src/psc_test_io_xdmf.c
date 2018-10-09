@@ -10,6 +10,17 @@
 #include <string.h>
 #include <unistd.h>
 
+// ======================================================================
+
+void
+mock_domain_init(struct mock_domain *mock, struct mrc_domain *domain)
+{
+  mock->domain = domain;
+}
+
+// ======================================================================
+
+
 // ----------------------------------------------------------------------
 // xdmf_collective_setup
 
@@ -372,8 +383,9 @@ writer_comm_destroy(struct collective_m3_ctx *ctx)
 // xdmf_collective_write_m3
 
 void
-xdmf_collective_write_m3(struct xdmf* xdmf, const char *path, struct mrc_domain *domain)
+xdmf_collective_write_m3(struct xdmf* xdmf, struct mock_domain *mock)
 {
+  struct mrc_domain *domain = mock->domain;
   struct collective_m3_ctx ctx;
   collective_m3_init(xdmf, &ctx, domain);
 
