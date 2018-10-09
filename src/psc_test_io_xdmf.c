@@ -383,10 +383,10 @@ writer_comm_destroy(struct collective_m3_ctx *ctx)
 // xdmf_collective_write_m3
 
 void
-xdmf_collective_write_m3(struct xdmf* xdmf, const char *path, struct mrc_fld *m3)
+xdmf_collective_write_m3(struct xdmf* xdmf, const char *path, struct mrc_domain *domain)
 {
   struct collective_m3_ctx ctx;
-  collective_m3_init(xdmf, &ctx, m3->_domain);
+  collective_m3_init(xdmf, &ctx, domain);
 
   if (xdmf->is_writer) {
     int writer;
@@ -403,10 +403,10 @@ xdmf_collective_write_m3(struct xdmf* xdmf, const char *path, struct mrc_fld *m3
     mrc_ndarray_set_param_int_array(nd, "offs", 3, writer_off);
     mrc_ndarray_setup(nd);
 
-    writer_comm_init(&ctx, nd, m3->_domain, sizeof(float));
+    writer_comm_init(&ctx, nd, domain, sizeof(float));
     for (int m = 0; m < 2; m++) {
       writer_comm_begin(&ctx, nd);
-      collective_send_fld_begin(xdmf, &ctx, m3->_domain, 0);
+      collective_send_fld_begin(xdmf, &ctx, domain, 0);
       writer_comm_end(&ctx, nd);
       collective_send_fld_end(xdmf, &ctx);
     }
@@ -415,7 +415,7 @@ xdmf_collective_write_m3(struct xdmf* xdmf, const char *path, struct mrc_fld *m3
     mrc_ndarray_destroy(nd);
   } else {
     for (int m = 0; m < 2; m++) {
-      collective_send_fld_begin(xdmf, &ctx, m3->_domain, 0);
+      collective_send_fld_begin(xdmf, &ctx, domain, 0);
       collective_send_fld_end(xdmf, &ctx);
     }
   }

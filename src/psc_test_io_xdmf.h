@@ -21,7 +21,7 @@ BEGIN_C_DECLS
 
 void xdmf_collective_setup(struct xdmf *xdmf);
 void xdmf_collective_destroy(struct xdmf *xdmf);
-void xdmf_collective_write_m3(struct xdmf *xdmf, const char *path, struct mrc_fld *m3);
+void xdmf_collective_write_m3(struct xdmf *xdmf, const char *path, struct mrc_domain *domain);
 
 END_C_DECLS
 

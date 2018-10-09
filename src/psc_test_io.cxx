@@ -64,30 +64,12 @@ struct PscTestIo
     
     mpi_printf(MPI_COMM_WORLD, "***** Testing output\n");
 
-    mrc_fld* fld = mrc_domain_m3_create(domain);
-    mrc_fld_set_name(fld, "e");
-    mrc_fld_set_param_int(fld, "nr_ghosts", 0);
-    mrc_fld_set_param_int(fld, "nr_comps", 2);
-    mrc_fld_setup(fld);
-    mrc_fld_set_comp_name(fld, 0, "ex");
-    mrc_fld_set_comp_name(fld, 1, "ey");
-    
-    for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
-      mrc_fld_patch *m3p = mrc_fld_patch_get(fld, p);
-      mrc_fld_foreach(fld, i,j,k, 0,0) {
-	MRC_M3(m3p, 0, i,j,k) = i;
-	MRC_M3(m3p, 1, i,j,k) = j;
-      } mrc_fld_foreach_end;
-      mrc_fld_patch_put(fld);
-    }
-    
     xdmf xdmf[1] = {};
     xdmf->nr_writers = 2;
     xdmf_collective_setup(xdmf);
-    xdmf_collective_write_m3(xdmf, "testpath", fld);
+    xdmf_collective_write_m3(xdmf, "testpath", domain);
     xdmf_collective_destroy(xdmf);
 
-    mrc_fld_destroy(fld);
     mrc_domain_destroy(domain);
 
     mpi_printf(MPI_COMM_WORLD, "***** Testing output done\n");
