@@ -82,7 +82,6 @@ struct collective_m3_ctx {
   int slow_indices_rmndr;
 
   struct collective_m3_recv_patch *recv_patches;
-  int n_recv_patches;
 
   MPI_Request *recv_reqs;
   struct collective_m3_peer *peers;
@@ -221,7 +220,7 @@ writer_comm_init(struct collective_m3_ctx *ctx, int *writer_offs, int *writer_di
   int nr_global_patches;
   mrc_domain_get_nr_global_patches(domain, &nr_global_patches);
 
-  ctx->n_recv_patches = 0;
+  int n_recv_patches = 0;
   for (int gp = 0; gp < nr_global_patches; gp++) {
     struct mrc_patch_info info;
     mrc_domain_get_global_patch_info(domain, gp, &info);
@@ -233,16 +232,16 @@ writer_comm_init(struct collective_m3_ctx *ctx, int *writer_offs, int *writer_di
       continue;
     }
 
-    ctx->n_recv_patches++;
+    n_recv_patches++;
   }
-  mprintf("n_recv_patches %d\n", ctx->n_recv_patches);
+  mprintf("n_recv_patches %d\n", n_recv_patches);
 
-  ctx->recv_patches = calloc(ctx->n_recv_patches, sizeof(*ctx->recv_patches));
+  ctx->recv_patches = calloc(n_recv_patches, sizeof(*ctx->recv_patches));
 
   struct collective_m3_recv_patch **recv_patches_by_rank = calloc(ctx->size + 1, sizeof(*recv_patches_by_rank));
 
   int cur_rank = -1;
-  ctx->n_recv_patches = 0;
+  n_recv_patches = 0;
   for (int gp = 0; gp < nr_global_patches; gp++) {
     struct mrc_patch_info info;
     mrc_domain_get_global_patch_info(domain, gp, &info);
@@ -257,21 +256,21 @@ writer_comm_init(struct collective_m3_ctx *ctx, int *writer_offs, int *writer_di
     assert(info.rank >= cur_rank);
     while (cur_rank < info.rank) {
       cur_rank++;
-      recv_patches_by_rank[cur_rank] = &ctx->recv_patches[ctx->n_recv_patches];
+      recv_patches_by_rank[cur_rank] = &ctx->recv_patches[n_recv_patches];
       //mprintf("rank %d patches start at %d\n", cur_rank, ctx->n_recv_patches);
     }
 
-    struct collective_m3_recv_patch *recv_patch = &ctx->recv_patches[ctx->n_recv_patches];
+    struct collective_m3_recv_patch *recv_patch = &ctx->recv_patches[n_recv_patches];
     for (int d = 0; d < 3; d++) {
       recv_patch->ilo[d] = ilo[d];
       recv_patch->ihi[d] = ihi[d];
     }
-    ctx->n_recv_patches++;
+    n_recv_patches++;
   }
 
   while (cur_rank < ctx->size) {
     cur_rank++;
-    recv_patches_by_rank[cur_rank] = &ctx->recv_patches[ctx->n_recv_patches];
+    recv_patches_by_rank[cur_rank] = &ctx->recv_patches[n_recv_patches];
     //mprintf("rank %d patches start at %d\n", cur_rank, ctx->n_recv_patches);
   }
 
@@ -352,15 +351,6 @@ writer_comm_end(struct collective_m3_ctx *ctx)
   MHERE;
   MPI_Waitall(ctx->n_peers, ctx->recv_reqs, MPI_STATUSES_IGNORE);
   MHERE;
-  
-  for (struct collective_m3_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
-    // skip local patches
-    if (peer->rank == ctx->rank) {
-      continue;
-    }
-
-    // copy
-  }
 }
 
 // ----------------------------------------------------------------------
@@ -375,7 +365,6 @@ writer_comm_destroy(struct collective_m3_ctx *ctx)
     free(peer->recv_buf);
   }
   free(ctx->peers);
-
   free(ctx->recv_patches);
 }
 
