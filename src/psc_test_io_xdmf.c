@@ -16,30 +16,49 @@ void
 mock_domain_init(struct mock_domain *mock, struct mrc_domain *domain)
 {
   mock->domain = domain;
+  mrc_domain_get_global_dims(domain, mock->gdims);
+  mrc_domain_get_nr_global_patches(domain, &mock->nr_global_patches);
+
+  // FIXME, leaked
+  mock->patch_info = calloc(mock->nr_global_patches, sizeof(*mock->patch_info));
+  for (int gp = 0; gp < mock->nr_global_patches; gp++) {
+    mrc_domain_get_global_patch_info(domain, gp, &mock->patch_info[gp]);
+  }
+
+  struct mrc_patch *patches = mrc_domain_get_patches(domain, &mock->nr_patches);
+
+  // FIXME, leaked
+  mock->patches = calloc(mock->nr_patches, sizeof(*mock->patches));
+  for (int p = 0; p < mock->nr_patches; p++) {
+    mock->patches[p] = patches[p];
+  }
 }
 
 void
 mock_domain_get_global_dims(struct mock_domain *mock, int *gdims)
 {
-  mrc_domain_get_global_dims(mock->domain, gdims);
+  for (int d = 0; d < 3; d++) {
+    gdims[d] = mock->gdims[d];
+  }
 }
 
 void
 mock_domain_get_nr_global_patches(struct mock_domain *mock, int *nr_global_patches)
 {
-  mrc_domain_get_nr_global_patches(mock->domain, nr_global_patches);
+  *nr_global_patches = mock->nr_global_patches;
 }
 
 struct mrc_patch*
 mock_domain_get_patches(struct mock_domain *mock, int *nr_patches)
 {
-  return mrc_domain_get_patches(mock->domain, nr_patches);
+  *nr_patches = mock->nr_patches;
+  return mock->patches;
 }
 
 void
 mock_domain_get_global_patch_info(struct mock_domain *mock, int gp, struct mrc_patch_info *info)
 {
-  mrc_domain_get_global_patch_info(mock->domain, gp, info);
+  *info = mock->patch_info[gp];
 }
 
 // ======================================================================

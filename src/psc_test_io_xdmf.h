@@ -16,6 +16,13 @@ BEGIN_C_DECLS
 
 struct mock_domain {
   struct mrc_domain *domain;
+  int gdims[3];
+
+  int nr_global_patches;
+  struct mrc_patch_info *patch_info;
+
+  int nr_patches;
+  struct mrc_patch *patches;
 };
 
 void mock_domain_init(struct mock_domain *mock, struct mrc_domain *domain);
