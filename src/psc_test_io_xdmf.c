@@ -144,10 +144,10 @@ get_writer_off_dims(struct collective_m3_ctx *ctx, int writer,
 
 static void
 collective_send_fld_begin(struct xdmf *xdmf, struct collective_m3_ctx *ctx,
-			  struct mrc_fld *m3, int m)
+			  struct mrc_domain *domain, int m)
 {
   int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(m3->_domain, &nr_patches);
+  struct mrc_patch *patches = mrc_domain_get_patches(domain, &nr_patches);
 
   size_t *buf_sizes = calloc(xdmf->nr_writers, sizeof(*buf_sizes));
   ctx->send_bufs = calloc(xdmf->nr_writers, sizeof(*ctx->send_bufs));
@@ -164,15 +164,15 @@ collective_send_fld_begin(struct xdmf *xdmf, struct collective_m3_ctx *ctx,
 
     // find buf_size per writer
     for (int p = 0; p < nr_patches; p++) {
+      int *ldims = patches[p].ldims;
       int ilo[3], ihi[3];
       bool has_intersection =
-	find_intersection(ilo, ihi, patches[p].off, patches[p].ldims,
+	find_intersection(ilo, ihi, patches[p].off, ldims,
 			  writer_off, writer_dims);
       if (!has_intersection)
 	continue;
 
-      size_t len = (size_t) m3->_dims.vals[0] * m3->_dims.vals[1] * m3->_dims.vals[2];
-      buf_sizes[writer] += len;
+      buf_sizes[writer] += ldims[0] * ldims[1] * ldims[2];
     }
 
     // allocate buf per writer
@@ -196,10 +196,8 @@ collective_send_fld_begin(struct xdmf *xdmf, struct collective_m3_ctx *ctx,
 // collective_send_fld_end
 
 static void
-collective_send_fld_end(struct xdmf *xdmf, struct collective_m3_ctx *ctx,
-			struct mrc_fld *m3, int m)
+collective_send_fld_end(struct xdmf *xdmf, struct collective_m3_ctx *ctx)
 {
-  MHERE;
   MPI_Waitall(xdmf->nr_writers, ctx->send_reqs, MPI_STATUSES_IGNORE);
 
   for (int writer = 0; writer < xdmf->nr_writers; writer++) {
@@ -414,17 +412,17 @@ xdmf_collective_write_m3(struct xdmf* xdmf, const char *path, struct mrc_fld *m3
     writer_comm_init(&ctx, nd, m3->_domain, m3->_nd->size_of_type);
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
       writer_comm_begin(&ctx, nd, m3);
-      collective_send_fld_begin(xdmf, &ctx, m3, 0);
+      collective_send_fld_begin(xdmf, &ctx, m3->_domain, 0);
       writer_comm_end(&ctx, nd, m3, 0);
-      collective_send_fld_end(xdmf, &ctx, m3, 0);
+      collective_send_fld_end(xdmf, &ctx);
     }
     writer_comm_destroy(&ctx);
 
     mrc_ndarray_destroy(nd);
   } else {
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
-      collective_send_fld_begin(xdmf, &ctx, m3, m);
-      collective_send_fld_end(xdmf, &ctx, m3, m);
+      collective_send_fld_begin(xdmf, &ctx, m3->_domain, m);
+      collective_send_fld_end(xdmf, &ctx);
     }
   }
 }
