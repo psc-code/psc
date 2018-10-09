@@ -2,13 +2,6 @@
 #ifndef PSC_TEST_IO_XDMF_H
 #define PSC_TEST_IO_XDMF_H
 
-#include <hdf5.h>
-#include <hdf5_hl.h>
-
-#include <mrc.h>
-#include <mrc_list.h>
-#include <mrc_fld.h>
-
 BEGIN_C_DECLS
 
 // ======================================================================
