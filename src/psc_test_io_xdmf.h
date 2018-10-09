@@ -32,6 +32,7 @@ struct mock_domain {
 };
 
 void mock_domain_init(struct mock_domain *mock, struct mrc_domain *domain);
+void mock_domain_init_indep(struct mock_domain *mock, int gdims[3], int np[3]);
 
 struct xdmf {
   int slab_dims[3];

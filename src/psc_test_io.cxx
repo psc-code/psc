@@ -63,7 +63,8 @@ struct PscTestIo
     mrc_domain_setup(domain);
     
     struct mock_domain mock[1];
-    mock_domain_init(mock, domain);
+    //mock_domain_init(mock, domain);
+    mock_domain_init_indep(mock, gdims, np);
 
     mpi_printf(MPI_COMM_WORLD, "***** Testing output\n");
 

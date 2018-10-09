@@ -53,6 +53,46 @@ mock_domain_init(struct mock_domain *mock, struct mrc_domain *domain)
 }
 
 void
+mock_domain_init_indep(struct mock_domain *mock, int gdims[3], int np[3])
+{
+  int rank, size;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+  mock->domain = NULL;
+
+  int ldims[3];
+  for (int d = 0; d < 3; d++) {
+    mock->gdims[d] = gdims[d];
+    assert(mock->gdims[d] % np[d] == 0);
+    ldims[d] = gdims[d] / np[d];
+  }
+
+  mock->nr_global_patches = np[0] * np[1] * np[2];
+  assert(mock->nr_global_patches % size == 0);
+  int procs_per_rank = mock->nr_global_patches / size;
+
+  mock->patch_info = calloc(mock->nr_global_patches, sizeof(*mock->patch_info));
+  int gp = 0;
+  int proc[3];
+  for (proc[2] = 0; proc[2] < np[2]; proc[2]++) {
+    for (proc[1] = 0; proc[1] < np[1]; proc[1]++) {
+      for (proc[0] = 0; proc[0] < np[0]; proc[0]++) {
+	for (int d = 0; d < 3; d++) {
+	  mock->patch_info[gp].ldims[d] = ldims[d];
+	  mock->patch_info[gp].off[d] = proc[d] * ldims[d];
+	}
+	mock->patch_info[gp].rank = gp / procs_per_rank;
+	gp++;
+      }
+    }
+  }
+
+  mock->nr_patches = procs_per_rank;
+  mock->patches = mock->patch_info + rank * procs_per_rank;
+}
+
+void
 mock_domain_get_global_dims(struct mock_domain *mock, int *gdims)
 {
   for (int d = 0; d < 3; d++) {
