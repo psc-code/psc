@@ -2,6 +2,10 @@
 #ifndef PSC_TEST_IO_XDMF_H
 #define PSC_TEST_IO_XDMF_H
 
+#include <mrc.h>
+
+#include <stdio.h>
+
 BEGIN_C_DECLS
 
 // ======================================================================
