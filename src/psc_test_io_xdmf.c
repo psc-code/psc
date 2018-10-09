@@ -421,7 +421,7 @@ xdmf_collective_write_m3(struct xdmf* xdmf, const char *path, struct mrc_fld *m3
     mrc_ndarray_destroy(nd);
   } else {
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
-      collective_send_fld_begin(xdmf, &ctx, m3->_domain, m);
+      collective_send_fld_begin(xdmf, &ctx, m3->_domain, 0);
       collective_send_fld_end(xdmf, &ctx);
     }
   }
