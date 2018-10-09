@@ -22,7 +22,13 @@ mock_domain_init(struct mock_domain *mock, struct mrc_domain *domain)
   // FIXME, leaked
   mock->patch_info = calloc(mock->nr_global_patches, sizeof(*mock->patch_info));
   for (int gp = 0; gp < mock->nr_global_patches; gp++) {
-    mrc_domain_get_global_patch_info(domain, gp, &mock->patch_info[gp]);
+    struct mrc_patch_info info;
+    mrc_domain_get_global_patch_info(domain, gp, &info);
+    for (int d = 0; d < 3; d++) {
+      mock->patch_info[gp].off[d] = info.off[d];
+      mock->patch_info[gp].ldims[d] = info.ldims[d];
+    }
+    mock->patch_info[gp].rank = info.rank;
   }
 
   struct mrc_patch *patches = mrc_domain_get_patches(domain, &mock->nr_patches);
@@ -56,9 +62,9 @@ mock_domain_get_patches(struct mock_domain *mock, int *nr_patches)
 }
 
 void
-mock_domain_get_global_patch_info(struct mock_domain *mock, int gp, struct mrc_patch_info *info)
+mock_domain_get_global_patch_info(struct mock_domain *mock, int gp, struct mock_patch *patch)
 {
-  *info = mock->patch_info[gp];
+  *patch = mock->patch_info[gp];
 }
 
 // ======================================================================
@@ -272,7 +278,7 @@ writer_comm_init(struct collective_m3_ctx *ctx, int *writer_offs, int *writer_di
 
   int n_recv_patches = 0;
   for (int gp = 0; gp < nr_global_patches; gp++) {
-    struct mrc_patch_info info;
+    struct mock_patch info;
     mock_domain_get_global_patch_info(mock, gp, &info);
 
     int ilo[3], ihi[3];
@@ -293,7 +299,7 @@ writer_comm_init(struct collective_m3_ctx *ctx, int *writer_offs, int *writer_di
   int cur_rank = -1;
   n_recv_patches = 0;
   for (int gp = 0; gp < nr_global_patches; gp++) {
-    struct mrc_patch_info info;
+    struct mock_patch info;
     mock_domain_get_global_patch_info(mock, gp, &info);
 
     int ilo[3], ihi[3];

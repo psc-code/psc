@@ -14,12 +14,18 @@ BEGIN_C_DECLS
 // ======================================================================
 // mock_domain
 
+struct mock_patch {
+  int off[3];
+  int ldims[3];
+  int rank;
+};
+
 struct mock_domain {
   struct mrc_domain *domain;
   int gdims[3];
 
   int nr_global_patches;
-  struct mrc_patch_info *patch_info;
+  struct mock_patch *patch_info;
 
   int nr_patches;
   struct mrc_patch *patches;
