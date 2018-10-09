@@ -18,6 +18,30 @@ mock_domain_init(struct mock_domain *mock, struct mrc_domain *domain)
   mock->domain = domain;
 }
 
+void
+mock_domain_get_global_dims(struct mock_domain *mock, int *gdims)
+{
+  mrc_domain_get_global_dims(mock->domain, gdims);
+}
+
+void
+mock_domain_get_nr_global_patches(struct mock_domain *mock, int *nr_global_patches)
+{
+  mrc_domain_get_nr_global_patches(mock->domain, nr_global_patches);
+}
+
+struct mrc_patch*
+mock_domain_get_patches(struct mock_domain *mock, int *nr_patches)
+{
+  return mrc_domain_get_patches(mock->domain, nr_patches);
+}
+
+void
+mock_domain_get_global_patch_info(struct mock_domain *mock, int gp, struct mrc_patch_info *info)
+{
+  mrc_domain_get_global_patch_info(mock->domain, gp, info);
+}
+
 // ======================================================================
 
 
@@ -109,11 +133,11 @@ struct collective_m3_ctx {
 
 static void
 collective_m3_init(struct xdmf *xdmf, struct collective_m3_ctx *ctx,
-		   struct mrc_domain *domain)
+		   struct mock_domain *mock)
 {
-  mrc_domain_get_global_dims(domain, ctx->gdims);
-  mrc_domain_get_patches(domain, &ctx->nr_patches);
-  mrc_domain_get_nr_global_patches(domain, &ctx->nr_global_patches);
+  mock_domain_get_global_dims(mock, ctx->gdims);
+  mock_domain_get_nr_global_patches(mock, &ctx->nr_global_patches);
+  mock_domain_get_patches(mock, &ctx->nr_patches);
   for (int d = 0; d < 3; d++) {
     ctx->slab_dims[d] = ctx->gdims[d];
     ctx->slab_off[d] = 0;
@@ -154,10 +178,10 @@ get_writer_off_dims(struct collective_m3_ctx *ctx, int writer,
 
 static void
 collective_send_fld_begin(struct xdmf *xdmf, struct collective_m3_ctx *ctx,
-			  struct mrc_domain *domain, int m)
+			  struct mock_domain *mock, int m)
 {
   int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(domain, &nr_patches);
+  struct mrc_patch *patches = mock_domain_get_patches(mock, &nr_patches);
 
   size_t *buf_sizes = calloc(xdmf->nr_writers, sizeof(*buf_sizes));
   ctx->send_bufs = calloc(xdmf->nr_writers, sizeof(*ctx->send_bufs));
@@ -222,19 +246,15 @@ collective_send_fld_end(struct xdmf *xdmf, struct collective_m3_ctx *ctx)
 
 static void
 writer_comm_init(struct collective_m3_ctx *ctx, int *writer_offs, int *writer_dims,
-		 struct mrc_domain *domain, int size_of_type)
+		 struct mock_domain *mock, int size_of_type)
 {
-  // find out who's sending, OPT: this way is not very scalable
-  // could also be optimized by just looking at slow_dim
-  // FIXME, figure out pattern and cache, at least across components
-
   int nr_global_patches;
-  mrc_domain_get_nr_global_patches(domain, &nr_global_patches);
+  mock_domain_get_nr_global_patches(mock, &nr_global_patches);
 
   int n_recv_patches = 0;
   for (int gp = 0; gp < nr_global_patches; gp++) {
     struct mrc_patch_info info;
-    mrc_domain_get_global_patch_info(domain, gp, &info);
+    mock_domain_get_global_patch_info(mock, gp, &info);
 
     int ilo[3], ihi[3];
     int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
@@ -255,7 +275,7 @@ writer_comm_init(struct collective_m3_ctx *ctx, int *writer_offs, int *writer_di
   n_recv_patches = 0;
   for (int gp = 0; gp < nr_global_patches; gp++) {
     struct mrc_patch_info info;
-    mrc_domain_get_global_patch_info(domain, gp, &info);
+    mock_domain_get_global_patch_info(mock, gp, &info);
 
     int ilo[3], ihi[3];
     int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
@@ -385,9 +405,8 @@ writer_comm_destroy(struct collective_m3_ctx *ctx)
 void
 xdmf_collective_write_m3(struct xdmf* xdmf, struct mock_domain *mock)
 {
-  struct mrc_domain *domain = mock->domain;
   struct collective_m3_ctx ctx;
-  collective_m3_init(xdmf, &ctx, domain);
+  collective_m3_init(xdmf, &ctx, mock);
 
   if (xdmf->is_writer) {
     int writer;
@@ -398,17 +417,17 @@ xdmf_collective_write_m3(struct xdmf* xdmf, struct mock_domain *mock)
     	    writer_off[0], writer_off[1], writer_off[2],
     	    writer_dims[0], writer_dims[1], writer_dims[2]);
 
-    writer_comm_init(&ctx, writer_off, writer_dims, domain, sizeof(float));
+    writer_comm_init(&ctx, writer_off, writer_dims, mock, sizeof(float));
     for (int m = 0; m < 2; m++) {
       writer_comm_begin(&ctx);
-      collective_send_fld_begin(xdmf, &ctx, domain, 0);
+      collective_send_fld_begin(xdmf, &ctx, mock, 0);
       writer_comm_end(&ctx);
       collective_send_fld_end(xdmf, &ctx);
     }
     writer_comm_destroy(&ctx);
   } else {
     for (int m = 0; m < 2; m++) {
-      collective_send_fld_begin(xdmf, &ctx, domain, 0);
+      collective_send_fld_begin(xdmf, &ctx, mock, 0);
       collective_send_fld_end(xdmf, &ctx);
     }
   }
