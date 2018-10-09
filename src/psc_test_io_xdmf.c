@@ -211,7 +211,7 @@ collective_send_fld_end(struct xdmf *xdmf, struct collective_m3_ctx *ctx)
 // writer_comm_init
 
 static void
-writer_comm_init(struct collective_m3_ctx *ctx, struct mrc_ndarray *nd,
+writer_comm_init(struct collective_m3_ctx *ctx, int *writer_offs, int *writer_dims,
 		 struct mrc_domain *domain, int size_of_type)
 {
   // find out who's sending, OPT: this way is not very scalable
@@ -228,7 +228,7 @@ writer_comm_init(struct collective_m3_ctx *ctx, struct mrc_ndarray *nd,
 
     int ilo[3], ihi[3];
     int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
-					     mrc_ndarray_offs(nd), mrc_ndarray_dims(nd));
+					     writer_offs, writer_dims);
     if (!has_intersection) {
       continue;
     }
@@ -249,7 +249,7 @@ writer_comm_init(struct collective_m3_ctx *ctx, struct mrc_ndarray *nd,
 
     int ilo[3], ihi[3];
     int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
-					     mrc_ndarray_offs(nd), mrc_ndarray_dims(nd));
+					     writer_offs, writer_dims);
     if (!has_intersection) {
       continue;
     }
@@ -328,7 +328,7 @@ writer_comm_init(struct collective_m3_ctx *ctx, struct mrc_ndarray *nd,
 // writer_comm_begin
 
 static void
-writer_comm_begin(struct collective_m3_ctx *ctx, struct mrc_ndarray *nd)
+writer_comm_begin(struct collective_m3_ctx *ctx)
 {
   for (struct collective_m3_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
     // skip local patches
@@ -347,7 +347,7 @@ writer_comm_begin(struct collective_m3_ctx *ctx, struct mrc_ndarray *nd)
 // writer_comm_end
 
 static void
-writer_comm_end(struct collective_m3_ctx *ctx, struct mrc_ndarray *nd)
+writer_comm_end(struct collective_m3_ctx *ctx)
 {
   MHERE;
   MPI_Waitall(ctx->n_peers, ctx->recv_reqs, MPI_STATUSES_IGNORE);
@@ -397,22 +397,14 @@ xdmf_collective_write_m3(struct xdmf* xdmf, const char *path, struct mrc_domain 
     	    writer_off[0], writer_off[1], writer_off[2],
     	    writer_dims[0], writer_dims[1], writer_dims[2]);
 
-    struct mrc_ndarray *nd = mrc_ndarray_create(MPI_COMM_NULL);
-    mrc_ndarray_set_type(nd, "float");
-    mrc_ndarray_set_param_int_array(nd, "dims", 3, writer_dims);
-    mrc_ndarray_set_param_int_array(nd, "offs", 3, writer_off);
-    mrc_ndarray_setup(nd);
-
-    writer_comm_init(&ctx, nd, domain, sizeof(float));
+    writer_comm_init(&ctx, writer_off, writer_dims, domain, sizeof(float));
     for (int m = 0; m < 2; m++) {
-      writer_comm_begin(&ctx, nd);
+      writer_comm_begin(&ctx);
       collective_send_fld_begin(xdmf, &ctx, domain, 0);
-      writer_comm_end(&ctx, nd);
+      writer_comm_end(&ctx);
       collective_send_fld_end(xdmf, &ctx);
     }
     writer_comm_destroy(&ctx);
-
-    mrc_ndarray_destroy(nd);
   } else {
     for (int m = 0; m < 2; m++) {
       collective_send_fld_begin(xdmf, &ctx, domain, 0);
