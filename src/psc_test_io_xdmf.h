@@ -28,7 +28,7 @@ struct mock_domain {
   struct mock_patch *patch_info;
 
   int nr_patches;
-  struct mrc_patch *patches;
+  struct mock_patch *patches;
 };
 
 void mock_domain_init(struct mock_domain *mock, struct mrc_domain *domain);

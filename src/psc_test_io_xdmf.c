@@ -36,7 +36,10 @@ mock_domain_init(struct mock_domain *mock, struct mrc_domain *domain)
   // FIXME, leaked
   mock->patches = calloc(mock->nr_patches, sizeof(*mock->patches));
   for (int p = 0; p < mock->nr_patches; p++) {
-    mock->patches[p] = patches[p];
+    for (int d = 0; d < 3; d++) {
+      mock->patches[p].off[d] = patches[p].off[d];
+      mock->patches[p].ldims[d] = patches[p].ldims[d];
+    }
   }
 }
 
@@ -54,7 +57,7 @@ mock_domain_get_nr_global_patches(struct mock_domain *mock, int *nr_global_patch
   *nr_global_patches = mock->nr_global_patches;
 }
 
-struct mrc_patch*
+struct mock_patch*
 mock_domain_get_patches(struct mock_domain *mock, int *nr_patches)
 {
   *nr_patches = mock->nr_patches;
@@ -206,7 +209,7 @@ collective_send_fld_begin(struct xdmf *xdmf, struct collective_m3_ctx *ctx,
 			  struct mock_domain *mock, int m)
 {
   int nr_patches;
-  struct mrc_patch *patches = mock_domain_get_patches(mock, &nr_patches);
+  struct mock_patch *patches = mock_domain_get_patches(mock, &nr_patches);
 
   size_t *buf_sizes = calloc(xdmf->nr_writers, sizeof(*buf_sizes));
   ctx->send_bufs = calloc(xdmf->nr_writers, sizeof(*ctx->send_bufs));
