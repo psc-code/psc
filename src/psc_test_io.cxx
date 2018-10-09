@@ -1,10 +1,5 @@
 
-#include "vec3.hxx"
 #include "psc_test_io_xdmf.h"
-
-#include <mrc_domain.h>
-
-#include <string>
 
 int MPI_Irecv(void *buf, int count, MPI_Datatype datatype, int source,
 	      int tag, MPI_Comm comm, MPI_Request *request)
@@ -44,26 +39,14 @@ struct PscTestIo
 
     // --- setup domain
 #if 0
-    Int3 gdims = { 400, 800, 2400}; // global number of grid points
-    Int3 np = { 8, 16, 48 }; // division into patches
+    int gdims[3] = { 400, 800, 2400}; // global number of grid points
+    int np[3] = { 8, 16, 48 }; // division into patches
 #else
-    Int3 gdims = { 20, 20, 80}; // global number of grid points
-    Int3 np = { 2, 2, 8 }; // division into patches
+    int gdims[3] = { 20, 20, 80}; // global number of grid points
+    int np[3] = { 2, 2, 8 }; // division into patches
 #endif
     
-    struct mrc_domain *domain = mrc_domain_create(MPI_COMM_WORLD);
-    mrc_domain_set_type(domain, "multi");
-    mrc_domain_set_param_int3(domain, "m", gdims);
-    mrc_domain_set_param_int(domain, "bcx", BC_PERIODIC);
-    mrc_domain_set_param_int(domain, "bcy", BC_PERIODIC);
-    mrc_domain_set_param_int(domain, "bcz", BC_PERIODIC);
-    mrc_domain_set_param_int3(domain, "np", np);
-    
-    mrc_domain_set_from_options(domain);
-    mrc_domain_setup(domain);
-    
     struct mock_domain mock[1];
-    //mock_domain_init(mock, domain);
     mock_domain_init_indep(mock, gdims, np);
 
     mpi_printf(MPI_COMM_WORLD, "***** Testing output\n");
@@ -73,8 +56,6 @@ struct PscTestIo
     xdmf_collective_setup(xdmf);
     xdmf_collective_write_m3(xdmf, mock);
     xdmf_collective_destroy(xdmf);
-
-    mrc_domain_destroy(domain);
 
     mpi_printf(MPI_COMM_WORLD, "***** Testing output done\n");
   }
