@@ -328,8 +328,7 @@ writer_comm_init(struct collective_m3_ctx *ctx, struct mrc_ndarray *nd,
 // writer_comm_begin
 
 static void
-writer_comm_begin(struct collective_m3_ctx *ctx, struct mrc_ndarray *nd,
-		  struct mrc_fld *m3)
+writer_comm_begin(struct collective_m3_ctx *ctx, struct mrc_ndarray *nd)
 {
   for (struct collective_m3_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
     // skip local patches
@@ -338,11 +337,8 @@ writer_comm_begin(struct collective_m3_ctx *ctx, struct mrc_ndarray *nd,
       continue;
     }
 
-    assert (mrc_fld_data_type(m3) == MRC_NT_FLOAT);
-    MPI_Datatype mpi_dtype = MPI_FLOAT;
-    
     // recv aggregate buffers
-    MPI_Irecv(peer->recv_buf, peer->buf_size, mpi_dtype, peer->rank, 0x1000, ctx->comm,
+    MPI_Irecv(peer->recv_buf, peer->buf_size, MPI_FLOAT, peer->rank, 0x1000, ctx->comm,
 	      &ctx->recv_reqs[peer - ctx->peers]);
   }
 }
@@ -351,8 +347,7 @@ writer_comm_begin(struct collective_m3_ctx *ctx, struct mrc_ndarray *nd,
 // writer_comm_end
 
 static void
-writer_comm_end(struct collective_m3_ctx *ctx, struct mrc_ndarray *nd,
-		struct mrc_fld *m3, int m)
+writer_comm_end(struct collective_m3_ctx *ctx, struct mrc_ndarray *nd)
 {
   MHERE;
   MPI_Waitall(ctx->n_peers, ctx->recv_reqs, MPI_STATUSES_IGNORE);
@@ -403,24 +398,23 @@ xdmf_collective_write_m3(struct xdmf* xdmf, const char *path, struct mrc_fld *m3
     	    writer_dims[0], writer_dims[1], writer_dims[2]);
 
     struct mrc_ndarray *nd = mrc_ndarray_create(MPI_COMM_NULL);
-    assert(mrc_fld_data_type(m3) == MRC_NT_FLOAT);
     mrc_ndarray_set_type(nd, "float");
     mrc_ndarray_set_param_int_array(nd, "dims", 3, writer_dims);
     mrc_ndarray_set_param_int_array(nd, "offs", 3, writer_off);
     mrc_ndarray_setup(nd);
 
-    writer_comm_init(&ctx, nd, m3->_domain, m3->_nd->size_of_type);
-    for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
-      writer_comm_begin(&ctx, nd, m3);
+    writer_comm_init(&ctx, nd, m3->_domain, sizeof(float));
+    for (int m = 0; m < 2; m++) {
+      writer_comm_begin(&ctx, nd);
       collective_send_fld_begin(xdmf, &ctx, m3->_domain, 0);
-      writer_comm_end(&ctx, nd, m3, 0);
+      writer_comm_end(&ctx, nd);
       collective_send_fld_end(xdmf, &ctx);
     }
     writer_comm_destroy(&ctx);
 
     mrc_ndarray_destroy(nd);
   } else {
-    for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
+    for (int m = 0; m < 2; m++) {
       collective_send_fld_begin(xdmf, &ctx, m3->_domain, 0);
       collective_send_fld_end(xdmf, &ctx);
     }
