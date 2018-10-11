@@ -80,11 +80,15 @@ main(int argc, char **argv)
       recv_reqs = calloc(n_recv_reqs, sizeof(*recv_reqs));
       for (int source = rank * n_recv_reqs; source < (rank + 1) * n_recv_reqs; source++) {
 	mprintf("irecv src %d\n", source);
-	MPI_Irecv(recv_buf, buf_size, MPI_FLOAT, source, 111, comm, &recv_reqs[source - rank * n_recv_reqs]);
+	if (source != rank) {
+	  MPI_Irecv(recv_buf, buf_size, MPI_FLOAT, source, 111, comm, &recv_reqs[source - rank * n_recv_reqs]);
+	} else {
+	  recv_reqs[source - rank * n_recv_reqs] = MPI_REQUEST_NULL;
+	}
       }
     } 
     for (int dest = 0; dest < n_writers; dest++) {
-      if (dest == writer) {
+      if (dest == writer && dest != rank) {
 	mprintf("isend dest %d\n", dest);
 	MPI_Isend(send_buf, buf_size, MPI_FLOAT, dest, 111, comm, &send_reqs[dest]);
       } else {
