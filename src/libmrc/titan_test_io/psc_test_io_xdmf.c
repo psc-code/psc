@@ -520,7 +520,7 @@ main(int argc, char **argv)
   MPI_Init(&argc, &argv);
 
   // --- setup domain
-#if 0
+#if 1
   int gdims[3] = { 400, 800, 2400}; // global number of grid points
   int np[3] = { 8, 16, 48 }; // division into patches
 #else
