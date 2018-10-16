@@ -406,6 +406,7 @@ xdmf_collective_write_m3(struct xdmf* xdmf)
   if (xdmf->is_writer) {
     writer_comm_init(xdmf, writer_ctx);
     for (int m = 0; m < nr_comps; m++) {
+      mprintf("m %d\n", m);
       writer_comm_begin(xdmf, writer_ctx);
       peer_comm_begin(xdmf, peer_ctx, 0);
       writer_comm_end(writer_ctx);
@@ -414,6 +415,7 @@ xdmf_collective_write_m3(struct xdmf* xdmf)
     writer_comm_destroy(writer_ctx);
   } else {
     for (int m = 0; m < nr_comps; m++) {
+      mprintf("m %d\n", m);
       peer_comm_begin(xdmf, peer_ctx, 0);
       peer_comm_end(xdmf, peer_ctx);
     }
