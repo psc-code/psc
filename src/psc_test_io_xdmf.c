@@ -106,9 +106,7 @@ struct collective_m3_peer {
 };
 
 struct collective_m3_ctx {
-  int gdims[3];
   int slab_dims[3], slab_off[3];
-  int nr_patches, nr_global_patches;
   int slow_dim;
   int slow_indices_per_writer;
   int slow_indices_rmndr;
@@ -132,16 +130,11 @@ static void
 collective_m3_init(struct xdmf *xdmf, struct collective_m3_ctx *ctx)
 {
   for (int d = 0; d < 3; d++) {
-    ctx->gdims[d] = xdmf->gdims[d];
-  }
-  ctx->nr_global_patches = xdmf->nr_global_patches;
-  ctx->nr_patches = xdmf->nr_patches;
-  for (int d = 0; d < 3; d++) {
-    ctx->slab_dims[d] = ctx->gdims[d];
+    ctx->slab_dims[d] = xdmf->gdims[d];
     ctx->slab_off[d] = 0;
   }
   ctx->slow_dim = 2;
-  while (ctx->gdims[ctx->slow_dim] == 1) {
+  while (xdmf->gdims[ctx->slow_dim] == 1) {
     ctx->slow_dim--;
   }
   assert(ctx->slow_dim >= 0);
