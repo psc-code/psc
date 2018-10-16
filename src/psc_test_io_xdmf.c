@@ -106,7 +106,6 @@ struct collective_m3_peer {
 };
 
 struct collective_m3_ctx {
-  int slab_dims[3], slab_off[3];
   int slow_dim;
   int slow_indices_per_writer;
   int slow_indices_rmndr;
@@ -129,16 +128,12 @@ struct collective_m3_ctx {
 static void
 collective_m3_init(struct xdmf *xdmf, struct collective_m3_ctx *ctx)
 {
-  for (int d = 0; d < 3; d++) {
-    ctx->slab_dims[d] = xdmf->gdims[d];
-    ctx->slab_off[d] = 0;
-  }
   ctx->slow_dim = 2;
   while (xdmf->gdims[ctx->slow_dim] == 1) {
     ctx->slow_dim--;
   }
   assert(ctx->slow_dim >= 0);
-  int total_slow_indices = ctx->slab_dims[ctx->slow_dim];
+  int total_slow_indices = xdmf->gdims[ctx->slow_dim];
   ctx->slow_indices_per_writer = total_slow_indices / xdmf->nr_writers;
   ctx->slow_indices_rmndr = total_slow_indices % xdmf->nr_writers;
 
@@ -148,12 +143,12 @@ collective_m3_init(struct xdmf *xdmf, struct collective_m3_ctx *ctx)
 }
 
 static void
-get_writer_off_dims(struct collective_m3_ctx *ctx, int writer,
+get_writer_off_dims(struct xdmf* xdmf, struct collective_m3_ctx *ctx, int writer,
 		    int *writer_off, int *writer_dims)
 {
   for (int d = 0; d < 3; d++) {
-    writer_dims[d] = ctx->slab_dims[d];
-    writer_off[d] = ctx->slab_off[d];
+    writer_dims[d] = xdmf->gdims[d];
+    writer_off[d] = 0;
   }
   writer_dims[ctx->slow_dim] = ctx->slow_indices_per_writer + (writer < ctx->slow_indices_rmndr);
   if (writer < ctx->slow_indices_rmndr) {
@@ -184,7 +179,7 @@ collective_send_fld_begin(struct xdmf *xdmf, struct collective_m3_ctx *ctx, int 
       continue;
     }
     int writer_off[3], writer_dims[3];
-    get_writer_off_dims(ctx, writer, writer_off, writer_dims);
+    get_writer_off_dims(xdmf, ctx, writer, writer_off, writer_dims);
 
     // find buf_size per writer
     for (int p = 0; p < nr_patches; p++) {
@@ -399,7 +394,7 @@ xdmf_collective_write_m3(struct xdmf* xdmf)
     int writer;
     MPI_Comm_rank(xdmf->comm_writers, &writer);
     int writer_dims[3], writer_off[3];
-    get_writer_off_dims(&ctx, writer, writer_off, writer_dims);
+    get_writer_off_dims(xdmf, &ctx, writer, writer_off, writer_dims);
     mprintf("writer_off %d %d %d dims %d %d %d\n",
     	    writer_off[0], writer_off[1], writer_off[2],
     	    writer_dims[0], writer_dims[1], writer_dims[2]);
