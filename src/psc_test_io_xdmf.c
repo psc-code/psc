@@ -149,16 +149,6 @@ peer_comm_init(struct xdmf *xdmf, struct peer_comm *ctx)
   ctx->send_bufs = calloc(xdmf->nr_writers, sizeof(*ctx->send_bufs));
   ctx->buf_sizes = calloc(xdmf->nr_writers, sizeof(*ctx->buf_sizes));
   ctx->send_reqs = calloc(xdmf->nr_writers, sizeof(*ctx->send_reqs));
-}
-
-// ----------------------------------------------------------------------
-// peer_comm_begin
-
-static void
-peer_comm_begin(struct xdmf *xdmf, struct peer_comm *ctx, int m)
-{
-  int nr_patches = xdmf->nr_patches;
-  struct mock_patch *patches = xdmf->patches;
 
   for (int writer = 0; writer < xdmf->nr_writers; writer++) {
     // don't send to self
@@ -169,11 +159,12 @@ peer_comm_begin(struct xdmf *xdmf, struct peer_comm *ctx, int m)
     get_writer_off_dims(xdmf, writer, writer_off, writer_dims);
 
     // find buf_size per writer
-    for (int p = 0; p < nr_patches; p++) {
-      int *ldims = patches[p].ldims;
+    for (int p = 0; p < xdmf->nr_patches; p++) {
+      int *off = xdmf->patches[p].off;
+      int *ldims = xdmf->patches[p].ldims;
       int ilo[3], ihi[3];
       bool has_intersection =
-	find_intersection(ilo, ihi, patches[p].off, ldims,
+	find_intersection(ilo, ihi, off, ldims,
 			  writer_off, writer_dims);
       if (!has_intersection)
 	continue;
@@ -191,6 +182,17 @@ peer_comm_begin(struct xdmf *xdmf, struct peer_comm *ctx, int m)
     assert(ctx->send_bufs[writer]);
   }
     
+}
+
+// ----------------------------------------------------------------------
+// peer_comm_begin
+
+static void
+peer_comm_begin(struct xdmf *xdmf, struct peer_comm *ctx, int m)
+{
+  int nr_patches = xdmf->nr_patches;
+  struct mock_patch *patches = xdmf->patches;
+
   for (int writer = 0; writer < xdmf->nr_writers; writer++) {
     if (!ctx->send_bufs[writer]) {
       ctx->send_reqs[writer] = MPI_REQUEST_NULL;
@@ -209,10 +211,6 @@ static void
 peer_comm_end(struct xdmf *xdmf, struct peer_comm *ctx)
 {
   MPI_Waitall(xdmf->nr_writers, ctx->send_reqs, MPI_STATUSES_IGNORE);
-
-  for (int writer = 0; writer < xdmf->nr_writers; writer++) {
-    free(ctx->send_bufs[writer]);
-  }
 }
     
 // ----------------------------------------------------------------------
@@ -221,6 +219,10 @@ peer_comm_end(struct xdmf *xdmf, struct peer_comm *ctx)
 static void
 peer_comm_destroy(struct xdmf *xdmf, struct peer_comm *ctx)
 {
+
+  for (int writer = 0; writer < xdmf->nr_writers; writer++) {
+    free(ctx->send_bufs[writer]);
+  }
   free(ctx->send_bufs);
   free(ctx->buf_sizes);
   free(ctx->send_reqs);
