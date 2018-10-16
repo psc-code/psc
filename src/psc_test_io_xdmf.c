@@ -215,9 +215,16 @@ peer_comm_end(struct xdmf *xdmf, struct peer_comm *ctx)
 // writer_comm_init
 
 static void
-writer_comm_init(struct xdmf *xdmf, struct writer_comm *ctx,
-		 int *writer_offs, int *writer_dims, int size_of_type)
+writer_comm_init(struct xdmf *xdmf, struct writer_comm *ctx, int size_of_type)
 {
+  int writer;
+  MPI_Comm_rank(xdmf->comm_writers, &writer);
+  int writer_dims[3], writer_off[3];
+  get_writer_off_dims(xdmf, writer, writer_off, writer_dims);
+  mprintf("writer_off %d %d %d dims %d %d %d\n",
+	  writer_off[0], writer_off[1], writer_off[2],
+	  writer_dims[0], writer_dims[1], writer_dims[2]);
+
   int nr_global_patches = xdmf->nr_global_patches;
 
   int n_recv_patches = 0;
@@ -226,7 +233,7 @@ writer_comm_init(struct xdmf *xdmf, struct writer_comm *ctx,
 
     int ilo[3], ihi[3];
     int has_intersection = find_intersection(ilo, ihi, info->off, info->ldims,
-					     writer_offs, writer_dims);
+					     writer_off, writer_dims);
     if (!has_intersection) {
       continue;
     }
@@ -246,7 +253,7 @@ writer_comm_init(struct xdmf *xdmf, struct writer_comm *ctx,
 
     int ilo[3], ihi[3];
     int has_intersection = find_intersection(ilo, ihi, info->off, info->ldims,
-					     writer_offs, writer_dims);
+					     writer_off, writer_dims);
     if (!has_intersection) {
       continue;
     }
@@ -378,15 +385,7 @@ xdmf_collective_write_m3(struct xdmf* xdmf)
   int nr_comps = 2;
 
   if (xdmf->is_writer) {
-    int writer;
-    MPI_Comm_rank(xdmf->comm_writers, &writer);
-    int writer_dims[3], writer_off[3];
-    get_writer_off_dims(xdmf, writer, writer_off, writer_dims);
-    mprintf("writer_off %d %d %d dims %d %d %d\n",
-    	    writer_off[0], writer_off[1], writer_off[2],
-    	    writer_dims[0], writer_dims[1], writer_dims[2]);
-
-    writer_comm_init(xdmf, writer_ctx, writer_off, writer_dims, sizeof(float));
+    writer_comm_init(xdmf, writer_ctx, sizeof(float));
     for (int m = 0; m < nr_comps; m++) {
       writer_comm_begin(xdmf, writer_ctx);
       peer_comm_begin(xdmf, peer_ctx, 0);
