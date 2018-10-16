@@ -28,7 +28,6 @@ struct xdmf {
 
   int slow_dim;
   int slow_indices_per_writer;
-  int slow_indices_rmndr;
 
   int nr_writers;
   MPI_Comm comm_writers; //< communicator for only the writers

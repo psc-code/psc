@@ -63,8 +63,8 @@ xdmf_collective_setup(struct xdmf *xdmf, int nr_writers, int gdims[3], int np[3]
   }
   assert(xdmf->slow_dim >= 0);
   int total_slow_indices = xdmf->gdims[xdmf->slow_dim];
+  assert(total_slow_indices % xdmf->nr_writers == 0);
   xdmf->slow_indices_per_writer = total_slow_indices / xdmf->nr_writers;
-  xdmf->slow_indices_rmndr = total_slow_indices % xdmf->nr_writers;
 }
 
 // ----------------------------------------------------------------------
@@ -135,13 +135,8 @@ get_writer_off_dims(struct xdmf* xdmf, int writer, int *writer_off, int *writer_
     writer_dims[d] = xdmf->gdims[d];
     writer_off[d] = 0;
   }
-  writer_dims[xdmf->slow_dim] = xdmf->slow_indices_per_writer + (writer < xdmf->slow_indices_rmndr);
-  if (writer < xdmf->slow_indices_rmndr) {
-    writer_off[xdmf->slow_dim] += (xdmf->slow_indices_per_writer + 1) * writer;
-  } else {
-    writer_off[xdmf->slow_dim] += xdmf->slow_indices_rmndr +
-      xdmf->slow_indices_per_writer * writer;
-  }
+  writer_dims[xdmf->slow_dim] = xdmf->slow_indices_per_writer;
+  writer_off[xdmf->slow_dim] = xdmf->slow_indices_per_writer * writer;
 }
 
 // ----------------------------------------------------------------------
