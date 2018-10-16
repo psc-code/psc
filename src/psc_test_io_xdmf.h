@@ -26,8 +26,10 @@ struct xdmf {
   int nr_patches;
   struct mock_patch *patches;
 
-  int slab_dims[3];
-  int slab_off[3];
+  int slow_dim;
+  int slow_indices_per_writer;
+  int slow_indices_rmndr;
+
   int nr_writers;
   MPI_Comm comm_writers; //< communicator for only the writers
   int is_writer;         //< this rank is a writer
