@@ -9,14 +9,20 @@
 #include <unistd.h>
 #include <assert.h>
 
-// ======================================================================
+// ----------------------------------------------------------------------
+// xdmf_collective_setup
 
 void
-mock_domain_init_indep(struct mock_domain *mock, int gdims[3], int np[3])
+xdmf_collective_setup(struct xdmf *xdmf, int nr_writers, int gdims[3], int np[3])
 {
-  int rank, size;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  memset(xdmf, 0, sizeof(*xdmf));
+  xdmf->nr_writers = 2;
+
+  MPI_Comm comm = MPI_COMM_WORLD;
+  int rank; MPI_Comm_rank(comm, &rank);
+  int size; MPI_Comm_size(comm, &size);
+
+  struct mock_domain *mock = &xdmf->domain;
 
   int ldims[3];
   for (int d = 0; d < 3; d++) {
@@ -47,24 +53,6 @@ mock_domain_init_indep(struct mock_domain *mock, int gdims[3], int np[3])
 
   mock->nr_patches = procs_per_rank;
   mock->patches = mock->patch_info + rank * procs_per_rank;
-}
-
-// ======================================================================
-
-
-// ----------------------------------------------------------------------
-// xdmf_collective_setup
-
-void
-xdmf_collective_setup(struct xdmf *xdmf, int nr_writers, int gdims[3], int np[3])
-{
-  memset(xdmf, 0, sizeof(*xdmf));
-  xdmf->nr_writers = 2;
-  mock_domain_init_indep(&xdmf->domain, gdims, np);
-
-  MPI_Comm comm = MPI_COMM_WORLD;
-  int rank; MPI_Comm_rank(comm, &rank);
-  int size; MPI_Comm_size(comm, &size);
 
   if (rank < xdmf->nr_writers) {
     xdmf->is_writer = 1;
