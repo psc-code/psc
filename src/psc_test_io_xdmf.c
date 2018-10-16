@@ -140,22 +140,28 @@ get_writer_off_dims(struct xdmf* xdmf, int writer, int *writer_off, int *writer_
 }
 
 // ----------------------------------------------------------------------
+// peer_comm_init
+
+static void
+peer_comm_init(struct xdmf *xdmf, struct peer_comm *ctx)
+{
+  ctx->send_bufs = calloc(xdmf->nr_writers, sizeof(*ctx->send_bufs));
+  ctx->send_reqs = calloc(xdmf->nr_writers, sizeof(*ctx->send_reqs));
+}
+
+// ----------------------------------------------------------------------
 // peer_comm_begin
 
 static void
 peer_comm_begin(struct xdmf *xdmf, struct peer_comm *ctx, int m)
 {
   int nr_patches = xdmf->nr_patches;
-  struct mock_patch *patches = xdmf->patches;
-
   size_t *buf_sizes = calloc(xdmf->nr_writers, sizeof(*buf_sizes));
-  ctx->send_bufs = calloc(xdmf->nr_writers, sizeof(*ctx->send_bufs));
-  ctx->send_reqs = calloc(xdmf->nr_writers, sizeof(*ctx->send_reqs));
+  struct mock_patch *patches = xdmf->patches;
 
   for (int writer = 0; writer < xdmf->nr_writers; writer++) {
     // don't send to self
     if (writer == xdmf->rank) {
-      ctx->send_reqs[writer] = MPI_REQUEST_NULL;
       continue;
     }
     int writer_off[3], writer_dims[3];
@@ -183,7 +189,14 @@ peer_comm_begin(struct xdmf *xdmf, struct peer_comm *ctx, int m)
 
     ctx->send_bufs[writer] = malloc(buf_sizes[writer] * sizeof(*ctx->send_bufs[writer]));
     assert(ctx->send_bufs[writer]);
+  }
     
+  for (int writer = 0; writer < xdmf->nr_writers; writer++) {
+    // don't send to self
+    if (writer == xdmf->rank) {
+      ctx->send_reqs[writer] = MPI_REQUEST_NULL;
+      continue;
+    }
     MPI_Isend(ctx->send_bufs[writer], buf_sizes[writer], MPI_FLOAT,
 	      writer, 0x1000, xdmf->comm,
 	      &ctx->send_reqs[writer]);
