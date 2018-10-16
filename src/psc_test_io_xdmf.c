@@ -215,6 +215,14 @@ peer_comm_end(struct xdmf *xdmf, struct peer_comm *ctx)
   for (int writer = 0; writer < xdmf->nr_writers; writer++) {
     free(ctx->send_bufs[writer]);
   }
+}
+    
+// ----------------------------------------------------------------------
+// peer_comm_destroy
+
+static void
+peer_comm_destroy(struct xdmf *xdmf, struct peer_comm *ctx)
+{
   free(ctx->send_bufs);
   free(ctx->send_reqs);
 }
@@ -396,15 +404,19 @@ xdmf_collective_write_m3(struct xdmf* xdmf)
     writer_comm_init(xdmf, writer_ctx, sizeof(float));
     for (int m = 0; m < nr_comps; m++) {
       writer_comm_begin(xdmf, writer_ctx);
+      peer_comm_init(xdmf, peer_ctx);
       peer_comm_begin(xdmf, peer_ctx, 0);
       writer_comm_end(writer_ctx);
       peer_comm_end(xdmf, peer_ctx);
+      peer_comm_destroy(xdmf, peer_ctx);
     }
     writer_comm_destroy(writer_ctx);
   } else {
     for (int m = 0; m < nr_comps; m++) {
+      peer_comm_init(xdmf, peer_ctx);
       peer_comm_begin(xdmf, peer_ctx, 0);
       peer_comm_end(xdmf, peer_ctx);
+      peer_comm_destroy(xdmf, peer_ctx);
     }
   }
 }
