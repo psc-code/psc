@@ -70,12 +70,6 @@ mock_domain_get_patches(struct mock_domain *mock, int *nr_patches)
   return mock->patches;
 }
 
-void
-mock_domain_get_global_patch_info(struct mock_domain *mock, int gp, struct mock_patch *patch)
-{
-  *patch = mock->patch_info[gp];
-}
-
 // ======================================================================
 
 
@@ -289,11 +283,10 @@ writer_comm_init(struct xdmf *xdmf, struct collective_m3_ctx *ctx, int *writer_o
 
   int n_recv_patches = 0;
   for (int gp = 0; gp < nr_global_patches; gp++) {
-    struct mock_patch info;
-    mock_domain_get_global_patch_info(&xdmf->domain, gp, &info);
+    struct mock_patch *info = &xdmf->domain.patch_info[gp];
 
     int ilo[3], ihi[3];
-    int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
+    int has_intersection = find_intersection(ilo, ihi, info->off, info->ldims,
 					     writer_offs, writer_dims);
     if (!has_intersection) {
       continue;
@@ -310,18 +303,17 @@ writer_comm_init(struct xdmf *xdmf, struct collective_m3_ctx *ctx, int *writer_o
   int cur_rank = -1;
   n_recv_patches = 0;
   for (int gp = 0; gp < nr_global_patches; gp++) {
-    struct mock_patch info;
-    mock_domain_get_global_patch_info(&xdmf->domain, gp, &info);
+    struct mock_patch *info = &xdmf->domain.patch_info[gp];
 
     int ilo[3], ihi[3];
-    int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
+    int has_intersection = find_intersection(ilo, ihi, info->off, info->ldims,
 					     writer_offs, writer_dims);
     if (!has_intersection) {
       continue;
     }
 
-    assert(info.rank >= cur_rank);
-    while (cur_rank < info.rank) {
+    assert(info->rank >= cur_rank);
+    while (cur_rank < info->rank) {
       cur_rank++;
       recv_patches_by_rank[cur_rank] = &ctx->recv_patches[n_recv_patches];
       //mprintf("rank %d patches start at %d\n", cur_rank, ctx->n_recv_patches);
