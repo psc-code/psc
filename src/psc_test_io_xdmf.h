@@ -21,7 +21,7 @@ struct xdmf {
   int gdims[3];
 
   int nr_global_patches;
-  struct mock_patch *patch_info;
+  struct mock_patch *global_patches;
 
   int nr_patches;
   struct mock_patch *patches;

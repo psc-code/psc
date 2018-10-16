@@ -33,24 +33,24 @@ xdmf_collective_setup(struct xdmf *xdmf, int nr_writers, int gdims[3], int np[3]
   assert(xdmf->nr_global_patches % size == 0);
   int procs_per_rank = xdmf->nr_global_patches / size;
 
-  xdmf->patch_info = calloc(xdmf->nr_global_patches, sizeof(*xdmf->patch_info));
+  xdmf->global_patches = calloc(xdmf->nr_global_patches, sizeof(*xdmf->global_patches));
   int gp = 0;
   int proc[3];
   for (proc[2] = 0; proc[2] < np[2]; proc[2]++) {
     for (proc[1] = 0; proc[1] < np[1]; proc[1]++) {
       for (proc[0] = 0; proc[0] < np[0]; proc[0]++) {
 	for (int d = 0; d < 3; d++) {
-	  xdmf->patch_info[gp].ldims[d] = ldims[d];
-	  xdmf->patch_info[gp].off[d] = proc[d] * ldims[d];
+	  xdmf->global_patches[gp].ldims[d] = ldims[d];
+	  xdmf->global_patches[gp].off[d] = proc[d] * ldims[d];
 	}
-	xdmf->patch_info[gp].rank = gp / procs_per_rank;
+	xdmf->global_patches[gp].rank = gp / procs_per_rank;
 	gp++;
       }
     }
   }
   
   xdmf->nr_patches = procs_per_rank;
-  xdmf->patches = xdmf->patch_info + rank * procs_per_rank;
+  xdmf->patches = xdmf->global_patches + rank * procs_per_rank;
 
   if (rank < xdmf->nr_writers) {
     xdmf->is_writer = 1;
@@ -249,7 +249,7 @@ writer_comm_init(struct xdmf *xdmf, struct collective_m3_ctx *ctx, int *writer_o
 
   int n_recv_patches = 0;
   for (int gp = 0; gp < nr_global_patches; gp++) {
-    struct mock_patch *info = &xdmf->patch_info[gp];
+    struct mock_patch *info = &xdmf->global_patches[gp];
 
     int ilo[3], ihi[3];
     int has_intersection = find_intersection(ilo, ihi, info->off, info->ldims,
@@ -269,7 +269,7 @@ writer_comm_init(struct xdmf *xdmf, struct collective_m3_ctx *ctx, int *writer_o
   int cur_rank = -1;
   n_recv_patches = 0;
   for (int gp = 0; gp < nr_global_patches; gp++) {
-    struct mock_patch *info = &xdmf->patch_info[gp];
+    struct mock_patch *info = &xdmf->global_patches[gp];
 
     int ilo[3], ihi[3];
     int has_intersection = find_intersection(ilo, ihi, info->off, info->ldims,
