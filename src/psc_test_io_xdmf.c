@@ -401,24 +401,24 @@ xdmf_collective_write_m3(struct xdmf* xdmf)
 
   int nr_comps = 2;
 
+  peer_comm_init(xdmf, peer_ctx);
+
   if (xdmf->is_writer) {
     writer_comm_init(xdmf, writer_ctx, sizeof(float));
     for (int m = 0; m < nr_comps; m++) {
       writer_comm_begin(xdmf, writer_ctx);
-      peer_comm_init(xdmf, peer_ctx);
       peer_comm_begin(xdmf, peer_ctx, 0);
       writer_comm_end(writer_ctx);
       peer_comm_end(xdmf, peer_ctx);
-      peer_comm_destroy(xdmf, peer_ctx);
     }
     writer_comm_destroy(writer_ctx);
   } else {
     for (int m = 0; m < nr_comps; m++) {
-      peer_comm_init(xdmf, peer_ctx);
       peer_comm_begin(xdmf, peer_ctx, 0);
       peer_comm_end(xdmf, peer_ctx);
-      peer_comm_destroy(xdmf, peer_ctx);
     }
   }
+
+  peer_comm_destroy(xdmf, peer_ctx);
 }
 
