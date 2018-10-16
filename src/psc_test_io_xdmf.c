@@ -124,6 +124,7 @@ struct writer_comm {
 
 struct peer_comm {
   float **send_bufs; // one for each writer
+  size_t *buf_sizes; // one for each writer
   MPI_Request *send_reqs;
   int nr_sends;
 };
@@ -146,6 +147,7 @@ static void
 peer_comm_init(struct xdmf *xdmf, struct peer_comm *ctx)
 {
   ctx->send_bufs = calloc(xdmf->nr_writers, sizeof(*ctx->send_bufs));
+  ctx->buf_sizes = calloc(xdmf->nr_writers, sizeof(*ctx->buf_sizes));
   ctx->send_reqs = calloc(xdmf->nr_writers, sizeof(*ctx->send_reqs));
 }
 
@@ -156,7 +158,6 @@ static void
 peer_comm_begin(struct xdmf *xdmf, struct peer_comm *ctx, int m)
 {
   int nr_patches = xdmf->nr_patches;
-  size_t *buf_sizes = calloc(xdmf->nr_writers, sizeof(*buf_sizes));
   struct mock_patch *patches = xdmf->patches;
 
   for (int writer = 0; writer < xdmf->nr_writers; writer++) {
@@ -177,16 +178,16 @@ peer_comm_begin(struct xdmf *xdmf, struct peer_comm *ctx, int m)
       if (!has_intersection)
 	continue;
 
-      buf_sizes[writer] += ldims[0] * ldims[1] * ldims[2];
+      ctx->buf_sizes[writer] += ldims[0] * ldims[1] * ldims[2];
     }
 
     // allocate buf per writer
     //mprintf("to writer %d buf_size %d\n", writer, buf_sizes[writer]);
-    if (buf_sizes[writer] == 0) {
+    if (ctx->buf_sizes[writer] == 0) {
       continue;
     }
 
-    ctx->send_bufs[writer] = malloc(buf_sizes[writer] * sizeof(*ctx->send_bufs[writer]));
+    ctx->send_bufs[writer] = malloc(ctx->buf_sizes[writer] * sizeof(*ctx->send_bufs[writer]));
     assert(ctx->send_bufs[writer]);
   }
     
@@ -195,11 +196,10 @@ peer_comm_begin(struct xdmf *xdmf, struct peer_comm *ctx, int m)
       ctx->send_reqs[writer] = MPI_REQUEST_NULL;
       continue;
     }
-    MPI_Isend(ctx->send_bufs[writer], buf_sizes[writer], MPI_FLOAT,
+    MPI_Isend(ctx->send_bufs[writer], ctx->buf_sizes[writer], MPI_FLOAT,
 	      writer, 0x1000, xdmf->comm,
 	      &ctx->send_reqs[writer]);
   }
-  free(buf_sizes);
 }
 
 // ----------------------------------------------------------------------
@@ -222,6 +222,7 @@ static void
 peer_comm_destroy(struct xdmf *xdmf, struct peer_comm *ctx)
 {
   free(ctx->send_bufs);
+  free(ctx->buf_sizes);
   free(ctx->send_reqs);
 }
     
