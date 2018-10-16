@@ -18,8 +18,6 @@ mock_domain_init_indep(struct mock_domain *mock, int gdims[3], int np[3])
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-  mock->domain = NULL;
-
   int ldims[3];
   for (int d = 0; d < 3; d++) {
     mock->gdims[d] = gdims[d];

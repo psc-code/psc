@@ -18,7 +18,6 @@ struct mock_patch {
 };
 
 struct mock_domain {
-  struct mrc_domain *domain;
   int gdims[3];
 
   int nr_global_patches;
