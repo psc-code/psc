@@ -63,13 +63,6 @@ mock_domain_get_nr_global_patches(struct mock_domain *mock, int *nr_global_patch
   *nr_global_patches = mock->nr_global_patches;
 }
 
-struct mock_patch*
-mock_domain_get_patches(struct mock_domain *mock, int *nr_patches)
-{
-  *nr_patches = mock->nr_patches;
-  return mock->patches;
-}
-
 // ======================================================================
 
 
@@ -168,7 +161,7 @@ collective_m3_init(struct xdmf *xdmf, struct collective_m3_ctx *ctx)
 {
   mock_domain_get_global_dims(&xdmf->domain, ctx->gdims);
   mock_domain_get_nr_global_patches(&xdmf->domain, &ctx->nr_global_patches);
-  mock_domain_get_patches(&xdmf->domain, &ctx->nr_patches);
+  ctx->nr_patches = xdmf->domain.nr_patches;
   for (int d = 0; d < 3; d++) {
     ctx->slab_dims[d] = ctx->gdims[d];
     ctx->slab_off[d] = 0;
@@ -210,8 +203,8 @@ get_writer_off_dims(struct collective_m3_ctx *ctx, int writer,
 static void
 collective_send_fld_begin(struct xdmf *xdmf, struct collective_m3_ctx *ctx, int m)
 {
-  int nr_patches;
-  struct mock_patch *patches = mock_domain_get_patches(&xdmf->domain, &nr_patches);
+  int nr_patches = xdmf->domain.nr_patches;
+  struct mock_patch *patches = xdmf->domain.patches;
 
   size_t *buf_sizes = calloc(xdmf->nr_writers, sizeof(*buf_sizes));
   ctx->send_bufs = calloc(xdmf->nr_writers, sizeof(*ctx->send_bufs));
