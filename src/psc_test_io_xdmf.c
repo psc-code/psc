@@ -120,7 +120,9 @@ struct collective_m3_ctx {
   MPI_Request *recv_reqs;
   struct collective_m3_peer *peers;
   int n_peers;
+};
 
+struct peer_comm {
   float **send_bufs; // one for each writer
   MPI_Request *send_reqs;
   int nr_sends;
@@ -146,7 +148,7 @@ get_writer_off_dims(struct xdmf* xdmf, int writer, int *writer_off, int *writer_
 // peer_comm_begin
 
 static void
-peer_comm_begin(struct xdmf *xdmf, struct collective_m3_ctx *ctx, int m)
+peer_comm_begin(struct xdmf *xdmf, struct peer_comm *ctx, int m)
 {
   int nr_patches = xdmf->nr_patches;
   struct mock_patch *patches = xdmf->patches;
@@ -198,7 +200,7 @@ peer_comm_begin(struct xdmf *xdmf, struct collective_m3_ctx *ctx, int m)
 // peer_comm_end
 
 static void
-peer_comm_end(struct xdmf *xdmf, struct collective_m3_ctx *ctx)
+peer_comm_end(struct xdmf *xdmf, struct peer_comm *ctx)
 {
   MPI_Waitall(xdmf->nr_writers, ctx->send_reqs, MPI_STATUSES_IGNORE);
 
@@ -371,6 +373,9 @@ void
 xdmf_collective_write_m3(struct xdmf* xdmf)
 {
   struct collective_m3_ctx ctx;
+  struct peer_comm peer_ctx[1];
+
+  int nr_comps = 2;
 
   if (xdmf->is_writer) {
     int writer;
@@ -382,17 +387,17 @@ xdmf_collective_write_m3(struct xdmf* xdmf)
     	    writer_dims[0], writer_dims[1], writer_dims[2]);
 
     writer_comm_init(xdmf, &ctx, writer_off, writer_dims, sizeof(float));
-    for (int m = 0; m < 2; m++) {
+    for (int m = 0; m < nr_comps; m++) {
       writer_comm_begin(xdmf, &ctx);
-      peer_comm_begin(xdmf, &ctx, 0);
+      peer_comm_begin(xdmf, peer_ctx, 0);
       writer_comm_end(&ctx);
-      peer_comm_end(xdmf, &ctx);
+      peer_comm_end(xdmf, peer_ctx);
     }
     writer_comm_destroy(&ctx);
   } else {
-    for (int m = 0; m < 2; m++) {
-      peer_comm_begin(xdmf, &ctx, 0);
-      peer_comm_end(xdmf, &ctx);
+    for (int m = 0; m < nr_comps; m++) {
+      peer_comm_begin(xdmf, peer_ctx, 0);
+      peer_comm_end(xdmf, peer_ctx);
     }
   }
 }
