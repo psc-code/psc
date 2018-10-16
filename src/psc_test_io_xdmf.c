@@ -116,7 +116,9 @@ struct collective_m3_peer {
 
 struct collective_m3_ctx {
   struct collective_m3_recv_patch *recv_patches;
+};
 
+struct writer_comm {
   MPI_Request *recv_reqs;
   struct collective_m3_peer *peers;
   int n_peers;
@@ -215,8 +217,8 @@ peer_comm_end(struct xdmf *xdmf, struct peer_comm *ctx)
 // writer_comm_init
 
 static void
-writer_comm_init(struct xdmf *xdmf, struct collective_m3_ctx *ctx, int *writer_offs, int *writer_dims,
-		 int size_of_type)
+writer_comm_init(struct xdmf *xdmf, struct writer_comm *writer_ctx, struct collective_m3_ctx *ctx,
+		 int *writer_offs, int *writer_dims, int size_of_type)
 {
   int nr_global_patches = xdmf->nr_global_patches;
 
@@ -272,7 +274,7 @@ writer_comm_init(struct xdmf *xdmf, struct collective_m3_ctx *ctx, int *writer_o
     //mprintf("rank %d patches start at %d\n", cur_rank, ctx->n_recv_patches);
   }
 
-  ctx->n_peers = 0;
+  writer_ctx->n_peers = 0;
   for (int rank = 0; rank < xdmf->size; rank++) {
     struct collective_m3_recv_patch *begin = recv_patches_by_rank[rank];
     struct collective_m3_recv_patch *end   = recv_patches_by_rank[rank+1];
@@ -282,12 +284,12 @@ writer_comm_init(struct xdmf *xdmf, struct collective_m3_ctx *ctx, int *writer_o
     }
 
     //mprintf("peer rank %d # = %ld\n", rank, end - begin);
-    ctx->n_peers++;
+    writer_ctx->n_peers++;
   }
-  mprintf("n_peers %d\n", ctx->n_peers);
+  mprintf("n_peers %d\n", writer_ctx->n_peers);
 
-  ctx->peers = calloc(ctx->n_peers, sizeof(*ctx->peers));
-  ctx->n_peers = 0;
+  writer_ctx->peers = calloc(writer_ctx->n_peers, sizeof(*writer_ctx->peers));
+  writer_ctx->n_peers = 0;
   for (int rank = 0; rank < xdmf->size; rank++) {
     struct collective_m3_recv_patch *begin = recv_patches_by_rank[rank];
     struct collective_m3_recv_patch *end   = recv_patches_by_rank[rank+1];
@@ -296,7 +298,7 @@ writer_comm_init(struct xdmf *xdmf, struct collective_m3_ctx *ctx, int *writer_o
       continue;
     }
 
-    struct collective_m3_peer *peer = &ctx->peers[ctx->n_peers];
+    struct collective_m3_peer *peer = &writer_ctx->peers[writer_ctx->n_peers];
     peer->rank = rank;
     peer->begin = begin;
     peer->end = end;
@@ -313,19 +315,19 @@ writer_comm_init(struct xdmf *xdmf, struct collective_m3_ctx *ctx, int *writer_o
       peer->recv_buf = malloc(peer->buf_size * sizeof(*peer->recv_buf));
     }
 
-    ctx->n_peers++;
+    writer_ctx->n_peers++;
   }
   free(recv_patches_by_rank);
 
-  ctx->recv_reqs = calloc(ctx->n_peers, sizeof(*ctx->recv_reqs));
-  mprintf("recv_reqs %p\n", ctx->recv_reqs);
+  writer_ctx->recv_reqs = calloc(writer_ctx->n_peers, sizeof(*writer_ctx->recv_reqs));
+  mprintf("recv_reqs %p\n", writer_ctx->recv_reqs);
 }
 
 // ----------------------------------------------------------------------
 // writer_comm_begin
 
 static void
-writer_comm_begin(struct xdmf* xdmf, struct collective_m3_ctx *ctx)
+writer_comm_begin(struct xdmf* xdmf, struct writer_comm *ctx)
 {
   for (struct collective_m3_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
     // skip local patches
@@ -344,7 +346,7 @@ writer_comm_begin(struct xdmf* xdmf, struct collective_m3_ctx *ctx)
 // writer_comm_end
 
 static void
-writer_comm_end(struct collective_m3_ctx *ctx)
+writer_comm_end(struct writer_comm *ctx)
 {
   MHERE;
   MPI_Waitall(ctx->n_peers, ctx->recv_reqs, MPI_STATUSES_IGNORE);
@@ -355,14 +357,14 @@ writer_comm_end(struct collective_m3_ctx *ctx)
 // writer_comm_destroy
 
 static void
-writer_comm_destroy(struct collective_m3_ctx *ctx)
+writer_comm_destroy(struct collective_m3_ctx *ctx, struct writer_comm *writer_ctx)
 {
-  free(ctx->recv_reqs);
+  free(writer_ctx->recv_reqs);
   
-  for (struct collective_m3_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
+  for (struct collective_m3_peer *peer = writer_ctx->peers; peer < writer_ctx->peers + writer_ctx->n_peers; peer++) {
     free(peer->recv_buf);
   }
-  free(ctx->peers);
+  free(writer_ctx->peers);
   free(ctx->recv_patches);
 }
 
@@ -374,6 +376,7 @@ xdmf_collective_write_m3(struct xdmf* xdmf)
 {
   struct collective_m3_ctx ctx;
   struct peer_comm peer_ctx[1];
+  struct writer_comm writer_ctx[1];
 
   int nr_comps = 2;
 
@@ -386,14 +389,14 @@ xdmf_collective_write_m3(struct xdmf* xdmf)
     	    writer_off[0], writer_off[1], writer_off[2],
     	    writer_dims[0], writer_dims[1], writer_dims[2]);
 
-    writer_comm_init(xdmf, &ctx, writer_off, writer_dims, sizeof(float));
+    writer_comm_init(xdmf, writer_ctx, &ctx, writer_off, writer_dims, sizeof(float));
     for (int m = 0; m < nr_comps; m++) {
-      writer_comm_begin(xdmf, &ctx);
+      writer_comm_begin(xdmf, writer_ctx);
       peer_comm_begin(xdmf, peer_ctx, 0);
-      writer_comm_end(&ctx);
+      writer_comm_end(writer_ctx);
       peer_comm_end(xdmf, peer_ctx);
     }
-    writer_comm_destroy(&ctx);
+    writer_comm_destroy(&ctx, writer_ctx);
   } else {
     for (int m = 0; m < nr_comps; m++) {
       peer_comm_begin(xdmf, peer_ctx, 0);
