@@ -85,8 +85,12 @@ mock_domain_get_global_patch_info(struct mock_domain *mock, int gp, struct mock_
 // xdmf_collective_setup
 
 void
-xdmf_collective_setup(struct xdmf *xdmf)
+xdmf_collective_setup(struct xdmf *xdmf, int nr_writers, int gdims[3], int np[3])
 {
+  memset(xdmf, 0, sizeof(*xdmf));
+  xdmf->nr_writers = 2;
+  mock_domain_init_indep(&xdmf->domain, gdims, np);
+
   MPI_Comm comm = MPI_COMM_WORLD;
   int rank; MPI_Comm_rank(comm, &rank);
   int size; MPI_Comm_size(comm, &size);
@@ -439,10 +443,10 @@ writer_comm_destroy(struct collective_m3_ctx *ctx)
 // xdmf_collective_write_m3
 
 void
-xdmf_collective_write_m3(struct xdmf* xdmf, struct mock_domain *mock)
+xdmf_collective_write_m3(struct xdmf* xdmf)
 {
   struct collective_m3_ctx ctx;
-  collective_m3_init(xdmf, &ctx, mock);
+  collective_m3_init(xdmf, &ctx, &xdmf->domain);
 
   if (xdmf->is_writer) {
     int writer;
@@ -453,17 +457,17 @@ xdmf_collective_write_m3(struct xdmf* xdmf, struct mock_domain *mock)
     	    writer_off[0], writer_off[1], writer_off[2],
     	    writer_dims[0], writer_dims[1], writer_dims[2]);
 
-    writer_comm_init(&ctx, writer_off, writer_dims, mock, sizeof(float));
+    writer_comm_init(&ctx, writer_off, writer_dims, &xdmf->domain, sizeof(float));
     for (int m = 0; m < 2; m++) {
       writer_comm_begin(&ctx);
-      collective_send_fld_begin(xdmf, &ctx, mock, 0);
+      collective_send_fld_begin(xdmf, &ctx, &xdmf->domain, 0);
       writer_comm_end(&ctx);
       collective_send_fld_end(xdmf, &ctx);
     }
     writer_comm_destroy(&ctx);
   } else {
     for (int m = 0; m < 2; m++) {
-      collective_send_fld_begin(xdmf, &ctx, mock, 0);
+      collective_send_fld_begin(xdmf, &ctx, &xdmf->domain, 0);
       collective_send_fld_end(xdmf, &ctx);
     }
   }

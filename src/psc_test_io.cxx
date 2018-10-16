@@ -48,12 +48,9 @@ struct PscTestIo
     
     mpi_printf(MPI_COMM_WORLD, "***** Testing output\n");
 
-    xdmf xdmf[1] = {};
-    xdmf->nr_writers = 2;
-    mock_domain_init_indep(&xdmf->domain, gdims, np);
-
-    xdmf_collective_setup(xdmf);
-    xdmf_collective_write_m3(xdmf, &xdmf->domain);
+    xdmf xdmf[1];
+    xdmf_collective_setup(xdmf, 2, gdims, np);
+    xdmf_collective_write_m3(xdmf);
     xdmf_collective_destroy(xdmf);
 
     mpi_printf(MPI_COMM_WORLD, "***** Testing output done\n");

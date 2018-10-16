@@ -39,9 +39,10 @@ struct xdmf {
   int is_writer;         //< this rank is a writer
 };
 
-void xdmf_collective_setup(struct xdmf *xdmf);
+void xdmf_collective_setup(struct xdmf *xdmf, int nr_writers, int gdims[3], int np[3]);
 void xdmf_collective_destroy(struct xdmf *xdmf);
-void xdmf_collective_write_m3(struct xdmf* xdmf, struct mock_domain *mock);
+void xdmf_collective_write_m3(struct xdmf* xdmf);
+
 
 END_C_DECLS
 
