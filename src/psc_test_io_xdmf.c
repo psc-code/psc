@@ -22,37 +22,35 @@ xdmf_collective_setup(struct xdmf *xdmf, int nr_writers, int gdims[3], int np[3]
   int rank; MPI_Comm_rank(comm, &rank);
   int size; MPI_Comm_size(comm, &size);
 
-  struct mock_domain *mock = &xdmf->domain;
-
   int ldims[3];
   for (int d = 0; d < 3; d++) {
-    mock->gdims[d] = gdims[d];
-    assert(mock->gdims[d] % np[d] == 0);
+    xdmf->gdims[d] = gdims[d];
+    assert(gdims[d] % np[d] == 0);
     ldims[d] = gdims[d] / np[d];
   }
 
-  mock->nr_global_patches = np[0] * np[1] * np[2];
-  assert(mock->nr_global_patches % size == 0);
-  int procs_per_rank = mock->nr_global_patches / size;
+  xdmf->nr_global_patches = np[0] * np[1] * np[2];
+  assert(xdmf->nr_global_patches % size == 0);
+  int procs_per_rank = xdmf->nr_global_patches / size;
 
-  mock->patch_info = calloc(mock->nr_global_patches, sizeof(*mock->patch_info));
+  xdmf->patch_info = calloc(xdmf->nr_global_patches, sizeof(*xdmf->patch_info));
   int gp = 0;
   int proc[3];
   for (proc[2] = 0; proc[2] < np[2]; proc[2]++) {
     for (proc[1] = 0; proc[1] < np[1]; proc[1]++) {
       for (proc[0] = 0; proc[0] < np[0]; proc[0]++) {
 	for (int d = 0; d < 3; d++) {
-	  mock->patch_info[gp].ldims[d] = ldims[d];
-	  mock->patch_info[gp].off[d] = proc[d] * ldims[d];
+	  xdmf->patch_info[gp].ldims[d] = ldims[d];
+	  xdmf->patch_info[gp].off[d] = proc[d] * ldims[d];
 	}
-	mock->patch_info[gp].rank = gp / procs_per_rank;
+	xdmf->patch_info[gp].rank = gp / procs_per_rank;
 	gp++;
       }
     }
   }
-
-  mock->nr_patches = procs_per_rank;
-  mock->patches = mock->patch_info + rank * procs_per_rank;
+  
+  xdmf->nr_patches = procs_per_rank;
+  xdmf->patches = xdmf->patch_info + rank * procs_per_rank;
 
   if (rank < xdmf->nr_writers) {
     xdmf->is_writer = 1;
@@ -134,10 +132,10 @@ static void
 collective_m3_init(struct xdmf *xdmf, struct collective_m3_ctx *ctx)
 {
   for (int d = 0; d < 3; d++) {
-    ctx->gdims[d] = xdmf->domain.gdims[d];
+    ctx->gdims[d] = xdmf->gdims[d];
   }
-  ctx->nr_global_patches = xdmf->domain.nr_global_patches;
-  ctx->nr_patches = xdmf->domain.nr_patches;
+  ctx->nr_global_patches = xdmf->nr_global_patches;
+  ctx->nr_patches = xdmf->nr_patches;
   for (int d = 0; d < 3; d++) {
     ctx->slab_dims[d] = ctx->gdims[d];
     ctx->slab_off[d] = 0;
@@ -179,8 +177,8 @@ get_writer_off_dims(struct collective_m3_ctx *ctx, int writer,
 static void
 collective_send_fld_begin(struct xdmf *xdmf, struct collective_m3_ctx *ctx, int m)
 {
-  int nr_patches = xdmf->domain.nr_patches;
-  struct mock_patch *patches = xdmf->domain.patches;
+  int nr_patches = xdmf->nr_patches;
+  struct mock_patch *patches = xdmf->patches;
 
   size_t *buf_sizes = calloc(xdmf->nr_writers, sizeof(*buf_sizes));
   ctx->send_bufs = calloc(xdmf->nr_writers, sizeof(*ctx->send_bufs));
@@ -247,11 +245,11 @@ static void
 writer_comm_init(struct xdmf *xdmf, struct collective_m3_ctx *ctx, int *writer_offs, int *writer_dims,
 		 int size_of_type)
 {
-  int nr_global_patches = xdmf->domain.nr_global_patches;
+  int nr_global_patches = xdmf->nr_global_patches;
 
   int n_recv_patches = 0;
   for (int gp = 0; gp < nr_global_patches; gp++) {
-    struct mock_patch *info = &xdmf->domain.patch_info[gp];
+    struct mock_patch *info = &xdmf->patch_info[gp];
 
     int ilo[3], ihi[3];
     int has_intersection = find_intersection(ilo, ihi, info->off, info->ldims,
@@ -271,7 +269,7 @@ writer_comm_init(struct xdmf *xdmf, struct collective_m3_ctx *ctx, int *writer_o
   int cur_rank = -1;
   n_recv_patches = 0;
   for (int gp = 0; gp < nr_global_patches; gp++) {
-    struct mock_patch *info = &xdmf->domain.patch_info[gp];
+    struct mock_patch *info = &xdmf->patch_info[gp];
 
     int ilo[3], ihi[3];
     int has_intersection = find_intersection(ilo, ihi, info->off, info->ldims,

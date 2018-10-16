@@ -17,7 +17,7 @@ struct mock_patch {
   int rank;
 };
 
-struct mock_domain {
+struct xdmf {
   int gdims[3];
 
   int nr_global_patches;
@@ -25,12 +25,7 @@ struct mock_domain {
 
   int nr_patches;
   struct mock_patch *patches;
-};
 
-void mock_domain_init_indep(struct mock_domain *mock, int gdims[3], int np[3]);
-
-struct xdmf {
-  struct mock_domain domain;
   int slab_dims[3];
   int slab_off[3];
   int nr_writers;
