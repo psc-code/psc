@@ -4,53 +4,12 @@
 
 #include "psc_test_io_xdmf.h"
 
-#include <mrc_domain.h>
-
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <assert.h>
 
 // ======================================================================
-
-void
-mock_domain_init(struct mock_domain *mock, struct mrc_domain *domain)
-{
-  int rank;
-  MPI_Comm_rank(mrc_domain_comm(domain), &rank);
-  
-  mock->domain = domain;
-  mrc_domain_get_global_dims(domain, mock->gdims);
-  mrc_domain_get_nr_global_patches(domain, &mock->nr_global_patches);
-
-  // FIXME, leaked
-  mock->patch_info = calloc(mock->nr_global_patches, sizeof(*mock->patch_info));
-  for (int gp = 0; gp < mock->nr_global_patches; gp++) {
-    struct mrc_patch_info info;
-    mrc_domain_get_global_patch_info(domain, gp, &info);
-    for (int d = 0; d < 3; d++) {
-      mock->patch_info[gp].off[d] = info.off[d];
-      mock->patch_info[gp].ldims[d] = info.ldims[d];
-    }
-    mock->patch_info[gp].rank = info.rank;
-  }
-
-  mock->patches = NULL;
-  for (int gp = 0; gp < mock->nr_global_patches; gp++) {
-    if (mock->patch_info[gp].rank == rank) {
-      mock->patches = &mock->patch_info[gp];
-      break;
-    }
-  }
-  assert(mock->patches);
-
-  mock->nr_patches = 0;
-  for (struct mock_patch *pp = mock->patches; pp < mock->patch_info + mock->nr_global_patches; pp++) {
-    if (pp->rank != rank) {
-      break;
-    }
-    mock->nr_patches++;
-  }
-}
 
 void
 mock_domain_init_indep(struct mock_domain *mock, int gdims[3], int np[3])

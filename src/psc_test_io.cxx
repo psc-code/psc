@@ -46,15 +46,14 @@ struct PscTestIo
     int np[3] = { 2, 2, 8 }; // division into patches
 #endif
     
-    struct mock_domain mock[1];
-    mock_domain_init_indep(mock, gdims, np);
-
     mpi_printf(MPI_COMM_WORLD, "***** Testing output\n");
 
     xdmf xdmf[1] = {};
     xdmf->nr_writers = 2;
+    mock_domain_init_indep(&xdmf->domain, gdims, np);
+
     xdmf_collective_setup(xdmf);
-    xdmf_collective_write_m3(xdmf, mock);
+    xdmf_collective_write_m3(xdmf, &xdmf->domain);
     xdmf_collective_destroy(xdmf);
 
     mpi_printf(MPI_COMM_WORLD, "***** Testing output done\n");
