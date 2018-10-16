@@ -33,6 +33,10 @@ struct xdmf {
   int nr_writers;
   MPI_Comm comm_writers; //< communicator for only the writers
   int is_writer;         //< this rank is a writer
+
+  MPI_Comm comm;
+  int rank;
+  int size;
 };
 
 void xdmf_collective_setup(struct xdmf *xdmf, int nr_writers, int gdims[3], int np[3]);
