@@ -143,10 +143,10 @@ get_writer_off_dims(struct xdmf* xdmf, int writer, int *writer_off, int *writer_
 }
 
 // ----------------------------------------------------------------------
-// collective_send_fld_begin
+// peer_comm_begin
 
 static void
-collective_send_fld_begin(struct xdmf *xdmf, struct collective_m3_ctx *ctx, int m)
+peer_comm_begin(struct xdmf *xdmf, struct collective_m3_ctx *ctx, int m)
 {
   int nr_patches = xdmf->nr_patches;
   struct mock_patch *patches = xdmf->patches;
@@ -195,10 +195,10 @@ collective_send_fld_begin(struct xdmf *xdmf, struct collective_m3_ctx *ctx, int 
 }
 
 // ----------------------------------------------------------------------
-// collective_send_fld_end
+// peer_comm_end
 
 static void
-collective_send_fld_end(struct xdmf *xdmf, struct collective_m3_ctx *ctx)
+peer_comm_end(struct xdmf *xdmf, struct collective_m3_ctx *ctx)
 {
   MPI_Waitall(xdmf->nr_writers, ctx->send_reqs, MPI_STATUSES_IGNORE);
 
@@ -384,15 +384,15 @@ xdmf_collective_write_m3(struct xdmf* xdmf)
     writer_comm_init(xdmf, &ctx, writer_off, writer_dims, sizeof(float));
     for (int m = 0; m < 2; m++) {
       writer_comm_begin(xdmf, &ctx);
-      collective_send_fld_begin(xdmf, &ctx, 0);
+      peer_comm_begin(xdmf, &ctx, 0);
       writer_comm_end(&ctx);
-      collective_send_fld_end(xdmf, &ctx);
+      peer_comm_end(xdmf, &ctx);
     }
     writer_comm_destroy(&ctx);
   } else {
     for (int m = 0; m < 2; m++) {
-      collective_send_fld_begin(xdmf, &ctx, 0);
-      collective_send_fld_end(xdmf, &ctx);
+      peer_comm_begin(xdmf, &ctx, 0);
+      peer_comm_end(xdmf, &ctx);
     }
   }
 }
