@@ -232,7 +232,7 @@ peer_comm_destroy(struct xdmf *xdmf, struct peer_comm *ctx)
 // writer_comm_init
 
 static void
-writer_comm_init(struct xdmf *xdmf, struct writer_comm *ctx, int size_of_type)
+writer_comm_init(struct xdmf *xdmf, struct writer_comm *ctx)
 {
   int writer;
   MPI_Comm_rank(xdmf->comm_writers, &writer);
@@ -404,7 +404,7 @@ xdmf_collective_write_m3(struct xdmf* xdmf)
   peer_comm_init(xdmf, peer_ctx);
 
   if (xdmf->is_writer) {
-    writer_comm_init(xdmf, writer_ctx, sizeof(float));
+    writer_comm_init(xdmf, writer_ctx);
     for (int m = 0; m < nr_comps; m++) {
       writer_comm_begin(xdmf, writer_ctx);
       peer_comm_begin(xdmf, peer_ctx, 0);
