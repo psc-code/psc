@@ -183,7 +183,6 @@ peer_comm_begin(struct xdmf *xdmf, struct peer_comm *ctx, int m)
     // allocate buf per writer
     //mprintf("to writer %d buf_size %d\n", writer, buf_sizes[writer]);
     if (buf_sizes[writer] == 0) {
-      ctx->send_reqs[writer] = MPI_REQUEST_NULL;
       continue;
     }
 
@@ -192,8 +191,7 @@ peer_comm_begin(struct xdmf *xdmf, struct peer_comm *ctx, int m)
   }
     
   for (int writer = 0; writer < xdmf->nr_writers; writer++) {
-    // don't send to self
-    if (writer == xdmf->rank) {
+    if (!ctx->send_bufs[writer]) {
       ctx->send_reqs[writer] = MPI_REQUEST_NULL;
       continue;
     }
