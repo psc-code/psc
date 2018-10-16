@@ -56,6 +56,15 @@ xdmf_collective_setup(struct xdmf *xdmf, int nr_writers, int gdims[3], int np[3]
     xdmf->is_writer = 1;
   }
   MPI_Comm_split(comm, xdmf->is_writer, rank, &xdmf->comm_writers);
+
+  xdmf->slow_dim = 2;
+  while (xdmf->gdims[xdmf->slow_dim] == 1) {
+    xdmf->slow_dim--;
+  }
+  assert(xdmf->slow_dim >= 0);
+  int total_slow_indices = xdmf->gdims[xdmf->slow_dim];
+  xdmf->slow_indices_per_writer = total_slow_indices / xdmf->nr_writers;
+  xdmf->slow_indices_rmndr = total_slow_indices % xdmf->nr_writers;
 }
 
 // ----------------------------------------------------------------------
@@ -124,15 +133,6 @@ struct collective_m3_ctx {
 static void
 collective_m3_init(struct xdmf *xdmf, struct collective_m3_ctx *ctx)
 {
-  xdmf->slow_dim = 2;
-  while (xdmf->gdims[xdmf->slow_dim] == 1) {
-    xdmf->slow_dim--;
-  }
-  assert(xdmf->slow_dim >= 0);
-  int total_slow_indices = xdmf->gdims[xdmf->slow_dim];
-  xdmf->slow_indices_per_writer = total_slow_indices / xdmf->nr_writers;
-  xdmf->slow_indices_rmndr = total_slow_indices % xdmf->nr_writers;
-
   ctx->comm = MPI_COMM_WORLD;
   MPI_Comm_rank(ctx->comm, &ctx->rank);
   MPI_Comm_size(ctx->comm, &ctx->size);
