@@ -49,20 +49,6 @@ mock_domain_init_indep(struct mock_domain *mock, int gdims[3], int np[3])
   mock->patches = mock->patch_info + rank * procs_per_rank;
 }
 
-void
-mock_domain_get_global_dims(struct mock_domain *mock, int *gdims)
-{
-  for (int d = 0; d < 3; d++) {
-    gdims[d] = mock->gdims[d];
-  }
-}
-
-void
-mock_domain_get_nr_global_patches(struct mock_domain *mock, int *nr_global_patches)
-{
-  *nr_global_patches = mock->nr_global_patches;
-}
-
 // ======================================================================
 
 
@@ -159,8 +145,10 @@ struct collective_m3_ctx {
 static void
 collective_m3_init(struct xdmf *xdmf, struct collective_m3_ctx *ctx)
 {
-  mock_domain_get_global_dims(&xdmf->domain, ctx->gdims);
-  mock_domain_get_nr_global_patches(&xdmf->domain, &ctx->nr_global_patches);
+  for (int d = 0; d < 3; d++) {
+    ctx->gdims[d] = xdmf->domain.gdims[d];
+  }
+  ctx->nr_global_patches = xdmf->domain.nr_global_patches;
   ctx->nr_patches = xdmf->domain.nr_patches;
   for (int d = 0; d < 3; d++) {
     ctx->slab_dims[d] = ctx->gdims[d];
@@ -271,8 +259,7 @@ static void
 writer_comm_init(struct xdmf *xdmf, struct collective_m3_ctx *ctx, int *writer_offs, int *writer_dims,
 		 int size_of_type)
 {
-  int nr_global_patches;
-  mock_domain_get_nr_global_patches(&xdmf->domain, &nr_global_patches);
+  int nr_global_patches = xdmf->domain.nr_global_patches;
 
   int n_recv_patches = 0;
   for (int gp = 0; gp < nr_global_patches; gp++) {
