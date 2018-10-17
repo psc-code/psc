@@ -22,8 +22,8 @@ struct collective_m3_entry {
 };
 
 struct mrc_redist_write_send {
-  void **send_bufs; // one for each writer
-  MPI_Request *send_reqs;
+  void **bufs; // one for each writer
+  MPI_Request *reqs;
 };
 
 struct mrc_redist_read_send {
@@ -1036,13 +1036,13 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
   struct mrc_redist_write_send *send = &ctx->write_send;
 
   size_t *buf_sizes = calloc(xdmf->nr_writers, sizeof(*buf_sizes));
-  send->send_bufs = calloc(xdmf->nr_writers, sizeof(*send->send_bufs));
-  send->send_reqs = calloc(xdmf->nr_writers, sizeof(*send->send_reqs));
+  send->bufs = calloc(xdmf->nr_writers, sizeof(*send->bufs));
+  send->reqs = calloc(xdmf->nr_writers, sizeof(*send->reqs));
 
   for (int writer = 0; writer < xdmf->nr_writers; writer++) {
     // don't send to self
     if (xdmf->writers[writer] == io->rank) {
-      send->send_reqs[writer] = MPI_REQUEST_NULL;
+      send->reqs[writer] = MPI_REQUEST_NULL;
       continue;
     }
     int writer_off[3], writer_dims[3];
@@ -1064,12 +1064,12 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
     // allocate buf per writer
     //mprintf("to writer %d buf_size %d\n", writer, buf_sizes[writer]);
     if (buf_sizes[writer] == 0) {
-      send->send_reqs[writer] = MPI_REQUEST_NULL;
+      send->reqs[writer] = MPI_REQUEST_NULL;
       continue;
     }
 
-    send->send_bufs[writer] = malloc(buf_sizes[writer] * m3->_nd->size_of_type);
-    assert(send->send_bufs[writer]);
+    send->bufs[writer] = malloc(buf_sizes[writer] * m3->_nd->size_of_type);
+    assert(send->bufs[writer]);
 #if 1
     buf_sizes[writer] = 0;
 
@@ -1089,7 +1089,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       switch (mrc_fld_data_type(m3)) {
       case MRC_NT_FLOAT:
       {
-      	float *buf_ptr = (float *) send->send_bufs[writer] + buf_sizes[writer];
+      	float *buf_ptr = (float *) send->bufs[writer] + buf_sizes[writer];
       	BUFLOOP(ix, iy, iz, ilo, ihi) {
     	    *buf_ptr++ = MRC_S5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
       	} BUFLOOP_END
@@ -1097,7 +1097,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       }
       case MRC_NT_DOUBLE:
       {
-      	double *buf_ptr = (double *) send->send_bufs[writer] + buf_sizes[writer];
+      	double *buf_ptr = (double *) send->bufs[writer] + buf_sizes[writer];
       	BUFLOOP(ix, iy, iz, ilo, ihi) {
           *buf_ptr++ = MRC_D5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
       	} BUFLOOP_END
@@ -1105,7 +1105,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       }
       case MRC_NT_INT:
       {
-      	int *buf_ptr = (int *) send->send_bufs[writer] + buf_sizes[writer];
+      	int *buf_ptr = (int *) send->bufs[writer] + buf_sizes[writer];
       	BUFLOOP(ix, iy, iz, ilo, ihi) {
     	    *buf_ptr++ = MRC_I5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
       	} BUFLOOP_END
@@ -1137,9 +1137,9 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
     }
 
     mprintf("isend to %d\n", xdmf->writers[writer]);
-    MPI_Isend(send->send_bufs[writer], buf_sizes[writer], mpi_dtype,
+    MPI_Isend(send->bufs[writer], buf_sizes[writer], mpi_dtype,
 	      xdmf->writers[writer], 0x1000, mrc_io_comm(io),
-	      &send->send_reqs[writer]);
+	      &send->reqs[writer]);
   }
   free(buf_sizes);
 }
@@ -1156,13 +1156,13 @@ collective_send_fld_end(struct collective_m3_ctx *ctx, struct mrc_io *io,
   struct mrc_redist_write_send *send = &ctx->write_send;
 
   mprintf("send_end: waitall cnt = %d\n", xdmf->nr_writers);
-  MPI_Waitall(xdmf->nr_writers, send->send_reqs, MPI_STATUSES_IGNORE);
+  MPI_Waitall(xdmf->nr_writers, send->reqs, MPI_STATUSES_IGNORE);
 
   for (int writer = 0; writer < xdmf->nr_writers; writer++) {
-    free(send->send_bufs[writer]);
+    free(send->bufs[writer]);
   }
-  free(send->send_bufs);
-  free(send->send_reqs);
+  free(send->bufs);
+  free(send->reqs);
 }
     
 // ----------------------------------------------------------------------
