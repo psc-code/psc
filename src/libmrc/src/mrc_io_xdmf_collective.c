@@ -14,6 +14,7 @@
 
 struct mrc_redist {
   struct mrc_domain *domain;
+  MPI_Comm comm_writers;
   int is_writer;
   int nr_writers;
   int slab_dims[3];
@@ -26,11 +27,13 @@ struct mrc_redist {
 
 void
 mrc_redist_init(struct mrc_redist *redist, struct mrc_domain *domain,
-		int slab_offs[3], int slab_dims[3], int is_writer, int nr_writers)
+		int slab_offs[3], int slab_dims[3],
+		MPI_Comm comm_writers, int is_writer, int nr_writers)
 {
   redist->domain = domain;
   redist->is_writer = is_writer;
   redist->nr_writers = nr_writers;
+  redist->comm_writers = comm_writers;
 
   int gdims[3];
   mrc_domain_get_global_dims(domain, gdims);
@@ -74,11 +77,23 @@ mrc_redist_writer_offs_dims(struct mrc_redist *redist, int writer,
 }
 
 struct mrc_ndarray *
-mrc_redist_create_ndarray()
+mrc_redist_create_ndarray(struct mrc_redist *redist)
 {
-  // FIXME? MPI_COMM_NULL works, but it's not really right
-  struct mrc_ndarray *nd = mrc_ndarray_create(MPI_COMM_NULL);
+  assert(redist->is_writer);
+  
+  struct mrc_ndarray *nd = mrc_ndarray_create(redist->comm_writers);
 
+  int writer;
+  MPI_Comm_rank(redist->comm_writers, &writer);
+  int writer_dims[3], writer_off[3];
+  mrc_redist_writer_offs_dims(redist, writer, writer_off, writer_dims);
+  mprintf("writer_off %d %d %d dims %d %d %d\n",
+	  writer_off[0], writer_off[1], writer_off[2],
+	  writer_dims[0], writer_dims[1], writer_dims[2]);
+
+  mrc_ndarray_set_param_int_array(nd, "dims", 3, writer_dims);
+  mrc_ndarray_set_param_int_array(nd, "offs", 3, writer_off);
+  
   return nd;
 }
 
@@ -1495,7 +1510,8 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
   struct xdmf *xdmf = to_xdmf(io);
 
   struct mrc_redist redist[1];
-  mrc_redist_init(redist, m3->_domain, xdmf->slab_off, xdmf->slab_dims, xdmf->is_writer, xdmf->nr_writers);
+  mrc_redist_init(redist, m3->_domain, xdmf->slab_off, xdmf->slab_dims,
+		  xdmf->comm_writers, xdmf->is_writer, xdmf->nr_writers);
 
   struct collective_m3_ctx ctx;
   collective_m3_init(io, &ctx, m3->_domain);
@@ -1522,23 +1538,13 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
   }
 
   if (xdmf->is_writer) {
-    int writer;
-    MPI_Comm_rank(xdmf->comm_writers, &writer);
-    int writer_dims[3], writer_off[3];
-    mrc_redist_writer_offs_dims(redist, writer, writer_off, writer_dims);
-    mprintf("writer_off %d %d %d dims %d %d %d\n",
-    	    writer_off[0], writer_off[1], writer_off[2],
-    	    writer_dims[0], writer_dims[1], writer_dims[2]);
-
-    struct mrc_ndarray *nd = mrc_redist_create_ndarray();
+    struct mrc_ndarray *nd = mrc_redist_create_ndarray(redist);
     switch (mrc_fld_data_type(m3)) {
     case MRC_NT_FLOAT: mrc_ndarray_set_type(nd, "float"); break;
     case MRC_NT_DOUBLE: mrc_ndarray_set_type(nd, "double"); break;
     case MRC_NT_INT: mrc_ndarray_set_type(nd, "int"); break;
     default: assert(0);
     }
-    mrc_ndarray_set_param_int_array(nd, "dims", 3, writer_dims);
-    mrc_ndarray_set_param_int_array(nd, "offs", 3, writer_off);
     mrc_ndarray_setup(nd);
 
     hid_t group0;
