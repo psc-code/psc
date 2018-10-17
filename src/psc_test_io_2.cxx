@@ -75,6 +75,15 @@ struct PscTestIo
     io_pfd.open(grid(), rn, rx);
 
     auto mres = Mfields{grid(), 3, grid().ibn};
+
+    for (int p = 0; p < mres.n_patches(); p++) {
+      grid().Foreach_3d(0, 0, [&](int i, int j, int k) {
+	  int ii = i + grid().patches[p].off[0];
+	  int jj = j + grid().patches[p].off[1];
+	  int kk = k + grid().patches[p].off[2];
+	  mres[p](0, i,j,k) = ii + 100 * jj + 10000 * kk;
+	});
+    }
     mres.write_as_mrc_fld(io_pfd.io_, "e", {"ex", "ey", "ez"});
 
     io_pfd.close();
