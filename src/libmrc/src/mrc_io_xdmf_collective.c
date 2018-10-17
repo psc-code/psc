@@ -21,7 +21,14 @@ struct collective_m3_entry {
   int rank; //< of peer
 };
 
-struct mrc_redist_send {
+struct mrc_redist_write_send {
+  struct collective_m3_entry *blocks;
+  void **send_bufs; // one for each writer
+  MPI_Request *send_reqs;
+  int nr_sends;
+};
+
+struct mrc_redist_read_send {
   struct collective_m3_entry *blocks;
   void **send_bufs; // one for each writer
   MPI_Request *send_reqs;
@@ -960,7 +967,8 @@ struct collective_m3_ctx {
   struct collective_m3_peer *peers;
   int n_peers;
 
-  struct mrc_redist_send send;
+  struct mrc_redist_read_send read_send;
+  struct mrc_redist_write_send write_send;
 
   struct collective_m3_entry *recvs;
   MPI_Request *recv_reqs;
@@ -1028,7 +1036,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(m3->_domain, &nr_patches);
 
-  struct mrc_redist_send *send = &ctx->send;
+  struct mrc_redist_write_send *send = &ctx->write_send;
 
   size_t *buf_sizes = calloc(xdmf->nr_writers, sizeof(*buf_sizes));
   send->send_bufs = calloc(xdmf->nr_writers, sizeof(*send->send_bufs));
@@ -1148,7 +1156,7 @@ collective_send_fld_end(struct collective_m3_ctx *ctx, struct mrc_io *io,
 {
   struct xdmf *xdmf = to_xdmf(io);
 
-  struct mrc_redist_send *send = &ctx->send;
+  struct mrc_redist_write_send *send = &ctx->write_send;
 
   mprintf("send_end: waitall cnt = %d\n", xdmf->nr_writers);
   MPI_Waitall(xdmf->nr_writers, send->send_reqs, MPI_STATUSES_IGNORE);
@@ -1599,7 +1607,7 @@ static void
 collective_m3_send_setup(struct mrc_io *io, struct collective_m3_ctx *ctx,
 			 struct mrc_domain *domain, struct mrc_fld *gfld)
 {
-  struct mrc_redist_send *send = &ctx->send;
+  struct mrc_redist_read_send *send = &ctx->read_send;
 
   send->nr_sends = 0;
   for (int gp = 0; gp < ctx->nr_global_patches; gp++) {
@@ -1634,7 +1642,7 @@ static void
 collective_m3_send_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
 			 struct mrc_domain *domain, struct mrc_fld *gfld)
 {
-  struct mrc_redist_send *send = &ctx->send;
+  struct mrc_redist_read_send *send = &ctx->read_send;
 
   collective_m3_send_setup(io, ctx, domain, gfld);
 
@@ -1700,9 +1708,8 @@ collective_m3_send_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
 static void
 collective_m3_send_end(struct mrc_io *io, struct collective_m3_ctx *ctx)
 {
-  struct mrc_redist_send *send = &ctx->send;
+  struct mrc_redist_read_send *send = &ctx->read_send;
 
-  MHERE;
   MPI_Waitall(send->nr_sends, send->send_reqs, MPI_STATUSES_IGNORE);
   for (int i = 0; i < send->nr_sends; i++) {
     mrc_fld_destroy(send->blocks[i].fld);
