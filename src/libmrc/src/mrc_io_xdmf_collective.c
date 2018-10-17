@@ -27,6 +27,15 @@ mrc_redist_init(struct mrc_redist *redist, struct mrc_domain *domain,
   redist->nr_writers = nr_writers;
 }
 
+struct mrc_ndarray *
+mrc_redist_create_ndarray()
+{
+  // FIXME? MPI_COMM_NULL works, but it's not really right
+  struct mrc_ndarray *nd = mrc_ndarray_create(MPI_COMM_NULL);
+
+  return nd;
+}
+
 void
 mrc_redist_destroy(struct mrc_redist *redist)
 {
@@ -1475,7 +1484,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     	    writer_off[0], writer_off[1], writer_off[2],
     	    writer_dims[0], writer_dims[1], writer_dims[2]);
 
-    struct mrc_ndarray *nd = mrc_ndarray_create(MPI_COMM_NULL);
+    struct mrc_ndarray *nd = mrc_redist_create_ndarray();
     switch (mrc_fld_data_type(m3)) {
     case MRC_NT_FLOAT: mrc_ndarray_set_type(nd, "float"); break;
     case MRC_NT_DOUBLE: mrc_ndarray_set_type(nd, "double"); break;
