@@ -1034,6 +1034,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       assert(0);
     }
 
+    mprintf("isend to %d\n", xdmf->writers[writer]);
     MPI_Isend(ctx->send_bufs[writer], buf_sizes[writer], mpi_dtype,
 	      xdmf->writers[writer], 0x1000, mrc_io_comm(io),
 	      &ctx->send_reqs[writer]);
@@ -1050,7 +1051,7 @@ collective_send_fld_end(struct collective_m3_ctx *ctx, struct mrc_io *io,
 {
   struct xdmf *xdmf = to_xdmf(io);
 
-  MHERE;
+  mprintf("send_end: waitall cnt = %d\n", xdmf->nr_writers);
   MPI_Waitall(xdmf->nr_writers, ctx->send_reqs, MPI_STATUSES_IGNORE);
 
   for (int writer = 0; writer < xdmf->nr_writers; writer++) {
@@ -1208,6 +1209,7 @@ writer_comm_begin(struct collective_m3_ctx *ctx, struct mrc_io *io, struct mrc_n
     }
     
     // recv aggregate buffers
+    mprintf("irecv from %d\n", peer->rank);
     MPI_Irecv(peer->recv_buf, peer->buf_size, mpi_dtype, peer->rank, 0x1000, mrc_io_comm(io),
 	      &ctx->recv_reqs[peer - ctx->peers]);
   }
@@ -1220,7 +1222,7 @@ static void
 writer_comm_end(struct collective_m3_ctx *ctx, struct mrc_io *io, struct mrc_ndarray *nd,
 		struct mrc_fld *m3, int m)
 {
-  MHERE;
+  mprintf("recv_end: waitall cnt = %d\n", ctx->n_peers);
   MPI_Waitall(ctx->n_peers, ctx->recv_reqs, MPI_STATUSES_IGNORE);
 
   for (struct collective_m3_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
