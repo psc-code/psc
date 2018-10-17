@@ -16,15 +16,61 @@ struct mrc_redist {
   struct mrc_domain *domain;
   int is_writer;
   int nr_writers;
+  int slab_dims[3];
+  int slab_offs[3];
+
+  int slow_dim;
+  int slow_indices_per_writer;
+  int slow_indices_rmndr;
 };
 
 void
 mrc_redist_init(struct mrc_redist *redist, struct mrc_domain *domain,
-		int is_writer, int nr_writers)
+		int slab_offs[3], int slab_dims[3], int is_writer, int nr_writers)
 {
   redist->domain = domain;
   redist->is_writer = is_writer;
   redist->nr_writers = nr_writers;
+
+  int gdims[3];
+  mrc_domain_get_global_dims(domain, gdims);
+  int nr_patches;
+  mrc_domain_get_patches(domain, &nr_patches);
+  int nr_global_patches;
+  mrc_domain_get_nr_global_patches(domain, &nr_global_patches);
+  for (int d = 0; d < 3; d++) {
+    if (slab_dims[d]) {
+      redist->slab_dims[d] = slab_dims[d];
+    } else {
+      redist->slab_dims[d] = gdims[d];
+    }
+    redist->slab_offs[d] = slab_offs[d];
+  }
+  redist->slow_dim = 2;
+  while (gdims[redist->slow_dim] == 1) {
+    redist->slow_dim--;
+  }
+  assert(redist->slow_dim >= 0);
+  int total_slow_indices = redist->slab_dims[redist->slow_dim];
+  redist->slow_indices_per_writer = total_slow_indices / nr_writers;
+  redist->slow_indices_rmndr = total_slow_indices % nr_writers;
+}
+
+static void
+mrc_redist_writer_offs_dims(struct mrc_redist *redist, int writer,
+			    int *writer_offs, int *writer_dims)
+{
+  for (int d = 0; d < 3; d++) {
+    writer_dims[d] = redist->slab_dims[d];
+    writer_offs[d] = redist->slab_offs[d];
+  }
+  writer_dims[redist->slow_dim] = redist->slow_indices_per_writer + (writer < redist->slow_indices_rmndr);
+  if (writer < redist->slow_indices_rmndr) {
+    writer_offs[redist->slow_dim] += (redist->slow_indices_per_writer + 1) * writer;
+  } else {
+    writer_offs[redist->slow_dim] += redist->slow_indices_rmndr +
+      redist->slow_indices_per_writer * writer;
+  }
 }
 
 struct mrc_ndarray *
@@ -1449,7 +1495,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
   struct xdmf *xdmf = to_xdmf(io);
 
   struct mrc_redist redist[1];
-  mrc_redist_init(redist, m3->_domain, xdmf->is_writer, xdmf->nr_writers);
+  mrc_redist_init(redist, m3->_domain, xdmf->slab_off, xdmf->slab_dims, xdmf->is_writer, xdmf->nr_writers);
 
   struct collective_m3_ctx ctx;
   collective_m3_init(io, &ctx, m3->_domain);
@@ -1479,7 +1525,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     int writer;
     MPI_Comm_rank(xdmf->comm_writers, &writer);
     int writer_dims[3], writer_off[3];
-    get_writer_off_dims(&ctx, writer, writer_off, writer_dims);
+    mrc_redist_writer_offs_dims(redist, writer, writer_off, writer_dims);
     mprintf("writer_off %d %d %d dims %d %d %d\n",
     	    writer_off[0], writer_off[1], writer_off[2],
     	    writer_dims[0], writer_dims[1], writer_dims[2]);
