@@ -22,15 +22,12 @@ struct collective_m3_entry {
 };
 
 struct mrc_redist_write_send {
-  struct collective_m3_entry *blocks;
   void **send_bufs; // one for each writer
   MPI_Request *send_reqs;
-  int nr_sends;
 };
 
 struct mrc_redist_read_send {
   struct collective_m3_entry *blocks;
-  void **send_bufs; // one for each writer
   MPI_Request *send_reqs;
   int nr_sends;
 };
