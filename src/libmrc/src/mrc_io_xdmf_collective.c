@@ -961,8 +961,6 @@ struct collective_m3_ctx {
   int n_peers;
 
   struct mrc_redist_send send;
-  struct collective_m3_entry *blocks;
-  void **send_bufs; // one for each writer
 
   struct collective_m3_entry *recvs;
   MPI_Request *recv_reqs;
@@ -1033,7 +1031,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
   struct mrc_redist_send *send = &ctx->send;
 
   size_t *buf_sizes = calloc(xdmf->nr_writers, sizeof(*buf_sizes));
-  ctx->send_bufs = calloc(xdmf->nr_writers, sizeof(*ctx->send_bufs));
+  send->send_bufs = calloc(xdmf->nr_writers, sizeof(*send->send_bufs));
   send->send_reqs = calloc(xdmf->nr_writers, sizeof(*send->send_reqs));
 
   for (int writer = 0; writer < xdmf->nr_writers; writer++) {
@@ -1065,8 +1063,8 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       continue;
     }
 
-    ctx->send_bufs[writer] = malloc(buf_sizes[writer] * m3->_nd->size_of_type);
-    assert(ctx->send_bufs[writer]);
+    send->send_bufs[writer] = malloc(buf_sizes[writer] * m3->_nd->size_of_type);
+    assert(send->send_bufs[writer]);
 #if 1
     buf_sizes[writer] = 0;
 
@@ -1086,7 +1084,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       switch (mrc_fld_data_type(m3)) {
       case MRC_NT_FLOAT:
       {
-      	float *buf_ptr = (float *) ctx->send_bufs[writer] + buf_sizes[writer];
+      	float *buf_ptr = (float *) send->send_bufs[writer] + buf_sizes[writer];
       	BUFLOOP(ix, iy, iz, ilo, ihi) {
     	    *buf_ptr++ = MRC_S5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
       	} BUFLOOP_END
@@ -1094,7 +1092,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       }
       case MRC_NT_DOUBLE:
       {
-      	double *buf_ptr = (double *) ctx->send_bufs[writer] + buf_sizes[writer];
+      	double *buf_ptr = (double *) send->send_bufs[writer] + buf_sizes[writer];
       	BUFLOOP(ix, iy, iz, ilo, ihi) {
           *buf_ptr++ = MRC_D5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
       	} BUFLOOP_END
@@ -1102,7 +1100,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       }
       case MRC_NT_INT:
       {
-      	int *buf_ptr = (int *) ctx->send_bufs[writer] + buf_sizes[writer];
+      	int *buf_ptr = (int *) send->send_bufs[writer] + buf_sizes[writer];
       	BUFLOOP(ix, iy, iz, ilo, ihi) {
     	    *buf_ptr++ = MRC_I5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
       	} BUFLOOP_END
@@ -1134,7 +1132,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
     }
 
     mprintf("isend to %d\n", xdmf->writers[writer]);
-    MPI_Isend(ctx->send_bufs[writer], buf_sizes[writer], mpi_dtype,
+    MPI_Isend(send->send_bufs[writer], buf_sizes[writer], mpi_dtype,
 	      xdmf->writers[writer], 0x1000, mrc_io_comm(io),
 	      &send->send_reqs[writer]);
   }
@@ -1156,9 +1154,9 @@ collective_send_fld_end(struct collective_m3_ctx *ctx, struct mrc_io *io,
   MPI_Waitall(xdmf->nr_writers, send->send_reqs, MPI_STATUSES_IGNORE);
 
   for (int writer = 0; writer < xdmf->nr_writers; writer++) {
-    free(ctx->send_bufs[writer]);
+    free(send->send_bufs[writer]);
   }
-  free(ctx->send_bufs);
+  free(send->send_bufs);
   free(send->send_reqs);
 }
     
@@ -1616,10 +1614,10 @@ collective_m3_send_setup(struct mrc_io *io, struct collective_m3_ctx *ctx,
   }
 
   send->send_reqs = calloc(send->nr_sends, sizeof(*send->send_reqs));
-  ctx->blocks = calloc(send->nr_sends, sizeof(*ctx->blocks));
+  send->blocks = calloc(send->nr_sends, sizeof(*send->blocks));
 
   for (int i = 0, gp = 0; i < send->nr_sends; i++) {
-    struct collective_m3_entry *block = &ctx->blocks[i];
+    struct collective_m3_entry *block = &send->blocks[i];
     struct mrc_patch_info info;
     bool has_intersection;
     do {
@@ -1641,7 +1639,7 @@ collective_m3_send_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
   collective_m3_send_setup(io, ctx, domain, gfld);
 
   for (int i = 0; i < send->nr_sends; i++) {
-    struct collective_m3_entry *block = &ctx->blocks[i];
+    struct collective_m3_entry *block = &send->blocks[i];
     int *ilo = block->ilo, *ihi = block->ihi;
     struct mrc_fld *fld = mrc_fld_create(MPI_COMM_NULL);
     mrc_fld_set_type(fld, mrc_fld_type(gfld));
@@ -1707,9 +1705,9 @@ collective_m3_send_end(struct mrc_io *io, struct collective_m3_ctx *ctx)
   MHERE;
   MPI_Waitall(send->nr_sends, send->send_reqs, MPI_STATUSES_IGNORE);
   for (int i = 0; i < send->nr_sends; i++) {
-    mrc_fld_destroy(ctx->blocks[i].fld);
+    mrc_fld_destroy(send->blocks[i].fld);
   }
-  free(ctx->blocks);
+  free(send->blocks);
   free(send->send_reqs);
 }
 
