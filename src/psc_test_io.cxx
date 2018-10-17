@@ -11,12 +11,12 @@ int MPI_Irecv(void *buf, int count, MPI_Datatype datatype, int source,
 }
 
 
-int MPI_Isend(void *buf, int count, MPI_Datatype datatype, int dest,
+int MPI_Isend(const void *buf, int count, MPI_Datatype datatype, int dest,
 	      int tag, MPI_Comm comm, MPI_Request *request)
 {
   mprintf("MPI_Isend buf %p count %d dest %d tag %d request %p\n",
 	  buf, count, dest, tag, request);
-  int ierr = PMPI_Irecv(buf, count, datatype, dest, tag, comm, request);
+  int ierr = PMPI_Isend(buf, count, datatype, dest, tag, comm, request);
   return ierr;
 }
 
