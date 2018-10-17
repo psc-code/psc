@@ -12,6 +12,27 @@
 #include <string.h>
 #include <unistd.h>
 
+struct mrc_redist {
+  struct mrc_domain *domain;
+  int is_writer;
+  int nr_writers;
+};
+
+void
+mrc_redist_init(struct mrc_redist *redist, struct mrc_domain *domain,
+		int is_writer, int nr_writers)
+{
+  redist->domain = domain;
+  redist->is_writer = is_writer;
+  redist->nr_writers = nr_writers;
+}
+
+void
+mrc_redist_destroy(struct mrc_redist *redist)
+{
+}
+
+
 #define H5_CHK(ierr) assert(ierr >= 0)
 #define CE assert(ierr == 0)
 
@@ -1418,6 +1439,9 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
 {
   struct xdmf *xdmf = to_xdmf(io);
 
+  struct mrc_redist redist[1];
+  mrc_redist_init(redist, m3->_domain, xdmf->is_writer, xdmf->nr_writers);
+
   struct collective_m3_ctx ctx;
   collective_m3_init(io, &ctx, m3->_domain);
 
@@ -1496,6 +1520,8 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
   if (m3->_aos) {
     mrc_fld_put_as(m3_soa, m3);
   }
+
+  mrc_redist_destroy(redist);
 }
 
 // ======================================================================
