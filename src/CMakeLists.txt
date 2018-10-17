@@ -8,7 +8,7 @@ endmacro(add_psc_executable)
 
 add_psc_executable(psc_bubble_yz)
 add_psc_executable(psc_flatfoil_yz)
-#add_psc_executable(psc_test_io)
+add_psc_executable(psc_test_io_2)
 add_executable(psc_test_io psc_test_io.cxx psc_test_io_xdmf.c)
 target_link_libraries(psc_test_io psc)
 
