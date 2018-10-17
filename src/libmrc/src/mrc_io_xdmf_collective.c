@@ -12,6 +12,22 @@
 #include <string.h>
 #include <unistd.h>
 
+struct collective_m3_entry {
+  struct mrc_fld *fld;
+  int ilo[3];
+  int ihi[3];
+  int patch;
+  int global_patch; //< also used as tag
+  int rank; //< of peer
+};
+
+struct mrc_redist_send {
+  struct collective_m3_entry *sends;
+  void **send_bufs; // one for each writer
+  MPI_Request *send_reqs;
+  int nr_sends;
+};
+
 struct mrc_redist {
   struct mrc_domain *domain;
   MPI_Comm comm_writers;
@@ -917,15 +933,6 @@ find_intersection(int *ilo, int *ihi, const int *ib1, const int *im1,
 // ----------------------------------------------------------------------
 // collective helper context
 
-struct collective_m3_entry {
-  struct mrc_fld *fld;
-  int ilo[3];
-  int ihi[3];
-  int patch;
-  int global_patch; //< also used as tag
-  int rank; //< of peer
-};
-
 struct collective_m3_recv_patch {
   int ilo[3]; // intersection low
   int ihi[3]; // intersection high
@@ -953,9 +960,9 @@ struct collective_m3_ctx {
   struct collective_m3_peer *peers;
   int n_peers;
 
+  struct mrc_redist_send send;
   struct collective_m3_entry *sends;
   void **send_bufs; // one for each writer
-  MPI_Request *send_reqs;
   int nr_sends;
 
   struct collective_m3_entry *recvs;
@@ -1024,14 +1031,16 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(m3->_domain, &nr_patches);
 
+  struct mrc_redist_send *send = &ctx->send;
+
   size_t *buf_sizes = calloc(xdmf->nr_writers, sizeof(*buf_sizes));
   ctx->send_bufs = calloc(xdmf->nr_writers, sizeof(*ctx->send_bufs));
-  ctx->send_reqs = calloc(xdmf->nr_writers, sizeof(*ctx->send_reqs));
+  send->send_reqs = calloc(xdmf->nr_writers, sizeof(*send->send_reqs));
 
   for (int writer = 0; writer < xdmf->nr_writers; writer++) {
     // don't send to self
     if (xdmf->writers[writer] == io->rank) {
-      ctx->send_reqs[writer] = MPI_REQUEST_NULL;
+      send->send_reqs[writer] = MPI_REQUEST_NULL;
       continue;
     }
     int writer_off[3], writer_dims[3];
@@ -1053,7 +1062,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
     // allocate buf per writer
     //mprintf("to writer %d buf_size %d\n", writer, buf_sizes[writer]);
     if (buf_sizes[writer] == 0) {
-      ctx->send_reqs[writer] = MPI_REQUEST_NULL;
+      send->send_reqs[writer] = MPI_REQUEST_NULL;
       continue;
     }
 
@@ -1128,7 +1137,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
     mprintf("isend to %d\n", xdmf->writers[writer]);
     MPI_Isend(ctx->send_bufs[writer], buf_sizes[writer], mpi_dtype,
 	      xdmf->writers[writer], 0x1000, mrc_io_comm(io),
-	      &ctx->send_reqs[writer]);
+	      &send->send_reqs[writer]);
   }
   free(buf_sizes);
 }
@@ -1142,14 +1151,16 @@ collective_send_fld_end(struct collective_m3_ctx *ctx, struct mrc_io *io,
 {
   struct xdmf *xdmf = to_xdmf(io);
 
+  struct mrc_redist_send *send = &ctx->send;
+
   mprintf("send_end: waitall cnt = %d\n", xdmf->nr_writers);
-  MPI_Waitall(xdmf->nr_writers, ctx->send_reqs, MPI_STATUSES_IGNORE);
+  MPI_Waitall(xdmf->nr_writers, send->send_reqs, MPI_STATUSES_IGNORE);
 
   for (int writer = 0; writer < xdmf->nr_writers; writer++) {
     free(ctx->send_bufs[writer]);
   }
   free(ctx->send_bufs);
-  free(ctx->send_reqs);
+  free(send->send_reqs);
 }
     
 // ----------------------------------------------------------------------
@@ -1523,7 +1534,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     xs = xdmf_spatial_create_m3_parallel(&file->xdmf_spatial_list,
 					 mrc_domain_name(m3->_domain),
 					 m3->_domain,
-					 ctx.slab_off, ctx.slab_dims, io);
+					 redist->slab_offs, redist->slab_dims, io);
   }
 
   // If we have an aos field, we need to get it as soa for collection and writing
@@ -1591,6 +1602,8 @@ static void
 collective_m3_send_setup(struct mrc_io *io, struct collective_m3_ctx *ctx,
 			 struct mrc_domain *domain, struct mrc_fld *gfld)
 {
+  struct mrc_redist_send *send = &ctx->send;
+
   ctx->nr_sends = 0;
   for (int gp = 0; gp < ctx->nr_global_patches; gp++) {
     struct mrc_patch_info info;
@@ -1603,7 +1616,7 @@ collective_m3_send_setup(struct mrc_io *io, struct collective_m3_ctx *ctx,
       ctx->nr_sends++;
   }
 
-  ctx->send_reqs = calloc(ctx->nr_sends, sizeof(*ctx->send_reqs));
+  send->send_reqs = calloc(ctx->nr_sends, sizeof(*send->send_reqs));
   ctx->sends = calloc(ctx->nr_sends, sizeof(*ctx->sends));
 
   for (int i = 0, gp = 0; i < ctx->nr_sends; i++) {
@@ -1624,11 +1637,13 @@ static void
 collective_m3_send_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
 			 struct mrc_domain *domain, struct mrc_fld *gfld)
 {
+  struct mrc_redist_send *send = &ctx->send;
+
   collective_m3_send_setup(io, ctx, domain, gfld);
 
   for (int i = 0; i < ctx->nr_sends; i++) {
-    struct collective_m3_entry *send = &ctx->sends[i];
-    int *ilo = send->ilo, *ihi = send->ihi;
+    struct collective_m3_entry *block = &ctx->sends[i];
+    int *ilo = block->ilo, *ihi = block->ihi;
     struct mrc_fld *fld = mrc_fld_create(MPI_COMM_NULL);
     mrc_fld_set_type(fld, mrc_fld_type(gfld));
     mrc_fld_set_param_int_array(fld, "offs", 4,
@@ -1679,22 +1694,24 @@ collective_m3_send_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
       default: assert(0);
     }
     
-    MPI_Isend(fld->_nd->arr, mrc_fld_len(fld), dtype, send->rank, send->patch,
-	      mrc_io_comm(io), &ctx->send_reqs[i]);
-    send->fld = fld;
+    MPI_Isend(fld->_nd->arr, mrc_fld_len(fld), dtype, block->rank, block->patch,
+	      mrc_io_comm(io), &send->send_reqs[i]);
+    block->fld = fld;
   }
 }
 
 static void
 collective_m3_send_end(struct mrc_io *io, struct collective_m3_ctx *ctx)
 {
+  struct mrc_redist_send *send = &ctx->send;
+
   MHERE;
-  MPI_Waitall(ctx->nr_sends, ctx->send_reqs, MPI_STATUSES_IGNORE);
+  MPI_Waitall(ctx->nr_sends, send->send_reqs, MPI_STATUSES_IGNORE);
   for (int i = 0; i < ctx->nr_sends; i++) {
     mrc_fld_destroy(ctx->sends[i].fld);
   }
   free(ctx->sends);
-  free(ctx->send_reqs);
+  free(send->send_reqs);
 }
 
 // ----------------------------------------------------------------------
