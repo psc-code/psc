@@ -43,6 +43,8 @@ struct mrc_redist {
   int slow_dim;
   int slow_indices_per_writer;
   int slow_indices_rmndr;
+
+  struct mrc_redist_write_send write_send;
 };
 
 void
@@ -965,7 +967,6 @@ struct collective_m3_ctx {
   int n_peers;
 
   struct mrc_redist_read_send read_send;
-  struct mrc_redist_write_send write_send;
 
   struct collective_m3_entry *recvs;
   MPI_Request *recv_reqs;
@@ -1025,7 +1026,7 @@ get_writer_off_dims(struct collective_m3_ctx *ctx, int writer,
 
 #define BUFLOOP_END }}
 static void
-collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
+collective_send_fld_begin(struct mrc_redist *redist, struct mrc_io *io,
 			  struct mrc_fld *m3, int m)
 {
   struct xdmf *xdmf = to_xdmf(io);
@@ -1033,7 +1034,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(m3->_domain, &nr_patches);
 
-  struct mrc_redist_write_send *send = &ctx->write_send;
+  struct mrc_redist_write_send *send = &redist->write_send;
 
   size_t *buf_sizes = calloc(xdmf->nr_writers, sizeof(*buf_sizes));
   send->bufs = calloc(xdmf->nr_writers, sizeof(*send->bufs));
@@ -1045,15 +1046,15 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       send->reqs[writer] = MPI_REQUEST_NULL;
       continue;
     }
-    int writer_off[3], writer_dims[3];
-    get_writer_off_dims(ctx, writer, writer_off, writer_dims);
+    int writer_offs[3], writer_dims[3];
+    mrc_redist_writer_offs_dims(redist, writer, writer_offs, writer_dims);
 
     // find buf_size per writer
     for (int p = 0; p < nr_patches; p++) {
       int ilo[3], ihi[3];
       bool has_intersection =
 	find_intersection(ilo, ihi, patches[p].off, patches[p].ldims,
-			  writer_off, writer_dims);
+			  writer_offs, writer_dims);
       if (!has_intersection)
 	continue;
 
@@ -1079,7 +1080,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       int *off = patches[p].off;
       bool has_intersection =
 	find_intersection(ilo, ihi, off, patches[p].ldims,
-			  writer_off, writer_dims);
+			  writer_offs, writer_dims);
       if (!has_intersection)
 	continue;
 
@@ -1148,12 +1149,12 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
 // collective_send_fld_end
 
 static void
-collective_send_fld_end(struct collective_m3_ctx *ctx, struct mrc_io *io,
+collective_send_fld_end(struct mrc_redist *redist, struct mrc_io *io,
 			struct mrc_fld *m3, int m)
 {
   struct xdmf *xdmf = to_xdmf(io);
 
-  struct mrc_redist_write_send *send = &ctx->write_send;
+  struct mrc_redist_write_send *send = &redist->write_send;
 
   mprintf("send_end: waitall cnt = %d\n", xdmf->nr_writers);
   MPI_Waitall(xdmf->nr_writers, send->reqs, MPI_STATUSES_IGNORE);
@@ -1574,11 +1575,11 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     writer_comm_init(&ctx, io, nd, m3_soa->_domain, m3_soa->_nd->size_of_type);
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
       writer_comm_begin(&ctx, io, nd, m3_soa);
-      collective_send_fld_begin(&ctx, io, m3_soa, 0);
+      collective_send_fld_begin(redist, io, m3_soa, 0);
       writer_comm_local(&ctx, io, nd, m3_soa, 0);
       writer_comm_end(&ctx, io, nd, m3_soa, 0);
       collective_write_fld(&ctx, io, path, nd, m, m3, xs, group0);
-      collective_send_fld_end(&ctx, io, m3, 0);
+      collective_send_fld_end(redist, io, m3, 0);
     }
     writer_comm_destroy(&ctx);
 
@@ -1586,8 +1587,8 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     mrc_ndarray_destroy(nd);
   } else {
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
-      collective_send_fld_begin(&ctx, io, m3_soa, m);
-      collective_send_fld_end(&ctx, io, m3_soa, m);
+      collective_send_fld_begin(redist, io, m3_soa, m);
+      collective_send_fld_end(redist, io, m3_soa, m);
     }
   }
 
