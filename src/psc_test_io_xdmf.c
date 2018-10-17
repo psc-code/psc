@@ -16,7 +16,7 @@ void
 xdmf_collective_setup(struct xdmf *xdmf, int nr_writers, int gdims[3], int np[3])
 {
   memset(xdmf, 0, sizeof(*xdmf));
-  xdmf->nr_writers = 2;
+  xdmf->nr_writers = nr_writers;
 
   xdmf->comm = MPI_COMM_WORLD;
   MPI_Comm_rank(xdmf->comm, &xdmf->rank);
