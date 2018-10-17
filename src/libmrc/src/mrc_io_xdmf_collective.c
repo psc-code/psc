@@ -963,7 +963,6 @@ struct collective_m3_ctx {
   struct mrc_redist_send send;
   struct collective_m3_entry *sends;
   void **send_bufs; // one for each writer
-  int nr_sends;
 
   struct collective_m3_entry *recvs;
   MPI_Request *recv_reqs;
@@ -1604,7 +1603,7 @@ collective_m3_send_setup(struct mrc_io *io, struct collective_m3_ctx *ctx,
 {
   struct mrc_redist_send *send = &ctx->send;
 
-  ctx->nr_sends = 0;
+  send->nr_sends = 0;
   for (int gp = 0; gp < ctx->nr_global_patches; gp++) {
     struct mrc_patch_info info;
     mrc_domain_get_global_patch_info(domain, gp, &info);
@@ -1613,13 +1612,13 @@ collective_m3_send_setup(struct mrc_io *io, struct collective_m3_ctx *ctx,
     int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
 					     mrc_fld_ghost_offs(gfld), mrc_fld_ghost_dims(gfld));
     if (has_intersection)
-      ctx->nr_sends++;
+      send->nr_sends++;
   }
 
-  send->send_reqs = calloc(ctx->nr_sends, sizeof(*send->send_reqs));
-  ctx->sends = calloc(ctx->nr_sends, sizeof(*ctx->sends));
+  send->send_reqs = calloc(send->nr_sends, sizeof(*send->send_reqs));
+  ctx->sends = calloc(send->nr_sends, sizeof(*ctx->sends));
 
-  for (int i = 0, gp = 0; i < ctx->nr_sends; i++) {
+  for (int i = 0, gp = 0; i < send->nr_sends; i++) {
     struct collective_m3_entry *send = &ctx->sends[i];
     struct mrc_patch_info info;
     bool has_intersection;
@@ -1641,7 +1640,7 @@ collective_m3_send_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
 
   collective_m3_send_setup(io, ctx, domain, gfld);
 
-  for (int i = 0; i < ctx->nr_sends; i++) {
+  for (int i = 0; i < send->nr_sends; i++) {
     struct collective_m3_entry *block = &ctx->sends[i];
     int *ilo = block->ilo, *ihi = block->ihi;
     struct mrc_fld *fld = mrc_fld_create(MPI_COMM_NULL);
@@ -1706,8 +1705,8 @@ collective_m3_send_end(struct mrc_io *io, struct collective_m3_ctx *ctx)
   struct mrc_redist_send *send = &ctx->send;
 
   MHERE;
-  MPI_Waitall(ctx->nr_sends, send->send_reqs, MPI_STATUSES_IGNORE);
-  for (int i = 0; i < ctx->nr_sends; i++) {
+  MPI_Waitall(send->nr_sends, send->send_reqs, MPI_STATUSES_IGNORE);
+  for (int i = 0; i < send->nr_sends; i++) {
     mrc_fld_destroy(ctx->sends[i].fld);
   }
   free(ctx->sends);
