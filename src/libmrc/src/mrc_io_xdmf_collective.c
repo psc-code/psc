@@ -17,6 +17,14 @@ struct mrc_redist_block {
   int ihi[3]; // intersection high
 };
 
+struct mrc_redist_peer {
+  int rank;
+  struct mrc_redist_block *begin;
+  struct mrc_redist_block *end;
+  void *recv_buf;
+  size_t buf_size;
+};
+
 struct mrc_redist_write_send {
   void **bufs; // one for each writer
   MPI_Request *reqs;
@@ -944,14 +952,6 @@ find_intersection(int *ilo, int *ihi, const int *ib1, const int *im1,
 // ----------------------------------------------------------------------
 // collective helper context
 
-struct collective_m3_peer {
-  int rank;
-  struct mrc_redist_block *begin;
-  struct mrc_redist_block *end;
-  void *recv_buf;
-  size_t buf_size;
-};
-
 struct collective_m3_ctx {
   int gdims[3];
   int slab_dims[3], slab_off[3];
@@ -963,7 +963,7 @@ struct collective_m3_ctx {
   struct mrc_redist_block *recv_patches;
   int n_recv_patches;
 
-  struct collective_m3_peer *peers;
+  struct mrc_redist_peer *peers;
   int n_peers;
 
   struct mrc_redist_read_send read_send;
@@ -1259,7 +1259,7 @@ writer_comm_init(struct collective_m3_ctx *ctx,
       continue;
     }
 
-    struct collective_m3_peer *peer = &ctx->peers[ctx->n_peers];
+    struct mrc_redist_peer *peer = &ctx->peers[ctx->n_peers];
     peer->rank = rank;
     peer->begin = begin;
     peer->end = end;
@@ -1291,7 +1291,7 @@ static void
 writer_comm_begin(struct collective_m3_ctx *ctx, struct mrc_io *io, struct mrc_ndarray *nd,
 		  struct mrc_fld *m3)
 {
-  for (struct collective_m3_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
+  for (struct mrc_redist_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
     // skip local patches
     if (peer->rank == io->rank) {
       ctx->recv_reqs[peer - ctx->peers] = MPI_REQUEST_NULL;
@@ -1330,7 +1330,7 @@ writer_comm_end(struct collective_m3_ctx *ctx, struct mrc_io *io, struct mrc_nda
   mprintf("recv_end: waitall cnt = %d\n", ctx->n_peers);
   MPI_Waitall(ctx->n_peers, ctx->recv_reqs, MPI_STATUSES_IGNORE);
 
-  for (struct collective_m3_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
+  for (struct mrc_redist_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
     // skip local patches
     if (peer->rank == io->rank) {
       continue;
@@ -1381,7 +1381,7 @@ writer_comm_destroy(struct collective_m3_ctx *ctx)
 {
   free(ctx->recv_reqs);
   
-  for (struct collective_m3_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
+  for (struct mrc_redist_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
     free(peer->recv_buf);
   }
   free(ctx->peers);
