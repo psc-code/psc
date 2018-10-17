@@ -12,6 +12,16 @@
 #include <string.h>
 #include <unistd.h>
 
+struct mrc_redist_block {
+  int ilo[3]; // intersection low
+  int ihi[3]; // intersection high
+};
+
+struct mrc_redist_write_send {
+  void **bufs; // one for each writer
+  MPI_Request *reqs;
+};
+
 struct collective_m3_entry {
   struct mrc_fld *fld;
   int ilo[3];
@@ -19,11 +29,6 @@ struct collective_m3_entry {
   int patch;
   int global_patch; //< also used as tag
   int rank; //< of peer
-};
-
-struct mrc_redist_write_send {
-  void **bufs; // one for each writer
-  MPI_Request *reqs;
 };
 
 struct mrc_redist_read_send {
@@ -939,15 +944,10 @@ find_intersection(int *ilo, int *ihi, const int *ib1, const int *im1,
 // ----------------------------------------------------------------------
 // collective helper context
 
-struct collective_m3_recv_patch {
-  int ilo[3]; // intersection low
-  int ihi[3]; // intersection high
-};
-
 struct collective_m3_peer {
   int rank;
-  struct collective_m3_recv_patch *begin;
-  struct collective_m3_recv_patch *end;
+  struct mrc_redist_block *begin;
+  struct mrc_redist_block *end;
   void *recv_buf;
   size_t buf_size;
 };
@@ -960,7 +960,7 @@ struct collective_m3_ctx {
   int slow_indices_per_writer;
   int slow_indices_rmndr;
 
-  struct collective_m3_recv_patch *recv_patches;
+  struct mrc_redist_block *recv_patches;
   int n_recv_patches;
 
   struct collective_m3_peer *peers;
@@ -1199,7 +1199,7 @@ writer_comm_init(struct collective_m3_ctx *ctx,
 
   ctx->recv_patches = calloc(ctx->n_recv_patches, sizeof(*ctx->recv_patches));
 
-  struct collective_m3_recv_patch **recv_patches_by_rank = calloc(io->size + 1, sizeof(*recv_patches_by_rank));
+  struct mrc_redist_block **recv_patches_by_rank = calloc(io->size + 1, sizeof(*recv_patches_by_rank));
 
   int cur_rank = -1;
   ctx->n_recv_patches = 0;
@@ -1221,7 +1221,7 @@ writer_comm_init(struct collective_m3_ctx *ctx,
       //mprintf("rank %d patches start at %d\n", cur_rank, ctx->n_recv_patches);
     }
 
-    struct collective_m3_recv_patch *recv_patch = &ctx->recv_patches[ctx->n_recv_patches];
+    struct mrc_redist_block *recv_patch = &ctx->recv_patches[ctx->n_recv_patches];
     for (int d = 0; d < 3; d++) {
       recv_patch->ilo[d] = ilo[d];
       recv_patch->ihi[d] = ihi[d];
@@ -1237,8 +1237,8 @@ writer_comm_init(struct collective_m3_ctx *ctx,
 
   ctx->n_peers = 0;
   for (int rank = 0; rank < io->size; rank++) {
-    struct collective_m3_recv_patch *begin = recv_patches_by_rank[rank];
-    struct collective_m3_recv_patch *end   = recv_patches_by_rank[rank+1];
+    struct mrc_redist_block *begin = recv_patches_by_rank[rank];
+    struct mrc_redist_block *end   = recv_patches_by_rank[rank+1];
 
     if (begin == end) {
       continue;
@@ -1252,8 +1252,8 @@ writer_comm_init(struct collective_m3_ctx *ctx,
   ctx->peers = calloc(ctx->n_peers, sizeof(*ctx->peers));
   ctx->n_peers = 0;
   for (int rank = 0; rank < io->size; rank++) {
-    struct collective_m3_recv_patch *begin = recv_patches_by_rank[rank];
-    struct collective_m3_recv_patch *end   = recv_patches_by_rank[rank+1];
+    struct mrc_redist_block *begin = recv_patches_by_rank[rank];
+    struct mrc_redist_block *end   = recv_patches_by_rank[rank+1];
 
     if (begin == end) {
       continue;
@@ -1267,7 +1267,7 @@ writer_comm_init(struct collective_m3_ctx *ctx,
     // for remote patches, allocate buffer
     if (peer->rank != io->rank) {
       peer->buf_size = 0;
-      for (struct collective_m3_recv_patch *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
+      for (struct mrc_redist_block *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
 	int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
 	peer->buf_size += (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
       }
@@ -1339,7 +1339,7 @@ writer_comm_end(struct collective_m3_ctx *ctx, struct mrc_io *io, struct mrc_nda
     switch (mrc_fld_data_type(m3)) {
     case MRC_NT_FLOAT: {
       float *buf = peer->recv_buf;
-      for (struct collective_m3_recv_patch *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
+      for (struct mrc_redist_block *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
 	int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
 	BUFLOOP(ix, iy, iz, ilo, ihi) {
 	  MRC_S3(nd, ix,iy,iz) = *buf++;
@@ -1349,7 +1349,7 @@ writer_comm_end(struct collective_m3_ctx *ctx, struct mrc_io *io, struct mrc_nda
     }
     case MRC_NT_DOUBLE: {
       double *buf = peer->recv_buf;
-      for (struct collective_m3_recv_patch *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
+      for (struct mrc_redist_block *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
 	int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
 	BUFLOOP(ix, iy, iz, ilo, ihi) {
 	  MRC_D3(nd, ix,iy,iz) = *buf++;
@@ -1359,7 +1359,7 @@ writer_comm_end(struct collective_m3_ctx *ctx, struct mrc_io *io, struct mrc_nda
     }
     case MRC_NT_INT: {
       int *buf = peer->recv_buf;
-      for (struct collective_m3_recv_patch *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
+      for (struct mrc_redist_block *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
 	int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
 	BUFLOOP(ix, iy, iz, ilo, ihi) {
 	  MRC_I3(nd, ix,iy,iz) = *buf++;
