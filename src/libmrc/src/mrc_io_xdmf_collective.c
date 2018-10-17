@@ -1474,7 +1474,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     H5LTset_attribute_int(group0, ".", "nr_patches", &nr_1, 1);
 
     writer_comm_init(&ctx, io, nd, m3_soa->_domain, m3_soa->_nd->size_of_type);
-    for (int m = 0; m < 1/*mrc_fld_nr_comps(m3)*/; m++) {
+    for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
       writer_comm_begin(&ctx, io, nd, m3_soa);
       collective_send_fld_begin(&ctx, io, m3_soa, 0);
       writer_comm_local(&ctx, io, nd, m3_soa, 0);
