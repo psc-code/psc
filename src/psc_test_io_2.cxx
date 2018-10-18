@@ -51,9 +51,9 @@ struct PscTestIo
     auto coeff = Grid_t::Normalization{norm_params};
     auto& grid = *Grid_t::psc_make_grid(grid_domain, grid_bc, kinds, coeff, dt, {2, 2, 2});
 
-    mrc_domain *domain = grid.mrc_domain().domain_;
+    mrc_domain* domain = grid.mrc_domain().domain_;
     int n_patches;
-    mrc_domain_get_patches(domain, &n_patches);
+    mrc_patch* patches = mrc_domain_get_patches(domain, &n_patches);
 
     mpi_printf(MPI_COMM_WORLD, "*** Writing output\n");
 
@@ -77,9 +77,9 @@ struct PscTestIo
     for (int p = 0; p < n_patches; p++) {
       mrc_fld_patch *m3p = mrc_fld_patch_get(fld, p);
       mrc_fld_foreach(fld, i,j,k, 0,0) {
-	int ii = i + grid.patches[p].off[0];
-	int jj = j + grid.patches[p].off[1];
-	int kk = k + grid.patches[p].off[2];
+	int ii = i + patches[p].off[0];
+	int jj = j + patches[p].off[1];
+	int kk = k + patches[p].off[2];
 	for (int m = 0; m < mrc_fld_nr_comps(fld); m++) {
 	  MRC_M3(m3p, m , i,j,k) = ii + 100 * jj + 10000 * kk;
 	}
@@ -93,7 +93,7 @@ struct PscTestIo
     mrc_io_close(io);
     mrc_io_destroy(io);
 
-    mpi_printf(grid.comm(), "*** Writing output done.\n");
+    mpi_printf(mrc_domain_comm(domain), "*** Writing output done.\n");
   }
 };
 
