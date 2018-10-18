@@ -1119,10 +1119,11 @@ mrc_redist_write_send_end(struct mrc_redist *redist, struct mrc_fld *m3, int m)
 // mrc_redist_write_recv_init
 
 static void
-mrc_redist_write_recv_init(struct mrc_redist_write_recv *recv,
-			   struct mrc_io *io, struct mrc_ndarray *nd,
+mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
 			   struct mrc_domain *domain, int size_of_type)
 {
+  struct mrc_redist_write_recv *recv = &redist->write_recv;
+
   // find out who's sending, OPT: this way is not very scalable
   // could also be optimized by just looking at slow_dim
   // FIXME, figure out pattern and cache, at least across components
@@ -1148,7 +1149,7 @@ mrc_redist_write_recv_init(struct mrc_redist_write_recv *recv,
 
   recv->recv_patches = calloc(recv->n_recv_patches, sizeof(*recv->recv_patches));
 
-  struct mrc_redist_block **recv_patches_by_rank = calloc(io->size + 1, sizeof(*recv_patches_by_rank));
+  struct mrc_redist_block **recv_patches_by_rank = calloc(redist->size + 1, sizeof(*recv_patches_by_rank));
 
   int cur_rank = -1;
   recv->n_recv_patches = 0;
@@ -1178,14 +1179,14 @@ mrc_redist_write_recv_init(struct mrc_redist_write_recv *recv,
     recv->n_recv_patches++;
   }
 
-  while (cur_rank < io->size) {
+  while (cur_rank < redist->size) {
     cur_rank++;
     recv_patches_by_rank[cur_rank] = &recv->recv_patches[recv->n_recv_patches];
     //mprintf("rank %d patches start at %d\n", cur_rank, recv->n_recv_patches);
   }
 
   recv->n_peers = 0;
-  for (int rank = 0; rank < io->size; rank++) {
+  for (int rank = 0; rank < redist->size; rank++) {
     struct mrc_redist_block *begin = recv_patches_by_rank[rank];
     struct mrc_redist_block *end   = recv_patches_by_rank[rank+1];
 
@@ -1200,7 +1201,7 @@ mrc_redist_write_recv_init(struct mrc_redist_write_recv *recv,
 
   recv->peers = calloc(recv->n_peers, sizeof(*recv->peers));
   recv->n_peers = 0;
-  for (int rank = 0; rank < io->size; rank++) {
+  for (int rank = 0; rank < redist->size; rank++) {
     struct mrc_redist_block *begin = recv_patches_by_rank[rank];
     struct mrc_redist_block *end   = recv_patches_by_rank[rank+1];
 
@@ -1214,7 +1215,7 @@ mrc_redist_write_recv_init(struct mrc_redist_write_recv *recv,
     peer->end = end;
 
     // for remote patches, allocate buffer
-    if (peer->rank != io->rank) {
+    if (peer->rank != redist->rank) {
       peer->buf_size = 0;
       for (struct mrc_redist_block *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
 	int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
@@ -1236,9 +1237,11 @@ mrc_redist_write_recv_init(struct mrc_redist_write_recv *recv,
 // mrc_redist_write_recv_begin
 
 static void
-mrc_redist_write_recv_begin(struct mrc_redist_write_recv *recv, struct mrc_io *io, struct mrc_ndarray *nd,
+mrc_redist_write_recv_begin(struct mrc_redist *redist, struct mrc_io *io, struct mrc_ndarray *nd,
 			    struct mrc_fld *m3)
 {
+  struct mrc_redist_write_recv *recv = &redist->write_recv;
+  
   for (struct mrc_redist_peer *peer = recv->peers; peer < recv->peers + recv->n_peers; peer++) {
     // skip local patches
     if (peer->rank == io->rank) {
@@ -1272,9 +1275,11 @@ mrc_redist_write_recv_begin(struct mrc_redist_write_recv *recv, struct mrc_io *i
 // mrc_redist_write_recv_end
 
 static void
-mrc_redist_write_recv_end(struct mrc_redist_write_recv *recv, struct mrc_io *io, struct mrc_ndarray *nd,
+mrc_redist_write_recv_end(struct mrc_redist *redist, struct mrc_io *io, struct mrc_ndarray *nd,
 			  struct mrc_fld *m3, int m)
 {
+  struct mrc_redist_write_recv *recv = &redist->write_recv;
+
   mprintf("recv_end: waitall cnt = %d\n", recv->n_peers);
   MPI_Waitall(recv->n_peers, recv->reqs, MPI_STATUSES_IGNORE);
 
@@ -1325,8 +1330,10 @@ mrc_redist_write_recv_end(struct mrc_redist_write_recv *recv, struct mrc_io *io,
 // writer_comm_destroy
 
 static void
-writer_comm_destroy(struct mrc_redist_write_recv *recv)
+writer_comm_destroy(struct mrc_redist *redist)
 {
+  struct mrc_redist_write_recv *recv = &redist->write_recv;
+
   free(recv->reqs);
   
   for (struct mrc_redist_peer *peer = recv->peers; peer < recv->peers + recv->n_peers; peer++) {
@@ -1341,9 +1348,11 @@ writer_comm_destroy(struct mrc_redist_write_recv *recv)
 // mrc_redist_write_comm_local
 
 static void
-mrc_redist_write_comm_local(struct mrc_redist_write_recv *recv, struct mrc_io *io, struct mrc_ndarray *nd,
+mrc_redist_write_comm_local(struct mrc_redist *redist, struct mrc_io *io, struct mrc_ndarray *nd,
 			    struct mrc_fld *m3, int m)
 {
+  struct mrc_redist_write_recv *recv = &redist->write_recv;
+
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(m3->_domain, &nr_patches);
 
@@ -1512,17 +1521,17 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
 
   struct mrc_ndarray *nd = NULL;
   if (xdmf->is_writer) {
-    nd = mrc_redist_make_ndarray(redist, m3);
+    nd = mrc_redist_make_ndarray(redist, m3_soa);
 
-    mrc_redist_write_recv_init(&redist->write_recv, io, nd, m3_soa->_domain, m3_soa->_nd->size_of_type);
+    mrc_redist_write_recv_init(redist, nd, m3_soa->_domain, m3_soa->_nd->size_of_type);
   }
   
   for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
     if (xdmf->is_writer) {
-      mrc_redist_write_recv_begin(&redist->write_recv, io, nd, m3_soa);
+      mrc_redist_write_recv_begin(redist, io, nd, m3_soa);
       mrc_redist_write_send_begin(redist, m3_soa, m);
-      mrc_redist_write_comm_local(&redist->write_recv, io, nd, m3_soa, m);
-      mrc_redist_write_recv_end(&redist->write_recv, io, nd, m3_soa, m);
+      mrc_redist_write_comm_local(redist, io, nd, m3_soa, m);
+      mrc_redist_write_recv_end(redist, io, nd, m3_soa, m);
       mrc_redist_write_send_end(redist, m3, 0);
     } else {
       mrc_redist_write_send_begin(redist, m3_soa, m);
@@ -1535,7 +1544,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
   }
 
   if (xdmf->is_writer) {
-    writer_comm_destroy(&redist->write_recv);
+    writer_comm_destroy(redist);
     H5Gclose(group0);
     mrc_ndarray_destroy(nd);
   }
