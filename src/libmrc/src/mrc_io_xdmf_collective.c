@@ -1527,9 +1527,6 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
   mrc_redist_init(redist, m3->_domain, xdmf->slab_off, xdmf->slab_dims,
 		  xdmf->comm_writers, xdmf->is_writer, xdmf->nr_writers);
 
-  struct collective_m3_ctx ctx;
-  collective_m3_init(io, &ctx, m3->_domain);
-
   struct xdmf_file *file = &xdmf->file;
   struct xdmf_spatial *xs = xdmf_spatial_find(&file->xdmf_spatial_list,
 					      mrc_domain_name(m3->_domain));
