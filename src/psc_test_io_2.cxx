@@ -23,9 +23,6 @@ struct PscTestIo
 
     mpi_printf(comm, "*** Setting up...\n");
 
-    // -- setup particle kinds
-    Grid_t::Kinds kinds = {{1., 100., "i"}, { -1., 1., "e"}};
-    
     // --- setup domain
     Grid_t::Real3 LL = { 400., 800., 400.*6 }; // domain size (in d_e)
 #if 0
@@ -43,15 +40,9 @@ struct PscTestIo
 			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC },
 			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC }};
 
-    // --- generic setup
-    auto norm_params = Grid_t::NormalizationParams::dimensionless();
-    norm_params.nicell = 5;
-
-    double dt = .99;
-    auto coeff = Grid_t::Normalization{norm_params};
-    auto grid = Grid_t{grid_domain, grid_bc, kinds, coeff, dt};
-      
-    mrc_domain* domain = grid.mrc_domain().domain_;
+    auto dom = Grid_t::make_mrc_domain(grid_domain, grid_bc, -1);
+    mrc_domain* domain = dom.domain_;
+    
     int n_patches;
     mrc_patch* patches = mrc_domain_get_patches(domain, &n_patches);
 
