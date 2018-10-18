@@ -1237,14 +1237,14 @@ mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
 // mrc_redist_write_recv_begin
 
 static void
-mrc_redist_write_recv_begin(struct mrc_redist *redist, struct mrc_io *io, struct mrc_ndarray *nd,
+mrc_redist_write_recv_begin(struct mrc_redist *redist, struct mrc_ndarray *nd,
 			    struct mrc_fld *m3)
 {
   struct mrc_redist_write_recv *recv = &redist->write_recv;
   
   for (struct mrc_redist_peer *peer = recv->peers; peer < recv->peers + recv->n_peers; peer++) {
     // skip local patches
-    if (peer->rank == io->rank) {
+    if (peer->rank == redist->rank) {
       recv->reqs[peer - recv->peers] = MPI_REQUEST_NULL;
       continue;
     }
@@ -1266,7 +1266,7 @@ mrc_redist_write_recv_begin(struct mrc_redist *redist, struct mrc_io *io, struct
     
     // recv aggregate buffers
     mprintf("irecv from %d\n", peer->rank);
-    MPI_Irecv(peer->buf, peer->buf_size, mpi_dtype, peer->rank, 0x1000, mrc_io_comm(io),
+    MPI_Irecv(peer->buf, peer->buf_size, mpi_dtype, peer->rank, 0x1000, redist->comm,
 	      &recv->reqs[peer - recv->peers]);
   }
 }
@@ -1275,7 +1275,7 @@ mrc_redist_write_recv_begin(struct mrc_redist *redist, struct mrc_io *io, struct
 // mrc_redist_write_recv_end
 
 static void
-mrc_redist_write_recv_end(struct mrc_redist *redist, struct mrc_io *io, struct mrc_ndarray *nd,
+mrc_redist_write_recv_end(struct mrc_redist *redist, struct mrc_ndarray *nd,
 			  struct mrc_fld *m3, int m)
 {
   struct mrc_redist_write_recv *recv = &redist->write_recv;
@@ -1285,7 +1285,7 @@ mrc_redist_write_recv_end(struct mrc_redist *redist, struct mrc_io *io, struct m
 
   for (struct mrc_redist_peer *peer = recv->peers; peer < recv->peers + recv->n_peers; peer++) {
     // skip local patches
-    if (peer->rank == io->rank) {
+    if (peer->rank == redist->rank) {
       continue;
     }
 
@@ -1348,7 +1348,7 @@ writer_comm_destroy(struct mrc_redist *redist)
 // mrc_redist_write_comm_local
 
 static void
-mrc_redist_write_comm_local(struct mrc_redist *redist, struct mrc_io *io, struct mrc_ndarray *nd,
+mrc_redist_write_comm_local(struct mrc_redist *redist, struct mrc_ndarray *nd,
 			    struct mrc_fld *m3, int m)
 {
   struct mrc_redist_write_recv *recv = &redist->write_recv;
@@ -1528,10 +1528,10 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
   
   for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
     if (xdmf->is_writer) {
-      mrc_redist_write_recv_begin(redist, io, nd, m3_soa);
+      mrc_redist_write_recv_begin(redist, nd, m3_soa);
       mrc_redist_write_send_begin(redist, m3_soa, m);
-      mrc_redist_write_comm_local(redist, io, nd, m3_soa, m);
-      mrc_redist_write_recv_end(redist, io, nd, m3_soa, m);
+      mrc_redist_write_comm_local(redist, nd, m3_soa, m);
+      mrc_redist_write_recv_end(redist, nd, m3_soa, m);
       mrc_redist_write_send_end(redist, m3, 0);
     } else {
       mrc_redist_write_send_begin(redist, m3_soa, m);
