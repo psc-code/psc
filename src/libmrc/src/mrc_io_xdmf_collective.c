@@ -26,8 +26,12 @@ struct mrc_redist_peer {
 };
 
 struct mrc_redist_write_recv {
-  struct mrc_redist_block *recv_patches;
+  int n_peers;
+  struct mrc_redist_peer *peers;
+  MPI_Request *recv_reqs;
+
   int n_recv_patches;
+  struct mrc_redist_block *recv_patches;
 };
 
 struct mrc_redist_write_send {
@@ -965,9 +969,6 @@ struct collective_m3_ctx {
   int slow_indices_per_writer;
   int slow_indices_rmndr;
 
-  struct mrc_redist_peer *peers;
-  int n_peers;
-
   struct mrc_redist_write_recv write_recv;
   struct mrc_redist_read_send read_send;
 
@@ -1239,7 +1240,7 @@ writer_comm_init(struct collective_m3_ctx *ctx,
     //mprintf("rank %d patches start at %d\n", cur_rank, ctx->n_recv_patches);
   }
 
-  ctx->n_peers = 0;
+  recv->n_peers = 0;
   for (int rank = 0; rank < io->size; rank++) {
     struct mrc_redist_block *begin = recv_patches_by_rank[rank];
     struct mrc_redist_block *end   = recv_patches_by_rank[rank+1];
@@ -1249,12 +1250,12 @@ writer_comm_init(struct collective_m3_ctx *ctx,
     }
 
     //mprintf("peer rank %d # = %ld\n", rank, end - begin);
-    ctx->n_peers++;
+    recv->n_peers++;
   }
-  mprintf("n_peers %d\n", ctx->n_peers);
+  mprintf("n_peers %d\n", recv->n_peers);
 
-  ctx->peers = calloc(ctx->n_peers, sizeof(*ctx->peers));
-  ctx->n_peers = 0;
+  recv->peers = calloc(recv->n_peers, sizeof(*recv->peers));
+  recv->n_peers = 0;
   for (int rank = 0; rank < io->size; rank++) {
     struct mrc_redist_block *begin = recv_patches_by_rank[rank];
     struct mrc_redist_block *end   = recv_patches_by_rank[rank+1];
@@ -1263,7 +1264,7 @@ writer_comm_init(struct collective_m3_ctx *ctx,
       continue;
     }
 
-    struct mrc_redist_peer *peer = &ctx->peers[ctx->n_peers];
+    struct mrc_redist_peer *peer = &recv->peers[recv->n_peers];
     peer->rank = rank;
     peer->begin = begin;
     peer->end = end;
@@ -1280,12 +1281,11 @@ writer_comm_init(struct collective_m3_ctx *ctx,
       peer->recv_buf = malloc(peer->buf_size * size_of_type);
     }
 
-    ctx->n_peers++;
+    recv->n_peers++;
   }
   free(recv_patches_by_rank);
 
-  ctx->recv_reqs = calloc(ctx->n_peers, sizeof(*ctx->recv_reqs));
-  mprintf("recv_reqs %p\n", ctx->recv_reqs);
+  recv->recv_reqs = calloc(recv->n_peers, sizeof(*recv->recv_reqs));
 }
 
 // ----------------------------------------------------------------------
@@ -1295,10 +1295,12 @@ static void
 writer_comm_begin(struct collective_m3_ctx *ctx, struct mrc_io *io, struct mrc_ndarray *nd,
 		  struct mrc_fld *m3)
 {
-  for (struct mrc_redist_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
+  struct mrc_redist_write_recv *recv = &ctx->write_recv;
+
+  for (struct mrc_redist_peer *peer = recv->peers; peer < recv->peers + recv->n_peers; peer++) {
     // skip local patches
     if (peer->rank == io->rank) {
-      ctx->recv_reqs[peer - ctx->peers] = MPI_REQUEST_NULL;
+      recv->recv_reqs[peer - recv->peers] = MPI_REQUEST_NULL;
       continue;
     }
 
@@ -1320,7 +1322,7 @@ writer_comm_begin(struct collective_m3_ctx *ctx, struct mrc_io *io, struct mrc_n
     // recv aggregate buffers
     mprintf("irecv from %d\n", peer->rank);
     MPI_Irecv(peer->recv_buf, peer->buf_size, mpi_dtype, peer->rank, 0x1000, mrc_io_comm(io),
-	      &ctx->recv_reqs[peer - ctx->peers]);
+	      &recv->recv_reqs[peer - recv->peers]);
   }
 }
 
@@ -1331,10 +1333,12 @@ static void
 writer_comm_end(struct collective_m3_ctx *ctx, struct mrc_io *io, struct mrc_ndarray *nd,
 		struct mrc_fld *m3, int m)
 {
-  mprintf("recv_end: waitall cnt = %d\n", ctx->n_peers);
-  MPI_Waitall(ctx->n_peers, ctx->recv_reqs, MPI_STATUSES_IGNORE);
+  struct mrc_redist_write_recv *recv = &ctx->write_recv;
 
-  for (struct mrc_redist_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
+  mprintf("recv_end: waitall cnt = %d\n", recv->n_peers);
+  MPI_Waitall(recv->n_peers, recv->recv_reqs, MPI_STATUSES_IGNORE);
+
+  for (struct mrc_redist_peer *peer = recv->peers; peer < recv->peers + recv->n_peers; peer++) {
     // skip local patches
     if (peer->rank == io->rank) {
       continue;
@@ -1384,12 +1388,12 @@ static void
 writer_comm_destroy(struct collective_m3_ctx *ctx)
 {
   struct mrc_redist_write_recv *recv = &ctx->write_recv;
-  free(ctx->recv_reqs);
+  free(recv->recv_reqs);
   
-  for (struct mrc_redist_peer *peer = ctx->peers; peer < ctx->peers + ctx->n_peers; peer++) {
+  for (struct mrc_redist_peer *peer = recv->peers; peer < recv->peers + recv->n_peers; peer++) {
     free(peer->recv_buf);
   }
-  free(ctx->peers);
+  free(recv->peers);
 
   free(recv->recv_patches);
 }
