@@ -107,7 +107,7 @@ mrc_redist_writer_offs_dims(struct mrc_redist *redist, int writer,
 }
 
 struct mrc_ndarray *
-mrc_redist_create_ndarray(struct mrc_redist *redist)
+mrc_redist_make_ndarray(struct mrc_redist *redist, struct mrc_fld *m3)
 {
   assert(redist->is_writer);
   
@@ -124,6 +124,14 @@ mrc_redist_create_ndarray(struct mrc_redist *redist)
   mrc_ndarray_set_param_int_array(nd, "dims", 3, writer_dims);
   mrc_ndarray_set_param_int_array(nd, "offs", 3, writer_off);
   
+  switch (mrc_fld_data_type(m3)) {
+  case MRC_NT_FLOAT: mrc_ndarray_set_type(nd, "float"); break;
+  case MRC_NT_DOUBLE: mrc_ndarray_set_type(nd, "double"); break;
+  case MRC_NT_INT: mrc_ndarray_set_type(nd, "int"); break;
+  default: assert(0);
+  }
+  mrc_ndarray_setup(nd);
+
   return nd;
 }
 
@@ -1475,14 +1483,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
   }
 
   if (xdmf->is_writer) {
-    struct mrc_ndarray *nd = mrc_redist_create_ndarray(redist);
-    switch (mrc_fld_data_type(m3)) {
-    case MRC_NT_FLOAT: mrc_ndarray_set_type(nd, "float"); break;
-    case MRC_NT_DOUBLE: mrc_ndarray_set_type(nd, "double"); break;
-    case MRC_NT_INT: mrc_ndarray_set_type(nd, "int"); break;
-    default: assert(0);
-    }
-    mrc_ndarray_setup(nd);
+    struct mrc_ndarray *nd = mrc_redist_make_ndarray(redist, m3);
 
     hid_t group0;
     if (H5Lexists(file->h5_file, path, H5P_DEFAULT) > 0) {
