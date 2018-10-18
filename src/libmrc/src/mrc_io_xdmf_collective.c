@@ -41,6 +41,10 @@ struct mrc_redist_write_send {
 
 struct mrc_redist {
   struct mrc_domain *domain;
+  MPI_Comm comm;
+  int rank;
+  int size;
+  
   MPI_Comm comm_writers;
   int is_writer;
   int nr_writers;
@@ -61,6 +65,10 @@ mrc_redist_init(struct mrc_redist *redist, struct mrc_domain *domain,
 		MPI_Comm comm_writers, int is_writer, int nr_writers)
 {
   redist->domain = domain;
+  redist->comm = mrc_domain_comm(domain);
+  MPI_Comm_rank(redist->comm, &redist->rank);
+  MPI_Comm_size(redist->comm, &redist->size);
+
   redist->is_writer = is_writer;
   redist->nr_writers = nr_writers;
   redist->comm_writers = comm_writers;
@@ -973,11 +981,11 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_io *io,
 
   struct mrc_redist_write_send *send = &redist->write_send;
 
-  size_t *buf_sizes = calloc(xdmf->nr_writers, sizeof(*buf_sizes));
-  send->bufs = calloc(xdmf->nr_writers, sizeof(*send->bufs));
-  send->reqs = calloc(xdmf->nr_writers, sizeof(*send->reqs));
+  size_t *buf_sizes = calloc(redist->nr_writers, sizeof(*buf_sizes));
+  send->bufs = calloc(redist->nr_writers, sizeof(*send->bufs));
+  send->reqs = calloc(redist->nr_writers, sizeof(*send->reqs));
 
-  for (int writer = 0; writer < xdmf->nr_writers; writer++) {
+  for (int writer = 0; writer < redist->nr_writers; writer++) {
     // don't send to self
     if (xdmf->writers[writer] == io->rank) {
       send->reqs[writer] = MPI_REQUEST_NULL;
@@ -1091,8 +1099,8 @@ mrc_redist_write_send_end(struct mrc_redist *redist, struct mrc_io *io,
 
   struct mrc_redist_write_send *send = &redist->write_send;
 
-  mprintf("send_end: waitall cnt = %d\n", xdmf->nr_writers);
-  MPI_Waitall(xdmf->nr_writers, send->reqs, MPI_STATUSES_IGNORE);
+  mprintf("send_end: waitall cnt = %d\n", redist->nr_writers);
+  MPI_Waitall(redist->nr_writers, send->reqs, MPI_STATUSES_IGNORE);
 
   for (int writer = 0; writer < xdmf->nr_writers; writer++) {
     free(send->bufs[writer]);
