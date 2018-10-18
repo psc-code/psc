@@ -1482,10 +1482,9 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     }
   }
 
-  if (xdmf->is_writer) {
-    struct mrc_ndarray *nd = mrc_redist_make_ndarray(redist, m3);
+  hid_t group0 = 0;
 
-    hid_t group0;
+  if (xdmf->is_writer) {
     if (H5Lexists(file->h5_file, path, H5P_DEFAULT) > 0) {
       group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT);
     } else {
@@ -1495,6 +1494,11 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     }
     int nr_1 = 1;
     H5LTset_attribute_int(group0, ".", "nr_patches", &nr_1, 1);
+  }
+
+  struct mrc_ndarray *nd = NULL;
+  if (xdmf->is_writer) {
+    nd = mrc_redist_make_ndarray(redist, m3);
 
     mrc_redist_write_recv_init(&redist->write_recv, io, nd, m3_soa->_domain, m3_soa->_nd->size_of_type);
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
@@ -1506,14 +1510,16 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
       mrc_redist_write_send_end(redist, io, m3, 0);
     }
     writer_comm_destroy(&redist->write_recv);
-
-    H5Gclose(group0);
-    mrc_ndarray_destroy(nd);
   } else {
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
       mrc_redist_write_send_begin(redist, io, m3_soa, m);
       mrc_redist_write_send_end(redist, io, m3_soa, m);
     }
+  }
+
+  if (xdmf->is_writer) {
+    H5Gclose(group0);
+    mrc_ndarray_destroy(nd);
   }
 
   if (m3->_aos) {
