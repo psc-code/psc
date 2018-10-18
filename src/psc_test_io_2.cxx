@@ -2,10 +2,7 @@
 #include <psc.h>
 
 #include <mrc_profile.h>
-
-#include "fields_item.hxx"
-
-#include <mrc_io.hxx>
+#include <mrc_redist.h>
 
 #include "psc_fields_single.h"
 
@@ -48,6 +45,35 @@ struct PscTestIo
     int n_patches;
     mrc_patch* patches = mrc_domain_get_patches(domain, &n_patches);
 
+    mrc_fld* fld = mrc_domain_m3_create(domain);
+    mrc_fld_set_name(fld, "e");
+    mrc_fld_set_param_int(fld, "nr_ghosts", 0);
+    mrc_fld_set_param_int(fld, "nr_comps", 3);
+    mrc_fld_setup(fld);
+    mrc_fld_set_comp_name(fld, 0, "ex");
+    mrc_fld_set_comp_name(fld, 1, "ey");
+    mrc_fld_set_comp_name(fld, 2, "ez");
+    
+    mpi_printf(MPI_COMM_WORLD, "*** Testing redist\n");
+
+    struct mrc_redist redist[1];
+    mrc_redist_init(redist, domain, Int3{}, Int3{}, 2);
+    struct mrc_ndarray *nd = mrc_redist_get_ndarray(redist, fld);
+
+    for (int m = 0; m < mrc_fld_nr_comps(fld); m++) {
+      mprintf("m = %d\n", m);
+      MPI_Barrier(MPI_COMM_WORLD);
+      MHERE;
+      mrc_redist_run(redist, nd, fld, m);
+    }
+
+    MHERE;
+    MPI_Barrier(MPI_COMM_WORLD);
+    MHERE;
+    mrc_redist_put_ndarray(redist, nd);
+
+    mrc_redist_destroy(redist);
+    
     mpi_printf(MPI_COMM_WORLD, "*** Writing output\n");
 
     mrc_io* io = mrc_io_create(MPI_COMM_WORLD);
@@ -57,15 +83,6 @@ struct PscTestIo
     mrc_io_view(io);
 
     mrc_io_open(io, "w", 0, 0.);
-    
-    mrc_fld* fld = mrc_domain_m3_create(domain);
-    mrc_fld_set_name(fld, "e");
-    mrc_fld_set_param_int(fld, "nr_ghosts", 0);
-    mrc_fld_set_param_int(fld, "nr_comps", 3);
-    mrc_fld_setup(fld);
-    mrc_fld_set_comp_name(fld, 0, "ex");
-    mrc_fld_set_comp_name(fld, 1, "ey");
-    mrc_fld_set_comp_name(fld, 2, "ez");
     
     for (int p = 0; p < n_patches; p++) {
       mrc_fld_patch *m3p = mrc_fld_patch_get(fld, p);
@@ -81,12 +98,13 @@ struct PscTestIo
     }
     
     mrc_fld_write(fld, io);
-    mrc_fld_destroy(fld);
 
     mrc_io_close(io);
     mrc_io_destroy(io);
 
     mpi_printf(mrc_domain_comm(domain), "*** Writing output done.\n");
+
+    mrc_fld_destroy(fld);
   }
 };
 
