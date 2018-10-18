@@ -14,9 +14,6 @@
 
 struct PscTestIo
 {
-  using Mfields = MfieldsSingle;
-  using dim = dim_xyz;
-
   static void run()
   {
     auto comm = MPI_COMM_WORLD;
@@ -33,15 +30,20 @@ struct PscTestIo
     Int3 np = { 4, 1, 2 }; // division into patches
 #endif
 
-    auto grid_domain = Grid_t::Domain{gdims, LL, -.5 * LL, np};
+    struct mrc_domain *domain = mrc_domain_create(comm);
     
-    auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
-			  { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
-			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC },
-			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC }};
-
-    auto dom = Grid_t::make_mrc_domain(grid_domain, grid_bc, -1);
-    mrc_domain* domain = dom.domain_;
+    mrc_domain_set_type(domain, "multi");
+    mrc_domain_set_param_int3(domain, "m", gdims);
+    mrc_domain_set_param_int3(domain, "np", np);
+    
+    struct mrc_crds *crds = mrc_domain_get_crds(domain);
+    mrc_crds_set_type(crds, "uniform");
+    mrc_crds_set_param_int(crds, "sw", 2);
+    mrc_crds_set_param_double3(crds, "l", -.5 * LL);
+    mrc_crds_set_param_double3(crds, "h", LL);
+    
+    mrc_domain_set_from_options(domain);
+    mrc_domain_setup(domain);
     
     int n_patches;
     mrc_patch* patches = mrc_domain_get_patches(domain, &n_patches);
