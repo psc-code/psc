@@ -962,7 +962,9 @@ struct mrc_redist_read_send {
 };
 
 struct mrc_redist_read_recv {
+  struct collective_m3_entry *recvs;
   MPI_Request *recv_reqs;
+  int nr_recvs;
 };
 
 struct collective_m3_ctx {
@@ -976,9 +978,6 @@ struct collective_m3_ctx {
   struct mrc_redist_write_recv write_recv;
   struct mrc_redist_read_send read_send;
   struct mrc_redist_read_recv read_recv;
-
-  struct collective_m3_entry *recvs;
-  int nr_recvs;
 };
 
 static void
@@ -1738,7 +1737,7 @@ collective_m3_recv_setup(struct mrc_io *io, struct collective_m3_ctx *ctx,
   struct xdmf *xdmf = to_xdmf(io);
   struct mrc_redist_read_recv *recv = &ctx->read_recv;
 
-  ctx->nr_recvs = 0;
+  recv->nr_recvs = 0;
   for (int p = 0; p < ctx->nr_patches; p++) {
     struct mrc_patch_info info;
     mrc_domain_get_local_patch_info(domain, p, &info);
@@ -1749,13 +1748,13 @@ collective_m3_recv_setup(struct mrc_io *io, struct collective_m3_ctx *ctx,
       int ilo[3], ihi[3];
       if (find_intersection(ilo, ihi, info.off, info.ldims,
 			    writer_off, writer_dims)) {
-	ctx->nr_recvs++;
+	recv->nr_recvs++;
       }
     }
   }
 
-  recv->recv_reqs = calloc(ctx->nr_recvs, sizeof(*recv->recv_reqs));
-  ctx->recvs = calloc(ctx->nr_recvs, sizeof(*ctx->recvs));
+  recv->recv_reqs = calloc(recv->nr_recvs, sizeof(*recv->recv_reqs));
+  recv->recvs = calloc(recv->nr_recvs, sizeof(*recv->recvs));
 
   int i = 0;
   for (int p = 0; p < ctx->nr_patches; p++) {
@@ -1763,24 +1762,24 @@ collective_m3_recv_setup(struct mrc_io *io, struct collective_m3_ctx *ctx,
     mrc_domain_get_local_patch_info(domain, p, &info);
 
     for (int writer = 0; writer < xdmf->nr_writers; writer++) {
-      if (i == ctx->nr_recvs) {
+      if (i == recv->nr_recvs) {
 	break;
       }
-      struct collective_m3_entry *recv = &ctx->recvs[i];
+      struct collective_m3_entry *block = &recv->recvs[i];
 
       int writer_off[3], writer_dims[3];
       get_writer_off_dims(ctx, writer, writer_off, writer_dims);
-      if (!find_intersection(recv->ilo, recv->ihi, info.off, info.ldims,
+      if (!find_intersection(block->ilo, block->ihi, info.off, info.ldims,
 			     writer_off, writer_dims)) {
 	continue;
       }
-      recv->rank = xdmf->writers[writer];
-      recv->patch = p;
-      recv->global_patch = info.global_patch;
+      block->rank = xdmf->writers[writer];
+      block->patch = p;
+      block->global_patch = info.global_patch;
       // patch-local indices from here on
       for (int d = 0; d < 3; d++) {
-	recv->ilo[d] -= info.off[d];
-	recv->ihi[d] -= info.off[d];
+	block->ilo[d] -= info.off[d];
+	block->ihi[d] -= info.off[d];
       }
       i++;
     }
@@ -1795,8 +1794,8 @@ collective_m3_recv_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
 
   collective_m3_recv_setup(io, ctx, domain);
 
-  for (int i = 0; i < ctx->nr_recvs; i++) {
-    struct collective_m3_entry *block = &ctx->recvs[i];
+  for (int i = 0; i < recv->nr_recvs; i++) {
+    struct collective_m3_entry *block = &recv->recvs[i];
 
     struct mrc_fld *fld = mrc_fld_create(MPI_COMM_NULL);
     int *ilo = block->ilo, *ihi = block->ihi; // FIXME, -> off, dims
@@ -1828,20 +1827,20 @@ collective_m3_recv_end(struct mrc_io *io, struct collective_m3_ctx *ctx,
 {
   struct mrc_redist_read_recv *recv = &ctx->read_recv;
 
-  MPI_Waitall(ctx->nr_recvs, recv->recv_reqs, MPI_STATUSES_IGNORE);
+  MPI_Waitall(recv->nr_recvs, recv->recv_reqs, MPI_STATUSES_IGNORE);
   
-  for (int i = 0; i < ctx->nr_recvs; i++) {
-    struct collective_m3_entry *recv = &ctx->recvs[i];
-    struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, recv->patch);
+  for (int i = 0; i < recv->nr_recvs; i++) {
+    struct collective_m3_entry *block = &recv->recvs[i];
+    struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, block->patch);
 
-    int *ilo = recv->ilo, *ihi = recv->ihi;
+    int *ilo = block->ilo, *ihi = block->ihi;
     switch (mrc_fld_data_type(m3)) {
       case MRC_NT_FLOAT:
         for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
           for (int iz = ilo[2]; iz < ihi[2]; iz++) {
             for (int iy = ilo[1]; iy < ihi[1]; iy++) {
               for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-                MRC_S5((m3p)->_fld, ix, iy, iz, m, (m3p)->_p) = MRC_S4(recv->fld,ix,iy,iz,m);
+                MRC_S5((m3p)->_fld, ix, iy, iz, m, (m3p)->_p) = MRC_S4(block->fld,ix,iy,iz,m);
                 }
               }
             }
@@ -1852,7 +1851,7 @@ collective_m3_recv_end(struct mrc_io *io, struct collective_m3_ctx *ctx,
           for (int iz = ilo[2]; iz < ihi[2]; iz++) {
             for (int iy = ilo[1]; iy < ihi[1]; iy++) {
               for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-                MRC_D5((m3p)->_fld, ix, iy, iz, m, (m3p)->_p) = MRC_D4(recv->fld,ix,iy,iz,m);
+                MRC_D5((m3p)->_fld, ix, iy, iz, m, (m3p)->_p) = MRC_D4(block->fld,ix,iy,iz,m);
                 }
               }
             }
@@ -1863,7 +1862,7 @@ collective_m3_recv_end(struct mrc_io *io, struct collective_m3_ctx *ctx,
           for (int iz = ilo[2]; iz < ihi[2]; iz++) {
             for (int iy = ilo[1]; iy < ihi[1]; iy++) {
               for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-                MRC_I5((m3p)->_fld, ix, iy, iz, m, (m3p)->_p) = MRC_I4(recv->fld,ix,iy,iz,m);
+                MRC_I5((m3p)->_fld, ix, iy, iz, m, (m3p)->_p) = MRC_I4(block->fld,ix,iy,iz,m);
                 }
               }
             }
@@ -1871,9 +1870,9 @@ collective_m3_recv_end(struct mrc_io *io, struct collective_m3_ctx *ctx,
         break;
       }
     mrc_fld_patch_put(m3);
-    mrc_fld_destroy(recv->fld);
+    mrc_fld_destroy(block->fld);
   }
-  free(ctx->recvs);
+  free(recv->recvs);
   free(recv->recv_reqs);
 }
 
