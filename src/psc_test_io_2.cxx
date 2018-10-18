@@ -51,6 +51,10 @@ struct PscTestIo
     auto coeff = Grid_t::Normalization{norm_params};
     auto& grid = *Grid_t::psc_make_grid(grid_domain, grid_bc, kinds, coeff, dt, {2, 2, 2});
 
+    mrc_domain *domain = grid.mrc_domain().domain_;
+    int n_patches;
+    mrc_domain_get_patches(domain, &n_patches);
+
     mpi_printf(MPI_COMM_WORLD, "*** Writing output\n");
 
     mrc_io* io = mrc_io_create(MPI_COMM_WORLD);
@@ -61,7 +65,7 @@ struct PscTestIo
 
     mrc_io_open(io, "w", 0, 0.);
     
-    mrc_fld* fld = grid.mrc_domain().m3_create();
+    mrc_fld* fld = mrc_domain_m3_create(domain);
     mrc_fld_set_name(fld, "e");
     mrc_fld_set_param_int(fld, "nr_ghosts", 0);
     mrc_fld_set_param_int(fld, "nr_comps", 3);
@@ -70,7 +74,7 @@ struct PscTestIo
     mrc_fld_set_comp_name(fld, 1, "ey");
     mrc_fld_set_comp_name(fld, 2, "ez");
     
-    for (int p = 0; p < grid.n_patches(); p++) {
+    for (int p = 0; p < n_patches; p++) {
       mrc_fld_patch *m3p = mrc_fld_patch_get(fld, p);
       mrc_fld_foreach(fld, i,j,k, 0,0) {
 	int ii = i + grid.patches[p].off[0];
