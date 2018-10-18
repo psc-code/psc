@@ -49,8 +49,8 @@ struct PscTestIo
 
     double dt = .99;
     auto coeff = Grid_t::Normalization{norm_params};
-    auto& grid = *Grid_t::psc_make_grid(grid_domain, grid_bc, kinds, coeff, dt, {2, 2, 2});
-
+    auto grid = Grid_t{grid_domain, grid_bc, kinds, coeff, dt};
+      
     mrc_domain* domain = grid.mrc_domain().domain_;
     int n_patches;
     mrc_patch* patches = mrc_domain_get_patches(domain, &n_patches);
