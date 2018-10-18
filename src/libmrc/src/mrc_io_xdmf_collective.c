@@ -39,21 +39,6 @@ struct mrc_redist_write_send {
   MPI_Request *reqs;
 };
 
-struct collective_m3_entry {
-  struct mrc_fld *fld;
-  int ilo[3];
-  int ihi[3];
-  int patch;
-  int global_patch; //< also used as tag
-  int rank; //< of peer
-};
-
-struct mrc_redist_read_send {
-  struct collective_m3_entry *blocks;
-  MPI_Request *send_reqs;
-  int nr_sends;
-};
-
 struct mrc_redist {
   struct mrc_domain *domain;
   MPI_Comm comm_writers;
@@ -960,6 +945,21 @@ find_intersection(int *ilo, int *ihi, const int *ib1, const int *im1,
 
 // ----------------------------------------------------------------------
 // collective helper context
+
+struct collective_m3_entry {
+  struct mrc_fld *fld;
+  int ilo[3];
+  int ihi[3];
+  int patch;
+  int global_patch; //< also used as tag
+  int rank; //< of peer
+};
+
+struct mrc_redist_read_send {
+  struct collective_m3_entry *blocks;
+  MPI_Request *send_reqs;
+  int nr_sends;
+};
 
 struct collective_m3_ctx {
   int gdims[3];
