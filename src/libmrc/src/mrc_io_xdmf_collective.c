@@ -298,7 +298,7 @@ mrc_redist_write_send_end(struct mrc_redist *redist, struct mrc_fld *m3, int m)
 
 static void
 mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
-			   struct mrc_domain *domain, int size_of_type)
+			   int size_of_type)
 {
   struct mrc_redist_write_recv *recv = &redist->write_recv;
 
@@ -307,12 +307,12 @@ mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
   // FIXME, figure out pattern and cache, at least across components
 
   int nr_global_patches;
-  mrc_domain_get_nr_global_patches(domain, &nr_global_patches);
+  mrc_domain_get_nr_global_patches(redist->domain, &nr_global_patches);
 
   recv->n_recv_patches = 0;
   for (int gp = 0; gp < nr_global_patches; gp++) {
     struct mrc_patch_info info;
-    mrc_domain_get_global_patch_info(domain, gp, &info);
+    mrc_domain_get_global_patch_info(redist->domain, gp, &info);
 
     int ilo[3], ihi[3];
     int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
@@ -333,7 +333,7 @@ mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
   recv->n_recv_patches = 0;
   for (int gp = 0; gp < nr_global_patches; gp++) {
     struct mrc_patch_info info;
-    mrc_domain_get_global_patch_info(domain, gp, &info);
+    mrc_domain_get_global_patch_info(redist->domain, gp, &info);
 
     int ilo[3], ihi[3];
     int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
@@ -605,7 +605,7 @@ mrc_redist_make_ndarray(struct mrc_redist *redist, struct mrc_fld *m3)
   }
   mrc_ndarray_setup(nd);
 
-  mrc_redist_write_recv_init(redist, nd, m3->_domain, m3->_nd->size_of_type);
+  mrc_redist_write_recv_init(redist, nd, m3->_nd->size_of_type);
 
   return nd;
 }
