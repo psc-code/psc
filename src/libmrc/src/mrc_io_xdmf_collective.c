@@ -132,35 +132,6 @@ mrc_redist_writer_offs_dims(struct mrc_redist *redist, int writer,
   }
 }
 
-struct mrc_ndarray *
-mrc_redist_make_ndarray(struct mrc_redist *redist, struct mrc_fld *m3)
-{
-  assert(redist->is_writer);
-  
-  struct mrc_ndarray *nd = mrc_ndarray_create(redist->comm_writers);
-
-  int writer;
-  MPI_Comm_rank(redist->comm_writers, &writer);
-  int writer_dims[3], writer_off[3];
-  mrc_redist_writer_offs_dims(redist, writer, writer_off, writer_dims);
-  mprintf("writer_off %d %d %d dims %d %d %d\n",
-	  writer_off[0], writer_off[1], writer_off[2],
-	  writer_dims[0], writer_dims[1], writer_dims[2]);
-
-  mrc_ndarray_set_param_int_array(nd, "dims", 3, writer_dims);
-  mrc_ndarray_set_param_int_array(nd, "offs", 3, writer_off);
-  
-  switch (mrc_fld_data_type(m3)) {
-  case MRC_NT_FLOAT: mrc_ndarray_set_type(nd, "float"); break;
-  case MRC_NT_DOUBLE: mrc_ndarray_set_type(nd, "double"); break;
-  case MRC_NT_INT: mrc_ndarray_set_type(nd, "int"); break;
-  default: assert(0);
-  }
-  mrc_ndarray_setup(nd);
-
-  return nd;
-}
-
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
@@ -605,6 +576,41 @@ mrc_redist_write_comm_local(struct mrc_redist *redist, struct mrc_ndarray *nd,
     }    
   }
 }
+
+struct mrc_ndarray *
+mrc_redist_make_ndarray(struct mrc_redist *redist, struct mrc_fld *m3)
+{
+  if (!redist->is_writer) {
+    return NULL;
+  }
+  
+  struct mrc_ndarray *nd = mrc_ndarray_create(redist->comm_writers);
+
+  int writer;
+  MPI_Comm_rank(redist->comm_writers, &writer);
+  int writer_dims[3], writer_off[3];
+  mrc_redist_writer_offs_dims(redist, writer, writer_off, writer_dims);
+  mprintf("writer_off %d %d %d dims %d %d %d\n",
+	  writer_off[0], writer_off[1], writer_off[2],
+	  writer_dims[0], writer_dims[1], writer_dims[2]);
+
+  mrc_ndarray_set_param_int_array(nd, "dims", 3, writer_dims);
+  mrc_ndarray_set_param_int_array(nd, "offs", 3, writer_off);
+  
+  switch (mrc_fld_data_type(m3)) {
+  case MRC_NT_FLOAT: mrc_ndarray_set_type(nd, "float"); break;
+  case MRC_NT_DOUBLE: mrc_ndarray_set_type(nd, "double"); break;
+  case MRC_NT_INT: mrc_ndarray_set_type(nd, "int"); break;
+  default: assert(0);
+  }
+  mrc_ndarray_setup(nd);
+
+  mrc_redist_write_recv_init(redist, nd, m3->_domain, m3->_nd->size_of_type);
+
+  return nd;
+}
+
+// ======================================================================
 
 #define H5_CHK(ierr) assert(ierr >= 0)
 #define CE assert(ierr == 0)
@@ -1519,12 +1525,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     H5LTset_attribute_int(group0, ".", "nr_patches", &nr_1, 1);
   }
 
-  struct mrc_ndarray *nd = NULL;
-  if (xdmf->is_writer) {
-    nd = mrc_redist_make_ndarray(redist, m3_soa);
-
-    mrc_redist_write_recv_init(redist, nd, m3_soa->_domain, m3_soa->_nd->size_of_type);
-  }
+  struct mrc_ndarray *nd = mrc_redist_make_ndarray(redist, m3_soa);
   
   for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
     if (xdmf->is_writer) {
