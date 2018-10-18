@@ -955,13 +955,7 @@ struct collective_m3_entry {
   int rank; //< of peer
 };
 
-struct mrc_redist_read_send {
-  struct collective_m3_entry *blocks;
-  MPI_Request *reqs;
-  int n;
-};
-
-struct mrc_redist_read_recv {
+struct mrc_redist_read {
   struct collective_m3_entry *blocks;
   MPI_Request *reqs;
   int n;
@@ -976,8 +970,8 @@ struct collective_m3_ctx {
   int slow_indices_rmndr;
 
   struct mrc_redist_write_recv write_recv;
-  struct mrc_redist_read_send read_send;
-  struct mrc_redist_read_recv read_recv;
+  struct mrc_redist_read read_send;
+  struct mrc_redist_read read_recv;
 };
 
 static void
@@ -1617,7 +1611,7 @@ static void
 collective_m3_send_setup(struct mrc_io *io, struct collective_m3_ctx *ctx,
 			 struct mrc_domain *domain, struct mrc_fld *gfld)
 {
-  struct mrc_redist_read_send *send = &ctx->read_send;
+  struct mrc_redist_read *send = &ctx->read_send;
 
   send->n = 0;
   for (int gp = 0; gp < ctx->nr_global_patches; gp++) {
@@ -1652,7 +1646,7 @@ static void
 collective_m3_send_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
 			 struct mrc_domain *domain, struct mrc_fld *gfld)
 {
-  struct mrc_redist_read_send *send = &ctx->read_send;
+  struct mrc_redist_read *send = &ctx->read_send;
 
   collective_m3_send_setup(io, ctx, domain, gfld);
 
@@ -1718,7 +1712,7 @@ collective_m3_send_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
 static void
 collective_m3_send_end(struct mrc_io *io, struct collective_m3_ctx *ctx)
 {
-  struct mrc_redist_read_send *send = &ctx->read_send;
+  struct mrc_redist_read *send = &ctx->read_send;
 
   MPI_Waitall(send->n, send->reqs, MPI_STATUSES_IGNORE);
   for (int i = 0; i < send->n; i++) {
@@ -1735,7 +1729,7 @@ collective_m3_recv_setup(struct mrc_io *io, struct collective_m3_ctx *ctx,
 			 struct mrc_domain *domain)
 {
   struct xdmf *xdmf = to_xdmf(io);
-  struct mrc_redist_read_recv *recv = &ctx->read_recv;
+  struct mrc_redist_read *recv = &ctx->read_recv;
 
   recv->n = 0;
   for (int p = 0; p < ctx->nr_patches; p++) {
@@ -1790,7 +1784,7 @@ static void
 collective_m3_recv_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
 			 struct mrc_domain *domain, struct mrc_fld *m3)
 {
-  struct mrc_redist_read_recv *recv = &ctx->read_recv;
+  struct mrc_redist_read *recv = &ctx->read_recv;
 
   collective_m3_recv_setup(io, ctx, domain);
 
@@ -1825,7 +1819,7 @@ static void
 collective_m3_recv_end(struct mrc_io *io, struct collective_m3_ctx *ctx,
 		       struct mrc_domain *domain, struct mrc_fld *m3)
 {
-  struct mrc_redist_read_recv *recv = &ctx->read_recv;
+  struct mrc_redist_read *recv = &ctx->read_recv;
 
   MPI_Waitall(recv->n, recv->reqs, MPI_STATUSES_IGNORE);
   
