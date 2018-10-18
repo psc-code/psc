@@ -58,16 +58,6 @@ struct PscTestIo
 
     mrc_io_open(io, "w", 0, 0.);
     
-    // save some basic info about the run in the output file
-    struct mrc_obj *obj = mrc_obj_create(mrc_io_comm(io));
-    mrc_obj_set_name(obj, "psc");
-    mrc_obj_dict_add_int(obj, "timestep", grid.timestep());
-    mrc_obj_dict_add_float(obj, "time", grid.timestep() * grid.dt);
-    mrc_obj_dict_add_float(obj, "cc", grid.norm.cc);
-    mrc_obj_dict_add_float(obj, "dt", grid.dt);
-    mrc_obj_write(obj, io);
-    mrc_obj_destroy(obj);
-    
     mrc_fld* fld = grid.mrc_domain().m3_create();
     mrc_fld_set_name(fld, "e");
     mrc_fld_set_param_int(fld, "nr_ghosts", 0);
