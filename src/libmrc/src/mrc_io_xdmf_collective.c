@@ -1443,14 +1443,14 @@ writer_comm_local(struct mrc_redist_write_recv *recv, struct mrc_io *io, struct 
 }
 
 // ----------------------------------------------------------------------
-// collective_write_fld
+// writer_write_fld
 // does the actual write of the partial fld to the file
 // only called on writer procs
 
 static void
-collective_write_fld(struct collective_m3_ctx *ctx, struct mrc_io *io,
-		    const char *path, struct mrc_ndarray *nd, int m,
-		    struct mrc_fld *m3, struct xdmf_spatial *xs, hid_t group0)
+writer_write_fld(struct mrc_redist *redist, struct mrc_io *io,
+		 const char *path, struct mrc_ndarray *nd, int m,
+		 struct mrc_fld *m3, struct xdmf_spatial *xs, hid_t group0)
 {
   int ierr;
 
@@ -1474,7 +1474,7 @@ collective_write_fld(struct collective_m3_ctx *ctx, struct mrc_io *io,
   int i0 = 0;
   ierr = H5LTset_attribute_int(group, ".", "global_patch", &i0, 1); CE;
 
-  hsize_t fdims[3] = { ctx->slab_dims[2], ctx->slab_dims[1], ctx->slab_dims[0] };
+  hsize_t fdims[3] = { redist->slab_dims[2], redist->slab_dims[1], redist->slab_dims[0] };
   hid_t filespace = H5Screate_simple(3, fdims, NULL); H5_CHK(filespace);
   hid_t dtype;
   switch (mrc_ndarray_data_type(nd)) {
@@ -1497,9 +1497,9 @@ collective_write_fld(struct collective_m3_ctx *ctx, struct mrc_io *io,
 #endif
   const int *im = mrc_ndarray_dims(nd), *ib = mrc_ndarray_offs(nd);
   hsize_t mdims[3] = { im[2], im[1], im[0] };
-  hsize_t foff[3] = { ib[2] - ctx->slab_off[2],
-		      ib[1] - ctx->slab_off[1],
-		      ib[0] - ctx->slab_off[0] };
+  hsize_t foff[3] = { ib[2] - redist->slab_offs[2],
+		      ib[1] - redist->slab_offs[1],
+		      ib[0] - redist->slab_offs[0] };
   hid_t memspace = H5Screate_simple(3, mdims, NULL);
   ierr = H5Sselect_hyperslab(filespace, H5S_SELECT_SET, foff, NULL,
 			     mdims, NULL); CE;
@@ -1578,7 +1578,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
       collective_send_fld_begin(redist, io, m3_soa, 0);
       writer_comm_local(&redist->write_recv, io, nd, m3_soa, 0);
       writer_comm_end(&redist->write_recv, io, nd, m3_soa, 0);
-      collective_write_fld(&ctx, io, path, nd, m, m3, xs, group0);
+      writer_write_fld(redist, io, path, nd, m, m3, xs, group0);
       collective_send_fld_end(redist, io, m3, 0);
     }
     writer_comm_destroy(&redist->write_recv);
