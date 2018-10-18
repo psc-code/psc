@@ -69,7 +69,33 @@ struct PscTestIo
 	  mres[p](0, i,j,k) = ii + 100 * jj + 10000 * kk;
 	});
     }
-    MrcIo::write_mflds(io_pfd.io_, mres, "e", {"ex", "ey", "ez"});
+
+    mrc_io* io = io_pfd.io_;
+    // FIXME, should generally equal the # of component in mflds,
+    // but this way allows us to write fewer components, useful to hack around 16-bit vpic material ids,
+    // stored together as AOS with floats...
+    
+    mrc_fld* fld = grid.mrc_domain().m3_create();
+    mrc_fld_set_name(fld, "e");
+    mrc_fld_set_param_int(fld, "nr_ghosts", 0);
+    mrc_fld_set_param_int(fld, "nr_comps", 3);
+    mrc_fld_setup(fld);
+    mrc_fld_set_comp_name(fld, 0, "ex");
+    mrc_fld_set_comp_name(fld, 0, "ey");
+    mrc_fld_set_comp_name(fld, 0, "ez");
+    
+    for (int p = 0; p < grid.n_patches(); p++) {
+      mrc_fld_patch *m3p = mrc_fld_patch_get(fld, p);
+      mrc_fld_foreach(fld, i,j,k, 0,0) {
+	for (int m = 0; m < mrc_fld_nr_comps(fld); m++) {
+	  MRC_M3(m3p, m , i,j,k) = mres[p](m, i,j,k);
+	}
+      } mrc_fld_foreach_end;
+      mrc_fld_patch_put(fld);
+    }
+    
+    mrc_fld_write(fld, io);
+    mrc_fld_destroy(fld);
 
     io_pfd.close();
 
