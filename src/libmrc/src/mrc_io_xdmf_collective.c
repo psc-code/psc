@@ -1501,23 +1501,27 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     nd = mrc_redist_make_ndarray(redist, m3);
 
     mrc_redist_write_recv_init(&redist->write_recv, io, nd, m3_soa->_domain, m3_soa->_nd->size_of_type);
-    for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
+  }
+  
+  for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
+    if (xdmf->is_writer) {
       mrc_redist_write_recv_begin(&redist->write_recv, io, nd, m3_soa);
       mrc_redist_write_send_begin(redist, io, m3_soa, m);
       mrc_redist_write_comm_local(&redist->write_recv, io, nd, m3_soa, m);
       mrc_redist_write_recv_end(&redist->write_recv, io, nd, m3_soa, m);
-      writer_write_fld(redist, io, path, nd, m, m3, xs, group0);
       mrc_redist_write_send_end(redist, io, m3, 0);
-    }
-    writer_comm_destroy(&redist->write_recv);
-  } else {
-    for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
+    } else {
       mrc_redist_write_send_begin(redist, io, m3_soa, m);
       mrc_redist_write_send_end(redist, io, m3_soa, m);
+    }
+
+    if (xdmf->is_writer) {
+      writer_write_fld(redist, io, path, nd, m, m3, xs, group0);
     }
   }
 
   if (xdmf->is_writer) {
+    writer_comm_destroy(&redist->write_recv);
     H5Gclose(group0);
     mrc_ndarray_destroy(nd);
   }
