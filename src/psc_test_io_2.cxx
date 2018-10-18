@@ -69,7 +69,7 @@ struct PscTestIo
 	  mres[p](0, i,j,k) = ii + 100 * jj + 10000 * kk;
 	});
     }
-    mres.write_as_mrc_fld(io_pfd.io_, "e", {"ex", "ey", "ez"});
+    MrcIo::write_mflds(io_pfd.io_, mres, "e", {"ex", "ey", "ez"});
 
     io_pfd.close();
 
