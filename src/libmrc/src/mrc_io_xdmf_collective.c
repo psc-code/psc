@@ -46,8 +46,10 @@ struct mrc_redist {
   int size;
   
   MPI_Comm comm_writers;
-  int is_writer;
+  int *writers;
   int nr_writers;
+  int is_writer;
+
   int slab_dims[3];
   int slab_offs[3];
 
@@ -61,17 +63,26 @@ struct mrc_redist {
 
 void
 mrc_redist_init(struct mrc_redist *redist, struct mrc_domain *domain,
-		int slab_offs[3], int slab_dims[3],
-		MPI_Comm comm_writers, int is_writer, int nr_writers)
+		int slab_offs[3], int slab_dims[3], int nr_writers)
 {
   redist->domain = domain;
   redist->comm = mrc_domain_comm(domain);
   MPI_Comm_rank(redist->comm, &redist->rank);
   MPI_Comm_size(redist->comm, &redist->size);
 
-  redist->is_writer = is_writer;
   redist->nr_writers = nr_writers;
-  redist->comm_writers = comm_writers;
+  redist->writers = calloc(nr_writers, sizeof(*redist->writers));
+  // setup writers, just use first nr_writers ranks,
+  // could do something fancier in the future
+  redist->is_writer = 0;
+  for (int i = 0; i < nr_writers; i++) {
+    redist->writers[i] = i;
+    if (i == redist->rank) {
+      redist->is_writer = 1;
+    }
+  }
+  
+  MPI_Comm_split(redist->comm, redist->is_writer, redist->rank, &redist->comm_writers);
 
   int gdims[3];
   mrc_domain_get_global_dims(domain, gdims);
@@ -95,6 +106,13 @@ mrc_redist_init(struct mrc_redist *redist, struct mrc_domain *domain,
   int total_slow_indices = redist->slab_dims[redist->slow_dim];
   redist->slow_indices_per_writer = total_slow_indices / nr_writers;
   redist->slow_indices_rmndr = total_slow_indices % nr_writers;
+}
+
+void
+mrc_redist_destroy(struct mrc_redist *redist)
+{
+  free(redist->writers);
+  MPI_Comm_free(&redist->comm_writers);
 }
 
 static void
@@ -142,12 +160,6 @@ mrc_redist_make_ndarray(struct mrc_redist *redist, struct mrc_fld *m3)
 
   return nd;
 }
-
-void
-mrc_redist_destroy(struct mrc_redist *redist)
-{
-}
-
 
 #define H5_CHK(ierr) assert(ierr >= 0)
 #define CE assert(ierr == 0)
@@ -971,11 +983,8 @@ find_intersection(int *ilo, int *ihi, const int *ib1, const int *im1,
 // mrc_redist_write_send_begin
 
 static void
-mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_io *io,
-			    struct mrc_fld *m3, int m)
+mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m)
 {
-  struct xdmf *xdmf = to_xdmf(io);
-
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(m3->_domain, &nr_patches);
 
@@ -987,7 +996,7 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_io *io,
 
   for (int writer = 0; writer < redist->nr_writers; writer++) {
     // don't send to self
-    if (xdmf->writers[writer] == io->rank) {
+    if (redist->writers[writer] == redist->rank) {
       send->reqs[writer] = MPI_REQUEST_NULL;
       continue;
     }
@@ -1080,9 +1089,9 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_io *io,
       assert(0);
     }
 
-    mprintf("isend to %d\n", xdmf->writers[writer]);
+    mprintf("isend to %d\n", redist->writers[writer]);
     MPI_Isend(send->bufs[writer], buf_sizes[writer], mpi_dtype,
-	      xdmf->writers[writer], 0x1000, mrc_io_comm(io),
+	      redist->writers[writer], 0x1000, redist->comm,
 	      &send->reqs[writer]);
   }
   free(buf_sizes);
@@ -1092,17 +1101,14 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_io *io,
 // mrc_redist_write_send_end
 
 static void
-mrc_redist_write_send_end(struct mrc_redist *redist, struct mrc_io *io,
-			  struct mrc_fld *m3, int m)
+mrc_redist_write_send_end(struct mrc_redist *redist, struct mrc_fld *m3, int m)
 {
-  struct xdmf *xdmf = to_xdmf(io);
-
   struct mrc_redist_write_send *send = &redist->write_send;
 
   mprintf("send_end: waitall cnt = %d\n", redist->nr_writers);
   MPI_Waitall(redist->nr_writers, send->reqs, MPI_STATUSES_IGNORE);
 
-  for (int writer = 0; writer < xdmf->nr_writers; writer++) {
+  for (int writer = 0; writer < redist->nr_writers; writer++) {
     free(send->bufs[writer]);
   }
   free(send->bufs);
@@ -1467,7 +1473,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
 
   struct mrc_redist redist[1];
   mrc_redist_init(redist, m3->_domain, xdmf->slab_off, xdmf->slab_dims,
-		  xdmf->comm_writers, xdmf->is_writer, xdmf->nr_writers);
+		  xdmf->nr_writers);
 
   struct xdmf_file *file = &xdmf->file;
   struct xdmf_spatial *xs = xdmf_spatial_find(&file->xdmf_spatial_list,
@@ -1514,13 +1520,13 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
   for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
     if (xdmf->is_writer) {
       mrc_redist_write_recv_begin(&redist->write_recv, io, nd, m3_soa);
-      mrc_redist_write_send_begin(redist, io, m3_soa, m);
+      mrc_redist_write_send_begin(redist, m3_soa, m);
       mrc_redist_write_comm_local(&redist->write_recv, io, nd, m3_soa, m);
       mrc_redist_write_recv_end(&redist->write_recv, io, nd, m3_soa, m);
-      mrc_redist_write_send_end(redist, io, m3, 0);
+      mrc_redist_write_send_end(redist, m3, 0);
     } else {
-      mrc_redist_write_send_begin(redist, io, m3_soa, m);
-      mrc_redist_write_send_end(redist, io, m3_soa, m);
+      mrc_redist_write_send_begin(redist, m3_soa, m);
+      mrc_redist_write_send_end(redist, m3_soa, m);
     }
 
     if (xdmf->is_writer) {
