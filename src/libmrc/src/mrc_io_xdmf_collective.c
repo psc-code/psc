@@ -1171,7 +1171,7 @@ collective_send_fld_end(struct mrc_redist *redist, struct mrc_io *io,
 // writer_comm_init
 
 static void
-writer_comm_init(struct collective_m3_ctx *ctx,
+writer_comm_init(struct mrc_redist_write_recv *recv,
 		 struct mrc_io *io, struct mrc_ndarray *nd,
 		 struct mrc_domain *domain, int size_of_type)
 {
@@ -1182,7 +1182,6 @@ writer_comm_init(struct collective_m3_ctx *ctx,
   int nr_global_patches;
   mrc_domain_get_nr_global_patches(domain, &nr_global_patches);
 
-  struct mrc_redist_write_recv *recv = &ctx->write_recv;
   recv->n_recv_patches = 0;
   for (int gp = 0; gp < nr_global_patches; gp++) {
     struct mrc_patch_info info;
@@ -1220,7 +1219,7 @@ writer_comm_init(struct collective_m3_ctx *ctx,
     while (cur_rank < info.rank) {
       cur_rank++;
       recv_patches_by_rank[cur_rank] = &recv->recv_patches[recv->n_recv_patches];
-      //mprintf("rank %d patches start at %d\n", cur_rank, ctx->n_recv_patches);
+      //mprintf("rank %d patches start at %d\n", cur_rank, recv->n_recv_patches);
     }
 
     struct mrc_redist_block *recv_patch = &recv->recv_patches[recv->n_recv_patches];
@@ -1234,7 +1233,7 @@ writer_comm_init(struct collective_m3_ctx *ctx,
   while (cur_rank < io->size) {
     cur_rank++;
     recv_patches_by_rank[cur_rank] = &recv->recv_patches[recv->n_recv_patches];
-    //mprintf("rank %d patches start at %d\n", cur_rank, ctx->n_recv_patches);
+    //mprintf("rank %d patches start at %d\n", cur_rank, recv->n_recv_patches);
   }
 
   recv->n_peers = 0;
@@ -1289,11 +1288,9 @@ writer_comm_init(struct collective_m3_ctx *ctx,
 // writer_comm_begin
 
 static void
-writer_comm_begin(struct collective_m3_ctx *ctx, struct mrc_io *io, struct mrc_ndarray *nd,
+writer_comm_begin(struct mrc_redist_write_recv *recv, struct mrc_io *io, struct mrc_ndarray *nd,
 		  struct mrc_fld *m3)
 {
-  struct mrc_redist_write_recv *recv = &ctx->write_recv;
-
   for (struct mrc_redist_peer *peer = recv->peers; peer < recv->peers + recv->n_peers; peer++) {
     // skip local patches
     if (peer->rank == io->rank) {
@@ -1327,11 +1324,9 @@ writer_comm_begin(struct collective_m3_ctx *ctx, struct mrc_io *io, struct mrc_n
 // writer_comm_end
 
 static void
-writer_comm_end(struct collective_m3_ctx *ctx, struct mrc_io *io, struct mrc_ndarray *nd,
+writer_comm_end(struct mrc_redist_write_recv *recv, struct mrc_io *io, struct mrc_ndarray *nd,
 		struct mrc_fld *m3, int m)
 {
-  struct mrc_redist_write_recv *recv = &ctx->write_recv;
-
   mprintf("recv_end: waitall cnt = %d\n", recv->n_peers);
   MPI_Waitall(recv->n_peers, recv->reqs, MPI_STATUSES_IGNORE);
 
@@ -1382,9 +1377,8 @@ writer_comm_end(struct collective_m3_ctx *ctx, struct mrc_io *io, struct mrc_nda
 // writer_comm_destroy
 
 static void
-writer_comm_destroy(struct collective_m3_ctx *ctx)
+writer_comm_destroy(struct mrc_redist_write_recv *recv)
 {
-  struct mrc_redist_write_recv *recv = &ctx->write_recv;
   free(recv->reqs);
   
   for (struct mrc_redist_peer *peer = recv->peers; peer < recv->peers + recv->n_peers; peer++) {
@@ -1399,7 +1393,7 @@ writer_comm_destroy(struct collective_m3_ctx *ctx)
 // writer_comm_local
 
 static void
-writer_comm_local(struct collective_m3_ctx *ctx, struct mrc_io *io, struct mrc_ndarray *nd,
+writer_comm_local(struct mrc_redist_write_recv *recv, struct mrc_io *io, struct mrc_ndarray *nd,
 		  struct mrc_fld *m3, int m)
 {
   int nr_patches;
@@ -1578,16 +1572,16 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     int nr_1 = 1;
     H5LTset_attribute_int(group0, ".", "nr_patches", &nr_1, 1);
 
-    writer_comm_init(&ctx, io, nd, m3_soa->_domain, m3_soa->_nd->size_of_type);
+    writer_comm_init(&ctx.write_recv, io, nd, m3_soa->_domain, m3_soa->_nd->size_of_type);
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
-      writer_comm_begin(&ctx, io, nd, m3_soa);
+      writer_comm_begin(&ctx.write_recv, io, nd, m3_soa);
       collective_send_fld_begin(redist, io, m3_soa, 0);
-      writer_comm_local(&ctx, io, nd, m3_soa, 0);
-      writer_comm_end(&ctx, io, nd, m3_soa, 0);
+      writer_comm_local(&ctx.write_recv, io, nd, m3_soa, 0);
+      writer_comm_end(&ctx.write_recv, io, nd, m3_soa, 0);
       collective_write_fld(&ctx, io, path, nd, m, m3, xs, group0);
       collective_send_fld_end(redist, io, m3, 0);
     }
-    writer_comm_destroy(&ctx);
+    writer_comm_destroy(&ctx.write_recv);
 
     H5Gclose(group0);
     mrc_ndarray_destroy(nd);
