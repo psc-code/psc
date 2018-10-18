@@ -505,10 +505,10 @@ mrc_redist_write_recv_end(struct mrc_redist *redist, struct mrc_ndarray *nd,
 }
 
 // ----------------------------------------------------------------------
-// writer_comm_destroy
+// mrc_redist_write_destroy
 
 static void
-writer_comm_destroy(struct mrc_redist *redist)
+mrc_redist_write_destroy(struct mrc_redist *redist)
 {
   struct mrc_redist_write_recv *recv = &redist->write_recv;
 
@@ -577,8 +577,11 @@ mrc_redist_write_comm_local(struct mrc_redist *redist, struct mrc_ndarray *nd,
   }
 }
 
+// ----------------------------------------------------------------------
+// mrc_redist_get_ndarray
+
 struct mrc_ndarray *
-mrc_redist_make_ndarray(struct mrc_redist *redist, struct mrc_fld *m3)
+mrc_redist_get_ndarray(struct mrc_redist *redist, struct mrc_fld *m3)
 {
   if (!redist->is_writer) {
     return NULL;
@@ -608,6 +611,36 @@ mrc_redist_make_ndarray(struct mrc_redist *redist, struct mrc_fld *m3)
   mrc_redist_write_recv_init(redist, nd, m3->_nd->size_of_type);
 
   return nd;
+}
+
+// ----------------------------------------------------------------------
+// mrc_redist_put_ndarray
+
+static void
+mrc_redist_put_ndarray(struct mrc_redist *redist, struct mrc_ndarray *nd)
+{
+  if (redist->is_writer) {
+    mrc_redist_write_destroy(redist);
+    mrc_ndarray_destroy(nd);
+  }
+}
+
+// ----------------------------------------------------------------------
+
+static void
+mrc_redist_run(struct mrc_redist *redist, struct mrc_ndarray *nd,
+	       struct mrc_fld *m3, int m)
+{
+  if (redist->is_writer) {
+    mrc_redist_write_recv_begin(redist, nd, m3);
+    mrc_redist_write_send_begin(redist, m3, m);
+    mrc_redist_write_comm_local(redist, nd, m3, m);
+    mrc_redist_write_recv_end(redist, nd, m3, m);
+    mrc_redist_write_send_end(redist, m3, m);
+  } else {
+    mrc_redist_write_send_begin(redist, m3, m);
+    mrc_redist_write_send_end(redist, m3, m);
+  }
 }
 
 // ======================================================================
@@ -1525,29 +1558,20 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     H5LTset_attribute_int(group0, ".", "nr_patches", &nr_1, 1);
   }
 
-  struct mrc_ndarray *nd = mrc_redist_make_ndarray(redist, m3_soa);
+  struct mrc_ndarray *nd = mrc_redist_get_ndarray(redist, m3_soa);
   
   for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
-    if (xdmf->is_writer) {
-      mrc_redist_write_recv_begin(redist, nd, m3_soa);
-      mrc_redist_write_send_begin(redist, m3_soa, m);
-      mrc_redist_write_comm_local(redist, nd, m3_soa, m);
-      mrc_redist_write_recv_end(redist, nd, m3_soa, m);
-      mrc_redist_write_send_end(redist, m3, 0);
-    } else {
-      mrc_redist_write_send_begin(redist, m3_soa, m);
-      mrc_redist_write_send_end(redist, m3_soa, m);
-    }
+    mrc_redist_run(redist, nd, m3_soa, m);
 
-    if (xdmf->is_writer) {
+    if (redist->is_writer) {
       writer_write_fld(redist, io, path, nd, m, m3, xs, group0);
     }
   }
 
+  mrc_redist_put_ndarray(redist, nd);
+  
   if (xdmf->is_writer) {
-    writer_comm_destroy(redist);
     H5Gclose(group0);
-    mrc_ndarray_destroy(nd);
   }
 
   if (m3->_aos) {
