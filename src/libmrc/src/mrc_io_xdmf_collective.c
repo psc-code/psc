@@ -945,80 +945,6 @@ find_intersection(int *ilo, int *ihi, const int *ib1, const int *im1,
 }
 
 // ----------------------------------------------------------------------
-// collective helper context
-
-struct collective_m3_entry {
-  struct mrc_fld *fld;
-  int ilo[3];
-  int ihi[3];
-  int patch;
-  int global_patch; //< also used as tag
-  int rank; //< of peer
-};
-
-struct mrc_redist_read {
-  struct collective_m3_entry *blocks;
-  MPI_Request *reqs;
-  int n;
-};
-
-struct collective_m3_ctx {
-  int gdims[3];
-  int slab_dims[3], slab_off[3];
-  int nr_patches, nr_global_patches;
-  int slow_dim;
-  int slow_indices_per_writer;
-  int slow_indices_rmndr;
-
-  struct mrc_redist_read read_send;
-  struct mrc_redist_read read_recv;
-};
-
-static void
-collective_m3_init(struct mrc_io *io, struct collective_m3_ctx *ctx,
-		   struct mrc_domain *domain)
-{
-  struct xdmf *xdmf = to_xdmf(io);
-
-  mrc_domain_get_global_dims(domain, ctx->gdims);
-  mrc_domain_get_patches(domain, &ctx->nr_patches);
-  mrc_domain_get_nr_global_patches(domain, &ctx->nr_global_patches);
-  for (int d = 0; d < 3; d++) {
-    if (xdmf->slab_dims[d]) {
-      ctx->slab_dims[d] = xdmf->slab_dims[d];
-    } else {
-      ctx->slab_dims[d] = ctx->gdims[d];
-    }
-    ctx->slab_off[d] = xdmf->slab_off[d];
-  }
-  ctx->slow_dim = 2;
-  while (ctx->gdims[ctx->slow_dim] == 1) {
-    ctx->slow_dim--;
-  }
-  assert(ctx->slow_dim >= 0);
-  int total_slow_indices = ctx->slab_dims[ctx->slow_dim];
-  ctx->slow_indices_per_writer = total_slow_indices / xdmf->nr_writers;
-  ctx->slow_indices_rmndr = total_slow_indices % xdmf->nr_writers;
-}
-
-static void
-get_writer_off_dims(struct collective_m3_ctx *ctx, int writer,
-		    int *writer_off, int *writer_dims)
-{
-  for (int d = 0; d < 3; d++) {
-    writer_dims[d] = ctx->slab_dims[d];
-    writer_off[d] = ctx->slab_off[d];
-  }
-  writer_dims[ctx->slow_dim] = ctx->slow_indices_per_writer + (writer < ctx->slow_indices_rmndr);
-  if (writer < ctx->slow_indices_rmndr) {
-    writer_off[ctx->slow_dim] += (ctx->slow_indices_per_writer + 1) * writer;
-  } else {
-    writer_off[ctx->slow_dim] += ctx->slow_indices_rmndr +
-      ctx->slow_indices_per_writer * writer;
-  }
-}
-
-// ----------------------------------------------------------------------
 // collective_send_fld_begin
 #define BUFLOOP(ix, iy, iz, ilo, hi) \
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {\
@@ -1597,6 +1523,80 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
 }
 
 // ======================================================================
+
+// ----------------------------------------------------------------------
+// collective helper context
+
+struct collective_m3_entry {
+  struct mrc_fld *fld;
+  int ilo[3];
+  int ihi[3];
+  int patch;
+  int global_patch; //< also used as tag
+  int rank; //< of peer
+};
+
+struct mrc_redist_read {
+  struct collective_m3_entry *blocks;
+  MPI_Request *reqs;
+  int n;
+};
+
+struct collective_m3_ctx {
+  int gdims[3];
+  int slab_dims[3], slab_off[3];
+  int nr_patches, nr_global_patches;
+  int slow_dim;
+  int slow_indices_per_writer;
+  int slow_indices_rmndr;
+
+  struct mrc_redist_read read_send;
+  struct mrc_redist_read read_recv;
+};
+
+static void
+collective_m3_init(struct mrc_io *io, struct collective_m3_ctx *ctx,
+		   struct mrc_domain *domain)
+{
+  struct xdmf *xdmf = to_xdmf(io);
+
+  mrc_domain_get_global_dims(domain, ctx->gdims);
+  mrc_domain_get_patches(domain, &ctx->nr_patches);
+  mrc_domain_get_nr_global_patches(domain, &ctx->nr_global_patches);
+  for (int d = 0; d < 3; d++) {
+    if (xdmf->slab_dims[d]) {
+      ctx->slab_dims[d] = xdmf->slab_dims[d];
+    } else {
+      ctx->slab_dims[d] = ctx->gdims[d];
+    }
+    ctx->slab_off[d] = xdmf->slab_off[d];
+  }
+  ctx->slow_dim = 2;
+  while (ctx->gdims[ctx->slow_dim] == 1) {
+    ctx->slow_dim--;
+  }
+  assert(ctx->slow_dim >= 0);
+  int total_slow_indices = ctx->slab_dims[ctx->slow_dim];
+  ctx->slow_indices_per_writer = total_slow_indices / xdmf->nr_writers;
+  ctx->slow_indices_rmndr = total_slow_indices % xdmf->nr_writers;
+}
+
+static void
+get_writer_off_dims(struct collective_m3_ctx *ctx, int writer,
+		    int *writer_off, int *writer_dims)
+{
+  for (int d = 0; d < 3; d++) {
+    writer_dims[d] = ctx->slab_dims[d];
+    writer_off[d] = ctx->slab_off[d];
+  }
+  writer_dims[ctx->slow_dim] = ctx->slow_indices_per_writer + (writer < ctx->slow_indices_rmndr);
+  if (writer < ctx->slow_indices_rmndr) {
+    writer_off[ctx->slow_dim] += (ctx->slow_indices_per_writer + 1) * writer;
+  } else {
+    writer_off[ctx->slow_dim] += ctx->slow_indices_rmndr +
+      ctx->slow_indices_per_writer * writer;
+  }
+}
 
 static void
 collective_m3_send_setup(struct mrc_io *io, struct collective_m3_ctx *ctx,
