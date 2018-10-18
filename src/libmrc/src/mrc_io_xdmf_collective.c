@@ -1563,9 +1563,11 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
   for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
     mrc_redist_run(redist, nd, m3_soa, m);
 
+#if 0
     if (redist->is_writer) {
       writer_write_fld(redist, io, path, nd, m, m3, xs, group0);
     }
+#endif
   }
 
   mrc_redist_put_ndarray(redist, nd);
