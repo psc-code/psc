@@ -958,13 +958,13 @@ struct collective_m3_entry {
 struct mrc_redist_read_send {
   struct collective_m3_entry *blocks;
   MPI_Request *reqs;
-  int nr_sends;
+  int n;
 };
 
 struct mrc_redist_read_recv {
   struct collective_m3_entry *blocks;
-  MPI_Request *recv_reqs;
-  int nr_recvs;
+  MPI_Request *reqs;
+  int n;
 };
 
 struct collective_m3_ctx {
@@ -1619,7 +1619,7 @@ collective_m3_send_setup(struct mrc_io *io, struct collective_m3_ctx *ctx,
 {
   struct mrc_redist_read_send *send = &ctx->read_send;
 
-  send->nr_sends = 0;
+  send->n = 0;
   for (int gp = 0; gp < ctx->nr_global_patches; gp++) {
     struct mrc_patch_info info;
     mrc_domain_get_global_patch_info(domain, gp, &info);
@@ -1628,13 +1628,13 @@ collective_m3_send_setup(struct mrc_io *io, struct collective_m3_ctx *ctx,
     int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
 					     mrc_fld_ghost_offs(gfld), mrc_fld_ghost_dims(gfld));
     if (has_intersection)
-      send->nr_sends++;
+      send->n++;
   }
 
-  send->reqs = calloc(send->nr_sends, sizeof(*send->reqs));
-  send->blocks = calloc(send->nr_sends, sizeof(*send->blocks));
+  send->reqs = calloc(send->n, sizeof(*send->reqs));
+  send->blocks = calloc(send->n, sizeof(*send->blocks));
 
-  for (int i = 0, gp = 0; i < send->nr_sends; i++) {
+  for (int i = 0, gp = 0; i < send->n; i++) {
     struct collective_m3_entry *block = &send->blocks[i];
     struct mrc_patch_info info;
     bool has_intersection;
@@ -1656,7 +1656,7 @@ collective_m3_send_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
 
   collective_m3_send_setup(io, ctx, domain, gfld);
 
-  for (int i = 0; i < send->nr_sends; i++) {
+  for (int i = 0; i < send->n; i++) {
     struct collective_m3_entry *block = &send->blocks[i];
     int *ilo = block->ilo, *ihi = block->ihi;
     struct mrc_fld *fld = mrc_fld_create(MPI_COMM_NULL);
@@ -1720,8 +1720,8 @@ collective_m3_send_end(struct mrc_io *io, struct collective_m3_ctx *ctx)
 {
   struct mrc_redist_read_send *send = &ctx->read_send;
 
-  MPI_Waitall(send->nr_sends, send->reqs, MPI_STATUSES_IGNORE);
-  for (int i = 0; i < send->nr_sends; i++) {
+  MPI_Waitall(send->n, send->reqs, MPI_STATUSES_IGNORE);
+  for (int i = 0; i < send->n; i++) {
     mrc_fld_destroy(send->blocks[i].fld);
   }
   free(send->blocks);
@@ -1737,7 +1737,7 @@ collective_m3_recv_setup(struct mrc_io *io, struct collective_m3_ctx *ctx,
   struct xdmf *xdmf = to_xdmf(io);
   struct mrc_redist_read_recv *recv = &ctx->read_recv;
 
-  recv->nr_recvs = 0;
+  recv->n = 0;
   for (int p = 0; p < ctx->nr_patches; p++) {
     struct mrc_patch_info info;
     mrc_domain_get_local_patch_info(domain, p, &info);
@@ -1748,13 +1748,13 @@ collective_m3_recv_setup(struct mrc_io *io, struct collective_m3_ctx *ctx,
       int ilo[3], ihi[3];
       if (find_intersection(ilo, ihi, info.off, info.ldims,
 			    writer_off, writer_dims)) {
-	recv->nr_recvs++;
+	recv->n++;
       }
     }
   }
 
-  recv->recv_reqs = calloc(recv->nr_recvs, sizeof(*recv->recv_reqs));
-  recv->blocks = calloc(recv->nr_recvs, sizeof(*recv->blocks));
+  recv->reqs = calloc(recv->n, sizeof(*recv->reqs));
+  recv->blocks = calloc(recv->n, sizeof(*recv->blocks));
 
   int i = 0;
   for (int p = 0; p < ctx->nr_patches; p++) {
@@ -1762,7 +1762,7 @@ collective_m3_recv_setup(struct mrc_io *io, struct collective_m3_ctx *ctx,
     mrc_domain_get_local_patch_info(domain, p, &info);
 
     for (int writer = 0; writer < xdmf->nr_writers; writer++) {
-      if (i == recv->nr_recvs) {
+      if (i == recv->n) {
 	break;
       }
       struct collective_m3_entry *block = &recv->blocks[i];
@@ -1794,7 +1794,7 @@ collective_m3_recv_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
 
   collective_m3_recv_setup(io, ctx, domain);
 
-  for (int i = 0; i < recv->nr_recvs; i++) {
+  for (int i = 0; i < recv->n; i++) {
     struct collective_m3_entry *block = &recv->blocks[i];
 
     struct mrc_fld *fld = mrc_fld_create(MPI_COMM_NULL);
@@ -1816,7 +1816,7 @@ collective_m3_recv_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
     }
     
     MPI_Irecv(fld->_nd->arr, mrc_fld_len(fld), dtype, block->rank,
-	      block->global_patch, mrc_io_comm(io), &recv->recv_reqs[i]);
+	      block->global_patch, mrc_io_comm(io), &recv->reqs[i]);
     block->fld = fld;
   }
 }
@@ -1827,9 +1827,9 @@ collective_m3_recv_end(struct mrc_io *io, struct collective_m3_ctx *ctx,
 {
   struct mrc_redist_read_recv *recv = &ctx->read_recv;
 
-  MPI_Waitall(recv->nr_recvs, recv->recv_reqs, MPI_STATUSES_IGNORE);
+  MPI_Waitall(recv->n, recv->reqs, MPI_STATUSES_IGNORE);
   
-  for (int i = 0; i < recv->nr_recvs; i++) {
+  for (int i = 0; i < recv->n; i++) {
     struct collective_m3_entry *block = &recv->blocks[i];
     struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, block->patch);
 
@@ -1873,7 +1873,7 @@ collective_m3_recv_end(struct mrc_io *io, struct collective_m3_ctx *ctx,
     mrc_fld_destroy(block->fld);
   }
   free(recv->blocks);
-  free(recv->recv_reqs);
+  free(recv->reqs);
 }
 
 struct read_m3_cb_data {
