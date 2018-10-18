@@ -21,7 +21,6 @@ struct PscTestIo
   // ctor
   
   PscTestIo()
-    : grid_{ggrid}
   {
     auto comm = grid().comm();
 
@@ -58,14 +57,7 @@ struct PscTestIo
     double dt = .99;
     auto coeff = Grid_t::Normalization{norm_params};
     grid_ = Grid_t::psc_make_grid(grid_domain, grid_bc, kinds, coeff, dt, ibn);
-  }
 
-  // ----------------------------------------------------------------------
-  // initialize
-
-  void initialize()
-  {
-    // initial output / stats
     mpi_printf(MPI_COMM_WORLD, "***** Writing PFD output\n");
 
     Int3 rn = {};
@@ -95,7 +87,7 @@ struct PscTestIo
   const Grid_t& grid() { return *grid_; }
 
 protected:
-  Grid_t*& grid_;
+  Grid_t* grid_;
   Int3 ibn = {2, 2, 2}; // FIXME!!! need to factor in invar dims (but not in vpic...)
 };
 
@@ -110,7 +102,6 @@ main(int argc, char **argv)
 
   {
     auto psc = PscTestIo{};
-    psc.initialize();
   }
 
   libmrc_params_finalize();
