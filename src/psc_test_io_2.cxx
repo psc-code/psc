@@ -83,7 +83,7 @@ struct PscTestIo
     mrc_fld_write(fld, io);
     mrc_fld_destroy(fld);
 
-    io_pfd.close();
+    mrc_io_close(io);
 
     mpi_printf(grid.comm(), "*** Writing output done.\n");
   }
