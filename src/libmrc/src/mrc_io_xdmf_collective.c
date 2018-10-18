@@ -944,17 +944,19 @@ find_intersection(int *ilo, int *ihi, const int *ib1, const int *im1,
   return has_intersection;
 }
 
-// ----------------------------------------------------------------------
-// collective_send_fld_begin
 #define BUFLOOP(ix, iy, iz, ilo, hi) \
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {\
 	for (int iy = ilo[1]; iy < ihi[1]; iy++) {\
 	  for (int ix = ilo[0]; ix < ihi[0]; ix++)
 
 #define BUFLOOP_END }}
+
+// ----------------------------------------------------------------------
+// mrc_redist_write_send_begin
+
 static void
-collective_send_fld_begin(struct mrc_redist *redist, struct mrc_io *io,
-			  struct mrc_fld *m3, int m)
+mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_io *io,
+			    struct mrc_fld *m3, int m)
 {
   struct xdmf *xdmf = to_xdmf(io);
 
@@ -998,7 +1000,6 @@ collective_send_fld_begin(struct mrc_redist *redist, struct mrc_io *io,
 
     send->bufs[writer] = malloc(buf_sizes[writer] * m3->_nd->size_of_type);
     assert(send->bufs[writer]);
-#if 1
     buf_sizes[writer] = 0;
 
     // fill buf per writer
@@ -1047,7 +1048,6 @@ collective_send_fld_begin(struct mrc_redist *redist, struct mrc_io *io,
       size_t len = (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
       buf_sizes[writer] += len;
     }
-#endif
     
     MPI_Datatype mpi_dtype;
     switch (mrc_fld_data_type(m3)) {
@@ -1073,11 +1073,11 @@ collective_send_fld_begin(struct mrc_redist *redist, struct mrc_io *io,
 }
 
 // ----------------------------------------------------------------------
-// collective_send_fld_end
+// mrc_redist_write_send_end
 
 static void
-collective_send_fld_end(struct mrc_redist *redist, struct mrc_io *io,
-			struct mrc_fld *m3, int m)
+mrc_redist_write_send_end(struct mrc_redist *redist, struct mrc_io *io,
+			  struct mrc_fld *m3, int m)
 {
   struct xdmf *xdmf = to_xdmf(io);
 
@@ -1498,11 +1498,11 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     writer_comm_init(&redist->write_recv, io, nd, m3_soa->_domain, m3_soa->_nd->size_of_type);
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
       writer_comm_begin(&redist->write_recv, io, nd, m3_soa);
-      collective_send_fld_begin(redist, io, m3_soa, 0);
-      writer_comm_local(&redist->write_recv, io, nd, m3_soa, 0);
-      writer_comm_end(&redist->write_recv, io, nd, m3_soa, 0);
+      mrc_redist_write_send_begin(redist, io, m3_soa, m);
+      writer_comm_local(&redist->write_recv, io, nd, m3_soa, m);
+      writer_comm_end(&redist->write_recv, io, nd, m3_soa, m);
       writer_write_fld(redist, io, path, nd, m, m3, xs, group0);
-      collective_send_fld_end(redist, io, m3, 0);
+      mrc_redist_write_send_end(redist, io, m3, 0);
     }
     writer_comm_destroy(&redist->write_recv);
 
@@ -1510,8 +1510,8 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     mrc_ndarray_destroy(nd);
   } else {
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
-      collective_send_fld_begin(redist, io, m3_soa, m);
-      collective_send_fld_end(redist, io, m3_soa, m);
+      mrc_redist_write_send_begin(redist, io, m3_soa, m);
+      mrc_redist_write_send_end(redist, io, m3_soa, m);
     }
   }
 
