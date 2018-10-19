@@ -32,7 +32,6 @@ struct mrc_redist_write_recv {
 
 struct mrc_redist_writer {
   int writer_rank;
-  int n_blocks;
   struct mrc_redist_block *blocks_begin, *blocks_end;
   void *buf;
   int buf_size;
