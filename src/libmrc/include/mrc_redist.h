@@ -28,6 +28,7 @@ struct mrc_redist_write_recv {
 
 struct mrc_redist_write_send {
   void **bufs; // one for each writer
+  int *buf_sizes;
   MPI_Request *reqs;
 };
 

@@ -110,6 +110,32 @@ find_intersection(int *ilo, int *ihi, const int *ib1, const int *im1,
 #define BUFLOOP_END }}
 
 // ----------------------------------------------------------------------
+// mrc_redist_write_send_init
+
+static void
+mrc_redist_write_send_init(struct mrc_redist *redist)
+{
+  struct mrc_redist_write_send *send = &redist->write_send;
+
+  send->buf_sizes = calloc(redist->nr_writers, sizeof(*send->buf_sizes));
+  send->bufs = calloc(redist->nr_writers, sizeof(*send->bufs));
+  send->reqs = calloc(redist->nr_writers, sizeof(*send->reqs));
+}
+
+// ----------------------------------------------------------------------
+// mrc_redist_write_send_destroy
+
+static void
+mrc_redist_write_send_destroy(struct mrc_redist *redist)
+{
+  struct mrc_redist_write_send *send = &redist->write_send;
+
+  free(send->buf_sizes);
+  free(send->bufs);
+  free(send->reqs);
+}
+
+// ----------------------------------------------------------------------
 // mrc_redist_write_send_begin
 
 static void
@@ -119,10 +145,6 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
   struct mrc_patch *patches = mrc_domain_get_patches(m3->_domain, &nr_patches);
 
   struct mrc_redist_write_send *send = &redist->write_send;
-
-  size_t *buf_sizes = calloc(redist->nr_writers, sizeof(*buf_sizes));
-  send->bufs = calloc(redist->nr_writers, sizeof(*send->bufs));
-  send->reqs = calloc(redist->nr_writers, sizeof(*send->reqs));
 
   for (int writer = 0; writer < redist->nr_writers; writer++) {
     // don't send to self
@@ -143,19 +165,19 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
 	continue;
 
       size_t len = (size_t) m3->_dims.vals[0] * m3->_dims.vals[1] * m3->_dims.vals[2];
-      buf_sizes[writer] += len;
+      send->buf_sizes[writer] += len;
     }
 
     // allocate buf per writer
     //mprintf("to writer %d buf_size %d\n", writer, buf_sizes[writer]);
-    if (buf_sizes[writer] == 0) {
+    if (send->buf_sizes[writer] == 0) {
       send->reqs[writer] = MPI_REQUEST_NULL;
       continue;
     }
 
-    send->bufs[writer] = malloc(buf_sizes[writer] * m3->_nd->size_of_type);
+    send->bufs[writer] = malloc(send->buf_sizes[writer] * m3->_nd->size_of_type);
     assert(send->bufs[writer]);
-    buf_sizes[writer] = 0;
+    send->buf_sizes[writer] = 0;
 
     // fill buf per writer
     for (int p = 0; p < nr_patches; p++) {
@@ -173,7 +195,7 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
       switch (mrc_fld_data_type(m3)) {
       case MRC_NT_FLOAT:
       {
-      	float *buf_ptr = (float *) send->bufs[writer] + buf_sizes[writer];
+      	float *buf_ptr = (float *) send->bufs[writer] + send->buf_sizes[writer];
       	BUFLOOP(ix, iy, iz, ilo, ihi) {
     	    *buf_ptr++ = MRC_S5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
       	} BUFLOOP_END
@@ -181,7 +203,7 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
       }
       case MRC_NT_DOUBLE:
       {
-      	double *buf_ptr = (double *) send->bufs[writer] + buf_sizes[writer];
+      	double *buf_ptr = (double *) send->bufs[writer] + send->buf_sizes[writer];
       	BUFLOOP(ix, iy, iz, ilo, ihi) {
           *buf_ptr++ = MRC_D5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
       	} BUFLOOP_END
@@ -189,7 +211,7 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
       }
       case MRC_NT_INT:
       {
-      	int *buf_ptr = (int *) send->bufs[writer] + buf_sizes[writer];
+      	int *buf_ptr = (int *) send->bufs[writer] + send->buf_sizes[writer];
       	BUFLOOP(ix, iy, iz, ilo, ihi) {
     	    *buf_ptr++ = MRC_I5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
       	} BUFLOOP_END
@@ -201,7 +223,7 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
       }
       }
       size_t len = (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
-      buf_sizes[writer] += len;
+      send->buf_sizes[writer] += len;
     }
     
     MPI_Datatype mpi_dtype;
@@ -220,11 +242,10 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
     }
 
     mprintf("isend to %d\n", redist->writers[writer]);
-    MPI_Isend(send->bufs[writer], buf_sizes[writer], mpi_dtype,
+    MPI_Isend(send->bufs[writer], send->buf_sizes[writer], mpi_dtype,
 	      redist->writers[writer], 0x1000, redist->comm,
 	      &send->reqs[writer]);
   }
-  free(buf_sizes);
 }
 
 // ----------------------------------------------------------------------
@@ -241,8 +262,6 @@ mrc_redist_write_send_end(struct mrc_redist *redist, struct mrc_fld *m3, int m)
   for (int writer = 0; writer < redist->nr_writers; writer++) {
     free(send->bufs[writer]);
   }
-  free(send->bufs);
-  free(send->reqs);
 }
     
 // ----------------------------------------------------------------------
@@ -535,6 +554,8 @@ mrc_redist_write_comm_local(struct mrc_redist *redist, struct mrc_ndarray *nd,
 struct mrc_ndarray *
 mrc_redist_get_ndarray(struct mrc_redist *redist, struct mrc_fld *m3)
 {
+  mrc_redist_write_send_init(redist);
+
   if (!redist->is_writer) {
     return NULL;
   }
@@ -571,6 +592,8 @@ mrc_redist_get_ndarray(struct mrc_redist *redist, struct mrc_fld *m3)
 void
 mrc_redist_put_ndarray(struct mrc_redist *redist, struct mrc_ndarray *nd)
 {
+  mrc_redist_write_send_destroy(redist);
+
   if (redist->is_writer) {
     mrc_redist_write_destroy(redist);
     mrc_ndarray_destroy(nd);
@@ -1074,7 +1097,6 @@ collective_m1_send_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
 static void
 collective_m1_send_end(struct mrc_io *io, struct collective_m1_ctx *ctx)
 {
-  MHERE;
   MPI_Waitall(ctx->nr_send_reqs, ctx->send_reqs, MPI_STATUSES_IGNORE);
   free(ctx->send_reqs);
 }
@@ -1129,7 +1151,6 @@ collective_m1_recv_end(struct mrc_io *io, struct collective_m1_ctx *ctx)
   if (io->rank != xdmf->writers[0])
     return;
 
-  MHERE;
   MPI_Waitall(ctx->nr_recv_reqs, ctx->recv_reqs, MPI_STATUSES_IGNORE);
   free(ctx->recv_reqs);
 }
@@ -1227,7 +1248,6 @@ static void
 collective_m1_read_recv_end(struct mrc_io *io, struct collective_m1_ctx *ctx,
 			    struct mrc_fld *m1, int m)
 {
-  MHERE;
   MPI_Waitall(ctx->nr_recv_reqs, ctx->recv_reqs, MPI_STATUSES_IGNORE);
   free(ctx->recv_reqs);
   mrc_fld_set_comp_name(m1, m, ctx->comp_name);
@@ -1270,7 +1290,6 @@ collective_m1_read_send_end(struct mrc_io *io, struct collective_m1_ctx *ctx)
   if (io->rank != xdmf->writers[0])
     return;
 
-  MHERE;
   MPI_Waitall(ctx->nr_send_reqs, ctx->send_reqs, MPI_STATUSES_IGNORE);
   free(ctx->send_reqs);
 }
