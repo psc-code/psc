@@ -106,22 +106,41 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
     int writer_offs[3], writer_dims[3];
     mrc_redist_writer_offs_dims(redist, writer, writer_offs, writer_dims);
 
-    // find buf_size per writer
-    int buf_n = 0;
+    // count blocks that we need to send to writer
     for (int p = 0; p < nr_patches; p++) {
       int ilo[3], ihi[3];
-      bool has_intersection =
-	find_intersection(ilo, ihi, patches[p].off, patches[p].ldims,
-			  writer_offs, writer_dims);
-      if (!has_intersection)
+      bool has_intersection = find_intersection(ilo, ihi, patches[p].off, patches[p].ldims,
+						writer_offs, writer_dims);
+      if (!has_intersection) {
 	continue;
+      }
+      w->n_blocks++;
+    }
 
+    if (w->n_blocks == 0) {
+      continue;
+    }
+
+    w->blocks = calloc(w->n_blocks, sizeof(*w->blocks));
+    int buf_n = 0;
+    int block = 0;
+    for (int p = 0; p < nr_patches; p++) {
+      int ilo[3], ihi[3];
+      bool has_intersection = find_intersection(ilo, ihi, patches[p].off, patches[p].ldims,
+						writer_offs, writer_dims);
+      if (!has_intersection) {
+	continue;
+      }
+
+      for (int d = 0; d < 3; d++) {
+	w->blocks[block].ilo[d] = ilo[d];
+	w->blocks[block].ihi[d] = ihi[d];
+      }
+      block++;
       int *ldims = patches[p].ldims;
       buf_n += ldims[0] * ldims[1] * ldims[2];
     }
-    if (buf_n == 0) {
-      continue;
-    }
+    assert(block == w->n_blocks);
 
     // allocate buf per writer
     //mprintf("to writer %d buf_size %d\n", writer, buf_sizes[writer]);
@@ -141,6 +160,7 @@ mrc_redist_write_send_destroy(struct mrc_redist *redist)
 
   for (int writer = 0; writer < redist->nr_writers; writer++) {
     struct mrc_redist_writer *w = &send->writers[writer];
+    free(w->blocks);
     free(w->buf);
   }
   free(send->writers);
