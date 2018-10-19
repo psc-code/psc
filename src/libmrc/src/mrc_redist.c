@@ -98,8 +98,9 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
 
   for (int writer = 0; writer < redist->nr_writers; writer++) {
     struct mrc_redist_writer *w = &send->writers[writer];
+    w->writer_rank = redist->writer_ranks[writer];
     // don't send to self
-    if (redist->writer_ranks[writer] == redist->rank) {
+    if (w->writer_rank == redist->rank) {
       continue;
     }
     int writer_offs[3], writer_dims[3];
@@ -229,9 +230,8 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
       assert(0);
     }
 
-    mprintf("isend to %d\n", redist->writer_ranks[writer]);
-    MPI_Isend(w->buf, w->buf_size, mpi_dtype,
-	      redist->writer_ranks[writer], 0x1000, redist->comm,
+    mprintf("isend to %d\n", w->writer_rank);
+    MPI_Isend(w->buf, w->buf_size, mpi_dtype, w->writer_rank, 0x1000, redist->comm,
 	      &send->reqs[writer]);
   }
 }

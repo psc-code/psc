@@ -30,7 +30,7 @@ struct mrc_redist_write_recv {
 };
 
 struct mrc_redist_writer {
-  int writer;
+  int writer_rank;
   void *buf;
   int buf_size;
 };
