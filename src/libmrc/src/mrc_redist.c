@@ -100,7 +100,6 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
   for (int writer = 0; writer < redist->nr_writers; writer++) {
     // don't send to self
     if (redist->writers[writer] == redist->rank) {
-      send->reqs[writer] = MPI_REQUEST_NULL;
       continue;
     }
     int writer_offs[3], writer_dims[3];
@@ -124,7 +123,6 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
     // allocate buf per writer
     //mprintf("to writer %d buf_size %d\n", writer, buf_sizes[writer]);
     if (send->buf_sizes[writer] == 0) {
-      send->reqs[writer] = MPI_REQUEST_NULL;
       continue;
     }
 
