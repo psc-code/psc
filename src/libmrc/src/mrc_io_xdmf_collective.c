@@ -113,38 +113,16 @@ find_intersection(int *ilo, int *ihi, const int *ib1, const int *im1,
 // mrc_redist_write_send_init
 
 static void
-mrc_redist_write_send_init(struct mrc_redist *redist)
+mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
 {
   struct mrc_redist_write_send *send = &redist->write_send;
 
   send->buf_sizes = calloc(redist->nr_writers, sizeof(*send->buf_sizes));
   send->bufs = calloc(redist->nr_writers, sizeof(*send->bufs));
   send->reqs = calloc(redist->nr_writers, sizeof(*send->reqs));
-}
 
-// ----------------------------------------------------------------------
-// mrc_redist_write_send_destroy
-
-static void
-mrc_redist_write_send_destroy(struct mrc_redist *redist)
-{
-  struct mrc_redist_write_send *send = &redist->write_send;
-
-  free(send->buf_sizes);
-  free(send->bufs);
-  free(send->reqs);
-}
-
-// ----------------------------------------------------------------------
-// mrc_redist_write_send_begin
-
-static void
-mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m)
-{
   int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(m3->_domain, &nr_patches);
-
-  struct mrc_redist_write_send *send = &redist->write_send;
+  struct mrc_patch *patches = mrc_domain_get_patches(redist->domain, &nr_patches);
 
   for (int writer = 0; writer < redist->nr_writers; writer++) {
     // don't send to self
@@ -165,7 +143,8 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
       if (!has_intersection)
 	continue;
 
-      buf_n += m3->_dims.vals[0] * m3->_dims.vals[1] * m3->_dims.vals[2];
+      int *ldims = patches[p].ldims;
+      buf_n += ldims[0] * ldims[1] * ldims[2];
     }
     send->buf_sizes[writer] = buf_n;
 
@@ -179,6 +158,34 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
     send->bufs[writer] = malloc(send->buf_sizes[writer] * m3->_nd->size_of_type);
     assert(send->bufs[writer]);
   }
+}
+
+// ----------------------------------------------------------------------
+// mrc_redist_write_send_destroy
+
+static void
+mrc_redist_write_send_destroy(struct mrc_redist *redist)
+{
+  struct mrc_redist_write_send *send = &redist->write_send;
+
+  for (int writer = 0; writer < redist->nr_writers; writer++) {
+    free(send->bufs[writer]);
+  }
+  free(send->buf_sizes);
+  free(send->bufs);
+  free(send->reqs);
+}
+
+// ----------------------------------------------------------------------
+// mrc_redist_write_send_begin
+
+static void
+mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m)
+{
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(m3->_domain, &nr_patches);
+
+  struct mrc_redist_write_send *send = &redist->write_send;
 
   for (int writer = 0; writer < redist->nr_writers; writer++) {
     if (!send->bufs[writer]) {
@@ -268,10 +275,6 @@ mrc_redist_write_send_end(struct mrc_redist *redist, struct mrc_fld *m3, int m)
 
   mprintf("send_end: waitall cnt = %d\n", redist->nr_writers);
   MPI_Waitall(redist->nr_writers, send->reqs, MPI_STATUSES_IGNORE);
-
-  for (int writer = 0; writer < redist->nr_writers; writer++) {
-    free(send->bufs[writer]);
-  }
 }
     
 // ----------------------------------------------------------------------
@@ -564,7 +567,7 @@ mrc_redist_write_comm_local(struct mrc_redist *redist, struct mrc_ndarray *nd,
 struct mrc_ndarray *
 mrc_redist_get_ndarray(struct mrc_redist *redist, struct mrc_fld *m3)
 {
-  mrc_redist_write_send_init(redist);
+  mrc_redist_write_send_init(redist, m3);
 
   if (!redist->is_writer) {
     return NULL;
