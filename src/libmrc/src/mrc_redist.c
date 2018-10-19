@@ -14,12 +14,12 @@ mrc_redist_init(struct mrc_redist *redist, struct mrc_domain *domain,
   MPI_Comm_size(redist->comm, &redist->size);
 
   redist->nr_writers = nr_writers;
-  redist->writers = calloc(nr_writers, sizeof(*redist->writers));
+  redist->writer_ranks = calloc(nr_writers, sizeof(*redist->writer_ranks));
   // setup writers, just use first nr_writers ranks,
   // could do something fancier in the future
   redist->is_writer = 0;
   for (int i = 0; i < nr_writers; i++) {
-    redist->writers[i] = i;
+    redist->writer_ranks[i] = i;
     if (i == redist->rank) {
       redist->is_writer = 1;
     }
@@ -54,7 +54,7 @@ mrc_redist_init(struct mrc_redist *redist, struct mrc_domain *domain,
 void
 mrc_redist_destroy(struct mrc_redist *redist)
 {
-  free(redist->writers);
+  free(redist->writer_ranks);
   MPI_Comm_free(&redist->comm_writers);
 }
 
@@ -99,7 +99,7 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
   for (int writer = 0; writer < redist->nr_writers; writer++) {
     struct mrc_redist_writer *w = &send->writers[writer];
     // don't send to self
-    if (redist->writers[writer] == redist->rank) {
+    if (redist->writer_ranks[writer] == redist->rank) {
       continue;
     }
     int writer_offs[3], writer_dims[3];
@@ -229,9 +229,9 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
       assert(0);
     }
 
-    mprintf("isend to %d\n", redist->writers[writer]);
+    mprintf("isend to %d\n", redist->writer_ranks[writer]);
     MPI_Isend(w->buf, w->buf_size, mpi_dtype,
-	      redist->writers[writer], 0x1000, redist->comm,
+	      redist->writer_ranks[writer], 0x1000, redist->comm,
 	      &send->reqs[writer]);
   }
 }

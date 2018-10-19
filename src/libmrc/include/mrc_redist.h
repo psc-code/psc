@@ -47,7 +47,7 @@ struct mrc_redist {
   int size;
   
   MPI_Comm comm_writers;
-  int *writers;
+  int *writer_ranks;
   int nr_writers;
   int is_writer;
 
