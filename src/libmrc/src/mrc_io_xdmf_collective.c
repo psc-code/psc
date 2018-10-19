@@ -156,6 +156,7 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
     mrc_redist_writer_offs_dims(redist, writer, writer_offs, writer_dims);
 
     // find buf_size per writer
+    int buf_n = 0;
     for (int p = 0; p < nr_patches; p++) {
       int ilo[3], ihi[3];
       bool has_intersection =
@@ -164,9 +165,9 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
       if (!has_intersection)
 	continue;
 
-      size_t len = (size_t) m3->_dims.vals[0] * m3->_dims.vals[1] * m3->_dims.vals[2];
-      send->buf_sizes[writer] += len;
+      buf_n += m3->_dims.vals[0] * m3->_dims.vals[1] * m3->_dims.vals[2];
     }
+    send->buf_sizes[writer] = buf_n;
 
     // allocate buf per writer
     //mprintf("to writer %d buf_size %d\n", writer, buf_sizes[writer]);
@@ -177,9 +178,18 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
 
     send->bufs[writer] = malloc(send->buf_sizes[writer] * m3->_nd->size_of_type);
     assert(send->bufs[writer]);
-    send->buf_sizes[writer] = 0;
+  }
+
+  for (int writer = 0; writer < redist->nr_writers; writer++) {
+    if (!send->bufs[writer]) {
+      send->reqs[writer] = MPI_REQUEST_NULL;
+      continue;
+    }
+    int writer_offs[3], writer_dims[3];
+    mrc_redist_writer_offs_dims(redist, writer, writer_offs, writer_dims);
 
     // fill buf per writer
+    int buf_n = 0;
     for (int p = 0; p < nr_patches; p++) {
       int ilo[3], ihi[3];
       int *off = patches[p].off;
@@ -195,7 +205,7 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
       switch (mrc_fld_data_type(m3)) {
       case MRC_NT_FLOAT:
       {
-      	float *buf_ptr = (float *) send->bufs[writer] + send->buf_sizes[writer];
+      	float *buf_ptr = (float *) send->bufs[writer] + buf_n;
       	BUFLOOP(ix, iy, iz, ilo, ihi) {
     	    *buf_ptr++ = MRC_S5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
       	} BUFLOOP_END
@@ -203,7 +213,7 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
       }
       case MRC_NT_DOUBLE:
       {
-      	double *buf_ptr = (double *) send->bufs[writer] + send->buf_sizes[writer];
+      	double *buf_ptr = (double *) send->bufs[writer] + buf_n;
       	BUFLOOP(ix, iy, iz, ilo, ihi) {
           *buf_ptr++ = MRC_D5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
       	} BUFLOOP_END
@@ -211,7 +221,7 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
       }
       case MRC_NT_INT:
       {
-      	int *buf_ptr = (int *) send->bufs[writer] + send->buf_sizes[writer];
+      	int *buf_ptr = (int *) send->bufs[writer] + buf_n;
       	BUFLOOP(ix, iy, iz, ilo, ihi) {
     	    *buf_ptr++ = MRC_I5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
       	} BUFLOOP_END
@@ -222,9 +232,9 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
       	assert(0);
       }
       }
-      size_t len = (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
-      send->buf_sizes[writer] += len;
+      buf_n += (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
     }
+    assert(buf_n == send->buf_sizes[writer]);
     
     MPI_Datatype mpi_dtype;
     switch (mrc_fld_data_type(m3)) {
