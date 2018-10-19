@@ -180,7 +180,7 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
 
   for (int writer = 0; writer < redist->nr_writers; writer++) {
     struct mrc_redist_writer *w = &send->writers[writer];
-    if (!w->buf) {
+    if (!w->n_blocks) {
       send->reqs[writer] = MPI_REQUEST_NULL;
       continue;
     }
@@ -189,14 +189,17 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
 
     // fill buf per writer
     int buf_n = 0;
+    int block = 0;
     for (int p = 0; p < nr_patches; p++) {
-      int ilo[3], ihi[3];
+      int _ilo[3], _ihi[3];
       int *off = patches[p].off;
       bool has_intersection =
-	find_intersection(ilo, ihi, off, patches[p].ldims,
+	find_intersection(_ilo, _ihi, off, patches[p].ldims,
 			  writer_offs, writer_dims);
       if (!has_intersection)
 	continue;
+
+      int *ilo = w->blocks[block].ilo, *ihi = w->blocks[block].ihi;
 
       struct mrc_patch_info info;
       mrc_domain_get_local_patch_info(m3->_domain, p, &info);
@@ -232,6 +235,7 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
       }
       }
       buf_n += (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
+      block++;
     }
     assert(buf_n == w->buf_size);
     
