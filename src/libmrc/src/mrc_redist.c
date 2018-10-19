@@ -121,7 +121,7 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
       continue;
     }
 
-    w->blocks = calloc(w->n_blocks, sizeof(*w->blocks));
+    w->blocks_begin = calloc(w->n_blocks, sizeof(*w->blocks_begin));
     int buf_n = 0;
     int block = 0;
     for (int p = 0; p < nr_patches; p++) {
@@ -132,10 +132,11 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
 	continue;
       }
 
-      w->blocks[block].p = p;
+      struct mrc_redist_block *b = &w->blocks_begin[block];
+      b->p = p;
       for (int d = 0; d < 3; d++) {
-	w->blocks[block].ilo[d] = ilo[d];
-	w->blocks[block].ihi[d] = ihi[d];
+	b->ilo[d] = ilo[d];
+	b->ihi[d] = ihi[d];
       }
 
       block++;
@@ -161,7 +162,7 @@ mrc_redist_write_send_destroy(struct mrc_redist *redist)
 
   for (int writer = 0; writer < redist->nr_writers; writer++) {
     struct mrc_redist_writer *w = &send->writers[writer];
-    free(w->blocks);
+    free(w->blocks_begin);
     free(w->buf);
   }
   free(send->writers);
@@ -192,16 +193,10 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
     int buf_n = 0;
     int block = 0;
     for (int block = 0; block < w->n_blocks; block++) {
-      int p = w->blocks[block].p;
+      struct mrc_redist_block *b = &w->blocks_begin[block];
+      int p = b->p;
       int *off = patches[p].off;
-      int *ldims = patches[p].ldims;
-
-      int *ilo = w->blocks[block].ilo, *ihi = w->blocks[block].ihi;
-      mprintf("ilo %d %d %d ihi %d %d %d ldims %d %d %d p %d\n",
-	      ilo[0], ilo[1], ilo[2],
-	      ihi[0], ihi[1], ihi[2],
-	      ldims[0], ldims[1], ldims[2], p);
-
+      int *ilo = b->ilo, *ihi = b->ihi;
       struct mrc_patch_info info;
       mrc_domain_get_local_patch_info(m3->_domain, p, &info);
       assert(!m3->_aos);
