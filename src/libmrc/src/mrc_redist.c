@@ -122,6 +122,7 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
     }
 
     w->blocks_begin = calloc(w->n_blocks, sizeof(*w->blocks_begin));
+    w->blocks_end = w->blocks_begin + w->n_blocks;
     int buf_n = 0;
     int block = 0;
     for (int p = 0; p < nr_patches; p++) {
@@ -142,10 +143,9 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
       block++;
       buf_n += (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
     }
-    assert(block == w->n_blocks);
 
     // allocate buf per writer
-    mprintf("to writer %d buf_size %d n_blocks %d\n", writer, buf_n, w->n_blocks);
+    //mprintf("to writer %d buf_size %d n_blocks %d\n", writer, buf_n, w->n_blocks);
     w->buf_size = buf_n;
     w->buf = malloc(buf_n * m3->_nd->size_of_type);
     assert(w->buf);
@@ -182,12 +182,10 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
 
   for (int writer = 0; writer < redist->nr_writers; writer++) {
     struct mrc_redist_writer *w = &send->writers[writer];
-    if (!w->n_blocks) {
+    if (!w->blocks_begin) {
       send->reqs[writer] = MPI_REQUEST_NULL;
       continue;
     }
-    int writer_offs[3], writer_dims[3];
-    mrc_redist_writer_offs_dims(redist, writer, writer_offs, writer_dims);
 
     // fill buf per writer
     int buf_n = 0;
