@@ -132,18 +132,19 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
 	continue;
       }
 
+      w->blocks[block].p = p;
       for (int d = 0; d < 3; d++) {
 	w->blocks[block].ilo[d] = ilo[d];
 	w->blocks[block].ihi[d] = ihi[d];
       }
+
       block++;
-      int *ldims = patches[p].ldims;
-      buf_n += ldims[0] * ldims[1] * ldims[2];
+      buf_n += (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
     }
     assert(block == w->n_blocks);
 
     // allocate buf per writer
-    //mprintf("to writer %d buf_size %d\n", writer, buf_sizes[writer]);
+    mprintf("to writer %d buf_size %d n_blocks %d\n", writer, buf_n, w->n_blocks);
     w->buf_size = buf_n;
     w->buf = malloc(buf_n * m3->_nd->size_of_type);
     assert(w->buf);
@@ -190,16 +191,16 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
     // fill buf per writer
     int buf_n = 0;
     int block = 0;
-    for (int p = 0; p < nr_patches; p++) {
-      int _ilo[3], _ihi[3];
+    for (int block = 0; block < w->n_blocks; block++) {
+      int p = w->blocks[block].p;
       int *off = patches[p].off;
-      bool has_intersection =
-	find_intersection(_ilo, _ihi, off, patches[p].ldims,
-			  writer_offs, writer_dims);
-      if (!has_intersection)
-	continue;
+      int *ldims = patches[p].ldims;
 
       int *ilo = w->blocks[block].ilo, *ihi = w->blocks[block].ihi;
+      mprintf("ilo %d %d %d ihi %d %d %d ldims %d %d %d p %d\n",
+	      ilo[0], ilo[1], ilo[2],
+	      ihi[0], ihi[1], ihi[2],
+	      ldims[0], ldims[1], ldims[2], p);
 
       struct mrc_patch_info info;
       mrc_domain_get_local_patch_info(m3->_domain, p, &info);
@@ -235,7 +236,6 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
       }
       }
       buf_n += (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
-      block++;
     }
     assert(buf_n == w->buf_size);
     

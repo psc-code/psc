@@ -10,6 +10,7 @@ BEGIN_C_DECLS
 struct mrc_redist_block {
   int ilo[3]; // intersection low
   int ihi[3]; // intersection high
+  int p; // local patch
 };
 
 struct mrc_redist_peer {
