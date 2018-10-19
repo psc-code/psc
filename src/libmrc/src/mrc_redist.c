@@ -90,8 +90,7 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
 {
   struct mrc_redist_write_send *send = &redist->write_send;
 
-  send->buf_sizes = calloc(redist->nr_writers, sizeof(*send->buf_sizes));
-  send->bufs = calloc(redist->nr_writers, sizeof(*send->bufs));
+  send->writers = calloc(redist->nr_writers, sizeof(*send->writers));
   send->reqs = calloc(redist->nr_writers, sizeof(*send->reqs));
 
   int nr_patches;
@@ -118,16 +117,15 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
       int *ldims = patches[p].ldims;
       buf_n += ldims[0] * ldims[1] * ldims[2];
     }
-    send->buf_sizes[writer] = buf_n;
-
-    // allocate buf per writer
-    //mprintf("to writer %d buf_size %d\n", writer, buf_sizes[writer]);
-    if (send->buf_sizes[writer] == 0) {
+    if (buf_n == 0) {
       continue;
     }
 
-    send->bufs[writer] = malloc(send->buf_sizes[writer] * m3->_nd->size_of_type);
-    assert(send->bufs[writer]);
+    // allocate buf per writer
+    //mprintf("to writer %d buf_size %d\n", writer, buf_sizes[writer]);
+    send->writers[writer].buf_size = buf_n;
+    send->writers[writer].buf = malloc(buf_n * m3->_nd->size_of_type);
+    assert(send->writers[writer].buf);
   }
 }
 
@@ -140,10 +138,9 @@ mrc_redist_write_send_destroy(struct mrc_redist *redist)
   struct mrc_redist_write_send *send = &redist->write_send;
 
   for (int writer = 0; writer < redist->nr_writers; writer++) {
-    free(send->bufs[writer]);
+    free(send->writers[writer].buf);
   }
-  free(send->buf_sizes);
-  free(send->bufs);
+  free(send->writers);
   free(send->reqs);
 }
 
@@ -159,7 +156,7 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
   struct mrc_redist_write_send *send = &redist->write_send;
 
   for (int writer = 0; writer < redist->nr_writers; writer++) {
-    if (!send->bufs[writer]) {
+    if (!send->writers[writer].buf) {
       send->reqs[writer] = MPI_REQUEST_NULL;
       continue;
     }
@@ -183,7 +180,7 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
       switch (mrc_fld_data_type(m3)) {
       case MRC_NT_FLOAT:
       {
-      	float *buf_ptr = (float *) send->bufs[writer] + buf_n;
+      	float *buf_ptr = (float *) send->writers[writer].buf + buf_n;
       	BUFLOOP(ix, iy, iz, ilo, ihi) {
     	    *buf_ptr++ = MRC_S5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
       	} BUFLOOP_END
@@ -191,7 +188,7 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
       }
       case MRC_NT_DOUBLE:
       {
-      	double *buf_ptr = (double *) send->bufs[writer] + buf_n;
+      	double *buf_ptr = (double *) send->writers[writer].buf + buf_n;
       	BUFLOOP(ix, iy, iz, ilo, ihi) {
           *buf_ptr++ = MRC_D5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
       	} BUFLOOP_END
@@ -199,7 +196,7 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
       }
       case MRC_NT_INT:
       {
-      	int *buf_ptr = (int *) send->bufs[writer] + buf_n;
+      	int *buf_ptr = (int *) send->writers[writer].buf + buf_n;
       	BUFLOOP(ix, iy, iz, ilo, ihi) {
     	    *buf_ptr++ = MRC_I5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
       	} BUFLOOP_END
@@ -212,7 +209,7 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
       }
       buf_n += (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
     }
-    assert(buf_n == send->buf_sizes[writer]);
+    assert(buf_n == send->writers[writer].buf_size);
     
     MPI_Datatype mpi_dtype;
     switch (mrc_fld_data_type(m3)) {
@@ -230,7 +227,7 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
     }
 
     mprintf("isend to %d\n", redist->writers[writer]);
-    MPI_Isend(send->bufs[writer], send->buf_sizes[writer], mpi_dtype,
+    MPI_Isend(send->writers[writer].buf, send->writers[writer].buf_size, mpi_dtype,
 	      redist->writers[writer], 0x1000, redist->comm,
 	      &send->reqs[writer]);
   }

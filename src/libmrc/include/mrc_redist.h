@@ -29,9 +29,14 @@ struct mrc_redist_write_recv {
   struct mrc_redist_block *recv_patches;
 };
 
+struct mrc_redist_writer {
+  int writer;
+  void *buf;
+  int buf_size;
+};
+
 struct mrc_redist_write_send {
-  void **bufs; // one for each writer
-  int *buf_sizes;
+  struct mrc_redist_writer *writers;
   MPI_Request *reqs;
 };
 
