@@ -2,6 +2,9 @@
 #ifndef MRC_REDIST_H
 #define MRC_REDIST_H
 
+#include <mrc.h>
+#include <mrc_fld.h>
+
 BEGIN_C_DECLS
 
 struct mrc_redist_block {
@@ -61,6 +64,24 @@ struct mrc_ndarray *mrc_redist_get_ndarray(struct mrc_redist *redist, struct mrc
 void mrc_redist_put_ndarray(struct mrc_redist *redist, struct mrc_ndarray *nd);
 void mrc_redist_run(struct mrc_redist *redist, struct mrc_ndarray *nd,
 		    struct mrc_fld *m3, int m);
+
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+
+static inline bool
+find_intersection(int *ilo, int *ihi, const int *ib1, const int *im1,
+		  const int *ib2, const int *im2)
+{
+  bool has_intersection = true;
+  for (int d = 0; d < 3; d++) {
+    ilo[d] = MAX(ib1[d], ib2[d]);
+    ihi[d] = MIN(ib1[d] + im1[d], ib2[d] + im2[d]);
+    if (ihi[d] - ilo[d] <= 0) {
+      has_intersection = false;
+    }
+  }
+  return has_intersection;
+}
 
 END_C_DECLS
 
