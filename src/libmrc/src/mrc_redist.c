@@ -274,7 +274,7 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
     
     MPI_Datatype mpi_dtype = to_mpi_datatype(mrc_fld_data_type(m3));
 
-    mprintf("isend to %d\n", w->writer_rank);
+    mprintf("send_begin: Isend cnt %ld to %d\n", w->buf_size, w->writer_rank);
     MPI_Isend(w->buf, w->buf_size, mpi_dtype, w->writer_rank, 0x1000, redist->comm,
 	      &send->reqs[w - send->writers_begin]);
   }
@@ -289,7 +289,7 @@ mrc_redist_write_send_end(struct mrc_redist *redist, struct mrc_fld *m3, int m)
   struct mrc_redist_write_send *send = &redist->write_send;
 
   int n_peers = send->writers_end - send->writers_begin;
-  mprintf("send_end: waitall cnt = %d\n", n_peers);
+  mprintf("send_end: Waitall cnt = %d\n", n_peers);
   MPI_Waitall(n_peers, send->reqs, MPI_STATUSES_IGNORE);
 }
     
@@ -426,7 +426,7 @@ mrc_redist_write_recv_begin(struct mrc_redist *redist, struct mrc_ndarray *nd,
     MPI_Datatype mpi_dtype = to_mpi_datatype(mrc_fld_data_type(m3));
     
     // recv aggregate buffers
-    mprintf("irecv from %d\n", peer->rank);
+    mprintf("recv_begin: Irecv cnt %ld from %d\n", peer->buf_size, peer->rank);
     MPI_Irecv(peer->buf, peer->buf_size, mpi_dtype, peer->rank, 0x1000, redist->comm,
 	      &recv->reqs[peer - recv->peers]);
   }
@@ -441,7 +441,7 @@ mrc_redist_write_recv_end(struct mrc_redist *redist, struct mrc_ndarray *nd,
 {
   struct mrc_redist_write_recv *recv = &redist->write_recv;
 
-  mprintf("recv_end: waitall cnt = %d\n", recv->n_peers);
+  mprintf("recv_end: Waitall cnt = %d\n", recv->n_peers);
   MPI_Waitall(recv->n_peers, recv->reqs, MPI_STATUSES_IGNORE);
 
   for (struct mrc_redist_peer *peer = recv->peers; peer < recv->peers + recv->n_peers; peer++) {

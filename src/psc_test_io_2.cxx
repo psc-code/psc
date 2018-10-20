@@ -83,7 +83,7 @@ struct PscTestIo
     mpi_printf(MPI_COMM_WORLD, "*** Testing redist\n");
 
     struct mrc_redist redist[1];
-    mrc_redist_init(redist, domain, Int3{}, Int3{}, 2);
+    mrc_redist_init(redist, domain, Int3{}, Int3{}, 1);
     struct mrc_ndarray *nd = mrc_redist_get_ndarray(redist, fld);
 
     for (int m = 0; m < mrc_fld_nr_comps(fld); m++) {
