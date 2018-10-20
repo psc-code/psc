@@ -927,9 +927,8 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
   struct mrc_ndarray *nd = mrc_redist_get_ndarray(redist, m3_soa);
 
   for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
-    mprintf("m = %d\n", m);
     MPI_Barrier(MPI_COMM_WORLD);
-    MHERE;
+    mpi_printf(MPI_COMM_WORLD, "m = %d\n", m);
     mrc_redist_run(redist, nd, m3_soa, m);
 
 #if 1
@@ -939,9 +938,8 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
 #endif
   }
 
-  MHERE;
   MPI_Barrier(MPI_COMM_WORLD);
-  MHERE;
+  mpi_printf(MPI_COMM_WORLD, "m done\n");
   mrc_redist_put_ndarray(redist, nd);
   
   if (xdmf->is_writer) {
