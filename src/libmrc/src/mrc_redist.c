@@ -82,6 +82,16 @@ mrc_redist_writer_offs_dims(struct mrc_redist *redist, int writer,
 
 #define BUFLOOP_END }}
 
+MPI_Datatype to_mpi_datatype(int data_type)
+{
+  switch (data_type) {
+  case MRC_NT_FLOAT:  return MPI_FLOAT; break;
+  case MRC_NT_DOUBLE: return MPI_DOUBLE; break;
+  case MRC_NT_INT:    return MPI_INT; break;
+  default: assert(0);
+  }
+}
+
 // ----------------------------------------------------------------------
 // mrc_redist_write_send_init
 
@@ -261,20 +271,7 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
     }
     assert(buf_n == w->buf_size);
     
-    MPI_Datatype mpi_dtype;
-    switch (mrc_fld_data_type(m3)) {
-    case MRC_NT_FLOAT:
-      mpi_dtype = MPI_FLOAT;
-      break;
-    case MRC_NT_DOUBLE:
-      mpi_dtype = MPI_DOUBLE;
-      break;
-    case MRC_NT_INT:
-      mpi_dtype = MPI_INT;
-      break;
-    default:
-      assert(0);
-    }
+    MPI_Datatype mpi_dtype = to_mpi_datatype(mrc_fld_data_type(m3));
 
     mprintf("isend to %d\n", w->writer_rank);
     MPI_Isend(w->buf, w->buf_size, mpi_dtype, w->writer_rank, 0x1000, redist->comm,
@@ -425,20 +422,7 @@ mrc_redist_write_recv_begin(struct mrc_redist *redist, struct mrc_ndarray *nd,
   struct mrc_redist_write_recv *recv = &redist->write_recv;
   
   for (struct mrc_redist_peer *peer = recv->peers; peer < recv->peers + recv->n_peers; peer++) {
-    MPI_Datatype mpi_dtype;
-    switch (mrc_fld_data_type(m3)) {
-    case MRC_NT_FLOAT:
-      mpi_dtype = MPI_FLOAT;
-      break;
-    case MRC_NT_DOUBLE:
-      mpi_dtype = MPI_DOUBLE;
-      break;
-    case MRC_NT_INT:
-      mpi_dtype = MPI_INT;
-      break;
-    default:
-      assert(0);
-    }
+    MPI_Datatype mpi_dtype = to_mpi_datatype(mrc_fld_data_type(m3));
     
     // recv aggregate buffers
     mprintf("irecv from %d\n", peer->rank);
