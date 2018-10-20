@@ -426,7 +426,7 @@ mrc_redist_write_recv_begin(struct mrc_redist *redist, struct mrc_ndarray *nd,
     MPI_Datatype mpi_dtype = to_mpi_datatype(mrc_fld_data_type(m3));
     
     // recv aggregate buffers
-    mprintf("recv_begin: Irecv cnt %ld from %d\n", peer->buf_size, peer->rank);
+    //mprintf("recv_begin: Irecv cnt %ld from %d\n", peer->buf_size, peer->rank);
     MPI_Irecv(peer->buf, peer->buf_size, mpi_dtype, peer->rank, 0x1000, redist->comm,
 	      &recv->reqs[peer - recv->peers]);
   }
