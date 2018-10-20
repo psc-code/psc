@@ -125,7 +125,7 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
     w->blocks_begin = calloc(n_blocks, sizeof(*w->blocks_begin));
     w->blocks_end = w->blocks_begin + n_blocks;
     int buf_n = 0;
-    int block = 0;
+    struct mrc_redist_block *b = w->blocks_begin;
     for (int p = 0; p < nr_patches; p++) {
       int ilo[3], ihi[3];
       bool has_intersection = find_intersection(ilo, ihi, patches[p].off, patches[p].ldims,
@@ -134,14 +134,13 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
 	continue;
       }
 
-      struct mrc_redist_block *b = &w->blocks_begin[block];
       b->p = p;
       for (int d = 0; d < 3; d++) {
 	b->ilo[d] = ilo[d];
 	b->ihi[d] = ihi[d];
       }
 
-      block++;
+      b++;
       buf_n += (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
     }
 
