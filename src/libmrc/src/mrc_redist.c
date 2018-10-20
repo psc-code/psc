@@ -274,7 +274,7 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
     
     MPI_Datatype mpi_dtype = to_mpi_datatype(mrc_fld_data_type(m3));
 
-    mprintf("send_begin: Isend cnt %ld to %d\n", w->buf_size, w->writer_rank);
+    //mprintf("send_begin: Isend cnt %ld to %d\n", w->buf_size, w->writer_rank);
     MPI_Isend(w->buf, w->buf_size, mpi_dtype, w->writer_rank, 0x1000, redist->comm,
 	      &send->reqs[w - send->writers_begin]);
   }
@@ -289,7 +289,7 @@ mrc_redist_write_send_end(struct mrc_redist *redist, struct mrc_fld *m3, int m)
   struct mrc_redist_write_send *send = &redist->write_send;
 
   int n_peers = send->writers_end - send->writers_begin;
-  mprintf("send_end: Waitall cnt = %d\n", n_peers);
+  //mprintf("send_end: Waitall cnt = %d\n", n_peers);
   MPI_Waitall(n_peers, send->reqs, MPI_STATUSES_IGNORE);
 }
     
@@ -323,7 +323,7 @@ mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
 
     recv->n_recv_patches++;
   }
-  mprintf("n_recv_patches %d\n", recv->n_recv_patches);
+  //mprintf("n_recv_patches %d\n", recv->n_recv_patches);
 
   recv->recv_patches = calloc(recv->n_recv_patches, sizeof(*recv->recv_patches));
 
