@@ -229,7 +229,7 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
 
   for (struct mrc_redist_writer *w = send->writers_begin; w != send->writers_end; w++) {
     // fill buf per writer
-    int buf_n = 0;
+    void *buf = w->buf;
     for (struct mrc_redist_block *b = w->blocks_begin; b != w->blocks_end; b++) {
       int p = b->p;
       int *off = patches[p].off;
@@ -240,26 +240,29 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
       switch (mrc_fld_data_type(m3)) {
       case MRC_NT_FLOAT:
       {
-      	float *buf_ptr = (float *) w->buf + buf_n;
+      	float *buf_ptr = (float *) buf;
       	BUFLOOP(ix, iy, iz, ilo, ihi) {
     	    *buf_ptr++ = MRC_S5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
-      	} BUFLOOP_END
+      	} BUFLOOP_END;
+	buf = buf_ptr;
       	break;
       }
       case MRC_NT_DOUBLE:
       {
-      	double *buf_ptr = (double *) w->buf + buf_n;
+      	double *buf_ptr = (double *) buf;
       	BUFLOOP(ix, iy, iz, ilo, ihi) {
           *buf_ptr++ = MRC_D5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
-      	} BUFLOOP_END
+      	} BUFLOOP_END;
+	buf = buf_ptr;
       	break;
       }
       case MRC_NT_INT:
       {
-      	int *buf_ptr = (int *) w->buf + buf_n;
+      	int *buf_ptr = (int *) buf;
       	BUFLOOP(ix, iy, iz, ilo, ihi) {
     	    *buf_ptr++ = MRC_I5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
-      	} BUFLOOP_END
+      	} BUFLOOP_END;
+	buf = buf_ptr;
       	break;
       }
       default:
@@ -267,9 +270,7 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
       	assert(0);
       }
       }
-      buf_n += (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
     }
-    assert(buf_n == w->buf_size);
     
     MPI_Datatype mpi_dtype = to_mpi_datatype(mrc_fld_data_type(m3));
 
