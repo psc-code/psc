@@ -90,19 +90,21 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
 {
   struct mrc_redist_write_send *send = &redist->write_send;
 
-  send->writers = calloc(redist->nr_writers, sizeof(*send->writers));
+  send->writers_begin = calloc(redist->nr_writers, sizeof(*send->writers_begin));
+  send->writers_end = send->writers_begin + redist->nr_writers;
   send->reqs = calloc(redist->nr_writers, sizeof(*send->reqs));
 
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(redist->domain, &nr_patches);
 
   for (int writer = 0; writer < redist->nr_writers; writer++) {
-    struct mrc_redist_writer *w = &send->writers[writer];
+    struct mrc_redist_writer *w = &send->writers_begin[writer];
     w->writer_rank = redist->writer_ranks[writer];
     // don't send to self
     if (w->writer_rank == redist->rank) {
       continue;
     }
+
     int writer_offs[3], writer_dims[3];
     mrc_redist_writer_offs_dims(redist, writer, writer_offs, writer_dims);
 
@@ -161,11 +163,11 @@ mrc_redist_write_send_destroy(struct mrc_redist *redist)
   struct mrc_redist_write_send *send = &redist->write_send;
 
   for (int writer = 0; writer < redist->nr_writers; writer++) {
-    struct mrc_redist_writer *w = &send->writers[writer];
+    struct mrc_redist_writer *w = &send->writers_begin[writer];
     free(w->blocks_begin);
     free(w->buf);
   }
-  free(send->writers);
+  free(send->writers_begin);
   free(send->reqs);
 }
 
@@ -181,7 +183,7 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
   struct mrc_redist_write_send *send = &redist->write_send;
 
   for (int writer = 0; writer < redist->nr_writers; writer++) {
-    struct mrc_redist_writer *w = &send->writers[writer];
+    struct mrc_redist_writer *w = &send->writers_begin[writer];
     if (!w->blocks_begin) {
       send->reqs[writer] = MPI_REQUEST_NULL;
       continue;
