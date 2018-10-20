@@ -99,15 +99,14 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(redist->domain, &nr_patches);
 
-  for (struct mrc_redist_writer *w = send->writers_begin; w != send->writers_end; w++) {
-    int writer = w - send->writers_begin;
-    struct mrc_redist_writer *w = &send->writers_begin[writer];
-    w->writer_rank = redist->writer_ranks[writer];
+  struct mrc_redist_writer *w = send->writers_begin;
+  for (int writer = 0; writer < redist->nr_writers; writer++) {
     // don't send to self
-    if (w->writer_rank == redist->rank) {
+    int writer_rank = redist->writer_ranks[writer];
+    if (writer_rank == redist->rank) {
       continue;
     }
-
+    
     int writer_offs[3], writer_dims[3];
     mrc_redist_writer_offs_dims(redist, writer, writer_offs, writer_dims);
 
@@ -127,6 +126,7 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
       continue;
     }
 
+    w->writer_rank = writer_rank;
     w->blocks_begin = calloc(n_blocks, sizeof(*w->blocks_begin));
     w->blocks_end = w->blocks_begin + n_blocks;
     int buf_n = 0;
@@ -154,7 +154,9 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
     w->buf_size = buf_n;
     w->buf = malloc(buf_n * m3->_nd->size_of_type);
     assert(w->buf);
+    w++;
   }
+  send->writers_end = w;
 }
 
 // ----------------------------------------------------------------------
@@ -185,12 +187,6 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
   struct mrc_redist_write_send *send = &redist->write_send;
 
   for (struct mrc_redist_writer *w = send->writers_begin; w != send->writers_end; w++) {
-    int writer = w - send->writers_begin;
-    if (!w->blocks_begin) {
-      send->reqs[writer] = MPI_REQUEST_NULL;
-      continue;
-    }
-
     // fill buf per writer
     int buf_n = 0;
     for (struct mrc_redist_block *b = w->blocks_begin; b != w->blocks_end; b++) {
@@ -251,7 +247,7 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
 
     mprintf("isend to %d\n", w->writer_rank);
     MPI_Isend(w->buf, w->buf_size, mpi_dtype, w->writer_rank, 0x1000, redist->comm,
-	      &send->reqs[writer]);
+	      &send->reqs[w - send->writers_begin]);
   }
 }
 
