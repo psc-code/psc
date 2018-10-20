@@ -90,9 +90,11 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
 {
   struct mrc_redist_write_send *send = &redist->write_send;
 
-  send->writers_begin = calloc(redist->nr_writers, sizeof(*send->writers_begin));
-  send->writers_end = send->writers_begin + redist->nr_writers;
-  send->reqs = calloc(redist->nr_writers, sizeof(*send->reqs));
+  int n_peers = redist->nr_writers;
+
+  send->writers_begin = calloc(n_peers, sizeof(*send->writers_begin));
+  send->writers_end = send->writers_begin + n_peers;
+  send->reqs = calloc(n_peers, sizeof(*send->reqs));
 
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(redist->domain, &nr_patches);
@@ -261,8 +263,9 @@ mrc_redist_write_send_end(struct mrc_redist *redist, struct mrc_fld *m3, int m)
 {
   struct mrc_redist_write_send *send = &redist->write_send;
 
-  mprintf("send_end: waitall cnt = %d\n", redist->nr_writers);
-  MPI_Waitall(redist->nr_writers, send->reqs, MPI_STATUSES_IGNORE);
+  int n_peers = send->writers_end - send->writers_begin;
+  mprintf("send_end: waitall cnt = %d\n", n_peers);
+  MPI_Waitall(n_peers, send->reqs, MPI_STATUSES_IGNORE);
 }
     
 // ----------------------------------------------------------------------
