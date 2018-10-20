@@ -90,14 +90,44 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
 {
   struct mrc_redist_write_send *send = &redist->write_send;
 
-  int n_peers = redist->nr_writers;
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(redist->domain, &nr_patches);
+
+  // count number of writers we actually need to communicate with
+  int n_peers = 0;
+  for (int writer = 0; writer < redist->nr_writers; writer++) {
+    // don't send to self
+    int writer_rank = redist->writer_ranks[writer];
+    if (writer_rank == redist->rank) {
+      continue;
+    }
+    
+    int writer_offs[3], writer_dims[3];
+    mrc_redist_writer_offs_dims(redist, writer, writer_offs, writer_dims);
+
+    // count blocks that we need to send to writer
+    int n_blocks = 0;
+    for (int p = 0; p < nr_patches; p++) {
+      int ilo[3], ihi[3];
+      bool has_intersection = find_intersection(ilo, ihi, patches[p].off, patches[p].ldims,
+						writer_offs, writer_dims);
+      if (!has_intersection) {
+	continue;
+      }
+      n_blocks++;
+    }
+
+    if (!n_blocks) {
+      continue;
+    }
+
+    n_peers++;
+  }
+  //  int n_peers = redist->nr_writers;
 
   send->writers_begin = calloc(n_peers, sizeof(*send->writers_begin));
   send->writers_end = send->writers_begin + n_peers;
   send->reqs = calloc(n_peers, sizeof(*send->reqs));
-
-  int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(redist->domain, &nr_patches);
 
   struct mrc_redist_writer *w = send->writers_begin;
   for (int writer = 0; writer < redist->nr_writers; writer++) {
@@ -129,6 +159,7 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
     w->writer_rank = writer_rank;
     w->blocks_begin = calloc(n_blocks, sizeof(*w->blocks_begin));
     w->blocks_end = w->blocks_begin + n_blocks;
+
     int buf_n = 0;
     struct mrc_redist_block *b = w->blocks_begin;
     for (int p = 0; p < nr_patches; p++) {
@@ -339,7 +370,8 @@ mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
     struct mrc_redist_block *begin = recv_patches_by_rank[rank];
     struct mrc_redist_block *end   = recv_patches_by_rank[rank+1];
 
-    if (begin == end) {
+    // don't communicate with same proc, and skip procs that have no intersection
+    if (rank == redist->rank || begin == end) {
       continue;
     }
 
@@ -354,7 +386,8 @@ mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
     struct mrc_redist_block *begin = recv_patches_by_rank[rank];
     struct mrc_redist_block *end   = recv_patches_by_rank[rank+1];
 
-    if (begin == end) {
+    // don't communicate with same proc, and skip procs that have no intersection
+    if (rank == redist->rank || begin == end) {
       continue;
     }
 
@@ -392,12 +425,6 @@ mrc_redist_write_recv_begin(struct mrc_redist *redist, struct mrc_ndarray *nd,
   struct mrc_redist_write_recv *recv = &redist->write_recv;
   
   for (struct mrc_redist_peer *peer = recv->peers; peer < recv->peers + recv->n_peers; peer++) {
-    // skip local patches
-    if (peer->rank == redist->rank) {
-      recv->reqs[peer - recv->peers] = MPI_REQUEST_NULL;
-      continue;
-    }
-
     MPI_Datatype mpi_dtype;
     switch (mrc_fld_data_type(m3)) {
     case MRC_NT_FLOAT:
