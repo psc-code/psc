@@ -202,7 +202,7 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
   void *p = send->buf;
   for (struct mrc_redist_writer* w = send->writers_begin; w != send->writers_end; w++) {
     w->buf = p;
-    p += w->buf_size;
+    p += w->buf_size * m3->_nd->size_of_type;
   }
 
   size_t g_data[2], data[2] = { send->buf_size, send->writers_end - send->writers_begin };
