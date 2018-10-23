@@ -193,8 +193,6 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
     // allocate buf per writer
     //mprintf("to writer %d buf_size %d n_blocks %d\n", writer, buf_n, w->n_blocks);
     w->buf_size = buf_n;
-    w->buf = malloc(buf_n * m3->_nd->size_of_type);
-    assert(w->buf);
     w++;
   }
   send->writers_end = w;
@@ -202,6 +200,8 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
   size_t buf_size = 0;
   for (struct mrc_redist_writer* w = send->writers_begin; w != send->writers_end; w++) {
     buf_size += w->buf_size;
+    w->buf = malloc(w->buf_size * m3->_nd->size_of_type);
+    assert(w->buf);
   }
 
   size_t g_data[2], data[2] = { buf_size, send->writers_end - send->writers_begin };
