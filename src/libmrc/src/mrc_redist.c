@@ -420,10 +420,13 @@ mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
   }
   free(recv_patches_by_rank);
 
+  recv->buf = malloc(recv->buf_size * size_of_type);
+  assert(recv->buf);
+  void *p = recv->buf;
   for (struct mrc_redist_peer *peer = recv->peers_begin; peer != recv->peers_end; peer++) {
     // alloc aggregate recv buffers
-    peer->buf = malloc(peer->buf_size * size_of_type);
-    assert(peer->buf);
+    peer->buf = p;
+    p += peer->buf_size * size_of_type;
   }
   size_t g_data[2], data[2] = { recv->peers_end - recv->peers_begin, recv->buf_size };
   MPI_Reduce(data, g_data, 2, MPI_LONG, MPI_SUM, 0, redist->comm_writers);
@@ -514,10 +517,7 @@ mrc_redist_write_destroy(struct mrc_redist *redist)
   struct mrc_redist_write_recv *recv = &redist->write_recv;
 
   free(recv->reqs);
-  
-  for (struct mrc_redist_peer *peer = recv->peers_begin; peer < recv->peers_end; peer++) {
-    free(peer->buf);
-  }
+  free(recv->buf);
   free(recv->peers_begin);
 
   free(recv->recv_patches);
