@@ -133,7 +133,6 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
 
     n_peers++;
   }
-  //  int n_peers = redist->nr_writers;
 
   send->buf_size = 0;
   send->writers_begin = calloc(n_peers, sizeof(*send->writers_begin));
@@ -375,7 +374,7 @@ mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
     //mprintf("rank %d patches start at %d\n", cur_rank, recv->n_recv_patches);
   }
 
-  recv->n_peers = 0;
+  int n_peers = 0;
   recv->buf_size = 0;
   for (int rank = 0; rank < redist->size; rank++) {
     struct mrc_redist_block *begin = recv_patches_by_rank[rank];
@@ -387,13 +386,13 @@ mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
     }
 
     //mprintf("peer rank %d # = %ld\n", rank, end - begin);
-    recv->n_peers++;
+    n_peers++;
   }
-  mprintf("n_peers %d\n", recv->n_peers);
+  mprintf("n_peers %d\n", n_peers);
 
-  recv->peers_begin = calloc(recv->n_peers, sizeof(*recv->peers_begin));
-  recv->peers_end = recv->peers_begin + recv->n_peers;
-  recv->reqs = calloc(recv->n_peers, sizeof(*recv->reqs));
+  recv->peers_begin = calloc(n_peers, sizeof(*recv->peers_begin));
+  recv->peers_end = recv->peers_begin + n_peers;
+  recv->reqs = calloc(n_peers, sizeof(*recv->reqs));
 
   struct mrc_redist_peer *peer = recv->peers_begin;
   for (int rank = 0; rank < redist->size; rank++) {
@@ -460,7 +459,7 @@ mrc_redist_write_recv_end(struct mrc_redist *redist, struct mrc_ndarray *nd,
 {
   struct mrc_redist_write_recv *recv = &redist->write_recv;
 
-  //mprintf("recv_end: Waitall cnt = %d\n", recv->n_peers);
+  //mprintf("recv_end: Waitall cnt = %d\n", recv->peers_end - recv->peers_begin);
   MPI_Waitall(recv->peers_end - recv->peers_begin, recv->reqs, MPI_STATUSES_IGNORE);
 
   for (struct mrc_redist_peer *peer = recv->peers_begin; peer < recv->peers_end; peer++) {
