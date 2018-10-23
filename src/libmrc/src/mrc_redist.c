@@ -204,9 +204,10 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
     buf_size += w->buf_size;
   }
 
-  size_t g_buf_size;
-  MPI_Reduce(&buf_size, &g_buf_size, 1, MPI_LONG, MPI_SUM, 0, redist->comm);
-  mpi_printf(redist->comm, "avg send buf size = %ld\n", g_buf_size / redist->size);
+  size_t g_data[2], data[2] = { buf_size, send->writers_end - send->writers_begin };
+  MPI_Reduce(data, g_data, 2, MPI_LONG, MPI_SUM, 0, redist->comm);
+  mpi_printf(redist->comm, "avg send buf size = %ld (n peers %ld)\n", g_data[0] / redist->size,
+	     g_data[1] / redist->size);
 }
 
 // ----------------------------------------------------------------------
@@ -428,7 +429,7 @@ mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
   size_t g_data[2], data[2] = { recv->n_peers, buf_size };
   MPI_Reduce(data, g_data, 2, MPI_LONG, MPI_SUM, 0, redist->comm_writers);
   mpi_printf(redist->comm_writers, "avg recv buf size %ld (avg n_peers %ld)\n",
-	     g_data[1], g_data[0]);
+	     g_data[1] / redist->nr_writers, g_data[0] / redist->nr_writers);
 }
 
 // ----------------------------------------------------------------------
