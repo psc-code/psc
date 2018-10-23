@@ -96,7 +96,7 @@ MPI_Datatype to_mpi_datatype(int data_type)
 // mrc_redist_write_send_init
 
 static void
-mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
+mrc_redist_write_send_init(struct mrc_redist *redist, int size_of_type)
 {
   struct mrc_redist_write_send *send = &redist->write_send;
 
@@ -197,12 +197,12 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
   }
   send->writers_end = w;
 
-  send->buf = malloc(send->buf_size * m3->_nd->size_of_type);
+  send->buf = malloc(send->buf_size * size_of_type);
   assert(send->buf);
   void *p = send->buf;
   for (struct mrc_redist_writer* w = send->writers_begin; w != send->writers_end; w++) {
     w->buf = p;
-    p += w->buf_size * m3->_nd->size_of_type;
+    p += w->buf_size * size_of_type;
   }
 
   size_t g_data[2], data[2] = { send->buf_size, send->writers_end - send->writers_begin };
@@ -584,7 +584,7 @@ mrc_redist_write_comm_local(struct mrc_redist *redist, struct mrc_ndarray *nd,
 struct mrc_ndarray *
 mrc_redist_get_ndarray(struct mrc_redist *redist, struct mrc_fld *m3)
 {
-  mrc_redist_write_send_init(redist, m3);
+  mrc_redist_write_send_init(redist, m3->_nd->size_of_type);
 
   if (!redist->is_writer) {
     return NULL;
