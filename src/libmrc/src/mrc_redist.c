@@ -135,11 +135,11 @@ mrc_redist_write_send_init(struct mrc_redist *redist, int size_of_type)
   }
 
   send->buf_size = 0;
-  send->writers_begin = calloc(n_peers, sizeof(*send->writers_begin));
-  send->writers_end = send->writers_begin + n_peers;
+  send->peers_begin = calloc(n_peers, sizeof(*send->peers_begin));
+  send->peers_end = send->peers_begin + n_peers;
   send->reqs = calloc(n_peers, sizeof(*send->reqs));
 
-  struct mrc_redist_peer *w = send->writers_begin;
+  struct mrc_redist_peer *w = send->peers_begin;
   for (int writer = 0; writer < redist->nr_writers; writer++) {
     // don't send to self
     int writer_rank = redist->writer_ranks[writer];
@@ -195,17 +195,16 @@ mrc_redist_write_send_init(struct mrc_redist *redist, int size_of_type)
     send->buf_size += w->buf_size;
     w++;
   }
-  send->writers_end = w;
 
   send->buf = malloc(send->buf_size * size_of_type);
   assert(send->buf);
   int off = 0;
-  for (struct mrc_redist_peer* w = send->writers_begin; w != send->writers_end; w++) {
+  for (struct mrc_redist_peer* w = send->peers_begin; w != send->peers_end; w++) {
     w->off = off;
     off += w->buf_size;
   }
 
-  size_t g_data[2], data[2] = { send->buf_size, send->writers_end - send->writers_begin };
+  size_t g_data[2], data[2] = { send->buf_size, send->peers_end - send->peers_begin };
   MPI_Reduce(data, g_data, 2, MPI_LONG, MPI_SUM, 0, redist->comm);
   mpi_printf(redist->comm, "avg send buf size = %ld (n peers %ld)\n", g_data[0] / redist->size,
 	     g_data[1] / redist->size);
@@ -219,10 +218,10 @@ mrc_redist_write_send_destroy(struct mrc_redist *redist)
 {
   struct mrc_redist_write_send *send = &redist->write_send;
 
-  for (struct mrc_redist_peer *w = send->writers_begin; w != send->writers_end; w++) {
+  for (struct mrc_redist_peer *w = send->peers_begin; w != send->peers_end; w++) {
     free(w->blocks_begin);
   }
-  free(send->writers_begin);
+  free(send->peers_begin);
   free(send->reqs);
   free(send->buf);
 }
@@ -238,7 +237,7 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
 
   struct mrc_redist_write_send *send = &redist->write_send;
 
-  for (struct mrc_redist_peer *w = send->writers_begin; w != send->writers_end; w++) {
+  for (struct mrc_redist_peer *w = send->peers_begin; w != send->peers_end; w++) {
     // fill buf per writer
     void *buf = send->buf + w->off * m3->_nd->size_of_type;
     for (struct mrc_redist_block *b = w->blocks_begin; b != w->blocks_end; b++) {
@@ -288,7 +287,7 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
     //mprintf("send_begin: Isend cnt %ld to %d\n", w->buf_size, w->writer_rank);
     buf = send->buf + w->off * m3->_nd->size_of_type;
     MPI_Isend(buf, w->buf_size, mpi_dtype, w->rank, 0x1000, redist->comm,
-	      &send->reqs[w - send->writers_begin]);
+	      &send->reqs[w - send->peers_begin]);
   }
 }
 
@@ -300,7 +299,7 @@ mrc_redist_write_send_end(struct mrc_redist *redist, struct mrc_fld *m3, int m)
 {
   struct mrc_redist_write_send *send = &redist->write_send;
 
-  int n_peers = send->writers_end - send->writers_begin;
+  int n_peers = send->peers_end - send->peers_begin;
   //mprintf("send_end: Waitall cnt = %d\n", n_peers);
   MPI_Waitall(n_peers, send->reqs, MPI_STATUSES_IGNORE);
 }
