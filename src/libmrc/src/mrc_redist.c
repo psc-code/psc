@@ -138,6 +138,7 @@ mrc_redist_write_send_init(struct mrc_redist *redist, int size_of_type)
   send->peers_begin = calloc(n_peers, sizeof(*send->peers_begin));
   send->peers_end = send->peers_begin + n_peers;
   send->reqs = calloc(n_peers, sizeof(*send->reqs));
+  send->disps = calloc(redist->size + 1, sizeof(*send->disps));
 
   struct mrc_redist_peer *w = send->peers_begin;
   for (int writer = 0; writer < redist->nr_writers; writer++) {
@@ -192,14 +193,24 @@ mrc_redist_write_send_init(struct mrc_redist *redist, int size_of_type)
 
     // allocate buf per writer
     //mprintf("to writer %d buf_size %d n_blocks %d\n", writer, w->buf_size, w->n_blocks);
+    send->disps[w->rank] = w->buf_size;
     send->buf_size += w->buf_size;
     w++;
   }
 
+  int last = 0;
+  for (int r = 0; r <= redist->size; r++) {
+    int disp = send->disps[r];
+    send->disps[r] = last;
+    last = send->disps[r] + disp;
+  }
+  assert(send->disps[redist->size] == send->buf_size);
+  
   send->buf = malloc(send->buf_size * size_of_type);
   assert(send->buf);
   int off = 0;
   for (struct mrc_redist_peer* w = send->peers_begin; w != send->peers_end; w++) {
+    assert(off == send->disps[w->rank]);
     w->off = off;
     off += w->buf_size;
   }
@@ -223,6 +234,7 @@ mrc_redist_write_send_destroy(struct mrc_redist *redist)
   }
   free(send->peers_begin);
   free(send->reqs);
+  free(send->disps);
   free(send->buf);
 }
 
@@ -286,7 +298,7 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
   MPI_Datatype mpi_dtype = to_mpi_datatype(mrc_fld_data_type(m3));
   for (struct mrc_redist_peer *w = send->peers_begin; w != send->peers_end; w++) {
     //mprintf("send_begin: Isend cnt %ld to %d\n", w->buf_size, w->rank);
-    MPI_Isend(send->buf + w->off * m3->_nd->size_of_type, w->buf_size,
+    MPI_Isend(send->buf + send->disps[w->rank] * m3->_nd->size_of_type, w->buf_size,
 	      mpi_dtype, w->rank, 0x1000, redist->comm,
 	      &send->reqs[w - send->peers_begin]);
   }
@@ -394,6 +406,7 @@ mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
   recv->peers_begin = calloc(n_peers, sizeof(*recv->peers_begin));
   recv->peers_end = recv->peers_begin + n_peers;
   recv->reqs = calloc(n_peers, sizeof(*recv->reqs));
+  recv->disps = calloc(redist->size + 1, sizeof(*recv->disps));
 
   struct mrc_redist_peer *peer = recv->peers_begin;
   for (int rank = 0; rank < redist->size; rank++) {
@@ -417,10 +430,20 @@ mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
     }
     
     recv->buf_size += peer->buf_size;
+    recv->disps[peer->rank] = peer->buf_size;
     peer++;
   }
   free(recv_patches_by_rank);
 
+  // prefix sum to get displacements
+  int last = 0;
+  for (int r = 0; r <= redist->size; r++) {
+    int disp = recv->disps[r];
+    recv->disps[r] = last;
+    last = recv->disps[r] + disp;
+  }
+  assert(recv->disps[redist->size] == recv->buf_size);
+  
   // alloc aggregate recv buffers
   recv->buf = malloc(recv->buf_size * size_of_type);
   assert(recv->buf);
@@ -451,7 +474,8 @@ mrc_redist_write_recv_begin(struct mrc_redist *redist, struct mrc_ndarray *nd,
     
     // recv aggregate buffers
     //mprintf("recv_begin: Irecv cnt %ld from %d\n", peer->buf_size, peer->rank);
-    MPI_Irecv(recv->buf + peer->off * nd->size_of_type, peer->buf_size,
+    assert(peer->off == recv->disps[peer->rank]);
+    MPI_Irecv(recv->buf + recv->disps[peer->rank] * nd->size_of_type, peer->buf_size,
 	      mpi_dtype, peer->rank, 0x1000, redist->comm,
 	      &recv->reqs[peer - recv->peers_begin]);
   }
@@ -521,6 +545,7 @@ mrc_redist_write_destroy(struct mrc_redist *redist)
   struct mrc_redist_write_recv *recv = &redist->write_recv;
 
   free(recv->reqs);
+  free(recv->disps);
   free(recv->buf);
   free(recv->peers_begin);
 

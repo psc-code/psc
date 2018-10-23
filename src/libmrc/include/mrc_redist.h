@@ -16,6 +16,7 @@ struct mrc_redist_block {
 struct mrc_redist_peer {
   int rank;
   struct mrc_redist_block *blocks_begin, *blocks_end;
+  // off and buf_size are redundant with disps
   int off;
   int buf_size;
 };
@@ -25,6 +26,7 @@ struct mrc_redist_write_recv {
   MPI_Request *reqs;
   void *buf;
   size_t buf_size;
+  int *disps;
 
   int n_recv_patches;
   struct mrc_redist_block *recv_patches;
@@ -35,6 +37,7 @@ struct mrc_redist_write_send {
   MPI_Request *reqs;
   void *buf;
   size_t buf_size;
+  int *disps;
 };
 
 struct mrc_redist {
