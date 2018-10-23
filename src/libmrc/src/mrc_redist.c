@@ -301,8 +301,20 @@ mrc_redist_write_send_prep(struct mrc_redist *redist, struct mrc_fld *m3, int m)
 // mrc_redist_write_recv_init
 
 static void
-mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
-			   int size_of_type)
+mrc_redist_write_recv_init(struct mrc_redist *redist, int size_of_type)
+{
+  struct mrc_redist_write_recv *recv = &redist->write_recv;
+
+  recv->disps = calloc(redist->size, sizeof(*recv->disps));
+  recv->cnts = calloc(redist->size, sizeof(*recv->cnts));
+}
+
+// ----------------------------------------------------------------------
+// mrc_redist_write_recv_init2
+
+static void
+mrc_redist_write_recv_init2(struct mrc_redist *redist, struct mrc_ndarray *nd,
+			    int size_of_type)
 {
   struct mrc_redist_write_recv *recv = &redist->write_recv;
 
@@ -386,8 +398,6 @@ mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
   recv->peers_begin = calloc(n_peers, sizeof(*recv->peers_begin));
   recv->peers_end = recv->peers_begin + n_peers;
   recv->reqs = calloc(n_peers, sizeof(*recv->reqs));
-  recv->disps = calloc(redist->size, sizeof(*recv->disps));
-  recv->cnts = calloc(redist->size, sizeof(*recv->cnts));
 
   struct mrc_redist_peer *peer = recv->peers_begin;
   for (int rank = 0; rank < redist->size; rank++) {
@@ -572,6 +582,7 @@ struct mrc_ndarray *
 mrc_redist_get_ndarray(struct mrc_redist *redist, struct mrc_fld *m3)
 {
   mrc_redist_write_send_init(redist, m3->_nd->size_of_type);
+  mrc_redist_write_recv_init(redist, m3->_nd->size_of_type);
 
   if (!redist->is_writer) {
     return NULL;
@@ -598,7 +609,7 @@ mrc_redist_get_ndarray(struct mrc_redist *redist, struct mrc_fld *m3)
   }
   mrc_ndarray_setup(nd);
 
-  mrc_redist_write_recv_init(redist, nd, m3->_nd->size_of_type);
+  mrc_redist_write_recv_init2(redist, nd, m3->_nd->size_of_type);
 
   return nd;
 }
@@ -683,8 +694,27 @@ mrc_redist_write_begin2(struct mrc_redist *redist, struct mrc_ndarray *nd,
   struct mrc_redist_write_send *send = &redist->write_send;
   MPI_Datatype mpi_dtype = to_mpi_datatype(mrc_fld_data_type(m3));
 
-  /* MPI_Alltoallv(send->buf, send->cnts, send->disps, mpi_dtype, */
-  /* 		recv->buf, recv->cnts, recv->disps, mpi_dtype, redist->comm); */
+#if 0
+  for (int r = 0; r < redist->size; r++) {
+    MPI_Barrier(redist->comm);
+    if (r == redist->rank) {
+      mprintf("send disp/cnts:");
+      for (int r = 0; r < redist->size; r++) {
+	printf(" (%d) %d/%d", r, send->disps[r], send->cnts[r]);
+      }
+      printf("\n");
+      mprintf("recv disp/cnts:");
+      for (int r = 0; r < redist->size; r++) {
+	printf(" (%d) %d/%d", r, recv->disps[r], recv->cnts[r]);
+      }
+      printf("\n");
+    }
+  }
+#endif
+  
+  MPI_Barrier(redist->comm);
+  MPI_Alltoallv(send->buf, send->cnts, send->disps, mpi_dtype,
+  		recv->buf, recv->cnts, recv->disps, mpi_dtype, redist->comm);
 }
 
 // ----------------------------------------------------------------------
@@ -703,13 +733,13 @@ void
 mrc_redist_run(struct mrc_redist *redist, struct mrc_ndarray *nd,
 	       struct mrc_fld *m3, int m)
 {
-  mrc_redist_write_begin(redist, nd, m3, m);
+  mrc_redist_write_begin2(redist, nd, m3, m);
 
   if (redist->is_writer) {
     mrc_redist_write_comm_local(redist, nd, m3, m);
   }
 
-  mrc_redist_write_end(redist, nd, m3, m);
+  mrc_redist_write_end2(redist, nd, m3, m);
 }
 
 
