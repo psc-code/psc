@@ -392,7 +392,7 @@ mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
   mprintf("n_peers %d\n", recv->n_peers);
 
   recv->peers = calloc(recv->n_peers, sizeof(*recv->peers));
-  recv->n_peers = 0;
+  struct mrc_redist_peer *peer = recv->peers;
   for (int rank = 0; rank < redist->size; rank++) {
     struct mrc_redist_block *begin = recv_patches_by_rank[rank];
     struct mrc_redist_block *end   = recv_patches_by_rank[rank+1];
@@ -402,7 +402,6 @@ mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
       continue;
     }
 
-    struct mrc_redist_peer *peer = &recv->peers[recv->n_peers];
     peer->rank = rank;
     peer->begin = begin;
     peer->end = end;
@@ -415,7 +414,7 @@ mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
     }
     
     recv->buf_size += peer->buf_size;
-    recv->n_peers++;
+    peer++;
   }
   free(recv_patches_by_rank);
 
