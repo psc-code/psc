@@ -198,9 +198,12 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
   }
   send->writers_end = w;
 
+  send->buf = malloc(send->buf_size * m3->_nd->size_of_type);
+  assert(send->buf);
+  void *p = send->buf;
   for (struct mrc_redist_writer* w = send->writers_begin; w != send->writers_end; w++) {
-    w->buf = malloc(w->buf_size * m3->_nd->size_of_type);
-    assert(w->buf);
+    w->buf = p;
+    p += w->buf_size;
   }
 
   size_t g_data[2], data[2] = { send->buf_size, send->writers_end - send->writers_begin };
@@ -219,10 +222,10 @@ mrc_redist_write_send_destroy(struct mrc_redist *redist)
 
   for (struct mrc_redist_writer *w = send->writers_begin; w != send->writers_end; w++) {
     free(w->blocks_begin);
-    free(w->buf);
   }
   free(send->writers_begin);
   free(send->reqs);
+  free(send->buf);
 }
 
 // ----------------------------------------------------------------------
