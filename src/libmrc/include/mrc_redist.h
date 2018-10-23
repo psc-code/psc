@@ -18,7 +18,7 @@ struct mrc_redist_peer {
   struct mrc_redist_block *begin;
   struct mrc_redist_block *end;
   int off;
-  size_t buf_size;
+  int buf_size;
 };
 
 struct mrc_redist_write_recv {
