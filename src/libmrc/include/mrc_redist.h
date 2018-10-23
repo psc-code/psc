@@ -30,15 +30,8 @@ struct mrc_redist_write_recv {
   struct mrc_redist_block *recv_patches;
 };
 
-struct mrc_redist_writer {
-  int rank;
-  struct mrc_redist_block *blocks_begin, *blocks_end;
-  int off;
-  int buf_size;
-};
-
 struct mrc_redist_write_send {
-  struct mrc_redist_writer *writers_begin, *writers_end;
+  struct mrc_redist_peer *writers_begin, *writers_end;
   MPI_Request *reqs;
   void *buf;
   size_t buf_size;

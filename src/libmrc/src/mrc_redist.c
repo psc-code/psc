@@ -139,7 +139,7 @@ mrc_redist_write_send_init(struct mrc_redist *redist, int size_of_type)
   send->writers_end = send->writers_begin + n_peers;
   send->reqs = calloc(n_peers, sizeof(*send->reqs));
 
-  struct mrc_redist_writer *w = send->writers_begin;
+  struct mrc_redist_peer *w = send->writers_begin;
   for (int writer = 0; writer < redist->nr_writers; writer++) {
     // don't send to self
     int writer_rank = redist->writer_ranks[writer];
@@ -200,7 +200,7 @@ mrc_redist_write_send_init(struct mrc_redist *redist, int size_of_type)
   send->buf = malloc(send->buf_size * size_of_type);
   assert(send->buf);
   int off = 0;
-  for (struct mrc_redist_writer* w = send->writers_begin; w != send->writers_end; w++) {
+  for (struct mrc_redist_peer* w = send->writers_begin; w != send->writers_end; w++) {
     w->off = off;
     off += w->buf_size;
   }
@@ -219,7 +219,7 @@ mrc_redist_write_send_destroy(struct mrc_redist *redist)
 {
   struct mrc_redist_write_send *send = &redist->write_send;
 
-  for (struct mrc_redist_writer *w = send->writers_begin; w != send->writers_end; w++) {
+  for (struct mrc_redist_peer *w = send->writers_begin; w != send->writers_end; w++) {
     free(w->blocks_begin);
   }
   free(send->writers_begin);
@@ -238,7 +238,7 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
 
   struct mrc_redist_write_send *send = &redist->write_send;
 
-  for (struct mrc_redist_writer *w = send->writers_begin; w != send->writers_end; w++) {
+  for (struct mrc_redist_peer *w = send->writers_begin; w != send->writers_end; w++) {
     // fill buf per writer
     void *buf = send->buf + w->off * m3->_nd->size_of_type;
     for (struct mrc_redist_block *b = w->blocks_begin; b != w->blocks_end; b++) {
