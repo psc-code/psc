@@ -392,6 +392,9 @@ mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
   mprintf("n_peers %d\n", recv->n_peers);
 
   recv->peers_begin = calloc(recv->n_peers, sizeof(*recv->peers_begin));
+  recv->peers_end = recv->peers_begin + recv->n_peers;
+  recv->reqs = calloc(recv->n_peers, sizeof(*recv->reqs));
+
   struct mrc_redist_peer *peer = recv->peers_begin;
   for (int rank = 0; rank < redist->size; rank++) {
     struct mrc_redist_block *begin = recv_patches_by_rank[rank];
@@ -418,14 +421,12 @@ mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
   }
   free(recv_patches_by_rank);
 
-  recv->reqs = calloc(recv->n_peers, sizeof(*recv->reqs));
-
-  for (struct mrc_redist_peer *peer = recv->peers_begin; peer != recv->peers_begin + recv->n_peers; peer++) {
+  for (struct mrc_redist_peer *peer = recv->peers_begin; peer != recv->peers_end; peer++) {
     // alloc aggregate recv buffers
     peer->buf = malloc(peer->buf_size * size_of_type);
     assert(peer->buf);
   }
-  size_t g_data[2], data[2] = { recv->n_peers, recv->buf_size };
+  size_t g_data[2], data[2] = { recv->peers_end - recv->peers_begin, recv->buf_size };
   MPI_Reduce(data, g_data, 2, MPI_LONG, MPI_SUM, 0, redist->comm_writers);
   mpi_printf(redist->comm_writers, "avg recv buf size %ld (avg n_peers %ld)\n",
 	     g_data[1] / redist->nr_writers, g_data[0] / redist->nr_writers);
@@ -440,7 +441,7 @@ mrc_redist_write_recv_begin(struct mrc_redist *redist, struct mrc_ndarray *nd,
 {
   struct mrc_redist_write_recv *recv = &redist->write_recv;
   
-  for (struct mrc_redist_peer *peer = recv->peers_begin; peer < recv->peers_begin + recv->n_peers; peer++) {
+  for (struct mrc_redist_peer *peer = recv->peers_begin; peer < recv->peers_end; peer++) {
     MPI_Datatype mpi_dtype = to_mpi_datatype(mrc_fld_data_type(m3));
     
     // recv aggregate buffers
@@ -460,9 +461,9 @@ mrc_redist_write_recv_end(struct mrc_redist *redist, struct mrc_ndarray *nd,
   struct mrc_redist_write_recv *recv = &redist->write_recv;
 
   //mprintf("recv_end: Waitall cnt = %d\n", recv->n_peers);
-  MPI_Waitall(recv->n_peers, recv->reqs, MPI_STATUSES_IGNORE);
+  MPI_Waitall(recv->peers_end - recv->peers_begin, recv->reqs, MPI_STATUSES_IGNORE);
 
-  for (struct mrc_redist_peer *peer = recv->peers_begin; peer < recv->peers_begin + recv->n_peers; peer++) {
+  for (struct mrc_redist_peer *peer = recv->peers_begin; peer < recv->peers_end; peer++) {
     // skip local patches
     if (peer->rank == redist->rank) {
       continue;
@@ -515,7 +516,7 @@ mrc_redist_write_destroy(struct mrc_redist *redist)
 
   free(recv->reqs);
   
-  for (struct mrc_redist_peer *peer = recv->peers_begin; peer < recv->peers_begin + recv->n_peers; peer++) {
+  for (struct mrc_redist_peer *peer = recv->peers_begin; peer < recv->peers_end; peer++) {
     free(peer->buf);
   }
   free(recv->peers_begin);
