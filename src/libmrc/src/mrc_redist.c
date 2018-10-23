@@ -281,12 +281,13 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
       }
       }
     }
-    
-    MPI_Datatype mpi_dtype = to_mpi_datatype(mrc_fld_data_type(m3));
-
-    //mprintf("send_begin: Isend cnt %ld to %d\n", w->buf_size, w->writer_rank);
-    buf = send->buf + w->off * m3->_nd->size_of_type;
-    MPI_Isend(buf, w->buf_size, mpi_dtype, w->rank, 0x1000, redist->comm,
+  }
+  
+  MPI_Datatype mpi_dtype = to_mpi_datatype(mrc_fld_data_type(m3));
+  for (struct mrc_redist_peer *w = send->peers_begin; w != send->peers_end; w++) {
+    //mprintf("send_begin: Isend cnt %ld to %d\n", w->buf_size, w->rank);
+    MPI_Isend(send->buf + w->off * m3->_nd->size_of_type, w->buf_size,
+	      mpi_dtype, w->rank, 0x1000, redist->comm,
 	      &send->reqs[w - send->peers_begin]);
   }
 }
