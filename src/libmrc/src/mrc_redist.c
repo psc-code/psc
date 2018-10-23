@@ -660,21 +660,44 @@ mrc_redist_put_ndarray(struct mrc_redist *redist, struct mrc_ndarray *nd)
 }
 
 // ----------------------------------------------------------------------
+// mrc_redist_write_begin
+
+static void
+mrc_redist_write_begin(struct mrc_redist *redist, struct mrc_ndarray *nd,
+		       struct mrc_fld *m3, int m)
+{
+  if (redist->is_writer) {
+    mrc_redist_write_recv_begin(redist, nd, m3);
+  }
+  mrc_redist_write_send_begin(redist, m3, m);
+}
+
+// ----------------------------------------------------------------------
+// mrc_redist_write_end
+
+static void
+mrc_redist_write_end(struct mrc_redist *redist, struct mrc_ndarray *nd,
+		     struct mrc_fld *m3, int m)
+{
+  if (redist->is_writer) {
+    mrc_redist_write_recv_end(redist, nd, m3, m);
+  }
+  mrc_redist_write_send_end(redist, m3, m);
+}
+
+// ----------------------------------------------------------------------
 
 void
 mrc_redist_run(struct mrc_redist *redist, struct mrc_ndarray *nd,
 	       struct mrc_fld *m3, int m)
 {
+  mrc_redist_write_begin(redist, nd, m3, m);
+
   if (redist->is_writer) {
-    mrc_redist_write_recv_begin(redist, nd, m3);
-    mrc_redist_write_send_begin(redist, m3, m);
     mrc_redist_write_comm_local(redist, nd, m3, m);
-    mrc_redist_write_recv_end(redist, nd, m3, m);
-    mrc_redist_write_send_end(redist, m3, m);
-  } else {
-    mrc_redist_write_send_begin(redist, m3, m);
-    mrc_redist_write_send_end(redist, m3, m);
   }
+
+  mrc_redist_write_end(redist, nd, m3, m);
 }
 
 
