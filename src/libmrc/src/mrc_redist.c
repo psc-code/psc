@@ -376,6 +376,7 @@ mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
   }
 
   recv->n_peers = 0;
+  recv->buf_size = 0;
   for (int rank = 0; rank < redist->size; rank++) {
     struct mrc_redist_block *begin = recv_patches_by_rank[rank];
     struct mrc_redist_block *end   = recv_patches_by_rank[rank+1];
@@ -413,20 +414,19 @@ mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
       peer->buf_size += (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
     }
     
+    recv->buf_size += peer->buf_size;
     recv->n_peers++;
   }
   free(recv_patches_by_rank);
 
   recv->reqs = calloc(recv->n_peers, sizeof(*recv->reqs));
 
-  size_t buf_size = 0;
   for (struct mrc_redist_peer *peer = recv->peers; peer != recv->peers + recv->n_peers; peer++) {
     // alloc aggregate recv buffers
     peer->buf = malloc(peer->buf_size * size_of_type);
     assert(peer->buf);
-    buf_size += peer->buf_size;
   }
-  size_t g_data[2], data[2] = { recv->n_peers, buf_size };
+  size_t g_data[2], data[2] = { recv->n_peers, recv->buf_size };
   MPI_Reduce(data, g_data, 2, MPI_LONG, MPI_SUM, 0, redist->comm_writers);
   mpi_printf(redist->comm_writers, "avg recv buf size %ld (avg n_peers %ld)\n",
 	     g_data[1] / redist->nr_writers, g_data[0] / redist->nr_writers);

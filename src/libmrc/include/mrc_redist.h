@@ -25,6 +25,7 @@ struct mrc_redist_write_recv {
   int n_peers;
   struct mrc_redist_peer *peers;
   MPI_Request *reqs;
+  size_t buf_size;
 
   int n_recv_patches;
   struct mrc_redist_block *recv_patches;
