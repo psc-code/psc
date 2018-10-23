@@ -170,7 +170,7 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
     w->blocks_begin = calloc(n_blocks, sizeof(*w->blocks_begin));
     w->blocks_end = w->blocks_begin + n_blocks;
 
-    int buf_n = 0;
+    w->buf_size = 0;
     struct mrc_redist_block *b = w->blocks_begin;
     for (int p = 0; p < nr_patches; p++) {
       int ilo[3], ihi[3];
@@ -187,12 +187,11 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
       }
 
       b++;
-      buf_n += (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
+      w->buf_size += (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
     }
 
     // allocate buf per writer
-    //mprintf("to writer %d buf_size %d n_blocks %d\n", writer, buf_n, w->n_blocks);
-    w->buf_size = buf_n;
+    //mprintf("to writer %d buf_size %d n_blocks %d\n", writer, w->buf_size, w->n_blocks);
     w++;
   }
   send->writers_end = w;
