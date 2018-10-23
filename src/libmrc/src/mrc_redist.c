@@ -239,10 +239,10 @@ mrc_redist_write_send_destroy(struct mrc_redist *redist)
 }
 
 // ----------------------------------------------------------------------
-// mrc_redist_write_send_begin
+// mrc_redist_write_send_prep
 
 static void
-mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m)
+mrc_redist_write_send_prep(struct mrc_redist *redist, struct mrc_fld *m3, int m)
 {
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(m3->_domain, &nr_patches);
@@ -293,14 +293,6 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
       }
       }
     }
-  }
-  
-  MPI_Datatype mpi_dtype = to_mpi_datatype(mrc_fld_data_type(m3));
-  for (struct mrc_redist_peer *w = send->peers_begin; w != send->peers_end; w++) {
-    //mprintf("send_begin: Isend cnt %ld to %d\n", w->buf_size, w->rank);
-    MPI_Isend(send->buf + send->disps[w->rank] * m3->_nd->size_of_type, w->buf_size,
-	      mpi_dtype, w->rank, 0x1000, redist->comm,
-	      &send->reqs[w - send->peers_begin]);
   }
 }
 
@@ -673,7 +665,17 @@ mrc_redist_write_begin(struct mrc_redist *redist, struct mrc_ndarray *nd,
 		       struct mrc_fld *m3, int m)
 {
   mrc_redist_write_recv_begin(redist, nd, m3);
-  mrc_redist_write_send_begin(redist, m3, m);
+  mrc_redist_write_send_prep(redist, m3, m);
+
+  struct mrc_redist_write_send *send = &redist->write_send;
+
+  MPI_Datatype mpi_dtype = to_mpi_datatype(mrc_fld_data_type(m3));
+  for (struct mrc_redist_peer *w = send->peers_begin; w != send->peers_end; w++) {
+    //mprintf("send_begin: Isend cnt %ld to %d\n", w->buf_size, w->rank);
+    MPI_Isend(send->buf + send->disps[w->rank] * m3->_nd->size_of_type, w->buf_size,
+	      mpi_dtype, w->rank, 0x1000, redist->comm,
+	      &send->reqs[w - send->peers_begin]);
+  }
 }
 
 // ----------------------------------------------------------------------
