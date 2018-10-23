@@ -26,6 +26,7 @@ struct mrc_redist_write_recv {
   MPI_Request *reqs;
   void *buf;
   size_t buf_size;
+  int *cnts;
   int *disps;
 
   int n_recv_patches;
@@ -37,6 +38,7 @@ struct mrc_redist_write_send {
   MPI_Request *reqs;
   void *buf;
   size_t buf_size;
+  int *cnts;
   int *disps;
 };
 

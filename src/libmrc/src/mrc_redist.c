@@ -138,7 +138,8 @@ mrc_redist_write_send_init(struct mrc_redist *redist, int size_of_type)
   send->peers_begin = calloc(n_peers, sizeof(*send->peers_begin));
   send->peers_end = send->peers_begin + n_peers;
   send->reqs = calloc(n_peers, sizeof(*send->reqs));
-  send->disps = calloc(redist->size + 1, sizeof(*send->disps));
+  send->disps = calloc(redist->size, sizeof(*send->disps));
+  send->cnts = calloc(redist->size, sizeof(*send->cnts));
 
   struct mrc_redist_peer *w = send->peers_begin;
   for (int writer = 0; writer < redist->nr_writers; writer++) {
@@ -193,18 +194,17 @@ mrc_redist_write_send_init(struct mrc_redist *redist, int size_of_type)
 
     // allocate buf per writer
     //mprintf("to writer %d buf_size %d n_blocks %d\n", writer, w->buf_size, w->n_blocks);
-    send->disps[w->rank] = w->buf_size;
+    send->cnts[w->rank] = w->buf_size;
     send->buf_size += w->buf_size;
     w++;
   }
 
   int last = 0;
-  for (int r = 0; r <= redist->size; r++) {
-    int disp = send->disps[r];
+  for (int r = 0; r < redist->size; r++) {
     send->disps[r] = last;
-    last = send->disps[r] + disp;
+    last += send->cnts[r];
   }
-  assert(send->disps[redist->size] == send->buf_size);
+  assert(last == send->buf_size);
   
   send->buf = malloc(send->buf_size * size_of_type);
   assert(send->buf);
@@ -235,6 +235,7 @@ mrc_redist_write_send_destroy(struct mrc_redist *redist)
   free(send->peers_begin);
   free(send->reqs);
   free(send->disps);
+  free(send->cnts);
   free(send->buf);
 }
 
@@ -385,7 +386,8 @@ mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
   recv->peers_begin = calloc(n_peers, sizeof(*recv->peers_begin));
   recv->peers_end = recv->peers_begin + n_peers;
   recv->reqs = calloc(n_peers, sizeof(*recv->reqs));
-  recv->disps = calloc(redist->size + 1, sizeof(*recv->disps));
+  recv->disps = calloc(redist->size, sizeof(*recv->disps));
+  recv->cnts = calloc(redist->size, sizeof(*recv->cnts));
 
   struct mrc_redist_peer *peer = recv->peers_begin;
   for (int rank = 0; rank < redist->size; rank++) {
@@ -409,28 +411,25 @@ mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
     }
     
     recv->buf_size += peer->buf_size;
-    recv->disps[peer->rank] = peer->buf_size;
+    recv->cnts[peer->rank] = peer->buf_size;
     peer++;
   }
   free(recv_patches_by_rank);
 
   // prefix sum to get displacements
   int last = 0;
-  for (int r = 0; r <= redist->size; r++) {
-    int disp = recv->disps[r];
+  for (int r = 0; r < redist->size; r++) {
     recv->disps[r] = last;
-    last = recv->disps[r] + disp;
+    last += recv->cnts[r];
   }
-  assert(recv->disps[redist->size] == recv->buf_size);
+  assert(last == recv->buf_size);
   
   // alloc aggregate recv buffers
   recv->buf = malloc(recv->buf_size * size_of_type);
   assert(recv->buf);
-  void *p = recv->buf;
   int off = 0;
   for (struct mrc_redist_peer *peer = recv->peers_begin; peer != recv->peers_end; peer++) {
     peer->off = off;
-    p += peer->buf_size * size_of_type;
     off += peer->buf_size;
   }
   size_t g_data[2], data[2] = { recv->peers_end - recv->peers_begin, recv->buf_size };
