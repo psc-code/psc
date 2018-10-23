@@ -135,6 +135,7 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
   }
   //  int n_peers = redist->nr_writers;
 
+  send->buf_size = 0;
   send->writers_begin = calloc(n_peers, sizeof(*send->writers_begin));
   send->writers_end = send->writers_begin + n_peers;
   send->reqs = calloc(n_peers, sizeof(*send->reqs));
@@ -192,18 +193,17 @@ mrc_redist_write_send_init(struct mrc_redist *redist, struct mrc_fld *m3)
 
     // allocate buf per writer
     //mprintf("to writer %d buf_size %d n_blocks %d\n", writer, w->buf_size, w->n_blocks);
+    send->buf_size += w->buf_size;
     w++;
   }
   send->writers_end = w;
 
-  size_t buf_size = 0;
   for (struct mrc_redist_writer* w = send->writers_begin; w != send->writers_end; w++) {
-    buf_size += w->buf_size;
     w->buf = malloc(w->buf_size * m3->_nd->size_of_type);
     assert(w->buf);
   }
 
-  size_t g_data[2], data[2] = { buf_size, send->writers_end - send->writers_begin };
+  size_t g_data[2], data[2] = { send->buf_size, send->writers_end - send->writers_begin };
   MPI_Reduce(data, g_data, 2, MPI_LONG, MPI_SUM, 0, redist->comm);
   mpi_printf(redist->comm, "avg send buf size = %ld (n peers %ld)\n", g_data[0] / redist->size,
 	     g_data[1] / redist->size);

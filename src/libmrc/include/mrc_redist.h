@@ -38,6 +38,7 @@ struct mrc_redist_writer {
 };
 
 struct mrc_redist_write_send {
+  size_t buf_size;
   struct mrc_redist_writer *writers_begin, *writers_end;
   MPI_Request *reqs;
 };
