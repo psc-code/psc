@@ -406,17 +406,15 @@ mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
     peer->begin = begin;
     peer->end = end;
 
-    // for remote patches, allocate buffer
-    if (peer->rank != redist->rank) {
-      peer->buf_size = 0;
-      for (struct mrc_redist_block *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
-	int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
-	peer->buf_size += (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
-      }
-      
-      // alloc aggregate recv buffers
-      peer->buf = malloc(peer->buf_size * size_of_type);
+    // allocate buffer
+    peer->buf_size = 0;
+    for (struct mrc_redist_block *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
+      int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
+      peer->buf_size += (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
     }
+    
+    // alloc aggregate recv buffers
+    peer->buf = malloc(peer->buf_size * size_of_type);
 
     recv->n_peers++;
   }
