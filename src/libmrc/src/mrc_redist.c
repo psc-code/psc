@@ -672,6 +672,33 @@ mrc_redist_write_end(struct mrc_redist *redist, struct mrc_ndarray *nd,
 }
 
 // ----------------------------------------------------------------------
+// mrc_redist_write_begin2
+
+static void
+mrc_redist_write_begin2(struct mrc_redist *redist, struct mrc_ndarray *nd,
+			struct mrc_fld *m3, int m)
+{
+  mrc_redist_write_send_prep(redist, m3, m);
+
+  struct mrc_redist_write_recv *recv = &redist->write_recv;
+  struct mrc_redist_write_send *send = &redist->write_send;
+  MPI_Datatype mpi_dtype = to_mpi_datatype(mrc_fld_data_type(m3));
+
+  /* MPI_Alltoallv(send->buf, send->cnts, send->disps, mpi_dtype, */
+  /* 		recv->buf, recv->cnts, recv->disps, mpi_dtype, redist->comm); */
+}
+
+// ----------------------------------------------------------------------
+// mrc_redist_write_end2
+
+static void
+mrc_redist_write_end2(struct mrc_redist *redist, struct mrc_ndarray *nd,
+		      struct mrc_fld *m3, int m)
+{
+  mrc_redist_write_recv_post(redist, nd, m3, m);
+}
+
+// ----------------------------------------------------------------------
 
 void
 mrc_redist_run(struct mrc_redist *redist, struct mrc_ndarray *nd,
