@@ -17,7 +17,7 @@ struct mrc_redist_peer {
   int rank;
   struct mrc_redist_block *begin;
   struct mrc_redist_block *end;
-  void *buf;
+  int off;
   size_t buf_size;
 };
 

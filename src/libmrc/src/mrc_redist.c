@@ -421,13 +421,15 @@ mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
   }
   free(recv_patches_by_rank);
 
+  // alloc aggregate recv buffers
   recv->buf = malloc(recv->buf_size * size_of_type);
   assert(recv->buf);
   void *p = recv->buf;
+  int off = 0;
   for (struct mrc_redist_peer *peer = recv->peers_begin; peer != recv->peers_end; peer++) {
-    // alloc aggregate recv buffers
-    peer->buf = p;
+    peer->off = off;
     p += peer->buf_size * size_of_type;
+    off += peer->buf_size;
   }
   size_t g_data[2], data[2] = { recv->peers_end - recv->peers_begin, recv->buf_size };
   MPI_Reduce(data, g_data, 2, MPI_LONG, MPI_SUM, 0, redist->comm_writers);
@@ -449,7 +451,8 @@ mrc_redist_write_recv_begin(struct mrc_redist *redist, struct mrc_ndarray *nd,
     
     // recv aggregate buffers
     //mprintf("recv_begin: Irecv cnt %ld from %d\n", peer->buf_size, peer->rank);
-    MPI_Irecv(peer->buf, peer->buf_size, mpi_dtype, peer->rank, 0x1000, redist->comm,
+    MPI_Irecv(recv->buf + peer->off * nd->size_of_type, peer->buf_size,
+	      mpi_dtype, peer->rank, 0x1000, redist->comm,
 	      &recv->reqs[peer - recv->peers_begin]);
   }
 }
@@ -474,7 +477,7 @@ mrc_redist_write_recv_end(struct mrc_redist *redist, struct mrc_ndarray *nd,
 
     switch (mrc_fld_data_type(m3)) {
     case MRC_NT_FLOAT: {
-      float *buf = peer->buf;
+      float *buf = recv->buf + peer->off * nd->size_of_type;
       for (struct mrc_redist_block *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
 	int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
 	BUFLOOP(ix, iy, iz, ilo, ihi) {
@@ -484,7 +487,7 @@ mrc_redist_write_recv_end(struct mrc_redist *redist, struct mrc_ndarray *nd,
       break;
     }
     case MRC_NT_DOUBLE: {
-      double *buf = peer->buf;
+      double *buf = recv->buf + peer->off * nd->size_of_type;
       for (struct mrc_redist_block *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
 	int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
 	BUFLOOP(ix, iy, iz, ilo, ihi) {
@@ -494,7 +497,7 @@ mrc_redist_write_recv_end(struct mrc_redist *redist, struct mrc_ndarray *nd,
       break;
     }
     case MRC_NT_INT: {
-      int *buf = peer->buf;
+      int *buf = recv->buf + peer->off * nd->size_of_type;
       for (struct mrc_redist_block *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
 	int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
 	BUFLOOP(ix, iy, iz, ilo, ihi) {
