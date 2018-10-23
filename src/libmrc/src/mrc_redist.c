@@ -413,9 +413,6 @@ mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
       peer->buf_size += (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
     }
     
-    // alloc aggregate recv buffers
-    peer->buf = malloc(peer->buf_size * size_of_type);
-
     recv->n_peers++;
   }
   free(recv_patches_by_rank);
@@ -424,6 +421,9 @@ mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
 
   size_t buf_size = 0;
   for (struct mrc_redist_peer *peer = recv->peers; peer != recv->peers + recv->n_peers; peer++) {
+    // alloc aggregate recv buffers
+    peer->buf = malloc(peer->buf_size * size_of_type);
+    assert(peer->buf);
     buf_size += peer->buf_size;
   }
   size_t g_data[2], data[2] = { recv->n_peers, buf_size };
