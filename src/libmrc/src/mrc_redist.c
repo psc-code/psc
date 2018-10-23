@@ -199,10 +199,10 @@ mrc_redist_write_send_init(struct mrc_redist *redist, int size_of_type)
 
   send->buf = malloc(send->buf_size * size_of_type);
   assert(send->buf);
-  void *p = send->buf;
+  int off = 0;
   for (struct mrc_redist_writer* w = send->writers_begin; w != send->writers_end; w++) {
-    w->buf = p;
-    p += w->buf_size * size_of_type;
+    w->off = off;
+    off += w->buf_size;
   }
 
   size_t g_data[2], data[2] = { send->buf_size, send->writers_end - send->writers_begin };
@@ -240,7 +240,7 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
 
   for (struct mrc_redist_writer *w = send->writers_begin; w != send->writers_end; w++) {
     // fill buf per writer
-    void *buf = w->buf;
+    void *buf = send->buf + w->off * m3->_nd->size_of_type;
     for (struct mrc_redist_block *b = w->blocks_begin; b != w->blocks_end; b++) {
       int p = b->p;
       int *off = patches[p].off;
@@ -286,7 +286,8 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
     MPI_Datatype mpi_dtype = to_mpi_datatype(mrc_fld_data_type(m3));
 
     //mprintf("send_begin: Isend cnt %ld to %d\n", w->buf_size, w->writer_rank);
-    MPI_Isend(w->buf, w->buf_size, mpi_dtype, w->writer_rank, 0x1000, redist->comm,
+    buf = send->buf + w->off * m3->_nd->size_of_type;
+    MPI_Isend(buf, w->buf_size, mpi_dtype, w->writer_rank, 0x1000, redist->comm,
 	      &send->reqs[w - send->writers_begin]);
   }
 }

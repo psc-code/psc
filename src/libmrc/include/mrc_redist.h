@@ -34,8 +34,8 @@ struct mrc_redist_write_recv {
 struct mrc_redist_writer {
   int writer_rank;
   struct mrc_redist_block *blocks_begin, *blocks_end;
-  void *buf;
-  size_t buf_size;
+  int off;
+  int buf_size;
 };
 
 struct mrc_redist_write_send {
