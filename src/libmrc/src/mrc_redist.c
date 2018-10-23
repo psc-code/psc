@@ -166,7 +166,7 @@ mrc_redist_write_send_init(struct mrc_redist *redist, int size_of_type)
       continue;
     }
 
-    w->writer_rank = writer_rank;
+    w->rank = writer_rank;
     w->blocks_begin = calloc(n_blocks, sizeof(*w->blocks_begin));
     w->blocks_end = w->blocks_begin + n_blocks;
 
@@ -287,7 +287,7 @@ mrc_redist_write_send_begin(struct mrc_redist *redist, struct mrc_fld *m3, int m
 
     //mprintf("send_begin: Isend cnt %ld to %d\n", w->buf_size, w->writer_rank);
     buf = send->buf + w->off * m3->_nd->size_of_type;
-    MPI_Isend(buf, w->buf_size, mpi_dtype, w->writer_rank, 0x1000, redist->comm,
+    MPI_Isend(buf, w->buf_size, mpi_dtype, w->rank, 0x1000, redist->comm,
 	      &send->reqs[w - send->writers_begin]);
   }
 }
@@ -406,12 +406,12 @@ mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
     }
 
     peer->rank = rank;
-    peer->begin = begin;
-    peer->end = end;
+    peer->blocks_begin = begin;
+    peer->blocks_end = end;
 
     // allocate buffer
     peer->buf_size = 0;
-    for (struct mrc_redist_block *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
+    for (struct mrc_redist_block *recv_patch = peer->blocks_begin; recv_patch < peer->blocks_end; recv_patch++) {
       int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
       peer->buf_size += (size_t) (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
     }
@@ -478,7 +478,7 @@ mrc_redist_write_recv_end(struct mrc_redist *redist, struct mrc_ndarray *nd,
     switch (mrc_fld_data_type(m3)) {
     case MRC_NT_FLOAT: {
       float *buf = recv->buf + peer->off * nd->size_of_type;
-      for (struct mrc_redist_block *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
+      for (struct mrc_redist_block *recv_patch = peer->blocks_begin; recv_patch < peer->blocks_end; recv_patch++) {
 	int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
 	BUFLOOP(ix, iy, iz, ilo, ihi) {
 	  MRC_S3(nd, ix,iy,iz) = *buf++;
@@ -488,7 +488,7 @@ mrc_redist_write_recv_end(struct mrc_redist *redist, struct mrc_ndarray *nd,
     }
     case MRC_NT_DOUBLE: {
       double *buf = recv->buf + peer->off * nd->size_of_type;
-      for (struct mrc_redist_block *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
+      for (struct mrc_redist_block *recv_patch = peer->blocks_begin; recv_patch < peer->blocks_end; recv_patch++) {
 	int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
 	BUFLOOP(ix, iy, iz, ilo, ihi) {
 	  MRC_D3(nd, ix,iy,iz) = *buf++;
@@ -498,7 +498,7 @@ mrc_redist_write_recv_end(struct mrc_redist *redist, struct mrc_ndarray *nd,
     }
     case MRC_NT_INT: {
       int *buf = recv->buf + peer->off * nd->size_of_type;
-      for (struct mrc_redist_block *recv_patch = peer->begin; recv_patch < peer->end; recv_patch++) {
+      for (struct mrc_redist_block *recv_patch = peer->blocks_begin; recv_patch < peer->blocks_end; recv_patch++) {
 	int *ilo = recv_patch->ilo, *ihi = recv_patch->ihi;
 	BUFLOOP(ix, iy, iz, ilo, ihi) {
 	  MRC_I3(nd, ix,iy,iz) = *buf++;

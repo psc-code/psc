@@ -15,8 +15,7 @@ struct mrc_redist_block {
 
 struct mrc_redist_peer {
   int rank;
-  struct mrc_redist_block *begin;
-  struct mrc_redist_block *end;
+  struct mrc_redist_block *blocks_begin, *blocks_end;
   int off;
   int buf_size;
 };
@@ -32,7 +31,7 @@ struct mrc_redist_write_recv {
 };
 
 struct mrc_redist_writer {
-  int writer_rank;
+  int rank;
   struct mrc_redist_block *blocks_begin, *blocks_end;
   int off;
   int buf_size;
