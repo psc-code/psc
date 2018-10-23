@@ -391,8 +391,8 @@ mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
   }
   mprintf("n_peers %d\n", recv->n_peers);
 
-  recv->peers = calloc(recv->n_peers, sizeof(*recv->peers));
-  struct mrc_redist_peer *peer = recv->peers;
+  recv->peers_begin = calloc(recv->n_peers, sizeof(*recv->peers_begin));
+  struct mrc_redist_peer *peer = recv->peers_begin;
   for (int rank = 0; rank < redist->size; rank++) {
     struct mrc_redist_block *begin = recv_patches_by_rank[rank];
     struct mrc_redist_block *end   = recv_patches_by_rank[rank+1];
@@ -420,7 +420,7 @@ mrc_redist_write_recv_init(struct mrc_redist *redist, struct mrc_ndarray *nd,
 
   recv->reqs = calloc(recv->n_peers, sizeof(*recv->reqs));
 
-  for (struct mrc_redist_peer *peer = recv->peers; peer != recv->peers + recv->n_peers; peer++) {
+  for (struct mrc_redist_peer *peer = recv->peers_begin; peer != recv->peers_begin + recv->n_peers; peer++) {
     // alloc aggregate recv buffers
     peer->buf = malloc(peer->buf_size * size_of_type);
     assert(peer->buf);
@@ -440,13 +440,13 @@ mrc_redist_write_recv_begin(struct mrc_redist *redist, struct mrc_ndarray *nd,
 {
   struct mrc_redist_write_recv *recv = &redist->write_recv;
   
-  for (struct mrc_redist_peer *peer = recv->peers; peer < recv->peers + recv->n_peers; peer++) {
+  for (struct mrc_redist_peer *peer = recv->peers_begin; peer < recv->peers_begin + recv->n_peers; peer++) {
     MPI_Datatype mpi_dtype = to_mpi_datatype(mrc_fld_data_type(m3));
     
     // recv aggregate buffers
     //mprintf("recv_begin: Irecv cnt %ld from %d\n", peer->buf_size, peer->rank);
     MPI_Irecv(peer->buf, peer->buf_size, mpi_dtype, peer->rank, 0x1000, redist->comm,
-	      &recv->reqs[peer - recv->peers]);
+	      &recv->reqs[peer - recv->peers_begin]);
   }
 }
 
@@ -462,7 +462,7 @@ mrc_redist_write_recv_end(struct mrc_redist *redist, struct mrc_ndarray *nd,
   //mprintf("recv_end: Waitall cnt = %d\n", recv->n_peers);
   MPI_Waitall(recv->n_peers, recv->reqs, MPI_STATUSES_IGNORE);
 
-  for (struct mrc_redist_peer *peer = recv->peers; peer < recv->peers + recv->n_peers; peer++) {
+  for (struct mrc_redist_peer *peer = recv->peers_begin; peer < recv->peers_begin + recv->n_peers; peer++) {
     // skip local patches
     if (peer->rank == redist->rank) {
       continue;
@@ -515,10 +515,10 @@ mrc_redist_write_destroy(struct mrc_redist *redist)
 
   free(recv->reqs);
   
-  for (struct mrc_redist_peer *peer = recv->peers; peer < recv->peers + recv->n_peers; peer++) {
+  for (struct mrc_redist_peer *peer = recv->peers_begin; peer < recv->peers_begin + recv->n_peers; peer++) {
     free(peer->buf);
   }
-  free(recv->peers);
+  free(recv->peers_begin);
 
   free(recv->recv_patches);
 }
