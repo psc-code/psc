@@ -215,10 +215,12 @@ mrc_redist_write_send_init(struct mrc_redist *redist, int size_of_type)
     off += w->buf_size;
   }
 
+#if 0
   size_t g_data[2], data[2] = { send->buf_size, send->peers_end - send->peers_begin };
   MPI_Reduce(data, g_data, 2, MPI_LONG, MPI_SUM, 0, redist->comm);
   mpi_printf(redist->comm, "avg send buf size = %ld (n peers %ld)\n", g_data[0] / redist->size,
 	     g_data[1] / redist->size);
+#endif
 }
 
 // ----------------------------------------------------------------------
@@ -393,7 +395,7 @@ mrc_redist_write_recv_init2(struct mrc_redist *redist, struct mrc_ndarray *nd,
     //mprintf("peer rank %d # = %ld\n", rank, end - begin);
     n_peers++;
   }
-  mprintf("n_peers %d\n", n_peers);
+  //mprintf("n_peers %d\n", n_peers);
 
   recv->peers_begin = calloc(n_peers, sizeof(*recv->peers_begin));
   recv->peers_end = recv->peers_begin + n_peers;
@@ -442,10 +444,13 @@ mrc_redist_write_recv_init2(struct mrc_redist *redist, struct mrc_ndarray *nd,
     peer->off = off;
     off += peer->buf_size;
   }
+
+#if 0
   size_t g_data[2], data[2] = { recv->peers_end - recv->peers_begin, recv->buf_size };
   MPI_Reduce(data, g_data, 2, MPI_LONG, MPI_SUM, 0, redist->comm_writers);
   mpi_printf(redist->comm_writers, "avg recv buf size %ld (avg n_peers %ld)\n",
 	     g_data[1] / redist->nr_writers, g_data[0] / redist->nr_writers);
+#endif
 }
 
 // ----------------------------------------------------------------------
@@ -594,10 +599,12 @@ mrc_redist_get_ndarray(struct mrc_redist *redist, struct mrc_fld *m3)
   MPI_Comm_rank(redist->comm_writers, &writer);
   int writer_dims[3], writer_off[3];
   mrc_redist_writer_offs_dims(redist, writer, writer_off, writer_dims);
+#if 0
   mprintf("writer_off %d %d %d dims %d %d %d\n",
 	  writer_off[0], writer_off[1], writer_off[2],
 	  writer_dims[0], writer_dims[1], writer_dims[2]);
-
+#endif
+  
   mrc_ndarray_set_param_int_array(nd, "dims", 3, writer_dims);
   mrc_ndarray_set_param_int_array(nd, "offs", 3, writer_off);
   
