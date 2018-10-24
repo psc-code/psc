@@ -136,7 +136,7 @@ struct PscFlatfoil : Psc<PscConfig>
     
     // --- setup domain
     Grid_t::Real3 LL = { 400., 800., 400.*6 }; // domain size (in d_e)
-#if 0
+#if 1
     Int3 gdims = { 400, 800, 2400}; // global number of grid points
     Int3 np = { 40, 80, 4 }; // division into patches
 #else
@@ -155,7 +155,7 @@ struct PscFlatfoil : Psc<PscConfig>
 
     // --- generic setup
     auto norm_params = Grid_t::NormalizationParams::dimensionless();
-    norm_params.nicell = 5;
+    norm_params.nicell = 1;
 
     double dt = p_.cfl * courant_length(grid_domain);
     define_grid(grid_domain, grid_bc, kinds, dt, norm_params);
