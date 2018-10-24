@@ -179,8 +179,9 @@ struct PscFlatfoil : Psc<PscConfig>
 
     // -- Checks
     ChecksParams checks_params{};
-    checks_params.continuity_every_step = 20;
+    checks_params.continuity_every_step = 1;
     checks_params.continuity_threshold = 1e-5;
+    checks_params.continuity_verbose = true;
     checks_.reset(new Checks_t{grid(), comm, checks_params});
 
     // -- Marder correction
@@ -225,7 +226,7 @@ struct PscFlatfoil : Psc<PscConfig>
     // -- output fields
     OutputFieldsCParams outf_params;
     outf_params.output_fields = "e,h,j,n_1st_single,v_1st_single,T_1st_single";
-    outf_params.pfield_step = 100;
+    outf_params.pfield_step = -100;
     outf_.reset(new OutputFieldsC{grid(), outf_params});
 
     // --- partition particles and initial balancing
