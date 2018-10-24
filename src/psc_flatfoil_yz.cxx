@@ -226,7 +226,7 @@ struct PscFlatfoil : Psc<PscConfig>
     // -- output fields
     OutputFieldsCParams outf_params;
     outf_params.output_fields = "e,h,j,n_1st_single,v_1st_single,T_1st_single";
-    outf_params.pfield_step = -100;
+    outf_params.pfield_step = 200;
     outf_.reset(new OutputFieldsC{grid(), outf_params});
 
     // --- partition particles and initial balancing
