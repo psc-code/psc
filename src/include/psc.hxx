@@ -630,6 +630,11 @@ struct Psc
 		       zeta,  zeta,  zeta);
     return material_list_.append(m);
   }
+#else
+  void define_material(const char *name,
+		       double eps, double mu=1.,
+		       double sigma=0., double zeta=0.)
+  {}
 #endif
 
   void grid_setup_communication()

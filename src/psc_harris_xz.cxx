@@ -315,7 +315,11 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     // --- setup species
     // FIXME, half-redundant to the PSC species setup
+#ifdef VPIC
     mprts_.reset(new Mparticles_t{grid(), vgrid_});
+#else
+    mprts_.reset(new Mparticles_t{grid()});
+#endif
     setup_species();
 
     // -- Balance
@@ -326,8 +330,10 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // FIXME, needs a way to make it gets set?
     // FIXME: the "vpic" sort actually keeps track of per-species sorting intervals
     // internally, so it needs to be called every step
+#ifdef VPIC
     sort_interval = 1;
-
+#endif
+    
     // -- Collision
     int collision_interval = 0;
     double collision_nu = .1; // FIXME, != 0 needed to avoid crash
@@ -345,7 +351,11 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // FIXME, how do we make sure that we don't forget to set this?
     // (maybe make it part of the Marder object, or provide a base class interface
     // define_marder() that takes the object and the interval
+#ifdef VPIC
     marder_interval = 1;
+#else
+    marder_interval = 0;
+#endif
 #if 0
     // FIXME, marder "vpic" manages its own cleaning intervals
     psc_marder_set_param_int(psc_->marder, "every_step", 1);
@@ -366,7 +376,11 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // -- output fields
     OutputFieldsCParams outf_params;
     double output_field_interval = 1.;
+#ifdef VPIC // handled by diagnostics instead
     outf_params.output_fields = nullptr;
+#else
+    outf_params.output_fields = "e,h,j,n_1st_single,v_1st_single,T_1st_single";
+#endif
     outf_params.pfield_step = int((output_field_interval / (phys_.wci*dt)));
     outf_.reset(new OutputFieldsC{grid(), outf_params});
 
@@ -717,7 +731,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   // ----------------------------------------------------------------------
   // diagnostics
 
-#if 1
+#ifdef VPIC
   void diagnostics() override
   {
     run_diagnostics();
