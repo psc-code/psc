@@ -331,7 +331,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // -- Collision
     int collision_interval = 0;
     double collision_nu = .1; // FIXME, != 0 needed to avoid crash
-    collision_.reset(new Collision_t{comm, collision_interval, collision_nu});
+    collision_.reset(new Collision_t{grid(), collision_interval, collision_nu});
 
     // -- Checks
     ChecksParams checks_params{};
@@ -356,7 +356,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     psc_marder_set_param_int(psc_->marder, "num_div_b_round", 2);
 #endif
   
-    marder_.reset(new Marder_t(comm, marder_diffusion, marder_loop, marder_dump));
+    marder_.reset(new Marder_t(grid(), marder_diffusion, marder_loop, marder_dump));
 
     // ---
 

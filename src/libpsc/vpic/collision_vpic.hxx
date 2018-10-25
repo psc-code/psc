@@ -12,7 +12,7 @@ class PscCollisionVpic : public CollisionBase
 public:
   constexpr static char const* const name = "vpic";
 
-  PscCollisionVpic(MPI_Comm comm, int interval, double nu)
+  PscCollisionVpic(const Grid_t& grid, int interval, double nu)
     : interval_{interval}
   {}
 
