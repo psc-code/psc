@@ -3,13 +3,11 @@
 
 #include "testing.hxx"
 #include "../libpsc/psc_collision/psc_collision_impl.hxx"
-#include "setup_particles.hxx"
 #include "psc_particles_single.h"
 #include "psc_fields_single.h"
 
 #ifdef USE_CUDA
 #include "../libpsc/cuda/collision_cuda_impl.hxx"
-#include "../libpsc/cuda/setup_particles_cuda.hxx"
 #endif
 
 struct TestParticle
