@@ -273,8 +273,8 @@ struct mparticles_patch
       grid_(&mprts->grid())
   {}
 
-  const_accessor_range get() { return {*this}; }
   injector injector() { return {*this}; }
+  const_accessor_range get() { return {*this}; }
 
   particle_t& operator[](int n) { return buf[n]; }
   const particle_t& operator[](int n) const { return buf[n]; }

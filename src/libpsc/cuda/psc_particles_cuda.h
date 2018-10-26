@@ -111,10 +111,25 @@ struct MparticlesCuda : MparticlesBase
 
   struct patch_t
   {
-    using Double3 = Vec3<double>;
-    
+    struct injector
+    {
+      injector(patch_t& patch)
+	: patch_{patch}
+      {}
+      
+      void operator()(const particle_inject& new_prt)
+      {
+	patch_.inject(new_prt);
+      }
+      
+    private:
+      patch_t& patch_;
+    };
+
     struct const_accessor
     {
+    using Double3 = Vec3<double>;
+      
       const_accessor(const cuda_mparticles_prt& prt, const patch_t& prts)
 	: prt_{prt}, prts_{prts}
       {}
@@ -194,6 +209,7 @@ struct MparticlesCuda : MparticlesBase
       return n_prts_by_patch[p_];
     }
 
+    injector injector() { return {*this}; }
     const_accessor_range get() const { return {*this}; }
 
   private:
