@@ -39,6 +39,21 @@ struct MparticlesVpic_ : MparticlesBase
     using Real3 = Vec3<real_t>;
     using Double3 = Vec3<double>;
     
+    struct injector
+    {
+      injector(Patch& patch)
+	: patch_{patch}
+      {}
+      
+      void operator()(const particle_inject& new_prt)
+      {
+	patch_.inject(new_prt);
+      }
+      
+    private:
+      Patch& patch_;
+    };
+
     struct const_accessor
     {
       const_accessor(const typename Particles::const_iterator sp, uint n)
@@ -133,6 +148,8 @@ struct MparticlesVpic_ : MparticlesBase
     {}
     
     uint size() const { return mprts_.get_n_prts(); }
+
+    injector injector() { return {*this}; }
     const_accessor_range get() const { return {*this}; }
 
     void inject_reweight(const particle_inject& prt)
