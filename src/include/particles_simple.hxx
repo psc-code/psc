@@ -188,6 +188,21 @@ struct mparticles_patch
   using iterator = typename buf_t::iterator;
   using const_iterator = typename buf_t::const_iterator;
 
+  struct injector
+  {
+    injector(mparticles_patch& patch)
+      : patch_{patch}
+    {}
+
+    void operator()(const particle_inject& new_prt)
+    {
+      patch_.inject(new_prt);
+    }
+    
+  private:
+    mparticles_patch& patch_;
+  };
+
   struct const_accessor
   {
     const_accessor(const particle_t& prt, const mparticles_patch& prts)
@@ -259,6 +274,7 @@ struct mparticles_patch
   {}
 
   const_accessor_range get() { return {*this}; }
+  injector injector() { return {*this}; }
 
   particle_t& operator[](int n) { return buf[n]; }
   const particle_t& operator[](int n) const { return buf[n]; }
