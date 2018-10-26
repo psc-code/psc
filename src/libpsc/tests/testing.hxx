@@ -109,7 +109,7 @@ using TestConfig1vbec3dCuda444 = TestConfig<dim_xyz, MfieldsCuda,
 					    BndParticlesCuda<MparticlesCuda<BS444>, dim_xyz>,
 					    PushFieldsCuda,
 					    BndCuda3<MfieldsStateCuda>,
-					    Moment_n_1st_cuda<BS444, dim_xyz>>;
+					    Moment_n_1st_cuda<MparticlesCuda<BS444>, dim_xyz>>;
 using TestConfig1vbec3dCudaYZ = TestConfig<dim_yz, MfieldsCuda,
 					   PushParticlesCuda<CudaConfig1vbec3d<dim_yz, BS144>>,
 					   checks_order_1st,
@@ -117,7 +117,7 @@ using TestConfig1vbec3dCudaYZ = TestConfig<dim_yz, MfieldsCuda,
 					   BndParticlesCuda<MparticlesCuda<BS144>, dim_yz>,
 					   PushFieldsCuda,
 					   BndCuda<MfieldsStateCuda>,
-					   Moment_n_1st_cuda<BS144, dim_yz>>;
+					   Moment_n_1st_cuda<MparticlesCuda<BS144>, dim_yz>>;
 #endif
 
 // ======================================================================
