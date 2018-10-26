@@ -8,14 +8,16 @@
 // ======================================================================
 // InjectCuda
 
-template<typename BS, typename dim, typename Target_t>
+template<typename _Mparticles, typename dim, typename Target_t>
 struct InjectCuda : InjectBase
 {
-  using Mparticles = MparticlesCuda<BS>;
+  static_assert(_Mparticles::is_cuda::value, "InjectCuda only works with MparticlesCuda");
+  
+  using Mparticles = _Mparticles;
   using fields_t = MfieldsSingle::fields_t;
   using Fields = Fields3d<fields_t>;
   using real_t = typename Mparticles::real_t;
-  using ItemMoment_t = Moment_n_1st_cuda<BS, dim>;
+  using ItemMoment_t = Moment_n_1st_cuda<typename Mparticles::BS, dim>;
   
   // ----------------------------------------------------------------------
   // ctor
@@ -150,7 +152,7 @@ struct InjectCuda : InjectBase
   
   void run(MparticlesBase& mprts_base, MfieldsBase& mflds_base) override
   {
-    auto& mprts = mprts_base.get_as<MparticlesCuda<BS>>();
+    auto& mprts = mprts_base.get_as<Mparticles>();
     (*this)(mprts);
     mprts_base.put_as(mprts);
   }
