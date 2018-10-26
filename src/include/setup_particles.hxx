@@ -94,6 +94,7 @@ struct SetupParticles
 
     for (int p = 0; p < mprts.n_patches(); ++p) {
       Int3 ilo = {}, ihi = grid.ldims;
+      auto injector = mprts[p].injector();
   
       for (int jz = ilo[2]; jz < ihi[2]; jz++) {
 	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
@@ -138,7 +139,7 @@ struct SetupParticles
 		particle_inject prt{{}, {}, wni, kind};
 		setup_particle(grid, &prt, &npt, p, xx);
 		//p->lni = particle_label_offset + 1;
-		mprts[p].inject(prt);
+		injector(prt);
 	      }
 	    }
 	  }

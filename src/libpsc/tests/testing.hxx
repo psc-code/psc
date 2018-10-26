@@ -196,8 +196,11 @@ struct PushParticlesTest : ::testing::Test
 
     // init particle
     mprts = new Mparticles{grid()};
-    (*mprts)[0].inject(prt0);
-
+    {
+      auto injector = (*mprts)[0].injector();
+      injector(prt0);
+    }
+    
     //mprts->dump("mprts.dump");
   
     // do one step

@@ -30,8 +30,10 @@ TYPED_TEST(PushParticlesTest, Moment1)
   
   // init particles
   Mparticles mprts{grid};
-  mprts[0].inject(particle_inject{{5., 5., 5.}, {0., 0., 1.}, 1., 0});
-
+  {
+    auto injector = mprts[0].injector();
+    injector({{5., 5., 5.}, {0., 0., 1.}, 1., 0});
+  }
   Moment_n moment_n{grid, grid.comm()};
   moment_n.run(mprts);
   auto& mres = moment_n.result();
@@ -66,7 +68,10 @@ TYPED_TEST(PushParticlesTest, Moment2) // FIXME, mostly copied
   
   // init particles
   Mparticles mprts{grid};
-  mprts[0].inject(particle_inject{{25., 5., 5.}, {0., 0., 1.}, 1., 0});
+  {
+    auto injector = mprts[0].injector();
+    injector({{25., 5., 5.}, {0., 0., 1.}, 1., 0});
+  }
 
   int i0 = 2;
   if (PushParticlesTest<TypeParam>::dim::InvarX::value) i0 = 0;

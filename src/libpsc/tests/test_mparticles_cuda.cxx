@@ -71,14 +71,14 @@ TYPED_TEST(MparticlesCudaTest, Inject)
 
   int nn = 0;
   for (int p = 0; p < mprts.n_patches(); ++p) {
-    auto prts = mprts[p];
+    auto injector = mprts[p].injector();
     auto& patch = mprts.grid().patches[p];
     for (int n = 0; n < n_prts; n++) {
       particle_inject prt = {};
       auto x = .5 * (patch.xb + patch.xe);
       int kind = 0;
       // use weight to store particle number for testing
-      mprts[p].inject({{x[0], x[1], x[2]}, {}, double(nn), kind});
+      injector({{x[0], x[1], x[2]}, {}, double(nn), kind});
       nn++;
     }
   }

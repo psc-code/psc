@@ -90,10 +90,10 @@ struct MparticlesTest : ::testing::Test
     return mk_mprts(static_cast<Mparticles*>(nullptr));
   }
   
-  void inject(Mparticles& mprts, int n_prts)
+  void inject_test_particles(Mparticles& mprts, int n_prts)
   {
     for (int p = 0; p < mprts.n_patches(); ++p) {
-      auto prts = mprts[p];
+      auto injector = mprts[p].injector();
       auto& patch = mprts.grid().patches[p];
       for (int n = 0; n < n_prts; n++) {
 	double nn = double(n) / n_prts;
@@ -104,7 +104,7 @@ struct MparticlesTest : ::testing::Test
 	prt.x[2] = patch.xb[2] + nn * L[2];
 	prt.kind = 0;
 	prt.w = 1.;
-	mprts[p].inject(prt);
+	injector(prt);
       }
     }
   }
@@ -133,7 +133,7 @@ TYPED_TEST(MparticlesTest, Inject)
 
   auto mprts = this->mk_mprts();
 
-  this->inject(mprts, n_prts);
+  this->inject_test_particles(mprts, n_prts);
 }
 
 // ----------------------------------------------------------------------
@@ -145,7 +145,7 @@ TYPED_TEST(MparticlesTest, setParticles)
 
   auto mprts = this->mk_mprts();
 
-  this->inject(mprts, n_prts);
+  this->inject_test_particles(mprts, n_prts);
 
   for (int p = 0; p < mprts.n_patches(); ++p) {
     auto prts = mprts[p];

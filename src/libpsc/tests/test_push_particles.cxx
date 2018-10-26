@@ -44,7 +44,10 @@ TYPED_TEST(PushParticlesTest, SingleParticle)
   auto n_prts_by_patch = std::vector<uint>{1};
 
   Mparticles mprts{grid};
-  mprts[0].inject({{1., 0., 0.}, {}, 1., 0});
+  {
+    auto injector = mprts[0].injector();
+    injector({{1., 0., 0.}, {}, 1., 0});
+  }
 
   // check particle
   EXPECT_EQ(mprts[0].size(), 1);

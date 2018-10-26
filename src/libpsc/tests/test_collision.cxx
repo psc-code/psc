@@ -120,8 +120,11 @@ TYPED_TEST(CollisionTest, Test1)
   auto prt1 = particle_inject{{5., 5., 5.}, {0. ,0., 0.}, 1., 0};
 
   Mparticles mprts{grid};
-  mprts[0].inject(prt0);
-  mprts[0].inject(prt1);
+  {
+    auto injector = mprts[0].injector();
+    injector(prt0);
+    injector(prt1);
+  }
 
   auto collision = Collision(grid, 1, 1.);
 
