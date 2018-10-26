@@ -55,6 +55,7 @@ struct Inject_ : InjectBase
     for (int p = 0; p < mprts.n_patches(); p++) {
       Fields N(mf_n[p]);
       const int *ldims = grid.ldims;
+      auto injector = mprts[p].injector();
     
       for (int jz = 0; jz < ldims[2]; jz++) {
 	for (int jy = 0; jy < ldims[1]; jy++) {
@@ -104,7 +105,7 @@ struct Inject_ : InjectBase
 		auto prt = particle_inject{{}, {}, wni, npt.kind};
 		setup_particles.setup_particle(grid, &prt, &npt, p, xx);
 
-		mprts[p].inject(prt);
+		injector(prt);
 	      }
 	    }
 	  }

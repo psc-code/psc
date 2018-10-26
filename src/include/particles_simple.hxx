@@ -292,6 +292,7 @@ struct mparticles_patch
     buf.push_back(prt);
   }
 
+private:
   void inject(const particle_inject& new_prt)
   {
     const Grid_t::Patch& patch = grid().patches[p_];
@@ -308,6 +309,7 @@ struct mparticles_patch
     push_back(prt);
   }
 
+public:
   void inject_reweight(const particle_inject& new_prt)
   {
     const Grid_t::Patch& patch = grid_->patches[p_];

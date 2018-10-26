@@ -157,6 +157,7 @@ struct MparticlesVpic_ : MparticlesBase
       mprts_.vmprts_.inject_particle(mprts_.vmprts_, prt); // FIXME why pass vmprts?
     }
 
+  private:
     void inject(const particle_inject& prt)
     {
       particle_inject prt_reweighted = prt;
