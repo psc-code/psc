@@ -12,11 +12,11 @@
 // ======================================================================
 // Inject_
 
-template<typename MP, typename MF, typename Target_t>
+template<typename _Mparticles, typename _Mfields, typename Target_t>
 struct Inject_ : InjectBase
 {
-  using Mfields = MF;
-  using Mparticles = MP;
+  using Mfields = _Mfields;
+  using Mparticles = _Mparticles;
   using fields_t = typename Mfields::fields_t;
   using Fields = Fields3d<fields_t>;
   using real_t = typename Mparticles::real_t;
