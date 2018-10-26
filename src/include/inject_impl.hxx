@@ -136,7 +136,8 @@ private:
 //
 // FIXME, should go away eventually
 
-template<typename Mparticles, typename MfieldsState, typename InjectShape, typename Dim>
+template<typename Mparticles, typename MfieldsState, typename InjectShape, typename Dim,
+	 typename Enable=void>
 struct InjectSelector
 {
   using Inject = Inject_<Mparticles, MfieldsC, InjectShape>; // FIXME, shouldn't always use MfieldsC
@@ -146,10 +147,11 @@ struct InjectSelector
 
 #include "../libpsc/cuda/inject_cuda_impl.hxx"
 
-// FIXME, this should really be conditional to Mparticles == MparticlesCuda<BS>, not
-// Mfields == MfieldsCuda
+// This not particularly pretty template arg specializes InjectSelector for all CUDA
+// Mparticles types
 template<typename Mparticles, typename InjectShape, typename Dim>
-struct InjectSelector<Mparticles, MfieldsStateCuda, InjectShape, Dim>
+struct InjectSelector<Mparticles, MfieldsStateCuda, InjectShape, Dim,
+		      typename std::enable_if<Mparticles::is_cuda::value>::type>
 {
   using Inject = InjectCuda<typename Mparticles::BS, Dim, InjectShape>;
 };

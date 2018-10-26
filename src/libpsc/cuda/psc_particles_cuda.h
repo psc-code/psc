@@ -73,6 +73,8 @@ struct MparticlesCuda : MparticlesBase
   using Real3 = Vec3<real_t>;
   using buf_t = std::vector<particle_cuda_t>;
   using CudaMparticles = cuda_mparticles<BS>;
+
+  using is_cuda = std::true_type;
   
   MparticlesCuda(const Grid_t& grid);
   ~MparticlesCuda();
