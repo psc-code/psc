@@ -136,7 +136,7 @@ private:
 //
 // FIXME, should go away eventually
 
-template<typename Mparticles, typename Mfields, typename InjectShape, typename Dim>
+template<typename Mparticles, typename MfieldsState, typename InjectShape, typename Dim>
 struct InjectSelector
 {
   using Inject = Inject_<Mparticles, MfieldsC, InjectShape>; // FIXME, shouldn't always use MfieldsC
@@ -151,7 +151,6 @@ struct InjectSelector
 template<typename Mparticles, typename InjectShape, typename Dim>
 struct InjectSelector<Mparticles, MfieldsStateCuda, InjectShape, Dim>
 {
-  using Mfields = MfieldsStateCuda; // MfieldsState
   using Inject = InjectCuda<typename Mparticles::BS, Dim, InjectShape>;
 };
 
