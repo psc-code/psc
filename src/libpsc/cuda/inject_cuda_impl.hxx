@@ -17,7 +17,7 @@ struct InjectCuda : InjectBase
   using fields_t = MfieldsSingle::fields_t;
   using Fields = Fields3d<fields_t>;
   using real_t = typename Mparticles::real_t;
-  using ItemMoment_t = Moment_n_1st_cuda<typename Mparticles::BS, dim>;
+  using ItemMoment_t = Moment_n_1st_cuda<Mparticles, dim>;
   
   // ----------------------------------------------------------------------
   // ctor

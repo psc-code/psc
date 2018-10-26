@@ -9,12 +9,12 @@
 // ======================================================================
 // Moment_rho_1st_nc_cuda
 
-template<typename BS, typename dim>
-struct Moment_rho_1st_nc_cuda : ItemMomentCRTP<Moment_rho_1st_nc_cuda<BS, dim>, MfieldsCuda>
+template<typename _Mparticles, typename dim>
+struct Moment_rho_1st_nc_cuda : ItemMomentCRTP<Moment_rho_1st_nc_cuda<_Mparticles, dim>, MfieldsCuda>
 {
   using Base = ItemMomentCRTP<Moment_rho_1st_nc_cuda, MfieldsCuda>;
+  using Mparticles = _Mparticles;
   using Mfields = MfieldsCuda;
-  using Mparticles = MparticlesCuda<BS>;
   using Bnd = BndCuda<Mfields>;
   
   constexpr static const char* name = "rho_1st_nc";
@@ -27,14 +27,14 @@ struct Moment_rho_1st_nc_cuda : ItemMomentCRTP<Moment_rho_1st_nc_cuda<BS, dim>, 
       bnd_{grid, grid.ibn}
   {}
 
-  void run(MparticlesCuda<BS>& mprts)
+  void run(Mparticles& mprts)
   {
     Mfields& mres  = this->mres_;
     auto& cmprts = *mprts.cmprts();
     cuda_mfields *cmres = mres.cmflds();
     
     mres.zero();
-    CudaMoments1stNcRho<cuda_mparticles<BS>, dim> cmoments;
+    CudaMoments1stNcRho<cuda_mparticles<typename Mparticles::BS>, dim> cmoments;
     cmoments(cmprts, cmres);
     bnd_.add_ghosts(mres, 0, mres.n_comps());
   }
@@ -46,12 +46,12 @@ private:
 // ======================================================================
 // n_1st_cuda
 
-template<typename BS, typename dim>
-struct Moment_n_1st_cuda : ItemMomentCRTP<Moment_n_1st_cuda<BS, dim>, MfieldsCuda>
+template<typename _Mparticles, typename dim>
+struct Moment_n_1st_cuda : ItemMomentCRTP<Moment_n_1st_cuda<_Mparticles, dim>, MfieldsCuda>
 {
   using Base = ItemMomentCRTP<Moment_n_1st_cuda, MfieldsCuda>;
+  using Mparticles = _Mparticles;
   using Mfields = MfieldsCuda;
-  using Mparticles = MparticlesCuda<BS>;
   using Bnd = BndCuda<Mfields>;
   
   constexpr static const char* name = "n_1st";
@@ -64,14 +64,14 @@ struct Moment_n_1st_cuda : ItemMomentCRTP<Moment_n_1st_cuda<BS, dim>, MfieldsCud
       bnd_{grid, grid.ibn}
   {}
 
-  void run(MparticlesCuda<BS>& mprts)
+  void run(Mparticles& mprts)
   {
     Mfields& mres = this->mres_;
     auto& cmprts = *mprts.cmprts();
     cuda_mfields *cmres = mres.cmflds();
     
     mres.zero();
-    CudaMoments1stNcN<cuda_mparticles<BS>, dim> cmoments;
+    CudaMoments1stNcN<cuda_mparticles<typename Mparticles::BS>, dim> cmoments;
     cmoments(cmprts, cmres);
     bnd_.add_ghosts(mres, 0, mres.n_comps());
   }
