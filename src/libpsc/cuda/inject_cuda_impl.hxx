@@ -22,8 +22,9 @@ struct InjectCuda : InjectBase
   // ----------------------------------------------------------------------
   // ctor
   
-  InjectCuda(const Grid_t& grid, int interval, int tau, int kind_n, Target_t target)
-    : InjectBase(interval, tau, kind_n),
+  InjectCuda(const Grid_t& grid, int interval, int tau, int kind_n,
+	     Target_t target)
+    : InjectBase{interval, tau, kind_n},
       target_{target},
       moment_n_{grid, grid.comm()} // FIXME, should just take grid
   {}
@@ -111,6 +112,7 @@ struct InjectCuda : InjectBase
 	      }
 
 	      for (int cnt = 0; cnt < n_in_cell; cnt++) {
+		assert(setup_particles.fractional_n_particles_per_cell);
 		real_t wni = 1.; // ??? FIXME
 		auto prt = particle_inject{{}, {}, wni, npt.kind};
 		setup_particles.setup_particle(grid, &prt, &npt, p, xx);
