@@ -87,7 +87,6 @@ struct MparticlesCuda : MparticlesBase
 
   void inject_buf(cuda_mparticles_prt *buf, uint *buf_n_by_patch);
   void dump(const std::string& filename);
-  void push_back(int p, const particle_t& prt);
   uint start(int p) const;
   bool check_after_push();
 
@@ -192,9 +191,6 @@ struct MparticlesCuda : MparticlesBase
 
     const ParticleIndexer<real_t>& particleIndexer() const { return mp_.pi_; }
 
-    void push_back(const particle_t& prt) { assert(0); }
-    void inject(const particle_inject& new_prt);
-
     cuda_mparticles_prt get_particle(int n) const
     {
       uint off = mp_.start(p_);
@@ -212,6 +208,9 @@ struct MparticlesCuda : MparticlesBase
     injector injector() { return {*this}; }
     const_accessor_range get() const { return {*this}; }
 
+  private:
+    void inject(const particle_inject& new_prt);
+    
   private:
     const MparticlesCuda& mp_;
     int p_;
