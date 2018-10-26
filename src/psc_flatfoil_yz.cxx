@@ -20,7 +20,7 @@
 #include <setup_particles.hxx>
 #include <setup_fields.hxx>
 
-#include "../libpsc/psc_inject/psc_inject_impl.hxx"
+#include "inject_impl.hxx"
 #include "../libpsc/psc_heating/psc_heating_impl.hxx"
 #include "../libpsc/psc_checks/checks_impl.hxx"
 

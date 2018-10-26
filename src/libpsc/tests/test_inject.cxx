@@ -2,7 +2,7 @@
 #include "gtest/gtest.h"
 
 #include "testing.hxx"
-#include "../libpsc/psc_inject/psc_inject_impl.hxx"
+#include "inject_impl.hxx"
 
 // ======================================================================
 // InjectTestTarget
