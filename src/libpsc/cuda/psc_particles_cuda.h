@@ -85,7 +85,8 @@ struct MparticlesCuda : MparticlesBase
   void resize_all(const uint *n_prts_by_patch) override;
   void reset(const Grid_t& grid) override;
 
-  void inject_buf(cuda_mparticles_prt *buf, uint *buf_n_by_patch);
+  void inject_buf(const cuda_mparticles_prt *buf, const uint *buf_n_by_patch);
+  void inject_buf(const particle_inject *buf, const uint *buf_n_by_patch);
   void dump(const std::string& filename);
   uint start(int p) const;
   bool check_after_push();
@@ -110,19 +111,49 @@ struct MparticlesCuda : MparticlesBase
 
   struct patch_t
   {
+    // ----------------------------------------------------------------------
+    // injector
+    //
+    // caches injected particles for all patches before actually transferring them to
+    // the GPU
+    //
+    // It expects that an injector is constructed and then destructed for every patch
+    // in order, and the real action occurs only when the last patch instance is destructed
+    
     struct injector
     {
       injector(patch_t& patch)
-	: patch_{patch}
-      {}
+	: patch_{patch},
+	  n_prts_{0}
+      {
+	auto& mprts = patch_.mp_;
+	//mprintf("injector p = %d/%d\n", patch_.p_, mprts.n_patches());
+	// make sure we're constructed/destructed in order, one patch at a time
+	assert(patch_.p_ == mprts.injector_n_prts_by_patch.size());
+      }
+
+      ~injector()
+      {
+	auto& mprts = patch_.mp_;
+	//mprintf("~injector p = %d/%d\n", patch_.p_, mprts.n_patches());
+	mprts.injector_n_prts_by_patch.push_back(n_prts_);
+	if (patch_.p_ == mprts.n_patches() - 1) {
+	  mprts.inject_buf(mprts.injector_buf.data(), mprts.injector_n_prts_by_patch.data());
+	  mprts.injector_n_prts_by_patch.clear();
+	  mprts.injector_buf.clear();
+	}
+      }
       
       void operator()(const particle_inject& new_prt)
       {
-	patch_.inject(new_prt);
+	auto& mprts = patch_.mp_;
+	mprts.injector_buf.push_back(new_prt);
+	n_prts_++;
       }
       
     private:
       patch_t& patch_;
+      uint n_prts_;
     };
 
     struct const_accessor
@@ -185,7 +216,7 @@ struct MparticlesCuda : MparticlesBase
       const patch_t& prts_;
     };
 
-    patch_t(const MparticlesCuda& mp, int p)
+    patch_t(MparticlesCuda& mp, int p)
       : mp_(mp), p_(p)
     {}
 
@@ -212,15 +243,18 @@ struct MparticlesCuda : MparticlesBase
     void inject(const particle_inject& new_prt);
     
   private:
-    const MparticlesCuda& mp_;
+    MparticlesCuda& mp_;
     int p_;
   };
 
-  patch_t operator[](int p) const { return patch_t{*this, p}; }
+  patch_t operator[](int p) { return patch_t{*this, p}; }
 
 private:
   CudaMparticles* cmprts_;
   ParticleIndexer<real_t> pi_;
+
+  std::vector<uint> injector_n_prts_by_patch;
+  std::vector<particle_inject> injector_buf;
 };
 
 template<>

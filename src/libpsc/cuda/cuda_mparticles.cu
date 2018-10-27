@@ -396,7 +396,7 @@ uint cuda_mparticles<BS>::get_n_prts()
 
 template<typename BS>
 void cuda_mparticles<BS>::inject_buf(const cuda_mparticles_prt *buf,
-				     uint *buf_n_by_patch)
+				     const uint *buf_n_by_patch)
 {
   if (need_reorder) {
     reorder();
@@ -429,6 +429,92 @@ void cuda_mparticles<BS>::inject_buf(const cuda_mparticles_prt *buf,
       pxi4->y = prt->p[1];
       pxi4->z = prt->p[2];
       pxi4->w = prt->w * this->grid_.kinds[prt->kind].q;
+
+      auto bidx = this->blockIndex(*xi4, p);
+      assert(bidx >= 0 && bidx < this->n_blocks);
+      h_bidx[off + n] = bidx;;
+      h_id[off + n] = this->n_prts + off + n;
+    }
+    off += buf_n_by_patch[p];
+  }
+  assert(off == buf_n);
+
+  // assert(check_in_patch_unordered_slow());
+
+  this->by_block_.find_indices_ids(*this);
+  // assert(check_bidx_id_unordered_slow());
+
+  resize(this->n_prts + buf_n);
+
+  thrust::copy(h_xi4.begin(), h_xi4.end(), this->d_xi4.begin() + this->n_prts);
+  thrust::copy(h_pxi4.begin(), h_pxi4.end(), this->d_pxi4.begin() + this->n_prts);
+  thrust::copy(h_bidx.begin(), h_bidx.end(), this->by_block_.d_idx.begin() + this->n_prts);
+  //thrust::copy(h_id.begin(), h_id.end(), d_id + n_prts);
+  // FIXME, looks like ids up until n_prts have already been set above
+  thrust::sequence(this->by_block_.d_id.data(), this->by_block_.d_id.data() + this->n_prts + buf_n);
+
+  // for (int i = -5; i <= 5; i++) {
+  //   //    float4 xi4 = d_xi4[cmprts->n_prts + i];
+  //   uint bidx = d_bidx[cmprts->n_prts + i];
+  //   uint id = d_id[cmprts->n_prts + i];
+  //   printf("i %d bidx %d %d\n", i, bidx, id);
+  // }
+
+  // assert(check_ordered());
+
+  this->n_prts += buf_n;
+
+  this->by_block_.stable_sort();
+
+  this->by_block_.reorder_and_offsets(*this);
+
+  // assert(check_ordered());
+}
+
+// ----------------------------------------------------------------------
+// inject_buf
+
+template<typename BS>
+void cuda_mparticles<BS>::inject_buf(const particle_inject *buf,
+				     const uint *buf_n_by_patch)
+{
+  using Double3 = Vec3<double>;
+  
+  if (need_reorder) {
+    reorder();
+  }
+  
+  uint buf_n = 0;
+  for (int p = 0; p < this->n_patches; p++) {
+    buf_n += buf_n_by_patch[p];
+    //    printf("p %d buf_n_by_patch %d\n", p, buf_n_by_patch[p]);
+  }
+  //  printf("buf_n %d\n", buf_n);
+
+  thrust::host_vector<float4> h_xi4(buf_n);
+  thrust::host_vector<float4> h_pxi4(buf_n);
+  thrust::host_vector<uint> h_bidx(buf_n);
+  thrust::host_vector<uint> h_id(buf_n);
+
+  uint off = 0;
+  for (int p = 0; p < this->n_patches; p++) {
+    auto& patch = this->grid_.patches[p];
+    for (int n = 0; n < buf_n_by_patch[p]; n++) {
+      float4 *xi4 = &h_xi4[off + n];
+      float4 *pxi4 = &h_pxi4[off + n];
+      auto new_prt = buf[off + n];
+      auto x = Double3{new_prt.x} - patch.xb;
+      auto prt = cuda_mparticles_prt{Real3{x}, Real3{Double3{new_prt.u}},
+				     real_t(new_prt.w), new_prt.kind};
+  
+      xi4->x  = prt.x[0];
+      xi4->y  = prt.x[1];
+      xi4->z  = prt.x[2];
+      xi4->w  = cuda_int_as_float(prt.kind);
+      pxi4->x = prt.p[0];
+      pxi4->y = prt.p[1];
+      pxi4->z = prt.p[2];
+      pxi4->w = prt.w * this->grid_.kinds[prt.kind].q;
 
       auto bidx = this->blockIndex(*xi4, p);
       assert(bidx >= 0 && bidx < this->n_blocks);
