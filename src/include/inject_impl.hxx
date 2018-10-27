@@ -153,7 +153,7 @@ template<typename Mparticles, typename InjectShape, typename Dim>
 struct InjectSelector<Mparticles, MfieldsStateCuda, InjectShape, Dim,
 		      typename std::enable_if<Mparticles::is_cuda::value>::type>
 {
-  using Inject = InjectCuda<Mparticles, Dim, InjectShape>;
+  using Inject = InjectCuda<Mparticles, MfieldsSingle, InjectShape, Dim>;
 };
 
 #endif

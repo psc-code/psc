@@ -8,13 +8,14 @@
 // ======================================================================
 // InjectCuda
 
-template<typename _Mparticles, typename dim, typename Target_t>
+template<typename _Mparticles, typename _Mfields, typename Target_t, typename dim>
 struct InjectCuda : InjectBase
 {
   static_assert(_Mparticles::is_cuda::value, "InjectCuda only works with MparticlesCuda");
   
+  using Mfields = _Mfields;
   using Mparticles = _Mparticles;
-  using fields_t = MfieldsSingle::fields_t;
+  using fields_t = typename Mfields::fields_t;
   using Fields = Fields3d<fields_t>;
   using real_t = typename Mparticles::real_t;
   using ItemMoment_t = Moment_n_1st_cuda<Mparticles, dim>;
@@ -127,26 +128,14 @@ struct InjectCuda : InjectBase
 
     mres.put_as(mf_n, 0, 0);
 
-    using Real3 = Vec3<real_t>;
-    using Double3 = Vec3<double>;
-    
-    static std::vector<cuda_mparticles_prt> buf;
-
     auto cur = buf2.cbegin();
-    buf.clear();
     for (int p = 0; p < mprts.n_patches(); p++) {
-      const auto& patch = grid.patches[p];
+      auto injector = mprts[p].injector();
       for (int n = 0; n < buf_n_by_patch[p]; n++) {
-	const auto& prt2 = *cur++;
-	auto x = Double3{prt2.x} - patch.xb;
-	auto prt = cuda_mparticles_prt{Real3{x}, Real3{Double3{prt2.u}},
-				       real_t(prt2.w), prt2.kind};
-	buf.push_back(prt);
+	injector(*cur++);
       }
     }
-
-    mprts.inject_buf(buf.data(), buf_n_by_patch);
-    mprintf("**** Inject: %ld particles added\n", buf.size());
+    mprintf("**** Inject: %ld particles added\n", buf2.size());
   }
 
   // ----------------------------------------------------------------------
