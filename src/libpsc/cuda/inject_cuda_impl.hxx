@@ -60,15 +60,9 @@ struct InjectCuda : InjectBase
     MfieldsCuda& mres = moment_n_.result();
     auto& mf_n = mres.get_as<MfieldsSingle>(kind_n, kind_n+1);
 
-    static std::vector<particle_inject> buf2;
-
-    uint buf_n_by_patch[mprts.n_patches()];
     int n_prts = 0;
-
-    buf2.clear();
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto injector = mprts[p].injector();
-      buf_n_by_patch[p] = 0;
       Fields N(mf_n[p]);
       const int *ldims = grid.ldims;
     
@@ -119,7 +113,6 @@ struct InjectCuda : InjectBase
 		real_t wni = 1.; // ??? FIXME
 		auto prt = particle_inject{{}, {}, wni, npt.kind};
 		setup_particles.setup_particle(grid, &prt, &npt, p, xx);
-		buf2.push_back(prt);
 		injector(prt);
 		n_prts++;
 	      }
