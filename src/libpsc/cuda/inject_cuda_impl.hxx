@@ -60,11 +60,10 @@ struct InjectCuda : InjectBase
     MfieldsCuda& mres = moment_n_.result();
     auto& mf_n = mres.get_as<MfieldsSingle>(kind_n, kind_n+1);
 
-    int n_prts = 0;
     for (int p = 0; p < mprts.n_patches(); p++) {
-      auto injector = mprts[p].injector();
       Fields N(mf_n[p]);
       const int *ldims = grid.ldims;
+      auto injector = mprts[p].injector();
     
       for (int jz = 0; jz < ldims[2]; jz++) {
 	for (int jy = 0; jy < ldims[1]; jy++) {
@@ -113,8 +112,8 @@ struct InjectCuda : InjectBase
 		real_t wni = 1.; // ??? FIXME
 		auto prt = particle_inject{{}, {}, wni, npt.kind};
 		setup_particles.setup_particle(grid, &prt, &npt, p, xx);
+
 		injector(prt);
-		n_prts++;
 	      }
 	    }
 	  }
@@ -123,8 +122,6 @@ struct InjectCuda : InjectBase
     }
 
     mres.put_as(mf_n, 0, 0);
-
-    mprintf("**** Inject: %d particles added\n", n_prts);
   }
 
   // ----------------------------------------------------------------------
