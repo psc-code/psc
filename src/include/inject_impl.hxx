@@ -149,7 +149,8 @@ struct InjectSelector
 
 #ifdef USE_CUDA
 
-#include "../libpsc/cuda/inject_cuda_impl.hxx"
+#include <psc_fields_single.h>
+#include "../libpsc/cuda/fields_item_moments_1st_cuda.hxx"
 
 // This not particularly pretty template arg specializes InjectSelector for all CUDA
 // Mparticles types
@@ -157,8 +158,8 @@ template<typename Mparticles, typename InjectShape, typename Dim>
 struct InjectSelector<Mparticles, InjectShape, Dim,
 		      typename std::enable_if<Mparticles::is_cuda::value>::type>
 {
-  using Inject = InjectCuda<Mparticles, MfieldsSingle, InjectShape,
-			    Moment_n_1st_cuda<Mparticles, Dim>>;
+  using Inject = Inject_<Mparticles, MfieldsSingle, InjectShape,
+			 Moment_n_1st_cuda<Mparticles, Dim>>;
 };
 
 #endif
