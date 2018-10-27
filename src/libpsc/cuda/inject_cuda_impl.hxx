@@ -48,7 +48,6 @@ struct InjectCuda : InjectBase
       (interval * grid.dt / tau) / (1. + interval * grid.dt / tau);
 
     moment_n_.run(mprts);
-
     auto& mres = moment_n_.result();
     auto& mf_n = mres.template get_as<Mfields>(kind_n, kind_n+1);
 

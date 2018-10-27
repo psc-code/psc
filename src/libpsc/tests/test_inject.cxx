@@ -84,7 +84,7 @@ TYPED_TEST(InjectTest, Test1)
   using Mparticles = typename TypeParam::Mparticles;
   using MfieldsState = typename TypeParam::MfieldsState;
   using PushParticles = typename TypeParam::PushParticles;
-  using Inject = typename InjectSelector<Mparticles, MfieldsState, InjectTestTarget,
+  using Inject = typename InjectSelector<Mparticles, InjectTestTarget,
 					 typename TypeParam::dim>::Inject;
   using ItemMoment = typename Inject::ItemMoment_t;
   using real_t = typename Mparticles::real_t;

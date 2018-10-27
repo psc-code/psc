@@ -51,7 +51,8 @@ struct Inject_ : InjectBase
       (interval * grid.dt / tau) / (1. + interval * grid.dt / tau);
 
     moment_n_.run(mprts);
-    auto& mf_n = moment_n_.result();
+    auto& mres = moment_n_.result();
+    auto& mf_n = mres.template get_as<Mfields>(kind_n, kind_n+1);
 
     for (int p = 0; p < mprts.n_patches(); p++) {
       Fields N(mf_n[p]);
@@ -113,8 +114,9 @@ struct Inject_ : InjectBase
 	}
       }
     }
-  }
 
+    mres.put_as(mf_n, 0, 0);
+  }
 
   // ----------------------------------------------------------------------
   // run
