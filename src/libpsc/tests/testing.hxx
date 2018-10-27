@@ -24,7 +24,6 @@
 #ifdef USE_CUDA
 #include "../libpsc/cuda/push_particles_cuda_impl.hxx"
 #include "../libpsc/cuda/setup_fields_cuda.hxx"
-#include "../libpsc/cuda/setup_particles_cuda.hxx"
 #include "../libpsc/cuda/bnd_particles_cuda_impl.hxx"
 #include "../libpsc/cuda/checks_cuda_impl.hxx"
 #include "../libpsc/cuda/push_fields_cuda_impl.hxx"

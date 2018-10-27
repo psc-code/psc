@@ -26,7 +26,6 @@
 
 #ifdef USE_CUDA
 #include "../libpsc/cuda/setup_fields_cuda.hxx"
-#include "../libpsc/cuda/setup_particles_cuda.hxx"
 #endif
 
 #include "psc_config.hxx"
