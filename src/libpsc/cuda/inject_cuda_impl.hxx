@@ -31,14 +31,6 @@ struct InjectCuda : InjectBase
   {}
 
   // ----------------------------------------------------------------------
-  // dtor
-
-  ~InjectCuda()
-  {
-    // FIXME, more cleanup needed
-  }
-  
-  // ----------------------------------------------------------------------
   // operator()
 
   void operator()(Mparticles& mprts)
