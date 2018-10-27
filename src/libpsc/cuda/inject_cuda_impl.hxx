@@ -63,9 +63,11 @@ struct InjectCuda : InjectBase
     static std::vector<particle_inject> buf2;
 
     uint buf_n_by_patch[mprts.n_patches()];
+    int n_prts = 0;
 
     buf2.clear();
     for (int p = 0; p < mprts.n_patches(); p++) {
+      auto injector = mprts[p].injector();
       buf_n_by_patch[p] = 0;
       Fields N(mf_n[p]);
       const int *ldims = grid.ldims;
@@ -118,8 +120,9 @@ struct InjectCuda : InjectBase
 		auto prt = particle_inject{{}, {}, wni, npt.kind};
 		setup_particles.setup_particle(grid, &prt, &npt, p, xx);
 		buf2.push_back(prt);
+		injector(prt);
+		n_prts++;
 	      }
-	      buf_n_by_patch[p] += n_in_cell;
 	    }
 	  }
 	}
@@ -128,14 +131,7 @@ struct InjectCuda : InjectBase
 
     mres.put_as(mf_n, 0, 0);
 
-    auto cur = buf2.cbegin();
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      auto injector = mprts[p].injector();
-      for (int n = 0; n < buf_n_by_patch[p]; n++) {
-	injector(*cur++);
-      }
-    }
-    mprintf("**** Inject: %ld particles added\n", buf2.size());
+    mprintf("**** Inject: %d particles added\n", n_prts);
   }
 
   // ----------------------------------------------------------------------
