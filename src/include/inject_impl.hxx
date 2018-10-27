@@ -12,7 +12,8 @@
 // ======================================================================
 // Inject_
 
-template<typename _Mparticles, typename _Mfields, typename Target_t>
+template<typename _Mparticles, typename _Mfields, typename Target_t,
+	 typename _ItemMoment>
 struct Inject_ : InjectBase
 {
   using Mfields = _Mfields;
@@ -20,7 +21,7 @@ struct Inject_ : InjectBase
   using fields_t = typename Mfields::fields_t;
   using Fields = Fields3d<fields_t>;
   using real_t = typename Mparticles::real_t;
-  using ItemMoment_t = ItemMomentLoopPatches<Moment_n_1st<Mparticles, Mfields>>;
+  using ItemMoment_t = _ItemMoment;
   
   // ----------------------------------------------------------------------
   // ctor
@@ -140,7 +141,8 @@ template<typename Mparticles, typename MfieldsState, typename InjectShape, typen
 	 typename Enable=void>
 struct InjectSelector
 {
-  using Inject = Inject_<Mparticles, MfieldsC, InjectShape>; // FIXME, shouldn't always use MfieldsC
+  using Inject = Inject_<Mparticles, MfieldsC, InjectShape,
+			 ItemMomentLoopPatches<Moment_n_1st<Mparticles, MfieldsC>>>; // FIXME, shouldn't always use MfieldsC
 };
 
 #ifdef USE_CUDA
@@ -153,7 +155,8 @@ template<typename Mparticles, typename InjectShape, typename Dim>
 struct InjectSelector<Mparticles, MfieldsStateCuda, InjectShape, Dim,
 		      typename std::enable_if<Mparticles::is_cuda::value>::type>
 {
-  using Inject = InjectCuda<Mparticles, MfieldsSingle, InjectShape, Dim>;
+  using Inject = InjectCuda<Mparticles, MfieldsSingle, InjectShape,
+			    Moment_n_1st_cuda<Mparticles, Dim>>;
 };
 
 #endif

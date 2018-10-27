@@ -8,7 +8,7 @@
 // ======================================================================
 // InjectCuda
 
-template<typename _Mparticles, typename _Mfields, typename Target_t, typename dim>
+template<typename _Mparticles, typename _Mfields, typename Target_t, typename _ItemMoment>
 struct InjectCuda : InjectBase
 {
   static_assert(_Mparticles::is_cuda::value, "InjectCuda only works with MparticlesCuda");
@@ -18,7 +18,7 @@ struct InjectCuda : InjectBase
   using fields_t = typename Mfields::fields_t;
   using Fields = Fields3d<fields_t>;
   using real_t = typename Mparticles::real_t;
-  using ItemMoment_t = Moment_n_1st_cuda<Mparticles, dim>;
+  using ItemMoment_t = _ItemMoment;
   
   // ----------------------------------------------------------------------
   // ctor
