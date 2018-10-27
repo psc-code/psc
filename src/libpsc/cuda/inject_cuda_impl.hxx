@@ -49,8 +49,8 @@ struct InjectCuda : InjectBase
 
     moment_n_.run(mprts);
 
-    MfieldsCuda& mres = moment_n_.result();
-    auto& mf_n = mres.get_as<MfieldsSingle>(kind_n, kind_n+1);
+    auto& mres = moment_n_.result();
+    auto& mf_n = mres.template get_as<Mfields>(kind_n, kind_n+1);
 
     for (int p = 0; p < mprts.n_patches(); p++) {
       Fields N(mf_n[p]);
