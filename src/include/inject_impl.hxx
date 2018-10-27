@@ -137,7 +137,7 @@ private:
 //
 // FIXME, should go away eventually
 
-template<typename Mparticles, typename MfieldsState, typename InjectShape, typename Dim,
+template<typename Mparticles, typename InjectShape, typename Dim,
 	 typename Enable=void>
 struct InjectSelector
 {
@@ -152,7 +152,7 @@ struct InjectSelector
 // This not particularly pretty template arg specializes InjectSelector for all CUDA
 // Mparticles types
 template<typename Mparticles, typename InjectShape, typename Dim>
-struct InjectSelector<Mparticles, MfieldsStateCuda, InjectShape, Dim,
+struct InjectSelector<Mparticles, InjectShape, Dim,
 		      typename std::enable_if<Mparticles::is_cuda::value>::type>
 {
   using Inject = InjectCuda<Mparticles, MfieldsSingle, InjectShape,
