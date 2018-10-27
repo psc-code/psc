@@ -120,13 +120,6 @@ bool MparticlesCuda<BS>::check_after_push()
   return cmprts_->check_bidx_after_push();
 }
 
-template<typename BS>
-void MparticlesCuda<BS>::patch_t::inject(const particle_inject& new_prt)
-{
-  dprintf("CMPRTS: inject\n");
-  mp_.cmprts_->inject(p_, new_prt);
-}
-
 // ======================================================================
 // conversion
 

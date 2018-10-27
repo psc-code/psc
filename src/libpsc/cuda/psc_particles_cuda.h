@@ -240,9 +240,6 @@ struct MparticlesCuda : MparticlesBase
     const_accessor_range get() const { return {*this}; }
 
   private:
-    void inject(const particle_inject& new_prt);
-    
-  private:
     MparticlesCuda& mp_;
     int p_;
   };

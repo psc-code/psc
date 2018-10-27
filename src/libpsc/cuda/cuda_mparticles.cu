@@ -558,24 +558,6 @@ void cuda_mparticles<BS>::inject_buf(const particle_inject *buf,
 }
 
 // ----------------------------------------------------------------------
-// inject
-
-template<typename BS>
-void cuda_mparticles<BS>::inject(int p, const particle_inject& new_prt)
-{
-  // FIXME, very slow implementation, only useful for testing!!!
-  using Double3 = Vec3<double>;
-
-  auto& patch = this->grid_.patches[p];
-  auto x = Double3{new_prt.x} - patch.xb;
-  auto prt = cuda_mparticles_prt{Real3{x}, Real3{Double3{new_prt.u}},
-				 real_t(new_prt.w), new_prt.kind};
-  auto n_prts_by_patch = std::vector<uint>(this->grid_.n_patches());
-  n_prts_by_patch[p] = 1;
-  inject_buf(&prt, n_prts_by_patch.data());
-}
-
-// ----------------------------------------------------------------------
 // get_particles
 
 template<typename BS>

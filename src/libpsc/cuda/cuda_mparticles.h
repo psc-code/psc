@@ -100,7 +100,6 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   void reserve_all(const uint *n_prts_by_patch);
   uint get_n_prts();
   void setup_internals();
-  void inject(int p, const particle_inject& new_prt);
   void inject_buf(const cuda_mparticles_prt *buf, const uint *buf_n_by_patch);
   void inject_buf(const particle_inject *buf, const uint *buf_n_by_patch);
 
