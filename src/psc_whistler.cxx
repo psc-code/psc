@@ -64,8 +64,8 @@ struct PscWhistler : Psc<PscConfig>
 
     // --- setup domain
     Grid_t::Real3 LL = {5., 5., 100.}; // domain size (normalized units, ie, in d_i)
-    Int3 gdims = {32, 32, 32}; // global number of grid points
-    Int3 np = {1, 1, 2}; // division into patches
+    Int3 gdims = {8, 8, 200}; // global number of grid points
+    Int3 np = {1, 1, 25}; // division into patches
 
     auto grid_domain = Grid_t::Domain{gdims, LL, {}, np};
     
