@@ -79,7 +79,7 @@ struct Inject_ : InjectBase
 	      npt.kind = kind;
 	      npt.q    = kinds[kind].q;
 	      npt.m    = kinds[kind].m;
-	      target_.init_npt(kind, xx, &npt);
+	      target_.init_npt(kind, xx, npt);
 	    
 	      int n_in_cell;
 	      if (kind != setup_particles.neutralizing_population) {

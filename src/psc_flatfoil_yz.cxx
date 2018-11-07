@@ -63,25 +63,25 @@ struct InjectFoil : InjectFoilParams
 	    crd[2] >= zl && crd[2] <= zh);
   }
 
-  void init_npt(int pop, double crd[3], struct psc_particle_npt *npt)
+  void init_npt(int pop, double crd[3], psc_particle_npt& npt)
   {
     if (!is_inside(crd)) {
-      npt->n = 0;
+      npt.n = 0;
       return;
     }
     
     switch (pop) {
     case MY_ION:
-      npt->n    = n;
-      npt->T[0] = Ti;
-      npt->T[1] = Ti;
-      npt->T[2] = Ti;
+      npt.n    = n;
+      npt.T[0] = Ti;
+      npt.T[1] = Ti;
+      npt.T[2] = Ti;
       break;
     case MY_ELECTRON:
-      npt->n    = n;
-      npt->T[0] = Te;
-      npt->T[1] = Te;
-      npt->T[2] = Te;
+      npt.n    = n;
+      npt.T[0] = Te;
+      npt.T[1] = Te;
+      npt.T[2] = Te;
       break;
     default:
       assert(0);
@@ -266,7 +266,7 @@ struct PscFlatfoil : Psc<PscConfig>
       
     if (inject_target_.is_inside(crd)) {
       // replace values above by target values
-      inject_target_.init_npt(kind, crd, &npt);
+      inject_target_.init_npt(kind, crd, npt);
     }
   }
   

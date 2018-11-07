@@ -14,14 +14,14 @@ struct InjectTestTarget
     return (crd[1] >= 40. && crd[1] <= 120.);
   }
 
-  void init_npt(int pop, double crd[3], struct psc_particle_npt *npt)
+  void init_npt(int pop, double crd[3], struct psc_particle_npt& npt)
   {
     if (!is_inside(crd)) {
-      npt->n = 0;
+      npt.n = 0;
       return;
     }
     
-    npt->n = 1.;
+    npt.n = 1.;
   }
 };
 
