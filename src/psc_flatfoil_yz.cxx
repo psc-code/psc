@@ -90,7 +90,7 @@ struct InjectFoil : InjectFoilParams
 };
 
 // EDIT to change order / floating point type / cuda / 2d/3d
-using dim_t = dim_xyz;
+using dim_t = dim_yz;
 using PscConfig = PscConfig1vbecSingle<dim_t>;
 //using PscConfig = PscConfig1vbecCuda<dim_t>;
 
@@ -112,7 +112,11 @@ struct PscFlatfoil : Psc<PscConfig>
 
     mpi_printf(comm, "*** Setting up...\n");
 
+#if 0
     p_.nmax = 5001;
+#else
+    p_.nmax = 2001;
+#endif
     p_.cfl = 0.75;
 
     BB_ = 0.;
@@ -134,13 +138,16 @@ struct PscFlatfoil : Psc<PscConfig>
     mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(background_Te_));
     
     // --- setup domain
+#if 0
     Grid_t::Real3 LL = { 400., 800., 400.*6 }; // domain size (in d_e)
-#if 1
     Int3 gdims = { 400, 800, 2400}; // global number of grid points
     Int3 np = { 40, 80, 4 }; // division into patches
 #else
-    Int3 gdims = { 40, 10, 20}; // global number of grid points
-    Int3 np = { 4, 1, 2 }; // division into patches
+    Grid_t::Real3 LL = {1., 1600., 400.}; // domain size (in d_e)
+    // Int3 gdims = {40, 10, 20}; // global number of grid points
+    // Int3 np = {4, 1, 2; // division into patches
+    Int3 gdims = {1, 1024, 512}; // global number of grid points
+    Int3 np = {1, 4, 1}; // division into patches
 #endif
 
     if (dim::InvarX::value) { ibn[0] = 0; } // FIXME, wrong place, not for VPIC...
