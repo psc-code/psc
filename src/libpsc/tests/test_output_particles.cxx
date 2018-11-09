@@ -3,13 +3,7 @@
 
 #include "testing.hxx"
 
-#include "grid.hxx"
-#include "fields.hxx"
-#include "psc_particles_double.h"
-#include "psc_fields_c.h"
-#include "push_particles.hxx"
-#include "setup_fields.hxx"
-#include "setup_particles.hxx"
+#include <output_particles.hxx>
 
 template<typename T>
 struct OutputParticlesTest : ::testing::Test
@@ -74,6 +68,13 @@ TYPED_TEST(OutputParticlesTest, Test1)
     injector({{2., 0., 0.}, {}, 1., 1});
   }
 
+  psc_output_particles* outp = psc_output_particles_create(grid.comm());
+  psc_output_particles_set_type(outp, "ascii");
+  psc_output_particles_set_param_int(outp, "every_step", 1);
+  psc_output_particles_setup(outp);
+  psc_output_particles_view(outp);
+  PscOutputParticlesBase{outp}.run(mprts);
+  psc_output_particles_destroy(outp);
 }
 
 // ----------------------------------------------------------------------
