@@ -5,14 +5,14 @@
 
 #include <mrc_io.hxx>
 
-psc_output_fields_item* FieldsItemCreate(const char *type, const Grid_t& grid)
+PscFieldsItemBase FieldsItemCreate(const char *type, const Grid_t& grid)
 {
   struct psc_output_fields_item *item =
     psc_output_fields_item_create(grid.comm());
   psc_output_fields_item_set_type(item, type);
   psc_output_fields_item_setup(item);
 
-  return item;
+  return PscFieldsItemBase{item};
 }
 
 // ======================================================================
@@ -73,12 +73,12 @@ struct OutputFieldsC : public OutputFieldsCParams
 	auto item = FieldsItemCreate(p, grid);
 	
 	// pfd
-	std::vector<std::string> comp_names = PscFieldsItemBase{item}->comp_names();
-	MfieldsBase& mflds_pfd = PscFieldsItemBase{item}->mres();
+	std::vector<std::string> comp_names = item->comp_names();
+	MfieldsBase& mflds_pfd = item->mres();
 	
 	// tfd -- FIXME?! always MfieldsC
 	MfieldsBase& mflds_tfd = *new MfieldsC{grid, mflds_pfd.n_comps(), grid.ibn};
-	items.emplace_back(PscFieldsItemBase{item}, p, comp_names, mflds_pfd, mflds_tfd);
+	items.emplace_back(item, p, comp_names, mflds_pfd, mflds_tfd);
       }
       free(s_orig);
     }
