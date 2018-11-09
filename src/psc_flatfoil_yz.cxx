@@ -235,6 +235,13 @@ struct PscFlatfoil : Psc<PscConfig>
     outf_params.pfield_step = 200;
     outf_.reset(new OutputFieldsC{grid(), outf_params});
 
+    // -- output particles
+    OutputParticlesParams outp_params;
+    outp_params.every_step = 10;
+    outp_params.data_dir = ".";
+    outp_params.basename = "prt";
+    outp__.reset(new OutputParticles{grid(), outp_params});
+
     // --- partition particles and initial balancing
     mpi_printf(comm, "**** Partitioning...\n");
     auto n_prts_by_patch_old = setup_initial_partition();

@@ -827,7 +827,10 @@ private:
     (*outf_)(*mflds_, *mprts_);
 #endif
     psc_stats_start(st_time_output);
-    PscOutputParticlesBase{outp_}.run(*mprts_);
+    if (outp__) {
+      (*outp__).run(*mprts_);
+    }
+    //PscOutputParticlesBase{outp_}.run(*mprts_);
     psc_stats_stop(st_time_output);
   }
 
