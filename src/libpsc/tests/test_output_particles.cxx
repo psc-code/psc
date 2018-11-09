@@ -39,7 +39,6 @@ struct OutputParticlesTest : ::testing::Test
     auto coeff = Grid_t::Normalization{norm_params};
 
     grid_ = Grid_t::psc_make_grid(grid_domain, grid_bc, kinds, coeff, 1., {});
-    ggrid = grid_; // FIXME
   }
 
   const Grid_t& grid() const
