@@ -2,6 +2,7 @@
 #pragma once
 
 #include "psc_particles_cuda.h"
+#include "fields_item_dive_cuda.hxx"
 
 #include <mrc_io.h>
 
@@ -32,10 +33,6 @@ struct MarderCuda : MarderBase
     assert(0);
 
     // FIXME, output_fields should be taking care of their own psc_bnd?
-    item_div_e = psc_output_fields_item_create(grid.comm());
-    psc_output_fields_item_set_type(item_div_e, "dive_cuda");
-    psc_output_fields_item_setup(item_div_e);
-
     item_rho = psc_output_fields_item_create(grid.comm());
     psc_output_fields_item_set_type(item_rho, "rho_1st_nc_cuda");
     psc_output_fields_item_setup(item_rho);
@@ -53,7 +50,6 @@ struct MarderCuda : MarderBase
   ~MarderCuda()
   {
     //psc_bnd_destroy(bnd_);
-    psc_output_fields_item_destroy(item_div_e);
     psc_output_fields_item_destroy(item_rho);
     if (dump_) {
       mrc_io_destroy(io_);
@@ -62,23 +58,22 @@ struct MarderCuda : MarderBase
   
   void calc_aid_fields(MfieldsStateBase& mflds_base, MparticlesBase& mprts_base)
   {
-    PscFieldsItemBase item_div_e(this->item_div_e);
     PscFieldsItemBase item_rho(this->item_rho);
-    item_div_e(mflds_base, mprts_base); // FIXME, should accept NULL for particles
+    item_div_e_.run(mflds_base, mprts_base); // FIXME, should accept NULL for particles
   
     if (dump_) {
       static int cnt;
       mrc_io_open(io_, "w", cnt, cnt);//ppsc->timestep, ppsc->timestep * ppsc->dt);
       cnt++;
       // psc_mfields_write_as_mrc_fld(item_rho->mres().mflds(), io_);
-      // psc_mfields_write_as_mrc_fld(item_div_e->mres().mflds(), io_);
+      // psc_mfields_write_as_mrc_fld(item_div_e_.mres().mflds(), io_);
       mrc_io_close(io_);
     }
 
-    item_div_e->mres().axpy_comp(0, -1., item_rho->mres(), 0);
+    item_div_e_.mres().axpy_comp(0, -1., item_rho->mres(), 0);
     // FIXME, why is this necessary?
     //auto bnd = PscBndBase(bnd_);
-    //bnd.fill_ghosts(item_div_e->mres(), 0, 1);
+    //bnd.fill_ghosts(item_div_e_.mres(), 0, 1);
   }
 
   // ----------------------------------------------------------------------
@@ -153,7 +148,6 @@ struct MarderCuda : MarderBase
   void run(MfieldsStateBase& mflds_base, MparticlesBase& mprts_base) override
   {
     PscFieldsItemBase item_rho(this->item_rho);
-    PscFieldsItemBase item_div_e(this->item_div_e);
     item_rho(mflds_base, mprts_base);
   
     // need to fill ghost cells first (should be unnecessary with only variant 1) FIXME
@@ -163,7 +157,7 @@ struct MarderCuda : MarderBase
   
     for (int i = 0; i < loop_; i++) {
       calc_aid_fields(mflds_base, mprts_base);
-      correct(mflds_base, item_div_e->mres());
+      correct(mflds_base, item_div_e_.mres());
       auto bnd = PscBndBase(ppsc->bnd);
       bnd.fill_ghosts(mflds_base, EX, EX+3);
     }
@@ -176,7 +170,7 @@ private:
   int loop_; //< execute this many relaxation steps in a loop
   bool dump_; //< dump div_E, rho
 
-  psc_output_fields_item* item_div_e;
+  FieldsItemFields<Item_dive_cuda> item_div_e_;
   psc_output_fields_item* item_rho;
   mrc_io *io_; //< for debug dumping
 };
