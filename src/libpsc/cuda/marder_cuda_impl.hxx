@@ -3,6 +3,7 @@
 
 #include "psc_particles_cuda.h"
 #include "fields_item_dive_cuda.hxx"
+#include "fields_item_moments_1st_cuda.hxx"
 
 #include <mrc_io.h>
 
@@ -33,10 +34,6 @@ struct MarderCuda : MarderBase
     assert(0);
 
     // FIXME, output_fields should be taking care of their own psc_bnd?
-    item_rho = psc_output_fields_item_create(grid.comm());
-    psc_output_fields_item_set_type(item_rho, "rho_1st_nc_cuda");
-    psc_output_fields_item_setup(item_rho);
-
     if (dump_) {
       io_ = mrc_io_create(grid.comm());
       mrc_io_set_type(io_, "xdmf_collective");
@@ -50,7 +47,6 @@ struct MarderCuda : MarderBase
   ~MarderCuda()
   {
     //psc_bnd_destroy(bnd_);
-    psc_output_fields_item_destroy(item_rho);
     if (dump_) {
       mrc_io_destroy(io_);
     }
@@ -58,19 +54,18 @@ struct MarderCuda : MarderBase
   
   void calc_aid_fields(MfieldsStateBase& mflds_base, MparticlesBase& mprts_base)
   {
-    PscFieldsItemBase item_rho(this->item_rho);
     item_div_e_.run(mflds_base, mprts_base); // FIXME, should accept NULL for particles
   
     if (dump_) {
       static int cnt;
       mrc_io_open(io_, "w", cnt, cnt);//ppsc->timestep, ppsc->timestep * ppsc->dt);
       cnt++;
-      // psc_mfields_write_as_mrc_fld(item_rho->mres().mflds(), io_);
+      // psc_mfields_write_as_mrc_fld(item_rho_.mres().mflds(), io_);
       // psc_mfields_write_as_mrc_fld(item_div_e_.mres().mflds(), io_);
       mrc_io_close(io_);
     }
 
-    item_div_e_.mres().axpy_comp(0, -1., item_rho->mres(), 0);
+    item_div_e_.mres().axpy_comp(0, -1., item_rho_.mres(), 0);
     // FIXME, why is this necessary?
     //auto bnd = PscBndBase(bnd_);
     //bnd.fill_ghosts(item_div_e_.mres(), 0, 1);
@@ -147,8 +142,7 @@ struct MarderCuda : MarderBase
   
   void run(MfieldsStateBase& mflds_base, MparticlesBase& mprts_base) override
   {
-    PscFieldsItemBase item_rho(this->item_rho);
-    item_rho(mflds_base, mprts_base);
+    item_rho_.run(mflds_base, mprts_base);
   
     // need to fill ghost cells first (should be unnecessary with only variant 1) FIXME
 #if 0
@@ -171,7 +165,7 @@ private:
   bool dump_; //< dump div_E, rho
 
   FieldsItemFields<Item_dive_cuda> item_div_e_;
-  psc_output_fields_item* item_rho;
+  FieldsItemMoment<Moment_rho_1st_nc_cuda<MparticlesCuda<BS144>, dim_yz>> item_rho_; // FIXME, hardcoded dim_yz
   mrc_io *io_; //< for debug dumping
 };
 
