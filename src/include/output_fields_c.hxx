@@ -47,20 +47,16 @@ private:
   static std::map<std::string, CreateMethod> types;
 };
 
-std::unique_ptr<FieldsItemBase> createFieldsItem_e_cc(const Grid_t& grid)
+template<typename Item>
+std::unique_ptr<FieldsItemBase> createFieldsItem(const Grid_t& grid)
 {
-  return std::unique_ptr<FieldsItemBase>{new FieldsItemFields<ItemLoopPatches<Item_e_cc>>{grid, grid.comm()}};
-}
-
-std::unique_ptr<FieldsItemBase> createFieldsItem_h_cc(const Grid_t& grid)
-{
-  return std::unique_ptr<FieldsItemBase>{new FieldsItemFields<ItemLoopPatches<Item_h_cc>>{grid, grid.comm()}};
+  return std::unique_ptr<FieldsItemBase>{new FieldsItemFields<ItemLoopPatches<Item>>{grid, grid.comm()}};
 }
 
 std::map<std::string, FieldsItemFactory::CreateMethod> FieldsItemFactory::types;
 
-static bool b1 = FieldsItemFactory::registerType("e", createFieldsItem_e_cc);
-static bool b2 = FieldsItemFactory::registerType("h", createFieldsItem_h_cc);
+static bool b1 = FieldsItemFactory::registerType("e", createFieldsItem<Item_e_cc>);
+static bool b2 = FieldsItemFactory::registerType("h", createFieldsItem<Item_h_cc>);
 
 // ======================================================================
 // OutputFieldsCParams
