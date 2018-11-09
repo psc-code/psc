@@ -404,10 +404,12 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     setup_log();
 
+#if 0 // FIXME, need to create out own outp_
     if (output_particle_interval > 0) {
       psc_output_particles_set_param_int(outp_, "every_step",
 					 (int) (output_particle_interval / (phys_.wci*dt)));
     }
+#endif
   
     mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
   }

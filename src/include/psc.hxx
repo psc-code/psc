@@ -71,9 +71,6 @@ struct Psc
 
     diag_ = psc_diag_create(MPI_COMM_WORLD);
     psc_diag_set_from_options(diag_);
-
-    outp_ = psc_output_particles_create(MPI_COMM_WORLD);
-    psc_output_particles_set_from_options(outp_);
   }
 
   // ----------------------------------------------------------------------
@@ -178,7 +175,6 @@ struct Psc
     bndp_.reset(new BndParticles_t{grid()});
 
     psc_diag_setup(diag_);
-    psc_output_particles_setup(outp_);
 
     initialize_stats();
   }
@@ -826,12 +822,11 @@ private:
     // FIXME
     (*outf_)(*mflds_, *mprts_);
 #endif
-    psc_stats_start(st_time_output);
     if (outp__) {
+      psc_stats_start(st_time_output);
       (*outp__).run(*mprts_);
+      psc_stats_stop(st_time_output);
     }
-    //PscOutputParticlesBase{outp_}.run(*mprts_);
-    psc_stats_stop(st_time_output);
   }
 
   // ----------------------------------------------------------------------
@@ -891,7 +886,6 @@ protected:
   DiagMixin diag_mixin_;
 #endif
   psc_diag* diag_;             ///< timeseries diagnostics
-  psc_output_particles* outp_; ///< particle output
 
   // FIXME, maybe should be private
   // need to make sure derived class sets these (? -- or just leave them off by default)
