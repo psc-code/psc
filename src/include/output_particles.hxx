@@ -34,9 +34,7 @@ struct PscOutputParticles
 
   void run(MparticlesBase& mprts_base)
   {
-    psc_stats_start(st_time_output);
     sub()->run(mprts_base);
-    psc_stats_stop(st_time_output);
   }
 
   psc_output_particles* outp() { return outp_; }
