@@ -1,7 +1,6 @@
 
 #include "psc.h"
 #include "psc_diag.h"
-#include "psc_output_particles.h"
 #include "psc_fields_as_c.h"
 #include "fields.hxx"
 #include "setup_fields.hxx"

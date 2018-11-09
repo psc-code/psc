@@ -7,8 +7,6 @@
 #include <psc.hxx>
 #include "psc_config.hxx"
 
-#include <psc_output_particles.h>
-
 #include <push_particles.hxx>
 #include <push_fields.hxx>
 #include <sort.hxx>
