@@ -3,9 +3,9 @@
 
 #include "psc_particles_double.h"
 
-struct psc_output_particles_ascii : OutputParticlesParams, OutputParticlesBase
+struct OutputParticlesAscii : OutputParticlesParams, OutputParticlesBase
 {
-  psc_output_particles_ascii(const Grid_t& grid, const OutputParticlesParams& params)
+  OutputParticlesAscii(const Grid_t& grid, const OutputParticlesParams& params)
     : OutputParticlesParams(params),
       comm_{grid.comm()}
   {}
