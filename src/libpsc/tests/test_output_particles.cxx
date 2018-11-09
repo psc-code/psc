@@ -1,14 +1,21 @@
 
 #include "gtest/gtest.h"
 
-#include "testing.hxx"
-
+#include <dim.hxx>
+#include <psc_particles_single.h>
 #include <output_particles.hxx>
+
+template<typename _Dim, typename _Mparticles>
+struct Config
+{
+  using Dim = _Dim;
+  using Mparticles = _Mparticles;
+};
 
 template<typename T>
 struct OutputParticlesTest : ::testing::Test
 {
-  using Dim = typename T::dim;
+  using Dim = typename T::Dim;
 
   const double L = 160;
 
@@ -43,7 +50,7 @@ private:
   Int3 ibn = { 2, 2, 2 };
 };
 
-using OutputParticlesTestTypes = ::testing::Types<TestConfig1vbec3dSingle>;
+using OutputParticlesTestTypes = ::testing::Types<Config<dim_xyz, MparticlesSingle>>;
 
 TYPED_TEST_CASE(OutputParticlesTest, OutputParticlesTestTypes);
 
