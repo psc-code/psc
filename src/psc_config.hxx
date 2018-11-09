@@ -16,6 +16,8 @@
 #include "bnd_particles_impl.hxx"
 #include "../libpsc/psc_balance/psc_balance_impl.hxx"
 #include "../libpsc/psc_push_fields/marder_impl.hxx"
+#include "../libpsc/psc_output_particles/output_particles_hdf5_impl.hxx"
+#include "../libpsc/psc_output_particles/output_particles_none_impl.hxx"
 
 #ifdef USE_CUDA
 #include "../libpsc/cuda/push_particles_cuda_impl.hxx"
@@ -29,6 +31,9 @@
 #include "../libpsc/cuda/checks_cuda_impl.hxx"
 #include "../libpsc/cuda/marder_cuda_impl.hxx"
 #endif
+
+template<typename Mparticles>
+using OutputParticlesDefault = OutputParticlesHdf5<Mparticles>;
 
 struct SimulationNone
 {
@@ -89,6 +94,7 @@ struct PscConfig_
   using Checks_t = Checks_<Mparticles_t, MfieldsState, Mfields, checks_order>;
   using Marder_t = Marder_<Mparticles_t, MfieldsState, Mfields>;
   using Simulation = _Simulation;
+  using OutputParticles = OutputParticlesDefault<Mparticles>;
 };
 
 #ifdef USE_CUDA
@@ -111,6 +117,7 @@ struct PscConfig_<DIM, Mparticles, _MfieldsState, _Mfields, PscConfigPushParticl
   using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Checks_t = ChecksCuda<Mparticles>;
   using Marder_t = MarderCuda<BS>;
+  using OutputParticles = OutputParticlesDefault<Mparticles>;
 };
 
 template<typename Mparticles, typename _MfieldsState, typename _Mfields>
@@ -131,6 +138,7 @@ struct PscConfig_<dim_xyz, Mparticles, _MfieldsState, _Mfields, PscConfigPushPar
   using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Checks_t = ChecksCuda<Mparticles>;
   using Marder_t = MarderCuda<BS>;
+  using OutputParticles = OutputParticlesDefault<Mparticles>;
 };
 
 #endif
@@ -190,6 +198,7 @@ struct PscConfigVpic
   using BndParticles_t = BndParticlesVpic;
   using Checks_t = ChecksVpic;
   using Marder_t = MarderVpic;
+  using OutputParticles = OutputParticlesNone;
 
 #if 0
   using DiagMixin = VpicDiagMixin<MparticlesVpic, MfieldsState, MfieldsInterpolator, MfieldsHydro,

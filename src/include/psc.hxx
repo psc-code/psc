@@ -48,6 +48,7 @@ struct Psc
   using BndParticles_t = typename PscConfig::BndParticles_t;
   using Checks_t = typename PscConfig::Checks_t;
   using Marder_t = typename PscConfig::Marder_t;
+  using OutputParticles = typename PscConfig::OutputParticles;
 
 #ifdef VPIC
   using MaterialList = typename MfieldsState::MaterialList;
@@ -881,6 +882,7 @@ protected:
   std::unique_ptr<Checks_t> checks_;
   std::unique_ptr<Marder_t> marder_;
   std::unique_ptr<OutputFieldsC> outf_;
+  std::unique_ptr<OutputParticles> outp__;
 
 #ifdef VPIC
   DiagMixin diag_mixin_;
