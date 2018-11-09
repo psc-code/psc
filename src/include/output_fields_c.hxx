@@ -2,21 +2,65 @@
 #pragma once
 
 #include "fields_item.hxx"
+#include "../libpsc/psc_output_fields/fields_item_jeh.hxx"
 
 #include <mrc_io.hxx>
 
 #include <memory>
+#include <map>
 
-std::unique_ptr<FieldsItemBase> FieldsItemCreate(const char *type, const Grid_t& grid)
+class FieldsItemFactory
 {
-  struct psc_output_fields_item *item =
-    psc_output_fields_item_create(grid.comm());
-  psc_output_fields_item_set_type(item, type);
-  psc_output_fields_item_setup(item);
+  using CreateMethod = std::unique_ptr<FieldsItemBase>(*)(const Grid_t& grid);
+  
+public:
+  FieldsItemFactory() = delete;
 
-  auto p = reinterpret_cast<FieldsItemBase*>(item->obj.subctx);
-  return std::unique_ptr<FieldsItemBase>{p};
+  static std::unique_ptr<FieldsItemBase> create(const char *type, const Grid_t& grid)
+  {
+#if 0
+    auto it = types.find(type);    
+    if (it != types.end()) 
+        return it->second(grid); // call the create method
+
+    mprintf("unknown type %s\n", type);
+    assert(0);
+
+#else
+    struct psc_output_fields_item *item =
+      psc_output_fields_item_create(grid.comm());
+    psc_output_fields_item_set_type(item, type);
+    psc_output_fields_item_setup(item);
+    
+    auto p = reinterpret_cast<FieldsItemBase*>(item->obj.subctx);
+    return std::unique_ptr<FieldsItemBase>{p};
+#endif
+  }
+
+  static bool registerType(const std::string& name, CreateMethod create)
+  {
+    types[name] = create;
+    return true;
+  }
+
+private:
+  static std::map<std::string, CreateMethod> types;
+};
+
+std::unique_ptr<FieldsItemBase> createFieldsItem_e_cc(const Grid_t& grid)
+{
+  return std::unique_ptr<FieldsItemBase>{new FieldsItemFields<ItemLoopPatches<Item_e_cc>>{grid, grid.comm()}};
 }
+
+std::unique_ptr<FieldsItemBase> createFieldsItem_h_cc(const Grid_t& grid)
+{
+  return std::unique_ptr<FieldsItemBase>{new FieldsItemFields<ItemLoopPatches<Item_h_cc>>{grid, grid.comm()}};
+}
+
+std::map<std::string, FieldsItemFactory::CreateMethod> FieldsItemFactory::types;
+
+static bool b1 = FieldsItemFactory::registerType("e", createFieldsItem_e_cc);
+static bool b2 = FieldsItemFactory::registerType("h", createFieldsItem_h_cc);
 
 // ======================================================================
 // OutputFieldsCParams
@@ -73,7 +117,7 @@ struct OutputFieldsC : public OutputFieldsCParams
       // parse comma separated list of fields
       char *s_orig = strdup(output_fields), *p, *s = s_orig;
       while ((p = strsep(&s, ", "))) {
-	auto item = FieldsItemCreate(p, grid);
+	auto item = FieldsItemFactory::create(p, grid);
 	
 	// pfd
 	std::vector<std::string> comp_names = item->comp_names();
