@@ -822,9 +822,9 @@ private:
     // FIXME
     (*outf_)(*mflds_, *mprts_);
 #endif
-    if (outp__) {
+    if (outp_) {
       psc_stats_start(st_time_output);
-      (*outp__).run(*mprts_);
+      (*outp_).run(*mprts_);
       psc_stats_stop(st_time_output);
     }
   }
@@ -880,7 +880,7 @@ protected:
   std::unique_ptr<Checks_t> checks_;
   std::unique_ptr<Marder_t> marder_;
   std::unique_ptr<OutputFieldsC> outf_;
-  std::unique_ptr<OutputParticles> outp__;
+  std::unique_ptr<OutputParticles> outp_;
 
 #ifdef VPIC
   DiagMixin diag_mixin_;
