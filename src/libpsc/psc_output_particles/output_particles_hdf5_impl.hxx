@@ -25,13 +25,13 @@ struct hdf5_prt {
   mrc_to_subobj(out, struct psc_output_particles_hdf5)
 
 template<typename Mparticles>
-struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
+struct OutputParticlesHdf5 : OutputParticlesParams, OutputParticlesBase
 {
   using particle_t = typename Mparticles::particle_t;
   using Particles = typename Mparticles::patch_t;
   using real_t = typename Mparticles::real_t;
 
-  psc_output_particles_hdf5(const Grid_t& grid, const OutputParticlesParams& params)
+  OutputParticlesHdf5(const Grid_t& grid, const OutputParticlesParams& params)
     : OutputParticlesParams{params},
       grid_{grid}
   {
@@ -59,7 +59,7 @@ struct psc_output_particles_hdf5 : OutputParticlesParams, OutputParticlesBase
     }
   }
 
-  ~psc_output_particles_hdf5()
+  ~OutputParticlesHdf5()
   {
     H5Tclose(prt_type);
   }
