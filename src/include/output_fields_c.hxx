@@ -5,6 +5,16 @@
 
 #include <mrc_io.hxx>
 
+psc_output_fields_item* FieldsItemCreate(const char *type, const Grid_t& grid)
+{
+  struct psc_output_fields_item *item =
+    psc_output_fields_item_create(grid.comm());
+  psc_output_fields_item_set_type(item, type);
+  psc_output_fields_item_setup(item);
+
+  return item;
+}
+
 // ======================================================================
 // OutputFieldsCParams
 
@@ -60,10 +70,7 @@ struct OutputFieldsC : public OutputFieldsCParams
       // parse comma separated list of fields
       char *s_orig = strdup(output_fields), *p, *s = s_orig;
       while ((p = strsep(&s, ", "))) {
-	struct psc_output_fields_item *item =
-	  psc_output_fields_item_create(grid.comm());
-	psc_output_fields_item_set_type(item, p);
-	psc_output_fields_item_setup(item);
+	auto item = FieldsItemCreate(p, grid);
 	
 	// pfd
 	std::vector<std::string> comp_names = PscFieldsItemBase{item}->comp_names();
