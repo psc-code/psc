@@ -5,14 +5,17 @@
 
 #include <mrc_io.hxx>
 
-FieldsItemBase* FieldsItemCreate(const char *type, const Grid_t& grid)
+#include <memory>
+
+std::unique_ptr<FieldsItemBase> FieldsItemCreate(const char *type, const Grid_t& grid)
 {
   struct psc_output_fields_item *item =
     psc_output_fields_item_create(grid.comm());
   psc_output_fields_item_set_type(item, type);
   psc_output_fields_item_setup(item);
 
-  return reinterpret_cast<FieldsItemBase*>(item->obj.subctx);
+  auto p = reinterpret_cast<FieldsItemBase*>(item->obj.subctx);
+  return std::unique_ptr<FieldsItemBase>{p};
 }
 
 // ======================================================================
@@ -42,13 +45,13 @@ struct OutputFieldsC : public OutputFieldsCParams
 {
   struct Item
   {
-    Item(FieldsItemBase* item, const std::string& name,
+    Item(std::unique_ptr<FieldsItemBase>&& item, const std::string& name,
 	 std::vector<std::string>& comp_names, MfieldsBase& pfd,
 	 MfieldsBase& tfd)
-      : item(item), name(name), comp_names(comp_names), pfd(pfd), tfd(tfd)
+      : item(std::move(item)), name(name), comp_names(comp_names), pfd(pfd), tfd(tfd)
     {}
-    
-    FieldsItemBase* item;
+
+    std::unique_ptr<FieldsItemBase> item;
     MfieldsBase& pfd;
     MfieldsBase& tfd;
     std::string name;
@@ -78,7 +81,7 @@ struct OutputFieldsC : public OutputFieldsCParams
 	
 	// tfd -- FIXME?! always MfieldsC
 	MfieldsBase& mflds_tfd = *new MfieldsC{grid, mflds_pfd.n_comps(), grid.ibn};
-	items.emplace_back(item, p, comp_names, mflds_pfd, mflds_tfd);
+	items.emplace_back(std::move(item), p, comp_names, mflds_pfd, mflds_tfd);
       }
       free(s_orig);
     }
@@ -99,7 +102,6 @@ struct OutputFieldsC : public OutputFieldsCParams
   ~OutputFieldsC()
   {
     for (auto& item : items) {
-      item.item->~FieldsItemBase();
       delete &item.tfd;
     }
   }
@@ -125,7 +127,7 @@ struct OutputFieldsC : public OutputFieldsCParams
     
     if ((pfield_step > 0 && timestep >= pfield_next) ||
 	(tfield_step > 0 && doaccum_tfield)) {
-      for (auto item : items) {
+      for (auto& item : items) {
 	item.item->run(mflds, mprts);
       }
     }
