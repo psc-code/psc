@@ -5,11 +5,27 @@
 #include <psc_particles_single.h>
 #include <output_particles.hxx>
 
-template<typename _Dim, typename _Mparticles>
+struct OutpAscii
+{
+  static constexpr const char* type = "ascii";
+};
+
+struct OutpHdf5Single
+{
+  static constexpr const char* type = "hdf5_single";
+};
+
+struct OutpHdf5Double
+{
+  static constexpr const char* type = "hdf5_double";
+};
+
+template<typename _Dim, typename _Mparticles, typename _Outp>
 struct Config
 {
   using Dim = _Dim;
   using Mparticles = _Mparticles;
+  using Outp = _Outp;
 };
 
 template<typename T>
@@ -37,6 +53,7 @@ struct OutputParticlesTest : ::testing::Test
     auto coeff = Grid_t::Normalization{norm_params};
 
     grid_ = Grid_t::psc_make_grid(grid_domain, grid_bc, kinds, coeff, 1., {});
+    ggrid = grid_; // FIXME
   }
 
   const Grid_t& grid() const
@@ -50,7 +67,9 @@ private:
   Int3 ibn = { 2, 2, 2 };
 };
 
-using OutputParticlesTestTypes = ::testing::Types<Config<dim_xyz, MparticlesSingle>>;
+using OutputParticlesTestTypes = ::testing::Types<Config<dim_xyz, MparticlesSingle, OutpAscii>,
+						  Config<dim_xyz, MparticlesSingle, OutpHdf5Single>,
+						  Config<dim_xyz, MparticlesSingle, OutpHdf5Double>>;
 
 TYPED_TEST_CASE(OutputParticlesTest, OutputParticlesTestTypes);
 
@@ -76,10 +95,10 @@ TYPED_TEST(OutputParticlesTest, Test1)
   }
 
   psc_output_particles* outp = psc_output_particles_create(grid.comm());
-  psc_output_particles_set_type(outp, "ascii");
+  psc_output_particles_set_type(outp, TypeParam::Outp::type);
   psc_output_particles_set_param_int(outp, "every_step", 1);
   psc_output_particles_setup(outp);
-  psc_output_particles_view(outp);
+  //psc_output_particles_view(outp);
   PscOutputParticlesBase{outp}.run(mprts);
   psc_output_particles_destroy(outp);
 }
