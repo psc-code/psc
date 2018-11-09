@@ -5,14 +5,14 @@
 
 #include <mrc_io.hxx>
 
-PscFieldsItemBase FieldsItemCreate(const char *type, const Grid_t& grid)
+FieldsItemBase* FieldsItemCreate(const char *type, const Grid_t& grid)
 {
   struct psc_output_fields_item *item =
     psc_output_fields_item_create(grid.comm());
   psc_output_fields_item_set_type(item, type);
   psc_output_fields_item_setup(item);
 
-  return PscFieldsItemBase{item};
+  return PscFieldsItemBase{item}.sub();
 }
 
 // ======================================================================
@@ -42,13 +42,13 @@ struct OutputFieldsC : public OutputFieldsCParams
 {
   struct Item
   {
-    Item(PscFieldsItemBase item, const std::string& name,
+    Item(FieldsItemBase* item, const std::string& name,
 	 std::vector<std::string>& comp_names, MfieldsBase& pfd,
 	 MfieldsBase& tfd)
       : item(item), name(name), comp_names(comp_names), pfd(pfd), tfd(tfd)
     {}
     
-    PscFieldsItemBase item;
+    FieldsItemBase* item;
     MfieldsBase& pfd;
     MfieldsBase& tfd;
     std::string name;
@@ -99,7 +99,7 @@ struct OutputFieldsC : public OutputFieldsCParams
   ~OutputFieldsC()
   {
     for (auto& item : items) {
-      item.item.sub()->~FieldsItemBase();
+      item.item->~FieldsItemBase();
       delete &item.tfd;
     }
   }
@@ -126,7 +126,7 @@ struct OutputFieldsC : public OutputFieldsCParams
     if ((pfield_step > 0 && timestep >= pfield_next) ||
 	(tfield_step > 0 && doaccum_tfield)) {
       for (auto item : items) {
-	item.item(mflds, mprts);
+	item.item->run(mflds, mprts);
       }
     }
     
