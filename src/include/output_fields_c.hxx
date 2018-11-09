@@ -12,7 +12,7 @@ FieldsItemBase* FieldsItemCreate(const char *type, const Grid_t& grid)
   psc_output_fields_item_set_type(item, type);
   psc_output_fields_item_setup(item);
 
-  return PscFieldsItemBase{item}.sub();
+  return reinterpret_cast<FieldsItemBase*>(item->obj.subctx);
 }
 
 // ======================================================================
