@@ -230,13 +230,13 @@ struct PscFlatfoil : Psc<PscConfig>
     inject_.reset(new Inject_t{grid(), inject_interval_, inject_tau, MY_ELECTRON, inject_target_});
     
     // -- output fields
-    OutputFieldsCParams outf_params;
+    OutputFieldsCParams outf_params{};
     outf_params.output_fields = "e,h,j,n_1st_single,v_1st_single,T_1st_single";
     outf_params.pfield_step = 200;
     outf_.reset(new OutputFieldsC{grid(), outf_params});
 
     // -- output particles
-    OutputParticlesParams outp_params;
+    OutputParticlesParams outp_params{};
     outp_params.every_step = 10;
     outp_params.data_dir = ".";
     outp_params.basename = "prt";
