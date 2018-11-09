@@ -92,7 +92,7 @@ struct OutputFieldsC : public OutputFieldsCParams
   ~OutputFieldsC()
   {
     for (auto& item : items) {
-      psc_output_fields_item_destroy(item.item.item());
+      item.item.sub()->~FieldsItemBase();
       delete &item.tfd;
     }
   }

@@ -19,6 +19,8 @@
 
 struct FieldsItemBase
 {
+  virtual ~FieldsItemBase() {};
+
   virtual void run(MfieldsStateBase& mflds_base, MparticlesBase& mprts_base) = 0;
 
   virtual MfieldsBase& mres() = 0;
@@ -72,15 +74,6 @@ public:
     PscFieldsItem<FieldsItem> item(_item);
     new(item.sub()) FieldsItem(*ggrid, psc_output_fields_item_comm(_item));
   }
-
-  static void destroy(psc_output_fields_item* _item)
-  {
-    PscFieldsItem<FieldsItem> item(_item);
-
-    if (!item->inited) return; // ctor hadn't run yet FIXME
-
-    item->~FieldsItem();
-  }
 };
 
 // ======================================================================
@@ -93,7 +86,6 @@ struct FieldsItemOps : psc_output_fields_item_ops {
     name      = Item_t::name();
     size      = Wrapper_t::size;
     setup     = Wrapper_t::setup;
-    destroy   = Wrapper_t::destroy;
   }
 };
 
