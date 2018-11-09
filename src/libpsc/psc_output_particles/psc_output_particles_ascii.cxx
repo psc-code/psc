@@ -7,9 +7,6 @@
 
 #include <string.h>
 
-#define to_psc_output_particles_ascii(out) \
-  mrc_to_subobj(out, struct psc_output_particles_ascii)
-
 struct psc_output_particles_ascii : OutputParticlesParams, OutputParticlesBase
 {
   psc_output_particles_ascii(const Grid_t& grid, const OutputParticlesParams& params)
@@ -29,7 +26,7 @@ struct psc_output_particles_ascii : OutputParticlesParams, OutputParticlesBase
     
     int rank;
     MPI_Comm_rank(comm_, &rank);
-    char filename[strlen(data_dir) + strlen(basename) + 19];
+    char filename[strlen(data_dir) + strlen(basename) + 21];
     sprintf(filename, "%s/%s.%06d_p%06d.asc", data_dir,
 	    basename, grid.timestep(), rank);
     
