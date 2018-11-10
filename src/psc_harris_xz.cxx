@@ -388,7 +388,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // --- partition particles and initial balancing
     mpi_printf(comm, "**** Partitioning...\n");
     auto n_prts_by_patch_old = setup_initial_partition();
-    auto n_prts_by_patch_new = balance_->initial(n_prts_by_patch_old);
+    auto n_prts_by_patch_new = balance_->initial(grid(), n_prts_by_patch_old);
     mprts_->reset(grid());
     
     mpi_printf(comm, "**** Setting up particles...\n");

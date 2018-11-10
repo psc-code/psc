@@ -121,7 +121,7 @@ struct PscWhistler : Psc<PscConfig>
     // --- partition particles and initial balancing
     mpi_printf(comm, "**** Partitioning...\n");
     auto n_prts_by_patch_old = setup_initial_partition();
-    auto n_prts_by_patch_new = balance_->initial(n_prts_by_patch_old);
+    auto n_prts_by_patch_new = balance_->initial(grid(), n_prts_by_patch_old);
     // balance::initial does not rebalance particles, because the old way of doing this
     // does't even have the particle data structure created yet -- FIXME?
     mprts_->reset(grid());
