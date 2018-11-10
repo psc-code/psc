@@ -1,4 +1,4 @@
-#
+
 #pragma once
 
 #include "psc_output_fields_item_private.h"
@@ -40,33 +40,25 @@ public:
 
   static std::unique_ptr<FieldsItemBase> create(const char *type, const Grid_t& grid)
   {
-#if 0
-    auto it = types.find(type);    
-    if (it != types.end()) 
+    auto it = types->find(type);    
+    if (it != types->end()) 
         return it->second(grid); // call the create method
 
     mprintf("unknown type %s\n", type);
     assert(0);
-
-#else
-    struct psc_output_fields_item *item =
-      psc_output_fields_item_create(grid.comm());
-    psc_output_fields_item_set_type(item, type);
-    psc_output_fields_item_setup(item);
-    
-    auto p = reinterpret_cast<FieldsItemBase*>(item->obj.subctx);
-    return std::unique_ptr<FieldsItemBase>{p};
-#endif
   }
 
-  static bool registerType(const std::string& name, CreateMethod create)
+  static bool registerType(const char* name, CreateMethod create)
   {
-    types[name] = create;
+    if (!types) {
+      types = new std::map<std::string, CreateMethod>;
+    }
+    (*types)[name] = create;
     return true;
   }
 
 private:
-  static std::map<std::string, CreateMethod> types;
+  static std::map<std::string, CreateMethod> *types;
 };
 
 // ======================================================================
@@ -94,6 +86,12 @@ struct FieldsItemOps : psc_output_fields_item_ops {
     name      = Item_t::name();
     size      = Wrapper_t::size;
     setup     = Wrapper_t::setup;
+    FieldsItemFactory::registerType(Item_t::name(), create);
+  }
+
+  static std::unique_ptr<FieldsItemBase> create(const Grid_t& grid)
+  {
+    return std::unique_ptr<FieldsItemBase>{new Item_t{grid, grid.comm()}};
   }
 };
 
@@ -383,10 +381,4 @@ private:
   
 template<typename Moment_t>
 using FieldsItemMomentOps = FieldsItemOps<FieldsItemMoment<ItemMomentLoopPatches<Moment_t>>>;
-
-template<typename Item>
-std::unique_ptr<FieldsItemBase> createFieldsItem(const Grid_t& grid)
-{
-  return std::unique_ptr<FieldsItemBase>{new FieldsItemFields<ItemLoopPatches<Item>>{grid, grid.comm()}};
-}
 

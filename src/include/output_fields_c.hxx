@@ -8,11 +8,6 @@
 
 #include <memory>
 
-std::map<std::string, FieldsItemFactory::CreateMethod> FieldsItemFactory::types;
-
-static bool b1 = FieldsItemFactory::registerType("e", createFieldsItem<Item_e_cc>);
-static bool b2 = FieldsItemFactory::registerType("h", createFieldsItem<Item_h_cc>);
-
 // ======================================================================
 // OutputFieldsCParams
 

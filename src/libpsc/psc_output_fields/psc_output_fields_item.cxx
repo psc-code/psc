@@ -6,6 +6,8 @@
 
 #include <string.h>
 
+std::map<std::string, FieldsItemFactory::CreateMethod>* FieldsItemFactory::types;
+
 // ======================================================================
 // psc_output_fields_item_init
 
