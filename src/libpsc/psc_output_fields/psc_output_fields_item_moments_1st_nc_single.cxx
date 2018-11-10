@@ -15,3 +15,5 @@
 
 MAKE_POFI_OPS(MparticlesSingle, MfieldsC, single)
 
+void registerFieldsItemMoments1stNcSingle()
+{}

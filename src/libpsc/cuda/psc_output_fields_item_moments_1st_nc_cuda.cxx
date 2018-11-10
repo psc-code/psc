@@ -1,5 +1,4 @@
 
-#include "psc_output_fields_item_private.h"
 #include "psc_particles_cuda.h"
 #include "psc_fields_cuda.h"
 #include "cuda_iface.h"

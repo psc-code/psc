@@ -1,5 +1,4 @@
 
-#include "psc_output_fields_item_private.h"
 #include "fields.hxx"
 
 #include <math.h>

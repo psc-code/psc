@@ -3,7 +3,6 @@
 
 #include "collision.hxx"
 #include "binary_collision.hxx"
-#include "psc_output_fields_item_private.h"
 #include "fields.hxx"
 #include "fields3d.hxx"
 

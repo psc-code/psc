@@ -71,6 +71,8 @@ struct Psc
 
     diag_ = psc_diag_create(MPI_COMM_WORLD);
     psc_diag_set_from_options(diag_);
+
+    registerFieldsItemFields();
   }
 
   // ----------------------------------------------------------------------

@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include "psc_output_fields_item.h"
 #include "fields.hxx"
 #include "fields_item.hxx"
 #include "checks.hxx"

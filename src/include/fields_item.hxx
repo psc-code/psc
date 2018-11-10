@@ -1,8 +1,6 @@
 
 #pragma once
 
-#include "psc_output_fields_item_private.h"
-
 #include "particles.hxx"
 #include "fields3d.hxx"
 #include "fields.hxx"
@@ -14,6 +12,14 @@
 
 #include <map>
 #include <string>
+
+enum {
+  POFI_BY_KIND    = 2, // this item needs to be replicated by kind
+};
+
+#define POFI_MAX_COMPS (16)
+
+using fld_names_t = std::array<const char*, POFI_MAX_COMPS>;
 
 // ======================================================================
 // FieldsItemBase
@@ -66,37 +72,21 @@ private:
   
 };
 
-// ======================================================================
-// PscFieldsItemWrapper
-
-template<typename FieldsItem>
-class PscFieldsItemWrapper
-{
-public:
-  const static size_t size = sizeof(FieldsItem);
-  
-  static void setup(psc_output_fields_item* _item)
-  {
-    new(_item->obj.subctx) FieldsItem(*ggrid, psc_output_fields_item_comm(_item));
-  }
-};
+void registerFieldsItemFields();
 
 // ======================================================================
 // FieldsItemOps
 
-template<typename Item_t>
-struct FieldsItemOps : psc_output_fields_item_ops {
-  using Wrapper_t = PscFieldsItemWrapper<Item_t>;
+template<typename Item>
+struct FieldsItemOps
+{
   FieldsItemOps() {
-    name      = Item_t::name();
-    size      = Wrapper_t::size;
-    setup     = Wrapper_t::setup;
-    FieldsItemFactory::registerType(Item_t::name(), create);
+    FieldsItemFactory::registerType(Item::name(), create);
   }
 
   static std::unique_ptr<FieldsItemBase> create(const Grid_t& grid)
   {
-    return std::unique_ptr<FieldsItemBase>{new Item_t{grid, grid.comm()}};
+    return std::unique_ptr<FieldsItemBase>{new Item{grid, grid.comm()}};
   }
 };
 

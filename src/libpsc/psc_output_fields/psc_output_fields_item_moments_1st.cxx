@@ -24,3 +24,6 @@ using Ops = FieldsItemMomentOps<Moment_t>;
 
 MAKE_POFI_OPS(MparticlesSingle, MfieldsC, single);
 MAKE_POFI_OPS(MparticlesDouble, MfieldsC, double);
+
+void registerFieldsItemMoments1st()
+{}
