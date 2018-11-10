@@ -105,6 +105,15 @@ struct Grid_
       ibn{ibn},
       mrc_domain_{make_mrc_domain(domain, bc, n_patches)}
   {
+#if 0
+    mpi_printf(MPI_COMM_WORLD, "::: dt      = %g\n", dt);
+    mpi_printf(MPI_COMM_WORLD, "::: dx      = %g %g %g\n", domain.dx[0], domain.dx[1], domain.dx[2]);
+#endif
+    
+    assert(domain.dx[0] > 0.);
+    assert(domain.dx[1] > 0.);
+    assert(domain.dx[2] > 0.);
+    
     for (auto off : mrc_domain_.offs()) {
       patches.push_back(Patch(off,
 			      Vec3<double>(off        ) * domain.dx + domain.corner,
@@ -177,15 +186,6 @@ struct Grid_
   static Grid_* psc_make_grid(const Domain& domain, GridBc& bc, const Kinds& kinds,
 			      const Normalization& norm, double dt, Int3 ibn)
   {
-#if 0
-    mpi_printf(MPI_COMM_WORLD, "::: dt      = %g\n", dt);
-    mpi_printf(MPI_COMM_WORLD, "::: dx      = %g %g %g\n", domain.dx[0], domain.dx[1], domain.dx[2]);
-#endif
-    
-    assert(domain.dx[0] > 0.);
-    assert(domain.dx[1] > 0.);
-    assert(domain.dx[2] > 0.);
-    
     return new Grid_{domain, bc, kinds, norm, dt, -1, ibn};
   }
 
