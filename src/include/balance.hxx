@@ -9,7 +9,7 @@
 
 struct BalanceBase
 {
-  virtual std::vector<uint> initial(const Grid_t& grid, const std::vector<uint>& n_prts_by_patch) = 0;
+  virtual void initial(const Grid_t& grid, std::vector<uint>& n_prts_by_patch) = 0;
   virtual void operator()(MparticlesBase& mp) = 0;
 };
 

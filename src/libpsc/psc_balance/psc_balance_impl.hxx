@@ -331,10 +331,10 @@ struct Balance_ : BalanceBase
     delete[] psc_balance_comp_time_by_patch;
   }
   
-  std::vector<uint> initial(const Grid_t& grid, const std::vector<uint>& n_prts_by_patch_old) override
+  void initial(const Grid_t& grid, std::vector<uint>& n_prts_by_patch) override
   {
-    auto loads = get_loads_initial(grid, n_prts_by_patch_old);
-    return balance(loads, nullptr, n_prts_by_patch_old);
+    auto loads = get_loads_initial(grid, n_prts_by_patch);
+    n_prts_by_patch = balance(loads, nullptr, n_prts_by_patch);
   }
 
   void operator()(MparticlesBase& mp) override
