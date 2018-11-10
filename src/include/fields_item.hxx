@@ -31,34 +31,39 @@ struct FieldsItemBase
   bool inited = true; // FIXME hack to avoid dtor call when not yet constructed
 };
 
+// ======================================================================
+// FieldsItemFactory
+
 class FieldsItemFactory
 {
   using CreateMethod = std::unique_ptr<FieldsItemBase>(*)(const Grid_t& grid);
+  using Map = std::map<std::string, CreateMethod>;
   
 public:
   FieldsItemFactory() = delete;
 
   static std::unique_ptr<FieldsItemBase> create(const char *type, const Grid_t& grid)
   {
-    auto it = types->find(type);    
-    if (it != types->end()) 
+    auto it = map().find(type);    
+    if (it != map().end()) 
         return it->second(grid); // call the create method
 
     mprintf("unknown type %s\n", type);
     assert(0);
   }
 
-  static bool registerType(const char* name, CreateMethod create)
+  static void registerType(const char* name, CreateMethod create)
   {
-    if (!types) {
-      types = new std::map<std::string, CreateMethod>;
-    }
-    (*types)[name] = create;
-    return true;
+    map()[name] = create;
   }
 
 private:
-  static std::map<std::string, CreateMethod> *types;
+  static Map& map()
+  {
+    static std::map<std::string, CreateMethod> s_map;
+    return s_map;
+  }
+  
 };
 
 // ======================================================================
