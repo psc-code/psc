@@ -1,4 +1,4 @@
-
+#
 #pragma once
 
 #include "psc_output_fields_item_private.h"
@@ -12,6 +12,7 @@
 
 #include <mrc_profile.h>
 
+#include <map>
 #include <string>
 
 // ======================================================================
@@ -28,6 +29,44 @@ struct FieldsItemBase
   virtual std::vector<std::string> comp_names() = 0;
 
   bool inited = true; // FIXME hack to avoid dtor call when not yet constructed
+};
+
+class FieldsItemFactory
+{
+  using CreateMethod = std::unique_ptr<FieldsItemBase>(*)(const Grid_t& grid);
+  
+public:
+  FieldsItemFactory() = delete;
+
+  static std::unique_ptr<FieldsItemBase> create(const char *type, const Grid_t& grid)
+  {
+#if 0
+    auto it = types.find(type);    
+    if (it != types.end()) 
+        return it->second(grid); // call the create method
+
+    mprintf("unknown type %s\n", type);
+    assert(0);
+
+#else
+    struct psc_output_fields_item *item =
+      psc_output_fields_item_create(grid.comm());
+    psc_output_fields_item_set_type(item, type);
+    psc_output_fields_item_setup(item);
+    
+    auto p = reinterpret_cast<FieldsItemBase*>(item->obj.subctx);
+    return std::unique_ptr<FieldsItemBase>{p};
+#endif
+  }
+
+  static bool registerType(const std::string& name, CreateMethod create)
+  {
+    types[name] = create;
+    return true;
+  }
+
+private:
+  static std::map<std::string, CreateMethod> types;
 };
 
 // ======================================================================
@@ -344,4 +383,10 @@ private:
   
 template<typename Moment_t>
 using FieldsItemMomentOps = FieldsItemOps<FieldsItemMoment<ItemMomentLoopPatches<Moment_t>>>;
+
+template<typename Item>
+std::unique_ptr<FieldsItemBase> createFieldsItem(const Grid_t& grid)
+{
+  return std::unique_ptr<FieldsItemBase>{new FieldsItemFields<ItemLoopPatches<Item>>{grid, grid.comm()}};
+}
 
