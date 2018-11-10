@@ -346,7 +346,7 @@ struct Balance_ : BalanceBase
 
     psc_stats_start(st_time_balance);
     auto loads = get_loads(mp.grid(), mp);
-    balance(ggrid, loads, &mp);
+    balance(&grid, loads, &mp);
     psc_stats_stop(st_time_balance);
   }
 
@@ -810,7 +810,7 @@ private:
     }
   }
   
-  std::vector<uint> balance(Grid_t* ggrid, std::vector<double> loads, MparticlesBase *mp,
+  std::vector<uint> balance(Grid_t* gridp, std::vector<double> loads, MparticlesBase *mp,
 			    std::vector<uint> n_prts_by_patch_old = {})
   {
     static int pr_bal_load, pr_bal_ctx, pr_bal_prts, pr_bal_flds;
@@ -822,7 +822,7 @@ private:
     }
 
     prof_start(pr_bal_load);
-    auto old_grid = ggrid;
+    auto old_grid = gridp;
     
     auto loads_all = gather_loads(*old_grid, loads);
     int n_patches_new = find_best_mapping(*old_grid, loads_all);
@@ -869,8 +869,8 @@ private:
     prof_stop(pr_bal_flds);
 
     // update psc etc
-    delete ggrid;
-    ggrid = new_grid;
+    delete gridp;
+    gridp = new_grid;
     psc_balance_generation_cnt++;
 
     return n_prts_by_patch_new;
