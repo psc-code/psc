@@ -95,13 +95,14 @@ struct Grid_
   // ctor
   
   Grid_(const Domain& domain, const GridBc& bc, const Kinds& kinds, const Normalization& norm,
-	double dt, int n_patches = -1)
+	double dt, int n_patches = -1, Int3 ibn = {})
     : domain{domain},
       ldims{domain.ldims},
       bc{bc},
       kinds{kinds},
       norm{norm},
       dt{dt},
+      ibn{ibn},
       mrc_domain_{make_mrc_domain(domain, bc, n_patches)}
   {
     for (auto off : mrc_domain_.offs()) {
@@ -185,10 +186,7 @@ struct Grid_
     assert(domain.dx[1] > 0.);
     assert(domain.dx[2] > 0.);
     
-    auto grid = new Grid_{domain, bc, kinds, norm, dt};
-    grid->ibn = ibn;
-    
-    return grid;
+    return new Grid_{domain, bc, kinds, norm, dt, -1, ibn};
   }
 
   // ----------------------------------------------------------------------
