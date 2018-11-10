@@ -60,7 +60,6 @@ struct Psc
   // ctor
 
   Psc()
-    : grid_{ggrid}
   {
     time_start_ = MPI_Wtime();
 
@@ -446,7 +445,7 @@ struct Psc
     auto& mflds = *mflds_;
 
     if (balance_interval > 0 && timestep % balance_interval == 0) {
-      (*balance_)(*ggrid, mprts);
+      (*balance_)(*grid_, mprts);
     }
 
     if (sort_interval > 0 && timestep % sort_interval == 0) {
@@ -854,7 +853,7 @@ protected:
   double time_start_;
 
   PscParams p_;
-  Grid_t*& grid_;
+  Grid_t* grid_;
 #ifdef VPIC
   Grid* vgrid_;
 #endif

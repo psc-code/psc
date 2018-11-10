@@ -21,8 +21,6 @@
 using Mfields_t = MfieldsC;
 using Fields = Fields3d<Mfields_t::fields_t>;
 
-Grid_t* ggrid;
-
 // ----------------------------------------------------------------------
 // _psc_write
 

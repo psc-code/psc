@@ -52,8 +52,6 @@ struct psc_particle_npt {
 // ----------------------------------------------------------------------
 // we keep this info global for now.
 
-extern Grid_t* ggrid;
-
 extern int pr_time_step_no_comm;
 
 void psc_init(int& argc, char**& argv);
