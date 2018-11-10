@@ -199,6 +199,7 @@ struct PscConfigVpic
   using Checks_t = ChecksVpic;
   using Marder_t = MarderVpic;
   using OutputParticles = OutputParticlesNone;
+  using dim_t = dim_xyz;
 
 #if 0
   using DiagMixin = VpicDiagMixin<MparticlesVpic, MfieldsState, MfieldsInterpolator, MfieldsHydro,

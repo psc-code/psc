@@ -185,19 +185,6 @@ struct Grid_
     assert(domain.dx[1] > 0.);
     assert(domain.dx[2] > 0.);
     
-    for (int d = 0; d < 3; d++) {
-      if (ibn[d] != 0) {
-	continue;
-      }
-      // FIXME, old-style particle pushers need 3 ghost points still
-      if (domain.gdims[d] == 1) {
-	// no ghost points
-	ibn[d] = 0;
-      } else {
-	ibn[d] = 2;
-      }
-    }
-
     auto grid = new Grid_{domain, bc, kinds, norm, dt};
     grid->ibn = ibn;
     

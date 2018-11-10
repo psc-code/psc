@@ -150,8 +150,6 @@ struct PscFlatfoil : Psc<PscConfig>
     Int3 np = {1, 4, 1}; // division into patches
 #endif
 
-    if (dim::InvarX::value) { ibn[0] = 0; } // FIXME, wrong place, not for VPIC...
-    
     auto grid_domain = Grid_t::Domain{gdims, LL, -.5 * LL, np};
     
     auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },

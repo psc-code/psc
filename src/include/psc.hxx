@@ -49,6 +49,7 @@ struct Psc
   using Checks_t = typename PscConfig::Checks_t;
   using Marder_t = typename PscConfig::Marder_t;
   using OutputParticles = typename PscConfig::OutputParticles;
+  using Dim = typename PscConfig::dim_t;
 
 #ifdef VPIC
   using MaterialList = typename MfieldsState::MaterialList;
@@ -80,6 +81,10 @@ struct Psc
   void define_grid(Grid_t::Domain& domain, GridBc& bc, Grid_t::Kinds& kinds,
 		   double dt, Grid_t::NormalizationParams& norm_params)
   {
+    if (Dim::InvarX::value) { ibn[0] = 0; }
+    if (Dim::InvarY::value) { ibn[1] = 0; }
+    if (Dim::InvarZ::value) { ibn[2] = 0; }
+    
     auto coeff = Grid_t::Normalization{norm_params};
     grid_ = Grid_t::psc_make_grid(domain, bc, kinds, coeff, dt, ibn);
 
