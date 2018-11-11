@@ -181,15 +181,6 @@ struct Grid_
   MrcDomain mrc_domain_;
 
   // ----------------------------------------------------------------------
-  // psc_make_grid
-  
-  static Grid_* psc_make_grid(const Domain& domain, GridBc& bc, const Kinds& kinds,
-			      const Normalization& norm, double dt, Int3 ibn)
-  {
-    return new Grid_{domain, bc, kinds, norm, dt, -1, ibn};
-  }
-
-  // ----------------------------------------------------------------------
   // make_mrc_domain
 
   static MrcDomain make_mrc_domain(const Domain& grid_domain, const GridBc& grid_bc, int nr_patches)

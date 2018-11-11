@@ -86,7 +86,7 @@ struct Psc
     if (Dim::InvarZ::value) { ibn[2] = 0; }
     
     auto coeff = Grid_t::Normalization{norm_params};
-    grid_ = Grid_t::psc_make_grid(domain, bc, kinds, coeff, dt, ibn);
+    grid_ = new Grid_t{domain, bc, kinds, coeff, dt, -1, ibn};
 
 #ifdef VPIC
     vgrid_ = Grid::create();
