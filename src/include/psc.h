@@ -40,15 +40,6 @@ enum {
   NR_KINDS,
 };
 
-struct psc_particle_npt {
-  int kind; ///< particle kind
-  double q; ///< charge
-  double m; ///< mass
-  double n; ///< density
-  double p[3]; ///< momentum
-  double T[3]; ///< temperature
-};
-
 // ----------------------------------------------------------------------
 // we keep this info global for now.
 
