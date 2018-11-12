@@ -50,11 +50,9 @@ struct _push_p_config
 
 template<typename _Mparticles, typename _MfieldsState,
 	 typename _InterpolateEM,
-	 typename _Dim, typename _Order,
-	 template<typename, typename, typename> class _Current,
-	 typename dim_curr = dim_xyz>
+	 typename _Dim, typename _Order>
 using PushpConfigEsirkepov = _push_p_config<_Mparticles, _MfieldsState, _InterpolateEM,
-					    _Dim, _Order, _Current, dim_curr>;
+					    _Dim, _Order, CurrentNone>;
 
 template<typename _Mparticles, typename _MfieldsState,
 	 typename _InterpolateEM,
@@ -71,9 +69,8 @@ using PushpConfigVb = _push_p_config<_Mparticles, _MfieldsState, _InterpolateEM,
 
 template<typename Mparticles, typename MfieldsState, typename dim>
 using Config2nd = PushpConfigEsirkepov<Mparticles, MfieldsState,
-				InterpolateEM2nd<Fields3d<typename MfieldsState::fields_t>, dim>,
-				dim, opt_order_2nd,
-				CurrentNone>;
+				       InterpolateEM2nd<Fields3d<typename MfieldsState::fields_t>, dim>,
+				       dim, opt_order_2nd>;
 
 template<typename dim>
 using Config2ndDouble = Config2nd<MparticlesDouble, MfieldsStateDouble, dim>;
@@ -81,8 +78,7 @@ using Config2ndDouble = Config2nd<MparticlesDouble, MfieldsStateDouble, dim>;
 template<typename dim>
 using Config1stDouble = PushpConfigEsirkepov<MparticlesDouble, MfieldsStateDouble,
 					     InterpolateEM1st<Fields3d<MfieldsStateDouble::fields_t>, dim>,
-					     dim, opt_order_1st,
-					     CurrentNone>;
+					     dim, opt_order_1st>;
 
 template<typename Mparticles, typename Mfields, typename dim>
 using Config1vbec = PushpConfigVb<Mparticles, Mfields,
