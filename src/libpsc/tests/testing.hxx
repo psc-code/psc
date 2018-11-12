@@ -173,7 +173,7 @@ struct PushParticlesTest : ::testing::Test
     norm_params.nicell = 200;
     auto coeff = Grid_t::Normalization{norm_params};
 
-    grid_ = new Grid_t{grid_domain, grid_bc, kinds, coeff, 1.};
+    grid_ = new Grid_t{grid_domain, grid_bc, kinds, coeff, 1., -1, {2, 2, 2}};
   }
   
   const Grid_t& grid()
