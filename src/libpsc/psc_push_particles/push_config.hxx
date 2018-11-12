@@ -43,14 +43,15 @@ struct _push_p_config
   using Current_t = _Current;
   using InterpolateEM_t = _InterpolateEM;
   using AdvanceParticle_t = AdvanceParticle<typename Mparticles::real_t, _Dim>;
-  using CurrentE_t = Current<_Order, _Dim, Fields3d<typename MfieldsState::fields_t>, InterpolateEM_t>;
+  using CurrentE_t = _Current;
 };
 
 template<typename _Mparticles, typename _MfieldsState,
 	 typename _InterpolateEM,
 	 typename _Dim, typename _Order>
 using PushpConfigEsirkepov = _push_p_config<_Mparticles, _MfieldsState, _InterpolateEM,
-					    _Dim, _Order, CurrentNone<void, void, void>>;
+					    _Dim, _Order,
+					    Current<_Order, _Dim, Fields3d<typename _MfieldsState::fields_t>, _InterpolateEM>>;
 
 template<typename _Mparticles, typename _MfieldsState,
 	 typename _InterpolateEM,
