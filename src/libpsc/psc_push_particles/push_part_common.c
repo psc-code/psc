@@ -34,6 +34,9 @@ struct PushParticles__ : PushParticlesCommon<C>
   using Current = typename C::Current_t;
   using checks_order = checks_order_2nd; // FIXME, sometimes 1st even with Esirkepov
 
+  // ----------------------------------------------------------------------
+  // push_mprts
+
   static void push_mprts(Mparticles& mprts, MfieldsState& mflds)
   {
     for (int p = 0; p < mprts.n_patches(); p++) {

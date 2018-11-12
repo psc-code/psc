@@ -1,6 +1,4 @@
 
-#include <mrc_profile.h>
-
 #include "../libpsc/psc_checks/checks_impl.hxx"
 
 #define MAX_NR_KINDS (10)
