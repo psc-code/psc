@@ -31,21 +31,21 @@ struct curr_cache_t : fields_t
   }
 };
 
-template<typename MP, typename _MfieldsState,
-	 typename IPEM,
-	 typename D, typename O,
-	 template<typename, typename> class CURRENT,
+template<typename _Mparticles, typename _MfieldsState,
+	 typename _InterpolateEM,
+	 typename _Dim, typename _Order,
+	 template<typename, typename> class _Current,
 	 typename dim_curr = dim_xyz>
 struct push_p_config
 {
-  using Mparticles = MP;
+  using Mparticles = _Mparticles;
   using MfieldsState = _MfieldsState;
-  using dim = D;
-  using Current_t = CURRENT<curr_cache_t<typename MfieldsState::fields_t, dim_curr>, D>;
+  using dim = _Dim;
+  using Current_t = _Current<curr_cache_t<typename MfieldsState::fields_t, dim_curr>, _Dim>;
 
-  using InterpolateEM_t = IPEM;
-  using AdvanceParticle_t = AdvanceParticle<typename MP::real_t, D>;
-  using CurrentE_t = Current<O, D, InterpolateEM_t, Fields3d<typename MfieldsState::fields_t>>;
+  using InterpolateEM_t = _InterpolateEM;
+  using AdvanceParticle_t = AdvanceParticle<typename Mparticles::real_t, _Dim>;
+  using CurrentE_t = Current<_Order, _Dim, InterpolateEM_t, Fields3d<typename MfieldsState::fields_t>>;
 };
 
 #include "psc_particles_double.h"
