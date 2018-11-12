@@ -23,7 +23,6 @@ struct PushParticles1vb : PushParticlesCommon<C>
   using checks_order = checks_order_1st;
   using dim = typename C::dim;
   using Current = typename C::Current_t;
-  using curr_cache_t = typename Current::curr_cache_t;
   
   // ----------------------------------------------------------------------
   // push_mprts
@@ -54,9 +53,9 @@ private:
   static void push_mprts_patch(typename MfieldsState::fields_t flds, typename Mparticles::patch_t& prts)
   {
     typename InterpolateEM_t::fields_t EM(flds);
+    typename Current::curr_cache_t curr_cache(flds);
     InterpolateEM_t ip;
     AdvanceParticle_t advance(prts.grid().dt);
-    curr_cache_t curr_cache(flds);
     Current current(prts.grid());
 
     PI<real_t> pi(prts.grid());
@@ -83,7 +82,6 @@ private:
       // FIELD INTERPOLATION
 
       ip.set_coeffs(xm);
-      // FIXME, we're not using EM instead flds_em
       real_t E[3] = { ip.ex(EM), ip.ey(EM), ip.ez(EM) };
       real_t H[3] = { ip.hx(EM), ip.hy(EM), ip.hz(EM) };
 

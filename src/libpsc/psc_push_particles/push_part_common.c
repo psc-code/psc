@@ -43,17 +43,21 @@ struct PushParticles__ : PushParticlesCommon<C>
   }
 
 private:
-  static void push_mprts_patch(fields_t flds, typename Mparticles::patch_t& prts)
+
+  // ----------------------------------------------------------------------
+  // push_mprts_patch
+  
+  static void push_mprts_patch(typename MfieldsState::fields_t flds, typename Mparticles::patch_t& prts)
   {
+    typename InterpolateEM_t::fields_t EM(flds); // FIXME, EM and J are identical here
+    typename InterpolateEM_t::fields_t J(flds);
+    InterpolateEM_t ip;
+    AdvanceParticle_t advance(prts.grid().dt);
+
     real_t dqs = .5f * prts.grid().norm.eta * prts.grid().dt;
     Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().domain.dx);
   
-    AdvanceParticle_t advance(prts.grid().dt);
-    InterpolateEM_t ip;
     CurrentE_t c(prts.grid());
-
-    Fields3d<fields_t> EM(flds); // FIXME, EM and J are identical here
-    Fields3d<fields_t> J(flds);
 
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
       particle_t& prt = *prt_iter;
