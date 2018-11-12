@@ -34,14 +34,14 @@ struct curr_cache_t : fields_t
 template<typename _Mparticles, typename _MfieldsState,
 	 typename _InterpolateEM,
 	 typename _Dim, typename _Order,
-	 template<typename, typename> class _Current,
+	 template<typename, typename, typename> class _Current,
 	 typename dim_curr = dim_xyz>
 struct push_p_config
 {
   using Mparticles = _Mparticles;
   using MfieldsState = _MfieldsState;
   using dim = _Dim;
-  using Current_t = _Current<curr_cache_t<typename MfieldsState::fields_t, dim_curr>, _Dim>;
+  using Current_t = _Current<_Order, _Dim, curr_cache_t<typename MfieldsState::fields_t, dim_curr>>;
 
   using InterpolateEM_t = _InterpolateEM;
   using AdvanceParticle_t = AdvanceParticle<typename Mparticles::real_t, _Dim>;

@@ -3,10 +3,12 @@
 
 // ======================================================================
 
-template<typename CURR_CACHE, typename dim_t>
+template<typename Order, typename Dim, typename _fields_t>
 struct Current1vbSplit
 {
-  using fields_t = CURR_CACHE;
+  static_assert(std::is_same<Order, opt_order_1st>::value, "Current1vbSplit only works with 1st order");
+
+  using fields_t = _fields_t;
   using real_t = typename fields_t::real_t;
   using Real3 = Vec3<real_t>;
   
@@ -124,7 +126,7 @@ struct Current1vbSplit
   void calc_j2_one_cell(fields_t curr_cache, real_t qni_wni,
 			real_t xm[3], real_t xp[3])
   {
-    calc_j2_one_cell(curr_cache, qni_wni, xm, xp, dim_t{});
+    calc_j2_one_cell(curr_cache, qni_wni, xm, xp, Dim{});
   }
   
   static void calc_j2_split_along_dim(int dim, int im, real_t x1[3],
@@ -264,7 +266,7 @@ struct Current1vbSplit
   void calc_j2_split_dim_z(fields_t curr_cache, real_t qni_wni,
 			   real_t *xm, real_t *xp)
   {
-    calc_j2_split_dim_z(curr_cache, qni_wni, xm, xp, dim_t{});
+    calc_j2_split_dim_z(curr_cache, qni_wni, xm, xp, Dim{});
   }
 
   void calc_j(fields_t curr_cache, real_t *xm, real_t *xp,
@@ -295,7 +297,7 @@ struct Current1vbSplit
   void calc_j(fields_t curr_cache, real_t *xm, real_t *xp,
 	      int *lf, int *lg, real_t qni_wni, real_t *vxi)
   {
-    calc_j(curr_cache, xm, xp, lf, lg, qni_wni, vxi, dim_t{});
+    calc_j(curr_cache, xm, xp, lf, lg, qni_wni, vxi, Dim{});
   }
   
 private:

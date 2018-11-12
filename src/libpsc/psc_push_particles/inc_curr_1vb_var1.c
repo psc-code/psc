@@ -9,10 +9,12 @@
 // ----------------------------------------------------------------------
 // calc_3d_dx1
 
-template<typename CURR_CACHE, typename dim_t>
+template<typename Order, typename Dim, typename _fields_t>
 struct Current1vbVar1
 {
-  using fields_t = CURR_CACHE;
+  static_assert(std::is_same<Order, opt_order_1st>::value, "Current1vbVar1 only works with 1st order");
+  
+  using fields_t = _fields_t;
   using real_t = typename fields_t::real_t;
   using Real3 = Vec3<real_t>;
   
@@ -161,7 +163,7 @@ struct Current1vbVar1
   void calc_j(fields_t curr_cache, real_t *xm, real_t *xp,
 	      int *lf, int *lg, real_t qni_wni, real_t *vxi)
   {
-    calc_j(curr_cache, xm, xp, lf, lg, qni_wni, vxi, dim_t{});
+    calc_j(curr_cache, xm, xp, lf, lg, qni_wni, vxi, Dim{});
   }
   
 private:
