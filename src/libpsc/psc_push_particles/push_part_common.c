@@ -70,9 +70,9 @@ private:
 	xm[d] = x[d] * dxi[d];
       }
       ip.set_coeffs(xm);
-
+      
       current.charge_before(ip);
-
+      
       real_t E[3] = { ip.ex(EM), ip.ey(EM), ip.ez(EM) };
       real_t H[3] = { ip.hx(EM), ip.hy(EM), ip.hz(EM) };
 

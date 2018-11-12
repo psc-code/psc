@@ -69,14 +69,14 @@ private:
 
     for (auto& prt: prts) {
       // field interpolation
-      real_t *xi = prt.x;
+      real_t *x = prt.x;
 
       real_t xm[3];
       for (int d = 0; d < 3; d++) {
-	xm[d] = xi[d] * dxi[d];
+	xm[d] = x[d] * dxi[d];
       }
-
       ip.set_coeffs(xm);
+      
       real_t E[3] = { ip.ex(EM), ip.ey(EM), ip.ez(EM) };
       real_t H[3] = { ip.hx(EM), ip.hy(EM), ip.hz(EM) };
 
@@ -84,24 +84,24 @@ private:
       real_t dq = dq_kind[prt.kind];
       advance.push_p(prt.p, E, H, dq);
 
-      real_t vxi[3];
-      advance.calc_v(vxi, prt.p);
+      real_t vv[3];
+      advance.calc_v(vv, prt.p);
 
       int lf[3];
       real_t of[3], xp[3];
 #if CALC_J == CALC_J_1VB_2D
       // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0)
-      advance.push_x(prt.x, vxi, .5f);
+      advance.push_x(prt.x, vv, .5f);
   
       // OUT OF PLANE CURRENT DENSITY AT (n+1.0)*dt
       pi.find_idx_off_1st_rel(prt.x, lf, of, real_t(0.));
-      current.calc_j_oop(curr_cache, prts.prt_qni_wni(prt), vxi, lf, of);
+      current.calc_j_oop(curr_cache, prts.prt_qni_wni(prt), vv, lf, of);
   
       // x^(n+1), p^(n+1) -> x^(n+1.5), p^(n+1)
-      advance.push_x(prt.x, vxi, .5f);
+      advance.push_x(prt.x, vv, .5f);
 #else
       // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0)
-      advance.push_x(prt.x, vxi);
+      advance.push_x(prt.x, vv);
 #endif
   
       pi.find_idx_off_pos_1st_rel(prt.x, lf, of, xp, real_t(0.));
@@ -111,7 +111,7 @@ private:
       if (!Dim::InvarX::value) { lg[0] = ip.cx.g.l; }
       if (!Dim::InvarY::value) { lg[1] = ip.cy.g.l; }
       if (!Dim::InvarZ::value) { lg[2] = ip.cz.g.l; }
-      current.calc_j(J, xm, xp, lf, lg, prts.prt_qni_wni(prt), vxi);
+      current.calc_j(J, xm, xp, lf, lg, prts.prt_qni_wni(prt), vv);
     }
   }
 
