@@ -45,7 +45,7 @@ struct push_p_config
 
   using InterpolateEM_t = _InterpolateEM;
   using AdvanceParticle_t = AdvanceParticle<typename Mparticles::real_t, _Dim>;
-  using CurrentE_t = Current<_Order, _Dim, InterpolateEM_t, Fields3d<typename MfieldsState::fields_t>>;
+  using CurrentE_t = Current<_Order, _Dim, Fields3d<typename MfieldsState::fields_t>, InterpolateEM_t>;
 };
 
 #include "psc_particles_double.h"
