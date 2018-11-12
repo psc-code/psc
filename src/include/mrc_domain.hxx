@@ -8,25 +8,13 @@
 // ======================================================================
 // MrcDomain
 
+struct mrc_domain_Deleter {
+  void operator()(mrc_domain* domain) { mrc_domain_destroy(domain); }
+};
+
 struct MrcDomain
 {
   MrcDomain(mrc_domain *domain = {}) : domain_{domain} {}
-  MrcDomain(const MrcDomain&) = delete;
-
-  MrcDomain(MrcDomain&& other)
-    : domain_{std::move(other.domain_)}
-  {}
-
-  ~MrcDomain()
-  {
-    mrc_domain_destroy(domain_.release());
-  }
-
-  MrcDomain& operator=(MrcDomain&& other)
-  {
-    domain_ = std::move(other.domain_);
-    return *this;
-  }
 
   MPI_Comm comm() const { return mrc_domain_comm(domain_.get()); }
   void view() const { mrc_domain_view(domain_.get()); }
@@ -60,5 +48,5 @@ struct MrcDomain
   mrc_ddc* create_ddc() const { return mrc_domain_create_ddc(domain_.get()); }
   
 private:
-  std::unique_ptr<mrc_domain> domain_;
+  std::unique_ptr<mrc_domain, mrc_domain_Deleter> domain_;
 };
