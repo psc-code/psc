@@ -50,15 +50,14 @@ private:
   static void push_mprts_patch(typename MfieldsState::fields_t flds, typename Mparticles::patch_t& prts)
   {
     typename InterpolateEM_t::fields_t EM(flds); // FIXME, EM and J are identical here
-    typename InterpolateEM_t::fields_t J(flds);
+    typename CurrentE_t::fields_t J(flds);
     InterpolateEM_t ip;
     AdvanceParticle_t advance(prts.grid().dt);
-
+    CurrentE_t c(prts.grid());
+  
     real_t dqs = .5f * prts.grid().norm.eta * prts.grid().dt;
     Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().domain.dx);
   
-    CurrentE_t c(prts.grid());
-
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
       particle_t& prt = *prt_iter;
       real_t *x = prt.x;

@@ -159,6 +159,7 @@ struct Current
 {
   using real_t = typename IP::real_t;
   using Real3 = Vec3<real_t>;
+  using fields_t = Fields;
 
   Current(const Grid_t& grid)
     : dxi_{ Real3{1., 1. , 1.} / Real3{grid.domain.dx} },

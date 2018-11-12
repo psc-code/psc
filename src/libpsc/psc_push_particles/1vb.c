@@ -53,7 +53,7 @@ private:
   static void push_mprts_patch(typename MfieldsState::fields_t flds, typename Mparticles::patch_t& prts)
   {
     typename InterpolateEM_t::fields_t EM(flds);
-    typename Current::curr_cache_t curr_cache(flds);
+    typename Current::curr_cache_t J(flds);
     InterpolateEM_t ip;
     AdvanceParticle_t advance(prts.grid().dt);
     Current current(prts.grid());
@@ -116,7 +116,7 @@ private:
       if (!dim::InvarX::value) { lg[0] = ip.cx.g.l; }
       if (!dim::InvarY::value) { lg[1] = ip.cy.g.l; }
       if (!dim::InvarZ::value) { lg[2] = ip.cz.g.l; }
-      current.calc_j(curr_cache, xm, xp, lf, lg, prts.prt_qni_wni(prt), vxi);
+      current.calc_j(J, xm, xp, lf, lg, prts.prt_qni_wni(prt), vxi);
 
 #ifdef PUSH_DIM
 #if !(PUSH_DIM & DIM_X)
