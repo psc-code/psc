@@ -49,11 +49,11 @@ private:
   
   static void push_mprts_patch(typename MfieldsState::fields_t flds, typename Mparticles::patch_t& prts)
   {
-    typename InterpolateEM_t::fields_t EM(flds); // FIXME, EM and J are identical here
+    typename InterpolateEM_t::fields_t EM(flds);
     typename Current::fields_t J(flds);
     InterpolateEM_t ip;
     AdvanceParticle_t advance(prts.grid().dt);
-    Current c(prts.grid());
+    Current current(prts.grid());
   
     real_t dqs = .5f * prts.grid().norm.eta * prts.grid().dt;
     Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().domain.dx);
@@ -72,7 +72,7 @@ private:
       }
       ip.set_coeffs(xm);
 
-      c.charge_before(ip);
+      current.charge_before(ip);
 
       real_t E[3] = { ip.ex(EM), ip.ey(EM), ip.ez(EM) };
       real_t H[3] = { ip.hx(EM), ip.hy(EM), ip.hz(EM) };
@@ -86,11 +86,11 @@ private:
       advance.push_x(x, vv);
 
       // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt
-      c.charge_after(x);
+      current.charge_after(x);
 
       // CURRENT DENSITY AT (n+1.0)*dt
-      c.prep(prts.prt_qni_wni(prt), vv);
-      c.calc(J);
+      current.prep(prts.prt_qni_wni(prt), vv);
+      current.calc(J);
     }
   }
 
