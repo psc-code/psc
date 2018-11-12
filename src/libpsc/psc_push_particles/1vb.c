@@ -20,9 +20,9 @@ struct PushParticles1vb : PushParticlesCommon<C>
   using typename Base::AdvanceParticle_t;
   using typename Base::InterpolateEM_t;
   
-  using checks_order = checks_order_1st;
-  using dim = typename C::dim;
+  using Dim = typename C::dim;
   using Current = typename C::Current_t;
+  using checks_order = checks_order_1st;
   
   // ----------------------------------------------------------------------
   // push_mprts
@@ -113,22 +113,10 @@ private:
 
       // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
       int lg[3];
-      if (!dim::InvarX::value) { lg[0] = ip.cx.g.l; }
-      if (!dim::InvarY::value) { lg[1] = ip.cy.g.l; }
-      if (!dim::InvarZ::value) { lg[2] = ip.cz.g.l; }
+      if (!Dim::InvarX::value) { lg[0] = ip.cx.g.l; }
+      if (!Dim::InvarY::value) { lg[1] = ip.cy.g.l; }
+      if (!Dim::InvarZ::value) { lg[2] = ip.cz.g.l; }
       current.calc_j(J, xm, xp, lf, lg, prts.prt_qni_wni(prt), vxi);
-
-#ifdef PUSH_DIM
-#if !(PUSH_DIM & DIM_X)
-      prt->xi = 0.f;
-#endif
-#if !(PUSH_DIM & DIM_Y)
-      prt->yi = 0.f;
-#endif
-#if !(PUSH_DIM & DIM_Z)
-      prt->zi = 0.f;
-#endif
-#endif
     }
   }
 
