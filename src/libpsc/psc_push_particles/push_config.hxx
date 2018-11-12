@@ -34,15 +34,13 @@ struct curr_cache_t : fields_t
 template<typename _Mparticles, typename _MfieldsState,
 	 typename _InterpolateEM,
 	 typename _Dim, typename _Order,
-	 template<typename, typename, typename> class _Current,
-	 typename dim_curr = dim_xyz>
+	 class _Current>
 struct _push_p_config
 {
   using Mparticles = _Mparticles;
   using MfieldsState = _MfieldsState;
   using dim = _Dim;
-  using Current_t = _Current<_Order, _Dim, curr_cache_t<typename MfieldsState::fields_t, dim_curr>>;
-
+  using Current_t = _Current;
   using InterpolateEM_t = _InterpolateEM;
   using AdvanceParticle_t = AdvanceParticle<typename Mparticles::real_t, _Dim>;
   using CurrentE_t = Current<_Order, _Dim, Fields3d<typename MfieldsState::fields_t>, InterpolateEM_t>;
@@ -52,7 +50,7 @@ template<typename _Mparticles, typename _MfieldsState,
 	 typename _InterpolateEM,
 	 typename _Dim, typename _Order>
 using PushpConfigEsirkepov = _push_p_config<_Mparticles, _MfieldsState, _InterpolateEM,
-					    _Dim, _Order, CurrentNone>;
+					    _Dim, _Order, CurrentNone<void, void, void>>;
 
 template<typename _Mparticles, typename _MfieldsState,
 	 typename _InterpolateEM,
@@ -60,7 +58,8 @@ template<typename _Mparticles, typename _MfieldsState,
 	 template<typename, typename, typename> class _Current,
 	 typename dim_curr = dim_xyz>
 using PushpConfigVb = _push_p_config<_Mparticles, _MfieldsState, _InterpolateEM,
-				     _Dim, _Order, _Current, dim_curr>;
+				     _Dim, _Order,
+				     _Current<_Order, _Dim, curr_cache_t<typename _MfieldsState::fields_t, dim_curr>>>;
 
 #include "psc_particles_double.h"
 #include "psc_particles_single.h"
