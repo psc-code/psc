@@ -30,7 +30,7 @@ struct PushParticles__ : PushParticlesCommon<C>
   using typename Base::AdvanceParticle_t;
   using typename Base::InterpolateEM_t;
   
-  using checks_order = checks_order_2nd;
+  using checks_order = checks_order_2nd; // FIXME, sometimes 1st even with Esirkepov
   using Current = typename C::Current_t;
 
   static void push_mprts(Mparticles& mprts, MfieldsState& mflds)
