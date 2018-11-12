@@ -1,11 +1,6 @@
 
 #include <mrc_profile.h>
 
-#include <math.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "1vb/psc_push_particles_1vb.h"
 #include "../libpsc/psc_checks/checks_impl.hxx"
 
 #define MAX_NR_KINDS (10)

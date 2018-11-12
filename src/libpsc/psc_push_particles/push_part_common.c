@@ -15,6 +15,9 @@ struct PushParticlesCommon
   using InterpolateEM_t = typename C::InterpolateEM_t;
 };
 
+// ======================================================================
+// PushParticles__
+
 template<typename C>
 struct PushParticles__ : PushParticlesCommon<C>
 {
@@ -33,17 +36,10 @@ struct PushParticles__ : PushParticlesCommon<C>
 
   static void push_mprts(Mparticles& mprts, MfieldsState& mflds)
   {
-    static int pr;
-    if (!pr) {
-      pr = prof_register(__func__, 1., 0, 0);
-    }
-
-    prof_start(pr);
     for (int p = 0; p < mprts.n_patches(); p++) {
       mflds[p].zero(JXI, JXI + 3);
       push_mprts_patch(mflds[p], mprts[p]);
     }
-    prof_stop(pr);
   }
 
 private:
