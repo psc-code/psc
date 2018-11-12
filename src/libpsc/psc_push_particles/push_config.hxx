@@ -36,7 +36,7 @@ template<typename _Mparticles, typename _MfieldsState,
 	 typename _Dim, typename _Order,
 	 template<typename, typename, typename> class _Current,
 	 typename dim_curr = dim_xyz>
-struct push_p_config
+struct _push_p_config
 {
   using Mparticles = _Mparticles;
   using MfieldsState = _MfieldsState;
@@ -48,13 +48,29 @@ struct push_p_config
   using CurrentE_t = Current<_Order, _Dim, Fields3d<typename MfieldsState::fields_t>, InterpolateEM_t>;
 };
 
+template<typename _Mparticles, typename _MfieldsState,
+	 typename _InterpolateEM,
+	 typename _Dim, typename _Order,
+	 template<typename, typename, typename> class _Current,
+	 typename dim_curr = dim_xyz>
+using PushpConfigEsirkepov = _push_p_config<_Mparticles, _MfieldsState, _InterpolateEM,
+					    _Dim, _Order, _Current, dim_curr>;
+
+template<typename _Mparticles, typename _MfieldsState,
+	 typename _InterpolateEM,
+	 typename _Dim, typename _Order,
+	 template<typename, typename, typename> class _Current,
+	 typename dim_curr = dim_xyz>
+using PushpConfigVb = _push_p_config<_Mparticles, _MfieldsState, _InterpolateEM,
+				     _Dim, _Order, _Current, dim_curr>;
+
 #include "psc_particles_double.h"
 #include "psc_particles_single.h"
 #include "psc_fields_c.h"
 #include "psc_fields_single.h"
 
 template<typename Mparticles, typename MfieldsState, typename dim>
-using Config2nd = push_p_config<Mparticles, MfieldsState,
+using Config2nd = PushpConfigEsirkepov<Mparticles, MfieldsState,
 				InterpolateEM2nd<Fields3d<typename MfieldsState::fields_t>, dim>,
 				dim, opt_order_2nd,
 				CurrentNone>;
@@ -63,19 +79,19 @@ template<typename dim>
 using Config2ndDouble = Config2nd<MparticlesDouble, MfieldsStateDouble, dim>;
 
 template<typename dim>
-using Config1stDouble = push_p_config<MparticlesDouble, MfieldsStateDouble,
-				      InterpolateEM1st<Fields3d<MfieldsStateDouble::fields_t>, dim>,
-				      dim, opt_order_1st,
-				      CurrentNone>;
+using Config1stDouble = PushpConfigEsirkepov<MparticlesDouble, MfieldsStateDouble,
+					     InterpolateEM1st<Fields3d<MfieldsStateDouble::fields_t>, dim>,
+					     dim, opt_order_1st,
+					     CurrentNone>;
 
 template<typename Mparticles, typename Mfields, typename dim>
-using Config1vbec = push_p_config<Mparticles, Mfields,
+using Config1vbec = PushpConfigVb<Mparticles, Mfields,
 				  InterpolateEM1vbec<Fields3d<typename Mfields::fields_t>, dim>,
 				  dim, opt_order_1st,
 				  Current1vbVar1>;
 
 template<typename Mparticles, typename MfieldsState, typename dim>
-using Config1vbecSplit = push_p_config<Mparticles, MfieldsState,
+using Config1vbecSplit = PushpConfigVb<Mparticles, MfieldsState,
 				       InterpolateEM1vbec<Fields3d<typename MfieldsState::fields_t>, dim>,
 				       dim, opt_order_1st,
 				       Current1vbSplit>;
@@ -86,12 +102,12 @@ using Config1vbecDouble = Config1vbec<MparticlesDouble, MfieldsStateDouble, dim>
 template<typename dim>
 using Config1vbecSingle = Config1vbec<MparticlesSingle, MfieldsStateSingle, dim>;
 
-using Config1vbecSingleXZ = push_p_config<MparticlesSingle, MfieldsStateSingle,
+using Config1vbecSingleXZ = PushpConfigVb<MparticlesSingle, MfieldsStateSingle,
 					  InterpolateEM1vbec<Fields3d<MfieldsStateSingle::fields_t, dim_xz>, dim_xyz>,
 					  dim_xyz, opt_order_1st,
 					  Current1vbSplit,
 					  dim_xz>;
-using Config1vbecSingle1 = push_p_config<MparticlesSingle, MfieldsStateSingle,
+using Config1vbecSingle1 = PushpConfigVb<MparticlesSingle, MfieldsStateSingle,
 					 InterpolateEM1vbec<Fields3d<MfieldsStateSingle::fields_t, dim_1>, dim_1>,
 					 dim_1, opt_order_1st,
 					 Current1vbVar1,
