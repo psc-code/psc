@@ -67,9 +67,7 @@ private:
       dq_kind[k] = .5f * prts.grid().norm.eta * prts.grid().dt * kinds[k].q / kinds[k].m;
     }
 
-    for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
-      particle_t& prt = *prt_iter;
-  
+    for (auto& prt: prts) {
       // field interpolation
       real_t *xi = prt.x;
 
@@ -77,8 +75,6 @@ private:
       for (int d = 0; d < 3; d++) {
 	xm[d] = xi[d] * dxi[d];
       }
-
-      // FIELD INTERPOLATION
 
       ip.set_coeffs(xm);
       real_t E[3] = { ip.ex(EM), ip.ey(EM), ip.ez(EM) };
@@ -137,9 +133,7 @@ private:
       dq_kind[k] = .5f * prts.grid().eta * prts.grid().dt * kinds[k].q / kinds[k].m;
     }
       
-    for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
-      particle_t& prt = *prt_iter;
-  
+    for (auto& prt: prts) {
       // field interpolation
       real_t *xi = &prt->xi;
       

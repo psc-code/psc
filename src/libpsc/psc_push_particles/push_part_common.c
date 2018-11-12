@@ -58,8 +58,7 @@ private:
     real_t dqs = .5f * prts.grid().norm.eta * prts.grid().dt;
     Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().domain.dx);
   
-    for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
-      particle_t& prt = *prt_iter;
+    for (auto& prt: prts) {
       real_t *x = prt.x;
       real_t vv[3];
 
