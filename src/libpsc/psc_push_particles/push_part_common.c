@@ -31,8 +31,7 @@ struct PushParticles__ : PushParticlesCommon<C>
   using typename Base::InterpolateEM_t;
   
   using checks_order = checks_order_2nd;
-  using fields_t = typename MfieldsState::fields_t;
-  using CurrentE_t = typename C::CurrentE_t;
+  using Current = typename C::Current_t;
 
   static void push_mprts(Mparticles& mprts, MfieldsState& mflds)
   {
@@ -50,10 +49,10 @@ private:
   static void push_mprts_patch(typename MfieldsState::fields_t flds, typename Mparticles::patch_t& prts)
   {
     typename InterpolateEM_t::fields_t EM(flds); // FIXME, EM and J are identical here
-    typename CurrentE_t::fields_t J(flds);
+    typename Current::fields_t J(flds);
     InterpolateEM_t ip;
     AdvanceParticle_t advance(prts.grid().dt);
-    CurrentE_t c(prts.grid());
+    Current c(prts.grid());
   
     real_t dqs = .5f * prts.grid().norm.eta * prts.grid().dt;
     Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().domain.dx);

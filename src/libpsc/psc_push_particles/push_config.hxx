@@ -43,7 +43,6 @@ struct _push_p_config
   using Current_t = _Current;
   using InterpolateEM_t = _InterpolateEM;
   using AdvanceParticle_t = AdvanceParticle<typename Mparticles::real_t, _Dim>;
-  using CurrentE_t = _Current;
 };
 
 template<typename _Mparticles, typename _MfieldsState,
