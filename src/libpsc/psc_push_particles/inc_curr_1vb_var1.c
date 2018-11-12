@@ -12,8 +12,8 @@
 template<typename CURR_CACHE, typename dim_t>
 struct Current1vbVar1
 {
-  using curr_cache_t = CURR_CACHE;
-  using real_t = typename curr_cache_t::real_t;
+  using fields_t = CURR_CACHE;
+  using real_t = typename fields_t::real_t;
   using Real3 = Vec3<real_t>;
   
   Current1vbVar1(const Grid_t& grid)
@@ -25,7 +25,7 @@ struct Current1vbVar1
     fnqzs_ = grid.domain.dx[2] * grid.norm.fnqs / grid.dt;
   }
   
-  void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
+  void calc_j(fields_t curr_cache, real_t *xm, real_t *xp,
 	      int *lf, int *lg, real_t qni_wni, real_t *vxi, dim_1 tag)
   {
     // FIXME
@@ -58,7 +58,7 @@ struct Current1vbVar1
   // ----------------------------------------------------------------------
   // curr_3d_vb_cell
 
-  void curr_3d_vb_cell(curr_cache_t curr_cache, int i[3], real_t x[3], real_t dx[3],
+  void curr_3d_vb_cell(fields_t curr_cache, int i[3], real_t x[3], real_t dx[3],
 		       real_t qni_wni)
   {
     real_t xa[3] = { 0.,
@@ -99,7 +99,7 @@ struct Current1vbVar1
   // ----------------------------------------------------------------------
   // calc_j
 
-  void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
+  void calc_j(fields_t curr_cache, real_t *xm, real_t *xp,
 	      int *lf, int *lg, real_t qni_wni, real_t *vxi, dim_yz tag_dim)
   {
     // deposit xm -> xp
@@ -152,13 +152,13 @@ struct Current1vbVar1
     curr_3d_vb_cell(curr_cache, i, x, dx, qni_wni);
   }
 
-  void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
+  void calc_j(fields_t curr_cache, real_t *xm, real_t *xp,
 	      int *lf, int *lg, real_t qni_wni, real_t *vxi, dim_xyz tag_dim)
   {
     assert(0); // FIXME
   }
   
-  void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
+  void calc_j(fields_t curr_cache, real_t *xm, real_t *xp,
 	      int *lf, int *lg, real_t qni_wni, real_t *vxi)
   {
     calc_j(curr_cache, xm, xp, lf, lg, qni_wni, vxi, dim_t{});

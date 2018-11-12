@@ -53,7 +53,7 @@ private:
   static void push_mprts_patch(typename MfieldsState::fields_t flds, typename Mparticles::patch_t& prts)
   {
     typename InterpolateEM_t::fields_t EM(flds);
-    typename Current::curr_cache_t J(flds);
+    typename Current::fields_t J(flds);
     InterpolateEM_t ip;
     AdvanceParticle_t advance(prts.grid().dt);
     Current current(prts.grid());

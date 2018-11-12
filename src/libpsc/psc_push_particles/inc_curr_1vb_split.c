@@ -6,8 +6,8 @@
 template<typename CURR_CACHE, typename dim_t>
 struct Current1vbSplit
 {
-  using curr_cache_t = CURR_CACHE;
-  using real_t = typename curr_cache_t::real_t;
+  using fields_t = CURR_CACHE;
+  using real_t = typename fields_t::real_t;
   using Real3 = Vec3<real_t>;
   
   Current1vbSplit(const Grid_t& grid)
@@ -19,7 +19,7 @@ struct Current1vbSplit
     fnqzs_ = grid.domain.dx[2] * grid.norm.fnqs / grid.dt;
   }
 
-  void calc_j2_one_cell(curr_cache_t curr_cache, real_t qni_wni,
+  void calc_j2_one_cell(fields_t curr_cache, real_t qni_wni,
 			real_t xm[3], real_t xp[3], dim_yz tag_dim)
   {
 
@@ -53,7 +53,7 @@ struct Current1vbSplit
     curr_cache.add(2, i[0]  ,i[1]+1,i[2]  , fnqz * (dx[2] * (      xa[1])));
   }
 
-  void calc_j2_one_cell(curr_cache_t curr_cache, real_t qni_wni,
+  void calc_j2_one_cell(fields_t curr_cache, real_t qni_wni,
 			real_t xm[3], real_t xp[3], dim_xz tag_dim)
   {
 
@@ -87,7 +87,7 @@ struct Current1vbSplit
     curr_cache.add(2, i[0]+1,i[1]  ,i[2]  , fnqz * (dx[2] * (      xa[0])));
   }
 
-  void calc_j2_one_cell(curr_cache_t curr_cache, real_t qni_wni,
+  void calc_j2_one_cell(fields_t curr_cache, real_t qni_wni,
 			real_t xm[3], real_t xp[3], dim_xyz tag_dim)
   {
     real_t dx[3] = { xp[0] - xm[0], xp[1] - xm[1], xp[2] - xm[2] };
@@ -121,7 +121,7 @@ struct Current1vbSplit
     curr_cache.add(2, i[0]+1,i[1]+1,i[2]  , fnqz * (dx[2] * (      xa[0]) * (      xa[1]) + h));
   }
 
-  void calc_j2_one_cell(curr_cache_t curr_cache, real_t qni_wni,
+  void calc_j2_one_cell(fields_t curr_cache, real_t qni_wni,
 			real_t xm[3], real_t xp[3])
   {
     calc_j2_one_cell(curr_cache, qni_wni, xm, xp, dim_t{});
@@ -150,7 +150,7 @@ struct Current1vbSplit
   // ----------------------------------------------------------------------
   // dim_yz
 
-  void calc_j2_split_dim_y(curr_cache_t curr_cache, real_t qni_wni,
+  void calc_j2_split_dim_y(fields_t curr_cache, real_t qni_wni,
 			   real_t *xm, real_t *xp, dim_yz tag_dim)
   {
     const int dim = 1;
@@ -165,7 +165,7 @@ struct Current1vbSplit
     }
   }
 
-  void calc_j2_split_dim_z(curr_cache_t curr_cache, real_t qni_wni,
+  void calc_j2_split_dim_z(fields_t curr_cache, real_t qni_wni,
 			   real_t *xm, real_t *xp, dim_yz tag_dim)
   {
     const int dim = 2;
@@ -183,7 +183,7 @@ struct Current1vbSplit
   // ----------------------------------------------------------------------
   // dim_xz
 
-  void calc_j2_split_dim_x(curr_cache_t curr_cache, real_t qni_wni,
+  void calc_j2_split_dim_x(fields_t curr_cache, real_t qni_wni,
 			   real_t *xm, real_t *xp, dim_xz tag_dim)
   {
     const int dim = 0;
@@ -198,7 +198,7 @@ struct Current1vbSplit
     }
   }
 
-  void calc_j2_split_dim_z(curr_cache_t curr_cache, real_t qni_wni,
+  void calc_j2_split_dim_z(fields_t curr_cache, real_t qni_wni,
 			   real_t *xm, real_t *xp, dim_xz tag_dim)
   {
     const int dim = 2;
@@ -216,7 +216,7 @@ struct Current1vbSplit
   // ----------------------------------------------------------------------
   // dim_xyz
 
-  void calc_j2_split_dim_x(curr_cache_t curr_cache, real_t qni_wni,
+  void calc_j2_split_dim_x(fields_t curr_cache, real_t qni_wni,
 			   real_t *xm, real_t *xp)
   {
     const int dim = 0;
@@ -231,7 +231,7 @@ struct Current1vbSplit
     }
   }
 
-  void calc_j2_split_dim_y(curr_cache_t curr_cache, real_t qni_wni,
+  void calc_j2_split_dim_y(fields_t curr_cache, real_t qni_wni,
 			   real_t *xm, real_t *xp, dim_xyz tag_dim)
   {
     const int dim = 1;
@@ -246,7 +246,7 @@ struct Current1vbSplit
     }
   }
 
-  void calc_j2_split_dim_z(curr_cache_t curr_cache, real_t qni_wni,
+  void calc_j2_split_dim_z(fields_t curr_cache, real_t qni_wni,
 			   real_t *xm, real_t *xp, dim_xyz tag_dim)
   {
     const int dim = 2;
@@ -261,13 +261,13 @@ struct Current1vbSplit
     }
   }
 
-  void calc_j2_split_dim_z(curr_cache_t curr_cache, real_t qni_wni,
+  void calc_j2_split_dim_z(fields_t curr_cache, real_t qni_wni,
 			   real_t *xm, real_t *xp)
   {
     calc_j2_split_dim_z(curr_cache, qni_wni, xm, xp, dim_t{});
   }
 
-  void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
+  void calc_j(fields_t curr_cache, real_t *xm, real_t *xp,
 	      int *lf, int *lg, real_t qni_wni, real_t *vxi, dim_yz tag)
   {
     xm[0] = .5f; // this way, we guarantee that the average position will remain in the 0th cell
@@ -275,7 +275,7 @@ struct Current1vbSplit
     calc_j2_split_dim_z(curr_cache, qni_wni, xm, xp);
   }
   
-  void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
+  void calc_j(fields_t curr_cache, real_t *xm, real_t *xp,
 	      int *lf, int *lg, real_t qni_wni, real_t *vxi, dim_xz tag)
   {
     xm[1] = .5f; // this way, we guarantee that the average position will remain in the 0th cell
@@ -283,7 +283,7 @@ struct Current1vbSplit
     calc_j2_split_dim_z(curr_cache, qni_wni, xm, xp);
   }
   
-  void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
+  void calc_j(fields_t curr_cache, real_t *xm, real_t *xp,
 	      int *lf, int *lg, real_t qni_wni, real_t *vxi, dim_xyz tag)
   {
     calc_j2_split_dim_z(curr_cache, qni_wni, xm, xp);
@@ -292,7 +292,7 @@ struct Current1vbSplit
   // ----------------------------------------------------------------------
   // calc_j
 
-  void calc_j(curr_cache_t curr_cache, real_t *xm, real_t *xp,
+  void calc_j(fields_t curr_cache, real_t *xm, real_t *xp,
 	      int *lf, int *lg, real_t qni_wni, real_t *vxi)
   {
     calc_j(curr_cache, xm, xp, lf, lg, qni_wni, vxi, dim_t{});
