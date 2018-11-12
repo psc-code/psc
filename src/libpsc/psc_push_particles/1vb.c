@@ -14,19 +14,21 @@
 // PushParticles1vb
 
 template<typename C>
-struct PushParticles1vb
+struct PushParticles1vb : PushParticlesCommon<C>
 {
-  using Mparticles = typename C::Mparticles;
-  using MfieldsState = typename C::MfieldsState;
-  using real_t = typename Mparticles::real_t;
-  using Real3 = Vec3<real_t>;
-  using dim = typename C::dim;
-  using InterpolateEM_t = typename C::InterpolateEM_t;
-  using AdvanceParticle_t = typename C::AdvanceParticle_t;
-  using Current = typename C::Current_t;
-  using particle_t = typename Mparticles::particle_t;
-  using curr_cache_t = typename Current::curr_cache_t;
+  using Base = PushParticlesCommon<C>;
+  using typename Base::Mparticles;
+  using typename Base::MfieldsState;
+  using typename Base::particle_t;
+  using typename Base::real_t;
+  using typename Base::Real3;
+  using typename Base::AdvanceParticle_t;
+  using typename Base::InterpolateEM_t;
+  
   using checks_order = checks_order_1st;
+  using dim = typename C::dim;
+  using Current = typename C::Current_t;
+  using curr_cache_t = typename Current::curr_cache_t;
   
   // ----------------------------------------------------------------------
   // push_mprts

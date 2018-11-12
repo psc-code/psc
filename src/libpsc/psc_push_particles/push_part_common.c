@@ -4,15 +4,32 @@
 #include "../libpsc/psc_checks/checks_impl.hxx"
 
 template<typename C>
-struct PushParticles__
+struct PushParticlesCommon
 {
   using Mparticles = typename C::Mparticles;
   using MfieldsState = typename C::MfieldsState;
-  using fields_t = typename MfieldsState::fields_t;
-  using AdvanceParticle_t = typename C::AdvanceParticle_t;
+  using particle_t = typename Mparticles::particle_t;
   using real_t = typename Mparticles::real_t;
   using Real3 = Vec3<real_t>;
+  using AdvanceParticle_t = typename C::AdvanceParticle_t;
+  using InterpolateEM_t = typename C::InterpolateEM_t;
+};
+
+template<typename C>
+struct PushParticles__ : PushParticlesCommon<C>
+{
+  using Base = PushParticlesCommon<C>;
+  using typename Base::Mparticles;
+  using typename Base::MfieldsState;
+  using typename Base::particle_t;
+  using typename Base::real_t;
+  using typename Base::Real3;
+  using typename Base::AdvanceParticle_t;
+  using typename Base::InterpolateEM_t;
+  
   using checks_order = checks_order_2nd;
+  using fields_t = typename MfieldsState::fields_t;
+  using CurrentE_t = typename C::CurrentE_t;
 
   static void push_mprts(Mparticles& mprts, MfieldsState& mflds)
   {
@@ -32,10 +49,6 @@ struct PushParticles__
 private:
   static void push_mprts_patch(fields_t flds, typename Mparticles::patch_t& prts)
   {
-    using InterpolateEM_t = typename C::InterpolateEM_t;
-    using CurrentE_t = typename C::CurrentE_t;
-    using particle_t = typename Mparticles::particle_t;
-
     real_t dqs = .5f * prts.grid().norm.eta * prts.grid().dt;
     Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().domain.dx);
   
