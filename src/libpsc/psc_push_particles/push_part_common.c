@@ -4,6 +4,7 @@
 #define MAX_NR_KINDS (10)
 
 // ======================================================================
+// PushParticlesEsirkepov
 
 template<typename C>
 struct PushParticlesEsirkepov
@@ -16,6 +17,8 @@ struct PushParticlesEsirkepov
   using real_t = typename Mparticles::real_t;
   using Real3 = Vec3<real_t>;
 
+  using checks_order = checks_order_2nd; // FIXME, sometimes 1st even with Esirkepov
+  
   static void push_mprts_patch(typename MfieldsState::fields_t flds, typename Mparticles::patch_t& prts)
   {
     typename InterpolateEM_t::fields_t EM(flds);
@@ -67,30 +70,17 @@ struct PushParticlesEsirkepov
   }
 };
 
-template<typename C>
-struct PushParticlesCommon
-{
-  using Mparticles = typename C::Mparticles;
-  using MfieldsState = typename C::MfieldsState;
-  using particle_t = typename Mparticles::particle_t;
-  using real_t = typename Mparticles::real_t;
-  using Real3 = Vec3<real_t>;
-  using AdvanceParticle_t = typename C::AdvanceParticle_t;
-  using InterpolateEM_t = typename C::InterpolateEM_t;
-};
-
 // ======================================================================
 // PushParticles__
 
-template<typename C>
-struct PushParticles__ : PushParticlesCommon<C>
+template<typename C, template<typename> class PushParticlesImpl = PushParticlesEsirkepov>
+struct PushParticles__
 {
-  using Base = PushParticlesCommon<C>;
-  using typename Base::Mparticles;
-  using typename Base::MfieldsState;
+  using Mparticles = typename C::Mparticles;
+  using MfieldsState = typename C::MfieldsState;
   
-  using checks_order = checks_order_2nd; // FIXME, sometimes 1st even with Esirkepov
-
+  using checks_order = typename PushParticlesImpl<C>::checks_order;
+  
   // ----------------------------------------------------------------------
   // push_mprts
 
@@ -98,7 +88,17 @@ struct PushParticles__ : PushParticlesCommon<C>
   {
     for (int p = 0; p < mprts.n_patches(); p++) {
       mflds[p].zero(JXI, JXI + 3);
-      PushParticlesEsirkepov<C>::push_mprts_patch(mflds[p], mprts[p]);
+      PushParticlesImpl<C>::push_mprts_patch(mflds[p], mprts[p]);
+    }
+  }
+
+  // ----------------------------------------------------------------------
+  // stagger_mprts
+  
+  static void stagger_mprts(Mparticles& mprts, MfieldsState& mflds)
+  {
+    for (int p = 0; p < mprts.n_patches(); p++) {
+      PushParticlesImpl<C>::stagger_mprts_patch(mflds[p], mprts[p]);
     }
   }
 };

@@ -3,6 +3,9 @@
 
 #define MAX_NR_KINDS (10)
 
+// ======================================================================
+// PushParticlesVb
+
 template<typename C>
 struct PushParticlesVb
 {
@@ -14,6 +17,8 @@ struct PushParticlesVb
   using Dim = typename C::dim;
   using real_t = typename Mparticles::real_t;
   using Real3 = Vec3<real_t>;
+
+  using checks_order = checks_order_1st;
 
   static void push_mprts_patch(typename MfieldsState::fields_t flds, typename Mparticles::patch_t& prts)
   {
@@ -66,49 +71,6 @@ struct PushParticlesVb
       current.calc_j(J, xm, xp, lf, lg, prts.prt_qni_wni(prt), vv);
     }
   }
-};
-
-// ======================================================================
-// PushParticles1vb
-
-template<typename C>
-struct PushParticles1vb : PushParticlesCommon<C>
-{
-  using Base = PushParticlesCommon<C>;
-  using typename Base::Mparticles;
-  using typename Base::MfieldsState;
-  using typename Base::particle_t;
-  using typename Base::real_t;
-  using typename Base::Real3;
-  using typename Base::AdvanceParticle_t;
-  using typename Base::InterpolateEM_t;
-  
-  using Dim = typename C::dim;
-  using Current = typename C::Current_t;
-  using checks_order = checks_order_1st;
-  
-  // ----------------------------------------------------------------------
-  // push_mprts
-
-  static void push_mprts(Mparticles& mprts, MfieldsState& mflds)
-  {
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      mflds[p].zero(JXI, JXI + 3);
-      PushParticlesVb<C>::push_mprts_patch(mflds[p], mprts[p]);
-    }
-  }
-
-  // ----------------------------------------------------------------------
-  // stagger_mprts
-  
-  static void stagger_mprts(Mparticles& mprts, MfieldsState& mflds)
-  {
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      stagger_mprts_patch(mflds[p], mprts[p]);
-    }
-  }
-
-private:
 
   // ----------------------------------------------------------------------
   // stagger_mprts_patch
@@ -130,11 +92,11 @@ private:
       
     for (auto& prt: prts) {
       // field interpolation
-      real_t *xi = &prt->xi;
+      real_t *x = prt.x;
       
       real_t xm[3];
       for (int d = 0; d < 3; d++) {
-	xm[d] = xi[d] * dxi[d];
+	xm[d] = x[d] * dxi[d];
       }
       
       // FIELD INTERPOLATION
@@ -148,6 +110,39 @@ private:
       int kind = prt->kind();
       real_t dq = dq_kind[kind];
       advance.push_p(&prt->pxi, E, H, -.5f * dq);
+    }
+  }
+};
+
+// ======================================================================
+// PushParticles1vb
+
+template<typename C, template<typename> class PushParticlesImpl = PushParticlesVb>
+struct PushParticles1vb
+{
+  using Mparticles = typename C::Mparticles;
+  using MfieldsState = typename C::MfieldsState;
+  
+  using checks_order = typename PushParticlesImpl<C>::checks_order;
+  
+  // ----------------------------------------------------------------------
+  // push_mprts
+
+  static void push_mprts(Mparticles& mprts, MfieldsState& mflds)
+  {
+    for (int p = 0; p < mprts.n_patches(); p++) {
+      mflds[p].zero(JXI, JXI + 3);
+      PushParticlesImpl<C>::push_mprts_patch(mflds[p], mprts[p]);
+    }
+  }
+
+  // ----------------------------------------------------------------------
+  // stagger_mprts
+  
+  static void stagger_mprts(Mparticles& mprts, MfieldsState& mflds)
+  {
+    for (int p = 0; p < mprts.n_patches(); p++) {
+      PushParticlesImpl<C>::stagger_mprts_patch(mflds[p], mprts[p]);
     }
   }
 };
