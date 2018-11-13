@@ -64,7 +64,7 @@ private:
     for (int k = 0; k < kinds.size(); k++) {
       dq_kind[k] = .5f * prts.grid().norm.eta * prts.grid().dt * kinds[k].q / kinds[k].m;
     }
-
+    
     for (auto& prt: prts) {
       // field interpolation
       real_t *x = prt.x;

@@ -1,7 +1,7 @@
 
-#include <mrc_profile.h>
-
 #include "../libpsc/psc_checks/checks_impl.hxx"
+
+#define MAX_NR_KINDS (10)
 
 template<typename C>
 struct PushParticlesCommon
@@ -58,9 +58,14 @@ private:
     AdvanceParticle_t advance(prts.grid().dt);
     Current current(prts.grid());
   
-    real_t dqs = .5f * prts.grid().norm.eta * prts.grid().dt;
     Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().domain.dx);
-  
+    real_t dq_kind[MAX_NR_KINDS];
+    auto& kinds = prts.grid().kinds;
+    assert(kinds.size() <= MAX_NR_KINDS);
+    for (int k = 0; k < kinds.size(); k++) {
+      dq_kind[k] = .5f * prts.grid().norm.eta * prts.grid().dt * kinds[k].q / kinds[k].m;
+    }
+    
     for (auto& prt: prts) {
       real_t *x = prt.x;
       real_t vv[3];
@@ -80,7 +85,7 @@ private:
       real_t H[3] = { ip.hx(EM), ip.hy(EM), ip.hz(EM) };
 
       // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
-      real_t dq = dqs * prts.prt_qni(prt) / prts.prt_mni(prt);
+      real_t dq = dq_kind[prt.kind];
       advance.push_p(prt.p, E, H, dq);
 
       // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0)
