@@ -475,5 +475,5 @@ void CurrentEsirkepov<order, dim, Fields, IP>::calc(opt_order_2nd o, dim_xyz d, 
       }
     }
   }
- }
+}
 
