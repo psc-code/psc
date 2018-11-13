@@ -3,51 +3,18 @@
 
 #define MAX_NR_KINDS (10)
 
-// ======================================================================
-// PushParticles1vb
-
 template<typename C>
-struct PushParticles1vb : PushParticlesCommon<C>
+struct PushParticlesVb
 {
-  using Base = PushParticlesCommon<C>;
-  using typename Base::Mparticles;
-  using typename Base::MfieldsState;
-  using typename Base::particle_t;
-  using typename Base::real_t;
-  using typename Base::Real3;
-  using typename Base::AdvanceParticle_t;
-  using typename Base::InterpolateEM_t;
-  
-  using Dim = typename C::dim;
+  using Mparticles = typename C::Mparticles;
+  using MfieldsState = typename C::MfieldsState;
+  using AdvanceParticle_t = typename C::AdvanceParticle_t;
+  using InterpolateEM_t = typename C::InterpolateEM_t;
   using Current = typename C::Current_t;
-  using checks_order = checks_order_1st;
-  
-  // ----------------------------------------------------------------------
-  // push_mprts
+  using Dim = typename C::dim;
+  using real_t = typename Mparticles::real_t;
+  using Real3 = Vec3<real_t>;
 
-  static void push_mprts(Mparticles& mprts, MfieldsState& mflds)
-  {
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      mflds[p].zero(JXI, JXI + 3);
-      push_mprts_patch(mflds[p], mprts[p]);
-    }
-  }
-
-  // ----------------------------------------------------------------------
-  // stagger_mprts
-  
-  static void stagger_mprts(Mparticles& mprts, MfieldsState& mflds)
-  {
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      stagger_mprts_patch(mflds[p], mprts[p]);
-    }
-  }
-
-private:
-
-  // ----------------------------------------------------------------------
-  // push_mprts_patch
-  
   static void push_mprts_patch(typename MfieldsState::fields_t flds, typename Mparticles::patch_t& prts)
   {
     typename InterpolateEM_t::fields_t EM(flds);
@@ -99,6 +66,49 @@ private:
       current.calc_j(J, xm, xp, lf, lg, prts.prt_qni_wni(prt), vv);
     }
   }
+};
+
+// ======================================================================
+// PushParticles1vb
+
+template<typename C>
+struct PushParticles1vb : PushParticlesCommon<C>
+{
+  using Base = PushParticlesCommon<C>;
+  using typename Base::Mparticles;
+  using typename Base::MfieldsState;
+  using typename Base::particle_t;
+  using typename Base::real_t;
+  using typename Base::Real3;
+  using typename Base::AdvanceParticle_t;
+  using typename Base::InterpolateEM_t;
+  
+  using Dim = typename C::dim;
+  using Current = typename C::Current_t;
+  using checks_order = checks_order_1st;
+  
+  // ----------------------------------------------------------------------
+  // push_mprts
+
+  static void push_mprts(Mparticles& mprts, MfieldsState& mflds)
+  {
+    for (int p = 0; p < mprts.n_patches(); p++) {
+      mflds[p].zero(JXI, JXI + 3);
+      PushParticlesVb<C>::push_mprts_patch(mflds[p], mprts[p]);
+    }
+  }
+
+  // ----------------------------------------------------------------------
+  // stagger_mprts
+  
+  static void stagger_mprts(Mparticles& mprts, MfieldsState& mflds)
+  {
+    for (int p = 0; p < mprts.n_patches(); p++) {
+      stagger_mprts_patch(mflds[p], mprts[p]);
+    }
+  }
+
+private:
 
   // ----------------------------------------------------------------------
   // stagger_mprts_patch

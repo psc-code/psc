@@ -3,53 +3,19 @@
 
 #define MAX_NR_KINDS (10)
 
+// ======================================================================
+
 template<typename C>
-struct PushParticlesCommon
+struct PushParticlesEsirkepov
 {
   using Mparticles = typename C::Mparticles;
   using MfieldsState = typename C::MfieldsState;
-  using particle_t = typename Mparticles::particle_t;
-  using real_t = typename Mparticles::real_t;
-  using Real3 = Vec3<real_t>;
   using AdvanceParticle_t = typename C::AdvanceParticle_t;
   using InterpolateEM_t = typename C::InterpolateEM_t;
-};
-
-// ======================================================================
-// PushParticles__
-
-template<typename C>
-struct PushParticles__ : PushParticlesCommon<C>
-{
-  using Base = PushParticlesCommon<C>;
-  using typename Base::Mparticles;
-  using typename Base::MfieldsState;
-  using typename Base::particle_t;
-  using typename Base::real_t;
-  using typename Base::Real3;
-  using typename Base::AdvanceParticle_t;
-  using typename Base::InterpolateEM_t;
-  
-  using Dim = typename C::dim;
   using Current = typename C::Current_t;
-  using checks_order = checks_order_2nd; // FIXME, sometimes 1st even with Esirkepov
+  using real_t = typename Mparticles::real_t;
+  using Real3 = Vec3<real_t>;
 
-  // ----------------------------------------------------------------------
-  // push_mprts
-
-  static void push_mprts(Mparticles& mprts, MfieldsState& mflds)
-  {
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      mflds[p].zero(JXI, JXI + 3);
-      push_mprts_patch(mflds[p], mprts[p]);
-    }
-  }
-
-private:
-
-  // ----------------------------------------------------------------------
-  // push_mprts_patch
-  
   static void push_mprts_patch(typename MfieldsState::fields_t flds, typename Mparticles::patch_t& prts)
   {
     typename InterpolateEM_t::fields_t EM(flds);
@@ -99,6 +65,41 @@ private:
       current.calc(J);
     }
   }
+};
 
+template<typename C>
+struct PushParticlesCommon
+{
+  using Mparticles = typename C::Mparticles;
+  using MfieldsState = typename C::MfieldsState;
+  using particle_t = typename Mparticles::particle_t;
+  using real_t = typename Mparticles::real_t;
+  using Real3 = Vec3<real_t>;
+  using AdvanceParticle_t = typename C::AdvanceParticle_t;
+  using InterpolateEM_t = typename C::InterpolateEM_t;
+};
+
+// ======================================================================
+// PushParticles__
+
+template<typename C>
+struct PushParticles__ : PushParticlesCommon<C>
+{
+  using Base = PushParticlesCommon<C>;
+  using typename Base::Mparticles;
+  using typename Base::MfieldsState;
+  
+  using checks_order = checks_order_2nd; // FIXME, sometimes 1st even with Esirkepov
+
+  // ----------------------------------------------------------------------
+  // push_mprts
+
+  static void push_mprts(Mparticles& mprts, MfieldsState& mflds)
+  {
+    for (int p = 0; p < mprts.n_patches(); p++) {
+      mflds[p].zero(JXI, JXI + 3);
+      PushParticlesEsirkepov<C>::push_mprts_patch(mflds[p], mprts[p]);
+    }
+  }
 };
 
