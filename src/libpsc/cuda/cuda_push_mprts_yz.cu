@@ -56,9 +56,9 @@ struct CudaPushParticles
     uint id;
     if (REORDER) {
       id = dmprts.id_[n];
-      LOAD_PARTICLE_POS(prt, dmprts.xi4_, id);
+      prt.load_position(dmprts.xi4_, id);
     } else {
-      LOAD_PARTICLE_POS(prt, dmprts.xi4_, n);
+      prt.load_position(dmprts.xi4_, n);
     }
     // here we have x^{n+.5}, p^n
     
@@ -93,13 +93,13 @@ struct CudaPushParticles
     int kind = __float_as_int(prt.kind_as_float);
     real_t dq = dmprts.dq(kind);
     if (REORDER) {
-      LOAD_PARTICLE_MOM(prt, dmprts.pxi4_, id);
+      prt.load_momentum(dmprts.pxi4_, id);
       advance.push_p(prt.pxi, E, H, dq);
-      STORE_PARTICLE_MOM(prt, dmprts.alt_pxi4_, n);
+      prt.store_momentum(dmprts.alt_pxi4_, n);
     } else {
-      LOAD_PARTICLE_MOM(prt, dmprts.pxi4_, n);
+      prt.load_momentum(dmprts.pxi4_, n);
       advance.push_p(prt.pxi, E, H, dq);
-      STORE_PARTICLE_MOM(prt, dmprts.pxi4_, n);
+      prt.store_momentum(dmprts.pxi4_, n);
     }
 #if 0
     if (!isfinite(prt.pxi[0]) || !isfinite(prt.pxi[1]) || !isfinite(prt.pxi[2])) {
@@ -290,11 +290,11 @@ struct CudaPushParticles
 
       // x^(n+1.0), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
       advance.push_x(prt.xi, vxi, .5f);
-      STORE_PARTICLE_POS(prt, d_xi4, n);
+      prt.store_position(d_xi4, n);
     } else if (Config::Deposit::value == DEPOSIT_VB_3D) {
       // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
       advance.push_x(prt.xi, vxi);
-      STORE_PARTICLE_POS(prt, d_xi4, n);
+      prt.store_position(d_xi4, n);
     }
 
     // has moved into which block? (given as relative shift)
@@ -374,7 +374,7 @@ struct CudaPushParticles
     static_assert(Config::Deposit::value == DEPOSIT_VB_3D, "calc_j dim_xyz needs 3d deposit");
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
     advance.push_x(prt.xi, vxi);
-    STORE_PARTICLE_POS(prt, d_xi4, n);
+    prt.store_position(d_xi4, n);
 
     // position xp at x^(n+1.5)
     for (int d = 0; d < 3; d++) {

@@ -115,15 +115,15 @@ struct CudaCollision
       : dmprts_{dmprts},
 	n_{n}
     {
-      LOAD_PARTICLE_POS(prt_, dmprts_.xi4_ , n_);
-      LOAD_PARTICLE_MOM(prt_, dmprts_.pxi4_, n_);
+      prt_.load_position(dmprts.xi4_, n_);
+      prt_.load_momentum(dmprts.pxi4_, n_);
     }
 
     __device__
     ~Particle()
     {
       // xi4 is not modified
-      STORE_PARTICLE_MOM(prt_, dmprts_.pxi4_, n_);
+      prt_.store_momentum(dmprts_.pxi4_, n_);
     }
     
     __device__

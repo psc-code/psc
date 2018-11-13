@@ -47,38 +47,43 @@ struct cuda_mparticles_base : cuda_mparticles_indexer<BS>
 // ----------------------------------------------------------------------
 // struct d_particle
 
-struct d_particle {
+struct d_particle
+{
+  void __device__ load_position(float4* d_xi4, int n)
+  {
+    float4 _xi4 = d_xi4[n];
+    xi[0]         = _xi4.x;
+    xi[1]         = _xi4.y;
+    xi[2]         = _xi4.z;
+    kind_as_float = _xi4.w;
+  }
+  
+  void __device__ load_momentum(float4* d_pxi4, int n)
+  {
+    float4 _pxi4 = d_pxi4[n];
+    pxi[0]        = _pxi4.x;
+    pxi[1]        = _pxi4.y;
+    pxi[2]        = _pxi4.z;
+    qni_wni       = _pxi4.w;
+  }
+
+  void __device__ store_position(float4* d_xi4, int n)
+  {
+    float4 xi4 = { xi[0], xi[1], xi[2], kind_as_float };
+    d_xi4[n] = xi4;
+  }
+
+  void __device__ store_momentum(float4* d_pxi4, int n)
+  {
+    float4 pxi4 = { pxi[0], pxi[1], pxi[2], qni_wni };
+    d_pxi4[n] = pxi4;
+  }
+  
   float xi[3];
   float kind_as_float;
   float pxi[3];
   float qni_wni;
 };
-
-#define LOAD_PARTICLE_POS(pp, d_xi4, n) do {				\
-    float4 _xi4 = d_xi4[n];						\
-    (pp).xi[0]         = _xi4.x;					\
-    (pp).xi[1]         = _xi4.y;					\
-    (pp).xi[2]         = _xi4.z;					\
-    (pp).kind_as_float = _xi4.w;					\
-} while (0)
-
-#define LOAD_PARTICLE_MOM(pp, d_pxi4, n) do {				\
-    float4 _pxi4 = d_pxi4[n];						\
-    (pp).pxi[0]        = _pxi4.x;					\
-    (pp).pxi[1]        = _pxi4.y;					\
-    (pp).pxi[2]        = _pxi4.z;					\
-    (pp).qni_wni       = _pxi4.w;					\
-} while (0)
-
-#define STORE_PARTICLE_POS(pp, d_xi4, n) do {				\
-    float4 xi4 = { (pp).xi[0], (pp).xi[1], (pp).xi[2], (pp).kind_as_float }; \
-    d_xi4[n] = xi4;							\
-} while (0)
-
-#define STORE_PARTICLE_MOM(pp, d_pxi4, n) do {				\
-    float4 pxi4 = { (pp).pxi[0], (pp).pxi[1], (pp).pxi[2], (pp).qni_wni }; \
-    d_pxi4[n] = pxi4;							\
-} while (0)
 
 // ----------------------------------------------------------------------
 // cuda_mparticles

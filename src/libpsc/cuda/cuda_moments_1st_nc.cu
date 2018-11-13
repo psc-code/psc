@@ -55,11 +55,11 @@ rho_1st_nc_cuda_run(DMparticles dmprts, DMFields dmflds)
     struct d_particle prt;
     if (REORDER) {
       uint id = dmprts.id_[n];
-      LOAD_PARTICLE_POS(prt, dmprts.xi4_, id);
-      LOAD_PARTICLE_MOM(prt, dmprts.pxi4_, id);
+      prt.load_position(dmprts.xi4_, id);
+      prt.load_momentum(dmprts.pxi4_, id);
     } else {
-      LOAD_PARTICLE_POS(prt, dmprts.xi4_, n);
-      LOAD_PARTICLE_MOM(prt, dmprts.pxi4_, n);
+      prt.load_position(dmprts.xi4_, n);
+      prt.load_momentum(dmprts.pxi4_, n);
     }
 
     float fnq = prt.qni_wni * dmprts.fnqs();
@@ -111,11 +111,11 @@ n_1st_cuda_run(DMparticlesCuda<BS> dmprts, DMFields dmflds)
     struct d_particle prt;
     if (REORDER) {
       uint id = dmprts.id_[n];
-      LOAD_PARTICLE_POS(prt, dmprts.xi4_, id);
-      LOAD_PARTICLE_MOM(prt, dmprts.pxi4_, id);
+      prt.load_position(dmprts.xi4_, id);
+      prt.load_momentum(dmprts.pxi4_, id);
     } else {
-      LOAD_PARTICLE_POS(prt, dmprts.xi4_, n);
-      LOAD_PARTICLE_MOM(prt, dmprts.pxi4_, n);
+      prt.load_position(dmprts.xi4_, n);
+      prt.load_momentum(dmprts.pxi4_, n);
     }
 
     int kind = __float_as_int(prt.kind_as_float);
