@@ -7,7 +7,6 @@
 #include "inc_defs.h"
 #include "interpolate.hxx"
 #include "inc_curr.c"
-#include "pushp_current_esirkepov.hxx"
 #include "inc_push.c"
 #include "push_particles.hxx"
 
@@ -38,10 +37,10 @@ struct PushpConfigEsirkepov
 {
   using Mparticles = _Mparticles;
   using MfieldsState = _MfieldsState;
-  using dim = _Dim;
+  using Dim = _Dim;
+  using Order = _Order;
   using InterpolateEM_t = _InterpolateEM;
-  using Current_t = CurrentEsirkepov<_Order, dim, Fields3d<typename MfieldsState::fields_t>, InterpolateEM_t>;
-  using AdvanceParticle_t = AdvanceParticle<typename Mparticles::real_t, dim>;
+  using AdvanceParticle_t = AdvanceParticle<typename Mparticles::real_t, Dim>;
 };
 
 template<typename _Mparticles, typename _MfieldsState,

@@ -1,6 +1,8 @@
 
 #include "../libpsc/psc_checks/checks_impl.hxx"
 
+#include "pushp_current_esirkepov.hxx"
+
 #define MAX_NR_KINDS (10)
 
 // ======================================================================
@@ -13,7 +15,8 @@ struct PushParticlesEsirkepov
   using MfieldsState = typename C::MfieldsState;
   using AdvanceParticle_t = typename C::AdvanceParticle_t;
   using InterpolateEM_t = typename C::InterpolateEM_t;
-  using Current = typename C::Current_t;
+  using Current = CurrentEsirkepov<typename C::Order, typename C::Dim,
+				   Fields3d<typename MfieldsState::fields_t>, InterpolateEM_t>;
   using real_t = typename Mparticles::real_t;
   using Real3 = Vec3<real_t>;
 

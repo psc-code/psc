@@ -1,6 +1,9 @@
 
 #pragma once
 
+#include "inc_defs.h"
+#include "interpolate.hxx"
+
 // ----------------------------------------------------------------------
 // find_l_minmax
 
