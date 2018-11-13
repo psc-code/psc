@@ -10,6 +10,7 @@
 #include "inc_push.c"
 #include "push_particles.hxx"
 #include "push_particles_esirkepov.hxx"
+#include "push_particles_1vb.hxx"
 
 #define atomicAdd(addr, val) \
   do { *(addr) += (val); } while (0)

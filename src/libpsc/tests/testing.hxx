@@ -76,13 +76,13 @@ using TestConfig2ndSingle = TestConfig<dim_xyz, MfieldsSingle,
 						       PushParticlesEsirkepov>,
 				       checks_order_2nd>;
 using TestConfig1vbec3dSingle = TestConfig<dim_xyz, MfieldsSingle,
-					   PushParticles1vb<Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_xyz>>,
+					   PushParticles1vb<Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_xyz>, PushParticlesVb>,
 					   checks_order_1st>;
 using TestConfig1vbec3dSingleYZ = TestConfig<dim_yz, MfieldsSingle,
-					     PushParticles1vb<Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_yz>>,
+					     PushParticles1vb<Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_yz>, PushParticlesVb>,
 					     checks_order_1st>;
 using TestConfig1vbec3dSingleXZ = TestConfig<dim_xz, MfieldsSingle,
-					     PushParticles1vb<Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_xz>>,
+					     PushParticles1vb<Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_xz>, PushParticlesVb>,
 					     checks_order_1st>;
 
 #ifdef USE_VPIC

@@ -50,7 +50,8 @@ struct PscConfigPushParticles2nd
 template<typename DIM, typename Mparticles, typename MfieldsState>
 struct PscConfigPushParticles1vbec
 {
-  using PushParticles_t = PushParticles1vb<Config1vbec<Mparticles, MfieldsState, DIM>>;
+  using PushParticles_t = PushParticles1vb<Config1vbec<Mparticles, MfieldsState, DIM>,
+					   PushParticlesVb>;
 };
 
 template<typename DIM, typename Mparticles, typename MfieldsState>
@@ -63,13 +64,15 @@ struct PscConfigPushParticlesCuda
 template<typename Mparticles, typename Mfields>
 struct PscConfigPushParticles1vbec<dim_xyz, Mparticles, Mfields>
 {
-  using PushParticles_t = PushParticles1vb<Config1vbecSplit<Mparticles, Mfields, dim_xyz>>;
+  using PushParticles_t = PushParticles1vb<Config1vbecSplit<Mparticles, Mfields, dim_xyz>,
+					   PushParticlesVb>;
 };
 
 template<typename Mparticles, typename Mfields>
 struct PscConfigPushParticles1vbec<dim_xz, Mparticles, Mfields>
 {
-  using PushParticles_t = PushParticles1vb<Config1vbecSplit<Mparticles, Mfields, dim_xz>>;
+  using PushParticles_t = PushParticles1vb<Config1vbecSplit<Mparticles, Mfields, dim_xz>,
+					   PushParticlesVb>;
 };
 
 template<typename DIM, typename Mparticles, typename _MfieldsState,
