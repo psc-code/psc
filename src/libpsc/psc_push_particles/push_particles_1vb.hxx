@@ -12,7 +12,7 @@ struct PushParticlesVb
   using AdvanceParticle_t = typename C::AdvanceParticle_t;
   using InterpolateEM_t = typename C::InterpolateEM_t;
   using Current = typename C::Current_t;
-  using Dim = typename C::dim;
+  using Dim = typename C::Dim;
   using real_t = typename Mparticles::real_t;
   using Real3 = Vec3<real_t>;
 
