@@ -50,7 +50,7 @@ template<typename _Mparticles, typename _MfieldsState,
 	 typename _Dim, typename _Order>
 using PushpConfigEsirkepov = _push_p_config<_Mparticles, _MfieldsState, _InterpolateEM,
 					    _Dim, _Order,
-					    Current<_Order, _Dim, Fields3d<typename _MfieldsState::fields_t>, _InterpolateEM>>;
+					    CurrentEsirkepov<_Order, _Dim, Fields3d<typename _MfieldsState::fields_t>, _InterpolateEM>>;
 
 template<typename _Mparticles, typename _MfieldsState,
 	 typename _InterpolateEM,

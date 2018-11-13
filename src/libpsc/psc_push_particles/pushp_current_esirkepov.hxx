@@ -155,13 +155,13 @@ struct CurrentDir<order, IP, std::true_type>
 // Current
 
 template<typename order, typename dim, typename Fields, typename IP>
-struct Current
+struct CurrentEsirkepov
 {
   using real_t = typename IP::real_t;
   using Real3 = Vec3<real_t>;
   using fields_t = Fields;
 
-  Current(const Grid_t& grid)
+  CurrentEsirkepov(const Grid_t& grid)
     : dxi_{ Real3{1., 1. , 1.} / Real3{grid.domain.dx} },
       fnqs_(grid.norm.fnqs)
   {
@@ -220,7 +220,7 @@ private:
 // ======================================================================
 
 template<typename order, typename dim, typename Fields, typename IP>
-void Current<order, dim, Fields, IP>::calc(opt_order_2nd o, dim_1 d, Fields& J)
+void CurrentEsirkepov<order, dim, Fields, IP>::calc(opt_order_2nd o, dim_1 d, Fields& J)
 {
   real_t jxh = x.fnqv;
   real_t jyh = y.fnqv;
@@ -232,7 +232,7 @@ void Current<order, dim, Fields, IP>::calc(opt_order_2nd o, dim_1 d, Fields& J)
 };
 
 template<typename order, typename dim, typename Fields, typename IP>
-void Current<order, dim, Fields, IP>::calc(opt_order_2nd o, dim_y d, Fields& J)
+void CurrentEsirkepov<order, dim, Fields, IP>::calc(opt_order_2nd o, dim_y d, Fields& J)
 {
   real_t jyh = 0.f;
 
@@ -252,7 +252,7 @@ void Current<order, dim, Fields, IP>::calc(opt_order_2nd o, dim_y d, Fields& J)
 }
 
 template<typename order, typename dim, typename Fields, typename IP>
-void Current<order, dim, Fields, IP>::calc(opt_order_2nd o, dim_z d, Fields& J)
+void CurrentEsirkepov<order, dim, Fields, IP>::calc(opt_order_2nd o, dim_z d, Fields& J)
 {
   real_t jzh = 0.f;
   for (int l3 = z.lmin; l3 <= z.lmax; l3++) {
@@ -271,7 +271,7 @@ void Current<order, dim, Fields, IP>::calc(opt_order_2nd o, dim_z d, Fields& J)
 };
 
 template<typename order, typename dim, typename Fields, typename IP>
-void Current<order, dim, Fields, IP>::calc(opt_order_2nd o, dim_xy d, Fields& J)
+void CurrentEsirkepov<order, dim, Fields, IP>::calc(opt_order_2nd o, dim_xy d, Fields& J)
 {
   for (int l2 = y.lmin; l2 <= y.lmax; l2++) {
     real_t jxh = 0.f;
@@ -300,7 +300,7 @@ void Current<order, dim, Fields, IP>::calc(opt_order_2nd o, dim_xy d, Fields& J)
 
 // FIXME, 1st/2d duplicated
 template<typename order, typename dim, typename Fields, typename IP>
-void Current<order, dim, Fields, IP>::calc(opt_order_1st o, dim_xz d, Fields& J)
+void CurrentEsirkepov<order, dim, Fields, IP>::calc(opt_order_1st o, dim_xz d, Fields& J)
 {
   for (int l3 = z.lmin; l3 <= z.lmax; l3++) {
     real_t jxh = 0.f;
@@ -332,7 +332,7 @@ void Current<order, dim, Fields, IP>::calc(opt_order_1st o, dim_xz d, Fields& J)
 }
 
 template<typename order, typename dim, typename Fields, typename IP>
-void Current<order, dim, Fields, IP>::calc(opt_order_2nd o, dim_xz d, Fields& J)
+void CurrentEsirkepov<order, dim, Fields, IP>::calc(opt_order_2nd o, dim_xz d, Fields& J)
 {
   for (int l3 = z.lmin; l3 <= z.lmax; l3++) {
     real_t jxh = 0.f;
@@ -364,7 +364,7 @@ void Current<order, dim, Fields, IP>::calc(opt_order_2nd o, dim_xz d, Fields& J)
 }
 
 template<typename order, typename dim, typename Fields, typename IP>
-void Current<order, dim, Fields, IP>::calc(opt_order_1st o, dim_yz d, Fields& J)
+void CurrentEsirkepov<order, dim, Fields, IP>::calc(opt_order_1st o, dim_yz d, Fields& J)
 {
   for (int l3 = z.lmin; l3 <= z.lmax; l3++) {
     for (int l2 = y.lmin; l2 <= y.lmax; l2++) {
@@ -398,7 +398,7 @@ void Current<order, dim, Fields, IP>::calc(opt_order_1st o, dim_yz d, Fields& J)
 
 #define JZH(i) jzh[i+2]
 template<typename order, typename dim, typename Fields, typename IP>
-void Current<order, dim, Fields, IP>::calc(opt_order_2nd o, dim_yz d, Fields& J)
+void CurrentEsirkepov<order, dim, Fields, IP>::calc(opt_order_2nd o, dim_yz d, Fields& J)
 {
   real_t jxh;
   real_t jyh;
@@ -429,7 +429,7 @@ void Current<order, dim, Fields, IP>::calc(opt_order_2nd o, dim_yz d, Fields& J)
 }
 
 template<typename order, typename dim, typename Fields, typename IP>
-void Current<order, dim, Fields, IP>::calc(opt_order_2nd o, dim_xyz d, Fields& J)
+void CurrentEsirkepov<order, dim, Fields, IP>::calc(opt_order_2nd o, dim_xyz d, Fields& J)
 {
   for (int l3 = z.lmin; l3 <= z.lmax; l3++) {
     for (int l2 = y.lmin; l2 <= y.lmax; l2++) {
