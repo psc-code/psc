@@ -9,7 +9,6 @@
 #include "../libpsc/psc_collision/psc_collision_impl.hxx"
 #include "../libpsc/psc_push_particles/push_part_common.c"
 #include "../libpsc/psc_push_particles/1vb/psc_push_particles_1vb.h"
-#include "../libpsc/psc_push_particles/1vb.c"
 #include "psc_push_fields_impl.hxx"
 #include "../libpsc/psc_bnd/psc_bnd_impl.hxx"
 #include "../libpsc/psc_bnd_fields/psc_bnd_fields_impl.hxx"
@@ -43,15 +42,15 @@ struct SimulationNone
 template<typename DIM, typename Mparticles, typename MfieldsState>
 struct PscConfigPushParticles2nd
 {
-  using PushParticles_t = PushParticles__<Config2nd<Mparticles, MfieldsState, DIM>,
-					  PushParticlesEsirkepov>;
+  using PushParticles_t = PushParticlesSimple<Config2nd<Mparticles, MfieldsState, DIM>,
+					      PushParticlesEsirkepov>;
 };
 
 template<typename DIM, typename Mparticles, typename MfieldsState>
 struct PscConfigPushParticles1vbec
 {
-  using PushParticles_t = PushParticles1vb<Config1vbec<Mparticles, MfieldsState, DIM>,
-					   PushParticlesVb>;
+  using PushParticles_t = PushParticlesSimple<Config1vbec<Mparticles, MfieldsState, DIM>,
+					      PushParticlesVb>;
 };
 
 template<typename DIM, typename Mparticles, typename MfieldsState>
@@ -64,15 +63,15 @@ struct PscConfigPushParticlesCuda
 template<typename Mparticles, typename Mfields>
 struct PscConfigPushParticles1vbec<dim_xyz, Mparticles, Mfields>
 {
-  using PushParticles_t = PushParticles1vb<Config1vbecSplit<Mparticles, Mfields, dim_xyz>,
-					   PushParticlesVb>;
+  using PushParticles_t = PushParticlesSimple<Config1vbecSplit<Mparticles, Mfields, dim_xyz>,
+					      PushParticlesVb>;
 };
 
 template<typename Mparticles, typename Mfields>
 struct PscConfigPushParticles1vbec<dim_xz, Mparticles, Mfields>
 {
-  using PushParticles_t = PushParticles1vb<Config1vbecSplit<Mparticles, Mfields, dim_xz>,
-					   PushParticlesVb>;
+  using PushParticles_t = PushParticlesSimple<Config1vbecSplit<Mparticles, Mfields, dim_xz>,
+					      PushParticlesVb>;
 };
 
 template<typename DIM, typename Mparticles, typename _MfieldsState,

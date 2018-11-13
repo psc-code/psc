@@ -7,7 +7,6 @@
 #include "../libpsc/psc_push_particles/push_config.hxx"
 #include "../libpsc/psc_push_particles/push_part_common.c"
 #include "../libpsc/psc_push_particles/1vb/psc_push_particles_1vb.h"
-#include "../libpsc/psc_push_particles/1vb.c"
 #include "bnd_particles_impl.hxx"
 #include "../libpsc/psc_checks/checks_impl.hxx"
 #include "psc_push_fields_impl.hxx"
@@ -66,23 +65,23 @@ struct TestConfig
 };
 
 using TestConfig2ndDouble = TestConfig<dim_xyz, MfieldsC,
-				       PushParticles__<Config2ndDouble<dim_xyz>, PushParticlesEsirkepov>,
+				       PushParticlesSimple<Config2ndDouble<dim_xyz>, PushParticlesEsirkepov>,
 				       checks_order_2nd>;
 using TestConfig2ndDoubleYZ = TestConfig<dim_yz, MfieldsC,
-					 PushParticles__<Config2ndDouble<dim_yz>, PushParticlesEsirkepov>,
+					 PushParticlesSimple<Config2ndDouble<dim_yz>, PushParticlesEsirkepov>,
 					 checks_order_2nd>;
 using TestConfig2ndSingle = TestConfig<dim_xyz, MfieldsSingle,
-				       PushParticles__<Config2nd<MparticlesSingle, MfieldsStateSingle, dim_xyz>,
-						       PushParticlesEsirkepov>,
+				       PushParticlesSimple<Config2nd<MparticlesSingle, MfieldsStateSingle, dim_xyz>,
+							   PushParticlesEsirkepov>,
 				       checks_order_2nd>;
 using TestConfig1vbec3dSingle = TestConfig<dim_xyz, MfieldsSingle,
-					   PushParticles1vb<Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_xyz>, PushParticlesVb>,
+					   PushParticlesSimple<Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_xyz>, PushParticlesVb>,
 					   checks_order_1st>;
 using TestConfig1vbec3dSingleYZ = TestConfig<dim_yz, MfieldsSingle,
-					     PushParticles1vb<Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_yz>, PushParticlesVb>,
+					     PushParticlesSimple<Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_yz>, PushParticlesVb>,
 					     checks_order_1st>;
 using TestConfig1vbec3dSingleXZ = TestConfig<dim_xz, MfieldsSingle,
-					     PushParticles1vb<Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_xz>, PushParticlesVb>,
+					     PushParticlesSimple<Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_xz>, PushParticlesVb>,
 					     checks_order_1st>;
 
 #ifdef USE_VPIC

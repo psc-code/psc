@@ -1,11 +1,9 @@
 
-#include "../libpsc/psc_checks/checks_impl.hxx"
-
 // ======================================================================
-// PushParticles__
+// PushParticlesSimple
 
 template<typename C, template<typename> class PushParticlesImpl>
-struct PushParticles__
+struct PushParticlesSimple
 {
   using Mparticles = typename C::Mparticles;
   using MfieldsState = typename C::MfieldsState;
