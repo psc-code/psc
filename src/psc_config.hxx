@@ -43,7 +43,8 @@ struct SimulationNone
 template<typename DIM, typename Mparticles, typename MfieldsState>
 struct PscConfigPushParticles2nd
 {
-  using PushParticles_t = PushParticles__<Config2nd<Mparticles, MfieldsState, DIM>>;
+  using PushParticles_t = PushParticles__<Config2nd<Mparticles, MfieldsState, DIM>,
+					  PushParticlesEsirkepov>;
 };
 
 template<typename DIM, typename Mparticles, typename MfieldsState>

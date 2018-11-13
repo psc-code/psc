@@ -1,14 +1,12 @@
 
-#include "../libpsc/psc_checks/checks_impl.hxx"
-
-#define MAX_NR_KINDS (10)
-
 // ======================================================================
 // PushParticlesVb
 
 template<typename C>
 struct PushParticlesVb
 {
+  static const int MAX_NR_KINDS = 10;
+
   using Mparticles = typename C::Mparticles;
   using MfieldsState = typename C::MfieldsState;
   using AdvanceParticle_t = typename C::AdvanceParticle_t;

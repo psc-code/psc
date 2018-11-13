@@ -66,13 +66,14 @@ struct TestConfig
 };
 
 using TestConfig2ndDouble = TestConfig<dim_xyz, MfieldsC,
-				       PushParticles__<Config2ndDouble<dim_xyz>>,
+				       PushParticles__<Config2ndDouble<dim_xyz>, PushParticlesEsirkepov>,
 				       checks_order_2nd>;
 using TestConfig2ndDoubleYZ = TestConfig<dim_yz, MfieldsC,
-					 PushParticles__<Config2ndDouble<dim_yz>>,
+					 PushParticles__<Config2ndDouble<dim_yz>, PushParticlesEsirkepov>,
 					 checks_order_2nd>;
 using TestConfig2ndSingle = TestConfig<dim_xyz, MfieldsSingle,
-				       PushParticles__<Config2nd<MparticlesSingle, MfieldsStateSingle, dim_xyz>>,
+				       PushParticles__<Config2nd<MparticlesSingle, MfieldsStateSingle, dim_xyz>,
+						       PushParticlesEsirkepov>,
 				       checks_order_2nd>;
 using TestConfig1vbec3dSingle = TestConfig<dim_xyz, MfieldsSingle,
 					   PushParticles1vb<Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_xyz>>,
