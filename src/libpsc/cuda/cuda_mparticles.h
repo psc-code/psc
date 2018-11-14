@@ -28,6 +28,23 @@ struct MparticlesCudaStorage
 
 struct DParticleCuda
 {
+  using real_t = float;
+  using Real3 = Vec3<real_t>;
+
+  __host__ __device__
+  DParticleCuda() = default;
+
+  __host__ __device__
+  DParticleCuda(const DParticleCuda&) = default;
+
+  __host__ __device__
+  DParticleCuda(real_t x[3], float kind, real_t u[3], real_t qni_wni)
+    : xi{x[0], x[1], x[2]},
+      kind_as_float{kind},
+      pxi{u[0], u[1], u[2]},
+      qni_wni{qni_wni}
+  {}
+  
   float xi[3];
   float kind_as_float;
   float pxi[3];
@@ -45,7 +62,8 @@ struct DMparticlesCudaStorage
   {
     float4 _xi4 = xi4[n];
     float4 _pxi4 = pxi4[n];
-    return {{_xi4.x, _xi4.y, _xi4.z}, _xi4.w, {_pxi4.x, _pxi4.y, _pxi4.z}, _pxi4.w};
+    return {(float[3]){_xi4.x, _xi4.y, _xi4.z}, _xi4.w,
+						  (float[3]){_pxi4.x, _pxi4.y, _pxi4.z}, _pxi4.w};
   }
 
   __host__ __device__
