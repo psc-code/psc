@@ -51,15 +51,7 @@ struct CudaPushParticles
   __device__ static void
   push_part_one(DMparticles& dmprts, struct d_particle& prt, int n, const FldCache& fld_cache,
 		const Block& current_block)
-    
   {
-    uint id;
-    if (REORDER) {
-      id = dmprts.id_[n];
-      prt.load_position(dmprts.xi4_, id);
-    } else {
-      prt.load_position(dmprts.xi4_, n);
-    }
     // here we have x^{n+.5}, p^n
     
     // field interpolation
@@ -92,15 +84,7 @@ struct CudaPushParticles
     // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
     int kind = __float_as_int(prt.kind_as_float);
     real_t dq = dmprts.dq(kind);
-    if (REORDER) {
-      prt.load_momentum(dmprts.pxi4_, id);
       advance.push_p(prt.pxi, E, H, dq);
-      prt.store_momentum(dmprts.alt_pxi4_, n);
-    } else {
-      prt.load_momentum(dmprts.pxi4_, n);
-      advance.push_p(prt.pxi, E, H, dq);
-      prt.store_momentum(dmprts.pxi4_, n);
-    }
 #if 0
     if (!isfinite(prt.pxi[0]) || !isfinite(prt.pxi[1]) || !isfinite(prt.pxi[2])) {
       printf("CUDA_ERROR push_part_one: n = %d pxi %g %g %g\n", n,
@@ -477,12 +461,22 @@ struct CudaPushParticles
 	continue;
       }
       struct d_particle prt;
+      if (REORDER) {
+	uint id = dmprts.id_[n];
+	prt.load_position(dmprts.xi4_, id);
+	prt.load_momentum(dmprts.pxi4_, id);
+      } else {
+	prt.load_position(dmprts.xi4_, n);
+	prt.load_momentum(dmprts.pxi4_, n);
+      }
       push_part_one(dmprts, prt, n, fld_cache, current_block);
       
       if (REORDER) {
+	prt.store_momentum(dmprts.alt_pxi4_, n);
 	calc_j(dmprts, prt, n, dmprts.alt_xi4_, dmprts.alt_pxi4_, scurr, current_block, dim{});
       } else {
 	calc_j(dmprts, prt, n, dmprts.xi4_, dmprts.pxi4_, scurr, current_block, dim{});
+	prt.store_momentum(dmprts.pxi4_, n);
       }
     }
     
