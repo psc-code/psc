@@ -462,20 +462,20 @@ struct CudaPushParticles
       struct d_particle prt;
       if (REORDER) {
 	uint id = dmprts.id_[n];
-	prt.load_position(dmprts.xi4_, id);
-	prt.load_momentum(dmprts.pxi4_, id);
+	prt.load_position(dmprts.storage.xi4, id);
+	prt.load_momentum(dmprts.storage.pxi4, id);
       } else {
-	prt.load_position(dmprts.xi4_, n);
-	prt.load_momentum(dmprts.pxi4_, n);
+	prt.load_position(dmprts.storage.xi4, n);
+	prt.load_momentum(dmprts.storage.pxi4, n);
       }
       push_part_one(dmprts, prt, n, fld_cache, current_block);
       
       if (REORDER) {
-	prt.store_momentum(dmprts.alt_pxi4_, n);
-	calc_j(dmprts, prt, n, dmprts.alt_xi4_, scurr, current_block, dim{});
+	prt.store_momentum(dmprts.alt_storage.pxi4, n);
+	calc_j(dmprts, prt, n, dmprts.alt_storage.xi4, scurr, current_block, dim{});
       } else {
-	calc_j(dmprts, prt, n, dmprts.xi4_, scurr, current_block, dim{});
-	prt.store_momentum(dmprts.pxi4_, n);
+	calc_j(dmprts, prt, n, dmprts.storage.xi4, scurr, current_block, dim{});
+	prt.store_momentum(dmprts.storage.pxi4, n);
       }
     }
     

@@ -15,6 +15,15 @@
 #include <thrust/binary_search.h>
 
 // ======================================================================
+// MparticlesCudaStorage
+
+struct DMparticlesCudaStorage
+{
+  float4 *xi4;
+  float4 *pxi4;
+};
+
+// ======================================================================
 // cuda_mparticles_base
 
 template<typename BS>
@@ -162,8 +171,8 @@ struct DMparticlesCuda : DParticleIndexer<BS_>
       fnqys_(cmprts.grid_.domain.dx[1] * fnqs_ / dt_),
       fnqzs_(cmprts.grid_.domain.dx[2] * fnqs_ / dt_),
       dqs_(.5f * cmprts.grid_.norm.eta * dt_),
-      xi4_(cmprts.d_xi4.data().get()), pxi4_(cmprts.d_pxi4.data().get()),
-      alt_xi4_(cmprts.d_alt_xi4.data().get()), alt_pxi4_(cmprts.d_alt_pxi4.data().get()),
+      storage{cmprts.d_xi4.data().get(), cmprts.d_pxi4.data().get()},
+      alt_storage{cmprts.d_alt_xi4.data().get(), cmprts.d_alt_pxi4.data().get()},
       off_(cmprts.by_block_.d_off.data().get()),
       bidx_(cmprts.by_block_.d_idx.data().get()),
       id_(cmprts.by_block_.d_id.data().get()),
@@ -201,10 +210,8 @@ private:
   real_t q_[MAX_N_KINDS];
   real_t m_[MAX_N_KINDS];
 public:
-  float4* xi4_;
-  float4* pxi4_;
-  float4* alt_xi4_;
-  float4* alt_pxi4_;
+  DMparticlesCudaStorage storage;
+  DMparticlesCudaStorage alt_storage;
   uint *off_;
   uint *bidx_;
   uint *id_;
