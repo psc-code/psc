@@ -153,7 +153,7 @@ struct CudaCollision
   private:
     DMparticles& dmprts_;
     int n_;
-    d_particle prt_;
+    DParticleCuda prt_;
   };
   
   CudaCollision(int interval, double nu, int nicell, double dt)

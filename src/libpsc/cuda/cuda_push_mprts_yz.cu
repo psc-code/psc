@@ -49,7 +49,7 @@ struct CudaPushParticles
   // push_part_one
 
   __device__ static void
-  push_part_one(DMparticles& dmprts, struct d_particle& prt, int n, const FldCache& fld_cache,
+  push_part_one(DMparticles& dmprts, DParticleCuda& prt, int n, const FldCache& fld_cache,
 		const Block& current_block)
   {
     // here we have x^{n+.5}, p^n
@@ -239,7 +239,7 @@ struct CudaPushParticles
   // calc_j -- dispatched for dim_yz
   
   __device__ static void
-  calc_j(DMparticles& dmprts, struct d_particle& prt, int n, DMparticlesCudaStorage& storage,
+  calc_j(DMparticles& dmprts, DParticleCuda& prt, int n, DMparticlesCudaStorage& storage,
 	 Curr &scurr, const Block& current_block, dim_yz tag)
   {
     AdvanceParticle<real_t, dim> advance{dmprts.dt()};
@@ -339,7 +339,7 @@ struct CudaPushParticles
   // calc_j -- dispatched for dim_xyz
   
   __device__ static void
-  calc_j(DMparticles& dmprts, struct d_particle& prt, int n, DMparticlesCudaStorage& storage,
+  calc_j(DMparticles& dmprts, DParticleCuda& prt, int n, DMparticlesCudaStorage& storage,
 	 Curr &scurr, const Block& current_block, dim_xyz tag)
   {
     AdvanceParticle<real_t, dim> advance{dmprts.dt()};
@@ -459,7 +459,7 @@ struct CudaPushParticles
       if (n < block_begin) {
 	continue;
       }
-      struct d_particle prt;
+      DParticleCuda prt;
       if (REORDER) {
 	uint id = dmprts.id_[n];
 	prt = dmprts.storage.load(id);

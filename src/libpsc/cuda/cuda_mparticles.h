@@ -24,9 +24,9 @@ struct MparticlesCudaStorage
 };
 
 // ----------------------------------------------------------------------
-// d_particle
+// DParticleCuda
 
-struct d_particle
+struct DParticleCuda
 {
   float xi[3];
   float kind_as_float;
@@ -41,7 +41,7 @@ struct DMparticlesCudaStorage
 {
   // FIXME, could be operator[]
   __host__ __device__
-  struct d_particle load(int n)
+  struct DParticleCuda load(int n)
   {
     float4 _xi4 = xi4[n];
     float4 _pxi4 = pxi4[n];
@@ -49,14 +49,14 @@ struct DMparticlesCudaStorage
   }
 
   __host__ __device__
-  void store_position(const d_particle& prt, int n)
+  void store_position(const DParticleCuda& prt, int n)
   {
     float4 _xi4 = { prt.xi[0], prt.xi[1], prt.xi[2], prt.kind_as_float };
     xi4[n] = _xi4;
   }
 
   __host__ __device__
-  void store_momentum(const d_particle& prt, int n)
+  void store_momentum(const DParticleCuda& prt, int n)
   {
     float4 _pxi4 = { prt.pxi[0], prt.pxi[1], prt.pxi[2], prt.qni_wni };
     pxi4[n] = _pxi4;

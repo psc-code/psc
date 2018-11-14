@@ -52,7 +52,7 @@ rho_1st_nc_cuda_run(DMparticles dmprts, DMFields dmflds)
     if (n < block_begin) {
       continue;
     }
-    struct d_particle prt;
+    DParticleCuda prt;
     if (REORDER) {
       uint id = dmprts.id_[n];
       prt = dmprts.storage.load(id);
@@ -106,7 +106,7 @@ n_1st_cuda_run(DMparticlesCuda<BS> dmprts, DMFields dmflds)
     if (n < block_begin) {
       continue;
     }
-    struct d_particle prt;
+    DParticleCuda prt;
     if (REORDER) {
       uint id = dmprts.id_[n];
       prt = dmprts.storage.load(id);
