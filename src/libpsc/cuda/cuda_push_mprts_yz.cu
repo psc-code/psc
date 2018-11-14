@@ -524,8 +524,8 @@ void CudaPushParticles_<Config>::push_mprts_ab(CudaMparticles* cmprts, struct cu
   dim3 dimGrid = Block::dimGrid(*cmprts);
 
   if (REORDER) {
-    cmprts->d_alt_xi4.resize(cmprts->n_prts);
-    cmprts->d_alt_pxi4.resize(cmprts->n_prts);
+    cmprts->alt_storage.xi4.resize(cmprts->n_prts);
+    cmprts->alt_storage.pxi4.resize(cmprts->n_prts);
   }
 
   for (auto block_start : Block::block_starts()) {

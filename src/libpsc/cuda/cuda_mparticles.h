@@ -154,9 +154,7 @@ public:
   void resize(uint n_prts);
 
 public:
-  // per particle
-  thrust::device_vector<float4> d_alt_xi4;  // storage for out-of-place reordering of particle data
-  thrust::device_vector<float4> d_alt_pxi4;
+  MparticlesCudaStorage alt_storage; // storage for out-of-place reordering of particle data
 
   std::vector<Real3> xb_by_patch; // lower left corner for each patch
 
@@ -180,7 +178,7 @@ struct DMparticlesCuda : DParticleIndexer<BS_>
       fnqzs_(cmprts.grid_.domain.dx[2] * fnqs_ / dt_),
       dqs_(.5f * cmprts.grid_.norm.eta * dt_),
       storage{cmprts.storage.xi4.data().get(), cmprts.storage.pxi4.data().get()},
-      alt_storage{cmprts.d_alt_xi4.data().get(), cmprts.d_alt_pxi4.data().get()},
+      alt_storage{cmprts.alt_storage.xi4.data().get(), cmprts.alt_storage.pxi4.data().get()},
       off_(cmprts.by_block_.d_off.data().get()),
       bidx_(cmprts.by_block_.d_idx.data().get()),
       id_(cmprts.by_block_.d_id.data().get()),

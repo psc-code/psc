@@ -113,8 +113,8 @@ void cuda_mparticles<BS>::dump(const std::string& filename) const
 template<typename BS>
 void cuda_mparticles<BS>::swap_alt()
 {
-  thrust::swap(this->storage.xi4, d_alt_xi4);
-  thrust::swap(this->storage.pxi4, d_alt_pxi4);
+  thrust::swap(this->storage.xi4, alt_storage.xi4);
+  thrust::swap(this->storage.pxi4, alt_storage.pxi4);
 }
 
 #define THREADS_PER_BLOCK 256
@@ -301,7 +301,7 @@ void cuda_mparticles<BS>::reorder_and_offsets(const thrust::device_vector<uint>&
 
   k_reorder_and_offsets<<<dimGrid, dimBlock>>>(this->n_prts, this->storage.xi4.data().get(),
 					       this->storage.pxi4.data().get(),
-					       d_alt_xi4.data().get(), d_alt_pxi4.data().get(),
+					       alt_storage.xi4.data().get(), alt_storage.pxi4.data().get(),
 					       d_idx.data().get(),
 					       d_id.data().get(),
 					       d_off.data().get(), this->n_blocks);
@@ -353,7 +353,7 @@ void cuda_mparticles<BS>::reorder(const thrust::device_vector<uint>& d_id)
   
   k_reorder<<<dimGrid, THREADS_PER_BLOCK>>>
     (this->n_prts, d_id.data().get(), this->storage.xi4.data().get(), this->storage.pxi4.data().get(),
-     d_alt_xi4.data().get(), d_alt_pxi4.data().get());
+     alt_storage.xi4.data().get(), alt_storage.pxi4.data().get());
 }
 
 // ----------------------------------------------------------------------
