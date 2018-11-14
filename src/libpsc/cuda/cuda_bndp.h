@@ -110,8 +110,8 @@ struct cuda_bndp<CudaMparticles, dim_xyz> : cuda_mparticles_indexer<typename Cud
     auto& cmprts = *_cmprts;
     auto& d_bidx = cmprts.by_block_.d_idx;
     
-    auto begin = thrust::make_zip_iterator(thrust::make_tuple(d_bidx.begin(), cmprts.d_xi4.begin(), cmprts.d_pxi4.begin()));
-    auto end = thrust::make_zip_iterator(thrust::make_tuple(d_bidx.end(), cmprts.d_xi4.end(), cmprts.d_pxi4.end()));
+    auto begin = thrust::make_zip_iterator(thrust::make_tuple(d_bidx.begin(), cmprts.storage.xi4.begin(), cmprts.storage.pxi4.begin()));
+    auto end = thrust::make_zip_iterator(thrust::make_tuple(d_bidx.end(), cmprts.storage.xi4.end(), cmprts.storage.pxi4.end()));
     auto oob = thrust::stable_partition(begin, end, is_inside(cmprts.n_blocks));
 
     n_prts_send = end - oob;
@@ -135,10 +135,10 @@ struct cuda_bndp<CudaMparticles, dim_xyz> : cuda_mparticles_indexer<typename Cud
     thrust::host_vector<float4> h_bnd_pxi4(n_prts_send);
     thrust::host_vector<uint> h_bidx(n_prts_send);
     
-    assert(cmprts->d_xi4.begin() + n_prts + n_prts_send == cmprts->d_xi4.end());
+    assert(cmprts->storage.xi4.begin() + n_prts + n_prts_send == cmprts->storage.xi4.end());
     
-    thrust::copy(cmprts->d_xi4.begin()  + n_prts, cmprts->d_xi4.end(), h_bnd_xi4.begin());
-    thrust::copy(cmprts->d_pxi4.begin() + n_prts, cmprts->d_pxi4.end(), h_bnd_pxi4.begin());
+    thrust::copy(cmprts->storage.xi4.begin()  + n_prts, cmprts->storage.xi4.end(), h_bnd_xi4.begin());
+    thrust::copy(cmprts->storage.pxi4.begin() + n_prts, cmprts->storage.pxi4.end(), h_bnd_pxi4.begin());
     thrust::copy(cmprts->by_block_.d_idx.begin() + n_prts, cmprts->by_block_.d_idx.end(),
 		 h_bidx.begin());
 

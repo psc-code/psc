@@ -185,7 +185,7 @@ TEST_F(CudaMparticlesTest, SetupInternalsDetail)
 
   cmprts->by_block_.reorder_and_offsets(*cmprts);
 
-  float4 xi4_0 = cmprts->d_xi4[0], xi4_1 = cmprts->d_xi4[1], xi4_2 = cmprts->d_xi4[2];
+  float4 xi4_0 = cmprts->storage.xi4[0], xi4_1 = cmprts->storage.xi4[1], xi4_2 = cmprts->storage.xi4[2];
   EXPECT_FLOAT_EQ(xi4_0.y, 35.);
   EXPECT_FLOAT_EQ(xi4_0.z, 15.);
   EXPECT_FLOAT_EQ(xi4_1.y, 5.);
@@ -260,7 +260,7 @@ TEST_F(CudaMparticlesTest, SortByCellDetail)
   EXPECT_EQ(d_off[16], 3);
   
   sort_by_cell.reorder(*cmprts);
-  float4 xi4_0 = cmprts->d_xi4[0], xi4_1 = cmprts->d_xi4[1], xi4_2 = cmprts->d_xi4[2];
+  float4 xi4_0 = cmprts->storage.xi4[0], xi4_1 = cmprts->storage.xi4[1], xi4_2 = cmprts->storage.xi4[2];
   EXPECT_FLOAT_EQ(xi4_0.y, 5.);
   EXPECT_FLOAT_EQ(xi4_0.z, 5.);
   EXPECT_FLOAT_EQ(xi4_1.y, 35.);

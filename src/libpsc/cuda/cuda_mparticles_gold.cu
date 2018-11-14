@@ -9,8 +9,8 @@ void cuda_mparticles<BS>::reorder_and_offsets_slow()
     return;
   }
 
-  thrust::host_vector<float4> h_xi4(this->d_xi4);
-  thrust::host_vector<float4> h_pxi4(this->d_pxi4);
+  thrust::host_vector<float4> h_xi4(this->storage.xi4);
+  thrust::host_vector<float4> h_pxi4(this->storage.pxi4);
   thrust::host_vector<float4> h_alt_xi4(this->n_prts);
   thrust::host_vector<float4> h_alt_pxi4(this->n_prts);
   thrust::host_vector<uint> h_off(this->by_block_.d_off);

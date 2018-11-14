@@ -65,9 +65,9 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
     // move every particle one full cell to the right (+y, that is)
     // (position doesn't actually matter since we'll only look at bidx)
     for (int n = 0; n < cmprts->n_prts; n++) {
-      float4 xi4 = cmprts->d_xi4[n];
+      float4 xi4 = cmprts->storage.xi4[n];
       xi4.y += 10.;
-      cmprts->d_xi4[n] = xi4;
+      cmprts->storage.xi4[n] = xi4;
     }
     auto& d_bidx = cmprts->by_block_.d_idx;
     d_bidx[0] = 4;
@@ -133,8 +133,8 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
   }
 #endif
 
-  auto begin = thrust::make_zip_iterator(thrust::make_tuple(d_bidx.begin(), cmprts.d_xi4.begin(), cmprts.d_pxi4.begin()));
-  auto end = thrust::make_zip_iterator(thrust::make_tuple(d_bidx.end(), cmprts.d_xi4.end(), cmprts.d_pxi4.end()));
+  auto begin = thrust::make_zip_iterator(thrust::make_tuple(d_bidx.begin(), cmprts.storage.xi4.begin(), cmprts.storage.pxi4.begin()));
+  auto end = thrust::make_zip_iterator(thrust::make_tuple(d_bidx.end(), cmprts.storage.xi4.end(), cmprts.storage.pxi4.end()));
   auto oob = thrust::stable_partition(begin, end, is_inside(cmprts.n_blocks));
 
 #if 0
@@ -146,10 +146,10 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 #endif
 
   EXPECT_EQ(oob, begin + 2);
-  EXPECT_EQ(cuda_float_as_int(float4(cmprts.d_xi4[0]).w), 0);
-  EXPECT_EQ(cuda_float_as_int(float4(cmprts.d_xi4[1]).w), 2);
-  EXPECT_EQ(cuda_float_as_int(float4(cmprts.d_xi4[2]).w), 1);
-  EXPECT_EQ(cuda_float_as_int(float4(cmprts.d_xi4[3]).w), 3);
+  EXPECT_EQ(cuda_float_as_int(float4(cmprts.storage.xi4[0]).w), 0);
+  EXPECT_EQ(cuda_float_as_int(float4(cmprts.storage.xi4[1]).w), 2);
+  EXPECT_EQ(cuda_float_as_int(float4(cmprts.storage.xi4[2]).w), 1);
+  EXPECT_EQ(cuda_float_as_int(float4(cmprts.storage.xi4[3]).w), 3);
 
   cbndp->n_prts_send = end - oob;
 
@@ -160,8 +160,8 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 
   // particles 1, 3, which need to be exchanged, should now be at the
   // end of the regular array
-  EXPECT_EQ(cuda_float_as_int(float4(cmprts.d_xi4[cmprts.n_prts  ]).w), 1);
-  EXPECT_EQ(cuda_float_as_int(float4(cmprts.d_xi4[cmprts.n_prts+1]).w), 3);
+  EXPECT_EQ(cuda_float_as_int(float4(cmprts.storage.xi4[cmprts.n_prts  ]).w), 1);
+  EXPECT_EQ(cuda_float_as_int(float4(cmprts.storage.xi4[cmprts.n_prts+1]).w), 3);
 
   // test copy_from_dev_and_convert
   cbndp->copy_from_dev_and_convert(&cmprts, cbndp->n_prts_send);
@@ -263,8 +263,8 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
 
   // and the particle have been appended after the old end of the particle list
   int n_prts_old = cmprts.n_prts - n_prts_recv;
-  EXPECT_EQ(cuda_float_as_int(float4(cmprts.d_xi4[n_prts_old  ]).w), 3);
-  EXPECT_EQ(cuda_float_as_int(float4(cmprts.d_xi4[n_prts_old+1]).w), 1);
+  EXPECT_EQ(cuda_float_as_int(float4(cmprts.storage.xi4[n_prts_old  ]).w), 3);
+  EXPECT_EQ(cuda_float_as_int(float4(cmprts.storage.xi4[n_prts_old+1]).w), 1);
 
   // block indices have been calculated
   auto& d_bidx = cmprts.by_block_.d_idx;

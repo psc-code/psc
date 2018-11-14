@@ -17,6 +17,15 @@
 // ======================================================================
 // MparticlesCudaStorage
 
+struct MparticlesCudaStorage
+{
+  thrust::device_vector<float4> xi4;
+  thrust::device_vector<float4> pxi4;
+};
+
+// ======================================================================
+// DMparticlesCudaStorage
+
 struct DMparticlesCudaStorage
 {
   float4 *xi4;
@@ -43,8 +52,7 @@ struct cuda_mparticles_base : cuda_mparticles_indexer<BS>
   void from_device(float4 *xi4, float4 *pxi4, uint n_prts, uint off);
   
   // per particle
-  thrust::device_vector<float4> d_xi4;
-  thrust::device_vector<float4> d_pxi4;
+  MparticlesCudaStorage storage;
 
   // per block
   cuda_mparticles_sort2 by_block_;
@@ -171,7 +179,7 @@ struct DMparticlesCuda : DParticleIndexer<BS_>
       fnqys_(cmprts.grid_.domain.dx[1] * fnqs_ / dt_),
       fnqzs_(cmprts.grid_.domain.dx[2] * fnqs_ / dt_),
       dqs_(.5f * cmprts.grid_.norm.eta * dt_),
-      storage{cmprts.d_xi4.data().get(), cmprts.d_pxi4.data().get()},
+      storage{cmprts.storage.xi4.data().get(), cmprts.storage.pxi4.data().get()},
       alt_storage{cmprts.d_alt_xi4.data().get(), cmprts.d_alt_pxi4.data().get()},
       off_(cmprts.by_block_.d_off.data().get()),
       bidx_(cmprts.by_block_.d_idx.data().get()),
@@ -253,8 +261,8 @@ void cuda_mparticles<BS>::set_particles(uint p, F getter)
     pxi4[n].w = prt.w * this->grid_.kinds[kind].q;
   }
 
-  thrust::copy(xi4.begin(), xi4.end(), &this->d_xi4[off]);
-  thrust::copy(pxi4.begin(), pxi4.end(), &this->d_pxi4[off]);
+  thrust::copy(xi4.begin(), xi4.end(), &this->storage.xi4[off]);
+  thrust::copy(pxi4.begin(), pxi4.end(), &this->storage.pxi4[off]);
 }
 
 

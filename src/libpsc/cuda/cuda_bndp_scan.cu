@@ -52,8 +52,8 @@ k_reorder_send_by_id(uint nr_prts_send, uint *d_xchg_ids,
 template<typename CudaMparticles, typename DIM>
 void cuda_bndp<CudaMparticles, DIM>::reorder_send_by_id(CudaMparticles* cmprts, uint n_prts_send)
 {
-  cmprts->d_xi4.resize(cmprts->n_prts + n_prts_send);
-  cmprts->d_pxi4.resize(cmprts->n_prts + n_prts_send);
+  cmprts->storage.xi4.resize(cmprts->n_prts + n_prts_send);
+  cmprts->storage.pxi4.resize(cmprts->n_prts + n_prts_send);
   
   if (n_prts_send == 0) {
     return;
@@ -63,8 +63,8 @@ void cuda_bndp<CudaMparticles, DIM>::reorder_send_by_id(CudaMparticles* cmprts, 
 
   k_reorder_send_by_id<<<dimGrid, THREADS_PER_BLOCK>>>
     (n_prts_send, cmprts->by_block_.d_id.data().get() + cmprts->n_prts - n_prts_send,
-     cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(),
-     cmprts->d_xi4.data().get() + cmprts->n_prts, cmprts->d_pxi4.data().get() + cmprts->n_prts);
+     cmprts->storage.xi4.data().get(), cmprts->storage.pxi4.data().get(),
+     cmprts->storage.xi4.data().get() + cmprts->n_prts, cmprts->storage.pxi4.data().get() + cmprts->n_prts);
   cuda_sync_if_enabled();
 }
 
@@ -75,8 +75,8 @@ template<typename CudaMparticles, typename DIM>
 void cuda_bndp<CudaMparticles, DIM>::reorder_send_by_id_gold(CudaMparticles *cmprts, uint n_prts_send)
 {
   thrust::host_vector<uint> h_id(cmprts->by_block_.d_id.data(), cmprts->by_block_.d_id.data() + cmprts->n_prts);
-  thrust::host_vector<float4> h_xi4(cmprts->d_xi4.data(), cmprts->d_xi4.data() + cmprts->n_prts + n_prts_send);
-  thrust::host_vector<float4> h_pxi4(cmprts->d_pxi4.data(), cmprts->d_pxi4.data() + cmprts->n_prts + n_prts_send);
+  thrust::host_vector<float4> h_xi4(cmprts->storage.xi4.data(), cmprts->storage.xi4.data() + cmprts->n_prts + n_prts_send);
+  thrust::host_vector<float4> h_pxi4(cmprts->storage.pxi4.data(), cmprts->storage.pxi4.data() + cmprts->n_prts + n_prts_send);
   
   for (int n = 0; n < n_prts_send; n++) {
     uint id = h_id[cmprts->n_prts - n_prts_send + n];
@@ -84,8 +84,8 @@ void cuda_bndp<CudaMparticles, DIM>::reorder_send_by_id_gold(CudaMparticles *cmp
     h_pxi4[cmprts->n_prts + n] = h_pxi4[id];
   }
 
-  thrust::copy(h_xi4.begin(), h_xi4.end(), cmprts->d_xi4.data());
-  thrust::copy(h_pxi4.begin(), h_pxi4.end(), cmprts->d_pxi4.data());
+  thrust::copy(h_xi4.begin(), h_xi4.end(), cmprts->storage.xi4.data());
+  thrust::copy(h_pxi4.begin(), h_pxi4.end(), cmprts->storage.pxi4.data());
 }
 
 // ----------------------------------------------------------------------
@@ -120,15 +120,15 @@ void cuda_bndp<CudaMparticles, DIM>::reorder_send_buf_total(CudaMparticles *cmpr
 
   cmprts->resize(cmprts->n_prts + n_prts_send);
 
-  float4 *xchg_xi4 = cmprts->d_xi4.data().get() + cmprts->n_prts;
-  float4 *xchg_pxi4 = cmprts->d_pxi4.data().get() + cmprts->n_prts;
+  float4 *xchg_xi4 = cmprts->storage.xi4.data().get() + cmprts->n_prts;
+  float4 *xchg_pxi4 = cmprts->storage.pxi4.data().get() + cmprts->n_prts;
   
   dim3 dimBlock(THREADS_PER_BLOCK, 1);
   dim3 dimGrid((cmprts->n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1);
   
   k_reorder_send_buf_total<<<dimGrid, dimBlock>>>(cmprts->n_prts, cmprts->n_blocks,
 						  cmprts->by_block_.d_idx.data().get(), d_sums.data().get(),
-						  cmprts->d_xi4.data().get(), cmprts->d_pxi4.data().get(),
+						  cmprts->storage.xi4.data().get(), cmprts->storage.pxi4.data().get(),
 						  xchg_xi4, xchg_pxi4);
   cuda_sync_if_enabled();
 }

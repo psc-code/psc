@@ -14,7 +14,7 @@ bool cuda_mparticles<BS>::check_in_patch_unordered_slow()
   uint off = 0;
   for (int p = 0; p < this->n_patches; p++) {
     for (int n = 0; n < n_prts_by_patch[p]; n++) {
-      int bidx = this->blockIndex(this->d_xi4[off + n], p);
+      int bidx = this->blockIndex(this->storage.xi4[off + n], p);
       if (!(bidx >= 0 && bidx <= this->n_blocks)) return false;
     }
     off += n_prts_by_patch[p];
@@ -40,7 +40,7 @@ bool cuda_mparticles<BS>::check_bidx_id_unordered_slow()
   uint off = 0;
   for (int p = 0; p < this->n_patches; p++) {
     for (int n = 0; n < n_prts_by_patch[p]; n++) {
-      int bidx = this->blockIndex(this->d_xi4[off + n], p);
+      int bidx = this->blockIndex(this->storage.xi4[off + n], p);
       if (!(bidx == this->by_block_.d_idx[off+n])) return false;
       if (!(off+n == this->by_block_.d_id[off+n])) return false;
     }
@@ -58,7 +58,7 @@ bool cuda_mparticles<BS>::check_bidx_id_unordered_slow()
 template<typename BS>
 bool cuda_mparticles<BS>::check_ordered()
 {
-  thrust::host_vector<float4> h_xi4(this->d_xi4.data(), this->d_xi4.data() + this->n_prts);
+  thrust::host_vector<float4> h_xi4(this->storage.xi4.data(), this->storage.xi4.data() + this->n_prts);
   thrust::host_vector<uint> h_off(this->by_block_.d_off);
   thrust::host_vector<uint> h_id(this->by_block_.d_id.data(), this->by_block_.d_id.data() + this->n_prts);
 
@@ -107,7 +107,7 @@ bool cuda_mparticles<BS>::check_bidx_after_push()
     int begin = this->by_block_.d_off[p * this->n_blocks_per_patch];
     int end = this->by_block_.d_off[(p+1) * this->n_blocks_per_patch];
     for (int n = begin; n < end; n++) {
-      float4 xi4 = this->d_xi4[n];
+      float4 xi4 = this->storage.xi4[n];
       int bidx = this->by_block_.d_idx[n];
       int bidx2 = this->blockIndex(xi4, p);
       if (bidx2 < 0) bidx2 = this->n_blocks;

@@ -150,10 +150,10 @@ void cuda_bndp<CudaMparticles, DIM>::copy_from_dev_and_convert(CudaMparticles *c
   thrust::host_vector<float4> h_bnd_xi4(n_prts_send);
   thrust::host_vector<float4> h_bnd_pxi4(n_prts_send);
 
-  assert(cmprts->d_xi4.begin() + n_prts + n_prts_send == cmprts->d_xi4.end());
+  assert(cmprts->storage.xi4.begin() + n_prts + n_prts_send == cmprts->storage.xi4.end());
 
-  thrust::copy(cmprts->d_xi4.begin()  + n_prts, cmprts->d_xi4.end(), h_bnd_xi4.begin());
-  thrust::copy(cmprts->d_pxi4.begin() + n_prts, cmprts->d_pxi4.end(), h_bnd_pxi4.begin());
+  thrust::copy(cmprts->storage.xi4.begin()  + n_prts, cmprts->storage.xi4.end(), h_bnd_xi4.begin());
+  thrust::copy(cmprts->storage.pxi4.begin() + n_prts, cmprts->storage.pxi4.end(), h_bnd_pxi4.begin());
 
   uint off = 0;
   for (int p = 0; p < n_patches; p++) {
@@ -221,8 +221,8 @@ uint cuda_bndp<CudaMparticles, DIM>::convert_and_copy_to_dev(CudaMparticles *cmp
 
   cmprts->resize(cmprts->n_prts + n_recv);
 
-  thrust::copy(h_bnd_xi4.begin(), h_bnd_xi4.end(), cmprts->d_xi4.begin() + cmprts->n_prts);
-  thrust::copy(h_bnd_pxi4.begin(), h_bnd_pxi4.end(), cmprts->d_pxi4.begin() + cmprts->n_prts);
+  thrust::copy(h_bnd_xi4.begin(), h_bnd_xi4.end(), cmprts->storage.xi4.begin() + cmprts->n_prts);
+  thrust::copy(h_bnd_pxi4.begin(), h_bnd_pxi4.end(), cmprts->storage.pxi4.begin() + cmprts->n_prts);
 
   // for consistency, use same block indices that we counted earlier
   // OPT unneeded?
@@ -318,8 +318,8 @@ uint cuda_bndp<CudaMparticles, dim_xyz>::convert_and_copy_to_dev(CudaMparticles*
 
   cmprts->resize(cmprts->n_prts + n_recv);
 
-  thrust::copy(h_bnd_xi4.begin(), h_bnd_xi4.end(), cmprts->d_xi4.begin() + cmprts->n_prts);
-  thrust::copy(h_bnd_pxi4.begin(), h_bnd_pxi4.end(), cmprts->d_pxi4.begin() + cmprts->n_prts);
+  thrust::copy(h_bnd_xi4.begin(), h_bnd_xi4.end(), cmprts->storage.xi4.begin() + cmprts->n_prts);
+  thrust::copy(h_bnd_pxi4.begin(), h_bnd_pxi4.end(), cmprts->storage.pxi4.begin() + cmprts->n_prts);
   thrust::copy(h_bnd_idx.begin(), h_bnd_idx.end(), cmprts->by_block_.d_idx.begin() + cmprts->n_prts);
   // // slight abuse of the now unused last part of spine_cnts
   // thrust::copy(h_bnd_cnt.begin(), h_bnd_cnt.end(), d_spine_cnts.begin() + 10 * n_blocks);

@@ -278,7 +278,7 @@ k_heating_run_foil(cuda_heating_foil d_foil, DMparticlesCuda<BS> dmprts, struct 
     if (n < block_begin) {
       continue;
     }
-    float4 xi4 = dmprts.xi4_[n];
+    float4 xi4 = dmprts.storage.xi4[n];
     
     int prt_kind = __float_as_int(xi4.w);
     if (prt_kind != d_foil.kind) {
@@ -293,9 +293,9 @@ k_heating_run_foil(cuda_heating_foil d_foil, DMparticlesCuda<BS> dmprts, struct 
     float H = d_foil.get_H(xx);
     //d_pxi4[n].w = H;
     if (H > 0) {
-      float4 pxi4 = dmprts.pxi4_[n];
+      float4 pxi4 = dmprts.storage.pxi4[n];
       d_foil.d_particle_kick(&pxi4, H, &local_state);
-      dmprts.pxi4_[n] = pxi4;
+      dmprts.storage.pxi4[n] = pxi4;
     }
   }
 
