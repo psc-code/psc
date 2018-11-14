@@ -278,7 +278,7 @@ struct CudaPushParticles
       // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
       advance.push_x(prt.xi, vxi);
     }
-    prt.store_position(storage, n);
+    storage.store_position(prt, n);
 
     // has moved into which block? (given as relative shift)
     dmprts.bidx_[n] = dmprts.blockShift(prt.xi, current_block.p, current_block.bid);
@@ -357,7 +357,7 @@ struct CudaPushParticles
     static_assert(Config::Deposit::value == DEPOSIT_VB_3D, "calc_j dim_xyz needs 3d deposit");
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
     advance.push_x(prt.xi, vxi);
-    prt.store_position(storage, n);
+    storage.store_position(prt, n);
 
     // position xp at x^(n+1.5)
     for (int d = 0; d < 3; d++) {
@@ -462,19 +462,17 @@ struct CudaPushParticles
       struct d_particle prt;
       if (REORDER) {
 	uint id = dmprts.id_[n];
-	prt.load_position(dmprts.storage, id);
-	prt.load_momentum(dmprts.storage, id);
+	prt = dmprts.storage.load(id);
       } else {
-	prt.load_position(dmprts.storage, n);
-	prt.load_momentum(dmprts.storage, n);
+	prt = dmprts.storage.load(n);
       }
       push_part_one(dmprts, prt, n, fld_cache, current_block);
       
       if (REORDER) {
-	prt.store_momentum(dmprts.alt_storage, n);
+	dmprts.alt_storage.store_momentum(prt, n);
 	calc_j(dmprts, prt, n, dmprts.alt_storage, scurr, current_block, dim{});
       } else {
-	prt.store_momentum(dmprts.storage, n);
+	dmprts.storage.store_momentum(prt, n);
 	calc_j(dmprts, prt, n, dmprts.storage, scurr, current_block, dim{});
       }
     }

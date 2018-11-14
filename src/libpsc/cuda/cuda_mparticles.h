@@ -23,54 +23,47 @@ struct MparticlesCudaStorage
   thrust::device_vector<float4> pxi4;
 };
 
+// ----------------------------------------------------------------------
+// d_particle
+
+struct d_particle
+{
+  float xi[3];
+  float kind_as_float;
+  float pxi[3];
+  float qni_wni;
+};
+
 // ======================================================================
 // DMparticlesCudaStorage
 
 struct DMparticlesCudaStorage
 {
+  // FIXME, could be operator[]
+  __host__ __device__
+  struct d_particle load(int n)
+  {
+    float4 _xi4 = xi4[n];
+    float4 _pxi4 = pxi4[n];
+    return {{_xi4.x, _xi4.y, _xi4.z}, _xi4.w, {_pxi4.x, _pxi4.y, _pxi4.z}, _pxi4.w};
+  }
+
+  __host__ __device__
+  void store_position(const d_particle& prt, int n)
+  {
+    float4 _xi4 = { prt.xi[0], prt.xi[1], prt.xi[2], prt.kind_as_float };
+    xi4[n] = _xi4;
+  }
+
+  __host__ __device__
+  void store_momentum(const d_particle& prt, int n)
+  {
+    float4 _pxi4 = { prt.pxi[0], prt.pxi[1], prt.pxi[2], prt.qni_wni };
+    pxi4[n] = _pxi4;
+  }
+  
   float4 *xi4;
   float4 *pxi4;
-};
-
-// ----------------------------------------------------------------------
-// struct d_particle
-
-struct d_particle
-{
-  void __device__ load_position(const DMparticlesCudaStorage& storage, int n)
-  {
-    float4 _xi4 = storage.xi4[n];
-    xi[0]         = _xi4.x;
-    xi[1]         = _xi4.y;
-    xi[2]         = _xi4.z;
-    kind_as_float = _xi4.w;
-  }
-  
-  void __device__ load_momentum(const DMparticlesCudaStorage& storage, int n)
-  {
-    float4 _pxi4 = storage.pxi4[n];
-    pxi[0]        = _pxi4.x;
-    pxi[1]        = _pxi4.y;
-    pxi[2]        = _pxi4.z;
-    qni_wni       = _pxi4.w;
-  }
-
-  void __device__ store_position(DMparticlesCudaStorage& storage, int n)
-  {
-    float4 xi4 = { xi[0], xi[1], xi[2], kind_as_float };
-    storage.xi4[n] = xi4;
-  }
-
-  void __device__ store_momentum(DMparticlesCudaStorage& storage, int n)
-  {
-    float4 pxi4 = { pxi[0], pxi[1], pxi[2], qni_wni };
-    storage.pxi4[n] = pxi4;
-  }
-  
-  float xi[3];
-  float kind_as_float;
-  float pxi[3];
-  float qni_wni;
 };
 
 // ======================================================================
