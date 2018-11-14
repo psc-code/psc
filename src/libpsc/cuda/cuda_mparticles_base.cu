@@ -73,29 +73,5 @@ void cuda_mparticles_base<BS>::get_size_all(uint *n_prts_by_patch)
   }
 }
 
-// ----------------------------------------------------------------------
-// to_device
-
-template<typename BS>
-void cuda_mparticles_base<BS>::to_device(float4 *xi4, float4 *pxi4,
-					 uint n_prts, uint off)
-{
-  assert(off + n_prts <= storage.xi4.size());
-  thrust::copy(xi4, xi4 + n_prts, storage.xi4.begin() + off);
-  thrust::copy(pxi4, pxi4 + n_prts, storage.pxi4.begin() + off);
-}
-
-// ----------------------------------------------------------------------
-// from_device
-
-template<typename BS>
-void cuda_mparticles_base<BS>::from_device(float4 *xi4, float4 *pxi4,
-				       uint n_prts, uint off)
-{
-  assert(off + n_prts <= storage.xi4.size());
-  thrust::copy(storage.xi4.begin() + off, storage.xi4.begin() + off + n_prts, xi4);
-  thrust::copy(storage.pxi4.begin() + off, storage.pxi4.begin() + off + n_prts, pxi4);
-}
-
 template struct cuda_mparticles_base<BS144>;
 template struct cuda_mparticles_base<BS444>;
