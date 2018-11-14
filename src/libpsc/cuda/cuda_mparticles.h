@@ -32,31 +32,6 @@ struct DMparticlesCudaStorage
   float4 *pxi4;
 };
 
-// ======================================================================
-// cuda_mparticles_base
-
-template<typename BS>
-struct cuda_mparticles_base : cuda_mparticles_indexer<BS>
-{
-  cuda_mparticles_base(const Grid_t& grid);
-  // copy constructor would work fine, but we don't want to copy everything
-  // by accident
-  cuda_mparticles_base(const cuda_mparticles<BS>&) = delete;
-
-  void reserve_all(uint sinze);
-  void resize_all(const uint *n_prts_by_patch);
-  void get_size_all(uint *n_prts_by_patch);
-
-  // per particle
-  MparticlesCudaStorage storage;
-
-  // per block
-  cuda_mparticles_sort2 by_block_;
-
-  uint n_prts = 0;                       // total # of particles across all patches
-  const Grid_t& grid_;
-};
-
 // ----------------------------------------------------------------------
 // struct d_particle
 
@@ -96,6 +71,31 @@ struct d_particle
   float kind_as_float;
   float pxi[3];
   float qni_wni;
+};
+
+// ======================================================================
+// cuda_mparticles_base
+
+template<typename BS>
+struct cuda_mparticles_base : cuda_mparticles_indexer<BS>
+{
+  cuda_mparticles_base(const Grid_t& grid);
+  // copy constructor would work fine, but we don't want to copy everything
+  // by accident
+  cuda_mparticles_base(const cuda_mparticles<BS>&) = delete;
+
+  void reserve_all(uint sinze);
+  void resize_all(const uint *n_prts_by_patch);
+  void get_size_all(uint *n_prts_by_patch);
+
+  // per particle
+  MparticlesCudaStorage storage;
+
+  // per block
+  cuda_mparticles_sort2 by_block_;
+
+  uint n_prts = 0;                       // total # of particles across all patches
+  const Grid_t& grid_;
 };
 
 // ----------------------------------------------------------------------
