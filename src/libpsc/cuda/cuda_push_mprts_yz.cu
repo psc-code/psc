@@ -239,7 +239,7 @@ struct CudaPushParticles
   // calc_j -- dispatched for dim_yz
   
   __device__ static void
-  calc_j(DMparticles& dmprts, struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
+  calc_j(DMparticles& dmprts, struct d_particle& prt, int n, float4 *d_xi4,
 	 Curr &scurr, const Block& current_block, dim_yz tag)
   {
     AdvanceParticle<real_t, dim> advance{dmprts.dt()};
@@ -274,12 +274,11 @@ struct CudaPushParticles
 
       // x^(n+1.0), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
       advance.push_x(prt.xi, vxi, .5f);
-      prt.store_position(d_xi4, n);
     } else if (Config::Deposit::value == DEPOSIT_VB_3D) {
       // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
       advance.push_x(prt.xi, vxi);
-      prt.store_position(d_xi4, n);
     }
+    prt.store_position(d_xi4, n);
 
     // has moved into which block? (given as relative shift)
     dmprts.bidx_[n] = dmprts.blockShift(prt.xi, current_block.p, current_block.bid);
@@ -340,7 +339,7 @@ struct CudaPushParticles
   // calc_j -- dispatched for dim_xyz
   
   __device__ static void
-  calc_j(DMparticles& dmprts, struct d_particle& prt, int n, float4 *d_xi4, float4 *d_pxi4,
+  calc_j(DMparticles& dmprts, struct d_particle& prt, int n, float4 *d_xi4,
 	 Curr &scurr, const Block& current_block, dim_xyz tag)
   {
     AdvanceParticle<real_t, dim> advance{dmprts.dt()};
@@ -473,9 +472,9 @@ struct CudaPushParticles
       
       if (REORDER) {
 	prt.store_momentum(dmprts.alt_pxi4_, n);
-	calc_j(dmprts, prt, n, dmprts.alt_xi4_, dmprts.alt_pxi4_, scurr, current_block, dim{});
+	calc_j(dmprts, prt, n, dmprts.alt_xi4_, scurr, current_block, dim{});
       } else {
-	calc_j(dmprts, prt, n, dmprts.xi4_, dmprts.pxi4_, scurr, current_block, dim{});
+	calc_j(dmprts, prt, n, dmprts.xi4_, scurr, current_block, dim{});
 	prt.store_momentum(dmprts.pxi4_, n);
       }
     }
