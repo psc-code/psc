@@ -55,11 +55,11 @@ rho_1st_nc_cuda_run(DMparticles dmprts, DMFields dmflds)
     struct d_particle prt;
     if (REORDER) {
       uint id = dmprts.id_[n];
-      prt.load_position(dmprts.storage.xi4, id);
-      prt.load_momentum(dmprts.storage.pxi4, id);
+      prt.load_position(dmprts.storage, id);
+      prt.load_momentum(dmprts.storage, id);
     } else {
-      prt.load_position(dmprts.storage.xi4, n);
-      prt.load_momentum(dmprts.storage.pxi4, n);
+      prt.load_position(dmprts.storage, n);
+      prt.load_momentum(dmprts.storage, n);
     }
 
     float fnq = prt.qni_wni * dmprts.fnqs();
@@ -111,11 +111,11 @@ n_1st_cuda_run(DMparticlesCuda<BS> dmprts, DMFields dmflds)
     struct d_particle prt;
     if (REORDER) {
       uint id = dmprts.id_[n];
-      prt.load_position(dmprts.storage.xi4, id);
-      prt.load_momentum(dmprts.storage.pxi4, id);
+      prt.load_position(dmprts.storage, id);
+      prt.load_momentum(dmprts.storage, id);
     } else {
-      prt.load_position(dmprts.storage.xi4, n);
-      prt.load_momentum(dmprts.storage.pxi4, n);
+      prt.load_position(dmprts.storage, n);
+      prt.load_momentum(dmprts.storage, n);
     }
 
     int kind = __float_as_int(prt.kind_as_float);

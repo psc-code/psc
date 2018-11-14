@@ -62,34 +62,34 @@ struct cuda_mparticles_base : cuda_mparticles_indexer<BS>
 
 struct d_particle
 {
-  void __device__ load_position(float4* d_xi4, int n)
+  void __device__ load_position(const DMparticlesCudaStorage& storage, int n)
   {
-    float4 _xi4 = d_xi4[n];
+    float4 _xi4 = storage.xi4[n];
     xi[0]         = _xi4.x;
     xi[1]         = _xi4.y;
     xi[2]         = _xi4.z;
     kind_as_float = _xi4.w;
   }
   
-  void __device__ load_momentum(float4* d_pxi4, int n)
+  void __device__ load_momentum(const DMparticlesCudaStorage& storage, int n)
   {
-    float4 _pxi4 = d_pxi4[n];
+    float4 _pxi4 = storage.pxi4[n];
     pxi[0]        = _pxi4.x;
     pxi[1]        = _pxi4.y;
     pxi[2]        = _pxi4.z;
     qni_wni       = _pxi4.w;
   }
 
-  void __device__ store_position(float4* d_xi4, int n)
+  void __device__ store_position(DMparticlesCudaStorage& storage, int n)
   {
     float4 xi4 = { xi[0], xi[1], xi[2], kind_as_float };
-    d_xi4[n] = xi4;
+    storage.xi4[n] = xi4;
   }
 
-  void __device__ store_momentum(float4* d_pxi4, int n)
+  void __device__ store_momentum(DMparticlesCudaStorage& storage, int n)
   {
     float4 pxi4 = { pxi[0], pxi[1], pxi[2], qni_wni };
-    d_pxi4[n] = pxi4;
+    storage.pxi4[n] = pxi4;
   }
   
   float xi[3];
