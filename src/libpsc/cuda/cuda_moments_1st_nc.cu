@@ -60,11 +60,11 @@ rho_1st_nc_cuda_run(DMparticles dmprts, DMFields dmflds)
       prt = dmprts.storage.load(n);
     }
 
-    float fnq = prt.qni_wni * dmprts.fnqs();
+    float fnq = prt.qni_wni() * dmprts.fnqs();
     
     int lf[3];
     float of[3];
-    dmprts.find_idx_off_1st(prt.xi, lf, of, float(0.));
+    dmprts.find_idx_off_1st(prt.x(), lf, of, float(0.));
 
     if (dim::InvarX::value) { // FIXME, ugly...
       scurr.add(0, 0, lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnq);
@@ -114,13 +114,13 @@ n_1st_cuda_run(DMparticlesCuda<BS> dmprts, DMFields dmflds)
       prt = dmprts.storage.load(n);
     }
 
-    int kind = __float_as_int(prt.kind_as_float);
-    float wni = prt.qni_wni * dmprts.q_inv(kind);
+    int kind = prt.kind();
+    float wni = prt.qni_wni() * dmprts.q_inv(kind);
     float fnq = wni * dmprts.fnqs();
     
     int lf[3];
     float of[3];
-    dmprts.find_idx_off_1st(prt.xi, lf, of, float(-.5));
+    dmprts.find_idx_off_1st(prt.x(), lf, of, float(-.5));
 
     if (dim::InvarX::value) { // FIXME, ugly...
       scurr.add(kind, 0, lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnq);

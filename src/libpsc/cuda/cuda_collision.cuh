@@ -127,27 +127,25 @@ struct CudaCollision
     __device__
     real_t q() const
     {
-      int kind = __float_as_int(prt_.kind_as_float);
-      return dmprts_.q(kind);
+      return dmprts_.q(prt_.kind());
     }
 
     __device__
     real_t m() const
     {
-      int kind = __float_as_int(prt_.kind_as_float);
-      return dmprts_.m(kind);
+      return dmprts_.m(prt_.kind());
     }
     
     __device__
     real_t u(int d) const
     {
-      return prt_.pxi[d];
+      return prt_.u()[d];
     }
 
     __device__
     real_t& u(int d)
     {
-      return prt_.pxi[d];
+      return prt_.u()[d];
     }
 
   private:
