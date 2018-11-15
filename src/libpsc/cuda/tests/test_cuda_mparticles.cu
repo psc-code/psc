@@ -123,9 +123,9 @@ TEST_F(CudaMparticlesTest, SetParticles)
     int k = nn % grid_->ldims[2]; nn /= grid_->ldims[2];
     int j = nn % grid_->ldims[1]; nn /= grid_->ldims[1];
     int i = nn;
-    EXPECT_FLOAT_EQ(prt.xi_[0], (i + .5) * grid_->domain.dx[0]);
-    EXPECT_FLOAT_EQ(prt.xi_[1], (j + .5) * grid_->domain.dx[1]);
-    EXPECT_FLOAT_EQ(prt.xi_[2], (k + .5) * grid_->domain.dx[2]);
+    EXPECT_FLOAT_EQ(prt.x()[0], (i + .5) * grid_->domain.dx[0]);
+    EXPECT_FLOAT_EQ(prt.x()[1], (j + .5) * grid_->domain.dx[1]);
+    EXPECT_FLOAT_EQ(prt.x()[2], (k + .5) * grid_->domain.dx[2]);
   }
 }
 
@@ -290,7 +290,7 @@ TEST_F(CudaMparticlesTest, SetupInternals)
   // check that particles are now in Fortran order
   int cur_bidx = 0;
   for (auto prt: cmprts->get_particles(0)) {
-    float4 xi = { prt.xi_[0], prt.xi_[1], prt.xi_[2] };
+    float4 xi = { prt.x()[0], prt.x()[1], prt.x()[2] };
     int bidx = cmprts->blockIndex(xi, 0);
     EXPECT_GE(bidx, cur_bidx);
     cur_bidx = bidx;
@@ -340,8 +340,8 @@ TEST_F(CudaMparticlesTest, CudaCollision)
 
   coll(*cmprts);
   for (auto prt: cmprts->get_particles(0)) {
-    printf("xi %g %g pxi %g %g %g\n", prt.xi_[1], prt.xi_[2],
-	   prt.pxi_[0], prt.pxi_[1], prt.pxi_[2]);
+    printf("xi %g %g pxi %g %g %g\n", prt.x()[1], prt.x()[2],
+	   prt.u()[0], prt.u()[1], prt.u()[2]);
   }
 }
 

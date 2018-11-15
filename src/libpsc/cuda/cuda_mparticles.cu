@@ -422,13 +422,13 @@ void cuda_mparticles<BS>::inject_buf(const cuda_mparticles_prt *buf,
       float4 *pxi4 = &h_pxi4[off + n];
       const cuda_mparticles_prt *prt = &buf[off + n];
       
-      xi4->x  = prt->xi_[0];
-      xi4->y  = prt->xi_[1];
-      xi4->z  = prt->xi_[2];
-      xi4->w  = cuda_int_as_float(prt->kind_);
-      pxi4->x = prt->pxi_[0];
-      pxi4->y = prt->pxi_[1];
-      pxi4->z = prt->pxi_[2];
+      xi4->x  = prt->x()[0];
+      xi4->y  = prt->x()[1];
+      xi4->z  = prt->x()[2];
+      xi4->w  = cuda_int_as_float(prt->kind());
+      pxi4->x = prt->u()[0];
+      pxi4->y = prt->u()[1];
+      pxi4->z = prt->u()[2];
       pxi4->w = prt->qni_wni();
 
       auto bidx = this->blockIndex(*xi4, p);
@@ -508,13 +508,13 @@ void cuda_mparticles<BS>::inject_buf(const particle_inject *buf,
       auto prt = cuda_mparticles_prt{Real3(x), new_prt.kind,
 				     Real3(Double3::fromPointer(new_prt.u)), real_t(new_prt.w)};
   
-      xi4->x  = prt.xi_[0];
-      xi4->y  = prt.xi_[1];
-      xi4->z  = prt.xi_[2];
-      xi4->w  = cuda_int_as_float(prt.kind_);
-      pxi4->x = prt.pxi_[0];
-      pxi4->y = prt.pxi_[1];
-      pxi4->z = prt.pxi_[2];
+      xi4->x  = prt.x()[0];
+      xi4->y  = prt.x()[1];
+      xi4->z  = prt.x()[2];
+      xi4->w  = cuda_int_as_float(prt.kind());
+      pxi4->x = prt.u()[0];
+      pxi4->y = prt.u()[1];
+      pxi4->z = prt.u()[2];
       pxi4->w = prt.qni_wni();
 
       auto bidx = this->blockIndex(*xi4, p);

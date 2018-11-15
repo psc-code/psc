@@ -281,15 +281,15 @@ void cuda_mparticles<BS>::set_particles(uint p, F getter)
 
   for (int n = 0; n < n_prts; n++) {
     struct cuda_mparticles_prt prt = getter(n);
-    this->checkInPatchMod(prt.xi_);
+    this->checkInPatchMod(prt.x());
 
-    xi4[n].x  = prt.xi_[0];
-    xi4[n].y  = prt.xi_[1];
-    xi4[n].z  = prt.xi_[2];
-    xi4[n].w  = cuda_int_as_float(prt.kind_);
-    pxi4[n].x = prt.pxi_[0];
-    pxi4[n].y = prt.pxi_[1];
-    pxi4[n].z = prt.pxi_[2];
+    xi4[n].x  = prt.x()[0];
+    xi4[n].y  = prt.x()[1];
+    xi4[n].z  = prt.x()[2];
+    xi4[n].w  = cuda_int_as_float(prt.kind());
+    pxi4[n].x = prt.u()[0];
+    pxi4[n].y = prt.u()[1];
+    pxi4[n].z = prt.u()[2];
     pxi4[n].w = prt.qni_wni();
   }
 

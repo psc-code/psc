@@ -132,9 +132,9 @@ TEST_F(PushMprtsTest, Accel)
     CudaPushParticles_<CudaConfig1vbec3d<dim_yz, BS144>>::push_mprts(cmprts.get(), cmflds.get());
 
     for (auto prt: cmprts->get_particles(0)) {
-      EXPECT_NEAR(prt.pxi_[0], 1*(n+1), eps);
-      EXPECT_NEAR(prt.pxi_[1], 2*(n+1), eps);
-      EXPECT_NEAR(prt.pxi_[2], 3*(n+1), eps);
+      EXPECT_NEAR(prt.u()[0], 1*(n+1), eps);
+      EXPECT_NEAR(prt.u()[1], 2*(n+1), eps);
+      EXPECT_NEAR(prt.u()[2], 3*(n+1), eps);
     }
   }
 }
@@ -183,9 +183,9 @@ TEST_F(PushMprtsTest, Cyclo)
 		 sin(2*M_PI*(0.125*n_steps)      /(double)n_steps));
     double uz = 1.;
     for (auto prt: cmprts->get_particles(0)) {
-      EXPECT_NEAR(prt.pxi_[0], ux, eps);
-      EXPECT_NEAR(prt.pxi_[1], uy, eps);
-      EXPECT_NEAR(prt.pxi_[2], uz, eps);
+      EXPECT_NEAR(prt.u()[0], ux, eps);
+      EXPECT_NEAR(prt.u()[1], uy, eps);
+      EXPECT_NEAR(prt.u()[2], uz, eps);
     }
   }
 }

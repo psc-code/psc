@@ -50,12 +50,15 @@ struct cuda_mparticles_prt
 
   bool operator!=(const cuda_mparticles_prt& other) const { return !(*this == other); }
 
+  Real3 x() const { return xi_; }
+  Real3 u() const { return pxi_; }
+  int kind() const { return kind_; }
   real_t qni_wni() const { return qni_wni_; }
 
+private:
   Real3 xi_;
   int kind_;
   Real3 pxi_;
-private:
   real_t qni_wni_;
 };
 
@@ -166,15 +169,15 @@ struct MparticlesCuda : MparticlesBase
 	: prt_{prt}, prts_{prts}
       {}
       
-      Real3 u()   const { return prt_.pxi_; }
-      real_t w()  const { return prt_.qni_wni() / prts_.mp_.grid().kinds[prt_.kind_].q; }
-      int kind()  const { return prt_.kind_; }
+      Real3 u()   const { return prt_.u(); }
+      real_t w()  const { return prt_.qni_wni() / prts_.mp_.grid().kinds[prt_.kind()].q; }
+      int kind()  const { return prt_.kind(); }
       
       Double3 position() const
       {
 	auto& patch = prts_.mp_.grid().patches[prts_.p_];
 	
-	return patch.xb + Double3(prt_.xi_);
+	return patch.xb + Double3(prt_.x());
       }
     
     private:
