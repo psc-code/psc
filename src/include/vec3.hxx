@@ -7,12 +7,46 @@
 #include <cassert>
 
 // ======================================================================
+// array
+//
+// Basically the same (or at least, a subset) of std::array, but with CUDA support
+
+template<typename T, std::size_t N>
+struct array
+{
+  using value_type = T;
+  using size_t = std::size_t;
+  
+  T arr[N];
+
+  T  operator[](size_t i) const { return arr[i]; }
+  T& operator[](size_t i)       { return arr[i]; }
+
+  const T* data() const { return arr; }
+  T* data() { return arr; }
+
+  operator T*() { return arr; } // FIXME, should be data()
+};
+
+template <typename T, std::size_t N>
+bool operator==(const array<T, N>& x, const array<T, N>& y)
+{
+  return std::equal(x.arr, x.arr + N, y.arr);
+}
+
+template <typename T, std::size_t N>
+bool operator!=(const array<T, N>& x, const array<T, N>& y)
+{
+  return !(x == y);
+}
+
+// ======================================================================
 // Vec3
 
 template<typename T>
-struct Vec3 : std::array<T, 3>
+struct Vec3 : array<T, 3>
 {
-  using Base = std::array<T, 3>;
+  using Base = array<T, 3>;
   using value_type = typename Base::value_type;
 
   using Base::data;
