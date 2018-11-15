@@ -31,14 +31,16 @@ using CudaMparticles = cuda_mparticles<BS144>;
 
 struct SetParticleTest1
 {
+  using particle_t = CudaMparticles::particle_t;
+
   SetParticleTest1(const Grid_t& grid)
   : grid_(grid)
   {
   }
   
-  cuda_mparticles_prt operator()(int n)
+  particle_t operator()(int n)
   {
-    using Real3 = cuda_mparticles_prt::Real3;
+    using Real3 = particle_t::Real3;
     auto ldims = grid_.ldims;
     auto dx = grid_.domain.dx;
     
@@ -48,7 +50,7 @@ struct SetParticleTest1
     n /= ldims[1];
     int i = n;
 
-    auto prt = cuda_mparticles_prt{
+    auto prt = particle_t{
       Real3(Vec3<double>{dx[0] * (i + .5f), dx[1] * (j + .5f), dx[2] * (k + .5f)}),
       Real3(Vec3<int>{i, j, k}),
       1., 0};
@@ -138,7 +140,7 @@ TEST_F(CudaMparticlesTest, SetupInternalsDetail)
   grid_->kinds.push_back(Grid_t::Kind(-1.,  1., "electron"));
   grid_->kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
 
-  std::vector<cuda_mparticles_prt> prts = {
+  std::vector<particle_t> prts = {
     {{ .5, 75., 15. }, {}, 0., 0},
     {{ .5, 35., 15. }, {}, 0., 0},
     {{ .5,  5.,  5. }, {}, 0., 0},
@@ -211,7 +213,7 @@ TEST_F(CudaMparticlesTest, SortByCellDetail)
   grid_->kinds.push_back(Grid_t::Kind(-1.,  1., "electron"));
   grid_->kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
 
-  std::vector<cuda_mparticles_prt> prts = {
+  std::vector<particle_t> prts = {
     {{ .5, 75., 15. }, {}, 0., 0},
     {{ .5, 35., 15. }, {}, 0., 0},
     {{ .5,  5.,  5. }, {}, 0., 0},
@@ -305,7 +307,7 @@ TEST_F(CudaMparticlesTest, CudaCollision)
 {
   grid_->kinds.push_back(Grid_t::Kind( 1.,  1., "test species"));
 
-  std::vector<cuda_mparticles_prt> prts = {
+  std::vector<particle_t> prts = {
     {{.5, 75., 15.}, {1.0, 0., 0.}, 1., 0},
     {{.5, 75., 15.}, {1.1, 0., 0.}, 1., 0},
     {{.5, 75., 15.}, {1.2, 0., 0.}, 1., 0},

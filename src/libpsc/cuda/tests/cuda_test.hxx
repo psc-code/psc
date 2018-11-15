@@ -2,10 +2,11 @@
 #ifndef CUDA_TEST_HXX
 #define CUDA_TEST_HXX
 
-template<typename CMP>
+template<typename _CudaMparticles>
 struct TestBase
 {
-  using CudaMparticles = CMP;
+  using CudaMparticles = _CudaMparticles;
+  using particle_t = typename CudaMparticles::particle_t;
 
   CudaMparticles* make_cmprts(Grid_t& grid)
   {
@@ -14,7 +15,7 @@ struct TestBase
     return cmprts;
   }
 
-  CudaMparticles* make_cmprts(Grid_t& grid, const std::vector<cuda_mparticles_prt>& prts)
+  CudaMparticles* make_cmprts(Grid_t& grid, const std::vector<particle_t>& prts)
   {
     auto cmprts = new CudaMparticles(grid);
 
@@ -30,11 +31,11 @@ struct TestBase
   template<typename S>
   CudaMparticles* make_cmprts(Grid_t& grid, uint n_prts, S setter)
   {
-    std::vector<cuda_mparticles_prt> prts;
+    std::vector<particle_t> prts;
     prts.reserve(n_prts);
   
     for (int i = 0; i < n_prts; i++) {
-      cuda_mparticles_prt prt = setter(i);
+      auto prt = setter(i);
       prts.push_back(prt);
     }
 

@@ -74,7 +74,7 @@ void MparticlesCuda<BS>::reset(const Grid_t& grid)
 }
 
 template<typename BS>
-void MparticlesCuda<BS>::inject_buf(const cuda_mparticles_prt *buf, const uint *buf_n_by_patch)
+void MparticlesCuda<BS>::inject_buf(const particle_t *buf, const uint *buf_n_by_patch)
 {
   dprintf("CMPRTS: inject_buf\n");
   cmprts_->inject_buf(buf, buf_n_by_patch);
@@ -88,14 +88,14 @@ void MparticlesCuda<BS>::inject_buf(const particle_inject *buf, const uint *buf_
 }
 
 template<typename BS>
-std::vector<cuda_mparticles_prt> MparticlesCuda<BS>::get_particles(int beg, int end) const
+std::vector<typename MparticlesCuda<BS>::particle_t> MparticlesCuda<BS>::get_particles(int beg, int end) const
 {
   dprintf("CMPRTS: get_particles\n");
   return cmprts_->get_particles(beg, end);
 }
 
 template<typename BS>
-std::vector<cuda_mparticles_prt> MparticlesCuda<BS>::get_particles(int p) const
+std::vector<typename MparticlesCuda<BS>::particle_t> MparticlesCuda<BS>::get_particles(int p) const
 {
   dprintf("CMPRTS: get_particles\n");
   return cmprts_->get_particles(p);
@@ -126,16 +126,17 @@ bool MparticlesCuda<BS>::check_after_push()
 template<typename MP>
 struct ConvertToCuda
 {
+  using ParticleCuda = DParticleCuda;
   using particle_t = typename MP::particle_t;
 
   ConvertToCuda(MP& mprts_other, int p)
     : mprts_other_(mprts_other), p_(p)
   {}
 
-  cuda_mparticles_prt operator()(int n)
+  ParticleCuda operator()(int n)
   {
-    using real_t = cuda_mparticles_prt::real_t;
-    using Real3 = cuda_mparticles_prt::Real3;
+    using real_t = ParticleCuda::real_t;
+    using Real3 = ParticleCuda::Real3;
     const particle_t& prt_other = mprts_other_[p_][n];
 
     return {Real3(prt_other.x()), Real3(prt_other.u()), real_t(prt_other.qni_wni()), prt_other.kind()};
@@ -149,6 +150,7 @@ private:
 template<typename MP>
 struct ConvertFromCuda
 {
+  using ParticleCuda = DParticleCuda;
   using particle_t = typename MP::particle_t;
   using real_t = typename particle_t::real_t;
   using Real3 = typename particle_t::Real3;
@@ -157,7 +159,7 @@ struct ConvertFromCuda
     : mprts_other_(mprts_other), p_(p)
   {}
 
-  void operator()(int n, const cuda_mparticles_prt &prt)
+  void operator()(int n, const ParticleCuda& prt)
   {
     mprts_other_[p_][n] = particle_t{Real3(prt.x()), Real3(prt.u()), prt.qni_wni(), prt.kind()};
   }

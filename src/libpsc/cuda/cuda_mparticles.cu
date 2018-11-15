@@ -396,7 +396,7 @@ uint cuda_mparticles<BS>::get_n_prts()
 // inject_buf
 
 template<typename BS>
-void cuda_mparticles<BS>::inject_buf(const cuda_mparticles_prt *buf,
+void cuda_mparticles<BS>::inject_buf(const particle_t *buf,
 				     const uint *buf_n_by_patch)
 {
   if (need_reorder) {
@@ -420,7 +420,7 @@ void cuda_mparticles<BS>::inject_buf(const cuda_mparticles_prt *buf,
     for (int n = 0; n < buf_n_by_patch[p]; n++) {
       float4 *xi4 = &h_xi4[off + n];
       float4 *pxi4 = &h_pxi4[off + n];
-      const cuda_mparticles_prt *prt = &buf[off + n];
+      const auto *prt = &buf[off + n];
       
       xi4->x  = prt->x()[0];
       xi4->y  = prt->x()[1];
@@ -505,7 +505,7 @@ void cuda_mparticles<BS>::inject_buf(const particle_inject *buf,
       float4 *pxi4 = &h_pxi4[off + n];
       auto new_prt = buf[off + n];
       auto x = Double3::fromPointer(new_prt.x) - patch.xb;
-      auto prt = cuda_mparticles_prt{Real3(x), Real3(Double3::fromPointer(new_prt.u)),
+      auto prt = particle_t{Real3(x), Real3(Double3::fromPointer(new_prt.u)),
 				     real_t(new_prt.w), new_prt.kind};
   
       xi4->x  = prt.x()[0];
@@ -562,10 +562,10 @@ void cuda_mparticles<BS>::inject_buf(const particle_inject *buf,
 // get_particles
 
 template<typename BS>
-std::vector<cuda_mparticles_prt> cuda_mparticles<BS>::get_particles(int beg, int end)
+std::vector<typename cuda_mparticles<BS>::particle_t> cuda_mparticles<BS>::get_particles(int beg, int end)
 {
   int n_prts = end - beg;
-  std::vector<cuda_mparticles_prt> prts;
+  std::vector<particle_t> prts;
   prts.reserve(n_prts);
 
   reorder(); // FIXME? by means of this, this function disturbs the state...
@@ -592,7 +592,7 @@ std::vector<cuda_mparticles_prt> cuda_mparticles<BS>::get_particles(int beg, int
 // get_particles
 
 template<typename BS>
-std::vector<cuda_mparticles_prt> cuda_mparticles<BS>::get_particles(int p)
+std::vector<typename cuda_mparticles<BS>::particle_t> cuda_mparticles<BS>::get_particles(int p)
 {
   // FIXME, doing the copy here all the time would be nice to avoid
   // making sure we actually have a valid d_off would't hurt, either

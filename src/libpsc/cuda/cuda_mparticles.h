@@ -106,11 +106,11 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   void reserve_all(const uint *n_prts_by_patch);
   uint get_n_prts();
   void setup_internals();
-  void inject_buf(const cuda_mparticles_prt *buf, const uint *buf_n_by_patch);
+  void inject_buf(const particle_t *buf, const uint *buf_n_by_patch);
   void inject_buf(const particle_inject *buf, const uint *buf_n_by_patch);
 
-  std::vector<cuda_mparticles_prt> get_particles(int beg, int end);
-  std::vector<cuda_mparticles_prt> get_particles(int p);
+  std::vector<particle_t> get_particles(int beg, int end);
+  std::vector<particle_t> get_particles(int p);
 
   uint start(int p);
   
@@ -229,7 +229,7 @@ void cuda_mparticles<BS>::set_particles(uint p, F getter)
   thrust::host_vector<float4> pxi4(n_prts);
 
   for (int n = 0; n < n_prts; n++) {
-    cuda_mparticles_prt prt = getter(n);
+    auto prt = getter(n);
     this->checkInPatchMod(prt.x());
 
     xi4[n].x  = prt.x()[0];
