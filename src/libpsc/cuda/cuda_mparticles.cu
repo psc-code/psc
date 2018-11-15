@@ -429,7 +429,7 @@ void cuda_mparticles<BS>::inject_buf(const cuda_mparticles_prt *buf,
       pxi4->x = prt->pxi_[0];
       pxi4->y = prt->pxi_[1];
       pxi4->z = prt->pxi_[2];
-      pxi4->w = prt->qni_wni(this->grid_);
+      pxi4->w = prt->qni_wni();
 
       auto bidx = this->blockIndex(*xi4, p);
       assert(bidx >= 0 && bidx < this->n_blocks);
@@ -515,7 +515,7 @@ void cuda_mparticles<BS>::inject_buf(const particle_inject *buf,
       pxi4->x = prt.pxi_[0];
       pxi4->y = prt.pxi_[1];
       pxi4->z = prt.pxi_[2];
-      pxi4->w = prt.qni_wni(this->grid_);
+      pxi4->w = prt.qni_wni();
 
       auto bidx = this->blockIndex(*xi4, p);
       assert(bidx >= 0 && bidx < this->n_blocks);

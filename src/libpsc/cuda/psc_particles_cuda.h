@@ -38,29 +38,25 @@ struct cuda_mparticles_prt
 
   cuda_mparticles_prt() = default; // FIXME? needed to use std::vector
 
-  cuda_mparticles_prt(Real3 x, int kind, Real3 p, real_t w)
-    : xi_(x), pxi_(p), w_(w), kind_(kind)
-  {}
-
-  cuda_mparticles_prt(Real3 x, int kind, Real3 p, real_t qni_wni, const Grid_t& grid)
-    : xi_(x), pxi_(p), w_(qni_wni / grid.kinds[kind].q), kind_(kind)
+  cuda_mparticles_prt(Real3 x, int kind, Real3 p, real_t qni_wni)
+    : xi_(x), pxi_(p), qni_wni_(qni_wni), kind_(kind)
   {}
 
   bool operator==(const cuda_mparticles_prt& other) const
   {
-    return (xi_ == other.xi_ && w_ == other.w_ &&
+    return (xi_ == other.xi_ && qni_wni_ == other.qni_wni_ &&
 	    pxi_ == other.pxi_ && kind_ == other.kind_);
   }
 
   bool operator!=(const cuda_mparticles_prt& other) const { return !(*this == other); }
 
-  real_t qni_wni(const Grid_t& grid) const { return w_ * grid.kinds[kind_].q; }
+  real_t qni_wni() const { return qni_wni_; }
 
   Real3 xi_;
   int kind_;
   Real3 pxi_;
 private:
-  real_t w_;
+  real_t qni_wni_;
 };
 
 template<typename BS>
@@ -171,7 +167,7 @@ struct MparticlesCuda : MparticlesBase
       {}
       
       Real3 u()   const { return prt_.pxi_; }
-      real_t w()  const { return prt_.qni_wni(prts_.mp_.grid()) / prts_.mp_.grid().kinds[prt_.kind_].q; }
+      real_t w()  const { return prt_.qni_wni() / prts_.mp_.grid().kinds[prt_.kind_].q; }
       int kind()  const { return prt_.kind_; }
       
       Double3 position() const

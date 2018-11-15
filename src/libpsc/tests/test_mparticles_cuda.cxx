@@ -99,7 +99,7 @@ TYPED_TEST(MparticlesCudaTest, Inject)
       EXPECT_EQ(prt.xi_[0], xm[0]);
       EXPECT_EQ(prt.xi_[1], xm[1]);
       EXPECT_EQ(prt.xi_[2], xm[2]);
-      EXPECT_EQ(prt.qni_wni(mprts.grid()), nn);
+      EXPECT_EQ(prt.qni_wni(), nn);
       nn++;
     }
   }

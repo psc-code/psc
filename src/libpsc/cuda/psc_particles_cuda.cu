@@ -162,7 +162,7 @@ struct ConvertFromCuda
   {
     const auto& grid = mprts_other_.grid();
     
-    mprts_other_[p_][n] = particle_t{Real3(prt.xi_), Real3(prt.pxi_), prt.qni_wni(grid), prt.kind_};
+    mprts_other_[p_][n] = particle_t{Real3(prt.xi_), Real3(prt.pxi_), prt.qni_wni(), prt.kind_};
   }
 
 private:
