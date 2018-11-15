@@ -37,10 +37,10 @@ struct DParticleCuda
   {}
 
   __host__ __device__
-  const real_t* x() const { return xi_; }
+  const real_t* x() const { return xi_.data(); }
   
   __host__ __device__
-  real_t* x() { return xi_; }
+  real_t* x() { return xi_.data(); }
   
   __device__
   real_t kind() const { return __float_as_int(kind_as_float_); }
@@ -49,17 +49,17 @@ struct DParticleCuda
   real_t kind_as_float() const { return kind_as_float_; }
   
   __host__ __device__
-  const real_t* u() const { return pxi_; }
+  const real_t* u() const { return pxi_.data(); }
   
   __host__ __device__
-  real_t* u() { return pxi_; }
+  real_t* u() { return pxi_.data(); }
   
   __host__ __device__
   real_t qni_wni() const { return qni_wni_; }
   
 private:
-  float xi_[3];
-  float pxi_[3];
+  array<real_t, 3> xi_;
+  array<real_t, 3> pxi_;
   real_t kind_as_float_;
   real_t qni_wni_;
 };
