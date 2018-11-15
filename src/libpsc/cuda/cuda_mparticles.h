@@ -58,8 +58,8 @@ struct DParticleCuda
   real_t qni_wni() const { return qni_wni_; }
   
 private:
-  array<real_t, 3> xi_;
-  array<real_t, 3> pxi_;
+  Real3 xi_;
+  Real3 pxi_;
   real_t kind_as_float_;
   real_t qni_wni_;
 };
