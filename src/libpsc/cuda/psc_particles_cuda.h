@@ -39,21 +39,21 @@ struct cuda_mparticles_prt
   cuda_mparticles_prt() = default; // FIXME? needed to use std::vector
 
   cuda_mparticles_prt(Real3 x, int kind, Real3 p, real_t w)
-    : x(x), p(p), w(w), kind(kind)
+    : xi_(x), pxi_(p), w_(w), kind_(kind)
   {}
 
   bool operator==(const cuda_mparticles_prt& other) const
   {
-    return (x == other.x && w == other.w &&
-	    p == other.p && kind == other.kind);
+    return (xi_ == other.xi_ && w_ == other.w_ &&
+	    pxi_ == other.pxi_ && kind_ == other.kind_);
   }
 
   bool operator!=(const cuda_mparticles_prt& other) const { return !(*this == other); }
 
-  Real3 x;
-  int kind;
-  Real3 p; 
-  real_t w;
+  Real3 xi_;
+  int kind_;
+  Real3 pxi_; 
+  real_t w_;
 };
 
 template<typename BS>
@@ -163,15 +163,15 @@ struct MparticlesCuda : MparticlesBase
 	: prt_{prt}, prts_{prts}
       {}
       
-      Real3 u()   const { return prt_.p; }
-      real_t w()  const { return prt_.w; }
-      int kind()  const { return prt_.kind; }
+      Real3 u()   const { return prt_.pxi_; }
+      real_t w()  const { return prt_.w_; }
+      int kind()  const { return prt_.kind_; }
       
       Double3 position() const
       {
 	auto& patch = prts_.mp_.grid().patches[prts_.p_];
 	
-	return patch.xb + Double3(prt_.x);
+	return patch.xb + Double3(prt_.xi_);
       }
     
     private:

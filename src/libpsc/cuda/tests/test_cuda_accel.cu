@@ -132,9 +132,9 @@ TEST_F(PushMprtsTest, Accel)
     CudaPushParticles_<CudaConfig1vbec3d<dim_yz, BS144>>::push_mprts(cmprts.get(), cmflds.get());
 
     for (auto prt: cmprts->get_particles(0)) {
-      EXPECT_NEAR(prt.p[0], 1*(n+1), eps);
-      EXPECT_NEAR(prt.p[1], 2*(n+1), eps);
-      EXPECT_NEAR(prt.p[2], 3*(n+1), eps);
+      EXPECT_NEAR(prt.pxi_[0], 1*(n+1), eps);
+      EXPECT_NEAR(prt.pxi_[1], 2*(n+1), eps);
+      EXPECT_NEAR(prt.pxi_[2], 3*(n+1), eps);
     }
   }
 }
@@ -167,7 +167,8 @@ TEST_F(PushMprtsTest, Cyclo)
   std::unique_ptr<CudaMparticles> cmprts(make_cmprts(*grid_, n_prts, [&](int i) -> cuda_mparticles_prt {
 	using real_t = cuda_mparticles_prt::real_t;
 	using Real3 = cuda_mparticles_prt::Real3;
-	return {Real3(Vec3<double>({rng->uniform(0, L), rng->uniform(0, L), rng->uniform(0, L)})), 0,
+	return {Real3(Vec3<double>({rng->uniform(0, L), rng->uniform(0, L), rng->uniform(0, L)})),
+	        0,
 	        Real3{1., 1., 1.}, // gamma = 2
 	        real_t(rng->uniform(0, 1.))};
       }));
@@ -182,9 +183,9 @@ TEST_F(PushMprtsTest, Cyclo)
 		 sin(2*M_PI*(0.125*n_steps)      /(double)n_steps));
     double uz = 1.;
     for (auto prt: cmprts->get_particles(0)) {
-      EXPECT_NEAR(prt.p[0], ux, eps);
-      EXPECT_NEAR(prt.p[1], uy, eps);
-      EXPECT_NEAR(prt.p[2], uz, eps);
+      EXPECT_NEAR(prt.pxi_[0], ux, eps);
+      EXPECT_NEAR(prt.pxi_[1], uy, eps);
+      EXPECT_NEAR(prt.pxi_[2], uz, eps);
     }
   }
 }

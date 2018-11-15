@@ -96,10 +96,10 @@ TYPED_TEST(MparticlesCudaTest, Inject)
     for (auto prt: mprts.get_particles(p)) {
       // xm is patch-relative position
       auto xm = .5 * (patch.xe - patch.xb);
-      EXPECT_EQ(prt.x[0], xm[0]);
-      EXPECT_EQ(prt.x[1], xm[1]);
-      EXPECT_EQ(prt.x[2], xm[2]);
-      EXPECT_EQ(prt.w, nn);
+      EXPECT_EQ(prt.xi_[0], xm[0]);
+      EXPECT_EQ(prt.xi_[1], xm[1]);
+      EXPECT_EQ(prt.xi_[2], xm[2]);
+      EXPECT_EQ(prt.w_, nn);
       nn++;
     }
   }
