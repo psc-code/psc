@@ -26,7 +26,7 @@ struct BS444
 // ======================================================================
 // particle_cuda_t
 
-using particle_cuda_t = ParticleSimple<float>;
+using BndpParticleCuda = ParticleSimple<float>;
 
 // ======================================================================
 // DParticleCuda
@@ -101,10 +101,10 @@ struct MparticlesCuda : MparticlesBase
 {
   using Self = MparticlesCuda;
   using BS = _BS;
-  using particle_t = particle_cuda_t;
+  using particle_t = BndpParticleCuda;
   using real_t = particle_t::real_t;
   using Real3 = Vec3<real_t>;
-  using buf_t = std::vector<particle_cuda_t>;
+  using buf_t = std::vector<BndpParticleCuda>;
   using CudaMparticles = cuda_mparticles<BS>;
 
   using is_cuda = std::true_type;

@@ -31,7 +31,7 @@ template<typename CudaMparticles, typename DIM>
 struct cuda_bndp : cuda_mparticles_indexer<typename CudaMparticles::BS>
 {
   using BS = typename CudaMparticles::BS;
-  using buf_t = std::vector<particle_cuda_t>;
+  using buf_t = std::vector<BndpParticleCuda>;
 
   using cuda_mparticles_indexer<BS>::n_blocks;
   using cuda_mparticles_indexer<BS>::n_blocks_per_patch;
@@ -149,10 +149,10 @@ struct cuda_bndp<CudaMparticles, dim_xyz> : cuda_mparticles_indexer<typename Cud
     }
     for (int n = 0; n < n_prts_send; n++) {
       int kind = cuda_float_as_int(h_bnd_xi4[n].w);
-      auto prt = particle_cuda_t{{h_bnd_xi4[n].x, h_bnd_xi4[n].y, h_bnd_xi4[n].z},
-				 {h_bnd_pxi4[n].x, h_bnd_pxi4[n].y, h_bnd_pxi4[n].z},
-				 h_bnd_pxi4[n].w,
-				 kind};
+      auto prt = typename CudaMparticles::particle_t{{h_bnd_xi4[n].x, h_bnd_xi4[n].y, h_bnd_xi4[n].z},
+						     {h_bnd_pxi4[n].x, h_bnd_pxi4[n].y, h_bnd_pxi4[n].z},
+						     h_bnd_pxi4[n].w,
+						     kind};
 
       int p = h_bidx[n] - cmprts->n_blocks;
       auto& buf = bpatch[p].buf;

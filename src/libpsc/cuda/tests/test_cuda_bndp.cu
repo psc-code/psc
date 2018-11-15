@@ -264,8 +264,8 @@ TEST_F(CudaMparticlesBndTest, BndPost)
   // Mock what the actual boundary exchange does, ie., move
   // particles to their new patch and adjust the relative position.
   // This assumes periodic b.c.
-  particle_cuda_t prt1 = cbndp->bpatch[0].buf[0];
-  particle_cuda_t prt3 = cbndp->bpatch[1].buf[0];
+  auto prt1 = cbndp->bpatch[0].buf[0];
+  auto prt3 = cbndp->bpatch[1].buf[0];
   prt1.x()[1] -= 40.;
   prt3.x()[1] -= 40.;
   cbndp->bpatch[0].buf[0] = prt3;
@@ -303,8 +303,8 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   // Mock what the actual boundary exchange does, ie., move
   // particles to their new patch and adjust the relative position.
   // This assumes periodic b.c.
-  particle_cuda_t prt1 = cbndp->bpatch[0].buf[0];
-  particle_cuda_t prt3 = cbndp->bpatch[1].buf[0];
+  auto prt1 = cbndp->bpatch[0].buf[0];
+  auto prt3 = cbndp->bpatch[1].buf[0];
   prt1.x()[1] -= 160.;
   prt3.x()[1] -= 160.;
   cbndp->bpatch[0].buf[0] = prt3;

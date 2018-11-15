@@ -164,10 +164,10 @@ void cuda_bndp<CudaMparticles, DIM>::copy_from_dev_and_convert(CudaMparticles *c
 
     for (int n = 0; n < n_send; n++) {
       int kind = cuda_float_as_int(h_bnd_xi4[n + off].w);
-      buf[n] = particle_cuda_t{{h_bnd_xi4[n + off].x, h_bnd_xi4[n + off].y, h_bnd_xi4[n + off].z},
-			       {h_bnd_pxi4[n + off].x, h_bnd_pxi4[n + off].y, h_bnd_pxi4[n + off].z},
-			       h_bnd_pxi4[n + off].w,
-			       kind};
+      buf[n] = typename CudaMparticles::particle_t{{h_bnd_xi4[n + off].x, h_bnd_xi4[n + off].y, h_bnd_xi4[n + off].z},
+						   {h_bnd_pxi4[n + off].x, h_bnd_pxi4[n + off].y, h_bnd_pxi4[n + off].z},
+						   h_bnd_pxi4[n + off].w,
+					  kind};
     }
     off += n_send;
   }
@@ -199,7 +199,7 @@ uint cuda_bndp<CudaMparticles, DIM>::convert_and_copy_to_dev(CudaMparticles *cmp
     bpatch[p].n_recv = n_recv;
     
     for (int n = 0; n < n_recv; n++) {
-      const particle_cuda_t& prt = bpatch[p].buf[n];
+      auto& prt = bpatch[p].buf[n];
 
       h_bnd_xi4[n + off].x  = prt.x()[0];
       h_bnd_xi4[n + off].y  = prt.x()[1];
@@ -296,7 +296,7 @@ uint cuda_bndp<CudaMparticles, dim_xyz>::convert_and_copy_to_dev(CudaMparticles*
     bpatch[p].n_recv = n_recv;
     
     for (int n = 0; n < n_recv; n++) {
-      const particle_cuda_t& prt = bpatch[p].buf[n];
+      const auto& prt = bpatch[p].buf[n];
 
       h_bnd_xi4[n + off].x  = prt.x()[0];
       h_bnd_xi4[n + off].y  = prt.x()[1];
