@@ -24,7 +24,7 @@ struct BS444
 };
 
 using BndpParticleCuda = ParticleSimple<float>;
-using DParticleCuda = DParticleSimple<float>;
+using DParticleCuda = ParticleSimple<float>;
 using cuda_mparticles_prt = DParticleCuda;
 
 template<typename BS>
