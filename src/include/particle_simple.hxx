@@ -19,7 +19,7 @@ struct DParticleSimple
   DParticleSimple(const DParticleSimple&) = default;
 
   __host__ __device__
-  DParticleSimple(Real3 x, int kind, Real3 u, real_t qni_wni)
+  DParticleSimple(Real3 x, Real3 u, real_t qni_wni, int kind)
     : xi_{x},
       pxi_{u},
       kind_{kind},

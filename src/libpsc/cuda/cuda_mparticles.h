@@ -40,8 +40,7 @@ struct DMparticlesCudaStorage
   {
     float4 _xi4 = xi4[n];
     float4 _pxi4 = pxi4[n];
-    return {{_xi4.x, _xi4.y, _xi4.z}, cuda_float_as_int(_xi4.w),
-	    {_pxi4.x, _pxi4.y, _pxi4.z}, _pxi4.w};
+    return {{_xi4.x, _xi4.y, _xi4.z}, {_pxi4.x, _pxi4.y, _pxi4.z}, _pxi4.w, cuda_float_as_int(_xi4.w)};
   }
 
   __host__ __device__

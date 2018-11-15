@@ -505,8 +505,8 @@ void cuda_mparticles<BS>::inject_buf(const particle_inject *buf,
       float4 *pxi4 = &h_pxi4[off + n];
       auto new_prt = buf[off + n];
       auto x = Double3::fromPointer(new_prt.x) - patch.xb;
-      auto prt = cuda_mparticles_prt{Real3(x), new_prt.kind,
-				     Real3(Double3::fromPointer(new_prt.u)), real_t(new_prt.w)};
+      auto prt = cuda_mparticles_prt{Real3(x), Real3(Double3::fromPointer(new_prt.u)),
+				     real_t(new_prt.w), new_prt.kind};
   
       xi4->x  = prt.x()[0];
       xi4->y  = prt.x()[1];
@@ -576,9 +576,8 @@ std::vector<cuda_mparticles_prt> cuda_mparticles<BS>::get_particles(int beg, int
   for (int n = 0; n < n_prts; n++) {
     int kind = cuda_float_as_int(xi4[n].w);
     prts.emplace_back(Real3{xi4[n].x, xi4[n].y, xi4[n].z},
-		      kind,
 	              Real3{pxi4[n].x, pxi4[n].y, pxi4[n].z},
-	              pxi4[n].w / float(this->grid_.kinds[kind].q));
+	              pxi4[n].w / float(this->grid_.kinds[kind].q), kind);
 
 #if 0
     uint b = blockIndex(xi4[n], p);

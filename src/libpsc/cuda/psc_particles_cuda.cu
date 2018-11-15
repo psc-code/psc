@@ -138,7 +138,7 @@ struct ConvertToCuda
     using Real3 = cuda_mparticles_prt::Real3;
     const particle_t& prt_other = mprts_other_[p_][n];
 
-    return {Real3(prt_other.x()), prt_other.kind(), Real3(prt_other.u()), real_t(prt_other.qni_wni())};
+    return {Real3(prt_other.x()), Real3(prt_other.u()), real_t(prt_other.qni_wni()), prt_other.kind()};
   }
 
 private:

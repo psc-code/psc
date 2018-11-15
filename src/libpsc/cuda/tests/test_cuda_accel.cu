@@ -123,7 +123,7 @@ TEST_F(PushMprtsTest, Accel)
   grid_->kinds.push_back(Grid_t::Kind(1., 1., "test_species"));
   std::unique_ptr<CudaMparticles> cmprts(make_cmprts(*grid_, n_prts, [&](int i) -> cuda_mparticles_prt {
 	using Real3 = cuda_mparticles_prt::Real3;
-	auto prt = cuda_mparticles_prt{Real3(Vec3<double>{rng->uniform(0, L), rng->uniform(0, L), rng->uniform(0, L)}), 0, {}, 1.};
+	auto prt = cuda_mparticles_prt{Real3(Vec3<double>{rng->uniform(0, L), rng->uniform(0, L), rng->uniform(0, L)}), {}, 1., 0};
 	return prt;
       }));
   
@@ -168,9 +168,8 @@ TEST_F(PushMprtsTest, Cyclo)
 	using real_t = cuda_mparticles_prt::real_t;
 	using Real3 = cuda_mparticles_prt::Real3;
 	return {Real3(Vec3<double>({rng->uniform(0, L), rng->uniform(0, L), rng->uniform(0, L)})),
-	        0,
 	        Real3{1., 1., 1.}, // gamma = 2
-	        real_t(rng->uniform(0, 1.))};
+	        real_t(rng->uniform(0, 1.)), 0};
       }));
 
   // run test
