@@ -162,13 +162,15 @@ struct psc_particle
   {}
 
   psc_particle(Real3 x, Real3 p, real_t w, int kind)
-    : x{x}, p{p}, w{w}, kind{kind}
+    : x{x}, p{p}, w{w}, kind_{kind}
   {}
+
+  int kind() const { return kind_; }
 
   Real3 x;
   real_t w;
   Real3 p;
-  int kind;
+  int kind_;
 };
 
 // ======================================================================
@@ -211,7 +213,7 @@ struct mparticles_patch
 
     Real3 u()   const { return prt_.p; }
     real_t w()  const { return prt_.w; }
-    int kind()  const { return prt_.kind; }
+    int kind()  const { return prt_.kind(); }
 
     Double3 position() const
     {
@@ -350,8 +352,8 @@ public:
 
   // FIXME, grid is always double precision, so this will switch precision
   // where not desired. should use same info stored in mprts at right precision
-  real_t prt_qni(const particle_t& prt) const { return grid().kinds[prt.kind].q; }
-  real_t prt_mni(const particle_t& prt) const { return grid().kinds[prt.kind].m; }
+  real_t prt_qni(const particle_t& prt) const { return grid().kinds[prt.kind()].q; }
+  real_t prt_mni(const particle_t& prt) const { return grid().kinds[prt.kind()].m; }
   real_t prt_wni(const particle_t& prt) const { return prt.w; }
   real_t prt_qni_wni(const particle_t& prt) const { return prt_qni(prt) * prt.w; }
 

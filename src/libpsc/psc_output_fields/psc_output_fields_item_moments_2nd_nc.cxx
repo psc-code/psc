@@ -30,7 +30,7 @@ struct Moment_n_2nd_nc
     
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
       auto *prt = &*prt_iter;
-      int m = prt->kind;
+      int m = prt->kind();
       DEPOSIT_TO_GRID_2ND_NC(prt, flds, m, 1.f);
     }
   }

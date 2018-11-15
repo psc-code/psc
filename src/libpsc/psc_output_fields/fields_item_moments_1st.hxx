@@ -30,7 +30,7 @@ struct Moment_n_1st
     
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
       auto *prt = &*prt_iter;
-      int m = prt->kind;
+      int m = prt->kind();
       DEPOSIT_TO_GRID_1ST_CC(prt, flds, m, 1.f);
     }
   }
@@ -61,7 +61,7 @@ struct Moment_v_1st
     
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
       auto *prt = &*prt_iter;
-      int mm = prt->kind * 3;
+      int mm = prt->kind() * 3;
       
       real_t vxi[3];
       particle_calc_vxi(prt, vxi);
@@ -98,7 +98,7 @@ struct Moment_p_1st
     
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
       auto *prt = &*prt_iter;
-      int mm = prt->kind * 3;
+      int mm = prt->kind() * 3;
       real_t *pxi = prt->p;
       
       for (int m = 0; m < 3; m++) {
@@ -133,7 +133,7 @@ struct Moment_vv_1st
     
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
       auto *prt = &*prt_iter;
-      int mm = prt->kind * 3;
+      int mm = prt->kind() * 3;
       
       real_t vxi[3];
       particle_calc_vxi(prt, vxi);
@@ -170,7 +170,7 @@ struct Moment_T_1st
     
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
       auto *prt = &*prt_iter;
-      int mm = prt->kind * 6;
+      int mm = prt->kind() * 6;
       
       real_t vxi[3];
       particle_calc_vxi(prt, vxi);
@@ -210,7 +210,7 @@ struct Moment_Tvv_1st
     
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
       auto *prt = &*prt_iter;
-      int mm = prt->kind * 6;
+      int mm = prt->kind() * 6;
       
       real_t vxi[3];
       particle_calc_vxi(prt, vxi);
