@@ -17,9 +17,9 @@
 // ----------------------------------------------------------------------
 // cuda_bnd
 
-template<typename CudaMparticles>
+template<typename buf_t>
 struct cuda_bnd {
-  std::vector<particle_cuda_t> buf;
+  buf_t buf;
   int n_recv;
   int n_send;
 };
@@ -76,7 +76,7 @@ struct cuda_bndp : cuda_mparticles_indexer<typename CudaMparticles::BS>
 
   thrust::device_vector<uint> d_sums; // FIXME, should go away (only used in some gold stuff)
 
-  std::vector<cuda_bnd> bpatch;
+  std::vector<cuda_bnd<buf_t>> bpatch;
   std::vector<buf_t*> bufs_;
 };
 
@@ -177,7 +177,7 @@ struct cuda_bndp<CudaMparticles, dim_xyz> : cuda_mparticles_indexer<typename Cud
     int n_blocks_;
   };
 
-  std::vector<cuda_bnd> bpatch;
+  std::vector<cuda_bnd<buf_t>> bpatch;
   std::vector<buf_t*> bufs_;
   uint n_prts_send;
 };
