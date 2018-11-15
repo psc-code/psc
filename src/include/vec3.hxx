@@ -108,15 +108,13 @@ struct Vec3 : array<T, 3>
   }
 
   // ----------------------------------------------------------------------
-  // construct by converting from different type (e.g., float -> double)
+  // converting to Vec3 of different type (e.g., float -> double)
 
   template<typename U>
   __host__ __device__
-  explicit Vec3(const Vec3<U>& u)
+  explicit operator Vec3<U>() const
   {
-    for (int i = 0; i < 3; i++) {
-      new (&(*this)[i])	T(u[i]); // placement new -- not really necessary
-    }
+    return {U((*this)[0]), U((*this)[1]), U((*this)[2])};
   }
 
   // ----------------------------------------------------------------------

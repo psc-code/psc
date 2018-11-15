@@ -172,7 +172,7 @@ struct MparticlesCuda : MparticlesBase
       {
 	auto& patch = prts_.mp_.grid().patches[prts_.p_];
 	
-	return patch.xb + Double3{prt_.x};
+	return patch.xb + Double3(prt_.x);
       }
     
     private:

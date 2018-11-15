@@ -49,8 +49,8 @@ struct SetParticleTest1
     int i = n;
 
     auto prt = cuda_mparticles_prt{
-      Real3{Vec3<double>{dx[0] * (i + .5f), dx[1] * (j + .5f), dx[2] * (k + .5f)}},
-      Real3{Vec3<int>{i, j, k}},
+      Real3(Vec3<double>{dx[0] * (i + .5f), dx[1] * (j + .5f), dx[2] * (k + .5f)}),
+      Real3(Vec3<int>{i, j, k}),
       1., 0};
     return prt;
   }
