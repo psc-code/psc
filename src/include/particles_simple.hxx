@@ -160,7 +160,7 @@ struct psc_particle
   psc_particle()
   {}
 
-  psc_particle(Real3 x, Real3 u, real_t qni_wni, int kind, const Grid_t& grid)
+  psc_particle(Real3 x, Real3 u, real_t qni_wni, int kind)
     : x_{x}, u_{u}, qni_wni_{qni_wni}, kind_{kind}
   {}
 
@@ -169,7 +169,7 @@ struct psc_particle
   Real3  u() const { return u_; }
   Real3& u(  )     { return u_; }
   int kind() const { return kind_; }
-  real_t qni_wni(const Grid_t& grid) const { return qni_wni_; }
+  real_t qni_wni() const { return qni_wni_; }
   
   Real3 x_;
   real_t qni_wni_;
@@ -216,7 +216,7 @@ struct mparticles_patch
     {}
 
     Real3 u()   const { return prt_.u(); }
-    real_t w()  const { return prt_.qni_wni(prts_.grid()) / prts_.grid().kinds[prt_.kind()].q; }
+    real_t w()  const { return prt_.qni_wni() / prts_.grid().kinds[prt_.kind()].q; }
     int kind()  const { return prt_.kind(); }
 
     Double3 position() const
@@ -310,7 +310,7 @@ private:
     auto prt = particle_t{{real_t(new_prt.x[0] - patch.xb[0]), real_t(new_prt.x[1] - patch.xb[1]), real_t(new_prt.x[2] - patch.xb[2])},
 			  {real_t(new_prt.u[0]), real_t(new_prt.u[1]), real_t(new_prt.u[2])},
 			  real_t(new_prt.w * grid().kinds[new_prt.kind].q),
-			  new_prt.kind, grid()};
+			  new_prt.kind};
 
     push_back(prt);
   }
@@ -358,8 +358,8 @@ public:
   // where not desired. should use same info stored in mprts at right precision
   real_t prt_qni(const particle_t& prt) const { return grid().kinds[prt.kind()].q; }
   real_t prt_mni(const particle_t& prt) const { return grid().kinds[prt.kind()].m; }
-  real_t prt_wni(const particle_t& prt) const { return prt.qni_wni(grid()) / prt_qni(prt); }
-  real_t prt_qni_wni(const particle_t& prt) const { return prt.qni_wni(grid()); }
+  real_t prt_wni(const particle_t& prt) const { return prt.qni_wni() / prt_qni(prt); }
+  real_t prt_qni_wni(const particle_t& prt) const { return prt.qni_wni(); }
 
   const Grid_t& grid() const { return *grid_; }
 

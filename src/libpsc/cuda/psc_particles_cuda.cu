@@ -137,9 +137,8 @@ struct ConvertToCuda
     using real_t = cuda_mparticles_prt::real_t;
     using Real3 = cuda_mparticles_prt::Real3;
     const particle_t& prt_other = mprts_other_[p_][n];
-    auto& grid = mprts_other_.grid();
 
-    return {Real3(prt_other.x()), prt_other.kind(), Real3(prt_other.u()), real_t(prt_other.qni_wni(grid))};
+    return {Real3(prt_other.x()), prt_other.kind(), Real3(prt_other.u()), real_t(prt_other.qni_wni())};
   }
 
 private:
@@ -160,9 +159,7 @@ struct ConvertFromCuda
 
   void operator()(int n, const cuda_mparticles_prt &prt)
   {
-    const auto& grid = mprts_other_.grid();
-    
-    mprts_other_[p_][n] = particle_t{Real3(prt.x()), Real3(prt.u()), prt.qni_wni(), prt.kind(), grid};
+    mprts_other_[p_][n] = particle_t{Real3(prt.x()), Real3(prt.u()), prt.qni_wni(), prt.kind()};
   }
 
 private:
