@@ -57,7 +57,7 @@ struct DParticleCuda
   Real3& x() { return xi_; }
   
   __host__ __device__
-  real_t kind() const { return kind_; }
+  int kind() const { return kind_; }
 
   __host__ __device__
   Real3 u() const { return pxi_; }
