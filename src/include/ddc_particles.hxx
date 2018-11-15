@@ -14,7 +14,7 @@ template<typename MP>
 struct ddc_particles
 {
   using Mparticles = MP;
-  using particle_t = typename Mparticles::particle_t;
+  using particle_t = typename Mparticles::BndpParticle;
   using buf_t = typename Mparticles::buf_t;
   using real_t = typename Mparticles::real_t;
   

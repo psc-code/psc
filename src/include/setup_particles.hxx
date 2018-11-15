@@ -17,7 +17,7 @@ template<typename MP>
 struct SetupParticles
 {
   using Mparticles = MP;
-  using particle_t = typename MP::particle_t;
+  using real_t = typename MP::real_t;
   
   // ----------------------------------------------------------------------
   // get_n_in_cell
@@ -137,7 +137,6 @@ struct SetupParticles
 		n_in_cell = -n_q_in_cell / npt.q;
 	      }
 	      for (int cnt = 0; cnt < n_in_cell; cnt++) {
-		using real_t = typename particle_t::real_t;
 		int kind = npt.kind;
 		real_t wni;
 		if (fractional_n_particles_per_cell) {

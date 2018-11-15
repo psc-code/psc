@@ -101,9 +101,10 @@ struct MparticlesCuda : MparticlesBase
 {
   using Self = MparticlesCuda;
   using BS = _BS;
-  using particle_t = BndpParticleCuda;
+  using particle_t = BndpParticleCuda; // FIXME
   using real_t = particle_t::real_t;
   using Real3 = Vec3<real_t>;
+  using BndpParticle = BndpParticleCuda;
   using buf_t = std::vector<BndpParticleCuda>;
   using CudaMparticles = cuda_mparticles<BS>;
 

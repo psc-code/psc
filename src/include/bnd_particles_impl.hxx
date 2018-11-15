@@ -20,7 +20,7 @@ template<typename MP>
 struct BndParticlesCommon : BndParticlesBase
 {
   using Mparticles = MP;
-  using particle_t = typename Mparticles::particle_t;
+  using particle_t = typename Mparticles::BndpParticle;
   using real_t = typename Mparticles::real_t;
   using ddcp_t = ddc_particles<Mparticles>;
   using buf_t = typename Mparticles::buf_t;

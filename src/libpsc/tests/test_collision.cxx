@@ -108,7 +108,6 @@ TYPED_TEST(CollisionTest, Test1)
   using Config = TypeParam;
   using dim = typename Config::dim;
   using Mparticles = typename Config::Mparticles;
-  using particle_t = typename Mparticles::particle_t;
   using Collision = typename Config::Collision;
   const typename Mparticles::real_t eps = 1e-5;
 
