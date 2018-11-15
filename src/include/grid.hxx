@@ -215,7 +215,7 @@ struct Grid_
     // make sure that np isn't overridden on the command line
     Int3 np;
     mrc_domain_get_param_int3(domain, "np", np);
-    assert(np == grid_domain.np);
+    assert(np == Int3::fromPointer(grid_domain.np));
     
     return domain;
   }

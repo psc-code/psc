@@ -217,7 +217,7 @@ struct mparticles_patch
     {
       auto& patch = prts_.grid().patches[prts_.p_];
 
-      return patch.xb +	Double3{prt_.x};
+      return patch.xb +	Double3(prt_.x);
     }
     
   private:

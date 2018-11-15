@@ -52,41 +52,25 @@ bool operator!=(const array<T, N>& x, const array<T, N>& y)
 // Vec3
 
 template<typename T>
-struct Vec3 : array<T, 3>
+struct Vec3
 {
-  using Base = array<T, 3>;
-  using value_type = typename Base::value_type;
-
-  using Base::data;
-
-  __host__ __device__
-  Vec3() = default;
-
-  // ----------------------------------------------------------------------
-  // copy ctor
-
-  __host__ __device__
-  Vec3(const Vec3&) = default;
-
-  __host__ __device__
-  Vec3& operator=(const Vec3& other) // FIXME, why doesn't this work by default?
-  {
-    for (int i = 0; i < 3; i++) {
-      (*this)[i] = other[i];
-    }    
-    return *this;
-  }
+  static const int N = 3;
+  using value_type = T;
+  using size_t = std::size_t;
   
-  // // ----------------------------------------------------------------------
-  // // construct by broadcasting single value
+  T arr[N];
 
-  // __host__ __device__
-  // explicit Vec3(T val)
-  // {
-  //   for (int i = 0; i < 3; i++) {
-  //     new (&(*this)[i])	T(val); // placement new -- not really necessary
-  //   }    
-  // }
+  __host__ __device__
+  T  operator[](size_t i) const { return arr[i]; }
+
+  __host__ __device__
+  T& operator[](size_t i)       { return arr[i]; }
+
+  __host__ __device__
+  const T* data() const { return arr; }
+
+  __host__ __device__
+  T* data() { return arr; }
 
   // ----------------------------------------------------------------------
   // construct from pointer to values
@@ -95,16 +79,6 @@ struct Vec3 : array<T, 3>
   static Vec3 fromPointer(const T *p)
   {
     return { p[0], p[1], p[2] };
-  }
-
-  // ----------------------------------------------------------------------
-  // construct from initializer list
-  
-  __host__ __device__
-  Vec3(std::initializer_list<T> l)
-  {
-    assert(l.size() == 3);
-    std::uninitialized_copy(l.begin(), l.end(), data());
   }
 
   // ----------------------------------------------------------------------
@@ -183,6 +157,19 @@ struct Vec3 : array<T, 3>
   __host__ __device__
   operator T* ()             { return data(); }
 };
+
+template <typename T>
+bool operator==(const Vec3<T>& x, const Vec3<T>& y)
+{
+  static const int N = 3;
+  return std::equal(x.arr, x.arr + N, y.arr);
+}
+
+template <typename T, std::size_t N>
+bool operator!=(const Vec3<T>& x, const Vec3<T>& y)
+{
+  return !(x == y);
+}
 
 template<typename T>
 __host__ __device__

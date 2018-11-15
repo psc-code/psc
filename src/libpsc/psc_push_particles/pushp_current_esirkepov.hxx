@@ -165,7 +165,7 @@ struct CurrentEsirkepov
   using fields_t = Fields;
 
   CurrentEsirkepov(const Grid_t& grid)
-    : dxi_{ Real3{1., 1. , 1.} / Real3{grid.domain.dx} },
+    : dxi_{ Real3{1., 1. , 1.} / Real3(grid.domain.dx) },
       fnqs_(grid.norm.fnqs)
   {
     fnqxs_ = grid.domain.dx[0] * fnqs_ / grid.dt;
