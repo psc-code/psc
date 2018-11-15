@@ -29,10 +29,10 @@ struct DParticleCuda
   DParticleCuda(const DParticleCuda&) = default;
 
   __host__ __device__
-  DParticleCuda(real_t x[3], int kind, real_t u[3], real_t qni_wni)
-    : xi_{x[0], x[1], x[2]},
+  DParticleCuda(Real3 x, int kind, Real3 u, real_t qni_wni)
+    : xi_{x},
+      pxi_{u},
       kind_{kind},
-      pxi_{u[0], u[1], u[2]},
       qni_wni_{qni_wni}
   {}
 
@@ -87,8 +87,8 @@ struct DMparticlesCudaStorage
   {
     float4 _xi4 = xi4[n];
     float4 _pxi4 = pxi4[n];
-    return {(float[3]){_xi4.x, _xi4.y, _xi4.z}, cuda_float_as_int(_xi4.w),
-	    (float[3]){_pxi4.x, _pxi4.y, _pxi4.z}, _pxi4.w};
+    return {{_xi4.x, _xi4.y, _xi4.z}, cuda_float_as_int(_xi4.w),
+	    {_pxi4.x, _pxi4.y, _pxi4.z}, _pxi4.w};
   }
 
   __host__ __device__
