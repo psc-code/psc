@@ -504,8 +504,8 @@ void cuda_mparticles<BS>::inject_buf(const particle_inject *buf,
       float4 *xi4 = &h_xi4[off + n];
       float4 *pxi4 = &h_pxi4[off + n];
       auto new_prt = buf[off + n];
-      auto x = Double3{new_prt.x} - patch.xb;
-      auto prt = cuda_mparticles_prt{Real3{x}, Real3{Double3{new_prt.u}},
+      auto x = Double3::fromPointer(new_prt.x) - patch.xb;
+      auto prt = cuda_mparticles_prt{Real3{x}, Real3{Double3::fromPointer(new_prt.u)},
 				     real_t(new_prt.w), new_prt.kind};
   
       xi4->x  = prt.x[0];

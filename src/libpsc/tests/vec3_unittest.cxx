@@ -33,11 +33,11 @@ namespace {
     EXPECT_NE((V3{ 1, 2, 3 }), (V3{ 1, 3, 2 }));
   }
   
-  TYPED_TEST(Vec3Test, ConstructorConstValuePtr)
+  TYPED_TEST(Vec3Test, fromPointer)
   {
     using V3 = Vec3<TypeParam>;
     const TypeParam arr[3] = { 1, 2, 3 };
-    V3 v(arr);
+    auto v = V3::fromPointer(arr);
     
     EXPECT_EQ(v, (V3{ 1, 2, 3 }));
   }

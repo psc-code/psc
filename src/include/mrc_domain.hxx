@@ -34,11 +34,11 @@ struct MrcDomain
     int n_patches;
     auto patches = getPatches(&n_patches);
     assert(n_patches > 0);
-    Int3 ldims = patches[0].ldims;
+    Int3 ldims = Int3::fromPointer(patches[0].ldims);
     offs.reserve(n_patches);
     for (int p = 0; p < n_patches; p++) {
-      assert(ldims == Int3(patches[p].ldims));
-      offs.push_back(patches[p].off);
+      assert(ldims == Int3::fromPointer(patches[p].ldims));
+      offs.push_back(Int3::fromPointer(patches[p].off));
     }
 
     return offs;

@@ -92,11 +92,9 @@ struct Vec3 : array<T, 3>
   // construct from pointer to values
   
   __host__ __device__
-  Vec3(const T *p)
+  static Vec3 fromPointer(const T *p)
   {
-    for (int i = 0; i < 3; i++) {
-      new (&(*this)[i])	T(p[i]); // placement new -- not really necessary
-    }
+    return { p[0], p[1], p[2] };
   }
 
   // ----------------------------------------------------------------------

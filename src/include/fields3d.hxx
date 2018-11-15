@@ -429,7 +429,7 @@ struct Mfields : MfieldsBase
   
   fields_t operator[](int p)
   {
-    return fields_t(grid(), ib, im, n_fields_, data[p].get());
+    return fields_t(grid(), Int3::fromPointer(ib), Int3::fromPointer(im), n_fields_, data[p].get());
   }
 
   void zero_comp(int m) override
