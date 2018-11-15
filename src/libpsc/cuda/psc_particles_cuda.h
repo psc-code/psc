@@ -23,7 +23,6 @@ struct BS444
   using z = std::integral_constant<unsigned int, 4>;
 };
 
-using BndpParticleCuda = ParticleSimple<float>;
 using DParticleCuda = ParticleSimple<float>;
 
 template<typename BS>
@@ -40,8 +39,8 @@ struct MparticlesCuda : MparticlesBase
   using real_t = float;
   using particle_t = ParticleSimple<real_t>;
   using Real3 = Vec3<real_t>;
-  using BndpParticle = BndpParticleCuda;
-  using buf_t = std::vector<BndpParticleCuda>;
+  using BndpParticle = DParticleCuda;
+  using buf_t = std::vector<BndpParticle>;
   using CudaMparticles = cuda_mparticles<BS>;
 
   using is_cuda = std::true_type;
