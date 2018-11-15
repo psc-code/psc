@@ -3,11 +3,6 @@
 
 #include "psc_vpic_bits.h"
 
-struct particle_vpic_t
-{
-  using real_t = float;
-};
-
 struct vpic_mparticles_prt
 {
   float dx[3];
@@ -29,6 +24,7 @@ struct MparticlesVpic_ : MparticlesBase
   using const_iterator = typename Particles::const_iterator;
   using Grid = typename Particles::Grid;
   using real_t = float;
+  using patch_t = bool; // FIXME, faking it...
   
   // ======================================================================
   // Patch

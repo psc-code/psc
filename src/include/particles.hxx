@@ -16,21 +16,8 @@
 // ======================================================================
 // MparticlesBase
 
-struct particle_base_t
-{
-  struct real_t {};
-};
-
-struct patch_base_t
-{
-  struct buf_t {};
-};
-
 struct MparticlesBase
 {
-  using particle_t = particle_base_t;
-  using patch_t = patch_base_t;
-
   using convert_func_t = void (*)(MparticlesBase&, MparticlesBase&);
   using Convert = std::unordered_map<std::type_index, convert_func_t>;
   
