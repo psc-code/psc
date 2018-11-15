@@ -33,8 +33,8 @@ struct OutputParticlesAscii : OutputParticlesParams, OutputParticlesBase
       int n = 0;
       for (auto& prt : mprts[p]) {
 	fprintf(file, "%d %g %g %g %g %g %g %g %d\n",
-		n, prt.x[0], prt.x[1], prt.x[2],
-		prt.p[0], prt.p[1], prt.p[2],
+		n, prt.x()[0], prt.x()[1], prt.x()[2],
+		prt.u()[0], prt.u()[1], prt.u()[2],
 		prt.w(), prt.kind());
 	n++;
       }

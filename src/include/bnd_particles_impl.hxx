@@ -115,8 +115,8 @@ void BndParticlesCommon<MP>::process_patch(const Grid_t& grid, const ParticleInd
 
   for (int n = n_begin; n < n_end; n++) {
     particle_t *prt = &buf[n];
-    real_t *xi = prt->x;
-    real_t *pxi = prt->p;
+    real_t *xi = prt->x();
+    real_t *pxi = prt->u();
     
     Int3 pos = pi.cellPosition(xi);
     

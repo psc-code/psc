@@ -99,7 +99,7 @@ struct Moment_p_1st
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
       auto *prt = &*prt_iter;
       int mm = prt->kind() * 3;
-      real_t *pxi = prt->p;
+      real_t *pxi = prt->u();
       
       for (int m = 0; m < 3; m++) {
 	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + m, prts.prt_mni(*prt) * pxi[m]);
@@ -174,7 +174,7 @@ struct Moment_T_1st
       
       real_t vxi[3];
       particle_calc_vxi(prt, vxi);
-      real_t *pxi = prt->p;
+      real_t *pxi = prt->u();
       DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 0, prts.prt_mni(*prt) * pxi[0] * vxi[0]);
       DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 1, prts.prt_mni(*prt) * pxi[1] * vxi[1]);
       DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 2, prts.prt_mni(*prt) * pxi[2] * vxi[2]);

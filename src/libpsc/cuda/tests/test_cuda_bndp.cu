@@ -266,8 +266,8 @@ TEST_F(CudaMparticlesBndTest, BndPost)
   // This assumes periodic b.c.
   particle_cuda_t prt1 = cbndp->bpatch[0].buf[0];
   particle_cuda_t prt3 = cbndp->bpatch[1].buf[0];
-  prt1.x[1] -= 40.;
-  prt3.x[1] -= 40.;
+  prt1.x()[1] -= 40.;
+  prt3.x()[1] -= 40.;
   cbndp->bpatch[0].buf[0] = prt3;
   cbndp->bpatch[1].buf[0] = prt1;
   
@@ -305,8 +305,8 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   // This assumes periodic b.c.
   particle_cuda_t prt1 = cbndp->bpatch[0].buf[0];
   particle_cuda_t prt3 = cbndp->bpatch[1].buf[0];
-  prt1.x[1] -= 160.;
-  prt3.x[1] -= 160.;
+  prt1.x()[1] -= 160.;
+  prt3.x()[1] -= 160.;
   cbndp->bpatch[0].buf[0] = prt3;
   cbndp->bpatch[1].buf[0] = prt1;
 

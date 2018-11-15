@@ -8,7 +8,7 @@
 #define DEPOSIT_TO_GRID_1ST_CC(part, flds, m, val) do {			\
     using Fields = Fields3d<fields_t>;					\
     Fields F(flds);							\
-    real_t *xi = part->x; /* don't shift back in time */		\
+    real_t *xi = part->x(); /* don't shift back in time */		\
     real_t u = xi[0] * dxi - .5;					\
     real_t v = xi[1] * dyi - .5;					\
     real_t w = xi[2] * dzi - .5;					\
@@ -56,7 +56,7 @@
 #define DEPOSIT_TO_GRID_1ST_NC(part, flds, m, val) do {			\
     using Fields = Fields3d<fields_t>;					\
     Fields F(flds);							\
-    real_t *xi = part->x; /* don't shift back in time */		\
+    real_t *xi = part->x(); /* don't shift back in time */		\
     real_t u = xi[0] * dxi;						\
     real_t v = xi[1] * dyi;						\
     real_t w = xi[2] * dzi;						\
@@ -104,7 +104,7 @@
 #define DEPOSIT_TO_GRID_2ND_NC(part, flds, m, val) do {			\
     using Fields = Fields3d<fields_t>;					\
     Fields F(flds);							\
-    real_t *xi = part->x; /* don't shift back in time */		\
+    real_t *xi = part->x(); /* don't shift back in time */		\
     real_t u = xi[0] * dxi;						\
     real_t v = xi[1] * dyi;						\
     real_t w = xi[2] * dzi;						\
@@ -179,9 +179,9 @@ static inline void
 particle_calc_vxi(particle_t *part, typename particle_t::real_t vxi[3])
 {
   typename particle_t::real_t root =
-    1.f / std::sqrt(1.f + sqr(part->p[0]) + sqr(part->p[1]) + sqr(part->p[2]));
-  vxi[0] = part->p[0] * root;
-  vxi[1] = part->p[1] * root;
-  vxi[2] = part->p[2] * root;
+    1.f / std::sqrt(1.f + sqr(part->u()[0]) + sqr(part->u()[1]) + sqr(part->u()[2]));
+  vxi[0] = part->u()[0] * root;
+  vxi[1] = part->u()[1] * root;
+  vxi[2] = part->u()[2] * root;
 }
 

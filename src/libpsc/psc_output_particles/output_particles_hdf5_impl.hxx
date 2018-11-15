@@ -80,9 +80,9 @@ struct OutputParticlesHdf5 : OutputParticlesParams, OutputParticlesBase
     const Grid_t& grid = prts.grid();
     const int *ldims = grid.ldims;
   
-    int j0 = prts.cellPosition(part->x[0], 0);
-    int j1 = prts.cellPosition(part->x[1], 1);
-    int j2 = prts.cellPosition(part->x[2], 2);
+    int j0 = prts.cellPosition(part->x()[0], 0);
+    int j1 = prts.cellPosition(part->x()[1], 1);
+    int j2 = prts.cellPosition(part->x()[2], 2);
     // FIXME, this is hoping that reason is that we were just on the right bnd...
     if (j0 == ldims[0]) j0--;
     if (j1 == ldims[1]) j1--;
@@ -209,12 +209,12 @@ struct OutputParticlesHdf5 : OutputParticlesParams, OutputParticlesBase
 	      idx[p][jj + sz] = nn + n_off + off[p][si+1] - off[p][si];
 	      for (int n = off[p][si]; n < off[p][si+1]; n++, nn++) {
 		particle_t *part = &prts[map[p][n]];
-		arr[nn].x  = part->x[0] + patch.xb[0];
-		arr[nn].y  = part->x[1] + patch.xb[1];
-		arr[nn].z  = part->x[2] + patch.xb[2];
-		arr[nn].px = part->p[0];
-		arr[nn].py = part->p[1];
-		arr[nn].pz = part->p[2];
+		arr[nn].x  = part->x()[0] + patch.xb[0];
+		arr[nn].y  = part->x()[1] + patch.xb[1];
+		arr[nn].z  = part->x()[2] + patch.xb[2];
+		arr[nn].px = part->u()[0];
+		arr[nn].py = part->u()[1];
+		arr[nn].pz = part->u()[2];
 		arr[nn].q  = prts.prt_qni(*part);
 		arr[nn].m  = prts.prt_mni(*part);
 		arr[nn].w  = prts.prt_wni(*part);
