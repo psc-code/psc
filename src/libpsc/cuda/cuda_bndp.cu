@@ -166,8 +166,8 @@ void cuda_bndp<CudaMparticles, DIM>::copy_from_dev_and_convert(CudaMparticles *c
       int kind = cuda_float_as_int(h_bnd_xi4[n + off].w);
       buf[n] = particle_cuda_t{{h_bnd_xi4[n + off].x, h_bnd_xi4[n + off].y, h_bnd_xi4[n + off].z},
 			       {h_bnd_pxi4[n + off].x, h_bnd_pxi4[n + off].y, h_bnd_pxi4[n + off].z},
-			       h_bnd_pxi4[n + off].w / float(cmprts->grid_.kinds[kind].q),
-			       kind};
+			       h_bnd_pxi4[n + off].w,
+			       kind, cmprts->grid_};
     }
     off += n_send;
   }

@@ -157,12 +157,11 @@ struct psc_particle
   using real_t = R;
   using Real3 = Vec3<real_t>;
 
-  // FIXME, I don't want this ctor.
   psc_particle()
   {}
 
-  psc_particle(Real3 x, Real3 u, real_t w, int kind)
-    : x_{x}, u_{u}, w_{w}, kind_{kind}
+  psc_particle(Real3 x, Real3 u, real_t qni_wni, int kind, const Grid_t& grid)
+    : x_{x}, u_{u}, w_{qni_wni / real_t(grid.kinds[kind].q)}, kind_{kind}
   {}
 
   Real3  x() const { return x_; }
@@ -311,8 +310,8 @@ private:
     
     auto prt = particle_t{{real_t(new_prt.x[0] - patch.xb[0]), real_t(new_prt.x[1] - patch.xb[1]), real_t(new_prt.x[2] - patch.xb[2])},
 			  {real_t(new_prt.u[0]), real_t(new_prt.u[1]), real_t(new_prt.u[2])},
-			  real_t(new_prt.w),
-			  new_prt.kind};
+			  real_t(new_prt.w * grid().kinds[new_prt.kind].q),
+			  new_prt.kind, grid()};
 
     push_back(prt);
   }

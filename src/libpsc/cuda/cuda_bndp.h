@@ -150,8 +150,8 @@ struct cuda_bndp<CudaMparticles, dim_xyz> : cuda_mparticles_indexer<typename Cud
       int kind = cuda_float_as_int(h_bnd_xi4[n].w);
       auto prt = particle_cuda_t{{h_bnd_xi4[n].x, h_bnd_xi4[n].y, h_bnd_xi4[n].z},
 				 {h_bnd_pxi4[n].x, h_bnd_pxi4[n].y, h_bnd_pxi4[n].z},
-				 h_bnd_pxi4[n].w / float(cmprts->grid_.kinds[kind].q),
-				 kind};
+				 h_bnd_pxi4[n].w,
+				 kind, cmprts->grid_};
 
       int p = h_bidx[n] - cmprts->n_blocks;
       auto& buf = bpatch[p].buf;
