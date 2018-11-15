@@ -161,7 +161,7 @@ struct psc_particle
   {}
 
   psc_particle(Real3 x, Real3 u, real_t qni_wni, int kind, const Grid_t& grid)
-    : x_{x}, u_{u}, w_{qni_wni / real_t(grid.kinds[kind].q)}, kind_{kind}
+    : x_{x}, u_{u}, qni_wni_{qni_wni}, kind_{kind}
   {}
 
   Real3  x() const { return x_; }
@@ -169,10 +169,10 @@ struct psc_particle
   Real3  u() const { return u_; }
   Real3& u(  )     { return u_; }
   int kind() const { return kind_; }
-  real_t qni_wni(const Grid_t& grid) const { return grid.kinds[kind_].q * w_; }
+  real_t qni_wni(const Grid_t& grid) const { return qni_wni_; }
   
   Real3 x_;
-  real_t w_;
+  real_t qni_wni_;
   Real3 u_;
   int kind_;
 };
