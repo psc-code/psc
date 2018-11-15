@@ -230,7 +230,7 @@ void cuda_mparticles<BS>::set_particles(uint p, F getter)
   thrust::host_vector<float4> pxi4(n_prts);
 
   for (int n = 0; n < n_prts; n++) {
-    struct cuda_mparticles_prt prt = getter(n);
+    cuda_mparticles_prt prt = getter(n);
     this->checkInPatchMod(prt.x());
 
     xi4[n].x  = prt.x()[0];

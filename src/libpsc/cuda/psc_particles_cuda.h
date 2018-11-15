@@ -51,6 +51,16 @@ struct DParticleCuda
   {}
 
   __host__ __device__
+  bool operator==(const DParticleCuda& other) const
+  {
+    return (xi_ == other.xi_ && qni_wni_ == other.qni_wni_ &&
+	    pxi_ == other.pxi_ && kind_ == other.kind_);
+  }
+
+  __host__ __device__
+  bool operator!=(const DParticleCuda& other) const { return !(*this == other); }
+
+  __host__ __device__
   Real3 x() const { return xi_; }
   
   __host__ __device__
@@ -78,36 +88,7 @@ private:
 // ======================================================================
 // cuda_mparticles_prt
 
-struct cuda_mparticles_prt
-{
-  using real_t = float;
-  using Real3 = Vec3<real_t>;
-
-  cuda_mparticles_prt() = default; // FIXME? needed to use std::vector
-
-  cuda_mparticles_prt(Real3 x, int kind, Real3 p, real_t qni_wni)
-    : xi_(x), pxi_(p), qni_wni_(qni_wni), kind_(kind)
-  {}
-
-  bool operator==(const cuda_mparticles_prt& other) const
-  {
-    return (xi_ == other.xi_ && qni_wni_ == other.qni_wni_ &&
-	    pxi_ == other.pxi_ && kind_ == other.kind_);
-  }
-
-  bool operator!=(const cuda_mparticles_prt& other) const { return !(*this == other); }
-
-  Real3 x() const { return xi_; }
-  Real3 u() const { return pxi_; }
-  int kind() const { return kind_; }
-  real_t qni_wni() const { return qni_wni_; }
-
-private:
-  Real3 xi_;
-  int kind_;
-  Real3 pxi_;
-  real_t qni_wni_;
-};
+using cuda_mparticles_prt = DParticleCuda;
 
 template<typename BS>
 struct cuda_mparticles;
