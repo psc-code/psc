@@ -77,16 +77,16 @@ struct Vec3 : array<T, 3>
     return *this;
   }
   
-  // ----------------------------------------------------------------------
-  // construct by broadcasting single value
+  // // ----------------------------------------------------------------------
+  // // construct by broadcasting single value
 
-  __host__ __device__
-  explicit Vec3(T val)
-  {
-    for (int i = 0; i < 3; i++) {
-      new (&(*this)[i])	T(val); // placement new -- not really necessary
-    }    
-  }
+  // __host__ __device__
+  // explicit Vec3(T val)
+  // {
+  //   for (int i = 0; i < 3; i++) {
+  //     new (&(*this)[i])	T(val); // placement new -- not really necessary
+  //   }    
+  // }
 
   // ----------------------------------------------------------------------
   // construct from pointer to values

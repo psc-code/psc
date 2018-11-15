@@ -61,17 +61,6 @@ namespace {
     EXPECT_EQ(v, (V3{ T(1.2f), T(2.5f), T(3.8f) }));
   }
 
-  TYPED_TEST(Vec3Test, ConstructorFromScalar)
-  {
-    using T = TypeParam;
-    using V3 = Vec3<TypeParam>;
-    V3 v(T(5.f));
-    
-    EXPECT_EQ(v, (V3{ T(5.f), T(5.f), T(5.f) }));
-  }
-
-  // arithmetic
-
   TYPED_TEST(Vec3Test, Negative)
   {
     using T = TypeParam;
