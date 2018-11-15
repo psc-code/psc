@@ -8,7 +8,7 @@
 #include "particles_simple.hxx"
 #include "particles_traits.hxx"
 
-using particle_double_t = psc_particle<double>;
+using particle_double_t = ParticleSimple<double>;
 
 using MparticlesDouble = Mparticles<particle_double_t>;
 

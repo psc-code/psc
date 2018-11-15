@@ -2,18 +2,18 @@
 #pragma once
 
 // ======================================================================
-// psc_particle
+// ParticleSimple
 
 template<class R>
-struct psc_particle
+struct ParticleSimple
 {
   using real_t = R;
   using Real3 = Vec3<real_t>;
 
-  psc_particle()
+  ParticleSimple()
   {}
 
-  psc_particle(Real3 x, Real3 u, real_t qni_wni, int kind)
+  ParticleSimple(Real3 x, Real3 u, real_t qni_wni, int kind)
     : x_{x}, u_{u}, qni_wni_{qni_wni}, kind_{kind}
   {}
 
