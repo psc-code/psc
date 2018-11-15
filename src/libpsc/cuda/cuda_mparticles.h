@@ -36,7 +36,7 @@ struct DMparticlesCudaStorage
 {
   // FIXME, could be operator[]
   __host__ __device__
-  struct DParticleCuda load(int n)
+  DParticleCuda load(int n)
   {
     float4 _xi4 = xi4[n];
     float4 _pxi4 = pxi4[n];
