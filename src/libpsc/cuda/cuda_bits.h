@@ -17,6 +17,7 @@ static bool CUDA_SYNC = true;
     }									\
   } while(0)
 
+__host__ __device__
 static inline float cuda_int_as_float(int i)
 {
   union { int i; float f; } u;
@@ -24,6 +25,7 @@ static inline float cuda_int_as_float(int i)
   return u.f;
 };
 
+__host__ __device__
 static inline int cuda_float_as_int(float f)
 {
   union { int i; float f; } u;
