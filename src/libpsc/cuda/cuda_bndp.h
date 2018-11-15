@@ -17,6 +17,7 @@
 // ----------------------------------------------------------------------
 // cuda_bnd
 
+template<typename CudaMparticles>
 struct cuda_bnd {
   std::vector<particle_cuda_t> buf;
   int n_recv;
