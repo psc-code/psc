@@ -38,7 +38,7 @@ struct cuda_mparticles_prt
 
   cuda_mparticles_prt() = default; // FIXME? needed to use std::vector
 
-  cuda_mparticles_prt(Real3 x, Real3 p, real_t w, int kind)
+  cuda_mparticles_prt(Real3 x, int kind, Real3 p, real_t w)
     : x(x), p(p), w(w), kind(kind)
   {}
 
@@ -50,11 +50,10 @@ struct cuda_mparticles_prt
 
   bool operator!=(const cuda_mparticles_prt& other) const { return !(*this == other); }
 
-  
   Real3 x;
-  real_t w;
-  Real3 p; 
   int kind;
+  Real3 p; 
+  real_t w;
 };
 
 template<typename BS>
