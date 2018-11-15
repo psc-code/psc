@@ -12,6 +12,7 @@
 
 #include <map>
 #include <string>
+#include <array>
 
 enum {
   POFI_BY_KIND    = 2, // this item needs to be replicated by kind

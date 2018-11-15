@@ -59,9 +59,9 @@ struct DParticleCuda
   
 private:
   float xi_[3];
-  float kind_as_float_;
   float pxi_[3];
-  float qni_wni_;
+  real_t kind_as_float_;
+  real_t qni_wni_;
 };
 
 // ======================================================================

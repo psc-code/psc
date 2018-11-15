@@ -2,9 +2,11 @@
 #ifndef VEC3_HXX
 #define VEC3_HXX
 
-#include <array>
 #include <memory>
+#include <algorithm>
 #include <cassert>
+
+#include "cuda_compat.h"
 
 // ======================================================================
 // array
@@ -19,10 +21,16 @@ struct array
   
   T arr[N];
 
+  __host__ __device__
   T  operator[](size_t i) const { return arr[i]; }
+
+  __host__ __device__
   T& operator[](size_t i)       { return arr[i]; }
 
+  __host__ __device__
   const T* data() const { return arr; }
+
+  __host__ __device__
   T* data() { return arr; }
 
   operator T*() { return arr; } // FIXME, should be data()
@@ -50,17 +58,29 @@ struct Vec3 : array<T, 3>
   using value_type = typename Base::value_type;
 
   using Base::data;
-  
+
+  __host__ __device__
   Vec3() = default;
 
   // ----------------------------------------------------------------------
   // copy ctor
 
+  __host__ __device__
   Vec3(const Vec3&) = default;
 
+  __host__ __device__
+  Vec3& operator=(const Vec3& other) // FIXME, why doesn't this work by default?
+  {
+    for (int i = 0; i < 3; i++) {
+      (*this)[i] = other[i];
+    }    
+    return *this;
+  }
+  
   // ----------------------------------------------------------------------
   // construct by broadcasting single value
 
+  __host__ __device__
   explicit Vec3(T val)
   {
     for (int i = 0; i < 3; i++) {
@@ -71,6 +91,7 @@ struct Vec3 : array<T, 3>
   // ----------------------------------------------------------------------
   // construct from pointer to values
   
+  __host__ __device__
   Vec3(const T *p)
   {
     for (int i = 0; i < 3; i++) {
@@ -81,6 +102,7 @@ struct Vec3 : array<T, 3>
   // ----------------------------------------------------------------------
   // construct from initializer list
   
+  __host__ __device__
   Vec3(std::initializer_list<T> l)
   {
     assert(l.size() == 3);
@@ -91,6 +113,7 @@ struct Vec3 : array<T, 3>
   // construct by converting from different type (e.g., float -> double)
 
   template<typename U>
+  __host__ __device__
   explicit Vec3(const Vec3<U>& u)
   {
     for (int i = 0; i < 3; i++) {
@@ -101,6 +124,7 @@ struct Vec3 : array<T, 3>
   // ----------------------------------------------------------------------
   // arithmetic
 
+  __host__ __device__
   Vec3 operator-() const
   {
     Vec3 res;
@@ -110,6 +134,7 @@ struct Vec3 : array<T, 3>
     return res;
   }
 
+  __host__ __device__
   Vec3& operator+=(const Vec3& w)
   {
     for (int i = 0; i < 3; i++) {
@@ -118,6 +143,7 @@ struct Vec3 : array<T, 3>
     return *this;
   }
   
+  __host__ __device__
   Vec3& operator-=(const Vec3& w)
   {
     for (int i = 0; i < 3; i++) {
@@ -126,6 +152,7 @@ struct Vec3 : array<T, 3>
     return *this;
   }
   
+  __host__ __device__
   Vec3& operator*=(const Vec3& w)
   {
     for (int i = 0; i < 3; i++) {
@@ -134,6 +161,7 @@ struct Vec3 : array<T, 3>
     return *this;
   }
   
+  __host__ __device__
   Vec3& operator*=(T s)
   {
     for (int i = 0; i < 3; i++) {
@@ -142,6 +170,7 @@ struct Vec3 : array<T, 3>
     return *this;
   }
   
+  __host__ __device__
   Vec3& operator/=(const Vec3& w)
   {
     for (int i = 0; i < 3; i++) {
@@ -152,16 +181,15 @@ struct Vec3 : array<T, 3>
   
   // conversion to pointer
   
+  __host__ __device__
   operator const T* () const { return data(); }
-  operator T* ()             { return data(); }
 
-  bool operator==(const Vec3& other) const
-  {
-    return *static_cast<const Base*>(this) == other;
-  }
+  __host__ __device__
+  operator T* ()             { return data(); }
 };
 
 template<typename T>
+__host__ __device__
 Vec3<T> operator+(const Vec3<T>& v, const Vec3<T>& w) {
   Vec3<T> res = v;
   res += w;
@@ -169,6 +197,7 @@ Vec3<T> operator+(const Vec3<T>& v, const Vec3<T>& w) {
 }
 
 template<typename T>
+__host__ __device__
 Vec3<T> operator-(const Vec3<T>& v, const Vec3<T>& w) {
   Vec3<T> res = v;
   res -= w;
@@ -176,6 +205,7 @@ Vec3<T> operator-(const Vec3<T>& v, const Vec3<T>& w) {
 }
 
 template<typename T>
+__host__ __device__
 Vec3<T> operator*(const Vec3<T>& v, const Vec3<T>& w) {
   Vec3<T> res = v;
   res *= w;
@@ -183,6 +213,7 @@ Vec3<T> operator*(const Vec3<T>& v, const Vec3<T>& w) {
 }
 
 template<typename T>
+__host__ __device__
 Vec3<T> operator*(T s, const Vec3<T>& v) {
   Vec3<T> res = v;
   res *= s;
@@ -190,6 +221,7 @@ Vec3<T> operator*(T s, const Vec3<T>& v) {
 }
 
 template<typename T>
+__host__ __device__
 Vec3<T> operator/(const Vec3<T>& v, const Vec3<T>& w) {
   Vec3<T> res = v;
   res /= w;
