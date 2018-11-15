@@ -290,7 +290,7 @@ void cuda_mparticles<BS>::set_particles(uint p, F getter)
     pxi4[n].x = prt.pxi_[0];
     pxi4[n].y = prt.pxi_[1];
     pxi4[n].z = prt.pxi_[2];
-    pxi4[n].w = prt.w_ * this->grid_.kinds[prt.kind_].q;
+    pxi4[n].w = prt.qni_wni(this->grid_);
   }
 
   thrust::copy(xi4.begin(), xi4.end(), &this->storage.xi4[off]);

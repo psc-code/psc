@@ -42,6 +42,10 @@ struct cuda_mparticles_prt
     : xi_(x), pxi_(p), w_(w), kind_(kind)
   {}
 
+  cuda_mparticles_prt(Real3 x, int kind, Real3 p, real_t qni_wni, const Grid_t& grid)
+    : xi_(x), pxi_(p), w_(qni_wni / grid.kinds[kind].q), kind_(kind)
+  {}
+
   bool operator==(const cuda_mparticles_prt& other) const
   {
     return (xi_ == other.xi_ && w_ == other.w_ &&
@@ -50,9 +54,12 @@ struct cuda_mparticles_prt
 
   bool operator!=(const cuda_mparticles_prt& other) const { return !(*this == other); }
 
+  real_t qni_wni(const Grid_t& grid) const { return w_ * grid.kinds[kind_].q; }
+
   Real3 xi_;
   int kind_;
-  Real3 pxi_; 
+  Real3 pxi_;
+private:
   real_t w_;
 };
 
@@ -164,7 +171,7 @@ struct MparticlesCuda : MparticlesBase
       {}
       
       Real3 u()   const { return prt_.pxi_; }
-      real_t w()  const { return prt_.w_; }
+      real_t w()  const { return prt_.qni_wni(prts_.mp_.grid()) / prts_.mp_.grid().kinds[prt_.kind_].q; }
       int kind()  const { return prt_.kind_; }
       
       Double3 position() const
