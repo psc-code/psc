@@ -64,9 +64,9 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
     // move every particle one full cell to the right (+y, that is)
     // (position doesn't actually matter since we'll only look at bidx)
     for (int n = 0; n < cmprts->n_prts; n++) {
-      float4 xi4 = cmprts->storage.xi4[n];
-      xi4.y += 10.;
-      cmprts->storage.xi4[n] = xi4;
+      auto prt = cmprts->storage.load(n);
+      prt.x()[1] += 10.;
+      cmprts->storage.store(prt, n);
     }
     auto& d_bidx = cmprts->by_block_.d_idx;
     d_bidx[0] = 0 + 1 * 3; // +1 in y, 0 in z
@@ -221,8 +221,8 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 
   // particles 1, 3, which need to be exchanged, should now be at the
   // end of the regular array
-  EXPECT_EQ(cuda_float_as_int(float4(cmprts->storage.xi4[cmprts->n_prts  ]).w), 1);
-  EXPECT_EQ(cuda_float_as_int(float4(cmprts->storage.xi4[cmprts->n_prts+1]).w), 3);
+  EXPECT_EQ(cmprts->storage.load(cmprts->n_prts  ).kind(), 1);
+  EXPECT_EQ(cmprts->storage.load(cmprts->n_prts+1).kind(), 3);
 
   // test copy_from_dev_and_convert
   cbndp->copy_from_dev_and_convert(cmprts.get(), cbndp->n_prts_send);
@@ -322,8 +322,8 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
 
   // and the particle have been appended after the old end of the particle list
   int n_prts_old = cmprts->n_prts - n_prts_recv;
-  EXPECT_EQ(cuda_float_as_int(float4(cmprts->storage.xi4[n_prts_old  ]).w), 3);
-  EXPECT_EQ(cuda_float_as_int(float4(cmprts->storage.xi4[n_prts_old+1]).w), 1);
+  EXPECT_EQ(cmprts->storage.load(n_prts_old  ).kind(), 3);
+  EXPECT_EQ(cmprts->storage.load(n_prts_old+1).kind(), 1);
 
   // block indices have been calculated
   auto& d_bidx = cmprts->by_block_.d_idx;
@@ -381,10 +381,6 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   // bnd_post doesn't do the actually final reordering, but
   // let's do it here for a final check
   cmprts->reorder();
-  // for (int n = 0; n < cmprts->n_prts; n++) {
-  //   float4 xi4 = cmprts->d_xi4[n];
-  //   printf("n %d: %g:%g kind %d\n", n, xi4.y, xi4.z, cuda_float_as_int(xi4.w));
-  // }
   EXPECT_TRUE(cmprts->check_ordered());
 
 #if 0

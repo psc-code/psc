@@ -63,9 +63,9 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
     // move every particle one full cell to the right (+y, that is)
     // (position doesn't actually matter since we'll only look at bidx)
     for (int n = 0; n < cmprts->n_prts; n++) {
-      float4 xi4 = cmprts->storage.xi4[n];
-      xi4.y += 10.;
-      cmprts->storage.xi4[n] = xi4;
+      auto prt = cmprts->storage.load(n);
+      prt.x()[1] += 10.;
+      cmprts->storage.store(prt, n);
     }
     auto& d_bidx = cmprts->by_block_.d_idx;
     d_bidx[0] = 4;
@@ -125,9 +125,9 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
   auto& d_bidx = cmprts.by_block_.d_idx;
 #if 0
   for (int n = 0; n < cmprts.n_prts; n++) {
-    float4 xi4 = cmprts.d_xi4[n];
-    printf("n %d: %g:%g:%g kind %d bidx %d\n", n, xi4.x, xi4.y, xi4.z,
-	   cuda_float_as_int(xi4.w), int(d_bidx[n]));
+    auto prt = cmprts.storage.load(n);
+    printf("n %d: %g:%g:%g kind %d bidx %d\n", n, prt.x()[0], prt.x()[1], prt.x()[2], prt.kind(),
+	   int(d_bidx[n]));
   }
 #endif
 
@@ -137,17 +137,17 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 
 #if 0
   for (int n = 0; n < cmprts.n_prts; n++) {
-    float4 xi4 = cmprts.d_xi4[n];
-    printf("n %d: %g:%g:%g kind %d bidx %d\n", n, xi4.x, xi4.y, xi4.z,
-	   cuda_float_as_int(xi4.w), int(d_bidx[n]));
+    auto prt = cmprts.storage.load(n);
+    printf("n %d: %g:%g:%g kind %d bidx %d\n", n, prt.x()[0], prt.x()[1], prt.x()[2], prt.kind(),
+	   int(d_bidx[n]));
   }
 #endif
 
   EXPECT_EQ(oob, begin + 2);
-  EXPECT_EQ(cuda_float_as_int(float4(cmprts.storage.xi4[0]).w), 0);
-  EXPECT_EQ(cuda_float_as_int(float4(cmprts.storage.xi4[1]).w), 2);
-  EXPECT_EQ(cuda_float_as_int(float4(cmprts.storage.xi4[2]).w), 1);
-  EXPECT_EQ(cuda_float_as_int(float4(cmprts.storage.xi4[3]).w), 3);
+  EXPECT_EQ(cmprts.storage.load(0).kind(), 0);
+  EXPECT_EQ(cmprts.storage.load(1).kind(), 2);
+  EXPECT_EQ(cmprts.storage.load(2).kind(), 1);
+  EXPECT_EQ(cmprts.storage.load(3).kind(), 3);
 
   cbndp->n_prts_send = end - oob;
 
@@ -158,8 +158,8 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 
   // particles 1, 3, which need to be exchanged, should now be at the
   // end of the regular array
-  EXPECT_EQ(cuda_float_as_int(float4(cmprts.storage.xi4[cmprts.n_prts  ]).w), 1);
-  EXPECT_EQ(cuda_float_as_int(float4(cmprts.storage.xi4[cmprts.n_prts+1]).w), 3);
+  EXPECT_EQ(cmprts.storage.load(cmprts.n_prts  ).kind(), 1);
+  EXPECT_EQ(cmprts.storage.load(cmprts.n_prts+1).kind(), 3);
 
   // test copy_from_dev_and_convert
   cbndp->copy_from_dev_and_convert(&cmprts, cbndp->n_prts_send);
@@ -261,8 +261,8 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
 
   // and the particle have been appended after the old end of the particle list
   int n_prts_old = cmprts.n_prts - n_prts_recv;
-  EXPECT_EQ(cuda_float_as_int(float4(cmprts.storage.xi4[n_prts_old  ]).w), 3);
-  EXPECT_EQ(cuda_float_as_int(float4(cmprts.storage.xi4[n_prts_old+1]).w), 1);
+  EXPECT_EQ(cmprts.storage.load(n_prts_old  ).kind(), 3);
+  EXPECT_EQ(cmprts.storage.load(n_prts_old+1).kind(), 1);
 
   // block indices have been calculated
   auto& d_bidx = cmprts.by_block_.d_idx;
@@ -273,14 +273,6 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   thrust::sequence(cmprts.by_block_.d_id.begin(), cmprts.by_block_.d_id.end());
   thrust::stable_sort_by_key(d_bidx.begin(), d_bidx.end(), cmprts.by_block_.d_id.begin());
 
-#if 0
-  for (int n = 0; n < cmprts.n_prts; n++) {
-    float4 xi4 = cmprts.d_xi4[n];
-    printf("n %d: bidx %d id %d\n", n,
-	   int(d_bidx[n]), int(cmprts.by_block_.d_id[n]));
-  }
-#endif
-  
   EXPECT_EQ(cmprts.n_prts, 4);
   auto& d_id = cmprts.by_block_.d_id;
   EXPECT_EQ(d_id[0], 2);
@@ -315,10 +307,6 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   // bnd_post doesn't do the actually final reordering, but
   // let's do it here for a final check
   cmprts.reorder();
-  // for (int n = 0; n < cmprts.n_prts; n++) {
-  //   float4 xi4 = cmprts.d_xi4[n];
-  //   printf("n %d: %g:%g kind %d\n", n, xi4.y, xi4.z, cuda_float_as_int(xi4.w));
-  // }
   EXPECT_TRUE(cmprts.check_ordered());
 
 #if 0
