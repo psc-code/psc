@@ -308,16 +308,16 @@ void cuda_mparticles<BS>::reorder_and_offsets(const thrust::device_vector<uint>&
 // ----------------------------------------------------------------------
 // k_reorder
 
+template<typename BS>
 __global__ static void
-k_reorder(int n_prts, const uint *d_ids, float4 *xi4, float4 *pxi4,
-	  const float4 *alt_xi4, const float4 *alt_pxi4)
+k_reorder(DMparticlesCuda<BS> dmprts, int n_prts, const uint *d_ids)
 {
   int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
 
   if (i < n_prts) {
     int j = d_ids[i];
-    xi4[i] = alt_xi4[j];
-    pxi4[i] = alt_pxi4[j];
+    dmprts.storage.xi4[i] = dmprts.alt_storage.xi4[j];
+    dmprts.storage.pxi4[i] = dmprts.alt_storage.pxi4[j];
   }
 }
 
@@ -346,9 +346,7 @@ void cuda_mparticles<BS>::reorder(const thrust::device_vector<uint>& d_id)
 
   dim3 dimGrid((this->n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
   
-  k_reorder<<<dimGrid, THREADS_PER_BLOCK>>>
-    (this->n_prts, d_id.data().get(), this->storage.xi4.data().get(), this->storage.pxi4.data().get(),
-     alt_storage.xi4.data().get(), alt_storage.pxi4.data().get());
+  k_reorder<BS><<<dimGrid, THREADS_PER_BLOCK>>>(*this, this->n_prts, d_id.data().get());
 }
 
 // ----------------------------------------------------------------------
