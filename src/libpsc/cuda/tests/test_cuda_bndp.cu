@@ -41,8 +41,6 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
     double dt = .1;
     grid.reset(new Grid_t(domain, bc, kinds, norm, dt));
 
-    grid->kinds.push_back(Grid_t::Kind(1., 1., "test species"));
-
     cmprts.reset(make_cmprts(*grid));
 
     // (ab)use kind to track particle more easily in the test
