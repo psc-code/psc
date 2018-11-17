@@ -25,7 +25,7 @@ struct MparticlesCudaStorage
     pxi4.resize(n);
   }
   
-  DParticleCuda load(int n)
+  DParticleCuda load(int n) const
   {
     float4 _xi4 = xi4[n];
     float4 _pxi4 = pxi4[n];
