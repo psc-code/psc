@@ -45,6 +45,34 @@ struct MparticlesCudaStorage
 };
 
 // ======================================================================
+// HMparticlesCudaStorage
+
+struct HMparticlesCudaStorage
+{
+  HMparticlesCudaStorage(size_t n)
+  : xi4{n}, pxi4{n}
+  {}
+  
+  DParticleCuda load(int n) const
+  {
+    float4 _xi4 = xi4[n];
+    float4 _pxi4 = pxi4[n];
+    return {{_xi4.x, _xi4.y, _xi4.z}, {_pxi4.x, _pxi4.y, _pxi4.z}, _pxi4.w, cuda_float_as_int(_xi4.w)};
+  }
+
+  void store(const DParticleCuda& prt, int n)
+  {
+    float4 _xi4 = { prt.x()[0], prt.x()[1], prt.x()[2], cuda_int_as_float(prt.kind()) };
+    float4 _pxi4 = { prt.u()[0], prt.u()[1], prt.u()[2], prt.qni_wni() };
+    xi4[n] = _xi4;
+    pxi4[n] = _pxi4;
+  }
+  
+  thrust::host_vector<float4> xi4;
+  thrust::host_vector<float4> pxi4;
+};
+
+// ======================================================================
 // DMparticlesCudaStorage
 
 struct DMparticlesCudaStorage
