@@ -45,12 +45,6 @@ struct cuda_mparticles_indexer
     return pi_.cellPosition(xi);
   }
 
-  int validCellIndex(const float4& xi4, int p) const
-  {
-    Int3 cpos = cellPosition(&xi4.x);
-    return validCellIndex(cpos, p);
-  }
-
   Int3 blockPosition(const real_t xi[3]) const
   {
     Int3 pos = pi_.cellPosition(xi);
