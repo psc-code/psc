@@ -245,8 +245,9 @@ void cuda_mparticles<BS>::find_cell_indices_ids(thrust::device_vector<uint>& d_c
 // ----------------------------------------------------------------------
 // k_reorder_and_offsets
 
+template<typename BS>
 __global__ static void
-k_reorder_and_offsets(int nr_prts, float4 *xi4, float4 *pxi4, float4 *alt_xi4, float4 *alt_pxi4,
+k_reorder_and_offsets(DMparticlesCuda<BS> dmprts, int nr_prts,
 		      const uint *d_bidx, const uint *d_ids, uint *d_off, int last_block)
 {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
@@ -254,8 +255,8 @@ k_reorder_and_offsets(int nr_prts, float4 *xi4, float4 *pxi4, float4 *alt_xi4, f
   for (; i <= nr_prts; i += blockDim.x * gridDim.x) {
     int block, prev_block;
     if (i < nr_prts) {
-      xi4[i] = alt_xi4[d_ids[i]];
-      pxi4[i] = alt_pxi4[d_ids[i]];
+      dmprts.storage.xi4[i] = dmprts.alt_storage.xi4[d_ids[i]];
+      dmprts.storage.pxi4[i] = dmprts.alt_storage.pxi4[d_ids[i]];
       
       block = d_bidx[i];
     } else { // needed if there is no particle in the last block
@@ -294,12 +295,11 @@ void cuda_mparticles<BS>::reorder_and_offsets(const thrust::device_vector<uint>&
   dim3 dimGrid(n_blocks);
   dim3 dimBlock(THREADS_PER_BLOCK);
 
-  k_reorder_and_offsets<<<dimGrid, dimBlock>>>(this->n_prts, this->storage.xi4.data().get(),
-					       this->storage.pxi4.data().get(),
-					       alt_storage.xi4.data().get(), alt_storage.pxi4.data().get(),
-					       d_idx.data().get(),
-					       d_id.data().get(),
-					       d_off.data().get(), this->n_blocks);
+  k_reorder_and_offsets<BS><<<dimGrid, dimBlock>>>(*this,
+						   this->n_prts,
+						   d_idx.data().get(),
+						   d_id.data().get(),
+						   d_off.data().get(), this->n_blocks);
   cuda_sync_if_enabled();
 
   need_reorder = false;
