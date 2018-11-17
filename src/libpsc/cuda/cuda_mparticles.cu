@@ -123,19 +123,19 @@ void cuda_mparticles<BS>::swap_alt()
 
 template<typename BS>
 __global__ static void
-k_find_block_indices_ids(DParticleIndexer<BS> dpi, float4 *d_xi4, uint *d_off,
-			 uint *d_bidx, uint *d_ids, int n_patches,
-			 int n_blocks_per_patch)
+k_find_block_indices_ids(DMparticlesCuda<BS> dmprts,
+			 uint* d_bidx, uint* d_id,
+			 int n_patches,int n_blocks_per_patch)
 {
   for (int p = 0; p < n_patches; p++) {
-    uint off = d_off[p * n_blocks_per_patch];
-    uint n_prts = d_off[(p + 1) * n_blocks_per_patch] - off;
+    uint off = dmprts.off_[p * n_blocks_per_patch];
+    uint n_prts = dmprts.off_[(p + 1) * n_blocks_per_patch] - off;
 
     int n = threadIdx.x + blockDim.x * blockIdx.x;
     for (; n < n_prts; n += gridDim.x * blockDim.x) {
-      float4 xi4 = d_xi4[n + off];
-      d_bidx[n + off] = dpi.blockIndex(xi4, p);
-      d_ids[n + off] = n + off;
+      float4 xi4 = dmprts.storage.xi4[n + off];
+      d_bidx[n + off] = dmprts.blockIndex(xi4, p);
+      d_id[n + off] = n + off;
     }
   }
 }
@@ -191,13 +191,11 @@ void cuda_mparticles<BS>::find_block_indices_ids(thrust::device_vector<uint>& d_
   }
 
   int n_blocks = (max_n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
-  if (n_blocks > 32768) n_blocks = 32768;
+  //if (n_blocks > 32768) n_blocks = 32768;
   dim3 dimGrid(n_blocks);
   dim3 dimBlock(THREADS_PER_BLOCK);
 
   k_find_block_indices_ids<BS><<<dimGrid, dimBlock>>>(*this,
-						      this->storage.xi4.data().get(),
-						      this->by_block_.d_off.data().get(),
 						      d_idx.data().get(),
 						      d_id.data().get(),
 						      this->n_patches,
