@@ -473,8 +473,7 @@ void cuda_mparticles<BS>::inject_buf(const particle_inject *buf,
   }
   //  printf("buf_n %d\n", buf_n);
 
-  thrust::host_vector<float4> h_xi4(buf_n);
-  thrust::host_vector<float4> h_pxi4(buf_n);
+  HMparticlesCudaStorage h_storage(buf_n);
   thrust::host_vector<uint> h_bidx(buf_n);
   thrust::host_vector<uint> h_id(buf_n);
 
@@ -482,23 +481,12 @@ void cuda_mparticles<BS>::inject_buf(const particle_inject *buf,
   for (int p = 0; p < this->n_patches; p++) {
     auto& patch = this->grid_.patches[p];
     for (int n = 0; n < buf_n_by_patch[p]; n++) {
-      float4 *xi4 = &h_xi4[off + n];
-      float4 *pxi4 = &h_pxi4[off + n];
       auto new_prt = buf[off + n];
       auto x = Double3::fromPointer(new_prt.x) - patch.xb;
       auto prt = particle_t{Real3(x), Real3(Double3::fromPointer(new_prt.u)),
 				     real_t(new_prt.w), new_prt.kind};
-  
-      xi4->x  = prt.x()[0];
-      xi4->y  = prt.x()[1];
-      xi4->z  = prt.x()[2];
-      xi4->w  = cuda_int_as_float(prt.kind());
-      pxi4->x = prt.u()[0];
-      pxi4->y = prt.u()[1];
-      pxi4->z = prt.u()[2];
-      pxi4->w = prt.qni_wni();
-
-      auto bidx = this->blockIndex(*xi4, p);
+      h_storage.store(prt, off + n);
+      auto bidx = this->blockIndex(h_storage.xi4[off + n], p);
       assert(bidx >= 0 && bidx < this->n_blocks);
       h_bidx[off + n] = bidx;;
       h_id[off + n] = this->n_prts + off + n;
@@ -514,8 +502,8 @@ void cuda_mparticles<BS>::inject_buf(const particle_inject *buf,
 
   resize(this->n_prts + buf_n);
 
-  thrust::copy(h_xi4.begin(), h_xi4.end(), this->storage.xi4.begin() + this->n_prts);
-  thrust::copy(h_pxi4.begin(), h_pxi4.end(), this->storage.pxi4.begin() + this->n_prts);
+  thrust::copy(h_storage.xi4.begin(), h_storage.xi4.end(), this->storage.xi4.begin() + this->n_prts);
+  thrust::copy(h_storage.pxi4.begin(), h_storage.pxi4.end(), this->storage.pxi4.begin() + this->n_prts);
   thrust::copy(h_bidx.begin(), h_bidx.end(), this->by_block_.d_idx.begin() + this->n_prts);
   //thrust::copy(h_id.begin(), h_id.end(), d_id + n_prts);
   // FIXME, looks like ids up until n_prts have already been set above

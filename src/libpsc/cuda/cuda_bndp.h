@@ -132,14 +132,13 @@ struct cuda_bndp<CudaMparticles, dim_xyz> : cuda_mparticles_indexer<typename Cud
   void copy_from_dev_and_convert(CudaMparticles *cmprts, uint n_prts_send)
   {
     uint n_prts = cmprts->n_prts;
-    thrust::host_vector<float4> h_bnd_xi4(n_prts_send);
-    thrust::host_vector<float4> h_bnd_pxi4(n_prts_send);
+    HMparticlesCudaStorage h_bnd_storage(n_prts_send);
     thrust::host_vector<uint> h_bidx(n_prts_send);
     
     assert(cmprts->storage.xi4.begin() + n_prts + n_prts_send == cmprts->storage.xi4.end());
     
-    thrust::copy(cmprts->storage.xi4.begin()  + n_prts, cmprts->storage.xi4.end(), h_bnd_xi4.begin());
-    thrust::copy(cmprts->storage.pxi4.begin() + n_prts, cmprts->storage.pxi4.end(), h_bnd_pxi4.begin());
+    thrust::copy(cmprts->storage.xi4.begin()  + n_prts, cmprts->storage.xi4.end(), h_bnd_storage.xi4.begin());
+    thrust::copy(cmprts->storage.pxi4.begin() + n_prts, cmprts->storage.pxi4.end(), h_bnd_storage.pxi4.begin());
     thrust::copy(cmprts->by_block_.d_idx.begin() + n_prts, cmprts->by_block_.d_idx.end(),
 		 h_bidx.begin());
 
@@ -148,12 +147,7 @@ struct cuda_bndp<CudaMparticles, dim_xyz> : cuda_mparticles_indexer<typename Cud
       bpatch[p].n_send = 0;
     }
     for (int n = 0; n < n_prts_send; n++) {
-      int kind = cuda_float_as_int(h_bnd_xi4[n].w);
-      auto prt = typename CudaMparticles::particle_t{{h_bnd_xi4[n].x, h_bnd_xi4[n].y, h_bnd_xi4[n].z},
-						     {h_bnd_pxi4[n].x, h_bnd_pxi4[n].y, h_bnd_pxi4[n].z},
-						     h_bnd_pxi4[n].w,
-						     kind};
-
+      auto prt = h_bnd_storage.load(n);
       int p = h_bidx[n] - cmprts->n_blocks;
       auto& buf = bpatch[p].buf;
       bpatch[p].buf.push_back(prt);
