@@ -12,10 +12,8 @@ struct ParticleSimple
   using real_t = _Real;
   using Real3 = Vec3<real_t>;
 
-  __host__ __device__
   ParticleSimple() = default;
 
-  __host__ __device__
   ParticleSimple(const ParticleSimple&) = default;
 
   __host__ __device__

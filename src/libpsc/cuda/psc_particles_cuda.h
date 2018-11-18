@@ -92,7 +92,7 @@ struct MparticlesCuda : MparticlesBase
     struct injector
     {
       injector(patch_t& patch)
-	: patch_{patch},
+	: patch_(patch),
 	  n_prts_{0}
       {
 	auto& mprts = patch_.mp_;
@@ -130,7 +130,7 @@ struct MparticlesCuda : MparticlesBase
     using Double3 = Vec3<double>;
       
       const_accessor(const particle_t& prt, const patch_t& prts)
-	: prt_{prt}, prts_{prts}
+	: prt_(prt), prts_(prts)
       {}
       
       Real3 u()   const { return prt_.u(); }
@@ -159,7 +159,7 @@ struct MparticlesCuda : MparticlesBase
       
       {
 	const_iterator(const patch_t& prts, uint n)
-	  : prts_{prts}, n_{n}
+	  : prts_(prts), n_{n}
 	{}
 	
 	bool operator==(const_iterator other) const { return n_ == other.n_; }
@@ -175,7 +175,7 @@ struct MparticlesCuda : MparticlesBase
       };
     
       const_accessor_range(const patch_t& prts)
-	: prts_{prts}
+	: prts_(prts)
       {}
 
       const_iterator begin() const { return {prts_, 0}; }

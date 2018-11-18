@@ -14,7 +14,7 @@ struct FldCache
   const static int BLOCKSIZE_Y = BS::y::value;
   const static int BLOCKSIZE_Z = BS::z::value;
 
-  __device__ FldCache() = default;
+  FldCache() = default;
   __device__ FldCache(const FldCache&) = delete;
   
   __device__ void load(DFields d_flds, int *ci0)
@@ -100,7 +100,7 @@ struct FldCache<BS, dim_yz>
   const static int BLOCKSIZE_Y = BS::y::value;
   const static int BLOCKSIZE_Z = BS::z::value;
 
-  __device__ FldCache() = default;
+  FldCache() = default;
   __device__ FldCache(const FldCache&) = delete;
   
   __device__ void load(DFields d_flds, int *ci0)
