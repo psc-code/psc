@@ -9,10 +9,8 @@ void cuda_mparticles<BS>::reorder_and_offsets_slow()
     return;
   }
 
-  thrust::host_vector<float4> h_xi4(this->storage.xi4);
-  thrust::host_vector<float4> h_pxi4(this->storage.pxi4);
-  thrust::host_vector<float4> h_alt_xi4(this->n_prts);
-  thrust::host_vector<float4> h_alt_pxi4(this->n_prts);
+  HMparticlesCudaStorage h_storage(this->storage);
+  HMparticlesCudaStorage h_alt_storage(this->alt_storage);
   thrust::host_vector<uint> h_off(this->by_block_.d_off);
   thrust::host_vector<uint> h_bidx(this->by_block_.d_idx);
   thrust::host_vector<uint> h_id(this->by_block_.d_id);
@@ -21,8 +19,8 @@ void cuda_mparticles<BS>::reorder_and_offsets_slow()
     //    uint bidx;
     uint block;
     if (i < this->n_prts) {
-      h_alt_xi4[i] = h_xi4[h_id[i]];
-      h_alt_pxi4[i] = h_pxi4[h_id[i]];
+      h_alt_storage.xi4[i] = h_storage.xi4[h_id[i]];
+      h_alt_storage.pxi4[i] = h_storage.pxi4[h_id[i]];
       //bidx = blockIndex(h_alt_xi4[i], 0);
       block = h_bidx[i];
     } else {
@@ -38,10 +36,10 @@ void cuda_mparticles<BS>::reorder_and_offsets_slow()
     }
   }
 
-  alt_storage.xi4.resize(this->n_prts);
-  alt_storage.pxi4.resize(this->n_prts);
-  thrust::copy(h_alt_xi4.begin(), h_alt_xi4.end(), alt_storage.xi4.begin());
-  thrust::copy(h_alt_pxi4.begin(), h_alt_pxi4.end(), alt_storage.pxi4.begin());
+  h_alt_storage.xi4.resize(this->n_prts);
+  h_alt_storage.pxi4.resize(this->n_prts);
+  thrust::copy(h_alt_storage.xi4.begin(), h_alt_storage.xi4.end(), alt_storage.xi4.begin());
+  thrust::copy(h_alt_storage.pxi4.begin(), h_alt_storage.pxi4.end(), alt_storage.pxi4.begin());
   thrust::copy(h_off.begin(), h_off.end(), this->by_block_.d_off.begin());
   
   swap_alt();
