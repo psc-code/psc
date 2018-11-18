@@ -58,11 +58,11 @@ struct HMparticlesCudaStorage
   {}
 
   // FIXME, why so many warnings?
-  // void resize(size_t n)
-  // {
-  //   xi4.resize(n);
-  //   pxi4.resize(n);
-  // }
+  void resize(size_t n)
+  {
+    xi4.resize(n);
+    pxi4.resize(n);
+  }
   
   DParticleCuda load(int n) const
   {

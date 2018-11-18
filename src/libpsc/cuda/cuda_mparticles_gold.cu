@@ -36,8 +36,8 @@ void cuda_mparticles<BS>::reorder_and_offsets_slow()
     }
   }
 
-  h_alt_storage.xi4.resize(this->n_prts);
-  h_alt_storage.pxi4.resize(this->n_prts);
+  h_alt_storage.resize(this->n_prts);
+  //h_alt_storage.pxi4.resize(this->n_prts);
   thrust::copy(h_alt_storage.xi4.begin(), h_alt_storage.xi4.end(), alt_storage.xi4.begin());
   thrust::copy(h_alt_storage.pxi4.begin(), h_alt_storage.pxi4.end(), alt_storage.pxi4.begin());
   thrust::copy(h_off.begin(), h_off.end(), this->by_block_.d_off.begin());
