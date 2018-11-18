@@ -147,13 +147,12 @@ template<typename CudaMparticles, typename DIM>
 void cuda_bndp<CudaMparticles, DIM>::copy_from_dev_and_convert(CudaMparticles *cmprts, uint n_prts_send)
 {
   uint n_prts = cmprts->n_prts;
-  thrust::host_vector<float4> h_bnd_xi4(n_prts_send);
-  thrust::host_vector<float4> h_bnd_pxi4(n_prts_send);
+  HMparticlesCudaStorage h_bnd_storage{n_prts_send};
 
   assert(cmprts->storage.xi4.begin() + n_prts + n_prts_send == cmprts->storage.xi4.end());
 
-  thrust::copy(cmprts->storage.xi4.begin()  + n_prts, cmprts->storage.xi4.end(), h_bnd_xi4.begin());
-  thrust::copy(cmprts->storage.pxi4.begin() + n_prts, cmprts->storage.pxi4.end(), h_bnd_pxi4.begin());
+  thrust::copy(cmprts->storage.xi4.begin()  + n_prts, cmprts->storage.xi4.end(), h_bnd_storage.xi4.begin());
+  thrust::copy(cmprts->storage.pxi4.begin() + n_prts, cmprts->storage.pxi4.end(), h_bnd_storage.pxi4.begin());
 
   uint off = 0;
   for (int p = 0; p < n_patches; p++) {
@@ -163,11 +162,7 @@ void cuda_bndp<CudaMparticles, DIM>::copy_from_dev_and_convert(CudaMparticles *c
     buf.resize(n_send);
 
     for (int n = 0; n < n_send; n++) {
-      int kind = cuda_float_as_int(h_bnd_xi4[n + off].w);
-      buf[n] = typename CudaMparticles::particle_t{{h_bnd_xi4[n + off].x, h_bnd_xi4[n + off].y, h_bnd_xi4[n + off].z},
-						   {h_bnd_pxi4[n + off].x, h_bnd_pxi4[n + off].y, h_bnd_pxi4[n + off].z},
-						   h_bnd_pxi4[n + off].w,
-					  kind};
+      buf[n] = h_bnd_storage.load(n + off);
     }
     off += n_send;
   }
@@ -186,8 +181,7 @@ uint cuda_bndp<CudaMparticles, DIM>::convert_and_copy_to_dev(CudaMparticles *cmp
     n_recv += bpatch[p].buf.size();
   }
 
-  thrust::host_vector<float4> h_bnd_xi4(n_recv);
-  thrust::host_vector<float4> h_bnd_pxi4(n_recv);
+  HMparticlesCudaStorage h_bnd_storage{n_recv};
   thrust::host_vector<uint> h_bnd_idx(n_recv);
   thrust::host_vector<uint> h_bnd_off(n_recv);
 
@@ -199,19 +193,9 @@ uint cuda_bndp<CudaMparticles, DIM>::convert_and_copy_to_dev(CudaMparticles *cmp
     bpatch[p].n_recv = n_recv;
     
     for (int n = 0; n < n_recv; n++) {
-      auto& prt = bpatch[p].buf[n];
-
-      h_bnd_xi4[n + off].x  = prt.x()[0];
-      h_bnd_xi4[n + off].y  = prt.x()[1];
-      h_bnd_xi4[n + off].z  = prt.x()[2];
-      h_bnd_xi4[n + off].w  = cuda_int_as_float(prt.kind());
-      h_bnd_pxi4[n + off].x = prt.u()[0];
-      h_bnd_pxi4[n + off].y = prt.u()[1];
-      h_bnd_pxi4[n + off].z = prt.u()[2];
-      h_bnd_pxi4[n + off].w = prt.qni_wni();
-
-      checkInPatchMod(&h_bnd_xi4[n + off].x);
-      uint b = blockIndex(h_bnd_xi4[n + off], p);
+      h_bnd_storage.store(bpatch[p].buf[n], n + off);;
+      checkInPatchMod(&h_bnd_storage.xi4[n + off].x);
+      uint b = blockIndex(h_bnd_storage.xi4[n + off], p);
       assert(b < n_blocks);
       h_bnd_idx[n + off] = b;
       h_bnd_off[n + off] = h_bnd_cnt[b]++;
@@ -221,8 +205,8 @@ uint cuda_bndp<CudaMparticles, DIM>::convert_and_copy_to_dev(CudaMparticles *cmp
 
   cmprts->resize(cmprts->n_prts + n_recv);
 
-  thrust::copy(h_bnd_xi4.begin(), h_bnd_xi4.end(), cmprts->storage.xi4.begin() + cmprts->n_prts);
-  thrust::copy(h_bnd_pxi4.begin(), h_bnd_pxi4.end(), cmprts->storage.pxi4.begin() + cmprts->n_prts);
+  thrust::copy(h_bnd_storage.xi4.begin(), h_bnd_storage.xi4.end(), cmprts->storage.xi4.begin() + cmprts->n_prts);
+  thrust::copy(h_bnd_storage.pxi4.begin(), h_bnd_storage.pxi4.end(), cmprts->storage.pxi4.begin() + cmprts->n_prts);
 
   // for consistency, use same block indices that we counted earlier
   // OPT unneeded?

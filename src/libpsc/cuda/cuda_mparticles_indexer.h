@@ -60,6 +60,12 @@ struct cuda_mparticles_indexer
     return blockIndex(bpos, p);
   }
 
+  int blockIndex(const DParticleCuda& prt, int p) const
+  {
+    Int3 bpos = blockPosition(prt.x());
+    return blockIndex(bpos, p);
+  }
+
   void checkInPatchMod(real_t xi[3]) const { pi_.checkInPatchMod(xi); }
   const Int3& b_mx() const { return b_mx_; }
 

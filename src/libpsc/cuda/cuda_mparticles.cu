@@ -410,9 +410,8 @@ void cuda_mparticles<BS>::inject_buf(const particle_t *buf,
   uint off = 0;
   for (int p = 0; p < this->n_patches; p++) {
     for (int n = 0; n < buf_n_by_patch[p]; n++) {
-      h_storage.store(buf[off+n], off+n);
-      float4 *xi4 = &h_storage.xi4[off + n];
-      auto bidx = this->blockIndex(*xi4, p);
+      h_storage.store(buf[off + n], off + n);
+      auto bidx = this->blockIndex(buf[off + n], p);
       assert(bidx >= 0 && bidx < this->n_blocks);
       h_bidx[off + n] = bidx;;
       h_id[off + n] = this->n_prts + off + n;
@@ -486,7 +485,7 @@ void cuda_mparticles<BS>::inject_buf(const particle_inject *buf,
       auto prt = particle_t{Real3(x), Real3(Double3::fromPointer(new_prt.u)),
 				     real_t(new_prt.w), new_prt.kind};
       h_storage.store(prt, off + n);
-      auto bidx = this->blockIndex(h_storage.xi4[off + n], p);
+      auto bidx = this->blockIndex(prt, p);
       assert(bidx >= 0 && bidx < this->n_blocks);
       h_bidx[off + n] = bidx;;
       h_id[off + n] = this->n_prts + off + n;
