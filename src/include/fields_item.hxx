@@ -192,7 +192,7 @@ struct ItemMomentCRTP
     auto& kinds = grid.kinds;
     assert(n_comps <= POFI_MAX_COMPS);
 
-    if (!Derived::flags & POFI_BY_KIND) {
+    if (!(Derived::flags & POFI_BY_KIND)) {
       for (int m = 0; m < n_comps; m++) {
 	comp_names_.emplace_back(fld_names[m]);
       }
