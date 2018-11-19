@@ -422,11 +422,11 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     params.wpedt_max = .36;
     params.wpe_wce = 2.;
-    params.mi_me = 25.;
+    params.mi_me = 200.;
     
-    params.Lx_di = 40.;
+    params.Lx_di = 80.;
     params.Ly_di = 1.;
-    params.Lz_di = 10.;
+    params.Lz_di = 20.;
     
     params.electron_sort_interval = 25;
     params.ion_sort_interval = 25;
@@ -437,8 +437,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     
     params.overalloc = 2.;
     
-    params.gdims = {512, 1, 128};
-    params.np = { 4, 1, 1 };
+    params.gdims = {5120, 1, 1280};
+    params.np = { 256, 1, 2 };
     
     params.L_di = .5;
     params.Ti_Te = 5.;
@@ -451,7 +451,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     
     params.Lpert_Lx = 1.;
     params.dbz_b0 = .03;
-    params.nppc = 10;
+    params.nppc = 300;
     params.open_bc_x = false;
     params.driven_bc_z = false;
 
