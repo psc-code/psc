@@ -15,10 +15,8 @@
 #include "setup_fields.hxx"
 #include "setup_particles.hxx"
 
-#ifdef USE_VPIC
 #include "../libpsc/vpic/push_particles_vpic.hxx"
 #include "../libpsc/vpic/bnd_particles_vpic.hxx"
-#endif
 
 #ifdef USE_CUDA
 #include "../libpsc/cuda/push_particles_cuda_impl.hxx"
