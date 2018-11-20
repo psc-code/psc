@@ -2,7 +2,7 @@
 #ifndef VPIC_CONFIG_H
 #define VPIC_CONFIG_H
 
-//#define DO_VPIC 1
+#define DO_VPIC 1
 
 #ifdef USE_VPIC
 #include "util/profile/profile.h"
