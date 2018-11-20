@@ -3,7 +3,14 @@
 
 #include "psc_vpic_bits.h"
 
+#ifdef USE_VPIC
 #define HAS_V4_PIPELINE
+#endif
+
+#ifdef HAS_V4_PIPELINE
+#define USE_V4_SSE
+#include "util/v4/v4.h"
+#endif
 
 struct ParticleInjector
 {
@@ -78,7 +85,6 @@ struct PscParticlesOps
 		    AccumulatorBlock acc_block,
 		    const Grid* g, const float qsp)
   {
-
     using namespace v4;
 
     /*const*/ v4float one( 1.f );
@@ -535,7 +541,7 @@ struct PscParticlesOps
 
   static void advance_p_pipeline_v4(typename Mparticles::Species& sp,
 				    AccumulatorBlock acc_block,
-				    Interpolator& interpolator,
+				    MfieldsInterpolator& interpolator,
 				    particle_mover_seg_t *seg,
 				    Particle * ALIGNED(128) p, int n,
 				    ParticleMover * ALIGNED(16) pm, int max_nm)
@@ -575,16 +581,18 @@ struct PscParticlesOps
     int nm   = 0;
     int n_ignored = 0;
 
+    auto& ip = interpolator.getPatch(0);
+
     // Process the particle quads for this pipeline
 
     for( ; nq; nq--, p+=4 ) {
       load_4x4_tr(&p[0].dx,&p[1].dx,&p[2].dx,&p[3].dx,dx,dy,dz,ii);
 
       // Interpolate fields
-      vp0 = (float * ALIGNED(16)) (&interpolator[ii(0)]);
-      vp1 = (float * ALIGNED(16)) (&interpolator[ii(1)]);
-      vp2 = (float * ALIGNED(16)) (&interpolator[ii(2)]);
-      vp3 = (float * ALIGNED(16)) (&interpolator[ii(3)]);
+      vp0 = (float * ALIGNED(16)) (&ip[ii(0)]);
+      vp1 = (float * ALIGNED(16)) (&ip[ii(1)]);
+      vp2 = (float * ALIGNED(16)) (&ip[ii(2)]);
+      vp3 = (float * ALIGNED(16)) (&ip[ii(3)]);
       load_4x4_tr(vp0,  vp1,  vp2,  vp3,  hax,v0,v1,v2); hax = qdt_2mc*fma( fma( v2, dy, v1 ), dz, fma( v0, dy, hax ) );
       load_4x4_tr(vp0+4,vp1+4,vp2+4,vp3+4,hay,v3,v4,v5); hay = qdt_2mc*fma( fma( v5, dz, v4 ), dx, fma( v3, dz, hay ) );
       load_4x4_tr(vp0+8,vp1+8,vp2+8,vp3+8,haz,v0,v1,v2); haz = qdt_2mc*fma( fma( v2, dx, v1 ), dy, fma( v0, dx, haz ) );
@@ -1456,12 +1464,13 @@ struct PscParticlesOps
 
 #if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
 
-  static void uncenter_p_pipeline_v4(Species* sp, /*const*/ Interpolator& interpolator,
+  static void uncenter_p_pipeline_v4(Species* sp, /*const*/ MfieldsInterpolator& interpolator,
 				     int off, int cnt)
   {
     using namespace v4;
     const Grid* g = sp->grid();
-    const typename Interpolator::Element * ALIGNED(128) f0 = interpolator.data();
+    auto& ip = interpolator.getPatch(0);
+    const typename MfieldsInterpolator::Element * ALIGNED(128) f0 = ip.data();
 
     Particle             * ALIGNED(128) p;
     const float          * ALIGNED(16)  vp0;
@@ -1655,14 +1664,14 @@ struct PscParticlesOps
 
 #if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
 
-  static double energy_p_pipeline_v4(Mparticles::Species& sp, Interpolator &interpolator,
+  static double energy_p_pipeline_v4(typename Mparticles::Species& sp, MfieldsInterpolator &interpolator,
 				     int n0, int n1)
   {
     using namespace v4;
 
     const Grid* g = sp.grid();
 
-    const typename Interpolator::Element * RESTRICT ALIGNED(128) f = interpolator.data();
+    const typename MfieldsInterpolator::Element * RESTRICT ALIGNED(128) f = interpolator.data();
 
     const float          * RESTRICT ALIGNED(16)  vp0;
     const float          * RESTRICT ALIGNED(16)  vp1;
