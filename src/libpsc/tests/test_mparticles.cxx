@@ -9,13 +9,10 @@
 #include "../libpsc/vpic/PscGridBase.h"
 #include "../libpsc/vpic/PscParticleBc.h"
 #include "../libpsc/vpic/PscParticlesBase.h"
+#include "../libpsc/vpic/vpic_config.h"
 #ifdef USE_CUDA
 #include "../libpsc/cuda/psc_particles_cuda.h"
 #endif
-
-using Grid = PscGridBase; // FIXME
-using ParticlesVpic = PscParticlesBase<Grid, PscParticleBcList>;
-using MparticlesVpic = MparticlesVpic_<ParticlesVpic>;
 
 template<typename _Mparticles, typename _MakeGrid = MakeTestGrid1>
 struct Config
