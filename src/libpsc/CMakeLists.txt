@@ -37,9 +37,7 @@ if (USE_CUDA)
   target_include_directories(psc PRIVATE vpic) # FIXME!
 endif()
 
-if (USE_VPIC)
-  add_subdirectory(vpic)
-  target_link_libraries(psc PUBLIC pscvpic)
-endif()
+add_subdirectory(vpic)
+target_link_libraries(psc PUBLIC pscvpic)
 
 add_subdirectory(tests)

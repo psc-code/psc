@@ -13,8 +13,14 @@ target_include_directories(pscvpic
   )
 target_link_libraries(pscvpic
   mrc
+  )
+
+if (USE_VPIC)
+target_link_libraries(pscvpic
   VPIC::VPIC
   )
+endif()
+
 target_compile_features(pscvpic
   PUBLIC cxx_std_11
   )
