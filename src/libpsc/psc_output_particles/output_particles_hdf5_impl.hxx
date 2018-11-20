@@ -146,10 +146,10 @@ struct OutputParticlesHdf5 : OutputParticlesParams, OutputParticlesBase
 			int ilo[3], int ihi[3], int ld[3])
   {
     for (int d = 0; d < 3; d++) {
-      ilo[d] = MIN(ldims[d], MAX(0, lo[d] - off[d]));
-      ihi[d] = MAX(0, MIN(ldims[d], hi[d] - off[d]));
-      ilo[d] = MAX(0, lo[d] - off[d]);
-      ihi[d] = MIN(ldims[d], hi[d] - off[d]);
+      ilo[d] = MAX(lo[d], off[d]) - off[d];
+      ihi[d] = MIN(hi[d], off[d] + ldims[d]) - off[d];
+      ilo[d] = MIN(ldims[d], ilo[d]);
+      ihi[d] = MAX(0, ihi[d]);
       ld[d] = ihi[d] - ilo[d];
     }
     return grid_.kinds.size() * ld[0] * ld[1] * ld[2];
