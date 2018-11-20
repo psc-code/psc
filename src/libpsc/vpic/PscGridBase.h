@@ -8,6 +8,7 @@
 #include <array>
 #include <vector>
 #include <cassert>
+#include <cstring>
 #include <mrc_common.h>
 
 // ======================================================================
