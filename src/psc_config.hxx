@@ -201,7 +201,7 @@ struct PscConfigVpic
   using BndParticles_t = BndParticlesVpic;
   using Checks_t = ChecksVpic;
   using Marder_t = MarderVpic;
-  using OutputParticles = OutputParticlesNone;
+  using OutputParticles = OutputParticlesHdf5<MparticlesSingle>;
   using dim_t = dim_xyz;
 
 #if 0

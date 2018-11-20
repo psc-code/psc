@@ -382,6 +382,12 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     outf_params.pfield_step = int((output_field_interval / (phys_.wci*dt)));
     outf_.reset(new OutputFieldsC{grid(), outf_params});
 
+    OutputParticlesParams outp_params{};
+    outp_params.every_step = int((output_particle_interval / (phys_.wci*dt)));
+    outp_params.data_dir = ".";
+    outp_params.basename = "prt";
+    outp_.reset(new OutputParticles{grid(), outp_params});
+
     // ----------------------------------------------------------------------
     // rebalance and actually initialize particles / fields
 
@@ -757,6 +763,12 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 	io_pfd_.write_mflds(result.mflds, result.name, result.comp_names);
       }
       mrc_io_close(io_pfd_.io_);
+    }
+
+    if (outp_) {
+      psc_stats_start(st_time_output);
+      (*outp_).run(*mprts_);
+      psc_stats_stop(st_time_output);
     }
   }
 #endif
