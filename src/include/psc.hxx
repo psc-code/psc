@@ -841,13 +841,13 @@ private:
   void print_status()
   {
 #ifdef VPIC
-#ifdef HAVE_VPIC
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  update_profile(rank == 0);
+#ifdef USE_VPIC
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    update_profile(rank == 0);
 #endif
 #endif
-  psc_stats_log(grid().timestep());
+    psc_stats_log(grid().timestep());
     print_profiling();
   }
 

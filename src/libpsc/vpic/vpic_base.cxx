@@ -20,7 +20,7 @@ void vpic_base_init(int *pargc, char ***pargv)
   //  boot_services( &argc, &argv );
   {
     // Start up the checkpointing service.  This should be first.
-#ifdef HAVE_VPIC    
+#ifdef USE_VPIC    
     boot_checkpt( pargc, pargv );
     
     serial.boot( pargc, pargv );
@@ -39,7 +39,7 @@ void vpic_base_init(int *pargc, char ***pargv)
     MPI_Comm_size(psc_comm_world, &psc_world_size);
     
     MPI_Barrier(psc_comm_world);
-#ifdef HAVE_VPIC
+#ifdef USE_VPIC
     _boot_timestamp = 0;
     _boot_timestamp = uptime();
 #endif

@@ -4,9 +4,7 @@
 
 //#define DO_VPIC 1
 
-#define HAVE_VPIC
-
-#ifdef HAVE_VPIC
+#ifdef USE_VPIC
 #include "util/profile/profile.h"
 #else
 //#include "util/profile/profile.h"
@@ -44,7 +42,7 @@
 
 #include "NoneDiag.h"
 
-#ifdef HAVE_VPIC
+#ifdef USE_VPIC
 
 #include "VpicRng.h"
 
