@@ -15,6 +15,7 @@
 #include "setup_fields.hxx"
 #include "setup_particles.hxx"
 
+#include "../libpsc/vpic/mfields_state_psc.hxx"
 #include "../libpsc/vpic/push_particles_vpic.hxx"
 #include "../libpsc/vpic/bnd_particles_vpic.hxx"
 
@@ -82,14 +83,12 @@ using TestConfig1vbec3dSingleXZ = TestConfig<dim_xz, MfieldsSingle,
 					     PushParticlesSimple<Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_xz>, PushParticlesVb>,
 					     checks_order_1st>;
 
-#ifdef USE_VPIC
 using TestConfigVpic = TestConfig<dim_xyz,
 				  MfieldsSingle, // FIXME, this is not real nice, but might work...
 				  PushParticlesVpic,
 				  checks_order_1st,
-				  Checks_<MparticlesVpic, MfieldsStateVpic, void, checks_order_1st>,
+				  Checks_<MparticlesVpic, MfieldsStatePsc<PscGridBase, PscMaterialList>, void, checks_order_1st>,
 				  BndParticlesVpic>;
-#endif
 
 #ifdef USE_CUDA
 using TestConfig1vbec3dCuda = TestConfig<dim_xyz, MfieldsCuda,
@@ -137,7 +136,6 @@ struct PushParticlesTest : ::testing::Test
   using Mparticles = typename T::Mparticles;
   using MfieldsState = typename T::MfieldsState;
   using PushParticles = typename T::PushParticles;
-  using particle_t = typename Mparticles::particle_t;
   using real_t = typename Mparticles::real_t;
 
   const real_t eps = 1e-5;

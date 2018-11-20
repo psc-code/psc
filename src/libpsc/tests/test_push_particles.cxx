@@ -86,9 +86,6 @@ typename particle_inject::real_t vz(const particle_inject& prt)
 
 TYPED_TEST(PushParticlesTest, SingleParticlePushp1)
 {
-  using Base = PushParticlesTest<TypeParam>;
-  using particle_t = typename Base::particle_t;
-
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
     default: return 0.;
@@ -109,9 +106,6 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp1)
 
 TYPED_TEST(PushParticlesTest, SingleParticlePushp2)
 {
-  using Base = PushParticlesTest<TypeParam>;
-  using particle_t = typename Base::particle_t;
-
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
     case EZ: return 2.;
@@ -137,9 +131,6 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp2)
 
 TYPED_TEST(PushParticlesTest, SingleParticlePushp3)
 {
-  using Base = PushParticlesTest<TypeParam>;
-  using particle_t = typename Base::particle_t;
-
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
     case EZ: return crd[2];
@@ -163,7 +154,6 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp3)
 TYPED_TEST(PushParticlesTest, SingleParticlePushp4)
 {
   using Base = PushParticlesTest<TypeParam>;
-  using particle_t = typename Base::particle_t;
 
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
@@ -188,7 +178,6 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp4)
 TYPED_TEST(PushParticlesTest, SingleParticlePushp5)
 {
   using Base = PushParticlesTest<TypeParam>;
-  using particle_t = typename Base::particle_t;
 
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
@@ -214,7 +203,6 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp5)
 TYPED_TEST(PushParticlesTest, SingleParticlePushp6)
 {
   using Base = PushParticlesTest<TypeParam>;
-  using particle_t = typename Base::particle_t;
 
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
@@ -238,9 +226,6 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp6)
 
 TYPED_TEST(PushParticlesTest, SingleParticlePushp7)
 {
-  using Base = PushParticlesTest<TypeParam>;
-  using particle_t = typename Base::particle_t;
-
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
     case EZ: return crd[2];
@@ -263,9 +248,6 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp7)
 
 TYPED_TEST(PushParticlesTest, SingleParticlePushp8)
 {
-  using Base = PushParticlesTest<TypeParam>;
-  using particle_t = typename Base::particle_t;
-
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
     default: return 0.;
@@ -292,9 +274,6 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp8)
 
 TYPED_TEST(PushParticlesTest, SingleParticlePushp9)
 {
-  using Base = PushParticlesTest<TypeParam>;
-  using particle_t = typename Base::particle_t;
-
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
     default: return 0.;
@@ -323,9 +302,6 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp9)
 
 TYPED_TEST(PushParticlesTest, SingleParticlePushp10)
 {
-  using Base = PushParticlesTest<TypeParam>;
-  using particle_t = typename Base::particle_t;
-
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
     default: return 0.;
@@ -356,9 +332,6 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp10)
 
 TYPED_TEST(PushParticlesTest, SingleParticlePushp11)
 {
-  using Base = PushParticlesTest<TypeParam>;
-  using particle_t = typename Base::particle_t;
-
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
     default: return 0.;
@@ -386,9 +359,6 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp11)
 
 TYPED_TEST(PushParticlesTest, SingleParticlePushp12)
 {
-  using Base = PushParticlesTest<TypeParam>;
-  using particle_t = typename Base::particle_t;
-
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
     default: return 0.;
@@ -419,9 +389,6 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp12)
 
 TYPED_TEST(PushParticlesTest, SingleParticlePushp13)
 {
-  using Base = PushParticlesTest<TypeParam>;
-  using particle_t = typename Base::particle_t;
-
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
     default: return 0.;
@@ -454,9 +421,6 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp13)
 
 TYPED_TEST(PushParticlesTest, SingleParticlePushp14)
 {
-  using Base = PushParticlesTest<TypeParam>;
-  using particle_t = typename Base::particle_t;
-
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
     default: return 0.;
@@ -489,9 +453,6 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp14)
 
 TYPED_TEST(PushParticlesTest, SingleParticlePushp15)
 {
-  using Base = PushParticlesTest<TypeParam>;
-  using particle_t = typename Base::particle_t;
-
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
     default: return 0.;
@@ -512,9 +473,6 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp15)
 
 TYPED_TEST(PushParticlesTest, SingleParticlePushp16)
 {
-  using Base = PushParticlesTest<TypeParam>;
-  using particle_t = typename Base::particle_t;
-
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
     default: return 0.;
