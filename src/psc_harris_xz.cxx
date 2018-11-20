@@ -386,6 +386,8 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     outp_params.every_step = int((output_particle_interval / (phys_.wci*dt)));
     outp_params.data_dir = ".";
     outp_params.basename = "prt";
+    outp_params.lo = {192, 0, 48};
+    outp_params.hi = {320, 0, 80};
     outp_.reset(new OutputParticles{grid(), outp_params});
 
     // ----------------------------------------------------------------------
