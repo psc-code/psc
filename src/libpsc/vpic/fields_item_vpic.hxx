@@ -16,7 +16,7 @@ struct OutputFieldsVpic
   Result operator()(MfieldsState& mflds)
   {
     std::vector<std::string> comp_names = { "ex_ec", "ey_ec", "ez_ec", "div_e_err_nc",
-					    "hx_fc", "hy_fc", "hz_fc", "div_b_err_cc"
+					    "hx_fc", "hy_fc", "hz_fc", "div_b_err_cc",
 					    "tcax_ec", "tcay_ec", "tcaz_ec", "rhob_nc",
 					    "jx_ec", "jy_ec", "jz_ec", "rhof_nc" };
     return {mflds, "fields_vpic", comp_names};
