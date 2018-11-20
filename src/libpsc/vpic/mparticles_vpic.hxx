@@ -37,7 +37,7 @@ struct MparticlesVpic_ : MparticlesBase
     
     struct injector
     {
-      injector(Patch& patch)
+      injector(const Patch& patch)
 	: patch_{patch}
       {}
       
@@ -47,7 +47,7 @@ struct MparticlesVpic_ : MparticlesBase
       }
       
     private:
-      Patch& patch_;
+      Patch patch_;
     };
 
     struct const_accessor

@@ -6,9 +6,16 @@
 #include "psc_particles_single.h"
 #include "psc_particles_double.h"
 #include "../libpsc/vpic/mparticles_vpic.hxx"
+#include "../libpsc/vpic/PscGridBase.h"
+#include "../libpsc/vpic/PscParticleBc.h"
+#include "../libpsc/vpic/PscParticlesBase.h"
 #ifdef USE_CUDA
 #include "../libpsc/cuda/psc_particles_cuda.h"
 #endif
+
+using Grid = PscGridBase; // FIXME
+using ParticlesVpic = PscParticlesBase<Grid, PscParticleBcList>;
+using MparticlesVpic = MparticlesVpic_<ParticlesVpic>;
 
 template<typename _Mparticles, typename _MakeGrid = MakeTestGrid1>
 struct Config
@@ -19,9 +26,7 @@ struct Config
 
 using MparticlesTestTypes = ::testing::Types<Config<MparticlesSingle>
 					    ,Config<MparticlesDouble>
-#ifdef USE_VPIC
 					    ,Config<MparticlesVpic>
-#endif
 #ifdef USE_CUDA
 					     // FIXME, ugliness, cuda doen't work on the usual grid,
 					     // but the 2 patch YZ grid breaks vpic init,
@@ -45,22 +50,6 @@ struct MparticlesTest : ::testing::Test
     : grid_{MakeGrid{}()}
   {
     grid_.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
-
-    // Setup basic grid parameters
-    auto& domain = grid_.domain;
-    double dx[3], xl[3], xh[3];
-    for (int d = 0; d < 3; d++) {
-      dx[d] = domain.length[d] / domain.gdims[d];
-      xl[d] = domain.corner[d];
-      xh[d] = xl[d] + domain.length[d];
-    }
-
-#ifdef USE_VPIC
-    vgrid_.setup(dx, grid_.dt, 1., 1.);
-  
-    // Define the grid
-    vgrid_.partition_periodic_box(xl, xh, domain.gdims, domain.np);
-#endif
   }
 
   template<typename tag>
@@ -72,15 +61,28 @@ struct MparticlesTest : ::testing::Test
     return mprts;
   }
 
-#ifdef USE_VPIC
   Mparticles mk_mprts(MparticlesVpic* dummy)
   {
+    // FIXME, vgrid_ is bad, and this kinda belongs to where grid_ is set up
+
+    // Setup basic grid parameters
+    auto& domain = grid_.domain;
+    double dx[3], xl[3], xh[3];
+    for (int d = 0; d < 3; d++) {
+      dx[d] = domain.length[d] / domain.gdims[d];
+      xl[d] = domain.corner[d];
+      xh[d] = xl[d] + domain.length[d];
+    }
+    vgrid_.setup(dx, grid_.dt, 1., 1.);
+  
+    // Define the grid
+    vgrid_.partition_periodic_box(xl, xh, domain.gdims, domain.np);
+
     Mparticles mprts(grid_, &vgrid_);
     mprts.define_species("test_species", 1., 1., 100, 10,
 			 10, 0);
     return mprts;
   }
-#endif
 
   Mparticles mk_mprts()
   {
@@ -108,9 +110,7 @@ struct MparticlesTest : ::testing::Test
 
 private:
   Grid_t grid_;
-#ifdef USE_VPIC
-  Grid vgrid_;
-#endif
+  Grid vgrid_; // FIXME
 };
 
 // -----------------------------------------------------------------------
@@ -167,11 +167,11 @@ TYPED_TEST(MparticlesTest, setParticles)
 int main(int argc, char **argv)
 {
   MPI_Init(&argc, &argv);
-#ifdef USE_VPIC
+  //#ifdef USE_VPIC FIXME
   MPI_Comm_dup(MPI_COMM_WORLD, &psc_comm_world);
   MPI_Comm_rank(psc_comm_world, &psc_world_rank);
   MPI_Comm_size(psc_comm_world, &psc_world_size);
-#endif
+  //#endif
 
   ::testing::InitGoogleTest(&argc, argv);
   int rc = RUN_ALL_TESTS();
