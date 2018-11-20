@@ -422,7 +422,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     params.wpedt_max = .36;
     params.wpe_wce = 2.;
-    params.mi_me = 200.;
+    params.mi_me = 100.;
     
     params.Lx_di = 80.;
     params.Ly_di = 1.;
