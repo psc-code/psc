@@ -116,6 +116,60 @@ protected:
 };
 
 // ======================================================================
+// InjectorBuffered
+
+template<typename Mparticles>
+struct InjectorBuffered
+{
+  using particle_t = typename Mparticles::particle_t;
+  using real_t = typename particle_t::real_t;
+  using Real3 = typename particle_t::Real3;
+  using Double3 = Vec3<double>;
+  
+  struct Patch
+  {
+    Patch(Mparticles& mprts, int p)
+      : mprts_{mprts}, p_{p}, n_prts_{0}
+    {
+      assert(p_ == mprts_.injector_n_prts_by_patch_.size());
+    }
+    
+    void operator()(const particle_inject& new_prt)
+    {
+      auto& patch = mprts_.grid().patches[p_];
+      auto x = Double3::fromPointer(new_prt.x) - patch.xb;
+      auto u = Double3::fromPointer(new_prt.u);
+      mprts_.injector_buf_.push_back({Real3(x), Real3(u), real_t(new_prt.w), new_prt.kind});
+      n_prts_++;
+    }
+    
+    ~Patch()
+    {
+      mprts_.injector_n_prts_by_patch_.push_back(n_prts_);
+      if (p_ == mprts_.n_patches() - 1) {
+	mprts_.inject(mprts_.injector_buf_, mprts_.injector_n_prts_by_patch_);
+	mprts_.injector_n_prts_by_patch_.clear();
+	mprts_.injector_buf_.clear();
+      }
+    }
+  
+  private:
+    Mparticles& mprts_;
+    const int p_;
+    uint n_prts_;
+  };
+  
+  InjectorBuffered(Mparticles& mprts)
+    : mprts_{mprts}
+  {}
+
+  Patch operator[](int p) const { return {mprts_, p}; }
+
+private:
+  Mparticles& mprts_;
+};
+
+// ======================================================================
 // MparticlesCuda
 
 template<typename _BS>
@@ -251,8 +305,10 @@ struct MparticlesCuda : MparticlesBase
   };
 
   friend typename Patch::Injector;
+  friend struct InjectorBuffered<MparticlesCuda>;
   
   Patch operator[](int p) { return {*this, p}; }
+  InjectorBuffered<MparticlesCuda> injector() { return {*this}; }
 
 private:
   CudaMparticles* cmprts_;

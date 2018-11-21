@@ -73,19 +73,22 @@ TYPED_TEST(MparticlesCudaTest, Inject)
   EXPECT_EQ(mprts.n_patches(), 4);
 
   int nn = 0;
-  for (int p = 0; p < mprts.n_patches(); ++p) {
-    auto injector = mprts[p].injector();
-    auto& patch = mprts.grid().patches[p];
-    for (int n = 0; n < n_prts; n++) {
-      particle_inject prt = {};
-      auto x = .5 * (patch.xb + patch.xe);
-      int kind = 0;
-      // use weight to store particle number for testing
-      injector({{x[0], x[1], x[2]}, {}, double(nn), kind});
-      nn++;
+  {
+    auto inj = mprts.injector();
+    for (int p = 0; p < mprts.n_patches(); ++p) {
+      auto injector = inj[p];
+      auto& patch = mprts.grid().patches[p];
+      for (int n = 0; n < n_prts; n++) {
+	particle_inject prt = {};
+	auto x = .5 * (patch.xb + patch.xe);
+	int kind = 0;
+	// use weight to store particle number for testing
+	injector({{x[0], x[1], x[2]}, {}, double(nn), kind});
+	nn++;
+      }
     }
   }
-
+  
   EXPECT_EQ(mprts.get_n_prts(), 4);
   
   std::vector<uint> n_prts_by_patch(mprts.n_patches());
