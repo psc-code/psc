@@ -167,7 +167,7 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   {
     using Mparticles = cuda_mparticles;
 
-    using Injector = InjectorCuda_<Patch>;
+    using Injector = InjectorCuda<Patch>;
     friend Injector;
     
     Patch(Mparticles& mprts, int p)
