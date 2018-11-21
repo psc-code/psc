@@ -179,8 +179,7 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
 	auto& cmprts = patch_.cmprts_;
 	cmprts.injector_n_prts_by_patch_.push_back(n_prts_);
 	if (patch_.p_ == cmprts.n_patches - 1) {
-	  cmprts.set_particles(cmprts.injector_buf_, cmprts.injector_n_prts_by_patch_);
-	  cmprts.setup_internals();
+	  cmprts.inject_buf(cmprts.injector_buf_, cmprts.injector_n_prts_by_patch_);
 	  cmprts.injector_n_prts_by_patch_.clear();
 	  cmprts.injector_buf_.clear();
 	}

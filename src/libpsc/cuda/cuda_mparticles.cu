@@ -422,6 +422,13 @@ template<typename BS>
 void cuda_mparticles<BS>::inject_buf(const std::vector<particle_t>& buf,
 				     const std::vector<uint>& buf_n_by_patch)
 {
+  if (this->n_prts == 0) {
+    // if there are no particles yet, we basically just initialize from the buffer
+    set_particles(buf, buf_n_by_patch);
+    setup_internals();
+    return;
+  }
+  
   using Double3 = Vec3<double>;
   
   uint buf_n = 0;
