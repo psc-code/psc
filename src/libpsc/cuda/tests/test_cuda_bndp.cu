@@ -45,22 +45,17 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
     auto& cmprts = *cmprts_;
 
     // (ab)use kind to track particle more easily in the test
-    using Real3 = particle_t::Real3;
-    std::vector<particle_t> prts = {
-      {{ .5,  35., 5.}, {}, 0., 0},
-      {{ .5, 155., 5.}, {}, 0., 1},
-      
-      {{ .5,  35., 5.}, {}, 0., 2},
-      {{ .5, 155., 5.}, {}, 0., 3},
-    };
-
-    std::vector<uint> n_prts_by_patch = {2, 2, 0, 0};
-    
-    // FIXME eventually shouldn't have to reserve additional room for sending here
-    std::vector<uint> n_prts_reserve_by_patch = {2, 4, 0, 0};
-    
-    //cmprts.reserve_all(n_prts_reserve_by_patch); FIXME
-    cmprts.inject_buf(prts.data(), n_prts_by_patch);
+    for (int p = 0; p < cmprts.n_patches; ++p) {
+      auto injector = cmprts[p].injector();
+      if (p == 0) { // patch 0
+	injector({{ .5,  35., 5.}, {}, 0., 0});
+	injector({{ .5, 155., 5.}, {}, 0., 1});
+      } else if (p == 1) { // patch 1
+	injector({{ .5,  35., 5.}, {}, 0., 2});
+	injector({{ .5, 155., 5.}, {}, 0., 3});
+      }
+    }
+    cmprts.setup_internals();
 
     // move every particle one full cell to the right (+y, that is)
     // (position doesn't actually matter since we'll only look at bidx)
