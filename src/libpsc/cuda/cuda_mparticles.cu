@@ -461,40 +461,6 @@ void cuda_mparticles<BS>::inject_buf(HMparticlesCudaStorage& h_storage,
 // inject_buf
 
 template<typename BS>
-void cuda_mparticles<BS>::inject_buf(const particle_t *buf,
-				     const std::vector<uint>& buf_n_by_patch)
-{
-  uint buf_n = 0;
-  for (int p = 0; p < this->n_patches; p++) {
-    buf_n += buf_n_by_patch[p];
-    //    printf("p %d buf_n_by_patch %d\n", p, buf_n_by_patch[p]);
-  }
-  //  printf("buf_n %d\n", buf_n);
-
-  HMparticlesCudaStorage h_storage{buf_n};
-  thrust::host_vector<uint> h_bidx(buf_n);
-  //thrust::host_vector<uint> h_id(buf_n);
-
-  uint off = 0;
-  for (int p = 0; p < this->n_patches; p++) {
-    for (int n = 0; n < buf_n_by_patch[p]; n++) {
-      h_storage.store(buf[off + n], off + n);
-      auto bidx = this->blockIndex(buf[off + n], p);
-      assert(bidx >= 0 && bidx < this->n_blocks);
-      h_bidx[off + n] = bidx;;
-      //h_id[off + n] = this->n_prts + off + n;
-    }
-    off += buf_n_by_patch[p];
-  }
-  assert(off == buf_n);
-
-  inject_buf(h_storage, h_bidx);
-}
-
-// ----------------------------------------------------------------------
-// inject_buf
-
-template<typename BS>
 void cuda_mparticles<BS>::inject_buf(const particle_inject *buf,
 				     const std::vector<uint>& buf_n_by_patch)
 {
