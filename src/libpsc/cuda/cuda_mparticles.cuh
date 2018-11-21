@@ -1,6 +1,5 @@
 
-#ifndef CUDA_MPARTICLES_H
-#define CUDA_MPARTICLES_H
+#pragma once
 
 #include "cuda_iface.h"
 #include "cuda_mparticles_indexer.h"
@@ -176,8 +175,6 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   uint start(int p);
   
   void set_particles(uint p, const std::vector<particle_t>& buf);
-  template<typename F>
-  void set_particles(uint p, F getter);
 
   void dump(const std::string& filename) const;
   void dump_by_patch(uint *n_prts_by_patch);
@@ -309,27 +306,3 @@ void cuda_mparticles<BS>::set_particles(uint p, const std::vector<particle_t>& b
   thrust::copy(pxi4.begin(), pxi4.end(), &this->storage.pxi4[off]);
 }
 
-
-template<typename BS>
-template<typename F>
-void cuda_mparticles<BS>::set_particles(uint p, F getter)
-{
-  // FIXME, doing the copy here all the time would be nice to avoid
-  // making sue we actually have a valid d_off would't hurt, either
-  thrust::host_vector<uint> h_off(this->by_block_.d_off);
-
-  uint off = h_off[p * this->n_blocks_per_patch];
-  uint n_prts = h_off[(p+1) * this->n_blocks_per_patch] - off;
-
-  std::vector<particle_t> buf;
-  buf.reserve(n_prts);
-  for (int n = 0; n < n_prts; n++) {
-    buf.push_back(getter(n));
-  }
-
-  set_particles(p, buf);
-}
-
-
-
-#endif
