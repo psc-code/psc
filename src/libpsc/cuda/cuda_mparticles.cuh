@@ -166,27 +166,32 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
     struct injector
     {
       injector(const Patch& patch)
-	: patch_{patch}
+	: patch_{patch},
+	  n_prts_{0}
       {}
 
       ~injector()
       {
-	patch_.cmprts_.set_particles(patch_.p_, buf_);
+	assert(n_prts_ == patch_.cmprts_.injector_buf_.size());
+	patch_.cmprts_.set_particles(patch_.p_, patch_.cmprts_.injector_buf_);
       }
       
       void operator()(const particle_t& prt)
       {
-	buf_.push_back(prt);
+	patch_.cmprts_.injector_buf_.push_back(prt);
+	n_prts_++;
       }
 
       void operator()(const std::vector<particle_t>& buf)
       {
-	buf_.insert(buf_.end(), buf.begin(), buf.end());
+	auto& injector_buf = patch_.cmprts_.injector_buf_;
+	injector_buf.insert(injector_buf.end(), buf.begin(), buf.end());
+	n_prts_ += buf.size();
       }
       
     private:
       const Patch patch_;
-      std::vector<particle_t> buf_;
+      size_t n_prts_;
     };
 
     Patch(cuda_mparticles& cmprts, int p)
@@ -244,6 +249,9 @@ public:
   std::vector<Real3> xb_by_patch; // lower left corner for each patch
 
   bool need_reorder = { false };            // particles haven't yet been put into their sorted order
+
+private:
+  std::vector<particle_t> injector_buf_;
 };
 
 template<typename BS_>
