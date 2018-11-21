@@ -218,7 +218,7 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
 
   Patch operator[](int p) { return Patch{*this, p}; }
   
-  void reserve_all(const std::vector<uint>& n_prts_by_patch);
+
   uint get_n_prts();
   void setup_internals();
   void inject_buf(const particle_t *buf, const uint *buf_n_by_patch);

@@ -21,7 +21,7 @@ struct TestBase
 
     std::vector<uint> n_prts_by_patch = { uint(prts.size()) };
 
-    cmprts->reserve_all(n_prts_by_patch);
+    //cmprts->reserve_all(n_prts_by_patch); FIXME
     cmprts->inject_buf(prts.data(), n_prts_by_patch.data());
   
     return cmprts;

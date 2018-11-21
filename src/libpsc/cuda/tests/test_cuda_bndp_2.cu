@@ -57,7 +57,7 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
     // FIXME eventually shouldn't have to reserve additional room for sending here
     std::vector<uint> n_prts_reserve_by_patch = {2, 4, 0, 0, 0, 0, 0, 0};
     
-    cmprts->reserve_all(n_prts_reserve_by_patch);
+    //cmprts->reserve_all(n_prts_reserve_by_patch); FIXME
     cmprts->inject_buf(prts.data(), n_prts_by_patch.data());
 
     // move every particle one full cell to the right (+y, that is)

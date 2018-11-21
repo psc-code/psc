@@ -27,21 +27,6 @@ cuda_mparticles<BS>::cuda_mparticles(const Grid_t& grid)
 }
 
 // ----------------------------------------------------------------------
-// reserve_all
-
-template<typename BS>
-void cuda_mparticles<BS>::reserve_all(const std::vector<uint>& n_prts_by_patch)
-{
-  uint size = 0;
-  for (int p = 0; p < this->n_patches; p++) {
-    size += n_prts_by_patch[p];
-  }
-
-  // FIXME, arguably this should just reserve here, not actually resize
-  resize(size);
-}
-
-// ----------------------------------------------------------------------
 // resize
 //
 // the goal here is to have d_xi4, d_pxi4, d_bidx and d_id always
