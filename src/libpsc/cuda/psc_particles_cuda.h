@@ -47,48 +47,49 @@ struct InjectorCuda
   using Double3 = Vec3<double>;
   
   InjectorCuda(const Patch& patch)
-  : patch_{patch},
-    n_prts_{0}
+    : mprts_(patch.mprts_),
+      p_{patch.p_},
+      n_prts_{0}
   {
-    assert(patch_.p_ == patch_.mprts_.injector_n_prts_by_patch_.size());
+    assert(p_ == mprts_.injector_n_prts_by_patch_.size());
   }
   
   ~InjectorCuda()
   {
-    auto& mprts = patch_.mprts_;
-    mprts.injector_n_prts_by_patch_.push_back(n_prts_);
-    if (patch_.p_ == mprts.n_patches() - 1) {
-      mprts.inject(mprts.injector_buf_, mprts.injector_n_prts_by_patch_);
-      mprts.injector_n_prts_by_patch_.clear();
-      mprts.injector_buf_.clear();
+    mprts_.injector_n_prts_by_patch_.push_back(n_prts_);
+    if (p_ == mprts_.n_patches() - 1) {
+      mprts_.inject(mprts_.injector_buf_, mprts_.injector_n_prts_by_patch_);
+      mprts_.injector_n_prts_by_patch_.clear();
+      mprts_.injector_buf_.clear();
     }
   }
   
   void raw(const particle_t& prt)
   {
-    patch_.mprts_.injector_buf_.push_back(prt);
+    mprts_.injector_buf_.push_back(prt);
     n_prts_++;
   }
   
   void operator()(const particle_inject& new_prt)
   {
-    auto& patch = patch_.grid().patches[patch_.p_];
+    auto& patch = mprts_.grid().patches[p_];
     auto x = Double3::fromPointer(new_prt.x) - patch.xb;
     auto prt = particle_t{Real3(x), Real3(Double3::fromPointer(new_prt.u)),
 			  real_t(new_prt.w), new_prt.kind};
-    patch_.mprts_.injector_buf_.push_back(prt);
+    mprts_.injector_buf_.push_back(prt);
     n_prts_++;
   }
   
   void operator()(const std::vector<particle_t>& buf)
   {
-    auto& injector_buf = patch_.mprts_.injector_buf_;
+    auto& injector_buf = mprts_.injector_buf_;
     injector_buf.insert(injector_buf.end(), buf.begin(), buf.end());
     n_prts_ += buf.size();
   }
   
 private:
-  const Patch patch_;
+  /*const*/ Mparticles& mprts_; // FIXME
+  const int p_;
   uint n_prts_;
 };
 
