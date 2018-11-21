@@ -420,10 +420,10 @@ void cuda_mparticles<BS>::inject_initial(const std::vector<particle_t>& buf,
 }
 
 // ----------------------------------------------------------------------
-// inject_buf
+// inject
 
 template<typename BS>
-void cuda_mparticles<BS>::inject_buf(const std::vector<particle_t>& buf,
+void cuda_mparticles<BS>::inject(const std::vector<particle_t>& buf,
 				     const std::vector<uint>& buf_n_by_patch)
 {
   if (this->n_prts == 0) {

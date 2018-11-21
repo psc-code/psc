@@ -52,7 +52,7 @@ struct MparticlesCuda : MparticlesBase
   void get_size_all(uint *n_prts_by_patch) const override;
   void reset(const Grid_t& grid) override;
 
-  void inject_buf(const std::vector<particle_t>& buf, const std::vector<uint>& buf_n_by_patch);
+  void inject(const std::vector<particle_t>& buf, const std::vector<uint>& buf_n_by_patch);
   void dump(const std::string& filename);
   uint start(int p) const;
   bool check_after_push();
@@ -104,7 +104,7 @@ struct MparticlesCuda : MparticlesBase
 	//mprintf("~injector p = %d/%d\n", patch_.p_, mprts.n_patches());
 	mprts.injector_n_prts_by_patch.push_back(n_prts_);
 	if (patch_.p_ == mprts.n_patches() - 1) {
-	  mprts.inject_buf(mprts.injector_buf, mprts.injector_n_prts_by_patch);
+	  mprts.inject(mprts.injector_buf, mprts.injector_n_prts_by_patch);
 	  mprts.injector_n_prts_by_patch.clear();
 	  mprts.injector_buf.clear();
 	}

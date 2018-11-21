@@ -179,7 +179,7 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
 	auto& cmprts = patch_.cmprts_;
 	cmprts.injector_n_prts_by_patch_.push_back(n_prts_);
 	if (patch_.p_ == cmprts.n_patches - 1) {
-	  cmprts.inject_buf(cmprts.injector_buf_, cmprts.injector_n_prts_by_patch_);
+	  cmprts.inject(cmprts.injector_buf_, cmprts.injector_n_prts_by_patch_);
 	  cmprts.injector_n_prts_by_patch_.clear();
 	  cmprts.injector_buf_.clear();
 	}
@@ -220,7 +220,7 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   
 
   uint get_n_prts();
-  void inject_buf(const std::vector<particle_t>& buf, const std::vector<uint>& buf_n_by_patch);
+  void inject(const std::vector<particle_t>& buf, const std::vector<uint>& buf_n_by_patch);
 
   std::vector<particle_t> get_particles(int beg, int end);
   std::vector<particle_t> get_particles(int p);
