@@ -99,7 +99,6 @@ template<typename _Mparticles>
 struct PatchCuda
 {
   using Mparticles = _Mparticles;
-  using Patch = typename Mparticles::Patch;
 
   using Injector = InjectorCuda<Mparticles>;
 
@@ -108,6 +107,8 @@ struct PatchCuda
   {}
   
   const Grid_t& grid() const { return mprts_.grid(); }
+
+  Injector injector() { return {mprts_, p_}; }
 
 protected:
   Mparticles& mprts_;
@@ -247,7 +248,6 @@ struct MparticlesCuda : MparticlesBase
     }
 
     const_accessor_range get() const { return {*this}; }
-    typename Base::Injector injector() { return {mprts_, p_}; }
   };
 
   friend typename Patch::Injector;

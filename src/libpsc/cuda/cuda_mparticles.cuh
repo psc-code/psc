@@ -163,18 +163,9 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   using Real3 = Vec3<real_t>;
   using DMparticles = DMparticlesCuda<BS>;
 
-  struct Patch : PatchCuda<cuda_mparticles>
-  {
-    using Base = PatchCuda<cuda_mparticles>;
+  using Patch = PatchCuda<cuda_mparticles>;
 
-    using Base::Base;
-    using Base::mprts_;
-    using Base::p_;
-    
-    typename Base::Injector injector() { return {mprts_, p_}; }
-  };
-
-  friend typename Patch::Injector;
+  friend struct InjectorCuda<cuda_mparticles>;
 
   cuda_mparticles(const Grid_t& grid);
 
