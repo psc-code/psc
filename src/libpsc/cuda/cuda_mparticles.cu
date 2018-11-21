@@ -415,6 +415,17 @@ void cuda_mparticles<BS>::set_particles(const std::vector<particle_t>& buf,
   thrust::copy(h_off.begin(), h_off.end(), this->by_block_.d_off.begin());
 }
 
+template<typename BS>
+void cuda_mparticles<BS>::inject_buf(HMparticlesCudaStorage& h_storage,
+				     const thrust::host_vector<uint>& h_bidx)
+{
+  this->by_block_.stable_sort();
+
+  this->by_block_.reorder_and_offsets(*this);
+
+  // assert(check_ordered());
+}
+
 // ----------------------------------------------------------------------
 // inject_buf
 
@@ -475,11 +486,7 @@ void cuda_mparticles<BS>::inject_buf(const particle_t *buf,
 
   this->n_prts += buf_n;
 
-  this->by_block_.stable_sort();
-
-  this->by_block_.reorder_and_offsets(*this);
-
-  // assert(check_ordered());
+  inject_buf(h_storage, h_bidx);
 }
 
 // ----------------------------------------------------------------------
@@ -549,11 +556,7 @@ void cuda_mparticles<BS>::inject_buf(const particle_inject *buf,
 
   this->n_prts += buf_n;
 
-  this->by_block_.stable_sort();
-
-  this->by_block_.reorder_and_offsets(*this);
-
-  // assert(check_ordered());
+  inject_buf(h_storage, h_bidx);
 }
 
 // ----------------------------------------------------------------------

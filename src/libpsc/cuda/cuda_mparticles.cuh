@@ -223,6 +223,7 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   void setup_internals();
   void inject_buf(const particle_t *buf, const uint *buf_n_by_patch);
   void inject_buf(const particle_inject *buf, const uint *buf_n_by_patch);
+  void inject_buf(HMparticlesCudaStorage& h_storage, const thrust::host_vector<uint>& h_bidx);
 
   std::vector<particle_t> get_particles(int beg, int end);
   std::vector<particle_t> get_particles(int p);
