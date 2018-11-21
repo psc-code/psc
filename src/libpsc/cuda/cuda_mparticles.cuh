@@ -233,8 +233,6 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
 private:
   void set_particles(const std::vector<particle_t>& buf,
 		     const std::vector<size_t>& n_prts_by_patch);
-  void set_particles(uint p, const std::vector<particle_t>::const_iterator begin,
-		     const std::vector<particle_t>::const_iterator end);
 
 public:
   void find_block_indices_ids(thrust::device_vector<uint>& d_idx, thrust::device_vector<uint>& d_id);

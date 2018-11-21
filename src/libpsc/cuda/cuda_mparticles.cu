@@ -389,49 +389,39 @@ uint cuda_mparticles<BS>::get_n_prts()
 // set_particles
 
 template<typename BS>
-void cuda_mparticles<BS>::set_particles(uint p, const std::vector<particle_t>::const_iterator begin,
-					const std::vector<particle_t>::const_iterator end)
+void cuda_mparticles<BS>::set_particles(const std::vector<particle_t>& buf,
+					const std::vector<size_t>& n_prts_by_patch)
 {
   // FIXME, doing the copy here all the time would be nice to avoid
   // making sure we actually have a valid d_off would't hurt, either
   thrust::host_vector<uint> h_off(this->by_block_.d_off);
-
-  uint off = h_off[p * this->n_blocks_per_patch];
-  uint n_prts = h_off[(p+1) * this->n_blocks_per_patch] - off;
-
-  assert(n_prts == end - begin);
   
-  thrust::host_vector<float4> xi4(n_prts);
-  thrust::host_vector<float4> pxi4(n_prts);
-
-  auto it = begin;
-  for (int n = 0; n < n_prts; n++) {
-    auto &prt = *it++;
-    this->checkInPatchMod(prt.x());
-
-    xi4[n].x  = prt.x()[0];
-    xi4[n].y  = prt.x()[1];
-    xi4[n].z  = prt.x()[2];
-    xi4[n].w  = cuda_int_as_float(prt.kind());
-    pxi4[n].x = prt.u()[0];
-    pxi4[n].y = prt.u()[1];
-    pxi4[n].z = prt.u()[2];
-    pxi4[n].w = prt.qni_wni();
-  }
-
-  thrust::copy(xi4.begin(), xi4.end(), &this->storage.xi4[off]);
-  thrust::copy(pxi4.begin(), pxi4.end(), &this->storage.pxi4[off]);
-}
-
-template<typename BS>
-void cuda_mparticles<BS>::set_particles(const std::vector<particle_t>& buf,
-					const std::vector<size_t>& n_prts_by_patch)
-{
   auto it = buf.begin();
   for (int p = 0; p < this->n_patches; p++) {
-    auto n_prts = n_prts_by_patch[p];
-    set_particles(p, it, it + n_prts);
-    it += n_prts;
+    uint off = h_off[p * this->n_blocks_per_patch];
+    uint n_prts = h_off[(p+1) * this->n_blocks_per_patch] - off;
+
+    assert(n_prts == n_prts_by_patch[p]);
+  
+    thrust::host_vector<float4> xi4(n_prts);
+    thrust::host_vector<float4> pxi4(n_prts);
+
+    for (int n = 0; n < n_prts; n++) {
+      auto &prt = *it++;
+      this->checkInPatchMod(prt.x());
+      
+      xi4[n].x  = prt.x()[0];
+      xi4[n].y  = prt.x()[1];
+      xi4[n].z  = prt.x()[2];
+      xi4[n].w  = cuda_int_as_float(prt.kind());
+      pxi4[n].x = prt.u()[0];
+      pxi4[n].y = prt.u()[1];
+      pxi4[n].z = prt.u()[2];
+      pxi4[n].w = prt.qni_wni();
+    }
+    
+    thrust::copy(xi4.begin(), xi4.end(), &this->storage.xi4[off]);
+    thrust::copy(pxi4.begin(), pxi4.end(), &this->storage.pxi4[off]);
   }
 }
 
