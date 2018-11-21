@@ -461,7 +461,7 @@ void cuda_mparticles<BS>::inject_buf(HMparticlesCudaStorage& h_storage,
 // inject_buf
 
 template<typename BS>
-void cuda_mparticles<BS>::inject_buf(const particle_inject *buf,
+void cuda_mparticles<BS>::inject_buf(const std::vector<particle_inject>& buf,
 				     const std::vector<uint>& buf_n_by_patch)
 {
   using Double3 = Vec3<double>;
