@@ -424,10 +424,10 @@ void cuda_mparticles<BS>::set_particles(const std::vector<particle_t>& buf,
       pxi4[n + off].z = prt.u()[2];
       pxi4[n + off].w = prt.qni_wni();
     }
-    
-    thrust::copy(&xi4[off], &xi4[off + n_prts], &this->storage.xi4[off]);
-    thrust::copy(&pxi4[off], &pxi4[off + n_prts], &this->storage.pxi4[off]);
   }
+
+  thrust::copy(xi4.begin(), xi4.end(), this->storage.xi4.begin());
+  thrust::copy(pxi4.begin(), pxi4.end(), this->storage.pxi4.begin());
 }
 
 // ----------------------------------------------------------------------
