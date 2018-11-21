@@ -19,11 +19,10 @@ struct TestBase
   {
     auto cmprts = new CudaMparticles(grid);
 
-    uint n_prts_by_patch[1];
-    n_prts_by_patch[0] = prts.size();
+    std::vector<uint> n_prts_by_patch = { uint(prts.size()) };
 
     cmprts->reserve_all(n_prts_by_patch);
-    cmprts->inject_buf(prts.data(), n_prts_by_patch);
+    cmprts->inject_buf(prts.data(), n_prts_by_patch.data());
   
     return cmprts;
   }

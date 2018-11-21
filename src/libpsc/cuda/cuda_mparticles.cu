@@ -30,7 +30,7 @@ cuda_mparticles<BS>::cuda_mparticles(const Grid_t& grid)
 // reserve_all
 
 template<typename BS>
-void cuda_mparticles<BS>::reserve_all(const uint *n_prts_by_patch)
+void cuda_mparticles<BS>::reserve_all(const std::vector<uint>& n_prts_by_patch)
 {
   uint size = 0;
   for (int p = 0; p < this->n_patches; p++) {

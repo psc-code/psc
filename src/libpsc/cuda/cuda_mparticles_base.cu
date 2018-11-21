@@ -43,7 +43,7 @@ void cuda_mparticles_base<BS>::reserve_all(uint size)
 //   to check that we aren't beyond our allocated space
   
 template<typename BS>
-void cuda_mparticles_base<BS>::resize_all(const uint *n_prts_by_patch)
+void cuda_mparticles_base<BS>::resize_all(const std::vector<uint>& n_prts_by_patch)
 {
   thrust::host_vector<uint> h_off(this->n_blocks + 1);
     

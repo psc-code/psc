@@ -39,7 +39,7 @@ void MparticlesCuda<BS>::reserve_all(const std::vector<uint>& n_prts_by_patch)
   for (int p = 0; p < cmprts_->n_patches; p++) {
     dprintf("  p %d: %d\n", p, n_prts_by_patch[p]);
   }
-  cmprts_->reserve_all(n_prts_by_patch.data());
+  cmprts_->reserve_all(n_prts_by_patch);
 }
 
 template<typename BS>
@@ -56,7 +56,7 @@ template<typename BS>
 void MparticlesCuda<BS>::resize_all(const std::vector<uint>& n_prts_by_patch)
 {
   dprintf("CMPRTS: resize_all\n");
-  cmprts_->resize_all(n_prts_by_patch.data());
+  cmprts_->resize_all(n_prts_by_patch);
 }
 
 template<typename BS>

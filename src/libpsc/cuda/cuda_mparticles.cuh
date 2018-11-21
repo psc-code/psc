@@ -133,10 +133,10 @@ struct cuda_mparticles_base : cuda_mparticles_indexer<BS>
   cuda_mparticles_base(const cuda_mparticles<BS>&) = delete;
 
 protected:
-  void reserve_all(uint sinze);
+  void reserve_all(uint size);
 
 public:
-  void resize_all(const uint *n_prts_by_patch);
+  void resize_all(const std::vector<uint>& n_prts_by_patch);
   void get_size_all(uint *n_prts_by_patch);
 
   // per particle
@@ -219,7 +219,7 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
 
   Patch operator[](int p) { return Patch{*this, p}; }
   
-  void reserve_all(const uint *n_prts_by_patch);
+  void reserve_all(const std::vector<uint>& n_prts_by_patch);
   uint get_n_prts();
   void setup_internals();
   void inject_buf(const particle_t *buf, const uint *buf_n_by_patch);
