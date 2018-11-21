@@ -138,7 +138,7 @@ TEST_F(CudaMparticlesTest, SetupInternalsDetail)
   auto& cmprts = *_cmprts;
   cmprts.reserve_all(n_prts_by_patch);
   cmprts.resize_all(n_prts_by_patch);
-  cmprts[0].set_particles(prts);
+  cmprts[0].injector()(prts);
 
   auto& d_id = cmprts.by_block_.d_id;
   auto& d_bidx = cmprts.by_block_.d_idx;
@@ -210,7 +210,7 @@ TEST_F(CudaMparticlesTest, SortByCellDetail)
   auto& cmprts = *_cmprts;
   cmprts.reserve_all(n_prts_by_patch);
   cmprts.resize_all(n_prts_by_patch);
-  cmprts[0].set_particles(prts);
+  cmprts[0].injector()(prts);
   EXPECT_TRUE(cmprts.check_in_patch_unordered_slow());
 
   auto sort_by_cell = cuda_mparticles_sort{cmprts.n_cells()};
@@ -311,7 +311,7 @@ TEST_F(CudaMparticlesTest, CudaCollision)
   auto& cmprts = *_cmprts;
   cmprts.reserve_all(n_prts_by_patch);
   cmprts.resize_all(n_prts_by_patch);
-  cmprts[0].set_particles(prts);
+  cmprts[0].injector()(prts);
 
   cmprts.setup_internals();
   cmprts.check_ordered();
