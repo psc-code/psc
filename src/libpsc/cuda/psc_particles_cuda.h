@@ -92,6 +92,16 @@ private:
 };
 
 // ======================================================================
+// PatchCuda
+
+template<typename _Mparticles>
+struct PatchCuda
+{
+  using Mparticles = _Mparticles;
+  using Patch = typename Mparticles::Patch;
+};
+
+// ======================================================================
 // MparticlesCuda
 
 template<typename _BS>
@@ -138,7 +148,7 @@ struct MparticlesCuda : MparticlesBase
 
   CudaMparticles* cmprts() { return cmprts_; }
 
-  struct Patch
+  struct Patch : PatchCuda<MparticlesCuda>
   {
     using Mparticles = MparticlesCuda;
     using Injector = InjectorCuda<Patch>;

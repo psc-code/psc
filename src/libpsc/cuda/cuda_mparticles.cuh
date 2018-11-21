@@ -163,7 +163,7 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   using Real3 = Vec3<real_t>;
   using DMparticles = DMparticlesCuda<BS>;
 
-  struct Patch
+  struct Patch : PatchCuda<cuda_mparticles>
   {
     using Mparticles = cuda_mparticles;
 
