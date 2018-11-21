@@ -10,6 +10,7 @@
 
 #ifdef USE_CUDA
 #include "../libpsc/cuda/psc_particles_cuda.h"
+#include "psc_particles_single.h"
 
 template<typename _Mparticles, typename _MakeGrid = MakeTestGrid1>
 struct Config
@@ -45,6 +46,8 @@ struct MparticlesCudaTest : ::testing::Test
     return mprts;
   }
 
+  const Grid_t& grid() const { return grid_; }
+  
 private:
   Grid_t grid_;
 };
@@ -110,6 +113,56 @@ TYPED_TEST(MparticlesCudaTest, Inject)
 
   auto prt2 = mprts[0].get_particle(0);
   EXPECT_EQ(cprts[0], prt2);
+  
+  nn = 0;
+  for (int p = 0; p < mprts.n_patches(); ++p) {
+    auto prts = mprts[p];
+    auto& patch = mprts.grid().patches[p];
+
+    for (auto prt: prts.get()) {
+      auto x = .5 * (patch.xb + patch.xe);
+      EXPECT_EQ(prt.position()[0], x[0]);
+      EXPECT_EQ(prt.position()[1], x[1]);
+      EXPECT_EQ(prt.position()[2], x[2]);
+      EXPECT_EQ(prt.w(), nn);
+      EXPECT_EQ(prt.kind(), 0);
+      nn++;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------
+// Conversion from MparticlesSingle
+
+TYPED_TEST(MparticlesCudaTest, ConvertFromSingle)
+{
+  using Mparticles = typename TypeParam::Mparticles;
+  const int n_prts = 1;
+  const auto& grid = this->grid();
+
+  auto mprts_single = MparticlesSingle{grid};
+
+  EXPECT_EQ(mprts_single.n_patches(), 4);
+
+  int nn = 0;
+  for (int p = 0; p < mprts_single.n_patches(); ++p) {
+    auto injector = mprts_single[p].injector();
+    auto& patch = grid.patches[p];
+    for (int n = 0; n < n_prts; n++) {
+      particle_inject prt = {};
+      auto x = .5 * (patch.xb + patch.xe);
+      int kind = 0;
+      // use weight to store particle number for testing
+      injector({{x[0], x[1], x[2]}, {}, double(nn), kind});
+      nn++;
+    }
+  }
+
+  EXPECT_EQ(mprts_single.get_n_prts(), 4);
+
+  auto mprts = mprts_single.get_as<Mparticles>();
+
+  EXPECT_EQ(mprts.get_n_prts(), 4);
   
   nn = 0;
   for (int p = 0; p < mprts.n_patches(); ++p) {
