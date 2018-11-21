@@ -170,14 +170,14 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
     using Injector = InjectorCuda_<Patch>;
     friend Injector;
     
-    Patch(cuda_mparticles& cmprts, int p)
-      : cmprts_(cmprts), p_(p)
+    Patch(Mparticles& mprts, int p)
+      : mprts_(mprts), p_(p)
     {}
 
     Injector injector() { return {*this}; }
 
   private:
-    cuda_mparticles& cmprts_;
+    Mparticles& mprts_;
     int p_;
   };
 
