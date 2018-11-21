@@ -39,7 +39,7 @@ void cuda_mparticles_add_particles_test_1(CudaMparticles& cmprts, std::vector<ui
   Int3 ldims = grid.ldims;
 
   uint n_prts = 0;
-  for (int p = 0; p < cmprts.n_patches; p++) {
+  for (int p = 0; p < cmprts.n_patches(); p++) {
     n_prts_by_patch[p] = ldims[0] * ldims[1] * ldims[2];
     n_prts += n_prts_by_patch[p];
   }
@@ -88,7 +88,7 @@ TEST_F(CudaMparticlesTest, ConstructorDestructor)
   grid_->kinds.push_back(Grid_t::Kind(-1.,  1., "electron"));
   grid_->kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
   auto cmprts = CudaMparticles{*grid_};
-  EXPECT_EQ(cmprts.n_patches, 1);
+  EXPECT_EQ(cmprts.n_patches(), 1);
 }
 
 // ----------------------------------------------------------------------
@@ -98,7 +98,7 @@ TEST_F(CudaMparticlesTest, SetParticles)
   grid_->kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
   auto cmprts = CudaMparticles{*grid_};
 
-  std::vector<uint> n_prts_by_patch(cmprts.n_patches);
+  std::vector<uint> n_prts_by_patch(cmprts.n_patches());
   cuda_mparticles_add_particles_test_1(cmprts, n_prts_by_patch);
 
   // check that particles are in C order
@@ -253,7 +253,7 @@ TEST_F(CudaMparticlesTest, SetupInternals)
   grid_->kinds.push_back(Grid_t::Kind( 1.,  1., "test species"));
   auto cmprts = CudaMparticles{*grid_};
 
-  std::vector<uint> n_prts_by_patch(cmprts.n_patches);
+  std::vector<uint> n_prts_by_patch(cmprts.n_patches());
   cuda_mparticles_add_particles_test_1(cmprts, n_prts_by_patch);
 
   cmprts.check_in_patch_unordered_slow();

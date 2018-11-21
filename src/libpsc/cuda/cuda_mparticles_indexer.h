@@ -35,10 +35,12 @@ struct cuda_mparticles_indexer
             int(grid.ldims[1] / BS::y::value),
             int(grid.ldims[2] / BS::z::value)}
   {
-    n_patches = grid.n_patches();
+    n_patches_ = grid.n_patches();
     n_blocks_per_patch = b_mx_[0] * b_mx_[1] * b_mx_[2];
-    n_blocks = n_patches * n_blocks_per_patch;
+    n_blocks = n_patches_ * n_blocks_per_patch;
   }
+
+  int n_patches() const { return n_patches_; }
 
   Int3 cellPosition(const real_t xi[3]) const
   {
@@ -91,9 +93,9 @@ protected:
   }
 
 public:
-  uint n_cells() const { return pi_.n_cells_ * n_patches; }
+  uint n_cells() const { return pi_.n_cells_ * n_patches(); }
   
-  uint n_patches;                // number of patches
+  uint n_patches_;               // number of patches
   uint n_blocks_per_patch;       // number of blocks per patch
   uint n_blocks;                 // number of blocks in all patches in mprts
 private:
@@ -254,7 +256,7 @@ struct BlockSimple : BlockBase
   {
     int gx = cmprts.b_mx()[0];
     int gy = cmprts.b_mx()[1];
-    int gz = cmprts.b_mx()[2] * cmprts.n_patches;
+    int gz = cmprts.b_mx()[2] * cmprts.n_patches();
     return dim3(gx, gy, gz);
   }
 
@@ -288,7 +290,7 @@ struct BlockSimple<BS, dim_yz> : BlockBase
   static dim3 dimGrid(CudaMparticles& cmprts)
   {
     int gx = cmprts.b_mx()[1];
-    int gy = cmprts.b_mx()[2] * cmprts.n_patches;
+    int gy = cmprts.b_mx()[2] * cmprts.n_patches();
     return dim3(gx, gy);
   }
 
@@ -366,7 +368,7 @@ struct BlockQ<BS, dim_yz> : BlockBase
   static dim3 dimGrid(CudaMparticles& cmprts)
   {
     int gx =  (cmprts.b_mx()[1] + 1) / 2;
-    int gy = ((cmprts.b_mx()[2] + 1) / 2) * cmprts.n_patches;
+    int gy = ((cmprts.b_mx()[2] + 1) / 2) * cmprts.n_patches();
     return dim3(gx, gy);
   }
 

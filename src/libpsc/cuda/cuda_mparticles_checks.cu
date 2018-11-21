@@ -8,11 +8,11 @@
 template<typename BS>
 bool cuda_mparticles<BS>::check_in_patch_unordered_slow()
 {
-  uint n_prts_by_patch[this->n_patches];
+  uint n_prts_by_patch[this->n_patches()];
   this->get_size_all(n_prts_by_patch);
 
   uint off = 0;
-  for (int p = 0; p < this->n_patches; p++) {
+  for (int p = 0; p < this->n_patches(); p++) {
     for (int n = 0; n < n_prts_by_patch[p]; n++) {
       int bidx = this->blockIndex(this->storage.load(off + n), p);
       if (!(bidx >= 0 && bidx <= this->n_blocks)) return false;
@@ -34,11 +34,11 @@ bool cuda_mparticles<BS>::check_in_patch_unordered_slow()
 template<typename BS>
 bool cuda_mparticles<BS>::check_bidx_id_unordered_slow()
 {
-  uint n_prts_by_patch[this->n_patches];
+  uint n_prts_by_patch[this->n_patches()];
   this->get_size_all(n_prts_by_patch);
 
   uint off = 0;
-  for (int p = 0; p < this->n_patches; p++) {
+  for (int p = 0; p < this->n_patches(); p++) {
     for (int n = 0; n < n_prts_by_patch[p]; n++) {
       int bidx = this->blockIndex(this->storage.load(off + n), p);
       if (!(bidx == this->by_block_.d_idx[off+n])) return false;
@@ -103,7 +103,7 @@ bool cuda_mparticles<BS>::check_bidx_after_push()
 {
   bool ok = true;
   
-  for (int p = 0; p < this->n_patches; p++) {
+  for (int p = 0; p < this->n_patches(); p++) {
     int begin = this->by_block_.d_off[p * this->n_blocks_per_patch];
     int end = this->by_block_.d_off[(p+1) * this->n_blocks_per_patch];
     for (int n = begin; n < end; n++) {

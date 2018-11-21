@@ -35,7 +35,7 @@ void cuda_mparticles_base<BS>::get_size_all(uint *n_prts_by_patch)
 {
   thrust::host_vector<uint> h_off(by_block_.d_off);
 
-  for (int p = 0; p < this->n_patches; p++) {
+  for (int p = 0; p < this->n_patches(); p++) {
     n_prts_by_patch[p] = h_off[(p+1) * this->n_blocks_per_patch] - h_off[p * this->n_blocks_per_patch];
     //printf("p %d n_prts_by_patch %d\n", p, n_prts_by_patch[p]);
   }

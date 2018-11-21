@@ -84,7 +84,7 @@ void cuda_bndp<CudaMparticles, DIM>::spine_reduce_gold(CudaMparticles *cmprts)
   thrust::host_vector<uint> h_spine_cnts(d_spine_cnts.data(), d_spine_cnts.data() + 1 + n_blocks * (CUDA_BND_STRIDE + 1));
 
   Int3 mx = b_mx();
-  for (int p = 0; p < n_patches; p++) {
+  for (int p = 0; p < n_patches(); p++) {
     for (int b = 0; b < n_blocks_per_patch; b++) {
       uint bid = b + p * n_blocks_per_patch;
       for (int n = h_off[bid]; n < h_off[bid+1]; n++) {
@@ -103,7 +103,7 @@ void cuda_bndp<CudaMparticles, DIM>::spine_reduce_gold(CudaMparticles *cmprts)
 	    assert(0);
 	  }
 	} else if (key == CUDA_BND_S_OOB) {
-	  h_spine_cnts[mx[1]*mx[2]*n_patches * 10 + bid]++;
+	  h_spine_cnts[mx[1]*mx[2]*n_patches() * 10 + bid]++;
 	}
       }
     }

@@ -20,8 +20,8 @@ cuda_mparticles<BS>::cuda_mparticles(const Grid_t& grid)
 {
   cuda_base_init();
   
-  xb_by_patch.resize(this->n_patches);
-  for (int p = 0; p < this->n_patches; p++) {
+  xb_by_patch.resize(this->n_patches());
+  for (int p = 0; p < this->n_patches(); p++) {
     xb_by_patch[p] = Real3(grid.patches[p].xb);
   }
 }
@@ -48,7 +48,7 @@ void cuda_mparticles<BS>::dump_by_patch(uint *n_prts_by_patch)
 {
   printf("cuda_mparticles_dump_by_patch: n_prts = %d\n", this->n_prts);
   uint off = 0;
-  for (int p = 0; p < this->n_patches; p++) {
+  for (int p = 0; p < this->n_patches(); p++) {
     float *xb = &xb_by_patch[p][0];
     for (int n = 0; n < n_prts_by_patch[p]; n++) {
       auto prt = this->storage.load(n + off);
@@ -154,18 +154,18 @@ template<typename BS>
 void cuda_mparticles<BS>::find_block_indices_ids(thrust::device_vector<uint>& d_idx,
 						 thrust::device_vector<uint>& d_id)
 {
-  if (this->n_patches == 0) {
+  if (this->n_patches() == 0) {
     return;
   }
 
   // OPT: if we didn't need max_n_prts, we wouldn't have to get the
   // sizes / offsets at all, and it seems likely we could do a better
   // job here in general
-  uint n_prts_by_patch[this->n_patches];
+  uint n_prts_by_patch[this->n_patches()];
   this->get_size_all(n_prts_by_patch);
   
   int max_n_prts = 0;
-  for (int p = 0; p < this->n_patches; p++) {
+  for (int p = 0; p < this->n_patches(); p++) {
     if (n_prts_by_patch[p] > max_n_prts) {
       max_n_prts = n_prts_by_patch[p];
     }
@@ -183,7 +183,7 @@ void cuda_mparticles<BS>::find_block_indices_ids(thrust::device_vector<uint>& d_
   k_find_block_indices_ids<BS><<<dimGrid, dimBlock>>>(*this,
 						      d_idx.data().get(),
 						      d_id.data().get(),
-						      this->n_patches,
+						      this->n_patches(),
 						      this->n_blocks_per_patch);
   cuda_sync_if_enabled();
 }
@@ -195,18 +195,18 @@ template<typename BS>
 void cuda_mparticles<BS>::find_cell_indices_ids(thrust::device_vector<uint>& d_cidx,
 						thrust::device_vector<uint>& d_id)
 {
-  if (this->n_patches == 0) {
+  if (this->n_patches() == 0) {
     return;
   }
 
   // OPT: if we didn't need max_n_prts, we wouldn't have to get the
   // sizes / offsets at all, and it seems likely we could do a better
   // job here in general
-  uint n_prts_by_patch[this->n_patches];
+  uint n_prts_by_patch[this->n_patches()];
   this->get_size_all(n_prts_by_patch);
   
   int max_n_prts = 0;
-  for (int p = 0; p < this->n_patches; p++) {
+  for (int p = 0; p < this->n_patches(); p++) {
     if (n_prts_by_patch[p] > max_n_prts) {
       max_n_prts = n_prts_by_patch[p];
     }
@@ -222,7 +222,7 @@ void cuda_mparticles<BS>::find_cell_indices_ids(thrust::device_vector<uint>& d_c
   k_find_cell_indices_ids<BS><<<dimGrid, dimBlock>>>(*this,
 						     d_cidx.data().get(),
 						     d_id.data().get(),
-						     this->n_patches,
+						     this->n_patches(),
 						     this->n_blocks_per_patch);
   cuda_sync_if_enabled();
 }
@@ -268,7 +268,7 @@ void cuda_mparticles<BS>::reorder_and_offsets(const thrust::device_vector<uint>&
 					      const thrust::device_vector<uint>& d_id,
 					      thrust::device_vector<uint>& d_off)
 {
-  if (this->n_patches == 0) {
+  if (this->n_patches() == 0) {
     return;
   }
 
@@ -387,7 +387,7 @@ void cuda_mparticles<BS>::inject_initial(const std::vector<particle_t>& buf,
   assert(this->n_prts == 0);
   
   uint buf_n = 0;
-  for (int p = 0; p < this->n_patches; p++) {
+  for (int p = 0; p < this->n_patches(); p++) {
     assert(h_off[ p    * this->n_blocks_per_patch] == 0);
     assert(h_off[(p+1) * this->n_blocks_per_patch] == 0);
     buf_n += n_prts_by_patch[p];
@@ -399,7 +399,7 @@ void cuda_mparticles<BS>::inject_initial(const std::vector<particle_t>& buf,
 
   auto it = buf.begin();
   uint off = 0;
-  for (int p = 0; p < this->n_patches; p++) {
+  for (int p = 0; p < this->n_patches(); p++) {
     auto n_prts = n_prts_by_patch[p];
     h_off[p     * this->n_blocks_per_patch] = off;
     h_off[(p+1) * this->n_blocks_per_patch] = off + n_prts;
@@ -436,7 +436,7 @@ void cuda_mparticles<BS>::inject(const std::vector<particle_t>& buf,
   using Double3 = Vec3<double>;
   
   uint buf_n = 0;
-  for (int p = 0; p < this->n_patches; p++) {
+  for (int p = 0; p < this->n_patches(); p++) {
     buf_n += buf_n_by_patch[p];
     //    printf("p %d buf_n_by_patch %d\n", p, buf_n_by_patch[p]);
   }
@@ -447,7 +447,7 @@ void cuda_mparticles<BS>::inject(const std::vector<particle_t>& buf,
   //thrust::host_vector<uint> h_id(buf_n);
 
   uint off = 0;
-  for (int p = 0; p < this->n_patches; p++) {
+  for (int p = 0; p < this->n_patches(); p++) {
     for (int n = 0; n < buf_n_by_patch[p]; n++) {
       auto prt = buf[off + n];
       h_storage.store(prt, off + n);

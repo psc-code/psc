@@ -31,10 +31,10 @@ static void cuda_heating_params_set(cuda_heating_params& h_prm, cuda_mparticles<
 {
   cudaError_t ierr;
 
-  ierr = cudaMalloc(&h_prm.d_xb_by_patch, cmprts->n_patches * sizeof(float_3));
+  ierr = cudaMalloc(&h_prm.d_xb_by_patch, cmprts->n_patches() * sizeof(float_3));
   cudaCheck(ierr);
   ierr = cudaMemcpy(h_prm.d_xb_by_patch, cmprts->xb_by_patch.data(),
-		    cmprts->n_patches * sizeof(float_3), cudaMemcpyHostToDevice);
+		    cmprts->n_patches() * sizeof(float_3), cudaMemcpyHostToDevice);
   cudaCheck(ierr);
 }
 

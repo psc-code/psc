@@ -96,9 +96,9 @@ struct cuda_bndp<CudaMparticles, dim_xyz> : cuda_mparticles_indexer<typename Cud
   cuda_bndp(const Grid_t& grid)
     : cuda_mparticles_indexer<BS>{grid}
   {
-    bpatch.resize(n_patches);
-    bufs_.reserve(n_patches);
-    for (int p = 0; p < n_patches; p++) {
+    bpatch.resize(n_patches());
+    bufs_.reserve(n_patches());
+    for (int p = 0; p < n_patches(); p++) {
       bufs_.push_back(&bpatch[p].buf);
     }
   }
@@ -142,7 +142,7 @@ struct cuda_bndp<CudaMparticles, dim_xyz> : cuda_mparticles_indexer<typename Cud
     thrust::copy(cmprts->by_block_.d_idx.begin() + n_prts, cmprts->by_block_.d_idx.end(),
 		 h_bidx.begin());
 
-    for (int p = 0; p < n_patches; p++) {
+    for (int p = 0; p < n_patches(); p++) {
       bpatch[p].buf.clear();
       bpatch[p].n_send = 0;
     }

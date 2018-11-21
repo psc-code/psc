@@ -114,7 +114,7 @@ k_reorder_send_buf_total(int nr_prts, int nr_total_blocks,
 template<typename CudaMparticles, typename DIM>
 void cuda_bndp<CudaMparticles, DIM>::reorder_send_buf_total(CudaMparticles *cmprts, uint n_prts_send)
 {
-  if (n_patches == 0) {
+  if (n_patches() == 0) {
     return;
   }
 

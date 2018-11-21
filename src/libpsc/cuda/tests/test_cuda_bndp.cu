@@ -45,7 +45,7 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
     auto& cmprts = *cmprts_;
 
     // (ab)use kind to track particle more easily in the test
-    for (int p = 0; p < cmprts.n_patches; ++p) {
+    for (int p = 0; p < cmprts.n_patches(); ++p) {
       auto injector = cmprts[p].injector();
       if (p == 0) { // patch 0
 	injector(particle_inject{{ .5,  35., 5.}, {}, 0., 0});
@@ -174,7 +174,7 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
   // test find_n_send
   cbndp->n_prts_send = cbndp->find_n_send(cmprts_.get());
 
-  for (int p = 0; p < cmprts.n_patches; p++) {
+  for (int p = 0; p < cmprts.n_patches(); p++) {
     //printf("p %d: n_send %d\n", p, cmprts.bpatch[p].n_send);
     EXPECT_EQ(cbndp->bpatch[p].n_send, p < 2 ? 1 : 0);
   }
@@ -345,7 +345,7 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   EXPECT_EQ(cbndp->d_bnd_off[1], 0);
 
   // === test sort
-  uint n_prts_by_patch[cmprts.n_patches];
+  uint n_prts_by_patch[cmprts.n_patches()];
   cmprts.get_size_all(n_prts_by_patch);
   EXPECT_EQ(n_prts_by_patch[0], 2);
   EXPECT_EQ(n_prts_by_patch[1], 2);

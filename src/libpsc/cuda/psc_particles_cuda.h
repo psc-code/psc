@@ -59,7 +59,7 @@ struct InjectorCuda_
   {
     auto& mprts = patch_.mprts_;
     mprts.injector_n_prts_by_patch_.push_back(n_prts_);
-    if (patch_.p_ == mprts.n_patches - 1) {
+    if (patch_.p_ == mprts.n_patches() - 1) {
       mprts.inject(mprts.injector_buf_, mprts.injector_n_prts_by_patch_);
       mprts.injector_n_prts_by_patch_.clear();
       mprts.injector_buf_.clear();

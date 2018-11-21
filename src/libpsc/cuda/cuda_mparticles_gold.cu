@@ -5,7 +5,7 @@
 template<typename BS>
 void cuda_mparticles<BS>::reorder_and_offsets_slow()
 {
-  if (this->n_patches == 0) {
+  if (this->n_patches() == 0) {
     return;
   }
 
