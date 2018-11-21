@@ -133,7 +133,7 @@ struct cuda_mparticles_base : cuda_mparticles_indexer<BS>
   cuda_mparticles_base(const cuda_mparticles<BS>&) = delete;
 
 protected:
-  void reserve_all(uint size);
+  void resize(uint size);
 
 public:
   void get_size_all(uint *n_prts_by_patch);

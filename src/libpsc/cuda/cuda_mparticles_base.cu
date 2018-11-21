@@ -21,7 +21,7 @@ cuda_mparticles_base<BS>::cuda_mparticles_base(const Grid_t& grid)
 // reserve_all
   
 template<typename BS>
-void cuda_mparticles_base<BS>::reserve_all(uint size)
+void cuda_mparticles_base<BS>::resize(uint size)
 {
   storage.xi4.resize(size);
   storage.pxi4.resize(size);

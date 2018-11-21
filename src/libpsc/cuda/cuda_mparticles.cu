@@ -35,7 +35,7 @@ cuda_mparticles<BS>::cuda_mparticles(const Grid_t& grid)
 template<typename BS>
 void cuda_mparticles<BS>::resize(uint n_prts)
 {
-  cuda_mparticles_base<BS>::reserve_all(n_prts);
+  cuda_mparticles_base<BS>::resize(n_prts);
   this->by_block_.d_idx.resize(n_prts);
   this->by_block_.d_id.resize(n_prts);
 }
