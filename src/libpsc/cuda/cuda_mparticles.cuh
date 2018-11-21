@@ -163,14 +163,14 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   using Real3 = Vec3<real_t>;
   using DMparticles = DMparticlesCuda<BS>;
 
-  using Patch = PatchCuda<cuda_mparticles>;
-
   friend struct InjectorCuda<cuda_mparticles>;
 
   cuda_mparticles(const Grid_t& grid);
 
-  Patch operator[](int p) { return Patch{*this, p}; }
+  friend struct InjectorBuffered<cuda_mparticles>;
   
+  InjectorBuffered<cuda_mparticles> injector() { return {*this}; }
+
 
   uint get_n_prts();
   void inject(const std::vector<particle_t>& buf, const std::vector<uint>& buf_n_by_patch);

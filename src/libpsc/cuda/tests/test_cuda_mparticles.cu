@@ -293,7 +293,7 @@ TEST_F(CudaMparticlesTest, CudaCollision)
   };
 
   auto cmprts = CudaMparticles{*grid_};
-  cmprts[0].injector()(prts);
+  cmprts.injector()[0].raw(prts);
 
   cmprts.check_ordered();
 

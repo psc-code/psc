@@ -44,14 +44,17 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
     cmprts_.reset(new CudaMparticles{*grid});
     auto& cmprts = *cmprts_;
 
-    for (int p = 0; p < cmprts.n_patches(); ++p) {
-      auto injector = cmprts[p].injector();
-      if (p == 0) { // patch 0
-	injector(particle_inject{{ .5,  35., 5.}, {}, 0., 0});
-	injector(particle_inject{{ .5, 155., 5.}, {}, 0., 1});
-      } else if (p == 1) { // patch 1
-	injector(particle_inject{{ 160.5,  35., 5.}, {}, 0., 2});
-	injector(particle_inject{{ 160.5, 155., 5.}, {}, 0., 3});
+    {
+      auto inj = cmprts.injector();
+      for (int p = 0; p < cmprts.n_patches(); ++p) {
+	auto injector = inj[p];
+	if (p == 0) { // patch 0
+	  injector(particle_inject{{ .5,  35., 5.}, {}, 0., 0});
+	  injector(particle_inject{{ .5, 155., 5.}, {}, 0., 1});
+	} else if (p == 1) { // patch 1
+	  injector(particle_inject{{ 160.5,  35., 5.}, {}, 0., 2});
+	  injector(particle_inject{{ 160.5, 155., 5.}, {}, 0., 3});
+	}
       }
     }
 

@@ -123,11 +123,14 @@ TEST_F(PushMprtsTest, Accel)
   grid_->kinds.push_back(Grid_t::Kind(1., 1., "test_species"));
 
   auto cmprts = CudaMparticles{*grid_};
-  for (int p = 0; p < cmprts.n_patches(); p++) {
-    auto injector = cmprts[p].injector();
-    for (int n = 0; n < n_prts; n++) {
-      using Real3 = particle_t::Real3;
-      injector({{rng->uniform(0, L), rng->uniform(0, L), rng->uniform(0, L)}, {}, 1., 0});
+  {
+    auto inj = cmprts.injector();
+    for (int p = 0; p < cmprts.n_patches(); p++) {
+      auto injector = inj[p];
+      for (int n = 0; n < n_prts; n++) {
+	using Real3 = particle_t::Real3;
+	injector({{rng->uniform(0, L), rng->uniform(0, L), rng->uniform(0, L)}, {}, 1., 0});
+      }
     }
   }
   
@@ -170,14 +173,17 @@ TEST_F(PushMprtsTest, Cyclo)
   grid_->kinds.push_back(Grid_t::Kind(2., 1., "test_species"));
 
   auto cmprts = CudaMparticles{*grid_};
-  for (int p = 0; p < cmprts.n_patches(); p++) {
-    auto injector = cmprts[p].injector();
-    for (int n = 0; n < n_prts; n++) {
-      using real_t = particle_t::real_t;
-      using Real3 = particle_t::Real3;
-      injector({{rng->uniform(0, L), rng->uniform(0, L), rng->uniform(0, L)},
-	        {1., 1., 1.}, // gamma = 2
+  {
+    auto inj = cmprts.injector();
+    for (int p = 0; p < cmprts.n_patches(); p++) {
+      auto injector = inj[p];
+      for (int n = 0; n < n_prts; n++) {
+	using real_t = particle_t::real_t;
+	using Real3 = particle_t::Real3;
+	injector({{rng->uniform(0, L), rng->uniform(0, L), rng->uniform(0, L)},
+	      {1., 1., 1.}, // gamma = 2
 	        rng->uniform(0, 1.), 0});
+      }
     }
   }
 

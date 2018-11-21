@@ -134,14 +134,28 @@ struct InjectorBuffered
       assert(p_ == mprts_.injector_n_prts_by_patch_.size());
     }
     
+    void raw(const particle_t& prt)
+    {
+      mprts_.injector_buf_.push_back(prt);
+      n_prts_++;
+    }
+    
     void operator()(const particle_inject& new_prt)
     {
       auto& patch = mprts_.grid().patches[p_];
       auto x = Double3::fromPointer(new_prt.x) - patch.xb;
       auto u = Double3::fromPointer(new_prt.u);
-      mprts_.injector_buf_.push_back({Real3(x), Real3(u), real_t(new_prt.w), new_prt.kind});
-      n_prts_++;
+      raw({Real3(x), Real3(u), real_t(new_prt.w), new_prt.kind});
     }
+
+    // FIXME do we want to keep this? or just have a particle_inject version instead?
+    void raw(const std::vector<particle_t>& buf)
+    {
+      auto& injector_buf = mprts_.injector_buf_;
+      injector_buf.insert(injector_buf.end(), buf.begin(), buf.end());
+      n_prts_ += buf.size();
+    }
+  
     
     ~Patch()
     {
