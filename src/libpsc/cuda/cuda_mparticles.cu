@@ -408,7 +408,6 @@ void cuda_mparticles<BS>::set_particles(const std::vector<particle_t>& buf,
   
   HMparticlesCudaStorage h_storage{buf_n};
 
-  // this also implements resize_all()
   auto it = buf.begin();
   size_t off = 0;
   for (int p = 0; p < this->n_patches; p++) {

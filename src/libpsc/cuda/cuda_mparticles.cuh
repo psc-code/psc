@@ -136,7 +136,6 @@ protected:
   void reserve_all(uint size);
 
 public:
-  void resize_all(const std::vector<uint>& n_prts_by_patch);
   void get_size_all(uint *n_prts_by_patch);
 
   // per particle
