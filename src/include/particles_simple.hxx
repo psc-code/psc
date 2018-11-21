@@ -381,7 +381,7 @@ struct Mparticles : MparticlesBase
   const patch_t& operator[](int p) const { return patches_[p]; }
   patch_t&       operator[](int p)       { return patches_[p]; }
 
-  void reserve_all(const uint *n_prts_by_patch) override
+  void reserve_all(const std::vector<uint> &n_prts_by_patch) override
   {
     for (int p = 0; p < patches_.size(); p++) {
       patches_[p].reserve(n_prts_by_patch[p]);

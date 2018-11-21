@@ -33,13 +33,13 @@ MparticlesCuda<BS>::~MparticlesCuda()
 }
 
 template<typename BS>
-void MparticlesCuda<BS>::reserve_all(const uint *n_prts_by_patch)
+void MparticlesCuda<BS>::reserve_all(const std::vector<uint>& n_prts_by_patch)
 {
   dprintf("CMPRTS: reserve_all\n");
   for (int p = 0; p < cmprts_->n_patches; p++) {
     dprintf("  p %d: %d\n", p, n_prts_by_patch[p]);
   }
-  cmprts_->reserve_all(n_prts_by_patch);
+  cmprts_->reserve_all(n_prts_by_patch.data());
 }
 
 template<typename BS>
@@ -195,7 +195,7 @@ static void copy_to(MparticlesCuda& mp, MP& mp_other)
   int n_patches = mp_other.n_patches();
   std::vector<uint> n_prts_by_patch(n_patches);
   mp.get_size_all(n_prts_by_patch.data());
-  mp_other.reserve_all(n_prts_by_patch.data());
+  mp_other.reserve_all(n_prts_by_patch);
   mp_other.resize_all(n_prts_by_patch);
 
   if (mp.cmprts()->need_reorder) {

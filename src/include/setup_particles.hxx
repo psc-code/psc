@@ -99,7 +99,7 @@ struct SetupParticles
     const auto& grid = mprts.grid();
     const auto& kinds = grid.kinds;
     
-    mprts.reserve_all(n_prts_by_patch.data());
+    mprts.reserve_all(n_prts_by_patch);
 
     for (int p = 0; p < mprts.n_patches(); ++p) {
       Int3 ilo = {}, ihi = grid.ldims;

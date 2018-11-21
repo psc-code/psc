@@ -572,7 +572,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   
   void setup_initial_particles(Mparticles_t& mprts, std::vector<uint>& n_prts_by_patch)
   {
-    mprts_->reserve_all(n_prts_by_patch.data());
+    mprts_->reserve_all(n_prts_by_patch);
     setup_particles(n_prts_by_patch, false);
   }
   

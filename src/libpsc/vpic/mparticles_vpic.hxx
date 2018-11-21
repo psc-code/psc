@@ -205,7 +205,7 @@ struct MparticlesVpic_ : MparticlesBase
   // at least for now, and we wouldn't be able to know how to split this into
   // the different species, anyway.
 
-  void reserve_all(const uint *n_prts_by_patch) override
+  void reserve_all(const std::vector<uint>& n_prts_by_patch) override
   {
     for (int p = 0; p < n_patches(); p++) {
       int n_prts = 0, n_prts_alloced = 0;

@@ -178,7 +178,7 @@ void copy_to(MparticlesVpic& mprts_from, MP& mprts_to)
   int n_patches = mprts_to.n_patches();
   std::vector<uint> n_prts_by_patch(n_patches);
   mprts_from.get_size_all(n_prts_by_patch.data());
-  mprts_to.reserve_all(n_prts_by_patch.data());
+  mprts_to.reserve_all(n_prts_by_patch);
   mprts_to.resize_all(n_prts_by_patch);
   
   unsigned int off = 0;
@@ -200,7 +200,7 @@ void copy_from(MparticlesVpic& mprts_to, MparticlesSingle& mprts_from)
   mprts_to.resize_all(n_prts_by_patch);
 
   mprts_from.get_size_all(n_prts_by_patch.data());
-  mprts_to.reserve_all(n_prts_by_patch.data());
+  mprts_to.reserve_all(n_prts_by_patch);
   
   for (int p = 0; p < n_patches; p++) {
     ConvertToVpic<MparticlesSingle> convert_to_vpic(mprts_from, *vmprts.grid(), p);
