@@ -20,6 +20,5 @@ struct particle_inject
 };
 
 #define MP_DONT_COPY (0x1)
-#define MP_DONT_RESIZE (0x2)
 
 #endif

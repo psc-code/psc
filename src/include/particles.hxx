@@ -52,14 +52,11 @@ struct MparticlesBase
     prof_start(pr);
     auto& mprts = *new MP{grid()};
     if (flags & MP_DONT_COPY) {
-      if (!(flags & MP_DONT_RESIZE)) {
-	uint n_prts_by_patch[n_patches()];
-	get_size_all(n_prts_by_patch);
-	mprts.reserve_all(n_prts_by_patch);
-	mprts.resize_all(n_prts_by_patch);
-      }
+      uint n_prts_by_patch[n_patches()];
+      get_size_all(n_prts_by_patch);
+      mprts.reserve_all(n_prts_by_patch);
+      mprts.resize_all(n_prts_by_patch);
     } else {
-      assert(!(flags & MP_DONT_RESIZE));
       MparticlesBase::convert(*this, mprts);
     }
   
