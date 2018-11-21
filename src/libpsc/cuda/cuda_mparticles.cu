@@ -494,7 +494,7 @@ void cuda_mparticles<BS>::inject_buf(const particle_t *buf,
 
 template<typename BS>
 void cuda_mparticles<BS>::inject_buf(const particle_inject *buf,
-				     const uint *buf_n_by_patch)
+				     const std::vector<uint>& buf_n_by_patch)
 {
   using Double3 = Vec3<double>;
   
