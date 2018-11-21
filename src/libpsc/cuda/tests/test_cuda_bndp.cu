@@ -25,7 +25,7 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
   using Double3 = Vec3<double>;
   
   std::unique_ptr<Grid_t> grid;
-  std::unique_ptr<CudaMparticles> cmprts;
+  std::unique_ptr<CudaMparticles> cmprts_;
   std::unique_ptr<cuda_bndp<CudaMparticles, dim_yz>> cbndp;
 
   void SetUp()
@@ -41,7 +41,8 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
     double dt = .1;
     grid.reset(new Grid_t(domain, bc, kinds, norm, dt));
 
-    cmprts.reset(make_cmprts(*grid));
+    cmprts_.reset(make_cmprts(*grid));
+    auto& cmprts = *cmprts_;
 
     // (ab)use kind to track particle more easily in the test
     using Real3 = particle_t::Real3;
@@ -58,24 +59,24 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
     // FIXME eventually shouldn't have to reserve additional room for sending here
     std::vector<uint> n_prts_reserve_by_patch = {2, 4, 0, 0};
     
-    //cmprts->reserve_all(n_prts_reserve_by_patch); FIXME
-    cmprts->inject_buf(prts.data(), n_prts_by_patch);
+    //cmprts.reserve_all(n_prts_reserve_by_patch); FIXME
+    cmprts.inject_buf(prts.data(), n_prts_by_patch);
 
     // move every particle one full cell to the right (+y, that is)
     // (position doesn't actually matter since we'll only look at bidx)
-    for (int n = 0; n < cmprts->n_prts; n++) {
-      auto prt = cmprts->storage.load(n);
+    for (int n = 0; n < cmprts.n_prts; n++) {
+      auto prt = cmprts.storage.load(n);
       prt.x()[1] += 10.;
-      cmprts->storage.store(prt, n);
+      cmprts.storage.store(prt, n);
     }
-    auto& d_bidx = cmprts->by_block_.d_idx;
+    auto& d_bidx = cmprts.by_block_.d_idx;
     d_bidx[0] = 0 + 1 * 3; // +1 in y, 0 in z
     d_bidx[1] = CUDA_BND_S_OOB;
     d_bidx[2] = 0 + 1 * 3; // +1 in y, 0 in z
     d_bidx[3] = CUDA_BND_S_OOB;
     
 #if 0
-    cmprts->dump();
+    cmprts.dump();
 #endif
 
     cbndp.reset(new cuda_bndp<cuda_mparticles<BS144>, dim_yz>(*grid));
@@ -90,7 +91,7 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
 
 TEST_F(CudaMparticlesBndTest, BndPrep)
 {
-  cbndp->prep(cmprts.get());
+  cbndp->prep(cmprts_.get());
 
   // particles 0 and 2 remain in their patch,
   // particles 1 and 3 leave their patch and need special handling
@@ -107,11 +108,13 @@ TEST_F(CudaMparticlesBndTest, BndPrep)
 
 TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 {
+  auto& cmprts = *cmprts_;
+
   // test spine_reduce
-  cbndp->spine_reduce(cmprts.get());
+  cbndp->spine_reduce(cmprts_.get());
 
 #if 0
-  for (int b = 0; b < cmprts->n_blocks; b++) {
+  for (int b = 0; b < cmprts.n_blocks; b++) {
     printf("b %d:", b);
     for (int n = 0; n < 10; n++) {
       int cnt = cbndp->d_spine_cnts[10*b + n];
@@ -121,7 +124,7 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
   }
 #endif
 
-  for (int b = 0; b < cmprts->n_blocks; b++) {
+  for (int b = 0; b < cmprts.n_blocks; b++) {
     for (int n = 0; n < 10; n++) {
       int cnt = cbndp->d_spine_cnts[10*b + n];
       // one particle each moves to block 1, 17, respectively, from the left (-y: 3)
@@ -136,15 +139,15 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 
 #if 0
   printf("oob: ");
-  for (int b = 0; b < cmprts->n_blocks + 1; b++) {
-    int cnt = cbndp->d_spine_cnts[10*cmprts->n_blocks + b];
+  for (int b = 0; b < cmprts.n_blocks + 1; b++) {
+    int cnt = cbndp->d_spine_cnts[10*cmprts.n_blocks + b];
     printf(" %3d", cnt);
   }
   printf("\n");
 #endif
 
-  for (int b = 0; b < cmprts->n_blocks + 1; b++) {
-    int cnt = cbndp->d_spine_cnts[10*cmprts->n_blocks + b];
+  for (int b = 0; b < cmprts.n_blocks + 1; b++) {
+    int cnt = cbndp->d_spine_cnts[10*cmprts.n_blocks + b];
     // the particles in cell 3 and 19 went out of bounds
     if (b == 3 || b == 19) {
       EXPECT_EQ(cnt, 1) << "where b = " << b;
@@ -155,15 +158,15 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 
 #if 0
   printf("sum: ");
-  for (int b = 0; b < cmprts->n_blocks + 1; b++) {
-    int cnt = cbndp->d_spine_sums[10*cmprts->n_blocks + b];
+  for (int b = 0; b < cmprts.n_blocks + 1; b++) {
+    int cnt = cbndp->d_spine_sums[10*cmprts.n_blocks + b];
     printf(" %3d", cnt);
   }
   printf("\n");
 #endif
   
-  for (int b = 0; b < cmprts->n_blocks + 1; b++) {
-    int cnt = cbndp->d_spine_sums[10*cmprts->n_blocks + b];
+  for (int b = 0; b < cmprts.n_blocks + 1; b++) {
+    int cnt = cbndp->d_spine_sums[10*cmprts.n_blocks + b];
     // the particles in cell 3 and 19 went out of bounds
     if (b <= 3) {
       EXPECT_EQ(cnt, 0) << "where b = " << b;
@@ -175,30 +178,30 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
   }
 
   // test find_n_send
-  cbndp->n_prts_send = cbndp->find_n_send(cmprts.get());
+  cbndp->n_prts_send = cbndp->find_n_send(cmprts_.get());
 
-  for (int p = 0; p < cmprts->n_patches; p++) {
-    //printf("p %d: n_send %d\n", p, cmprts->bpatch[p].n_send);
+  for (int p = 0; p < cmprts.n_patches; p++) {
+    //printf("p %d: n_send %d\n", p, cmprts.bpatch[p].n_send);
     EXPECT_EQ(cbndp->bpatch[p].n_send, p < 2 ? 1 : 0);
   }
   EXPECT_EQ(cbndp->n_prts_send, 2);
 
   // test scan_send_buf_total
 #if 1
-  cbndp->scan_send_buf_total(cmprts.get(), cbndp->n_prts_send);
+  cbndp->scan_send_buf_total(cmprts_.get(), cbndp->n_prts_send);
 
 #if 0
   printf("ids: ");
-  for (int n = cmprts->n_prts - cmprts->n_prts_send; n < cmprts->n_prts; n++) {
-    int id = cmprts->d_id[n];
+  for (int n = cmprts.n_prts - cmprts.n_prts_send; n < cmprts.n_prts; n++) {
+    int id = cmprts.d_id[n];
     printf(" %3d", id);
   }
   printf("\n");
 #endif
-  EXPECT_EQ(cmprts->n_prts, 4);
+  EXPECT_EQ(cmprts.n_prts, 4);
   EXPECT_EQ(cbndp->n_prts_send, 2);
-  EXPECT_EQ(cmprts->by_block_.d_id[2], 1);
-  EXPECT_EQ(cmprts->by_block_.d_id[3], 3);
+  EXPECT_EQ(cmprts.by_block_.d_id[2], 1);
+  EXPECT_EQ(cmprts.by_block_.d_id[3], 3);
 
 #else
   cbndp->scan_send_buf_total_gold(cmprts.get(), cbndp->n_prts_send);
@@ -207,8 +210,8 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
   // and has different intermediate results
 #if 0
   printf("sums: ");
-  for (int n = 0; n < cmprts->n_prts; n++) {
-    int sum = cmprts->d_sums[n];
+  for (int n = 0; n < cmprts.n_prts; n++) {
+    int sum = cmprts.d_sums[n];
     printf(" %3d", sum);
   }
   printf("\n");
@@ -221,16 +224,16 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 
   // particles 1, 3, which need to be exchanged, should now be at the
   // end of the regular array
-  EXPECT_EQ(cmprts->storage.load(cmprts->n_prts  ).kind(), 1);
-  EXPECT_EQ(cmprts->storage.load(cmprts->n_prts+1).kind(), 3);
+  EXPECT_EQ(cmprts.storage.load(cmprts.n_prts  ).kind(), 1);
+  EXPECT_EQ(cmprts.storage.load(cmprts.n_prts+1).kind(), 3);
 
   // test copy_from_dev_and_convert
-  cbndp->copy_from_dev_and_convert(cmprts.get(), cbndp->n_prts_send);
+  cbndp->copy_from_dev_and_convert(cmprts_.get(), cbndp->n_prts_send);
 
 #if 0
-  for (int p = 0; p < cmprts->n_patches; p++) {
+  for (int p = 0; p < cmprts.n_patches; p++) {
     printf("from_dev: p %d\n", p);
-    for (auto& prt : cmprts->bpatch[p].buf) {
+    for (auto& prt : cmprts.bpatch[p].buf) {
       printf("  prt xyz %g %g %g kind %d\n", prt.xi, prt.yi, prt.zi, prt.kind_);
     }
   }
@@ -249,8 +252,10 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 
 TEST_F(CudaMparticlesBndTest, BndPost)
 {
+  auto& cmprts = *cmprts_;
+
   // BndPost expects the work done by bnd_prep()
-  cbndp->prep(cmprts.get());
+  cbndp->prep(cmprts_.get());
 
   // particles 0 and 2 remain in their patch,
   // particles 1 and 3 leave their patch and need special handling
@@ -269,15 +274,15 @@ TEST_F(CudaMparticlesBndTest, BndPost)
   cbndp->bpatch[0].buf[0] = prt3;
   cbndp->bpatch[1].buf[0] = prt1;
   
-  cbndp->post(cmprts.get());
+  cbndp->post(cmprts_.get());
 
   // bnd_post doesn't do the actual final reordering
-  EXPECT_TRUE(cmprts->need_reorder);
-  cmprts->reorder();
-  EXPECT_TRUE(cmprts->check_ordered());
+  EXPECT_TRUE(cmprts.need_reorder);
+  cmprts.reorder();
+  EXPECT_TRUE(cmprts.check_ordered());
 
 #if 0
-  cmprts->dump();
+  cmprts.dump();
 #endif
 }
 
@@ -288,8 +293,10 @@ TEST_F(CudaMparticlesBndTest, BndPost)
 
 TEST_F(CudaMparticlesBndTest, BndPostDetail)
 {
+  auto& cmprts = *cmprts_;
+  
   // BndPost expects the work done by bnd_prep()
-  cbndp->prep(cmprts.get());
+  cbndp->prep(cmprts_.get());
 
   // particles 0 and 2 remain in their patch,
   // particles 1 and 3 leave their patch and need special handling
@@ -309,8 +316,8 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   cbndp->bpatch[1].buf[0] = prt1;
 
   // === test convert_and_copy_to_dev()
-  uint n_prts_recv = cbndp->convert_and_copy_to_dev(cmprts.get());
-  cmprts->n_prts += n_prts_recv;
+  uint n_prts_recv = cbndp->convert_and_copy_to_dev(cmprts_.get());
+  cmprts.n_prts += n_prts_recv;
 
   // n_recv should be set for each patch, and its total
   EXPECT_EQ(cbndp->bpatch[0].n_recv, 1);
@@ -318,24 +325,24 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   EXPECT_EQ(n_prts_recv, 2);
 
   // the received particle have been added to the previous total
-  EXPECT_EQ(cmprts->n_prts, 6);
+  EXPECT_EQ(cmprts.n_prts, 6);
 
   // and the particle have been appended after the old end of the particle list
-  int n_prts_old = cmprts->n_prts - n_prts_recv;
-  EXPECT_EQ(cmprts->storage.load(n_prts_old  ).kind(), 3);
-  EXPECT_EQ(cmprts->storage.load(n_prts_old+1).kind(), 1);
+  int n_prts_old = cmprts.n_prts - n_prts_recv;
+  EXPECT_EQ(cmprts.storage.load(n_prts_old  ).kind(), 3);
+  EXPECT_EQ(cmprts.storage.load(n_prts_old+1).kind(), 1);
 
   // block indices have been calculated
-  auto& d_bidx = cmprts->by_block_.d_idx;
+  auto& d_bidx = cmprts.by_block_.d_idx;
   EXPECT_EQ(d_bidx[n_prts_old  ], 0);  // 0th block in 0th patch
   EXPECT_EQ(d_bidx[n_prts_old+1], 16); // 0th block in 1st patch
 
   // received particles per block have been counted
-  for (int b = 0; b < cmprts->n_blocks; b++) {
+  for (int b = 0; b < cmprts.n_blocks; b++) {
     if (b == 0 || b == 16) {
-      EXPECT_EQ(cbndp->d_spine_cnts[10*cmprts->n_blocks + b], 1);
+      EXPECT_EQ(cbndp->d_spine_cnts[10*cmprts.n_blocks + b], 1);
     } else {
-      EXPECT_EQ(cbndp->d_spine_cnts[10*cmprts->n_blocks + b], 0);
+      EXPECT_EQ(cbndp->d_spine_cnts[10*cmprts.n_blocks + b], 0);
     }
   }
 
@@ -344,25 +351,25 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   EXPECT_EQ(cbndp->d_bnd_off[1], 0);
 
   // === test sort
-  uint n_prts_by_patch[cmprts->n_patches];
-  cmprts->get_size_all(n_prts_by_patch);
+  uint n_prts_by_patch[cmprts.n_patches];
+  cmprts.get_size_all(n_prts_by_patch);
   EXPECT_EQ(n_prts_by_patch[0], 2);
   EXPECT_EQ(n_prts_by_patch[1], 2);
   
-  cbndp->sort_pairs_device(cmprts.get(), n_prts_recv);
-  cmprts->n_prts -= cbndp->n_prts_send;
+  cbndp->sort_pairs_device(cmprts_.get(), n_prts_recv);
+  cmprts.n_prts -= cbndp->n_prts_send;
 
-  EXPECT_EQ(cmprts->n_prts, 4);
-  auto& d_id = cmprts->by_block_.d_id;
+  EXPECT_EQ(cmprts.n_prts, 4);
+  auto& d_id = cmprts.by_block_.d_id;
   EXPECT_EQ(d_id[0], 4);
   EXPECT_EQ(d_id[1], 0);
   EXPECT_EQ(d_id[2], 5);
   EXPECT_EQ(d_id[3], 2);
 
-  cbndp->update_offsets(cmprts.get());
-  auto& d_off = cmprts->by_block_.d_off;
-  for (int b = 0; b <= cmprts->n_blocks; b++) {
-    //if (b < cmprts->n_blocks) printf("b %d: off [%d:%d[\n", b, int(d_off[b]), int(d_off[b+1]));
+  cbndp->update_offsets(cmprts_.get());
+  auto& d_off = cmprts.by_block_.d_off;
+  for (int b = 0; b <= cmprts.n_blocks; b++) {
+    //if (b < cmprts.n_blocks) printf("b %d: off [%d:%d[\n", b, int(d_off[b]), int(d_off[b+1]));
     if (b < 1) {
       EXPECT_EQ(d_off[b], 0) << "where b = " << b;
     } else if (b < 2) {
@@ -376,15 +383,15 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
     }
   }
 
-  cmprts->need_reorder = true;
+  cmprts.need_reorder = true;
 
   // bnd_post doesn't do the actually final reordering, but
   // let's do it here for a final check
-  cmprts->reorder();
-  EXPECT_TRUE(cmprts->check_ordered());
+  cmprts.reorder();
+  EXPECT_TRUE(cmprts.check_ordered());
 
 #if 0
-  cmprts->dump();
+  cmprts.dump();
 #endif
 }
 

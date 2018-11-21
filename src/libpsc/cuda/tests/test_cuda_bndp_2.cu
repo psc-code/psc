@@ -25,7 +25,7 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
   using Double3 = Vec3<double>;
   
   std::unique_ptr<Grid_t> grid;
-  std::unique_ptr<CudaMparticles> cmprts;
+  std::unique_ptr<CudaMparticles> cmprts_;
   std::unique_ptr<cuda_bndp<CudaMparticles, dim_xyz>> cbndp;
 
   void SetUp()
@@ -41,7 +41,8 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
     double dt = .1;
     grid.reset(new Grid_t(domain, bc, kinds, norm, dt));
 
-    cmprts.reset(make_cmprts(*grid));
+    cmprts_.reset(make_cmprts(*grid));
+    auto& cmprts = *cmprts_;
 
     // (ab)use kind to track particle more easily in the test
     std::vector<particle_t> prts = {
@@ -57,24 +58,24 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
     // FIXME eventually shouldn't have to reserve additional room for sending here
     std::vector<uint> n_prts_reserve_by_patch = {2, 4, 0, 0, 0, 0, 0, 0};
     
-    //cmprts->reserve_all(n_prts_reserve_by_patch); FIXME
-    cmprts->inject_buf(prts.data(), n_prts_by_patch);
+    //cmprts.reserve_all(n_prts_reserve_by_patch); FIXME
+    cmprts.inject_buf(prts.data(), n_prts_by_patch);
 
     // move every particle one full cell to the right (+y, that is)
     // (position doesn't actually matter since we'll only look at bidx)
-    for (int n = 0; n < cmprts->n_prts; n++) {
-      auto prt = cmprts->storage.load(n);
+    for (int n = 0; n < cmprts.n_prts; n++) {
+      auto prt = cmprts.storage.load(n);
       prt.x()[1] += 10.;
-      cmprts->storage.store(prt, n);
+      cmprts.storage.store(prt, n);
     }
-    auto& d_bidx = cmprts->by_block_.d_idx;
+    auto& d_bidx = cmprts.by_block_.d_idx;
     d_bidx[0] = 4;
-    d_bidx[1] = cmprts->n_blocks + 0; // oob p0
+    d_bidx[1] = cmprts.n_blocks + 0; // oob p0
     d_bidx[2] = 68;
-    d_bidx[3] = cmprts->n_blocks + 1; // oob p1
+    d_bidx[3] = cmprts.n_blocks + 1; // oob p1
     
 #if 0
-    cmprts->dump();
+    cmprts.dump();
 #endif
 
     cbndp.reset(new cuda_bndp<CudaMparticles, dim_xyz>(*grid));
@@ -89,7 +90,7 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
 
 TEST_F(CudaMparticlesBndTest, BndPrep)
 {
-  cbndp->prep(cmprts.get());
+  cbndp->prep(cmprts_.get());
 
   // particles 0 and 2 remain in their patch,
   // particles 1 and 3 leave their patch and need special handling
@@ -120,7 +121,7 @@ struct is_inside
 
 TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 {
-  auto& cmprts = *this->cmprts;
+  auto& cmprts = *this->cmprts_;
 
   auto& d_bidx = cmprts.by_block_.d_idx;
 #if 0
@@ -186,7 +187,7 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 
 TEST_F(CudaMparticlesBndTest, BndPost)
 {
-  auto& cmprts = *this->cmprts;
+  auto& cmprts = *this->cmprts_;
   // BndPost expects the work done by bnd_prep()
   cbndp->prep(&cmprts);
 
@@ -226,7 +227,7 @@ TEST_F(CudaMparticlesBndTest, BndPost)
 
 TEST_F(CudaMparticlesBndTest, BndPostDetail)
 {
-  auto& cmprts = *this->cmprts;
+  auto& cmprts = *this->cmprts_;
   // BndPost expects the work done by bnd_prep()
   cbndp->prep(&cmprts);
 
