@@ -371,10 +371,14 @@ uint cuda_mparticles<BS>::get_n_prts()
 }
 
 // ----------------------------------------------------------------------
-// set_particles
+// inject_initial
+//
+// adds particles initially, ie., into an empty cmprts
+// does not complete setting correct internal state
+// (setup_internal() needs to be called next)
 
 template<typename BS>
-void cuda_mparticles<BS>::set_particles(const std::vector<particle_t>& buf,
+void cuda_mparticles<BS>::inject_initial(const std::vector<particle_t>& buf,
 					const std::vector<uint>& n_prts_by_patch)
 {
   thrust::host_vector<uint> h_off(this->by_block_.d_off);
@@ -424,7 +428,7 @@ void cuda_mparticles<BS>::inject_buf(const std::vector<particle_t>& buf,
 {
   if (this->n_prts == 0) {
     // if there are no particles yet, we basically just initialize from the buffer
-    set_particles(buf, buf_n_by_patch);
+    inject_initial(buf, buf_n_by_patch);
     setup_internals();
     return;
   }

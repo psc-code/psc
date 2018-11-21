@@ -61,7 +61,7 @@ void cuda_mparticles_add_particles_test_1(CudaMparticles& cmprts, std::vector<ui
       }
     }
   }
-  cmprts.set_particles(buf, n_prts_by_patch);
+  cmprts.inject_initial(buf, n_prts_by_patch);
 }
 
 // ======================================================================
@@ -132,7 +132,7 @@ TEST_F(CudaMparticlesTest, SetupInternalsDetail)
 
   // can't use make_cmprts() from vector here, since that'll sort etc
   auto cmprts = CudaMparticles{*grid_};
-  cmprts.set_particles(prts, {uint(prts.size())});
+  cmprts.inject_initial(prts, {uint(prts.size())});
 
   auto& d_id = cmprts.by_block_.d_id;
   auto& d_bidx = cmprts.by_block_.d_idx;
@@ -199,7 +199,7 @@ TEST_F(CudaMparticlesTest, SortByCellDetail)
 
   // can't use make_cmprts() from vector here, since that'll sort etc
   auto cmprts = CudaMparticles{*grid_};
-  cmprts.set_particles(prts, {uint(prts.size())});
+  cmprts.inject_initial(prts, {uint(prts.size())});
   EXPECT_TRUE(cmprts.check_in_patch_unordered_slow());
 
   auto sort_by_cell = cuda_mparticles_sort{cmprts.n_cells()};

@@ -220,7 +220,6 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   
 
   uint get_n_prts();
-  void setup_internals();
   void inject_buf(const std::vector<particle_t>& buf, const std::vector<uint>& buf_n_by_patch);
 
   std::vector<particle_t> get_particles(int beg, int end);
@@ -232,8 +231,9 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   void dump_by_patch(uint *n_prts_by_patch);
 
   // internal / testing use
-  void set_particles(const std::vector<particle_t>& buf,
-		     const std::vector<uint>& n_prts_by_patch);
+  void inject_initial(const std::vector<particle_t>& buf,
+		      const std::vector<uint>& n_prts_by_patch);
+  void setup_internals();
 
 public:
   void find_block_indices_ids(thrust::device_vector<uint>& d_idx, thrust::device_vector<uint>& d_id);
