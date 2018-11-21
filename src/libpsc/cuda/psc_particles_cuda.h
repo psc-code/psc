@@ -110,18 +110,18 @@ struct InjectorCuda
     auto& mprts = patch_.mprts_;
     //mprintf("injector p = %d/%d\n", patch_.p_, mprts.n_patches());
     // make sure we're constructed/destructed in order, one patch at a time
-    assert(patch_.p_ == mprts.injector_n_prts_by_patch.size());
+    assert(patch_.p_ == mprts.injector_n_prts_by_patch_.size());
   }
   
   ~InjectorCuda()
   {
     auto& mprts = patch_.mprts_;
     //mprintf("~injector p = %d/%d\n", patch_.p_, mprts.n_patches());
-    mprts.injector_n_prts_by_patch.push_back(n_prts_);
+    mprts.injector_n_prts_by_patch_.push_back(n_prts_);
     if (patch_.p_ == mprts.n_patches() - 1) {
-      mprts.inject(mprts.injector_buf, mprts.injector_n_prts_by_patch);
-      mprts.injector_n_prts_by_patch.clear();
-      mprts.injector_buf.clear();
+      mprts.inject(mprts.injector_buf_, mprts.injector_n_prts_by_patch_);
+      mprts.injector_n_prts_by_patch_.clear();
+      mprts.injector_buf_.clear();
     }
   }
   
@@ -130,7 +130,7 @@ struct InjectorCuda
     auto& mprts = patch_.mprts_;
     auto& patch = mprts.grid().patches[patch_.p_];
     auto x = Double3::fromPointer(new_prt.x) - patch.xb;
-    mprts.injector_buf.push_back({Real3(x), Real3(Double3::fromPointer(new_prt.u)),
+    mprts.injector_buf_.push_back({Real3(x), Real3(Double3::fromPointer(new_prt.u)),
 	  real_t(new_prt.w), new_prt.kind});
     n_prts_++;
   }
@@ -289,8 +289,8 @@ private:
   CudaMparticles* cmprts_;
   ParticleIndexer<real_t> pi_;
 
-  std::vector<uint> injector_n_prts_by_patch;
-  std::vector<particle_t> injector_buf;
+  std::vector<uint> injector_n_prts_by_patch_;
+  std::vector<particle_t> injector_buf_;
 };
 
 template<>
