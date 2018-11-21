@@ -175,6 +175,7 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
 
   uint start(int p);
   
+  void set_particles(uint p, const std::vector<particle_t>& buf);
   template<typename F>
   void set_particles(uint p, F getter);
 
@@ -276,21 +277,16 @@ public:
 // set_particles
 
 template<typename BS>
-template<typename F>
-void cuda_mparticles<BS>::set_particles(uint p, F getter)
+void cuda_mparticles<BS>::set_particles(uint p, const std::vector<particle_t>& buf)
 {
   // FIXME, doing the copy here all the time would be nice to avoid
-  // making sue we actually have a valid d_off would't hurt, either
+  // making sure we actually have a valid d_off would't hurt, either
   thrust::host_vector<uint> h_off(this->by_block_.d_off);
 
   uint off = h_off[p * this->n_blocks_per_patch];
   uint n_prts = h_off[(p+1) * this->n_blocks_per_patch] - off;
 
-  std::vector<particle_t> buf;
-  buf.reserve(n_prts);
-  for (int n = 0; n < n_prts; n++) {
-    buf.push_back(getter(n));
-  }
+  assert(n_prts == buf.size());
   
   thrust::host_vector<float4> xi4(n_prts);
   thrust::host_vector<float4> pxi4(n_prts);
@@ -311,6 +307,27 @@ void cuda_mparticles<BS>::set_particles(uint p, F getter)
 
   thrust::copy(xi4.begin(), xi4.end(), &this->storage.xi4[off]);
   thrust::copy(pxi4.begin(), pxi4.end(), &this->storage.pxi4[off]);
+}
+
+
+template<typename BS>
+template<typename F>
+void cuda_mparticles<BS>::set_particles(uint p, F getter)
+{
+  // FIXME, doing the copy here all the time would be nice to avoid
+  // making sue we actually have a valid d_off would't hurt, either
+  thrust::host_vector<uint> h_off(this->by_block_.d_off);
+
+  uint off = h_off[p * this->n_blocks_per_patch];
+  uint n_prts = h_off[(p+1) * this->n_blocks_per_patch] - off;
+
+  std::vector<particle_t> buf;
+  buf.reserve(n_prts);
+  for (int n = 0; n < n_prts; n++) {
+    buf.push_back(getter(n));
+  }
+
+  set_particles(p, buf);
 }
 
 
