@@ -37,12 +37,71 @@ struct cuda_mparticles;
 // It expects that an injector is constructed and then destructed for every patch
 // in order, and the real action occurs only when the last patch instance is destructed
 
+// ----------------------------------------------------------------------
+// InjectorCuda_
+
+template<typename Patch>
+struct InjectorCuda_
+{
+  using particle_t = typename Patch::Mparticles::particle_t;
+  using real_t = typename particle_t::real_t;
+  using Real3 = typename particle_t::Real3;
+  using Double3 = Vec3<double>;
+  
+  InjectorCuda_(const Patch& patch)
+  : patch_{patch},
+    n_prts_{0}
+  {
+    assert(patch_.p_ == patch_.cmprts_.injector_n_prts_by_patch_.size());
+  }
+  
+  ~InjectorCuda_()
+  {
+    auto& cmprts = patch_.cmprts_;
+    cmprts.injector_n_prts_by_patch_.push_back(n_prts_);
+    if (patch_.p_ == cmprts.n_patches - 1) {
+      cmprts.inject(cmprts.injector_buf_, cmprts.injector_n_prts_by_patch_);
+      cmprts.injector_n_prts_by_patch_.clear();
+      cmprts.injector_buf_.clear();
+    }
+  }
+  
+  void raw(const particle_t& prt)
+  {
+    patch_.cmprts_.injector_buf_.push_back(prt);
+    n_prts_++;
+  }
+  
+  void operator()(const particle_inject& new_prt)
+  {
+    auto& cmprts = patch_.cmprts_;
+    auto& patch = cmprts.grid_.patches[patch_.p_];
+    auto x = Double3::fromPointer(new_prt.x) - patch.xb;
+    auto prt = particle_t{Real3(x), Real3(Double3::fromPointer(new_prt.u)),
+			  real_t(new_prt.w), new_prt.kind};
+    patch_.cmprts_.injector_buf_.push_back(prt);
+    n_prts_++;
+  }
+  
+  void operator()(const std::vector<particle_t>& buf)
+  {
+    auto& injector_buf = patch_.cmprts_.injector_buf_;
+    injector_buf.insert(injector_buf.end(), buf.begin(), buf.end());
+    n_prts_ += buf.size();
+  }
+  
+private:
+  const Patch patch_;
+  uint n_prts_;
+};
+
 template<typename Patch>
 struct InjectorCuda
 {
+  using particle_t = typename Patch::Mparticles::particle_t;
+  using real_t = typename particle_t::real_t;
+  using Real3 = typename particle_t::Real3;
   using Double3 = Vec3<double>;
-  using real_t = float; // FIXME
-  using Real3 = Vec3<real_t>;
     
   InjectorCuda(const Patch& patch)
     : patch_{patch},
@@ -130,6 +189,7 @@ struct MparticlesCuda : MparticlesBase
 
   struct Patch
   {
+    using Mparticles = MparticlesCuda;
     using Injector = InjectorCuda<Patch>;
     friend Injector;
     
