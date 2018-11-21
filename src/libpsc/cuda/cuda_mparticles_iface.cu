@@ -1,6 +1,6 @@
 
 #include "cuda_iface.h"
-#include "cuda_mparticles.h"
+#include "cuda_mparticles.cuh"
 #include "cuda_bits.h"
 
 #include "psc_particles_cuda.h"

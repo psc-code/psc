@@ -2,7 +2,7 @@
 #include "grid.hxx"
 #include "fields.hxx"
 #include "cuda_mfields.h"
-#include "cuda_mparticles.h"
+#include "cuda_mparticles.cuh"
 #include "cuda_push_particles.cuh"
 #include "push_particles_cuda_impl.hxx"
 

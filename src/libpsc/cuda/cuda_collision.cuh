@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "cuda_mparticles.h"
+#include "cuda_mparticles.cuh"
 #include "cuda_mparticles_sort.cuh"
 // FIXME, horrible hack...
 #define DEVICE __device__

@@ -1,6 +1,6 @@
 
 #include "cuda_bndp.h"
-#include "cuda_mparticles.h"
+#include "cuda_mparticles.cuh"
 #include "cuda_bits.h"
 
 #include <thrust/device_vector.h>

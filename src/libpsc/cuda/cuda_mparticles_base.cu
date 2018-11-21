@@ -1,5 +1,5 @@
 
-#include "cuda_mparticles.h"
+#include "cuda_mparticles.cuh"
 
 #include "psc_bits.h"
 #include "cuda_bits.h"

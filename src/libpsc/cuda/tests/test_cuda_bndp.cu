@@ -1,5 +1,5 @@
 
-#include "cuda_mparticles.h"
+#include "cuda_mparticles.cuh"
 #include "cuda_bndp.h"
 #include "cuda_test.hxx"
 

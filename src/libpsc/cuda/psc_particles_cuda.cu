@@ -1,6 +1,6 @@
 
 #include "psc.h"
-#include "cuda_mparticles.h"
+#include "cuda_mparticles.cuh"
 #include "psc_particles_cuda.h"
 #include "psc_particles_single.h"
 #include "psc_particles_double.h"
