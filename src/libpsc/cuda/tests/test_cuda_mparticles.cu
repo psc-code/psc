@@ -29,7 +29,7 @@ using CudaMparticles = cuda_mparticles<BS144>;
 // patch (C order, but to get them ordered by block, they need to be reordered
 // into Fortran order, a.k.a., this will exercise the initial sorting
 
-void cuda_mparticles_add_particles_test_1(CudaMparticles& cmprts, uint *n_prts_by_patch)
+void cuda_mparticles_add_particles_test_1(CudaMparticles& cmprts, std::vector<uint>& n_prts_by_patch)
 {
   using particle_t = CudaMparticles::particle_t; 
   using real_t = particle_t::real_t;
@@ -38,29 +38,31 @@ void cuda_mparticles_add_particles_test_1(CudaMparticles& cmprts, uint *n_prts_b
   const Grid_t& grid = cmprts.grid_;
   Int3 ldims = grid.ldims;
 
-#if 0 // FIXME, could still be used as reserve hint for injector
+  uint n_prts = 0;
   for (int p = 0; p < cmprts.n_patches; p++) {
     n_prts_by_patch[p] = ldims[0] * ldims[1] * ldims[2];
+    n_prts += n_prts_by_patch[p];
   }
-  cmprts.reserve_all(n_prts_by_patch);
-#endif
   
   auto dx = grid.domain.dx;
-      
+
+  std::vector<particle_t> buf;
+  buf.reserve(n_prts);
+  
   for (int p = 0; p < grid.n_patches(); p++) {
     auto injector = cmprts[p].injector();
     for (int i = 0; i < ldims[0]; i++) {
       for (int j = 0; j < ldims[1]; j++) {
 	for (int k = 0; k < ldims[2]; k++) {
-	  auto prt = particle_t{
-	    {real_t(dx[0] * (i + .5f)), real_t(dx[1] * (j + .5f)), real_t(dx[2] * (k + .5f))},
-	    {real_t(i), real_t(j), real_t(k)},
-	    1., 0};
-	  injector(prt);
+	  buf.push_back(particle_t{
+	      {real_t(dx[0] * (i + .5f)), real_t(dx[1] * (j + .5f)), real_t(dx[2] * (k + .5f))},
+		{real_t(i), real_t(j), real_t(k)},
+		  1., 0});
 	}
       }
     }
-  } 
+  }
+  cmprts.inject_buf(buf, n_prts_by_patch);
 }
 
 // ======================================================================
@@ -99,7 +101,7 @@ TEST_F(CudaMparticlesTest, SetParticles)
   std::unique_ptr<CudaMparticles> _cmprts(make_cmprts(*grid_));
   auto& cmprts = *_cmprts;
 
-  uint n_prts_by_patch[cmprts.n_patches];
+  std::vector<uint> n_prts_by_patch(cmprts.n_patches);
   cuda_mparticles_add_particles_test_1(cmprts, n_prts_by_patch);
 
   // check that particles are in C order
@@ -257,7 +259,7 @@ TEST_F(CudaMparticlesTest, SetupInternals)
   std::unique_ptr<CudaMparticles> _cmprts(make_cmprts(*grid_));
   auto& cmprts = *_cmprts;
 
-  uint n_prts_by_patch[cmprts.n_patches];
+  std::vector<uint> n_prts_by_patch(cmprts.n_patches);
   cuda_mparticles_add_particles_test_1(cmprts, n_prts_by_patch);
 
   cmprts.check_in_patch_unordered_slow();
