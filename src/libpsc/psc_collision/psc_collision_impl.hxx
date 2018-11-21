@@ -17,7 +17,7 @@ template<typename _Mparticles, typename _MfieldsState, typename _Mfields, typena
 struct CollisionHost
 {
   using Mparticles = _Mparticles;
-  using particles_t = typename Mparticles::patch_t;
+  using particles_t = typename Mparticles::Patch;
   using particle_t = typename Mparticles::particle_t;
   using real_t = typename Mparticles::real_t;
   using MfieldsState = _MfieldsState;

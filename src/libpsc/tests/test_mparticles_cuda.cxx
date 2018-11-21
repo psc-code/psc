@@ -109,7 +109,7 @@ TYPED_TEST(MparticlesCudaTest, Inject)
 
   auto prts = mprts[0];
   auto cprts = mprts.get_particles(0, 1);
-  typename Mparticles::patch_t::const_accessor prt{cprts[0], prts};
+  typename Mparticles::Patch::const_accessor prt{cprts[0], prts};
 
   auto prt2 = mprts[0].get_particle(0);
   EXPECT_EQ(cprts[0], prt2);

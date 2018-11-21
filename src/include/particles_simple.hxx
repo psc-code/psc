@@ -240,7 +240,7 @@ struct mparticles_patch
   };
 
   // FIXME, I would like to delete the copy ctor because I don't
-  // want to copy patch_t by mistake, but that doesn't play well with
+  // want to copy Patch by mistake, but that doesn't play well with
   // putting the patches into std::vector
   // mparticles_patch_base(const mparticles_patch_base&) = delete;
 
@@ -354,9 +354,9 @@ struct Mparticles : MparticlesBase
   using particle_t = P;
   using real_t = typename particle_t::real_t;
   using Real3 = Vec3<real_t>;
-  using patch_t = mparticles_patch<particle_t>;
+  using Patch = mparticles_patch<particle_t>;
   using BndpParticle = P;
-  using buf_t = typename patch_t::buf_t;
+  using buf_t = typename Patch::buf_t;
 
   Mparticles(const Grid_t& grid)
     : MparticlesBase(grid)
@@ -378,8 +378,8 @@ struct Mparticles : MparticlesBase
   }
 
   
-  const patch_t& operator[](int p) const { return patches_[p]; }
-  patch_t&       operator[](int p)       { return patches_[p]; }
+  const Patch& operator[](int p) const { return patches_[p]; }
+  Patch&       operator[](int p)       { return patches_[p]; }
 
   void reserve_all(const std::vector<uint> &n_prts_by_patch)
   {
@@ -446,6 +446,6 @@ struct Mparticles : MparticlesBase
   const Convert& convert_from() override { return convert_from_; }
 
 private:
-  std::vector<patch_t> patches_;
+  std::vector<Patch> patches_;
 };
 

@@ -128,16 +128,16 @@ struct MparticlesCuda : MparticlesBase
 
   CudaMparticles* cmprts() { return cmprts_; }
 
-  struct patch_t
+  struct Patch
   {
-    using Injector = InjectorCuda<patch_t>;
+    using Injector = InjectorCuda<Patch>;
     friend Injector;
     
     struct const_accessor
     {
       using Double3 = Vec3<double>;
       
-      const_accessor(const particle_t& prt, const patch_t& prts)
+      const_accessor(const particle_t& prt, const Patch& prts)
 	: prt_{prt}, prts_{prts}
       {}
       
@@ -154,7 +154,7 @@ struct MparticlesCuda : MparticlesBase
     
     private:
       particle_t prt_;
-      const patch_t prts_;
+      const Patch prts_;
     };
   
     struct const_accessor_range
@@ -166,7 +166,7 @@ struct MparticlesCuda : MparticlesBase
 					    const_accessor&> // reference type
       
       {
-	const_iterator(const patch_t& prts, uint n)
+	const_iterator(const Patch& prts, uint n)
 	  : prts_{prts}, n_{n}
 	{}
 	
@@ -178,11 +178,11 @@ struct MparticlesCuda : MparticlesBase
 	const_accessor operator*() { return {prts_.get_particle(n_), prts_}; }
 	
       private:
-	const patch_t prts_;
+	const Patch prts_;
 	uint n_;
       };
     
-      const_accessor_range(const patch_t& prts)
+      const_accessor_range(const Patch& prts)
 	: prts_(prts)
       {}
 
@@ -190,10 +190,10 @@ struct MparticlesCuda : MparticlesBase
       const_iterator end()   const { return {prts_, prts_.size()}; };
       
     private:
-      const patch_t prts_;
+      const Patch prts_;
     };
 
-    patch_t(MparticlesCuda& mp, int p)
+    Patch(MparticlesCuda& mp, int p)
       : mp_(mp), p_(p)
     {}
 
@@ -221,9 +221,9 @@ struct MparticlesCuda : MparticlesBase
     int p_;
   };
 
-  friend typename patch_t::Injector;
+  friend typename Patch::Injector;
   
-  patch_t operator[](int p) { return patch_t{*this, p}; }
+  Patch operator[](int p) { return {*this, p}; }
 
 private:
   CudaMparticles* cmprts_;

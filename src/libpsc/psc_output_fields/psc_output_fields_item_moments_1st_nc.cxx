@@ -14,7 +14,7 @@ struct Moment_n_1st_nc
   using Mparticles = MP;
   using Mfields = MF;
   using real_t = typename Mparticles::real_t;
-  using particles_t = typename Mparticles::patch_t;
+  using particles_t = typename Mparticles::Patch;
   using fields_t = typename Mfields::fields_t;  
   
   constexpr static char const* name = "n_1st_nc";
@@ -45,7 +45,7 @@ struct Moment_rho_1st_nc
   using Mparticles = MP;
   using Mfields = MF;
   using real_t = typename Mparticles::real_t;
-  using particles_t = typename Mparticles::patch_t;
+  using particles_t = typename Mparticles::Patch;
   using fields_t = typename Mfields::fields_t;  
   
   constexpr static char const* name = "rho_1st_nc";
@@ -75,7 +75,7 @@ struct Moment_v_1st_nc
   using Mparticles = MP;
   using Mfields = MF;
   using real_t = typename Mparticles::real_t;
-  using particles_t = typename Mparticles::patch_t;
+  using particles_t = typename Mparticles::Patch;
   using fields_t = typename Mfields::fields_t;  
   
   constexpr static char const* name = "v_1st_nc";

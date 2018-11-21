@@ -23,7 +23,7 @@ struct PushParticlesEsirkepov
 
   using checks_order = checks_order_2nd; // FIXME, sometimes 1st even with Esirkepov
   
-  static void push_mprts_patch(typename MfieldsState::fields_t flds, typename Mparticles::patch_t& prts)
+  static void push_mprts_patch(typename MfieldsState::fields_t flds, typename Mparticles::Patch& prts)
   {
     typename InterpolateEM_t::fields_t EM(flds);
     typename Current::fields_t J(flds);

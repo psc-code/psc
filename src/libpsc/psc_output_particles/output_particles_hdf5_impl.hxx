@@ -28,7 +28,7 @@ template<typename Mparticles>
 struct OutputParticlesHdf5 : OutputParticlesParams, OutputParticlesBase
 {
   using particle_t = typename Mparticles::particle_t;
-  using Particles = typename Mparticles::patch_t;
+  using Particles = typename Mparticles::Patch;
   using real_t = typename Mparticles::real_t;
 
   OutputParticlesHdf5(const Grid_t& grid, const OutputParticlesParams& params)

@@ -18,7 +18,7 @@ struct PushParticlesVb
 
   using checks_order = checks_order_1st;
 
-  static void push_mprts_patch(typename MfieldsState::fields_t flds, typename Mparticles::patch_t& prts)
+  static void push_mprts_patch(typename MfieldsState::fields_t flds, typename Mparticles::Patch& prts)
   {
     typename InterpolateEM_t::fields_t EM(flds);
     typename Current::fields_t J(flds);
@@ -73,7 +73,7 @@ struct PushParticlesVb
   // ----------------------------------------------------------------------
   // stagger_mprts_patch
   
-  static void stagger_mprts_patch(typename MfieldsState::fields_t flds, typename Mparticles::patch_t& prts)
+  static void stagger_mprts_patch(typename MfieldsState::fields_t flds, typename Mparticles::Patch& prts)
   {
     typename InterpolateEM_t::fields_t EM(flds);
     InterpolateEM_t ip;
