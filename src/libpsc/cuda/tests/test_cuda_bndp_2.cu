@@ -47,11 +47,11 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
     for (int p = 0; p < cmprts.n_patches; ++p) {
       auto injector = cmprts[p].injector();
       if (p == 0) { // patch 0
-	injector(particle_t{{ .5,  35., 5.}, {}, 0., 0});
-	injector(particle_t{{ .5, 155., 5.}, {}, 0., 1});
+	injector(particle_inject{{ .5,  35., 5.}, {}, 0., 0});
+	injector(particle_inject{{ .5, 155., 5.}, {}, 0., 1});
       } else if (p == 1) { // patch 1
-	injector(particle_t{{ .5,  35., 5.}, {}, 0., 2});
-	injector(particle_t{{ .5, 155., 5.}, {}, 0., 3});
+	injector(particle_inject{{ 160.5,  35., 5.}, {}, 0., 2});
+	injector(particle_inject{{ 160.5, 155., 5.}, {}, 0., 3});
       }
     }
 
