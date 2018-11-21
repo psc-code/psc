@@ -28,6 +28,59 @@ using DParticleCuda = ParticleSimple<float>;
 template<typename BS>
 struct cuda_mparticles;
 
+// ----------------------------------------------------------------------
+// InjectorCuda
+//
+// caches injected particles for all patches before actually transferring them to
+// the GPU
+//
+// It expects that an injector is constructed and then destructed for every patch
+// in order, and the real action occurs only when the last patch instance is destructed
+
+template<typename Patch>
+struct InjectorCuda
+{
+  using Double3 = Vec3<double>;
+  using real_t = float; // FIXME
+  using Real3 = Vec3<real_t>;
+    
+  InjectorCuda(const Patch& patch)
+    : patch_{patch},
+      n_prts_{0}
+  {
+    auto& mprts = patch_.mp_;
+    //mprintf("injector p = %d/%d\n", patch_.p_, mprts.n_patches());
+    // make sure we're constructed/destructed in order, one patch at a time
+    assert(patch_.p_ == mprts.injector_n_prts_by_patch.size());
+  }
+  
+  ~InjectorCuda()
+  {
+    auto& mprts = patch_.mp_;
+    //mprintf("~injector p = %d/%d\n", patch_.p_, mprts.n_patches());
+    mprts.injector_n_prts_by_patch.push_back(n_prts_);
+    if (patch_.p_ == mprts.n_patches() - 1) {
+      mprts.inject(mprts.injector_buf, mprts.injector_n_prts_by_patch);
+      mprts.injector_n_prts_by_patch.clear();
+      mprts.injector_buf.clear();
+    }
+  }
+  
+  void operator()(const particle_inject& new_prt)
+  {
+    auto& mprts = patch_.mp_;
+    auto& patch = mprts.grid().patches[patch_.p_];
+    auto x = Double3::fromPointer(new_prt.x) - patch.xb;
+    mprts.injector_buf.push_back({Real3(x), Real3(Double3::fromPointer(new_prt.u)),
+	  real_t(new_prt.w), new_prt.kind});
+    n_prts_++;
+  }
+  
+private:
+  const Patch patch_;
+  uint n_prts_;
+};
+
 // ======================================================================
 // MparticlesCuda
 
@@ -77,60 +130,12 @@ struct MparticlesCuda : MparticlesBase
 
   struct patch_t
   {
-    // ----------------------------------------------------------------------
-    // injector
-    //
-    // caches injected particles for all patches before actually transferring them to
-    // the GPU
-    //
-    // It expects that an injector is constructed and then destructed for every patch
-    // in order, and the real action occurs only when the last patch instance is destructed
+    using Injector = InjectorCuda<patch_t>;
+    friend Injector;
     
-    struct injector
-    {
-      injector(const patch_t& patch)
-	: patch_{patch},
-	  n_prts_{0}
-      {
-	auto& mprts = patch_.mp_;
-	//mprintf("injector p = %d/%d\n", patch_.p_, mprts.n_patches());
-	// make sure we're constructed/destructed in order, one patch at a time
-	assert(patch_.p_ == mprts.injector_n_prts_by_patch.size());
-      }
-
-      ~injector()
-      {
-	auto& mprts = patch_.mp_;
-	//mprintf("~injector p = %d/%d\n", patch_.p_, mprts.n_patches());
-	mprts.injector_n_prts_by_patch.push_back(n_prts_);
-	if (patch_.p_ == mprts.n_patches() - 1) {
-	  mprts.inject(mprts.injector_buf, mprts.injector_n_prts_by_patch);
-	  mprts.injector_n_prts_by_patch.clear();
-	  mprts.injector_buf.clear();
-	}
-      }
-      
-      void operator()(const particle_inject& new_prt)
-      {
-	using Double3 = Vec3<double>;
-	
-	auto& mprts = patch_.mp_;
-	auto& patch = mprts.grid().patches[patch_.p_];
-	auto x = Double3::fromPointer(new_prt.x) - patch.xb;
-	auto prt = particle_t{Real3(x), Real3(Double3::fromPointer(new_prt.u)),
-			      real_t(new_prt.w), new_prt.kind};
-	mprts.injector_buf.push_back(prt);
-	n_prts_++;
-      }
-      
-    private:
-      const patch_t patch_;
-      uint n_prts_;
-    };
-
     struct const_accessor
     {
-    using Double3 = Vec3<double>;
+      using Double3 = Vec3<double>;
       
       const_accessor(const particle_t& prt, const patch_t& prts)
 	: prt_{prt}, prts_{prts}
@@ -208,7 +213,7 @@ struct MparticlesCuda : MparticlesBase
       return n_prts_by_patch[p_];
     }
 
-    injector injector() { return {*this}; }
+    Injector injector() { return {*this}; }
     const_accessor_range get() const { return {*this}; }
 
   private:
@@ -216,6 +221,8 @@ struct MparticlesCuda : MparticlesBase
     int p_;
   };
 
+  friend typename patch_t::Injector;
+  
   patch_t operator[](int p) { return patch_t{*this, p}; }
 
 private:
