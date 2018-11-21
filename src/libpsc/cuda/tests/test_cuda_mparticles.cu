@@ -45,24 +45,20 @@ void cuda_mparticles_add_particles_test_1(CudaMparticles* cmprts, uint *n_prts_b
   cmprts->reserve_all(n_prts_by_patch);
   cmprts->resize_all(n_prts_by_patch);
   
+  auto dx = grid.domain.dx;
+      
   for (int p = 0; p < grid.n_patches(); p++) {
     std::vector<particle_t> buf;
-    for (int n = 0; n < n_prts_by_patch[p]; n++) {
-      auto ldims = grid.ldims;
-      auto dx = grid.domain.dx;
-
-      int nn = n;
-      int k = nn % ldims[2];
-      nn /= ldims[2];
-      int j = nn % ldims[1];
-      nn /= ldims[1];
-      int i = nn;
-      
-      auto prt = particle_t{
-	{real_t(dx[0] * (i + .5f)), real_t(dx[1] * (j + .5f)), real_t(dx[2] * (k + .5f))},
-	{real_t(i), real_t(j), real_t(k)},
-	1., 0};
-      buf.push_back(prt);
+    for (int i = 0; i < ldims[0]; i++) {
+      for (int j = 0; j < ldims[1]; j++) {
+	for (int k = 0; k < ldims[2]; k++) {
+	  auto prt = particle_t{
+	    {real_t(dx[0] * (i + .5f)), real_t(dx[1] * (j + .5f)), real_t(dx[2] * (k + .5f))},
+	    {real_t(i), real_t(j), real_t(k)},
+	    1., 0};
+	  buf.push_back(prt);
+	}
+      }
     }
     cmprts->set_particles(p, buf);
   } 
