@@ -397,8 +397,7 @@ void cuda_mparticles<BS>::set_particles(const std::vector<particle_t>& buf,
     buf_n += n_prts_by_patch[p];
   }
 
-  thrust::host_vector<float4> xi4(buf_n);
-  thrust::host_vector<float4> pxi4(buf_n);
+  HMparticlesCudaStorage h_storage{buf_n};
   
   // FIXME, doing the copy here all the time would be nice to avoid
   // making sure we actually have a valid d_off would't hurt, either
@@ -414,20 +413,12 @@ void cuda_mparticles<BS>::set_particles(const std::vector<particle_t>& buf,
     for (int n = 0; n < n_prts; n++) {
       auto &prt = *it++;
       this->checkInPatchMod(prt.x());
-      
-      xi4[n + off].x  = prt.x()[0];
-      xi4[n + off].y  = prt.x()[1];
-      xi4[n + off].z  = prt.x()[2];
-      xi4[n + off].w  = cuda_int_as_float(prt.kind());
-      pxi4[n + off].x = prt.u()[0];
-      pxi4[n + off].y = prt.u()[1];
-      pxi4[n + off].z = prt.u()[2];
-      pxi4[n + off].w = prt.qni_wni();
+      h_storage.store(prt, off + n);
     }
   }
 
-  thrust::copy(xi4.begin(), xi4.end(), this->storage.xi4.begin());
-  thrust::copy(pxi4.begin(), pxi4.end(), this->storage.pxi4.begin());
+  thrust::copy(h_storage.xi4.begin(), h_storage.xi4.end(), this->storage.xi4.begin());
+  thrust::copy(h_storage.pxi4.begin(), h_storage.pxi4.end(), this->storage.pxi4.begin());
 }
 
 // ----------------------------------------------------------------------
