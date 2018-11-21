@@ -191,6 +191,19 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
 	n_prts_++;
       }
 
+      void operator()(const particle_inject& new_prt)
+      {
+	using Double3 = Vec3<double>;
+	
+	auto& cmprts = patch_.cmprts_;
+	auto& patch = cmprts.grid_.patches[patch_.p_];
+	auto x = Double3::fromPointer(new_prt.x) - patch.xb;
+	auto prt = particle_t{Real3(x), Real3(Double3::fromPointer(new_prt.u)),
+			      real_t(new_prt.w), new_prt.kind};
+	patch_.cmprts_.injector_buf_.push_back(prt);
+	n_prts_++;
+      }
+
       void operator()(const std::vector<particle_t>& buf)
       {
 	auto& injector_buf = patch_.cmprts_.injector_buf_;
