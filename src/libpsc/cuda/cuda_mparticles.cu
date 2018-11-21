@@ -392,19 +392,18 @@ template<typename BS>
 void cuda_mparticles<BS>::set_particles(const std::vector<particle_t>& buf,
 					const std::vector<size_t>& n_prts_by_patch)
 {
-  // FIXME, doing the copy here all the time would be nice to avoid
-  // making sure we actually have a valid d_off would't hurt, either
   thrust::host_vector<uint> h_off(this->by_block_.d_off);
   
   size_t buf_n = 0;
   for (int p = 0; p < this->n_patches; p++) {
-    assert(buf_n == h_off[p * this->n_blocks_per_patch]);
+    assert(h_off[ p    * this->n_blocks_per_patch] == 0);
+    assert(h_off[(p+1) * this->n_blocks_per_patch] == 0);
     buf_n += n_prts_by_patch[p];
-    assert(buf_n == h_off[(p+1) * this->n_blocks_per_patch]);
   }
 
   HMparticlesCudaStorage h_storage{buf_n};
-  
+
+  // this also implements resize_all()
   auto it = buf.begin();
   size_t off = 0;
   for (int p = 0; p < this->n_patches; p++) {
@@ -420,6 +419,7 @@ void cuda_mparticles<BS>::set_particles(const std::vector<particle_t>& buf,
 
     off += n_prts;
   }
+  this->n_prts = off;
 
   thrust::copy(h_storage.xi4.begin(), h_storage.xi4.end(), this->storage.xi4.begin());
   thrust::copy(h_storage.pxi4.begin(), h_storage.pxi4.end(), this->storage.pxi4.begin());

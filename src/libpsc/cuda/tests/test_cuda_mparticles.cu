@@ -43,7 +43,6 @@ void cuda_mparticles_add_particles_test_1(CudaMparticles& cmprts, uint *n_prts_b
   }
 
   cmprts.reserve_all(n_prts_by_patch);
-  cmprts.resize_all(n_prts_by_patch);
   
   auto dx = grid.domain.dx;
       
@@ -137,7 +136,6 @@ TEST_F(CudaMparticlesTest, SetupInternalsDetail)
   std::unique_ptr<CudaMparticles> _cmprts(make_cmprts(*grid_));
   auto& cmprts = *_cmprts;
   cmprts.reserve_all(n_prts_by_patch);
-  cmprts.resize_all(n_prts_by_patch);
   cmprts[0].injector()(prts);
 
   auto& d_id = cmprts.by_block_.d_id;
@@ -209,7 +207,6 @@ TEST_F(CudaMparticlesTest, SortByCellDetail)
   std::unique_ptr<CudaMparticles> _cmprts(make_cmprts(*grid_));
   auto& cmprts = *_cmprts;
   cmprts.reserve_all(n_prts_by_patch);
-  cmprts.resize_all(n_prts_by_patch);
   cmprts[0].injector()(prts);
   EXPECT_TRUE(cmprts.check_in_patch_unordered_slow());
 
@@ -310,7 +307,6 @@ TEST_F(CudaMparticlesTest, CudaCollision)
   std::unique_ptr<CudaMparticles> _cmprts(make_cmprts(*grid_));
   auto& cmprts = *_cmprts;
   cmprts.reserve_all(n_prts_by_patch);
-  cmprts.resize_all(n_prts_by_patch);
   cmprts[0].injector()(prts);
 
   cmprts.setup_internals();

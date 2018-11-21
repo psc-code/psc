@@ -176,7 +176,6 @@ static void copy_from(MparticlesCuda& mp, MP& mp_other)
   uint n_prts_by_patch[n_patches];
   mp_other.get_size_all(n_prts_by_patch);
   mp.reserve_all(n_prts_by_patch);
-  mp.resize_all(n_prts_by_patch);
 
   for (int p = 0; p < n_patches; p++) {
     auto& cmprts = *mp.cmprts();
