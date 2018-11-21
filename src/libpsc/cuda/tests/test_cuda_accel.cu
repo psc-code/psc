@@ -127,7 +127,7 @@ TEST_F(PushMprtsTest, Accel)
     auto injector = cmprts[p].injector();
     for (int n = 0; n < n_prts; n++) {
       using Real3 = particle_t::Real3;
-      injector({Real3(Vec3<double>{rng->uniform(0, L), rng->uniform(0, L), rng->uniform(0, L)}), {}, 1., 0});
+      injector.raw({Real3(Vec3<double>{rng->uniform(0, L), rng->uniform(0, L), rng->uniform(0, L)}), {}, 1., 0});
     }
   }
   
@@ -175,7 +175,7 @@ TEST_F(PushMprtsTest, Cyclo)
     for (int n = 0; n < n_prts; n++) {
       using real_t = particle_t::real_t;
       using Real3 = particle_t::Real3;
-      injector({Real3(Vec3<double>({rng->uniform(0, L), rng->uniform(0, L), rng->uniform(0, L)})),
+      injector.raw({Real3(Vec3<double>({rng->uniform(0, L), rng->uniform(0, L), rng->uniform(0, L)})),
 	        Real3{1., 1., 1.}, // gamma = 2
 	        real_t(rng->uniform(0, 1.)), 0});
     }

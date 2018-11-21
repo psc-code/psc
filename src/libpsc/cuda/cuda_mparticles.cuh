@@ -185,7 +185,7 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
 	}
       }
       
-      void operator()(const particle_t& prt)
+      void raw(const particle_t& prt)
       {
 	patch_.cmprts_.injector_buf_.push_back(prt);
 	n_prts_++;

@@ -158,7 +158,7 @@ static void copy_from(MparticlesCuda& mp, MP& mp_other)
     auto injector = cmprts[p].injector();
     ConvertToCuda<MP> convert_to_cuda(mp_other, p);
     for (int n = 0; n < n_prts_by_patch[p]; n++) {
-      injector(convert_to_cuda(n));
+      injector.raw(convert_to_cuda(n));
     }
   }
 }
