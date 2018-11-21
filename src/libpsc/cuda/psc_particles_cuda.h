@@ -108,6 +108,8 @@ struct PatchCuda
     : mprts_(mprts), p_(p)
   {}
   
+  const Grid_t& grid() const { return mprts_.grid(); }
+
 protected:
   Mparticles& mprts_;
   int p_;
@@ -167,6 +169,7 @@ struct MparticlesCuda : MparticlesBase
     using Base::Base;
     using Base::mprts_;
     using Base::p_;
+    using Base::grid;
     
     friend struct InjectorCuda<MparticlesCuda>;
     
@@ -248,8 +251,6 @@ struct MparticlesCuda : MparticlesBase
 
     const_accessor_range get() const { return {*this}; }
     typename Base::Injector injector() { return {*this}; }
-
-    const Grid_t& grid() const { return mprts_.grid(); }
   };
 
   friend typename Patch::Injector;

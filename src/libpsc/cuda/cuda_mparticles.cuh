@@ -174,8 +174,6 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
     friend struct InjectorCuda<cuda_mparticles>;
     
     typename Base::Injector injector() { return {*this}; }
-
-    const Grid_t& grid() const { return mprts_.grid_; }
   };
 
   friend typename Patch::Injector;
@@ -217,6 +215,8 @@ public:
   bool check_bidx_after_push();
 
   void resize(uint n_prts);
+
+  const Grid_t& grid() const { return this->grid_; }
 
 public:
   MparticlesCudaStorage alt_storage; // storage for out-of-place reordering of particle data
