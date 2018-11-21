@@ -100,6 +100,17 @@ struct PatchCuda
 {
   using Mparticles = _Mparticles;
   using Patch = typename Mparticles::Patch;
+
+  using Injector = InjectorCuda<Mparticles>;
+  friend Injector;
+
+  PatchCuda(Mparticles& mprts, int p)
+    : mprts_(mprts), p_(p)
+  {}
+  
+protected:
+  Mparticles& mprts_;
+  int p_;
 };
 
 // ======================================================================
@@ -151,9 +162,13 @@ struct MparticlesCuda : MparticlesBase
 
   struct Patch : PatchCuda<MparticlesCuda>
   {
-    using Mparticles = MparticlesCuda;
-    using Injector = InjectorCuda<MparticlesCuda>;
-    friend Injector;
+    using Base = PatchCuda<MparticlesCuda>;
+
+    using Base::Base;
+    using Base::mprts_;
+    using Base::p_;
+    
+    friend struct InjectorCuda<MparticlesCuda>;
     
     struct const_accessor
     {
@@ -215,10 +230,6 @@ struct MparticlesCuda : MparticlesBase
       const Patch prts_;
     };
 
-    Patch(MparticlesCuda& mprts, int p)
-      : mprts_(mprts), p_(p)
-    {}
-
     const ParticleIndexer<real_t>& particleIndexer() const { return mprts_.pi_; }
 
     particle_t get_particle(int n) const
@@ -235,14 +246,10 @@ struct MparticlesCuda : MparticlesBase
       return n_prts_by_patch[p_];
     }
 
-    Injector injector() { return {*this}; }
     const_accessor_range get() const { return {*this}; }
+    typename Base::Injector injector() { return {*this}; }
 
     const Grid_t& grid() const { return mprts_.grid(); }
-
-  private:
-    MparticlesCuda& mprts_;
-    int p_;
   };
 
   friend typename Patch::Injector;
