@@ -419,6 +419,37 @@ template<typename BS>
 void cuda_mparticles<BS>::inject_buf(HMparticlesCudaStorage& h_storage,
 				     const thrust::host_vector<uint>& h_bidx)
 {
+  if (need_reorder) {
+    reorder();
+  }
+  
+  uint buf_n = h_storage.xi4.size();
+
+  // assert(check_in_patch_unordered_slow());
+
+  this->by_block_.find_indices_ids(*this);
+  // assert(check_bidx_id_unordered_slow());
+
+  resize(this->n_prts + buf_n);
+
+  thrust::copy(h_storage.xi4.begin(), h_storage.xi4.end(), this->storage.xi4.begin() + this->n_prts);
+  thrust::copy(h_storage.pxi4.begin(), h_storage.pxi4.end(), this->storage.pxi4.begin() + this->n_prts);
+  thrust::copy(h_bidx.begin(), h_bidx.end(), this->by_block_.d_idx.begin() + this->n_prts);
+  //thrust::copy(h_id.begin(), h_id.end(), d_id + n_prts);
+  // FIXME, looks like ids up until n_prts have already been set above
+  thrust::sequence(this->by_block_.d_id.data(), this->by_block_.d_id.data() + this->n_prts + buf_n);
+
+  // for (int i = -5; i <= 5; i++) {
+  //   //    float4 xi4 = d_xi4[cmprts->n_prts + i];
+  //   uint bidx = d_bidx[cmprts->n_prts + i];
+  //   uint id = d_id[cmprts->n_prts + i];
+  //   printf("i %d bidx %d %d\n", i, bidx, id);
+  // }
+
+  // assert(check_ordered());
+
+  this->n_prts += buf_n;
+  
   this->by_block_.stable_sort();
 
   this->by_block_.reorder_and_offsets(*this);
@@ -433,10 +464,6 @@ template<typename BS>
 void cuda_mparticles<BS>::inject_buf(const particle_t *buf,
 				     const std::vector<uint>& buf_n_by_patch)
 {
-  if (need_reorder) {
-    reorder();
-  }
-  
   uint buf_n = 0;
   for (int p = 0; p < this->n_patches; p++) {
     buf_n += buf_n_by_patch[p];
@@ -446,7 +473,7 @@ void cuda_mparticles<BS>::inject_buf(const particle_t *buf,
 
   HMparticlesCudaStorage h_storage{buf_n};
   thrust::host_vector<uint> h_bidx(buf_n);
-  thrust::host_vector<uint> h_id(buf_n);
+  //thrust::host_vector<uint> h_id(buf_n);
 
   uint off = 0;
   for (int p = 0; p < this->n_patches; p++) {
@@ -455,36 +482,11 @@ void cuda_mparticles<BS>::inject_buf(const particle_t *buf,
       auto bidx = this->blockIndex(buf[off + n], p);
       assert(bidx >= 0 && bidx < this->n_blocks);
       h_bidx[off + n] = bidx;;
-      h_id[off + n] = this->n_prts + off + n;
+      //h_id[off + n] = this->n_prts + off + n;
     }
     off += buf_n_by_patch[p];
   }
   assert(off == buf_n);
-
-  // assert(check_in_patch_unordered_slow());
-
-  this->by_block_.find_indices_ids(*this);
-  // assert(check_bidx_id_unordered_slow());
-
-  resize(this->n_prts + buf_n);
-
-  thrust::copy(h_storage.xi4.begin(), h_storage.xi4.end(), this->storage.xi4.begin() + this->n_prts);
-  thrust::copy(h_storage.pxi4.begin(), h_storage.pxi4.end(), this->storage.pxi4.begin() + this->n_prts);
-  thrust::copy(h_bidx.begin(), h_bidx.end(), this->by_block_.d_idx.begin() + this->n_prts);
-  //thrust::copy(h_id.begin(), h_id.end(), d_id + n_prts);
-  // FIXME, looks like ids up until n_prts have already been set above
-  thrust::sequence(this->by_block_.d_id.data(), this->by_block_.d_id.data() + this->n_prts + buf_n);
-
-  // for (int i = -5; i <= 5; i++) {
-  //   //    float4 xi4 = d_xi4[cmprts->n_prts + i];
-  //   uint bidx = d_bidx[cmprts->n_prts + i];
-  //   uint id = d_id[cmprts->n_prts + i];
-  //   printf("i %d bidx %d %d\n", i, bidx, id);
-  // }
-
-  // assert(check_ordered());
-
-  this->n_prts += buf_n;
 
   inject_buf(h_storage, h_bidx);
 }
@@ -498,10 +500,6 @@ void cuda_mparticles<BS>::inject_buf(const particle_inject *buf,
 {
   using Double3 = Vec3<double>;
   
-  if (need_reorder) {
-    reorder();
-  }
-  
   uint buf_n = 0;
   for (int p = 0; p < this->n_patches; p++) {
     buf_n += buf_n_by_patch[p];
@@ -511,7 +509,7 @@ void cuda_mparticles<BS>::inject_buf(const particle_inject *buf,
 
   HMparticlesCudaStorage h_storage(buf_n);
   thrust::host_vector<uint> h_bidx(buf_n);
-  thrust::host_vector<uint> h_id(buf_n);
+  //thrust::host_vector<uint> h_id(buf_n);
 
   uint off = 0;
   for (int p = 0; p < this->n_patches; p++) {
@@ -525,36 +523,11 @@ void cuda_mparticles<BS>::inject_buf(const particle_inject *buf,
       auto bidx = this->blockIndex(prt, p);
       assert(bidx >= 0 && bidx < this->n_blocks);
       h_bidx[off + n] = bidx;;
-      h_id[off + n] = this->n_prts + off + n;
+      //h_id[off + n] = this->n_prts + off + n;
     }
     off += buf_n_by_patch[p];
   }
   assert(off == buf_n);
-
-  // assert(check_in_patch_unordered_slow());
-
-  this->by_block_.find_indices_ids(*this);
-  // assert(check_bidx_id_unordered_slow());
-
-  resize(this->n_prts + buf_n);
-
-  thrust::copy(h_storage.xi4.begin(), h_storage.xi4.end(), this->storage.xi4.begin() + this->n_prts);
-  thrust::copy(h_storage.pxi4.begin(), h_storage.pxi4.end(), this->storage.pxi4.begin() + this->n_prts);
-  thrust::copy(h_bidx.begin(), h_bidx.end(), this->by_block_.d_idx.begin() + this->n_prts);
-  //thrust::copy(h_id.begin(), h_id.end(), d_id + n_prts);
-  // FIXME, looks like ids up until n_prts have already been set above
-  thrust::sequence(this->by_block_.d_id.data(), this->by_block_.d_id.data() + this->n_prts + buf_n);
-
-  // for (int i = -5; i <= 5; i++) {
-  //   //    float4 xi4 = d_xi4[cmprts->n_prts + i];
-  //   uint bidx = d_bidx[cmprts->n_prts + i];
-  //   uint id = d_id[cmprts->n_prts + i];
-  //   printf("i %d bidx %d %d\n", i, bidx, id);
-  // }
-
-  // assert(check_ordered());
-
-  this->n_prts += buf_n;
 
   inject_buf(h_storage, h_bidx);
 }
