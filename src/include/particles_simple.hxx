@@ -388,7 +388,7 @@ struct Mparticles : MparticlesBase
     }
   }
 
-  void resize_all(const uint *n_prts_by_patch) override
+  void resize_all(const std::vector<uint>& n_prts_by_patch) override
   {
     for (int p = 0; p < patches_.size(); p++) {
       patches_[p].resize(n_prts_by_patch[p]);

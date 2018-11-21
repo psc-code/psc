@@ -27,9 +27,9 @@ void psc_mparticles_copy(MP_FROM& mp_from, MP_TO& mp_to)
 {
   Convert<MP_FROM, MP_TO> convert;
   int n_patches = mp_to.n_patches();
-  uint n_prts_by_patch[n_patches];
-  mp_from.get_size_all(n_prts_by_patch);
-  mp_to.reserve_all(n_prts_by_patch);
+  std::vector<uint> n_prts_by_patch(n_patches);
+  mp_from.get_size_all(n_prts_by_patch.data());
+  mp_to.reserve_all(n_prts_by_patch.data());
   mp_to.resize_all(n_prts_by_patch);
   
   for (int p = 0; p < n_patches; p++) {

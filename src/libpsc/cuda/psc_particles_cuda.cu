@@ -53,10 +53,10 @@ void MparticlesCuda<BS>::get_size_all(uint *n_prts_by_patch) const
 }
 
 template<typename BS>
-void MparticlesCuda<BS>::resize_all(const uint *n_prts_by_patch)
+void MparticlesCuda<BS>::resize_all(const std::vector<uint>& n_prts_by_patch)
 {
   dprintf("CMPRTS: resize_all\n");
-  cmprts_->resize_all(n_prts_by_patch);
+  cmprts_->resize_all(n_prts_by_patch.data());
 }
 
 template<typename BS>
@@ -193,9 +193,9 @@ template<typename MparticlesCuda, typename MP>
 static void copy_to(MparticlesCuda& mp, MP& mp_other)
 {
   int n_patches = mp_other.n_patches();
-  uint n_prts_by_patch[n_patches];
-  mp.get_size_all(n_prts_by_patch);
-  mp_other.reserve_all(n_prts_by_patch);
+  std::vector<uint> n_prts_by_patch(n_patches);
+  mp.get_size_all(n_prts_by_patch.data());
+  mp_other.reserve_all(n_prts_by_patch.data());
   mp_other.resize_all(n_prts_by_patch);
 
   if (mp.cmprts()->need_reorder) {

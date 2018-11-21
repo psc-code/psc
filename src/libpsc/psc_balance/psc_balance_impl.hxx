@@ -568,7 +568,7 @@ private:
 
     prof_start(pr_A);
     mp_new.reserve_all(n_prts_by_patch_new.data());
-    mp_new.resize_all(n_prts_by_patch_new.data());
+    mp_new.resize_all(n_prts_by_patch_new);
 
     assert(sizeof(particle_t) % sizeof(real_t) == 0); // FIXME
 

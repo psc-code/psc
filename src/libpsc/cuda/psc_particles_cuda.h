@@ -51,7 +51,7 @@ struct MparticlesCuda : MparticlesBase
   int get_n_prts() const override;
   void get_size_all(uint *n_prts_by_patch) const override;
   void reserve_all(const uint *n_prts_by_patch) override;
-  void resize_all(const uint *n_prts_by_patch) override;
+  void resize_all(const std::vector<uint>& n_prts_by_patch) override;
   void reset(const Grid_t& grid) override;
 
   void inject_buf(const particle_t *buf, const uint *buf_n_by_patch);
