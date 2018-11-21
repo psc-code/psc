@@ -52,7 +52,7 @@ struct MparticlesCuda : MparticlesBase
   void get_size_all(uint *n_prts_by_patch) const override;
   void reset(const Grid_t& grid) override;
 
-  void inject_buf(const std::vector<particle_inject>& buf, const std::vector<uint>& buf_n_by_patch);
+  void inject_buf(const std::vector<particle_t>& buf, const std::vector<uint>& buf_n_by_patch);
   void dump(const std::string& filename);
   uint start(int p) const;
   bool check_after_push();
@@ -112,8 +112,14 @@ struct MparticlesCuda : MparticlesBase
       
       void operator()(const particle_inject& new_prt)
       {
+	using Double3 = Vec3<double>;
+	
 	auto& mprts = patch_.mp_;
-	mprts.injector_buf.push_back(new_prt);
+	auto& patch = mprts.grid().patches[patch_.p_];
+	auto x = Double3::fromPointer(new_prt.x) - patch.xb;
+	auto prt = particle_t{Real3(x), Real3(Double3::fromPointer(new_prt.u)),
+			      real_t(new_prt.w), new_prt.kind};
+	mprts.injector_buf.push_back(prt);
 	n_prts_++;
       }
       
@@ -217,7 +223,7 @@ private:
   ParticleIndexer<real_t> pi_;
 
   std::vector<uint> injector_n_prts_by_patch;
-  std::vector<particle_inject> injector_buf;
+  std::vector<particle_t> injector_buf;
 };
 
 template<>

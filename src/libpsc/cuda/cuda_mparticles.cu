@@ -461,7 +461,7 @@ void cuda_mparticles<BS>::inject_buf(HMparticlesCudaStorage& h_storage,
 // inject_buf
 
 template<typename BS>
-void cuda_mparticles<BS>::inject_buf(const std::vector<particle_inject>& buf,
+void cuda_mparticles<BS>::inject_buf(const std::vector<particle_t>& buf,
 				     const std::vector<uint>& buf_n_by_patch)
 {
   using Double3 = Vec3<double>;
@@ -479,12 +479,8 @@ void cuda_mparticles<BS>::inject_buf(const std::vector<particle_inject>& buf,
 
   uint off = 0;
   for (int p = 0; p < this->n_patches; p++) {
-    auto& patch = this->grid_.patches[p];
     for (int n = 0; n < buf_n_by_patch[p]; n++) {
-      auto new_prt = buf[off + n];
-      auto x = Double3::fromPointer(new_prt.x) - patch.xb;
-      auto prt = particle_t{Real3(x), Real3(Double3::fromPointer(new_prt.u)),
-				     real_t(new_prt.w), new_prt.kind};
+      auto prt = buf[off + n];
       h_storage.store(prt, off + n);
       auto bidx = this->blockIndex(prt, p);
       assert(bidx >= 0 && bidx < this->n_blocks);
