@@ -7,13 +7,6 @@ struct TestBase
 {
   using CudaMparticles = _CudaMparticles;
   using particle_t = typename CudaMparticles::particle_t;
-
-  CudaMparticles* make_cmprts(Grid_t& grid)
-  {
-    auto cmprts = new CudaMparticles(grid);
-    
-    return cmprts;
-  }
 };
 
 

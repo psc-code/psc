@@ -121,9 +121,10 @@ TEST_F(PushMprtsTest, Accel)
   Rng *rng = rngpool[0];
 
   grid_->kinds.push_back(Grid_t::Kind(1., 1., "test_species"));
-  std::unique_ptr<CudaMparticles> cmprts(make_cmprts(*grid_));
-  for (int p = 0; p < cmprts->n_patches; p++) {
-    auto injector = (*cmprts)[p].injector();
+
+  auto cmprts = CudaMparticles{*grid_};
+  for (int p = 0; p < cmprts.n_patches; p++) {
+    auto injector = cmprts[p].injector();
     for (int n = 0; n < n_prts; n++) {
       using Real3 = particle_t::Real3;
       injector({Real3(Vec3<double>{rng->uniform(0, L), rng->uniform(0, L), rng->uniform(0, L)}), {}, 1., 0});
@@ -132,9 +133,9 @@ TEST_F(PushMprtsTest, Accel)
   
   // run test
   for (int n = 0; n < n_steps; n++) {
-    CudaPushParticles_<CudaConfig1vbec3d<dim_yz, BS144>>::push_mprts(cmprts.get(), cmflds.get());
+    CudaPushParticles_<CudaConfig1vbec3d<dim_yz, BS144>>::push_mprts(&cmprts, cmflds.get());
 
-    for (auto prt: cmprts->get_particles(0)) {
+    for (auto prt: cmprts.get_particles(0)) {
       EXPECT_NEAR(prt.u()[0], 1*(n+1), eps);
       EXPECT_NEAR(prt.u()[1], 2*(n+1), eps);
       EXPECT_NEAR(prt.u()[2], 3*(n+1), eps);
@@ -167,9 +168,10 @@ TEST_F(PushMprtsTest, Cyclo)
   Rng *rng = rngpool[0];
 
   grid_->kinds.push_back(Grid_t::Kind(2., 1., "test_species"));
-  std::unique_ptr<CudaMparticles> cmprts(make_cmprts(*grid_));
-  for (int p = 0; p < cmprts->n_patches; p++) {
-    auto injector = (*cmprts)[p].injector();
+
+  auto cmprts = CudaMparticles{*grid_};
+  for (int p = 0; p < cmprts.n_patches; p++) {
+    auto injector = cmprts[p].injector();
     for (int n = 0; n < n_prts; n++) {
       using real_t = particle_t::real_t;
       using Real3 = particle_t::Real3;
@@ -181,14 +183,14 @@ TEST_F(PushMprtsTest, Cyclo)
 
   // run test
   for (int n = 0; n < n_steps; n++) {
-    CudaPushParticles_<CudaConfig1vbec3d<dim_yz, BS144>>::push_mprts(cmprts.get(), cmflds.get());
+    CudaPushParticles_<CudaConfig1vbec3d<dim_yz, BS144>>::push_mprts(&cmprts, cmflds.get());
 
     double ux = (cos(2*M_PI*(0.125*n_steps-(n+1))/(double)n_steps) /
 		 cos(2*M_PI*(0.125*n_steps)      /(double)n_steps));
     double uy = (sin(2*M_PI*(0.125*n_steps-(n+1))/(double)n_steps) /
 		 sin(2*M_PI*(0.125*n_steps)      /(double)n_steps));
     double uz = 1.;
-    for (auto prt: cmprts->get_particles(0)) {
+    for (auto prt: cmprts.get_particles(0)) {
       EXPECT_NEAR(prt.u()[0], ux, eps);
       EXPECT_NEAR(prt.u()[1], uy, eps);
       EXPECT_NEAR(prt.u()[2], uz, eps);

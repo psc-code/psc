@@ -87,8 +87,7 @@ TEST_F(CudaMparticlesTest, ConstructorDestructor)
 {
   grid_->kinds.push_back(Grid_t::Kind(-1.,  1., "electron"));
   grid_->kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
-  std::unique_ptr<CudaMparticles> _cmprts(make_cmprts(*grid_));
-  auto& cmprts = *_cmprts;
+  auto cmprts = CudaMparticles{*grid_};
   EXPECT_EQ(cmprts.n_patches, 1);
 }
 
@@ -97,8 +96,7 @@ TEST_F(CudaMparticlesTest, SetParticles)
 {
   grid_->kinds.push_back(Grid_t::Kind(-1.,  1., "electron"));
   grid_->kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
-  std::unique_ptr<CudaMparticles> _cmprts(make_cmprts(*grid_));
-  auto& cmprts = *_cmprts;
+  auto cmprts = CudaMparticles{*grid_};
 
   std::vector<uint> n_prts_by_patch(cmprts.n_patches);
   cuda_mparticles_add_particles_test_1(cmprts, n_prts_by_patch);
@@ -133,8 +131,7 @@ TEST_F(CudaMparticlesTest, SetupInternalsDetail)
   };
 
   // can't use make_cmprts() from vector here, since that'll sort etc
-  std::unique_ptr<CudaMparticles> _cmprts(make_cmprts(*grid_));
-  auto& cmprts = *_cmprts;
+  auto cmprts = CudaMparticles{*grid_};
   cmprts.set_particles(prts, {uint(prts.size())});
 
   auto& d_id = cmprts.by_block_.d_id;
@@ -201,8 +198,7 @@ TEST_F(CudaMparticlesTest, SortByCellDetail)
   };
 
   // can't use make_cmprts() from vector here, since that'll sort etc
-  std::unique_ptr<CudaMparticles> _cmprts(make_cmprts(*grid_));
-  auto& cmprts = *_cmprts;
+  auto cmprts = CudaMparticles{*grid_};
   cmprts.set_particles(prts, {uint(prts.size())});
   EXPECT_TRUE(cmprts.check_in_patch_unordered_slow());
 
@@ -255,8 +251,7 @@ TEST_F(CudaMparticlesTest, SortByCellDetail)
 TEST_F(CudaMparticlesTest, SetupInternals)
 {
   grid_->kinds.push_back(Grid_t::Kind( 1.,  1., "test species"));
-  std::unique_ptr<CudaMparticles> _cmprts(make_cmprts(*grid_));
-  auto& cmprts = *_cmprts;
+  auto cmprts = CudaMparticles{*grid_};
 
   std::vector<uint> n_prts_by_patch(cmprts.n_patches);
   cuda_mparticles_add_particles_test_1(cmprts, n_prts_by_patch);
@@ -297,9 +292,7 @@ TEST_F(CudaMparticlesTest, CudaCollision)
     {{.5,  5.,  5.}, {0., 0., 1.1}, 1., 0},
   };
 
-  // FIXME: can use make_cmprts() from vector here
-  std::unique_ptr<CudaMparticles> _cmprts(make_cmprts(*grid_));
-  auto& cmprts = *_cmprts;
+  auto cmprts = CudaMparticles{*grid_};
   cmprts[0].injector()(prts);
 
   cmprts.check_ordered();

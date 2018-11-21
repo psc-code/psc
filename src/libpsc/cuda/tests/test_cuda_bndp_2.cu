@@ -41,7 +41,7 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
     double dt = .1;
     grid.reset(new Grid_t(domain, bc, kinds, norm, dt));
 
-    cmprts_.reset(make_cmprts(*grid));
+    cmprts_.reset(new CudaMparticles{*grid});
     auto& cmprts = *cmprts_;
 
     for (int p = 0; p < cmprts.n_patches; ++p) {
