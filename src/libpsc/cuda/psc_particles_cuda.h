@@ -28,7 +28,7 @@ using DParticleCuda = ParticleSimple<float>;
 template<typename BS>
 struct cuda_mparticles;
 
-// ----------------------------------------------------------------------
+// ======================================================================
 // InjectorCuda
 //
 // caches injected particles for all patches before actually transferring them to
@@ -37,10 +37,11 @@ struct cuda_mparticles;
 // It expects that an injector is constructed and then destructed for every patch
 // in order, and the real action occurs only when the last patch instance is destructed
 
-template<typename Patch>
+template<typename Mparticles>
 struct InjectorCuda
 {
-  using particle_t = typename Patch::Mparticles::particle_t;
+  using Patch = typename Mparticles::Patch;
+  using particle_t = typename Mparticles::particle_t;
   using real_t = typename particle_t::real_t;
   using Real3 = typename particle_t::Real3;
   using Double3 = Vec3<double>;
@@ -151,7 +152,7 @@ struct MparticlesCuda : MparticlesBase
   struct Patch : PatchCuda<MparticlesCuda>
   {
     using Mparticles = MparticlesCuda;
-    using Injector = InjectorCuda<Patch>;
+    using Injector = InjectorCuda<MparticlesCuda>;
     friend Injector;
     
     struct const_accessor
