@@ -176,6 +176,8 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
 
     Injector injector() { return {*this}; }
 
+    const Grid_t& grid() const { return mprts_.grid_; }
+
   private:
     Mparticles& mprts_;
     int p_;

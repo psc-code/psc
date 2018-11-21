@@ -75,7 +75,7 @@ struct InjectorCuda_
   void operator()(const particle_inject& new_prt)
   {
     auto& mprts = patch_.mprts_;
-    auto& patch = mprts.grid_.patches[patch_.p_];
+    auto& patch = patch_.grid().patches[patch_.p_];
     auto x = Double3::fromPointer(new_prt.x) - patch.xb;
     auto prt = particle_t{Real3(x), Real3(Double3::fromPointer(new_prt.u)),
 			  real_t(new_prt.w), new_prt.kind};
@@ -128,7 +128,7 @@ struct InjectorCuda
   void operator()(const particle_inject& new_prt)
   {
     auto& mprts = patch_.mprts_;
-    auto& patch = mprts.grid().patches[patch_.p_];
+    auto& patch = patch_.grid().patches[patch_.p_];
     auto x = Double3::fromPointer(new_prt.x) - patch.xb;
     mprts.injector_buf_.push_back({Real3(x), Real3(Double3::fromPointer(new_prt.u)),
 	  real_t(new_prt.w), new_prt.kind});
@@ -202,12 +202,12 @@ struct MparticlesCuda : MparticlesBase
       {}
       
       Real3 u()   const { return prt_.u(); }
-      real_t w()  const { return prt_.qni_wni() / prts_.mprts_.grid().kinds[prt_.kind()].q; }
+      real_t w()  const { return prt_.qni_wni() / prts_.grid().kinds[prt_.kind()].q; }
       int kind()  const { return prt_.kind(); }
       
       Double3 position() const
       {
-	auto& patch = prts_.mprts_.grid().patches[prts_.p_];
+	auto& patch = prts_.grid().patches[prts_.p_];
 	
 	return patch.xb + Double3(prt_.x());
       }
@@ -268,13 +268,15 @@ struct MparticlesCuda : MparticlesBase
 
     uint size() const
     {
-      uint n_prts_by_patch[mprts_.grid().n_patches()];
+      uint n_prts_by_patch[grid().n_patches()];
       mprts_.get_size_all(n_prts_by_patch);
       return n_prts_by_patch[p_];
     }
 
     Injector injector() { return {*this}; }
     const_accessor_range get() const { return {*this}; }
+
+    const Grid_t& grid() const { return mprts_.grid(); }
 
   private:
     MparticlesCuda& mprts_;
