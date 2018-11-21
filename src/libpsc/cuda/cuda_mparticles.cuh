@@ -161,8 +161,26 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   using Real3 = Vec3<real_t>;
   using DMparticles = DMparticlesCuda<BS>;
 
+  struct Patch
+  {
+    Patch(cuda_mparticles& cmprts, int p)
+      : cmprts_(cmprts), p_(p)
+    {}
+
+    void set_particles(const std::vector<particle_t>& buf)
+    {
+      cmprts_.set_particles(p_, buf);
+    }
+
+  private:
+    cuda_mparticles& cmprts_;
+    int p_;
+  };
+
   cuda_mparticles(const Grid_t& grid);
 
+  Patch operator[](int p) { return Patch{*this, p}; }
+  
   void reserve_all(const uint *n_prts_by_patch);
   uint get_n_prts();
   void setup_internals();
@@ -173,11 +191,12 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   std::vector<particle_t> get_particles(int p);
 
   uint start(int p);
-  
-  void set_particles(uint p, const std::vector<particle_t>& buf);
 
   void dump(const std::string& filename) const;
   void dump_by_patch(uint *n_prts_by_patch);
+
+private:
+  void set_particles(uint p, const std::vector<particle_t>& buf);
 
 public:
   void find_block_indices_ids(thrust::device_vector<uint>& d_idx, thrust::device_vector<uint>& d_id);

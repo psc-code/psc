@@ -185,7 +185,7 @@ static void copy_from(MparticlesCuda& mp, MP& mp_other)
     for (int n = 0; n < n_prts_by_patch[p]; n++) {
       buf.push_back(convert_to_cuda(n));
     }
-    mp.cmprts()->set_particles(p, buf);
+    (*mp.cmprts())[p].set_particles(buf);
   }
 
   mp.cmprts()->setup_internals();
