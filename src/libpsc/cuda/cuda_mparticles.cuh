@@ -168,12 +168,24 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
       injector(const Patch& patch)
 	: patch_{patch},
 	  n_prts_{0}
-      {}
+      {
+	assert(patch_.p_ == patch_.cmprts_.injector_n_prts_by_patch_.size());
+      }
 
       ~injector()
       {
-	assert(n_prts_ == patch_.cmprts_.injector_buf_.size());
-	patch_.cmprts_.set_particles(patch_.p_, patch_.cmprts_.injector_buf_);
+	auto& cmprts = patch_.cmprts_;
+	cmprts.injector_n_prts_by_patch_.push_back(n_prts_);
+	if (patch_.p_ == cmprts.n_patches - 1) {
+	  auto it = cmprts.injector_buf_.begin();
+	  for (int p = 0; p < cmprts.n_patches; p++) {
+	    auto n_prts = cmprts.injector_n_prts_by_patch_[p];
+	    cmprts.set_particles(p, it, it + n_prts);
+	    it += n_prts;
+	  }
+	  cmprts.injector_n_prts_by_patch_.clear();
+	  cmprts.injector_buf_.clear();
+	}
       }
       
       void operator()(const particle_t& prt)
@@ -224,7 +236,8 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   void dump_by_patch(uint *n_prts_by_patch);
 
 private:
-  void set_particles(uint p, const std::vector<particle_t>& buf);
+  void set_particles(uint p, const std::vector<particle_t>::const_iterator begin,
+		     const std::vector<particle_t>::const_iterator end);
 
 public:
   void find_block_indices_ids(thrust::device_vector<uint>& d_idx, thrust::device_vector<uint>& d_id);
@@ -252,6 +265,7 @@ public:
 
 private:
   std::vector<particle_t> injector_buf_;
+  std::vector<size_t> injector_n_prts_by_patch_;
 };
 
 template<typename BS_>
@@ -324,7 +338,8 @@ public:
 // set_particles
 
 template<typename BS>
-void cuda_mparticles<BS>::set_particles(uint p, const std::vector<particle_t>& buf)
+void cuda_mparticles<BS>::set_particles(uint p, const std::vector<particle_t>::const_iterator begin,
+					const std::vector<particle_t>::const_iterator end)
 {
   // FIXME, doing the copy here all the time would be nice to avoid
   // making sure we actually have a valid d_off would't hurt, either
@@ -333,13 +348,14 @@ void cuda_mparticles<BS>::set_particles(uint p, const std::vector<particle_t>& b
   uint off = h_off[p * this->n_blocks_per_patch];
   uint n_prts = h_off[(p+1) * this->n_blocks_per_patch] - off;
 
-  assert(n_prts == buf.size());
+  assert(n_prts == end - begin);
   
   thrust::host_vector<float4> xi4(n_prts);
   thrust::host_vector<float4> pxi4(n_prts);
 
+  auto it = begin;
   for (int n = 0; n < n_prts; n++) {
-    auto prt = buf[n];
+    auto &prt = *it++;
     this->checkInPatchMod(prt.x());
 
     xi4[n].x  = prt.x()[0];
