@@ -40,15 +40,14 @@ struct cuda_mparticles;
 template<typename Mparticles>
 struct InjectorCuda
 {
-  using Patch = typename Mparticles::Patch;
   using particle_t = typename Mparticles::particle_t;
   using real_t = typename particle_t::real_t;
   using Real3 = typename particle_t::Real3;
   using Double3 = Vec3<double>;
   
-  InjectorCuda(const Patch& patch)
-    : mprts_(patch.mprts_),
-      p_{patch.p_},
+  InjectorCuda(const Mparticles& mprts, int p)
+    : mprts_{const_cast<Mparticles&>(mprts)}, // FIXME
+      p_{p},
       n_prts_{0}
   {
     assert(p_ == mprts_.injector_n_prts_by_patch_.size());
@@ -103,7 +102,6 @@ struct PatchCuda
   using Patch = typename Mparticles::Patch;
 
   using Injector = InjectorCuda<Mparticles>;
-  friend Injector;
 
   PatchCuda(Mparticles& mprts, int p)
     : mprts_(mprts), p_(p)
@@ -171,8 +169,6 @@ struct MparticlesCuda : MparticlesBase
     using Base::mprts_;
     using Base::p_;
     using Base::grid;
-    
-    friend struct InjectorCuda<MparticlesCuda>;
     
     struct const_accessor
     {
@@ -251,7 +247,7 @@ struct MparticlesCuda : MparticlesBase
     }
 
     const_accessor_range get() const { return {*this}; }
-    typename Base::Injector injector() { return {*this}; }
+    typename Base::Injector injector() { return {mprts_, p_}; }
   };
 
   friend typename Patch::Injector;

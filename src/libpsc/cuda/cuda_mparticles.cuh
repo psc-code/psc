@@ -171,9 +171,7 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
     using Base::mprts_;
     using Base::p_;
     
-    friend struct InjectorCuda<cuda_mparticles>;
-    
-    typename Base::Injector injector() { return {*this}; }
+    typename Base::Injector injector() { return {mprts_, p_}; }
   };
 
   friend typename Patch::Injector;
