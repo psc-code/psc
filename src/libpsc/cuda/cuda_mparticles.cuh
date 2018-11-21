@@ -132,7 +132,10 @@ struct cuda_mparticles_base : cuda_mparticles_indexer<BS>
   // by accident
   cuda_mparticles_base(const cuda_mparticles<BS>&) = delete;
 
+protected:
   void reserve_all(uint sinze);
+
+public:
   void resize_all(const uint *n_prts_by_patch);
   void get_size_all(uint *n_prts_by_patch);
 
