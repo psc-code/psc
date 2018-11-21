@@ -180,7 +180,12 @@ static void copy_from(MparticlesCuda& mp, MP& mp_other)
 
   for (int p = 0; p < n_patches; p++) {
     ConvertToCuda<MP> convert_to_cuda(mp_other, p);
-    mp.cmprts()->set_particles(p, convert_to_cuda);
+    std::vector<typename MparticlesCuda::particle_t> buf;
+    buf.reserve(n_prts_by_patch[p]);
+    for (int n = 0; n < n_prts_by_patch[p]; n++) {
+      buf.push_back(convert_to_cuda(n));
+    }
+    mp.cmprts()->set_particles(p, buf);
   }
 
   mp.cmprts()->setup_internals();
