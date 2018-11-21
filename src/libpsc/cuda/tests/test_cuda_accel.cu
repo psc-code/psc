@@ -121,11 +121,15 @@ TEST_F(PushMprtsTest, Accel)
   Rng *rng = rngpool[0];
 
   grid_->kinds.push_back(Grid_t::Kind(1., 1., "test_species"));
-  std::unique_ptr<CudaMparticles> cmprts(make_cmprts(*grid_, n_prts, [&](int i) -> particle_t {
-	using Real3 = particle_t::Real3;
-	auto prt = particle_t{Real3(Vec3<double>{rng->uniform(0, L), rng->uniform(0, L), rng->uniform(0, L)}), {}, 1., 0};
-	return prt;
-      }));
+  std::unique_ptr<CudaMparticles> cmprts(make_cmprts(*grid_));
+  for (int p = 0; p < cmprts->n_patches; p++) {
+    auto injector = (*cmprts)[p].injector();
+    for (int n = 0; n < n_prts; n++) {
+      using Real3 = particle_t::Real3;
+      injector({Real3(Vec3<double>{rng->uniform(0, L), rng->uniform(0, L), rng->uniform(0, L)}), {}, 1., 0});
+    }
+  }
+  cmprts->setup_internals();
   
   // run test
   for (int n = 0; n < n_steps; n++) {
@@ -164,13 +168,18 @@ TEST_F(PushMprtsTest, Cyclo)
   Rng *rng = rngpool[0];
 
   grid_->kinds.push_back(Grid_t::Kind(2., 1., "test_species"));
-  std::unique_ptr<CudaMparticles> cmprts(make_cmprts(*grid_, n_prts, [&](int i) -> particle_t {
-	using real_t = particle_t::real_t;
-	using Real3 = particle_t::Real3;
-	return {Real3(Vec3<double>({rng->uniform(0, L), rng->uniform(0, L), rng->uniform(0, L)})),
+  std::unique_ptr<CudaMparticles> cmprts(make_cmprts(*grid_));
+  for (int p = 0; p < cmprts->n_patches; p++) {
+    auto injector = (*cmprts)[p].injector();
+    for (int n = 0; n < n_prts; n++) {
+      using real_t = particle_t::real_t;
+      using Real3 = particle_t::Real3;
+      injector({Real3(Vec3<double>({rng->uniform(0, L), rng->uniform(0, L), rng->uniform(0, L)})),
 	        Real3{1., 1., 1.}, // gamma = 2
-	        real_t(rng->uniform(0, 1.)), 0};
-      }));
+	        real_t(rng->uniform(0, 1.)), 0});
+    }
+  }
+  cmprts->setup_internals();
 
   // run test
   for (int n = 0; n < n_steps; n++) {
