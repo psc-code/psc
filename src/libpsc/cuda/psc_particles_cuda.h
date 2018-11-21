@@ -107,7 +107,7 @@ struct InjectorCuda
     : patch_{patch},
       n_prts_{0}
   {
-    auto& mprts = patch_.mp_;
+    auto& mprts = patch_.mprts_;
     //mprintf("injector p = %d/%d\n", patch_.p_, mprts.n_patches());
     // make sure we're constructed/destructed in order, one patch at a time
     assert(patch_.p_ == mprts.injector_n_prts_by_patch.size());
@@ -115,7 +115,7 @@ struct InjectorCuda
   
   ~InjectorCuda()
   {
-    auto& mprts = patch_.mp_;
+    auto& mprts = patch_.mprts_;
     //mprintf("~injector p = %d/%d\n", patch_.p_, mprts.n_patches());
     mprts.injector_n_prts_by_patch.push_back(n_prts_);
     if (patch_.p_ == mprts.n_patches() - 1) {
@@ -127,7 +127,7 @@ struct InjectorCuda
   
   void operator()(const particle_inject& new_prt)
   {
-    auto& mprts = patch_.mp_;
+    auto& mprts = patch_.mprts_;
     auto& patch = mprts.grid().patches[patch_.p_];
     auto x = Double3::fromPointer(new_prt.x) - patch.xb;
     mprts.injector_buf.push_back({Real3(x), Real3(Double3::fromPointer(new_prt.u)),
@@ -202,12 +202,12 @@ struct MparticlesCuda : MparticlesBase
       {}
       
       Real3 u()   const { return prt_.u(); }
-      real_t w()  const { return prt_.qni_wni() / prts_.mp_.grid().kinds[prt_.kind()].q; }
+      real_t w()  const { return prt_.qni_wni() / prts_.mprts_.grid().kinds[prt_.kind()].q; }
       int kind()  const { return prt_.kind(); }
       
       Double3 position() const
       {
-	auto& patch = prts_.mp_.grid().patches[prts_.p_];
+	auto& patch = prts_.mprts_.grid().patches[prts_.p_];
 	
 	return patch.xb + Double3(prt_.x());
       }
@@ -253,23 +253,23 @@ struct MparticlesCuda : MparticlesBase
       const Patch prts_;
     };
 
-    Patch(MparticlesCuda& mp, int p)
-      : mp_(mp), p_(p)
+    Patch(MparticlesCuda& mprts, int p)
+      : mprts_(mprts), p_(p)
     {}
 
-    const ParticleIndexer<real_t>& particleIndexer() const { return mp_.pi_; }
+    const ParticleIndexer<real_t>& particleIndexer() const { return mprts_.pi_; }
 
     particle_t get_particle(int n) const
     {
-      uint off = mp_.start(p_);
-      auto cprts = mp_.get_particles(off + n, off + n + 1);
+      uint off = mprts_.start(p_);
+      auto cprts = mprts_.get_particles(off + n, off + n + 1);
       return cprts[0];
     }
 
     uint size() const
     {
-      uint n_prts_by_patch[mp_.grid().n_patches()];
-      mp_.get_size_all(n_prts_by_patch);
+      uint n_prts_by_patch[mprts_.grid().n_patches()];
+      mprts_.get_size_all(n_prts_by_patch);
       return n_prts_by_patch[p_];
     }
 
@@ -277,7 +277,7 @@ struct MparticlesCuda : MparticlesBase
     const_accessor_range get() const { return {*this}; }
 
   private:
-    MparticlesCuda& mp_;
+    MparticlesCuda& mprts_;
     int p_;
   };
 
