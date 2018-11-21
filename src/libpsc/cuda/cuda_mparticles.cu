@@ -423,6 +423,18 @@ void cuda_mparticles<BS>::set_particles(uint p, const std::vector<particle_t>::c
   thrust::copy(pxi4.begin(), pxi4.end(), &this->storage.pxi4[off]);
 }
 
+template<typename BS>
+void cuda_mparticles<BS>::set_particles(const std::vector<particle_t>& buf,
+					const std::vector<size_t>& n_prts_by_patch)
+{
+  auto it = buf.begin();
+  for (int p = 0; p < this->n_patches; p++) {
+    auto n_prts = n_prts_by_patch[p];
+    set_particles(p, it, it + n_prts);
+    it += n_prts;
+  }
+}
+
 // ----------------------------------------------------------------------
 // inject_buf
 
