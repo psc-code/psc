@@ -180,6 +180,7 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
 	cmprts.injector_n_prts_by_patch_.push_back(n_prts_);
 	if (patch_.p_ == cmprts.n_patches - 1) {
 	  cmprts.set_particles(cmprts.injector_buf_, cmprts.injector_n_prts_by_patch_);
+	  cmprts.setup_internals();
 	  cmprts.injector_n_prts_by_patch_.clear();
 	  cmprts.injector_buf_.clear();
 	}
@@ -200,7 +201,7 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
       
     private:
       const Patch patch_;
-      size_t n_prts_;
+      uint n_prts_;
     };
 
     Patch(cuda_mparticles& cmprts, int p)
@@ -222,7 +223,6 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   uint get_n_prts();
   void setup_internals();
   void inject_buf(const std::vector<particle_t>& buf, const std::vector<uint>& buf_n_by_patch);
-  void inject_buf(HMparticlesCudaStorage& h_storage, const thrust::host_vector<uint>& h_bidx);
 
   std::vector<particle_t> get_particles(int beg, int end);
   std::vector<particle_t> get_particles(int p);
@@ -232,9 +232,9 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   void dump(const std::string& filename) const;
   void dump_by_patch(uint *n_prts_by_patch);
 
-private:
+  // internal / testing use
   void set_particles(const std::vector<particle_t>& buf,
-		     const std::vector<size_t>& n_prts_by_patch);
+		     const std::vector<uint>& n_prts_by_patch);
 
 public:
   void find_block_indices_ids(thrust::device_vector<uint>& d_idx, thrust::device_vector<uint>& d_id);
@@ -262,7 +262,7 @@ public:
 
 private:
   std::vector<particle_t> injector_buf_;
-  std::vector<size_t> injector_n_prts_by_patch_;
+  std::vector<uint> injector_n_prts_by_patch_;
 };
 
 template<typename BS_>

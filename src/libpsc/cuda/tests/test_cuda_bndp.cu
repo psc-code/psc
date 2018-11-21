@@ -55,7 +55,6 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
 	injector({{ .5, 155., 5.}, {}, 0., 3});
       }
     }
-    cmprts.setup_internals();
 
     // move every particle one full cell to the right (+y, that is)
     // (position doesn't actually matter since we'll only look at bidx)

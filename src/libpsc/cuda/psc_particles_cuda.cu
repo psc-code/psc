@@ -161,8 +161,6 @@ static void copy_from(MparticlesCuda& mp, MP& mp_other)
       injector(convert_to_cuda(n));
     }
   }
-
-  mp.cmprts()->setup_internals();
 }
 
 template<typename MparticlesCuda, typename MP>

@@ -129,7 +129,6 @@ TEST_F(PushMprtsTest, Accel)
       injector({Real3(Vec3<double>{rng->uniform(0, L), rng->uniform(0, L), rng->uniform(0, L)}), {}, 1., 0});
     }
   }
-  cmprts->setup_internals();
   
   // run test
   for (int n = 0; n < n_steps; n++) {
@@ -179,7 +178,6 @@ TEST_F(PushMprtsTest, Cyclo)
 	        real_t(rng->uniform(0, 1.)), 0});
     }
   }
-  cmprts->setup_internals();
 
   // run test
   for (int n = 0; n < n_steps; n++) {
