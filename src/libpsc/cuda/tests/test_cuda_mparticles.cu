@@ -48,7 +48,7 @@ void cuda_mparticles_add_particles_test_1(CudaMparticles& cmprts, uint *n_prts_b
   auto dx = grid.domain.dx;
       
   for (int p = 0; p < grid.n_patches(); p++) {
-    std::vector<particle_t> buf;
+    auto injector = cmprts[p].injector();
     for (int i = 0; i < ldims[0]; i++) {
       for (int j = 0; j < ldims[1]; j++) {
 	for (int k = 0; k < ldims[2]; k++) {
@@ -56,12 +56,10 @@ void cuda_mparticles_add_particles_test_1(CudaMparticles& cmprts, uint *n_prts_b
 	    {real_t(dx[0] * (i + .5f)), real_t(dx[1] * (j + .5f)), real_t(dx[2] * (k + .5f))},
 	    {real_t(i), real_t(j), real_t(k)},
 	    1., 0};
-	  buf.push_back(prt);
+	  injector(prt);
 	}
       }
     }
-    auto injector = cmprts[p].injector();
-    injector(buf);
   } 
 }
 

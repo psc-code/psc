@@ -169,13 +169,19 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
 	: patch_{patch}
       {}
 
-      void operator()(const std::vector<particle_t>& buf)
+      ~injector()
       {
-	patch_.cmprts_.set_particles(patch_.p_, buf);
+	patch_.cmprts_.set_particles(patch_.p_, buf_);
+      }
+      
+      void operator()(const particle_t& prt)
+      {
+	buf_.push_back(prt);
       }
       
     private:
       const Patch patch_;
+      std::vector<particle_t> buf_;
     };
 
     Patch(cuda_mparticles& cmprts, int p)
