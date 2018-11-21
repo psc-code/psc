@@ -38,11 +38,12 @@ void cuda_mparticles_add_particles_test_1(CudaMparticles& cmprts, uint *n_prts_b
   const Grid_t& grid = cmprts.grid_;
   Int3 ldims = grid.ldims;
 
+#if 0 // FIXME, could still be used as reserve hint for injector
   for (int p = 0; p < cmprts.n_patches; p++) {
     n_prts_by_patch[p] = ldims[0] * ldims[1] * ldims[2];
   }
-
   cmprts.reserve_all(n_prts_by_patch);
+#endif
   
   auto dx = grid.domain.dx;
       
@@ -129,13 +130,10 @@ TEST_F(CudaMparticlesTest, SetupInternalsDetail)
     {{ .5, 35., 15. }, {}, 0., 0},
     {{ .5,  5.,  5. }, {}, 0., 0},
   };
-  uint n_prts_by_patch[1];
-  n_prts_by_patch[0] = prts.size();
 
   // can't use make_cmprts() from vector here, since that'll sort etc
   std::unique_ptr<CudaMparticles> _cmprts(make_cmprts(*grid_));
   auto& cmprts = *_cmprts;
-  cmprts.reserve_all(n_prts_by_patch);
   cmprts[0].injector()(prts);
 
   auto& d_id = cmprts.by_block_.d_id;
@@ -200,13 +198,10 @@ TEST_F(CudaMparticlesTest, SortByCellDetail)
     {{ .5, 35., 15. }, {}, 0., 0},
     {{ .5,  5.,  5. }, {}, 0., 0},
   };
-  uint n_prts_by_patch[1];
-  n_prts_by_patch[0] = prts.size();
 
   // can't use make_cmprts() from vector here, since that'll sort etc
   std::unique_ptr<CudaMparticles> _cmprts(make_cmprts(*grid_));
   auto& cmprts = *_cmprts;
-  cmprts.reserve_all(n_prts_by_patch);
   cmprts[0].injector()(prts);
   EXPECT_TRUE(cmprts.check_in_patch_unordered_slow());
 
@@ -300,13 +295,10 @@ TEST_F(CudaMparticlesTest, CudaCollision)
     {{.5,  5.,  5.}, {0., 0., 1.0}, 1., 0},
     {{.5,  5.,  5.}, {0., 0., 1.1}, 1., 0},
   };
-  uint n_prts_by_patch[1];
-  n_prts_by_patch[0] = prts.size();
 
   // FIXME: can use make_cmprts() from vector here
   std::unique_ptr<CudaMparticles> _cmprts(make_cmprts(*grid_));
   auto& cmprts = *_cmprts;
-  cmprts.reserve_all(n_prts_by_patch);
   cmprts[0].injector()(prts);
 
   cmprts.setup_internals();

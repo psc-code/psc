@@ -393,6 +393,9 @@ void cuda_mparticles<BS>::set_particles(const std::vector<particle_t>& buf,
 					const std::vector<size_t>& n_prts_by_patch)
 {
   thrust::host_vector<uint> h_off(this->by_block_.d_off);
+
+  assert(this->storage.xi4.size() == 0);
+  assert(this->n_prts == 0);
   
   size_t buf_n = 0;
   for (int p = 0; p < this->n_patches; p++) {
@@ -401,6 +404,8 @@ void cuda_mparticles<BS>::set_particles(const std::vector<particle_t>& buf,
     buf_n += n_prts_by_patch[p];
   }
 
+  resize(buf_n);
+  
   HMparticlesCudaStorage h_storage{buf_n};
 
   // this also implements resize_all()
