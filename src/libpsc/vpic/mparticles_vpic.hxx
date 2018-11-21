@@ -205,7 +205,7 @@ struct MparticlesVpic_ : MparticlesBase
   // at least for now, and we wouldn't be able to know how to split this into
   // the different species, anyway.
 
-  void reserve_all(const std::vector<uint>& n_prts_by_patch) override
+  void reserve_all(const std::vector<uint>& n_prts_by_patch)
   {
     for (int p = 0; p < n_patches(); p++) {
       int n_prts = 0, n_prts_alloced = 0;
@@ -229,7 +229,7 @@ struct MparticlesVpic_ : MparticlesBase
   // Even more iffy, since can't really resize the per-species arrays, since we don't
   // know how the total # of particles we're given should be divided up
   
-  void resize_all(const std::vector<uint>& n_prts_by_patch) override
+  void resize_all(const std::vector<uint>& n_prts_by_patch)
   {
     // we can't resize to the numbers given, unless it's "resize to 0", we'll just do nothing
     // The mparticles conversion function should call resize_all() itself first, resizing to
