@@ -60,7 +60,8 @@ void cuda_mparticles_add_particles_test_1(CudaMparticles& cmprts, uint *n_prts_b
 	}
       }
     }
-    cmprts[p].set_particles(buf);
+    auto injector = cmprts[p].injector();
+    injector(buf);
   } 
 }
 
