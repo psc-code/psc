@@ -285,12 +285,18 @@ void cuda_mparticles<BS>::set_particles(uint p, F getter)
 
   uint off = h_off[p * this->n_blocks_per_patch];
   uint n_prts = h_off[(p+1) * this->n_blocks_per_patch] - off;
+
+  std::vector<particle_t> buf;
+  buf.reserve(n_prts);
+  for (int n = 0; n < n_prts; n++) {
+    buf.push_back(getter(n));
+  }
   
   thrust::host_vector<float4> xi4(n_prts);
   thrust::host_vector<float4> pxi4(n_prts);
 
   for (int n = 0; n < n_prts; n++) {
-    auto prt = getter(n);
+    auto prt = buf[n];
     this->checkInPatchMod(prt.x());
 
     xi4[n].x  = prt.x()[0];
