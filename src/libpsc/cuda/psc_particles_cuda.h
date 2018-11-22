@@ -62,18 +62,11 @@ struct InjectorBuffered
   {
     Patch(InjectorBuffered& injector, int p)
       : injector_(injector), p_{p}, n_prts_{0} // FIXME, why (), {} does not work
-    {
-      assert(p_ == injector_.n_prts_by_patch_.size());
-    }
+    {}
     
     ~Patch()
     {
-      injector_.n_prts_by_patch_.push_back(n_prts_);
-      if (p_ == injector_.mprts_.n_patches() - 1) {
-	injector_.mprts_.inject(injector_.buf_, injector_.n_prts_by_patch_);
-	injector_.n_prts_by_patch_.clear();
-	injector_.buf_.clear();
-      }
+      injector_.n_prts_by_patch_[p_] += n_prts_;
     }
   
     void raw(const particle_t& prt)
@@ -104,14 +97,27 @@ struct InjectorBuffered
   };
   
   InjectorBuffered(Mparticles& mprts)
-    : mprts_{mprts}
+    : n_prts_by_patch_(mprts.n_patches()), last_patch_{0}, mprts_{mprts}
   {}
 
-  Patch operator[](int p) { return {*this, p}; }
+  ~InjectorBuffered()
+  {
+    assert(n_prts_by_patch_.size() == mprts_.n_patches());
+    mprts_.inject(buf_, n_prts_by_patch_);
+  }
+
+  Patch operator[](int p)
+  {
+    // ensure that we inject particles into patches in ascending order
+    assert(p >= last_patch_);
+    last_patch_ = p;
+    return {*this, p};
+  }
 
 private:
   std::vector<particle_t> buf_;
   std::vector<uint> n_prts_by_patch_;
+  uint last_patch_;
   Mparticles& mprts_;
 };
 

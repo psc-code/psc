@@ -47,16 +47,12 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
     // (ab)use kind to track particle more easily in the test
     {
       auto inj = cmprts.injector();
-      for (int p = 0; p < cmprts.n_patches(); ++p) {
-	auto injector = inj[p];
-	if (p == 0) { // patch 0
-	  injector(particle_inject{{ .5,  35., 5.}, {}, 0., 0});
-	  injector(particle_inject{{ .5, 155., 5.}, {}, 0., 1});
-	} else if (p == 1) { // patch 1
-	  injector(particle_inject{{ .5, 195., 5.}, {}, 0., 2});
-	  injector(particle_inject{{ .5, 315., 5.}, {}, 0., 3});
-	}
-      }
+      // patch 0
+      inj[0](particle_inject{{ .5,  35., 5.}, {}, 0., 0});
+      inj[0](particle_inject{{ .5, 155., 5.}, {}, 0., 1});
+      // patch 1
+      inj[1](particle_inject{{ .5, 195., 5.}, {}, 0., 2});
+      inj[1](particle_inject{{ .5, 315., 5.}, {}, 0., 3});
     }
 
     // move every particle one full cell to the right (+y, that is)
