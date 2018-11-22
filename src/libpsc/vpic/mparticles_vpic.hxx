@@ -82,6 +82,7 @@ struct MparticlesVpic_ : MparticlesBase
       
       Real3 u()  const { return {prt().ux, prt().uy, prt().uz}; }
       real_t w() const { return prt().w * sp_->grid()->dV; }
+      real_t qni_wni() const { return w() * sp_->q; }
       int kind() const { return sp_->id; }
 
       Double3 position() const
