@@ -25,10 +25,8 @@ using MparticlesTestTypes = ::testing::Types<Config<MparticlesSingle>
 					    ,Config<MparticlesDouble>
 					    ,Config<MparticlesVpic>
 #ifdef USE_CUDA
-					     // FIXME, ugliness, cuda doen't work on the usual grid,
-					     // but the 2 patch YZ grid breaks vpic init,
-					     // which we aren't even using in this test...
 					    ,Config<MparticlesCuda<BS144>, MakeTestGridYZ1>
+					    ,Config<MparticlesCuda<BS144>, MakeTestGridYZ>
 #endif
 					     >;
 
@@ -132,9 +130,9 @@ TYPED_TEST(MparticlesTest, Inject)
 }
 
 // ----------------------------------------------------------------------
-// setParticles
+// Injector
 
-TYPED_TEST(MparticlesTest, setParticles)
+TYPED_TEST(MparticlesTest, Injector)
 {
   const int n_prts = 4;
 
