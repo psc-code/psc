@@ -6,6 +6,9 @@
 #include "bnd_cuda_impl.hxx"
 #include "cuda_moments.cuh"
 
+template<typename BS>
+struct cuda_mparticles;
+
 // ======================================================================
 // Moment_rho_1st_nc_cuda
 

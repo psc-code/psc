@@ -3,6 +3,7 @@
 
 #include "psc_bits.h"
 #include "cuda_bits.h"
+#include "bs.hxx"
 
 // ======================================================================
 // cuda_mparticles_base

@@ -46,6 +46,9 @@ void cuda_push_fields_H_xyz(struct cuda_mfields *cmflds, float dt);
 // cuda_moments
 
 template<typename BS>
+struct cuda_mparticles;
+
+template<typename BS>
 void cuda_moments_yz_rho_1st_nc(cuda_mparticles<BS>* cmprts, struct cuda_mfields *cmres);
 
 template<typename BS>

@@ -2,6 +2,7 @@
 #include "cuda_mparticles.cuh"
 #include "cuda_mfields.h"
 #include "cuda_moments.cuh"
+#include "bs.hxx"
 
 #define THREADS_PER_BLOCK (512)
 

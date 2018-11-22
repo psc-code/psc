@@ -3,6 +3,7 @@
 #include "cuda_bits.h"
 
 #include "psc_bits.h"
+#include "bs.hxx"
 
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>

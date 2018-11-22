@@ -1,5 +1,5 @@
 
-#include "psc_particles_cuda.h"
+#include "mparticles_cuda.hxx"
 #include "psc_fields_cuda.h"
 #include "cuda_iface.h"
 

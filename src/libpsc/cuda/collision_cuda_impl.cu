@@ -2,6 +2,7 @@
 #include "collision_cuda_impl.hxx"
 
 #include "cuda_collision.cuh"
+#include "mparticles_cuda.hxx"
 
 // ======================================================================
 // CollisionCuda

@@ -11,7 +11,7 @@
 #include "../libpsc/vpic/PscParticlesBase.h"
 #include "../libpsc/vpic/vpic_config.h"
 #ifdef USE_CUDA
-#include "../libpsc/cuda/psc_particles_cuda.h"
+#include "../libpsc/cuda/mparticles_cuda.hxx"
 #endif
 
 template<typename _Mparticles, typename _MakeGrid = MakeTestGrid1>

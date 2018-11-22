@@ -4,6 +4,7 @@
 
 #include "grid.hxx"
 #include "psc_particles_cuda.h"
+#include "particle_cuda.hxx"
 #include "range.hxx"
 #include "dim.hxx"
 

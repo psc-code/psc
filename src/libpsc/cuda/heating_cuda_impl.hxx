@@ -2,7 +2,7 @@
 #pragma once
 
 #include "heating.hxx"
-#include "psc_particles_cuda.h"
+#include "mparticles_cuda.hxx"
 #include "psc_fields_cuda.h"
 
 // ======================================================================

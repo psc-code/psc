@@ -3,6 +3,7 @@
 
 #include "psc_config.h"
 #include "test_common.hxx"
+#include "../libpsc/cuda/mparticles_cuda.hxx"
 #include "mpi.h"
 
 // FIXME, the general tests should be moved -> test_mparticles,

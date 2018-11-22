@@ -3,6 +3,7 @@
 #include "cuda_mparticles_sort.cuh"
 #include "cuda_collision.cuh"
 #include "cuda_test.hxx"
+#include "bs.hxx"
 
 #include <stdio.h>
 #include <stdlib.h>

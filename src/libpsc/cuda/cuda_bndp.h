@@ -4,7 +4,7 @@
 
 #include "cuda_mparticles_indexer.h"
 #include "cuda_mparticles.cuh"
-#include "psc_particles_cuda.h"
+#include "mparticles_cuda.hxx"
 #include "ddc_particles.hxx"
 #include "cuda_bits.h"
 
