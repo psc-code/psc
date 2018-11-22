@@ -63,7 +63,7 @@ struct ConstPatchCuda_
 	
       const_iterator& operator++() { n_++; return *this; }
       const_iterator operator++(int) { auto retval = *this; ++(*this); return retval; }
-      const_accessor operator*() { return {patch_.get_particle(n_), patch_}; }
+      const_accessor operator*() { return {patch_.mprts_.get_particle(patch_.p_, n_), patch_}; }
 	
     private:
       const ConstPatchCuda_ patch_;
@@ -88,13 +88,6 @@ struct ConstPatchCuda_
   const_accessor_range get() const { return {*this}; }
 
   const Grid_t& grid() const { return mprts_.grid(); }
-
-  particle_t get_particle(int n) const
-  {
-    uint off = mprts_.start(p_);
-    auto cprts = mprts_.get_particles(off + n, off + n + 1);
-    return cprts[0];
-  }
 
   uint size() const
   {
@@ -157,6 +150,8 @@ struct MparticlesCuda : MparticlesBase
 
   std::vector<particle_t> get_particles(int beg, int end) const;
 
+  particle_t get_particle(int p, int n) const;
+  
   void define_species(const char *name, double q, double m,
 		      double max_local_np, double max_local_nm,
 		      double sort_interval, double sort_out_of_place)

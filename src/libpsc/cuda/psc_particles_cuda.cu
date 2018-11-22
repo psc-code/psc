@@ -78,6 +78,14 @@ uint MparticlesCuda<BS>::start(int p) const
 }
 
 template<typename BS>
+typename MparticlesCuda<BS>::particle_t MparticlesCuda<BS>::get_particle(int p, int n) const
+{
+  auto off = start(p);
+  auto cprts = get_particles(off + n, off + n + 1);
+  return cprts[0];
+}
+
+template<typename BS>
 void MparticlesCuda<BS>::dump(const std::string& filename)
 {
   cmprts_->dump(filename);
