@@ -6,6 +6,21 @@
 
 #include <iterator>
 
+template<typename Mparticles>
+struct InjectorSimple
+{
+  using Patch = typename Mparticles::Patch;
+  
+  InjectorSimple(Mparticles& mprts)
+    : mprts_{mprts}
+  {}
+
+  typename Mparticles::Patch::Injector operator[](int p) const { return mprts_[p].injector(); }
+
+private:
+  Mparticles& mprts_;
+};
+
 // ======================================================================
 // Particle positions in cell / patch
 
@@ -166,9 +181,9 @@ struct mparticles_patch
   using iterator = typename buf_t::iterator;
   using const_iterator = typename buf_t::const_iterator;
 
-  struct injector
+  struct Injector
   {
-    injector(mparticles_patch& patch)
+    Injector(mparticles_patch& patch)
       : patch_{patch}
     {}
 
@@ -251,7 +266,7 @@ struct mparticles_patch
       grid_(&mprts->grid())
   {}
 
-  injector injector() { return {*this}; }
+  Injector injector() { return {*this}; }
   const_accessor_range get() { return {*this}; }
 
   particle_t& operator[](int n) { return buf[n]; }
@@ -410,6 +425,8 @@ struct Mparticles : MparticlesBase
     }
     return n_prts;
   }
+
+  InjectorSimple<Mparticles> injector() { return {*this}; }
   
   void check() const
   {
