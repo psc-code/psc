@@ -57,9 +57,10 @@ struct MparticlesCuda : MparticlesBase
 
   CudaMparticles* cmprts() { return cmprts_; }
 
-  struct Patch : PatchCuda<MparticlesCuda>
+  template<typename Mparticles>
+  struct ConstPatchCuda_ : PatchCuda<Mparticles>
   {
-    using Base = PatchCuda<MparticlesCuda>;
+    using Base = PatchCuda<Mparticles>;
 
     using Base::Base;
     using Base::mprts_;
@@ -70,7 +71,7 @@ struct MparticlesCuda : MparticlesBase
     {
       using Double3 = Vec3<double>;
       
-      const_accessor(const particle_t& prt, const Patch& prts)
+      const_accessor(const particle_t& prt, const ConstPatchCuda_& prts)
 	: prt_{prt}, prts_{prts}
       {}
 
@@ -89,7 +90,7 @@ struct MparticlesCuda : MparticlesBase
     
     private:
       particle_t prt_;
-      const Patch prts_;
+      const ConstPatchCuda_ prts_;
     };
   
     struct const_accessor_range
@@ -101,7 +102,7 @@ struct MparticlesCuda : MparticlesBase
 					    const_accessor&> // reference type
       
       {
-	const_iterator(const Patch& prts, uint n)
+	const_iterator(const ConstPatchCuda_& prts, uint n)
 	  : prts_{prts}, n_{n}
 	{}
 	
@@ -113,11 +114,11 @@ struct MparticlesCuda : MparticlesBase
 	const_accessor operator*() { return {prts_.get_particle(n_), prts_}; }
 	
       private:
-	const Patch prts_;
+	const ConstPatchCuda_ prts_;
 	uint n_;
       };
     
-      const_accessor_range(const Patch& prts)
+      const_accessor_range(const ConstPatchCuda_& prts)
 	: prts_(prts)
       {}
 
@@ -125,7 +126,7 @@ struct MparticlesCuda : MparticlesBase
       const_iterator end()   const { return {prts_, prts_.size()}; };
       
     private:
-      const Patch prts_;
+      const ConstPatchCuda_ prts_;
     };
 
     const ParticleIndexer<real_t>& particleIndexer() const { return mprts_.pi_; }
@@ -146,6 +147,8 @@ struct MparticlesCuda : MparticlesBase
 
     const_accessor_range get() const { return {*this}; }
   };
+
+  using Patch = ConstPatchCuda_<MparticlesCuda>;
 
   Patch operator[](int p) { return {*this, p}; }
   InjectorBuffered<MparticlesCuda> injector() { return {*this}; }
