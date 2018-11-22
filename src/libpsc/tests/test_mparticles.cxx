@@ -130,6 +130,67 @@ TYPED_TEST(MparticlesTest, Inject)
   this->inject_test_particles(mprts, n_prts);
 }
 
+// -----------------------------------------------------------------------
+// Inject2
+
+TYPED_TEST(MparticlesTest, Inject2)
+{
+  using Mparticles = typename TypeParam::Mparticles;
+  const int n_prts = 1;
+  
+  auto mprts = this->mk_mprts();
+
+  // FIXME, kinda the cheap way out
+  if (mprts.n_patches() != 4) {
+    return;
+  }
+  ASSERT_EQ(mprts.n_patches(), 4);
+
+  int nn = 0;
+  {
+    auto inj = mprts.injector();
+    for (int p = 0; p < mprts.n_patches(); ++p) {
+      auto injector = inj[p];
+      auto& patch = mprts.grid().patches[p];
+      for (int n = 0; n < n_prts; n++) {
+	particle_inject prt = {};
+	auto x = .5 * (patch.xb + patch.xe);
+	int kind = 0;
+	// use weight to store particle number for testing
+	injector({{x[0], x[1], x[2]}, {}, double(nn), kind});
+	nn++;
+      }
+    }
+  }
+  
+  EXPECT_EQ(mprts.get_n_prts(), 4);
+  
+  std::vector<uint> n_prts_by_patch(mprts.n_patches());
+  mprts.get_size_all(n_prts_by_patch.data());
+  EXPECT_EQ(n_prts_by_patch, std::vector<uint>({n_prts, n_prts, n_prts, n_prts}));
+
+  nn = 0;
+  for (int p = 0; p < mprts.n_patches(); ++p) {
+    auto& patch = mprts.grid().patches[p];
+    for (auto prt: mprts[p].get()) {
+      // xm is patch-relative position
+      auto xm = .5 * (patch.xe - patch.xb);
+      EXPECT_EQ(prt.x()[0], xm[0]);
+      EXPECT_EQ(prt.x()[1], xm[1]);
+      EXPECT_EQ(prt.x()[2], xm[2]);
+      EXPECT_EQ(prt.qni_wni(), nn);
+      EXPECT_EQ(prt.w(), nn);
+      EXPECT_EQ(prt.kind(), 0);
+
+      auto x = .5 * (patch.xb + patch.xe);
+      EXPECT_EQ(prt.position()[0], x[0]);
+      EXPECT_EQ(prt.position()[1], x[1]);
+      EXPECT_EQ(prt.position()[2], x[2]);
+      nn++;
+    }
+  }
+}
+
 // ----------------------------------------------------------------------
 // Injector
 
