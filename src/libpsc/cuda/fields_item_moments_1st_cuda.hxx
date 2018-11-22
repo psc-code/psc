@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include "psc_particles_cuda.h"
 #include "fields_item.hxx"
 #include "bnd_cuda_impl.hxx"
 #include "cuda_moments.cuh"

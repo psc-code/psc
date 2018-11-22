@@ -13,7 +13,6 @@
 
 #include "psc_particles_single.h"
 #include "psc_particles_double.h"
-#include "../libpsc/cuda/psc_particles_cuda.h"
 
 void MparticlesBase::convert(MparticlesBase& mp_from, MparticlesBase& mp_to)
 {

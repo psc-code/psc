@@ -2,7 +2,6 @@
 #pragma once
 
 #include "bnd_particles_impl.hxx"
-#include "psc_particles_cuda.h"
 
 template<typename CudaMparticles, typename DIM>
 struct cuda_bndp;

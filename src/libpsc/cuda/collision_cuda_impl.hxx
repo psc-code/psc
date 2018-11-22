@@ -2,7 +2,6 @@
 #pragma once
 
 #include "collision.hxx"
-#include "psc_particles_cuda.h"
 
 template<typename cuda_mparticles, typename RngState>
 struct CudaCollision;

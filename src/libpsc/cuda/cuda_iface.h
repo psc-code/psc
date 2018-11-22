@@ -5,8 +5,6 @@
 #include "mrc_json.h"
 #include "psc_fields_single.h"
 
-#include "psc_particles_cuda.h"
-#include <particles_simple.hxx> // FIXME?
 #include <grid.hxx>
 
 #if 0

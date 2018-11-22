@@ -10,7 +10,6 @@
 // and the real cuda ones to test_cuda_mparticle?
 
 #ifdef USE_CUDA
-#include "../libpsc/cuda/psc_particles_cuda.h"
 #include "psc_particles_single.h"
 
 template<typename _Mparticles, typename _MakeGrid = MakeTestGrid1>
