@@ -1,5 +1,4 @@
 
-#include "cuda_mparticles.cuh"
 #include "cuda_mfields.h"
 #include "cuda_bits.h"
 

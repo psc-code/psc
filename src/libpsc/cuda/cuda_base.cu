@@ -1,6 +1,4 @@
 
-#include "cuda_mparticles.cuh"
-
 #include <cstdio>
 
 void
