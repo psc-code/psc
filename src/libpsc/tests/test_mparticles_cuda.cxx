@@ -53,14 +53,6 @@ private:
 };
 
 // -----------------------------------------------------------------------
-// Constructor
-
-TYPED_TEST(MparticlesCudaTest, Constructor)
-{
-  auto mprts = this->mk_mprts();
-}
-
-// -----------------------------------------------------------------------
 // Inject
 
 TYPED_TEST(MparticlesCudaTest, Inject)
