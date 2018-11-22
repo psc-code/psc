@@ -154,14 +154,31 @@ struct ConstPatchCuda
   using Mparticles = _Mparticles;
   using particle_t = typename Mparticles::particle_t;
 
+  struct const_accessor_range
+  {
+    using const_iterator = typename std::vector<particle_t>::const_iterator;
+    
+    const_accessor_range(const Mparticles& mprts, int p)
+      : mprts_{mprts}, p_{p}, data_{const_cast<Mparticles&>(mprts_).get_particles(p_)}
+    // FIXME, const hacking around reorder may change state...
+    {}
+
+    const_iterator begin() const { return data_.begin(); }
+    const_iterator end()   const { return data_.end();   }
+    
+  private:
+    const Mparticles& mprts_;
+    int p_;
+    const std::vector<particle_t> data_;
+  };
+
   ConstPatchCuda(const Mparticles& mprts, int p)
     : mprts_{mprts}, p_(p)
   {}
   
-  std::vector<particle_t> get()
+  const_accessor_range get()
   {
-    // FIXME, hack around reorder may change state...
-    return const_cast<Mparticles&>(mprts_).get_particles(p_);
+    return {mprts_, p_};
   }
   
 private:
