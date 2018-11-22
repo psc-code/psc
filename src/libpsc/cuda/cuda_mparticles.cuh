@@ -165,10 +165,7 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
 
   cuda_mparticles(const Grid_t& grid);
 
-  friend struct InjectorBuffered<cuda_mparticles>;
-  
   InjectorBuffered<cuda_mparticles> injector() { return {*this}; }
-
 
   uint get_n_prts();
   void inject(const std::vector<particle_t>& buf, const std::vector<uint>& buf_n_by_patch);
@@ -211,10 +208,6 @@ public:
   std::vector<Real3> xb_by_patch; // lower left corner for each patch
 
   bool need_reorder = { false };            // particles haven't yet been put into their sorted order
-
-private:
-  std::vector<particle_t> injector_buf_;
-  std::vector<uint> injector_n_prts_by_patch_;
 };
 
 template<typename BS_>

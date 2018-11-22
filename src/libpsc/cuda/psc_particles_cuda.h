@@ -63,22 +63,22 @@ struct InjectorBuffered
     Patch(InjectorBuffered& injector, int p)
       : injector_(injector), p_{p}, n_prts_{0} // FIXME, why (), {} does not work
     {
-      assert(p_ == injector_.mprts_.injector_n_prts_by_patch_.size());
+      assert(p_ == injector_.n_prts_by_patch_.size());
     }
     
     ~Patch()
     {
-      injector_.mprts_.injector_n_prts_by_patch_.push_back(n_prts_);
+      injector_.n_prts_by_patch_.push_back(n_prts_);
       if (p_ == injector_.mprts_.n_patches() - 1) {
-	injector_.mprts_.inject(injector_.mprts_.injector_buf_, injector_.mprts_.injector_n_prts_by_patch_);
-	injector_.mprts_.injector_n_prts_by_patch_.clear();
-	injector_.mprts_.injector_buf_.clear();
+	injector_.mprts_.inject(injector_.buf_, injector_.n_prts_by_patch_);
+	injector_.n_prts_by_patch_.clear();
+	injector_.buf_.clear();
       }
     }
   
     void raw(const particle_t& prt)
     {
-      injector_.mprts_.injector_buf_.push_back(prt);
+      injector_.buf_.push_back(prt);
       n_prts_++;
     }
     
@@ -93,8 +93,7 @@ struct InjectorBuffered
     // FIXME do we want to keep this? or just have a particle_inject version instead?
     void raw(const std::vector<particle_t>& buf)
     {
-      auto& injector_buf = injector_.mprts_.injector_buf_;
-      injector_buf.insert(injector_buf.end(), buf.begin(), buf.end());
+      injector_.buf_.insert(injector_.buf_.end(), buf.begin(), buf.end());
       n_prts_ += buf.size();
     }
     
@@ -111,6 +110,8 @@ struct InjectorBuffered
   Patch operator[](int p) { return {*this, p}; }
 
 private:
+  std::vector<particle_t> buf_;
+  std::vector<uint> n_prts_by_patch_;
   Mparticles& mprts_;
 };
 
@@ -249,17 +250,12 @@ struct MparticlesCuda : MparticlesBase
     const_accessor_range get() const { return {*this}; }
   };
 
-  friend struct InjectorBuffered<MparticlesCuda>;
-  
   Patch operator[](int p) { return {*this, p}; }
   InjectorBuffered<MparticlesCuda> injector() { return {*this}; }
 
 private:
   CudaMparticles* cmprts_;
   ParticleIndexer<real_t> pi_;
-
-  std::vector<uint> injector_n_prts_by_patch_;
-  std::vector<particle_t> injector_buf_;
 };
 
 template<>
