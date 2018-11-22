@@ -9,13 +9,27 @@
 template<typename Mparticles>
 struct InjectorSimple
 {
-  using Patch = typename Mparticles::Patch;
+  struct Patch
+  {
+    Patch(Mparticles& mprts, int p)
+      : mprts_{mprts}, p_{p}
+    {}
+    
+    void operator()(const particle_inject& new_prt)
+    {
+      mprts_[p_].inject(new_prt);
+    }
+    
+  private:
+    Mparticles& mprts_;
+    int p_;
+  };
   
   InjectorSimple(Mparticles& mprts)
     : mprts_{mprts}
   {}
 
-  typename Mparticles::Patch::Injector operator[](int p) const { return mprts_[p].injector(); }
+  Patch operator[](int p) const { return {mprts_, p}; }
 
 private:
   Mparticles& mprts_;
@@ -285,7 +299,6 @@ struct mparticles_patch
     buf.push_back(prt);
   }
 
-private:
   void inject(const particle_inject& new_prt)
   {
     const Grid_t::Patch& patch = grid().patches[p_];
