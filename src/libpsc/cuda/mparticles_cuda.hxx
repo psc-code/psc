@@ -89,8 +89,6 @@ struct ConstPatchCuda_
 
   const Grid_t& grid() const { return mprts_.grid(); }
 
-  const ParticleIndexer<real_t>& particleIndexer() const { return mprts_.pi_; }
-
   particle_t get_particle(int n) const
   {
     uint off = mprts_.start(p_);
@@ -134,6 +132,11 @@ struct MparticlesCuda : MparticlesBase
   {
     using Base = ConstPatchCuda_<MparticlesCuda>;
     using Base::Base;
+    using Base::mprts_;
+    using Base::p_;
+    using Base::grid;
+
+    const ParticleIndexer<real_t>& particleIndexer() const { return mprts_.pi_; }
   };
 
   MparticlesCuda(const Grid_t& grid);
@@ -170,7 +173,6 @@ struct MparticlesCuda : MparticlesBase
 
 private:
   CudaMparticles* cmprts_;
-public: // FIXME
   ParticleIndexer<real_t> pi_;
 };
 
