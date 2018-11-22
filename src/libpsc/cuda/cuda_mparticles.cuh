@@ -175,6 +175,8 @@ struct ConstPatchCuda
       
       return patch.xb + Double3(prt_.x());
     }
+
+    operator const particle_t& () const { return prt_; }
     
   private:
     const particle_t& prt_;

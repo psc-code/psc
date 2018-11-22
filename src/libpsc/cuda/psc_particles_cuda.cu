@@ -175,13 +175,14 @@ static void copy_to(MparticlesCuda& mp, MP& mp_other)
   mp_other.reserve_all(n_prts_by_patch);
   mp_other.resize_all(n_prts_by_patch);
 
-  if (mp.cmprts()->need_reorder) {
-    mp.cmprts()->reorder();
+  auto& cmprts = *mp.cmprts();
+  if (cmprts.need_reorder) {
+    cmprts.reorder();
   }
   for (int p = 0; p < n_patches; p++) {
     ConvertFromCuda<MP> convert_from_cuda(mp_other, p);
     int n = 0;
-    for (auto prt: mp.cmprts()->get_particles(p)) {
+    for (auto prt: cmprts[p].get()) {
       convert_from_cuda(n, prt);
       n++;
     }
