@@ -71,13 +71,6 @@ std::vector<typename MparticlesCuda<BS>::particle_t> MparticlesCuda<BS>::get_par
 }
 
 template<typename BS>
-std::vector<typename MparticlesCuda<BS>::particle_t> MparticlesCuda<BS>::get_particles(int p) const
-{
-  dprintf("CMPRTS: get_particles\n");
-  return cmprts_->get_particles(p);
-}
-
-template<typename BS>
 uint MparticlesCuda<BS>::start(int p) const
 {
   dprintf("CMPRTS: start\n");

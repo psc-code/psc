@@ -155,7 +155,6 @@ struct MparticlesCuda : MparticlesBase
   // mostly for debugging (?)
 
   std::vector<particle_t> get_particles(int beg, int end) const;
-  std::vector<particle_t> get_particles(int p) const;
 
   void define_species(const char *name, double q, double m,
 		      double max_local_np, double max_local_nm,
@@ -184,9 +183,11 @@ struct MparticlesCuda : MparticlesBase
       const_accessor(const particle_t& prt, const Patch& prts)
 	: prt_{prt}, prts_{prts}
       {}
-      
+
+      Real3 x()   const { return prt_.x(); }
       Real3 u()   const { return prt_.u(); }
       real_t w()  const { return prt_.qni_wni() / prts_.grid().kinds[prt_.kind()].q; }
+      real_t qni_wni() const { return prt_.qni_wni(); }
       int kind()  const { return prt_.kind(); }
       
       Double3 position() const

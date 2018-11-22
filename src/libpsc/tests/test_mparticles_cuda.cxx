@@ -99,7 +99,7 @@ TYPED_TEST(MparticlesCudaTest, Inject)
   nn = 0;
   for (int p = 0; p < mprts.n_patches(); ++p) {
     auto& patch = mprts.grid().patches[p];
-    for (auto prt: mprts.get_particles(p)) {
+    for (auto prt: mprts[0].get()) {
       // xm is patch-relative position
       auto xm = .5 * (patch.xe - patch.xb);
       EXPECT_EQ(prt.x()[0], xm[0]);

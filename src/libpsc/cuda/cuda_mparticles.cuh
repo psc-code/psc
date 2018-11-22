@@ -167,6 +167,7 @@ struct ConstPatchCuda
     Real3 x()   const { return prt_.x(); }
     Real3 u()   const { return prt_.u(); }
     real_t w()  const { return prt_.qni_wni() / patch_.grid().kinds[prt_.kind()].q; }
+    real_t qni_wni() const { return prt_.qni_wni(); }
     int kind()  const { return prt_.kind(); }
     
     Double3 position() const
