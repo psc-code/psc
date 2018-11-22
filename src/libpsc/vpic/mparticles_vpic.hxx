@@ -85,7 +85,9 @@ struct MparticlesVpic_ : MparticlesBase
       real_t qni_wni() const { return w() * sp_->q; }
       int kind() const { return sp_->id; }
 
-      Double3 position() const
+      Real3 x() const { return Real3(x_double()); }
+	
+      Double3 x_double()  const
       {
 	const Grid* vgrid = sp_->grid();
 	double x0 = vgrid->x0, y0 = vgrid->y0, z0 = vgrid->z0;
@@ -106,9 +108,17 @@ struct MparticlesVpic_ : MparticlesBase
 	Double3 x = { ix + .5*(prt().dx+1.),
 		      iy + .5*(prt().dy+1.),
 		      iz + .5*(prt().dz+1.) };
-	x = Double3{x0, y0, z0} + (Double3{x1, y1, z1} - Double3{x0, y0, z0}) / Double3{nx, ny, nz} * x;
-      
+	x *= (Double3{x1, y1, z1} - Double3{x0, y0, z0}) / Double3{nx, ny, nz};
+
 	return x;
+      }
+      
+      Double3 position() const
+      {
+	const Grid* vgrid = sp_->grid();
+	double x0 = vgrid->x0, y0 = vgrid->y0, z0 = vgrid->z0;
+
+	return Double3(x_double()) + Double3{x0, y0, z0};
       }
     
     private:
