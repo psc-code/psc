@@ -18,11 +18,35 @@ struct vpic_mparticles_prt
 template<typename Mparticles>
 struct InjectorVpic
 {
+  struct Patch
+  {
+    Patch(Mparticles& mprts)
+      : mprts_{mprts}
+    {}
+
+    void operator()(const particle_inject& prt)
+    {
+      auto vgrid = mprts_.vmprts().grid();
+      float dVi = 1.f / (vgrid->dx * vgrid->dy * vgrid->dz);
+      particle_inject prt_reweighted = prt;
+      prt_reweighted.w *= dVi;
+      reweight(prt);
+    }
+    
+    void reweight(const particle_inject& prt)
+    {
+      mprts_.vmprts().inject_particle(mprts_.vmprts(), prt); // FIXME why pass vmprts?
+    }
+
+  private:
+    Mparticles& mprts_;
+  };
+  
   InjectorVpic(Mparticles& mprts)
     : mprts_{mprts}
   {}
-
-  typename Mparticles::Patch::Injector operator[](int p) const { return mprts_[p].injector(); }
+  
+  Patch operator[](int p) const { return {mprts_}; }
 
 private:
   Mparticles& mprts_;
@@ -50,21 +74,6 @@ struct MparticlesVpic_ : MparticlesBase
     using Real3 = Vec3<real_t>;
     using Double3 = Vec3<double>;
     
-    struct Injector
-    {
-      Injector(const Patch& patch)
-	: patch_{patch}
-      {}
-      
-      void operator()(const particle_inject& new_prt)
-      {
-	patch_.inject(new_prt);
-      }
-      
-    private:
-      Patch patch_;
-    };
-
     struct const_accessor
     {
       const_accessor(const typename Particles::const_iterator sp, uint n)
@@ -160,24 +169,8 @@ struct MparticlesVpic_ : MparticlesBase
     
     uint size() const { return mprts_.get_n_prts(); }
 
-    Injector injector() { return {*this}; }
     const_accessor_range get() const { return {*this}; }
 
-    void inject_reweight(const particle_inject& prt)
-    {
-      mprts_.vmprts_.inject_particle(mprts_.vmprts_, prt); // FIXME why pass vmprts?
-    }
-
-  private:
-    void inject(const particle_inject& prt)
-    {
-      particle_inject prt_reweighted = prt;
-      auto vgrid = mprts_.vmprts_.grid();
-      float dVi = 1.f / (vgrid->dx * vgrid->dy * vgrid->dz);
-      prt_reweighted.w *= dVi;
-      inject_reweight(prt_reweighted);
-    }
-    
   private:
     MparticlesVpic_& mprts_;
   };
@@ -281,6 +274,11 @@ struct MparticlesVpic_ : MparticlesBase
     assert(0);
   }
   
+  void inject_reweight(const particle_inject& prt)
+  {
+    vmprts_.inject_particle(vmprts_, prt); // FIXME why pass vmprts?
+  }
+
   Patch operator[](int p) { assert(p == 0); return Patch{*this}; }
 
   InjectorVpic<MparticlesVpic_> injector() { return {*this}; }

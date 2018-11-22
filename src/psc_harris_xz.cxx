@@ -625,6 +625,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     mpi_printf(comm, "-> Main Harris Sheet\n");
 
+    {
+    auto inj = mprts_->injector();
+    auto injector = inj[0];
     for (int64_t n = 0; n < Ne_sheet / n_global_patches; n++) {
       double x, y, z, ux, uy, uz, d0;
 
@@ -650,7 +653,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       prt.u[0] = ux; prt.u[1] = uy; prt.u[2] = uz;
       prt.w = weight_s;
       prt.kind = KIND_ELECTRON;
-      (*mprts_)[0].inject_reweight(prt);
+      injector.reweight(prt);
 
       ux = Rng_normal(rng, 0, vthi);
       uy = Rng_normal(rng, 0, vthi);
@@ -661,7 +664,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
       prt.u[0] = ux; prt.u[1] = uy; prt.u[2] = uz;
       prt.kind = KIND_ION;
-      (*mprts_)[0].inject_reweight(prt);
+      injector.reweight(prt);
     }
 
     mpi_printf(comm, "-> Background Population\n");
@@ -678,18 +681,19 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       prt.u[2] = Rng_normal(rng, 0, vtheb);
       prt.w = weight_b;
       prt.kind = KIND_ELECTRON;
-      (*mprts_)[0].inject_reweight(prt);
+      injector.reweight(prt);
     
       prt.u[0] = Rng_normal(rng, 0, vthib);
       prt.u[1] = Rng_normal(rng, 0, vthib);
       prt.u[2] = Rng_normal(rng, 0, vthib);
       prt.kind = KIND_ION;
-      (*mprts_)[0].inject_reweight(prt);
+      injector.reweight(prt);
     }
-
+    }
+    
     mpi_printf(comm, "Finished loading particles\n");
   }
-
+  
   // ----------------------------------------------------------------------
   // setup_initial_fields
 
