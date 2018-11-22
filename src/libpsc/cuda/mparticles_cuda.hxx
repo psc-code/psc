@@ -8,6 +8,101 @@
 #include "injector_buffered.hxx"
 #include "bs.hxx"
 
+template<typename Mparticles>
+struct ConstPatchCuda_ : PatchCuda<Mparticles>
+{
+  using Base = PatchCuda<Mparticles>;
+  
+  using Base::Base;
+  using Base::mprts_;
+  using Base::p_;
+  using Base::grid;
+
+  using particle_t = typename Mparticles::particle_t;
+  using real_t = typename particle_t::real_t;
+  using Real3 = typename particle_t::Real3;
+    
+  struct const_accessor
+  {
+    using Double3 = Vec3<double>;
+      
+    const_accessor(const particle_t& prt, const ConstPatchCuda_& patch)
+      : prt_{prt}, patch_{patch}
+    {}
+
+    Real3 x()   const { return prt_.x(); }
+    Real3 u()   const { return prt_.u(); }
+    real_t w()  const { return prt_.qni_wni() / patch_.grid().kinds[prt_.kind()].q; }
+    real_t qni_wni() const { return prt_.qni_wni(); }
+    int kind()  const { return prt_.kind(); }
+      
+    Double3 position() const
+    {
+      auto& patch = patch_.grid().patches[patch_.p_];
+	
+      return patch.xb + Double3(prt_.x());
+    }
+    
+  private:
+    particle_t prt_;
+    const ConstPatchCuda_ patch_;
+  };
+  
+  struct const_accessor_range
+  {
+    struct const_iterator : std::iterator<std::random_access_iterator_tag,
+					  const_accessor,  // value type
+					  ptrdiff_t,       // difference type
+					  const_accessor*, // pointer type
+					  const_accessor&> // reference type
+      
+    {
+      const_iterator(const ConstPatchCuda_& patch, uint n)
+	: patch_{patch}, n_{n}
+      {}
+	
+      bool operator==(const_iterator other) const { return n_ == other.n_; }
+      bool operator!=(const_iterator other) const { return !(*this == other); }
+	
+      const_iterator& operator++() { n_++; return *this; }
+      const_iterator operator++(int) { auto retval = *this; ++(*this); return retval; }
+      const_accessor operator*() { return {patch_.get_particle(n_), patch_}; }
+	
+    private:
+      const ConstPatchCuda_ patch_;
+      uint n_;
+    };
+    
+    const_accessor_range(const ConstPatchCuda_& patch)
+      : patch_(patch)
+    {}
+
+    const_iterator begin() const { return {patch_, 0}; }
+    const_iterator end()   const { return {patch_, patch_.size()}; };
+      
+  private:
+    const ConstPatchCuda_ patch_;
+  };
+
+  const ParticleIndexer<real_t>& particleIndexer() const { return mprts_.pi_; }
+
+  particle_t get_particle(int n) const
+  {
+    uint off = mprts_.start(p_);
+    auto cprts = mprts_.get_particles(off + n, off + n + 1);
+    return cprts[0];
+  }
+
+  uint size() const
+  {
+    uint n_prts_by_patch[grid().n_patches()];
+    mprts_.get_size_all(n_prts_by_patch);
+    return n_prts_by_patch[p_];
+  }
+
+  const_accessor_range get() const { return {*this}; }
+};
+
 template<typename BS>
 struct cuda_mparticles;
 
@@ -57,97 +152,6 @@ struct MparticlesCuda : MparticlesBase
 
   CudaMparticles* cmprts() { return cmprts_; }
 
-  template<typename Mparticles>
-  struct ConstPatchCuda_ : PatchCuda<Mparticles>
-  {
-    using Base = PatchCuda<Mparticles>;
-
-    using Base::Base;
-    using Base::mprts_;
-    using Base::p_;
-    using Base::grid;
-    
-    struct const_accessor
-    {
-      using Double3 = Vec3<double>;
-      
-      const_accessor(const particle_t& prt, const ConstPatchCuda_& patch)
-	: prt_{prt}, patch_{patch}
-      {}
-
-      Real3 x()   const { return prt_.x(); }
-      Real3 u()   const { return prt_.u(); }
-      real_t w()  const { return prt_.qni_wni() / patch_.grid().kinds[prt_.kind()].q; }
-      real_t qni_wni() const { return prt_.qni_wni(); }
-      int kind()  const { return prt_.kind(); }
-      
-      Double3 position() const
-      {
-	auto& patch = patch_.grid().patches[patch_.p_];
-	
-	return patch.xb + Double3(prt_.x());
-      }
-    
-    private:
-      particle_t prt_;
-      const ConstPatchCuda_ patch_;
-    };
-  
-    struct const_accessor_range
-    {
-      struct const_iterator : std::iterator<std::random_access_iterator_tag,
-					    const_accessor,  // value type
-					    ptrdiff_t,       // difference type
-					    const_accessor*, // pointer type
-					    const_accessor&> // reference type
-      
-      {
-	const_iterator(const ConstPatchCuda_& patch, uint n)
-	  : patch_{patch}, n_{n}
-	{}
-	
-	bool operator==(const_iterator other) const { return n_ == other.n_; }
-	bool operator!=(const_iterator other) const { return !(*this == other); }
-	
-	const_iterator& operator++() { n_++; return *this; }
-	const_iterator operator++(int) { auto retval = *this; ++(*this); return retval; }
-	const_accessor operator*() { return {patch_.get_particle(n_), patch_}; }
-	
-      private:
-	const ConstPatchCuda_ patch_;
-	uint n_;
-      };
-    
-      const_accessor_range(const ConstPatchCuda_& patch)
-	: patch_(patch)
-      {}
-
-      const_iterator begin() const { return {patch_, 0}; }
-      const_iterator end()   const { return {patch_, patch_.size()}; };
-      
-    private:
-      const ConstPatchCuda_ patch_;
-    };
-
-    const ParticleIndexer<real_t>& particleIndexer() const { return mprts_.pi_; }
-
-    particle_t get_particle(int n) const
-    {
-      uint off = mprts_.start(p_);
-      auto cprts = mprts_.get_particles(off + n, off + n + 1);
-      return cprts[0];
-    }
-
-    uint size() const
-    {
-      uint n_prts_by_patch[grid().n_patches()];
-      mprts_.get_size_all(n_prts_by_patch);
-      return n_prts_by_patch[p_];
-    }
-
-    const_accessor_range get() const { return {*this}; }
-  };
-
   using Patch = ConstPatchCuda_<MparticlesCuda>;
 
   Patch operator[](int p) { return {*this, p}; }
@@ -155,6 +159,7 @@ struct MparticlesCuda : MparticlesBase
 
 private:
   CudaMparticles* cmprts_;
+public: // FIXME
   ParticleIndexer<real_t> pi_;
 };
 
