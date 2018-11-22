@@ -148,6 +148,27 @@ public:
   const Grid_t& grid_;
 };
 
+template<typename _Mparticles>
+struct ConstPatchCuda
+{
+  using Mparticles = _Mparticles;
+  using particle_t = typename Mparticles::particle_t;
+
+  ConstPatchCuda(const Mparticles& mprts, int p)
+    : mprts_{mprts}, p_(p)
+  {}
+  
+  std::vector<particle_t> get()
+  {
+    // FIXME, hack around reorder may change state...
+    return const_cast<Mparticles&>(mprts_).get_particles(p_);
+  }
+  
+private:
+  const Mparticles& mprts_;
+  int p_;
+};
+
 // ----------------------------------------------------------------------
 // cuda_mparticles
 
@@ -162,9 +183,11 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   using real_t = particle_t::real_t;
   using Real3 = Vec3<real_t>;
   using DMparticles = DMparticlesCuda<BS>;
+  using ConstPatch = ConstPatchCuda<cuda_mparticles>;
 
   cuda_mparticles(const Grid_t& grid);
 
+  ConstPatch operator[](int p) const { return {*this, p}; }
   InjectorBuffered<cuda_mparticles> injector() { return {*this}; }
 
   uint get_n_prts();

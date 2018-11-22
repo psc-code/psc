@@ -103,7 +103,7 @@ TEST_F(CudaMparticlesTest, SetParticles)
 
   // check that particles are in C order
   int n = 0;
-  for (auto prt: cmprts.get_particles(0)) {
+  for (auto prt: cmprts[0].get()) {
     int nn = n++;
     int k = nn % grid_->ldims[2]; nn /= grid_->ldims[2];
     int j = nn % grid_->ldims[1]; nn /= grid_->ldims[1];
