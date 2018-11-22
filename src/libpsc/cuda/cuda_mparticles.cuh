@@ -163,8 +163,6 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   using Real3 = Vec3<real_t>;
   using DMparticles = DMparticlesCuda<BS>;
 
-  friend struct InjectorCuda<cuda_mparticles>;
-
   cuda_mparticles(const Grid_t& grid);
 
   friend struct InjectorBuffered<cuda_mparticles>;
