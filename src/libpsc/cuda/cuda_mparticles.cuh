@@ -177,7 +177,7 @@ struct ConstPatchCuda
     }
     
   private:
-    particle_t prt_;
+    const particle_t& prt_;
     const ConstPatchCuda patch_;
   };
   
@@ -199,7 +199,7 @@ struct ConstPatchCuda
       
       const_iterator& operator++() { n_++; return *this; }
       const_iterator operator++(int) { auto retval = *this; ++(*this); return retval; }
-      const_accessor operator*() { return {range_.data_[n_], {range_.mprts_, range_.p_}}; }
+      const_accessor operator*() { return {range_.data_[n_], range_.patch_}; }
       
     private:
       const const_accessor_range range_;
@@ -207,7 +207,7 @@ struct ConstPatchCuda
     };
     
     const_accessor_range(const Mparticles& mprts, int p)
-      : mprts_{mprts}, p_{p}, data_{const_cast<Mparticles&>(mprts_).get_particles(p_)}
+      : patch_{mprts, p}, data_{const_cast<Mparticles&>(mprts).get_particles(p)}
     // FIXME, const hacking around reorder may change state...
     {}
 
@@ -215,8 +215,7 @@ struct ConstPatchCuda
     const_iterator end()   const { return {*this, uint(data_.size())}; }
     
   private:
-    const Mparticles& mprts_;
-    int p_;
+    const ConstPatchCuda patch_;
     const std::vector<particle_t> data_;
   };
 
