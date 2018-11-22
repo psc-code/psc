@@ -64,13 +64,6 @@ void MparticlesCuda<BS>::inject(const std::vector<particle_t>& buf, const std::v
 }
 
 template<typename BS>
-std::vector<typename MparticlesCuda<BS>::particle_t> MparticlesCuda<BS>::get_particles(int beg, int end) const
-{
-  dprintf("CMPRTS: get_particles\n");
-  return cmprts_->get_particles(beg, end);
-}
-
-template<typename BS>
 uint MparticlesCuda<BS>::start(int p) const
 {
   dprintf("CMPRTS: start\n");
@@ -80,8 +73,10 @@ uint MparticlesCuda<BS>::start(int p) const
 template<typename BS>
 typename MparticlesCuda<BS>::particle_t MparticlesCuda<BS>::get_particle(int p, int n) const
 {
+  dprintf("CMPRTS: get_particle\n");
+
   auto off = start(p);
-  auto cprts = get_particles(off + n, off + n + 1);
+  auto cprts = cmprts_->get_particles(off + n, off + n + 1);
   return cprts[0];
 }
 
