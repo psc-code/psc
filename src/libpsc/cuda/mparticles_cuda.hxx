@@ -130,6 +130,12 @@ struct MparticlesCuda : MparticlesBase
 
   using is_cuda = std::true_type;
   
+  struct Patch : ConstPatchCuda_<MparticlesCuda>
+  {
+    using Base = ConstPatchCuda_<MparticlesCuda>;
+    using Base::Base;
+  };
+
   MparticlesCuda(const Grid_t& grid);
   ~MparticlesCuda();
 
@@ -158,8 +164,6 @@ struct MparticlesCuda : MparticlesBase
   const Convert& convert_from() override { return convert_from_; }
 
   CudaMparticles* cmprts() { return cmprts_; }
-
-  using Patch = ConstPatchCuda_<MparticlesCuda>;
 
   Patch operator[](int p) { return {*this, p}; }
   InjectorBuffered<MparticlesCuda> injector() { return {*this}; }
