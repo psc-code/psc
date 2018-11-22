@@ -71,26 +71,26 @@ struct MparticlesCuda : MparticlesBase
     {
       using Double3 = Vec3<double>;
       
-      const_accessor(const particle_t& prt, const ConstPatchCuda_& prts)
-	: prt_{prt}, prts_{prts}
+      const_accessor(const particle_t& prt, const ConstPatchCuda_& patch)
+	: prt_{prt}, patch_{patch}
       {}
 
       Real3 x()   const { return prt_.x(); }
       Real3 u()   const { return prt_.u(); }
-      real_t w()  const { return prt_.qni_wni() / prts_.grid().kinds[prt_.kind()].q; }
+      real_t w()  const { return prt_.qni_wni() / patch_.grid().kinds[prt_.kind()].q; }
       real_t qni_wni() const { return prt_.qni_wni(); }
       int kind()  const { return prt_.kind(); }
       
       Double3 position() const
       {
-	auto& patch = prts_.grid().patches[prts_.p_];
+	auto& patch = patch_.grid().patches[patch_.p_];
 	
 	return patch.xb + Double3(prt_.x());
       }
     
     private:
       particle_t prt_;
-      const ConstPatchCuda_ prts_;
+      const ConstPatchCuda_ patch_;
     };
   
     struct const_accessor_range
@@ -102,8 +102,8 @@ struct MparticlesCuda : MparticlesBase
 					    const_accessor&> // reference type
       
       {
-	const_iterator(const ConstPatchCuda_& prts, uint n)
-	  : prts_{prts}, n_{n}
+	const_iterator(const ConstPatchCuda_& patch, uint n)
+	  : patch_{patch}, n_{n}
 	{}
 	
 	bool operator==(const_iterator other) const { return n_ == other.n_; }
@@ -111,22 +111,22 @@ struct MparticlesCuda : MparticlesBase
 	
 	const_iterator& operator++() { n_++; return *this; }
 	const_iterator operator++(int) { auto retval = *this; ++(*this); return retval; }
-	const_accessor operator*() { return {prts_.get_particle(n_), prts_}; }
+	const_accessor operator*() { return {patch_.get_particle(n_), patch_}; }
 	
       private:
-	const ConstPatchCuda_ prts_;
+	const ConstPatchCuda_ patch_;
 	uint n_;
       };
     
-      const_accessor_range(const ConstPatchCuda_& prts)
-	: prts_(prts)
+      const_accessor_range(const ConstPatchCuda_& patch)
+	: patch_(patch)
       {}
 
-      const_iterator begin() const { return {prts_, 0}; }
-      const_iterator end()   const { return {prts_, prts_.size()}; };
+      const_iterator begin() const { return {patch_, 0}; }
+      const_iterator end()   const { return {patch_, patch_.size()}; };
       
     private:
-      const ConstPatchCuda_ prts_;
+      const ConstPatchCuda_ patch_;
     };
 
     const ParticleIndexer<real_t>& particleIndexer() const { return mprts_.pi_; }
