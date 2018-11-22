@@ -30,7 +30,7 @@ struct InjectorVpic
       float dVi = 1.f / (vgrid->dx * vgrid->dy * vgrid->dz);
       particle_inject prt_reweighted = prt;
       prt_reweighted.w *= dVi;
-      reweight(prt);
+      reweight(prt_reweighted);
     }
     
     void reweight(const particle_inject& prt)
