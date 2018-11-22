@@ -60,21 +60,31 @@ struct InjectorBuffered
   
   struct Patch
   {
-    Patch(Mparticles& mprts, int p)
-      : mprts_{mprts}, p_{p}, n_prts_{0}
+    Patch(InjectorBuffered& injector, int p)
+      : injector_(injector), p_{p}, n_prts_{0} // FIXME, why (), {} does not work
     {
-      assert(p_ == mprts_.injector_n_prts_by_patch_.size());
+      assert(p_ == injector_.mprts_.injector_n_prts_by_patch_.size());
     }
     
+    ~Patch()
+    {
+      injector_.mprts_.injector_n_prts_by_patch_.push_back(n_prts_);
+      if (p_ == injector_.mprts_.n_patches() - 1) {
+	injector_.mprts_.inject(injector_.mprts_.injector_buf_, injector_.mprts_.injector_n_prts_by_patch_);
+	injector_.mprts_.injector_n_prts_by_patch_.clear();
+	injector_.mprts_.injector_buf_.clear();
+      }
+    }
+  
     void raw(const particle_t& prt)
     {
-      mprts_.injector_buf_.push_back(prt);
+      injector_.mprts_.injector_buf_.push_back(prt);
       n_prts_++;
     }
     
     void operator()(const particle_inject& new_prt)
     {
-      auto& patch = mprts_.grid().patches[p_];
+      auto& patch = injector_.mprts_.grid().patches[p_];
       auto x = Double3::fromPointer(new_prt.x) - patch.xb;
       auto u = Double3::fromPointer(new_prt.u);
       raw({Real3(x), Real3(u), real_t(new_prt.w), new_prt.kind});
@@ -83,24 +93,13 @@ struct InjectorBuffered
     // FIXME do we want to keep this? or just have a particle_inject version instead?
     void raw(const std::vector<particle_t>& buf)
     {
-      auto& injector_buf = mprts_.injector_buf_;
+      auto& injector_buf = injector_.mprts_.injector_buf_;
       injector_buf.insert(injector_buf.end(), buf.begin(), buf.end());
       n_prts_ += buf.size();
     }
-  
     
-    ~Patch()
-    {
-      mprts_.injector_n_prts_by_patch_.push_back(n_prts_);
-      if (p_ == mprts_.n_patches() - 1) {
-	mprts_.inject(mprts_.injector_buf_, mprts_.injector_n_prts_by_patch_);
-	mprts_.injector_n_prts_by_patch_.clear();
-	mprts_.injector_buf_.clear();
-      }
-    }
-  
   private:
-    Mparticles& mprts_;
+    InjectorBuffered& injector_;
     const int p_;
     uint n_prts_;
   };
@@ -109,7 +108,7 @@ struct InjectorBuffered
     : mprts_{mprts}
   {}
 
-  Patch operator[](int p) const { return {mprts_, p}; }
+  Patch operator[](int p) { return {*this, p}; }
 
 private:
   Mparticles& mprts_;
