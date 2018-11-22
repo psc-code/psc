@@ -5,7 +5,6 @@ add_library(psccuda
   psc_particles_cuda.cu
   cuda_mparticles_base.cu
   cuda_mparticles.cu
-  cuda_mparticles_iface.cu
 
   psc_fields_cuda.cxx
   cuda_mfields.cu
@@ -33,7 +32,6 @@ add_library(psccuda
 
   collision_cuda_impl.cu
 
-  psc_heating_cuda.cxx
   cuda_heating.cu
   )
 target_include_directories(psccuda
