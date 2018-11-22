@@ -138,7 +138,7 @@ TEST_F(PushMprtsTest, Accel)
   for (int n = 0; n < n_steps; n++) {
     CudaPushParticles_<CudaConfig1vbec3d<dim_yz, BS144>>::push_mprts(&cmprts, cmflds.get());
 
-    for (auto prt: cmprts.get_particles(0)) {
+    for (auto prt: cmprts[0].get()) {
       EXPECT_NEAR(prt.u()[0], 1*(n+1), eps);
       EXPECT_NEAR(prt.u()[1], 2*(n+1), eps);
       EXPECT_NEAR(prt.u()[2], 3*(n+1), eps);
@@ -196,7 +196,7 @@ TEST_F(PushMprtsTest, Cyclo)
     double uy = (sin(2*M_PI*(0.125*n_steps-(n+1))/(double)n_steps) /
 		 sin(2*M_PI*(0.125*n_steps)      /(double)n_steps));
     double uz = 1.;
-    for (auto prt: cmprts.get_particles(0)) {
+    for (auto prt: cmprts[0].get()) {
       EXPECT_NEAR(prt.u()[0], ux, eps);
       EXPECT_NEAR(prt.u()[1], uy, eps);
       EXPECT_NEAR(prt.u()[2], uz, eps);
