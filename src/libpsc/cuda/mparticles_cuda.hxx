@@ -141,14 +141,7 @@ struct MparticlesCuda : MparticlesBase
 
   void inject(const std::vector<particle_t>& buf, const std::vector<uint>& buf_n_by_patch);
   void dump(const std::string& filename);
-  uint start(int p) const;
   bool check_after_push();
-
-  // ----------------------------------------------------------------------
-  // facility to access particles without conversion,
-  // mostly for debugging (?)
-
-  std::vector<particle_t> get_particles(int beg, int end) const;
 
   particle_t get_particle(int p, int n) const;
   

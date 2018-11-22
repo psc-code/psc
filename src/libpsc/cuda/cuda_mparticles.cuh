@@ -261,8 +261,8 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   uint get_n_prts();
   void inject(const std::vector<particle_t>& buf, const std::vector<uint>& buf_n_by_patch);
 
-  std::vector<particle_t> get_particles(int beg, int end);
   std::vector<particle_t> get_particles(int p);
+  particle_t get_particle(int p, int n);
 
   uint start(int p);
 
@@ -274,6 +274,9 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
 		      const std::vector<uint>& n_prts_by_patch);
   void setup_internals();
 
+private:
+  std::vector<particle_t> get_particles(int beg, int end);
+  
 public:
   void find_block_indices_ids(thrust::device_vector<uint>& d_idx, thrust::device_vector<uint>& d_id);
   void find_cell_indices_ids(thrust::device_vector<uint>& d_idx, thrust::device_vector<uint>& d_id);

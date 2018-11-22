@@ -544,12 +544,14 @@ std::vector<typename cuda_mparticles<BS>::particle_t> cuda_mparticles<BS>::get_p
 }
 
 // ----------------------------------------------------------------------
-// start
+// get_particle
 
 template<typename BS>
-uint cuda_mparticles<BS>::start(int p)
+typename cuda_mparticles<BS>::particle_t cuda_mparticles<BS>::get_particle(int p, int n)
 {
-  return this->by_block_.d_off[p * this->n_blocks_per_patch];
+  auto off = this->by_block_.d_off[p * this->n_blocks_per_patch];
+  auto cprts = get_particles(off + n, off + n + 1);
+  return cprts[0];
 }
 
 #include "cuda_mparticles_gold.cu"
