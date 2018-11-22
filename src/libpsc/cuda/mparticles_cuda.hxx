@@ -8,16 +8,13 @@
 #include "injector_buffered.hxx"
 #include "bs.hxx"
 
-template<typename Mparticles>
-struct ConstPatchCuda_ : PatchCuda<Mparticles>
-{
-  using Base = PatchCuda<Mparticles>;
-  
-  using Base::Base;
-  using Base::mprts_;
-  using Base::p_;
-  using Base::grid;
+// ======================================================================
+// PatchCuda
 
+template<typename _Mparticles>
+struct ConstPatchCuda_
+{
+  using Mparticles = _Mparticles;
   using particle_t = typename Mparticles::particle_t;
   using real_t = typename particle_t::real_t;
   using Real3 = typename particle_t::Real3;
@@ -84,6 +81,14 @@ struct ConstPatchCuda_ : PatchCuda<Mparticles>
     const ConstPatchCuda_ patch_;
   };
 
+  ConstPatchCuda_(Mparticles& mprts, int p)
+    : mprts_(mprts), p_(p)
+  {}
+  
+  const_accessor_range get() const { return {*this}; }
+
+  const Grid_t& grid() const { return mprts_.grid(); }
+
   const ParticleIndexer<real_t>& particleIndexer() const { return mprts_.pi_; }
 
   particle_t get_particle(int n) const
@@ -100,7 +105,9 @@ struct ConstPatchCuda_ : PatchCuda<Mparticles>
     return n_prts_by_patch[p_];
   }
 
-  const_accessor_range get() const { return {*this}; }
+protected:
+  Mparticles& mprts_;
+  int p_;
 };
 
 template<typename BS>
