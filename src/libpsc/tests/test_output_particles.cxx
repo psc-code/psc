@@ -75,9 +75,9 @@ TYPED_TEST(OutputParticlesTest, Test1)
 
   Mparticles mprts{grid};
   {
-    auto injector = mprts[0].injector();
-    injector({{1., 0., 0.}, {}, 1., 0});
-    injector({{2., 0., 0.}, {}, 1., 1});
+    auto injector = mprts.injector();
+    injector[0]({{1., 0., 0.}, {}, 1., 0});
+    injector[0]({{2., 0., 0.}, {}, 1., 1});
   }
 
   auto params = OutputParticlesParams{};

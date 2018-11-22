@@ -101,9 +101,11 @@ struct SetupParticles
     
     mprts.reserve_all(n_prts_by_patch);
 
+    auto inj = mprts.injector();
+      
     for (int p = 0; p < mprts.n_patches(); ++p) {
       Int3 ilo = {}, ihi = grid.ldims;
-      auto injector = mprts[p].injector();
+      auto injector = inj[p];
   
       for (int jz = ilo[2]; jz < ihi[2]; jz++) {
 	for (int jy = ilo[1]; jy < ihi[1]; jy++) {

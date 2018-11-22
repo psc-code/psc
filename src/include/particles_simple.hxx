@@ -9,6 +9,9 @@
 template<typename Mparticles>
 struct InjectorSimple
 {
+  using particle_t = typename Mparticles::particle_t;
+  using real_t = typename particle_t::real_t;
+  
   struct Patch
   {
     Patch(Mparticles& mprts, int p)
@@ -17,7 +20,26 @@ struct InjectorSimple
     
     void operator()(const particle_inject& new_prt)
     {
-      mprts_[p_].inject(new_prt);
+      const auto& patch = mprts_.grid().patches[p_];
+      for (int d = 0; d < 3; d++) {
+	assert(new_prt.x[d] >= patch.xb[d]);
+	assert(new_prt.x[d] <= patch.xe[d]);
+      }
+      
+      auto prt = particle_t{{real_t(new_prt.x[0] - patch.xb[0]), real_t(new_prt.x[1] - patch.xb[1]), real_t(new_prt.x[2] - patch.xb[2])},
+			    {real_t(new_prt.u[0]), real_t(new_prt.u[1]), real_t(new_prt.u[2])},
+			      real_t(new_prt.w * mprts_.grid().kinds[new_prt.kind].q),
+			      new_prt.kind};
+      mprts_[p_].push_back(prt);
+    }
+    
+    void reweight(const particle_inject& new_prt)
+    {
+      auto& grid = mprts_.grid();
+      real_t dVi = 1.f / (grid.domain.dx[0] * grid.domain.dx[1] * grid.domain.dx[2]);
+      auto prt = new_prt;
+      assert(0); // FIXME, have to actually do reweighting
+      (*this)(prt);
     }
     
   private:
@@ -195,21 +217,6 @@ struct mparticles_patch
   using iterator = typename buf_t::iterator;
   using const_iterator = typename buf_t::const_iterator;
 
-  struct Injector
-  {
-    Injector(mparticles_patch& patch)
-      : patch_{patch}
-    {}
-
-    void operator()(const particle_inject& new_prt)
-    {
-      patch_.inject(new_prt);
-    }
-    
-  private:
-    mparticles_patch& patch_;
-  };
-
   struct const_accessor
   {
     const_accessor(const particle_t& prt, const mparticles_patch& prts)
@@ -280,7 +287,6 @@ struct mparticles_patch
       grid_(&mprts->grid())
   {}
 
-  Injector injector() { return {*this}; }
   const_accessor_range get() { return {*this}; }
 
   particle_t& operator[](int n) { return buf[n]; }
@@ -299,41 +305,6 @@ struct mparticles_patch
     buf.push_back(prt);
   }
 
-  void inject(const particle_inject& new_prt)
-  {
-    const Grid_t::Patch& patch = grid().patches[p_];
-    for (int d = 0; d < 3; d++) {
-      assert(new_prt.x[d] >= patch.xb[d]);
-      assert(new_prt.x[d] <= patch.xe[d]);
-    }
-    
-    auto prt = particle_t{{real_t(new_prt.x[0] - patch.xb[0]), real_t(new_prt.x[1] - patch.xb[1]), real_t(new_prt.x[2] - patch.xb[2])},
-			  {real_t(new_prt.u[0]), real_t(new_prt.u[1]), real_t(new_prt.u[2])},
-			  real_t(new_prt.w * grid().kinds[new_prt.kind].q),
-			  new_prt.kind};
-
-    push_back(prt);
-  }
-
-public:
-  void inject_reweight(const particle_inject& new_prt)
-  {
-    const Grid_t::Patch& patch = grid_->patches[p_];
-    for (int d = 0; d < 3; d++) {
-      assert(new_prt.x[d] >= patch.xb[d]);
-      assert(new_prt.x[d] <= patch.xe[d]);
-    }
-    
-    float dVi = 1.f / (grid_->domain.dx[0] * grid_->domain.dx[1] * grid_->domain.dx[2]);
-    
-    auto prt = particle_t{{real_t(new_prt.x[0] - patch.xb[0]), real_t(new_prt.x[1] - patch.xb[1]), real_t(new_prt.x[2] - patch.xb[2])},
-			  {real_t(new_prt.u[0]), real_t(new_prt.u[1]), real_t(new_prt.u[2])},
-			  real_t(new_prt.w),
-			  new_prt.kind};
-    
-    push_back(prt);
-  }
-  
   void resize(unsigned int new_size)
   {
     assert(new_size <= buf.capacity());

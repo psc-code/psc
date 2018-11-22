@@ -148,16 +148,18 @@ TYPED_TEST(MparticlesCudaTest, ConvertFromSingle)
   EXPECT_EQ(mprts_single.n_patches(), 4);
 
   int nn = 0;
-  for (int p = 0; p < mprts_single.n_patches(); ++p) {
-    auto injector = mprts_single[p].injector();
-    auto& patch = grid.patches[p];
-    for (int n = 0; n < n_prts; n++) {
-      particle_inject prt = {};
-      auto x = .5 * (patch.xb + patch.xe);
-      int kind = 0;
-      // use weight to store particle number for testing
-      injector({{x[0], x[1], x[2]}, {}, double(nn), kind});
-      nn++;
+  {
+    auto inj = mprts_single.injector();
+    for (int p = 0; p < mprts_single.n_patches(); ++p) {
+      auto injector = inj[p];
+      auto& patch = grid.patches[p];
+      for (int n = 0; n < n_prts; n++) {
+	auto x = .5 * (patch.xb + patch.xe);
+	int kind = 0;
+	// use weight to store particle number for testing
+	injector({{x[0], x[1], x[2]}, {}, double(nn), kind});
+	nn++;
+      }
     }
   }
 
