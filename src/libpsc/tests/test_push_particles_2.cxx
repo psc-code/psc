@@ -124,12 +124,15 @@ TYPED_TEST(PushParticlesTest, Cyclo)
   Rng *rng = rngpool[0];
 
   Mparticles mprts{grid};
-  for (int p = 0; p < grid.n_patches(); p++) {
-    auto injector = mprts[p].injector();
-    for (int n = 0; n < n_prts; n++) {
-      injector({{rng->uniform(0, this->L), rng->uniform(0, this->L), rng->uniform(0, this->L)},
-	        {1., 1., 1.},
+  {
+    auto inj = mprts.injector();
+    for (int p = 0; p < grid.n_patches(); p++) {
+      auto injector = inj[p];
+      for (int n = 0; n < n_prts; n++) {
+	injector({{rng->uniform(0, this->L), rng->uniform(0, this->L), rng->uniform(0, this->L)},
+	      {1., 1., 1.},
 		rng->uniform(0., 1.), 0});
+      }
     }
   }
 

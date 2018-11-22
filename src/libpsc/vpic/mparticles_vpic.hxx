@@ -13,6 +13,22 @@ struct vpic_mparticles_prt
 };
 
 // ======================================================================
+// InjectorVpic
+
+template<typename Mparticles>
+struct InjectorVpic
+{
+  InjectorVpic(Mparticles& mprts)
+    : mprts_{mprts}
+  {}
+
+  typename Mparticles::Patch::Injector operator[](int p) const { return mprts_[p].injector(); }
+
+private:
+  Mparticles& mprts_;
+};
+
+// ======================================================================
 // MparticlesVpic
 
 template<typename _Particles>
@@ -24,7 +40,6 @@ struct MparticlesVpic_ : MparticlesBase
   using const_iterator = typename Particles::const_iterator;
   using Grid = typename Particles::Grid;
   using real_t = float;
-  using patch_t = bool; // FIXME, faking it...
   
   // ======================================================================
   // Patch
@@ -35,9 +50,9 @@ struct MparticlesVpic_ : MparticlesBase
     using Real3 = Vec3<real_t>;
     using Double3 = Vec3<double>;
     
-    struct injector
+    struct Injector
     {
-      injector(const Patch& patch)
+      Injector(const Patch& patch)
 	: patch_{patch}
       {}
       
@@ -145,7 +160,7 @@ struct MparticlesVpic_ : MparticlesBase
     
     uint size() const { return mprts_.get_n_prts(); }
 
-    injector injector() { return {*this}; }
+    Injector injector() { return {*this}; }
     const_accessor_range get() const { return {*this}; }
 
     void inject_reweight(const particle_inject& prt)
@@ -267,6 +282,8 @@ struct MparticlesVpic_ : MparticlesBase
   }
   
   Patch operator[](int p) { assert(p == 0); return Patch{*this}; }
+
+  InjectorVpic<MparticlesVpic_> injector() { return {*this}; }
 
   Species* define_species(const char *name, double q, double m,
 			  double max_local_np, double max_local_nm,

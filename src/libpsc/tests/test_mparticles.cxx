@@ -88,8 +88,9 @@ struct MparticlesTest : ::testing::Test
   
   void inject_test_particles(Mparticles& mprts, int n_prts)
   {
+    auto inj = mprts.injector();
     for (int p = 0; p < mprts.n_patches(); ++p) {
-      auto injector = mprts[p].injector();
+      auto injector = inj[p];
       auto& patch = mprts.grid().patches[p];
       for (int n = 0; n < n_prts; n++) {
 	double nn = double(n) / n_prts;

@@ -120,7 +120,8 @@ TYPED_TEST(CollisionTest, Test1)
 
   Mparticles mprts{grid};
   {
-    auto injector = mprts[0].injector();
+    auto inj = mprts.injector();
+    auto injector = inj[0];
     injector(prt0);
     injector(prt1);
   }

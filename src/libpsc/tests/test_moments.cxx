@@ -31,8 +31,8 @@ TYPED_TEST(PushParticlesTest, Moment1)
   // init particles
   Mparticles mprts{grid};
   {
-    auto injector = mprts[0].injector();
-    injector({{5., 5., 5.}, {0., 0., 1.}, 1., 0});
+    auto injector = mprts.injector();
+    injector[0]({{5., 5., 5.}, {0., 0., 1.}, 1., 0});
   }
   Moment_n moment_n{grid, grid.comm()};
   moment_n.run(mprts);
@@ -69,8 +69,8 @@ TYPED_TEST(PushParticlesTest, Moment2) // FIXME, mostly copied
   // init particles
   Mparticles mprts{grid};
   {
-    auto injector = mprts[0].injector();
-    injector({{25., 5., 5.}, {0., 0., 1.}, 1., 0});
+    auto injector = mprts.injector();
+    injector[0]({{25., 5., 5.}, {0., 0., 1.}, 1., 0});
   }
 
   int i0 = 2;

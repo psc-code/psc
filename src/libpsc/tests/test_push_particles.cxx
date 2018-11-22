@@ -45,8 +45,8 @@ TYPED_TEST(PushParticlesTest, SingleParticle)
 
   Mparticles mprts{grid};
   {
-    auto injector = mprts[0].injector();
-    injector({{1., 0., 0.}, {}, 1., 0});
+    auto injector = mprts.injector();
+    injector[0]({{1., 0., 0.}, {}, 1., 0});
   }
 
   // check particle
