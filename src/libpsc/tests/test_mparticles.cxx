@@ -22,6 +22,7 @@ struct Config
 };
 
 using MparticlesTestTypes = ::testing::Types<Config<MparticlesSingle>
+					    ,Config<MparticlesSingle, MakeTestGridYZ>
 					    ,Config<MparticlesDouble>
 					    ,Config<MparticlesVpic>
 #ifdef USE_CUDA
