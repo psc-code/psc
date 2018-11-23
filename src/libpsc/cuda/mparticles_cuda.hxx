@@ -28,9 +28,9 @@ struct MparticlesCuda : MparticlesBase
 
   using is_cuda = std::true_type;
   
-  struct Patch : ConstPatchCuda_<MparticlesCuda>
+  struct Patch : ConstPatchCuda<MparticlesCuda>
   {
-    using Base = ConstPatchCuda_<MparticlesCuda>;
+    using Base = ConstPatchCuda<MparticlesCuda>;
     using Base::Base;
     using Base::mprts_;
     using Base::p_;
@@ -50,6 +50,7 @@ struct MparticlesCuda : MparticlesBase
   void dump(const std::string& filename);
   bool check_after_push();
 
+  std::vector<particle_t> get_particles(int p) const;
   particle_t get_particle(int p, int n) const;
   
   void define_species(const char *name, double q, double m,

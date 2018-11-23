@@ -87,7 +87,16 @@ struct ConstPatchCuda
     return {mprts_, p_};
   }
   
-private:
+  const Grid_t& grid() const { return mprts_.grid(); }
+
+  uint size() const
+  {
+    uint n_prts_by_patch[grid().n_patches()];
+    mprts_.get_size_all(n_prts_by_patch);
+    return n_prts_by_patch[p_];
+  }
+
+protected:
   const Mparticles& mprts_;
   int p_;
 };
