@@ -15,6 +15,9 @@
 #include <thrust/sort.h>
 #include <thrust/binary_search.h>
 
+// ======================================================================
+// ParticleCudaStorage
+
 struct ParticleCudaStorage
 {
   __host__ __device__
@@ -39,94 +42,90 @@ struct ParticleCudaStorage
 };
 
 // ======================================================================
-// MparticlesCudaStorage
+// MparticlesCudaStorage_
 
-struct MparticlesCudaStorage
+template<typename T>
+struct MparticlesCudaStorage_
 {
+  MparticlesCudaStorage_() = default;
+
+  __host__
+  MparticlesCudaStorage_(const T& xi4, const T& pxi4)
+    : xi4{xi4}, pxi4{pxi4}
+  {}
+  
+  template<typename OtherStorage>
+  __host__
+  MparticlesCudaStorage_(OtherStorage& other)
+  : xi4{other.xi4}, pxi4{other.pxi4}
+  {}
+
+  __host__
+  MparticlesCudaStorage_(uint n)
+  : xi4(n), pxi4(n)
+  {}
+
+  __host__
   void resize(size_t n)
   {
     xi4.resize(n);
     pxi4.resize(n);
   }
   
+  // FIXME, could be operator[]
+
+  __device__
+  DParticleCuda load_device(int n) const { return ParticleCudaStorage{xi4[n], pxi4[n]}; }
+
+  __host__
   DParticleCuda load(int n) const { return ParticleCudaStorage{xi4[n], pxi4[n]}; }
 
+  __host__ __device__
   void store(const DParticleCuda& prt, int n)
   {
     auto st = ParticleCudaStorage{prt};
     xi4[n] = st.xi4;
     pxi4[n] = st.pxi4;
   }
-  
-  thrust::device_vector<float4> xi4;
-  thrust::device_vector<float4> pxi4;
+
+  T xi4;
+  T pxi4;
 };
+
+// ======================================================================
+// MparticlesCudaStorage
+
+using MparticlesCudaStorage = MparticlesCudaStorage_<thrust::device_vector<float4>>;
 
 // ======================================================================
 // HMparticlesCudaStorage
 
-struct HMparticlesCudaStorage
-{
-  HMparticlesCudaStorage(size_t n)
-  : xi4(n), pxi4(n)
-  {}
-
-  HMparticlesCudaStorage(const MparticlesCudaStorage& storage)
-    : xi4{storage.xi4}, pxi4{storage.pxi4}
-  {}
-
-  void resize(size_t n)
-  {
-    xi4.resize(n);
-    pxi4.resize(n);
-  }
-  
-  DParticleCuda load(int n) const { return ParticleCudaStorage{xi4[n], pxi4[n]}; }
-
-  void store(const DParticleCuda& prt, int n)
-  {
-    auto st = ParticleCudaStorage{prt};
-    xi4[n] = st.xi4;
-    pxi4[n] = st.pxi4;
-  }
-  
-  thrust::host_vector<float4> xi4;
-  thrust::host_vector<float4> pxi4;
-};
+using HMparticlesCudaStorage = MparticlesCudaStorage_<thrust::host_vector<float4>>;
 
 // ======================================================================
 // DMparticlesCudaStorage
 
-struct DMparticlesCudaStorage
+struct DMparticlesCudaStorage : MparticlesCudaStorage_<float4*>
 {
-  // FIXME, could be operator[]
-  __host__ __device__
-  DParticleCuda load(int n) const { return ParticleCudaStorage{xi4[n], pxi4[n]}; }
+  using Base = MparticlesCudaStorage_<float4*>;
+  using Base::Base;
 
-  __host__ __device__
-  void store(const DParticleCuda& prt, int n)
-  {
-    auto st = ParticleCudaStorage{prt};
-    xi4[n] = st.xi4;
-    pxi4[n] = st.pxi4;
-  }
-  
-  __host__ __device__
+  __device__
+  DParticleCuda load(int n) const { return load_device(n); }
+
+  __device__
   void store_position(const DParticleCuda& prt, int n)
   {
     auto st = ParticleCudaStorage{prt};
     xi4[n] = st.xi4;
   }
 
-  __host__ __device__
+  __device__
   void store_momentum(const DParticleCuda& prt, int n)
   {
     auto st = ParticleCudaStorage{prt};
     pxi4[n] = st.pxi4;
   }
-  
-  float4 *xi4;
-  float4 *pxi4;
 };
 
 // ======================================================================
