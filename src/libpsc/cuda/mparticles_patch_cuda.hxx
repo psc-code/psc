@@ -1,6 +1,14 @@
 
 #pragma once
 
+// FIXME?  we have two pretty similar versions of ConstPatchCuda here,
+// and probably only one should survive.  one version copies from
+// device "on demand", whereas the other one copies a whole patch
+// worth of data just in case.  Obviously, there can be use cases for
+// either, but this needs some thinking as to what's actually needed
+// for this code.  The on-demand version might be useful to serve as a
+// template for a modifiable accesser, if we ever want to go there.
+
 // ======================================================================
 // ConstPatchCuda
 
