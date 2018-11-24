@@ -147,7 +147,7 @@ struct PscFlatfoil : Psc<PscConfig>
     // Int3 gdims = {40, 10, 20}; // global number of grid points
     // Int3 np = {4, 1, 2; // division into patches
     Int3 gdims = {1, 1024, 256}; // global number of grid points
-    Int3 np = {1, 4, 1}; // division into patches
+    Int3 np = {1, 16, 4}; // division into patches
 #endif
 
     auto grid_domain = Grid_t::Domain{gdims, LL, -.5 * LL, np};
@@ -235,7 +235,7 @@ struct PscFlatfoil : Psc<PscConfig>
 
     // -- output particles
     OutputParticlesParams outp_params{};
-    outp_params.every_step = 10;
+    outp_params.every_step = 0;
     outp_params.data_dir = ".";
     outp_params.basename = "prt";
     outp_.reset(new OutputParticles{grid(), outp_params});
