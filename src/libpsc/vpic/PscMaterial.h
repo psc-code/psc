@@ -6,6 +6,7 @@
 #include "VpicListBase.h"
 
 #include <mrc_common.h>
+#include <cstring>
 #include <cassert>
 
 // ======================================================================
