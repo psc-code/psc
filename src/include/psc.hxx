@@ -328,7 +328,7 @@ struct Psc
     auto& mflds = *mflds_;
 
     if (balance_interval > 0 && timestep % balance_interval == 0) {
-      (*balance_)(*grid_, mprts);
+      (*balance_)(grid_, mprts);
     }
 
     prof_start(pr_time_step_no_comm);
@@ -450,7 +450,7 @@ struct Psc
     auto& mflds = *mflds_;
 
     if (balance_interval > 0 && timestep % balance_interval == 0) {
-      (*balance_)(*grid_, mprts);
+      (*balance_)(grid_, mprts);
     }
 
     if (sort_interval > 0 && timestep % sort_interval == 0) {
