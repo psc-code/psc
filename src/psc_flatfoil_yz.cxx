@@ -90,7 +90,7 @@ struct InjectFoil : InjectFoilParams
 };
 
 // EDIT to change order / floating point type / cuda / 2d/3d
-using dim_t = dim_yz;
+using dim_t = dim_xyz;
 using PscConfig = PscConfig1vbecSingle<dim_t>;
 //using PscConfig = PscConfig1vbecCuda<dim_t>;
 
@@ -138,9 +138,9 @@ struct PscFlatfoil : Psc<PscConfig>
     mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(background_Te_));
     
     // --- setup domain
-#if 0
+#if 1
     Grid_t::Real3 LL = { 400., 800., 400.*6 }; // domain size (in d_e)
-    Int3 gdims = { 400, 800, 2400}; // global number of grid points
+    Int3 gdims = { 200, 400, 1200}; // global number of grid points
     Int3 np = { 40, 80, 4 }; // division into patches
 #else
     Grid_t::Real3 LL = {1., 1600., 400.}; // domain size (in d_e)
