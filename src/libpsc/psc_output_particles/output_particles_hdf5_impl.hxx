@@ -469,10 +469,10 @@ struct OutputParticlesHdf5 : OutputParticlesParams, OutputParticlesBase
     MPI_Info_create(&mpi_info);
 #ifdef H5_HAVE_PARALLEL
     if (romio_cb_write) {
-      MPI_Info_set(mpi_info, "romio_cb_write", romio_cb_write);
+      MPI_Info_set(mpi_info, (char*) "romio_cb_write", (char*) romio_cb_write);
     }
     if (romio_ds_write) {
-      MPI_Info_set(mpi_info, "romio_ds_write", romio_ds_write);
+      MPI_Info_set(mpi_info, (char*) "romio_ds_write", (char*) romio_ds_write);
     }
     H5Pset_fapl_mpio(plist, grid_.comm(), mpi_info);
 #endif
