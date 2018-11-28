@@ -21,7 +21,7 @@ struct MfieldsHydroVpic
 
   struct Patch
   {
-    using Element = Element;
+    using Element = hydro_t;
 
     Patch(Grid* vgrid)
       : ha_{::new_hydro_array(vgrid)}

@@ -10,7 +10,7 @@
 struct PushParticlesVpic : PushParticlesBase
 {
   using Mparticles = MparticlesVpic;
-  using MfieldsState = MfieldsState;
+  using MfieldsState = ::MfieldsState;
   
   void push_mprts(Mparticles& mprts, MfieldsState& mflds, MfieldsInterpolator& interpolator,
 		  MfieldsAccumulator& accumulator, ParticleBcList& particle_bc_list,

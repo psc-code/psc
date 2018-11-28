@@ -11,7 +11,7 @@ struct MfieldsInterpolatorVpic
 
   struct Patch
   {
-    using Element = Element;
+    using Element = interpolator_t;
     
     Patch(Grid* vgrid)
       : ip_{new_interpolator_array(vgrid)}

@@ -13,8 +13,8 @@ struct MfieldsAccumulatorVpic
 
   struct Block
   {
-    using Grid = Grid;
-    using Element = Element;
+    using Grid = VpicGridBase;
+    using Element = accumulator_t;
     
     Block(Element *arr, Grid *g)
       : arr_{arr}, g_{g}

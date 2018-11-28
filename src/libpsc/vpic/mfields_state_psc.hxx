@@ -172,7 +172,7 @@ struct MfieldsStatePsc
 
   struct Patch
   {
-    using Element = Element;
+    using Element = struct Element;
 
     Patch(Grid* vgrid)
       : fa_{vgrid}
