@@ -55,6 +55,7 @@ struct Psc
   using MaterialList = typename MfieldsState::MaterialList;
   using Material = typename MaterialList::Material;
   using DiagMixin = typename PscConfig::DiagMixin;
+  using CleanDivOps = typename PscConfig::CleanDivOps;
 #endif
   
   // ----------------------------------------------------------------------

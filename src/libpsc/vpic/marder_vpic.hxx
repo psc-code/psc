@@ -6,6 +6,7 @@
 // ======================================================================
 // psc_marder "vpic"
 
+template<typename CleanDivOps>
 struct MarderVpic : MarderBase
 {
   using real_t = MfieldsState::real_t;

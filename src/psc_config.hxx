@@ -189,8 +189,10 @@ struct PscConfigVpic
 {
 #ifdef DO_VPIC
   using PushFieldsOps = VpicPushFieldsOps<MfieldsState>;
+  using CleanDivOps = VpicCleanDivOps<MfieldsState>;
 #else
   using PushFieldsOps = PscPushFieldsOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
+  using CleanDivOps = PscCleanDivOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
 #endif
 
   using Mparticles_t = MparticlesVpic;
@@ -204,7 +206,7 @@ struct PscConfigVpic
   using BndFields_t = BndFieldsVpic;
   using BndParticles_t = BndParticlesVpic;
   using Checks_t = ChecksVpic;
-  using Marder_t = MarderVpic;
+  using Marder_t = MarderVpic<CleanDivOps>;
   using OutputParticles = OutputParticlesHdf5<MparticlesSingle>;
   using dim_t = dim_xyz;
 

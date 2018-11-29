@@ -87,7 +87,6 @@ using MaterialList = VpicMaterialList;
 using MfieldsState = MfieldsStateVpic;
 using DiagOps = VpicDiagOps<MfieldsState>;
 using AccumulateOps = VpicAccumulateOps<MfieldsState>;
-using CleanDivOps = VpicCleanDivOps<MfieldsState>;
 #else
 using MaterialList = PscMaterialList;
 using MfieldsState = MfieldsStatePsc<Grid, MaterialList>;
@@ -95,7 +94,6 @@ using FieldArrayLocalOps = PscFieldArrayLocalOps<MfieldsState>;
 using FieldArrayRemoteOps = PscFieldArrayRemoteOps<MfieldsState>;
 using DiagOps = PscDiagOps<MfieldsState>;
 using AccumulateOps = PscAccumulateOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
-using CleanDivOps = PscCleanDivOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
 #endif
 
 #ifdef DO_VPIC
