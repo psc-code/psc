@@ -10,12 +10,13 @@ using Grid = VpicGridBase;
 using Grid = PscGridBase;
 #endif
 
-#if 1
-using ParticleBcList = PscParticleBcList;
+#ifdef DO_VPIC
+  using ParticleBcList = VpicParticleBcList;
+  using Particles = VpicParticlesBase<Grid, ParticleBcList>;
 #else
-using ParticleBcList = VpicParticleBcList;
+  using ParticleBcList = PscParticleBcList;
+  using Particles = PscParticlesBase<Grid, ParticleBcList>;
 #endif
-using Particles = PscParticlesBase<Grid, ParticleBcList>;
 using MparticlesVpic = MparticlesVpic_<Particles>;
 
 // ======================================================================

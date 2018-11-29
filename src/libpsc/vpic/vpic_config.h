@@ -124,12 +124,13 @@ struct VpicConfig_
   using HydroArrayOps = PscHydroArrayOps<MfieldsHydro>;
 #endif
 
-#if 1
-  using ParticleBcList = PscParticleBcList;
-#else
+#ifdef DO_VPIC
   using ParticleBcList = VpicParticleBcList;
-#endif
+  using Particles = VpicParticlesBase<Grid, ParticleBcList>;
+#else
+  using ParticleBcList = PscParticleBcList;
   using Particles = PscParticlesBase<Grid, ParticleBcList>;
+#endif
   using Mparticles = MparticlesVpic_<Particles>;
 
 #if 0//def DO_VPIC

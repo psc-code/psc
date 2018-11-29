@@ -20,12 +20,13 @@ using Grid = VpicGridBase;
 using Grid = PscGridBase;
 #endif
 
-#if 1
-using ParticleBcList = PscParticleBcList;
-#else
+#ifdef DO_VPIC
 using ParticleBcList = VpicParticleBcList;
-#endif
+using Particles = VpicParticlesBase<Grid, ParticleBcList>;
+#else
+using ParticleBcList = PscParticleBcList;
 using Particles = PscParticlesBase<Grid, ParticleBcList>;
+#endif
 using MparticlesVpic = MparticlesVpic_<Particles>;
 
 template<typename _Mparticles, typename _MakeGrid = MakeTestGrid1>
