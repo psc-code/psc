@@ -3,6 +3,7 @@
 
 #include "vpic_iface.h"
 
+template<typename ParticlesOps>
 struct SortVpic
 {
   using Mparticles = MparticlesVpic;

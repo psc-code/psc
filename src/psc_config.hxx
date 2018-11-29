@@ -199,18 +199,24 @@ struct PscConfigVpic
 
   using InterpolatorOps = PscInterpolatorOps<MfieldsInterpolator, MfieldsState>;
   
+#if 0//def DO_VPIC
+using ParticlesOps = VpicParticlesOps<Particles, MfieldsState, Interpolator, MfieldsAccumulator, MfieldsHydro>;
+#else
+using ParticlesOps = PscParticlesOps<MparticlesVpic, MfieldsState, MfieldsInterpolator, MfieldsAccumulator, MfieldsHydro>;
+#endif
+
   using Mparticles_t = MparticlesVpic;
   using MfieldsState = ::MfieldsState;
   using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
-  using Sort_t = SortVpic;
+  using Sort_t = SortVpic<ParticlesOps>;
   using Collision_t = PscCollisionVpic;
-  using PushParticles_t = PushParticlesVpic<AccumulateOps, InterpolatorOps>;
+  using PushParticles_t = PushParticlesVpic<ParticlesOps, AccumulateOps, InterpolatorOps>;
   using PushFields_t = PushFieldsVpic<PushFieldsOps>;
   using Bnd_t = BndVpic;
   using BndFields_t = BndFieldsVpic;
   using BndParticles_t = BndParticlesVpic;
   using Checks_t = ChecksVpic;
-  using Marder_t = MarderVpic<CleanDivOps>;
+  using Marder_t = MarderVpic<ParticlesOps, CleanDivOps>;
   using OutputParticles = OutputParticlesHdf5<MparticlesSingle>;
   using dim_t = dim_xyz;
 

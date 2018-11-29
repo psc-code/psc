@@ -7,7 +7,7 @@
 // ======================================================================
 // PushParticlesVpic
 
-template<typename AccumulateOps, typename InterpolatorOps>
+template<typename ParticlesOps, typename AccumulateOps, typename InterpolatorOps>
 struct PushParticlesVpic : PushParticlesBase
 {
   using Mparticles = MparticlesVpic;

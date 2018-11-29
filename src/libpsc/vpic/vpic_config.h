@@ -123,11 +123,6 @@ using ParticleBcList = VpicParticleBcList;
 
 using Particles = PscParticlesBase<Grid, ParticleBcList>;
 using MparticlesVpic = MparticlesVpic_<Particles>;
-#if 0//def DO_VPIC
-using ParticlesOps = VpicParticlesOps<Particles, MfieldsState, Interpolator, MfieldsAccumulator, MfieldsHydro>;
-#else
-using ParticlesOps = PscParticlesOps<MparticlesVpic, MfieldsState, MfieldsInterpolator, MfieldsAccumulator, MfieldsHydro>;
-#endif
 
 #if 1
 typedef PscRng Rng;

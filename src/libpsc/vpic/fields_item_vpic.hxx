@@ -26,6 +26,7 @@ struct OutputFieldsVpic
 // ----------------------------------------------------------------------
 // OutputHydroVpic
 
+template<typename ParticlesOps>
 struct OutputHydroVpic
 {
   struct Result
