@@ -4,7 +4,7 @@
 #include "vpic_iface.h"
 
 template<typename ParticlesOps, typename Mparticles>
-struct SortVpic
+struct SortVpic_
 {
   void operator()(Mparticles& mprts)
   {
@@ -19,4 +19,13 @@ struct SortVpic
     }
   }
 };
+
+template<typename Mparticles>
+using SortVpic = SortVpic_<PscSortOps<Mparticles>, Mparticles>;
+
+template<typename Mparticles>
+using SortVpicWrap = SortVpic_<VpicSortOps<Mparticles>, Mparticles>;
+
+
+
 
