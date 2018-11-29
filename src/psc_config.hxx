@@ -188,6 +188,12 @@ struct PscConfig1vbecCuda<dim_xyz> : PscConfig_<dim_xyz, MparticlesCuda<BS444>, 
 struct PscConfigVpic
 {
 #ifdef DO_VPIC
+  using MfieldsState = MfieldsStateVpic;
+#else
+  using MfieldsState = MfieldsStatePsc<Grid, MaterialList>;
+#endif
+
+#ifdef DO_VPIC
   using PushFieldsOps = VpicPushFieldsOps<MfieldsState>;
   using AccumulateOps = VpicAccumulateOps<MfieldsState>;
   using CleanDivOps = VpicCleanDivOps<MfieldsState>;
@@ -242,17 +248,16 @@ struct PscConfigVpic
   using DiagOps = PscDiagOps<MfieldsState>;
 #endif
   
-  using MfieldsState = ::MfieldsState;
   using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Sort_t = SortVpic<ParticlesOps, Mparticles_t>;
   using Collision_t = PscCollisionVpic;
-  using PushParticles_t = PushParticlesVpic<Mparticles_t, MfieldsAccumulator, MfieldsInterpolator,
+  using PushParticles_t = PushParticlesVpic<Mparticles_t, MfieldsState, MfieldsAccumulator, MfieldsInterpolator,
 					    ParticlesOps, AccumulatorOps, AccumulateOps, InterpolatorOps>;
   using PushFields_t = PushFieldsVpic<PushFieldsOps>;
-  using Bnd_t = BndVpic;
-  using BndFields_t = BndFieldsVpic;
+  using Bnd_t = BndVpic<MfieldsState>;
+  using BndFields_t = BndFieldsVpic<MfieldsState>;
   using BndParticles_t = BndParticlesVpic<Mparticles_t>;
-  using Checks_t = ChecksVpic<Mparticles_t>;
+  using Checks_t = ChecksVpic<Mparticles_t, MfieldsState>;
   using Marder_t = MarderVpic<Mparticles_t, ParticlesOps, CleanDivOps>;
   using OutputParticles = OutputParticlesHdf5<MparticlesSingle>;
   using dim_t = dim_xyz;

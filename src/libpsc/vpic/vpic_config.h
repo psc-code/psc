@@ -84,10 +84,8 @@ using Grid = PscGridBase;
 
 #ifdef DO_VPIC
 using MaterialList = VpicMaterialList;
-using MfieldsState = MfieldsStateVpic;
 #else
 using MaterialList = PscMaterialList;
-using MfieldsState = MfieldsStatePsc<Grid, MaterialList>;
 #endif
 
 #if 1

@@ -7,9 +7,10 @@
 // ======================================================================
 // PscCleanDivOps
 
-template<typename MfieldsState, typename LocalOps, typename RemoteOps>
+template<typename _MfieldsState, typename LocalOps, typename RemoteOps>
 struct PscCleanDivOps
 {
+  using MfieldsState = _MfieldsState;
   using Grid = typename MfieldsState::Grid;
   using MaterialCoefficient = typename MfieldsState::MaterialCoefficient;
   using F3D = Field3D<typename MfieldsState::Patch>;

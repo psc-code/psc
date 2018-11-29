@@ -4,9 +4,10 @@
 // ======================================================================
 // PscPushFieldOps
 
-template<typename MfieldsState, typename LocalOps, typename RemoteOps>
+template<typename _MfieldsState, typename LocalOps, typename RemoteOps>
 struct PscPushFieldsOps
 {
+  using MfieldsState = _MfieldsState;
   using Grid = typename MfieldsState::Grid;
   using SfaParams = typename MfieldsState::SfaParams;
   using MaterialCoefficient = typename MfieldsState::MaterialCoefficient;

@@ -4,6 +4,7 @@
 // ----------------------------------------------------------------------
 // OutputFieldsVpic
 
+template<typename MfieldsState>
 struct OutputFieldsVpic
 {
   struct Result

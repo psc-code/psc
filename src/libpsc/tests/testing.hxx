@@ -84,6 +84,12 @@ using TestConfig1vbec3dSingleXZ = TestConfig<dim_xz, MfieldsSingle,
 					     checks_order_1st>;
 
 #ifdef DO_VPIC
+  using MfieldsState = MfieldsStateVpic;
+#else
+  using MfieldsState = MfieldsStatePsc<Grid, MaterialList>;
+#endif
+
+#ifdef DO_VPIC
 using AccumulateOps = VpicAccumulateOps<MfieldsState>;
 #else
 using FieldArrayLocalOps = PscFieldArrayLocalOps<MfieldsState>;
@@ -130,7 +136,7 @@ using ParticlesOps = PscParticlesOps<MparticlesVpic, MfieldsState, MfieldsInterp
 
 using TestConfigVpic = TestConfig<dim_xyz,
 				  MfieldsSingle, // FIXME, this is not real nice, but might work...
-				  PushParticlesVpic<MparticlesVpic, MfieldsAccumulator, MfieldsInterpolator,
+				  PushParticlesVpic<MparticlesVpic, MfieldsState, MfieldsAccumulator, MfieldsInterpolator,
 						    ParticlesOps, AccumulatorOps, AccumulateOps, InterpolatorOps>,
 				  checks_order_1st,
 				  Checks_<MparticlesVpic, MfieldsStatePsc<PscGridBase, PscMaterialList>, void, checks_order_1st>,

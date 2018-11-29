@@ -10,6 +10,8 @@
 template<typename PushFieldsOps>
 struct PushFieldsVpic : PushFieldsBase
 {
+  using MfieldsState = typename PushFieldsOps::MfieldsState;
+  
   void push_E(MfieldsState& mflds, double dt_fac)
   {
     TIC PushFieldsOps::advance_e(mflds, dt_fac); TOC(advance_e, 1);

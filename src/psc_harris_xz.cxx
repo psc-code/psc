@@ -750,7 +750,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       io_pfd_.open(grid);
 
       {
-	OutputFieldsVpic out_fields;
+	OutputFieldsVpic<MfieldsState> out_fields;
 	auto result = out_fields(*mflds_);
 	io_pfd_.write_mflds(result.mflds, result.name, result.comp_names);
       }

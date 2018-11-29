@@ -3,6 +3,7 @@
 
 #include "bnd.hxx"
 
+template<typename MfieldsState>
 struct BndVpic : BndBase
 {
   BndVpic(const Grid_t& grid, int ibn[3])

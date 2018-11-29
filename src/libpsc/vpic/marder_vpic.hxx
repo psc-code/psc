@@ -9,7 +9,8 @@
 template<typename Mparticles, typename ParticlesOps, typename CleanDivOps>
 struct MarderVpic : MarderBase
 {
-  using real_t = MfieldsState::real_t;
+  using MfieldsState = typename CleanDivOps::MfieldsState;
+  using real_t = typename MfieldsState::real_t;
   
   MarderVpic(const Grid_t& grid, real_t diffusion, int loop, bool dump)
     : comm_{grid.comm()}

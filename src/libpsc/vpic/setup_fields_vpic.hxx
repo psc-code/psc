@@ -8,9 +8,16 @@
 // ======================================================================
 // SetupFields
 
+#ifdef DO_VPIC
+using MfieldsStateHack = MfieldsStateVpic;
+#else
+using MfieldsStateHack = MfieldsStatePsc<Grid, MaterialList>;
+#endif
+
 template<>
-struct SetupFields<MfieldsState>
+struct SetupFields<MfieldsStateHack>
 {
+  using MfieldsState = MfieldsStateHack;
   using Fields = typename MfieldsState::fields_t;
 
   template<typename FUNC>
