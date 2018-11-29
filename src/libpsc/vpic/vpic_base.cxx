@@ -5,6 +5,8 @@
 #include <mrc_common.h>
 #include <cassert>
 
+vpic_simulation* simulation; // FIXME, never initialized, just a hack to make things link at least
+
 // ----------------------------------------------------------------------
 // vpic_base_init
 
