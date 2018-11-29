@@ -82,12 +82,6 @@ using Grid = VpicGridBase;
 using Grid = PscGridBase;
 #endif
 
-#ifdef DO_VPIC
-using MaterialList = VpicMaterialList;
-#else
-using MaterialList = PscMaterialList;
-#endif
-
 #if 1
 typedef PscRng Rng;
 typedef PscRngPool<Rng> RngPool;

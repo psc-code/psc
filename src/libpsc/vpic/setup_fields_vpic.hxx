@@ -9,9 +9,11 @@
 // SetupFields
 
 #ifdef DO_VPIC
-using MfieldsStateHack = MfieldsStateVpic;
+  using MaterialList = VpicMaterialList;
+  using MfieldsStateHack = MfieldsStateVpic;
 #else
-using MfieldsStateHack = MfieldsStatePsc<Grid, MaterialList>;
+  using MaterialList = PscMaterialList;
+  using MfieldsStateHack = MfieldsStatePsc<Grid, MaterialList>;
 #endif
 
 template<>
