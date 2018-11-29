@@ -201,7 +201,7 @@ struct PscConfigVpic
 					    typename VpicConfig::AccumulatorOps,
 					    typename VpicConfig::AccumulateOps,
 					    typename VpicConfig::InterpolatorOps>;
-  using PushFields_t = PushFieldsVpic<typename VpicConfig::PushFieldsOps>;
+  using PushFields_t = PushFieldsVpicWrap<MfieldsState>;
   using Bnd_t = BndVpic<MfieldsState>;
   using BndFields_t = BndFieldsVpic<MfieldsState>;
   using BndParticles_t = BndParticlesVpic<Mparticles_t>;

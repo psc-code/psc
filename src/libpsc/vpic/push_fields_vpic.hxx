@@ -8,7 +8,7 @@
 // PushFieldsVpic
 
 template<typename PushFieldsOps>
-struct PushFieldsVpic : PushFieldsBase
+struct PushFieldsVpic_ : PushFieldsBase
 {
   using MfieldsState = typename PushFieldsOps::MfieldsState;
   
@@ -49,4 +49,11 @@ struct PushFieldsVpic : PushFieldsBase
 #endif
   }
 };
+
+template<typename MfieldsState>
+using PushFieldsVpicWrap = PushFieldsVpic_<VpicPushFieldsOps<MfieldsState>>;
+
+template<typename MfieldsState>
+using PushFieldsVpic = PushFieldsVpic_<PscPushFieldsOps<MfieldsState, PscFieldArrayLocalOps<MfieldsState>,
+							PscFieldArrayRemoteOps<MfieldsState>>>;
 
