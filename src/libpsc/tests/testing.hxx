@@ -83,9 +83,15 @@ using TestConfig1vbec3dSingleXZ = TestConfig<dim_xz, MfieldsSingle,
 					     PushParticlesSimple<Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_xz>, PushParticlesVb>,
 					     checks_order_1st>;
 
+#ifdef DO_VPIC
+using AccumulateOps = VpicAccumulateOps<MfieldsState>;
+#else
+using AccumulateOps = PscAccumulateOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
+#endif
+
 using TestConfigVpic = TestConfig<dim_xyz,
 				  MfieldsSingle, // FIXME, this is not real nice, but might work...
-				  PushParticlesVpic,
+				  PushParticlesVpic<AccumulateOps>,
 				  checks_order_1st,
 				  Checks_<MparticlesVpic, MfieldsStatePsc<PscGridBase, PscMaterialList>, void, checks_order_1st>,
 				  BndParticlesVpic>;

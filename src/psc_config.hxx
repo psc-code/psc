@@ -189,9 +189,11 @@ struct PscConfigVpic
 {
 #ifdef DO_VPIC
   using PushFieldsOps = VpicPushFieldsOps<MfieldsState>;
+  using AccumulateOps = VpicAccumulateOps<MfieldsState>;
   using CleanDivOps = VpicCleanDivOps<MfieldsState>;
 #else
   using PushFieldsOps = PscPushFieldsOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
+  using AccumulateOps = PscAccumulateOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
   using CleanDivOps = PscCleanDivOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
 #endif
 
@@ -200,7 +202,7 @@ struct PscConfigVpic
   using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Sort_t = SortVpic;
   using Collision_t = PscCollisionVpic;
-  using PushParticles_t = PushParticlesVpic;
+  using PushParticles_t = PushParticlesVpic<AccumulateOps>;
   using PushFields_t = PushFieldsVpic<PushFieldsOps>;
   using Bnd_t = BndVpic;
   using BndFields_t = BndFieldsVpic;
