@@ -5,13 +5,13 @@
 #include "vpic_iface.h"
 
 // ======================================================================
-// PushFieldsVpic
+// PushFieldsVpicWrap
 
-template<typename PushFieldsOps>
-struct PushFieldsVpic_ : PushFieldsBase
+template<typename MfieldsState>
+struct PushFieldsVpicWrap
 {
-  using MfieldsState = typename PushFieldsOps::MfieldsState;
-  
+  using PushFieldsOps = VpicPushFieldsOps<MfieldsState>;
+
   void push_E(MfieldsState& mflds, double dt_fac)
   {
     TIC PushFieldsOps::advance_e(mflds, dt_fac); TOC(advance_e, 1);
@@ -26,10 +26,27 @@ struct PushFieldsVpic_ : PushFieldsBase
   }
 };
 
-template<typename MfieldsState>
-using PushFieldsVpicWrap = PushFieldsVpic_<VpicPushFieldsOps<MfieldsState>>;
+// ======================================================================
+// PushFieldsVpic
 
 template<typename MfieldsState>
-using PushFieldsVpic = PushFieldsVpic_<PscPushFieldsOps<MfieldsState, PscFieldArrayLocalOps<MfieldsState>,
-							PscFieldArrayRemoteOps<MfieldsState>>>;
+struct PushFieldsVpic
+{
+  using PushFieldsOps = PscPushFieldsOps<MfieldsState,
+					 PscFieldArrayLocalOps<MfieldsState>,
+					 PscFieldArrayRemoteOps<MfieldsState>>;
+
+  void push_E(MfieldsState& mflds, double dt_fac)
+  {
+    TIC PushFieldsOps::advance_e(mflds, dt_fac); TOC(advance_e, 1);
+#if 0
+    user_field_injection();
+#endif
+  }
+
+  void push_H(MfieldsState& mflds, double dt_fac)
+  {
+    TIC PushFieldsOps::advance_b(mflds, dt_fac); TOC(advance_b, 1);
+  }
+};
 
