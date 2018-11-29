@@ -88,6 +88,12 @@ using AccumulateOps = VpicAccumulateOps<MfieldsState>;
 #else
 using AccumulateOps = PscAccumulateOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
 #endif
+
+#ifdef DO_VPIC
+using MfieldsInterpolator = MfieldsInterpolatorVpic;
+#else
+using MfieldsInterpolator = MfieldsInterpolatorPsc<Grid>;
+#endif
 using InterpolatorOps = PscInterpolatorOps<MfieldsInterpolator, MfieldsState>;
 
 #ifdef DO_VPIC
@@ -122,7 +128,7 @@ using ParticlesOps = PscParticlesOps<MparticlesVpic, MfieldsState, MfieldsInterp
 
 using TestConfigVpic = TestConfig<dim_xyz,
 				  MfieldsSingle, // FIXME, this is not real nice, but might work...
-				  PushParticlesVpic<MparticlesVpic, MfieldsAccumulator,
+				  PushParticlesVpic<MparticlesVpic, MfieldsAccumulator, MfieldsInterpolator,
 						    ParticlesOps, AccumulatorOps, AccumulateOps, InterpolatorOps>,
 				  checks_order_1st,
 				  Checks_<MparticlesVpic, MfieldsStatePsc<PscGridBase, PscMaterialList>, void, checks_order_1st>,

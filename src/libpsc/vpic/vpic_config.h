@@ -94,12 +94,6 @@ using FieldArrayRemoteOps = PscFieldArrayRemoteOps<MfieldsState>;
 using DiagOps = PscDiagOps<MfieldsState>;
 #endif
 
-#ifdef DO_VPIC
-using MfieldsInterpolator = MfieldsInterpolatorVpic;
-#else
-using MfieldsInterpolator = MfieldsInterpolatorPsc<Grid>;
-#endif
-
 #if 1
 typedef PscRng Rng;
 typedef PscRngPool<Rng> RngPool;
