@@ -116,12 +116,6 @@ using HydroArrayOps = PscHydroArrayOps<MfieldsHydro>;
 #endif
 
 #if 1
-using ParticleBcList = PscParticleBcList;
-#else
-using ParticleBcList = VpicParticleBcList;
-#endif
-
-#if 1
 typedef PscRng Rng;
 typedef PscRngPool<Rng> RngPool;
 #else

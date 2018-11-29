@@ -11,6 +11,8 @@ template<typename _Mparticles, typename ParticlesOps, typename AccumulateOps, ty
 struct PushParticlesVpic : PushParticlesBase
 {
   using Mparticles = _Mparticles;
+  using Particles = typename Mparticles::Particles;
+  using ParticleBcList = typename Particles::ParticleBcList;
   using MfieldsState = ::MfieldsState;
   
   void push_mprts(Mparticles& mprts, MfieldsState& mflds, MfieldsInterpolator& interpolator,

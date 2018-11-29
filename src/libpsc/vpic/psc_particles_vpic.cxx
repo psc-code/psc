@@ -4,6 +4,11 @@
 #include <psc_particles_single.h>
 #include <psc_particles_single_by_kind.h>
 
+#if 1
+using ParticleBcList = PscParticleBcList;
+#else
+using ParticleBcList = VpicParticleBcList;
+#endif
 using Particles = PscParticlesBase<Grid, ParticleBcList>;
 using MparticlesVpic = MparticlesVpic_<Particles>;
 

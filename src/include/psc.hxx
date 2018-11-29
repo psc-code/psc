@@ -59,6 +59,8 @@ struct Psc
   using CleanDivOps = typename PscConfig::CleanDivOps;
   using InterpolatorOps = typename PscConfig::InterpolatorOps;
   using ParticlesOps = typename PscConfig::ParticlesOps;
+  using Particles = typename Mparticles_t::Particles;
+  using ParticleBcList = typename Particles::ParticleBcList;
 #endif
   
   // ----------------------------------------------------------------------

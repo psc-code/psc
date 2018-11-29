@@ -14,6 +14,11 @@
 #include "../libpsc/cuda/mparticles_cuda.hxx"
 #endif
 
+#if 1
+using ParticleBcList = PscParticleBcList;
+#else
+using ParticleBcList = VpicParticleBcList;
+#endif
 using Particles = PscParticlesBase<Grid, ParticleBcList>;
 using MparticlesVpic = MparticlesVpic_<Particles>;
 
