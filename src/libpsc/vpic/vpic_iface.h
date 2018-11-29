@@ -16,10 +16,10 @@
 
 struct psc_particle_inject;
 
-template <typename F>
+template <typename Particles, typename F>
 void vpic_mparticles_get_particles(Particles *vmprts, unsigned int n_prts, unsigned int off,
 				   F setter);
-template <typename F>
+template <typename Particles, typename F>
 void vpic_mparticles_set_particles(Particles *vmprts, unsigned int n_prts, unsigned int off,
 				   F getter);
 
@@ -91,7 +91,7 @@ struct vpic_simulation_info {
 // ----------------------------------------------------------------------
 // vpic_mparticles_get_particles
 
-template<typename F>
+template<typename Particles, typename F>
 void vpic_mparticles_get_particles(Particles *vmprts, unsigned int n_prts, unsigned int off,
 				   F getter)
 {
@@ -101,7 +101,7 @@ void vpic_mparticles_get_particles(Particles *vmprts, unsigned int n_prts, unsig
 
     unsigned int nb = std::max(v_off, off), ne = std::min(v_off + v_n_prts, off + n_prts);
     for (unsigned int n = nb; n < ne; n++) {
-      Particles::Particle* p = &sp->p[n - v_off];
+      auto* p = &sp->p[n - v_off];
 #if 0
       int i = p->i;
       int im[3] = { sp->g->nx + 2, sp->g->ny + 2, sp->g->nz + 2 };
@@ -131,7 +131,7 @@ void vpic_mparticles_get_particles(Particles *vmprts, unsigned int n_prts, unsig
   }
 }
 
-template<typename F>
+template<typename Particles, typename F>
 void vpic_mparticles_set_particles(Particles *vmprts, unsigned int n_prts, unsigned int off,
 				   F setter)
 {
@@ -143,7 +143,7 @@ void vpic_mparticles_set_particles(Particles *vmprts, unsigned int n_prts, unsig
     for (unsigned int n = nb; n < ne; n++) {
       struct vpic_mparticles_prt prt;
       setter(&prt, n - off);
-      Particles::Particle *p = &sp->p[n - v_off];
+      auto *p = &sp->p[n - v_off];
       p->dx = prt.dx[0];
       p->dy = prt.dx[1];
       p->dz = prt.dx[2];

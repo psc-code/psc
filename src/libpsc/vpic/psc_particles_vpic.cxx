@@ -4,6 +4,7 @@
 #include <psc_particles_single.h>
 #include <psc_particles_single_by_kind.h>
 
+using Particles = PscParticlesBase<Grid, ParticleBcList>;
 using MparticlesVpic = MparticlesVpic_<Particles>;
 
 // ======================================================================
@@ -175,7 +176,7 @@ struct ConvertFromVpic<MparticlesSingleByKind> : ConvertVpic<MparticlesSingleByK
 template<typename MP>
 void copy_to(MparticlesVpic& mprts_from, MP& mprts_to)
 {
-  Particles& vmprts = mprts_from.vmprts();
+  auto& vmprts = mprts_from.vmprts();
   int n_patches = mprts_to.n_patches();
   std::vector<uint> n_prts_by_patch(n_patches);
   mprts_from.get_size_all(n_prts_by_patch.data());
@@ -195,7 +196,7 @@ void copy_to(MparticlesVpic& mprts_from, MP& mprts_to)
 template<>
 void copy_from(MparticlesVpic& mprts_to, MparticlesSingle& mprts_from)
 {
-  Particles& vmprts = mprts_to.vmprts();
+  auto& vmprts = mprts_to.vmprts();
   int n_patches = mprts_to.n_patches();
   std::vector<uint> n_prts_by_patch(n_patches, 0);
   mprts_to.resize_all(n_prts_by_patch);
@@ -219,7 +220,7 @@ void copy_from(MparticlesVpic& mprts_to, MparticlesSingle& mprts_from)
 template<>
 void copy_from(MparticlesVpic& mprts_to, MparticlesSingleByKind& mprts_from)
 {
-  Particles& vmprts = mprts_to.vmprts();
+  auto& vmprts = mprts_to.vmprts();
   int n_patches = mprts_to.n_patches();
   uint n_prts_by_patch[n_patches];
   mprts_from.get_size_all(n_prts_by_patch);

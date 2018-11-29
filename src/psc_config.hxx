@@ -199,6 +199,7 @@ struct PscConfigVpic
 
   using InterpolatorOps = PscInterpolatorOps<MfieldsInterpolator, MfieldsState>;
   
+  using Particles = PscParticlesBase<Grid, ParticleBcList>;
   using Mparticles_t = MparticlesVpic_<Particles>;
 
 #if 0//def DO_VPIC

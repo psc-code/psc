@@ -14,6 +14,7 @@
 #include "../libpsc/cuda/mparticles_cuda.hxx"
 #endif
 
+using Particles = PscParticlesBase<Grid, ParticleBcList>;
 using MparticlesVpic = MparticlesVpic_<Particles>;
 
 template<typename _Mparticles, typename _MakeGrid = MakeTestGrid1>
