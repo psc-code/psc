@@ -88,8 +88,6 @@ using MfieldsState = MfieldsStateVpic;
 #else
 using MaterialList = PscMaterialList;
 using MfieldsState = MfieldsStatePsc<Grid, MaterialList>;
-using FieldArrayLocalOps = PscFieldArrayLocalOps<MfieldsState>;
-using FieldArrayRemoteOps = PscFieldArrayRemoteOps<MfieldsState>;
 #endif
 
 #if 1

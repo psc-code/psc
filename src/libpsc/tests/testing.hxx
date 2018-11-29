@@ -86,6 +86,8 @@ using TestConfig1vbec3dSingleXZ = TestConfig<dim_xz, MfieldsSingle,
 #ifdef DO_VPIC
 using AccumulateOps = VpicAccumulateOps<MfieldsState>;
 #else
+using FieldArrayLocalOps = PscFieldArrayLocalOps<MfieldsState>;
+using FieldArrayRemoteOps = PscFieldArrayRemoteOps<MfieldsState>;
 using AccumulateOps = PscAccumulateOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
 #endif
 

@@ -192,6 +192,8 @@ struct PscConfigVpic
   using AccumulateOps = VpicAccumulateOps<MfieldsState>;
   using CleanDivOps = VpicCleanDivOps<MfieldsState>;
 #else
+  using FieldArrayLocalOps = PscFieldArrayLocalOps<MfieldsState>;
+  using FieldArrayRemoteOps = PscFieldArrayRemoteOps<MfieldsState>;
   using PushFieldsOps = PscPushFieldsOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
   using AccumulateOps = PscAccumulateOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
   using CleanDivOps = PscCleanDivOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
