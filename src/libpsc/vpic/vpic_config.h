@@ -23,7 +23,6 @@
 #include "PscFieldArrayLocalOps.h"
 #include "PscFieldArrayRemoteOps.h"
 #include "PscFieldArray.h"
-#include "PscPushFieldsOps.hxx"
 
 #include "PscParticleBc.h"
 
@@ -119,7 +118,6 @@ struct VpicConfigPsc
   
   using FieldArrayLocalOps = PscFieldArrayLocalOps<MfieldsState>;
   using FieldArrayRemoteOps = PscFieldArrayRemoteOps<MfieldsState>;
-  using PushFieldsOps = PscPushFieldsOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
   using AccumulateOps = PscAccumulateOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
   using CleanDivOps = PscCleanDivOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
 
