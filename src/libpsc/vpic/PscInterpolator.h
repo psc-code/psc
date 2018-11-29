@@ -4,9 +4,11 @@
 // ======================================================================
 // PscInterpolatorOps
 
-template<typename MfieldsInterpolator, typename MfieldsState>
+template<typename _MfieldsInterpolator, typename MfieldsState>
 struct PscInterpolatorOps
 {
+  using MfieldsInterpolator = _MfieldsInterpolator;
+  
   // ----------------------------------------------------------------------
   // load
   

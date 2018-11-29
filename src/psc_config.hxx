@@ -188,38 +188,27 @@ struct PscConfig1vbecCuda<dim_xyz> : PscConfig_<dim_xyz, MparticlesCuda<BS444>, 
 template<typename VpicConfig>
 struct PscConfigVpic
 {
-  using Grid = typename VpicConfig::Grid;
   using MfieldsState = typename VpicConfig::MfieldsState;
-
-  using PushFieldsOps = typename VpicConfig::PushFieldsOps;
-  using AccumulateOps = typename VpicConfig::AccumulateOps;
-  using CleanDivOps = typename VpicConfig::CleanDivOps;
-
-  using MfieldsInterpolator = typename VpicConfig::MfieldsInterpolator;
-  using InterpolatorOps = typename VpicConfig::InterpolatorOps;
-  
-  using MfieldsAccumulator = typename VpicConfig::MfieldsAccumulator;
-  using AccumulatorOps = typename VpicConfig::AccumulatorOps;
-
-  using MfieldsHydro = typename VpicConfig::MfieldsHydro;
-  using HydroArrayOps = typename VpicConfig::HydroArrayOps;
-  
-  using Particles = typename VpicConfig::Particles;
   using Mparticles_t = typename VpicConfig::Mparticles;
 
-  using ParticlesOps = typename VpicConfig::ParticlesOps;
+  using HydroArrayOps = typename VpicConfig::HydroArrayOps;
   
   using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
-  using Sort_t = SortVpic<ParticlesOps, Mparticles_t>;
+  using Sort_t = SortVpic<typename VpicConfig::ParticlesOps, Mparticles_t>;
   using Collision_t = PscCollisionVpic;
-  using PushParticles_t = PushParticlesVpic<Mparticles_t, MfieldsState, MfieldsAccumulator, MfieldsInterpolator,
-					    ParticlesOps, AccumulatorOps, AccumulateOps, InterpolatorOps>;
-  using PushFields_t = PushFieldsVpic<PushFieldsOps>;
+  using PushParticles_t = PushParticlesVpic<Mparticles_t, MfieldsState,
+					    typename VpicConfig::MfieldsAccumulator,
+					    typename VpicConfig::MfieldsInterpolator,
+					    typename VpicConfig::ParticlesOps,
+					    typename VpicConfig::AccumulatorOps,
+					    typename VpicConfig::AccumulateOps,
+					    typename VpicConfig::InterpolatorOps>;
+  using PushFields_t = PushFieldsVpic<typename VpicConfig::PushFieldsOps>;
   using Bnd_t = BndVpic<MfieldsState>;
   using BndFields_t = BndFieldsVpic<MfieldsState>;
   using BndParticles_t = BndParticlesVpic<Mparticles_t>;
   using Checks_t = ChecksVpic<Mparticles_t, MfieldsState>;
-  using Marder_t = MarderVpic<Mparticles_t, ParticlesOps, CleanDivOps>;
+  using Marder_t = MarderVpic<Mparticles_t, typename VpicConfig::ParticlesOps, typename VpicConfig::CleanDivOps>;
   using OutputParticles = OutputParticlesHdf5<MparticlesSingle>;
   using dim_t = dim_xyz;
 
@@ -227,7 +216,9 @@ struct PscConfigVpic
   using DiagMixin = VpicDiagMixin<Mparticles_t, MfieldsState, MfieldsInterpolator, MfieldsHydro,
 				  DiagOps, ParticlesOps, HydroArrayOps>;
 #else
-  using DiagMixin = NoneDiagMixin<Mparticles_t, MfieldsState, MfieldsInterpolator, MfieldsHydro>;
+  using DiagMixin = NoneDiagMixin<Mparticles_t, MfieldsState,
+				  typename VpicConfig::MfieldsInterpolator,
+				  typename VpicConfig::MfieldsHydro>;
 #endif
 };
 

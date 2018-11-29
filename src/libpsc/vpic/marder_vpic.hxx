@@ -6,9 +6,10 @@
 // ======================================================================
 // psc_marder "vpic"
 
-template<typename Mparticles, typename ParticlesOps, typename CleanDivOps>
+template<typename Mparticles, typename ParticlesOps, typename _CleanDivOps>
 struct MarderVpic : MarderBase
 {
+  using CleanDivOps = _CleanDivOps;
   using MfieldsState = typename CleanDivOps::MfieldsState;
   using real_t = typename MfieldsState::real_t;
   

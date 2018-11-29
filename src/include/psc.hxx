@@ -52,18 +52,18 @@ struct Psc
   using Dim = typename PscConfig::dim_t;
 
 #ifdef VPIC
-  using Grid = typename PscConfig::Grid;
+  using Grid = typename MfieldsState::Grid;
   using MaterialList = typename MfieldsState::MaterialList;
   using Material = typename MaterialList::Material;
   using DiagMixin = typename PscConfig::DiagMixin;
-  using AccumulateOps = typename PscConfig::AccumulateOps;
-  using CleanDivOps = typename PscConfig::CleanDivOps;
-  using InterpolatorOps = typename PscConfig::InterpolatorOps;
-  using MfieldsInterpolator = typename PscConfig::MfieldsInterpolator;
-  using MfieldsAccumulator = typename PscConfig::MfieldsAccumulator;
-  using MfieldsHydro = typename PscConfig::MfieldsHydro;
+  using AccumulateOps = typename PushParticles_t::AccumulateOps;
+  using CleanDivOps = typename Marder_t::CleanDivOps;
+  using InterpolatorOps = typename PushParticles_t::InterpolatorOps;
+  using MfieldsInterpolator = typename InterpolatorOps::MfieldsInterpolator;
+  using MfieldsAccumulator = typename PushParticles_t::MfieldsAccumulator;
   using HydroArrayOps = typename PscConfig::HydroArrayOps;
-  using ParticlesOps = typename PscConfig::ParticlesOps;
+  using MfieldsHydro = typename HydroArrayOps::MfieldsHydro;
+  using ParticlesOps = typename PushParticles_t::ParticlesOps;
   using Particles = typename Mparticles_t::Particles;
   using ParticleBcList = typename Particles::ParticleBcList;
 #endif

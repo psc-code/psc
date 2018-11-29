@@ -85,31 +85,22 @@ using TestConfig1vbec3dSingleXZ = TestConfig<dim_xz, MfieldsSingle,
 
 using VpicConfig = VpicConfig_;
 
-using Grid = typename VpicConfig::Grid;
-using MfieldsState = typename VpicConfig::MfieldsState;
-using AccumulateOps = typename VpicConfig::AccumulateOps;
-
-using MfieldsInterpolator = typename VpicConfig::MfieldsInterpolator;
-using InterpolatorOps = typename VpicConfig::InterpolatorOps;
-
-using MfieldsAccumulator = typename VpicConfig::MfieldsAccumulator;
-using AccumulatorOps = typename VpicConfig::AccumulatorOps;
-
-using MfieldsHydro = typename VpicConfig::MfieldsHydro;
-using HydroArrayOps = typename VpicConfig::HydroArrayOps;
-
-using Particles = typename VpicConfig::Particles;
-using MparticlesVpic = typename VpicConfig::Mparticles;
-
-using ParticlesOps = typename VpicConfig::ParticlesOps;
+using _MfieldsStateVpic = typename VpicConfig::MfieldsState;
+using _MparticlesVpic = typename VpicConfig::Mparticles;
+using _PushParticlesVpic = PushParticlesVpic<_MparticlesVpic, _MfieldsStateVpic,
+					     typename VpicConfig::MfieldsAccumulator,
+					     typename VpicConfig::MfieldsInterpolator,
+					     typename VpicConfig::ParticlesOps,
+					     typename VpicConfig::AccumulatorOps,
+					     typename VpicConfig::AccumulateOps,
+					     typename VpicConfig::InterpolatorOps>;
 
 using TestConfigVpic = TestConfig<dim_xyz,
 				  MfieldsSingle, // FIXME, this is not real nice, but might work...
-				  PushParticlesVpic<MparticlesVpic, MfieldsState, MfieldsAccumulator, MfieldsInterpolator,
-						    ParticlesOps, AccumulatorOps, AccumulateOps, InterpolatorOps>,
+				  _PushParticlesVpic,
 				  checks_order_1st,
-				  Checks_<MparticlesVpic, MfieldsStatePsc<PscGridBase, PscMaterialList>, void, checks_order_1st>,
-				  BndParticlesVpic<MparticlesVpic>>;
+				  Checks_<_MparticlesVpic, _MfieldsStateVpic, void, checks_order_1st>,
+				  BndParticlesVpic<_MparticlesVpic>>;
 
 #ifdef USE_CUDA
 using TestConfig1vbec3dCuda = TestConfig<dim_xyz, MfieldsCuda,

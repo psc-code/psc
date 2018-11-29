@@ -15,9 +15,10 @@
 // ======================================================================
 // PscHydroArrayOps
 
-template<typename MfieldsHydro>
+template<typename _MfieldsHydro>
 struct PscHydroArrayOps
 {
+  using MfieldsHydro = _MfieldsHydro;
   using Grid = typename MfieldsHydro::Grid;
   using Element = typename MfieldsHydro::Element;
   
