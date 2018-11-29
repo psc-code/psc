@@ -185,76 +185,29 @@ struct PscConfig1vbecCuda<dim_xyz> : PscConfig_<dim_xyz, MparticlesCuda<BS444>, 
 #include "../libpsc/vpic/marder_vpic.hxx"
 #include "../libpsc/vpic/checks_vpic.hxx"
 
+template<typename VpicConfig>
 struct PscConfigVpic
 {
-#ifdef DO_VPIC
-  using Grid = VpicGridBase;
-#else
-  using Grid = PscGridBase;
-#endif
+  using Grid = typename VpicConfig::Grid;
+  using MfieldsState = typename VpicConfig::MfieldsState;
 
-#ifdef DO_VPIC
-  using MaterialList = VpicMaterialList;
-  using MfieldsState = MfieldsStateVpic;
-#else
-  using MaterialList = PscMaterialList;
-  using MfieldsState = MfieldsStatePsc<Grid, MaterialList>;
-#endif
+  using PushFieldsOps = typename VpicConfig::PushFieldsOps;
+  using AccumulateOps = typename VpicConfig::AccumulateOps;
+  using CleanDivOps = typename VpicConfig::CleanDivOps;
 
-#ifdef DO_VPIC
-  using PushFieldsOps = VpicPushFieldsOps<MfieldsState>;
-  using AccumulateOps = VpicAccumulateOps<MfieldsState>;
-  using CleanDivOps = VpicCleanDivOps<MfieldsState>;
-#else
-  using FieldArrayLocalOps = PscFieldArrayLocalOps<MfieldsState>;
-  using FieldArrayRemoteOps = PscFieldArrayRemoteOps<MfieldsState>;
-  using PushFieldsOps = PscPushFieldsOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
-  using AccumulateOps = PscAccumulateOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
-  using CleanDivOps = PscCleanDivOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
-#endif
-
-#ifdef DO_VPIC
-  using MfieldsInterpolator = MfieldsInterpolatorVpic;
-#else
-  using MfieldsInterpolator = MfieldsInterpolatorPsc<Grid>;
-#endif
-  using InterpolatorOps = PscInterpolatorOps<MfieldsInterpolator, MfieldsState>;
+  using MfieldsInterpolator = typename VpicConfig::MfieldsInterpolator;
+  using InterpolatorOps = typename VpicConfig::InterpolatorOps;
   
-#ifdef DO_VPIC
-  using MfieldsAccumulator = MfieldsAccumulatorVpic;
-#else
-  using MfieldsAccumulator = MfieldsAccumulatorPsc<Grid>;
-#endif
-  using AccumulatorOps = PscAccumulatorOps<MfieldsAccumulator, MfieldsState>;
+  using MfieldsAccumulator = typename VpicConfig::MfieldsAccumulator;
+  using AccumulatorOps = typename VpicConfig::AccumulatorOps;
+
+  using MfieldsHydro = typename VpicConfig::MfieldsHydro;
+  using HydroArrayOps = typename VpicConfig::HydroArrayOps;
   
-#ifdef DO_VPIC
-  using MfieldsHydro = MfieldsHydroVpic;
-  using HydroArrayOps = VpicHydroArrayOps<MfieldsHydro>;
-#else
-  using MfieldsHydro = MfieldsHydroPsc<Grid>;
-  using HydroArrayOps = PscHydroArrayOps<MfieldsHydro>;
-#endif
+  using Particles = typename VpicConfig::Particles;
+  using Mparticles_t = typename VpicConfig::Mparticles;
 
-#if 1
-  using ParticleBcList = PscParticleBcList;
-#else
-  using ParticleBcList = VpicParticleBcList;
-#endif
-
-  using Particles = PscParticlesBase<Grid, ParticleBcList>;
-  using Mparticles_t = MparticlesVpic_<Particles>;
-
-#if 0//def DO_VPIC
-  using ParticlesOps = VpicParticlesOps<Particles, MfieldsState, Interpolator, MfieldsAccumulator, MfieldsHydro>;
-#else
-  using ParticlesOps = PscParticlesOps<Mparticles_t, MfieldsState, MfieldsInterpolator, MfieldsAccumulator, MfieldsHydro>;
-#endif
-
-#ifdef DO_VPIC
-  using DiagOps = VpicDiagOps<MfieldsState>;
-#else
-  using DiagOps = PscDiagOps<MfieldsState>;
-#endif
+  using ParticlesOps = typename VpicConfig::ParticlesOps;
   
   using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Sort_t = SortVpic<ParticlesOps, Mparticles_t>;

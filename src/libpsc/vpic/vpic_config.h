@@ -2,7 +2,7 @@
 #ifndef VPIC_CONFIG_H
 #define VPIC_CONFIG_H
 
-#define DO_VPIC 1
+//#define DO_VPIC 1
 
 #ifdef USE_VPIC
 #include "util/profile/profile.h"
@@ -73,6 +73,77 @@
 #include "mfields_accumulator_vpic.hxx"
 
 #endif
+
+struct VpicConfig_
+{
+#ifdef DO_VPIC
+  using Grid = VpicGridBase;
+#else
+  using Grid = PscGridBase;
+#endif
+
+#ifdef DO_VPIC
+  using MaterialList = VpicMaterialList;
+  using MfieldsState = MfieldsStateVpic;
+#else
+  using MaterialList = PscMaterialList;
+  using MfieldsState = MfieldsStatePsc<Grid, MaterialList>;
+#endif
+  
+#ifdef DO_VPIC
+  using PushFieldsOps = VpicPushFieldsOps<MfieldsState>;
+  using AccumulateOps = VpicAccumulateOps<MfieldsState>;
+  using CleanDivOps = VpicCleanDivOps<MfieldsState>;
+#else
+  using FieldArrayLocalOps = PscFieldArrayLocalOps<MfieldsState>;
+  using FieldArrayRemoteOps = PscFieldArrayRemoteOps<MfieldsState>;
+  using PushFieldsOps = PscPushFieldsOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
+  using AccumulateOps = PscAccumulateOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
+  using CleanDivOps = PscCleanDivOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
+#endif
+
+#ifdef DO_VPIC
+  using MfieldsInterpolator = MfieldsInterpolatorVpic;
+#else
+  using MfieldsInterpolator = MfieldsInterpolatorPsc<Grid>;
+#endif
+  using InterpolatorOps = PscInterpolatorOps<MfieldsInterpolator, MfieldsState>;
+  
+#ifdef DO_VPIC
+  using MfieldsAccumulator = MfieldsAccumulatorVpic;
+#else
+  using MfieldsAccumulator = MfieldsAccumulatorPsc<Grid>;
+#endif
+  using AccumulatorOps = PscAccumulatorOps<MfieldsAccumulator, MfieldsState>;
+  
+#ifdef DO_VPIC
+  using MfieldsHydro = MfieldsHydroVpic;
+  using HydroArrayOps = VpicHydroArrayOps<MfieldsHydro>;
+#else
+  using MfieldsHydro = MfieldsHydroPsc<Grid>;
+  using HydroArrayOps = PscHydroArrayOps<MfieldsHydro>;
+#endif
+
+#if 1
+  using ParticleBcList = PscParticleBcList;
+#else
+  using ParticleBcList = VpicParticleBcList;
+#endif
+  using Particles = PscParticlesBase<Grid, ParticleBcList>;
+  using Mparticles = MparticlesVpic_<Particles>;
+
+#if 0//def DO_VPIC
+  using ParticlesOps = VpicParticlesOps<Particles, MfieldsState, Interpolator, MfieldsAccumulator, MfieldsHydro>;
+#else
+  using ParticlesOps = PscParticlesOps<Mparticles, MfieldsState, MfieldsInterpolator, MfieldsAccumulator, MfieldsHydro>;
+#endif
+
+/* #ifdef DO_VPIC */
+/*   using DiagOps = VpicDiagOps<MfieldsState>; */
+/* #else */
+/*   using DiagOps = PscDiagOps<MfieldsState>; */
+/* #endif */
+};
 
 #if 1
 typedef PscRng Rng;

@@ -83,64 +83,25 @@ using TestConfig1vbec3dSingleXZ = TestConfig<dim_xz, MfieldsSingle,
 					     PushParticlesSimple<Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_xz>, PushParticlesVb>,
 					     checks_order_1st>;
 
-#ifdef DO_VPIC
-using Grid = VpicGridBase;
-#else
-using Grid = PscGridBase;
-#endif
+using VpicConfig = VpicConfig_;
 
-#ifdef DO_VPIC
-using MaterialList = VpicMaterialList;
-using MfieldsState = MfieldsStateVpic;
-#else
-using MaterialList = PscMaterialList;
-using MfieldsState = MfieldsStatePsc<Grid, MaterialList>;
-#endif
+using Grid = typename VpicConfig::Grid;
+using MfieldsState = typename VpicConfig::MfieldsState;
+using AccumulateOps = typename VpicConfig::AccumulateOps;
 
-#ifdef DO_VPIC
-using AccumulateOps = VpicAccumulateOps<MfieldsState>;
-#else
-using FieldArrayLocalOps = PscFieldArrayLocalOps<MfieldsState>;
-using FieldArrayRemoteOps = PscFieldArrayRemoteOps<MfieldsState>;
-using AccumulateOps = PscAccumulateOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
-#endif
+using MfieldsInterpolator = typename VpicConfig::MfieldsInterpolator;
+using InterpolatorOps = typename VpicConfig::InterpolatorOps;
 
-#ifdef DO_VPIC
-using MfieldsInterpolator = MfieldsInterpolatorVpic;
-#else
-using MfieldsInterpolator = MfieldsInterpolatorPsc<Grid>;
-#endif
-using InterpolatorOps = PscInterpolatorOps<MfieldsInterpolator, MfieldsState>;
+using MfieldsAccumulator = typename VpicConfig::MfieldsAccumulator;
+using AccumulatorOps = typename VpicConfig::AccumulatorOps;
 
-#ifdef DO_VPIC
-using MfieldsAccumulator = MfieldsAccumulatorVpic;
-#else
-using MfieldsAccumulator = MfieldsAccumulatorPsc<Grid>;
-#endif
-using AccumulatorOps = PscAccumulatorOps<MfieldsAccumulator, MfieldsState>;
+using MfieldsHydro = typename VpicConfig::MfieldsHydro;
+using HydroArrayOps = typename VpicConfig::HydroArrayOps;
 
-#ifdef DO_VPIC
-using MfieldsHydro = MfieldsHydroVpic;
-using HydroArrayOps = VpicHydroArrayOps<MfieldsHydro>;
-#else
-using MfieldsHydro = MfieldsHydroPsc<Grid>;
-using HydroArrayOps = PscHydroArrayOps<MfieldsHydro>;
-#endif
+using Particles = typename VpicConfig::Particles;
+using MparticlesVpic = typename VpicConfig::Mparticles;
 
-#if 1
-using ParticleBcList = PscParticleBcList;
-#else
-using ParticleBcList = VpicParticleBcList;
-#endif
-
-using Particles = PscParticlesBase<Grid, ParticleBcList>;
-using MparticlesVpic = MparticlesVpic_<Particles>;
-
-#if 0//def DO_VPIC
-using ParticlesOps = VpicParticlesOps<Particles, MfieldsState, Interpolator, MfieldsAccumulator, MfieldsHydro>;
-#else
-using ParticlesOps = PscParticlesOps<MparticlesVpic, MfieldsState, MfieldsInterpolator, MfieldsAccumulator, MfieldsHydro>;
-#endif
+using ParticlesOps = typename VpicConfig::ParticlesOps;
 
 using TestConfigVpic = TestConfig<dim_xyz,
 				  MfieldsSingle, // FIXME, this is not real nice, but might work...
