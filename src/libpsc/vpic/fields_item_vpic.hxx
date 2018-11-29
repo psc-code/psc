@@ -26,7 +26,7 @@ struct OutputFieldsVpic
 // ----------------------------------------------------------------------
 // OutputHydroVpic
 
-template<typename Mparticles, typename ParticlesOps>
+template<typename Mparticles, typename MfieldsHydro, typename ParticlesOps, typename HydroArrayOps>
 struct OutputHydroVpic
 {
   struct Result

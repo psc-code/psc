@@ -107,14 +107,6 @@ using MfieldsAccumulator = MfieldsAccumulatorPsc<Grid>;
 #endif
 using AccumulatorOps = PscAccumulatorOps<MfieldsAccumulator, MfieldsState>;
 
-#ifdef DO_VPIC
-using MfieldsHydro = MfieldsHydroVpic;
-using HydroArrayOps = VpicHydroArrayOps<MfieldsHydro>;
-#else
-using MfieldsHydro = MfieldsHydroPsc<Grid>;
-using HydroArrayOps = PscHydroArrayOps<MfieldsHydro>;
-#endif
-
 #if 1
 typedef PscRng Rng;
 typedef PscRngPool<Rng> RngPool;

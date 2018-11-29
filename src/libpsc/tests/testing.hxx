@@ -90,6 +90,14 @@ using AccumulateOps = PscAccumulateOps<MfieldsState, FieldArrayLocalOps, FieldAr
 #endif
 using InterpolatorOps = PscInterpolatorOps<MfieldsInterpolator, MfieldsState>;
 
+#ifdef DO_VPIC
+using MfieldsHydro = MfieldsHydroVpic;
+using HydroArrayOps = VpicHydroArrayOps<MfieldsHydro>;
+#else
+using MfieldsHydro = MfieldsHydroPsc<Grid>;
+using HydroArrayOps = PscHydroArrayOps<MfieldsHydro>;
+#endif
+
 #if 1
 using ParticleBcList = PscParticleBcList;
 #else
