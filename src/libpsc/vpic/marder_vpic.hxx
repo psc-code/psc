@@ -6,7 +6,7 @@
 // ======================================================================
 // psc_marder "vpic"
 
-template<typename ParticlesOps, typename CleanDivOps>
+template<typename Mparticles, typename ParticlesOps, typename CleanDivOps>
 struct MarderVpic : MarderBase
 {
   using real_t = MfieldsState::real_t;
@@ -18,7 +18,7 @@ struct MarderVpic : MarderBase
   // ----------------------------------------------------------------------
   // psc_marder_vpic_clean_div_e
 
-  void psc_marder_vpic_clean_div_e(MfieldsState& mflds, MparticlesVpic& mprts)
+  void psc_marder_vpic_clean_div_e(MfieldsState& mflds, Mparticles& mprts)
   {
     mpi_printf(comm_, "Divergence cleaning electric field\n");
   
@@ -66,7 +66,7 @@ struct MarderVpic : MarderBase
     assert(0);
   }
   
-  void operator()(MfieldsState& mflds, MparticlesVpic& mprts)
+  void operator()(MfieldsState& mflds, Mparticles& mprts)
   {
     const auto& grid = mflds.grid();
     bool clean_div_e = (clean_div_e_interval_ > 0 && grid.timestep() % clean_div_e_interval_ == 0);

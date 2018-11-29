@@ -3,11 +3,9 @@
 
 #include "vpic_iface.h"
 
-template<typename ParticlesOps>
+template<typename ParticlesOps, typename Mparticles>
 struct SortVpic
 {
-  using Mparticles = MparticlesVpic;
-
   void operator()(Mparticles& mprts)
   {
     auto step = mprts.grid().timestep();

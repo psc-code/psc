@@ -199,32 +199,33 @@ struct PscConfigVpic
 
   using InterpolatorOps = PscInterpolatorOps<MfieldsInterpolator, MfieldsState>;
   
+  using Mparticles_t = MparticlesVpic;
+
 #if 0//def DO_VPIC
 using ParticlesOps = VpicParticlesOps<Particles, MfieldsState, Interpolator, MfieldsAccumulator, MfieldsHydro>;
 #else
-using ParticlesOps = PscParticlesOps<MparticlesVpic, MfieldsState, MfieldsInterpolator, MfieldsAccumulator, MfieldsHydro>;
+using ParticlesOps = PscParticlesOps<Mparticles_t, MfieldsState, MfieldsInterpolator, MfieldsAccumulator, MfieldsHydro>;
 #endif
 
-  using Mparticles_t = MparticlesVpic;
   using MfieldsState = ::MfieldsState;
   using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
-  using Sort_t = SortVpic<ParticlesOps>;
+  using Sort_t = SortVpic<ParticlesOps, Mparticles_t>;
   using Collision_t = PscCollisionVpic;
-  using PushParticles_t = PushParticlesVpic<ParticlesOps, AccumulateOps, InterpolatorOps>;
+  using PushParticles_t = PushParticlesVpic<Mparticles_t, ParticlesOps, AccumulateOps, InterpolatorOps>;
   using PushFields_t = PushFieldsVpic<PushFieldsOps>;
   using Bnd_t = BndVpic;
   using BndFields_t = BndFieldsVpic;
-  using BndParticles_t = BndParticlesVpic;
-  using Checks_t = ChecksVpic;
-  using Marder_t = MarderVpic<ParticlesOps, CleanDivOps>;
+  using BndParticles_t = BndParticlesVpic<Mparticles_t>;
+  using Checks_t = ChecksVpic<Mparticles_t>;
+  using Marder_t = MarderVpic<Mparticles_t, ParticlesOps, CleanDivOps>;
   using OutputParticles = OutputParticlesHdf5<MparticlesSingle>;
   using dim_t = dim_xyz;
 
 #if 0
-  using DiagMixin = VpicDiagMixin<MparticlesVpic, MfieldsState, MfieldsInterpolator, MfieldsHydro,
+  using DiagMixin = VpicDiagMixin<Mparticles_t, MfieldsState, MfieldsInterpolator, MfieldsHydro,
 				  DiagOps, ParticlesOps, HydroArrayOps>;
 #else
-  using DiagMixin = NoneDiagMixin<MparticlesVpic, MfieldsState, MfieldsInterpolator, MfieldsHydro>;
+  using DiagMixin = NoneDiagMixin<Mparticles_t, MfieldsState, MfieldsInterpolator, MfieldsHydro>;
 #endif
 };
 

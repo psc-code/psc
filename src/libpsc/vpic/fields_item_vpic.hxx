@@ -26,7 +26,7 @@ struct OutputFieldsVpic
 // ----------------------------------------------------------------------
 // OutputHydroVpic
 
-template<typename ParticlesOps>
+template<typename Mparticles, typename ParticlesOps>
 struct OutputHydroVpic
 {
   struct Result
@@ -47,7 +47,7 @@ struct OutputHydroVpic
     : mflds_res_{grid, MfieldsHydro::N_COMP * int(grid.kinds.size()), {1,1,1}}
   {}
 
-  Result operator()(MparticlesVpic& mprts, MfieldsHydro& mflds_hydro, MfieldsInterpolator& interpolator)
+  Result operator()(Mparticles& mprts, MfieldsHydro& mflds_hydro, MfieldsInterpolator& interpolator)
   {
     // This relies on load_interpolator_array() having been called earlier
 
@@ -61,7 +61,7 @@ struct OutputHydroVpic
       
       // FIXME, just iterate over species instead?
       auto& sp = *std::find_if(mprts.begin(), mprts.end(),
-			       [&](const typename MparticlesVpic::Species& sp) { return sp.id == kind; });
+			       [&](const typename Mparticles::Species& sp) { return sp.id == kind; });
       ParticlesOps::accumulate_hydro_p(mflds_hydro, sp, interpolator);
       
       HydroArrayOps::synchronize(mflds_hydro);

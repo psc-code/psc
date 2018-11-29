@@ -53,7 +53,7 @@ private:
 };
 
 // ======================================================================
-// MparticlesVpic
+// MparticlesVpic_
 
 template<typename _Particles>
 struct MparticlesVpic_ : MparticlesBase
