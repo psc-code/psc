@@ -234,6 +234,12 @@ struct PscConfigVpic
   using ParticlesOps = PscParticlesOps<Mparticles_t, MfieldsState, MfieldsInterpolator, MfieldsAccumulator, MfieldsHydro>;
 #endif
 
+#ifdef DO_VPIC
+  using DiagOps = VpicDiagOps<MfieldsState>;
+#else
+  using DiagOps = PscDiagOps<MfieldsState>;
+#endif
+  
   using MfieldsState = ::MfieldsState;
   using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Sort_t = SortVpic<ParticlesOps, Mparticles_t>;

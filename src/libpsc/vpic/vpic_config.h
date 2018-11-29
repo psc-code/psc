@@ -85,13 +85,11 @@ using Grid = PscGridBase;
 #ifdef DO_VPIC
 using MaterialList = VpicMaterialList;
 using MfieldsState = MfieldsStateVpic;
-using DiagOps = VpicDiagOps<MfieldsState>;
 #else
 using MaterialList = PscMaterialList;
 using MfieldsState = MfieldsStatePsc<Grid, MaterialList>;
 using FieldArrayLocalOps = PscFieldArrayLocalOps<MfieldsState>;
 using FieldArrayRemoteOps = PscFieldArrayRemoteOps<MfieldsState>;
-using DiagOps = PscDiagOps<MfieldsState>;
 #endif
 
 #if 1
