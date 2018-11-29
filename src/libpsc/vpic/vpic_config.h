@@ -122,7 +122,6 @@ using ParticleBcList = VpicParticleBcList;
 #endif
 
 using Particles = PscParticlesBase<Grid, ParticleBcList>;
-using MparticlesVpic = MparticlesVpic_<Particles>;
 
 #if 1
 typedef PscRng Rng;

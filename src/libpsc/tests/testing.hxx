@@ -90,6 +90,8 @@ using AccumulateOps = PscAccumulateOps<MfieldsState, FieldArrayLocalOps, FieldAr
 #endif
 using InterpolatorOps = PscInterpolatorOps<MfieldsInterpolator, MfieldsState>;
 
+using MparticlesVpic = MparticlesVpic_<Particles>;
+
 #if 0//def DO_VPIC
 using ParticlesOps = VpicParticlesOps<Particles, MfieldsState, Interpolator, MfieldsAccumulator, MfieldsHydro>;
 #else

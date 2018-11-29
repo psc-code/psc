@@ -14,6 +14,8 @@
 #include "../libpsc/cuda/mparticles_cuda.hxx"
 #endif
 
+using MparticlesVpic = MparticlesVpic_<Particles>;
+
 template<typename _Mparticles, typename _MakeGrid = MakeTestGrid1>
 struct Config
 {

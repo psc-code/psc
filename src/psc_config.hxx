@@ -199,7 +199,7 @@ struct PscConfigVpic
 
   using InterpolatorOps = PscInterpolatorOps<MfieldsInterpolator, MfieldsState>;
   
-  using Mparticles_t = MparticlesVpic;
+  using Mparticles_t = MparticlesVpic_<Particles>;
 
 #if 0//def DO_VPIC
 using ParticlesOps = VpicParticlesOps<Particles, MfieldsState, Interpolator, MfieldsAccumulator, MfieldsHydro>;
