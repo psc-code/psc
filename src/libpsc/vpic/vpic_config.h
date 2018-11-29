@@ -2,7 +2,7 @@
 #ifndef VPIC_CONFIG_H
 #define VPIC_CONFIG_H
 
-//#define DO_VPIC 1
+#define DO_VPIC 1
 
 #ifdef USE_VPIC
 #include "util/profile/profile.h"
@@ -71,8 +71,6 @@
 #include "mfields_hydro_vpic.hxx"
 #include "mfields_interpolator_vpic.hxx"
 #include "mfields_accumulator_vpic.hxx"
-
-#undef particle_t
 
 #endif
 

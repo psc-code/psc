@@ -5,9 +5,11 @@
 // ======================================================================
 // VpicCleanDivOps
 
-template<typename MfieldsState>
+template<typename _MfieldsState>
 struct VpicCleanDivOps
 {
+  using MfieldsState = _MfieldsState;
+  
   static void clear_rhof(field_array_t* fa) { fa->kernel->clear_rhof(fa); }
   static void synchronize_rho(field_array_t* fa) { fa->kernel->synchronize_rho(fa); }
   static void compute_div_e_err(field_array_t* fa) { fa->kernel->compute_div_e_err(fa); }
