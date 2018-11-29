@@ -84,11 +84,17 @@ using TestConfig1vbec3dSingleXZ = TestConfig<dim_xz, MfieldsSingle,
 					     checks_order_1st>;
 
 #ifdef DO_VPIC
-  using MaterialList = VpicMaterialList;
-  using MfieldsState = MfieldsStateVpic;
+using Grid = VpicGridBase;
 #else
-  using MaterialList = PscMaterialList;
-  using MfieldsState = MfieldsStatePsc<Grid, MaterialList>;
+using Grid = PscGridBase;
+#endif
+
+#ifdef DO_VPIC
+using MaterialList = VpicMaterialList;
+using MfieldsState = MfieldsStateVpic;
+#else
+using MaterialList = PscMaterialList;
+using MfieldsState = MfieldsStatePsc<Grid, MaterialList>;
 #endif
 
 #ifdef DO_VPIC

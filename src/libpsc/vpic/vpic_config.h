@@ -76,12 +76,6 @@
 
 #endif
 
-#ifdef DO_VPIC
-using Grid = VpicGridBase;
-#else
-using Grid = PscGridBase;
-#endif
-
 #if 1
 typedef PscRng Rng;
 typedef PscRngPool<Rng> RngPool;

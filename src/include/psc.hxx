@@ -52,6 +52,7 @@ struct Psc
   using Dim = typename PscConfig::dim_t;
 
 #ifdef VPIC
+  using Grid = typename PscConfig::Grid;
   using MaterialList = typename MfieldsState::MaterialList;
   using Material = typename MaterialList::Material;
   using DiagMixin = typename PscConfig::DiagMixin;

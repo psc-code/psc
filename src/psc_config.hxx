@@ -188,6 +188,12 @@ struct PscConfig1vbecCuda<dim_xyz> : PscConfig_<dim_xyz, MparticlesCuda<BS444>, 
 struct PscConfigVpic
 {
 #ifdef DO_VPIC
+  using Grid = VpicGridBase;
+#else
+  using Grid = PscGridBase;
+#endif
+
+#ifdef DO_VPIC
   using MaterialList = VpicMaterialList;
   using MfieldsState = MfieldsStateVpic;
 #else
