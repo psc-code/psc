@@ -99,7 +99,6 @@ using MfieldsInterpolator = MfieldsInterpolatorVpic;
 #else
 using MfieldsInterpolator = MfieldsInterpolatorPsc<Grid>;
 #endif
-using InterpolatorOps = PscInterpolatorOps<MfieldsInterpolator, MfieldsState>;
 
 #ifdef DO_VPIC
 using MfieldsAccumulator = MfieldsAccumulatorVpic;

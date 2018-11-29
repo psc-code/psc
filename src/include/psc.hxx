@@ -57,6 +57,7 @@ struct Psc
   using DiagMixin = typename PscConfig::DiagMixin;
   using AccumulateOps = typename PscConfig::AccumulateOps;
   using CleanDivOps = typename PscConfig::CleanDivOps;
+  using InterpolatorOps = typename PscConfig::InterpolatorOps;
 #endif
   
   // ----------------------------------------------------------------------

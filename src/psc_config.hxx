@@ -197,12 +197,14 @@ struct PscConfigVpic
   using CleanDivOps = PscCleanDivOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
 #endif
 
+  using InterpolatorOps = PscInterpolatorOps<MfieldsInterpolator, MfieldsState>;
+  
   using Mparticles_t = MparticlesVpic;
   using MfieldsState = ::MfieldsState;
   using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Sort_t = SortVpic;
   using Collision_t = PscCollisionVpic;
-  using PushParticles_t = PushParticlesVpic<AccumulateOps>;
+  using PushParticles_t = PushParticlesVpic<AccumulateOps, InterpolatorOps>;
   using PushFields_t = PushFieldsVpic<PushFieldsOps>;
   using Bnd_t = BndVpic;
   using BndFields_t = BndFieldsVpic;
