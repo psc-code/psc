@@ -8,7 +8,7 @@
 // ======================================================================
 // SetupFields
 
-using VpicConfig = VpicConfig_;
+using VpicConfig = VpicConfigPsc;
 
 template<>
 struct SetupFields<VpicConfig::MfieldsState>

@@ -15,19 +15,13 @@
 #endif
 
 #ifdef DO_VPIC
-using Grid = VpicGridBase;
+using VpicConfig = VpicConfigWrap;
 #else
-using Grid = PscGridBase;
+using VpicConfig = VpicConfigPsc;
 #endif
 
-#ifdef DO_VPIC
-using ParticleBcList = VpicParticleBcList;
-using Particles = VpicParticlesBase<Grid, ParticleBcList>;
-#else
-using ParticleBcList = PscParticleBcList;
-using Particles = PscParticlesBase<Grid, ParticleBcList>;
-#endif
-using MparticlesVpic = MparticlesVpic_<Particles>;
+using Grid = VpicConfig::Grid;
+using MparticlesVpic = VpicConfig::Mparticles;
 
 template<typename _Mparticles, typename _MakeGrid = MakeTestGrid1>
 struct Config

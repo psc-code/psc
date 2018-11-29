@@ -185,9 +185,10 @@ struct PscConfig1vbecCuda<dim_xyz> : PscConfig_<dim_xyz, MparticlesCuda<BS444>, 
 #include "../libpsc/vpic/marder_vpic.hxx"
 #include "../libpsc/vpic/checks_vpic.hxx"
 
-template<typename VpicConfig>
-struct PscConfigVpic
+struct PscConfigVpicWrap
 {
+  using VpicConfig = VpicConfigWrap;
+  
   using MfieldsState = typename VpicConfig::MfieldsState;
   using Mparticles_t = typename VpicConfig::Mparticles;
 
@@ -202,6 +203,42 @@ struct PscConfigVpic
 					    typename VpicConfig::AccumulateOps,
 					    typename VpicConfig::InterpolatorOps>;
   using PushFields_t = PushFieldsVpicWrap<MfieldsState>;
+  using Bnd_t = BndVpic<MfieldsState>;
+  using BndFields_t = BndFieldsVpic<MfieldsState>;
+  using BndParticles_t = BndParticlesVpic<Mparticles_t>;
+  using Checks_t = ChecksVpic<Mparticles_t, MfieldsState>;
+  using Marder_t = MarderVpic<Mparticles_t, typename VpicConfig::ParticlesOps, typename VpicConfig::CleanDivOps>;
+  using OutputParticles = OutputParticlesHdf5<MparticlesSingle>;
+  using dim_t = dim_xyz;
+
+#if 0
+  using DiagMixin = VpicDiagMixin<Mparticles_t, MfieldsState, MfieldsInterpolator, MfieldsHydro,
+				  DiagOps, ParticlesOps, HydroArrayOps>;
+#else
+  using DiagMixin = NoneDiagMixin<Mparticles_t, MfieldsState,
+				  typename VpicConfig::MfieldsInterpolator,
+				  typename VpicConfig::MfieldsHydro>;
+#endif
+};
+
+struct PscConfigVpicPsc
+{
+  using VpicConfig = VpicConfigPsc;
+
+  using MfieldsState = typename VpicConfig::MfieldsState;
+  using Mparticles_t = typename VpicConfig::Mparticles;
+
+  using HydroArrayOps = typename VpicConfig::HydroArrayOps;
+  
+  using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
+  using Sort_t = SortVpic<Mparticles_t>;
+  using Collision_t = PscCollisionVpic;
+  using PushParticles_t = PushParticlesVpic<Mparticles_t, MfieldsState,
+					    typename VpicConfig::ParticlesOps,
+					    typename VpicConfig::AccumulatorOps,
+					    typename VpicConfig::AccumulateOps,
+					    typename VpicConfig::InterpolatorOps>;
+  using PushFields_t = PushFieldsVpic<MfieldsState>;
   using Bnd_t = BndVpic<MfieldsState>;
   using BndFields_t = BndFieldsVpic<MfieldsState>;
   using BndParticles_t = BndParticlesVpic<Mparticles_t>;

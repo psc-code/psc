@@ -83,7 +83,7 @@ using TestConfig1vbec3dSingleXZ = TestConfig<dim_xz, MfieldsSingle,
 					     PushParticlesSimple<Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_xz>, PushParticlesVb>,
 					     checks_order_1st>;
 
-using VpicConfig = VpicConfig_;
+using VpicConfig = VpicConfigPsc;
 
 using _MfieldsStateVpic = typename VpicConfig::MfieldsState;
 using _MparticlesVpic = typename VpicConfig::Mparticles;

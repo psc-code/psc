@@ -209,7 +209,11 @@ struct globals_physics
 };
 
 #ifdef VPIC
-using PscConfig = PscConfigVpic<VpicConfig_>;
+#ifdef DO_VPIC
+using PscConfig = PscConfigVpicWrap;
+#else
+using PscConfig = PscConfigVpicPsc;
+#endif
 #else
 using PscConfig = PscConfig1vbecSingle<dim_xz>;
 #endif
