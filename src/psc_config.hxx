@@ -187,13 +187,19 @@ struct PscConfig1vbecCuda<dim_xyz> : PscConfig_<dim_xyz, MparticlesCuda<BS444>, 
 
 struct PscConfigVpic
 {
+#ifdef DO_VPIC
+  using PushFieldsOps = VpicPushFieldsOps<MfieldsState>;
+#else
+  using PushFieldsOps = PscPushFieldsOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
+#endif
+
   using Mparticles_t = MparticlesVpic;
   using MfieldsState = ::MfieldsState;
   using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Sort_t = SortVpic;
   using Collision_t = PscCollisionVpic;
   using PushParticles_t = PushParticlesVpic;
-  using PushFields_t = PushFieldsVpic;
+  using PushFields_t = PushFieldsVpic<PushFieldsOps>;
   using Bnd_t = BndVpic;
   using BndFields_t = BndFieldsVpic;
   using BndParticles_t = BndParticlesVpic;

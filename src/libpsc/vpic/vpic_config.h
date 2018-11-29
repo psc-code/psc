@@ -85,7 +85,6 @@ using Grid = PscGridBase;
 #ifdef DO_VPIC
 using MaterialList = VpicMaterialList;
 using MfieldsState = MfieldsStateVpic;
-using PushFieldsOps = VpicPushFieldsOps<MfieldsState>;
 using DiagOps = VpicDiagOps<MfieldsState>;
 using AccumulateOps = VpicAccumulateOps<MfieldsState>;
 using CleanDivOps = VpicCleanDivOps<MfieldsState>;
@@ -94,7 +93,6 @@ using MaterialList = PscMaterialList;
 using MfieldsState = MfieldsStatePsc<Grid, MaterialList>;
 using FieldArrayLocalOps = PscFieldArrayLocalOps<MfieldsState>;
 using FieldArrayRemoteOps = PscFieldArrayRemoteOps<MfieldsState>;
-using PushFieldsOps = PscPushFieldsOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
 using DiagOps = PscDiagOps<MfieldsState>;
 using AccumulateOps = PscAccumulateOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
 using CleanDivOps = PscCleanDivOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;

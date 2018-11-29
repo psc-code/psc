@@ -7,6 +7,7 @@
 // ======================================================================
 // PushFieldsVpic
 
+template<typename PushFieldsOps>
 struct PushFieldsVpic : PushFieldsBase
 {
   void push_E(MfieldsState& mflds, double dt_fac)
