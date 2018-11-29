@@ -1,9 +1,11 @@
 
 #pragma once
 
-template<typename MfieldsAccumulator, typename MfieldsState>
+template<typename _MfieldsAccumulator, typename _MfieldsState>
 struct PscAccumulatorOps
 {
+  using MfieldsAccumulator = _MfieldsAccumulator;
+  using MfieldsState = _MfieldsState;
   using Grid = typename MfieldsAccumulator::Grid;
   
   // ----------------------------------------------------------------------

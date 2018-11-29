@@ -197,8 +197,6 @@ struct PscConfigVpic
   using Sort_t = SortVpic<typename VpicConfig::ParticlesOps, Mparticles_t>;
   using Collision_t = PscCollisionVpic;
   using PushParticles_t = PushParticlesVpic<Mparticles_t, MfieldsState,
-					    typename VpicConfig::MfieldsAccumulator,
-					    typename VpicConfig::MfieldsInterpolator,
 					    typename VpicConfig::ParticlesOps,
 					    typename VpicConfig::AccumulatorOps,
 					    typename VpicConfig::AccumulateOps,

@@ -88,8 +88,6 @@ using VpicConfig = VpicConfig_;
 using _MfieldsStateVpic = typename VpicConfig::MfieldsState;
 using _MparticlesVpic = typename VpicConfig::Mparticles;
 using _PushParticlesVpic = PushParticlesVpic<_MparticlesVpic, _MfieldsStateVpic,
-					     typename VpicConfig::MfieldsAccumulator,
-					     typename VpicConfig::MfieldsInterpolator,
 					     typename VpicConfig::ParticlesOps,
 					     typename VpicConfig::AccumulatorOps,
 					     typename VpicConfig::AccumulateOps,
