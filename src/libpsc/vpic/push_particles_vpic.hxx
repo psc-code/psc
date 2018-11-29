@@ -7,7 +7,8 @@
 // ======================================================================
 // PushParticlesVpic
 
-template<typename _Mparticles, typename ParticlesOps, typename AccumulateOps, typename InterpolatorOps>
+template<typename _Mparticles, typename MfieldsAccumulator,
+	 typename ParticlesOps, typename AccumulatorOps, typename AccumulateOps, typename InterpolatorOps>
 struct PushParticlesVpic : PushParticlesBase
 {
   using Mparticles = _Mparticles;

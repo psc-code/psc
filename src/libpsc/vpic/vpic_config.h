@@ -100,13 +100,6 @@ using MfieldsInterpolator = MfieldsInterpolatorVpic;
 using MfieldsInterpolator = MfieldsInterpolatorPsc<Grid>;
 #endif
 
-#ifdef DO_VPIC
-using MfieldsAccumulator = MfieldsAccumulatorVpic;
-#else
-using MfieldsAccumulator = MfieldsAccumulatorPsc<Grid>;
-#endif
-using AccumulatorOps = PscAccumulatorOps<MfieldsAccumulator, MfieldsState>;
-
 #if 1
 typedef PscRng Rng;
 typedef PscRngPool<Rng> RngPool;

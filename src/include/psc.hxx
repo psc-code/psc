@@ -58,6 +58,7 @@ struct Psc
   using AccumulateOps = typename PscConfig::AccumulateOps;
   using CleanDivOps = typename PscConfig::CleanDivOps;
   using InterpolatorOps = typename PscConfig::InterpolatorOps;
+  using MfieldsAccumulator = typename PscConfig::MfieldsAccumulator;
   using MfieldsHydro = typename PscConfig::MfieldsHydro;
   using HydroArrayOps = typename PscConfig::HydroArrayOps;
   using ParticlesOps = typename PscConfig::ParticlesOps;

@@ -200,6 +200,13 @@ struct PscConfigVpic
   using InterpolatorOps = PscInterpolatorOps<MfieldsInterpolator, MfieldsState>;
   
 #ifdef DO_VPIC
+  using MfieldsAccumulator = MfieldsAccumulatorVpic;
+#else
+  using MfieldsAccumulator = MfieldsAccumulatorPsc<Grid>;
+#endif
+  using AccumulatorOps = PscAccumulatorOps<MfieldsAccumulator, MfieldsState>;
+  
+#ifdef DO_VPIC
   using MfieldsHydro = MfieldsHydroVpic;
   using HydroArrayOps = VpicHydroArrayOps<MfieldsHydro>;
 #else
@@ -226,7 +233,7 @@ using ParticlesOps = PscParticlesOps<Mparticles_t, MfieldsState, MfieldsInterpol
   using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Sort_t = SortVpic<ParticlesOps, Mparticles_t>;
   using Collision_t = PscCollisionVpic;
-  using PushParticles_t = PushParticlesVpic<Mparticles_t, ParticlesOps, AccumulateOps, InterpolatorOps>;
+  using PushParticles_t = PushParticlesVpic<Mparticles_t, MfieldsAccumulator, ParticlesOps, AccumulatorOps, AccumulateOps, InterpolatorOps>;
   using PushFields_t = PushFieldsVpic<PushFieldsOps>;
   using Bnd_t = BndVpic;
   using BndFields_t = BndFieldsVpic;
