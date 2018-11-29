@@ -1551,74 +1551,6 @@ struct PscParticlesOps
   }
 
   // ----------------------------------------------------------------------
-  // sort_p
-
-  static void sort_p(Species* sp)
-  {
-    const Grid* g = sp->grid();
-    sp->last_sorted = g->step;
-
-    int n_prts = sp->np;
-    int vl = VOXEL(1,1,1,             g->nx,g->ny,g->nz);
-    int vh = VOXEL(g->nx,g->ny,g->nz, g->nx,g->ny,g->nz) + 1;
-
-    static int * RESTRICT ALIGNED(128) next;
-    if (!next) {
-      next = new int[g->nv];
-    }
-    int * RESTRICT ALIGNED(128) partition = sp->partition;
-
-    static Particle * RESTRICT ALIGNED(128) p_aux;
-    static size_t n_alloced;
-    if (n_prts > n_alloced) {
-      delete[] p_aux;
-      p_aux = new Particle[n_prts];
-      n_alloced = n_prts;
-    }
-    Particle* RESTRICT ALIGNED(128) p = sp->p;
-
-    // zero counts
-    for (int v = vl; v < vh; v++) {
-      next[v] = 0;
-    }
-    
-    // find counts
-    for (int i = 0; i < n_prts; i++) {
-      next[p[i].i]++;
-    }
-    
-    // prefix sum
-    int sum = 0;
-    for (int v = vl; v < vh; v++) {
-      int count = next[v];
-      next[v] = sum;
-      partition[v] = sum;
-      sum += count;
-    }
-    partition[vh] = sum;
-    
-    // reorder
-    for(int i = 0; i < n_prts; i++) {
-      int v = p[i].i;
-      int j = next[v]++;
-      p_aux[j] = p[i];
-    }
-
-    // fix up unused part of partition
-    for (int i = 0; i < vl; i++) {
-      partition[i] = 0;
-    }
-    for (int i = vh; i < g->nv; i++) {
-      partition[i] = n_prts;
-    }
-
-    // OPT: just swap pointer?
-    for (int i = 0; i < n_prts; i++) {
-      p[i] = p_aux[i];
-    }
-  }
-
-  // ----------------------------------------------------------------------
   // energy_p
 
   static double energy_p_pipeline(typename Mparticles::Species& sp, MfieldsInterpolator &interpolator,
@@ -1750,3 +1682,79 @@ struct PscParticlesOps
 
 };
 
+template<typename Mparticles>
+struct PscSortOps
+{
+  using Particles = typename Mparticles::Particles;
+  using Grid = typename Particles::Grid;
+  using Species = typename Particles::Species;
+  using Particle = typename Particles::Particle;
+
+  // ----------------------------------------------------------------------
+  // sort_p
+
+  static void sort_p(Species* sp)
+  {
+    const Grid* g = sp->grid();
+    sp->last_sorted = g->step;
+
+    int n_prts = sp->np;
+    int vl = VOXEL(1,1,1,             g->nx,g->ny,g->nz);
+    int vh = VOXEL(g->nx,g->ny,g->nz, g->nx,g->ny,g->nz) + 1;
+
+    static int * RESTRICT ALIGNED(128) next;
+    if (!next) {
+      next = new int[g->nv];
+    }
+    int * RESTRICT ALIGNED(128) partition = sp->partition;
+
+    static Particle * RESTRICT ALIGNED(128) p_aux;
+    static size_t n_alloced;
+    if (n_prts > n_alloced) {
+      delete[] p_aux;
+      p_aux = new Particle[n_prts];
+      n_alloced = n_prts;
+    }
+    Particle* RESTRICT ALIGNED(128) p = sp->p;
+
+    // zero counts
+    for (int v = vl; v < vh; v++) {
+      next[v] = 0;
+    }
+    
+    // find counts
+    for (int i = 0; i < n_prts; i++) {
+      next[p[i].i]++;
+    }
+    
+    // prefix sum
+    int sum = 0;
+    for (int v = vl; v < vh; v++) {
+      int count = next[v];
+      next[v] = sum;
+      partition[v] = sum;
+      sum += count;
+    }
+    partition[vh] = sum;
+    
+    // reorder
+    for(int i = 0; i < n_prts; i++) {
+      int v = p[i].i;
+      int j = next[v]++;
+      p_aux[j] = p[i];
+    }
+
+    // fix up unused part of partition
+    for (int i = 0; i < vl; i++) {
+      partition[i] = 0;
+    }
+    for (int i = vh; i < g->nv; i++) {
+      partition[i] = n_prts;
+    }
+
+    // OPT: just swap pointer?
+    for (int i = 0; i < n_prts; i++) {
+      p[i] = p_aux[i];
+    }
+  }
+};

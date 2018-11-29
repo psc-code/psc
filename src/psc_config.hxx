@@ -194,7 +194,7 @@ struct PscConfigVpic
   using HydroArrayOps = typename VpicConfig::HydroArrayOps;
   
   using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
-  using Sort_t = SortVpic<typename VpicConfig::ParticlesOps, Mparticles_t>;
+  using Sort_t = SortVpic<PscSortOps<Mparticles_t>, Mparticles_t>;
   using Collision_t = PscCollisionVpic;
   using PushParticles_t = PushParticlesVpic<Mparticles_t, MfieldsState,
 					    typename VpicConfig::ParticlesOps,
