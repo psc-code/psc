@@ -52,7 +52,6 @@
 #include "VpicFieldArrayLocalOps.h"
 #include "VpicFieldArrayRemoteOps.h"
 #include "VpicFieldArray.h"
-#include "VpicPushFieldsOps.hxx"
 
 #include "VpicParticleBc.h"
 
@@ -79,7 +78,6 @@ struct VpicConfigWrap
   using MaterialList = VpicMaterialList;
   using MfieldsState = MfieldsStateVpic;
   
-  using PushFieldsOps = VpicPushFieldsOps<MfieldsState>;
   using AccumulateOps = VpicAccumulateOps<MfieldsState>;
   using CleanDivOps = VpicCleanDivOps<MfieldsState>;
 
