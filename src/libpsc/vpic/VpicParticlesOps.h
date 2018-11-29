@@ -88,12 +88,3 @@ struct VpicParticlesOps
   }
 };
 
-template<typename Mparticles>
-struct VpicSortOps
-{
-  static void sort_p(species_t *sp)
-  {
-    ::sort_p(sp);
-  }
-};
-
