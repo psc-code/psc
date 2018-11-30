@@ -122,7 +122,6 @@ struct VpicConfigPsc
   using FieldArrayLocalOps = PscFieldArrayLocalOps<MfieldsState>;
   using FieldArrayRemoteOps = PscFieldArrayRemoteOps<MfieldsState>;
   using AccumulateOps = PscAccumulateOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
-  using CleanDivOps = PscCleanDivOps<Mparticles, MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
 
   using MfieldsInterpolator = MfieldsInterpolatorPsc<Grid>;
   using InterpolatorOps = PscInterpolatorOps<MfieldsInterpolator, MfieldsState>;
