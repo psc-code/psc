@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include <psc_fields_single.h>
+
 // ----------------------------------------------------------------------
 // OutputFieldsVpic
 

@@ -10,6 +10,7 @@
 #include <checks.hxx>
 #include <output_particles.hxx>
 #include <output_fields_c.hxx>
+#include "../libpsc/vpic/fields_item_vpic.hxx"
 
  #ifdef VPIC
 #include "../libpsc/vpic/vpic_iface.h"
@@ -59,8 +60,8 @@ struct Psc
   using AccumulateOps = typename PushParticles_t::AccumulateOps;
   using MfieldsInterpolator = typename PushParticles_t::MfieldsInterpolator;
   using MfieldsAccumulator = typename PushParticles_t::MfieldsAccumulator;
-  using HydroOps = typename PscConfig::HydroOps;
-  using MfieldsHydro = typename HydroOps::MfieldsHydro;
+  using OutputHydroVpic = OutputHydroVpic_<typename PscConfig::HydroOps>;
+  using MfieldsHydro = typename OutputHydroVpic::MfieldsHydro;
   using ParticlesOps = typename PushParticles_t::ParticlesOps;
   using ParticleBcList = typename Mparticles_t::Particles::ParticleBcList;
 #endif
