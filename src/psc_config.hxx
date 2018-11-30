@@ -207,7 +207,7 @@ struct PscConfigVpicWrap
   using BndFields_t = BndFieldsVpic<MfieldsState>;
   using BndParticles_t = BndParticlesVpic<Mparticles_t>;
   using Checks_t = ChecksVpic<Mparticles_t, MfieldsState>;
-  using Marder_t = MarderVpic<Mparticles_t, typename VpicConfig::ParticlesOps, typename VpicConfig::CleanDivOps>;
+  using Marder_t = MarderVpic<Mparticles_t, typename VpicConfig::CleanDivOps>;
   using OutputParticles = OutputParticlesHdf5<MparticlesSingle>;
   using dim_t = dim_xyz;
 
@@ -243,7 +243,7 @@ struct PscConfigVpicPsc
   using BndFields_t = BndFieldsVpic<MfieldsState>;
   using BndParticles_t = BndParticlesVpic<Mparticles_t>;
   using Checks_t = ChecksVpic<Mparticles_t, MfieldsState>;
-  using Marder_t = MarderVpic<Mparticles_t, typename VpicConfig::ParticlesOps, typename VpicConfig::CleanDivOps>;
+  using Marder_t = MarderVpic<Mparticles_t, typename VpicConfig::CleanDivOps>;
   using OutputParticles = OutputParticlesHdf5<MparticlesSingle>;
   using dim_t = dim_xyz;
 

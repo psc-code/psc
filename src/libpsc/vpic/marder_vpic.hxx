@@ -6,7 +6,7 @@
 // ======================================================================
 // psc_marder "vpic"
 
-template<typename Mparticles, typename ParticlesOps, typename _CleanDivOps>
+template<typename Mparticles, typename _CleanDivOps>
 struct MarderVpic : MarderBase
 {
   using CleanDivOps = _CleanDivOps;
