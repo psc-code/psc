@@ -57,7 +57,6 @@ struct Psc
   using Material = typename MaterialList::Material;
   using DiagMixin = typename PscConfig::DiagMixin;
   using AccumulateOps = typename PushParticles_t::AccumulateOps;
-  using CleanDivOps = typename Marder_t::CleanDivOps;
   using InterpolatorOps = typename PushParticles_t::InterpolatorOps;
   using MfieldsInterpolator = typename InterpolatorOps::MfieldsInterpolator;
   using MfieldsAccumulator = typename PushParticles_t::MfieldsAccumulator;
@@ -773,21 +772,21 @@ private:
   {
     MPI_Comm comm = grid().comm();
     
-    // FIXME, just change the uses
     auto& mprts = *mprts_;
-    auto& mflds = mflds_;
+    auto& mflds = *mflds_;
+
     // Do some consistency checks on user initialized fields
     
     mpi_printf(comm, "Checking interdomain synchronization\n");
     double err;
-    TIC err = CleanDivOps::synchronize_tang_e_norm_b(*mflds_); TOC(synchronize_tang_e_norm_b, 1);
+    TIC err = marder_->synchronize_tang_e_norm_b(mflds); TOC(synchronize_tang_e_norm_b, 1);
     mpi_printf(comm, "Error = %g (arb units)\n", err);
     
     mpi_printf(comm, "Checking magnetic field divergence\n");
-    TIC CleanDivOps::compute_div_b_err(*mflds_); TOC(compute_div_b_err, 1);
-    TIC err = CleanDivOps::compute_rms_div_b_err(*mflds_); TOC(compute_rms_div_b_err, 1);
+    TIC marder_->compute_div_b_err(mflds); TOC(compute_div_b_err, 1);
+    TIC err = marder_->compute_rms_div_b_err(mflds); TOC(compute_rms_div_b_err, 1);
     mpi_printf(comm, "RMS error = %e (charge/volume)\n", err);
-    TIC CleanDivOps::clean_div_b(*mflds_); TOC(clean_div_b, 1);
+    TIC marder_->clean_div_b(mflds); TOC(clean_div_b, 1);
     
     // Load fields not initialized by the user
     
@@ -795,21 +794,21 @@ private:
     TIC AccumulateOps::compute_curl_b(*mflds_); TOC(compute_curl_b, 1);
     
     mpi_printf(comm, "Initializing bound charge density\n");
-    TIC CleanDivOps::clear_rhof(*mflds_); TOC(clear_rhof, 1);
-    CleanDivOps::accumulate_rho_p(*mprts_, *mflds_);
-    CleanDivOps::synchronize_rho(*mflds_);
+    TIC marder_->clear_rhof(mflds); TOC(clear_rhof, 1);
+    marder_->accumulate_rho_p(mprts, mflds);
+    marder_->synchronize_rho(mflds);
     TIC AccumulateOps::compute_rhob(*mflds_); TOC(compute_rhob, 1);
     
     // Internal sanity checks
     
     mpi_printf(comm, "Checking electric field divergence\n");
-    TIC CleanDivOps::compute_div_e_err(*mflds_); TOC(compute_div_e_err, 1);
-    TIC err = CleanDivOps::compute_rms_div_e_err(*mflds_); TOC(compute_rms_div_e_err, 1);
+    TIC marder_->compute_div_e_err(mflds); TOC(compute_div_e_err, 1);
+    TIC err = marder_->compute_rms_div_e_err(mflds); TOC(compute_rms_div_e_err, 1);
     mpi_printf(comm, "RMS error = %e (charge/volume)\n", err);
-    TIC CleanDivOps::clean_div_e(*mflds_); TOC(clean_div_e, 1);
+    TIC marder_->clean_div_e(mflds); TOC(clean_div_e, 1);
     
     mpi_printf(comm, "Rechecking interdomain synchronization\n");
-    TIC err = CleanDivOps::synchronize_tang_e_norm_b(*mflds_); TOC(synchronize_tang_e_norm_b, 1);
+    TIC err = marder_->synchronize_tang_e_norm_b(mflds); TOC(synchronize_tang_e_norm_b, 1);
     mpi_printf(comm, "Error = %e (arb units)\n", err);
     
     mpi_printf(comm, "Uncentering particles\n");
