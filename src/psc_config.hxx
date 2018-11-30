@@ -193,6 +193,7 @@ struct PscConfigVpicWrap
   using Mparticles_t = typename VpicConfig::Mparticles;
 
   using HydroArrayOps = typename VpicConfig::HydroArrayOps;
+  using HydroOps = typename VpicConfig::HydroOps;
   
   using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Sort_t = SortVpicWrap<Mparticles_t>;
@@ -229,6 +230,7 @@ struct PscConfigVpicPsc
   using Mparticles_t = typename VpicConfig::Mparticles;
 
   using HydroArrayOps = typename VpicConfig::HydroArrayOps;
+  using HydroOps = typename VpicConfig::HydroOps;
   
   using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Sort_t = SortVpic<Mparticles_t>;

@@ -65,12 +65,6 @@ struct VpicParticlesOps
     }
   }
 
-  static void accumulate_hydro_p(MfieldsHydro& hydro, typename Particles::const_iterator sp,
-				 /*const*/ MfieldsInterpolator& interpolator)
-  {
-    ::accumulate_hydro_p(hydro, &*sp, interpolator.getPatch(0).ip());
-  }
-
   static void uncenter_p(species_t *sp, /*const*/ MfieldsInterpolator& interpolator)
   {
     ::uncenter_p(sp, interpolator.getPatch(0).ip());
@@ -87,3 +81,13 @@ struct VpicParticlesOps
   }
 };
 
+template<typename Mparticles, typename MfieldsHydro, typename MfieldsInterpolator>
+struct VpicHydroOps
+{
+  static void accumulate_hydro_p(MfieldsHydro& hydro, typename Mparticles::Particles::const_iterator sp,
+				 /*const*/ MfieldsInterpolator& interpolator)
+  {
+    ::accumulate_hydro_p(hydro, &*sp, interpolator.getPatch(0).ip());
+  }
+
+};

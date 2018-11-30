@@ -28,7 +28,7 @@ struct OutputFieldsVpic
 // OutputHydroVpic
 
 template<typename Mparticles, typename MfieldsHydro, typename MfieldsInterpolator,
-	 typename ParticlesOps, typename HydroArrayOps>
+	 typename HydroOps, typename HydroArrayOps>
 struct OutputHydroVpic
 {
   struct Result
@@ -64,7 +64,7 @@ struct OutputHydroVpic
       // FIXME, just iterate over species instead?
       auto sp = std::find_if(mprts.begin(), mprts.end(),
 			     [&](const typename Mparticles::Species& sp) { return sp.id == kind; });
-      ParticlesOps::accumulate_hydro_p(mflds_hydro, sp, interpolator);
+      HydroOps::accumulate_hydro_p(mflds_hydro, sp, interpolator);
       
       HydroArrayOps::synchronize(mflds_hydro);
       
