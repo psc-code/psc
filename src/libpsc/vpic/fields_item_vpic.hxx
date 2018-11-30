@@ -28,7 +28,7 @@ struct OutputFieldsVpic
 // OutputHydroVpic
 
 template<typename HydroOps>
-struct OutputHydroVpic
+struct OutputHydroVpic_
 {
   using Mparticles = typename HydroOps::Mparticles;
   using MfieldsHydro = typename HydroOps::MfieldsHydro;
@@ -48,7 +48,7 @@ struct OutputHydroVpic
 	"tzx_nc", "txy_nc", "_pad0", "_pad1" };
   }
 
-  OutputHydroVpic(const Grid_t& grid)
+  OutputHydroVpic_(const Grid_t& grid)
     : mflds_res_{grid, MfieldsHydro::N_COMP * int(grid.kinds.size()), {1,1,1}}
   {}
 
