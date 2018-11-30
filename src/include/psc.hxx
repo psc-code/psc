@@ -60,8 +60,8 @@ struct Psc
   using AccumulateOps = typename PushParticles_t::AccumulateOps;
   using MfieldsInterpolator = typename PushParticles_t::MfieldsInterpolator;
   using MfieldsAccumulator = typename PushParticles_t::MfieldsAccumulator;
-  using OutputHydroVpic = OutputHydroVpic_<typename PscConfig::HydroOps>;
-  using MfieldsHydro = typename OutputHydroVpic::MfieldsHydro;
+  using OutputHydro = typename PscConfig::OutputHydro;
+  using MfieldsHydro = typename OutputHydro::MfieldsHydro;
   using ParticlesOps = typename PushParticles_t::ParticlesOps;
   using ParticleBcList = typename Mparticles_t::Particles::ParticleBcList;
 #endif

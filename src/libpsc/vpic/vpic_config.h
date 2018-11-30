@@ -87,7 +87,6 @@ struct VpicConfigWrap
   using AccumulatorOps = PscAccumulatorOps<MfieldsAccumulator, MfieldsState>;
   
   using MfieldsHydro = MfieldsHydroVpic;
-  using HydroOps = VpicHydroOps<Mparticles, MfieldsHydro, MfieldsInterpolator>;
 
 #if 1//def DO_VPIC
   using ParticlesOps = VpicParticlesOps<Mparticles, MfieldsState, MfieldsInterpolator, MfieldsAccumulator, MfieldsHydro>;
@@ -127,7 +126,6 @@ struct VpicConfigPsc
   using AccumulatorOps = PscAccumulatorOps<MfieldsAccumulator, MfieldsState>;
   
   using MfieldsHydro = MfieldsHydroPsc<Grid>;
-  using HydroOps = PscHydroOps<Mparticles, MfieldsHydro, MfieldsInterpolator>;
 
   using ParticlesOps = PscParticlesOps<Mparticles, MfieldsState, MfieldsInterpolator, MfieldsAccumulator, MfieldsHydro>;
     

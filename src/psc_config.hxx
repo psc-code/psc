@@ -192,7 +192,9 @@ struct PscConfigVpicWrap
   using MfieldsState = typename VpicConfig::MfieldsState;
   using Mparticles_t = typename VpicConfig::Mparticles;
 
-  using HydroOps = typename VpicConfig::HydroOps;
+  using MfieldsHydro = typename VpicConfig::MfieldsHydro;
+  using HydroOps = VpicHydroOps<Mparticles_t, MfieldsHydro, typename VpicConfig::MfieldsInterpolator>;
+  using OutputHydro = OutputHydroVpic_<HydroOps>;
   
   using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Sort_t = SortVpicWrap<Mparticles_t>;
@@ -228,7 +230,9 @@ struct PscConfigVpicPsc
   using MfieldsState = typename VpicConfig::MfieldsState;
   using Mparticles_t = typename VpicConfig::Mparticles;
 
-  using HydroOps = typename VpicConfig::HydroOps;
+  using MfieldsHydro = typename VpicConfig::MfieldsHydro;
+  using HydroOps = PscHydroOps<Mparticles_t, MfieldsHydro, typename VpicConfig::MfieldsInterpolator>;
+  using OutputHydro = OutputHydroVpic_<HydroOps>;
   
   using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Sort_t = SortVpic<Mparticles_t>;
