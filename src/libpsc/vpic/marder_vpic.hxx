@@ -49,14 +49,14 @@ struct MarderVpicOpsWrap
   void compute_div_b_err(MfieldsState& mflds)
   {
     field_array_t* fa = mflds;
-    TIC fa->kernel->compute_div_b_err(fa); TOC(compute_div_e_err, 1);
+    TIC fa->kernel->compute_div_b_err(fa); TOC(compute_div_b_err, 1);
   }
 
   double compute_rms_div_b_err(MfieldsState& mflds)
   {
     field_array_t* fa = mflds;
     double err;
-    TIC err = fa->kernel->compute_rms_div_b_err(mflds); TOC(compute_rms_div_e_err, 1);
+    TIC err = fa->kernel->compute_rms_div_b_err(mflds); TOC(compute_rms_div_b_err, 1);
     return err;
   }
 
@@ -87,23 +87,23 @@ struct MarderVpicOpsWrap
 #endif
 
 // ======================================================================
-// PscCleanDivOps
+// MarderVpicOps
 
-template<typename _Mparticles, typename _MfieldsState, typename LocalOps, typename RemoteOps>
-struct PscCleanDivOps
+template<typename _Mparticles, typename _MfieldsState>
+struct MarderVpicOps
 {
   using Mparticles = _Mparticles;
   using MfieldsState = _MfieldsState;
   using Grid = typename MfieldsState::Grid;
   using MaterialCoefficient = typename MfieldsState::MaterialCoefficient;
+  using LocalOps = PscFieldArrayLocalOps<MfieldsState>;
+  using RemoteOps = PscFieldArrayRemoteOps<MfieldsState>;
   using F3D = Field3D<typename MfieldsState::Patch>;
-  using Particles = typename Mparticles::Particles;
-  using Particle = typename Particles::Particle;
   
   // ----------------------------------------------------------------------
   // clear_rhof
 
-  static void clear_rhof(MfieldsState& mflds)
+  void _clear_rhof(MfieldsState& mflds)
   {
     auto& fa = mflds.getPatch(0);
     const int nv = mflds.vgrid()->nv;
@@ -111,6 +111,11 @@ struct PscCleanDivOps
     for (int v = 0; v < nv; v++) {
       fa[v].rhof = 0;
     }
+  }
+
+  void clear_rhof(MfieldsState& mflds)
+  {
+    TIC _clear_rhof(mflds); TOC(clear_rhof, 1);
   }
 
   // ----------------------------------------------------------------------
@@ -179,7 +184,7 @@ struct PscCleanDivOps
     }
   };
 
-  static void synchronize_rho(MfieldsState& mflds)
+  void _synchronize_rho(MfieldsState& mflds)
   {
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
@@ -194,10 +199,15 @@ struct PscCleanDivOps
     }
   }
 
+  void synchronize_rho(MfieldsState& mflds)
+  {
+    TIC _synchronize_rho(mflds); TOC(synchronize_rho, 1);
+  }
+
   // ----------------------------------------------------------------------
   // compute_div_e_err
   
-  static void compute_div_e_err(MfieldsState& mflds)
+  void _compute_div_e_err(MfieldsState& mflds)
   {
     struct CalcDivE {
       CalcDivE(typename MfieldsState::Patch& fa, const MaterialCoefficient* m)
@@ -245,13 +255,18 @@ struct PscCleanDivOps
     LocalOps::local_adjust_div_e(mflds);
   }
 
+  void compute_div_e_err(MfieldsState& mflds)
+  {
+    TIC _compute_div_e_err(mflds); TOC(compute_div_e_err, 1);
+  }
+
   // ----------------------------------------------------------------------
   // compute_rms_div_e_err
   //
   // OPT: doing this at the same time as compute_div_e_err might be
   // advantageous (faster)
   
-  static double compute_rms_div_e_err(MfieldsState& mflds)
+  double _compute_rms_div_e_err(MfieldsState& mflds)
   {
     const Grid* g = mflds.vgrid();
     auto& fa = mflds.getPatch(0);
@@ -335,6 +350,13 @@ struct PscCleanDivOps
     return g->eps0 * sqrt(_global[0]/_global[1]);
   }
 
+  double compute_rms_div_e_err(MfieldsState& mflds)
+  {
+    double err;
+    TIC err = _compute_rms_div_e_err(mflds); TOC(compute_rms_div_e_err, 1);
+    return err;
+  }
+
   // ----------------------------------------------------------------------
   // clean_div_e
   
@@ -342,7 +364,7 @@ struct PscCleanDivOps
 #define MARDER_EY(i,j,k) F(i,j,k).ey += py * (F(i,j+1,k).div_e_err - F(i,j,k).div_e_err)
 #define MARDER_EZ(i,j,k) F(i,j,k).ez += pz * (F(i,j,k+1).div_e_err - F(i,j,k).div_e_err)
 
-  static void vacuum_clean_div_e(MfieldsState& mflds)
+  void vacuum_clean_div_e(MfieldsState& mflds)
   {
     const Grid* g = mflds.vgrid();
     auto& fa = mflds.getPatch(0);
@@ -413,15 +435,20 @@ struct PscCleanDivOps
     LocalOps::local_adjust_tang_e(mflds);
   }
 
-  static void clean_div_e(MfieldsState& mflds)
+  void _clean_div_e(MfieldsState& mflds)
   {
-    vacuum_clean_div_e(mflds);
+    vacuum_clean_div_e(mflds); // FIXME eventually?
   }
 
+  void clean_div_e(MfieldsState& mflds)
+  {
+    TIC _clean_div_e(mflds); TOC(clean_div_e, 1);
+  }
+  
   // ----------------------------------------------------------------------
   // compute_div_b_err
   
-  static void compute_div_b_err(MfieldsState& mflds)
+  void _compute_div_b_err(MfieldsState& mflds)
   {
     const Grid* g = mflds.vgrid();
     auto& fa = mflds.getPatch(0);
@@ -443,12 +470,17 @@ struct PscCleanDivOps
     }
   }
 
+  void compute_div_b_err(MfieldsState& mflds)
+  {
+    TIC _compute_div_b_err(mflds); TOC(compute_div_b_err, 1);
+  }
+
   // ----------------------------------------------------------------------
   // compute_rms_div_b_err
   //
   // OPT: doing that at the same time as div_b should be faster
 
-  static double compute_rms_div_b_err(MfieldsState& mflds)
+  double _compute_rms_div_b_err(MfieldsState& mflds)
   {
     const Grid* g = mflds.vgrid();
     auto& fa = mflds.getPatch(0);
@@ -472,6 +504,13 @@ struct PscCleanDivOps
     return g->eps0 * sqrt(_global[0]/_global[1]);
   }
 
+  double compute_rms_div_b_err(MfieldsState& mflds)
+  {
+    double err;
+    TIC err = _compute_rms_div_b_err(mflds); TOC(compute_rms_div_e_err, 1);
+    return err;
+  }
+
   // ----------------------------------------------------------------------
   // clean_div_b
   
@@ -479,7 +518,7 @@ struct PscCleanDivOps
 #define MARDER_CBY(i,j,k) F(i,j,k).cby += py * (F(i,j,k).div_b_err - F(i,j-1,k).div_b_err)
 #define MARDER_CBZ(i,j,k) F(i,j,k).cbz += pz * (F(i,j,k).div_b_err - F(i,j,k-1).div_b_err)
 
-  static void clean_div_b(MfieldsState& mflds)
+  void _clean_div_b(MfieldsState& mflds)
   {
     const Grid* g = mflds.vgrid();
     auto& fa = mflds.getPatch(0);
@@ -595,6 +634,11 @@ struct PscCleanDivOps
     LocalOps::local_adjust_norm_b(mflds);
   }
 
+  void clean_div_b(MfieldsState& mflds)
+  {
+    TIC _clean_div_b(mflds); TOC(clean_div_e, 1);
+  }
+
   // ----------------------------------------------------------------------
   // synchronize_tang_e_norm_b
 
@@ -659,7 +703,7 @@ struct PscCleanDivOps
     double err;
   };
 
-  static double synchronize_tang_e_norm_b(MfieldsState& mflds)
+  double _synchronize_tang_e_norm_b(MfieldsState& mflds)
   {
     const Grid* g = mflds.vgrid();
     auto& fa = mflds.getPatch(0);
@@ -679,12 +723,19 @@ struct PscCleanDivOps
     return gerr;
   }
 
+  double synchronize_tang_e_norm_b(MfieldsState& mflds)
+  {
+    double err;
+    TIC err = _synchronize_tang_e_norm_b(mflds); TOC(synchronize_tang_e_norm_b, 1);
+    return err;
+  }
+
   // ----------------------------------------------------------------------
   // accumulate_rho_p
 
-  static void accumulate_rho_p(MfieldsState& mflds, typename Mparticles::Species& sp)
+  void accumulate_rho_p(MfieldsState& mflds, typename Mparticles::Species& sp)
   {
-    const Particle * RESTRICT ALIGNED(128) p = sp.p;
+    const auto * RESTRICT ALIGNED(128) p = sp.p;
 
     const Grid* g = sp.grid();
     const float q_8V = sp.q*g->r8V;
@@ -734,81 +785,11 @@ struct PscCleanDivOps
     }
   }
 
-  static void accumulate_rho_p(Mparticles& mprts, MfieldsState &mflds)
+  void accumulate_rho_p(Mparticles& mprts, MfieldsState &mflds)
   {
     for (auto& sp : mprts) {
       TIC accumulate_rho_p(mflds, sp); TOC(accumulate_rho_p, 1);
     }
-  }
-
-};
-
-// ======================================================================
-// MarderVpicOps
-
-template<typename _Mparticles, typename _MfieldsState>
-struct MarderVpicOps
-{
-  using Mparticles = _Mparticles;
-  using MfieldsState = _MfieldsState;
-  using LocalOps = PscFieldArrayLocalOps<MfieldsState>;
-  using RemoteOps = PscFieldArrayRemoteOps<MfieldsState>;
-  using CleanDivOps = PscCleanDivOps<Mparticles, MfieldsState, LocalOps, RemoteOps>;
-  
-  void clear_rhof(MfieldsState& mflds)
-  {
-    TIC CleanDivOps::clear_rhof(mflds); TOC(clear_rhof, 1);
-  }
-
-  void synchronize_rho(MfieldsState& mflds)
-  {
-    TIC CleanDivOps::synchronize_rho(mflds); TOC(synchronize_rho, 1);
-  }
-
-  void compute_div_e_err(MfieldsState& mflds)
-  {
-    TIC CleanDivOps::compute_div_e_err(mflds); TOC(compute_div_e_err, 1);
-  }
-
-  double compute_rms_div_e_err(MfieldsState& mflds)
-  {
-    double err;
-    TIC err = CleanDivOps::compute_rms_div_e_err(mflds); TOC(compute_rms_div_e_err, 1);
-    return err;
-  }
-
-  void clean_div_e(MfieldsState& mflds)
-  {
-    TIC CleanDivOps::clean_div_e(mflds); TOC(clean_div_e, 1);
-  }
-  
-  void compute_div_b_err(MfieldsState& mflds)
-  {
-    TIC CleanDivOps::compute_div_b_err(mflds); TOC(compute_div_e_err, 1);
-  }
-
-  double compute_rms_div_b_err(MfieldsState& mflds)
-  {
-    double err;
-    TIC err = CleanDivOps::compute_rms_div_b_err(mflds); TOC(compute_rms_div_e_err, 1);
-    return err;
-  }
-
-  void clean_div_b(MfieldsState& mflds)
-  {
-    TIC CleanDivOps::clean_div_b(mflds); TOC(clean_div_e, 1);
-  }
-
-  double synchronize_tang_e_norm_b(MfieldsState& mflds)
-  {
-    double err;
-    TIC err = CleanDivOps::synchronize_tang_e_norm_b(mflds); TOC(synchronize_tang_e_norm_b, 1);
-    return err;
-  }
-
-  void accumulate_rho_p(Mparticles& mprts, MfieldsState& mflds)
-  {
-    CleanDivOps::accumulate_rho_p(mprts, mflds);
   }
 };
 
