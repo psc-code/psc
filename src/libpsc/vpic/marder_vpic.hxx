@@ -3,6 +3,8 @@
 
 #include "marder.hxx"
 
+#ifdef USE_VPIC
+
 // ======================================================================
 // MarderVpicOpsWrap
 
@@ -11,64 +13,78 @@ struct MarderVpicOpsWrap
 {
   using Mparticles = _Mparticles;
   using MfieldsState = _MfieldsState;
-  using CleanDivOps = VpicCleanDivOps<Mparticles, MfieldsState>;
   
   void clear_rhof(MfieldsState& mflds)
   {
-    TIC CleanDivOps::clear_rhof(mflds); TOC(clear_rhof, 1);
-  }
-
-  void accumulate_rho_p(Mparticles& mprts, MfieldsState& mflds)
-  {
-    CleanDivOps::accumulate_rho_p(mprts, mflds);
+    field_array_t* fa = mflds;
+    TIC fa->kernel->clear_rhof(fa); TOC(clear_rhof, 1);
   }
 
   void synchronize_rho(MfieldsState& mflds)
   {
-    CleanDivOps::synchronize_rho(mflds);
+    field_array_t* fa = mflds;
+    fa->kernel->synchronize_rho(fa);
   }
 
   void compute_div_e_err(MfieldsState& mflds)
   {
-    TIC CleanDivOps::compute_div_e_err(mflds); TOC(compute_div_e_err, 1);
+    field_array_t* fa = mflds;
+    TIC fa->kernel->compute_div_e_err(fa); TOC(compute_div_e_err, 1);
   }
 
   double compute_rms_div_e_err(MfieldsState& mflds)
   {
+    field_array_t* fa = mflds;
     double err;
-    TIC err = CleanDivOps::compute_rms_div_e_err(mflds); TOC(compute_rms_div_e_err, 1);
+    TIC err = fa->kernel->compute_rms_div_e_err(fa); TOC(compute_rms_div_e_err, 1);
     return err;
   }
 
   void clean_div_e(MfieldsState& mflds)
   {
-    TIC CleanDivOps::clean_div_e(mflds); TOC(clean_div_e, 1);
+    field_array_t* fa = mflds;
+    TIC fa->kernel->clean_div_e(fa); TOC(clean_div_e, 1);
   }
   
   void compute_div_b_err(MfieldsState& mflds)
   {
-    TIC CleanDivOps::compute_div_b_err(mflds); TOC(compute_div_e_err, 1);
+    field_array_t* fa = mflds;
+    TIC fa->kernel->compute_div_b_err(fa); TOC(compute_div_e_err, 1);
   }
 
   double compute_rms_div_b_err(MfieldsState& mflds)
   {
+    field_array_t* fa = mflds;
     double err;
-    TIC err = CleanDivOps::compute_rms_div_b_err(mflds); TOC(compute_rms_div_e_err, 1);
+    TIC err = fa->kernel->compute_rms_div_b_err(mflds); TOC(compute_rms_div_e_err, 1);
     return err;
   }
 
   void clean_div_b(MfieldsState& mflds)
   {
-    TIC CleanDivOps::clean_div_b(mflds); TOC(clean_div_e, 1);
+    field_array_t* fa = mflds;
+    TIC fa->kernel->clean_div_b(fa); TOC(clean_div_e, 1);
   }
 
   double synchronize_tang_e_norm_b(MfieldsState& mflds)
   {
+    field_array_t* fa = mflds;
     double err;
-    TIC err = CleanDivOps::synchronize_tang_e_norm_b(mflds); TOC(synchronize_tang_e_norm_b, 1);
+    TIC err = fa->kernel->synchronize_tang_e_norm_b(fa); TOC(synchronize_tang_e_norm_b, 1);
     return err;
   }
+
+  void accumulate_rho_p(Mparticles& mprts, MfieldsState& mflds)
+  {
+    auto& vmprts = mprts.vmprts();
+    field_array_t* fa = mflds;
+    for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
+      TIC ::accumulate_rho_p(fa, &*sp); TOC(accumulate_rho_p, 1);
+    }
+  }
 };
+
+#endif
 
 // ======================================================================
 // MarderVpicOps

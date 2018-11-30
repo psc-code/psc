@@ -82,7 +82,6 @@ struct VpicConfigWrap
   using MfieldsState = MfieldsStateVpic;
   
   using AccumulateOps = VpicAccumulateOps<MfieldsState>;
-  using CleanDivOps = VpicCleanDivOps<Mparticles, MfieldsState>;
 
   using MfieldsInterpolator = MfieldsInterpolatorVpic;
   using InterpolatorOps = PscInterpolatorOps<MfieldsInterpolator, MfieldsState>;
