@@ -21,13 +21,6 @@ struct VpicParticlesOps
     ::boundary_p(const_cast<particle_bc_t*>(pbc), vmprts.head(), mflds, &accumulator);
   }
   
-  static void accumulate_rho_p(Particles& vmprts, FieldArray* fa)
-  {
-    for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
-      TIC ::accumulate_rho_p(fa, &*sp); TOC(accumulate_rho_p, 1);
-    }
-  }
-
   static void accumulate_rhob(MfieldsState& mflds, const particle_t* p, float qsp)
   {
     FieldArray* fa = mflds;

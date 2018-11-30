@@ -74,11 +74,15 @@ struct VpicConfigWrap
 {
   using Grid = VpicGridBase;
 
+  using ParticleBcList = VpicParticleBcList;
+  using Particles = VpicParticlesBase<Grid, ParticleBcList>;
+  using Mparticles = MparticlesVpic_<Particles>;
+
   using MaterialList = VpicMaterialList;
   using MfieldsState = MfieldsStateVpic;
   
   using AccumulateOps = VpicAccumulateOps<MfieldsState>;
-  using CleanDivOps = VpicCleanDivOps<MfieldsState>;
+  using CleanDivOps = VpicCleanDivOps<Mparticles, MfieldsState>;
 
   using MfieldsInterpolator = MfieldsInterpolatorVpic;
   using InterpolatorOps = PscInterpolatorOps<MfieldsInterpolator, MfieldsState>;
@@ -88,10 +92,6 @@ struct VpicConfigWrap
   
   using MfieldsHydro = MfieldsHydroVpic;
   using HydroArrayOps = VpicHydroArrayOps<MfieldsHydro>;
-
-  using ParticleBcList = VpicParticleBcList;
-  using Particles = VpicParticlesBase<Grid, ParticleBcList>;
-  using Mparticles = MparticlesVpic_<Particles>;
 
 #if 0//def DO_VPIC
   using ParticlesOps = VpicParticlesOps<Particles, MfieldsState, Interpolator, MfieldsAccumulator, MfieldsHydro>;
@@ -113,13 +113,17 @@ struct VpicConfigPsc
 {
   using Grid = PscGridBase;
 
+  using ParticleBcList = PscParticleBcList;
+  using Particles = PscParticlesBase<Grid, ParticleBcList>;
+  using Mparticles = MparticlesVpic_<Particles>;
+
   using MaterialList = PscMaterialList;
   using MfieldsState = MfieldsStatePsc<Grid, MaterialList>;
   
   using FieldArrayLocalOps = PscFieldArrayLocalOps<MfieldsState>;
   using FieldArrayRemoteOps = PscFieldArrayRemoteOps<MfieldsState>;
   using AccumulateOps = PscAccumulateOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
-  using CleanDivOps = PscCleanDivOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
+  using CleanDivOps = PscCleanDivOps<Mparticles, MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
 
   using MfieldsInterpolator = MfieldsInterpolatorPsc<Grid>;
   using InterpolatorOps = PscInterpolatorOps<MfieldsInterpolator, MfieldsState>;
@@ -129,10 +133,6 @@ struct VpicConfigPsc
   
   using MfieldsHydro = MfieldsHydroPsc<Grid>;
   using HydroArrayOps = PscHydroArrayOps<MfieldsHydro>;
-
-  using ParticleBcList = PscParticleBcList;
-  using Particles = PscParticlesBase<Grid, ParticleBcList>;
-  using Mparticles = MparticlesVpic_<Particles>;
 
   using ParticlesOps = PscParticlesOps<Mparticles, MfieldsState, MfieldsInterpolator, MfieldsAccumulator, MfieldsHydro>;
     

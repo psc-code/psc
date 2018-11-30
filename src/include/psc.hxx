@@ -796,7 +796,7 @@ private:
     
     mpi_printf(comm, "Initializing bound charge density\n");
     TIC CleanDivOps::clear_rhof(*mflds_); TOC(clear_rhof, 1);
-    ParticlesOps::accumulate_rho_p(*mprts_, *mflds_);
+    CleanDivOps::accumulate_rho_p(*mprts_, *mflds_);
     CleanDivOps::synchronize_rho(*mflds_);
     TIC AccumulateOps::compute_rhob(*mflds_); TOC(compute_rhob, 1);
     
