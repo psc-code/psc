@@ -14,66 +14,21 @@ struct MarderVpicOpsWrap
   using Mparticles = _Mparticles;
   using MfieldsState = _MfieldsState;
   
-  void clear_rhof(MfieldsState& mflds)
-  {
-    field_array_t* fa = mflds;
-    fa->kernel->clear_rhof(fa);
-  }
-
-  void synchronize_rho(MfieldsState& mflds)
-  {
-    field_array_t* fa = mflds;
-    fa->kernel->synchronize_rho(fa);
-  }
-
-  void compute_div_e_err(MfieldsState& mflds)
-  {
-    field_array_t* fa = mflds;
-    fa->kernel->compute_div_e_err(fa);
-  }
-
-  double compute_rms_div_e_err(MfieldsState& mflds)
-  {
-    field_array_t* fa = mflds;
-    return fa->kernel->compute_rms_div_e_err(fa);
-  }
-
-  void clean_div_e(MfieldsState& mflds)
-  {
-    field_array_t* fa = mflds;
-    fa->kernel->clean_div_e(fa);
-  }
-  
-  void compute_div_b_err(MfieldsState& mflds)
-  {
-    field_array_t* fa = mflds;
-    fa->kernel->compute_div_b_err(fa);
-  }
-
-  double compute_rms_div_b_err(MfieldsState& mflds)
-  {
-    field_array_t* fa = mflds;
-    return fa->kernel->compute_rms_div_b_err(mflds);
-  }
-
-  void clean_div_b(MfieldsState& mflds)
-  {
-    field_array_t* fa = mflds;
-    fa->kernel->clean_div_b(fa);
-  }
-
-  double synchronize_tang_e_norm_b(MfieldsState& mflds)
-  {
-    field_array_t* fa = mflds;
-    return fa->kernel->synchronize_tang_e_norm_b(fa);
-  }
+  void clear_rhof(MfieldsState& mflds) { mflds.fa()->kernel->clear_rhof(mflds.fa()); }
+  void synchronize_rho(MfieldsState& mflds) { mflds.fa()->kernel->synchronize_rho(mflds.fa()); }
+  void compute_div_e_err(MfieldsState& mflds) { mflds.fa()->kernel->compute_div_e_err(mflds.fa()); }
+  double compute_rms_div_e_err(MfieldsState& mflds) { return mflds.fa()->kernel->compute_rms_div_e_err(mflds.fa()); }
+  void clean_div_e(MfieldsState& mflds) { mflds.fa()->kernel->clean_div_e(mflds.fa()); }
+  void compute_div_b_err(MfieldsState& mflds) { mflds.fa()->kernel->compute_div_b_err(mflds.fa()); }
+  double compute_rms_div_b_err(MfieldsState& mflds) { return mflds.fa()->kernel->compute_rms_div_b_err(mflds); }
+  void clean_div_b(MfieldsState& mflds) { mflds.fa()->kernel->clean_div_b(mflds.fa()); }
+  double synchronize_tang_e_norm_b(MfieldsState& mflds) { return mflds.fa()->kernel->synchronize_tang_e_norm_b(mflds.fa()); }
 
   void accumulate_rho_p(Mparticles& mprts, MfieldsState& mflds)
   {
     auto& vmprts = mprts.vmprts();
-    field_array_t* fa = mflds;
     for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
-      TIC ::accumulate_rho_p(fa, &*sp); TOC(accumulate_rho_p, 1);
+      TIC ::accumulate_rho_p(mflds.fa(), &*sp); TOC(accumulate_rho_p, 1);
     }
   }
 };

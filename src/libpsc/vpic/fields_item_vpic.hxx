@@ -62,8 +62,8 @@ struct OutputHydroVpic
       HydroArrayOps::clear(mflds_hydro);
       
       // FIXME, just iterate over species instead?
-      auto& sp = *std::find_if(mprts.begin(), mprts.end(),
-			       [&](const typename Mparticles::Species& sp) { return sp.id == kind; });
+      auto sp = std::find_if(mprts.begin(), mprts.end(),
+			     [&](const typename Mparticles::Species& sp) { return sp.id == kind; });
       ParticlesOps::accumulate_hydro_p(mflds_hydro, sp, interpolator);
       
       HydroArrayOps::synchronize(mflds_hydro);

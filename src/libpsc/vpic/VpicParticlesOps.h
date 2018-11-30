@@ -1,24 +1,29 @@
 
 #pragma once
 
-template<typename Particles, typename MfieldsState, typename FieldArray, typename Interpolator, typename MfieldsAccumulator, typename MfieldsHydro>
+template<typename Mparticles, typename MfieldsState,
+	 typename MfieldsInterpolator, typename MfieldsAccumulator, typename MfieldsHydro>
 struct VpicParticlesOps
 {
-  typedef typename Particles::ParticleBcList ParticleBcList;
+  using Particles = typename Mparticles::Particles;
+  using ParticleBcList =  typename Particles::ParticleBcList;
+  using FieldArray = typename MfieldsState::FieldArray;
   
-  static void advance_p(Particles& vmprts, MfieldsAccumulator& accumulator,
-			Interpolator& interpolator)
+  static void advance_p(Mparticles& mprts, MfieldsAccumulator& accumulator,
+			MfieldsInterpolator& interpolator)
   {
+    auto& vmprts = mprts.vmprts();
     for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
-      TIC ::advance_p(&*sp, &accumulator, &interpolator); TOC(advance_p, 1);
+      TIC ::advance_p(&*sp, accumulator, interpolator.getPatch(0).ip()); TOC(advance_p, 1);
     }
   }
   
-  static void boundary_p(const ParticleBcList &pbc_list, Particles& vmprts, MfieldsState& mflds,
+  static void boundary_p(const ParticleBcList &pbc_list, Mparticles& mprts, MfieldsState& mflds,
 			 MfieldsAccumulator& accumulator)
   {
+    auto& vmprts = mprts.vmprts();
     const particle_bc_t *pbc = pbc_list;
-    ::boundary_p(const_cast<particle_bc_t*>(pbc), vmprts.head(), mflds, &accumulator);
+    ::boundary_p(const_cast<particle_bc_t*>(pbc), vmprts.head(), mflds, accumulator);
   }
   
   static void accumulate_rhob(MfieldsState& mflds, const particle_t* p, float qsp)
@@ -30,8 +35,9 @@ struct VpicParticlesOps
   // ----------------------------------------------------------------------
   // drop_p
 
-  void drop_p(Particles& vmprts, MfieldsState& mflds)
+  static void drop_p(Mparticles& mprts, MfieldsState& mflds)
   {
+    auto& vmprts = mprts.vmprts();
     for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
       if (sp->nm) {
 	LOG_WARN("Removing %i particles associated with unprocessed %s movers (increase num_comm_round)",
@@ -51,7 +57,7 @@ struct VpicParticlesOps
 	int i = pm->i; // particle index we are removing
 	p0[i].i >>= 3; // shift particle voxel down
 	// accumulate the particle's charge to the mesh
-	this->accumulate_rhob(mflds, p0 + i, sp->q);
+	accumulate_rhob(mflds, p0 + i, sp->q);
 	p0[i] = p0[sp->np - 1]; // put the last particle into position i
 	sp->np--; // decrement the number of particles
       }
@@ -60,14 +66,14 @@ struct VpicParticlesOps
   }
 
   static void accumulate_hydro_p(MfieldsHydro& hydro, typename Particles::const_iterator sp,
-				 const Interpolator& interpolator)
+				 /*const*/ MfieldsInterpolator& interpolator)
   {
-    ::accumulate_hydro_p(&hydro, &*sp, &interpolator);
+    ::accumulate_hydro_p(hydro, &*sp, interpolator.getPatch(0).ip());
   }
 
-  static void uncenter_p(species_t *sp, const Interpolator& interpolator)
+  static void uncenter_p(species_t *sp, /*const*/ MfieldsInterpolator& interpolator)
   {
-    ::uncenter_p(sp, &interpolator);
+    ::uncenter_p(sp, interpolator.getPatch(0).ip());
   }
 
   static void sort_p(species_t *sp)
@@ -75,7 +81,7 @@ struct VpicParticlesOps
     ::sort_p(sp);
   }
 
-  static double energy_p(typename Particles::const_iterator sp, const Interpolator& interpolator)
+  static double energy_p(typename Particles::const_iterator sp, const MfieldsInterpolator& interpolator)
   {
     return ::energy_p(&*sp, &interpolator);
   }

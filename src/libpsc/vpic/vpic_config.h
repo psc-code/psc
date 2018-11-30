@@ -92,8 +92,8 @@ struct VpicConfigWrap
   using MfieldsHydro = MfieldsHydroVpic;
   using HydroArrayOps = VpicHydroArrayOps<MfieldsHydro>;
 
-#if 0//def DO_VPIC
-  using ParticlesOps = VpicParticlesOps<Particles, MfieldsState, Interpolator, MfieldsAccumulator, MfieldsHydro>;
+#if 1//def DO_VPIC
+  using ParticlesOps = VpicParticlesOps<Mparticles, MfieldsState, MfieldsInterpolator, MfieldsAccumulator, MfieldsHydro>;
 #else
   using ParticlesOps = PscParticlesOps<Mparticles, MfieldsState, MfieldsInterpolator, MfieldsAccumulator, MfieldsHydro>;
 #endif

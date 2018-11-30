@@ -28,7 +28,10 @@ struct MfieldsInterpolatorVpic
 
     Grid* grid() { return static_cast<Grid*>(ip_->g); }
 
-    interpolator_array_t *ip_;
+    interpolator_array_t* ip() { return ip_; }
+
+  private:
+    interpolator_array_t* ip_;
   };
 
   MfieldsInterpolatorVpic(Grid* vgrid)

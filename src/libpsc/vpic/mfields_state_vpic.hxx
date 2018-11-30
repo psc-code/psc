@@ -96,6 +96,7 @@ struct MfieldsStateVpic
   Grid* vgrid() { return patch_.grid(); }
 
   operator FieldArray*() { return patch_; }
+  FieldArray* fa() { return patch_; }
 
   const Grid_t& grid() const { return grid_; }
   int n_patches() const { return grid_.n_patches(); }
