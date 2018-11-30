@@ -2,6 +2,8 @@
 #pragma once
 
 #include <psc_fields_single.h>
+#include "VpicParticlesOps.h"
+#include "PscParticlesOps.h"
 
 // ----------------------------------------------------------------------
 // OutputFieldsVpic
@@ -95,3 +97,8 @@ private:
   MfieldsSingle mflds_res_;
 };
 
+template<typename Mparticles, typename MfieldsHydro, typename MfieldsInterpolator>
+using OutputHydroVpicWrap = OutputHydroVpic_<VpicHydroOps<Mparticles, MfieldsHydro, MfieldsInterpolator>>;
+
+template<typename Mparticles, typename MfieldsHydro, typename MfieldsInterpolator>
+using OutputHydroVpic = OutputHydroVpic_<PscHydroOps<Mparticles, MfieldsHydro, MfieldsInterpolator>>;

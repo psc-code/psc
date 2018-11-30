@@ -2,6 +2,8 @@
 #pragma once
 
 #include "psc_vpic_bits.h"
+#include "GridLoop.h"
+#include "Field3D.h"
 
 #ifdef USE_VPIC
 #define HAS_V4_PIPELINE

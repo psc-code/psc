@@ -191,11 +191,8 @@ struct PscConfigVpicWrap
   
   using MfieldsState = typename VpicConfig::MfieldsState;
   using Mparticles_t = typename VpicConfig::Mparticles;
-
   using MfieldsHydro = typename VpicConfig::MfieldsHydro;
-  using HydroOps = VpicHydroOps<Mparticles_t, MfieldsHydro, typename VpicConfig::MfieldsInterpolator>;
-  using OutputHydro = OutputHydroVpic_<HydroOps>;
-  
+
   using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Sort_t = SortVpicWrap<Mparticles_t>;
   using Collision_t = PscCollisionVpic;
@@ -211,6 +208,7 @@ struct PscConfigVpicWrap
   using Checks_t = ChecksVpic<Mparticles_t, MfieldsState>;
   using Marder_t = MarderVpicWrap<Mparticles_t, MfieldsState>;
   using OutputParticles = OutputParticlesHdf5<MparticlesSingle>;
+  using OutputHydro = OutputHydroVpicWrap<Mparticles_t, MfieldsHydro, typename VpicConfig::MfieldsInterpolator>;
   using dim_t = dim_xyz;
 
 #if 0
@@ -229,10 +227,7 @@ struct PscConfigVpicPsc
 
   using MfieldsState = typename VpicConfig::MfieldsState;
   using Mparticles_t = typename VpicConfig::Mparticles;
-
   using MfieldsHydro = typename VpicConfig::MfieldsHydro;
-  using HydroOps = PscHydroOps<Mparticles_t, MfieldsHydro, typename VpicConfig::MfieldsInterpolator>;
-  using OutputHydro = OutputHydroVpic_<HydroOps>;
   
   using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Sort_t = SortVpic<Mparticles_t>;
@@ -249,6 +244,7 @@ struct PscConfigVpicPsc
   using Checks_t = ChecksVpic<Mparticles_t, MfieldsState>;
   using Marder_t = MarderVpic<Mparticles_t, MfieldsState>;
   using OutputParticles = OutputParticlesHdf5<MparticlesSingle>;
+  using OutputHydro = OutputHydroVpic<Mparticles_t, MfieldsHydro, typename VpicConfig::MfieldsInterpolator>;
   using dim_t = dim_xyz;
 
 #if 0
