@@ -27,10 +27,13 @@ struct OutputFieldsVpic
 // ----------------------------------------------------------------------
 // OutputHydroVpic
 
-template<typename Mparticles, typename MfieldsHydro, typename MfieldsInterpolator,
-	 typename HydroOps>
+template<typename HydroOps>
 struct OutputHydroVpic
 {
+  using Mparticles = typename HydroOps::Mparticles;
+  using MfieldsHydro = typename HydroOps::MfieldsHydro;
+  using MfieldsInterpolator = typename HydroOps::MfieldsInterpolator;
+  
   struct Result
   {
     MfieldsSingle& mflds;
