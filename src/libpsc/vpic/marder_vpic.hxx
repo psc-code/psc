@@ -57,6 +57,13 @@ struct MarderVpicOps
   {
     TIC CleanDivOps::clean_div_b(mflds); TOC(clean_div_e, 1);
   }
+
+  double synchronize_tang_e_norm_b(MfieldsState& mflds)
+  {
+    double err;
+    TIC err = CleanDivOps::synchronize_tang_e_norm_b(mflds); TOC(synchronize_tang_e_norm_b, 1);
+    return err;
+  }
 };
 
 // ======================================================================
@@ -150,8 +157,7 @@ struct MarderVpic_ : MarderBase, MarderVpicOps<Mparticles, typename _CleanDivOps
     if (sync_shared) {
       // needs E, B, TCA
       mpi_printf(comm_, "Synchronizing shared tang e, norm b\n");
-      double err;
-      TIC err = CleanDivOps::synchronize_tang_e_norm_b(mflds); TOC(synchronize_tang_e_norm_b, 1);
+      double err = synchronize_tang_e_norm_b(mflds);
       mpi_printf(comm_, "Domain desynchronization error = %e (arb units)\n", err);
       // updates E, B, TCA
     }
