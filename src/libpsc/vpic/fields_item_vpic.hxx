@@ -2,8 +2,8 @@
 #pragma once
 
 #include <psc_fields_single.h>
-#include "VpicParticlesOps.h"
-#include "PscParticlesOps.h"
+#include "vpic_hydro_ops.hxx"
+#include "psc_hydro_ops.hxx"
 
 // ----------------------------------------------------------------------
 // OutputFieldsVpic
