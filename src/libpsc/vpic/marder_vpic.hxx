@@ -4,10 +4,66 @@
 #include "marder.hxx"
 
 // ======================================================================
-// psc_marder "vpic"
+// MarderVpicOps
+
+template<typename Mparticles, typename MfieldsState, typename CleanDivOps>
+struct MarderVpicOps
+{
+  void clear_rhof(MfieldsState& mflds)
+  {
+    TIC CleanDivOps::clear_rhof(mflds); TOC(clear_rhof, 1);
+  }
+
+  void accumulate_rho_p(Mparticles& mprts, MfieldsState& mflds)
+  {
+    CleanDivOps::accumulate_rho_p(mprts, mflds);
+  }
+
+  void synchronize_rho(MfieldsState& mflds)
+  {
+    CleanDivOps::synchronize_rho(mflds);
+  }
+
+  void compute_div_e_err(MfieldsState& mflds)
+  {
+    TIC CleanDivOps::compute_div_e_err(mflds); TOC(compute_div_e_err, 1);
+  }
+
+  double compute_rms_div_e_err(MfieldsState& mflds)
+  {
+    double err;
+    TIC err = CleanDivOps::compute_rms_div_e_err(mflds); TOC(compute_rms_div_e_err, 1);
+    return err;
+  }
+
+  void clean_div_e(MfieldsState& mflds)
+  {
+    TIC CleanDivOps::clean_div_e(mflds); TOC(clean_div_e, 1);
+  }
+  
+  void compute_div_b_err(MfieldsState& mflds)
+  {
+    TIC CleanDivOps::compute_div_b_err(mflds); TOC(compute_div_e_err, 1);
+  }
+
+  double compute_rms_div_b_err(MfieldsState& mflds)
+  {
+    double err;
+    TIC err = CleanDivOps::compute_rms_div_b_err(mflds); TOC(compute_rms_div_e_err, 1);
+    return err;
+  }
+
+  void clean_div_b(MfieldsState& mflds)
+  {
+    TIC CleanDivOps::clean_div_b(mflds); TOC(clean_div_e, 1);
+  }
+};
+
+// ======================================================================
+// MarderVpic
 
 template<typename Mparticles, typename _CleanDivOps>
-struct MarderVpic : MarderBase
+struct MarderVpic : MarderBase, MarderVpicOps<Mparticles, typename _CleanDivOps::MfieldsState, _CleanDivOps>
 {
   using CleanDivOps = _CleanDivOps;
   using MfieldsState = typename CleanDivOps::MfieldsState;
@@ -23,20 +79,19 @@ struct MarderVpic : MarderBase
   void psc_marder_vpic_clean_div_e(MfieldsState& mflds, Mparticles& mprts)
   {
     mpi_printf(comm_, "Divergence cleaning electric field\n");
-  
-    TIC CleanDivOps::clear_rhof(mflds); TOC(clear_rhof, 1);
-    CleanDivOps::accumulate_rho_p(mprts, mflds);
-    CleanDivOps::synchronize_rho(mflds);
+
+    this->clear_rhof(mflds);
+    this->accumulate_rho_p(mprts, mflds);
+    this->synchronize_rho(mflds);
 
     for (int round = 0; round < num_div_e_round_; round++ ) {
-      TIC CleanDivOps::compute_div_e_err(mflds); TOC(compute_div_e_err, 1);
+      this->compute_div_e_err(mflds);
       if (round == 0 || round == num_div_e_round_ - 1) {
-	double err;
-	TIC err = CleanDivOps::compute_rms_div_e_err(mflds); TOC(compute_rms_div_e_err, 1);
+	double err = this->compute_rms_div_e_err(mflds);
 	mpi_printf(comm_, "%s rms error = %e (charge/volume)\n",
 		   round == 0 ? "Initial" : "Cleaned", err);
       }
-      TIC CleanDivOps::clean_div_e(mflds); TOC(clean_div_e, 1);
+      this->clean_div_e(mflds);
     }
   }
 
@@ -49,14 +104,13 @@ struct MarderVpic : MarderBase
   
     for (int round = 0; round < num_div_b_round_; round++) {
       // FIXME, having the TIC/TOC stuff with every use is not pretty
-      TIC CleanDivOps::compute_div_b_err(mflds); TOC(compute_div_b_err, 1);
+      this->compute_div_b_err(mflds);
       if (round == 0 || round == num_div_b_round_ - 1) {
-	double err;
-	TIC err = CleanDivOps::compute_rms_div_b_err(mflds); TOC(compute_rms_div_b_err, 1);
+	double err = this->compute_rms_div_b_err(mflds);
 	mpi_printf(comm_, "%s rms error = %e (charge/volume)\n",
 		   round == 0 ? "Initial" : "Cleaned", err);
       }
-      TIC CleanDivOps::clean_div_b(mflds); TOC(clean_div_b, 1);
+      this->clean_div_b(mflds);
     }
   }
 
