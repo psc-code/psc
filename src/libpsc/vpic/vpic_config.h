@@ -36,7 +36,6 @@
 #include "PscAccumulator.h"
 #include "mfields_accumulator_psc.hxx"
 
-#include "PscHydroArray.h"
 #include "mfields_hydro.hxx"
 
 #include "NoneDiag.h"
@@ -60,8 +59,6 @@
 #include "VpicInterpolator.h"
 
 #include "VpicAccumulator.h"
-
-#include "VpicHydroArray.h"
 
 #include "VpicDiag.h"
 
@@ -90,7 +87,6 @@ struct VpicConfigWrap
   using AccumulatorOps = PscAccumulatorOps<MfieldsAccumulator, MfieldsState>;
   
   using MfieldsHydro = MfieldsHydroVpic;
-  using HydroArrayOps = VpicHydroArrayOps<MfieldsHydro>;
   using HydroOps = VpicHydroOps<Mparticles, MfieldsHydro, MfieldsInterpolator>;
 
 #if 1//def DO_VPIC
@@ -131,7 +127,6 @@ struct VpicConfigPsc
   using AccumulatorOps = PscAccumulatorOps<MfieldsAccumulator, MfieldsState>;
   
   using MfieldsHydro = MfieldsHydroPsc<Grid>;
-  using HydroArrayOps = PscHydroArrayOps<MfieldsHydro>;
   using HydroOps = PscHydroOps<Mparticles, MfieldsHydro, MfieldsInterpolator>;
 
   using ParticlesOps = PscParticlesOps<Mparticles, MfieldsState, MfieldsInterpolator, MfieldsAccumulator, MfieldsHydro>;

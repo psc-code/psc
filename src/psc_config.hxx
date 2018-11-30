@@ -192,7 +192,6 @@ struct PscConfigVpicWrap
   using MfieldsState = typename VpicConfig::MfieldsState;
   using Mparticles_t = typename VpicConfig::Mparticles;
 
-  using HydroArrayOps = typename VpicConfig::HydroArrayOps;
   using HydroOps = typename VpicConfig::HydroOps;
   
   using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
@@ -229,7 +228,6 @@ struct PscConfigVpicPsc
   using MfieldsState = typename VpicConfig::MfieldsState;
   using Mparticles_t = typename VpicConfig::Mparticles;
 
-  using HydroArrayOps = typename VpicConfig::HydroArrayOps;
   using HydroOps = typename VpicConfig::HydroOps;
   
   using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
