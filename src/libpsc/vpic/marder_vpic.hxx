@@ -6,9 +6,12 @@
 // ======================================================================
 // MarderVpicOps
 
-template<typename Mparticles, typename MfieldsState, typename CleanDivOps>
+template<typename _Mparticles, typename _MfieldsState, typename CleanDivOps>
 struct MarderVpicOps
 {
+  using Mparticles = _Mparticles;
+  using MfieldsState = _MfieldsState;
+  
   void clear_rhof(MfieldsState& mflds)
   {
     TIC CleanDivOps::clear_rhof(mflds); TOC(clear_rhof, 1);
@@ -69,9 +72,11 @@ struct MarderVpicOps
 // ======================================================================
 // MarderVpic_
 
-template<typename Mparticles, typename MfieldsState, typename _CleanDivOps>
-struct MarderVpic_ : MarderBase, MarderVpicOps<Mparticles, typename _CleanDivOps::MfieldsState, _CleanDivOps>
+template<typename Ops>
+struct MarderVpic_ : MarderBase, Ops
 {
+  using Mparticles = typename Ops::Mparticles;
+  using MfieldsState = typename Ops::MfieldsState;
   using real_t = typename MfieldsState::real_t;
   
   MarderVpic_(const Grid_t& grid, real_t diffusion, int loop, bool dump)
@@ -172,7 +177,7 @@ private:
 };
 
 template<typename Mparticles, typename MfieldsState>
-using MarderVpic = MarderVpic_<Mparticles, MfieldsState, PscCleanDivOps<Mparticles, MfieldsState, PscFieldArrayLocalOps<MfieldsState>, PscFieldArrayRemoteOps<MfieldsState>>>;
+using MarderVpic = MarderVpic_<MarderVpicOps<Mparticles, MfieldsState, PscCleanDivOps<Mparticles, MfieldsState, PscFieldArrayLocalOps<MfieldsState>, PscFieldArrayRemoteOps<MfieldsState>>>>;
 
 template<typename Mparticles, typename MfieldsState>
-using MarderVpicWrap = MarderVpic_<Mparticles, MfieldsState, VpicCleanDivOps<Mparticles, MfieldsState>>;
+using MarderVpicWrap = MarderVpic_<MarderVpicOps<Mparticles, MfieldsState, VpicCleanDivOps<Mparticles, MfieldsState>>>;
