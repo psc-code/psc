@@ -4,13 +4,83 @@
 #include "marder.hxx"
 
 // ======================================================================
+// MarderVpicOpsWrap
+
+template<typename _Mparticles, typename _MfieldsState>
+struct MarderVpicOpsWrap
+{
+  using Mparticles = _Mparticles;
+  using MfieldsState = _MfieldsState;
+  using CleanDivOps = VpicCleanDivOps<Mparticles, MfieldsState>;
+  
+  void clear_rhof(MfieldsState& mflds)
+  {
+    TIC CleanDivOps::clear_rhof(mflds); TOC(clear_rhof, 1);
+  }
+
+  void accumulate_rho_p(Mparticles& mprts, MfieldsState& mflds)
+  {
+    CleanDivOps::accumulate_rho_p(mprts, mflds);
+  }
+
+  void synchronize_rho(MfieldsState& mflds)
+  {
+    CleanDivOps::synchronize_rho(mflds);
+  }
+
+  void compute_div_e_err(MfieldsState& mflds)
+  {
+    TIC CleanDivOps::compute_div_e_err(mflds); TOC(compute_div_e_err, 1);
+  }
+
+  double compute_rms_div_e_err(MfieldsState& mflds)
+  {
+    double err;
+    TIC err = CleanDivOps::compute_rms_div_e_err(mflds); TOC(compute_rms_div_e_err, 1);
+    return err;
+  }
+
+  void clean_div_e(MfieldsState& mflds)
+  {
+    TIC CleanDivOps::clean_div_e(mflds); TOC(clean_div_e, 1);
+  }
+  
+  void compute_div_b_err(MfieldsState& mflds)
+  {
+    TIC CleanDivOps::compute_div_b_err(mflds); TOC(compute_div_e_err, 1);
+  }
+
+  double compute_rms_div_b_err(MfieldsState& mflds)
+  {
+    double err;
+    TIC err = CleanDivOps::compute_rms_div_b_err(mflds); TOC(compute_rms_div_e_err, 1);
+    return err;
+  }
+
+  void clean_div_b(MfieldsState& mflds)
+  {
+    TIC CleanDivOps::clean_div_b(mflds); TOC(clean_div_e, 1);
+  }
+
+  double synchronize_tang_e_norm_b(MfieldsState& mflds)
+  {
+    double err;
+    TIC err = CleanDivOps::synchronize_tang_e_norm_b(mflds); TOC(synchronize_tang_e_norm_b, 1);
+    return err;
+  }
+};
+
+// ======================================================================
 // MarderVpicOps
 
-template<typename _Mparticles, typename _MfieldsState, typename CleanDivOps>
+template<typename _Mparticles, typename _MfieldsState>
 struct MarderVpicOps
 {
   using Mparticles = _Mparticles;
   using MfieldsState = _MfieldsState;
+  using LocalOps = PscFieldArrayLocalOps<MfieldsState>;
+  using RemoteOps = PscFieldArrayRemoteOps<MfieldsState>;
+  using CleanDivOps = PscCleanDivOps<Mparticles, MfieldsState, LocalOps, RemoteOps>;
   
   void clear_rhof(MfieldsState& mflds)
   {
@@ -177,7 +247,8 @@ private:
 };
 
 template<typename Mparticles, typename MfieldsState>
-using MarderVpic = MarderVpic_<MarderVpicOps<Mparticles, MfieldsState, PscCleanDivOps<Mparticles, MfieldsState, PscFieldArrayLocalOps<MfieldsState>, PscFieldArrayRemoteOps<MfieldsState>>>>;
+using MarderVpicWrap = MarderVpic_<MarderVpicOpsWrap<Mparticles, MfieldsState>>;
 
 template<typename Mparticles, typename MfieldsState>
-using MarderVpicWrap = MarderVpic_<MarderVpicOps<Mparticles, MfieldsState, VpicCleanDivOps<Mparticles, MfieldsState>>>;
+using MarderVpic = MarderVpic_<MarderVpicOps<Mparticles, MfieldsState>>;
+
