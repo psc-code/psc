@@ -778,15 +778,14 @@ private:
     // Do some consistency checks on user initialized fields
     
     mpi_printf(comm, "Checking interdomain synchronization\n");
-    double err;
-    TIC err = marder_->synchronize_tang_e_norm_b(mflds); TOC(synchronize_tang_e_norm_b, 1);
+    double err =  marder_->synchronize_tang_e_norm_b(mflds);
     mpi_printf(comm, "Error = %g (arb units)\n", err);
     
     mpi_printf(comm, "Checking magnetic field divergence\n");
-    TIC marder_->compute_div_b_err(mflds); TOC(compute_div_b_err, 1);
-    TIC err = marder_->compute_rms_div_b_err(mflds); TOC(compute_rms_div_b_err, 1);
+    marder_->compute_div_b_err(mflds);
+    err = marder_->compute_rms_div_b_err(mflds);
     mpi_printf(comm, "RMS error = %e (charge/volume)\n", err);
-    TIC marder_->clean_div_b(mflds); TOC(clean_div_b, 1);
+    marder_->clean_div_b(mflds);
     
     // Load fields not initialized by the user
     
@@ -794,7 +793,7 @@ private:
     TIC AccumulateOps::compute_curl_b(*mflds_); TOC(compute_curl_b, 1);
     
     mpi_printf(comm, "Initializing bound charge density\n");
-    TIC marder_->clear_rhof(mflds); TOC(clear_rhof, 1);
+    marder_->clear_rhof(mflds);
     marder_->accumulate_rho_p(mprts, mflds);
     marder_->synchronize_rho(mflds);
     TIC AccumulateOps::compute_rhob(*mflds_); TOC(compute_rhob, 1);
@@ -802,13 +801,13 @@ private:
     // Internal sanity checks
     
     mpi_printf(comm, "Checking electric field divergence\n");
-    TIC marder_->compute_div_e_err(mflds); TOC(compute_div_e_err, 1);
-    TIC err = marder_->compute_rms_div_e_err(mflds); TOC(compute_rms_div_e_err, 1);
+    marder_->compute_div_e_err(mflds);
+    err = marder_->compute_rms_div_e_err(mflds);
     mpi_printf(comm, "RMS error = %e (charge/volume)\n", err);
-    TIC marder_->clean_div_e(mflds); TOC(clean_div_e, 1);
+    marder_->clean_div_e(mflds);
     
     mpi_printf(comm, "Rechecking interdomain synchronization\n");
-    TIC err = marder_->synchronize_tang_e_norm_b(mflds); TOC(synchronize_tang_e_norm_b, 1);
+    err = marder_->synchronize_tang_e_norm_b(mflds);
     mpi_printf(comm, "Error = %e (arb units)\n", err);
     
     mpi_printf(comm, "Uncentering particles\n");

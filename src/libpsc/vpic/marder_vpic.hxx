@@ -23,7 +23,7 @@ struct MarderVpicOpsWrap
   void synchronize_rho(MfieldsState& mflds)
   {
     field_array_t* fa = mflds;
-    fa->kernel->synchronize_rho(fa);
+    TIC fa->kernel->synchronize_rho(fa); TOC(synchronize_rho, 1);
   }
 
   void compute_div_e_err(MfieldsState& mflds)
@@ -103,14 +103,9 @@ struct MarderVpicOps
     TIC CleanDivOps::clear_rhof(mflds); TOC(clear_rhof, 1);
   }
 
-  void accumulate_rho_p(Mparticles& mprts, MfieldsState& mflds)
-  {
-    CleanDivOps::accumulate_rho_p(mprts, mflds);
-  }
-
   void synchronize_rho(MfieldsState& mflds)
   {
-    CleanDivOps::synchronize_rho(mflds);
+    TIC CleanDivOps::synchronize_rho(mflds); TOC(synchronize_rho, 1);
   }
 
   void compute_div_e_err(MfieldsState& mflds)
@@ -152,6 +147,11 @@ struct MarderVpicOps
     double err;
     TIC err = CleanDivOps::synchronize_tang_e_norm_b(mflds); TOC(synchronize_tang_e_norm_b, 1);
     return err;
+  }
+
+  void accumulate_rho_p(Mparticles& mprts, MfieldsState& mflds)
+  {
+    CleanDivOps::accumulate_rho_p(mprts, mflds);
   }
 };
 
@@ -199,7 +199,6 @@ struct MarderVpic_ : MarderBase, Ops
     mpi_printf(comm_, "Divergence cleaning magnetic field\n");
   
     for (int round = 0; round < num_div_b_round_; round++) {
-      // FIXME, having the TIC/TOC stuff with every use is not pretty
       this->compute_div_b_err(mflds);
       if (round == 0 || round == num_div_b_round_ - 1) {
 	double err = this->compute_rms_div_b_err(mflds);
