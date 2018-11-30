@@ -88,7 +88,7 @@ struct PushParticlesVpic : PushParticlesBase
 #endif
   }
 
-  void prep(Mparticles& mprts, MfieldsState& mflds, MfieldsInterpolator& interpolator)
+  void load_interpolator(Mparticles& mprts, MfieldsState& mflds, MfieldsInterpolator& interpolator)
   {
     // At end of step:
     // Fields are updated ... load the interpolator for next time step and
@@ -114,7 +114,7 @@ struct PushParticlesVpic : PushParticlesBase
     // needs E, B
     auto mprts = mprts_base.get_as<Mparticles>();
     auto& mflds = mflds_base.get_as<Mfields>(EX, HX + 6);
-    prep(mprts, mflds);
+    load_interpolator(mprts, mflds);
     mflds_base.put_as(mflds, 0, 0);
     mprts_base.put_as(mprts, MP_DONT_COPY);
 #endif

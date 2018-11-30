@@ -57,8 +57,7 @@ struct Psc
   using Material = typename MaterialList::Material;
   using DiagMixin = typename PscConfig::DiagMixin;
   using AccumulateOps = typename PushParticles_t::AccumulateOps;
-  using InterpolatorOps = typename PushParticles_t::InterpolatorOps;
-  using MfieldsInterpolator = typename InterpolatorOps::MfieldsInterpolator;
+  using MfieldsInterpolator = typename PushParticles_t::MfieldsInterpolator;
   using MfieldsAccumulator = typename PushParticles_t::MfieldsAccumulator;
   using HydroArrayOps = typename PscConfig::HydroArrayOps;
   using MfieldsHydro = typename HydroArrayOps::MfieldsHydro;
@@ -425,7 +424,7 @@ struct Psc
     checks_->gauss(mprts, mflds);
 
 #ifdef VPIC
-    pushp_->prep(mprts, mflds, *interpolator_);
+    pushp_->load_interpolator(mprts, mflds, *interpolator_);
 #endif
   }
 #endif
@@ -810,8 +809,8 @@ private:
     mpi_printf(comm, "Error = %e (arb units)\n", err);
     
     mpi_printf(comm, "Uncentering particles\n");
-    if (!mprts_->empty()) {
-      TIC InterpolatorOps::load(*interpolator_, *mflds_); TOC(load_interpolator, 1);
+    if (!mprts.empty()) {
+      pushp_->load_interpolator(mprts, mflds, *interpolator_);
       pushp_->uncenter(mprts, *interpolator_);
     }
   }
