@@ -63,8 +63,7 @@ struct Psc
   using HydroArrayOps = typename PscConfig::HydroArrayOps;
   using MfieldsHydro = typename HydroArrayOps::MfieldsHydro;
   using ParticlesOps = typename PushParticles_t::ParticlesOps;
-  using Particles = typename Mparticles_t::Particles;
-  using ParticleBcList = typename Particles::ParticleBcList;
+  using ParticleBcList = typename Mparticles_t::Particles::ParticleBcList;
 #endif
   
   // ----------------------------------------------------------------------
@@ -813,10 +812,7 @@ private:
     mpi_printf(comm, "Uncentering particles\n");
     if (!mprts_->empty()) {
       TIC InterpolatorOps::load(*interpolator_, *mflds_); TOC(load_interpolator, 1);
-      
-      for (auto& sp : mprts) {
-	TIC ParticlesOps::uncenter_p(&sp, *interpolator_); TOC(uncenter_p, 1);
-      }
+      pushp_->uncenter(mprts, *interpolator_);
     }
   }
 

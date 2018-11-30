@@ -99,6 +99,13 @@ struct PushParticlesVpic : PushParticlesBase
       TIC InterpolatorOps::load(interpolator, mflds); TOC(load_interpolator, 1);
     }
   }
+
+  void uncenter(Mparticles& mprts, MfieldsInterpolator& interpolator)
+  {
+    for (auto& sp : mprts) {
+      TIC ParticlesOps::uncenter_p(&sp, interpolator); TOC(uncenter_p, 1);
+    }
+  }
   
   void prep(MparticlesBase& mprts_base, MfieldsStateBase& mflds_base) override
   {
