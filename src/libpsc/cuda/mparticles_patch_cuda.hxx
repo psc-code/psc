@@ -80,6 +80,7 @@ struct ConstPatchCuda
 
     const_iterator begin() const { return {*this, 0}; }
     const_iterator end()   const { return {*this, uint(data_.size())}; }
+    uint size() const { return data_.size(); }
     
   private:
     const ConstPatchCuda patch_;
@@ -90,10 +91,7 @@ struct ConstPatchCuda
     : mprts_{mprts}, p_(p)
   {}
   
-  const_accessor_range get()
-  {
-    return {mprts_, p_};
-  }
+  const_accessor_range _get() { return {mprts_, p_}; }
   
   const Grid_t& grid() const { return mprts_.grid(); }
 
@@ -177,6 +175,7 @@ struct ConstPatchCuda_
 
     const_iterator begin() const { return {patch_, 0}; }
     const_iterator end()   const { return {patch_, patch_.size()}; };
+    uint size() const { return patch_.size(); }
       
   private:
     const ConstPatchCuda_ patch_;
@@ -211,7 +210,7 @@ struct ConstAccessorCuda
 
   typename Mparticles::Patch::const_accessor_range operator[](int p)
   {
-    return mprts_[p].get();
+    return mprts_[p]._get();
   }
 
 private:

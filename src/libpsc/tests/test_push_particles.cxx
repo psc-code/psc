@@ -50,8 +50,9 @@ TYPED_TEST(PushParticlesTest, SingleParticle)
   }
 
   // check particle
-  EXPECT_EQ(mprts[0].size(), 1);
-  auto prt = *mprts[0].get().begin();
+  auto accessor = mprts.accessor();
+  EXPECT_EQ(accessor[0].size(), 1);
+  auto prt = *accessor[0].begin();
   EXPECT_NEAR(prt.position()[0], 1., eps);
   EXPECT_NEAR(prt.position()[1], 0., eps);
   EXPECT_NEAR(prt.position()[2], 0., eps);

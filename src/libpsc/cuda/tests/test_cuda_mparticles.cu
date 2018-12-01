@@ -104,7 +104,8 @@ TEST_F(CudaMparticlesTest, SetParticles)
 
   // check that particles are in C order
   int n = 0;
-  for (auto prt: cmprts[0].get()) {
+  auto accessor = cmprts.accessor();
+  for (auto prt: accessor[0]) {
     int nn = n++;
     int k = nn % grid_->ldims[2]; nn /= grid_->ldims[2];
     int j = nn % grid_->ldims[1]; nn /= grid_->ldims[1];
@@ -263,7 +264,8 @@ TEST_F(CudaMparticlesTest, SetupInternals)
   
   // check that particles are now in Fortran order
   int cur_bidx = 0;
-  for (auto prt: cmprts[0].get()) {
+  auto accessor = cmprts.accessor();
+  for (auto prt: accessor[0]) {
     float4 xi = { prt.x()[0], prt.x()[1], prt.x()[2] };
     int bidx = cmprts.blockIndex(xi, 0);
     EXPECT_GE(bidx, cur_bidx);
@@ -305,7 +307,8 @@ TEST_F(CudaMparticlesTest, CudaCollision)
   CudaCollision<CudaMparticles, RngStateCuda> coll{interval, nu, nicell, dt};
 
   coll(cmprts);
-  for (auto prt: cmprts[0].get()) {
+  auto accessor = cmprts.accessor();
+  for (auto prt: accessor[0]) {
     printf("xi %g %g pxi %g %g %g\n", prt.x()[1], prt.x()[2],
 	   prt.u()[0], prt.u()[1], prt.u()[2]);
   }

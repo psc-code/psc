@@ -67,7 +67,7 @@ struct ConstAccessorSimple
 
   typename Mparticles::Patch::const_accessor_range operator[](int p)
   {
-    return mprts_[p].get();
+    return mprts_[p]._get();
   }
 
 private:
@@ -146,6 +146,7 @@ struct mparticles_patch
 
     const_iterator begin() const { return {prts_, 0}; }
     const_iterator end()   const { return {prts_, prts_.size()}; }
+    uint size() const { return prts_.size(); }
 
   private:
     const mparticles_patch& prts_;
@@ -163,7 +164,7 @@ struct mparticles_patch
       grid_(&mprts->grid())
   {}
 
-  const_accessor_range get() { return {*this}; }
+  const_accessor_range _get() { return {*this}; }
 
   particle_t& operator[](int n) { return buf[n]; }
   const particle_t& operator[](int n) const { return buf[n]; }

@@ -61,7 +61,7 @@ struct ConstAccessorVpic
 
   typename Mparticles::Patch::const_accessor_range operator[](int p)
   {
-    return mprts_[p].get();
+    return mprts_[p]._get();
   }
 
 private:
@@ -184,6 +184,7 @@ struct MparticlesVpic_ : MparticlesBase, Particles
 
       const_iterator begin() const { return {prts_, prts_.mprts_.begin(), 0}; }
       const_iterator end()   const { return {prts_, prts_.mprts_.end(), 0}; }
+      uint size() const { return prts_.size(); }
 
     private:
       const Patch& prts_;
@@ -195,7 +196,7 @@ struct MparticlesVpic_ : MparticlesBase, Particles
     
     uint size() const { return mprts_.get_n_prts(); }
 
-    const_accessor_range get() const { return {*this}; }
+    const_accessor_range _get() const { return {*this}; }
 
   private:
     MparticlesVpic_& mprts_;

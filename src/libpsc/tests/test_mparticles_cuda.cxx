@@ -88,11 +88,12 @@ TYPED_TEST(MparticlesCudaTest, ConvertFromSingle)
   EXPECT_EQ(mprts.get_n_prts(), 4);
   
   nn = 0;
+  auto accessor = mprts.accessor();
   for (int p = 0; p < mprts.n_patches(); ++p) {
-    auto prts = mprts[p];
+    auto prts = accessor[p];
     auto& patch = mprts.grid().patches[p];
 
-    for (auto prt: prts.get()) {
+    for (auto prt: prts) {
       auto x = .5 * (patch.xb + patch.xe);
       EXPECT_EQ(prt.position()[0], x[0]);
       EXPECT_EQ(prt.position()[1], x[1]);

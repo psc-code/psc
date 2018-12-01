@@ -213,7 +213,8 @@ struct PushParticlesTest : ::testing::Test
     pushp_.push_mprts(*mprts, *mflds);
 
     // check against reference
-    auto prt = *(*mprts)[0].get().begin();
+    auto accessor = mprts->accessor();
+    auto prt = *accessor[0].begin();
     EXPECT_NEAR(prt.u()[0], prt1.u[0], eps);
     EXPECT_NEAR(prt.u()[1], prt1.u[1], eps);
     EXPECT_NEAR(prt.u()[2], prt1.u[2], eps);

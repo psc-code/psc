@@ -130,7 +130,8 @@ TYPED_TEST(CollisionTest, Test1)
 
   collision(mprts);
 
-  auto it = mprts[0].get().begin();
+  auto accessor = mprts.accessor();
+  auto it = accessor[0].begin();
   auto prtf0 = *it++;
   auto prtf1 = *it++;
   EXPECT_NEAR(prtf0.u()[0] + prtf1.u()[0], 1., eps);

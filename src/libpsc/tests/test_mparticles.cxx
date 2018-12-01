@@ -212,12 +212,13 @@ TYPED_TEST(MparticlesTest, Injector)
 
   this->inject_test_particles(mprts, n_prts);
 
+  auto accessor = mprts.accessor();
   for (int p = 0; p < mprts.n_patches(); ++p) {
-    auto prts = mprts[p];
+    auto prts = accessor[p];
     auto& patch = mprts.grid().patches[p];
     EXPECT_EQ(prts.size(), n_prts);
     int n = 0;
-    for (auto prt : prts.get()) {
+    for (auto prt : prts) {
       double nn = double(n) / n_prts;
       auto L = patch.xe - patch.xb;
       auto x = prt.position();
