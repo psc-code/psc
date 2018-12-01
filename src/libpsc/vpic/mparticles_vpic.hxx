@@ -271,7 +271,7 @@ struct MparticlesVpic_ : MparticlesBase, _Particles
 
   void push_back(const vpic_mparticles_prt *prt)
   {
-    for (auto& sp : vmprts()) {
+    for (auto& sp : *this) {
       if (sp.id == prt->kind) {
 	assert(sp.np < sp.max_np);
 	// the below is inject_particle_raw()

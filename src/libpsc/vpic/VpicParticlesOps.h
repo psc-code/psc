@@ -13,8 +13,7 @@ struct VpicParticlesOps
   static void advance_p(Mparticles& mprts, MfieldsAccumulator& accumulator,
 			MfieldsInterpolator& interpolator)
   {
-    auto& vmprts = mprts.vmprts();
-    for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
+    for (auto sp = mprts.begin(); sp != mprts.end(); ++sp) {
       TIC ::advance_p(&*sp, accumulator, interpolator.getPatch(0).ip()); TOC(advance_p, 1);
     }
   }
@@ -22,9 +21,8 @@ struct VpicParticlesOps
   static void boundary_p(const ParticleBcList &pbc_list, Mparticles& mprts, MfieldsState& mflds,
 			 MfieldsAccumulator& accumulator)
   {
-    auto& vmprts = mprts.vmprts();
     const particle_bc_t *pbc = pbc_list;
-    ::boundary_p(const_cast<particle_bc_t*>(pbc), vmprts.head(), mflds, accumulator);
+    ::boundary_p(const_cast<particle_bc_t*>(pbc), mprts.head(), mflds, accumulator);
   }
   
   static void accumulate_rhob(MfieldsState& mflds, const particle_t* p, float qsp)
@@ -38,8 +36,7 @@ struct VpicParticlesOps
 
   static void drop_p(Mparticles& mprts, MfieldsState& mflds)
   {
-    auto& vmprts = mprts.vmprts();
-    for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
+    for (auto sp = mprts.begin(); sp != mprts.end(); ++sp) {
       if (sp->nm) {
 	LOG_WARN("Removing %i particles associated with unprocessed %s movers (increase num_comm_round)",
 		 sp->nm, sp->name);

@@ -26,8 +26,7 @@ struct MarderVpicOpsWrap
 
   void accumulate_rho_p(Mparticles& mprts, MfieldsState& mflds)
   {
-    auto& vmprts = mprts.vmprts();
-    for (auto sp = vmprts.begin(); sp != vmprts.end(); ++sp) {
+    for (auto sp = mprts.begin(); sp != mprts.end(); ++sp) {
       TIC ::accumulate_rho_p(mflds.fa(), &*sp); TOC(accumulate_rho_p, 1);
     }
   }
