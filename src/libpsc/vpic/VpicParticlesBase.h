@@ -63,9 +63,9 @@ struct VpicParticlesBase : public VpicListBase<VpicSpecies<G>>
     return iterator(static_cast<Species*>(sp));
   }
 
-  void inject_particle_reweight(VpicParticlesBase& vmprts, const particle_inject& prt)
+  void inject_particle_reweight(const particle_inject& prt)
   {
-    species_t *sp = &*vmprts.find(prt.kind);
+    species_t *sp = &*find(prt.kind);
 
     extern vpic_simulation *simulation;
     assert(simulation);
