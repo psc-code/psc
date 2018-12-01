@@ -63,7 +63,7 @@ struct VpicParticlesBase : public VpicListBase<VpicSpecies<G>>
     return iterator(static_cast<Species*>(sp));
   }
 
-  void inject_particle(VpicParticlesBase& vmprts, const particle_inject& prt)
+  void inject_particle_reweight(VpicParticlesBase& vmprts, const particle_inject& prt)
   {
     species_t *sp = &*vmprts.find(prt.kind);
 

@@ -35,7 +35,7 @@ struct InjectorVpic
     
     void reweight(const particle_inject& prt)
     {
-      mprts_.vmprts().inject_particle(mprts_.vmprts(), prt); // FIXME why pass vmprts?
+      mprts_.vmprts().inject_particle_reweight(mprts_.vmprts(), prt); // FIXME why pass vmprts?
     }
 
   private:

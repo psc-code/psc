@@ -200,9 +200,9 @@ struct PscParticlesBase : public VpicListBase<PscSpecies<G>>
   }
   
   // ----------------------------------------------------------------------
-  // inject_particle
+  // inject_particle_reweight
   
-  void inject_particle(PscParticlesBase& vmprts, const particle_inject& prt)
+  void inject_particle_reweight(PscParticlesBase& vmprts, const particle_inject& prt)
   {
     auto sp = vmprts.find(prt.kind);
     assert(sp != end());
