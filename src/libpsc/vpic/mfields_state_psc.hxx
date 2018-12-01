@@ -223,7 +223,7 @@ struct MfieldsStatePsc
   Patch& getPatch(int p) { return patch_; }
 
   SfaParams& params() { return params_; }
-  Grid* vgrid() { return patch_.grid(); }
+  Grid& vgrid() { return *patch_.grid(); } // FIXME, const version would be better
 
   const Grid_t& grid() const { return grid_; }
   int n_patches() const { return grid_.n_patches(); }

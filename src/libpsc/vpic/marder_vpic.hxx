@@ -54,7 +54,7 @@ struct MarderVpicOps
   void clear_rhof(MfieldsState& mflds)
   {
     auto& fa = mflds.getPatch(0);
-    const int nv = mflds.vgrid()->nv;
+    const int nv = mflds.vgrid().nv;
 
     for (int v = 0; v < nv; v++) {
       fa[v].rhof = 0;
@@ -131,7 +131,7 @@ struct MarderVpicOps
   {
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
-    CommRho<Grid, F3D> comm(mflds.vgrid());
+    CommRho<Grid, F3D> comm(&mflds.vgrid());
 
     LocalOps::local_adjust_rhof(mflds);
     LocalOps::local_adjust_rhob(mflds);
@@ -182,13 +182,13 @@ struct MarderVpicOps
 
     // Overlap local computation
     LocalOps::local_ghost_norm_e(mflds);
-    foreach_nc_interior(updater, mflds.vgrid());
+    foreach_nc_interior(updater, &mflds.vgrid());
 
     // Finish setting normal e ghosts
     RemoteOps::end_remote_ghost_norm_e(mflds);
 
     // Now do points on boundary
-    foreach_nc_boundary(updater, mflds.vgrid());
+    foreach_nc_boundary(updater, &mflds.vgrid());
 
     LocalOps::local_adjust_div_e(mflds);
   }
@@ -201,10 +201,10 @@ struct MarderVpicOps
   
   double compute_rms_div_e_err(MfieldsState& mflds)
   {
-    const Grid* g = mflds.vgrid();
+    const auto& g = mflds.vgrid();
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
-    const int nx = g->nx, ny = g->ny, nz = g->nz;
+    const int nx = g.nx, ny = g.ny, nz = g.nz;
 
     // Interior points
     // FIXME, it's inconsistent to calc the square in single prec here, but
@@ -277,10 +277,10 @@ struct MarderVpicOps
     err += 0.125*sqr((double) (F(nx+1,ny+1,nz+1).div_e_err));
     
     double local[2], _global[2]; // FIXME, name clash with global macro
-    local[0] = err * g->dV;
-    local[1] = (nx * ny * nz) * g->dV;
+    local[0] = err * g.dV;
+    local[1] = (nx * ny * nz) * g.dV;
     MPI_Allreduce(local, _global, 2, MPI_DOUBLE, MPI_SUM, psc_comm_world);
-    return g->eps0 * sqrt(_global[0]/_global[1]);
+    return g.eps0 * sqrt(_global[0]/_global[1]);
   }
 
   // ----------------------------------------------------------------------
@@ -292,7 +292,7 @@ struct MarderVpicOps
 
   void vacuum_clean_div_e(MfieldsState& mflds)
   {
-    const Grid* g = mflds.vgrid();
+    const auto& g = mflds.vgrid();
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
 
@@ -300,11 +300,11 @@ struct MarderVpicOps
     assert(prm.size() == 1);
     const MaterialCoefficient* m = prm[0];
 
-    const int nx = g->nx, ny = g->ny, nz = g->nz;
+    const int nx = g.nx, ny = g.ny, nz = g.nz;
 
-    const float _rdx = (nx>1) ? g->rdx : 0;
-    const float _rdy = (ny>1) ? g->rdy : 0;
-    const float _rdz = (nz>1) ? g->rdz : 0;
+    const float _rdx = (nx>1) ? g.rdx : 0;
+    const float _rdy = (ny>1) ? g.rdy : 0;
+    const float _rdz = (nz>1) ? g.rdz : 0;
     const float alphadt = 0.3888889/(_rdx*_rdx + _rdy*_rdy + _rdz*_rdz);
     const float px = (alphadt*_rdx) * m->drivex;
     const float py = (alphadt*_rdy) * m->drivey;
@@ -371,14 +371,14 @@ struct MarderVpicOps
   
   void compute_div_b_err(MfieldsState& mflds)
   {
-    const Grid* g = mflds.vgrid();
+    const auto& g = mflds.vgrid();
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
 
-    const int nx = g->nx, ny = g->ny, nz = g->nz;
-    const float px = (nx>1) ? g->rdx : 0;  // FIXME, should be based on global dims
-    const float py = (ny>1) ? g->rdy : 0;
-    const float pz = (nz>1) ? g->rdz : 0;
+    const int nx = g.nx, ny = g.ny, nz = g.nz;
+    const float px = (nx>1) ? g.rdx : 0;  // FIXME, should be based on global dims
+    const float py = (ny>1) ? g.rdy : 0;
+    const float pz = (nz>1) ? g.rdz : 0;
 
     for (int k = 1; k <= nz; k++) {
       for (int j = 1; j <= ny; j++) {
@@ -398,11 +398,11 @@ struct MarderVpicOps
 
   double compute_rms_div_b_err(MfieldsState& mflds)
   {
-    const Grid* g = mflds.vgrid();
+    const auto& g = mflds.vgrid();
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
 
-    const int nx = g->nx, ny = g->ny, nz = g->nz;
+    const int nx = g.nx, ny = g.ny, nz = g.nz;
 
     double err = 0;
     for (int k = 1; k <= nz; k++) {
@@ -414,10 +414,10 @@ struct MarderVpicOps
     }
     
     double local[2], _global[2]; // FIXME, name clash with global macro
-    local[0] = err * g->dV;
-    local[1] = (nx * ny * nz) * g->dV;
+    local[0] = err * g.dV;
+    local[1] = (nx * ny * nz) * g.dV;
     MPI_Allreduce(local, _global, 2, MPI_DOUBLE, MPI_SUM, psc_comm_world);
-    return g->eps0 * sqrt(_global[0]/_global[1]);
+    return g.eps0 * sqrt(_global[0]/_global[1]);
   }
 
   // ----------------------------------------------------------------------
@@ -429,14 +429,14 @@ struct MarderVpicOps
 
   void clean_div_b(MfieldsState& mflds)
   {
-    const Grid* g = mflds.vgrid();
+    const auto& g = mflds.vgrid();
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
 
-    const int nx = g->nx, ny = g->ny, nz = g->nz;
-    float px = (nx>1) ? g->rdx : 0;
-    float py = (ny>1) ? g->rdy : 0;
-    float pz = (nz>1) ? g->rdz : 0;
+    const int nx = g.nx, ny = g.ny, nz = g.nz;
+    float px = (nx>1) ? g.rdx : 0;
+    float py = (ny>1) ? g.rdy : 0;
+    float pz = (nz>1) ? g.rdz : 0;
     float alphadt = 0.3888889/(px*px + py*py + pz*pz);
     px *= alphadt;
     py *= alphadt;
@@ -609,10 +609,9 @@ struct MarderVpicOps
 
   double synchronize_tang_e_norm_b(MfieldsState& mflds)
   {
-    const Grid* g = mflds.vgrid();
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
-    CommTangENormB<Grid, F3D> comm(mflds.vgrid());
+    CommTangENormB<Grid, F3D> comm(&mflds.vgrid());
     
     LocalOps::local_adjust_tang_e(mflds);
     LocalOps::local_adjust_norm_b(mflds);

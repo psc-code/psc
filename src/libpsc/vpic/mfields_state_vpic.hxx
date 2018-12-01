@@ -93,7 +93,7 @@ struct MfieldsStateVpic
   Patch& getPatch(int p) { return patch_; }
 
   SfaParams& params() { return patch_.params(); }
-  Grid* vgrid() { return patch_.grid(); }
+  const Grid& vgrid() { return *patch_.grid(); }
 
   operator FieldArray*() { return patch_; }
   FieldArray* fa() { return patch_; }

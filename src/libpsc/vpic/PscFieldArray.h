@@ -20,7 +20,7 @@ struct PscAccumulateOps
   static void clear_jf(MfieldsState& mflds)
   {
     auto& fa = mflds.getPatch(0);
-    const int nv = mflds.vgrid()->nv;
+    const int nv = mflds.vgrid().nv;
 
     for (int v = 0; v < nv; v++) {
       fa[v].jfx = 0;
@@ -77,7 +77,7 @@ struct PscAccumulateOps
   {
     auto& fa = mflds.getPatch(0);
     Field3D<typename MfieldsState::Patch> F(fa);
-    CommJf<Grid, Field3D<typename MfieldsState::Patch>> comm(mflds.vgrid());
+    CommJf<Grid, Field3D<typename MfieldsState::Patch>> comm(&mflds.vgrid());
 
     LocalOps::local_adjust_jf(mflds);
 
@@ -126,13 +126,13 @@ struct PscAccumulateOps
 
     // Overlap local computation
     LocalOps::local_ghost_norm_e(mflds);
-    foreach_nc_interior(updater, mflds.vgrid());
+    foreach_nc_interior(updater, &mflds.vgrid());
     
     // Finish setting normal e ghosts
     RemoteOps::end_remote_ghost_norm_e(mflds);
 
     // Now do points on boundary
-    foreach_nc_boundary(updater, mflds.vgrid());
+    foreach_nc_boundary(updater, &mflds.vgrid());
 
     LocalOps::local_adjust_rhob(mflds);
   }
@@ -186,16 +186,16 @@ struct PscAccumulateOps
     assert(prm.size() == 1);
     const MaterialCoefficient* m = prm[0];
 
-    CurlB curlB(fa, mflds.vgrid(), m);
+    CurlB curlB(fa, &mflds.vgrid(), m);
       
     RemoteOps::begin_remote_ghost_tang_b(mflds);
 
     LocalOps::local_ghost_tang_b(mflds);
-    foreach_ec_interior(curlB, mflds.vgrid());
+    foreach_ec_interior(curlB, &mflds.vgrid());
 
     RemoteOps::end_remote_ghost_tang_b(mflds);
 
-    foreach_ec_boundary(curlB, mflds.vgrid());
+    foreach_ec_boundary(curlB, &mflds.vgrid());
     LocalOps::local_adjust_tang_e(mflds); // FIXME, is this right here?
   }
 
@@ -219,7 +219,7 @@ struct PscDiagOps
 
   static void vacuum_energy_f(MfieldsState& mflds, double global[6])
   {
-    const Grid* g = mflds.vgrid();
+    const auto& g = mflds.vgrid();
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
 
@@ -227,7 +227,7 @@ struct PscDiagOps
     assert(prm.size() == 1);
     auto m = prm[0];
 
-    const int nx = g->nx, ny = g->ny, nz = g->nz;
+    const int nx = g.nx, ny = g.ny, nz = g.nz;
 
     const float qepsx = 0.25*m->epsx;
     const float qepsy = 0.25*m->epsy;
@@ -263,7 +263,7 @@ struct PscDiagOps
     }
 
     // Convert to physical units
-    double v0 = 0.5 * g->eps0 * g->dV;
+    double v0 = 0.5 * g.eps0 * g.dV;
     for (int m = 0; m < 6; m++) {
       en[m] *= v0;
     }

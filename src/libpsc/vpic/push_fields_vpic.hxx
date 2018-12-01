@@ -76,15 +76,15 @@ private:
 
   static void advance_b(MfieldsState& mflds, double frac)
   {
-    const Grid* g = mflds.vgrid();
+    const auto& g = mflds.vgrid();
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
-    int nx = g->nx, ny = g->ny, nz = g->nz;
+    int nx = g.nx, ny = g.ny, nz = g.nz;
 
     // FIXME, invariant should be based on global dims
-    const float px   = (nx>1) ? frac*g->cvac*g->dt*g->rdx : 0;
-    const float py   = (ny>1) ? frac*g->cvac*g->dt*g->rdy : 0;
-    const float pz   = (nz>1) ? frac*g->cvac*g->dt*g->rdz : 0;
+    const float px   = (nx>1) ? frac*g.cvac*g.dt*g.rdx : 0;
+    const float py   = (ny>1) ? frac*g.cvac*g.dt*g.rdy : 0;
+    const float pz   = (nz>1) ? frac*g.cvac*g.dt*g.rdz : 0;
 
     // bulk
     for (int k = 1; k <= nz; k++) {
@@ -201,16 +201,16 @@ private:
     assert(prm.size() == 1);
     const MaterialCoefficient* m = prm[0];
 
-    AdvanceE advanceE(fa, mflds.vgrid(), m, prm.damp);
+    AdvanceE advanceE(fa, &mflds.vgrid(), m, prm.damp);
 
     RemoteOps::begin_remote_ghost_tang_b(mflds);
 
     LocalOps::local_ghost_tang_b(mflds);
-    foreach_ec_interior(advanceE, mflds.vgrid());
+    foreach_ec_interior(advanceE, &mflds.vgrid());
 
     RemoteOps::end_remote_ghost_tang_b(mflds);
 
-    foreach_ec_boundary(advanceE, mflds.vgrid());
+    foreach_ec_boundary(advanceE, &mflds.vgrid());
     LocalOps::local_adjust_tang_e(mflds);
   }
 

@@ -815,7 +815,7 @@ struct PscParticlesOps
 
     // Unpack fields
 
-    Grid& RESTRICT g = *mflds.vgrid();
+    Grid& RESTRICT g = mflds.vgrid();
     // Unpack the grid
 
     const int64_t * RESTRICT ALIGNED(128) neighbor = g.neighbor;
@@ -1112,9 +1112,9 @@ struct PscParticlesOps
   {
     float w0 = p->dx, w1 = p->dy, w2, w3, w4, w5, w6, w7, dz = p->dz;
     const auto& g = mflds.vgrid();
-    int v = p->i, x, y, z, sy = g->sy, sz = g->sz;
-    const int nx = g->nx, ny = g->ny, nz = g->nz;
-    w7 = (qsp * g->r8V) * p->w;
+    int v = p->i, x, y, z, sy = g.sy, sz = g.sz;
+    const int nx = g.nx, ny = g.ny, nz = g.nz;
+    w7 = (qsp * g.r8V) * p->w;
 
     // Compute the trilinear weights
     // See note in rhof for why FMA and FNMS are done this way.

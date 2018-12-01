@@ -32,13 +32,13 @@ struct PscFieldArrayLocalOps
 
   static void local_ghost_tang_b(MfieldsState& mflds)
   {
-    const Grid* g = mflds.vgrid();
+    const auto& g = mflds.vgrid();
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
-    const int nx = g->nx, ny = g->ny, nz = g->nz;
-    const float cdt_dx = g->cvac*g->dt*g->rdx;
-    const float cdt_dy = g->cvac*g->dt*g->rdy;
-    const float cdt_dz = g->cvac*g->dt*g->rdz;
+    const int nx = g.nx, ny = g.ny, nz = g.nz;
+    const float cdt_dx = g.cvac*g.dt*g.rdx;
+    const float cdt_dy = g.cvac*g.dt*g.rdy;
+    const float cdt_dz = g.cvac*g.dt*g.rdz;
     int bc, face, ghost, x, y, z;
     float decay, drive, higend, t1, t2;
     FieldT *fg, *fh;
@@ -51,7 +51,7 @@ struct PscFieldArrayLocalOps
 
 # define APPLY_LOCAL_TANG_B(i,j,k,X,Y,Z)				\
     do {								\
-      bc = g->bc[BOUNDARY(i,j,k)];					\
+      bc = g.bc[BOUNDARY(i,j,k)];					\
       if( bc<0 || bc>=psc_world_size ) {				\
 	ghost = (i+j+k)<0 ? 0 : n##X+1;					\
 	face  = (i+j+k)<0 ? 1 : n##X+1;					\
@@ -112,16 +112,16 @@ struct PscFieldArrayLocalOps
 
   static void local_ghost_norm_e(MfieldsState& mflds)
   {
-    const Grid* g = mflds.vgrid();
+    const auto& g = mflds.vgrid();
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
-    const int nx = g->nx, ny = g->ny, nz = g->nz;
+    const int nx = g.nx, ny = g.ny, nz = g.nz;
     int bc, face, x, y, z;
     FieldT * ALIGNED(16) f0, * ALIGNED(16) f1, * ALIGNED(16) f2;
 
 # define APPLY_LOCAL_NORM_E(i,j,k,X,Y,Z)                        \
     do {							\
-      bc = g->bc[BOUNDARY(i,j,k)];				\
+      bc = g.bc[BOUNDARY(i,j,k)];				\
       if( bc<0 || bc>=psc_world_size ) {			\
 	face = (i+j+k)<0 ? 0 : n##X+1;				\
 	switch(bc) {						\
@@ -167,15 +167,15 @@ struct PscFieldArrayLocalOps
 
   static void local_ghost_div_b(MfieldsState& mflds)
   {
-    const Grid* g = mflds.vgrid();
+    const auto& g = mflds.vgrid();
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
-    const int nx = g->nx, ny = g->ny, nz = g->nz;
+    const int nx = g.nx, ny = g.ny, nz = g.nz;
     int bc, face, x, y, z;
 
 # define APPLY_LOCAL_DIV_B(i,j,k,X,Y,Z)					\
     do {								\
-      bc = g->bc[BOUNDARY(i,j,k)];					\
+      bc = g.bc[BOUNDARY(i,j,k)];					\
       if( bc<0 || bc>=psc_world_size ) {				\
 	face = (i+j+k)<0 ? 0 : n##X+1;					\
 	switch(bc) {							\
@@ -208,16 +208,16 @@ struct PscFieldArrayLocalOps
   
   static void local_adjust_tang_e(MfieldsState& mflds)
   {
-    const Grid* g = mflds.vgrid();
+    const auto& g = mflds.vgrid();
     auto &fa = mflds.getPatch(0);
     F3D F(fa);
-    const int nx = g->nx, ny = g->ny, nz = g->nz;
+    const int nx = g.nx, ny = g.ny, nz = g.nz;
     int bc, face, x, y, z;
     FieldT* fs;
 
 # define ADJUST_TANG_E(i,j,k,X,Y,Z)                                     \
     do {								\
-      bc = g->bc[BOUNDARY(i,j,k)];					\
+      bc = g.bc[BOUNDARY(i,j,k)];					\
       if( bc<0 || bc>=psc_world_size ) {				\
 	face = (i+j+k)<0 ? 1 : n##X+1;					\
 	switch(bc) {							\
@@ -252,15 +252,15 @@ struct PscFieldArrayLocalOps
 
   static void local_adjust_norm_b(MfieldsState& mflds)
   {
-    const Grid* g = mflds.vgrid();
+    const auto& g = mflds.vgrid();
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
-    const int nx = g->nx, ny = g->ny, nz = g->nz;
+    const int nx = g.nx, ny = g.ny, nz = g.nz;
     int bc, face, x, y, z;
 
 # define ADJUST_NORM_B(i,j,k,X,Y,Z)                                     \
     do {								\
-      bc = g->bc[BOUNDARY(i,j,k)];					\
+      bc = g.bc[BOUNDARY(i,j,k)];					\
       if( bc<0 || bc>=psc_world_size ) {				\
 	face = (i+j+k)<0 ? 1 : n##X+1;					\
 	switch(bc) {							\
@@ -286,15 +286,15 @@ struct PscFieldArrayLocalOps
 
   static void local_adjust_div_e(MfieldsState& mflds)
   {
-    const Grid* g = mflds.vgrid();
+    const auto& g = mflds.vgrid();
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
-    const int nx = g->nx, ny = g->ny, nz = g->nz;
+    const int nx = g.nx, ny = g.ny, nz = g.nz;
     int bc, face, x, y, z;
 
 # define ADJUST_DIV_E_ERR(i,j,k,X,Y,Z)				\
     do {							\
-      bc = g->bc[BOUNDARY(i,j,k)];				\
+      bc = g.bc[BOUNDARY(i,j,k)];				\
       if( bc<0 || bc>=psc_world_size ) {			\
 	face = (i+j+k)<0 ? 1 : n##X+1;				\
 	switch(bc) {						\
@@ -325,15 +325,15 @@ struct PscFieldArrayLocalOps
 
   static void local_adjust_jf(MfieldsState& mflds)
   {
-    const Grid* g = mflds.vgrid();
+    const auto& g = mflds.vgrid();
     auto& fa = mflds.getPatch(0);
     Field3D<typename MfieldsState::Patch> F(fa);
-    const int nx = g->nx, ny = g->ny, nz = g->nz;
+    const int nx = g.nx, ny = g.ny, nz = g.nz;
     int bc, face, x, y, z;
 
 # define ADJUST_JF(i,j,k,X,Y,Z)                                         \
     do {								\
-      bc = g->bc[BOUNDARY(i,j,k)];					\
+      bc = g.bc[BOUNDARY(i,j,k)];					\
       if( bc<0 || bc>=psc_world_size ) {				\
 	face = (i+j+k)<0 ? 1 : n##X+1;					\
 	switch(bc) {							\
@@ -368,15 +368,15 @@ struct PscFieldArrayLocalOps
 
   static void local_adjust_rhof(MfieldsState& mflds)
   {
-    const Grid* g = mflds.vgrid();
+    const auto& g = mflds.vgrid();
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
-    const int nx = g->nx, ny = g->ny, nz = g->nz;
+    const int nx = g.nx, ny = g.ny, nz = g.nz;
     int bc, face, x, y, z;
 
 # define ADJUST_RHOF(i,j,k,X,Y,Z)                                       \
     do {								\
-      bc = g->bc[BOUNDARY(i,j,k)];					\
+      bc = g.bc[BOUNDARY(i,j,k)];					\
       if( bc<0 || bc>=psc_world_size ) {				\
 	face = (i+j+k)<0 ? 1 : n##X+1;					\
 	switch(bc) {							\
@@ -408,15 +408,15 @@ struct PscFieldArrayLocalOps
 
   static void local_adjust_rhob(MfieldsState& mflds)
   {
-    const Grid* g = mflds.vgrid();
+    const auto& g = mflds.vgrid();
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
-    const int nx = g->nx, ny = g->ny, nz = g->nz;
+    const int nx = g.nx, ny = g.ny, nz = g.nz;
     int bc, face, x, y, z;
 
 # define ADJUST_RHOB(i,j,k,X,Y,Z)                                       \
     do {								\
-      bc = g->bc[BOUNDARY(i,j,k)];					\
+      bc = g.bc[BOUNDARY(i,j,k)];					\
       if( bc<0 || bc>=psc_world_size ) {				\
 	face = (i+j+k)<0 ? 1 : n##X+1;					\
 	switch(bc) {							\

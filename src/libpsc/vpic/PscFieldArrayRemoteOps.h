@@ -57,7 +57,7 @@ struct PscFieldArrayRemoteOps
   {
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
-    CommEC<Grid, F3D> comm(mflds.vgrid());
+    CommEC<Grid, F3D> comm(&mflds.vgrid());
 
     comm.begin(F);
   }
@@ -66,7 +66,7 @@ struct PscFieldArrayRemoteOps
   {
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
-    CommEC<Grid, F3D> comm(mflds.vgrid());
+    CommEC<Grid, F3D> comm(&mflds.vgrid());
     
     comm.end(F);
   }
@@ -111,7 +111,7 @@ struct PscFieldArrayRemoteOps
   {
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
-    CommNC<Grid, F3D> comm(mflds.vgrid());
+    CommNC<Grid, F3D> comm(&mflds.vgrid());
 
     comm.begin(F);
   }
@@ -120,7 +120,7 @@ struct PscFieldArrayRemoteOps
   {
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
-    CommNC<Grid, F3D> comm(mflds.vgrid());
+    CommNC<Grid, F3D> comm(&mflds.vgrid());
 
     comm.end(F);
   }
@@ -165,7 +165,7 @@ struct PscFieldArrayRemoteOps
   {
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
-    CommCC<Grid, F3D> comm(mflds.vgrid());
+    CommCC<Grid, F3D> comm(&mflds.vgrid());
 
     comm.begin(F);
   }
@@ -174,7 +174,7 @@ struct PscFieldArrayRemoteOps
   {
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
-    CommCC<Grid, F3D> comm(mflds.vgrid());
+    CommCC<Grid, F3D> comm(&mflds.vgrid());
 
     comm.end(F);
   }
