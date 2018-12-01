@@ -202,8 +202,8 @@ struct MparticlesVpic_ : MparticlesBase
   int get_n_prts() const override
   {
     int n_prts = 0;
-    for (auto sp = vmprts_.cbegin(); sp != vmprts_.cend(); ++sp) {
-      n_prts += sp->np;
+    for (auto& sp : vmprts()) {
+      n_prts += sp.np;
     }
     
     return n_prts;
@@ -228,9 +228,9 @@ struct MparticlesVpic_ : MparticlesBase
   {
     for (int p = 0; p < n_patches(); p++) {
       int n_prts = 0, n_prts_alloced = 0;
-      for (auto sp = vmprts_.cbegin(); sp != vmprts_.cend(); ++sp) {
-	n_prts += sp->np;
-	n_prts_alloced += sp->max_np;
+      for (auto& sp : vmprts()) {
+	n_prts += sp.np;
+	n_prts_alloced += sp.max_np;
       }
 #if 0
       if (n_prts_by_patch[p] != n_prts) {
@@ -255,8 +255,8 @@ struct MparticlesVpic_ : MparticlesBase
     // 0, and then using push_back, which will increase the count back to the right value
     
     if (n_prts_by_patch[0] == 0) {
-      for (auto sp = vmprts_.begin(); sp != vmprts_.end(); ++sp) {
-	sp->np = 0;
+      for (auto& sp : vmprts()) {
+	sp.np = 0;
       }
     } else {
 #if 0
@@ -271,11 +271,11 @@ struct MparticlesVpic_ : MparticlesBase
 
   void push_back(const vpic_mparticles_prt *prt)
   {
-    for (auto sp = vmprts_.begin(); sp != vmprts_.end(); ++sp) {
-      if (sp->id == prt->kind) {
-	assert(sp->np < sp->max_np);
+    for (auto& sp : vmprts()) {
+      if (sp.id == prt->kind) {
+	assert(sp.np < sp.max_np);
 	// the below is inject_particle_raw()
-	typename Particles::Particle * RESTRICT p = sp->p + (sp->np++);
+	typename Particles::Particle * RESTRICT p = sp.p + (sp.np++);
 	p->dx = prt->dx[0]; p->dy = prt->dx[1]; p->dz = prt->dx[2]; p->i = prt->i;
 	p->ux = prt->ux[0]; p->uy = prt->ux[1]; p->uz = prt->ux[2]; p->w = prt->w;
 	return;
@@ -287,7 +287,7 @@ struct MparticlesVpic_ : MparticlesBase
   
   void inject_reweight(const particle_inject& prt)
   {
-    vmprts_.inject_particle(vmprts_, prt); // FIXME why pass vmprts?
+    vmprts().inject_particle(vmprts(), prt); // FIXME why pass vmprts?
   }
 
   Patch operator[](int p) { assert(p == 0); return Patch{*this}; }
@@ -310,21 +310,22 @@ struct MparticlesVpic_ : MparticlesBase
 	max_local_nm = 16*(MAX_PIPELINE+1);
 #endif
     }
-    auto sp = vmprts_.create(name, q, m, max_local_np, max_local_nm,
-			     sort_interval, sort_out_of_place, vgrid_);
-    return vmprts_.append(sp);
+    auto sp = vmprts().create(name, q, m, max_local_np, max_local_nm,
+			      sort_interval, sort_out_of_place, vgrid_);
+    return vmprts().append(sp);
   }
 
-  bool empty() const { return vmprts_.empty(); }
-  iterator begin() { return vmprts_.begin(); }
-  iterator end() { return vmprts_.end(); }
-  int getNumSpecies() { return vmprts_.getNumSpecies(); } // FIXME should be const
+  bool empty() const { return vmprts().empty(); }
+  iterator begin() { return vmprts().begin(); }
+  iterator end() { return vmprts().end(); }
+  int getNumSpecies() { return vmprts().getNumSpecies(); } // FIXME should be const
 
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
 
   Particles& vmprts() { return vmprts_; }
+  const Particles& vmprts() const { return vmprts_; }
 
 private:
   Particles vmprts_;
