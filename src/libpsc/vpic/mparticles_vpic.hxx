@@ -26,8 +26,8 @@ struct InjectorVpic
 
     void operator()(const particle_inject& prt)
     {
-      auto vgrid = mprts_.vgrid();
-      float dVi = 1.f / (vgrid->dx * vgrid->dy * vgrid->dz);
+      const auto& vgrid = mprts_.vgrid();
+      float dVi = 1.f / (vgrid.dx * vgrid.dy * vgrid.dz);
       particle_inject prt_reweighted = prt;
       prt_reweighted.w *= dVi;
       reweight(prt_reweighted);
@@ -315,7 +315,7 @@ struct MparticlesVpic_ : MparticlesBase, _Particles
   const Convert& convert_from() override { return convert_from_; }
 
   const Grid_t& grid() const { return MparticlesBase::grid(); } // FIXME, if the other one were called vgrid(), this wouldn't be ambiguous
-  const Grid& vgrid() { return *Particles::grid(); }
+  const Grid& vgrid() { return Particles::vgrid(); }
   
 private:
   Grid* vgrid_;

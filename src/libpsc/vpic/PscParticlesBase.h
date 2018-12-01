@@ -291,12 +291,8 @@ struct PscParticlesBase : public VpicListBase<PscSpecies<G>>
 #endif
   }
   
-  Grid *grid()
-  {
-    assert(head_);
-    return head_->grid();
-  }
-  
+  const Grid& vgrid() const { assert(head_); return *head_->grid(); }
+
   Species* head()
   {
     return head_;

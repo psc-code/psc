@@ -74,11 +74,7 @@ struct VpicParticlesBase : public VpicListBase<VpicSpecies<G>>
 				 prt.u[0], prt.u[1], prt.u[2], prt.w, 0., 0);
   }
 
-  Grid *grid()
-  {
-    assert(head_);
-    return head_->grid();
-  }
+  const Grid& vgrid() const { assert(head_); return *head_->grid(); }
 
   species_t* head()
   {
