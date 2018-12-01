@@ -315,7 +315,7 @@ struct MparticlesVpic_ : MparticlesBase, _Particles
   const Convert& convert_from() override { return convert_from_; }
 
   const Grid_t& grid() const { return MparticlesBase::grid(); } // FIXME, if the other one were called vgrid(), this wouldn't be ambiguous
-  Grid* vgrid() { return Particles::grid(); }
+  const Grid& vgrid() { return *Particles::grid(); }
   
 private:
   Grid* vgrid_;

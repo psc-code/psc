@@ -106,7 +106,7 @@ static void copy_from(MparticlesVpic& mprts, MP& mprts_from);
 template<>
 struct ConvertVpic<MparticlesSingle>
 {
-  ConvertVpic(MparticlesSingle& mprts_other, Grid& grid, int p)
+  ConvertVpic(MparticlesSingle& mprts_other, const Grid& grid, int p)
     : mprts_other_(mprts_other), p_(p)
   {
     im[0] = grid.nx + 2;
@@ -263,7 +263,7 @@ void copy_to(MparticlesVpic& mprts_from, MP& mprts_to)
   unsigned int off = 0;
   for (int p = 0; p < n_patches; p++) {
     int n_prts = n_prts_by_patch[p];
-    ConvertFromVpic<MP> convert_from_vpic(mprts_to, *mprts_from.vgrid(), p);
+    ConvertFromVpic<MP> convert_from_vpic(mprts_to, mprts_from.vgrid(), p);
     vpic_mparticles_get_particles(mprts_from, n_prts, off, convert_from_vpic);
 
     off += n_prts;
@@ -281,7 +281,7 @@ void copy_from(MparticlesVpic& mprts_to, MparticlesSingle& mprts_from)
   mprts_to.reserve_all(n_prts_by_patch);
   
   for (int p = 0; p < n_patches; p++) {
-    ConvertToVpic<MparticlesSingle> convert_to_vpic(mprts_from, *mprts_to.vgrid(), p);
+    ConvertToVpic<MparticlesSingle> convert_to_vpic(mprts_from, mprts_to.vgrid(), p);
 
     int n_prts = n_prts_by_patch[p];
     for (int n = 0; n < n_prts; n++) {
