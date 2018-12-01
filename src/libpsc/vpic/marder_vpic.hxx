@@ -634,11 +634,11 @@ struct MarderVpicOps
   {
     const auto * RESTRICT ALIGNED(128) p = sp.p;
 
-    const Grid* g = sp.grid();
-    const float q_8V = sp.q*g->r8V;
+    const auto& g = sp.vgrid();
+    const float q_8V = sp.q*g.r8V;
     const int np = sp.np;
-    const int sy = g->sy;
-    const int sz = g->sz;
+    const int sy = g.sy;
+    const int sz = g.sz;
 
     float w0, w1, w2, w3, w4, w5, w6, w7, dz;
 

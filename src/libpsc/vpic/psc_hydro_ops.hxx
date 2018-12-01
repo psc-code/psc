@@ -187,23 +187,23 @@ struct PscHydroOps
     float w0, w1, w2, w3, w4, w5, w6, w7, t;
     int i, n;
 
-    const auto* g = sp.grid();
+    const auto& g = sp.vgrid();
     const auto* p = sp.p;
 
-    c        = g->cvac;
+    c        = g.cvac;
     qsp      = sp.q;
     mspc     = sp.m*c;
-    qdt_2mc  = (qsp*g->dt)/(2*mspc);
+    qdt_2mc  = (qsp*g.dt)/(2*mspc);
     qdt_4mc2 = qdt_2mc / (2*c);
-    r8V      = g->r8V;
+    r8V      = g.r8V;
 
     np        = sp.np;
-    stride_10 = (VOXEL(1,0,0, g->nx,g->ny,g->nz) -
-		 VOXEL(0,0,0, g->nx,g->ny,g->nz));
-    stride_21 = (VOXEL(0,1,0, g->nx,g->ny,g->nz) -
-		 VOXEL(1,0,0, g->nx,g->ny,g->nz));
-    stride_43 = (VOXEL(0,0,1, g->nx,g->ny,g->nz) -
-		 VOXEL(1,1,0, g->nx,g->ny,g->nz));
+    stride_10 = (VOXEL(1,0,0, g.nx,g.ny,g.nz) -
+		 VOXEL(0,0,0, g.nx,g.ny,g.nz));
+    stride_21 = (VOXEL(0,1,0, g.nx,g.ny,g.nz) -
+		 VOXEL(1,0,0, g.nx,g.ny,g.nz));
+    stride_43 = (VOXEL(0,0,1, g.nx,g.ny,g.nz) -
+		 VOXEL(1,1,0, g.nx,g.ny,g.nz));
 
     for( n=0; n<np; n++ ) {
 

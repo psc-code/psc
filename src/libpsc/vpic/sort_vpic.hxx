@@ -65,16 +65,16 @@ private:
 
   static void sort_p(Species& sp)
   {
-    const Grid* g = sp.grid();
-    sp.last_sorted = g->step;
+    const auto& g = sp.vgrid();
+    sp.last_sorted = g.step;
 
     int n_prts = sp.np;
-    int vl = VOXEL(1,1,1,             g->nx,g->ny,g->nz);
-    int vh = VOXEL(g->nx,g->ny,g->nz, g->nx,g->ny,g->nz) + 1;
+    int vl = VOXEL(1,1,1,             g.nx,g.ny,g.nz);
+    int vh = VOXEL(g.nx,g.ny,g.nz, g.nx,g.ny,g.nz) + 1;
 
     static int * RESTRICT ALIGNED(128) next;
     if (!next) {
-      next = new int[g->nv];
+      next = new int[g.nv];
     }
     int * RESTRICT ALIGNED(128) partition = sp.partition;
 
@@ -118,7 +118,7 @@ private:
     for (int i = 0; i < vl; i++) {
       partition[i] = 0;
     }
-    for (int i = vh; i < g->nv; i++) {
+    for (int i = vh; i < g.nv; i++) {
       partition[i] = n_prts;
     }
 

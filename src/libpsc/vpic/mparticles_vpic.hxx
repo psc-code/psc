@@ -81,7 +81,7 @@ struct MparticlesVpic_ : MparticlesBase, _Particles
       {}
       
       Real3 u()  const { return {prt().ux, prt().uy, prt().uz}; }
-      real_t w() const { return prt().w * sp_->grid()->dV; }
+      real_t w() const { return prt().w * sp_->vgrid().dV; }
       real_t qni_wni() const { return w() * sp_->q; }
       int kind() const { return sp_->id; }
 
@@ -89,10 +89,10 @@ struct MparticlesVpic_ : MparticlesBase, _Particles
 	
       Double3 x_double()  const
       {
-	const Grid* vgrid = sp_->grid();
-	double x0 = vgrid->x0, y0 = vgrid->y0, z0 = vgrid->z0;
-	double x1 = vgrid->x1, y1 = vgrid->y1, z1 = vgrid->z1;
-	double nx = vgrid->nx, ny = vgrid->ny, nz = vgrid->nz;
+	const auto& vgrid = sp_->vgrid();
+	double x0 = vgrid.x0, y0 = vgrid.y0, z0 = vgrid.z0;
+	double x1 = vgrid.x1, y1 = vgrid.y1, z1 = vgrid.z1;
+	double nx = vgrid.nx, ny = vgrid.ny, nz = vgrid.nz;
 
 	int i = prt().i;
 	int iz = i / ((nx+2) * (ny+2));
@@ -115,8 +115,8 @@ struct MparticlesVpic_ : MparticlesBase, _Particles
       
       Double3 position() const
       {
-	const Grid* vgrid = sp_->grid();
-	double x0 = vgrid->x0, y0 = vgrid->y0, z0 = vgrid->z0;
+	const auto& vgrid = sp_->vgrid();
+	double x0 = vgrid.x0, y0 = vgrid.y0, z0 = vgrid.z0;
 
 	return Double3(x_double()) + Double3{x0, y0, z0};
       }

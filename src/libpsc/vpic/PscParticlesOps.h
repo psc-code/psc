@@ -83,7 +83,7 @@ struct PscParticlesOps
   static int move_p(Particle      * RESTRICT ALIGNED(128) p,
 		    ParticleMover * RESTRICT ALIGNED(16)  pm,
 		    AccumulatorBlock acc_block,
-		    const Grid* g, const float qsp)
+		    const Grid& g, const float qsp)
   {
     using namespace v4;
 
@@ -268,7 +268,7 @@ struct PscParticlesOps
   static int move_p(Particle      * ALIGNED(128) p0,
 		    ParticleMover * ALIGNED(16)  pm,
 		    AccumulatorBlock acc_block,
-		    const Grid* g, float qsp)
+		    const Grid& g, float qsp)
   {
     float s_midx, s_midy, s_midz;
     float s_dispx, s_dispy, s_dispz;
@@ -358,7 +358,7 @@ struct PscParticlesOps
       (&(p->dx))[axis] = v0; // Avoid roundoff fiascos--put the particle
       // _exactly_ on the boundary.
       face = axis; if( v0>0 ) face += 3;
-      neighbor = g->neighbor[ 6*p->i + face ];
+      neighbor = g.neighbor[ 6*p->i + face ];
     
       if( UNLIKELY( neighbor==Grid::reflect_particles ) ) {
 	// Hit a reflecting boundary condition.  Reflect the particle
@@ -369,7 +369,7 @@ struct PscParticlesOps
 	continue;
       }
 
-      if( UNLIKELY( neighbor<g->rangel || neighbor>g->rangeh ) ) {
+      if( UNLIKELY( neighbor<g.rangel || neighbor>g.rangeh ) ) {
 	// Cannot handle the boundary condition here.  Save the updated
 	// particle position, face it hit and update the remaining
 	// displacement in the particle mover.
@@ -380,8 +380,8 @@ struct PscParticlesOps
       // Crossed into a normal voxel.  Update the voxel index, convert the
       // particle coordinate system and keep moving the particle.
     
-      p->i = neighbor - g->rangel; // Compute local index of neighbor
-      /**/                         // Note: neighbor - g->rangel < 2^31 / 6
+      p->i = neighbor - g.rangel; // Compute local index of neighbor
+      /**/                         // Note: neighbor - g.rangel < 2^31 / 6
       (&(p->dx))[axis] = -v0;      // Convert coordinate system
     }
 
@@ -406,16 +406,16 @@ struct PscParticlesOps
 				 ParticleMover * ALIGNED(16) pm, int max_nm)
   {
     Particle* ALIGNED(128) p0 = sp.p;
-    const Grid* g = sp.grid();
+    const auto& g = sp.vgrid();
     auto& ip = interpolator.getPatch(0);
     
     const typename MfieldsInterpolator::Element * ALIGNED(16)  f;
     float                * ALIGNED(16)  a;
 
-    const float qdt_2mc  = (sp.q*g->dt)/(2*sp.m*g->cvac);
-    const float cdt_dx   = g->cvac*g->dt*g->rdx;
-    const float cdt_dy   = g->cvac*g->dt*g->rdy;
-    const float cdt_dz   = g->cvac*g->dt*g->rdz;
+    const float qdt_2mc  = (sp.q*g.dt)/(2*sp.m*g.cvac);
+    const float cdt_dx   = g.cvac*g.dt*g.rdx;
+    const float cdt_dy   = g.cvac*g.dt*g.rdy;
+    const float cdt_dz   = g.cvac*g.dt*g.rdz;
     const float qsp      = sp.q;
 
     const float one            = 1.;
@@ -549,7 +549,7 @@ struct PscParticlesOps
     using namespace v4;
 
     Particle             * ALIGNED(128) p0 = sp.p;
-    const Grid* g = sp.grid();
+    const auto& g = sp.vgrid();
 
     float                * ALIGNED(16)  vp0;
     float                * ALIGNED(16)  vp1;
@@ -815,28 +815,28 @@ struct PscParticlesOps
 
     // Unpack fields
 
-    Grid* RESTRICT g = mflds.vgrid();
+    Grid& RESTRICT g = *mflds.vgrid();
     // Unpack the grid
 
-    const int64_t * RESTRICT ALIGNED(128) neighbor = g->neighbor;
-    const int64_t rangel = g->rangel;
-    const int64_t rangeh = g->rangeh;
-    const int64_t rangem = g->range[psc_world_size];
+    const int64_t * RESTRICT ALIGNED(128) neighbor = g.neighbor;
+    const int64_t rangel = g.rangel;
+    const int64_t rangeh = g.rangeh;
+    const int64_t rangem = g.range[psc_world_size];
     /*const*/ int bc[6], shared[6];
     /*const*/ int64_t range[6];
     for( face=0; face<6; face++ ) {
-      bc[face] = g->bc[f2b[face]];
+      bc[face] = g.bc[f2b[face]];
       shared[face] = (bc[face]>=0) && (bc[face]<psc_world_size) &&
 	(bc[face] != psc_world_rank);
-      if( shared[face] ) range[face] = g->range[bc[face]]; 
+      if( shared[face] ) range[face] = g.range[bc[face]]; 
     }
 
     // Begin receiving the particle counts
 
     for (face = 0; face < 6; face++) {
       if (shared[face]) {
-	g->mp_size_recv_buffer(f2b[face], sizeof(int));
-	g->mp_begin_recv(f2b[face], sizeof(int), bc[face], f2rb[face]);
+	g.mp_size_recv_buffer(f2b[face], sizeof(int));
+	g.mp_begin_recv(f2b[face], sizeof(int), bc[face], f2rb[face]);
       }
     }
     
@@ -858,8 +858,8 @@ struct PscParticlesOps
 
       for( face=0; face<6; face++ )
 	if( shared[face] ) {
-	  g->mp_size_send_buffer(f2b[face], 16+nm*sizeof(ParticleInjector));
-	  pi_send[face] = (ParticleInjector*)(((char *)g->mp_send_buffer(f2b[face]))+16);
+	  g.mp_size_send_buffer(f2b[face], 16+nm*sizeof(ParticleInjector));
+	  pi_send[face] = (ParticleInjector*)(((char *)g.mp_send_buffer(f2b[face]))+16);
 	  n_send[face] = 0;
 	}
 
@@ -961,27 +961,27 @@ struct PscParticlesOps
   
     for (face=0; face<6; face++) {
       if (shared[face]) {
-	*((int *)g->mp_send_buffer(f2b[face])) = n_send[face];
-	g->mp_begin_send(f2b[face], sizeof(int), bc[face], f2b[face]);
+	*((int *)g.mp_send_buffer(f2b[face])) = n_send[face];
+	g.mp_begin_send(f2b[face], sizeof(int), bc[face], f2b[face]);
       }
     }
     for (face=0; face<6; face++) {
       if (shared[face])  {
-	g->mp_end_recv(f2b[face]);
-	n_recv[face] = *((int *)g->mp_recv_buffer(f2b[face]));
-	g->mp_size_recv_buffer(f2b[face],
+	g.mp_end_recv(f2b[face]);
+	n_recv[face] = *((int *)g.mp_recv_buffer(f2b[face]));
+	g.mp_size_recv_buffer(f2b[face],
 			       16+n_recv[face]*sizeof(ParticleInjector));
-	g->mp_begin_recv(f2b[face], 16+n_recv[face]*sizeof(ParticleInjector),
+	g.mp_begin_recv(f2b[face], 16+n_recv[face]*sizeof(ParticleInjector),
 			 bc[face], f2rb[face]);
       }
     }
     for (face=0; face<6; face++) {
       if (shared[face]) {
-	g->mp_end_send(f2b[face]);
+	g.mp_end_send(f2b[face]);
 	// FIXME: ASSUMES MP WON'T MUCK WITH REST OF SEND BUFFER. IF WE
 	// DID MORE EFFICIENT MOVER ALLOCATION ABOVE, THIS WOULD BE
 	// ROBUSTED AGAINST MP IMPLEMENTATION VAGARIES
-	g->mp_begin_send(f2b[face], 16+n_send[face]*sizeof(ParticleInjector),
+	g.mp_begin_send(f2b[face], 16+n_send[face]*sizeof(ParticleInjector),
 			 bc[face], f2b[face]);
       }
     }
@@ -1029,9 +1029,9 @@ struct PscParticlesOps
 	  pi = ci;
 	  n = n_ci;
 	} else if (shared[face]) {
-	  g->mp_end_recv(f2b[face]);
+	  g.mp_end_recv(f2b[face]);
 	  pi = (const ParticleInjector*)
-	    (((char *)g->mp_recv_buffer(f2b[face]))+16);
+	    (((char *)g.mp_recv_buffer(f2b[face]))+16);
 	  n  = n_recv[face];
 	} else {
 	  continue;
@@ -1093,7 +1093,7 @@ struct PscParticlesOps
   
     for (face = 0; face < 6; face++) {
       if (shared[face]) {
-	g->mp_end_send(f2b[face]);
+	g.mp_end_send(f2b[face]);
       }
     }
   }
@@ -1111,7 +1111,7 @@ struct PscParticlesOps
   static void accumulate_rhob(MfieldsState& mflds, const Particle* p, float qsp)
   {
     float w0 = p->dx, w1 = p->dy, w2, w3, w4, w5, w6, w7, dz = p->dz;
-    const Grid* g = mflds.vgrid();
+    const auto& g = mflds.vgrid();
     int v = p->i, x, y, z, sy = g->sy, sz = g->sz;
     const int nx = g->nx, ny = g->ny, nz = g->nz;
     w7 = (qsp * g->r8V) * p->w;
@@ -1191,11 +1191,11 @@ struct PscParticlesOps
   static void uncenter_p_pipeline(Species* sp, /*const*/ MfieldsInterpolator& interpolator,
 				  int off, int cnt)
   {
-    const Grid* g = sp->grid();
+    const auto& g = sp->vgrid();
     auto& ip = interpolator.getPatch(0);
     const typename MfieldsInterpolator::Element* f;
     // For backward half advance
-    const float qdt_2mc = -(sp->q * g->dt) / (2*sp->m * g->cvac);
+    const float qdt_2mc = -(sp->q * g.dt) / (2*sp->m * g.cvac);
     const float qdt_4mc = 0.5 * qdt_2mc; // For backward half rotate
     const float one = 1.;
     const float one_third = 1./3.;
@@ -1258,7 +1258,7 @@ struct PscParticlesOps
 				     int off, int cnt)
   {
     using namespace v4;
-    const Grid* g = sp->grid();
+    const auto& g = sp->vgrid();
     auto& ip = interpolator.getPatch(0);
     const typename MfieldsInterpolator::Element * ALIGNED(128) f0 = ip.data();
 
@@ -1268,7 +1268,7 @@ struct PscParticlesOps
     const float          * ALIGNED(16)  vp2;
     const float          * ALIGNED(16)  vp3;
 
-    const float _qdt_2mc = (sp->q * g->dt) / (2*sp->m * g->cvac);
+    const float _qdt_2mc = (sp->q * g.dt) / (2*sp->m * g.cvac);
     
     const v4float qdt_2mc(    -_qdt_2mc); // For backward half advance
     const v4float qdt_4mc(-0.5*_qdt_2mc); // For backward half Boris rotate
@@ -1346,11 +1346,11 @@ struct PscParticlesOps
   static double energy_p_pipeline(typename Mparticles::Species& sp, MfieldsInterpolator &interpolator,
 				  int n0, int n1)
   {
-    const Grid* g = sp.grid();
+    const auto& g = sp.vgrid();
     auto& ip = interpolator.getPatch(0);
     const typename MfieldsInterpolator::Element * RESTRICT ALIGNED(128) f = ip.data();
     const Particle       * RESTRICT ALIGNED(32)  p = sp.p;
-    const float qdt_2mc = (sp.q*g->dt)/(2*sp.m*g->cvac);
+    const float qdt_2mc = (sp.q*g.dt)/(2*sp.m*g.cvac);
     const float msp     = sp.m;
     const float one     = 1;
 
@@ -1391,7 +1391,7 @@ struct PscParticlesOps
   {
     using namespace v4;
 
-    const Grid* g = sp.grid();
+    const auto& g = sp.vgrid();
 
     const typename MfieldsInterpolator::Element * RESTRICT ALIGNED(128) f = interpolator.data();
 
@@ -1400,7 +1400,7 @@ struct PscParticlesOps
     const float          * RESTRICT ALIGNED(16)  vp2;
     const float          * RESTRICT ALIGNED(16)  vp3;
 
-    const v4float qdt_2mc((sp.q*g->dt)/(2*sp.m*g->cvac));
+    const v4float qdt_2mc((sp.q*g.dt)/(2*sp.m*g.cvac));
     const v4float msp(sp.m);
     const v4float one(1.);
 
@@ -1456,7 +1456,7 @@ struct PscParticlesOps
 
   static double energy_p(typename Mparticles::Species& sp, MfieldsInterpolator& interpolator)
   {
-    const Grid* g = sp.grid();
+    const auto& g = sp.vgrid();
     int cnt = sp.np & ~15;
 #if defined(V4_ACCELERATION) && defined(HAS_V4_PIPELINE)
     double local = energy_p_pipeline_v4(sp, interpolator, 0, cnt);
@@ -1467,7 +1467,7 @@ struct PscParticlesOps
 
     double global;
     MPI_Allreduce(&local, &global, 1, MPI_DOUBLE, MPI_SUM, psc_comm_world);
-    return global * sqr(g->cvac);
+    return global * sqr(g.cvac);
   }
 
 };

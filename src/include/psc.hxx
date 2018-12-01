@@ -12,7 +12,7 @@
 #include <output_fields_c.hxx>
 #include "../libpsc/vpic/fields_item_vpic.hxx"
 
- #ifdef VPIC
+#ifdef VPIC
 #include "../libpsc/vpic/vpic_iface.h"
 #endif
 

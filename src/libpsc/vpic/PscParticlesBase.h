@@ -98,8 +98,7 @@ struct PscSpecies
     free(name);
   }
 
-  const Grid* grid() const { return grid_; }
-  Grid* grid() { return grid_; }
+  const Grid& vgrid() const { return *grid_; }
 
   char * name;                        // Species name
   float q;                            // Species particle charge
@@ -217,17 +216,17 @@ struct PscParticlesBase : public VpicListBase<PscSpecies<G>>
 
     int ix, iy, iz;
 
-    const Grid* grid = sp->grid();
-    const double x0 = (double)grid->x0, y0 = (double)grid->y0, z0 = (double)grid->z0;
-    const double x1 = (double)grid->x1, y1 = (double)grid->y1, z1 = (double)grid->z1;
-    const int    nx = grid->nx,         ny = grid->ny,         nz = grid->nz;
+    const auto& vgrid = sp->vgrid();
+    double x0 = vgrid.x0, y0 = vgrid.y0, z0 = vgrid.z0;
+    double x1 = vgrid.x1, y1 = vgrid.y1, z1 = vgrid.z1;
+    int    nx = vgrid.nx, ny = vgrid.ny, nz = vgrid.nz;
     
     // Do not inject if the particle is strictly outside the local domain
     // or if a far wall of local domain shared with a neighbor
     
-    if ((x<x0) | (x>x1) | ( (x==x1) & (grid->bc[BOUNDARY(1,0,0)]>=0))) return;
-    if ((y<y0) | (y>y1) | ( (y==y1) & (grid->bc[BOUNDARY(0,1,0)]>=0))) return;
-    if ((z<z0) | (z>z1) | ( (z==z1) & (grid->bc[BOUNDARY(0,0,1)]>=0))) return;
+    if ((x<x0) | (x>x1) | ( (x==x1) & (vgrid.bc[BOUNDARY(1,0,0)]>=0))) return;
+    if ((y<y0) | (y>y1) | ( (y==y1) & (vgrid.bc[BOUNDARY(0,1,0)]>=0))) return;
+    if ((z<z0) | (z>z1) | ( (z==z1) & (vgrid.bc[BOUNDARY(0,0,1)]>=0))) return;
     
     // This node should inject the particle
     
@@ -291,7 +290,7 @@ struct PscParticlesBase : public VpicListBase<PscSpecies<G>>
 #endif
   }
   
-  const Grid& vgrid() const { assert(head_); return *head_->grid(); }
+  const Grid& vgrid() const { assert(head_); return head_->vgrid(); }
 
   Species* head()
   {
