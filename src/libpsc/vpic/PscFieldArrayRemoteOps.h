@@ -28,7 +28,7 @@ struct PscFieldArrayRemoteOps
     using Base::g_;
     using Base::buf_size_;
 
-    CommEC(Grid *g) : Base(g)
+    CommEC(Grid& g) : Base(g)
     {
       for (int X = 0; X < 3; X++) {
 	int Y = (X + 1) % 3, Z = (X + 2) % 3;
@@ -57,7 +57,7 @@ struct PscFieldArrayRemoteOps
   {
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
-    CommEC<Grid, F3D> comm(&mflds.vgrid());
+    CommEC<Grid, F3D> comm(mflds.vgrid());
 
     comm.begin(F);
   }
@@ -66,7 +66,7 @@ struct PscFieldArrayRemoteOps
   {
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
-    CommEC<Grid, F3D> comm(&mflds.vgrid());
+    CommEC<Grid, F3D> comm(mflds.vgrid());
     
     comm.end(F);
   }
@@ -86,7 +86,7 @@ struct PscFieldArrayRemoteOps
     using Base::g_;
     using Base::buf_size_;
 
-    CommNC(Grid *g) : Base(g)
+    CommNC(Grid& g) : Base(g)
     {
       for (int X = 0; X < 3; X++) {
 	int Y = (X + 1) % 3, Z = (X + 2) % 3;
@@ -111,7 +111,7 @@ struct PscFieldArrayRemoteOps
   {
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
-    CommNC<Grid, F3D> comm(&mflds.vgrid());
+    CommNC<Grid, F3D> comm(mflds.vgrid());
 
     comm.begin(F);
   }
@@ -120,7 +120,7 @@ struct PscFieldArrayRemoteOps
   {
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
-    CommNC<Grid, F3D> comm(&mflds.vgrid());
+    CommNC<Grid, F3D> comm(mflds.vgrid());
 
     comm.end(F);
   }
@@ -140,7 +140,7 @@ struct PscFieldArrayRemoteOps
     using Base::g_;
     using Base::buf_size_;
 
-    CommCC(Grid *g) : Base(g)
+    CommCC(Grid& g) : Base(g)
     {
       for (int X = 0; X < 3; X++) {
 	int Y = (X + 1) % 3, Z = (X + 2) % 3;
@@ -165,7 +165,7 @@ struct PscFieldArrayRemoteOps
   {
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
-    CommCC<Grid, F3D> comm(&mflds.vgrid());
+    CommCC<Grid, F3D> comm(mflds.vgrid());
 
     comm.begin(F);
   }
@@ -174,7 +174,7 @@ struct PscFieldArrayRemoteOps
   {
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
-    CommCC<Grid, F3D> comm(&mflds.vgrid());
+    CommCC<Grid, F3D> comm(mflds.vgrid());
 
     comm.end(F);
   }

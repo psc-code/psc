@@ -52,7 +52,7 @@ struct PscHydroOps
     using Base::g_;
     using Base::buf_size_;
 
-    CommHydro(Grid *g) : Base(g)
+    CommHydro(Grid& g) : Base(g)
     {
       for (int X = 0; X < 3; X++) {
 	int Y = (X + 1) % 3, Z = (X + 2) % 3;
@@ -155,7 +155,7 @@ struct PscHydroOps
 
 # undef ADJUST_HYDRO
 
-    CommHydro<Grid, F3D> comm{hydro.vgrid()};
+    CommHydro<Grid, F3D> comm{*hydro.vgrid()};
 
     for (int dir = 0; dir < 3; dir++) {
       comm.begin(dir, H);

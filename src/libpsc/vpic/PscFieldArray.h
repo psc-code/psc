@@ -45,7 +45,7 @@ struct PscAccumulateOps
     using Base::g_;
     using Base::buf_size_;
 
-    CommJf(Grid *g) : Base(g)
+    CommJf(Grid& g) : Base(g)
     {
       for (int X = 0; X < 3; X++) {
 	int Y = (X + 1) % 3, Z = (X + 2) % 3;
@@ -77,7 +77,7 @@ struct PscAccumulateOps
   {
     auto& fa = mflds.getPatch(0);
     Field3D<typename MfieldsState::Patch> F(fa);
-    CommJf<Grid, Field3D<typename MfieldsState::Patch>> comm(&mflds.vgrid());
+    CommJf<Grid, Field3D<typename MfieldsState::Patch>> comm(mflds.vgrid());
 
     LocalOps::local_adjust_jf(mflds);
 
@@ -126,13 +126,13 @@ struct PscAccumulateOps
 
     // Overlap local computation
     LocalOps::local_ghost_norm_e(mflds);
-    foreach_nc_interior(updater, &mflds.vgrid());
+    foreach_nc_interior(updater, mflds.vgrid());
     
     // Finish setting normal e ghosts
     RemoteOps::end_remote_ghost_norm_e(mflds);
 
     // Now do points on boundary
-    foreach_nc_boundary(updater, &mflds.vgrid());
+    foreach_nc_boundary(updater, mflds.vgrid());
 
     LocalOps::local_adjust_rhob(mflds);
   }
@@ -191,11 +191,11 @@ struct PscAccumulateOps
     RemoteOps::begin_remote_ghost_tang_b(mflds);
 
     LocalOps::local_ghost_tang_b(mflds);
-    foreach_ec_interior(curlB, &mflds.vgrid());
+    foreach_ec_interior(curlB, mflds.vgrid());
 
     RemoteOps::end_remote_ghost_tang_b(mflds);
 
-    foreach_ec_boundary(curlB, &mflds.vgrid());
+    foreach_ec_boundary(curlB, mflds.vgrid());
     LocalOps::local_adjust_tang_e(mflds); // FIXME, is this right here?
   }
 

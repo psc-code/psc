@@ -206,11 +206,11 @@ private:
     RemoteOps::begin_remote_ghost_tang_b(mflds);
 
     LocalOps::local_ghost_tang_b(mflds);
-    foreach_ec_interior(advanceE, &mflds.vgrid());
+    foreach_ec_interior(advanceE, mflds.vgrid());
 
     RemoteOps::end_remote_ghost_tang_b(mflds);
 
-    foreach_ec_boundary(advanceE, &mflds.vgrid());
+    foreach_ec_boundary(advanceE, mflds.vgrid());
     LocalOps::local_adjust_tang_e(mflds);
   }
 

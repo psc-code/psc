@@ -104,7 +104,7 @@ struct MarderVpicOps
     using Base::g_;
     using Base::buf_size_;
 
-    CommRho(Grid *g) : Base(g)
+    CommRho(Grid& g) : Base(g)
     {
       for (int X = 0; X < 3; X++) {
 	int Y = (X + 1) % 3, Z = (X + 2) % 3;
@@ -131,7 +131,7 @@ struct MarderVpicOps
   {
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
-    CommRho<Grid, F3D> comm(&mflds.vgrid());
+    CommRho<Grid, F3D> comm(mflds.vgrid());
 
     LocalOps::local_adjust_rhof(mflds);
     LocalOps::local_adjust_rhob(mflds);
@@ -182,13 +182,13 @@ struct MarderVpicOps
 
     // Overlap local computation
     LocalOps::local_ghost_norm_e(mflds);
-    foreach_nc_interior(updater, &mflds.vgrid());
+    foreach_nc_interior(updater, mflds.vgrid());
 
     // Finish setting normal e ghosts
     RemoteOps::end_remote_ghost_norm_e(mflds);
 
     // Now do points on boundary
-    foreach_nc_boundary(updater, &mflds.vgrid());
+    foreach_nc_boundary(updater, mflds.vgrid());
 
     LocalOps::local_adjust_div_e(mflds);
   }
@@ -559,7 +559,7 @@ struct MarderVpicOps
     using Base::g_;
     using Base::buf_size_;
 
-    CommTangENormB(Grid *g) : Base(g)
+    CommTangENormB(Grid& g) : Base(g)
     {
       for (int X = 0; X < 3; X++) {
 	int Y = (X + 1) % 3, Z = (X + 2) % 3;
@@ -611,7 +611,7 @@ struct MarderVpicOps
   {
     auto& fa = mflds.getPatch(0);
     F3D F(fa);
-    CommTangENormB<Grid, F3D> comm(&mflds.vgrid());
+    CommTangENormB<Grid, F3D> comm(mflds.vgrid());
     
     LocalOps::local_adjust_tang_e(mflds);
     LocalOps::local_adjust_norm_b(mflds);
