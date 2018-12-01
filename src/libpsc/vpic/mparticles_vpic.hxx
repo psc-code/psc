@@ -26,7 +26,7 @@ struct InjectorVpic
 
     void operator()(const particle_inject& prt)
     {
-      auto vgrid = mprts_.vmprts().grid();
+      auto vgrid = mprts_.vgrid();
       float dVi = 1.f / (vgrid->dx * vgrid->dy * vgrid->dz);
       particle_inject prt_reweighted = prt;
       prt_reweighted.w *= dVi;
@@ -35,7 +35,7 @@ struct InjectorVpic
     
     void reweight(const particle_inject& prt)
     {
-      mprts_.vmprts().inject_particle_reweight(prt);
+      mprts_.inject_particle_reweight(prt);
     }
 
   private:
@@ -56,7 +56,7 @@ private:
 // MparticlesVpic_
 
 template<typename _Particles>
-struct MparticlesVpic_ : MparticlesBase, private _Particles
+struct MparticlesVpic_ : MparticlesBase, _Particles
 {
   using Particles = _Particles;
   using Species = typename Particles::Species;
@@ -167,8 +167,8 @@ struct MparticlesVpic_ : MparticlesBase, private _Particles
     : prts_{prts}
       {}
 
-      const_iterator begin() const { return {prts_, prts_.mprts_.vmprts().cbegin(), 0}; }
-      const_iterator end()   const { return {prts_, prts_.mprts_.vmprts().cend(), 0}; }
+      const_iterator begin() const { return {prts_, prts_.mprts_.begin(), 0}; }
+      const_iterator end()   const { return {prts_, prts_.mprts_.end(), 0}; }
 
     private:
       const Patch& prts_;
@@ -202,7 +202,7 @@ struct MparticlesVpic_ : MparticlesBase, private _Particles
   int get_n_prts() const override
   {
     int n_prts = 0;
-    for (auto& sp : vmprts()) {
+    for (auto& sp : *this) {
       n_prts += sp.np;
     }
     
@@ -228,7 +228,7 @@ struct MparticlesVpic_ : MparticlesBase, private _Particles
   {
     for (int p = 0; p < n_patches(); p++) {
       int n_prts = 0, n_prts_alloced = 0;
-      for (auto& sp : vmprts()) {
+      for (auto& sp : *this) {
 	n_prts += sp.np;
 	n_prts_alloced += sp.max_np;
       }
@@ -253,9 +253,9 @@ struct MparticlesVpic_ : MparticlesBase, private _Particles
     // we can't resize to the numbers given, unless it's "resize to 0", we'll just do nothing
     // The mparticles conversion function should call resize_all() itself first, resizing to
     // 0, and then using push_back, which will increase the count back to the right value
-    
+
     if (n_prts_by_patch[0] == 0) {
-      for (auto& sp : vmprts()) {
+      for (auto& sp : *this) {
 	sp.np = 0;
       }
     } else {
@@ -285,12 +285,7 @@ struct MparticlesVpic_ : MparticlesBase, private _Particles
     assert(0);
   }
   
-  void inject_reweight(const particle_inject& prt)
-  {
-    vmprts().inject_particle(vmprts(), prt); // FIXME why pass vmprts?
-  }
-
-  Patch operator[](int p) { assert(p == 0); return Patch{*this}; }
+  Patch operator[](int p) { assert(p == 0); return {*this}; }
 
   InjectorVpic<MparticlesVpic_> injector() { return {*this}; }
 
@@ -310,15 +305,10 @@ struct MparticlesVpic_ : MparticlesBase, private _Particles
 	max_local_nm = 16*(MAX_PIPELINE+1);
 #endif
     }
-    auto sp = vmprts().create(name, q, m, max_local_np, max_local_nm,
-			      sort_interval, sort_out_of_place, vgrid_);
-    return vmprts().append(sp);
+    auto sp = this->create(name, q, m, max_local_np, max_local_nm,
+			   sort_interval, sort_out_of_place, vgrid_);
+    return this->append(sp);
   }
-
-  bool empty() const { return vmprts().empty(); }
-  iterator begin() { return vmprts().begin(); }
-  iterator end() { return vmprts().end(); }
-  int getNumSpecies() { return vmprts().getNumSpecies(); } // FIXME should be const
 
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
@@ -328,7 +318,8 @@ struct MparticlesVpic_ : MparticlesBase, private _Particles
   const Particles& vmprts() const { return *this; }
 
   const Grid_t& grid() const { return MparticlesBase::grid(); } // FIXME, if the other one were called vgrid(), this wouldn't be ambiguous
-
+  Grid* vgrid() { return Particles::grid(); }
+  
 private:
   Grid* vgrid_;
 };
