@@ -56,7 +56,7 @@ private:
 // MparticlesVpic_
 
 template<typename _Particles>
-struct MparticlesVpic_ : MparticlesBase
+struct MparticlesVpic_ : MparticlesBase, private _Particles
 {
   using Particles = _Particles;
   using Species = typename Particles::Species;
@@ -167,8 +167,8 @@ struct MparticlesVpic_ : MparticlesBase
     : prts_{prts}
       {}
 
-      const_iterator begin() const { return {prts_, prts_.mprts_.vmprts_.cbegin(), 0}; }
-      const_iterator end()   const { return {prts_, prts_.mprts_.vmprts_.cend(), 0}; }
+      const_iterator begin() const { return {prts_, prts_.mprts_.vmprts().cbegin(), 0}; }
+      const_iterator end()   const { return {prts_, prts_.mprts_.vmprts().cend(), 0}; }
 
     private:
       const Patch& prts_;
@@ -324,11 +324,12 @@ struct MparticlesVpic_ : MparticlesBase
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
 
-  Particles& vmprts() { return vmprts_; }
-  const Particles& vmprts() const { return vmprts_; }
+  Particles& vmprts() { return *this; }
+  const Particles& vmprts() const { return *this; }
+
+  const Grid_t& grid() const { return MparticlesBase::grid(); } // FIXME, if the other one were called vgrid(), this wouldn't be ambiguous
 
 private:
-  Particles vmprts_;
   Grid* vgrid_;
 };
 
