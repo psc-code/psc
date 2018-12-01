@@ -158,8 +158,7 @@ struct mparticles_patch
   // mparticles_patch_base(const mparticles_patch_base&) = delete;
 
   mparticles_patch(Mparticles<P>* mprts, int p)
-    : pi_(mprts->grid()),
-      mprts_(mprts),
+    : mprts_(mprts),
       p_(p),
       grid_(&mprts->grid())
   {}
@@ -196,11 +195,10 @@ struct mparticles_patch
   }
 
   // ParticleIndexer functionality
-  int cellPosition(real_t xi, int d) const { return pi_.cellPosition(xi, d); }
-  int validCellIndex(const particle_t& prt) const { return pi_.validCellIndex(prt.x()); }
+  int cellPosition(real_t xi, int d) const { return mprts_->pi_.cellPosition(xi, d); }
+  int validCellIndex(const particle_t& prt) const { return mprts_->pi_.validCellIndex(prt.x()); }
 
-  void checkInPatchMod(particle_t& prt) const { return pi_.checkInPatchMod(prt.x()); }
-  const ParticleIndexer<real_t>& particleIndexer() const { return pi_; }
+  void checkInPatchMod(particle_t& prt) const { return mprts_->pi_.checkInPatchMod(prt.x()); }
 
   // FIXME, grid is always double precision, so this will switch precision
   // where not desired. should use same info stored in mprts at right precision
@@ -212,7 +210,6 @@ struct mparticles_patch
   const Grid_t& grid() const { return *grid_; }
 
   buf_t buf;
-  ParticleIndexer<real_t> pi_;
 
 private:
   Mparticles<P>* mprts_;
@@ -235,7 +232,8 @@ struct Mparticles : MparticlesBase
   using buf_t = typename Patch::buf_t;
 
   Mparticles(const Grid_t& grid)
-    : MparticlesBase(grid)
+    : MparticlesBase(grid),
+      pi_(grid)
   {
     patches_.reserve(grid.n_patches());
     for (int p = 0; p < grid.n_patches(); p++) {
@@ -253,7 +251,6 @@ struct Mparticles : MparticlesBase
     }
   }
 
-  
   const Patch& operator[](int p) const { return patches_[p]; }
   Patch&       operator[](int p)       { return patches_[p]; }
 
@@ -287,6 +284,8 @@ struct Mparticles : MparticlesBase
     return n_prts;
   }
 
+  const ParticleIndexer<real_t>& particleIndexer() const { return pi_; }
+  
   InjectorSimple<Mparticles> injector() { return {*this}; }
   ConstAccessorSimple<Mparticles> accessor() { return {*this}; }
   
@@ -326,5 +325,7 @@ struct Mparticles : MparticlesBase
 
 private:
   std::vector<Patch> patches_;
+public: // FIXME
+  ParticleIndexer<real_t> pi_;
 };
 

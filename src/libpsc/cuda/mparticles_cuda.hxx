@@ -28,16 +28,7 @@ struct MparticlesCuda : MparticlesBase
 
   using is_cuda = std::true_type;
   
-  struct Patch : ConstPatchCuda<MparticlesCuda>
-  {
-    using Base = ConstPatchCuda<MparticlesCuda>;
-    using Base::Base;
-    using Base::mprts_;
-    using Base::p_;
-    using Base::grid;
-
-    const ParticleIndexer<real_t>& particleIndexer() const { return mprts_.pi_; }
-  };
+  using Patch = ConstPatchCuda<MparticlesCuda>;
 
   MparticlesCuda(const Grid_t& grid);
   ~MparticlesCuda();
@@ -52,7 +43,7 @@ struct MparticlesCuda : MparticlesBase
 
   std::vector<particle_t> get_particles(int p) const;
   particle_t get_particle(int p, int n) const;
-  
+  const ParticleIndexer<real_t>& particleIndexer() const { return pi_; }
   void define_species(const char *name, double q, double m,
 		      double max_local_np, double max_local_nm,
 		      double sort_interval, double sort_out_of_place)
@@ -64,7 +55,7 @@ struct MparticlesCuda : MparticlesBase
 
   CudaMparticles* cmprts() { return cmprts_; }
 
-  Patch operator[](int p) { return {*this, p}; }
+  Patch ppp(int p) { return {*this, p}; }
   InjectorBuffered<MparticlesCuda> injector() { return {*this}; }
   ConstAccessorCuda<MparticlesCuda> accessor() { return {*this}; }
 

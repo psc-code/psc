@@ -74,7 +74,7 @@ struct SortCountsort2
       auto& prts = mprts[p];
       unsigned int n_prts = prts.size();
       
-      unsigned int n_cells = prts.pi_.n_cells_;
+      unsigned int n_cells = mprts.pi_.n_cells_;
       unsigned int *cnis = new unsigned int[n_prts];
       // FIXME, might as well merge counting here, too
       int i = 0;

@@ -210,7 +210,7 @@ struct ConstAccessorCuda
 
   typename Mparticles::Patch::const_accessor_range operator[](int p)
   {
-    return mprts_[p]._get();
+    return mprts_.ppp(p)._get();
   }
 
 private:

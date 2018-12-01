@@ -104,7 +104,10 @@ TYPED_TEST(InjectTest, Test1)
   Mparticles mprts{grid};
 
   // should have no particles
-  EXPECT_EQ(mprts[0].size(), 0);
+  {
+    auto accessor = mprts.accessor();
+    EXPECT_EQ(accessor[0].size(), 0);
+  }
 
   // density should be all zero
   ItemMoment moment_n{grid, grid.comm()};

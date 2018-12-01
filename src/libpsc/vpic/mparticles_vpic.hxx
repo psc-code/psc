@@ -61,7 +61,7 @@ struct ConstAccessorVpic
 
   typename Mparticles::Patch::const_accessor_range operator[](int p)
   {
-    return mprts_[p]._get();
+    return mprts_.ppp(p)._get();
   }
 
 private:
@@ -301,7 +301,7 @@ struct MparticlesVpic_ : MparticlesBase, Particles
     assert(0);
   }
   
-  Patch operator[](int p) { assert(p == 0); return {*this}; }
+  Patch ppp(int p) { assert(p == 0); return {*this}; }
 
   InjectorVpic<MparticlesVpic_> injector() { return {*this}; }
 
