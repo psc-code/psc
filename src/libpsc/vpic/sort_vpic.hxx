@@ -38,10 +38,9 @@ struct SortVpicWrap
 template<typename Mparticles>
 struct SortVpic
 {
-  using Particles = typename Mparticles::Particles;
-  using Grid = typename Particles::Grid;
-  using Species = typename Particles::Species;
-  using Particle = typename Particles::Particle;
+  using Grid = typename Mparticles::Grid;
+  using Species = typename Mparticles::Species;
+  using Particle = typename Mparticles::Particle;
 
   // ----------------------------------------------------------------------
   // operator()

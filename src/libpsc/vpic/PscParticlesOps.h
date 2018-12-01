@@ -26,13 +26,12 @@ template<typename Mparticles, typename MfieldsState, typename MfieldsInterpolato
   typename MfieldsAccumulator, typename MfieldsHydro>
 struct PscParticlesOps
 {
-  using Particles = typename Mparticles::Particles;
-  typedef typename Particles::Grid Grid;
-  typedef typename Particles::Species Species;
-  typedef typename Particles::Particle Particle;
-  typedef typename Particles::ParticleMover ParticleMover;
-  typedef typename Particles::ParticleBcList ParticleBcList;
-  typedef typename MfieldsAccumulator::Block AccumulatorBlock;
+  using Grid = typename Mparticles::Grid;
+  using Species = typename Mparticles::Species;
+  using Particle = typename Mparticles::Particle;
+  using ParticleMover = typename Mparticles::ParticleMover;
+  using ParticleBcList = typename Mparticles::ParticleBcList;
+  using AccumulatorBlock = typename MfieldsAccumulator::Block;
   
   // ----------------------------------------------------------------------
   // move_p

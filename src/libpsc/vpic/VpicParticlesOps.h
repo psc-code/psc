@@ -5,10 +5,8 @@ template<typename Mparticles, typename MfieldsState,
 	 typename MfieldsInterpolator, typename MfieldsAccumulator, typename MfieldsHydro>
 struct VpicParticlesOps
 {
-  using Particles = typename Mparticles::Particles;
-  using ParticleBcList =  typename Particles::ParticleBcList;
+  using ParticleBcList =  typename Mparticles::ParticleBcList;
   using FieldArray = typename MfieldsState::FieldArray;
-  using particle_t = typename Particles::Particle;
   
   static void advance_p(Mparticles& mprts, MfieldsAccumulator& accumulator,
 			MfieldsInterpolator& interpolator)
@@ -73,7 +71,7 @@ struct VpicParticlesOps
     ::sort_p(sp);
   }
 
-  static double energy_p(typename Particles::const_iterator sp, const MfieldsInterpolator& interpolator)
+  static double energy_p(typename Mparticles::const_iterator sp, const MfieldsInterpolator& interpolator)
   {
     return ::energy_p(&*sp, &interpolator);
   }

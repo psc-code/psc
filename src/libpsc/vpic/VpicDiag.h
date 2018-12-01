@@ -116,8 +116,7 @@ template<class Mparticles, class MfieldsState, class MfieldsInterpolator, class 
 	 class DiagOps, class ParticlesOps, class HydroArrayOps>
 struct VpicDiagMixin
 {
-  using Particles = typename Mparticles::Particles;
-  using Grid = typename Particles::Grid;
+  using Grid = typename Mparticles::Grid;
   
   void diagnostics_init(int interval_)
   {

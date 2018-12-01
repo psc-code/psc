@@ -17,8 +17,7 @@ struct PushParticlesVpic : PushParticlesBase
   using AccumulateOps = _AccumulateOps;
   using AccumulatorOps = _AccumulatorOps;
   using InterpolatorOps = _InterpolatorOps;
-  using Particles = typename Mparticles::Particles;
-  using ParticleBcList = typename Particles::ParticleBcList;
+  using ParticleBcList = typename Mparticles::ParticleBcList;
   using MfieldsInterpolator = typename InterpolatorOps::MfieldsInterpolator;
   using MfieldsAccumulator = typename AccumulatorOps::MfieldsAccumulator;
   

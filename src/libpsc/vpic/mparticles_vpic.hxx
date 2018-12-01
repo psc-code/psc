@@ -55,14 +55,13 @@ private:
 // ======================================================================
 // MparticlesVpic_
 
-template<typename _Particles>
-struct MparticlesVpic_ : MparticlesBase, _Particles
+template<typename Particles>
+struct MparticlesVpic_ : MparticlesBase, Particles
 {
-  using Particles = _Particles;
   using Species = typename Particles::Species;
-  using iterator = typename Particles::iterator;
-  using const_iterator = typename Particles::const_iterator;
   using Grid = typename Particles::Grid;
+  using Particle = typename Particles::Particle;
+  using const_iterator = typename Particles::const_iterator;
   using real_t = float;
   
   // ======================================================================
@@ -76,7 +75,7 @@ struct MparticlesVpic_ : MparticlesBase, _Particles
     
     struct const_accessor
     {
-      const_accessor(const typename Particles::const_iterator sp, uint n)
+      const_accessor(typename Particles::const_iterator sp, uint n)
 	: sp_{sp}, n_{n}
       {}
       
@@ -122,9 +121,9 @@ struct MparticlesVpic_ : MparticlesBase, _Particles
       }
     
     private:
-      const typename Particles::Particle& prt() const { return sp_->p[n_]; }
+      const Particle& prt() const { return sp_->p[n_]; }
     
-      typename Particles::const_iterator sp_;
+      const_iterator sp_;
       uint n_;
     };
   
@@ -150,7 +149,7 @@ struct MparticlesVpic_ : MparticlesBase, _Particles
 	  if (n_ == sp_->np) {
 	    n_ = 0;
 	    ++sp_;
-	    }
+	  }
 	  return *this;
 	}
 	
@@ -275,7 +274,7 @@ struct MparticlesVpic_ : MparticlesBase, _Particles
       if (sp.id == prt->kind) {
 	assert(sp.np < sp.max_np);
 	// the below is inject_particle_raw()
-	typename Particles::Particle * RESTRICT p = sp.p + (sp.np++);
+	auto * RESTRICT p = sp.p + (sp.np++);
 	p->dx = prt->dx[0]; p->dy = prt->dx[1]; p->dz = prt->dx[2]; p->i = prt->i;
 	p->ux = prt->ux[0]; p->uy = prt->ux[1]; p->uz = prt->ux[2]; p->w = prt->w;
 	return;
@@ -314,8 +313,7 @@ struct MparticlesVpic_ : MparticlesBase, _Particles
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
 
-  const Grid_t& grid() const { return MparticlesBase::grid(); } // FIXME, if the other one were called vgrid(), this wouldn't be ambiguous
-  const Grid& vgrid() { return Particles::vgrid(); }
+  const Grid& vgrid() { return *vgrid_; }
   
 private:
   Grid* vgrid_;

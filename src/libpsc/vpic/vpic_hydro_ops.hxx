@@ -13,7 +13,7 @@ struct VpicHydroOps
   
   static void clear(MfieldsHydro& hydro)       { ::clear_hydro_array(hydro); }
   static void synchronize(MfieldsHydro& hydro) { ::synchronize_hydro_array(hydro); }
-  static void accumulate_hydro_p(MfieldsHydro& hydro, typename Mparticles::Particles::const_iterator sp,
+  static void accumulate_hydro_p(MfieldsHydro& hydro, typename Mparticles::const_iterator sp,
 				 /*const*/ MfieldsInterpolator& interpolator)
   {
     ::accumulate_hydro_p(hydro, &*sp, interpolator.getPatch(0).ip());
