@@ -261,7 +261,7 @@ struct MparticlesVpic_ : MparticlesBase, _Particles
     } else {
 #if 0
       int cur_n_prts_by_patch[n_patches];
-      vpic_mparticles_get_size_all(vmprts, n_patches, cur_n_prts_by_patch);
+      get_size_all(n_patches, cur_n_prts_by_patch);
       
       mprintf("vpic_mparticles_resize_all: ignoring %d -> %d\n",
 	      cur_n_prts_by_patch[0], n_prts_by_patch[0]);
@@ -313,9 +313,6 @@ struct MparticlesVpic_ : MparticlesBase, _Particles
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
-
-  Particles& vmprts() { return *this; }
-  const Particles& vmprts() const { return *this; }
 
   const Grid_t& grid() const { return MparticlesBase::grid(); } // FIXME, if the other one were called vgrid(), this wouldn't be ambiguous
   Grid* vgrid() { return Particles::grid(); }
