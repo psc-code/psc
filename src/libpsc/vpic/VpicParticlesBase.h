@@ -16,19 +16,18 @@ struct VpicSpecies : species_t
   const Grid* grid() const { return static_cast<Grid*>(g); }
 };
 
-template<class G, class BCL>
-struct VpicParticlesBase : public VpicListBase<VpicSpecies<G>>
+template<typename _Grid, typename _ParticleBcList>
+struct VpicParticlesBase
 {
-  typedef G Grid;
-  typedef BCL ParticleBcList;
-  typedef VpicSpecies<Grid> Species;
-  typedef VpicListBase<Species> Base;
-  typedef particle_t Particle;
-  typedef particle_mover_t ParticleMover;
+  using Grid = _Grid;
+  using ParticleBcList = _ParticleBcList;
+  using Species = VpicSpecies<Grid>;
+  using Particle = particle_t;
+  using ParticleMover = particle_mover_t;
 
-  using typename Base::iterator;
-  using typename Base::const_iterator;
-  using Base::head_;
+  using Base = VpicListBase<Species>;
+  using iterator = typename Base::iterator;
+  using const_iterator = typename Base::const_iterator;
 
   static Species* create(const char * name, float q, float m,
 			 int max_local_np, int max_local_nm,
@@ -42,24 +41,24 @@ struct VpicParticlesBase : public VpicListBase<VpicSpecies<G>>
 
   int getNumSpecies()
   {
-    return ::num_species(head_);
+    return ::num_species(head());
   }
   
   Species* append(species_t* s)
   {
-    species_t *sp = ::append_species(s, reinterpret_cast<species_t **>(&head_));
+    species_t *sp = ::append_species(s, reinterpret_cast<species_t **>(&base_.head_));
     return static_cast<Species*>(sp);
   }
   
   iterator find(int id)
   {
-    species_t *sp = ::find_species_id(id, head_);
+    species_t *sp = ::find_species_id(id, head());
     return iterator(static_cast<Species*>(sp));
   }
 
   iterator find(const char *name)
   {
-    species_t *sp = ::find_species_name(name, head_);
+    species_t *sp = ::find_species_name(name, head());
     return iterator(static_cast<Species*>(sp));
   }
 
@@ -76,14 +75,28 @@ struct VpicParticlesBase : public VpicListBase<VpicSpecies<G>>
 
   Grid *grid()
   {
-    assert(head_);
-    return head_->grid();
+    assert(base_.head_);
+    return base_.head_->grid();
   }
 
   species_t* head()
   {
-    return head_;
+    return base_.head_;
   }
+
+  iterator begin() { return base_.begin(); }
+  iterator end()   { return base_.end(); }
+
+  const_iterator begin() const { return base_.begin(); }
+  const_iterator end()   const { return base_.end(); }
+
+  const_iterator cbegin() const { return base_.begin(); }
+  const_iterator cend()   const { return base_.end(); }
+
+  bool empty() const { return base_.empty(); }
+  
+private:
+  Base base_;
 };
 
 

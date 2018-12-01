@@ -82,7 +82,7 @@ public:
   const_iterator cbegin() const { return const_iterator(head_); }
   const_iterator cend()   const { return const_iterator(nullptr); }
 
-protected:
+  //protected:
   T* head_;
 };
 
