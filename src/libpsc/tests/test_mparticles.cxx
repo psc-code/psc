@@ -179,9 +179,10 @@ TYPED_TEST(MparticlesTest, Inject2)
   EXPECT_EQ(n_prts_by_patch, std::vector<uint>({n_prts, n_prts, n_prts, n_prts}));
 
   nn = 0;
+  auto accessor = mprts.accessor();
   for (int p = 0; p < mprts.n_patches(); ++p) {
     auto& patch = mprts.grid().patches[p];
-    for (auto prt: mprts[p].get()) {
+    for (auto prt: accessor[p]) {
       // xm is patch-relative position
       auto xm = .5 * (patch.xe - patch.xb);
       EXPECT_EQ(prt.x()[0], xm[0]);

@@ -58,6 +58,22 @@ private:
   Mparticles& mprts_;
 };
 
+template<typename Mparticles>
+struct ConstAccessorSimple
+{
+  ConstAccessorSimple(Mparticles& mprts)
+    : mprts_{mprts}
+  {}
+
+  typename Mparticles::Patch::const_accessor_range operator[](int p)
+  {
+    return mprts_[p].get();
+  }
+
+private:
+  Mparticles& mprts_;
+};
+
 // ======================================================================
 // mparticles_patch
 
@@ -271,6 +287,7 @@ struct Mparticles : MparticlesBase
   }
 
   InjectorSimple<Mparticles> injector() { return {*this}; }
+  ConstAccessorSimple<Mparticles> accessor() { return {*this}; }
   
   void check() const
   {

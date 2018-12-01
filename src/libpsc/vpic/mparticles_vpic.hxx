@@ -52,6 +52,22 @@ private:
   Mparticles& mprts_;
 };
 
+template<typename Mparticles>
+struct ConstAccessorVpic
+{
+  ConstAccessorVpic(Mparticles& mprts)
+    : mprts_{mprts}
+  {}
+
+  typename Mparticles::Patch::const_accessor_range operator[](int p)
+  {
+    return mprts_[p].get();
+  }
+
+private:
+  Mparticles& mprts_;
+};
+
 // ======================================================================
 // MparticlesVpic_
 
@@ -287,6 +303,8 @@ struct MparticlesVpic_ : MparticlesBase, Particles
   Patch operator[](int p) { assert(p == 0); return {*this}; }
 
   InjectorVpic<MparticlesVpic_> injector() { return {*this}; }
+
+  ConstAccessorVpic<MparticlesVpic_> accessor() { return {*this}; }
 
   Species* define_species(const char *name, double q, double m,
 			  double max_local_np, double max_local_nm,

@@ -202,3 +202,19 @@ protected:
   int p_;
 };
 
+template<typename Mparticles>
+struct ConstAccessorCuda
+{
+  ConstAccessorCuda(Mparticles& mprts)
+    : mprts_{mprts}
+  {}
+
+  typename Mparticles::Patch::const_accessor_range operator[](int p)
+  {
+    return mprts_[p].get();
+  }
+
+private:
+  Mparticles& mprts_;
+};
+
