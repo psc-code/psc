@@ -7,6 +7,9 @@
 
 #include <iterator>
 
+// ======================================================================
+// InjectorSimple
+
 template<typename Mparticles>
 struct InjectorSimple
 {
@@ -58,6 +61,9 @@ private:
   Mparticles& mprts_;
 };
 
+// ======================================================================
+// ConstAcessorSimple
+
 template<typename Mparticles>
 struct ConstAccessorSimple
 {
@@ -91,7 +97,7 @@ struct ConstAccessorSimple
     const mparticles_patch& prts_;
   };
   
-  struct const_accessor_range
+  struct Patch
   {
     struct const_iterator : std::iterator<std::random_access_iterator_tag,
 					  const_accessor,  // value type
@@ -116,7 +122,7 @@ struct ConstAccessorSimple
       uint n_;
     };
     
-    const_accessor_range(const mparticles_patch& prts)
+    Patch(const mparticles_patch& prts)
       : prts_{prts}
     {}
 
@@ -132,11 +138,7 @@ struct ConstAccessorSimple
     : mprts_{mprts}
   {}
 
-  const_accessor_range operator[](int p)
-  {
-    auto patch = mprts_[p];
-    return {patch};
-  }
+  Patch operator[](int p) { return {mprts_[p]}; }
 
 private:
   Mparticles& mprts_;
