@@ -55,7 +55,6 @@ struct MparticlesCuda : MparticlesBase
 
   CudaMparticles* cmprts() { return cmprts_; }
 
-  Patch ppp(int p) { return {*this, p}; }
   InjectorBuffered<MparticlesCuda> injector() { return {*this}; }
   ConstAccessorCuda<MparticlesCuda> accessor() { return {*this}; }
 

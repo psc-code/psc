@@ -91,8 +91,6 @@ struct ConstPatchCuda
     : mprts_{mprts}, p_(p)
   {}
   
-  const_accessor_range _get() { return {mprts_, p_}; }
-  
   const Grid_t& grid() const { return mprts_.grid(); }
 
   uint size() const
@@ -185,8 +183,6 @@ struct ConstPatchCuda_
     : mprts_(mprts), p_(p)
   {}
   
-  const_accessor_range get() const { return {*this}; }
-
   const Grid_t& grid() const { return mprts_.grid(); }
 
   uint size() const
@@ -210,7 +206,7 @@ struct ConstAccessorCuda
 
   typename Mparticles::Patch::const_accessor_range operator[](int p)
   {
-    return mprts_.ppp(p)._get();
+    return {mprts_, p};
   }
 
 private:

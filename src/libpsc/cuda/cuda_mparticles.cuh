@@ -174,7 +174,6 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
 
   cuda_mparticles(const Grid_t& grid);
 
-  ConstPatch ppp(int p) const { return {*this, p}; }
   InjectorBuffered<cuda_mparticles> injector() { return {*this}; }
   ConstAccessorCuda<cuda_mparticles> accessor() { return {*this}; }
   
