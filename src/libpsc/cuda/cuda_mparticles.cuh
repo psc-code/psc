@@ -169,13 +169,13 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   using real_t = particle_t::real_t;
   using Real3 = Vec3<real_t>;
   using DMparticles = DMparticlesCuda<BS>;
-  using ConstPatch = ConstPatchCuda<cuda_mparticles>;
+  using ConstPatch = ConstPatchCuda_<cuda_mparticles>;
   using Patch = ConstPatch; // FIXME, settle on one or the other
 
   cuda_mparticles(const Grid_t& grid);
 
   InjectorBuffered<cuda_mparticles> injector() { return {*this}; }
-  ConstAccessorCuda<cuda_mparticles> accessor() { return {*this}; }
+  ConstAccessorCuda_<cuda_mparticles> accessor() { return {*this}; }
   
   uint get_n_prts();
   void inject(const std::vector<particle_t>& buf, const std::vector<uint>& buf_n_by_patch);

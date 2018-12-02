@@ -147,6 +147,8 @@ struct ConstPatchCuda_
       return patch.xb + Double3(prt_.x());
     }
     
+    operator const particle_t& () const { return prt_; }
+    
   private:
     particle_t prt_;
     const ConstPatchCuda_ patch_;
@@ -207,3 +209,22 @@ protected:
   int p_;
 };
 
+// ======================================================================
+// ConstAccessorCuda_
+
+template<typename Mparticles>
+struct ConstAccessorCuda_
+{
+  ConstAccessorCuda_(Mparticles& mprts)
+    : mprts_{mprts}
+  {}
+
+  typename Mparticles::Patch::const_accessor_range operator[](int p)
+  {
+    typename Mparticles::ConstPatch patch = {mprts_, p};
+    return {patch};
+  }
+
+private:
+  Mparticles& mprts_;
+};
