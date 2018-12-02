@@ -64,106 +64,106 @@ struct ConstAccessorVpic
   using Real3 = Vec3<real_t>;
   using Double3 = Vec3<double>;
 
-    struct const_accessor
+  struct const_accessor
+  {
+    const_accessor(const_iterator sp, uint n)
+      : sp_{sp}, n_{n}
+    {}
+      
+    Real3 u()  const { return {prt().ux, prt().uy, prt().uz}; }
+    real_t w() const { return prt().w * sp_->vgrid().dV; }
+    real_t qni_wni() const { return w() * sp_->q; }
+    int kind() const { return sp_->id; }
+      
+    Real3 x() const { return Real3(x_double()); }
+      
+    Double3 x_double()  const
     {
-      const_accessor(const_iterator sp, uint n)
-	: sp_{sp}, n_{n}
-      {}
-      
-      Real3 u()  const { return {prt().ux, prt().uy, prt().uz}; }
-      real_t w() const { return prt().w * sp_->vgrid().dV; }
-      real_t qni_wni() const { return w() * sp_->q; }
-      int kind() const { return sp_->id; }
-      
-      Real3 x() const { return Real3(x_double()); }
-      
-      Double3 x_double()  const
-      {
-	const auto& vgrid = sp_->vgrid();
-	double x0 = vgrid.x0, y0 = vgrid.y0, z0 = vgrid.z0;
-	double x1 = vgrid.x1, y1 = vgrid.y1, z1 = vgrid.z1;
-	double nx = vgrid.nx, ny = vgrid.ny, nz = vgrid.nz;
+      const auto& vgrid = sp_->vgrid();
+      double x0 = vgrid.x0, y0 = vgrid.y0, z0 = vgrid.z0;
+      double x1 = vgrid.x1, y1 = vgrid.y1, z1 = vgrid.z1;
+      double nx = vgrid.nx, ny = vgrid.ny, nz = vgrid.nz;
 	
-	int i = prt().i;
-	int iz = i / ((nx+2) * (ny+2));
-	i -= iz * ((nx+2) * (ny+2));
-	int iy = i / (nx+2);
-	i -= iy * (nx + 2);
-	int ix = i;
+      int i = prt().i;
+      int iz = i / ((nx+2) * (ny+2));
+      i -= iz * ((nx+2) * (ny+2));
+      int iy = i / (nx+2);
+      i -= iy * (nx + 2);
+      int ix = i;
 	
-	// adjust to 0-based (no ghost)
-	ix--; iy--; iz--;
+      // adjust to 0-based (no ghost)
+      ix--; iy--; iz--;
 	
-	// back to physical coords
-	Double3 x = { ix + .5*(prt().dx+1.),
-		      iy + .5*(prt().dy+1.),
-		      iz + .5*(prt().dz+1.) };
-	x *= (Double3{x1, y1, z1} - Double3{x0, y0, z0}) / Double3{nx, ny, nz};
+      // back to physical coords
+      Double3 x = { ix + .5*(prt().dx+1.),
+		    iy + .5*(prt().dy+1.),
+		    iz + .5*(prt().dz+1.) };
+      x *= (Double3{x1, y1, z1} - Double3{x0, y0, z0}) / Double3{nx, ny, nz};
 	
-	return x;
-      }
+      return x;
+    }
       
-      Double3 position() const
-      {
-	const auto& vgrid = sp_->vgrid();
-	double x0 = vgrid.x0, y0 = vgrid.y0, z0 = vgrid.z0;
+    Double3 position() const
+    {
+      const auto& vgrid = sp_->vgrid();
+      double x0 = vgrid.x0, y0 = vgrid.y0, z0 = vgrid.z0;
 	
-	return Double3(x_double()) + Double3{x0, y0, z0};
-      }
+      return Double3(x_double()) + Double3{x0, y0, z0};
+    }
       
-    private:
-      const Particle& prt() const { return sp_->p[n_]; }
+  private:
+    const Particle& prt() const { return sp_->p[n_]; }
       
-      const_iterator sp_;
-      uint n_;
-    };
+    const_iterator sp_;
+    uint n_;
+  };
     
-    struct const_accessor_range
+  struct const_accessor_range
+  {
+    struct const_iterator : std::iterator<std::random_access_iterator_tag,
+					  const_accessor,  // value type
+					  ptrdiff_t,       // difference type
+					  const_accessor*, // pointer type
+					  const_accessor&> // reference type
+      
     {
-      struct const_iterator : std::iterator<std::random_access_iterator_tag,
-					    const_accessor,  // value type
-					    ptrdiff_t,       // difference type
-					    const_accessor*, // pointer type
-					    const_accessor&> // reference type
-      
-      {
-	const_iterator(const Mparticles& mprts, typename Mparticles::const_iterator sp, uint n)
-	  : mprts_{mprts}, sp_{sp}, n_{n}
-	{}
-	
-	bool operator==(const_iterator other) const { return sp_ == other.sp_ && n_ == other.n_; }
-	bool operator!=(const_iterator other) const { return !(*this == other); }
-	
-	const_iterator& operator++()
-	{
-	  n_++;
-	  if (n_ == sp_->np) {
-	    n_ = 0;
-	    ++sp_;
-	  }
-	  return *this;
-	}
-      
-	const_iterator operator++(int) { auto retval = *this; ++(*this); return retval; }
-	const_accessor operator*() { return {sp_, n_}; }
-	
-      private:
-	const Mparticles& mprts_;
-	typename Mparticles::const_iterator sp_;
-	uint n_;
-      };
-      
-      const_accessor_range(const Mparticles& mprts)
-	: mprts_{mprts}
+      const_iterator(const Mparticles& mprts, typename Mparticles::const_iterator sp, uint n)
+	: mprts_{mprts}, sp_{sp}, n_{n}
       {}
+	
+      bool operator==(const_iterator other) const { return sp_ == other.sp_ && n_ == other.n_; }
+      bool operator!=(const_iterator other) const { return !(*this == other); }
+	
+      const_iterator& operator++()
+      {
+	n_++;
+	if (n_ == sp_->np) {
+	  n_ = 0;
+	  ++sp_;
+	}
+	return *this;
+      }
       
-      const_iterator begin() const { return {mprts_, mprts_.begin(), 0}; }
-      const_iterator end()   const { return {mprts_, mprts_.end(), 0}; }
-      uint size() const { return mprts_.get_n_prts(); }
-      
+      const_iterator operator++(int) { auto retval = *this; ++(*this); return retval; }
+      const_accessor operator*() { return {sp_, n_}; }
+	
     private:
       const Mparticles& mprts_;
+      typename Mparticles::const_iterator sp_;
+      uint n_;
     };
+      
+    const_accessor_range(const Mparticles& mprts)
+      : mprts_{mprts}
+    {}
+      
+    const_iterator begin() const { return {mprts_, mprts_.begin(), 0}; }
+    const_iterator end()   const { return {mprts_, mprts_.end(), 0}; }
+    uint size() const { return mprts_.get_n_prts(); }
+      
+  private:
+    const Mparticles& mprts_;
+  };
   
   ConstAccessorVpic(Mparticles& mprts)
     : mprts_{mprts}
