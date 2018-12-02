@@ -52,22 +52,6 @@ private:
   Mparticles& mprts_;
 };
 
-template<typename Mparticles>
-struct ConstAccessorVpic
-{
-  ConstAccessorVpic(Mparticles& mprts)
-    : mprts_{mprts}
-  {}
-
-  typename Mparticles::Patch::const_accessor_range operator[](int p)
-  {
-    return mprts_.ppp(p)._get();
-  }
-
-private:
-  Mparticles& mprts_;
-};
-
 // ======================================================================
 // MparticlesVpicPatch
 
@@ -144,8 +128,8 @@ struct MparticlesVpicPatch
 					  const_accessor&> // reference type
     
     {
-      const_iterator(const MparticlesVpicPatch& prts, const typename Particles::const_iterator sp, uint n)
-	: prts_{prts}, sp_{sp}, n_{n}
+      const_iterator(const Mparticles& mprts, const typename Particles::const_iterator sp, uint n)
+	: mprts_{mprts}, sp_{sp}, n_{n}
       {}
       
       bool operator==(const_iterator other) const { return sp_ == other.sp_ && n_ == other.n_; }
@@ -165,31 +149,41 @@ struct MparticlesVpicPatch
       const_accessor operator*() { return {sp_, n_}; }
       
     private:
-      const MparticlesVpicPatch& prts_;
+      const Mparticles& mprts_;
       typename Particles::const_iterator sp_;
       uint n_;
     };
     
-    const_accessor_range(const MparticlesVpicPatch& prts)
-      : prts_{prts}
+    const_accessor_range(const Mparticles& mprts)
+      : mprts_{mprts}
     {}
     
-    const_iterator begin() const { return {prts_, prts_.mprts_.begin(), 0}; }
-    const_iterator end()   const { return {prts_, prts_.mprts_.end(), 0}; }
-    uint size() const { return prts_.size(); }
+    const_iterator begin() const { return {mprts_, mprts_.begin(), 0}; }
+    const_iterator end()   const { return {mprts_, mprts_.end(), 0}; }
+    uint size() const { return mprts_.get_n_prts(); }
     
   private:
-    const MparticlesVpicPatch& prts_;
+    const Mparticles& mprts_;
   };
+};
+
+// ======================================================================
+// ConstAccessorVpic
+
+template<typename Mparticles>
+struct ConstAccessorVpic
+{
+  using Patch = MparticlesVpicPatch<Mparticles>;
   
-  MparticlesVpicPatch(Mparticles& mprts)
+  ConstAccessorVpic(Mparticles& mprts)
     : mprts_{mprts}
   {}
-  
-  uint size() const { return mprts_.get_n_prts(); }
-  
-  const_accessor_range _get() const { return {*this}; }
-  
+
+  typename Patch::const_accessor_range operator[](int p)
+  {
+    return typename Patch::const_accessor_range{mprts_};
+  }
+
 private:
   Mparticles& mprts_;
 };
@@ -307,8 +301,6 @@ struct MparticlesVpic_ : MparticlesBase, _Particles
     assert(0);
   }
   
-  Patch ppp(int p) { assert(p == 0); return {*this}; }
-
   InjectorVpic<MparticlesVpic_> injector() { return {*this}; }
 
   ConstAccessorVpic<MparticlesVpic_> accessor() { return {*this}; }
