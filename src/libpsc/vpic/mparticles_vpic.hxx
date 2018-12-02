@@ -118,7 +118,7 @@ struct ConstAccessorVpic
     uint n_;
   };
     
-  struct const_accessor_range
+  struct Patch
   {
     struct const_iterator : std::iterator<std::random_access_iterator_tag,
 					  const_accessor,  // value type
@@ -153,7 +153,7 @@ struct ConstAccessorVpic
       uint n_;
     };
       
-    const_accessor_range(const Mparticles& mprts)
+    Patch(const Mparticles& mprts)
       : mprts_{mprts}
     {}
       
@@ -169,7 +169,7 @@ struct ConstAccessorVpic
     : mprts_{mprts}
   {}
 
-  const_accessor_range operator[](int p) { return {mprts_}; }
+  Patch operator[](int p) { return {mprts_}; }
 
 private:
   Mparticles& mprts_;
