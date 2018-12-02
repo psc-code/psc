@@ -99,33 +99,15 @@ private:
 };
 
 // ======================================================================
-// ConstPatchCuda
+// ConstAccessorCuda_
 
-template<typename _Mparticles>
-struct ConstPatchCuda
+template<typename Mparticles>
+struct ConstAccessorCuda_
 {
-  using Mparticles = _Mparticles;
-
-  ConstPatchCuda(const Mparticles& mprts, int p)
-    : mprts_{mprts}, p_(p)
-  {}
-  
-private:
-  const Mparticles& mprts_;
-  int p_;
-};
-
-// ======================================================================
-// ConstPatchCuda_
-
-template<typename _Mparticles>
-struct ConstPatchCuda_
-{
-  using Mparticles = _Mparticles;
   using particle_t = typename Mparticles::particle_t;
   using real_t = typename particle_t::real_t;
   using Real3 = typename particle_t::Real3;
-    
+
   struct const_accessor
   {
     using Double3 = Vec3<double>;
@@ -200,36 +182,47 @@ struct ConstPatchCuda_
     const int p_;
   };
 
-  ConstPatchCuda_(Mparticles& mprts, int p)
-    : mprts_(mprts), p_(p)
-  {}
-  
-  const Grid_t& grid() const { return mprts_.grid(); }
-
-  uint size() const
-  {
-    uint n_prts_by_patch[grid().n_patches()];
-    mprts_.get_size_all(n_prts_by_patch);
-    return n_prts_by_patch[p_];
-  }
-
-protected:
-  Mparticles& mprts_;
-  int p_;
-};
-
-// ======================================================================
-// ConstAccessorCuda_
-
-template<typename Mparticles>
-struct ConstAccessorCuda_
-{
   ConstAccessorCuda_(Mparticles& mprts)
     : mprts_{mprts}
   {}
 
-  typename Mparticles::Patch::const_accessor_range operator[](int p) { return {mprts_, p}; }
+  const_accessor_range operator[](int p) { return {mprts_, p}; }
 
 private:
   Mparticles& mprts_;
 };
+
+// ======================================================================
+// ConstPatchCuda
+
+template<typename _Mparticles>
+struct ConstPatchCuda
+{
+  using Mparticles = _Mparticles;
+
+  ConstPatchCuda(const Mparticles& mprts, int p)
+    : mprts_{mprts}, p_(p)
+  {}
+  
+private:
+  const Mparticles& mprts_;
+  int p_;
+};
+
+// ======================================================================
+// ConstPatchCuda_
+
+template<typename _Mparticles>
+struct ConstPatchCuda_
+{
+  using Mparticles = _Mparticles;
+    
+  ConstPatchCuda_(Mparticles& mprts, int p)
+    : mprts_(mprts), p_(p)
+  {}
+  
+private:
+  Mparticles& mprts_;
+  int p_;
+};
+
