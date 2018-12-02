@@ -169,8 +169,7 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   using real_t = particle_t::real_t;
   using Real3 = Vec3<real_t>;
   using DMparticles = DMparticlesCuda<BS>;
-  using ConstPatch = ConstPatchCuda_<cuda_mparticles>;
-  using Patch = ConstPatch; // FIXME, settle on one or the other
+  using Patch = ConstPatchCuda<cuda_mparticles>;
 
   cuda_mparticles(const Grid_t& grid);
 

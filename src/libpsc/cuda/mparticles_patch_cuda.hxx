@@ -137,7 +137,7 @@ struct ConstAccessorCuda_
     const int p_;
   };
   
-  struct const_accessor_range
+  struct Patch
   {
     struct const_iterator : std::iterator<std::random_access_iterator_tag,
 					  const_accessor,  // value type
@@ -163,7 +163,7 @@ struct ConstAccessorCuda_
       uint n_;
     };
     
-    const_accessor_range(const Mparticles& mprts, int p)
+    Patch(const Mparticles& mprts, int p)
       : mprts_{mprts}, p_{p}
     {}
 
@@ -186,7 +186,7 @@ struct ConstAccessorCuda_
     : mprts_{mprts}
   {}
 
-  const_accessor_range operator[](int p) { return {mprts_, p}; }
+  Patch operator[](int p) { return {mprts_, p}; }
 
 private:
   Mparticles& mprts_;
@@ -206,23 +206,6 @@ struct ConstPatchCuda
   
 private:
   const Mparticles& mprts_;
-  int p_;
-};
-
-// ======================================================================
-// ConstPatchCuda_
-
-template<typename _Mparticles>
-struct ConstPatchCuda_
-{
-  using Mparticles = _Mparticles;
-    
-  ConstPatchCuda_(Mparticles& mprts, int p)
-    : mprts_(mprts), p_(p)
-  {}
-  
-private:
-  Mparticles& mprts_;
   int p_;
 };
 
