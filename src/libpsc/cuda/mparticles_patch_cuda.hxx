@@ -105,24 +105,12 @@ template<typename _Mparticles>
 struct ConstPatchCuda
 {
   using Mparticles = _Mparticles;
-  using particle_t = typename Mparticles::particle_t;
-  using real_t = typename particle_t::real_t;
-  using Real3 = typename particle_t::Real3;
 
   ConstPatchCuda(const Mparticles& mprts, int p)
     : mprts_{mprts}, p_(p)
   {}
   
-  const Grid_t& grid() const { return mprts_.grid(); }
-
-  uint size() const
-  {
-    uint n_prts_by_patch[grid().n_patches()];
-    mprts_.get_size_all(n_prts_by_patch);
-    return n_prts_by_patch[p_];
-  }
-
-protected:
+private:
   const Mparticles& mprts_;
   int p_;
 };
