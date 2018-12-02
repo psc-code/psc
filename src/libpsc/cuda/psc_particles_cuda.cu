@@ -146,9 +146,8 @@ static void copy_from(MparticlesCuda& mp, MP& mp_other)
   mp_other.get_size_all(n_prts_by_patch);
   //mp.reserve_all(n_prts_by_patch); FIXME, would still be a good hint for the injector
 
-  auto& cmprts = *mp.cmprts();
   {
-    auto inj = cmprts.injector();
+    auto inj = mp.injector();
     for (int p = 0; p < n_patches; p++) {
       auto injector = inj[p];
       ConvertToCuda<MP> convert_to_cuda(mp_other, p);
@@ -168,8 +167,7 @@ static void copy_to(MparticlesCuda& mp, MP& mp_other)
   mp_other.reserve_all(n_prts_by_patch);
   mp_other.resize_all(n_prts_by_patch);
 
-  auto& cmprts = *mp.cmprts();
-  auto accessor = cmprts.accessor(); // FIXME, should we use this in the first place?
+  auto accessor = mp.accessor(); // FIXME, should we use this in the first place?
   for (int p = 0; p < n_patches; p++) {
     ConvertFromCuda<MP> convert_from_cuda(mp_other, p);
     int n = 0;
