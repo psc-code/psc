@@ -130,19 +130,19 @@ struct ConstPatchCuda_
   {
     using Double3 = Vec3<double>;
       
-    const_accessor(const particle_t& prt, const ConstPatchCuda_& patch)
-      : prt_{prt}, patch_{patch}
+    const_accessor(const particle_t& prt, const Mparticles& mprts, int p)
+      : prt_{prt}, mprts_{mprts}, p_{p}
     {}
 
     Real3 x()   const { return prt_.x(); }
     Real3 u()   const { return prt_.u(); }
-    real_t w()  const { return prt_.qni_wni() / patch_.grid().kinds[prt_.kind()].q; }
+    real_t w()  const { return prt_.qni_wni() / mprts_.grid().kinds[prt_.kind()].q; }
     real_t qni_wni() const { return prt_.qni_wni(); }
     int kind()  const { return prt_.kind(); }
       
     Double3 position() const
     {
-      auto& patch = patch_.grid().patches[patch_.p_];
+      auto& patch = mprts_.grid().patches[p_];
 	
       return patch.xb + Double3(prt_.x());
     }
@@ -151,7 +151,8 @@ struct ConstPatchCuda_
     
   private:
     particle_t prt_;
-    const ConstPatchCuda_ patch_;
+    const Mparticles& mprts_;
+    const int p_;
   };
   
   struct const_accessor_range
@@ -163,8 +164,8 @@ struct ConstPatchCuda_
 					  const_accessor&> // reference type
       
     {
-      const_iterator(const ConstPatchCuda_& patch, uint n)
-	: patch_{patch}, n_{n}
+      const_iterator(const Mparticles& mprts, int p, uint n)
+	: mprts_{mprts}, p_{p}, n_{n}
       {}
 	
       bool operator==(const_iterator other) const { return n_ == other.n_; }
@@ -172,23 +173,31 @@ struct ConstPatchCuda_
 	
       const_iterator& operator++() { n_++; return *this; }
       const_iterator operator++(int) { auto retval = *this; ++(*this); return retval; }
-      const_accessor operator*() { return {patch_.mprts_.get_particle(patch_.p_, n_), patch_}; }
+      const_accessor operator*() { return {const_cast<Mparticles&>(mprts_).get_particle(p_, n_), mprts_, p_}; } // FIXME constness
 	
     private:
-      const ConstPatchCuda_ patch_;
+      const Mparticles& mprts_;
+      const int p_;
       uint n_;
     };
     
-    const_accessor_range(const ConstPatchCuda_& patch)
-      : patch_(patch)
+    const_accessor_range(const Mparticles& mprts, int p)
+      : mprts_{mprts}, p_{p}
     {}
 
-    const_iterator begin() const { return {patch_, 0}; }
-    const_iterator end()   const { return {patch_, patch_.size()}; };
-    uint size() const { return patch_.size(); }
+    const_iterator begin() const { return {mprts_, p_, 0}; }
+    const_iterator end()   const { return {mprts_, p_, size()}; };
+
+    uint size() const
+    {
+      uint n_prts_by_patch[mprts_.grid().n_patches()];
+      const_cast<Mparticles&>(mprts_).get_size_all(n_prts_by_patch);
+      return n_prts_by_patch[p_];
+    }
       
   private:
-    const ConstPatchCuda_ patch_;
+    const Mparticles& mprts_;
+    const int p_;
   };
 
   ConstPatchCuda_(Mparticles& mprts, int p)
@@ -219,11 +228,7 @@ struct ConstAccessorCuda_
     : mprts_{mprts}
   {}
 
-  typename Mparticles::Patch::const_accessor_range operator[](int p)
-  {
-    typename Mparticles::ConstPatch patch = {mprts_, p};
-    return {patch};
-  }
+  typename Mparticles::Patch::const_accessor_range operator[](int p) { return {mprts_, p}; }
 
 private:
   Mparticles& mprts_;
