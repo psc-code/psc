@@ -48,7 +48,7 @@ struct ConstAccessorCuda
     const int p_;
   };
   
-  struct const_accessor_range
+  struct Patch
   {
     struct const_iterator : std::iterator<std::random_access_iterator_tag,
       const_accessor,  // value type
@@ -57,8 +57,8 @@ struct ConstAccessorCuda
       const_accessor&> // reference type
     
     {
-      const_iterator(const const_accessor_range& range, uint n)
-	: range_{range}, n_{n}
+      const_iterator(const Patch& patch, uint n)
+	: patch_{patch}, n_{n}
       {}
       
       bool operator==(const_iterator other) const { return n_ == other.n_; }
@@ -66,14 +66,14 @@ struct ConstAccessorCuda
       
       const_iterator& operator++() { n_++; return *this; }
       const_iterator operator++(int) { auto retval = *this; ++(*this); return retval; }
-      const_accessor operator*() { return {range_.data_[n_], range_.mprts_, range_.p_}; }
+      const_accessor operator*() { return {patch_.data_[n_], patch_.mprts_, patch_.p_}; }
       
     private:
-      const const_accessor_range range_;
+      const Patch patch_;
       uint n_;
     };
     
-    const_accessor_range(const Mparticles& mprts, int p)
+    Patch(const Mparticles& mprts, int p)
       : mprts_{mprts}, p_{p}, data_{const_cast<Mparticles&>(mprts).get_particles(p)}
     // FIXME, const hacking around reorder may change state...
     {}
@@ -92,7 +92,7 @@ struct ConstAccessorCuda
     : mprts_{mprts}
   {}
 
-  const_accessor_range operator[](int p) { return {mprts_, p}; }
+  Patch operator[](int p) { return {mprts_, p}; }
 
 private:
   Mparticles& mprts_;
