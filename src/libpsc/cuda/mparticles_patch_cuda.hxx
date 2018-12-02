@@ -1,7 +1,7 @@
 
 #pragma once
 
-// FIXME?  we have two pretty similar versions of ConstPatchCuda here,
+// FIXME?  we have two pretty similar versions of ConstAccessorCuda here,
 // and probably only one should survive.  one version copies from
 // device "on demand", whereas the other one copies a whole patch
 // worth of data just in case.  Obviously, there can be use cases for
@@ -10,12 +10,11 @@
 // template for a modifiable accesser, if we ever want to go there.
 
 // ======================================================================
-// ConstPatchCuda
+// ConstAccessorCuda
 
-template<typename _Mparticles>
-struct ConstPatchCuda
+template<typename Mparticles>
+struct ConstAccessorCuda
 {
-  using Mparticles = _Mparticles;
   using particle_t = typename Mparticles::particle_t;
   using real_t = typename particle_t::real_t;
   using Real3 = typename particle_t::Real3;
@@ -88,6 +87,27 @@ struct ConstPatchCuda
     int p_;
     const std::vector<particle_t> data_;
   };
+
+  ConstAccessorCuda(Mparticles& mprts)
+    : mprts_{mprts}
+  {}
+
+  const_accessor_range operator[](int p) { return {mprts_, p}; }
+
+private:
+  Mparticles& mprts_;
+};
+
+// ======================================================================
+// ConstPatchCuda
+
+template<typename _Mparticles>
+struct ConstPatchCuda
+{
+  using Mparticles = _Mparticles;
+  using particle_t = typename Mparticles::particle_t;
+  using real_t = typename particle_t::real_t;
+  using Real3 = typename particle_t::Real3;
 
   ConstPatchCuda(const Mparticles& mprts, int p)
     : mprts_{mprts}, p_(p)
@@ -197,21 +217,5 @@ struct ConstPatchCuda_
 protected:
   Mparticles& mprts_;
   int p_;
-};
-
-template<typename Mparticles>
-struct ConstAccessorCuda
-{
-  ConstAccessorCuda(Mparticles& mprts)
-    : mprts_{mprts}
-  {}
-
-  typename Mparticles::Patch::const_accessor_range operator[](int p)
-  {
-    return {mprts_, p};
-  }
-
-private:
-  Mparticles& mprts_;
 };
 
