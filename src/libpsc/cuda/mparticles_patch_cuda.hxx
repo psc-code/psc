@@ -24,19 +24,19 @@ struct ConstPatchCuda
   {
     using Double3 = Vec3<double>;
     
-    const_accessor(const particle_t& prt, const ConstPatchCuda& patch)
-      : prt_{prt}, patch_{patch}
+    const_accessor(const particle_t& prt, const Mparticles& mprts, int p)
+      : prt_{prt}, mprts_{mprts}, p_{p}
     {}
 
     Real3 x()   const { return prt_.x(); }
     Real3 u()   const { return prt_.u(); }
-    real_t w()  const { return prt_.qni_wni() / patch_.grid().kinds[prt_.kind()].q; }
+    real_t w()  const { return prt_.qni_wni() / mprts_.grid().kinds[prt_.kind()].q; }
     real_t qni_wni() const { return prt_.qni_wni(); }
     int kind()  const { return prt_.kind(); }
     
     Double3 position() const
     {
-      auto& patch = patch_.mprts_.grid().patches[patch_.p_];
+      auto& patch = mprts_.grid().patches[p_];
       
       return patch.xb + Double3(prt_.x());
     }
@@ -45,7 +45,8 @@ struct ConstPatchCuda
     
   private:
     const particle_t& prt_;
-    const ConstPatchCuda patch_;
+    const Mparticles& mprts_;
+    const int p_;
   };
   
   struct const_accessor_range
@@ -66,7 +67,7 @@ struct ConstPatchCuda
       
       const_iterator& operator++() { n_++; return *this; }
       const_iterator operator++(int) { auto retval = *this; ++(*this); return retval; }
-      const_accessor operator*() { return {range_.data_[n_], range_.patch_}; }
+      const_accessor operator*() { return {range_.data_[n_], range_.mprts_, range_.p_}; }
       
     private:
       const const_accessor_range range_;
@@ -74,7 +75,7 @@ struct ConstPatchCuda
     };
     
     const_accessor_range(const Mparticles& mprts, int p)
-      : patch_{mprts, p}, data_{const_cast<Mparticles&>(mprts).get_particles(p)}
+      : mprts_{mprts}, p_{p}, data_{const_cast<Mparticles&>(mprts).get_particles(p)}
     // FIXME, const hacking around reorder may change state...
     {}
 
@@ -83,7 +84,8 @@ struct ConstPatchCuda
     uint size() const { return data_.size(); }
     
   private:
-    const ConstPatchCuda patch_;
+    const Mparticles& mprts_;
+    int p_;
     const std::vector<particle_t> data_;
   };
 
