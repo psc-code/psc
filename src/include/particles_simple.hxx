@@ -61,36 +61,12 @@ private:
 template<typename Mparticles>
 struct ConstAccessorSimple
 {
-  ConstAccessorSimple(Mparticles& mprts)
-    : mprts_{mprts}
-  {}
-
-  typename Mparticles::Patch::const_accessor_range operator[](int p)
-  {
-    return mprts_[p]._get();
-  }
-
-private:
-  Mparticles& mprts_;
-};
-
-// ======================================================================
-// mparticles_patch
-
-template<typename P>
-struct Mparticles;
-
-template<typename P>
-struct mparticles_patch
-{
-  using particle_t = P;
-  using real_t = typename particle_t::real_t;
+  using particle_t = typename Mparticles::particle_t; // FIXME -> Particle
+  using mparticles_patch = typename Mparticles::Patch;
+  using real_t = typename Mparticles::real_t;
   using Real3 = Vec3<real_t>;
   using Double3 = Vec3<double>;
-  using buf_t = std::vector<particle_t>;
-  using iterator = typename buf_t::iterator;
-  using const_iterator = typename buf_t::const_iterator;
-
+  
   struct const_accessor
   {
     const_accessor(const particle_t& prt, const mparticles_patch& prts)
@@ -105,7 +81,7 @@ struct mparticles_patch
 
     Double3 position() const
     {
-      auto& patch = prts_.grid().patches[prts_.p_];
+      auto& patch = prts_.grid().patches[prts_.p()]; // FIXME, generally, it'd be nice to have a better way to get this
 
       return patch.xb +	Double3(prt_.x());
     }
@@ -152,6 +128,37 @@ struct mparticles_patch
     const mparticles_patch& prts_;
   };
 
+  ConstAccessorSimple(Mparticles& mprts)
+    : mprts_{mprts}
+  {}
+
+  const_accessor_range operator[](int p)
+  {
+    auto patch = mprts_[p];
+    return {patch};
+  }
+
+private:
+  Mparticles& mprts_;
+};
+
+// ======================================================================
+// mparticles_patch
+
+template<typename P>
+struct Mparticles;
+
+template<typename P>
+struct mparticles_patch
+{
+  using particle_t = P;
+  using real_t = typename particle_t::real_t;
+  using Real3 = Vec3<real_t>;
+  using Double3 = Vec3<double>;
+  using buf_t = std::vector<particle_t>;
+  using iterator = typename buf_t::iterator;
+  using const_iterator = typename buf_t::const_iterator;
+
   // FIXME, I would like to delete the copy ctor because I don't
   // want to copy Patch by mistake, but that doesn't play well with
   // putting the patches into std::vector
@@ -162,8 +169,6 @@ struct mparticles_patch
       p_(p),
       grid_(&mprts->grid())
   {}
-
-  const_accessor_range _get() { return {*this}; }
 
   particle_t& operator[](int n) { return buf[n]; }
   const particle_t& operator[](int n) const { return buf[n]; }
@@ -208,6 +213,7 @@ struct mparticles_patch
   real_t prt_qni_wni(const particle_t& prt) const { return prt.qni_wni(); }
 
   const Grid_t& grid() const { return *grid_; }
+  int p() const { return p_; }
 
   buf_t buf;
 
