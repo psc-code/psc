@@ -318,9 +318,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // --- setup species
     // FIXME, half-redundant to the PSC species setup
 #ifdef VPIC
-    mprts_.reset(new Mparticles_t{grid(), vgrid_});
+    mprts_.reset(new Mparticles{grid(), vgrid_});
 #else
-    mprts_.reset(new Mparticles_t{grid()});
+    mprts_.reset(new Mparticles{grid()});
 #endif
     setup_species();
 
@@ -574,7 +574,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   // ----------------------------------------------------------------------
   // setup_initial_particles
   
-  void setup_initial_particles(Mparticles_t& mprts, std::vector<uint>& n_prts_by_patch)
+  void setup_initial_particles(Mparticles& mprts, std::vector<uint>& n_prts_by_patch)
   {
     mprts_->reserve_all(n_prts_by_patch);
     setup_particles(n_prts_by_patch, false);

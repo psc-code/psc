@@ -37,7 +37,7 @@ struct PscParams
 template<typename PscConfig>
 struct Psc
 {
-  using Mparticles_t = typename PscConfig::Mparticles;
+  using Mparticles = typename PscConfig::Mparticles;
   using MfieldsState = typename PscConfig::MfieldsState;
   using Balance_t = typename PscConfig::Balance_t;
   using Sort_t = typename PscConfig::Sort_t;
@@ -62,7 +62,7 @@ struct Psc
   using MfieldsAccumulator = typename PushParticles_t::MfieldsAccumulator;
   using OutputHydro = typename PscConfig::OutputHydro;
   using MfieldsHydro = typename OutputHydro::MfieldsHydro;
-  using ParticleBcList = typename Mparticles_t::ParticleBcList;
+  using ParticleBcList = typename Mparticles::ParticleBcList;
 #endif
   
   // ----------------------------------------------------------------------
@@ -877,7 +877,7 @@ protected:
   std::unique_ptr<MfieldsAccumulator> accumulator_;
   ParticleBcList particle_bc_list_;
 #endif
-  std::unique_ptr<Mparticles_t> mprts_;
+  std::unique_ptr<Mparticles> mprts_;
 
   std::unique_ptr<Balance_t> balance_;
   std::unique_ptr<Sort_t> sort_;

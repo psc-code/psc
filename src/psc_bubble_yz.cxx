@@ -100,7 +100,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
 
     define_field_array();
 
-    mprts_.reset(new Mparticles_t{grid()});
+    mprts_.reset(new Mparticles{grid()});
 
     // -- Balance
     balance_interval = 0;
@@ -201,7 +201,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   
   std::vector<uint> setup_initial_partition()
   {
-    SetupParticles<Mparticles_t> setup_particles;    
+    SetupParticles<Mparticles> setup_particles;    
     return setup_particles.setup_partition(grid(), [&](int kind, double crd[3], psc_particle_npt& npt) {
 	this->init_npt(kind, crd, npt);
       });
@@ -210,7 +210,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   // ----------------------------------------------------------------------
   // setup_initial_particles
   
-  void setup_initial_particles(Mparticles_t& mprts, std::vector<uint>& n_prts_by_patch)
+  void setup_initial_particles(Mparticles& mprts, std::vector<uint>& n_prts_by_patch)
   {
 #if 0
     n_prts_by_patch[0] = 2;
@@ -227,7 +227,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
       }
     };
 #else
-    SetupParticles<Mparticles_t> setup_particles;
+    SetupParticles<Mparticles> setup_particles;
     setup_particles.setup_particles(mprts, n_prts_by_patch, [&](int kind, double crd[3], psc_particle_npt& npt) {
 	this->init_npt(kind, crd, npt);
       });
