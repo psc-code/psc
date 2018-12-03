@@ -254,14 +254,12 @@ struct ConvertFromVpic<MparticlesSingleByKind> : ConvertVpic<MparticlesSingleByK
 template<typename MP>
 void copy_to(MparticlesVpic& mprts_from, MP& mprts_to)
 {
-  int n_patches = mprts_to.n_patches();
-  std::vector<uint> n_prts_by_patch(n_patches);
-  mprts_from.get_size_all(n_prts_by_patch.data());
+  auto n_prts_by_patch = mprts_from.get_size_all();
   mprts_to.reserve_all(n_prts_by_patch);
   mprts_to.resize_all(n_prts_by_patch);
   
   unsigned int off = 0;
-  for (int p = 0; p < n_patches; p++) {
+  for (int p = 0; p < mprts_to.n_patches(); p++) {
     int n_prts = n_prts_by_patch[p];
     ConvertFromVpic<MP> convert_from_vpic(mprts_to, mprts_from.vgrid(), p);
     vpic_mparticles_get_particles(mprts_from, n_prts, off, convert_from_vpic);
@@ -274,10 +272,10 @@ template<>
 void copy_from(MparticlesVpic& mprts_to, MparticlesSingle& mprts_from)
 {
   int n_patches = mprts_to.n_patches();
-  std::vector<uint> n_prts_by_patch(n_patches, 0);
-  mprts_to.resize_all(n_prts_by_patch);
+  std::vector<uint> n_prts_by_patch_0(n_patches, 0);
+  mprts_to.resize_all(n_prts_by_patch_0);
 
-  mprts_from.get_size_all(n_prts_by_patch.data());
+  auto n_prts_by_patch = mprts_from.get_size_all();
   mprts_to.reserve_all(n_prts_by_patch);
   
   for (int p = 0; p < n_patches; p++) {
@@ -297,8 +295,7 @@ template<>
 void copy_from(MparticlesVpic& mprts_to, MparticlesSingleByKind& mprts_from)
 {
   int n_patches = mprts_to.n_patches();
-  uint n_prts_by_patch[n_patches];
-  mprts_from.get_size_all(n_prts_by_patch);
+  auto n_prts_by_patch = mprts_from.get_size_all();
   mprts_to.reserve_all(n_prts_by_patch);
   mprts_to.resize_all(n_prts_by_patch);
   

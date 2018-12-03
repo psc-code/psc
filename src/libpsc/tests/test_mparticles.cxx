@@ -174,8 +174,7 @@ TYPED_TEST(MparticlesTest, Inject2)
   
   EXPECT_EQ(mprts.get_n_prts(), 4);
   
-  std::vector<uint> n_prts_by_patch(mprts.n_patches());
-  mprts.get_size_all(n_prts_by_patch.data());
+  auto n_prts_by_patch = mprts.get_size_all();
   EXPECT_EQ(n_prts_by_patch, std::vector<uint>({n_prts, n_prts, n_prts, n_prts}));
 
   nn = 0;

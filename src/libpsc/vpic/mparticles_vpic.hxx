@@ -217,9 +217,14 @@ struct MparticlesVpic_ : MparticlesBase, _Particles
   // ----------------------------------------------------------------------
   // get_size_all
   
-  void get_size_all(uint *n_prts_by_patch) const override
+  void get_size_all(uint *n_prts_by_patch) const
   {
     n_prts_by_patch[0] = get_n_prts();
+  }
+
+  std::vector<uint> get_size_all() const override
+  {
+    return {uint(get_n_prts())};
   }
 
   // ----------------------------------------------------------------------

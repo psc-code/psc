@@ -43,6 +43,17 @@ void MparticlesCuda<BS>::get_size_all(uint *n_prts_by_patch) const
 }
 
 template<typename BS>
+std::vector<uint> MparticlesCuda<BS>::get_size_all() const
+{
+  dprintf("CMPRTS: get_size_all\n");
+  auto n_prts_by_patch = cmprts_->get_size_all();
+  for (int p = 0; p < cmprts_->n_patches(); p++) {
+    dprintf("  p %d: %d\n", p, n_prts_by_patch[p]);
+  }
+  return n_prts_by_patch;
+}
+
+template<typename BS>
 int MparticlesCuda<BS>::get_n_prts() const
 {
   dprintf("CMPRTS: get_n_prts\n");
@@ -142,8 +153,7 @@ template<typename MparticlesCuda, typename MP>
 static void copy_from(MparticlesCuda& mp, MP& mp_other)
 {
   int n_patches = mp.n_patches();
-  uint n_prts_by_patch[n_patches];
-  mp_other.get_size_all(n_prts_by_patch);
+  auto n_prts_by_patch = mp_other.get_size_all();
   //mp.reserve_all(n_prts_by_patch); FIXME, would still be a good hint for the injector
 
   {
@@ -162,8 +172,7 @@ template<typename MparticlesCuda, typename MP>
 static void copy_to(MparticlesCuda& mp, MP& mp_other)
 {
   int n_patches = mp_other.n_patches();
-  std::vector<uint> n_prts_by_patch(n_patches);
-  mp.get_size_all(n_prts_by_patch.data());
+  auto n_prts_by_patch = mp.get_size_all();
   mp_other.reserve_all(n_prts_by_patch);
   mp_other.resize_all(n_prts_by_patch);
 
@@ -232,8 +241,7 @@ psc_mparticles_cuda_write(struct psc_mparticles *_mprts, struct mrc_io *io)
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
 
-  uint n_prts_by_patch[mprts.n_patches()];
-  mprts->get_size_all(n_prts_by_patch);
+  auto n_prts_by_patch = mprts->get_size_all();
 
   hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, _mprts), H5P_DEFAULT); H5_CHK(group);
   uint off = 0;

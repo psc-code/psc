@@ -32,7 +32,7 @@ void cuda_mparticles_base<BS>::resize(uint size)
 // get_size_all
 
 template<typename BS>
-void cuda_mparticles_base<BS>::get_size_all(uint *n_prts_by_patch)
+void cuda_mparticles_base<BS>::get_size_all(uint *n_prts_by_patch) const
 {
   thrust::host_vector<uint> h_off(by_block_.d_off);
 
@@ -40,6 +40,19 @@ void cuda_mparticles_base<BS>::get_size_all(uint *n_prts_by_patch)
     n_prts_by_patch[p] = h_off[(p+1) * this->n_blocks_per_patch] - h_off[p * this->n_blocks_per_patch];
     //printf("p %d n_prts_by_patch %d\n", p, n_prts_by_patch[p]);
   }
+}
+
+template<typename BS>
+std::vector<uint> cuda_mparticles_base<BS>::get_size_all() const
+{
+  std::vector<uint> n_prts_by_patch(this->n_patches());
+  thrust::host_vector<uint> h_off(by_block_.d_off);
+
+  for (int p = 0; p < this->n_patches(); p++) {
+    n_prts_by_patch[p] = h_off[(p+1) * this->n_blocks_per_patch] - h_off[p * this->n_blocks_per_patch];
+    //printf("p %d n_prts_by_patch %d\n", p, n_prts_by_patch[p]);
+  }
+  return n_prts_by_patch;
 }
 
 template struct cuda_mparticles_base<BS144>;

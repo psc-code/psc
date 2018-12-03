@@ -143,7 +143,8 @@ protected:
   void resize(uint size);
 
 public:
-  void get_size_all(uint *n_prts_by_patch);
+  void get_size_all(uint *n_prts_by_patch) const;
+  std::vector<uint> get_size_all() const;
 
   // per particle
   MparticlesCudaStorage storage;

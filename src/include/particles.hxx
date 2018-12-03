@@ -32,7 +32,7 @@ struct MparticlesBase
 
   virtual ~MparticlesBase() {}
   virtual int get_n_prts() const = 0;
-  virtual void get_size_all(uint *n_prts_by_patch) const = 0;
+  virtual std::vector<uint> get_size_all() const = 0;
 
   template<typename MP>
   MP& get_as(uint flags = 0)
@@ -86,8 +86,7 @@ struct MparticlesBase
     mpi_printf(comm, "  n_patches    = %d\n", n_patches());
     mpi_printf(comm, "  n_prts_total = %d\n", get_n_prts());
     
-    uint n_prts_by_patch[n_patches()];
-    get_size_all(n_prts_by_patch);
+    auto n_prts_by_patch = get_size_all();
     
     for (int p = 0; p < n_patches(); p++) {
       mpi_printf(comm, "  p %d: n_prts = %d\n", p, n_prts_by_patch[p]);

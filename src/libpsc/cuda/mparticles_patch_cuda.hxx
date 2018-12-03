@@ -172,8 +172,7 @@ struct ConstAccessorCuda_
 
     uint size() const
     {
-      uint n_prts_by_patch[mprts_.grid().n_patches()];
-      const_cast<Mparticles&>(mprts_).get_size_all(n_prts_by_patch);
+      auto n_prts_by_patch = const_cast<Mparticles&>(mprts_).get_size_all();
       return n_prts_by_patch[p_];
     }
       

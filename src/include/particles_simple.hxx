@@ -276,11 +276,20 @@ struct Mparticles : MparticlesBase
     }
   }
 
-  void get_size_all(uint *n_prts_by_patch) const override
+  void get_size_all(uint *n_prts_by_patch) const
   {
     for (int p = 0; p < patches_.size(); p++) {
       n_prts_by_patch[p] = patches_[p].size();
     }
+  }
+
+  std::vector<uint> get_size_all() const override
+  {
+    std::vector<uint> n_prts_by_patch(n_patches());
+    for (int p = 0; p < patches_.size(); p++) {
+      n_prts_by_patch[p] = patches_[p].size();
+    }
+    return n_prts_by_patch;
   }
 
   int get_n_prts() const override
