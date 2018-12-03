@@ -344,10 +344,8 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   EXPECT_EQ(cbndp->d_bnd_off[1], 0);
 
   // === test sort
-  uint n_prts_by_patch[cmprts.n_patches()];
-  cmprts.get_size_all(n_prts_by_patch);
-  EXPECT_EQ(n_prts_by_patch[0], 2);
-  EXPECT_EQ(n_prts_by_patch[1], 2);
+  auto n_prts_by_patch = cmprts.get_size_all();
+  EXPECT_EQ(n_prts_by_patch, std::vector<uint>({2, 2, 0, 0}));
   
   cbndp->sort_pairs_device(cmprts_.get(), n_prts_recv);
   cmprts.n_prts -= cbndp->n_prts_send;

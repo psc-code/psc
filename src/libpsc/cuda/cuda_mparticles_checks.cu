@@ -8,8 +8,7 @@
 template<typename BS>
 bool cuda_mparticles<BS>::check_in_patch_unordered_slow()
 {
-  uint n_prts_by_patch[this->n_patches()];
-  this->get_size_all(n_prts_by_patch);
+  auto n_prts_by_patch = this->get_size_all();
 
   uint off = 0;
   for (int p = 0; p < this->n_patches(); p++) {
@@ -34,8 +33,7 @@ bool cuda_mparticles<BS>::check_in_patch_unordered_slow()
 template<typename BS>
 bool cuda_mparticles<BS>::check_bidx_id_unordered_slow()
 {
-  uint n_prts_by_patch[this->n_patches()];
-  this->get_size_all(n_prts_by_patch);
+  auto n_prts_by_patch = this->get_size_all();
 
   uint off = 0;
   for (int p = 0; p < this->n_patches(); p++) {

@@ -38,11 +38,6 @@ struct MparticlesSingleByKind : MparticlesBase
     return bk_mparticles_n_prts(bkmprts);
   }
 
-  void get_size_all(uint *n_prts_by_patch) const override
-  {
-    bk_mparticles_size_all(bkmprts, n_prts_by_patch);
-  }
-
   void reserve_all(const std::vector<uint>& n_prts_by_patch)
   {
     bk_mparticles_reserve_all(bkmprts, n_prts_by_patch.data());
