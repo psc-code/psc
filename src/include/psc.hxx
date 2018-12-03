@@ -37,7 +37,7 @@ struct PscParams
 template<typename PscConfig>
 struct Psc
 {
-  using Mparticles_t = typename PscConfig::Mparticles_t;
+  using Mparticles_t = typename PscConfig::Mparticles;
   using MfieldsState = typename PscConfig::MfieldsState;
   using Balance_t = typename PscConfig::Balance_t;
   using Sort_t = typename PscConfig::Sort_t;
