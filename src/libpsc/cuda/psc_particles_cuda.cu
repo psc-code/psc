@@ -93,83 +93,48 @@ bool MparticlesCuda<BS>::check_after_push()
 // ======================================================================
 // conversion
 
-template<typename MP>
-struct ConvertFromCuda
-{
-  using ParticleCuda = DParticleCuda;
-  using particle_t = typename MP::particle_t;
-  using real_t = typename particle_t::real_t;
-  using Real3 = typename particle_t::Real3;
-
-  ConvertFromCuda(MP& mprts_other, int p)
-    : mprts_other_(mprts_other), p_(p)
-  {}
-
-  void operator()(int n, const ParticleCuda& prt)
-  {
-    mprts_other_[p_][n] = particle_t{Real3(prt.x()), Real3(prt.u()), prt.qni_wni(), prt.kind()};
-  }
-
-private:
-  MP& mprts_other_;
-  int p_;
-};
-
 template<typename MparticlesCuda, typename MP>
-static void copy_from(MparticlesCuda& mp, MP& mp_other)
+static void copy_from(MparticlesBase& mprts_base, MparticlesBase& mprts_other_base)
 {
-  int n_patches = mp.n_patches();
-  auto n_prts_by_patch = mp_other.get_size_all();
+  auto& mprts = dynamic_cast<MparticlesCuda&>(mprts_base);
+  auto& mprts_other = dynamic_cast<MP&>(mprts_other_base);
+  auto n_prts_by_patch = mprts_other.get_size_all();
   //mp.reserve_all(n_prts_by_patch); FIXME, would still be a good hint for the injector
 
-  {
-    auto inj = mp.injector();
-    for (int p = 0; p < n_patches; p++) {
-      auto injector = inj[p];
-      for (int n = 0; n < n_prts_by_patch[p]; n++) {
-	using real_t = typename MparticlesCuda::real_t;
-	using Real3 = typename MparticlesCuda::Real3;
-	const auto& prt_other = mp_other[p][n];
-	injector.raw({Real3(prt_other.x()), Real3(prt_other.u()),
-	              real_t(prt_other.qni_wni()), prt_other.kind()});
-      }
+  auto inj = mprts.injector();
+  for (int p = 0; p < mprts.n_patches(); p++) {
+    auto injector = inj[p];
+    for (int n = 0; n < n_prts_by_patch[p]; n++) {
+      using real_t = typename MparticlesCuda::real_t;
+      using Real3 = typename MparticlesCuda::Real3;
+      const auto& prt = mprts_other[p][n];
+      injector.raw({Real3(prt.x()), Real3(prt.u()), real_t(prt.qni_wni()), prt.kind()});
     }
   }
 }
 
 template<typename MparticlesCuda, typename MP>
-static void copy_to(MparticlesCuda& mp, MP& mp_other)
+static void copy_to(MparticlesBase& mprts_base, MparticlesBase& mprts_other_base)
 {
-  int n_patches = mp_other.n_patches();
-  auto n_prts_by_patch = mp.get_size_all();
-  mp_other.reserve_all(n_prts_by_patch);
-  mp_other.resize_all(n_prts_by_patch);
+  auto& mprts = dynamic_cast<MparticlesCuda&>(mprts_base);
+  auto& mprts_other = dynamic_cast<MP&>(mprts_other_base);
+  auto n_prts_by_patch = mprts.get_size_all();
+  mprts_other.reserve_all(n_prts_by_patch);
+  mprts_other.resize_all(n_prts_by_patch);
 
-  auto accessor = mp.accessor(); // FIXME, should we use this in the first place?
-  for (int p = 0; p < n_patches; p++) {
-    ConvertFromCuda<MP> convert_from_cuda(mp_other, p);
+  auto accessor = mprts.accessor(); // FIXME, should we use this in the first place?
+  for (int p = 0; p < mprts.n_patches(); p++) {
     int n = 0;
     for (auto prt: accessor[p]) {
-      convert_from_cuda(n, prt);
-      n++;
+      using real_t = typename MP::real_t;
+      using Real3 = typename MP::Real3;
+      mprts_other[p][n++] = {Real3(prt.x()), Real3(prt.u()), real_t(prt.qni_wni()), prt.kind()};
     }
   }
 }
 
 // ======================================================================
 // conversion to "single"/"double"
-
-template<typename MparticlesCuda, typename MP>
-static void copy_from(MparticlesBase& mp, MparticlesBase& mp_other)
-{
-  copy_from(dynamic_cast<MparticlesCuda&>(mp), dynamic_cast<MP&>(mp_other));
-}
-
-template<typename MparticlesCuda, typename MP>
-static void copy_to(MparticlesBase& mp, MparticlesBase& mp_other)
-{
-  copy_to(dynamic_cast<MparticlesCuda&>(mp), dynamic_cast<MP&>(mp_other));
-}
 
 template<typename BS>
 const MparticlesCuda<BS>::Convert MparticlesCuda<BS>::convert_to_ = {
