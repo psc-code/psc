@@ -43,7 +43,7 @@ struct ConstAccessorCuda
     operator const particle_t& () const { return prt_; }
     
   private:
-    const particle_t& prt_;
+    const particle_t prt_;
     const Mparticles& mprts_;
     const int p_;
   };
@@ -60,7 +60,7 @@ struct ConstAccessorCuda
       const_iterator(const Patch& patch, uint n)
 	: patch_{patch}, n_{n}
       {}
-      
+
       bool operator==(const_iterator other) const { return n_ == other.n_; }
       bool operator!=(const_iterator other) const { return !(*this == other); }
       
@@ -78,6 +78,9 @@ struct ConstAccessorCuda
     // FIXME, const hacking around reorder may change state...
     {}
 
+    // FIXME, implicit copy ctor copies entire array, and that happens all the time when
+    // making a const_iterator, which is rather bad
+      
     const_iterator begin() const { return {*this, 0}; }
     const_iterator end()   const { return {*this, uint(data_.size())}; }
     uint size() const { return data_.size(); }
