@@ -129,47 +129,26 @@ void copy_to(MparticlesVpic& mprts_from, MP& mprts_to)
 
     unsigned int v_off = 0;
     for (auto sp = mprts_from.cbegin(); sp != mprts_from.cend(); ++sp) {
+      assert(sp->id < mprts_to.grid().kinds.size());
 
       unsigned int v_n_prts = sp->np;
       
       unsigned int nb = std::max(v_off, off), ne = std::min(v_off + v_n_prts, off + n_prts);
       for (unsigned int n = nb; n < ne; n++) {
 	auto& vprt = sp->p[n - v_off];
-#if 0
+
 	int i = vprt.i;
 	int i3[3];
 	i3[2] = i / (im[0] * im[1]); i -= i3[2] * (im[0] * im[1]);
 	i3[1] = i / im[0]; i-= i3[1] * im[0];
 	i3[0] = i;
-	if (!(i3[2] >= 1 && i3[2] <= sp->g->nz)) {
-	  mprintf("i3 %d %d %d\n", i3[0], i3[1], i3[2]);
-	  assert(0);
-	}
-#endif
-	struct vpic_mparticles_prt prt;
-	prt.dx[0] = vprt.dx;
-	prt.dx[1] = vprt.dy;
-	prt.dx[2] = vprt.dz;
-	prt.i     = vprt.i;
-	prt.ux[0] = vprt.ux;
-	prt.ux[1] = vprt.uy;
-	prt.ux[2] = vprt.uz;
-	prt.w     = vprt.w;
-	prt.kind  = sp->id;
-
-	assert(prt.kind < mprts_to.grid().kinds.size());
-	int i = prt.i;
-	int i3[3];
-	i3[2] = i / (im[0] * im[1]); i -= i3[2] * (im[0] * im[1]);
-	i3[1] = i / im[0]; i-= i3[1] * im[0];
-	i3[0] = i;
-	auto xi = Vec3<float>{(i3[0] - 1 + .5f * (1.f + prt.dx[0])) * dx[0],
-			      (i3[1] - 1 + .5f * (1.f + prt.dx[1])) * dx[1],
-			      (i3[2] - 1 + .5f * (1.f + prt.dx[2])) * dx[2]};
-	auto pxi = Vec3<float>{prt.ux[0], prt.ux[1], prt.ux[2]};
-	auto kind = prt.kind;
-	auto wni = float(prt.w * dVi);
-	mprts_to[p][n - off] = MparticlesSingle::particle_t{xi, pxi, wni * float(mprts_to.grid().kinds[kind].q), kind};
+	auto x = Vec3<float>{(i3[0] - 1 + .5f * (1.f + vprt.dx)) * dx[0],
+			     (i3[1] - 1 + .5f * (1.f + vprt.dy)) * dx[1],
+			     (i3[2] - 1 + .5f * (1.f + vprt.dz)) * dx[2]};
+	auto u = Vec3<float>{vprt.ux, vprt.uy, vprt.uz};
+	auto kind = sp->id;
+	auto qni_wni = float(vprt.w * dVi) * float(mprts_to.grid().kinds[kind].q);
+	mprts_to[p][n - off] = {x, u, qni_wni, kind};
       }
 
       v_off += v_n_prts;
