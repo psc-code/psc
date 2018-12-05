@@ -238,33 +238,6 @@ struct MparticlesVpic_ : MparticlesBase, _Particles
     }
   }
 
-  // ----------------------------------------------------------------------
-  // resize_all
-  //
-  // Even more iffy, since can't really resize the per-species arrays, since we don't
-  // know how the total # of particles we're given should be divided up
-  
-  void resize_all(const std::vector<uint>& n_prts_by_patch)
-  {
-    // we can't resize to the numbers given, unless it's "resize to 0", we'll just do nothing
-    // The mparticles conversion function should call resize_all() itself first, resizing to
-    // 0, and then using push_back, which will increase the count back to the right value
-
-    if (n_prts_by_patch[0] == 0) {
-      for (auto& sp : *this) {
-	sp.np = 0;
-      }
-    } else {
-#if 0
-      int cur_n_prts_by_patch[n_patches];
-      get_size_all(n_patches, cur_n_prts_by_patch);
-      
-      mprintf("vpic_mparticles_resize_all: ignoring %d -> %d\n",
-	      cur_n_prts_by_patch[0], n_prts_by_patch[0]);
-#endif
-    }
-  }
-
   void reset()
   {
     for (auto& sp : *this) {
