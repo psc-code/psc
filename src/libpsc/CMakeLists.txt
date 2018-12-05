@@ -1,6 +1,5 @@
 
 add_library(psc
-  bk_mparticles.cxx
   integrate.cxx
   mfields.cxx
   mparticles.cxx

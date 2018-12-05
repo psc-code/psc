@@ -2,7 +2,6 @@
 #include "vpic_iface.h"
 
 #include <psc_particles_single.h>
-#include <psc_particles_single_by_kind.h>
 
 #ifdef DO_VPIC
 using VpicConfig = VpicConfigWrap;
