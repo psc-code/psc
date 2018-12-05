@@ -94,30 +94,6 @@ bool MparticlesCuda<BS>::check_after_push()
 // conversion
 
 template<typename MP>
-struct ConvertToCuda
-{
-  using ParticleCuda = DParticleCuda;
-  using particle_t = typename MP::particle_t;
-
-  ConvertToCuda(MP& mprts_other, int p)
-    : mprts_other_(mprts_other), p_(p)
-  {}
-
-  ParticleCuda operator()(int n)
-  {
-    using real_t = ParticleCuda::real_t;
-    using Real3 = ParticleCuda::Real3;
-    const particle_t& prt_other = mprts_other_[p_][n];
-
-    return {Real3(prt_other.x()), Real3(prt_other.u()), real_t(prt_other.qni_wni()), prt_other.kind()};
-  }
-
-private:
-  MP& mprts_other_;
-  int p_;
-};
-
-template<typename MP>
 struct ConvertFromCuda
 {
   using ParticleCuda = DParticleCuda;
@@ -150,9 +126,12 @@ static void copy_from(MparticlesCuda& mp, MP& mp_other)
     auto inj = mp.injector();
     for (int p = 0; p < n_patches; p++) {
       auto injector = inj[p];
-      ConvertToCuda<MP> convert_to_cuda(mp_other, p);
       for (int n = 0; n < n_prts_by_patch[p]; n++) {
-	injector.raw(convert_to_cuda(n));
+	using real_t = typename MparticlesCuda::real_t;
+	using Real3 = typename MparticlesCuda::Real3;
+	const auto& prt_other = mp_other[p][n];
+	injector.raw({Real3(prt_other.x()), Real3(prt_other.u()),
+	              real_t(prt_other.qni_wni()), prt_other.kind()});
       }
     }
   }
