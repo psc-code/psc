@@ -33,7 +33,7 @@ struct Config
 using MparticlesTestTypes = ::testing::Types<Config<MparticlesSingle>
 					    ,Config<MparticlesSingle, MakeTestGridYZ>
 					    ,Config<MparticlesDouble>
-					    ,Config<MparticlesVpic>
+					    ,Config<MparticlesVpic, MakeTestGridYZ1>
 #ifdef USE_CUDA
 					    ,Config<MparticlesCuda<BS144>, MakeTestGridYZ1>
 					    ,Config<MparticlesCuda<BS144>, MakeTestGridYZ>
@@ -229,6 +229,57 @@ TYPED_TEST(MparticlesTest, Injector)
       ++n;
     }
   }
+}
+
+// ----------------------------------------------------------------------
+// Conversion to MparticlesSingle
+
+template<typename Mparticles, typename MakeTestGrid>
+struct TestConversionToMparticlesSingle
+{
+  void operator()(Mparticles& mprts) {}
+};
+
+template<typename Mparticles>
+struct TestConversionToMparticlesSingle<Mparticles, MakeTestGridYZ1>
+{
+  using Double3 = Vec3<double>;
+
+  void operator()(Mparticles& mprts)
+  {
+    auto mprts_single = mprts.template get_as<MparticlesSingle>();
+    EXPECT_EQ(mprts_single.get_n_prts(), 2);
+    
+    {
+      auto accessor = mprts.accessor();
+      {
+	auto it = accessor[0].begin();
+	auto prt0 = *it++;
+	EXPECT_EQ(prt0.position(), (Double3{0., -40., -80.}));
+	auto prt1 = *it++;
+	EXPECT_EQ(prt1.position(), (Double3{5., 0., 0.}));
+      }
+    }
+  }
+};
+
+TYPED_TEST(MparticlesTest, ConversionToMparticlesSingle)
+{
+  auto mprts = this->mk_mprts();
+  this->inject_test_particles(mprts, 2);
+
+#if 0
+  {
+    auto accessor = mprts.accessor();
+    for (int p = 0; p < mprts.n_patches(); p++) {
+      for (auto prt : accessor[p]) {
+	mprintf("xyz %g %g %g\n", prt.position()[0], prt.position()[1], prt.position()[2]);
+      }
+    }
+  }
+#endif
+  auto test = TestConversionToMparticlesSingle<typename TypeParam::Mparticles, typename TypeParam::MakeGrid>{};
+  test(mprts);
 }
 
 
