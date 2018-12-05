@@ -13,35 +13,6 @@ using VpicConfig = VpicConfigPsc;
 using Grid = VpicConfig::Grid;
 using MparticlesVpic = VpicConfig::Mparticles;
 
-template<typename Mparticles, typename F>
-void vpic_mparticles_set_particles(Mparticles& mprts, unsigned int n_prts, unsigned int off,
-				   F setter)
-{
-  unsigned int v_off = 0;
-  for (auto sp = mprts.begin(); sp != mprts.end(); ++sp) {
-    unsigned int v_n_prts = sp->np;
-
-    unsigned int nb = std::max(v_off, off), ne = std::min(v_off + v_n_prts, off + n_prts);
-    for (unsigned int n = nb; n < ne; n++) {
-      struct vpic_mparticles_prt prt;
-      setter(&prt, n - off);
-      auto *p = &sp->p[n - v_off];
-      p->dx = prt.dx[0];
-      p->dy = prt.dx[1];
-      p->dz = prt.dx[2];
-      p->i  = prt.i;
-      p->ux = prt.ux[0];
-      p->uy = prt.ux[1];
-      p->uz = prt.ux[2];
-      p->w  = prt.w;
-      assert(prt.kind == sp->id);
-    }
-
-    v_off += v_n_prts;
-  }
-}
-
-
 // ======================================================================
 // conversion
 
@@ -87,7 +58,7 @@ struct ConvertToVpic<MparticlesSingle> : ConvertVpic<MparticlesSingle>
 
   using Base::Base;
   
-  void operator()(struct vpic_mparticles_prt *prt, int n)
+  void operator()(vpic_mparticles_prt& prt, int n)
   {
     auto& prts_other = mprts_other_[p_];
     auto& prt_other = prts_other[n];
@@ -99,15 +70,15 @@ struct ConvertToVpic<MparticlesSingle> : ConvertVpic<MparticlesSingle>
       i3[d] = (int) val;
       //mprintf("d %d val %g xi %g\n", d, val, prt_other.xi);
       assert(i3[d] >= -1 && i3[d] < im[d] + 1);
-      prt->dx[d] = (val - i3[d]) * 2.f - 1.f;
+      prt.dx[d] = (val - i3[d]) * 2.f - 1.f;
       i3[d] += 1;
     }
-    prt->i     = (i3[2] * im[1] + i3[1]) * im[0] + i3[0];
-    prt->ux[0] = prt_other.u()[0];
-    prt->ux[1] = prt_other.u()[1];
-    prt->ux[2] = prt_other.u()[2];
-    prt->w     = prts_other.prt_wni(prt_other) / dVi;
-    prt->kind  = prt_other.kind();
+    prt.i     = (i3[2] * im[1] + i3[1]) * im[0] + i3[0];
+    prt.ux[0] = prt_other.u()[0];
+    prt.ux[1] = prt_other.u()[1];
+    prt.ux[2] = prt_other.u()[2];
+    prt.w     = prts_other.prt_wni(prt_other) / dVi;
+    prt.kind  = prt_other.kind();
   }
 };
 
@@ -151,20 +122,40 @@ void copy_to(MparticlesVpic& mprts_from, MP& mprts_to)
 template<>
 void copy_from(MparticlesVpic& mprts_to, MparticlesSingle& mprts_from)
 {
-  int n_patches = mprts_to.n_patches();
-  std::vector<uint> n_prts_by_patch_0(n_patches, 0);
-  mprts_to.resize_all(n_prts_by_patch_0);
+  auto& vgrid = mprts_to.vgrid();
+  int im[3] = { vgrid.nx + 2, vgrid.ny + 2, vgrid.nz + 2 };
+  float dx[3] = { vgrid.dx, vgrid.dy, vgrid.dz };
+  float dVi = 1.f / (dx[0] * dx[1] * dx[2]); // FIXME, vgrid->dVi?
+
+  mprts_to.reset();
 
   auto n_prts_by_patch = mprts_from.get_size_all();
   mprts_to.reserve_all(n_prts_by_patch);
   
-  for (int p = 0; p < n_patches; p++) {
-    ConvertToVpic<MparticlesSingle> convert_to_vpic(mprts_from, mprts_to.vgrid(), p);
+  for (int p = 0; p < mprts_to.n_patches(); p++) {
+    auto& prts_from = mprts_from[p];
 
     int n_prts = n_prts_by_patch[p];
     for (int n = 0; n < n_prts; n++) {
-      struct vpic_mparticles_prt prt;
-      convert_to_vpic(&prt, n);
+      auto& prt_from = prts_from[n];
+      assert(prt_from.kind() < mprts_to.grid().kinds.size());
+
+      vpic_mparticles_prt prt;
+      int i3[3];
+      for (int d = 0; d < 3; d++) {
+	float val = prt_from.x()[d] / dx[d];
+	i3[d] = (int) val;
+	//mprintf("d %d val %g xi %g\n", d, val, prt_from.xi);
+	assert(i3[d] >= -1 && i3[d] < im[d] + 1);
+	prt.dx[d] = (val - i3[d]) * 2.f - 1.f;
+	i3[d] += 1;
+      }
+      prt.i     = (i3[2] * im[1] + i3[1]) * im[0] + i3[0];
+      prt.ux[0] = prt_from.u()[0];
+      prt.ux[1] = prt_from.u()[1];
+      prt.ux[2] = prt_from.u()[2];
+      prt.w     = prts_from.prt_wni(prt_from) / dVi;
+      prt.kind  = prt_from.kind();
       mprts_to.push_back(&prt);
     }
   }

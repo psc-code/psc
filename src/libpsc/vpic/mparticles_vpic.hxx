@@ -274,6 +274,13 @@ struct MparticlesVpic_ : MparticlesBase, _Particles
     }
   }
 
+  void reset()
+  {
+    for (auto& sp : *this) {
+      sp.np = 0;
+    }
+  }
+
   void push_back(const vpic_mparticles_prt *prt)
   {
     for (auto& sp : *this) {
