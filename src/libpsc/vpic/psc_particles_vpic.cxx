@@ -16,75 +16,11 @@ using MparticlesVpic = VpicConfig::Mparticles;
 // ======================================================================
 // conversion
 
-template<typename MP>
-struct ConvertVpic;
-
-template<typename MP>
-struct ConvertToVpic;
-
-template<typename MP>
-static void copy_from(MparticlesVpic& mprts, MP& mprts_from);
-
-// ----------------------------------------------------------------------
-// conversion to "single"
-
-template<>
-struct ConvertVpic<MparticlesSingle>
+template<typename Mparticles>
+void copy_to(MparticlesBase& mprts_from_base, MparticlesBase& mprts_to_base)
 {
-  ConvertVpic(MparticlesSingle& mprts_other, const Grid& grid, int p)
-    : mprts_other_(mprts_other), p_(p)
-  {
-    im[0] = grid.nx + 2;
-    im[1] = grid.ny + 2;
-    im[2] = grid.nz + 2;
-    dx[0] = grid.dx;
-    dx[1] = grid.dy;
-    dx[2] = grid.dz;
-    dVi = 1.f / (dx[0] * dx[1] * dx[2]);
-  }
-
-protected:
-  MparticlesSingle& mprts_other_;
-  int p_;
-  int im[3];
-  float dx[3];
-  float dVi;
-};
-
-template<>
-struct ConvertToVpic<MparticlesSingle> : ConvertVpic<MparticlesSingle>
-{
-  using Base = ConvertVpic<MparticlesSingle>;
-
-  using Base::Base;
-  
-  void operator()(vpic_mparticles_prt& prt, int n)
-  {
-    auto& prts_other = mprts_other_[p_];
-    auto& prt_other = prts_other[n];
-    
-    assert(prt_other.kind() < mprts_other_.grid().kinds.size());
-    int i3[3];
-    for (int d = 0; d < 3; d++) {
-      float val = prt_other.x()[d] / dx[d];
-      i3[d] = (int) val;
-      //mprintf("d %d val %g xi %g\n", d, val, prt_other.xi);
-      assert(i3[d] >= -1 && i3[d] < im[d] + 1);
-      prt.dx[d] = (val - i3[d]) * 2.f - 1.f;
-      i3[d] += 1;
-    }
-    prt.i     = (i3[2] * im[1] + i3[1]) * im[0] + i3[0];
-    prt.ux[0] = prt_other.u()[0];
-    prt.ux[1] = prt_other.u()[1];
-    prt.ux[2] = prt_other.u()[2];
-    prt.w     = prts_other.prt_wni(prt_other) / dVi;
-    prt.kind  = prt_other.kind();
-  }
-};
-
-template<typename MP>
-void copy_to(MparticlesVpic& mprts_from, MP& mprts_to)
-{
+  auto& mprts_from = dynamic_cast<MparticlesVpic&>(mprts_from_base);
+  auto& mprts_to = dynamic_cast<Mparticles&>(mprts_to_base);
   auto& vgrid = mprts_from.vgrid();
   int im[3] = { vgrid.nx + 2, vgrid.ny + 2, vgrid.nz + 2 };
   float dx[3] = { vgrid.dx, vgrid.dy, vgrid.dz };
@@ -119,9 +55,11 @@ void copy_to(MparticlesVpic& mprts_from, MP& mprts_to)
   }
 }
 
-template<>
-void copy_from(MparticlesVpic& mprts_to, MparticlesSingle& mprts_from)
+template<typename Mparticles>
+void copy_from(MparticlesBase& mprts_to_base, MparticlesBase& mprts_from_base)
 {
+  auto& mprts_to = dynamic_cast<MparticlesVpic&>(mprts_to_base);
+  auto& mprts_from = dynamic_cast<Mparticles&>(mprts_from_base);
   auto& vgrid = mprts_to.vgrid();
   int im[3] = { vgrid.nx + 2, vgrid.ny + 2, vgrid.nz + 2 };
   float dx[3] = { vgrid.dx, vgrid.dy, vgrid.dz };
@@ -161,30 +99,16 @@ void copy_from(MparticlesVpic& mprts_to, MparticlesSingle& mprts_from)
   }
 }
 
-template<typename MP>
-static void psc_mparticles_vpic_copy_from(MparticlesBase& mp,
-					  MparticlesBase& mp_other)
-{
-  copy_from(dynamic_cast<MparticlesVpic&>(mp), dynamic_cast<MP&>(mp_other));
-}
-
-template<typename MP>
-static void psc_mparticles_vpic_copy_to(MparticlesBase& mp,
-					MparticlesBase& mp_other)
-{
-  copy_to(dynamic_cast<MparticlesVpic&>(mp), dynamic_cast<MP&>(mp_other));
-}
-
 // ----------------------------------------------------------------------
 // psc_mparticles_vpic_methods
 
 template<>
 const MparticlesVpic::Convert MparticlesVpic::convert_to_ = {
-  { std::type_index(typeid(MparticlesSingle)), psc_mparticles_vpic_copy_to<MparticlesSingle> },
+  { std::type_index(typeid(MparticlesSingle)), copy_to<MparticlesSingle> },
 };
 
 template<>
 const MparticlesVpic::Convert MparticlesVpic::convert_from_ = {
-  { std::type_index(typeid(MparticlesSingle)), psc_mparticles_vpic_copy_from<MparticlesSingle> },
+  { std::type_index(typeid(MparticlesSingle)), copy_from<MparticlesSingle> },
 };
 
