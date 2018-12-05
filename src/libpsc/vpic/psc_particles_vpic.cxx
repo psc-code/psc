@@ -121,22 +121,16 @@ void copy_to(MparticlesVpic& mprts_from, MP& mprts_to)
 
   auto n_prts_by_patch = mprts_from.get_size_all();
   mprts_to.reserve_all(n_prts_by_patch);
-  mprts_to.resize_all(n_prts_by_patch);
+  mprts_to.reset();
   
-  unsigned int off = 0;
   for (int p = 0; p < mprts_to.n_patches(); p++) {
     int n_prts = n_prts_by_patch[p];
 
-    unsigned int v_off = 0;
     for (auto sp = mprts_from.cbegin(); sp != mprts_from.cend(); ++sp) {
       assert(sp->id < mprts_to.grid().kinds.size());
 
-      unsigned int v_n_prts = sp->np;
-      
-      unsigned int nb = std::max(v_off, off), ne = std::min(v_off + v_n_prts, off + n_prts);
-      for (unsigned int n = nb; n < ne; n++) {
-	auto& vprt = sp->p[n - v_off];
-
+      for (unsigned int n = 0; n < sp->np; n++) {
+	auto& vprt = sp->p[n];
 	int i = vprt.i;
 	int i3[3];
 	i3[2] = i / (im[0] * im[1]); i -= i3[2] * (im[0] * im[1]);
@@ -148,13 +142,9 @@ void copy_to(MparticlesVpic& mprts_from, MP& mprts_to)
 	auto u = Vec3<float>{vprt.ux, vprt.uy, vprt.uz};
 	auto kind = sp->id;
 	auto qni_wni = float(vprt.w * dVi) * float(mprts_to.grid().kinds[kind].q);
-	mprts_to[p][n - off] = {x, u, qni_wni, kind};
+	mprts_to[p].push_back({x, u, qni_wni, kind});
       }
-
-      v_off += v_n_prts;
     }
-
-    off += n_prts;
   }
 }
 
