@@ -78,23 +78,26 @@ void copy_from(MparticlesBase& mprts_to_base, MparticlesBase& mprts_from_base)
       auto& prt_from = prts_from[n];
       assert(prt_from.kind() < mprts_to.grid().kinds.size());
 
-      vpic_mparticles_prt prt;
       int i3[3];
+      float dx[3];
       for (int d = 0; d < 3; d++) {
 	float val = prt_from.x()[d] / dx[d];
 	i3[d] = (int) val;
 	//mprintf("d %d val %g xi %g\n", d, val, prt_from.xi);
 	assert(i3[d] >= -1 && i3[d] < im[d] + 1);
-	prt.dx[d] = (val - i3[d]) * 2.f - 1.f;
+	dx[d] = (val - i3[d]) * 2.f - 1.f;
 	i3[d] += 1;
       }
-      prt.i     = (i3[2] * im[1] + i3[1]) * im[0] + i3[0];
-      prt.ux[0] = prt_from.u()[0];
-      prt.ux[1] = prt_from.u()[1];
-      prt.ux[2] = prt_from.u()[2];
-      prt.w     = prts_from.prt_wni(prt_from) / dVi;
-      prt.kind  = prt_from.kind();
-      mprts_to.push_back(prt);
+      typename MparticlesVpic::Particle prt;
+      prt.dx = dx[0];
+      prt.dy = dx[1];
+      prt.dz = dx[2];
+      prt.i  = (i3[2] * im[1] + i3[1]) * im[0] + i3[0];
+      prt.ux = prt_from.u()[0];
+      prt.uy = prt_from.u()[1];
+      prt.uz = prt_from.u()[2];
+      prt.w = prts_from.prt_wni(prt_from) / dVi;
+      mprts_to.push_back(prt_from.kind(), prt);
     }
   }
 }

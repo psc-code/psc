@@ -3,15 +3,6 @@
 
 #include "psc_vpic_bits.h"
 
-struct vpic_mparticles_prt
-{
-  float dx[3];
-  int i;
-  float ux[3];
-  float w;
-  int kind;
-};
-
 // ======================================================================
 // InjectorVpic
 
@@ -281,19 +272,15 @@ struct MparticlesVpic_ : MparticlesBase, _Particles
     }
   }
 
-  void push_back(const vpic_mparticles_prt& prt)
+  void push_back(int kind, const Particle& prt)
   {
     for (auto& sp : *this) {
-      if (sp.id == prt.kind) {
-	assert(sp.np < sp.max_np);
-	// the below is inject_particle_raw()
-	auto& RESTRICT p = sp.p[sp.np++];
-	p.dx = prt.dx[0]; p.dy = prt.dx[1]; p.dz = prt.dx[2]; p.i = prt.i;
-	p.ux = prt.ux[0]; p.uy = prt.ux[1]; p.uz = prt.ux[2]; p.w = prt.w;
+      if (sp.id == kind) {
+	sp.p[sp.np++] = prt;
 	return;
       }
     }
-    mprintf("prt.kind %d not found in species list!\n", prt.kind);
+    mprintf("prt.kind %d not found in species list!\n", kind);
     assert(0);
   }
   
