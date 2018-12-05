@@ -156,7 +156,7 @@ void copy_from(MparticlesVpic& mprts_to, MparticlesSingle& mprts_from)
       prt.ux[2] = prt_from.u()[2];
       prt.w     = prts_from.prt_wni(prt_from) / dVi;
       prt.kind  = prt_from.kind();
-      mprts_to.push_back(&prt);
+      mprts_to.push_back(prt);
     }
   }
 }
