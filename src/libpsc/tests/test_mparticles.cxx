@@ -93,8 +93,9 @@ struct MparticlesTest : ::testing::Test
   {
     return mk_mprts(static_cast<Mparticles*>(nullptr));
   }
-  
-  void inject_test_particles(Mparticles& mprts, int n_prts)
+
+  template<typename _Mparticles>
+  void inject_test_particles(_Mparticles& mprts, int n_prts)
   {
     auto inj = mprts.injector();
     for (int p = 0; p < mprts.n_patches(); ++p) {
@@ -114,6 +115,8 @@ struct MparticlesTest : ::testing::Test
     }
   }
 
+  const Grid_t& grid() { return grid_; }
+  
 private:
   Grid_t grid_;
   Grid vgrid_; // FIXME
@@ -251,7 +254,7 @@ struct TestConversionToMparticlesSingle<Mparticles, MakeTestGridYZ1>
     EXPECT_EQ(mprts_single.get_n_prts(), 2);
     
     {
-      auto accessor = mprts.accessor();
+      auto accessor = mprts_single.accessor();
       {
 	auto it = accessor[0].begin();
 	auto prt0 = *it++;
@@ -279,6 +282,66 @@ TYPED_TEST(MparticlesTest, ConversionToMparticlesSingle)
   }
 #endif
   auto test = TestConversionToMparticlesSingle<typename TypeParam::Mparticles, typename TypeParam::MakeGrid>{};
+  test(mprts);
+}
+
+// ----------------------------------------------------------------------
+// Conversion from MparticlesSingle
+
+template<typename Mparticles, typename MakeTestGrid>
+struct TestConversionFromMparticlesSingle
+{
+  void operator()(MparticlesSingle& mprts_single) {}
+};
+
+template<typename Mparticles>
+struct TestConversionFromMparticlesSingle<Mparticles, MakeTestGridYZ1>
+{
+  using Double3 = Vec3<double>;
+
+  void operator()(MparticlesSingle& mprts_single)
+  {
+    auto mprts = mprts_single.template get_as<Mparticles>();
+    EXPECT_EQ(mprts.get_n_prts(), 2);
+    
+    {
+      auto accessor = mprts.accessor();
+      {
+	auto it = accessor[0].begin();
+	auto prt0 = *it++;
+	EXPECT_EQ(prt0.position(), (Double3{0., -40., -80.}));
+	auto prt1 = *it++;
+	EXPECT_EQ(prt1.position(), (Double3{5., 0., 0.}));
+      }
+    }
+  }
+};
+
+// FIXME, MparticlesVpic can't be converted the usual way...
+template<>
+struct TestConversionFromMparticlesSingle<MparticlesVpic, MakeTestGridYZ1>
+{
+  using Double3 = Vec3<double>;
+
+  void operator()(MparticlesSingle& mprts_single) {}
+};
+
+TYPED_TEST(MparticlesTest, ConversionFromMparticlesSingle)
+{
+  MparticlesSingle mprts(this->grid());
+  this->inject_test_particles(mprts, 2);
+
+#if 0
+  {
+    auto accessor = mprts.accessor();
+    for (int p = 0; p < mprts.n_patches(); p++) {
+      for (auto prt : accessor[p]) {
+	mprintf("xyz %g %g %g\n", prt.position()[0], prt.position()[1], prt.position()[2]);
+      }
+    }
+  }
+#endif
+  auto test = TestConversionFromMparticlesSingle<typename TypeParam::Mparticles, typename TypeParam::MakeGrid>{};
   test(mprts);
 }
 
