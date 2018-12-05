@@ -120,15 +120,14 @@ static void copy_to(MparticlesBase& mprts_base, MparticlesBase& mprts_other_base
   auto& mprts_other = dynamic_cast<MP&>(mprts_other_base);
   auto n_prts_by_patch = mprts.get_size_all();
   mprts_other.reserve_all(n_prts_by_patch);
-  mprts_other.resize_all(n_prts_by_patch);
+  mprts_other.reset();
 
   auto accessor = mprts.accessor(); // FIXME, should we use this in the first place?
   for (int p = 0; p < mprts.n_patches(); p++) {
-    int n = 0;
     for (auto prt: accessor[p]) {
       using real_t = typename MP::real_t;
       using Real3 = typename MP::Real3;
-      mprts_other[p][n++] = {Real3(prt.x()), Real3(prt.u()), real_t(prt.qni_wni()), prt.kind()};
+      mprts_other[p].push_back({Real3(prt.x()), Real3(prt.u()), real_t(prt.qni_wni()), prt.kind()});
     }
   }
 }

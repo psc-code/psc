@@ -181,8 +181,10 @@ struct mparticles_patch
   unsigned int size() const { return buf.size(); }
   void reserve(unsigned int new_capacity) { buf.reserve(new_capacity); }
 
-  void push_back(particle_t& prt) // FIXME, should particle_t be const?
+  void push_back(const particle_t& new_prt)
   {
+    // need to copy because we modify it
+    particle_t prt = new_prt;
     checkInPatchMod(prt);
     validCellIndex(prt);
     buf.push_back(prt);
@@ -273,6 +275,13 @@ struct Mparticles : MparticlesBase
   {
     for (int p = 0; p < patches_.size(); p++) {
       patches_[p].resize(n_prts_by_patch[p]);
+    }
+  }
+
+  void reset()
+  {
+    for (int p = 0; p < patches_.size(); p++) {
+      patches_[p].resize(0);
     }
   }
 
