@@ -71,6 +71,7 @@ struct ConstAccessorSimple
     const_iterator begin() const { return {prts_, 0}; }
     const_iterator end()   const { return {prts_, prts_.size()}; }
     uint size() const { return prts_.size(); }
+    const_accessor operator[](int n) const { return {prts_[n], prts_}; }
 
   private:
     const MparticlesPatch& prts_;

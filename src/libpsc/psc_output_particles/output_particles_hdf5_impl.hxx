@@ -191,40 +191,42 @@ struct OutputParticlesHdf5 : OutputParticlesParams, OutputParticlesBase
 
     // copy particles to be written into temp array
     int nn = 0;
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      auto& prts = mprts[p];
-      const auto& patch = grid.patches[p];
-      int ilo[3], ihi[3], ld[3];
-      int sz = find_patch_bounds(grid.ldims, patch.off, ilo, ihi, ld);
-      idx[p] = (size_t *) malloc(2 * sz * sizeof(*idx));
-
-      for (int jz = ilo[2]; jz < ihi[2]; jz++) {
-	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
-	  for (int jx = ilo[0]; jx < ihi[0]; jx++) {
-	    for (int kind = 0; kind < nr_kinds; kind++) {
-	      int si = cell_index_3_to_1(grid.ldims, jx, jy, jz) * nr_kinds + kind;
-	      int jj = ((kind * ld[2] + jz - ilo[2])
-			* ld[1] + jy - ilo[1]) * ld[0] + jx - ilo[0];
-	      idx[p][jj     ] = nn + n_off;
-	      idx[p][jj + sz] = nn + n_off + off[p][si+1] - off[p][si];
-	      for (int n = off[p][si]; n < off[p][si+1]; n++, nn++) {
-		auto& prt = prts[map[p][n]];
-		arr[nn].x  = prt.x()[0] + patch.xb[0];
-		arr[nn].y  = prt.x()[1] + patch.xb[1];
-		arr[nn].z  = prt.x()[2] + patch.xb[2];
-		arr[nn].px = prt.u()[0];
-		arr[nn].py = prt.u()[1];
-		arr[nn].pz = prt.u()[2];
-		arr[nn].q  = prts.prt_qni(prt);
-		arr[nn].m  = prts.prt_mni(prt);
-		arr[nn].w  = prts.prt_wni(prt);
+    {
+      auto accessor = mprts.accessor();
+      for (int p = 0; p < mprts.n_patches(); p++) {
+	auto prts = accessor[p];
+	const auto& patch = grid.patches[p];
+	int ilo[3], ihi[3], ld[3];
+	int sz = find_patch_bounds(grid.ldims, patch.off, ilo, ihi, ld);
+	idx[p] = (size_t *) malloc(2 * sz * sizeof(*idx));
+	
+	for (int jz = ilo[2]; jz < ihi[2]; jz++) {
+	  for (int jy = ilo[1]; jy < ihi[1]; jy++) {
+	    for (int jx = ilo[0]; jx < ihi[0]; jx++) {
+	      for (int kind = 0; kind < nr_kinds; kind++) {
+		int si = cell_index_3_to_1(grid.ldims, jx, jy, jz) * nr_kinds + kind;
+		int jj = ((kind * ld[2] + jz - ilo[2])
+			  * ld[1] + jy - ilo[1]) * ld[0] + jx - ilo[0];
+		idx[p][jj     ] = nn + n_off;
+		idx[p][jj + sz] = nn + n_off + off[p][si+1] - off[p][si];
+		for (int n = off[p][si]; n < off[p][si+1]; n++, nn++) {
+		  auto prt = prts[map[p][n]];
+		  arr[nn].x  = prt.x()[0] + patch.xb[0];
+		  arr[nn].y  = prt.x()[1] + patch.xb[1];
+		  arr[nn].z  = prt.x()[2] + patch.xb[2];
+		  arr[nn].px = prt.u()[0];
+		  arr[nn].py = prt.u()[1];
+		  arr[nn].pz = prt.u()[2];
+		  arr[nn].q  = prt.q();
+		  arr[nn].m  = prt.m();
+		  arr[nn].w  = prt.w();
+		}
 	      }
 	    }
 	  }
 	}
       }
     }
-
     *p_n_write = n_write;
     *p_n_off = n_off;
     *p_n_total = n_total;
