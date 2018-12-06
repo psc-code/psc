@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "injector_simple.hxx"
+#include "const_accessor_simple.hxx"
 #include "particles.hxx"
 #include "particle_simple.hxx"
 #include "particle_indexer.hxx"
@@ -8,155 +10,14 @@
 #include <iterator>
 
 // ======================================================================
-// InjectorSimple
-
-template<typename Mparticles>
-struct InjectorSimple
-{
-  using Particle = typename Mparticles::Particle;
-  using real_t = typename Particle::real_t;
-  
-  struct Patch
-  {
-    Patch(Mparticles& mprts, int p)
-      : mprts_{mprts}, p_{p}
-    {}
-    
-    void operator()(const particle_inject& new_prt)
-    {
-      const auto& patch = mprts_.grid().patches[p_];
-      for (int d = 0; d < 3; d++) {
-	assert(new_prt.x[d] >= patch.xb[d]);
-	assert(new_prt.x[d] <= patch.xe[d]);
-      }
-      
-      auto prt = Particle{{real_t(new_prt.x[0] - patch.xb[0]), real_t(new_prt.x[1] - patch.xb[1]), real_t(new_prt.x[2] - patch.xb[2])},
-			  {real_t(new_prt.u[0]), real_t(new_prt.u[1]), real_t(new_prt.u[2])},
-			  real_t(new_prt.w * mprts_.grid().kinds[new_prt.kind].q),
-			  new_prt.kind};
-      mprts_[p_].push_back(prt);
-    }
-    
-    void reweight(const particle_inject& new_prt)
-    {
-      auto& grid = mprts_.grid();
-      real_t dVi = 1.f / (grid.domain.dx[0] * grid.domain.dx[1] * grid.domain.dx[2]);
-      auto prt = new_prt;
-      assert(0); // FIXME, have to actually do reweighting
-      (*this)(prt);
-    }
-    
-  private:
-    Mparticles& mprts_;
-    int p_;
-  };
-  
-  InjectorSimple(Mparticles& mprts)
-    : mprts_{mprts}
-  {}
-
-  Patch operator[](int p) const { return {mprts_, p}; }
-
-private:
-  Mparticles& mprts_;
-};
-
-// ======================================================================
-// ConstAcessorSimple
-
-template<typename Mparticles>
-struct ConstAccessorSimple
-{
-  using Particle = typename Mparticles::Particle;
-  using mparticles_patch = typename Mparticles::Patch;
-  using real_t = typename Mparticles::real_t;
-  using Real3 = Vec3<real_t>;
-  using Double3 = Vec3<double>;
-  
-  struct const_accessor
-  {
-    const_accessor(const Particle& prt, const mparticles_patch& prts)
-      : prt_{prt}, prts_{prts}
-    {}
-
-    Real3 x()   const { return prt_.x(); }
-    Real3 u()   const { return prt_.u(); }
-    real_t w()  const { return prt_.qni_wni() / prts_.grid().kinds[prt_.kind()].q; }
-    real_t qni_wni() const { return prt_.qni_wni(); }
-    int kind()  const { return prt_.kind(); }
-
-    Double3 position() const
-    {
-      auto& patch = prts_.grid().patches[prts_.p()]; // FIXME, generally, it'd be nice to have a better way to get this
-
-      return patch.xb +	Double3(prt_.x());
-    }
-    
-  private:
-    const Particle& prt_;
-    const mparticles_patch& prts_;
-  };
-  
-  struct Patch
-  {
-    struct const_iterator : std::iterator<std::random_access_iterator_tag,
-					  const_accessor,  // value type
-					  ptrdiff_t,       // difference type
-					  const_accessor*, // pointer type
-					  const_accessor&> // reference type
-					   
-    {
-      const_iterator(const mparticles_patch& prts, uint n)
-	: prts_{prts}, n_{n}
-      {}
-      
-      bool operator==(const_iterator other) const { return n_ == other.n_; }
-      bool operator!=(const_iterator other) const { return !(*this == other); }
-
-      const_iterator& operator++()  { n_++; return *this; }
-      const_iterator operator++(int) { auto retval = *this; ++(*this); return retval; }
-      const_accessor operator*() { return {prts_[n_], prts_}; }
-
-    private:
-      const mparticles_patch& prts_;
-      uint n_;
-    };
-    
-    Patch(const mparticles_patch& prts)
-      : prts_{prts}
-    {}
-
-    const_iterator begin() const { return {prts_, 0}; }
-    const_iterator end()   const { return {prts_, prts_.size()}; }
-    uint size() const { return prts_.size(); }
-
-  private:
-    const mparticles_patch& prts_;
-  };
-
-  ConstAccessorSimple(Mparticles& mprts)
-    : mprts_{mprts}
-  {}
-
-  Patch operator[](int p) { return {mprts_[p]}; }
-
-private:
-  Mparticles& mprts_;
-};
-
-// ======================================================================
 // mparticles_patch
 
-template<typename P>
-struct Mparticles;
-
-template<typename P>
+template<typename Mparticles>
 struct mparticles_patch
 {
-  using Particle = P;
+  using Particle = typename Mparticles::Particle;
   using real_t = typename Particle::real_t;
-  using Real3 = Vec3<real_t>;
-  using Double3 = Vec3<double>;
+  using Real3 = typename Particle::real_t;
   using buf_t = std::vector<Particle>;
   using iterator = typename buf_t::iterator;
   using const_iterator = typename buf_t::const_iterator;
@@ -166,7 +27,7 @@ struct mparticles_patch
   // putting the patches into std::vector
   // mparticles_patch_base(const mparticles_patch_base&) = delete;
 
-  mparticles_patch(Mparticles<P>* mprts, int p)
+  mparticles_patch(Mparticles* mprts, int p)
     : mprts_(mprts),
       p_(p),
       grid_(&mprts->grid())
@@ -222,7 +83,7 @@ struct mparticles_patch
   buf_t buf;
 
 private:
-  Mparticles<P>* mprts_;
+  Mparticles* mprts_;
   int p_;
   const Grid_t* grid_;
 };
@@ -233,11 +94,10 @@ private:
 template<typename P>
 struct Mparticles : MparticlesBase
 {
-  using Self = Mparticles<P>;
   using Particle = P;
   using real_t = typename Particle::real_t;
   using Real3 = Vec3<real_t>;
-  using Patch = mparticles_patch<Particle>;
+  using Patch = mparticles_patch<Mparticles>;
   using BndpParticle = P;
   using buf_t = typename Patch::buf_t;
 
