@@ -245,6 +245,8 @@ struct MparticlesVpic_ : MparticlesBase, _Particles
     }
   }
 
+  using MparticlesBase::reset;
+
   void push_back(int kind, const Particle& prt)
   {
     for (auto& sp : *this) {
