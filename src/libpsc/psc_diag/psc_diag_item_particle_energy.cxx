@@ -15,18 +15,20 @@ psc_diag_item_particle_energy_run(struct psc_diag_item *item,
   double fnqs = grid.norm.fnqs;
   double fac = grid.domain.dx[0] * grid.domain.dx[1] * grid.domain.dx[2];
 
-  for (int p = 0; p < mprts.n_patches(); p++) {
-    auto& prts = mprts[p];
-    for (auto& prt : prts) {
-      double gamma = sqrt(1.f + sqr(prt.u()[0]) + sqr(prt.u()[1]) + sqr(prt.u()[2]));
-      double Ekin = (gamma - 1.) * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
-      double qni = prts.prt_qni(prt);
-      if (qni < 0.) {
-	result[0] += Ekin * fac;
-      } else if (qni > 0.) {
-	result[1] += Ekin * fac;
-      } else {
-	assert(0);
+  {
+    auto accessor = mprts.accessor();
+    for (int p = 0; p < mprts.n_patches(); p++) {
+      for (auto prt : accessor[p]) {
+	double gamma = sqrt(1.f + sqr(prt.u()[0]) + sqr(prt.u()[1]) + sqr(prt.u()[2]));
+	double Ekin = (gamma - 1.) * prt.m() * prt.w() * fnqs;
+	double q = prt.q();
+	if (q < 0.) {
+	  result[0] += Ekin * fac;
+	} else if (q > 0.) {
+	  result[1] += Ekin * fac;
+	} else {
+	  assert(0);
+	}
       }
     }
   }

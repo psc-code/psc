@@ -21,8 +21,10 @@ struct ConstAccessorSimple
 
     Real3 x()   const { return prt_.x(); }
     Real3 u()   const { return prt_.u(); }
-    real_t w()  const { return prt_.qni_wni() / prts_.grid().kinds[prt_.kind()].q; }
+    real_t w()  const { return prt_.qni_wni() / q(); }
     real_t qni_wni() const { return prt_.qni_wni(); }
+    real_t q()  const { return prts_.grid().kinds[kind()].q; }
+    real_t m()  const { return prts_.grid().kinds[kind()].m; }
     int kind()  const { return prt_.kind(); }
 
     Double3 position() const
