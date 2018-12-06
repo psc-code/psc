@@ -208,16 +208,16 @@ struct OutputParticlesHdf5 : OutputParticlesParams, OutputParticlesBase
 	      idx[p][jj     ] = nn + n_off;
 	      idx[p][jj + sz] = nn + n_off + off[p][si+1] - off[p][si];
 	      for (int n = off[p][si]; n < off[p][si+1]; n++, nn++) {
-		Particle *part = &prts[map[p][n]];
-		arr[nn].x  = part->x()[0] + patch.xb[0];
-		arr[nn].y  = part->x()[1] + patch.xb[1];
-		arr[nn].z  = part->x()[2] + patch.xb[2];
-		arr[nn].px = part->u()[0];
-		arr[nn].py = part->u()[1];
-		arr[nn].pz = part->u()[2];
-		arr[nn].q  = prts.prt_qni(*part);
-		arr[nn].m  = prts.prt_mni(*part);
-		arr[nn].w  = prts.prt_wni(*part);
+		auto& prt = prts[map[p][n]];
+		arr[nn].x  = prt.x()[0] + patch.xb[0];
+		arr[nn].y  = prt.x()[1] + patch.xb[1];
+		arr[nn].z  = prt.x()[2] + patch.xb[2];
+		arr[nn].px = prt.u()[0];
+		arr[nn].py = prt.u()[1];
+		arr[nn].pz = prt.u()[2];
+		arr[nn].q  = prts.prt_qni(prt);
+		arr[nn].m  = prts.prt_mni(prt);
+		arr[nn].w  = prts.prt_wni(prt);
 	      }
 	    }
 	  }
