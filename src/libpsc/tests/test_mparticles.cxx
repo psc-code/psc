@@ -49,6 +49,7 @@ template<typename T>
 struct MparticlesTest : ::testing::Test
 {
   using Mparticles = typename T::Mparticles;
+  using Particle = typename Mparticles::Particle;
   using MakeGrid = typename T::MakeGrid;
 
   MparticlesTest()
@@ -140,6 +141,40 @@ TYPED_TEST(MparticlesTest, Inject)
   auto mprts = this->mk_mprts();
 
   this->inject_test_particles(mprts, n_prts);
+}
+
+// ----------------------------------------------------------------------
+// ConstAccessor
+
+TYPED_TEST(MparticlesTest, ConstAccessor)
+{
+  using Base = MparticlesTest<TypeParam>;
+  using Real3 = typename Base::Mparticles::Real3;
+
+  auto mprts = this->mk_mprts();
+
+  {
+    auto inj = mprts.injector();
+    for (int p = 0; p < mprts.n_patches(); ++p) {
+      auto& patch = mprts.grid().patches[p];
+      auto injector = inj[p];
+      auto x = .5 * (patch.xb + patch.xe);
+      injector({{x[0], x[1], x[2]}, {1., 2., 3.}, double(p), 0});
+      injector({{x[0], x[1], x[2]}, {1., 2., 3.}, double(p), 0});
+    }
+  }
+
+  // check iterating of particles per patch
+  {
+    auto accessor = mprts.accessor();
+    for (int p = 0; p < mprts.n_patches(); ++p) {
+      for (auto prt: accessor[p]) {
+	EXPECT_EQ(prt.u(), (Real3{1., 2., 3.}));
+	EXPECT_EQ(prt.w(), p);
+      }
+    }
+  }
+
 }
 
 // -----------------------------------------------------------------------

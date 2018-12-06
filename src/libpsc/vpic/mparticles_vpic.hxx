@@ -178,6 +178,7 @@ struct MparticlesVpic_ : MparticlesBase, _Particles
   using Particle = typename Particles::Particle;
   using const_iterator = typename Particles::const_iterator;
   using real_t = float;
+  using Real3 = Vec3<real_t>;
 
   // FIXME, should go away or actually made uesful
   struct Patch {};
