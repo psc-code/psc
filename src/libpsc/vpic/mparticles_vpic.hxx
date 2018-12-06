@@ -151,7 +151,18 @@ struct ConstAccessorVpic
     const_iterator begin() const { return {mprts_, mprts_.begin(), 0}; }
     const_iterator end()   const { return {mprts_, mprts_.end(), 0}; }
     uint size() const { return mprts_.get_n_prts(); }
-      
+
+    const_accessor operator[](int n) const
+    {
+      for (auto sp = mprts_.begin(); sp != mprts_.end(); ++sp) {
+	if (n < sp->np) {
+	  return {sp, uint(n)};
+	}
+	n -= sp->np;
+      }
+      assert(0);
+    }
+    
   private:
     const Mparticles& mprts_;
   };

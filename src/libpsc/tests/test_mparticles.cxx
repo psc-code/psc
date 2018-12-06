@@ -175,6 +175,14 @@ TYPED_TEST(MparticlesTest, ConstAccessor)
     }
   }
 
+  // check indexed access
+  {
+    auto accessor = mprts.accessor();
+    for (int p = 0; p < mprts.n_patches(); ++p) {
+      EXPECT_EQ(accessor[p][0].w(), p);
+      EXPECT_EQ(accessor[p][1].w(), p);
+    }
+  }
 }
 
 // -----------------------------------------------------------------------

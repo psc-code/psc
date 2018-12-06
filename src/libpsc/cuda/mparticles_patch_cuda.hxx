@@ -83,6 +83,7 @@ struct ConstAccessorCuda
       
     const_iterator begin() const { return {*this, 0}; }
     const_iterator end()   const { return {*this, uint(data_.size())}; }
+    const_accessor operator[](int n) const { return {data_[n], mprts_, p_}; }
     uint size() const { return data_.size(); }
     
   private:
@@ -172,12 +173,14 @@ struct ConstAccessorCuda_
 
     const_iterator begin() const { return {mprts_, p_, 0}; }
     const_iterator end()   const { return {mprts_, p_, size()}; };
+    const_accessor operator[](int n) const { return {const_cast<Mparticles&>(mprts_).get_particle(p_, n), mprts_, p_}; }
 
     uint size() const
     {
       auto n_prts_by_patch = const_cast<Mparticles&>(mprts_).get_size_all();
       return n_prts_by_patch[p_];
     }
+
       
   private:
     const Mparticles& mprts_;
