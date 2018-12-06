@@ -214,12 +214,12 @@ protected:
 };
 
 // ----------------------------------------------------------------------
-// ItemMomentLoopPatches2
+// ItemMomentAddBnd
 
 template<typename Moment_t, typename Bnd = Bnd_<typename Moment_t::Mfields>>
-struct ItemMomentLoopPatches2 : ItemMomentCRTP<ItemMomentLoopPatches2<Moment_t>, typename Moment_t::Mfields>
+struct ItemMomentAddBnd : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Moment_t::Mfields>
 {
-  using Base = ItemMomentCRTP<ItemMomentLoopPatches2<Moment_t>, typename Moment_t::Mfields>;
+  using Base = ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Moment_t::Mfields>;
   using Mfields = typename Moment_t::Mfields;
   using Mparticles = typename Moment_t::Mparticles;
   using fields_t = typename Mfields::fields_t;
@@ -230,7 +230,7 @@ struct ItemMomentLoopPatches2 : ItemMomentCRTP<ItemMomentLoopPatches2<Moment_t>,
   constexpr static fld_names_t fld_names() { return Moment_t::fld_names(); }
   constexpr static int flags = Moment_t::flags;
 
-  ItemMomentLoopPatches2(const Grid_t& grid, MPI_Comm comm)
+  ItemMomentAddBnd(const Grid_t& grid, MPI_Comm comm)
     : Base{grid, comm},
       bnd_{grid, grid.ibn}
   {}
@@ -376,5 +376,5 @@ private:
 // FieldsItemMomentOps
   
 template<typename Moment_t>
-using FieldsItemMomentOps = FieldsItemOps<FieldsItemMoment<ItemMomentLoopPatches2<Moment_t>>>;
+using FieldsItemMomentOps = FieldsItemOps<FieldsItemMoment<ItemMomentAddBnd<Moment_t>>>;
 

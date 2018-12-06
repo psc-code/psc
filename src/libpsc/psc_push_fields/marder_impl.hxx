@@ -223,7 +223,7 @@ private:
 
   const Grid_t& grid_;
   Bnd_<Mfields> bnd_;
-  ItemMomentLoopPatches2<Moment_t> item_rho_;
+  ItemMomentAddBnd<Moment_t> item_rho_;
   FieldsItemFields<ItemLoopPatches<Item_dive<MfieldsState, Mfields>>> item_dive_;
   mrc_io *io_; //< for debug dumping
 };
