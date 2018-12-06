@@ -27,10 +27,11 @@ struct Moment_n_2nd_nc
     const auto& grid = mprts.grid();
     real_t fnqs = grid.norm.fnqs;
     real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
-    
+
+    auto accessor = mprts.accessor();
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto flds = mflds[p];
-      auto prts = mprts[p];
+      auto prts = accessor[p];
       for (auto prt: prts) {
 	int m = prt.kind();
 	DEPOSIT_TO_GRID_2ND_NC(prt, flds, m, 1.f);
@@ -61,12 +62,13 @@ struct Moment_rho_2nd_nc
     const auto& grid = mprts.grid();
     real_t fnqs = grid.norm.fnqs;
     real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
-    
+
+    auto accessor = mprts.accessor();
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto flds = mflds[p];
-      auto prts = mprts[p];
+      auto prts = accessor[p];
       for (auto prt: prts) {
-	DEPOSIT_TO_GRID_2ND_NC(prt, flds, 0, prts.prt_qni(prt));
+	DEPOSIT_TO_GRID_2ND_NC(prt, flds, 0, prt.q());
       }
     }
   }

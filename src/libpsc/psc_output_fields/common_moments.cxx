@@ -140,7 +140,7 @@
     assert(jy >= 0 && jy <= grid.ldims[1]);				\
     assert(jz >= 0 && jz <= grid.ldims[2]);				\
     									\
-    real_t fnq = prts.prt_wni(prt) * fnqs;				\
+    real_t fnq = prt.w() * fnqs;					\
 					     				\
     F(m, jx-jxd,jy-jyd,jz-jzd) += fnq*gmx*gmy*gmz * (val);		\
     F(m, jx    ,jy-jyd,jz-jzd) += fnq*g0x*gmy*gmz * (val);		\
