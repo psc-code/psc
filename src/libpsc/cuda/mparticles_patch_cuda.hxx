@@ -15,15 +15,15 @@
 template<typename Mparticles>
 struct ConstAccessorCuda
 {
-  using particle_t = typename Mparticles::particle_t;
-  using real_t = typename particle_t::real_t;
-  using Real3 = typename particle_t::Real3;
+  using Particle = typename Mparticles::Particle;
+  using real_t = typename Particle::real_t;
+  using Real3 = typename Particle::Real3;
 
   struct const_accessor
   {
     using Double3 = Vec3<double>;
     
-    const_accessor(const particle_t& prt, const Mparticles& mprts, int p)
+    const_accessor(const Particle& prt, const Mparticles& mprts, int p)
       : prt_{prt}, mprts_{mprts}, p_{p}
     {}
 
@@ -40,10 +40,10 @@ struct ConstAccessorCuda
       return patch.xb + Double3(prt_.x());
     }
 
-    operator const particle_t& () const { return prt_; }
+    operator const Particle& () const { return prt_; }
     
   private:
-    const particle_t prt_;
+    const Particle prt_;
     const Mparticles& mprts_;
     const int p_;
   };
@@ -88,7 +88,7 @@ struct ConstAccessorCuda
   private:
     const Mparticles& mprts_;
     int p_;
-    const std::vector<particle_t> data_;
+    const std::vector<Particle> data_;
   };
 
   ConstAccessorCuda(Mparticles& mprts)
@@ -107,15 +107,15 @@ private:
 template<typename Mparticles>
 struct ConstAccessorCuda_
 {
-  using particle_t = typename Mparticles::particle_t;
-  using real_t = typename particle_t::real_t;
-  using Real3 = typename particle_t::Real3;
+  using Particle = typename Mparticles::Particle;
+  using real_t = typename Particle::real_t;
+  using Real3 = typename Particle::Real3;
 
   struct const_accessor
   {
     using Double3 = Vec3<double>;
       
-    const_accessor(const particle_t& prt, const Mparticles& mprts, int p)
+    const_accessor(const Particle& prt, const Mparticles& mprts, int p)
       : prt_{prt}, mprts_{mprts}, p_{p}
     {}
 
@@ -132,10 +132,10 @@ struct ConstAccessorCuda_
       return patch.xb + Double3(prt_.x());
     }
     
-    operator const particle_t& () const { return prt_; }
+    operator const Particle& () const { return prt_; }
     
   private:
-    particle_t prt_;
+    Particle prt_;
     const Mparticles& mprts_;
     const int p_;
   };

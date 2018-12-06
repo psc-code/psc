@@ -377,7 +377,7 @@ uint cuda_mparticles<BS>::get_n_prts()
 // (setup_internal() needs to be called next)
 
 template<typename BS>
-void cuda_mparticles<BS>::inject_initial(const std::vector<particle_t>& buf,
+void cuda_mparticles<BS>::inject_initial(const std::vector<Particle>& buf,
 					const std::vector<uint>& n_prts_by_patch)
 {
   thrust::host_vector<uint> h_off(this->by_block_.d_off);
@@ -422,7 +422,7 @@ void cuda_mparticles<BS>::inject_initial(const std::vector<particle_t>& buf,
 // inject
 
 template<typename BS>
-void cuda_mparticles<BS>::inject(const std::vector<particle_t>& buf,
+void cuda_mparticles<BS>::inject(const std::vector<Particle>& buf,
 				     const std::vector<uint>& buf_n_by_patch)
 {
   if (this->n_prts == 0) {
@@ -499,10 +499,10 @@ void cuda_mparticles<BS>::inject(const std::vector<particle_t>& buf,
 // get_particles
 
 template<typename BS>
-std::vector<typename cuda_mparticles<BS>::particle_t> cuda_mparticles<BS>::get_particles(int beg, int end)
+std::vector<typename cuda_mparticles<BS>::Particle> cuda_mparticles<BS>::get_particles(int beg, int end)
 {
   int n_prts = end - beg;
-  std::vector<particle_t> prts;
+  std::vector<Particle> prts;
   prts.reserve(n_prts);
 
   reorder(); // FIXME? by means of this, this function disturbs the state...
@@ -529,7 +529,7 @@ std::vector<typename cuda_mparticles<BS>::particle_t> cuda_mparticles<BS>::get_p
 // get_particles
 
 template<typename BS>
-std::vector<typename cuda_mparticles<BS>::particle_t> cuda_mparticles<BS>::get_particles(int p)
+std::vector<typename cuda_mparticles<BS>::Particle> cuda_mparticles<BS>::get_particles(int p)
 {
   // FIXME, doing the copy here all the time would be nice to avoid
   // making sure we actually have a valid d_off would't hurt, either
@@ -545,7 +545,7 @@ std::vector<typename cuda_mparticles<BS>::particle_t> cuda_mparticles<BS>::get_p
 // get_particle
 
 template<typename BS>
-typename cuda_mparticles<BS>::particle_t cuda_mparticles<BS>::get_particle(int p, int n)
+typename cuda_mparticles<BS>::Particle cuda_mparticles<BS>::get_particle(int p, int n)
 {
   auto off = this->by_block_.d_off[p * this->n_blocks_per_patch];
   auto cprts = get_particles(off + n, off + n + 1);

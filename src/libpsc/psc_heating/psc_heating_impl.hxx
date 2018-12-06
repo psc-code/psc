@@ -12,7 +12,7 @@ struct Heating__ : HeatingBase
 {
   using Mparticles = MP;
   using real_t = typename Mparticles::real_t;
-  using particle_t = typename Mparticles::particle_t;
+  using particle_t = typename Mparticles::Particle;
   
   // ----------------------------------------------------------------------
   // ctor

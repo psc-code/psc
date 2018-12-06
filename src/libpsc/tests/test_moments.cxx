@@ -20,7 +20,7 @@ TYPED_TEST(PushParticlesTest, Moment1)
   using Mfields = typename TypeParam::Mfields;
   using Moment_n = typename TypeParam::Moment_n;
   using Bnd = typename TypeParam::Bnd;
-  using particle_t = typename Mparticles::particle_t;
+  using particle_t = typename Mparticles::Particle;
   using real_t = typename Mfields::real_t;
 
   const real_t eps = 1e-6;
@@ -58,7 +58,7 @@ TYPED_TEST(PushParticlesTest, Moment2) // FIXME, mostly copied
   using Mfields = typename TypeParam::Mfields;
   using Moment_n = typename TypeParam::Moment_n;
   using Bnd = typename TypeParam::Bnd;
-  using particle_t = typename Mparticles::particle_t;
+  using particle_t = typename Mparticles::Particle;
   using real_t = typename Mfields::real_t;
 
   const real_t eps = 1e-6;

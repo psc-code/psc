@@ -7,7 +7,7 @@
 template<typename Mparticles>
 struct InjectorBuffered
 {
-  using particle_t = typename Mparticles::particle_t;
+  using particle_t = typename Mparticles::Particle;
   using real_t = typename particle_t::real_t;
   using Real3 = typename particle_t::Real3;
   using Double3 = Vec3<double>;

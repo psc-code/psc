@@ -66,7 +66,7 @@ template<typename MP>
 struct SortCountsort2
 {
   using Mparticles = MP;
-  using particle_t = typename Mparticles::particle_t;
+  using particle_t = typename Mparticles::Particle;
 
   void operator()(Mparticles& mprts)
   {

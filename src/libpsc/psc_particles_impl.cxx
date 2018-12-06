@@ -7,8 +7,8 @@ struct Convert
 {
   using MparticlesFrom = MP_FROM;
   using MparticlesTo = MP_TO;
-  using particle_from_t = typename MP_FROM::particle_t;
-  using particle_to_t = typename MP_TO::particle_t;
+  using particle_from_t = typename MP_FROM::Particle;
+  using particle_to_t = typename MP_TO::Particle;
 
   particle_to_t operator()(const particle_from_t& prt_from, const Grid_t& grid)
   {

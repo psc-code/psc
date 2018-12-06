@@ -31,7 +31,7 @@ template<typename CudaMparticles, typename DIM>
 struct cuda_bndp : cuda_mparticles_indexer<typename CudaMparticles::BS>
 {
   using BS = typename CudaMparticles::BS;
-  using buf_t = std::vector<typename CudaMparticles::particle_t>;
+  using buf_t = std::vector<typename CudaMparticles::Particle>;
 
   using cuda_mparticles_indexer<BS>::n_blocks;
   using cuda_mparticles_indexer<BS>::n_blocks_per_patch;

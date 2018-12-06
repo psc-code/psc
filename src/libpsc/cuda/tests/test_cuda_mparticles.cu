@@ -32,9 +32,9 @@ using CudaMparticles = cuda_mparticles<BS144>;
 
 void cuda_mparticles_add_particles_test_1(CudaMparticles& cmprts, std::vector<uint>& n_prts_by_patch)
 {
-  using particle_t = CudaMparticles::particle_t; 
-  using real_t = particle_t::real_t;
-  using Real3 = particle_t::Real3;
+  using Particle = CudaMparticles::Particle; 
+  using real_t = Particle::real_t;
+  using Real3 = Particle::Real3;
  
   const Grid_t& grid = cmprts.grid_;
   Int3 ldims = grid.ldims;
@@ -47,14 +47,14 @@ void cuda_mparticles_add_particles_test_1(CudaMparticles& cmprts, std::vector<ui
   
   auto dx = grid.domain.dx;
 
-  std::vector<particle_t> buf;
+  std::vector<Particle> buf;
   buf.reserve(n_prts);
   
   for (int p = 0; p < grid.n_patches(); p++) {
     for (int i = 0; i < ldims[0]; i++) {
       for (int j = 0; j < ldims[1]; j++) {
 	for (int k = 0; k < ldims[2]; k++) {
-	  buf.push_back(particle_t{
+	  buf.push_back(Particle{
 	      {real_t(dx[0] * (i + .5f)), real_t(dx[1] * (j + .5f)), real_t(dx[2] * (k + .5f))},
 		{real_t(i), real_t(j), real_t(k)},
 		  1., 0});
@@ -126,7 +126,7 @@ TEST_F(CudaMparticlesTest, SetupInternalsDetail)
   grid_->kinds.push_back(Grid_t::Kind(-1.,  1., "electron"));
   grid_->kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
 
-  std::vector<particle_t> prts = {
+  std::vector<Particle> prts = {
     {{ .5, 75., 15. }, {}, 0., 0},
     {{ .5, 35., 15. }, {}, 0., 0},
     {{ .5,  5.,  5. }, {}, 0., 0},
@@ -193,7 +193,7 @@ TEST_F(CudaMparticlesTest, SortByCellDetail)
   grid_->kinds.push_back(Grid_t::Kind(-1.,  1., "electron"));
   grid_->kinds.push_back(Grid_t::Kind( 1., 25., "ion"));
 
-  std::vector<particle_t> prts = {
+  std::vector<Particle> prts = {
     {{ .5, 75., 15. }, {}, 0., 0},
     {{ .5, 35., 15. }, {}, 0., 0},
     {{ .5,  5.,  5. }, {}, 0., 0},
@@ -282,7 +282,7 @@ TEST_F(CudaMparticlesTest, CudaCollision)
 {
   grid_->kinds.push_back(Grid_t::Kind( 1.,  1., "test species"));
 
-  std::vector<particle_t> prts = {
+  std::vector<Particle> prts = {
     {{.5, 75., 15.}, {1.0, 0., 0.}, 1., 0},
     {{.5, 75., 15.}, {1.1, 0., 0.}, 1., 0},
     {{.5, 75., 15.}, {1.2, 0., 0.}, 1., 0},

@@ -58,21 +58,21 @@ void MparticlesCuda<BS>::reset(const Grid_t& grid)
 }
 
 template<typename BS>
-void MparticlesCuda<BS>::inject(const std::vector<particle_t>& buf, const std::vector<uint>& buf_n_by_patch)
+void MparticlesCuda<BS>::inject(const std::vector<Particle>& buf, const std::vector<uint>& buf_n_by_patch)
 {
   dprintf("CMPRTS: inject\n");
   cmprts_->inject(buf, buf_n_by_patch);
 }
 
 template<typename BS>
-std::vector<typename MparticlesCuda<BS>::particle_t> MparticlesCuda<BS>::get_particles(int p) const
+std::vector<typename MparticlesCuda<BS>::Particle> MparticlesCuda<BS>::get_particles(int p) const
 {
   dprintf("CMPRTS: get_particles\n");
   return cmprts_->get_particles(p);
 }
 
 template<typename BS>
-typename MparticlesCuda<BS>::particle_t MparticlesCuda<BS>::get_particle(int p, int n) const
+typename MparticlesCuda<BS>::Particle MparticlesCuda<BS>::get_particle(int p, int n) const
 {
   dprintf("CMPRTS: get_particle\n");
   return cmprts_->get_particle(p, n);

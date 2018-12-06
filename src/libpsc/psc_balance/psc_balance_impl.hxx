@@ -318,7 +318,7 @@ struct Balance_ : BalanceBase
 {
   using fields_t = typename Mfields::fields_t;
   using Fields = Fields3d<fields_t>;
-  using particle_t = typename Mparticles::particle_t;
+  using particle_t = typename Mparticles::Particle;
   using real_t = typename Mparticles::real_t;
 
   Balance_(int every, double factor_fields=1., bool print_loads=false, bool write_loads=false)

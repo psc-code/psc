@@ -18,7 +18,7 @@ struct CollisionHost
 {
   using Mparticles = _Mparticles;
   using particles_t = typename Mparticles::Patch;
-  using particle_t = typename Mparticles::particle_t;
+  using particle_t = typename Mparticles::Particle;
   using real_t = typename Mparticles::real_t;
   using MfieldsState = _MfieldsState;
   using Mfields = _Mfields;

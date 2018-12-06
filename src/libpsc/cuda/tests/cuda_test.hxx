@@ -6,7 +6,7 @@ template<typename _CudaMparticles>
 struct TestBase
 {
   using CudaMparticles = _CudaMparticles;
-  using particle_t = typename CudaMparticles::particle_t;
+  using Particle = typename CudaMparticles::Particle;
 };
 
 

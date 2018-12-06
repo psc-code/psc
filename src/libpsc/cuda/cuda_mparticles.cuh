@@ -165,8 +165,8 @@ template<typename _BS>
 struct cuda_mparticles : cuda_mparticles_base<_BS>
 {
   using BS = _BS;
-  using particle_t = DParticleCuda;
-  using real_t = particle_t::real_t;
+  using Particle = DParticleCuda;
+  using real_t = Particle::real_t;
   using Real3 = Vec3<real_t>;
   using DMparticles = DMparticlesCuda<BS>;
   using Patch = ConstPatchCuda<cuda_mparticles>;
@@ -177,10 +177,10 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   ConstAccessorCuda_<cuda_mparticles> accessor() { return {*this}; }
   
   uint get_n_prts();
-  void inject(const std::vector<particle_t>& buf, const std::vector<uint>& buf_n_by_patch);
+  void inject(const std::vector<Particle>& buf, const std::vector<uint>& buf_n_by_patch);
 
-  std::vector<particle_t> get_particles(int p);
-  particle_t get_particle(int p, int n);
+  std::vector<Particle> get_particles(int p);
+  Particle get_particle(int p, int n);
 
   uint start(int p);
 
@@ -188,12 +188,12 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   void dump_by_patch(uint *n_prts_by_patch);
 
   // internal / testing use
-  void inject_initial(const std::vector<particle_t>& buf,
+  void inject_initial(const std::vector<Particle>& buf,
 		      const std::vector<uint>& n_prts_by_patch);
   void setup_internals();
 
 private:
-  std::vector<particle_t> get_particles(int beg, int end);
+  std::vector<Particle> get_particles(int beg, int end);
   
 public:
   void find_block_indices_ids(thrust::device_vector<uint>& d_idx, thrust::device_vector<uint>& d_id);

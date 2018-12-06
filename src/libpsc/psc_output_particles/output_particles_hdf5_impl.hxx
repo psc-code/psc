@@ -27,7 +27,7 @@ struct hdf5_prt {
 template<typename Mparticles>
 struct OutputParticlesHdf5 : OutputParticlesParams, OutputParticlesBase
 {
-  using particle_t = typename Mparticles::particle_t;
+  using particle_t = typename Mparticles::Particle;
   using Particles = typename Mparticles::Patch;
   using real_t = typename Mparticles::real_t;
 

@@ -13,7 +13,7 @@
 template<typename Mparticles>
 struct InjectorSimple
 {
-  using Particle = typename Mparticles::particle_t;
+  using Particle = typename Mparticles::Particle;
   using real_t = typename Particle::real_t;
   
   struct Patch
@@ -67,7 +67,7 @@ private:
 template<typename Mparticles>
 struct ConstAccessorSimple
 {
-  using Particle = typename Mparticles::particle_t;
+  using Particle = typename Mparticles::Particle;
   using mparticles_patch = typename Mparticles::Patch;
   using real_t = typename Mparticles::real_t;
   using Real3 = Vec3<real_t>;
@@ -234,10 +234,10 @@ template<typename P>
 struct Mparticles : MparticlesBase
 {
   using Self = Mparticles<P>;
-  using particle_t = P;
-  using real_t = typename particle_t::real_t;
+  using Particle = P;
+  using real_t = typename Particle::real_t;
   using Real3 = Vec3<real_t>;
-  using Patch = mparticles_patch<particle_t>;
+  using Patch = mparticles_patch<Particle>;
   using BndpParticle = P;
   using buf_t = typename Patch::buf_t;
 

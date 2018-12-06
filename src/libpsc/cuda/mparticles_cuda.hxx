@@ -20,7 +20,7 @@ struct MparticlesCuda : MparticlesBase
   using Self = MparticlesCuda;
   using BS = _BS;
   using real_t = float;
-  using particle_t = ParticleSimple<real_t>;
+  using Particle = ParticleSimple<real_t>;
   using Real3 = Vec3<real_t>;
   using BndpParticle = DParticleCuda;
   using buf_t = std::vector<BndpParticle>;
@@ -37,12 +37,12 @@ struct MparticlesCuda : MparticlesBase
   std::vector<uint> get_size_all() const override;
   void reset(const Grid_t& grid) override;
 
-  void inject(const std::vector<particle_t>& buf, const std::vector<uint>& buf_n_by_patch);
+  void inject(const std::vector<Particle>& buf, const std::vector<uint>& buf_n_by_patch);
   void dump(const std::string& filename);
   bool check_after_push();
 
-  std::vector<particle_t> get_particles(int p) const;
-  particle_t get_particle(int p, int n) const;
+  std::vector<Particle> get_particles(int p) const;
+  Particle get_particle(int p, int n) const;
   const ParticleIndexer<real_t>& particleIndexer() const { return pi_; }
   void define_species(const char *name, double q, double m,
 		      double max_local_np, double max_local_nm,
