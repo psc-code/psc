@@ -28,10 +28,10 @@ struct Moment_n_1st_nc
     real_t fnqs = grid.norm.fnqs;
     real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
 
+    auto accessor = mprts.accessor();
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto flds = mflds[p];
-      auto prts = mprts[p];
-      for (auto prt: prts) {
+      for (auto prt: accessor[p]) {
 	int m = prt.kind();
 	DEPOSIT_TO_GRID_1ST_NC(prt, flds, m, 1.f);
       }
@@ -62,11 +62,11 @@ struct Moment_rho_1st_nc
     real_t fnqs = grid.norm.fnqs;
     real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
     
+    auto accessor = mprts.accessor();
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto flds = mflds[p];
-      auto prts = mprts[p];
-      for (auto prt: prts) {
-	DEPOSIT_TO_GRID_1ST_NC(prt, flds, 0, prts.prt_qni(prt));
+      for (auto prt: accessor[p]) {
+	DEPOSIT_TO_GRID_1ST_NC(prt, flds, 0, prt.q());
       }
     }
   }
@@ -95,14 +95,14 @@ struct Moment_v_1st_nc
     real_t fnqs = grid.norm.fnqs;
     real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
 
+    auto accessor = mprts.accessor();
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto flds = mflds[p];
-      auto prts = mprts[p];
-      for (auto prt: prts) {
+      for (auto prt: accessor[p]) {
 	int mm = prt.kind() * 3;
       
 	real_t vxi[3];
-	particle_calc_vxi(&prt, vxi);
+	particle_calc_vxi(prt, vxi);
 	
 	for (int m = 0; m < 3; m++) {
 	  DEPOSIT_TO_GRID_1ST_NC(prt, flds, mm + m, vxi[m]);

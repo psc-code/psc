@@ -9,12 +9,13 @@ struct ConstAccessorSimple
 {
   using Particle = typename Mparticles::Particle;
   using MparticlesPatch = typename Mparticles::Patch;
-  using real_t = typename Mparticles::real_t;
-  using Real3 = Vec3<real_t>;
   using Double3 = Vec3<double>;
   
   struct const_accessor
   {
+    using real_t = typename Mparticles::real_t;
+    using Real3 = Vec3<real_t>;
+    
     const_accessor(const Particle& prt, const MparticlesPatch& prts)
       : prt_{prt}, prts_{prts}
     {}

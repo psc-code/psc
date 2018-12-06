@@ -27,11 +27,11 @@ struct Moment_n_1st
     const Grid_t& grid = mprts.grid();
     real_t fnqs = grid.norm.fnqs;
     real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
-    
+
+    auto accessor = mprts.accessor();
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto flds = mflds[p];
-      auto prts = mprts[p];
-      for (auto prt: prts) {
+      for (auto prt: accessor[p]) {
 	int m = prt.kind();
 	DEPOSIT_TO_GRID_1ST_CC(prt, flds, m, 1.f);
       }
@@ -62,10 +62,10 @@ struct Moment_v_1st
     real_t fnqs = grid.norm.fnqs;
     real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
     
+    auto accessor = mprts.accessor();
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto flds = mflds[p];
-      auto prts = mprts[p];
-      for (auto prt: prts) {
+      for (auto prt: accessor[p]) {
 	int mm = prt.kind() * 3;
       
 	real_t vxi[3];
@@ -102,15 +102,15 @@ struct Moment_p_1st
     real_t fnqs = grid.norm.fnqs;
     real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
     
+    auto accessor = mprts.accessor();
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto flds = mflds[p];
-      auto prts = mprts[p];
-      for (auto prt: prts) {
+      for (auto prt: accessor[p]) {
 	int mm = prt.kind() * 3;
 	real_t *pxi = prt.u();
 	
 	for (int m = 0; m < 3; m++) {
-	  DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + m, prts.prt_mni(prt) * pxi[m]);
+	  DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + m, prt.m() * pxi[m]);
 	}
       }
     }
@@ -140,10 +140,10 @@ struct Moment_vv_1st
     real_t fnqs = grid.norm.fnqs;
     real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
     
+    auto accessor = mprts.accessor();
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto flds = mflds[p];
-      auto prts = mprts[p];
-      for (auto prt: prts) {
+      for (auto prt: accessor[p]) {
 	int mm = prt.kind() * 3;
 	
 	real_t vxi[3];
@@ -180,21 +180,21 @@ struct Moment_T_1st
     real_t fnqs = grid.norm.fnqs;
     real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
     
+    auto accessor = mprts.accessor();
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto flds = mflds[p];
-      auto prts = mprts[p];
-      for (auto prt: prts) {
+      for (auto prt: accessor[p]) {
 	int mm = prt.kind() * 6;
 	
 	real_t vxi[3];
 	particle_calc_vxi(prt, vxi);
 	real_t *pxi = prt.u();
-	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 0, prts.prt_mni(prt) * pxi[0] * vxi[0]);
-	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 1, prts.prt_mni(prt) * pxi[1] * vxi[1]);
-	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 2, prts.prt_mni(prt) * pxi[2] * vxi[2]);
-	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 3, prts.prt_mni(prt) * pxi[0] * vxi[1]);
-	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4, prts.prt_mni(prt) * pxi[0] * vxi[2]);
-	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 5, prts.prt_mni(prt) * pxi[1] * vxi[2]);
+	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 0, prt.m() * pxi[0] * vxi[0]);
+	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 1, prt.m() * pxi[1] * vxi[1]);
+	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 2, prt.m() * pxi[2] * vxi[2]);
+	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 3, prt.m() * pxi[0] * vxi[1]);
+	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4, prt.m() * pxi[0] * vxi[2]);
+	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 5, prt.m() * pxi[1] * vxi[2]);
       }
     }
   }
@@ -223,20 +223,20 @@ struct Moment_Tvv_1st
     real_t fnqs = grid.norm.fnqs;
     real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
     
+    auto accessor = mprts.accessor();
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto flds = mflds[p];
-      auto prts = mprts[p];
-      for (auto prt: prts) {
+      for (auto prt: accessor[p]) {
 	int mm = prt.kind() * 6;
       
 	real_t vxi[3];
 	particle_calc_vxi(prt, vxi);
-	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 0, prts.prt_mni(prt) * vxi[0] * vxi[0]);
-	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 1, prts.prt_mni(prt) * vxi[1] * vxi[1]);
-	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 2, prts.prt_mni(prt) * vxi[2] * vxi[2]);
-	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 3, prts.prt_mni(prt) * vxi[0] * vxi[1]);
-	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4, prts.prt_mni(prt) * vxi[0] * vxi[2]);
-	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 5, prts.prt_mni(prt) * vxi[1] * vxi[2]);
+	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 0, prt.m() * vxi[0] * vxi[0]);
+	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 1, prt.m() * vxi[1] * vxi[1]);
+	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 2, prt.m() * vxi[2] * vxi[2]);
+	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 3, prt.m() * vxi[0] * vxi[1]);
+	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4, prt.m() * vxi[0] * vxi[2]);
+	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 5, prt.m() * vxi[1] * vxi[2]);
       }
     }
   }
