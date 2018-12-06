@@ -2,6 +2,7 @@
 #pragma once
 
 #include "collision.hxx"
+#include "const_accessor_simple.hxx"
 #include "binary_collision.hxx"
 #include "fields.hxx"
 #include "fields3d.hxx"
@@ -38,25 +39,7 @@ struct CollisionHost
     real_t s[NR_STATS];
   };
 
-  struct Particle
-  {
-    using real_t = typename Mparticles::real_t;
-    
-    Particle(particles_t& prts, int n)
-      : prt_{prts[n]},
-	prts_{prts}
-    {}
-    
-    real_t q() const { return prts_.prt_qni(prt_); }
-    real_t m() const { return prts_.prt_mni(prt_); }
-    
-    real_t  u(int d) const { return prt_.u()[d]; }
-    real_t& u(int d)       { return prt_.u()[d]; }
-    
-  private:
-    typename Mparticles::Particle& prt_;
-    particles_t& prts_;
-  };
+  using Accessor = AccessorSimple<Mparticles>;
   
   CollisionHost(const Grid_t& grid, int interval, double nu)
     : interval_{interval},
@@ -268,9 +251,9 @@ struct CollisionHost
   real_t do_bc(particles_t& prts, int n1, int n2, real_t nudt1)
   {
     Rng rng;
-    BinaryCollision<Particle> bc;
-    Particle prt1 = {prts, n1};
-    Particle prt2 = {prts, n2};
+    BinaryCollision<Accessor> bc;
+    Accessor prt1 = {prts, n1};
+    Accessor prt2 = {prts, n2};
     return bc(prt1, prt2, nudt1, rng);
   }
 

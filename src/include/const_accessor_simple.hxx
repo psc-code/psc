@@ -2,6 +2,32 @@
 #pragma once
 
 // ======================================================================
+// AccessorSimple
+
+template<typename Mparticles>
+struct AccessorSimple
+{
+  using real_t = typename Mparticles::real_t;
+  using Patch = typename Mparticles::Patch;
+  using Real3 = Vec3<real_t>;
+  
+  AccessorSimple(Patch& prts, int n)
+    : prt_{prts[n]},
+      prts_{prts}
+  {}
+  
+  real_t q() const { return prts_.prt_qni(prt_); }
+  real_t m() const { return prts_.prt_mni(prt_); }
+  
+  real_t  u(int d) const { return prt_.u()[d]; }
+  real_t& u(int d)       { return prt_.u()[d]; }
+  
+private:
+  typename Mparticles::Particle& prt_;
+  Patch& prts_;
+};
+
+// ======================================================================
 // ConstAcessorSimple
 
 template<typename Mparticles>
