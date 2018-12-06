@@ -15,10 +15,8 @@ struct Convert
     using real_t = typename MparticlesTo::real_t;
     using Real3 = typename MparticlesTo::Real3;
     
-    auto prt_to = particle_to_t{Real3(prt_from.x()), Real3(prt_from.u()),
-				real_t(prt_from.qni_wni()), prt_from.kind()};
-    
-    return prt_to;
+    return {Real3(prt_from.x()), Real3(prt_from.u()),
+	    real_t(prt_from.qni_wni()), prt_from.kind()};
   }
 };
 
@@ -26,17 +24,16 @@ template<typename MP_FROM, typename MP_TO>
 void psc_mparticles_copy(MP_FROM& mp_from, MP_TO& mp_to)
 {
   Convert<MP_FROM, MP_TO> convert;
-  int n_patches = mp_to.n_patches();
   auto n_prts_by_patch = mp_from.get_size_all();
   mp_to.reserve_all(n_prts_by_patch);
-  mp_to.resize_all(n_prts_by_patch);
+  mp_to.reset();
   
-  for (int p = 0; p < n_patches; p++) {
+  for (int p = 0; p < mp_to.n_patches(); p++) {
     auto& prts_from = mp_from[p];
     auto& prts_to = mp_to[p];
     int n_prts = prts_from.size();
     for (int n = 0; n < n_prts; n++) {
-      prts_to[n] = convert(prts_from[n], mp_from.grid());
+      prts_to.push_back(convert(prts_from[n], mp_from.grid()));
     }
   }
 }
