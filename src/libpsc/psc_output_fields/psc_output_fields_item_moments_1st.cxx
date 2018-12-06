@@ -12,7 +12,7 @@
 #include "psc_fields_c.h"
 
 template<typename Moment_t>
-using Ops = FieldsItemMomentOps<Moment_t>;
+using Ops = FieldsItemMoment2Ops<Moment_t>;
   
 #define MAKE_POFI_OPS(MP, MF, TYPE)					\
   Ops<Moment_n_1st<MP, MF>> psc_output_fields_item_n_1st_##TYPE##_ops;	\

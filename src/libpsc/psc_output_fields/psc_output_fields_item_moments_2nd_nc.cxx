@@ -31,8 +31,7 @@ struct Moment_n_2nd_nc
     auto accessor = mprts.accessor();
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto flds = mflds[p];
-      auto prts = accessor[p];
-      for (auto prt: prts) {
+      for (auto prt: accessor[p]) {
 	int m = prt.kind();
 	DEPOSIT_TO_GRID_2ND_NC(prt, flds, m, 1.f);
       }
@@ -66,8 +65,7 @@ struct Moment_rho_2nd_nc
     auto accessor = mprts.accessor();
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto flds = mflds[p];
-      auto prts = accessor[p];
-      for (auto prt: prts) {
+      for (auto prt: accessor[p]) {
 	DEPOSIT_TO_GRID_2ND_NC(prt, flds, 0, prt.q());
       }
     }

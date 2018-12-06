@@ -13,7 +13,7 @@
 struct checks_order_1st
 {
   template<typename Mparticles, typename Mfields>
-  using Moment_rho_nc = ItemMomentLoopPatches<Moment_rho_1st_nc<Mparticles, Mfields>>;
+  using Moment_rho_nc = ItemMomentLoopPatches2<Moment_rho_1st_nc<Mparticles, Mfields>>;
 };
 
 struct checks_order_2nd

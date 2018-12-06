@@ -147,7 +147,7 @@ template<typename Mparticles, typename InjectShape, typename Dim,
 struct InjectSelector
 {
   using Inject = Inject_<Mparticles, MfieldsC, InjectShape,
-			 ItemMomentLoopPatches<Moment_n_1st<Mparticles, MfieldsC>>>; // FIXME, shouldn't always use MfieldsC
+			 ItemMomentLoopPatches2<Moment_n_1st<Mparticles, MfieldsC>>>; // FIXME, shouldn't always use MfieldsC
 };
 
 #ifdef USE_CUDA
