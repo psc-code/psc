@@ -22,16 +22,19 @@ struct Moment_n_2nd_nc
   constexpr static fld_names_t fld_names() { return { "n" }; }
   constexpr static int flags = POFI_BY_KIND;
   
-  static void run(fields_t flds, particles_t& prts)
+  static void run(Mfields& mflds, Mparticles& mprts)
   {
-    const auto& grid = prts.grid();
+    const auto& grid = mprts.grid();
     real_t fnqs = grid.norm.fnqs;
     real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
     
-    for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
-      auto& prt = *prt_iter;
-      int m = prt.kind();
-      DEPOSIT_TO_GRID_2ND_NC(prt, flds, m, 1.f);
+    for (int p = 0; p < mprts.n_patches(); p++) {
+      auto flds = mflds[p];
+      auto prts = mprts[p];
+      for (auto prt: prts) {
+	int m = prt.kind();
+	DEPOSIT_TO_GRID_2ND_NC(prt, flds, m, 1.f);
+      }
     }
   }
 };
@@ -53,15 +56,18 @@ struct Moment_rho_2nd_nc
   constexpr static fld_names_t fld_names() { return { "rho" }; }
   constexpr static int flags = 0;
   
-  static void run(fields_t flds, particles_t& prts)
+  static void run(Mfields& mflds, Mparticles& mprts)
   {
-    const auto& grid = flds.grid();
+    const auto& grid = mprts.grid();
     real_t fnqs = grid.norm.fnqs;
     real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
     
-    for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
-      auto& prt = *prt_iter;
-      DEPOSIT_TO_GRID_2ND_NC(prt, flds, 0, prts.prt_qni(prt));
+    for (int p = 0; p < mprts.n_patches(); p++) {
+      auto flds = mflds[p];
+      auto prts = mprts[p];
+      for (auto prt: prts) {
+	DEPOSIT_TO_GRID_2ND_NC(prt, flds, 0, prts.prt_qni(prt));
+      }
     }
   }
 };

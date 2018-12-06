@@ -13,13 +13,13 @@
 struct checks_order_1st
 {
   template<typename Mparticles, typename Mfields>
-  using Moment_rho_nc = Moment_rho_1st_nc<Mparticles, Mfields>;
+  using Moment_rho_nc = ItemMomentLoopPatches<Moment_rho_1st_nc<Mparticles, Mfields>>;
 };
 
 struct checks_order_2nd
 {
   template<typename Mparticles, typename Mfields>
-  using Moment_rho_nc = Moment_rho_2nd_nc<Mparticles, Mfields>;
+  using Moment_rho_nc = ItemMomentLoopPatches2<Moment_rho_2nd_nc<Mparticles, Mfields>>;
 };
 
 template<typename _Mparticles, typename _MfieldsState, typename _Mfields, typename ORDER>
@@ -233,9 +233,9 @@ struct Checks_ : ChecksParams, ChecksBase
 
   // state
   MPI_Comm comm_;
-  ItemMomentLoopPatches<Moment_t> item_rho_p_;
-  ItemMomentLoopPatches<Moment_t> item_rho_m_;
-  ItemMomentLoopPatches<Moment_t> item_rho_;
+  Moment_t item_rho_p_;
+  Moment_t item_rho_m_;
+  Moment_t item_rho_;
   FieldsItemFields<ItemLoopPatches<Item_dive<MfieldsState, Mfields>>> item_dive_;
   FieldsItemFields<ItemLoopPatches<Item_divj<MfieldsState, Mfields>>> item_divj_;
 };
