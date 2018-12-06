@@ -10,10 +10,10 @@
 #include <iterator>
 
 // ======================================================================
-// mparticles_patch
+// MparticlesPatchSimple
 
 template<typename Mparticles>
-struct mparticles_patch
+struct MparticlesPatchSimple
 {
   using Particle = typename Mparticles::Particle;
   using real_t = typename Particle::real_t;
@@ -25,9 +25,9 @@ struct mparticles_patch
   // FIXME, I would like to delete the copy ctor because I don't
   // want to copy Patch by mistake, but that doesn't play well with
   // putting the patches into std::vector
-  // mparticles_patch_base(const mparticles_patch_base&) = delete;
+  // MparticlesPatchSimple(const MparticlesPatchSimple&) = delete;
 
-  mparticles_patch(Mparticles* mprts, int p)
+  MparticlesPatchSimple(Mparticles* mprts, int p)
     : mprts_(mprts),
       p_(p),
       grid_(&mprts->grid())
@@ -97,7 +97,7 @@ struct Mparticles : MparticlesBase
   using Particle = P;
   using real_t = typename Particle::real_t;
   using Real3 = Vec3<real_t>;
-  using Patch = mparticles_patch<Mparticles>;
+  using Patch = MparticlesPatchSimple<Mparticles>;
   using BndpParticle = P;
   using buf_t = typename Patch::buf_t;
 
