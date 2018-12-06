@@ -298,13 +298,8 @@ struct TestConversionToMparticlesSingle<Mparticles, MakeTestGridYZ1>
     
     {
       auto accessor = mprts_single.accessor();
-      {
-	auto it = accessor[0].begin();
-	auto prt0 = *it++;
-	EXPECT_EQ(prt0.position(), (Double3{0., -40., -80.}));
-	auto prt1 = *it++;
-	EXPECT_EQ(prt1.position(), (Double3{5., 0., 0.}));
-      }
+      EXPECT_EQ(accessor[0][0].position(), (Double3{0., -40., -80.}));
+      EXPECT_EQ(accessor[0][1].position(), (Double3{5., 0., 0.}));
     }
   }
 };
@@ -349,13 +344,8 @@ struct TestConversionFromMparticlesSingle<Mparticles, MakeTestGridYZ1>
     
     {
       auto accessor = mprts.accessor();
-      {
-	auto it = accessor[0].begin();
-	auto prt0 = *it++;
-	EXPECT_EQ(prt0.position(), (Double3{0., -40., -80.}));
-	auto prt1 = *it++;
-	EXPECT_EQ(prt1.position(), (Double3{5., 0., 0.}));
-      }
+      EXPECT_EQ(accessor[0][0].position(), (Double3{0., -40., -80.}));
+      EXPECT_EQ(accessor[0][1].position(), (Double3{5., 0., 0.}));
     }
   }
 };
