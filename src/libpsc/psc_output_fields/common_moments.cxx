@@ -5,10 +5,10 @@
 
 #include <string>
 
-#define DEPOSIT_TO_GRID_1ST_CC(part, flds, m, val) do {			\
+#define DEPOSIT_TO_GRID_1ST_CC(prt, flds, m, val) do {			\
     using Fields = Fields3d<fields_t>;					\
     Fields F(flds);							\
-    real_t *xi = part->x(); /* don't shift back in time */		\
+    auto xi = prt.x(); /* don't shift back in time */			\
     real_t u = xi[0] * dxi - .5;					\
     real_t v = xi[1] * dyi - .5;					\
     real_t w = xi[2] * dzi - .5;					\
@@ -41,7 +41,7 @@
     assert(jy >= -1 && jy < grid.ldims[1]);				\
     assert(jz >= -1 && jz < grid.ldims[2]);				\
     									\
-    real_t fnq = prts.prt_wni(*part) * fnqs;				\
+    real_t fnq = prts.prt_wni(prt) * fnqs;				\
     									\
     F(m, jx    ,jy    ,jz    ) += fnq*g0x*g0y*g0z * (val);		\
     F(m, jx+jxd,jy    ,jz    ) += fnq*g1x*g0y*g0z * (val);		\
@@ -53,10 +53,10 @@
     F(m, jx+jxd,jy+jyd,jz+jzd) += fnq*g1x*g1y*g1z * (val);		\
   } while (0)
 
-#define DEPOSIT_TO_GRID_1ST_NC(part, flds, m, val) do {			\
+#define DEPOSIT_TO_GRID_1ST_NC(prt, flds, m, val) do {			\
     using Fields = Fields3d<fields_t>;					\
     Fields F(flds);							\
-    real_t *xi = part->x(); /* don't shift back in time */		\
+    auto xi = prt.x(); /* don't shift back in time */			\
     real_t u = xi[0] * dxi;						\
     real_t v = xi[1] * dyi;						\
     real_t w = xi[2] * dzi;						\
@@ -78,10 +78,10 @@
     if (grid.isInvar(0)) {						\
       jx = 0; g0x = 1.; g1x = 0.; jxd = 0;				\
     }									\
-    if (grid.isInvar(1)) {					\
+    if (grid.isInvar(1)) {						\
       jy = 0; g0y = 1.; g1y = 0.; jyd = 0;				\
     }									\
-    if (grid.isInvar(2)) {					\
+    if (grid.isInvar(2)) {						\
       jz = 0; g0z = 1.; g1z = 0.; jzd = 0;				\
     }									\
     									\
@@ -89,7 +89,7 @@
     assert(jy >= -1 && jy < grid.ldims[1]);				\
     assert(jz >= -1 && jz < grid.ldims[2]);				\
     									\
-    real_t fnq = prts.prt_wni(*part) * fnqs;				\
+    real_t fnq = prts.prt_wni(prt) * fnqs;				\
 									\
     F(m, jx    ,jy    ,jz    ) += fnq*g0x*g0y*g0z * (val);		\
     F(m, jx+jxd,jy    ,jz    ) += fnq*g1x*g0y*g0z * (val);		\
@@ -101,10 +101,10 @@
     F(m, jx+jxd,jy+jyd,jz+jzd) += fnq*g1x*g1y*g1z * (val);		\
   } while (0)
 
-#define DEPOSIT_TO_GRID_2ND_NC(part, flds, m, val) do {			\
+#define DEPOSIT_TO_GRID_2ND_NC(prt, flds, m, val) do {			\
     using Fields = Fields3d<fields_t>;					\
     Fields F(flds);							\
-    real_t *xi = part->x(); /* don't shift back in time */		\
+    auto xi = prt.x(); /* don't shift back in time */			\
     real_t u = xi[0] * dxi;						\
     real_t v = xi[1] * dyi;						\
     real_t w = xi[2] * dzi;						\
@@ -140,7 +140,7 @@
     assert(jy >= 0 && jy <= grid.ldims[1]);				\
     assert(jz >= 0 && jz <= grid.ldims[2]);				\
     									\
-    real_t fnq = prts.prt_wni(*part) * fnqs;				\
+    real_t fnq = prts.prt_wni(prt) * fnqs;				\
 					     				\
     F(m, jx-jxd,jy-jyd,jz-jzd) += fnq*gmx*gmy*gmz * (val);		\
     F(m, jx    ,jy-jyd,jz-jzd) += fnq*g0x*gmy*gmz * (val);		\

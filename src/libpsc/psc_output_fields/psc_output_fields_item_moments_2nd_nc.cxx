@@ -29,8 +29,8 @@ struct Moment_n_2nd_nc
     real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
     
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
-      auto *prt = &*prt_iter;
-      int m = prt->kind();
+      auto& prt = *prt_iter;
+      int m = prt.kind();
       DEPOSIT_TO_GRID_2ND_NC(prt, flds, m, 1.f);
     }
   }
@@ -60,8 +60,8 @@ struct Moment_rho_2nd_nc
     real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
     
     for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
-      auto *prt = &*prt_iter;
-      DEPOSIT_TO_GRID_2ND_NC(prt, flds, 0, prts.prt_qni(*prt));
+      auto& prt = *prt_iter;
+      DEPOSIT_TO_GRID_2ND_NC(prt, flds, 0, prts.prt_qni(prt));
     }
   }
 };
