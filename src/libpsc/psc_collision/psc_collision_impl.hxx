@@ -252,8 +252,8 @@ struct CollisionHost
   {
     Rng rng;
     BinaryCollision<Accessor> bc;
-    Accessor prt1 = {prts, n1};
-    Accessor prt2 = {prts, n2};
+    auto prt1 = prts.at(n1);
+    auto prt2 = prts.at(n2);
     return bc(prt1, prt2, nudt1, rng);
   }
 

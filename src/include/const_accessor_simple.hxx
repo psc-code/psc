@@ -7,12 +7,13 @@
 template<typename Mparticles>
 struct AccessorSimple
 {
+  using Particle = typename Mparticles::Particle;
   using real_t = typename Mparticles::real_t;
   using Patch = typename Mparticles::Patch;
   using Real3 = Vec3<real_t>;
   
-  AccessorSimple(Patch& prts, int n)
-    : prt_{prts[n]},
+  AccessorSimple(Particle& prt, const Patch& prts)
+    : prt_{prt},
       prts_{prts}
   {}
   
@@ -23,8 +24,8 @@ struct AccessorSimple
   real_t& u(int d)       { return prt_.u()[d]; }
   
 private:
-  typename Mparticles::Particle& prt_;
-  Patch& prts_;
+  Particle& prt_;
+  const Patch& prts_;
 };
 
 // ======================================================================

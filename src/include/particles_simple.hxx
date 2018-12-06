@@ -64,6 +64,8 @@ struct MparticlesPatchSimple
     }
   }
 
+  AccessorSimple<Mparticles> at(int n) { return { buf[n], *this }; }
+
   // ParticleIndexer functionality
   int cellPosition(real_t xi, int d) const { return mprts_->pi_.cellPosition(xi, d); }
   int validCellIndex(const Particle& prt) const { return mprts_->pi_.validCellIndex(prt.x()); }
