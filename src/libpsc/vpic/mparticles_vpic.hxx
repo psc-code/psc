@@ -43,6 +43,71 @@ private:
   Mparticles& mprts_;
 };
 
+
+// ======================================================================
+// ConstParticleAccessorVpic
+
+template<typename Mparticles>
+struct ConstParticleAccessorVpic
+{
+  using Particle = typename Mparticles::Particle;
+  using real_t = typename Mparticles::real_t;
+  using Real3 = Vec3<real_t>;
+  using Double3 = Vec3<double>;
+  using ConstSpeciesIterator = typename Mparticles::ConstSpeciesIterator;
+
+  ConstParticleAccessorVpic(ConstSpeciesIterator sp, uint n)
+    : sp_{sp}, n_{n}
+  {}
+  
+  Real3 u()  const { return {prt().ux, prt().uy, prt().uz}; }
+  real_t w() const { return prt().w * sp_->vgrid().dV; }
+  real_t qni_wni() const { return w() * sp_->q; }
+  int kind() const { return sp_->id; }
+  
+  Real3 x() const { return Real3(x_double()); }
+  
+  Double3 x_double()  const
+  {
+    const auto& vgrid = sp_->vgrid();
+    double x0 = vgrid.x0, y0 = vgrid.y0, z0 = vgrid.z0;
+    double x1 = vgrid.x1, y1 = vgrid.y1, z1 = vgrid.z1;
+    double nx = vgrid.nx, ny = vgrid.ny, nz = vgrid.nz;
+    
+    int i = prt().i;
+    int iz = i / ((nx+2) * (ny+2));
+    i -= iz * ((nx+2) * (ny+2));
+    int iy = i / (nx+2);
+    i -= iy * (nx + 2);
+    int ix = i;
+    
+    // adjust to 0-based (no ghost)
+    ix--; iy--; iz--;
+    
+    // back to physical coords
+    Double3 x = { ix + .5*(prt().dx+1.),
+		  iy + .5*(prt().dy+1.),
+		  iz + .5*(prt().dz+1.) };
+    x *= (Double3{x1, y1, z1} - Double3{x0, y0, z0}) / Double3{nx, ny, nz};
+    
+    return x;
+  }
+      
+  Double3 position() const
+  {
+    const auto& vgrid = sp_->vgrid();
+    double x0 = vgrid.x0, y0 = vgrid.y0, z0 = vgrid.z0;
+    
+    return Double3(x_double()) + Double3{x0, y0, z0};
+  }
+  
+private:
+  const Particle& prt() const { return sp_->p[n_]; }
+  
+  ConstSpeciesIterator sp_;
+  uint n_;
+};
+
 // ======================================================================
 // ConstAccessorVpic
 
@@ -55,60 +120,8 @@ struct ConstAccessorVpic
   using Real3 = Vec3<real_t>;
   using Double3 = Vec3<double>;
 
-  struct const_accessor
-  {
-    const_accessor(ConstSpeciesIterator sp, uint n)
-      : sp_{sp}, n_{n}
-    {}
-      
-    Real3 u()  const { return {prt().ux, prt().uy, prt().uz}; }
-    real_t w() const { return prt().w * sp_->vgrid().dV; }
-    real_t qni_wni() const { return w() * sp_->q; }
-    int kind() const { return sp_->id; }
-      
-    Real3 x() const { return Real3(x_double()); }
-      
-    Double3 x_double()  const
-    {
-      const auto& vgrid = sp_->vgrid();
-      double x0 = vgrid.x0, y0 = vgrid.y0, z0 = vgrid.z0;
-      double x1 = vgrid.x1, y1 = vgrid.y1, z1 = vgrid.z1;
-      double nx = vgrid.nx, ny = vgrid.ny, nz = vgrid.nz;
-	
-      int i = prt().i;
-      int iz = i / ((nx+2) * (ny+2));
-      i -= iz * ((nx+2) * (ny+2));
-      int iy = i / (nx+2);
-      i -= iy * (nx + 2);
-      int ix = i;
-	
-      // adjust to 0-based (no ghost)
-      ix--; iy--; iz--;
-	
-      // back to physical coords
-      Double3 x = { ix + .5*(prt().dx+1.),
-		    iy + .5*(prt().dy+1.),
-		    iz + .5*(prt().dz+1.) };
-      x *= (Double3{x1, y1, z1} - Double3{x0, y0, z0}) / Double3{nx, ny, nz};
-	
-      return x;
-    }
-      
-    Double3 position() const
-    {
-      const auto& vgrid = sp_->vgrid();
-      double x0 = vgrid.x0, y0 = vgrid.y0, z0 = vgrid.z0;
-	
-      return Double3(x_double()) + Double3{x0, y0, z0};
-    }
-      
-  private:
-    const Particle& prt() const { return sp_->p[n_]; }
-      
-    ConstSpeciesIterator sp_;
-    uint n_;
-  };
-    
+  using const_accessor = ConstParticleAccessorVpic<Mparticles>;
+
   struct Patch
   {
     using ConstSpeciesIterator = typename Mparticles::ConstSpeciesIterator;
