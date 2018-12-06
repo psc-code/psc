@@ -69,7 +69,7 @@ struct Moment_v_1st
 	int mm = prt.kind() * 3;
       
 	real_t vxi[3];
-	particle_calc_vxi(&prt, vxi);
+	particle_calc_vxi(prt, vxi);
 	
 	for (int m = 0; m < 3; m++) {
 	  DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + m, vxi[m]);
@@ -147,7 +147,7 @@ struct Moment_vv_1st
 	int mm = prt.kind() * 3;
 	
 	real_t vxi[3];
-	particle_calc_vxi(&prt, vxi);
+	particle_calc_vxi(prt, vxi);
 	
 	for (int m = 0; m < 3; m++) {
 	  DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + m, vxi[m] * vxi[m]);
@@ -187,7 +187,7 @@ struct Moment_T_1st
 	int mm = prt.kind() * 6;
 	
 	real_t vxi[3];
-	particle_calc_vxi(&prt, vxi);
+	particle_calc_vxi(prt, vxi);
 	real_t *pxi = prt.u();
 	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 0, prts.prt_mni(prt) * pxi[0] * vxi[0]);
 	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 1, prts.prt_mni(prt) * pxi[1] * vxi[1]);
@@ -230,7 +230,7 @@ struct Moment_Tvv_1st
 	int mm = prt.kind() * 6;
       
 	real_t vxi[3];
-	particle_calc_vxi(&prt, vxi);
+	particle_calc_vxi(prt, vxi);
 	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 0, prts.prt_mni(prt) * vxi[0] * vxi[0]);
 	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 1, prts.prt_mni(prt) * vxi[1] * vxi[1]);
 	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 2, prts.prt_mni(prt) * vxi[2] * vxi[2]);
