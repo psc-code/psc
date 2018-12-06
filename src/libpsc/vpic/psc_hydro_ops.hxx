@@ -174,7 +174,7 @@ struct PscHydroOps
   // hydro jx,jy,jz are for diagnostic purposes only; they are not
   // accumulated with a charge conserving algorithm.
 
-  static void accumulate_hydro_p(MfieldsHydro& hydro, const typename Mparticles::const_iterator sp_iter,
+  static void accumulate_hydro_p(MfieldsHydro& hydro, const typename Mparticles::ConstSpeciesIterator sp_iter,
 				 /*const*/ MfieldsInterpolator& interpolator)
   {
     auto& sp = *sp_iter;

@@ -18,8 +18,8 @@ struct SortVpicWrap
   {
     auto step = mprts.grid().timestep();
     // Sort the particles for performance if desired.
-    
-    for (auto& sp : mprts) {
+
+    for (auto& sp : mprts[0]) {
       if (sp.sort_interval > 0 && (step % sp.sort_interval) == 0) {
 	mpi_printf(MPI_COMM_WORLD, "Performance sorting \"%s\"\n", sp.name);
 	TIC ::sort_p(&sp); TOC(sort_p, 1);
@@ -50,7 +50,7 @@ struct SortVpic
     auto step = mprts.grid().timestep();
     // Sort the particles for performance if desired.
     
-    for (auto& sp : mprts) {
+    for (auto& sp : mprts[0]) {
       if (sp.sort_interval > 0 && (step % sp.sort_interval) == 0) {
 	mpi_printf(MPI_COMM_WORLD, "Performance sorting \"%s\"\n", sp.name);
 	TIC sort_p(sp); TOC(sort_p, 1);

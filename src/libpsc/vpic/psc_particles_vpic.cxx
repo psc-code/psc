@@ -32,7 +32,8 @@ void copy_to(MparticlesBase& mprts_from_base, MparticlesBase& mprts_to_base)
   for (int p = 0; p < mprts_to.n_patches(); p++) {
     int n_prts = n_prts_by_patch[p];
 
-    for (auto sp = mprts_from.cbegin(); sp != mprts_from.cend(); ++sp) {
+    auto prts_from = mprts_from[p];
+    for (auto sp = prts_from.cbegin(); sp != prts_from.cend(); ++sp) {
       assert(sp->id < mprts_to.grid().kinds.size());
 
       for (unsigned int n = 0; n < sp->np; n++) {

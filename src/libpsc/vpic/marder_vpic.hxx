@@ -26,7 +26,8 @@ struct MarderVpicOpsWrap
 
   void accumulate_rho_p(Mparticles& mprts, MfieldsState& mflds)
   {
-    for (auto sp = mprts.begin(); sp != mprts.end(); ++sp) {
+    auto prts = mprts[0];
+    for (auto sp = prts.begin(); sp != prts.end(); ++sp) {
       TIC ::accumulate_rho_p(mflds.fa(), &*sp); TOC(accumulate_rho_p, 1);
     }
   }
@@ -629,7 +630,7 @@ struct MarderVpicOps
   // ----------------------------------------------------------------------
   // accumulate_rho_p
 
-  void accumulate_rho_p(MfieldsState& mflds, typename Mparticles::Species& sp)
+  void accumulate_rho_p(MfieldsState& mflds, const typename Mparticles::Species& sp)
   {
     const auto * RESTRICT ALIGNED(128) p = sp.p;
 
@@ -683,7 +684,7 @@ struct MarderVpicOps
 
   void accumulate_rho_p(Mparticles& mprts, MfieldsState &mflds)
   {
-    for (auto& sp : mprts) {
+    for (auto& sp : mprts[0]) {
       TIC accumulate_rho_p(mflds, sp); TOC(accumulate_rho_p, 1);
     }
   }

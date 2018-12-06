@@ -50,14 +50,14 @@ template<typename Mparticles>
 struct ConstAccessorVpic
 {
   using Particle = typename Mparticles::Particle;
-  using constSpeciesIterator = typename Mparticles::constSpeciesIterator;
+  using ConstSpeciesIterator = typename Mparticles::ConstSpeciesIterator;
   using real_t = float;
   using Real3 = Vec3<real_t>;
   using Double3 = Vec3<double>;
 
   struct const_accessor
   {
-    const_accessor(constSpeciesIterator sp, uint n)
+    const_accessor(ConstSpeciesIterator sp, uint n)
       : sp_{sp}, n_{n}
     {}
       
@@ -105,13 +105,13 @@ struct ConstAccessorVpic
   private:
     const Particle& prt() const { return sp_->p[n_]; }
       
-    constSpeciesIterator sp_;
+    ConstSpeciesIterator sp_;
     uint n_;
   };
     
   struct Patch
   {
-    using constSpeciesIterator = typename Mparticles::constSpeciesIterator;
+    using ConstSpeciesIterator = typename Mparticles::ConstSpeciesIterator;
     
     struct const_iterator : std::iterator<std::random_access_iterator_tag,
 					  const_accessor,  // value type
@@ -120,7 +120,7 @@ struct ConstAccessorVpic
 					  const_accessor&> // reference type
       
     {
-      const_iterator(const Mparticles& mprts, constSpeciesIterator sp, uint n)
+      const_iterator(const Mparticles& mprts, ConstSpeciesIterator sp, uint n)
 	: mprts_{mprts}, sp_{sp}, n_{n}
       {}
 	
@@ -142,7 +142,7 @@ struct ConstAccessorVpic
 	
     private:
       const Mparticles& mprts_;
-      constSpeciesIterator sp_;
+      ConstSpeciesIterator sp_;
       uint n_;
     };
       
@@ -150,13 +150,14 @@ struct ConstAccessorVpic
       : mprts_{mprts}
     {}
       
-    const_iterator begin() const { return {mprts_, mprts_.begin(), 0}; }
-    const_iterator end()   const { return {mprts_, mprts_.end(), 0}; }
+    const_iterator begin() const { auto prts = mprts_[0]; return {mprts_, prts.begin(), 0}; }
+    const_iterator end()   const { auto prts = mprts_[0]; return {mprts_, prts.end(), 0}; }
     uint size() const { return mprts_.get_n_prts(); }
 
     const_accessor operator[](int n) const
     {
-      for (auto sp = mprts_.begin(); sp != mprts_.end(); ++sp) {
+      auto prts = mprts_[0];
+      for (auto sp = prts.begin(); sp != prts.end(); ++sp) {
 	if (n < sp->np) {
 	  return {sp, uint(n)};
 	}
@@ -173,7 +174,7 @@ struct ConstAccessorVpic
     : mprts_{mprts}
   {}
 
-  Patch operator[](int p) { return {mprts_}; }
+  Patch operator[](int p)       { return {mprts_}; }
 
 private:
   Mparticles& mprts_;
@@ -183,18 +184,55 @@ private:
 // MparticlesVpic_
 
 template<typename _Particles>
-struct MparticlesVpic_ : MparticlesBase, _Particles
+struct MparticlesVpic_ : MparticlesBase, protected _Particles
 {
   using Particles = _Particles;
   using Species = typename Particles::Species;
   using Grid = typename Particles::Grid;
   using Particle = typename Particles::Particle;
-  using constSpeciesIterator = typename Particles::const_iterator;
+  using SpeciesIterator = typename Particles::iterator;
+  using ConstSpeciesIterator = typename Particles::const_iterator;
   using real_t = float;
   using Real3 = Vec3<real_t>;
 
-  // FIXME, should go away or actually made uesful
-  struct Patch {};
+  using Particles::empty;
+  using Particles::inject_particle_reweight;
+  using Particles::getNumSpecies;
+  using Particles::head;
+  using typename Particles::ParticleMover;
+  using typename Particles::ParticleBcList;
+
+  struct Patch
+  {
+    Patch(MparticlesVpic_& mprts)
+      : mprts_{mprts}
+    {}
+
+    ConstSpeciesIterator cbegin() const { return mprts_.cbegin(); }
+    ConstSpeciesIterator cend()   const { return mprts_.cend(); }
+    ConstSpeciesIterator begin()  const { return mprts_.begin(); }
+    ConstSpeciesIterator end()    const { return mprts_.end(); }
+    SpeciesIterator      begin()        { return mprts_.begin(); }
+    SpeciesIterator      end()          { return mprts_.end(); }
+    
+  private:
+    MparticlesVpic_& mprts_;
+  };
+
+  struct ConstPatch
+  {
+    ConstPatch(const MparticlesVpic_& mprts)
+      : mprts_{mprts}
+    {}
+
+    ConstSpeciesIterator cbegin() const { return mprts_.cbegin(); }
+    ConstSpeciesIterator cend()   const { return mprts_.cend(); }
+    ConstSpeciesIterator begin()  const { return mprts_.begin(); }
+    ConstSpeciesIterator end()    const { return mprts_.end(); }
+    
+  private:
+    const MparticlesVpic_& mprts_;
+  };
 
   // ----------------------------------------------------------------------
   // ctor
@@ -273,6 +311,9 @@ struct MparticlesVpic_ : MparticlesBase, _Particles
     assert(0);
   }
   
+  Patch      operator[](int p)       { assert(p == 0); return {*this}; }
+  ConstPatch operator[](int p) const { assert(p == 0); return {*this}; }
+
   InjectorVpic<MparticlesVpic_> injector() { return {*this}; }
 
   ConstAccessorVpic<MparticlesVpic_> accessor() { return {*this}; }

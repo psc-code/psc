@@ -758,7 +758,7 @@ struct PscParticlesOps
   static void advance_p(Mparticles& mprts, MfieldsAccumulator& accumulator,
 			MfieldsInterpolator& interpolator)
   {
-    for (auto& sp : mprts) {
+    for (auto& sp : mprts[0]) {
       TIC advance_p(sp, accumulator, interpolator); TOC(advance_p, 1);
     }
   }
@@ -851,7 +851,7 @@ struct PscParticlesOps
       // beam simulations, is one buffer gets all the movers).
     
       int nm = 0;
-      for (auto& sp : mprts) { // FIXME, should use const iterator
+      for (auto& sp : mprts[0]) { // FIXME, should use const iterator
 	nm += sp.nm;
       }
 
@@ -871,7 +871,7 @@ struct PscParticlesOps
 
       // For each species, load the movers
 
-      for (auto& sp : mprts) {
+      for (auto& sp : mprts[0]) {
 	const float   sp_q  = sp.q;
 	const int32_t sp_id = sp.id;
 
@@ -999,7 +999,7 @@ struct PscParticlesOps
       if (mprts.getNumSpecies() > MAX_SP) {
 	LOG_ERROR("Update this to support more species");
       }
-      for (auto& sp : mprts) {
+      for (auto& sp : mprts[0]) {
 	sp_p[  sp.id ] = sp.p;
 	sp_pm[ sp.id ] = sp.pm;
 	sp_q[  sp.id ] = sp.q;
@@ -1072,7 +1072,7 @@ struct PscParticlesOps
 	}
       } while (face != 5);
   
-      for (auto& sp : mprts) {
+      for (auto& sp : mprts[0]) {
 	if (n_dropped_particles[sp.id])
 	  LOG_WARN("Dropped %i particles from species \"%s\".  Use a larger "
 		   "local particle allocation in your simulation setup for "
@@ -1157,7 +1157,7 @@ struct PscParticlesOps
 
   static void drop_p(Mparticles& mprts, MfieldsState& mflds)
   {
-    for (auto& sp : mprts) {
+    for (auto& sp : mprts[0]) {
       if (sp.nm) {
 	LOG_WARN("Removing %i particles associated with unprocessed %s movers (increase num_comm_round)",
 		 sp.nm, sp.name);

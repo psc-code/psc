@@ -101,7 +101,7 @@ struct PushParticlesVpic : PushParticlesBase
 
   void uncenter(Mparticles& mprts, MfieldsInterpolator& interpolator)
   {
-    for (auto& sp : mprts) {
+    for (auto& sp : mprts[0]) {
       TIC ParticlesOps::uncenter_p(&sp, interpolator); TOC(uncenter_p, 1);
     }
   }

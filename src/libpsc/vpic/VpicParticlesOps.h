@@ -11,7 +11,8 @@ struct VpicParticlesOps
   static void advance_p(Mparticles& mprts, MfieldsAccumulator& accumulator,
 			MfieldsInterpolator& interpolator)
   {
-    for (auto sp = mprts.begin(); sp != mprts.end(); ++sp) {
+    auto prts = mprts[0];
+    for (auto sp = prts.begin(); sp != prts.end(); ++sp) {
       TIC ::advance_p(&*sp, accumulator, interpolator.getPatch(0).ip()); TOC(advance_p, 1);
     }
   }
@@ -34,7 +35,8 @@ struct VpicParticlesOps
 
   static void drop_p(Mparticles& mprts, MfieldsState& mflds)
   {
-    for (auto sp = mprts.begin(); sp != mprts.end(); ++sp) {
+    auto prts = mprts[0];
+    for (auto sp = prts.begin(); sp != prts.end(); ++sp) {
       if (sp->nm) {
 	LOG_WARN("Removing %i particles associated with unprocessed %s movers (increase num_comm_round)",
 		 sp->nm, sp->name);
@@ -71,7 +73,7 @@ struct VpicParticlesOps
     ::sort_p(sp);
   }
 
-  static double energy_p(typename Mparticles::const_iterator sp, const MfieldsInterpolator& interpolator)
+  static double energy_p(typename Mparticles::ConstSpeciesIterator sp, const MfieldsInterpolator& interpolator)
   {
     return ::energy_p(&*sp, &interpolator);
   }

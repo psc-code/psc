@@ -68,8 +68,9 @@ struct OutputHydroVpic_
     for (int kind = 0; kind < grid.kinds.size(); ++kind) {
       HydroOps::clear(mflds_hydro);
       
+      auto prts = mprts[0];
       // FIXME, just iterate over species instead?
-      auto sp = std::find_if(mprts.begin(), mprts.end(),
+      auto sp = std::find_if(prts.cbegin(), prts.cend(),
 			     [&](const typename Mparticles::Species& sp) { return sp.id == kind; });
       HydroOps::accumulate_hydro_p(mflds_hydro, sp, interpolator);
       
