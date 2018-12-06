@@ -364,9 +364,11 @@ struct ItemMomentLoopPatches2 : ItemMomentCRTP<ItemMomentLoopPatches2<Moment_t>,
   void run(Mparticles& mprts)
   {
     auto& mres = this->mres_;
+    mres.zero();
     for (int p = 0; p < mprts.n_patches(); p++) {
-      mres[p].zero();
       Moment_t::run(mres[p], mprts[p]);
+    }
+    for (int p = 0; p < mprts.n_patches(); p++) {
       add_ghosts_boundary(mres[p], p, 0, mres.n_comps());
     }
 
