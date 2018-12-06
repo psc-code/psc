@@ -13,8 +13,8 @@
 template<typename Mparticles>
 struct InjectorSimple
 {
-  using particle_t = typename Mparticles::particle_t;
-  using real_t = typename particle_t::real_t;
+  using Particle = typename Mparticles::particle_t;
+  using real_t = typename Particle::real_t;
   
   struct Patch
   {
@@ -30,10 +30,10 @@ struct InjectorSimple
 	assert(new_prt.x[d] <= patch.xe[d]);
       }
       
-      auto prt = particle_t{{real_t(new_prt.x[0] - patch.xb[0]), real_t(new_prt.x[1] - patch.xb[1]), real_t(new_prt.x[2] - patch.xb[2])},
-			    {real_t(new_prt.u[0]), real_t(new_prt.u[1]), real_t(new_prt.u[2])},
-			      real_t(new_prt.w * mprts_.grid().kinds[new_prt.kind].q),
-			      new_prt.kind};
+      auto prt = Particle{{real_t(new_prt.x[0] - patch.xb[0]), real_t(new_prt.x[1] - patch.xb[1]), real_t(new_prt.x[2] - patch.xb[2])},
+			  {real_t(new_prt.u[0]), real_t(new_prt.u[1]), real_t(new_prt.u[2])},
+			  real_t(new_prt.w * mprts_.grid().kinds[new_prt.kind].q),
+			  new_prt.kind};
       mprts_[p_].push_back(prt);
     }
     
@@ -67,7 +67,7 @@ private:
 template<typename Mparticles>
 struct ConstAccessorSimple
 {
-  using particle_t = typename Mparticles::particle_t; // FIXME -> Particle
+  using Particle = typename Mparticles::particle_t;
   using mparticles_patch = typename Mparticles::Patch;
   using real_t = typename Mparticles::real_t;
   using Real3 = Vec3<real_t>;
@@ -75,7 +75,7 @@ struct ConstAccessorSimple
   
   struct const_accessor
   {
-    const_accessor(const particle_t& prt, const mparticles_patch& prts)
+    const_accessor(const Particle& prt, const mparticles_patch& prts)
       : prt_{prt}, prts_{prts}
     {}
 
@@ -93,7 +93,7 @@ struct ConstAccessorSimple
     }
     
   private:
-    const particle_t& prt_;
+    const Particle& prt_;
     const mparticles_patch& prts_;
   };
   
@@ -153,11 +153,11 @@ struct Mparticles;
 template<typename P>
 struct mparticles_patch
 {
-  using particle_t = P;
-  using real_t = typename particle_t::real_t;
+  using Particle = P;
+  using real_t = typename Particle::real_t;
   using Real3 = Vec3<real_t>;
   using Double3 = Vec3<double>;
-  using buf_t = std::vector<particle_t>;
+  using buf_t = std::vector<Particle>;
   using iterator = typename buf_t::iterator;
   using const_iterator = typename buf_t::const_iterator;
 
@@ -172,8 +172,8 @@ struct mparticles_patch
       grid_(&mprts->grid())
   {}
 
-  particle_t& operator[](int n) { return buf[n]; }
-  const particle_t& operator[](int n) const { return buf[n]; }
+  Particle& operator[](int n) { return buf[n]; }
+  const Particle& operator[](int n) const { return buf[n]; }
   const_iterator begin() const { return buf.begin(); }
   iterator begin() { return buf.begin(); }
   const_iterator end() const { return buf.end(); }
@@ -181,10 +181,10 @@ struct mparticles_patch
   unsigned int size() const { return buf.size(); }
   void reserve(unsigned int new_capacity) { buf.reserve(new_capacity); }
 
-  void push_back(const particle_t& new_prt)
+  void push_back(const Particle& new_prt)
   {
     // need to copy because we modify it
-    particle_t prt = new_prt;
+    auto prt = new_prt;
     checkInPatchMod(prt);
     validCellIndex(prt);
     buf.push_back(prt);
@@ -205,16 +205,16 @@ struct mparticles_patch
 
   // ParticleIndexer functionality
   int cellPosition(real_t xi, int d) const { return mprts_->pi_.cellPosition(xi, d); }
-  int validCellIndex(const particle_t& prt) const { return mprts_->pi_.validCellIndex(prt.x()); }
+  int validCellIndex(const Particle& prt) const { return mprts_->pi_.validCellIndex(prt.x()); }
 
-  void checkInPatchMod(particle_t& prt) const { return mprts_->pi_.checkInPatchMod(prt.x()); }
+  void checkInPatchMod(Particle& prt) const { return mprts_->pi_.checkInPatchMod(prt.x()); }
 
   // FIXME, grid is always double precision, so this will switch precision
   // where not desired. should use same info stored in mprts at right precision
-  real_t prt_qni(const particle_t& prt) const { return grid().kinds[prt.kind()].q; }
-  real_t prt_mni(const particle_t& prt) const { return grid().kinds[prt.kind()].m; }
-  real_t prt_wni(const particle_t& prt) const { return prt.qni_wni() / prt_qni(prt); }
-  real_t prt_qni_wni(const particle_t& prt) const { return prt.qni_wni(); }
+  real_t prt_qni(const Particle& prt) const { return grid().kinds[prt.kind()].q; }
+  real_t prt_mni(const Particle& prt) const { return grid().kinds[prt.kind()].m; }
+  real_t prt_wni(const Particle& prt) const { return prt.qni_wni() / prt_qni(prt); }
+  real_t prt_qni_wni(const Particle& prt) const { return prt.qni_wni(); }
 
   const Grid_t& grid() const { return *grid_; }
   int p() const { return p_; }
@@ -278,7 +278,7 @@ struct Mparticles : MparticlesBase
     }
   }
 
-  void reset()
+  void reset() // FIXME, "reset" is used for two very different functions
   {
     for (int p = 0; p < patches_.size(); p++) {
       patches_[p].resize(0);
