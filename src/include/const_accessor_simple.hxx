@@ -29,6 +29,41 @@ private:
 };
 
 // ======================================================================
+// ConstParticleAcessorSimple
+
+template<typename Mparticles, typename MparticlesPatch>
+struct ConstParticleAccessorSimple
+{
+  using Particle = typename Mparticles::Particle;
+  using real_t = typename Particle::real_t;
+  using Real3 = Vec3<real_t>;
+  using Double3 = Vec3<double>;
+  
+  ConstParticleAccessorSimple(const Particle& prt, const MparticlesPatch& prts)
+    : prt_{prt}, prts_{prts}
+  {}
+  
+  Real3 x()   const { return prt_.x(); }
+  Real3 u()   const { return prt_.u(); }
+  real_t w()  const { return prt_.qni_wni() / q(); }
+  real_t qni_wni() const { return prt_.qni_wni(); }
+  real_t q()  const { return prts_.grid().kinds[kind()].q; }
+  real_t m()  const { return prts_.grid().kinds[kind()].m; }
+  int kind()  const { return prt_.kind(); }
+  
+  Double3 position() const
+  {
+    auto& patch = prts_.grid().patches[prts_.p()]; // FIXME, generally, it'd be nice to have a better way to get this
+    
+    return patch.xb +	Double3(prt_.x());
+  }
+  
+private:
+  const Particle& prt_;
+  const MparticlesPatch& prts_;
+};
+  
+// ======================================================================
 // ConstAcessorSimple
 
 template<typename Mparticles>
@@ -37,35 +72,8 @@ struct ConstAccessorSimple
   using Particle = typename Mparticles::Particle;
   using MparticlesPatch = typename Mparticles::Patch;
   using Double3 = Vec3<double>;
-  
-  struct const_accessor
-  {
-    using real_t = typename Mparticles::real_t;
-    using Real3 = Vec3<real_t>;
-    
-    const_accessor(const Particle& prt, const MparticlesPatch& prts)
-      : prt_{prt}, prts_{prts}
-    {}
 
-    Real3 x()   const { return prt_.x(); }
-    Real3 u()   const { return prt_.u(); }
-    real_t w()  const { return prt_.qni_wni() / q(); }
-    real_t qni_wni() const { return prt_.qni_wni(); }
-    real_t q()  const { return prts_.grid().kinds[kind()].q; }
-    real_t m()  const { return prts_.grid().kinds[kind()].m; }
-    int kind()  const { return prt_.kind(); }
-
-    Double3 position() const
-    {
-      auto& patch = prts_.grid().patches[prts_.p()]; // FIXME, generally, it'd be nice to have a better way to get this
-
-      return patch.xb +	Double3(prt_.x());
-    }
-    
-  private:
-    const Particle& prt_;
-    const MparticlesPatch& prts_;
-  };
+  using const_accessor = ConstParticleAccessorSimple<Mparticles, MparticlesPatch>;
   
   struct Patch
   {
