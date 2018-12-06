@@ -11,16 +11,13 @@
 #include "psc_particles_double.h"
 #include "psc_fields_c.h"
 
-template<typename Moment_t>
-using Ops = FieldsItemMoment2Ops<Moment_t>;
-  
 #define MAKE_POFI_OPS(MP, MF, TYPE)					\
-  Ops<Moment_n_1st<MP, MF>> psc_output_fields_item_n_1st_##TYPE##_ops;	\
-  Ops<Moment_v_1st<MP, MF>> psc_output_fields_item_v_1st_##TYPE##_ops;	\
-  Ops<Moment_p_1st<MP, MF>> psc_output_fields_item_p_1st_##TYPE##_ops;	\
-  Ops<Moment_vv_1st<MP, MF>> psc_output_fields_item_vv_1st_##TYPE##_ops; \
-  Ops<Moment_T_1st<MP, MF>> psc_output_fields_item_T_1st_##TYPE##_ops;	\
-  Ops<Moment_Tvv_1st<MP, MF>> psc_output_fields_item_Tvv_1st_##TYPE##_ops; \
+  FieldsItemMomentOps<Moment_n_1st<MP, MF>> psc_output_fields_item_n_1st_##TYPE##_ops;	\
+  FieldsItemMomentOps<Moment_v_1st<MP, MF>> psc_output_fields_item_v_1st_##TYPE##_ops;	\
+  FieldsItemMomentOps<Moment_p_1st<MP, MF>> psc_output_fields_item_p_1st_##TYPE##_ops;	\
+  FieldsItemMomentOps<Moment_vv_1st<MP, MF>> psc_output_fields_item_vv_1st_##TYPE##_ops; \
+  FieldsItemMomentOps<Moment_T_1st<MP, MF>> psc_output_fields_item_T_1st_##TYPE##_ops;	\
+  FieldsItemMomentOps<Moment_Tvv_1st<MP, MF>> psc_output_fields_item_Tvv_1st_##TYPE##_ops; \
 
 MAKE_POFI_OPS(MparticlesSingle, MfieldsC, single);
 MAKE_POFI_OPS(MparticlesDouble, MfieldsC, double);

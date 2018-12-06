@@ -15,6 +15,6 @@
 // ======================================================================
 // psc_output_fields_item: subclass "n_2nd_nc_double"
 
-FieldsItemMoment2Ops<Moment_n_2nd_nc<MparticlesDouble, MfieldsC>> psc_output_fields_item_n_2nd_nc_double_ops;
-FieldsItemMoment2Ops<Moment_rho_2nd_nc<MparticlesDouble, MfieldsC>> psc_output_fields_item_rho_2nd_nc_double_ops;
+FieldsItemMomentOps<Moment_n_2nd_nc<MparticlesDouble, MfieldsC>> psc_output_fields_item_n_2nd_nc_double_ops;
+FieldsItemMomentOps<Moment_rho_2nd_nc<MparticlesDouble, MfieldsC>> psc_output_fields_item_rho_2nd_nc_double_ops;
 

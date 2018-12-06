@@ -112,11 +112,8 @@ struct Moment_v_1st_nc
   }
 };
 
-template<typename Moment_t>
-using Ops = FieldsItemMoment2Ops<Moment_t>;
-
 #define MAKE_POFI_OPS(MP, MF, TYPE)					\
-  Ops<Moment_n_1st_nc<MP, MF>> psc_output_fields_item_n_1st_nc_##TYPE##_ops; \
-  Ops<Moment_rho_1st_nc<MP, MF>> psc_output_fields_item_rho_1st_nc_##TYPE##_ops; \
-  Ops<Moment_v_1st_nc<MP, MF>> psc_output_fields_item_v_1st_nc_##TYPE##_ops; \
+  FieldsItemMomentOps<Moment_n_1st_nc<MP, MF>> psc_output_fields_item_n_1st_nc_##TYPE##_ops; \
+  FieldsItemMomentOps<Moment_rho_1st_nc<MP, MF>> psc_output_fields_item_rho_1st_nc_##TYPE##_ops; \
+  FieldsItemMomentOps<Moment_v_1st_nc<MP, MF>> psc_output_fields_item_v_1st_nc_##TYPE##_ops; \
 

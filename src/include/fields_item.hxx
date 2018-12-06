@@ -376,5 +376,5 @@ private:
 // FieldsItemMomentOps
   
 template<typename Moment_t>
-using FieldsItemMoment2Ops = FieldsItemOps<FieldsItemMoment<ItemMomentLoopPatches2<Moment_t>>>;
+using FieldsItemMomentOps = FieldsItemOps<FieldsItemMoment<ItemMomentLoopPatches2<Moment_t>>>;
 
