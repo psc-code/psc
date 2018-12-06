@@ -50,14 +50,14 @@ template<typename Mparticles>
 struct ConstAccessorVpic
 {
   using Particle = typename Mparticles::Particle;
-  using const_iterator = typename Mparticles::const_iterator;
+  using constSpeciesIterator = typename Mparticles::constSpeciesIterator;
   using real_t = float;
   using Real3 = Vec3<real_t>;
   using Double3 = Vec3<double>;
 
   struct const_accessor
   {
-    const_accessor(const_iterator sp, uint n)
+    const_accessor(constSpeciesIterator sp, uint n)
       : sp_{sp}, n_{n}
     {}
       
@@ -105,12 +105,14 @@ struct ConstAccessorVpic
   private:
     const Particle& prt() const { return sp_->p[n_]; }
       
-    const_iterator sp_;
+    constSpeciesIterator sp_;
     uint n_;
   };
     
   struct Patch
   {
+    using constSpeciesIterator = typename Mparticles::constSpeciesIterator;
+    
     struct const_iterator : std::iterator<std::random_access_iterator_tag,
 					  const_accessor,  // value type
 					  ptrdiff_t,       // difference type
@@ -118,7 +120,7 @@ struct ConstAccessorVpic
 					  const_accessor&> // reference type
       
     {
-      const_iterator(const Mparticles& mprts, typename Mparticles::const_iterator sp, uint n)
+      const_iterator(const Mparticles& mprts, constSpeciesIterator sp, uint n)
 	: mprts_{mprts}, sp_{sp}, n_{n}
       {}
 	
@@ -140,7 +142,7 @@ struct ConstAccessorVpic
 	
     private:
       const Mparticles& mprts_;
-      typename Mparticles::const_iterator sp_;
+      constSpeciesIterator sp_;
       uint n_;
     };
       
@@ -187,7 +189,7 @@ struct MparticlesVpic_ : MparticlesBase, _Particles
   using Species = typename Particles::Species;
   using Grid = typename Particles::Grid;
   using Particle = typename Particles::Particle;
-  using const_iterator = typename Particles::const_iterator;
+  using constSpeciesIterator = typename Particles::const_iterator;
   using real_t = float;
   using Real3 = Vec3<real_t>;
 
