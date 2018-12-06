@@ -20,7 +20,6 @@ template<typename MP>
 struct BndParticlesCommon : BndParticlesBase
 {
   using Mparticles = MP;
-  using particle_t = typename Mparticles::BndpParticle;
   using real_t = typename Mparticles::real_t;
   using ddcp_t = ddc_particles<Mparticles>;
   using buf_t = typename Mparticles::buf_t;
@@ -114,7 +113,7 @@ void BndParticlesCommon<MP>::process_patch(const Grid_t& grid, const ParticleInd
   unsigned int head = n_begin;
 
   for (int n = n_begin; n < n_end; n++) {
-    particle_t *prt = &buf[n];
+    auto *prt = &buf[n];
     real_t *xi = prt->x();
     real_t *pxi = prt->u();
     

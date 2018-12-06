@@ -15,7 +15,7 @@ template<typename MP>
 struct SortCountsort
 {
   using Mparticles = MP;
-  using particle_t = typename Mparticles::particle_t;
+  using Particle = typename Mparticles::Particle;
 
   void operator()(Mparticles& mprts)
   {
@@ -42,7 +42,7 @@ struct SortCountsort
       assert(cur == n_prts);
     
       // move into new position
-      particle_t *particles2 = new particle_t[n_prts];
+      auto particles2 = new Particle[n_prts];
       for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
 	unsigned int cni = prts.validCellIndex(*prt_iter);
 	particles2[cnts[cni]] = *prt_iter;
@@ -66,7 +66,7 @@ template<typename MP>
 struct SortCountsort2
 {
   using Mparticles = MP;
-  using particle_t = typename Mparticles::Particle;
+  using Particle = typename Mparticles::Particle;
 
   void operator()(Mparticles& mprts)
   {
@@ -100,7 +100,7 @@ struct SortCountsort2
       assert(cur == n_prts);
       
       // move into new position
-      particle_t *particles2 = new particle_t[n_prts];
+      auto particles2 = new Particle[n_prts];
       for (int i = 0; i < n_prts; i++) {
 	unsigned int cni = cnis[i];
 	int n = 1;

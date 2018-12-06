@@ -12,7 +12,7 @@ struct Heating__ : HeatingBase
 {
   using Mparticles = MP;
   using real_t = typename Mparticles::real_t;
-  using particle_t = typename Mparticles::Particle;
+  using Particle = typename Mparticles::Particle;
   
   // ----------------------------------------------------------------------
   // ctor
@@ -28,7 +28,7 @@ struct Heating__ : HeatingBase
   // ----------------------------------------------------------------------
   // kick_particle
 
-  void kick_particle(particle_t& prt, real_t H)
+  void kick_particle(Particle& prt, real_t H)
   {
     float ran1, ran2, ran3, ran4, ran5, ran6;
     do {

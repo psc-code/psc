@@ -7,9 +7,9 @@
 template<typename Mparticles>
 struct InjectorBuffered
 {
-  using particle_t = typename Mparticles::Particle;
-  using real_t = typename particle_t::real_t;
-  using Real3 = typename particle_t::Real3;
+  using Particle = typename Mparticles::Particle;
+  using real_t = typename Particle::real_t;
+  using Real3 = typename Particle::Real3;
   using Double3 = Vec3<double>;
   
   struct Patch
@@ -23,7 +23,7 @@ struct InjectorBuffered
       injector_.n_prts_by_patch_[p_] += n_prts_;
     }
   
-    void raw(const particle_t& prt)
+    void raw(const Particle& prt)
     {
       injector_.buf_.push_back(prt);
       n_prts_++;
@@ -38,7 +38,7 @@ struct InjectorBuffered
     }
 
     // FIXME do we want to keep this? or just have a particle_inject version instead?
-    void raw(const std::vector<particle_t>& buf)
+    void raw(const std::vector<Particle>& buf)
     {
       injector_.buf_.insert(injector_.buf_.end(), buf.begin(), buf.end());
       n_prts_ += buf.size();
@@ -69,7 +69,7 @@ struct InjectorBuffered
   }
 
 private:
-  std::vector<particle_t> buf_;
+  std::vector<Particle> buf_;
   std::vector<uint> n_prts_by_patch_;
   uint last_patch_;
   Mparticles& mprts_;

@@ -6,7 +6,6 @@ template<typename MP>
 struct bnd_particles_policy_ordered
 {
   using Mparticles = MP;
-  using particle_t = typename Mparticles::particle_t;
   using ddcp_t = ddc_particles<Mparticles>;
   using ddcp_patch = typename ddcp_t::patch;
   
@@ -21,7 +20,7 @@ struct bnd_particles_policy_ordered
     unsigned int n_prts = prts.size();
     int *b_mx = prts.pi_.b_mx_;
     for (int i = off; i < n_prts; i++) {
-      particle_t *part = &prts[i];
+      auto *part = &prts[i];
       Int3 b_pos = prts.blockPosition(&part->xi);
       assert(b_pos[0] >= 0 && b_pos[0] < b_mx[0] &&
 	     b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
@@ -44,7 +43,7 @@ struct bnd_particles_policy_ordered
     memset(prts.b_cnt, 0, (prts.nr_blocks + 1) * sizeof(*prts.b_cnt));
 
     for (int i = 0; i < n_prts; i++) {
-      particle_t *part = &prts[i];
+      auto *part = &prts[i];
       Int3 b_pos = prts.blockPosition(b_pos);
       if (b_pos[0] >= 0 && b_pos[0] < b_mx[0] &&
 	  b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&

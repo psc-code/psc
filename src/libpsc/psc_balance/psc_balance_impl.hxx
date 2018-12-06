@@ -318,7 +318,7 @@ struct Balance_ : BalanceBase
 {
   using fields_t = typename Mfields::fields_t;
   using Fields = Fields3d<fields_t>;
-  using particle_t = typename Mparticles::Particle;
+  using Particle = typename Mparticles::Particle;
   using real_t = typename Mparticles::real_t;
 
   Balance_(int every, double factor_fields=1., bool print_loads=false, bool write_loads=false)
@@ -569,7 +569,7 @@ private:
     mp_new.reserve_all(n_prts_by_patch_new);
     mp_new.resize_all(n_prts_by_patch_new);
 
-    assert(sizeof(particle_t) % sizeof(real_t) == 0); // FIXME
+    assert(sizeof(Particle) % sizeof(real_t) == 0); // FIXME
 
     MPI_Datatype mpi_dtype = Mparticles_traits<Mparticles>::mpi_dtype();
     // recv for new local patches
@@ -585,7 +585,7 @@ private:
       for (int pi = 0; pi < recv->nr_patches; pi++) {
 	int p = recv->pi_to_patch[pi];
 	auto& prts_new = mp_new[p];
-	int nn = prts_new.size() * (sizeof(particle_t)  / sizeof(real_t));
+	int nn = prts_new.size() * (sizeof(Particle)  / sizeof(real_t));
 	MPI_Irecv(&*prts_new.begin(), nn, mpi_dtype, recv->rank,
 		  pi, ctx->comm, &recv_reqs[nr_recv_reqs++]);
       }
@@ -606,7 +606,7 @@ private:
       for (int pi = 0; pi < send->nr_patches; pi++) {
 	int p = send->pi_to_patch[pi];
 	auto& prts_old = mp_old[p];
-	int nn = prts_old.size() * (sizeof(particle_t)  / sizeof(real_t));
+	int nn = prts_old.size() * (sizeof(Particle)  / sizeof(real_t));
 	//mprintf("A send -> %d tag %d (patch %d)\n", send->rank, pi, p);
 	MPI_Isend(&*prts_old.begin(), nn, mpi_dtype, send->rank,
 		  pi, ctx->comm, &send_reqs[nr_send_reqs++]);

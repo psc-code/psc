@@ -30,7 +30,7 @@ static void
 PFX(write)(struct psc_mparticles *mprts, struct mrc_io *io)
 {
   int ierr;
-  assert(sizeof(particle_t) / sizeof(real_t) == 8);
+  assert(sizeof(Particle) / sizeof(real_t) == 8);
 
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);

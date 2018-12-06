@@ -18,7 +18,6 @@ struct CollisionHost
 {
   using Mparticles = _Mparticles;
   using particles_t = typename Mparticles::Patch;
-  using particle_t = typename Mparticles::Particle;
   using real_t = typename Mparticles::real_t;
   using MfieldsState = _MfieldsState;
   using Mfields = _Mfields;
@@ -55,7 +54,7 @@ struct CollisionHost
     real_t& u(int d)       { return prt_.u()[d]; }
     
   private:
-    particle_t& prt_;
+    typename Mparticles::Particle& prt_;
     particles_t& prts_;
   };
   
@@ -205,7 +204,7 @@ struct CollisionHost
     F(1, i,j,k) = 0.;
     F(2, i,j,k) = 0.;
     for (int n = n_start; n < n_end; n++) {
-      particle_t& prt = prts[n];
+      const auto& prt = prts[n];
       F(0, i,j,k) -= prt.u()[0] * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
       F(1, i,j,k) -= prt.u()[1] * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
       F(2, i,j,k) -= prt.u()[2] * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
@@ -221,7 +220,7 @@ struct CollisionHost
     real_t fnqs = prts.grid().norm.fnqs, dt = prts.grid().dt;
     Fields F(mflds_rei_[p]);
     for (int n = n_start; n < n_end; n++) {
-      particle_t& prt = prts[n];
+      const auto& prt = prts[n];
       F(0, i,j,k) += prt.u()[0] * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
       F(1, i,j,k) += prt.u()[1] * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
       F(2, i,j,k) += prt.u()[2] * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;

@@ -264,8 +264,8 @@ struct PushParticlesTest : ::testing::Test
       });
   }
   
-  template<typename particle_t>
-  Vec3<double> push_x(const particle_t& prt0, particle_t& prt1)
+  template<typename Particle>
+  Vec3<double> push_x(const Particle& prt0, Particle& prt1)
   {
     Vec3<double> xi1 = { prt0.x[0] + vx(prt1),
 			 prt0.x[1] + vy(prt1),

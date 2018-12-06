@@ -7,7 +7,7 @@
 // ======================================================================
 // PscSpecies
 
-// FIXME: Eventually particle_t (definitely) and the other formats
+// FIXME: Eventually Particle (definitely) and the other formats
 // (maybe) should be opaque and specific to a particular
 // species_advance implementation
 

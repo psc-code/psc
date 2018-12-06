@@ -27,7 +27,7 @@ struct hdf5_prt {
 template<typename Mparticles>
 struct OutputParticlesHdf5 : OutputParticlesParams, OutputParticlesBase
 {
-  using particle_t = typename Mparticles::Particle;
+  using Particle = typename Mparticles::Particle;
   using Particles = typename Mparticles::Patch;
   using real_t = typename Mparticles::real_t;
 
@@ -75,7 +75,7 @@ struct OutputParticlesHdf5 : OutputParticlesParams, OutputParticlesBase
   }
 
   static inline int
-  get_sort_index(Particles& prts, particle_t *part)
+  get_sort_index(Particles& prts, Particle *part)
   {
     const Grid_t& grid = prts.grid();
     const int *ldims = grid.ldims;
@@ -113,7 +113,7 @@ struct OutputParticlesHdf5 : OutputParticlesParams, OutputParticlesBase
 
       // counting sort to get map 
       for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
-	particle_t *part = &*prt_iter;
+	Particle *part = &*prt_iter;
 	int si = get_sort_index(prts, part);
 	off[p][si]++;
       }
@@ -131,7 +131,7 @@ struct OutputParticlesHdf5 : OutputParticlesParams, OutputParticlesBase
       map[p] = (int *) malloc(n_prts * sizeof(*map[p]));
       int n = 0;
       for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter, n++) {
-	particle_t *part = &*prt_iter;
+	Particle *part = &*prt_iter;
 	int si = get_sort_index(prts, part);
 	map[p][off2[si]++] = n;
       }
@@ -208,7 +208,7 @@ struct OutputParticlesHdf5 : OutputParticlesParams, OutputParticlesBase
 	      idx[p][jj     ] = nn + n_off;
 	      idx[p][jj + sz] = nn + n_off + off[p][si+1] - off[p][si];
 	      for (int n = off[p][si]; n < off[p][si+1]; n++, nn++) {
-		particle_t *part = &prts[map[p][n]];
+		Particle *part = &prts[map[p][n]];
 		arr[nn].x  = part->x()[0] + patch.xb[0];
 		arr[nn].y  = part->x()[1] + patch.xb[1];
 		arr[nn].z  = part->x()[2] + patch.xb[2];
