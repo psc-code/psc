@@ -56,12 +56,12 @@ struct ConstParticleAccessorVpic
   using Double3 = Vec3<double>;
   using ConstSpeciesIterator = typename Mparticles::ConstSpeciesIterator;
 
-  ConstParticleAccessorVpic(ConstSpeciesIterator sp, uint n)
-    : sp_{sp}, n_{n}
+  ConstParticleAccessorVpic(const Particle& prt, ConstSpeciesIterator sp)
+    : prt_{prt}, sp_{sp}
   {}
   
-  Real3 u()  const { return {prt().ux, prt().uy, prt().uz}; }
-  real_t w() const { return prt().w * sp_->vgrid().dV; }
+  Real3 u()  const { return {prt_.ux, prt_.uy, prt_.uz}; }
+  real_t w() const { return prt_.w * sp_->vgrid().dV; }
   real_t qni_wni() const { return w() * sp_->q; }
   int kind() const { return sp_->id; }
   
@@ -74,7 +74,7 @@ struct ConstParticleAccessorVpic
     double x1 = vgrid.x1, y1 = vgrid.y1, z1 = vgrid.z1;
     double nx = vgrid.nx, ny = vgrid.ny, nz = vgrid.nz;
     
-    int i = prt().i;
+    int i = prt_.i;
     int iz = i / ((nx+2) * (ny+2));
     i -= iz * ((nx+2) * (ny+2));
     int iy = i / (nx+2);
@@ -85,9 +85,9 @@ struct ConstParticleAccessorVpic
     ix--; iy--; iz--;
     
     // back to physical coords
-    Double3 x = { ix + .5*(prt().dx+1.),
-		  iy + .5*(prt().dy+1.),
-		  iz + .5*(prt().dz+1.) };
+    Double3 x = { ix + .5*(prt_.dx+1.),
+		  iy + .5*(prt_.dy+1.),
+		  iz + .5*(prt_.dz+1.) };
     x *= (Double3{x1, y1, z1} - Double3{x0, y0, z0}) / Double3{nx, ny, nz};
     
     return x;
@@ -102,10 +102,8 @@ struct ConstParticleAccessorVpic
   }
   
 private:
-  const Particle& prt() const { return sp_->p[n_]; }
-  
+  const Particle& prt_;
   ConstSpeciesIterator sp_;
-  uint n_;
 };
 
 // ======================================================================
@@ -151,7 +149,7 @@ struct ConstAccessorVpic
       }
       
       const_iterator operator++(int) { auto retval = *this; ++(*this); return retval; }
-      const_accessor operator*() { return {sp_, n_}; }
+      const_accessor operator*() { return {sp_->p[n_], sp_}; }
 	
     private:
       const Mparticles& mprts_;
@@ -172,7 +170,7 @@ struct ConstAccessorVpic
       auto prts = mprts_[0];
       for (auto sp = prts.begin(); sp != prts.end(); ++sp) {
 	if (n < sp->np) {
-	  return {sp, uint(n)};
+	  return {sp->p[n], sp};
 	}
 	n -= sp->np;
       }
