@@ -29,7 +29,7 @@ private:
 };
 
 // ======================================================================
-// ConstParticleAcessorSimple
+// ConstParticleAccessorSimple
 
 template<typename Mparticles>
 struct ConstParticleAccessorSimple
@@ -67,15 +67,11 @@ private:
 // ======================================================================
 // ConstAcessorPatchSimple
 
-template<typename Mparticles>
-struct ConstAccessorSimple;
-
-template<typename Mparticles>
+template<typename ConstAccessorSimple>
 struct ConstAccessorPatchSimple
 {
+  using Mparticles = typename ConstAccessorSimple::Mparticles;
   using const_accessor = ConstParticleAccessorSimple<Mparticles>;
-  using ConstAccessorSimple = ConstAccessorSimple<Mparticles>;
-  using MparticlesPatch = typename Mparticles::Patch;
 
   struct const_iterator : std::iterator<std::random_access_iterator_tag,
 					const_accessor,  // value type
@@ -101,26 +97,27 @@ struct ConstAccessorPatchSimple
   };
   
   ConstAccessorPatchSimple(const ConstAccessorSimple& accessor, int p)
-    : accessor_{accessor}, prts_{accessor.mprts()[p]}
+    : accessor_{accessor}, p_{p}
   {}
   
   const_iterator begin() const { return {*this, 0}; }
   const_iterator end()   const { return {*this, size()}; }
-  const_accessor operator[](int n) const { return {prts_[n], prts_.mprts(), prts_.p()}; }
-  uint size() const { return prts_.size(); }
+  const_accessor operator[](int n) const { return {accessor_.data(p_)[n], accessor_.mprts(), p_}; }
+  uint size() const { return accessor_.size(p_); }
   
 private:
   const ConstAccessorSimple& accessor_;
-  const MparticlesPatch& prts_;
+  const int p_;
 };
 
 // ======================================================================
 // ConstAcessorSimple
 
-template<typename Mparticles>
+template<typename _Mparticles>
 struct ConstAccessorSimple
 {
-  using Patch = ConstAccessorPatchSimple<Mparticles>;
+  using Mparticles = _Mparticles;
+  using Patch = ConstAccessorPatchSimple<ConstAccessorSimple>;
   
   ConstAccessorSimple(Mparticles& mprts)
     : mprts_{mprts}
@@ -128,6 +125,8 @@ struct ConstAccessorSimple
 
   Patch operator[](int p) const { return {*this, p}; }
   const Mparticles& mprts() const { return mprts_; }
+  uint size(int p) const { return mprts_[p].size(); }
+  typename Mparticles::Patch::iterator data(int p) const { return mprts_[p].begin(); }
 
 private:
   Mparticles& mprts_;

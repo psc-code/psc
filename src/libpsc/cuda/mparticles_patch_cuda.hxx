@@ -58,7 +58,7 @@ struct ConstAccessorPatchCuda
   
 private:
   const ConstAccessorCuda& accessor_;
-  int p_;
+  const int p_;
 };
 
 // ======================================================================
