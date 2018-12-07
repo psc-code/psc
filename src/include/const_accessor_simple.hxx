@@ -65,55 +65,58 @@ private:
 };
   
 // ======================================================================
+// ConstAcessorPatchSimple
+
+template<typename Mparticles>
+struct ConstAccessorPatchSimple
+{
+  using const_accessor = ConstParticleAccessorSimple<Mparticles>;
+  using MparticlesPatch = typename Mparticles::Patch;
+
+  struct const_iterator : std::iterator<std::random_access_iterator_tag,
+					const_accessor,  // value type
+					ptrdiff_t,       // difference type
+					const_accessor*, // pointer type
+					const_accessor&> // reference type
+  
+  {
+    const_iterator(const ConstAccessorPatchSimple& patch, uint n)
+      : patch_{patch}, n_{n}
+    {}
+    
+    bool operator==(const_iterator other) const { return n_ == other.n_; }
+    bool operator!=(const_iterator other) const { return !(*this == other); }
+    
+    const_iterator& operator++() { n_++; return *this; }
+    const_iterator operator++(int) { auto retval = *this; ++(*this); return retval; }
+    const_accessor operator*() { return patch_[n_]; }
+    
+  private:
+    const ConstAccessorPatchSimple patch_;
+    uint n_;
+  };
+  
+  ConstAccessorPatchSimple(const MparticlesPatch& prts)
+    : prts_{prts}
+  {}
+  
+  const_iterator begin() const { return {*this, 0}; }
+  const_iterator end()   const { return {*this, size()}; }
+  const_accessor operator[](int n) const { return {prts_[n], prts_.mprts(), prts_.p()}; }
+  uint size() const { return prts_.size(); }
+  
+private:
+  const MparticlesPatch& prts_;
+};
+
+// ======================================================================
 // ConstAcessorSimple
 
 template<typename Mparticles>
 struct ConstAccessorSimple
 {
-  using Particle = typename Mparticles::Particle;
-  using MparticlesPatch = typename Mparticles::Patch;
-  using Double3 = Vec3<double>;
-
-  using const_accessor = ConstParticleAccessorSimple<Mparticles>;
+  using Patch = ConstAccessorPatchSimple<Mparticles>;
   
-  struct Patch
-  {
-    struct const_iterator : std::iterator<std::random_access_iterator_tag,
-					  const_accessor,  // value type
-					  ptrdiff_t,       // difference type
-					  const_accessor*, // pointer type
-					  const_accessor&> // reference type
-					   
-    {
-      const_iterator(const Patch& patch, uint n)
-	: patch_{patch}, n_{n}
-      {}
-      
-      bool operator==(const_iterator other) const { return n_ == other.n_; }
-      bool operator!=(const_iterator other) const { return !(*this == other); }
-
-      const_iterator& operator++() { n_++; return *this; }
-      const_iterator operator++(int) { auto retval = *this; ++(*this); return retval; }
-      const_accessor operator*() { return patch_[n_]; }
-
-    private:
-      const Patch patch_;
-      uint n_;
-    };
-    
-    Patch(const MparticlesPatch& prts)
-      : prts_{prts}
-    {}
-
-    const_iterator begin() const { return {*this, 0}; }
-    const_iterator end()   const { return {*this, size()}; }
-    const_accessor operator[](int n) const { return {prts_[n], prts_.mprts(), prts_.p()}; }
-    uint size() const { return prts_.size(); }
-
-  private:
-    const MparticlesPatch& prts_;
-  };
-
   ConstAccessorSimple(Mparticles& mprts)
     : mprts_{mprts}
   {}

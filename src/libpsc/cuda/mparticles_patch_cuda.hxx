@@ -12,6 +12,58 @@
 // template for a modifiable accesser, if we ever want to go there.
 
 // ======================================================================
+// ConstAcccessorPatchCuda
+
+template<typename Mparticles>
+struct ConstAccessorCuda;
+
+template<typename Mparticles>
+struct ConstAccessorPatchCuda
+{
+  using const_accessor = ConstParticleAccessorSimple<Mparticles>;
+  using ConstAccessorCuda = ConstAccessorCuda<Mparticles>;
+  using Particle = typename Mparticles::Particle;
+
+  struct const_iterator : std::iterator<std::random_access_iterator_tag,
+					const_accessor,  // value type
+					ptrdiff_t,       // difference type
+					const_accessor*, // pointer type
+					const_accessor&> // reference type
+  
+  {
+    const_iterator(const ConstAccessorPatchCuda& patch, uint n)
+      : patch_{patch}, n_{n}
+    {}
+    
+    bool operator==(const_iterator other) const { return n_ == other.n_; }
+    bool operator!=(const_iterator other) const { return !(*this == other); }
+    
+    const_iterator& operator++() { n_++; return *this; }
+    const_iterator operator++(int) { auto retval = *this; ++(*this); return retval; }
+    const_accessor operator*() { return patch_[n_]; }
+    
+  private:
+    const ConstAccessorPatchCuda patch_;
+    uint n_;
+  };
+  
+  ConstAccessorPatchCuda(const ConstAccessorCuda& accessor, int p)
+    : mprts_{accessor.mprts()}, p_{p}, data_{accessor.data(p)}, size_{accessor.size(p)}
+  {}
+  
+  const_iterator begin() const { return {*this, 0}; }
+  const_iterator end()   const { return {*this, size()}; }
+  const_accessor operator[](int n) const { return {data_[n], mprts_, p_}; }
+  uint size() const { return size_; }
+  
+private:
+  const Mparticles& mprts_;
+  int p_;
+  const Particle* data_;
+  uint size_;
+};
+
+// ======================================================================
 // ConstAccessorCuda
 
 template<typename Mparticles>
@@ -20,48 +72,8 @@ struct ConstAccessorCuda
   using Particle = typename Mparticles::Particle;
   
   using const_accessor = ConstParticleAccessorSimple<Mparticles>;
+  using Patch = ConstAccessorPatchCuda<Mparticles>;
   
-  struct Patch
-  {
-    struct const_iterator : std::iterator<std::random_access_iterator_tag,
-					  const_accessor,  // value type
-					  ptrdiff_t,       // difference type
-					  const_accessor*, // pointer type
-					  const_accessor&> // reference type
-    
-    {
-      const_iterator(const Patch& patch, uint n)
-	: patch_{patch}, n_{n}
-      {}
-
-      bool operator==(const_iterator other) const { return n_ == other.n_; }
-      bool operator!=(const_iterator other) const { return !(*this == other); }
-      
-      const_iterator& operator++() { n_++; return *this; }
-      const_iterator operator++(int) { auto retval = *this; ++(*this); return retval; }
-      const_accessor operator*() { return patch_[n_]; }
-      
-    private:
-      const Patch patch_;
-      uint n_;
-    };
-    
-    Patch(const ConstAccessorCuda& accessor, int p)
-      : mprts_{accessor.mprts()}, p_{p}, data_{accessor.data(p)}, size_{accessor.size(p)}
-    {}
-
-    const_iterator begin() const { return {*this, 0}; }
-    const_iterator end()   const { return {*this, size()}; }
-    const_accessor operator[](int n) const { return {data_[n], mprts_, p_}; }
-    uint size() const { return size_; }
-    
-  private:
-    const Mparticles& mprts_;
-    int p_;
-    const Particle* data_;
-    uint size_;
-  };
-
   ConstAccessorCuda(Mparticles& mprts)
     : mprts_{mprts}, data_{const_cast<Mparticles&>(mprts).get_particles()}, off_{mprts.get_offsets()}
   {}
