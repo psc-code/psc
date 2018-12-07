@@ -39,28 +39,29 @@ struct ConstParticleAccessorSimple
   using Real3 = Vec3<real_t>;
   using Double3 = Vec3<double>;
   
-  ConstParticleAccessorSimple(const Particle& prt, const MparticlesPatch& prts)
-    : prt_{prt}, prts_{prts}
+  ConstParticleAccessorSimple(const Particle& prt, const Mparticles& mprts, int p)
+    : prt_{prt}, mprts_{mprts}, p_{p}
   {}
   
   Real3 x()   const { return prt_.x(); }
   Real3 u()   const { return prt_.u(); }
   real_t w()  const { return prt_.qni_wni() / q(); }
   real_t qni_wni() const { return prt_.qni_wni(); }
-  real_t q()  const { return prts_.grid().kinds[kind()].q; }
-  real_t m()  const { return prts_.grid().kinds[kind()].m; }
+  real_t q()  const { return mprts_.grid().kinds[kind()].q; }
+  real_t m()  const { return mprts_.grid().kinds[kind()].m; }
   int kind()  const { return prt_.kind(); }
   
   Double3 position() const
   {
-    auto& patch = prts_.grid().patches[prts_.p()]; // FIXME, generally, it'd be nice to have a better way to get this
+    auto& patch = mprts_.grid().patches[p_]; // FIXME, generally, it'd be nice to have a better way to get this
     
-    return patch.xb +	Double3(prt_.x());
+    return patch.xb + Double3(prt_.x());
   }
   
 private:
   const Particle& prt_;
-  const MparticlesPatch& prts_;
+  const Mparticles& mprts_;
+  const int p_;
 };
   
 // ======================================================================
@@ -93,7 +94,7 @@ struct ConstAccessorSimple
 
       const_iterator& operator++()  { n_++; return *this; }
       const_iterator operator++(int) { auto retval = *this; ++(*this); return retval; }
-      const_accessor operator*() { return {prts_[n_], prts_}; }
+      const_accessor operator*() { return {prts_[n_], prts_.mprts(), prts_.p()}; }
 
     private:
       const MparticlesPatch& prts_;
@@ -107,7 +108,7 @@ struct ConstAccessorSimple
     const_iterator begin() const { return {prts_, 0}; }
     const_iterator end()   const { return {prts_, prts_.size()}; }
     uint size() const { return prts_.size(); }
-    const_accessor operator[](int n) const { return {prts_[n], prts_}; }
+    const_accessor operator[](int n) const { return {prts_[n], prts_.mprts(), prts_.p()}; }
 
   private:
     const MparticlesPatch& prts_;

@@ -80,6 +80,7 @@ struct MparticlesPatchSimple
   real_t prt_qni_wni(const Particle& prt) const { return prt.qni_wni(); }
 
   const Grid_t& grid() const { return *grid_; }
+  const Mparticles& mprts() const { return *mprts_; }
   int p() const { return p_; }
 
   buf_t buf;
