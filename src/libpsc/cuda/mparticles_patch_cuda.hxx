@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "const_accessor_simple.hxx"
+
 // FIXME?  we have two pretty similar versions of ConstAccessorCuda here,
 // and probably only one should survive.  one version copies from
 // device "on demand", whereas the other one copies a whole patch
@@ -10,42 +12,6 @@
 // template for a modifiable accesser, if we ever want to go there.
 
 // ======================================================================
-// ConstParticleAccessorCuda
-
-template<typename Mparticles>
-struct ConstParticleAccessorCuda
-{
-  using Particle = typename Mparticles::Particle;
-  using real_t = typename Particle::real_t;
-  using Real3 = typename Particle::Real3;
-  using Double3 = Vec3<double>;
-  
-  ConstParticleAccessorCuda(const Particle& prt, const Mparticles& mprts, int p)
-    : prt_{prt}, mprts_{mprts}, p_{p}
-  {}
-  
-  Real3 x()   const { return prt_.x(); }
-  Real3 u()   const { return prt_.u(); }
-  real_t w()  const { return prt_.qni_wni() / mprts_.grid().kinds[prt_.kind()].q; }
-  real_t qni_wni() const { return prt_.qni_wni(); }
-  int kind()  const { return prt_.kind(); }
-  
-  Double3 position() const
-  {
-    auto& patch = mprts_.grid().patches[p_];
-    
-    return patch.xb + Double3(prt_.x());
-  }
-  
-  operator const Particle& () const { return prt_; }
-  
-private:
-  const Particle& prt_;
-  const Mparticles& mprts_;
-  const int p_;
-};
-
-// ======================================================================
 // ConstAccessorCuda
 
 template<typename Mparticles>
@@ -53,7 +19,7 @@ struct ConstAccessorCuda
 {
   using Particle = typename Mparticles::Particle;
   
-  using const_accessor = ConstParticleAccessorCuda<Mparticles>;
+  using const_accessor = ConstParticleAccessorSimple<Mparticles>;
   
   struct Patch
   {

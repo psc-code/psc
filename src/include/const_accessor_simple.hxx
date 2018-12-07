@@ -31,7 +31,7 @@ private:
 // ======================================================================
 // ConstParticleAcessorSimple
 
-template<typename Mparticles, typename MparticlesPatch>
+template<typename Mparticles>
 struct ConstParticleAccessorSimple
 {
   using Particle = typename Mparticles::Particle;
@@ -74,7 +74,7 @@ struct ConstAccessorSimple
   using MparticlesPatch = typename Mparticles::Patch;
   using Double3 = Vec3<double>;
 
-  using const_accessor = ConstParticleAccessorSimple<Mparticles, MparticlesPatch>;
+  using const_accessor = ConstParticleAccessorSimple<Mparticles>;
   
   struct Patch
   {
