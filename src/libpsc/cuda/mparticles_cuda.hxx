@@ -41,6 +41,8 @@ struct MparticlesCuda : MparticlesBase
   void dump(const std::string& filename);
   bool check_after_push();
 
+  std::vector<uint> get_offsets() const;
+  std::vector<Particle> get_particles() const;
   std::vector<Particle> get_particles(int p) const;
   Particle get_particle(int p, int n) const;
   const ParticleIndexer<real_t>& particleIndexer() const { return pi_; }

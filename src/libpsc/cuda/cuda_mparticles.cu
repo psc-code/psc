@@ -529,6 +529,29 @@ std::vector<typename cuda_mparticles<BS>::Particle> cuda_mparticles<BS>::get_par
 // get_particles
 
 template<typename BS>
+std::vector<uint> cuda_mparticles<BS>::get_offsets() const
+{
+  thrust::host_vector<uint> h_off(this->by_block_.d_off);
+  std::vector<uint> off(this->n_patches() + 1);
+  for (int p = 0; p <= this->n_patches(); p++) {
+    off[p] = h_off[p * this->n_blocks_per_patch];
+  }
+  return off;
+}
+
+// ----------------------------------------------------------------------
+// get_particles
+
+template<typename BS>
+std::vector<typename cuda_mparticles<BS>::Particle> cuda_mparticles<BS>::get_particles()
+{
+  return get_particles(0, this->n_prts);
+}
+
+// ----------------------------------------------------------------------
+// get_particles
+
+template<typename BS>
 std::vector<typename cuda_mparticles<BS>::Particle> cuda_mparticles<BS>::get_particles(int p)
 {
   // FIXME, doing the copy here all the time would be nice to avoid

@@ -65,6 +65,20 @@ void MparticlesCuda<BS>::inject(const std::vector<Particle>& buf, const std::vec
 }
 
 template<typename BS>
+std::vector<uint> MparticlesCuda<BS>::get_offsets() const
+{
+  dprintf("CMPRTS: get_particles\n");
+  return cmprts_->get_offsets();
+}
+
+template<typename BS>
+std::vector<typename MparticlesCuda<BS>::Particle> MparticlesCuda<BS>::get_particles() const
+{
+  dprintf("CMPRTS: get_particles\n");
+  return cmprts_->get_particles();
+}
+
+template<typename BS>
 std::vector<typename MparticlesCuda<BS>::Particle> MparticlesCuda<BS>::get_particles(int p) const
 {
   dprintf("CMPRTS: get_particles\n");

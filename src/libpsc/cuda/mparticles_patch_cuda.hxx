@@ -93,13 +93,15 @@ struct ConstAccessorCuda
   };
 
   ConstAccessorCuda(Mparticles& mprts)
-    : mprts_{mprts}
+    : mprts_{mprts}, data_{const_cast<Mparticles&>(mprts).get_particles()}, off_{mprts.get_offsets()}
   {}
 
   Patch operator[](int p) { return {mprts_, p}; }
 
 private:
   Mparticles& mprts_;
+  const std::vector<Particle> data_;
+  const std::vector<uint> off_;
 };
 
 // ======================================================================

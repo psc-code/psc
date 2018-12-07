@@ -179,10 +179,10 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   uint get_n_prts();
   void inject(const std::vector<Particle>& buf, const std::vector<uint>& buf_n_by_patch);
 
+  std::vector<uint> get_offsets() const;
+  std::vector<Particle> get_particles();
   std::vector<Particle> get_particles(int p);
   Particle get_particle(int p, int n);
-
-  uint start(int p);
 
   void dump(const std::string& filename) const;
   void dump_by_patch(uint *n_prts_by_patch);
