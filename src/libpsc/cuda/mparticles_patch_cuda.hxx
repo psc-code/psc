@@ -66,7 +66,7 @@ struct ConstAccessorCuda
       
       const_iterator& operator++() { n_++; return *this; }
       const_iterator operator++(int) { auto retval = *this; ++(*this); return retval; }
-      const_accessor operator*() { return {patch_.data_[n_], patch_.mprts_, patch_.p_}; }
+      const_accessor operator*() { return {patch_.data_[n_], patch_.accessor_.mprts(), patch_.p_}; }
       
     private:
       const Patch patch_;
@@ -74,7 +74,7 @@ struct ConstAccessorCuda
     };
     
     Patch(ConstAccessorCuda& accessor, int p)
-      : mprts_{accessor.mprts()}, p_{p}, data_{accessor.data(p)}, size_{accessor.size(p)}
+      : accessor_{accessor}, p_{p}, data_{accessor.data(p)}, size_{accessor.size(p)}
     {}
 
     // FIXME, implicit copy ctor copies entire array, and that happens all the time when
@@ -82,11 +82,11 @@ struct ConstAccessorCuda
       
     const_iterator begin() const { return {*this, 0}; }
     const_iterator end()   const { return {*this, size_}; }
-    const_accessor operator[](int n) const { return {data_[n], mprts_, p_}; }
+    const_accessor operator[](int n) const { return {data_[n], accessor_.mprts(), p_}; }
     uint size() const { return size_; }
     
   private:
-    const Mparticles& mprts_;
+    const ConstAccessorCuda accessor_;
     int p_;
     const Particle* data_;
     uint size_;
@@ -97,7 +97,7 @@ struct ConstAccessorCuda
   {}
 
   Patch operator[](int p) { return {*this, p}; }
-  Mparticles& mprts() { return mprts_; }
+  Mparticles& mprts() const { return mprts_; }
   const Particle* data(int p) { return &data_[off_[p]]; }
   uint size(int p) { return off_[p+1] - off_[p]; }
 
