@@ -54,22 +54,22 @@ struct ConstParticleAccessorVpic
   using real_t = typename Mparticles::real_t;
   using Real3 = Vec3<real_t>;
   using Double3 = Vec3<double>;
-  using ConstSpeciesIterator = typename Mparticles::ConstSpeciesIterator;
+  using Species = typename Mparticles::Species;
 
-  ConstParticleAccessorVpic(const Particle& prt, ConstSpeciesIterator sp)
+  ConstParticleAccessorVpic(const Particle& prt, const Species& sp)
     : prt_{prt}, sp_{sp}
   {}
   
   Real3 u()  const { return {prt_.ux, prt_.uy, prt_.uz}; }
-  real_t w() const { return prt_.w * sp_->vgrid().dV; }
-  real_t qni_wni() const { return w() * sp_->q; }
-  int kind() const { return sp_->id; }
+  real_t w() const { return prt_.w * sp_.vgrid().dV; }
+  real_t qni_wni() const { return w() * sp_.q; }
+  int kind() const { return sp_.id; }
   
   Real3 x() const { return Real3(x_double()); }
   
   Double3 x_double()  const
   {
-    const auto& vgrid = sp_->vgrid();
+    const auto& vgrid = sp_.vgrid();
     double x0 = vgrid.x0, y0 = vgrid.y0, z0 = vgrid.z0;
     double x1 = vgrid.x1, y1 = vgrid.y1, z1 = vgrid.z1;
     double nx = vgrid.nx, ny = vgrid.ny, nz = vgrid.nz;
@@ -95,7 +95,7 @@ struct ConstParticleAccessorVpic
       
   Double3 position() const
   {
-    const auto& vgrid = sp_->vgrid();
+    const auto& vgrid = sp_.vgrid();
     double x0 = vgrid.x0, y0 = vgrid.y0, z0 = vgrid.z0;
     
     return Double3(x_double()) + Double3{x0, y0, z0};
@@ -103,7 +103,7 @@ struct ConstParticleAccessorVpic
   
 private:
   const Particle& prt_;
-  ConstSpeciesIterator sp_;
+  const Species& sp_;
 };
 
 // ======================================================================
@@ -149,8 +149,8 @@ struct ConstAccessorVpic
       }
       
       const_iterator operator++(int) { auto retval = *this; ++(*this); return retval; }
-      const_accessor operator*() { return {sp_->p[n_], sp_}; }
-	
+      const_accessor operator*() { return {sp_->p[n_], *sp_}; }
+      
     private:
       const Mparticles& mprts_;
       ConstSpeciesIterator sp_;
@@ -167,12 +167,11 @@ struct ConstAccessorVpic
 
     const_accessor operator[](int n) const
     {
-      auto prts = mprts_[0];
-      for (auto sp = prts.begin(); sp != prts.end(); ++sp) {
-	if (n < sp->np) {
-	  return {sp->p[n], sp};
+      for (auto& sp : mprts_[0]) {
+	if (n < sp.np) {
+	  return {sp.p[n], sp};
 	}
-	n -= sp->np;
+	n -= sp.np;
       }
       assert(0);
     }
