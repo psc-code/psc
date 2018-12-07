@@ -73,9 +73,8 @@ struct ConstAccessorCuda
       uint n_;
     };
     
-    Patch(const Mparticles& mprts, int p)
-      : mprts_{mprts}, p_{p}, data_{const_cast<Mparticles&>(mprts).get_particles(p)}
-    // FIXME, const hacking around reorder may change state...
+    Patch(ConstAccessorCuda& accessor, int p)
+      : mprts_{accessor.mprts()}, p_{p}, data_{accessor.data(p)}
     {}
 
     // FIXME, implicit copy ctor copies entire array, and that happens all the time when
@@ -96,7 +95,9 @@ struct ConstAccessorCuda
     : mprts_{mprts}, data_{const_cast<Mparticles&>(mprts).get_particles()}, off_{mprts.get_offsets()}
   {}
 
-  Patch operator[](int p) { return {mprts_, p}; }
+  Patch operator[](int p) { return {*this, p}; }
+  Mparticles& mprts() { return mprts_; }
+  std::vector<Particle> data(int p) { return {&data_[off_[p]], &data_[off_[p+1]]}; }
 
 private:
   Mparticles& mprts_;
