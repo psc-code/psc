@@ -85,8 +85,8 @@ struct ConstAccessorSimple
 					  const_accessor&> // reference type
 					   
     {
-      const_iterator(const MparticlesPatch& prts, uint n)
-	: prts_{prts}, n_{n}
+      const_iterator(const Patch& patch, uint n)
+	: patch_{patch}, n_{n}
       {}
       
       bool operator==(const_iterator other) const { return n_ == other.n_; }
@@ -94,10 +94,10 @@ struct ConstAccessorSimple
 
       const_iterator& operator++()  { n_++; return *this; }
       const_iterator operator++(int) { auto retval = *this; ++(*this); return retval; }
-      const_accessor operator*() { return {prts_[n_], prts_.mprts(), prts_.p()}; }
+      const_accessor operator*() { return patch_[n_]; }
 
     private:
-      const MparticlesPatch& prts_;
+      const Patch patch_;
       uint n_;
     };
     
