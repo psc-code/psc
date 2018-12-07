@@ -43,7 +43,7 @@ struct ConstAccessorCuda
     operator const Particle& () const { return prt_; }
     
   private:
-    const Particle prt_;
+    const Particle& prt_;
     const Mparticles& mprts_;
     const int p_;
   };
