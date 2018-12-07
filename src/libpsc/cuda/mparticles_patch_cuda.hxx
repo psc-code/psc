@@ -10,43 +10,50 @@
 // template for a modifiable accesser, if we ever want to go there.
 
 // ======================================================================
+// ConstParticleAccessorCuda
+
+template<typename Mparticles>
+struct ConstParticleAccessorCuda
+{
+  using Particle = typename Mparticles::Particle;
+  using real_t = typename Particle::real_t;
+  using Real3 = typename Particle::Real3;
+  using Double3 = Vec3<double>;
+  
+  ConstParticleAccessorCuda(const Particle& prt, const Mparticles& mprts, int p)
+    : prt_{prt}, mprts_{mprts}, p_{p}
+  {}
+  
+  Real3 x()   const { return prt_.x(); }
+  Real3 u()   const { return prt_.u(); }
+  real_t w()  const { return prt_.qni_wni() / mprts_.grid().kinds[prt_.kind()].q; }
+  real_t qni_wni() const { return prt_.qni_wni(); }
+  int kind()  const { return prt_.kind(); }
+  
+  Double3 position() const
+  {
+    auto& patch = mprts_.grid().patches[p_];
+    
+    return patch.xb + Double3(prt_.x());
+  }
+  
+  operator const Particle& () const { return prt_; }
+  
+private:
+  const Particle& prt_;
+  const Mparticles& mprts_;
+  const int p_;
+};
+
+// ======================================================================
 // ConstAccessorCuda
 
 template<typename Mparticles>
 struct ConstAccessorCuda
 {
   using Particle = typename Mparticles::Particle;
-  using real_t = typename Particle::real_t;
-  using Real3 = typename Particle::Real3;
-
-  struct const_accessor
-  {
-    using Double3 = Vec3<double>;
-    
-    const_accessor(const Particle& prt, const Mparticles& mprts, int p)
-      : prt_{prt}, mprts_{mprts}, p_{p}
-    {}
-
-    Real3 x()   const { return prt_.x(); }
-    Real3 u()   const { return prt_.u(); }
-    real_t w()  const { return prt_.qni_wni() / mprts_.grid().kinds[prt_.kind()].q; }
-    real_t qni_wni() const { return prt_.qni_wni(); }
-    int kind()  const { return prt_.kind(); }
-    
-    Double3 position() const
-    {
-      auto& patch = mprts_.grid().patches[p_];
-      
-      return patch.xb + Double3(prt_.x());
-    }
-
-    operator const Particle& () const { return prt_; }
-    
-  private:
-    const Particle& prt_;
-    const Mparticles& mprts_;
-    const int p_;
-  };
+  
+  using const_accessor = ConstParticleAccessorCuda<Mparticles>;
   
   struct Patch
   {
