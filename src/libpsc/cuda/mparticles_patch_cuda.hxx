@@ -24,10 +24,10 @@ struct ConstAccessorCuda
   struct Patch
   {
     struct const_iterator : std::iterator<std::random_access_iterator_tag,
-      const_accessor,  // value type
-      ptrdiff_t,       // difference type
-      const_accessor*, // pointer type
-      const_accessor&> // reference type
+					  const_accessor,  // value type
+					  ptrdiff_t,       // difference type
+					  const_accessor*, // pointer type
+					  const_accessor&> // reference type
     
     {
       const_iterator(const Patch& patch, uint n)
