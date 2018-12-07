@@ -101,7 +101,7 @@ struct ConstAccessorPatchSimple
   };
   
   ConstAccessorPatchSimple(const ConstAccessorSimple& accessor, int p)
-    : prts_{accessor.mprts()[p]}
+    : accessor_{accessor}, prts_{accessor.mprts()[p]}
   {}
   
   const_iterator begin() const { return {*this, 0}; }
@@ -110,6 +110,7 @@ struct ConstAccessorPatchSimple
   uint size() const { return prts_.size(); }
   
 private:
+  const ConstAccessorSimple& accessor_;
   const MparticlesPatch& prts_;
 };
 
@@ -126,7 +127,6 @@ struct ConstAccessorSimple
   {}
 
   Patch operator[](int p) const { return {*this, p}; }
-
   const Mparticles& mprts() const { return mprts_; }
 
 private:

@@ -48,19 +48,17 @@ struct ConstAccessorPatchCuda
   };
   
   ConstAccessorPatchCuda(const ConstAccessorCuda& accessor, int p)
-    : mprts_{accessor.mprts()}, p_{p}, data_{accessor.data(p)}, size_{accessor.size(p)}
+    : accessor_{accessor}, p_{p}
   {}
   
   const_iterator begin() const { return {*this, 0}; }
   const_iterator end()   const { return {*this, size()}; }
-  const_accessor operator[](int n) const { return {data_[n], mprts_, p_}; }
-  uint size() const { return size_; }
+  const_accessor operator[](int n) const { return {accessor_.data(p_)[n], accessor_.mprts(), p_}; }
+  uint size() const { return accessor_.size(p_); }
   
 private:
-  const Mparticles& mprts_;
+  const ConstAccessorCuda& accessor_;
   int p_;
-  const Particle* data_;
-  uint size_;
 };
 
 // ======================================================================
