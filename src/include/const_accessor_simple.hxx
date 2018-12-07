@@ -35,7 +35,7 @@ template<typename Mparticles, typename MparticlesPatch>
 struct ConstParticleAccessorSimple
 {
   using Particle = typename Mparticles::Particle;
-  using real_t = typename Particle::real_t;
+  using real_t = typename Mparticles::real_t;
   using Real3 = Vec3<real_t>;
   using Double3 = Vec3<double>;
   

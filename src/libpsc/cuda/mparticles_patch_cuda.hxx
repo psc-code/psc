@@ -106,26 +106,40 @@ private:
 // ConstParticleAccessorCuda_
 
 template<typename Mparticles>
+struct ConstParticleAccessorPatchCuda
+{
+  ConstParticleAccessorPatchCuda(const Mparticles& mprts, int p)
+    : mprts{mprts}, p{p}
+  {}
+
+  const Grid_t& grid() const { return mprts.grid(); }
+
+  const Mparticles& mprts;
+  int p;
+};
+
+template<typename Mparticles>
 struct ConstParticleAccessorCuda_
 {
   using Particle = typename Mparticles::Particle;
   using real_t = typename Particle::real_t;
   using Real3 = Vec3<real_t>;
   using Double3 = Vec3<double>;
+  using MparticlesPatch = ConstParticleAccessorPatchCuda<Mparticles>;
 
-  ConstParticleAccessorCuda_(const Particle& prt, const Mparticles& mprts, int p)
-    : prt_{prt}, mprts_{mprts}, p_{p}
+  ConstParticleAccessorCuda_(const Particle& prt, const MparticlesPatch& prts)
+    : prt_{prt}, prts_{prts}
   {}
   
   Real3 x()   const { return prt_.x(); }
   Real3 u()   const { return prt_.u(); }
-  real_t w()  const { return prt_.qni_wni() / mprts_.grid().kinds[prt_.kind()].q; }
+  real_t w()  const { return prt_.qni_wni() / prts_.grid().kinds[prt_.kind()].q; }
   real_t qni_wni() const { return prt_.qni_wni(); }
   int kind()  const { return prt_.kind(); }
   
   Double3 position() const
   {
-    auto& patch = mprts_.grid().patches[p_];
+    auto& patch = prts_.grid().patches[prts_.p];
     
     return patch.xb + Double3(prt_.x());
   }
@@ -134,8 +148,7 @@ struct ConstParticleAccessorCuda_
   
 private:
   Particle prt_;
-  const Mparticles& mprts_;
-  const int p_;
+  MparticlesPatch prts_;
 };
   
 
@@ -148,6 +161,7 @@ struct ConstAccessorCuda_
   using Particle = typename Mparticles::Particle;
   using real_t = typename Particle::real_t;
   using Real3 = typename Particle::Real3;
+  using MparticlesPatch = ConstParticleAccessorPatchCuda<Mparticles>;
 
   using const_accessor = ConstParticleAccessorCuda_<Mparticles>;
   
@@ -160,8 +174,8 @@ struct ConstAccessorCuda_
 					  const_accessor&> // reference type
       
     {
-      const_iterator(const Mparticles& mprts, int p, uint n)
-	: mprts_{mprts}, p_{p}, n_{n}
+      const_iterator(const MparticlesPatch& prts, uint n)
+	: prts_{prts}, n_{n}
       {}
 	
       bool operator==(const_iterator other) const { return n_ == other.n_; }
@@ -169,32 +183,30 @@ struct ConstAccessorCuda_
 	
       const_iterator& operator++() { n_++; return *this; }
       const_iterator operator++(int) { auto retval = *this; ++(*this); return retval; }
-      const_accessor operator*() { return {const_cast<Mparticles&>(mprts_).get_particle(p_, n_), mprts_, p_}; } // FIXME constness
+      const_accessor operator*() { return {const_cast<Mparticles&>(prts_.mprts).get_particle(prts_.p, n_), prts_}; } // FIXME constness
 	
     private:
-      const Mparticles& mprts_;
-      const int p_;
+      const MparticlesPatch prts_;
       uint n_;
     };
     
     Patch(const Mparticles& mprts, int p)
-      : mprts_{mprts}, p_{p}
+      : prts_{mprts, p}
     {}
 
-    const_iterator begin() const { return {mprts_, p_, 0}; }
-    const_iterator end()   const { return {mprts_, p_, size()}; };
-    const_accessor operator[](int n) const { return {const_cast<Mparticles&>(mprts_).get_particle(p_, n), mprts_, p_}; }
+    const_iterator begin() const { return {prts_, 0}; }
+    const_iterator end()   const { return {prts_, size()}; };
+    const_accessor operator[](int n) const { return {const_cast<Mparticles&>(prts_.mprts).get_particle(prts_.p, n), prts_}; }
 
     uint size() const
     {
-      auto n_prts_by_patch = const_cast<Mparticles&>(mprts_).get_size_all();
-      return n_prts_by_patch[p_];
+      auto n_prts_by_patch = const_cast<Mparticles&>(prts_.mprts).get_size_all();
+      return n_prts_by_patch[prts_.p];
     }
 
       
   private:
-    const Mparticles& mprts_;
-    const int p_;
+    const MparticlesPatch prts_;
   };
 
   ConstAccessorCuda_(Mparticles& mprts)
