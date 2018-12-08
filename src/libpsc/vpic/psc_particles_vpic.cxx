@@ -66,16 +66,14 @@ void copy_from(MparticlesBase& mprts_to_base, MparticlesBase& mprts_from_base)
   float dVi = 1.f / (dx[0] * dx[1] * dx[2]); // FIXME, vgrid->dVi?
 
   mprts_to.reset();
+  mprts_to.reserve_all(mprts_from.get_size_all());
 
-  auto n_prts_by_patch = mprts_from.get_size_all();
-  mprts_to.reserve_all(n_prts_by_patch);
-  
+  auto accessor_from = mprts_from.accessor();
   for (int p = 0; p < mprts_to.n_patches(); p++) {
-    auto& prts_from = mprts_from[p];
+    auto prts_from = accessor_from[p];
 
-    int n_prts = n_prts_by_patch[p];
-    for (int n = 0; n < n_prts; n++) {
-      auto& prt_from = prts_from[n];
+    int n_prts = prts_from.size();
+    for (auto prt_from : prts_from) {
       assert(prt_from.kind() < mprts_to.grid().kinds.size());
 
       int i3[3];
@@ -96,7 +94,7 @@ void copy_from(MparticlesBase& mprts_to_base, MparticlesBase& mprts_from_base)
       prt.ux = prt_from.u()[0];
       prt.uy = prt_from.u()[1];
       prt.uz = prt_from.u()[2];
-      prt.w = prts_from.prt_wni(prt_from) / dVi;
+      prt.w  = prt_from.w() / dVi;
       mprts_to.push_back(prt_from.kind(), prt);
     }
   }
