@@ -123,6 +123,7 @@ struct ConstAccessorVpic
   struct Patch
   {
     using ConstSpeciesIterator = typename Mparticles::ConstSpeciesIterator;
+    using Species = typename Mparticles::Species;
     
     struct const_iterator : std::iterator<std::random_access_iterator_tag,
 					  const_accessor,  // value type
@@ -169,12 +170,14 @@ struct ConstAccessorVpic
     {
       for (auto& sp : mprts_[0]) {
 	if (n < sp.np) {
-	  return {sp.p[n], sp};
+	  return get(sp, n);
 	}
 	n -= sp.np;
       }
       assert(0);
     }
+
+    const_accessor get(const Species& sp, int n) const { return {sp.p[n], sp}; }
     
   private:
     const Mparticles& mprts_;
