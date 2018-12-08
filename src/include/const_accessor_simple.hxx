@@ -17,11 +17,15 @@ struct AccessorSimple
       prts_{prts}
   {}
   
-  real_t q() const { return prts_.prt_qni(prt_); }
-  real_t m() const { return prts_.prt_mni(prt_); }
+  real_t  x(int d) const { return prt_.x()[d]; }
+  real_t& x(int d)       { return prt_.x()[d]; }
   
   real_t  u(int d) const { return prt_.u()[d]; }
   real_t& u(int d)       { return prt_.u()[d]; }
+  
+  real_t w()  const { return prt_.qni_wni() / q(); }
+  real_t q() const { return prts_.prt_qni(prt_); }
+  real_t m() const { return prts_.prt_mni(prt_); }
   
 private:
   Particle& prt_;
@@ -78,7 +82,9 @@ struct AccessorPatchSimple
   {}
 
   Accessor operator[](int n) { return {prts_.buf[n], prts_}; }
+  const Grid_t& grid() const { return prts_.grid(); }
 
+private:
   MparticlesPatch& prts_;
 };
 

@@ -76,7 +76,8 @@ struct CollisionHost
 	  update_rei_before(mprts[p], offsets[c], offsets[c+1], p, ix,iy,iz);
 	  
 	  struct psc_collision_stats stats = {};
-	  collide_in_cell(mprts[p], offsets[c], offsets[c+1], &stats);
+	  auto acc = mprts[p].accessor();
+	  collide_in_cell(acc, offsets[c], offsets[c+1], &stats);
 	  
 	  update_rei_after(mprts[p], offsets[c], offsets[c+1], p, ix,iy,iz);
 	  
@@ -216,10 +217,10 @@ struct CollisionHost
   // ----------------------------------------------------------------------
   // collide_in_cell
 
-  void collide_in_cell(particles_t& prts, int n_start, int n_end,
+  void collide_in_cell(AccessorPatchSimple<Mparticles>& acc, int n_start, int n_end,
 		       struct psc_collision_stats *stats)
   {
-    const auto& grid = prts.grid();
+    const auto& grid = acc.grid();
     int nn = n_end - n_start;
   
     int n = 0;
@@ -228,33 +229,32 @@ struct CollisionHost
     }
 
     // all particles need to have same weight!
-    real_t wni = prts.prt_wni(prts[n_start]);
+    real_t wni = acc[n_start].w();
     real_t nudt1 = wni * grid.norm.cori * nn * this->interval_ * grid.dt * nu_;
 
     real_t *nudts = (real_t *) malloc((nn / 2 + 2) * sizeof(*nudts));
     int cnt = 0;
 
     if (nn % 2 == 1) { // odd # of particles: do 3-collision
-      nudts[cnt++] = do_bc(prts, n_start  , n_start+1, .5 * nudt1);
-      nudts[cnt++] = do_bc(prts, n_start  , n_start+2, .5 * nudt1);
-      nudts[cnt++] = do_bc(prts, n_start+1, n_start+2, .5 * nudt1);
+      nudts[cnt++] = do_bc(acc, n_start  , n_start+1, .5 * nudt1);
+      nudts[cnt++] = do_bc(acc, n_start  , n_start+2, .5 * nudt1);
+      nudts[cnt++] = do_bc(acc, n_start+1, n_start+2, .5 * nudt1);
       n = 3;
     }
     for (; n < nn;  n += 2) { // do remaining particles as pair
-      nudts[cnt++] = do_bc(prts, n_start+n, n_start+n+1, nudt1);
+      nudts[cnt++] = do_bc(acc, n_start+n, n_start+n+1, nudt1);
     }
 
     calc_stats(stats, nudts, cnt);
     free(nudts);
   }
 
-  real_t do_bc(particles_t& prts, int n1, int n2, real_t nudt1)
+  real_t do_bc(AccessorPatchSimple<Mparticles>& prts, int n1, int n2, real_t nudt1)
   {
     Rng rng;
     BinaryCollision<Accessor> bc;
-    auto accessor = prts.accessor();
-    auto prt1 = accessor[n1];
-    auto prt2 = accessor[n2];
+    auto prt1 = prts[n1];
+    auto prt2 = prts[n2];
     return bc(prt1, prt2, nudt1, rng);
   }
 
