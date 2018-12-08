@@ -12,9 +12,8 @@ struct ParticleProxySimple
   using Patch = typename Mparticles::Patch;
   using Real3 = Vec3<real_t>;
   
-  ParticleProxySimple(Particle& prt, const Patch& prts)
-    : prt_{prt},
-      prts_{prts}
+  ParticleProxySimple(Particle& prt, const Mparticles& mprts, int p)
+    : prt_{prt}, mprts_{mprts}, p_{p}
   {}
   
   real_t  x(int d) const { return prt_.x()[d]; }
@@ -24,10 +23,11 @@ struct ParticleProxySimple
   real_t& u(int d)       { return prt_.u()[d]; }
   
   real_t w()  const { return prt_.qni_wni() / q(); }
-  real_t q() const { return prts_.prt_qni(prt_); }
-  real_t m() const { return prts_.prt_mni(prt_); }
+  real_t q()  const { return mprts_.grid().kinds[kind()].q; }
+  real_t m()  const { return mprts_.grid().kinds[kind()].m; }
+  int kind()  const { return prt_.kind(); }
 
-  int validCellIndex() const { return prts_.validCellIndex(prt_); }
+  int validCellIndex() const { return mprts_[p_].validCellIndex(prt_); }
   
   friend void swap(ParticleProxySimple<Mparticles> a, ParticleProxySimple<Mparticles> b)
   {
@@ -37,7 +37,8 @@ struct ParticleProxySimple
 
 private:
   Particle& prt_;
-  const Patch& prts_;
+  const Mparticles& mprts_;
+  int p_;
 };
 
 // ======================================================================
@@ -77,7 +78,7 @@ private:
 };
   
 // ======================================================================
-// AcessorPatchSimple
+// AccessorPatchSimple
 
 template<typename AccessorSimple>
 struct AccessorPatchSimple
@@ -87,15 +88,16 @@ struct AccessorPatchSimple
   using MparticlesPatch = typename Mparticles::Patch;
   
   AccessorPatchSimple(AccessorSimple& accessor, int p)
-    : prts_{accessor.mprts()[p]}
+    : accessor_{accessor}, p_{p}
   {}
 
-  Accessor operator[](int n) { return {prts_.buf[n], prts_}; }
-  uint size() const { return prts_.size(); }
-  const Grid_t& grid() const { return prts_.grid(); }
+  Accessor operator[](int n) { return {accessor_.data(p_)[n], accessor_.mprts(), p_}; }
+  uint size() const { return accessor_.size(p_); }
+  const Grid_t& grid() const { return accessor_.grid(); }
 
 private:
-  MparticlesPatch& prts_;
+  AccessorSimple& accessor_;
+  int p_;
 };
 
 // ======================================================================
@@ -161,6 +163,7 @@ struct ConstAccessorSimple
   const Mparticles& mprts() const { return mprts_; }
   uint size(int p) const { return mprts_[p].size(); }
   typename Mparticles::Patch::iterator data(int p) const { return mprts_[p].begin(); }
+  const Grid_t& grid() const { return mprts_.grid(); }
 
 private:
   Mparticles& mprts_;
@@ -182,6 +185,9 @@ struct AccessorSimple
   Patch operator[](int p) { return {*this, p}; }
   const Mparticles& mprts() const { return mprts_; }
   Mparticles& mprts() { return mprts_; }
+  uint size(int p) const { return mprts_[p].size(); }
+  typename Mparticles::Patch::iterator data(int p) { return mprts_[p].begin(); }
+  const Grid_t& grid() const { return mprts_.grid(); }
 
 private:
   Mparticles& mprts_;
