@@ -44,17 +44,17 @@ private:
 };
 
 // ======================================================================
-// ConstParticleAccessorSimple
+// ConstParticleProxySimple
 
 template<typename Mparticles>
-struct ConstParticleAccessorSimple
+struct ConstParticleProxySimple
 {
   using Particle = typename Mparticles::Particle;
   using real_t = typename Mparticles::real_t;
   using Real3 = Vec3<real_t>;
   using Double3 = Vec3<double>;
   
-  ConstParticleAccessorSimple(const Particle& prt, const Mparticles& mprts, int p)
+  ConstParticleProxySimple(const Particle& prt, const Mparticles& mprts, int p)
     : prt_{prt}, mprts_{mprts}, p_{p}
   {}
   
@@ -86,14 +86,14 @@ template<typename AccessorSimple>
 struct AccessorPatchSimple
 {
   using Mparticles = typename AccessorSimple::Mparticles;
-  using Accessor = ParticleProxySimple<Mparticles>;
+  using ParticleProxy = ParticleProxySimple<Mparticles>;
   using MparticlesPatch = typename Mparticles::Patch;
   
   AccessorPatchSimple(AccessorSimple& accessor, int p)
     : accessor_{accessor}, p_{p}
   {}
 
-  Accessor operator[](int n) { return {accessor_.data(p_)[n], accessor_.mprts(), p_}; }
+  ParticleProxy operator[](int n) { return {accessor_.data(p_)[n], accessor_.mprts(), p_}; }
   uint size() const { return accessor_.size(p_); }
   const Grid_t& grid() const { return accessor_.grid(); }
 
@@ -109,13 +109,13 @@ template<typename ConstAccessorSimple>
 struct ConstAccessorPatchSimple
 {
   using Mparticles = typename ConstAccessorSimple::Mparticles;
-  using accessor = ConstParticleAccessorSimple<Mparticles>;
+  using ConstParticleProxy = ConstParticleProxySimple<Mparticles>;
 
   struct const_iterator : std::iterator<std::forward_iterator_tag,
-					accessor,        // value type
-					ptrdiff_t,       // difference type
-					const accessor*, // pointer type
-					const accessor&> // reference type
+					ConstParticleProxy,  // value type
+					ptrdiff_t,           // difference type
+					ConstParticleProxy*, // pointer type
+					ConstParticleProxy&> // reference type
   
   {
     const_iterator(const ConstAccessorPatchSimple& patch, uint n)
@@ -127,7 +127,7 @@ struct ConstAccessorPatchSimple
     
     const_iterator& operator++() { n_++; return *this; }
     const_iterator operator++(int) { auto retval = *this; ++(*this); return retval; }
-    const accessor operator*() { return patch_[n_]; }
+    ConstParticleProxy operator*() { return patch_[n_]; }
     
   private:
     const ConstAccessorPatchSimple patch_;
@@ -140,7 +140,7 @@ struct ConstAccessorPatchSimple
   
   const_iterator begin() const { return {*this, 0}; }
   const_iterator end()   const { return {*this, size()}; }
-  const accessor operator[](int n) const { return {accessor_.data(p_)[n], accessor_.mprts(), p_}; }
+  ConstParticleProxy operator[](int n) const { return {accessor_.data(p_)[n], accessor_.mprts(), p_}; }
   uint size() const { return accessor_.size(p_); }
   
 private:

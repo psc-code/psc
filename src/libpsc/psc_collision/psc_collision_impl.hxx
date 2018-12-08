@@ -23,7 +23,7 @@ struct CollisionHost
   using Mfields = _Mfields;
   using Fields = Fields3d<typename Mfields::fields_t>;
   using AccessorPatch = typename Mparticles::Accessor::Patch;
-  using Accessor = typename AccessorPatch::Accessor;
+  using ParticleProxy = typename AccessorPatch::ParticleProxy;
   
   constexpr static char const* const name = Mparticles_traits<Mparticles>::name;
 
@@ -252,7 +252,7 @@ struct CollisionHost
   real_t do_bc(AccessorPatch& prts, int n1, int n2, real_t nudt1)
   {
     Rng rng;
-    BinaryCollision<Accessor> bc;
+    BinaryCollision<ParticleProxy> bc;
     auto prt1 = prts[n1];
     auto prt2 = prts[n2];
     return bc(prt1, prt2, nudt1, rng);
