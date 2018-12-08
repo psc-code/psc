@@ -74,12 +74,12 @@ struct CollisionHost
 	  int c = (iz * ldims[1] + iy) * ldims[0] + ix;
 	  randomize_in_cell(prts, offsets[c], offsets[c+1]);
 	  
-	  update_rei_before(mprts[p], offsets[c], offsets[c+1], p, ix,iy,iz);
+	  update_rei_before(acc, offsets[c], offsets[c+1], p, ix,iy,iz);
 	  
 	  struct psc_collision_stats stats = {};
 	  collide_in_cell(acc, offsets[c], offsets[c+1], &stats);
 	  
-	  update_rei_after(mprts[p], offsets[c], offsets[c+1], p, ix,iy,iz);
+	  update_rei_after(acc, offsets[c], offsets[c+1], p, ix,iy,iz);
 	  
 	  for (int s = 0; s < NR_STATS; s++) {
 	    F(s, ix,iy,iz) = stats.s[s];
@@ -179,7 +179,7 @@ struct CollisionHost
   // ----------------------------------------------------------------------
   // update_rei_before
 
-  void update_rei_before(particles_t& prts, int n_start, int n_end,
+  void update_rei_before(/*const*/ AccessorPatch& prts, int n_start, int n_end,
 			 int p, int i, int j, int k)
   {
     real_t fnqs = prts.grid().norm.fnqs;
@@ -188,26 +188,26 @@ struct CollisionHost
     F(1, i,j,k) = 0.;
     F(2, i,j,k) = 0.;
     for (int n = n_start; n < n_end; n++) {
-      const auto& prt = prts[n];
-      F(0, i,j,k) -= prt.u()[0] * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
-      F(1, i,j,k) -= prt.u()[1] * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
-      F(2, i,j,k) -= prt.u()[2] * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
+      auto prt = prts[n];
+      F(0, i,j,k) -= prt.u(0) * prt.m() * prt.w() * fnqs;
+      F(1, i,j,k) -= prt.u(1) * prt.m() * prt.w() * fnqs;
+      F(2, i,j,k) -= prt.u(2) * prt.m() * prt.w() * fnqs;
     }
   }
 
   // ----------------------------------------------------------------------
   // update_rei_after
 
-  void update_rei_after(particles_t& prts, int n_start, int n_end,
+  void update_rei_after(/*const*/ AccessorPatch& prts, int n_start, int n_end,
 			int p, int i, int j, int k)
   {
     real_t fnqs = prts.grid().norm.fnqs, dt = prts.grid().dt;
     Fields F(mflds_rei_[p]);
     for (int n = n_start; n < n_end; n++) {
       const auto& prt = prts[n];
-      F(0, i,j,k) += prt.u()[0] * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
-      F(1, i,j,k) += prt.u()[1] * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
-      F(2, i,j,k) += prt.u()[2] * prts.prt_mni(prt) * prts.prt_wni(prt) * fnqs;
+      F(0, i,j,k) += prt.u(0) * prt.m() * prt.w() * fnqs;
+      F(1, i,j,k) += prt.u(1) * prt.m() * prt.w() * fnqs;
+      F(2, i,j,k) += prt.u(2) * prt.m() * prt.w() * fnqs;
     }
     F(0, i,j,k) /= (this->interval_ * dt);
     F(1, i,j,k) /= (this->interval_ * dt);
