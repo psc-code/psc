@@ -112,24 +112,17 @@ private:
 template<typename Mparticles>
 struct ConstAccessorVpic
 {
-  using Particle = typename Mparticles::Particle;
-  using ConstSpeciesIterator = typename Mparticles::ConstSpeciesIterator;
-  using real_t = float;
-  using Real3 = Vec3<real_t>;
-  using Double3 = Vec3<double>;
-
-  using const_accessor = ConstParticleAccessorVpic<Mparticles>;
-
   struct Patch
   {
+    using accessor = ConstParticleAccessorVpic<Mparticles>;
     using ConstSpeciesIterator = typename Mparticles::ConstSpeciesIterator;
     using Species = typename Mparticles::Species;
     
     struct const_iterator : std::iterator<std::forward_iterator_tag,
-					  const_accessor,  // value type
+					  accessor,        // value type
 					  ptrdiff_t,       // difference type
-					  const_accessor*, // pointer type
-					  const_accessor&> // reference type
+					  const accessor*, // pointer type
+					  const accessor&> // reference type
       
     {
       const_iterator(const Patch& patch, ConstSpeciesIterator sp, uint n)
@@ -150,7 +143,7 @@ struct ConstAccessorVpic
       }
       
       const_iterator operator++(int) { auto retval = *this; ++(*this); return retval; }
-      const_accessor operator*() { return {sp_->p[n_], *sp_}; }
+      const accessor operator*() { return {sp_->p[n_], *sp_}; }
       
     private:
       const Patch patch_;
@@ -166,7 +159,7 @@ struct ConstAccessorVpic
     const_iterator end()   const { return {*this, accessor_.mprts_[0].end(), 0}; }
     uint size() const { return accessor_.size(0); }
 
-    const_accessor operator[](int n) const
+    const accessor operator[](int n) const
     {
       for (auto& sp : accessor_.mprts_[0]) {
 	if (n < sp.np) {
