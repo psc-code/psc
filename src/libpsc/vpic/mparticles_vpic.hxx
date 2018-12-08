@@ -132,8 +132,8 @@ struct ConstAccessorVpic
 					  const_accessor&> // reference type
       
     {
-      const_iterator(const Mparticles& mprts, ConstSpeciesIterator sp, uint n)
-	: mprts_{mprts}, sp_{sp}, n_{n}
+      const_iterator(const Patch& patch, ConstSpeciesIterator sp, uint n)
+	: patch_{patch}, sp_{sp}, n_{n}
       {}
 	
       bool operator==(const_iterator other) const { return sp_ == other.sp_ && n_ == other.n_; }
@@ -153,41 +153,40 @@ struct ConstAccessorVpic
       const_accessor operator*() { return {sp_->p[n_], *sp_}; }
       
     private:
-      const Mparticles& mprts_;
+      const Patch patch_;
       ConstSpeciesIterator sp_;
       uint n_;
     };
-      
-    Patch(const Mparticles& mprts)
-      : mprts_{mprts}
+
+    Patch(const ConstAccessorVpic& accessor)
+      : accessor_{accessor}
     {}
       
-    const_iterator begin() const { auto prts = mprts_[0]; return {mprts_, prts.begin(), 0}; }
-    const_iterator end()   const { auto prts = mprts_[0]; return {mprts_, prts.end(), 0}; }
-    uint size() const { return mprts_.get_n_prts(); }
+    const_iterator begin() const { return {*this, accessor_.mprts_[0].begin(), 0}; }
+    const_iterator end()   const { return {*this, accessor_.mprts_[0].end(), 0}; }
+    uint size() const { return accessor_.size(0); }
 
     const_accessor operator[](int n) const
     {
-      for (auto& sp : mprts_[0]) {
+      for (auto& sp : accessor_.mprts_[0]) {
 	if (n < sp.np) {
-	  return get(sp, n);
+	  return { sp.p[n], sp };
 	}
 	n -= sp.np;
       }
       assert(0);
     }
 
-    const_accessor get(const Species& sp, int n) const { return {sp.p[n], sp}; }
-    
   private:
-    const Mparticles& mprts_;
+    const ConstAccessorVpic& accessor_;
   };
   
   ConstAccessorVpic(Mparticles& mprts)
     : mprts_{mprts}
   {}
 
-  Patch operator[](int p)       { return {mprts_}; }
+  Patch operator[](int p) const { return {*this}; }
+  uint size(int p) const { return mprts_.get_n_prts(); }
 
 private:
   Mparticles& mprts_;
