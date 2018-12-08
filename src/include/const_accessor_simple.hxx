@@ -2,17 +2,17 @@
 #pragma once
 
 // ======================================================================
-// AccessorSimple
+// ParticleProxySimple
 
 template<typename Mparticles>
-struct AccessorSimple
+struct ParticleProxySimple
 {
   using Particle = typename Mparticles::Particle;
   using real_t = typename Mparticles::real_t;
   using Patch = typename Mparticles::Patch;
   using Real3 = Vec3<real_t>;
   
-  AccessorSimple(Particle& prt, const Patch& prts)
+  ParticleProxySimple(Particle& prt, const Patch& prts)
     : prt_{prt},
       prts_{prts}
   {}
@@ -29,7 +29,7 @@ struct AccessorSimple
 
   int validCellIndex() const { return prts_.validCellIndex(prt_); }
   
-  friend void swap(AccessorSimple<Mparticles> a, AccessorSimple<Mparticles> b)
+  friend void swap(ParticleProxySimple<Mparticles> a, ParticleProxySimple<Mparticles> b)
   {
     using std::swap;
     swap(a.prt_, b.prt_);
@@ -82,7 +82,7 @@ private:
 template<typename Mparticles>
 struct AccessorPatchSimple
 {
-  using Accessor = AccessorSimple<Mparticles>;
+  using Accessor = ParticleProxySimple<Mparticles>;
   using MparticlesPatch = typename Mparticles::Patch;
   
   AccessorPatchSimple(MparticlesPatch& prts)
