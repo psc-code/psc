@@ -73,7 +73,7 @@ struct ConstAccessorPatchSimple
   using Mparticles = typename ConstAccessorSimple::Mparticles;
   using accessor = ConstParticleAccessorSimple<Mparticles>;
 
-  struct const_iterator : std::iterator<std::random_access_iterator_tag,
+  struct const_iterator : std::iterator<std::forward_iterator_tag,
 					accessor,        // value type
 					ptrdiff_t,       // difference type
 					const accessor*, // pointer type

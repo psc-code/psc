@@ -125,7 +125,7 @@ struct ConstAccessorVpic
     using ConstSpeciesIterator = typename Mparticles::ConstSpeciesIterator;
     using Species = typename Mparticles::Species;
     
-    struct const_iterator : std::iterator<std::random_access_iterator_tag,
+    struct const_iterator : std::iterator<std::forward_iterator_tag,
 					  const_accessor,  // value type
 					  ptrdiff_t,       // difference type
 					  const_accessor*, // pointer type
