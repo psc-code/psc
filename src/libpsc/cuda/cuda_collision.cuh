@@ -185,7 +185,7 @@ struct CudaCollision
     }
     
     // all particles need to have same weight!
-    real_t wni = 1.; // FIXME, there should at least be some assert to enforce this //prts.prt_wni(prts[n_start]);
+    real_t wni = 1.; // FIXME, there should at least be some assert to enforce this //prts[n_start].w());
     real_t nudt0 = wni / nicell_ * interval_ * dt_ * nu_;
 
     k_collide<cuda_mparticles><<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, sort_by_cell.d_off.data().get(),
