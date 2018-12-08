@@ -22,6 +22,8 @@ struct ParticleProxySimple
   real_t  u(int d) const { return prt_.u()[d]; }
   real_t& u(int d)       { return prt_.u()[d]; }
   
+  // FIXME, grid is always double precision, so this will switch precision
+  // where not desired. should use same info stored elsewhere at right precision
   real_t w()  const { return prt_.qni_wni() / q(); }
   real_t q()  const { return mprts_.grid().kinds[kind()].q; }
   real_t m()  const { return mprts_.grid().kinds[kind()].m; }

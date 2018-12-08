@@ -73,7 +73,6 @@ struct MparticlesPatchSimple
   // FIXME, grid is always double precision, so this will switch precision
   // where not desired. should use same info stored in mprts at right precision
   real_t prt_qni(const Particle& prt) const { return grid().kinds[prt.kind()].q; }
-  real_t prt_mni(const Particle& prt) const { return grid().kinds[prt.kind()].m; }
   real_t prt_wni(const Particle& prt) const { return prt.qni_wni() / prt_qni(prt); }
   real_t prt_qni_wni(const Particle& prt) const { return prt.qni_wni(); }
 
