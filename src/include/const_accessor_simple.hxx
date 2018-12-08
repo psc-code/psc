@@ -165,3 +165,23 @@ private:
   Mparticles& mprts_;
 };
 
+// ======================================================================
+// AcessorSimple
+
+template<typename _Mparticles>
+struct AccessorSimple
+{
+  using Mparticles = _Mparticles;
+  using Patch = AccessorPatchSimple<Mparticles>;
+  
+  AccessorSimple(Mparticles& mprts)
+    : mprts_{mprts}
+  {}
+
+  Patch operator[](int p) { return {mprts_[p]}; }
+  const Mparticles& mprts() const { return mprts_; }
+
+private:
+  Mparticles& mprts_;
+};
+

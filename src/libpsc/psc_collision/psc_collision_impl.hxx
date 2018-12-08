@@ -57,8 +57,9 @@ struct CollisionHost
   {
     auto& grid = mprts.grid();
 
+    auto accessor = mprts.accessor_();
     for (int p = 0; p < mprts.n_patches(); p++) {
-      auto acc = mprts[p].accessor();
+      auto acc = accessor[p];
   
       const int *ldims = grid.ldims;
       int nr_cells = ldims[0] * ldims[1] * ldims[2];
