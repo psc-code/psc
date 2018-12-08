@@ -65,6 +65,24 @@ private:
 };
   
 // ======================================================================
+// AcessorPatchSimple
+
+template<typename Mparticles>
+struct AccessorPatchSimple
+{
+  using Accessor = AccessorSimple<Mparticles>;
+  using MparticlesPatch = typename Mparticles::Patch;
+  
+  AccessorPatchSimple(MparticlesPatch& prts)
+    : prts_{prts}
+  {}
+
+  Accessor operator[](int n) { return {prts_.buf[n], prts_}; }
+
+  MparticlesPatch& prts_;
+};
+
+// ======================================================================
 // ConstAcessorPatchSimple
 
 template<typename ConstAccessorSimple>
