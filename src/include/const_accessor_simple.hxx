@@ -79,14 +79,15 @@ private:
 // ======================================================================
 // AcessorPatchSimple
 
-template<typename Mparticles>
+template<typename AccessorSimple>
 struct AccessorPatchSimple
 {
+  using Mparticles = typename AccessorSimple::Mparticles;
   using Accessor = ParticleProxySimple<Mparticles>;
   using MparticlesPatch = typename Mparticles::Patch;
   
-  AccessorPatchSimple(MparticlesPatch& prts)
-    : prts_{prts}
+  AccessorPatchSimple(AccessorSimple& accessor, int p)
+    : prts_{accessor.mprts()[p]}
   {}
 
   Accessor operator[](int n) { return {prts_.buf[n], prts_}; }
@@ -172,14 +173,15 @@ template<typename _Mparticles>
 struct AccessorSimple
 {
   using Mparticles = _Mparticles;
-  using Patch = AccessorPatchSimple<Mparticles>;
+  using Patch = AccessorPatchSimple<AccessorSimple>;
   
   AccessorSimple(Mparticles& mprts)
     : mprts_{mprts}
   {}
 
-  Patch operator[](int p) { return {mprts_[p]}; }
+  Patch operator[](int p) { return {*this, p}; }
   const Mparticles& mprts() const { return mprts_; }
+  Mparticles& mprts() { return mprts_; }
 
 private:
   Mparticles& mprts_;

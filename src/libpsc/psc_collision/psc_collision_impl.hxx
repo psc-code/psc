@@ -22,7 +22,7 @@ struct CollisionHost
   using MfieldsState = _MfieldsState;
   using Mfields = _Mfields;
   using Fields = Fields3d<typename Mfields::fields_t>;
-  using AccessorPatch = AccessorPatchSimple<Mparticles>;
+  using AccessorPatch = typename Mparticles::Accessor::Patch;
   using Accessor = typename AccessorPatch::Accessor;
   
   constexpr static char const* const name = Mparticles_traits<Mparticles>::name;

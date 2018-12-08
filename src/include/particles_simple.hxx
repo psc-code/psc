@@ -101,6 +101,7 @@ struct Mparticles : MparticlesBase
   using Patch = MparticlesPatchSimple<Mparticles>;
   using BndpParticle = P;
   using buf_t = typename Patch::buf_t;
+  using Accessor = AccessorSimple<Mparticles>;
 
   Mparticles(const Grid_t& grid)
     : MparticlesBase(grid),
@@ -168,7 +169,7 @@ struct Mparticles : MparticlesBase
   
   InjectorSimple<Mparticles> injector() { return {*this}; }
   ConstAccessorSimple<Mparticles> accessor() { return {*this}; }
-  AccessorSimple<Mparticles> accessor_() { return {*this}; }
+  Accessor accessor_() { return {*this}; }
   
   void check() const
   {
