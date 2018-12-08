@@ -71,13 +71,13 @@ template<typename ConstAccessorSimple>
 struct ConstAccessorPatchSimple
 {
   using Mparticles = typename ConstAccessorSimple::Mparticles;
-  using const_accessor = ConstParticleAccessorSimple<Mparticles>;
+  using accessor = ConstParticleAccessorSimple<Mparticles>;
 
   struct const_iterator : std::iterator<std::random_access_iterator_tag,
-					const_accessor,  // value type
+					accessor,        // value type
 					ptrdiff_t,       // difference type
-					const_accessor*, // pointer type
-					const_accessor&> // reference type
+					const accessor*, // pointer type
+					const accessor&> // reference type
   
   {
     const_iterator(const ConstAccessorPatchSimple& patch, uint n)
@@ -89,7 +89,7 @@ struct ConstAccessorPatchSimple
     
     const_iterator& operator++() { n_++; return *this; }
     const_iterator operator++(int) { auto retval = *this; ++(*this); return retval; }
-    const_accessor operator*() { return patch_[n_]; }
+    const accessor operator*() { return patch_[n_]; }
     
   private:
     const ConstAccessorPatchSimple patch_;
@@ -102,7 +102,7 @@ struct ConstAccessorPatchSimple
   
   const_iterator begin() const { return {*this, 0}; }
   const_iterator end()   const { return {*this, size()}; }
-  const_accessor operator[](int n) const { return {accessor_.data(p_)[n], accessor_.mprts(), p_}; }
+  const accessor operator[](int n) const { return {accessor_.data(p_)[n], accessor_.mprts(), p_}; }
   uint size() const { return accessor_.size(p_); }
   
 private:
