@@ -26,7 +26,15 @@ struct AccessorSimple
   real_t w()  const { return prt_.qni_wni() / q(); }
   real_t q() const { return prts_.prt_qni(prt_); }
   real_t m() const { return prts_.prt_mni(prt_); }
+
+  int validCellIndex() const { return prts_.validCellIndex(prt_); }
   
+  friend void swap(AccessorSimple<Mparticles> a, AccessorSimple<Mparticles> b)
+  {
+    using std::swap;
+    swap(a.prt_, b.prt_);
+  }
+
 private:
   Particle& prt_;
   const Patch& prts_;
@@ -82,6 +90,7 @@ struct AccessorPatchSimple
   {}
 
   Accessor operator[](int n) { return {prts_.buf[n], prts_}; }
+  uint size() const { return prts_.size(); }
   const Grid_t& grid() const { return prts_.grid(); }
 
 private:

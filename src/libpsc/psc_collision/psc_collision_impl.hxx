@@ -18,7 +18,6 @@ template<typename _Mparticles, typename _MfieldsState, typename _Mfields, typena
 struct CollisionHost
 {
   using Mparticles = _Mparticles;
-  using particles_t = typename Mparticles::Patch;
   using real_t = typename Mparticles::real_t;
   using MfieldsState = _MfieldsState;
   using Mfields = _Mfields;
@@ -59,7 +58,6 @@ struct CollisionHost
     auto& grid = mprts.grid();
 
     for (int p = 0; p < mprts.n_patches(); p++) {
-      particles_t& prts = mprts[p];
       auto acc = mprts[p].accessor();
   
       const int *ldims = grid.ldims;
@@ -67,12 +65,12 @@ struct CollisionHost
       int *offsets = (int *) calloc(nr_cells + 1, sizeof(*offsets));
       struct psc_collision_stats stats_total = {};
     
-      find_cell_offsets(offsets, mprts[p]);
+      find_cell_offsets(offsets, acc);
     
       Fields F(mflds_stats_[p]);
       grid.Foreach_3d(0, 0, [&](int ix, int iy, int iz) {
 	  int c = (iz * ldims[1] + iy) * ldims[0] + ix;
-	  randomize_in_cell(prts, offsets[c], offsets[c+1]);
+	  randomize_in_cell(acc, offsets[c], offsets[c+1]);
 	  
 	  update_rei_before(acc, offsets[c], offsets[c+1], p, ix,iy,iz);
 	  
@@ -142,14 +140,14 @@ struct CollisionHost
   // ----------------------------------------------------------------------
   // find_cell_offsets
 
-  static void find_cell_offsets(int offsets[], particles_t& prts)
+  static void find_cell_offsets(int offsets[], /*const*/ AccessorPatch& prts)
   {
     const int *ldims = prts.grid().ldims;
     int last = 0;
     offsets[last] = 0;
     int n_prts = prts.size();
     for (int n = 0; n < n_prts; n++) {
-      int cell_index = prts.validCellIndex(prts[n]);
+      int cell_index = prts[n].validCellIndex();
       assert(cell_index >= last);
       while (last < cell_index) {
 	offsets[++last] = n;
@@ -163,7 +161,7 @@ struct CollisionHost
   // ----------------------------------------------------------------------
   // randomize_in_cell
 
-  static void randomize_in_cell(particles_t& prts, int n_start, int n_end)
+  static void randomize_in_cell(AccessorPatch& prts, int n_start, int n_end)
   {
     return;
     int nn = n_end - n_start;
@@ -171,7 +169,8 @@ struct CollisionHost
       int n_partner = n + random() % (nn - n);
       if (n != n_partner) {
 	// swap n, n_partner
-	std::swap(prts[n_start + n], prts[n_start + n_partner]);
+	using std::swap;
+	swap(prts[n_start + n], prts[n_start + n_partner]);
       }
     }
   }
