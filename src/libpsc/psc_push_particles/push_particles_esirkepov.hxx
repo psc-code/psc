@@ -31,6 +31,8 @@ struct PushParticlesEsirkepov
     AdvanceParticle_t advance(prts.grid().dt);
     Current current(prts.grid());
     
+    flds.zero(JXI, JXI + 3);
+
     Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().domain.dx);
     real_t dq_kind[MAX_NR_KINDS];
     auto& kinds = prts.grid().kinds;
