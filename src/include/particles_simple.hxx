@@ -70,10 +70,6 @@ struct MparticlesPatchSimple
 
   void checkInPatchMod(Particle& prt) const { return mprts_->pi_.checkInPatchMod(prt.x()); }
 
-  // FIXME, grid is always double precision, so this will switch precision
-  // where not desired. should use same info stored in mprts at right precision
-  real_t prt_qni_wni(const Particle& prt) const { return prt.qni_wni(); }
-
   const Grid_t& grid() const { return *grid_; }
   const Mparticles& mprts() const { return *mprts_; }
   int p() const { return p_; }
