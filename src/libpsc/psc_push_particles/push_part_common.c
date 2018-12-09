@@ -23,9 +23,7 @@ struct PushParticlesSimple
   
   static void stagger_mprts(Mparticles& mprts, MfieldsState& mflds)
   {
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      PushParticlesImpl<C>::stagger_mprts_patch(mflds[p], mprts[p]);
-    }
+    PushParticlesImpl<C>::stagger_mprts_patch(mflds, mprts);
   }
 };
 
