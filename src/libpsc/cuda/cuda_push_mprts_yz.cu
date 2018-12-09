@@ -244,8 +244,7 @@ struct CudaPushParticles
   {
     AdvanceParticle<real_t, dim> advance{dmprts.dt()};
 
-    Real3 v;
-    advance.calc_v(v, prt.u());
+    auto v = advance.calc_v(prt.u());
 
     // position xm at x^(n+.5)
     float h0[3], h1[3];
@@ -344,8 +343,7 @@ struct CudaPushParticles
   {
     AdvanceParticle<real_t, dim> advance{dmprts.dt()};
 
-    Real3 v;
-    advance.calc_v(v, prt.u());
+    auto v = advance.calc_v(prt.u());
 
     // position xm at x^(n+.5)
     float h0[3];

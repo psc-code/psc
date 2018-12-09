@@ -56,10 +56,10 @@ struct AdvanceParticle
 // ----------------------------------------------------------------------
 // calc_v
 
-  __host__ __device__ inline void calc_v(Real3& v, const Real3& u)
+  __host__ __device__ inline Real3 calc_v(const Real3& u)
   {
     real_t root = rsqrt(1.f + sqr(u[0]) + sqr(u[1]) + sqr(u[2]));
-    v = u * Real3{root, root, root};
+    return u * Real3{root, root, root};
   }
   
 private:

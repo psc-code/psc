@@ -42,7 +42,6 @@ struct PushParticlesVb
     
       for (auto& prt: prts) {
 	Real3& x = prt.x();
-	Real3 v;
 
 	real_t xm[3];
 	for (int d = 0; d < 3; d++) {
@@ -59,7 +58,7 @@ struct PushParticlesVb
 	advance.push_p(prt.u(), E, H, dq);
 
 	// x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0)
-	advance.calc_v(v, prt.u());
+	auto v = advance.calc_v(prt.u());
 	advance.push_x(x, v);
 
 	int lf[3];
