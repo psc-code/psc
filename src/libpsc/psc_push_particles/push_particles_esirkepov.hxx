@@ -25,26 +25,28 @@ struct PushParticlesEsirkepov
   
   static void push_mprts(MfieldsState& mflds, Mparticles& mprts)
   {
+    const auto& grid = mflds.grid();
+    Real3 dxi = Real3{ 1., 1., 1. } / Real3(grid.domain.dx);
+    real_t dq_kind[MAX_NR_KINDS];
+    auto& kinds = grid.kinds;
+    assert(kinds.size() <= MAX_NR_KINDS);
+    for (int k = 0; k < kinds.size(); k++) {
+      dq_kind[k] = .5f * grid.norm.eta * grid.dt * kinds[k].q / kinds[k].m;
+    }
+    
+    auto accessor = mprts.accessor_();
     for (int p = 0; p < mflds.n_patches(); p++) {
       auto flds = mflds[p];
-      auto& prts = mprts[p];
+      auto prts = accessor[p];
       typename InterpolateEM_t::fields_t EM(flds);
       typename Current::fields_t J(flds);
       InterpolateEM_t ip;
-      AdvanceParticle_t advance(prts.grid().dt);
-      Current current(prts.grid());
+      AdvanceParticle_t advance(grid.dt);
+      Current current(grid);
       
       flds.zero(JXI, JXI + 3);
       
-      Real3 dxi = Real3{ 1., 1., 1. } / Real3(prts.grid().domain.dx);
-      real_t dq_kind[MAX_NR_KINDS];
-      auto& kinds = prts.grid().kinds;
-      assert(kinds.size() <= MAX_NR_KINDS);
-      for (int k = 0; k < kinds.size(); k++) {
-	dq_kind[k] = .5f * prts.grid().norm.eta * prts.grid().dt * kinds[k].q / kinds[k].m;
-      }
-      
-      for (auto& prt: prts) {
+      for (auto prt: prts) {
 	Real3& x = prt.x();
 
 	real_t xm[3];
