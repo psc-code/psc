@@ -16,7 +16,7 @@ struct AdvanceParticle
   // ----------------------------------------------------------------------
   // push_x
   
-  __host__ __device__ inline void push_x(Real3& x, const Real3 v, real_t dt_fac=real_t{1.})
+  __host__ __device__ inline void push_x(Real3& x, const Real3& v, real_t dt_fac=real_t{1.})
   {
     if (!dim::InvarX::value) { x[0] += dt_fac * dt_ * v[0]; }
     if (!dim::InvarY::value) { x[1] += dt_fac * dt_ * v[1]; }
@@ -28,7 +28,7 @@ struct AdvanceParticle
   //
   // advance momentum based on Lorentz force from EM fields
   
-  __host__ __device__ inline void push_p(real_t p[3], const real_t E[3], const real_t H[3], real_t dq)
+  __host__ __device__ inline void push_p(Real3& p, const Real3& E, const Real3& H, real_t dq)
   {
     real_t pxm = p[0] + dq * E[0];
     real_t pym = p[1] + dq * E[1];
@@ -56,12 +56,10 @@ struct AdvanceParticle
 // ----------------------------------------------------------------------
 // calc_v
 
-  __host__ __device__ inline void calc_v(real_t v[3], const real_t p[3])
+  __host__ __device__ inline void calc_v(Real3& v, const Real3& u)
   {
-    real_t root = rsqrt(1.f + sqr(p[0]) + sqr(p[1]) + sqr(p[2]));
-    for (int d = 0; d < 3; d++) {
-      v[d] = p[d] * root;
-    }
+    real_t root = rsqrt(1.f + sqr(u[0]) + sqr(u[1]) + sqr(u[2]));
+    v = u * Real3{root, root, root};
   }
   
 private:
