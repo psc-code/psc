@@ -15,9 +15,7 @@ struct PushParticlesSimple
 
   static void push_mprts(Mparticles& mprts, MfieldsState& mflds)
   {
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      PushParticlesImpl<C>::push_mprts_patch(mflds[p], mprts[p]);
-    }
+    PushParticlesImpl<C>::push_mprts(mflds, mprts);
   }
 
   // ----------------------------------------------------------------------
