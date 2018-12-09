@@ -45,9 +45,9 @@ struct PushParticlesEsirkepov
       }
       
       for (auto& prt: prts) {
-	real_t *x = prt.x();
+	Real3& x = prt.x();
 	Real3 v;
-	
+
 	real_t xm[3];
 	for (int d = 0; d < 3; d++) {
 	  xm[d] = x[d] * dxi[d];

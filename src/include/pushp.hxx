@@ -16,7 +16,7 @@ struct AdvanceParticle
   // ----------------------------------------------------------------------
   // push_x
   
-  __host__ __device__ inline void push_x(real_t x[3], const Real3 v, real_t dt_fac=real_t{1.})
+  __host__ __device__ inline void push_x(Real3& x, const Real3 v, real_t dt_fac=real_t{1.})
   {
     if (!dim::InvarX::value) { x[0] += dt_fac * dt_ * v[0]; }
     if (!dim::InvarY::value) { x[1] += dt_fac * dt_ * v[1]; }

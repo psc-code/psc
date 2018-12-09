@@ -41,7 +41,7 @@ struct PushParticlesVb
       }
     
       for (auto& prt: prts) {
-	real_t *x = prt.x();
+	Real3& x = prt.x();
 	Real3 v;
 
 	real_t xm[3];
