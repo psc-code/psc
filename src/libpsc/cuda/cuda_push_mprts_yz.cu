@@ -71,8 +71,8 @@ struct CudaPushParticles
     
     ip.set_coeffs(xm);
     
-    real_t E[3] = { ip.ex(fld_cache), ip.ey(fld_cache), ip.ez(fld_cache) };
-    real_t H[3] = { ip.hx(fld_cache), ip.hy(fld_cache), ip.hz(fld_cache) };
+    Real3 E = { ip.ex(fld_cache), ip.ey(fld_cache), ip.ez(fld_cache) };
+    Real3 H = { ip.hx(fld_cache), ip.hy(fld_cache), ip.hz(fld_cache) };
 #if 1
     if (!isfinite(E[0]) || !isfinite(E[1]) || !isfinite(E[2]) ||
 	!isfinite(H[0]) || !isfinite(H[1]) || !isfinite(H[2])) {

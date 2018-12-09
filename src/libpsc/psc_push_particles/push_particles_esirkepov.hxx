@@ -58,8 +58,8 @@ struct PushParticlesEsirkepov
 	current.charge_before(ip);
 	
 	// FIELD INTERPOLATION
-	real_t E[3] = { ip.ex(EM), ip.ey(EM), ip.ez(EM) };
-	real_t H[3] = { ip.hx(EM), ip.hy(EM), ip.hz(EM) };
+	Real3 E = { ip.ex(EM), ip.ey(EM), ip.ez(EM) };
+	Real3 H = { ip.hx(EM), ip.hy(EM), ip.hz(EM) };
 	
 	// x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
 	real_t dq = dq_kind[prt.kind()];
