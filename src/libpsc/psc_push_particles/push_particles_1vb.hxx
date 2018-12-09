@@ -18,7 +18,10 @@ struct PushParticlesVb
 
   using checks_order = checks_order_1st;
 
-  static void push_mprts(MfieldsState& mflds, Mparticles& mprts)
+  // ----------------------------------------------------------------------
+  // push_mprts
+
+  static void push_mprts(Mparticles& mprts, MfieldsState& mflds)
   {
     const auto& grid = mprts.grid();
     PI<real_t> pi(grid);
@@ -80,7 +83,7 @@ struct PushParticlesVb
   // ----------------------------------------------------------------------
   // stagger_mprts_patch
   
-  static void stagger_mprts_patch(MfieldsState& mflds, Mparticles& mprts)
+  static void stagger_mprts_patch(Mparticles& mprts, MfieldsState& mflds)
   {
     const auto& grid = mprts.grid();
     Real3 dxi = Real3{ 1., 1., 1. } / Real3(grid.domain.dx);

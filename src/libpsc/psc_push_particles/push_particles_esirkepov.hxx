@@ -22,8 +22,11 @@ struct PushParticlesEsirkepov
   using Real3 = Vec3<real_t>;
 
   using checks_order = checks_order_2nd; // FIXME, sometimes 1st even with Esirkepov
+
+  // ----------------------------------------------------------------------
+  // push_mprts
   
-  static void push_mprts(MfieldsState& mflds, Mparticles& mprts)
+  static void push_mprts(Mparticles& mprts, MfieldsState& mflds)
   {
     const auto& grid = mprts.grid();
     Real3 dxi = Real3{ 1., 1., 1. } / Real3(grid.domain.dx);

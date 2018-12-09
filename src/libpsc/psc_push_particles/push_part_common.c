@@ -15,7 +15,7 @@ struct PushParticlesSimple
 
   static void push_mprts(Mparticles& mprts, MfieldsState& mflds)
   {
-    PushParticlesImpl<C>::push_mprts(mflds, mprts);
+    PushParticlesImpl<C>::push_mprts(mprts, mflds);
   }
 
   // ----------------------------------------------------------------------
@@ -23,7 +23,7 @@ struct PushParticlesSimple
   
   static void stagger_mprts(Mparticles& mprts, MfieldsState& mflds)
   {
-    PushParticlesImpl<C>::stagger_mprts_patch(mflds, mprts);
+    PushParticlesImpl<C>::stagger_mprts_patch(mprts, mflds);
   }
 };
 
