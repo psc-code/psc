@@ -18,13 +18,9 @@ struct ParticleProxySimple
 
   Real3   x() const      { return prt_.x(); }
   Real3&  x()            { return prt_.x(); }
-  real_t  x(int d) const { return prt_.x()[d]; }
-  real_t& x(int d)       { return prt_.x()[d]; }
   
   Real3   u() const      { return prt_.u(); }
   Real3&  u()            { return prt_.u(); }
-  real_t  u(int d) const { return prt_.u()[d]; }
-  real_t& u(int d)       { return prt_.u()[d]; }
   
   // FIXME, grid is always double precision, so this will switch precision
   // where not desired. should use same info stored elsewhere at right precision

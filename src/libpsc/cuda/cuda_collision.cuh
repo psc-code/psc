@@ -109,6 +109,7 @@ struct CudaCollision
   struct Particle
   {
     using real_t = real_t;
+    using Real3 = Vec3<real_t>;
 
     __device__
     Particle(DMparticles& dmprts, int n)
@@ -126,8 +127,8 @@ struct CudaCollision
     
     __device__ real_t q() const { return dmprts_.q(prt_.kind()); }
     __device__ real_t m() const { return dmprts_.m(prt_.kind()); }
-    __device__ real_t  u(int d) const { return prt_.u()[d]; }
-    __device__ real_t& u(int d)       { return prt_.u()[d]; }
+    __device__ Real3  u() const { return prt_.u(); }
+    __device__ Real3& u()       { return prt_.u(); }
 
   private:
     DMparticles& dmprts_;

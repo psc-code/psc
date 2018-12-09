@@ -189,9 +189,9 @@ struct CollisionHost
     F(2, i,j,k) = 0.;
     for (int n = n_start; n < n_end; n++) {
       auto prt = prts[n];
-      F(0, i,j,k) -= prt.u(0) * prt.m() * prt.w() * fnqs;
-      F(1, i,j,k) -= prt.u(1) * prt.m() * prt.w() * fnqs;
-      F(2, i,j,k) -= prt.u(2) * prt.m() * prt.w() * fnqs;
+      F(0, i,j,k) -= prt.u()[0] * prt.m() * prt.w() * fnqs;
+      F(1, i,j,k) -= prt.u()[1] * prt.m() * prt.w() * fnqs;
+      F(2, i,j,k) -= prt.u()[2] * prt.m() * prt.w() * fnqs;
     }
   }
 
@@ -205,9 +205,9 @@ struct CollisionHost
     Fields F(mflds_rei_[p]);
     for (int n = n_start; n < n_end; n++) {
       const auto& prt = prts[n];
-      F(0, i,j,k) += prt.u(0) * prt.m() * prt.w() * fnqs;
-      F(1, i,j,k) += prt.u(1) * prt.m() * prt.w() * fnqs;
-      F(2, i,j,k) += prt.u(2) * prt.m() * prt.w() * fnqs;
+      F(0, i,j,k) += prt.u()[0] * prt.m() * prt.w() * fnqs;
+      F(1, i,j,k) += prt.u()[1] * prt.m() * prt.w() * fnqs;
+      F(2, i,j,k) += prt.u()[2] * prt.m() * prt.w() * fnqs;
     }
     F(0, i,j,k) /= (this->interval_ * dt);
     F(1, i,j,k) /= (this->interval_ * dt);

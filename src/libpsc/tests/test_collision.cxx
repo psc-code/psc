@@ -13,13 +13,14 @@
 struct TestParticle
 {
   using real_t = double;
+  using Real3 = Vec3<real_t>;
 
   real_t q() const { return q_; }
   real_t m() const { return m_; }
-  real_t  u(int d) const { return u_[d]; }
-  real_t& u(int d)       { return u_[d]; }
+  Real3  u() const { return u_; }
+  Real3& u()       { return u_; }
 
-  Vec3<real_t> u_;
+  Real3 u_;
   real_t q_;
   real_t m_;
 };
@@ -36,13 +37,13 @@ TEST(BinaryCollision, Test1)
 
   double nudt = bc(prt1, prt2, .1, rng);
 
-  EXPECT_NEAR(prt1.u(0) + prt2.u(0), 1., eps);
-  EXPECT_NEAR(prt1.u(1) + prt2.u(1), 0., eps);
-  EXPECT_NEAR(prt1.u(2) + prt2.u(2), 0., eps);
+  EXPECT_NEAR(prt1.u()[0] + prt2.u()[0], 1., eps);
+  EXPECT_NEAR(prt1.u()[1] + prt2.u()[1], 0., eps);
+  EXPECT_NEAR(prt1.u()[2] + prt2.u()[2], 0., eps);
 
 #if 0
-  printf("prt1: %g %g %g\n", prt1.u(0), prt1.u(1), prt1.u(2));
-  printf("prt2: %g %g %g\n", prt2.u(0), prt2.u(1), prt2.u(2));
+  printf("prt1: %g %g %g\n", prt1.u()[0], prt1.u()[1], prt1.u()[2]);
+  printf("prt2: %g %g %g\n", prt2.u()[0], prt2.u()[1], prt2.u()[2]);
 #endif
 }
 

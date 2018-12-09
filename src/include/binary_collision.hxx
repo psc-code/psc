@@ -86,15 +86,15 @@ struct BinaryCollision
     real_t m12,q12;
     real_t ran1,ran2;
 
-    px1=prt1.u(0);
-    py1=prt1.u(1);
-    pz1=prt1.u(2);
+    px1=prt1.u()[0];
+    py1=prt1.u()[1];
+    pz1=prt1.u()[2];
     q1 =prt1.q();
     m1 =prt1.m();
 
-    px2=prt2.u(0);
-    py2=prt2.u(1);
-    pz2=prt2.u(2);
+    px2=prt2.u()[0];
+    py2=prt2.u()[1];
+    pz2=prt2.u()[2];
     q2 =prt2.q();
     m2 =prt2.m();
 
@@ -295,12 +295,12 @@ struct BinaryCollision
     py4=py4/m4;
     pz4=pz4/m4;
 
-    prt1.u(0) = px3;
-    prt1.u(1) = py3;
-    prt1.u(2) = pz3;
-    prt2.u(0) = px4;
-    prt2.u(1) = py4;
-    prt2.u(2) = pz4;
+    prt1.u()[0] = px3;
+    prt1.u()[1] = py3;
+    prt1.u()[2] = pz3;
+    prt2.u()[0] = px4;
+    prt2.u()[1] = py4;
+    prt2.u()[2] = pz4;
 
     return nudt;
   }
