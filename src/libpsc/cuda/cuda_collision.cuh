@@ -124,29 +124,10 @@ struct CudaCollision
       dmprts_.storage.store_momentum(prt_, n_);
     }
     
-    __device__
-    real_t q() const
-    {
-      return dmprts_.q(prt_.kind());
-    }
-
-    __device__
-    real_t m() const
-    {
-      return dmprts_.m(prt_.kind());
-    }
-    
-    __device__
-    real_t u(int d) const
-    {
-      return prt_.u()[d];
-    }
-
-    __device__
-    real_t& u(int d)
-    {
-      return prt_.u()[d];
-    }
+    __device__ real_t q() const { return dmprts_.q(prt_.kind()); }
+    __device__ real_t m() const { return dmprts_.m(prt_.kind()); }
+    __device__ real_t  u(int d) const { return prt_.u()[d]; }
+    __device__ real_t& u(int d)       { return prt_.u()[d]; }
 
   private:
     DMparticles& dmprts_;
