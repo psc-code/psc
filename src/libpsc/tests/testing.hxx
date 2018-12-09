@@ -5,7 +5,6 @@
 #include "psc_fields_single.h"
 #include "psc_particles_single.h"
 #include "../libpsc/psc_push_particles/push_config.hxx"
-#include "../libpsc/psc_push_particles/push_part_common.c"
 #include "../libpsc/psc_push_particles/1vb/psc_push_particles_1vb.h"
 #include "bnd_particles_impl.hxx"
 #include "../libpsc/psc_checks/checks_impl.hxx"
@@ -64,23 +63,22 @@ struct TestConfig
 };
 
 using TestConfig2ndDouble = TestConfig<dim_xyz, MfieldsC,
-				       PushParticlesSimple<Config2ndDouble<dim_xyz>, PushParticlesEsirkepov>,
+				       PushParticlesEsirkepov<Config2ndDouble<dim_xyz>>,
 				       checks_order_2nd>;
 using TestConfig2ndDoubleYZ = TestConfig<dim_yz, MfieldsC,
-					 PushParticlesSimple<Config2ndDouble<dim_yz>, PushParticlesEsirkepov>,
+					 PushParticlesEsirkepov<Config2ndDouble<dim_yz>>,
 					 checks_order_2nd>;
 using TestConfig2ndSingle = TestConfig<dim_xyz, MfieldsSingle,
-				       PushParticlesSimple<Config2nd<MparticlesSingle, MfieldsStateSingle, dim_xyz>,
-							   PushParticlesEsirkepov>,
+				       PushParticlesEsirkepov<Config2nd<MparticlesSingle, MfieldsStateSingle, dim_xyz>>,
 				       checks_order_2nd>;
 using TestConfig1vbec3dSingle = TestConfig<dim_xyz, MfieldsSingle,
-					   PushParticlesSimple<Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_xyz>, PushParticlesVb>,
+					   PushParticlesVb<Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_xyz>>,
 					   checks_order_1st>;
 using TestConfig1vbec3dSingleYZ = TestConfig<dim_yz, MfieldsSingle,
-					     PushParticlesSimple<Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_yz>, PushParticlesVb>,
+					     PushParticlesVb<Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_yz>>,
 					     checks_order_1st>;
 using TestConfig1vbec3dSingleXZ = TestConfig<dim_xz, MfieldsSingle,
-					     PushParticlesSimple<Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_xz>, PushParticlesVb>,
+					     PushParticlesVb<Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_xz>>,
 					     checks_order_1st>;
 
 using VpicConfig = VpicConfigPsc;

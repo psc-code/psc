@@ -7,7 +7,6 @@
 
 #include "../libpsc/psc_sort/psc_sort_impl.hxx"
 #include "../libpsc/psc_collision/psc_collision_impl.hxx"
-#include "../libpsc/psc_push_particles/push_part_common.c"
 #include "../libpsc/psc_push_particles/1vb/psc_push_particles_1vb.h"
 #include "psc_push_fields_impl.hxx"
 #include "../libpsc/psc_bnd/psc_bnd_impl.hxx"
@@ -42,15 +41,13 @@ struct SimulationNone
 template<typename DIM, typename Mparticles, typename MfieldsState>
 struct PscConfigPushParticles2nd
 {
-  using PushParticles_t = PushParticlesSimple<Config2nd<Mparticles, MfieldsState, DIM>,
-					      PushParticlesEsirkepov>;
+  using PushParticles_t = PushParticlesEsirkepov<Config2nd<Mparticles, MfieldsState, DIM>>;
 };
 
 template<typename DIM, typename Mparticles, typename MfieldsState>
 struct PscConfigPushParticles1vbec
 {
-  using PushParticles_t = PushParticlesSimple<Config1vbec<Mparticles, MfieldsState, DIM>,
-					      PushParticlesVb>;
+  using PushParticles_t = PushParticlesVb<Config1vbec<Mparticles, MfieldsState, DIM>>;
 };
 
 template<typename DIM, typename Mparticles, typename MfieldsState>
@@ -63,15 +60,13 @@ struct PscConfigPushParticlesCuda
 template<typename Mparticles, typename Mfields>
 struct PscConfigPushParticles1vbec<dim_xyz, Mparticles, Mfields>
 {
-  using PushParticles_t = PushParticlesSimple<Config1vbecSplit<Mparticles, Mfields, dim_xyz>,
-					      PushParticlesVb>;
+  using PushParticles_t = PushParticlesVb<Config1vbecSplit<Mparticles, Mfields, dim_xyz>>;
 };
 
 template<typename Mparticles, typename Mfields>
 struct PscConfigPushParticles1vbec<dim_xz, Mparticles, Mfields>
 {
-  using PushParticles_t = PushParticlesSimple<Config1vbecSplit<Mparticles, Mfields, dim_xz>,
-					      PushParticlesVb>;
+  using PushParticles_t = PushParticlesVb<Config1vbecSplit<Mparticles, Mfields, dim_xz>>;
 };
 
 template<typename DIM, typename _Mparticles, typename _MfieldsState,
