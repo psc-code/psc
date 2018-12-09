@@ -46,7 +46,7 @@ struct PushParticlesEsirkepov
       
       for (auto& prt: prts) {
 	real_t *x = prt.x();
-	real_t vv[3];
+	Real3 v;
 	
 	real_t xm[3];
 	for (int d = 0; d < 3; d++) {
@@ -66,14 +66,14 @@ struct PushParticlesEsirkepov
 	advance.push_p(prt.u(), E, H, dq);
 	
 	// x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0)
-	advance.calc_v(vv, prt.u());
-	advance.push_x(x, vv);
+	advance.calc_v(v, prt.u());
+	advance.push_x(x, v);
 	
 	// CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt
 	current.charge_after(x);
 	
 	// CURRENT DENSITY AT (n+1.0)*dt
-	current.prep(prts.prt_qni_wni(prt), vv);
+	current.prep(prt.qni_wni(), v);
 	current.calc(J);
       }
     }

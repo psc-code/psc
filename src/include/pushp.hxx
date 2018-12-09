@@ -7,6 +7,8 @@
 template<typename real_t, typename dim>
 struct AdvanceParticle
 {
+  using Real3 = Vec3<real_t>;
+  
   __host__ __device__ AdvanceParticle(real_t dt)
     : dt_(dt)
   {}
@@ -14,7 +16,7 @@ struct AdvanceParticle
   // ----------------------------------------------------------------------
   // push_x
   
-  __host__ __device__ inline void push_x(real_t x[3], const real_t v[3], real_t dt_fac=real_t{1.})
+  __host__ __device__ inline void push_x(real_t x[3], const Real3 v, real_t dt_fac=real_t{1.})
   {
     if (!dim::InvarX::value) { x[0] += dt_fac * dt_ * v[0]; }
     if (!dim::InvarY::value) { x[1] += dt_fac * dt_ * v[1]; }

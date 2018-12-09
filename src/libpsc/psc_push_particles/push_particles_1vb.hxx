@@ -42,7 +42,7 @@ struct PushParticlesVb
     
       for (auto& prt: prts) {
 	real_t *x = prt.x();
-	real_t vv[3];
+	Real3 v;
 
 	real_t xm[3];
 	for (int d = 0; d < 3; d++) {
@@ -59,8 +59,8 @@ struct PushParticlesVb
 	advance.push_p(prt.u(), E, H, dq);
 
 	// x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0)
-	advance.calc_v(vv, prt.u());
-	advance.push_x(x, vv);
+	advance.calc_v(v, prt.u());
+	advance.push_x(x, v);
 
 	int lf[3];
 	real_t of[3], xp[3];
@@ -71,7 +71,7 @@ struct PushParticlesVb
 	if (!Dim::InvarX::value) { lg[0] = ip.cx.g.l; }
 	if (!Dim::InvarY::value) { lg[1] = ip.cy.g.l; }
 	if (!Dim::InvarZ::value) { lg[2] = ip.cz.g.l; }
-	current.calc_j(J, xm, xp, lf, lg, prts.prt_qni_wni(prt), vv);
+	current.calc_j(J, xm, xp, lf, lg, prts.prt_qni_wni(prt), v);
       }
     }
   }

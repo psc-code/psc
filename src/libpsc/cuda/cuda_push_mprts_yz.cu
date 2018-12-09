@@ -43,6 +43,7 @@ struct CudaPushParticles
   using Curr = typename Currmem::Curr<BS, dim>;
   using DMparticles = DMparticlesCuda<BS>;
   using real_t = typename DMparticles::real_t;
+  using Real3 = Vec3<real_t>;
   using FldCache = FldCache<BS, dim>;
 
   // ----------------------------------------------------------------------
@@ -243,8 +244,8 @@ struct CudaPushParticles
   {
     AdvanceParticle<real_t, dim> advance{dmprts.dt()};
 
-    float vxi[3];
-    advance.calc_v(vxi, prt.u());
+    Real3 v;
+    advance.calc_v(v, prt.u());
 
     // position xm at x^(n+.5)
     float h0[3], h1[3];
@@ -255,9 +256,9 @@ struct CudaPushParticles
 
     if (Config::Deposit::value == DEPOSIT_VB_2D) {
       // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
-      advance.push_x(prt.x(), vxi, .5f);
+      advance.push_x(prt.x(), v, .5f);
 
-      float fnqx = vxi[0] * prt.qni_wni() * dmprts.fnqs();
+      float fnqx = v[0] * prt.qni_wni() * dmprts.fnqs();
 
       // out-of-plane currents at intermediate time
       int lf[3];
@@ -272,10 +273,10 @@ struct CudaPushParticles
       scurr.add(0, lf[1]+1, lf[2]+1, (      of[1]) * (      of[2]) * fnqx, current_block.ci0);
 
       // x^(n+1.0), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
-      advance.push_x(prt.x(), vxi, .5f);
+      advance.push_x(prt.x(), v, .5f);
     } else if (Config::Deposit::value == DEPOSIT_VB_3D) {
       // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
-      advance.push_x(prt.x(), vxi);
+      advance.push_x(prt.x(), v);
     }
     storage.store_position(prt, n);
 
@@ -305,7 +306,7 @@ struct CudaPushParticles
 #endif
     float x[3] = { 0.f, xm[1] - j[1] - float(.5), xm[2] - j[2] - float(.5) };
     //float dx[3] = { 0.f, xp[1] - xm[1], xp[2] - xm[2] };
-    float dx[3] = { dmprts.scalePos(vxi[0] * dmprts.dt(), 0), xp[1] - xm[1], xp[2] - xm[2] };
+    float dx[3] = { dmprts.scalePos(v[0] * dmprts.dt(), 0), xp[1] - xm[1], xp[2] - xm[2] };
   
     float x1 = x[1] * idiff[1];
     float x2 = x[2] * idiff[2];
@@ -343,8 +344,8 @@ struct CudaPushParticles
   {
     AdvanceParticle<real_t, dim> advance{dmprts.dt()};
 
-    float vxi[3];
-    advance.calc_v(vxi, prt.u());
+    Real3 v;
+    advance.calc_v(v, prt.u());
 
     // position xm at x^(n+.5)
     float h0[3];
@@ -355,7 +356,7 @@ struct CudaPushParticles
 
     static_assert(Config::Deposit::value == DEPOSIT_VB_3D, "calc_j dim_xyz needs 3d deposit");
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
-    advance.push_x(prt.x(), vxi);
+    advance.push_x(prt.x(), v);
     storage.store_position(prt, n);
 
     // position xp at x^(n+1.5)
