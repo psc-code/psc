@@ -87,12 +87,36 @@ struct AccessorPatchSimple
 {
   using Mparticles = typename AccessorSimple::Mparticles;
   using ParticleProxy = ParticleProxySimple<Mparticles>;
-  using MparticlesPatch = typename Mparticles::Patch;
+  
+  struct iterator : std::iterator<std::forward_iterator_tag,
+				  ParticleProxy,  // value type
+				  ptrdiff_t,           // difference type
+				  ParticleProxy*, // pointer type
+				  ParticleProxy&> // reference type
+  
+  {
+    iterator(AccessorPatchSimple& patch, uint n)
+      : patch_{patch}, n_{n}
+    {}
+    
+    bool operator==(iterator other) const { return n_ == other.n_; }
+    bool operator!=(iterator other) const { return !(*this == other); }
+    
+    iterator& operator++() { n_++; return *this; }
+    iterator operator++(int) { auto retval = *this; ++(*this); return retval; }
+    ParticleProxy operator*() { return patch_[n_]; }
+    
+  private:
+    AccessorPatchSimple patch_;
+    uint n_;
+  };
   
   AccessorPatchSimple(AccessorSimple& accessor, int p)
     : accessor_{accessor}, p_{p}
   {}
 
+  iterator begin() { return {*this, 0}; }
+  iterator end()   { return {*this, size()}; }
   ParticleProxy operator[](int n) { return {accessor_.data(p_)[n], accessor_.mprts(), p_}; }
   uint size() const { return accessor_.size(p_); }
   const Grid_t& grid() const { return accessor_.grid(); }
