@@ -29,13 +29,16 @@ struct DParticleProxy
     : prt_{prt}, dmprts_{dmprts}
   {}
 
-  __device__ int kind() const { return prt_.kind; }
-  __device__ real_t qni_wni() const { return prt_.qni_wni; }
   __device__ Real3  x() const { return prt_.x(); }
   __device__ Real3& x()       { return prt_.x(); }
   __device__ Real3  u() const { return prt_.u(); }
   __device__ Real3& u()       { return prt_.u(); }
+  __device__ int kind() const { return prt_.kind; }
+  __device__ real_t qni_wni() const { return prt_.qni_wni; }
 
+  __device__ real_t q() const { return dmprts_.q(prt_.kind); }
+  __device__ real_t m() const { return dmprts_.m(prt_.kind); }
+  
 private:
   DParticleCuda prt_;
   const DMparticlesCuda& dmprts_;
