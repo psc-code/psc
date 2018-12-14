@@ -115,7 +115,7 @@ n_1st_cuda_run(DMparticlesCuda<BS> dmprts, DMFields dmflds)
       prt = dmprts.storage.load(n);
     }
 
-    int kind = prt.kind();
+    int kind = prt.kind;
     float wni = prt.qni_wni * dmprts.q_inv(kind);
     float fnq = wni * dmprts.fnqs();
     

@@ -83,7 +83,7 @@ struct CudaPushParticles
 #endif
     
     // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
-    real_t dq = dmprts.dq(prt.kind());
+    real_t dq = dmprts.dq(prt.kind);
     advance.push_p(prt.u(), E, H, dq);
 #if 0
     if (!isfinite(prt.pxi[0]) || !isfinite(prt.pxi[1]) || !isfinite(prt.pxi[2])) {

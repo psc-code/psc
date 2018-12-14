@@ -56,7 +56,7 @@ void cuda_mparticles<BS>::dump_by_patch(uint *n_prts_by_patch)
       uint bidx = this->by_block_.d_idx[n + off], id = this->by_block_.d_id[n + off];
       printf("cuda_mparticles_dump_by_patch: [%d/%d] %g %g %g // %d // %g %g %g // %g b_idx %d id %d\n",
 	     p, n, prt.x()[0] + xb[0], prt.x()[1] + xb[1], prt.x()[2] + xb[2],
-	     prt.kind(), prt.u()[0], prt.u()[1], prt.u()[2], prt.qni_wni,
+	     prt.kind, prt.u()[0], prt.u()[1], prt.u()[2], prt.qni_wni,
 	     bidx, id);
     }
     off += n_prts_by_patch[p];
@@ -84,7 +84,7 @@ void cuda_mparticles<BS>::dump(const std::string& filename) const
       auto prt = this->storage.load(n + off);
       uint bidx = this->by_block_.d_idx[n], id = this->by_block_.d_id[n];
       fprintf(file, "mparticles_dump: [%d] %g %g %g // %d // %g %g %g // %g || bidx %d id %d %s\n",
-	      n, prt.x()[0], prt.x()[1], prt.x()[2], prt.kind(), prt.u()[0], prt.u()[1], prt.u()[2],
+	      n, prt.x()[0], prt.x()[1], prt.x()[2], prt.kind, prt.u()[0], prt.u()[1], prt.u()[2],
 	      prt.qni_wni, bidx, id, b == bidx ? "" : "BIDX MISMATCH!");
     }
     off += off_e - off_b;

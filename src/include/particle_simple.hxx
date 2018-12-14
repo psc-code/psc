@@ -20,7 +20,7 @@ struct ParticleSimple
   ParticleSimple(Real3 x, Real3 u, real_t qni_wni, int kind)
     : x_{x},
       u_{u},
-      kind_{kind},
+      kind{kind},
       qni_wni{qni_wni}
   {}
 
@@ -28,7 +28,7 @@ struct ParticleSimple
   bool operator==(const ParticleSimple& other) const
   {
     return (x_ == other.x_ && qni_wni == other.qni_wni &&
-	    u_ == other.u_ && kind_ == other.kind_);
+	    u_ == other.u_ && kind == other.kind);
   }
 
   __host__ __device__
@@ -38,13 +38,12 @@ struct ParticleSimple
   __host__ __device__ Real3& x()       { return x_; }
   __host__ __device__ Real3  u() const { return u_; }
   __host__ __device__ Real3& u()       { return u_; }
-  __host__ __device__ int kind() const { return kind_; }
   
 private:
   Real3 x_;
   Real3 u_;
-  int kind_;
 public:
+  int kind;
   real_t qni_wni;
 };
 

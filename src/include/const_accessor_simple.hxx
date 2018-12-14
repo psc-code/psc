@@ -28,7 +28,7 @@ struct ParticleProxySimple
   real_t w()  const { return prt_.qni_wni / q(); }
   real_t q()  const { return mprts_.grid().kinds[kind()].q; }
   real_t m()  const { return mprts_.grid().kinds[kind()].m; }
-  int kind()  const { return prt_.kind(); }
+  int kind()  const { return prt_.kind; }
 
   int validCellIndex() const { return mprts_[p_].validCellIndex(prt_); }
   
@@ -65,7 +65,7 @@ struct ConstParticleProxySimple
   real_t qni_wni() const { return prt_.qni_wni; }
   real_t q()  const { return mprts_.grid().kinds[kind()].q; }
   real_t m()  const { return mprts_.grid().kinds[kind()].m; }
-  int kind()  const { return prt_.kind(); }
+  int kind()  const { return prt_.kind; }
   
   Double3 position() const
   {

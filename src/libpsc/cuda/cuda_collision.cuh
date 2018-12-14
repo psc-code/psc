@@ -125,8 +125,8 @@ struct CudaCollision
       dmprts_.storage.store_momentum(prt_, n_);
     }
     
-    __device__ real_t q() const { return dmprts_.q(prt_.kind()); }
-    __device__ real_t m() const { return dmprts_.m(prt_.kind()); }
+    __device__ real_t q() const { return dmprts_.q(prt_.kind); }
+    __device__ real_t m() const { return dmprts_.m(prt_.kind); }
     __device__ Real3  u() const { return prt_.u(); }
     __device__ Real3& u()       { return prt_.u(); }
 
