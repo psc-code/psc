@@ -239,7 +239,7 @@ struct CudaPushParticles
   // calc_j -- dispatched for dim_yz
   
   __device__ static void
-  calc_j(DMparticles& dmprts, DParticleCuda& prt, int n, DMparticlesCudaStorage& storage,
+  calc_j(DMparticles& dmprts, DParticleProxy<DMparticles>& prt, int n, DMparticlesCudaStorage& storage,
 	 Curr &scurr, const Block& current_block, dim_yz tag)
   {
     AdvanceParticle<real_t, dim> advance{dmprts.dt()};
@@ -257,7 +257,7 @@ struct CudaPushParticles
       // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
       advance.push_x(prt.x(), v, .5f);
 
-      float fnqx = v[0] * prt.qni_wni * dmprts.fnqs();
+      float fnqx = v[0] * prt.qni_wni() * dmprts.fnqs();
 
       // out-of-plane currents at intermediate time
       int lf[3];
@@ -322,23 +322,23 @@ struct CudaPushParticles
 
     float dx1[3];
     calc_dx1(dx1, x, dx, off);
-    curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni, scurr, current_block, dim{});
+    curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni(), scurr, current_block, dim{});
     curr_vb_cell_upd(i, x, dx1, dx, off, dim{});
   
     off[1] = idiff[1] - off[1];
     off[2] = idiff[2] - off[2];
     calc_dx1(dx1, x, dx, off);
-    curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni, scurr, current_block, dim{});
+    curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni(), scurr, current_block, dim{});
     curr_vb_cell_upd(i, x, dx1, dx, off, dim{});
     
-    curr_vb_cell(dmprts, i, x, dx, prt.qni_wni, scurr, current_block, dim{});
+    curr_vb_cell(dmprts, i, x, dx, prt.qni_wni(), scurr, current_block, dim{});
   }
 
   // ----------------------------------------------------------------------
   // calc_j -- dispatched for dim_xyz
   
   __device__ static void
-  calc_j(DMparticles& dmprts, DParticleCuda& prt, int n, DMparticlesCudaStorage& storage,
+  calc_j(DMparticles& dmprts, DParticleProxy<DMparticles>& prt, int n, DMparticlesCudaStorage& storage,
 	 Curr &scurr, const Block& current_block, dim_xyz tag)
   {
     AdvanceParticle<real_t, dim> advance{dmprts.dt()};
@@ -400,7 +400,7 @@ struct CudaPushParticles
       // printf("frac %g %g %g step %g dir %d\n", frac[0], frac[1], frac[2], step, dir);
       // printf("i %d:%d:%d dx1 %g %g %g x %g %g %g\n", i[0], i[1], i[2], dx1[0], dx1[1], dx1[2],
       // 	     x[0], x[1], x[2]);
-      curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni, scurr, current_block, dim{});
+      curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni(), scurr, current_block, dim{});
       if (dir < 0) {
 	break;
       }
@@ -457,16 +457,9 @@ struct CudaPushParticles
       if (n < block_begin) {
 	continue;
       }
-      DParticleCuda prt;
-      if (REORDER) {
-	uint id = dmprts.id_[n];
-	prt = dmprts.storage.load(id);
-      } else {
-	prt = dmprts.storage.load(n);
-      }
-      auto pprt = DParticleProxy<DMparticles>{prt, dmprts};
-      push_part_one(dmprts, pprt, n, fld_cache, current_block);
-      prt = pprt.prt_;
+      auto prt = (REORDER) ? dmprts.storage.load_proxy(dmprts, dmprts.id_[n]) : 
+	dmprts.storage.load_proxy(dmprts, n);
+      push_part_one(dmprts, prt, n, fld_cache, current_block);
       
       if (REORDER) {
 	dmprts.alt_storage.store_momentum(prt, n);

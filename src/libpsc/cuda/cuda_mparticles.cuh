@@ -156,6 +156,22 @@ struct DMparticlesCudaStorage : MparticlesCudaStorage_<float4*>
 
   template<typename DMparticlesCuda>
   __device__
+  void store_position(const DParticleProxy<DMparticlesCuda>& prt, int n)
+  {
+    auto st = ParticleCudaStorage{prt.prt_};
+    xi4[n] = st.xi4;
+  }
+
+  template<typename DMparticlesCuda>
+  __device__
+  void store_momentum(const DParticleProxy<DMparticlesCuda>& prt, int n)
+  {
+    auto st = ParticleCudaStorage{prt.prt_};
+    pxi4[n] = st.pxi4;
+  }
+
+  template<typename DMparticlesCuda>
+  __device__
   DParticleProxy<DMparticlesCuda> load_proxy(const DMparticlesCuda& dmprts, int n)
   {
     return {load_device(n), dmprts};
