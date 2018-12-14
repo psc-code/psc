@@ -50,7 +50,7 @@ struct CudaPushParticles
   // push_part_one
 
   __device__ static void
-  push_part_one(DMparticles& dmprts, DParticleCuda& prt, int n, const FldCache& fld_cache,
+  push_part_one(DMparticles& dmprts, DParticleProxy<DMparticles>& prt, int n, const FldCache& fld_cache,
 		const Block& current_block)
   {
     // here we have x^{n+.5}, p^n
@@ -83,7 +83,7 @@ struct CudaPushParticles
 #endif
     
     // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
-    real_t dq = dmprts.dq(prt.kind);
+    real_t dq = dmprts.dq(prt.kind());
     advance.push_p(prt.u(), E, H, dq);
 #if 0
     if (!isfinite(prt.pxi[0]) || !isfinite(prt.pxi[1]) || !isfinite(prt.pxi[2])) {
@@ -464,7 +464,9 @@ struct CudaPushParticles
       } else {
 	prt = dmprts.storage.load(n);
       }
-      push_part_one(dmprts, prt, n, fld_cache, current_block);
+      auto pprt = DParticleProxy<DMparticles>{prt, dmprts};
+      push_part_one(dmprts, pprt, n, fld_cache, current_block);
+      prt = pprt.prt_;
       
       if (REORDER) {
 	dmprts.alt_storage.store_momentum(prt, n);
