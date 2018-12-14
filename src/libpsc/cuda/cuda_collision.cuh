@@ -113,26 +113,15 @@ struct CudaCollision
 
     __device__
     Particle(DMparticles& dmprts, int n)
-      : dmprts_{dmprts},
-	n_{n},
-	prt_{dmprts.storage.load_proxy(dmprts, n_)}
+      : prt_{dmprts.storage.load_proxy(dmprts, n)}
     {}
 
-    __device__
-    ~Particle()
-    {
-      // xi4 is not modified
-      dmprts_.storage.store_momentum(prt_, n_);
-    }
-    
     __device__ real_t q() const { return prt_.q(); }
     __device__ real_t m() const { return prt_.m(); }
     __device__ Real3  u() const { return prt_.u(); }
     __device__ Real3& u()       { return prt_.u(); }
 
-  private:
-    DMparticles& dmprts_;
-    int n_;
+    //private:
     DParticleProxy<DMparticles> prt_;
   };
   
@@ -196,6 +185,9 @@ struct CudaCollision
 	Particle prt1{dmprts, int(d_id[n  ])};
 	Particle prt2{dmprts, int(d_id[n+1])};
 	bc(prt1, prt2, nudt1, rng);
+	// xi4 is not modified, don't need to store
+	dmprts.storage.store_momentum(prt1.prt_, d_id[n  ]);
+	dmprts.storage.store_momentum(prt2.prt_, d_id[n+1]);
       }
     }
     
