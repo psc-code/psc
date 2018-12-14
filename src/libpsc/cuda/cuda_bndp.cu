@@ -289,7 +289,7 @@ uint cuda_bndp<CudaMparticles, dim_xyz>::convert_and_copy_to_dev(CudaMparticles*
       h_bnd_pxi4[n + off].x = prt.u()[0];
       h_bnd_pxi4[n + off].y = prt.u()[1];
       h_bnd_pxi4[n + off].z = prt.u()[2];
-      h_bnd_pxi4[n + off].w = prt.qni_wni();
+      h_bnd_pxi4[n + off].w = prt.qni_wni;
 
       checkInPatchMod(&h_bnd_xi4[n + off].x);
       uint b = blockIndex(h_bnd_xi4[n + off], p);

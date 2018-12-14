@@ -257,7 +257,7 @@ struct CudaPushParticles
       // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
       advance.push_x(prt.x(), v, .5f);
 
-      float fnqx = v[0] * prt.qni_wni() * dmprts.fnqs();
+      float fnqx = v[0] * prt.qni_wni * dmprts.fnqs();
 
       // out-of-plane currents at intermediate time
       int lf[3];
@@ -322,16 +322,16 @@ struct CudaPushParticles
 
     float dx1[3];
     calc_dx1(dx1, x, dx, off);
-    curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni(), scurr, current_block, dim{});
+    curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni, scurr, current_block, dim{});
     curr_vb_cell_upd(i, x, dx1, dx, off, dim{});
   
     off[1] = idiff[1] - off[1];
     off[2] = idiff[2] - off[2];
     calc_dx1(dx1, x, dx, off);
-    curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni(), scurr, current_block, dim{});
+    curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni, scurr, current_block, dim{});
     curr_vb_cell_upd(i, x, dx1, dx, off, dim{});
     
-    curr_vb_cell(dmprts, i, x, dx, prt.qni_wni(), scurr, current_block, dim{});
+    curr_vb_cell(dmprts, i, x, dx, prt.qni_wni, scurr, current_block, dim{});
   }
 
   // ----------------------------------------------------------------------
@@ -400,7 +400,7 @@ struct CudaPushParticles
       // printf("frac %g %g %g step %g dir %d\n", frac[0], frac[1], frac[2], step, dir);
       // printf("i %d:%d:%d dx1 %g %g %g x %g %g %g\n", i[0], i[1], i[2], dx1[0], dx1[1], dx1[2],
       // 	     x[0], x[1], x[2]);
-      curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni(), scurr, current_block, dim{});
+      curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni, scurr, current_block, dim{});
       if (dir < 0) {
 	break;
       }

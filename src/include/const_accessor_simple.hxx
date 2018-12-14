@@ -24,8 +24,8 @@ struct ParticleProxySimple
   
   // FIXME, grid is always double precision, so this will switch precision
   // where not desired. should use same info stored elsewhere at right precision
-  real_t qni_wni() const { return prt_.qni_wni(); }
-  real_t w()  const { return prt_.qni_wni() / q(); }
+  real_t qni_wni() const { return prt_.qni_wni; }
+  real_t w()  const { return prt_.qni_wni / q(); }
   real_t q()  const { return mprts_.grid().kinds[kind()].q; }
   real_t m()  const { return mprts_.grid().kinds[kind()].m; }
   int kind()  const { return prt_.kind(); }
@@ -61,8 +61,8 @@ struct ConstParticleProxySimple
   
   Real3 x()   const { return prt_.x(); }
   Real3 u()   const { return prt_.u(); }
-  real_t w()  const { return prt_.qni_wni() / q(); }
-  real_t qni_wni() const { return prt_.qni_wni(); }
+  real_t w()  const { return prt_.qni_wni / q(); }
+  real_t qni_wni() const { return prt_.qni_wni; }
   real_t q()  const { return mprts_.grid().kinds[kind()].q; }
   real_t m()  const { return mprts_.grid().kinds[kind()].m; }
   int kind()  const { return prt_.kind(); }
