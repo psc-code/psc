@@ -104,16 +104,16 @@ using HMparticlesCudaStorage = MparticlesCudaStorage_<thrust::host_vector<float4
 
 
 // ======================================================================
-// DConstParticleProxy
+// DParticleProxy
 
 template<typename DMparticlesCuda>
-struct DConstParticleProxy
+struct DParticleProxy
 {
   using real_t = DParticleCuda::real_t;
   using Real3 = DParticleCuda::Real3;
   
   __device__
-  DConstParticleProxy(const DParticleCuda& prt, const DMparticlesCuda& dmprts)
+  DParticleProxy(const DParticleCuda& prt, const DMparticlesCuda& dmprts)
     : prt_{prt}, dmprts_{dmprts}
   {}
 
@@ -154,7 +154,7 @@ struct DMparticlesCudaStorage : MparticlesCudaStorage_<float4*>
 
   template<typename DMparticlesCuda>
   __device__
-  DConstParticleProxy<DMparticlesCuda> load_const(const DMparticlesCuda& dmprts, int n)
+  DParticleProxy<DMparticlesCuda> load_proxy(const DMparticlesCuda& dmprts, int n)
   {
     return {load_device(n), dmprts};
   }

@@ -53,8 +53,8 @@ rho_1st_nc_cuda_run(DMparticles dmprts, DMFields dmflds)
     if (n < block_begin) {
       continue;
     }
-    auto prt = REORDER ? dmprts.storage.load_const(dmprts, dmprts.id_[n]) :
-      dmprts.storage.load_const(dmprts, n);
+    const auto prt = REORDER ? dmprts.storage.load_proxy(dmprts, dmprts.id_[n]) :
+      dmprts.storage.load_proxy(dmprts, n);
 
     float fnq = prt.qni_wni() * dmprts.fnqs();
     
@@ -102,8 +102,8 @@ n_1st_cuda_run(DMparticlesCuda<BS> dmprts, DMFields dmflds)
     if (n < block_begin) {
       continue;
     }
-    auto prt = REORDER ? dmprts.storage.load_const(dmprts, dmprts.id_[n]) :
-      dmprts.storage.load_const(dmprts, n);
+    const auto prt = REORDER ? dmprts.storage.load_proxy(dmprts, dmprts.id_[n]) :
+      dmprts.storage.load_proxy(dmprts, n);
 
     int kind = prt.kind();
     float wni = prt.qni_wni() * dmprts.q_inv(kind);
