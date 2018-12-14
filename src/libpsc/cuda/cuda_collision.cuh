@@ -115,7 +115,7 @@ struct CudaCollision
     Particle(DMparticles& dmprts, int n)
       : dmprts_{dmprts},
 	n_{n},
-	prt_{dmprts.storage.load(n_)}
+	prt_{dmprts.storage.load_proxy(dmprts, n_)}
     {}
 
     __device__
@@ -125,15 +125,15 @@ struct CudaCollision
       dmprts_.storage.store_momentum(prt_, n_);
     }
     
-    __device__ real_t q() const { return dmprts_.q(prt_.kind); }
-    __device__ real_t m() const { return dmprts_.m(prt_.kind); }
+    __device__ real_t q() const { return dmprts_.q(prt_.kind()); }
+    __device__ real_t m() const { return dmprts_.m(prt_.kind()); }
     __device__ Real3  u() const { return prt_.u(); }
     __device__ Real3& u()       { return prt_.u(); }
 
   private:
     DMparticles& dmprts_;
     int n_;
-    DParticleCuda prt_;
+    DParticleProxy<DMparticles> prt_;
   };
   
   CudaCollision(int interval, double nu, int nicell, double dt)
