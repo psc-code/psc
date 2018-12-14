@@ -16,6 +16,32 @@
 #include <thrust/binary_search.h>
 
 // ======================================================================
+// DParticleProxy
+
+template<typename DMparticlesCuda>
+struct DParticleProxy
+{
+  using real_t = DParticleCuda::real_t;
+  using Real3 = DParticleCuda::Real3;
+  
+  __device__
+  DParticleProxy(const DParticleCuda& prt, const DMparticlesCuda& dmprts)
+    : prt_{prt}, dmprts_{dmprts}
+  {}
+
+  __device__ int kind() const { return prt_.kind; }
+  __device__ real_t qni_wni() const { return prt_.qni_wni; }
+  __device__ Real3  x() const { return prt_.x(); }
+  __device__ Real3& x()       { return prt_.x(); }
+  __device__ Real3  u() const { return prt_.u(); }
+  __device__ Real3& u()       { return prt_.u(); }
+
+private:
+  DParticleCuda prt_;
+  const DMparticlesCuda& dmprts_;
+};
+
+// ======================================================================
 // ParticleCudaStorage
 
 struct ParticleCudaStorage
@@ -29,6 +55,13 @@ struct ParticleCudaStorage
   ParticleCudaStorage(const DParticleCuda& prt)
   : xi4{prt.x()[0], prt.x()[1], prt.x()[2], cuda_int_as_float(prt.kind)},
     pxi4{prt.u()[0], prt.u()[1], prt.u()[2], prt.qni_wni}
+  {}
+
+  template<typename DParticleProxy>
+  __device__
+  ParticleCudaStorage(const DParticleProxy& prt)
+  : xi4{prt.x()[0], prt.x()[1], prt.x()[2], cuda_int_as_float(prt.kind())},
+    pxi4{prt.u()[0], prt.u()[1], prt.u()[2], prt.qni_wni()}
   {}
 
   __host__ __device__
@@ -102,33 +135,6 @@ using MparticlesCudaStorage = MparticlesCudaStorage_<thrust::device_vector<float
 
 using HMparticlesCudaStorage = MparticlesCudaStorage_<thrust::host_vector<float4>>;
 
-
-// ======================================================================
-// DParticleProxy
-
-template<typename DMparticlesCuda>
-struct DParticleProxy
-{
-  using real_t = DParticleCuda::real_t;
-  using Real3 = DParticleCuda::Real3;
-  
-  __device__
-  DParticleProxy(const DParticleCuda& prt, const DMparticlesCuda& dmprts)
-    : prt_{prt}, dmprts_{dmprts}
-  {}
-
-  __device__ int kind() const { return prt_.kind; }
-  __device__ real_t qni_wni() const { return prt_.qni_wni; }
-  __device__ Real3  x() const { return prt_.x(); }
-  __device__ Real3& x()       { return prt_.x(); }
-  __device__ Real3  u() const { return prt_.u(); }
-  __device__ Real3& u()       { return prt_.u(); }
-
-  DParticleCuda prt_;
-private:
-  const DMparticlesCuda& dmprts_;
-};
-
 // ======================================================================
 // DMparticlesCudaStorage
 
@@ -141,13 +147,6 @@ struct DMparticlesCudaStorage : MparticlesCudaStorage_<float4*>
   DParticleCuda load(int n) const { return load_device(n); }
 
   __device__
-  void store_position(const DParticleCuda& prt, int n)
-  {
-    auto st = ParticleCudaStorage{prt};
-    xi4[n] = st.xi4;
-  }
-
-  __device__
   void store_momentum(const DParticleCuda& prt, int n)
   {
     auto st = ParticleCudaStorage{prt};
@@ -158,7 +157,7 @@ struct DMparticlesCudaStorage : MparticlesCudaStorage_<float4*>
   __device__
   void store_position(const DParticleProxy<DMparticlesCuda>& prt, int n)
   {
-    auto st = ParticleCudaStorage{prt.prt_};
+    auto st = ParticleCudaStorage{prt};
     xi4[n] = st.xi4;
   }
 
@@ -166,7 +165,7 @@ struct DMparticlesCudaStorage : MparticlesCudaStorage_<float4*>
   __device__
   void store_momentum(const DParticleProxy<DMparticlesCuda>& prt, int n)
   {
-    auto st = ParticleCudaStorage{prt.prt_};
+    auto st = ParticleCudaStorage{prt};
     pxi4[n] = st.pxi4;
   }
 
