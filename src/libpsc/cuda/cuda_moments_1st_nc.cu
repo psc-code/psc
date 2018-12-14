@@ -53,15 +53,10 @@ rho_1st_nc_cuda_run(DMparticles dmprts, DMFields dmflds)
     if (n < block_begin) {
       continue;
     }
-    DParticleCuda prt;
-    if (REORDER) {
-      uint id = dmprts.id_[n];
-      prt = dmprts.storage.load(id);
-    } else {
-      prt = dmprts.storage.load(n);
-    }
+    auto prt = REORDER ? dmprts.storage.load_const(dmprts, dmprts.id_[n]) :
+      dmprts.storage.load_const(dmprts, n);
 
-    float fnq = prt.qni_wni * dmprts.fnqs();
+    float fnq = prt.qni_wni() * dmprts.fnqs();
     
     int lf[3];
     float of[3];
@@ -107,16 +102,11 @@ n_1st_cuda_run(DMparticlesCuda<BS> dmprts, DMFields dmflds)
     if (n < block_begin) {
       continue;
     }
-    DParticleCuda prt;
-    if (REORDER) {
-      uint id = dmprts.id_[n];
-      prt = dmprts.storage.load(id);
-    } else {
-      prt = dmprts.storage.load(n);
-    }
+    auto prt = REORDER ? dmprts.storage.load_const(dmprts, dmprts.id_[n]) :
+      dmprts.storage.load_const(dmprts, n);
 
-    int kind = prt.kind;
-    float wni = prt.qni_wni * dmprts.q_inv(kind);
+    int kind = prt.kind();
+    float wni = prt.qni_wni() * dmprts.q_inv(kind);
     float fnq = wni * dmprts.fnqs();
     
     int lf[3];
