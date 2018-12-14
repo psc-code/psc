@@ -29,13 +29,14 @@ struct OutputParticlesAscii : OutputParticlesParams, OutputParticlesBase
     auto& mprts = mprts_base.get_as<MparticlesDouble>();
     
     FILE *file = fopen(filename, "w");
+    auto accessor = mprts.accessor();
     for (int p = 0; p < mprts.n_patches(); p++) {
       int n = 0;
-      for (auto& prt : mprts[p]) {
+      for (auto prt : accessor[p]) {
 	fprintf(file, "%d %g %g %g %g %g %g %g %d\n",
 		n, prt.x()[0], prt.x()[1], prt.x()[2],
 		prt.u()[0], prt.u()[1], prt.u()[2],
-		prt.qni_wni / grid.kinds[prt.kind()].q, prt.kind()); 
+		prt.w(), prt.kind()); 
 	n++;
       }
     }

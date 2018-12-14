@@ -128,7 +128,7 @@ private:
 };
 
 // ======================================================================
-// ConstAcessorPatchSimple
+// ConstAccessorPatchSimple
 
 template<typename ConstAccessorSimple>
 struct ConstAccessorPatchSimple
@@ -174,7 +174,7 @@ private:
 };
 
 // ======================================================================
-// ConstAcessorSimple
+// ConstAccessorSimple
 
 template<typename _Mparticles>
 struct ConstAccessorSimple
@@ -197,7 +197,7 @@ private:
 };
 
 // ======================================================================
-// AcessorSimple
+// AccessorSimple
 
 template<typename _Mparticles>
 struct AccessorSimple
