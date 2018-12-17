@@ -1,6 +1,7 @@
 
 #include "mparticles_cuda.hxx"
 #include "psc.h"
+#include "cuda_mparticles_iface.hxx"
 #include "cuda_mparticles.cuh"
 #include "psc_particles_single.h"
 #include "psc_particles_double.h"
@@ -22,22 +23,22 @@ MparticlesCuda<BS>::MparticlesCuda(const Grid_t& grid)
     pi_(grid)
 {
   dprintf("CMPRTS: ctor\n");
-  cmprts_ = new cuda_mparticles<BS>(grid);
+  cmprts_ = cuda_mparticles_iface<BS>::new_(grid);
 }
 
 template<typename BS>
 MparticlesCuda<BS>::~MparticlesCuda()
 {
   dprintf("CMPRTS: dtor\n");
-  delete cmprts_;
+  cuda_mparticles_iface<BS>::delete_(cmprts_);
 }
 
 template<typename BS>
 std::vector<uint> MparticlesCuda<BS>::get_size_all() const
 {
   dprintf("CMPRTS: get_size_all\n");
-  auto n_prts_by_patch = cmprts_->get_size_all();
-  for (int p = 0; p < cmprts_->n_patches(); p++) {
+  auto n_prts_by_patch = cuda_mparticles_iface<BS>::get_size_all(cmprts_);
+  for (int p = 0; p < n_prts_by_patch.size(); p++) {
     dprintf("  p %d: %d\n", p, n_prts_by_patch[p]);
   }
   return n_prts_by_patch;
@@ -47,7 +48,7 @@ template<typename BS>
 int MparticlesCuda<BS>::get_n_prts() const
 {
   dprintf("CMPRTS: get_n_prts\n");
-  return cmprts_->get_n_prts();
+  return cuda_mparticles_iface<BS>::get_n_prts(cmprts_);
 }
 
 template<typename BS>
