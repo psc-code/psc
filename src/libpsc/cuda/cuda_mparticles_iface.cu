@@ -37,7 +37,7 @@ template<typename BS>
 std::vector<uint> cuda_mparticles_iface<BS>::get_size_all(const cuda_mparticles* cmprts)
 {
   dprintf("CMPRTS: get_size_all\n");
-  auto n_prts_by_patch = cmprts_->get_size_all();
+  auto n_prts_by_patch = cmprts->get_size_all();
   for (int p = 0; p < n_prts_by_patch.size(); p++) {
     dprintf("  p %d: %d\n", p, n_prts_by_patch[p]);
   }

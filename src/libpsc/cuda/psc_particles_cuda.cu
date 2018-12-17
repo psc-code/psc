@@ -1,83 +1,10 @@
 
 #include "mparticles_cuda.hxx"
 #include "psc.h"
-#include "cuda_mparticles_iface.hxx"
 #include "psc_particles_single.h"
 #include "psc_particles_double.h"
 
 #include <mrc_io.h>
-
-// ======================================================================
-// MparticleCuda implementation
-
-template<typename BS>
-MparticlesCuda<BS>::MparticlesCuda(const Grid_t& grid)
-  : MparticlesBase(grid),
-    pi_(grid)
-{
-  cmprts_ = cuda_mparticles_iface<BS>::new_(grid);
-}
-
-template<typename BS>
-MparticlesCuda<BS>::~MparticlesCuda()
-{
-  cuda_mparticles_iface<BS>::delete_(cmprts_);
-}
-
-template<typename BS>
-std::vector<uint> MparticlesCuda<BS>::get_size_all() const
-{
-  return cuda_mparticles_iface<BS>::get_size_all(cmprts_);
-}
-
-template<typename BS>
-int MparticlesCuda<BS>::get_n_prts() const
-{
-  return cuda_mparticles_iface<BS>::get_n_prts(cmprts_);
-}
-
-template<typename BS>
-void MparticlesCuda<BS>::reset(const Grid_t& grid)
-{
-  this->~MparticlesCuda();
-  new(this) MparticlesCuda(grid);
-}
-
-template<typename BS>
-void MparticlesCuda<BS>::inject(const std::vector<Particle>& buf, const std::vector<uint>& buf_n_by_patch)
-{
-  cuda_mparticles_iface<BS>::inject(cmprts_, buf, buf_n_by_patch);
-}
-
-template<typename BS>
-std::vector<uint> MparticlesCuda<BS>::get_offsets() const
-{
-  return cuda_mparticles_iface<BS>::get_offsets(cmprts_);
-}
-
-template<typename BS>
-std::vector<typename MparticlesCuda<BS>::Particle> MparticlesCuda<BS>::get_particles() const
-{
-  return cuda_mparticles_iface<BS>::get_particles(cmprts_);
-}
-
-template<typename BS>
-typename MparticlesCuda<BS>::Particle MparticlesCuda<BS>::get_particle(int p, int n) const
-{
-  return cuda_mparticles_iface<BS>::get_particle(cmprts_, p, n);
-}
-
-template<typename BS>
-bool MparticlesCuda<BS>::check_after_push()
-{
-  return cuda_mparticles_iface<BS>::check_after_push(cmprts_);
-}
-
-template<typename BS>
-void MparticlesCuda<BS>::dump(const std::string& filename)
-{
-  cuda_mparticles_iface<BS>::dump(cmprts_, filename);
-}
 
 // ======================================================================
 // conversion

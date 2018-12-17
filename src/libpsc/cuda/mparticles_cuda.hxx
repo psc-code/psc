@@ -6,10 +6,8 @@
 #include "particle_indexer.hxx"
 #include "mparticles_patch_cuda.hxx"
 #include "injector_buffered.hxx"
+#include "cuda_mparticles_iface.hxx"
 #include "bs.hxx"
-
-template<typename BS>
-struct cuda_mparticles;
 
 // ======================================================================
 // MparticlesCuda
@@ -29,22 +27,33 @@ struct MparticlesCuda : MparticlesBase
   using is_cuda = std::true_type;
   
   using Patch = ConstPatchCuda<MparticlesCuda>;
+  using Iface = cuda_mparticles_iface<BS>;
 
-  MparticlesCuda(const Grid_t& grid);
-  ~MparticlesCuda();
+  MparticlesCuda(const Grid_t& grid)
+    : MparticlesBase(grid),
+      pi_(grid)
+  {
+    cmprts_ = Iface::new_(grid);
+  }
+  
+  ~MparticlesCuda() { Iface::delete_(cmprts_); }
 
-  int get_n_prts() const override;
-  std::vector<uint> get_size_all() const override;
-  void reset(const Grid_t& grid) override;
+  void reset(const Grid_t& grid) override
+  {
+    this->~MparticlesCuda();
+    new(this) MparticlesCuda(grid);
+  }
 
-  void inject(const std::vector<Particle>& buf, const std::vector<uint>& buf_n_by_patch);
-  void dump(const std::string& filename);
-  bool check_after_push();
+  int get_n_prts() const override { return Iface::get_n_prts(cmprts_); }
+  std::vector<uint> get_size_all() const override { return Iface::get_size_all(cmprts_); }
 
-  std::vector<uint> get_offsets() const;
-  std::vector<Particle> get_particles() const;
-  std::vector<Particle> get_particles(int p) const;
-  Particle get_particle(int p, int n) const;
+  void inject(const std::vector<Particle>& buf, const std::vector<uint>& buf_n_by_patch) { Iface::inject(cmprts_, buf, buf_n_by_patch); }
+  void dump(const std::string& filename) { Iface::dump(cmprts_, filename); }
+  bool check_after_push() { return Iface::check_after_push(cmprts_); }
+
+  std::vector<uint> get_offsets() const { return Iface::get_offsets(cmprts_); }
+  std::vector<Particle> get_particles() const { return Iface::get_particles(cmprts_); }
+  Particle get_particle(int p, int n) const { return Iface::get_particle(cmprts_, p, n); }
   const ParticleIndexer<real_t>& particleIndexer() const { return pi_; }
   void define_species(const char *name, double q, double m,
 		      double max_local_np, double max_local_nm,
