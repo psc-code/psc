@@ -2,7 +2,6 @@
 #include "mparticles_cuda.hxx"
 #include "psc.h"
 #include "cuda_mparticles_iface.hxx"
-#include "cuda_mparticles.cuh"
 #include "psc_particles_single.h"
 #include "psc_particles_double.h"
 
@@ -62,47 +61,40 @@ template<typename BS>
 void MparticlesCuda<BS>::inject(const std::vector<Particle>& buf, const std::vector<uint>& buf_n_by_patch)
 {
   dprintf("CMPRTS: inject\n");
-  cmprts_->inject(buf, buf_n_by_patch);
+  cuda_mparticles_iface<BS>::inject(cmprts_, buf, buf_n_by_patch);
 }
 
 template<typename BS>
 std::vector<uint> MparticlesCuda<BS>::get_offsets() const
 {
   dprintf("CMPRTS: get_particles\n");
-  return cmprts_->get_offsets();
+  return cuda_mparticles_iface<BS>::get_offsets(cmprts_);
 }
 
 template<typename BS>
 std::vector<typename MparticlesCuda<BS>::Particle> MparticlesCuda<BS>::get_particles() const
 {
   dprintf("CMPRTS: get_particles\n");
-  return cmprts_->get_particles();
-}
-
-template<typename BS>
-std::vector<typename MparticlesCuda<BS>::Particle> MparticlesCuda<BS>::get_particles(int p) const
-{
-  dprintf("CMPRTS: get_particles\n");
-  return cmprts_->get_particles(p);
+  return cuda_mparticles_iface<BS>::get_particles(cmprts_);
 }
 
 template<typename BS>
 typename MparticlesCuda<BS>::Particle MparticlesCuda<BS>::get_particle(int p, int n) const
 {
   dprintf("CMPRTS: get_particle\n");
-  return cmprts_->get_particle(p, n);
-}
-
-template<typename BS>
-void MparticlesCuda<BS>::dump(const std::string& filename)
-{
-  cmprts_->dump(filename);
+  return cuda_mparticles_iface<BS>::get_particle(cmprts_, p, n);
 }
 
 template<typename BS>
 bool MparticlesCuda<BS>::check_after_push()
 {
-  return cmprts_->check_bidx_after_push();
+  return cuda_mparticles_iface<BS>::check_after_push(cmprts_);
+}
+
+template<typename BS>
+void MparticlesCuda<BS>::dump(const std::string& filename)
+{
+  cuda_mparticles_iface<BS>::dump(cmprts_, filename);
 }
 
 // ======================================================================
