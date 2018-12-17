@@ -7,12 +7,6 @@
 
 #include <mrc_io.h>
 
-#if 0
-#define dprintf(...) mprintf(__VA_ARGS__)
-#else
-#define dprintf(...) do {} while (0)
-#endif
-
 // ======================================================================
 // MparticleCuda implementation
 
@@ -21,32 +15,24 @@ MparticlesCuda<BS>::MparticlesCuda(const Grid_t& grid)
   : MparticlesBase(grid),
     pi_(grid)
 {
-  dprintf("CMPRTS: ctor\n");
   cmprts_ = cuda_mparticles_iface<BS>::new_(grid);
 }
 
 template<typename BS>
 MparticlesCuda<BS>::~MparticlesCuda()
 {
-  dprintf("CMPRTS: dtor\n");
   cuda_mparticles_iface<BS>::delete_(cmprts_);
 }
 
 template<typename BS>
 std::vector<uint> MparticlesCuda<BS>::get_size_all() const
 {
-  dprintf("CMPRTS: get_size_all\n");
-  auto n_prts_by_patch = cuda_mparticles_iface<BS>::get_size_all(cmprts_);
-  for (int p = 0; p < n_prts_by_patch.size(); p++) {
-    dprintf("  p %d: %d\n", p, n_prts_by_patch[p]);
-  }
-  return n_prts_by_patch;
+  return cuda_mparticles_iface<BS>::get_size_all(cmprts_);
 }
 
 template<typename BS>
 int MparticlesCuda<BS>::get_n_prts() const
 {
-  dprintf("CMPRTS: get_n_prts\n");
   return cuda_mparticles_iface<BS>::get_n_prts(cmprts_);
 }
 
@@ -60,28 +46,24 @@ void MparticlesCuda<BS>::reset(const Grid_t& grid)
 template<typename BS>
 void MparticlesCuda<BS>::inject(const std::vector<Particle>& buf, const std::vector<uint>& buf_n_by_patch)
 {
-  dprintf("CMPRTS: inject\n");
   cuda_mparticles_iface<BS>::inject(cmprts_, buf, buf_n_by_patch);
 }
 
 template<typename BS>
 std::vector<uint> MparticlesCuda<BS>::get_offsets() const
 {
-  dprintf("CMPRTS: get_particles\n");
   return cuda_mparticles_iface<BS>::get_offsets(cmprts_);
 }
 
 template<typename BS>
 std::vector<typename MparticlesCuda<BS>::Particle> MparticlesCuda<BS>::get_particles() const
 {
-  dprintf("CMPRTS: get_particles\n");
   return cuda_mparticles_iface<BS>::get_particles(cmprts_);
 }
 
 template<typename BS>
 typename MparticlesCuda<BS>::Particle MparticlesCuda<BS>::get_particle(int p, int n) const
 {
-  dprintf("CMPRTS: get_particle\n");
   return cuda_mparticles_iface<BS>::get_particle(cmprts_, p, n);
 }
 

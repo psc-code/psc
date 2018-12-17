@@ -7,6 +7,12 @@
 template<typename BS>
 struct cuda_mparticles;
 
+// ======================================================================
+// cuda_mparticles_iface
+//
+// This is quite a bit of boilerplate code, with the only purpose being to have
+// a separation between nvcc-compiled code and CXX compiled code
+
 template<typename BS>
 struct cuda_mparticles_iface
 {
