@@ -2,7 +2,9 @@
 #pragma once
 
 #include <psc_fields_single.h>
+#ifdef USE_VPIC
 #include "vpic_hydro_ops.hxx"
+#endif
 #include "psc_hydro_ops.hxx"
 
 // ----------------------------------------------------------------------
@@ -98,8 +100,10 @@ private:
   MfieldsSingle mflds_res_;
 };
 
+#ifdef USE_VPIC
 template<typename Mparticles, typename MfieldsHydro, typename MfieldsInterpolator>
 using OutputHydroVpicWrap = OutputHydroVpic_<VpicHydroOps<Mparticles, MfieldsHydro, MfieldsInterpolator>>;
+#endif
 
 template<typename Mparticles, typename MfieldsHydro, typename MfieldsInterpolator>
 using OutputHydroVpic = OutputHydroVpic_<PscHydroOps<Mparticles, MfieldsHydro, MfieldsInterpolator>>;

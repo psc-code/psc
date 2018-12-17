@@ -852,8 +852,10 @@ private:
   int num_div_b_round_ = 3;
 };
 
+#ifdef USE_VPIC
 template<typename Mparticles, typename MfieldsState>
 using MarderVpicWrap = MarderVpic_<MarderVpicOpsWrap<Mparticles, MfieldsState>>;
+#endif
 
 template<typename Mparticles, typename MfieldsState>
 using MarderVpic = MarderVpic_<MarderVpicOps<Mparticles, MfieldsState>>;

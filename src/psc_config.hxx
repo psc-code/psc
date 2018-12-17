@@ -180,6 +180,7 @@ struct PscConfig1vbecCuda<dim_xyz> : PscConfig_<dim_xyz, MparticlesCuda<BS444>, 
 #include "../libpsc/vpic/marder_vpic.hxx"
 #include "../libpsc/vpic/checks_vpic.hxx"
 
+#ifdef USE_VPIC
 struct PscConfigVpicWrap
 {
   using VpicConfig = VpicConfigWrap;
@@ -215,6 +216,7 @@ struct PscConfigVpicWrap
 				  typename VpicConfig::MfieldsHydro>;
 #endif
 };
+#endif
 
 struct PscConfigVpicPsc
 {
