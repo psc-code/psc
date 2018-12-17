@@ -52,13 +52,13 @@ static void copy_to(MparticlesBase& mprts_base, MparticlesBase& mprts_other_base
 // conversion to "single"/"double"
 
 template<typename BS>
-const MparticlesCuda<BS>::Convert MparticlesCuda<BS>::convert_to_ = {
+const typename MparticlesCuda<BS>::Convert MparticlesCuda<BS>::convert_to_ = {
   { std::type_index(typeid(MparticlesSingle)), copy_to<MparticlesCuda<BS>, MparticlesSingle>   },
   { std::type_index(typeid(MparticlesDouble)), copy_to<MparticlesCuda<BS>, MparticlesDouble>   },
 };
 
 template<typename BS>
-const MparticlesCuda<BS>::Convert MparticlesCuda<BS>::convert_from_ = {
+const typename MparticlesCuda<BS>::Convert MparticlesCuda<BS>::convert_from_ = {
   { std::type_index(typeid(MparticlesSingle)), copy_from<MparticlesCuda<BS>, MparticlesSingle>   },
   { std::type_index(typeid(MparticlesDouble)), copy_from<MparticlesCuda<BS>, MparticlesDouble>   },
 };
