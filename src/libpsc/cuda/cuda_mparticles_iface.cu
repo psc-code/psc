@@ -13,28 +13,28 @@
 // cuda_mparticles_iface implementation
 
 template<typename BS>
-cuda_mparticles<BS>* cuda_mparticles_iface<BS>::new_(const Grid_t& grid)
+cuda_mparticles_iface<BS>::CudaMparticles* cuda_mparticles_iface<BS>::new_(const Grid_t& grid)
 {
   dprintf("CMPRTS: new\n");
-  return new cuda_mparticles(grid);
+  return new CudaMparticles(grid);
 }
 
 template<typename BS>
-void cuda_mparticles_iface<BS>::delete_(cuda_mparticles* cmprts)
+void cuda_mparticles_iface<BS>::delete_(CudaMparticles* cmprts)
 {
   dprintf("CMPRTS: delete\n");
   delete cmprts;
 }
 
 template<typename BS>
-int cuda_mparticles_iface<BS>::get_n_prts(cuda_mparticles* cmprts)
+int cuda_mparticles_iface<BS>::get_n_prts(CudaMparticles* cmprts)
 {
   dprintf("CMPRTS: get_n_prts\n");
   return cmprts->get_n_prts();
 }
 
 template<typename BS>
-std::vector<uint> cuda_mparticles_iface<BS>::get_size_all(const cuda_mparticles* cmprts)
+std::vector<uint> cuda_mparticles_iface<BS>::get_size_all(const CudaMparticles* cmprts)
 {
   dprintf("CMPRTS: get_size_all\n");
   auto n_prts_by_patch = cmprts->get_size_all();
@@ -45,7 +45,7 @@ std::vector<uint> cuda_mparticles_iface<BS>::get_size_all(const cuda_mparticles*
 }
 
 template<typename BS>
-void cuda_mparticles_iface<BS>::inject(cuda_mparticles* cmprts, const std::vector<cuda_mparticles_iface<BS>::Particle>& buf,
+void cuda_mparticles_iface<BS>::inject(CudaMparticles* cmprts, const std::vector<cuda_mparticles_iface<BS>::Particle>& buf,
 				       const std::vector<uint>& buf_n_by_patch)
 {
   dprintf("CMPRTS: inject\n");
@@ -53,34 +53,34 @@ void cuda_mparticles_iface<BS>::inject(cuda_mparticles* cmprts, const std::vecto
 }
 
 template<typename BS>
-std::vector<uint> cuda_mparticles_iface<BS>::get_offsets(const cuda_mparticles* cmprts)
+std::vector<uint> cuda_mparticles_iface<BS>::get_offsets(const CudaMparticles* cmprts)
 {
   dprintf("CMPRTS: get_offsets\n");
   return cmprts->get_offsets();
 }
 
 template<typename BS>
-std::vector<typename cuda_mparticles_iface<BS>::Particle> cuda_mparticles_iface<BS>::get_particles(const cuda_mparticles* cmprts)
+std::vector<typename cuda_mparticles_iface<BS>::Particle> cuda_mparticles_iface<BS>::get_particles(const CudaMparticles* cmprts)
 {
   dprintf("CMPRTS: get_particles\n");
-  return const_cast<cuda_mparticles*>(cmprts)->get_particles(); // FIXME cast
+  return const_cast<CudaMparticles*>(cmprts)->get_particles(); // FIXME cast
 }
 
 template<typename BS>
-cuda_mparticles_iface<BS>::Particle cuda_mparticles_iface<BS>::get_particle(const cuda_mparticles* cmprts, int p, int n)
+cuda_mparticles_iface<BS>::Particle cuda_mparticles_iface<BS>::get_particle(const CudaMparticles* cmprts, int p, int n)
 {
   dprintf("CMPRTS: get_particle\n");
-  return const_cast<cuda_mparticles*>(cmprts)->get_particle(p, n); // FIXME cast
+  return const_cast<CudaMparticles*>(cmprts)->get_particle(p, n); // FIXME cast
 }
 
 template<typename BS>
-bool cuda_mparticles_iface<BS>::check_after_push(cuda_mparticles* cmprts)
+bool cuda_mparticles_iface<BS>::check_after_push(CudaMparticles* cmprts)
 {
   return cmprts->check_bidx_after_push(); // FIXME, naming inconsistence
 }
 
 template<typename BS>
-void cuda_mparticles_iface<BS>::dump(const cuda_mparticles* cmprts, const std::string& filename)
+void cuda_mparticles_iface<BS>::dump(const CudaMparticles* cmprts, const std::string& filename)
 {
   cmprts->dump(filename);
 }
