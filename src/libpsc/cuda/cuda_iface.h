@@ -20,11 +20,6 @@ typedef float float_3[3];
 typedef double double_3[3];
 
 // ----------------------------------------------------------------------
-// cuda_base
-
-void cuda_base_init(void);
-
-// ----------------------------------------------------------------------
 // cuda_mfields
 
 struct cuda_mfields;

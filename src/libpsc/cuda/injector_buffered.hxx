@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "psc_particles.h"
+
 // ======================================================================
 // InjectorBuffered
 

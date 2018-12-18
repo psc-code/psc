@@ -9,6 +9,8 @@
 #include <thrust/device_vector.h>
 #include <thrust/sort.h>
 
+#include "cuda_base.cuh"
+
 #include <cstdio>
 #include <cassert>
 

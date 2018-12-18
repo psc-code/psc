@@ -5,6 +5,9 @@
 #include <thrust/sort.h>
 #include <thrust/binary_search.h>
 
+template<typename BS>
+struct cuda_mparticles;
+
 // ======================================================================
 // cuda_mparticles_sort
 

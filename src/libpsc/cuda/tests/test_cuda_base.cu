@@ -1,5 +1,5 @@
 
-#include "cuda_iface.h"
+#include "cuda_base.cuh"
 
 #include "gtest/gtest.h"
 

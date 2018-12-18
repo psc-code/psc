@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include "cuda_iface.h"
 #include "cuda_mparticles_indexer.h"
 #include "cuda_mparticles_sort.cuh"
 #include "injector_buffered.hxx"
