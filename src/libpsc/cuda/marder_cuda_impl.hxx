@@ -19,7 +19,9 @@ struct MarderCuda : MarderBase
     : grid_{grid},
       diffusion_{diffusion},
       loop_{loop},
-      dump_{dump}
+      dump_{dump},
+      item_rho_{grid, grid.comm()},
+      item_div_e_{grid, grid.comm()}
   {
 #if 0
     bnd_ = psc_bnd_create(grid.comm());
