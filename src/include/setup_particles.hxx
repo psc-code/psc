@@ -99,7 +99,7 @@ struct SetupParticles
     const auto& grid = mprts.grid();
     const auto& kinds = grid.kinds;
     
-    mprts.reserve_all(n_prts_by_patch);
+    //mprts.reserve_all(n_prts_by_patch); FIXME
 
     auto inj = mprts.injector();
       
@@ -156,7 +156,7 @@ struct SetupParticles
 	}
       }
       if (!fractional_n_particles_per_cell) {
-	assert(mprts[p].size() == n_prts_by_patch[p]);
+	//assert(mprts[p].size() == n_prts_by_patch[p]); FIXME
       }
     }
   }
