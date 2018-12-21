@@ -780,8 +780,6 @@ private:
   void balance_state_field(communicate_ctx& ctx, const Grid_t& new_grid, MfieldsStateBase& mf_base)
   {
     if (typeid(mf_base) != typeid(MfieldsState)) {
-      assert(0);
-#if 0
       auto& mf_old = *new MfieldsState{mf_base.grid()};
       MfieldsStateBase::convert(mf_base, mf_old, 0, mf_old.n_comps());
       mf_base.reset(new_grid); // free old memory
@@ -790,8 +788,7 @@ private:
       communicate_fields(&ctx, mf_old.mflds(), mf_new.mflds());
       delete &mf_old; // delete as early as possible
       
-      MfieldsBase::convert(mf_new.mflds(), mf_base.mflds(), 0, mf_base.n_comps());
-#endif
+      MfieldsStateBase::convert(mf_new, mf_base, 0, mf_base.n_comps());
     } else {
       // for now MfieldsStateFromMfields will have its underlying Mfields rebalanced, anyway, so all we need ot do
       // is reset the grid.
