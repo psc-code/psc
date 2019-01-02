@@ -4,23 +4,22 @@
 #include "test_common.hxx"
 
 #include "psc_particles_single.h"
+#include "psc_fields_single.h"
 #include "psc_particles_double.h"
-#include "../libpsc/vpic/mparticles_vpic.hxx"
-#include "../libpsc/vpic/PscGridBase.h"
-#include "../libpsc/vpic/PscParticleBc.h"
-#include "../libpsc/vpic/PscParticlesBase.h"
-#include "../libpsc/vpic/vpic_config.h"
+#include "psc_fields_c.h"
+#include "../libpsc/psc_balance/psc_balance_impl.hxx"
 
-template<typename _Mparticles, typename _MakeGrid = MakeTestGrid1>
+template<typename _Mparticles, typename _MfieldsState, typename _Mfields>
 struct Config
 {
   using Mparticles = _Mparticles;
-  using MakeGrid = _MakeGrid;
+  using MfieldsState = _MfieldsState;
+  using Mfields = _Mfields;
+  using Balance = Balance_<Mparticles, MfieldsState, Mfields>;
 };
 
-using BalanceTestTypes = ::testing::Types<Config<MparticlesSingle>
-					 ,Config<MparticlesSingle, MakeTestGridYZ>
-					 ,Config<MparticlesDouble>
+using BalanceTestTypes = ::testing::Types<Config<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>
+					 ,Config<MparticlesDouble, MfieldsStateDouble, MfieldsC>
 					 >;
 
 TYPED_TEST_CASE(BalanceTest, BalanceTestTypes);
@@ -32,18 +31,26 @@ template<typename T>
 struct BalanceTest : ::testing::Test
 {
   using Mparticles = typename T::Mparticles;
+  using Balance = typename T::Balance;
   using Particle = typename Mparticles::Particle;
-  using MakeGrid = typename T::MakeGrid;
 
   BalanceTest()
-    : grid_{MakeGrid{}()}
   {
-    grid_.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
+    auto domain = Grid_t::Domain{{1, 8, 16},
+				 {10., 80., 160.}, {0., -40., -80.},
+				 {1, 2, 2}};
+    auto bc = GridBc{};
+    auto kinds = Grid_t::Kinds{};
+    auto norm = Grid_t::Normalization{};
+    double dt = .1;
+    grid_ = new Grid_t{domain, bc, kinds, norm, dt};
+
+    grid_->kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
   }
 
   Mparticles mk_mprts()
   {
-    Mparticles mprts(grid_);
+    Mparticles mprts(grid());
     mprts.define_species("test_species", 1., 1., 100, 10,
 			 10, 0);
     return mprts;
@@ -70,10 +77,10 @@ struct BalanceTest : ::testing::Test
     }
   }
 
-  const Grid_t& grid() { return grid_; }
+  const Grid_t& grid() { return *grid_; }
   
-private:
-  Grid_t grid_;
+protected:
+  Grid_t *grid_;
 };
 
 // -----------------------------------------------------------------------
@@ -81,19 +88,65 @@ private:
 
 TYPED_TEST(BalanceTest, Constructor)
 {
-  auto mprts = this->mk_mprts();
+  using Balance = typename BalanceTest<TypeParam>::Balance;
+  auto balance = Balance{1, 1., true};
 }
 
 // ----------------------------------------------------------------------
-// Inject
+// Initial1
+//
+// already balanced, nothing tbd
 
-TYPED_TEST(BalanceTest, Inject)
+TYPED_TEST(BalanceTest, Initial1)
 {
-  const int n_prts = 4;
+  using Balance = typename BalanceTest<TypeParam>::Balance;
 
-  auto mprts = this->mk_mprts();
+  int rank, size;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  auto balance = Balance{1, 0., true};
 
-  this->inject_test_particles(mprts, n_prts);
+  auto n_prts_by_patch = std::vector<uint>{};
+  if (size == 1) {
+    n_prts_by_patch = {4, 4, 4, 4};
+  } else if (size == 2) {
+    n_prts_by_patch = {4, 4};
+  } else {
+    assert(0);
+  }
+  balance.initial(this->grid_, n_prts_by_patch);
+}
+
+// ----------------------------------------------------------------------
+// Initial2
+//
+// not balanced (on 2 procs)
+
+TYPED_TEST(BalanceTest, Initial2)
+{
+  using Balance = typename BalanceTest<TypeParam>::Balance;
+
+  int rank, size;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  auto balance = Balance{1, 0., true};
+
+  // auto mprts = this->mk_mprts();
+  // this->inject_test_particles(mprts, n_prts);
+
+  auto n_prts_by_patch = std::vector<uint>{};
+  if (size == 1) {
+    n_prts_by_patch = {4, 4, 4, 4};
+  } else if (size == 2) {
+    if (rank == 0) {
+      n_prts_by_patch = {4, 4};
+    } else {
+      n_prts_by_patch = {4, 100};
+    }
+  } else {
+    assert(0);
+  }
+  balance.initial(this->grid_, n_prts_by_patch);
 }
 
 int main(int argc, char **argv)
