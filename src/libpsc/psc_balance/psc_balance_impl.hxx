@@ -852,6 +852,7 @@ private:
     // particles
     std::vector<uint> n_prts_by_patch_new;
     if (mp) {
+      mpi_printf(old_grid->comm(), "***** Balance: balancing particles\n");
       prof_start(pr_bal_prts);
       balance_particles(ctx, *new_grid, *mp);
       prof_stop(pr_bal_prts);
@@ -861,12 +862,14 @@ private:
 
     prof_start(pr_bal_flds);
     // state field
+    mpi_printf(old_grid->comm(), "***** Balance: balancing state field\n");
     for (auto mf : MfieldsStateBase::instances) {
       balance_state_field(ctx, *new_grid, *mf);
     }
     
     // fields
     for (auto mf : MfieldsBase::instances) {
+      mpi_printf(old_grid->comm(), "***** Balance: balancing field\n");
       balance_field(ctx, *new_grid, *mf);
     }
     prof_stop(pr_bal_flds);
