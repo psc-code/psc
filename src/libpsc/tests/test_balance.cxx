@@ -31,7 +31,6 @@ template<typename T>
 struct BalanceTest : ::testing::Test
 {
   using Mparticles = typename T::Mparticles;
-  using Balance = typename T::Balance;
   using Particle = typename Mparticles::Particle;
 
   BalanceTest()
@@ -88,10 +87,11 @@ protected:
 
 TYPED_TEST(BalanceTest, Constructor)
 {
-  using Balance = typename BalanceTest<TypeParam>::Balance;
+  using Balance = typename TypeParam::Balance;
   auto balance = Balance{1, 1., true};
 }
 
+#if 0
 // ----------------------------------------------------------------------
 // Initial1
 //
@@ -99,7 +99,7 @@ TYPED_TEST(BalanceTest, Constructor)
 
 TYPED_TEST(BalanceTest, Initial1)
 {
-  using Balance = typename BalanceTest<TypeParam>::Balance;
+  using Balance = typename TypeParam::Balance;
 
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -124,7 +124,7 @@ TYPED_TEST(BalanceTest, Initial1)
 
 TYPED_TEST(BalanceTest, Initial2)
 {
-  using Balance = typename BalanceTest<TypeParam>::Balance;
+  using Balance = typename TypeParam::Balance;
 
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -133,6 +133,41 @@ TYPED_TEST(BalanceTest, Initial2)
 
   // auto mprts = this->mk_mprts();
   // this->inject_test_particles(mprts, n_prts);
+
+  auto n_prts_by_patch = std::vector<uint>{};
+  if (size == 1) {
+    n_prts_by_patch = {4, 4, 4, 4};
+  } else if (size == 2) {
+    if (rank == 0) {
+      n_prts_by_patch = {4, 4};
+    } else {
+      n_prts_by_patch = {4, 100};
+    }
+  } else {
+    assert(0);
+  }
+  balance.initial(this->grid_, n_prts_by_patch);
+}
+#endif
+
+// ----------------------------------------------------------------------
+// Initial3
+//
+// not balanced (on 2 procs), actually rebalance some fields
+
+TYPED_TEST(BalanceTest, Initial3)
+{
+  using MfieldsState = typename TypeParam::MfieldsState;
+  using Mfields = typename TypeParam::Mfields;
+  using Balance = typename TypeParam::Balance;
+
+  int rank, size;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  auto balance = Balance{1, 0., true};
+
+  auto mflds_state = MfieldsState{this->grid()};
+  auto mflds = Mfields{this->grid(), 3, {2, 2, 2}};
 
   auto n_prts_by_patch = std::vector<uint>{};
   if (size == 1) {
