@@ -2,6 +2,7 @@
 #pragma once
 
 #include "fields.hxx"
+#include "fields_traits.hxx"
 #include "balance.hxx"
 #include "bnd_particles.hxx"
 #include "bnd.hxx"
@@ -353,6 +354,7 @@ struct Balance_ : BalanceBase
 private:
   std::vector<double> get_loads_initial(const Grid_t& grid, const std::vector<uint>& n_prts_by_patch)
   {
+    assert(n_prts_by_patch.size() == grid.n_patches());
     std::vector<double> loads;
     loads.reserve(n_prts_by_patch.size());
 
