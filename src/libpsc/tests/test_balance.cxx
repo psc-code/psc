@@ -9,17 +9,27 @@
 #include "psc_fields_c.h"
 #include "../libpsc/psc_balance/psc_balance_impl.hxx"
 
-template<typename _Mparticles, typename _MfieldsState, typename _Mfields>
+#ifdef USE_CUDA
+#include "../libpsc/cuda/mparticles_cuda.hxx"
+#include "psc_fields_cuda.h"
+#endif
+
+template<typename _Mparticles, typename _MfieldsState, typename _Mfields,
+	 typename _Balance = Balance_<_Mparticles, _MfieldsState, _Mfields>>
 struct Config
 {
   using Mparticles = _Mparticles;
   using MfieldsState = _MfieldsState;
   using Mfields = _Mfields;
-  using Balance = Balance_<Mparticles, MfieldsState, Mfields>;
+  using Balance = _Balance;
 };
 
 using BalanceTestTypes = ::testing::Types<Config<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>
 					 ,Config<MparticlesDouble, MfieldsStateDouble, MfieldsC>
+#ifdef USE_CUDA
+					 ,Config<MparticlesCuda<BS144>, MfieldsStateCuda, MfieldsCuda,
+						 Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>>
+#endif
 					 >;
 
 TYPED_TEST_CASE(BalanceTest, BalanceTestTypes);
