@@ -330,6 +330,7 @@ struct Balance_ : BalanceBase
   ~Balance_()
   {
     delete[] psc_balance_comp_time_by_patch;
+    psc_balance_comp_time_by_patch = nullptr;
   }
   
   void initial(Grid_t*& grid, std::vector<uint>& n_prts_by_patch) override
