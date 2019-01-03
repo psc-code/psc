@@ -91,6 +91,12 @@ struct MfieldsStateCuda : MfieldsStateBase
       mflds_{grid, NR_FIELDS, grid.ibn}
   {}
 
+  /* void reset(const Grid_t& new_grid) override */
+  /* { */
+  /*   MfieldsStateBase::reset(new_grid); */
+  /*   mflds_.reset(new_grid); */
+  /* } */
+
   cuda_mfields* cmflds() { return mflds_.cmflds(); }
 
   fields_single_t get_host_fields()
