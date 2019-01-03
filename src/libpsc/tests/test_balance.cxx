@@ -66,12 +66,13 @@ struct BalanceTest : ::testing::Test
   }
 
   template<typename _Mparticles>
-  void inject_test_particles(_Mparticles& mprts, int n_prts)
+  void inject_test_particles(_Mparticles& mprts, const std::vector<uint>& n_prts_by_patch)
   {
     auto inj = mprts.injector();
     for (int p = 0; p < mprts.n_patches(); ++p) {
       auto injector = inj[p];
       auto& patch = mprts.grid().patches[p];
+      auto n_prts = n_prts_by_patch[p];
       for (int n = 0; n < n_prts; n++) {
 	double nn = double(n) / n_prts;
 	auto L = patch.xe - patch.xb;
@@ -141,9 +142,6 @@ TYPED_TEST(BalanceTest, Initial2)
   MPI_Comm_size(MPI_COMM_WORLD, &size);
   auto balance = Balance{1, 0., true};
 
-  // auto mprts = this->mk_mprts();
-  // this->inject_test_particles(mprts, n_prts);
-
   auto n_prts_by_patch = std::vector<uint>{};
   if (size == 1) {
     n_prts_by_patch = {4, 4, 4, 4};
@@ -192,6 +190,43 @@ TYPED_TEST(BalanceTest, Initial3)
     assert(0);
   }
   balance.initial(this->grid_, n_prts_by_patch);
+}
+
+// ----------------------------------------------------------------------
+// Every1
+//
+// not balanced (on 2 procs), so actually rebalances
+
+TYPED_TEST(BalanceTest, Every1)
+{
+  using MfieldsState = typename TypeParam::MfieldsState;
+  using Mfields = typename TypeParam::Mfields;
+  using Balance = typename TypeParam::Balance;
+
+  int rank, size;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  auto balance = Balance{1, 0., true};
+
+  auto mflds_state = MfieldsState{this->grid()};
+  auto mflds = Mfields{this->grid(), 3, {2, 2, 2}};
+
+  auto n_prts_by_patch = std::vector<uint>{};
+  if (size == 1) {
+    n_prts_by_patch = {4, 4, 4, 4};
+  } else if (size == 2) {
+    if (rank == 0) {
+      n_prts_by_patch = {4, 4};
+    } else {
+      n_prts_by_patch = {4, 100};
+    }
+  } else {
+    assert(0);
+  }
+  auto mprts = this->mk_mprts();
+  this->inject_test_particles(mprts, n_prts_by_patch);
+
+  balance(this->grid_, mprts);
 }
 
 int main(int argc, char **argv)
