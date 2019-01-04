@@ -2,7 +2,8 @@
 #pragma once
 
 #include "fields_item.hxx"
-#include "bnd_cuda_impl.hxx"
+#include "bnd_cuda_3_impl.hxx"
+#include "psc_fields_cuda.h"
 #include "cuda_moments.cuh"
 
 template<typename BS>
@@ -17,7 +18,7 @@ struct Moment_rho_1st_nc_cuda : ItemMomentCRTP<Moment_rho_1st_nc_cuda<_Mparticle
   using Base = ItemMomentCRTP<Moment_rho_1st_nc_cuda, MfieldsCuda>;
   using Mparticles = _Mparticles;
   using Mfields = MfieldsCuda;
-  using Bnd = BndCuda<Mfields>;
+  using Bnd = BndCuda3<Mfields>;
   
   constexpr static const char* name = "rho_1st_nc";
   constexpr static int n_comps = 1;
@@ -46,7 +47,7 @@ private:
 };
 
 // ======================================================================
-// n_1st_cuda
+// Moment_n_1st_cuda
 
 template<typename _Mparticles, typename dim>
 struct Moment_n_1st_cuda : ItemMomentCRTP<Moment_n_1st_cuda<_Mparticles, dim>, MfieldsCuda>
@@ -54,7 +55,7 @@ struct Moment_n_1st_cuda : ItemMomentCRTP<Moment_n_1st_cuda<_Mparticles, dim>, M
   using Base = ItemMomentCRTP<Moment_n_1st_cuda, MfieldsCuda>;
   using Mparticles = _Mparticles;
   using Mfields = MfieldsCuda;
-  using Bnd = BndCuda<Mfields>;
+  using Bnd = BndCuda3<Mfields>;
   
   constexpr static const char* name = "n_1st";
   constexpr static int n_comps = 1;
