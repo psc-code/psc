@@ -139,9 +139,9 @@ struct PscFlatfoil : Psc<PscConfig>
     
     // --- setup domain
 #if 1
-    Grid_t::Real3 LL = { 400., 800., 400.*6 }; // domain size (in d_e)
-    Int3 gdims = { 400, 800, 2400}; // global number of grid points
-    Int3 np = { 40, 80, 4 }; // division into patches
+    Grid_t::Real3 LL = {384., 384.*2., 384.*6}; // domain size (in d_e)
+    Int3 gdims = {384, 384*2, 384*6}; // global number of grid points
+    Int3 np = {12, 24, 72}; // division into patches
 #else
     Grid_t::Real3 LL = {1., 1600., 400.}; // domain size (in d_e)
     // Int3 gdims = {40, 10, 20}; // global number of grid points
