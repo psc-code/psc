@@ -18,6 +18,8 @@ struct HeatingCuda : HeatingBase
 
   ~HeatingCuda();
 
+  void reset(MparticlesCuda<BS>& mprts);
+
   void operator()(MparticlesCuda<BS>& mprts);
   
   // ----------------------------------------------------------------------
@@ -32,5 +34,6 @@ struct HeatingCuda : HeatingBase
 
 private:
   cuda_heating_foil* foil_;
+  int balance_generation_cnt_;
 };
 

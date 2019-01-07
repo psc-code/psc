@@ -6,6 +6,7 @@
 #include "psc_bits.h"
 #include "heating_spot_foil.hxx"
 #include "heating_cuda_impl.hxx"
+#include "balance.hxx"
 
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
@@ -94,7 +95,8 @@ struct cuda_heating_foil : HeatingSpotFoilParams
 {
   cuda_heating_foil(const HeatingSpotFoilParams& params, int kind, double heating_dt)
     : HeatingSpotFoilParams(params), kind(kind), heating_dt(heating_dt),
-      h_prm_{}
+      h_prm_{},
+      first_time_{true}
   {
     float width = zh - zl;
     fac = (8.f * pow(T, 1.5)) / (sqrt(Mi) * width);
@@ -109,6 +111,12 @@ struct cuda_heating_foil : HeatingSpotFoilParams
     ierr = cudaFree(d_curand_states_);
     cudaCheck(ierr);
 #endif
+  }
+
+  template<typename BS>
+  void reset(cuda_mparticles<BS>* cmprts)
+  {
+    first_time_ = true;
   }
   
   __host__  __device__ float get_H(float *xx)
@@ -171,9 +179,8 @@ struct cuda_heating_foil : HeatingSpotFoilParams
   void operator()(cuda_mparticles<BS>* cmprts)
   {
     //return cuda_heating_run_foil_gold(cmprts);
-    
-    static bool first_time = true;
-    if (first_time) {
+
+    if (first_time_) { // FIXME
       cuda_heating_params_set(h_prm_, cmprts);
       
       dim3 dimGrid = BlockSimple<BS, dim_yz>::dimGrid(*cmprts);
@@ -186,7 +193,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
       k_curand_setup<<<dimGrid, THREADS_PER_BLOCK>>>(d_curand_states_, cmprts->b_mx()[1]);
       cuda_sync_if_enabled();
       
-      first_time = false;
+      first_time_ = false;
     }
     
     if (cmprts->need_reorder) { 
@@ -200,6 +207,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
   int kind;
 
   // state (FIXME, shouldn't be part of the interface)
+  bool first_time_;
   float fac;
   float heating_dt;
 
@@ -307,9 +315,9 @@ k_heating_run_foil(cuda_heating_foil d_foil, DMparticlesCuda<BS> dmprts, struct 
 template<typename BS>
 template<typename FUNC>
 HeatingCuda<BS>::HeatingCuda(const Grid_t& grid, int interval, int kind, FUNC get_H)
-{
-  foil_ = new cuda_heating_foil{get_H, kind, interval * grid.dt};
-}
+  : foil_{new cuda_heating_foil{get_H, kind, interval * grid.dt}},
+    balance_generation_cnt_{-1}
+{}
 
 template<typename BS>
 HeatingCuda<BS>::~HeatingCuda()
@@ -318,8 +326,18 @@ HeatingCuda<BS>::~HeatingCuda()
 }
 
 template<typename BS>
+void HeatingCuda<BS>::reset(MparticlesCuda<BS>& mprts)
+{
+  foil_->reset(mprts.cmprts());
+}
+
+template<typename BS>
 void HeatingCuda<BS>::operator()(MparticlesCuda<BS>& mprts)
 {
+  if (psc_balance_generation_cnt > this->balance_generation_cnt_) {
+    reset(mprts);
+  }
+  
   (*foil_)(mprts.cmprts());
 }
   
