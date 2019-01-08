@@ -20,7 +20,8 @@
 // ----------------------------------------------------------------------
 // cuda_heating_params
 
-struct cuda_heating_params {
+struct cuda_heating_params
+{
   float_3 *d_xb_by_patch;
 };
 
@@ -46,8 +47,9 @@ static void cuda_heating_params_free(cuda_heating_params& h_prm)
 {
   cudaError_t ierr;
 
-  ierr = cudaFree(&h_prm.d_xb_by_patch);
+  ierr = cudaFree(h_prm.d_xb_by_patch);
   cudaCheck(ierr);
+  h_prm.d_xb_by_patch = nullptr;
 }
 
 // ----------------------------------------------------------------------
@@ -96,6 +98,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
   cuda_heating_foil(const HeatingSpotFoilParams& params, int kind, double heating_dt)
     : HeatingSpotFoilParams(params), kind(kind), heating_dt(heating_dt),
       h_prm_{},
+      d_curand_states_{},
       first_time_{true}
   {
     float width = zh - zl;
@@ -104,12 +107,15 @@ struct cuda_heating_foil : HeatingSpotFoilParams
 
   ~cuda_heating_foil()
   {
-#if 0 // FIXME
+    // FIXME, since we're copy-constructing this when passing to device,
+    // implementing the dtor breaks things...
+#if 0
     cuda_heating_params_free(h_prm_);
     
     cudaError_t ierr;
     ierr = cudaFree(d_curand_states_);
     cudaCheck(ierr);
+    d_curand_states_ = nullptr;
 #endif
   }
 
@@ -181,12 +187,14 @@ struct cuda_heating_foil : HeatingSpotFoilParams
     //return cuda_heating_run_foil_gold(cmprts);
 
     if (first_time_) { // FIXME
+      cuda_heating_params_free(h_prm_);
       cuda_heating_params_set(h_prm_, cmprts);
       
       dim3 dimGrid = BlockSimple<BS, dim_yz>::dimGrid(*cmprts);
       int n_threads = dimGrid.x * dimGrid.y * THREADS_PER_BLOCK;
       
       cudaError_t ierr;
+      ierr = cudaFree(d_curand_states_);
       ierr = cudaMalloc(&d_curand_states_, n_threads * sizeof(*d_curand_states_));
       cudaCheck(ierr);
       
