@@ -3,6 +3,7 @@
 #include "cuda_mparticles.cuh"
 #include "cuda_mfields.h"
 #include "cuda_bits.h"
+#include "cuda_base.cuh"
 #include "psc_bits.h"
 #include "heating_spot_foil.hxx"
 #include "heating_cuda_impl.hxx"
@@ -33,8 +34,7 @@ static void cuda_heating_params_set(cuda_heating_params& h_prm, cuda_mparticles<
 {
   cudaError_t ierr;
 
-  ierr = cudaMalloc(&h_prm.d_xb_by_patch, cmprts->n_patches() * sizeof(float_3));
-  cudaCheck(ierr);
+  h_prm.d_xb_by_patch = (float_3*) myCudaMalloc(cmprts->n_patches() * sizeof(float_3));
   ierr = cudaMemcpy(h_prm.d_xb_by_patch, cmprts->xb_by_patch.data(),
 		    cmprts->n_patches() * sizeof(float_3), cudaMemcpyHostToDevice);
   cudaCheck(ierr);
@@ -45,10 +45,7 @@ static void cuda_heating_params_set(cuda_heating_params& h_prm, cuda_mparticles<
 
 static void cuda_heating_params_free(cuda_heating_params& h_prm)
 {
-  cudaError_t ierr;
-
-  ierr = cudaFree(h_prm.d_xb_by_patch);
-  cudaCheck(ierr);
+  myCudaFree(h_prm.d_xb_by_patch);
   h_prm.d_xb_by_patch = nullptr;
 }
 
@@ -112,9 +109,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
 #if 0
     cuda_heating_params_free(h_prm_);
     
-    cudaError_t ierr;
-    ierr = cudaFree(d_curand_states_);
-    cudaCheck(ierr);
+    myCudaFree(d_curand_states_);
     d_curand_states_ = nullptr;
 #endif
   }
@@ -193,10 +188,8 @@ struct cuda_heating_foil : HeatingSpotFoilParams
       dim3 dimGrid = BlockSimple<BS, dim_yz>::dimGrid(*cmprts);
       int n_threads = dimGrid.x * dimGrid.y * THREADS_PER_BLOCK;
       
-      cudaError_t ierr;
-      ierr = cudaFree(d_curand_states_);
-      ierr = cudaMalloc(&d_curand_states_, n_threads * sizeof(*d_curand_states_));
-      cudaCheck(ierr);
+      myCudaFree(d_curand_states_);
+      d_curand_states_ = (curandState*) myCudaMalloc(n_threads * sizeof(*d_curand_states_));
       
       k_curand_setup<<<dimGrid, THREADS_PER_BLOCK>>>(d_curand_states_, cmprts->b_mx()[1]);
       cuda_sync_if_enabled();
