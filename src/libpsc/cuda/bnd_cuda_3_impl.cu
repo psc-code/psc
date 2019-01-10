@@ -8,9 +8,12 @@
 
 template<typename MF>
 BndCuda3<MF>::BndCuda3(const Grid_t& grid, const int ibn[3])
-  : cbnd_{new CudaBnd{grid, Int3::fromPointer(ibn)}},
-    balance_generation_cnt_{psc_balance_generation_cnt}
-{}
+{
+  if (!cbnd_) {
+    cbnd_ = new CudaBnd{grid, Int3::fromPointer(ibn)};
+    balance_generation_cnt_ = psc_balance_generation_cnt;
+  }
+}
 
 // ----------------------------------------------------------------------
 // dtor
@@ -18,7 +21,7 @@ BndCuda3<MF>::BndCuda3(const Grid_t& grid, const int ibn[3])
 template<typename MF>
 BndCuda3<MF>::~BndCuda3()
 {
-  delete cbnd_;
+  // FIXME, if we're the last user, we should clean up cbnd_?
 }
   
 // ----------------------------------------------------------------------
@@ -58,5 +61,9 @@ void BndCuda3<MF>::fill_ghosts(Mfields& mflds, int mb, int me)
   cbnd_->fill_ghosts(*mflds.cmflds(), mb, me);
 }
 
+template<typename MF> int BndCuda3<MF>::balance_generation_cnt_;
+template<typename MF> CudaBnd* BndCuda3<MF>::cbnd_;
+
 template struct BndCuda3<MfieldsCuda>;
 template struct BndCuda3<MfieldsStateCuda>;
+

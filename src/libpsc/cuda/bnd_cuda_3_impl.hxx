@@ -33,7 +33,7 @@ struct BndCuda3 : BndBase
   }
 
 private:
-  CudaBnd* cbnd_;
-  int balance_generation_cnt_;
+  static CudaBnd* cbnd_;
+  static int balance_generation_cnt_;
 };
 
