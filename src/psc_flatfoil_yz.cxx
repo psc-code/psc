@@ -170,7 +170,7 @@ struct PscFlatfoil : Psc<PscConfig>
 
     // -- Balance
     balance_interval = 50;
-    balance_.reset(new Balance_t{balance_interval, .1, false});
+    balance_.reset(new Balance_t{balance_interval, 3., false});
 
     // -- Sort
     // FIXME, needs a way to make sure it gets set?
