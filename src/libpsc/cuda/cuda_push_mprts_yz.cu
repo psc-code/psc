@@ -516,6 +516,7 @@ void CudaPushParticles_<Config>::push_mprts_ab(CudaMparticles* cmprts, struct cu
 
   if (REORDER) {
     cmprts->alt_storage.resize(cmprts->n_prts);
+    cmprts->by_block_.d_idx.resize(cmprts->n_prts);
   }
 
   for (auto block_start : Block::block_starts()) {

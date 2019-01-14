@@ -111,12 +111,22 @@ struct cuda_bndp<CudaMparticles, dim_xyz> : cuda_mparticles_indexer<typename Cud
     auto& cmprts = *_cmprts;
     auto& d_bidx = cmprts.by_block_.d_idx;
     
-    auto begin = thrust::make_zip_iterator(thrust::make_tuple(d_bidx.begin(), cmprts.storage.xi4.begin(), cmprts.storage.pxi4.begin()));
-    auto end = thrust::make_zip_iterator(thrust::make_tuple(d_bidx.end(), cmprts.storage.xi4.end(), cmprts.storage.pxi4.end()));
-    auto oob = thrust::stable_partition(begin, end, is_inside(cmprts.n_blocks));
+    auto oob = thrust::count_if(d_bidx.begin(), d_bidx.end(), is_outside(cmprts.n_blocks));
+    auto sz = d_bidx.size();
+    assert(cmprts.storage.xi4.size() == sz);
+    assert(cmprts.storage.pxi4.size() == sz);
+    assert(cmprts.n_prts == sz);
+    d_bidx.resize(sz + oob);
+    cmprts.storage.xi4.resize(sz + oob);
+    cmprts.storage.pxi4.resize(sz + oob);
 
-    n_prts_send = end - oob;
-    cmprts.n_prts -= n_prts_send;
+    auto begin = thrust::make_zip_iterator(thrust::make_tuple(d_bidx.begin(), cmprts.storage.xi4.begin(), cmprts.storage.pxi4.begin()));
+    auto end = begin + sz;
+    
+    auto oob_end = thrust::copy_if(begin, end, begin + sz, is_outside(cmprts.n_blocks));
+    assert(oob_end == begin + sz + oob);
+
+    n_prts_send = oob;
 
     copy_from_dev_and_convert(&cmprts, n_prts_send);
   }
@@ -157,17 +167,21 @@ struct cuda_bndp<CudaMparticles, dim_xyz> : cuda_mparticles_indexer<typename Cud
 
   uint convert_and_copy_to_dev(CudaMparticles *cmprts);
 
-  struct is_inside
+  struct is_outside
   {
-    is_inside(int n_blocks) : n_blocks_(n_blocks) {}
+    is_outside(int n_blocks) : n_blocks_(n_blocks) {}
+    
+    __host__ __device__
+    bool operator()(uint bidx) { return bidx >= n_blocks_; }
     
     __host__ __device__
     bool operator()(thrust::tuple<uint, float4, float4> tup)
     {
       uint bidx = thrust::get<0>(tup);
-      return bidx < n_blocks_;
+      return (*this)(bidx);
     }
     
+  private:
     int n_blocks_;
   };
 
