@@ -100,8 +100,10 @@ void cuda_mparticles<BS>::dump(const std::string& filename) const
 template<typename BS>
 void cuda_mparticles<BS>::swap_alt()
 {
-  thrust::swap(this->storage.xi4, alt_storage.xi4);
-  thrust::swap(this->storage.pxi4, alt_storage.pxi4);
+  this->storage.xi4.swap(alt_storage.xi4);
+  //thrust::swap(this->storage.xi4, alt_storage.xi4);
+  this->storage.pxi4.swap(alt_storage.pxi4);
+  //thrust::swap(this->storage.pxi4, alt_storage.pxi4);
 }
 
 #define THREADS_PER_BLOCK 256
