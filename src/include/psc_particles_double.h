@@ -11,7 +11,6 @@ template<>
 struct Mparticles_traits<MparticlesDouble>
 {
   static constexpr const char* name = "double";
-  static MPI_Datatype mpi_dtype() { return MPI_DOUBLE; }
 };
 
 #endif

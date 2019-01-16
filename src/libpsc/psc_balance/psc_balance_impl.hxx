@@ -6,6 +6,7 @@
 #include "balance.hxx"
 #include "bnd_particles.hxx"
 #include "bnd.hxx"
+#include "mpi_dtype_traits.hxx"
 
 #include <mrc_profile.h>
 #include <string.h>
@@ -574,7 +575,7 @@ private:
 
     assert(sizeof(Particle) % sizeof(real_t) == 0); // FIXME
 
-    MPI_Datatype mpi_dtype = Mparticles_traits<Mparticles>::mpi_dtype();
+    auto mpi_dtype = MpiDtypeTraits<typename Mparticles::real_t>::value();
     // recv for new local patches
     MPI_Request *recv_reqs = new MPI_Request[ctx->nr_patches_new]();
     int nr_recv_reqs = 0;

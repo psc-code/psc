@@ -11,7 +11,6 @@ template<>
 struct Mparticles_traits<MparticlesSingle>
 {
   static constexpr const char* name = "single";
-  static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
 };
 
 #endif

@@ -4,6 +4,7 @@
 
 #include <mrc_ddc.h>
 #include <mrc_domain.h>
+#include <mpi_dtype_traits.hxx>
 
 // ======================================================================
 // ddc_particles
@@ -345,7 +346,7 @@ inline void ddc_particles<MP>::comm(std::vector<buf_t*>& bufs)
   MPI_Waitall(n_ranks, recv_reqs_.data(), MPI_STATUSES_IGNORE);
   MPI_Waitall(n_ranks, send_reqs_.data(), MPI_STATUSES_IGNORE);
 
-  MPI_Datatype mpi_dtype = Mparticles_traits<Mparticles>::mpi_dtype();
+  auto mpi_dtype = MpiDtypeTraits<typename Mparticles::real_t>::value();
 
   // add remote # particles
   int n_send = 0, n_recv = 0;
