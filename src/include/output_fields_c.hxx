@@ -35,12 +35,11 @@ struct OutputFieldsC : public OutputFieldsCParams
 {
   struct Item
   {
-    Item(std::unique_ptr<FieldsItemBase>&& item, MfieldsBase& pfd)
-      : item(std::move(item)), pfd(pfd)
+    Item(std::unique_ptr<FieldsItemBase>&& item)
+      : item(std::move(item))
     {}
 
     std::unique_ptr<FieldsItemBase> item;
-    MfieldsBase& pfd;
   };
 
   // ----------------------------------------------------------------------
@@ -60,12 +59,9 @@ struct OutputFieldsC : public OutputFieldsCParams
       while ((p = strsep(&s, ", "))) {
 	auto item = FieldsItemFactory::create(p, grid);
 	
-	// pfd
-	MfieldsBase& mflds_pfd = item->mres();
-	
-	items.emplace_back(std::move(item), mflds_pfd);
 	// tfd -- FIXME?! always MfieldsC
-	tfds_.emplace_back(new MfieldsC{grid, mflds_pfd.n_comps(), grid.ibn});
+	tfds_.emplace_back(new MfieldsC{grid, item->n_comps(grid), grid.ibn});
+	items.emplace_back(std::move(item));
       }
       free(s_orig);
     }
@@ -122,7 +118,7 @@ struct OutputFieldsC : public OutputFieldsCParams
       
       io_pfd_->open(grid, rn, rx);
       for (auto& item : items) {
-	item.pfd.write_as_mrc_fld(io_pfd_->io_, item.item->_name(), item.item->comp_names());
+	item.item->mres().write_as_mrc_fld(io_pfd_->io_, item.item->_name(), item.item->comp_names());
       }
       io_pfd_->close();
     }
@@ -131,7 +127,7 @@ struct OutputFieldsC : public OutputFieldsCParams
       if (doaccum_tfield) {
 	// tfd += pfd
 	for (int i = 0; i < items.size(); i++) {
-	  tfds_[i]->axpy(1., items[i].pfd);
+	  tfds_[i]->axpy(1., items[i].item->mres());
 	}
 	naccum++;
       }
