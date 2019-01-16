@@ -5,7 +5,7 @@
 #include "particles_simple.hxx"
 #include "particles_traits.hxx"
 
-using MparticlesDouble = Mparticles<ParticleSimple<double>>;
+using MparticlesDouble = MparticlesSimple<ParticleSimple<double>>;
 
 template<>
 struct Mparticles_traits<MparticlesDouble>

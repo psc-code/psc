@@ -86,17 +86,17 @@ private:
 // Mparticles
 
 template<typename P>
-struct Mparticles : MparticlesBase
+struct MparticlesSimple : MparticlesBase
 {
   using Particle = P;
   using real_t = typename Particle::real_t;
   using Real3 = Vec3<real_t>;
-  using Patch = MparticlesPatchSimple<Mparticles>;
+  using Patch = MparticlesPatchSimple<MparticlesSimple>;
   using BndpParticle = P;
   using buf_t = typename Patch::buf_t;
-  using Accessor = AccessorSimple<Mparticles>;
+  using Accessor = AccessorSimple<MparticlesSimple>;
 
-  Mparticles(const Grid_t& grid)
+  MparticlesSimple(const Grid_t& grid)
     : MparticlesBase(grid),
       pi_(grid)
   {
@@ -160,8 +160,8 @@ struct Mparticles : MparticlesBase
 
   const ParticleIndexer<real_t>& particleIndexer() const { return pi_; }
   
-  InjectorSimple<Mparticles> injector() { return {*this}; }
-  ConstAccessorSimple<Mparticles> accessor() { return {*this}; }
+  InjectorSimple<MparticlesSimple> injector() { return {*this}; }
+  ConstAccessorSimple<MparticlesSimple> accessor() { return {*this}; }
   Accessor accessor_() { return {*this}; }
   
   void check() const
