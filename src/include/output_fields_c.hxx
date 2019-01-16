@@ -50,8 +50,7 @@ struct OutputFieldsC : public OutputFieldsCParams
       while ((p = strsep(&s, ", "))) {
 	auto item = FieldsItemFactory::create(p, grid);
 	
-	// tfd -- FIXME?! always MfieldsC
-	tfds_.emplace_back(new MfieldsC{grid, item->n_comps(grid), grid.ibn});
+	tfds_.emplace_back(grid, item->n_comps(grid), grid.ibn);
 	items_.emplace_back(std::move(item));
       }
       free(s_orig);
@@ -64,16 +63,6 @@ struct OutputFieldsC : public OutputFieldsCParams
     }
     if (tfield_step) {
       io_tfd_.reset(new MrcIo{"tfd", data_dir});
-    }
-  }
-
-  // ----------------------------------------------------------------------
-  // dtor
-
-  ~OutputFieldsC()
-  {
-    for (auto tfd : tfds_) {
-      delete tfd;
     }
   }
 
@@ -118,7 +107,7 @@ struct OutputFieldsC : public OutputFieldsCParams
       if (doaccum_tfield) {
 	// tfd += pfd
 	for (int i = 0; i < items_.size(); i++) {
-	  tfds_[i]->axpy(1., items_[i]->mres());
+	  tfds_[i].axpy(1., items_[i]->mres());
 	}
 	naccum++;
       }
@@ -130,9 +119,9 @@ struct OutputFieldsC : public OutputFieldsCParams
 	
 	// convert accumulated values to correct temporal mean
 	for (int i = 0; i < items_.size(); i++) {
-	  tfds_[i]->scale(1. / naccum);
-	  tfds_[i]->write_as_mrc_fld(io_tfd_->io_, items_[i]->_name(), items_[i]->comp_names());
-	  tfds_[i]->zero();
+	  tfds_[i].scale(1. / naccum);
+	  tfds_[i].write_as_mrc_fld(io_tfd_->io_, items_[i]->_name(), items_[i]->comp_names());
+	  tfds_[i].zero();
 	}
 	naccum = 0;
 	io_tfd_->close();
@@ -148,7 +137,8 @@ public:
   unsigned int naccum;
 private:
   std::vector<std::unique_ptr<FieldsItemBase>> items_;
-  std::vector<MfieldsBase*> tfds_;
+  // tfd -- FIXME?! always MfieldsC
+  std::vector<MfieldsC> tfds_;
   std::unique_ptr<MrcIo> io_pfd_;
   std::unique_ptr<MrcIo> io_tfd_;
 };
