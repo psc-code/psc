@@ -36,16 +36,14 @@ struct OutputFieldsC : public OutputFieldsCParams
   struct Item
   {
     Item(std::unique_ptr<FieldsItemBase>&& item, const std::string& name,
-	 std::vector<std::string>& comp_names, MfieldsBase& pfd,
-	 MfieldsBase& tfd)
-      : item(std::move(item)), name(name), comp_names(comp_names), pfd(pfd), tfd(tfd)
+	 MfieldsBase& pfd, MfieldsBase& tfd)
+      : item(std::move(item)), name(name), pfd(pfd), tfd(tfd)
     {}
 
     std::unique_ptr<FieldsItemBase> item;
     MfieldsBase& pfd;
     MfieldsBase& tfd;
     std::string name;
-    std::vector<std::string> comp_names;
   };
 
   // ----------------------------------------------------------------------
@@ -66,12 +64,11 @@ struct OutputFieldsC : public OutputFieldsCParams
 	auto item = FieldsItemFactory::create(p, grid);
 	
 	// pfd
-	std::vector<std::string> comp_names = item->comp_names();
 	MfieldsBase& mflds_pfd = item->mres();
 	
 	// tfd -- FIXME?! always MfieldsC
 	MfieldsBase& mflds_tfd = *new MfieldsC{grid, mflds_pfd.n_comps(), grid.ibn};
-	items.emplace_back(std::move(item), p, comp_names, mflds_pfd, mflds_tfd);
+	items.emplace_back(std::move(item), p, mflds_pfd, mflds_tfd);
       }
       free(s_orig);
     }
@@ -128,7 +125,7 @@ struct OutputFieldsC : public OutputFieldsCParams
       
       io_pfd_->open(grid, rn, rx);
       for (auto& item : items) {
-	item.pfd.write_as_mrc_fld(io_pfd_->io_, item.name, item.comp_names);
+	item.pfd.write_as_mrc_fld(io_pfd_->io_, item.name, item.item->comp_names());
       }
       io_pfd_->close();
     }
@@ -150,7 +147,7 @@ struct OutputFieldsC : public OutputFieldsCParams
 	// convert accumulated values to correct temporal mean
 	for (auto& item : items) {
 	  item.tfd.scale(1. / naccum);
-	  item.tfd.write_as_mrc_fld(io_tfd_->io_, item.name, item.comp_names);
+	  item.tfd.write_as_mrc_fld(io_tfd_->io_, item.name, item.item->comp_names());
 	  item.tfd.zero();
 	}
 	naccum = 0;
