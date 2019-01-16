@@ -35,13 +35,12 @@ struct OutputFieldsC : public OutputFieldsCParams
 {
   struct Item
   {
-    Item(std::unique_ptr<FieldsItemBase>&& item, MfieldsBase& pfd, MfieldsBase* tfd)
-      : item(std::move(item)), pfd(pfd), tfd(tfd)
+    Item(std::unique_ptr<FieldsItemBase>&& item, MfieldsBase& pfd)
+      : item(std::move(item)), pfd(pfd)
     {}
 
     std::unique_ptr<FieldsItemBase> item;
     MfieldsBase& pfd;
-    MfieldsBase* tfd;
   };
 
   // ----------------------------------------------------------------------
@@ -64,9 +63,9 @@ struct OutputFieldsC : public OutputFieldsCParams
 	// pfd
 	MfieldsBase& mflds_pfd = item->mres();
 	
+	items.emplace_back(std::move(item), mflds_pfd);
 	// tfd -- FIXME?! always MfieldsC
-	MfieldsBase* mflds_tfd = new MfieldsC{grid, mflds_pfd.n_comps(), grid.ibn};
-	items.emplace_back(std::move(item), mflds_pfd, mflds_tfd);
+	tfds_.emplace_back(new MfieldsC{grid, mflds_pfd.n_comps(), grid.ibn});
       }
       free(s_orig);
     }
@@ -86,8 +85,8 @@ struct OutputFieldsC : public OutputFieldsCParams
 
   ~OutputFieldsC()
   {
-    for (auto& item : items) {
-      delete &item.tfd;
+    for (auto tfd : tfds_) {
+      delete tfd;
     }
   }
 
@@ -131,8 +130,8 @@ struct OutputFieldsC : public OutputFieldsCParams
     if (tfield_step > 0) {
       if (doaccum_tfield) {
 	// tfd += pfd
-	for (auto& item : items) {
-	  item.tfd->axpy(1., item.pfd);
+	for (int i = 0; i < items.size(); i++) {
+	  tfds_[i]->axpy(1., items[i].pfd);
 	}
 	naccum++;
       }
@@ -143,10 +142,10 @@ struct OutputFieldsC : public OutputFieldsCParams
 	io_tfd_->open(grid, rn, rx);
 	
 	// convert accumulated values to correct temporal mean
-	for (auto& item : items) {
-	  item.tfd->scale(1. / naccum);
-	  item.tfd->write_as_mrc_fld(io_tfd_->io_, item.item->_name(), item.item->comp_names());
-	  item.tfd->zero();
+	for (int i = 0; i < items.size(); i++) {
+	  tfds_[i]->scale(1. / naccum);
+	  tfds_[i]->write_as_mrc_fld(io_tfd_->io_, items[i].item->_name(), items[i].item->comp_names());
+	  tfds_[i]->zero();
 	}
 	naccum = 0;
 	io_tfd_->close();
@@ -162,6 +161,7 @@ public:
   unsigned int naccum;
   std::vector<Item> items;
 private:
+  std::vector<MfieldsBase*> tfds_;
   std::unique_ptr<MrcIo> io_pfd_;
   std::unique_ptr<MrcIo> io_tfd_;
 };
