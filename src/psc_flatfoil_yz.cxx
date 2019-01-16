@@ -130,7 +130,13 @@ struct PscFlatfoil : Psc<PscConfig>
     // -- setup particle kinds
     // last population ("e") is neutralizing
     // FIXME, hardcoded mass ratio 100
-    Grid_t::Kinds kinds = {{Zi_, 100.*Zi_, "i"}, { -1., 1., "e"}};
+#if 1
+    double mass_ratio = 100.;
+#endif
+#if 0
+    double mass_ratio = 25.;
+#endif
+    Grid_t::Kinds kinds = {{Zi_, mass_ratio*Zi_, "i"}, { -1., 1., "e"}};
     
     double d_i = sqrt(kinds[MY_ION].m / kinds[MY_ION].q);
     
@@ -142,6 +148,12 @@ struct PscFlatfoil : Psc<PscConfig>
     Grid_t::Real3 LL = {384., 384.*2., 384.*6}; // domain size (in d_e)
     Int3 gdims = {384, 384*2, 384*6}; // global number of grid points
     Int3 np = {12, 24, 72}; // division into patches
+#endif
+#if 0
+    Grid_t::Real3 LL = {192., 192.*2, 192.*6}; // domain size (in d_e)
+    Int3 gdims = {192, 192*2, 192*6}; // global number of grid points
+    Int3 np = {6, 12, 36}; // division into patches
+    // -> patch size 32 x 32 x 32
 #endif
 #if 0
     Grid_t::Real3 LL = {32., 32.*2., 32.*6 }; // domain size (in d_e)
@@ -183,7 +195,11 @@ struct PscFlatfoil : Psc<PscConfig>
     sort_interval = 10;
 
     // -- Collision
+#if 1
     int collision_interval = 10;
+#else
+    int collision_interval = -10;
+#endif
     double collision_nu = .1;
     collision_.reset(new Collision_t{grid(), collision_interval, collision_nu});
 
