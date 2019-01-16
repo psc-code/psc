@@ -33,6 +33,8 @@ struct FieldsItemBase
 
   virtual MfieldsBase& mres() = 0;
 
+  virtual const char* _name() const = 0;
+
   virtual std::vector<std::string> comp_names() = 0;
 
   bool inited = true; // FIXME hack to avoid dtor call when not yet constructed
@@ -100,7 +102,7 @@ struct FieldsItemFields : FieldsItemBase
   using MfieldsState = typename Item::MfieldsState;
   using Mfields = typename Item::Mfields;
   
-  static char const* name()
+  static const char* name()
   {
     if (std::is_same<Mfields, MfieldsC>::value && strcmp(Item::name, "dive") != 0) {
       return Item::name;
@@ -108,6 +110,8 @@ struct FieldsItemFields : FieldsItemBase
       return strdup((std::string{Item::name} + "_" + Mfields_traits<Mfields>::name).c_str());
     }
   }
+
+  const char* _name() const override { return name(); }
  
   FieldsItemFields(const Grid_t& grid, MPI_Comm comm)
     : mres_{grid, Item::n_comps, grid.ibn}
@@ -352,6 +356,8 @@ struct FieldsItemMoment : FieldsItemBase
     return strdup((std::string(Moment_t::name) + "_" +
 		   Mparticles_traits<Mparticles>::name).c_str());
   }
+
+  const char* _name() const override { return name(); }
 
   FieldsItemMoment(const Grid_t& grid, MPI_Comm comm)
     : moment_(grid, comm)
