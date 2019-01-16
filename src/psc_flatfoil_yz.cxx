@@ -187,8 +187,8 @@ struct PscFlatfoil : Psc<PscConfig>
     mprts_.reset(new Mparticles{grid()});
 
     // -- Balance
-    balance_interval = 50;
-    balance_.reset(new Balance_t{balance_interval, 3., false});
+    balance_interval = 300;
+    balance_.reset(new Balance_t{balance_interval, 3, true});
 
     // -- Sort
     // FIXME, needs a way to make sure it gets set?
@@ -253,7 +253,7 @@ struct PscFlatfoil : Psc<PscConfig>
     // -- output fields
     OutputFieldsCParams outf_params{};
     outf_params.output_fields = "e,h,j,n_1st_single,v_1st_single,T_1st_single";
-    outf_params.pfield_step = 200;
+    outf_params.pfield_step = 100;
     outf_.reset(new OutputFieldsC{grid(), outf_params});
 
     // -- output particles
