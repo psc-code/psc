@@ -35,13 +35,13 @@ struct OutputFieldsC : public OutputFieldsCParams
 {
   struct Item
   {
-    Item(std::unique_ptr<FieldsItemBase>&& item, MfieldsBase& pfd, MfieldsBase& tfd)
+    Item(std::unique_ptr<FieldsItemBase>&& item, MfieldsBase& pfd, MfieldsBase* tfd)
       : item(std::move(item)), pfd(pfd), tfd(tfd)
     {}
 
     std::unique_ptr<FieldsItemBase> item;
     MfieldsBase& pfd;
-    MfieldsBase& tfd;
+    MfieldsBase* tfd;
   };
 
   // ----------------------------------------------------------------------
@@ -65,7 +65,7 @@ struct OutputFieldsC : public OutputFieldsCParams
 	MfieldsBase& mflds_pfd = item->mres();
 	
 	// tfd -- FIXME?! always MfieldsC
-	MfieldsBase& mflds_tfd = *new MfieldsC{grid, mflds_pfd.n_comps(), grid.ibn};
+	MfieldsBase* mflds_tfd = new MfieldsC{grid, mflds_pfd.n_comps(), grid.ibn};
 	items.emplace_back(std::move(item), mflds_pfd, mflds_tfd);
       }
       free(s_orig);
@@ -132,7 +132,7 @@ struct OutputFieldsC : public OutputFieldsCParams
       if (doaccum_tfield) {
 	// tfd += pfd
 	for (auto& item : items) {
-	  item.tfd.axpy(1., item.pfd);
+	  item.tfd->axpy(1., item.pfd);
 	}
 	naccum++;
       }
@@ -144,9 +144,9 @@ struct OutputFieldsC : public OutputFieldsCParams
 	
 	// convert accumulated values to correct temporal mean
 	for (auto& item : items) {
-	  item.tfd.scale(1. / naccum);
-	  item.tfd.write_as_mrc_fld(io_tfd_->io_, item.item->_name(), item.item->comp_names());
-	  item.tfd.zero();
+	  item.tfd->scale(1. / naccum);
+	  item.tfd->write_as_mrc_fld(io_tfd_->io_, item.item->_name(), item.item->comp_names());
+	  item.tfd->zero();
 	}
 	naccum = 0;
 	io_tfd_->close();
