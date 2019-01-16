@@ -57,6 +57,13 @@ struct RngStateCuda
 
   void init(dim3 dim_grid);
 
+  void dtor() // FIXME
+  {
+    cudaError_t ierr;
+    ierr = cudaFree(rngs_);
+    cudaCheck(ierr);
+  }
+
   __device__
   Rng  operator[](int id) const { return rngs_[id]; }
 
@@ -111,6 +118,11 @@ struct CudaCollision
     : interval_{interval}, nu_{nu}, nicell_(nicell), dt_(dt)
   {}
 
+  ~CudaCollision()
+  {
+    rng_state_.dtor();
+  }
+
   int interval() const
   {
     return interval_;
@@ -131,10 +143,9 @@ struct CudaCollision
     if (blocks > 32768) blocks = 32768;
     dim3 dimGrid(blocks);
 
-    static bool first_time = true;
-    if (first_time) {
+    if (first_time_) {
       rng_state_.init(dimGrid);
-      first_time = false;
+      first_time_ = false;
     }
     
     // all particles need to have same weight!
@@ -182,5 +193,6 @@ private:
   int nicell_;
   double dt_;
   RngState rng_state_;
+  bool first_time_ = false;
 };
 
