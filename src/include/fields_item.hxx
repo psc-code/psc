@@ -33,7 +33,7 @@ struct FieldsItemBase
 
   virtual MfieldsBase& mres() = 0;
 
-  virtual const char* _name() const = 0;
+  virtual const char* name() const = 0;
 
   virtual int n_comps(const Grid_t& grid) const = 0;
 
@@ -51,12 +51,7 @@ struct FieldsItemFields : FieldsItemBase
   using MfieldsState = typename Item::MfieldsState;
   using Mfields = typename Item::Mfields;
   
-  static const char* name()
-  {
-    return Item::name;
-  }
-
-  const char* _name() const override { return name(); }
+  const char* name() const override { return Item::name; }
 
   int n_comps(const Grid_t& grid) const override { return Item::n_comps; }
  
@@ -292,12 +287,7 @@ struct FieldsItemMoment : FieldsItemBase
 {
   using Mparticles = typename Moment_t::Mparticles;
   
-  static const char* name()
-  {
-    return Moment_t::name;
-  }
-
-  const char* _name() const override { return name(); }
+  const char* name() const override { return Moment_t::name; }
 
   int n_comps(const Grid_t& grid) const override
   {

@@ -88,7 +88,7 @@ struct OutputFieldsC : public OutputFieldsCParams
       
       io_pfd_->open(grid, rn, rx);
       for (auto& item : items_) {
-	item->mres().write_as_mrc_fld(io_pfd_->io_, item->_name(), item->comp_names());
+	item->mres().write_as_mrc_fld(io_pfd_->io_, item->name(), item->comp_names());
       }
       io_pfd_->close();
     }
@@ -110,7 +110,7 @@ struct OutputFieldsC : public OutputFieldsCParams
 	// convert accumulated values to correct temporal mean
 	for (int i = 0; i < items_.size(); i++) {
 	  tfds_[i].scale(1. / naccum);
-	  tfds_[i].write_as_mrc_fld(io_tfd_->io_, items_[i]->_name(), items_[i]->comp_names());
+	  tfds_[i].write_as_mrc_fld(io_tfd_->io_, items_[i]->name(), items_[i]->comp_names());
 	  tfds_[i].zero();
 	}
 	naccum = 0;
