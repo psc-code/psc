@@ -254,12 +254,12 @@ struct PscFlatfoil : Psc<PscConfig>
     OutputFieldsCParams outf_params{};
     outf_params.pfield_step = 100;
     std::vector<std::unique_ptr<FieldsItemBase>> outf_items;
-    outf_items.emplace_back(std::move(FieldsItemFactory::create("e", grid())));
-    outf_items.emplace_back(std::move(FieldsItemFactory::create("h", grid())));
-    outf_items.emplace_back(std::move(FieldsItemFactory::create("j", grid())));
-    outf_items.emplace_back(std::move(FieldsItemFactory::create("n_1st_single", grid())));
-    outf_items.emplace_back(std::move(FieldsItemFactory::create("v_1st_single", grid())));
-    outf_items.emplace_back(std::move(FieldsItemFactory::create("T_1st_single", grid())));
+    outf_items.emplace_back(std::move(FieldsItemFieldsOps<Item_e_cc>::create(grid())));
+    outf_items.emplace_back(std::move(FieldsItemFieldsOps<Item_h_cc>::create(grid())));
+    outf_items.emplace_back(std::move(FieldsItemFieldsOps<Item_j_cc>::create(grid())));
+    outf_items.emplace_back(std::move(FieldsItemMomentOps<Moment_n_1st<Mparticles, MfieldsC>>::create(grid())));
+    outf_items.emplace_back(std::move(FieldsItemMomentOps<Moment_v_1st<Mparticles, MfieldsC>>::create(grid())));
+    outf_items.emplace_back(std::move(FieldsItemMomentOps<Moment_T_1st<Mparticles, MfieldsC>>::create(grid())));
     outf_.reset(new OutputFieldsC{grid(), outf_params, std::move(outf_items)});
 
     // -- output particles
