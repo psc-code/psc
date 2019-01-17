@@ -24,8 +24,8 @@ struct Marder_ : MarderBase
       loop_{loop},
       dump_{dump},
       bnd_{grid, grid.ibn},
-      item_rho_{grid, grid.comm()},
-      item_dive_{grid, grid.comm()}
+      item_rho_{grid},
+      item_dive_{grid}
   {
     if (dump_) {
       io_ = mrc_io_create(grid.comm());

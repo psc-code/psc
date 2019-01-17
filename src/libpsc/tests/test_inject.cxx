@@ -110,7 +110,7 @@ TYPED_TEST(InjectTest, Test1)
   }
 
   // density should be all zero
-  ItemMoment moment_n{grid, grid.comm()};
+  ItemMoment moment_n{grid};
   auto& mflds_n = moment_n.result();
 
   moment_n.run(mprts);

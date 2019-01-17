@@ -192,7 +192,7 @@ struct ItemMomentCRTP
 {
   using Mfields = MF;
   
-  ItemMomentCRTP(const Grid_t& grid, MPI_Comm comm)
+  ItemMomentCRTP(const Grid_t& grid)
     : mres_{grid, int(Derived::n_comps * ((Derived::flags & POFI_BY_KIND) ? grid.kinds.size() : 1)), grid.ibn}
   {
     auto n_comps = Derived::n_comps;
@@ -238,8 +238,8 @@ struct ItemMomentAddBnd : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Mo
   constexpr static fld_names_t fld_names() { return Moment_t::fld_names(); }
   constexpr static int flags = Moment_t::flags;
 
-  ItemMomentAddBnd(const Grid_t& grid, MPI_Comm comm)
-    : Base{grid, comm},
+  ItemMomentAddBnd(const Grid_t& grid)
+    : Base{grid},
       bnd_{grid, grid.ibn}
   {}
 
@@ -369,7 +369,7 @@ struct FieldsItemMoment : FieldsItemBase
   }
   
   FieldsItemMoment(const Grid_t& grid)
-    : moment_(grid, grid.comm())
+    : moment_(grid)
   {}
 
   void run(MfieldsStateBase& mflds_base, MparticlesBase& mprts_base) override
