@@ -48,12 +48,14 @@ struct OutputFieldsC : public OutputFieldsCParams
       // parse comma separated list of fields
       char *s_orig = strdup(output_fields), *p, *s = s_orig;
       while ((p = strsep(&s, ", "))) {
-	auto item = FieldsItemFactory::create(p, grid);
-	
-	tfds_.emplace_back(grid, item->n_comps(grid), grid.ibn);
-	items_.emplace_back(std::move(item));
+	items_.emplace_back(FieldsItemFactory::create(p, grid));
       }
       free(s_orig);
+
+    }
+    
+    for (auto& item : items_) {
+      tfds_.emplace_back(grid, item->n_comps(grid), grid.ibn);
     }
     
     naccum = 0;
