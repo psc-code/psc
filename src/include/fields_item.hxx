@@ -35,6 +35,8 @@ struct FieldsItemBase
 
   virtual const char* _name() const = 0;
 
+  virtual int n_comps(const Grid_t& grid) const = 0;
+
   virtual std::vector<std::string> comp_names() = 0;
 
   bool inited = true; // FIXME hack to avoid dtor call when not yet constructed
@@ -112,6 +114,8 @@ struct FieldsItemFields : FieldsItemBase
   }
 
   const char* _name() const override { return name(); }
+
+  int n_comps(const Grid_t& grid) const override { return Item::n_comps; }
  
   FieldsItemFields(const Grid_t& grid, MPI_Comm comm)
     : mres_{grid, Item::n_comps, grid.ibn}
@@ -359,6 +363,11 @@ struct FieldsItemMoment : FieldsItemBase
 
   const char* _name() const override { return name(); }
 
+  int n_comps(const Grid_t& grid) const override
+  {
+    return Moment_t::n_comps * ((Moment_t::flags & POFI_BY_KIND) ? grid.kinds.size() : 1);
+  }
+  
   FieldsItemMoment(const Grid_t& grid, MPI_Comm comm)
     : moment_(grid, comm)
   {}
