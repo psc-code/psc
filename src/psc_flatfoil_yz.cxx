@@ -254,9 +254,9 @@ struct PscFlatfoil : Psc<PscConfig>
     OutputFieldsCParams outf_params{};
     outf_params.pfield_step = 100;
     std::vector<std::unique_ptr<FieldsItemBase>> outf_items;
-    outf_items.emplace_back(std::move(FieldsItemFieldsOps<Item_e_cc>::create(grid())));
-    outf_items.emplace_back(std::move(FieldsItemFieldsOps<Item_h_cc>::create(grid())));
-    outf_items.emplace_back(std::move(FieldsItemFieldsOps<Item_j_cc>::create(grid())));
+    outf_items.emplace_back(new FieldsItemFields<ItemLoopPatches<Item_e_cc>>(grid()));
+    outf_items.emplace_back(new FieldsItemFields<ItemLoopPatches<Item_h_cc>>(grid()));
+    outf_items.emplace_back(new FieldsItemFields<ItemLoopPatches<Item_j_cc>>(grid()));
     outf_items.emplace_back(std::move(FieldsItemMomentOps<Moment_n_1st<Mparticles, MfieldsC>>::create(grid())));
     outf_items.emplace_back(std::move(FieldsItemMomentOps<Moment_v_1st<Mparticles, MfieldsC>>::create(grid())));
     outf_items.emplace_back(std::move(FieldsItemMomentOps<Moment_T_1st<Mparticles, MfieldsC>>::create(grid())));
