@@ -294,8 +294,7 @@ struct FieldsItemMoment : FieldsItemBase
   
   static const char* name()
   {
-    return strdup((std::string(Moment_t::name) + "_" +
-		   Mparticles_traits<Mparticles>::name).c_str());
+    return Moment_t::name;
   }
 
   const char* _name() const override { return name(); }
