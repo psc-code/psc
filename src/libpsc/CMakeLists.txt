@@ -19,12 +19,6 @@ add_library(psc
   psc_diag/psc_diag_item.cxx
   psc_diag/psc_diag_item_field_energy.cxx
   psc_diag/psc_diag_item_particle_energy.cxx
-
-  psc_output_fields/psc_output_fields_item.cxx
-  psc_output_fields/psc_output_fields_item_moments_1st.cxx
-  psc_output_fields/psc_output_fields_item_moments_1st_nc_double.cxx
-  psc_output_fields/psc_output_fields_item_moments_1st_nc_single.cxx
-  psc_output_fields/psc_output_fields_item_moments_2nd_nc_double.cxx
   )
 target_include_directories(psc PUBLIC ../include)
 target_link_libraries(psc PUBLIC mrc)

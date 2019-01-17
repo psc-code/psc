@@ -43,59 +43,6 @@ struct FieldsItemBase
 };
 
 // ======================================================================
-// FieldsItemFactory
-
-class FieldsItemFactory
-{
-  using CreateMethod = std::unique_ptr<FieldsItemBase>(*)(const Grid_t& grid);
-  using Map = std::map<std::string, CreateMethod>;
-  
-public:
-  FieldsItemFactory() = delete;
-
-  static std::unique_ptr<FieldsItemBase> create(const char *type, const Grid_t& grid)
-  {
-    auto it = map().find(type);    
-    if (it != map().end()) 
-        return it->second(grid); // call the create method
-
-    mprintf("unknown type %s\n", type);
-    assert(0);
-  }
-
-  static void registerType(const char* name, CreateMethod create)
-  {
-    map()[name] = create;
-  }
-
-private:
-  static Map& map()
-  {
-    static std::map<std::string, CreateMethod> s_map;
-    return s_map;
-  }
-  
-};
-
-void registerFieldsItemFields();
-
-// ======================================================================
-// FieldsItemOps
-
-template<typename Item>
-struct FieldsItemOps
-{
-  FieldsItemOps() {
-    FieldsItemFactory::registerType(Item::name(), create);
-  }
-
-  static std::unique_ptr<FieldsItemBase> create(const Grid_t& grid)
-  {
-    return std::unique_ptr<FieldsItemBase>{new Item{grid}};
-  }
-};
-
-// ======================================================================
 // FieldsItemFields
 
 template<typename Item>
@@ -151,7 +98,7 @@ private:
 };
 
 // ======================================================================
-// FieldsItemFieldsOps
+// ItemLoopPatches
 //
 // Adapter from per-patch Item with ::set
 
@@ -176,13 +123,7 @@ struct ItemLoopPatches : ItemPatch
   }
 };
 
-template<typename Item_t>
-using FieldsItemFieldsOps = FieldsItemOps<FieldsItemFields<ItemLoopPatches<Item_t>>>;
-
 // ======================================================================
-// FieldsItemMomentOps
-
-// ----------------------------------------------------------------------
 // ItemMomentCRTP
 //
 // deriving from this class adds the result field mres_
@@ -221,7 +162,7 @@ protected:
   std::vector<std::string> comp_names_;
 };
 
-// ----------------------------------------------------------------------
+// ======================================================================
 // ItemMomentAddBnd
 
 template<typename Moment_t, typename Bnd = Bnd_<typename Moment_t::Mfields>>
@@ -347,7 +288,7 @@ private:
   Bnd bnd_;
 };
 
-// ----------------------------------------------------------------------
+// ======================================================================
 // FieldsItemMoment
 
 template<typename Moment_t>
@@ -386,10 +327,4 @@ struct FieldsItemMoment : FieldsItemBase
 private:
   Moment_t moment_;
 };
-
-// ----------------------------------------------------------------------
-// FieldsItemMomentOps
-  
-template<typename Moment_t>
-using FieldsItemMomentOps = FieldsItemOps<FieldsItemMoment<ItemMomentAddBnd<Moment_t>>>;
 
