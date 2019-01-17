@@ -257,9 +257,9 @@ struct PscFlatfoil : Psc<PscConfig>
     outf_items.emplace_back(new FieldsItemFields<ItemLoopPatches<Item_e_cc>>(grid()));
     outf_items.emplace_back(new FieldsItemFields<ItemLoopPatches<Item_h_cc>>(grid()));
     outf_items.emplace_back(new FieldsItemFields<ItemLoopPatches<Item_j_cc>>(grid()));
-    outf_items.emplace_back(std::move(FieldsItemMomentOps<Moment_n_1st<Mparticles, MfieldsC>>::create(grid())));
-    outf_items.emplace_back(std::move(FieldsItemMomentOps<Moment_v_1st<Mparticles, MfieldsC>>::create(grid())));
-    outf_items.emplace_back(std::move(FieldsItemMomentOps<Moment_T_1st<Mparticles, MfieldsC>>::create(grid())));
+    outf_items.emplace_back(new FieldsItemMoment<ItemMomentAddBnd<Moment_n_1st<Mparticles, MfieldsC>>>(grid()));
+    outf_items.emplace_back(new FieldsItemMoment<ItemMomentAddBnd<Moment_v_1st<Mparticles, MfieldsC>>>(grid()));
+    outf_items.emplace_back(new FieldsItemMoment<ItemMomentAddBnd<Moment_T_1st<Mparticles, MfieldsC>>>(grid()));
     outf_.reset(new OutputFieldsC{grid(), outf_params, std::move(outf_items)});
 
     // -- output particles
