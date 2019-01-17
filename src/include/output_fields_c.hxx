@@ -36,8 +36,9 @@ struct OutputFieldsC : public OutputFieldsCParams
   // ----------------------------------------------------------------------
   // ctor
 
-  OutputFieldsC(const Grid_t& grid, const OutputFieldsCParams& prm)
-    : OutputFieldsCParams{prm}
+  OutputFieldsC(const Grid_t& grid, const OutputFieldsCParams& prm,
+		std::vector<std::unique_ptr<FieldsItemBase>>&& items = {})
+    : OutputFieldsCParams{prm}, items_{std::move(items)}
   {
     pfield_next = pfield_first;
     tfield_next = tfield_first;
