@@ -128,9 +128,15 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
 
     // -- output fields
     OutputFieldsCParams outf_params;
-    outf_params.output_fields = "e,h,j,n_1st_single,v_1st_single";
     outf_params.pfield_step = 10;
-    outf_.reset(new OutputFieldsC{grid(), outf_params});
+    std::vector<std::unique_ptr<FieldsItemBase>> outf_items;
+    outf_items.emplace_back(std::move(FieldsItemFactory::create("e", grid())));
+    outf_items.emplace_back(std::move(FieldsItemFactory::create("h", grid())));
+    outf_items.emplace_back(std::move(FieldsItemFactory::create("j", grid())));
+    outf_items.emplace_back(std::move(FieldsItemFactory::create("n_1st_single", grid())));
+    outf_items.emplace_back(std::move(FieldsItemFactory::create("v_1st_single", grid())));
+    outf_items.emplace_back(std::move(FieldsItemFactory::create("T_1st_single", grid())));
+    outf_.reset(new OutputFieldsC{grid(), outf_params, std::move(outf_items)});
 
     // --- partition particles and initial balancing
     mpi_printf(comm, "**** Partitioning...\n");

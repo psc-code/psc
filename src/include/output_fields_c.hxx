@@ -14,7 +14,6 @@
 struct OutputFieldsCParams
 {
   const char *data_dir = {"."};
-  const char *output_fields = {"j,e,h"};
 
   int pfield_step = 0;
   int pfield_first = 0;
@@ -43,18 +42,6 @@ struct OutputFieldsC : public OutputFieldsCParams
     pfield_next = pfield_first;
     tfield_next = tfield_first;
 
-    if (output_fields) {
-      // setup pfd according to output_fields as given
-      // (potentially) on the command line
-      // parse comma separated list of fields
-      char *s_orig = strdup(output_fields), *p, *s = s_orig;
-      while ((p = strsep(&s, ", "))) {
-	items_.emplace_back(FieldsItemFactory::create(p, grid));
-      }
-      free(s_orig);
-
-    }
-    
     for (auto& item : items_) {
       tfds_.emplace_back(grid, item->n_comps(grid), grid.ibn);
     }

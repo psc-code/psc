@@ -378,13 +378,19 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // -- output fields
     OutputFieldsCParams outf_params;
     double output_field_interval = 1.;
-#ifdef VPIC // handled by diagnostics instead
-    outf_params.output_fields = nullptr;
+    std::vector<std::unique_ptr<FieldsItemBase>> outf_items;
+#ifdef VPIC
+    // handled by diagnostics instead
 #else
-    outf_params.output_fields = "e,h,j,n_1st_single,v_1st_single,T_1st_single";
+    outf_items.emplace_back(std::move(FieldsItemFactory::create("e", grid())));
+    outf_items.emplace_back(std::move(FieldsItemFactory::create("h", grid())));
+    outf_items.emplace_back(std::move(FieldsItemFactory::create("j", grid())));
+    outf_items.emplace_back(std::move(FieldsItemFactory::create("n_1st_single", grid())));
+    outf_items.emplace_back(std::move(FieldsItemFactory::create("v_1st_single", grid())));
+    outf_items.emplace_back(std::move(FieldsItemFactory::create("T_1st_single", grid())));
 #endif
     outf_params.pfield_step = int((output_field_interval / (phys_.wci*dt)));
-    outf_.reset(new OutputFieldsC{grid(), outf_params});
+    outf_.reset(new OutputFieldsC{grid(), outf_params, std::move(outf_items)});
 
     OutputParticlesParams outp_params{};
     outp_params.every_step = int((output_particle_interval / (phys_.wci*dt)));
