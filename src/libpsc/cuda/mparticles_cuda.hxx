@@ -74,17 +74,3 @@ private:
   ParticleIndexer<real_t> pi_;
 };
 
-// FIXME
-template<>
-struct Mparticles_traits<MparticlesCuda<BS144>>
-{
-  static constexpr const char* name = "cuda";
-};
-
-
-template<>
-struct Mparticles_traits<MparticlesCuda<BS444>>
-{
-  static constexpr const char* name = "cuda444";
-};
-
