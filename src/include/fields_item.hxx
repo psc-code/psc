@@ -91,7 +91,7 @@ struct FieldsItemOps
 
   static std::unique_ptr<FieldsItemBase> create(const Grid_t& grid)
   {
-    return std::unique_ptr<FieldsItemBase>{new Item{grid, grid.comm()}};
+    return std::unique_ptr<FieldsItemBase>{new Item{grid}};
   }
 };
 
@@ -117,7 +117,7 @@ struct FieldsItemFields : FieldsItemBase
 
   int n_comps(const Grid_t& grid) const override { return Item::n_comps; }
  
-  FieldsItemFields(const Grid_t& grid, MPI_Comm comm)
+  FieldsItemFields(const Grid_t& grid)
     : mres_{grid, Item::n_comps, grid.ibn}
   {}
 
@@ -368,8 +368,8 @@ struct FieldsItemMoment : FieldsItemBase
     return Moment_t::n_comps * ((Moment_t::flags & POFI_BY_KIND) ? grid.kinds.size() : 1);
   }
   
-  FieldsItemMoment(const Grid_t& grid, MPI_Comm comm)
-    : moment_(grid, comm)
+  FieldsItemMoment(const Grid_t& grid)
+    : moment_(grid, grid.comm())
   {}
 
   void run(MfieldsStateBase& mflds_base, MparticlesBase& mprts_base) override
