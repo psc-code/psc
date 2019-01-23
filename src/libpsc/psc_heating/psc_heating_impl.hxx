@@ -71,7 +71,7 @@ struct Heating__ : HeatingBase
 	};
 
 	double H = get_H_(xx);
-	if (H > 0) {
+	if (H > 0.f) {
 	  kick_particle(prt, H);
 	}
       }
