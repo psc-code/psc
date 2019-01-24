@@ -94,19 +94,23 @@ bool cuda_mparticles<BS>::check_ordered()
 }
 
 // ----------------------------------------------------------------------
-// check_bidx
+// check_bidx_after_push
 
 template<typename BS>
 bool cuda_mparticles<BS>::check_bidx_after_push()
 {
   bool ok = true;
+
+  thrust::host_vector<uint> h_off(this->by_block_.d_off);
+  thrust::host_vector<uint> h_bidx(this->by_block_.d_idx);
+  thrust::host_vector<float4> h_xi4(this->storage.xi4);
   
   for (int p = 0; p < this->n_patches(); p++) {
-    int begin = this->by_block_.d_off[p * this->n_blocks_per_patch];
-    int end = this->by_block_.d_off[(p+1) * this->n_blocks_per_patch];
+    int begin = h_off[p * this->n_blocks_per_patch];
+    int end = h_off[(p+1) * this->n_blocks_per_patch];
     for (int n = begin; n < end; n++) {
-      float4 xi4 = this->storage.xi4[n];
-      int bidx = this->by_block_.d_idx[n];
+      float4 xi4 = h_xi4[n];
+      int bidx = h_bidx[n];
       int bidx2 = this->blockIndex(xi4, p);
       if (bidx2 < 0) bidx2 = this->n_blocks;
       if (bidx != bidx2) {
