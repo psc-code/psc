@@ -54,7 +54,7 @@ struct Checks_ : ChecksParams, ChecksBase
 
   void continuity_before_particle_push(MparticlesBase& mprts_base) override
   {
-    auto mprts = mprts_base.get_as<Mparticles>();
+    auto&& mprts = mprts_base.get_as<Mparticles>();
     continuity_before_particle_push(mprts);
     mprts_base.put_as(mprts, MP_DONT_COPY);
   }

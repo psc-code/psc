@@ -106,6 +106,11 @@ struct MparticlesSimple : MparticlesBase
     }
   }
 
+  MparticlesSimple(const MparticlesSimple&) = delete;
+  MparticlesSimple(MparticlesSimple&&) = default;
+
+  MparticlesSimple& operator=(MparticlesSimple&&) = default;
+
   void reset(const Grid_t& grid) override
   {
     MparticlesBase::reset(grid);
