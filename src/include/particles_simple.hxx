@@ -22,17 +22,15 @@ struct MparticlesPatchSimple
   using iterator = typename buf_t::iterator;
   using const_iterator = typename buf_t::const_iterator;
 
-  // FIXME, I would like to delete the copy ctor because I don't
-  // want to copy Patch by mistake, but that doesn't play well with
-  // putting the patches into std::vector
-  // MparticlesPatchSimple(const MparticlesPatchSimple&) = delete;
-
   MparticlesPatchSimple(Mparticles* mprts, int p)
     : mprts_(mprts),
       p_(p),
       grid_(&mprts->grid())
   {}
 
+  MparticlesPatchSimple(const MparticlesPatchSimple&) = delete;
+  MparticlesPatchSimple(MparticlesPatchSimple&&) = default;
+  
   Particle& operator[](int n) { return buf[n]; }
   const Particle& operator[](int n) const { return buf[n]; }
   const_iterator begin() const { return buf.begin(); }
