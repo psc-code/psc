@@ -71,9 +71,9 @@ bm_normal2(void)
 // k_curand_setup
 
 __global__ static void
-k_curand_setup(curandState *d_curand_states, int b_my)
+k_curand_setup(curandState *d_curand_states)
 {
-  int bid = blockIdx.y * b_my + blockIdx.x;
+  int bid = (blockIdx.z * gridDim.y + blockIdx.y) * gridDim.x + blockIdx.x;
   int id = threadIdx.x + bid * THREADS_PER_BLOCK;
 
   curand_init(1234, id % 1024, 0, &d_curand_states[id]); // FIXME, % 1024 hack
@@ -191,7 +191,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
       myCudaFree(d_curand_states_);
       d_curand_states_ = (curandState*) myCudaMalloc(n_threads * sizeof(*d_curand_states_));
       
-      k_curand_setup<<<dimGrid, THREADS_PER_BLOCK>>>(d_curand_states_, cmprts->b_mx()[1]);
+      k_curand_setup<<<dimGrid, THREADS_PER_BLOCK>>>(d_curand_states_);
       cuda_sync_if_enabled();
       
       first_time_ = false;
@@ -277,7 +277,8 @@ k_heating_run_foil(cuda_heating_foil d_foil, DMparticlesCuda<BS> dmprts, struct 
   xb[2] = prm.d_xb_by_patch[current_block.p][2];
 
 
-  int id = threadIdx.x + current_block.bid * THREADS_PER_BLOCK;
+  int bid = (blockIdx.z * gridDim.y + blockIdx.y) * gridDim.x + blockIdx.x;
+  int id = threadIdx.x + bid * THREADS_PER_BLOCK;
   /* Copy state to local memory for efficiency */
   curandState local_state = d_curand_states[id];
 
