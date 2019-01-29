@@ -159,7 +159,7 @@ struct DParticleIndexer
     if (uint(cpos[0]) >= ldims_[0] ||
 	uint(cpos[1]) >= ldims_[1] ||
 	uint(cpos[2]) >= ldims_[2]) {
-      return n_blocks_;
+      return n_blocks_ + p;
     }
 
     int bpos[3] = { int(cpos[0] / BS::x::value),
