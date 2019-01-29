@@ -79,6 +79,19 @@ struct OutputFieldsC : public OutputFieldsCParams
 	(tfield_step > 0 && doaccum_tfield)) {
       for (auto& item : items_) {
 	item->run(mflds, mprts);
+#if 0
+	auto& mres = dynamic_cast<MfieldsC&>(item->mres());
+	double min = 1e10, max = -1e10;
+	for (int m = 0; m < mres.n_comps(); m++) {
+	  for (int p = 0; p < mres.n_patches(); p++) {
+	    mres.grid().Foreach_3d(0, 0, [&](int i, int j, int k) {
+		min = fminf(min, mres[p](m, i,j,k));
+		max = fmaxf(max, mres[p](m, i,j,k));
+	      });
+	  }
+	  mprintf("name %s %d min %g max %g\n", item->name(), m, min, max);
+	}
+#endif
       }
     }
     
