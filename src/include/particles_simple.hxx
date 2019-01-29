@@ -74,7 +74,7 @@ struct MparticlesPatchSimple
 
   buf_t buf;
 
-private:
+  //private:
   Mparticles* mprts_;
   int p_;
   const Grid_t* grid_;
@@ -105,9 +105,26 @@ struct MparticlesSimple : MparticlesBase
   }
 
   MparticlesSimple(const MparticlesSimple&) = delete;
-  MparticlesSimple(MparticlesSimple&&) = default;
+  MparticlesSimple(MparticlesSimple&& o)
+    : MparticlesBase(o.grid()),
+      patches_{std::move(o.patches_)},
+      pi_{std::move(o.pi_)}
+  {
+    for (auto& patch : patches_) {
+      patch.mprts_ = this;
+    }
+  }
 
-  MparticlesSimple& operator=(MparticlesSimple&&) = default;
+  MparticlesSimple& operator=(MparticlesSimple&& o)
+  {
+    MparticlesBase::operator=(o);
+    patches_ = std::move(o.patches_);
+    pi_ = std::move(o.pi_);
+    for (auto& patch : patches_) {
+      patch.mprts_ = this;
+    }
+    return *this;
+  }
 
   void reset(const Grid_t& grid) override
   {
