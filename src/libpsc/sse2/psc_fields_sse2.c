@@ -44,7 +44,7 @@ psc_mfields_sse2_get_from(fields_sse2_t *pf, int mb, int me, void *_flds_base)
   __gotten = true;
 
   struct psc_patch *patch = &psc.patch[0];
-  mfields_base_t *flds_base = _flds_base;
+  struct psc_mfields *flds_base = _flds_base;
   fields_base_t *pf_base = &flds_base->f[0];
   int sz = 1;
   for (int d = 0; d < 3; d++) {
@@ -70,7 +70,7 @@ psc_mfields_sse2_put_to(fields_sse2_t *pf, int mb, int me, void *_flds_base)
   __gotten = false;
 
   struct psc_patch *patch = &psc.patch[0];
-  mfields_base_t *flds_base = _flds_base;
+  struct psc_mfields *flds_base = _flds_base;
   fields_base_t *pf_base = &flds_base->f[0];
   int sz = 1;
   for (int d = 0; d < 3; d++) {

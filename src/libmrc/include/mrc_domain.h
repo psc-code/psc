@@ -8,6 +8,8 @@
 
 #include <mpi.h>
 
+BEGIN_C_DECLS
+
 enum {
   SW_0,
   SW_1,
@@ -114,5 +116,7 @@ struct mrc_fld *mrc_domain_m1_create(struct mrc_domain *domain);
 struct mrc_fld *mrc_domain_fld_create(struct mrc_domain *domain, int sw, const char *comps);
 
 struct mrc_ddc *mrc_domain_create_ddc(struct mrc_domain *domain);
+
+END_C_DECLS
 
 #endif

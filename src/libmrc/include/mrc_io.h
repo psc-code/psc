@@ -8,6 +8,8 @@
 
 #include <stdbool.h>
 
+BEGIN_C_DECLS
+
 // ----------------------------------------------------------------------
 // diagnostics writing
 
@@ -130,6 +132,8 @@ const char *__mrc_io_obj_path(struct mrc_io *io, struct mrc_obj *obj);
 // mrc_io_server
 
 void mrc_io_server(const char *format, const char *ds_srv, int nproc_domain);
+
+END_C_DECLS
 
 #endif
 

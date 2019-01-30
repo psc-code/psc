@@ -4,6 +4,8 @@
 
 #include <mrc_obj.h>
 
+BEGIN_C_DECLS
+
 // ======================================================================
 // mrc_ndarray, as one might guess from the name, is somewhat modeled after numpy.
 // It's a n_dims array (up to MRC_FLD_MAXDIMS). The underlying data may not be
@@ -29,7 +31,7 @@ enum {
 struct mrc_ndarray_access {
   void *arr_off; //< same as the data pointer (arr), but shifted by
 		 //precalculated offset for faster access
-  int stride[MRC_NDARRAY_MAXDIMS];
+  size_t stride[MRC_NDARRAY_MAXDIMS];
   int beg[MRC_NDARRAY_MAXDIMS];
   int end[MRC_NDARRAY_MAXDIMS];
   int data_type;
@@ -101,7 +103,7 @@ struct mrc_ndarray {
   int n_dims;
   int size_of_type;
   int data_type;
-  int len; // number of data values in this ndarray
+  size_t len; // number of data values in this ndarray
   struct mrc_vec *vec; //< underlying mrc_vec that manages memory alloc/free (could be petsc)
 
   // parameters
@@ -223,6 +225,8 @@ mrc_ndarray_it_next(struct mrc_ndarray_it *it)
  done:
   ;
 }
+
+END_C_DECLS
 
 #endif
 

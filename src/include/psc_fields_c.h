@@ -2,33 +2,32 @@
 #ifndef PSC_FIELD_C_H
 #define PSC_FIELD_C_H
 
-#include "psc_fields_private.h"
+#include <mpi.h>
+#include "fields3d.hxx"
+#include "fields_traits.hxx"
 
-typedef double fields_c_real_t;
-#define MPI_FIELDS_C_REAL MPI_DOUBLE
+struct fields_c_t : fields3d<double>
+{
+  using Base = fields3d<double>;
 
-#define F3_OFF_C(pf, fldnr, jx,jy,jz)					\
-  ((((((fldnr - (pf)->first_comp)					\
-       * (pf)->im[2] + ((jz)-(pf)->ib[2]))				\
-      * (pf)->im[1] + ((jy)-(pf)->ib[1]))				\
-     * (pf)->im[0] + ((jx)-(pf)->ib[0]))))
+  using Base::Base;
+};
 
-#ifndef BOUNDS_CHECK
+using MfieldsC = Mfields<fields_c_t>;
+using MfieldsStateDouble = MfieldsStateFromMfields<MfieldsC>;
 
-#define F3_C(pf, fldnr, jx,jy,jz)		\
-  (((fields_c_real_t *) (pf)->data)[F3_OFF_C(pf, fldnr, jx,jy,jz)])
+template<>
+struct Mfields_traits<MfieldsC>
+{
+  static constexpr const char* name = "c";
+  static MPI_Datatype mpi_dtype() { return MPI_DOUBLE; }
+};
 
-#else
-
-#define F3_C(pf, fldnr, jx,jy,jz)					\
-  (*({int off = F3_OFF_C(pf, fldnr, jx,jy,jz);				\
-      assert(fldnr >= (pf)->first_comp && fldnr < (pf)->first_comp + (pf)->nr_comp); \
-      assert(jx >= (pf)->ib[0] && jx < (pf)->ib[0] + (pf)->im[0]);	\
-      assert(jy >= (pf)->ib[1] && jy < (pf)->ib[1] + (pf)->im[1]);	\
-      assert(jz >= (pf)->ib[2] && jz < (pf)->ib[2] + (pf)->im[2]);	\
-      &(((fields_c_real_t *) (pf)->data)[off]);				\
-    }))
-
-#endif
+template<>
+struct Mfields_traits<MfieldsStateDouble>
+{
+  static constexpr const char* name = "c";
+  static MPI_Datatype mpi_dtype() { return MPI_DOUBLE; }
+};
 
 #endif

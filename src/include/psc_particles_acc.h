@@ -10,8 +10,6 @@
 typedef float particle_acc_real_t;
 
 
-#define MPI_PARTICLES_ACC_REAL MPI_FLOAT
-
 typedef struct psc_particle_acc {
   particle_acc_real_t xi[3];
   particle_acc_real_t kind_as_float;
@@ -27,7 +25,6 @@ struct psc_particles_acc {
   unsigned int *b_cnt;
   unsigned int *b_off;
 
-  int n_alloced;
   particle_acc_real_t dxi[3];
   int b_mx[3];
   int nr_blocks;
@@ -51,46 +48,6 @@ struct psc_mparticles_acc {
 };
 
 #define psc_mparticles_acc(prts) mrc_to_subobj(prts, struct psc_mparticles_acc)
-
-#define particle_acc_wni(p) ({				\
-      particle_acc_real_t rv;					\
-      int kind = particle_acc_kind(p);			\
-      rv = p->qni_wni / ppsc->kinds[kind].q;			\
-      rv;							\
-    })
-
-static inline int
-particle_acc_kind(particle_acc_t *prt)
-{
-  return cuda_float_as_int(prt->kind_as_float);
-}
-
-#define particle_acc_qni_wni(prt) ((prt)->qni_wni)
-
-#define particle_acc_x(prt) ((prt)->xi[0])
-#define particle_acc_px(prt) ((prt)->pxi[0])
-
-static inline int
-particle_acc_real_fint(particle_acc_real_t x)
-{
-#ifdef __CUDACC__
-  return __float2int_rd(x);
-#else
-  return floorf(x);
-#endif
-}
-
-static inline particle_acc_real_t
-particle_acc_real_sqrt(particle_acc_real_t x)
-{
-  return sqrtf(x);
-}
-
-static inline particle_acc_real_t
-particle_acc_real_abs(particle_acc_real_t x)
-{
-  return fabsf(x);
-}
 
 #define PARTICLE_ACC_LOAD_POS(prt, d_xi4, n) do {			\
     float4 xi4 = d_xi4[n];						\

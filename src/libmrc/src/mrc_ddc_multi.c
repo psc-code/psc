@@ -496,6 +496,11 @@ ddc_run_local(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
   for (int i = 0; i < ri[sub->mpi_rank].n_send_entries; i++) {
     struct mrc_ddc_sendrecv_entry *se = &ri[sub->mpi_rank].send_entry[i];
     struct mrc_ddc_sendrecv_entry *re = &ri[sub->mpi_rank].recv_entry[i];
+    if (se->ilo[0] == se->ihi[0] ||
+	se->ilo[1] == se->ihi[1] ||
+	se->ilo[2] == se->ihi[2]) { // FIXME, we shouldn't even create these
+      continue;
+    }
     to_buf(mb, me, se->patch, se->ilo, se->ihi, patt2->local_buf, ctx);
     from_buf(mb, me, se->nei_patch, re->ilo, re->ihi, patt2->local_buf, ctx);
   }

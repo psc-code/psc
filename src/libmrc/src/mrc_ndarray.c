@@ -144,6 +144,7 @@ _mrc_ndarray_setup(struct mrc_ndarray *nd)
   }
 
   mrc_vec_set_type(nd->vec, get_vec_type(nd));
+  assert(nd->len < 0x80000000); // FIXME, should support 64-bit for real
   mrc_vec_set_param_int(nd->vec, "len", nd->len);
   mrc_vec_setup(nd->vec);
 
@@ -152,10 +153,11 @@ _mrc_ndarray_setup(struct mrc_ndarray *nd)
   assert(nd->arr);
 
   // set up arr_off
-  int off = 0;
+  size_t off = 0;
   for (int d = 0; d < n_dims; d++) {
     off += nd->start[d] * nd->nd_acc.stride[d];
   }
+  //mprintf("off %ld\n", off);
   nd->nd_acc.arr_off = nd->arr - off * nd->size_of_type;
 
   // store more info in nd_acc so we can do bounds checking
@@ -291,7 +293,7 @@ mrc_ndarray_same_shape(struct mrc_ndarray *nd1, struct mrc_ndarray *nd2)
 bool
 mrc_ndarray_f_contiguous(struct mrc_ndarray *nd)
 {
-  int stride = 1;
+  size_t stride = 1;
   for (int d = 0; d < nd->n_dims; d++) {
     // if the number of elements in a given dimension is 1, the corresponding
     // stride for that dimension does not matter, so we don't need to check

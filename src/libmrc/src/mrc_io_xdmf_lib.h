@@ -7,6 +7,8 @@
 
 #include <stdbool.h>
 
+BEGIN_C_DECLS
+
 #define MAX_XDMF_FLD_INFO (100)
 
 struct xdmf_fld_info {
@@ -72,5 +74,7 @@ struct xdmf_spatial *xdmf_spatial_create_m3_parallel(list_t *xdmf_spatial_list,
 						     struct mrc_io *io);
 void xdmf_spatial_save_fld_info(struct xdmf_spatial *xs, char *fld_name,
 				char *path, bool is_vec, int mrc_dtype);
+
+END_C_DECLS
 
 #endif

@@ -34,6 +34,8 @@ test_mrc_obj
 test_spherical_harmonics
 test_fdtd_amr
 test_mrc_mat
+test_json
+test_json_mrc_obj
 *.asc
 /run*.xdmf
 /run*.h5

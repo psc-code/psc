@@ -14,9 +14,9 @@
 
 
 static void
-psc_push_fields_cbe_push_a_2d(struct psc_push_fields *push, mfields_base_t *flds_base)
+psc_push_fields_cbe_push_a_2d(struct psc_push_fields *push, struct psc_mfields *flds_base)
 {
-  mfields_t flds;
+  struct psc_mfields flds;
   fields_get(&flds, JXI,JXI+9,flds_base);
 
   int job = SPU_FIELD_A;
@@ -44,9 +44,9 @@ psc_push_fields_cbe_push_a_2d(struct psc_push_fields *push, mfields_base_t *flds
 }
 
 static void
-psc_push_fields_cbe_push_b_2d(struct psc_push_fields *push, mfields_base_t *flds_base)
+psc_push_fields_cbe_push_b_2d(struct psc_push_fields *push, struct psc_mfields *flds_base)
 {
-  mfields_t flds;
+  struct psc_mfields flds;
   fields_get(&flds, JXI,JXI+9,flds_base);
   
   int job = SPU_FIELD_B;
@@ -92,7 +92,7 @@ psc_push_fields_cbe_push_b_2d(struct psc_push_fields *push, mfields_base_t *flds
 // Hence the dummy function.
 
 static void
-dummy_function(struct psc_push_fields *push, mfields_base_t *flds_base)
+dummy_function(struct psc_push_fields *push, struct psc_mfields *flds_base)
 {
 }
 

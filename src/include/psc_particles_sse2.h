@@ -7,8 +7,6 @@
 
 typedef sse2_real particle_sse2_real_t;
 
-#define MPI_PARTICLES_SSE2_REAL MPI_SSE2_REAL
-
 typedef struct {
   particle_sse2_real_t xi, yi, zi;
   particle_sse2_real_t pxi, pyi, pzi;

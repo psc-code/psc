@@ -4,12 +4,12 @@
 
 #include "psc_fields_fortran.h"
 
-typedef fields_fortran_t fields_t;
-typedef mfields_fortran_t mfields_t;
-
-#define F3(fldnr, jx,jy,jz) F3_FORTRAN(pf, fldnr, jx,jy,jz)
+typedef PscMfieldsFortran     mfields_t;
 
 #define psc_mfields_get_from          psc_mfields_fortran_get_from
 #define psc_mfields_put_to            psc_mfields_fortran_put_to
+#define FIELDS_TYPE                   "fortran"
+
+#define PSC_FIELDS_AS_FORTRAN 1
 
 #endif

@@ -677,8 +677,8 @@ do_push_part_yz(particles_sse2_t *pp, fields_sse2_t *pf)
 
 void
 psc_push_particles_sse2_push_yz_a(struct psc_push_particles *push,
-				  mparticles_base_t *particles_base,
-				  mfields_base_t *flds_base)
+				  struct psc_mparticles *particles_base,
+				  struct psc_mfields *flds_base)
 {
   particles_sse2_t pp;
   mparticles_sse2_get(&pp, particles_base);
@@ -696,8 +696,8 @@ psc_push_particles_sse2_push_yz_a(struct psc_push_particles *push,
 
 void
 psc_push_particles_sse2_push_yz_b(struct psc_push_particles *push,
-				  mparticles_base_t *particles_base,
-				  mfields_base_t *flds_base)
+				  struct psc_mparticles *particles_base,
+				  struct psc_mfields *flds_base)
 {
   particles_sse2_t pp;
   fields_sse2_t pf;
@@ -718,8 +718,8 @@ psc_push_particles_sse2_push_yz_b(struct psc_push_particles *push,
 
 void
 psc_push_particles_sse2_push_yz(struct psc_push_particles *push,
-				mparticles_base_t *particles_base,
-				mfields_base_t *flds_base)
+				struct psc_mparticles *particles_base,
+				struct psc_mfields *flds_base)
 {
   particles_sse2_t pp;
   fields_sse2_t pf;

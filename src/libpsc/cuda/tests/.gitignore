@@ -1,0 +1,7 @@
+test_cuda_accel
+test_cuda_mparticles
+test_cuda_mfields
+test_cuda_mfields_1
+test_cuda_mparticles_1
+test_cuda_bndp
+test_cuda_heating

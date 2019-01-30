@@ -2,32 +2,31 @@
 #ifndef PSC_FIELD_FORTRAN_H
 #define PSC_FIELD_FORTRAN_H
 
-#include "psc_fields_private.h"
+#include "fields3d.hxx"
 
-typedef double fields_fortran_real_t;
-#define MPI_FIELDS_FORTRAN_REAL MPI_DOUBLE
+struct fields_fortran_t : fields3d<double>
+{
+  using Base = fields3d<double>;
 
-#define F3_OFF_FORTRAN(pf, jx,jy,jz)			\
-  (((((((jz)-(pf)->ib[2]))				\
-      * (pf)->im[1] + ((jy)-(pf)->ib[1]))		\
-     * (pf)->im[0] + ((jx)-(pf)->ib[0]))))
+  using Base::Base;
+};
 
-#ifndef BOUNDS_CHECK
+struct psc_mfields_fortran_sub
+{
+  using fields_t = fields_fortran_t;
+  
+  fields_t::real_t ***data;
+  int ib[3]; //> lower left corner for each patch (incl. ghostpoints)
+  int im[3]; //> extent for each patch (incl. ghostpoints)
+};
 
-#define F3_FORTRAN(pf, fldnr, jx,jy,jz)					\
-  (((fields_fortran_real_t **) (pf)->data)[fldnr][F3_OFF_FORTRAN(pf, jx,jy,jz)])
+using PscMfieldsFortran = PscMfields<psc_mfields_fortran_sub>;
 
-#else
-
-#define F3_FORTRAN(pf, fldnr, jx,jy,jz)					\
-  (*({int off = F3_OFF_FORTRAN(pf, jx,jy,jz);				\
-      assert(fldnr >= 0 && fldnr < (pf)->nr_comp);			\
-      assert(jx >= (pf)->ib[0] && jx < (pf)->ib[0] + (pf)->im[0]);	\
-      assert(jy >= (pf)->ib[1] && jy < (pf)->ib[1] + (pf)->im[1]);	\
-      assert(jz >= (pf)->ib[2] && jz < (pf)->ib[2] + (pf)->im[2]);	\
-      &(((fields_fortran_real_t **) (pf)->data)[fldnr][off]);		\
-    }))
-
-#endif
+template<>
+inline fields_fortran_t PscMfieldsFortran::operator[](int p)
+{
+  fields_fortran_t psc_mfields_fortran_get_field_t(struct psc_mfields *mflds, int p);
+  return psc_mfields_fortran_get_field_t(mflds_, p);
+}
 
 #endif

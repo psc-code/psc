@@ -1,0 +1,3 @@
+
+#cmakedefine USE_CUDA
+#cmakedefine USE_VPIC

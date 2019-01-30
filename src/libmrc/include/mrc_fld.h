@@ -14,6 +14,8 @@
 
 //#define BOUNDS_CHECK
 
+BEGIN_C_DECLS
+
 #define MRC_F3(f3,m, ix,iy,iz) MRC_S4(f3, ix,iy,iz,m)
 #define MRC_F2(f3,m, ix,iy) MRC_S3(f3, ix,iy,m)
 #define MRC_F1(f1,m, ix) MRC_S2(f1, ix,m)
@@ -292,5 +294,6 @@ typedef void (*mrc_fld_copy_from_func_t)(struct mrc_fld *,
 
 #define mrc_m1_foreach_end  }
   
+END_C_DECLS
 
 #endif

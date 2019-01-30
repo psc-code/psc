@@ -6,9 +6,7 @@
 #include <stdio.h>
 #include <mpi.h>
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#include <mrc_config.h>
 
 #define NR_EVENTS (0)
 
@@ -16,6 +14,8 @@ struct prof_info {
   int cnt;
   long long time;
   long long counters[NR_EVENTS];
+  int total_cnt;
+  long long total_time;
 };
 
 #define MAX_PROF (100)

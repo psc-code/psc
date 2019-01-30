@@ -48,7 +48,8 @@ mrc_ndarray_sub_copy(struct mrc_ndarray *to, struct mrc_ndarray *from)
   // OPT: could be done for c_contiguous, too, or really, whenever
   // all the strides match
   if (mrc_ndarray_f_contiguous(to) && mrc_ndarray_f_contiguous(from)) {
-    return mrc_vec_copy(to->vec, from->vec);
+    mrc_vec_copy(to->vec, from->vec);
+    return;
   }
   struct mrc_ndarray_it it_to, it_from;
 

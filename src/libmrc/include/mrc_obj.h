@@ -9,6 +9,8 @@
 #include <mpi.h>
 #include <stdbool.h>
 
+BEGIN_C_DECLS
+
 struct mrc_io;
 
 struct mrc_obj {
@@ -164,6 +166,8 @@ void mrc_obj_read_children(struct mrc_obj *obj, struct mrc_io *io);
 bool mrc_obj_is_setup(struct mrc_obj *obj);
 mrc_void_func_t mrc_obj_get_method(struct mrc_obj *obj, const char *name);
 
+struct mrc_obj_ops *mrc_obj_find_subclass_ops(struct mrc_class *cls, const char *subclass);
+
 enum {
   CLASS_INFO_VERB_NONE = 0,
   CLASS_INFO_VERB_DIFF,
@@ -172,11 +176,22 @@ enum {
 };
 int mrc_obj_print_class_info(int verbosity);
 
-#define MRC_CLASS_DECLARE(pfx, obj_type)                                \
+#ifdef __cplusplus
+#define MRC_CLASS_DECLARE_1(pfx, obj_type)				\
   obj_type;                                                             \
-  DECLARE_STRUCT_MRC_CLASS(_ ## pfx, obj_type);                         \
-                                                                        \
-  extern struct mrc_class_ ##pfx mrc_class_ ## pfx;                     \
+  DECLARE_STRUCT_MRC_CLASS(_ ## pfx, obj_type);				\
+  extern struct mrc_class_ ##pfx##_ mrc_class_ ## pfx;			\
+  
+#else
+#define MRC_CLASS_DECLARE_1(pfx, obj_type)				\
+  obj_type;                                                             \
+  DECLARE_STRUCT_MRC_CLASS(_ ## pfx, obj_type);				\
+  extern struct mrc_class_ ##pfx mrc_class_ ## pfx;			\
+  
+#endif
+
+#define MRC_CLASS_DECLARE(pfx, obj_type)                                \
+  MRC_CLASS_DECLARE_1(pfx, obj_type)					\
   static inline obj_type *                                              \
   pfx ## _create(MPI_Comm comm)                                         \
   {                                                                     \
@@ -587,5 +602,7 @@ void __mrc_class_register_subclass(struct mrc_class *cls,
 
 #define mrc_obj_for_each_child(item, parent, type) \
   __list_for_each_entry(item, &parent->obj.children_list, obj.child_entry, type)
+
+END_C_DECLS
 
 #endif

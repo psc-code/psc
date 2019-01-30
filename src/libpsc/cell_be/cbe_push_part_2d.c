@@ -10,12 +10,12 @@
 
 void
 psc_push_particles_cbe_push_xy(struct psc_push_particles *push, 
-			       mparticles_base_t *particles_base,
-			       mfields_base_t *flds_base)
+			       struct psc_mparticles *particles_base,
+			       struct psc_mfields *flds_base)
 {
   
-  mfields_t flds;
-  mparticles_t particles;
+  struct psc_mfields flds;
+  struct psc_mparticles particles;
   fields_get(&flds, EX, EX +6,flds_base);
   mparticles_get(&particles, particles_base);
   

@@ -33,14 +33,14 @@
 // actually work), and seriously cuts down on the amount of specialized ppu
 // code we need to have. 
 
-void psc_push_particles_cbe_push_xy(struct psc_push_particles *push, mparticles_base_t *particles_base, mfields_base_t *flds_base);
+void psc_push_particles_cbe_push_xy(struct psc_push_particles *push, struct psc_mparticles *particles_base, struct psc_mfields *flds_base);
 
 
 // Spe handeling functions from psc_cbe.c
 void psc_init_spes(void);
 void psc_kill_spes(void);
 void update_spes_status(void);
-void cell_run_patch(int p, fields_t *pf, particles_t *pp, int job);
+void cell_run_patch(int p, struct psc_fields *pf, particles_t *pp, int job);
 void wait_all_spe(void);
 
 void cbe_create(void);

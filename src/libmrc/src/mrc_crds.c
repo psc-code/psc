@@ -57,7 +57,8 @@ _mrc_crds_create(struct mrc_crds *crds)
 static void
 _mrc_crds_read(struct mrc_crds *crds, struct mrc_io *io)
 {
-  if (strcmp(mrc_io_type(io), "hdf5_serial") != 0) {
+  if (strcmp(mrc_io_type(io), "hdf5_serial") != 0 &&
+      strcmp(mrc_io_type(io), "xdmf_serial") != 0) {
     // FIXME, but reading back coordinates is broken for everything but hdf5_serial,
     // because for other mrc_io types, we don't write crd_nc (at least not completely),
     // so there's no (easy) way to restore it.

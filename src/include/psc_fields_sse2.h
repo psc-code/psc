@@ -7,8 +7,6 @@
 
 typedef sse2_real fields_sse2_real_t;
 
-#define MPI_FIELDS_SSE2_REAL MPI_SSE2_REAL
-
 typedef struct {
   fields_sse2_real_t *flds;
 } fields_sse2_t;

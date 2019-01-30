@@ -6,8 +6,6 @@
 
 typedef float fields_cuda2_real_t;
 
-#define MPI_FIELDS_CUDA2_REAL MPI_FLOAT
-
 struct psc_fields_cuda2 {
 };
 

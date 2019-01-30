@@ -5,6 +5,16 @@
 #include <mrc_common.h>
 #include <stdbool.h>
 
+#ifdef __cplusplus
+# define BEGIN_C_DECLS extern "C" {
+# define END_C_DECLS }
+#else
+# define BEGIN_C_DECLS /* empty */
+# define END_C_DECLS /* empty */
+#endif
+
+BEGIN_C_DECLS
+
 // ======================================================================
 // global flags
 //
@@ -33,5 +43,7 @@ void libmrc_finalize(void);
 // private to libmrc
 
 extern unsigned long mrc_flags;
+
+END_C_DECLS
 
 #endif

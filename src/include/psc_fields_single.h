@@ -2,37 +2,32 @@
 #ifndef PSC_FIELD_SINGLE_H
 #define PSC_FIELD_SINGLE_H
 
-#include "psc_fields_private.h"
+#include <mpi.h>
+#include "fields3d.hxx"
+#include "fields_traits.hxx"
 
-typedef float fields_single_real_t;
-#define MPI_FIELDS_SINGLE_REAL MPI_FLOAT
+struct fields_single_t : fields3d<float>
+{
+  using Base = fields3d<float>;
 
-// Lower bounds and dims are intentionally not called ilg, ihg, img,
-// to lessen confusion with psc.ilg, psc.ihg, etc.. These bounds may
-// be psc.ilo, psc.ihi or psc.ilg, psc.ihg, or something yet different.
+  using Base::Base;
+};
 
-#define F3_OFF_S(pf, fldnr, jx,jy,jz)					\
-  ((((((fldnr - (pf)->first_comp)					\
-       * (pf)->im[2] + ((jz)-(pf)->ib[2]))				\
-      * (pf)->im[1] + ((jy)-(pf)->ib[1]))				\
-     * (pf)->im[0] + ((jx)-(pf)->ib[0]))))
+using MfieldsSingle = Mfields<fields_single_t>;
+using MfieldsStateSingle = MfieldsStateFromMfields<MfieldsSingle>;
 
-#ifndef BOUNDS_CHECK
+template<>
+struct Mfields_traits<MfieldsSingle>
+{
+  static constexpr const char* name = "single";
+  static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
+};
 
-#define F3_S(pf, fldnr, jx,jy,jz)		\
-  (((fields_single_real_t *) (pf)->data)[F3_OFF_S(pf, fldnr, jx,jy,jz)])
-
-#else
-
-#define F3_S(pf, fldnr, jx,jy,jz)					\
-  (*({int off = F3_OFF_S(pf, fldnr, jx,jy,jz);				\
-      assert(fldnr >= (pf)->first_comp && fldnr < (pf)->first_comp + (pf)->nr_comp); \
-      assert(jx >= (pf)->ib[0] && jx < (pf)->ib[0] + (pf)->im[0]);	\
-      assert(jy >= (pf)->ib[1] && jy < (pf)->ib[1] + (pf)->im[1]);	\
-      assert(jz >= (pf)->ib[2] && jz < (pf)->ib[2] + (pf)->im[2]);	\
-      &(((fields_single_real_t *) (pf)->data)[off]);			\
-    }))
-
-#endif
+template<>
+struct Mfields_traits<MfieldsStateSingle>
+{
+  static constexpr const char* name = "single";
+  static MPI_Datatype mpi_dtype() { return MPI_FLOAT; }
+};
 
 #endif

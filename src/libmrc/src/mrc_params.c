@@ -903,6 +903,9 @@ mrc_params_get_type(void *p, struct param *params, const char *name,
       error("option '%s' is not of type %d!\n", name, type);
     }
     switch (type) {
+    case PT_BOOL:
+      pval->u_bool = pv->u_bool;
+      break;
     case PT_INT:
       pval->u_int = pv->u_int;
       break;

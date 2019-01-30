@@ -8,6 +8,8 @@
 
 #include <mpi.h>
 
+BEGIN_C_DECLS
+
 struct mrc_ddc_funcs {
   void (*copy_to_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx);
   void (*copy_from_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx);
@@ -87,6 +89,8 @@ mrc_ddc_idx2dir(int idx)
 {
   return _mrc_ddc_idx2dir[idx];
 }
+
+END_C_DECLS
 
 #endif
 

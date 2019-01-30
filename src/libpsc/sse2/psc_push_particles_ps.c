@@ -8,6 +8,8 @@
 struct psc_push_particles_ops psc_push_particles_1vb_ps_ops = {
   .name                  = "1vb_ps",
   .push_a_yz             = psc_push_particles_1vb_ps_push_a_yz,
+  .particles_type        = "single",
+  .fields_type           = "single",
 };
 
 // ======================================================================
@@ -16,5 +18,7 @@ struct psc_push_particles_ops psc_push_particles_1vb_ps_ops = {
 struct psc_push_particles_ops psc_push_particles_1vb_ps2_ops = {
   .name                  = "1vb_ps2",
   .push_a_yz             = psc_push_particles_1vb_ps2_push_a_yz,
+  .particles_type        = "single",
+  .fields_type           = "single",
 };
 
