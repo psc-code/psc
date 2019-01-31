@@ -88,10 +88,9 @@ struct MparticlesSimple : MparticlesBase
       pi_(grid)
   {
     patches_.reserve(grid.n_patches());
-    bufs_.reserve(grid.n_patches());
+    bufs_.resize(grid.n_patches());
     for (int p = 0; p < grid.n_patches(); p++) {
       patches_.emplace_back(this, p);
-      bufs_.emplace_back();
     }
   }
 
@@ -124,10 +123,10 @@ struct MparticlesSimple : MparticlesBase
     MparticlesBase::reset(grid);
     patches_.clear();
     patches_.reserve(grid.n_patches());
-    bufs_.reserve(grid.n_patches());
+    bufs_.clear();
+    bufs_.resize(grid.n_patches());
     for (int p = 0; p < grid.n_patches(); p++) {
       patches_.emplace_back(this, p);
-      bufs_.emplace_back();
     }
   }
 
@@ -136,14 +135,14 @@ struct MparticlesSimple : MparticlesBase
 
   void reserve_all(const std::vector<uint> &n_prts_by_patch)
   {
-    for (int p = 0; p < patches_.size(); p++) {
+    for (int p = 0; p < n_patches(); p++) {
       bufs_[p].reserve(n_prts_by_patch[p]);
     }
   }
 
   void resize_all(const std::vector<uint>& n_prts_by_patch)
   {
-    for (int p = 0; p < patches_.size(); p++) {
+    for (int p = 0; p < n_patches(); p++) {
       assert(n_prts_by_patch[p] <= bufs_[p].capacity());
       bufs_[p].resize(n_prts_by_patch[p]);
     }
@@ -151,7 +150,7 @@ struct MparticlesSimple : MparticlesBase
 
   void reset() // FIXME, "reset" is used for two very different functions
   {
-    for (int p = 0; p < patches_.size(); p++) {
+    for (int p = 0; p < n_patches(); p++) {
       bufs_[p].resize(0);
     }
   }
@@ -159,8 +158,8 @@ struct MparticlesSimple : MparticlesBase
   std::vector<uint> get_size_all() const override
   {
     std::vector<uint> n_prts_by_patch(n_patches());
-    for (int p = 0; p < patches_.size(); p++) {
-      n_prts_by_patch[p] = patches_[p].size();
+    for (int p = 0; p < n_patches(); p++) {
+      n_prts_by_patch[p] = bufs_[p].size();
     }
     return n_prts_by_patch;
   }
@@ -168,8 +167,8 @@ struct MparticlesSimple : MparticlesBase
   int get_n_prts() const override
   {
     int n_prts = 0;
-    for (auto const& patch : patches_) {
-      n_prts += patch.size();
+    for (auto const& buf : bufs_) {
+      n_prts += buf.size();
     }
     return n_prts;
   }
@@ -182,8 +181,8 @@ struct MparticlesSimple : MparticlesBase
   
   void check() const
   {
-    for (auto& patch: patches_) {
-      patch.check();
+    for (int p = 0; p < n_patches(); p++) {
+      (*this)[p].check();
     }
   }
 
