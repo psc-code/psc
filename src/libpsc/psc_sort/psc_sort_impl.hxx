@@ -71,7 +71,7 @@ struct SortCountsort2
   void operator()(Mparticles& mprts)
   {
     for (int p = 0; p < mprts.n_patches(); p++) {
-      auto& prts = mprts[p];
+      auto&& prts = mprts[p];
       unsigned int n_prts = prts.size();
       
       unsigned int n_cells = mprts.pi_.n_cells_;

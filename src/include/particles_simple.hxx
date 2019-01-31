@@ -87,51 +87,21 @@ struct MparticlesSimple : MparticlesBase
     : MparticlesBase(grid),
       pi_(grid)
   {
-    patches_.reserve(grid.n_patches());
     bufs_.resize(grid.n_patches());
-    for (int p = 0; p < grid.n_patches(); p++) {
-      patches_.emplace_back(this, p);
-    }
   }
 
   MparticlesSimple(const MparticlesSimple&) = delete;
-  MparticlesSimple(MparticlesSimple&& o)
-    : MparticlesBase(o.grid()),
-      patches_{std::move(o.patches_)},
-      bufs_{std::move(o.bufs_)},
-      pi_{std::move(o.pi_)}
-  {
-    for (auto& patch : patches_) {
-      patch.mprts_ = this;
-    }
-  }
+  MparticlesSimple(MparticlesSimple&& o) = default;
 
-  MparticlesSimple& operator=(MparticlesSimple&& o)
-  {
-    MparticlesBase::operator=(o);
-    patches_ = std::move(o.patches_);
-    bufs_ = std::move(o.bufs_);
-    pi_ = std::move(o.pi_);
-    for (auto& patch : patches_) {
-      patch.mprts_ = this;
-    }
-    return *this;
-  }
+  MparticlesSimple& operator=(MparticlesSimple&& o) = default;
 
   void reset(const Grid_t& grid) override
   {
     MparticlesBase::reset(grid);
-    patches_.clear();
-    patches_.reserve(grid.n_patches());
-    bufs_.clear();
-    bufs_.resize(grid.n_patches());
-    for (int p = 0; p < grid.n_patches(); p++) {
-      patches_.emplace_back(this, p);
-    }
+    bufs_ = std::vector<buf_t>(grid.n_patches());
   }
 
-  const Patch& operator[](int p) const { return patches_[p]; }
-  Patch&       operator[](int p)       { return patches_[p]; }
+  Patch operator[](int p) const { return {const_cast<MparticlesSimple*>(this), p}; } // FIXME, isn't actually const
 
   void reserve_all(const std::vector<uint> &n_prts_by_patch)
   {
@@ -214,7 +184,6 @@ struct MparticlesSimple : MparticlesBase
   const Convert& convert_from() override { return convert_from_; }
 
 private:
-  std::vector<Patch> patches_;
   std::vector<buf_t> bufs_;
 public: // FIXME
   ParticleIndexer<real_t> pi_;

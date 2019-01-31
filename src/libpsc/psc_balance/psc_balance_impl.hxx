@@ -588,7 +588,7 @@ private:
 
       for (int pi = 0; pi < recv->nr_patches; pi++) {
 	int p = recv->pi_to_patch[pi];
-	auto& prts_new = mp_new[p];
+	auto&& prts_new = mp_new[p];
 	int nn = prts_new.size() * (sizeof(Particle)  / sizeof(real_t));
 	MPI_Irecv(&*prts_new.begin(), nn, mpi_dtype, recv->rank,
 		  pi, ctx->comm, &recv_reqs[nr_recv_reqs++]);
@@ -609,7 +609,7 @@ private:
 
       for (int pi = 0; pi < send->nr_patches; pi++) {
 	int p = send->pi_to_patch[pi];
-	auto& prts_old = mp_old[p];
+	auto&& prts_old = mp_old[p];
 	int nn = prts_old.size() * (sizeof(Particle)  / sizeof(real_t));
 	//mprintf("A send -> %d tag %d (patch %d)\n", send->rank, pi, p);
 	MPI_Isend(&*prts_old.begin(), nn, mpi_dtype, send->rank,
@@ -626,8 +626,8 @@ private:
 	continue;
       }
 
-      auto& prts_old = mp_old[ctx->recv_info[p].patch];
-      auto& prts_new = mp_new[p];
+      auto&& prts_old = mp_old[ctx->recv_info[p].patch];
+      auto&& prts_new = mp_new[p];
       assert(prts_old.size() == prts_new.size());
 #if 1
       for (int n = 0; n < prts_new.size(); n++) {
