@@ -49,7 +49,6 @@ struct MparticlesSimple : MparticlesBase
     const_iterator end() const { return buf().end(); }
     iterator end() { return buf().end(); }
     unsigned int size() const { return buf().size(); }
-    void reserve(unsigned int new_capacity) { buf().reserve(new_capacity); }
     
     void push_back(const Particle& new_prt)
     {
@@ -58,12 +57,6 @@ struct MparticlesSimple : MparticlesBase
       checkInPatchMod(prt);
       validCellIndex(prt);
       buf().push_back(prt);
-    }
-    
-    void resize(unsigned int new_size)
-    {
-      assert(new_size <= buf().capacity());
-      buf().resize(new_size);
     }
     
     void check() const
@@ -144,21 +137,22 @@ struct MparticlesSimple : MparticlesBase
   void reserve_all(const std::vector<uint> &n_prts_by_patch)
   {
     for (int p = 0; p < patches_.size(); p++) {
-      patches_[p].reserve(n_prts_by_patch[p]);
+      bufs_[p].reserve(n_prts_by_patch[p]);
     }
   }
 
   void resize_all(const std::vector<uint>& n_prts_by_patch)
   {
     for (int p = 0; p < patches_.size(); p++) {
-      patches_[p].resize(n_prts_by_patch[p]);
+      assert(n_prts_by_patch[p] <= bufs_[p].capacity());
+      bufs_[p].resize(n_prts_by_patch[p]);
     }
   }
 
   void reset() // FIXME, "reset" is used for two very different functions
   {
     for (int p = 0; p < patches_.size(); p++) {
-      patches_[p].resize(0);
+      bufs_[p].resize(0);
     }
   }
 
