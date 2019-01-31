@@ -293,7 +293,7 @@ struct TestConversionToMparticlesSingle<Mparticles, MakeTestGridYZ1>
 
   void operator()(Mparticles& mprts)
   {
-    auto mprts_single = mprts.template get_as<MparticlesSingle>();
+    auto&& mprts_single = mprts.template get_as<MparticlesSingle>();
     EXPECT_EQ(mprts_single.get_n_prts(), 2);
     
     {

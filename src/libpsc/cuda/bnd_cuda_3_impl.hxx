@@ -15,7 +15,7 @@ struct BndCuda3 : BndBase
 {
   using Mfields = MF;
 
-  BndCuda3(const Grid_t& grid, int ibn[3]);
+  BndCuda3(const Grid_t& grid, const int ibn[3]);
   ~BndCuda3();
   
   void reset(const Grid_t& grid);
@@ -33,7 +33,7 @@ struct BndCuda3 : BndBase
   }
 
 private:
-  CudaBnd* cbnd_;
-  int balance_generation_cnt_;
+  static CudaBnd* cbnd_;
+  static int balance_generation_cnt_;
 };
 

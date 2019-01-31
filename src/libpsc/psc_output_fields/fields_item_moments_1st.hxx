@@ -107,7 +107,7 @@ struct Moment_p_1st
       auto flds = mflds[p];
       for (auto prt: accessor[p]) {
 	int mm = prt.kind() * 3;
-	real_t *pxi = prt.u();
+	auto pxi = prt.u();
 	
 	for (int m = 0; m < 3; m++) {
 	  DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + m, prt.m() * pxi[m]);
@@ -188,7 +188,7 @@ struct Moment_T_1st
 	
 	real_t vxi[3];
 	particle_calc_vxi(prt, vxi);
-	real_t *pxi = prt.u();
+	auto pxi = prt.u();
 	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 0, prt.m() * pxi[0] * vxi[0]);
 	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 1, prt.m() * pxi[1] * vxi[1]);
 	DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 2, prt.m() * pxi[2] * vxi[2]);

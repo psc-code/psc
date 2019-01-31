@@ -27,8 +27,6 @@ add_library(psccuda
   psc_bnd_fields_cuda.cxx
   cuda_mfields_bnd.cu
 
-  psc_output_fields_item_flds_cuda.cxx
-  psc_output_fields_item_moments_1st_nc_cuda.cxx
   cuda_moments_1st_nc.cu
 
   collision_cuda_impl.cu

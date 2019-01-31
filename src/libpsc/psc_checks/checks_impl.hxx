@@ -39,11 +39,11 @@ struct Checks_ : ChecksParams, ChecksBase
   Checks_(const Grid_t& grid, MPI_Comm comm, const ChecksParams& params)
     : ChecksParams(params),
       comm_{comm},
-      item_rho_{grid, comm},
-      item_rho_m_{grid, comm},
-      item_rho_p_{grid, comm},
-      item_dive_{grid, comm},
-      item_divj_{grid, comm}
+      item_rho_{grid},
+      item_rho_m_{grid},
+      item_rho_p_{grid},
+      item_dive_{grid},
+      item_divj_{grid}
   {}
   
   // ======================================================================
@@ -54,7 +54,7 @@ struct Checks_ : ChecksParams, ChecksBase
 
   void continuity_before_particle_push(MparticlesBase& mprts_base) override
   {
-    auto mprts = mprts_base.get_as<Mparticles>();
+    auto&& mprts = mprts_base.get_as<Mparticles>();
     continuity_before_particle_push(mprts);
     mprts_base.put_as(mprts, MP_DONT_COPY);
   }

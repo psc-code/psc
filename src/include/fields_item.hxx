@@ -33,62 +33,13 @@ struct FieldsItemBase
 
   virtual MfieldsBase& mres() = 0;
 
+  virtual const char* name() const = 0;
+
+  virtual int n_comps(const Grid_t& grid) const = 0;
+
   virtual std::vector<std::string> comp_names() = 0;
 
   bool inited = true; // FIXME hack to avoid dtor call when not yet constructed
-};
-
-// ======================================================================
-// FieldsItemFactory
-
-class FieldsItemFactory
-{
-  using CreateMethod = std::unique_ptr<FieldsItemBase>(*)(const Grid_t& grid);
-  using Map = std::map<std::string, CreateMethod>;
-  
-public:
-  FieldsItemFactory() = delete;
-
-  static std::unique_ptr<FieldsItemBase> create(const char *type, const Grid_t& grid)
-  {
-    auto it = map().find(type);    
-    if (it != map().end()) 
-        return it->second(grid); // call the create method
-
-    mprintf("unknown type %s\n", type);
-    assert(0);
-  }
-
-  static void registerType(const char* name, CreateMethod create)
-  {
-    map()[name] = create;
-  }
-
-private:
-  static Map& map()
-  {
-    static std::map<std::string, CreateMethod> s_map;
-    return s_map;
-  }
-  
-};
-
-void registerFieldsItemFields();
-
-// ======================================================================
-// FieldsItemOps
-
-template<typename Item>
-struct FieldsItemOps
-{
-  FieldsItemOps() {
-    FieldsItemFactory::registerType(Item::name(), create);
-  }
-
-  static std::unique_ptr<FieldsItemBase> create(const Grid_t& grid)
-  {
-    return std::unique_ptr<FieldsItemBase>{new Item{grid, grid.comm()}};
-  }
 };
 
 // ======================================================================
@@ -100,16 +51,11 @@ struct FieldsItemFields : FieldsItemBase
   using MfieldsState = typename Item::MfieldsState;
   using Mfields = typename Item::Mfields;
   
-  static char const* name()
-  {
-    if (std::is_same<Mfields, MfieldsC>::value && strcmp(Item::name, "dive") != 0) {
-      return Item::name;
-    } else {
-      return strdup((std::string{Item::name} + "_" + Mfields_traits<Mfields>::name).c_str());
-    }
-  }
+  const char* name() const override { return Item::name; }
+
+  int n_comps(const Grid_t& grid) const override { return Item::n_comps; }
  
-  FieldsItemFields(const Grid_t& grid, MPI_Comm comm)
+  FieldsItemFields(const Grid_t& grid)
     : mres_{grid, Item::n_comps, grid.ibn}
   {}
 
@@ -143,7 +89,7 @@ private:
 };
 
 // ======================================================================
-// FieldsItemFieldsOps
+// ItemLoopPatches
 //
 // Adapter from per-patch Item with ::set
 
@@ -168,13 +114,7 @@ struct ItemLoopPatches : ItemPatch
   }
 };
 
-template<typename Item_t>
-using FieldsItemFieldsOps = FieldsItemOps<FieldsItemFields<ItemLoopPatches<Item_t>>>;
-
 // ======================================================================
-// FieldsItemMomentOps
-
-// ----------------------------------------------------------------------
 // ItemMomentCRTP
 //
 // deriving from this class adds the result field mres_
@@ -184,7 +124,7 @@ struct ItemMomentCRTP
 {
   using Mfields = MF;
   
-  ItemMomentCRTP(const Grid_t& grid, MPI_Comm comm)
+  ItemMomentCRTP(const Grid_t& grid)
     : mres_{grid, int(Derived::n_comps * ((Derived::flags & POFI_BY_KIND) ? grid.kinds.size() : 1)), grid.ibn}
   {
     auto n_comps = Derived::n_comps;
@@ -213,7 +153,7 @@ protected:
   std::vector<std::string> comp_names_;
 };
 
-// ----------------------------------------------------------------------
+// ======================================================================
 // ItemMomentAddBnd
 
 template<typename Moment_t, typename Bnd = Bnd_<typename Moment_t::Mfields>>
@@ -230,8 +170,8 @@ struct ItemMomentAddBnd : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Mo
   constexpr static fld_names_t fld_names() { return Moment_t::fld_names(); }
   constexpr static int flags = Moment_t::flags;
 
-  ItemMomentAddBnd(const Grid_t& grid, MPI_Comm comm)
-    : Base{grid, comm},
+  ItemMomentAddBnd(const Grid_t& grid)
+    : Base{grid},
       bnd_{grid, grid.ibn}
   {}
 
@@ -339,7 +279,7 @@ private:
   Bnd bnd_;
 };
 
-// ----------------------------------------------------------------------
+// ======================================================================
 // FieldsItemMoment
 
 template<typename Moment_t>
@@ -347,14 +287,15 @@ struct FieldsItemMoment : FieldsItemBase
 {
   using Mparticles = typename Moment_t::Mparticles;
   
-  static const char* name()
-  {
-    return strdup((std::string(Moment_t::name) + "_" +
-		   Mparticles_traits<Mparticles>::name).c_str());
-  }
+  const char* name() const override { return Moment_t::name; }
 
-  FieldsItemMoment(const Grid_t& grid, MPI_Comm comm)
-    : moment_(grid, comm)
+  int n_comps(const Grid_t& grid) const override
+  {
+    return Moment_t::n_comps * ((Moment_t::flags & POFI_BY_KIND) ? grid.kinds.size() : 1);
+  }
+  
+  FieldsItemMoment(const Grid_t& grid)
+    : moment_(grid)
   {}
 
   void run(MfieldsStateBase& mflds_base, MparticlesBase& mprts_base) override
@@ -371,10 +312,4 @@ struct FieldsItemMoment : FieldsItemBase
 private:
   Moment_t moment_;
 };
-
-// ----------------------------------------------------------------------
-// FieldsItemMomentOps
-  
-template<typename Moment_t>
-using FieldsItemMomentOps = FieldsItemOps<FieldsItemMoment<ItemMomentAddBnd<Moment_t>>>;
 

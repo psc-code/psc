@@ -14,7 +14,6 @@
 struct OutputFieldsCParams
 {
   const char *data_dir = {"."};
-  const char *output_fields = {"j,e,h"};
 
   int pfield_step = 0;
   int pfield_first = 0;
@@ -33,47 +32,18 @@ struct OutputFieldsCParams
 
 struct OutputFieldsC : public OutputFieldsCParams
 {
-  struct Item
-  {
-    Item(std::unique_ptr<FieldsItemBase>&& item, const std::string& name,
-	 std::vector<std::string>& comp_names, MfieldsBase& pfd,
-	 MfieldsBase& tfd)
-      : item(std::move(item)), name(name), comp_names(comp_names), pfd(pfd), tfd(tfd)
-    {}
-
-    std::unique_ptr<FieldsItemBase> item;
-    MfieldsBase& pfd;
-    MfieldsBase& tfd;
-    std::string name;
-    std::vector<std::string> comp_names;
-  };
-
   // ----------------------------------------------------------------------
   // ctor
 
-  OutputFieldsC(const Grid_t& grid, const OutputFieldsCParams& prm)
-    : OutputFieldsCParams{prm}
+  OutputFieldsC(const Grid_t& grid, const OutputFieldsCParams& prm,
+		std::vector<std::unique_ptr<FieldsItemBase>>&& items = {})
+    : OutputFieldsCParams{prm}, items_{std::move(items)}
   {
     pfield_next = pfield_first;
     tfield_next = tfield_first;
 
-    if (output_fields) {
-      // setup pfd according to output_fields as given
-      // (potentially) on the command line
-      // parse comma separated list of fields
-      char *s_orig = strdup(output_fields), *p, *s = s_orig;
-      while ((p = strsep(&s, ", "))) {
-	auto item = FieldsItemFactory::create(p, grid);
-	
-	// pfd
-	std::vector<std::string> comp_names = item->comp_names();
-	MfieldsBase& mflds_pfd = item->mres();
-	
-	// tfd -- FIXME?! always MfieldsC
-	MfieldsBase& mflds_tfd = *new MfieldsC{grid, mflds_pfd.n_comps(), grid.ibn};
-	items.emplace_back(std::move(item), p, comp_names, mflds_pfd, mflds_tfd);
-      }
-      free(s_orig);
+    for (auto& item : items_) {
+      tfds_.emplace_back(grid, item->n_comps(grid), grid.ibn);
     }
     
     naccum = 0;
@@ -83,16 +53,6 @@ struct OutputFieldsC : public OutputFieldsCParams
     }
     if (tfield_step) {
       io_tfd_.reset(new MrcIo{"tfd", data_dir});
-    }
-  }
-
-  // ----------------------------------------------------------------------
-  // dtor
-
-  ~OutputFieldsC()
-  {
-    for (auto& item : items) {
-      delete &item.tfd;
     }
   }
 
@@ -117,8 +77,21 @@ struct OutputFieldsC : public OutputFieldsCParams
     
     if ((pfield_step > 0 && timestep >= pfield_next) ||
 	(tfield_step > 0 && doaccum_tfield)) {
-      for (auto& item : items) {
-	item.item->run(mflds, mprts);
+      for (auto& item : items_) {
+	item->run(mflds, mprts);
+#if 0
+	auto& mres = dynamic_cast<MfieldsC&>(item->mres());
+	double min = 1e10, max = -1e10;
+	for (int m = 0; m < mres.n_comps(); m++) {
+	  for (int p = 0; p < mres.n_patches(); p++) {
+	    mres.grid().Foreach_3d(0, 0, [&](int i, int j, int k) {
+		min = fminf(min, mres[p](m, i,j,k));
+		max = fmaxf(max, mres[p](m, i,j,k));
+	      });
+	  }
+	  mprintf("name %s %d min %g max %g\n", item->name(), m, min, max);
+	}
+#endif
       }
     }
     
@@ -127,8 +100,8 @@ struct OutputFieldsC : public OutputFieldsCParams
       pfield_next += pfield_step;
       
       io_pfd_->open(grid, rn, rx);
-      for (auto& item : items) {
-	item.pfd.write_as_mrc_fld(io_pfd_->io_, item.name, item.comp_names);
+      for (auto& item : items_) {
+	item->mres().write_as_mrc_fld(io_pfd_->io_, item->name(), item->comp_names());
       }
       io_pfd_->close();
     }
@@ -136,8 +109,8 @@ struct OutputFieldsC : public OutputFieldsCParams
     if (tfield_step > 0) {
       if (doaccum_tfield) {
 	// tfd += pfd
-	for (auto& item : items) {
-	  item.tfd.axpy(1., item.pfd);
+	for (int i = 0; i < items_.size(); i++) {
+	  tfds_[i].axpy(1., items_[i]->mres());
 	}
 	naccum++;
       }
@@ -148,10 +121,10 @@ struct OutputFieldsC : public OutputFieldsCParams
 	io_tfd_->open(grid, rn, rx);
 	
 	// convert accumulated values to correct temporal mean
-	for (auto& item : items) {
-	  item.tfd.scale(1. / naccum);
-	  item.tfd.write_as_mrc_fld(io_tfd_->io_, item.name, item.comp_names);
-	  item.tfd.zero();
+	for (int i = 0; i < items_.size(); i++) {
+	  tfds_[i].scale(1. / naccum);
+	  tfds_[i].write_as_mrc_fld(io_tfd_->io_, items_[i]->name(), items_[i]->comp_names());
+	  tfds_[i].zero();
 	}
 	naccum = 0;
 	io_tfd_->close();
@@ -165,8 +138,10 @@ public:
   int pfield_next, tfield_next;
   // storage for output
   unsigned int naccum;
-  std::vector<Item> items;
 private:
+  std::vector<std::unique_ptr<FieldsItemBase>> items_;
+  // tfd -- FIXME?! always MfieldsC
+  std::vector<MfieldsC> tfds_;
   std::unique_ptr<MrcIo> io_pfd_;
   std::unique_ptr<MrcIo> io_tfd_;
 };

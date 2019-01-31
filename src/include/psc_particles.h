@@ -7,7 +7,6 @@
 #include <assert.h>
 
 #include "grid.hxx"
-#include "particles_traits.hxx"
 
 struct particle_inject
 {

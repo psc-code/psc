@@ -100,8 +100,10 @@ void cuda_mparticles<BS>::dump(const std::string& filename) const
 template<typename BS>
 void cuda_mparticles<BS>::swap_alt()
 {
-  thrust::swap(this->storage.xi4, alt_storage.xi4);
-  thrust::swap(this->storage.pxi4, alt_storage.pxi4);
+  this->storage.xi4.swap(alt_storage.xi4);
+  //thrust::swap(this->storage.xi4, alt_storage.xi4);
+  this->storage.pxi4.swap(alt_storage.pxi4);
+  //thrust::swap(this->storage.pxi4, alt_storage.pxi4);
 }
 
 #define THREADS_PER_BLOCK 256
@@ -516,7 +518,7 @@ std::vector<typename cuda_mparticles<BS>::Particle> cuda_mparticles<BS>::get_par
     int kind = cuda_float_as_int(xi4[n].w);
     prts.emplace_back(Real3{xi4[n].x, xi4[n].y, xi4[n].z},
 	              Real3{pxi4[n].x, pxi4[n].y, pxi4[n].z},
-	              pxi4[n].w / float(this->grid_.kinds[kind].q), kind);
+	              pxi4[n].w, kind);
 
 #if 0
     uint b = blockIndex(xi4[n], p);

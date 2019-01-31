@@ -1,5 +1,8 @@
 
 #include <cstdio>
+#include <cassert>
+#include <cuda_bits.h>
+#include <mrc_common.h>
 
 void
 cuda_base_init(void)
@@ -73,4 +76,30 @@ cuda_base_init(void)
 #endif
   }
 }
-	   
+
+// ----------------------------------------------------------------------
+// myCudaMalloc
+
+void* myCudaMalloc(size_t len)
+{
+  void* rv;
+  cudaError_t ierr;
+  ierr = cudaMalloc(&rv, len);
+  cudaCheck(ierr);
+  //mprintf("myCudaMalloc %ld\n", len);
+
+  return rv;
+}
+
+// ----------------------------------------------------------------------
+// myCudaFree
+
+void myCudaFree(void *ptr)
+{
+  cudaError_t ierr;
+  ierr = cudaFree(ptr);
+  cudaCheck(ierr);
+  //mprintf("myCudaFree\n");
+}
+
+

@@ -22,17 +22,15 @@ struct MparticlesPatchSimple
   using iterator = typename buf_t::iterator;
   using const_iterator = typename buf_t::const_iterator;
 
-  // FIXME, I would like to delete the copy ctor because I don't
-  // want to copy Patch by mistake, but that doesn't play well with
-  // putting the patches into std::vector
-  // MparticlesPatchSimple(const MparticlesPatchSimple&) = delete;
-
   MparticlesPatchSimple(Mparticles* mprts, int p)
     : mprts_(mprts),
       p_(p),
       grid_(&mprts->grid())
   {}
 
+  MparticlesPatchSimple(const MparticlesPatchSimple&) = delete;
+  MparticlesPatchSimple(MparticlesPatchSimple&&) = default;
+  
   Particle& operator[](int n) { return buf[n]; }
   const Particle& operator[](int n) const { return buf[n]; }
   const_iterator begin() const { return buf.begin(); }
@@ -76,7 +74,7 @@ struct MparticlesPatchSimple
 
   buf_t buf;
 
-private:
+  //private:
   Mparticles* mprts_;
   int p_;
   const Grid_t* grid_;
@@ -86,17 +84,17 @@ private:
 // Mparticles
 
 template<typename P>
-struct Mparticles : MparticlesBase
+struct MparticlesSimple : MparticlesBase
 {
   using Particle = P;
   using real_t = typename Particle::real_t;
   using Real3 = Vec3<real_t>;
-  using Patch = MparticlesPatchSimple<Mparticles>;
+  using Patch = MparticlesPatchSimple<MparticlesSimple>;
   using BndpParticle = P;
   using buf_t = typename Patch::buf_t;
-  using Accessor = AccessorSimple<Mparticles>;
+  using Accessor = AccessorSimple<MparticlesSimple>;
 
-  Mparticles(const Grid_t& grid)
+  MparticlesSimple(const Grid_t& grid)
     : MparticlesBase(grid),
       pi_(grid)
   {
@@ -104,6 +102,28 @@ struct Mparticles : MparticlesBase
     for (int p = 0; p < grid.n_patches(); p++) {
       patches_.emplace_back(this, p);
     }
+  }
+
+  MparticlesSimple(const MparticlesSimple&) = delete;
+  MparticlesSimple(MparticlesSimple&& o)
+    : MparticlesBase(o.grid()),
+      patches_{std::move(o.patches_)},
+      pi_{std::move(o.pi_)}
+  {
+    for (auto& patch : patches_) {
+      patch.mprts_ = this;
+    }
+  }
+
+  MparticlesSimple& operator=(MparticlesSimple&& o)
+  {
+    MparticlesBase::operator=(o);
+    patches_ = std::move(o.patches_);
+    pi_ = std::move(o.pi_);
+    for (auto& patch : patches_) {
+      patch.mprts_ = this;
+    }
+    return *this;
   }
 
   void reset(const Grid_t& grid) override
@@ -160,8 +180,8 @@ struct Mparticles : MparticlesBase
 
   const ParticleIndexer<real_t>& particleIndexer() const { return pi_; }
   
-  InjectorSimple<Mparticles> injector() { return {*this}; }
-  ConstAccessorSimple<Mparticles> accessor() { return {*this}; }
+  InjectorSimple<MparticlesSimple> injector() { return {*this}; }
+  ConstAccessorSimple<MparticlesSimple> accessor() { return {*this}; }
   Accessor accessor_() { return {*this}; }
   
   void check() const

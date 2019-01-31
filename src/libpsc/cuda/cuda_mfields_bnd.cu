@@ -1,6 +1,7 @@
 
 #include "cuda_mfields.h"
 #include "cuda_bits.h"
+#include "cuda_base.cuh"
 
 #include <mrc_profile.h>
 
@@ -49,10 +50,9 @@ cuda_mfields_bnd_setup_d_nei_patch(struct cuda_mfields_bnd *cbnd, int n_recv_ent
     cbnd->h_nei_patch[recv_entry[i].patch * 9 + recv_entry[i].dir1 / 3] = recv_entry[i].nei_patch;
   }
 
-  cudaError_t ierr;
+  cbnd->d_nei_patch = (int*) myCudaMalloc(9 * cbnd->n_patches * sizeof(*cbnd->d_nei_patch));
 
-  ierr = cudaMalloc((void **) &cbnd->d_nei_patch,
-		    9 * cbnd->n_patches * sizeof(*cbnd->d_nei_patch)); cudaCheck(ierr);
+  cudaError_t ierr;
   ierr = cudaMemcpy(cbnd->d_nei_patch, cbnd->h_nei_patch, 
 		    9 * cbnd->n_patches * sizeof(*cbnd->d_nei_patch),
 		    cudaMemcpyHostToDevice); cudaCheck(ierr);
@@ -108,16 +108,14 @@ cuda_mfields_bnd_ctor(struct cuda_mfields_bnd *cbnd, struct cuda_mfields_bnd_par
 void
 cuda_mfields_bnd_dtor(struct cuda_mfields_bnd *cbnd)
 {
-  cudaError_t ierr;
-
-  ierr = cudaFree(cbnd->d_nei_patch); cudaCheck(ierr);
+  myCudaFree(cbnd->d_nei_patch);
   cbnd->h_buf.clear(); // FIXME, if we just called an actual dtor...
   cbnd->d_buf.clear(); // FIXME, if we just called an actual dtor...
 
   for (int n = 0; n < MAX_BND_FIELDS; n++) {
     struct cuda_mfields_bnd_map *map = &cbnd->map[n];
-    ierr = cudaFree(map->d_map_out); cudaCheck(ierr);
-    ierr = cudaFree(map->d_map_in); cudaCheck(ierr);
+    myCudaFree(map->d_map_out);
+    myCudaFree(map->d_map_in);
     delete[] map->h_map_out;
     delete[] map->h_map_in;
   }
@@ -1142,8 +1140,7 @@ cuda_mfields_bnd_setup_map(struct cuda_mfields_bnd *cbnd, int n_fields,
   fields_create_map_out_yz(cbnd, n_fields, 2, &map->nr_map_out, &map->h_map_out);
   //printf("map_out %d\n", map->nr_map_out);
   
-  ierr = cudaMalloc((void **) &map->d_map_out,
-		    map->nr_map_out * sizeof(*map->d_map_out)); cudaCheck(ierr);
+  map->d_map_out = (int*) myCudaMalloc(map->nr_map_out * sizeof(*map->d_map_out));
   ierr = cudaMemcpy(map->d_map_out, map->h_map_out, 
 		    map->nr_map_out * sizeof(*map->d_map_out),
 		    cudaMemcpyHostToDevice); cudaCheck(ierr);
@@ -1151,8 +1148,7 @@ cuda_mfields_bnd_setup_map(struct cuda_mfields_bnd *cbnd, int n_fields,
   fields_create_map_in_yz(cbnd, n_fields, 2, &map->nr_map_in, &map->h_map_in);
   //printf("map_in %d\n", map->nr_map_in);
   
-  ierr = cudaMalloc((void **) &map->d_map_in,
-		    map->nr_map_in * sizeof(*map->d_map_in)); cudaCheck(ierr);
+  map->d_map_in = (int*) myCudaMalloc(map->nr_map_in * sizeof(*map->d_map_in));
   ierr = cudaMemcpy(map->d_map_in, map->h_map_in, 
 		    map->nr_map_in * sizeof(*map->d_map_in),
 		    cudaMemcpyHostToDevice); cudaCheck(ierr);

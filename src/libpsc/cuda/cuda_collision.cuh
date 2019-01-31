@@ -3,6 +3,7 @@
 
 #include "cuda_mparticles.cuh"
 #include "cuda_mparticles_sort.cuh"
+#include "cuda_base.cuh"
 // FIXME, horrible hack...
 #define DEVICE __device__
 #include "binary_collision.hxx"
@@ -57,6 +58,11 @@ struct RngStateCuda
 
   void init(dim3 dim_grid);
 
+  void dtor() // FIXME
+  {
+    myCudaFree(rngs_);
+  }
+
   __device__
   Rng  operator[](int id) const { return rngs_[id]; }
 
@@ -80,10 +86,8 @@ static void k_curand_setup(RngStateCuda rng_state)
 void RngStateCuda::init(dim3 dim_grid)
 {
   int n_threads = dim_grid.x * THREADS_PER_BLOCK;
-  
-  cudaError_t ierr;
-  ierr = cudaMalloc(&rngs_, n_threads * sizeof(*rngs_));
-  cudaCheck(ierr);
+
+  rngs_ = (RngStateCuda::Rng*) myCudaMalloc(n_threads * sizeof(*rngs_));
   
   k_curand_setup<<<dim_grid, THREADS_PER_BLOCK>>>(*this);
   cuda_sync_if_enabled();
@@ -111,6 +115,11 @@ struct CudaCollision
     : interval_{interval}, nu_{nu}, nicell_(nicell), dt_(dt)
   {}
 
+  ~CudaCollision()
+  {
+    rng_state_.dtor();
+  }
+
   int interval() const
   {
     return interval_;
@@ -131,10 +140,9 @@ struct CudaCollision
     if (blocks > 32768) blocks = 32768;
     dim3 dimGrid(blocks);
 
-    static bool first_time = true;
-    if (first_time) {
+    if (first_time_) {
       rng_state_.init(dimGrid);
-      first_time = false;
+      first_time_ = false;
     }
     
     // all particles need to have same weight!
@@ -142,9 +150,9 @@ struct CudaCollision
     real_t nudt0 = wni / nicell_ * interval_ * dt_ * nu_;
 
     k_collide<cuda_mparticles><<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, sort_by_cell.d_off.data().get(),
-					      sort_by_cell.d_id.data().get(),
+							       sort_by_cell.d_id.data().get(),
 							       nudt0, rng_state_,
-					      cmprts.n_cells());
+							       cmprts.n_cells());
     cuda_sync_if_enabled();
   }
 
@@ -182,5 +190,6 @@ private:
   int nicell_;
   double dt_;
   RngState rng_state_;
+  bool first_time_ = true;
 };
 

@@ -17,6 +17,8 @@
 #include "setup_particles.hxx"
 #include "setup_fields.hxx"
 
+#include "../src/libpsc/psc_output_fields/fields_item_moments_1st.hxx"
+
 #include <mrc_params.h>
 
 #include <math.h>
@@ -128,9 +130,15 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
 
     // -- output fields
     OutputFieldsCParams outf_params;
-    outf_params.output_fields = "e,h,j,n_1st_single,v_1st_single";
     outf_params.pfield_step = 10;
-    outf_.reset(new OutputFieldsC{grid(), outf_params});
+    std::vector<std::unique_ptr<FieldsItemBase>> outf_items;
+    outf_items.emplace_back(new FieldsItemFields<ItemLoopPatches<Item_e_cc>>(grid()));
+    outf_items.emplace_back(new FieldsItemFields<ItemLoopPatches<Item_h_cc>>(grid()));
+    outf_items.emplace_back(new FieldsItemFields<ItemLoopPatches<Item_j_cc>>(grid()));
+    outf_items.emplace_back(new FieldsItemMoment<ItemMomentAddBnd<Moment_n_1st<Mparticles, MfieldsC>>>(grid()));
+    outf_items.emplace_back(new FieldsItemMoment<ItemMomentAddBnd<Moment_v_1st<Mparticles, MfieldsC>>>(grid()));
+    outf_items.emplace_back(new FieldsItemMoment<ItemMomentAddBnd<Moment_T_1st<Mparticles, MfieldsC>>>(grid()));
+    outf_.reset(new OutputFieldsC{grid(), outf_params, std::move(outf_items)});
 
     // --- partition particles and initial balancing
     mpi_printf(comm, "**** Partitioning...\n");

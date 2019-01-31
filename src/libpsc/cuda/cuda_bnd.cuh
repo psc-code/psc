@@ -142,6 +142,9 @@ struct CudaBnd
       d_recv_buf.resize(recv_buf.size());
     }
     
+    Maps(const Maps&) = delete;
+    Maps(Maps&&) = default;
+
     thrust::host_vector<uint> send, recv;
     thrust::host_vector<uint> local_send, local_recv;
     thrust::host_vector<real_t> local_buf;

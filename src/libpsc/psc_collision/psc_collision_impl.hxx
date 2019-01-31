@@ -25,8 +25,6 @@ struct CollisionHost
   using AccessorPatch = typename Mparticles::Accessor::Patch;
   using ParticleProxy = typename AccessorPatch::ParticleProxy;
   
-  constexpr static char const* const name = Mparticles_traits<Mparticles>::name;
-
   enum {
     STATS_MIN,
     STATS_MED,

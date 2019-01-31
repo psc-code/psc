@@ -98,17 +98,21 @@ TEST_F(CudaMparticlesBndTest, BndPrep)
 //
 // tests the pieces that go into cuda_bndp::prep()
 
-struct is_inside
+struct is_outside
 {
-  is_inside(int n_blocks) : n_blocks_(n_blocks) {}
+  is_outside(int n_blocks) : n_blocks_(n_blocks) {}
   
+  __host__ __device__
+  bool operator()(uint bidx) { printf("bidx %d pred %d\n", bidx, bidx >= n_blocks_); return bidx >= n_blocks_; }
+
   __host__ __device__
   bool operator()(thrust::tuple<uint, float4, float4> tup)
   {
     uint bidx = thrust::get<0>(tup);
-    return bidx < n_blocks_;
+    return (*this)(bidx);
   }
-  
+
+private:
   int n_blocks_;
 };
 
@@ -117,38 +121,56 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
   auto& cmprts = *this->cmprts_;
 
   auto& d_bidx = cmprts.by_block_.d_idx;
-#if 0
+#if 1
   for (int n = 0; n < cmprts.n_prts; n++) {
     auto prt = cmprts.storage.load(n);
     printf("n %d: %g:%g:%g kind %d bidx %d\n", n, prt.x()[0], prt.x()[1], prt.x()[2], prt.kind,
 	   int(d_bidx[n]));
   }
 #endif
+
+  auto oob = thrust::count_if(d_bidx.begin(), d_bidx.end(), is_outside(cmprts.n_blocks));
+  auto sz = d_bidx.size();
+  assert(cmprts.storage.xi4.size() == sz);
+  assert(cmprts.storage.pxi4.size() == sz);
+  assert(cmprts.n_prts == sz);
+  d_bidx.resize(sz + oob);
+  cmprts.storage.xi4.resize(sz + oob);
+  cmprts.storage.pxi4.resize(sz + oob);
 
   auto begin = thrust::make_zip_iterator(thrust::make_tuple(d_bidx.begin(), cmprts.storage.xi4.begin(), cmprts.storage.pxi4.begin()));
-  auto end = thrust::make_zip_iterator(thrust::make_tuple(d_bidx.end(), cmprts.storage.xi4.end(), cmprts.storage.pxi4.end()));
-  auto oob = thrust::stable_partition(begin, end, is_inside(cmprts.n_blocks));
+  auto end = begin + sz;
 
-#if 0
+  auto oob_end = thrust::copy_if(begin, end, begin + sz, is_outside(cmprts.n_blocks));
+  printf("oob_end - begin = %ld\n", oob_end - begin);
+  assert(oob_end == begin + sz + oob);
+
+#if 1
   for (int n = 0; n < cmprts.n_prts; n++) {
     auto prt = cmprts.storage.load(n);
     printf("n %d: %g:%g:%g kind %d bidx %d\n", n, prt.x()[0], prt.x()[1], prt.x()[2], prt.kind,
 	   int(d_bidx[n]));
   }
+  for (int n = 0; n < oob; n++) {
+    auto prt = cmprts.storage.load(sz + n);
+    printf("oob n %d: %g:%g:%g kind %d bidx %d\n", n, prt.x()[0], prt.x()[1], prt.x()[2], prt.kind,
+	   int(d_bidx[sz + n]));
+  }
 #endif
 
-  EXPECT_EQ(oob, begin + 2);
+  EXPECT_EQ(oob, 2);
   EXPECT_EQ(cmprts.storage.load(0).kind, 0);
-  EXPECT_EQ(cmprts.storage.load(1).kind, 2);
-  EXPECT_EQ(cmprts.storage.load(2).kind, 1);
+  EXPECT_EQ(cmprts.storage.load(1).kind, 1);
+  EXPECT_EQ(cmprts.storage.load(2).kind, 2);
   EXPECT_EQ(cmprts.storage.load(3).kind, 3);
 
-  cbndp->n_prts_send = end - oob;
+  EXPECT_EQ(cmprts.storage.load(4).kind, 1);
+  EXPECT_EQ(cmprts.storage.load(5).kind, 3);
+
+  cbndp->n_prts_send = oob;
 
   EXPECT_EQ(cmprts.n_prts, 4);
   EXPECT_EQ(cbndp->n_prts_send, 2);
-
-  cmprts.n_prts -= cbndp->n_prts_send;
 
   // particles 1, 3, which need to be exchanged, should now be at the
   // end of the regular array
@@ -158,11 +180,11 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
   // test copy_from_dev_and_convert
   cbndp->copy_from_dev_and_convert(&cmprts, cbndp->n_prts_send);
 
-#if 0
-  for (int p = 0; p < cmprts.n_patches; p++) {
+#if 1
+  for (int p = 0; p < cmprts.n_patches(); p++) {
     printf("from_dev: p %d\n", p);
     for (auto& prt : cbndp->bpatch[p].buf) {
-      printf("  prt xyz %g %g %g kind %d\n", prt.xi, prt.yi, prt.zi, prt.kind_);
+      printf("  prt xyz %g %g %g kind %d\n", prt.x()[0], prt.x()[1], prt.x()[2], prt.kind);
     }
   }
 #endif
@@ -221,8 +243,13 @@ TEST_F(CudaMparticlesBndTest, BndPost)
 TEST_F(CudaMparticlesBndTest, BndPostDetail)
 {
   auto& cmprts = *this->cmprts_;
+  auto& d_bidx = cmprts.by_block_.d_idx;
+
   // BndPost expects the work done by bnd_prep()
   cbndp->prep(&cmprts);
+
+  EXPECT_EQ(cmprts.n_prts, 4);
+  EXPECT_EQ(d_bidx.size(), 6);
 
   // particles 0 and 2 remain in their patch,
   // particles 1 and 3 leave their patch and need special handling
@@ -242,7 +269,8 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   cbndp->bpatch[1].buf[0] = prt1;
 
   // === test convert_and_copy_to_dev()
-  uint n_prts_recv = cbndp->convert_and_copy_to_dev(&cmprts);
+  auto n_prts_send = d_bidx.size() - cmprts.n_prts;
+  auto n_prts_recv = cbndp->convert_and_copy_to_dev(&cmprts);
   cmprts.n_prts += n_prts_recv;
 
   // n_recv should be set for each patch, and its total
@@ -250,8 +278,8 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   EXPECT_EQ(cbndp->bpatch[1].n_recv, 1);
   EXPECT_EQ(n_prts_recv, 2);
 
-  // the received particle have been appended to the two remaining ones
-  EXPECT_EQ(cmprts.n_prts, 4);
+  // the received particle have been appended to the prev 4 (even though two of them have left, they're still in the array)
+  EXPECT_EQ(cmprts.n_prts, 6);
 
   // and the particle have been appended after the old end of the particle list
   int n_prts_old = cmprts.n_prts - n_prts_recv;
@@ -259,20 +287,42 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   EXPECT_EQ(cmprts.storage.load(n_prts_old+1).kind, 1);
 
   // block indices have been calculated
-  auto& d_bidx = cmprts.by_block_.d_idx;
   EXPECT_EQ(d_bidx[n_prts_old  ], 0);  // 0th block in 0th patch
   EXPECT_EQ(d_bidx[n_prts_old+1], 64); // 0th block in 1st patch
 
   cmprts.resize(cmprts.n_prts);
+
+#if 0
+  for (int n = 0; n < cmprts.n_prts; n++) {
+    auto prt = cmprts.storage.load(n);
+    printf("A n %d: %g:%g:%g kind %d bidx %d d_id %d\n", n, prt.x()[0], prt.x()[1], prt.x()[2], prt.kind,
+	   int(d_bidx[n]), int(cmprts.by_block_.d_id[n]));
+  }
+#endif
+
   thrust::sequence(cmprts.by_block_.d_id.begin(), cmprts.by_block_.d_id.end());
   thrust::stable_sort_by_key(d_bidx.begin(), d_bidx.end(), cmprts.by_block_.d_id.begin());
 
+#if 0
+  for (int n = 0; n < cmprts.n_prts; n++) {
+    auto prt = cmprts.storage.load(n);
+    printf("B n %d: %g:%g:%g kind %d bidx %d d_id %d\n", n, prt.x()[0], prt.x()[1], prt.x()[2], prt.kind,
+	   int(d_bidx[n]), int(cmprts.by_block_.d_id[n]));
+  }
+#endif
+
+  // drop the previously sent particles, which have been sorted to the end of the array, now
+  cmprts.n_prts -= n_prts_send;
+  // FIXME, this is evil, but done in yz case, too: even though the arrays are still have 6 elements
+  // because they contain previously sent particles (a.k.a., gaps), the actual # particles is only 4,
+  // but they are pointed to correctly by d_id
+  //cmprts.resize(cmprts.n_prts);
   EXPECT_EQ(cmprts.n_prts, 4);
   auto& d_id = cmprts.by_block_.d_id;
-  EXPECT_EQ(d_id[0], 2);
+  EXPECT_EQ(d_id[0], 4);
   EXPECT_EQ(d_id[1], 0);
-  EXPECT_EQ(d_id[2], 3);
-  EXPECT_EQ(d_id[3], 1);
+  EXPECT_EQ(d_id[2], 5);
+  EXPECT_EQ(d_id[3], 2);
 
   // find offsets
   thrust::counting_iterator<uint> search_begin(0);

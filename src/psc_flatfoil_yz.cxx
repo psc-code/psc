@@ -130,7 +130,13 @@ struct PscFlatfoil : Psc<PscConfig>
     // -- setup particle kinds
     // last population ("e") is neutralizing
     // FIXME, hardcoded mass ratio 100
-    Grid_t::Kinds kinds = {{Zi_, 100.*Zi_, "i"}, { -1., 1., "e"}};
+#if 1
+    double mass_ratio = 100.;
+#endif
+#if 0
+    double mass_ratio = 25.;
+#endif
+    Grid_t::Kinds kinds = {{Zi_, mass_ratio*Zi_, "i"}, { -1., 1., "e"}};
     
     double d_i = sqrt(kinds[MY_ION].m / kinds[MY_ION].q);
     
@@ -139,10 +145,22 @@ struct PscFlatfoil : Psc<PscConfig>
     
     // --- setup domain
 #if 1
-    Grid_t::Real3 LL = { 400., 800., 400.*6 }; // domain size (in d_e)
-    Int3 gdims = { 400, 800, 2400}; // global number of grid points
-    Int3 np = { 40, 80, 4 }; // division into patches
-#else
+    Grid_t::Real3 LL = {384., 384.*2., 384.*6}; // domain size (in d_e)
+    Int3 gdims = {384, 384*2, 384*6}; // global number of grid points
+    Int3 np = {12, 24, 72}; // division into patches
+#endif
+#if 0
+    Grid_t::Real3 LL = {192., 192.*2, 192.*6}; // domain size (in d_e)
+    Int3 gdims = {192, 192*2, 192*6}; // global number of grid points
+    Int3 np = {6, 12, 36}; // division into patches
+    // -> patch size 32 x 32 x 32
+#endif
+#if 0
+    Grid_t::Real3 LL = {32., 32.*2., 32.*6 }; // domain size (in d_e)
+    Int3 gdims = {32, 32*2, 32*6}; // global number of grid points
+    Int3 np = { 1, 2, 6 }; // division into patches
+#endif
+#if 0
     Grid_t::Real3 LL = {1., 1600., 400.}; // domain size (in d_e)
     // Int3 gdims = {40, 10, 20}; // global number of grid points
     // Int3 np = {4, 1, 2; // division into patches
@@ -169,15 +187,20 @@ struct PscFlatfoil : Psc<PscConfig>
     mprts_.reset(new Mparticles{grid()});
 
     // -- Balance
-    balance_interval = 50;
-    balance_.reset(new Balance_t{balance_interval, .1, false});
+    balance_interval = 300;
+    balance_.reset(new Balance_t{balance_interval, 3, true});
 
     // -- Sort
     // FIXME, needs a way to make sure it gets set?
     sort_interval = 10;
 
     // -- Collision
+#if 0
     int collision_interval = 10;
+#endif
+#if 1
+    int collision_interval = -10;
+#endif
     double collision_nu = .1;
     collision_.reset(new Collision_t{grid(), collision_interval, collision_nu});
 
@@ -229,9 +252,15 @@ struct PscFlatfoil : Psc<PscConfig>
     
     // -- output fields
     OutputFieldsCParams outf_params{};
-    outf_params.output_fields = "e,h,j,n_1st_single,v_1st_single,T_1st_single";
     outf_params.pfield_step = 200;
-    outf_.reset(new OutputFieldsC{grid(), outf_params});
+    std::vector<std::unique_ptr<FieldsItemBase>> outf_items;
+    outf_items.emplace_back(new FieldsItemFields<ItemLoopPatches<Item_e_cc>>(grid()));
+    outf_items.emplace_back(new FieldsItemFields<ItemLoopPatches<Item_h_cc>>(grid()));
+    outf_items.emplace_back(new FieldsItemFields<ItemLoopPatches<Item_j_cc>>(grid()));
+    outf_items.emplace_back(new FieldsItemMoment<ItemMomentAddBnd<Moment_n_1st<Mparticles, MfieldsC>>>(grid()));
+    outf_items.emplace_back(new FieldsItemMoment<ItemMomentAddBnd<Moment_v_1st<Mparticles, MfieldsC>>>(grid()));
+    outf_items.emplace_back(new FieldsItemMoment<ItemMomentAddBnd<Moment_T_1st<Mparticles, MfieldsC>>>(grid()));
+    outf_.reset(new OutputFieldsC{grid(), outf_params, std::move(outf_items)});
 
     // -- output particles
     OutputParticlesParams outp_params{};

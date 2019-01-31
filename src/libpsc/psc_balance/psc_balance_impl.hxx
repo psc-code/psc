@@ -2,9 +2,11 @@
 #pragma once
 
 #include "fields.hxx"
+#include "fields_traits.hxx"
 #include "balance.hxx"
 #include "bnd_particles.hxx"
 #include "bnd.hxx"
+#include "mpi_dtype_traits.hxx"
 
 #include <mrc_profile.h>
 #include <string.h>
@@ -329,6 +331,7 @@ struct Balance_ : BalanceBase
   ~Balance_()
   {
     delete[] psc_balance_comp_time_by_patch;
+    psc_balance_comp_time_by_patch = nullptr;
   }
   
   void initial(Grid_t*& grid, std::vector<uint>& n_prts_by_patch) override
@@ -353,6 +356,7 @@ struct Balance_ : BalanceBase
 private:
   std::vector<double> get_loads_initial(const Grid_t& grid, const std::vector<uint>& n_prts_by_patch)
   {
+    assert(n_prts_by_patch.size() == grid.n_patches());
     std::vector<double> loads;
     loads.reserve(n_prts_by_patch.size());
 
@@ -571,7 +575,7 @@ private:
 
     assert(sizeof(Particle) % sizeof(real_t) == 0); // FIXME
 
-    MPI_Datatype mpi_dtype = Mparticles_traits<Mparticles>::mpi_dtype();
+    auto mpi_dtype = MpiDtypeTraits<typename Mparticles::real_t>::value();
     // recv for new local patches
     MPI_Request *recv_reqs = new MPI_Request[ctx->nr_patches_new]();
     int nr_recv_reqs = 0;
@@ -780,7 +784,9 @@ private:
   void balance_state_field(communicate_ctx& ctx, const Grid_t& new_grid, MfieldsStateBase& mf_base)
   {
     if (typeid(mf_base) != typeid(MfieldsState)) {
-      assert(0);
+      // FIXME, for the most part we rely on the underlying MfieldsCuda to be rebalanced together
+      // with all the other Mfields
+      mf_base.reset(new_grid);
 #if 0
       auto& mf_old = *new MfieldsState{mf_base.grid()};
       MfieldsStateBase::convert(mf_base, mf_old, 0, mf_old.n_comps());
@@ -790,7 +796,7 @@ private:
       communicate_fields(&ctx, mf_old.mflds(), mf_new.mflds());
       delete &mf_old; // delete as early as possible
       
-      MfieldsBase::convert(mf_new.mflds(), mf_base.mflds(), 0, mf_base.n_comps());
+      MfieldsStateBase::convert(mf_new, mf_base, 0, mf_base.n_comps());
 #endif
     } else {
       // for now MfieldsStateFromMfields will have its underlying Mfields rebalanced, anyway, so all we need ot do
@@ -847,6 +853,7 @@ private:
     // particles
     std::vector<uint> n_prts_by_patch_new;
     if (mp) {
+      mpi_printf(old_grid->comm(), "***** Balance: balancing particles\n");
       prof_start(pr_bal_prts);
       balance_particles(ctx, *new_grid, *mp);
       prof_stop(pr_bal_prts);
@@ -856,12 +863,14 @@ private:
 
     prof_start(pr_bal_flds);
     // state field
+    mpi_printf(old_grid->comm(), "***** Balance: balancing state field\n");
     for (auto mf : MfieldsStateBase::instances) {
       balance_state_field(ctx, *new_grid, *mf);
     }
     
     // fields
     for (auto mf : MfieldsBase::instances) {
+      mpi_printf(old_grid->comm(), "***** Balance: balancing field\n");
       balance_field(ctx, *new_grid, *mf);
     }
     prof_stop(pr_bal_flds);
