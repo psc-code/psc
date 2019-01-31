@@ -9,8 +9,68 @@
 
 #include <iterator>
 
-template<typename Mparticles>
-struct MparticlesPatchSimple;
+// ======================================================================
+// MparticlesStorage
+
+template<typename _Particle>
+struct MparticlesStorage
+{
+  using Particle = _Particle;
+  using PatchBuffer = std::vector<Particle>;
+
+  MparticlesStorage(uint n_patches)
+    : bufs_(n_patches)
+  {}
+
+  void reset(const Grid_t& grid)
+  {
+    bufs_ = std::vector<PatchBuffer>(grid.n_patches());    
+  }
+
+  void reserve_all(const std::vector<uint>& n_prts_by_patch)
+  {
+    for (int p = 0; p < bufs_.size(); p++) {
+      bufs_[p].reserve(n_prts_by_patch[p]);
+    }
+  }
+
+  void resize_all(const std::vector<uint>& n_prts_by_patch)
+  {
+    for (int p = 0; p < bufs_.size(); p++) {
+      assert(n_prts_by_patch[p] <= bufs_[p].capacity());
+      bufs_[p].resize(n_prts_by_patch[p]);
+    }
+  }
+
+  void clear()
+  {
+    for (int p = 0; p < bufs_.size(); p++) {
+      bufs_[p].resize(0);
+    }
+  }
+
+  std::vector<uint> get_size_all() const
+  {
+    std::vector<uint> n_prts_by_patch(bufs_.size());
+    for (int p = 0; p < bufs_.size(); p++) {
+      n_prts_by_patch[p] = bufs_[p].size();
+    }
+    return n_prts_by_patch;
+  }
+
+  int size() const
+  {
+    int n_prts = 0;
+    for (const auto& buf : bufs_) {
+      n_prts += buf.size();
+    }
+    return n_prts;
+  }
+
+  PatchBuffer& buffer(int p) { return bufs_[p]; }
+
+  std::vector<PatchBuffer> bufs_;
+};
 
 // ======================================================================
 // Mparticles
@@ -24,7 +84,8 @@ struct MparticlesSimple : MparticlesBase
   using BndpParticle = P;
   using Accessor = AccessorSimple<MparticlesSimple>;
 
-  using buf_t = std::vector<Particle>;
+  using Storage = MparticlesStorage<Particle>;
+  using buf_t = typename Storage::PatchBuffer;
 
   struct Patch
   {
@@ -39,8 +100,8 @@ struct MparticlesSimple : MparticlesBase
     Patch(const Patch&) = delete;
     Patch(Patch&&) = default;
 
-    buf_t&       buf()       { return mprts_.bufs_[p_]; }
-    const buf_t& buf() const { return mprts_.bufs_[p_]; }
+    buf_t&       buf()       { return mprts_.storage_.buffer(p_); }
+    const buf_t& buf() const { return mprts_.storage_.buffer(p_); }
     
     Particle& operator[](int n) { return buf()[n]; }
     const Particle& operator[](int n) const { return buf()[n]; }
@@ -84,10 +145,9 @@ struct MparticlesSimple : MparticlesBase
 
   MparticlesSimple(const Grid_t& grid)
     : MparticlesBase(grid),
-      pi_(grid)
-  {
-    bufs_.resize(grid.n_patches());
-  }
+      pi_(grid),
+      storage_(grid.n_patches())
+  {}
 
   MparticlesSimple(const MparticlesSimple&) = delete;
   MparticlesSimple(MparticlesSimple&& o) = default;
@@ -97,50 +157,17 @@ struct MparticlesSimple : MparticlesBase
   void reset(const Grid_t& grid) override
   {
     MparticlesBase::reset(grid);
-    bufs_ = std::vector<buf_t>(grid.n_patches());
+    storage_.reset(grid);
   }
 
   Patch operator[](int p) const { return {const_cast<MparticlesSimple&>(*this), p}; } // FIXME, isn't actually const
 
-  void reserve_all(const std::vector<uint> &n_prts_by_patch)
-  {
-    for (int p = 0; p < n_patches(); p++) {
-      bufs_[p].reserve(n_prts_by_patch[p]);
-    }
-  }
-
-  void resize_all(const std::vector<uint>& n_prts_by_patch)
-  {
-    for (int p = 0; p < n_patches(); p++) {
-      assert(n_prts_by_patch[p] <= bufs_[p].capacity());
-      bufs_[p].resize(n_prts_by_patch[p]);
-    }
-  }
-
-  void reset() // FIXME, "reset" is used for two very different functions
-  {
-    for (int p = 0; p < n_patches(); p++) {
-      bufs_[p].resize(0);
-    }
-  }
-
-  std::vector<uint> get_size_all() const override
-  {
-    std::vector<uint> n_prts_by_patch(n_patches());
-    for (int p = 0; p < n_patches(); p++) {
-      n_prts_by_patch[p] = bufs_[p].size();
-    }
-    return n_prts_by_patch;
-  }
-
-  int get_n_prts() const override
-  {
-    int n_prts = 0;
-    for (auto const& buf : bufs_) {
-      n_prts += buf.size();
-    }
-    return n_prts;
-  }
+  void reserve_all(const std::vector<uint> &n_prts_by_patch) { storage_.reserve_all(n_prts_by_patch); }
+  void resize_all(const std::vector<uint>& n_prts_by_patch)  { storage_.resize_all(n_prts_by_patch); }
+  // FIXME, "reset" is used for two very different functions
+  void reset()                                               { storage_.clear(); }
+  std::vector<uint> get_size_all() const override            { return storage_.get_size_all(); }
+  int get_n_prts() const override                            { return storage_.size(); }
 
   const ParticleIndexer<real_t>& particleIndexer() const { return pi_; }
   
@@ -183,7 +210,7 @@ struct MparticlesSimple : MparticlesBase
   const Convert& convert_from() override { return convert_from_; }
 
 private:
-  std::vector<buf_t> bufs_;
+  Storage storage_;
 public: // FIXME
   ParticleIndexer<real_t> pi_;
 };
