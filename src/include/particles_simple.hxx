@@ -72,7 +72,8 @@ struct MparticlesStorage
   iterator begin(int p) { return bufs_[p].begin(); }
   iterator end(int p)   { return bufs_[p].end();   }
   uint size(int p)      { return bufs_[p].size();  }
-  Particle& at(int p, int n) { return bufs_[p][n]; } // FIXME, ugly and bad for effciency
+  Particle& at(int p, int n) { return bufs_[p][n]; } // FIXME, ugly and not great for effciency
+  void push_back(int p, const Particle& prt) { bufs_[p].push_back(prt); }
 
   PatchBuffer& buffer(int p) { return bufs_[p]; }
 
@@ -107,8 +108,6 @@ struct MparticlesSimple : MparticlesBase
     Patch(const Patch&) = delete;
     Patch(Patch&&) = default;
 
-    buf_t&       buf()       { return mprts_.storage_.buffer(p_); }
-    
     Particle& operator[](int n) { return mprts_.storage_.at(p_, n); }
     iterator begin() { return mprts_.storage_.begin(p_); }
     iterator end() { return mprts_.storage_.end(p_); }
@@ -120,13 +119,15 @@ struct MparticlesSimple : MparticlesBase
       auto prt = new_prt;
       checkInPatchMod(prt);
       validCellIndex(prt);
-      buf().push_back(prt);
+      mprts_.storage_.push_back(p_, prt);
     }
     
     void check() const
     {
-      for (auto& prt : buf()) {
-	validCellIndex(prt);
+      auto begin = mprts_.storage_.begin(p_);
+      auto end   = mprts_.storage_.end(p_);
+      for (auto it = begin; it != end; ++it) {
+	mprts_.pi_.validCellIndex(it->x());
       }
     }
     
@@ -139,7 +140,7 @@ struct MparticlesSimple : MparticlesBase
     const Grid_t& grid() const { return mprts_.grid(); }
     const MparticlesSimple& mprts() const { return *mprts_; }
     int p() const { return p_; }
-    buf_t& bndBuffer() { return buf(); }
+    buf_t& bndBuffer() { return mprts_.storage_.buffer(p_); }
     
   private:
     MparticlesSimple& mprts_;
