@@ -86,7 +86,7 @@ static void k_curand_setup(RngStateCuda rng_state)
 void RngStateCuda::init(dim3 dim_grid)
 {
   int n_threads = dim_grid.x * THREADS_PER_BLOCK;
-  
+
   rngs_ = (RngStateCuda::Rng*) myCudaMalloc(n_threads * sizeof(*rngs_));
   
   k_curand_setup<<<dim_grid, THREADS_PER_BLOCK>>>(*this);
@@ -150,9 +150,9 @@ struct CudaCollision
     real_t nudt0 = wni / nicell_ * interval_ * dt_ * nu_;
 
     k_collide<cuda_mparticles><<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, sort_by_cell.d_off.data().get(),
-					      sort_by_cell.d_id.data().get(),
+							       sort_by_cell.d_id.data().get(),
 							       nudt0, rng_state_,
-					      cmprts.n_cells());
+							       cmprts.n_cells());
     cuda_sync_if_enabled();
   }
 
@@ -190,6 +190,6 @@ private:
   int nicell_;
   double dt_;
   RngState rng_state_;
-  bool first_time_ = false;
+  bool first_time_ = true;
 };
 
