@@ -31,7 +31,7 @@ struct MparticlesSimple : MparticlesBase
     using iterator = typename buf_t::iterator;
     using const_iterator = typename buf_t::const_iterator;
     
-    Patch(MparticlesSimple* mprts, int p)
+    Patch(MparticlesSimple& mprts, int p)
       : mprts_(mprts),
 	p_(p)
       {}
@@ -39,8 +39,8 @@ struct MparticlesSimple : MparticlesBase
     Patch(const Patch&) = delete;
     Patch(Patch&&) = default;
 
-    buf_t&       buf()       { return mprts_->bufs_[p_]; }
-    const buf_t& buf() const { return mprts_->bufs_[p_]; }
+    buf_t&       buf()       { return mprts_.bufs_[p_]; }
+    const buf_t& buf() const { return mprts_.bufs_[p_]; }
     
     Particle& operator[](int n) { return buf()[n]; }
     const Particle& operator[](int n) const { return buf()[n]; }
@@ -67,19 +67,18 @@ struct MparticlesSimple : MparticlesBase
     }
     
     // ParticleIndexer functionality
-    int cellPosition(real_t xi, int d) const { return mprts_->pi_.cellPosition(xi, d); }
-    int validCellIndex(const Particle& prt) const { return mprts_->pi_.validCellIndex(prt.x()); }
+    int cellPosition(real_t xi, int d) const { return mprts_.pi_.cellPosition(xi, d); }
+    int validCellIndex(const Particle& prt) const { return mprts_.pi_.validCellIndex(prt.x()); }
     
-    void checkInPatchMod(Particle& prt) const { return mprts_->pi_.checkInPatchMod(prt.x()); }
+    void checkInPatchMod(Particle& prt) const { return mprts_.pi_.checkInPatchMod(prt.x()); }
     
-    const Grid_t& grid() const { return mprts_->grid(); }
+    const Grid_t& grid() const { return mprts_.grid(); }
     const MparticlesSimple& mprts() const { return *mprts_; }
     int p() const { return p_; }
     buf_t& bndBuffer() { return buf(); }
     
-  public: // FIXME
-    MparticlesSimple* mprts_;
   private:
+    MparticlesSimple& mprts_;
     int p_;
   };
 
@@ -101,7 +100,7 @@ struct MparticlesSimple : MparticlesBase
     bufs_ = std::vector<buf_t>(grid.n_patches());
   }
 
-  Patch operator[](int p) const { return {const_cast<MparticlesSimple*>(this), p}; } // FIXME, isn't actually const
+  Patch operator[](int p) const { return {const_cast<MparticlesSimple&>(*this), p}; } // FIXME, isn't actually const
 
   void reserve_all(const std::vector<uint> &n_prts_by_patch)
   {
