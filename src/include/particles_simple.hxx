@@ -24,9 +24,71 @@ struct MparticlesSimple : MparticlesBase
   using BndpParticle = P;
   using Accessor = AccessorSimple<MparticlesSimple>;
 
-  struct Patch;
-  using buf_t = typename Patch::buf_t;
-  
+  using buf_t = std::vector<Particle>;
+
+  struct Patch
+  {
+    using iterator = typename buf_t::iterator;
+    using const_iterator = typename buf_t::const_iterator;
+    
+    Patch(MparticlesSimple* mprts, int p)
+      : mprts_(mprts),
+      p_(p)
+      {}
+    
+    Patch(const Patch&) = delete;
+    Patch(Patch&&) = default;
+    
+    Particle& operator[](int n) { return buf_[n]; }
+    const Particle& operator[](int n) const { return buf_[n]; }
+    const_iterator begin() const { return buf_.begin(); }
+    iterator begin() { return buf_.begin(); }
+    const_iterator end() const { return buf_.end(); }
+    iterator end() { return buf_.end(); }
+    unsigned int size() const { return buf_.size(); }
+    void reserve(unsigned int new_capacity) { buf_.reserve(new_capacity); }
+    
+    void push_back(const Particle& new_prt)
+    {
+      // need to copy because we modify it
+      auto prt = new_prt;
+      checkInPatchMod(prt);
+      validCellIndex(prt);
+      buf_.push_back(prt);
+    }
+    
+    void resize(unsigned int new_size)
+    {
+      assert(new_size <= buf_.capacity());
+      buf_.resize(new_size);
+    }
+    
+    void check() const
+    {
+      for (auto& prt : buf_) {
+	validCellIndex(prt);
+      }
+    }
+    
+    // ParticleIndexer functionality
+    int cellPosition(real_t xi, int d) const { return mprts_->pi_.cellPosition(xi, d); }
+    int validCellIndex(const Particle& prt) const { return mprts_->pi_.validCellIndex(prt.x()); }
+    
+    void checkInPatchMod(Particle& prt) const { return mprts_->pi_.checkInPatchMod(prt.x()); }
+    
+    const Grid_t& grid() const { return mprts_->grid(); }
+    const MparticlesSimple& mprts() const { return *mprts_; }
+    int p() const { return p_; }
+    buf_t& bndBuffer() { return buf_; }
+    
+  private:
+    buf_t buf_;
+  public: // FIXME
+    MparticlesSimple* mprts_;
+  private:
+    int p_;
+  };
+
   MparticlesSimple(const Grid_t& grid)
     : MparticlesBase(grid),
       pi_(grid)
@@ -155,74 +217,5 @@ private:
   std::vector<Patch> patches_;
 public: // FIXME
   ParticleIndexer<real_t> pi_;
-};
-
-// ======================================================================
-// MparticlesSimple::Patch
-
-template<typename P>
-struct MparticlesSimple<P>::Patch
-{
-  using Mparticles = MparticlesSimple<P>;
-  using buf_t = std::vector<Particle>;
-  using iterator = typename buf_t::iterator;
-  using const_iterator = typename buf_t::const_iterator;
-
-  Patch(Mparticles* mprts, int p)
-    : mprts_(mprts),
-      p_(p)
-  {}
-
-  Patch(const Patch&) = delete;
-  Patch(Patch&&) = default;
-  
-  Particle& operator[](int n) { return buf_[n]; }
-  const Particle& operator[](int n) const { return buf_[n]; }
-  const_iterator begin() const { return buf_.begin(); }
-  iterator begin() { return buf_.begin(); }
-  const_iterator end() const { return buf_.end(); }
-  iterator end() { return buf_.end(); }
-  unsigned int size() const { return buf_.size(); }
-  void reserve(unsigned int new_capacity) { buf_.reserve(new_capacity); }
-
-  void push_back(const Particle& new_prt)
-  {
-    // need to copy because we modify it
-    auto prt = new_prt;
-    checkInPatchMod(prt);
-    validCellIndex(prt);
-    buf_.push_back(prt);
-  }
-
-  void resize(unsigned int new_size)
-  {
-    assert(new_size <= buf_.capacity());
-    buf_.resize(new_size);
-  }
-
-  void check() const
-  {
-    for (auto& prt : buf_) {
-      validCellIndex(prt);
-    }
-  }
-
-  // ParticleIndexer functionality
-  int cellPosition(real_t xi, int d) const { return mprts_->pi_.cellPosition(xi, d); }
-  int validCellIndex(const Particle& prt) const { return mprts_->pi_.validCellIndex(prt.x()); }
-
-  void checkInPatchMod(Particle& prt) const { return mprts_->pi_.checkInPatchMod(prt.x()); }
-
-  const Grid_t& grid() const { return mprts_->grid(); }
-  const Mparticles& mprts() const { return *mprts_; }
-  int p() const { return p_; }
-  buf_t& bndBuffer() { return buf_; }
-
-private:
-  buf_t buf_;
-public: // FIXME
-  Mparticles* mprts_;
-private:
-  int p_;
 };
 
