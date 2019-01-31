@@ -20,7 +20,22 @@ struct MparticlesStorage
   using iterator = typename PatchBuffer::iterator;
   using const_iterator = typename PatchBuffer::const_iterator;
 
-  MparticlesStorage(uint n_patches)
+  struct Range
+  {
+    Range(iterator begin, iterator end)
+      : begin_{begin}, end_{end}
+    {}
+    
+    iterator begin() const { return begin_; }
+    iterator end()   const { return end_;   }
+    size_t size()    const { return end_ - begin_; }
+
+  private:
+    iterator begin_;
+    iterator end_;
+  };
+
+   MparticlesStorage(uint n_patches)
     : bufs_(n_patches)
   {}
 
@@ -69,9 +84,7 @@ struct MparticlesStorage
     return n_prts;
   }
 
-  iterator begin(int p) { return bufs_[p].begin(); }
-  iterator end(int p)   { return bufs_[p].end();   }
-  uint size(int p)      { return bufs_[p].size();  }
+  Range operator[](int p) { return {bufs_[p].begin(), bufs_[p].end()}; }
   Particle& at(int p, int n) { return bufs_[p][n]; } // FIXME, ugly and not great for effciency
   void push_back(int p, const Particle& prt) { bufs_[p].push_back(prt); }
 
@@ -109,9 +122,9 @@ struct MparticlesSimple : MparticlesBase
     Patch(Patch&&) = default;
 
     Particle& operator[](int n) { return mprts_.storage_.at(p_, n); }
-    iterator begin() { return mprts_.storage_.begin(p_); }
-    iterator end() { return mprts_.storage_.end(p_); }
-    unsigned int size() const { return mprts_.storage_.size(p_); }
+    iterator begin() { return mprts_.storage_[p_].begin(); }
+    iterator end() { return mprts_.storage_[p_].end(); }
+    unsigned int size() const { return mprts_.storage_[p_].size(); }
     
     void push_back(const Particle& new_prt)
     {
@@ -124,10 +137,8 @@ struct MparticlesSimple : MparticlesBase
     
     void check() const
     {
-      auto begin = mprts_.storage_.begin(p_);
-      auto end   = mprts_.storage_.end(p_);
-      for (auto it = begin; it != end; ++it) {
-	mprts_.pi_.validCellIndex(it->x());
+      for (auto& prt: mprts_.storage_[p_]) {
+	mprts_.pi_.validCellIndex(prt.x());
       }
     }
     
