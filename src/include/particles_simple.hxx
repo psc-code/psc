@@ -70,6 +70,7 @@ struct MparticlesPatchSimple
   const Grid_t& grid() const { return mprts_->grid(); }
   const Mparticles& mprts() const { return *mprts_; }
   int p() const { return p_; }
+  buf_t& bndBuffer() { return buf; }
 
   buf_t buf;
 
