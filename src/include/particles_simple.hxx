@@ -30,14 +30,14 @@ struct MparticlesPatchSimple
   MparticlesPatchSimple(const MparticlesPatchSimple&) = delete;
   MparticlesPatchSimple(MparticlesPatchSimple&&) = default;
   
-  Particle& operator[](int n) { return buf[n]; }
-  const Particle& operator[](int n) const { return buf[n]; }
-  const_iterator begin() const { return buf.begin(); }
-  iterator begin() { return buf.begin(); }
-  const_iterator end() const { return buf.end(); }
-  iterator end() { return buf.end(); }
-  unsigned int size() const { return buf.size(); }
-  void reserve(unsigned int new_capacity) { buf.reserve(new_capacity); }
+  Particle& operator[](int n) { return buf_[n]; }
+  const Particle& operator[](int n) const { return buf_[n]; }
+  const_iterator begin() const { return buf_.begin(); }
+  iterator begin() { return buf_.begin(); }
+  const_iterator end() const { return buf_.end(); }
+  iterator end() { return buf_.end(); }
+  unsigned int size() const { return buf_.size(); }
+  void reserve(unsigned int new_capacity) { buf_.reserve(new_capacity); }
 
   void push_back(const Particle& new_prt)
   {
@@ -45,18 +45,18 @@ struct MparticlesPatchSimple
     auto prt = new_prt;
     checkInPatchMod(prt);
     validCellIndex(prt);
-    buf.push_back(prt);
+    buf_.push_back(prt);
   }
 
   void resize(unsigned int new_size)
   {
-    assert(new_size <= buf.capacity());
-    buf.resize(new_size);
+    assert(new_size <= buf_.capacity());
+    buf_.resize(new_size);
   }
 
   void check() const
   {
-    for (auto& prt : buf) {
+    for (auto& prt : buf_) {
       validCellIndex(prt);
     }
   }
@@ -70,12 +70,13 @@ struct MparticlesPatchSimple
   const Grid_t& grid() const { return mprts_->grid(); }
   const Mparticles& mprts() const { return *mprts_; }
   int p() const { return p_; }
-  buf_t& bndBuffer() { return buf; }
+  buf_t& bndBuffer() { return buf_; }
 
-  buf_t buf;
-
-  //private:
+private:
+  buf_t buf_;
+public: // FIXME
   Mparticles* mprts_;
+private:
   int p_;
 };
 
