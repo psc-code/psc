@@ -24,8 +24,7 @@ struct MparticlesPatchSimple
 
   MparticlesPatchSimple(Mparticles* mprts, int p)
     : mprts_(mprts),
-      p_(p),
-      grid_(&mprts->grid())
+      p_(p)
   {}
 
   MparticlesPatchSimple(const MparticlesPatchSimple&) = delete;
@@ -68,7 +67,7 @@ struct MparticlesPatchSimple
 
   void checkInPatchMod(Particle& prt) const { return mprts_->pi_.checkInPatchMod(prt.x()); }
 
-  const Grid_t& grid() const { return *grid_; }
+  const Grid_t& grid() const { return mprts_->grid(); }
   const Mparticles& mprts() const { return *mprts_; }
   int p() const { return p_; }
 
@@ -77,7 +76,6 @@ struct MparticlesPatchSimple
   //private:
   Mparticles* mprts_;
   int p_;
-  const Grid_t* grid_;
 };
 
 // ======================================================================
