@@ -179,8 +179,7 @@ struct MparticlesSimple : MparticlesBase
 
   void reserve_all(const std::vector<uint> &n_prts_by_patch) { storage_.reserve_all(n_prts_by_patch); }
   void resize_all(const std::vector<uint>& n_prts_by_patch)  { storage_.resize_all(n_prts_by_patch); }
-  // FIXME, "reset" is used for two very different functions
-  void reset()                                               { storage_.clear(); }
+  void clear()                                               { storage_.clear(); }
   std::vector<uint> get_size_all() const override            { return storage_.get_size_all(); }
   int get_n_prts() const override                            { return storage_.size(); }
 
