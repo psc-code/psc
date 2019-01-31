@@ -21,11 +21,12 @@ struct MparticlesSimple : MparticlesBase
   using Particle = P;
   using real_t = typename Particle::real_t;
   using Real3 = Vec3<real_t>;
-  using Patch = MparticlesPatchSimple<MparticlesSimple>;
   using BndpParticle = P;
-  using buf_t = typename Patch::buf_t;
   using Accessor = AccessorSimple<MparticlesSimple>;
 
+  struct Patch;
+  using buf_t = typename Patch::buf_t;
+  
   MparticlesSimple(const Grid_t& grid)
     : MparticlesBase(grid),
       pi_(grid)
@@ -157,25 +158,23 @@ public: // FIXME
 };
 
 // ======================================================================
-// MparticlesPatchSimple
+// MparticlesSimple::Patch
 
-template<typename Mparticles>
-struct MparticlesPatchSimple
+template<typename P>
+struct MparticlesSimple<P>::Patch
 {
-  using Particle = typename Mparticles::Particle;
-  using real_t = typename Particle::real_t;
-  using Real3 = typename Particle::real_t;
+  using Mparticles = MparticlesSimple<P>;
   using buf_t = std::vector<Particle>;
   using iterator = typename buf_t::iterator;
   using const_iterator = typename buf_t::const_iterator;
 
-  MparticlesPatchSimple(Mparticles* mprts, int p)
+  Patch(Mparticles* mprts, int p)
     : mprts_(mprts),
       p_(p)
   {}
 
-  MparticlesPatchSimple(const MparticlesPatchSimple&) = delete;
-  MparticlesPatchSimple(MparticlesPatchSimple&&) = default;
+  Patch(const Patch&) = delete;
+  Patch(Patch&&) = default;
   
   Particle& operator[](int n) { return buf_[n]; }
   const Particle& operator[](int n) const { return buf_[n]; }
