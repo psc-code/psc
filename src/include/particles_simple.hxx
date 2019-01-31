@@ -39,8 +39,8 @@ struct MparticlesSimple : MparticlesBase
     Patch(const Patch&) = delete;
     Patch(Patch&&) = default;
 
-    buf_t&       buf()       { return buf_; }
-    const buf_t& buf() const { return buf_; }
+    buf_t&       buf()       { return mprts_->bufs_[p_]; }
+    const buf_t& buf() const { return mprts_->bufs_[p_]; }
     
     Particle& operator[](int n) { return buf()[n]; }
     const Particle& operator[](int n) const { return buf()[n]; }
@@ -84,8 +84,6 @@ struct MparticlesSimple : MparticlesBase
     int p() const { return p_; }
     buf_t& bndBuffer() { return buf(); }
     
-  private:
-    buf_t buf_;
   public: // FIXME
     MparticlesSimple* mprts_;
   private:
@@ -97,8 +95,10 @@ struct MparticlesSimple : MparticlesBase
       pi_(grid)
   {
     patches_.reserve(grid.n_patches());
+    bufs_.reserve(grid.n_patches());
     for (int p = 0; p < grid.n_patches(); p++) {
       patches_.emplace_back(this, p);
+      bufs_.emplace_back();
     }
   }
 
@@ -106,6 +106,7 @@ struct MparticlesSimple : MparticlesBase
   MparticlesSimple(MparticlesSimple&& o)
     : MparticlesBase(o.grid()),
       patches_{std::move(o.patches_)},
+      bufs_{std::move(o.bufs_)},
       pi_{std::move(o.pi_)}
   {
     for (auto& patch : patches_) {
@@ -117,6 +118,7 @@ struct MparticlesSimple : MparticlesBase
   {
     MparticlesBase::operator=(o);
     patches_ = std::move(o.patches_);
+    bufs_ = std::move(o.bufs_);
     pi_ = std::move(o.pi_);
     for (auto& patch : patches_) {
       patch.mprts_ = this;
@@ -129,8 +131,10 @@ struct MparticlesSimple : MparticlesBase
     MparticlesBase::reset(grid);
     patches_.clear();
     patches_.reserve(grid.n_patches());
+    bufs_.reserve(grid.n_patches());
     for (int p = 0; p < grid.n_patches(); p++) {
       patches_.emplace_back(this, p);
+      bufs_.emplace_back();
     }
   }
 
@@ -218,6 +222,7 @@ struct MparticlesSimple : MparticlesBase
 
 private:
   std::vector<Patch> patches_;
+  std::vector<buf_t> bufs_;
 public: // FIXME
   ParticleIndexer<real_t> pi_;
 };
