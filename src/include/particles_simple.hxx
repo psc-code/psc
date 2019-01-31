@@ -17,6 +17,8 @@ struct MparticlesStorage
 {
   using Particle = _Particle;
   using PatchBuffer = std::vector<Particle>;
+  using iterator = typename PatchBuffer::iterator;
+  using const_iterator = typename PatchBuffer::const_iterator;
 
   MparticlesStorage(uint n_patches)
     : bufs_(n_patches)
@@ -67,6 +69,11 @@ struct MparticlesStorage
     return n_prts;
   }
 
+  iterator begin(int p) { return bufs_[p].begin(); }
+  iterator end(int p)   { return bufs_[p].end();   }
+  uint size(int p)      { return bufs_[p].size();  }
+  Particle& at(int p, int n) { return bufs_[p][n]; } // FIXME, ugly and bad for effciency
+
   PatchBuffer& buffer(int p) { return bufs_[p]; }
 
   std::vector<PatchBuffer> bufs_;
@@ -101,15 +108,11 @@ struct MparticlesSimple : MparticlesBase
     Patch(Patch&&) = default;
 
     buf_t&       buf()       { return mprts_.storage_.buffer(p_); }
-    const buf_t& buf() const { return mprts_.storage_.buffer(p_); }
     
-    Particle& operator[](int n) { return buf()[n]; }
-    const Particle& operator[](int n) const { return buf()[n]; }
-    const_iterator begin() const { return buf().begin(); }
-    iterator begin() { return buf().begin(); }
-    const_iterator end() const { return buf().end(); }
-    iterator end() { return buf().end(); }
-    unsigned int size() const { return buf().size(); }
+    Particle& operator[](int n) { return mprts_.storage_.at(p_, n); }
+    iterator begin() { return mprts_.storage_.begin(p_); }
+    iterator end() { return mprts_.storage_.end(p_); }
+    unsigned int size() const { return mprts_.storage_.size(p_); }
     
     void push_back(const Particle& new_prt)
     {
