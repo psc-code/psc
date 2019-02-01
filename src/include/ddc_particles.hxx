@@ -15,13 +15,14 @@ template<typename MP>
 struct ddc_particles
 {
   using Mparticles = MP;
-  using particle_t = typename Mparticles::BndpParticle;
+  using BndBuffers = typename Mparticles::BndBuffers;
   using buf_t = typename Mparticles::buf_t;
+  using particle_t = typename Mparticles::BndpParticle;
   using real_t = typename Mparticles::real_t;
   
   ddc_particles(const Grid_t& grid);
 
-  void comm(std::vector<buf_t*>& bufs);
+  void comm(BndBuffers& bufs);
 
   struct dsend_entry {
     int patch; // source patch (source rank is this rank)
@@ -269,7 +270,7 @@ inline ddc_particles<MP>::ddc_particles(const Grid_t& grid)
 // OPT: make the status buffers only as large as needed?
 
 template<typename MP>
-inline void ddc_particles<MP>::comm(std::vector<buf_t*>& bufs)
+inline void ddc_particles<MP>::comm(BndBuffers& bufs)
 {
   using iterator_t = typename buf_t::iterator;
   
@@ -366,16 +367,16 @@ inline void ddc_particles<MP>::comm(std::vector<buf_t*>& bufs)
   // post sends
   buf_t send_buf;
   send_buf.resize(n_send);
-  iterator_t it = send_buf.begin();
+  auto it = send_buf.begin();
   for (int r = 0; r < n_ranks; r++) {
     if (cinfo_[r].n_send == 0)
       continue;
 
-    iterator_t it0 = it;
+    auto it0 = it;
     for (int i = 0; i < cinfo_[r].n_send_entries; i++) {
       dsend_entry *se = &cinfo_[r].send_entry[i];
       patch *patch = &patches_[se->patch];
-      buf_t *send_buf_nei = &patch->nei[se->dir1].send_buf;
+      auto* send_buf_nei = &patch->nei[se->dir1].send_buf;
       std::copy(send_buf_nei->begin(), send_buf_nei->end(), it);
       it += send_buf_nei->size();
     }
@@ -405,7 +406,7 @@ inline void ddc_particles<MP>::comm(std::vector<buf_t*>& bufs)
   //          --------------      new particles go here (# = patch->n_recvs)
   //          ----------          locally exchanged particles go here
   //                    ----      remote particles go here
-  iterator_t *it_recv = new iterator_t[nr_patches];
+  auto* it_recv = new iterator_t[nr_patches];
 
   for (int p = 0; p < nr_patches; p++) {
     patch *patch = &patches_[p];
@@ -432,7 +433,7 @@ inline void ddc_particles<MP>::comm(std::vector<buf_t*>& bufs)
 	  if (nei->rank != rank) {
 	    continue;
 	  }
-	  buf_t *nei_send_buf = &patches_[nei->patch].nei[dir1neg].send_buf;
+	  auto* nei_send_buf = &patches_[nei->patch].nei[dir1neg].send_buf;
 
 	  std::copy(nei_send_buf->begin(), nei_send_buf->end(), it_recv[p]);
 	  it_recv[p] += nei_send_buf->size();
