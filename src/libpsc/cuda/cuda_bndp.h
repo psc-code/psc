@@ -32,6 +32,7 @@ struct cuda_bndp : cuda_mparticles_indexer<typename CudaMparticles::BS>
 {
   using BS = typename CudaMparticles::BS;
   using buf_t = std::vector<typename CudaMparticles::Particle>;
+  using BndBuffers = std::vector<buf_t*>;
 
   using cuda_mparticles_indexer<BS>::n_blocks;
   using cuda_mparticles_indexer<BS>::n_blocks_per_patch;
@@ -42,7 +43,7 @@ struct cuda_bndp : cuda_mparticles_indexer<typename CudaMparticles::BS>
 
   cuda_bndp(const Grid_t& grid);
   
-  void prep(CudaMparticles* cmprts);
+  BndBuffers prep(CudaMparticles* cmprts);
   void post(CudaMparticles* cmprts);
 
   // pieces for prep
@@ -85,6 +86,7 @@ struct cuda_bndp<CudaMparticles, dim_xyz> : cuda_mparticles_indexer<typename Cud
 {
   using BS = typename CudaMparticles::BS;
   using buf_t = typename MparticlesCuda<BS>::buf_t;
+  using BndBuffers = std::vector<buf_t*>;
 
   using cuda_mparticles_indexer<BS>::n_blocks;
   using cuda_mparticles_indexer<BS>::n_blocks_per_patch;
@@ -106,7 +108,7 @@ struct cuda_bndp<CudaMparticles, dim_xyz> : cuda_mparticles_indexer<typename Cud
   // ----------------------------------------------------------------------
   // prep
 
-  void prep(CudaMparticles* _cmprts)
+  BndBuffers prep(CudaMparticles* _cmprts)
   {
     auto& cmprts = *_cmprts;
     auto& d_bidx = cmprts.by_block_.d_idx;
@@ -129,6 +131,8 @@ struct cuda_bndp<CudaMparticles, dim_xyz> : cuda_mparticles_indexer<typename Cud
     n_prts_send = oob;
 
     copy_from_dev_and_convert(&cmprts, n_prts_send);
+
+    return bufs_;
   }
 
   // ----------------------------------------------------------------------

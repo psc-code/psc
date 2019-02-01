@@ -49,7 +49,7 @@ cuda_bndp<CudaMparticles, DIM>::cuda_bndp(const Grid_t& grid)
 // prep
 
 template<typename CudaMparticles, typename DIM>
-void cuda_bndp<CudaMparticles, DIM>::prep(CudaMparticles* cmprts)
+auto cuda_bndp<CudaMparticles, DIM>::prep(CudaMparticles* cmprts) -> BndBuffers
 {
   static int pr_A, pr_B, pr_D, pr_B0, pr_B1;
   if (!pr_A) {
@@ -79,6 +79,8 @@ void cuda_bndp<CudaMparticles, DIM>::prep(CudaMparticles* cmprts)
   prof_start(pr_D);
   copy_from_dev_and_convert(cmprts, n_prts_send);
   prof_stop(pr_D);
+
+  return bufs_;
 }
 
 // ----------------------------------------------------------------------

@@ -107,11 +107,12 @@ struct MparticlesSimple : MparticlesBase
 
   using Storage = MparticlesStorage<Particle>;
   using buf_t = typename Storage::PatchBuffer;
+  using BndBuffers = std::vector<buf_t*>;
 
   struct Patch
   {
-    using iterator = typename buf_t::iterator;
-    using const_iterator = typename buf_t::const_iterator;
+    using iterator = typename Storage::PatchBuffer::iterator;
+    using const_iterator = typename Storage::PatchBuffer::const_iterator;
     
     Patch(MparticlesSimple& mprts, int p)
       : mprts_(mprts),
@@ -151,7 +152,6 @@ struct MparticlesSimple : MparticlesBase
     const Grid_t& grid() const { return mprts_.grid(); }
     const MparticlesSimple& mprts() const { return *mprts_; }
     int p() const { return p_; }
-    buf_t& bndBuffer() { return mprts_.storage_.buffer(p_); }
     
   private:
     MparticlesSimple& mprts_;
@@ -189,12 +189,12 @@ struct MparticlesSimple : MparticlesBase
   ConstAccessorSimple<MparticlesSimple> accessor() { return {*this}; }
   Accessor accessor_() { return {*this}; }
 
-  std::vector<buf_t*> bndBuffers()
+  BndBuffers bndBuffers()
   {
-    std::vector<buf_t*> bufs;
+    BndBuffers bufs;
     bufs.reserve(n_patches());
     for (int p = 0; p < n_patches(); p++) {
-      bufs.push_back(&(*this)[p].bndBuffer());
+      bufs.push_back(&storage_.buffer(p));
     }
     return bufs;
   }
