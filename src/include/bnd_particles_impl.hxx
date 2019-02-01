@@ -232,12 +232,7 @@ struct BndParticles_ : BndParticlesCommon<MP>
       this->reset(mprts.grid());
     }
 
-    std::vector<buf_t*> bufs;
-    bufs.reserve(mprts.n_patches());
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      bufs.push_back(&mprts[p].bndBuffer());
-    }
-
+    std::vector<buf_t*> bufs = mprts.bndBuffers();
     this->process_and_exchange(mprts, bufs);
     
     //struct psc_mfields *mflds = psc_mfields_get_as(psc->flds, "c", JXI, JXI + 3);

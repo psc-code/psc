@@ -188,7 +188,17 @@ struct MparticlesSimple : MparticlesBase
   InjectorSimple<MparticlesSimple> injector() { return {*this}; }
   ConstAccessorSimple<MparticlesSimple> accessor() { return {*this}; }
   Accessor accessor_() { return {*this}; }
-  
+
+  std::vector<buf_t*> bndBuffers()
+  {
+    std::vector<buf_t*> bufs;
+    bufs.reserve(n_patches());
+    for (int p = 0; p < n_patches(); p++) {
+      bufs.push_back(&(*this)[p].bndBuffer());
+    }
+    return bufs;
+  }
+
   void check() const
   {
     for (int p = 0; p < n_patches(); p++) {
