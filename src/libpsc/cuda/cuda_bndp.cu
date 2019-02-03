@@ -41,17 +41,13 @@ cuda_bndp<CudaMparticles, DIM>::cuda_bndp(const Grid_t& grid)
   bufs.resize(n_patches());
   n_sends.resize(n_patches());
   n_recvs.resize(n_patches());
-  bufs_.reserve(n_patches());
-  for (int p = 0; p < n_patches(); p++) {
-    bufs_.push_back(bufs[p]);
-  }
 }
 
 // ----------------------------------------------------------------------
 // prep
 
 template<typename CudaMparticles, typename DIM>
-auto cuda_bndp<CudaMparticles, DIM>::prep(CudaMparticles* cmprts) -> BndBuffers
+auto cuda_bndp<CudaMparticles, DIM>::prep(CudaMparticles* cmprts) -> BndBuffers&
 {
   static int pr_A, pr_B, pr_D, pr_B0, pr_B1;
   if (!pr_A) {
@@ -82,7 +78,7 @@ auto cuda_bndp<CudaMparticles, DIM>::prep(CudaMparticles* cmprts) -> BndBuffers
   copy_from_dev_and_convert(cmprts, n_prts_send);
   prof_stop(pr_D);
 
-  return bufs_;
+  return bufs;
 }
 
 // ----------------------------------------------------------------------

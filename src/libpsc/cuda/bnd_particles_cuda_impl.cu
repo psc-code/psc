@@ -49,7 +49,7 @@ void BndParticlesCuda<Mparticles, DIM>::operator()(Mparticles& mprts)
   
   prof_restart(pr_time_step_no_comm);
   prof_start(pr_A);
-  auto bufs = cbndp_->prep(mprts.cmprts());
+  auto&& bufs = cbndp_->prep(mprts.cmprts());
   prof_stop(pr_A);
   
   this->process_and_exchange(mprts, bufs);

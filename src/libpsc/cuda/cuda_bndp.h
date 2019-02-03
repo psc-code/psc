@@ -30,7 +30,7 @@ struct cuda_bndp : cuda_mparticles_indexer<typename CudaMparticles::BS>
 
   cuda_bndp(const Grid_t& grid);
   
-  BndBuffers prep(CudaMparticles* cmprts);
+  BndBuffers& prep(CudaMparticles* cmprts);
   void post(CudaMparticles* cmprts);
 
   // pieces for prep
@@ -64,10 +64,9 @@ struct cuda_bndp : cuda_mparticles_indexer<typename CudaMparticles::BS>
 
   thrust::device_vector<uint> d_sums; // FIXME, should go away (only used in some gold stuff)
 
-  std::vector<BndBuffer> bufs;
+  BndBuffers bufs;
   std::vector<int> n_sends;
   std::vector<int> n_recvs;
-  BndBuffers bufs_;
 };
 
 template<typename CudaMparticles>
@@ -90,16 +89,12 @@ struct cuda_bndp<CudaMparticles, dim_xyz> : cuda_mparticles_indexer<typename Cud
     bufs.resize(n_patches());
     n_sends.resize(n_patches());
     n_recvs.resize(n_patches());
-    bufs_.reserve(n_patches());
-    for (int p = 0; p < n_patches(); p++) {
-      bufs_.push_back(bufs[p]);
-    }
   }
 
   // ----------------------------------------------------------------------
   // prep
 
-  BndBuffers prep(CudaMparticles* _cmprts)
+  BndBuffers& prep(CudaMparticles* _cmprts)
   {
     auto& cmprts = *_cmprts;
     auto& d_bidx = cmprts.by_block_.d_idx;
@@ -123,7 +118,7 @@ struct cuda_bndp<CudaMparticles, dim_xyz> : cuda_mparticles_indexer<typename Cud
 
     copy_from_dev_and_convert(&cmprts, n_prts_send);
 
-    return bufs_;
+    return bufs;
   }
 
   // ----------------------------------------------------------------------
