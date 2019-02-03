@@ -17,9 +17,9 @@
 // ----------------------------------------------------------------------
 // cuda_bnd
 
-template<typename buf_t>
+template<typename BndBuffer>
 struct cuda_bnd {
-  buf_t buf;
+  BndBuffer buf;
   int n_recv;
   int n_send;
 };
@@ -31,6 +31,7 @@ template<typename CudaMparticles, typename DIM>
 struct cuda_bndp : cuda_mparticles_indexer<typename CudaMparticles::BS>
 {
   using BS = typename CudaMparticles::BS;
+  using BndBuffer = std::vector<typename CudaMparticles::Particle>;
   using BndBuffers = typename CudaMparticles::BndBuffers;
 
   using cuda_mparticles_indexer<BS>::n_blocks;
@@ -76,8 +77,7 @@ struct cuda_bndp : cuda_mparticles_indexer<typename CudaMparticles::BS>
 
   thrust::device_vector<uint> d_sums; // FIXME, should go away (only used in some gold stuff)
 
-  using Buffer = std::vector<typename MparticlesCuda<BS>::BndpParticle>;
-  std::vector<cuda_bnd<Buffer>> bpatch;
+  std::vector<cuda_bnd<BndBuffer>> bpatch;
   BndBuffers bufs_;
 };
 
@@ -85,6 +85,7 @@ template<typename CudaMparticles>
 struct cuda_bndp<CudaMparticles, dim_xyz> : cuda_mparticles_indexer<typename CudaMparticles::BS>
 {
   using BS = typename CudaMparticles::BS;
+  using BndBuffer = std::vector<typename CudaMparticles::Particle>;
   using BndBuffers = typename MparticlesCuda<BS>::BndBuffers;
 
   using cuda_mparticles_indexer<BS>::n_blocks;
@@ -188,8 +189,7 @@ struct cuda_bndp<CudaMparticles, dim_xyz> : cuda_mparticles_indexer<typename Cud
     int n_blocks_;
   };
 
-  using Buffer = std::vector<typename MparticlesCuda<BS>::BndpParticle>;
-  std::vector<cuda_bnd<Buffer>> bpatch;
+  std::vector<cuda_bnd<BndBuffer>> bpatch;
   BndBuffers bufs_;
   uint n_prts_send;
 };
