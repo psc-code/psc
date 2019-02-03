@@ -16,9 +16,9 @@ struct ddc_particles
 {
   using Mparticles = MP;
   using BndBuffers = typename Mparticles::BndBuffers;
-  using buf_t = typename Mparticles::buf_t;
-  using particle_t = typename Mparticles::BndpParticle;
-  using real_t = typename Mparticles::real_t;
+  using Particle = typename Mparticles::BndpParticle;
+  using Buffer = std::vector<Particle>;
+  using real_t = typename Particle::real_t;
   
   ddc_particles(const Grid_t& grid);
 
@@ -53,7 +53,7 @@ struct ddc_particles
   };
 
   struct dnei {
-    buf_t send_buf;
+    Buffer send_buf;
     int n_recv;
     int rank;
     int patch;
@@ -272,7 +272,7 @@ inline ddc_particles<MP>::ddc_particles(const Grid_t& grid)
 template<typename MP>
 inline void ddc_particles<MP>::comm(BndBuffers& bufs)
 {
-  using iterator_t = typename buf_t::iterator;
+  using iterator_t = typename Buffer::iterator;
   
   MPI_Comm comm = MPI_COMM_WORLD; // FIXME
   int rank, size;
@@ -280,8 +280,8 @@ inline void ddc_particles<MP>::comm(BndBuffers& bufs)
   MPI_Comm_size(comm, &size);
 
   // FIXME, this is assuming our struct is equiv to an array of real_type
-  assert(sizeof(particle_t) % sizeof(real_t) == 0);
-  int sz = sizeof(particle_t) / sizeof(real_t);
+  assert(sizeof(Particle) % sizeof(real_t) == 0);
+  int sz = sizeof(Particle) / sizeof(real_t);
   int dir[3];
 
   for (int r = 0; r < n_ranks; r++) {
@@ -365,7 +365,7 @@ inline void ddc_particles<MP>::comm(BndBuffers& bufs)
   }
 
   // post sends
-  buf_t send_buf;
+  Buffer send_buf;
   send_buf.resize(n_send);
   auto it = send_buf.begin();
   for (int r = 0; r < n_ranks; r++) {
@@ -386,7 +386,7 @@ inline void ddc_particles<MP>::comm(BndBuffers& bufs)
   assert(it == send_buf.begin() + n_send);
 
   // post receives
-  buf_t recv_buf;
+  Buffer recv_buf;
   recv_buf.resize(n_recv);
   it = recv_buf.begin();
   for (int r = 0; r < n_ranks; r++) {
