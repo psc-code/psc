@@ -11,17 +11,6 @@
 #include <thrust/device_vector.h>
 #include <thrust/partition.h>
 
-// ======================================================================
-// bnd
-
-// ----------------------------------------------------------------------
-// cuda_bnd
-
-template<typename BndBuffer>
-struct cuda_bnd {
-  BndBuffer buf;
-};
-
 // ----------------------------------------------------------------------
 // cuda_bndp
 
@@ -75,7 +64,7 @@ struct cuda_bndp : cuda_mparticles_indexer<typename CudaMparticles::BS>
 
   thrust::device_vector<uint> d_sums; // FIXME, should go away (only used in some gold stuff)
 
-  std::vector<cuda_bnd<BndBuffer>> bpatch;
+  std::vector<BndBuffer> bufs;
   std::vector<int> n_sends;
   std::vector<int> n_recvs;
   BndBuffers bufs_;
@@ -98,12 +87,12 @@ struct cuda_bndp<CudaMparticles, dim_xyz> : cuda_mparticles_indexer<typename Cud
   cuda_bndp(const Grid_t& grid)
     : cuda_mparticles_indexer<BS>{grid}
   {
-    bpatch.resize(n_patches());
+    bufs.resize(n_patches());
     n_sends.resize(n_patches());
     n_recvs.resize(n_patches());
     bufs_.reserve(n_patches());
     for (int p = 0; p < n_patches(); p++) {
-      bufs_.push_back(bpatch[p].buf);
+      bufs_.push_back(bufs[p]);
     }
   }
 
@@ -159,14 +148,13 @@ struct cuda_bndp<CudaMparticles, dim_xyz> : cuda_mparticles_indexer<typename Cud
 		 h_bidx.begin());
 
     for (int p = 0; p < n_patches(); p++) {
-      bpatch[p].buf.clear();
+      bufs[p].clear();
       n_sends[p] = 0;
     }
     for (int n = 0; n < n_prts_send; n++) {
       auto prt = h_bnd_storage.load(n);
       int p = h_bidx[n] - cmprts->n_blocks;
-      auto& buf = bpatch[p].buf;
-      bpatch[p].buf.push_back(prt);
+      bufs[p].push_back(prt);
       n_sends[p]++;
     }
   }
@@ -191,7 +179,7 @@ struct cuda_bndp<CudaMparticles, dim_xyz> : cuda_mparticles_indexer<typename Cud
     int n_blocks_;
   };
 
-  std::vector<cuda_bnd<BndBuffer>> bpatch;
+  std::vector<BndBuffer> bufs;
   std::vector<int> n_sends;
   std::vector<int> n_recvs;
   BndBuffers bufs_;

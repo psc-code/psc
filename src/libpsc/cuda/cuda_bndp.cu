@@ -38,12 +38,12 @@ cuda_bndp<CudaMparticles, DIM>::cuda_bndp(const Grid_t& grid)
   d_spine_cnts.resize(1 + n_blocks * (CUDA_BND_STRIDE + 1));
   d_spine_sums.resize(1 + n_blocks * (CUDA_BND_STRIDE + 1));
 
-  bpatch.resize(n_patches());
+  bufs.resize(n_patches());
   n_sends.resize(n_patches());
   n_recvs.resize(n_patches());
   bufs_.reserve(n_patches());
   for (int p = 0; p < n_patches(); p++) {
-    bufs_.push_back(bpatch[p].buf);
+    bufs_.push_back(bufs[p]);
   }
 }
 
@@ -160,7 +160,7 @@ void cuda_bndp<CudaMparticles, DIM>::copy_from_dev_and_convert(CudaMparticles *c
 
   uint off = 0;
   for (int p = 0; p < n_patches(); p++) {
-    auto& buf = bpatch[p].buf;
+    auto& buf = bufs[p];
     uint n_send = n_sends[p];
     buf.resize(n_send);
 
@@ -181,7 +181,7 @@ uint cuda_bndp<CudaMparticles, DIM>::convert_and_copy_to_dev(CudaMparticles *cmp
 {
   uint n_recv = 0;
   for (int p = 0; p < n_patches(); p++) {
-    n_recv += bpatch[p].buf.size();
+    n_recv += bufs[p].size();
   }
 
   HMparticlesCudaStorage h_bnd_storage{n_recv};
@@ -192,11 +192,11 @@ uint cuda_bndp<CudaMparticles, DIM>::convert_and_copy_to_dev(CudaMparticles *cmp
   
   uint off = 0;
   for (int p = 0; p < n_patches(); p++) {
-    int n_recv = bpatch[p].buf.size();
+    int n_recv = bufs[p].size();
     n_recvs[p] = n_recv;
     
     for (int n = 0; n < n_recv; n++) {
-      h_bnd_storage.store(bpatch[p].buf[n], n + off);;
+      h_bnd_storage.store(bufs[p][n], n + off);;
       checkInPatchMod(&h_bnd_storage.xi4[n + off].x);
       uint b = blockIndex(h_bnd_storage.xi4[n + off], p);
       assert(b < n_blocks);
@@ -267,7 +267,7 @@ uint cuda_bndp<CudaMparticles, dim_xyz>::convert_and_copy_to_dev(CudaMparticles*
 {
   uint n_recv = 0;
   for (int p = 0; p < n_patches(); p++) {
-    n_recv += bpatch[p].buf.size();
+    n_recv += bufs[p].size();
   }
 
   thrust::host_vector<float4> h_bnd_xi4(n_recv);
@@ -279,11 +279,11 @@ uint cuda_bndp<CudaMparticles, dim_xyz>::convert_and_copy_to_dev(CudaMparticles*
   
   uint off = 0;
   for (int p = 0; p < n_patches(); p++) {
-    int n_recv = bpatch[p].buf.size();
+    int n_recv = bufs[p].size();
     n_recvs[p] = n_recv;
     
     for (int n = 0; n < n_recv; n++) {
-      const auto& prt = bpatch[p].buf[n];
+      const auto& prt = bufs[p][n];
 
       h_bnd_xi4[n + off].x  = prt.x()[0];
       h_bnd_xi4[n + off].y  = prt.x()[1];
