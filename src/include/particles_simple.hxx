@@ -17,6 +17,7 @@ struct MparticlesStorage
 {
   using Particle = _Particle;
   using PatchBuffer = std::vector<Particle>;
+  using BndBuffers = std::vector<PatchBuffer>;
   using iterator = typename PatchBuffer::iterator;
   using const_iterator = typename PatchBuffer::const_iterator;
 
@@ -41,7 +42,7 @@ struct MparticlesStorage
 
   void reset(const Grid_t& grid)
   {
-    bufs_ = std::vector<PatchBuffer>(grid.n_patches());    
+    bufs_ = BndBuffers(grid.n_patches());
   }
 
   void reserve_all(const std::vector<uint>& n_prts_by_patch)
@@ -88,9 +89,9 @@ struct MparticlesStorage
   Particle& at(int p, int n) { return bufs_[p][n]; } // FIXME, ugly and not great for effciency
   void push_back(int p, const Particle& prt) { bufs_[p].push_back(prt); }
 
-  PatchBuffer& buffer(int p) { return bufs_[p]; }
+  BndBuffers& bndBuffers() { return bufs_; }
 
-  std::vector<PatchBuffer> bufs_;
+  BndBuffers bufs_;
 };
 
 // ======================================================================
@@ -107,7 +108,7 @@ struct MparticlesSimple : MparticlesBase
 
   using Storage = MparticlesStorage<Particle>;
   using BndBuffer = typename Storage::PatchBuffer;
-  using BndBuffers = std::vector<std::reference_wrapper<BndBuffer>>;
+  using BndBuffers = typename Storage::BndBuffers;
 
   struct Patch
   {
@@ -189,15 +190,7 @@ struct MparticlesSimple : MparticlesBase
   ConstAccessorSimple<MparticlesSimple> accessor() { return {*this}; }
   Accessor accessor_() { return {*this}; }
 
-  BndBuffers bndBuffers()
-  {
-    BndBuffers bufs;
-    bufs.reserve(n_patches());
-    for (int p = 0; p < n_patches(); p++) {
-      bufs.push_back(storage_.buffer(p));
-    }
-    return bufs;
-  }
+  BndBuffers& bndBuffers() { return storage_.bndBuffers(); }
 
   void check() const
   {

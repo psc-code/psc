@@ -234,7 +234,7 @@ struct BndParticles_ : BndParticlesCommon<MP>
       this->reset(mprts.grid());
     }
 
-    auto bufs = mprts.bndBuffers();
+    auto&& bufs = mprts.bndBuffers();
     this->process_and_exchange(mprts, bufs);
     
     //struct psc_mfields *mflds = psc_mfields_get_as(psc->flds, "c", JXI, JXI + 3);
