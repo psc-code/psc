@@ -22,7 +22,8 @@ struct MparticlesCuda : MparticlesBase
   using Real3 = Vec3<real_t>;
   using CudaMparticles = cuda_mparticles<BS>;
   using BndpParticle = DParticleCuda;
-  using BndBuffers = std::vector<std::vector<BndpParticle>*>;
+  using BndBuffer = std::vector<BndpParticle>;
+  using BndBuffers = std::vector<std::reference_wrapper<BndBuffer>>;
 
   using is_cuda = std::true_type;
   

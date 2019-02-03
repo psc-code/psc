@@ -212,7 +212,8 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   using DMparticles = DMparticlesCuda<BS>;
   using Patch = ConstPatchCuda<cuda_mparticles>;
   using BndpParticle = DParticleCuda;
-  using BndBuffers = std::vector<std::vector<BndpParticle>*>;
+  using BndBuffer = std::vector<BndpParticle>;
+  using BndBuffers = std::vector<std::reference_wrapper<BndBuffer>>;
 
   cuda_mparticles(const Grid_t& grid);
 

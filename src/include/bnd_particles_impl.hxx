@@ -109,7 +109,8 @@ void BndParticlesCommon<MP>::process_patch(const Grid_t& grid, const ParticleInd
     dpatch->nei[dir1].send_buf.resize(0);
   }
 
-  auto& buf = *bufs[p];
+  using BndBuffer = typename Mparticles::BndBuffer;
+  BndBuffer& buf = bufs[p];
   unsigned int n_begin = 0;
   unsigned int n_end = buf.size();
   unsigned int head = n_begin;

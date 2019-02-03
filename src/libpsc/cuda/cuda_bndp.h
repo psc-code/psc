@@ -101,7 +101,7 @@ struct cuda_bndp<CudaMparticles, dim_xyz> : cuda_mparticles_indexer<typename Cud
     bpatch.resize(n_patches());
     bufs_.reserve(n_patches());
     for (int p = 0; p < n_patches(); p++) {
-      bufs_.push_back(&bpatch[p].buf);
+      bufs_.push_back(bpatch[p].buf);
     }
   }
 

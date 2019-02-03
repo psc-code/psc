@@ -15,6 +15,7 @@ template<typename MP>
 struct ddc_particles
 {
   using Mparticles = MP;
+  using BndBuffer = typename Mparticles::BndBuffer;
   using BndBuffers = typename Mparticles::BndBuffers;
   using Particle = typename Mparticles::BndpParticle;
   using Buffer = std::vector<Particle>;
@@ -410,7 +411,7 @@ inline void ddc_particles<MP>::comm(BndBuffers& bufs)
 
   for (int p = 0; p < nr_patches; p++) {
     patch *patch = &patches_[p];
-    auto& buf = *bufs[p];
+    BndBuffer& buf = bufs[p];
     int size = buf.size();
     buf.reserve(size + patch->n_recv);
     // this is dangerous: we keep using the iterator, knowing that
@@ -459,7 +460,8 @@ inline void ddc_particles<MP>::comm(BndBuffers& bufs)
   assert(it == recv_buf.begin() + n_recv);
 
   for (int p = 0; p < nr_patches; p++) {
-    assert(it_recv[p] == bufs[p]->end());
+    BndBuffer& buf = bufs[p];
+    assert(it_recv[p] == buf.end());
   }
   
   delete[] it_recv;

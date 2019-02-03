@@ -41,7 +41,7 @@ cuda_bndp<CudaMparticles, DIM>::cuda_bndp(const Grid_t& grid)
   bpatch.resize(n_patches());
   bufs_.reserve(n_patches());
   for (int p = 0; p < n_patches(); p++) {
-    bufs_.push_back(&bpatch[p].buf);
+    bufs_.push_back(bpatch[p].buf);
   }
 }
 
