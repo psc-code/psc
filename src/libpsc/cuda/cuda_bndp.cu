@@ -39,6 +39,8 @@ cuda_bndp<CudaMparticles, DIM>::cuda_bndp(const Grid_t& grid)
   d_spine_sums.resize(1 + n_blocks * (CUDA_BND_STRIDE + 1));
 
   bpatch.resize(n_patches());
+  n_sends.resize(n_patches());
+  n_recvs.resize(n_patches());
   bufs_.reserve(n_patches());
   for (int p = 0; p < n_patches(); p++) {
     bufs_.push_back(bpatch[p].buf);
@@ -136,7 +138,7 @@ uint cuda_bndp<CudaMparticles, DIM>::find_n_send(CudaMparticles *cmprts)
   uint off = 0;
   for (int p = 0; p < n_patches(); p++) {
     uint n_send = h_spine_sums[(p + 1) * n_blocks_per_patch];
-    bpatch[p].n_send = n_send - off;
+    n_sends[p] = n_send - off;
     off = n_send;
   }
   return off;
@@ -159,8 +161,7 @@ void cuda_bndp<CudaMparticles, DIM>::copy_from_dev_and_convert(CudaMparticles *c
   uint off = 0;
   for (int p = 0; p < n_patches(); p++) {
     auto& buf = bpatch[p].buf;
-    uint n_send = bpatch[p].n_send;
-    buf.reserve(n_send);
+    uint n_send = n_sends[p];
     buf.resize(n_send);
 
     for (int n = 0; n < n_send; n++) {
@@ -192,7 +193,7 @@ uint cuda_bndp<CudaMparticles, DIM>::convert_and_copy_to_dev(CudaMparticles *cmp
   uint off = 0;
   for (int p = 0; p < n_patches(); p++) {
     int n_recv = bpatch[p].buf.size();
-    bpatch[p].n_recv = n_recv;
+    n_recvs[p] = n_recv;
     
     for (int n = 0; n < n_recv; n++) {
       h_bnd_storage.store(bpatch[p].buf[n], n + off);;
@@ -279,7 +280,7 @@ uint cuda_bndp<CudaMparticles, dim_xyz>::convert_and_copy_to_dev(CudaMparticles*
   uint off = 0;
   for (int p = 0; p < n_patches(); p++) {
     int n_recv = bpatch[p].buf.size();
-    bpatch[p].n_recv = n_recv;
+    n_recvs[p] = n_recv;
     
     for (int n = 0; n < n_recv; n++) {
       const auto& prt = bpatch[p].buf[n];

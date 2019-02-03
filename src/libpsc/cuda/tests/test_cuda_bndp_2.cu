@@ -274,8 +274,8 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   cmprts.n_prts += n_prts_recv;
 
   // n_recv should be set for each patch, and its total
-  EXPECT_EQ(cbndp->bpatch[0].n_recv, 1);
-  EXPECT_EQ(cbndp->bpatch[1].n_recv, 1);
+  EXPECT_EQ(cbndp->n_recvs[0], 1);
+  EXPECT_EQ(cbndp->n_recvs[1], 1);
   EXPECT_EQ(n_prts_recv, 2);
 
   // the received particle have been appended to the prev 4 (even though two of them have left, they're still in the array)

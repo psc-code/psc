@@ -175,7 +175,7 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 
   for (int p = 0; p < cmprts.n_patches(); p++) {
     //printf("p %d: n_send %d\n", p, cmprts.bpatch[p].n_send);
-    EXPECT_EQ(cbndp->bpatch[p].n_send, p < 2 ? 1 : 0);
+    EXPECT_EQ(cbndp->n_sends[p], p < 2 ? 1 : 0);
   }
   EXPECT_EQ(cbndp->n_prts_send, 2);
 
@@ -313,8 +313,8 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   cmprts.n_prts += n_prts_recv;
 
   // n_recv should be set for each patch, and its total
-  EXPECT_EQ(cbndp->bpatch[0].n_recv, 1);
-  EXPECT_EQ(cbndp->bpatch[1].n_recv, 1);
+  EXPECT_EQ(cbndp->n_recvs[0], 1);
+  EXPECT_EQ(cbndp->n_recvs[1], 1);
   EXPECT_EQ(n_prts_recv, 2);
 
   // the received particle have been added to the previous total
