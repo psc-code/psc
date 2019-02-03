@@ -106,8 +106,7 @@ struct MparticlesSimple : MparticlesBase
   using Accessor = AccessorSimple<MparticlesSimple>;
 
   using Storage = MparticlesStorage<Particle>;
-  using buf_t = typename Storage::PatchBuffer;
-  using BndBuffers = std::vector<buf_t*>;
+  using BndBuffers = std::vector<typename Storage::PatchBuffer*>;
 
   struct Patch
   {
