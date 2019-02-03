@@ -20,10 +20,9 @@ struct MparticlesCuda : MparticlesBase
   using real_t = float;
   using Particle = ParticleSimple<real_t>;
   using Real3 = Vec3<real_t>;
-  using BndpParticle = DParticleCuda;
-  using buf_t = std::vector<BndpParticle>;
-  using BndBuffers = std::vector<buf_t*>;
   using CudaMparticles = cuda_mparticles<BS>;
+  using BndpParticle = DParticleCuda;
+  using BndBuffers = std::vector<std::vector<BndpParticle>*>;
 
   using is_cuda = std::true_type;
   
