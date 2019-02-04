@@ -108,7 +108,7 @@ struct OutputParticlesHdf5 : OutputParticlesParams, OutputParticlesBase
       const int *ldims = mprts.grid().ldims;
       int nr_indices = ldims[0] * ldims[1] * ldims[2] * nr_kinds;
       off[p] = (int *) calloc(nr_indices + 1, sizeof(*off[p]));
-      Particles& prts = mprts[p];
+      auto&& prts = mprts[p];
       unsigned int n_prts = prts.size();
 
       // counting sort to get map 

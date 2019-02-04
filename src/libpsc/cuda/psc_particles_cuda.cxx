@@ -36,7 +36,7 @@ static void copy_to(MparticlesBase& mprts_base, MparticlesBase& mprts_other_base
   auto& mprts_other = dynamic_cast<MP&>(mprts_other_base);
   auto n_prts_by_patch = mprts.get_size_all();
   mprts_other.reserve_all(n_prts_by_patch);
-  mprts_other.reset();
+  mprts_other.clear();
 
   auto accessor = mprts.accessor(); // FIXME, should we use this in the first place?
   for (int p = 0; p < mprts.n_patches(); p++) {

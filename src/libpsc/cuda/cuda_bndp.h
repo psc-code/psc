@@ -11,19 +11,6 @@
 #include <thrust/device_vector.h>
 #include <thrust/partition.h>
 
-// ======================================================================
-// bnd
-
-// ----------------------------------------------------------------------
-// cuda_bnd
-
-template<typename buf_t>
-struct cuda_bnd {
-  buf_t buf;
-  int n_recv;
-  int n_send;
-};
-
 // ----------------------------------------------------------------------
 // cuda_bndp
 
@@ -31,7 +18,8 @@ template<typename CudaMparticles, typename DIM>
 struct cuda_bndp : cuda_mparticles_indexer<typename CudaMparticles::BS>
 {
   using BS = typename CudaMparticles::BS;
-  using buf_t = std::vector<typename CudaMparticles::Particle>;
+  using BndBuffer = std::vector<typename CudaMparticles::Particle>;
+  using BndBuffers = typename CudaMparticles::BndBuffers;
 
   using cuda_mparticles_indexer<BS>::n_blocks;
   using cuda_mparticles_indexer<BS>::n_blocks_per_patch;
@@ -42,7 +30,7 @@ struct cuda_bndp : cuda_mparticles_indexer<typename CudaMparticles::BS>
 
   cuda_bndp(const Grid_t& grid);
   
-  void prep(CudaMparticles* cmprts);
+  BndBuffers& prep(CudaMparticles* cmprts);
   void post(CudaMparticles* cmprts);
 
   // pieces for prep
@@ -76,15 +64,17 @@ struct cuda_bndp : cuda_mparticles_indexer<typename CudaMparticles::BS>
 
   thrust::device_vector<uint> d_sums; // FIXME, should go away (only used in some gold stuff)
 
-  std::vector<cuda_bnd<buf_t>> bpatch;
-  std::vector<buf_t*> bufs_;
+  BndBuffers bufs;
+  std::vector<int> n_sends;
+  std::vector<int> n_recvs;
 };
 
 template<typename CudaMparticles>
 struct cuda_bndp<CudaMparticles, dim_xyz> : cuda_mparticles_indexer<typename CudaMparticles::BS>
 {
   using BS = typename CudaMparticles::BS;
-  using buf_t = typename MparticlesCuda<BS>::buf_t;
+  using BndBuffer = std::vector<typename CudaMparticles::Particle>;
+  using BndBuffers = typename MparticlesCuda<BS>::BndBuffers;
 
   using cuda_mparticles_indexer<BS>::n_blocks;
   using cuda_mparticles_indexer<BS>::n_blocks_per_patch;
@@ -96,17 +86,15 @@ struct cuda_bndp<CudaMparticles, dim_xyz> : cuda_mparticles_indexer<typename Cud
   cuda_bndp(const Grid_t& grid)
     : cuda_mparticles_indexer<BS>{grid}
   {
-    bpatch.resize(n_patches());
-    bufs_.reserve(n_patches());
-    for (int p = 0; p < n_patches(); p++) {
-      bufs_.push_back(&bpatch[p].buf);
-    }
+    bufs.resize(n_patches());
+    n_sends.resize(n_patches());
+    n_recvs.resize(n_patches());
   }
 
   // ----------------------------------------------------------------------
   // prep
 
-  void prep(CudaMparticles* _cmprts)
+  BndBuffers& prep(CudaMparticles* _cmprts)
   {
     auto& cmprts = *_cmprts;
     auto& d_bidx = cmprts.by_block_.d_idx;
@@ -129,6 +117,8 @@ struct cuda_bndp<CudaMparticles, dim_xyz> : cuda_mparticles_indexer<typename Cud
     n_prts_send = oob;
 
     copy_from_dev_and_convert(&cmprts, n_prts_send);
+
+    return bufs;
   }
 
   // ----------------------------------------------------------------------
@@ -153,15 +143,14 @@ struct cuda_bndp<CudaMparticles, dim_xyz> : cuda_mparticles_indexer<typename Cud
 		 h_bidx.begin());
 
     for (int p = 0; p < n_patches(); p++) {
-      bpatch[p].buf.clear();
-      bpatch[p].n_send = 0;
+      bufs[p].clear();
+      n_sends[p] = 0;
     }
     for (int n = 0; n < n_prts_send; n++) {
       auto prt = h_bnd_storage.load(n);
       int p = h_bidx[n] - cmprts->n_blocks;
-      auto& buf = bpatch[p].buf;
-      bpatch[p].buf.push_back(prt);
-      bpatch[p].n_send++;
+      bufs[p].push_back(prt);
+      n_sends[p]++;
     }
   }
 
@@ -185,8 +174,10 @@ struct cuda_bndp<CudaMparticles, dim_xyz> : cuda_mparticles_indexer<typename Cud
     int n_blocks_;
   };
 
-  std::vector<cuda_bnd<buf_t>> bpatch;
-  std::vector<buf_t*> bufs_;
+  std::vector<BndBuffer> bufs;
+  std::vector<int> n_sends;
+  std::vector<int> n_recvs;
+  BndBuffers bufs_;
   uint n_prts_send;
 };
   

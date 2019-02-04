@@ -211,6 +211,9 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   using Real3 = Vec3<real_t>;
   using DMparticles = DMparticlesCuda<BS>;
   using Patch = ConstPatchCuda<cuda_mparticles>;
+  using BndpParticle = DParticleCuda;
+  using BndBuffer = std::vector<BndpParticle>;
+  using BndBuffers = std::vector<BndBuffer>;
 
   cuda_mparticles(const Grid_t& grid);
 

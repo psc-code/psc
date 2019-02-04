@@ -87,10 +87,10 @@ TEST_F(CudaMparticlesBndTest, BndPrep)
 
   // particles 0 and 2 remain in their patch,
   // particles 1 and 3 leave their patch and need special handling
-  EXPECT_EQ(cbndp->bpatch[0].buf.size(), 1);
-  EXPECT_EQ(cbndp->bpatch[1].buf.size(), 1);
-  EXPECT_EQ(cbndp->bpatch[0].buf[0].kind, 1);
-  EXPECT_EQ(cbndp->bpatch[1].buf[0].kind, 3);
+  EXPECT_EQ(cbndp->bufs[0].size(), 1);
+  EXPECT_EQ(cbndp->bufs[1].size(), 1);
+  EXPECT_EQ(cbndp->bufs[0][0].kind, 1);
+  EXPECT_EQ(cbndp->bufs[1][0].kind, 3);
 }
 
 // ----------------------------------------------------------------------
@@ -183,16 +183,16 @@ TEST_F(CudaMparticlesBndTest, BndPrepDetail)
 #if 1
   for (int p = 0; p < cmprts.n_patches(); p++) {
     printf("from_dev: p %d\n", p);
-    for (auto& prt : cbndp->bpatch[p].buf) {
+    for (auto& prt : cbndp->bufs[p]) {
       printf("  prt xyz %g %g %g kind %d\n", prt.x()[0], prt.x()[1], prt.x()[2], prt.kind);
     }
   }
 #endif
 
-  EXPECT_EQ(cbndp->bpatch[0].buf.size(), 1);
-  EXPECT_EQ(cbndp->bpatch[1].buf.size(), 1);
-  EXPECT_EQ(cbndp->bpatch[0].buf[0].kind, 1);
-  EXPECT_EQ(cbndp->bpatch[1].buf[0].kind, 3);
+  EXPECT_EQ(cbndp->bufs[0].size(), 1);
+  EXPECT_EQ(cbndp->bufs[1].size(), 1);
+  EXPECT_EQ(cbndp->bufs[0][0].kind, 1);
+  EXPECT_EQ(cbndp->bufs[1][0].kind, 3);
 }
 
 // ----------------------------------------------------------------------
@@ -208,20 +208,20 @@ TEST_F(CudaMparticlesBndTest, BndPost)
 
   // particles 0 and 2 remain in their patch,
   // particles 1 and 3 leave their patch and need special handling
-  EXPECT_EQ(cbndp->bpatch[0].buf.size(), 1);
-  EXPECT_EQ(cbndp->bpatch[1].buf.size(), 1);
-  EXPECT_EQ(cbndp->bpatch[0].buf[0].kind, 1);
-  EXPECT_EQ(cbndp->bpatch[1].buf[0].kind, 3);
+  EXPECT_EQ(cbndp->bufs[0].size(), 1);
+  EXPECT_EQ(cbndp->bufs[1].size(), 1);
+  EXPECT_EQ(cbndp->bufs[0][0].kind, 1);
+  EXPECT_EQ(cbndp->bufs[1][0].kind, 3);
 
   // Mock what the actual boundary exchange does, ie., move
   // particles to their new patch and adjust the relative position.
   // This assumes periodic b.c.
-  auto prt1 = cbndp->bpatch[0].buf[0];
-  auto prt3 = cbndp->bpatch[1].buf[0];
+  auto prt1 = cbndp->bufs[0][0];
+  auto prt3 = cbndp->bufs[1][0];
   prt1.x()[1] -= 40.;
   prt3.x()[1] -= 40.;
-  cbndp->bpatch[0].buf[0] = prt3;
-  cbndp->bpatch[1].buf[0] = prt1;
+  cbndp->bufs[0][0] = prt3;
+  cbndp->bufs[1][0] = prt1;
   
   cbndp->post(&cmprts);
 
@@ -253,20 +253,20 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
 
   // particles 0 and 2 remain in their patch,
   // particles 1 and 3 leave their patch and need special handling
-  EXPECT_EQ(cbndp->bpatch[0].buf.size(), 1);
-  EXPECT_EQ(cbndp->bpatch[1].buf.size(), 1);
-  EXPECT_EQ(cbndp->bpatch[0].buf[0].kind, 1);
-  EXPECT_EQ(cbndp->bpatch[1].buf[0].kind, 3);
+  EXPECT_EQ(cbndp->bufs[0].size(), 1);
+  EXPECT_EQ(cbndp->bufs[1].size(), 1);
+  EXPECT_EQ(cbndp->bufs[0][0].kind, 1);
+  EXPECT_EQ(cbndp->bufs[1][0].kind, 3);
 
   // Mock what the actual boundary exchange does, ie., move
   // particles to their new patch and adjust the relative position.
   // This assumes periodic b.c.
-  auto prt1 = cbndp->bpatch[0].buf[0];
-  auto prt3 = cbndp->bpatch[1].buf[0];
+  auto prt1 = cbndp->bufs[0][0];
+  auto prt3 = cbndp->bufs[1][0];
   prt1.x()[1] -= 160.;
   prt3.x()[1] -= 160.;
-  cbndp->bpatch[0].buf[0] = prt3;
-  cbndp->bpatch[1].buf[0] = prt1;
+  cbndp->bufs[0][0] = prt3;
+  cbndp->bufs[1][0] = prt1;
 
   // === test convert_and_copy_to_dev()
   auto n_prts_send = d_bidx.size() - cmprts.n_prts;
@@ -274,8 +274,8 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   cmprts.n_prts += n_prts_recv;
 
   // n_recv should be set for each patch, and its total
-  EXPECT_EQ(cbndp->bpatch[0].n_recv, 1);
-  EXPECT_EQ(cbndp->bpatch[1].n_recv, 1);
+  EXPECT_EQ(cbndp->n_recvs[0], 1);
+  EXPECT_EQ(cbndp->n_recvs[1], 1);
   EXPECT_EQ(n_prts_recv, 2);
 
   // the received particle have been appended to the prev 4 (even though two of them have left, they're still in the array)

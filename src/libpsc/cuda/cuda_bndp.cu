@@ -38,18 +38,16 @@ cuda_bndp<CudaMparticles, DIM>::cuda_bndp(const Grid_t& grid)
   d_spine_cnts.resize(1 + n_blocks * (CUDA_BND_STRIDE + 1));
   d_spine_sums.resize(1 + n_blocks * (CUDA_BND_STRIDE + 1));
 
-  bpatch.resize(n_patches());
-  bufs_.reserve(n_patches());
-  for (int p = 0; p < n_patches(); p++) {
-    bufs_.push_back(&bpatch[p].buf);
-  }
+  bufs.resize(n_patches());
+  n_sends.resize(n_patches());
+  n_recvs.resize(n_patches());
 }
 
 // ----------------------------------------------------------------------
 // prep
 
 template<typename CudaMparticles, typename DIM>
-void cuda_bndp<CudaMparticles, DIM>::prep(CudaMparticles* cmprts)
+auto cuda_bndp<CudaMparticles, DIM>::prep(CudaMparticles* cmprts) -> BndBuffers&
 {
   static int pr_A, pr_B, pr_D, pr_B0, pr_B1;
   if (!pr_A) {
@@ -79,6 +77,8 @@ void cuda_bndp<CudaMparticles, DIM>::prep(CudaMparticles* cmprts)
   prof_start(pr_D);
   copy_from_dev_and_convert(cmprts, n_prts_send);
   prof_stop(pr_D);
+
+  return bufs;
 }
 
 // ----------------------------------------------------------------------
@@ -134,7 +134,7 @@ uint cuda_bndp<CudaMparticles, DIM>::find_n_send(CudaMparticles *cmprts)
   uint off = 0;
   for (int p = 0; p < n_patches(); p++) {
     uint n_send = h_spine_sums[(p + 1) * n_blocks_per_patch];
-    bpatch[p].n_send = n_send - off;
+    n_sends[p] = n_send - off;
     off = n_send;
   }
   return off;
@@ -156,9 +156,8 @@ void cuda_bndp<CudaMparticles, DIM>::copy_from_dev_and_convert(CudaMparticles *c
 
   uint off = 0;
   for (int p = 0; p < n_patches(); p++) {
-    auto& buf = bpatch[p].buf;
-    uint n_send = bpatch[p].n_send;
-    buf.reserve(n_send);
+    auto& buf = bufs[p];
+    uint n_send = n_sends[p];
     buf.resize(n_send);
 
     for (int n = 0; n < n_send; n++) {
@@ -178,7 +177,7 @@ uint cuda_bndp<CudaMparticles, DIM>::convert_and_copy_to_dev(CudaMparticles *cmp
 {
   uint n_recv = 0;
   for (int p = 0; p < n_patches(); p++) {
-    n_recv += bpatch[p].buf.size();
+    n_recv += bufs[p].size();
   }
 
   HMparticlesCudaStorage h_bnd_storage{n_recv};
@@ -189,11 +188,11 @@ uint cuda_bndp<CudaMparticles, DIM>::convert_and_copy_to_dev(CudaMparticles *cmp
   
   uint off = 0;
   for (int p = 0; p < n_patches(); p++) {
-    int n_recv = bpatch[p].buf.size();
-    bpatch[p].n_recv = n_recv;
+    int n_recv = bufs[p].size();
+    n_recvs[p] = n_recv;
     
     for (int n = 0; n < n_recv; n++) {
-      h_bnd_storage.store(bpatch[p].buf[n], n + off);;
+      h_bnd_storage.store(bufs[p][n], n + off);;
       checkInPatchMod(&h_bnd_storage.xi4[n + off].x);
       uint b = blockIndex(h_bnd_storage.xi4[n + off], p);
       assert(b < n_blocks);
@@ -264,7 +263,7 @@ uint cuda_bndp<CudaMparticles, dim_xyz>::convert_and_copy_to_dev(CudaMparticles*
 {
   uint n_recv = 0;
   for (int p = 0; p < n_patches(); p++) {
-    n_recv += bpatch[p].buf.size();
+    n_recv += bufs[p].size();
   }
 
   thrust::host_vector<float4> h_bnd_xi4(n_recv);
@@ -276,11 +275,11 @@ uint cuda_bndp<CudaMparticles, dim_xyz>::convert_and_copy_to_dev(CudaMparticles*
   
   uint off = 0;
   for (int p = 0; p < n_patches(); p++) {
-    int n_recv = bpatch[p].buf.size();
-    bpatch[p].n_recv = n_recv;
+    int n_recv = bufs[p].size();
+    n_recvs[p] = n_recv;
     
     for (int n = 0; n < n_recv; n++) {
-      const auto& prt = bpatch[p].buf[n];
+      const auto& prt = bufs[p][n];
 
       h_bnd_xi4[n + off].x  = prt.x()[0];
       h_bnd_xi4[n + off].y  = prt.x()[1];

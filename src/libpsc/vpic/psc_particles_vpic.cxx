@@ -27,7 +27,7 @@ void copy_to(MparticlesBase& mprts_from_base, MparticlesBase& mprts_to_base)
 
   auto n_prts_by_patch = mprts_from.get_size_all();
   mprts_to.reserve_all(n_prts_by_patch);
-  mprts_to.reset();
+  mprts_to.clear();
   
   for (int p = 0; p < mprts_to.n_patches(); p++) {
     int n_prts = n_prts_by_patch[p];

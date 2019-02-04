@@ -15,13 +15,15 @@ template<typename MP>
 struct ddc_particles
 {
   using Mparticles = MP;
-  using particle_t = typename Mparticles::BndpParticle;
-  using buf_t = typename Mparticles::buf_t;
-  using real_t = typename Mparticles::real_t;
+  using BndBuffer = typename Mparticles::BndBuffer;
+  using BndBuffers = typename Mparticles::BndBuffers;
+  using Particle = typename Mparticles::BndpParticle;
+  using Buffer = std::vector<Particle>;
+  using real_t = typename Particle::real_t;
   
   ddc_particles(const Grid_t& grid);
 
-  void comm(std::vector<buf_t*>& bufs);
+  void comm(BndBuffers& bufs);
 
   struct dsend_entry {
     int patch; // source patch (source rank is this rank)
@@ -52,7 +54,7 @@ struct ddc_particles
   };
 
   struct dnei {
-    buf_t send_buf;
+    Buffer send_buf;
     int n_recv;
     int rank;
     int patch;
@@ -269,9 +271,9 @@ inline ddc_particles<MP>::ddc_particles(const Grid_t& grid)
 // OPT: make the status buffers only as large as needed?
 
 template<typename MP>
-inline void ddc_particles<MP>::comm(std::vector<buf_t*>& bufs)
+inline void ddc_particles<MP>::comm(BndBuffers& bufs)
 {
-  using iterator_t = typename buf_t::iterator;
+  using iterator_t = typename Buffer::iterator;
   
   MPI_Comm comm = MPI_COMM_WORLD; // FIXME
   int rank, size;
@@ -279,8 +281,8 @@ inline void ddc_particles<MP>::comm(std::vector<buf_t*>& bufs)
   MPI_Comm_size(comm, &size);
 
   // FIXME, this is assuming our struct is equiv to an array of real_type
-  assert(sizeof(particle_t) % sizeof(real_t) == 0);
-  int sz = sizeof(particle_t) / sizeof(real_t);
+  assert(sizeof(Particle) % sizeof(real_t) == 0);
+  int sz = sizeof(Particle) / sizeof(real_t);
   int dir[3];
 
   for (int r = 0; r < n_ranks; r++) {
@@ -364,18 +366,18 @@ inline void ddc_particles<MP>::comm(std::vector<buf_t*>& bufs)
   }
 
   // post sends
-  buf_t send_buf;
+  Buffer send_buf;
   send_buf.resize(n_send);
-  iterator_t it = send_buf.begin();
+  auto it = send_buf.begin();
   for (int r = 0; r < n_ranks; r++) {
     if (cinfo_[r].n_send == 0)
       continue;
 
-    iterator_t it0 = it;
+    auto it0 = it;
     for (int i = 0; i < cinfo_[r].n_send_entries; i++) {
       dsend_entry *se = &cinfo_[r].send_entry[i];
       patch *patch = &patches_[se->patch];
-      buf_t *send_buf_nei = &patch->nei[se->dir1].send_buf;
+      auto* send_buf_nei = &patch->nei[se->dir1].send_buf;
       std::copy(send_buf_nei->begin(), send_buf_nei->end(), it);
       it += send_buf_nei->size();
     }
@@ -385,7 +387,7 @@ inline void ddc_particles<MP>::comm(std::vector<buf_t*>& bufs)
   assert(it == send_buf.begin() + n_send);
 
   // post receives
-  buf_t recv_buf;
+  Buffer recv_buf;
   recv_buf.resize(n_recv);
   it = recv_buf.begin();
   for (int r = 0; r < n_ranks; r++) {
@@ -405,11 +407,11 @@ inline void ddc_particles<MP>::comm(std::vector<buf_t*>& bufs)
   //          --------------      new particles go here (# = patch->n_recvs)
   //          ----------          locally exchanged particles go here
   //                    ----      remote particles go here
-  iterator_t *it_recv = new iterator_t[nr_patches];
+  auto* it_recv = new iterator_t[nr_patches];
 
   for (int p = 0; p < nr_patches; p++) {
     patch *patch = &patches_[p];
-    auto& buf = *bufs[p];
+    BndBuffer& buf = bufs[p];
     int size = buf.size();
     buf.reserve(size + patch->n_recv);
     // this is dangerous: we keep using the iterator, knowing that
@@ -432,7 +434,7 @@ inline void ddc_particles<MP>::comm(std::vector<buf_t*>& bufs)
 	  if (nei->rank != rank) {
 	    continue;
 	  }
-	  buf_t *nei_send_buf = &patches_[nei->patch].nei[dir1neg].send_buf;
+	  auto* nei_send_buf = &patches_[nei->patch].nei[dir1neg].send_buf;
 
 	  std::copy(nei_send_buf->begin(), nei_send_buf->end(), it_recv[p]);
 	  it_recv[p] += nei_send_buf->size();
@@ -458,7 +460,8 @@ inline void ddc_particles<MP>::comm(std::vector<buf_t*>& bufs)
   assert(it == recv_buf.begin() + n_recv);
 
   for (int p = 0; p < nr_patches; p++) {
-    assert(it_recv[p] == bufs[p]->end());
+    BndBuffer& buf = bufs[p];
+    assert(it_recv[p] == buf.end());
   }
   
   delete[] it_recv;

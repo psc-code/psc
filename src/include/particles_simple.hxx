@@ -10,74 +10,89 @@
 #include <iterator>
 
 // ======================================================================
-// MparticlesPatchSimple
+// MparticlesStorage
 
-template<typename Mparticles>
-struct MparticlesPatchSimple
+template<typename _Particle>
+struct MparticlesStorage
 {
-  using Particle = typename Mparticles::Particle;
-  using real_t = typename Particle::real_t;
-  using Real3 = typename Particle::real_t;
-  using buf_t = std::vector<Particle>;
-  using iterator = typename buf_t::iterator;
-  using const_iterator = typename buf_t::const_iterator;
+  using Particle = _Particle;
+  using PatchBuffer = std::vector<Particle>;
+  using Buffers = std::vector<PatchBuffer>;
+  using iterator = typename PatchBuffer::iterator;
+  using const_iterator = typename PatchBuffer::const_iterator;
 
-  MparticlesPatchSimple(Mparticles* mprts, int p)
-    : mprts_(mprts),
-      p_(p),
-      grid_(&mprts->grid())
+  struct Range
+  {
+    Range(iterator begin, iterator end)
+      : begin_{begin}, end_{end}
+    {}
+    
+    iterator begin() const { return begin_; }
+    iterator end()   const { return end_;   }
+    size_t size()    const { return end_ - begin_; }
+
+  private:
+    iterator begin_;
+    iterator end_;
+  };
+
+   MparticlesStorage(uint n_patches)
+    : bufs_(n_patches)
   {}
 
-  MparticlesPatchSimple(const MparticlesPatchSimple&) = delete;
-  MparticlesPatchSimple(MparticlesPatchSimple&&) = default;
-  
-  Particle& operator[](int n) { return buf[n]; }
-  const Particle& operator[](int n) const { return buf[n]; }
-  const_iterator begin() const { return buf.begin(); }
-  iterator begin() { return buf.begin(); }
-  const_iterator end() const { return buf.end(); }
-  iterator end() { return buf.end(); }
-  unsigned int size() const { return buf.size(); }
-  void reserve(unsigned int new_capacity) { buf.reserve(new_capacity); }
-
-  void push_back(const Particle& new_prt)
+  void reset(const Grid_t& grid)
   {
-    // need to copy because we modify it
-    auto prt = new_prt;
-    checkInPatchMod(prt);
-    validCellIndex(prt);
-    buf.push_back(prt);
+    bufs_ = Buffers(grid.n_patches());
   }
 
-  void resize(unsigned int new_size)
+  void reserve_all(const std::vector<uint>& n_prts_by_patch)
   {
-    assert(new_size <= buf.capacity());
-    buf.resize(new_size);
-  }
-
-  void check() const
-  {
-    for (auto& prt : buf) {
-      validCellIndex(prt);
+    for (int p = 0; p < bufs_.size(); p++) {
+      bufs_[p].reserve(n_prts_by_patch[p]);
     }
   }
 
-  // ParticleIndexer functionality
-  int cellPosition(real_t xi, int d) const { return mprts_->pi_.cellPosition(xi, d); }
-  int validCellIndex(const Particle& prt) const { return mprts_->pi_.validCellIndex(prt.x()); }
+  void resize_all(const std::vector<uint>& n_prts_by_patch)
+  {
+    for (int p = 0; p < bufs_.size(); p++) {
+      assert(n_prts_by_patch[p] <= bufs_[p].capacity());
+      bufs_[p].resize(n_prts_by_patch[p]);
+    }
+  }
 
-  void checkInPatchMod(Particle& prt) const { return mprts_->pi_.checkInPatchMod(prt.x()); }
+  void clear()
+  {
+    for (int p = 0; p < bufs_.size(); p++) {
+      bufs_[p].resize(0);
+    }
+  }
 
-  const Grid_t& grid() const { return *grid_; }
-  const Mparticles& mprts() const { return *mprts_; }
-  int p() const { return p_; }
+  std::vector<uint> get_size_all() const
+  {
+    std::vector<uint> n_prts_by_patch(bufs_.size());
+    for (int p = 0; p < bufs_.size(); p++) {
+      n_prts_by_patch[p] = bufs_[p].size();
+    }
+    return n_prts_by_patch;
+  }
 
-  buf_t buf;
+  int size() const
+  {
+    int n_prts = 0;
+    for (const auto& buf : bufs_) {
+      n_prts += buf.size();
+    }
+    return n_prts;
+  }
 
-  //private:
-  Mparticles* mprts_;
-  int p_;
-  const Grid_t* grid_;
+  Range operator[](int p) { return {bufs_[p].begin(), bufs_[p].end()}; }
+  Particle& at(int p, int n) { return bufs_[p][n]; } // FIXME, ugly and not great for effciency
+  void push_back(int p, const Particle& prt) { bufs_[p].push_back(prt); }
+
+  Buffers& bndBuffers() { return bufs_; }
+
+private:
+  Buffers bufs_;
 };
 
 // ======================================================================
@@ -89,105 +104,99 @@ struct MparticlesSimple : MparticlesBase
   using Particle = P;
   using real_t = typename Particle::real_t;
   using Real3 = Vec3<real_t>;
-  using Patch = MparticlesPatchSimple<MparticlesSimple>;
   using BndpParticle = P;
-  using buf_t = typename Patch::buf_t;
   using Accessor = AccessorSimple<MparticlesSimple>;
+
+  using Storage = MparticlesStorage<Particle>;
+  using BndBuffer = typename Storage::PatchBuffer;
+  using BndBuffers = typename Storage::Buffers;
+
+  struct Patch
+  {
+    using iterator = typename Storage::PatchBuffer::iterator;
+    using const_iterator = typename Storage::PatchBuffer::const_iterator;
+    
+    Patch(MparticlesSimple& mprts, int p)
+      : mprts_(mprts),
+	p_(p)
+      {}
+    
+    Patch(const Patch&) = delete;
+    Patch(Patch&&) = default;
+
+    Particle& operator[](int n) { return mprts_.storage_.at(p_, n); }
+    iterator begin() { return mprts_.storage_[p_].begin(); }
+    iterator end() { return mprts_.storage_[p_].end(); }
+    unsigned int size() const { return mprts_.storage_[p_].size(); }
+    
+    void push_back(const Particle& new_prt)
+    {
+      // need to copy because we modify it
+      auto prt = new_prt;
+      checkInPatchMod(prt);
+      validCellIndex(prt);
+      mprts_.storage_.push_back(p_, prt);
+    }
+    
+    void check() const
+    {
+      for (auto& prt: mprts_.storage_[p_]) {
+	mprts_.pi_.validCellIndex(prt.x());
+      }
+    }
+    
+    // ParticleIndexer functionality
+    int cellPosition(real_t xi, int d) const { return mprts_.pi_.cellPosition(xi, d); }
+    int validCellIndex(const Particle& prt) const { return mprts_.pi_.validCellIndex(prt.x()); }
+    
+    void checkInPatchMod(Particle& prt) const { return mprts_.pi_.checkInPatchMod(prt.x()); }
+    
+    const Grid_t& grid() const { return mprts_.grid(); }
+    const MparticlesSimple& mprts() const { return *mprts_; }
+    int p() const { return p_; }
+    
+  private:
+    MparticlesSimple& mprts_;
+    int p_;
+  };
 
   MparticlesSimple(const Grid_t& grid)
     : MparticlesBase(grid),
-      pi_(grid)
-  {
-    patches_.reserve(grid.n_patches());
-    for (int p = 0; p < grid.n_patches(); p++) {
-      patches_.emplace_back(this, p);
-    }
-  }
+      pi_(grid),
+      storage_(grid.n_patches())
+  {}
 
   MparticlesSimple(const MparticlesSimple&) = delete;
-  MparticlesSimple(MparticlesSimple&& o)
-    : MparticlesBase(o.grid()),
-      patches_{std::move(o.patches_)},
-      pi_{std::move(o.pi_)}
-  {
-    for (auto& patch : patches_) {
-      patch.mprts_ = this;
-    }
-  }
+  MparticlesSimple(MparticlesSimple&& o) = default;
 
-  MparticlesSimple& operator=(MparticlesSimple&& o)
-  {
-    MparticlesBase::operator=(o);
-    patches_ = std::move(o.patches_);
-    pi_ = std::move(o.pi_);
-    for (auto& patch : patches_) {
-      patch.mprts_ = this;
-    }
-    return *this;
-  }
+  MparticlesSimple& operator=(MparticlesSimple&& o) = default;
 
   void reset(const Grid_t& grid) override
   {
     MparticlesBase::reset(grid);
-    patches_.clear();
-    patches_.reserve(grid.n_patches());
-    for (int p = 0; p < grid.n_patches(); p++) {
-      patches_.emplace_back(this, p);
-    }
+    storage_.reset(grid);
   }
 
-  const Patch& operator[](int p) const { return patches_[p]; }
-  Patch&       operator[](int p)       { return patches_[p]; }
+  Patch operator[](int p) const { return {const_cast<MparticlesSimple&>(*this), p}; } // FIXME, isn't actually const
 
-  void reserve_all(const std::vector<uint> &n_prts_by_patch)
-  {
-    for (int p = 0; p < patches_.size(); p++) {
-      patches_[p].reserve(n_prts_by_patch[p]);
-    }
-  }
-
-  void resize_all(const std::vector<uint>& n_prts_by_patch)
-  {
-    for (int p = 0; p < patches_.size(); p++) {
-      patches_[p].resize(n_prts_by_patch[p]);
-    }
-  }
-
-  void reset() // FIXME, "reset" is used for two very different functions
-  {
-    for (int p = 0; p < patches_.size(); p++) {
-      patches_[p].resize(0);
-    }
-  }
-
-  std::vector<uint> get_size_all() const override
-  {
-    std::vector<uint> n_prts_by_patch(n_patches());
-    for (int p = 0; p < patches_.size(); p++) {
-      n_prts_by_patch[p] = patches_[p].size();
-    }
-    return n_prts_by_patch;
-  }
-
-  int get_n_prts() const override
-  {
-    int n_prts = 0;
-    for (auto const& patch : patches_) {
-      n_prts += patch.size();
-    }
-    return n_prts;
-  }
+  void reserve_all(const std::vector<uint> &n_prts_by_patch) { storage_.reserve_all(n_prts_by_patch); }
+  void resize_all(const std::vector<uint>& n_prts_by_patch)  { storage_.resize_all(n_prts_by_patch); }
+  void clear()                                               { storage_.clear(); }
+  std::vector<uint> get_size_all() const override            { return storage_.get_size_all(); }
+  int get_n_prts() const override                            { return storage_.size(); }
 
   const ParticleIndexer<real_t>& particleIndexer() const { return pi_; }
   
   InjectorSimple<MparticlesSimple> injector() { return {*this}; }
   ConstAccessorSimple<MparticlesSimple> accessor() { return {*this}; }
   Accessor accessor_() { return {*this}; }
-  
+
+  BndBuffers& bndBuffers() { return storage_.bndBuffers(); }
+
   void check() const
   {
-    for (auto& patch: patches_) {
-      patch.check();
+    for (int p = 0; p < n_patches(); p++) {
+      (*this)[p].check();
     }
   }
 
@@ -219,7 +228,7 @@ struct MparticlesSimple : MparticlesBase
   const Convert& convert_from() override { return convert_from_; }
 
 private:
-  std::vector<Patch> patches_;
+  Storage storage_;
 public: // FIXME
   ParticleIndexer<real_t> pi_;
 };

@@ -22,7 +22,7 @@ struct BndParticlesCommon : BndParticlesBase
   using Mparticles = MP;
   using real_t = typename Mparticles::real_t;
   using ddcp_t = ddc_particles<Mparticles>;
-  using buf_t = typename Mparticles::buf_t;
+  using BndBuffers = typename Mparticles::BndBuffers;
 
   // ----------------------------------------------------------------------
   // ctor
@@ -55,7 +55,7 @@ struct BndParticlesCommon : BndParticlesBase
   // ----------------------------------------------------------------------
   // process_and_exchange
 
-  void process_and_exchange(Mparticles& mprts, std::vector<buf_t*>& bufs)
+  void process_and_exchange(Mparticles& mprts, BndBuffers& bufs)
   {
     static int pr_B, pr_C;
     if (!pr_B) {
@@ -68,7 +68,7 @@ struct BndParticlesCommon : BndParticlesBase
 #pragma omp parallel for
     for (int p = 0; p < ddcp->nr_patches; p++) {
       if (psc_balance_comp_time_by_patch) psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
-      process_patch(mprts.grid(), mprts.particleIndexer(), *bufs[p], p);
+      process_patch(mprts.grid(), mprts.particleIndexer(), bufs, p);
       if (psc_balance_comp_time_by_patch) psc_balance_comp_time_by_patch[p] += MPI_Wtime();
     }
     prof_stop(pr_B);
@@ -80,7 +80,7 @@ struct BndParticlesCommon : BndParticlesBase
   }
   
 protected:
-  void process_patch(const Grid_t& grid, const ParticleIndexer<real_t>& pi, buf_t& buf, int p);
+  void process_patch(const Grid_t& grid, const ParticleIndexer<real_t>& pi, BndBuffers& buf, int p);
 
 protected:
   ddcp_t* ddcp;
@@ -91,7 +91,8 @@ protected:
 // BndParticlesCommon::process_patch
 
 template<typename MP>
-void BndParticlesCommon<MP>::process_patch(const Grid_t& grid, const ParticleIndexer<real_t>& pi, buf_t& buf, int p)
+void BndParticlesCommon<MP>::process_patch(const Grid_t& grid, const ParticleIndexer<real_t>& pi,
+					   BndBuffers& bufs, int p)
 {
   // New-style boundary requirements.
   // These will need revisiting when it comes to non-periodic domains.
@@ -108,6 +109,8 @@ void BndParticlesCommon<MP>::process_patch(const Grid_t& grid, const ParticleInd
     dpatch->nei[dir1].send_buf.resize(0);
   }
 
+  using BndBuffer = typename Mparticles::BndBuffer;
+  BndBuffer& buf = bufs[p];
   unsigned int n_begin = 0;
   unsigned int n_end = buf.size();
   unsigned int head = n_begin;
@@ -219,7 +222,6 @@ struct BndParticles_ : BndParticlesCommon<MP>
 {
   using Base = BndParticlesCommon<MP>;
   using Mparticles = MP;
-  using buf_t = typename Mparticles::buf_t;
 
   using Base::Base;
 
@@ -232,12 +234,7 @@ struct BndParticles_ : BndParticlesCommon<MP>
       this->reset(mprts.grid());
     }
 
-    std::vector<buf_t*> bufs;
-    bufs.reserve(mprts.n_patches());
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      bufs.push_back(&mprts[p].buf);
-    }
-
+    auto&& bufs = mprts.bndBuffers();
     this->process_and_exchange(mprts, bufs);
     
     //struct psc_mfields *mflds = psc_mfields_get_as(psc->flds, "c", JXI, JXI + 3);
