@@ -57,7 +57,7 @@ struct Heating__ : HeatingBase
   void operator()(Mparticles& mprts)
   {
     for (int p = 0; p < mprts.n_patches(); p++) {
-      auto& prts = mprts[p];
+      auto&& prts = mprts[p];
       auto& patch = mprts.grid().patches[p];
       for (auto& prt : prts) {
 	if (prt.kind != kind_) {
