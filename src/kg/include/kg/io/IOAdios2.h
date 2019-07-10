@@ -3,7 +3,6 @@
 
 #include <kg/io.h>
 #include "FileAdios2.h"
-#include "File.h"
 
 namespace kg
 {
@@ -19,6 +18,7 @@ public:
   IOAdios2();
 
   File openFile(const std::string& name, const Mode mode, MPI_Comm comm = MPI_COMM_WORLD);
+  Engine open(const std::string& name, const Mode mode, MPI_Comm comm = MPI_COMM_WORLD);
 
 private:
   adios2::ADIOS ad_;

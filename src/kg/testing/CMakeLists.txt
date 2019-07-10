@@ -7,4 +7,5 @@ endmacro()
   
 if (PSC_HAVE_ADIOS2)
   add_kg_test(TestIOAdios2 io/TestIOAdios2.cxx)
+  add_kg_test(TestIO io/TestIO.cxx)
 endif()

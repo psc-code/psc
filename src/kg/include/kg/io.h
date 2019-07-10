@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include <PscConfig.h>
+
 #include <vector>
 #include <limits>
 
@@ -33,3 +35,8 @@ struct Extents
 } // namespace io
 } // namespace kg
 
+#include "io/Descr.h"
+#include "io/Engine.h"
+#ifdef PSC_HAVE_ADIOS2
+#include "io/IOAdios2.h"
+#endif
