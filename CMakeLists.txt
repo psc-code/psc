@@ -38,6 +38,30 @@ endif()
 
 find_package(GTest)
 
+function(GenerateHeaderConfig)
+  set(PSC_CONFIG_DEFINES)
+  foreach(OPT IN LISTS ARGN)
+    string(APPEND PSC_CONFIG_DEFINES "
+/* CMake Option: PSC_USE_${OPT}=${PSC_USE_${OPT}} */
+#cmakedefine PSC_HAVE_${OPT}
+")
+  endforeach()
+
+  configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/include/PscConfig.h.in
+    ${CMAKE_CURRENT_BINARY_DIR}/src/include/PscConfig.h.in
+  )
+  configure_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/src/include/PscConfig.h.in
+    ${CMAKE_CURRENT_BINARY_DIR}/src/include/PscConfig.h
+  )
+endfunction()
+
+GenerateHeaderConfig(ADIOS2)
+
+# FIXME, merge with other config
+# FIXME, unify options / autodetect
+# FIXME, mv helpers into separate file
 configure_file (
   "${PROJECT_SOURCE_DIR}/src/include/psc_config.h.in"
   "${PROJECT_BINARY_DIR}/src/include/psc_config.h"
