@@ -57,15 +57,10 @@ function(GenerateHeaderConfig)
   )
 endfunction()
 
+# FIXME, unify USE_CUDA, USE_VPIC options / autodetect
+# FIXME, mv helpers into separate file
 GenerateHeaderConfig(ADIOS2)
 
-# FIXME, merge with other config
-# FIXME, unify options / autodetect
-# FIXME, mv helpers into separate file
-configure_file (
-  "${PROJECT_SOURCE_DIR}/src/include/psc_config.h.in"
-  "${PROJECT_BINARY_DIR}/src/include/psc_config.h"
-  )
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/src/include)
 # FIXME, this seems too ugly to find mrc_config.h
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/src/libmrc/include)

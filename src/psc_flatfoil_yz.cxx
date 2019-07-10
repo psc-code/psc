@@ -1,6 +1,4 @@
 
-#include <psc_config.h>
-
 #include <psc.h>
 #include <psc.hxx>
 
