@@ -30,7 +30,20 @@ if (USE_CUDA)
   target_include_directories(psc PRIVATE vpic) # FIXME!
 endif()
 
-add_subdirectory(vpic)
-target_link_libraries(psc PUBLIC pscvpic)
+if (USE_VPIC)
+  add_library(VPIC::VPIC INTERFACE IMPORTED)
+  set_target_properties(VPIC::VPIC PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "/Users/kai/build/vpic/src"
+    INTERFACE_LINK_LIBRARIES "/Users/kai/build/vpic/build/libvpic.a"
+  )
+
+  target_sources(psc PRIVATE
+    vpic/psc_fields_vpic.cxx
+    vpic/psc_particles_vpic.cxx
+    vpic/psc_vpic_bits.cxx
+    vpic/vpic_base.cxx)
+  target_include_directories(psc PUBLIC vpic)
+  target_link_libraries(psc PUBLIC VPIC::VPIC)
+endif()
 
 add_subdirectory(tests)
