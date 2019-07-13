@@ -115,7 +115,7 @@ struct PscConfig_<DIM, _Mparticles, _MfieldsState, _Mfields, PscConfigPushPartic
   using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Checks_t = ChecksCuda<Mparticles>;
   using Marder_t = MarderCuda<BS>;
-  using OutputParticles = OutputParticlesDefault<Mparticles>;
+  using OutputParticles = OutputParticlesDefault<MparticlesSingle>;
 };
 
 template<typename _Mparticles, typename _MfieldsState, typename _Mfields>
