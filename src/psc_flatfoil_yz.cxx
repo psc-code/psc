@@ -88,7 +88,7 @@ struct InjectFoil : InjectFoilParams
 };
 
 // EDIT to change order / floating point type / cuda / 2d/3d
-using dim_t = dim_xyz;
+using dim_t = dim_yz;
 #ifdef USE_CUDA
 using PscConfig = PscConfig1vbecCuda<dim_t>;
 #else
@@ -145,7 +145,7 @@ struct PscFlatfoil : Psc<PscConfig>
     mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(background_Te_));
     
     // --- setup domain
-#if 1
+#if 0
     Grid_t::Real3 LL = {384., 384.*2., 384.*6}; // domain size (in d_e)
     Int3 gdims = {384, 384*2, 384*6}; // global number of grid points
     Int3 np = {12, 24, 72}; // division into patches
@@ -168,6 +168,11 @@ struct PscFlatfoil : Psc<PscConfig>
     Int3 gdims = {1, 2048, 512}; // global number of grid points
     Int3 np = {1, 64, 16}; // division into patches
 #endif
+#if 1
+    Grid_t::Real3 LL = {1., 800., 200.}; // domain size (in d_e)
+    Int3 gdims = {1, 1024, 256}; // global number of grid points
+    Int3 np = {1, 8, 2}; // division into patches
+#endif
 
     auto grid_domain = Grid_t::Domain{gdims, LL, -.5 * LL, np};
     
@@ -182,6 +187,10 @@ struct PscFlatfoil : Psc<PscConfig>
 
     double dt = p_.cfl * courant_length(grid_domain);
     define_grid(grid_domain, grid_bc, kinds, dt, norm_params);
+
+    assert(grid().isInvar(0) == dim_t::InvarX::value);
+    assert(grid().isInvar(1) == dim_t::InvarY::value);
+    assert(grid().isInvar(2) == dim_t::InvarZ::value);
 
     define_field_array();
 
@@ -269,7 +278,7 @@ struct PscFlatfoil : Psc<PscConfig>
     outp_params.data_dir = ".";
     outp_params.basename = "prt";
     outp_.reset(new OutputParticles{grid(), outp_params});
-
+    
     // --- partition particles and initial balancing
     mpi_printf(comm, "**** Partitioning...\n");
     auto n_prts_by_patch = setup_initial_partition();
