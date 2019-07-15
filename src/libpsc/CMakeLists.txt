@@ -21,7 +21,7 @@ add_library(psc
   psc_diag/psc_diag_item_particle_energy.cxx
   )
 target_include_directories(psc PUBLIC ../include)
-target_link_libraries(psc PUBLIC mrc)
+target_link_libraries(psc PUBLIC kg mrc)
 target_compile_features(psc PUBLIC cxx_std_11)
 
 if (USE_CUDA)

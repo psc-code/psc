@@ -3,7 +3,7 @@
 #define FIELDS_HXX
 
 #include "dim.hxx"
-#include "vec3.hxx"
+#include "kg/Vec3.h"
 
 template<typename F, typename D = dim_xyz>
 class Fields3d

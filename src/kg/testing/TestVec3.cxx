@@ -1,5 +1,5 @@
 
-#include "vec3.hxx"
+#include "kg/Vec3.h"
 #include "gtest/gtest.h"
 
 namespace {

@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "vec3.hxx"
+#include "kg/Vec3.h"
 
 namespace kg
 {
