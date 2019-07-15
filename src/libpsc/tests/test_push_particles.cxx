@@ -24,7 +24,7 @@ using PushParticlesTestTypes = ::testing::Types<TestConfig2ndDoubleYZ,
 						TestConfig2ndSingle,
 						TestConfig1vbec3dSingle>;
 
-TYPED_TEST_CASE(PushParticlesTest, PushParticlesTestTypes);
+TYPED_TEST_SUITE(PushParticlesTest, PushParticlesTestTypes);
 
 // ======================================================================
 // SingleParticle test

@@ -15,7 +15,7 @@ using PushFieldsTestTypes = ::testing::Types<TestConfig1vbec3dSingleYZ,
 #endif
 					     TestConfig1vbec3dSingle>;
 
-TYPED_TEST_CASE(PushFieldsTest, PushFieldsTestTypes);
+TYPED_TEST_SUITE(PushFieldsTest, PushFieldsTestTypes);
 
 // ======================================================================
 // Pushf1

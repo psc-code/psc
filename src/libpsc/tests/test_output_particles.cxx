@@ -56,7 +56,7 @@ using OutputParticlesTestTypes = ::testing::Types<Config<dim_xyz, MparticlesSing
 						  Config<dim_xyz, MparticlesSingle, OutputParticlesHdf5<MparticlesSingle>>,
 						  Config<dim_xyz, MparticlesDouble, OutputParticlesHdf5<MparticlesDouble>>>;
 
-TYPED_TEST_CASE(OutputParticlesTest, OutputParticlesTestTypes);
+TYPED_TEST_SUITE(OutputParticlesTest, OutputParticlesTestTypes);
 
 // ======================================================================
 // Test1

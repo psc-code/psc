@@ -74,7 +74,7 @@ using InjectTestTypes = ::testing::Types<
 #endif
 						TestConfig1vbec3dSingleYZ>;
 
-TYPED_TEST_CASE(InjectTest, InjectTestTypes);
+TYPED_TEST_SUITE(InjectTest, InjectTestTypes);
 
 // ======================================================================
 // InjectTest/Test1

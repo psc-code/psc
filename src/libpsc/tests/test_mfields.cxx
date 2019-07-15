@@ -64,7 +64,7 @@ using MfieldsTestTypes = ::testing::Types<MfieldsSingle, MfieldsC, MfieldsCuda>;
 using MfieldsTestTypes = ::testing::Types<MfieldsSingle, MfieldsC>;
 #endif
 
-TYPED_TEST_CASE(MfieldsTest, MfieldsTestTypes);
+TYPED_TEST_SUITE(MfieldsTest, MfieldsTestTypes);
 
 TYPED_TEST(MfieldsTest, Constructor)
 {

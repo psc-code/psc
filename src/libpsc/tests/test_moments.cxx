@@ -12,7 +12,7 @@ using PushParticlesTestTypes = ::testing::Types<TestConfig1vbec3dSingleYZ
 						>;
 
 // FIXME, obviously this name is bad...
-TYPED_TEST_CASE(PushParticlesTest, PushParticlesTestTypes);
+TYPED_TEST_SUITE(PushParticlesTest, PushParticlesTestTypes);
 
 TYPED_TEST(PushParticlesTest, Moment1)
 {
