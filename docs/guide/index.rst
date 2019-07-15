@@ -3,14 +3,14 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to The Plasma Simulation Code (PSC)'s documentation!
+Welcome to the Plasma Simulation Code (PSC)'s documentation!
 ============================================================
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-
+   installation/installation
 
 Indices and tables
 ==================
