@@ -91,8 +91,11 @@ struct InjectFoil : InjectFoilParams
 
 // EDIT to change order / floating point type / cuda / 2d/3d
 using dim_t = dim_xyz;
-//using PscConfig = PscConfig1vbecSingle<dim_t>;
+#ifdef USE_CUDA
 using PscConfig = PscConfig1vbecCuda<dim_t>;
+#else
+using PscConfig = PscConfig1vbecSingle<dim_t>;
+#endif
 
 // ======================================================================
 // PscFlatfoil
