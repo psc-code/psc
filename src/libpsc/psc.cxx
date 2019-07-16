@@ -79,14 +79,12 @@ _psc_read(struct psc *psc, struct mrc_io *io)
   //psc_read_member_objs(psc, io);
 }
 
-#ifdef USE_VPIC
 // FIXME
 void vpic_base_init(int *pargc, char ***pargv);
-#endif
 
 void psc_init(int& argc, char**& argv)
 {
-#ifdef USE_VPIC
+#if 1
   vpic_base_init(&argc, &argv);
 #else
   MPI_Init(&argc, &argv);
