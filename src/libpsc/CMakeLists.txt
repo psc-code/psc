@@ -19,6 +19,11 @@ add_library(psc
   psc_diag/psc_diag_item.cxx
   psc_diag/psc_diag_item_field_energy.cxx
   psc_diag/psc_diag_item_particle_energy.cxx
+
+  vpic/psc_particles_vpic.cxx
+  vpic/psc_fields_vpic.cxx
+  vpic/psc_vpic_bits.cxx
+  vpic/vpic_base.cxx
   )
 target_include_directories(psc PUBLIC ../include)
 target_link_libraries(psc PUBLIC kg mrc)
@@ -68,11 +73,6 @@ if (USE_VPIC)
     INTERFACE_LINK_LIBRARIES "/Users/kai/build/vpic/build/libvpic.a"
   )
 
-  target_sources(psc PRIVATE
-    vpic/psc_fields_vpic.cxx
-    vpic/psc_particles_vpic.cxx
-    vpic/psc_vpic_bits.cxx
-    vpic/vpic_base.cxx)
   target_include_directories(psc PUBLIC vpic)
   target_link_libraries(psc PUBLIC VPIC::VPIC)
 endif()
