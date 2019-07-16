@@ -13,7 +13,7 @@ using PushParticlesTestTypes = ::testing::Types<TestConfig2ndDoubleYZ
 //TestConfig1vbec3dSingle>;
 //TestConfig2ndDouble>;
 
-TYPED_TEST_CASE(PushParticlesTest, PushParticlesTestTypes);
+TYPED_TEST_SUITE(PushParticlesTest, PushParticlesTestTypes);
 
 // ======================================================================
 // Accel test

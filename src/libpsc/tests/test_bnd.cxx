@@ -95,7 +95,7 @@ using BndTestTypes = ::testing::Types<TestConfigBnd<Bnd_<MfieldsSingle>, dim_yz>
 #endif
 				      TestConfigBnd<Bnd_<MfieldsSingle>, dim_xyz>>;
 
-TYPED_TEST_CASE(BndTest, BndTestTypes);
+TYPED_TEST_SUITE(BndTest, BndTestTypes);
 
 const int B = 2;
 

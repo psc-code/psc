@@ -32,7 +32,7 @@ using BalanceTestTypes = ::testing::Types<Config<MparticlesSingle, MfieldsStateS
 #endif
 					 >;
 
-TYPED_TEST_CASE(BalanceTest, BalanceTestTypes);
+TYPED_TEST_SUITE(BalanceTest, BalanceTestTypes);
 
 // ======================================================================
 // BalanceTest

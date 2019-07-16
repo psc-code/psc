@@ -102,7 +102,7 @@ using CollisionTestTypes = ::testing::Types<CollisionTestConfigSingle
 #endif
 					    >;
 
-TYPED_TEST_CASE(CollisionTest, CollisionTestTypes);
+TYPED_TEST_SUITE(CollisionTest, CollisionTestTypes);
   
 TYPED_TEST(CollisionTest, Test1)
 {

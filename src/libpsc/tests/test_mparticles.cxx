@@ -40,7 +40,7 @@ using MparticlesTestTypes = ::testing::Types<Config<MparticlesSingle>
 #endif
 					     >;
 
-TYPED_TEST_CASE(MparticlesTest, MparticlesTestTypes);
+TYPED_TEST_SUITE(MparticlesTest, MparticlesTestTypes);
 
 // ======================================================================
 // MparticlesTest

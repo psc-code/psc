@@ -36,8 +36,6 @@ if(ADIOS2_FOUND)
   set(PSC_HAVE_ADIOS2 1)
 endif()
 
-find_package(GTest)
-
 function(GenerateHeaderConfig)
   set(PSC_CONFIG_DEFINES)
   foreach(OPT IN LISTS ARGN)
@@ -65,6 +63,8 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/src/include)
 # FIXME, this seems too ugly to find mrc_config.h
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/src/libmrc/include)
 
+add_subdirectory(external)
+include(GoogleTest)
 add_subdirectory(src)
 
 

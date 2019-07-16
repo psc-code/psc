@@ -14,7 +14,7 @@ namespace {
 
   using Vec3Types = ::testing::Types<int, float, double>;
 
-  TYPED_TEST_CASE(Vec3Test, Vec3Types);
+  TYPED_TEST_SUITE(Vec3Test, Vec3Types);
 
   TYPED_TEST(Vec3Test, ConstructorInitList)
   {
