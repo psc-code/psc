@@ -1,4 +1,5 @@
 
+add_subdirectory(kg)
 add_subdirectory(libpsc)
 
 macro(add_psc_executable name)

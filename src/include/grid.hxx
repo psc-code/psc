@@ -2,7 +2,7 @@
 #ifndef GRID_HXX
 #define GRID_HXX
 
-#include "vec3.hxx"
+#include "kg/Vec3.h"
 #include "psc_bits.h"
 #include "mrc_domain.hxx"
 

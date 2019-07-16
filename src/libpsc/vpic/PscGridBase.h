@@ -3,7 +3,7 @@
 #define PSC_GRID_BASE_H
 
 #include "psc_vpic_bits.h"
-#include "vec3.hxx"
+#include "kg/Vec3.h"
 
 #include <array>
 #include <vector>

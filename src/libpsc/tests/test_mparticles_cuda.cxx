@@ -1,7 +1,6 @@
 
 #include <gtest/gtest.h>
 
-#include "psc_config.h"
 #include "test_common.hxx"
 #include "../libpsc/cuda/mparticles_cuda.hxx"
 #include "mpi.h"

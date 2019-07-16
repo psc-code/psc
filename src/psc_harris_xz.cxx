@@ -1,6 +1,4 @@
 
-#include <psc_config.h>
-
 #define VPIC 1
 
 #include <psc.h>
