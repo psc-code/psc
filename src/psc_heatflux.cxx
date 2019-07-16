@@ -63,9 +63,9 @@ struct PscWhistler : Psc<PscConfig>
     Grid_t::Kinds kinds = {{ -1., me, "e"}, {1., mi, "i"}, };
 
     // --- setup domain
-    Grid_t::Real3 LL = {1., 10., 10.}; // domain size (normalized units, ie, in d_i)
-    Int3 gdims = {1, 64, 64}; // global number of grid points
-    Int3 np = {1, 2, 2}; // division into patches
+    Grid_t::Real3 LL = {1., 32., 256.}; // domain size (normalized units, ie, in d_i)
+    Int3 gdims = {1, 32, 256}; // global number of grid points
+    Int3 np = {1, 1, 4}; // division into patches
 
     auto grid_domain = Grid_t::Domain{gdims, LL, {}, np};
     
@@ -76,7 +76,7 @@ struct PscWhistler : Psc<PscConfig>
 
     // --- generic setup
     auto norm_params = Grid_t::NormalizationParams::dimensionless();
-    norm_params.nicell = 50;
+    norm_params.nicell = 100;
 
     double dt = p_.cfl * courant_length(grid_domain);
     define_grid(grid_domain, grid_bc, kinds, dt, norm_params);
@@ -114,7 +114,7 @@ struct PscWhistler : Psc<PscConfig>
 
     // -- output fields
     OutputFieldsCParams outf_params;
-    outf_params.pfield_step = 200;
+    outf_params.pfield_step = 10;
     std::vector<std::unique_ptr<FieldsItemBase>> outf_items;
     outf_items.emplace_back(new FieldsItemFields<ItemLoopPatches<Item_e_cc>>(grid()));
     outf_items.emplace_back(new FieldsItemFields<ItemLoopPatches<Item_h_cc>>(grid()));
@@ -157,7 +157,7 @@ private:
       
       npt.p[0] = 0.;
       npt.p[1] = 0.;
-      npt.p[2] = 0.;
+      npt.p[2] = .01;
 
       npt.T[0] = Te_perp;
       npt.T[1] = Te_perp;
@@ -210,7 +210,7 @@ private:
 
     SetupFields<MfieldsState>::set(mflds, [&](int m, double crd[3]) {
 	switch (m) {
-	case HZ: return B0;
+	  //case HZ: return B0;
 	  
 	default: return 0.;
 	}
