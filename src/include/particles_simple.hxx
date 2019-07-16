@@ -96,7 +96,7 @@ private:
 };
 
 // ======================================================================
-// Mparticles
+// MparticlesSimple
 
 template<typename P>
 struct MparticlesSimple : MparticlesBase

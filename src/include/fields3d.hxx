@@ -230,7 +230,7 @@ struct MfieldsBase
     }
   }
 
-  const Grid_t& grid() { return *grid_; }
+  const Grid_t& grid() const { return *grid_; }
   
   template<typename MF>
   MF& get_as(int mb, int me)

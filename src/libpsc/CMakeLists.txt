@@ -25,12 +25,56 @@ target_link_libraries(psc PUBLIC mrc)
 target_compile_features(psc PUBLIC cxx_std_11)
 
 if (USE_CUDA)
-  add_subdirectory(cuda)
-  target_link_libraries(psc PRIVATE psccuda)
-  target_include_directories(psc PRIVATE vpic) # FIXME!
+  target_sources(psc PRIVATE
+    cuda/cuda_base.cu
+
+    cuda/psc_particles_cuda.cxx
+    cuda/cuda_mparticles_base.cu
+    cuda/cuda_mparticles.cu
+    cuda/cuda_mparticles_iface.cu
+    
+    cuda/psc_fields_cuda.cxx
+    cuda/cuda_mfields.cu
+    cuda/cuda_mfields_iface.cu
+    
+    cuda/cuda_push_mprts_yz.cu
+    
+    cuda/cuda_push_fields_yz.cu
+    cuda/cuda_push_fields_xyz.cu
+    
+    cuda/bnd_particles_cuda_impl.cu
+    cuda/cuda_bndp.cu
+    cuda/cuda_bndp_scan.cu
+    cuda/cuda_bndp_spine.cu
+    
+    cuda/cuda_bnd.cu
+    cuda/bnd_cuda_3_impl.cu
+    
+    cuda/psc_bnd_fields_cuda.cxx
+    cuda/cuda_mfields_bnd.cu
+    
+    cuda/cuda_moments_1st_nc.cu
+    
+    cuda/collision_cuda_impl.cu
+    
+    cuda/cuda_heating.cu)
+  target_include_directories(psc PUBLIC cuda)
 endif()
 
-add_subdirectory(vpic)
-target_link_libraries(psc PUBLIC pscvpic)
+if (USE_VPIC)
+  add_library(VPIC::VPIC INTERFACE IMPORTED)
+  set_target_properties(VPIC::VPIC PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "/Users/kai/build/vpic/src"
+    INTERFACE_LINK_LIBRARIES "/Users/kai/build/vpic/build/libvpic.a"
+  )
+
+  target_sources(psc PRIVATE
+    vpic/psc_fields_vpic.cxx
+    vpic/psc_particles_vpic.cxx
+    vpic/psc_vpic_bits.cxx
+    vpic/vpic_base.cxx)
+  target_include_directories(psc PUBLIC vpic)
+  target_link_libraries(psc PUBLIC VPIC::VPIC)
+endif()
 
 add_subdirectory(tests)
