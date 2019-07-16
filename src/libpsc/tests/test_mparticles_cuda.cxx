@@ -20,7 +20,7 @@ struct Config
 
 using MparticlesCudaTestTypes = ::testing::Types<Config<MparticlesCuda<BS144>, MakeTestGridYZ>>;
 
-TYPED_TEST_CASE(MparticlesCudaTest, MparticlesCudaTestTypes);
+TYPED_TEST_SUITE(MparticlesCudaTest, MparticlesCudaTestTypes);
 
 // ======================================================================
 // MparticlesCudaTest
