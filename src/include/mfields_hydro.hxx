@@ -11,7 +11,7 @@ struct MfieldsHydroPsc
 {
   using Grid = _Grid;
   using real_t = float;
-  using fields_t = fields3d<real_t, LayoutAOS>;
+  using fields_t = fields3d<real_t, kg::LayoutAOS>;
 
   struct Element
   {

@@ -75,7 +75,7 @@ struct MfieldsStateVpic
     field_array_t* fa_;
   };
     
-  using fields_t = fields3d<float, LayoutAOS>;
+  using fields_t = fields3d<float, kg::LayoutAOS>;
 
   MfieldsStateVpic(const Grid_t& grid, Grid* vgrid, const MaterialList& material_list, double damp = 0.)
     : grid_{grid},

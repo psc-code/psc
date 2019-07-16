@@ -6,6 +6,7 @@
 
 #include "grid.hxx"
 #include <mrc_io.hxx>
+#include <kg/Array3d.h>
 
 #include <mrc_profile.h>
 
@@ -19,19 +20,10 @@
 #include <list>
 #include <string>
 
-template<bool AOS>
-struct Layout
-{
-  using isAOS = std::integral_constant<bool, AOS>;
-};
-
-using LayoutAOS = Layout<true>;
-using LayoutSOA = Layout<false>;
-
 // ======================================================================
 // fields3d
 
-template<typename R, typename L=LayoutSOA>
+template<typename R, typename L=kg::LayoutSOA>
 struct fields3d {
   using real_t = R;
   using layout = L;
