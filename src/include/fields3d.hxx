@@ -43,15 +43,61 @@ private:
   R* data_;
 };
 
+// FIXME, do noexcept?
+
+template<typename D, typename R, typename L=kg::LayoutSOA>
+class fields3d_container
+{
+public:
+  using Derived = D;
+  using Storage = Storage<R>;
+
+  fields3d_container(Int3 ib, Int3 im, int n_comps)
+    : ib_{ib}, im_{im},
+      n_comps_{n_comps}
+  {
+  }
+      
+protected:
+  Storage& storage()
+  {
+    return derived().storage_impl();
+  }
+
+  const Storage& storage() const
+  {
+    return derived().storage_impl();
+  }
+  
+  Derived& derived()
+  {
+    return *static_cast<Derived*>(this);
+  }
+
+  const Derived& derived() const
+  {
+    return *static_cast<const Derived*>(this);
+  }
+
+protected: // FIXME, for now
+  const Int3 ib_, im_; //> lower bounds and length per direction
+  const int n_comps_; // # of components
+};
+
 template<typename R, typename L=kg::LayoutSOA>
-struct fields3d {
+struct fields3d : fields3d_container<fields3d<R, L>, R, L>
+{
+  using Base = fields3d_container<fields3d<R, L>, R, L>;
   using real_t = R;
   using layout = L;
 
+  using Base::ib_;
+  using Base::im_;
+  using Base::n_comps_;
+
   fields3d(const Grid_t& grid, Int3 ib, Int3 im, int n_comps, real_t* data=nullptr)
-    : grid_{grid},
-      ib_{ib}, im_{im},
-      n_comps_{n_comps},
+    : Base{ib, im, n_comps},
+      grid_{grid},
       storage_{data ? data : (real_t *) calloc(size(), sizeof(real_t))}
   {
   }
@@ -163,8 +209,6 @@ struct fields3d {
 
   const Grid_t& grid() const { return grid_; }
 
-  Int3 ib_, im_; //> lower bounds and length per direction
-  int n_comps_; // # of components
   Storage<R> storage_;
   const Grid_t& grid_;
 };
