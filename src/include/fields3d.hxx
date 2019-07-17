@@ -63,6 +63,27 @@ public:
   int n_cells() const { return im_[0] * im_[1] * im_[2]; }
   int n_comps() const { return n_comps_; }
   int size()    const { return n_comps() * n_cells(); }
+
+  int index(int m, int i, int j, int k) const
+  {
+#ifdef BOUNDS_CHECK
+    assert(m >= 0 && m < n_comps_);
+    assert(i >= ib_[0] && i < ib_[0] + im_[0]);
+    assert(j >= ib_[1] && j < ib_[1] + im_[1]);
+    assert(k >= ib_[2] && k < ib_[2] + im_[2]);
+#endif
+
+    if (L::isAOS::value) {
+      return (((((k - ib_[2])) * im_[1] +
+		(j - ib_[1])) * im_[0] +
+	       (i - ib_[0])) * n_comps_ + m);
+    } else {
+      return (((((m) * im_[2] +
+		 (k - ib_[2])) * im_[1] +
+		(j - ib_[1])) * im_[0] +
+	       (i - ib_[0])));
+    }
+  }
       
 protected:
   Storage& storage()
@@ -113,12 +134,11 @@ struct fields3d : fields3d_container<fields3d<R, L>, R, L>
     storage_.free();
   }
 
-  real_t  operator()(int m, int i, int j, int k) const { return storage_.data()[index(m, i, j, k)];  }
-  real_t& operator()(int m, int i, int j, int k)       { return storage_.data()[index(m, i, j, k)];  }
+  real_t  operator()(int m, int i, int j, int k) const { return storage_.data()[Base::index(m, i, j, k)];  }
+  real_t& operator()(int m, int i, int j, int k)       { return storage_.data()[Base::index(m, i, j, k)];  }
 
   real_t* data() { return storage_.data(); }
   const real_t* data() const { return storage_.data(); }
-  int index(int m, int i, int j, int k) const;
 
   void zero(int m)
   {
@@ -213,28 +233,6 @@ struct fields3d : fields3d_container<fields3d<R, L>, R, L>
   Storage<R> storage_;
   const Grid_t& grid_;
 };
-
-template<typename R, typename L>
-int fields3d<R, L>::index(int m, int i, int j, int k) const
-{
-#ifdef BOUNDS_CHECK
-  assert(m >= 0 && m < n_comps_);
-  assert(i >= ib_[0] && i < ib_[0] + im_[0]);
-  assert(j >= ib_[1] && j < ib_[1] + im_[1]);
-  assert(k >= ib_[2] && k < ib_[2] + im_[2]);
-#endif
-
-  if (L::isAOS::value) {
-    return (((((k - ib_[2])) * im_[1] +
-	      (j - ib_[1])) * im_[0] +
-	     (i - ib_[0])) * n_comps_ + m);
-  } else {
-    return (((((m) * im_[2] +
-	       (k - ib_[2])) * im_[1] +
-	      (j - ib_[1])) * im_[0] +
-	     (i - ib_[0])));
-  }
-}
 
 // ======================================================================
 // MfieldsBase
