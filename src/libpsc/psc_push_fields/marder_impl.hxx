@@ -13,9 +13,9 @@ struct Marder_ : MarderBase
   using Mparticles = _Mparticles;
   using MfieldsState = _MfieldsState;
   using Mfields = _Mfields;
-  using fields_t = typename Mfields::fields_t;
   using real_t = typename Mfields::real_t;
-  using Fields = Fields3d<fields_t>;
+  using fields_view_t = typename Mfields::fields_view_t;
+  using FieldsV = Fields3d<fields_view_t>;
   using Moment_t = Moment_rho_1st_nc<Mparticles, Mfields>;
 
   Marder_(const Grid_t& grid, real_t diffusion, int loop, bool dump)
@@ -92,9 +92,9 @@ struct Marder_ : MarderBase
 #define psc_foreach_3d_more_end			\
   } } }
 
-  void correct_patch(fields_t flds, fields_t f, int p, real_t& max_err)
+  void correct_patch(fields_view_t flds, fields_view_t f, int p, real_t& max_err)
   {
-    Fields F(flds), FF(f);
+    FieldsV F(flds), FF(f);
     define_dxdydz(dx, dy, dz);
 
     // FIXME: how to choose diffusion parameter properly?

@@ -18,8 +18,6 @@ struct Inject_ : InjectBase
 {
   using Mfields = _Mfields;
   using Mparticles = _Mparticles;
-  using fields_t = typename Mfields::fields_t;
-  using Fields = Fields3d<fields_t>;
   using FieldsV = Fields3d<typename Mfields::fields_view_t>;
   using real_t = typename Mparticles::real_t;
   using ItemMoment_t = _ItemMoment;

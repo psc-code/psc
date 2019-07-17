@@ -21,7 +21,6 @@ struct CollisionHost
   using real_t = typename Mparticles::real_t;
   using MfieldsState = _MfieldsState;
   using Mfields = _Mfields;
-  using Fields = Fields3d<typename Mfields::fields_t>;
   using FieldsV = Fields3d<typename Mfields::fields_view_t>;
   using AccessorPatch = typename Mparticles::Accessor::Patch;
   using ParticleProxy = typename AccessorPatch::ParticleProxy;

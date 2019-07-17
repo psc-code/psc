@@ -18,9 +18,6 @@
 #include <time.h>
 #include <array>
 
-using Mfields_t = MfieldsC;
-using Fields = Fields3d<Mfields_t::fields_t>;
-
 // ----------------------------------------------------------------------
 // _psc_write
 

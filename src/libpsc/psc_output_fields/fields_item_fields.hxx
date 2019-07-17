@@ -17,9 +17,6 @@ struct Item_dive
 {
   using MfieldsState = _MfieldsState;
   using Mfields = _Mfields;
-  using fields_t = typename Mfields::fields_t;
-  using Fields = Fields3d<typename Mfields::fields_t>;
-  using FieldsState = Fields3d<typename MfieldsState::fields_t>;
   
   constexpr static char const* name = "dive";
   constexpr static int n_comps = 1;
@@ -45,8 +42,6 @@ struct Item_divj
 {
   using MfieldsState = _MfieldsState;
   using Mfields = _Mfields;
-  using fields_t = typename Mfields::fields_t;
-  using Fields = Fields3d<fields_t>;
   
   constexpr static char const* name = "divj";
   constexpr static int n_comps = 1;

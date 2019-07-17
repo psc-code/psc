@@ -11,7 +11,6 @@ struct MfieldsHydroVpic
   using Grid = VpicGridBase;
   using real_t = float;
   using Element = hydro_t;
-  using fields_t = fields3d<float, kg::LayoutAOS>;
   using fields_view_t = fields3d_view<float, kg::LayoutAOS>;
 
   enum {

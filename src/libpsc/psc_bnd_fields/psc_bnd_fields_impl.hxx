@@ -17,9 +17,9 @@ struct BndFields_ : BndFieldsBase
 {
   using Self = BndFields_<MF>;
   using Mfields = MF;
-  using fields_t = typename Mfields::fields_t;
   using real_t = typename Mfields::real_t;
-  using Fields = Fields3d<fields_t, dim>;
+  using fields_view_t = typename Mfields::fields_view_t;
+  using FieldsV = Fields3d<fields_view_t, dim>;
   
   // ----------------------------------------------------------------------
   // fill_ghosts_E
@@ -180,9 +180,9 @@ struct BndFields_ : BndFieldsBase
     *f = std::numeric_limits<real_t>::quiet_NaN();
   }
 
-  void conducting_wall_E_lo(fields_t flds, int p, int d)
+  void conducting_wall_E_lo(fields_view_t flds, int p, int d)
   {
-    Fields F(flds);
+    FieldsV F(flds);
     const int *ldims = flds.grid().ldims;
 
     if (d == 1) {
@@ -249,9 +249,9 @@ struct BndFields_ : BndFieldsBase
     }
   }
 
-  void conducting_wall_E_hi(fields_t flds, int p, int d)
+  void conducting_wall_E_hi(fields_view_t flds, int p, int d)
   {
-    Fields F(flds);
+    FieldsV F(flds);
     const int *ldims = flds.grid().ldims;
 
     if (d == 1) {
@@ -316,9 +316,9 @@ struct BndFields_ : BndFieldsBase
     }
   }
 
-  void conducting_wall_H_lo(fields_t flds, int p, int d)
+  void conducting_wall_H_lo(fields_view_t flds, int p, int d)
   {
-    Fields F(flds);
+    FieldsV F(flds);
     const int *ldims = flds.grid().ldims;
 
     if (d == 1) {
@@ -376,9 +376,9 @@ struct BndFields_ : BndFieldsBase
     }
   }
 
-  void conducting_wall_H_hi(fields_t flds, int p, int d)
+  void conducting_wall_H_hi(fields_view_t flds, int p, int d)
   {
-    Fields F(flds);
+    FieldsV F(flds);
     const int *ldims = flds.grid().ldims;
 
     if (d == 1) {
@@ -438,9 +438,9 @@ struct BndFields_ : BndFieldsBase
     }
   }
 
-  void conducting_wall_J_lo(fields_t flds, int p, int d)
+  void conducting_wall_J_lo(fields_view_t flds, int p, int d)
   {
-    Fields F(flds);
+    FieldsV F(flds);
     const int *ldims = flds.grid().ldims;
 
     if (d == 1) {
@@ -473,9 +473,9 @@ struct BndFields_ : BndFieldsBase
     }
   }
 
-  void conducting_wall_J_hi(fields_t flds, int p, int d)
+  void conducting_wall_J_hi(fields_view_t flds, int p, int d)
   {
-    Fields F(flds);
+    FieldsV F(flds);
     const int *ldims = flds.grid().ldims;
 
     if (d == 1) {
@@ -515,9 +515,9 @@ struct BndFields_ : BndFieldsBase
   // ----------------------------------------------------------------------
   // open_H_lo
 
-  void open_H_lo(fields_t flds, int p, int d)
+  void open_H_lo(fields_view_t flds, int p, int d)
   {
-    Fields F(flds);
+    FieldsV F(flds);
     const int *ldims = flds.grid().ldims;
 
     if (d == 1) {
@@ -582,9 +582,9 @@ struct BndFields_ : BndFieldsBase
   }
 
   static void
-  open_H_hi(fields_t flds, int p, int d)
+  open_H_hi(fields_view_t flds, int p, int d)
   {
-    Fields F(flds);
+    FieldsV F(flds);
     const int *ldims = flds.grid().ldims;
 
     if (d == 1) {

@@ -3,7 +3,6 @@
 #include "psc_fields_as_c.h"
 #include "fields.hxx"
 
-using Fields = Fields3d<MfieldsC::fields_t, dim_xyz>;
 using FieldsV = Fields3d<MfieldsC::fields_view_t, dim_xyz>;
 
 // ----------------------------------------------------------------------

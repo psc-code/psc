@@ -13,9 +13,7 @@
 #define MPFX(x) psc_mfields_single_ ## x
 #define MFIELDS MfieldsSingle
 
-using Fields = Fields3d<MfieldsSingle::fields_t>;
 using FieldsV = Fields3d<MfieldsSingle::fields_view_t>;
-using FieldsC = Fields3d<fields_c_t>;
 using FieldsCV = Fields3d<fields_view_c_t>;
 
 // ======================================================================

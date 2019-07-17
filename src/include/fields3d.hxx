@@ -644,7 +644,6 @@ struct Mfields : MfieldsBase
 template<typename Mfields>
 struct MfieldsStateFromMfields : MfieldsStateBase
 {
-  using fields_t = typename Mfields::fields_t;
   using fields_view_t = typename Mfields::fields_view_t;
   using real_t = typename Mfields::real_t;
 

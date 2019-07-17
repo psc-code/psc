@@ -28,9 +28,7 @@ struct Checks_ : ChecksParams, ChecksBase
   using Mparticles = _Mparticles;
   using MfieldsState = _MfieldsState;
   using Mfields = _Mfields;
-  using fields_t = typename Mfields::fields_t;
   using real_t = typename Mfields::real_t;
-  using Fields = Fields3d<fields_t>;
   using FieldsV = Fields3d<typename Mfields::fields_view_t>;
   using Moment_t = typename ORDER::template Moment_rho_nc<Mparticles, Mfields>;
   

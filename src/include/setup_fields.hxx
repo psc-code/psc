@@ -10,7 +10,6 @@ template<typename MF>
 struct SetupFields
 {
   using Mfields = MF;
-  using Fields = typename Mfields::fields_t;
   using FieldsV = typename Mfields::fields_view_t;
   using real_t = typename Mfields::real_t;
 

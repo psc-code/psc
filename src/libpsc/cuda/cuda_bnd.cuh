@@ -42,9 +42,7 @@ static void k_scatter_add(const real_t* buf, const uint* map, real_t* flds, unsi
 struct CudaBnd
 {
   using Mfields = MfieldsCuda;
-  using fields_t = typename Mfields::fields_t;
   using real_t = typename Mfields::real_t;
-  using Fields = Fields3d<fields_t>;
 
   // ======================================================================
   // Scatter

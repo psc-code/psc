@@ -15,7 +15,6 @@ struct Moment_n_1st
   using Mfields = MF;
   using real_t = typename Mparticles::real_t;
   using particles_t = typename Mparticles::Patch;
-  using fields_t = typename Mfields::fields_view_t;  
   
   constexpr static char const* name = "n_1st";
   constexpr static int n_comps = 1;
@@ -49,7 +48,6 @@ struct Moment_v_1st
   using Mfields = MF;
   using real_t = typename Mparticles::real_t;
   using particles_t = typename Mparticles::Patch;
-  using fields_t = typename Mfields::fields_t;  
   
   constexpr static char const* name = "v_1st";
   constexpr static int n_comps = 3;
@@ -89,7 +87,6 @@ struct Moment_p_1st
   using Mfields = MF;
   using real_t = typename Mparticles::real_t;
   using particles_t = typename Mparticles::Patch;
-  using fields_t = typename Mfields::fields_t;  
   
   constexpr static char const* name = "p_1st";
   constexpr static int n_comps = 3;
@@ -127,7 +124,6 @@ struct Moment_vv_1st
   using Mfields = MF;
   using real_t = typename Mparticles::real_t;
   using particles_t = typename Mparticles::Patch;
-  using fields_t = typename Mfields::fields_t;  
   
   constexpr static char const* name = "vv_1st";
   constexpr static int n_comps = 3;
@@ -167,7 +163,6 @@ struct Moment_T_1st
   using Mfields = MF;
   using real_t = typename Mparticles::real_t;
   using particles_t = typename Mparticles::Patch;
-  using fields_t = typename Mfields::fields_t;  
   
   constexpr static char const* name = "T_1st";
   constexpr static int n_comps = 6;
@@ -210,7 +205,6 @@ struct Moment_Tvv_1st
   using Mfields = MF;
   using real_t = typename Mparticles::real_t;
   using particles_t = typename Mparticles::Patch;
-  using fields_t = typename Mfields::fields_t;  
   
   constexpr static char const* name = "Tvv_1st";
   constexpr static int n_comps = 6;

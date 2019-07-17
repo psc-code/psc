@@ -13,9 +13,7 @@ template<typename MF>
 struct Bnd_ : BndBase
 {
   using Mfields = MF;
-  using fields_t = typename Mfields::fields_t;
   using real_t = typename Mfields::real_t;
-  using Fields = Fields3d<fields_t>;
   using FieldsV = Fields3d<typename Mfields::fields_view_t>;
 
   // ----------------------------------------------------------------------

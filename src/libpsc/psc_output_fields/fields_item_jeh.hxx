@@ -7,9 +7,6 @@
 using MfieldsState_t = MfieldsStateDouble;
 using Mfields_t = MfieldsC;
 
-using Fields = Fields3d<Mfields_t::fields_t>;
-using FieldsState = Fields3d<MfieldsState_t::fields_t>;
-
 // ======================================================================
 
 #define define_dxdydz(dx, dy, dz)		       \

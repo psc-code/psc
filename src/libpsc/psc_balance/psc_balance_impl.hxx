@@ -318,8 +318,6 @@ struct communicate_ctx {
 template<typename Mparticles, typename MfieldsState, typename Mfields>
 struct Balance_ : BalanceBase
 {
-  using fields_t = typename Mfields::fields_t;
-  using Fields = Fields3d<fields_t>;
   using FieldsV = Fields3d<typename Mfields::fields_view_t>;
   using Particle = typename Mparticles::Particle;
   using real_t = typename Mparticles::real_t;
@@ -724,7 +722,7 @@ private:
       Int3 ib = flds_new.ib();
       void *addr_new = &F_new(0, ib[0], ib[1], ib[2]);
       void *addr_old = &F_old(0, ib[0], ib[1], ib[2]);
-      memcpy(addr_new, addr_old, size * sizeof(typename fields_t::real_t));
+      memcpy(addr_new, addr_old, size * sizeof(typename Mfields::real_t));
     }
     prof_stop(pr);
 

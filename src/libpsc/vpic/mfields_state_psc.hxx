@@ -204,7 +204,6 @@ struct MfieldsStatePsc
     PscFieldBase<Element, Grid> fa_;
   };
   
-  using fields_t = fields3d<float, kg::LayoutAOS>;
   using fields_view_t = fields3d_view<float, kg::LayoutAOS>;
 
   MfieldsStatePsc(const Grid_t& grid, Grid* vgrid, const MaterialList& material_list, double damp = 0.)
