@@ -76,6 +76,7 @@ struct MfieldsStateVpic
   };
     
   using fields_t = fields3d<float, kg::LayoutAOS>;
+  using fields_view_t = fields3d_view<float, kg::LayoutAOS>;
 
   MfieldsStateVpic(const Grid_t& grid, Grid* vgrid, const MaterialList& material_list, double damp = 0.)
     : grid_{grid},
@@ -89,7 +90,7 @@ struct MfieldsStateVpic
   }
 
   real_t* data() { return reinterpret_cast<real_t*>(patch_.data()); }
-  fields_t operator[](int p) { return {grid(), ib_, im_, N_COMP, data()}; }
+  fields_view_t operator[](int p) { return {grid(), ib_, im_, N_COMP, data()}; }
   Patch& getPatch(int p) { return patch_; }
 
   SfaParams& params() { return patch_.params(); }

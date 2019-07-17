@@ -17,7 +17,7 @@ struct PushParticlesEsirkepov
   using AdvanceParticle_t = typename C::AdvanceParticle_t;
   using InterpolateEM_t = typename C::InterpolateEM_t;
   using Current = CurrentEsirkepov<typename C::Order, typename C::Dim,
-				   Fields3d<typename MfieldsState::fields_t>, InterpolateEM_t>;
+				   Fields3d<typename MfieldsState::fields_view_t>, InterpolateEM_t>;
   using real_t = typename Mparticles::real_t;
   using Real3 = Vec3<real_t>;
 

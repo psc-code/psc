@@ -11,7 +11,9 @@
 
 using FieldsH = Fields3d<fields_single_t>; // host
 using FieldsS = Fields3d<fields_single_t> ;// host
+using FieldsSV = Fields3d<fields_view_single_t>; // host
 using FieldsC = Fields3d<fields_c_t>; // host
+using FieldsCV = Fields3d<fields_view_c_t>; // host
 
 // OPT, CUDA fields have too many ghostpoints, and 7 points in the invar direction!
 
@@ -26,7 +28,7 @@ static void psc_mfields_cuda_copy_from_c(MfieldsBase& mflds_cuda, MfieldsBase& m
   FieldsH F(flds);
 
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
-    FieldsC F_c(mf_c[p]);
+    FieldsCV F_c(mf_c[p]);
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.im()[2]; jz++) {
 	for (int jy = flds.ib()[1]; jy < flds.ib()[1] + flds.im()[1]; jy++) {
@@ -51,7 +53,7 @@ static void psc_mfields_cuda_copy_to_c(MfieldsBase& mflds_cuda, MfieldsBase& mfl
   FieldsH F(flds);
 
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
-    FieldsC F_c(mf_c[p]);
+    FieldsCV F_c(mf_c[p]);
     mf_cuda.copy_from_device(p, flds, mb, me);
   
     for (int m = mb; m < me; m++) {
@@ -76,7 +78,7 @@ static void psc_mfields_state_cuda_copy_from_c(MfieldsStateBase& mflds_cuda, Mfi
   FieldsH F(flds);
 
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
-    FieldsC F_c(mf_c[p]);
+    FieldsCV F_c(mf_c[p]);
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.im()[2]; jz++) {
 	for (int jy = flds.ib()[1]; jy < flds.ib()[1] + flds.im()[1]; jy++) {
@@ -101,7 +103,7 @@ static void psc_mfields_state_cuda_copy_to_c(MfieldsStateBase& mflds_cuda, Mfiel
   FieldsH F(flds);
 
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
-    FieldsC F_c(mf_c[p]);
+    FieldsCV F_c(mf_c[p]);
     mf_cuda.copy_from_device(p, flds, mb, me);
   
     for (int m = mb; m < me; m++) {
@@ -129,7 +131,7 @@ static void psc_mfields_cuda_copy_from_single(MfieldsBase& mflds_cuda, MfieldsBa
   FieldsH F(flds);
   
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
-    FieldsS F_s(mf_single[p]);
+    FieldsSV F_s(mf_single[p]);
 
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.im()[2]; jz++) {
@@ -155,7 +157,7 @@ static void psc_mfields_state_cuda_copy_from_single(MfieldsStateBase& mflds_cuda
   FieldsH F(flds);
   
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
-    FieldsS F_s(mf_single[p]);
+    FieldsSV F_s(mf_single[p]);
 
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.im()[2]; jz++) {
@@ -181,7 +183,7 @@ static void psc_mfields_cuda_copy_to_single(MfieldsBase& mflds_cuda, MfieldsBase
   FieldsH F(flds);
 
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
-    FieldsS F_s(mf_single[p]);
+    FieldsSV F_s(mf_single[p]);
     mf_cuda.copy_from_device(p, flds, mb, me);
   
     for (int m = mb; m < me; m++) {
@@ -206,7 +208,7 @@ static void psc_mfields_state_cuda_copy_to_single(MfieldsStateBase& mflds_cuda, 
   FieldsH F(flds);
 
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
-    FieldsS F_s(mf_single[p]);
+    FieldsSV F_s(mf_single[p]);
     mf_cuda.copy_from_device(p, flds, mb, me);
   
     for (int m = mb; m < me; m++) {

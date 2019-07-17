@@ -320,6 +320,7 @@ struct Balance_ : BalanceBase
 {
   using fields_t = typename Mfields::fields_t;
   using Fields = Fields3d<fields_t>;
+  using FieldsV = Fields3d<typename Mfields::fields_view_t>;
   using Particle = typename Mparticles::Particle;
   using real_t = typename Mparticles::real_t;
 
@@ -667,8 +668,8 @@ private:
       if (new_rank == ctx->mpi_rank || new_rank < 0) {
 	send_reqs[p] = MPI_REQUEST_NULL;
       } else {
-	fields_t flds_old = mf_old[p];
-	Fields F_old(flds_old);
+	auto flds_old = mf_old[p];
+	auto F_old(flds_old);
 	int nn = flds_old.size();
 	Int3 ib = flds_old.ib();
 	void *addr_old = &F_old(0, ib[0], ib[1], ib[2]);
@@ -689,8 +690,8 @@ private:
 	recv_reqs[p] = MPI_REQUEST_NULL;
 	//Seed new data
       } else {
-	fields_t flds_new = mf_new[p];
-	Fields F_new(flds_new);
+	auto flds_new = mf_new[p];
+	FieldsV F_new(flds_new);
 	int nn = flds_new.size();
 	Int3 ib = flds_new.ib();
 	void *addr_new = &F_new(0, ib[0], ib[1], ib[2]);
@@ -714,9 +715,9 @@ private:
 	continue;
       }
 
-      fields_t flds_old = mf_old[ctx->recv_info[p].patch];
-      fields_t flds_new = mf_new[p];
-      Fields F_old(flds_old), F_new(flds_new);
+      auto flds_old = mf_old[ctx->recv_info[p].patch];
+      auto flds_new = mf_new[p];
+      FieldsV F_old(flds_old), F_new(flds_new);
       assert(flds_old.n_comps() == flds_new.n_comps());
       assert(flds_old.size() == flds_new.size());
       int size = flds_old.size();

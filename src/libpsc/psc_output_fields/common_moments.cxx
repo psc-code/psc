@@ -6,7 +6,7 @@
 #include <string>
 
 #define DEPOSIT_TO_GRID_1ST_CC(prt, flds, m, val) do {			\
-    using Fields = Fields3d<fields_t>;					\
+    using Fields = Fields3d<typename Mfields::fields_view_t>;		\
     Fields F(flds);							\
     auto xi = prt.x(); /* don't shift back in time */			\
     real_t u = xi[0] * dxi - .5;					\
@@ -54,7 +54,7 @@
   } while (0)
 
 #define DEPOSIT_TO_GRID_1ST_NC(prt, flds, m, val) do {			\
-    using Fields = Fields3d<fields_t>;					\
+    using Fields = Fields3d<typename Mfields::fields_view_t>;		\
     Fields F(flds);							\
     auto xi = prt.x(); /* don't shift back in time */			\
     real_t u = xi[0] * dxi;						\
@@ -102,7 +102,7 @@
   } while (0)
 
 #define DEPOSIT_TO_GRID_2ND_NC(prt, flds, m, val) do {			\
-    using Fields = Fields3d<fields_t>;					\
+    using Fields = Fields3d<typename Mfields::fields_view_t>;		\
     Fields F(flds);							\
     auto xi = prt.x(); /* don't shift back in time */			\
     real_t u = xi[0] * dxi;						\

@@ -4,6 +4,7 @@
 #include "fields.hxx"
 
 using Fields = Fields3d<MfieldsC::fields_t, dim_xyz>;
+using FieldsV = Fields3d<MfieldsC::fields_view_t, dim_xyz>;
 
 // ----------------------------------------------------------------------
 // psc_diag_item_field_energy_run
@@ -17,7 +18,7 @@ psc_diag_item_field_energy_run(struct psc_diag_item *item,
   auto& mf = mflds_base.get_as<MfieldsStateDouble>(EX, HX + 3);
   for (int p = 0; p < grid.n_patches(); p++) {
     double fac = grid.domain.dx[0] * grid.domain.dx[1] * grid.domain.dx[2];
-    Fields F(mf[p]);
+    FieldsV F(mf[p]);
     // FIXME, this doesn't handle non-periodic b.c. right
     grid.Foreach_3d(0, 0, [&](int ix, int iy, int iz) {
 	EH2[0] +=	sqr(F(EX, ix,iy,iz)) * fac;

@@ -98,15 +98,14 @@ struct ItemLoopPatches : ItemPatch
 {
   using MfieldsState = typename ItemPatch::MfieldsState;
   using Mfields = typename ItemPatch::Mfields;
-  using fields_t = typename Mfields::fields_t;
-  using Fields = Fields3d<fields_t>;
+  using FieldsV = Fields3d<typename Mfields::fields_view_t>;
   
   static void run(MfieldsState& mflds, Mfields& mres)
   {
     auto& grid = mres.grid();
     
     for (int p = 0; p < mres.n_patches(); p++) {
-      Fields F(mflds[p]), R(mres[p]);
+      FieldsV F(mflds[p]), R(mres[p]);
       grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
 	  ItemPatch::set(grid, R, F, i,j,k);
 	});
@@ -164,6 +163,7 @@ struct ItemMomentAddBnd : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Mo
   using Mparticles = typename Moment_t::Mparticles;
   using fields_t = typename Mfields::fields_t;
   using Fields = Fields3d<fields_t>;
+  using FieldsV = Fields3d<typename Mfields::fields_view_t>;
 
   constexpr static const char* name = Moment_t::name;
   constexpr static int n_comps = Moment_t::n_comps;
@@ -190,9 +190,10 @@ struct ItemMomentAddBnd : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Mo
   // ----------------------------------------------------------------------
   // boundary stuff FIXME, should go elsewhere...
 
-  static void add_ghosts_reflecting_lo(fields_t flds, int p, int d, int mb, int me)
+  template<typename FE>
+  static void add_ghosts_reflecting_lo(FE flds, int p, int d, int mb, int me)
   {
-    Fields F(flds);
+    FieldsV F(flds);
     const int *ldims = flds.grid().ldims;
 
     int bx = ldims[0] == 1 ? 0 : 1;
@@ -221,9 +222,10 @@ struct ItemMomentAddBnd : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Mo
     }
   }
 
-  static void add_ghosts_reflecting_hi(fields_t flds, int p, int d, int mb, int me)
+  template<typename FE>
+  static void add_ghosts_reflecting_hi(FE flds, int p, int d, int mb, int me)
   {
-    Fields F(flds);
+    FieldsV F(flds);
     const int *ldims = flds.grid().ldims;
 
     int bx = ldims[0] == 1 ? 0 : 1;
@@ -252,7 +254,8 @@ struct ItemMomentAddBnd : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Mo
     }
   }
 
-  static void add_ghosts_boundary(fields_t res, int p, int mb, int me)
+  template<typename FE>
+  static void add_ghosts_boundary(FE res, int p, int mb, int me)
   {
     const auto& grid = res.grid();
     // lo

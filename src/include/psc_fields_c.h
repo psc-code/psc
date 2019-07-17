@@ -13,6 +13,8 @@ struct fields_c_t : fields3d<double>
   using Base::Base;
 };
 
+using fields_view_c_t = fields3d_view<double>;
+
 using MfieldsC = Mfields<fields_c_t>;
 using MfieldsStateDouble = MfieldsStateFromMfields<MfieldsC>;
 

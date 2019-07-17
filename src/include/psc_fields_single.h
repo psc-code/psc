@@ -13,6 +13,8 @@ struct fields_single_t : fields3d<float>
   using Base::Base;
 };
 
+using fields_view_single_t = fields3d_view<float>;
+
 using MfieldsSingle = Mfields<fields_single_t>;
 using MfieldsStateSingle = MfieldsStateFromMfields<MfieldsSingle>;
 

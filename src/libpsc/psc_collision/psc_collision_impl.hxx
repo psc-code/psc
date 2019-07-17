@@ -22,6 +22,7 @@ struct CollisionHost
   using MfieldsState = _MfieldsState;
   using Mfields = _Mfields;
   using Fields = Fields3d<typename Mfields::fields_t>;
+  using FieldsV = Fields3d<typename Mfields::fields_view_t>;
   using AccessorPatch = typename Mparticles::Accessor::Patch;
   using ParticleProxy = typename AccessorPatch::ParticleProxy;
   
@@ -66,7 +67,7 @@ struct CollisionHost
     
       find_cell_offsets(offsets, acc);
     
-      Fields F(mflds_stats_[p]);
+      FieldsV F(mflds_stats_[p]);
       grid.Foreach_3d(0, 0, [&](int ix, int iy, int iz) {
 	  int c = (iz * ldims[1] + iy) * ldims[0] + ix;
 	  randomize_in_cell(acc, offsets[c], offsets[c+1]);
@@ -181,7 +182,7 @@ struct CollisionHost
 			 int p, int i, int j, int k)
   {
     real_t fnqs = prts.grid().norm.fnqs;
-    Fields F(mflds_rei_[p]);
+    FieldsV F(mflds_rei_[p]);
     F(0, i,j,k) = 0.;
     F(1, i,j,k) = 0.;
     F(2, i,j,k) = 0.;
@@ -200,7 +201,7 @@ struct CollisionHost
 			int p, int i, int j, int k)
   {
     real_t fnqs = prts.grid().norm.fnqs, dt = prts.grid().dt;
-    Fields F(mflds_rei_[p]);
+    FieldsV F(mflds_rei_[p]);
     for (int n = n_start; n < n_end; n++) {
       const auto& prt = prts[n];
       F(0, i,j,k) += prt.u()[0] * prt.m() * prt.w() * fnqs;

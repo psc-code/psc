@@ -14,7 +14,7 @@ template<>
 struct SetupFields<VpicConfig::MfieldsState>
 {
   using MfieldsState = VpicConfig::MfieldsState;
-  using Fields = typename MfieldsState::fields_t;
+  using Fields = typename MfieldsState::fields_view_t;
 
   template<typename FUNC>
   static void set(MfieldsState& mf, FUNC func)

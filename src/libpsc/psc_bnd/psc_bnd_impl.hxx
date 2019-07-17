@@ -16,6 +16,7 @@ struct Bnd_ : BndBase
   using fields_t = typename Mfields::fields_t;
   using real_t = typename Mfields::real_t;
   using Fields = Fields3d<fields_t>;
+  using FieldsV = Fields3d<typename Mfields::fields_view_t>;
 
   // ----------------------------------------------------------------------
   // ctor
@@ -108,7 +109,7 @@ struct Bnd_ : BndBase
 			  void *_buf, void *ctx)
   {
     auto& mf = *static_cast<Mfields*>(ctx);
-    Fields F(mf[p]);
+    FieldsV F(mf[p]);
     real_t *buf = static_cast<real_t*>(_buf);
     
     for (int m = mb; m < me; m++) {
@@ -126,7 +127,7 @@ struct Bnd_ : BndBase
 			   void *_buf, void *ctx)
   {
     auto& mf = *static_cast<Mfields*>(ctx);
-    Fields F(mf[p]);
+    FieldsV F(mf[p]);
     real_t *buf = static_cast<real_t*>(_buf);
     
     for (int m = mb; m < me; m++) {
@@ -144,7 +145,7 @@ struct Bnd_ : BndBase
 			    void *_buf, void *ctx)
   {
     auto& mf = *static_cast<Mfields*>(ctx);
-    Fields F(mf[p]);
+    FieldsV F(mf[p]);
     real_t *buf = static_cast<real_t*>(_buf);
     
     for (int m = mb; m < me; m++) {

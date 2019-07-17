@@ -18,6 +18,7 @@ struct fields_cuda_t
 struct MfieldsCuda : MfieldsBase
 {
   using fields_t = fields_cuda_t;
+  using fields_view_t = fields_cuda_t;
   using real_t = fields_cuda_t::real_t;
 
   class Accessor
@@ -84,6 +85,7 @@ struct MfieldsCuda : MfieldsBase
 struct MfieldsStateCuda : MfieldsStateBase
 {
   using fields_t = MfieldsCuda::fields_t;
+  using fields_view_t = MfieldsCuda::fields_view_t;
   using real_t = MfieldsCuda::real_t;
   
   MfieldsStateCuda(const Grid_t& grid)

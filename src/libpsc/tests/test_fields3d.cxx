@@ -25,11 +25,11 @@ TEST(fields3d, CtorNoArray)
   f.dtor();
 }
 
-TEST(fields3d, CtorArray)
+TEST(fields3d_view, Ctor)
 {
   auto grid = make_grid();
   auto storage = std::vector<Real>(2 * 3 * 4 * 2);
-  auto f = fields3d<Real, Layout>{grid, {1, 2, 3}, {2, 3, 4}, 2, storage.data()};
+  auto f = fields3d_view<Real, Layout>{grid, {1, 2, 3}, {2, 3, 4}, 2, storage.data()};
 }
 
 TEST(fields3d, BoundsEtc)

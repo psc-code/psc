@@ -154,7 +154,8 @@ public:
     }
   }
 
-  void copy_comp(int mto, const Derived& from, int mfrom)
+  template<typename F>
+  void copy_comp(int mto, const F& from, int mfrom)
   {
     for (int k = ib_[2]; k < ib_[2] + im_[2]; k++) {
       for (int j = ib_[1]; j < ib_[1] + im_[1]; j++) {
@@ -165,7 +166,8 @@ public:
     }
   }
 
-  void axpy_comp(int m_y, const_reference alpha, const Derived& x, int m_x)
+  template<typename F>
+  void axpy_comp(int m_y, const_reference alpha, const F& x, int m_x)
   {
     for (int k = ib_[2]; k < ib_[2] + im_[2]; k++) {
       for (int j = ib_[1]; j < ib_[1] + im_[1]; j++) {
@@ -228,7 +230,9 @@ private:
   const int n_comps_; // # of components
 };
 
-// forward decl
+// ======================================================================
+// fields3d
+
 template<typename T, typename L=kg::LayoutSOA>
 struct fields3d;
 
@@ -246,16 +250,65 @@ struct fields3d : fields3d_container<fields3d<T, L>>
   using Storage = typename Base::Storage;
   using real_t = typename Base::value_type;
 
-  fields3d(const Grid_t& grid, Int3 ib, Int3 im, int n_comps, real_t* data=nullptr)
+  fields3d(const Grid_t& grid, Int3 ib, Int3 im, int n_comps)
     : Base{ib, im, n_comps},
       grid_{grid},
-      storage_{data ? data : (real_t *) calloc(Base::size(), sizeof(real_t))}
+      storage_{(real_t *) calloc(Base::size(), sizeof(real_t))}
   {
   }
 
+#if 0
+  fields3d(const Grid_t& grid, Int3 ib, Int3 im, int n_comps, real_t* data)
+    : Base{ib, im, n_comps},
+      grid_{grid},
+      storage_{data}
+  {
+  }
+#endif
+  
   void dtor()
   {
     storage_.free();
+  }
+
+  const Grid_t& grid() const { return grid_; }
+
+private:
+  Storage storage_;
+
+  Storage& storageImpl() { return storage_; }
+  const Storage& storageImpl() const { return storage_; }
+
+  friend class fields3d_container<fields3d<T, L>>;
+  
+  const Grid_t& grid_;
+};
+
+// ======================================================================
+// fields3d_view
+
+template<typename T, typename L=kg::LayoutSOA>
+struct fields3d_view;
+
+template<typename T, typename L>
+struct fields3d_container_InnerTypes<fields3d_view<T, L>>
+{
+  using Layout = L;
+  using Storage = Storage<T>;
+};
+
+template<typename T, typename L>
+struct fields3d_view : fields3d_container<fields3d<T, L>>
+{
+  using Base = fields3d_container<fields3d<T, L>>;
+  using Storage = typename Base::Storage;
+  using real_t = typename Base::value_type;
+
+  fields3d_view(const Grid_t& grid, Int3 ib, Int3 im, int n_comps, real_t* data)
+    : Base{ib, im, n_comps},
+      grid_{grid},
+      storage_{data}
+  {
   }
 
   const Grid_t& grid() const { return grid_; }
@@ -484,6 +537,7 @@ struct Mfields : MfieldsBase
 {
   using fields_t = F;
   using real_t = typename fields_t::real_t;
+  using fields_view_t = fields3d_view<real_t, typename fields_t::Layout>;
 
   Mfields(const Grid_t& grid, int n_fields, Int3 ibn)
     : MfieldsBase(grid, n_fields, ibn)
@@ -517,9 +571,9 @@ struct Mfields : MfieldsBase
     }
   }
   
-  fields_t operator[](int p)
+  fields_view_t operator[](int p)
   {
-    return fields_t(grid(), Int3::fromPointer(ib), Int3::fromPointer(im), n_fields_, data[p].get());
+    return fields_view_t(grid(), Int3::fromPointer(ib), Int3::fromPointer(im), n_fields_, data[p].get());
   }
 
   void zero_comp(int m) override
@@ -591,6 +645,7 @@ template<typename Mfields>
 struct MfieldsStateFromMfields : MfieldsStateBase
 {
   using fields_t = typename Mfields::fields_t;
+  using fields_view_t = typename Mfields::fields_view_t;
   using real_t = typename Mfields::real_t;
 
   MfieldsStateFromMfields(const Grid_t& grid)
@@ -598,7 +653,7 @@ struct MfieldsStateFromMfields : MfieldsStateBase
       mflds_{grid, NR_FIELDS, grid.ibn}
   {}
 
-  fields_t operator[](int p) { return mflds_[p]; }
+  fields_view_t operator[](int p) { return mflds_[p]; }
 
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }

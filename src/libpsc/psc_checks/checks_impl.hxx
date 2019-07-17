@@ -31,6 +31,7 @@ struct Checks_ : ChecksParams, ChecksBase
   using fields_t = typename Mfields::fields_t;
   using real_t = typename Mfields::real_t;
   using Fields = Fields3d<fields_t>;
+  using FieldsV = Fields3d<typename Mfields::fields_view_t>;
   using Moment_t = typename ORDER::template Moment_rho_nc<Mparticles, Mfields>;
   
   // ----------------------------------------------------------------------
@@ -103,8 +104,8 @@ struct Checks_ : ChecksParams, ChecksBase
     double eps = continuity_threshold;
     double max_err = 0.;
     for (int p = 0; p < div_j.n_patches(); p++) {
-      Fields D_rho(d_rho[p]);
-      Fields Div_J(div_j[p]);
+      FieldsV D_rho(d_rho[p]);
+      FieldsV Div_J(div_j[p]);
       grid.Foreach_3d(0, 0, [&](int jx, int jy, int jz) {
 	  double d_rho = D_rho(0, jx,jy,jz);
 	  double div_j = Div_J(0, jx,jy,jz);
@@ -176,7 +177,7 @@ struct Checks_ : ChecksParams, ChecksBase
     double eps = gauss_threshold;
     double max_err = 0.;
     for (int p = 0; p < dive.n_patches(); p++) {
-      Fields Rho(rho[p]), DivE(dive[p]);
+      FieldsV Rho(rho[p]), DivE(dive[p]);
 
       int l[3] = {0, 0, 0}, r[3] = {0, 0, 0};
       for (int d = 0; d < 3; d++) {
