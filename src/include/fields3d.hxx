@@ -332,8 +332,6 @@ struct MfieldsBase
   using convert_func_t = void (*)(MfieldsBase&, MfieldsBase&, int, int);
   using Convert = std::unordered_map<std::type_index, convert_func_t>;
   
-  struct fields_t { struct real_t {}; };
-  
   MfieldsBase(const Grid_t& grid, int n_fields, Int3 ibn)
     : grid_(&grid),
       n_fields_(n_fields),

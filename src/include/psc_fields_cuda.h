@@ -83,7 +83,6 @@ struct MfieldsCuda : MfieldsBase
 
 struct MfieldsStateCuda : MfieldsStateBase
 {
-  using fields_t = MfieldsCuda::fields_t;
   using fields_view_t = MfieldsCuda::fields_view_t;
   using real_t = MfieldsCuda::real_t;
   

@@ -161,8 +161,6 @@ struct ItemMomentAddBnd : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Mo
   using Base = ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Moment_t::Mfields>;
   using Mfields = typename Moment_t::Mfields;
   using Mparticles = typename Moment_t::Mparticles;
-  using fields_t = typename Mfields::fields_t;
-  using Fields = Fields3d<fields_t>;
   using FieldsV = Fields3d<typename Mfields::fields_view_t>;
 
   constexpr static const char* name = Moment_t::name;
