@@ -32,7 +32,7 @@ struct Moment_n_1st
       auto flds = mflds[p];
       for (auto prt: accessor[p]) {
 	int m = prt.kind();
-	DEPOSIT_TO_GRID_1ST_CC(prt, flds, m, 1.f);
+	deposit_1st_cc(grid, flds, prt, m, fnqs, dxi, dyi, dzi, 1.f);	\
       }
     }
   }
