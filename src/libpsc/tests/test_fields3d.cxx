@@ -58,6 +58,18 @@ TEST(fields3d, index)
   f.dtor();
 }
 
+TEST(fields3d, data)
+{
+  auto grid = make_grid();
+  auto f = fields3d<Real, Layout>{grid, {1, 2, 3}, {2, 3, 4}, 2};
+
+  EXPECT_EQ(f.data(), &f(0, 1, 2, 3));
+  const auto fc = const_cast<const fields3d<Real, Layout>&>(f);
+  EXPECT_EQ(fc.data(), &fc(0, 1, 2, 3));
+
+  f.dtor();
+}
+
 // ======================================================================
 // main
 

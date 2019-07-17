@@ -64,6 +64,9 @@ public:
   int n_comps() const { return n_comps_; }
   int size()    const { return n_comps() * n_cells(); }
 
+  R* data() { return storage().data(); }
+  const R* data() const { return storage().data(); }
+
   int index(int m, int i, int j, int k) const
   {
 #ifdef BOUNDS_CHECK
@@ -88,12 +91,12 @@ public:
 protected:
   Storage& storage()
   {
-    return derived().storage_impl();
+    return derived().storageImpl();
   }
 
   const Storage& storage() const
   {
-    return derived().storage_impl();
+    return derived().storageImpl();
   }
   
   Derived& derived()
@@ -115,6 +118,7 @@ template<typename R, typename L=kg::LayoutSOA>
 struct fields3d : fields3d_container<fields3d<R, L>, R, L>
 {
   using Base = fields3d_container<fields3d<R, L>, R, L>;
+  using Storage = Storage<R>;
   using real_t = R;
   using layout = L;
 
@@ -136,9 +140,6 @@ struct fields3d : fields3d_container<fields3d<R, L>, R, L>
 
   const real_t& operator()(int m, int i, int j, int k) const { return storage_.data()[Base::index(m, i, j, k)];  }
   real_t& operator()(int m, int i, int j, int k)             { return storage_.data()[Base::index(m, i, j, k)];  }
-
-  real_t* data() { return storage_.data(); }
-  const real_t* data() const { return storage_.data(); }
 
   void zero(int m)
   {
@@ -230,7 +231,13 @@ struct fields3d : fields3d_container<fields3d<R, L>, R, L>
 
   const Grid_t& grid() const { return grid_; }
 
-  Storage<R> storage_;
+private:
+  Storage& storageImpl() { return storage_; }
+  const Storage& storageImpl() const { return storage_; }
+
+  friend class fields3d_container<fields3d<R, L>, R, L>;
+  
+  Storage storage_;
   const Grid_t& grid_;
 };
 
