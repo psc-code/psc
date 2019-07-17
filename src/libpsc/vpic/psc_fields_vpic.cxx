@@ -12,7 +12,7 @@
 #if 0
 
 using Fields = Fields3d<MfieldsStateVpic::fields_view_t>;
-using FieldsS = Fields3d<fields_single_t>;
+using FieldsS = Fields3d<MfieldsStateSingle::fields_view_t>;
 
 static const int map_psc2vpic[MfieldsStateVpic::N_COMP] = {
   [JXI] = MfieldsStateVpic::JFX, [JYI] = MfieldsStateVpic::JFY, [JZI] = MfieldsStateVpic::JFZ,
@@ -56,7 +56,7 @@ static void MfieldsStateVpic_copy_to_single(MfieldsStateBase& mflds, MfieldsStat
   auto& mf = dynamic_cast<MfieldsStateVpic&>(mflds);
   for (int p = 0; p < mf.n_patches(); p++) {
     fields_vpic_t flds = mf[p];
-    fields_single_t flds_single = mf_single[p];
+    auto flds_single = mf_single[p];
     FieldsS F_s(flds_single);
 
     int ib[3], ie[3];

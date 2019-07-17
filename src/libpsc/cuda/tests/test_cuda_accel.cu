@@ -72,8 +72,8 @@ struct PushMprtsTest : TestBase<CudaMparticles>, ::testing::Test
   {
     auto cmflds = std::unique_ptr<cuda_mfields>(new cuda_mfields(*grid_, N_FIELDS, { 0, 2, 2 }));
 
-    fields_single_t flds = cmflds->get_host_fields();
-    Fields3d<fields_single_t> F(flds);
+    auto flds = cmflds->get_host_fields();
+    Fields3d<fields_host_t> F(flds);
 
     auto ldims = grid_->ldims;
 

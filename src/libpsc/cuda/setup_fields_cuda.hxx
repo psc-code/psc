@@ -10,8 +10,8 @@ void SetupFields<MfieldsStateCuda>::set(Mfields& mf, FUNC func)
 {
   for (int p = 0; p < mf.n_patches(); ++p) {
     auto& patch = mf.grid().patches[p];
-    fields_single_t flds = mf.get_host_fields();
-    Fields3d<fields_single_t> F(flds);
+    auto flds = mf.get_host_fields();
+    Fields3d<MfieldsStateCuda::fields_host_t> F(flds);
     
     int n_ghosts = std::max({mf.ibn()[0], mf.ibn()[1], mf.ibn()[2]}); // FIXME, not pretty
     // FIXME, do we need the ghost points?

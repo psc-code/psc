@@ -129,10 +129,10 @@ cuda_marder_correct_yz_gold(struct cuda_mfields *cmflds, struct cuda_mfields *cm
 			    int ly[3], int ry[3],
 			    int lz[3], int rz[3])
 {
-  fields_single_t flds = cmflds->get_host_fields();
-  Fields3d<fields_single_t> Flds(flds);
-  fields_single_t f = cmf->get_host_fields();
-  Fields3d<fields_single_t> F(f);
+  auto flds = cmflds->get_host_fields();
+  Fields3d<cuda_mfields::fields_host_t> Flds(flds);
+  auto f = cmf->get_host_fields();
+  Fields3d<cuda_mfields::fields_host_t> F(f);
   
   cmflds->copy_from_device(p, flds, EX, EX + 3);
   cmf->copy_from_device(p, f, 0, 1);

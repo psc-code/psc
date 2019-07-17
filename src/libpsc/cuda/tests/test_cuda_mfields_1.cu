@@ -47,7 +47,7 @@ init_wave(double x, double y, int m)
 int
 main(void)
 {
-  using fields_t = fields_single_t;
+  using fields_t = fields3d<float>;
   using real_t = fields_t::real_t;
   
   Grid_t grid{};

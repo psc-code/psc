@@ -50,6 +50,7 @@ struct DFields;
 struct cuda_mfields
 {
   using real_t = float;
+  using fields_host_t = fields3d<real_t>;
 
   cuda_mfields(const Grid_t& grid, int n_fields, const Int3& ibn);
   cuda_mfields(const cuda_mfields&) = delete;
@@ -59,9 +60,9 @@ struct cuda_mfields
   
   void axpy_comp_yz(int ym, float a, cuda_mfields *x, int xm);
 
-  fields_single_t get_host_fields();
-  void copy_to_device(int p, fields_single_t h_flds, int mb, int me);
-  void copy_from_device(int p, fields_single_t h_flds, int mb, int me);
+  fields_host_t get_host_fields();
+  void copy_to_device(int p, fields_host_t h_flds, int mb, int me);
+  void copy_from_device(int p, fields_host_t h_flds, int mb, int me);
 
   mrc_json_t to_json();
   void dump(const char *filename);
