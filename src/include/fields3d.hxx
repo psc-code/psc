@@ -57,6 +57,12 @@ public:
       n_comps_{n_comps}
   {
   }
+
+  Int3 ib()     const { return ib_; }
+  Int3 im()     const { return im_; }
+  int n_cells() const { return im_[0] * im_[1] * im_[2]; }
+  int n_comps() const { return n_comps_; }
+  int size()    const { return n_comps() * n_cells(); }
       
 protected:
   Storage& storage()
@@ -98,7 +104,7 @@ struct fields3d : fields3d_container<fields3d<R, L>, R, L>
   fields3d(const Grid_t& grid, Int3 ib, Int3 im, int n_comps, real_t* data=nullptr)
     : Base{ib, im, n_comps},
       grid_{grid},
-      storage_{data ? data : (real_t *) calloc(size(), sizeof(real_t))}
+      storage_{data ? data : (real_t *) calloc(Base::size(), sizeof(real_t))}
   {
   }
 
@@ -113,16 +119,11 @@ struct fields3d : fields3d_container<fields3d<R, L>, R, L>
   real_t* data() { return storage_.data(); }
   const real_t* data() const { return storage_.data(); }
   int index(int m, int i, int j, int k) const;
-  int n_comps() const { return n_comps_; }
-  int n_cells() const { return im_[0] * im_[1] * im_[2]; }
-  int size()    const { return n_comps() * n_cells(); }
-  Int3 ib()     const { return ib_; }
-  Int3 im()     const { return im_; }
 
   void zero(int m)
   {
     // FIXME, only correct for SOA!!!
-    memset(&(*this)(m, ib_[0], ib_[1], ib_[2]), 0, n_cells() * sizeof(real_t));
+    memset(&(*this)(m, ib_[0], ib_[1], ib_[2]), 0, Base::n_cells() * sizeof(real_t));
   }
 
   void zero(int mb, int me)
@@ -134,7 +135,7 @@ struct fields3d : fields3d_container<fields3d<R, L>, R, L>
 
   void zero()
   {
-    memset(storage_.data(), 0, sizeof(real_t) * size());
+    memset(storage_.data(), 0, sizeof(real_t) * Base::size());
   }
 
   void set(int m, real_t val)

@@ -21,15 +21,28 @@ static Grid_t make_grid()
 TEST(fields3d, CtorNoArray)
 {
   auto grid = make_grid();
-  auto f = fields3d<Real, Layout>{grid, {1, 2, 3}, {6, 5, 4}, 2};
+  auto f = fields3d<Real, Layout>{grid, {1, 2, 3}, {2, 3, 4}, 2};
   f.dtor();
 }
 
 TEST(fields3d, CtorArray)
 {
   auto grid = make_grid();
-  auto storage = std::vector<Real>(5 * 3 * 1 * 2);
-  auto f = fields3d<Real, Layout>{grid, {1, 2, 3}, {6, 5, 4}, 2, storage.data()};
+  auto storage = std::vector<Real>(2 * 3 * 4 * 2);
+  auto f = fields3d<Real, Layout>{grid, {1, 2, 3}, {2, 3, 4}, 2, storage.data()};
+}
+
+TEST(fields3d, BoundsEtc)
+{
+  auto grid = make_grid();
+  auto storage = std::vector<Real>(2 * 3 * 4 * 2);
+  auto f = fields3d<Real, Layout>{grid, {1, 2, 3}, {2, 3, 4}, 2, storage.data()};
+
+  EXPECT_EQ(f.ib(), Int3({1, 2, 3}));
+  EXPECT_EQ(f.im(), Int3({2, 3, 4}));
+  EXPECT_EQ(f.n_comps(), 2);
+  EXPECT_EQ(f.n_cells(), 2 * 3 * 4);
+  EXPECT_EQ(f.size(), 2 * 3 * 4 * 2);
 }
 
 // ======================================================================
