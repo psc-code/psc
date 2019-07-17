@@ -23,15 +23,21 @@
 // ======================================================================
 // fields3d
 
-template<typename R>
+template<typename T>
 class Storage
 {
 public:
-  Storage(R* data)
+  using value_type = T;
+  using reference = T&;
+  using const_reference = const T&;
+  using pointer = T*;
+  using const_pointer = const T*;
+  
+  Storage(pointer data)
     : data_{data} {}
   
-  R* data() { return data_; }
-  const R* data() const { return data_; }
+  pointer data() { return data_; }
+  const_pointer data() const { return data_; }
 
   void free()
   {
@@ -40,7 +46,7 @@ public:
   }
   
 private:
-  R* data_;
+  pointer data_;
 };
 
 // FIXME, do noexcept?
@@ -55,9 +61,12 @@ public:
 
   using InnerTypes = fields3d_container_InnerTypes<D>;
   using Layout = typename InnerTypes::Layout;
-  using R = typename InnerTypes::value_type;
-
-  using Storage = Storage<R>;
+  using Storage = typename InnerTypes::Storage;
+  using value_type = typename Storage::value_type;
+  using reference = typename Storage::reference;
+  using const_reference = typename Storage::const_reference;
+  using pointer = typename Storage::pointer;
+  using const_pointer = typename Storage::const_pointer;
 
   fields3d_container(Int3 ib, Int3 im, int n_comps)
     : ib_{ib}, im_{im},
@@ -71,16 +80,16 @@ public:
   int n_comps() const { return n_comps_; }
   int size()    const { return n_comps() * n_cells(); }
 
-  R* data() { return storage().data(); }
-  const R* data() const { return storage().data(); }
+  const_pointer data() const { return storage().data(); }
+  pointer data() { return storage().data(); }
 
-  const R& operator()(int m, int i, int j, int k) const { return storage().data()[index(m, i, j, k)];  }
-  R& operator()(int m, int i, int j, int k)             { return storage().data()[index(m, i, j, k)];  }
+  const_reference operator()(int m, int i, int j, int k) const { return storage().data()[index(m, i, j, k)];  }
+  reference operator()(int m, int i, int j, int k)             { return storage().data()[index(m, i, j, k)];  }
 
   void zero(int m)
   {
     // FIXME, only correct for SOA!!!
-    memset(&(*this)(m, ib_[0], ib_[1], ib_[2]), 0, n_cells() * sizeof(R));
+    memset(&(*this)(m, ib_[0], ib_[1], ib_[2]), 0, n_cells() * sizeof(value_type));
   }
 
   void zero(int mb, int me)
@@ -92,7 +101,7 @@ public:
 
   void zero()
   {
-    memset(storage().data(), 0, sizeof(R) * size());
+    memset(storage().data(), 0, sizeof(value_type) * size());
   }
 
   int index(int m, int i, int j, int k) const
@@ -116,7 +125,7 @@ public:
     }
   }
       
-  void set(int m, R val)
+  void set(int m, const_reference val)
   {
     for (int k = ib_[2]; k < ib_[2] + im_[2]; k++) {
       for (int j = ib_[1]; j < ib_[1] + im_[1]; j++) {
@@ -127,7 +136,7 @@ public:
     }
   }
 
-  void scale(int m, R val)
+  void scale(int m, const_reference val)
   {
     for (int k = ib_[2]; k < ib_[2] + im_[2]; k++) {
       for (int j = ib_[1]; j < ib_[1] + im_[1]; j++) {
@@ -149,7 +158,7 @@ public:
     }
   }
 
-  void axpy_comp(int m_y, R alpha, const Derived& x, int m_x)
+  void axpy_comp(int m_y, const_reference alpha, const Derived& x, int m_x)
   {
     for (int k = ib_[2]; k < ib_[2] + im_[2]; k++) {
       for (int j = ib_[1]; j < ib_[1] + im_[1]; j++) {
@@ -160,9 +169,9 @@ public:
     }
   }
 
-  R max_comp(int m)
+  value_type max_comp(int m)
   {
-    R rv = -std::numeric_limits<R>::max();
+    value_type rv = std::numeric_limits<value_type>::lowest();
     for (int k = ib_[2]; k < ib_[2] + im_[2]; k++) {
       for (int j = ib_[1]; j < ib_[1] + im_[1]; j++) {
 	for (int i = ib_[0]; i < ib_[0] + im_[0]; i++) {
@@ -213,23 +222,22 @@ private:
 };
 
 // forward decl
-template<typename R, typename L=kg::LayoutSOA>
+template<typename T, typename L=kg::LayoutSOA>
 struct fields3d;
 
-template<typename R, typename L>
-struct fields3d_container_InnerTypes<fields3d<R, L>>
+template<typename T, typename L>
+struct fields3d_container_InnerTypes<fields3d<T, L>>
 {
-  using value_type = R;
   using Layout = L;
+  using Storage = Storage<T>;
 };
 
-template<typename R, typename L>
-struct fields3d : fields3d_container<fields3d<R, L>>
+template<typename T, typename L>
+struct fields3d : fields3d_container<fields3d<T, L>>
 {
-  using Base = fields3d_container<fields3d<R, L>>;
-  using Storage = Storage<R>;
-  using real_t = R;
-  using layout = L;
+  using Base = fields3d_container<fields3d<T, L>>;
+  using Storage = typename Base::Storage;
+  using real_t = typename Base::value_type;
 
   fields3d(const Grid_t& grid, Int3 ib, Int3 im, int n_comps, real_t* data=nullptr)
     : Base{ib, im, n_comps},
@@ -251,7 +259,7 @@ private:
   Storage& storageImpl() { return storage_; }
   const Storage& storageImpl() const { return storage_; }
 
-  friend class fields3d_container<fields3d<R, L>>;
+  friend class fields3d_container<fields3d<T, L>>;
   
   const Grid_t& grid_;
 };
