@@ -23,6 +23,26 @@
 // ======================================================================
 // fields3d
 
+template<typename R>
+class Storage
+{
+public:
+  Storage(R* data)
+    : data_{data} {}
+  
+  R* data() { return data_; }
+  const R* data() const { return data_; }
+
+  void free()
+  {
+    ::free(data_);
+    data_ = nullptr;
+  }
+  
+private:
+  R* data_;
+};
+
 template<typename R, typename L=kg::LayoutSOA>
 struct fields3d {
   using real_t = R;
@@ -32,23 +52,20 @@ struct fields3d {
     : grid_{grid},
       ib_{ib}, im_{im},
       n_comps_{n_comps},
-      data_{data}
+      storage_{data ? data : (real_t *) calloc(size(), sizeof(real_t))}
   {
-    if (!data_) {
-      data_ = (real_t *) calloc(size(), sizeof(*data_));
-    }
   }
 
   void dtor()
   {
-    free(data_);
-    data_ = NULL;
+    storage_.free();
   }
 
-  real_t  operator()(int m, int i, int j, int k) const { return data_[index(m, i, j, k)];  }
-  real_t& operator()(int m, int i, int j, int k)       { return data_[index(m, i, j, k)];  }
+  real_t  operator()(int m, int i, int j, int k) const { return storage_.data()[index(m, i, j, k)];  }
+  real_t& operator()(int m, int i, int j, int k)       { return storage_.data()[index(m, i, j, k)];  }
 
-  real_t* data() { return data_; }
+  real_t* data() { return storage_.data(); }
+  const real_t* data() const { return storage_.data(); }
   int index(int m, int i, int j, int k) const;
   int n_comps() const { return n_comps_; }
   int n_cells() const { return im_[0] * im_[1] * im_[2]; }
@@ -58,6 +75,7 @@ struct fields3d {
 
   void zero(int m)
   {
+    // FIXME, only correct for SOA!!!
     memset(&(*this)(m, ib_[0], ib_[1], ib_[2]), 0, n_cells() * sizeof(real_t));
   }
 
@@ -70,7 +88,7 @@ struct fields3d {
 
   void zero()
   {
-    memset(data_, 0, sizeof(real_t) * size());
+    memset(storage_.data(), 0, sizeof(real_t) * size());
   }
 
   void set(int m, real_t val)
@@ -145,9 +163,9 @@ struct fields3d {
 
   const Grid_t& grid() const { return grid_; }
 
-  real_t* data_;
   Int3 ib_, im_; //> lower bounds and length per direction
   int n_comps_; // # of components
+  Storage<R> storage_;
   const Grid_t& grid_;
 };
 
