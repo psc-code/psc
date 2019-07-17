@@ -17,7 +17,6 @@ struct fields_cuda_t
 
 struct MfieldsCuda : MfieldsBase
 {
-  using fields_view_t = fields_cuda_t;
   using real_t = fields_cuda_t::real_t;
   using fields_host_t = fields3d<real_t>;
 
@@ -84,7 +83,6 @@ struct MfieldsCuda : MfieldsBase
 
 struct MfieldsStateCuda : MfieldsStateBase
 {
-  using fields_view_t = MfieldsCuda::fields_view_t;
   using real_t = MfieldsCuda::real_t;
   using fields_host_t = MfieldsCuda::fields_host_t;
   

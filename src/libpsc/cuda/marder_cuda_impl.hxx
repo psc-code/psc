@@ -13,7 +13,7 @@
 template<typename BS>
 struct MarderCuda : MarderBase
 {
-  using real_t = MfieldsStateCuda::fields_view_t::real_t;
+  using real_t = MfieldsStateCuda::real_t;
   
   MarderCuda(const Grid_t& grid, real_t diffusion, int loop, bool dump)
     : grid_{grid},
