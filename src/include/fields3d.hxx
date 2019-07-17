@@ -67,6 +67,9 @@ public:
   R* data() { return storage().data(); }
   const R* data() const { return storage().data(); }
 
+  const R& operator()(int m, int i, int j, int k) const { return storage().data()[index(m, i, j, k)];  }
+  R& operator()(int m, int i, int j, int k)             { return storage().data()[index(m, i, j, k)];  }
+
   int index(int m, int i, int j, int k) const
   {
 #ifdef BOUNDS_CHECK
@@ -137,9 +140,6 @@ struct fields3d : fields3d_container<fields3d<R, L>, R, L>
   {
     storage_.free();
   }
-
-  const real_t& operator()(int m, int i, int j, int k) const { return storage_.data()[Base::index(m, i, j, k)];  }
-  real_t& operator()(int m, int i, int j, int k)             { return storage_.data()[Base::index(m, i, j, k)];  }
 
   void zero(int m)
   {
