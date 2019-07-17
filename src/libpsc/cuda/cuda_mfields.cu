@@ -48,7 +48,7 @@ mrc_json_t cuda_mfields::to_json()
   mrc_json_object_push(json_flds, "data", json_flds_patches);
 
   auto flds = get_host_fields();
-  Fields3d<fields_host_t> F(flds);
+  auto F = makeFields3d(flds);
   for (int p = 0; p < n_patches; p++) {
     copy_from_device(p, flds, 0, n_fields);
 

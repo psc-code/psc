@@ -18,7 +18,6 @@
 #include <limits.h>
 #include <stdlib.h>
 
-using Fields = Fields3d<fields_t>;
 using real_t = Fields::real_t;
 
 bool opt_checks_verbose = false;

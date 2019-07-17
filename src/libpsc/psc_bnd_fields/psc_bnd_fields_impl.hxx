@@ -19,7 +19,6 @@ struct BndFields_ : BndFieldsBase
   using Mfields = MF;
   using real_t = typename Mfields::real_t;
   using fields_view_t = typename Mfields::fields_view_t;
-  using FieldsV = Fields3d<fields_view_t, dim>;
   
   // ----------------------------------------------------------------------
   // fill_ghosts_E
@@ -182,7 +181,7 @@ struct BndFields_ : BndFieldsBase
 
   void conducting_wall_E_lo(fields_view_t flds, int p, int d)
   {
-    FieldsV F(flds);
+    auto F = makeFields3d(flds);
     const int *ldims = flds.grid().ldims;
 
     if (d == 1) {
@@ -251,7 +250,7 @@ struct BndFields_ : BndFieldsBase
 
   void conducting_wall_E_hi(fields_view_t flds, int p, int d)
   {
-    FieldsV F(flds);
+    auto F = makeFields3d(flds);
     const int *ldims = flds.grid().ldims;
 
     if (d == 1) {
@@ -318,7 +317,7 @@ struct BndFields_ : BndFieldsBase
 
   void conducting_wall_H_lo(fields_view_t flds, int p, int d)
   {
-    FieldsV F(flds);
+    auto F = makeFields3d(flds);
     const int *ldims = flds.grid().ldims;
 
     if (d == 1) {
@@ -378,7 +377,7 @@ struct BndFields_ : BndFieldsBase
 
   void conducting_wall_H_hi(fields_view_t flds, int p, int d)
   {
-    FieldsV F(flds);
+    auto F = makeFields3d(flds);
     const int *ldims = flds.grid().ldims;
 
     if (d == 1) {
@@ -440,7 +439,7 @@ struct BndFields_ : BndFieldsBase
 
   void conducting_wall_J_lo(fields_view_t flds, int p, int d)
   {
-    FieldsV F(flds);
+    auto F = makeFields3d(flds);
     const int *ldims = flds.grid().ldims;
 
     if (d == 1) {
@@ -475,7 +474,7 @@ struct BndFields_ : BndFieldsBase
 
   void conducting_wall_J_hi(fields_view_t flds, int p, int d)
   {
-    FieldsV F(flds);
+    auto F = makeFields3d(flds);
     const int *ldims = flds.grid().ldims;
 
     if (d == 1) {
@@ -517,7 +516,7 @@ struct BndFields_ : BndFieldsBase
 
   void open_H_lo(fields_view_t flds, int p, int d)
   {
-    FieldsV F(flds);
+    auto F = makeFields3d(flds);
     const int *ldims = flds.grid().ldims;
 
     if (d == 1) {
@@ -584,7 +583,7 @@ struct BndFields_ : BndFieldsBase
   static void
   open_H_hi(fields_view_t flds, int p, int d)
   {
-    FieldsV F(flds);
+    auto F = makeFields3d(flds);
     const int *ldims = flds.grid().ldims;
 
     if (d == 1) {

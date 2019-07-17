@@ -77,7 +77,7 @@ psc_diag_item_mirror_run(struct psc_diag_item *item, struct psc *psc, double *re
   psc_foreach_patch(psc, p) {
     struct psc_patch *patch = &psc->patch[p];
     double fac = patch->dx[0] * patch->dx[1] * patch->dx[2];
-    Fields3d<fields_c_t> F(mf[p]);
+    auto F = makeFields3d(mf[p]);
     psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
       result[0] += 
 	(sqr(F(HX, ix,iy,iz) - HX0) +

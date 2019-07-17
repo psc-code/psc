@@ -10,9 +10,6 @@
 
 #include "psc_fields_inc.h"
 
-using Fields = Fields3d<fields_t>;
-using FieldsC = Fields3d<fields_c_t>;
-
 // ======================================================================
 // convert to/from "c"
 

@@ -72,7 +72,7 @@ curr_cache_add(curr_cache_t curr_cache, int m, int jx, int jy, int jz, real val)
 CUDA_DEVICE static void
 curr_cache_destroy(curr_cache_t curr_cache, flds_curr_t flds_curr, int ci0[3])
 {
-  Fields3d<flds_curr_t> F(flds_curr);
+  auto F = makeFields3d(flds_curr);
   CUDA_SYNCTHREADS();
 
 #ifdef __CUDACC__

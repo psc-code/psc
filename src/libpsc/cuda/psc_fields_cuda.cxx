@@ -9,10 +9,6 @@
 
 #include <mrc_params.h>
 
-using FieldsH = fields3d<float>; // host
-using FieldsSV = Fields3d<MfieldsSingle::fields_view_t>; // host
-using FieldsCV = Fields3d<MfieldsC::fields_view_t>; // host
-
 // OPT, CUDA fields have too many ghostpoints, and 7 points in the invar direction!
 
 // ======================================================================
@@ -23,10 +19,10 @@ static void psc_mfields_cuda_copy_from_c(MfieldsBase& mflds_cuda, MfieldsBase& m
   auto& mf_cuda = dynamic_cast<MfieldsCuda&>(mflds_cuda);
   auto& mf_c = dynamic_cast<MfieldsC&>(mflds_c);
   auto flds = mf_cuda.get_host_fields();
-  FieldsH F(flds);
+  auto F = makeFields3d(flds);
 
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
-    FieldsCV F_c(mf_c[p]);
+    auto F_c = makeFields3d(mf_c[p]);
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.im()[2]; jz++) {
 	for (int jy = flds.ib()[1]; jy < flds.ib()[1] + flds.im()[1]; jy++) {
@@ -48,10 +44,10 @@ static void psc_mfields_cuda_copy_to_c(MfieldsBase& mflds_cuda, MfieldsBase& mfl
   auto& mf_cuda = dynamic_cast<MfieldsCuda&>(mflds_cuda);
   auto& mf_c = dynamic_cast<MfieldsC&>(mflds_c);
   auto flds = mf_cuda.get_host_fields();
-  FieldsH F(flds);
+  auto F = makeFields3d(flds);
 
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
-    FieldsCV F_c(mf_c[p]);
+    auto F_c = makeFields3d(mf_c[p]);
     mf_cuda.copy_from_device(p, flds, mb, me);
   
     for (int m = mb; m < me; m++) {
@@ -73,10 +69,10 @@ static void psc_mfields_state_cuda_copy_from_c(MfieldsStateBase& mflds_cuda, Mfi
   auto& mf_cuda = dynamic_cast<MfieldsStateCuda&>(mflds_cuda);
   auto& mf_c = dynamic_cast<MfieldsStateDouble&>(mflds_c);
   auto flds = mf_cuda.get_host_fields();
-  FieldsH F(flds);
+  auto F = makeFields3d(flds);
 
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
-    FieldsCV F_c(mf_c[p]);
+    auto F_c = makeFields3d(mf_c[p]);
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.im()[2]; jz++) {
 	for (int jy = flds.ib()[1]; jy < flds.ib()[1] + flds.im()[1]; jy++) {
@@ -98,10 +94,10 @@ static void psc_mfields_state_cuda_copy_to_c(MfieldsStateBase& mflds_cuda, Mfiel
   auto& mf_cuda = dynamic_cast<MfieldsStateCuda&>(mflds_cuda);
   auto& mf_c = dynamic_cast<MfieldsStateDouble&>(mflds_c);
   auto flds = mf_cuda.get_host_fields();
-  FieldsH F(flds);
+  auto F = makeFields3d(flds);
 
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
-    FieldsCV F_c(mf_c[p]);
+    auto F_c = makeFields3d(mf_c[p]);
     mf_cuda.copy_from_device(p, flds, mb, me);
   
     for (int m = mb; m < me; m++) {
@@ -126,10 +122,10 @@ static void psc_mfields_cuda_copy_from_single(MfieldsBase& mflds_cuda, MfieldsBa
   auto& mf_cuda = dynamic_cast<MfieldsCuda&>(mflds_cuda);
   auto& mf_single = dynamic_cast<MfieldsSingle&>(mflds_single);
   auto flds = mf_cuda.get_host_fields();
-  FieldsH F(flds);
+  auto F = makeFields3d(flds);
   
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
-    FieldsSV F_s(mf_single[p]);
+    auto F_s = makeFields3d(mf_single[p]);
 
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.im()[2]; jz++) {
@@ -152,10 +148,10 @@ static void psc_mfields_state_cuda_copy_from_single(MfieldsStateBase& mflds_cuda
   auto& mf_cuda = dynamic_cast<MfieldsStateCuda&>(mflds_cuda);
   auto& mf_single = dynamic_cast<MfieldsStateSingle&>(mflds_single);
   auto flds = mf_cuda.get_host_fields();
-  FieldsH F(flds);
+  auto F = makeFields3d(flds);
   
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
-    FieldsSV F_s(mf_single[p]);
+    auto F_s = makeFields3d(mf_single[p]);
 
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.im()[2]; jz++) {
@@ -178,10 +174,10 @@ static void psc_mfields_cuda_copy_to_single(MfieldsBase& mflds_cuda, MfieldsBase
   auto& mf_cuda = dynamic_cast<MfieldsCuda&>(mflds_cuda);
   auto& mf_single = dynamic_cast<MfieldsSingle&>(mflds_single);
   auto flds = mf_cuda.get_host_fields();
-  FieldsH F(flds);
+  auto F = makeFields3d(flds);
 
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
-    FieldsSV F_s(mf_single[p]);
+    auto F_s = makeFields3d(mf_single[p]);
     mf_cuda.copy_from_device(p, flds, mb, me);
   
     for (int m = mb; m < me; m++) {
@@ -203,10 +199,10 @@ static void psc_mfields_state_cuda_copy_to_single(MfieldsStateBase& mflds_cuda, 
   auto& mf_cuda = dynamic_cast<MfieldsStateCuda&>(mflds_cuda);
   auto& mf_single = dynamic_cast<MfieldsStateSingle&>(mflds_single);
   auto flds = mf_cuda.get_host_fields();
-  FieldsH F(flds);
+  auto F = makeFields3d(flds);
 
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
-    FieldsSV F_s(mf_single[p]);
+    auto F_s = makeFields3d(mf_single[p]);
     mf_cuda.copy_from_device(p, flds, mb, me);
   
     for (int m = mb; m < me; m++) {

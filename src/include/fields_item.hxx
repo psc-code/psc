@@ -98,14 +98,14 @@ struct ItemLoopPatches : ItemPatch
 {
   using MfieldsState = typename ItemPatch::MfieldsState;
   using Mfields = typename ItemPatch::Mfields;
-  using FieldsV = Fields3d<typename Mfields::fields_view_t>;
   
   static void run(MfieldsState& mflds, Mfields& mres)
   {
     auto& grid = mres.grid();
     
     for (int p = 0; p < mres.n_patches(); p++) {
-      FieldsV F(mflds[p]), R(mres[p]);
+      auto F = makeFields3d(mflds[p]);
+      auto R = makeFields3d(mres[p]);
       grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
 	  ItemPatch::set(grid, R, F, i,j,k);
 	});
@@ -161,7 +161,6 @@ struct ItemMomentAddBnd : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Mo
   using Base = ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Moment_t::Mfields>;
   using Mfields = typename Moment_t::Mfields;
   using Mparticles = typename Moment_t::Mparticles;
-  using FieldsV = Fields3d<typename Mfields::fields_view_t>;
 
   constexpr static const char* name = Moment_t::name;
   constexpr static int n_comps = Moment_t::n_comps;
@@ -191,7 +190,7 @@ struct ItemMomentAddBnd : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Mo
   template<typename FE>
   static void add_ghosts_reflecting_lo(FE flds, int p, int d, int mb, int me)
   {
-    FieldsV F(flds);
+    auto F = makeFields3d(flds);
     const int *ldims = flds.grid().ldims;
 
     int bx = ldims[0] == 1 ? 0 : 1;
@@ -223,7 +222,7 @@ struct ItemMomentAddBnd : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Mo
   template<typename FE>
   static void add_ghosts_reflecting_hi(FE flds, int p, int d, int mb, int me)
   {
-    FieldsV F(flds);
+    auto F = makeFields3d(flds);
     const int *ldims = flds.grid().ldims;
 
     int bx = ldims[0] == 1 ? 0 : 1;

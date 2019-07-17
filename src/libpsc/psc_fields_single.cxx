@@ -13,9 +13,6 @@
 #define MPFX(x) psc_mfields_single_ ## x
 #define MFIELDS MfieldsSingle
 
-using FieldsV = Fields3d<MfieldsSingle::fields_view_t>;
-using FieldsCV = Fields3d<MfieldsC::fields_view_t>;
-
 // ======================================================================
 // convert to c
 
@@ -26,8 +23,8 @@ static void psc_mfields_single_copy_from_c(MfieldsBase& mflds, MfieldsBase& mfld
   auto& mf_c = dynamic_cast<MfieldsC&>(mflds_c);
   for (int p = 0; p < mf.n_patches(); p++) {
     auto flds = mf[p];
-    FieldsV F(flds);
-    FieldsCV F_c(mf_c[p]);
+    auto F = makeFields3d(flds);
+    auto F_c = makeFields3d(mf_c[p]);
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.im()[2]; jz++) {
 	for (int jy = flds.ib()[1]; jy < flds.ib()[1] + flds.im()[1]; jy++) {
@@ -47,8 +44,8 @@ static void psc_mfields_single_copy_to_c(MfieldsBase& mflds, MfieldsBase& mflds_
   auto& mf_c = dynamic_cast<MfieldsC&>(mflds_c);
   for (int p = 0; p < mf.n_patches(); p++) {
     auto flds = mf[p];
-    FieldsV F(flds);
-    FieldsCV F_c(mf_c[p]);
+    auto F = makeFields3d(flds);
+    auto F_c = makeFields3d(mf_c[p]);
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.im()[2]; jz++) {
 	for (int jy = flds.ib()[1]; jy < flds.ib()[1] + flds.im()[1]; jy++) {

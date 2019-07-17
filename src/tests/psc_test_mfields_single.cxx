@@ -3,8 +3,6 @@
 #include "psc_fields_as_single.h"
 #include "fields.hxx"
 
-using Fields = Fields3d<fields_t>;
-
 #include "psc.h"
 
 // ======================================================================
@@ -70,8 +68,8 @@ test_print(MPI_Comm comm)
 
   mfields_t mf(mflds);
   for (int p = 0; p < mflds->nr_patches; p++) {
-    fields_t flds = mf[p];
-    Fields F(flds);
+    auto flds = mf[p];
+    auto F = makeFields3d(flds);
 
     for (int m = 0; m < flds.nr_comp; m++) {
       for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {

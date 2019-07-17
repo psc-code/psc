@@ -318,7 +318,6 @@ struct communicate_ctx {
 template<typename Mparticles, typename MfieldsState, typename Mfields>
 struct Balance_ : BalanceBase
 {
-  using FieldsV = Fields3d<typename Mfields::fields_view_t>;
   using Particle = typename Mparticles::Particle;
   using real_t = typename Mparticles::real_t;
 
@@ -689,7 +688,7 @@ private:
 	//Seed new data
       } else {
 	auto flds_new = mf_new[p];
-	FieldsV F_new(flds_new);
+	auto F_new = makeFields3d(flds_new);
 	int nn = flds_new.size();
 	Int3 ib = flds_new.ib();
 	void *addr_new = &F_new(0, ib[0], ib[1], ib[2]);
@@ -715,7 +714,8 @@ private:
 
       auto flds_old = mf_old[ctx->recv_info[p].patch];
       auto flds_new = mf_new[p];
-      FieldsV F_old(flds_old), F_new(flds_new);
+      auto F_old = makeFields3d(flds_old);
+      auto F_new = makeFields3d(flds_new);
       assert(flds_old.n_comps() == flds_new.n_comps());
       assert(flds_old.size() == flds_new.size());
       int size = flds_old.size();

@@ -15,7 +15,6 @@ struct Marder_ : MarderBase
   using Mfields = _Mfields;
   using real_t = typename Mfields::real_t;
   using fields_view_t = typename Mfields::fields_view_t;
-  using FieldsV = Fields3d<fields_view_t>;
   using Moment_t = Moment_rho_1st_nc<Mparticles, Mfields>;
 
   Marder_(const Grid_t& grid, real_t diffusion, int loop, bool dump)
@@ -94,7 +93,8 @@ struct Marder_ : MarderBase
 
   void correct_patch(fields_view_t flds, fields_view_t f, int p, real_t& max_err)
   {
-    FieldsV F(flds), FF(f);
+    auto F = makeFields3d(flds);
+    auto FF = makeFields3d(f);
     define_dxdydz(dx, dy, dz);
 
     // FIXME: how to choose diffusion parameter properly?

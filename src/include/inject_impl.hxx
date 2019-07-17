@@ -18,7 +18,6 @@ struct Inject_ : InjectBase
 {
   using Mfields = _Mfields;
   using Mparticles = _Mparticles;
-  using FieldsV = Fields3d<typename Mfields::fields_view_t>;
   using real_t = typename Mparticles::real_t;
   using ItemMoment_t = _ItemMoment;
   
@@ -56,7 +55,7 @@ struct Inject_ : InjectBase
     {
       auto inj = mprts.injector();
       for (int p = 0; p < mprts.n_patches(); p++) {
-	FieldsV N(mf_n[p]);
+	auto N = makeFields3d(mf_n[p]);
 	const int *ldims = grid.ldims;
 	auto injector = inj[p];
     

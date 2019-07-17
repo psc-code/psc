@@ -72,7 +72,7 @@ main(void)
   cmflds->dump("cmflds.json");
 
   fields_t flds = cmflds->get_host_fields();
-  Fields3d<fields_t> F(flds);
+  auto F = makeFields3d(flds);
   for (int p = 0; p < n_patches; p++) {
     for (int k = flds.ib[2]; k < flds.ib[2] + flds.im[2]; k++) {
       for (int j = flds.ib[1]; j < flds.ib[1] + flds.im[1]; j++) {
