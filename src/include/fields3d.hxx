@@ -45,11 +45,18 @@ private:
 
 // FIXME, do noexcept?
 
-template<typename D, typename R, typename L=kg::LayoutSOA>
+template<typename C> struct fields3d_container_InnerTypes;
+
+template<typename D>
 class fields3d_container
 {
 public:
   using Derived = D;
+
+  using InnerTypes = fields3d_container_InnerTypes<D>;
+  using Layout = typename InnerTypes::Layout;
+  using R = typename InnerTypes::value_type;
+
   using Storage = Storage<R>;
 
   fields3d_container(Int3 ib, Int3 im, int n_comps)
@@ -97,7 +104,7 @@ public:
     assert(k >= ib_[2] && k < ib_[2] + im_[2]);
 #endif
 
-    if (L::isAOS::value) {
+    if (Layout::isAOS::value) {
       return (((((k - ib_[2])) * im_[1] +
 		(j - ib_[1])) * im_[0] +
 	       (i - ib_[0])) * n_comps_ + m);
@@ -205,10 +212,21 @@ private:
   const int n_comps_; // # of components
 };
 
+// forward decl
 template<typename R, typename L=kg::LayoutSOA>
-struct fields3d : fields3d_container<fields3d<R, L>, R, L>
+struct fields3d;
+
+template<typename R, typename L>
+struct fields3d_container_InnerTypes<fields3d<R, L>>
 {
-  using Base = fields3d_container<fields3d<R, L>, R, L>;
+  using value_type = R;
+  using Layout = L;
+};
+
+template<typename R, typename L>
+struct fields3d : fields3d_container<fields3d<R, L>>
+{
+  using Base = fields3d_container<fields3d<R, L>>;
   using Storage = Storage<R>;
   using real_t = R;
   using layout = L;
@@ -233,7 +251,7 @@ private:
   Storage& storageImpl() { return storage_; }
   const Storage& storageImpl() const { return storage_; }
 
-  friend class fields3d_container<fields3d<R, L>, R, L>;
+  friend class fields3d_container<fields3d<R, L>>;
   
   const Grid_t& grid_;
 };
