@@ -200,7 +200,7 @@ protected:
     return *static_cast<const Derived*>(this);
   }
 
-protected: // FIXME, for now
+private:
   const Int3 ib_, im_; //> lower bounds and length per direction
   const int n_comps_; // # of components
 };
@@ -212,10 +212,6 @@ struct fields3d : fields3d_container<fields3d<R, L>, R, L>
   using Storage = Storage<R>;
   using real_t = R;
   using layout = L;
-
-  using Base::ib_;
-  using Base::im_;
-  using Base::n_comps_;
 
   fields3d(const Grid_t& grid, Int3 ib, Int3 im, int n_comps, real_t* data=nullptr)
     : Base{ib, im, n_comps},
@@ -232,12 +228,13 @@ struct fields3d : fields3d_container<fields3d<R, L>, R, L>
   const Grid_t& grid() const { return grid_; }
 
 private:
+  Storage storage_;
+
   Storage& storageImpl() { return storage_; }
   const Storage& storageImpl() const { return storage_; }
 
   friend class fields3d_container<fields3d<R, L>, R, L>;
   
-  Storage storage_;
   const Grid_t& grid_;
 };
 

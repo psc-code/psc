@@ -29,9 +29,9 @@ static void psc_mfields_single_copy_from_c(MfieldsBase& mflds, MfieldsBase& mfld
     Fields F(flds);
     FieldsC F_c(mf_c[p]);
     for (int m = mb; m < me; m++) {
-      for (int jz = flds.ib_[2]; jz < flds.ib_[2] + flds.im_[2]; jz++) {
-	for (int jy = flds.ib_[1]; jy < flds.ib_[1] + flds.im_[1]; jy++) {
-	  for (int jx = flds.ib_[0]; jx < flds.ib_[0] + flds.im_[0]; jx++) {
+      for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.im()[2]; jz++) {
+	for (int jy = flds.ib()[1]; jy < flds.ib()[1] + flds.im()[1]; jy++) {
+	  for (int jx = flds.ib()[0]; jx < flds.ib()[0] + flds.im()[0]; jx++) {
 	    F(m, jx,jy,jz) = F_c(m, jx,jy,jz);
 	  }
 	}
@@ -50,9 +50,9 @@ static void psc_mfields_single_copy_to_c(MfieldsBase& mflds, MfieldsBase& mflds_
     Fields F(flds);
     FieldsC F_c(mf_c[p]);
     for (int m = mb; m < me; m++) {
-      for (int jz = flds.ib_[2]; jz < flds.ib_[2] + flds.im_[2]; jz++) {
-	for (int jy = flds.ib_[1]; jy < flds.ib_[1] + flds.im_[1]; jy++) {
-	  for (int jx = flds.ib_[0]; jx < flds.ib_[0] + flds.im_[0]; jx++) {
+      for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.im()[2]; jz++) {
+	for (int jy = flds.ib()[1]; jy < flds.ib()[1] + flds.im()[1]; jy++) {
+	  for (int jx = flds.ib()[0]; jx < flds.ib()[0] + flds.im()[0]; jx++) {
 	    F_c(m, jx,jy,jz) = F(m, jx,jy,jz);
 	  }
 	}
