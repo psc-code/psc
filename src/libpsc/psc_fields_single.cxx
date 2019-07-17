@@ -14,7 +14,7 @@
 #define MFIELDS MfieldsSingle
 
 using FieldsV = Fields3d<MfieldsSingle::fields_view_t>;
-using FieldsCV = Fields3d<fields_view_c_t>;
+using FieldsCV = Fields3d<MfieldsC::fields_view_t>;
 
 // ======================================================================
 // convert to c

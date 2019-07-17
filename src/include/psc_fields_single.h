@@ -7,7 +7,6 @@
 #include "fields_traits.hxx"
 
 using fields_single_t = fields3d<float>;
-using fields_view_single_t = fields3d_view<float>;
 
 using MfieldsSingle = Mfields<float>;
 using MfieldsStateSingle = MfieldsStateFromMfields<MfieldsSingle>;

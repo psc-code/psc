@@ -9,11 +9,9 @@
 
 #include <mrc_params.h>
 
-using FieldsH = Fields3d<fields_single_t>; // host
-using FieldsS = Fields3d<fields_single_t> ;// host
-using FieldsSV = Fields3d<fields_view_single_t>; // host
-using FieldsC = Fields3d<fields_c_t>; // host
-using FieldsCV = Fields3d<fields_view_c_t>; // host
+using FieldsH = fields3d<float>; // host
+using FieldsSV = Fields3d<MfieldsSingle::fields_view_t>; // host
+using FieldsCV = Fields3d<MfieldsC::fields_view_t>; // host
 
 // OPT, CUDA fields have too many ghostpoints, and 7 points in the invar direction!
 
