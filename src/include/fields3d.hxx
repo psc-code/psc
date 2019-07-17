@@ -70,6 +70,24 @@ public:
   const R& operator()(int m, int i, int j, int k) const { return storage().data()[index(m, i, j, k)];  }
   R& operator()(int m, int i, int j, int k)             { return storage().data()[index(m, i, j, k)];  }
 
+  void zero(int m)
+  {
+    // FIXME, only correct for SOA!!!
+    memset(&(*this)(m, ib_[0], ib_[1], ib_[2]), 0, n_cells() * sizeof(R));
+  }
+
+  void zero(int mb, int me)
+  {
+    for (int m = mb; m < me; m++) {
+      zero(m);
+    }
+  }
+
+  void zero()
+  {
+    memset(storage().data(), 0, sizeof(R) * size());
+  }
+
   int index(int m, int i, int j, int k) const
   {
 #ifdef BOUNDS_CHECK
@@ -91,6 +109,76 @@ public:
     }
   }
       
+  void set(int m, R val)
+  {
+    for (int k = ib_[2]; k < ib_[2] + im_[2]; k++) {
+      for (int j = ib_[1]; j < ib_[1] + im_[1]; j++) {
+	for (int i = ib_[0]; i < ib_[0] + im_[0]; i++) {
+	  (*this)(m, i,j,k) = val;
+	}
+      }
+    }
+  }
+
+  void scale(int m, R val)
+  {
+    for (int k = ib_[2]; k < ib_[2] + im_[2]; k++) {
+      for (int j = ib_[1]; j < ib_[1] + im_[1]; j++) {
+	for (int i = ib_[0]; i < ib_[0] + im_[0]; i++) {
+	  (*this)(m, i,j,k) *= val;
+	}
+      }
+    }
+  }
+
+  void copy_comp(int mto, const Derived& from, int mfrom)
+  {
+    for (int k = ib_[2]; k < ib_[2] + im_[2]; k++) {
+      for (int j = ib_[1]; j < ib_[1] + im_[1]; j++) {
+	for (int i = ib_[0]; i < ib_[0] + im_[0]; i++) {
+	  (*this)(mto, i,j,k) = from(mfrom, i,j,k);
+	}
+      }
+    }
+  }
+
+  void axpy_comp(int m_y, R alpha, const Derived& x, int m_x)
+  {
+    for (int k = ib_[2]; k < ib_[2] + im_[2]; k++) {
+      for (int j = ib_[1]; j < ib_[1] + im_[1]; j++) {
+	for (int i = ib_[0]; i < ib_[0] + im_[0]; i++) {
+	  (*this)(m_y, i,j,k) += alpha * x(m_x, i,j,k);
+	}
+      }
+    }
+  }
+
+  R max_comp(int m)
+  {
+    R rv = -std::numeric_limits<R>::max();
+    for (int k = ib_[2]; k < ib_[2] + im_[2]; k++) {
+      for (int j = ib_[1]; j < ib_[1] + im_[1]; j++) {
+	for (int i = ib_[0]; i < ib_[0] + im_[0]; i++) {
+	  rv = std::max(rv, (*this)(m, i,j,k));
+	}
+      }
+    }
+    return rv;
+  }
+
+  void dump()
+  {
+    for (int k = ib_[2]; k < ib_[2] + im_[2]; k++) {
+      for (int j = ib_[1]; j < ib_[1] + im_[1]; j++) {
+	for (int i = ib_[0]; i < ib_[0] + im_[0]; i++) {
+	  for (int m = 0; m < n_comps_; m++) {
+	    mprintf("dump: ijk %d:%d:%d m %d: %g\n", i, j, k, m, (*this)(m, i,j,k));
+	  }
+	}
+      }
+    }
+  }
+
 protected:
   Storage& storage()
   {
@@ -139,94 +227,6 @@ struct fields3d : fields3d_container<fields3d<R, L>, R, L>
   void dtor()
   {
     storage_.free();
-  }
-
-  void zero(int m)
-  {
-    // FIXME, only correct for SOA!!!
-    memset(&(*this)(m, ib_[0], ib_[1], ib_[2]), 0, Base::n_cells() * sizeof(real_t));
-  }
-
-  void zero(int mb, int me)
-  {
-    for (int m = mb; m < me; m++) {
-      zero(m);
-    }
-  }
-
-  void zero()
-  {
-    memset(storage_.data(), 0, sizeof(real_t) * Base::size());
-  }
-
-  void set(int m, real_t val)
-  {
-    for (int k = ib_[2]; k < ib_[2] + im_[2]; k++) {
-      for (int j = ib_[1]; j < ib_[1] + im_[1]; j++) {
-	for (int i = ib_[0]; i < ib_[0] + im_[0]; i++) {
-	  (*this)(m, i,j,k) = val;
-	}
-      }
-    }
-  }
-
-  void scale(int m, real_t val)
-  {
-    for (int k = ib_[2]; k < ib_[2] + im_[2]; k++) {
-      for (int j = ib_[1]; j < ib_[1] + im_[1]; j++) {
-	for (int i = ib_[0]; i < ib_[0] + im_[0]; i++) {
-	  (*this)(m, i,j,k) *= val;
-	}
-      }
-    }
-  }
-
-  void copy_comp(int mto, const fields3d& from, int mfrom)
-  {
-    for (int k = ib_[2]; k < ib_[2] + im_[2]; k++) {
-      for (int j = ib_[1]; j < ib_[1] + im_[1]; j++) {
-	for (int i = ib_[0]; i < ib_[0] + im_[0]; i++) {
-	  (*this)(mto, i,j,k) = from(mfrom, i,j,k);
-	}
-      }
-    }
-  }
-
-  void axpy_comp(int m_y, real_t alpha, const fields3d& x, int m_x)
-  {
-    for (int k = ib_[2]; k < ib_[2] + im_[2]; k++) {
-      for (int j = ib_[1]; j < ib_[1] + im_[1]; j++) {
-	for (int i = ib_[0]; i < ib_[0] + im_[0]; i++) {
-	  (*this)(m_y, i,j,k) += alpha * x(m_x, i,j,k);
-	}
-      }
-    }
-  }
-
-  real_t max_comp(int m)
-  {
-    real_t rv = -std::numeric_limits<real_t>::max();
-    for (int k = ib_[2]; k < ib_[2] + im_[2]; k++) {
-      for (int j = ib_[1]; j < ib_[1] + im_[1]; j++) {
-	for (int i = ib_[0]; i < ib_[0] + im_[0]; i++) {
-	  rv = std::max(rv, (*this)(m, i,j,k));
-	}
-      }
-    }
-    return rv;
-  }
-
-  void dump()
-  {
-    for (int k = ib_[2]; k < ib_[2] + im_[2]; k++) {
-      for (int j = ib_[1]; j < ib_[1] + im_[1]; j++) {
-	for (int i = ib_[0]; i < ib_[0] + im_[0]; i++) {
-	  for (int m = 0; m < n_comps_; m++) {
-	    mprintf("dump: ijk %d:%d:%d m %d: %g\n", i, j, k, m, (*this)(m, i,j,k));
-	  }
-	}
-      }
-    }
   }
 
   const Grid_t& grid() const { return grid_; }
