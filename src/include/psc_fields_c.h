@@ -9,7 +9,7 @@
 using fields_c_t = fields3d<double>;
 using fields_view_c_t = fields3d_view<double>;
 
-using MfieldsC = Mfields<fields_c_t>;
+using MfieldsC = Mfields<double>;
 using MfieldsStateDouble = MfieldsStateFromMfields<MfieldsC>;
 
 template<>

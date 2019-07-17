@@ -530,12 +530,11 @@ protected:
 // ======================================================================
 // Mfields
 
-template<typename F>
+template<typename R>
 struct Mfields : MfieldsBase
 {
-  using fields_t = F;
-  using real_t = typename fields_t::real_t;
-  using fields_view_t = fields3d_view<real_t, typename fields_t::Layout>;
+  using real_t = R;
+  using fields_view_t = fields3d_view<real_t>;
 
   Mfields(const Grid_t& grid, int n_fields, Int3 ibn)
     : MfieldsBase(grid, n_fields, ibn)

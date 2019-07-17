@@ -9,7 +9,7 @@
 using fields_single_t = fields3d<float>;
 using fields_view_single_t = fields3d_view<float>;
 
-using MfieldsSingle = Mfields<fields_single_t>;
+using MfieldsSingle = Mfields<float>;
 using MfieldsStateSingle = MfieldsStateFromMfields<MfieldsSingle>;
 
 template<>
