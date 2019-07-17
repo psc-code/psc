@@ -6,13 +6,7 @@
 #include "fields3d.hxx"
 #include "fields_traits.hxx"
 
-struct fields_c_t : fields3d<double>
-{
-  using Base = fields3d<double>;
-
-  using Base::Base;
-};
-
+using fields_c_t = fields3d<double>;
 using fields_view_c_t = fields3d_view<double>;
 
 using MfieldsC = Mfields<fields_c_t>;
