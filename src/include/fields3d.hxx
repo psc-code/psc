@@ -20,6 +20,8 @@
 #include <list>
 #include <string>
 
+// FIXME, use size_t instead of int, at least for 1d offsets?
+
 // ======================================================================
 // fields3d
 
@@ -35,9 +37,14 @@ public:
   
   Storage(pointer data)
     : data_{data} {}
-  
-  pointer data() { return data_; }
+
+  const_reference operator[](int offset) const { return data_[offset]; }
+  reference operator[](int offset) { return data_[offset]; }
+
+  // FIXME access to underlying storage might better be avoided?
+  // use of this makes assumption that storage is contiguous
   const_pointer data() const { return data_; }
+  pointer data() { return data_; }
 
   void free()
   {
@@ -83,8 +90,8 @@ public:
   const_pointer data() const { return storage().data(); }
   pointer data() { return storage().data(); }
 
-  const_reference operator()(int m, int i, int j, int k) const { return storage().data()[index(m, i, j, k)];  }
-  reference operator()(int m, int i, int j, int k)             { return storage().data()[index(m, i, j, k)];  }
+  const_reference operator()(int m, int i, int j, int k) const { return storage()[index(m, i, j, k)];  }
+  reference operator()(int m, int i, int j, int k)             { return storage()[index(m, i, j, k)];  }
 
   void zero(int m)
   {
