@@ -134,8 +134,8 @@ struct fields3d : fields3d_container<fields3d<R, L>, R, L>
     storage_.free();
   }
 
-  real_t  operator()(int m, int i, int j, int k) const { return storage_.data()[Base::index(m, i, j, k)];  }
-  real_t& operator()(int m, int i, int j, int k)       { return storage_.data()[Base::index(m, i, j, k)];  }
+  const real_t& operator()(int m, int i, int j, int k) const { return storage_.data()[Base::index(m, i, j, k)];  }
+  real_t& operator()(int m, int i, int j, int k)             { return storage_.data()[Base::index(m, i, j, k)];  }
 
   real_t* data() { return storage_.data(); }
   const real_t* data() const { return storage_.data(); }
