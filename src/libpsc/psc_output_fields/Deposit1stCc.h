@@ -102,7 +102,7 @@ public:
 private:
   const Mparticles& mprts_;
   Mfields& mflds_;
-  Fields3d<FE> flds_;
+  FE flds_;
   R fnqs_;
   Vec3<R> dxi_;
   Vec3<bool> is_invar_;
