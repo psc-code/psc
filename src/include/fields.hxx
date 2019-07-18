@@ -13,8 +13,8 @@ public:
   using real_t = typename fields_t::real_t;
   using dim = D;
 
-  Fields3d(fields_t f)
-    : data_(f.data()),
+  Fields3d(const fields_t& f)
+    : data_(const_cast<typename fields_t::real_t*>(f.data())), // FIXME
       n_comp_(f.n_comps()),
       ib(f.ib()), im(f.im())
   {}
@@ -59,13 +59,13 @@ private:
 // instead of deduction guides...
 
 template<typename FE>
-Fields3d<FE, dim_xyz> makeFields3d(FE f)
+Fields3d<FE, dim_xyz> makeFields3d(const FE& f)
 {
   return Fields3d<FE, dim_xyz>(f);
 }
 
 template<typename D, typename FE>
-Fields3d<FE, D> makeFields3d(FE f)
+Fields3d<FE, D> makeFields3d(const FE& f)
 {
   return Fields3d<FE, D>(f);
 }

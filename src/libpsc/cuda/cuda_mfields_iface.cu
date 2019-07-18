@@ -41,13 +41,13 @@ MfieldsCuda::fields_host_t MfieldsCuda::get_host_fields()
   return cmflds()->get_host_fields();
 }
 
-void MfieldsCuda::copy_to_device(int p, fields_host_t h_flds, int mb, int me)
+void MfieldsCuda::copy_to_device(int p, const fields_host_t& h_flds, int mb, int me)
 {
   dprintf("CMFLDS: copy_to_device\n");
   cmflds()->copy_to_device(p, h_flds, mb, me);
 }
 
-void MfieldsCuda::copy_from_device(int p, fields_host_t h_flds, int mb, int me)
+void MfieldsCuda::copy_from_device(int p, fields_host_t& h_flds, int mb, int me)
 {
   dprintf("CMFLDS: copy_from_device\n");
   cmflds()->copy_from_device(p, h_flds, mb, me);

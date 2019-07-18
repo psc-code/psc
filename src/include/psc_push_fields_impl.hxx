@@ -55,7 +55,7 @@ public:
   using typename Base::real_t;
   using typename Base::fields_t;
   
-  PushE(const fields_t& flds, double dt_fac)
+  PushE(fields_t&& flds, double dt_fac)
     : Base(flds.grid(), dt_fac),
       F(flds)
   {
@@ -95,7 +95,7 @@ public:
   using typename Base::real_t;
   using typename Base::fields_t;
   
-  PushH(const fields_t& flds, double dt_fac)
+  PushH(fields_t&& flds, double dt_fac)
     : Base(flds.grid(), dt_fac),
       F(flds)
   {}

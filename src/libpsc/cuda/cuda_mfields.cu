@@ -122,7 +122,7 @@ cuda_mfields::fields_host_t cuda_mfields::get_host_fields()
 // ----------------------------------------------------------------------
 // copy_to_device
 
-void cuda_mfields::copy_to_device(int p, fields_host_t h_flds, int mb, int me)
+void cuda_mfields::copy_to_device(int p, const fields_host_t& h_flds, int mb, int me)
 {
   cudaError_t ierr;
   
@@ -141,7 +141,7 @@ void cuda_mfields::copy_to_device(int p, fields_host_t h_flds, int mb, int me)
 // ----------------------------------------------------------------------
 // copy_from_device
 
-void cuda_mfields::copy_from_device(int p, fields_host_t h_flds, int mb, int me)
+void cuda_mfields::copy_from_device(int p, fields_host_t& h_flds, int mb, int me)
 {
   cudaError_t ierr;
 

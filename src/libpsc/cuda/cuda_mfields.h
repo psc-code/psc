@@ -63,8 +63,8 @@ struct cuda_mfields
   void axpy_comp_yz(int ym, float a, cuda_mfields *x, int xm);
 
   fields_host_t get_host_fields();
-  void copy_to_device(int p, fields_host_t h_flds, int mb, int me);
-  void copy_from_device(int p, fields_host_t h_flds, int mb, int me);
+  void copy_to_device(int p, const fields_host_t& h_flds, int mb, int me);
+  void copy_from_device(int p, fields_host_t& h_flds, int mb, int me);
 
   mrc_json_t to_json();
   void dump(const char *filename);

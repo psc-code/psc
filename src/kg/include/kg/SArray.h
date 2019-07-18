@@ -8,10 +8,13 @@ namespace kg
 {
 
 // ======================================================================
-// StorageRaw
+// StorageUniquePtr
+//
+// Mostly, std::vector would be an equivalent choice, though this
+// Storagle class is move-only, preventing accidental copies
 
 template <typename T>
-class StorageRaw
+class StorageUniquePtr
 {
 public:
   using value_type = T;
@@ -20,23 +23,18 @@ public:
   using pointer = T*;
   using const_pointer = const T*;
 
-  StorageRaw(pointer data) : data_{data} {}
-  ~StorageRaw()
-  {
-    ::free(data_);
-  }
-
+  StorageUniquePtr(size_t size) : data_{new T[size]} {}
 
   const_reference operator[](int offset) const { return data_[offset]; }
   reference operator[](int offset) { return data_[offset]; }
 
   // FIXME access to underlying storage might better be avoided?
   // use of this makes assumption that storage is contiguous
-  const_pointer data() const { return data_; }
-  pointer data() { return data_; }
+  const_pointer data() const { return data_.get(); }
+  pointer data() { return data_.get(); }
 
 private:
-  pointer data_;
+  std::unique_ptr<value_type[]> data_;
 };
 
 // ======================================================================
@@ -49,7 +47,8 @@ template <typename T, typename L>
 struct SArrayContainerInnerTypes<SArray<T, L>>
 {
   using Layout = L;
-  using Storage = StorageRaw<T>;
+  using Storage = StorageUniquePtr<T>;
+  //using Storage = std::vector<T>;
 };
 
 template <typename T, typename L>
@@ -61,7 +60,7 @@ struct SArray : SArrayContainer<SArray<T, L>>
 
   SArray(Int3 ib, Int3 im, int n_comps)
     : Base{ib, im, n_comps},
-      storage_{(real_t*)calloc(Base::size(), sizeof(real_t))}
+      storage_(Base::size())
   {}
 
 private:

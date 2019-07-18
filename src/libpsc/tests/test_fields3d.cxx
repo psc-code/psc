@@ -56,7 +56,7 @@ TEST(SArray, data)
   auto f = kg::SArray<Real, Layout>{{1, 2, 3}, {2, 3, 4}, 2};
 
   EXPECT_EQ(f.data(), &f(0, 1, 2, 3));
-  const auto fc = const_cast<const kg::SArray<Real, Layout>&>(f);
+  const auto& fc = const_cast<const kg::SArray<Real, Layout>&>(f);
   EXPECT_EQ(fc.data(), &fc(0, 1, 2, 3));
 }
 

@@ -66,8 +66,8 @@ struct MfieldsCuda : MfieldsBase
   void axpy_comp_yz(int ym, float a, MfieldsCuda& x, int xm);
 
   fields_host_t get_host_fields();
-  void copy_to_device(int p, fields_host_t h_flds, int mb, int me);
-  void copy_from_device(int p, fields_host_t h_flds, int mb, int me);
+  void copy_to_device(int p, const fields_host_t& h_flds, int mb, int me);
+  void copy_from_device(int p, fields_host_t& h_flds, int mb, int me);
 
   int index(int m, int i, int j, int k, int p) const;
   Patch operator[](int p) { return { *this, p }; }
@@ -105,12 +105,12 @@ struct MfieldsStateCuda : MfieldsStateBase
     return mflds_.get_host_fields();
   }
 
-  void copy_to_device(int p, fields_host_t h_flds, int mb, int me)
+  void copy_to_device(int p, const fields_host_t& h_flds, int mb, int me)
   {
     mflds_.copy_to_device(p, h_flds, mb, me);
   }
 
-  void copy_from_device(int p, fields_host_t h_flds, int mb, int me)
+  void copy_from_device(int p, fields_host_t& h_flds, int mb, int me)
   {
     mflds_.copy_from_device(p, h_flds, mb, me);
   }
