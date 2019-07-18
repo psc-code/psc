@@ -3,6 +3,7 @@
 
 #include <fields3d.hxx>
 
+#include <kg/SArray.h>
 
 using Real = double;
 using Layout = kg::LayoutSOA;
@@ -20,7 +21,7 @@ static Grid_t make_grid()
 
 TEST(fields3d, CtorNoArray)
 {
-  auto f = fields3d<Real, Layout>{{1, 2, 3}, {2, 3, 4}, 2};
+  auto f = kg::SArray<Real, Layout>{{1, 2, 3}, {2, 3, 4}, 2};
   f.dtor();
 }
 

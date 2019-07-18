@@ -5,6 +5,7 @@
 #include <mpi.h>
 #include "fields3d.hxx"
 #include "fields_traits.hxx"
+#include <kg/SArray.h>
 
 #include "psc_fields_single.h"
 
@@ -18,7 +19,7 @@ struct fields_cuda_t
 struct MfieldsCuda : MfieldsBase
 {
   using real_t = fields_cuda_t::real_t;
-  using fields_host_t = fields3d<real_t>;
+  using fields_host_t = kg::SArray<real_t>;
 
   class Accessor
   {

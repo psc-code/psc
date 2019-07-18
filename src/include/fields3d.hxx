@@ -21,46 +21,6 @@
 #include <string>
 
 // ======================================================================
-// fields3d
-
-template<typename T, typename L=kg::LayoutSOA>
-struct fields3d;
-
-template<typename T, typename L>
-struct kg::SArrayContainerInnerTypes<fields3d<T, L>>
-{
-  using Layout = L;
-  using Storage = kg::Storage<T>;
-};
-
-template<typename T, typename L>
-struct fields3d : kg::SArrayContainer<fields3d<T, L>>
-{
-  using Base = kg::SArrayContainer<fields3d<T, L>>;
-  using Storage = typename Base::Storage;
-  using real_t = typename Base::value_type;
-
-  fields3d(Int3 ib, Int3 im, int n_comps)
-    : Base{ib, im, n_comps},
-      storage_{(real_t *) calloc(Base::size(), sizeof(real_t))}
-  {
-  }
-
-  void dtor()
-  {
-    storage_.free();
-  }
-
-private:
-  Storage storage_;
-
-  Storage& storageImpl() { return storage_; }
-  const Storage& storageImpl() const { return storage_; }
-
-  friend class kg::SArrayContainer<fields3d<T, L>>;
-};
-
-// ======================================================================
 // fields3d_view
 
 template<typename T, typename L=kg::LayoutSOA>
@@ -74,9 +34,9 @@ struct kg::SArrayContainerInnerTypes<fields3d_view<T, L>>
 };
 
 template<typename T, typename L>
-struct fields3d_view : kg::SArrayContainer<fields3d<T, L>>
+struct fields3d_view : kg::SArrayContainer<fields3d_view<T, L>>
 {
-  using Base = kg::SArrayContainer<fields3d<T, L>>;
+  using Base = kg::SArrayContainer<fields3d_view<T, L>>;
   using Storage = typename Base::Storage;
   using real_t = typename Base::value_type;
 
@@ -95,7 +55,7 @@ private:
   Storage& storageImpl() { return storage_; }
   const Storage& storageImpl() const { return storage_; }
 
-  friend class kg::SArrayContainer<fields3d<T, L>>;
+  friend class kg::SArrayContainer<fields3d_view<T, L>>;
   
   const Grid_t& grid_;
 };

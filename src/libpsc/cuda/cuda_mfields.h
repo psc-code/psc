@@ -6,6 +6,8 @@
 #include "cuda_iface_bnd.h"
 #include "dim.hxx"
 
+#include <kg/SArray.h>
+
 #define MAX_BND_FIELDS (17)
 #define MAX_BND_COMPONENTS (3)
 
@@ -50,7 +52,7 @@ struct DFields;
 struct cuda_mfields
 {
   using real_t = float;
-  using fields_host_t = fields3d<real_t>;
+  using fields_host_t = kg::SArray<real_t>;
 
   cuda_mfields(const Grid_t& grid, int n_fields, const Int3& ibn);
   cuda_mfields(const cuda_mfields&) = delete;
