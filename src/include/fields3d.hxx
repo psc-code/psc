@@ -40,28 +40,16 @@ struct fields3d : kg::SArrayContainer<fields3d<T, L>>
   using Storage = typename Base::Storage;
   using real_t = typename Base::value_type;
 
-  fields3d(const Grid_t& grid, Int3 ib, Int3 im, int n_comps)
+  fields3d(Int3 ib, Int3 im, int n_comps)
     : Base{ib, im, n_comps},
-      grid_{grid},
       storage_{(real_t *) calloc(Base::size(), sizeof(real_t))}
   {
   }
 
-#if 0
-  fields3d(const Grid_t& grid, Int3 ib, Int3 im, int n_comps, real_t* data)
-    : Base{ib, im, n_comps},
-      grid_{grid},
-      storage_{data}
-  {
-  }
-#endif
-  
   void dtor()
   {
     storage_.free();
   }
-
-  const Grid_t& grid() const { return grid_; }
 
 private:
   Storage storage_;
@@ -70,8 +58,6 @@ private:
   const Storage& storageImpl() const { return storage_; }
 
   friend class kg::SArrayContainer<fields3d<T, L>>;
-  
-  const Grid_t& grid_;
 };
 
 // ======================================================================

@@ -20,8 +20,7 @@ static Grid_t make_grid()
 
 TEST(fields3d, CtorNoArray)
 {
-  auto grid = make_grid();
-  auto f = fields3d<Real, Layout>{grid, {1, 2, 3}, {2, 3, 4}, 2};
+  auto f = fields3d<Real, Layout>{{1, 2, 3}, {2, 3, 4}, 2};
   f.dtor();
 }
 
@@ -34,8 +33,7 @@ TEST(fields3d_view, Ctor)
 
 TEST(fields3d, BoundsEtc)
 {
-  auto grid = make_grid();
-  auto f = fields3d<Real, Layout>{grid, {1, 2, 3}, {2, 3, 4}, 2};
+  auto f = fields3d<Real, Layout>{{1, 2, 3}, {2, 3, 4}, 2};
 
   EXPECT_EQ(f.ib(), Int3({1, 2, 3}));
   EXPECT_EQ(f.im(), Int3({2, 3, 4}));
@@ -48,8 +46,7 @@ TEST(fields3d, BoundsEtc)
 
 TEST(fields3d, index)
 {
-  auto grid = make_grid();
-  auto f = fields3d<Real, Layout>{grid, {1, 2, 3}, {2, 3, 4}, 2};
+  auto f = fields3d<Real, Layout>{{1, 2, 3}, {2, 3, 4}, 2};
 
   EXPECT_EQ(f.index(0, 1, 2, 3), 0);
   EXPECT_EQ(f.index(0, 2, 2, 3), 1);
@@ -60,8 +57,7 @@ TEST(fields3d, index)
 
 TEST(fields3d, data)
 {
-  auto grid = make_grid();
-  auto f = fields3d<Real, Layout>{grid, {1, 2, 3}, {2, 3, 4}, 2};
+  auto f = fields3d<Real, Layout>{{1, 2, 3}, {2, 3, 4}, 2};
 
   EXPECT_EQ(f.data(), &f(0, 1, 2, 3));
   const auto fc = const_cast<const fields3d<Real, Layout>&>(f);
