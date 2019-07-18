@@ -41,7 +41,8 @@ release = '2.99'
 extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.mathjax',
-    'sphinx.ext.githubpages',
+    'nbsphinx',
+    'IPython.sphinxext.ipython_console_highlighting', # FIXME, just a hack...
 ]
 
 # Add any paths that contain templates here, relative to this directory.

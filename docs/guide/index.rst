@@ -12,6 +12,8 @@ Welcome to the Plasma Simulation Code (PSC)'s documentation!
 
    installation/installation
 
+   viz/index
+
 Indices and tables
 ==================
 
