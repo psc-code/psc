@@ -1,6 +1,8 @@
 
 # PSC
 
+[![Documentation Status](https://readthedocs.org/projects/psc/badge/?version=latest)](https://psc.readthedocs.io/en/latest/?badge=latest)
+
 ## Introduction
 
 This is the development version of PSC. It is usable for certain problems, but overall lots of changes are happening and things may be unstable / evolving.
