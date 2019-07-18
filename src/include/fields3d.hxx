@@ -43,12 +43,6 @@ public:
   const_pointer data() const { return data_; }
   pointer data() { return data_; }
 
-  void free()
-  {
-    ::free(data_);
-    data_ = nullptr;
-  }
-
 private:
   pointer data_;
 };
@@ -78,14 +72,11 @@ struct fields3d_view : kg::SArrayContainer<fields3d_view<T, L>>
   using Storage = typename Base::Storage;
   using real_t = typename Base::value_type;
 
-  fields3d_view(const Grid_t& grid, Int3 ib, Int3 im, int n_comps, real_t* data)
+  fields3d_view(Int3 ib, Int3 im, int n_comps, real_t* data)
     : Base{ib, im, n_comps},
-      grid_{grid},
       storage_{data}
   {
   }
-
-  const Grid_t& grid() const { return grid_; }
 
 private:
   Storage storage_;
@@ -94,8 +85,6 @@ private:
   const Storage& storageImpl() const { return storage_; }
 
   friend class kg::SArrayContainer<fields3d_view<T, L>>;
-  
-  const Grid_t& grid_;
 };
 
 // ======================================================================
@@ -344,7 +333,7 @@ struct Mfields : MfieldsBase
   
   fields_view_t operator[](int p)
   {
-    return fields_view_t(grid(), Int3::fromPointer(ib), Int3::fromPointer(im), n_fields_, data[p].get());
+    return fields_view_t(Int3::fromPointer(ib), Int3::fromPointer(im), n_fields_, data[p].get());
   }
 
   void zero_comp(int m) override
