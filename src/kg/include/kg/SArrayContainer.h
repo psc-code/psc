@@ -172,8 +172,8 @@ protected:
   const Derived& derived() const { return *static_cast<const Derived*>(this); }
 
 private:
-  const Int3 ib_, im_; //> lower bounds and length per direction
-  const int n_comps_;  // # of components
+  Int3 ib_, im_; //> lower bounds and length per direction
+  int n_comps_;  // # of components
 };
 
 } // namespace kg
