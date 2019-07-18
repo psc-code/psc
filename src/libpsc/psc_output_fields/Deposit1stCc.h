@@ -1,20 +1,31 @@
 
 #pragma once
 
-template <typename Mfields>
+template <typename Mparticles, typename Mfields>
 class Deposit1stCc
 {
 public:
   using FE = typename Mfields::fields_view_t;
   using R = typename Mfields::real_t;
+  using ConstAccessor = typename Mparticles::ConstAccessor;
   
-  Deposit1stCc(const Grid_t& grid, FE flds)
-    : flds_{flds},
-      fnqs_{R(grid.norm.fnqs)},
-      dxi_{R(1.f / grid.domain.dx[0]), R(1.f / grid.domain.dx[1]), R(1.f / grid.domain.dx[2])},
-      is_invar_{grid.isInvar(0), grid.isInvar(1), grid.isInvar(2)},
-      ldims_{grid.ldims}
+  Deposit1stCc(const Mparticles& mprts, Mfields& mflds)
+    : mprts_{mprts},
+      mflds_{mflds},
+      accessor_{mprts.accessor()},
+      flds_{mflds[0]},
+      fnqs_{R(mprts.grid().norm.fnqs)},
+      dxi_{R(1.f / mprts.grid().domain.dx[0]),
+	   R(1.f / mprts.grid().domain.dx[1]),
+	   R(1.f / mprts.grid().domain.dx[2])},
+      is_invar_{mprts.grid().isInvar(0), mprts.grid().isInvar(1), mprts.grid().isInvar(2)},
+      ldims_{mprts.grid().ldims}
   {}
+
+  void setPatch(int p)
+  {
+    flds_ = mflds_[p];
+  }
   
   template<typename PRT>
   void operator()(const PRT& prt, int m, R val)
@@ -74,7 +85,21 @@ public:
     flds_(m, jx + jxd, jy + jyd, jz + jzd) += fnq * g1x * g1y * g1z * (val);
   }
 
+  template<typename F>
+  void process(F&& func)
+  {
+    for (int p = 0; p < mprts_.n_patches(); p++) {
+      setPatch(p);
+      for (auto prt: accessor_[p]) {
+	func(prt);
+      }
+    }
+  }
+
 private:
+  const Mparticles& mprts_;
+  ConstAccessor accessor_;
+  Mfields& mflds_;
   Fields3d<FE> flds_;
   R fnqs_;
   Vec3<R> dxi_;

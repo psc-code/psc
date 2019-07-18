@@ -106,7 +106,7 @@ struct MparticlesSimple : MparticlesBase
   using Real3 = Vec3<real_t>;
   using BndpParticle = P;
   using Accessor = AccessorSimple<MparticlesSimple>;
-
+  using ConstAccessor = ConstAccessorSimple<MparticlesSimple>;
   using Storage = MparticlesStorage<Particle>;
   using BndBuffer = typename Storage::PatchBuffer;
   using BndBuffers = typename Storage::Buffers;
@@ -188,7 +188,7 @@ struct MparticlesSimple : MparticlesBase
   const ParticleIndexer<real_t>& particleIndexer() const { return pi_; }
   
   InjectorSimple<MparticlesSimple> injector() { return {*this}; }
-  ConstAccessorSimple<MparticlesSimple> accessor() { return {*this}; }
+  ConstAccessor accessor() const { return {const_cast<MparticlesSimple&>(*this)}; } // FIXME
   Accessor accessor_() { return {*this}; }
 
   BndBuffers& bndBuffers() { return storage_.bndBuffers(); }

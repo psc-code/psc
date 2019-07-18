@@ -112,6 +112,8 @@ private:
 template<typename Mparticles>
 struct ConstAccessorVpic
 {
+  using Particle = ConstParticleAccessorVpic<Mparticles>;
+  
   struct Patch
   {
     using accessor = ConstParticleAccessorVpic<Mparticles>;
@@ -197,6 +199,7 @@ struct MparticlesVpic_ : MparticlesBase, protected _Particles
   using Particle = typename Particles::Particle;
   using SpeciesIterator = typename Particles::iterator;
   using ConstSpeciesIterator = typename Particles::const_iterator;
+  using ConstAccessor = ConstAccessorVpic<MparticlesVpic_>;
   using real_t = float;
   using Real3 = Vec3<real_t>;
 
@@ -321,7 +324,7 @@ struct MparticlesVpic_ : MparticlesBase, protected _Particles
 
   InjectorVpic<MparticlesVpic_> injector() { return {*this}; }
 
-  ConstAccessorVpic<MparticlesVpic_> accessor() { return {*this}; }
+  ConstAccessor accessor() { return {*this}; }
 
   Species* define_species(const char *name, double q, double m,
 			  double max_local_np, double max_local_nm,

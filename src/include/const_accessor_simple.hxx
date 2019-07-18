@@ -181,6 +181,7 @@ struct ConstAccessorSimple
 {
   using Mparticles = _Mparticles;
   using Patch = ConstAccessorPatchSimple<ConstAccessorSimple>;
+  using Particle = typename Patch::ConstParticleProxy;
   
   ConstAccessorSimple(Mparticles& mprts)
     : mprts_{mprts}

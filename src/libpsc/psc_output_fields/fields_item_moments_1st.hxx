@@ -13,8 +13,7 @@ struct Moment_n_1st
 {
   using Mparticles = MP;
   using Mfields = MF;
-  using real_t = typename Mparticles::real_t;
-  using particles_t = typename Mparticles::Patch;
+  using Particle = typename Mparticles::ConstAccessor::Particle;
   
   constexpr static char const* name = "n_1st";
   constexpr static int n_comps = 1;
@@ -23,16 +22,11 @@ struct Moment_n_1st
   
   static void run(Mfields& mflds, Mparticles& mprts)
   {
-    const Grid_t& grid = mprts.grid();
-
-    auto accessor = mprts.accessor();
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      auto deposit = Deposit1stCc<Mfields>{grid, mflds[p]};
-      for (auto prt: accessor[p]) {
+    auto deposit = Deposit1stCc<Mparticles, Mfields>{mprts, mflds};
+    deposit.process([&](const Particle &prt) {
 	int m = prt.kind();
 	deposit(prt, m, 1.f);
-      }
-    }
+      });
   }
 };
 
@@ -45,7 +39,7 @@ struct Moment_v_1st
   using Mparticles = MP;
   using Mfields = MF;
   using real_t = typename Mparticles::real_t;
-  using particles_t = typename Mparticles::Patch;
+  using Particle = typename Mparticles::ConstAccessor::Particle;
   
   constexpr static char const* name = "v_1st";
   constexpr static int n_comps = 3;
@@ -54,24 +48,16 @@ struct Moment_v_1st
 
   static void run(Mfields& mflds, Mparticles& mprts)
   {
-    const Grid_t& grid = mprts.grid();
-    real_t fnqs = grid.norm.fnqs;
-    real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
-    
-    auto accessor = mprts.accessor();
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      auto deposit = Deposit1stCc<Mfields>{grid, mflds[p]};
-      for (auto prt: accessor[p]) {
-	int mm = prt.kind() * 3;
-      
+    auto deposit = Deposit1stCc<Mparticles, Mfields>{mprts, mflds};
+    deposit.process([&](const Particle &prt) {
 	real_t vxi[3];
 	particle_calc_vxi(prt, vxi);
 	
+	int mm = prt.kind() * 3;
 	for (int m = 0; m < 3; m++) {
 	  deposit(prt, mm + m, vxi[m]);
 	}
-      }
-    }
+      });
   }
 };
 
@@ -84,7 +70,7 @@ struct Moment_p_1st
   using Mparticles = MP;
   using Mfields = MF;
   using real_t = typename Mparticles::real_t;
-  using particles_t = typename Mparticles::Patch;
+  using Particle = typename Mparticles::ConstAccessor::Particle;
   
   constexpr static char const* name = "p_1st";
   constexpr static int n_comps = 3;
@@ -93,22 +79,14 @@ struct Moment_p_1st
 
   static void run(Mfields& mflds, Mparticles& mprts)
   {
-    const Grid_t& grid = mprts.grid();
-    real_t fnqs = grid.norm.fnqs;
-    real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
-    
-    auto accessor = mprts.accessor();
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      auto deposit = Deposit1stCc<Mfields>{grid, mflds[p]};
-      for (auto prt: accessor[p]) {
+    auto deposit = Deposit1stCc<Mparticles, Mfields>{mprts, mflds};
+    deposit.process([&](const Particle &prt) {
 	int mm = prt.kind() * 3;
 	auto pxi = prt.u();
-	
 	for (int m = 0; m < 3; m++) {
 	  deposit(prt, mm + m, prt.m() * pxi[m]);
 	}
-      }
-    }
+      });
   }
 };
 
@@ -121,7 +99,7 @@ struct Moment_vv_1st
   using Mparticles = MP;
   using Mfields = MF;
   using real_t = typename Mparticles::real_t;
-  using particles_t = typename Mparticles::Patch;
+  using Particle = typename Mparticles::ConstAccessor::Particle;
   
   constexpr static char const* name = "vv_1st";
   constexpr static int n_comps = 3;
@@ -130,24 +108,16 @@ struct Moment_vv_1st
 
   static void run(Mfields& mflds, Mparticles& mprts)
   {
-    const Grid_t& grid = mprts.grid();
-    real_t fnqs = grid.norm.fnqs;
-    real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
-    
-    auto accessor = mprts.accessor();
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      auto deposit = Deposit1stCc<Mfields>{grid, mflds[p]};
-      for (auto prt: accessor[p]) {
+    auto deposit = Deposit1stCc<Mparticles, Mfields>{mprts, mflds};
+    deposit.process([&](const Particle &prt) {
 	int mm = prt.kind() * 3;
-	
 	real_t vxi[3];
 	particle_calc_vxi(prt, vxi);
 	
 	for (int m = 0; m < 3; m++) {
 	  deposit(prt, mm + m, vxi[m] * vxi[m]);
 	}
-      }
-    }
+      });
   }
 };
 
@@ -160,7 +130,7 @@ struct Moment_T_1st
   using Mparticles = MP;
   using Mfields = MF;
   using real_t = typename Mparticles::real_t;
-  using particles_t = typename Mparticles::Patch;
+  using Particle = typename Mparticles::ConstAccessor::Particle;
   
   constexpr static char const* name = "T_1st";
   constexpr static int n_comps = 6;
@@ -169,14 +139,8 @@ struct Moment_T_1st
 
   static void run(Mfields& mflds, Mparticles& mprts)
   {
-    const Grid_t& grid = mprts.grid();
-    real_t fnqs = grid.norm.fnqs;
-    real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
-    
-    auto accessor = mprts.accessor();
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      auto deposit = Deposit1stCc<Mfields>{grid, mflds[p]};
-      for (auto prt: accessor[p]) {
+    auto deposit = Deposit1stCc<Mparticles, Mfields>{mprts, mflds};
+    deposit.process([&](const Particle &prt) {
 	int mm = prt.kind() * 6;
 	
 	real_t vxi[3];
@@ -188,8 +152,7 @@ struct Moment_T_1st
 	deposit(prt, mm + 3, prt.m() * pxi[0] * vxi[1]);
 	deposit(prt, mm + 4, prt.m() * pxi[0] * vxi[2]);
 	deposit(prt, mm + 5, prt.m() * pxi[1] * vxi[2]);
-      }
-    }
+      });
   }
 };
 
@@ -202,7 +165,7 @@ struct Moment_Tvv_1st
   using Mparticles = MP;
   using Mfields = MF;
   using real_t = typename Mparticles::real_t;
-  using particles_t = typename Mparticles::Patch;
+  using Particle = typename Mparticles::ConstAccessor::Particle;
   
   constexpr static char const* name = "Tvv_1st";
   constexpr static int n_comps = 6;
@@ -211,16 +174,10 @@ struct Moment_Tvv_1st
 
   static void run(Mfields& mflds, Mparticles& mprts)
   {
-    const Grid_t& grid = mprts.grid();
-    real_t fnqs = grid.norm.fnqs;
-    real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
-    
-    auto accessor = mprts.accessor();
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      auto deposit = Deposit1stCc<Mfields>{grid, mflds[p]};
-      for (auto prt: accessor[p]) {
+    auto deposit = Deposit1stCc<Mparticles, Mfields>{mprts, mflds};
+    deposit.process([&](const Particle &prt) {
 	int mm = prt.kind() * 6;
-      
+	
 	real_t vxi[3];
 	particle_calc_vxi(prt, vxi);
 	deposit(prt, mm + 0, prt.m() * vxi[0] * vxi[0]);
@@ -229,8 +186,7 @@ struct Moment_Tvv_1st
 	deposit(prt, mm + 3, prt.m() * vxi[0] * vxi[1]);
 	deposit(prt, mm + 4, prt.m() * vxi[0] * vxi[2]);
 	deposit(prt, mm + 5, prt.m() * vxi[1] * vxi[2]);
-      }
-    }
+      });
   }
 };
 

@@ -24,7 +24,7 @@ struct MparticlesCuda : MparticlesBase
   using BndpParticle = DParticleCuda;
   using BndBuffer = std::vector<BndpParticle>;
   using BndBuffers = std::vector<BndBuffer>;
-
+  using ConstAccessor = ConstAccessorCuda<MparticlesCuda>;
   using is_cuda = std::true_type;
   
   using Patch = ConstPatchCuda<MparticlesCuda>;
@@ -68,7 +68,7 @@ struct MparticlesCuda : MparticlesBase
   CudaMparticles* cmprts() { return cmprts_; }
 
   InjectorBuffered<MparticlesCuda> injector() { return {*this}; }
-  ConstAccessorCuda<MparticlesCuda> accessor() { return {*this}; }
+  ConstAccessorCuda<MparticlesCuda> accessor() const { return {const_cast<MparticlesCuda&>(*this)}; } // FIXME cast
 
 private:
   CudaMparticles* cmprts_;
