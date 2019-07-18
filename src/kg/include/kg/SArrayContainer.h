@@ -5,9 +5,43 @@
 #include <kg/Array3d.h>
 
 // FIXME, do noexcept?
+// FIXME, use size_t instead of int, at least for 1d offsets?
 
 namespace kg
 {
+
+// ======================================================================
+// Storage
+
+template <typename T>
+class Storage
+{
+public:
+  using value_type = T;
+  using reference = T&;
+  using const_reference = const T&;
+  using pointer = T*;
+  using const_pointer = const T*;
+
+  Storage(pointer data) : data_{data} {}
+
+  const_reference operator[](int offset) const { return data_[offset]; }
+  reference operator[](int offset) { return data_[offset]; }
+
+  // FIXME access to underlying storage might better be avoided?
+  // use of this makes assumption that storage is contiguous
+  const_pointer data() const { return data_; }
+  pointer data() { return data_; }
+
+  void free()
+  {
+    ::free(data_);
+    data_ = nullptr;
+  }
+
+private:
+  pointer data_;
+};
 
 template <typename C>
 struct SArrayContainerInnerTypes;
