@@ -26,6 +26,19 @@ namespace {
     EXPECT_EQ(v[2], 3);
   }
 
+  TYPED_TEST(Vec3Test, CopyCtorAssign)
+  {
+    using V3 = Vec3<TypeParam>;
+    
+    V3 v = { 1, 2, 3 };
+    EXPECT_EQ(v, V3({1, 2, 3}));
+    V3 v2 = v;
+    EXPECT_EQ(v2, V3({1, 2, 3}));
+    V3 v3;
+    v3 = v;
+    EXPECT_EQ(v3, V3({1, 2, 3}));
+  }
+
   TYPED_TEST(Vec3Test, OperatorEqual)
   {
     using V3 = Vec3<TypeParam>;
