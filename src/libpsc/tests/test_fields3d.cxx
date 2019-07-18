@@ -19,7 +19,7 @@ static Grid_t make_grid()
   return Grid_t{domain, bc, kinds, norm, dt};
 }
 
-TEST(fields3d, CtorNoArray)
+TEST(SArray, Ctor)
 {
   auto f = kg::SArray<Real, Layout>{{1, 2, 3}, {2, 3, 4}, 2};
   f.dtor();
@@ -32,9 +32,9 @@ TEST(fields3d_view, Ctor)
   auto f = fields3d_view<Real, Layout>{grid, {1, 2, 3}, {2, 3, 4}, 2, storage.data()};
 }
 
-TEST(fields3d, BoundsEtc)
+TEST(SArray, BoundsEtc)
 {
-  auto f = fields3d<Real, Layout>{{1, 2, 3}, {2, 3, 4}, 2};
+  auto f = kg::SArray<Real, Layout>{{1, 2, 3}, {2, 3, 4}, 2};
 
   EXPECT_EQ(f.ib(), Int3({1, 2, 3}));
   EXPECT_EQ(f.im(), Int3({2, 3, 4}));
@@ -45,9 +45,9 @@ TEST(fields3d, BoundsEtc)
   f.dtor();
 }
 
-TEST(fields3d, index)
+TEST(SArray, index)
 {
-  auto f = fields3d<Real, Layout>{{1, 2, 3}, {2, 3, 4}, 2};
+  auto f = kg::SArray<Real, Layout>{{1, 2, 3}, {2, 3, 4}, 2};
 
   EXPECT_EQ(f.index(0, 1, 2, 3), 0);
   EXPECT_EQ(f.index(0, 2, 2, 3), 1);
@@ -56,12 +56,12 @@ TEST(fields3d, index)
   f.dtor();
 }
 
-TEST(fields3d, data)
+TEST(SArray, data)
 {
-  auto f = fields3d<Real, Layout>{{1, 2, 3}, {2, 3, 4}, 2};
+  auto f = kg::SArray<Real, Layout>{{1, 2, 3}, {2, 3, 4}, 2};
 
   EXPECT_EQ(f.data(), &f(0, 1, 2, 3));
-  const auto fc = const_cast<const fields3d<Real, Layout>&>(f);
+  const auto fc = const_cast<const kg::SArray<Real, Layout>&>(f);
   EXPECT_EQ(fc.data(), &fc(0, 1, 2, 3));
 
   f.dtor();
