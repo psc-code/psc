@@ -22,7 +22,6 @@ static Grid_t make_grid()
 TEST(SArray, Ctor)
 {
   auto f = kg::SArray<Real, Layout>{{1, 2, 3}, {2, 3, 4}, 2};
-  f.dtor();
 }
 
 TEST(fields3d_view, Ctor)
@@ -41,8 +40,6 @@ TEST(SArray, BoundsEtc)
   EXPECT_EQ(f.n_comps(), 2);
   EXPECT_EQ(f.n_cells(), 2 * 3 * 4);
   EXPECT_EQ(f.size(), 2 * 3 * 4 * 2);
-
-  f.dtor();
 }
 
 TEST(SArray, index)
@@ -52,8 +49,6 @@ TEST(SArray, index)
   EXPECT_EQ(f.index(0, 1, 2, 3), 0);
   EXPECT_EQ(f.index(0, 2, 2, 3), 1);
   EXPECT_EQ(f.index(1, 1, 2, 3), 2 * 3 * 4);
-
-  f.dtor();
 }
 
 TEST(SArray, data)
@@ -63,8 +58,6 @@ TEST(SArray, data)
   EXPECT_EQ(f.data(), &f(0, 1, 2, 3));
   const auto fc = const_cast<const kg::SArray<Real, Layout>&>(f);
   EXPECT_EQ(fc.data(), &fc(0, 1, 2, 3));
-
-  f.dtor();
 }
 
 // ======================================================================

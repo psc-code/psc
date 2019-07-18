@@ -21,6 +21,11 @@ public:
   using const_pointer = const T*;
 
   StorageRaw(pointer data) : data_{data} {}
+  ~StorageRaw()
+  {
+    ::free(data_);
+  }
+
 
   const_reference operator[](int offset) const { return data_[offset]; }
   reference operator[](int offset) { return data_[offset]; }
@@ -29,12 +34,6 @@ public:
   // use of this makes assumption that storage is contiguous
   const_pointer data() const { return data_; }
   pointer data() { return data_; }
-
-  void free()
-  {
-    ::free(data_);
-    data_ = nullptr;
-  }
 
 private:
   pointer data_;
@@ -64,8 +63,6 @@ struct SArray : SArrayContainer<SArray<T, L>>
     : Base{ib, im, n_comps},
       storage_{(real_t*)calloc(Base::size(), sizeof(real_t))}
   {}
-
-  void dtor() { storage_.free(); }
 
 private:
   Storage storage_;

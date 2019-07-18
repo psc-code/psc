@@ -70,7 +70,6 @@ mrc_json_t cuda_mfields::to_json()
       }
     }
   }
-  flds.dtor();
 
   return json;
 }

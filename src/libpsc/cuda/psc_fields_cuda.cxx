@@ -35,8 +35,6 @@ static void psc_mfields_cuda_copy_from_c(MfieldsBase& mflds_cuda, MfieldsBase& m
 
     mf_cuda.copy_to_device(p, flds, mb, me);
   }
-  
-  flds.dtor();
 }
 
 static void psc_mfields_cuda_copy_to_c(MfieldsBase& mflds_cuda, MfieldsBase& mflds_c, int mb, int me)
@@ -60,8 +58,6 @@ static void psc_mfields_cuda_copy_to_c(MfieldsBase& mflds_cuda, MfieldsBase& mfl
       }
     }
   }
-
-  flds.dtor();
 }
 
 static void psc_mfields_state_cuda_copy_from_c(MfieldsStateBase& mflds_cuda, MfieldsStateBase& mflds_c, int mb, int me)
@@ -85,8 +81,6 @@ static void psc_mfields_state_cuda_copy_from_c(MfieldsStateBase& mflds_cuda, Mfi
 
     mf_cuda.copy_to_device(p, flds, mb, me);
   }
-  
-  flds.dtor();
 }
 
 static void psc_mfields_state_cuda_copy_to_c(MfieldsStateBase& mflds_cuda, MfieldsStateBase& mflds_c, int mb, int me)
@@ -110,8 +104,6 @@ static void psc_mfields_state_cuda_copy_to_c(MfieldsStateBase& mflds_cuda, Mfiel
       }
     }
   }
-
-  flds.dtor();
 }
 
 // ======================================================================
@@ -139,8 +131,6 @@ static void psc_mfields_cuda_copy_from_single(MfieldsBase& mflds_cuda, MfieldsBa
 
     mf_cuda.copy_to_device(p, flds, mb, me);
   }
-  
-  flds.dtor();
 }
 
 static void psc_mfields_state_cuda_copy_from_single(MfieldsStateBase& mflds_cuda, MfieldsStateBase& mflds_single, int mb, int me)
@@ -165,8 +155,6 @@ static void psc_mfields_state_cuda_copy_from_single(MfieldsStateBase& mflds_cuda
 
     mf_cuda.copy_to_device(p, flds, mb, me);
   }
-  
-  flds.dtor();
 }
 
 static void psc_mfields_cuda_copy_to_single(MfieldsBase& mflds_cuda, MfieldsBase& mflds_single, int mb, int me)
@@ -190,8 +178,6 @@ static void psc_mfields_cuda_copy_to_single(MfieldsBase& mflds_cuda, MfieldsBase
       }
     }
   }
-
-  flds.dtor();
 }
 
 static void psc_mfields_state_cuda_copy_to_single(MfieldsStateBase& mflds_cuda, MfieldsStateBase& mflds_single, int mb, int me)
@@ -215,8 +201,6 @@ static void psc_mfields_state_cuda_copy_to_single(MfieldsStateBase& mflds_cuda, 
       }
     }
   }
-
-  flds.dtor();
 }
 
 // ======================================================================

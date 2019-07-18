@@ -153,9 +153,6 @@ cuda_marder_correct_yz_gold(struct cuda_mfields *cmflds, struct cuda_mfields *cm
   }
   
   cmflds->copy_to_device(p, flds, EX, EX + 3);
-
-  flds.dtor();
-  f.dtor();
 }
 
 __global__ static void
