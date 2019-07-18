@@ -106,7 +106,7 @@ struct Bnd_ : BndBase
 			  void *_buf, void *ctx)
   {
     auto& mf = *static_cast<Mfields*>(ctx);
-    auto F = makeFields3d(mf[p]);
+    auto F = mf[p];
     real_t *buf = static_cast<real_t*>(_buf);
     
     for (int m = mb; m < me; m++) {
@@ -124,7 +124,7 @@ struct Bnd_ : BndBase
 			   void *_buf, void *ctx)
   {
     auto& mf = *static_cast<Mfields*>(ctx);
-    auto F = makeFields3d(mf[p]);
+    auto F = mf[p];
     real_t *buf = static_cast<real_t*>(_buf);
     
     for (int m = mb; m < me; m++) {
@@ -142,7 +142,7 @@ struct Bnd_ : BndBase
 			    void *_buf, void *ctx)
   {
     auto& mf = *static_cast<Mfields*>(ctx);
-    auto F = makeFields3d(mf[p]);
+    auto F = mf[p];
     real_t *buf = static_cast<real_t*>(_buf);
     
     for (int m = mb; m < me; m++) {

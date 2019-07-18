@@ -48,7 +48,6 @@ mrc_json_t cuda_mfields::to_json()
   mrc_json_object_push(json_flds, "data", json_flds_patches);
 
   auto flds = get_host_fields();
-  auto F = makeFields3d(flds);
   for (int p = 0; p < n_patches; p++) {
     copy_from_device(p, flds, 0, n_fields);
 
@@ -64,7 +63,7 @@ mrc_json_t cuda_mfields::to_json()
 	  mrc_json_t json_fld_x = mrc_json_array_new(im[0]);
 	  mrc_json_array_push(json_fld_y, json_fld_x);
 	  for (int i = ib[0]; i < ib[0] + im[0]; i++) {
-	    mrc_json_array_push_double(json_fld_x, F(m, i,j,k));
+	    mrc_json_array_push_double(json_fld_x, flds(m, i,j,k));
 	  }
 	}
       }

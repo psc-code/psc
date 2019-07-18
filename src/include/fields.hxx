@@ -53,21 +53,6 @@ private:
   real_t *data_;
   Int3 ib, im;
   int n_comp_;
-  int first_comp_;
 };
-
-// instead of deduction guides...
-
-template<typename FE>
-Fields3d<FE, dim_xyz> makeFields3d(const FE& f)
-{
-  return Fields3d<FE, dim_xyz>(f);
-}
-
-template<typename D, typename FE>
-Fields3d<FE, D> makeFields3d(const FE& f)
-{
-  return Fields3d<FE, D>(f);
-}
 
 #endif

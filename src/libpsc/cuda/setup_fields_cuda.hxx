@@ -11,7 +11,6 @@ void SetupFields<MfieldsStateCuda>::set(Mfields& mf, FUNC func)
   for (int p = 0; p < mf.n_patches(); ++p) {
     auto& patch = mf.grid().patches[p];
     auto flds = mf.get_host_fields();
-    auto F = makeFields3d(flds);
     
     int n_ghosts = std::max({mf.ibn()[0], mf.ibn()[1], mf.ibn()[2]}); // FIXME, not pretty
     // FIXME, do we need the ghost points?
@@ -27,17 +26,17 @@ void SetupFields<MfieldsStateCuda>::set(Mfields& mf, FUNC func)
 	double ncn[3] = { x_nc, y_cc, z_nc };
 	double nnc[3] = { x_nc, y_nc, z_cc };
 	
-	F(HX, jx,jy,jz) += func(HX, ncc);
-	F(HY, jx,jy,jz) += func(HY, cnc);
-	F(HZ, jx,jy,jz) += func(HZ, ccn);
+	flds(HX, jx,jy,jz) += func(HX, ncc);
+	flds(HY, jx,jy,jz) += func(HY, cnc);
+	flds(HZ, jx,jy,jz) += func(HZ, ccn);
 	
-	F(EX, jx,jy,jz) += func(EX, cnn);
-	F(EY, jx,jy,jz) += func(EY, ncn);
-	F(EZ, jx,jy,jz) += func(EZ, nnc);
+	flds(EX, jx,jy,jz) += func(EX, cnn);
+	flds(EY, jx,jy,jz) += func(EY, ncn);
+	flds(EZ, jx,jy,jz) += func(EZ, nnc);
 	
-	F(JXI, jx,jy,jz) += func(JXI, cnn);
-	F(JYI, jx,jy,jz) += func(JYI, ncn);
-	F(JZI, jx,jy,jz) += func(JZI, nnc);
+	flds(JXI, jx,jy,jz) += func(JXI, cnn);
+	flds(JYI, jx,jy,jz) += func(JYI, ncn);
+	flds(JZI, jx,jy,jz) += func(JZI, nnc);
       });
 
     mf.copy_to_device(p, flds, JXI, HX+3);

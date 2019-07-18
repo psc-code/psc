@@ -688,10 +688,9 @@ private:
 	//Seed new data
       } else {
 	auto flds_new = mf_new[p];
-	auto F_new = makeFields3d(flds_new);
 	int nn = flds_new.size();
 	Int3 ib = flds_new.ib();
-	void *addr_new = &F_new(0, ib[0], ib[1], ib[2]);
+	void *addr_new = &flds_new(0, ib[0], ib[1], ib[2]);
 	int tag = nr_patches_old_by_rank[old_rank]++;
 	MPI_Irecv(addr_new, nn, mpi_dtype, old_rank,
 		  tag, ctx->comm, &recv_reqs[p]);
@@ -714,14 +713,12 @@ private:
 
       auto flds_old = mf_old[ctx->recv_info[p].patch];
       auto flds_new = mf_new[p];
-      auto F_old = makeFields3d(flds_old);
-      auto F_new = makeFields3d(flds_new);
       assert(flds_old.n_comps() == flds_new.n_comps());
       assert(flds_old.size() == flds_new.size());
       int size = flds_old.size();
       Int3 ib = flds_new.ib();
-      void *addr_new = &F_new(0, ib[0], ib[1], ib[2]);
-      void *addr_old = &F_old(0, ib[0], ib[1], ib[2]);
+      void *addr_new = &flds_new(0, ib[0], ib[1], ib[2]);
+      void *addr_old = &flds_old(0, ib[0], ib[1], ib[2]);
       memcpy(addr_new, addr_old, size * sizeof(typename Mfields::real_t));
     }
     prof_stop(pr);

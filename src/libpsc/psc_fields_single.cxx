@@ -23,13 +23,12 @@ static void psc_mfields_single_copy_from_c(MfieldsBase& mflds, MfieldsBase& mfld
   auto& mf_c = dynamic_cast<MfieldsC&>(mflds_c);
   for (int p = 0; p < mf.n_patches(); p++) {
     auto flds = mf[p];
-    auto F = makeFields3d(flds);
-    auto F_c = makeFields3d(mf_c[p]);
+    auto flds_c = mf_c[p];
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.im()[2]; jz++) {
 	for (int jy = flds.ib()[1]; jy < flds.ib()[1] + flds.im()[1]; jy++) {
 	  for (int jx = flds.ib()[0]; jx < flds.ib()[0] + flds.im()[0]; jx++) {
-	    F(m, jx,jy,jz) = F_c(m, jx,jy,jz);
+	    flds(m, jx,jy,jz) = flds_c(m, jx,jy,jz);
 	  }
 	}
       }
@@ -44,13 +43,12 @@ static void psc_mfields_single_copy_to_c(MfieldsBase& mflds, MfieldsBase& mflds_
   auto& mf_c = dynamic_cast<MfieldsC&>(mflds_c);
   for (int p = 0; p < mf.n_patches(); p++) {
     auto flds = mf[p];
-    auto F = makeFields3d(flds);
-    auto F_c = makeFields3d(mf_c[p]);
+    auto flds_c = mf_c[p];
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.im()[2]; jz++) {
 	for (int jy = flds.ib()[1]; jy < flds.ib()[1] + flds.im()[1]; jy++) {
 	  for (int jx = flds.ib()[0]; jx < flds.ib()[0] + flds.im()[0]; jx++) {
-	    F_c(m, jx,jy,jz) = F(m, jx,jy,jz);
+	    flds_c(m, jx,jy,jz) = flds(m, jx,jy,jz);
 	  }
 	}
       }

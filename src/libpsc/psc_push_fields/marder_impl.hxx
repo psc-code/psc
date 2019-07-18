@@ -93,8 +93,6 @@ struct Marder_ : MarderBase
 
   void correct_patch(fields_view_t flds, fields_view_t f, int p, real_t& max_err)
   {
-    auto F = makeFields3d(flds);
-    auto FF = makeFields3d(f);
     define_dxdydz(dx, dy, dz);
 
     // FIXME: how to choose diffusion parameter properly?
@@ -127,14 +125,14 @@ struct Marder_ : MarderBase
 #if 0
     psc_foreach_3d_more(ppsc, p, ix, iy, iz, l, r) {
       // FIXME: F3 correct?
-      F(EX, ix,iy,iz) += 
-	(FF(DIVE_MARDER, ix+dx,iy,iz) - FF(DIVE_MARDER, ix,iy,iz))
+      flds(EX, ix,iy,iz) += 
+	(f(DIVE_MARDER, ix+dx,iy,iz) - f(DIVE_MARDER, ix,iy,iz))
 	* .5 * ppsc->dt * diffusion / deltax;
-      F(EY, ix,iy,iz) += 
-	(FF(DIVE_MARDER, ix,iy+dy,iz) - FF(DIVE_MARDER, ix,iy,iz))
+      flds(EY, ix,iy,iz) += 
+	(f(DIVE_MARDER, ix,iy+dy,iz) - f(DIVE_MARDER, ix,iy,iz))
 	* .5 * ppsc->dt * diffusion / deltay;
-      F(EZ, ix,iy,iz) += 
-	(FF(DIVE_MARDER, ix,iy,iz+dz) - FF(DIVE_MARDER, ix,iy,iz))
+      flds(EZ, ix,iy,iz) += 
+	(f(DIVE_MARDER, ix,iy,iz+dz) - f(DIVE_MARDER, ix,iy,iz))
 	* .5 * ppsc->dt * diffusion / deltaz;
     } psc_foreach_3d_more_end;
 #endif
@@ -145,9 +143,9 @@ struct Marder_ : MarderBase
       int l[3] = { l_nc[0], l_cc[1], l_nc[2] };
       int r[3] = { r_nc[0], r_cc[1], r_nc[2] };
       psc_foreach_3d_more(ppsc, p, ix, iy, iz, l, r) {
-	max_err = std::max(max_err, std::abs(FF(0, ix,iy,iz)));
-	F(EY, ix,iy,iz) += 
-	  (FF(0, ix,iy+dy,iz) - FF(0, ix,iy,iz))
+	max_err = std::max(max_err, std::abs(f(0, ix,iy,iz)));
+	flds(EY, ix,iy,iz) += 
+	  (f(0, ix,iy+dy,iz) - f(0, ix,iy,iz))
 	  * .5 *grid.dt * diffusion / deltay;
       } psc_foreach_3d_more_end;
     }
@@ -156,8 +154,8 @@ struct Marder_ : MarderBase
       int l[3] = { l_nc[0], l_nc[1], l_cc[2] };
       int r[3] = { r_nc[0], r_nc[1], r_cc[2] };
       psc_foreach_3d_more(ppsc, p, ix, iy, iz, l, r) {
-	F(EZ, ix,iy,iz) += 
-	  (FF(0, ix,iy,iz+dz) - FF(0, ix,iy,iz))
+	flds(EZ, ix,iy,iz) += 
+	  (f(0, ix,iy,iz+dz) - f(0, ix,iy,iz))
 	  * .5 * grid.dt * diffusion / deltaz;
       } psc_foreach_3d_more_end;
     }

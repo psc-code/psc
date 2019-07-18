@@ -73,19 +73,18 @@ struct PushMprtsTest : TestBase<CudaMparticles>, ::testing::Test
     auto cmflds = std::unique_ptr<cuda_mfields>(new cuda_mfields(*grid_, N_FIELDS, { 0, 2, 2 }));
 
     auto flds = cmflds->get_host_fields();
-    auto F = makeFields3d(flds);
 
     auto ldims = grid_->ldims;
 
     // FIXME, initializes some ghosts too many, but that doesn't really hurt...
     for (int k = 0; k <= ldims[2]; k++) {
       for (int j = 0; j <= ldims[1]; j++) {
-	F(EX, 0,j,k) = set(EX);
-	F(EY, 0,j,k) = set(EY);
-	F(EZ, 0,j,k) = set(EZ);
-	F(HX, 0,j,k) = set(HX);
-	F(HY, 0,j,k) = set(HY);
-	F(HZ, 0,j,k) = set(HZ);
+	flds(EX, 0,j,k) = set(EX);
+	flds(EY, 0,j,k) = set(EY);
+	flds(EZ, 0,j,k) = set(EZ);
+	flds(HX, 0,j,k) = set(HX);
+	flds(HY, 0,j,k) = set(HY);
+	flds(HZ, 0,j,k) = set(HZ);
       }
     }
     

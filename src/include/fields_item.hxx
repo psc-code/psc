@@ -104,8 +104,8 @@ struct ItemLoopPatches : ItemPatch
     auto& grid = mres.grid();
     
     for (int p = 0; p < mres.n_patches(); p++) {
-      auto F = makeFields3d(mflds[p]);
-      auto R = makeFields3d(mres[p]);
+      auto F = mflds[p];
+      auto R = mres[p];
       grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
 	  ItemPatch::set(grid, R, F, i,j,k);
 	});
@@ -190,7 +190,6 @@ struct ItemMomentAddBnd : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Mo
   template<typename FE>
   static void add_ghosts_reflecting_lo(FE flds, int p, int d, int mb, int me)
   {
-    auto F = makeFields3d(flds);
     const int *ldims = flds.grid().ldims;
 
     int bx = ldims[0] == 1 ? 0 : 1;
@@ -199,7 +198,7 @@ struct ItemMomentAddBnd : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Mo
 	for (int ix = -bx; ix < ldims[0] + bx; ix++) {
 	  int iy = 0; {
 	    for (int m = mb; m < me; m++) {
-	      F(m, ix,iy,iz) += F(m, ix,iy-1,iz);
+	      flds(m, ix,iy,iz) += flds(m, ix,iy-1,iz);
 	    }
 	  }
 	}
@@ -209,7 +208,7 @@ struct ItemMomentAddBnd : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Mo
 	for (int ix = -bx; ix < ldims[0] + bx; ix++) {
 	  int iz = 0; {
 	    for (int m = mb; m < me; m++) {
-	      F(m, ix,iy,iz) += F(m, ix,iy,iz-1);
+	      flds(m, ix,iy,iz) += flds(m, ix,iy,iz-1);
 	    }
 	  }
 	}
@@ -222,7 +221,6 @@ struct ItemMomentAddBnd : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Mo
   template<typename FE>
   static void add_ghosts_reflecting_hi(FE flds, int p, int d, int mb, int me)
   {
-    auto F = makeFields3d(flds);
     const int *ldims = flds.grid().ldims;
 
     int bx = ldims[0] == 1 ? 0 : 1;
@@ -231,7 +229,7 @@ struct ItemMomentAddBnd : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Mo
 	for (int ix = -bx; ix < ldims[0] + bx; ix++) {
 	  int iy = ldims[1] - 1; {
 	    for (int m = mb; m < me; m++) {
-	      F(m, ix,iy,iz) += F(m, ix,iy+1,iz);
+	      flds(m, ix,iy,iz) += flds(m, ix,iy+1,iz);
 	    }
 	  }
 	}
@@ -241,7 +239,7 @@ struct ItemMomentAddBnd : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Mo
 	for (int ix = -bx; ix < ldims[0] + bx; ix++) {
 	  int iz = ldims[2] - 1; {
 	    for (int m = mb; m < me; m++) {
-	      F(m, ix,iy,iz) += F(m, ix,iy,iz+1);
+	      flds(m, ix,iy,iz) += flds(m, ix,iy,iz+1);
 	    }
 	  }
 	}

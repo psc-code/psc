@@ -55,7 +55,7 @@ struct Inject_ : InjectBase
     {
       auto inj = mprts.injector();
       for (int p = 0; p < mprts.n_patches(); p++) {
-	auto N = makeFields3d(mf_n[p]);
+	auto N = mf_n[p];
 	const int *ldims = grid.ldims;
 	auto injector = inj[p];
     
