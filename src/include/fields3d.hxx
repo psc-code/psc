@@ -336,6 +336,13 @@ struct Mfields : MfieldsBase
     return fields_view_t(Int3::fromPointer(ib), Int3::fromPointer(im), n_fields_, data[p].get());
   }
 
+  void zero()
+  {
+    for (int p = 0; p < n_patches(); p++) {
+      (*this)[p].zero();
+    }
+  }
+
   void zero_comp(int m) override
   {
     for (int p = 0; p < n_patches(); p++) {
@@ -419,6 +426,8 @@ struct MfieldsStateFromMfields : MfieldsStateBase
   const Convert& convert_from() override { return convert_from_; }
 
   Mfields& mflds() { return mflds_; }
+
+  void zero() { return mflds_.zero(); }
 
 private:
   Mfields mflds_;
