@@ -45,6 +45,38 @@ struct cuda_mfields_bnd {
 };
 
 // ======================================================================
+// MfieldsStorageDeviceVector
+
+class MfieldsStorageDeviceVector
+{
+public:
+  using value_type = float;
+  
+  MfieldsStorageDeviceVector(size_t size, uint stride)
+    : d_flds_(size), stride_{stride}
+  {}
+
+  value_type* data() { return d_flds_.data().get(); }
+
+  void set_value(int idx, const value_type& val) { d_flds_[idx] = val; }
+  value_type get_value(int idx) const { return d_flds_[idx]; }
+
+#if 0
+  void resize(int size, int n_patches)
+  {
+    assert(0);
+  }
+
+  value_type* operator[](int p) { return data_ + p * stride_; }
+  const value_type* operator[](int p) const { return data_ + p * stride_; }
+#endif
+  
+private:
+  thrust::device_vector<value_type> d_flds_;
+  uint stride_;
+};
+
+// ======================================================================
 // cuda_mfields
 
 struct DMFields;
@@ -53,7 +85,8 @@ using DFields = kg::SArrayView<float, kg::LayoutSOA>;
 
 struct cuda_mfields
 {
-  using real_t = float;
+  using Storage = MfieldsStorageDeviceVector;
+  using real_t = typename Storage::value_type;
   using fields_host_t = kg::SArray<real_t>;
 
   cuda_mfields(const Grid_t& grid, int n_fields, const Int3& ibn);
@@ -71,7 +104,7 @@ struct cuda_mfields
   mrc_json_t to_json();
   void dump(const char *filename);
 
-  real_t *data() { return d_flds_.data().get(); }
+  real_t *data() { return storage_.data(); }
   operator DMFields();
   DFields operator[](int p);
   const Grid_t& grid() const { return grid_; }
@@ -85,8 +118,8 @@ struct cuda_mfields
 	    * im[0] + (i - ib[0]));
   }
 
-  real_t get_value(int idx) const { return d_flds_[idx]; }
-  void set_value(int idx, real_t val) { d_flds_[idx] = val; }
+  real_t get_value(int idx) const { return storage_.get_value(idx); }
+  void set_value(int idx, real_t val) { storage_.set_value(idx, val); }
   
 public:
   Int3 ib;
@@ -96,7 +129,7 @@ public:
   int n_cells_per_patch;
   int n_cells;
 private:
-  thrust::device_vector<fields_cuda_real_t> d_flds_;
+  Storage storage_;
   const Grid_t& grid_;
 };
 

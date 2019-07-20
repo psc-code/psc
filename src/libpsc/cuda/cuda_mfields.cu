@@ -21,7 +21,7 @@ cuda_mfields::cuda_mfields(const Grid_t& grid, int _n_fields, const Int3& ibn)
     n_fields(_n_fields),
     n_cells_per_patch(im[0] * im[1] * im[2]),
     n_cells(n_patches * n_cells_per_patch),
-    d_flds_(n_fields * n_cells),
+    storage_(n_fields * n_cells, n_cells_per_patch * n_fields),
     grid_(grid)
 {
   cuda_base_init();
@@ -99,7 +99,7 @@ void cuda_mfields::dump(const char *filename)
 
 cuda_mfields::operator DMFields()
 {
-  return DMFields(d_flds_.data().get(), n_cells_per_patch * n_fields, im, ib, n_fields,
+  return DMFields(storage_.data(), n_cells_per_patch * n_fields, im, ib, n_fields,
 		  grid().n_patches());
 }
 
