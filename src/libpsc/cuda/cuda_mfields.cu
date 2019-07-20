@@ -16,9 +16,8 @@
 
 cuda_mfields::cuda_mfields(const Grid_t& grid, int _n_fields, const Int3& ibn)
   : Base{_n_fields, -ibn, grid.ldims + 2*ibn, grid.n_patches()},
-    n_cells_per_patch(im(0) * im(1) * im(2)),
-    n_cells(n_patches_ * n_cells_per_patch),
-    storage_(n_comps() * n_cells, n_comps() * n_cells_per_patch ),
+    n_cells(n_patches_ * box().size()),
+    storage_(n_comps() * n_cells, n_comps() * box().size() ),
     grid_(grid)
 {
   cuda_base_init();
@@ -32,7 +31,6 @@ mrc_json_t cuda_mfields::to_json()
   mrc_json_t json = mrc_json_object_new(9);
   mrc_json_object_push_integer(json, "n_patches", n_patches());
   mrc_json_object_push_integer(json, "n_fields", n_comps());
-  mrc_json_object_push_integer(json, "n_cells_per_patch", n_cells_per_patch);
   mrc_json_object_push_integer(json, "n_cells", n_cells);
 
   // mrc_json_object_push(json, "ib", mrc_json_integer_array_new(3, ib()));
@@ -96,7 +94,7 @@ void cuda_mfields::dump(const char *filename)
 
 cuda_mfields::operator DMFields()
 {
-  return DMFields(storage_.data(), n_comps() * n_cells_per_patch, im(), ib(), n_comps(),
+  return DMFields(storage_.data(), n_comps() * box().size(), im(), ib(), n_comps(),
 		  n_patches());
 }
 
@@ -128,7 +126,7 @@ void cuda_mfields::copy_to_device(int p, const fields_host_t& h_flds, int mb, in
   }
   assert(mb < me);
 
-  uint size = n_cells_per_patch;
+  uint size = box().size();
   ierr = cudaMemcpy((*this)[p].data() + mb * size,
 		    h_flds.data() + mb * size,
 		    (me - mb) * size * sizeof(float),
@@ -147,7 +145,7 @@ void cuda_mfields::copy_from_device(int p, fields_host_t& h_flds, int mb, int me
   }
   assert(mb < me);
 
-  uint size = n_cells_per_patch;
+  uint size = box().size();
   ierr = cudaMemcpy(h_flds.data() + mb * size,
 		    (*this)[p].data() + mb * size,
 		    (me - mb) * size * sizeof(float),
@@ -257,7 +255,7 @@ void cuda_mfields::zero_comp(int m, dim_yz tag)
 
 void cuda_mfields::zero_comp(int m, dim_xyz tag)
 {
-  int n = n_cells_per_patch;
+  int n = box().size();
   int stride = n * n_comps();
 
   const int THREADS_PER_BLOCK = 512;

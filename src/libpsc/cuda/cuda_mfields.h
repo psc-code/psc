@@ -123,7 +123,6 @@ struct cuda_mfields : MfieldsCRTP<cuda_mfields>
   void set_value(int idx, real_t val) { storage_.set_value(idx, val); }
   
 public:
-  int n_cells_per_patch;
   int n_cells;
 private:
   Storage storage_;
