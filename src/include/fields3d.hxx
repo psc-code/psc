@@ -375,12 +375,10 @@ public:
   }
 
 protected:
-  Derived& derived() { return *static_cast<Derived*>(this); }
-  const Derived& derived() const { return *static_cast<const Derived*>(this); }
-
-  // storae_ could move into Derived class, but I guess no point right now
-  Storage& storage() { return storage_; }
-  const Storage& storage() const { return storage_; }
+  KG_INLINE Storage& storage() { return derived().storageImpl(); }
+  KG_INLINE const Storage& storage() const { return derived().storageImpl(); }
+  KG_INLINE Derived& derived() { return *static_cast<Derived*>(this); }
+  KG_INLINE const Derived& derived() const { return *static_cast<const Derived*>(this); }
 
 protected:
   Storage storage_;
@@ -407,6 +405,7 @@ struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>>
 {
   using real_t = R;
   using Base = MfieldsCRTP<Mfields<R>>;
+  using Storage = typename Base::Storage;
 
   Mfields(const Grid_t& grid, int n_fields, Int3 ibn)
     : MfieldsBase(grid, n_fields, ibn),
@@ -427,6 +426,12 @@ struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>>
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override;
   const Convert& convert_from() override;
+
+private:
+  Storage& storageImpl() { return Base::storage_; }
+  const Storage& storageImpl() const { return Base::storage_; }
+
+  friend class MfieldsCRTP<Mfields<R>>;
 };
 
 template<> const MfieldsBase::Convert Mfields<float>::convert_to_;
