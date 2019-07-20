@@ -61,16 +61,6 @@ public:
   void set_value(int idx, const value_type& val) { d_flds_[idx] = val; }
   value_type get_value(int idx) const { return d_flds_[idx]; }
 
-#if 0
-  void resize(int size, int n_patches)
-  {
-    assert(0);
-  }
-
-  value_type* operator[](int p) { return data_ + p * stride_; }
-  const value_type* operator[](int p) const { return data_ + p * stride_; }
-#endif
-  
 private:
   thrust::device_vector<value_type> d_flds_;
   uint stride_;
@@ -82,10 +72,18 @@ private:
 struct DMFields;
 using DFields = kg::SArrayView<float, kg::LayoutSOA>;
 
+struct cuda_mfields;
 
-struct cuda_mfields
+template<>
+struct MfieldsCRTPInnerTypes<cuda_mfields>
 {
   using Storage = MfieldsStorageDeviceVector;
+};
+
+struct cuda_mfields : MfieldsCRTP<cuda_mfields>
+{
+  using Base = MfieldsCRTP<cuda_mfields>;
+  using Storage = typename Base::Storage;
   using real_t = typename Storage::value_type;
   using fields_host_t = kg::SArray<real_t>;
 
@@ -145,11 +143,6 @@ public:
     : stride_{stride}, data_{data}
   {}
   
-  void resize(int size, int n_patches)
-  {
-    assert(0);
-  }
-
   value_type* operator[](int p) { return data_ + p * stride_; }
   const value_type* operator[](int p) const { return data_ + p * stride_; }
 
