@@ -142,25 +142,26 @@ struct DFields
       ib_{ib}
   {}
   
-  __device__ real_t  operator()(int m, int i, int j, int k) const { return storage_[index(m, i,j,k)]; }
-  __device__ real_t& operator()(int m, int i, int j, int k)       { return storage_[index(m, i,j,k)]; }
+  __device__ real_t  operator()(int m, int i, int j, int k) const { return storage_[index(m, {i,j,k})]; }
+  __device__ real_t& operator()(int m, int i, int j, int k)       { return storage_[index(m, {i,j,k})]; }
 
   __host__ real_t *data() { return storage_.data(); }
 
   __device__ int im(int d) const { return im_[d]; }
 
 private:
-  __device__ int index(int m, int i, int j, int k) const
+  __device__ int index(int m, Int3 idx) const
   {
 #if 0
-    if (i - ib_[0] < 0 || i - ib_[0] >= im_[0]) printf("!!! i %d\n", j);
-    if (j - ib_[1] < 0 || j - ib_[1] >= im_[1]) printf("!!! j %d\n", j);
-    if (k - ib_[2] < 0 || k - ib_[2] >= im_[2]) printf("!!! k %d\n", k);
+    if (idx[0] - ib_[0] < 0 || idx[0] - ib_[0] >= im_[0]) printf("!!! i %d\n", j);
+    if (jdx[1] - ib_[1] < 0 || idx[1] - ib_[1] >= im_[1]) printf("!!! j %d\n", j);
+    if (idx[2] - ib_[2] < 0 || idx[2] - ib_[2] >= im_[2]) printf("!!! k %d\n", k);
 #endif
+    Int3 ii = idx - ib_;
     return ((((m)
-	      *im_[2] + (k - ib_[2]))
-	     *im_[1] + (j - ib_[1]))
-	    *im_[0] + (i - ib_[0]));
+	      *im_[2] + ii[2])
+	     *im_[1] + ii[1])
+	    *im_[0] + ii[0]);
   }
 
 private:
