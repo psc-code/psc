@@ -4,6 +4,7 @@
 
 #include <kg/Array3d.h>
 #include <kg/Vec3.h>
+#include <kg/Macros.h>
 
 // FIXME, do noexcept?
 // FIXME, use size_t instead of int, at least for 1d offsets?
@@ -19,7 +20,7 @@ struct LayoutDataOffset;
 template <>
 struct LayoutDataOffset<LayoutSOA>
 {
-  static int run(int n_comps, const Int3& im, int m, Int3 idx)
+  KG_INLINE static int run(int n_comps, const Int3& im, int m, Int3 idx)
   {
     return (((((m)*im[2] + idx[2]) * im[1] + idx[1]) * im[0] + idx[0]));
   }
@@ -28,7 +29,7 @@ struct LayoutDataOffset<LayoutSOA>
 template <>
 struct LayoutDataOffset<LayoutAOS>
 {
-  static int run(int n_comps, const Int3& im, int m, Int3 idx)
+  KG_INLINE static int run(int n_comps, const Int3& im, int m, Int3 idx)
   {
     return ((((idx[2]) * im[1] + idx[1]) * im[0] + idx[0]) * n_comps + m);
   }
@@ -37,7 +38,7 @@ struct LayoutDataOffset<LayoutAOS>
 } // namespace detail
 
 template <typename Layout>
-static int layoutDataOffset(int n_comps, const Int3& im, int m, Int3 idx)
+KG_INLINE static int layoutDataOffset(int n_comps, const Int3& im, int m, Int3 idx)
 {
   return detail::LayoutDataOffset<Layout>::run(n_comps, im, m, idx);
 }

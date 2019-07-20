@@ -136,10 +136,11 @@ struct DFields
   using Storage = StorageNoOwnershipDevice<float>;
   using real_t = typename Storage::value_type;
   
-  __host__ __device__ DFields(real_t* d_flds, Int3 im, Int3 ib)
+  __host__ __device__ DFields(real_t* d_flds, Int3 im, Int3 ib, int n_comps)
     : storage_{d_flds},
       im_{im},
-      ib_{ib}
+      ib_{ib},
+      n_comps_{n_comps}
   {}
   
   __device__ real_t  operator()(int m, int i, int j, int k) const { return storage_[index(m, {i,j,k})]; }
@@ -157,17 +158,14 @@ private:
     if (jdx[1] - ib_[1] < 0 || idx[1] - ib_[1] >= im_[1]) printf("!!! j %d\n", j);
     if (idx[2] - ib_[2] < 0 || idx[2] - ib_[2] >= im_[2]) printf("!!! k %d\n", k);
 #endif
-    Int3 ii = idx - ib_;
-    return ((((m)
-	      *im_[2] + ii[2])
-	     *im_[1] + ii[1])
-	    *im_[0] + ii[0]);
+    return kg::layoutDataOffset<kg::LayoutSOA>(n_comps_, im_, m, idx);
   }
 
 private:
   Storage storage_;
   Int3 im_;
   Int3 ib_;
+  int n_comps_;
 };
 
 // ======================================================================
@@ -177,16 +175,17 @@ struct DMFields
 {
   using real_t = float;
   
-  __host__ DMFields(real_t* d_flds, uint stride, Int3 im, Int3 ib)
+  __host__ DMFields(real_t* d_flds, uint stride, Int3 im, Int3 ib, int n_comps)
     : d_flds_(d_flds),
       stride_(stride),
       im_{im},
-      ib_{ib}
+      ib_{ib},
+      n_comps_{n_comps}
   {}
 
   __host__ __device__ DFields operator[](int p)
   {
-    return DFields(d_flds_ + p * stride_, im_, ib_);
+    return DFields(d_flds_ + p * stride_, im_, ib_, n_comps_);
   }
 
   __device__ int im(int d) const { return im_[d]; }
@@ -196,6 +195,7 @@ private:
   uint stride_;
   Int3 im_;
   Int3 ib_;
+  int n_comps_;
 };
 
 #endif
