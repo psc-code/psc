@@ -16,8 +16,7 @@
 
 cuda_mfields::cuda_mfields(const Grid_t& grid, int _n_fields, const Int3& ibn)
   : Base{_n_fields, -ibn, grid.ldims + 2*ibn, grid.n_patches()},
-    n_cells(n_patches_ * box().size()),
-    storage_(n_comps() * n_cells, n_comps() * box().size() ),
+    storage_(n_comps() * box().size() * n_patches(), n_comps() * box().size() ),
     grid_(grid)
 {
   cuda_base_init();
@@ -31,7 +30,6 @@ mrc_json_t cuda_mfields::to_json()
   mrc_json_t json = mrc_json_object_new(9);
   mrc_json_object_push_integer(json, "n_patches", n_patches());
   mrc_json_object_push_integer(json, "n_fields", n_comps());
-  mrc_json_object_push_integer(json, "n_cells", n_cells);
 
   // mrc_json_object_push(json, "ib", mrc_json_integer_array_new(3, ib()));
   // mrc_json_object_push(json, "im", mrc_json_integer_array_new(3, im()));
