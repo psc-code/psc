@@ -14,7 +14,7 @@ namespace {
 
   using RangeTypes = ::testing::Types<int>;
 
-  TYPED_TEST_CASE(RangeTest, RangeTypes);
+  TYPED_TEST_SUITE(RangeTest, RangeTypes);
 
   TYPED_TEST(RangeTest, OneParam)
   {

@@ -30,7 +30,7 @@ MPFX(write)(struct psc_mfields *mflds, struct mrc_io *io)
   hid_t group0 = H5Gopen(h5_file, mrc_io_obj_path(io, mflds), H5P_DEFAULT); H5_CHK(group0);
 
   for (int p = 0; p < mflds->nr_patches; p++) {
-    fields_t flds = mf[p];
+    auto flds = mf[p];
     char name[20]; sprintf(name, "flds%d", p);
     hid_t group = H5Gcreate(group0, name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group);
     ierr = H5LTset_attribute_int(group, ".", "ib", flds.ib, 3); CE;
@@ -71,7 +71,7 @@ MPFX(read)(struct psc_mfields *mflds, struct mrc_io *io)
   hid_t group0 = H5Gopen(h5_file, mrc_io_obj_path(io, mflds), H5P_DEFAULT); H5_CHK(group0);
 
   for (int p = 0; p < mflds->nr_patches; p++) {
-    fields_t flds = mf[p];
+    auto flds = mf[p];
     char name[20]; sprintf(name, "flds%d", p);
     hid_t group = H5Gopen(group0, name, H5P_DEFAULT); H5_CHK(group);
     int ib[3], im[3], nr_comp;

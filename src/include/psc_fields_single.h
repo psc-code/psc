@@ -6,14 +6,7 @@
 #include "fields3d.hxx"
 #include "fields_traits.hxx"
 
-struct fields_single_t : fields3d<float>
-{
-  using Base = fields3d<float>;
-
-  using Base::Base;
-};
-
-using MfieldsSingle = Mfields<fields_single_t>;
+using MfieldsSingle = Mfields<float>;
 using MfieldsStateSingle = MfieldsStateFromMfields<MfieldsSingle>;
 
 template<>

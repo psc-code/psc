@@ -15,7 +15,6 @@ struct Moment_n_2nd_nc
   using Mfields = MF;
   using real_t = typename Mparticles::real_t;
   using particles_t = typename Mparticles::Patch;
-  using fields_t = typename Mfields::fields_t;  
   
   constexpr static char const* name = "n_2nd_nc_double";
   constexpr static int n_comps = 1;
@@ -49,7 +48,6 @@ struct Moment_rho_2nd_nc
   using Mfields = MF;
   using real_t = typename Mparticles::real_t;
   using particles_t = typename Mparticles::Patch;
-  using fields_t = typename Mfields::fields_t;  
   
   constexpr static char const* name = "rho_2nd_nc";
   constexpr static int n_comps = 1;

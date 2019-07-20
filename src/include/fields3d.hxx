@@ -6,6 +6,7 @@
 
 #include "grid.hxx"
 #include <mrc_io.hxx>
+#include <kg/SArrayContainer.h>
 
 #include <mrc_profile.h>
 
@@ -19,167 +20,72 @@
 #include <list>
 #include <string>
 
-template<bool AOS>
-struct Layout
-{
-  using isAOS = std::integral_constant<bool, AOS>;
-};
+// ======================================================================
+// Storage
 
-using LayoutAOS = Layout<true>;
-using LayoutSOA = Layout<false>;
+template <typename T>
+class StorageNoOwnership
+{
+public:
+  using value_type = T;
+  using reference = T&;
+  using const_reference = const T&;
+  using pointer = T*;
+  using const_pointer = const T*;
+
+  StorageNoOwnership(pointer data) : data_{data} {}
+
+  const_reference operator[](int offset) const { return data_[offset]; }
+  reference operator[](int offset) { return data_[offset]; }
+
+  // FIXME access to underlying storage might better be avoided?
+  // use of this makes assumption that storage is contiguous
+  const_pointer data() const { return data_; }
+  pointer data() { return data_; }
+
+private:
+  pointer data_;
+};
 
 // ======================================================================
-// fields3d
+// fields3d_view
 
-template<typename R, typename L=LayoutSOA>
-struct fields3d {
-  using real_t = R;
-  using layout = L;
+template<typename T, typename L=kg::LayoutSOA>
+struct fields3d_view;
 
-  fields3d(const Grid_t& grid, Int3 ib, Int3 im, int n_comps, real_t* data=nullptr)
-    : grid_{grid},
-      ib_{ib}, im_{im},
-      n_comps_{n_comps},
-      data_{data}
-  {
-    if (!data_) {
-      data_ = (real_t *) calloc(size(), sizeof(*data_));
-    }
-  }
+namespace kg
+{
 
-  void dtor()
-  {
-    free(data_);
-    data_ = NULL;
-  }
-
-  real_t  operator()(int m, int i, int j, int k) const { return data_[index(m, i, j, k)];  }
-  real_t& operator()(int m, int i, int j, int k)       { return data_[index(m, i, j, k)];  }
-
-  real_t* data() { return data_; }
-  int index(int m, int i, int j, int k) const;
-  int n_comps() const { return n_comps_; }
-  int n_cells() const { return im_[0] * im_[1] * im_[2]; }
-  int size()    const { return n_comps() * n_cells(); }
-  Int3 ib()     const { return ib_; }
-  Int3 im()     const { return im_; }
-
-  void zero(int m)
-  {
-    memset(&(*this)(m, ib_[0], ib_[1], ib_[2]), 0, n_cells() * sizeof(real_t));
-  }
-
-  void zero(int mb, int me)
-  {
-    for (int m = mb; m < me; m++) {
-      zero(m);
-    }
-  }
-
-  void zero()
-  {
-    memset(data_, 0, sizeof(real_t) * size());
-  }
-
-  void set(int m, real_t val)
-  {
-    for (int k = ib_[2]; k < ib_[2] + im_[2]; k++) {
-      for (int j = ib_[1]; j < ib_[1] + im_[1]; j++) {
-	for (int i = ib_[0]; i < ib_[0] + im_[0]; i++) {
-	  (*this)(m, i,j,k) = val;
-	}
-      }
-    }
-  }
-
-  void scale(int m, real_t val)
-  {
-    for (int k = ib_[2]; k < ib_[2] + im_[2]; k++) {
-      for (int j = ib_[1]; j < ib_[1] + im_[1]; j++) {
-	for (int i = ib_[0]; i < ib_[0] + im_[0]; i++) {
-	  (*this)(m, i,j,k) *= val;
-	}
-      }
-    }
-  }
-
-  void copy_comp(int mto, const fields3d& from, int mfrom)
-  {
-    for (int k = ib_[2]; k < ib_[2] + im_[2]; k++) {
-      for (int j = ib_[1]; j < ib_[1] + im_[1]; j++) {
-	for (int i = ib_[0]; i < ib_[0] + im_[0]; i++) {
-	  (*this)(mto, i,j,k) = from(mfrom, i,j,k);
-	}
-      }
-    }
-  }
-
-  void axpy_comp(int m_y, real_t alpha, const fields3d& x, int m_x)
-  {
-    for (int k = ib_[2]; k < ib_[2] + im_[2]; k++) {
-      for (int j = ib_[1]; j < ib_[1] + im_[1]; j++) {
-	for (int i = ib_[0]; i < ib_[0] + im_[0]; i++) {
-	  (*this)(m_y, i,j,k) += alpha * x(m_x, i,j,k);
-	}
-      }
-    }
-  }
-
-  real_t max_comp(int m)
-  {
-    real_t rv = -std::numeric_limits<real_t>::max();
-    for (int k = ib_[2]; k < ib_[2] + im_[2]; k++) {
-      for (int j = ib_[1]; j < ib_[1] + im_[1]; j++) {
-	for (int i = ib_[0]; i < ib_[0] + im_[0]; i++) {
-	  rv = std::max(rv, (*this)(m, i,j,k));
-	}
-      }
-    }
-    return rv;
-  }
-
-  void dump()
-  {
-    for (int k = ib_[2]; k < ib_[2] + im_[2]; k++) {
-      for (int j = ib_[1]; j < ib_[1] + im_[1]; j++) {
-	for (int i = ib_[0]; i < ib_[0] + im_[0]; i++) {
-	  for (int m = 0; m < n_comps_; m++) {
-	    mprintf("dump: ijk %d:%d:%d m %d: %g\n", i, j, k, m, (*this)(m, i,j,k));
-	  }
-	}
-      }
-    }
-  }
-
-  const Grid_t& grid() const { return grid_; }
-
-  real_t* data_;
-  Int3 ib_, im_; //> lower bounds and length per direction
-  int n_comps_; // # of components
-  const Grid_t& grid_;
+template<typename T, typename L>
+struct SArrayContainerInnerTypes<fields3d_view<T, L>>
+{
+  using Layout = L;
+  using Storage = StorageNoOwnership<T>;
 };
 
-template<typename R, typename L>
-int fields3d<R, L>::index(int m, int i, int j, int k) const
-{
-#ifdef BOUNDS_CHECK
-  assert(m >= 0 && m < n_comps_);
-  assert(i >= ib_[0] && i < ib_[0] + im_[0]);
-  assert(j >= ib_[1] && j < ib_[1] + im_[1]);
-  assert(k >= ib_[2] && k < ib_[2] + im_[2]);
-#endif
-
-  if (L::isAOS::value) {
-    return (((((k - ib_[2])) * im_[1] +
-	      (j - ib_[1])) * im_[0] +
-	     (i - ib_[0])) * n_comps_ + m);
-  } else {
-    return (((((m) * im_[2] +
-	       (k - ib_[2])) * im_[1] +
-	      (j - ib_[1])) * im_[0] +
-	     (i - ib_[0])));
-  }
 }
+
+template<typename T, typename L>
+struct fields3d_view : kg::SArrayContainer<fields3d_view<T, L>>
+{
+  using Base = kg::SArrayContainer<fields3d_view<T, L>>;
+  using Storage = typename Base::Storage;
+  using real_t = typename Base::value_type;
+
+  fields3d_view(Int3 ib, Int3 im, int n_comps, real_t* data)
+    : Base{ib, im, n_comps},
+      storage_{data}
+  {
+  }
+
+private:
+  Storage storage_;
+
+  Storage& storageImpl() { return storage_; }
+  const Storage& storageImpl() const { return storage_; }
+
+  friend class kg::SArrayContainer<fields3d_view<T, L>>;
+};
 
 // ======================================================================
 // MfieldsBase
@@ -188,8 +94,6 @@ struct MfieldsBase
 {
   using convert_func_t = void (*)(MfieldsBase&, MfieldsBase&, int, int);
   using Convert = std::unordered_map<std::type_index, convert_func_t>;
-  
-  struct fields_t { struct real_t {}; };
   
   MfieldsBase(const Grid_t& grid, int n_fields, Int3 ibn)
     : grid_(&grid),
@@ -389,11 +293,11 @@ protected:
 // ======================================================================
 // Mfields
 
-template<typename F>
+template<typename R>
 struct Mfields : MfieldsBase
 {
-  using fields_t = F;
-  using real_t = typename fields_t::real_t;
+  using real_t = R;
+  using fields_view_t = fields3d_view<real_t>;
 
   Mfields(const Grid_t& grid, int n_fields, Int3 ibn)
     : MfieldsBase(grid, n_fields, ibn)
@@ -427,9 +331,16 @@ struct Mfields : MfieldsBase
     }
   }
   
-  fields_t operator[](int p)
+  fields_view_t operator[](int p)
   {
-    return fields_t(grid(), Int3::fromPointer(ib), Int3::fromPointer(im), n_fields_, data[p].get());
+    return fields_view_t(Int3::fromPointer(ib), Int3::fromPointer(im), n_fields_, data[p].get());
+  }
+
+  void zero()
+  {
+    for (int p = 0; p < n_patches(); p++) {
+      (*this)[p].zero();
+    }
   }
 
   void zero_comp(int m) override
@@ -500,7 +411,7 @@ struct Mfields : MfieldsBase
 template<typename Mfields>
 struct MfieldsStateFromMfields : MfieldsStateBase
 {
-  using fields_t = typename Mfields::fields_t;
+  using fields_view_t = typename Mfields::fields_view_t;
   using real_t = typename Mfields::real_t;
 
   MfieldsStateFromMfields(const Grid_t& grid)
@@ -508,13 +419,15 @@ struct MfieldsStateFromMfields : MfieldsStateBase
       mflds_{grid, NR_FIELDS, grid.ibn}
   {}
 
-  fields_t operator[](int p) { return mflds_[p]; }
+  fields_view_t operator[](int p) { return mflds_[p]; }
 
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
 
   Mfields& mflds() { return mflds_; }
+
+  void zero() { return mflds_.zero(); }
 
 private:
   Mfields mflds_;

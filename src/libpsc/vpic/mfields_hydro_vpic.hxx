@@ -11,7 +11,7 @@ struct MfieldsHydroVpic
   using Grid = VpicGridBase;
   using real_t = float;
   using Element = hydro_t;
-  using fields_t = fields3d<float, LayoutAOS>;
+  using fields_view_t = fields3d_view<float, kg::LayoutAOS>;
 
   enum {
     N_COMP = 16,
@@ -63,7 +63,7 @@ struct MfieldsHydroVpic
   int n_comps() const { return N_COMP; }
 
   real_t* data() { return reinterpret_cast<real_t*>(patch_.data()); }
-  fields_t operator[](int p) { return {grid_, ib_, im_, N_COMP, data()}; }
+  fields_view_t operator[](int p) { return {ib_, im_, N_COMP, data()}; }
   Patch& getPatch(int p) { return patch_; }
 
   Grid* vgrid() { return patch_.grid(); }

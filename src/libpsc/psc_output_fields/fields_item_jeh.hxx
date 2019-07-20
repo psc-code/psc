@@ -7,9 +7,6 @@
 using MfieldsState_t = MfieldsStateDouble;
 using Mfields_t = MfieldsC;
 
-using Fields = Fields3d<Mfields_t::fields_t>;
-using FieldsState = Fields3d<MfieldsState_t::fields_t>;
-
 // ======================================================================
 
 #define define_dxdydz(dx, dy, dz)		       \
@@ -31,8 +28,9 @@ struct Item_j_nc
   constexpr static char const* name = "j_nc";
   constexpr static int n_comps = 3;
   static fld_names_t fld_names() { return { "jx_nc", "jy_nc", "jz_nc" }; }
-  
-  static void set(const Grid_t& grid, Fields& R, Fields&F, int i, int j, int k)
+
+  template<typename FE>
+  static void set(const Grid_t& grid, FE& R, FE& F, int i, int j, int k)
   {
     define_dxdydz(dx, dy, dz);
     R(0, i,j,k) = JX_NC(i,j,k);
@@ -59,7 +57,8 @@ struct Item_j_cc
   constexpr static int n_comps = 3;
   static fld_names_t fld_names() { return { "jx", "jy", "jz" }; }
   
-  static void set(const Grid_t& grid, Fields& R, Fields&F, int i, int j, int k)
+  template<typename FE>
+  static void set(const Grid_t& grid, FE& R, FE&F, int i, int j, int k)
   {
     define_dxdydz(dx, dy, dz);
     R(0, i,j,k) = JX_CC(i,j,k);
@@ -79,7 +78,8 @@ struct Item_j_ec
   constexpr static int n_comps = 3;
   static fld_names_t fld_names() { return { "jx_ec", "jy_ec", "jz_ec" }; }
   
-  static void set(const Grid_t& grid, Fields& R, Fields&F, int i, int j, int k)
+  template<typename FE>
+  static void set(const Grid_t& grid, FE& R, FE&F, int i, int j, int k)
   {
     define_dxdydz(dx, dy, dz);
     R(0, i,j,k) = F(JXI, i,j,k);
@@ -103,7 +103,8 @@ struct Item_e_nc
   constexpr static int n_comps = 3;
   static fld_names_t fld_names() { return { "ex_nc", "ey_nc", "ez_nc" }; }
   
-  static void set(const Grid_t& grid, Fields& R, Fields&F, int i, int j, int k)
+  template<typename FE>
+  static void set(const Grid_t& grid, FE& R, FE&F, int i, int j, int k)
   {
     define_dxdydz(dx, dy, dz);
     R(0, i,j,k) = EX_NC(i,j,k);
@@ -129,8 +130,9 @@ struct Item_e_cc
   constexpr static char const* name = "e";
   constexpr static int n_comps = 3;
   static fld_names_t fld_names() { return { "ex", "ey", "ez" }; }
-  
-  static void set(const Grid_t& grid, Fields& R, Fields&F, int i, int j, int k)
+
+  template<typename FE>
+  static void set(const Grid_t& grid, FE& R, FE&F, int i, int j, int k)
   {
     define_dxdydz(dx, dy, dz);
     R(0, i,j,k) = EX_CC(i,j,k);
@@ -150,7 +152,8 @@ struct Item_e_ec
   constexpr static int n_comps = 3;
   static fld_names_t fld_names() { return { "ex_ec", "ey_ec", "ez_ec" }; }
   
-  static void set(const Grid_t& grid, Fields& R, Fields&F, int i, int j, int k)
+  template<typename FE>
+  static void set(const Grid_t& grid, FE& R, FE&F, int i, int j, int k)
   {
     define_dxdydz(dx, dy, dz);
     R(0, i,j,k) = F(EX, i,j,k);
@@ -177,7 +180,8 @@ struct Item_h_nc
   constexpr static int n_comps = 3;
   static fld_names_t fld_names() { return { "hx_nc", "hy_nc", "hz_nc" }; }
   
-  static void set(const Grid_t& grid, Fields& R, Fields&F, int i, int j, int k)
+  template<typename FE>
+  static void set(const Grid_t& grid, FE& R, FE&F, int i, int j, int k)
   {
     define_dxdydz(dx, dy, dz);
     R(0, i,j,k) = HX_NC(i,j,k);
@@ -201,7 +205,8 @@ struct Item_h_cc
   constexpr static int n_comps = 3;
   static fld_names_t fld_names() { return { "hx", "hy", "hz" }; }
   
-  static void set(const Grid_t& grid, Fields& R, Fields&F, int i, int j, int k)
+  template<typename FE>
+  static void set(const Grid_t& grid, FE& R, FE&F, int i, int j, int k)
   {
     define_dxdydz(dx, dy, dz);
     R(0, i,j,k) = HX_CC(i,j,k);
@@ -221,7 +226,8 @@ struct Item_h_fc
   constexpr static int n_comps = 3;
   static fld_names_t fld_names() { return { "hx_fc", "hy_fc", "hz_fc" }; }
   
-  static void set(const Grid_t& grid, Fields& R, Fields&F, int i, int j, int k)
+  template<typename FE>
+  static void set(const Grid_t& grid, FE& R, FE&F, int i, int j, int k)
   {
     define_dxdydz(dx, dy, dz);
     R(0, i,j,k) = F(HX, i,j,k);
@@ -242,7 +248,8 @@ struct Item_jdote
   constexpr static int n_comps = 3;
   static fld_names_t fld_names() { return { "jxex", "jyey", "jzez" }; }
   
-  static void set(const Grid_t& grid, Fields& R, Fields&F, int i, int j, int k)
+  template<typename FE>
+  static void set(const Grid_t& grid, FE& R, FE&F, int i, int j, int k)
   {
     define_dxdydz(dx, dy, dz);
     R(0, i,j,k) = JX_CC(i,j,k) * EX_CC(i,j,k);
@@ -262,7 +269,8 @@ struct Item_poyn
   constexpr static int n_comps = 3;
   static fld_names_t fld_names() { return { "poynx", "poyny", "poynz" }; }
   
-  static void set(const Grid_t& grid, Fields& R, Fields&F, int i, int j, int k)
+  template<typename FE>
+  static void set(const Grid_t& grid, FE& R, FE&F, int i, int j, int k)
   {
     define_dxdydz(dx, dy, dz);
     R(0, i,j,k) = (EY_CC(i,j,k) * HZ_CC(i,j,k) - 
@@ -285,7 +293,8 @@ struct Item_e2
   constexpr static int n_comps = 3;
   static fld_names_t fld_names() { return { "ex2", "ey2", "ez2" }; }
   
-  static void set(const Grid_t& grid, Fields& R, Fields&F, int i, int j, int k)
+  template<typename FE>
+  static void set(const Grid_t& grid, FE& R, FE&F, int i, int j, int k)
   {
     define_dxdydz(dx, dy, dz);
     R(0, i,j,k) = sqr(EX_CC(i,j,k));
@@ -305,7 +314,8 @@ struct Item_h2
   constexpr static int n_comps = 3;
   static fld_names_t fld_names() { return { "hx2", "hy2", "hz2" }; }
   
-  static void set(const Grid_t& grid, Fields& R, Fields&F, int i, int j, int k)
+  template<typename FE>
+  static void set(const Grid_t& grid, FE& R, FE&F, int i, int j, int k)
   {
     define_dxdydz(dx, dy, dz);
     R(0, i,j,k) = sqr(HX_CC(i,j,k));
@@ -325,7 +335,8 @@ struct Item_divb
   constexpr static int n_comps = 1;
   static fld_names_t fld_names() { return { "divb" }; }
   
-  static void set(const Grid_t& grid, Fields& R, Fields&F, int i, int j, int k)
+  template<typename FE>
+  static void set(const Grid_t& grid, FE& R, FE&F, int i, int j, int k)
   {
     define_dxdydz(dx, dy, dz);
     R(0, i,j,k) = 

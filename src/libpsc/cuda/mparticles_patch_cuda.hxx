@@ -18,8 +18,9 @@ template<typename _Mparticles>
 struct ConstAccessorCuda
 {
   using Mparticles = _Mparticles;
-  using Particle = typename Mparticles::Particle;
+  using _Particle = typename Mparticles::Particle;
   using Patch = ConstAccessorPatchSimple<ConstAccessorCuda>;
+  using Particle = typename Patch::ConstParticleProxy;
   
   ConstAccessorCuda(Mparticles& mprts)
     : mprts_{mprts}, data_{const_cast<Mparticles&>(mprts).get_particles()}, off_{mprts.get_offsets()}
@@ -27,12 +28,12 @@ struct ConstAccessorCuda
 
   Patch operator[](int p) const { return {*this, p}; }
   Mparticles& mprts() const { return mprts_; }
-  const Particle* data(int p) const { return &data_[off_[p]]; }
+  const _Particle* data(int p) const { return &data_[off_[p]]; }
   uint size(int p) const { return off_[p+1] - off_[p]; }
 
 private:
   Mparticles& mprts_;
-  const std::vector<Particle> data_;
+  const std::vector<_Particle> data_;
   const std::vector<uint> off_;
 };
 

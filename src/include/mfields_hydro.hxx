@@ -3,6 +3,8 @@
 
 #include <fields3d.hxx>
 
+#include <kg/SArray.h>
+
 // ======================================================================
 // MfieldsHydroPsc
 
@@ -11,7 +13,8 @@ struct MfieldsHydroPsc
 {
   using Grid = _Grid;
   using real_t = float;
-  using fields_t = fields3d<real_t, LayoutAOS>;
+  using fields_t = kg::SArray<real_t, kg::LayoutAOS>;
+  using fields_view_t = fields3d_view<real_t, kg::LayoutAOS>;
 
   struct Element
   {
@@ -44,7 +47,7 @@ struct MfieldsHydroPsc
 
   real_t* data() { return reinterpret_cast<real_t*>(patch_.data()); }
 
-  fields_t operator[](int p) { return {grid_, ib_, im_, N_COMP, data()}; }
+  fields_view_t operator[](int p) { return {ib_, im_, N_COMP, data()}; }
   Patch& getPatch(int p) { return patch_; }
   // FIXME the above two kinds of accessing a patch worth of data needs consolidation
   

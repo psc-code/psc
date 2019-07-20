@@ -5,6 +5,7 @@
 #include <mpi.h>
 #include "fields3d.hxx"
 #include "fields_traits.hxx"
+#include <kg/SArray.h>
 
 #include "psc_fields_single.h"
 
@@ -17,8 +18,8 @@ struct fields_cuda_t
 
 struct MfieldsCuda : MfieldsBase
 {
-  using fields_t = fields_cuda_t;
   using real_t = fields_cuda_t::real_t;
+  using fields_host_t = kg::SArray<real_t>;
 
   class Accessor
   {
@@ -64,9 +65,9 @@ struct MfieldsCuda : MfieldsBase
   void zero();
   void axpy_comp_yz(int ym, float a, MfieldsCuda& x, int xm);
 
-  fields_single_t get_host_fields();
-  void copy_to_device(int p, fields_single_t h_flds, int mb, int me);
-  void copy_from_device(int p, fields_single_t h_flds, int mb, int me);
+  fields_host_t get_host_fields();
+  void copy_to_device(int p, const fields_host_t& h_flds, int mb, int me);
+  void copy_from_device(int p, fields_host_t& h_flds, int mb, int me);
 
   int index(int m, int i, int j, int k, int p) const;
   Patch operator[](int p) { return { *this, p }; }
@@ -83,8 +84,8 @@ struct MfieldsCuda : MfieldsBase
 
 struct MfieldsStateCuda : MfieldsStateBase
 {
-  using fields_t = MfieldsCuda::fields_t;
   using real_t = MfieldsCuda::real_t;
+  using fields_host_t = MfieldsCuda::fields_host_t;
   
   MfieldsStateCuda(const Grid_t& grid)
     : MfieldsStateBase{grid, NR_FIELDS, grid.ibn},
@@ -99,17 +100,17 @@ struct MfieldsStateCuda : MfieldsStateBase
 
   cuda_mfields* cmflds() { return mflds_.cmflds(); }
 
-  fields_single_t get_host_fields()
+  fields_host_t get_host_fields()
   {
     return mflds_.get_host_fields();
   }
 
-  void copy_to_device(int p, fields_single_t h_flds, int mb, int me)
+  void copy_to_device(int p, const fields_host_t& h_flds, int mb, int me)
   {
     mflds_.copy_to_device(p, h_flds, mb, me);
   }
 
-  void copy_from_device(int p, fields_single_t h_flds, int mb, int me)
+  void copy_from_device(int p, fields_host_t& h_flds, int mb, int me)
   {
     mflds_.copy_from_device(p, h_flds, mb, me);
   }

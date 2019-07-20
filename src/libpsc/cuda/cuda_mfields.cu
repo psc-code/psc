@@ -47,8 +47,7 @@ mrc_json_t cuda_mfields::to_json()
   mrc_json_t json_flds_patches = mrc_json_array_new(n_patches);
   mrc_json_object_push(json_flds, "data", json_flds_patches);
 
-  fields_single_t flds = get_host_fields();
-  Fields3d<fields_single_t> F(flds);
+  auto flds = get_host_fields();
   for (int p = 0; p < n_patches; p++) {
     copy_from_device(p, flds, 0, n_fields);
 
@@ -64,13 +63,12 @@ mrc_json_t cuda_mfields::to_json()
 	  mrc_json_t json_fld_x = mrc_json_array_new(im[0]);
 	  mrc_json_array_push(json_fld_y, json_fld_x);
 	  for (int i = ib[0]; i < ib[0] + im[0]; i++) {
-	    mrc_json_array_push_double(json_fld_x, F(m, i,j,k));
+	    mrc_json_array_push_double(json_fld_x, flds(m, i,j,k));
 	  }
 	}
       }
     }
   }
-  flds.dtor();
 
   return json;
 }
@@ -115,15 +113,15 @@ DFields cuda_mfields::operator[](int p)
 // ----------------------------------------------------------------------
 // get_host_fields
 
-fields_single_t cuda_mfields::get_host_fields()
+cuda_mfields::fields_host_t cuda_mfields::get_host_fields()
 {
-  return fields_single_t(grid(), ib, im, n_fields);
+  return fields_host_t(ib, im, n_fields);
 }
 
 // ----------------------------------------------------------------------
 // copy_to_device
 
-void cuda_mfields::copy_to_device(int p, fields_single_t h_flds, int mb, int me)
+void cuda_mfields::copy_to_device(int p, const fields_host_t& h_flds, int mb, int me)
 {
   cudaError_t ierr;
   
@@ -142,7 +140,7 @@ void cuda_mfields::copy_to_device(int p, fields_single_t h_flds, int mb, int me)
 // ----------------------------------------------------------------------
 // copy_from_device
 
-void cuda_mfields::copy_from_device(int p, fields_single_t h_flds, int mb, int me)
+void cuda_mfields::copy_from_device(int p, fields_host_t& h_flds, int mb, int me)
 {
   cudaError_t ierr;
 

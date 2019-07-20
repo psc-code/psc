@@ -13,8 +13,8 @@ public:
   using real_t = typename fields_t::real_t;
   using dim = D;
 
-  Fields3d(fields_t f)
-    : data_(f.data()),
+  Fields3d(const fields_t& f)
+    : data_(const_cast<typename fields_t::real_t*>(f.data())), // FIXME
       n_comp_(f.n_comps()),
       ib(f.ib()), im(f.im())
   {}
@@ -53,7 +53,6 @@ private:
   real_t *data_;
   Int3 ib, im;
   int n_comp_;
-  int first_comp_;
 };
 
 #endif

@@ -98,15 +98,14 @@ struct ItemLoopPatches : ItemPatch
 {
   using MfieldsState = typename ItemPatch::MfieldsState;
   using Mfields = typename ItemPatch::Mfields;
-  using fields_t = typename Mfields::fields_t;
-  using Fields = Fields3d<fields_t>;
   
   static void run(MfieldsState& mflds, Mfields& mres)
   {
     auto& grid = mres.grid();
     
     for (int p = 0; p < mres.n_patches(); p++) {
-      Fields F(mflds[p]), R(mres[p]);
+      auto F = mflds[p];
+      auto R = mres[p];
       grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
 	  ItemPatch::set(grid, R, F, i,j,k);
 	});
@@ -162,8 +161,6 @@ struct ItemMomentAddBnd : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Mo
   using Base = ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Moment_t::Mfields>;
   using Mfields = typename Moment_t::Mfields;
   using Mparticles = typename Moment_t::Mparticles;
-  using fields_t = typename Mfields::fields_t;
-  using Fields = Fields3d<fields_t>;
 
   constexpr static const char* name = Moment_t::name;
   constexpr static int n_comps = Moment_t::n_comps;
@@ -172,7 +169,8 @@ struct ItemMomentAddBnd : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Mo
 
   ItemMomentAddBnd(const Grid_t& grid)
     : Base{grid},
-      bnd_{grid, grid.ibn}
+      bnd_{grid, grid.ibn},
+      grid_{grid}
   {}
 
   void run(Mparticles& mprts)
@@ -190,10 +188,10 @@ struct ItemMomentAddBnd : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Mo
   // ----------------------------------------------------------------------
   // boundary stuff FIXME, should go elsewhere...
 
-  static void add_ghosts_reflecting_lo(fields_t flds, int p, int d, int mb, int me)
+  template<typename FE>
+  void add_ghosts_reflecting_lo(FE flds, int p, int d, int mb, int me)
   {
-    Fields F(flds);
-    const int *ldims = flds.grid().ldims;
+    const int *ldims = grid_.ldims;
 
     int bx = ldims[0] == 1 ? 0 : 1;
     if (d == 1) {
@@ -201,7 +199,7 @@ struct ItemMomentAddBnd : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Mo
 	for (int ix = -bx; ix < ldims[0] + bx; ix++) {
 	  int iy = 0; {
 	    for (int m = mb; m < me; m++) {
-	      F(m, ix,iy,iz) += F(m, ix,iy-1,iz);
+	      flds(m, ix,iy,iz) += flds(m, ix,iy-1,iz);
 	    }
 	  }
 	}
@@ -211,7 +209,7 @@ struct ItemMomentAddBnd : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Mo
 	for (int ix = -bx; ix < ldims[0] + bx; ix++) {
 	  int iz = 0; {
 	    for (int m = mb; m < me; m++) {
-	      F(m, ix,iy,iz) += F(m, ix,iy,iz-1);
+	      flds(m, ix,iy,iz) += flds(m, ix,iy,iz-1);
 	    }
 	  }
 	}
@@ -221,10 +219,10 @@ struct ItemMomentAddBnd : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Mo
     }
   }
 
-  static void add_ghosts_reflecting_hi(fields_t flds, int p, int d, int mb, int me)
+  template<typename FE>
+  void add_ghosts_reflecting_hi(FE flds, int p, int d, int mb, int me)
   {
-    Fields F(flds);
-    const int *ldims = flds.grid().ldims;
+    const int *ldims = grid_.ldims;
 
     int bx = ldims[0] == 1 ? 0 : 1;
     if (d == 1) {
@@ -232,7 +230,7 @@ struct ItemMomentAddBnd : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Mo
 	for (int ix = -bx; ix < ldims[0] + bx; ix++) {
 	  int iy = ldims[1] - 1; {
 	    for (int m = mb; m < me; m++) {
-	      F(m, ix,iy,iz) += F(m, ix,iy+1,iz);
+	      flds(m, ix,iy,iz) += flds(m, ix,iy+1,iz);
 	    }
 	  }
 	}
@@ -242,7 +240,7 @@ struct ItemMomentAddBnd : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Mo
 	for (int ix = -bx; ix < ldims[0] + bx; ix++) {
 	  int iz = ldims[2] - 1; {
 	    for (int m = mb; m < me; m++) {
-	      F(m, ix,iy,iz) += F(m, ix,iy,iz+1);
+	      flds(m, ix,iy,iz) += flds(m, ix,iy,iz+1);
 	    }
 	  }
 	}
@@ -252,23 +250,23 @@ struct ItemMomentAddBnd : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Mo
     }
   }
 
-  static void add_ghosts_boundary(fields_t res, int p, int mb, int me)
+  template<typename FE>
+  void add_ghosts_boundary(FE res, int p, int mb, int me)
   {
-    const auto& grid = res.grid();
     // lo
     for (int d = 0; d < 3; d++) {
-      if (grid.atBoundaryLo(p, d)) {
-	if (grid.bc.prt_lo[d] == BND_PRT_REFLECTING ||
-	    grid.bc.prt_lo[d] == BND_PRT_OPEN) {
+      if (grid_.atBoundaryLo(p, d)) {
+	if (grid_.bc.prt_lo[d] == BND_PRT_REFLECTING ||
+	    grid_.bc.prt_lo[d] == BND_PRT_OPEN) {
 	  add_ghosts_reflecting_lo(res, p, d, mb, me);
 	}
       }
     }
     // hi
     for (int d = 0; d < 3; d++) {
-      if (grid.atBoundaryHi(p, d)) {
-	if (grid.bc.prt_hi[d] == BND_PRT_REFLECTING ||
-	    grid.bc.prt_hi[d] == BND_PRT_OPEN) {
+      if (grid_.atBoundaryHi(p, d)) {
+	if (grid_.bc.prt_hi[d] == BND_PRT_REFLECTING ||
+	    grid_.bc.prt_hi[d] == BND_PRT_OPEN) {
 	  add_ghosts_reflecting_hi(res, p, d, mb, me);
 	}
       }
@@ -277,6 +275,7 @@ struct ItemMomentAddBnd : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Mo
 
 private:
   Bnd bnd_;
+  const Grid_t& grid_;
 };
 
 // ======================================================================

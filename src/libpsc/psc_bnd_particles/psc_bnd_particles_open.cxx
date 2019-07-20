@@ -1,7 +1,6 @@
 
 #include "fields.hxx"
 
-using Fields = Fields3d<fields_t>;
 using real_t = mparticles_t::real_t;
 
 static const int debug_every_step = 10;

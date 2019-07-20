@@ -17,15 +17,13 @@ struct Item_dive
 {
   using MfieldsState = _MfieldsState;
   using Mfields = _Mfields;
-  using fields_t = typename Mfields::fields_t;
-  using Fields = Fields3d<typename Mfields::fields_t>;
-  using FieldsState = Fields3d<typename MfieldsState::fields_t>;
   
   constexpr static char const* name = "dive";
   constexpr static int n_comps = 1;
   static fld_names_t fld_names() { return { "dive" }; }
 
-  static void set(const Grid_t& grid, Fields& R, FieldsState&F, int i, int j, int k)
+  template<typename FE>
+  static void set(const Grid_t& grid, FE& R, FE&F, int i, int j, int k)
   {
     define_dxdydz(dx, dy, dz);
     R(0, i,j,k) = ((F(EX, i,j,k) - F(EX, i-dx,j,k)) / grid.domain.dx[0] +
@@ -44,14 +42,13 @@ struct Item_divj
 {
   using MfieldsState = _MfieldsState;
   using Mfields = _Mfields;
-  using fields_t = typename Mfields::fields_t;
-  using Fields = Fields3d<fields_t>;
   
   constexpr static char const* name = "divj";
   constexpr static int n_comps = 1;
   static fld_names_t fld_names() { return { "divj" }; }
-  
-  static void set(const Grid_t& grid, Fields& R, Fields&F, int i, int j, int k)
+
+  template<typename FE>
+  static void set(const Grid_t& grid, FE& R, FE&F, int i, int j, int k)
   {
     define_dxdydz(dx, dy, dz);
     R(0, i,j,k) = ((F(JXI, i,j,k) - F(JXI, i-dx,j,k)) / grid.domain.dx[0] +

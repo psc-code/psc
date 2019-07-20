@@ -47,7 +47,7 @@ init_wave(double x, double y, int m)
 int
 main(void)
 {
-  using fields_t = fields_single_t;
+  using fields_t = fields3d<float>;
   using real_t = fields_t::real_t;
   
   Grid_t grid{};
@@ -72,7 +72,6 @@ main(void)
   cmflds->dump("cmflds.json");
 
   fields_t flds = cmflds->get_host_fields();
-  Fields3d<fields_t> F(flds);
   for (int p = 0; p < n_patches; p++) {
     for (int k = flds.ib[2]; k < flds.ib[2] + flds.im[2]; k++) {
       for (int j = flds.ib[1]; j < flds.ib[1] + flds.im[1]; j++) {
@@ -81,12 +80,12 @@ main(void)
 	  real_t y_cc = (j + .5) * dx[1];
 	  real_t x_nc = i * dx[0];
 	  real_t y_nc = j * dx[1];
-	  F(EX, i,j,k) = init_wave(x_cc, y_nc, EX);
-	  F(EY, i,j,k) = init_wave(x_nc, y_cc, EY);
-	  F(EZ, i,j,k) = init_wave(x_nc, y_nc, EZ);
-	  F(HX, i,j,k) = init_wave(x_nc, y_cc, HX);
-	  F(HY, i,j,k) = init_wave(x_cc, y_nc, HY);
-	  F(HZ, i,j,k) = init_wave(x_cc, y_cc, HZ);
+	  flds(EX, i,j,k) = init_wave(x_cc, y_nc, EX);
+	  flds(EY, i,j,k) = init_wave(x_nc, y_cc, EY);
+	  flds(EZ, i,j,k) = init_wave(x_nc, y_nc, EZ);
+	  flds(HX, i,j,k) = init_wave(x_nc, y_cc, HX);
+	  flds(HY, i,j,k) = init_wave(x_cc, y_nc, HY);
+	  flds(HZ, i,j,k) = init_wave(x_cc, y_cc, HZ);
 	}
       }
     }

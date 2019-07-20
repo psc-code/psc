@@ -13,8 +13,6 @@
 
 #include <math.h>
 
-using Fields = Fields3d<fields_t>;
-
 struct psc_test_em_wave {
   // params
   double k[3];
@@ -145,7 +143,7 @@ psc_test_em_wave_check(struct psc *psc)
 
   int failed = 0;
   for (int p = 0; p < mf.n_patches(); p++) {
-    Fields F(mf[p]);
+    auto F = mf[p];
 
     foreach_3d(psc, p, jx,jy,jz, 0, 0) {
       double dx = psc->patch[p].dx[0], dy = psc->patch[p].dx[1], dz = psc->patch[p].dx[2];
@@ -188,7 +186,7 @@ psc_test_em_wave_check_single(struct psc *psc)
 
   int failed = 0;
   for (int p = 0; p < mf.n_patches(); p++) {
-    Fields3d<fields_single_t> F(mf[p]);
+    auto F = mf[p];
 
     foreach_3d(psc, p, jx,jy,jz, 0, 0) {
       double dx = psc->patch[p].dx[0], dy = psc->patch[p].dx[1], dz = psc->patch[p].dx[2];

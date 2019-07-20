@@ -12,9 +12,7 @@ template<typename MF>
 struct BndCuda2 : BndBase
 {
   using Mfields = MF;
-  using fields_t = typename Mfields::fields_t;
   using real_t = typename Mfields::real_t;
-  using Fields = Fields3d<fields_t>;
 
   // ----------------------------------------------------------------------
   // ctor

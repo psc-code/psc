@@ -13,9 +13,7 @@ template<typename MF>
 struct Bnd_ : BndBase
 {
   using Mfields = MF;
-  using fields_t = typename Mfields::fields_t;
   using real_t = typename Mfields::real_t;
-  using Fields = Fields3d<fields_t>;
 
   // ----------------------------------------------------------------------
   // ctor
@@ -108,7 +106,7 @@ struct Bnd_ : BndBase
 			  void *_buf, void *ctx)
   {
     auto& mf = *static_cast<Mfields*>(ctx);
-    Fields F(mf[p]);
+    auto F = mf[p];
     real_t *buf = static_cast<real_t*>(_buf);
     
     for (int m = mb; m < me; m++) {
@@ -126,7 +124,7 @@ struct Bnd_ : BndBase
 			   void *_buf, void *ctx)
   {
     auto& mf = *static_cast<Mfields*>(ctx);
-    Fields F(mf[p]);
+    auto F = mf[p];
     real_t *buf = static_cast<real_t*>(_buf);
     
     for (int m = mb; m < me; m++) {
@@ -144,7 +142,7 @@ struct Bnd_ : BndBase
 			    void *_buf, void *ctx)
   {
     auto& mf = *static_cast<Mfields*>(ctx);
-    Fields F(mf[p]);
+    auto F = mf[p];
     real_t *buf = static_cast<real_t*>(_buf);
     
     for (int m = mb; m < me; m++) {

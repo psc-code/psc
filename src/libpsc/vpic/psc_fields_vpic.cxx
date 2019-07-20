@@ -11,9 +11,6 @@
 
 #if 0
 
-using Fields = Fields3d<MfieldsStateVpic::fields_t>;
-using FieldsS = Fields3d<fields_single_t>;
-
 static const int map_psc2vpic[MfieldsStateVpic::N_COMP] = {
   [JXI] = MfieldsStateVpic::JFX, [JYI] = MfieldsStateVpic::JFY, [JZI] = MfieldsStateVpic::JFZ,
   [EX]  = MfieldsStateVpic::EX , [EY]  = MfieldsStateVpic::EY , [EZ]  = MfieldsStateVpic::EZ,
@@ -34,7 +31,7 @@ static void MfieldsStateVpic_copy_from_single(MfieldsStateBase& mflds, MfieldsSt
   auto& mf = dynamic_cast<MfieldsStateVpic&>(mflds);
   for (int p = 0; p < mf.n_patches(); p++) {
     fields_vpic_t flds = mf[p];
-    FieldsS F_s(mf_single[p]);
+    auto F_s = mf_single[p];
 
     assert(mf.n_comps() == MfieldsStateVpic::N_COMP);
     for (int m = mb; m < me; m++) {
@@ -56,8 +53,7 @@ static void MfieldsStateVpic_copy_to_single(MfieldsStateBase& mflds, MfieldsStat
   auto& mf = dynamic_cast<MfieldsStateVpic&>(mflds);
   for (int p = 0; p < mf.n_patches(); p++) {
     fields_vpic_t flds = mf[p];
-    fields_single_t flds_single = mf_single[p];
-    FieldsS F_s(flds_single);
+    auto flds_single = mf_single[p];
 
     int ib[3], ie[3];
     for (int d = 0; d < 3; d++) {
@@ -71,7 +67,7 @@ static void MfieldsStateVpic_copy_to_single(MfieldsStateBase& mflds, MfieldsStat
       for (int jz = ib[2]; jz < ie[2]; jz++) {
 	for (int jy = ib[1]; jy < ie[1]; jy++) {
 	  for (int jx = ib[0]; jx < ie[0]; jx++) {
-	    F_s(m, jx,jy,jz) = flds(m_vpic, jx,jy,jz);
+	    flds_single(m, jx,jy,jz) = flds(m_vpic, jx,jy,jz);
 	  }
 	}
       }
