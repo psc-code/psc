@@ -31,14 +31,14 @@ TEST(DFields, Ctor)
 {
   thrust::device_vector<float> d_storage(6);
   
-  auto d_flds = DFields{{0, 0, 0}, {3, 2, 1}, 1, thrust::raw_pointer_cast(d_storage.data())};
+  auto d_flds = DFields{{{0, 0, 0}, {3, 2, 1}}, 1, thrust::raw_pointer_cast(d_storage.data())};
   //set_raw<<<1, 1>>>(d_flds.data());
   set_dfields<<<1, 1>>>(d_flds);
   
   thrust::host_vector<float> h_storage = d_storage;
 
 #if 0
-  auto h_flds = DFields{{0, 0, 0}, {3, 2, 1}, 1, h_storage.data()};
+  auto h_flds = DFields{{{0, 0, 0}, {3, 2, 1}}, 1, h_storage.data()};
   for (int k = 0; k < 1; k++) {
     for (int j = 0; j < 2; j++) {
       for (int i = 0; i < 3; i++) {

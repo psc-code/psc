@@ -29,8 +29,8 @@ struct SArray : SArrayContainer<SArray<T, L>>
   using Storage = typename Base::Storage;
   using real_t = typename Base::value_type;
 
-  SArray(Int3 ib, Int3 im, int n_comps)
-    : Base{ib, im, n_comps}, storage_(Base::size())
+  SArray(const Box3& box, int n_comps)
+    : Base{box, n_comps}, storage_(Base::size())
   {}
 
 private:

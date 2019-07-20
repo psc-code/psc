@@ -116,7 +116,7 @@ DFields cuda_mfields::operator[](int p)
 
 cuda_mfields::fields_host_t cuda_mfields::get_host_fields()
 {
-  return fields_host_t(ib, im, n_fields);
+  return fields_host_t({ib, im}, n_fields);
 }
 
 // ----------------------------------------------------------------------

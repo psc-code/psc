@@ -33,6 +33,8 @@ public:
 
   KG_INLINE const Int3& ib() const { return ib_; }
   KG_INLINE const Int3& im() const { return im_; }
+  KG_INLINE int ib(int d) const { return ib_[d]; }
+  KG_INLINE int im(int d) const { return im_[d]; }
 
 private:
   Int3 ib_;

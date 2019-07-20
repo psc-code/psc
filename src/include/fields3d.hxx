@@ -284,7 +284,7 @@ public:
   
   KG_INLINE fields_view_t operator[](int p)
   {
-    return fields_view_t(box_.ib(), box_.im(), n_fields_, storage()[p]);
+    return fields_view_t(box_, n_fields_, storage()[p]);
   }
 
   void zero_comp(int m)
