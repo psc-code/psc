@@ -271,6 +271,8 @@ public:
   using fields_view_t = kg::SArrayView<Real>;
 
   KG_INLINE const kg::Box3& box() const { return box_; }
+  KG_INLINE int ib(int d) { return box_.ib(d); }
+  KG_INLINE int im(int d) { return box_.im(d); }
 
   MfieldsCRTP(int n_fields, Int3 ib, Int3 im, int n_patches)
     : n_fields_(n_fields), box_{ib, im}, n_patches_{n_patches}

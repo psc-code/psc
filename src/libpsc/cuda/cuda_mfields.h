@@ -147,8 +147,6 @@ struct DMFields : MfieldsCRTP<DMFields>
       storage_{stride, d_flds}
   {}
 
-  __device__ int im(int d) const { return Base::box().im()[d]; }
-  
 private:
   Storage storage_;
   
