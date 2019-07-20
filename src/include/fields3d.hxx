@@ -273,23 +273,107 @@ protected:
 #endif
 
 // ======================================================================
+// Box3
+
+class Box3
+{
+public:
+  Box3(const Int3& ib, const Int3& im)
+    : ib_{ib}, im_{im}
+  {}
+
+  int size() const { return im_[0] * im_[1] * im_[2]; }
+
+  const Int3& ib() const { return ib_; }
+  const Int3& im() const { return im_; }
+
+private:
+  Int3 ib_;
+  Int3 im_;
+};
+
+// ======================================================================
+// MfieldsStorageUniquePtr
+
+template <typename R>
+class MfieldsStorageUniquePtr
+{
+public:
+  using value_type = R;
+  
+  void resize(int size, int n_patches)
+  {
+    data_.resize(n_patches);
+    for (auto& patch : data_) {
+      patch.reset(new R[size]{});
+    }
+  }
+
+  R* operator[](int p) { return data_[p].get(); }
+  const R* operator[](int p) const { return data_[p].get(); }
+  
+private:
+  std::vector<std::unique_ptr<R[]>> data_;
+};
+  
+// ======================================================================
+// MfieldsStorageVector
+
+template <typename R>
+class MfieldsStorageVector
+{
+public:
+  using value_type = R;
+  
+  void resize(int size, int n_patches)
+  {
+    data_.resize(n_patches);
+    for (auto& patch : data_) {
+      patch.resize(size);
+    }
+  }
+
+  R* operator[](int p) { return data_[p].data(); }
+  const R* operator[](int p) const { return data_[p].data(); }
+  
+private:
+  std::vector<std::vector<R>> data_;
+};
+  
+// ======================================================================
 // MfieldsCRTP
 
-template <typename D, typename R>
+template <typename C>
+struct MfieldsCRTPInnerTypes;
+
+template <typename D>
 class MfieldsCRTP
 {
 public:
   using Derived = D;
 
-  using fields_view_t = fields3d_view<R>;
+  using InnerTypes = MfieldsCRTPInnerTypes<D>;
+  using Storage = typename InnerTypes::Storage;
+  using Real = typename Storage::value_type;
+  using fields_view_t = fields3d_view<Real>;
+
+  const Box3& box() const { return box_; }
 
   MfieldsCRTP(int n_fields, Int3 ib, Int3 im, int n_patches)
-    : n_fields_(n_fields), ib_{ib}, im_{im}, n_patches_{n_patches}
-  {}
+    : n_fields_(n_fields), box_{ib, im}, n_patches_{n_patches}
+  {
+    storage_.resize(n_fields_ * box_.size(), n_patches_);
+  }
+
+  void reset(int n_patches)
+  {
+    n_patches_ = n_patches;
+    storage_.resize(n_fields_ * box_.size(), n_patches_);
+  }
   
   fields_view_t operator[](int p)
   {
-    return fields_view_t(Int3::fromPointer(ib_), Int3::fromPointer(im_), n_fields_, data_[p].get());
+    return fields_view_t(box_.ib(), box_.im(), n_fields_, storage_[p]);
   }
 
   void zero_comp(int m)
@@ -362,9 +446,8 @@ protected:
   const Derived& derived() const { return *static_cast<const Derived*>(this); }
 
 protected:
-  std::vector<std::unique_ptr<R[]>> data_;
-  Int3 ib_; //> lower left corner for each patch (incl. ghostpoints)
-  Int3 im_; //> extent for each patch (incl. ghostpoints)
+  Storage storage_;
+  Box3 box_; // size of one patch, including ghost points
   int n_fields_;
   int n_patches_;
 };
@@ -373,44 +456,32 @@ protected:
 // Mfields
 
 template<typename R>
-struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>, R>
+struct Mfields;
+
+template <typename R>
+struct MfieldsCRTPInnerTypes<Mfields<R>>
+{
+  using Storage = MfieldsStorageVector<R>;
+  //using Storage = MfieldsStorageUniquePtr<R>; // FIXME, drop?
+};
+
+template<typename R>
+struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>>
 {
   using real_t = R;
-  using Base = MfieldsCRTP<Mfields<R>, R>;
+  using Base = MfieldsCRTP<Mfields<R>>;
 
-  using Base::data_;
-  using Base::ib_;
-  using Base::im_;
+  using Base::Storage;
 
   Mfields(const Grid_t& grid, int n_fields, Int3 ibn)
     : MfieldsBase(grid, n_fields, ibn),
       Base(n_fields, -ibn, grid.ldims + 2 * ibn, grid.n_patches())
-  {
-    unsigned int size = 1;
-    for (int d = 0; d < 3; d++) {
-      size *= im_[d];
-    }
-
-    data_.reserve(n_patches());
-    for (int p = 0; p < n_patches(); p++) {
-      data_.emplace_back(new real_t[n_fields * size]{});
-    }
-  }
+  {}
 
   virtual void reset(const Grid_t& grid) override
   {
     MfieldsBase::reset(grid);
-
-    unsigned int size = 1;
-    for (int d = 0; d < 3; d++) {
-      size *= im_[d];
-    }
-
-    data_.clear();
-    data_.reserve(n_patches());
-    for (int p = 0; p < n_patches(); p++) {
-      data_.emplace_back(new real_t[n_comps() * size]);
-    }
+    Base::reset(grid.n_patches());
   }
   
   void write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names) override
