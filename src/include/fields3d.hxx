@@ -397,13 +397,31 @@ struct Mfields : MfieldsBase
   }
 
   static const Convert convert_to_, convert_from_;
-  const Convert& convert_to() override { return convert_to_; }
-  const Convert& convert_from() override { return convert_from_; }
+  const Convert& convert_to() override;
+  const Convert& convert_from() override;
 
   std::vector<std::unique_ptr<real_t[]>> data;
   int ib[3]; //> lower left corner for each patch (incl. ghostpoints)
   int im[3]; //> extent for each patch (incl. ghostpoints)
 };
+
+template<> const MfieldsBase::Convert Mfields<float>::convert_to_;
+extern template const MfieldsBase::Convert Mfields<float>::convert_to_;
+
+template<> const MfieldsBase::Convert Mfields<float>::convert_from_;
+extern template const MfieldsBase::Convert Mfields<float>::convert_from_;
+
+template <typename R>
+inline auto Mfields<R>::convert_to() -> const Convert&
+{
+  return convert_to_;
+}
+
+template <typename R>
+inline auto Mfields<R>::convert_from() -> const Convert&
+{
+  return convert_from_;
+}
 
 // ======================================================================
 // MfieldsStateFromMfields
