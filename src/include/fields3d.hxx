@@ -21,7 +21,7 @@
 #include <string>
 
 // ======================================================================
-// Storage
+// StorageNoOwnership
 
 template <typename T>
 class StorageNoOwnership
@@ -114,25 +114,7 @@ struct MfieldsBase
   int n_comps() const { return n_fields_; }
   Int3 ibn() const { return ibn_; }
 
-  virtual void zero_comp(int m) = 0;
-  virtual void set_comp(int m, double val) = 0;
-  virtual void scale_comp(int m, double val) = 0;
-  virtual void axpy_comp(int m_y, double alpha, MfieldsBase& x, int m_x) = 0;
-  virtual void copy_comp(int mto, MfieldsBase& from, int mfrom) = 0;
-  virtual double max_comp(int m) = 0;
-  virtual void write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names)
-  {
-    assert(0);
-  }
-
-  void zero()            { for (int m = 0; m < n_fields_; m++) zero_comp(m); }
-  void scale(double val) { for (int m = 0; m < n_fields_; m++) scale_comp(m, val); }
-  void axpy(double alpha, MfieldsBase& x)
-  {
-    for (int m = 0; m < n_fields_; m++) {
-      axpy_comp(m, alpha, x, m);
-    }
-  }
+  virtual void write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names) = 0;
 
   const Grid_t& grid() const { return *grid_; }
   
@@ -336,28 +318,38 @@ struct Mfields : MfieldsBase
     return fields_view_t(Int3::fromPointer(ib), Int3::fromPointer(im), n_fields_, data[p].get());
   }
 
-  void zero_comp(int m) override
+  void zero_comp(int m)
   {
     for (int p = 0; p < n_patches(); p++) {
       (*this)[p].zero(m);
     }
   }
 
-  void set_comp(int m, double val) override
+  void zero()
+  {
+    for (int m = 0; m < n_fields_; m++) zero_comp(m);
+  }
+  
+  void set_comp(int m, double val)
   {
     for (int p = 0; p < n_patches(); p++) {
       (*this)[p].set(m, val);
     }
   }
   
-  void scale_comp(int m, double val) override
+  void scale_comp(int m, double val)
   {
     for (int p = 0; p < n_patches(); p++) {
       (*this)[p].scale(m, val);
     }
   }
 
-  void copy_comp(int mto, MfieldsBase& from_base, int mfrom) override
+  void scale(double val)
+  {
+    for (int m = 0; m < n_fields_; m++) scale_comp(m, val);
+  }
+  
+  void copy_comp(int mto, MfieldsBase& from_base, int mfrom)
   {
     // FIXME? dynamic_cast would actually be more appropriate
     Mfields& from = static_cast<Mfields&>(from_base);
@@ -366,7 +358,7 @@ struct Mfields : MfieldsBase
     }
   }
   
-  void axpy_comp(int m_y, double alpha, MfieldsBase& x_base, int m_x) override
+  void axpy_comp(int m_y, double alpha, MfieldsBase& x_base, int m_x)
   {
     // FIXME? dynamic_cast would actually be more appropriate
     Mfields& x = static_cast<Mfields&>(x_base);
@@ -375,7 +367,14 @@ struct Mfields : MfieldsBase
     }
   }
 
-  double max_comp(int m) override
+  void axpy(double alpha, MfieldsBase& x)
+  {
+    for (int m = 0; m < n_fields_; m++) {
+      axpy_comp(m, alpha, x, m);
+    }
+  }
+
+  double max_comp(int m)
   {
     double rv = -std::numeric_limits<double>::max();
     for (int p = 0; p < n_patches(); p++) {
