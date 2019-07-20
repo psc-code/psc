@@ -99,22 +99,53 @@ private:
 };
 
 // ======================================================================
+// StoragNoOwnershipDevice
+//
+// FIXME, same as StorageNoOwnership
+
+
+template <typename T>
+class StorageNoOwnershipDevice
+{
+public:
+  using value_type = T;
+  using reference = T&;
+  using const_reference = const T&;
+  using pointer = T*;
+  using const_pointer = const T*;
+
+  __host__ __device__ StorageNoOwnershipDevice(pointer data) : data_{data} {}
+
+  __device__ const_reference operator[](int offset) const { return data_[offset]; }
+  __device__ reference operator[](int offset) { return data_[offset]; }
+
+  // FIXME access to underlying storage might better be avoided?
+  // use of this makes assumption that storage is contiguous
+  const_pointer data() const { return data_; }
+  pointer data() { return data_; }
+
+private:
+  pointer data_;
+};
+
+// ======================================================================
 // DFields
 
 struct DFields
 {
-  using real_t = float;
+  using Storage = StorageNoOwnershipDevice<float>;
+  using real_t = typename Storage::value_type;
   
   __host__ __device__ DFields(real_t* d_flds, int im[3], int ib[3])
-    : d_flds_(d_flds),
+    : storage_{d_flds},
       im_{im[0], im[1], im[2]},
       ib_{ib[0], ib[1], ib[2]}
   {}
   
-  __device__ real_t  operator()(int m, int i, int j, int k) const { return d_flds_[index(m, i,j,k)]; }
-  __device__ real_t& operator()(int m, int i, int j, int k)       { return d_flds_[index(m, i,j,k)]; }
+  __device__ real_t  operator()(int m, int i, int j, int k) const { return storage_[index(m, i,j,k)]; }
+  __device__ real_t& operator()(int m, int i, int j, int k)       { return storage_[index(m, i,j,k)]; }
 
-  __host__ real_t *data() { return d_flds_; }
+  __host__ real_t *data() { return storage_.data(); }
 
   __device__ int im(int d) const { return im_[d]; }
 
@@ -133,7 +164,7 @@ private:
   }
 
 private:
-  real_t *d_flds_;
+  Storage storage_;
   int im_[3];
   int ib_[3];
 };
