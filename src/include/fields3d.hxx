@@ -280,62 +280,12 @@ class MfieldsCRTP
 {
 public:
   using Derived = D;
- 
-protected:
-  Derived& derived() { return *static_cast<Derived*>(this); }
-  const Derived& derived() const { return *static_cast<const Derived*>(this); }
 
-protected:
-  std::vector<std::unique_ptr<R[]>> data_;
-  Int3 ib_; //> lower left corner for each patch (incl. ghostpoints)
-  Int3 im_; //> extent for each patch (incl. ghostpoints)
-};
+  using fields_view_t = fields3d_view<R>;
 
-// ======================================================================
-// Mfields
-
-template<typename R>
-struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>, R>
-{
-  using real_t = R;
-  using Base = MfieldsCRTP<Mfields<R>, R>;
-  using fields_view_t = fields3d_view<real_t>;
-
-  using Base::data_;
-  using Base::ib_;
-  using Base::im_;
-
-  Mfields(const Grid_t& grid, int n_fields, Int3 ibn)
-    : MfieldsBase(grid, n_fields, ibn)
-  {
-    unsigned int size = 1;
-    for (int d = 0; d < 3; d++) {
-      ib_[d] = -ibn[d];
-      im_[d] = grid_->ldims[d] + 2 * ibn[d];
-      size *= im_[d];
-    }
-
-    data_.reserve(n_patches());
-    for (int p = 0; p < n_patches(); p++) {
-      data_.emplace_back(new real_t[n_fields * size]{});
-    }
-  }
-
-  virtual void reset(const Grid_t& grid) override
-  {
-    MfieldsBase::reset(grid);
-    data_.clear();
-
-    unsigned int size = 1;
-    for (int d = 0; d < 3; d++) {
-      size *= im_[d];
-    }
-
-    data_.reserve(n_patches());
-    for (int p = 0; p < n_patches(); p++) {
-      data_.emplace_back(new real_t[n_comps() * size]);
-    }
-  }
+  MfieldsCRTP(int n_fields, Int3 ib, Int3 im, int n_patches)
+    : n_fields_(n_fields), ib_{ib}, im_{im}, n_patches_{n_patches}
+  {}
   
   fields_view_t operator[](int p)
   {
@@ -344,7 +294,7 @@ struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>, R>
 
   void zero_comp(int m)
   {
-    for (int p = 0; p < n_patches(); p++) {
+    for (int p = 0; p < n_patches_; p++) {
       (*this)[p].zero(m);
     }
   }
@@ -356,14 +306,14 @@ struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>, R>
   
   void set_comp(int m, double val)
   {
-    for (int p = 0; p < n_patches(); p++) {
+    for (int p = 0; p < n_patches_; p++) {
       (*this)[p].set(m, val);
     }
   }
   
   void scale_comp(int m, double val)
   {
-    for (int p = 0; p < n_patches(); p++) {
+    for (int p = 0; p < n_patches_; p++) {
       (*this)[p].scale(m, val);
     }
   }
@@ -376,8 +326,8 @@ struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>, R>
   void copy_comp(int mto, MfieldsBase& from_base, int mfrom)
   {
     // FIXME? dynamic_cast would actually be more appropriate
-    Mfields& from = static_cast<Mfields&>(from_base);
-    for (int p = 0; p < n_patches(); p++) {
+    Derived& from = static_cast<Derived&>(from_base);
+    for (int p = 0; p < n_patches_; p++) {
       (*this)[p].copy_comp(mto, from[p], mfrom);
     }
   }
@@ -385,8 +335,8 @@ struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>, R>
   void axpy_comp(int m_y, double alpha, MfieldsBase& x_base, int m_x)
   {
     // FIXME? dynamic_cast would actually be more appropriate
-    Mfields& x = static_cast<Mfields&>(x_base);
-    for (int p = 0; p < n_patches(); p++) {
+    Derived& x = static_cast<Derived&>(x_base);
+    for (int p = 0; p < n_patches_; p++) {
       (*this)[p].axpy_comp(m_y, alpha, x[p], m_x);
     }
   }
@@ -401,12 +351,68 @@ struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>, R>
   double max_comp(int m)
   {
     double rv = -std::numeric_limits<double>::max();
-    for (int p = 0; p < n_patches(); p++) {
+    for (int p = 0; p < n_patches_; p++) {
       rv = std::max(rv, double((*this)[p].max_comp(m)));
     }
     return rv;
   }
 
+protected:
+  Derived& derived() { return *static_cast<Derived*>(this); }
+  const Derived& derived() const { return *static_cast<const Derived*>(this); }
+
+protected:
+  std::vector<std::unique_ptr<R[]>> data_;
+  Int3 ib_; //> lower left corner for each patch (incl. ghostpoints)
+  Int3 im_; //> extent for each patch (incl. ghostpoints)
+  int n_fields_;
+  int n_patches_;
+};
+
+// ======================================================================
+// Mfields
+
+template<typename R>
+struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>, R>
+{
+  using real_t = R;
+  using Base = MfieldsCRTP<Mfields<R>, R>;
+
+  using Base::data_;
+  using Base::ib_;
+  using Base::im_;
+
+  Mfields(const Grid_t& grid, int n_fields, Int3 ibn)
+    : MfieldsBase(grid, n_fields, ibn),
+      Base(n_fields, -ibn, grid.ldims + 2 * ibn, grid.n_patches())
+  {
+    unsigned int size = 1;
+    for (int d = 0; d < 3; d++) {
+      size *= im_[d];
+    }
+
+    data_.reserve(n_patches());
+    for (int p = 0; p < n_patches(); p++) {
+      data_.emplace_back(new real_t[n_fields * size]{});
+    }
+  }
+
+  virtual void reset(const Grid_t& grid) override
+  {
+    MfieldsBase::reset(grid);
+
+    unsigned int size = 1;
+    for (int d = 0; d < 3; d++) {
+      size *= im_[d];
+    }
+
+    data_.clear();
+    data_.reserve(n_patches());
+    for (int p = 0; p < n_patches(); p++) {
+      data_.emplace_back(new real_t[n_comps() * size]);
+    }
+  }
+  
   void write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names) override
   {
     MrcIo::write_mflds(io, *this, name, comp_names);
