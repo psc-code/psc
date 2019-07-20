@@ -64,26 +64,41 @@ public:
   using pointer = typename Storage::pointer;
   using const_pointer = typename Storage::const_pointer;
 
-  SArrayContainer(Int3 ib, Int3 im, int n_comps)
+  KG_INLINE SArrayContainer(Int3 ib, Int3 im, int n_comps)
     : ib_{ib}, im_{im}, n_comps_{n_comps}
   {}
 
-  Int3 ib() const { return ib_; }
-  Int3 im() const { return im_; }
-  int n_cells() const { return im_[0] * im_[1] * im_[2]; }
-  int n_comps() const { return n_comps_; }
-  int size() const { return n_comps() * n_cells(); }
+  KG_INLINE const Int3& ib() const { return ib_; }
+  KG_INLINE const Int3& im() const { return im_; }
+  KG_INLINE int ib(int d) const { return ib_[d]; }
+  KG_INLINE int im(int d) const { return im_[d]; }
+  KG_INLINE int n_cells() const { return im_[0] * im_[1] * im_[2]; }
+  KG_INLINE int n_comps() const { return n_comps_; }
+  KG_INLINE int size() const { return n_comps() * n_cells(); }
 
   const_pointer data() const { return storage().data(); }
   pointer data() { return storage().data(); }
 
-  const_reference operator()(int m, int i, int j, int k) const
+  KG_INLINE const_reference operator()(int m, int i, int j, int k) const
   {
     return storage()[index(m, {i, j, k})];
   }
-  reference operator()(int m, int i, int j, int k)
+
+  KG_INLINE reference operator()(int m, int i, int j, int k)
   {
     return storage()[index(m, {i, j, k})];
+  }
+
+  KG_INLINE int index(int m, Int3 idx) const
+  {
+#ifdef BOUNDS_CHECK
+    assert(m >= 0 && m < n_comps_);
+    assert(idx[0] >= ib_[0] && idx[0] < ib_[0] + im_[0]);
+    assert(idx[1] >= ib_[1] && idx[1] < ib_[1] + im_[1]);
+    assert(idx[2] >= ib_[2] && idx[2] < ib_[2] + im_[2]);
+#endif
+
+    return layoutDataOffset<Layout>(n_comps_, im_, m, idx - ib_);
   }
 
   void zero(int m)
@@ -101,18 +116,6 @@ public:
   }
 
   void zero() { memset(storage().data(), 0, sizeof(value_type) * size()); }
-
-  int index(int m, Int3 idx) const
-  {
-#ifdef BOUNDS_CHECK
-    assert(m >= 0 && m < n_comps_);
-    assert(idx[0] >= ib_[0] && idx[0] < ib_[0] + im_[0]);
-    assert(idx[1] >= ib_[1] && idx[1] < ib_[1] + im_[1]);
-    assert(idx[2] >= ib_[2] && idx[2] < ib_[2] + im_[2]);
-#endif
-
-    return layoutDataOffset<Layout>(n_comps_, im_, m, idx - ib_);
-  }
 
   void set(int m, const_reference val)
   {
@@ -188,13 +191,10 @@ public:
   }
 
 protected:
-  Storage& storage() { return derived().storageImpl(); }
-
-  const Storage& storage() const { return derived().storageImpl(); }
-
-  Derived& derived() { return *static_cast<Derived*>(this); }
-
-  const Derived& derived() const { return *static_cast<const Derived*>(this); }
+  KG_INLINE Storage& storage() { return derived().storageImpl(); }
+  KG_INLINE const Storage& storage() const { return derived().storageImpl(); }
+  KG_INLINE Derived& derived() { return *static_cast<Derived*>(this); }
+  KG_INLINE const Derived& derived() const { return *static_cast<const Derived*>(this); }
 
 private:
   Int3 ib_, im_; //> lower bounds and length per direction

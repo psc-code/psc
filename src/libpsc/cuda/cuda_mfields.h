@@ -101,41 +101,39 @@ private:
 // ======================================================================
 // DFields
 
-struct DFields
+struct DFields;
+
+namespace kg
 {
+
+template<>
+struct SArrayContainerInnerTypes<DFields>
+{
+  using Layout = LayoutSOA;
+  using Storage = StorageNoOwnership<float>;
+};
+
+}
+
+struct DFields : kg::SArrayContainer<DFields>
+{
+  using Base = kg::SArrayContainer<DFields>;
+  
   using Storage = kg::StorageNoOwnership<float>;
   using real_t = typename Storage::value_type;
   
-  __host__ __device__ DFields(real_t* d_flds, Int3 im, Int3 ib, int n_comps)
-    : storage_{d_flds},
-      im_{im},
-      ib_{ib},
-      n_comps_{n_comps}
+  KG_INLINE DFields(real_t* d_flds, Int3 im, Int3 ib, int n_comps)
+    : Base{ib, im, n_comps},
+      storage_{d_flds}
   {}
   
-  __device__ real_t  operator()(int m, int i, int j, int k) const { return storage_[index(m, {i,j,k})]; }
-  __device__ real_t& operator()(int m, int i, int j, int k)       { return storage_[index(m, {i,j,k})]; }
-
-  __host__ real_t *data() { return storage_.data(); }
-
-  __device__ int im(int d) const { return im_[d]; }
-
-private:
-  __device__ int index(int m, Int3 idx) const
-  {
-#if 0
-    if (idx[0] - ib_[0] < 0 || idx[0] - ib_[0] >= im_[0]) printf("!!! i %d\n", j);
-    if (jdx[1] - ib_[1] < 0 || idx[1] - ib_[1] >= im_[1]) printf("!!! j %d\n", j);
-    if (idx[2] - ib_[2] < 0 || idx[2] - ib_[2] >= im_[2]) printf("!!! k %d\n", k);
-#endif
-    return kg::layoutDataOffset<kg::LayoutSOA>(n_comps_, im_, m, idx);
-  }
-
 private:
   Storage storage_;
-  Int3 im_;
-  Int3 ib_;
-  int n_comps_;
+
+  KG_INLINE Storage& storageImpl() { return storage_; }
+  KG_INLINE const Storage& storageImpl() const { return storage_; }
+
+  friend class kg::SArrayContainer<DFields>;
 };
 
 // ======================================================================
