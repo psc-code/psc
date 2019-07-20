@@ -7,6 +7,7 @@
 #include <memory>
 
 #include "cuda_compat.h"
+#include <kg/Macros.h>
 
 // ======================================================================
 // array
@@ -22,13 +23,13 @@ struct array
 
   T arr[N];
 
-  __host__ __device__ T operator[](size_t i) const { return arr[i]; }
+  KG_INLINE T operator[](size_t i) const { return arr[i]; }
 
-  __host__ __device__ T& operator[](size_t i) { return arr[i]; }
+  KG_INLINE T& operator[](size_t i) { return arr[i]; }
 
-  __host__ __device__ const T* data() const { return arr; }
+  KG_INLINE const T* data() const { return arr; }
 
-  __host__ __device__ T* data() { return arr; }
+  KG_INLINE T* data() { return arr; }
 
   operator T*() { return arr; } // FIXME, should be data()
 };
@@ -57,27 +58,24 @@ struct Vec3
 
   T arr[N];
 
-  __host__ __device__ T operator[](size_t i) const { return arr[i]; }
+  KG_INLINE T operator[](size_t i) const { return arr[i]; }
 
-  __host__ __device__ T& operator[](size_t i) { return arr[i]; }
+  KG_INLINE T& operator[](size_t i) { return arr[i]; }
 
-  __host__ __device__ const T* data() const { return arr; }
+  KG_INLINE const T* data() const { return arr; }
 
-  __host__ __device__ T* data() { return arr; }
+  KG_INLINE T* data() { return arr; }
 
   // ----------------------------------------------------------------------
   // construct from pointer to values
 
-  __host__ __device__ static Vec3 fromPointer(const T* p)
-  {
-    return {p[0], p[1], p[2]};
-  }
+  KG_INLINE static Vec3 fromPointer(const T* p) { return {p[0], p[1], p[2]}; }
 
   // ----------------------------------------------------------------------
   // converting to Vec3 of different type (e.g., float -> double)
 
   template <typename U>
-  __host__ __device__ explicit operator Vec3<U>() const
+  KG_INLINE explicit operator Vec3<U>() const
   {
     return {U((*this)[0]), U((*this)[1]), U((*this)[2])};
   }
@@ -85,7 +83,7 @@ struct Vec3
   // ----------------------------------------------------------------------
   // arithmetic
 
-  __host__ __device__ Vec3 operator-() const
+  KG_INLINE Vec3 operator-() const
   {
     Vec3 res;
     for (int i = 0; i < 3; i++) {
@@ -94,7 +92,7 @@ struct Vec3
     return res;
   }
 
-  __host__ __device__ Vec3& operator+=(const Vec3& w)
+  KG_INLINE Vec3& operator+=(const Vec3& w)
   {
     for (int i = 0; i < 3; i++) {
       (*this)[i] += w[i];
@@ -102,7 +100,7 @@ struct Vec3
     return *this;
   }
 
-  __host__ __device__ Vec3& operator-=(const Vec3& w)
+  KG_INLINE Vec3& operator-=(const Vec3& w)
   {
     for (int i = 0; i < 3; i++) {
       (*this)[i] -= w[i];
@@ -110,7 +108,7 @@ struct Vec3
     return *this;
   }
 
-  __host__ __device__ Vec3& operator*=(const Vec3& w)
+  KG_INLINE Vec3& operator*=(const Vec3& w)
   {
     for (int i = 0; i < 3; i++) {
       (*this)[i] *= w[i];
@@ -118,7 +116,7 @@ struct Vec3
     return *this;
   }
 
-  __host__ __device__ Vec3& operator*=(T s)
+  KG_INLINE Vec3& operator*=(T s)
   {
     for (int i = 0; i < 3; i++) {
       (*this)[i] *= s;
@@ -126,7 +124,7 @@ struct Vec3
     return *this;
   }
 
-  __host__ __device__ Vec3& operator/=(const Vec3& w)
+  KG_INLINE Vec3& operator/=(const Vec3& w)
   {
     for (int i = 0; i < 3; i++) {
       (*this)[i] /= w[i];
@@ -136,9 +134,9 @@ struct Vec3
 
   // conversion to pointer
 
-  __host__ __device__ operator const T*() const { return data(); }
+  KG_INLINE operator const T*() const { return data(); }
 
-  __host__ __device__ operator T*() { return data(); }
+  KG_INLINE operator T*() { return data(); }
 };
 
 template <typename T>
@@ -155,7 +153,7 @@ bool operator!=(const Vec3<T>& x, const Vec3<T>& y)
 }
 
 template <typename T>
-__host__ __device__ Vec3<T> operator+(const Vec3<T>& v, const Vec3<T>& w)
+KG_INLINE Vec3<T> operator+(const Vec3<T>& v, const Vec3<T>& w)
 {
   Vec3<T> res = v;
   res += w;
@@ -163,7 +161,7 @@ __host__ __device__ Vec3<T> operator+(const Vec3<T>& v, const Vec3<T>& w)
 }
 
 template <typename T>
-__host__ __device__ Vec3<T> operator-(const Vec3<T>& v, const Vec3<T>& w)
+KG_INLINE Vec3<T> operator-(const Vec3<T>& v, const Vec3<T>& w)
 {
   Vec3<T> res = v;
   res -= w;
@@ -171,7 +169,7 @@ __host__ __device__ Vec3<T> operator-(const Vec3<T>& v, const Vec3<T>& w)
 }
 
 template <typename T>
-__host__ __device__ Vec3<T> operator*(const Vec3<T>& v, const Vec3<T>& w)
+KG_INLINE Vec3<T> operator*(const Vec3<T>& v, const Vec3<T>& w)
 {
   Vec3<T> res = v;
   res *= w;
@@ -179,7 +177,7 @@ __host__ __device__ Vec3<T> operator*(const Vec3<T>& v, const Vec3<T>& w)
 }
 
 template <typename T>
-__host__ __device__ Vec3<T> operator*(T s, const Vec3<T>& v)
+KG_INLINE Vec3<T> operator*(T s, const Vec3<T>& v)
 {
   Vec3<T> res = v;
   res *= s;
@@ -187,7 +185,7 @@ __host__ __device__ Vec3<T> operator*(T s, const Vec3<T>& v)
 }
 
 template <typename T>
-__host__ __device__ Vec3<T> operator/(const Vec3<T>& v, const Vec3<T>& w)
+KG_INLINE Vec3<T> operator/(const Vec3<T>& v, const Vec3<T>& w)
 {
   Vec3<T> res = v;
   res /= w;
