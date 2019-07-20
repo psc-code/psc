@@ -11,11 +11,42 @@
 namespace kg
 {
 
-template <typename C>
-struct SArrayContainerInnerTypes;
+namespace detail
+{
+template <typename Layout>
+struct LayoutDataOffset;
+
+template <>
+struct LayoutDataOffset<LayoutSOA>
+{
+  static int run(int n_comps, const Int3& im, int m, Int3 idx)
+  {
+    return (((((m)*im[2] + idx[2]) * im[1] + idx[1]) * im[0] + idx[0]));
+  }
+};
+
+template <>
+struct LayoutDataOffset<LayoutAOS>
+{
+  static int run(int n_comps, const Int3& im, int m, Int3 idx)
+  {
+    return ((((idx[2]) * im[1] + idx[1]) * im[0] + idx[0]) * n_comps + m);
+  }
+};
+
+} // namespace detail
+
+template <typename Layout>
+static int layoutDataOffset(int n_comps, const Int3& im, int m, Int3 idx)
+{
+  return detail::LayoutDataOffset<Layout>::run(n_comps, im, m, idx);
+}
 
 // ======================================================================
-// fields3d_container
+// SArrayContainer
+
+template <typename C>
+struct SArrayContainerInnerTypes;
 
 template <typename D>
 class SArrayContainer
@@ -70,16 +101,6 @@ public:
 
   void zero() { memset(storage().data(), 0, sizeof(value_type) * size()); }
 
-  int indexAOS(int m, Int3 idx) const
-  {
-    return ((((idx[2]) * im_[1] + idx[1]) * im_[0] + idx[0]) * n_comps_ + m);
-  }
-
-  int indexSOA(int m, Int3 idx) const
-  {
-    return (((((m) * im_[2] + idx[2]) * im_[1] + idx[1]) * im_[0] + idx[0]));
-  }
-
   int index(int m, Int3 idx) const
   {
 #ifdef BOUNDS_CHECK
@@ -89,11 +110,7 @@ public:
     assert(idx[2] >= ib_[2] && idx[2] < ib_[2] + im_[2]);
 #endif
 
-    if (Layout::isAOS::value) {
-      return indexAOS(m, idx - ib_);
-    } else {
-      return indexSOA(m, idx - ib_);
-    }
+    return layoutDataOffset<Layout>(n_comps_, im_, m, idx - ib_);
   }
 
   void set(int m, const_reference val)
