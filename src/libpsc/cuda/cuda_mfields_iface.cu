@@ -30,9 +30,9 @@ void MfieldsCuda::reset(const Grid_t& new_grid)
   dprintf("CMFLDS: reset\n");
   MfieldsBase::reset(new_grid);
   Int3 ibn = -cmflds()->ib();
-  int n_fields = cmflds()->n_fields;
+  int n_comps = cmflds()->n_comps();
   delete cmflds_;
-  cmflds_ = new cuda_mfields(new_grid, n_fields, ibn);
+  cmflds_ = new cuda_mfields(new_grid, n_comps, ibn);
 }
 
 MfieldsCuda::fields_host_t MfieldsCuda::get_host_fields()
@@ -74,7 +74,7 @@ void MfieldsCuda::zero_comp(int m)
 void MfieldsCuda::zero()
 {
   dprintf("CMFLDS: zero\n");
-  for (int m = 0; m < cmflds()->n_fields; m++) {
+  for (int m = 0; m < cmflds()->n_comps(); m++) {
     zero_comp(m);
   }
 }

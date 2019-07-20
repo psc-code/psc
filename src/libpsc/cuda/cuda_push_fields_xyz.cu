@@ -92,7 +92,7 @@ cuda_push_fields_E_xyz(struct cuda_mfields *cmflds, float dt)
     return;
   }
 
-  assert(cmflds->n_fields == NR_FIELDS);
+  assert(cmflds->n_comps() == NR_FIELDS);
   assert(cmflds->ib(0) == -BND);
   assert(cmflds->ib(1) == -BND);
   assert(cmflds->ib(2) == -BND);

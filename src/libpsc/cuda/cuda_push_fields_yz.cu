@@ -87,7 +87,7 @@ cuda_push_fields_E_yz(struct cuda_mfields *cmflds, float dt)
     return;
   }
 
-  assert(cmflds->n_fields == NR_FIELDS);
+  assert(cmflds->n_comps() == NR_FIELDS);
 
   float cny = dt / cmflds->grid().domain.dx[1];
   float cnz = dt / cmflds->grid().domain.dx[2];

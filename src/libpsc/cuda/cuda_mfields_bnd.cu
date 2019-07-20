@@ -414,7 +414,7 @@ fields_device_pack2_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd *cbn
 
   auto im = cmflds->im();
   assert(im[0] == 1);
-  int n_fields = cmflds->n_fields;
+  int n_fields = cmflds->n_comps();
   int n_patches = cmflds->n_patches();
   int n_ghosts = 2*B * (im[1] + im[2] - 2*B);
   int n_threads = n_ghosts * n_patches;
@@ -434,7 +434,7 @@ cuda_mfields_bnd_fill_ghosts_local_xyz(struct cuda_mfields_bnd *cbnd, struct cud
 {
   const int B = 2;
   auto im = cmflds->im();
-  int n_fields = cmflds->n_fields;
+  int n_fields = cmflds->n_comps();
   int n_patches = cmflds->n_patches();
   int n_ghosts = im[0] * im[1] * im[2] -
     (im[0] - 2*B) * (im[1] - 2*B) * (im[2] - 2*B);
@@ -480,7 +480,7 @@ cuda_mfields_bnd_fill_ghosts_local(struct cuda_mfields_bnd *cbnd, struct cuda_mf
     cuda_mfields_bnd_fill_ghosts_local_xyz(cbnd, cmflds, mb, me);
   }
   assert(im[0] == 1);
-  int n_fields = cmflds->n_fields;
+  int n_fields = cmflds->n_comps();
   int n_patches = cmflds->n_patches();
   int n_ghosts = 2*B * (im[1] + im[2] - 2*B);
   int n_threads = n_ghosts * n_patches;
@@ -621,7 +621,7 @@ fields_host_pack3_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd *cbnd,
 		     int mb, int me)
 {
   auto im = cmflds->im();
-  int n_fields = cmflds->n_fields;
+  int n_fields = cmflds->n_comps();
 
   struct cuda_mfields_bnd_map *map = cuda_mfields_bnd_get_map(cbnd, n_fields);
 
@@ -731,7 +731,7 @@ __fields_cuda_from_device3_yz(struct cuda_mfields *cmflds, struct cuda_mfields_b
     pr3 = prof_register("field_host_unpack 3i", 1., 0, 0);
   }
     
-  struct cuda_mfields_bnd_map *map = cuda_mfields_bnd_get_map(cbnd, cmflds->n_fields);
+  struct cuda_mfields_bnd_map *map = cuda_mfields_bnd_get_map(cbnd, cmflds->n_comps());
 
   assert(me - mb <= MAX_BND_COMPONENTS);
   assert(cmflds->ib(1) == -BND);
@@ -771,7 +771,7 @@ __fields_cuda_to_device3_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd
     pr3 = prof_register("field_device_unpack 3o", 1., 0, 0);
   }
 
-  struct cuda_mfields_bnd_map *map = cuda_mfields_bnd_get_map(cbnd, cmflds->n_fields);
+  struct cuda_mfields_bnd_map *map = cuda_mfields_bnd_get_map(cbnd, cmflds->n_comps());
 
   assert(me - mb <= MAX_BND_COMPONENTS);
   assert(cmflds->ib(1) == -BND);
@@ -1159,7 +1159,7 @@ static void
 fields_device_pack3_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd *cbnd,
 		       int mb, int me)
 {
-  struct cuda_mfields_bnd_map *map = cuda_mfields_bnd_get_map(cbnd, cmflds->n_fields);
+  struct cuda_mfields_bnd_map *map = cuda_mfields_bnd_get_map(cbnd, cmflds->n_comps());
 
   auto im = cmflds->im();
   assert(im[0] == 1);

@@ -16,10 +16,9 @@
 
 cuda_mfields::cuda_mfields(const Grid_t& grid, int _n_fields, const Int3& ibn)
   : Base{_n_fields, -ibn, grid.ldims + 2*ibn, grid.n_patches()},
-    n_fields(_n_fields),
     n_cells_per_patch(im(0) * im(1) * im(2)),
     n_cells(n_patches_ * n_cells_per_patch),
-    storage_(n_fields * n_cells, n_cells_per_patch * n_fields),
+    storage_(n_comps() * n_cells, n_comps() * n_cells_per_patch ),
     grid_(grid)
 {
   cuda_base_init();
@@ -31,8 +30,8 @@ cuda_mfields::cuda_mfields(const Grid_t& grid, int _n_fields, const Int3& ibn)
 mrc_json_t cuda_mfields::to_json()
 {
   mrc_json_t json = mrc_json_object_new(9);
-  mrc_json_object_push_integer(json, "n_patches", n_patches_);
-  mrc_json_object_push_integer(json, "n_fields", n_fields);
+  mrc_json_object_push_integer(json, "n_patches", n_patches());
+  mrc_json_object_push_integer(json, "n_fields", n_comps());
   mrc_json_object_push_integer(json, "n_cells_per_patch", n_cells_per_patch);
   mrc_json_object_push_integer(json, "n_cells", n_cells);
 
@@ -47,11 +46,11 @@ mrc_json_t cuda_mfields::to_json()
 
   auto flds = get_host_fields();
   for (int p = 0; p < n_patches(); p++) {
-    copy_from_device(p, flds, 0, n_fields);
+    copy_from_device(p, flds, 0, n_comps());
 
-    mrc_json_t json_flds_comps = mrc_json_array_new(n_fields);
+    mrc_json_t json_flds_comps = mrc_json_array_new(n_comps());
     mrc_json_array_push(json_flds_patches, json_flds_comps);
-    for (int m = 0; m < n_fields; m++) {
+    for (int m = 0; m < n_comps(); m++) {
       mrc_json_t json_fld_z = mrc_json_array_new(im(2));
       mrc_json_array_push(json_flds_comps, json_fld_z);
       for (int k = ib(2); k < ib(2) + im(2); k++) {
@@ -97,8 +96,8 @@ void cuda_mfields::dump(const char *filename)
 
 cuda_mfields::operator DMFields()
 {
-  return DMFields(storage_.data(), n_cells_per_patch * n_fields, im(), ib(), n_fields,
-		  grid().n_patches());
+  return DMFields(storage_.data(), n_comps() * n_cells_per_patch, im(), ib(), n_comps(),
+		  n_patches());
 }
 
 // ----------------------------------------------------------------------
@@ -114,7 +113,7 @@ DFields cuda_mfields::operator[](int p)
 
 cuda_mfields::fields_host_t cuda_mfields::get_host_fields()
 {
-  return fields_host_t(box(), n_fields);
+  return fields_host_t(box(), n_comps());
 }
 
 // ----------------------------------------------------------------------
@@ -259,7 +258,7 @@ void cuda_mfields::zero_comp(int m, dim_yz tag)
 void cuda_mfields::zero_comp(int m, dim_xyz tag)
 {
   int n = n_cells_per_patch;
-  int stride = n * n_fields;
+  int stride = n * n_comps();
 
   const int THREADS_PER_BLOCK = 512;
   dim3 dimBlock(THREADS_PER_BLOCK);

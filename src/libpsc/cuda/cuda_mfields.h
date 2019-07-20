@@ -91,7 +91,8 @@ struct cuda_mfields : MfieldsCRTP<cuda_mfields>
   cuda_mfields(const cuda_mfields&) = delete;
 
   int n_patches() const { return n_patches_; }
-
+  int n_comps() const { return n_fields_; }
+  
   void zero_comp(int m, dim_yz tag);
   void zero_comp(int m, dim_xyz tag);
   
@@ -112,7 +113,7 @@ struct cuda_mfields : MfieldsCRTP<cuda_mfields>
   int index(int m, int i, int j, int k, int p) const
   {
     return (((((p)
-	       * n_fields + m)
+	       * n_comps() + m)
 	      * im(2) + (k - ib(2)))
 	     * im(1) + (j - ib(1)))
 	    * im(0) + (i - ib(0)));
@@ -122,7 +123,6 @@ struct cuda_mfields : MfieldsCRTP<cuda_mfields>
   void set_value(int idx, real_t val) { storage_.set_value(idx, val); }
   
 public:
-  int n_fields;
   int n_cells_per_patch;
   int n_cells;
 private:
