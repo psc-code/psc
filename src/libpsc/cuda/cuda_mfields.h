@@ -7,6 +7,7 @@
 #include "dim.hxx"
 
 #include <kg/SArray.h>
+#include <kg/SArrayView.h>
 
 #define MAX_BND_FIELDS (17)
 #define MAX_BND_COMPONENTS (3)
@@ -47,7 +48,8 @@ struct cuda_mfields_bnd {
 // cuda_mfields
 
 struct DMFields;
-struct DFields;
+using DFields = kg::SArrayView<float, kg::LayoutSOA>;
+
 
 struct cuda_mfields
 {
@@ -96,44 +98,6 @@ public:
 private:
   thrust::device_vector<fields_cuda_real_t> d_flds_;
   const Grid_t& grid_;
-};
-
-// ======================================================================
-// DFields
-
-struct DFields;
-
-namespace kg
-{
-
-template<>
-struct SArrayContainerInnerTypes<DFields>
-{
-  using Layout = LayoutSOA;
-  using Storage = StorageNoOwnership<float>;
-};
-
-}
-
-struct DFields : kg::SArrayContainer<DFields>
-{
-  using Base = kg::SArrayContainer<DFields>;
-  
-  using Storage = kg::StorageNoOwnership<float>;
-  using real_t = typename Storage::value_type;
-  
-  KG_INLINE DFields(Int3 ib, Int3 im, int n_comps, real_t *data)
-    : Base{ib, im, n_comps},
-      storage_{data}
-  {}
-  
-private:
-  Storage storage_;
-
-  KG_INLINE Storage& storageImpl() { return storage_; }
-  KG_INLINE const Storage& storageImpl() const { return storage_; }
-
-  friend class kg::SArrayContainer<DFields>;
 };
 
 // ======================================================================

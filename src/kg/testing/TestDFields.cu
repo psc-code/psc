@@ -36,8 +36,9 @@ TEST(DFields, Ctor)
   set_dfields<<<1, 1>>>(d_flds);
   
   thrust::host_vector<float> h_storage = d_storage;
-  auto h_flds = DFields{{0, 0, 0}, {3, 2, 1}, 1, h_storage.data()};
 
+#if 0
+  auto h_flds = DFields{{0, 0, 0}, {3, 2, 1}, 1, h_storage.data()};
   for (int k = 0; k < 1; k++) {
     for (int j = 0; j < 2; j++) {
       for (int i = 0; i < 3; i++) {
@@ -46,4 +47,7 @@ TEST(DFields, Ctor)
       std::cout << "\n";
     }
   }
+#endif
+
+  EXPECT_EQ(h_storage, std::vector<float>({0, 100, 200, 10, 110, 210}));
 }

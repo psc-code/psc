@@ -28,15 +28,15 @@ struct SArrayView : kg::SArrayContainer<SArrayView<T, L>>
   using Storage = typename Base::Storage;
   using real_t = typename Base::value_type;
 
-  SArrayView(Int3 ib, Int3 im, int n_comps, real_t* data)
+  KG_INLINE SArrayView(Int3 ib, Int3 im, int n_comps, real_t* data)
     : Base{ib, im, n_comps}, storage_{data}
   {}
 
 private:
   Storage storage_;
 
-  Storage& storageImpl() { return storage_; }
-  const Storage& storageImpl() const { return storage_; }
+  KG_INLINE Storage& storageImpl() { return storage_; }
+  KG_INLINE const Storage& storageImpl() const { return storage_; }
 
   friend class kg::SArrayContainer<SArrayView<T, L>>;
 };
