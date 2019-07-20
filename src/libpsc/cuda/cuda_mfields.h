@@ -136,10 +136,10 @@ struct DFields
   using Storage = StorageNoOwnershipDevice<float>;
   using real_t = typename Storage::value_type;
   
-  __host__ __device__ DFields(real_t* d_flds, int im[3], int ib[3])
+  __host__ __device__ DFields(real_t* d_flds, Int3 im, Int3 ib)
     : storage_{d_flds},
-      im_{im[0], im[1], im[2]},
-      ib_{ib[0], ib[1], ib[2]}
+      im_{im},
+      ib_{ib}
   {}
   
   __device__ real_t  operator()(int m, int i, int j, int k) const { return storage_[index(m, i,j,k)]; }
@@ -165,8 +165,8 @@ private:
 
 private:
   Storage storage_;
-  int im_[3];
-  int ib_[3];
+  Int3 im_;
+  Int3 ib_;
 };
 
 // ======================================================================
@@ -176,11 +176,11 @@ struct DMFields
 {
   using real_t = float;
   
-  __host__ DMFields(real_t* d_flds, uint stride, int im[3], int ib[3])
+  __host__ DMFields(real_t* d_flds, uint stride, Int3 im, Int3 ib)
     : d_flds_(d_flds),
       stride_(stride),
-      im_{ im[0], im[1], im[2] },
-      ib_{ ib[0], ib[1], ib[2] }
+      im_{im},
+      ib_{ib}
   {}
 
   __host__ __device__ DFields operator[](int p)
@@ -193,8 +193,8 @@ struct DMFields
 private:
   real_t *d_flds_;
   uint stride_;
-  int im_[3];
-  int ib_[3];
+  Int3 im_;
+  Int3 ib_;
 };
 
 #endif
