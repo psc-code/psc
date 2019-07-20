@@ -10,20 +10,20 @@ namespace kg
 // ======================================================================
 // SArray
 
-template <typename T, typename L = kg::LayoutSOA>
+template <typename T, typename L = LayoutSOA>
 struct SArray;
 
 template <typename T, typename L>
-struct kg::SArrayContainerInnerTypes<SArray<T, L>>
+struct SArrayContainerInnerTypes<SArray<T, L>>
 {
   using Layout = L;
-  using Storage = kg::Storage<T>;
+  using Storage = Storage<T>;
 };
 
 template <typename T, typename L>
-struct SArray : kg::SArrayContainer<SArray<T, L>>
+struct SArray : SArrayContainer<SArray<T, L>>
 {
-  using Base = kg::SArrayContainer<SArray<T, L>>;
+  using Base = SArrayContainer<SArray<T, L>>;
   using Storage = typename Base::Storage;
   using real_t = typename Base::value_type;
 
@@ -40,7 +40,7 @@ private:
   Storage& storageImpl() { return storage_; }
   const Storage& storageImpl() const { return storage_; }
 
-  friend class kg::SArrayContainer<SArray<T, L>>;
+  friend class SArrayContainer<SArray<T, L>>;
 };
 
 } // namespace kg
