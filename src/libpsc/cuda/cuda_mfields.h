@@ -122,9 +122,9 @@ struct DFields : kg::SArrayContainer<DFields>
   using Storage = kg::StorageNoOwnership<float>;
   using real_t = typename Storage::value_type;
   
-  KG_INLINE DFields(real_t* d_flds, Int3 im, Int3 ib, int n_comps)
+  KG_INLINE DFields(Int3 ib, Int3 im, int n_comps, real_t *data)
     : Base{ib, im, n_comps},
-      storage_{d_flds}
+      storage_{data}
   {}
   
 private:
@@ -153,7 +153,7 @@ struct DMFields
 
   __host__ __device__ DFields operator[](int p)
   {
-    return DFields(d_flds_ + p * stride_, im_, ib_, n_comps_);
+    return DFields(ib_, im_, n_comps_, d_flds_ + p * stride_);
   }
 
   __device__ int im(int d) const { return im_[d]; }
