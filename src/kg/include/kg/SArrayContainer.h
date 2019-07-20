@@ -2,8 +2,8 @@
 #ifndef KG_SARRAY_CONTAINER_H
 #define KG_SARRAY_CONTAINER_H
 
-#include <kg/Vec3.h>
 #include <kg/Array3d.h>
+#include <kg/Vec3.h>
 
 // FIXME, do noexcept?
 // FIXME, use size_t instead of int, at least for 1d offsets?
@@ -47,11 +47,11 @@ public:
 
   const_reference operator()(int m, int i, int j, int k) const
   {
-    return storage()[index(m, i, j, k)];
+    return storage()[index(m, {i, j, k})];
   }
   reference operator()(int m, int i, int j, int k)
   {
-    return storage()[index(m, i, j, k)];
+    return storage()[index(m, {i, j, k})];
   }
 
   void zero(int m)
@@ -70,23 +70,29 @@ public:
 
   void zero() { memset(storage().data(), 0, sizeof(value_type) * size()); }
 
-  int index(int m, int i, int j, int k) const
+  int indexAOS(int m, Int3 idx) const
+  {
+    return ((((idx[2]) * im_[1] + idx[1]) * im_[0] + idx[0]) * n_comps_ + m);
+  }
+
+  int indexSOA(int m, Int3 idx) const
+  {
+    return (((((m) * im_[2] + idx[2]) * im_[1] + idx[1]) * im_[0] + idx[0]));
+  }
+
+  int index(int m, Int3 idx) const
   {
 #ifdef BOUNDS_CHECK
     assert(m >= 0 && m < n_comps_);
-    assert(i >= ib_[0] && i < ib_[0] + im_[0]);
-    assert(j >= ib_[1] && j < ib_[1] + im_[1]);
-    assert(k >= ib_[2] && k < ib_[2] + im_[2]);
+    assert(idx[0] >= ib_[0] && idx[0] < ib_[0] + im_[0]);
+    assert(idx[1] >= ib_[1] && idx[1] < ib_[1] + im_[1]);
+    assert(idx[2] >= ib_[2] && idx[2] < ib_[2] + im_[2]);
 #endif
 
     if (Layout::isAOS::value) {
-      return (
-        ((((k - ib_[2])) * im_[1] + (j - ib_[1])) * im_[0] + (i - ib_[0])) *
-          n_comps_ +
-        m);
+      return indexAOS(m, idx - ib_);
     } else {
-      return (((((m)*im_[2] + (k - ib_[2])) * im_[1] + (j - ib_[1])) * im_[0] +
-               (i - ib_[0])));
+      return indexSOA(m, idx - ib_);
     }
   }
 
