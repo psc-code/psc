@@ -20,7 +20,7 @@
 struct cuda_mfields_bnd *
 cuda_mfields_bnd_create()
 {
-  return (struct cuda_mfields_bnd *) calloc(1, sizeof(struct cuda_mfields_bnd));
+  return new cuda_mfields_bnd{};
 }
 
 // ----------------------------------------------------------------------
@@ -29,7 +29,7 @@ cuda_mfields_bnd_create()
 void
 cuda_mfields_bnd_destroy(struct cuda_mfields_bnd *cbnd)
 {
-  free(cbnd);
+  delete cbnd;
 }
 
 // ----------------------------------------------------------------------

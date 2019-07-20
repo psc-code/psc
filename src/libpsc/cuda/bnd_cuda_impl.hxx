@@ -50,7 +50,7 @@ struct BndCuda : BndBase
     struct mrc_ddc_rank_info *ri = patt2->ri;
     
     prm.n_recv_entries = ri[multi->mpi_rank].n_recv_entries;
-    prm.recv_entry = (struct cuda_mfields_bnd_entry *) calloc(prm.n_recv_entries, sizeof(*prm.recv_entry));
+    prm.recv_entry = new cuda_mfields_bnd_entry[prm.n_recv_entries]{};
     
     for (int i = 0; i < prm.n_recv_entries; i++) {
       struct mrc_ddc_sendrecv_entry *re = &ri[multi->mpi_rank].recv_entry[i];
@@ -63,7 +63,7 @@ struct BndCuda : BndBase
     cbnd = cuda_mfields_bnd_create();
     cuda_mfields_bnd_ctor(cbnd, &prm);
     
-    free(prm.recv_entry);
+    delete[] prm.recv_entry;
   }
 
   // ----------------------------------------------------------------------

@@ -1,6 +1,14 @@
 
 cmake_minimum_required (VERSION 3.9)
 
+foreach(policy
+    CMP0074 # CMake 3.12
+    )
+  if(POLICY ${policy})
+    cmake_policy(SET ${policy} NEW)
+  endif()
+endforeach()
+
 add_subdirectory(src/libmrc)
 
 project(PSC)
