@@ -2,6 +2,7 @@
 #ifndef KG_SARRAY_CONTAINER_H
 #define KG_SARRAY_CONTAINER_H
 
+#include <kg/Vec3.h>
 #include <kg/Array3d.h>
 
 // FIXME, do noexcept?
