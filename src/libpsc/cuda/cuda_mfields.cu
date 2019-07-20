@@ -16,10 +16,9 @@
 
 cuda_mfields::cuda_mfields(const Grid_t& grid, int _n_fields, const Int3& ibn)
   : Base{_n_fields, -ibn, grid.ldims + 2*ibn, grid.n_patches()},
-    n_patches(grid.n_patches()),
     n_fields(_n_fields),
     n_cells_per_patch(im(0) * im(1) * im(2)),
-    n_cells(n_patches * n_cells_per_patch),
+    n_cells(n_patches_ * n_cells_per_patch),
     storage_(n_fields * n_cells, n_cells_per_patch * n_fields),
     grid_(grid)
 {
@@ -32,7 +31,7 @@ cuda_mfields::cuda_mfields(const Grid_t& grid, int _n_fields, const Int3& ibn)
 mrc_json_t cuda_mfields::to_json()
 {
   mrc_json_t json = mrc_json_object_new(9);
-  mrc_json_object_push_integer(json, "n_patches", n_patches);
+  mrc_json_object_push_integer(json, "n_patches", n_patches_);
   mrc_json_object_push_integer(json, "n_fields", n_fields);
   mrc_json_object_push_integer(json, "n_cells_per_patch", n_cells_per_patch);
   mrc_json_object_push_integer(json, "n_cells", n_cells);
@@ -43,11 +42,11 @@ mrc_json_t cuda_mfields::to_json()
   mrc_json_t json_flds = mrc_json_object_new(2);
   mrc_json_object_push(json, "flds", json_flds);
   mrc_json_object_push_boolean(json_flds, "__field5d__", true);
-  mrc_json_t json_flds_patches = mrc_json_array_new(n_patches);
+  mrc_json_t json_flds_patches = mrc_json_array_new(n_patches_);
   mrc_json_object_push(json_flds, "data", json_flds_patches);
 
   auto flds = get_host_fields();
-  for (int p = 0; p < n_patches; p++) {
+  for (int p = 0; p < n_patches(); p++) {
     copy_from_device(p, flds, 0, n_fields);
 
     mrc_json_t json_flds_comps = mrc_json_array_new(n_fields);
@@ -200,7 +199,7 @@ void cuda_mfields::axpy_comp_yz(int ym, float a, cuda_mfields *cmflds_x, int xm)
 	       (mz + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
 
-  for (int p = 0; p < n_patches; p++) {
+  for (int p = 0; p < n_patches_; p++) {
     k_axpy_comp_yz<<<dimGrid, dimBlock>>>((*this)[p].data(), ym, a,
 					  (*cmflds_x)[p].data(), xm, my, mz);
   }
@@ -251,7 +250,7 @@ void cuda_mfields::zero_comp(int m, dim_yz tag)
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
 
   // OPT, should be done in a single kernel
-  for (int p = 0; p < n_patches; p++) {
+  for (int p = 0; p < n_patches_; p++) {
     k_zero_comp_yz<<<dimGrid, dimBlock>>>((*this)[p].data(), m, my, mz);
   }
   cuda_sync_if_enabled();
@@ -264,7 +263,7 @@ void cuda_mfields::zero_comp(int m, dim_xyz tag)
 
   const int THREADS_PER_BLOCK = 512;
   dim3 dimBlock(THREADS_PER_BLOCK);
-  dim3 dimGrid((n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, n_patches);
+  dim3 dimGrid((n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, n_patches());
 
   k_zero_comp_xyz<<<dimGrid, dimBlock>>>(data() + m * n, n, stride);
   cuda_sync_if_enabled();
