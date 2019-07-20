@@ -294,9 +294,7 @@ public:
 
   MfieldsCRTP(int n_fields, Int3 ib, Int3 im, int n_patches)
     : n_fields_(n_fields), box_{ib, im}, n_patches_{n_patches}
-  {
-    storage().resize(n_fields_ * box_.size(), n_patches_);
-  }
+  {}
 
   void reset(int n_patches)
   {
@@ -381,7 +379,6 @@ protected:
   KG_INLINE const Derived& derived() const { return *static_cast<const Derived*>(this); }
 
 protected:
-  Storage storage_;
   Box3 box_; // size of one patch, including ghost points
   int n_fields_;
   int n_patches_;
@@ -410,7 +407,9 @@ struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>>
   Mfields(const Grid_t& grid, int n_fields, Int3 ibn)
     : MfieldsBase(grid, n_fields, ibn),
       Base(n_fields, -ibn, grid.ldims + 2 * ibn, grid.n_patches())
-  {}
+  {
+    storage_.resize(n_fields_ * Base::box().size(), grid.n_patches());
+  }
 
   virtual void reset(const Grid_t& grid) override
   {
@@ -428,8 +427,10 @@ struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>>
   const Convert& convert_from() override;
 
 private:
-  Storage& storageImpl() { return Base::storage_; }
-  const Storage& storageImpl() const { return Base::storage_; }
+  Storage storage_;
+
+  Storage& storageImpl() { return storage_; }
+  const Storage& storageImpl() const { return storage_; }
 
   friend class MfieldsCRTP<Mfields<R>>;
 };

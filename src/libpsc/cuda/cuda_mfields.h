@@ -150,9 +150,10 @@ private:
   real_t *d_flds_;
   uint stride_;
   Int3 im_;
-
-  KG_INLINE Storage& storageImpl() { return Base::storage_; }
-  KG_INLINE const Storage& storageImpl() const { return Base::storage_; }
+  Storage storage_;
+  
+  KG_INLINE Storage& storageImpl() { return storage_; }
+  KG_INLINE const Storage& storageImpl() const { return storage_; }
 
   friend class MfieldsCRTP<DMFields>;
 };
