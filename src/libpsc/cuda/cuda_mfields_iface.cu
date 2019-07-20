@@ -25,6 +25,11 @@ MfieldsCuda::~MfieldsCuda()
   delete cmflds_;
 }
 
+int MfieldsCuda::n_comps() const
+{
+  return cmflds_->n_comps();
+}
+
 void MfieldsCuda::reset(const Grid_t& new_grid)
 {
   dprintf("CMFLDS: reset\n");

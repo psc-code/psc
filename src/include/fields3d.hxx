@@ -44,7 +44,7 @@ struct MfieldsBase
   virtual void reset(const Grid_t& grid) { grid_ = &grid; }
   
   int n_patches() const { return grid_->n_patches(); }
-  int n_comps() const { return n_fields_; }
+  int _n_comps() const { return n_fields_; }
   Int3 ibn() const { return ibn_; }
 
   virtual void write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names) = 0;
@@ -67,7 +67,7 @@ struct MfieldsBase
 
     // mprintf("get_as %s (%s) %d %d\n", type, psc_mfields_type(mflds_base), mb, me);
     
-    auto& mflds = *new MF{grid(), n_comps(), ibn()};
+    auto& mflds = *new MF{grid(), n_fields_, ibn()};
     
     MfieldsBase::convert(*this, mflds, mb, me);
 
@@ -100,9 +100,10 @@ struct MfieldsBase
   static void convert(MfieldsBase& mf_from, MfieldsBase& mf_to, int mb, int me);
 
   static std::list<MfieldsBase*> instances;
-  
-protected:
+
+private:
   int n_fields_;
+protected:
   const Grid_t* grid_;
   Int3 ibn_;
 };
@@ -275,6 +276,7 @@ public:
   KG_INLINE const Int3& im() const { return box_.im(); }
   KG_INLINE int ib(int d) const { return box_.ib(d); }
   KG_INLINE int im(int d) const { return box_.im(d); }
+  KG_INLINE int n_comps() const { return n_fields_; }
 
   MfieldsCRTP(int n_fields, Int3 ib, Int3 im, int n_patches)
     : n_fields_(n_fields), box_{ib, im}, n_patches_{n_patches}
@@ -392,7 +394,7 @@ struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>>
     : MfieldsBase(grid, n_fields, ibn),
       Base(n_fields, -ibn, grid.ldims + 2 * ibn, grid.n_patches())
   {
-    storage_.resize(n_fields_ * Base::box().size(), grid.n_patches());
+    storage_.resize(n_fields * Base::box().size(), grid.n_patches());
   }
 
   virtual void reset(const Grid_t& grid) override
