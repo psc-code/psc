@@ -302,7 +302,7 @@ public:
     storage().resize(n_fields_ * box_.size(), n_patches_);
   }
   
-  fields_view_t operator[](int p)
+  KG_INLINE fields_view_t operator[](int p)
   {
     return fields_view_t(box_.ib(), box_.im(), n_fields_, storage()[p]);
   }

@@ -107,12 +107,22 @@ class DMFieldsStorage
 {
 public:
   using value_type = float;
-
-
+  
+  DMFieldsStorage(uint stride, value_type* data)
+    : stride_{stride}, data_{data}
+  {}
+  
   void resize(int size, int n_patches)
   {
     assert(0);
   }
+
+  value_type* operator[](int p) { return data_ + p * stride_; }
+  const value_type* operator[](int p) const { return data_ + p * stride_; }
+
+private:
+  value_type *data_;
+  uint stride_;
 };
 
 // ======================================================================
@@ -134,22 +144,12 @@ struct DMFields : MfieldsCRTP<DMFields>
   
   DMFields(real_t* d_flds, uint stride, Int3 im, Int3 ib, int n_comps, int n_patches)
     : Base{n_comps, ib, im, n_patches},
-      d_flds_(d_flds),
-      stride_(stride),
-      im_{im}
+      storage_{stride, d_flds}
   {}
 
-  __host__ __device__ DFields operator[](int p)
-  {
-    return DFields(Base::box().ib(), Base::box().im(), Base::n_fields_, d_flds_ + p * stride_);
-  }
-
-  __device__ int im(int d) const { return im_[d]; }
+  __device__ int im(int d) const { return Base::box().im()[d]; }
   
 private:
-  real_t *d_flds_;
-  uint stride_;
-  Int3 im_;
   Storage storage_;
   
   KG_INLINE Storage& storageImpl() { return storage_; }
