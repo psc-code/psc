@@ -48,14 +48,5 @@ public:
   {
     CudaPushParticles_<Config>::push_mprts(mprts.cmprts(), mflds.cmflds());
   }
-  
-  void push_mprts_yz(MparticlesBase& mprts_base, MfieldsStateBase& mflds_base) override
-  {
-    auto& mflds = mflds_base.get_as<MfieldsState>(EX, EX + 6);
-    auto& mprts = mprts_base.get_as<Mparticles>();
-    push_mprts(mprts, mflds);
-    mprts_base.put_as(mprts);
-    mflds_base.put_as(mflds, JXI, JXI + 3);
-  }
 };
 

@@ -105,34 +105,5 @@ struct PushParticlesVpic : PushParticlesBase
       TIC ParticlesOps::uncenter_p(&sp, interpolator); TOC(uncenter_p, 1);
     }
   }
-  
-  void prep(MparticlesBase& mprts_base, MfieldsStateBase& mflds_base) override
-  {
-    assert(0);
-#if 0
-    // needs E, B
-    auto mprts = mprts_base.get_as<Mparticles>();
-    auto& mflds = mflds_base.get_as<Mfields>(EX, HX + 6);
-    load_interpolator(mprts, mflds);
-    mflds_base.put_as(mflds, 0, 0);
-    mprts_base.put_as(mprts, MP_DONT_COPY);
-#endif
-  }
-  
-  void push_mprts(MparticlesBase& mprts_base, MfieldsStateBase& mflds_base) override
-  {
-    assert(0);
-#if 0
-    // needs E, B (not really, because they're already in interpolator), rhob?
-    auto& mflds = mflds_base.get_as<Mfields>(EX, HX + 6);
-    auto& mprts = mprts_base.get_as<Mparticles>();
-
-    push_mprts(mprts, mflds);
-    
-    // update jf FIXME: rhob too, probably, depending on b.c.
-    mflds_base.put_as(mflds, JXI, JXI + 3);
-    mprts_base.put_as(mprts);
-#endif
-  }
 };
 
