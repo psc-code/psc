@@ -273,49 +273,73 @@ protected:
 #endif
 
 // ======================================================================
+// MfieldsCRTP
+
+template <typename D, typename R>
+class MfieldsCRTP
+{
+public:
+  using Derived = D;
+ 
+protected:
+  Derived& derived() { return *static_cast<Derived*>(this); }
+  const Derived& derived() const { return *static_cast<const Derived*>(this); }
+
+protected:
+  std::vector<std::unique_ptr<R[]>> data_;
+  Int3 ib_; //> lower left corner for each patch (incl. ghostpoints)
+  Int3 im_; //> extent for each patch (incl. ghostpoints)
+};
+
+// ======================================================================
 // Mfields
 
 template<typename R>
-struct Mfields : MfieldsBase
+struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>, R>
 {
   using real_t = R;
+  using Base = MfieldsCRTP<Mfields<R>, R>;
   using fields_view_t = fields3d_view<real_t>;
+
+  using Base::data_;
+  using Base::ib_;
+  using Base::im_;
 
   Mfields(const Grid_t& grid, int n_fields, Int3 ibn)
     : MfieldsBase(grid, n_fields, ibn)
   {
     unsigned int size = 1;
     for (int d = 0; d < 3; d++) {
-      ib[d] = -ibn[d];
-      im[d] = grid_->ldims[d] + 2 * ibn[d];
-      size *= im[d];
+      ib_[d] = -ibn[d];
+      im_[d] = grid_->ldims[d] + 2 * ibn[d];
+      size *= im_[d];
     }
 
-    data.reserve(n_patches());
+    data_.reserve(n_patches());
     for (int p = 0; p < n_patches(); p++) {
-      data.emplace_back(new real_t[n_fields * size]{});
+      data_.emplace_back(new real_t[n_fields * size]{});
     }
   }
 
   virtual void reset(const Grid_t& grid) override
   {
     MfieldsBase::reset(grid);
-    data.clear();
+    data_.clear();
 
     unsigned int size = 1;
     for (int d = 0; d < 3; d++) {
-      size *= im[d];
+      size *= im_[d];
     }
 
-    data.reserve(n_patches());
+    data_.reserve(n_patches());
     for (int p = 0; p < n_patches(); p++) {
-      data.emplace_back(new real_t[n_comps() * size]);
+      data_.emplace_back(new real_t[n_comps() * size]);
     }
   }
   
   fields_view_t operator[](int p)
   {
-    return fields_view_t(Int3::fromPointer(ib), Int3::fromPointer(im), n_fields_, data[p].get());
+    return fields_view_t(Int3::fromPointer(ib_), Int3::fromPointer(im_), n_fields_, data_[p].get());
   }
 
   void zero_comp(int m)
@@ -391,10 +415,6 @@ struct Mfields : MfieldsBase
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override;
   const Convert& convert_from() override;
-
-  std::vector<std::unique_ptr<real_t[]>> data;
-  int ib[3]; //> lower left corner for each patch (incl. ghostpoints)
-  int im[3]; //> extent for each patch (incl. ghostpoints)
 };
 
 template<> const MfieldsBase::Convert Mfields<float>::convert_to_;
