@@ -16,11 +16,9 @@
 
 cuda_mfields::cuda_mfields(const Grid_t& grid, int _n_fields, const Int3& ibn)
   : Base{_n_fields, -ibn, grid.ldims + 2*ibn, grid.n_patches()},
-    ib(-ibn),
-    im(grid.ldims + 2 * ibn),
     n_patches(grid.n_patches()),
     n_fields(_n_fields),
-    n_cells_per_patch(im[0] * im[1] * im[2]),
+    n_cells_per_patch(im(0) * im(1) * im(2)),
     n_cells(n_patches * n_cells_per_patch),
     storage_(n_fields * n_cells, n_cells_per_patch * n_fields),
     grid_(grid)
@@ -39,8 +37,8 @@ mrc_json_t cuda_mfields::to_json()
   mrc_json_object_push_integer(json, "n_cells_per_patch", n_cells_per_patch);
   mrc_json_object_push_integer(json, "n_cells", n_cells);
 
-  mrc_json_object_push(json, "ib", mrc_json_integer_array_new(3, ib));
-  mrc_json_object_push(json, "im", mrc_json_integer_array_new(3, im));
+  // mrc_json_object_push(json, "ib", mrc_json_integer_array_new(3, ib()));
+  // mrc_json_object_push(json, "im", mrc_json_integer_array_new(3, im()));
 
   mrc_json_t json_flds = mrc_json_object_new(2);
   mrc_json_object_push(json, "flds", json_flds);
@@ -55,15 +53,15 @@ mrc_json_t cuda_mfields::to_json()
     mrc_json_t json_flds_comps = mrc_json_array_new(n_fields);
     mrc_json_array_push(json_flds_patches, json_flds_comps);
     for (int m = 0; m < n_fields; m++) {
-      mrc_json_t json_fld_z = mrc_json_array_new(im[2]);
+      mrc_json_t json_fld_z = mrc_json_array_new(im(2));
       mrc_json_array_push(json_flds_comps, json_fld_z);
-      for (int k = ib[2]; k < ib[2] + im[2]; k++) {
-	mrc_json_t json_fld_y = mrc_json_array_new(im[1]);
+      for (int k = ib(2); k < ib(2) + im(2); k++) {
+	mrc_json_t json_fld_y = mrc_json_array_new(im(1));
 	mrc_json_array_push(json_fld_z, json_fld_y);
-	for (int j = ib[1]; j < ib[1] + im[1]; j++) {
-	  mrc_json_t json_fld_x = mrc_json_array_new(im[0]);
+	for (int j = ib(1); j < ib(1) + im(1); j++) {
+	  mrc_json_t json_fld_x = mrc_json_array_new(im(0));
 	  mrc_json_array_push(json_fld_y, json_fld_x);
-	  for (int i = ib[0]; i < ib[0] + im[0]; i++) {
+	  for (int i = ib(0); i < ib(0) + im(0); i++) {
 	    mrc_json_array_push_double(json_fld_x, flds(m, i,j,k));
 	  }
 	}
@@ -100,7 +98,7 @@ void cuda_mfields::dump(const char *filename)
 
 cuda_mfields::operator DMFields()
 {
-  return DMFields(storage_.data(), n_cells_per_patch * n_fields, im, ib, n_fields,
+  return DMFields(storage_.data(), n_cells_per_patch * n_fields, im(), ib(), n_fields,
 		  grid().n_patches());
 }
 
@@ -117,7 +115,7 @@ DFields cuda_mfields::operator[](int p)
 
 cuda_mfields::fields_host_t cuda_mfields::get_host_fields()
 {
-  return fields_host_t({ib, im}, n_fields);
+  return fields_host_t(box(), n_fields);
 }
 
 // ----------------------------------------------------------------------
@@ -193,10 +191,10 @@ k_axpy_comp_yz(float *y_flds, int ym, float a, float *x_flds, int xm,
 
 void cuda_mfields::axpy_comp_yz(int ym, float a, cuda_mfields *cmflds_x, int xm)
 {
-  int my = im[1];
-  int mz = im[2];
-  assert(ib[1] == -BND);
-  assert(ib[2] == -BND);
+  int my = im(1);
+  int mz = im(2);
+  assert(ib(1) == -BND);
+  assert(ib(2) == -BND);
 
   dim3 dimGrid((my + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
 	       (mz + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
@@ -243,10 +241,10 @@ k_zero_comp_xyz(float *data, uint n, uint stride)
 
 void cuda_mfields::zero_comp(int m, dim_yz tag)
 {
-  int my = im[1];
-  int mz = im[2];
-  assert(ib[1] == -BND);
-  assert(ib[2] == -BND);
+  int my = im(1);
+  int mz = im(2);
+  assert(ib(1) == -BND);
+  assert(ib(2) == -BND);
 
   dim3 dimGrid((my + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
 	       (mz + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);

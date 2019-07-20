@@ -111,17 +111,15 @@ struct cuda_mfields : MfieldsCRTP<cuda_mfields>
   {
     return (((((p)
 	       * n_fields + m)
-	      * im[2] + (k - ib[2]))
-	     * im[1] + (j - ib[1]))
-	    * im[0] + (i - ib[0]));
+	      * im(2) + (k - ib(2)))
+	     * im(1) + (j - ib(1)))
+	    * im(0) + (i - ib(0)));
   }
 
   real_t get_value(int idx) const { return storage_.get_value(idx); }
   void set_value(int idx, real_t val) { storage_.set_value(idx, val); }
   
 public:
-  Int3 ib;
-  Int3 im;
   int n_patches;
   int n_fields;
   int n_cells_per_patch;

@@ -29,7 +29,7 @@ void MfieldsCuda::reset(const Grid_t& new_grid)
 {
   dprintf("CMFLDS: reset\n");
   MfieldsBase::reset(new_grid);
-  Int3 ibn = -cmflds()->ib;
+  Int3 ibn = -cmflds()->ib();
   int n_fields = cmflds()->n_fields;
   delete cmflds_;
   cmflds_ = new cuda_mfields(new_grid, n_fields, ibn);
