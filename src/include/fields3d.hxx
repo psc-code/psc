@@ -362,18 +362,18 @@ public:
   MfieldsCRTP(int n_fields, Int3 ib, Int3 im, int n_patches)
     : n_fields_(n_fields), box_{ib, im}, n_patches_{n_patches}
   {
-    storage_.resize(n_fields_ * box_.size(), n_patches_);
+    storage().resize(n_fields_ * box_.size(), n_patches_);
   }
 
   void reset(int n_patches)
   {
     n_patches_ = n_patches;
-    storage_.resize(n_fields_ * box_.size(), n_patches_);
+    storage().resize(n_fields_ * box_.size(), n_patches_);
   }
   
   fields_view_t operator[](int p)
   {
-    return fields_view_t(box_.ib(), box_.im(), n_fields_, storage_[p]);
+    return fields_view_t(box_.ib(), box_.im(), n_fields_, storage()[p]);
   }
 
   void zero_comp(int m)
@@ -445,7 +445,11 @@ protected:
   Derived& derived() { return *static_cast<Derived*>(this); }
   const Derived& derived() const { return *static_cast<const Derived*>(this); }
 
-protected:
+  // storae_ could move into Derived class, but I guess no point right now
+  Storage& storage() { return storage_; }
+  const Storage& storage() const { return storage_; }
+
+private:
   Storage storage_;
   Box3 box_; // size of one patch, including ghost points
   int n_fields_;
@@ -470,8 +474,6 @@ struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>>
 {
   using real_t = R;
   using Base = MfieldsCRTP<Mfields<R>>;
-
-  using Base::Storage;
 
   Mfields(const Grid_t& grid, int n_fields, Int3 ibn)
     : MfieldsBase(grid, n_fields, ibn),
