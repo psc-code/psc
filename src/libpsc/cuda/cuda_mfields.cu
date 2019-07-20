@@ -99,7 +99,8 @@ void cuda_mfields::dump(const char *filename)
 
 cuda_mfields::operator DMFields()
 {
-  return DMFields(d_flds_.data().get(), n_cells_per_patch * n_fields, im, ib, n_fields);
+  return DMFields(d_flds_.data().get(), n_cells_per_patch * n_fields, im, ib, n_fields,
+		  grid().n_patches());
 }
 
 // ----------------------------------------------------------------------

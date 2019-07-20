@@ -215,10 +215,10 @@ public:
     : ib_{ib}, im_{im}
   {}
 
-  int size() const { return im_[0] * im_[1] * im_[2]; }
+  KG_INLINE int size() const { return im_[0] * im_[1] * im_[2]; }
 
-  const Int3& ib() const { return ib_; }
-  const Int3& im() const { return im_; }
+  KG_INLINE const Int3& ib() const { return ib_; }
+  KG_INLINE const Int3& im() const { return im_; }
 
 private:
   Int3 ib_;
@@ -290,7 +290,7 @@ public:
   using Real = typename Storage::value_type;
   using fields_view_t = kg::SArrayView<Real>;
 
-  const Box3& box() const { return box_; }
+  KG_INLINE const Box3& box() const { return box_; }
 
   MfieldsCRTP(int n_fields, Int3 ib, Int3 im, int n_patches)
     : n_fields_(n_fields), box_{ib, im}, n_patches_{n_patches}
@@ -382,7 +382,7 @@ protected:
   Storage& storage() { return storage_; }
   const Storage& storage() const { return storage_; }
 
-private:
+protected:
   Storage storage_;
   Box3 box_; // size of one patch, including ghost points
   int n_fields_;

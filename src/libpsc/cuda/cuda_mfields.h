@@ -101,23 +101,47 @@ private:
 };
 
 // ======================================================================
+// DMFieldsStorage
+
+class DMFieldsStorage
+{
+public:
+  using value_type = float;
+
+
+  void resize(int size, int n_patches)
+  {
+    assert(0);
+  }
+};
+
+// ======================================================================
 // DMFields
 
-struct DMFields
+struct DMfields;
+
+template <>
+struct MfieldsCRTPInnerTypes<DMFields>
 {
-  using real_t = float;
+  using Storage = DMFieldsStorage;
+};
+
+struct DMFields : MfieldsCRTP<DMFields>
+{
+  using Base = MfieldsCRTP<DMFields>;
+
+  using real_t = typename Base::Real;
   
-  __host__ DMFields(real_t* d_flds, uint stride, Int3 im, Int3 ib, int n_comps)
-    : d_flds_(d_flds),
+  DMFields(real_t* d_flds, uint stride, Int3 im, Int3 ib, int n_comps, int n_patches)
+    : Base{n_comps, ib, im, n_patches},
+      d_flds_(d_flds),
       stride_(stride),
-      im_{im},
-      ib_{ib},
-      n_comps_{n_comps}
+      im_{im}
   {}
 
   __host__ __device__ DFields operator[](int p)
   {
-    return DFields(ib_, im_, n_comps_, d_flds_ + p * stride_);
+    return DFields(Base::box().ib(), Base::box().im(), Base::n_fields_, d_flds_ + p * stride_);
   }
 
   __device__ int im(int d) const { return im_[d]; }
@@ -126,8 +150,6 @@ private:
   real_t *d_flds_;
   uint stride_;
   Int3 im_;
-  Int3 ib_;
-  int n_comps_;
 };
 
 #endif
