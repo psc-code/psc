@@ -99,41 +99,11 @@ private:
 };
 
 // ======================================================================
-// StoragNoOwnershipDevice
-//
-// FIXME, same as StorageNoOwnership
-
-
-template <typename T>
-class StorageNoOwnershipDevice
-{
-public:
-  using value_type = T;
-  using reference = T&;
-  using const_reference = const T&;
-  using pointer = T*;
-  using const_pointer = const T*;
-
-  __host__ __device__ StorageNoOwnershipDevice(pointer data) : data_{data} {}
-
-  __device__ const_reference operator[](int offset) const { return data_[offset]; }
-  __device__ reference operator[](int offset) { return data_[offset]; }
-
-  // FIXME access to underlying storage might better be avoided?
-  // use of this makes assumption that storage is contiguous
-  const_pointer data() const { return data_; }
-  pointer data() { return data_; }
-
-private:
-  pointer data_;
-};
-
-// ======================================================================
 // DFields
 
 struct DFields
 {
-  using Storage = StorageNoOwnershipDevice<float>;
+  using Storage = kg::StorageNoOwnership<float>;
   using real_t = typename Storage::value_type;
   
   __host__ __device__ DFields(real_t* d_flds, Int3 im, Int3 ib, int n_comps)

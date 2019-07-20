@@ -18,10 +18,10 @@ public:
   using pointer = T*;
   using const_pointer = const T*;
 
-  StorageNoOwnership(pointer data) : data_{data} {}
+  KG_INLINE StorageNoOwnership(pointer data) : data_{data} {}
 
-  const_reference operator[](int offset) const { return data_[offset]; }
-  reference operator[](int offset) { return data_[offset]; }
+  KG_INLINE const_reference operator[](int offset) const { return data_[offset]; }
+  KG_INLINE reference operator[](int offset) { return data_[offset]; }
 
   // FIXME access to underlying storage might better be avoided?
   // use of this makes assumption that storage is contiguous
