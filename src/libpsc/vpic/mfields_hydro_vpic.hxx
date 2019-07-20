@@ -11,7 +11,7 @@ struct MfieldsHydroVpic
   using Grid = VpicGridBase;
   using real_t = float;
   using Element = hydro_t;
-  using fields_view_t = fields3d_view<float, kg::LayoutAOS>;
+  using fields_view_t = kg::SArrayView<float, kg::LayoutAOS>;
 
   enum {
     N_COMP = 16,

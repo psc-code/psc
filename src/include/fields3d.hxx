@@ -6,8 +6,7 @@
 
 #include "grid.hxx"
 #include <mrc_io.hxx>
-#include <kg/SArrayContainer.h>
-#include <kg/Storage.h>
+#include <kg/SArrayView.h>
 
 #include <mrc_profile.h>
 
@@ -20,46 +19,6 @@
 #include <typeindex>
 #include <list>
 #include <string>
-
-// ======================================================================
-// fields3d_view
-
-template<typename T, typename L=kg::LayoutSOA>
-struct fields3d_view;
-
-namespace kg
-{
-
-template<typename T, typename L>
-struct SArrayContainerInnerTypes<fields3d_view<T, L>>
-{
-  using Layout = L;
-  using Storage = StorageNoOwnership<T>;
-};
-
-}
-
-template<typename T, typename L>
-struct fields3d_view : kg::SArrayContainer<fields3d_view<T, L>>
-{
-  using Base = kg::SArrayContainer<fields3d_view<T, L>>;
-  using Storage = typename Base::Storage;
-  using real_t = typename Base::value_type;
-
-  fields3d_view(Int3 ib, Int3 im, int n_comps, real_t* data)
-    : Base{ib, im, n_comps},
-      storage_{data}
-  {
-  }
-
-private:
-  Storage storage_;
-
-  Storage& storageImpl() { return storage_; }
-  const Storage& storageImpl() const { return storage_; }
-
-  friend class kg::SArrayContainer<fields3d_view<T, L>>;
-};
 
 // ======================================================================
 // MfieldsBase
@@ -329,7 +288,7 @@ public:
   using InnerTypes = MfieldsCRTPInnerTypes<D>;
   using Storage = typename InnerTypes::Storage;
   using Real = typename Storage::value_type;
-  using fields_view_t = fields3d_view<Real>;
+  using fields_view_t = kg::SArrayView<Real>;
 
   const Box3& box() const { return box_; }
 
