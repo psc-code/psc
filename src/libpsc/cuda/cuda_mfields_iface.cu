@@ -47,18 +47,6 @@ void MfieldsCuda::reset(const Grid_t& new_grid)
   grid_ = &new_grid;
 }
 
-void MfieldsCuda::copy_to_device(int p, const fields_host_t& h_flds, int mb, int me)
-{
-  dprintf("CMFLDS: copy_to_device\n");
-  cmflds()->copy_to_device(p, h_flds, mb, me);
-}
-
-void MfieldsCuda::copy_from_device(int p, fields_host_t& h_flds, int mb, int me)
-{
-  dprintf("CMFLDS: copy_from_device\n");
-  cmflds()->copy_from_device(p, h_flds, mb, me);
-}
-
 void MfieldsCuda::axpy_comp_yz(int ym, float a, MfieldsCuda& mflds_x, int xm)
 {
   dprintf("CMFLDS: axpy_comp_yz\n");
@@ -132,5 +120,17 @@ MfieldsCuda::fields_host_t get_host_fields(const MfieldsCuda& mflds)
 {
   dprintf("CMFLDS: get_host_fields\n");
   return get_host_fields(*mflds.cmflds());
+}
+
+void copy_to_device(int p, const MfieldsCuda::fields_host_t& h_flds, MfieldsCuda& mflds, int mb, int me)
+{
+  dprintf("CMFLDS: copy_to_device\n");
+  copy_to_device(p, h_flds, *mflds.cmflds(), mb, me);
+}
+
+void copy_from_device(int p, MfieldsCuda::fields_host_t& h_flds, const MfieldsCuda& mflds, int mb, int me)
+{
+  dprintf("CMFLDS: copy_from_device\n");
+  copy_from_device(p, h_flds, *mflds.cmflds(), mb, me);
 }
 

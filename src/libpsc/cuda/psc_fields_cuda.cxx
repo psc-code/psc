@@ -32,7 +32,7 @@ static void psc_mfields_cuda_copy_from_c(MfieldsBase& mflds_cuda, MfieldsBase& m
       }
     }
 
-    mf_cuda.copy_to_device(p, flds, mb, me);
+    copy_to_device(p, flds, mf_cuda, mb, me);
   }
 }
 
@@ -44,7 +44,7 @@ static void psc_mfields_cuda_copy_to_c(MfieldsBase& mflds_cuda, MfieldsBase& mfl
 
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
     auto flds_c = mf_c[p];
-    mf_cuda.copy_from_device(p, flds, mb, me);
+    copy_from_device(p, flds, mf_cuda, mb, me);
   
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.im()[2]; jz++) {
@@ -76,7 +76,7 @@ static void psc_mfields_state_cuda_copy_from_c(MfieldsStateBase& mflds_cuda, Mfi
       }
     }
 
-    mf_cuda.copy_to_device(p, flds, mb, me);
+    copy_to_device(p, flds, mf_cuda, mb, me);
   }
 }
 
@@ -88,7 +88,7 @@ static void psc_mfields_state_cuda_copy_to_c(MfieldsStateBase& mflds_cuda, Mfiel
 
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
     auto flds_c = mf_c[p];
-    mf_cuda.copy_from_device(p, flds, mb, me);
+    copy_from_device(p, flds, mf_cuda, mb, me);
   
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.im()[2]; jz++) {
@@ -124,7 +124,7 @@ static void psc_mfields_cuda_copy_from_single(MfieldsBase& mflds_cuda, MfieldsBa
       }
     }
 
-    mf_cuda.copy_to_device(p, flds, mb, me);
+    copy_to_device(p, flds, mf_cuda, mb, me);
   }
 }
 
@@ -147,7 +147,7 @@ static void psc_mfields_state_cuda_copy_from_single(MfieldsStateBase& mflds_cuda
       }
     }
 
-    mf_cuda.copy_to_device(p, flds, mb, me);
+    copy_to_device(p, flds, mf_cuda, mb, me);
   }
 }
 
@@ -159,7 +159,7 @@ static void psc_mfields_cuda_copy_to_single(MfieldsBase& mflds_cuda, MfieldsBase
 
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
     auto flds_s = mf_single[p];
-    mf_cuda.copy_from_device(p, flds, mb, me);
+    copy_from_device(p, flds, mf_cuda, mb, me);
   
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.im()[2]; jz++) {
@@ -181,7 +181,7 @@ static void psc_mfields_state_cuda_copy_to_single(MfieldsStateBase& mflds_cuda, 
 
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
     auto flds_s = mf_single[p];
-    mf_cuda.copy_from_device(p, flds, mb, me);
+    copy_from_device(p, flds, mf_cuda, mb, me);
   
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.im()[2]; jz++) {

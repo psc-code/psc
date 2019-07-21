@@ -67,9 +67,6 @@ struct MfieldsCuda : MfieldsBase
   void zero();
   void axpy_comp_yz(int ym, float a, MfieldsCuda& x, int xm);
 
-  void copy_to_device(int p, const fields_host_t& h_flds, int mb, int me);
-  void copy_from_device(int p, fields_host_t& h_flds, int mb, int me);
-
   int index(int m, int i, int j, int k, int p) const;
   Patch operator[](int p) { return { *this, p }; }
 
@@ -82,6 +79,8 @@ struct MfieldsCuda : MfieldsBase
 };
 
 MfieldsCuda::fields_host_t get_host_fields(const MfieldsCuda& mflds);
+void copy_to_device(int p, const MfieldsCuda::fields_host_t& h_flds, MfieldsCuda& mflds, int mb, int me);
+void copy_from_device(int p, MfieldsCuda::fields_host_t& h_flds, const MfieldsCuda& mflds, int mb, int me);
 
 // ======================================================================
 // MfieldsStateCuda
@@ -107,22 +106,13 @@ struct MfieldsStateCuda : MfieldsStateBase
   int n_patches() const { return mflds_.n_patches(); };
   const Grid_t& grid() const { return *grid_; }
 
-  void copy_to_device(int p, const fields_host_t& h_flds, int mb, int me)
-  {
-    mflds_.copy_to_device(p, h_flds, mb, me);
-  }
-
-  void copy_from_device(int p, fields_host_t& h_flds, int mb, int me)
-  {
-    mflds_.copy_from_device(p, h_flds, mb, me);
-  }
-
   MfieldsCuda::Patch operator[](int p) { return mflds_[p]; }
 
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
 
+  MfieldsCuda& mflds() { return mflds_; }
   const MfieldsCuda& mflds() const { return mflds_; }
   
 private:
@@ -138,6 +128,16 @@ struct Mfields_traits<MfieldsCuda>
 inline MfieldsStateCuda::fields_host_t get_host_fields(const MfieldsStateCuda& mflds)
 {
   return ::get_host_fields(mflds.mflds());
+}
+
+inline void copy_to_device(int p, const MfieldsStateCuda::fields_host_t& h_flds, MfieldsStateCuda& mflds, int mb, int me)
+{
+  copy_to_device(p, h_flds, mflds.mflds(), mb, me);
+}
+
+inline void copy_from_device(int p, MfieldsStateCuda::fields_host_t& h_flds, const MfieldsStateCuda& mflds, int mb, int me)
+{
+  copy_from_device(p, h_flds, mflds.mflds(), mb, me);
 }
 
 // ----------------------------------------------------------------------

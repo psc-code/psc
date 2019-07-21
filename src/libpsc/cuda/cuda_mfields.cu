@@ -42,7 +42,7 @@ mrc_json_t cuda_mfields::to_json()
 
   auto flds = get_host_fields(*this);
   for (int p = 0; p < n_patches(); p++) {
-    copy_from_device(p, flds, 0, n_comps());
+    copy_from_device(p, flds, *this, 0, n_comps());
 
     mrc_json_t json_flds_comps = mrc_json_array_new(n_comps());
     mrc_json_array_push(json_flds_patches, json_flds_comps);
@@ -99,9 +99,9 @@ cuda_mfields::operator DMFields()
 // ----------------------------------------------------------------------
 // operator[]
 
-DFields cuda_mfields::operator[](int p)
+DFields cuda_mfields::operator[](int p) const
 {
-  return static_cast<DMFields>(*this)[p];
+  return static_cast<DMFields>(const_cast<cuda_mfields&>(*this))[p];
 }
 
 // ----------------------------------------------------------------------
@@ -115,7 +115,7 @@ cuda_mfields::fields_host_t get_host_fields(const cuda_mfields& cmflds)
 // ----------------------------------------------------------------------
 // copy_to_device
 
-void cuda_mfields::copy_to_device(int p, const fields_host_t& h_flds, int mb, int me)
+void copy_to_device(int p, const cuda_mfields::fields_host_t& h_flds, cuda_mfields& cmflds, int mb, int me)
 {
   cudaError_t ierr;
   
@@ -124,8 +124,8 @@ void cuda_mfields::copy_to_device(int p, const fields_host_t& h_flds, int mb, in
   }
   assert(mb < me);
 
-  uint size = box().size();
-  ierr = cudaMemcpy((*this)[p].data() + mb * size,
+  uint size = cmflds.box().size();
+  ierr = cudaMemcpy(cmflds[p].data() + mb * size,
 		    h_flds.data() + mb * size,
 		    (me - mb) * size * sizeof(float),
 		    cudaMemcpyHostToDevice); cudaCheck(ierr);
@@ -134,7 +134,7 @@ void cuda_mfields::copy_to_device(int p, const fields_host_t& h_flds, int mb, in
 // ----------------------------------------------------------------------
 // copy_from_device
 
-void cuda_mfields::copy_from_device(int p, fields_host_t& h_flds, int mb, int me)
+void copy_from_device(int p, cuda_mfields::fields_host_t& h_flds, const cuda_mfields& cmflds, int mb, int me)
 {
   cudaError_t ierr;
 
@@ -143,9 +143,9 @@ void cuda_mfields::copy_from_device(int p, fields_host_t& h_flds, int mb, int me
   }
   assert(mb < me);
 
-  uint size = box().size();
+  uint size = cmflds.box().size();
   ierr = cudaMemcpy(h_flds.data() + mb * size,
-		    (*this)[p].data() + mb * size,
+		    cmflds[p].data() + mb * size,
 		    (me - mb) * size * sizeof(float),
 		    cudaMemcpyDeviceToHost); cudaCheck(ierr);
 }

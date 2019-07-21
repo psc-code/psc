@@ -132,8 +132,8 @@ cuda_marder_correct_yz_gold(struct cuda_mfields *cmflds, struct cuda_mfields *cm
   auto flds = get_host_fields(*cmflds);
   auto f = get_host_fields(*cmf);
   
-  cmflds->copy_from_device(p, flds, EX, EX + 3);
-  cmf->copy_from_device(p, f, 0, 1);
+  copy_from_device(p, flds, *cmflds, EX, EX + 3);
+  copy_from_device(p, f, *cmf, 0, 1);
 
   Int3 ldims = cmflds->grid().ldims;
   for (int iz = -1; iz < ldims[2]; iz++) {
@@ -150,7 +150,7 @@ cuda_marder_correct_yz_gold(struct cuda_mfields *cmflds, struct cuda_mfields *cm
     }
   }
   
-  cmflds->copy_to_device(p, flds, EX, EX + 3);
+  copy_to_device(p, flds, *cmflds, EX, EX + 3);
 }
 
 __global__ static void

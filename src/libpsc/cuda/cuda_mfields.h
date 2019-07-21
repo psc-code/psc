@@ -95,15 +95,12 @@ struct cuda_mfields : MfieldsCRTP<cuda_mfields>
   
   void axpy_comp_yz(int ym, float a, cuda_mfields *x, int xm);
 
-  void copy_to_device(int p, const fields_host_t& h_flds, int mb, int me);
-  void copy_from_device(int p, fields_host_t& h_flds, int mb, int me);
-
   mrc_json_t to_json();
   void dump(const char *filename);
 
   real_t *data() { return storage_.data(); }
   operator DMFields();
-  DFields operator[](int p);
+  DFields operator[](int p) const; // FIXME, const correctness
   const Grid_t& grid() const { return grid_; }
 
   int index(int m, int i, int j, int k, int p) const
@@ -124,6 +121,8 @@ private:
 };
 
 cuda_mfields::fields_host_t get_host_fields(const cuda_mfields& cmflds);
+void copy_to_device(int p, const cuda_mfields::fields_host_t& h_flds, cuda_mfields& cmflds, int mb, int me);
+void copy_from_device(int p, cuda_mfields::fields_host_t& h_flds, const cuda_mfields& cmflds, int mb, int me);
 
 // ======================================================================
 // DMFieldsStorage
