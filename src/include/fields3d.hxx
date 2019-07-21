@@ -315,7 +315,7 @@ protected:
   KG_INLINE Derived& derived() { return *static_cast<Derived*>(this); }
   KG_INLINE const Derived& derived() const { return *static_cast<const Derived*>(this); }
 
-protected:
+private:
   kg::Box3 box_; // size of one patch, including ghost points
   int n_fields_;
   int n_patches_;
