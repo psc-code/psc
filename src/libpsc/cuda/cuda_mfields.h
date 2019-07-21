@@ -7,7 +7,6 @@
 #include "psc_fields_cuda.h"
 #include "dim.hxx"
 
-#include <kg/SArray.h>
 #include <kg/SArrayView.h>
 
 #define MAX_BND_FIELDS (17)
@@ -118,7 +117,6 @@ struct cuda_mfields : MfieldsCRTP<cuda_mfields>
   using Base = MfieldsCRTP<cuda_mfields>;
   using Storage = typename Base::Storage;
   using real_t = typename Storage::value_type;
-  using fields_host_t = kg::SArray<real_t>;
 
   cuda_mfields(const Grid_t& grid, int n_fields, const Int3& ibn);
   cuda_mfields(const cuda_mfields&) = delete;
@@ -161,9 +159,5 @@ private:
 HMFields hostMirror(const cuda_mfields& cmflds);
 void copy(const cuda_mfields& cmflds, HMFields& hmflds);
 void copy(const HMFields& hmflds, cuda_mfields& cmflds);
-
-cuda_mfields::fields_host_t get_host_fields(const cuda_mfields& cmflds);
-void copy_to_device(int p, const cuda_mfields::fields_host_t& h_flds, cuda_mfields& cmflds, int mb, int me);
-void copy_from_device(int p, cuda_mfields::fields_host_t& h_flds, const cuda_mfields& cmflds, int mb, int me);
 
 #endif

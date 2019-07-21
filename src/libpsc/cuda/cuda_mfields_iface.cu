@@ -116,24 +116,6 @@ MfieldsCuda::real_t MfieldsCuda::Accessor::operator+=(real_t val)
   return val;
 }  
 
-MfieldsCuda::fields_host_t get_host_fields(const MfieldsCuda& mflds)
-{
-  dprintf("CMFLDS: get_host_fields\n");
-  return get_host_fields(*mflds.cmflds());
-}
-
-void copy_to_device(int p, const MfieldsCuda::fields_host_t& h_flds, MfieldsCuda& mflds, int mb, int me)
-{
-  dprintf("CMFLDS: copy_to_device\n");
-  copy_to_device(p, h_flds, *mflds.cmflds(), mb, me);
-}
-
-void copy_from_device(int p, MfieldsCuda::fields_host_t& h_flds, const MfieldsCuda& mflds, int mb, int me)
-{
-  dprintf("CMFLDS: copy_from_device\n");
-  copy_from_device(p, h_flds, *mflds.cmflds(), mb, me);
-}
-
 HMFields hostMirror(const MfieldsCuda& mflds)
 {
   return hostMirror(*mflds.cmflds());

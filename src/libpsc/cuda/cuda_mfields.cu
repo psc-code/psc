@@ -40,9 +40,10 @@ mrc_json_t cuda_mfields::to_json()
   mrc_json_t json_flds_patches = mrc_json_array_new(n_patches_);
   mrc_json_object_push(json_flds, "data", json_flds_patches);
 
-  auto flds = get_host_fields(*this);
+  auto h_mflds = hostMirror(*this);
+  copy(*this, h_mflds);
   for (int p = 0; p < n_patches(); p++) {
-    copy_from_device(p, flds, *this, 0, n_comps());
+    auto flds = h_mflds[p];
 
     mrc_json_t json_flds_comps = mrc_json_array_new(n_comps());
     mrc_json_array_push(json_flds_patches, json_flds_comps);
@@ -101,52 +102,6 @@ cuda_mfields::operator DMFields()
 DFields cuda_mfields::operator[](int p) const
 {
   return static_cast<DMFields>(const_cast<cuda_mfields&>(*this))[p];
-}
-
-// ----------------------------------------------------------------------
-// get_host_fields
-
-cuda_mfields::fields_host_t get_host_fields(const cuda_mfields& cmflds)
-{
-  return cuda_mfields::fields_host_t(cmflds.box(), cmflds.n_comps());
-}
-
-// ----------------------------------------------------------------------
-// copy_to_device
-
-void copy_to_device(int p, const cuda_mfields::fields_host_t& h_flds, cuda_mfields& cmflds, int mb, int me)
-{
-  cudaError_t ierr;
-  
-  if (mb == me) {
-    return;
-  }
-  assert(mb < me);
-
-  uint size = cmflds.box().size();
-  ierr = cudaMemcpy(cmflds[p].data() + mb * size,
-		    h_flds.data() + mb * size,
-		    (me - mb) * size * sizeof(float),
-		    cudaMemcpyHostToDevice); cudaCheck(ierr);
-}
-
-// ----------------------------------------------------------------------
-// copy_from_device
-
-void copy_from_device(int p, cuda_mfields::fields_host_t& h_flds, const cuda_mfields& cmflds, int mb, int me)
-{
-  cudaError_t ierr;
-
-  if (mb == me) {
-    return;
-  }
-  assert(mb < me);
-
-  uint size = cmflds.box().size();
-  ierr = cudaMemcpy(h_flds.data() + mb * size,
-		    cmflds[p].data() + mb * size,
-		    (me - mb) * size * sizeof(float),
-		    cudaMemcpyDeviceToHost); cudaCheck(ierr);
 }
 
 #define BND (2) // FIXME

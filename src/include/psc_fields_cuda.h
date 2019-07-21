@@ -57,7 +57,6 @@ private:
 struct MfieldsCuda : MfieldsBase
 {
   using real_t = fields_cuda_t::real_t;
-  using fields_host_t = kg::SArray<real_t>;
 
   class Accessor
   {
@@ -118,17 +117,12 @@ HMFields hostMirror(const MfieldsCuda& mflds);
 void copy(const MfieldsCuda& mflds, HMFields& hmflds);
 void copy(const HMFields& hmflds, MfieldsCuda& mflds);
 
-MfieldsCuda::fields_host_t get_host_fields(const MfieldsCuda& mflds);
-void copy_to_device(int p, const MfieldsCuda::fields_host_t& h_flds, MfieldsCuda& mflds, int mb, int me);
-void copy_from_device(int p, MfieldsCuda::fields_host_t& h_flds, const MfieldsCuda& mflds, int mb, int me);
-
 // ======================================================================
 // MfieldsStateCuda
 
 struct MfieldsStateCuda : MfieldsStateBase
 {
   using real_t = MfieldsCuda::real_t;
-  using fields_host_t = MfieldsCuda::fields_host_t;
   
   MfieldsStateCuda(const Grid_t& grid)
     : MfieldsStateBase{grid, NR_FIELDS, grid.ibn},
@@ -178,21 +172,6 @@ inline void copy(const MfieldsStateCuda& mflds, HMFields& hmflds)
 inline void copy(const HMFields& hmflds, MfieldsStateCuda& mflds)
 {
   copy(hmflds, mflds.mflds());
-}
-
-inline MfieldsStateCuda::fields_host_t get_host_fields(const MfieldsStateCuda& mflds)
-{
-  return ::get_host_fields(mflds.mflds());
-}
-
-inline void copy_to_device(int p, const MfieldsStateCuda::fields_host_t& h_flds, MfieldsStateCuda& mflds, int mb, int me)
-{
-  copy_to_device(p, h_flds, mflds.mflds(), mb, me);
-}
-
-inline void copy_from_device(int p, MfieldsStateCuda::fields_host_t& h_flds, const MfieldsStateCuda& mflds, int mb, int me)
-{
-  copy_from_device(p, h_flds, mflds.mflds(), mb, me);
 }
 
 // ----------------------------------------------------------------------
