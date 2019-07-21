@@ -10,7 +10,7 @@ void SetupFields<MfieldsStateCuda>::set(Mfields& mf, FUNC func)
 {
   for (int p = 0; p < mf.n_patches(); ++p) {
     auto& patch = mf.grid().patches[p];
-    auto flds = mf.get_host_fields();
+    auto flds = get_host_fields(mf);
     mf.copy_from_device(p, flds, JXI, HX+3);
     
     int n_ghosts = std::max({mf.ibn()[0], mf.ibn()[1], mf.ibn()[2]}); // FIXME, not pretty

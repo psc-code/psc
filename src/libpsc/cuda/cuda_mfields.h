@@ -95,7 +95,6 @@ struct cuda_mfields : MfieldsCRTP<cuda_mfields>
   
   void axpy_comp_yz(int ym, float a, cuda_mfields *x, int xm);
 
-  fields_host_t get_host_fields();
   void copy_to_device(int p, const fields_host_t& h_flds, int mb, int me);
   void copy_from_device(int p, fields_host_t& h_flds, int mb, int me);
 
@@ -123,6 +122,8 @@ private:
   Storage storage_;
   const Grid_t& grid_;
 };
+
+cuda_mfields::fields_host_t get_host_fields(const cuda_mfields& cmflds);
 
 // ======================================================================
 // DMFieldsStorage

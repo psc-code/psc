@@ -47,12 +47,6 @@ void MfieldsCuda::reset(const Grid_t& new_grid)
   grid_ = &new_grid;
 }
 
-MfieldsCuda::fields_host_t MfieldsCuda::get_host_fields()
-{
-  dprintf("CMFLDS: get_host_fields\n");
-  return cmflds()->get_host_fields();
-}
-
 void MfieldsCuda::copy_to_device(int p, const fields_host_t& h_flds, int mb, int me)
 {
   dprintf("CMFLDS: copy_to_device\n");
@@ -133,3 +127,10 @@ MfieldsCuda::real_t MfieldsCuda::Accessor::operator+=(real_t val)
   mflds_.cmflds_->set_value(idx_, val);
   return val;
 }  
+
+MfieldsCuda::fields_host_t get_host_fields(const MfieldsCuda& mflds)
+{
+  dprintf("CMFLDS: get_host_fields\n");
+  return get_host_fields(*mflds.cmflds());
+}
+

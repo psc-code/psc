@@ -40,7 +40,7 @@ mrc_json_t cuda_mfields::to_json()
   mrc_json_t json_flds_patches = mrc_json_array_new(n_patches_);
   mrc_json_object_push(json_flds, "data", json_flds_patches);
 
-  auto flds = get_host_fields();
+  auto flds = get_host_fields(*this);
   for (int p = 0; p < n_patches(); p++) {
     copy_from_device(p, flds, 0, n_comps());
 
@@ -107,9 +107,9 @@ DFields cuda_mfields::operator[](int p)
 // ----------------------------------------------------------------------
 // get_host_fields
 
-cuda_mfields::fields_host_t cuda_mfields::get_host_fields()
+cuda_mfields::fields_host_t get_host_fields(const cuda_mfields& cmflds)
 {
-  return fields_host_t(box(), n_comps());
+  return cuda_mfields::fields_host_t(cmflds.box(), cmflds.n_comps());
 }
 
 // ----------------------------------------------------------------------

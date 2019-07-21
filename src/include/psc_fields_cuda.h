@@ -11,6 +11,8 @@
 
 #include "mrc_json.h"
 
+struct cuda_mfields;
+
 struct fields_cuda_t
 {
   using real_t = float;
@@ -51,7 +53,8 @@ struct MfieldsCuda : MfieldsBase
   MfieldsCuda(MfieldsCuda&&) = default;
   ~MfieldsCuda();
 
-  struct cuda_mfields* cmflds() { return cmflds_; }
+  cuda_mfields* cmflds() { return cmflds_; }
+  const cuda_mfields* cmflds() const { return cmflds_; }
 
   int n_comps() const;
   int n_patches() const;
@@ -64,7 +67,6 @@ struct MfieldsCuda : MfieldsBase
   void zero();
   void axpy_comp_yz(int ym, float a, MfieldsCuda& x, int xm);
 
-  fields_host_t get_host_fields();
   void copy_to_device(int p, const fields_host_t& h_flds, int mb, int me);
   void copy_from_device(int p, fields_host_t& h_flds, int mb, int me);
 
@@ -78,6 +80,8 @@ struct MfieldsCuda : MfieldsBase
   cuda_mfields* cmflds_;
   const Grid_t* grid_;
 };
+
+MfieldsCuda::fields_host_t get_host_fields(const MfieldsCuda& mflds);
 
 // ======================================================================
 // MfieldsStateCuda
@@ -103,11 +107,6 @@ struct MfieldsStateCuda : MfieldsStateBase
   int n_patches() const { return mflds_.n_patches(); };
   const Grid_t& grid() const { return *grid_; }
 
-  fields_host_t get_host_fields()
-  {
-    return mflds_.get_host_fields();
-  }
-
   void copy_to_device(int p, const fields_host_t& h_flds, int mb, int me)
   {
     mflds_.copy_to_device(p, h_flds, mb, me);
@@ -123,6 +122,8 @@ struct MfieldsStateCuda : MfieldsStateBase
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
+
+  const MfieldsCuda& mflds() const { return mflds_; }
   
 private:
   MfieldsCuda mflds_;
@@ -133,6 +134,11 @@ struct Mfields_traits<MfieldsCuda>
 {
   static constexpr const char* name = "cuda";
 };
+
+inline MfieldsStateCuda::fields_host_t get_host_fields(const MfieldsStateCuda& mflds)
+{
+  return ::get_host_fields(mflds.mflds());
+}
 
 // ----------------------------------------------------------------------
 
