@@ -67,10 +67,61 @@ private:
 };
 
 // ======================================================================
-// cuda_mfields
+// CudaMfieldsStorage
 
-struct DMFields;
-using DFields = kg::SArrayView<float, kg::LayoutSOA>;
+class CudaMfieldsStorage
+{
+public:
+  using value_type = float;
+  
+  CudaMfieldsStorage(uint stride, value_type* data)
+    : stride_{stride}, data_{data}
+  {}
+  
+  KG_INLINE value_type* operator[](int p) { return data_ + p * stride_; }
+  KG_INLINE const value_type* operator[](int p) const { return data_ + p * stride_; }
+
+private:
+  value_type *data_;
+  uint stride_;
+};
+
+// ======================================================================
+// CudaMfields
+
+struct CudaMfields;
+
+template <>
+struct MfieldsCRTPInnerTypes<CudaMfields>
+{
+  using Storage = CudaMfieldsStorage;
+};
+
+struct CudaMfields : MfieldsCRTP<CudaMfields>
+{
+  using Base = MfieldsCRTP<CudaMfields>;
+
+  using real_t = typename Base::Real;
+  
+  CudaMfields(real_t* d_flds, uint stride, Int3 im, Int3 ib, int n_comps, int n_patches)
+    : Base{n_comps, ib, im, n_patches},
+      storage_{stride, d_flds}
+  {}
+
+private:
+  Storage storage_;
+  
+  KG_INLINE Storage& storageImpl() { return storage_; }
+  KG_INLINE const Storage& storageImpl() const { return storage_; }
+
+  friend class MfieldsCRTP<CudaMfields>;
+};
+
+using DMFields = CudaMfields;
+using DFields = CudaMfields::fields_view_t;
+
+// ======================================================================
+// cuda_mfields
 
 struct cuda_mfields;
 
@@ -123,56 +174,5 @@ private:
 cuda_mfields::fields_host_t get_host_fields(const cuda_mfields& cmflds);
 void copy_to_device(int p, const cuda_mfields::fields_host_t& h_flds, cuda_mfields& cmflds, int mb, int me);
 void copy_from_device(int p, cuda_mfields::fields_host_t& h_flds, const cuda_mfields& cmflds, int mb, int me);
-
-// ======================================================================
-// DMFieldsStorage
-
-class DMFieldsStorage
-{
-public:
-  using value_type = float;
-  
-  DMFieldsStorage(uint stride, value_type* data)
-    : stride_{stride}, data_{data}
-  {}
-  
-  KG_INLINE value_type* operator[](int p) { return data_ + p * stride_; }
-  KG_INLINE const value_type* operator[](int p) const { return data_ + p * stride_; }
-
-private:
-  value_type *data_;
-  uint stride_;
-};
-
-// ======================================================================
-// DMFields
-
-struct DMfields;
-
-template <>
-struct MfieldsCRTPInnerTypes<DMFields>
-{
-  using Storage = DMFieldsStorage;
-};
-
-struct DMFields : MfieldsCRTP<DMFields>
-{
-  using Base = MfieldsCRTP<DMFields>;
-
-  using real_t = typename Base::Real;
-  
-  DMFields(real_t* d_flds, uint stride, Int3 im, Int3 ib, int n_comps, int n_patches)
-    : Base{n_comps, ib, im, n_patches},
-      storage_{stride, d_flds}
-  {}
-
-private:
-  Storage storage_;
-  
-  KG_INLINE Storage& storageImpl() { return storage_; }
-  KG_INLINE const Storage& storageImpl() const { return storage_; }
-
-  friend class MfieldsCRTP<DMFields>;
-};
 
 #endif
