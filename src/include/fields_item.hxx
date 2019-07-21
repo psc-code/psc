@@ -66,7 +66,7 @@ struct FieldsItemFields : FieldsItemBase
 
   void run(MfieldsStateBase& mflds_base, MparticlesBase& mprts_base) override
   {
-    auto& mflds = mflds_base.get_as<MfieldsState>(0, mflds_base.n_comps());
+    auto& mflds = mflds_base.get_as<MfieldsState>(0, mflds_base._n_comps());
     (*this)(mflds);
     mflds_base.put_as(mflds, 0, 0);
   }

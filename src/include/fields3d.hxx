@@ -107,12 +107,6 @@ protected:
   Int3 ibn_;
 };
 
-#if 0
-
-using MfieldsStateBase = MfieldsBase;
-
-#else
-
 // ======================================================================
 // MfieldsStateBase
 
@@ -136,8 +130,8 @@ struct MfieldsStateBase
 
   virtual void reset(const Grid_t& grid) { grid_ = &grid; }
 
-  int n_patches() const { return grid_->n_patches(); }
-  int n_comps() const { return n_fields_; }
+  int _n_patches() const { return grid_->n_patches(); }
+  int _n_comps() const { return n_fields_; }
   Int3 ibn() const { return ibn_; }
 
   virtual void write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names)
@@ -145,7 +139,7 @@ struct MfieldsStateBase
     assert(0);
   }
 
-  const Grid_t& grid() { return *grid_; }
+  const Grid_t& _grid() { return *grid_; }
 
   virtual const Convert& convert_to() { static const Convert convert_to_; return convert_to_; }
   virtual const Convert& convert_from() { static const Convert convert_from_; return convert_from_; }
@@ -169,7 +163,7 @@ struct MfieldsStateBase
 
     // mprintf("get_as %s (%s) %d %d\n", type, psc_mfields_type(mflds_base), mb, me);
     
-    auto& mflds = *new MF{grid()};
+    auto& mflds = *new MF{_grid()};
     
     MfieldsStateBase::convert(*this, mflds, mb, me);
 
@@ -202,8 +196,6 @@ protected:
   const Grid_t* grid_;
   Int3 ibn_;
 };
-
-#endif
 
 // ======================================================================
 // MfieldsStorageUniquePtr
@@ -458,6 +450,9 @@ struct MfieldsStateFromMfields : MfieldsStateBase
       mflds_{grid, NR_FIELDS, grid.ibn}
   {}
 
+  const Grid_t& grid() const { return mflds_.grid(); }
+  int n_patches() const { return mflds_.n_patches(); }
+  
   fields_view_t operator[](int p) { return mflds_[p]; }
 
   static const Convert convert_to_, convert_from_;

@@ -100,6 +100,9 @@ struct MfieldsStateCuda : MfieldsStateBase
 
   cuda_mfields* cmflds() { return mflds_.cmflds(); }
 
+  int n_patches() const { return mflds_.n_patches(); };
+  const Grid_t& grid() const { return *grid_; }
+
   fields_host_t get_host_fields()
   {
     return mflds_.get_host_fields();
