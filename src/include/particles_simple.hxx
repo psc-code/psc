@@ -10,6 +10,31 @@
 #include <iterator>
 
 // ======================================================================
+
+template <typename T>
+class Span
+{
+public:
+  using element_type = T;
+  using pointer = T*;
+  using reference = T&;
+  using iterator = T*;
+  using const_iterator = const T*;
+
+  Span(pointer data, size_t size)
+    : begin_{data}, end_{data + size}
+  {}
+
+  iterator begin() const { return begin_; }
+  iterator end() const { return end_; }
+  size_t size() const { return end_ - begin_; }
+  
+private:
+  pointer begin_;
+  pointer end_;
+};
+
+// ======================================================================
 // MparticlesStorage
 
 template<typename _Particle>
@@ -18,25 +43,11 @@ struct MparticlesStorage
   using Particle = _Particle;
   using PatchBuffer = std::vector<Particle>;
   using Buffers = std::vector<PatchBuffer>;
-  using iterator = typename PatchBuffer::iterator;
-  using const_iterator = typename PatchBuffer::const_iterator;
-
-  struct Range
-  {
-    Range(iterator begin, iterator end)
-      : begin_{begin}, end_{end}
-    {}
-    
-    iterator begin() const { return begin_; }
-    iterator end()   const { return end_;   }
-    size_t size()    const { return end_ - begin_; }
-
-  private:
-    iterator begin_;
-    iterator end_;
-  };
-
-   MparticlesStorage(uint n_patches)
+  using Range = Span<Particle>;
+  using iterator = typename Range::iterator;
+  using const_iterator = typename Range::const_iterator;
+  
+  MparticlesStorage(uint n_patches)
     : bufs_(n_patches)
   {}
 
@@ -85,7 +96,7 @@ struct MparticlesStorage
     return n_prts;
   }
 
-  Range operator[](int p) { return {bufs_[p].begin(), bufs_[p].end()}; }
+  Range operator[](int p) { return {bufs_[p].data(), bufs_[p].size()}; }
   Particle& at(int p, int n) { return bufs_[p][n]; } // FIXME, ugly and not great for effciency
   void push_back(int p, const Particle& prt) { bufs_[p].push_back(prt); }
 
@@ -113,8 +124,8 @@ struct MparticlesSimple : MparticlesBase
 
   struct Patch
   {
-    using iterator = typename Storage::PatchBuffer::iterator;
-    using const_iterator = typename Storage::PatchBuffer::const_iterator;
+    using iterator = typename Storage::iterator;
+    using const_iterator = typename Storage::const_iterator;
     
     Patch(MparticlesSimple& mprts, int p)
       : mprts_(mprts),
