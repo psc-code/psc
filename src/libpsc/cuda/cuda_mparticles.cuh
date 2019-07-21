@@ -28,10 +28,10 @@ struct DParticleProxy
     : prt_{prt}, dmprts_{dmprts}
   {}
 
-  __device__ Real3  x() const { return prt_.x(); }
-  __device__ Real3& x()       { return prt_.x(); }
-  __device__ Real3  u() const { return prt_.u(); }
-  __device__ Real3& u()       { return prt_.u(); }
+  __device__ Real3  x() const { return prt_.x; }
+  __device__ Real3& x()       { return prt_.x; }
+  __device__ Real3  u() const { return prt_.u; }
+  __device__ Real3& u()       { return prt_.u; }
   __device__ int kind() const { return prt_.kind; }
   __device__ real_t qni_wni() const { return prt_.qni_wni; }
 
@@ -55,8 +55,8 @@ struct ParticleCudaStorage
 
   __host__ __device__
   ParticleCudaStorage(const DParticleCuda& prt)
-  : xi4{prt.x()[0], prt.x()[1], prt.x()[2], cuda_int_as_float(prt.kind)},
-    pxi4{prt.u()[0], prt.u()[1], prt.u()[2], prt.qni_wni}
+  : xi4{prt.x[0], prt.x[1], prt.x[2], cuda_int_as_float(prt.kind)},
+    pxi4{prt.u[0], prt.u[1], prt.u[2], prt.qni_wni}
   {}
 
   template<typename DParticleProxy>

@@ -147,9 +147,9 @@ struct MparticlesSimple : MparticlesBase
     
     // ParticleIndexer functionality
     int cellPosition(real_t xi, int d) const { return mprts_.pi_.cellPosition(xi, d); }
-    int validCellIndex(const Particle& prt) const { return mprts_.pi_.validCellIndex(prt.x()); }
+    int validCellIndex(const Particle& prt) const { return mprts_.pi_.validCellIndex(prt.x); }
     
-    void checkInPatchMod(Particle& prt) const { return mprts_.pi_.checkInPatchMod(prt.x()); }
+    void checkInPatchMod(Particle& prt) const { return mprts_.pi_.checkInPatchMod(prt.x); }
     
     const Grid_t& grid() const { return mprts_.grid(); }
     const MparticlesSimple& mprts() const { return *mprts_; }

@@ -65,7 +65,7 @@ struct cuda_mparticles_indexer
 
   int blockIndex(const DParticleCuda& prt, int p) const
   {
-    Int3 bpos = blockPosition(prt.x());
+    Int3 bpos = blockPosition(prt.x);
     return blockIndex(bpos, p);
   }
 

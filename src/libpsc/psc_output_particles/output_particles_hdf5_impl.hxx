@@ -80,9 +80,9 @@ struct OutputParticlesHdf5 : OutputParticlesParams, OutputParticlesBase
     const Grid_t& grid = prts.grid();
     const int *ldims = grid.ldims;
   
-    int j0 = prts.cellPosition(part->x()[0], 0);
-    int j1 = prts.cellPosition(part->x()[1], 1);
-    int j2 = prts.cellPosition(part->x()[2], 2);
+    int j0 = prts.cellPosition(part->x[0], 0);
+    int j1 = prts.cellPosition(part->x[1], 1);
+    int j2 = prts.cellPosition(part->x[2], 2);
     // FIXME, this is hoping that reason is that we were just on the right bnd...
     if (j0 == ldims[0]) j0--;
     if (j1 == ldims[1]) j1--;

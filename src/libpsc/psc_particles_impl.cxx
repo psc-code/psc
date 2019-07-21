@@ -15,7 +15,7 @@ struct Convert
     using real_t = typename MparticlesTo::real_t;
     using Real3 = typename MparticlesTo::Real3;
     
-    return {Real3(prt_from.x()), Real3(prt_from.u()),
+    return {Real3(prt_from.x), Real3(prt_from.u),
 	    real_t(prt_from.qni_wni), prt_from.kind};
   }
 };
