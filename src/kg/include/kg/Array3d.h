@@ -7,14 +7,15 @@
 namespace kg
 {
 
-template <bool AOS>
-struct Layout
+struct LayoutAOS
 {
-  using isAOS = std::integral_constant<bool, AOS>;
+  using isAOS = std::true_type;
 };
 
-using LayoutAOS = Layout<true>;
-using LayoutSOA = Layout<false>;
+struct LayoutSOA
+{
+  using isAOS = std::false_type;
+};
 
 } // namespace kg
 

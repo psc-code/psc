@@ -200,19 +200,6 @@ struct Marder_ : MarderBase
 #endif
   }
   
-  // ----------------------------------------------------------------------
-  // run
-  
-  void run(MfieldsStateBase& mflds_base, MparticlesBase& mprts_base) override
-  {
-    auto& mflds = mflds_base.get_as<MfieldsState>(EX, EX + 3);
-    auto& mprts = mprts_base.get_as<Mparticles>();
-
-    (*this)(mflds, mprts);
-
-    mflds_base.put_as(mflds, EX, EX + 3);
-    mprts_base.put_as(mprts, MP_DONT_COPY);
-  }
 
 private:
   real_t diffusion_; //< diffusion coefficient for Marder correction

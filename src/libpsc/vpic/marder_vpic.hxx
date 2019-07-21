@@ -747,11 +747,6 @@ struct MarderVpic_ : MarderBase, Ops
   // ----------------------------------------------------------------------
   // run
 
-  void run(MfieldsStateBase& mflds_base, MparticlesBase& mprts_base) override
-  {
-    assert(0);
-  }
-  
   void operator()(MfieldsState& mflds, Mparticles& mprts)
   {
     const auto& grid = mflds.grid();

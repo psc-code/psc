@@ -50,13 +50,6 @@ struct Checks_ : ChecksParams, ChecksBase
   // ----------------------------------------------------------------------
   // continuity_before_particle_push
 
-  void continuity_before_particle_push(MparticlesBase& mprts_base) override
-  {
-    auto&& mprts = mprts_base.get_as<Mparticles>();
-    continuity_before_particle_push(mprts);
-    mprts_base.put_as(mprts, MP_DONT_COPY);
-  }
-
   void continuity_before_particle_push(Mparticles& mprts)
   {
     const auto& grid = mprts.grid();
@@ -69,16 +62,6 @@ struct Checks_ : ChecksParams, ChecksBase
 
   // ----------------------------------------------------------------------
   // continuity_after_particle_push
-
-  void continuity_after_particle_push(MparticlesBase& mprts_base,
-				      MfieldsStateBase& mflds_base) override
-  {
-    auto& mprts = mprts_base.get_as<Mparticles>();
-    auto& mflds = mflds_base.get_as<MfieldsState>(0, mflds_base.n_comps());
-    continuity_after_particle_push(mprts, mflds);
-    mflds_base.put_as(mflds, 0, 0);
-    mprts_base.put_as(mprts, MP_DONT_COPY);
-  }
 
   void continuity_after_particle_push(Mparticles& mprts, MfieldsState& mflds)
   {
@@ -146,17 +129,6 @@ struct Checks_ : ChecksParams, ChecksBase
 
   // ----------------------------------------------------------------------
   // gauss
-
-  void gauss(MparticlesBase& mprts_base, MfieldsStateBase& mflds_base) override
-  {
-    auto& mflds = mflds_base.get_as<MfieldsState>(EX, EX+3);
-    auto& mprts = mprts_base.get_as<Mparticles>();
-
-    gauss(mprts, mflds);
-
-    mflds_base.put_as(mflds, 0, 0);
-    mprts_base.put_as(mprts);
-}
 
   void gauss(Mparticles& mprts, MfieldsState& mflds)
   {

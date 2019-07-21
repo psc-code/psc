@@ -11,8 +11,4 @@ struct ChecksVpic : ChecksParams, ChecksBase
   void continuity_before_particle_push(Mparticles& mprts) {}
   void continuity_after_particle_push(Mparticles& mprts, MfieldsState& mflds) {}
   void gauss(Mparticles& mprts, MfieldsState& mflds) {}
-
-  void continuity_before_particle_push(MparticlesBase& mprts) override {}
-  void continuity_after_particle_push(MparticlesBase& mprts, MfieldsStateBase& mflds) override {}
-  void gauss(MparticlesBase& mprts, MfieldsStateBase& mflds) override {}
 };

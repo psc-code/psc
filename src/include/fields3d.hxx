@@ -21,7 +21,7 @@
 #include <string>
 
 // ======================================================================
-// Storage
+// StorageNoOwnership
 
 template <typename T>
 class StorageNoOwnership
@@ -114,25 +114,7 @@ struct MfieldsBase
   int n_comps() const { return n_fields_; }
   Int3 ibn() const { return ibn_; }
 
-  virtual void zero_comp(int m) = 0;
-  virtual void set_comp(int m, double val) = 0;
-  virtual void scale_comp(int m, double val) = 0;
-  virtual void axpy_comp(int m_y, double alpha, MfieldsBase& x, int m_x) = 0;
-  virtual void copy_comp(int mto, MfieldsBase& from, int mfrom) = 0;
-  virtual double max_comp(int m) = 0;
-  virtual void write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names)
-  {
-    assert(0);
-  }
-
-  void zero()            { for (int m = 0; m < n_fields_; m++) zero_comp(m); }
-  void scale(double val) { for (int m = 0; m < n_fields_; m++) scale_comp(m, val); }
-  void axpy(double alpha, MfieldsBase& x)
-  {
-    for (int m = 0; m < n_fields_; m++) {
-      axpy_comp(m, alpha, x, m);
-    }
-  }
+  virtual void write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names) = 0;
 
   const Grid_t& grid() const { return *grid_; }
   
@@ -291,119 +273,246 @@ protected:
 #endif
 
 // ======================================================================
-// Mfields
+// Box3
 
-template<typename R>
-struct Mfields : MfieldsBase
+class Box3
 {
-  using real_t = R;
-  using fields_view_t = fields3d_view<real_t>;
+public:
+  Box3(const Int3& ib, const Int3& im)
+    : ib_{ib}, im_{im}
+  {}
 
-  Mfields(const Grid_t& grid, int n_fields, Int3 ibn)
-    : MfieldsBase(grid, n_fields, ibn)
+  int size() const { return im_[0] * im_[1] * im_[2]; }
+
+  const Int3& ib() const { return ib_; }
+  const Int3& im() const { return im_; }
+
+private:
+  Int3 ib_;
+  Int3 im_;
+};
+
+// ======================================================================
+// MfieldsStorageUniquePtr
+
+template <typename R>
+class MfieldsStorageUniquePtr
+{
+public:
+  using value_type = R;
+  
+  void resize(int size, int n_patches)
   {
-    unsigned int size = 1;
-    for (int d = 0; d < 3; d++) {
-      ib[d] = -ibn[d];
-      im[d] = grid_->ldims[d] + 2 * ibn[d];
-      size *= im[d];
-    }
-
-    data.reserve(n_patches());
-    for (int p = 0; p < n_patches(); p++) {
-      data.emplace_back(new real_t[n_fields * size]{});
+    data_.resize(n_patches);
+    for (auto& patch : data_) {
+      patch.reset(new R[size]{});
     }
   }
 
-  virtual void reset(const Grid_t& grid) override
+  R* operator[](int p) { return data_[p].get(); }
+  const R* operator[](int p) const { return data_[p].get(); }
+  
+private:
+  std::vector<std::unique_ptr<R[]>> data_;
+};
+  
+// ======================================================================
+// MfieldsStorageVector
+
+template <typename R>
+class MfieldsStorageVector
+{
+public:
+  using value_type = R;
+  
+  void resize(int size, int n_patches)
   {
-    MfieldsBase::reset(grid);
-    data.clear();
-
-    unsigned int size = 1;
-    for (int d = 0; d < 3; d++) {
-      size *= im[d];
+    data_.resize(n_patches);
+    for (auto& patch : data_) {
+      patch.resize(size);
     }
+  }
 
-    data.reserve(n_patches());
-    for (int p = 0; p < n_patches(); p++) {
-      data.emplace_back(new real_t[n_comps() * size]);
-    }
+  R* operator[](int p) { return data_[p].data(); }
+  const R* operator[](int p) const { return data_[p].data(); }
+  
+private:
+  std::vector<std::vector<R>> data_;
+};
+  
+// ======================================================================
+// MfieldsCRTP
+
+template <typename C>
+struct MfieldsCRTPInnerTypes;
+
+template <typename D>
+class MfieldsCRTP
+{
+public:
+  using Derived = D;
+
+  using InnerTypes = MfieldsCRTPInnerTypes<D>;
+  using Storage = typename InnerTypes::Storage;
+  using Real = typename Storage::value_type;
+  using fields_view_t = fields3d_view<Real>;
+
+  const Box3& box() const { return box_; }
+
+  MfieldsCRTP(int n_fields, Int3 ib, Int3 im, int n_patches)
+    : n_fields_(n_fields), box_{ib, im}, n_patches_{n_patches}
+  {
+    storage().resize(n_fields_ * box_.size(), n_patches_);
+  }
+
+  void reset(int n_patches)
+  {
+    n_patches_ = n_patches;
+    storage().resize(n_fields_ * box_.size(), n_patches_);
   }
   
   fields_view_t operator[](int p)
   {
-    return fields_view_t(Int3::fromPointer(ib), Int3::fromPointer(im), n_fields_, data[p].get());
+    return fields_view_t(box_.ib(), box_.im(), n_fields_, storage()[p]);
   }
 
-  void zero()
+  void zero_comp(int m)
   {
-    for (int p = 0; p < n_patches(); p++) {
-      (*this)[p].zero();
-    }
-  }
-
-  void zero_comp(int m) override
-  {
-    for (int p = 0; p < n_patches(); p++) {
+    for (int p = 0; p < n_patches_; p++) {
       (*this)[p].zero(m);
     }
   }
 
-  void set_comp(int m, double val) override
+  void zero()
   {
-    for (int p = 0; p < n_patches(); p++) {
+    for (int m = 0; m < n_fields_; m++) zero_comp(m);
+  }
+  
+  void set_comp(int m, double val)
+  {
+    for (int p = 0; p < n_patches_; p++) {
       (*this)[p].set(m, val);
     }
   }
   
-  void scale_comp(int m, double val) override
+  void scale_comp(int m, double val)
   {
-    for (int p = 0; p < n_patches(); p++) {
+    for (int p = 0; p < n_patches_; p++) {
       (*this)[p].scale(m, val);
     }
   }
 
-  void copy_comp(int mto, MfieldsBase& from_base, int mfrom) override
+  void scale(double val)
+  {
+    for (int m = 0; m < n_fields_; m++) scale_comp(m, val);
+  }
+  
+  void copy_comp(int mto, MfieldsBase& from_base, int mfrom)
   {
     // FIXME? dynamic_cast would actually be more appropriate
-    Mfields& from = static_cast<Mfields&>(from_base);
-    for (int p = 0; p < n_patches(); p++) {
+    Derived& from = static_cast<Derived&>(from_base);
+    for (int p = 0; p < n_patches_; p++) {
       (*this)[p].copy_comp(mto, from[p], mfrom);
     }
   }
   
-  void axpy_comp(int m_y, double alpha, MfieldsBase& x_base, int m_x) override
+  void axpy_comp(int m_y, double alpha, MfieldsBase& x_base, int m_x)
   {
     // FIXME? dynamic_cast would actually be more appropriate
-    Mfields& x = static_cast<Mfields&>(x_base);
-    for (int p = 0; p < n_patches(); p++) {
+    Derived& x = static_cast<Derived&>(x_base);
+    for (int p = 0; p < n_patches_; p++) {
       (*this)[p].axpy_comp(m_y, alpha, x[p], m_x);
     }
   }
 
-  double max_comp(int m) override
+  void axpy(double alpha, MfieldsBase& x)
+  {
+    for (int m = 0; m < n_fields_; m++) {
+      axpy_comp(m, alpha, x, m);
+    }
+  }
+
+  double max_comp(int m)
   {
     double rv = -std::numeric_limits<double>::max();
-    for (int p = 0; p < n_patches(); p++) {
+    for (int p = 0; p < n_patches_; p++) {
       rv = std::max(rv, double((*this)[p].max_comp(m)));
     }
     return rv;
   }
 
+protected:
+  Derived& derived() { return *static_cast<Derived*>(this); }
+  const Derived& derived() const { return *static_cast<const Derived*>(this); }
+
+  // storae_ could move into Derived class, but I guess no point right now
+  Storage& storage() { return storage_; }
+  const Storage& storage() const { return storage_; }
+
+private:
+  Storage storage_;
+  Box3 box_; // size of one patch, including ghost points
+  int n_fields_;
+  int n_patches_;
+};
+
+// ======================================================================
+// Mfields
+
+template<typename R>
+struct Mfields;
+
+template <typename R>
+struct MfieldsCRTPInnerTypes<Mfields<R>>
+{
+  using Storage = MfieldsStorageVector<R>;
+  //using Storage = MfieldsStorageUniquePtr<R>; // FIXME, drop?
+};
+
+template<typename R>
+struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>>
+{
+  using real_t = R;
+  using Base = MfieldsCRTP<Mfields<R>>;
+
+  Mfields(const Grid_t& grid, int n_fields, Int3 ibn)
+    : MfieldsBase(grid, n_fields, ibn),
+      Base(n_fields, -ibn, grid.ldims + 2 * ibn, grid.n_patches())
+  {}
+
+  virtual void reset(const Grid_t& grid) override
+  {
+    MfieldsBase::reset(grid);
+    Base::reset(grid.n_patches());
+  }
+  
   void write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names) override
   {
     MrcIo::write_mflds(io, *this, name, comp_names);
   }
 
   static const Convert convert_to_, convert_from_;
-  const Convert& convert_to() override { return convert_to_; }
-  const Convert& convert_from() override { return convert_from_; }
-
-  std::vector<std::unique_ptr<real_t[]>> data;
-  int ib[3]; //> lower left corner for each patch (incl. ghostpoints)
-  int im[3]; //> extent for each patch (incl. ghostpoints)
+  const Convert& convert_to() override;
+  const Convert& convert_from() override;
 };
+
+template<> const MfieldsBase::Convert Mfields<float>::convert_to_;
+extern template const MfieldsBase::Convert Mfields<float>::convert_to_;
+
+template<> const MfieldsBase::Convert Mfields<float>::convert_from_;
+extern template const MfieldsBase::Convert Mfields<float>::convert_from_;
+
+template <typename R>
+inline auto Mfields<R>::convert_to() -> const Convert&
+{
+  return convert_to_;
+}
+
+template <typename R>
+inline auto Mfields<R>::convert_from() -> const Convert&
+{
+  return convert_from_;
+}
 
 // ======================================================================
 // MfieldsStateFromMfields
@@ -426,8 +535,6 @@ struct MfieldsStateFromMfields : MfieldsStateBase
   const Convert& convert_from() override { return convert_from_; }
 
   Mfields& mflds() { return mflds_; }
-
-  void zero() { return mflds_.zero(); }
 
 private:
   Mfields mflds_;

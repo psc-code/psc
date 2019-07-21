@@ -141,24 +141,6 @@ struct MarderCuda : MarderBase
     MHERE;
   }
   
-  void run(MfieldsStateBase& mflds_base, MparticlesBase& mprts_base) override
-  {
-    item_rho_.run(mflds_base, mprts_base);
-  
-    // need to fill ghost cells first (should be unnecessary with only variant 1) FIXME
-#if 0
-    auto bnd = PscBndBase(ppsc->bnd);
-    bnd.fill_ghosts(mflds_base, EX, EX+3);
-  
-    for (int i = 0; i < loop_; i++) {
-      calc_aid_fields(mflds_base, mprts_base);
-      correct(mflds_base, item_div_e_.mres());
-      auto bnd = PscBndBase(ppsc->bnd);
-      bnd.fill_ghosts(mflds_base, EX, EX+3);
-    }
-#endif
-  }
-
 private:
   const Grid_t& grid_;
   real_t diffusion_; //< diffusion coefficient for Marder correction

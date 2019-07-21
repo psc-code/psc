@@ -6,6 +6,7 @@ macro(add_kg_test name src)
 endmacro()
 
 add_kg_test(TestVec3 TestVec3.cxx)
+add_kg_test(TestSArray TestSArray.cxx)
   
 if (PSC_HAVE_ADIOS2)
   add_kg_test(TestIOAdios2 io/TestIOAdios2.cxx)

@@ -134,7 +134,13 @@ class PushFields : public PushFieldsBase
 public:
   // ----------------------------------------------------------------------
   // push_E
-
+  //
+  // E-field propagation E^(n)    , H^(n), j^(n) 
+  //                  -> E^(n+0.5), H^(n), j^(n)
+  // Ex^{n}[-.5:+.5][-1:1][-1:1] -> Ex^{n+.5}[-.5:+.5][-1:1][-1:1]
+  // using Hx^{n}[-1:1][-1.5:1.5][-1.5:1.5]
+  //       jx^{n+1}[-.5:.5][-1:1][-1:1]
+  
   template<typename dim>
   void push_E(MfieldsState& mflds, double dt_fac, dim tag)
   {
@@ -148,6 +154,11 @@ public:
   
   // ----------------------------------------------------------------------
   // push_H
+  //
+  // B-field propagation E^(n+0.5), H^(n    ), j^(n), m^(n+0.5)
+  //                  -> E^(n+0.5), H^(n+0.5), j^(n), m^(n+0.5)
+  // Hx^{n}[:][-.5:.5][-.5:.5] -> Hx^{n+.5}[:][-.5:.5][-.5:.5]
+  // using Ex^{n+.5}[-.5:+.5][-1:1][-1:1]
 
   template<typename dim>
   void push_H(MfieldsState& mflds, double dt_fac, dim tag)
@@ -160,64 +171,6 @@ public:
     }
   }
 
-  // ----------------------------------------------------------------------
-  // push_E
-  //
-  // E-field propagation E^(n)    , H^(n), j^(n) 
-  //                  -> E^(n+0.5), H^(n), j^(n)
-  // Ex^{n}[-.5:+.5][-1:1][-1:1] -> Ex^{n+.5}[-.5:+.5][-1:1][-1:1]
-  // using Hx^{n}[-1:1][-1.5:1.5][-1.5:1.5]
-  //       jx^{n+1}[-.5:.5][-1:1][-1:1]
-  
-  void push_E(MfieldsStateBase& mflds_base, double dt_fac) override
-  {
-    auto& mflds = mflds_base.get_as<MfieldsState>(JXI, HX + 3);
-    
-    const auto& grid = mflds.grid();
-    using Bool3 = Vec3<bool>;
-    Bool3 invar{grid.isInvar(0), grid.isInvar(1), grid.isInvar(2)};
-
-    if (invar == Bool3{false, false, false}) {
-      push_E(mflds, dt_fac, dim_xyz{});
-    } else if (invar == Bool3{true, false, false}) {
-      push_E(mflds, dt_fac, dim_yz{});
-    } else if (invar == Bool3{false, true, false}) {
-      push_E(mflds, dt_fac, dim_xz{});
-    } else {
-      assert(0);
-    }
-
-    mflds_base.put_as(mflds, EX, EX + 3);
-  }
-
-  // ----------------------------------------------------------------------
-  // push_H
-  //
-  // B-field propagation E^(n+0.5), H^(n    ), j^(n), m^(n+0.5)
-  //                  -> E^(n+0.5), H^(n+0.5), j^(n), m^(n+0.5)
-  // Hx^{n}[:][-.5:.5][-.5:.5] -> Hx^{n+.5}[:][-.5:.5][-.5:.5]
-  // using Ex^{n+.5}[-.5:+.5][-1:1][-1:1]
-
-  void push_H(MfieldsStateBase& mflds_base, double dt_fac) override
-  {
-    auto& mflds = mflds_base.get_as<MfieldsState>(JXI, HX + 3);
-    
-    const auto& grid = mflds.grid();
-    using Bool3 = Vec3<bool>;
-    Bool3 invar{grid.isInvar(0), grid.isInvar(1), grid.isInvar(2)};
-
-    if (invar == Bool3{false, false, false}) {
-      push_H(mflds, dt_fac, dim_xyz{});
-    } else if (invar == Bool3{true, false, false}) {
-      push_H(mflds, dt_fac, dim_yz{});
-    } else if (invar == Bool3{false, true, false}) {
-      push_H(mflds, dt_fac, dim_xz{});
-    } else {
-      assert(0);
-    }
-
-    mflds_base.put_as(mflds, HX, HX + 3);
-  }    
 };
 
 #endif
