@@ -6,6 +6,7 @@ macro(add_psc_test name)
 endmacro()
 
 add_psc_test(test_grid)
+add_psc_test(test_grid_2)
 add_psc_test(test_rng)
 add_psc_test(test_mparticles_cuda)
 add_psc_test(test_mparticles)

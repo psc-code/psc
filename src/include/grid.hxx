@@ -69,9 +69,12 @@ struct Grid_
   
   struct Kind;
   using Kinds = std::vector<Kind>;
-  
+
   struct Patch
   {
+    Patch()
+    {}
+    
     Patch(const Int3& _off, const Real3& _xb, const Real3& _xe, const Real3& dx)
       : off(_off), xb(_xb), xe(_xe), dx_(dx)
     {}
@@ -93,6 +96,9 @@ struct Grid_
 
   // ----------------------------------------------------------------------
   // ctor
+
+  Grid_()
+  {}
   
   Grid_(const Domain& domain, const GridBc& bc, const Kinds& kinds, const Normalization& norm,
 	double dt, int n_patches = -1, Int3 ibn = {})
@@ -165,7 +171,7 @@ struct Grid_
       }
     }
   }
-  
+
   Int3 ldims;
   Domain domain;
   GridBc bc;
@@ -236,6 +242,9 @@ struct Grid_
 template<class T>
 struct Grid_<T>::Domain
 {
+  Domain()
+  {}
+  
   Domain(Int3 gdims, Real3 length, Real3 corner = {0., 0., 0.}, Int3 np = {1, 1, 1})
     : gdims(gdims), length(length), corner(corner), np(np)
   {
@@ -257,7 +266,6 @@ struct Grid_<T>::Domain
   Real3 length;	///<The physical size of the simulation-box 
   Real3 corner;
   Int3 np;		///<Number of patches in each dimension
-  
   Int3 ldims;
   Real3 dx;
 };
