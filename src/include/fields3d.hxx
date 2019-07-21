@@ -222,10 +222,10 @@ private:
 };
   
 // ======================================================================
-// MfieldsStorageVector
+// MfieldsStorageVectorVector
 
 template <typename R>
-class MfieldsStorageVector
+class MfieldsStorageVectorVector
 {
 public:
   using value_type = R;
@@ -246,15 +246,15 @@ private:
 };
   
 // ======================================================================
-// _MfieldsStorageVector
+// MfieldsStorageVector
 
 template <typename Vector>
-class _MfieldsStorageVector
+class MfieldsStorageVector
 {
 public:
   using value_type = typename Vector::value_type;
   
-  _MfieldsStorageVector(size_t size, uint stride)
+  MfieldsStorageVector(size_t size, uint stride)
     : d_flds_(size), stride_{stride}
   {}
 
@@ -394,7 +394,7 @@ struct Mfields;
 template <typename R>
 struct MfieldsCRTPInnerTypes<Mfields<R>>
 {
-  using Storage = MfieldsStorageVector<R>;
+  using Storage = MfieldsStorageVectorVector<R>;
   //using Storage = MfieldsStorageUniquePtr<R>; // FIXME, drop?
 };
 

@@ -44,8 +44,8 @@ struct cuda_mfields_bnd {
   struct cuda_mfields_bnd_map map[MAX_BND_FIELDS];
 };
 
-using MfieldsStorageDeviceVector = _MfieldsStorageVector<thrust::device_vector<float>>;
-using MfieldsStorageHostVector = _MfieldsStorageVector<thrust::host_vector<float>>;
+using MfieldsStorageDeviceVector = MfieldsStorageVector<thrust::device_vector<float>>;
+using MfieldsStorageHostVector = MfieldsStorageVector<thrust::host_vector<float>>;
 
 // ======================================================================
 // MfieldsStorageDeviceRaw
