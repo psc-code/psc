@@ -78,7 +78,7 @@ struct OutputFieldsC : public OutputFieldsCParams
     if ((pfield_step > 0 && timestep >= pfield_next) ||
 	(tfield_step > 0 && doaccum_tfield)) {
       for (auto& item : items_) {
-	item->run(mflds, mprts);
+	item->run(grid, mflds, mprts);
 #if 0
 	auto& mres = dynamic_cast<MfieldsC&>(item->mres());
 	double min = 1e10, max = -1e10;
