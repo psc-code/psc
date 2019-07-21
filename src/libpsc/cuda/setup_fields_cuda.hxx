@@ -6,7 +6,7 @@
 
 template<>
 template<typename FUNC>
-void SetupFields<MfieldsStateCuda>::set(Mfields& mf, FUNC func)
+void detail::SetupFields<MfieldsStateCuda>::run(const Grid_t& grid, Mfields& mf, FUNC&& func)
 {
   auto h_mf = hostMirror(mf);
   copy(mf, h_mf);

@@ -11,12 +11,12 @@
 using VpicConfig = VpicConfigPsc;
 
 template<>
-struct SetupFields<VpicConfig::MfieldsState>
+struct detail::SetupFields<VpicConfig::MfieldsState>
 {
   using MfieldsState = VpicConfig::MfieldsState;
 
   template<typename FUNC>
-  static void set(MfieldsState& mf, FUNC func)
+  static void run(const Grid_t& grid, MfieldsState& mf, FUNC func)
   {
     for (int p = 0; p < mf.n_patches(); ++p) {
       auto& patch = mf.grid().patches[p];

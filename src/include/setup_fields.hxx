@@ -6,6 +6,9 @@
 // ======================================================================
 // SetupFields
 
+namespace detail
+{
+
 template<typename MF>
 struct SetupFields
 {
@@ -13,15 +16,15 @@ struct SetupFields
   using real_t = typename Mfields::real_t;
 
   template<typename FUNC>
-  static void set(Mfields& mf, FUNC func)
+  static void run(const Grid_t& grid, Mfields& mf, FUNC&& func)
   {
     for (int p = 0; p < mf.n_patches(); ++p) {
-      auto& patch = mf.grid().patches[p];
+      auto& patch = grid.patches[p];
       auto F = mf[p];
 
       int n_ghosts = std::max({mf.ibn()[0], mf.ibn()[1], mf.ibn()[2]}); // FIXME, not pretty
       // FIXME, do we need the ghost points?
-      mf.grid().Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
+      grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
 	  double x_nc = patch.x_nc(jx), y_nc = patch.y_nc(jy), z_nc = patch.z_nc(jz);
 	  double x_cc = patch.x_cc(jx), y_cc = patch.y_cc(jy), z_cc = patch.z_cc(jz);
 	  
@@ -47,12 +50,12 @@ struct SetupFields
 	});
     }
   }
-
-  template<typename FUNC>
-  static void set(MfieldsBase& mflds_base, FUNC func)
-  {
-    auto& mflds = mflds_base.get_as<Mfields>(0, 0);
-    set(mflds, func);
-    mflds_base.put_as(mflds, JXI, HX + 3);
-  }
 };
+
+}
+
+template<typename MF, typename FUNC>
+void setupFields(const Grid_t& grid, MF& mflds, FUNC&& func)
+{
+  detail::SetupFields<MF>::run(grid, mflds, std::forward<FUNC>(func));
+}

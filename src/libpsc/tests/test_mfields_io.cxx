@@ -50,7 +50,7 @@ TYPED_TEST(MfieldsTest, WriteRead)
   auto grid = make_grid();
   auto mflds = Mfields{grid, NR_FIELDS, {}};
 
-  SetupFields<Mfields>::set(mflds, [](int m, double crd[3]) {
+  setupFields(grid, mflds, [](int m, double crd[3]) {
     return m + crd[0] + 100 * crd[1] + 10000 * crd[2];
   });
 
@@ -89,7 +89,7 @@ TYPED_TEST(MfieldsTest, WriteWithGhostsRead)
   auto grid = make_grid();
   auto mflds = Mfields{grid, NR_FIELDS, {2, 2, 2}};
 
-  SetupFields<Mfields>::set(mflds, [](int m, double crd[3]) {
+  setupFields(grid, mflds, [](int m, double crd[3]) {
     return m + crd[0] + 100 * crd[1] + 10000 * crd[2];
   });
 
@@ -129,7 +129,7 @@ TYPED_TEST(MfieldsTest, WriteReadWithGhosts)
   auto grid = make_grid();
   auto mflds = Mfields{grid, NR_FIELDS, {}};
 
-  SetupFields<Mfields>::set(mflds, [](int m, double crd[3]) {
+  setupFields(grid, mflds, [](int m, double crd[3]) {
     return m + crd[0] + 100 * crd[1] + 10000 * crd[2];
   });
 

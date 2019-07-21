@@ -352,7 +352,7 @@ struct PscFlatfoil : Psc<PscConfig>
   
   void setup_initial_fields(MfieldsState& mflds)
   {
-    SetupFields<MfieldsState>::set(mflds, [&](int m, double crd[3]) {
+    setupFields(grid(), mflds, [&](int m, double crd[3]) {
 	switch (m) {
 	case HY: return BB_;
 	default: return 0.;

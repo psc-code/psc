@@ -707,7 +707,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
   void setup_initial_fields(MfieldsState& mflds)
   {
-    SetupFields<MfieldsState>::set(mflds, [&](int m, double xx[3]) {
+    setupFields(grid(), mflds, [&](int m, double xx[3]) {
 	return init_field(xx, m);
       });
   }
