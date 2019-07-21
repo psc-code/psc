@@ -55,19 +55,18 @@ struct OutputHydroVpic_
   }
 
   OutputHydroVpic_(const Grid_t& grid)
-    : mflds_res_{grid, MfieldsHydro::N_COMP * int(grid.kinds.size()), {1,1,1}}
+    : mflds_res_{grid, MfieldsHydro::N_COMP * int(grid.kinds.size()), {1,1,1}},
+      kinds_{grid.kinds}
   {}
 
   Result operator()(Mparticles& mprts, MfieldsHydro& mflds_hydro, MfieldsInterpolator& interpolator)
   {
     // This relies on load_interpolator_array() having been called earlier
 
-    auto& grid = mflds_res_.grid();
-
     std::vector<std::string> comp_names;
     comp_names.reserve(mflds_res_.n_comps());
     
-    for (int kind = 0; kind < grid.kinds.size(); ++kind) {
+    for (int kind = 0; kind < kinds_.size(); ++kind) {
       HydroOps::clear(mflds_hydro);
       
       auto prts = mprts[0];
@@ -81,7 +80,7 @@ struct OutputHydroVpic_
       for (int p = 0; p < mflds_res_.n_patches(); p++) {
 	auto res = mflds_res_[p];
 	auto H = mflds_hydro[p];
-	grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
+	mflds_res_.Foreach_3d(0, 0, [&](int i, int j, int k) {
 	    for (int m = 0; m < MfieldsHydro::N_COMP; m++) {
 	      res(m + kind * MfieldsHydro::N_COMP, i,j,k) = H(m, i,j,k);
 	    }
@@ -89,7 +88,7 @@ struct OutputHydroVpic_
       }
 
       for (int m = 0; m < MfieldsHydro::N_COMP; m++) {
-	comp_names.emplace_back(std::string(fld_names()[m]) + "_" + grid.kinds[kind].name);
+	comp_names.emplace_back(std::string(fld_names()[m]) + "_" + kinds_[kind].name);
       }
     }
 
@@ -98,6 +97,7 @@ struct OutputHydroVpic_
 
 private:
   MfieldsSingle mflds_res_;
+  Grid_t::Kinds kinds_;
 };
 
 #ifdef USE_VPIC

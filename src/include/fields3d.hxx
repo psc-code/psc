@@ -344,6 +344,12 @@ public:
   int n_patches() const { return n_patches_; }
   Int3 patchOffset(int p) const { return patch_offsets_[p]; }
 
+  template<typename FUNC>
+  void Foreach_3d(int l, int r, FUNC&& F) const
+  {
+    return grid().Foreach_3d(l, r, std::forward<FUNC>(F));
+  }
+  
   const Grid_t& grid() const { return *grid_; }
   
 private:
@@ -383,9 +389,16 @@ struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>>
   Int3 ldims() const { return domain_.ldims(); }
   Int3 gdims() const { return domain_.gdims(); }
   Int3 patchOffset(int p) const { return domain_.patchOffset(p); }
+  const MfieldsDomain& domain() const { return domain_; }
   const Grid_t& grid() const { return domain_.grid(); }
   const Grid_t& xgrid() const { return domain_.grid(); }
 
+  template<typename FUNC>
+  void Foreach_3d(int l, int r, FUNC&& F) const
+  {
+    return domain().Foreach_3d(l, r, std::forward<FUNC>(F));
+  }
+  
   virtual void reset(const Grid_t& grid) override
   {
     MfieldsBase::reset(grid);
