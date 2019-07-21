@@ -391,7 +391,6 @@ struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>>
   Int3 patchOffset(int p) const { return domain_.patchOffset(p); }
   const MfieldsDomain& domain() const { return domain_; }
   const Grid_t& grid() const { return domain_.grid(); }
-  const Grid_t& xgrid() const { return domain_.grid(); }
 
   template<typename FUNC>
   void Foreach_3d(int l, int r, FUNC&& F) const
@@ -408,7 +407,7 @@ struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>>
   
   void write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names) override
   {
-    MrcIo::write_mflds(io, *this, xgrid(), name, comp_names);
+    MrcIo::write_mflds(io, *this, grid(), name, comp_names);
   }
 
   static const Convert convert_to_, convert_from_;
