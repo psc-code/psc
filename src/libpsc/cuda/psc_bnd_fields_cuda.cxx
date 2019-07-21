@@ -12,16 +12,15 @@ struct BndFieldsCuda : BndFieldsBase
   // ----------------------------------------------------------------------
   // fill_ghosts_E
 
-  void fill_ghosts_E(MfieldsBase& mflds_base) override
+  void fill_ghosts_E(MfieldsCuda& mflds)
   {
-    const auto& grid = mflds_base._grid();
+    const auto& grid = mflds.grid();
     if (grid.bc.fld_lo[0] == BND_FLD_PERIODIC &&
 	grid.bc.fld_lo[1] == BND_FLD_PERIODIC &&
 	grid.bc.fld_lo[2] == BND_FLD_PERIODIC) {
       return;
     }
 
-    auto& mflds = mflds_base.get_as<MfieldsCuda>(EX, EX + 3);
     if (grid.bc.fld_lo[0] == BND_FLD_PERIODIC &&
 	grid.bc.fld_lo[1] == BND_FLD_CONDUCTING_WALL &&
 	grid.bc.fld_hi[1] == BND_FLD_CONDUCTING_WALL &&
@@ -38,22 +37,20 @@ struct BndFieldsCuda : BndFieldsBase
     } else {
       assert(0);
     }
-    mflds_base.put_as(mflds, EX, EX + 3);
   }
 
   // ----------------------------------------------------------------------
   // fill_ghosts_H
 
-  void fill_ghosts_H(MfieldsBase& mflds_base) override
+  void fill_ghosts_H(MfieldsCuda& mflds)
   {
-    const auto& grid = mflds_base._grid();
+    const auto& grid = mflds.grid();
     if (grid.bc.fld_lo[0] == BND_FLD_PERIODIC &&
 	grid.bc.fld_lo[1] == BND_FLD_PERIODIC &&
 	grid.bc.fld_lo[2] == BND_FLD_PERIODIC) {
       return;
     }
 
-    auto& mflds = mflds_base.get_as<MfieldsCuda>(HX, HX + 3);
     if (grid.bc.fld_lo[0] == BND_FLD_PERIODIC &&
 	grid.bc.fld_lo[1] == BND_FLD_CONDUCTING_WALL &&
 	grid.bc.fld_hi[1] == BND_FLD_CONDUCTING_WALL &&
@@ -71,22 +68,20 @@ struct BndFieldsCuda : BndFieldsBase
     } else {
       assert(0);
     }
-    mflds_base.put_as(mflds, HX, HX + 3);
   }
 
   // ----------------------------------------------------------------------
   // add_ghosts_J
 
-  void add_ghosts_J(MfieldsBase& mflds_base) override
+  void add_ghosts_J(MfieldsCuda& mflds)
   {
-    const auto& grid = mflds_base._grid();
+    const auto& grid = mflds.grid();
     if (grid.bc.fld_lo[0] == BND_FLD_PERIODIC &&
 	grid.bc.fld_lo[1] == BND_FLD_PERIODIC &&
 	grid.bc.fld_lo[2] == BND_FLD_PERIODIC) {
       return;
     }
 
-    auto& mflds = mflds_base.get_as<MfieldsCuda>(JXI, JXI + 3);
     if (grid.bc.fld_lo[0] == BND_FLD_PERIODIC &&
 	grid.bc.fld_lo[1] == BND_FLD_CONDUCTING_WALL &&
 	grid.bc.fld_hi[1] == BND_FLD_CONDUCTING_WALL &&
@@ -103,7 +98,6 @@ struct BndFieldsCuda : BndFieldsBase
     } else {
       assert(0);
     }
-    mflds_base.put_as(mflds, JXI, JXI + 3);
   }
 };
 

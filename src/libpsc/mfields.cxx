@@ -33,7 +33,6 @@ void MfieldsBase::convert(MfieldsBase& mf_from, MfieldsBase& mf_to, int mb, int 
   assert(0);
 }
 
-#if 1
 std::list<MfieldsStateBase*> MfieldsStateBase::instances;
 
 void MfieldsStateBase::convert(MfieldsStateBase& mf_from, MfieldsStateBase& mf_to, int mb, int me)
@@ -57,4 +56,3 @@ void MfieldsStateBase::convert(MfieldsStateBase& mf_from, MfieldsStateBase& mf_t
 	  typeid(mf_from).name(), typeid(mf_to).name());
   assert(0);
 }
-#endif
