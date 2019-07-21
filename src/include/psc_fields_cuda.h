@@ -21,14 +21,12 @@ struct fields_cuda_t
 // ======================================================================
 // HMFields
 
-using MfieldsStorageHostVector = MfieldsStorageVector<std::vector<float>>;
-
 struct HMFields;
 
 template <>
 struct MfieldsCRTPInnerTypes<HMFields>
 {
-  using Storage = MfieldsStorageHostVector;
+  using Storage = std::vector<float>;
 };
 
 struct HMFields : MfieldsCRTP<HMFields>

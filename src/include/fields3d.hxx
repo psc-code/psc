@@ -198,41 +198,6 @@ protected:
 };
 
 // ======================================================================
-// MfieldsStorageVector
-
-template <typename Vector>
-class MfieldsStorageVector
-{
-public:
-  using value_type = typename Vector::value_type;
-  using pointer = typename Vector::pointer;
-  using const_pointer = typename Vector::const_pointer;
-  using reference = typename Vector::reference;
-  using const_reference = typename Vector::const_reference;
-  using iterator = typename Vector::iterator;
-  using const_iterator = typename Vector::const_iterator;
-  
-  MfieldsStorageVector(size_t size)
-    : data_(size)
-  {}
-
-  pointer data() { return data_.data(); }
-
-  reference operator[](size_t i) { return data_[i]; }
-  const_reference operator[](size_t i) const { return data_[i]; }
-
-  iterator begin() { return data_.begin(); }
-  iterator end() { return data_.end(); }
-  const_iterator begin() const { return data_.begin(); }
-  const_iterator end() const { return data_.end(); }
-  
-  void resize(size_t size) { data_.resize(size); }
-
-private:
-  Vector data_;
-};
-
-// ======================================================================
 // MfieldsCRTP
 
 template <typename C>
@@ -364,7 +329,7 @@ struct Mfields;
 template <typename R>
 struct MfieldsCRTPInnerTypes<Mfields<R>>
 {
-  using Storage = MfieldsStorageVector<std::vector<R>>;
+  using Storage = std::vector<R>;
 };
 
 template<typename R>
@@ -377,7 +342,7 @@ struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>>
   Mfields(const Grid_t& grid, int n_fields, Int3 ibn)
     : MfieldsBase(grid, n_fields, ibn),
       Base(n_fields, {-ibn, grid.ldims + 2 * ibn}, grid.n_patches()),
-      storage_{size_t(Base::box().size() * n_fields * Base::n_patches())},
+      storage_(size_t(Base::box().size() * n_fields * Base::n_patches())),
       grid_{&grid}
   {}
 
