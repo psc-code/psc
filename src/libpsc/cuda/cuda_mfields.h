@@ -136,8 +136,8 @@ public:
     : stride_{stride}, data_{data}
   {}
   
-  value_type* operator[](int p) { return data_ + p * stride_; }
-  const value_type* operator[](int p) const { return data_ + p * stride_; }
+  KG_INLINE value_type* operator[](int p) { return data_ + p * stride_; }
+  KG_INLINE const value_type* operator[](int p) const { return data_ + p * stride_; }
 
 private:
   value_type *data_;

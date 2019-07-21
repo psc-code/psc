@@ -36,8 +36,8 @@ struct SArray : SArrayContainer<SArray<T, L>>
 private:
   Storage storage_;
 
-  Storage& storageImpl() { return storage_; }
-  const Storage& storageImpl() const { return storage_; }
+  KG_INLINE Storage& storageImpl() { return storage_; }
+  KG_INLINE const Storage& storageImpl() const { return storage_; }
 
   friend class SArrayContainer<SArray<T, L>>;
 };
