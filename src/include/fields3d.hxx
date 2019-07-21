@@ -228,9 +228,6 @@ public:
   
   void resize(size_t size) { data_.resize(size); }
 
-  Vector& vector() { return data_; }
-  const Vector& vector() const { return data_; }
-
 private:
   Vector data_;
 };
