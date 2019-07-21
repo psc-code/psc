@@ -322,6 +322,39 @@ protected:
 };
 
 // ======================================================================
+// MfieldsDomain
+
+class MfieldsDomain
+{
+public:
+  MfieldsDomain(const Grid_t& grid)
+    : grid_{&grid},
+      n_patches_{grid.n_patches()},
+      ldims_{grid.ldims},
+      gdims_{grid.domain.gdims}
+  {
+    patch_offsets_.reserve(n_patches());
+    for (auto& patch : grid.patches) {
+      patch_offsets_.emplace_back(patch.off);
+    }
+  }
+
+  Int3 ldims() const { return ldims_; }
+  Int3 gdims() const { return gdims_; }
+  int n_patches() const { return n_patches_; }
+  Int3 patchOffset(int p) const { return patch_offsets_[p]; }
+
+  const Grid_t& grid() const { return *grid_; }
+  
+private:
+  const Grid_t* grid_;
+  Int3 ldims_;
+  Int3 gdims_;
+  int n_patches_;
+  std::vector<Int3> patch_offsets_;
+};
+
+// ======================================================================
 // Mfields
 
 template<typename R>
@@ -340,20 +373,23 @@ struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>>
   using Base = MfieldsCRTP<Mfields<R>>;
   using Storage = typename Base::Storage;
 
-  Mfields(const Grid_t& grid, int n_fields, Int3 ibn)
-    : MfieldsBase(grid, n_fields, ibn),
-      Base(n_fields, {-ibn, grid.ldims + 2 * ibn}, grid.n_patches()),
+  Mfields(const MfieldsDomain& domain, int n_fields, Int3 ibn)
+    : MfieldsBase(domain.grid(), n_fields, ibn),
+      Base(n_fields, {-ibn, domain.ldims() + 2 * ibn}, domain.n_patches()),
       storage_(size_t(Base::box().size() * n_fields * Base::n_patches())),
-      grid_{&grid}
+      domain_{domain}
   {}
 
-  const Grid_t& grid() const { return *grid_; }
+  Int3 ldims() const { return domain_.ldims(); }
+  Int3 gdims() const { return domain_.gdims(); }
+  Int3 patchOffset(int p) const { return domain_.patchOffset(p); }
+  const Grid_t& grid() const { return domain_.grid(); }
 
   virtual void reset(const Grid_t& grid) override
   {
     MfieldsBase::reset(grid);
     Base::reset(grid.n_patches());
-    grid_ = &grid;
+    domain_ = MfieldsDomain(grid);
   }
   
   void write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names) override
@@ -367,7 +403,7 @@ struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>>
 
 private:
   Storage storage_;
-  const Grid_t* grid_;
+  MfieldsDomain domain_;
 
   Storage& storageImpl() { return storage_; }
   const Storage& storageImpl() const { return storage_; }
