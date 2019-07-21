@@ -205,6 +205,10 @@ private:
   const Grid_t& grid_;
 };
 
+HMFields hostMirror(const cuda_mfields& cmflds);
+void copy(const cuda_mfields& cmflds, HMFields& hmflds);
+void copy(const HMFields& hmflds, cuda_mfields& cmflds);
+
 cuda_mfields::fields_host_t get_host_fields(const cuda_mfields& cmflds);
 void copy_to_device(int p, const cuda_mfields::fields_host_t& h_flds, cuda_mfields& cmflds, int mb, int me);
 void copy_from_device(int p, cuda_mfields::fields_host_t& h_flds, const cuda_mfields& cmflds, int mb, int me);

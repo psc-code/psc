@@ -263,3 +263,10 @@ void cuda_mfields::zero_comp(int m, dim_xyz tag)
   cuda_sync_if_enabled();
 }
 
+
+
+HMFields hostMirror(const cuda_mfields& cmflds)
+{
+  return HMFields{cmflds.box(), cmflds.n_comps(), cmflds.n_patches()};
+}
+
