@@ -45,7 +45,6 @@ struct cuda_mfields_bnd {
 };
 
 using MfieldsStorageDeviceVector = MfieldsStorageVector<thrust::device_vector<float>>;
-using MfieldsStorageHostVector = MfieldsStorageVector<thrust::host_vector<float>>;
 
 // ======================================================================
 // MfieldsStorageDeviceRaw
@@ -99,37 +98,6 @@ private:
 };
 
 using DFields = DMFields::fields_view_t;
-
-// ======================================================================
-// HMFields
-
-struct HMFields;
-
-template <>
-struct MfieldsCRTPInnerTypes<HMFields>
-{
-  using Storage = MfieldsStorageHostVector;
-};
-
-struct HMFields : MfieldsCRTP<HMFields>
-{
-  using Base = MfieldsCRTP<HMFields>;
-  using Storage = typename Base::Storage;
-  using real_t = typename Base::Real;
-  
-  HMFields(const kg::Box3& box, int n_comps, int n_patches)
-    : Base{n_comps, box, n_patches},
-      storage_(n_comps * box.size() * n_patches, n_comps * box.size() )
-  {}
-
-private:
-  Storage storage_;
-  
-  KG_INLINE Storage& storageImpl() { return storage_; }
-  KG_INLINE const Storage& storageImpl() const { return storage_; }
-
-  friend class MfieldsCRTP<HMFields>;
-};
 
 // ======================================================================
 // cuda_mfields

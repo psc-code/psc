@@ -18,6 +18,42 @@ struct fields_cuda_t
   using real_t = float;
 };
 
+// ======================================================================
+// HMFields
+
+using MfieldsStorageHostVector = MfieldsStorageVector<std::vector<float>>;
+
+struct HMFields;
+
+template <>
+struct MfieldsCRTPInnerTypes<HMFields>
+{
+  using Storage = MfieldsStorageHostVector;
+};
+
+struct HMFields : MfieldsCRTP<HMFields>
+{
+  using Base = MfieldsCRTP<HMFields>;
+  using Storage = typename Base::Storage;
+  using real_t = typename Base::Real;
+  
+  HMFields(const kg::Box3& box, int n_comps, int n_patches)
+    : Base{n_comps, box, n_patches},
+      storage_(n_comps * box.size() * n_patches, n_comps * box.size() )
+  {}
+
+private:
+  Storage storage_;
+  
+  KG_INLINE Storage& storageImpl() { return storage_; }
+  KG_INLINE const Storage& storageImpl() const { return storage_; }
+
+  friend class MfieldsCRTP<HMFields>;
+};
+
+// ======================================================================
+// MfieldsCuda
+
 struct MfieldsCuda : MfieldsBase
 {
   using real_t = fields_cuda_t::real_t;
