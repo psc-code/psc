@@ -4,6 +4,7 @@
 
 #include "cuda_iface.h"
 #include "cuda_iface_bnd.h"
+#include "psc_fields_cuda.h"
 #include "dim.hxx"
 
 #include <kg/SArray.h>
@@ -53,6 +54,8 @@ class MfieldsStorageDeviceRaw
 {
 public:
   using value_type = float;
+  using iterator = float*;
+  using const_iterator = const float*;
   
   MfieldsStorageDeviceRaw(uint stride, value_type* data)
     : stride_{stride}, data_{data}
@@ -148,6 +151,11 @@ struct cuda_mfields : MfieldsCRTP<cuda_mfields>
 private:
   Storage storage_;
   const Grid_t& grid_;
+
+  KG_INLINE Storage& storageImpl() { return storage_; }
+  KG_INLINE const Storage& storageImpl() const { return storage_; }
+
+  friend class MfieldsCRTP<cuda_mfields>;
 };
 
 HMFields hostMirror(const cuda_mfields& cmflds);

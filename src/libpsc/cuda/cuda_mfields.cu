@@ -270,3 +270,12 @@ HMFields hostMirror(const cuda_mfields& cmflds)
   return HMFields{cmflds.box(), cmflds.n_comps(), cmflds.n_patches()};
 }
 
+void copy(const cuda_mfields& cmflds, HMFields& hmflds)
+{
+  thrust::copy(cmflds.begin(), cmflds.end(), hmflds.begin());
+}
+
+void copy(const HMFields& hmflds, cuda_mfields& cmflds)
+{
+  thrust::copy(hmflds.begin(), hmflds.end(), cmflds.begin());
+}

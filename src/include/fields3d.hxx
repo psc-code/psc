@@ -229,6 +229,9 @@ class MfieldsStorageVectorVector
 {
 public:
   using value_type = R;
+
+  using iterator = R*;
+  using const_iterator = const R*;
   
   void resize(int size, int n_patches)
   {
@@ -253,18 +256,28 @@ class MfieldsStorageVector
 {
 public:
   using value_type = typename Vector::value_type;
+  using iterator = typename Vector::iterator;
+  using const_iterator = typename Vector::const_iterator;
   
   MfieldsStorageVector(size_t size, uint stride)
-    : d_flds_(size), stride_{stride}
+    : data_(size), stride_{stride}
   {}
 
-  value_type* data() { return d_flds_.data().get(); }
+  value_type* data() { return data_.data().get(); }
 
-  void set_value(int idx, const value_type& val) { d_flds_[idx] = val; }
-  value_type get_value(int idx) const { return d_flds_[idx]; }
+  value_type* operator[](int p) { return data_.data() + p * stride_; }
+  const value_type* operator[](int p) const { return data_.data() + p * stride_; }
+
+  iterator begin() { return data_.begin(); }
+  iterator end() { return data_.end(); }
+  const_iterator begin() const { return data_.begin(); }
+  const_iterator end() const { return data_.end(); }
+  
+  void set_value(int idx, const value_type& val) { data_[idx] = val; }
+  value_type get_value(int idx) const { return data_[idx]; }
 
 private:
-  Vector d_flds_;
+  Vector data_;
   uint stride_;
 };
 
@@ -292,6 +305,11 @@ public:
   KG_INLINE int im(int d) const { return box_.im(d); }
   KG_INLINE int n_comps() const { return n_fields_; }
   KG_INLINE int n_patches() const { return n_patches_; }
+
+  typename Storage::iterator begin() { return storage().begin(); }
+  typename Storage::iterator end() { return storage().end(); }
+  typename Storage::const_iterator begin() const { return storage().begin(); }
+  typename Storage::const_iterator end() const { return storage().end(); }
 
   MfieldsCRTP(int n_fields, const kg::Box3& box, int n_patches)
     : n_fields_(n_fields), box_{box}, n_patches_{n_patches}

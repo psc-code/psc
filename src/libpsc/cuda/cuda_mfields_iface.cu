@@ -134,3 +134,17 @@ void copy_from_device(int p, MfieldsCuda::fields_host_t& h_flds, const MfieldsCu
   copy_from_device(p, h_flds, *mflds.cmflds(), mb, me);
 }
 
+HMFields hostMirror(const MfieldsCuda& mflds)
+{
+  return hostMirror(*mflds.cmflds());
+}
+
+void copy(const MfieldsCuda& mflds, HMFields& hmflds)
+{
+  copy(*mflds.cmflds(), hmflds);
+}
+  
+void copy(const HMFields& hmflds, MfieldsCuda& mflds)
+{
+  copy(hmflds, *mflds.cmflds());
+}
