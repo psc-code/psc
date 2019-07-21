@@ -198,30 +198,6 @@ protected:
 };
 
 // ======================================================================
-// MfieldsStorageUniquePtr
-
-template <typename R>
-class MfieldsStorageUniquePtr
-{
-public:
-  using value_type = R;
-  
-  void resize(int size, int n_patches)
-  {
-    data_.resize(n_patches);
-    for (auto& patch : data_) {
-      patch.reset(new R[size]{});
-    }
-  }
-
-  R* operator[](int p) { return data_[p].get(); }
-  const R* operator[](int p) const { return data_[p].get(); }
-  
-private:
-  std::vector<std::unique_ptr<R[]>> data_;
-};
-  
-// ======================================================================
 // MfieldsStorageVectorVector
 
 template <typename R>
@@ -413,7 +389,6 @@ template <typename R>
 struct MfieldsCRTPInnerTypes<Mfields<R>>
 {
   using Storage = MfieldsStorageVectorVector<R>;
-  //using Storage = MfieldsStorageUniquePtr<R>; // FIXME, drop?
 };
 
 template<typename R>
