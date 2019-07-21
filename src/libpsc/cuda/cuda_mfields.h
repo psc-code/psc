@@ -90,9 +90,6 @@ struct cuda_mfields : MfieldsCRTP<cuda_mfields>
   cuda_mfields(const Grid_t& grid, int n_fields, const Int3& ibn);
   cuda_mfields(const cuda_mfields&) = delete;
 
-  int n_patches() const { return n_patches_; }
-  int n_comps() const { return n_fields_; }
-  
   void zero_comp(int m, dim_yz tag);
   void zero_comp(int m, dim_xyz tag);
   

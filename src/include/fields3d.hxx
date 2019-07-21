@@ -43,7 +43,6 @@ struct MfieldsBase
 
   virtual void reset(const Grid_t& grid) { grid_ = &grid; }
   
-  int n_patches() const { return grid_->n_patches(); }
   int _n_comps() const { return n_fields_; }
   Int3 ibn() const { return ibn_; }
 
@@ -277,6 +276,7 @@ public:
   KG_INLINE int ib(int d) const { return box_.ib(d); }
   KG_INLINE int im(int d) const { return box_.im(d); }
   KG_INLINE int n_comps() const { return n_fields_; }
+  KG_INLINE int n_patches() const { return n_patches_; }
 
   MfieldsCRTP(int n_fields, Int3 ib, Int3 im, int n_patches)
     : n_fields_(n_fields), box_{ib, im}, n_patches_{n_patches}
