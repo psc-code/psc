@@ -18,9 +18,10 @@ static void psc_mfields_cuda_copy_from_c(MfieldsBase& mflds_cuda, MfieldsBase& m
 {
   auto& mf_cuda = dynamic_cast<MfieldsCuda&>(mflds_cuda);
   auto& mf_c = dynamic_cast<MfieldsC&>(mflds_c);
-  auto flds = get_host_fields(mf_cuda);
+  auto h_mf_cuda = hostMirror(mf_cuda);
 
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
+    auto flds = h_mf_cuda[p];
     auto flds_c = mf_c[p];
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.im()[2]; jz++) {
@@ -31,20 +32,20 @@ static void psc_mfields_cuda_copy_from_c(MfieldsBase& mflds_cuda, MfieldsBase& m
 	}
       }
     }
-
-    copy_to_device(p, flds, mf_cuda, mb, me);
   }
+  copy(h_mf_cuda, mf_cuda);
 }
 
 static void psc_mfields_cuda_copy_to_c(MfieldsBase& mflds_cuda, MfieldsBase& mflds_c, int mb, int me)
 {
   auto& mf_cuda = dynamic_cast<MfieldsCuda&>(mflds_cuda);
   auto& mf_c = dynamic_cast<MfieldsC&>(mflds_c);
-  auto flds = get_host_fields(mf_cuda);
+  auto h_mf_cuda = hostMirror(mf_cuda);
 
+  copy(mf_cuda, h_mf_cuda);
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
+    auto flds = h_mf_cuda[p];
     auto flds_c = mf_c[p];
-    copy_from_device(p, flds, mf_cuda, mb, me);
   
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.im()[2]; jz++) {
@@ -62,9 +63,10 @@ static void psc_mfields_state_cuda_copy_from_c(MfieldsStateBase& mflds_cuda, Mfi
 {
   auto& mf_cuda = dynamic_cast<MfieldsStateCuda&>(mflds_cuda);
   auto& mf_c = dynamic_cast<MfieldsStateDouble&>(mflds_c);
-  auto flds = get_host_fields(mf_cuda);
+  auto h_mf_cuda = hostMirror(mf_cuda);
 
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
+    auto flds = h_mf_cuda[p];
     auto flds_c = mf_c[p];
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.im()[2]; jz++) {
@@ -75,20 +77,20 @@ static void psc_mfields_state_cuda_copy_from_c(MfieldsStateBase& mflds_cuda, Mfi
 	}
       }
     }
-
-    copy_to_device(p, flds, mf_cuda, mb, me);
   }
+  copy(h_mf_cuda, mf_cuda);
 }
 
 static void psc_mfields_state_cuda_copy_to_c(MfieldsStateBase& mflds_cuda, MfieldsStateBase& mflds_c, int mb, int me)
 {
   auto& mf_cuda = dynamic_cast<MfieldsStateCuda&>(mflds_cuda);
   auto& mf_c = dynamic_cast<MfieldsStateDouble&>(mflds_c);
-  auto flds = get_host_fields(mf_cuda);
+  auto h_mf_cuda = hostMirror(mf_cuda);
 
+  copy(mf_cuda, h_mf_cuda);
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
+    auto flds = h_mf_cuda[p];
     auto flds_c = mf_c[p];
-    copy_from_device(p, flds, mf_cuda, mb, me);
   
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.im()[2]; jz++) {
@@ -109,9 +111,10 @@ static void psc_mfields_cuda_copy_from_single(MfieldsBase& mflds_cuda, MfieldsBa
 {
   auto& mf_cuda = dynamic_cast<MfieldsCuda&>(mflds_cuda);
   auto& mf_single = dynamic_cast<MfieldsSingle&>(mflds_single);
-  auto flds = get_host_fields(mf_cuda);
+  auto h_mf_cuda = hostMirror(mf_cuda);
   
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
+    auto flds = h_mf_cuda[p];
     auto flds_s = mf_single[p];
 
     for (int m = mb; m < me; m++) {
@@ -123,18 +126,18 @@ static void psc_mfields_cuda_copy_from_single(MfieldsBase& mflds_cuda, MfieldsBa
 	}
       }
     }
-
-    copy_to_device(p, flds, mf_cuda, mb, me);
   }
+  copy(h_mf_cuda, mf_cuda);
 }
 
 static void psc_mfields_state_cuda_copy_from_single(MfieldsStateBase& mflds_cuda, MfieldsStateBase& mflds_single, int mb, int me)
 {
   auto& mf_cuda = dynamic_cast<MfieldsStateCuda&>(mflds_cuda);
   auto& mf_single = dynamic_cast<MfieldsStateSingle&>(mflds_single);
-  auto flds = get_host_fields(mf_cuda);
+  auto h_mf_cuda = hostMirror(mf_cuda);
   
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
+    auto flds = h_mf_cuda[p];
     auto flds_s = mf_single[p];
 
     for (int m = mb; m < me; m++) {
@@ -146,20 +149,20 @@ static void psc_mfields_state_cuda_copy_from_single(MfieldsStateBase& mflds_cuda
 	}
       }
     }
-
-    copy_to_device(p, flds, mf_cuda, mb, me);
   }
+  copy(h_mf_cuda, mf_cuda);
 }
 
 static void psc_mfields_cuda_copy_to_single(MfieldsBase& mflds_cuda, MfieldsBase& mflds_single, int mb, int me)
 {
   auto& mf_cuda = dynamic_cast<MfieldsCuda&>(mflds_cuda);
   auto& mf_single = dynamic_cast<MfieldsSingle&>(mflds_single);
-  auto flds = get_host_fields(mf_cuda);
+  auto h_mf_cuda = hostMirror(mf_cuda);
 
+  copy(mf_cuda, h_mf_cuda);
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
+    auto flds = h_mf_cuda[p];
     auto flds_s = mf_single[p];
-    copy_from_device(p, flds, mf_cuda, mb, me);
   
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.im()[2]; jz++) {
@@ -177,11 +180,12 @@ static void psc_mfields_state_cuda_copy_to_single(MfieldsStateBase& mflds_cuda, 
 {
   auto& mf_cuda = dynamic_cast<MfieldsStateCuda&>(mflds_cuda);
   auto& mf_single = dynamic_cast<MfieldsStateSingle&>(mflds_single);
-  auto flds = get_host_fields(mf_cuda);
+  auto h_mf_cuda = hostMirror(mf_cuda);
 
+  copy(mf_cuda, h_mf_cuda);
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
+    auto flds = h_mf_cuda[p];
     auto flds_s = mf_single[p];
-    copy_from_device(p, flds, mf_cuda, mb, me);
   
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.im()[2]; jz++) {
@@ -221,10 +225,11 @@ psc_mfields_cuda_write(MfieldsCuda& mflds, struct mrc_io *io)
   mrc_io_get_h5_file(io, &h5_file);
   hid_t group0 = H5Gopen(h5_file, mrc_io_obj_path(io, _mflds), H5P_DEFAULT); H5_CHK(group0);
 
-  auto flds = mflds->get_host_fields();
+  auto h_mflds = hostMirror(mflds);
+  copy(mflds, h_mflds);
 
   for (int p = 0; p < mflds.n_patches(); p++) {
-    mflds->copy_from_device(p, flds, 0, flds.nr_comp);
+    auto flds = h_mflds[p];
     char name[20]; sprintf(name, "flds%d", p);
     hid_t group = H5Gcreate(group0, name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group);
     
@@ -258,8 +263,9 @@ psc_mfields_cuda_read(MfieldsCuda& mflds, struct mrc_io *io)
   mrc_io_get_h5_file(io, &h5_file);
   hid_t group0 = H5Gopen(h5_file, mrc_io_obj_path(io, _mflds), H5P_DEFAULT); H5_CHK(group0);
 
-  auto flds = mflds->get_host_fields();
+  auto h_mflds = hostMirror(mflds);
   for (int p = 0; p < mflds.n_patches(); p++) {
+    auto flds = h_mflds[p];
     char name[20]; sprintf(name, "flds%d", p);
     hid_t group = H5Gopen(group0, name, H5P_DEFAULT); H5_CHK(group);
 
@@ -274,10 +280,9 @@ psc_mfields_cuda_read(MfieldsCuda& mflds, struct mrc_io *io)
     assert(nr_comp == flds.nr_comp);
 
     ierr = H5LTread_dataset_float(group, "fields_cuda", flds.data); CE;
-    mflds->copy_to_device(p, flds, 0, flds.nr_comp);
     ierr = H5Gclose(group); CE;
   }
-  flds.dtor();
+  copy(h_mflds, mflds);
   ierr = H5Gclose(group0); CE;
 }
 

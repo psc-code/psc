@@ -71,7 +71,8 @@ main(void)
 
   cmflds->dump("cmflds.json");
 
-  fields_t flds = cmflds->get_host_fields();
+  auto mflds = hostMirror(*cmflds);
+  auto flds = mflds[0];
   for (int p = 0; p < n_patches; p++) {
     for (int k = flds.ib[2]; k < flds.ib[2] + flds.im[2]; k++) {
       for (int j = flds.ib[1]; j < flds.ib[1] + flds.im[1]; j++) {
@@ -89,9 +90,8 @@ main(void)
 	}
       }
     }
-    cmflds->copy_to_device(p, flds, 0, n_fields);
   }
-  flds.dtor();
+  copy(mflds, *cmflds);
 
   cmflds->dump("cmflds_wave.json");
 

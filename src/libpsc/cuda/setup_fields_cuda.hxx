@@ -8,10 +8,11 @@ template<>
 template<typename FUNC>
 void SetupFields<MfieldsStateCuda>::set(Mfields& mf, FUNC func)
 {
+  auto h_mf = hostMirror(mf);
+  copy(mf, h_mf);
   for (int p = 0; p < mf.n_patches(); ++p) {
     auto& patch = mf.grid().patches[p];
-    auto flds = get_host_fields(mf);
-    copy_from_device(p, flds, mf, JXI, HX+3);
+    auto flds = h_mf[p];
     
     int n_ghosts = std::max({mf.ibn()[0], mf.ibn()[1], mf.ibn()[2]}); // FIXME, not pretty
     // FIXME, do we need the ghost points?
@@ -40,7 +41,7 @@ void SetupFields<MfieldsStateCuda>::set(Mfields& mf, FUNC func)
 	flds(JZI, jx,jy,jz) += func(JZI, nnc);
       });
 
-    copy_to_device(p, flds, mf, JXI, HX+3);
   }
+  copy(h_mf, mf);
 }
 
