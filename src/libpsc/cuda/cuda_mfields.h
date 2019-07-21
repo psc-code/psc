@@ -89,18 +89,20 @@ private:
 // ======================================================================
 // CudaMfields
 
+template <typename S>
 struct CudaMfields;
 
-template <>
-struct MfieldsCRTPInnerTypes<CudaMfields>
+template <typename S>
+struct MfieldsCRTPInnerTypes<CudaMfields<S>>
 {
-  using Storage = CudaMfieldsStorage;
+  using Storage = S;
 };
 
-struct CudaMfields : MfieldsCRTP<CudaMfields>
+template <typename S>
+struct CudaMfields : MfieldsCRTP<CudaMfields<S>>
 {
   using Base = MfieldsCRTP<CudaMfields>;
-
+  using Storage = typename Base::Storage;
   using real_t = typename Base::Real;
   
   CudaMfields(real_t* d_flds, uint stride, Int3 im, Int3 ib, int n_comps, int n_patches)
@@ -114,11 +116,11 @@ private:
   KG_INLINE Storage& storageImpl() { return storage_; }
   KG_INLINE const Storage& storageImpl() const { return storage_; }
 
-  friend class MfieldsCRTP<CudaMfields>;
+  friend class MfieldsCRTP<CudaMfields<S>>;
 };
 
-using DMFields = CudaMfields;
-using DFields = CudaMfields::fields_view_t;
+using DMFields = CudaMfields<CudaMfieldsStorage>;
+using DFields = DMFields::fields_view_t;
 
 // ======================================================================
 // cuda_mfields
