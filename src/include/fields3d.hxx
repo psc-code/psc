@@ -270,8 +270,8 @@ public:
   KG_INLINE int n_comps() const { return n_fields_; }
   KG_INLINE int n_patches() const { return n_patches_; }
 
-  MfieldsCRTP(int n_fields, Int3 ib, Int3 im, int n_patches)
-    : n_fields_(n_fields), box_{ib, im}, n_patches_{n_patches}
+  MfieldsCRTP(int n_fields, const kg::Box3& box, int n_patches)
+    : n_fields_(n_fields), box_{box}, n_patches_{n_patches}
   {}
 
   void reset(int n_patches)
@@ -384,7 +384,7 @@ struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>>
 
   Mfields(const Grid_t& grid, int n_fields, Int3 ibn)
     : MfieldsBase(grid, n_fields, ibn),
-      Base(n_fields, -ibn, grid.ldims + 2 * ibn, grid.n_patches()),
+      Base(n_fields, {-ibn, grid.ldims + 2 * ibn}, grid.n_patches()),
       grid_{&grid}
   {
     storage_.resize(n_fields * Base::box().size(), grid.n_patches());

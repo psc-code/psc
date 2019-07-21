@@ -15,7 +15,7 @@
 // ctor
 
 cuda_mfields::cuda_mfields(const Grid_t& grid, int _n_fields, const Int3& ibn)
-  : Base{_n_fields, -ibn, grid.ldims + 2*ibn, grid.n_patches()},
+  : Base{_n_fields, {-ibn, grid.ldims + 2*ibn}, grid.n_patches()},
     storage_(n_comps() * box().size() * n_patches(), n_comps() * box().size() ),
     grid_(grid)
 {
@@ -92,8 +92,7 @@ void cuda_mfields::dump(const char *filename)
 
 cuda_mfields::operator DMFields()
 {
-  return DMFields(storage_.data(), n_comps() * box().size(), im(), ib(), n_comps(),
-		  n_patches());
+  return DMFields{box(), n_comps(), n_patches(), storage_.data()};
 }
 
 // ----------------------------------------------------------------------

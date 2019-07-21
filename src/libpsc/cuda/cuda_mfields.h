@@ -107,9 +107,9 @@ struct DMFields : MfieldsCRTP<DMFields>
   using Storage = typename Base::Storage;
   using real_t = typename Base::Real;
   
-  DMFields(real_t* d_flds, uint stride, Int3 im, Int3 ib, int n_comps, int n_patches)
-    : Base{n_comps, ib, im, n_patches},
-      storage_{stride, d_flds}
+  DMFields(const kg::Box3& box, int n_comps, int n_patches, real_t* d_flds)
+    : Base{n_comps, box, n_patches},
+      storage_{uint(n_comps * box.size()), d_flds}
   {}
 
 private:
@@ -140,9 +140,9 @@ struct HMFields : MfieldsCRTP<HMFields>
   using Storage = typename Base::Storage;
   using real_t = typename Base::Real;
   
-  HMFields(real_t* d_flds, Int3 ib, Int3 im, int n_comps, int n_patches)
-    : Base{n_comps, ib, im, n_patches},
-      storage_(n_comps * box().size() * n_patches, n_comps * box().size() )
+  HMFields(const kg::Box3& box, int n_comps, int n_patches)
+    : Base{n_comps, box, n_patches},
+      storage_(n_comps * box.size() * n_patches, n_comps * box.size() )
   {}
 
 private:
