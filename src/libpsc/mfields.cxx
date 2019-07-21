@@ -14,7 +14,7 @@ std::list<MfieldsBase*> MfieldsBase::instances;
 void MfieldsBase::convert(MfieldsBase& mf_from, MfieldsBase& mf_to, int mb, int me)
 {
   // FIXME, implementing == wouldn't hurt
-  assert(&mf_from.grid() == &mf_to.grid());
+  assert(&mf_from._grid() == &mf_to._grid());
   
   auto convert_to = mf_from.convert_to().find(std::type_index(typeid(mf_to)));
   if (convert_to != mf_from.convert_to().cend()) {

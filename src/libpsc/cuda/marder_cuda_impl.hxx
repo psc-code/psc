@@ -79,9 +79,9 @@ struct MarderCuda : MarderBase
 
   void correct(MfieldsBase& mflds_base, MfieldsBase& mf_base)
   {
-    assert(mflds_base.grid().isInvar(0));
+    assert(mflds_base._grid().isInvar(0));
 
-    const Grid_t& grid = mflds_base.grid();
+    const Grid_t& grid = mflds_base._grid();
     // FIXME: how to choose diffusion parameter properly?
     float dx[3];
     for (int d = 0; d < 3; d++) {

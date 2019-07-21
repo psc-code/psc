@@ -55,6 +55,7 @@ struct MfieldsCuda : MfieldsBase
 
   int n_comps() const;
   int n_patches() const;
+  const Grid_t& grid() const { return *grid_; }
 
   void reset(const Grid_t& new_grid) override;
   void zero_comp(int m);
@@ -75,6 +76,7 @@ struct MfieldsCuda : MfieldsBase
   const Convert& convert_from() override { return convert_from_; }
   
   cuda_mfields* cmflds_;
+  const Grid_t* grid_;
 };
 
 // ======================================================================

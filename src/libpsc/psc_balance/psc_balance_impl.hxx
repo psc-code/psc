@@ -758,7 +758,7 @@ private:
   void balance_field(communicate_ctx& ctx, const Grid_t& new_grid, MfieldsBase& mf_base)
   {
     if (typeid(mf_base) != typeid(Mfields)) {
-      auto& mf_old = *new Mfields{mf_base.grid(), mf_base._n_comps(), mf_base.ibn()};
+      auto& mf_old = *new Mfields{mf_base._grid(), mf_base._n_comps(), mf_base.ibn()};
       MfieldsBase::convert(mf_base, mf_old, 0, mf_old.n_comps());
       mf_base.reset(new_grid); // free old memory
 

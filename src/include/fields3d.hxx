@@ -48,7 +48,7 @@ struct MfieldsBase
 
   virtual void write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names) = 0;
 
-  const Grid_t& grid() const { return *grid_; }
+  const Grid_t& _grid() const { return *grid_; }
   
   template<typename MF>
   MF& get_as(int mb, int me)
@@ -66,7 +66,7 @@ struct MfieldsBase
 
     // mprintf("get_as %s (%s) %d %d\n", type, psc_mfields_type(mflds_base), mb, me);
     
-    auto& mflds = *new MF{grid(), n_fields_, ibn()};
+    auto& mflds = *new MF{_grid(), n_fields_, ibn()};
     
     MfieldsBase::convert(*this, mflds, mb, me);
 
@@ -392,15 +392,19 @@ struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>>
 
   Mfields(const Grid_t& grid, int n_fields, Int3 ibn)
     : MfieldsBase(grid, n_fields, ibn),
-      Base(n_fields, -ibn, grid.ldims + 2 * ibn, grid.n_patches())
+      Base(n_fields, -ibn, grid.ldims + 2 * ibn, grid.n_patches()),
+      grid_{&grid}
   {
     storage_.resize(n_fields * Base::box().size(), grid.n_patches());
   }
+
+  const Grid_t& grid() const { return *grid_; }
 
   virtual void reset(const Grid_t& grid) override
   {
     MfieldsBase::reset(grid);
     Base::reset(grid.n_patches());
+    grid_ = &grid;
   }
   
   void write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names) override
@@ -414,6 +418,7 @@ struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>>
 
 private:
   Storage storage_;
+  const Grid_t* grid_;
 
   Storage& storageImpl() { return storage_; }
   const Storage& storageImpl() const { return storage_; }

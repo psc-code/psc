@@ -13,7 +13,8 @@
 #endif
 
 MfieldsCuda::MfieldsCuda(const Grid_t& grid, int n_fields, Int3 ibn)
-  : MfieldsBase(grid, n_fields, ibn)
+  : MfieldsBase{grid, n_fields, ibn},
+    grid_{&grid}
 {
   dprintf("CMFLDS: ctor\n");
   cmflds_ = new cuda_mfields(grid, n_fields, ibn);
@@ -43,6 +44,7 @@ void MfieldsCuda::reset(const Grid_t& new_grid)
   int n_comps = cmflds()->n_comps();
   delete cmflds_;
   cmflds_ = new cuda_mfields(new_grid, n_comps, ibn);
+  grid_ = &new_grid;
 }
 
 MfieldsCuda::fields_host_t MfieldsCuda::get_host_fields()
