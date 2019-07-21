@@ -65,16 +65,6 @@ struct Bnd_ : BndBase
     mrc_ddc_add_ghosts(ddc_, mb, me, &mflds);
   }
 
-  void add_ghosts(MfieldsBase& mflds_base, int mb, int me) override
-  {
-    assert(0);
-#if 0
-    auto& mf = mflds_base.get_as<Mfields>(mb, me);
-    add_ghosts(mf, mb, me);
-    mflds_base.put_as(mf, mb, me);
-#endif
-  }
-
   // ----------------------------------------------------------------------
   // fill_ghosts
 
@@ -87,16 +77,6 @@ struct Bnd_ : BndBase
     // I don't think we need as many points, and only stencil star
     // rather then box
     mrc_ddc_fill_ghosts(ddc_, mb, me, &mflds);
-  }
-
-  void fill_ghosts(MfieldsBase& mflds_base, int mb, int me) override
-  {
-    assert(0);
-#if 0
-    auto& mf = mflds_base.get_as<Mfields>(mb, me);
-    fill_ghosts(mf, mb, me);
-    mflds_base.put_as(mf, mb, me);
-#endif
   }
 
   // ----------------------------------------------------------------------

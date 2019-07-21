@@ -126,16 +126,6 @@ struct BndCuda : BndBase
     }
   }
 
-  void add_ghosts(MfieldsBase& mflds_base, int mb, int me) override
-  {
-    assert(0);
-#if 0
-    auto& mflds = mflds_base.get_as<Mfields>(mb, me);
-    add_ghosts(mflds, mb, me);
-    mflds_base.put_as(mflds, mb, me);
-#endif
-  }
-
   // ----------------------------------------------------------------------
   // fill_ghosts
 
@@ -191,16 +181,6 @@ struct BndCuda : BndBase
       cuda_mfields_bnd_to_device_outside(cbnd, mflds.cmflds(), mb, me);
       prof_stop(pr5);
     }
-  }
-
-  void fill_ghosts(MfieldsBase& mflds_base, int mb, int me) override
-  {
-    assert(0);
-#if 0
-    auto& mflds = mflds_base.get_as<Mfields>(mb, me);
-    fill_ghosts(mflds, mb, me);
-    mflds_base.put_as(mflds, mb, me);
-#endif
   }
 
 private:
