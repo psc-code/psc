@@ -93,7 +93,7 @@ void cuda_mfields::dump(const char *filename)
 
 cuda_mfields::operator DMFields()
 {
-  return DMFields{box(), n_comps(), n_patches(), storage_.data()};
+  return DMFields{box(), n_comps(), n_patches(), storage_.data().get()};
 }
 
 // ----------------------------------------------------------------------
@@ -214,7 +214,7 @@ void cuda_mfields::zero_comp(int m, dim_xyz tag)
   dim3 dimBlock(THREADS_PER_BLOCK);
   dim3 dimGrid((n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, n_patches());
 
-  k_zero_comp_xyz<<<dimGrid, dimBlock>>>(data() + m * n, n, stride);
+  k_zero_comp_xyz<<<dimGrid, dimBlock>>>(data().get() + m * n, n, stride);
   cuda_sync_if_enabled();
 }
 

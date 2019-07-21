@@ -232,6 +232,8 @@ class MfieldsStorageVector
 {
 public:
   using value_type = typename Vector::value_type;
+  using pointer = typename Vector::pointer;
+  using const_pointer = typename Vector::const_pointer;
   using iterator = typename Vector::iterator;
   using const_iterator = typename Vector::const_iterator;
   
@@ -239,7 +241,7 @@ public:
     : data_(size), stride_{stride}
   {}
 
-  value_type* data() { return data_.data().get(); }
+  pointer data() { return data_.data(); }
 
   value_type* operator[](int p) { return data_.data() + p * stride_; }
   const value_type* operator[](int p) const { return data_.data() + p * stride_; }

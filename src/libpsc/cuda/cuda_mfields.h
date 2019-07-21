@@ -117,6 +117,8 @@ struct cuda_mfields : MfieldsCRTP<cuda_mfields>
   using Base = MfieldsCRTP<cuda_mfields>;
   using Storage = typename Base::Storage;
   using real_t = typename Storage::value_type;
+  using pointer = typename Storage::pointer;
+  using const_pointer = typename Storage::const_pointer;
 
   cuda_mfields(const Grid_t& grid, int n_fields, const Int3& ibn);
   cuda_mfields(const cuda_mfields&) = delete;
@@ -129,7 +131,7 @@ struct cuda_mfields : MfieldsCRTP<cuda_mfields>
   mrc_json_t to_json();
   void dump(const char *filename);
 
-  real_t *data() { return storage_.data(); }
+  pointer data() { return storage_.data(); }
   operator DMFields();
   DFields operator[](int p) const; // FIXME, const correctness
   const Grid_t& grid() const { return grid_; }
