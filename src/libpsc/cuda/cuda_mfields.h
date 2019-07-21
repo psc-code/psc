@@ -4,6 +4,7 @@
 
 #include "cuda_iface.h"
 #include "cuda_iface_bnd.h"
+#include "cuda_base.cuh"
 #include "psc_fields_cuda.h"
 #include "dim.hxx"
 
@@ -43,8 +44,6 @@ struct cuda_mfields_bnd {
   int *d_nei_patch;
   struct cuda_mfields_bnd_map map[MAX_BND_FIELDS];
 };
-
-using MfieldsStorageDeviceVector = thrust::device_vector<float>;
 
 // ======================================================================
 // MfieldsStorageDeviceRaw
@@ -106,23 +105,24 @@ using DFields = DMFields::fields_view_t;
 // ======================================================================
 // cuda_mfields
 
-struct cuda_mfields;
+using MfieldsStorageDeviceVector = thrust::device_vector<float>;
 
-template<>
-struct MfieldsCRTPInnerTypes<cuda_mfields>
+struct cuda_mfields : CudaMfields<MfieldsStorageDeviceVector>
 {
-  using Storage = MfieldsStorageDeviceVector;
-};
-
-struct cuda_mfields : MfieldsCRTP<cuda_mfields>
-{
-  using Base = MfieldsCRTP<cuda_mfields>;
+  using Base = CudaMfields<MfieldsStorageDeviceVector>;
   using Storage = typename Base::Storage;
   using real_t = typename Storage::value_type;
   using pointer = typename Storage::pointer;
   using const_pointer = typename Storage::const_pointer;
 
-  cuda_mfields(const Grid_t& grid, int n_fields, const Int3& ibn);
+  cuda_mfields(const Grid_t& grid, int n_comps, const Int3& ibn)
+    : Base{{-ibn, grid.ldims + 2*ibn}, n_comps, grid.n_patches()},
+      grid_{grid}
+  {
+    cuda_base_init();
+  }
+
+  using Base::Base;
   cuda_mfields(const cuda_mfields&) = delete;
 
   void zero_comp(int m, dim_yz tag);
@@ -133,7 +133,7 @@ struct cuda_mfields : MfieldsCRTP<cuda_mfields>
   mrc_json_t to_json();
   void dump(const char *filename);
 
-  pointer data() { return storage_.data(); }
+  pointer data() { return storage().data(); }
   operator DMFields();
   DFields operator[](int p) const; // FIXME, const correctness
   const Grid_t& grid() const { return grid_; }
@@ -147,17 +147,11 @@ struct cuda_mfields : MfieldsCRTP<cuda_mfields>
 	    * im(0) + (i - ib(0)));
   }
 
-  real_t get_value(int idx) const { return storage_[idx]; }
-  void set_value(int idx, real_t val) { storage_[idx] = val; }
+  real_t get_value(int idx) const { return storage()[idx]; }
+  void set_value(int idx, real_t val) { storage()[idx] = val; }
   
 private:
-  Storage storage_;
   const Grid_t& grid_;
-
-  KG_INLINE Storage& storageImpl() { return storage_; }
-  KG_INLINE const Storage& storageImpl() const { return storage_; }
-
-  friend class MfieldsCRTP<cuda_mfields>;
 };
 
 HMFields hostMirror(const cuda_mfields& cmflds);

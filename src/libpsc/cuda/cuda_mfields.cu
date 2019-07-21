@@ -12,17 +12,6 @@
 // cuda_mfields
 
 // ----------------------------------------------------------------------
-// ctor
-
-cuda_mfields::cuda_mfields(const Grid_t& grid, int _n_fields, const Int3& ibn)
-  : Base{_n_fields, {-ibn, grid.ldims + 2*ibn}, grid.n_patches()},
-    storage_(n_patches() * n_comps() * box().size()),
-    grid_(grid)
-{
-  cuda_base_init();
-}
-
-// ----------------------------------------------------------------------
 // to_json
 
 mrc_json_t cuda_mfields::to_json()
@@ -93,7 +82,7 @@ void cuda_mfields::dump(const char *filename)
 
 cuda_mfields::operator DMFields()
 {
-  return DMFields{box(), n_comps(), n_patches(), storage_.data().get()};
+  return DMFields{box(), n_comps(), n_patches(), storage().data().get()};
 }
 
 // ----------------------------------------------------------------------

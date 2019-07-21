@@ -19,23 +19,25 @@ struct fields_cuda_t
 };
 
 // ======================================================================
-// HMFields
+// CudaMfields
 
-struct HMFields;
+template <typename S>
+struct CudaMfields;
 
-template <>
-struct MfieldsCRTPInnerTypes<HMFields>
+template <typename S>
+struct MfieldsCRTPInnerTypes<CudaMfields<S>>
 {
-  using Storage = std::vector<float>;
+  using Storage = S;
 };
 
-struct HMFields : MfieldsCRTP<HMFields>
+template <typename S>
+struct CudaMfields : MfieldsCRTP<CudaMfields<S>>
 {
-  using Base = MfieldsCRTP<HMFields>;
+  using Base = MfieldsCRTP<CudaMfields<S>>;
   using Storage = typename Base::Storage;
   using real_t = typename Base::Real;
   
-  HMFields(const kg::Box3& box, int n_comps, int n_patches)
+  CudaMfields(const kg::Box3& box, int n_comps, int n_patches)
     : Base{n_comps, box, n_patches},
       storage_(n_patches * n_comps * box.size())
   {}
@@ -46,8 +48,10 @@ private:
   KG_INLINE Storage& storageImpl() { return storage_; }
   KG_INLINE const Storage& storageImpl() const { return storage_; }
 
-  friend class MfieldsCRTP<HMFields>;
+  friend class MfieldsCRTP<CudaMfields>;
 };
+
+using HMFields = CudaMfields<std::vector<float>>;
 
 // ======================================================================
 // MfieldsCuda
