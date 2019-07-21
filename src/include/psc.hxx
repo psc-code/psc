@@ -271,7 +271,7 @@ struct Psc
       psc_stats_stop(st_time_step);
       prof_stop(pr);
 
-      psc_stats_val[st_nr_particles] = mprts_->get_n_prts();
+      psc_stats_val[st_nr_particles] = mprts_->size();
 
       if (grid().timestep() % p_.stats_every == 0) {
 	print_status();

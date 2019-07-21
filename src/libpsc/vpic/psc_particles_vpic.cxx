@@ -25,7 +25,7 @@ void copy_to(MparticlesBase& mprts_from_base, MparticlesBase& mprts_to_base)
   float dx[3] = { vgrid.dx, vgrid.dy, vgrid.dz };
   float dVi = 1.f / (dx[0] * dx[1] * dx[2]); // FIXME, vgrid->dVi?
 
-  auto n_prts_by_patch = mprts_from.get_size_all();
+  auto n_prts_by_patch = mprts_from.sizeByPatch();
   mprts_to.reserve_all(n_prts_by_patch);
   mprts_to.clear();
   
@@ -66,7 +66,7 @@ void copy_from(MparticlesBase& mprts_to_base, MparticlesBase& mprts_from_base)
   float dVi = 1.f / (dx[0] * dx[1] * dx[2]); // FIXME, vgrid->dVi?
 
   mprts_to.reset();
-  mprts_to.reserve_all(mprts_from.get_size_all());
+  mprts_to.reserve_all(mprts_from.sizeByPatch());
 
   auto accessor_from = mprts_from.accessor();
   for (int p = 0; p < mprts_to.n_patches(); p++) {

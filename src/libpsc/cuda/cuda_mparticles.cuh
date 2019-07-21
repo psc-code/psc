@@ -184,7 +184,7 @@ protected:
   void resize(uint size);
 
 public:
-  std::vector<uint> get_size_all() const;
+  std::vector<uint> sizeByPatch() const;
 
   // per particle
   MparticlesCudaStorage storage;
@@ -220,7 +220,7 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   InjectorBuffered<cuda_mparticles> injector() { return {*this}; }
   ConstAccessorCuda_<cuda_mparticles> accessor() { return {*this}; }
   
-  uint get_n_prts();
+  uint size();
   void inject(const std::vector<Particle>& buf, const std::vector<uint>& buf_n_by_patch);
 
   std::vector<uint> get_offsets() const;

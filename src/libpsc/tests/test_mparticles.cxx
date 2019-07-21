@@ -218,9 +218,9 @@ TYPED_TEST(MparticlesTest, Inject2)
     }
   }
   
-  EXPECT_EQ(mprts.get_n_prts(), 4);
+  EXPECT_EQ(mprts.size(), 4);
   
-  auto n_prts_by_patch = mprts.get_size_all();
+  auto n_prts_by_patch = mprts.sizeByPatch();
   EXPECT_EQ(n_prts_by_patch, std::vector<uint>({n_prts, n_prts, n_prts, n_prts}));
 
   nn = 0;
@@ -294,7 +294,7 @@ struct TestConversionToMparticlesSingle<Mparticles, MakeTestGridYZ1>
   void operator()(Mparticles& mprts)
   {
     auto&& mprts_single = mprts.template get_as<MparticlesSingle>();
-    EXPECT_EQ(mprts_single.get_n_prts(), 2);
+    EXPECT_EQ(mprts_single.size(), 2);
     
     {
       auto accessor = mprts_single.accessor();
@@ -340,7 +340,7 @@ struct TestConversionFromMparticlesSingle<Mparticles, MakeTestGridYZ1>
   void operator()(MparticlesSingle& mprts_single)
   {
     auto mprts = mprts_single.template get_as<Mparticles>();
-    EXPECT_EQ(mprts.get_n_prts(), 2);
+    EXPECT_EQ(mprts.size(), 2);
     
     {
       auto accessor = mprts.accessor();

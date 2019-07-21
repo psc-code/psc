@@ -24,7 +24,7 @@ template<typename MP_FROM, typename MP_TO>
 void psc_mparticles_copy(MP_FROM& mp_from, MP_TO& mp_to)
 {
   Convert<MP_FROM, MP_TO> convert;
-  auto n_prts_by_patch = mp_from.get_size_all();
+  auto n_prts_by_patch = mp_from.sizeByPatch();
   mp_to.reserve_all(n_prts_by_patch);
   mp_to.clear();
   

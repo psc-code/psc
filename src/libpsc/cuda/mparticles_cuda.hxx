@@ -45,8 +45,8 @@ struct MparticlesCuda : MparticlesBase
     new(this) MparticlesCuda(grid);
   }
 
-  int get_n_prts() const override { return Iface::get_n_prts(cmprts_); }
-  std::vector<uint> get_size_all() const override { return Iface::get_size_all(cmprts_); }
+  int size() const override { return Iface::size(cmprts_); }
+  std::vector<uint> sizeByPatch() const override { return Iface::sizeByPatch(cmprts_); }
 
   void inject(const std::vector<Particle>& buf, const std::vector<uint>& buf_n_by_patch) { Iface::inject(cmprts_, buf, buf_n_by_patch); }
   void dump(const std::string& filename) { Iface::dump(cmprts_, filename); }

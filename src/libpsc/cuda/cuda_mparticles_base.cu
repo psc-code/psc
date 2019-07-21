@@ -29,10 +29,10 @@ void cuda_mparticles_base<BS>::resize(uint size)
 }
 
 // ----------------------------------------------------------------------
-// get_size_all
+// sizeByPatch
 
 template<typename BS>
-std::vector<uint> cuda_mparticles_base<BS>::get_size_all() const
+std::vector<uint> cuda_mparticles_base<BS>::sizeByPatch() const
 {
   std::vector<uint> n_prts_by_patch(this->n_patches());
   thrust::host_vector<uint> h_off(by_block_.d_off);

@@ -80,11 +80,11 @@ TYPED_TEST(MparticlesCudaTest, ConvertFromSingle)
     }
   }
 
-  EXPECT_EQ(mprts_single.get_n_prts(), 4);
+  EXPECT_EQ(mprts_single.size(), 4);
 
   auto mprts = mprts_single.get_as<Mparticles>();
 
-  EXPECT_EQ(mprts.get_n_prts(), 4);
+  EXPECT_EQ(mprts.size(), 4);
   
   nn = 0;
   auto accessor = mprts.accessor();

@@ -166,7 +166,7 @@ void cuda_mparticles<BS>::find_block_indices_ids(thrust::device_vector<uint>& d_
   // OPT: if we didn't need max_n_prts, we wouldn't have to get the
   // sizes / offsets at all, and it seems likely we could do a better
   // job here in general
-  auto n_prts_by_patch = this->get_size_all();
+  auto n_prts_by_patch = this->sizeByPatch();
   
   int max_n_prts = 0;
   for (int p = 0; p < this->n_patches(); p++) {
@@ -206,7 +206,7 @@ void cuda_mparticles<BS>::find_cell_indices_ids(thrust::device_vector<uint>& d_c
   // OPT: if we didn't need max_n_prts, we wouldn't have to get the
   // sizes / offsets at all, and it seems likely we could do a better
   // job here in general
-  auto n_prts_by_patch = this->get_size_all();
+  auto n_prts_by_patch = this->sizeByPatch();
   
   int max_n_prts = 0;
   for (int p = 0; p < this->n_patches(); p++) {
@@ -365,10 +365,10 @@ void cuda_mparticles<BS>::setup_internals()
 }
 
 // ----------------------------------------------------------------------
-// get_n_prts
+// size
 
 template<typename BS>
-uint cuda_mparticles<BS>::get_n_prts()
+uint cuda_mparticles<BS>::size()
 {
   return this->n_prts;
 }
