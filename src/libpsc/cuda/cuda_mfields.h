@@ -53,6 +53,8 @@ class MfieldsStorageDeviceRaw
 {
 public:
   using value_type = float;
+  using reference = float&;
+  using const_reference = const float&;
   using iterator = float*;
   using const_iterator = const float*;
   
@@ -60,8 +62,8 @@ public:
     : stride_{stride}, data_{data}
   {}
   
-  KG_INLINE value_type* operator[](int p) { return data_ + p * stride_; }
-  KG_INLINE const value_type* operator[](int p) const { return data_ + p * stride_; }
+  KG_INLINE reference operator[](size_t i) { return data_[i]; }
+  KG_INLINE const_reference operator[](size_t i) const { return data_[i]; }
 
 private:
   value_type *data_;
@@ -145,8 +147,8 @@ struct cuda_mfields : MfieldsCRTP<cuda_mfields>
 	    * im(0) + (i - ib(0)));
   }
 
-  real_t get_value(int idx) const { return storage_.get_value(idx); }
-  void set_value(int idx, real_t val) { storage_.set_value(idx, val); }
+  real_t get_value(int idx) const { return storage_.vector()[idx]; }
+  void set_value(int idx, real_t val) { storage_.vector()[idx] = val; }
   
 private:
   Storage storage_;

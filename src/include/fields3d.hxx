@@ -207,31 +207,32 @@ public:
   using value_type = typename Vector::value_type;
   using pointer = typename Vector::pointer;
   using const_pointer = typename Vector::const_pointer;
+  using reference = typename Vector::reference;
+  using const_reference = typename Vector::const_reference;
   using iterator = typename Vector::iterator;
   using const_iterator = typename Vector::const_iterator;
   
-  MfieldsStorageVector(size_t size, uint stride)
-    : data_(size), stride_{stride}
+  MfieldsStorageVector(size_t size)
+    : data_(size)
   {}
 
   pointer data() { return data_.data(); }
 
-  value_type* operator[](int p) { return data_.data() + p * stride_; }
-  const value_type* operator[](int p) const { return data_.data() + p * stride_; }
+  reference operator[](size_t i) { return data_[i]; }
+  const_reference operator[](size_t i) const { return data_[i]; }
 
   iterator begin() { return data_.begin(); }
   iterator end() { return data_.end(); }
   const_iterator begin() const { return data_.begin(); }
   const_iterator end() const { return data_.end(); }
   
-  void resize(int size, int n_patches) { assert(size == stride_); data_.resize(stride_ * n_patches); }
-    
-  void set_value(int idx, const value_type& val) { data_[idx] = val; }
-  value_type get_value(int idx) const { return data_[idx]; }
+  void resize(size_t size) { data_.resize(size); }
+
+  Vector& vector() { return data_; }
+  const Vector& vector() const { return data_; }
 
 private:
   Vector data_;
-  uint stride_;
 };
 
 // ======================================================================
@@ -271,12 +272,13 @@ public:
   void reset(int n_patches)
   {
     n_patches_ = n_patches;
-    storage().resize(n_fields_ * box_.size(), n_patches_);
+    storage().resize(n_patches * n_comps() * box().size());
   }
   
   KG_INLINE fields_view_t operator[](int p)
   {
-    return fields_view_t(box_, n_fields_, storage()[p]);
+    size_t stride = n_comps() * box().size();
+    return fields_view_t(box(), n_comps(), &storage()[p * stride]);
   }
 
   void zero_comp(int m)
@@ -378,8 +380,7 @@ struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>>
   Mfields(const Grid_t& grid, int n_fields, Int3 ibn)
     : MfieldsBase(grid, n_fields, ibn),
       Base(n_fields, {-ibn, grid.ldims + 2 * ibn}, grid.n_patches()),
-      storage_{size_t(Base::box().size() * n_fields * Base::n_patches()),
-               uint(Base::box().size() * n_fields)},
+      storage_{size_t(Base::box().size() * n_fields * Base::n_patches())},
       grid_{&grid}
   {}
 

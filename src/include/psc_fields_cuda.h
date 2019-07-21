@@ -39,7 +39,7 @@ struct HMFields : MfieldsCRTP<HMFields>
   
   HMFields(const kg::Box3& box, int n_comps, int n_patches)
     : Base{n_comps, box, n_patches},
-      storage_(n_comps * box.size() * n_patches, n_comps * box.size() )
+      storage_(n_patches * n_comps * box.size())
   {}
 
 private:
