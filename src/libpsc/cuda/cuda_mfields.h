@@ -45,14 +45,15 @@ struct cuda_mfields_bnd {
 };
 
 // ======================================================================
-// MfieldsStorageDeviceVector
+// _MfieldsStorageVector
 
-class MfieldsStorageDeviceVector
+template <typename Vector>
+class _MfieldsStorageVector
 {
 public:
-  using value_type = float;
+  using value_type = typename Vector::value_type;
   
-  MfieldsStorageDeviceVector(size_t size, uint stride)
+  _MfieldsStorageVector(size_t size, uint stride)
     : d_flds_(size), stride_{stride}
   {}
 
@@ -62,19 +63,22 @@ public:
   value_type get_value(int idx) const { return d_flds_[idx]; }
 
 private:
-  thrust::device_vector<value_type> d_flds_;
+  Vector d_flds_;
   uint stride_;
 };
 
-// ======================================================================
-// CudaMfieldsStorage
+using MfieldsStorageDeviceVector = _MfieldsStorageVector<thrust::device_vector<float>>;
+using MfieldsStorageHostVector = _MfieldsStorageVector<thrust::host_vector<float>>;
 
-class CudaMfieldsStorage
+// ======================================================================
+// MfieldsStorageDeviceRaw
+
+class MfieldsStorageDeviceRaw
 {
 public:
   using value_type = float;
   
-  CudaMfieldsStorage(uint stride, value_type* data)
+  MfieldsStorageDeviceRaw(uint stride, value_type* data)
     : stride_{stride}, data_{data}
   {}
   
@@ -87,25 +91,23 @@ private:
 };
 
 // ======================================================================
-// CudaMfields
+// DMfields
 
-template <typename S>
-struct CudaMfields;
+struct DMFields;
 
-template <typename S>
-struct MfieldsCRTPInnerTypes<CudaMfields<S>>
+template <>
+struct MfieldsCRTPInnerTypes<DMFields>
 {
-  using Storage = S;
+  using Storage = MfieldsStorageDeviceRaw;
 };
 
-template <typename S>
-struct CudaMfields : MfieldsCRTP<CudaMfields<S>>
+struct DMFields : MfieldsCRTP<DMFields>
 {
-  using Base = MfieldsCRTP<CudaMfields>;
+  using Base = MfieldsCRTP<DMFields>;
   using Storage = typename Base::Storage;
   using real_t = typename Base::Real;
   
-  CudaMfields(real_t* d_flds, uint stride, Int3 im, Int3 ib, int n_comps, int n_patches)
+  DMFields(real_t* d_flds, uint stride, Int3 im, Int3 ib, int n_comps, int n_patches)
     : Base{n_comps, ib, im, n_patches},
       storage_{stride, d_flds}
   {}
@@ -116,11 +118,41 @@ private:
   KG_INLINE Storage& storageImpl() { return storage_; }
   KG_INLINE const Storage& storageImpl() const { return storage_; }
 
-  friend class MfieldsCRTP<CudaMfields<S>>;
+  friend class MfieldsCRTP<DMFields>;
 };
 
-using DMFields = CudaMfields<CudaMfieldsStorage>;
 using DFields = DMFields::fields_view_t;
+
+// ======================================================================
+// HMFields
+
+struct HMFields;
+
+template <>
+struct MfieldsCRTPInnerTypes<HMFields>
+{
+  using Storage = MfieldsStorageHostVector;
+};
+
+struct HMFields : MfieldsCRTP<HMFields>
+{
+  using Base = MfieldsCRTP<HMFields>;
+  using Storage = typename Base::Storage;
+  using real_t = typename Base::Real;
+  
+  HMFields(real_t* d_flds, Int3 ib, Int3 im, int n_comps, int n_patches)
+    : Base{n_comps, ib, im, n_patches},
+      storage_(n_comps * box().size() * n_patches, n_comps * box().size() )
+  {}
+
+private:
+  Storage storage_;
+  
+  KG_INLINE Storage& storageImpl() { return storage_; }
+  KG_INLINE const Storage& storageImpl() const { return storage_; }
+
+  friend class MfieldsCRTP<HMFields>;
+};
 
 // ======================================================================
 // cuda_mfields
