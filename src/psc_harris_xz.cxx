@@ -760,14 +760,14 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       {
 	OutputFieldsVpic<MfieldsState> out_fields;
 	auto result = out_fields(*mflds_);
-	io_pfd_.write_mflds(result.mflds, result.name, result.comp_names);
+	io_pfd_.write_mflds(result.mflds, grid, result.name, result.comp_names);
       }
 
       {
 	// FIXME, would be better to keep "out_hydro" around
 	OutputHydro out_hydro{grid};
 	auto result = out_hydro(*mprts_, *hydro_, *interpolator_);
-	io_pfd_.write_mflds(result.mflds, result.name, result.comp_names);
+	io_pfd_.write_mflds(result.mflds, grid, result.name, result.comp_names);
       }
       mrc_io_close(io_pfd_.io_);
     }

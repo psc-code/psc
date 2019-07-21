@@ -384,6 +384,7 @@ struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>>
   Int3 gdims() const { return domain_.gdims(); }
   Int3 patchOffset(int p) const { return domain_.patchOffset(p); }
   const Grid_t& grid() const { return domain_.grid(); }
+  const Grid_t& xgrid() const { return domain_.grid(); }
 
   virtual void reset(const Grid_t& grid) override
   {
@@ -394,7 +395,7 @@ struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>>
   
   void write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names) override
   {
-    MrcIo::write_mflds(io, *this, name, comp_names);
+    MrcIo::write_mflds(io, *this, xgrid(), name, comp_names);
   }
 
   static const Convert convert_to_, convert_from_;
