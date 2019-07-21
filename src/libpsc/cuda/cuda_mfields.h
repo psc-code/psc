@@ -44,29 +44,6 @@ struct cuda_mfields_bnd {
   struct cuda_mfields_bnd_map map[MAX_BND_FIELDS];
 };
 
-// ======================================================================
-// _MfieldsStorageVector
-
-template <typename Vector>
-class _MfieldsStorageVector
-{
-public:
-  using value_type = typename Vector::value_type;
-  
-  _MfieldsStorageVector(size_t size, uint stride)
-    : d_flds_(size), stride_{stride}
-  {}
-
-  value_type* data() { return d_flds_.data().get(); }
-
-  void set_value(int idx, const value_type& val) { d_flds_[idx] = val; }
-  value_type get_value(int idx) const { return d_flds_[idx]; }
-
-private:
-  Vector d_flds_;
-  uint stride_;
-};
-
 using MfieldsStorageDeviceVector = _MfieldsStorageVector<thrust::device_vector<float>>;
 using MfieldsStorageHostVector = _MfieldsStorageVector<thrust::host_vector<float>>;
 
