@@ -3,18 +3,18 @@
 
 #include "test_common.hxx"
 
-#include "psc_particles_single.h"
-#include "psc_particles_double.h"
-#include "../libpsc/vpic/mparticles_vpic.hxx"
 #include "../libpsc/vpic/PscGridBase.h"
 #include "../libpsc/vpic/PscParticleBc.h"
 #include "../libpsc/vpic/PscParticlesBase.h"
+#include "../libpsc/vpic/mparticles_vpic.hxx"
 #include "../libpsc/vpic/vpic_config.h"
+#include "psc_particles_double.h"
+#include "psc_particles_single.h"
 #ifdef USE_CUDA
 #include "../libpsc/cuda/mparticles_cuda.hxx"
 #endif
-#include <kg/io.h>
 #include "particles_simple.inl"
+#include <kg/io.h>
 
 #ifdef DO_VPIC
 using VpicConfig = VpicConfigWrap;
@@ -25,47 +25,45 @@ using VpicConfig = VpicConfigPsc;
 using Grid = VpicConfig::Grid;
 using MparticlesVpic = VpicConfig::Mparticles;
 
-template<typename _Mparticles, typename _MakeGrid = MakeTestGrid1>
+template <typename _Mparticles, typename _MakeGrid = MakeTestGrid1>
 struct Config
 {
   using Mparticles = _Mparticles;
   using MakeGrid = _MakeGrid;
 };
 
-using MparticlesTestTypes = ::testing::Types<Config<MparticlesSingle>
-					    ,Config<MparticlesSingle, MakeTestGridYZ>
-					    ,Config<MparticlesDouble>
-					    ,Config<MparticlesVpic, MakeTestGridYZ1>
+using MparticlesTestTypes = ::testing::Types<
+  Config<MparticlesSingle>, Config<MparticlesSingle, MakeTestGridYZ>,
+  Config<MparticlesDouble>, Config<MparticlesVpic, MakeTestGridYZ1>
 #ifdef USE_CUDA
-					    ,Config<MparticlesCuda<BS144>, MakeTestGridYZ1>
-					    ,Config<MparticlesCuda<BS144>, MakeTestGridYZ>
+  ,
+  Config<MparticlesCuda<BS144>, MakeTestGridYZ1>,
+  Config<MparticlesCuda<BS144>, MakeTestGridYZ>
 #endif
-					     >;
+  >;
 
 TYPED_TEST_SUITE(MparticlesTest, MparticlesTestTypes);
 
 // ======================================================================
 // MparticlesTest
 
-template<typename T>
+template <typename T>
 struct MparticlesTest : ::testing::Test
 {
   using Mparticles = typename T::Mparticles;
   using Particle = typename Mparticles::Particle;
   using MakeGrid = typename T::MakeGrid;
 
-  MparticlesTest()
-    : grid_{MakeGrid{}()}
+  MparticlesTest() : grid_{MakeGrid{}()}
   {
     grid_.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
   }
 
-  template<typename tag>
+  template <typename tag>
   Mparticles mk_mprts(tag dummy)
   {
     Mparticles mprts(grid_);
-    mprts.define_species("test_species", 1., 1., 100, 10,
-			 10, 0);
+    mprts.define_species("test_species", 1., 1., 100, 10, 10, 0);
     return mprts;
   }
 
@@ -82,22 +80,18 @@ struct MparticlesTest : ::testing::Test
       xh[d] = xl[d] + domain.length[d];
     }
     vgrid_.setup(dx, grid_.dt, 1., 1.);
-  
+
     // Define the grid
     vgrid_.partition_periodic_box(xl, xh, domain.gdims, domain.np);
 
     Mparticles mprts(grid_, &vgrid_);
-    mprts.define_species("test_species", 1., 1., 100, 10,
-			 10, 0);
+    mprts.define_species("test_species", 1., 1., 100, 10, 10, 0);
     return mprts;
   }
 
-  Mparticles mk_mprts()
-  {
-    return mk_mprts(static_cast<Mparticles*>(nullptr));
-  }
+  Mparticles mk_mprts() { return mk_mprts(static_cast<Mparticles*>(nullptr)); }
 
-  template<typename _Mparticles>
+  template <typename _Mparticles>
   void inject_test_particles(_Mparticles& mprts, int n_prts)
   {
     auto inj = mprts.injector();
@@ -105,21 +99,21 @@ struct MparticlesTest : ::testing::Test
       auto injector = inj[p];
       auto& patch = mprts.grid().patches[p];
       for (int n = 0; n < n_prts; n++) {
-	double nn = double(n) / n_prts;
-	auto L = patch.xe - patch.xb;
-	particle_inject prt = {};
-	prt.x[0] = patch.xb[0] + nn * L[0];
-	prt.x[1] = patch.xb[1] + nn * L[1];
-	prt.x[2] = patch.xb[2] + nn * L[2];
-	prt.kind = 0;
-	prt.w = 1.;
-	injector(prt);
+        double nn = double(n) / n_prts;
+        auto L = patch.xe - patch.xb;
+        particle_inject prt = {};
+        prt.x[0] = patch.xb[0] + nn * L[0];
+        prt.x[1] = patch.xb[1] + nn * L[1];
+        prt.x[2] = patch.xb[2] + nn * L[2];
+        prt.kind = 0;
+        prt.w = 1.;
+        injector(prt);
       }
     }
   }
 
   const Grid_t& grid() { return grid_; }
-  
+
 private:
   Grid_t grid_;
   Grid vgrid_; // FIXME
@@ -170,9 +164,9 @@ TYPED_TEST(MparticlesTest, ConstAccessor)
   {
     auto accessor = mprts.accessor();
     for (int p = 0; p < mprts.n_patches(); ++p) {
-      for (auto prt: accessor[p]) {
-	EXPECT_EQ(prt.u(), (Real3{1., 2., 3.}));
-	EXPECT_EQ(prt.w(), p);
+      for (auto prt : accessor[p]) {
+        EXPECT_EQ(prt.u(), (Real3{1., 2., 3.}));
+        EXPECT_EQ(prt.w(), p);
       }
     }
   }
@@ -194,7 +188,7 @@ TYPED_TEST(MparticlesTest, Inject2)
 {
   using Mparticles = typename TypeParam::Mparticles;
   const int n_prts = 1;
-  
+
   auto mprts = this->mk_mprts();
 
   // FIXME, kinda the cheap way out
@@ -210,26 +204,27 @@ TYPED_TEST(MparticlesTest, Inject2)
       auto injector = inj[p];
       auto& patch = mprts.grid().patches[p];
       for (int n = 0; n < n_prts; n++) {
-	particle_inject prt = {};
-	auto x = .5 * (patch.xb + patch.xe);
-	int kind = 0;
-	// use weight to store particle number for testing
-	injector({{x[0], x[1], x[2]}, {}, double(nn), kind});
-	nn++;
+        particle_inject prt = {};
+        auto x = .5 * (patch.xb + patch.xe);
+        int kind = 0;
+        // use weight to store particle number for testing
+        injector({{x[0], x[1], x[2]}, {}, double(nn), kind});
+        nn++;
       }
     }
   }
-  
+
   EXPECT_EQ(mprts.size(), 4);
-  
+
   auto n_prts_by_patch = mprts.sizeByPatch();
-  EXPECT_EQ(n_prts_by_patch, std::vector<uint>({n_prts, n_prts, n_prts, n_prts}));
+  EXPECT_EQ(n_prts_by_patch,
+            std::vector<uint>({n_prts, n_prts, n_prts, n_prts}));
 
   nn = 0;
   auto accessor = mprts.accessor();
   for (int p = 0; p < mprts.n_patches(); ++p) {
     auto& patch = mprts.grid().patches[p];
-    for (auto prt: accessor[p]) {
+    for (auto prt : accessor[p]) {
       // xm is patch-relative position
       auto xm = .5 * (patch.xe - patch.xb);
       EXPECT_EQ(prt.x()[0], xm[0]);
@@ -282,13 +277,13 @@ TYPED_TEST(MparticlesTest, Injector)
 // ----------------------------------------------------------------------
 // Conversion to MparticlesSingle
 
-template<typename Mparticles, typename MakeTestGrid>
+template <typename Mparticles, typename MakeTestGrid>
 struct TestConversionToMparticlesSingle
 {
   void operator()(Mparticles& mprts) {}
 };
 
-template<typename Mparticles>
+template <typename Mparticles>
 struct TestConversionToMparticlesSingle<Mparticles, MakeTestGridYZ1>
 {
   using Double3 = Vec3<double>;
@@ -297,7 +292,7 @@ struct TestConversionToMparticlesSingle<Mparticles, MakeTestGridYZ1>
   {
     auto&& mprts_single = mprts.template get_as<MparticlesSingle>();
     EXPECT_EQ(mprts_single.size(), 2);
-    
+
     {
       auto accessor = mprts_single.accessor();
       EXPECT_EQ(accessor[0][0].position(), (Double3{0., -40., -80.}));
@@ -321,20 +316,21 @@ TYPED_TEST(MparticlesTest, ConversionToMparticlesSingle)
     }
   }
 #endif
-  auto test = TestConversionToMparticlesSingle<typename TypeParam::Mparticles, typename TypeParam::MakeGrid>{};
+  auto test = TestConversionToMparticlesSingle<typename TypeParam::Mparticles,
+                                               typename TypeParam::MakeGrid>{};
   test(mprts);
 }
 
 // ----------------------------------------------------------------------
 // Conversion from MparticlesSingle
 
-template<typename Mparticles, typename MakeTestGrid>
+template <typename Mparticles, typename MakeTestGrid>
 struct TestConversionFromMparticlesSingle
 {
   void operator()(MparticlesSingle& mprts_single) {}
 };
 
-template<typename Mparticles>
+template <typename Mparticles>
 struct TestConversionFromMparticlesSingle<Mparticles, MakeTestGridYZ1>
 {
   using Double3 = Vec3<double>;
@@ -343,7 +339,7 @@ struct TestConversionFromMparticlesSingle<Mparticles, MakeTestGridYZ1>
   {
     auto mprts = mprts_single.template get_as<Mparticles>();
     EXPECT_EQ(mprts.size(), 2);
-    
+
     {
       auto accessor = mprts.accessor();
       EXPECT_EQ(accessor[0][0].position(), (Double3{0., -40., -80.}));
@@ -353,7 +349,7 @@ struct TestConversionFromMparticlesSingle<Mparticles, MakeTestGridYZ1>
 };
 
 // FIXME, MparticlesVpic can't be converted the usual way...
-template<>
+template <>
 struct TestConversionFromMparticlesSingle<MparticlesVpic, MakeTestGridYZ1>
 {
   using Double3 = Vec3<double>;
@@ -376,7 +372,9 @@ TYPED_TEST(MparticlesTest, ConversionFromMparticlesSingle)
     }
   }
 #endif
-  auto test = TestConversionFromMparticlesSingle<typename TypeParam::Mparticles, typename TypeParam::MakeGrid>{};
+  auto test =
+    TestConversionFromMparticlesSingle<typename TypeParam::Mparticles,
+                                       typename TypeParam::MakeGrid>{};
   test(mprts);
 }
 
@@ -385,15 +383,14 @@ TYPED_TEST(MparticlesTest, ConversionFromMparticlesSingle)
 // ======================================================================
 // MparticlesTest
 
-template<typename T>
+template <typename T>
 struct MparticlesIOTest : MparticlesTest<T>
-{
-};
-  
-using MparticlesIOTestTypes = ::testing::Types<Config<MparticlesSingle>
-					       ,Config<MparticlesSingle, MakeTestGridYZ>
-					       ,Config<MparticlesDouble>
-					     >;
+{};
+
+using MparticlesIOTestTypes =
+  ::testing::Types<Config<MparticlesSingle>,
+                   Config<MparticlesSingle, MakeTestGridYZ>,
+                   Config<MparticlesDouble>>;
 
 TYPED_TEST_SUITE(MparticlesIOTest, MparticlesIOTestTypes);
 
@@ -401,7 +398,7 @@ TYPED_TEST(MparticlesIOTest, WriteRead)
 {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  
+
   auto mprts = this->mk_mprts();
   this->inject_test_particles(mprts, 4 + rank);
 
@@ -417,7 +414,7 @@ TYPED_TEST(MparticlesIOTest, WriteRead)
 
 #endif
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
   //#ifdef USE_VPIC FIXME

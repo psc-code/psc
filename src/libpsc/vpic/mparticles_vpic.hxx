@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "particles.hxx"
 #include "psc_vpic_bits.h"
 
 // ======================================================================
