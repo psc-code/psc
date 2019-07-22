@@ -24,19 +24,17 @@ struct VariableByParticle<std::vector<T>>
     writer.putVariable(vec.data(), launch, shape, {start, count});
   }
 
-#if 0
   void get(kg::io::Engine& reader, value_type& vec, const Grid_t& grid,
            const kg::io::Mode launch = kg::io::Mode::NonBlocking)
   {
-    kg::io::Dims shape = {static_cast<size_t>(grid.nGlobalPatches())};
-    kg::io::Dims start = {
-      static_cast<size_t>(grid.localPatchInfo(0).global_patch)};
-    kg::io::Dims count = {static_cast<size_t>(grid.n_patches())};
-    assert(reader.variableShape<T>() == shape);
-    vec.resize(count[0]);
+    unsigned long n = vec.size(), N, off = 0;
+    MPI_Allreduce(&n, &N, 1, MPI_UNSIGNED_LONG, MPI_SUM, grid.comm());
+    MPI_Exscan(&n, &off, 1, MPI_UNSIGNED_LONG, MPI_SUM, grid.comm());
+    kg::io::Dims shape = {size_t(N)};
+    kg::io::Dims start = {size_t(off)};
+    kg::io::Dims count = {size_t(n)};
     reader.getVariable(vec.data(), launch, {start, count});
   }
-#endif
 };
 
 // ======================================================================
@@ -53,13 +51,13 @@ public:
   template <typename FUNC>
   void operator()(const std::string& name, FUNC&& func)
   {
-    using Ret = decltype(func(mprts_[0][0]));
+    using Ret = typename std::remove_pointer<decltype(func(mprts_[0][0]))>::type;
     std::vector<Ret> vec(mprts_.size());
     auto it = vec.begin();
     for (int p = 0; p < mprts_.n_patches(); p++) {
       auto prts = mprts_[p];
       for (int n = 0; n < prts.size(); n++) {
-        *it++ = func(prts[n]);
+        *it++ = *func(prts[n]);
       }
     }
 
@@ -72,6 +70,34 @@ private:
   const Mparticles& mprts_;
 };
 
+template <typename Mparticles>
+class GetComponent
+{
+public:
+  GetComponent(kg::io::Engine& reader, Mparticles& mprts)
+    : reader_{reader}, mprts_{mprts}
+  {}
+
+  template <typename FUNC>
+  void operator()(const std::string& name, FUNC&& func)
+  {
+    using Ret = typename std::remove_pointer<decltype(func(mprts_[0][0]))>::type;
+    std::vector<Ret> vec(mprts_.size());
+    reader_.get<VariableByParticle>(name, vec, mprts_.grid(),
+                                    kg::io::Mode::Blocking);
+    auto it = vec.begin();
+    for (int p = 0; p < mprts_.n_patches(); p++) {
+      auto prts = mprts_[p];
+      for (int n = 0; n < prts.size(); n++) {
+        *func(prts[n]) = *it++;
+      }
+    }
+  }
+
+private:
+  kg::io::Engine& reader_;
+  Mparticles& mprts_;
+};
 
 template <typename R>
 class kg::io::Descr<MparticlesSimple<R>>
@@ -84,34 +110,29 @@ public:
            const kg::io::Mode launch = kg::io::Mode::NonBlocking)
   {
     auto& grid = mprts.grid();
-    auto sizeByPatch = mprts.sizeByPatch();
-    writer.put<VariableByPatch>("sizeByPatch", sizeByPatch, grid,
+
+    auto size_by_patch = mprts.sizeByPatch();
+    writer.put<VariableByPatch>("size_by_patch", size_by_patch, grid,
                                 Mode::NonBlocking);
 
     PutComponent<Mparticles> put_component{writer, mprts};
-    DoComponents<Particle>::run(put_component);
-    
+    ForComponents<Particle>::run(put_component);
+
     writer.performPuts();
   }
 
   void get(kg::io::Engine& reader, Mparticles& mprts,
            const kg::io::Mode launch = kg::io::Mode::NonBlocking)
-  {}
-
-private:
-  template <typename F>
-  void putComponent(kg::io::Engine& writer, const Mparticles& mprts,
-                    const Grid_t& grid, const std::string& name, F&& func)
   {
-    using Ret = decltype(func(mprts[0][0]));
-    std::vector<Ret> vec(mprts.size());
-    auto it = vec.begin();
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      auto prts = mprts[p];
-      for (int n = 0; n < prts.size(); n++) {
-        *it++ = func(prts[n]);
-      }
-    }
-    writer.put<VariableByParticle>(name, vec, grid, Mode::Blocking);
+    auto& grid = mprts.grid();
+
+    auto size_by_patch = std::vector<uint>(mprts.n_patches());
+    reader.get<VariableByPatch>("size_by_patch", size_by_patch, grid,
+                                Mode::Blocking);
+    mprts.reserve_all(size_by_patch);
+    mprts.resize_all(size_by_patch);
+
+    GetComponent<Mparticles> get_component{reader, mprts};
+    ForComponents<Particle>::run(get_component);
   }
 };

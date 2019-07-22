@@ -410,6 +410,21 @@ TYPED_TEST(MparticlesIOTest, WriteRead)
     writer.close();
   }
 
+  auto mprts2 = this->mk_mprts();
+  {
+    auto reader = io.open("test.bp", kg::io::Mode::Read);
+    reader.get("mprts", mprts2);
+    reader.close();
+  }
+
+  for (int p = 0; p < mprts.n_patches(); ++p) {
+    auto prts = mprts[p];
+    auto prts2 = mprts2[p];
+    ASSERT_EQ(prts.size(), prts2.size());
+    for (int n = 0; n < prts.size(); n++) {
+      EXPECT_EQ(prts[n], prts2[n]);
+    }
+  }
 }
 
 #endif

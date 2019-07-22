@@ -101,5 +101,8 @@ protected:
   const Grid_t* grid_;
 };
 
+template <typename Particle>
+class ForComponents;
+
 #endif
 
