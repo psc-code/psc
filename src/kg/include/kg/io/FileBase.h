@@ -15,9 +15,9 @@ class FileBase
 {
 public:
   using TypePointer =
-    mpark::variant<int*, unsigned long*, float*, double*, std::string*>;
+    mpark::variant<int*, unsigned int *, unsigned long*, float*, double*, std::string*>;
   using TypeConstPointer =
-    mpark::variant<const int*, const unsigned long*, const float*,
+    mpark::variant<const int*, const unsigned int *, const unsigned long*, const float*,
                    const double*, const std::string*>;
 
   virtual ~FileBase() = default;

@@ -13,6 +13,8 @@
 #ifdef USE_CUDA
 #include "../libpsc/cuda/mparticles_cuda.hxx"
 #endif
+#include <kg/io.h>
+#include "particles_simple.inl"
 
 #ifdef DO_VPIC
 using VpicConfig = VpicConfigWrap;
@@ -378,6 +380,42 @@ TYPED_TEST(MparticlesTest, ConversionFromMparticlesSingle)
   test(mprts);
 }
 
+#ifdef PSC_HAVE_ADIOS2
+
+// ======================================================================
+// MparticlesTest
+
+template<typename T>
+struct MparticlesIOTest : MparticlesTest<T>
+{
+};
+  
+using MparticlesIOTestTypes = ::testing::Types<Config<MparticlesSingle>
+					       ,Config<MparticlesSingle, MakeTestGridYZ>
+					       ,Config<MparticlesDouble>
+					     >;
+
+TYPED_TEST_SUITE(MparticlesIOTest, MparticlesIOTestTypes);
+
+TYPED_TEST(MparticlesIOTest, WriteRead)
+{
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  
+  auto mprts = this->mk_mprts();
+  this->inject_test_particles(mprts, 4 + rank);
+
+  auto io = kg::io::IOAdios2{};
+
+  {
+    auto writer = io.open("test.bp", kg::io::Mode::Write);
+    writer.put("mprts", mprts);
+    writer.close();
+  }
+
+}
+
+#endif
 
 int main(int argc, char **argv)
 {
