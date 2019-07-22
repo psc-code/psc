@@ -13,7 +13,8 @@
 #endif
 
 MfieldsCuda::MfieldsCuda(const Grid_t& grid, int n_fields, Int3 ibn)
-  : MfieldsBase(grid, n_fields, ibn)
+  : MfieldsBase{grid, n_fields, ibn},
+    grid_{&grid}
 {
   dprintf("CMFLDS: ctor\n");
   cmflds_ = new cuda_mfields(grid, n_fields, ibn);
@@ -25,32 +26,25 @@ MfieldsCuda::~MfieldsCuda()
   delete cmflds_;
 }
 
+int MfieldsCuda::n_comps() const
+{
+  return cmflds_->n_comps();
+}
+
+int MfieldsCuda::n_patches() const
+{
+  return cmflds_->n_patches();
+}
+
 void MfieldsCuda::reset(const Grid_t& new_grid)
 {
   dprintf("CMFLDS: reset\n");
   MfieldsBase::reset(new_grid);
-  Int3 ibn = -cmflds()->ib;
-  int n_fields = cmflds()->n_fields;
+  Int3 ibn = -cmflds()->ib();
+  int n_comps = cmflds()->n_comps();
   delete cmflds_;
-  cmflds_ = new cuda_mfields(new_grid, n_fields, ibn);
-}
-
-MfieldsCuda::fields_host_t MfieldsCuda::get_host_fields()
-{
-  dprintf("CMFLDS: get_host_fields\n");
-  return cmflds()->get_host_fields();
-}
-
-void MfieldsCuda::copy_to_device(int p, const fields_host_t& h_flds, int mb, int me)
-{
-  dprintf("CMFLDS: copy_to_device\n");
-  cmflds()->copy_to_device(p, h_flds, mb, me);
-}
-
-void MfieldsCuda::copy_from_device(int p, fields_host_t& h_flds, int mb, int me)
-{
-  dprintf("CMFLDS: copy_from_device\n");
-  cmflds()->copy_from_device(p, h_flds, mb, me);
+  cmflds_ = new cuda_mfields(new_grid, n_comps, ibn);
+  grid_ = &new_grid;
 }
 
 void MfieldsCuda::axpy_comp_yz(int ym, float a, MfieldsCuda& mflds_x, int xm)
@@ -74,7 +68,7 @@ void MfieldsCuda::zero_comp(int m)
 void MfieldsCuda::zero()
 {
   dprintf("CMFLDS: zero\n");
-  for (int m = 0; m < cmflds()->n_fields; m++) {
+  for (int m = 0; m < cmflds()->n_comps(); m++) {
     zero_comp(m);
   }
 }
@@ -121,3 +115,18 @@ MfieldsCuda::real_t MfieldsCuda::Accessor::operator+=(real_t val)
   mflds_.cmflds_->set_value(idx_, val);
   return val;
 }  
+
+HMFields hostMirror(const MfieldsCuda& mflds)
+{
+  return hostMirror(*mflds.cmflds());
+}
+
+void copy(const MfieldsCuda& mflds, HMFields& hmflds)
+{
+  copy(*mflds.cmflds(), hmflds);
+}
+  
+void copy(const HMFields& hmflds, MfieldsCuda& mflds)
+{
+  copy(hmflds, *mflds.cmflds());
+}

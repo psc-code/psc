@@ -758,17 +758,17 @@ private:
   void balance_field(communicate_ctx& ctx, const Grid_t& new_grid, MfieldsBase& mf_base)
   {
     if (typeid(mf_base) != typeid(Mfields)) {
-      auto& mf_old = *new Mfields{mf_base.grid(), mf_base.n_comps(), mf_base.ibn()};
+      auto& mf_old = *new Mfields{mf_base._grid(), mf_base._n_comps(), mf_base.ibn()};
       MfieldsBase::convert(mf_base, mf_old, 0, mf_old.n_comps());
       mf_base.reset(new_grid); // free old memory
 
-      auto mf_new = Mfields{new_grid, mf_base.n_comps(), mf_base.ibn()};
+      auto mf_new = Mfields{new_grid, mf_base._n_comps(), mf_base.ibn()};
       communicate_fields(&ctx, mf_old, mf_new);
       delete &mf_old; // delete as early as possible
       
-      MfieldsBase::convert(mf_new, mf_base, 0, mf_base.n_comps());
+      MfieldsBase::convert(mf_new, mf_base, 0, mf_base._n_comps());
     } else {
-      auto mf_new = Mfields{new_grid, mf_base.n_comps(), mf_base.ibn()};
+      auto mf_new = Mfields{new_grid, mf_base._n_comps(), mf_base.ibn()};
       auto &mf_old = dynamic_cast<Mfields&>(mf_base);
 
       communicate_fields(&ctx, mf_old, mf_new);

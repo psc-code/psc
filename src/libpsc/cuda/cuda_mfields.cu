@@ -12,57 +12,40 @@
 // cuda_mfields
 
 // ----------------------------------------------------------------------
-// ctor
-
-cuda_mfields::cuda_mfields(const Grid_t& grid, int _n_fields, const Int3& ibn)
-  : ib(-ibn),
-    im(grid.ldims + 2 * ibn),
-    n_patches(grid.n_patches()),
-    n_fields(_n_fields),
-    n_cells_per_patch(im[0] * im[1] * im[2]),
-    n_cells(n_patches * n_cells_per_patch),
-    d_flds_(n_fields * n_cells),
-    grid_(grid)
-{
-  cuda_base_init();
-}
-
-// ----------------------------------------------------------------------
 // to_json
 
 mrc_json_t cuda_mfields::to_json()
 {
   mrc_json_t json = mrc_json_object_new(9);
-  mrc_json_object_push_integer(json, "n_patches", n_patches);
-  mrc_json_object_push_integer(json, "n_fields", n_fields);
-  mrc_json_object_push_integer(json, "n_cells_per_patch", n_cells_per_patch);
-  mrc_json_object_push_integer(json, "n_cells", n_cells);
+  mrc_json_object_push_integer(json, "n_patches", n_patches());
+  mrc_json_object_push_integer(json, "n_fields", n_comps());
 
-  mrc_json_object_push(json, "ib", mrc_json_integer_array_new(3, ib));
-  mrc_json_object_push(json, "im", mrc_json_integer_array_new(3, im));
+  // mrc_json_object_push(json, "ib", mrc_json_integer_array_new(3, ib()));
+  // mrc_json_object_push(json, "im", mrc_json_integer_array_new(3, im()));
 
   mrc_json_t json_flds = mrc_json_object_new(2);
   mrc_json_object_push(json, "flds", json_flds);
   mrc_json_object_push_boolean(json_flds, "__field5d__", true);
-  mrc_json_t json_flds_patches = mrc_json_array_new(n_patches);
+  mrc_json_t json_flds_patches = mrc_json_array_new(n_patches_);
   mrc_json_object_push(json_flds, "data", json_flds_patches);
 
-  auto flds = get_host_fields();
-  for (int p = 0; p < n_patches; p++) {
-    copy_from_device(p, flds, 0, n_fields);
+  auto h_mflds = hostMirror(*this);
+  copy(*this, h_mflds);
+  for (int p = 0; p < n_patches(); p++) {
+    auto flds = h_mflds[p];
 
-    mrc_json_t json_flds_comps = mrc_json_array_new(n_fields);
+    mrc_json_t json_flds_comps = mrc_json_array_new(n_comps());
     mrc_json_array_push(json_flds_patches, json_flds_comps);
-    for (int m = 0; m < n_fields; m++) {
-      mrc_json_t json_fld_z = mrc_json_array_new(im[2]);
+    for (int m = 0; m < n_comps(); m++) {
+      mrc_json_t json_fld_z = mrc_json_array_new(im(2));
       mrc_json_array_push(json_flds_comps, json_fld_z);
-      for (int k = ib[2]; k < ib[2] + im[2]; k++) {
-	mrc_json_t json_fld_y = mrc_json_array_new(im[1]);
+      for (int k = ib(2); k < ib(2) + im(2); k++) {
+	mrc_json_t json_fld_y = mrc_json_array_new(im(1));
 	mrc_json_array_push(json_fld_z, json_fld_y);
-	for (int j = ib[1]; j < ib[1] + im[1]; j++) {
-	  mrc_json_t json_fld_x = mrc_json_array_new(im[0]);
+	for (int j = ib(1); j < ib(1) + im(1); j++) {
+	  mrc_json_t json_fld_x = mrc_json_array_new(im(0));
 	  mrc_json_array_push(json_fld_y, json_fld_x);
-	  for (int i = ib[0]; i < ib[0] + im[0]; i++) {
+	  for (int i = ib(0); i < ib(0) + im(0); i++) {
 	    mrc_json_array_push_double(json_fld_x, flds(m, i,j,k));
 	  }
 	}
@@ -99,61 +82,15 @@ void cuda_mfields::dump(const char *filename)
 
 cuda_mfields::operator DMFields()
 {
-  return DMFields(d_flds_.data().get(), n_cells_per_patch * n_fields, im, ib);
+  return DMFields{box(), n_comps(), n_patches(), storage().data().get()};
 }
 
 // ----------------------------------------------------------------------
 // operator[]
 
-DFields cuda_mfields::operator[](int p)
+DFields cuda_mfields::operator[](int p) const
 {
-  return static_cast<DMFields>(*this)[p];
-}
-
-// ----------------------------------------------------------------------
-// get_host_fields
-
-cuda_mfields::fields_host_t cuda_mfields::get_host_fields()
-{
-  return fields_host_t(ib, im, n_fields);
-}
-
-// ----------------------------------------------------------------------
-// copy_to_device
-
-void cuda_mfields::copy_to_device(int p, const fields_host_t& h_flds, int mb, int me)
-{
-  cudaError_t ierr;
-  
-  if (mb == me) {
-    return;
-  }
-  assert(mb < me);
-
-  uint size = n_cells_per_patch;
-  ierr = cudaMemcpy((*this)[p].data() + mb * size,
-		    h_flds.data() + mb * size,
-		    (me - mb) * size * sizeof(float),
-		    cudaMemcpyHostToDevice); cudaCheck(ierr);
-}
-
-// ----------------------------------------------------------------------
-// copy_from_device
-
-void cuda_mfields::copy_from_device(int p, fields_host_t& h_flds, int mb, int me)
-{
-  cudaError_t ierr;
-
-  if (mb == me) {
-    return;
-  }
-  assert(mb < me);
-
-  uint size = n_cells_per_patch;
-  ierr = cudaMemcpy(h_flds.data() + mb * size,
-		    (*this)[p].data() + mb * size,
-		    (me - mb) * size * sizeof(float),
-		    cudaMemcpyDeviceToHost); cudaCheck(ierr);
+  return static_cast<DMFields>(const_cast<cuda_mfields&>(*this))[p];
 }
 
 #define BND (2) // FIXME
@@ -191,16 +128,16 @@ k_axpy_comp_yz(float *y_flds, int ym, float a, float *x_flds, int xm,
 
 void cuda_mfields::axpy_comp_yz(int ym, float a, cuda_mfields *cmflds_x, int xm)
 {
-  int my = im[1];
-  int mz = im[2];
-  assert(ib[1] == -BND);
-  assert(ib[2] == -BND);
+  int my = im(1);
+  int mz = im(2);
+  assert(ib(1) == -BND);
+  assert(ib(2) == -BND);
 
   dim3 dimGrid((my + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
 	       (mz + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
 
-  for (int p = 0; p < n_patches; p++) {
+  for (int p = 0; p < n_patches_; p++) {
     k_axpy_comp_yz<<<dimGrid, dimBlock>>>((*this)[p].data(), ym, a,
 					  (*cmflds_x)[p].data(), xm, my, mz);
   }
@@ -241,17 +178,17 @@ k_zero_comp_xyz(float *data, uint n, uint stride)
 
 void cuda_mfields::zero_comp(int m, dim_yz tag)
 {
-  int my = im[1];
-  int mz = im[2];
-  assert(ib[1] == -BND);
-  assert(ib[2] == -BND);
+  int my = im(1);
+  int mz = im(2);
+  assert(ib(1) == -BND);
+  assert(ib(2) == -BND);
 
   dim3 dimGrid((my + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
 	       (mz + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
 
   // OPT, should be done in a single kernel
-  for (int p = 0; p < n_patches; p++) {
+  for (int p = 0; p < n_patches_; p++) {
     k_zero_comp_yz<<<dimGrid, dimBlock>>>((*this)[p].data(), m, my, mz);
   }
   cuda_sync_if_enabled();
@@ -259,14 +196,30 @@ void cuda_mfields::zero_comp(int m, dim_yz tag)
 
 void cuda_mfields::zero_comp(int m, dim_xyz tag)
 {
-  int n = n_cells_per_patch;
-  int stride = n * n_fields;
+  int n = box().size();
+  int stride = n * n_comps();
 
   const int THREADS_PER_BLOCK = 512;
   dim3 dimBlock(THREADS_PER_BLOCK);
-  dim3 dimGrid((n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, n_patches);
+  dim3 dimGrid((n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, n_patches());
 
-  k_zero_comp_xyz<<<dimGrid, dimBlock>>>(data() + m * n, n, stride);
+  k_zero_comp_xyz<<<dimGrid, dimBlock>>>(data().get() + m * n, n, stride);
   cuda_sync_if_enabled();
 }
 
+
+
+HMFields hostMirror(const cuda_mfields& cmflds)
+{
+  return HMFields{cmflds.box(), cmflds.n_comps(), cmflds.n_patches()};
+}
+
+void copy(const cuda_mfields& cmflds, HMFields& hmflds)
+{
+  thrust::copy(cmflds.begin(), cmflds.end(), hmflds.begin());
+}
+
+void copy(const HMFields& hmflds, cuda_mfields& cmflds)
+{
+  thrust::copy(hmflds.begin(), hmflds.end(), cmflds.begin());
+}

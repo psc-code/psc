@@ -72,7 +72,8 @@ struct PushMprtsTest : TestBase<CudaMparticles>, ::testing::Test
   {
     auto cmflds = std::unique_ptr<cuda_mfields>(new cuda_mfields(*grid_, N_FIELDS, { 0, 2, 2 }));
 
-    auto flds = cmflds->get_host_fields();
+    auto mflds = hostMirror(*cmflds);
+    auto flds = mflds[0];
 
     auto ldims = grid_->ldims;
 
@@ -87,10 +88,9 @@ struct PushMprtsTest : TestBase<CudaMparticles>, ::testing::Test
 	flds(HZ, 0,j,k) = set(HZ);
       }
     }
-    
-    cmflds->copy_to_device(0, flds, 0, N_FIELDS);
+
+    copy(mflds, *cmflds);
     cmflds->dump("accel.fld.json");
-    flds.dtor();
   
     return cmflds;
   }

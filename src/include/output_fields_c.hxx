@@ -61,7 +61,7 @@ struct OutputFieldsC : public OutputFieldsCParams
 
   void operator()(MfieldsStateBase& mflds, MparticlesBase& mprts)
   {
-    const auto& grid = mflds.grid();
+    const auto& grid = mflds._grid();
     
     static int pr;
     if (!pr) {

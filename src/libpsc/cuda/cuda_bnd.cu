@@ -42,12 +42,12 @@ fill_ghosts_periodic_yz(DFields d_flds, int mb, int me)
 void
 cuda_fill_ghosts_periodic_yz(struct cuda_mfields *cmflds, int p, int mb, int me)
 {
-  assert(cmflds->ib[1] == -SW);
-  assert(cmflds->ib[2] == -SW);
+  assert(cmflds->ib(1) == -SW);
+  assert(cmflds->ib(2) == -SW);
 
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
-  dim3 dimGrid((cmflds->im[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-	       (cmflds->im[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
+  dim3 dimGrid((cmflds->im(1) + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+	       (cmflds->im(2) + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
   fill_ghosts_periodic_yz<<<dimGrid, dimBlock>>>((*cmflds)[p], mb, me);
   cuda_sync_if_enabled();
 }
@@ -78,8 +78,8 @@ void
 cuda_fill_ghosts_periodic_z(struct cuda_mfields *cmflds, int p, int mb, int me)
 {
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
-  dim3 dimGrid((cmflds->im[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-	       (cmflds->im[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
+  dim3 dimGrid((cmflds->im(1) + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+	       (cmflds->im(2) + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
   fill_ghosts_periodic_z<<<dimGrid, dimBlock>>>((*cmflds)[p], mb, me);
   cuda_sync_if_enabled();
 }
@@ -277,7 +277,7 @@ template<bool lo, bool hi>
 static void
 cuda_conducting_wall_H_y(struct cuda_mfields *cmflds, int p)
 {
-  int dimGrid  = (cmflds->im[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
+  int dimGrid  = (cmflds->im(2) + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
   conducting_wall_H_y<lo, hi> <<<dimGrid, BLOCKSIZE_Z>>> ((*cmflds)[p]);
   cuda_sync_if_enabled();			       
 }
@@ -286,7 +286,7 @@ template<bool lo, bool hi>
 static void
 cuda_conducting_wall_E_y(struct cuda_mfields *cmflds, int p)
 {
-  int dimGrid  = (cmflds->im[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
+  int dimGrid  = (cmflds->im(2) + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
   conducting_wall_E_y<lo, hi> <<<dimGrid, BLOCKSIZE_Z>>> ((*cmflds)[p]);
   cuda_sync_if_enabled();			       
 }
@@ -295,7 +295,7 @@ template<bool lo, bool hi>
 static void
 cuda_conducting_wall_J_y(struct cuda_mfields *cmflds, int p)
 {
-  int dimGrid  = (cmflds->im[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
+  int dimGrid  = (cmflds->im(2) + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
   conducting_wall_J_y<lo, hi> <<<dimGrid, BLOCKSIZE_Z>>> ((*cmflds)[p]);
   cuda_sync_if_enabled();			       
 }

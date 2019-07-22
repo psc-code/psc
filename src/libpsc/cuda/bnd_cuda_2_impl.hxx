@@ -65,13 +65,6 @@ struct BndCuda2 : BndBase
     mflds.put_as(mflds_single, mb, me);
   }
 
-  void add_ghosts(MfieldsBase& mflds_base, int mb, int me) override
-  {
-    auto& mf = mflds_base.get_as<Mfields>(mb, me);
-    add_ghosts(mf, mb, me);
-    mflds_base.put_as(mf, mb, me);
-  }
-
   // ----------------------------------------------------------------------
   // fill_ghosts
 
@@ -86,13 +79,6 @@ struct BndCuda2 : BndBase
     auto& mflds_single = mflds.template get_as<MfieldsSingle>(mb, me);
     mrc_ddc_fill_ghosts(ddc_, mb, me, &mflds_single);
     mflds.put_as(mflds_single, mb, me);
-  }
-
-  void fill_ghosts(MfieldsBase& mflds_base, int mb, int me) override
-  {
-    auto& mf = mflds_base.get_as<Mfields>(mb, me);
-    fill_ghosts(mf, mb, me);
-    mflds_base.put_as(mf, mb, me);
   }
 
   // ----------------------------------------------------------------------

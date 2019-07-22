@@ -11,15 +11,54 @@
 
 #include "mrc_json.h"
 
+struct cuda_mfields;
+
 struct fields_cuda_t
 {
   using real_t = float;
 };
 
+// ======================================================================
+// CudaMfields
+
+template <typename S>
+struct CudaMfields;
+
+template <typename S>
+struct MfieldsCRTPInnerTypes<CudaMfields<S>>
+{
+  using Storage = S;
+};
+
+template <typename S>
+struct CudaMfields : MfieldsCRTP<CudaMfields<S>>
+{
+  using Base = MfieldsCRTP<CudaMfields<S>>;
+  using Storage = typename Base::Storage;
+  using real_t = typename Base::Real;
+  
+  CudaMfields(const kg::Box3& box, int n_comps, int n_patches)
+    : Base{n_comps, box, n_patches},
+      storage_(n_patches * n_comps * box.size())
+  {}
+
+private:
+  Storage storage_;
+  
+  KG_INLINE Storage& storageImpl() { return storage_; }
+  KG_INLINE const Storage& storageImpl() const { return storage_; }
+
+  friend class MfieldsCRTP<CudaMfields>;
+};
+
+using HMFields = CudaMfields<std::vector<float>>;
+
+// ======================================================================
+// MfieldsCuda
+
 struct MfieldsCuda : MfieldsBase
 {
   using real_t = fields_cuda_t::real_t;
-  using fields_host_t = kg::SArray<real_t>;
 
   class Accessor
   {
@@ -51,7 +90,12 @@ struct MfieldsCuda : MfieldsBase
   MfieldsCuda(MfieldsCuda&&) = default;
   ~MfieldsCuda();
 
-  struct cuda_mfields* cmflds() { return cmflds_; }
+  cuda_mfields* cmflds() { return cmflds_; }
+  const cuda_mfields* cmflds() const { return cmflds_; }
+
+  int n_comps() const;
+  int n_patches() const;
+  const Grid_t& grid() const { return *grid_; }
 
   void reset(const Grid_t& new_grid) override;
   void zero_comp(int m);
@@ -59,10 +103,6 @@ struct MfieldsCuda : MfieldsBase
 
   void zero();
   void axpy_comp_yz(int ym, float a, MfieldsCuda& x, int xm);
-
-  fields_host_t get_host_fields();
-  void copy_to_device(int p, const fields_host_t& h_flds, int mb, int me);
-  void copy_from_device(int p, fields_host_t& h_flds, int mb, int me);
 
   int index(int m, int i, int j, int k, int p) const;
   Patch operator[](int p) { return { *this, p }; }
@@ -72,7 +112,12 @@ struct MfieldsCuda : MfieldsBase
   const Convert& convert_from() override { return convert_from_; }
   
   cuda_mfields* cmflds_;
+  const Grid_t* grid_;
 };
+
+HMFields hostMirror(const MfieldsCuda& mflds);
+void copy(const MfieldsCuda& mflds, HMFields& hmflds);
+void copy(const HMFields& hmflds, MfieldsCuda& mflds);
 
 // ======================================================================
 // MfieldsStateCuda
@@ -80,7 +125,6 @@ struct MfieldsCuda : MfieldsBase
 struct MfieldsStateCuda : MfieldsStateBase
 {
   using real_t = MfieldsCuda::real_t;
-  using fields_host_t = MfieldsCuda::fields_host_t;
   
   MfieldsStateCuda(const Grid_t& grid)
     : MfieldsStateBase{grid, NR_FIELDS, grid.ibn},
@@ -95,26 +139,17 @@ struct MfieldsStateCuda : MfieldsStateBase
 
   cuda_mfields* cmflds() { return mflds_.cmflds(); }
 
-  fields_host_t get_host_fields()
-  {
-    return mflds_.get_host_fields();
-  }
-
-  void copy_to_device(int p, const fields_host_t& h_flds, int mb, int me)
-  {
-    mflds_.copy_to_device(p, h_flds, mb, me);
-  }
-
-  void copy_from_device(int p, fields_host_t& h_flds, int mb, int me)
-  {
-    mflds_.copy_from_device(p, h_flds, mb, me);
-  }
+  int n_patches() const { return mflds_.n_patches(); };
+  const Grid_t& grid() const { return *grid_; }
 
   MfieldsCuda::Patch operator[](int p) { return mflds_[p]; }
 
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
+
+  MfieldsCuda& mflds() { return mflds_; }
+  const MfieldsCuda& mflds() const { return mflds_; }
   
 private:
   MfieldsCuda mflds_;
@@ -125,6 +160,21 @@ struct Mfields_traits<MfieldsCuda>
 {
   static constexpr const char* name = "cuda";
 };
+
+inline HMFields hostMirror(const MfieldsStateCuda& mflds)
+{
+  return hostMirror(mflds.mflds());
+}
+
+inline void copy(const MfieldsStateCuda& mflds, HMFields& hmflds)
+{
+  copy(mflds.mflds(), hmflds);
+}
+
+inline void copy(const HMFields& hmflds, MfieldsStateCuda& mflds)
+{
+  copy(hmflds, mflds.mflds());
+}
 
 // ----------------------------------------------------------------------
 

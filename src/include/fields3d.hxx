@@ -6,7 +6,7 @@
 
 #include "grid.hxx"
 #include <mrc_io.hxx>
-#include <kg/SArrayContainer.h>
+#include <kg/SArrayView.h>
 
 #include <mrc_profile.h>
 
@@ -19,73 +19,6 @@
 #include <typeindex>
 #include <list>
 #include <string>
-
-// ======================================================================
-// StorageNoOwnership
-
-template <typename T>
-class StorageNoOwnership
-{
-public:
-  using value_type = T;
-  using reference = T&;
-  using const_reference = const T&;
-  using pointer = T*;
-  using const_pointer = const T*;
-
-  StorageNoOwnership(pointer data) : data_{data} {}
-
-  const_reference operator[](int offset) const { return data_[offset]; }
-  reference operator[](int offset) { return data_[offset]; }
-
-  // FIXME access to underlying storage might better be avoided?
-  // use of this makes assumption that storage is contiguous
-  const_pointer data() const { return data_; }
-  pointer data() { return data_; }
-
-private:
-  pointer data_;
-};
-
-// ======================================================================
-// fields3d_view
-
-template<typename T, typename L=kg::LayoutSOA>
-struct fields3d_view;
-
-namespace kg
-{
-
-template<typename T, typename L>
-struct SArrayContainerInnerTypes<fields3d_view<T, L>>
-{
-  using Layout = L;
-  using Storage = StorageNoOwnership<T>;
-};
-
-}
-
-template<typename T, typename L>
-struct fields3d_view : kg::SArrayContainer<fields3d_view<T, L>>
-{
-  using Base = kg::SArrayContainer<fields3d_view<T, L>>;
-  using Storage = typename Base::Storage;
-  using real_t = typename Base::value_type;
-
-  fields3d_view(Int3 ib, Int3 im, int n_comps, real_t* data)
-    : Base{ib, im, n_comps},
-      storage_{data}
-  {
-  }
-
-private:
-  Storage storage_;
-
-  Storage& storageImpl() { return storage_; }
-  const Storage& storageImpl() const { return storage_; }
-
-  friend class kg::SArrayContainer<fields3d_view<T, L>>;
-};
 
 // ======================================================================
 // MfieldsBase
@@ -110,13 +43,12 @@ struct MfieldsBase
 
   virtual void reset(const Grid_t& grid) { grid_ = &grid; }
   
-  int n_patches() const { return grid_->n_patches(); }
-  int n_comps() const { return n_fields_; }
+  int _n_comps() const { return n_fields_; }
   Int3 ibn() const { return ibn_; }
 
   virtual void write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names) = 0;
 
-  const Grid_t& grid() const { return *grid_; }
+  const Grid_t& _grid() const { return *grid_; }
   
   template<typename MF>
   MF& get_as(int mb, int me)
@@ -134,7 +66,7 @@ struct MfieldsBase
 
     // mprintf("get_as %s (%s) %d %d\n", type, psc_mfields_type(mflds_base), mb, me);
     
-    auto& mflds = *new MF{grid(), n_comps(), ibn()};
+    auto& mflds = *new MF{_grid(), n_fields_, ibn()};
     
     MfieldsBase::convert(*this, mflds, mb, me);
 
@@ -167,18 +99,13 @@ struct MfieldsBase
   static void convert(MfieldsBase& mf_from, MfieldsBase& mf_to, int mb, int me);
 
   static std::list<MfieldsBase*> instances;
-  
-protected:
+
+private:
   int n_fields_;
+protected:
   const Grid_t* grid_;
   Int3 ibn_;
 };
-
-#if 0
-
-using MfieldsStateBase = MfieldsBase;
-
-#else
 
 // ======================================================================
 // MfieldsStateBase
@@ -203,8 +130,8 @@ struct MfieldsStateBase
 
   virtual void reset(const Grid_t& grid) { grid_ = &grid; }
 
-  int n_patches() const { return grid_->n_patches(); }
-  int n_comps() const { return n_fields_; }
+  int _n_patches() const { return grid_->n_patches(); }
+  int _n_comps() const { return n_fields_; }
   Int3 ibn() const { return ibn_; }
 
   virtual void write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names)
@@ -212,7 +139,7 @@ struct MfieldsStateBase
     assert(0);
   }
 
-  const Grid_t& grid() { return *grid_; }
+  const Grid_t& _grid() { return *grid_; }
 
   virtual const Convert& convert_to() { static const Convert convert_to_; return convert_to_; }
   virtual const Convert& convert_from() { static const Convert convert_from_; return convert_from_; }
@@ -236,7 +163,7 @@ struct MfieldsStateBase
 
     // mprintf("get_as %s (%s) %d %d\n", type, psc_mfields_type(mflds_base), mb, me);
     
-    auto& mflds = *new MF{grid()};
+    auto& mflds = *new MF{_grid()};
     
     MfieldsStateBase::convert(*this, mflds, mb, me);
 
@@ -270,76 +197,6 @@ protected:
   Int3 ibn_;
 };
 
-#endif
-
-// ======================================================================
-// Box3
-
-class Box3
-{
-public:
-  Box3(const Int3& ib, const Int3& im)
-    : ib_{ib}, im_{im}
-  {}
-
-  int size() const { return im_[0] * im_[1] * im_[2]; }
-
-  const Int3& ib() const { return ib_; }
-  const Int3& im() const { return im_; }
-
-private:
-  Int3 ib_;
-  Int3 im_;
-};
-
-// ======================================================================
-// MfieldsStorageUniquePtr
-
-template <typename R>
-class MfieldsStorageUniquePtr
-{
-public:
-  using value_type = R;
-  
-  void resize(int size, int n_patches)
-  {
-    data_.resize(n_patches);
-    for (auto& patch : data_) {
-      patch.reset(new R[size]{});
-    }
-  }
-
-  R* operator[](int p) { return data_[p].get(); }
-  const R* operator[](int p) const { return data_[p].get(); }
-  
-private:
-  std::vector<std::unique_ptr<R[]>> data_;
-};
-  
-// ======================================================================
-// MfieldsStorageVector
-
-template <typename R>
-class MfieldsStorageVector
-{
-public:
-  using value_type = R;
-  
-  void resize(int size, int n_patches)
-  {
-    data_.resize(n_patches);
-    for (auto& patch : data_) {
-      patch.resize(size);
-    }
-  }
-
-  R* operator[](int p) { return data_[p].data(); }
-  const R* operator[](int p) const { return data_[p].data(); }
-  
-private:
-  std::vector<std::vector<R>> data_;
-};
-  
 // ======================================================================
 // MfieldsCRTP
 
@@ -355,25 +212,35 @@ public:
   using InnerTypes = MfieldsCRTPInnerTypes<D>;
   using Storage = typename InnerTypes::Storage;
   using Real = typename Storage::value_type;
-  using fields_view_t = fields3d_view<Real>;
+  using fields_view_t = kg::SArrayView<Real>;
 
-  const Box3& box() const { return box_; }
+  KG_INLINE const kg::Box3& box() const { return box_; }
+  KG_INLINE const Int3& ib() const { return box_.ib(); }
+  KG_INLINE const Int3& im() const { return box_.im(); }
+  KG_INLINE int ib(int d) const { return box_.ib(d); }
+  KG_INLINE int im(int d) const { return box_.im(d); }
+  KG_INLINE int n_comps() const { return n_fields_; }
+  KG_INLINE int n_patches() const { return n_patches_; }
 
-  MfieldsCRTP(int n_fields, Int3 ib, Int3 im, int n_patches)
-    : n_fields_(n_fields), box_{ib, im}, n_patches_{n_patches}
-  {
-    storage().resize(n_fields_ * box_.size(), n_patches_);
-  }
+  typename Storage::iterator begin() { return storage().begin(); }
+  typename Storage::iterator end() { return storage().end(); }
+  typename Storage::const_iterator begin() const { return storage().begin(); }
+  typename Storage::const_iterator end() const { return storage().end(); }
+
+  MfieldsCRTP(int n_fields, const kg::Box3& box, int n_patches)
+    : n_fields_(n_fields), box_{box}, n_patches_{n_patches}
+  {}
 
   void reset(int n_patches)
   {
     n_patches_ = n_patches;
-    storage().resize(n_fields_ * box_.size(), n_patches_);
+    storage().resize(n_patches * n_comps() * box().size());
   }
   
-  fields_view_t operator[](int p)
+  KG_INLINE fields_view_t operator[](int p)
   {
-    return fields_view_t(box_.ib(), box_.im(), n_fields_, storage()[p]);
+    size_t stride = n_comps() * box().size();
+    return fields_view_t(box(), n_comps(), &storage()[p * stride]);
   }
 
   void zero_comp(int m)
@@ -442,16 +309,13 @@ public:
   }
 
 protected:
-  Derived& derived() { return *static_cast<Derived*>(this); }
-  const Derived& derived() const { return *static_cast<const Derived*>(this); }
+  KG_INLINE Storage& storage() { return derived().storageImpl(); }
+  KG_INLINE const Storage& storage() const { return derived().storageImpl(); }
+  KG_INLINE Derived& derived() { return *static_cast<Derived*>(this); }
+  KG_INLINE const Derived& derived() const { return *static_cast<const Derived*>(this); }
 
-  // storae_ could move into Derived class, but I guess no point right now
-  Storage& storage() { return storage_; }
-  const Storage& storage() const { return storage_; }
-
-private:
-  Storage storage_;
-  Box3 box_; // size of one patch, including ghost points
+protected:
+  kg::Box3 box_; // size of one patch, including ghost points
   int n_fields_;
   int n_patches_;
 };
@@ -465,8 +329,7 @@ struct Mfields;
 template <typename R>
 struct MfieldsCRTPInnerTypes<Mfields<R>>
 {
-  using Storage = MfieldsStorageVector<R>;
-  //using Storage = MfieldsStorageUniquePtr<R>; // FIXME, drop?
+  using Storage = std::vector<R>;
 };
 
 template<typename R>
@@ -474,16 +337,22 @@ struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>>
 {
   using real_t = R;
   using Base = MfieldsCRTP<Mfields<R>>;
+  using Storage = typename Base::Storage;
 
   Mfields(const Grid_t& grid, int n_fields, Int3 ibn)
     : MfieldsBase(grid, n_fields, ibn),
-      Base(n_fields, -ibn, grid.ldims + 2 * ibn, grid.n_patches())
+      Base(n_fields, {-ibn, grid.ldims + 2 * ibn}, grid.n_patches()),
+      storage_(size_t(Base::box().size() * n_fields * Base::n_patches())),
+      grid_{&grid}
   {}
+
+  const Grid_t& grid() const { return *grid_; }
 
   virtual void reset(const Grid_t& grid) override
   {
     MfieldsBase::reset(grid);
     Base::reset(grid.n_patches());
+    grid_ = &grid;
   }
   
   void write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names) override
@@ -494,6 +363,15 @@ struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>>
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override;
   const Convert& convert_from() override;
+
+private:
+  Storage storage_;
+  const Grid_t* grid_;
+
+  Storage& storageImpl() { return storage_; }
+  const Storage& storageImpl() const { return storage_; }
+
+  friend class MfieldsCRTP<Mfields<R>>;
 };
 
 template<> const MfieldsBase::Convert Mfields<float>::convert_to_;
@@ -528,6 +406,9 @@ struct MfieldsStateFromMfields : MfieldsStateBase
       mflds_{grid, NR_FIELDS, grid.ibn}
   {}
 
+  const Grid_t& grid() const { return mflds_.grid(); }
+  int n_patches() const { return mflds_.n_patches(); }
+  
   fields_view_t operator[](int p) { return mflds_[p]; }
 
   static const Convert convert_to_, convert_from_;

@@ -8,12 +8,12 @@ using Layout = kg::LayoutSOA;
 
 TEST(SArray, Ctor)
 {
-  auto f = kg::SArray<Real, Layout>{{1, 2, 3}, {2, 3, 4}, 2};
+  auto f = kg::SArray<Real, Layout>{{{1, 2, 3}, {2, 3, 4}}, 2};
 }
 
 TEST(SArray, BoundsEtc)
 {
-  auto f = kg::SArray<Real, Layout>{{1, 2, 3}, {2, 3, 4}, 2};
+  auto f = kg::SArray<Real, Layout>{{{1, 2, 3}, {2, 3, 4}}, 2};
 
   EXPECT_EQ(f.ib(), Int3({1, 2, 3}));
   EXPECT_EQ(f.im(), Int3({2, 3, 4}));
@@ -42,7 +42,7 @@ static void setSArray(SA& f)
 
 TEST(SArray, AccessSOA)
 {
-  auto f = kg::SArray<Real, kg::LayoutSOA>{{1, 2, 3}, {2, 3, 1}, 2};
+  auto f = kg::SArray<Real, kg::LayoutSOA>{{{1, 2, 3}, {2, 3, 1}}, 2};
   setSArray(f);
 
   EXPECT_TRUE(std::equal(f.data(), f.data() + 12,
@@ -53,7 +53,7 @@ TEST(SArray, AccessSOA)
 
 TEST(SArray, AccessAOS)
 {
-  auto f = kg::SArray<Real, kg::LayoutAOS>{{1, 2, 3}, {2, 3, 1}, 2};
+  auto f = kg::SArray<Real, kg::LayoutAOS>{{{1, 2, 3}, {2, 3, 1}}, 2};
   setSArray(f);
 
   EXPECT_TRUE(std::equal(f.data(), f.data() + 12,
@@ -64,7 +64,7 @@ TEST(SArray, AccessAOS)
 
 TEST(SArray, index)
 {
-  auto f = kg::SArray<Real, kg::LayoutSOA>{{1, 2, 3}, {2, 3, 4}, 2};
+  auto f = kg::SArray<Real, kg::LayoutSOA>{{{1, 2, 3}, {2, 3, 4}}, 2};
 
   EXPECT_EQ(f.index(0, {1, 2, 3}), 0);
   EXPECT_EQ(f.index(0, {2, 2, 3}), 1);
@@ -73,7 +73,7 @@ TEST(SArray, index)
 
 TEST(SArray, data)
 {
-  auto f = kg::SArray<Real, Layout>{{1, 2, 3}, {2, 3, 4}, 2};
+  auto f = kg::SArray<Real, Layout>{{{1, 2, 3}, {2, 3, 4}}, 2};
 
   EXPECT_EQ(f.data(), &f(0, 1, 2, 3));
   const auto& fc = const_cast<const kg::SArray<Real, Layout>&>(f);

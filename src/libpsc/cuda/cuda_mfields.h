@@ -4,9 +4,11 @@
 
 #include "cuda_iface.h"
 #include "cuda_iface_bnd.h"
+#include "cuda_base.cuh"
+#include "psc_fields_cuda.h"
 #include "dim.hxx"
 
-#include <kg/SArray.h>
+#include <kg/SArrayView.h>
 
 #define MAX_BND_FIELDS (17)
 #define MAX_BND_COMPONENTS (3)
@@ -44,17 +46,83 @@ struct cuda_mfields_bnd {
 };
 
 // ======================================================================
-// cuda_mfields
+// MfieldsStorageDeviceRaw
+
+class MfieldsStorageDeviceRaw
+{
+public:
+  using value_type = float;
+  using reference = float&;
+  using const_reference = const float&;
+  using iterator = float*;
+  using const_iterator = const float*;
+  
+  MfieldsStorageDeviceRaw(uint stride, value_type* data)
+    : stride_{stride}, data_{data}
+  {}
+  
+  KG_INLINE reference operator[](size_t i) { return data_[i]; }
+  KG_INLINE const_reference operator[](size_t i) const { return data_[i]; }
+
+private:
+  value_type *data_;
+  uint stride_;
+};
+
+// ======================================================================
+// DMfields
 
 struct DMFields;
-struct DFields;
 
-struct cuda_mfields
+template <>
+struct MfieldsCRTPInnerTypes<DMFields>
 {
-  using real_t = float;
-  using fields_host_t = kg::SArray<real_t>;
+  using Storage = MfieldsStorageDeviceRaw;
+};
 
-  cuda_mfields(const Grid_t& grid, int n_fields, const Int3& ibn);
+struct DMFields : MfieldsCRTP<DMFields>
+{
+  using Base = MfieldsCRTP<DMFields>;
+  using Storage = typename Base::Storage;
+  using real_t = typename Base::Real;
+  
+  DMFields(const kg::Box3& box, int n_comps, int n_patches, real_t* d_flds)
+    : Base{n_comps, box, n_patches},
+      storage_{uint(n_comps * box.size()), d_flds}
+  {}
+
+private:
+  Storage storage_;
+  
+  KG_INLINE Storage& storageImpl() { return storage_; }
+  KG_INLINE const Storage& storageImpl() const { return storage_; }
+
+  friend class MfieldsCRTP<DMFields>;
+};
+
+using DFields = DMFields::fields_view_t;
+
+// ======================================================================
+// cuda_mfields
+
+using MfieldsStorageDeviceVector = thrust::device_vector<float>;
+
+struct cuda_mfields : CudaMfields<MfieldsStorageDeviceVector>
+{
+  using Base = CudaMfields<MfieldsStorageDeviceVector>;
+  using Storage = typename Base::Storage;
+  using real_t = typename Storage::value_type;
+  using pointer = typename Storage::pointer;
+  using const_pointer = typename Storage::const_pointer;
+
+  cuda_mfields(const Grid_t& grid, int n_comps, const Int3& ibn)
+    : Base{{-ibn, grid.ldims + 2*ibn}, n_comps, grid.n_patches()},
+      grid_{grid}
+  {
+    cuda_base_init();
+  }
+
+  using Base::Base;
   cuda_mfields(const cuda_mfields&) = delete;
 
   void zero_comp(int m, dim_yz tag);
@@ -62,108 +130,32 @@ struct cuda_mfields
   
   void axpy_comp_yz(int ym, float a, cuda_mfields *x, int xm);
 
-  fields_host_t get_host_fields();
-  void copy_to_device(int p, const fields_host_t& h_flds, int mb, int me);
-  void copy_from_device(int p, fields_host_t& h_flds, int mb, int me);
-
   mrc_json_t to_json();
   void dump(const char *filename);
 
-  real_t *data() { return d_flds_.data().get(); }
+  pointer data() { return storage().data(); }
   operator DMFields();
-  DFields operator[](int p);
+  DFields operator[](int p) const; // FIXME, const correctness
   const Grid_t& grid() const { return grid_; }
 
   int index(int m, int i, int j, int k, int p) const
   {
     return (((((p)
-	       * n_fields + m)
-	      * im[2] + (k - ib[2]))
-	     * im[1] + (j - ib[1]))
-	    * im[0] + (i - ib[0]));
+	       * n_comps() + m)
+	      * im(2) + (k - ib(2)))
+	     * im(1) + (j - ib(1)))
+	    * im(0) + (i - ib(0)));
   }
 
-  real_t get_value(int idx) const { return d_flds_[idx]; }
-  void set_value(int idx, real_t val) { d_flds_[idx] = val; }
+  real_t get_value(int idx) const { return storage()[idx]; }
+  void set_value(int idx, real_t val) { storage()[idx] = val; }
   
-public:
-  Int3 ib;
-  Int3 im;
-  int n_patches;
-  int n_fields;
-  int n_cells_per_patch;
-  int n_cells;
 private:
-  thrust::device_vector<fields_cuda_real_t> d_flds_;
   const Grid_t& grid_;
 };
 
-// ======================================================================
-// DFields
-
-struct DFields
-{
-  using real_t = float;
-  
-  __host__ __device__ DFields(real_t* d_flds, int im[3], int ib[3])
-    : d_flds_(d_flds),
-      im_{im[0], im[1], im[2]},
-      ib_{ib[0], ib[1], ib[2]}
-  {}
-  
-  __device__ real_t  operator()(int m, int i, int j, int k) const { return d_flds_[index(m, i,j,k)]; }
-  __device__ real_t& operator()(int m, int i, int j, int k)       { return d_flds_[index(m, i,j,k)]; }
-
-  __host__ real_t *data() { return d_flds_; }
-
-  __device__ int im(int d) const { return im_[d]; }
-
-private:
-  __device__ int index(int m, int i, int j, int k) const
-  {
-#if 0
-    if (i - ib_[0] < 0 || i - ib_[0] >= im_[0]) printf("!!! i %d\n", j);
-    if (j - ib_[1] < 0 || j - ib_[1] >= im_[1]) printf("!!! j %d\n", j);
-    if (k - ib_[2] < 0 || k - ib_[2] >= im_[2]) printf("!!! k %d\n", k);
-#endif
-    return ((((m)
-	      *im_[2] + (k - ib_[2]))
-	     *im_[1] + (j - ib_[1]))
-	    *im_[0] + (i - ib_[0]));
-  }
-
-private:
-  real_t *d_flds_;
-  int im_[3];
-  int ib_[3];
-};
-
-// ======================================================================
-// DMFields
-
-struct DMFields
-{
-  using real_t = float;
-  
-  __host__ DMFields(real_t* d_flds, uint stride, int im[3], int ib[3])
-    : d_flds_(d_flds),
-      stride_(stride),
-      im_{ im[0], im[1], im[2] },
-      ib_{ ib[0], ib[1], ib[2] }
-  {}
-
-  __host__ __device__ DFields operator[](int p)
-  {
-    return DFields(d_flds_ + p * stride_, im_, ib_);
-  }
-
-  __device__ int im(int d) const { return im_[d]; }
-  
-private:
-  real_t *d_flds_;
-  uint stride_;
-  int im_[3];
-  int ib_[3];
-};
+HMFields hostMirror(const cuda_mfields& cmflds);
+void copy(const cuda_mfields& cmflds, HMFields& hmflds);
+void copy(const HMFields& hmflds, cuda_mfields& cmflds);
 
 #endif

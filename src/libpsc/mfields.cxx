@@ -14,7 +14,7 @@ std::list<MfieldsBase*> MfieldsBase::instances;
 void MfieldsBase::convert(MfieldsBase& mf_from, MfieldsBase& mf_to, int mb, int me)
 {
   // FIXME, implementing == wouldn't hurt
-  assert(&mf_from.grid() == &mf_to.grid());
+  assert(&mf_from._grid() == &mf_to._grid());
   
   auto convert_to = mf_from.convert_to().find(std::type_index(typeid(mf_to)));
   if (convert_to != mf_from.convert_to().cend()) {
@@ -33,13 +33,12 @@ void MfieldsBase::convert(MfieldsBase& mf_from, MfieldsBase& mf_to, int mb, int 
   assert(0);
 }
 
-#if 1
 std::list<MfieldsStateBase*> MfieldsStateBase::instances;
 
 void MfieldsStateBase::convert(MfieldsStateBase& mf_from, MfieldsStateBase& mf_to, int mb, int me)
 {
   // FIXME, implementing == wouldn't hurt
-  assert(&mf_from.grid() == &mf_to.grid());
+  assert(&mf_from._grid() == &mf_to._grid());
   
   auto convert_to = mf_from.convert_to().find(std::type_index(typeid(mf_to)));
   if (convert_to != mf_from.convert_to().cend()) {
@@ -57,4 +56,3 @@ void MfieldsStateBase::convert(MfieldsStateBase& mf_from, MfieldsStateBase& mf_t
 	  typeid(mf_from).name(), typeid(mf_to).name());
   assert(0);
 }
-#endif

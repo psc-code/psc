@@ -88,24 +88,24 @@ push_fields_H_xyz(DMFields dmflds, float cnx, float cny, float cnz, int gridz)
 void
 cuda_push_fields_E_xyz(struct cuda_mfields *cmflds, float dt)
 {
-  if (cmflds->n_patches == 0) {
+  if (cmflds->n_patches() == 0) {
     return;
   }
 
-  assert(cmflds->n_fields == NR_FIELDS);
-  assert(cmflds->ib[0] == -BND);
-  assert(cmflds->ib[1] == -BND);
-  assert(cmflds->ib[2] == -BND);
+  assert(cmflds->n_comps() == NR_FIELDS);
+  assert(cmflds->ib(0) == -BND);
+  assert(cmflds->ib(1) == -BND);
+  assert(cmflds->ib(2) == -BND);
 
   float cnx = dt / cmflds->grid().domain.dx[0];
   float cny = dt / cmflds->grid().domain.dx[1];
   float cnz = dt / cmflds->grid().domain.dx[2];
 
-  int grid[3]  = { (cmflds->im[0] + BLOCKSIZE_X - 1) / BLOCKSIZE_X,
-		   (cmflds->im[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-		   (cmflds->im[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
+  int grid[3]  = { (cmflds->im(0) + BLOCKSIZE_X - 1) / BLOCKSIZE_X,
+		   (cmflds->im(1) + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+		   (cmflds->im(2) + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
   dim3 dimBlock(BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z);
-  dim3 dimGrid(grid[0], grid[1], grid[2] * cmflds->n_patches);
+  dim3 dimGrid(grid[0], grid[1], grid[2] * cmflds->n_patches());
 
 
   push_fields_E_xyz<<<dimGrid, dimBlock>>>(*cmflds, dt, cnx, cny, cnz, grid[2]);
@@ -115,7 +115,7 @@ cuda_push_fields_E_xyz(struct cuda_mfields *cmflds, float dt)
 void
 cuda_push_fields_H_xyz(struct cuda_mfields *cmflds, float dt)
 {
-  if (cmflds->n_patches == 0) {
+  if (cmflds->n_patches() == 0) {
     return;
   }
 
@@ -123,11 +123,11 @@ cuda_push_fields_H_xyz(struct cuda_mfields *cmflds, float dt)
   float cny = dt / cmflds->grid().domain.dx[1];
   float cnz = dt / cmflds->grid().domain.dx[2];
 
-  int grid[3]  = { (cmflds->im[0] + BLOCKSIZE_X - 1) / BLOCKSIZE_X,
-		   (cmflds->im[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-		   (cmflds->im[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
+  int grid[3]  = { (cmflds->im(0) + BLOCKSIZE_X - 1) / BLOCKSIZE_X,
+		   (cmflds->im(1) + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+		   (cmflds->im(2) + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
   dim3 dimBlock(BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z);
-  dim3 dimGrid(grid[0], grid[1], grid[2] * cmflds->n_patches);
+  dim3 dimGrid(grid[0], grid[1], grid[2] * cmflds->n_patches());
 
   push_fields_H_xyz<<<dimGrid, dimBlock>>>(*cmflds, cnx, cny, cnz, grid[2]);
   cuda_sync_if_enabled();
