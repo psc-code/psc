@@ -5,7 +5,13 @@
 
 ## Introduction
 
-This is the development version of PSC. It is usable for certain problems, but overall lots of changes are happening and things may be unstable / evolving.
+This is the development version of PSC. It is usable for certain
+problems, but overall lots of changes are happening and things may be
+unstable / evolving.
+
+PSC is a 3-dimensional fully electromagnetic particle-in-cell code for
+kinetic plasma simulations. It supports Nvidia GPUs and patch-based
+dynamic load balancing.
 
 ## Quickstart
 
@@ -19,9 +25,7 @@ $ mkdir build # This is my build directory
 $ # create a cmake.sh so I don't have to remember the options I used
 $ cat > cmake.sh <<EOF
 cmake \
-    -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-    -DCMAKE_C_FLAGS_RELWITHDEBINFO="-g -O2" \
-    -DCMAKE_CXX_FLAGS_RELWITHDEBINFO="-g -O2" \
+    -DCMAKE_BUILD_TYPE=Release \
     -DUSE_CUDA=OFF \
     -DUSE_VPIC=OFF \
     ..
@@ -44,4 +48,6 @@ if you don't have to go through a batch system.
 
 ## Documentation
 
-Well, this is really a big todo, so for now it's probably all about emailing kai.germaschewski@unh.edu. Here's a link to some very outdated docs: http://fishercat.sr.unh.edu/psc/
+Well, this is really a big todo, so for now a lot of it is probably
+all about emailing kai.germaschewski@unh.edu. But I'm working on
+actually usable documentation and there's a start here: https://psc.readthedocs.io/en/latest/
