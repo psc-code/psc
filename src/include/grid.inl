@@ -1,41 +1,7 @@
 
 #include <array>
 
-#include "kg/io.h"
-
-// ======================================================================
-// VariableByPatch
-
-template <typename T>
-struct VariableByPatch;
-
-template <typename T>
-struct VariableByPatch<std::vector<Vec3<T>>>
-{
-  using value_type = std::vector<Vec3<T>>;
-
-  void put(kg::io::Engine& writer, const value_type& datum, const Grid_t& grid,
-           const kg::io::Mode launch = kg::io::Mode::NonBlocking)
-  {
-    kg::io::Dims shape = {static_cast<size_t>(grid.nGlobalPatches()), 3};
-    kg::io::Dims start = {
-      static_cast<size_t>(grid.localPatchInfo(0).global_patch), 0};
-    kg::io::Dims count = {static_cast<size_t>(grid.n_patches()), 3};
-    writer.putVariable(datum[0].data(), launch, shape, {start, count});
-  }
-
-  void get(kg::io::Engine& reader, value_type& datum, const Grid_t& grid,
-           const kg::io::Mode launch = kg::io::Mode::NonBlocking)
-  {
-    kg::io::Dims shape = {static_cast<size_t>(grid.nGlobalPatches()), 3};
-    kg::io::Dims start = {
-      static_cast<size_t>(grid.localPatchInfo(0).global_patch), 0};
-    kg::io::Dims count = {static_cast<size_t>(grid.n_patches()), 3};
-    assert(reader.variableShape<T>() == shape);
-    datum.resize(count[0]);
-    reader.getVariable(datum[0].data(), launch, {start, count});
-  }
-};
+#include "VariableByPatch.h"
 
 // ======================================================================
 // Descr<Grid_t::Domain>
