@@ -7,6 +7,7 @@ Analyzing and Visualizing PSC data
    :caption: Contents:
 
    flatfoil_700
+   flatfoil_700prt
 
 .. todo::
 
