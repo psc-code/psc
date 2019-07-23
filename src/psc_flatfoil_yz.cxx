@@ -47,6 +47,8 @@ double background_n;
 double background_Te;
 double background_Ti;
 
+int inject_interval;
+
 // ======================================================================
 // InjectFoil
 
@@ -106,6 +108,7 @@ using PscConfig = PscConfig1vbecSingle<dim_t>;
 using MfieldsState = PscConfig::MfieldsState;
 using Mparticles = PscConfig::Mparticles;
 using Balance = PscConfig::Balance_t;
+using Inject = typename InjectSelector<Mparticles, InjectFoil, dim_t>::Inject;
 
 // ======================================================================
 // PscFlatfoil
@@ -114,13 +117,14 @@ struct PscFlatfoil : Psc<PscConfig>
 {
   using DIM = PscConfig::dim_t;
   using Heating_t = typename HeatingSelector<Mparticles>::Heating;
-  using Inject_t = typename InjectSelector<Mparticles, InjectFoil, DIM>::Inject;
 
   // ----------------------------------------------------------------------
   // ctor
 
   PscFlatfoil(const PscParams& params, Grid_t& grid, MfieldsState& mflds,
-              Mparticles& mprts, Balance& balance)
+              Mparticles& mprts, Balance& balance, Inject& inject,
+              InjectFoil& inject_target)
+    : inject_{inject}, inject_target_{inject_target}
   {
     auto comm = grid.comm();
 
@@ -173,23 +177,6 @@ struct PscFlatfoil : Psc<PscConfig>
     heating_end_ = 10000000;
     heating_.reset(
       new Heating_t{grid, heating_interval_, MY_ELECTRON, heating_spot});
-
-    // -- Particle injection
-    auto inject_foil_params = InjectFoilParams{};
-    inject_foil_params.yl = -100000. * d_i;
-    inject_foil_params.yh = 100000. * d_i;
-    double target_zwidth = 1.;
-    inject_foil_params.zl = -target_zwidth * d_i;
-    inject_foil_params.zh = target_zwidth * d_i;
-    inject_foil_params.n = 1.;
-    inject_foil_params.Te = .001;
-    inject_foil_params.Ti = .001;
-    inject_target_ = InjectFoil{inject_foil_params};
-    inject_interval_ = 20;
-
-    int inject_tau = 40;
-    inject_.reset(new Inject_t{grid, inject_interval_, inject_tau, MY_ELECTRON,
-                               inject_target_});
 
     // -- output fields
     OutputFieldsCParams outf_params{};
@@ -324,10 +311,10 @@ struct PscFlatfoil : Psc<PscConfig>
     auto comm = grid().comm();
     auto timestep = grid().timestep();
 
-    if (inject_interval_ > 0 && timestep % inject_interval_ == 0) {
+    if (inject_interval > 0 && timestep % inject_interval == 0) {
       mpi_printf(comm, "***** Performing injection...\n");
       prof_start(pr_inject);
-      (*inject_)(*mprts_);
+      inject_(*mprts_);
       prof_stop(pr_inject);
     }
 
@@ -343,11 +330,10 @@ struct PscFlatfoil : Psc<PscConfig>
 
 protected:
   std::unique_ptr<Heating_t> heating_;
-  std::unique_ptr<Inject_t> inject_;
+  Inject& inject_;
 
 private:
-  int inject_interval_;
-  InjectFoil inject_target_;
+  InjectFoil& inject_target_;
 
   int heating_begin_;
   int heating_end_;
@@ -379,6 +365,12 @@ int main(int argc, char** argv)
   // -- setup particle kinds
   // last population ("e") is neutralizing
   Grid_t::Kinds kinds = {{Zi, mass_ratio * Zi, "i"}, {-1., 1., "e"}};
+
+  double d_i = sqrt(kinds[MY_ION].m / kinds[MY_ION].q);
+
+  mpi_printf(MPI_COMM_WORLD, "d_e = %g, d_i = %g\n", 1., d_i);
+  mpi_printf(MPI_COMM_WORLD, "lambda_De (background) = %g\n",
+             sqrt(background_Te));
 
   // --- setup domain
 #if 0
@@ -447,7 +439,26 @@ int main(int argc, char** argv)
     // -- Sort
     psc_params.sort_interval = 10;
 
-    PscFlatfoil psc{psc_params, grid, mflds, mprts, balance};
+    // -- Particle injection
+    InjectFoilParams inject_foil_params;
+    inject_foil_params.yl = -100000. * d_i;
+    inject_foil_params.yh = 100000. * d_i;
+    double target_zwidth = 1.;
+    inject_foil_params.zl = -target_zwidth * d_i;
+    inject_foil_params.zh = target_zwidth * d_i;
+    inject_foil_params.n = 1.;
+    inject_foil_params.Te = .001;
+    inject_foil_params.Ti = .001;
+    InjectFoil inject_target{inject_foil_params};
+
+    inject_interval = 20;
+    int inject_tau = 40;
+    Inject inject{grid, inject_interval, inject_tau, MY_ELECTRON,
+                  inject_target};
+
+
+    PscFlatfoil psc{psc_params, grid,   mflds,        mprts,
+                    balance,    inject, inject_target};
     psc.initialize();
     psc.integrate();
   }
