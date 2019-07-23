@@ -169,7 +169,7 @@ struct ConstAccessorVpic
 	}
 	n -= sp.np;
       }
-      assert(0);
+      std::abort();
     }
 
   private:
