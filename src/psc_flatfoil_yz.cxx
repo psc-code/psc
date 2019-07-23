@@ -49,6 +49,10 @@ double background_Ti;
 
 int inject_interval;
 
+int heating_begin;
+int heating_end;
+int heating_interval;
+
 // ======================================================================
 // InjectFoil
 
@@ -109,22 +113,20 @@ using MfieldsState = PscConfig::MfieldsState;
 using Mparticles = PscConfig::Mparticles;
 using Balance = PscConfig::Balance_t;
 using Inject = typename InjectSelector<Mparticles, InjectFoil, dim_t>::Inject;
+using Heating = typename HeatingSelector<Mparticles>::Heating;
 
 // ======================================================================
 // PscFlatfoil
 
 struct PscFlatfoil : Psc<PscConfig>
 {
-  using DIM = PscConfig::dim_t;
-  using Heating_t = typename HeatingSelector<Mparticles>::Heating;
-
   // ----------------------------------------------------------------------
   // ctor
 
   PscFlatfoil(const PscParams& params, Grid_t& grid, MfieldsState& mflds,
               Mparticles& mprts, Balance& balance, Inject& inject,
-              InjectFoil& inject_target)
-    : inject_{inject}, inject_target_{inject_target}
+              Heating& heating)
+    : inject_{inject}, heating_{heating}
   {
     auto comm = grid.comm();
 
@@ -155,28 +157,6 @@ struct PscFlatfoil : Psc<PscConfig>
     p_.marder_interval = 0 * 5;
     marder_.reset(
       new Marder_t(grid, marder_diffusion, marder_loop, marder_dump));
-
-    double d_i = sqrt(grid.kinds[MY_ION].m / grid.kinds[MY_ION].q);
-
-    mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
-    mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(background_Te));
-
-    // -- Heating
-    auto heating_foil_params = HeatingSpotFoilParams{};
-    heating_foil_params.zl = -1. * d_i;
-    heating_foil_params.zh = 1. * d_i;
-    heating_foil_params.xc = 0. * d_i;
-    heating_foil_params.yc = 0. * d_i;
-    heating_foil_params.rH = 3. * d_i;
-    heating_foil_params.T = .04;
-    heating_foil_params.Mi = grid.kinds[MY_ION].m;
-    auto heating_spot = HeatingSpotFoil{heating_foil_params};
-
-    heating_interval_ = 20;
-    heating_begin_ = 0;
-    heating_end_ = 10000000;
-    heating_.reset(
-      new Heating_t{grid, heating_interval_, MY_ELECTRON, heating_spot});
 
     // -- output fields
     OutputFieldsCParams outf_params{};
@@ -249,25 +229,18 @@ struct PscFlatfoil : Psc<PscConfig>
     }
 
     // only heating between heating_tb and heating_te
-    if (timestep >= heating_begin_ && timestep < heating_end_ &&
-        heating_interval_ > 0 && timestep % heating_interval_ == 0) {
+    if (timestep >= heating_begin && timestep < heating_end &&
+        heating_interval > 0 && timestep % heating_interval == 0) {
       mpi_printf(comm, "***** Performing heating...\n");
       prof_start(pr_heating);
-      (*heating_)(*mprts_);
+      heating_(*mprts_);
       prof_stop(pr_heating);
     }
   }
 
-protected:
-  std::unique_ptr<Heating_t> heating_;
-  Inject& inject_;
-
 private:
-  InjectFoil& inject_target_;
-
-  int heating_begin_;
-  int heating_end_;
-  int heating_interval_;
+  Heating& heating_;
+  Inject& inject_;
 };
 
 // ======================================================================
@@ -370,6 +343,23 @@ int main(int argc, char** argv)
     // -- Sort
     psc_params.sort_interval = 10;
 
+    // -- Heating
+    HeatingSpotFoilParams heating_foil_params{};
+    heating_foil_params.zl = -1. * d_i;
+    heating_foil_params.zh = 1. * d_i;
+    heating_foil_params.xc = 0. * d_i;
+    heating_foil_params.yc = 0. * d_i;
+    heating_foil_params.rH = 3. * d_i;
+    heating_foil_params.T = .04;
+    heating_foil_params.Mi = grid.kinds[MY_ION].m;
+    HeatingSpotFoil heating_spot{heating_foil_params};
+
+    heating_interval = 20;
+    heating_begin = 0;
+    heating_end = 10000000;
+    auto& heating =
+      *new Heating{grid, heating_interval, MY_ELECTRON, heating_spot};
+
     // -- Particle injection
     InjectFoilParams inject_foil_params;
     inject_foil_params.yl = -100000. * d_i;
@@ -430,8 +420,8 @@ int main(int argc, char** argv)
     mpi_printf(MPI_COMM_WORLD, "**** Setting up particles...\n");
     setup_particles.setup_particles(mprts, n_prts_by_patch, lf_init_npt);
 
-    PscFlatfoil psc{psc_params, *grid_ptr, mflds,        mprts,
-                    balance,    inject,    inject_target};
+    PscFlatfoil psc{psc_params, *grid_ptr, mflds,  mprts,
+                    balance,    inject,    heating};
     psc.initialize();
     psc.integrate();
   }
