@@ -37,6 +37,12 @@ enum {
 };
 
 // ======================================================================
+// global parameters (FIXME?)
+
+double BB;
+double Zi;
+
+// ======================================================================
 // InjectFoil
 
 struct InjectFoilParams
@@ -107,37 +113,16 @@ struct PscFlatfoil : Psc<PscConfig>
   // ----------------------------------------------------------------------
   // ctor
   
-  PscFlatfoil()
+  PscFlatfoil(const PscParams& params, const Grid_t::Kinds& kinds)
   {
     auto comm = grid().comm();
 
-    mpi_printf(comm, "*** Setting up...\n");
+    p_ = params;
 
-#if 0
-    p_.nmax = 5001;
-#else
-    p_.nmax = 2001;
-#endif
-    p_.cfl = 0.75;
-
-    BB_ = 0.;
-    Zi_ = 1.;
-    
     // --- for background plasma
     background_n_  = .002;
     background_Te_ = .001;
     background_Ti_ = .001;
-    
-    // -- setup particle kinds
-    // last population ("e") is neutralizing
-    // FIXME, hardcoded mass ratio 100
-#if 1
-    double mass_ratio = 100.;
-#endif
-#if 0
-    double mass_ratio = 25.;
-#endif
-    Grid_t::Kinds kinds = {{Zi_, mass_ratio*Zi_, "i"}, { -1., 1., "e"}};
     
     double d_i = sqrt(kinds[MY_ION].m / kinds[MY_ION].q);
     
@@ -354,7 +339,7 @@ struct PscFlatfoil : Psc<PscConfig>
   {
     setupFields(grid(), mflds, [&](int m, double crd[3]) {
 	switch (m) {
-	case HY: return BB_;
+	case HY: return BB;
 	default: return 0.;
 	}
       });
@@ -396,9 +381,6 @@ protected:
   std::unique_ptr<Inject_t> inject_;
 
 private:
-  double BB_;
-  double Zi_;
-
   double background_n_;
   double background_Te_;
   double background_Ti_;
@@ -419,8 +401,23 @@ int
 main(int argc, char **argv)
 {
   psc_init(argc, argv);
+
+  mpi_printf(MPI_COMM_WORLD, "*** Setting up...\n");
+
+  PscParams psc_params;
+  psc_params.nmax = 2001; // 5001;
+  psc_params.cfl = 0.75;
+
+  BB = 0.;
+  Zi = 1.;
+  // FIXME, hardcoded mass ratio 100
+  double mass_ratio = 100.; // 25.
+
+  // -- setup particle kinds
+  // last population ("e") is neutralizing
+  Grid_t::Kinds kinds = {{Zi, mass_ratio*Zi, "i"}, { -1., 1., "e"}};
   
-  auto psc = new PscFlatfoil;
+  auto psc = new PscFlatfoil(psc_params, kinds);
 
   psc->initialize();
   psc->integrate();

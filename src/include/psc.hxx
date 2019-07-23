@@ -84,7 +84,7 @@ struct Psc
   // ----------------------------------------------------------------------
   // define_grid
 
-  void define_grid(Grid_t::Domain& domain, GridBc& bc, Grid_t::Kinds& kinds,
+  void define_grid(const Grid_t::Domain& domain, const GridBc& bc, const Grid_t::Kinds& kinds,
 		   double dt, Grid_t::NormalizationParams& norm_params)
   {
     if (Dim::InvarX::value) { ibn[0] = 0; }
@@ -581,7 +581,7 @@ struct Psc
   // ----------------------------------------------------------------------
   // define_periodic_grid
   
-  void define_periodic_grid(double xl[3], double xh[3], const int gdims[3], const int np[3])
+  void define_periodic_grid(const double xl[3], const double xh[3], const int gdims[3], const int np[3])
   {
 #ifdef VPIC
     // SimulationMixin::setTopology(np[0], np[1], np[2]); FIXME, needed for vpic_simulation,

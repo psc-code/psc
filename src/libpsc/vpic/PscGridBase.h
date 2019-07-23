@@ -111,7 +111,7 @@ struct PscGridBase
     return new PscGridBase;
   }
 
-  void setup(double dx_[3], double dt_, double cvac_, double eps0_)
+  void setup(const double dx_[3], double dt_, double cvac_, double eps0_)
   {
     dx = dx_[0]; dy = dx_[1]; dz = dx_[2];
     dt = dt_;

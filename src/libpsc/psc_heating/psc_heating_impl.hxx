@@ -49,9 +49,9 @@ struct Heating__ : HeatingBase
     real_t Dpyi = sqrtf(H * heating_dt_);
     real_t Dpzi = sqrtf(H * heating_dt_);
 
-    prt.u()[0] += Dpxi * ranx;
-    prt.u()[1] += Dpyi * rany;
-    prt.u()[2] += Dpzi * ranz;
+    prt.u[0] += Dpxi * ranx;
+    prt.u[1] += Dpyi * rany;
+    prt.u[2] += Dpzi * ranz;
   }
 
   void operator()(Mparticles& mprts)
@@ -65,9 +65,9 @@ struct Heating__ : HeatingBase
 	}
       
 	double xx[3] = {
-	  prt.x()[0] + patch.xb[0],
-	  prt.x()[1] + patch.xb[1],
-	  prt.x()[2] + patch.xb[2],
+	  prt.x[0] + patch.xb[0],
+	  prt.x[1] + patch.xb[1],
+	  prt.x[2] + patch.xb[2],
 	};
 
 	double H = get_H_(xx);
