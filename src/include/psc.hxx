@@ -29,6 +29,10 @@ struct PscParams
 
   bool detailed_profiling = false; // output profiling info for each process separately
   int stats_every = 10;    // output timing and other info every so many steps
+
+  int balance_interval = 0;
+  int sort_interval = 0;
+  int marder_interval = 0;
 };
 
 // ----------------------------------------------------------------------
@@ -375,14 +379,14 @@ struct Psc
     auto& mprts = *mprts_;
     auto& mflds = *mflds_;
 
-    if (balance_interval > 0 && timestep % balance_interval == 0) {
+    if (p_.balance_interval > 0 && timestep % p_.balance_interval == 0) {
       (*balance_)(grid_, mprts);
     }
 
     prof_start(pr_time_step_no_comm);
     prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
 
-    if (sort_interval > 0 && timestep % sort_interval == 0) {
+    if (p_.sort_interval > 0 && timestep % p_.sort_interval == 0) {
       //mpi_printf(comm, "***** Sorting...\n");
       prof_start(pr_sort);
       (*sort_)(mprts);
@@ -454,7 +458,7 @@ struct Psc
     // E at t^{n+3/2}, particles at t^{n+3/2}
     // B at t^{n+3/2} (Note: that is not it's natural time,
     // but div B should be == 0 at any time...)
-    if (marder_interval > 0 && timestep % marder_interval == 0) {
+    if (p_.marder_interval > 0 && timestep % p_.marder_interval == 0) {
       //mpi_printf(comm, "***** Performing Marder correction...\n");
       prof_start(pr_marder);
       (*marder_)(mflds, mprts);
@@ -497,11 +501,11 @@ struct Psc
     auto& mprts = *mprts_;
     auto& mflds = *mflds_;
 
-    if (balance_interval > 0 && timestep % balance_interval == 0) {
+    if (p_.balance_interval > 0 && timestep % p_.balance_interval == 0) {
       (*balance_)(grid_, mprts);
     }
 
-    if (sort_interval > 0 && timestep % sort_interval == 0) {
+    if (p_.sort_interval > 0 && timestep % p_.sort_interval == 0) {
       mpi_printf(comm, "***** Sorting...\n");
       prof_start(pr_sort);
       (*sort_)(mprts);
@@ -589,7 +593,7 @@ struct Psc
     // E at t^{n+3/2}, particles at t^{n+3/2}
     // B at t^{n+3/2} (Note: that is not its natural time,
     // but div B should be == 0 at any time...)
-    if (marder_interval > 0 && timestep % marder_interval == 0) {
+    if (p_.marder_interval > 0 && timestep % p_.marder_interval == 0) {
       mpi_printf(comm, "***** Performing Marder correction...\n");
       prof_start(pr_marder);
       (*marder_)(mflds, mprts);
@@ -930,10 +934,6 @@ protected:
 
   // FIXME, maybe should be private
   // need to make sure derived class sets these (? -- or just leave them off by default)
-  int balance_interval;
-  int sort_interval;
-  int marder_interval;
-
   int num_comm_round = {3};
   
   int st_nr_particles;

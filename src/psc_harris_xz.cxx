@@ -323,15 +323,15 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     setup_species();
 
     // -- Balance
-    balance_interval = 0;
-    balance_.reset(new Balance_t{balance_interval});
+    p_.balance_interval = 0;
+    balance_.reset(new Balance_t{p_.balance_interval});
 
     // -- Sort
     // FIXME, needs a way to make it gets set?
     // FIXME: the "vpic" sort actually keeps track of per-species sorting intervals
     // internally, so it needs to be called every step
 #ifdef VPIC
-    sort_interval = 1;
+    p_.sort_interval = 1;
 #endif
     
     // -- Collision
@@ -352,9 +352,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // (maybe make it part of the Marder object, or provide a base class interface
     // define_marder() that takes the object and the interval
 #ifdef VPIC
-    marder_interval = 1;
+    p_.marder_interval = 1;
 #else
-    marder_interval = 0;
+    p_.marder_interval = 0;
 #endif
 #if 0
     // FIXME, marder "vpic" manages its own cleaning intervals

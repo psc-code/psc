@@ -105,12 +105,12 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     mprts_.reset(new Mparticles{grid()});
 
     // -- Balance
-    balance_interval = 0;
-    balance_.reset(new Balance_t{balance_interval, .1,});
+    p_.balance_interval = 0;
+    balance_.reset(new Balance_t{p_.balance_interval, .1,});
 
     // -- Sort
     // FIXME, needs a way to make it gets set?
-    sort_interval = 10;
+    p_.sort_interval = 10;
 
     // -- Collision
     int collision_interval = 10;
@@ -125,7 +125,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     double marder_diffusion = 0.9;
     int marder_loop = 3;
     bool marder_dump = false;
-    marder_interval = 0*5;
+    p_.marder_interval = 0*5;
     marder_.reset(new Marder_t(grid(), marder_diffusion, marder_loop, marder_dump));
 
     // -- output fields

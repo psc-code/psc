@@ -105,6 +105,7 @@ using PscConfig = PscConfig1vbecSingle<dim_t>;
 
 using MfieldsState = PscConfig::MfieldsState;
 using Mparticles = PscConfig::Mparticles;
+using Balance = PscConfig::Balance_t;
 
 // ======================================================================
 // PscFlatfoil
@@ -119,7 +120,7 @@ struct PscFlatfoil : Psc<PscConfig>
   // ctor
 
   PscFlatfoil(const PscParams& params, Grid_t& grid, MfieldsState& mflds,
-	      Mparticles& mprts)
+	      Mparticles& mprts, Balance& balance)
   {
     auto comm = grid.comm();
 
@@ -129,26 +130,13 @@ struct PscFlatfoil : Psc<PscConfig>
     define_field_array(mflds);
     define_particles(mprts);
 
-    double d_i = sqrt(grid.kinds[MY_ION].m / grid.kinds[MY_ION].q);
-
-    mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
-    mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(background_Te));
-
-    // -- Balance
-    balance_interval = 300;
-    balance_.reset(new Balance_t{balance_interval, 3, true});
+    balance_.reset(&balance);
 
     // -- Sort
-    // FIXME, needs a way to make sure it gets set?
-    sort_interval = 10;
+    p_.sort_interval = 10;
 
     // -- Collision
-#if 0
     int collision_interval = 10;
-#endif
-#if 1
-    int collision_interval = -10;
-#endif
     double collision_nu = .1;
     collision_.reset(new Collision_t{grid, collision_interval, collision_nu});
 
@@ -163,9 +151,14 @@ struct PscFlatfoil : Psc<PscConfig>
     double marder_diffusion = 0.9;
     int marder_loop = 3;
     bool marder_dump = false;
-    marder_interval = 0 * 5;
+    p_.marder_interval = 0 * 5;
     marder_.reset(
       new Marder_t(grid, marder_diffusion, marder_loop, marder_dump));
+
+    double d_i = sqrt(grid.kinds[MY_ION].m / grid.kinds[MY_ION].q);
+
+    mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
+    mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(background_Te));
 
     // -- Heating
     auto heating_foil_params = HeatingSpotFoilParams{};
@@ -450,7 +443,11 @@ int main(int argc, char** argv)
     auto& mflds = *new MfieldsState{grid};
     auto& mprts = *new Mparticles{grid};
 
-    PscFlatfoil psc{psc_params, grid, mflds, mprts};
+    // -- Balance
+    psc_params.balance_interval = 300;
+    auto& balance = *new Balance{psc_params.balance_interval, 3, true};    
+    
+    PscFlatfoil psc{psc_params, grid, mflds, mprts, balance};
     psc.initialize();
     psc.integrate();
   }
