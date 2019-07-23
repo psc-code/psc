@@ -30,7 +30,24 @@ struct PscParams
   bool detailed_profiling = false; // output profiling info for each process separately
   int stats_every = 10;    // output timing and other info every so many steps
 };
-  
+
+// ----------------------------------------------------------------------
+// courant_length
+
+inline double courant_length(const Grid_t::Domain& domain)
+{
+  double inv_sum = 0.;
+  for (int d = 0; d < 3; d++) {
+    if (!domain.isInvar(d)) {
+      inv_sum += 1. / sqr(domain.dx[d]);
+    }
+  }
+  if (!inv_sum) { // simulation has 0 dimensions (happens in some test?)
+    inv_sum = 1.;
+  }
+  return sqrt(1. / inv_sum);
+}
+
 // ======================================================================
 // Psc
 
@@ -85,7 +102,7 @@ struct Psc
   // define_grid
 
   void define_grid(const Grid_t::Domain& domain, const GridBc& bc, const Grid_t::Kinds& kinds,
-		   double dt, Grid_t::NormalizationParams& norm_params)
+		   double dt, const Grid_t::NormalizationParams& norm_params)
   {
     if (Dim::InvarX::value) { ibn[0] = 0; }
     if (Dim::InvarY::value) { ibn[1] = 0; }
@@ -679,18 +696,9 @@ struct Psc
   // ----------------------------------------------------------------------
   // courant length
   
-  double courant_length(const Grid_t::Domain& domain)
+  static double courant_length(const Grid_t::Domain& domain)
   {
-    double inv_sum = 0.;
-    for (int d = 0; d < 3; d++) {
-      if (!domain.isInvar(d)) {
-	inv_sum += 1. / sqr(domain.dx[d]);
-      }
-    }
-    if (!inv_sum) { // simulation has 0 dimensions (happens in some test?)
-      inv_sum = 1.;
-    }
-    return sqrt(1. / inv_sum);
+    return ::courant_length(domain);
   }
 
   // ----------------------------------------------------------------------

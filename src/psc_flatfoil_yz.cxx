@@ -116,27 +116,23 @@ struct PscFlatfoil : Psc<PscConfig>
   // ctor
 
   PscFlatfoil(const PscParams& params, const Grid_t::Kinds& kinds,
-              const Grid_t::Domain& grid_domain, const GridBc& grid_bc)
+              const Grid_t::Domain& grid_domain, const GridBc& grid_bc,
+              double dt, const Grid_t::NormalizationParams& norm_params)
   {
     auto comm = grid().comm();
 
     p_ = params;
 
+    define_grid(grid_domain, grid_bc, kinds, dt, norm_params);
+    
+    assert(grid().isInvar(0) == dim_t::InvarX::value);
+    assert(grid().isInvar(1) == dim_t::InvarY::value);
+    assert(grid().isInvar(2) == dim_t::InvarZ::value);
+
     double d_i = sqrt(kinds[MY_ION].m / kinds[MY_ION].q);
 
     mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
     mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(background_Te));
-
-    // --- generic setup
-    auto norm_params = Grid_t::NormalizationParams::dimensionless();
-    norm_params.nicell = 50;
-
-    double dt = p_.cfl * courant_length(grid_domain);
-    define_grid(grid_domain, grid_bc, kinds, dt, norm_params);
-
-    assert(grid().isInvar(0) == dim_t::InvarX::value);
-    assert(grid().isInvar(1) == dim_t::InvarY::value);
-    assert(grid().isInvar(2) == dim_t::InvarZ::value);
 
     define_field_array();
 
@@ -435,8 +431,14 @@ int main(int argc, char** argv)
                  {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC},
                  {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC}};
 
+  // --- generic setup
+  auto norm_params = Grid_t::NormalizationParams::dimensionless();
+  norm_params.nicell = 50;
+
+  double dt = psc_params.cfl * courant_length(grid_domain);
+
   {
-    PscFlatfoil psc{psc_params, kinds, grid_domain, grid_bc};
+    PscFlatfoil psc{psc_params, kinds, grid_domain, grid_bc, dt, norm_params};
     psc.initialize();
     psc.integrate();
   }

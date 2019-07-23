@@ -333,10 +333,9 @@ struct Grid_<T>::Normalization
   // ----------------------------------------------------------------------
   // ctor
 
-  Normalization() // FIXME
-  {}
+  Normalization() = default; // FIXME
   
-  Normalization(NormalizationParams& prm)
+  Normalization(const NormalizationParams& prm)
   {
     assert(prm.nicell > 0);
     cc = prm.cc;
@@ -344,14 +343,14 @@ struct Grid_<T>::Normalization
     double wl = 2. * M_PI * cc / prm.lw;
     double ld = cc / wl;
     assert(ld == 1.); // FIXME, not sure why? (calculation of fnqs?)
-    if (prm.e0 == 0.) {
-      prm.e0 = sqrt(2.0 * prm.i0 / prm.eps0 / cc) /
-	prm.lw / 1.0e6;
+    e0 = prm.e0;
+    if (e0 == 0.) {
+      e0 = sqrt(2.0 * prm.i0 / prm.eps0 / cc) /	prm.lw / 1.0e6;
     }
-    b0 = prm.e0 / cc;
+    b0 = e0 / cc;
     rho0 = prm.eps0 * wl * b0;
     phi0 = ld * prm.e0;
-    a0 = prm.e0 / wl;
+    a0 = e0 / wl;
     
     double vos = prm.qq * prm.e0 / (prm.mm * wl);
     double vt = sqrt(prm.tt / prm.mm);
@@ -370,6 +369,7 @@ struct Grid_<T>::Normalization
   real_t beta = { 1. };
   real_t cori = { 1. };
 
+  real_t e0;
   real_t b0;
   real_t rho0;
   real_t phi0;
