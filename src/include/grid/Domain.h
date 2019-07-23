@@ -2,6 +2,8 @@
 #ifndef GRID_DOMAIN_H
 #define GRID_DOMAIN_H
 
+#include <mrc_common.h>
+
 namespace psc
 {
 namespace grid

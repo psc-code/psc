@@ -1,6 +1,9 @@
 
 #pragma once
 
+#include "grid/BC.h"
+#include "grid/Domain.h"
+
 #include <mrc_domain_private.h>
 
 #include <vector>
@@ -11,7 +14,62 @@
 struct MrcDomain
 {
   MrcDomain() = default;
-  MrcDomain(mrc_domain* domain) : domain_{domain} {}
+
+  template <typename R>
+  MrcDomain(const psc::grid::Domain<R>& grid_domain, const psc::grid::BC& grid_bc,
+            int nr_patches)
+  {
+    domain_ = mrc_domain_create(MPI_COMM_WORLD);
+    // create a very simple domain decomposition
+    int bc[3] = {};
+    for (int d = 0; d < 3; d++) {
+      if (grid_bc.fld_lo[d] == BND_FLD_PERIODIC && grid_domain.gdims[d] > 1) {
+	bc[d] = BC_PERIODIC;
+      }
+    }
+    
+    mrc_domain_set_type(domain_, "multi");
+    mrc_domain_set_param_int3(domain_, "m", grid_domain.gdims);
+    mrc_domain_set_param_int(domain_, "bcx", bc[0]);
+    mrc_domain_set_param_int(domain_, "bcy", bc[1]);
+    mrc_domain_set_param_int(domain_, "bcz", bc[2]);
+    mrc_domain_set_param_int(domain_, "nr_patches", nr_patches);
+    mrc_domain_set_param_int3(domain_, "np", grid_domain.np);
+    
+    struct mrc_crds* crds = mrc_domain_get_crds(domain_);
+    mrc_crds_set_type(crds, "uniform");
+    mrc_crds_set_param_int(crds, "sw", 2);
+    mrc_crds_set_param_double3(crds, "l", grid_domain.corner);
+    mrc_crds_set_param_double3(crds, "h",
+			       grid_domain.corner + grid_domain.length);
+    
+    mrc_domain_set_from_options(domain_);
+    mrc_domain_setup(domain_);
+    
+    // make sure that np isn't overridden on the command line
+    Int3 np;
+    mrc_domain_get_param_int3(domain_, "np", np);
+    assert(np == Int3::fromPointer(grid_domain.np));
+  }
+
+  MrcDomain(const MrcDomain&) = delete;
+  MrcDomain& operator=(const MrcDomain&) = delete;
+
+  MrcDomain(MrcDomain&& o)
+  {
+    domain_ = o.domain_;
+    o.domain_ = nullptr;
+  }
+
+  MrcDomain& operator=(MrcDomain&& o)
+  {
+    if (this != &o) {
+      domain_ = o.domain_;
+      o.domain_ = nullptr;
+    }
+    return *this;
+  }
+
   ~MrcDomain()
   {
     if (domain_) {

@@ -68,7 +68,7 @@ struct Grid_
       norm{norm},
       dt{dt},
       ibn{ibn},
-      mrc_domain_{make_mrc_domain(domain, bc, n_patches)}
+      mrc_domain_{domain, bc, n_patches}
   {
 #if 0
     mpi_printf(MPI_COMM_WORLD, "::: dt      = %g\n", dt);
@@ -144,46 +144,6 @@ struct Grid_
   Int3 ibn; // FIXME
   int timestep_ = 0;
   MrcDomain mrc_domain_;
-
-  // ----------------------------------------------------------------------
-  // make_mrc_domain
-
-  static MrcDomain make_mrc_domain(const Domain& grid_domain, const psc::grid::BC& grid_bc, int nr_patches)
-  {
-    // FIXME, should be split to create, set_from_options, setup time?
-    struct mrc_domain *domain = mrc_domain_create(MPI_COMM_WORLD);
-    // create a very simple domain decomposition
-    int bc[3] = {};
-    for (int d = 0; d < 3; d++) {
-      if (grid_bc.fld_lo[d] == BND_FLD_PERIODIC && grid_domain.gdims[d] > 1) {
-	bc[d] = BC_PERIODIC;
-      }
-    }
-    
-    mrc_domain_set_type(domain, "multi");
-    mrc_domain_set_param_int3(domain, "m", grid_domain.gdims);
-    mrc_domain_set_param_int(domain, "bcx", bc[0]);
-    mrc_domain_set_param_int(domain, "bcy", bc[1]);
-    mrc_domain_set_param_int(domain, "bcz", bc[2]);
-    mrc_domain_set_param_int(domain, "nr_patches", nr_patches);
-    mrc_domain_set_param_int3(domain, "np", grid_domain.np);
-    
-    struct mrc_crds *crds = mrc_domain_get_crds(domain);
-    mrc_crds_set_type(crds, "uniform");
-    mrc_crds_set_param_int(crds, "sw", 2);
-    mrc_crds_set_param_double3(crds, "l", grid_domain.corner);
-    mrc_crds_set_param_double3(crds, "h", grid_domain.corner + grid_domain.length);
-    
-    mrc_domain_set_from_options(domain);
-    mrc_domain_setup(domain);
-    
-    // make sure that np isn't overridden on the command line
-    Int3 np;
-    mrc_domain_get_param_int3(domain, "np", np);
-    assert(np == Int3::fromPointer(grid_domain.np));
-    
-    return domain;
-  }
 
   const MrcDomain& mrc_domain() const { return mrc_domain_; }
 

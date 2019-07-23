@@ -213,7 +213,7 @@ public:
 
     reader.performGets(); // need patches_n_local, domain, bc to be read
     grid.mrc_domain_ =
-      grid.make_mrc_domain(grid.domain, grid.bc, patches_n_local);
+      MrcDomain(grid.domain, grid.bc, patches_n_local);
 
     grid.patches.resize(patches_n_local);
     auto patches_off = std::vector<Int3>(patches_n_local);
