@@ -212,62 +212,6 @@ struct PscFlatfoil : Psc<PscConfig>
     init();
   }
 
-  void init_npt(int kind, double crd[3], psc_particle_npt& npt)
-  {
-    switch (kind) {
-      case MY_ION:
-        npt.n = background_n;
-        npt.T[0] = background_Ti;
-        npt.T[1] = background_Ti;
-        npt.T[2] = background_Ti;
-        break;
-      case MY_ELECTRON:
-        npt.n = background_n;
-        npt.T[0] = background_Te;
-        npt.T[1] = background_Te;
-        npt.T[2] = background_Te;
-        break;
-      default:
-        assert(0);
-    }
-
-    if (inject_target_.is_inside(crd)) {
-      // replace values above by target values
-      inject_target_.init_npt(kind, crd, npt);
-    }
-  }
-
-  // ----------------------------------------------------------------------
-  // setup_initial_partition
-
-  template <typename F>
-  static std::vector<uint> setup_initial_partition(const Grid_t& grid,
-                                                   F&& init_npt)
-  {
-    SetupParticles<Mparticles> setup_particles;
-    setup_particles.fractional_n_particles_per_cell =
-      true; // FIXME, should use same setup_particles for partition/setup
-    setup_particles.neutralizing_population = MY_ELECTRON;
-    return setup_particles.setup_partition(grid, std::forward<F>(init_npt));
-  }
-
-  // ----------------------------------------------------------------------
-  // setup_initial_particles
-
-  template <typename F>
-  static void setup_initial_particles(Mparticles& mprts,
-                                      std::vector<uint>& n_prts_by_patch,
-                                      F&& init_npt)
-  {
-    SetupParticles<Mparticles>
-      setup_particles; // FIXME, injection uses another setup_particles, which
-                       // won't have those settings
-    setup_particles.fractional_n_particles_per_cell = true;
-    setup_particles.neutralizing_population = MY_ELECTRON;
-    setup_particles.setup_particles(mprts, n_prts_by_patch,
-                                    std::forward<F>(init_npt));
-  }
-
   // ----------------------------------------------------------------------
   // setup_initial_fields
 
@@ -469,8 +413,13 @@ int main(int argc, char** argv)
 
     // --- partition particles and initial balancing
     mpi_printf(MPI_COMM_WORLD, "**** Partitioning...\n");
-    auto n_prts_by_patch =
-      PscFlatfoil::setup_initial_partition(grid, lf_init_npt);
+
+    SetupParticles<Mparticles> setup_particles;
+    setup_particles.fractional_n_particles_per_cell = true;
+    setup_particles.neutralizing_population = MY_ELECTRON;
+
+    auto n_prts_by_patch = setup_particles.setup_partition(grid, lf_init_npt);
+
     balance.initial(grid_ptr, n_prts_by_patch);
     // !!! FIXME! grid is now invalid
     // balance::initial does not rebalance particles, because the old way of
@@ -479,11 +428,10 @@ int main(int argc, char** argv)
     mprts.reset(*grid_ptr);
 
     mpi_printf(MPI_COMM_WORLD, "**** Setting up particles...\n");
-    PscFlatfoil::setup_initial_particles(mprts, n_prts_by_patch, lf_init_npt);
-    
+    setup_particles.setup_particles(mprts, n_prts_by_patch, lf_init_npt);
 
-    PscFlatfoil psc{psc_params, *grid_ptr,   mflds,         mprts,
-                    balance,    inject, inject_target};
+    PscFlatfoil psc{psc_params, *grid_ptr, mflds,        mprts,
+                    balance,    inject,    inject_target};
     psc.initialize();
     psc.integrate();
   }
