@@ -116,7 +116,7 @@ struct PscFlatfoil : Psc<PscConfig>
   // ctor
 
   PscFlatfoil(const PscParams& params, const Grid_t::Kinds& kinds,
-              const Grid_t::Domain& grid_domain, const GridBc& grid_bc,
+              const Grid_t::Domain& grid_domain, const psc::grid::BC& grid_bc,
               double dt, const Grid_t::NormalizationParams& norm_params)
   {
     auto comm = grid().comm();
@@ -124,7 +124,7 @@ struct PscFlatfoil : Psc<PscConfig>
     p_ = params;
 
     define_grid(grid_domain, grid_bc, kinds, dt, norm_params);
-    
+
     assert(grid().isInvar(0) == dim_t::InvarX::value);
     assert(grid().isInvar(1) == dim_t::InvarY::value);
     assert(grid().isInvar(2) == dim_t::InvarZ::value);
@@ -426,10 +426,10 @@ int main(int argc, char** argv)
 
   Grid_t::Domain grid_domain{gdims, LL, -.5 * LL, np};
 
-  GridBc grid_bc{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
-                 {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
-                 {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC},
-                 {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC}};
+  psc::grid::BC grid_bc{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
+                        {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
+                        {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC},
+                        {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC}};
 
   // --- generic setup
   auto norm_params = Grid_t::NormalizationParams::dimensionless();

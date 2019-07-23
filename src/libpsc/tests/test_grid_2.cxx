@@ -18,7 +18,7 @@ TEST(Grid, CtorComplete)
   auto domain = Grid_t::Domain{{8, 4, 2},
 			       {80.,  40., 20.}, {-40., -20., 0.},
 			       {2, 2, 1}};
-  auto bc = GridBc{};
+  auto bc = psc::grid::BC{};
   auto kinds = Grid_t::Kinds{};
   auto norm = Grid_t::Normalization{};
   double dt = .1;
@@ -53,7 +53,7 @@ TEST(Grid, MoveCtor)
 			       {80.,  40., 20.}, {-40., -20., 0.},
 			       {2, 2, 1}};
   auto offs = std::vector<Int3>{{0, 0, 0}, {4, 0, 0}};
-  auto bc = GridBc{};
+  auto bc = psc::grid::BC{};
   auto kinds = Grid_t::Kinds{};
   auto norm = Grid_t::Normalization{};
   double dt = .1;
@@ -69,7 +69,7 @@ TEST(Grid, MoveAssign)
 			       {80.,  40., 20.}, {-40., -20., 0.},
 			       {2, 2, 1}};
   auto offs = std::vector<Int3>{{0, 0, 0}, {4, 0, 0}};
-  auto bc = GridBc{};
+  auto bc = psc::grid::BC{};
   auto kinds = Grid_t::Kinds{};
   auto norm = Grid_t::Normalization{};
   double dt = .1;
@@ -99,7 +99,7 @@ TEST(Grid, adios2_write)
 				 {80.,  40., 20.}, {-40., -20., 0.},
 				 {2, 2, 1}};
     auto offs = std::vector<Int3>{{0, 0, 0}, {4, 0, 0}};
-    auto bc = GridBc{};
+    auto bc = psc::grid::BC{};
     auto kinds = Grid_t::Kinds{{-1., 1., "electron"}, {1., 100., "ion"}};
     auto norm = Grid_t::Normalization{};
     double dt = .1;

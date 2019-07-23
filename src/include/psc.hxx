@@ -101,7 +101,7 @@ struct Psc
   // ----------------------------------------------------------------------
   // define_grid
 
-  void define_grid(const Grid_t::Domain& domain, const GridBc& bc, const Grid_t::Kinds& kinds,
+  void define_grid(const Grid_t::Domain& domain, const psc::grid::BC& bc, const Grid_t::Kinds& kinds,
 		   double dt, const Grid_t::NormalizationParams& norm_params)
   {
 #ifdef VPIC

@@ -248,7 +248,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     
     mpi_printf(comm, "Conducting fields on Z-boundaries\n");
     mpi_printf(comm, "Reflect particles on Z-boundaries\n");
-    auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
+    auto grid_bc = psc::grid::BC{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
 			  { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
 			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING },
 			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING }};

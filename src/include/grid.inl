@@ -38,13 +38,13 @@ public:
 };
 
 // ======================================================================
-// Descr<GridBc>
+// Descr<psc::grid::BC>
 
 template <>
-class kg::io::Descr<GridBc>
+class kg::io::Descr<psc::grid::BC>
 {
 public:
-  using value_type = GridBc;
+  using value_type = psc::grid::BC;
 
   static void put(kg::io::Engine& writer, const value_type& bc,
                   const kg::io::Mode launch = kg::io::Mode::NonBlocking)

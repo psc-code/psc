@@ -18,13 +18,13 @@
 #include <time.h>
 #include <array>
 
+#if 0
 // ----------------------------------------------------------------------
 // _psc_write
 
 static void
 _psc_write(struct psc *psc, struct mrc_io *io)
 {
-#if 0
   mrc_io_write_int(io, psc, "timestep", psc->timestep);
   mrc_io_write_int(io, psc, "nr_kinds", psc->nr_kinds_);
 
@@ -39,7 +39,6 @@ _psc_write(struct psc *psc, struct mrc_io *io)
   mrc_io_write_ref(io, psc, "mrc_domain", psc->mrc_domain_);
   mrc_io_write_ref(io, psc, "mparticles", psc->particles_);
   mrc_io_write_ref(io, psc, "mfields", psc->flds);
-#endif
 }
 
 // ----------------------------------------------------------------------
@@ -50,7 +49,6 @@ _psc_read(struct psc *psc, struct mrc_io *io)
 {
   //psc_setup_coeff(psc->norm_params);
 
-#if 0
   mrc_io_read_int(io, psc, "timestep", &psc->timestep);
   mrc_io_read_int(io, psc, "nr_kinds", &psc->nr_kinds_);
   psc->kinds_ = new psc_kind[psc->nr_kinds_]();
@@ -64,7 +62,6 @@ _psc_read(struct psc *psc, struct mrc_io *io)
   }
   
   psc->mrc_domain_ = mrc_io_read_ref(io, psc, "mrc_domain", mrc_domain);
-#endif
   //psc_setup_domain(psc, psc->domain_, psc->bc_, psc->kinds_);
 #ifdef USE_FORTRAN
   psc_setup_fortran(psc);
@@ -75,6 +72,8 @@ _psc_read(struct psc *psc, struct mrc_io *io)
 
   //psc_read_member_objs(psc, io);
 }
+
+#endif
 
 // FIXME
 void vpic_base_init(int *pargc, char ***pargv);

@@ -48,7 +48,7 @@ struct BalanceTest : ::testing::Test
     auto domain = Grid_t::Domain{{1, 8, 16},
 				 {10., 80., 160.}, {0., -40., -80.},
 				 {1, 2, 2}};
-    auto bc = GridBc{};
+    auto bc = psc::grid::BC{};
     auto kinds = Grid_t::Kinds{};
     auto norm = Grid_t::Normalization{};
     double dt = .1;

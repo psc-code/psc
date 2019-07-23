@@ -5,53 +5,11 @@
 #include "kg/Vec3.h"
 #include "psc_bits.h"
 #include "mrc_domain.hxx"
+#include "grid/BC.h"
 
 #include <vector>
 #include <cstring>
 #include <cmath>
-
-///Possible boundary conditions for fields
-enum {
-  BND_FLD_OPEN,
-  BND_FLD_PERIODIC,
-  BND_FLD_CONDUCTING_WALL,
-  BND_FLD_ABSORBING,
-};
-
-///Possible boundary conditions for particles
-enum {
-  BND_PRT_REFLECTING,
-  BND_PRT_PERIODIC,
-  BND_PRT_ABSORBING,
-  BND_PRT_OPEN,
-};
-
-///Describes the spatial domain to operate on.
-///
-///This struct describes the spatial dimension of the simulation-box
-///@note Here, you can also set the dimensionality by eliminating a dimension. Example: To simulate in xy only, set
-///\verbatim psc_domain.gdims[2]=1 \endverbatim
-///Also, set the boundary conditions for the eliminated dimensions to BND_FLD_PERIODIC or you'll get invalid \a dt and \a dx
-
-struct GridBc
-{
-  GridBc()
-    : fld_lo{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
-      fld_hi{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
-      prt_lo{BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC},
-      prt_hi{BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC}
-  {}
-
-  GridBc(Int3 fld_lo, Int3 fld_hi, Int3 prt_lo, Int3 prt_hi)
-    : fld_lo(fld_lo), fld_hi(fld_hi),
-      prt_lo(prt_lo), prt_hi(prt_hi)
-  {}
-  
-  Int3 fld_lo;	///<Boundary conditions of the fields. Can be any value of BND_FLD.
-  Int3 fld_hi;	///<Boundary conditions of the fields. Can be any value of BND_FLD.
-  Int3 prt_lo;	///<Boundary conditions of the particles. Can be any value of BND_PART.
-  Int3 prt_hi;  ///<Boundary conditions of the particles. Can be any value of BND_PART.
-};
 
 // ======================================================================
 // Grid_
@@ -174,7 +132,7 @@ struct Grid_
 
   Int3 ldims;
   Domain domain;
-  GridBc bc;
+  psc::grid::BC bc;
   Normalization norm;
   // FIXME? this default might be a bit dangerous, as they're useful
   // for testing but might hide if one forgets to init dt correctly

@@ -84,7 +84,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
 				      {0., -.5 * params.LLy, -.5 * params.LLz},
 				      {1, 1, 4}};
     
-    auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
+    auto grid_bc = psc::grid::BC{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
 			  { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
 			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC },
 			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC }};

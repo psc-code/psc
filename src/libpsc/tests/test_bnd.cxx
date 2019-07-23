@@ -16,7 +16,7 @@
 static Grid_t make_grid(Int3 gdims, Vec3<double> length)
 {
   auto domain = Grid_t::Domain{gdims, length, {}, {1, 2, 1}};
-  auto bc = GridBc{};
+  auto bc = psc::grid::BC{};
   auto kinds = Grid_t::Kinds{};
   auto norm = Grid_t::Normalization{};
   double dt = .1;

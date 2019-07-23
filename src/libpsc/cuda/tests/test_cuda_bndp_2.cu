@@ -32,7 +32,7 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
   {
     auto domain = Grid_t::Domain{{32, 32, 32}, {320., 320., 320.}, {0., 0., 0.},
 				 {2, 2, 2}};
-    auto bc = GridBc{};
+    auto bc = psc::grid::BC{};
     auto kinds = Grid_t::Kinds{Grid_t::Kind{1., 1., "k0"},
 			       Grid_t::Kind{1., 1., "k1"},
 			       Grid_t::Kind{1., 1., "k2"},
