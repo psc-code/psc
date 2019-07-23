@@ -206,22 +206,6 @@ struct PscFlatfoil : Psc<PscConfig>
     outp_params.basename = "prt";
     outp_.reset(new OutputParticles{grid, outp_params});
 
-    // --- partition particles and initial balancing
-    auto lf_init_npt = [&](int kind, double crd[3], psc_particle_npt& npt) {
-      this->init_npt(kind, crd, npt);
-    };
-    
-    mpi_printf(comm, "**** Partitioning...\n");
-    auto n_prts_by_patch = setup_initial_partition(grid, lf_init_npt);
-    balance_->initial(grid_, n_prts_by_patch);
-    // balance::initial does not rebalance particles, because the old way of
-    // doing this does't even have the particle data structure created yet --
-    // FIXME?
-    mprts_->reset(grid);
-
-    mpi_printf(comm, "**** Setting up particles...\n");
-    setup_initial_particles(*mprts_, n_prts_by_patch, lf_init_npt);
-
     mpi_printf(comm, "**** Setting up fields...\n");
     setup_initial_fields(*mflds_);
 
@@ -257,7 +241,8 @@ struct PscFlatfoil : Psc<PscConfig>
   // setup_initial_partition
 
   template <typename F>
-  static std::vector<uint> setup_initial_partition(const Grid_t& grid, F&& init_npt)
+  static std::vector<uint> setup_initial_partition(const Grid_t& grid,
+                                                   F&& init_npt)
   {
     SetupParticles<Mparticles> setup_particles;
     setup_particles.fractional_n_particles_per_cell =
@@ -271,15 +256,16 @@ struct PscFlatfoil : Psc<PscConfig>
 
   template <typename F>
   static void setup_initial_particles(Mparticles& mprts,
-                               std::vector<uint>& n_prts_by_patch, F&& init_npt)
+                                      std::vector<uint>& n_prts_by_patch,
+                                      F&& init_npt)
   {
     SetupParticles<Mparticles>
       setup_particles; // FIXME, injection uses another setup_particles, which
                        // won't have those settings
     setup_particles.fractional_n_particles_per_cell = true;
     setup_particles.neutralizing_population = MY_ELECTRON;
-    setup_particles.setup_particles(
-				    mprts, n_prts_by_patch, std::forward<F>(init_npt));
+    setup_particles.setup_particles(mprts, n_prts_by_patch,
+                                    std::forward<F>(init_npt));
   }
 
   // ----------------------------------------------------------------------
@@ -428,7 +414,8 @@ int main(int argc, char** argv)
   }
 
   {
-    Grid_t grid{grid_domain, grid_bc, kinds, norm, dt, -1, ibn};
+    auto grid_ptr = new Grid_t{grid_domain, grid_bc, kinds, norm, dt, -1, ibn};
+    auto& grid = *grid_ptr;
     auto& mflds = *new MfieldsState{grid};
     auto& mprts = *new Mparticles{grid};
 
@@ -482,16 +469,20 @@ int main(int argc, char** argv)
 
     // --- partition particles and initial balancing
     mpi_printf(MPI_COMM_WORLD, "**** Partitioning...\n");
-#if 0
-    auto n_prts_by_patch = setup_initial_partition();
-    balance.initial(grid, n_prts_by_patch);
+    auto n_prts_by_patch =
+      PscFlatfoil::setup_initial_partition(grid, lf_init_npt);
+    balance.initial(grid_ptr, n_prts_by_patch);
+    // !!! FIXME! grid is now invalid
     // balance::initial does not rebalance particles, because the old way of
     // doing this does't even have the particle data structure created yet --
     // FIXME?
-    mprts.reset(grid);
-#endif
+    mprts.reset(*grid_ptr);
 
-    PscFlatfoil psc{psc_params, grid,   mflds,        mprts,
+    mpi_printf(MPI_COMM_WORLD, "**** Setting up particles...\n");
+    PscFlatfoil::setup_initial_particles(mprts, n_prts_by_patch, lf_init_npt);
+    
+
+    PscFlatfoil psc{psc_params, *grid_ptr,   mflds,         mprts,
                     balance,    inject, inject_target};
     psc.initialize();
     psc.integrate();
