@@ -42,6 +42,10 @@ enum {
 double BB;
 double Zi;
 
+double background_n;
+double background_Te;
+double background_Ti;
+
 // ======================================================================
 // InjectFoil
 
@@ -113,59 +117,18 @@ struct PscFlatfoil : Psc<PscConfig>
   // ----------------------------------------------------------------------
   // ctor
   
-  PscFlatfoil(const PscParams& params, const Grid_t::Kinds& kinds)
+  PscFlatfoil(const PscParams& params, const Grid_t::Kinds& kinds,
+	      const Grid_t::Domain& grid_domain, const GridBc& grid_bc)
   {
     auto comm = grid().comm();
 
     p_ = params;
 
-    // --- for background plasma
-    background_n_  = .002;
-    background_Te_ = .001;
-    background_Ti_ = .001;
-    
     double d_i = sqrt(kinds[MY_ION].m / kinds[MY_ION].q);
     
     mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
-    mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(background_Te_));
+    mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(background_Te));
     
-    // --- setup domain
-#if 0
-    Grid_t::Real3 LL = {384., 384.*2., 384.*6}; // domain size (in d_e)
-    Int3 gdims = {384, 384*2, 384*6}; // global number of grid points
-    Int3 np = {12, 24, 72}; // division into patches
-#endif
-#if 0
-    Grid_t::Real3 LL = {192., 192.*2, 192.*6}; // domain size (in d_e)
-    Int3 gdims = {192, 192*2, 192*6}; // global number of grid points
-    Int3 np = {6, 12, 36}; // division into patches
-    // -> patch size 32 x 32 x 32
-#endif
-#if 0
-    Grid_t::Real3 LL = {32., 32.*2., 32.*6 }; // domain size (in d_e)
-    Int3 gdims = {32, 32*2, 32*6}; // global number of grid points
-    Int3 np = { 1, 2, 6 }; // division into patches
-#endif
-#if 0
-    Grid_t::Real3 LL = {1., 1600., 400.}; // domain size (in d_e)
-    // Int3 gdims = {40, 10, 20}; // global number of grid points
-    // Int3 np = {4, 1, 2; // division into patches
-    Int3 gdims = {1, 2048, 512}; // global number of grid points
-    Int3 np = {1, 64, 16}; // division into patches
-#endif
-#if 1
-    Grid_t::Real3 LL = {1., 800., 200.}; // domain size (in d_e)
-    Int3 gdims = {1, 1024, 256}; // global number of grid points
-    Int3 np = {1, 8, 2}; // division into patches
-#endif
-
-    auto grid_domain = Grid_t::Domain{gdims, LL, -.5 * LL, np};
-    
-    auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
-			  { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
-			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC },
-			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC }};
-
     // --- generic setup
     auto norm_params = Grid_t::NormalizationParams::dimensionless();
     norm_params.nicell = 50;
@@ -285,16 +248,16 @@ struct PscFlatfoil : Psc<PscConfig>
   {
     switch (kind) {
     case MY_ION:
-      npt.n    = background_n_;
-      npt.T[0] = background_Ti_;
-      npt.T[1] = background_Ti_;
-      npt.T[2] = background_Ti_;
+      npt.n    = background_n;
+      npt.T[0] = background_Ti;
+      npt.T[1] = background_Ti;
+      npt.T[2] = background_Ti;
       break;
     case MY_ELECTRON:
-      npt.n    = background_n_;
-      npt.T[0] = background_Te_;
-      npt.T[1] = background_Te_;
-      npt.T[2] = background_Te_;
+      npt.n    = background_n;
+      npt.T[0] = background_Te;
+      npt.T[1] = background_Te;
+      npt.T[2] = background_Te;
       break;
     default:
       assert(0);
@@ -381,10 +344,6 @@ protected:
   std::unique_ptr<Inject_t> inject_;
 
 private:
-  double background_n_;
-  double background_Te_;
-  double background_Ti_;
-
   int inject_interval_;
   InjectFoil inject_target_;
 
@@ -410,19 +369,59 @@ main(int argc, char **argv)
 
   BB = 0.;
   Zi = 1.;
-  // FIXME, hardcoded mass ratio 100
   double mass_ratio = 100.; // 25.
 
+  // --- for background plasma
+  background_n  = .002;
+  background_Te = .001;
+  background_Ti = .001;
+  
   // -- setup particle kinds
   // last population ("e") is neutralizing
   Grid_t::Kinds kinds = {{Zi, mass_ratio*Zi, "i"}, { -1., 1., "e"}};
   
-  auto psc = new PscFlatfoil(psc_params, kinds);
+  // --- setup domain
+#if 0
+  Grid_t::Real3 LL = {384., 384.*2., 384.*6}; // domain size (in d_e)
+  Int3 gdims = {384, 384*2, 384*6}; // global number of grid points
+  Int3 np = {12, 24, 72}; // division into patches
+#endif
+#if 0
+  Grid_t::Real3 LL = {192., 192.*2, 192.*6}; // domain size (in d_e)
+  Int3 gdims = {192, 192*2, 192*6}; // global number of grid points
+  Int3 np = {6, 12, 36}; // division into patches
+  // -> patch size 32 x 32 x 32
+#endif
+#if 0
+  Grid_t::Real3 LL = {32., 32.*2., 32.*6 }; // domain size (in d_e)
+  Int3 gdims = {32, 32*2, 32*6}; // global number of grid points
+  Int3 np = { 1, 2, 6 }; // division into patches
+#endif
+#if 0
+  Grid_t::Real3 LL = {1., 1600., 400.}; // domain size (in d_e)
+  // Int3 gdims = {40, 10, 20}; // global number of grid points
+  // Int3 np = {4, 1, 2; // division into patches
+  Int3 gdims = {1, 2048, 512}; // global number of grid points
+  Int3 np = {1, 64, 16}; // division into patches
+#endif
+#if 1
+  Grid_t::Real3 LL = {1., 800., 200.}; // domain size (in d_e)
+  Int3 gdims = {1, 1024, 256}; // global number of grid points
+  Int3 np = {1, 8, 2}; // division into patches
+#endif
 
-  psc->initialize();
-  psc->integrate();
+  Grid_t::Domain grid_domain{gdims, LL, -.5 * LL, np};
+  
+  GridBc grid_bc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
+                 { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
+	         { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC },
+	         { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC }};
 
-  delete psc;
+  {
+    PscFlatfoil psc{psc_params, kinds, grid_domain, grid_bc};
+    psc.initialize();
+    psc.integrate();
+  }
   
   libmrc_params_finalize();
   MPI_Finalize();
