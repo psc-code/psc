@@ -104,9 +104,14 @@ struct Psc
   void define_grid(const Grid_t::Domain& domain, const GridBc& bc, const Grid_t::Kinds& kinds,
 		   double dt, const Grid_t::NormalizationParams& norm_params)
   {
+#ifdef VPIC
+    Int3 ibn = { 1, 1, 1 };
+#else
+    Int3 ibn = { 2, 2, 2 };
     if (Dim::InvarX::value) { ibn[0] = 0; }
     if (Dim::InvarY::value) { ibn[1] = 0; }
     if (Dim::InvarZ::value) { ibn[2] = 0; }
+#endif
     
     auto coeff = Grid_t::Normalization{norm_params};
     grid_ = new Grid_t{domain, bc, kinds, coeff, dt, -1, ibn};
@@ -174,8 +179,6 @@ struct Psc
 #ifdef VPIC
     // FIXME, mv assert innto MfieldsState ctor
     assert(!material_list_.empty());
-
-    ibn = {1, 1, 1};
 #endif
 
 #ifdef VPIC
@@ -199,7 +202,7 @@ struct Psc
     sort_.reset(new Sort_t{});
     pushp_.reset(new PushParticles_t{});
     pushf_.reset(new PushFields_t{});
-    bnd_.reset(new Bnd_t{grid(), ibn});
+    bnd_.reset(new Bnd_t{grid(), grid().ibn});
     bndf_.reset(new BndFields_t{});
     bndp_.reset(new BndParticles_t{grid()});
 
@@ -910,7 +913,6 @@ protected:
   int marder_interval;
 
   int num_comm_round = {3};
-  Int3 ibn = {2, 2, 2}; // FIXME!!! need to factor in invar dims (but not in vpic...)
   
   int st_nr_particles;
   int st_time_step;
