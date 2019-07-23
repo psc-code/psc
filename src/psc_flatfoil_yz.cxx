@@ -42,6 +42,7 @@ enum
 
 double BB;
 double Zi;
+double mass_ratio;
 
 double background_n;
 double background_Te;
@@ -52,6 +53,12 @@ int inject_interval;
 int heating_begin;
 int heating_end;
 int heating_interval;
+
+PscParams psc_params;
+
+// the following are calculated
+
+double d_i;
 
 // ======================================================================
 // InjectFoil
@@ -112,21 +119,44 @@ using PscConfig = PscConfig1vbecSingle<dim_t>;
 using MfieldsState = PscConfig::MfieldsState;
 using Mparticles = PscConfig::Mparticles;
 using Balance = PscConfig::Balance_t;
+using Collision = PscConfig::Collision_t;
+using Checks = PscConfig::Checks_t;
+using Marder = PscConfig::Marder_t;
+using OutputParticles = PscConfig::OutputParticles;
 using Inject = typename InjectSelector<Mparticles, InjectFoil, dim_t>::Inject;
 using Heating = typename HeatingSelector<Mparticles>::Heating;
+
+using FieldsItem_E_cc = FieldsItemFields<ItemLoopPatches<Item_e_cc>>;
+using FieldsItem_H_cc = FieldsItemFields<ItemLoopPatches<Item_h_cc>>;
+using FieldsItem_J_cc = FieldsItemFields<ItemLoopPatches<Item_j_cc>>;
+
+template <typename Mparticles>
+using FieldsItem_n_1st_cc =
+  FieldsItemMoment<ItemMomentAddBnd<Moment_n_1st<Mparticles, MfieldsC>>>;
+template <typename Mparticles>
+using FieldsItem_v_1st_cc =
+  FieldsItemMoment<ItemMomentAddBnd<Moment_v_1st<Mparticles, MfieldsC>>>;
+template <typename Mparticles>
+using FieldsItem_p_1st_cc =
+  FieldsItemMoment<ItemMomentAddBnd<Moment_p_1st<Mparticles, MfieldsC>>>;
+template <typename Mparticles>
+using FieldsItem_T_1st_cc =
+  FieldsItemMoment<ItemMomentAddBnd<Moment_T_1st<Mparticles, MfieldsC>>>;
 
 // ======================================================================
 // PscFlatfoil
 
+template <typename INJECT>
 struct PscFlatfoil : Psc<PscConfig>
 {
   // ----------------------------------------------------------------------
   // ctor
 
   PscFlatfoil(const PscParams& params, Grid_t& grid, MfieldsState& mflds,
-              Mparticles& mprts, Balance& balance, Inject& inject,
-              Heating& heating)
-    : inject_{inject}, heating_{heating}
+              Mparticles& mprts, Balance& balance, Collision& collision,
+              Checks& checks, Marder& marder, OutputFieldsC& outf,
+              OutputParticles& outp, INJECT& inject_particles)
+    : inject_particles_{inject_particles}
   {
     auto comm = grid.comm();
 
@@ -137,74 +167,14 @@ struct PscFlatfoil : Psc<PscConfig>
     define_particles(mprts);
 
     balance_.reset(&balance);
+    collision_.reset(&collision);
+    checks_.reset(&checks);
+    marder_.reset(&marder);
 
-    // -- Collision
-    int collision_interval = 10;
-    double collision_nu = .1;
-    collision_.reset(new Collision_t{grid, collision_interval, collision_nu});
-
-    // -- Checks
-    ChecksParams checks_params{};
-    checks_params.continuity_every_step = 50;
-    checks_params.continuity_threshold = 1e-5;
-    checks_params.continuity_verbose = false;
-    checks_.reset(new Checks_t{grid, comm, checks_params});
-
-    // -- Marder correction
-    double marder_diffusion = 0.9;
-    int marder_loop = 3;
-    bool marder_dump = false;
-    p_.marder_interval = 0 * 5;
-    marder_.reset(
-      new Marder_t(grid, marder_diffusion, marder_loop, marder_dump));
-
-    // -- output fields
-    OutputFieldsCParams outf_params{};
-    outf_params.pfield_step = 200;
-    std::vector<std::unique_ptr<FieldsItemBase>> outf_items;
-    outf_items.emplace_back(
-      new FieldsItemFields<ItemLoopPatches<Item_e_cc>>(grid));
-    outf_items.emplace_back(
-      new FieldsItemFields<ItemLoopPatches<Item_h_cc>>(grid));
-    outf_items.emplace_back(
-      new FieldsItemFields<ItemLoopPatches<Item_j_cc>>(grid));
-    outf_items.emplace_back(
-      new FieldsItemMoment<
-        ItemMomentAddBnd<Moment_n_1st<Mparticles, MfieldsC>>>(grid));
-    outf_items.emplace_back(
-      new FieldsItemMoment<
-        ItemMomentAddBnd<Moment_v_1st<Mparticles, MfieldsC>>>(grid));
-    outf_items.emplace_back(
-      new FieldsItemMoment<
-        ItemMomentAddBnd<Moment_T_1st<Mparticles, MfieldsC>>>(grid));
-    outf_.reset(new OutputFieldsC{grid, outf_params, std::move(outf_items)});
-
-    // -- output particles
-    OutputParticlesParams outp_params{};
-    outp_params.every_step = 0;
-    outp_params.data_dir = ".";
-    outp_params.basename = "prt";
-    outp_.reset(new OutputParticles{grid, outp_params});
-
-    mpi_printf(comm, "**** Setting up fields...\n");
-    setup_initial_fields(*mflds_);
+    outf_.reset(&outf);
+    outp_.reset(&outp);
 
     init();
-  }
-
-  // ----------------------------------------------------------------------
-  // setup_initial_fields
-
-  void setup_initial_fields(MfieldsState& mflds)
-  {
-    setupFields(grid(), mflds, [&](int m, double crd[3]) {
-      switch (m) {
-        case HY:
-          return BB;
-        default:
-          return 0.;
-      }
-    });
   }
 
   // ----------------------------------------------------------------------
@@ -212,69 +182,18 @@ struct PscFlatfoil : Psc<PscConfig>
 
   void inject_particles() override
   {
-    static int pr_inject, pr_heating;
-    if (!pr_inject) {
-      pr_inject = prof_register("inject", 1., 0, 0);
-      pr_heating = prof_register("heating", 1., 0, 0);
-    }
-
-    auto comm = grid().comm();
-    auto timestep = grid().timestep();
-
-    if (inject_interval > 0 && timestep % inject_interval == 0) {
-      mpi_printf(comm, "***** Performing injection...\n");
-      prof_start(pr_inject);
-      inject_(*mprts_);
-      prof_stop(pr_inject);
-    }
-
-    // only heating between heating_tb and heating_te
-    if (timestep >= heating_begin && timestep < heating_end &&
-        heating_interval > 0 && timestep % heating_interval == 0) {
-      mpi_printf(comm, "***** Performing heating...\n");
-      prof_start(pr_heating);
-      heating_(*mprts_);
-      prof_stop(pr_heating);
-    }
+    return inject_particles_(grid(), *mprts_);
   }
 
 private:
-  Heating& heating_;
-  Inject& inject_;
+  INJECT& inject_particles_;
 };
 
 // ======================================================================
-// main
+// setupGrid
 
-int main(int argc, char** argv)
+Grid_t* setupGrid()
 {
-  psc_init(argc, argv);
-
-  mpi_printf(MPI_COMM_WORLD, "*** Setting up...\n");
-
-  PscParams psc_params;
-  psc_params.nmax = 2001; // 5001;
-  psc_params.cfl = 0.75;
-
-  BB = 0.;
-  Zi = 1.;
-  double mass_ratio = 100.; // 25.
-
-  // --- for background plasma
-  background_n = .002;
-  background_Te = .001;
-  background_Ti = .001;
-
-  // -- setup particle kinds
-  // last population ("e") is neutralizing
-  Grid_t::Kinds kinds = {{Zi, mass_ratio * Zi, "i"}, {-1., 1., "e"}};
-
-  double d_i = sqrt(kinds[MY_ION].m / kinds[MY_ION].q);
-
-  mpi_printf(MPI_COMM_WORLD, "d_e = %g, d_i = %g\n", 1., d_i);
-  mpi_printf(MPI_COMM_WORLD, "lambda_De (background) = %g\n",
-             sqrt(background_Te));
-
   // --- setup domain
 #if 0
   Grid_t::Real3 LL = {384., 384.*2., 384.*6}; // domain size (in d_e)
@@ -305,18 +224,28 @@ int main(int argc, char** argv)
   Int3 np = {1, 8, 2};                 // division into patches
 #endif
 
-  Grid_t::Domain grid_domain{gdims, LL, -.5 * LL, np};
+  Grid_t::Domain domain{gdims, LL, -.5 * LL, np};
 
-  psc::grid::BC grid_bc{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
-                        {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
-                        {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC},
-                        {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC}};
+  psc::grid::BC bc{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
+                   {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
+                   {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC},
+                   {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC}};
 
-  // --- generic setup
+  // -- setup particle kinds
+  // last population ("e") is neutralizing
+  Grid_t::Kinds kinds = {{Zi, mass_ratio * Zi, "i"}, {-1., 1., "e"}};
+
+  d_i = sqrt(kinds[MY_ION].m / kinds[MY_ION].q);
+
+  mpi_printf(MPI_COMM_WORLD, "d_e = %g, d_i = %g\n", 1., d_i);
+  mpi_printf(MPI_COMM_WORLD, "lambda_De (background) = %g\n",
+             sqrt(background_Te));
+
+  // -- setup normalization
   auto norm_params = Grid_t::NormalizationParams::dimensionless();
   norm_params.nicell = 50;
 
-  double dt = psc_params.cfl * courant_length(grid_domain);
+  double dt = psc_params.cfl * courant_length(domain);
   Grid_t::Normalization norm{norm_params};
 
   Int3 ibn = {2, 2, 2};
@@ -330,8 +259,32 @@ int main(int argc, char** argv)
     ibn[2] = 0;
   }
 
+  return new Grid_t{domain, bc, kinds, norm, dt, -1, ibn};
+}
+
+// ======================================================================
+// main
+
+int main(int argc, char** argv)
+{
+  psc_init(argc, argv);
+
+  mpi_printf(MPI_COMM_WORLD, "*** Setting up...\n");
+
+  psc_params.nmax = 2001; // 5001;
+  psc_params.cfl = 0.75;
+
+  BB = 0.;
+  Zi = 1.;
+  mass_ratio = 100.; // 25.
+
+  // --- for background plasma
+  background_n = .002;
+  background_Te = .001;
+  background_Ti = .001;
+
   {
-    auto grid_ptr = new Grid_t{grid_domain, grid_bc, kinds, norm, dt, -1, ibn};
+    auto grid_ptr = setupGrid();
     auto& grid = *grid_ptr;
     auto& mflds = *new MfieldsState{grid};
     auto& mprts = *new Mparticles{grid};
@@ -342,6 +295,45 @@ int main(int argc, char** argv)
 
     // -- Sort
     psc_params.sort_interval = 10;
+
+    // -- Collision
+    int collision_interval = 10;
+    double collision_nu = .1;
+    auto& collision = *new Collision{grid, collision_interval, collision_nu};
+
+    // -- Checks
+    ChecksParams checks_params{};
+    checks_params.continuity_every_step = 50;
+    checks_params.continuity_threshold = 1e-5;
+    checks_params.continuity_verbose = false;
+    auto& checks = *new Checks{grid, MPI_COMM_WORLD, checks_params};
+
+    // -- Marder correction
+    double marder_diffusion = 0.9;
+    int marder_loop = 3;
+    bool marder_dump = false;
+    psc_params.marder_interval = 0 * 5;
+    auto& marder =
+      *new Marder(grid, marder_diffusion, marder_loop, marder_dump);
+
+    // -- output fields
+    OutputFieldsCParams outf_params{};
+    outf_params.pfield_step = 200;
+    std::vector<std::unique_ptr<FieldsItemBase>> outf_items;
+    outf_items.emplace_back(new FieldsItem_E_cc(grid));
+    outf_items.emplace_back(new FieldsItem_H_cc(grid));
+    outf_items.emplace_back(new FieldsItem_J_cc(grid));
+    outf_items.emplace_back(new FieldsItem_n_1st_cc<Mparticles>(grid));
+    outf_items.emplace_back(new FieldsItem_v_1st_cc<Mparticles>(grid));
+    outf_items.emplace_back(new FieldsItem_T_1st_cc<Mparticles>(grid));
+    auto& outf = *new OutputFieldsC{grid, outf_params, std::move(outf_items)};
+
+    // -- output particles
+    OutputParticlesParams outp_params{};
+    outp_params.every_step = 0;
+    outp_params.data_dir = ".";
+    outp_params.basename = "prt";
+    auto& outp = *new OutputParticles{grid, outp_params};
 
     // -- Heating
     HeatingSpotFoilParams heating_foil_params{};
@@ -376,6 +368,33 @@ int main(int argc, char** argv)
     int inject_tau = 40;
     Inject inject{grid, inject_interval, inject_tau, MY_ELECTRON,
                   inject_target};
+
+    auto lf_inject = [&](const Grid_t& grid, Mparticles& mprts) {
+      static int pr_inject, pr_heating;
+      if (!pr_inject) {
+        pr_inject = prof_register("inject", 1., 0, 0);
+        pr_heating = prof_register("heating", 1., 0, 0);
+      }
+
+      auto comm = grid.comm();
+      auto timestep = grid.timestep();
+
+      if (inject_interval > 0 && timestep % inject_interval == 0) {
+        mpi_printf(comm, "***** Performing injection...\n");
+        prof_start(pr_inject);
+        inject(mprts);
+        prof_stop(pr_inject);
+      }
+
+      // only heating between heating_tb and heating_te
+      if (timestep >= heating_begin && timestep < heating_end &&
+          heating_interval > 0 && timestep % heating_interval == 0) {
+        mpi_printf(comm, "***** Performing heating...\n");
+        prof_start(pr_heating);
+        heating(mprts);
+        prof_stop(pr_heating);
+      }
+    };
 
     auto lf_init_npt = [&](int kind, double crd[3], psc_particle_npt& npt) {
       switch (kind) {
@@ -417,11 +436,24 @@ int main(int argc, char** argv)
     // FIXME?
     mprts.reset(*grid_ptr);
 
+    // -- set up particles
     mpi_printf(MPI_COMM_WORLD, "**** Setting up particles...\n");
     setup_particles.setup_particles(mprts, n_prts_by_patch, lf_init_npt);
 
-    PscFlatfoil psc{psc_params, *grid_ptr, mflds,  mprts,
-                    balance,    inject,    heating};
+    // -- set up fields
+    mpi_printf(MPI_COMM_WORLD, "**** Setting up fields...\n");
+    setupFields(*grid_ptr, mflds, [&](int m, double crd[3]) {
+      switch (m) {
+        case HY:
+          return BB;
+        default:
+          return 0.;
+      }
+    });
+
+    PscFlatfoil<decltype(lf_inject)> psc{
+      psc_params, *grid_ptr, mflds, mprts, balance,  collision,
+      checks,     marder,    outf,  outp,  lf_inject};
     psc.initialize();
     psc.integrate();
   }
