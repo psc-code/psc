@@ -6,6 +6,7 @@
 #include "psc_bits.h"
 #include "mrc_domain.hxx"
 #include "grid/BC.h"
+#include "grid/Domain.h"
 
 #include <vector>
 #include <cstring>
@@ -23,7 +24,7 @@ struct Grid_
   struct NormalizationParams;
   struct Normalization;
 
-  struct Domain;
+  using Domain = psc::grid::Domain<real_t>;
   
   struct Kind;
   using Kinds = std::vector<Kind>;
@@ -58,7 +59,7 @@ struct Grid_
   Grid_()
   {}
   
-  Grid_(const Domain& domain, const GridBc& bc, const Kinds& kinds, const Normalization& norm,
+  Grid_(const Domain& domain, const psc::grid::BC& bc, const Kinds& kinds, const Normalization& norm,
 	double dt, int n_patches = -1, Int3 ibn = {})
     : domain{domain},
       ldims{domain.ldims},
@@ -147,7 +148,7 @@ struct Grid_
   // ----------------------------------------------------------------------
   // make_mrc_domain
 
-  static MrcDomain make_mrc_domain(const Domain& grid_domain, const GridBc& grid_bc, int nr_patches)
+  static MrcDomain make_mrc_domain(const Domain& grid_domain, const psc::grid::BC& grid_bc, int nr_patches)
   {
     // FIXME, should be split to create, set_from_options, setup time?
     struct mrc_domain *domain = mrc_domain_create(MPI_COMM_WORLD);
@@ -192,40 +193,6 @@ struct Grid_
   mrc_patch_info globalPatchInfo(int p) const { return mrc_domain().globalPatchInfo(p); }
   mrc_patch_info localPatchInfo(int p) const { return mrc_domain().localPatchInfo(p); }
   mrc_ddc* create_ddc() const { return mrc_domain().create_ddc(); }
-};
-
-// ======================================================================
-// Grid::Domain
-
-template<class T>
-struct Grid_<T>::Domain
-{
-  Domain()
-  {}
-  
-  Domain(Int3 gdims, Real3 length, Real3 corner = {0., 0., 0.}, Int3 np = {1, 1, 1})
-    : gdims(gdims), length(length), corner(corner), np(np)
-  {
-    for (int d = 0; d < 3; d++) {
-      assert(gdims[d] % np[d] == 0);
-      ldims[d] = gdims[d] / np[d];
-    }
-    dx = length / Real3(gdims);
-  }
-
-  void view() const
-  {
-    mprintf("Grid_::Domain: gdims %d x %d x %d\n", gdims[0], gdims[1], gdims[2]);
-  }
-  
-  bool isInvar(int d) const { return gdims[d] == 1; }
-  
-  Int3 gdims;		///<Number of grid-points in each dimension
-  Real3 length;	///<The physical size of the simulation-box 
-  Real3 corner;
-  Int3 np;		///<Number of patches in each dimension
-  Int3 ldims;
-  Real3 dx;
 };
 
 // ======================================================================
