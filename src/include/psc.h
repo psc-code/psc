@@ -46,5 +46,6 @@ enum {
 extern int pr_time_step_no_comm;
 
 void psc_init(int& argc, char**& argv);
+void psc_finalize();
 
 #endif

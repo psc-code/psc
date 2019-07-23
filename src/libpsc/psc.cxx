@@ -88,3 +88,10 @@ void psc_init(int& argc, char**& argv)
   libmrc_params_init(argc, argv);
   mrc_set_flags(MRC_FLAG_SUPPRESS_UNPREFIXED_OPTION_WARNING);
 }
+
+void psc_finalize()
+{
+  libmrc_params_finalize();
+  MPI_Finalize();
+}
+

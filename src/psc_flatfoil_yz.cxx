@@ -262,13 +262,11 @@ Grid_t* setupGrid()
   return new Grid_t{domain, bc, kinds, norm, dt, -1, ibn};
 }
 
-// ======================================================================
-// main
+// ----------------------------------------------------------------------
+// run
 
-int main(int argc, char** argv)
+void run()
 {
-  psc_init(argc, argv);
-
   mpi_printf(MPI_COMM_WORLD, "*** Setting up...\n");
 
   psc_params.nmax = 2001; // 5001;
@@ -283,183 +281,187 @@ int main(int argc, char** argv)
   background_Te = .001;
   background_Ti = .001;
 
-  {
-    auto grid_ptr = setupGrid();
-    auto& grid = *grid_ptr;
-    auto& mflds = *new MfieldsState{grid};
-    auto& mprts = *new Mparticles{grid};
+  auto grid_ptr = setupGrid();
+  auto& grid = *grid_ptr;
+  auto& mflds = *new MfieldsState{grid};
+  auto& mprts = *new Mparticles{grid};
 
-    // -- Balance
-    psc_params.balance_interval = 300;
-    auto& balance = *new Balance{psc_params.balance_interval, 3, true};
+  // -- Balance
+  psc_params.balance_interval = 300;
+  auto& balance = *new Balance{psc_params.balance_interval, 3, true};
 
-    // -- Sort
-    psc_params.sort_interval = 10;
+  // -- Sort
+  psc_params.sort_interval = 10;
 
-    // -- Collision
-    int collision_interval = 10;
-    double collision_nu = .1;
-    auto& collision = *new Collision{grid, collision_interval, collision_nu};
+  // -- Collision
+  int collision_interval = 10;
+  double collision_nu = .1;
+  auto& collision = *new Collision{grid, collision_interval, collision_nu};
 
-    // -- Checks
-    ChecksParams checks_params{};
-    checks_params.continuity_every_step = 50;
-    checks_params.continuity_threshold = 1e-5;
-    checks_params.continuity_verbose = false;
-    auto& checks = *new Checks{grid, MPI_COMM_WORLD, checks_params};
+  // -- Checks
+  ChecksParams checks_params{};
+  checks_params.continuity_every_step = 50;
+  checks_params.continuity_threshold = 1e-5;
+  checks_params.continuity_verbose = false;
+  auto& checks = *new Checks{grid, MPI_COMM_WORLD, checks_params};
 
-    // -- Marder correction
-    double marder_diffusion = 0.9;
-    int marder_loop = 3;
-    bool marder_dump = false;
-    psc_params.marder_interval = 0 * 5;
-    auto& marder =
-      *new Marder(grid, marder_diffusion, marder_loop, marder_dump);
+  // -- Marder correction
+  double marder_diffusion = 0.9;
+  int marder_loop = 3;
+  bool marder_dump = false;
+  psc_params.marder_interval = 0 * 5;
+  auto& marder = *new Marder(grid, marder_diffusion, marder_loop, marder_dump);
 
-    // -- output fields
-    OutputFieldsCParams outf_params{};
-    outf_params.pfield_step = 200;
-    std::vector<std::unique_ptr<FieldsItemBase>> outf_items;
-    outf_items.emplace_back(new FieldsItem_E_cc(grid));
-    outf_items.emplace_back(new FieldsItem_H_cc(grid));
-    outf_items.emplace_back(new FieldsItem_J_cc(grid));
-    outf_items.emplace_back(new FieldsItem_n_1st_cc<Mparticles>(grid));
-    outf_items.emplace_back(new FieldsItem_v_1st_cc<Mparticles>(grid));
-    outf_items.emplace_back(new FieldsItem_T_1st_cc<Mparticles>(grid));
-    auto& outf = *new OutputFieldsC{grid, outf_params, std::move(outf_items)};
+  // -- output fields
+  OutputFieldsCParams outf_params{};
+  outf_params.pfield_step = 200;
+  std::vector<std::unique_ptr<FieldsItemBase>> outf_items;
+  outf_items.emplace_back(new FieldsItem_E_cc(grid));
+  outf_items.emplace_back(new FieldsItem_H_cc(grid));
+  outf_items.emplace_back(new FieldsItem_J_cc(grid));
+  outf_items.emplace_back(new FieldsItem_n_1st_cc<Mparticles>(grid));
+  outf_items.emplace_back(new FieldsItem_v_1st_cc<Mparticles>(grid));
+  outf_items.emplace_back(new FieldsItem_T_1st_cc<Mparticles>(grid));
+  auto& outf = *new OutputFieldsC{grid, outf_params, std::move(outf_items)};
 
-    // -- output particles
-    OutputParticlesParams outp_params{};
-    outp_params.every_step = 0;
-    outp_params.data_dir = ".";
-    outp_params.basename = "prt";
-    auto& outp = *new OutputParticles{grid, outp_params};
+  // -- output particles
+  OutputParticlesParams outp_params{};
+  outp_params.every_step = 0;
+  outp_params.data_dir = ".";
+  outp_params.basename = "prt";
+  auto& outp = *new OutputParticles{grid, outp_params};
 
-    // -- Heating
-    HeatingSpotFoilParams heating_foil_params{};
-    heating_foil_params.zl = -1. * d_i;
-    heating_foil_params.zh = 1. * d_i;
-    heating_foil_params.xc = 0. * d_i;
-    heating_foil_params.yc = 0. * d_i;
-    heating_foil_params.rH = 3. * d_i;
-    heating_foil_params.T = .04;
-    heating_foil_params.Mi = grid.kinds[MY_ION].m;
-    HeatingSpotFoil heating_spot{heating_foil_params};
+  // -- Heating
+  HeatingSpotFoilParams heating_foil_params{};
+  heating_foil_params.zl = -1. * d_i;
+  heating_foil_params.zh = 1. * d_i;
+  heating_foil_params.xc = 0. * d_i;
+  heating_foil_params.yc = 0. * d_i;
+  heating_foil_params.rH = 3. * d_i;
+  heating_foil_params.T = .04;
+  heating_foil_params.Mi = grid.kinds[MY_ION].m;
+  HeatingSpotFoil heating_spot{heating_foil_params};
 
-    heating_interval = 20;
-    heating_begin = 0;
-    heating_end = 10000000;
-    auto& heating =
-      *new Heating{grid, heating_interval, MY_ELECTRON, heating_spot};
+  heating_interval = 20;
+  heating_begin = 0;
+  heating_end = 10000000;
+  auto& heating =
+    *new Heating{grid, heating_interval, MY_ELECTRON, heating_spot};
 
-    // -- Particle injection
-    InjectFoilParams inject_foil_params;
-    inject_foil_params.yl = -100000. * d_i;
-    inject_foil_params.yh = 100000. * d_i;
-    double target_zwidth = 1.;
-    inject_foil_params.zl = -target_zwidth * d_i;
-    inject_foil_params.zh = target_zwidth * d_i;
-    inject_foil_params.n = 1.;
-    inject_foil_params.Te = .001;
-    inject_foil_params.Ti = .001;
-    InjectFoil inject_target{inject_foil_params};
+  // -- Particle injection
+  InjectFoilParams inject_foil_params;
+  inject_foil_params.yl = -100000. * d_i;
+  inject_foil_params.yh = 100000. * d_i;
+  double target_zwidth = 1.;
+  inject_foil_params.zl = -target_zwidth * d_i;
+  inject_foil_params.zh = target_zwidth * d_i;
+  inject_foil_params.n = 1.;
+  inject_foil_params.Te = .001;
+  inject_foil_params.Ti = .001;
+  InjectFoil inject_target{inject_foil_params};
 
-    inject_interval = 20;
-    int inject_tau = 40;
-    Inject inject{grid, inject_interval, inject_tau, MY_ELECTRON,
-                  inject_target};
+  inject_interval = 20;
+  int inject_tau = 40;
+  Inject inject{grid, inject_interval, inject_tau, MY_ELECTRON, inject_target};
 
-    auto lf_inject = [&](const Grid_t& grid, Mparticles& mprts) {
-      static int pr_inject, pr_heating;
-      if (!pr_inject) {
-        pr_inject = prof_register("inject", 1., 0, 0);
-        pr_heating = prof_register("heating", 1., 0, 0);
-      }
+  auto lf_inject = [&](const Grid_t& grid, Mparticles& mprts) {
+    static int pr_inject, pr_heating;
+    if (!pr_inject) {
+      pr_inject = prof_register("inject", 1., 0, 0);
+      pr_heating = prof_register("heating", 1., 0, 0);
+    }
 
-      auto comm = grid.comm();
-      auto timestep = grid.timestep();
+    auto comm = grid.comm();
+    auto timestep = grid.timestep();
 
-      if (inject_interval > 0 && timestep % inject_interval == 0) {
-        mpi_printf(comm, "***** Performing injection...\n");
-        prof_start(pr_inject);
-        inject(mprts);
-        prof_stop(pr_inject);
-      }
+    if (inject_interval > 0 && timestep % inject_interval == 0) {
+      mpi_printf(comm, "***** Performing injection...\n");
+      prof_start(pr_inject);
+      inject(mprts);
+      prof_stop(pr_inject);
+    }
 
-      // only heating between heating_tb and heating_te
-      if (timestep >= heating_begin && timestep < heating_end &&
-          heating_interval > 0 && timestep % heating_interval == 0) {
-        mpi_printf(comm, "***** Performing heating...\n");
-        prof_start(pr_heating);
-        heating(mprts);
-        prof_stop(pr_heating);
-      }
-    };
+    // only heating between heating_tb and heating_te
+    if (timestep >= heating_begin && timestep < heating_end &&
+        heating_interval > 0 && timestep % heating_interval == 0) {
+      mpi_printf(comm, "***** Performing heating...\n");
+      prof_start(pr_heating);
+      heating(mprts);
+      prof_stop(pr_heating);
+    }
+  };
 
-    auto lf_init_npt = [&](int kind, double crd[3], psc_particle_npt& npt) {
-      switch (kind) {
-        case MY_ION:
-          npt.n = background_n;
-          npt.T[0] = background_Ti;
-          npt.T[1] = background_Ti;
-          npt.T[2] = background_Ti;
-          break;
-        case MY_ELECTRON:
-          npt.n = background_n;
-          npt.T[0] = background_Te;
-          npt.T[1] = background_Te;
-          npt.T[2] = background_Te;
-          break;
-        default:
-          assert(0);
-      }
+  auto lf_init_npt = [&](int kind, double crd[3], psc_particle_npt& npt) {
+    switch (kind) {
+      case MY_ION:
+        npt.n = background_n;
+        npt.T[0] = background_Ti;
+        npt.T[1] = background_Ti;
+        npt.T[2] = background_Ti;
+        break;
+      case MY_ELECTRON:
+        npt.n = background_n;
+        npt.T[0] = background_Te;
+        npt.T[1] = background_Te;
+        npt.T[2] = background_Te;
+        break;
+      default:
+        assert(0);
+    }
 
-      if (inject_target.is_inside(crd)) {
-        // replace values above by target values
-        inject_target.init_npt(kind, crd, npt);
-      }
-    };
+    if (inject_target.is_inside(crd)) {
+      // replace values above by target values
+      inject_target.init_npt(kind, crd, npt);
+    }
+  };
 
-    // --- partition particles and initial balancing
-    mpi_printf(MPI_COMM_WORLD, "**** Partitioning...\n");
+  // --- partition particles and initial balancing
+  mpi_printf(MPI_COMM_WORLD, "**** Partitioning...\n");
 
-    SetupParticles<Mparticles> setup_particles;
-    setup_particles.fractional_n_particles_per_cell = true;
-    setup_particles.neutralizing_population = MY_ELECTRON;
+  SetupParticles<Mparticles> setup_particles;
+  setup_particles.fractional_n_particles_per_cell = true;
+  setup_particles.neutralizing_population = MY_ELECTRON;
 
-    auto n_prts_by_patch = setup_particles.setup_partition(grid, lf_init_npt);
+  auto n_prts_by_patch = setup_particles.setup_partition(grid, lf_init_npt);
 
-    balance.initial(grid_ptr, n_prts_by_patch);
-    // !!! FIXME! grid is now invalid
-    // balance::initial does not rebalance particles, because the old way of
-    // doing this does't even have the particle data structure created yet --
-    // FIXME?
-    mprts.reset(*grid_ptr);
+  balance.initial(grid_ptr, n_prts_by_patch);
+  // !!! FIXME! grid is now invalid
+  // balance::initial does not rebalance particles, because the old way of
+  // doing this does't even have the particle data structure created yet --
+  // FIXME?
+  mprts.reset(*grid_ptr);
 
-    // -- set up particles
-    mpi_printf(MPI_COMM_WORLD, "**** Setting up particles...\n");
-    setup_particles.setup_particles(mprts, n_prts_by_patch, lf_init_npt);
+  // -- set up particles
+  mpi_printf(MPI_COMM_WORLD, "**** Setting up particles...\n");
+  setup_particles.setup_particles(mprts, n_prts_by_patch, lf_init_npt);
 
-    // -- set up fields
-    mpi_printf(MPI_COMM_WORLD, "**** Setting up fields...\n");
-    setupFields(*grid_ptr, mflds, [&](int m, double crd[3]) {
-      switch (m) {
-        case HY:
-          return BB;
-        default:
-          return 0.;
-      }
-    });
+  // -- set up fields
+  mpi_printf(MPI_COMM_WORLD, "**** Setting up fields...\n");
+  setupFields(*grid_ptr, mflds, [&](int m, double crd[3]) {
+    switch (m) {
+      case HY:
+        return BB;
+      default:
+        return 0.;
+    }
+  });
 
-    PscFlatfoil<decltype(lf_inject)> psc{
-      psc_params, *grid_ptr, mflds, mprts, balance,  collision,
-      checks,     marder,    outf,  outp,  lf_inject};
-    psc.initialize();
-    psc.integrate();
-  }
+  PscFlatfoil<decltype(lf_inject)> psc{psc_params, *grid_ptr, mflds,    mprts,
+                                       balance,    collision, checks,   marder,
+                                       outf,       outp,      lf_inject};
+  psc.initialize();
+  psc.integrate();
+}
 
-  libmrc_params_finalize();
-  MPI_Finalize();
+// ======================================================================
+// main
 
+int main(int argc, char** argv)
+{
+  psc_init(argc, argv);
+
+  run();
+
+  psc_finalize();
   return 0;
 }
