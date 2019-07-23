@@ -2,6 +2,7 @@
 #include <psc.h>
 #include <psc.hxx>
 
+#include "psc_integrator.hxx"
 #include <balance.hxx>
 #include <bnd.hxx>
 #include <bnd_fields.hxx>
@@ -142,52 +143,6 @@ using FieldsItem_p_1st_cc =
 template <typename Mparticles>
 using FieldsItem_T_1st_cc =
   FieldsItemMoment<ItemMomentAddBnd<Moment_T_1st<Mparticles, MfieldsC>>>;
-
-// ======================================================================
-// PscFlatfoil
-
-template <typename INJECT>
-struct PscFlatfoil : Psc<PscConfig>
-{
-  // ----------------------------------------------------------------------
-  // ctor
-
-  PscFlatfoil(const PscParams& params, Grid_t& grid, MfieldsState& mflds,
-              Mparticles& mprts, Balance& balance, Collision& collision,
-              Checks& checks, Marder& marder, OutputFieldsC& outf,
-              OutputParticles& outp, INJECT& inject_particles)
-    : inject_particles_{inject_particles}
-  {
-    auto comm = grid.comm();
-
-    p_ = params;
-
-    define_grid(grid);
-    define_field_array(mflds);
-    define_particles(mprts);
-
-    balance_.reset(&balance);
-    collision_.reset(&collision);
-    checks_.reset(&checks);
-    marder_.reset(&marder);
-
-    outf_.reset(&outf);
-    outp_.reset(&outp);
-
-    init();
-  }
-
-  // ----------------------------------------------------------------------
-  // inject_particles
-
-  void inject_particles() override
-  {
-    return inject_particles_(grid(), *mprts_);
-  }
-
-private:
-  INJECT& inject_particles_;
-};
 
 // ======================================================================
 // setupGrid
@@ -446,10 +401,10 @@ void run()
     }
   });
 
-  PscFlatfoil<decltype(lf_inject)> psc{psc_params, *grid_ptr, mflds,    mprts,
-                                       balance,    collision, checks,   marder,
-                                       outf,       outp,      lf_inject};
-  psc.initialize();
+  PscIntegrator<decltype(lf_inject), PscConfig> psc{
+    psc_params, *grid_ptr, mflds, mprts, balance,  collision,
+    checks,     marder,    outf,  outp,  lf_inject};
+
   psc.integrate();
 }
 
