@@ -179,9 +179,22 @@ struct Psc
     grid_setup_communication();
 #endif
   }
+
+  // ----------------------------------------------------------------------
+  // define_particles
+
+  void define_particles(Mparticles& mprts)
+  {
+    mprts_.reset(&mprts);
+  }
   
   // ----------------------------------------------------------------------
   // define_field_array
+
+  void define_field_array(MfieldsState& mflds)
+  {
+    mflds_.reset(&mflds);
+  }
 
   void define_field_array(double damp = 0.)
   {
@@ -193,7 +206,7 @@ struct Psc
 #ifdef VPIC
     mflds_.reset(new MfieldsState{grid(), vgrid_, material_list_, damp});
 #else
-    mflds_.reset(new MfieldsState{grid()});
+    define_field_array(*new MfieldsState{grid()});
 #endif
 
 #ifdef VPIC

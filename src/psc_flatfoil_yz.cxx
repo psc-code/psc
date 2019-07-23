@@ -103,6 +103,9 @@ using PscConfig = PscConfig1vbecCuda<dim_t>;
 using PscConfig = PscConfig1vbecSingle<dim_t>;
 #endif
 
+using MfieldsState = PscConfig::MfieldsState;
+using Mparticles = PscConfig::Mparticles;
+
 // ======================================================================
 // PscFlatfoil
 
@@ -115,22 +118,21 @@ struct PscFlatfoil : Psc<PscConfig>
   // ----------------------------------------------------------------------
   // ctor
 
-  PscFlatfoil(const PscParams& params, Grid_t& grid)
+  PscFlatfoil(const PscParams& params, Grid_t& grid, MfieldsState& mflds,
+	      Mparticles& mprts)
   {
     auto comm = grid.comm();
 
     p_ = params;
 
     define_grid(grid);
+    define_field_array(mflds);
+    define_particles(mprts);
 
     double d_i = sqrt(grid.kinds[MY_ION].m / grid.kinds[MY_ION].q);
 
     mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
     mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(background_Te));
-
-    define_field_array();
-
-    mprts_.reset(new Mparticles{grid});
 
     // -- Balance
     balance_interval = 300;
@@ -445,8 +447,10 @@ int main(int argc, char** argv)
 
   {
     Grid_t grid{grid_domain, grid_bc, kinds, norm, dt, -1, ibn};
+    auto& mflds = *new MfieldsState{grid};
+    auto& mprts = *new Mparticles{grid};
 
-    PscFlatfoil psc{psc_params, grid};
+    PscFlatfoil psc{psc_params, grid, mflds, mprts};
     psc.initialize();
     psc.integrate();
   }
