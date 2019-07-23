@@ -3,24 +3,24 @@
 #include <psc.hxx>
 
 #include <balance.hxx>
-#include <particles.hxx>
-#include <fields3d.hxx>
-#include <push_particles.hxx>
-#include <push_fields.hxx>
-#include <sort.hxx>
-#include <collision.hxx>
-#include <bnd_particles.hxx>
 #include <bnd.hxx>
 #include <bnd_fields.hxx>
-#include <marder.hxx>
-#include <inject.hxx>
+#include <bnd_particles.hxx>
+#include <collision.hxx>
+#include <fields3d.hxx>
 #include <heating.hxx>
-#include <setup_particles.hxx>
+#include <inject.hxx>
+#include <marder.hxx>
+#include <particles.hxx>
+#include <push_fields.hxx>
+#include <push_particles.hxx>
 #include <setup_fields.hxx>
+#include <setup_particles.hxx>
+#include <sort.hxx>
 
-#include "inject_impl.hxx"
-#include "../libpsc/psc_heating/psc_heating_impl.hxx"
 #include "../libpsc/psc_checks/checks_impl.hxx"
+#include "../libpsc/psc_heating/psc_heating_impl.hxx"
+#include "inject_impl.hxx"
 
 #ifdef USE_CUDA
 #include "../libpsc/cuda/setup_fields_cuda.hxx"
@@ -30,7 +30,8 @@
 
 #include "heating_spot_foil.hxx"
 
-enum {
+enum
+{
   MY_ION,
   MY_ELECTRON,
   N_MY_KINDS,
@@ -60,15 +61,12 @@ struct InjectFoilParams
 struct InjectFoil : InjectFoilParams
 {
   InjectFoil() = default;
-  
-  InjectFoil(const InjectFoilParams& params)
-    : InjectFoilParams(params)
-  {}
+
+  InjectFoil(const InjectFoilParams& params) : InjectFoilParams(params) {}
 
   bool is_inside(double crd[3])
   {
-    return (crd[1] >= yl && crd[1] <= yh &&
-	    crd[2] >= zl && crd[2] <= zh);
+    return (crd[1] >= yl && crd[1] <= yh && crd[2] >= zl && crd[2] <= zh);
   }
 
   void init_npt(int pop, double crd[3], psc_particle_npt& npt)
@@ -77,22 +75,22 @@ struct InjectFoil : InjectFoilParams
       npt.n = 0;
       return;
     }
-    
+
     switch (pop) {
-    case MY_ION:
-      npt.n    = n;
-      npt.T[0] = Ti;
-      npt.T[1] = Ti;
-      npt.T[2] = Ti;
-      break;
-    case MY_ELECTRON:
-      npt.n    = n;
-      npt.T[0] = Te;
-      npt.T[1] = Te;
-      npt.T[2] = Te;
-      break;
-    default:
-      assert(0);
+      case MY_ION:
+        npt.n = n;
+        npt.T[0] = Ti;
+        npt.T[1] = Ti;
+        npt.T[2] = Ti;
+        break;
+      case MY_ELECTRON:
+        npt.n = n;
+        npt.T[0] = Te;
+        npt.T[1] = Te;
+        npt.T[2] = Te;
+        break;
+      default:
+        assert(0);
     }
   }
 };
@@ -116,19 +114,19 @@ struct PscFlatfoil : Psc<PscConfig>
 
   // ----------------------------------------------------------------------
   // ctor
-  
+
   PscFlatfoil(const PscParams& params, const Grid_t::Kinds& kinds,
-	      const Grid_t::Domain& grid_domain, const GridBc& grid_bc)
+              const Grid_t::Domain& grid_domain, const GridBc& grid_bc)
   {
     auto comm = grid().comm();
 
     p_ = params;
 
     double d_i = sqrt(kinds[MY_ION].m / kinds[MY_ION].q);
-    
+
     mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
     mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(background_Te));
-    
+
     // --- generic setup
     auto norm_params = Grid_t::NormalizationParams::dimensionless();
     norm_params.nicell = 50;
@@ -173,51 +171,63 @@ struct PscFlatfoil : Psc<PscConfig>
     double marder_diffusion = 0.9;
     int marder_loop = 3;
     bool marder_dump = false;
-    marder_interval = 0*5;
-    marder_.reset(new Marder_t(grid(), marder_diffusion, marder_loop, marder_dump));
+    marder_interval = 0 * 5;
+    marder_.reset(
+      new Marder_t(grid(), marder_diffusion, marder_loop, marder_dump));
 
     // -- Heating
     auto heating_foil_params = HeatingSpotFoilParams{};
     heating_foil_params.zl = -1. * d_i;
-    heating_foil_params.zh =  1. * d_i;
-    heating_foil_params.xc =  0. * d_i;
-    heating_foil_params.yc =  0. * d_i;
+    heating_foil_params.zh = 1. * d_i;
+    heating_foil_params.xc = 0. * d_i;
+    heating_foil_params.yc = 0. * d_i;
     heating_foil_params.rH = 3. * d_i;
-    heating_foil_params.T  = .04;
+    heating_foil_params.T = .04;
     heating_foil_params.Mi = kinds[MY_ION].m;
     auto heating_spot = HeatingSpotFoil{heating_foil_params};
 
     heating_interval_ = 20;
     heating_begin_ = 0;
     heating_end_ = 10000000;
-    heating_.reset(new Heating_t{grid(), heating_interval_, MY_ELECTRON, heating_spot});
+    heating_.reset(
+      new Heating_t{grid(), heating_interval_, MY_ELECTRON, heating_spot});
 
     // -- Particle injection
     auto inject_foil_params = InjectFoilParams{};
     inject_foil_params.yl = -100000. * d_i;
-    inject_foil_params.yh =  100000. * d_i;
-    double target_zwidth =  1.;
-    inject_foil_params.zl = - target_zwidth * d_i;
-    inject_foil_params.zh =   target_zwidth * d_i;
-    inject_foil_params.n  = 1.;
+    inject_foil_params.yh = 100000. * d_i;
+    double target_zwidth = 1.;
+    inject_foil_params.zl = -target_zwidth * d_i;
+    inject_foil_params.zh = target_zwidth * d_i;
+    inject_foil_params.n = 1.;
     inject_foil_params.Te = .001;
     inject_foil_params.Ti = .001;
     inject_target_ = InjectFoil{inject_foil_params};
     inject_interval_ = 20;
-    
+
     int inject_tau = 40;
-    inject_.reset(new Inject_t{grid(), inject_interval_, inject_tau, MY_ELECTRON, inject_target_});
-    
+    inject_.reset(new Inject_t{grid(), inject_interval_, inject_tau,
+                               MY_ELECTRON, inject_target_});
+
     // -- output fields
     OutputFieldsCParams outf_params{};
     outf_params.pfield_step = 200;
     std::vector<std::unique_ptr<FieldsItemBase>> outf_items;
-    outf_items.emplace_back(new FieldsItemFields<ItemLoopPatches<Item_e_cc>>(grid()));
-    outf_items.emplace_back(new FieldsItemFields<ItemLoopPatches<Item_h_cc>>(grid()));
-    outf_items.emplace_back(new FieldsItemFields<ItemLoopPatches<Item_j_cc>>(grid()));
-    outf_items.emplace_back(new FieldsItemMoment<ItemMomentAddBnd<Moment_n_1st<Mparticles, MfieldsC>>>(grid()));
-    outf_items.emplace_back(new FieldsItemMoment<ItemMomentAddBnd<Moment_v_1st<Mparticles, MfieldsC>>>(grid()));
-    outf_items.emplace_back(new FieldsItemMoment<ItemMomentAddBnd<Moment_T_1st<Mparticles, MfieldsC>>>(grid()));
+    outf_items.emplace_back(
+      new FieldsItemFields<ItemLoopPatches<Item_e_cc>>(grid()));
+    outf_items.emplace_back(
+      new FieldsItemFields<ItemLoopPatches<Item_h_cc>>(grid()));
+    outf_items.emplace_back(
+      new FieldsItemFields<ItemLoopPatches<Item_j_cc>>(grid()));
+    outf_items.emplace_back(
+      new FieldsItemMoment<
+        ItemMomentAddBnd<Moment_n_1st<Mparticles, MfieldsC>>>(grid()));
+    outf_items.emplace_back(
+      new FieldsItemMoment<
+        ItemMomentAddBnd<Moment_v_1st<Mparticles, MfieldsC>>>(grid()));
+    outf_items.emplace_back(
+      new FieldsItemMoment<
+        ItemMomentAddBnd<Moment_T_1st<Mparticles, MfieldsC>>>(grid()));
     outf_.reset(new OutputFieldsC{grid(), outf_params, std::move(outf_items)});
 
     // -- output particles
@@ -226,18 +236,19 @@ struct PscFlatfoil : Psc<PscConfig>
     outp_params.data_dir = ".";
     outp_params.basename = "prt";
     outp_.reset(new OutputParticles{grid(), outp_params});
-    
+
     // --- partition particles and initial balancing
     mpi_printf(comm, "**** Partitioning...\n");
     auto n_prts_by_patch = setup_initial_partition();
     balance_->initial(grid_, n_prts_by_patch);
-    // balance::initial does not rebalance particles, because the old way of doing this
-    // does't even have the particle data structure created yet -- FIXME?
+    // balance::initial does not rebalance particles, because the old way of
+    // doing this does't even have the particle data structure created yet --
+    // FIXME?
     mprts_->reset(grid());
-    
+
     mpi_printf(comm, "**** Setting up particles...\n");
     setup_initial_particles(*mprts_, n_prts_by_patch);
-    
+
     mpi_printf(comm, "**** Setting up fields...\n");
     setup_initial_fields(*mflds_);
 
@@ -247,65 +258,74 @@ struct PscFlatfoil : Psc<PscConfig>
   void init_npt(int kind, double crd[3], psc_particle_npt& npt)
   {
     switch (kind) {
-    case MY_ION:
-      npt.n    = background_n;
-      npt.T[0] = background_Ti;
-      npt.T[1] = background_Ti;
-      npt.T[2] = background_Ti;
-      break;
-    case MY_ELECTRON:
-      npt.n    = background_n;
-      npt.T[0] = background_Te;
-      npt.T[1] = background_Te;
-      npt.T[2] = background_Te;
-      break;
-    default:
-      assert(0);
+      case MY_ION:
+        npt.n = background_n;
+        npt.T[0] = background_Ti;
+        npt.T[1] = background_Ti;
+        npt.T[2] = background_Ti;
+        break;
+      case MY_ELECTRON:
+        npt.n = background_n;
+        npt.T[0] = background_Te;
+        npt.T[1] = background_Te;
+        npt.T[2] = background_Te;
+        break;
+      default:
+        assert(0);
     }
-      
+
     if (inject_target_.is_inside(crd)) {
       // replace values above by target values
       inject_target_.init_npt(kind, crd, npt);
     }
   }
-  
+
   // ----------------------------------------------------------------------
   // setup_initial_partition
-  
+
   std::vector<uint> setup_initial_partition()
   {
     SetupParticles<Mparticles> setup_particles;
-    setup_particles.fractional_n_particles_per_cell = true; // FIXME, should use same setup_particles for partition/setup
+    setup_particles.fractional_n_particles_per_cell =
+      true; // FIXME, should use same setup_particles for partition/setup
     setup_particles.neutralizing_population = MY_ELECTRON;
-    return setup_particles.setup_partition(grid(), [&](int kind, double crd[3], psc_particle_npt& npt) {
-	this->init_npt(kind, crd, npt);
+    return setup_particles.setup_partition(
+      grid(), [&](int kind, double crd[3], psc_particle_npt& npt) {
+        this->init_npt(kind, crd, npt);
       });
   }
-  
+
   // ----------------------------------------------------------------------
   // setup_initial_particles
-  
-  void setup_initial_particles(Mparticles& mprts, std::vector<uint>& n_prts_by_patch)
+
+  void setup_initial_particles(Mparticles& mprts,
+                               std::vector<uint>& n_prts_by_patch)
   {
-    SetupParticles<Mparticles> setup_particles; // FIXME, injection uses another setup_particles, which won't have those settings
+    SetupParticles<Mparticles>
+      setup_particles; // FIXME, injection uses another setup_particles, which
+                       // won't have those settings
     setup_particles.fractional_n_particles_per_cell = true;
     setup_particles.neutralizing_population = MY_ELECTRON;
-    setup_particles.setup_particles(mprts, n_prts_by_patch, [&](int kind, double crd[3], psc_particle_npt& npt) {
-	this->init_npt(kind, crd, npt);
+    setup_particles.setup_particles(
+      mprts, n_prts_by_patch,
+      [&](int kind, double crd[3], psc_particle_npt& npt) {
+        this->init_npt(kind, crd, npt);
       });
   }
 
   // ----------------------------------------------------------------------
   // setup_initial_fields
-  
+
   void setup_initial_fields(MfieldsState& mflds)
   {
     setupFields(grid(), mflds, [&](int m, double crd[3]) {
-	switch (m) {
-	case HY: return BB;
-	default: return 0.;
-	}
-      });
+      switch (m) {
+        case HY:
+          return BB;
+        default:
+          return 0.;
+      }
+    });
   }
 
   // ----------------------------------------------------------------------
@@ -321,17 +341,17 @@ struct PscFlatfoil : Psc<PscConfig>
 
     auto comm = grid().comm();
     auto timestep = grid().timestep();
-    
+
     if (inject_interval_ > 0 && timestep % inject_interval_ == 0) {
       mpi_printf(comm, "***** Performing injection...\n");
       prof_start(pr_inject);
       (*inject_)(*mprts_);
       prof_stop(pr_inject);
     }
-      
+
     // only heating between heating_tb and heating_te
     if (timestep >= heating_begin_ && timestep < heating_end_ &&
-	heating_interval_ > 0 && timestep % heating_interval_ == 0) {
+        heating_interval_ > 0 && timestep % heating_interval_ == 0) {
       mpi_printf(comm, "***** Performing heating...\n");
       prof_start(pr_heating);
       (*heating_)(*mprts_);
@@ -352,12 +372,10 @@ private:
   int heating_interval_;
 };
 
-
 // ======================================================================
 // main
 
-int
-main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   psc_init(argc, argv);
 
@@ -372,14 +390,14 @@ main(int argc, char **argv)
   double mass_ratio = 100.; // 25.
 
   // --- for background plasma
-  background_n  = .002;
+  background_n = .002;
   background_Te = .001;
   background_Ti = .001;
-  
+
   // -- setup particle kinds
   // last population ("e") is neutralizing
-  Grid_t::Kinds kinds = {{Zi, mass_ratio*Zi, "i"}, { -1., 1., "e"}};
-  
+  Grid_t::Kinds kinds = {{Zi, mass_ratio * Zi, "i"}, {-1., 1., "e"}};
+
   // --- setup domain
 #if 0
   Grid_t::Real3 LL = {384., 384.*2., 384.*6}; // domain size (in d_e)
@@ -406,23 +424,23 @@ main(int argc, char **argv)
 #endif
 #if 1
   Grid_t::Real3 LL = {1., 800., 200.}; // domain size (in d_e)
-  Int3 gdims = {1, 1024, 256}; // global number of grid points
-  Int3 np = {1, 8, 2}; // division into patches
+  Int3 gdims = {1, 1024, 256};         // global number of grid points
+  Int3 np = {1, 8, 2};                 // division into patches
 #endif
 
   Grid_t::Domain grid_domain{gdims, LL, -.5 * LL, np};
-  
-  GridBc grid_bc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
-                 { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
-	         { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC },
-	         { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC }};
+
+  GridBc grid_bc{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
+                 {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
+                 {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC},
+                 {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC}};
 
   {
     PscFlatfoil psc{psc_params, kinds, grid_domain, grid_bc};
     psc.initialize();
     psc.integrate();
   }
-  
+
   libmrc_params_finalize();
   MPI_Finalize();
 
