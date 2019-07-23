@@ -1,6 +1,8 @@
 
 #include <mrc_common.h>
 
+#include <cstdlib>
+
 namespace kg
 {
 namespace io
@@ -9,7 +11,8 @@ namespace io
 // ======================================================================
 // FileAdios2
 
-inline FileAdios2::FileAdios2(adios2::ADIOS& ad, const std::string& name, Mode mode)
+inline FileAdios2::FileAdios2(adios2::ADIOS& ad, const std::string& name,
+                              Mode mode)
   : ad_{ad}
 {
   io_name_ = "io-" + name;
@@ -20,7 +23,7 @@ inline FileAdios2::FileAdios2(adios2::ADIOS& ad, const std::string& name, Mode m
   } else if (mode == Mode::Write) {
     adios2_mode = adios2::Mode::Write;
   } else {
-    assert(0);
+    std::abort();
   }
   engine_ = io_.Open(name, adios2_mode);
 }
@@ -159,7 +162,7 @@ inline Dims FileAdios2::shapeVariable(const std::string& name) const
   }
   ADIOS2_FOREACH_STDTYPE_1ARG(make_case)
 #undef make_case
-  assert(0);
+  std::abort();
 }
 
 template <typename T>
@@ -247,7 +250,7 @@ inline size_t FileAdios2::sizeAttribute(const std::string& name) const
   }
   ADIOS2_FOREACH_ATTRIBUTE_STDTYPE_1ARG(make_case)
 #undef make_case
-  assert(0);
+  std::abort();
 }
 
 inline adios2::Mode FileAdios2::adios2Mode(Mode mode)
@@ -257,7 +260,7 @@ inline adios2::Mode FileAdios2::adios2Mode(Mode mode)
   } else if (mode == Mode::NonBlocking) {
     return adios2::Mode::Deferred;
   }
-  assert(0);
+  std::abort();
 }
 
 } // namespace io
