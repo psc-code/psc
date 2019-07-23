@@ -120,7 +120,7 @@ struct PscFlatfoil : Psc<PscConfig>
   // ctor
 
   PscFlatfoil(const PscParams& params, Grid_t& grid, MfieldsState& mflds,
-	      Mparticles& mprts, Balance& balance)
+              Mparticles& mprts, Balance& balance)
   {
     auto comm = grid.comm();
 
@@ -131,9 +131,6 @@ struct PscFlatfoil : Psc<PscConfig>
     define_particles(mprts);
 
     balance_.reset(&balance);
-
-    // -- Sort
-    p_.sort_interval = 10;
 
     // -- Collision
     int collision_interval = 10;
@@ -224,7 +221,7 @@ struct PscFlatfoil : Psc<PscConfig>
 
     // --- partition particles and initial balancing
     mpi_printf(comm, "**** Partitioning...\n");
-    auto n_prts_by_patch = setup_initial_partition();
+    auto n_prts_by_patch = setup_initial_partition(grid);
     balance_->initial(grid_, n_prts_by_patch);
     // balance::initial does not rebalance particles, because the old way of
     // doing this does't even have the particle data structure created yet --
@@ -268,14 +265,14 @@ struct PscFlatfoil : Psc<PscConfig>
   // ----------------------------------------------------------------------
   // setup_initial_partition
 
-  std::vector<uint> setup_initial_partition()
+  std::vector<uint> setup_initial_partition(const Grid_t& grid)
   {
     SetupParticles<Mparticles> setup_particles;
     setup_particles.fractional_n_particles_per_cell =
       true; // FIXME, should use same setup_particles for partition/setup
     setup_particles.neutralizing_population = MY_ELECTRON;
     return setup_particles.setup_partition(
-      grid(), [&](int kind, double crd[3], psc_particle_npt& npt) {
+      grid, [&](int kind, double crd[3], psc_particle_npt& npt) {
         this->init_npt(kind, crd, npt);
       });
   }
@@ -445,8 +442,11 @@ int main(int argc, char** argv)
 
     // -- Balance
     psc_params.balance_interval = 300;
-    auto& balance = *new Balance{psc_params.balance_interval, 3, true};    
-    
+    auto& balance = *new Balance{psc_params.balance_interval, 3, true};
+
+    // -- Sort
+    psc_params.sort_interval = 10;
+
     PscFlatfoil psc{psc_params, grid, mflds, mprts, balance};
     psc.initialize();
     psc.integrate();
