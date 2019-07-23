@@ -5,7 +5,7 @@
 // ======================================================================
 // PscIntegrator
 
-template <typename InjectFunc, typename PscConfig>
+template <typename PscConfig, typename InjectFunc>
 struct PscIntegrator : Psc<PscConfig>
 {
   using Base = Psc<PscConfig>;
@@ -59,5 +59,17 @@ struct PscIntegrator : Psc<PscConfig>
 private:
   InjectFunc& inject_particles_;
 };
+
+template <typename PscConfig, typename MfieldsState, typename Mparticles,
+          typename Balance, typename Collision, typename Checks,
+          typename Marder, typename OutputParticles, typename InjectFunc>
+PscIntegrator<PscConfig, InjectFunc> makePscIntegrator(
+  const PscParams& params, Grid_t& grid, MfieldsState& mflds, Mparticles& mprts,
+  Balance& balance, Collision& collision, Checks& checks, Marder& marder,
+  OutputFieldsC& outf, OutputParticles& outp, InjectFunc& inject_particles)
+{
+  return {params, grid,   mflds, mprts, balance,         collision,
+          checks, marder, outf,  outp,  inject_particles};
+}
 
 #endif

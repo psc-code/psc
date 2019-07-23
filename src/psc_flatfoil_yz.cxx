@@ -401,9 +401,9 @@ void run()
     }
   });
 
-  PscIntegrator<decltype(lf_inject), PscConfig> psc{
-    psc_params, *grid_ptr, mflds, mprts, balance,  collision,
-    checks,     marder,    outf,  outp,  lf_inject};
+  auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
+                                          balance, collision, checks, marder,
+                                          outf, outp, lf_inject);
 
   psc.integrate();
 }
