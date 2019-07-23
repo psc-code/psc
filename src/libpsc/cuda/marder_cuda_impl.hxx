@@ -55,7 +55,7 @@ struct MarderCuda : MarderBase
   
   void calc_aid_fields(MfieldsStateBase& mflds_base, MparticlesBase& mprts_base)
   {
-    item_div_e_.run(mflds_base, mprts_base); // FIXME, should accept NULL for particles
+    item_div_e_.run(mprts_base.grid(), mflds_base, mprts_base); // FIXME, should accept NULL for particles
   
     if (dump_) {
       static int cnt;
@@ -66,7 +66,8 @@ struct MarderCuda : MarderBase
       mrc_io_close(io_);
     }
 
-    item_div_e_.mres().axpy_comp(0, -1., item_rho_.mres(), 0);
+    assert(0);
+    //item_div_e_.mres().axpy_comp(0, -1., item_rho_.mres(), 0);
     // FIXME, why is this necessary?
     //auto bnd = PscBndBase(bnd_);
     //bnd.fill_ghosts(item_div_e_.mres(), 0, 1);
