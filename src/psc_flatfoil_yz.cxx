@@ -115,28 +115,22 @@ struct PscFlatfoil : Psc<PscConfig>
   // ----------------------------------------------------------------------
   // ctor
 
-  PscFlatfoil(const PscParams& params, const Grid_t::Kinds& kinds,
-              const Grid_t::Domain& grid_domain, const psc::grid::BC& grid_bc,
-              double dt, const Grid_t::NormalizationParams& norm_params)
+  PscFlatfoil(const PscParams& params, Grid_t& grid)
   {
-    auto comm = grid().comm();
+    auto comm = grid.comm();
 
     p_ = params;
 
-    define_grid(grid_domain, grid_bc, kinds, dt, norm_params);
+    define_grid(grid);
 
-    assert(grid().isInvar(0) == dim_t::InvarX::value);
-    assert(grid().isInvar(1) == dim_t::InvarY::value);
-    assert(grid().isInvar(2) == dim_t::InvarZ::value);
-
-    double d_i = sqrt(kinds[MY_ION].m / kinds[MY_ION].q);
+    double d_i = sqrt(grid.kinds[MY_ION].m / grid.kinds[MY_ION].q);
 
     mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
     mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(background_Te));
 
     define_field_array();
 
-    mprts_.reset(new Mparticles{grid()});
+    mprts_.reset(new Mparticles{grid});
 
     // -- Balance
     balance_interval = 300;
@@ -154,14 +148,14 @@ struct PscFlatfoil : Psc<PscConfig>
     int collision_interval = -10;
 #endif
     double collision_nu = .1;
-    collision_.reset(new Collision_t{grid(), collision_interval, collision_nu});
+    collision_.reset(new Collision_t{grid, collision_interval, collision_nu});
 
     // -- Checks
     ChecksParams checks_params{};
     checks_params.continuity_every_step = 50;
     checks_params.continuity_threshold = 1e-5;
     checks_params.continuity_verbose = false;
-    checks_.reset(new Checks_t{grid(), comm, checks_params});
+    checks_.reset(new Checks_t{grid, comm, checks_params});
 
     // -- Marder correction
     double marder_diffusion = 0.9;
@@ -169,7 +163,7 @@ struct PscFlatfoil : Psc<PscConfig>
     bool marder_dump = false;
     marder_interval = 0 * 5;
     marder_.reset(
-      new Marder_t(grid(), marder_diffusion, marder_loop, marder_dump));
+      new Marder_t(grid, marder_diffusion, marder_loop, marder_dump));
 
     // -- Heating
     auto heating_foil_params = HeatingSpotFoilParams{};
@@ -179,14 +173,14 @@ struct PscFlatfoil : Psc<PscConfig>
     heating_foil_params.yc = 0. * d_i;
     heating_foil_params.rH = 3. * d_i;
     heating_foil_params.T = .04;
-    heating_foil_params.Mi = kinds[MY_ION].m;
+    heating_foil_params.Mi = grid.kinds[MY_ION].m;
     auto heating_spot = HeatingSpotFoil{heating_foil_params};
 
     heating_interval_ = 20;
     heating_begin_ = 0;
     heating_end_ = 10000000;
     heating_.reset(
-      new Heating_t{grid(), heating_interval_, MY_ELECTRON, heating_spot});
+      new Heating_t{grid, heating_interval_, MY_ELECTRON, heating_spot});
 
     // -- Particle injection
     auto inject_foil_params = InjectFoilParams{};
@@ -202,36 +196,36 @@ struct PscFlatfoil : Psc<PscConfig>
     inject_interval_ = 20;
 
     int inject_tau = 40;
-    inject_.reset(new Inject_t{grid(), inject_interval_, inject_tau,
-                               MY_ELECTRON, inject_target_});
+    inject_.reset(new Inject_t{grid, inject_interval_, inject_tau, MY_ELECTRON,
+                               inject_target_});
 
     // -- output fields
     OutputFieldsCParams outf_params{};
     outf_params.pfield_step = 200;
     std::vector<std::unique_ptr<FieldsItemBase>> outf_items;
     outf_items.emplace_back(
-      new FieldsItemFields<ItemLoopPatches<Item_e_cc>>(grid()));
+      new FieldsItemFields<ItemLoopPatches<Item_e_cc>>(grid));
     outf_items.emplace_back(
-      new FieldsItemFields<ItemLoopPatches<Item_h_cc>>(grid()));
+      new FieldsItemFields<ItemLoopPatches<Item_h_cc>>(grid));
     outf_items.emplace_back(
-      new FieldsItemFields<ItemLoopPatches<Item_j_cc>>(grid()));
-    outf_items.emplace_back(
-      new FieldsItemMoment<
-        ItemMomentAddBnd<Moment_n_1st<Mparticles, MfieldsC>>>(grid()));
+      new FieldsItemFields<ItemLoopPatches<Item_j_cc>>(grid));
     outf_items.emplace_back(
       new FieldsItemMoment<
-        ItemMomentAddBnd<Moment_v_1st<Mparticles, MfieldsC>>>(grid()));
+        ItemMomentAddBnd<Moment_n_1st<Mparticles, MfieldsC>>>(grid));
     outf_items.emplace_back(
       new FieldsItemMoment<
-        ItemMomentAddBnd<Moment_T_1st<Mparticles, MfieldsC>>>(grid()));
-    outf_.reset(new OutputFieldsC{grid(), outf_params, std::move(outf_items)});
+        ItemMomentAddBnd<Moment_v_1st<Mparticles, MfieldsC>>>(grid));
+    outf_items.emplace_back(
+      new FieldsItemMoment<
+        ItemMomentAddBnd<Moment_T_1st<Mparticles, MfieldsC>>>(grid));
+    outf_.reset(new OutputFieldsC{grid, outf_params, std::move(outf_items)});
 
     // -- output particles
     OutputParticlesParams outp_params{};
     outp_params.every_step = 0;
     outp_params.data_dir = ".";
     outp_params.basename = "prt";
-    outp_.reset(new OutputParticles{grid(), outp_params});
+    outp_.reset(new OutputParticles{grid, outp_params});
 
     // --- partition particles and initial balancing
     mpi_printf(comm, "**** Partitioning...\n");
@@ -240,7 +234,7 @@ struct PscFlatfoil : Psc<PscConfig>
     // balance::initial does not rebalance particles, because the old way of
     // doing this does't even have the particle data structure created yet --
     // FIXME?
-    mprts_->reset(grid());
+    mprts_->reset(grid);
 
     mpi_printf(comm, "**** Setting up particles...\n");
     setup_initial_particles(*mprts_, n_prts_by_patch);
@@ -436,9 +430,23 @@ int main(int argc, char** argv)
   norm_params.nicell = 50;
 
   double dt = psc_params.cfl * courant_length(grid_domain);
+  Grid_t::Normalization norm{norm_params};
+
+  Int3 ibn = {2, 2, 2};
+  if (dim_t::InvarX::value) {
+    ibn[0] = 0;
+  }
+  if (dim_t::InvarY::value) {
+    ibn[1] = 0;
+  }
+  if (dim_t::InvarZ::value) {
+    ibn[2] = 0;
+  }
 
   {
-    PscFlatfoil psc{psc_params, kinds, grid_domain, grid_bc, dt, norm_params};
+    Grid_t grid{grid_domain, grid_bc, kinds, norm, dt, -1, ibn};
+
+    PscFlatfoil psc{psc_params, grid};
     psc.initialize();
     psc.integrate();
   }

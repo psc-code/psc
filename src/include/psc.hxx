@@ -101,6 +101,15 @@ struct Psc
   // ----------------------------------------------------------------------
   // define_grid
 
+  void define_grid(Grid_t& grid)
+  {
+    assert(grid.isInvar(0) == Dim::InvarX::value);
+    assert(grid.isInvar(1) == Dim::InvarY::value);
+    assert(grid.isInvar(2) == Dim::InvarZ::value);
+
+    grid_ = &grid;
+  }
+  
   void define_grid(const Grid_t::Domain& domain, const psc::grid::BC& bc, const Grid_t::Kinds& kinds,
 		   double dt, const Grid_t::NormalizationParams& norm_params)
   {
@@ -114,7 +123,7 @@ struct Psc
 #endif
     
     auto coeff = Grid_t::Normalization{norm_params};
-    grid_ = new Grid_t{domain, bc, kinds, coeff, dt, -1, ibn};
+    define_grid(*new Grid_t{domain, bc, kinds, coeff, dt, -1, ibn});
 
 #ifdef VPIC
     vgrid_ = Grid::create();
