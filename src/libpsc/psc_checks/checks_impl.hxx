@@ -71,7 +71,7 @@ struct Checks_ : ChecksParams, ChecksBase
     }
 
     item_rho_p_.run(mprts);
-    item_divj_(mflds);
+    item_divj_(grid, mflds);
 
     auto& rho_p = item_rho_p_.result();
     auto& rho_m = item_rho_m_.result();
@@ -138,7 +138,7 @@ struct Checks_ : ChecksParams, ChecksBase
     }
 
     item_rho_.run(mprts);
-    item_dive_(mflds);
+    item_dive_(grid, mflds);
 
     auto& dive = item_dive_.result();
     auto& rho = item_rho_.result();

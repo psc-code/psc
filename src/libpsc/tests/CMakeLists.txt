@@ -6,6 +6,7 @@ macro(add_psc_test name)
 endmacro()
 
 add_psc_test(test_grid)
+add_psc_test(test_grid_2)
 add_psc_test(test_rng)
 add_psc_test(test_mparticles_cuda)
 add_psc_test(test_mparticles)
@@ -20,3 +21,8 @@ add_psc_test(test_moments)
 add_psc_test(test_collision)
 add_psc_test(test_inject)
 add_psc_test(test_balance)
+
+if (PSC_HAVE_ADIOS2)
+  add_psc_test(test_mfields_io)
+endif()
+

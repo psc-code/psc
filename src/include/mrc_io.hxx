@@ -61,14 +61,15 @@ struct MrcIo
   }
 
   template <typename Mfields>
-  void write_mflds(Mfields& mflds, const std::string& name, const std::vector<std::string>& comp_names)
+  void write_mflds(Mfields& mflds, const Grid_t& grid, const std::string& name,
+		   const std::vector<std::string>& comp_names)
   {
-    write_mflds(io_, mflds, name, comp_names);
+    write_mflds(io_, mflds, grid, name, comp_names);
   }
 
   // static version so it can be used elsewhere without MrcIo wrapper
   template <typename Mfields>
-  static void write_mflds(mrc_io* io, Mfields& mflds,
+  static void write_mflds(mrc_io* io, Mfields& mflds, const Grid_t& grid,
 			  const std::string& name, const std::vector<std::string>& comp_names)
   {
     int n_comps = comp_names.size();
@@ -76,7 +77,7 @@ struct MrcIo
     // but this way allows us to write fewer components, useful to hack around 16-bit vpic material ids,
     // stored together as AOS with floats...
     
-    mrc_fld* fld = mflds.grid().mrc_domain().m3_create();
+    mrc_fld* fld = grid.mrc_domain().m3_create();
     mrc_fld_set_name(fld, name.c_str());
     mrc_fld_set_param_int(fld, "nr_ghosts", 0);
     mrc_fld_set_param_int(fld, "nr_comps", n_comps);

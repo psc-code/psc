@@ -281,13 +281,13 @@ uint cuda_bndp<CudaMparticles, dim_xyz>::convert_and_copy_to_dev(CudaMparticles*
     for (int n = 0; n < n_recv; n++) {
       const auto& prt = bufs[p][n];
 
-      h_bnd_xi4[n + off].x  = prt.x()[0];
-      h_bnd_xi4[n + off].y  = prt.x()[1];
-      h_bnd_xi4[n + off].z  = prt.x()[2];
+      h_bnd_xi4[n + off].x  = prt.x[0];
+      h_bnd_xi4[n + off].y  = prt.x[1];
+      h_bnd_xi4[n + off].z  = prt.x[2];
       h_bnd_xi4[n + off].w  = cuda_int_as_float(prt.kind);
-      h_bnd_pxi4[n + off].x = prt.u()[0];
-      h_bnd_pxi4[n + off].y = prt.u()[1];
-      h_bnd_pxi4[n + off].z = prt.u()[2];
+      h_bnd_pxi4[n + off].x = prt.u[0];
+      h_bnd_pxi4[n + off].y = prt.u[1];
+      h_bnd_pxi4[n + off].z = prt.u[2];
       h_bnd_pxi4[n + off].w = prt.qni_wni;
 
       checkInPatchMod(&h_bnd_xi4[n + off].x);

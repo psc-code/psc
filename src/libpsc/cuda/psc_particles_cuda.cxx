@@ -14,7 +14,7 @@ static void copy_from(MparticlesBase& mprts_base, MparticlesBase& mprts_other_ba
 {
   auto& mprts = dynamic_cast<MparticlesCuda&>(mprts_base);
   auto& mprts_other = dynamic_cast<MP&>(mprts_other_base);
-  auto n_prts_by_patch = mprts_other.get_size_all();
+  auto n_prts_by_patch = mprts_other.sizeByPatch();
   //mp.reserve_all(n_prts_by_patch); FIXME, would still be a good hint for the injector
 
   auto accessor = mprts_other.accessor();
@@ -34,7 +34,7 @@ static void copy_to(MparticlesBase& mprts_base, MparticlesBase& mprts_other_base
 {
   auto& mprts = dynamic_cast<MparticlesCuda&>(mprts_base);
   auto& mprts_other = dynamic_cast<MP&>(mprts_other_base);
-  auto n_prts_by_patch = mprts.get_size_all();
+  auto n_prts_by_patch = mprts.sizeByPatch();
   mprts_other.reserve_all(n_prts_by_patch);
   mprts_other.clear();
 
@@ -90,7 +90,7 @@ psc_mparticles_cuda_write(struct psc_mparticles *_mprts, struct mrc_io *io)
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
 
-  auto n_prts_by_patch = mprts->get_size_all();
+  auto n_prts_by_patch = mprts->sizeByPatch();
 
   hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, _mprts), H5P_DEFAULT); H5_CHK(group);
   uint off = 0;

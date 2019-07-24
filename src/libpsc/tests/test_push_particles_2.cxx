@@ -37,7 +37,7 @@ TYPED_TEST(PushParticlesTest, Accel)
   
   // init fields
   auto mflds = MfieldsState{grid};
-  SetupFields<MfieldsState>::set(mflds, [&](int m, double crd[3]) {
+  setupFields(grid, mflds, [](int m, double crd[3]) {
       switch (m) {
       case EX: return 1.;
       case EY: return 2.;
@@ -113,7 +113,7 @@ TYPED_TEST(PushParticlesTest, Cyclo)
 
   // init fields
   auto mflds = MfieldsState{grid};
-  SetupFields<MfieldsState>::set(mflds, [&](int m, double crd[3]) {
+  setupFields(grid, mflds, [&](int m, double crd[3]) {
       switch (m) {
       case HZ: return 2. * M_PI / n_steps;
       default: return 0.;

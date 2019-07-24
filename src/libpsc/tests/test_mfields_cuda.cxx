@@ -21,7 +21,7 @@ static Grid_t make_grid()
 {
   auto domain =
     Grid_t::Domain{{8, 4, 2}, {80., 40., 20.}, {-40., -20., 0.}, {2, 2, 1}};
-  auto bc = GridBc{};
+  auto bc = psc::grid::BC{};
   auto kinds = Grid_t::Kinds{};
   auto norm = Grid_t::Normalization{};
   double dt = .1;
@@ -43,7 +43,7 @@ TYPED_TEST(TestMfieldsCuda, HostMirror)
   auto grid = make_grid();
   auto mflds = Mfields{grid, NR_FIELDS, {}};
 
-  SetupFields<Mfields>::set(mflds, [](int m, double crd[3]) {
+  setupFields(grid, mflds, [](int m, double crd[3]) {
     return m + crd[0] + 100 * crd[1] + 10000 * crd[2];
   });
 

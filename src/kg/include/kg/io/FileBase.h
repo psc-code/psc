@@ -15,9 +15,10 @@ class FileBase
 {
 public:
   using TypePointer =
-    mpark::variant<int*, unsigned long*, double*, std::string*>;
-  using TypeConstPointer = mpark::variant<const int*, const unsigned long*,
-                                          const double*, const std::string*>;
+    mpark::variant<int*, unsigned int *, unsigned long*, float*, double*, std::string*>;
+  using TypeConstPointer =
+    mpark::variant<const int*, const unsigned int *, const unsigned long*, const float*,
+                   const double*, const std::string*>;
 
   virtual ~FileBase() = default;
 
@@ -40,5 +41,5 @@ public:
   virtual size_t sizeAttribute(const std::string& name) const = 0;
 };
 
-}
+} // namespace io
 } // namespace kg

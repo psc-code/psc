@@ -2,6 +2,7 @@
 #pragma once
 
 #include "cuda_compat.h"
+#include "particles.hxx"
 
 // ======================================================================
 // ParticleSimple
@@ -14,36 +15,45 @@ struct ParticleSimple
 
   ParticleSimple() = default;
 
-  ParticleSimple(const ParticleSimple&) = default;
-
-  __host__ __device__
-  ParticleSimple(Real3 x, Real3 u, real_t qni_wni, int kind)
-    : x_{x},
-      u_{u},
+  KG_INLINE ParticleSimple(Real3 x, Real3 u, real_t qni_wni, int kind)
+    : x{x},
+      u{u},
       kind{kind},
       qni_wni{qni_wni}
   {}
 
-  __host__ __device__
-  bool operator==(const ParticleSimple& other) const
+  KG_INLINE bool operator==(const ParticleSimple& other) const
   {
-    return (x_ == other.x_ && qni_wni == other.qni_wni &&
-	    u_ == other.u_ && kind == other.kind);
+    return (x == other.x && qni_wni == other.qni_wni &&
+	    u == other.u && kind == other.kind);
   }
 
-  __host__ __device__
-  bool operator!=(const ParticleSimple& other) const { return !(*this == other); }
+  KG_INLINE bool operator!=(const ParticleSimple& other) const { return !(*this == other); }
 
-  __host__ __device__ Real3  x() const { return x_; }
-  __host__ __device__ Real3& x()       { return x_; }
-  __host__ __device__ Real3  u() const { return u_; }
-  __host__ __device__ Real3& u()       { return u_; }
-  
-private:
-  Real3 x_;
-  Real3 u_;
 public:
+  Real3 x;
+  Real3 u;
   int kind;
   real_t qni_wni;
+};
+
+template <typename R>
+class ForComponents<ParticleSimple<R>>
+{
+public:
+  using Particle = ParticleSimple<R>;
+
+  template <typename FUNC>
+  static void run(FUNC&& func)
+  {
+    func("x", [](Particle& prt) { return &prt.x[0]; });
+    func("y", [](Particle& prt) { return &prt.x[1]; });
+    func("z", [](Particle& prt) { return &prt.x[2]; });
+    func("ux", [](Particle& prt) { return &prt.u[0]; });
+    func("uy", [](Particle& prt) { return &prt.u[1]; });
+    func("uz", [](Particle& prt) { return &prt.u[2]; });
+    func("kind", [](Particle& prt) { return &prt.kind; });
+    func("qni_wni", [](Particle& prt) { return &prt.qni_wni; });
+  }
 };
 

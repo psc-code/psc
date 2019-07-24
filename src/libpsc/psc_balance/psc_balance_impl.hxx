@@ -368,7 +368,7 @@ private:
 
   std::vector<double> get_loads(const Grid_t& grid, MparticlesBase& mp)
   {
-    auto n_prts_by_patch = mp.get_size_all();
+    auto n_prts_by_patch = mp.sizeByPatch();
 
     std::vector<double> loads;
     loads.reserve(mp.n_patches());
@@ -732,7 +732,7 @@ private:
   void balance_particles(communicate_ctx& ctx, const Grid_t& new_grid, MparticlesBase& mp_base)
   {
     int n_patches = mp_base.n_patches();
-    auto n_prts_by_patch_old = mp_base.get_size_all();
+    auto n_prts_by_patch_old = mp_base.sizeByPatch();
     auto n_prts_by_patch_new = ctx.new_n_prts(n_prts_by_patch_old);
 
     if (typeid(mp_base) != typeid(Mparticles)) {

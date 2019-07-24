@@ -16,11 +16,11 @@ struct ParticleProxySimple
     : prt_{prt}, mprts_{mprts}, p_{p}
   {}
 
-  Real3   x() const      { return prt_.x(); }
-  Real3&  x()            { return prt_.x(); }
+  Real3   x() const      { return prt_.x; }
+  Real3&  x()            { return prt_.x; }
   
-  Real3   u() const      { return prt_.u(); }
-  Real3&  u()            { return prt_.u(); }
+  Real3   u() const      { return prt_.u; }
+  Real3&  u()            { return prt_.u; }
   
   // FIXME, grid is always double precision, so this will switch precision
   // where not desired. should use same info stored elsewhere at right precision
@@ -59,8 +59,8 @@ struct ConstParticleProxySimple
     : prt_{prt}, mprts_{mprts}, p_{p}
   {}
   
-  Real3 x()   const { return prt_.x(); }
-  Real3 u()   const { return prt_.u(); }
+  Real3 x()   const { return prt_.x; }
+  Real3 u()   const { return prt_.u; }
   real_t w()  const { return prt_.qni_wni / q(); }
   real_t qni_wni() const { return prt_.qni_wni; }
   real_t q()  const { return mprts_.grid().kinds[kind()].q; }
@@ -71,7 +71,7 @@ struct ConstParticleProxySimple
   {
     auto& patch = mprts_.grid().patches[p_]; // FIXME, generally, it'd be nice to have a better way to get this
     
-    return patch.xb + Double3(prt_.x());
+    return patch.xb + Double3(prt_.x);
   }
   
 private:

@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "particles.hxx"
 #include "psc_vpic_bits.h"
 
 // ======================================================================
@@ -169,7 +170,7 @@ struct ConstAccessorVpic
 	}
 	n -= sp.np;
       }
-      assert(0);
+      std::abort();
     }
 
   private:
@@ -181,7 +182,7 @@ struct ConstAccessorVpic
   {}
 
   Patch operator[](int p) const { return {*this}; }
-  uint size(int p) const { return mprts_.get_n_prts(); }
+  uint size(int p) const { return mprts_.size(); }
 
 private:
   Mparticles& mprts_;
@@ -253,9 +254,9 @@ struct MparticlesVpic_ : MparticlesBase, protected _Particles
   }
 
   // ----------------------------------------------------------------------
-  // get_n_prts
+  // size
 
-  int get_n_prts() const override
+  int size() const override
   {
     int n_prts = 0;
     for (auto& sp : *this) {
@@ -266,11 +267,11 @@ struct MparticlesVpic_ : MparticlesBase, protected _Particles
   }
 
   // ----------------------------------------------------------------------
-  // get_size_all
+  // sizeByPatch
   
-  std::vector<uint> get_size_all() const override
+  std::vector<uint> sizeByPatch() const override
   {
-    return {uint(get_n_prts())};
+    return {uint(size())};
   }
 
   // ----------------------------------------------------------------------

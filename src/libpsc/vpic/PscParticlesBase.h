@@ -2,6 +2,7 @@
 #ifndef PSC_PARTICLES_BASE_H
 #define PSC_PARTICLES_BASE_H
 
+#include "psc_particles.h"
 #include "VpicListBase.h"
 
 // ======================================================================

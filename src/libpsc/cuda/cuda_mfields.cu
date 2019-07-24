@@ -26,7 +26,7 @@ mrc_json_t cuda_mfields::to_json()
   mrc_json_t json_flds = mrc_json_object_new(2);
   mrc_json_object_push(json, "flds", json_flds);
   mrc_json_object_push_boolean(json_flds, "__field5d__", true);
-  mrc_json_t json_flds_patches = mrc_json_array_new(n_patches_);
+  mrc_json_t json_flds_patches = mrc_json_array_new(n_patches());
   mrc_json_object_push(json_flds, "data", json_flds_patches);
 
   auto h_mflds = hostMirror(*this);
@@ -137,7 +137,7 @@ void cuda_mfields::axpy_comp_yz(int ym, float a, cuda_mfields *cmflds_x, int xm)
 	       (mz + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
 
-  for (int p = 0; p < n_patches_; p++) {
+  for (int p = 0; p < n_patches(); p++) {
     k_axpy_comp_yz<<<dimGrid, dimBlock>>>((*this)[p].data(), ym, a,
 					  (*cmflds_x)[p].data(), xm, my, mz);
   }
@@ -188,7 +188,7 @@ void cuda_mfields::zero_comp(int m, dim_yz tag)
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
 
   // OPT, should be done in a single kernel
-  for (int p = 0; p < n_patches_; p++) {
+  for (int p = 0; p < n_patches(); p++) {
     k_zero_comp_yz<<<dimGrid, dimBlock>>>((*this)[p].data(), m, my, mz);
   }
   cuda_sync_if_enabled();

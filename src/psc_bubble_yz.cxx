@@ -84,7 +84,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
 				      {0., -.5 * params.LLy, -.5 * params.LLz},
 				      {1, 1, 4}};
     
-    auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
+    auto grid_bc = psc::grid::BC{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
 			  { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
 			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC },
 			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC }};
@@ -105,12 +105,12 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     mprts_.reset(new Mparticles{grid()});
 
     // -- Balance
-    balance_interval = 0;
-    balance_.reset(new Balance_t{balance_interval, .1,});
+    p_.balance_interval = 0;
+    balance_.reset(new Balance_t{p_.balance_interval, .1,});
 
     // -- Sort
     // FIXME, needs a way to make it gets set?
-    sort_interval = 10;
+    p_.sort_interval = 10;
 
     // -- Collision
     int collision_interval = 10;
@@ -125,7 +125,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     double marder_diffusion = 0.9;
     int marder_loop = 3;
     bool marder_dump = false;
-    marder_interval = 0*5;
+    p_.marder_interval = 0*5;
     marder_.reset(new Marder_t(grid(), marder_diffusion, marder_loop, marder_dump));
 
     // -- output fields
@@ -231,7 +231,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   
   void setup_initial_fields(MfieldsState& mflds)
   {
-    SetupFields<MfieldsState>::set(mflds, [&](int m, double crd[3]) {
+    setupFields(grid(), mflds, [&](int m, double crd[3]) {
 	double z1 = crd[2];
 	double y1 = crd[1] + .5 * LLy;
 	double r1 = sqrt(sqr(z1) + sqr(y1));

@@ -22,8 +22,8 @@ struct cuda_mparticles_iface
   
   static CudaMparticles* new_(const Grid_t& grid);
   static void delete_(CudaMparticles* cmprts);
-  static int get_n_prts(CudaMparticles* cmprts);
-  static std::vector<uint> get_size_all(const CudaMparticles* cmprts);
+  static int size(CudaMparticles* cmprts);
+  static std::vector<uint> sizeByPatch(const CudaMparticles* cmprts);
   static void inject(CudaMparticles* cmprts, const std::vector<Particle>& buf,
 		     const std::vector<uint>& buf_n_by_patch);
 

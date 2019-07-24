@@ -32,7 +32,7 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
   {
     auto domain = Grid_t::Domain{{1, 32, 32}, {1., 320., 320.}, {0., 0., 0.},
 				 {1, 2, 2}};
-    auto bc = GridBc{};
+    auto bc = psc::grid::BC{};
     auto kinds = Grid_t::Kinds{Grid_t::Kind{1., 1., "k0"},
 			       Grid_t::Kind{1., 1., "k1"},
 			       Grid_t::Kind{1., 1., "k2"},
@@ -344,7 +344,7 @@ TEST_F(CudaMparticlesBndTest, BndPostDetail)
   EXPECT_EQ(cbndp->d_bnd_off[1], 0);
 
   // === test sort
-  auto n_prts_by_patch = cmprts.get_size_all();
+  auto n_prts_by_patch = cmprts.sizeByPatch();
   EXPECT_EQ(n_prts_by_patch, std::vector<uint>({2, 2, 0, 0}));
   
   cbndp->sort_pairs_device(cmprts_.get(), n_prts_recv);

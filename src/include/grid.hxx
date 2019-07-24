@@ -5,53 +5,12 @@
 #include "kg/Vec3.h"
 #include "psc_bits.h"
 #include "mrc_domain.hxx"
+#include "grid/BC.h"
+#include "grid/Domain.h"
 
 #include <vector>
 #include <cstring>
 #include <cmath>
-
-///Possible boundary conditions for fields
-enum {
-  BND_FLD_OPEN,
-  BND_FLD_PERIODIC,
-  BND_FLD_CONDUCTING_WALL,
-  BND_FLD_ABSORBING,
-};
-
-///Possible boundary conditions for particles
-enum {
-  BND_PRT_REFLECTING,
-  BND_PRT_PERIODIC,
-  BND_PRT_ABSORBING,
-  BND_PRT_OPEN,
-};
-
-///Describes the spatial domain to operate on.
-///
-///This struct describes the spatial dimension of the simulation-box
-///@note Here, you can also set the dimensionality by eliminating a dimension. Example: To simulate in xy only, set
-///\verbatim psc_domain.gdims[2]=1 \endverbatim
-///Also, set the boundary conditions for the eliminated dimensions to BND_FLD_PERIODIC or you'll get invalid \a dt and \a dx
-
-struct GridBc
-{
-  GridBc()
-    : fld_lo{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
-      fld_hi{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
-      prt_lo{BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC},
-      prt_hi{BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC}
-  {}
-
-  GridBc(Int3 fld_lo, Int3 fld_hi, Int3 prt_lo, Int3 prt_hi)
-    : fld_lo(fld_lo), fld_hi(fld_hi),
-      prt_lo(prt_lo), prt_hi(prt_hi)
-  {}
-  
-  Int3 fld_lo;	///<Boundary conditions of the fields. Can be any value of BND_FLD.
-  Int3 fld_hi;	///<Boundary conditions of the fields. Can be any value of BND_FLD.
-  Int3 prt_lo;	///<Boundary conditions of the particles. Can be any value of BND_PART.
-  Int3 prt_hi;  ///<Boundary conditions of the particles. Can be any value of BND_PART.
-};
 
 // ======================================================================
 // Grid_
@@ -65,13 +24,16 @@ struct Grid_
   struct NormalizationParams;
   struct Normalization;
 
-  struct Domain;
+  using Domain = psc::grid::Domain<real_t>;
   
   struct Kind;
   using Kinds = std::vector<Kind>;
-  
+
   struct Patch
   {
+    Patch()
+    {}
+    
     Patch(const Int3& _off, const Real3& _xb, const Real3& _xe, const Real3& dx)
       : off(_off), xb(_xb), xe(_xe), dx_(dx)
     {}
@@ -93,8 +55,11 @@ struct Grid_
 
   // ----------------------------------------------------------------------
   // ctor
+
+  Grid_()
+  {}
   
-  Grid_(const Domain& domain, const GridBc& bc, const Kinds& kinds, const Normalization& norm,
+  Grid_(const Domain& domain, const psc::grid::BC& bc, const Kinds& kinds, const Normalization& norm,
 	double dt, int n_patches = -1, Int3 ibn = {})
     : domain{domain},
       ldims{domain.ldims},
@@ -103,7 +68,7 @@ struct Grid_
       norm{norm},
       dt{dt},
       ibn{ibn},
-      mrc_domain_{make_mrc_domain(domain, bc, n_patches)}
+      mrc_domain_{domain, bc, n_patches}
   {
 #if 0
     mpi_printf(MPI_COMM_WORLD, "::: dt      = %g\n", dt);
@@ -165,10 +130,10 @@ struct Grid_
       }
     }
   }
-  
+
   Int3 ldims;
   Domain domain;
-  GridBc bc;
+  psc::grid::BC bc;
   Normalization norm;
   // FIXME? this default might be a bit dangerous, as they're useful
   // for testing but might hide if one forgets to init dt correctly
@@ -180,46 +145,6 @@ struct Grid_
   int timestep_ = 0;
   MrcDomain mrc_domain_;
 
-  // ----------------------------------------------------------------------
-  // make_mrc_domain
-
-  static MrcDomain make_mrc_domain(const Domain& grid_domain, const GridBc& grid_bc, int nr_patches)
-  {
-    // FIXME, should be split to create, set_from_options, setup time?
-    struct mrc_domain *domain = mrc_domain_create(MPI_COMM_WORLD);
-    // create a very simple domain decomposition
-    int bc[3] = {};
-    for (int d = 0; d < 3; d++) {
-      if (grid_bc.fld_lo[d] == BND_FLD_PERIODIC && grid_domain.gdims[d] > 1) {
-	bc[d] = BC_PERIODIC;
-      }
-    }
-    
-    mrc_domain_set_type(domain, "multi");
-    mrc_domain_set_param_int3(domain, "m", grid_domain.gdims);
-    mrc_domain_set_param_int(domain, "bcx", bc[0]);
-    mrc_domain_set_param_int(domain, "bcy", bc[1]);
-    mrc_domain_set_param_int(domain, "bcz", bc[2]);
-    mrc_domain_set_param_int(domain, "nr_patches", nr_patches);
-    mrc_domain_set_param_int3(domain, "np", grid_domain.np);
-    
-    struct mrc_crds *crds = mrc_domain_get_crds(domain);
-    mrc_crds_set_type(crds, "uniform");
-    mrc_crds_set_param_int(crds, "sw", 2);
-    mrc_crds_set_param_double3(crds, "l", grid_domain.corner);
-    mrc_crds_set_param_double3(crds, "h", grid_domain.corner + grid_domain.length);
-    
-    mrc_domain_set_from_options(domain);
-    mrc_domain_setup(domain);
-    
-    // make sure that np isn't overridden on the command line
-    Int3 np;
-    mrc_domain_get_param_int3(domain, "np", np);
-    assert(np == Int3::fromPointer(grid_domain.np));
-    
-    return domain;
-  }
-
   const MrcDomain& mrc_domain() const { return mrc_domain_; }
 
   MPI_Comm comm() const { return MPI_COMM_WORLD; }
@@ -228,38 +153,6 @@ struct Grid_
   mrc_patch_info globalPatchInfo(int p) const { return mrc_domain().globalPatchInfo(p); }
   mrc_patch_info localPatchInfo(int p) const { return mrc_domain().localPatchInfo(p); }
   mrc_ddc* create_ddc() const { return mrc_domain().create_ddc(); }
-};
-
-// ======================================================================
-// Grid::Domain
-
-template<class T>
-struct Grid_<T>::Domain
-{
-  Domain(Int3 gdims, Real3 length, Real3 corner = {0., 0., 0.}, Int3 np = {1, 1, 1})
-    : gdims(gdims), length(length), corner(corner), np(np)
-  {
-    for (int d = 0; d < 3; d++) {
-      assert(gdims[d] % np[d] == 0);
-      ldims[d] = gdims[d] / np[d];
-    }
-    dx = length / Real3(gdims);
-  }
-
-  void view() const
-  {
-    mprintf("Grid_::Domain: gdims %d x %d x %d\n", gdims[0], gdims[1], gdims[2]);
-  }
-  
-  bool isInvar(int d) const { return gdims[d] == 1; }
-  
-  Int3 gdims;		///<Number of grid-points in each dimension
-  Real3 length;	///<The physical size of the simulation-box 
-  Real3 corner;
-  Int3 np;		///<Number of patches in each dimension
-  
-  Int3 ldims;
-  Real3 dx;
 };
 
 // ======================================================================
@@ -325,10 +218,9 @@ struct Grid_<T>::Normalization
   // ----------------------------------------------------------------------
   // ctor
 
-  Normalization() // FIXME
-  {}
+  Normalization() = default; // FIXME
   
-  Normalization(NormalizationParams& prm)
+  Normalization(const NormalizationParams& prm)
   {
     assert(prm.nicell > 0);
     cc = prm.cc;
@@ -336,14 +228,14 @@ struct Grid_<T>::Normalization
     double wl = 2. * M_PI * cc / prm.lw;
     double ld = cc / wl;
     assert(ld == 1.); // FIXME, not sure why? (calculation of fnqs?)
-    if (prm.e0 == 0.) {
-      prm.e0 = sqrt(2.0 * prm.i0 / prm.eps0 / cc) /
-	prm.lw / 1.0e6;
+    e0 = prm.e0;
+    if (e0 == 0.) {
+      e0 = sqrt(2.0 * prm.i0 / prm.eps0 / cc) /	prm.lw / 1.0e6;
     }
-    b0 = prm.e0 / cc;
+    b0 = e0 / cc;
     rho0 = prm.eps0 * wl * b0;
     phi0 = ld * prm.e0;
-    a0 = prm.e0 / wl;
+    a0 = e0 / wl;
     
     double vos = prm.qq * prm.e0 / (prm.mm * wl);
     double vt = sqrt(prm.tt / prm.mm);
@@ -362,6 +254,7 @@ struct Grid_<T>::Normalization
   real_t beta = { 1. };
   real_t cori = { 1. };
 
+  real_t e0;
   real_t b0;
   real_t rho0;
   real_t phi0;

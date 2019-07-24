@@ -6,7 +6,7 @@
 template<typename MfieldsState>
 struct BndVpic : BndBase
 {
-  BndVpic(const Grid_t& grid, int ibn[3])
+  BndVpic(const Grid_t& grid, const int ibn[3])
   {}
 
   void fill_ghosts(MfieldsState& mflds, int mb, int me) {}

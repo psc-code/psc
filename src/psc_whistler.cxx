@@ -70,7 +70,7 @@ struct PscWhistler : Psc<PscConfig>
 
     auto grid_domain = Grid_t::Domain{gdims, LL, {}, np};
     
-    auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
+    auto grid_bc = psc::grid::BC{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
 			  { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
 			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC },
 			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC }};
@@ -87,12 +87,12 @@ struct PscWhistler : Psc<PscConfig>
     mprts_.reset(new Mparticles{grid()});
 
     // -- Balance
-    balance_interval = -1;
-    balance_.reset(new Balance_t{balance_interval, .1, false});
+    p_.balance_interval = -1;
+    balance_.reset(new Balance_t{p_.balance_interval, .1, false});
 
     // -- Sort
     // FIXME, needs a way to make sure it gets set?
-    sort_interval = 100;
+    p_.sort_interval = 100;
 
     // -- Collision
     int collision_interval = -1;
@@ -110,7 +110,7 @@ struct PscWhistler : Psc<PscConfig>
     double marder_diffusion = 0.9;
     int marder_loop = 3;
     bool marder_dump = false;
-    marder_interval = -1;
+    p_.marder_interval = -1;
     marder_.reset(new Marder_t(grid(), marder_diffusion, marder_loop, marder_dump));
 
     // -- output fields
@@ -223,7 +223,7 @@ private:
     double kz    = (4. * M_PI / grid().domain.length[2]);
     double kperp = (2. * M_PI / grid().domain.length[0]);
 
-    SetupFields<MfieldsState>::set(mflds, [&](int m, double crd[3]) {
+    setupFields(grid(), mflds, [&](int m, double crd[3]) {
 	double x = crd[0], y = crd[1], z = crd[2];
 	double envelope1 = exp(-(z-25.)*(z-25.)/40.);
 	double envelope2 = exp(-(z-75.)*(z-75.)/40.);

@@ -14,7 +14,7 @@ struct MakeTestGrid1
   {
     auto domain = Grid_t::Domain{{8, 4, 2},
 				 {10., 10., 10.}};
-    auto bc = GridBc{};
+    auto bc = psc::grid::BC{};
     auto kinds = Grid_t::Kinds{};
     auto norm = Grid_t::Normalization{};
     double dt = .1;
@@ -37,7 +37,7 @@ struct MakeTestGridYZ
     auto domain = Grid_t::Domain{{1, 8, 16},
 				 {10., 80., 160.}, {0., -40., -80.},
 				 {1, 2, 2}};
-    auto bc = GridBc{};
+    auto bc = psc::grid::BC{};
     auto kinds = Grid_t::Kinds{};
     auto norm = Grid_t::Normalization{};
     double dt = .1;
@@ -58,7 +58,7 @@ struct MakeTestGridYZ1
     auto domain = Grid_t::Domain{{1, 8, 16},
 				 {10., 80., 160.}, {0., -40., -80.},
 				 {1, 1, 1}};
-    auto bc = GridBc{};
+    auto bc = psc::grid::BC{};
     auto kinds = Grid_t::Kinds{};
     auto norm = Grid_t::Normalization{};
     double dt = .1;

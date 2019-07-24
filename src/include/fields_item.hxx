@@ -29,7 +29,7 @@ struct FieldsItemBase
 {
   virtual ~FieldsItemBase() {};
 
-  virtual void run(MfieldsStateBase& mflds_base, MparticlesBase& mprts_base) = 0;
+  virtual void run(const Grid_t& grid, MfieldsStateBase& mflds_base, MparticlesBase& mprts_base) = 0;
 
   virtual MfieldsBase& mres() = 0;
 
@@ -59,15 +59,15 @@ struct FieldsItemFields : FieldsItemBase
     : mres_{grid, Item::n_comps, grid.ibn}
   {}
 
-  void operator()(MfieldsState& mflds)
+  void operator()(const Grid_t& grid, MfieldsState& mflds)
   {
-    Item::run(mflds, mres_);
+    Item::run(grid, mflds, mres_);
   }
 
-  void run(MfieldsStateBase& mflds_base, MparticlesBase& mprts_base) override
+  void run(const Grid_t& grid, MfieldsStateBase& mflds_base, MparticlesBase& mprts_base) override
   {
     auto& mflds = mflds_base.get_as<MfieldsState>(0, mflds_base._n_comps());
-    (*this)(mflds);
+    (*this)(grid, mflds);
     mflds_base.put_as(mflds, 0, 0);
   }
 
@@ -99,14 +99,12 @@ struct ItemLoopPatches : ItemPatch
   using MfieldsState = typename ItemPatch::MfieldsState;
   using Mfields = typename ItemPatch::Mfields;
   
-  static void run(MfieldsState& mflds, Mfields& mres)
+  static void run(const Grid_t& grid, MfieldsState& mflds, Mfields& mres)
   {
-    auto& grid = mres.grid();
-    
     for (int p = 0; p < mres.n_patches(); p++) {
       auto F = mflds[p];
       auto R = mres[p];
-      grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
+      mres.Foreach_3d(0, 0, [&](int i, int j, int k) {
 	  ItemPatch::set(grid, R, F, i,j,k);
 	});
     }
@@ -297,7 +295,7 @@ struct FieldsItemMoment : FieldsItemBase
     : moment_(grid)
   {}
 
-  void run(MfieldsStateBase& mflds_base, MparticlesBase& mprts_base) override
+  void run(const Grid_t& grid, MfieldsStateBase& mflds_base, MparticlesBase& mprts_base) override
   {
     auto& mprts = mprts_base.get_as<Mparticles>();
     moment_.run(mprts);

@@ -248,7 +248,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     
     mpi_printf(comm, "Conducting fields on Z-boundaries\n");
     mpi_printf(comm, "Reflect particles on Z-boundaries\n");
-    auto grid_bc = GridBc{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
+    auto grid_bc = psc::grid::BC{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
 			  { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL },
 			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING },
 			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING }};
@@ -323,15 +323,15 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     setup_species();
 
     // -- Balance
-    balance_interval = 0;
-    balance_.reset(new Balance_t{balance_interval});
+    p_.balance_interval = 0;
+    balance_.reset(new Balance_t{p_.balance_interval});
 
     // -- Sort
     // FIXME, needs a way to make it gets set?
     // FIXME: the "vpic" sort actually keeps track of per-species sorting intervals
     // internally, so it needs to be called every step
 #ifdef VPIC
-    sort_interval = 1;
+    p_.sort_interval = 1;
 #endif
     
     // -- Collision
@@ -352,9 +352,9 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     // (maybe make it part of the Marder object, or provide a base class interface
     // define_marder() that takes the object and the interval
 #ifdef VPIC
-    marder_interval = 1;
+    p_.marder_interval = 1;
 #else
-    marder_interval = 0;
+    p_.marder_interval = 0;
 #endif
 #if 0
     // FIXME, marder "vpic" manages its own cleaning intervals
@@ -707,7 +707,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
   void setup_initial_fields(MfieldsState& mflds)
   {
-    SetupFields<MfieldsState>::set(mflds, [&](int m, double xx[3]) {
+    setupFields(grid(), mflds, [&](int m, double xx[3]) {
 	return init_field(xx, m);
       });
   }
@@ -760,14 +760,14 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       {
 	OutputFieldsVpic<MfieldsState> out_fields;
 	auto result = out_fields(*mflds_);
-	io_pfd_.write_mflds(result.mflds, result.name, result.comp_names);
+	io_pfd_.write_mflds(result.mflds, grid, result.name, result.comp_names);
       }
 
       {
 	// FIXME, would be better to keep "out_hydro" around
 	OutputHydro out_hydro{grid};
 	auto result = out_hydro(*mprts_, *hydro_, *interpolator_);
-	io_pfd_.write_mflds(result.mflds, result.name, result.comp_names);
+	io_pfd_.write_mflds(result.mflds, grid, result.name, result.comp_names);
       }
       mrc_io_close(io_pfd_.io_);
     }

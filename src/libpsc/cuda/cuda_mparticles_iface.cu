@@ -27,17 +27,17 @@ void cuda_mparticles_iface<BS>::delete_(CudaMparticles* cmprts)
 }
 
 template<typename BS>
-int cuda_mparticles_iface<BS>::get_n_prts(CudaMparticles* cmprts)
+int cuda_mparticles_iface<BS>::size(CudaMparticles* cmprts)
 {
-  dprintf("CMPRTS: get_n_prts\n");
-  return cmprts->get_n_prts();
+  dprintf("CMPRTS: size\n");
+  return cmprts->size();
 }
 
 template<typename BS>
-std::vector<uint> cuda_mparticles_iface<BS>::get_size_all(const CudaMparticles* cmprts)
+std::vector<uint> cuda_mparticles_iface<BS>::sizeByPatch(const CudaMparticles* cmprts)
 {
-  dprintf("CMPRTS: get_size_all\n");
-  auto n_prts_by_patch = cmprts->get_size_all();
+  dprintf("CMPRTS: sizeByPatch\n");
+  auto n_prts_by_patch = cmprts->sizeByPatch();
   for (int p = 0; p < n_prts_by_patch.size(); p++) {
     dprintf("  p %d: %d\n", p, n_prts_by_patch[p]);
   }

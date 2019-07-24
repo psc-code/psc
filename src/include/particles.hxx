@@ -31,8 +31,8 @@ struct MparticlesBase
   int n_patches() const { return grid_->n_patches(); }
 
   virtual ~MparticlesBase() {}
-  virtual int get_n_prts() const = 0;
-  virtual std::vector<uint> get_size_all() const = 0;
+  virtual int size() const = 0;
+  virtual std::vector<uint> sizeByPatch() const = 0;
 
   template<typename MP>
   MP& get_as(uint flags = 0)
@@ -84,9 +84,9 @@ struct MparticlesBase
   {
     MPI_Comm comm = MPI_COMM_WORLD; // FIXME
     mpi_printf(comm, "  n_patches    = %d\n", n_patches());
-    mpi_printf(comm, "  n_prts_total = %d\n", get_n_prts());
+    mpi_printf(comm, "  n_prts_total = %d\n", size());
     
-    auto n_prts_by_patch = get_size_all();
+    auto n_prts_by_patch = sizeByPatch();
     
     for (int p = 0; p < n_patches(); p++) {
       mpi_printf(comm, "  p %d: n_prts = %d\n", p, n_prts_by_patch[p]);
@@ -100,6 +100,9 @@ struct MparticlesBase
 protected:
   const Grid_t* grid_;
 };
+
+template <typename Particle>
+class ForComponents;
 
 #endif
 
