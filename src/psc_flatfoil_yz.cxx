@@ -31,6 +31,18 @@
 
 #include "heating_spot_foil.hxx"
 
+// ======================================================================
+// Particle kinds
+//
+// Particle kinds can be used to define different species, or different
+// populations of the same species
+//
+// Here, we only enumerate the types, the actual information gets set up later.
+// The last kind (MY_ELECTRON) will be used as "neutralizing kind", ie, in the
+// initial setup, the code will add as many electrons as there are ions in a
+// cell, at the same position, to ensure the initial plasma is neutral
+// (so that Gauss's Law is satisfied).
+
 enum
 {
   MY_ION,
@@ -39,32 +51,10 @@ enum
 };
 
 // ======================================================================
-// global parameters (FIXME?)
-
-std::string read_checkpoint_filename;
-
-double BB;
-double Zi;
-double mass_ratio;
-
-double background_n;
-double background_Te;
-double background_Ti;
-
-int inject_interval;
-
-int heating_begin;
-int heating_end;
-int heating_interval;
-
-PscParams psc_params;
-
-// the following are calculated
-
-double d_i;
-
-// ======================================================================
 // InjectFoil
+//
+// This class describes the actual foil, specifically, where the foil
+// is located and what its plasma parameters are
 
 struct InjectFoilParams
 {
@@ -74,8 +64,9 @@ struct InjectFoilParams
   double Te, Ti;
 };
 
-struct InjectFoil : InjectFoilParams
+class InjectFoil : InjectFoilParams
 {
+public:
   InjectFoil() = default;
 
   InjectFoil(const InjectFoilParams& params) : InjectFoilParams(params) {}
@@ -111,13 +102,22 @@ struct InjectFoil : InjectFoilParams
   }
 };
 
+// ======================================================================
+// PSC configuration
+//
+// This sets up compile-time configuration for the code, in particular
+// what data structures and algorithms to use
+//
 // EDIT to change order / floating point type / cuda / 2d/3d
-using dim_t = dim_yz;
+
+using Dim = dim_yz;
 #ifdef USE_CUDA
-using PscConfig = PscConfig1vbecCuda<dim_t>;
+using PscConfig = PscConfig1vbecCuda<Dim>;
 #else
-using PscConfig = PscConfig1vbecSingle<dim_t>;
+using PscConfig = PscConfig1vbecSingle<Dim>;
 #endif
+
+// ----------------------------------------------------------------------
 
 using MfieldsState = PscConfig::MfieldsState;
 using Mparticles = PscConfig::Mparticles;
@@ -126,9 +126,10 @@ using Collision = PscConfig::Collision_t;
 using Checks = PscConfig::Checks_t;
 using Marder = PscConfig::Marder_t;
 using OutputParticles = PscConfig::OutputParticles;
-using Inject = typename InjectSelector<Mparticles, InjectFoil, dim_t>::Inject;
+using Inject = typename InjectSelector<Mparticles, InjectFoil, Dim>::Inject;
 using Heating = typename HeatingSelector<Mparticles>::Heating;
 
+// FIXME, this really shouldn't be here
 using FieldsItem_E_cc = FieldsItemFields<ItemLoopPatches<Item_e_cc>>;
 using FieldsItem_H_cc = FieldsItemFields<ItemLoopPatches<Item_h_cc>>;
 using FieldsItem_J_cc = FieldsItemFields<ItemLoopPatches<Item_j_cc>>;
@@ -147,7 +148,53 @@ using FieldsItem_T_1st_cc =
   FieldsItemMoment<ItemMomentAddBnd<Moment_T_1st<Mparticles, MfieldsC>>>;
 
 // ======================================================================
+// Global parameters
+//
+// I'm not a big fan of global parameters, but they're only for
+// this particular case and they help make things simpler.
+
+// An "anonymous namespace" makes these variables visible in this source file
+// only
+namespace
+{
+
+// Here are a bunch of constant parameters, ie, these are values that
+// need to be set for a particular run.
+
+std::string read_checkpoint_filename;
+
+double BB;
+double Zi;
+double mass_ratio;
+
+double background_n;
+double background_Te;
+double background_Ti;
+
+int inject_interval;
+
+int heating_begin;
+int heating_end;
+int heating_interval;
+
+// This is a set of generic PSC params (see include/psc.hxx),
+// like number of steps to run, etc, which also should be set by the case
+PscParams psc_params;
+
+// The following parameters are calculated from the above / and other
+// information
+
+double d_i;
+
+} // namespace
+
+// ======================================================================
 // setupGrid
+//
+// this helper function is responsible for setting up the "Grid",
+// which is really more than just the domain and its decomposition, it
+// also encompasses PC normalization parameters, information about the
+// particle kinds, etc.
 
 Grid_t* setupGrid()
 {
@@ -206,44 +253,67 @@ Grid_t* setupGrid()
   Grid_t::Normalization norm{norm_params};
 
   Int3 ibn = {2, 2, 2};
-  if (dim_t::InvarX::value) {
+  if (Dim::InvarX::value) {
     ibn[0] = 0;
   }
-  if (dim_t::InvarY::value) {
+  if (Dim::InvarY::value) {
     ibn[1] = 0;
   }
-  if (dim_t::InvarZ::value) {
+  if (Dim::InvarZ::value) {
     ibn[2] = 0;
   }
 
   return new Grid_t{domain, bc, kinds, norm, dt, -1, ibn};
 }
 
-// ----------------------------------------------------------------------
+// ======================================================================
 // run
+//
+// This is basically the main function of this run,
+// which sets up everything and then uses PscIntegrator to run the
+// simulation
 
 void run()
 {
   mpi_printf(MPI_COMM_WORLD, "*** Setting up...\n");
 
+  // ----------------------------------------------------------------------
+  // Set up a bunch of parameters
+
+  // -- set some generic PSC parameters
   psc_params.nmax = 2001; // 5001;
   psc_params.cfl = 0.75;
   psc_params.write_checkpoint_every_step = 500;
 
-  //read_checkpoint_filename = "checkpoint_500.bp";
+  // -- start from checkpoint:
+  //
+  // Uncomment when wanting to start from a checkpoint, ie.,
+  // instead of setting up grid, particles and state fields here,
+  // they'll be read from a file
+  // FIXME: This parameter would be a good candidate to be provided
+  // on the command line, rather than requiring recompilation when change.
+
+  // read_checkpoint_filename = "checkpoint_500.bp";
+
+  // -- Set some parameters specific to this case
   BB = 0.;
   Zi = 1.;
   mass_ratio = 100.; // 25.
 
-  // --- for background plasma
   background_n = .002;
   background_Te = .001;
   background_Ti = .001;
+
+  // ----------------------------------------------------------------------
+  // Set up grid, state fields, particles
 
   auto grid_ptr = setupGrid();
   auto& grid = *grid_ptr;
   auto& mflds = *new MfieldsState{grid};
   auto& mprts = *new Mparticles{grid};
+
+  // ----------------------------------------------------------------------
+  // Set up various objects needed to run this case
 
   // -- Balance
   psc_params.balance_interval = 300;
@@ -271,6 +341,11 @@ void run()
   psc_params.marder_interval = 0 * 5;
   auto& marder = *new Marder(grid, marder_diffusion, marder_loop, marder_dump);
 
+  // ----------------------------------------------------------------------
+  // Set up output
+  //
+  // FIXME, this really is too complicated and not very flexible
+
   // -- output fields
   OutputFieldsCParams outf_params{};
   outf_params.pfield_step = 200;
@@ -289,6 +364,9 @@ void run()
   outp_params.data_dir = ".";
   outp_params.basename = "prt";
   auto& outp = *new OutputParticles{grid, outp_params};
+
+  // ----------------------------------------------------------------------
+  // Set up objects specific to the flatfoil case
 
   // -- Heating
   HeatingSpotFoilParams heating_foil_params{};
@@ -350,70 +428,84 @@ void run()
     }
   };
 
-  auto lf_init_npt = [&](int kind, double crd[3], psc_particle_npt& npt) {
-    switch (kind) {
-      case MY_ION:
-        npt.n = background_n;
-        npt.T[0] = background_Ti;
-        npt.T[1] = background_Ti;
-        npt.T[2] = background_Ti;
-        break;
-      case MY_ELECTRON:
-        npt.n = background_n;
-        npt.T[0] = background_Te;
-        npt.T[1] = background_Te;
-        npt.T[2] = background_Te;
-        break;
-      default:
-        assert(0);
-    }
-
-    if (inject_target.is_inside(crd)) {
-      // replace values above by target values
-      inject_target.init_npt(kind, crd, npt);
-    }
-  };
-
-  // --- partition particles and initial balancing
-  mpi_printf(MPI_COMM_WORLD, "**** Partitioning...\n");
-
   if (read_checkpoint_filename.empty()) {
+    // ----------------------------------------------------------------------
+    // Initial conditions
+    //
+    // These functions are called to set up initial particle distribution
+    // and state fields
+
+    auto lf_init_npt = [&](int kind, double crd[3], psc_particle_npt& npt) {
+      switch (kind) {
+        case MY_ION:
+          npt.n = background_n;
+          npt.T[0] = background_Ti;
+          npt.T[1] = background_Ti;
+          npt.T[2] = background_Ti;
+          break;
+        case MY_ELECTRON:
+          npt.n = background_n;
+          npt.T[0] = background_Te;
+          npt.T[1] = background_Te;
+          npt.T[2] = background_Te;
+          break;
+        default:
+          assert(0);
+      }
+
+      if (inject_target.is_inside(crd)) {
+        // replace values above by target values
+        inject_target.init_npt(kind, crd, npt);
+      }
+    };
+
+    auto lf_init_fields = [&](int m, double crd[3]) {
+      switch (m) {
+        case HY:
+          return BB;
+        default:
+          return 0.;
+      }
+    };
+
+    // --- partition particles and initial balancing
+    mpi_printf(MPI_COMM_WORLD, "**** Partitioning...\n");
+
     SetupParticles<Mparticles> setup_particles;
     setup_particles.fractional_n_particles_per_cell = true;
     setup_particles.neutralizing_population = MY_ELECTRON;
-    
+
     auto n_prts_by_patch = setup_particles.setup_partition(grid, lf_init_npt);
-    
+
     balance.initial(grid_ptr, n_prts_by_patch);
     // !!! FIXME! grid is now invalid
     // balance::initial does not rebalance particles, because the old way of
     // doing this does't even have the particle data structure created yet --
     // FIXME?
     mprts.reset(*grid_ptr);
-    
+
     // -- set up particles
     mpi_printf(MPI_COMM_WORLD, "**** Setting up particles...\n");
     setup_particles.setup_particles(mprts, n_prts_by_patch, lf_init_npt);
-    
+
     // -- set up fields
     mpi_printf(MPI_COMM_WORLD, "**** Setting up fields...\n");
-    setupFields(*grid_ptr, mflds, [&](int m, double crd[3]) {
-	switch (m) {
-	case HY:
-	  return BB;
-	default:
-	  return 0.;
-	}
-      });
+    setupFields(*grid_ptr, mflds, lf_init_fields);
   }
-  
+
   auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
                                           balance, collision, checks, marder,
                                           outf, outp, lf_inject);
+
+  // FIXME, checkpoint reading should be moved to before the integrator
   if (!read_checkpoint_filename.empty()) {
+    mpi_printf(MPI_COMM_WORLD, "**** Reading checkpoint...\n");
     psc.read_checkpoint(read_checkpoint_filename);
   }
 
+  // ======================================================================
+  // Hand off to PscIntegrator to run the simulation
+  
   psc.integrate();
 }
 
