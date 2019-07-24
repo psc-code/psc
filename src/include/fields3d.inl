@@ -62,3 +62,23 @@ public:
     }
   }
 };
+
+template <typename MFields>
+class kg::io::Descr<MfieldsStateFromMfields<MFields>>
+{
+public:
+  using MfieldsState = MfieldsStateFromMfields<MFields>;
+  using DataType = typename MfieldsState::real_t;
+
+  void put(kg::io::Engine& writer, const MfieldsState& mflds,
+           const kg::io::Mode launch = kg::io::Mode::NonBlocking)
+  {
+    writer.put("mflds", mflds.mflds_);
+  }
+
+  void get(kg::io::Engine& reader, MfieldsState& mflds,
+           const kg::io::Mode launch = kg::io::Mode::NonBlocking)
+  {
+    reader.get("mflds", mflds.mflds_);
+  }
+};
