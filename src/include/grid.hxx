@@ -9,7 +9,7 @@
 #include "grid/Domain.h"
 
 #include <vector>
-#include <cstring>
+#include <string>
 #include <cmath>
 
 // ======================================================================
@@ -267,40 +267,15 @@ struct Grid_<T>::Normalization
 template<class T>
 struct Grid_<T>::Kind
 {
-  Kind() // FIXME, do we want to keep this ctor?
+  Kind() = default;
+  
+  Kind(real_t q, real_t m, const std::string &name)
+    : q(q), m(m), name(name)
   {}
   
-  Kind(real_t q_, real_t m_, const char *name_)
-    : q(q_), m(m_), name(strdup(name_))
-  {};
-  
-  Kind(const Kind& k)
-    : q(k.q), m(k.m), name(strdup(k.name))
-  {}
-  
-  Kind(Kind&& k)
-    : q(k.q), m(k.m), name(k.name)
-  {
-    k.name = nullptr;
-  }
-
-  Kind& operator=(const Kind& other)
-  {
-    free((void*) name);
-    q = other.q;
-    m = other.m;
-    name = strdup(other.name);
-    return *this;
-  }
-  
-  ~Kind()
-  {
-    free((void*) name);
-  }
-  
-  real_t q;
-  real_t m;
-  const char *name;
+  real_t q = {};
+  real_t m = {};
+  std::string name;
 };
 
 using Grid_t = Grid_<double>;
