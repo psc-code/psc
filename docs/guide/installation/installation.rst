@@ -2,16 +2,12 @@
 Installation
 ************
 
-Getting the code from github
-============================
+Introduction
+============
 
-PSC is available from github at
-https:://github.com/psc-code/psc.git. To use it, make a local clone
-using ``git``:
-
-.. code-block:: sh
-
-   [kai@mbpro ~]$ git clone https://github.com/psc-code/psc.git
+PSC is available from github at https:://github.com/psc-code/psc.git
+. It uses a cmake-based build, so building the code should be
+relatively straightforward.
 
 Dependencies
 ============
@@ -26,54 +22,26 @@ PSC has the following dependencies:
 
 - (included) `googletest <https://github.com/google/googletest>`_ for testing
 
-- ``HDF5``, one option for output
+- (equired) `HDF5 <https://www.hdfgroup.org/>`_, currently still the only real option
+  for regular field / particle output
 
-- ``ADIOS2``, another option for ouput and checkpointing
+- (optional) `ADIOS2 <https://github.com/ornladios/ADIOS2>`_, currently the only
+  option for checkpoint I/O
 
-- ``viscid`` is useful for analyzing / visualizing PSC data
+- (optional) `viscid <https://viscid-hub.github.io/Viscid-docs/docs/dev/>`_ is
+  useful for analyzing / visualizing PSC data
 
-.. todo::
-   add urls
+
+Build Instructions
+==================
+  
+.. toctree::
+   :maxdepth: 2
+
+   generic
+   summit
+   viscid
+
    
-Building
-========
 
-PSC uses ``cmake`` as a build system. The build happens in a separate
-build directory, e.g. called ``build``:
-
-.. code-block:: sh
-
-   [kai@macbook ~]$ cd psc
-   [kai@macbook ~]$ mkdir build
-   [kai@macbook ~]$ cd build
-   [kai@macbook ~]$ cmake -DCMAKE_BUILD_TYPE=Release ..
-   [...]
-
-.. todo::
-   add description of cmake options
-
-Hopefully, the cmake step will succeed without error, at which point
-we're ready to actually compile the code.
-
-From now on, one should only ever need to build the code using
-
-.. code-block:: sh
-
-   [kai@macbook ~]$ make
-   [...]
-
-.. todo::
-   psc_harris_xz doesn't compile / work w/o vpic
-   
-.. todo::
-   psc_flatfoil_yz change to small 2d run?
-
-.. todo::
-   viscid for viz (incl. mpl3 is_string_view issue)
-
-.. todo::
-   add flatfoil_yz notebook etc
-   
-   
-.. todo::
-   describe running the tests
+  
