@@ -8,11 +8,22 @@ Welcome to the Plasma Simulation Code (PSC)'s documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Contents
 
    installation/installation
 
-   viz/index
+.. toctree::
+   :maxdepth: 2
+   :caption: Code Description
+
+   code/case
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Analysis and Visualization
+
+   viz/python
+   viz/paraview
 
 Indices and tables
 ==================

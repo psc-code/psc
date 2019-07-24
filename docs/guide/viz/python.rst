@@ -1,6 +1,6 @@
 
-Analyzing and Visualizing PSC data
-==================================
+Analyzing and Visualizing PSC data using Python
+===============================================
 
 .. toctree::
    :maxdepth: 2
