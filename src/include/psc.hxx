@@ -940,6 +940,7 @@ private:
   template<typename P>
   void write_checkpoint(MparticlesSimple<P>& tag)
   {
+#ifdef PSC_HAVE_ADIOS2
     MPI_Barrier(grid().comm());
 
     std::string filename =
@@ -951,6 +952,10 @@ private:
     writer.put("mflds", *mflds_);
     writer.put("mprts", *mprts_);
     writer.close();
+#else
+    std::cerr << "write_checkpoint not available without adios2" << std::endl;
+    std::abort();
+#endif
   }
 
   void write_checkpoint()
@@ -974,6 +979,7 @@ private:
   template<typename P>
   void read_checkpoint(const std::string& filename, MparticlesSimple<P>& tag)
   {
+#ifdef PSC_HAVE_ADIOS2
     MPI_Barrier(grid().comm());
 
     auto io = kg::io::IOAdios2{};
@@ -982,6 +988,10 @@ private:
     reader.get("mflds", *mflds_);
     reader.get("mprts", *mprts_);
     reader.close();
+#else
+    std::cerr << "write_checkpoint not available without adios2" << std::endl;
+    std::abort();
+#endif
   }
 
 public:
