@@ -7,7 +7,6 @@
 #include "grid.hxx"
 #include <mrc_io.hxx>
 #include <kg/SArrayView.h>
-#include <kg/IO.h>
 
 #include <mrc_profile.h>
 
@@ -467,10 +466,10 @@ struct MfieldsStateFromMfields : MfieldsStateBase
 
   Mfields& mflds() { return mflds_; }
 
-private:
+public: // FIXME public so that we can read/write it, friend needs include which gives nvcc issues
   Mfields mflds_;
-
-  friend class kg::io::Descr<MfieldsStateFromMfields<Mfields>>;
+  
+  //  friend class kg::io::Descr<MfieldsStateFromMfields<Mfields>>;
 };
 
 #endif

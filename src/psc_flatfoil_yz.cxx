@@ -41,6 +41,8 @@ enum
 // ======================================================================
 // global parameters (FIXME?)
 
+std::string read_checkpoint_filename;
+
 double BB;
 double Zi;
 double mass_ratio;
@@ -226,7 +228,9 @@ void run()
 
   psc_params.nmax = 2001; // 5001;
   psc_params.cfl = 0.75;
+  psc_params.write_checkpoint_every_step = 500;
 
+  //read_checkpoint_filename = "checkpoint_500.bp";
   BB = 0.;
   Zi = 1.;
   mass_ratio = 100.; // 25.
@@ -373,37 +377,42 @@ void run()
   // --- partition particles and initial balancing
   mpi_printf(MPI_COMM_WORLD, "**** Partitioning...\n");
 
-  SetupParticles<Mparticles> setup_particles;
-  setup_particles.fractional_n_particles_per_cell = true;
-  setup_particles.neutralizing_population = MY_ELECTRON;
-
-  auto n_prts_by_patch = setup_particles.setup_partition(grid, lf_init_npt);
-
-  balance.initial(grid_ptr, n_prts_by_patch);
-  // !!! FIXME! grid is now invalid
-  // balance::initial does not rebalance particles, because the old way of
-  // doing this does't even have the particle data structure created yet --
-  // FIXME?
-  mprts.reset(*grid_ptr);
-
-  // -- set up particles
-  mpi_printf(MPI_COMM_WORLD, "**** Setting up particles...\n");
-  setup_particles.setup_particles(mprts, n_prts_by_patch, lf_init_npt);
-
-  // -- set up fields
-  mpi_printf(MPI_COMM_WORLD, "**** Setting up fields...\n");
-  setupFields(*grid_ptr, mflds, [&](int m, double crd[3]) {
-    switch (m) {
-      case HY:
-        return BB;
-      default:
-        return 0.;
-    }
-  });
-
+  if (read_checkpoint_filename.empty()) {
+    SetupParticles<Mparticles> setup_particles;
+    setup_particles.fractional_n_particles_per_cell = true;
+    setup_particles.neutralizing_population = MY_ELECTRON;
+    
+    auto n_prts_by_patch = setup_particles.setup_partition(grid, lf_init_npt);
+    
+    balance.initial(grid_ptr, n_prts_by_patch);
+    // !!! FIXME! grid is now invalid
+    // balance::initial does not rebalance particles, because the old way of
+    // doing this does't even have the particle data structure created yet --
+    // FIXME?
+    mprts.reset(*grid_ptr);
+    
+    // -- set up particles
+    mpi_printf(MPI_COMM_WORLD, "**** Setting up particles...\n");
+    setup_particles.setup_particles(mprts, n_prts_by_patch, lf_init_npt);
+    
+    // -- set up fields
+    mpi_printf(MPI_COMM_WORLD, "**** Setting up fields...\n");
+    setupFields(*grid_ptr, mflds, [&](int m, double crd[3]) {
+	switch (m) {
+	case HY:
+	  return BB;
+	default:
+	  return 0.;
+	}
+      });
+  }
+  
   auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
                                           balance, collision, checks, marder,
                                           outf, outp, lf_inject);
+  if (!read_checkpoint_filename.empty()) {
+    psc.read_checkpoint(read_checkpoint_filename);
+  }
 
   psc.integrate();
 }

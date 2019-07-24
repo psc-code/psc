@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "fields_item.hxx"
 #include <psc_fields_single.h>
 #ifdef USE_VPIC
 #include "vpic_hydro_ops.hxx"

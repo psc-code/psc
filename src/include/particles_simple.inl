@@ -1,4 +1,6 @@
 
+#include "particles_simple.hxx"
+
 #include "VariableByPatch.h"
 
 // ======================================================================
