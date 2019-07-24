@@ -111,3 +111,33 @@ The PSC code base includes a bunch of unit tests, though coverage is still far f
    100% tests passed, 0 tests failed out of 233
 
    Total Test time (real) = 120.68 sec
+
+Running a job
+=============
+
+Here is a job script ``flatfoil.sh`` to run the small sample 2-d flatfoil case on Summit:
+
+.. code-block:: sh
+
+   #! /bin/bash
+   #BSUB -P AST147
+   #BSUB -W 00:10
+   #BSUB -nnodes 1
+   #BSUB -J flatfoil_summit004
+
+   DIR=$PROJWORK/ast147/kaig1/flatfoil-summit004
+   mkdir -p $DIR
+   cd $DIR
+
+   jsrun -n 4 -a 1 -c 1 -g 1 ~/src/psc/build-summit-gpu/src/psc_flatfoil_yz
+
+Submit as usual:
+
+.. code-block:: sh
+
+   [kaig1@login3 build-summit-gpu]$ bsub flatfoil.sh
+   Job <523811> is submitted to default queue <batch>.
+   [kaig1@login3 build-summit-gpu]$ bjobs
+   JOBID   USER       STAT   SLOTS    QUEUE       START_TIME    FINISH_TIME   JOB_NAME
+   523811  kaig1      PEND      -     batch             -             -       flatfoil_summit004
+
