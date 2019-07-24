@@ -237,7 +237,9 @@ Grid_t* setupGrid()
 
   // -- setup particle kinds
   // last population ("e") is neutralizing
-  Grid_t::Kinds kinds = {{Zi, mass_ratio * Zi, "i"}, {-1., 1., "e"}};
+  Grid_t::Kinds kinds(N_MY_KINDS);
+  kinds[MY_ION] = {Zi, mass_ratio * Zi, "i"};
+  kinds[MY_ELECTRON] = {-1., 1., "e"};
 
   d_i = sqrt(kinds[MY_ION].m / kinds[MY_ION].q);
 
