@@ -5,45 +5,47 @@
 #include "particles.hxx"
 
 // ======================================================================
-// ParticleSimple
+// ParticleWithId
 
 template<typename _Real>
-struct ParticleSimple
+struct ParticleWithId
 {
   using real_t = _Real;
   using Real3 = Vec3<real_t>;
 
-  ParticleSimple() = default;
+  ParticleWithId() = default;
 
-  KG_INLINE ParticleSimple(Real3 x, Real3 u, real_t qni_wni, int kind, int id)
+  KG_INLINE ParticleWithId(Real3 x, Real3 u, real_t qni_wni, int kind, int id)
     : x{x},
       u{u},
       kind{kind},
-      qni_wni{qni_wni}
+      qni_wni{qni_wni},
+      id_{id}
   {}
 
-  KG_INLINE bool operator==(const ParticleSimple& other) const
+  KG_INLINE bool operator==(const ParticleWithId& other) const
   {
     return (x == other.x && qni_wni == other.qni_wni &&
-	    u == other.u && kind == other.kind);
+	    u == other.u && kind == other.kind && id == other.id);
   }
 
-  KG_INLINE bool operator!=(const ParticleSimple& other) const { return !(*this == other); }
+  KG_INLINE bool operator!=(const ParticleWithId& other) const { return !(*this == other); }
 
-  KG_INLINE bool id()  const { return 0; }
+  KG_INLINE int id() const { return id_; }
 
 public:
   Real3 x;
   Real3 u;
   int kind;
   real_t qni_wni;
+  int id_;
 };
 
 template <typename R>
-class ForComponents<ParticleSimple<R>>
+class ForComponents<ParticleWithId<R>>
 {
 public:
-  using Particle = ParticleSimple<R>;
+  using Particle = ParticleWithId<R>;
 
   template <typename FUNC>
   static void run(FUNC&& func)
@@ -56,6 +58,7 @@ public:
     func("uz", [](Particle& prt) { return &prt.u[2]; });
     func("kind", [](Particle& prt) { return &prt.kind; });
     func("qni_wni", [](Particle& prt) { return &prt.qni_wni; });
+    func("id", [](Particle& prt) { return &prt.id_; });
   }
 };
 
