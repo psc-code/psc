@@ -32,9 +32,7 @@
 #include "../libpsc/cuda/marder_cuda_impl.hxx"
 #endif
 
-#ifdef USE_VPIC
 #include "../libpsc/vpic/fields_item_vpic.hxx"
-#endif
 
 template<typename Mparticles>
 using OutputParticlesDefault = OutputParticlesHdf5<Mparticles>;
