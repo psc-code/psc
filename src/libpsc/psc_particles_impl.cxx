@@ -1,6 +1,7 @@
 
 #include "psc_particles_single.h"
 #include "psc_particles_double.h"
+#include "particle_with_id.h"
 
 template<typename MP_FROM, typename MP_TO>
 struct Convert
@@ -69,6 +70,12 @@ template<> const MparticlesBase::Convert MparticlesSingle::convert_from_ = {
 // ======================================================================
 // psc_mparticles: subclass "double"
 
-template<> const MparticlesBase::Convert MparticlesDouble::convert_to_{};
-template<> const MparticlesBase::Convert MparticlesDouble::convert_from_{};
+template<> const MparticlesBase::Convert MparticlesDouble::convert_to_ = {};
+template<> const MparticlesBase::Convert MparticlesDouble::convert_from_ = {};
+
+// ======================================================================
+// MparticlesSimple<ParticleWithId<float>>
+
+template<> const MparticlesBase::Convert MparticlesSimple<ParticleWithId<float>>::convert_to_ = {};
+template<> const MparticlesBase::Convert MparticlesSimple<ParticleWithId<float>>::convert_from_ = {};
 

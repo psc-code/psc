@@ -111,10 +111,22 @@ public:
 // EDIT to change order / floating point type / cuda / 2d/3d
 
 using Dim = dim_yz;
+
+#if 1
 #ifdef USE_CUDA
 using PscConfig = PscConfig1vbecCuda<Dim>;
 #else
 using PscConfig = PscConfig1vbecSingle<Dim>;
+#endif
+
+#else
+
+#include "particle_with_id.h"
+
+using PscConfig =
+  PscConfig_<Dim, MparticlesSimple<ParticleWithId<float>>, MfieldsStateSingle,
+             MfieldsSingle, PscConfigPushParticles1vbec>;
+
 #endif
 
 // ----------------------------------------------------------------------
