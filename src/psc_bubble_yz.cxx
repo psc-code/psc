@@ -91,10 +91,10 @@ using OutputParticles = PscConfig::OutputParticles;
 
 Grid_t* setupGrid()
 {
-  auto domain = Grid_t::Domain{{1, 128, 512},
+  auto domain = Grid_t::Domain{{1, 512*2, 512*3},
                                {g.LLn, g.LLy, g.LLz},
                                {0., -.5 * g.LLy, -.5 * g.LLz},
-                               {1, 1, 4}};
+                               {1, 16*2, 16*3}};
 
   auto bc =
     psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
@@ -320,7 +320,7 @@ static void run()
 
   // -- output fields
   OutputFieldsCParams outf_params{};
-  outf_params.pfield_step = 10;
+  outf_params.pfield_step = 200;
   std::vector<std::unique_ptr<FieldsItemBase>> outf_items;
   outf_items.emplace_back(new FieldsItem_E_cc(grid));
   outf_items.emplace_back(new FieldsItem_H_cc(grid));
