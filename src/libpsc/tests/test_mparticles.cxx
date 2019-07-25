@@ -12,6 +12,7 @@
 #include "psc_particles_single.h"
 #ifdef USE_CUDA
 #include "../libpsc/cuda/mparticles_cuda.hxx"
+#include "../libpsc/cuda/mparticles_cuda.inl"
 #endif
 #include "particles_simple.inl"
 #include <kg/io.h>
@@ -390,7 +391,13 @@ struct MparticlesIOTest : MparticlesTest<T>
 using MparticlesIOTestTypes =
   ::testing::Types<Config<MparticlesSingle>,
                    Config<MparticlesSingle, MakeTestGridYZ>,
-                   Config<MparticlesDouble>>;
+                   Config<MparticlesDouble>
+#ifdef USE_CUDA
+                   ,
+                   Config<MparticlesCuda<BS144>, MakeTestGridYZ1>,
+                   Config<MparticlesCuda<BS144>, MakeTestGridYZ>
+#endif
+                   >;
 
 TYPED_TEST_SUITE(MparticlesIOTest, MparticlesIOTestTypes);
 
@@ -417,12 +424,14 @@ TYPED_TEST(MparticlesIOTest, WriteRead)
     reader.close();
   }
 
+  auto accessor = mprts.accessor();
+  auto accessor2 = mprts2.accessor();
   for (int p = 0; p < mprts.n_patches(); ++p) {
-    auto prts = mprts[p];
-    auto prts2 = mprts2[p];
+    auto prts = accessor[p];
+    auto prts2 = accessor2[p];
     ASSERT_EQ(prts.size(), prts2.size());
     for (int n = 0; n < prts.size(); n++) {
-      EXPECT_EQ(prts[n], prts2[n]);
+      EXPECT_EQ(prts[n].x(), prts2[n].x());
     }
   }
 }

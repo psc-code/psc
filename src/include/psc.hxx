@@ -16,6 +16,12 @@
 #include "grid.inl"
 #include "fields3d.inl"
 #include "particles_simple.inl"
+#ifdef USE_CUDA
+#include "psc_fields_cuda.h"
+#include "psc_fields_cuda.inl"
+#include "../libpsc/cuda/mparticles_cuda.hxx"
+#include "../libpsc/cuda/mparticles_cuda.inl"
+#endif
 
 #ifdef VPIC
 #include "../libpsc/vpic/vpic_iface.h"
@@ -927,20 +933,10 @@ private:
   // ----------------------------------------------------------------------
   // write_checkpoint
   //
-  // FIXME: uses Mparticles as a tag to deal with data structures that don't have
-  // checkpoint I/O implemented yet
 
-  template<typename MP>
-  void write_checkpoint(MP& tag)
+  void write_checkpoint()
   {
-    std::cerr << "write_checkpoint not implemented for this simulation" << std::endl;
-    std::abort();
-  }
-  
-  template<typename P>
-  void write_checkpoint(MparticlesSimple<P>& tag)
-  {
-#ifdef PSC_HAVE_ADIOS2
+#if defined(PSC_HAVE_ADIOS2) && !defined(VPIC)
     MPI_Barrier(grid().comm());
 
     std::string filename =
@@ -958,26 +954,12 @@ private:
 #endif
   }
 
-  void write_checkpoint()
-  {
-    write_checkpoint(*mprts_);
-  }
-  
   // ----------------------------------------------------------------------
   // read_checkpoint
   //
-  // FIXME: uses Mparticles as a tag to deal with data structures that don't have
-  // checkpoint I/O implemented yet
 
-  template<typename MP>
-  void read_checkpoint(const std::string& filename, MP& tag)
-  {
-    std::cerr << "read_checkpoint not implemented for this simulation" << std::endl;
-    std::abort();
-  }
-  
-  template<typename P>
-  void read_checkpoint(const std::string& filename, MparticlesSimple<P>& tag)
+public:
+  void read_checkpoint(const std::string& filename)
   {
 #ifdef PSC_HAVE_ADIOS2
     MPI_Barrier(grid().comm());
@@ -994,12 +976,6 @@ private:
 #endif
   }
 
-public:
-  void read_checkpoint(const std::string& filename)
-  {
-    read_checkpoint(filename, *mprts_);
-  }
-  
   const Grid_t& grid() { return *grid_; }
 
 protected:

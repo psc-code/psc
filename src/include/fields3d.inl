@@ -1,14 +1,6 @@
 
+#include "io_common.h"
 #include "kg/io.h"
-
-#include "psc_fields_c.h"
-
-inline kg::io::Dims makeDims(int m, const Int3& dims)
-{
-  return kg::io::Dims{static_cast<size_t>(m), static_cast<size_t>(dims[2]),
-                      static_cast<size_t>(dims[1]),
-                      static_cast<size_t>(dims[0])};
-}
 
 // ======================================================================
 // Variable<Mfields>
@@ -33,8 +25,8 @@ public:
       auto count = makeDims(n_comps, mflds.ldims());
       auto ib = makeDims(0, -mflds.box().ib());
       auto im = makeDims(n_comps, mflds.box().im());
-      writer.putVariable(const_cast<Mfields&>(mflds)[p].data(), launch,
-                         shape, {start, count}, {ib, im}); // FIXME cast
+      writer.putVariable(const_cast<Mfields&>(mflds)[p].data(), launch, shape,
+                         {start, count}, {ib, im}); // FIXME cast
     }
   }
 
