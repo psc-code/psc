@@ -10,6 +10,7 @@
 #include "checks.hxx"
 #include "collision.hxx"
 #include "marder.hxx"
+#include "psc_integrator.hxx"
 #include "push_fields.hxx"
 #include "push_particles.hxx"
 #include "sort.hxx"
@@ -46,6 +47,8 @@ struct PscBubbleParams
 
 namespace
 {
+
+std::string read_checkpoint_filename;
 
 // Parameters specific to this run. They don't really need to be collected in a
 // struct, but maybe it's nice that they are
@@ -127,194 +130,116 @@ Grid_t* setupGrid()
 }
 
 // ======================================================================
-// PscBubble
+// init_npt
 
-struct PscBubble : Psc<PscConfig>
+static void init_npt(int kind, double crd[3], psc_particle_npt& npt)
 {
-  using Base = Psc<PscConfig>;
+  double V0 = g.MMach * sqrt(g.TTe / g.MMi);
 
-  // ----------------------------------------------------------------------
-  // ctor
+  double r1 = sqrt(sqr(crd[2]) + sqr(crd[1] + .5 * g.LLy));
+  double r2 = sqrt(sqr(crd[2]) + sqr(crd[1] - .5 * g.LLy));
 
-  PscBubble(const PscParams& params, Grid_t& grid, MfieldsState& mflds,
-            Mparticles& mprts, Balance& balance, Collision& collision,
-            Checks& checks, Marder& marder, OutputFieldsC& outf,
-	    OutputParticles& outp)
-  {
-    auto comm = grid.comm();
-
-    Base::p_ = params;
-
-    Base::define_grid(grid);
-    Base::define_field_array(mflds);
-    Base::define_particles(mprts);
-
-    Base::balance_.reset(&balance);
-    Base::collision_.reset(&collision);
-    Base::checks_.reset(&checks);
-    Base::marder_.reset(&marder);
-
-    Base::outf_.reset(&outf);
-    Base::outp_.reset(&outp);
-
-    // --- partition particles and initial balancing
-    mpi_printf(comm, "**** Partitioning...\n");
-    auto n_prts_by_patch = setup_initial_partition();
-    balance_->initial(grid_, n_prts_by_patch);
-    // balance::initial does not rebalance particles, because the old way of
-    // doing this does't even have the particle data structure created yet --
-    // FIXME?
-    mprts_->reset(grid);
-
-    mpi_printf(comm, "**** Setting up particles...\n");
-    setup_initial_particles(*mprts_, n_prts_by_patch);
-
-    mpi_printf(comm, "**** Setting up fields...\n");
-    setup_initial_fields(*mflds_);
-
-    Base::init();
-    Base::initialize();
+  npt.n = g.nnb;
+  if (r1 < g.LLn) {
+    npt.n += (g.nn0 - g.nnb) * sqr(cos(M_PI / 2. * r1 / g.LLn));
+    if (r1 > 0.0) {
+      npt.p[2] += V0 * sin(M_PI * r1 / g.LLn) * crd[2] / r1;
+      npt.p[1] += V0 * sin(M_PI * r1 / g.LLn) * (crd[1] + .5 * g.LLy) / r1;
+    }
   }
-
-  void init_npt(int kind, double crd[3], psc_particle_npt& npt)
-  {
-    double V0 = g.MMach * sqrt(g.TTe / g.MMi);
-
-    double r1 = sqrt(sqr(crd[2]) + sqr(crd[1] + .5 * g.LLy));
-    double r2 = sqrt(sqr(crd[2]) + sqr(crd[1] - .5 * g.LLy));
-
-    npt.n = g.nnb;
-    if (r1 < g.LLn) {
-      npt.n += (g.nn0 - g.nnb) * sqr(cos(M_PI / 2. * r1 / g.LLn));
-      if (r1 > 0.0) {
-        npt.p[2] += V0 * sin(M_PI * r1 / g.LLn) * crd[2] / r1;
-        npt.p[1] += V0 * sin(M_PI * r1 / g.LLn) * (crd[1] + .5 * g.LLy) / r1;
-      }
-    }
-    if (r2 < g.LLn) {
-      npt.n += (g.nn0 - g.nnb) * sqr(cos(M_PI / 2. * r2 / g.LLn));
-      if (r2 > 0.0) {
-        npt.p[2] += V0 * sin(M_PI * r2 / g.LLn) * crd[2] / r2;
-        npt.p[1] += V0 * sin(M_PI * r2 / g.LLn) * (crd[1] - .5 * g.LLy) / r2;
-      }
-    }
-
-    switch (kind) {
-      case KIND_ELECTRON:
-        // electron drift consistent with initial current
-        if ((r1 <= g.LLn) && (r1 >= g.LLn - 2. * g.LLB)) {
-          npt.p[0] = -g.BB * M_PI / (2. * g.LLB) *
-                     cos(M_PI * (g.LLn - r1) / (2. * g.LLB)) / npt.n;
-        }
-        if ((r2 <= g.LLn) && (r2 >= g.LLn - 2. * g.LLB)) {
-          npt.p[0] = -g.BB * M_PI / (2. * g.LLB) *
-                     cos(M_PI * (g.LLn - r2) / (2. * g.LLB)) / npt.n;
-        }
-
-        npt.T[0] = g.TTe;
-        npt.T[1] = g.TTe;
-        npt.T[2] = g.TTe;
-        break;
-      case KIND_ION:
-        npt.T[0] = g.TTi;
-        npt.T[1] = g.TTi;
-        npt.T[2] = g.TTi;
-        break;
-      default:
-        assert(0);
+  if (r2 < g.LLn) {
+    npt.n += (g.nn0 - g.nnb) * sqr(cos(M_PI / 2. * r2 / g.LLn));
+    if (r2 > 0.0) {
+      npt.p[2] += V0 * sin(M_PI * r2 / g.LLn) * crd[2] / r2;
+      npt.p[1] += V0 * sin(M_PI * r2 / g.LLn) * (crd[1] - .5 * g.LLy) / r2;
     }
   }
 
-  // ----------------------------------------------------------------------
-  // setup_initial_partition
-
-  std::vector<uint> setup_initial_partition()
-  {
-    SetupParticles<Mparticles> setup_particles;
-    return setup_particles.setup_partition(
-      grid(), [&](int kind, double crd[3], psc_particle_npt& npt) {
-        this->init_npt(kind, crd, npt);
-      });
-  }
-
-  // ----------------------------------------------------------------------
-  // setup_initial_particles
-
-  void setup_initial_particles(Mparticles& mprts,
-                               std::vector<uint>& n_prts_by_patch)
-  {
-    SetupParticles<Mparticles> setup_particles;
-    setup_particles.setup_particles(
-      mprts, n_prts_by_patch,
-      [&](int kind, double crd[3], psc_particle_npt& npt) {
-        this->init_npt(kind, crd, npt);
-      });
-  }
-
-  // ----------------------------------------------------------------------
-  // setup_initial_fields
-
-  void setup_initial_fields(MfieldsState& mflds)
-  {
-    setupFields(grid(), mflds, [&](int m, double crd[3]) {
-      double z1 = crd[2];
-      double y1 = crd[1] + .5 * g.LLy;
-      double r1 = sqrt(sqr(z1) + sqr(y1));
-      double z2 = crd[2];
-      double y2 = crd[1] - .5 * g.LLy;
-      double r2 = sqrt(sqr(z2) + sqr(y2));
-
-      double rv = 0.;
-      switch (m) {
-        case HZ:
-          if ((r1 < g.LLn) && (r1 > g.LLn - 2 * g.LLB)) {
-            rv += -g.BB * sin(M_PI * (g.LLn - r1) / (2. * g.LLB)) * y1 / r1;
-          }
-          if ((r2 < g.LLn) && (r2 > g.LLn - 2 * g.LLB)) {
-            rv += -g.BB * sin(M_PI * (g.LLn - r2) / (2. * g.LLB)) * y2 / r2;
-          }
-          return rv;
-
-        case HY:
-          if ((r1 < g.LLn) && (r1 > g.LLn - 2 * g.LLB)) {
-            rv += g.BB * sin(M_PI * (g.LLn - r1) / (2. * g.LLB)) * z1 / r1;
-          }
-          if ((r2 < g.LLn) && (r2 > g.LLn - 2 * g.LLB)) {
-            rv += g.BB * sin(M_PI * (g.LLn - r2) / (2. * g.LLB)) * z2 / r2;
-          }
-          return rv;
-
-        case EX:
-          if ((r1 < g.LLn) && (r1 > g.LLn - 2 * g.LLB)) {
-            rv += g.MMach * sqrt(g.TTe / g.MMi) * g.BB *
-                  sin(M_PI * (g.LLn - r1) / (2. * g.LLB)) *
-                  sin(M_PI * r1 / g.LLn);
-          }
-          if ((r2 < g.LLn) && (r2 > g.LLn - 2 * g.LLB)) {
-            rv += g.MMach * sqrt(g.TTe / g.MMi) * g.BB *
-                  sin(M_PI * (g.LLn - r2) / (2. * g.LLB)) *
-                  sin(M_PI * r2 / g.LLn);
-          }
-          return rv;
-
-          // FIXME, JXI isn't really needed anymore (?)
-        case JXI:
-          if ((r1 < g.LLn) && (r1 > g.LLn - 2 * g.LLB)) {
-            rv += g.BB * M_PI / (2. * g.LLB) *
-                  cos(M_PI * (g.LLn - r1) / (2. * g.LLB));
-          }
-          if ((r2 < g.LLn) && (r2 > g.LLn - 2 * g.LLB)) {
-            rv += g.BB * M_PI / (2. * g.LLB) *
-                  cos(M_PI * (g.LLn - r2) / (2. * g.LLB));
-          }
-          return rv;
-
-        default:
-          return 0.;
+  switch (kind) {
+    case KIND_ELECTRON:
+      // electron drift consistent with initial current
+      if ((r1 <= g.LLn) && (r1 >= g.LLn - 2. * g.LLB)) {
+        npt.p[0] = -g.BB * M_PI / (2. * g.LLB) *
+                   cos(M_PI * (g.LLn - r1) / (2. * g.LLB)) / npt.n;
       }
-    });
+      if ((r2 <= g.LLn) && (r2 >= g.LLn - 2. * g.LLB)) {
+        npt.p[0] = -g.BB * M_PI / (2. * g.LLB) *
+                   cos(M_PI * (g.LLn - r2) / (2. * g.LLB)) / npt.n;
+      }
+
+      npt.T[0] = g.TTe;
+      npt.T[1] = g.TTe;
+      npt.T[2] = g.TTe;
+      break;
+    case KIND_ION:
+      npt.T[0] = g.TTi;
+      npt.T[1] = g.TTi;
+      npt.T[2] = g.TTi;
+      break;
+    default:
+      assert(0);
   }
-};
+}
+
+// ======================================================================
+// init_fields
+
+static double init_fields(int m, double crd[3])
+{
+  double z1 = crd[2];
+  double y1 = crd[1] + .5 * g.LLy;
+  double r1 = sqrt(sqr(z1) + sqr(y1));
+  double z2 = crd[2];
+  double y2 = crd[1] - .5 * g.LLy;
+  double r2 = sqrt(sqr(z2) + sqr(y2));
+
+  double rv = 0.;
+  switch (m) {
+    case HZ:
+      if ((r1 < g.LLn) && (r1 > g.LLn - 2 * g.LLB)) {
+        rv += -g.BB * sin(M_PI * (g.LLn - r1) / (2. * g.LLB)) * y1 / r1;
+      }
+      if ((r2 < g.LLn) && (r2 > g.LLn - 2 * g.LLB)) {
+        rv += -g.BB * sin(M_PI * (g.LLn - r2) / (2. * g.LLB)) * y2 / r2;
+      }
+      return rv;
+
+    case HY:
+      if ((r1 < g.LLn) && (r1 > g.LLn - 2 * g.LLB)) {
+        rv += g.BB * sin(M_PI * (g.LLn - r1) / (2. * g.LLB)) * z1 / r1;
+      }
+      if ((r2 < g.LLn) && (r2 > g.LLn - 2 * g.LLB)) {
+        rv += g.BB * sin(M_PI * (g.LLn - r2) / (2. * g.LLB)) * z2 / r2;
+      }
+      return rv;
+
+    case EX:
+      if ((r1 < g.LLn) && (r1 > g.LLn - 2 * g.LLB)) {
+        rv += g.MMach * sqrt(g.TTe / g.MMi) * g.BB *
+              sin(M_PI * (g.LLn - r1) / (2. * g.LLB)) * sin(M_PI * r1 / g.LLn);
+      }
+      if ((r2 < g.LLn) && (r2 > g.LLn - 2 * g.LLB)) {
+        rv += g.MMach * sqrt(g.TTe / g.MMi) * g.BB *
+              sin(M_PI * (g.LLn - r2) / (2. * g.LLB)) * sin(M_PI * r2 / g.LLn);
+      }
+      return rv;
+
+      // FIXME, JXI isn't really needed anymore (?)
+    case JXI:
+      if ((r1 < g.LLn) && (r1 > g.LLn - 2 * g.LLB)) {
+        rv +=
+          g.BB * M_PI / (2. * g.LLB) * cos(M_PI * (g.LLn - r1) / (2. * g.LLB));
+      }
+      if ((r2 < g.LLn) && (r2 > g.LLn - 2 * g.LLB)) {
+        rv +=
+          g.BB * M_PI / (2. * g.LLB) * cos(M_PI * (g.LLn - r2) / (2. * g.LLB));
+      }
+      return rv;
+
+    default:
+      return 0.;
+  }
+}
 
 // ======================================================================
 // run
@@ -412,8 +337,42 @@ static void run()
   outp_params.basename = "prt";
   auto& outp = *new OutputParticles{grid, outp_params};
 
-  PscBubble psc(psc_params, grid, mflds, mprts, balance, collision, checks,
-                marder, outf, outp);
+  // ----------------------------------------------------------------------
+  // Initial conditions
+
+  if (read_checkpoint_filename.empty()) {
+    // --- partition particles and initial balancing
+    mpi_printf(MPI_COMM_WORLD, "**** Partitioning...\n");
+
+    SetupParticles<Mparticles> setup_particles;
+
+    auto n_prts_by_patch = setup_particles.setup_partition(grid, init_npt);
+
+    balance.initial(grid_ptr, n_prts_by_patch);
+    // !!! FIXME! grid is now invalid
+    // balance::initial does not rebalance particles, because the old way of
+    // doing this does't even have the particle data structure created yet --
+    // FIXME?
+    mprts.reset(*grid_ptr);
+
+    // -- set up particles
+    mpi_printf(MPI_COMM_WORLD, "**** Setting up particles...\n");
+    setup_particles.setup_particles(mprts, n_prts_by_patch, init_npt);
+
+    // -- set up fields
+    mpi_printf(MPI_COMM_WORLD, "**** Setting up fields...\n");
+    setupFields(*grid_ptr, mflds, init_fields);
+  }
+
+  auto psc =
+    makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts, balance,
+                                 collision, checks, marder, outf, outp);
+
+  // FIXME, checkpoint reading should be moved to before the integrator
+  if (!read_checkpoint_filename.empty()) {
+    mpi_printf(MPI_COMM_WORLD, "**** Reading checkpoint...\n");
+    psc.read_checkpoint(read_checkpoint_filename);
+  }
 
   psc.integrate();
 }

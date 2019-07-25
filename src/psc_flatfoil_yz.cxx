@@ -489,7 +489,7 @@ void run()
     setupFields(*grid_ptr, mflds, lf_init_fields);
   }
 
-  auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
+   auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
                                           balance, collision, checks, marder,
                                           outf, outp, lf_inject);
 

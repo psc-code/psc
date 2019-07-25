@@ -2,6 +2,15 @@
 #ifndef PSC_INTEGRATOR_HXX
 #define PSC_INTEGRATOR_HXX
 
+namespace
+{
+
+template <typename Mparticles>
+void injectNone(const Grid_t& grid, Mparticles& mprts)
+{}
+
+} // namespace
+
 // ======================================================================
 // PscIntegrator
 
@@ -69,6 +78,27 @@ PscIntegrator<PscConfig, InjectFunc> makePscIntegrator(
 {
   return {params, grid,   mflds, mprts, balance,         collision,
           checks, marder, outf,  outp,  inject_particles};
+}
+
+template <typename PscConfig, typename MfieldsState, typename Mparticles,
+          typename Balance, typename Collision, typename Checks,
+          typename Marder, typename OutputParticles>
+PscIntegrator<PscConfig, decltype(injectNone<Mparticles>)> makePscIntegrator(
+  const PscParams& params, Grid_t& grid, MfieldsState& mflds, Mparticles& mprts,
+  Balance& balance, Collision& collision, Checks& checks, Marder& marder,
+  OutputFieldsC& outf, OutputParticles& outp)
+{
+  return {params,
+          grid,
+          mflds,
+          mprts,
+          balance,
+          collision,
+          checks,
+          marder,
+          outf,
+          outp,
+          injectNone<Mparticles>};
 }
 
 #endif
