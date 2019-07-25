@@ -7,11 +7,14 @@
 //
 // FIXME, consolidate with host mfields write
 
-template <>
-class kg::io::Descr<MfieldsCuda>
+template <typename MF>
+class kg::io::Descr<
+  MF, typename std::enable_if<std::is_same<MF, MfieldsCuda>::value ||
+			      std::is_same<MF, MfieldsStateCuda>::value,
+                              void>::type>
 {
 public:
-  using Mfields = MfieldsCuda;
+  using Mfields = MF;
   using DataType = typename Mfields::real_t;
 
   void put(kg::io::Engine& writer, const Mfields& mflds_cuda,

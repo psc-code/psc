@@ -1,6 +1,8 @@
 
 #include <kg/io.h>
 
+#include "psc_particles_single.h"
+
 template <typename BS>
 class kg::io::Descr<MparticlesCuda<BS>>
 {
