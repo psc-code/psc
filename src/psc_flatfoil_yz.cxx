@@ -141,24 +141,6 @@ using OutputParticles = PscConfig::OutputParticles;
 using Inject = typename InjectSelector<Mparticles, InjectFoil, Dim>::Inject;
 using Heating = typename HeatingSelector<Mparticles>::Heating;
 
-// FIXME, this really shouldn't be here
-using FieldsItem_E_cc = FieldsItemFields<ItemLoopPatches<Item_e_cc>>;
-using FieldsItem_H_cc = FieldsItemFields<ItemLoopPatches<Item_h_cc>>;
-using FieldsItem_J_cc = FieldsItemFields<ItemLoopPatches<Item_j_cc>>;
-
-template <typename Mparticles>
-using FieldsItem_n_1st_cc =
-  FieldsItemMoment<ItemMomentAddBnd<Moment_n_1st<Mparticles, MfieldsC>>>;
-template <typename Mparticles>
-using FieldsItem_v_1st_cc =
-  FieldsItemMoment<ItemMomentAddBnd<Moment_v_1st<Mparticles, MfieldsC>>>;
-template <typename Mparticles>
-using FieldsItem_p_1st_cc =
-  FieldsItemMoment<ItemMomentAddBnd<Moment_p_1st<Mparticles, MfieldsC>>>;
-template <typename Mparticles>
-using FieldsItem_T_1st_cc =
-  FieldsItemMoment<ItemMomentAddBnd<Moment_T_1st<Mparticles, MfieldsC>>>;
-
 // ======================================================================
 // Global parameters
 //
@@ -203,7 +185,7 @@ double d_i;
 // ======================================================================
 // setupGrid
 //
-// this helper function is responsible for setting up the "Grid",
+// This helper function is responsible for setting up the "Grid",
 // which is really more than just the domain and its decomposition, it
 // also encompasses PC normalization parameters, information about the
 // particle kinds, etc.
@@ -507,7 +489,7 @@ void run()
     setupFields(*grid_ptr, mflds, lf_init_fields);
   }
 
-  auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
+   auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
                                           balance, collision, checks, marder,
                                           outf, outp, lf_inject);
 

@@ -213,3 +213,4 @@ private:
   mrc_io *io_; //< for debug dumping
 };
 
+#undef define_dxdydz
