@@ -6,14 +6,13 @@
 #include "psc_fields_single.h"
 #ifdef USE_CUDA
 #include "psc_fields_cuda.h"
+#include "psc_fields_cuda.inl"
 #endif
 #include "setup_fields.hxx"
 
 #ifdef USE_CUDA
 #include "../libpsc/cuda/setup_fields_cuda.hxx"
 #endif
-
-#undef USE_CUDA // FIXME, io not implemented for MfieldsCuda
 
 #include "kg/io.h"
 #include "fields3d.inl"
