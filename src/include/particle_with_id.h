@@ -26,7 +26,7 @@ struct ParticleWithId
   KG_INLINE bool operator==(const ParticleWithId& other) const
   {
     return (x == other.x && qni_wni == other.qni_wni &&
-	    u == other.u && kind == other.kind && id == other.id);
+	    u == other.u && kind == other.kind && id_ == other.id_);
   }
 
   KG_INLINE bool operator!=(const ParticleWithId& other) const { return !(*this == other); }
@@ -38,6 +38,7 @@ public:
   Real3 u;
   int kind;
   real_t qni_wni;
+private:
   int id_;
 };
 

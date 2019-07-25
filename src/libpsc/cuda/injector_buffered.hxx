@@ -37,7 +37,7 @@ struct InjectorBuffered
       auto x = Double3::fromPointer(new_prt.x) - patch.xb;
       auto u = Double3::fromPointer(new_prt.u);
       real_t q = injector_.mprts_.grid().kinds[new_prt.kind].q;
-      raw({Real3(x), Real3(u), q * real_t(new_prt.w), new_prt.kind});
+      raw({Real3(x), Real3(u), q * real_t(new_prt.w), new_prt.kind, new_prt.id});
     }
 
     // FIXME do we want to keep this? or just have a particle_inject version instead?
