@@ -41,47 +41,53 @@ struct PscBubbleParams
   double MMi;
 };
 
+// ======================================================================
+// Global parameters
+
+namespace
+{
+
+// Parameters specific to this run. They don't really need to be collected in a struct,
+// but maybe it's nice that they are
+PscBubbleParams g;
+
+// This is a set of generic PSC params (see include/psc.hxx),
+// like number of steps to run, etc, which also should be set by the case
+PscParams psc_params;
+
+}
+
+// ======================================================================
+// PSC configuration
+//
+// This sets up compile-time configuration for the code, in particular
+// what data structures and algorithms to use
+//
+// EDIT to change order / floating point type / cuda / 2d/3d
+
 using PscConfig = PscConfig1vbecSingle<dim_yz>;
 
 // ======================================================================
 // PscBubble
 
-struct PscBubble : Psc<PscConfig>, PscBubbleParams
+struct PscBubble : Psc<PscConfig>
 {
   using DIM = PscConfig::dim_t;
 
   // ----------------------------------------------------------------------
   // ctor
 
-  PscBubble()
+  PscBubble(const PscParams& psc_params)
   {
+    p_ = psc_params;
+    
     auto comm = grid().comm();
 
     mpi_printf(comm, "*** Setting up...\n");
 
-    PscBubbleParams params;
-    
-    params.BB = .07;
-    params.nnb = .1;
-    params.nn0 = 1.;
-    params.MMach = 3.;
-    params.LLn = 200.;
-    params.LLB = 200./6.;
-    params.TTe = .02;
-    params.TTi = .02;
-    params.MMi = 100.;
-    
-    params.LLy = 2. * params.LLn;
-    params.LLz = 3. * params.LLn;
-
-    static_cast<PscBubbleParams&>(*this) = params;
-
-    p_.nmax = 1000; //32000;
-    p_.stats_every = 100;
-  
     auto grid_domain = Grid_t::Domain{{1, 128, 512},
-				      {params.LLn, params.LLy, params.LLz},
-				      {0., -.5 * params.LLy, -.5 * params.LLz},
+				      {g.LLn, g.LLy, g.LLz},
+				      {0., -.5 * g.LLy, -.5 * g.LLz},
 				      {1, 1, 4}};
     
     auto grid_bc = psc::grid::BC{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
@@ -91,7 +97,7 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
     
     auto kinds = Grid_t::Kinds{{ -1., 1., "e"}, { 1., 100., "i" }};
     
-    mpi_printf(comm, "lambda_D = %g\n", sqrt(params.TTe));
+    mpi_printf(comm, "lambda_D = %g\n", sqrt(g.TTe));
     
     // --- generic setup
     auto norm_params = Grid_t::NormalizationParams::dimensionless();
@@ -159,45 +165,45 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
 
   void init_npt(int kind, double crd[3], psc_particle_npt& npt)
   {
-    double V0 = MMach * sqrt(TTe / MMi);
+    double V0 = g.MMach * sqrt(g.TTe / g.MMi);
     
-    double r1 = sqrt(sqr(crd[2]) + sqr(crd[1] + .5 * LLy));
-    double r2 = sqrt(sqr(crd[2]) + sqr(crd[1] - .5 * LLy));
+    double r1 = sqrt(sqr(crd[2]) + sqr(crd[1] + .5 * g.LLy));
+    double r2 = sqrt(sqr(crd[2]) + sqr(crd[1] - .5 * g.LLy));
     
-    npt.n = nnb;
-    if (r1 < LLn) {
-      npt.n += (nn0 - nnb) * sqr(cos(M_PI / 2. * r1 / LLn));
+    npt.n = g.nnb;
+    if (r1 < g.LLn) {
+      npt.n += (g.nn0 - g.nnb) * sqr(cos(M_PI / 2. * r1 / g.LLn));
       if (r1 > 0.0) {
-	npt.p[2] += V0 * sin(M_PI * r1 / LLn) * crd[2] / r1;
-	npt.p[1] += V0 * sin(M_PI * r1 / LLn) * (crd[1] + .5 * LLy) / r1;
+	npt.p[2] += V0 * sin(M_PI * r1 / g.LLn) * crd[2] / r1;
+	npt.p[1] += V0 * sin(M_PI * r1 / g.LLn) * (crd[1] + .5 * g.LLy) / r1;
       }
     }
-    if (r2 < LLn) {
-      npt.n += (nn0 - nnb) * sqr(cos(M_PI / 2. * r2 / LLn));
+    if (r2 < g.LLn) {
+      npt.n += (g.nn0 - g.nnb) * sqr(cos(M_PI / 2. * r2 / g.LLn));
       if (r2 > 0.0) {
-	npt.p[2] += V0 * sin(M_PI * r2 / LLn) * crd[2] / r2;
-	npt.p[1] += V0 * sin(M_PI * r2 / LLn) * (crd[1] - .5 * LLy) / r2;
+	npt.p[2] += V0 * sin(M_PI * r2 / g.LLn) * crd[2] / r2;
+	npt.p[1] += V0 * sin(M_PI * r2 / g.LLn) * (crd[1] - .5 * g.LLy) / r2;
       }
     }
     
     switch (kind) {
     case 0: // electrons
       // electron drift consistent with initial current
-      if ((r1 <= LLn) && (r1 >= LLn - 2.*LLB)) {
-	npt.p[0] = - BB * M_PI/(2.*LLB) * cos(M_PI * (LLn-r1)/(2.*LLB)) / npt.n;
+      if ((r1 <= g.LLn) && (r1 >= g.LLn - 2.*g.LLB)) {
+	npt.p[0] = - g.BB * M_PI/(2.*g.LLB) * cos(M_PI * (g.LLn-r1)/(2.*g.LLB)) / npt.n;
       }
-      if ((r2 <= LLn) && (r2 >= LLn - 2.*LLB)) {
-	npt.p[0] = - BB * M_PI/(2.*LLB) * cos(M_PI * (LLn-r2)/(2.*LLB)) / npt.n;
+      if ((r2 <= g.LLn) && (r2 >= g.LLn - 2.*g.LLB)) {
+	npt.p[0] = - g.BB * M_PI/(2.*g.LLB) * cos(M_PI * (g.LLn-r2)/(2.*g.LLB)) / npt.n;
       }
       
-      npt.T[0] = TTe;
-      npt.T[1] = TTe;
-      npt.T[2] = TTe;
+      npt.T[0] = g.TTe;
+      npt.T[1] = g.TTe;
+      npt.T[2] = g.TTe;
       break;
     case 1: // ions
-      npt.T[0] = TTi;
-      npt.T[1] = TTi;
-      npt.T[2] = TTi;
+      npt.T[0] = g.TTi;
+      npt.T[1] = g.TTi;
+      npt.T[2] = g.TTi;
       break;
     default:
       assert(0);
@@ -233,50 +239,50 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
   {
     setupFields(grid(), mflds, [&](int m, double crd[3]) {
 	double z1 = crd[2];
-	double y1 = crd[1] + .5 * LLy;
+	double y1 = crd[1] + .5 * g.LLy;
 	double r1 = sqrt(sqr(z1) + sqr(y1));
 	double z2 = crd[2];
-	double y2 = crd[1] - .5 * LLy;
+	double y2 = crd[1] - .5 * g.LLy;
 	double r2 = sqrt(sqr(z2) + sqr(y2));
 
 	double rv = 0.;
 	switch (m) {
 	case HZ:
-	  if ( (r1 < LLn) && (r1 > LLn - 2*LLB) ) {
-	    rv += - BB * sin(M_PI * (LLn - r1)/(2.*LLB)) * y1 / r1;
+	  if ( (r1 < g.LLn) && (r1 > g.LLn - 2*g.LLB) ) {
+	    rv += - g.BB * sin(M_PI * (g.LLn - r1)/(2.*g.LLB)) * y1 / r1;
 	  }
-	  if ( (r2 < LLn) && (r2 > LLn - 2*LLB) ) {
-	    rv += - BB * sin(M_PI * (LLn - r2)/(2.*LLB)) * y2 / r2;
+	  if ( (r2 < g.LLn) && (r2 > g.LLn - 2*g.LLB) ) {
+	    rv += - g.BB * sin(M_PI * (g.LLn - r2)/(2.*g.LLB)) * y2 / r2;
 	  }
 	  return rv;
 	  
 	case HY:
-	  if ( (r1 < LLn) && (r1 > LLn - 2*LLB) ) {
-	    rv += BB * sin(M_PI * (LLn - r1)/(2.*LLB)) * z1 / r1;
+	  if ( (r1 < g.LLn) && (r1 > g.LLn - 2*g.LLB) ) {
+	    rv += g.BB * sin(M_PI * (g.LLn - r1)/(2.*g.LLB)) * z1 / r1;
 	  }
-	  if ( (r2 < LLn) && (r2 > LLn - 2*LLB) ) {
-	    rv += BB * sin(M_PI * (LLn - r2)/(2.*LLB)) * z2 / r2;
+	  if ( (r2 < g.LLn) && (r2 > g.LLn - 2*g.LLB) ) {
+	    rv += g.BB * sin(M_PI * (g.LLn - r2)/(2.*g.LLB)) * z2 / r2;
 	  }
 	  return rv;
 	  
 	case EX:
-	  if ( (r1 < LLn) && (r1 > LLn - 2*LLB) ) {
-	    rv += MMach * sqrt(TTe/MMi) * BB *
-	      sin(M_PI * (LLn - r1)/(2.*LLB)) * sin(M_PI * r1 / LLn);
+	  if ( (r1 < g.LLn) && (r1 > g.LLn - 2*g.LLB) ) {
+	    rv += g.MMach * sqrt(g.TTe/g.MMi) * g.BB *
+	      sin(M_PI * (g.LLn - r1)/(2.*g.LLB)) * sin(M_PI * r1 / g.LLn);
 	  }
-	  if ( (r2 < LLn) && (r2 > LLn - 2*LLB) ) {
-	    rv += MMach * sqrt(TTe/MMi) * BB *
-	      sin(M_PI * (LLn - r2)/(2.*LLB)) * sin(M_PI * r2 / LLn);
+	  if ( (r2 < g.LLn) && (r2 > g.LLn - 2*g.LLB) ) {
+	    rv += g.MMach * sqrt(g.TTe/g.MMi) * g.BB *
+	      sin(M_PI * (g.LLn - r2)/(2.*g.LLB)) * sin(M_PI * r2 / g.LLn);
 	  }
 	  return rv;
 
 	  // FIXME, JXI isn't really needed anymore (?)
 	case JXI:
-	  if ( (r1 < LLn) && (r1 > LLn - 2*LLB) ) {
-	    rv += BB * M_PI/(2.*LLB) * cos(M_PI * (LLn - r1)/(2.*LLB));
+	  if ( (r1 < g.LLn) && (r1 > g.LLn - 2*g.LLB) ) {
+	    rv += g.BB * M_PI/(2.*g.LLB) * cos(M_PI * (g.LLn - r1)/(2.*g.LLB));
 	  }
-	  if ( (r2 < LLn) && (r2 > LLn - 2*LLB) ) {
-	    rv += BB * M_PI/(2.*LLB) * cos(M_PI * (LLn - r2)/(2.*LLB));
+	  if ( (r2 < g.LLn) && (r2 > g.LLn - 2*g.LLB) ) {
+	    rv += g.BB * M_PI/(2.*g.LLB) * cos(M_PI * (g.LLn - r2)/(2.*g.LLB));
 	  }
 	  return rv;
 	  
@@ -288,6 +294,34 @@ struct PscBubble : Psc<PscConfig>, PscBubbleParams
 };
 
 // ======================================================================
+// run
+
+static void run()
+{
+  g.BB = .07;
+  g.nnb = .1;
+  g.nn0 = 1.;
+  g.MMach = 3.;
+  g.LLn = 200.;
+  g.LLB = 200./6.;
+  g.TTe = .02;
+  g.TTi = .02;
+  g.MMi = 100.;
+  
+  g.LLy = 2. * g.LLn;
+  g.LLz = 3. * g.LLn;
+
+  psc_params.nmax = 1000; //32000;
+  psc_params.stats_every = 100;
+  
+  
+  PscBubble psc{psc_params};
+
+  psc.initialize();
+  psc.integrate();
+}
+
+// ======================================================================
 // main
 
 int
@@ -295,13 +329,6 @@ main(int argc, char **argv)
 {
   psc_init(argc, argv);
 
-  auto psc = new PscBubble;
-
-  psc->initialize();
-  psc->integrate();
-
-  delete psc;
-  
   libmrc_params_finalize();
   MPI_Finalize();
 
