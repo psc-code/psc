@@ -149,8 +149,8 @@ TEST(Grid, adios2_write)
     EXPECT_EQ(grid.kinds.size(), 2);
     EXPECT_EQ(grid.kinds[0].q, -1.);
     EXPECT_EQ(grid.kinds[1].q,  1.);
-    EXPECT_EQ(strcmp(grid.kinds[0].name, "electron"), 0);
-    EXPECT_EQ(strcmp(grid.kinds[1].name, "ion"), 0);
+    EXPECT_EQ(grid.kinds[0].name, "electron");
+    EXPECT_EQ(grid.kinds[1].name, "ion");
   }
 }
 #endif
