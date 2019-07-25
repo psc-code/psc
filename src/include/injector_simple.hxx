@@ -29,7 +29,7 @@ struct InjectorSimple
       auto prt = Particle{{real_t(new_prt.x[0] - patch.xb[0]), real_t(new_prt.x[1] - patch.xb[1]), real_t(new_prt.x[2] - patch.xb[2])},
 			  {real_t(new_prt.u[0]), real_t(new_prt.u[1]), real_t(new_prt.u[2])},
 			  real_t(new_prt.w * mprts_.grid().kinds[new_prt.kind].q),
-			  new_prt.kind, -1};
+			  new_prt.kind, new_prt.id};
       mprts_[p_].push_back(prt);
     }
     

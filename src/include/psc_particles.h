@@ -16,6 +16,7 @@ struct particle_inject
   double u[3];
   double w;
   int kind;
+  int id;
 };
 
 #define MP_DONT_COPY (0x1)
