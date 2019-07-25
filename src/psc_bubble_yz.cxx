@@ -65,100 +65,110 @@ PscParams psc_params;
 //
 // EDIT to change order / floating point type / cuda / 2d/3d
 
-using PscConfig = PscConfig1vbecSingle<dim_yz>;
+using Dim = dim_yz;
+using PscConfig = PscConfig1vbecSingle<Dim>;
+
+// ----------------------------------------------------------------------
+
+using MfieldsState = PscConfig::MfieldsState;
+using Mparticles = PscConfig::Mparticles;
+using Balance = PscConfig::Balance_t;
+using Collision = PscConfig::Collision_t;
+using Checks = PscConfig::Checks_t;
+using Marder = PscConfig::Marder_t;
+using OutputParticles = PscConfig::OutputParticles;
+
+// ======================================================================
+// setupGrid
+//
+// This helper function is responsible for setting up the "Grid",
+// which is really more than just the domain and its decomposition, it
+// also encompasses PC normalization parameters, information about the
+// particle kinds, etc.
+
+Grid_t* setupGrid()
+{
+  auto domain = Grid_t::Domain{{1, 128, 512},
+                               {g.LLn, g.LLy, g.LLz},
+                               {0., -.5 * g.LLy, -.5 * g.LLz},
+                               {1, 1, 4}};
+
+  auto bc =
+    psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
+                  {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
+                  {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC},
+                  {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC}};
+
+  auto kinds = Grid_t::Kinds(NR_KINDS);
+  kinds[KIND_ELECTRON] = {-1., 1., "e"};
+  kinds[KIND_ION] = {1., 100., "i"};
+
+  mpi_printf(MPI_COMM_WORLD, "lambda_D = %g\n", sqrt(g.TTe));
+
+  // --- generic setup
+  auto norm_params = Grid_t::NormalizationParams::dimensionless();
+  norm_params.nicell = 100;
+
+  double dt = psc_params.cfl * courant_length(domain);
+  Grid_t::Normalization norm{norm_params};
+
+  Int3 ibn = {2, 2, 2};
+  if (Dim::InvarX::value) {
+    ibn[0] = 0;
+  }
+  if (Dim::InvarY::value) {
+    ibn[1] = 0;
+  }
+  if (Dim::InvarZ::value) {
+    ibn[2] = 0;
+  }
+
+  return new Grid_t{domain, bc, kinds, norm, dt, -1, ibn};
+}
 
 // ======================================================================
 // PscBubble
 
 struct PscBubble : Psc<PscConfig>
 {
-  using DIM = PscConfig::dim_t;
+  using Base = Psc<PscConfig>;
 
   // ----------------------------------------------------------------------
   // ctor
 
-  PscBubble(const PscParams& psc_params)
+  PscBubble(const PscParams& params, Grid_t& grid, MfieldsState& mflds,
+            Mparticles& mprts, Balance& balance, Collision& collision,
+	    Checks& checks, Marder& marder)/*, OutputFieldsC& outf,
+                     OutputParticles& outp)*/
   {
-    p_ = psc_params;
+    auto comm = grid.comm();
 
-    auto comm = grid().comm();
+    Base::p_ = params;
 
-    mpi_printf(comm, "*** Setting up...\n");
-
-    auto grid_domain = Grid_t::Domain{{1, 128, 512},
-                                      {g.LLn, g.LLy, g.LLz},
-                                      {0., -.5 * g.LLy, -.5 * g.LLz},
-                                      {1, 1, 4}};
-
-    auto grid_bc =
-      psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
-                    {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
-                    {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC},
-                    {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC}};
-
-    auto kinds = Grid_t::Kinds{{-1., 1., "e"}, {1., 100., "i"}};
-
-    mpi_printf(comm, "lambda_D = %g\n", sqrt(g.TTe));
-
-    // --- generic setup
-    auto norm_params = Grid_t::NormalizationParams::dimensionless();
-    norm_params.nicell = 100;
-
-    double dt = p_.cfl * courant_length(grid_domain);
-    define_grid(grid_domain, grid_bc, kinds, dt, norm_params);
-
-    define_field_array();
-
-    mprts_.reset(new Mparticles{grid()});
-
-    // -- Balance
-    p_.balance_interval = 0;
-    balance_.reset(new Balance_t{
-      p_.balance_interval,
-      .1,
-    });
-
-    // -- Sort
-    // FIXME, needs a way to make it gets set?
-    p_.sort_interval = 10;
-
-    // -- Collision
-    int collision_interval = 10;
-    double collision_nu = .1;
-    collision_.reset(new Collision_t{grid(), collision_interval, collision_nu});
-
-    // -- Checks
-    ChecksParams checks_params;
-    checks_.reset(new Checks_t{grid(), comm, checks_params});
-
-    // -- Marder correction
-    double marder_diffusion = 0.9;
-    int marder_loop = 3;
-    bool marder_dump = false;
-    p_.marder_interval = 0 * 5;
-    marder_.reset(
-      new Marder_t(grid(), marder_diffusion, marder_loop, marder_dump));
+    Base::define_grid(grid);
+    Base::define_field_array(mflds);
+    Base::define_particles(mprts);
 
     // -- output fields
     OutputFieldsCParams outf_params;
     outf_params.pfield_step = 10;
     std::vector<std::unique_ptr<FieldsItemBase>> outf_items;
     outf_items.emplace_back(
-      new FieldsItemFields<ItemLoopPatches<Item_e_cc>>(grid()));
+      new FieldsItemFields<ItemLoopPatches<Item_e_cc>>(grid));
     outf_items.emplace_back(
-      new FieldsItemFields<ItemLoopPatches<Item_h_cc>>(grid()));
+      new FieldsItemFields<ItemLoopPatches<Item_h_cc>>(grid));
     outf_items.emplace_back(
-      new FieldsItemFields<ItemLoopPatches<Item_j_cc>>(grid()));
-    outf_items.emplace_back(
-      new FieldsItemMoment<
-        ItemMomentAddBnd<Moment_n_1st<Mparticles, MfieldsC>>>(grid()));
+      new FieldsItemFields<ItemLoopPatches<Item_j_cc>>(grid));
     outf_items.emplace_back(
       new FieldsItemMoment<
-        ItemMomentAddBnd<Moment_v_1st<Mparticles, MfieldsC>>>(grid()));
+        ItemMomentAddBnd<Moment_n_1st<Mparticles, MfieldsC>>>(grid));
     outf_items.emplace_back(
       new FieldsItemMoment<
-        ItemMomentAddBnd<Moment_T_1st<Mparticles, MfieldsC>>>(grid()));
-    outf_.reset(new OutputFieldsC{grid(), outf_params, std::move(outf_items)});
+        ItemMomentAddBnd<Moment_v_1st<Mparticles, MfieldsC>>>(grid));
+    outf_items.emplace_back(
+      new FieldsItemMoment<
+        ItemMomentAddBnd<Moment_T_1st<Mparticles, MfieldsC>>>(grid));
+    outf_.reset(new OutputFieldsC{grid, outf_params, std::move(outf_items)});
 
     // --- partition particles and initial balancing
     mpi_printf(comm, "**** Partitioning...\n");
@@ -167,7 +177,7 @@ struct PscBubble : Psc<PscConfig>
     // balance::initial does not rebalance particles, because the old way of
     // doing this does't even have the particle data structure created yet --
     // FIXME?
-    mprts_->reset(grid());
+    mprts_->reset(grid);
 
     mpi_printf(comm, "**** Setting up particles...\n");
     setup_initial_particles(*mprts_, n_prts_by_patch);
@@ -202,7 +212,7 @@ struct PscBubble : Psc<PscConfig>
     }
 
     switch (kind) {
-      case 0: // electrons
+      case KIND_ELECTRON:
         // electron drift consistent with initial current
         if ((r1 <= g.LLn) && (r1 >= g.LLn - 2. * g.LLB)) {
           npt.p[0] = -g.BB * M_PI / (2. * g.LLB) *
@@ -217,7 +227,7 @@ struct PscBubble : Psc<PscConfig>
         npt.T[1] = g.TTe;
         npt.T[2] = g.TTe;
         break;
-      case 1: // ions
+      case KIND_ION:
         npt.T[0] = g.TTi;
         npt.T[1] = g.TTi;
         npt.T[2] = g.TTi;
@@ -323,6 +333,26 @@ struct PscBubble : Psc<PscConfig>
 
 static void run()
 {
+  mpi_printf(MPI_COMM_WORLD, "*** Setting up...\n");
+
+  // ----------------------------------------------------------------------
+  // Set up a bunch of parameters
+
+  // -- set some generic PSC parameters
+  psc_params.nmax = 1000; // 32000;
+  psc_params.stats_every = 100;
+
+  // -- start from checkpoint:
+  //
+  // Uncomment when wanting to start from a checkpoint, ie.,
+  // instead of setting up grid, particles and state fields here,
+  // they'll be read from a file
+  // FIXME: This parameter would be a good candidate to be provided
+  // on the command line, rather than requiring recompilation when change.
+
+  // read_checkpoint_filename = "checkpoint_500.bp";
+
+  // -- Set some parameters specific to this case
   g.BB = .07;
   g.nnb = .1;
   g.nn0 = 1.;
@@ -336,10 +366,42 @@ static void run()
   g.LLy = 2. * g.LLn;
   g.LLz = 3. * g.LLn;
 
-  psc_params.nmax = 1000; // 32000;
-  psc_params.stats_every = 100;
+  // ----------------------------------------------------------------------
+  // Set up grid, state fields, particles
 
-  PscBubble psc{psc_params};
+  auto grid_ptr = setupGrid();
+  auto& grid = *grid_ptr;
+  auto& mflds = *new MfieldsState{grid};
+  auto& mprts = *new Mparticles{grid};
+
+  // ----------------------------------------------------------------------
+  // Set up various objects needed to run this case
+
+  // -- Balance
+  psc_params.balance_interval = 0;
+  auto& balance = *new Balance{psc_params.balance_interval, .1};
+
+  // -- Sort
+  psc_params.sort_interval = 10;
+
+  // -- Collision
+  int collision_interval = 10;
+  double collision_nu = .1;
+  auto& collision = *new Collision{grid, collision_interval, collision_nu};
+
+  // -- Checks
+  ChecksParams checks_params{};
+  auto& checks = *new Checks{grid, MPI_COMM_WORLD, checks_params};
+
+  // -- Marder correction
+  double marder_diffusion = 0.9;
+  int marder_loop = 3;
+  bool marder_dump = false;
+  psc_params.marder_interval = 0; // 5
+  auto& marder = *new Marder(grid, marder_diffusion, marder_loop, marder_dump);
+
+  PscBubble psc(psc_params, grid, mflds, mprts, balance, collision, checks,
+                marder);
 
   psc.initialize();
   psc.integrate();
@@ -351,6 +413,8 @@ static void run()
 int main(int argc, char** argv)
 {
   psc_init(argc, argv);
+
+  run();
 
   libmrc_params_finalize();
   MPI_Finalize();
