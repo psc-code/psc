@@ -63,6 +63,8 @@ I create another little script file ``cmake.sh`` in the ``build-summit/`` direct
       -DCMAKE_BUILD_TYPE=Release \
       -DCMAKE_C_COMPILER=mpicc \
       -DCMAKE_CXX_COMPILER=mpicxx \
+      -DADIOS2_ROOT=/ccs/home/kaig1/build/ADIOS2/build-summit/install \
+      -DUSE_CUDA=ON \
    ..
 
 Now, invoke cmake:
