@@ -15,11 +15,12 @@ struct ParticleWithId
 
   ParticleWithId() = default;
 
-  KG_INLINE ParticleWithId(Real3 x, Real3 u, real_t qni_wni, int kind)
+  KG_INLINE ParticleWithId(Real3 x, Real3 u, real_t qni_wni, int kind, int id)
     : x{x},
       u{u},
       kind{kind},
-      qni_wni{qni_wni}
+      qni_wni{qni_wni},
+      id_{id}
   {}
 
   KG_INLINE bool operator==(const ParticleWithId& other) const
@@ -30,12 +31,14 @@ struct ParticleWithId
 
   KG_INLINE bool operator!=(const ParticleWithId& other) const { return !(*this == other); }
 
+  KG_INLINE int id() const { return id_; }
+
 public:
   Real3 x;
   Real3 u;
   int kind;
   real_t qni_wni;
-  int id;
+  int id_;
 };
 
 template <typename R>
@@ -55,7 +58,7 @@ public:
     func("uz", [](Particle& prt) { return &prt.u[2]; });
     func("kind", [](Particle& prt) { return &prt.kind; });
     func("qni_wni", [](Particle& prt) { return &prt.qni_wni; });
-    func("id", [](Particle& prt) { return &prt.id; });
+    func("id", [](Particle& prt) { return &prt.id_; });
   }
 };
 
