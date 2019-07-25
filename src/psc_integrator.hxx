@@ -44,7 +44,6 @@ struct PscIntegrator : Psc<PscConfig>
     Base::outp_.reset(&outp);
 
     Base::init();
-
     Base::initialize();
   }
 

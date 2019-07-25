@@ -138,8 +138,8 @@ struct PscBubble : Psc<PscConfig>
 
   PscBubble(const PscParams& params, Grid_t& grid, MfieldsState& mflds,
             Mparticles& mprts, Balance& balance, Collision& collision,
-	    Checks& checks, Marder& marder)/*, OutputFieldsC& outf,
-                     OutputParticles& outp)*/
+            Checks& checks, Marder& marder, OutputFieldsC& outf,
+	    OutputParticles& outp)
   {
     auto comm = grid.comm();
 
@@ -149,26 +149,13 @@ struct PscBubble : Psc<PscConfig>
     Base::define_field_array(mflds);
     Base::define_particles(mprts);
 
-    // -- output fields
-    OutputFieldsCParams outf_params;
-    outf_params.pfield_step = 10;
-    std::vector<std::unique_ptr<FieldsItemBase>> outf_items;
-    outf_items.emplace_back(
-      new FieldsItemFields<ItemLoopPatches<Item_e_cc>>(grid));
-    outf_items.emplace_back(
-      new FieldsItemFields<ItemLoopPatches<Item_h_cc>>(grid));
-    outf_items.emplace_back(
-      new FieldsItemFields<ItemLoopPatches<Item_j_cc>>(grid));
-    outf_items.emplace_back(
-      new FieldsItemMoment<
-        ItemMomentAddBnd<Moment_n_1st<Mparticles, MfieldsC>>>(grid));
-    outf_items.emplace_back(
-      new FieldsItemMoment<
-        ItemMomentAddBnd<Moment_v_1st<Mparticles, MfieldsC>>>(grid));
-    outf_items.emplace_back(
-      new FieldsItemMoment<
-        ItemMomentAddBnd<Moment_T_1st<Mparticles, MfieldsC>>>(grid));
-    outf_.reset(new OutputFieldsC{grid, outf_params, std::move(outf_items)});
+    Base::balance_.reset(&balance);
+    Base::collision_.reset(&collision);
+    Base::checks_.reset(&checks);
+    Base::marder_.reset(&marder);
+
+    Base::outf_.reset(&outf);
+    Base::outp_.reset(&outp);
 
     // --- partition particles and initial balancing
     mpi_printf(comm, "**** Partitioning...\n");
@@ -185,7 +172,8 @@ struct PscBubble : Psc<PscConfig>
     mpi_printf(comm, "**** Setting up fields...\n");
     setup_initial_fields(*mflds_);
 
-    init();
+    Base::init();
+    Base::initialize();
   }
 
   void init_npt(int kind, double crd[3], psc_particle_npt& npt)
@@ -400,10 +388,33 @@ static void run()
   psc_params.marder_interval = 0; // 5
   auto& marder = *new Marder(grid, marder_diffusion, marder_loop, marder_dump);
 
-  PscBubble psc(psc_params, grid, mflds, mprts, balance, collision, checks,
-                marder);
+  // ----------------------------------------------------------------------
+  // Set up output
+  //
+  // FIXME, this really is too complicated and not very flexible
 
-  psc.initialize();
+  // -- output fields
+  OutputFieldsCParams outf_params{};
+  outf_params.pfield_step = 10;
+  std::vector<std::unique_ptr<FieldsItemBase>> outf_items;
+  outf_items.emplace_back(new FieldsItem_E_cc(grid));
+  outf_items.emplace_back(new FieldsItem_H_cc(grid));
+  outf_items.emplace_back(new FieldsItem_J_cc(grid));
+  outf_items.emplace_back(new FieldsItem_n_1st_cc<Mparticles>(grid));
+  outf_items.emplace_back(new FieldsItem_v_1st_cc<Mparticles>(grid));
+  outf_items.emplace_back(new FieldsItem_T_1st_cc<Mparticles>(grid));
+  auto& outf = *new OutputFieldsC{grid, outf_params, std::move(outf_items)};
+
+  // -- output particles
+  OutputParticlesParams outp_params{};
+  outp_params.every_step = 0;
+  outp_params.data_dir = ".";
+  outp_params.basename = "prt";
+  auto& outp = *new OutputParticles{grid, outp_params};
+
+  PscBubble psc(psc_params, grid, mflds, mprts, balance, collision, checks,
+                marder, outf, outp);
+
   psc.integrate();
 }
 
