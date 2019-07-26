@@ -45,8 +45,7 @@ struct Inject_ : InjectBase
     setup_particles.fractional_n_particles_per_cell = true;
     setup_particles.neutralizing_population = 1;// MY_ELECTRON;
     
-    real_t fac = 1. / grid.norm.cori * 
-      (interval * grid.dt / tau) / (1. + interval * grid.dt / tau);
+    real_t fac = (interval * grid.dt / tau) / (1. + interval * grid.dt / tau);
 
     moment_n_.run(mprts);
     auto& mres = moment_n_.result();
@@ -87,9 +86,8 @@ struct Inject_ : InjectBase
 		  if (npt.n < 0) {
 		    npt.n = 0;
 		  }
-		  // this rounds down rather than trying to get fractional particles
-		  // statistically right...
-		  n_in_cell = npt.n * fac;
+		  npt.n *= fac;
+		  n_in_cell = setup_particles.get_n_in_cell(grid, &npt);
 		  n_q_in_cell += npt.q * n_in_cell;
 		} else {
 		  // FIXME, should handle the case where not the last population is neutralizing
