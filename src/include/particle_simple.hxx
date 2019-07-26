@@ -30,7 +30,7 @@ struct ParticleSimple
 
   KG_INLINE bool operator!=(const ParticleSimple& other) const { return !(*this == other); }
 
-  KG_INLINE bool id()  const { return 0; }
+  KG_INLINE psc::particle::Id id()  const { return 0; }
 
 public:
   Real3 x;

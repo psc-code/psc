@@ -33,11 +33,12 @@ struct InjectorBuffered
     
     void operator()(const psc::particle::Inject& new_prt)
     {
-      auto& patch = injector_.mprts_.grid().patches[p_];
+      auto& mprts = injector_.mprts_;
+      auto& patch = mprts.grid().patches[p_];
       auto x = Double3::fromPointer(new_prt.x) - patch.xb;
       auto u = Double3::fromPointer(new_prt.u);
-      real_t q = injector_.mprts_.grid().kinds[new_prt.kind].q;
-      raw({Real3(x), Real3(u), q * real_t(new_prt.w), new_prt.kind, new_prt.id});
+      real_t q = mprts.grid().kinds[new_prt.kind].q;
+      raw(Particle{Real3(x), Real3(u), q * real_t(new_prt.w), new_prt.kind, mprts.uid_gen()});
     }
 
     // FIXME do we want to keep this? or just have a psc::particle::Inject version instead?

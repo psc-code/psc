@@ -8,6 +8,7 @@
 #include "injector_buffered.hxx"
 #include "cuda_mparticles_iface.hxx"
 #include "bs.hxx"
+#include "UniqueIdGenerator.h"
 
 // ======================================================================
 // MparticlesCuda
@@ -32,7 +33,8 @@ struct MparticlesCuda : MparticlesBase
 
   MparticlesCuda(const Grid_t& grid)
     : MparticlesBase(grid),
-      pi_(grid)
+      pi_(grid),
+      uid_gen(grid.comm())
   {
     cmprts_ = Iface::new_(grid);
   }
@@ -73,5 +75,7 @@ struct MparticlesCuda : MparticlesBase
 private:
   CudaMparticles* cmprts_;
   ParticleIndexer<real_t> pi_;
+public:
+  psc::particle::UniqueIdGenerator uid_gen;
 };
 

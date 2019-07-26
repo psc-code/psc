@@ -31,7 +31,6 @@ struct Inject
   Real3 u;
   Real w;
   int kind;
-  Id id;
 };
 
 } // namespace particle
