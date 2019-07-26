@@ -12,12 +12,12 @@
 
 struct particle_inject
 {
-  using real_t = double;
-  using Real3 = Vec3<real_t>;
+  using Real = double;
+  using Real3 = Vec3<Real>;
   
   Real3 x;
   Real3 u;
-  real_t w;
+  Real w;
   int kind;
   psc::particle::Id id;
 };

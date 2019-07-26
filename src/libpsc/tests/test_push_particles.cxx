@@ -62,19 +62,19 @@ TYPED_TEST(PushParticlesTest, SingleParticle)
 // ======================================================================
 // vx, vy, vz
 
-typename particle_inject::real_t vx(const particle_inject& prt)
+typename particle_inject::Real vx(const particle_inject& prt)
 {
   auto gamma = 1./std::sqrt(1. + sqr(prt.u[0]) + sqr(prt.u[1]) + sqr(prt.u[2]));
   return gamma * prt.u[0];
 }
 
-typename particle_inject::real_t vy(const particle_inject& prt)
+typename particle_inject::Real vy(const particle_inject& prt)
 {
   auto gamma = 1./std::sqrt(1. + sqr(prt.u[0]) + sqr(prt.u[1]) + sqr(prt.u[2]));
   return gamma * prt.u[1];
 }
 
-typename particle_inject::real_t vz(const particle_inject& prt)
+typename particle_inject::Real vz(const particle_inject& prt)
 {
   auto gamma = 1./std::sqrt(1. + sqr(prt.u[0]) + sqr(prt.u[1]) + sqr(prt.u[2]));
   return gamma * prt.u[2];
