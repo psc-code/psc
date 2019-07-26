@@ -85,12 +85,11 @@ struct Inject_ : InjectBase
 		if (kind != setup_particles.neutralizing_population) {
 		  npt.n -= N(kind_n, jx,jy,jz);
 		  if (npt.n < 0) {
-		    n_in_cell = 0;
-		  } else {
-		    // this rounds down rather than trying to get fractional particles
-		    // statistically right...
-		    n_in_cell = npt.n * fac;
+		    npt.n = 0;
 		  }
+		  // this rounds down rather than trying to get fractional particles
+		  // statistically right...
+		  n_in_cell = npt.n * fac;
 		  n_q_in_cell += npt.q * n_in_cell;
 		} else {
 		  // FIXME, should handle the case where not the last population is neutralizing
