@@ -66,7 +66,7 @@ struct ConstParticleProxySimple
   real_t q()  const { return mprts_.grid().kinds[kind()].q; }
   real_t m()  const { return mprts_.grid().kinds[kind()].m; }
   int kind()  const { return prt_.kind; }
-  int id()    const { return prt_.id(); }
+  psc::particle::Id id()    const { return prt_.id(); }
   
   Double3 position() const
   {

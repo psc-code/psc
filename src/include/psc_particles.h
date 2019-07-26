@@ -8,6 +8,8 @@
 
 #include "grid.hxx"
 
+#include "particle.h"
+
 struct particle_inject
 {
   using real_t = double;
@@ -17,7 +19,7 @@ struct particle_inject
   Real3 u;
   real_t w;
   int kind;
-  int id;
+  psc::particle::Id id;
 };
 
 #define MP_DONT_COPY (0x1)

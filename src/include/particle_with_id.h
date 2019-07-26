@@ -7,7 +7,7 @@
 // ======================================================================
 // ParticleWithId
 
-template<typename _Real>
+template <typename _Real>
 struct ParticleWithId
 {
   using real_t = _Real;
@@ -15,31 +15,30 @@ struct ParticleWithId
 
   ParticleWithId() = default;
 
-  KG_INLINE ParticleWithId(Real3 x, Real3 u, real_t qni_wni, int kind, int id)
-    : x{x},
-      u{u},
-      kind{kind},
-      qni_wni{qni_wni},
-      id_{id}
+  KG_INLINE ParticleWithId(Real3 x, Real3 u, real_t qni_wni, int kind,
+                           psc::particle::Id id)
+    : x{x}, u{u}, kind{kind}, qni_wni{qni_wni}, id_{id}
   {}
 
   KG_INLINE bool operator==(const ParticleWithId& other) const
   {
-    return (x == other.x && qni_wni == other.qni_wni &&
-	    u == other.u && kind == other.kind && id_ == other.id_);
+    return (x == other.x && qni_wni == other.qni_wni && u == other.u &&
+            kind == other.kind && id_ == other.id_);
   }
 
-  KG_INLINE bool operator!=(const ParticleWithId& other) const { return !(*this == other); }
+  KG_INLINE bool operator!=(const ParticleWithId& other) const
+  {
+    return !(*this == other);
+  }
 
-  KG_INLINE int id() const { return id_; }
+  KG_INLINE psc::particle::Id id() const { return id_; }
 
 public:
   Real3 x;
   Real3 u;
   int kind;
   real_t qni_wni;
-private:
-  int id_;
+  psc::particle::Id id_;
 };
 
 template <typename R>
@@ -62,4 +61,3 @@ public:
     func("id", [](Particle& prt) { return &prt.id_; });
   }
 };
-

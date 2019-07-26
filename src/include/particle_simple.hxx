@@ -15,7 +15,7 @@ struct ParticleSimple
 
   ParticleSimple() = default;
 
-  KG_INLINE ParticleSimple(Real3 x, Real3 u, real_t qni_wni, int kind, int id)
+  KG_INLINE ParticleSimple(Real3 x, Real3 u, real_t qni_wni, int kind, psc::particle::Id id)
     : x{x},
       u{u},
       kind{kind},
