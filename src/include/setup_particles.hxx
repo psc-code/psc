@@ -4,8 +4,6 @@
 struct psc_particle_npt
 {
   int kind;    ///< particle kind
-  double q;    ///< charge
-  double m;    ///< mass
   double n;    ///< density
   double p[3]; ///< momentum
   double T[3]; ///< temperature
@@ -50,6 +48,9 @@ struct SetupParticles
 
     particle_inject prt{};
 
+    assert(npt.kind >= 0 && npt.kind < kinds.size());
+    double m = kinds[npt.kind].m;
+    
     float ran1, ran2, ran3, ran4, ran5, ran6;
     do {
       ran1 = random() / ((float)RAND_MAX + 1);
@@ -62,13 +63,13 @@ struct SetupParticles
              ran5 >= 1.f || ran6 >= 1.f);
 
     double pxi =
-      npt.p[0] + sqrtf(-2.f * npt.T[0] / npt.m * sqr(beta) * logf(1.0 - ran1)) *
+      npt.p[0] + sqrtf(-2.f * npt.T[0] / m * sqr(beta) * logf(1.0 - ran1)) *
                    cosf(2.f * M_PI * ran2);
     double pyi =
-      npt.p[1] + sqrtf(-2.f * npt.T[1] / npt.m * sqr(beta) * logf(1.0 - ran3)) *
+      npt.p[1] + sqrtf(-2.f * npt.T[1] / m * sqr(beta) * logf(1.0 - ran3)) *
                    cosf(2.f * M_PI * ran4);
     double pzi =
-      npt.p[2] + sqrtf(-2.f * npt.T[2] / npt.m * sqr(beta) * logf(1.0 - ran5)) *
+      npt.p[2] + sqrtf(-2.f * npt.T[2] / m * sqr(beta) * logf(1.0 - ran5)) *
                    cosf(2.f * M_PI * ran6);
 
     if (initial_momentum_gamma_correction) {
@@ -82,12 +83,7 @@ struct SetupParticles
     }
 
     prt.w = wni;
-    assert(npt.kind >= 0 && npt.kind < kinds.size());
     prt.kind = npt.kind;
-    assert(npt.q == kinds[prt.kind].q);
-    assert(npt.m == kinds[prt.kind].m);
-    /* prt.qni = kinds[prt.kind].q; */
-    /* prt.mni = kinds[prt.kind].m; */
     prt.x[0] = pos[0];
     prt.x[1] = pos[1];
     prt.x[2] = pos[2];
@@ -145,20 +141,18 @@ struct SetupParticles
               struct psc_particle_npt npt = {};
               if (kind < kinds.size()) {
                 npt.kind = kind;
-                npt.q = kinds[kind].q;
-                npt.m = kinds[kind].m;
               }
               init_npt(kind, pos, p, {jx, jy, jz}, npt);
 
               int n_in_cell;
               if (kind != neutralizing_population) {
                 n_in_cell = get_n_in_cell(grid, &npt);
-                n_q_in_cell += npt.q * n_in_cell;
+                n_q_in_cell += kinds[npt.kind].q * n_in_cell;
               } else {
                 // FIXME, should handle the case where not the last population
                 // is neutralizing
                 assert(neutralizing_population == kinds.size() - 1);
-                n_in_cell = -n_q_in_cell / npt.q;
+                n_in_cell = -n_q_in_cell / kinds[npt.kind].q;
               }
               for (int cnt = 0; cnt < n_in_cell; cnt++) {
                 real_t wni;
@@ -211,20 +205,18 @@ struct SetupParticles
               struct psc_particle_npt npt = {};
               if (kind < kinds.size()) {
                 npt.kind = kind;
-                npt.q = kinds[kind].q;
-                npt.m = kinds[kind].m;
               };
               func(kind, pos, npt);
 
               int n_in_cell;
               if (kind != neutralizing_population) {
                 n_in_cell = get_n_in_cell(grid, &npt);
-                n_q_in_cell += npt.q * n_in_cell;
+                n_q_in_cell += kinds[npt.kind].q * n_in_cell;
               } else {
                 // FIXME, should handle the case where not the last population
                 // is neutralizing
                 assert(neutralizing_population == kinds.size() - 1);
-                n_in_cell = -n_q_in_cell / npt.q;
+                n_in_cell = -n_q_in_cell / kinds[npt.kind].q;
               }
               n_prts_by_patch[p] += n_in_cell;
             }
