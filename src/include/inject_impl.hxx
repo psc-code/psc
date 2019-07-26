@@ -51,15 +51,18 @@ struct Inject_ : InjectBase
 
     auto lf_init_npt = [&](int kind, Double3 pos, int p, Int3 idx,
                            psc_particle_npt& npt) {
-      target_.init_npt(kind, pos, npt);
-      npt.n -= mf_n[p](kind_n, idx[0], idx[1], idx[2]);
-      if (npt.n < 0) {
-        npt.n = 0;
+      if (target_.is_inside(pos)) {
+	target_.init_npt(kind, pos, npt);
+	npt.n -= mf_n[p](kind_n, idx[0], idx[1], idx[2]);
+	if (npt.n < 0) {
+	  npt.n = 0;
+	}
+	npt.n *= fac;
       }
-      npt.n *= fac;
     };
 
     auto inj = mprts.injector();
+
     for (int p = 0; p < mprts.n_patches(); ++p) {
       auto ldims = grid.ldims;
       auto injector = inj[p];
@@ -77,10 +80,6 @@ struct Inject_ : InjectBase
               pos[1] = grid.patches[p].y_nc(jy);
             if (grid.isInvar(2) == 1)
               pos[2] = grid.patches[p].z_nc(jz);
-
-            if (!target_.is_inside(pos)) {
-              continue;
-            }
 
             int n_q_in_cell = 0;
             for (int kind = 0; kind < kinds.size(); kind++) {
