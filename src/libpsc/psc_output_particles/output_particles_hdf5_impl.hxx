@@ -13,6 +13,7 @@ struct hdf5_prt {
   float x, y, z;
   float px, py, pz;
   float q, m, w;
+  psc::particle::Id id;
 };
 
 #define H5_CHK(ierr) assert(ierr >= 0)
@@ -21,8 +22,31 @@ struct hdf5_prt {
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
-#define to_psc_output_particles_hdf5(out) \
-  mrc_to_subobj(out, struct psc_output_particles_hdf5)
+// ----------------------------------------------------------------------
+
+template <typename T>
+struct ToHdf5Type;
+
+template <>
+struct ToHdf5Type<int>
+{
+  static hid_t H5Type() { return H5T_NATIVE_INT; }
+};
+
+template <>
+struct ToHdf5Type<unsigned long>
+{
+  static hid_t H5Type() { return H5T_NATIVE_ULONG; }
+};
+
+template <>
+struct ToHdf5Type<unsigned long long>
+{
+  static hid_t H5Type() { return H5T_NATIVE_ULLONG; }
+};
+
+// ======================================================================
+// OutputParticlesHdf5
 
 template<typename Mparticles>
 struct OutputParticlesHdf5 : OutputParticlesParams, OutputParticlesBase
@@ -45,6 +69,7 @@ struct OutputParticlesHdf5 : OutputParticlesParams, OutputParticlesBase
     H5Tinsert(id, "q" , HOFFSET(struct hdf5_prt, q) , H5T_NATIVE_FLOAT);
     H5Tinsert(id, "m" , HOFFSET(struct hdf5_prt, m) , H5T_NATIVE_FLOAT);
     H5Tinsert(id, "w" , HOFFSET(struct hdf5_prt, w) , H5T_NATIVE_FLOAT);
+    H5Tinsert(id, "id" , HOFFSET(struct hdf5_prt, id) , ToHdf5Type<psc::particle::Id>::H5Type());
     prt_type = id;
     
     // set hi to gdims by default (if not set differently before)
@@ -220,6 +245,7 @@ struct OutputParticlesHdf5 : OutputParticlesParams, OutputParticlesBase
 		  arr[nn].q  = prt.q();
 		  arr[nn].m  = prt.m();
 		  arr[nn].w  = prt.w();
+		  arr[nn].id  = prt.id();
 		}
 	      }
 	    }
