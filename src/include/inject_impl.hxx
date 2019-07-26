@@ -35,7 +35,24 @@ struct Inject_ : InjectBase
   void operator()(Mparticles& mprts)
   {
     const auto& grid = mprts.grid();
-    const auto& kinds = grid.kinds;
+
+    moment_n_.run(mprts);
+    auto& mres = moment_n_.result();
+    auto& mf_n = mres.template get_as<Mfields>(kind_n, kind_n + 1);
+
+    real_t fac = (interval * grid.dt / tau) / (1. + interval * grid.dt / tau);
+
+    auto lf_init_npt = [&](int kind, Double3 pos, int p, Int3 idx,
+                           psc_particle_npt& npt) {
+      if (target_.is_inside(pos)) {
+        target_.init_npt(kind, pos, npt);
+        npt.n -= mf_n[p](kind_n, idx[0], idx[1], idx[2]);
+        if (npt.n < 0) {
+          npt.n = 0;
+        }
+        npt.n *= fac;
+      }
+    };
 
     SetupParticles<Mparticles> setup_particles;
     // FIXME, this is taken from and kinda specific to psc_flatfoil_yz.cxx,
@@ -43,23 +60,17 @@ struct Inject_ : InjectBase
     setup_particles.fractional_n_particles_per_cell = true;
     setup_particles.neutralizing_population = 1; // MY_ELECTRON;
 
-    real_t fac = (interval * grid.dt / tau) / (1. + interval * grid.dt / tau);
+    setupParticles(mprts, setup_particles, lf_init_npt);
 
-    moment_n_.run(mprts);
-    auto& mres = moment_n_.result();
-    auto& mf_n = mres.template get_as<Mfields>(kind_n, kind_n + 1);
+    mres.put_as(mf_n, 0, 0);
+  }
 
-    auto lf_init_npt = [&](int kind, Double3 pos, int p, Int3 idx,
-                           psc_particle_npt& npt) {
-      if (target_.is_inside(pos)) {
-	target_.init_npt(kind, pos, npt);
-	npt.n -= mf_n[p](kind_n, idx[0], idx[1], idx[2]);
-	if (npt.n < 0) {
-	  npt.n = 0;
-	}
-	npt.n *= fac;
-      }
-    };
+  template <typename FUNC>
+  void setupParticles(Mparticles& mprts,
+                      SetupParticles<Mparticles>& setup_particles, FUNC init_npt)
+  {
+    const auto& grid = mprts.grid();
+    const auto& kinds = grid.kinds;
 
     auto inj = mprts.injector();
 
@@ -89,7 +100,7 @@ struct Inject_ : InjectBase
                 npt.q = kinds[kind].q;
                 npt.m = kinds[kind].m;
               }
-              lf_init_npt(kind, pos, p, {jx, jy, jz}, npt);
+              init_npt(kind, pos, p, {jx, jy, jz}, npt);
 
               int n_in_cell;
               if (kind != setup_particles.neutralizing_population) {
@@ -119,8 +130,6 @@ struct Inject_ : InjectBase
         }
       }
     }
-
-    mres.put_as(mf_n, 0, 0);
   }
 
   // ----------------------------------------------------------------------

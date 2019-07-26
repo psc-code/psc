@@ -100,6 +100,16 @@ struct SetupParticles
   void setup_particles(Mparticles& mprts, std::vector<uint>& n_prts_by_patch,
                        FUNC func)
   {
+    setupParticles(mprts, [&](int kind, Double3 pos, int p, Int3 idx,
+                              psc_particle_npt& npt) { func(kind, pos, npt); });
+  }
+
+  // ----------------------------------------------------------------------
+  // setupParticles
+
+  template <typename FUNC>
+  void setupParticles(Mparticles& mprts, FUNC init_npt)
+  {
     const auto& grid = mprts.grid();
     const auto& kinds = grid.kinds;
 
@@ -133,7 +143,7 @@ struct SetupParticles
                 npt.q = kinds[kind].q;
                 npt.m = kinds[kind].m;
               }
-              func(kind, pos, npt);
+              init_npt(kind, pos, p, {jx, jy, jz}, npt);
 
               int n_in_cell;
               if (kind != neutralizing_population) {
