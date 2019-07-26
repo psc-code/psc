@@ -40,13 +40,15 @@ struct SetupParticles
   }
 
   // ----------------------------------------------------------------------
-  // setup_particle
+  // setupParticle
 
-  void setup_particle(const Grid_t& grid, particle_inject* prt,
-                      psc_particle_npt* npt, int p, Double3 pos)
+  particle_inject setupParticle(const Grid_t& grid, const psc_particle_npt& npt,
+                                Double3 pos, double wni)
   {
     auto& kinds = grid.kinds;
     double beta = grid.norm.beta;
+
+    particle_inject prt{};
 
     float ran1, ran2, ran3, ran4, ran5, ran6;
     do {
@@ -59,15 +61,15 @@ struct SetupParticles
     } while (ran1 >= 1.f || ran2 >= 1.f || ran3 >= 1.f || ran4 >= 1.f ||
              ran5 >= 1.f || ran6 >= 1.f);
 
-    double pxi = npt->p[0] + sqrtf(-2.f * npt->T[0] / npt->m * sqr(beta) *
-                                   logf(1.0 - ran1)) *
-                               cosf(2.f * M_PI * ran2);
-    double pyi = npt->p[1] + sqrtf(-2.f * npt->T[1] / npt->m * sqr(beta) *
-                                   logf(1.0 - ran3)) *
-                               cosf(2.f * M_PI * ran4);
-    double pzi = npt->p[2] + sqrtf(-2.f * npt->T[2] / npt->m * sqr(beta) *
-                                   logf(1.0 - ran5)) *
-                               cosf(2.f * M_PI * ran6);
+    double pxi =
+      npt.p[0] + sqrtf(-2.f * npt.T[0] / npt.m * sqr(beta) * logf(1.0 - ran1)) *
+                   cosf(2.f * M_PI * ran2);
+    double pyi =
+      npt.p[1] + sqrtf(-2.f * npt.T[1] / npt.m * sqr(beta) * logf(1.0 - ran3)) *
+                   cosf(2.f * M_PI * ran4);
+    double pzi =
+      npt.p[2] + sqrtf(-2.f * npt.T[2] / npt.m * sqr(beta) * logf(1.0 - ran5)) *
+                   cosf(2.f * M_PI * ran6);
 
     if (initial_momentum_gamma_correction) {
       double gam;
@@ -79,18 +81,21 @@ struct SetupParticles
       }
     }
 
-    assert(npt->kind >= 0 && npt->kind < kinds.size());
-    prt->kind = npt->kind;
-    assert(npt->q == kinds[prt->kind].q);
-    assert(npt->m == kinds[prt->kind].m);
-    /* prt->qni = kinds[prt->kind].q; */
-    /* prt->mni = kinds[prt->kind].m; */
-    prt->x[0] = pos[0];
-    prt->x[1] = pos[1];
-    prt->x[2] = pos[2];
-    prt->u[0] = pxi;
-    prt->u[1] = pyi;
-    prt->u[2] = pzi;
+    prt.w = wni;
+    assert(npt.kind >= 0 && npt.kind < kinds.size());
+    prt.kind = npt.kind;
+    assert(npt.q == kinds[prt.kind].q);
+    assert(npt.m == kinds[prt.kind].m);
+    /* prt.qni = kinds[prt.kind].q; */
+    /* prt.mni = kinds[prt.kind].m; */
+    prt.x[0] = pos[0];
+    prt.x[1] = pos[1];
+    prt.x[2] = pos[2];
+    prt.u[0] = pxi;
+    prt.u[1] = pyi;
+    prt.u[2] = pzi;
+
+    return prt;
   }
 
   // ----------------------------------------------------------------------
@@ -162,8 +167,7 @@ struct SetupParticles
                 } else {
                   wni = npt.n / (n_in_cell * grid.norm.cori);
                 }
-                particle_inject prt{{}, {}, wni, npt.kind};
-                setup_particle(grid, &prt, &npt, p, pos);
+                auto prt = setupParticle(grid, npt, pos, wni);
                 injector(prt);
               }
             }
