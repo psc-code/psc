@@ -79,3 +79,9 @@ template<> const MparticlesBase::Convert MparticlesDouble::convert_from_ = {};
 template<> const MparticlesBase::Convert MparticlesSimple<ParticleWithId<float>>::convert_to_ = {};
 template<> const MparticlesBase::Convert MparticlesSimple<ParticleWithId<float>>::convert_from_ = {};
 
+// ======================================================================
+// MparticlesSimple<ParticleWithId<double>>
+
+template<> const MparticlesBase::Convert MparticlesSimple<ParticleWithId<double>>::convert_to_ = {};
+template<> const MparticlesBase::Convert MparticlesSimple<ParticleWithId<double>>::convert_from_ = {};
+
