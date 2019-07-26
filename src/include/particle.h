@@ -23,6 +23,10 @@ struct Inject
   using Real = double;
   using Real3 = Vec3<Real>;
 
+  Inject(const Real3& x, const Real3& u, Real w, int kind)
+    : x{x}, u{u}, w{w}, kind{kind}
+  {}
+
   Real3 x;
   Real3 u;
   Real w;

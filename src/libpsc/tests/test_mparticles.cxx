@@ -103,12 +103,10 @@ struct MparticlesTest : ::testing::Test
       for (int n = 0; n < n_prts; n++) {
         double nn = double(n) / n_prts;
         auto L = patch.xe - patch.xb;
-        psc::particle::Inject prt = {};
-        prt.x[0] = patch.xb[0] + nn * L[0];
-        prt.x[1] = patch.xb[1] + nn * L[1];
-        prt.x[2] = patch.xb[2] + nn * L[2];
-        prt.kind = 0;
-        prt.w = 1.;
+        psc::particle::Inject prt = {
+	  {patch.xb[0] + nn * L[0],
+	   patch.xb[1] + nn * L[1],
+	   patch.xb[2] + nn * L[2]}, {}, 1., 0};
         injector(prt);
       }
     }
@@ -206,11 +204,9 @@ TYPED_TEST(MparticlesTest, Inject2)
       auto injector = inj[p];
       auto& patch = mprts.grid().patches[p];
       for (int n = 0; n < n_prts; n++) {
-        psc::particle::Inject prt = {};
-        auto x = .5 * (patch.xb + patch.xe);
-        int kind = 0;
+        psc::particle::Inject prt{.5 * (patch.xb + patch.xe), {}, double(nn), 0};
         // use weight to store particle number for testing
-        injector({{x[0], x[1], x[2]}, {}, double(nn), kind});
+        injector(prt);
         nn++;
       }
     }

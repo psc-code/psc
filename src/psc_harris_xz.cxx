@@ -631,87 +631,72 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
 
     // Load Harris population
 
-    mpi_printf(comm, "-> Main Harris Sheet\n");
-
     {
-    auto inj = mprts_->injector();
-    auto injector = inj[0];
-    for (int64_t n = 0; n < Ne_sheet / n_global_patches; n++) {
-      double x, y, z, ux, uy, uz, d0;
+      auto inj = mprts_->injector();
+      auto injector = inj[0];
 
-      psc::particle::Inject prt;
+      mpi_printf(comm, "-> Main Harris Sheet\n");
 
-      do {
-	z = L*atanh(Rng_uniform(rng, -1., 1.)*tanhf);
-      } while (z <= zmin || z >= zmax);
-      x = Rng_uniform(rng, xmin, xmax);
-      y = Rng_uniform(rng, ymin, ymax);
+      for (int64_t n = 0; n < Ne_sheet / n_global_patches; n++) {
+        double x, y, z, ux, uy, uz, d0;
 
-      // inject_particles() will return an error for particles not on this
-      // node and will not inject particle locally
+        do {
+          z = L * atanh(Rng_uniform(rng, -1., 1.) * tanhf);
+        } while (z <= zmin || z >= zmax);
+        x = Rng_uniform(rng, xmin, xmax);
+        y = Rng_uniform(rng, ymin, ymax);
 
-      ux = Rng_normal(rng, 0, vthe);
-      uy = Rng_normal(rng, 0, vthe);
-      uz = Rng_normal(rng, 0, vthe);
-      d0 = gdre*uy + sqrt(ux*ux + uy*uy + uz*uz + 1)*udre;
-      uy = d0*cs - ux*sn;
-      ux = d0*sn + ux*cs;
+        // inject_particles() will return an error for particles not on this
+        // node and will not inject particle locally
 
-      prt.x[0] = x; prt.x[1] = y; prt.x[2] = z;
-      prt.u[0] = ux; prt.u[1] = uy; prt.u[2] = uz;
-      prt.w = weight_s;
-      prt.kind = KIND_ELECTRON;
-      injector.reweight(prt);
+        ux = Rng_normal(rng, 0, vthe);
+        uy = Rng_normal(rng, 0, vthe);
+        uz = Rng_normal(rng, 0, vthe);
+        d0 = gdre * uy + sqrt(ux * ux + uy * uy + uz * uz + 1) * udre;
+        uy = d0 * cs - ux * sn;
+        ux = d0 * sn + ux * cs;
 
-      ux = Rng_normal(rng, 0, vthi);
-      uy = Rng_normal(rng, 0, vthi);
-      uz = Rng_normal(rng, 0, vthi);
-      d0 = gdri*uy + sqrt(ux*ux + uy*uy + uz*uz + 1)*udri;
-      uy = d0*cs - ux*sn;
-      ux = d0*sn + ux*cs;
+        injector.reweight(psc::particle::Inject{
+          {x, y, z}, {ux, uy, uz}, weight_s, KIND_ELECTRON});
 
-      prt.u[0] = ux; prt.u[1] = uy; prt.u[2] = uz;
-      prt.kind = KIND_ION;
-      injector.reweight(prt);
+        ux = Rng_normal(rng, 0, vthi);
+        uy = Rng_normal(rng, 0, vthi);
+        uz = Rng_normal(rng, 0, vthi);
+        d0 = gdri * uy + sqrt(ux * ux + uy * uy + uz * uz + 1) * udri;
+        uy = d0 * cs - ux * sn;
+        ux = d0 * sn + ux * cs;
+
+        injector.reweight(
+          psc::particle::Inject{{x, y, z}, {ux, uy, uz}, weight_s, KIND_ION});
+      }
+      
+      mpi_printf(comm, "-> Background Population\n");
+      
+      for (int64_t n = 0; n < Ne_back / n_global_patches; n++) {
+	Double3 pos{Rng_uniform(rng, xmin, xmax), Rng_uniform(rng, ymin, ymax),
+	    Rng_uniform(rng, zmin, zmax)};
+	
+	Double3 u{Rng_normal(rng, 0, vtheb), Rng_normal(rng, 0, vtheb),
+	    Rng_normal(rng, 0, vtheb)};
+	injector.reweight(psc::particle::Inject{pos, u, weight_b, KIND_ELECTRON});
+	
+	u = {Rng_normal(rng, 0, vthib), Rng_normal(rng, 0, vthib),
+           Rng_normal(rng, 0, vthib)};
+	injector.reweight(psc::particle::Inject{pos, u, weight_b, KIND_ION});
+      }
     }
-
-    mpi_printf(comm, "-> Background Population\n");
-
-    for (int64_t n = 0; n < Ne_back / n_global_patches; n++) {
-      psc::particle::Inject prt;
-      double x = Rng_uniform(rng, xmin, xmax);
-      double y = Rng_uniform(rng, ymin, ymax);
-      double z = Rng_uniform(rng, zmin, zmax);
-
-      prt.x[0] = x; prt.x[1] = y; prt.x[2] = z;
-      prt.u[0] = Rng_normal(rng, 0, vtheb);
-      prt.u[1] = Rng_normal(rng, 0, vtheb);
-      prt.u[2] = Rng_normal(rng, 0, vtheb);
-      prt.w = weight_b;
-      prt.kind = KIND_ELECTRON;
-      injector.reweight(prt);
-    
-      prt.u[0] = Rng_normal(rng, 0, vthib);
-      prt.u[1] = Rng_normal(rng, 0, vthib);
-      prt.u[2] = Rng_normal(rng, 0, vthib);
-      prt.kind = KIND_ION;
-      injector.reweight(prt);
-    }
-    }
-    
     mpi_printf(comm, "Finished loading particles\n");
   }
-  
+
   // ----------------------------------------------------------------------
   // setup_initial_fields
 
   void setup_initial_fields(MfieldsState& mflds)
   {
-    setupFields(grid(), mflds, [&](int m, double xx[3]) {
-	return init_field(xx, m);
-      });
+    setupFields(grid(), mflds,
+                [&](int m, double xx[3]) { return init_field(xx, m); });
   }
-  
+
   // ----------------------------------------------------------------------
   // init_field
 
@@ -720,24 +705,27 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
     double b0 = phys_.b0, dbx = phys_.dbx, dbz = phys_.dbz;
     double L = phys_.L, Lx = phys_.Lx, Lz = phys_.Lz, Lpert = phys_.Lpert;
     double x = crd[0], z = crd[2];
-    
+
     double cs = cos(theta), sn = sin(theta);
-    
+
     switch (m) {
-    case HX:
-      return cs*b0*tanh(z/L)+dbx*cos(2.*M_PI*(x-.5*Lx)/Lpert)*sin(M_PI*z/Lz);
-      
-    case HY:
-    return -sn*b0*tanh(z/L) + b0*bg;
-    
-    case HZ:
-      return dbz*cos(M_PI*z/Lz)*sin(2.0*M_PI*(x-0.5*Lx)/Lpert);
-      
-    case JYI:
-      return 0.; // FIXME
-      
-    default:
-      return 0.;
+      case HX:
+        return cs * b0 * tanh(z / L) +
+               dbx * cos(2. * M_PI * (x - .5 * Lx) / Lpert) *
+                 sin(M_PI * z / Lz);
+
+      case HY:
+        return -sn * b0 * tanh(z / L) + b0 * bg;
+
+      case HZ:
+        return dbz * cos(M_PI * z / Lz) *
+               sin(2.0 * M_PI * (x - 0.5 * Lx) / Lpert);
+
+      case JYI:
+        return 0.; // FIXME
+
+      default:
+        return 0.;
     }
   }
 
@@ -748,7 +736,7 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
   void diagnostics() override
   {
     run_diagnostics();
-    
+
     MPI_Comm comm = grid().comm();
     const auto& grid = this->grid();
 
@@ -758,16 +746,16 @@ struct PscHarris : Psc<PscConfig>, PscHarrisParams
       io_pfd_.open(grid);
 
       {
-	OutputFieldsVpic<MfieldsState> out_fields;
-	auto result = out_fields(*mflds_);
-	io_pfd_.write_mflds(result.mflds, grid, result.name, result.comp_names);
+        OutputFieldsVpic<MfieldsState> out_fields;
+        auto result = out_fields(*mflds_);
+        io_pfd_.write_mflds(result.mflds, grid, result.name, result.comp_names);
       }
 
       {
-	// FIXME, would be better to keep "out_hydro" around
-	OutputHydro out_hydro{grid};
-	auto result = out_hydro(*mprts_, *hydro_, *interpolator_);
-	io_pfd_.write_mflds(result.mflds, grid, result.name, result.comp_names);
+        // FIXME, would be better to keep "out_hydro" around
+        OutputHydro out_hydro{grid};
+        auto result = out_hydro(*mprts_, *hydro_, *interpolator_);
+        io_pfd_.write_mflds(result.mflds, grid, result.name, result.comp_names);
       }
       mrc_io_close(io_pfd_.io_);
     }

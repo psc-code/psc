@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "setup_fields.hxx"
+
 // FIXME, duplicated only because vpic uses different comp numbers
 
 #include <algorithm>
