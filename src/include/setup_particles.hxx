@@ -116,6 +116,10 @@ struct SetupParticles
 
     // mprts.reserve_all(n_prts_by_patch); FIXME
 
+    if (n_populations < 0) {
+      n_populations = kinds.size();
+    }
+    
     auto inj = mprts.injector();
 
     for (int p = 0; p < mprts.n_patches(); ++p) {
@@ -137,21 +141,21 @@ struct SetupParticles
               pos[2] = grid.patches[p].z_nc(jz);
 
             int n_q_in_cell = 0;
-            for (int kind = 0; kind < kinds.size(); kind++) {
+            for (int pop = 0; pop < n_populations; pop++) {
               psc_particle_npt npt{};
-              if (kind < kinds.size()) {
-                npt.kind = kind;
+              if (pop < kinds.size()) {
+                npt.kind = pop;
               }
-              init_npt(kind, pos, p, {jx, jy, jz}, npt);
+              init_npt(pop, pos, p, {jx, jy, jz}, npt);
 
               int n_in_cell;
-              if (kind != neutralizing_population) {
+              if (pop != neutralizing_population) {
                 n_in_cell = get_n_in_cell(grid, npt);
                 n_q_in_cell += kinds[npt.kind].q * n_in_cell;
               } else {
                 // FIXME, should handle the case where not the last population
                 // is neutralizing
-                assert(neutralizing_population == kinds.size() - 1);
+                assert(neutralizing_population == n_populations - 1);
                 n_in_cell = -n_q_in_cell / kinds[npt.kind].q;
               }
               for (int cnt = 0; cnt < n_in_cell; cnt++) {
@@ -178,11 +182,15 @@ struct SetupParticles
   // setup_partition
 
   template <typename FUNC>
-  std::vector<uint> setup_partition(const Grid_t& grid, FUNC func)
+  std::vector<uint> setup_partition(const Grid_t& grid, FUNC init_npt)
   {
     const auto& kinds = grid.kinds;
     std::vector<uint> n_prts_by_patch(grid.n_patches());
 
+    if (n_populations < 0) {
+      n_populations = kinds.size();
+    }
+    
     for (int p = 0; p < grid.n_patches(); ++p) {
       auto ilo = Int3{}, ihi = grid.ldims;
 
@@ -201,21 +209,21 @@ struct SetupParticles
               pos[2] = grid.patches[p].z_nc(jz);
 
             int n_q_in_cell = 0;
-            for (int kind = 0; kind < kinds.size(); kind++) {
+            for (int pop = 0; pop < n_populations; pop++) {
               psc_particle_npt npt{};
-              if (kind < kinds.size()) {
-                npt.kind = kind;
+              if (pop < kinds.size()) {
+                npt.kind = pop;
               };
-              func(kind, pos, npt);
+              init_npt(pop, pos, npt);
 
               int n_in_cell;
-              if (kind != neutralizing_population) {
+              if (pop != neutralizing_population) {
                 n_in_cell = get_n_in_cell(grid, npt);
                 n_q_in_cell += kinds[npt.kind].q * n_in_cell;
               } else {
                 // FIXME, should handle the case where not the last population
                 // is neutralizing
-                assert(neutralizing_population == kinds.size() - 1);
+                assert(neutralizing_population == n_populations - 1);
                 n_in_cell = -n_q_in_cell / kinds[npt.kind].q;
               }
               n_prts_by_patch[p] += n_in_cell;
@@ -231,6 +239,7 @@ struct SetupParticles
   // the initial number of particles in a cell for this population will be st so
   // that it achieves neutrality
   int neutralizing_population = {-1};
+  int n_populations = {-1};
   bool fractional_n_particles_per_cell = {false};
   bool initial_momentum_gamma_correction = {false};
 };
