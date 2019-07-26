@@ -16,16 +16,16 @@ struct InjectorVpic
       : mprts_{mprts}
     {}
 
-    void operator()(const particle_inject& prt)
+    void operator()(const psc::particle::Inject& prt)
     {
       const auto& vgrid = mprts_.vgrid();
       float dVi = 1.f / (vgrid.dx * vgrid.dy * vgrid.dz);
-      particle_inject prt_reweighted = prt;
+      psc::particle::Inject prt_reweighted = prt;
       prt_reweighted.w *= dVi;
       reweight(prt_reweighted);
     }
     
-    void reweight(const particle_inject& prt)
+    void reweight(const psc::particle::Inject& prt)
     {
       mprts_.inject_particle_reweight(prt);
     }

@@ -31,7 +31,7 @@ struct InjectorBuffered
       n_prts_++;
     }
     
-    void operator()(const particle_inject& new_prt)
+    void operator()(const psc::particle::Inject& new_prt)
     {
       auto& patch = injector_.mprts_.grid().patches[p_];
       auto x = Double3::fromPointer(new_prt.x) - patch.xb;
@@ -40,7 +40,7 @@ struct InjectorBuffered
       raw({Real3(x), Real3(u), q * real_t(new_prt.w), new_prt.kind, new_prt.id});
     }
 
-    // FIXME do we want to keep this? or just have a particle_inject version instead?
+    // FIXME do we want to keep this? or just have a psc::particle::Inject version instead?
     void raw(const std::vector<Particle>& buf)
     {
       injector_.buf_.insert(injector_.buf_.end(), buf.begin(), buf.end());

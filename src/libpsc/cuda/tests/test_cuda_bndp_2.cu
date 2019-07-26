@@ -47,11 +47,11 @@ struct CudaMparticlesBndTest : TestBase<CudaMparticles>, ::testing::Test
     {
       auto inj = cmprts.injector();
       // patch 0
-      inj[0](particle_inject{{ .5,  35., 5.}, {}, 0., 0});
-      inj[0](particle_inject{{ .5, 155., 5.}, {}, 0., 1});
+      inj[0](psc::particle::Inject{{ .5,  35., 5.}, {}, 0., 0});
+      inj[0](psc::particle::Inject{{ .5, 155., 5.}, {}, 0., 1});
       // patch 1
-      inj[1](particle_inject{{ 160.5,  35., 5.}, {}, 0., 2});
-      inj[1](particle_inject{{ 160.5, 155., 5.}, {}, 0., 3});
+      inj[1](psc::particle::Inject{{ 160.5,  35., 5.}, {}, 0., 2});
+      inj[1](psc::particle::Inject{{ 160.5, 155., 5.}, {}, 0., 3});
     }
 
     // move every particle one full cell to the right (+y, that is)

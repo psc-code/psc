@@ -10,18 +10,6 @@
 
 #include "particle.h"
 
-struct particle_inject
-{
-  using Real = double;
-  using Real3 = Vec3<Real>;
-  
-  Real3 x;
-  Real3 u;
-  Real w;
-  int kind;
-  psc::particle::Id id;
-};
-
 #define MP_DONT_COPY (0x1)
 
 #endif

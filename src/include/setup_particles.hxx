@@ -40,13 +40,13 @@ struct SetupParticles
   // ----------------------------------------------------------------------
   // setupParticle
 
-  particle_inject setupParticle(const Grid_t& grid, const psc_particle_npt& npt,
+  psc::particle::Inject setupParticle(const Grid_t& grid, const psc_particle_npt& npt,
                                 Double3 pos, double wni)
   {
     auto& kinds = grid.kinds;
     double beta = grid.norm.beta;
 
-    particle_inject prt{};
+    psc::particle::Inject prt{};
 
     assert(npt.kind >= 0 && npt.kind < kinds.size());
     double m = kinds[npt.kind].m;

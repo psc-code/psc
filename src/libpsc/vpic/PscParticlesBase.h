@@ -202,7 +202,7 @@ struct PscParticlesBase : public VpicListBase<PscSpecies<G>>
   // ----------------------------------------------------------------------
   // inject_particle_reweight
   
-  void inject_particle_reweight(const particle_inject& prt)
+  void inject_particle_reweight(const psc::particle::Inject& prt)
   {
     auto sp = find(prt.kind);
     assert(sp != end());

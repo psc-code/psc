@@ -187,7 +187,7 @@ struct PushParticlesTest : ::testing::Test
   }
 
   template<typename FUNC>
-  void runSingleParticleTest(FUNC init_fields, particle_inject prt0, particle_inject prt1,
+  void runSingleParticleTest(FUNC init_fields, psc::particle::Inject prt0, psc::particle::Inject prt1,
 			     std::vector<CurrentReference> curr_ref = {})
   {
     auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
