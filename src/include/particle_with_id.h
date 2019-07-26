@@ -16,8 +16,8 @@ struct ParticleWithId
   ParticleWithId() = default;
 
   KG_INLINE ParticleWithId(Real3 x, Real3 u, real_t qni_wni, int kind,
-                           psc::particle::Id id)
-    : x{x}, u{u}, kind{kind}, qni_wni{qni_wni}, id_{id}
+                           psc::particle::Id id, psc::particle::Tag tag)
+    : x{x}, u{u}, kind{kind}, qni_wni{qni_wni}, id_{id}, tag_{tag}
   {}
 
   KG_INLINE bool operator==(const ParticleWithId& other) const
@@ -32,6 +32,7 @@ struct ParticleWithId
   }
 
   KG_INLINE psc::particle::Id id() const { return id_; }
+  KG_INLINE psc::particle::Tag tag() const { return tag_; }
 
 public:
   Real3 x;
@@ -39,6 +40,7 @@ public:
   int kind;
   real_t qni_wni;
   psc::particle::Id id_;
+  psc::particle::Tag tag_;
 };
 
 template <typename R>
@@ -59,5 +61,6 @@ public:
     func("kind", [](Particle& prt) { return &prt.kind; });
     func("qni_wni", [](Particle& prt) { return &prt.qni_wni; });
     func("id", [](Particle& prt) { return &prt.id_; });
+    func("tag", [](Particle& prt) { return &prt.tag_; });
   }
 };

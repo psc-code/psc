@@ -518,7 +518,7 @@ std::vector<typename cuda_mparticles<BS>::Particle> cuda_mparticles<BS>::get_par
     int kind = cuda_float_as_int(xi4[n].w);
     prts.emplace_back(Real3{xi4[n].x, xi4[n].y, xi4[n].z},
 	              Real3{pxi4[n].x, pxi4[n].y, pxi4[n].z},
-	              pxi4[n].w, kind, 0);
+	              pxi4[n].w, kind, psc::particle::Id(), psc::particle::Tag());
 
 #if 0
     uint b = blockIndex(xi4[n], p);

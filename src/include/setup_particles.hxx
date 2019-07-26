@@ -7,6 +7,7 @@ struct psc_particle_npt
   double n;    ///< density
   double p[3]; ///< momentum
   double T[3]; ///< temperature
+  psc::particle::Tag tag;
 };
 
 // ======================================================================
@@ -81,7 +82,7 @@ struct SetupParticles
       }
     }
 
-    return psc::particle::Inject{pos, {pxi, pyi, pzi}, wni, npt.kind};
+    return psc::particle::Inject{pos, {pxi, pyi, pzi}, wni, npt.kind, npt.tag};
   }
 
   // ----------------------------------------------------------------------
@@ -111,7 +112,6 @@ struct SetupParticles
     }
     
     auto inj = mprts.injector();
-
     for (int p = 0; p < mprts.n_patches(); ++p) {
       auto ldims = grid.ldims;
       auto injector = inj[p];

@@ -11,6 +11,7 @@ namespace particle
 {
 
 using Id = uint64_t;
+using Tag = int;
 
 // ======================================================================
 // Inject
@@ -23,14 +24,15 @@ struct Inject
   using Real = double;
   using Real3 = Vec3<Real>;
 
-  Inject(const Real3& x, const Real3& u, Real w, int kind)
-    : x{x}, u{u}, w{w}, kind{kind}
+  Inject(const Real3& x, const Real3& u, Real w, int kind, Tag tag = {})
+    : x{x}, u{u}, w{w}, kind{kind}, tag{tag}
   {}
 
   Real3 x;
   Real3 u;
   Real w;
   int kind;
+  Tag tag;
 };
 
 } // namespace particle

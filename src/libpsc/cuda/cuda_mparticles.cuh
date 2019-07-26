@@ -69,7 +69,7 @@ struct ParticleCudaStorage
   __host__ __device__
   operator DParticleCuda()
   {
-    return {{xi4.x, xi4.y, xi4.z}, {pxi4.x, pxi4.y, pxi4.z}, pxi4.w, cuda_float_as_int(xi4.w), 0};
+    return {{xi4.x, xi4.y, xi4.z}, {pxi4.x, pxi4.y, pxi4.z}, pxi4.w, cuda_float_as_int(xi4.w), psc::particle::Id(), psc::particle::Tag()};
   }
   
   float4 xi4;

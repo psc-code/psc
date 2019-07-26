@@ -15,7 +15,7 @@ struct ParticleSimple
 
   ParticleSimple() = default;
 
-  KG_INLINE ParticleSimple(Real3 x, Real3 u, real_t qni_wni, int kind, psc::particle::Id id)
+  KG_INLINE ParticleSimple(Real3 x, Real3 u, real_t qni_wni, int kind, psc::particle::Id id, psc::particle::Tag tag)
     : x{x},
       u{u},
       kind{kind},
@@ -31,6 +31,7 @@ struct ParticleSimple
   KG_INLINE bool operator!=(const ParticleSimple& other) const { return !(*this == other); }
 
   KG_INLINE psc::particle::Id id()  const { return 0; }
+  KG_INLINE psc::particle::Tag tag()  const { return 0; }
 
 public:
   Real3 x;

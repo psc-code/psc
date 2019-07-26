@@ -14,6 +14,7 @@ struct hdf5_prt {
   float px, py, pz;
   float q, m, w;
   psc::particle::Id id;
+  psc::particle::Tag tag;
 };
 
 #define H5_CHK(ierr) assert(ierr >= 0)
@@ -70,6 +71,7 @@ struct OutputParticlesHdf5 : OutputParticlesParams, OutputParticlesBase
     H5Tinsert(id, "m" , HOFFSET(struct hdf5_prt, m) , H5T_NATIVE_FLOAT);
     H5Tinsert(id, "w" , HOFFSET(struct hdf5_prt, w) , H5T_NATIVE_FLOAT);
     H5Tinsert(id, "id" , HOFFSET(struct hdf5_prt, id) , ToHdf5Type<psc::particle::Id>::H5Type());
+    H5Tinsert(id, "tag" , HOFFSET(struct hdf5_prt, tag) , ToHdf5Type<psc::particle::Tag>::H5Type());
     prt_type = id;
     
     // set hi to gdims by default (if not set differently before)
@@ -246,6 +248,7 @@ struct OutputParticlesHdf5 : OutputParticlesParams, OutputParticlesBase
 		  arr[nn].m  = prt.m();
 		  arr[nn].w  = prt.w();
 		  arr[nn].id  = prt.id();
+		  arr[nn].tag  = prt.tag();
 		}
 	      }
 	    }
