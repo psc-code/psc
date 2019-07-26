@@ -60,76 +60,9 @@ struct Inject_ : InjectBase
     setup_particles.fractional_n_particles_per_cell = true;
     setup_particles.neutralizing_population = 1; // MY_ELECTRON;
 
-    setupParticles(mprts, setup_particles, lf_init_npt);
+    setup_particles.setupParticles(mprts, lf_init_npt);
 
     mres.put_as(mf_n, 0, 0);
-  }
-
-  template <typename FUNC>
-  void setupParticles(Mparticles& mprts,
-                      SetupParticles<Mparticles>& setup_particles, FUNC init_npt)
-  {
-    const auto& grid = mprts.grid();
-    const auto& kinds = grid.kinds;
-
-    auto inj = mprts.injector();
-
-    for (int p = 0; p < mprts.n_patches(); ++p) {
-      auto ldims = grid.ldims;
-      auto injector = inj[p];
-
-      for (int jz = 0; jz < ldims[2]; jz++) {
-        for (int jy = 0; jy < ldims[1]; jy++) {
-          for (int jx = 0; jx < ldims[0]; jx++) {
-            Double3 pos = {grid.patches[p].x_cc(jx), grid.patches[p].y_cc(jy),
-                           grid.patches[p].z_cc(jz)};
-            // FIXME, the issue really is that (2nd order) particle pushers
-            // don't handle the invariant dim right
-            if (grid.isInvar(0) == 1)
-              pos[0] = grid.patches[p].x_nc(jx);
-            if (grid.isInvar(1) == 1)
-              pos[1] = grid.patches[p].y_nc(jy);
-            if (grid.isInvar(2) == 1)
-              pos[2] = grid.patches[p].z_nc(jz);
-
-            int n_q_in_cell = 0;
-            for (int kind = 0; kind < kinds.size(); kind++) {
-              struct psc_particle_npt npt = {};
-              if (kind < kinds.size()) {
-                npt.kind = kind;
-                npt.q = kinds[kind].q;
-                npt.m = kinds[kind].m;
-              }
-              init_npt(kind, pos, p, {jx, jy, jz}, npt);
-
-              int n_in_cell;
-              if (kind != setup_particles.neutralizing_population) {
-                n_in_cell = setup_particles.get_n_in_cell(grid, &npt);
-                n_q_in_cell += npt.q * n_in_cell;
-              } else {
-                // FIXME, should handle the case where not the last population
-                // is neutralizing
-                assert(setup_particles.neutralizing_population ==
-                       kinds.size() - 1);
-                n_in_cell = -n_q_in_cell / npt.q;
-              }
-              for (int cnt = 0; cnt < n_in_cell; cnt++) {
-                real_t wni;
-                if (setup_particles.fractional_n_particles_per_cell) {
-                  wni = 1.;
-                } else {
-                  wni = npt.n / (n_in_cell * grid.norm.cori);
-                }
-                particle_inject prt{{}, {}, wni, npt.kind};
-                setup_particles.setup_particle(grid, &prt, &npt, p, pos);
-
-                injector(prt);
-              }
-            }
-          }
-        }
-      }
-    }
   }
 
   // ----------------------------------------------------------------------
