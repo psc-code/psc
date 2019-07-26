@@ -23,18 +23,18 @@ struct SetupParticles
   //
   // helper function for partition / particle setup
 
-  int get_n_in_cell(const Grid_t& grid, psc_particle_npt* npt)
+  int get_n_in_cell(const Grid_t& grid, const psc_particle_npt& npt)
   {
     if (fractional_n_particles_per_cell) {
-      int n_prts = npt->n / grid.norm.cori;
-      float rmndr = npt->n / grid.norm.cori - n_prts;
+      int n_prts = npt.n / grid.norm.cori;
+      float rmndr = npt.n / grid.norm.cori - n_prts;
       float ran = random() / ((float)RAND_MAX + 1);
       if (ran < rmndr) {
         n_prts++;
       }
       return n_prts;
     }
-    return npt->n / grid.norm.cori + .5;
+    return npt.n / grid.norm.cori + .5;
   }
 
   // ----------------------------------------------------------------------
@@ -138,7 +138,7 @@ struct SetupParticles
 
             int n_q_in_cell = 0;
             for (int kind = 0; kind < kinds.size(); kind++) {
-              struct psc_particle_npt npt = {};
+              psc_particle_npt npt{};
               if (kind < kinds.size()) {
                 npt.kind = kind;
               }
@@ -146,7 +146,7 @@ struct SetupParticles
 
               int n_in_cell;
               if (kind != neutralizing_population) {
-                n_in_cell = get_n_in_cell(grid, &npt);
+                n_in_cell = get_n_in_cell(grid, npt);
                 n_q_in_cell += kinds[npt.kind].q * n_in_cell;
               } else {
                 // FIXME, should handle the case where not the last population
@@ -202,7 +202,7 @@ struct SetupParticles
 
             int n_q_in_cell = 0;
             for (int kind = 0; kind < kinds.size(); kind++) {
-              struct psc_particle_npt npt = {};
+              psc_particle_npt npt{};
               if (kind < kinds.size()) {
                 npt.kind = kind;
               };
@@ -210,7 +210,7 @@ struct SetupParticles
 
               int n_in_cell;
               if (kind != neutralizing_population) {
-                n_in_cell = get_n_in_cell(grid, &npt);
+                n_in_cell = get_n_in_cell(grid, npt);
                 n_q_in_cell += kinds[npt.kind].q * n_in_cell;
               } else {
                 // FIXME, should handle the case where not the last population

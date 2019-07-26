@@ -10,6 +10,7 @@
 #include "../libpsc/vpic/vpic_config.h"
 #include "psc_particles_double.h"
 #include "psc_particles_single.h"
+#include "setup_particles.hxx"
 #ifdef USE_CUDA
 #include "../libpsc/cuda/mparticles_cuda.hxx"
 #include "../libpsc/cuda/mparticles_cuda.inl"
@@ -437,6 +438,33 @@ TYPED_TEST(MparticlesIOTest, WriteRead)
 }
 
 #endif
+
+// ======================================================================
+// TestSetupParticles
+
+TEST(TestSetupParticles, Simple)
+{
+  using Mparticles = MparticlesDouble;
+  
+  auto domain = Grid_t::Domain{{1, 2, 2},
+			       {10., 20., 20.}, {},
+			       {1, 1, 1}};
+  auto kinds = Grid_t::Kinds{{1., 100., "i"}};
+  auto prm = Grid_t::NormalizationParams::dimensionless();
+  prm.nicell = 2;
+  Grid_t grid{domain, {}, kinds, {prm}, .1};
+  Mparticles mprts{grid};
+			   
+  SetupParticles<Mparticles> setup_particles;
+  std::vector<uint> n_prts_by_patch;
+  setup_particles.setup_particles(mprts, n_prts_by_patch,
+				  [&](int kind, Double3 crd, psc_particle_npt& npt) {
+      npt.n = 1;
+    });
+
+  auto n_cells = grid.domain.gdims[0] * grid.domain.gdims[1] * grid.domain.gdims[2];
+  EXPECT_EQ(mprts.size(), n_cells * kinds.size() * prm.nicell);
+}
 
 int main(int argc, char** argv)
 {
