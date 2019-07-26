@@ -108,12 +108,12 @@ struct SetupParticles
     auto inj = mprts.injector();
 
     for (int p = 0; p < mprts.n_patches(); ++p) {
-      Int3 ilo = {}, ihi = grid.ldims;
+      auto ldims = grid.ldims;
       auto injector = inj[p];
 
-      for (int jz = ilo[2]; jz < ihi[2]; jz++) {
-        for (int jy = ilo[1]; jy < ihi[1]; jy++) {
-          for (int jx = ilo[0]; jx < ihi[0]; jx++) {
+      for (int jz = 0; jz < ldims[2]; jz++) {
+        for (int jy = 0; jy < ldims[1]; jy++) {
+          for (int jx = 0; jx < ldims[0]; jx++) {
             Double3 pos = {grid.patches[p].x_cc(jx), grid.patches[p].y_cc(jy),
                            grid.patches[p].z_cc(jz)};
             // FIXME, the issue really is that (2nd order) particle pushers
@@ -132,7 +132,7 @@ struct SetupParticles
                 npt.kind = kind;
                 npt.q = kinds[kind].q;
                 npt.m = kinds[kind].m;
-              };
+              }
               func(kind, pos, npt);
 
               int n_in_cell;
@@ -146,16 +146,14 @@ struct SetupParticles
                 n_in_cell = -n_q_in_cell / npt.q;
               }
               for (int cnt = 0; cnt < n_in_cell; cnt++) {
-                int kind = npt.kind;
                 real_t wni;
                 if (fractional_n_particles_per_cell) {
                   wni = 1.;
                 } else {
                   wni = npt.n / (n_in_cell * grid.norm.cori);
                 }
-                particle_inject prt{{}, {}, wni, kind};
+                particle_inject prt{{}, {}, wni, npt.kind};
                 setup_particle(grid, &prt, &npt, p, pos);
-                // p->lni = particle_label_offset + 1;
                 injector(prt);
               }
             }

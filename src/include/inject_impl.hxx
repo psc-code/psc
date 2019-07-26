@@ -60,8 +60,8 @@ struct Inject_ : InjectBase
     };
 
     auto inj = mprts.injector();
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      const int* ldims = grid.ldims;
+    for (int p = 0; p < mprts.n_patches(); ++p) {
+      auto ldims = grid.ldims;
       auto injector = inj[p];
 
       for (int jz = 0; jz < ldims[2]; jz++) {
@@ -85,9 +85,11 @@ struct Inject_ : InjectBase
             int n_q_in_cell = 0;
             for (int kind = 0; kind < kinds.size(); kind++) {
               struct psc_particle_npt npt = {};
-              npt.kind = kind;
-              npt.q = kinds[kind].q;
-              npt.m = kinds[kind].m;
+              if (kind < kinds.size()) {
+                npt.kind = kind;
+                npt.q = kinds[kind].q;
+                npt.m = kinds[kind].m;
+              }
               lf_init_npt(kind, pos, p, {jx, jy, jz}, npt);
 
               int n_in_cell;
@@ -101,11 +103,14 @@ struct Inject_ : InjectBase
                        kinds.size() - 1);
                 n_in_cell = -n_q_in_cell / npt.q;
               }
-
               for (int cnt = 0; cnt < n_in_cell; cnt++) {
-                assert(setup_particles.fractional_n_particles_per_cell);
-                real_t wni = 1.; // ??? FIXME
-                auto prt = particle_inject{{}, {}, wni, npt.kind};
+                real_t wni;
+                if (setup_particles.fractional_n_particles_per_cell) {
+                  wni = 1.;
+                } else {
+                  wni = npt.n / (n_in_cell * grid.norm.cori);
+                }
+                particle_inject prt{{}, {}, wni, npt.kind};
                 setup_particles.setup_particle(grid, &prt, &npt, p, pos);
 
                 injector(prt);
