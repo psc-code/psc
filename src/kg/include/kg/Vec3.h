@@ -194,5 +194,7 @@ KG_INLINE Vec3<T> operator/(const Vec3<T>& v, const Vec3<T>& w)
 
 using Int3 = Vec3<int>;
 using UInt3 = Vec3<unsigned int>;
+using Float3 = Vec3<float>;
+using Double3 = Vec3<double>;
 
 #endif

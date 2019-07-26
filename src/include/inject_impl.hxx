@@ -51,8 +51,8 @@ struct Inject_ : InjectBase
     auto& mres = moment_n_.result();
     auto& mf_n = mres.template get_as<Mfields>(kind_n, kind_n+1);
 
-    auto lf_init_npt = [&](int kind, double crd[3], int p, Int3 idx, psc_particle_npt& npt) {
-      target_.init_npt(kind, crd, npt);
+    auto lf_init_npt = [&](int kind, Double3 pos, int p, Int3 idx, psc_particle_npt& npt) {
+      target_.init_npt(kind, pos, npt);
       npt.n -= mf_n[p](kind_n, idx[0], idx[1], idx[2]);
       if (npt.n < 0) {
 	npt.n = 0;
@@ -69,14 +69,14 @@ struct Inject_ : InjectBase
 	for (int jz = 0; jz < ldims[2]; jz++) {
 	  for (int jy = 0; jy < ldims[1]; jy++) {
 	    for (int jx = 0; jx < ldims[0]; jx++) {
-	      Vec3<double> xx = {grid.patches[p].x_cc(jx), grid.patches[p].y_cc(jy), grid.patches[p].z_cc(jz)};
+	      Double3 pos = {grid.patches[p].x_cc(jx), grid.patches[p].y_cc(jy), grid.patches[p].z_cc(jz)};
 	      // FIXME, the issue really is that (2nd order) particle pushers
 	      // don't handle the invariant dim right
-	      if (grid.isInvar(0) == 1) xx[0] = grid.patches[p].x_nc(jx);
-	      if (grid.isInvar(1) == 1) xx[1] = grid.patches[p].y_nc(jy);
-	      if (grid.isInvar(2) == 1) xx[2] = grid.patches[p].z_nc(jz);
+	      if (grid.isInvar(0) == 1) pos[0] = grid.patches[p].x_nc(jx);
+	      if (grid.isInvar(1) == 1) pos[1] = grid.patches[p].y_nc(jy);
+	      if (grid.isInvar(2) == 1) pos[2] = grid.patches[p].z_nc(jz);
 	      
-	      if (!target_.is_inside(xx)) {
+	      if (!target_.is_inside(pos)) {
 		continue;
 	      }
 	      
@@ -86,7 +86,7 @@ struct Inject_ : InjectBase
 		npt.kind = kind;
 		npt.q    = kinds[kind].q;
 		npt.m    = kinds[kind].m;
-		lf_init_npt(kind, xx, p, {jx, jy, jz}, npt);
+		lf_init_npt(kind, pos, p, {jx, jy, jz}, npt);
 		
 		int n_in_cell;
 		if (kind != setup_particles.neutralizing_population) {
@@ -102,7 +102,7 @@ struct Inject_ : InjectBase
 		  assert(setup_particles.fractional_n_particles_per_cell);
 		  real_t wni = 1.; // ??? FIXME
 		  auto prt = particle_inject{{}, {}, wni, npt.kind};
-		  setup_particles.setup_particle(grid, &prt, &npt, p, xx);
+		  setup_particles.setup_particle(grid, &prt, &npt, p, pos);
 		  
 		  injector(prt);
 		}

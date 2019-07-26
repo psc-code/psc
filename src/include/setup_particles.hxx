@@ -42,7 +42,7 @@ struct SetupParticles
   // setup_particle
   
   void setup_particle(const Grid_t& grid, particle_inject *prt, psc_particle_npt *npt,
-		      int p, double xx[3])
+		      int p, Double3 pos)
   {
     auto& kinds = grid.kinds;
     double beta = grid.norm.beta;
@@ -81,9 +81,9 @@ struct SetupParticles
     assert(npt->m == kinds[prt->kind].m);
     /* prt->qni = kinds[prt->kind].q; */
     /* prt->mni = kinds[prt->kind].m; */
-    prt->x[0] = xx[0];
-    prt->x[1] = xx[1];
-    prt->x[2] = xx[2];
+    prt->x[0] = pos[0];
+    prt->x[1] = pos[1];
+    prt->x[2] = pos[2];
     prt->u[0] = pxi;
     prt->u[1] = pyi;
     prt->u[2] = pzi;
@@ -110,14 +110,14 @@ struct SetupParticles
       for (int jz = ilo[2]; jz < ihi[2]; jz++) {
 	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
 	  for (int jx = ilo[0]; jx < ihi[0]; jx++) {
-	    double xx[3] = {grid.patches[p].x_cc(jx),
-			    grid.patches[p].y_cc(jy),
-			    grid.patches[p].z_cc(jz)};
+	    Double3 pos = {grid.patches[p].x_cc(jx),
+			   grid.patches[p].y_cc(jy),
+			   grid.patches[p].z_cc(jz)};
 	    // FIXME, the issue really is that (2nd order) particle pushers
 	    // don't handle the invariant dim right
-	    if (grid.isInvar(0) == 1) xx[0] = grid.patches[p].x_nc(jx);
-	    if (grid.isInvar(1) == 1) xx[1] = grid.patches[p].y_nc(jy);
-	    if (grid.isInvar(2) == 1) xx[2] = grid.patches[p].z_nc(jz);
+	    if (grid.isInvar(0) == 1) pos[0] = grid.patches[p].x_nc(jx);
+	    if (grid.isInvar(1) == 1) pos[1] = grid.patches[p].y_nc(jy);
+	    if (grid.isInvar(2) == 1) pos[2] = grid.patches[p].z_nc(jz);
 	  
 	    int n_q_in_cell = 0;
 	    for (int kind = 0; kind < kinds.size(); kind++) {
@@ -127,7 +127,7 @@ struct SetupParticles
 		npt.q    = kinds[kind].q;
 		npt.m    = kinds[kind].m;
 	      };
-	      func(kind, xx, npt);
+	      func(kind, pos, npt);
 
 	      int n_in_cell;
 	      if (kind != neutralizing_population) {
@@ -147,7 +147,7 @@ struct SetupParticles
 		  wni = npt.n / (n_in_cell * grid.norm.cori);
 		}
 		particle_inject prt{{}, {}, wni, kind};
-		setup_particle(grid, &prt, &npt, p, xx);
+		setup_particle(grid, &prt, &npt, p, pos);
 		//p->lni = particle_label_offset + 1;
 		injector(prt);
 	      }
@@ -176,12 +176,12 @@ struct SetupParticles
       for (int jz = ilo[2]; jz < ihi[2]; jz++) {
 	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
 	  for (int jx = ilo[0]; jx < ihi[0]; jx++) {
-	    double xx[3] = {grid.patches[p].x_cc(jx), grid.patches[p].y_cc(jy), grid.patches[p].z_cc(jz)};
+	    Double3 pos = {grid.patches[p].x_cc(jx), grid.patches[p].y_cc(jy), grid.patches[p].z_cc(jz)};
 	    // FIXME, the issue really is that (2nd order) particle pushers
 	    // don't handle the invariant dim right
-	    if (grid.isInvar(0) == 1) xx[0] = grid.patches[p].x_nc(jx);
-	    if (grid.isInvar(1) == 1) xx[1] = grid.patches[p].y_nc(jy);
-	    if (grid.isInvar(2) == 1) xx[2] = grid.patches[p].z_nc(jz);
+	    if (grid.isInvar(0) == 1) pos[0] = grid.patches[p].x_nc(jx);
+	    if (grid.isInvar(1) == 1) pos[1] = grid.patches[p].y_nc(jy);
+	    if (grid.isInvar(2) == 1) pos[2] = grid.patches[p].z_nc(jz);
 	  
 	    int n_q_in_cell = 0;
 	    for (int kind = 0; kind < kinds.size(); kind++) {
@@ -191,7 +191,7 @@ struct SetupParticles
 		npt.q    = kinds[kind].q;
 		npt.m    = kinds[kind].m;
 	      };
-	      func(kind, xx, npt);
+	      func(kind, pos, npt);
 
 	      int n_in_cell;
 	      if (kind != neutralizing_population) {
