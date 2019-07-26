@@ -83,16 +83,13 @@ struct Inject_ : InjectBase
 		
 		int n_in_cell;
 		if (kind != setup_particles.neutralizing_population) {
-		  if (grid.timestep() >= 0) {
-		    npt.n -= N(kind_n, jx,jy,jz);
-		    if (npt.n < 0) {
-		      n_in_cell = 0;
-		    } else {
-		      // this rounds down rather than trying to get fractional particles
-		      // statistically right...
-		      n_in_cell = npt.n *fac;		}
+		  npt.n -= N(kind_n, jx,jy,jz);
+		  if (npt.n < 0) {
+		    n_in_cell = 0;
 		  } else {
-		    n_in_cell = setup_particles.get_n_in_cell(grid, &npt);
+		    // this rounds down rather than trying to get fractional particles
+		    // statistically right...
+		    n_in_cell = npt.n * fac;
 		  }
 		  n_q_in_cell += npt.q * n_in_cell;
 		} else {
