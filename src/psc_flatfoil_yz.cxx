@@ -91,7 +91,7 @@ public:
 
 using Dim = dim_yz;
 
-#if 1
+#if 0
 #ifdef USE_CUDA
 using PscConfig = PscConfig1vbecCuda<Dim>;
 #else
