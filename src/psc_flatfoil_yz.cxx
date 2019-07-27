@@ -96,8 +96,7 @@ public:
         npt.T[1] = Te;
         npt.T[2] = Te;
         break;
-      default:
-        assert(0);
+      default: assert(0);
     }
   }
 };
@@ -400,7 +399,8 @@ void run()
   setup_particles.fractional_n_particles_per_cell = true;
   setup_particles.neutralizing_population = MY_ELECTRON;
 
-  Inject inject{grid, inject_interval, inject_tau, MY_ELECTRON, inject_target, setup_particles};
+  Inject inject{grid,        inject_interval, inject_tau,
+                MY_ELECTRON, inject_target,   setup_particles};
 
   auto lf_inject = [&](const Grid_t& grid, Mparticles& mprts) {
     static int pr_inject, pr_heating;
@@ -450,8 +450,7 @@ void run()
           npt.T[1] = background_Te;
           npt.T[2] = background_Te;
           break;
-        default:
-          assert(0);
+        default: assert(0);
       }
 
       if (inject_target.is_inside(crd)) {
@@ -462,10 +461,8 @@ void run()
 
     auto lf_init_fields = [&](int m, double crd[3]) {
       switch (m) {
-        case HY:
-          return BB;
-        default:
-          return 0.;
+        case HY: return BB;
+        default: return 0.;
       }
     };
 
@@ -490,7 +487,7 @@ void run()
     setupFields(mflds, lf_init_fields);
   }
 
-   auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
+  auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
                                           balance, collision, checks, marder,
                                           outf, outp, lf_inject);
 
@@ -502,7 +499,7 @@ void run()
 
   // ======================================================================
   // Hand off to PscIntegrator to run the simulation
-  
+
   psc.integrate();
 }
 

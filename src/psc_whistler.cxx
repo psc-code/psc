@@ -1,8 +1,8 @@
 
-#include <psc.hxx>
-#include <setup_particles.hxx>
-#include <setup_fields.hxx>
 #include "../src/libpsc/psc_output_fields/fields_item_moments_1st.hxx"
+#include <psc.hxx>
+#include <setup_fields.hxx>
+#include <setup_particles.hxx>
 
 #include "psc_config.hxx"
 
@@ -17,14 +17,15 @@ struct PscWhistler : Psc<PscConfig>
 {
   using Dim = PscConfig::dim_t;
 
-  enum {
+  enum
+  {
     WHISTLER_ELECTRON,
     WHISTLER_ION,
   };
-  
+
   // ----------------------------------------------------------------------
   // ctor
-  
+
   PscWhistler()
   {
     auto comm = grid().comm();
@@ -39,7 +40,7 @@ struct PscWhistler : Psc<PscConfig>
     beta_i_par_ = .1;
     Ti_perp_over_Ti_par_ = 1.;
     Te_perp_over_Te_par_ = 1.;
-    
+
     double B0 = vA_over_c_;
     double Te_par = beta_e_par_ * sqr(B0) / 2.;
     double Te_perp = Te_perp_over_Te_par_ * Te_par;
@@ -51,29 +52,38 @@ struct PscWhistler : Psc<PscConfig>
     mpi_printf(comm, "d_i = 1., d_e = %g\n", sqrt(me));
     mpi_printf(comm, "om_ci = %g, om_ce = %g\n", B0, B0 / me);
     mpi_printf(comm, "\n");
-    mpi_printf(comm, "v_i,perp = %g [c] T_i,perp = %g\n", sqrt(2.*Ti_perp), Ti_perp);
-    mpi_printf(comm, "v_i,par  = %g [c] T_i,par = %g\n", sqrt(2.*Ti_par), Ti_par);
-    mpi_printf(comm, "v_e,perp = %g [c] T_e,perp = %g\n", sqrt(2*Te_perp / me), Te_perp);
-    mpi_printf(comm, "v_e,par  = %g [c] T_e,par = %g\n", sqrt(2.*Te_par / me), Te_par);
+    mpi_printf(comm, "v_i,perp = %g [c] T_i,perp = %g\n", sqrt(2. * Ti_perp),
+               Ti_perp);
+    mpi_printf(comm, "v_i,par  = %g [c] T_i,par = %g\n", sqrt(2. * Ti_par),
+               Ti_par);
+    mpi_printf(comm, "v_e,perp = %g [c] T_e,perp = %g\n",
+               sqrt(2 * Te_perp / me), Te_perp);
+    mpi_printf(comm, "v_e,par  = %g [c] T_e,par = %g\n", sqrt(2. * Te_par / me),
+               Te_par);
     mpi_printf(comm, "\n");
-  
+
     p_.nmax = 16001;
     p_.cfl = 0.98;
 
     // -- setup particle kinds
-    Grid_t::Kinds kinds = {{ -1., me, "e"}, {1., mi, "i"}, };
+    Grid_t::Kinds kinds = {
+      {-1., me, "e"},
+      {1., mi, "i"},
+    };
 
     // --- setup domain
-    Grid_t::Real3 LL = {5., 5., 100.}; // domain size (normalized units, ie, in d_i)
-    Int3 gdims = {8, 8, 200}; // global number of grid points
-    Int3 np = {1, 1, 25}; // division into patches
+    Grid_t::Real3 LL = {5., 5.,
+                        100.}; // domain size (normalized units, ie, in d_i)
+    Int3 gdims = {8, 8, 200};  // global number of grid points
+    Int3 np = {1, 1, 25};      // division into patches
 
     auto grid_domain = Grid_t::Domain{gdims, LL, {}, np};
-    
-    auto grid_bc = psc::grid::BC{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
-			  { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
-			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC },
-			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC }};
+
+    auto grid_bc =
+      psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
+                    {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
+                    {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC},
+                    {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC}};
 
     // --- generic setup
     auto norm_params = Grid_t::NormalizationParams::dimensionless();
@@ -111,31 +121,42 @@ struct PscWhistler : Psc<PscConfig>
     int marder_loop = 3;
     bool marder_dump = false;
     p_.marder_interval = -1;
-    marder_.reset(new Marder_t(grid(), marder_diffusion, marder_loop, marder_dump));
+    marder_.reset(
+      new Marder_t(grid(), marder_diffusion, marder_loop, marder_dump));
 
     // -- output fields
     OutputFieldsCParams outf_params;
     outf_params.pfield_step = 200;
     std::vector<std::unique_ptr<FieldsItemBase>> outf_items;
-    outf_items.emplace_back(new FieldsItemFields<ItemLoopPatches<Item_e_cc>>(grid()));
-    outf_items.emplace_back(new FieldsItemFields<ItemLoopPatches<Item_h_cc>>(grid()));
-    outf_items.emplace_back(new FieldsItemFields<ItemLoopPatches<Item_j_cc>>(grid()));
-    outf_items.emplace_back(new FieldsItemMoment<ItemMomentAddBnd<Moment_n_1st<Mparticles, MfieldsC>>>(grid()));
-    outf_items.emplace_back(new FieldsItemMoment<ItemMomentAddBnd<Moment_v_1st<Mparticles, MfieldsC>>>(grid()));
-    outf_items.emplace_back(new FieldsItemMoment<ItemMomentAddBnd<Moment_T_1st<Mparticles, MfieldsC>>>(grid()));
+    outf_items.emplace_back(
+      new FieldsItemFields<ItemLoopPatches<Item_e_cc>>(grid()));
+    outf_items.emplace_back(
+      new FieldsItemFields<ItemLoopPatches<Item_h_cc>>(grid()));
+    outf_items.emplace_back(
+      new FieldsItemFields<ItemLoopPatches<Item_j_cc>>(grid()));
+    outf_items.emplace_back(
+      new FieldsItemMoment<
+        ItemMomentAddBnd<Moment_n_1st<Mparticles, MfieldsC>>>(grid()));
+    outf_items.emplace_back(
+      new FieldsItemMoment<
+        ItemMomentAddBnd<Moment_v_1st<Mparticles, MfieldsC>>>(grid()));
+    outf_items.emplace_back(
+      new FieldsItemMoment<
+        ItemMomentAddBnd<Moment_T_1st<Mparticles, MfieldsC>>>(grid()));
     outf_.reset(new OutputFieldsC{grid(), outf_params, std::move(outf_items)});
 
     // --- partition particles and initial balancing
     mpi_printf(comm, "**** Partitioning...\n");
     auto n_prts_by_patch = setup_initial_partition();
     balance_->initial(grid_, n_prts_by_patch);
-    // balance::initial does not rebalance particles, because the old way of doing this
-    // does't even have the particle data structure created yet -- FIXME?
+    // balance::initial does not rebalance particles, because the old way of
+    // doing this does't even have the particle data structure created yet --
+    // FIXME?
     mprts_->reset(grid());
-    
+
     mpi_printf(comm, "**** Setting up particles...\n");
     setup_initial_particles(*mprts_, n_prts_by_patch);
-    
+
     mpi_printf(comm, "**** Setting up fields...\n");
     setup_initial_fields(*mflds_);
 
@@ -151,91 +172,92 @@ private:
     double Te_perp = Te_perp_over_Te_par_ * Te_par;
     double Ti_par = beta_i_par_ * sqr(B0) / 2.;
     double Ti_perp = Ti_perp_over_Ti_par_ * Ti_par;
-    double kz    = (4. * M_PI / grid().domain.length[2]);
+    double kz = (4. * M_PI / grid().domain.length[2]);
     double kperp = (2. * M_PI / grid().domain.length[0]);
     double x = crd[0], y = crd[1], z = crd[2];
 
-    double envelope1 = exp(-(z-25.)*(z-25.)/40.);
-    double envelope2 = exp(-(z-75.)*(z-75.)/40.);
+    double envelope1 = exp(-(z - 25.) * (z - 25.) / 40.);
+    double envelope2 = exp(-(z - 75.) * (z - 75.) / 40.);
 
     switch (kind) {
-    case WHISTLER_ELECTRON:
-      npt.n = 1.;
-      
-      npt.T[0] = Te_perp;
-      npt.T[1] = Te_perp;
-      npt.T[2] = Te_par;
-      
-      // Set velocities for first wave:
-      npt.p[0] = -amplitude_ * envelope1 * B0 * cos(kperp * y + kz*z);
-      npt.p[2] = 0.;
-      
-      // Set velocities for second wave:
-      npt.p[1] = amplitude_ * envelope2 * B0 * sin(kperp * x - kz*z);
-      break;
-    case WHISTLER_ION:
-      npt.n = 1.;
-      
-      npt.T[0] = Ti_perp;
-      npt.T[1] = Ti_perp;
-      npt.T[2] = Ti_par;
-      
-      // Set velocities for first wave:
-      npt.p[0] = -amplitude_ * envelope1 * B0 * cos(kperp * y + kz*z);
-      npt.p[2] = 0.;
-      
-      // Set velocities for second wave:
-      npt.p[1] = amplitude_ * envelope2 * B0 * sin(kperp * x - kz*z);
-      break;
-    default:
-      assert(0);
+      case WHISTLER_ELECTRON:
+        npt.n = 1.;
+
+        npt.T[0] = Te_perp;
+        npt.T[1] = Te_perp;
+        npt.T[2] = Te_par;
+
+        // Set velocities for first wave:
+        npt.p[0] = -amplitude_ * envelope1 * B0 * cos(kperp * y + kz * z);
+        npt.p[2] = 0.;
+
+        // Set velocities for second wave:
+        npt.p[1] = amplitude_ * envelope2 * B0 * sin(kperp * x - kz * z);
+        break;
+      case WHISTLER_ION:
+        npt.n = 1.;
+
+        npt.T[0] = Ti_perp;
+        npt.T[1] = Ti_perp;
+        npt.T[2] = Ti_par;
+
+        // Set velocities for first wave:
+        npt.p[0] = -amplitude_ * envelope1 * B0 * cos(kperp * y + kz * z);
+        npt.p[2] = 0.;
+
+        // Set velocities for second wave:
+        npt.p[1] = amplitude_ * envelope2 * B0 * sin(kperp * x - kz * z);
+        break;
+      default: assert(0);
     }
   }
-  
+
   // ----------------------------------------------------------------------
   // setup_initial_partition
-  
+
   std::vector<uint> setup_initial_partition()
   {
     SetupParticles<Mparticles> setup_particles(grid());
-    return setup_particles.partition(grid(), [&](int kind, double crd[3], psc_particle_npt& npt) {
-	this->init_npt(kind, crd, npt);
+    return setup_particles.partition(
+      grid(), [&](int kind, double crd[3], psc_particle_npt& npt) {
+        this->init_npt(kind, crd, npt);
       });
   }
-  
+
   // ----------------------------------------------------------------------
   // setup_initial_particles
-  
-  void setup_initial_particles(Mparticles& mprts, std::vector<uint>& n_prts_by_patch)
+
+  void setup_initial_particles(Mparticles& mprts,
+                               std::vector<uint>& n_prts_by_patch)
   {
     SetupParticles<Mparticles> setup_particles(grid());
     setup_particles(mprts, [&](int kind, double crd[3], psc_particle_npt& npt) {
-	this->init_npt(kind, crd, npt);
-      });
+      this->init_npt(kind, crd, npt);
+    });
   }
 
   // ----------------------------------------------------------------------
   // setup_initial_fields
-  
+
   void setup_initial_fields(MfieldsState& mflds)
   {
     double B0 = vA_over_c_;
-    double kz    = (4. * M_PI / grid().domain.length[2]);
+    double kz = (4. * M_PI / grid().domain.length[2]);
     double kperp = (2. * M_PI / grid().domain.length[0]);
 
     setupFields(mflds, [&](int m, double crd[3]) {
-	double x = crd[0], y = crd[1], z = crd[2];
-	double envelope1 = exp(-(z-25.)*(z-25.)/40.);
-	double envelope2 = exp(-(z-75.)*(z-75.)/40.);
-    
-	switch (m) {
-	case HX: return amplitude_ * envelope1 * cos(kperp * y + kz*z) * B0;
-	case HY: return amplitude_ * envelope2 * sin(kperp * x - kz*z) * B0;
-	case HZ: return B0;
-	  
-	default: return 0.;
-	}
-      });
+      double x = crd[0], y = crd[1], z = crd[2];
+      double envelope1 = exp(-(z - 25.) * (z - 25.) / 40.);
+      double envelope2 = exp(-(z - 75.) * (z - 75.) / 40.);
+
+      switch (m) {
+        case HX: return amplitude_ * envelope1 * cos(kperp * y + kz * z) * B0;
+        case HY: return amplitude_ * envelope2 * sin(kperp * x - kz * z) * B0;
+        case HZ: return B0;
+
+        default: return 0.;
+      }
+    });
   }
 
 private:
@@ -262,8 +284,7 @@ static void run()
 // ======================================================================
 // main
 
-int
-main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   psc_init(argc, argv);
 
@@ -274,4 +295,3 @@ main(int argc, char **argv)
 
   return 0;
 }
-
