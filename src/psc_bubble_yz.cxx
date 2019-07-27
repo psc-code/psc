@@ -50,7 +50,7 @@ namespace
 
 std::string read_checkpoint_filename;
 
-// Parameters specific to this run. They don't really need to be collected in a
+// Parameters specific to this case. They don't really need to be collected in a
 // struct, but maybe it's nice that they are
 PscBubbleParams g;
 
@@ -95,10 +95,10 @@ using OutputParticles = PscConfig::OutputParticles;
 
 Grid_t* setupGrid()
 {
-  auto domain = Grid_t::Domain{{1, 512*2, 512*3},
+  auto domain = Grid_t::Domain{{1, 512 * 2, 512 * 3},
                                {g.LLn, g.LLy, g.LLz},
                                {0., -.5 * g.LLy, -.5 * g.LLz},
-                               {1, 16*2, 16*3}};
+                               {1, 16 * 2, 16 * 3}};
 
   auto bc =
     psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
@@ -180,8 +180,7 @@ static void init_npt(int kind, double crd[3], psc_particle_npt& npt)
       npt.T[1] = g.TTi;
       npt.T[2] = g.TTi;
       break;
-    default:
-      assert(0);
+    default: assert(0);
   }
 }
 
@@ -240,8 +239,7 @@ static double init_fields(int m, double crd[3])
       }
       return rv;
 
-    default:
-      return 0.;
+    default: return 0.;
   }
 }
 

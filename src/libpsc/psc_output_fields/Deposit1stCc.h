@@ -1,6 +1,10 @@
 
 #pragma once
 
+#include "psc_bits.h"
+
+#include <kg/Vec3.h>
+
 // FIXME, this is still too intermingled, both doing the actual deposit as well as
 // the particle / patch processing
 // OTOH, there is still opportunity for optimization, in particular when

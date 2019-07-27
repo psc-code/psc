@@ -3,6 +3,8 @@
 
 #include "Deposit1stCc.h"
 
+#include "fields_item.hxx"
+
 #include <cmath>
 
 // ======================================================================
