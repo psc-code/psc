@@ -395,7 +395,12 @@ void run()
 
   inject_interval = 20;
   int inject_tau = 40;
-  Inject inject{grid, inject_interval, inject_tau, MY_ELECTRON, inject_target};
+
+  SetupParticles<Mparticles> setup_particles(grid);
+  setup_particles.fractional_n_particles_per_cell = true;
+  setup_particles.neutralizing_population = MY_ELECTRON;
+
+  Inject inject{grid, inject_interval, inject_tau, MY_ELECTRON, inject_target, setup_particles};
 
   auto lf_inject = [&](const Grid_t& grid, Mparticles& mprts) {
     static int pr_inject, pr_heating;
@@ -466,10 +471,6 @@ void run()
 
     // --- partition particles and initial balancing
     mpi_printf(MPI_COMM_WORLD, "**** Partitioning...\n");
-
-    SetupParticles<Mparticles> setup_particles(grid);
-    setup_particles.fractional_n_particles_per_cell = true;
-    setup_particles.neutralizing_population = MY_ELECTRON;
 
     auto n_prts_by_patch = setup_particles.partition(grid, lf_init_npt);
 
