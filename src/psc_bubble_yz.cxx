@@ -50,7 +50,7 @@ namespace
 
 std::string read_checkpoint_filename;
 
-// Parameters specific to this run. They don't really need to be collected in a
+// Parameters specific to this case. They don't really need to be collected in a
 // struct, but maybe it's nice that they are
 PscBubbleParams g;
 

@@ -7,22 +7,41 @@
 #include "psc_config.hxx"
 
 // EDIT to change particle shape order / floating point type / 2d/3d / ...
-using dim_t = dim_xyz;
-using PscConfig = PscConfig1vbecSingle<dim_t>;
+using Dim = dim_xyz;
+using PscConfig = PscConfig1vbecSingle<Dim>;
+
+struct PscWhistlerParams
+{
+  double mi_over_me;
+  double vA_over_c;
+  double amplitude;
+  double beta_e_par;
+  double beta_i_par;
+  double Ti_perp_over_Ti_par;
+  double Te_perp_over_Te_par;
+};
+
+// ======================================================================
+// Global parameters
+
+namespace
+{
+
+// Parameters specific to this case. They don't really need to be collected in a
+// struct, but maybe it's nice that they are
+PscWhistlerParams g;
+
+// This is a set of generic PSC params (see include/psc.hxx),
+// like number of steps to run, etc, which also should be set by the case
+PscParams psc_params;
+
+} // namespace
 
 // ======================================================================
 // PscWhistler
 
 struct PscWhistler : Psc<PscConfig>
 {
-  using Dim = PscConfig::dim_t;
-
-  enum
-  {
-    WHISTLER_ELECTRON,
-    WHISTLER_ION,
-  };
-
   // ----------------------------------------------------------------------
   // ctor
 
@@ -33,21 +52,21 @@ struct PscWhistler : Psc<PscConfig>
     mpi_printf(comm, "*** Setting up...\n");
 
     // Parameters
-    mi_over_me_ = 10.;
-    vA_over_c_ = .1;
-    amplitude_ = .5;
-    beta_e_par_ = .1;
-    beta_i_par_ = .1;
-    Ti_perp_over_Ti_par_ = 1.;
-    Te_perp_over_Te_par_ = 1.;
+    g.mi_over_me = 10.;
+    g.vA_over_c = .1;
+    g.amplitude = .5;
+    g.beta_e_par = .1;
+    g.beta_i_par = .1;
+    g.Ti_perp_over_Ti_par = 1.;
+    g.Te_perp_over_Te_par = 1.;
 
-    double B0 = vA_over_c_;
-    double Te_par = beta_e_par_ * sqr(B0) / 2.;
-    double Te_perp = Te_perp_over_Te_par_ * Te_par;
-    double Ti_par = beta_i_par_ * sqr(B0) / 2.;
-    double Ti_perp = Ti_perp_over_Ti_par_ * Ti_par;
+    double B0 = g.vA_over_c;
+    double Te_par = g.beta_e_par * sqr(B0) / 2.;
+    double Te_perp = g.Te_perp_over_Te_par * Te_par;
+    double Ti_par = g.beta_i_par * sqr(B0) / 2.;
+    double Ti_perp = g.Ti_perp_over_Ti_par * Ti_par;
     double mi = 1.;
-    double me = 1. / mi_over_me_;
+    double me = 1. / g.mi_over_me;
 
     mpi_printf(comm, "d_i = 1., d_e = %g\n", sqrt(me));
     mpi_printf(comm, "om_ci = %g, om_ce = %g\n", B0, B0 / me);
@@ -167,11 +186,11 @@ struct PscWhistler : Psc<PscConfig>
 private:
   void init_npt(int kind, double crd[3], psc_particle_npt& npt)
   {
-    double B0 = vA_over_c_;
-    double Te_par = beta_e_par_ * sqr(B0) / 2.;
-    double Te_perp = Te_perp_over_Te_par_ * Te_par;
-    double Ti_par = beta_i_par_ * sqr(B0) / 2.;
-    double Ti_perp = Ti_perp_over_Ti_par_ * Ti_par;
+    double B0 = g.vA_over_c;
+    double Te_par = g.beta_e_par * sqr(B0) / 2.;
+    double Te_perp = g.Te_perp_over_Te_par * Te_par;
+    double Ti_par = g.beta_i_par * sqr(B0) / 2.;
+    double Ti_perp = g.Ti_perp_over_Ti_par * Ti_par;
     double kz = (4. * M_PI / grid().domain.length[2]);
     double kperp = (2. * M_PI / grid().domain.length[0]);
     double x = crd[0], y = crd[1], z = crd[2];
@@ -180,7 +199,7 @@ private:
     double envelope2 = exp(-(z - 75.) * (z - 75.) / 40.);
 
     switch (kind) {
-      case WHISTLER_ELECTRON:
+      case KIND_ELECTRON:
         npt.n = 1.;
 
         npt.T[0] = Te_perp;
@@ -188,13 +207,13 @@ private:
         npt.T[2] = Te_par;
 
         // Set velocities for first wave:
-        npt.p[0] = -amplitude_ * envelope1 * B0 * cos(kperp * y + kz * z);
+        npt.p[0] = -g.amplitude * envelope1 * B0 * cos(kperp * y + kz * z);
         npt.p[2] = 0.;
 
         // Set velocities for second wave:
-        npt.p[1] = amplitude_ * envelope2 * B0 * sin(kperp * x - kz * z);
+        npt.p[1] = g.amplitude * envelope2 * B0 * sin(kperp * x - kz * z);
         break;
-      case WHISTLER_ION:
+      case KIND_ION:
         npt.n = 1.;
 
         npt.T[0] = Ti_perp;
@@ -202,11 +221,11 @@ private:
         npt.T[2] = Ti_par;
 
         // Set velocities for first wave:
-        npt.p[0] = -amplitude_ * envelope1 * B0 * cos(kperp * y + kz * z);
+        npt.p[0] = -g.amplitude * envelope1 * B0 * cos(kperp * y + kz * z);
         npt.p[2] = 0.;
 
         // Set velocities for second wave:
-        npt.p[1] = amplitude_ * envelope2 * B0 * sin(kperp * x - kz * z);
+        npt.p[1] = g.amplitude * envelope2 * B0 * sin(kperp * x - kz * z);
         break;
       default: assert(0);
     }
@@ -241,7 +260,7 @@ private:
 
   void setup_initial_fields(MfieldsState& mflds)
   {
-    double B0 = vA_over_c_;
+    double B0 = g.vA_over_c;
     double kz = (4. * M_PI / grid().domain.length[2]);
     double kperp = (2. * M_PI / grid().domain.length[0]);
 
@@ -251,23 +270,13 @@ private:
       double envelope2 = exp(-(z - 75.) * (z - 75.) / 40.);
 
       switch (m) {
-        case HX: return amplitude_ * envelope1 * cos(kperp * y + kz * z) * B0;
-        case HY: return amplitude_ * envelope2 * sin(kperp * x - kz * z) * B0;
+        case HX: return g.amplitude * envelope1 * cos(kperp * y + kz * z) * B0;
+        case HY: return g.amplitude * envelope2 * sin(kperp * x - kz * z) * B0;
         case HZ: return B0;
-
         default: return 0.;
       }
     });
   }
-
-private:
-  double mi_over_me_;
-  double vA_over_c_;
-  double amplitude_;
-  double beta_e_par_;
-  double beta_i_par_;
-  double Ti_perp_over_Ti_par_;
-  double Te_perp_over_Te_par_;
 };
 
 // ======================================================================
