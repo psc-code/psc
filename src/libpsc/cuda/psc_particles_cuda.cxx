@@ -24,7 +24,7 @@ static void copy_from(MparticlesBase& mprts_base, MparticlesBase& mprts_other_ba
     for (auto prt: accessor[p]) {
       using real_t = typename MparticlesCuda::real_t;
       using Real3 = typename MparticlesCuda::Real3;
-      injector.raw({Real3(prt.x()), Real3(prt.u()), real_t(prt.qni_wni()), prt.kind(), prt.id()});
+      injector.raw({Real3(prt.x()), Real3(prt.u()), real_t(prt.qni_wni()), prt.kind(), prt.id(), prt.tag()});
     }
   }
 }
@@ -43,7 +43,7 @@ static void copy_to(MparticlesBase& mprts_base, MparticlesBase& mprts_other_base
     for (auto prt: accessor[p]) {
       using real_t = typename MP::real_t;
       using Real3 = typename MP::Real3;
-      mprts_other[p].push_back({Real3(prt.x()), Real3(prt.u()), real_t(prt.qni_wni()), prt.kind(), prt.id()});
+      mprts_other[p].push_back({Real3(prt.x()), Real3(prt.u()), real_t(prt.qni_wni()), prt.kind(), prt.id(), prt.tag()});
     }
   }
 }

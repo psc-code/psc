@@ -521,6 +521,37 @@ TEST(TestSetupParticles, Id)
   }
 }
 
+TEST(TestSetupParticles, Tag)
+{
+  using Mparticles = MparticlesSimple<ParticleWithId<double>>;
+  
+  auto domain = Grid_t::Domain{{1, 2, 2},
+			       {10., 20., 20.}, {},
+			       {1, 1, 1}};
+  auto kinds = Grid_t::Kinds{{1., 100., "i"}, {-1., 1., "e"}};
+  auto prm = Grid_t::NormalizationParams::dimensionless();
+  prm.nicell = 2;
+  Grid_t grid{domain, {}, kinds, {prm}, .1};
+  Mparticles mprts{grid};
+			   
+  SetupParticles<Mparticles> setup_particles;
+  std::vector<uint> n_prts_by_patch;
+  setup_particles.setup_particles(mprts, n_prts_by_patch,
+				  [&](int kind, Double3 crd, psc_particle_npt& npt) {
+      npt.n = 1;
+      npt.tag = psc::particle::Tag{kind * 10};
+    });
+
+  auto n_cells = grid.domain.gdims[0] * grid.domain.gdims[1] * grid.domain.gdims[2];
+  EXPECT_EQ(mprts.size(), n_cells * kinds.size() * prm.nicell);
+
+  for (int p = 0; p < mprts.n_patches(); p++) {
+    for (auto &prt : mprts[p]) {
+      EXPECT_EQ(prt.tag(), prt.kind * 10);
+    }
+  }
+}
+
 int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
