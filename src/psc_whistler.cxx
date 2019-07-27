@@ -249,6 +249,17 @@ private:
 };
 
 // ======================================================================
+// run
+
+static void run()
+{
+  PscWhistler psc;
+
+  psc.initialize();
+  psc.integrate();
+}
+
+// ======================================================================
 // main
 
 int
@@ -256,13 +267,8 @@ main(int argc, char **argv)
 {
   psc_init(argc, argv);
 
-  auto psc = new PscWhistler;
+  run();
 
-  psc->initialize();
-  psc->integrate();
-
-  delete psc;
-  
   libmrc_params_finalize();
   MPI_Finalize();
 
