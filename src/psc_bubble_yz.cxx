@@ -350,7 +350,7 @@ static void run()
 
     SetupParticles<Mparticles> setup_particles(grid);
 
-    auto n_prts_by_patch = setup_particles.setup_partition(grid, init_npt);
+    auto n_prts_by_patch = setup_particles.partition(grid, init_npt);
 
     balance.initial(grid_ptr, n_prts_by_patch);
     // !!! FIXME! grid is now invalid

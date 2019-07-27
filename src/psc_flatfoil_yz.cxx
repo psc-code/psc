@@ -471,7 +471,7 @@ void run()
     setup_particles.fractional_n_particles_per_cell = true;
     setup_particles.neutralizing_population = MY_ELECTRON;
 
-    auto n_prts_by_patch = setup_particles.setup_partition(grid, lf_init_npt);
+    auto n_prts_by_patch = setup_particles.partition(grid, lf_init_npt);
 
     balance.initial(grid_ptr, n_prts_by_patch);
     // !!! FIXME! grid is now invalid

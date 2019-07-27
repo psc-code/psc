@@ -198,7 +198,7 @@ private:
   std::vector<uint> setup_initial_partition()
   {
     SetupParticles<Mparticles> setup_particles(grid());
-    return setup_particles.setup_partition(grid(), [&](int kind, double crd[3], psc_particle_npt& npt) {
+    return setup_particles.partition(grid(), [&](int kind, double crd[3], psc_particle_npt& npt) {
 	this->init_npt(kind, crd, npt);
       });
   }

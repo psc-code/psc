@@ -166,10 +166,10 @@ struct SetupParticles
   }
 
   // ----------------------------------------------------------------------
-  // setup_partition
+  // partition
 
   template <typename FUNC>
-  std::vector<uint> setup_partition(const Grid_t& grid, FUNC init_npt)
+  std::vector<uint> partition(const Grid_t& grid, FUNC init_npt)
   {
     std::vector<uint> n_prts_by_patch(grid.n_patches());
 
