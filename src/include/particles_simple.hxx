@@ -6,6 +6,7 @@
 #include "particles.hxx"
 #include "particle_simple.hxx"
 #include "particle_indexer.hxx"
+#include "UniqueIdGenerator.h"
 
 #include <iterator>
 
@@ -173,8 +174,9 @@ struct MparticlesSimple : MparticlesBase
 
   MparticlesSimple(const Grid_t& grid)
     : MparticlesBase(grid),
-      pi_(grid),
-      storage_(grid.n_patches())
+      storage_(grid.n_patches()),
+      uid_gen(grid.comm()),
+      pi_(grid)
   {}
 
   MparticlesSimple(const MparticlesSimple&) = delete;
@@ -241,6 +243,7 @@ struct MparticlesSimple : MparticlesBase
 private:
   Storage storage_;
 public: // FIXME
+  psc::particle::UniqueIdGenerator uid_gen;
   ParticleIndexer<real_t> pi_;
 };
 

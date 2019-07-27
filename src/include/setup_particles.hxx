@@ -40,17 +40,16 @@ struct SetupParticles
   // ----------------------------------------------------------------------
   // setupParticle
 
-  particle_inject setupParticle(const Grid_t& grid, const psc_particle_npt& npt,
-                                Double3 pos, double wni)
+  psc::particle::Inject setupParticle(const Grid_t& grid,
+                                      const psc_particle_npt& npt, Double3 pos,
+                                      double wni)
   {
     auto& kinds = grid.kinds;
     double beta = grid.norm.beta;
 
-    particle_inject prt{};
-
     assert(npt.kind >= 0 && npt.kind < kinds.size());
     double m = kinds[npt.kind].m;
-    
+
     float ran1, ran2, ran3, ran4, ran5, ran6;
     do {
       ran1 = random() / ((float)RAND_MAX + 1);
@@ -82,16 +81,7 @@ struct SetupParticles
       }
     }
 
-    prt.w = wni;
-    prt.kind = npt.kind;
-    prt.x[0] = pos[0];
-    prt.x[1] = pos[1];
-    prt.x[2] = pos[2];
-    prt.u[0] = pxi;
-    prt.u[1] = pyi;
-    prt.u[2] = pzi;
-
-    return prt;
+    return psc::particle::Inject{pos, {pxi, pyi, pzi}, wni, npt.kind};
   }
 
   // ----------------------------------------------------------------------

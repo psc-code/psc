@@ -76,12 +76,10 @@ struct BalanceTest : ::testing::Test
       for (int n = 0; n < n_prts; n++) {
 	double nn = double(n) / n_prts;
 	auto L = patch.xe - patch.xb;
-	particle_inject prt = {};
-	prt.x[0] = patch.xb[0] + nn * L[0];
-	prt.x[1] = patch.xb[1] + nn * L[1];
-	prt.x[2] = patch.xb[2] + nn * L[2];
-	prt.kind = 0;
-	prt.w = 1.;
+	psc::particle::Inject prt = {
+	  {patch.xb[0] + nn * L[0],
+	   patch.xb[1] + nn * L[1],
+	   patch.xb[2] + nn * L[2]}, {}, 1., 0};
 	injector(prt);
       }
     }

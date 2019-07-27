@@ -26,6 +26,7 @@ add_psc_test(test_moments)
 add_psc_test(test_collision)
 add_psc_test(test_inject)
 add_psc_test(test_balance)
+add_psc_test(TestUniqueIdGenerator)
 
 if (PSC_HAVE_ADIOS2)
   add_psc_test(test_mfields_io)

@@ -116,8 +116,8 @@ TYPED_TEST(CollisionTest, Test1)
   const auto& grid = make_psc<dim>(kinds);
   
   // init particles
-  auto prt0 = particle_inject{{5., 5., 5.}, {1., 0., 0.}, 1., 0};
-  auto prt1 = particle_inject{{5., 5., 5.}, {0. ,0., 0.}, 1., 0};
+  auto prt0 = psc::particle::Inject{{5., 5., 5.}, {1., 0., 0.}, 1., 0};
+  auto prt1 = psc::particle::Inject{{5., 5., 5.}, {0. ,0., 0.}, 1., 0};
 
   Mparticles mprts{grid};
   {

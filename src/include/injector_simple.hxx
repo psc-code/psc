@@ -18,7 +18,7 @@ struct InjectorSimple
       : mprts_{mprts}, p_{p}
     {}
     
-    void operator()(const particle_inject& new_prt)
+    void operator()(const psc::particle::Inject& new_prt)
     {
       const auto& patch = mprts_.grid().patches[p_];
       for (int d = 0; d < 3; d++) {
@@ -29,11 +29,11 @@ struct InjectorSimple
       auto prt = Particle{{real_t(new_prt.x[0] - patch.xb[0]), real_t(new_prt.x[1] - patch.xb[1]), real_t(new_prt.x[2] - patch.xb[2])},
 			  {real_t(new_prt.u[0]), real_t(new_prt.u[1]), real_t(new_prt.u[2])},
 			  real_t(new_prt.w * mprts_.grid().kinds[new_prt.kind].q),
-			  new_prt.kind, new_prt.id};
+			  new_prt.kind, mprts_.uid_gen()};
       mprts_[p_].push_back(prt);
     }
     
-    void reweight(const particle_inject& new_prt)
+    void reweight(const psc::particle::Inject& new_prt)
     {
       auto& grid = mprts_.grid();
       real_t dVi = 1.f / (grid.domain.dx[0] * grid.domain.dx[1] * grid.domain.dx[2]);

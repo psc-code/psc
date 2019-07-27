@@ -10,6 +10,7 @@
 #include "../libpsc/vpic/vpic_config.h"
 #include "psc_particles_double.h"
 #include "psc_particles_single.h"
+#include "particle_with_id.h"
 #include "setup_particles.hxx"
 #ifdef USE_CUDA
 #include "../libpsc/cuda/mparticles_cuda.hxx"
@@ -103,12 +104,10 @@ struct MparticlesTest : ::testing::Test
       for (int n = 0; n < n_prts; n++) {
         double nn = double(n) / n_prts;
         auto L = patch.xe - patch.xb;
-        particle_inject prt = {};
-        prt.x[0] = patch.xb[0] + nn * L[0];
-        prt.x[1] = patch.xb[1] + nn * L[1];
-        prt.x[2] = patch.xb[2] + nn * L[2];
-        prt.kind = 0;
-        prt.w = 1.;
+        psc::particle::Inject prt = {
+	  {patch.xb[0] + nn * L[0],
+	   patch.xb[1] + nn * L[1],
+	   patch.xb[2] + nn * L[2]}, {}, 1., 0};
         injector(prt);
       }
     }
@@ -206,11 +205,9 @@ TYPED_TEST(MparticlesTest, Inject2)
       auto injector = inj[p];
       auto& patch = mprts.grid().patches[p];
       for (int n = 0; n < n_prts; n++) {
-        particle_inject prt = {};
-        auto x = .5 * (patch.xb + patch.xe);
-        int kind = 0;
+        psc::particle::Inject prt{.5 * (patch.xb + patch.xe), {}, double(nn), 0};
         // use weight to store particle number for testing
-        injector({{x[0], x[1], x[2]}, {}, double(nn), kind});
+        injector(prt);
         nn++;
       }
     }
@@ -491,6 +488,37 @@ TEST(TestSetupParticles, NPopulations)
 
   auto n_cells = grid.domain.gdims[0] * grid.domain.gdims[1] * grid.domain.gdims[2];
   EXPECT_EQ(mprts.size(), n_cells * setup_particles.n_populations * prm.nicell);
+}
+
+TEST(TestSetupParticles, Id)
+{
+  using Mparticles = MparticlesSimple<ParticleWithId<double>>;
+  
+  auto domain = Grid_t::Domain{{1, 2, 2},
+			       {10., 20., 20.}, {},
+			       {1, 1, 1}};
+  auto kinds = Grid_t::Kinds{{1., 100., "i"}};
+  auto prm = Grid_t::NormalizationParams::dimensionless();
+  prm.nicell = 2;
+  Grid_t grid{domain, {}, kinds, {prm}, .1};
+  Mparticles mprts{grid};
+			   
+  SetupParticles<Mparticles> setup_particles;
+  std::vector<uint> n_prts_by_patch;
+  setup_particles.setup_particles(mprts, n_prts_by_patch,
+				  [&](int kind, Double3 crd, psc_particle_npt& npt) {
+      npt.n = 1;
+    });
+
+  auto n_cells = grid.domain.gdims[0] * grid.domain.gdims[1] * grid.domain.gdims[2];
+  EXPECT_EQ(mprts.size(), n_cells * kinds.size() * prm.nicell);
+
+  psc::particle::Id cnt = 0;
+  for (int p = 0; p < mprts.n_patches(); p++) {
+    for (auto &prt : mprts[p]) {
+      EXPECT_EQ(prt.id(), cnt++);
+    }
+  }
 }
 
 int main(int argc, char** argv)
