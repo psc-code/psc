@@ -467,7 +467,7 @@ void run()
     // --- partition particles and initial balancing
     mpi_printf(MPI_COMM_WORLD, "**** Partitioning...\n");
 
-    SetupParticles<Mparticles> setup_particles;
+    SetupParticles<Mparticles> setup_particles(grid);
     setup_particles.fractional_n_particles_per_cell = true;
     setup_particles.neutralizing_population = MY_ELECTRON;
 

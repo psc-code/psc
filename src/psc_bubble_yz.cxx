@@ -348,7 +348,7 @@ static void run()
     // --- partition particles and initial balancing
     mpi_printf(MPI_COMM_WORLD, "**** Partitioning...\n");
 
-    SetupParticles<Mparticles> setup_particles;
+    SetupParticles<Mparticles> setup_particles(grid);
 
     auto n_prts_by_patch = setup_particles.setup_partition(grid, init_npt);
 

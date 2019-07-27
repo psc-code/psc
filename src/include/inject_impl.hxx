@@ -54,7 +54,7 @@ struct Inject_ : InjectBase
       }
     };
 
-    SetupParticles<Mparticles> setup_particles;
+    SetupParticles<Mparticles> setup_particles(grid);
     // FIXME, this is taken from and kinda specific to psc_flatfoil_yz.cxx,
     // and really shouldn't be replicated so many times anyway
     setup_particles.fractional_n_particles_per_cell = true;

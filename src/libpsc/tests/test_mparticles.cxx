@@ -452,7 +452,7 @@ TEST(TestSetupParticles, Simple)
   Grid_t grid{domain, {}, kinds, {prm}, .1};
   Mparticles mprts{grid};
 			   
-  SetupParticles<Mparticles> setup_particles;
+  SetupParticles<Mparticles> setup_particles(grid);
   std::vector<uint> n_prts_by_patch;
   setup_particles.setup_particles(mprts, n_prts_by_patch,
 				  [&](int kind, Double3 crd, psc_particle_npt& npt) {
@@ -476,7 +476,7 @@ TEST(TestSetupParticles, NPopulations)
   Grid_t grid{domain, {}, kinds, {prm}, .1};
   Mparticles mprts{grid};
 			   
-  SetupParticles<Mparticles> setup_particles;
+  SetupParticles<Mparticles> setup_particles(grid);
   setup_particles.n_populations = 2;
   std::vector<uint> n_prts_by_patch;
   setup_particles.setup_particles(mprts, n_prts_by_patch,
@@ -503,7 +503,7 @@ TEST(TestSetupParticles, Id)
   Grid_t grid{domain, {}, kinds, {prm}, .1};
   Mparticles mprts{grid};
 			   
-  SetupParticles<Mparticles> setup_particles;
+  SetupParticles<Mparticles> setup_particles(grid);
   std::vector<uint> n_prts_by_patch;
   setup_particles.setup_particles(mprts, n_prts_by_patch,
 				  [&](int kind, Double3 crd, psc_particle_npt& npt) {
@@ -534,7 +534,7 @@ TEST(TestSetupParticles, Tag)
   Grid_t grid{domain, {}, kinds, {prm}, .1};
   Mparticles mprts{grid};
 			   
-  SetupParticles<Mparticles> setup_particles;
+  SetupParticles<Mparticles> setup_particles(grid);
   std::vector<uint> n_prts_by_patch;
   setup_particles.setup_particles(mprts, n_prts_by_patch,
 				  [&](int kind, Double3 crd, psc_particle_npt& npt) {

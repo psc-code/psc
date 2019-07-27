@@ -197,7 +197,7 @@ private:
   
   std::vector<uint> setup_initial_partition()
   {
-    SetupParticles<Mparticles> setup_particles;
+    SetupParticles<Mparticles> setup_particles(grid());
     return setup_particles.setup_partition(grid(), [&](int kind, double crd[3], psc_particle_npt& npt) {
 	this->init_npt(kind, crd, npt);
       });
@@ -208,7 +208,7 @@ private:
   
   void setup_initial_particles(Mparticles& mprts, std::vector<uint>& n_prts_by_patch)
   {
-    SetupParticles<Mparticles> setup_particles;
+    SetupParticles<Mparticles> setup_particles(grid());
     setup_particles.setup_particles(mprts, n_prts_by_patch, [&](int kind, double crd[3], psc_particle_npt& npt) {
 	this->init_npt(kind, crd, npt);
       });
