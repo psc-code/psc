@@ -49,48 +49,76 @@ PscParams psc_params;
 } // namespace
 
 // ======================================================================
+// setupGrid
+//
+// This helper function is responsible for setting up the "Grid",
+// which is really more than just the domain and its decomposition, it
+// also encompasses PC normalization parameters, information about the
+// particle kinds, etc.
+
+Grid_t* setupGrid()
+{
+  // -- setup particle kinds
+  Grid_t::Kinds kinds(NR_KINDS);
+  kinds[KIND_ELECTRON] = {-1., g.me, "e"};
+  kinds[KIND_ION] = {1., g.mi, "i"};
+
+  // --- setup domain
+  Grid_t::Real3 LL = {5., 5.,
+                      100.}; // domain size (normalized units, ie, in d_i)
+  Int3 gdims = {8, 8, 200};  // global number of grid points
+  Int3 np = {1, 1, 25};      // division into patches
+
+  auto domain = Grid_t::Domain{gdims, LL, {}, np};
+
+  auto bc =
+    psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
+                  {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
+                  {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC},
+                  {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC}};
+
+  // --- generic setup
+  auto norm_params = Grid_t::NormalizationParams::dimensionless();
+  norm_params.nicell = 50;
+
+  double dt = psc_params.cfl * courant_length(domain);
+  Grid_t::Normalization norm{norm_params};
+
+  Int3 ibn = {2, 2, 2};
+  if (Dim::InvarX::value) {
+    ibn[0] = 0;
+  }
+  if (Dim::InvarY::value) {
+    ibn[1] = 0;
+  }
+  if (Dim::InvarZ::value) {
+    ibn[2] = 0;
+  }
+
+  return new Grid_t{domain, bc, kinds, norm, dt, -1, ibn};
+}
+
+// ======================================================================
 // PscWhistler
 
 struct PscWhistler : Psc<PscConfig>
 {
+  using Base = Psc<PscConfig>;
+  
   // ----------------------------------------------------------------------
   // ctor
 
-  PscWhistler(const PscParams& params)
+  PscWhistler(const PscParams& params, Grid_t& grid)
   {
-    auto comm = grid().comm();
+    auto comm = grid.comm();
 
-    p_ = params;
+    Base::p_ = params;
 
-    // -- setup particle kinds
-    Grid_t::Kinds kinds(NR_KINDS);
-    kinds[KIND_ELECTRON] = {-1., g.me, "e"};
-    kinds[KIND_ION] = {1., g.mi, "i"};
-
-    // --- setup domain
-    Grid_t::Real3 LL = {5., 5.,
-                        100.}; // domain size (normalized units, ie, in d_i)
-    Int3 gdims = {8, 8, 200};  // global number of grid points
-    Int3 np = {1, 1, 25};      // division into patches
-
-    auto grid_domain = Grid_t::Domain{gdims, LL, {}, np};
-
-    auto grid_bc =
-      psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
-                    {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
-                    {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC},
-                    {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC}};
-
-    // --- generic setup
-    auto norm_params = Grid_t::NormalizationParams::dimensionless();
-    norm_params.nicell = 50;
-
-    double dt = psc_params.cfl * courant_length(grid_domain);
-    define_grid(grid_domain, grid_bc, kinds, dt, norm_params);
+    Base::define_grid(grid);
 
     define_field_array();
 
-    mprts_.reset(new Mparticles{grid()});
+    mprts_.reset(new Mparticles{grid});
 
     // -- Balance
     p_.balance_interval = -1;
@@ -103,14 +131,14 @@ struct PscWhistler : Psc<PscConfig>
     // -- Collision
     int collision_interval = -1;
     double collision_nu = .1;
-    collision_.reset(new Collision_t{grid(), collision_interval, collision_nu});
+    collision_.reset(new Collision_t{grid, collision_interval, collision_nu});
 
     // -- Checks
     ChecksParams checks_params{};
     checks_params.continuity_every_step = 50;
     checks_params.continuity_threshold = 1e-5;
     checks_params.continuity_verbose = false;
-    checks_.reset(new Checks_t{grid(), comm, checks_params});
+    checks_.reset(new Checks_t{grid, comm, checks_params});
 
     // -- Marder correction
     double marder_diffusion = 0.9;
@@ -118,28 +146,28 @@ struct PscWhistler : Psc<PscConfig>
     bool marder_dump = false;
     p_.marder_interval = -1;
     marder_.reset(
-      new Marder_t(grid(), marder_diffusion, marder_loop, marder_dump));
+      new Marder_t(grid, marder_diffusion, marder_loop, marder_dump));
 
     // -- output fields
     OutputFieldsCParams outf_params;
     outf_params.pfield_step = 200;
     std::vector<std::unique_ptr<FieldsItemBase>> outf_items;
     outf_items.emplace_back(
-      new FieldsItemFields<ItemLoopPatches<Item_e_cc>>(grid()));
+      new FieldsItemFields<ItemLoopPatches<Item_e_cc>>(grid));
     outf_items.emplace_back(
-      new FieldsItemFields<ItemLoopPatches<Item_h_cc>>(grid()));
+      new FieldsItemFields<ItemLoopPatches<Item_h_cc>>(grid));
     outf_items.emplace_back(
-      new FieldsItemFields<ItemLoopPatches<Item_j_cc>>(grid()));
-    outf_items.emplace_back(
-      new FieldsItemMoment<
-        ItemMomentAddBnd<Moment_n_1st<Mparticles, MfieldsC>>>(grid()));
+      new FieldsItemFields<ItemLoopPatches<Item_j_cc>>(grid));
     outf_items.emplace_back(
       new FieldsItemMoment<
-        ItemMomentAddBnd<Moment_v_1st<Mparticles, MfieldsC>>>(grid()));
+        ItemMomentAddBnd<Moment_n_1st<Mparticles, MfieldsC>>>(grid));
     outf_items.emplace_back(
       new FieldsItemMoment<
-        ItemMomentAddBnd<Moment_T_1st<Mparticles, MfieldsC>>>(grid()));
-    outf_.reset(new OutputFieldsC{grid(), outf_params, std::move(outf_items)});
+        ItemMomentAddBnd<Moment_v_1st<Mparticles, MfieldsC>>>(grid));
+    outf_items.emplace_back(
+      new FieldsItemMoment<
+        ItemMomentAddBnd<Moment_T_1st<Mparticles, MfieldsC>>>(grid));
+    outf_.reset(new OutputFieldsC{grid, outf_params, std::move(outf_items)});
 
     // --- partition particles and initial balancing
     mpi_printf(comm, "**** Partitioning...\n");
@@ -148,7 +176,7 @@ struct PscWhistler : Psc<PscConfig>
     // balance::initial does not rebalance particles, because the old way of
     // doing this does't even have the particle data structure created yet --
     // FIXME?
-    mprts_->reset(grid());
+    mprts_->reset(grid);
 
     mpi_printf(comm, "**** Setting up particles...\n");
     setup_initial_particles(*mprts_, n_prts_by_patch);
@@ -309,7 +337,13 @@ static void run()
              sqrt(2. * g.Te_par / g.me), g.Te_par);
   mpi_printf(comm, "\n");
 
-  PscWhistler psc(psc_params);
+  // ----------------------------------------------------------------------
+  // Set up grid, state fields, particles
+
+  auto grid_ptr = setupGrid();
+  auto& grid = *grid_ptr;
+  
+  PscWhistler psc(psc_params, *grid_ptr);
 
   psc.initialize();
   psc.integrate();
