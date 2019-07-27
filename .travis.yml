@@ -1,0 +1,28 @@
+dist: bionic
+#addons:
+#  apt:
+#    packages:
+#      - libopenmpi-dev
+#      - cmake
+language: cpp
+compiler:
+  - clang
+  - gcc
+before_install:
+  - pushd ${HOME}
+  - sudo apt-get install -y libopenmpi-dev
+  - sudo apt-get install -y openmpi-bin
+  - sudo apt-get install -y libhdf5-openmpi-dev
+  - popd
+install:
+  - pushd ${HOME}
+  - popd
+before_script:
+  - git reset --hard ${TRAVIS_PULL_REQUEST_SHA}
+  - ${TRAVIS_BUILD_DIR}/scripts/travis/run-format.sh
+script:
+  - mkdir build_${TRAVIS_BUILD_NUMBER}
+  - cd build_${TRAVIS_BUILD_NUMBER}
+  - cmake -DCMAKE_BUILD_TYPE=Release ..
+  - make
+  - ctest -VV .
