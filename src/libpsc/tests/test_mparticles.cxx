@@ -453,8 +453,7 @@ TEST(TestSetupParticles, Simple)
   Mparticles mprts{grid};
 			   
   SetupParticles<Mparticles> setup_particles(grid);
-  setup_particles.setup_particles(mprts,
-				  [&](int kind, Double3 crd, psc_particle_npt& npt) {
+  setup_particles(mprts, [&](int kind, Double3 crd, psc_particle_npt& npt) {
       npt.n = 1;
     });
 
@@ -477,8 +476,7 @@ TEST(TestSetupParticles, NPopulations)
 
   int n_populations = 2;
   SetupParticles<Mparticles> setup_particles(grid, n_populations);
-  setup_particles.setup_particles(mprts,
-				  [&](int pop, Double3 crd, psc_particle_npt& npt) {
+  setup_particles(mprts, [&](int pop, Double3 crd, psc_particle_npt& npt) {
       npt.n = 1;
       npt.kind = 0;
       npt.p[0] = double(pop); // save pop in u[0] for testing
@@ -502,8 +500,7 @@ TEST(TestSetupParticles, Id)
   Mparticles mprts{grid};
 			   
   SetupParticles<Mparticles> setup_particles(grid);
-  setup_particles.setup_particles(mprts,
-				  [&](int kind, Double3 crd, psc_particle_npt& npt) {
+  setup_particles(mprts, [&](int kind, Double3 crd, psc_particle_npt& npt) {
       npt.n = 1;
     });
 
@@ -532,8 +529,7 @@ TEST(TestSetupParticles, Tag)
   Mparticles mprts{grid};
 			   
   SetupParticles<Mparticles> setup_particles(grid);
-  setup_particles.setup_particles(mprts,
-				  [&](int kind, Double3 crd, psc_particle_npt& npt) {
+  setup_particles(mprts, [&](int kind, Double3 crd, psc_particle_npt& npt) {
       npt.n = 1;
       npt.tag = psc::particle::Tag{kind * 10};
     });
