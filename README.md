@@ -2,6 +2,7 @@
 # PSC
 
 [![Documentation Status](https://readthedocs.org/projects/psc/badge/?version=latest)](https://psc.readthedocs.io/en/latest/?badge=latest)
+[![Build Status](https://travis-ci.com/psc-code/psc.svg?branch=master)](https://travis-ci.com/psc-code/psc)
 
 ## Introduction
 
