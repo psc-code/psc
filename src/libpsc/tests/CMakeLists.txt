@@ -1,8 +1,13 @@
 
+set(MPIEXEC_COMMAND
+  ${MPIEXEC_EXECUTABLE} 
+#  ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS}
+)
+
 macro(add_psc_test name)
   add_executable(${name} ${name}.cxx)
-  target_link_libraries(${name} psc GTest::GTest GTest::Main)
-  gtest_discover_tests(${name})
+  target_link_libraries(${name} psc GTest::GTest)
+  gtest_discover_tests(${name} EXEC_WRAPPER ${MPIEXEC_COMMAND})
 endmacro()
 
 add_psc_test(test_grid)
