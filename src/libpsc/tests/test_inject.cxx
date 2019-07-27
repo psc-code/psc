@@ -135,7 +135,7 @@ TYPED_TEST(InjectTest, Test1)
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
 	double xx[3] = {grid.patches[p].x_cc(i), grid.patches[p].y_cc(j), grid.patches[p].z_cc(k)};
 	real_t n_expected = target.is_inside(xx) ? n_injected : 0.;
-	EXPECT_NEAR(mflds_n[p](0, i,j,k), n_expected, eps) << "ijk " << i << ":" << j << ":" << k;
+	EXPECT_NEAR(mflds_n[p](0, i,j,k), n_expected, 2.*grid.norm.cori) << "ijk " << i << ":" << j << ":" << k;
       });
   }
 }

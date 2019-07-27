@@ -10,11 +10,12 @@
 
 struct particle_inject
 {
-  using real_t = double; // FIXME, do we want/need to keep this?
+  using real_t = double;
+  using Real3 = Vec3<real_t>;
   
-  double x[3];
-  double u[3];
-  double w;
+  Real3 x;
+  Real3 u;
+  real_t w;
   int kind;
   int id;
 };
