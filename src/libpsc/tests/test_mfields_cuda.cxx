@@ -43,7 +43,7 @@ TYPED_TEST(TestMfieldsCuda, HostMirror)
   auto grid = make_grid();
   auto mflds = Mfields{grid, NR_FIELDS, {}};
 
-  setupFields(grid, mflds, [](int m, double crd[3]) {
+  setupFields(mflds, [](int m, double crd[3]) {
     return m + crd[0] + 100 * crd[1] + 10000 * crd[2];
   });
 

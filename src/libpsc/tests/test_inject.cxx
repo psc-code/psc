@@ -98,7 +98,8 @@ TYPED_TEST(InjectTest, Test1)
   const int inject_interval = 1;
   const int inject_tau = 10;
   auto target = InjectTestTarget{};
-  Inject inject{grid, inject_interval, inject_tau, 0, target}; // FIXME, can't use "auto inject = Inject{...}", though I want to
+  auto setup_particles = SetupParticles<Mparticles>{grid};
+  Inject inject{grid, inject_interval, inject_tau, 0, target, setup_particles}; // FIXME, can't use "auto inject = Inject{...}", though I want to
 
   // let's start with no particles
   Mparticles mprts{grid};

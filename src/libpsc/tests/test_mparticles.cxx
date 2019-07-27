@@ -452,10 +452,8 @@ TEST(TestSetupParticles, Simple)
   Grid_t grid{domain, {}, kinds, {prm}, .1};
   Mparticles mprts{grid};
 			   
-  SetupParticles<Mparticles> setup_particles;
-  std::vector<uint> n_prts_by_patch;
-  setup_particles.setup_particles(mprts, n_prts_by_patch,
-				  [&](int kind, Double3 crd, psc_particle_npt& npt) {
+  SetupParticles<Mparticles> setup_particles(grid);
+  setup_particles(mprts, [&](int kind, Double3 crd, psc_particle_npt& npt) {
       npt.n = 1;
     });
 
@@ -475,19 +473,17 @@ TEST(TestSetupParticles, NPopulations)
   prm.nicell = 2;
   Grid_t grid{domain, {}, kinds, {prm}, .1};
   Mparticles mprts{grid};
-			   
-  SetupParticles<Mparticles> setup_particles;
-  setup_particles.n_populations = 2;
-  std::vector<uint> n_prts_by_patch;
-  setup_particles.setup_particles(mprts, n_prts_by_patch,
-				  [&](int pop, Double3 crd, psc_particle_npt& npt) {
+
+  int n_populations = 2;
+  SetupParticles<Mparticles> setup_particles(grid, n_populations);
+  setup_particles(mprts, [&](int pop, Double3 crd, psc_particle_npt& npt) {
       npt.n = 1;
       npt.kind = 0;
       npt.p[0] = double(pop); // save pop in u[0] for testing
     });
 
   auto n_cells = grid.domain.gdims[0] * grid.domain.gdims[1] * grid.domain.gdims[2];
-  EXPECT_EQ(mprts.size(), n_cells * setup_particles.n_populations * prm.nicell);
+  EXPECT_EQ(mprts.size(), n_cells * n_populations * prm.nicell);
 }
 
 TEST(TestSetupParticles, Id)
@@ -503,10 +499,8 @@ TEST(TestSetupParticles, Id)
   Grid_t grid{domain, {}, kinds, {prm}, .1};
   Mparticles mprts{grid};
 			   
-  SetupParticles<Mparticles> setup_particles;
-  std::vector<uint> n_prts_by_patch;
-  setup_particles.setup_particles(mprts, n_prts_by_patch,
-				  [&](int kind, Double3 crd, psc_particle_npt& npt) {
+  SetupParticles<Mparticles> setup_particles(grid);
+  setup_particles(mprts, [&](int kind, Double3 crd, psc_particle_npt& npt) {
       npt.n = 1;
     });
 
@@ -534,10 +528,8 @@ TEST(TestSetupParticles, Tag)
   Grid_t grid{domain, {}, kinds, {prm}, .1};
   Mparticles mprts{grid};
 			   
-  SetupParticles<Mparticles> setup_particles;
-  std::vector<uint> n_prts_by_patch;
-  setup_particles.setup_particles(mprts, n_prts_by_patch,
-				  [&](int kind, Double3 crd, psc_particle_npt& npt) {
+  SetupParticles<Mparticles> setup_particles(grid);
+  setup_particles(mprts, [&](int kind, Double3 crd, psc_particle_npt& npt) {
       npt.n = 1;
       npt.tag = psc::particle::Tag{kind * 10};
     });

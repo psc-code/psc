@@ -348,9 +348,9 @@ static void run()
     // --- partition particles and initial balancing
     mpi_printf(MPI_COMM_WORLD, "**** Partitioning...\n");
 
-    SetupParticles<Mparticles> setup_particles;
+    SetupParticles<Mparticles> setup_particles(grid);
 
-    auto n_prts_by_patch = setup_particles.setup_partition(grid, init_npt);
+    auto n_prts_by_patch = setup_particles.partition(grid, init_npt);
 
     balance.initial(grid_ptr, n_prts_by_patch);
     // !!! FIXME! grid is now invalid
@@ -361,11 +361,11 @@ static void run()
 
     // -- set up particles
     mpi_printf(MPI_COMM_WORLD, "**** Setting up particles...\n");
-    setup_particles.setup_particles(mprts, n_prts_by_patch, init_npt);
+    setup_particles(mprts, init_npt);
 
     // -- set up fields
     mpi_printf(MPI_COMM_WORLD, "**** Setting up fields...\n");
-    setupFields(*grid_ptr, mflds, init_fields);
+    setupFields(mflds, init_fields);
   }
 
   auto psc =

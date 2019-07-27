@@ -395,7 +395,12 @@ void run()
 
   inject_interval = 20;
   int inject_tau = 40;
-  Inject inject{grid, inject_interval, inject_tau, MY_ELECTRON, inject_target};
+
+  SetupParticles<Mparticles> setup_particles(grid);
+  setup_particles.fractional_n_particles_per_cell = true;
+  setup_particles.neutralizing_population = MY_ELECTRON;
+
+  Inject inject{grid, inject_interval, inject_tau, MY_ELECTRON, inject_target, setup_particles};
 
   auto lf_inject = [&](const Grid_t& grid, Mparticles& mprts) {
     static int pr_inject, pr_heating;
@@ -467,11 +472,7 @@ void run()
     // --- partition particles and initial balancing
     mpi_printf(MPI_COMM_WORLD, "**** Partitioning...\n");
 
-    SetupParticles<Mparticles> setup_particles;
-    setup_particles.fractional_n_particles_per_cell = true;
-    setup_particles.neutralizing_population = MY_ELECTRON;
-
-    auto n_prts_by_patch = setup_particles.setup_partition(grid, lf_init_npt);
+    auto n_prts_by_patch = setup_particles.partition(grid, lf_init_npt);
 
     balance.initial(grid_ptr, n_prts_by_patch);
     // !!! FIXME! grid is now invalid
@@ -482,11 +483,11 @@ void run()
 
     // -- set up particles
     mpi_printf(MPI_COMM_WORLD, "**** Setting up particles...\n");
-    setup_particles.setup_particles(mprts, n_prts_by_patch, lf_init_npt);
+    setup_particles(mprts, lf_init_npt);
 
     // -- set up fields
     mpi_printf(MPI_COMM_WORLD, "**** Setting up fields...\n");
-    setupFields(*grid_ptr, mflds, lf_init_fields);
+    setupFields(mflds, lf_init_fields);
   }
 
    auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,

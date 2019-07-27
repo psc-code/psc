@@ -20,13 +20,15 @@ struct Inject_ : InjectBase
   using Mparticles = _Mparticles;
   using real_t = typename Mparticles::real_t;
   using ItemMoment_t = _ItemMoment;
+  using SetupParticles = ::SetupParticles<Mparticles>;
 
   // ----------------------------------------------------------------------
   // ctor
 
   Inject_(const Grid_t& grid, int interval, int tau, int kind_n,
-          Target_t target)
-    : InjectBase{interval, tau, kind_n}, target_{target}, moment_n_{grid}
+          Target_t target, SetupParticles& setup_particles)
+    : InjectBase{interval, tau, kind_n}, target_{target}, moment_n_{grid},
+      setup_particles_{setup_particles}
   {}
 
   // ----------------------------------------------------------------------
@@ -54,13 +56,7 @@ struct Inject_ : InjectBase
       }
     };
 
-    SetupParticles<Mparticles> setup_particles;
-    // FIXME, this is taken from and kinda specific to psc_flatfoil_yz.cxx,
-    // and really shouldn't be replicated so many times anyway
-    setup_particles.fractional_n_particles_per_cell = true;
-    setup_particles.neutralizing_population = 1; // MY_ELECTRON;
-
-    setup_particles.setupParticles(mprts, lf_init_npt);
+    setup_particles_.setupParticles(mprts, lf_init_npt);
 
     mres.put_as(mf_n, 0, 0);
   }
@@ -78,6 +74,7 @@ struct Inject_ : InjectBase
 private:
   Target_t target_;
   ItemMoment_t moment_n_;
+  SetupParticles setup_particles_;
 };
 
 // ======================================================================

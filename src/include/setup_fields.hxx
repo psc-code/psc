@@ -16,8 +16,10 @@ struct SetupFields
   using real_t = typename Mfields::real_t;
 
   template<typename FUNC>
-  static void run(const Grid_t& grid, Mfields& mf, FUNC&& func)
+  static void run(Mfields& mf, FUNC&& func)
   {
+    const auto& grid = mf.grid();
+  
     for (int p = 0; p < mf.n_patches(); ++p) {
       auto& patch = grid.patches[p];
       auto F = mf[p];
@@ -55,7 +57,7 @@ struct SetupFields
 }
 
 template<typename MF, typename FUNC>
-void setupFields(const Grid_t& grid, MF& mflds, FUNC&& func)
+void setupFields(MF& mflds, FUNC&& func)
 {
-  detail::SetupFields<MF>::run(grid, mflds, std::forward<FUNC>(func));
+  detail::SetupFields<MF>::run(mflds, std::forward<FUNC>(func));
 }

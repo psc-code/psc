@@ -197,8 +197,8 @@ private:
   
   std::vector<uint> setup_initial_partition()
   {
-    SetupParticles<Mparticles> setup_particles;
-    return setup_particles.setup_partition(grid(), [&](int kind, double crd[3], psc_particle_npt& npt) {
+    SetupParticles<Mparticles> setup_particles(grid());
+    return setup_particles.partition(grid(), [&](int kind, double crd[3], psc_particle_npt& npt) {
 	this->init_npt(kind, crd, npt);
       });
   }
@@ -208,8 +208,8 @@ private:
   
   void setup_initial_particles(Mparticles& mprts, std::vector<uint>& n_prts_by_patch)
   {
-    SetupParticles<Mparticles> setup_particles;
-    setup_particles.setup_particles(mprts, n_prts_by_patch, [&](int kind, double crd[3], psc_particle_npt& npt) {
+    SetupParticles<Mparticles> setup_particles(grid());
+    setup_particles(mprts, [&](int kind, double crd[3], psc_particle_npt& npt) {
 	this->init_npt(kind, crd, npt);
       });
   }
@@ -223,7 +223,7 @@ private:
     double kz    = (4. * M_PI / grid().domain.length[2]);
     double kperp = (2. * M_PI / grid().domain.length[0]);
 
-    setupFields(grid(), mflds, [&](int m, double crd[3]) {
+    setupFields(mflds, [&](int m, double crd[3]) {
 	double x = crd[0], y = crd[1], z = crd[2];
 	double envelope1 = exp(-(z-25.)*(z-25.)/40.);
 	double envelope2 = exp(-(z-75.)*(z-75.)/40.);
