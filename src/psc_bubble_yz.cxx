@@ -365,7 +365,7 @@ static void run()
 
     // -- set up fields
     mpi_printf(MPI_COMM_WORLD, "**** Setting up fields...\n");
-    setupFields(*grid_ptr, mflds, init_fields);
+    setupFields(mflds, init_fields);
   }
 
   auto psc =

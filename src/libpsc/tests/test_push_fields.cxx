@@ -36,7 +36,7 @@ TYPED_TEST(PushFieldsTest, Pushf1)
   
   // init fields
   auto mflds = MfieldsState{grid};
-  setupFields(grid, mflds, [&](int m, double crd[3]) {
+  setupFields(mflds, [&](int m, double crd[3]) {
       switch (m) {
       case EY: return sin(kz*crd[2]);
       default: return 0.;
@@ -72,7 +72,7 @@ TYPED_TEST(PushFieldsTest, Pushf2)
   
   // init fields
   auto mflds = MfieldsState{grid};
-  setupFields(grid, mflds, [&](int m, double crd[3]) {
+  setupFields(mflds, [&](int m, double crd[3]) {
       switch (m) {
       case HX: return cos(ky*crd[1]);
       default: return 0.;

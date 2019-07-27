@@ -223,7 +223,7 @@ private:
     double kz    = (4. * M_PI / grid().domain.length[2]);
     double kperp = (2. * M_PI / grid().domain.length[0]);
 
-    setupFields(grid(), mflds, [&](int m, double crd[3]) {
+    setupFields(mflds, [&](int m, double crd[3]) {
 	double x = crd[0], y = crd[1], z = crd[2];
 	double envelope1 = exp(-(z-25.)*(z-25.)/40.);
 	double envelope2 = exp(-(z-75.)*(z-75.)/40.);

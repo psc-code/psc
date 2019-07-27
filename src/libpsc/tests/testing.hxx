@@ -195,7 +195,7 @@ struct PushParticlesTest : ::testing::Test
 
     // init fields
     mflds = new MfieldsState{grid()};
-    setupFields(grid(), *mflds, init_fields);
+    setupFields(*mflds, init_fields);
 
     // init particle
     mprts = new Mparticles{grid()};
