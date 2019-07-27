@@ -95,8 +95,7 @@ struct SetupParticles
   // setup_particles
 
   template <typename FUNC>
-  void setup_particles(Mparticles& mprts, std::vector<uint>& n_prts_by_patch,
-                       FUNC func)
+  void setup_particles(Mparticles& mprts, FUNC func)
   {
     setupParticles(mprts, [&](int kind, Double3 pos, int p, Int3 idx,
                               psc_particle_npt& npt) { func(kind, pos, npt); });
@@ -162,9 +161,6 @@ struct SetupParticles
             }
           }
         }
-      }
-      if (!fractional_n_particles_per_cell) {
-        // assert(mprts[p].size() == n_prts_by_patch[p]); FIXME
       }
     }
   }

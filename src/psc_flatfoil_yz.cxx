@@ -482,7 +482,7 @@ void run()
 
     // -- set up particles
     mpi_printf(MPI_COMM_WORLD, "**** Setting up particles...\n");
-    setup_particles.setup_particles(mprts, n_prts_by_patch, lf_init_npt);
+    setup_particles.setup_particles(mprts, lf_init_npt);
 
     // -- set up fields
     mpi_printf(MPI_COMM_WORLD, "**** Setting up fields...\n");

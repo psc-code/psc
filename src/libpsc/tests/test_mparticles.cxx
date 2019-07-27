@@ -453,8 +453,7 @@ TEST(TestSetupParticles, Simple)
   Mparticles mprts{grid};
 			   
   SetupParticles<Mparticles> setup_particles(grid);
-  std::vector<uint> n_prts_by_patch;
-  setup_particles.setup_particles(mprts, n_prts_by_patch,
+  setup_particles.setup_particles(mprts,
 				  [&](int kind, Double3 crd, psc_particle_npt& npt) {
       npt.n = 1;
     });
@@ -478,8 +477,7 @@ TEST(TestSetupParticles, NPopulations)
 
   int n_populations = 2;
   SetupParticles<Mparticles> setup_particles(grid, n_populations);
-  std::vector<uint> n_prts_by_patch;
-  setup_particles.setup_particles(mprts, n_prts_by_patch,
+  setup_particles.setup_particles(mprts,
 				  [&](int pop, Double3 crd, psc_particle_npt& npt) {
       npt.n = 1;
       npt.kind = 0;
@@ -504,8 +502,7 @@ TEST(TestSetupParticles, Id)
   Mparticles mprts{grid};
 			   
   SetupParticles<Mparticles> setup_particles(grid);
-  std::vector<uint> n_prts_by_patch;
-  setup_particles.setup_particles(mprts, n_prts_by_patch,
+  setup_particles.setup_particles(mprts,
 				  [&](int kind, Double3 crd, psc_particle_npt& npt) {
       npt.n = 1;
     });
@@ -535,8 +532,7 @@ TEST(TestSetupParticles, Tag)
   Mparticles mprts{grid};
 			   
   SetupParticles<Mparticles> setup_particles(grid);
-  std::vector<uint> n_prts_by_patch;
-  setup_particles.setup_particles(mprts, n_prts_by_patch,
+  setup_particles.setup_particles(mprts,
 				  [&](int kind, Double3 crd, psc_particle_npt& npt) {
       npt.n = 1;
       npt.tag = psc::particle::Tag{kind * 10};
