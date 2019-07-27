@@ -475,9 +475,9 @@ TEST(TestSetupParticles, NPopulations)
   prm.nicell = 2;
   Grid_t grid{domain, {}, kinds, {prm}, .1};
   Mparticles mprts{grid};
-			   
-  SetupParticles<Mparticles> setup_particles(grid);
-  setup_particles.n_populations = 2;
+
+  int n_populations = 2;
+  SetupParticles<Mparticles> setup_particles(grid, n_populations);
   std::vector<uint> n_prts_by_patch;
   setup_particles.setup_particles(mprts, n_prts_by_patch,
 				  [&](int pop, Double3 crd, psc_particle_npt& npt) {
@@ -487,7 +487,7 @@ TEST(TestSetupParticles, NPopulations)
     });
 
   auto n_cells = grid.domain.gdims[0] * grid.domain.gdims[1] * grid.domain.gdims[2];
-  EXPECT_EQ(mprts.size(), n_cells * setup_particles.n_populations * prm.nicell);
+  EXPECT_EQ(mprts.size(), n_cells * n_populations * prm.nicell);
 }
 
 TEST(TestSetupParticles, Id)
