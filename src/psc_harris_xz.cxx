@@ -37,7 +37,6 @@
 
 extern Grid* vgrid; // FIXME
 
-
 static RngPool* rngpool; // FIXME, should be member (of struct psc, really)
 
 // FIXME, helper should go somewhere...
@@ -412,8 +411,7 @@ struct PscHarris : Psc<PscConfig>
   //
   // FIXME: can only use 1st order pushers with current conducting wall b.c.
 
-  PscHarris(const PscParams& psc_params, Grid_t& grid,
-            MaterialList& material_list)
+  PscHarris(const PscParams& psc_params, Grid_t& grid, MfieldsState& mflds)
     : io_pfd_{"pfd"}
   {
     auto comm = grid.comm();
@@ -424,7 +422,8 @@ struct PscHarris : Psc<PscConfig>
 
     // --- setup field data structures
 
-    define_field_array(material_list);
+    mflds_.reset(&mflds);
+    vpic_define_fields(grid);
 
     // --- finalize field advance
 
@@ -863,10 +862,6 @@ void run()
   psc_params.nmax =
     int(g.taui / (phys.wci * grid.dt)); // number of steps from taui
 
-  // --- setup materials
-  MaterialList material_list;
-  setupMaterials(material_list);
-
   // --- create Simulation
 #if 0
   // set high level VPIC simulation parameters
@@ -876,7 +871,22 @@ void run()
 	    psc_params.stats_every / 2);
 #endif
 
-  auto psc = PscHarris{psc_params, *grid_ptr, material_list};
+  // --- setup fields
+#ifdef VPIC
+  // --- setup materials
+  MaterialList material_list;
+  setupMaterials(material_list);
+
+  // FIXME, mv assert into MfieldsState ctor
+  assert(!material_list.empty());
+
+  double damp = 0.;
+  auto& mflds = *new MfieldsState{grid, vgrid, material_list, damp};
+#else
+  auto& mflds = *new MfieldsState{grid};
+#endif
+
+  auto psc = PscHarris{psc_params, *grid_ptr, mflds};
 
   psc.initialize();
   psc.integrate();

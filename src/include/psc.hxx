@@ -148,22 +148,14 @@ struct Psc
   void define_particles(Mparticles& mprts) { mprts_.reset(&mprts); }
 
   // ----------------------------------------------------------------------
-  // define_field_array
+  // vpic_define_fields
 
-  void define_field_array(MfieldsState& mflds) { mflds_.reset(&mflds); }
-
-  void define_field_array(MaterialList& material_list, double damp = 0.)
+  void vpic_define_fields(const Grid_t& grid)
   {
 #ifdef VPIC
-    // FIXME, mv assert innto MfieldsState ctor
-    assert(!material_list.empty());
-
-    mflds_.reset(new MfieldsState{grid(), vgrid, material_list, damp});
-    hydro_.reset(new MfieldsHydro{grid(), vgrid});
+    hydro_.reset(new MfieldsHydro{grid, vgrid});
     interpolator_.reset(new MfieldsInterpolator{vgrid});
     accumulator_.reset(new MfieldsAccumulator{vgrid});
-#else
-    mflds_.reset(new MfieldsState{grid()});
 #endif
   }
 

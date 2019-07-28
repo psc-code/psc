@@ -41,7 +41,7 @@ struct PscIntegrator : Psc<PscConfig>
     Base::p_ = params;
 
     Base::define_grid(grid);
-    Base::define_field_array(mflds);
+    Base::mflds_.reset(&mflds);
     Base::define_particles(mprts);
 
     Base::balance_.reset(&balance);
