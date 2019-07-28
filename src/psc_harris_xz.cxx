@@ -35,6 +35,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+extern Grid* vgrid; // FIXME
+
+
 static RngPool* rngpool; // FIXME, should be member (of struct psc, really)
 
 // FIXME, helper should go somewhere...
@@ -434,7 +437,7 @@ struct PscHarris : Psc<PscConfig>
     // --- setup species
     // FIXME, half-redundant to the PSC species setup
 #ifdef VPIC
-    mprts_.reset(new Mparticles{grid, vgrid_});
+    mprts_.reset(new Mparticles{grid, vgrid});
 #else
     mprts_.reset(new Mparticles{grid});
 #endif

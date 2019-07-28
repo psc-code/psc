@@ -31,6 +31,18 @@
 struct MaterialList;
 #endif
 
+#ifdef VPIC
+
+// FIXME, global variables are bad...
+
+using VpicConfig = VpicConfigPsc;
+using MfieldsState = typename VpicConfig::MfieldsState;
+using Grid = typename MfieldsState::Grid;
+
+Grid* vgrid;
+
+#endif
+
 // ======================================================================
 // PscParams
 
@@ -133,8 +145,8 @@ struct Psc
     auto bc = grid.bc;
     auto dt = grid.dt;
     
-    vgrid_ = Grid::create();
-    vgrid_->setup(domain.dx, dt, grid.norm.cc, grid.norm.eps0);
+    vgrid = Grid::create();
+    vgrid->setup(domain.dx, dt, grid.norm.cc, grid.norm.eps0);
 
     // define the grid
     define_periodic_grid(domain.corner, domain.corner + domain.length,
@@ -202,10 +214,10 @@ struct Psc
     // FIXME, mv assert innto MfieldsState ctor
     assert(!material_list.empty());
 
-    mflds_.reset(new MfieldsState{grid(), vgrid_, material_list, damp});
-    hydro_.reset(new MfieldsHydro{grid(), vgrid_});
-    interpolator_.reset(new MfieldsInterpolator{vgrid_});
-    accumulator_.reset(new MfieldsAccumulator{vgrid_});
+    mflds_.reset(new MfieldsState{grid(), vgrid, material_list, damp});
+    hydro_.reset(new MfieldsHydro{grid(), vgrid});
+    interpolator_.reset(new MfieldsInterpolator{vgrid});
+    accumulator_.reset(new MfieldsAccumulator{vgrid});
 #else
     mflds_.reset(new MfieldsState{grid()});
 #endif
@@ -301,8 +313,8 @@ struct Psc
       step();
       grid_->timestep_++; // FIXME, too hacky
 #ifdef VPIC
-      vgrid_->step++;
-      assert(vgrid_->step == grid().timestep());
+      vgrid->step++;
+      assert(vgrid->step == grid().timestep());
 #endif
 
       diagnostics();
@@ -632,7 +644,7 @@ struct Psc
     // SimulationMixin::setTopology(np[0], np[1], np[2]); FIXME, needed for
     // vpic_simulation, I believe only because this info is written out in
     // diagnostics_run
-    vgrid_->partition_periodic_box(xl, xh, gdims, Int3::fromPointer(np));
+    vgrid->partition_periodic_box(xl, xh, gdims, Int3::fromPointer(np));
 #endif
   }
 
@@ -654,7 +666,7 @@ struct Psc
       default:
         assert(0);
     }
-    vgrid_->set_fbc(boundary, fbc);
+    vgrid->set_fbc(boundary, fbc);
 #endif
   }
 
@@ -676,7 +688,7 @@ struct Psc
       default:
         assert(0);
     }
-    vgrid_->set_pbc(boundary, pbc);
+    vgrid->set_pbc(boundary, pbc);
 #endif
   }
 
@@ -700,7 +712,7 @@ struct Psc
   void grid_setup_communication()
   {
 #ifdef VPIC
-    assert(vgrid_->nx && vgrid_->ny && vgrid_->ny);
+    assert(vgrid->nx && vgrid->ny && vgrid->ny);
 
     // Pre-size communications buffers. This is done to get most memory
     // allocation over with before the simulation starts running
@@ -711,31 +723,31 @@ struct Psc
     // FIXME, this really isn't a good place to do this, as it requires layer
     // breaking knowledge of which communication will need the largest
     // buffers...
-    int nx1 = vgrid_->nx + 1, ny1 = vgrid_->ny + 1, nz1 = vgrid_->nz + 1;
-    vgrid_->mp_size_recv_buffer(
+    int nx1 = vgrid->nx + 1, ny1 = vgrid->ny + 1, nz1 = vgrid->nz + 1;
+    vgrid->mp_size_recv_buffer(
       BOUNDARY(-1, 0, 0), ny1 * nz1 * sizeof(typename MfieldsHydro::Element));
-    vgrid_->mp_size_recv_buffer(
+    vgrid->mp_size_recv_buffer(
       BOUNDARY(1, 0, 0), ny1 * nz1 * sizeof(typename MfieldsHydro::Element));
-    vgrid_->mp_size_recv_buffer(
+    vgrid->mp_size_recv_buffer(
       BOUNDARY(0, -1, 0), nz1 * nx1 * sizeof(typename MfieldsHydro::Element));
-    vgrid_->mp_size_recv_buffer(
+    vgrid->mp_size_recv_buffer(
       BOUNDARY(0, 1, 0), nz1 * nx1 * sizeof(typename MfieldsHydro::Element));
-    vgrid_->mp_size_recv_buffer(
+    vgrid->mp_size_recv_buffer(
       BOUNDARY(0, 0, -1), nx1 * ny1 * sizeof(typename MfieldsHydro::Element));
-    vgrid_->mp_size_recv_buffer(
+    vgrid->mp_size_recv_buffer(
       BOUNDARY(0, 0, 1), nx1 * ny1 * sizeof(typename MfieldsHydro::Element));
 
-    vgrid_->mp_size_send_buffer(
+    vgrid->mp_size_send_buffer(
       BOUNDARY(-1, 0, 0), ny1 * nz1 * sizeof(typename MfieldsHydro::Element));
-    vgrid_->mp_size_send_buffer(
+    vgrid->mp_size_send_buffer(
       BOUNDARY(1, 0, 0), ny1 * nz1 * sizeof(typename MfieldsHydro::Element));
-    vgrid_->mp_size_send_buffer(
+    vgrid->mp_size_send_buffer(
       BOUNDARY(0, -1, 0), nz1 * nx1 * sizeof(typename MfieldsHydro::Element));
-    vgrid_->mp_size_send_buffer(
+    vgrid->mp_size_send_buffer(
       BOUNDARY(0, 1, 0), nz1 * nx1 * sizeof(typename MfieldsHydro::Element));
-    vgrid_->mp_size_send_buffer(
+    vgrid->mp_size_send_buffer(
       BOUNDARY(0, 0, -1), nx1 * ny1 * sizeof(typename MfieldsHydro::Element));
-    vgrid_->mp_size_send_buffer(
+    vgrid->mp_size_send_buffer(
       BOUNDARY(0, 0, 1), nx1 * ny1 * sizeof(typename MfieldsHydro::Element));
 #endif
   }
@@ -963,9 +975,6 @@ protected:
 
   PscParams p_;
   Grid_t* grid_;
-#ifdef VPIC
-  Grid* vgrid_;
-#endif
 
   std::unique_ptr<MfieldsState> mflds_;
 #ifdef VPIC
