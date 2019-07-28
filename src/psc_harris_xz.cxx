@@ -375,7 +375,9 @@ Grid_t* setupGrid()
   }
 #endif
 
-  return new Grid_t{domain, bc, kinds, norm, dt, -1, ibn};
+  auto grid_ptr = new Grid_t{domain, bc, kinds, norm, dt, -1, ibn};
+  vpic_define_grid(*grid_ptr);
+  return grid_ptr;
 }
 
 // ----------------------------------------------------------------------

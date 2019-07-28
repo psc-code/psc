@@ -44,8 +44,6 @@ Grid* vgrid;
 
 #endif
 
-void vpic_define_grid(const Grid_t& grid);
-
 // ======================================================================
 // PscParams
 
@@ -142,8 +140,6 @@ struct Psc
     assert(grid.isInvar(2) == Dim::InvarZ::value);
 
     grid_ = &grid;
-
-    vpic_define_grid(grid);
   }
 
   // ----------------------------------------------------------------------
