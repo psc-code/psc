@@ -293,6 +293,82 @@ struct globals_physics
 globals_physics phys;
 
 // ======================================================================
+// setupGrid
+//
+// This helper function is responsible for setting up the "Grid",
+// which is really more than just the domain and its decomposition, it
+// also encompasses PC normalization parameters, information about the
+// particle kinds, etc.
+
+Grid_t* setupGrid()
+{
+  auto comm = MPI_COMM_WORLD;
+
+  // --- set up domain
+
+  auto domain = Grid_t::Domain{g.gdims,
+                               {phys.Lx, phys.Ly, phys.Lz},
+                               {0., -.5 * phys.Ly, -.5 * phys.Lz},
+                               g.np};
+
+  mpi_printf(comm, "Conducting fields on Z-boundaries\n");
+  mpi_printf(comm, "Reflect particles on Z-boundaries\n");
+  auto bc =
+    psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL},
+                  {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL},
+                  {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING},
+                  {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING}};
+  if (g.open_bc_x) {
+    mpi_printf(comm, "Absorbing fields on X-boundaries\n");
+    bc.fld_lo[0] = BND_FLD_ABSORBING;
+    bc.fld_hi[0] = BND_FLD_ABSORBING;
+    mpi_printf(comm, "Absorb particles on X-boundaries\n");
+    bc.prt_lo[1] = BND_PRT_ABSORBING;
+    bc.prt_hi[1] = BND_PRT_ABSORBING;
+  }
+
+  if (g.driven_bc_z) {
+    mpi_printf(comm, "Absorb particles on Z-boundaries\n");
+    bc.prt_lo[2] = BND_PRT_ABSORBING;
+    bc.prt_hi[2] = BND_PRT_ABSORBING;
+  }
+
+  auto kinds = Grid_t::Kinds(NR_KINDS);
+  kinds[KIND_ELECTRON] = {-phys.ec, phys.me, "e"};
+  kinds[KIND_ION] = {phys.ec, phys.mi, "i"};
+
+  // determine the time step
+  double dg = courant_length(domain);
+  double dt = psc_params.cfl * dg / phys.c; // courant limited time step
+  if (phys.wpe * dt > g.wpedt_max) {
+    dt =
+      g.wpedt_max / phys.wpe; // override timestep if plasma frequency limited
+  }
+
+  assert(phys.c == 1. && phys.eps0 == 1.);
+  auto norm_params = Grid_t::NormalizationParams::dimensionless();
+  norm_params.nicell = 1;
+  auto norm = Grid_t::Normalization{norm_params};
+
+#ifdef VPIC
+  Int3 ibn = {1, 1, 1};
+#else
+  Int3 ibn = {2, 2, 2};
+  if (Dim::InvarX::value) {
+    ibn[0] = 0;
+  }
+  if (Dim::InvarY::value) {
+    ibn[1] = 0;
+  }
+  if (Dim::InvarZ::value) {
+    ibn[2] = 0;
+  }
+#endif
+
+  return new Grid_t{domain, bc, kinds, norm, dt, -1, ibn};
+}
+
+// ======================================================================
 // PscHarris
 
 struct PscHarris : Psc<PscConfig>
@@ -302,29 +378,15 @@ struct PscHarris : Psc<PscConfig>
   //
   // FIXME: can only use 1st order pushers with current conducting wall b.c.
 
-  PscHarris(const PscParams& psc_params, const Grid_t::Domain& domain,
-            const psc::grid::BC& bc, const Grid_t::Kinds& kinds)
-    : io_pfd_{"pfd"}
+  PscHarris(const PscParams& psc_params, Grid_t& grid) : io_pfd_{"pfd"}
   {
-    auto comm = grid().comm();
+    auto comm = grid.comm();
 
     p_ = psc_params;
 
-    // determine the time step
-    double dg = courant_length(domain);
-    double dt = p_.cfl * dg / phys.c; // courant limited time step
-    if (phys.wpe * dt > g.wpedt_max) {
-      dt =
-        g.wpedt_max / phys.wpe; // override timestep if plasma frequency limited
-    }
+    define_grid(grid);
 
-    assert(phys.c == 1. && phys.eps0 == 1.);
-    auto norm_params = Grid_t::NormalizationParams::dimensionless();
-    norm_params.nicell = 1;
-
-    define_grid(domain, bc, kinds, dt, norm_params);
-
-    p_.nmax = int(g.taui / (phys.wci * grid().dt)); // number of steps from taui
+    p_.nmax = int(g.taui / (phys.wci * grid.dt)); // number of steps from taui
 
     // --- setup materials
 
@@ -357,9 +419,9 @@ struct PscHarris : Psc<PscConfig>
     // --- setup species
     // FIXME, half-redundant to the PSC species setup
 #ifdef VPIC
-    mprts_.reset(new Mparticles{grid(), vgrid_});
+    mprts_.reset(new Mparticles{grid, vgrid_});
 #else
-    mprts_.reset(new Mparticles{grid()});
+    mprts_.reset(new Mparticles{grid});
 #endif
     setup_species();
 
@@ -378,11 +440,11 @@ struct PscHarris : Psc<PscConfig>
     // -- Collision
     int collision_interval = 0;
     double collision_nu = .1; // FIXME, != 0 needed to avoid crash
-    collision_.reset(new Collision_t{grid(), collision_interval, collision_nu});
+    collision_.reset(new Collision_t{grid, collision_interval, collision_nu});
 
     // -- Checks
     ChecksParams checks_params{};
-    checks_.reset(new Checks_t{grid(), comm, checks_params});
+    checks_.reset(new Checks_t{grid, comm, checks_params});
 
     // -- Marder correction
     // FIXME, these are ignored for vpic (?)
@@ -408,11 +470,11 @@ struct PscHarris : Psc<PscConfig>
 #endif
 
     marder_.reset(
-      new Marder_t(grid(), marder_diffusion, marder_loop, marder_dump));
+      new Marder_t(grid, marder_diffusion, marder_loop, marder_dump));
 
     // ---
 
-    int interval = int(g.t_intervali / (phys.wci * grid().dt));
+    int interval = int(g.t_intervali / (phys.wci * grid.dt));
     create_diagnostics(interval);
 
     // -- output fields
@@ -422,27 +484,28 @@ struct PscHarris : Psc<PscConfig>
 #ifdef VPIC
     // handled by diagnostics instead
 #else
-    outf_items.emplace_back(std::move(FieldsItemFactory::create("e", grid())));
-    outf_items.emplace_back(std::move(FieldsItemFactory::create("h", grid())));
-    outf_items.emplace_back(std::move(FieldsItemFactory::create("j", grid())));
+    outf_items.emplace_back(std::move(FieldsItemFactory::create("e", grid)));
+    outf_items.emplace_back(std::move(FieldsItemFactory::create("h", grid)));
+    outf_items.emplace_back(std::move(FieldsItemFactory::create("j", grid)));
     outf_items.emplace_back(
-      std::move(FieldsItemFactory::create("n_1st_single", grid())));
+      std::move(FieldsItemFactory::create("n_1st_single", grid)));
     outf_items.emplace_back(
-      std::move(FieldsItemFactory::create("v_1st_single", grid())));
+      std::move(FieldsItemFactory::create("v_1st_single", grid)));
     outf_items.emplace_back(
-      std::move(FieldsItemFactory::create("T_1st_single", grid())));
+      std::move(FieldsItemFactory::create("T_1st_single", grid)));
 #endif
-    outf_params.pfield_step = int((output_field_interval / (phys.wci * dt)));
-    outf_.reset(new OutputFieldsC{grid(), outf_params, std::move(outf_items)});
+    outf_params.pfield_step =
+      int((output_field_interval / (phys.wci * grid.dt)));
+    outf_.reset(new OutputFieldsC{grid, outf_params, std::move(outf_items)});
 
     OutputParticlesParams outp_params{};
     outp_params.every_step =
-      int((g.output_particle_interval / (phys.wci * dt)));
+      int((g.output_particle_interval / (phys.wci * grid.dt)));
     outp_params.data_dir = ".";
     outp_params.basename = "prt";
     outp_params.lo = {192, 0, 48};
     outp_params.hi = {320, 0, 80};
-    outp_.reset(new OutputParticles{grid(), outp_params});
+    outp_.reset(new OutputParticles{grid, outp_params});
 
     // ----------------------------------------------------------------------
     // rebalance and actually initialize particles / fields
@@ -451,7 +514,7 @@ struct PscHarris : Psc<PscConfig>
     mpi_printf(comm, "**** Partitioning...\n");
     auto n_prts_by_patch = setup_initial_partition();
     balance_->initial(grid_, n_prts_by_patch);
-    mprts_->reset(grid());
+    mprts_->reset(grid);
 
     mpi_printf(comm, "**** Setting up particles...\n");
     setup_initial_particles(*mprts_, n_prts_by_patch);
@@ -793,40 +856,13 @@ void run()
   psc_params.cfl = 0.99;
   psc_params.stats_every = 100;
 
-  // --- set up domain
+  // ----------------------------------------------------------------------
+  // Set up grid, state fields, particles
 
-  auto domain = Grid_t::Domain{g.gdims,
-                               {phys.Lx, phys.Ly, phys.Lz},
-                               {0., -.5 * phys.Ly, -.5 * phys.Lz},
-                               g.np};
+  auto grid_ptr = setupGrid();
+  auto& grid = *grid_ptr;
 
-  mpi_printf(comm, "Conducting fields on Z-boundaries\n");
-  mpi_printf(comm, "Reflect particles on Z-boundaries\n");
-  auto bc =
-    psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL},
-                  {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL},
-                  {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING},
-                  {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING}};
-  if (g.open_bc_x) {
-    mpi_printf(comm, "Absorbing fields on X-boundaries\n");
-    bc.fld_lo[0] = BND_FLD_ABSORBING;
-    bc.fld_hi[0] = BND_FLD_ABSORBING;
-    mpi_printf(comm, "Absorb particles on X-boundaries\n");
-    bc.prt_lo[1] = BND_PRT_ABSORBING;
-    bc.prt_hi[1] = BND_PRT_ABSORBING;
-  }
-
-  if (g.driven_bc_z) {
-    mpi_printf(comm, "Absorb particles on Z-boundaries\n");
-    bc.prt_lo[2] = BND_PRT_ABSORBING;
-    bc.prt_hi[2] = BND_PRT_ABSORBING;
-  }
-
-  auto kinds = Grid_t::Kinds(NR_KINDS);
-  kinds[KIND_ELECTRON] = {-phys.ec, phys.me, "e"};
-  kinds[KIND_ION] = {phys.ec, phys.mi, "i"};
-
-  auto psc = PscHarris{psc_params, domain, bc, kinds};
+  auto psc = PscHarris{psc_params, *grid_ptr};
 
   psc.initialize();
   psc.integrate();

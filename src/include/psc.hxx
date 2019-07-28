@@ -123,44 +123,25 @@ struct Psc
     assert(grid.isInvar(2) == Dim::InvarZ::value);
 
     grid_ = &grid;
-  }
-
-  void define_grid(const Grid_t::Domain& domain, const psc::grid::BC& bc,
-                   const Grid_t::Kinds& kinds, double dt,
-                   const Grid_t::NormalizationParams& norm_params)
-  {
-#ifdef VPIC
-    Int3 ibn = {1, 1, 1};
-#else
-    Int3 ibn = {2, 2, 2};
-    if (Dim::InvarX::value) {
-      ibn[0] = 0;
-    }
-    if (Dim::InvarY::value) {
-      ibn[1] = 0;
-    }
-    if (Dim::InvarZ::value) {
-      ibn[2] = 0;
-    }
-#endif
-
-    auto coeff = Grid_t::Normalization{norm_params};
-    define_grid(*new Grid_t{domain, bc, kinds, coeff, dt, -1, ibn});
 
 #ifdef VPIC
+    auto domain = grid.domain;
+    auto bc = grid.bc;
+    auto dt = grid.dt;
+    
     vgrid_ = Grid::create();
-    vgrid_->setup(domain.dx, dt, norm_params.cc, norm_params.eps0);
+    vgrid_->setup(domain.dx, dt, grid.norm.cc, grid.norm.eps0);
 
     // define the grid
     define_periodic_grid(domain.corner, domain.corner + domain.length,
                          domain.gdims, domain.np);
 
     // set field boundary conditions
-    for (int p = 0; p < grid().n_patches(); p++) {
+    for (int p = 0; p < grid.n_patches(); p++) {
       assert(p == 0);
       for (int d = 0; d < 3; d++) {
-        bool lo = grid().atBoundaryLo(p, d);
-        bool hi = grid().atBoundaryHi(p, d);
+        bool lo = grid.atBoundaryLo(p, d);
+        bool hi = grid.atBoundaryHi(p, d);
 
         if (lo && bc.fld_lo[d] != BND_FLD_PERIODIC) {
           Int3 bnd = {0, 0, 0};
@@ -177,11 +158,11 @@ struct Psc
     }
 
     // set particle boundary conditions
-    for (int p = 0; p < grid().n_patches(); p++) {
+    for (int p = 0; p < grid.n_patches(); p++) {
       assert(p == 0);
       for (int d = 0; d < 3; d++) {
-        bool lo = grid().atBoundaryLo(p, d);
-        bool hi = grid().atBoundaryHi(p, d);
+        bool lo = grid.atBoundaryLo(p, d);
+        bool hi = grid.atBoundaryHi(p, d);
 
         if (lo && bc.prt_lo[d] != BND_PRT_PERIODIC) {
           Int3 bnd = {0, 0, 0};
