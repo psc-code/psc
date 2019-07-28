@@ -302,60 +302,29 @@ struct PscHarris : Psc<PscConfig>
   //
   // FIXME: can only use 1st order pushers with current conducting wall b.c.
 
-  PscHarris(const PscParams& psc_params) : io_pfd_{"pfd"}
+  PscHarris(const PscParams& psc_params, const Grid_t::Domain& domain,
+            const psc::grid::BC& bc, const Grid_t::Kinds& kinds)
+    : io_pfd_{"pfd"}
   {
     auto comm = grid().comm();
 
     p_ = psc_params;
 
-    // --- set up domain
-
-    auto grid_domain = Grid_t::Domain{g.gdims,
-                                      {phys.Lx, phys.Ly, phys.Lz},
-                                      {0., -.5 * phys.Ly, -.5 * phys.Lz},
-                                      g.np};
-
-    mpi_printf(comm, "Conducting fields on Z-boundaries\n");
-    mpi_printf(comm, "Reflect particles on Z-boundaries\n");
-    auto grid_bc = psc::grid::BC{
-      {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL},
-      {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL},
-      {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING},
-      {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING}};
-    if (g.open_bc_x) {
-      mpi_printf(comm, "Absorbing fields on X-boundaries\n");
-      grid_bc.fld_lo[0] = BND_FLD_ABSORBING;
-      grid_bc.fld_hi[0] = BND_FLD_ABSORBING;
-      mpi_printf(comm, "Absorb particles on X-boundaries\n");
-      grid_bc.prt_lo[1] = BND_PRT_ABSORBING;
-      grid_bc.prt_hi[1] = BND_PRT_ABSORBING;
-    }
-
-    if (g.driven_bc_z) {
-      mpi_printf(comm, "Absorb particles on Z-boundaries\n");
-      grid_bc.prt_lo[2] = BND_PRT_ABSORBING;
-      grid_bc.prt_hi[2] = BND_PRT_ABSORBING;
-    }
-
-    auto kinds =
-      Grid_t::Kinds{{-phys.ec, phys.me, "e"}, {phys.ec, phys.mi, "i"}};
-
     // determine the time step
-    double dg = courant_length(grid_domain);
+    double dg = courant_length(domain);
     double dt = p_.cfl * dg / phys.c; // courant limited time step
     if (phys.wpe * dt > g.wpedt_max) {
-      dt = g.wpedt_max /
-           phys.wpe; // override timestep if plasma frequency limited
+      dt =
+        g.wpedt_max / phys.wpe; // override timestep if plasma frequency limited
     }
 
     assert(phys.c == 1. && phys.eps0 == 1.);
     auto norm_params = Grid_t::NormalizationParams::dimensionless();
     norm_params.nicell = 1;
 
-    define_grid(grid_domain, grid_bc, kinds, dt, norm_params);
+    define_grid(domain, bc, kinds, dt, norm_params);
 
-    p_.nmax =
-      int(g.taui / (phys.wci * grid().dt)); // number of steps from taui
+    p_.nmax = int(g.taui / (phys.wci * grid().dt)); // number of steps from taui
 
     // --- setup materials
 
@@ -824,7 +793,40 @@ void run()
   psc_params.cfl = 0.99;
   psc_params.stats_every = 100;
 
-  auto psc = PscHarris{psc_params};
+  // --- set up domain
+
+  auto domain = Grid_t::Domain{g.gdims,
+                               {phys.Lx, phys.Ly, phys.Lz},
+                               {0., -.5 * phys.Ly, -.5 * phys.Lz},
+                               g.np};
+
+  mpi_printf(comm, "Conducting fields on Z-boundaries\n");
+  mpi_printf(comm, "Reflect particles on Z-boundaries\n");
+  auto bc =
+    psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL},
+                  {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL},
+                  {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING},
+                  {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING}};
+  if (g.open_bc_x) {
+    mpi_printf(comm, "Absorbing fields on X-boundaries\n");
+    bc.fld_lo[0] = BND_FLD_ABSORBING;
+    bc.fld_hi[0] = BND_FLD_ABSORBING;
+    mpi_printf(comm, "Absorb particles on X-boundaries\n");
+    bc.prt_lo[1] = BND_PRT_ABSORBING;
+    bc.prt_hi[1] = BND_PRT_ABSORBING;
+  }
+
+  if (g.driven_bc_z) {
+    mpi_printf(comm, "Absorb particles on Z-boundaries\n");
+    bc.prt_lo[2] = BND_PRT_ABSORBING;
+    bc.prt_hi[2] = BND_PRT_ABSORBING;
+  }
+
+  auto kinds = Grid_t::Kinds(NR_KINDS);
+  kinds[KIND_ELECTRON] = {-phys.ec, phys.me, "e"};
+  kinds[KIND_ION] = {phys.ec, phys.mi, "i"};
+
+  auto psc = PscHarris{psc_params, domain, bc, kinds};
 
   psc.initialize();
   psc.integrate();
