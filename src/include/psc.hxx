@@ -37,11 +37,14 @@ struct MaterialList;
 
 using VpicConfig = VpicConfigPsc;
 using MfieldsState = typename VpicConfig::MfieldsState;
+using MfieldsHydro = typename VpicConfig::MfieldsHydro;
 using Grid = typename MfieldsState::Grid;
 
 Grid* vgrid;
 
 #endif
+
+void vpic_define_grid(const Grid_t& grid);
 
 // ======================================================================
 // PscParams
@@ -140,62 +143,7 @@ struct Psc
 
     grid_ = &grid;
 
-#ifdef VPIC
-    auto domain = grid.domain;
-    auto bc = grid.bc;
-    auto dt = grid.dt;
-    
-    vgrid = Grid::create();
-    vgrid->setup(domain.dx, dt, grid.norm.cc, grid.norm.eps0);
-
-    // define the grid
-    define_periodic_grid(domain.corner, domain.corner + domain.length,
-                         domain.gdims, domain.np);
-
-    // set field boundary conditions
-    for (int p = 0; p < grid.n_patches(); p++) {
-      assert(p == 0);
-      for (int d = 0; d < 3; d++) {
-        bool lo = grid.atBoundaryLo(p, d);
-        bool hi = grid.atBoundaryHi(p, d);
-
-        if (lo && bc.fld_lo[d] != BND_FLD_PERIODIC) {
-          Int3 bnd = {0, 0, 0};
-          bnd[d] = -1;
-          set_domain_field_bc(bnd, bc.fld_lo[d]);
-        }
-
-        if (hi && bc.fld_hi[d] != BND_FLD_PERIODIC) {
-          Int3 bnd = {0, 0, 0};
-          bnd[d] = 1;
-          set_domain_field_bc(bnd, bc.fld_hi[d]);
-        }
-      }
-    }
-
-    // set particle boundary conditions
-    for (int p = 0; p < grid.n_patches(); p++) {
-      assert(p == 0);
-      for (int d = 0; d < 3; d++) {
-        bool lo = grid.atBoundaryLo(p, d);
-        bool hi = grid.atBoundaryHi(p, d);
-
-        if (lo && bc.prt_lo[d] != BND_PRT_PERIODIC) {
-          Int3 bnd = {0, 0, 0};
-          bnd[d] = -1;
-          set_domain_particle_bc(bnd, bc.prt_lo[d]);
-        }
-
-        if (hi && bc.prt_hi[d] != BND_PRT_PERIODIC) {
-          Int3 bnd = {0, 0, 0};
-          bnd[d] = 1;
-          set_domain_particle_bc(bnd, bc.prt_hi[d]);
-        }
-      }
-    }
-
-    grid_setup_communication();
-#endif
+    vpic_define_grid(grid);
   }
 
   // ----------------------------------------------------------------------
@@ -635,64 +583,6 @@ struct Psc
   virtual void inject_particles() {}
 
   // ----------------------------------------------------------------------
-  // define_periodic_grid
-
-  void define_periodic_grid(const double xl[3], const double xh[3],
-                            const int gdims[3], const int np[3])
-  {
-#ifdef VPIC
-    // SimulationMixin::setTopology(np[0], np[1], np[2]); FIXME, needed for
-    // vpic_simulation, I believe only because this info is written out in
-    // diagnostics_run
-    vgrid->partition_periodic_box(xl, xh, gdims, Int3::fromPointer(np));
-#endif
-  }
-
-  // ----------------------------------------------------------------------
-  // set_domain_field_bc
-
-  void set_domain_field_bc(Int3 bnd, int bc)
-  {
-#ifdef VPIC
-    int boundary = BOUNDARY(bnd[0], bnd[1], bnd[2]);
-    int fbc;
-    switch (bc) {
-      case BND_FLD_CONDUCTING_WALL:
-        fbc = Grid::pec_fields;
-        break;
-      case BND_FLD_ABSORBING:
-        fbc = Grid::absorb_fields;
-        break;
-      default:
-        assert(0);
-    }
-    vgrid->set_fbc(boundary, fbc);
-#endif
-  }
-
-  // ----------------------------------------------------------------------
-  // set_domain_particle_bc
-
-  void set_domain_particle_bc(Int3 bnd, int bc)
-  {
-#ifdef VPIC
-    int boundary = BOUNDARY(bnd[0], bnd[1], bnd[2]);
-    int pbc;
-    switch (bc) {
-      case BND_PRT_REFLECTING:
-        pbc = Grid::reflect_particles;
-        break;
-      case BND_PRT_ABSORBING:
-        pbc = Grid::absorb_particles;
-        break;
-      default:
-        assert(0);
-    }
-    vgrid->set_pbc(boundary, pbc);
-#endif
-  }
-
-  // ----------------------------------------------------------------------
   // define_material
 
 #ifdef VPIC
@@ -708,49 +598,6 @@ struct Psc
 			      double sigma = 0., double zeta = 0.)
   {}
 #endif
-
-  void grid_setup_communication()
-  {
-#ifdef VPIC
-    assert(vgrid->nx && vgrid->ny && vgrid->ny);
-
-    // Pre-size communications buffers. This is done to get most memory
-    // allocation over with before the simulation starts running
-    // FIXME, this isn't a great place. First, we shouldn't call mp
-    // functions (semi-)directly. 2nd, whether we need these buffers depends
-    // on b.c., which aren't yet known.
-
-    // FIXME, this really isn't a good place to do this, as it requires layer
-    // breaking knowledge of which communication will need the largest
-    // buffers...
-    int nx1 = vgrid->nx + 1, ny1 = vgrid->ny + 1, nz1 = vgrid->nz + 1;
-    vgrid->mp_size_recv_buffer(
-      BOUNDARY(-1, 0, 0), ny1 * nz1 * sizeof(typename MfieldsHydro::Element));
-    vgrid->mp_size_recv_buffer(
-      BOUNDARY(1, 0, 0), ny1 * nz1 * sizeof(typename MfieldsHydro::Element));
-    vgrid->mp_size_recv_buffer(
-      BOUNDARY(0, -1, 0), nz1 * nx1 * sizeof(typename MfieldsHydro::Element));
-    vgrid->mp_size_recv_buffer(
-      BOUNDARY(0, 1, 0), nz1 * nx1 * sizeof(typename MfieldsHydro::Element));
-    vgrid->mp_size_recv_buffer(
-      BOUNDARY(0, 0, -1), nx1 * ny1 * sizeof(typename MfieldsHydro::Element));
-    vgrid->mp_size_recv_buffer(
-      BOUNDARY(0, 0, 1), nx1 * ny1 * sizeof(typename MfieldsHydro::Element));
-
-    vgrid->mp_size_send_buffer(
-      BOUNDARY(-1, 0, 0), ny1 * nz1 * sizeof(typename MfieldsHydro::Element));
-    vgrid->mp_size_send_buffer(
-      BOUNDARY(1, 0, 0), ny1 * nz1 * sizeof(typename MfieldsHydro::Element));
-    vgrid->mp_size_send_buffer(
-      BOUNDARY(0, -1, 0), nz1 * nx1 * sizeof(typename MfieldsHydro::Element));
-    vgrid->mp_size_send_buffer(
-      BOUNDARY(0, 1, 0), nz1 * nx1 * sizeof(typename MfieldsHydro::Element));
-    vgrid->mp_size_send_buffer(
-      BOUNDARY(0, 0, -1), nx1 * ny1 * sizeof(typename MfieldsHydro::Element));
-    vgrid->mp_size_send_buffer(
-      BOUNDARY(0, 0, 1), nx1 * ny1 * sizeof(typename MfieldsHydro::Element));
-#endif
-  }
 
   // ----------------------------------------------------------------------
   // courant length
@@ -1011,3 +858,172 @@ protected:
   int st_nr_particles;
   int st_time_step;
 };
+
+// ======================================================================
+// VPIC-like stuff
+
+// ----------------------------------------------------------------------
+// define_periodic_grid
+
+void define_periodic_grid(const double xl[3], const double xh[3],
+			  const int gdims[3], const int np[3])
+{
+#ifdef VPIC
+  // SimulationMixin::setTopology(np[0], np[1], np[2]); FIXME, needed for
+  // vpic_simulation, I believe only because this info is written out in
+  // diagnostics_run
+    vgrid->partition_periodic_box(xl, xh, gdims, Int3::fromPointer(np));
+#endif
+}
+
+// ----------------------------------------------------------------------
+// set_domain_field_bc
+
+void set_domain_field_bc(Int3 bnd, int bc)
+{
+#ifdef VPIC
+  int boundary = BOUNDARY(bnd[0], bnd[1], bnd[2]);
+  int fbc;
+  switch (bc) {
+  case BND_FLD_CONDUCTING_WALL:
+    fbc = Grid::pec_fields;
+    break;
+  case BND_FLD_ABSORBING:
+    fbc = Grid::absorb_fields;
+    break;
+  default:
+    assert(0);
+  }
+  vgrid->set_fbc(boundary, fbc);
+#endif
+}
+
+// ----------------------------------------------------------------------
+// set_domain_particle_bc
+
+void set_domain_particle_bc(Int3 bnd, int bc)
+{
+#ifdef VPIC
+  int boundary = BOUNDARY(bnd[0], bnd[1], bnd[2]);
+  int pbc;
+  switch (bc) {
+  case BND_PRT_REFLECTING:
+    pbc = Grid::reflect_particles;
+    break;
+  case BND_PRT_ABSORBING:
+    pbc = Grid::absorb_particles;
+    break;
+  default:
+    assert(0);
+  }
+  vgrid->set_pbc(boundary, pbc);
+#endif
+}
+
+void grid_setup_communication()
+{
+#ifdef VPIC
+  assert(vgrid->nx && vgrid->ny && vgrid->ny);
+
+  // Pre-size communications buffers. This is done to get most memory
+  // allocation over with before the simulation starts running
+  // FIXME, this isn't a great place. First, we shouldn't call mp
+  // functions (semi-)directly. 2nd, whether we need these buffers depends
+  // on b.c., which aren't yet known.
+
+  // FIXME, this really isn't a good place to do this, as it requires layer
+  // breaking knowledge of which communication will need the largest
+  // buffers...
+  int nx1 = vgrid->nx + 1, ny1 = vgrid->ny + 1, nz1 = vgrid->nz + 1;
+  vgrid->mp_size_recv_buffer(
+			     BOUNDARY(-1, 0, 0), ny1 * nz1 * sizeof(typename MfieldsHydro::Element));
+  vgrid->mp_size_recv_buffer(
+			     BOUNDARY(1, 0, 0), ny1 * nz1 * sizeof(typename MfieldsHydro::Element));
+  vgrid->mp_size_recv_buffer(
+			     BOUNDARY(0, -1, 0), nz1 * nx1 * sizeof(typename MfieldsHydro::Element));
+  vgrid->mp_size_recv_buffer(
+			     BOUNDARY(0, 1, 0), nz1 * nx1 * sizeof(typename MfieldsHydro::Element));
+  vgrid->mp_size_recv_buffer(
+			     BOUNDARY(0, 0, -1), nx1 * ny1 * sizeof(typename MfieldsHydro::Element));
+  vgrid->mp_size_recv_buffer(
+			     BOUNDARY(0, 0, 1), nx1 * ny1 * sizeof(typename MfieldsHydro::Element));
+  
+  vgrid->mp_size_send_buffer(
+			     BOUNDARY(-1, 0, 0), ny1 * nz1 * sizeof(typename MfieldsHydro::Element));
+  vgrid->mp_size_send_buffer(
+			     BOUNDARY(1, 0, 0), ny1 * nz1 * sizeof(typename MfieldsHydro::Element));
+  vgrid->mp_size_send_buffer(
+			     BOUNDARY(0, -1, 0), nz1 * nx1 * sizeof(typename MfieldsHydro::Element));
+  vgrid->mp_size_send_buffer(
+			     BOUNDARY(0, 1, 0), nz1 * nx1 * sizeof(typename MfieldsHydro::Element));
+  vgrid->mp_size_send_buffer(
+			     BOUNDARY(0, 0, -1), nx1 * ny1 * sizeof(typename MfieldsHydro::Element));
+  vgrid->mp_size_send_buffer(
+			     BOUNDARY(0, 0, 1), nx1 * ny1 * sizeof(typename MfieldsHydro::Element));
+#endif
+}
+
+// ----------------------------------------------------------------------
+// vpic_define_grid
+
+void vpic_define_grid(const Grid_t& grid)
+{
+#ifdef VPIC
+  auto domain = grid.domain;
+  auto bc = grid.bc;
+  auto dt = grid.dt;
+  
+  vgrid = Grid::create();
+  vgrid->setup(domain.dx, dt, grid.norm.cc, grid.norm.eps0);
+  
+  // define the grid
+  define_periodic_grid(domain.corner, domain.corner + domain.length,
+		       domain.gdims, domain.np);
+  
+  // set field boundary conditions
+  for (int p = 0; p < grid.n_patches(); p++) {
+    assert(p == 0);
+    for (int d = 0; d < 3; d++) {
+      bool lo = grid.atBoundaryLo(p, d);
+      bool hi = grid.atBoundaryHi(p, d);
+      
+      if (lo && bc.fld_lo[d] != BND_FLD_PERIODIC) {
+	Int3 bnd = {0, 0, 0};
+	bnd[d] = -1;
+	set_domain_field_bc(bnd, bc.fld_lo[d]);
+      }
+      
+      if (hi && bc.fld_hi[d] != BND_FLD_PERIODIC) {
+	Int3 bnd = {0, 0, 0};
+	bnd[d] = 1;
+	set_domain_field_bc(bnd, bc.fld_hi[d]);
+      }
+    }
+  }
+  
+  // set particle boundary conditions
+  for (int p = 0; p < grid.n_patches(); p++) {
+    assert(p == 0);
+    for (int d = 0; d < 3; d++) {
+      bool lo = grid.atBoundaryLo(p, d);
+      bool hi = grid.atBoundaryHi(p, d);
+      
+      if (lo && bc.prt_lo[d] != BND_PRT_PERIODIC) {
+	Int3 bnd = {0, 0, 0};
+	bnd[d] = -1;
+	set_domain_particle_bc(bnd, bc.prt_lo[d]);
+      }
+      
+      if (hi && bc.prt_hi[d] != BND_PRT_PERIODIC) {
+	Int3 bnd = {0, 0, 0};
+	bnd[d] = 1;
+	set_domain_particle_bc(bnd, bc.prt_hi[d]);
+      }
+    }
+  }
+  
+  grid_setup_communication();
+#endif
+}
+
+
