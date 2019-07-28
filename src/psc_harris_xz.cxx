@@ -75,6 +75,7 @@ using Balance = typename PscConfig::Balance_t;
 using Collision = typename PscConfig::Collision_t;
 using Checks = typename PscConfig::Checks_t;
 using Marder = typename PscConfig::Marder_t;
+using OutputParticles = PscConfig::OutputParticles;
 
 // ======================================================================
 // PscHarrisParams
@@ -418,7 +419,7 @@ struct PscHarris : Psc<PscConfig>
 
   PscHarris(const PscParams& psc_params, Grid_t& grid, MfieldsState& mflds,
             Mparticles& mprts, Balance& balance, Collision& collision,
-            Checks& checks, Marder& marder)
+            Checks& checks, Marder& marder, OutputFieldsC& outf, OutputParticles& outp)
     : io_pfd_{"pfd"}
   {
     auto comm = grid.comm();
@@ -438,40 +439,13 @@ struct PscHarris : Psc<PscConfig>
     checks_.reset(&checks);
     marder_.reset(&marder);
 
+    outf_.reset(&outf);
+    outp_.reset(&outp);
+
     // ---
 
     int interval = int(g.t_intervali / (phys.wci * grid.dt));
     create_diagnostics(interval);
-
-    // -- output fields
-    OutputFieldsCParams outf_params;
-    double output_field_interval = 1.;
-    std::vector<std::unique_ptr<FieldsItemBase>> outf_items;
-#ifdef VPIC
-    // handled by diagnostics instead
-#else
-    outf_items.emplace_back(std::move(FieldsItemFactory::create("e", grid)));
-    outf_items.emplace_back(std::move(FieldsItemFactory::create("h", grid)));
-    outf_items.emplace_back(std::move(FieldsItemFactory::create("j", grid)));
-    outf_items.emplace_back(
-      std::move(FieldsItemFactory::create("n_1st_single", grid)));
-    outf_items.emplace_back(
-      std::move(FieldsItemFactory::create("v_1st_single", grid)));
-    outf_items.emplace_back(
-      std::move(FieldsItemFactory::create("T_1st_single", grid)));
-#endif
-    outf_params.pfield_step =
-      int((output_field_interval / (phys.wci * grid.dt)));
-    outf_.reset(new OutputFieldsC{grid, outf_params, std::move(outf_items)});
-
-    OutputParticlesParams outp_params{};
-    outp_params.every_step =
-      int((g.output_particle_interval / (phys.wci * grid.dt)));
-    outp_params.data_dir = ".";
-    outp_params.basename = "prt";
-    outp_params.lo = {192, 0, 48};
-    outp_params.hi = {320, 0, 80};
-    outp_.reset(new OutputParticles{grid, outp_params});
 
     // ----------------------------------------------------------------------
     // rebalance and actually initialize particles / fields
@@ -892,11 +866,36 @@ void run()
   psc_marder_set_param_int(psc_->marder, "num_div_b_round", 2);
 #endif
 
-  auto& marder =
-    *new Marder(grid, marder_diffusion, marder_loop, marder_dump);
+  auto& marder = *new Marder(grid, marder_diffusion, marder_loop, marder_dump);
 
-  auto psc = PscHarris{psc_params, *grid_ptr, mflds,  mprts,
-                       balance,    collision, checks, marder};
+  // -- output fields
+  OutputFieldsCParams outf_params;
+  double output_field_interval = 1.;
+  std::vector<std::unique_ptr<FieldsItemBase>> outf_items;
+#ifdef VPIC
+  // handled by diagnostics instead
+#else
+  outf_items.emplace_back(new FieldsItem_E_cc(grid));
+  outf_items.emplace_back(new FieldsItem_H_cc(grid));
+  outf_items.emplace_back(new FieldsItem_J_cc(grid));
+  outf_items.emplace_back(new FieldsItem_n_1st_cc<Mparticles>(grid));
+  outf_items.emplace_back(new FieldsItem_v_1st_cc<Mparticles>(grid));
+  outf_items.emplace_back(new FieldsItem_T_1st_cc<Mparticles>(grid));
+#endif
+  outf_params.pfield_step = int((output_field_interval / (phys.wci * grid.dt)));
+  auto& outf = *new OutputFieldsC{grid, outf_params, std::move(outf_items)};
+
+  OutputParticlesParams outp_params{};
+  outp_params.every_step =
+    int((g.output_particle_interval / (phys.wci * grid.dt)));
+  outp_params.data_dir = ".";
+  outp_params.basename = "prt";
+  outp_params.lo = {192, 0, 48};
+  outp_params.hi = {320, 0, 80};
+  auto& outp = *new OutputParticles{grid, outp_params};
+
+  auto psc = PscHarris{psc_params, *grid_ptr, mflds,  mprts, balance,
+                       collision,  checks,    marder, outf,  outp};
 
   psc.initialize();
   psc.integrate();
