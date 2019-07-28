@@ -70,6 +70,11 @@ using MfieldsState = typename PscConfig::MfieldsState;
 #ifdef VPIC
 using MaterialList = typename MfieldsState::MaterialList;
 #endif
+using Mparticles = typename PscConfig::Mparticles;
+using Balance = typename PscConfig::Balance_t;
+using Collision = typename PscConfig::Collision_t;
+using Checks = typename PscConfig::Checks_t;
+using Marder = typename PscConfig::Marder_t;
 
 // ======================================================================
 // PscHarrisParams
@@ -411,7 +416,9 @@ struct PscHarris : Psc<PscConfig>
   //
   // FIXME: can only use 1st order pushers with current conducting wall b.c.
 
-  PscHarris(const PscParams& psc_params, Grid_t& grid, MfieldsState& mflds)
+  PscHarris(const PscParams& psc_params, Grid_t& grid, MfieldsState& mflds,
+            Mparticles& mprts, Balance& balance, Collision& collision,
+            Checks& checks, Marder& marder)
     : io_pfd_{"pfd"}
   {
     auto comm = grid.comm();
@@ -420,76 +427,16 @@ struct PscHarris : Psc<PscConfig>
 
     define_grid(grid);
 
-    // --- setup field data structures
-
     mflds_.reset(&mflds);
     vpic_define_fields(grid);
 
-    // --- finalize field advance
+    mprts_.reset(&mprts);
+    vpic_setup_species();
 
-    mpi_printf(comm, "*** Finalizing Field Advance\n");
-#if 0
-    assert(psc_->nr_patches > 0);
-    struct globals_physics *phys = &sub->phys;
-    Simulation_set_region_resistive_harris(sub->sim, &sub->prm, phys, psc_->patch[0].dx,
-					   0., resistive);
-#endif
-
-    // --- setup species
-    // FIXME, half-redundant to the PSC species setup
-#ifdef VPIC
-    mprts_.reset(new Mparticles{grid, vgrid});
-#else
-    mprts_.reset(new Mparticles{grid});
-#endif
-    setup_species();
-
-    // -- Balance
-    p_.balance_interval = 0;
-    balance_.reset(new Balance_t{p_.balance_interval});
-
-    // -- Sort
-    // FIXME, needs a way to make it gets set?
-    // FIXME: the "vpic" sort actually keeps track of per-species sorting
-    // intervals internally, so it needs to be called every step
-#ifdef VPIC
-    p_.sort_interval = 1;
-#endif
-
-    // -- Collision
-    int collision_interval = 0;
-    double collision_nu = .1; // FIXME, != 0 needed to avoid crash
-    collision_.reset(new Collision_t{grid, collision_interval, collision_nu});
-
-    // -- Checks
-    ChecksParams checks_params{};
-    checks_.reset(new Checks_t{grid, comm, checks_params});
-
-    // -- Marder correction
-    // FIXME, these are ignored for vpic (?)
-    double marder_diffusion = 0.9;
-    int marder_loop = 3;
-    bool marder_dump = false;
-    // FIXME, how do we make sure that we don't forget to set this?
-    // (maybe make it part of the Marder object, or provide a base class
-    // interface define_marder() that takes the object and the interval
-#ifdef VPIC
-    p_.marder_interval = 1;
-#else
-    p_.marder_interval = 0;
-#endif
-#if 0
-    // FIXME, marder "vpic" manages its own cleaning intervals
-    psc_marder_set_param_int(psc_->marder, "every_step", 1);
-    psc_marder_set_param_int(psc_->marder, "clean_div_e_interval", 50);
-    psc_marder_set_param_int(psc_->marder, "clean_div_b_interval", 50);
-    psc_marder_set_param_int(psc_->marder, "sync_shared_interval", 50);
-    psc_marder_set_param_int(psc_->marder, "num_div_e_round", 2);
-    psc_marder_set_param_int(psc_->marder, "num_div_b_round", 2);
-#endif
-
-    marder_.reset(
-      new Marder_t(grid, marder_diffusion, marder_loop, marder_dump));
+    balance_.reset(&balance);
+    collision_.reset(&collision);
+    checks_.reset(&checks);
+    marder_.reset(&marder);
 
     // ---
 
@@ -551,8 +498,10 @@ struct PscHarris : Psc<PscConfig>
 
   // ----------------------------------------------------------------------
   // setup_species
+  //
+  // FIXME, half-redundant to the PSC species setup
 
-  void setup_species()
+  void vpic_setup_species()
   {
     MPI_Comm comm = grid().comm();
 
@@ -871,7 +820,7 @@ void run()
 	    psc_params.stats_every / 2);
 #endif
 
-  // --- setup fields
+  // --- setup field data structure
 #ifdef VPIC
   // --- setup materials
   MaterialList material_list;
@@ -886,7 +835,68 @@ void run()
   auto& mflds = *new MfieldsState{grid};
 #endif
 
-  auto psc = PscHarris{psc_params, *grid_ptr, mflds};
+  mpi_printf(comm, "*** Finalizing Field Advance\n");
+#if 0
+  assert(grid.nr_patches() > 0);
+  Simulation_set_region_resistive_harris(sub->sim, &sub->prm, phys, psc_->patch[0].dx,
+					 0., resistive);
+#endif
+
+  /// --- setup particle data structure
+#ifdef VPIC
+  auto& mprts = *new Mparticles{grid, vgrid};
+#else
+  auto& mprts = *new Mparticles{grid};
+#endif
+
+  // -- Balance
+  psc_params.balance_interval = 0;
+  auto& balance = *new Balance{psc_params.balance_interval};
+
+  // -- Sort
+  // FIXME: the "vpic" sort actually keeps track of per-species sorting
+  // intervals internally, so it needs to be called every step
+#ifdef VPIC
+  psc_params.sort_interval = 1;
+#endif
+
+  // -- Collision
+  int collision_interval = 0;
+  double collision_nu = .1; // FIXME, != 0 needed to avoid crash
+  auto& collision = *new Collision{grid, collision_interval, collision_nu};
+
+  // -- Checks
+  ChecksParams checks_params{};
+  auto& checks = *new Checks{grid, comm, checks_params};
+
+  // -- Marder correction
+  // FIXME, these are ignored for vpic (?)
+  double marder_diffusion = 0.9;
+  int marder_loop = 3;
+  bool marder_dump = false;
+  // FIXME, how do we make sure that we don't forget to set this?
+  // (maybe make it part of the Marder object, or provide a base class
+  // interface define_marder() that takes the object and the interval
+#ifdef VPIC
+  psc_params.marder_interval = 1;
+#else
+  psc_params.marder_interval = 0;
+#endif
+#if 0
+  // FIXME, marder "vpic" manages its own cleaning intervals
+  psc_marder_set_param_int(psc_->marder, "every_step", 1);
+  psc_marder_set_param_int(psc_->marder, "clean_div_e_interval", 50);
+  psc_marder_set_param_int(psc_->marder, "clean_div_b_interval", 50);
+  psc_marder_set_param_int(psc_->marder, "sync_shared_interval", 50);
+  psc_marder_set_param_int(psc_->marder, "num_div_e_round", 2);
+  psc_marder_set_param_int(psc_->marder, "num_div_b_round", 2);
+#endif
+
+  auto& marder =
+    *new Marder(grid, marder_diffusion, marder_loop, marder_dump);
+
+  auto psc = PscHarris{psc_params, *grid_ptr, mflds,  mprts,
+                       balance,    collision, checks, marder};
 
   psc.initialize();
   psc.integrate();
