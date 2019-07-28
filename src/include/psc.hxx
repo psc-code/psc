@@ -27,6 +27,10 @@
 #include "../libpsc/vpic/vpic_iface.h"
 #endif
 
+#ifndef VPIC
+struct MaterialList;
+#endif
+
 // ======================================================================
 // PscParams
 
@@ -192,23 +196,18 @@ struct Psc
 
   void define_field_array(MfieldsState& mflds) { mflds_.reset(&mflds); }
 
-  void define_field_array(double damp = 0.)
+  void define_field_array(MaterialList& material_list, double damp = 0.)
   {
 #ifdef VPIC
     // FIXME, mv assert innto MfieldsState ctor
-    assert(!material_list_.empty());
-#endif
+    assert(!material_list.empty());
 
-#ifdef VPIC
-    mflds_.reset(new MfieldsState{grid(), vgrid_, material_list_, damp});
-#else
-    define_field_array(*new MfieldsState{grid()});
-#endif
-
-#ifdef VPIC
+    mflds_.reset(new MfieldsState{grid(), vgrid_, material_list, damp});
     hydro_.reset(new MfieldsHydro{grid(), vgrid_});
     interpolator_.reset(new MfieldsInterpolator{vgrid_});
     accumulator_.reset(new MfieldsAccumulator{vgrid_});
+#else
+    mflds_.reset(new MfieldsState{grid()});
 #endif
   }
 
@@ -685,16 +684,16 @@ struct Psc
   // define_material
 
 #ifdef VPIC
-  Material* define_material(const char* name, double eps, double mu = 1.,
-                            double sigma = 0., double zeta = 0.)
+  static Material* define_material(MaterialList& material_list, const char* name, double eps, double mu = 1.,
+				   double sigma = 0., double zeta = 0.)
   {
-    auto m = material_list_.create(name, eps, eps, eps, mu, mu, mu, sigma,
+    auto m = MaterialList::create(name, eps, eps, eps, mu, mu, mu, sigma,
                                    sigma, sigma, zeta, zeta, zeta);
-    return material_list_.append(m);
+    return material_list.append(m);
   }
 #else
-  void define_material(const char* name, double eps, double mu = 1.,
-                       double sigma = 0., double zeta = 0.)
+  static void define_material(MaterialList& material_list, const char* name, double eps, double mu = 1.,
+			      double sigma = 0., double zeta = 0.)
   {}
 #endif
 
@@ -968,9 +967,6 @@ protected:
   Grid* vgrid_;
 #endif
 
-#ifdef VPIC
-  MaterialList material_list_;
-#endif
   std::unique_ptr<MfieldsState> mflds_;
 #ifdef VPIC
   std::unique_ptr<MfieldsHydro> hydro_;

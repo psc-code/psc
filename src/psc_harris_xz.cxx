@@ -62,6 +62,13 @@ using PscConfig = PscConfigVpicPsc;
 using PscConfig = PscConfig1vbecSingle<dim_xz>;
 #endif
 
+// ----------------------------------------------------------------------
+
+using MfieldsState = typename PscConfig::MfieldsState;
+#ifdef VPIC
+using MaterialList = typename MfieldsState::MaterialList;
+#endif
+
 // ======================================================================
 // PscHarrisParams
 
@@ -368,6 +375,28 @@ Grid_t* setupGrid()
   return new Grid_t{domain, bc, kinds, norm, dt, -1, ibn};
 }
 
+// ----------------------------------------------------------------------
+// setupMaterials
+
+void setupMaterials(MaterialList& material_list)
+{
+  MPI_Comm comm = MPI_COMM_WORLD;
+
+  mpi_printf(comm, "Setting up materials.\n");
+
+  // -- set up MaterialList
+  Psc<PscConfig>::define_material(material_list, "vacuum", 1., 1., 0., 0.);
+#if 0
+  struct material *resistive =
+    Psc<PscConfig>::define_material(material_list, "resistive", 1., 1., 1., 0.);
+#endif
+
+  // Note: define_material defaults to isotropic materials with mu=1,sigma=0
+  // Tensor electronic, magnetic and conductive materials are supported
+  // though. See "shapes" for how to define them and assign them to regions.
+  // Also, space is initially filled with the first material defined.
+}
+
 // ======================================================================
 // PscHarris
 
@@ -378,7 +407,9 @@ struct PscHarris : Psc<PscConfig>
   //
   // FIXME: can only use 1st order pushers with current conducting wall b.c.
 
-  PscHarris(const PscParams& psc_params, Grid_t& grid) : io_pfd_{"pfd"}
+  PscHarris(const PscParams& psc_params, Grid_t& grid,
+            MaterialList& material_list)
+    : io_pfd_{"pfd"}
   {
     auto comm = grid.comm();
 
@@ -386,25 +417,9 @@ struct PscHarris : Psc<PscConfig>
 
     define_grid(grid);
 
-    p_.nmax = int(g.taui / (phys.wci * grid.dt)); // number of steps from taui
-
-    // --- setup materials
-
-    setup_materials();
-
-    // --- create Simulation
-
-#if 0
-    // set high level VPIC simulation parameters
-    // FIXME, will be unneeded eventually
-    setParams(p_.nmax, p_.stats_every,
-	      p_.stats_every / 2, p_.stats_every / 2,
-	      p_.stats_every / 2);
-#endif
-
     // --- setup field data structures
 
-    define_field_array();
+    define_field_array(material_list);
 
     // --- finalize field advance
 
@@ -528,28 +543,6 @@ struct PscHarris : Psc<PscConfig>
     setup_log();
 
     mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
-  }
-
-  // ----------------------------------------------------------------------
-  // setup_materials
-
-  void setup_materials()
-  {
-    MPI_Comm comm = grid().comm();
-
-    mpi_printf(comm, "Setting up materials.\n");
-
-    // -- set up MaterialList
-    define_material("vacuum", 1., 1., 0., 0.);
-#if 0
-    struct material *resistive =
-      define_material("resistive", 1., 1., 1., 0.);
-#endif
-
-    // Note: define_material defaults to isotropic materials with mu=1,sigma=0
-    // Tensor electronic, magnetic and conductive materials are supported
-    // though. See "shapes" for how to define them and assign them to regions.
-    // Also, space is initially filled with the first material defined.
   }
 
   // ----------------------------------------------------------------------
@@ -862,7 +855,23 @@ void run()
   auto grid_ptr = setupGrid();
   auto& grid = *grid_ptr;
 
-  auto psc = PscHarris{psc_params, *grid_ptr};
+  psc_params.nmax =
+    int(g.taui / (phys.wci * grid.dt)); // number of steps from taui
+
+  // --- setup materials
+  MaterialList material_list;
+  setupMaterials(material_list);
+
+  // --- create Simulation
+#if 0
+  // set high level VPIC simulation parameters
+  // FIXME, will be unneeded eventually
+  setParams(psc_params.nmax, psc_params.stats_every,
+	    psc_params.stats_every / 2, psc_params.stats_every / 2,
+	    psc_params.stats_every / 2);
+#endif
+
+  auto psc = PscHarris{psc_params, *grid_ptr, material_list};
 
   psc.initialize();
   psc.integrate();
