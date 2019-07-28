@@ -45,6 +45,24 @@ static inline double trunc_granular(double a, double b)
 }
 
 // ======================================================================
+// PSC configuration
+//
+// This sets up compile-time configuration for the code, in particular
+// what data structures and algorithms to use
+//
+// EDIT to change order / floating point type / cuda / 2d/3d
+
+#ifdef VPIC
+#ifdef DO_VPIC
+using PscConfig = PscConfigVpicWrap;
+#else
+using PscConfig = PscConfigVpicPsc;
+#endif
+#else
+using PscConfig = PscConfig1vbecSingle<dim_xz>;
+#endif
+
+// ======================================================================
 // PscHarrisParams
 
 struct PscHarrisParams
@@ -272,15 +290,7 @@ struct globals_physics
   }
 };
 
-#ifdef VPIC
-#ifdef DO_VPIC
-using PscConfig = PscConfigVpicWrap;
-#else
-using PscConfig = PscConfigVpicPsc;
-#endif
-#else
-using PscConfig = PscConfig1vbecSingle<dim_xz>;
-#endif
+globals_physics phys;
 
 // ======================================================================
 // PscHarris
@@ -298,13 +308,11 @@ struct PscHarris : Psc<PscConfig>
 
     p_ = psc_params;
 
-    phys_ = globals_physics{g};
-
     // --- set up domain
 
     auto grid_domain = Grid_t::Domain{g.gdims,
-                                      {phys_.Lx, phys_.Ly, phys_.Lz},
-                                      {0., -.5 * phys_.Ly, -.5 * phys_.Lz},
+                                      {phys.Lx, phys.Ly, phys.Lz},
+                                      {0., -.5 * phys.Ly, -.5 * phys.Lz},
                                       g.np};
 
     mpi_printf(comm, "Conducting fields on Z-boundaries\n");
@@ -330,24 +338,24 @@ struct PscHarris : Psc<PscConfig>
     }
 
     auto kinds =
-      Grid_t::Kinds{{-phys_.ec, phys_.me, "e"}, {phys_.ec, phys_.mi, "i"}};
+      Grid_t::Kinds{{-phys.ec, phys.me, "e"}, {phys.ec, phys.mi, "i"}};
 
     // determine the time step
     double dg = courant_length(grid_domain);
-    double dt = p_.cfl * dg / phys_.c; // courant limited time step
-    if (phys_.wpe * dt > g.wpedt_max) {
+    double dt = p_.cfl * dg / phys.c; // courant limited time step
+    if (phys.wpe * dt > g.wpedt_max) {
       dt = g.wpedt_max /
-           phys_.wpe; // override timestep if plasma frequency limited
+           phys.wpe; // override timestep if plasma frequency limited
     }
 
-    assert(phys_.c == 1. && phys_.eps0 == 1.);
+    assert(phys.c == 1. && phys.eps0 == 1.);
     auto norm_params = Grid_t::NormalizationParams::dimensionless();
     norm_params.nicell = 1;
 
     define_grid(grid_domain, grid_bc, kinds, dt, norm_params);
 
     p_.nmax =
-      int(g.taui / (phys_.wci * grid().dt)); // number of steps from taui
+      int(g.taui / (phys.wci * grid().dt)); // number of steps from taui
 
     // --- setup materials
 
@@ -435,7 +443,7 @@ struct PscHarris : Psc<PscConfig>
 
     // ---
 
-    int interval = int(g.t_intervali / (phys_.wci * grid().dt));
+    int interval = int(g.t_intervali / (phys.wci * grid().dt));
     create_diagnostics(interval);
 
     // -- output fields
@@ -455,12 +463,12 @@ struct PscHarris : Psc<PscConfig>
     outf_items.emplace_back(
       std::move(FieldsItemFactory::create("T_1st_single", grid())));
 #endif
-    outf_params.pfield_step = int((output_field_interval / (phys_.wci * dt)));
+    outf_params.pfield_step = int((output_field_interval / (phys.wci * dt)));
     outf_.reset(new OutputFieldsC{grid(), outf_params, std::move(outf_items)});
 
     OutputParticlesParams outp_params{};
     outp_params.every_step =
-      int((g.output_particle_interval / (phys_.wci * dt)));
+      int((g.output_particle_interval / (phys.wci * dt)));
     outp_params.data_dir = ".";
     outp_params.basename = "prt";
     outp_params.lo = {192, 0, 48};
@@ -520,13 +528,13 @@ struct PscHarris : Psc<PscConfig>
     MPI_Comm comm = grid().comm();
 
     mpi_printf(comm, "Setting up species.\n");
-    double nmax = g.overalloc * phys_.Ne / phys_.n_global_patches;
+    double nmax = g.overalloc * phys.Ne / phys.n_global_patches;
     double nmovers = .1 * nmax;
     double sort_method = 1; // 0=in place and 1=out of place
 
-    mprts_->define_species("electron", -phys_.ec, phys_.me, nmax, nmovers,
+    mprts_->define_species("electron", -phys.ec, phys.me, nmax, nmovers,
                            g.electron_sort_interval, sort_method);
-    mprts_->define_species("ion", phys_.ec, phys_.mi, nmax, nmovers,
+    mprts_->define_species("ion", phys.ec, phys.mi, nmax, nmovers,
                            g.ion_sort_interval, sort_method);
   }
 
@@ -539,9 +547,9 @@ struct PscHarris : Psc<PscConfig>
 
     mpi_printf(comm, "***********************************************\n");
     mpi_printf(comm, "* Topology: %d x %d x %d\n", g.np[0], g.np[1], g.np[2]);
-    mpi_printf(comm, "tanhf    = %g\n", phys_.tanhf);
+    mpi_printf(comm, "tanhf    = %g\n", phys.tanhf);
     mpi_printf(comm, "L_di     = %g\n", g.L_di);
-    mpi_printf(comm, "rhoi/L   = %g\n", phys_.rhoi_L);
+    mpi_printf(comm, "rhoi/L   = %g\n", phys.rhoi_L);
     mpi_printf(comm, "Ti/Te    = %g\n", g.Ti_Te);
     mpi_printf(comm, "nb/n0    = %g\n", g.nb_n0);
     mpi_printf(comm, "wpe/wce  = %g\n", g.wpe_wce);
@@ -552,42 +560,42 @@ struct PscHarris : Psc<PscConfig>
     mpi_printf(comm, "taui     = %g\n", g.taui);
     mpi_printf(comm, "t_intervali = %g\n", g.t_intervali);
     mpi_printf(comm, "num_step = %d\n", p_.nmax);
-    mpi_printf(comm, "Lx/di = %g\n", phys_.Lx / phys_.di);
-    mpi_printf(comm, "Lx/de = %g\n", phys_.Lx / phys_.de);
-    mpi_printf(comm, "Ly/di = %g\n", phys_.Ly / phys_.di);
-    mpi_printf(comm, "Ly/de = %g\n", phys_.Ly / phys_.de);
-    mpi_printf(comm, "Lz/di = %g\n", phys_.Lz / phys_.di);
-    mpi_printf(comm, "Lz/de = %g\n", phys_.Lz / phys_.de);
+    mpi_printf(comm, "Lx/di = %g\n", phys.Lx / phys.di);
+    mpi_printf(comm, "Lx/de = %g\n", phys.Lx / phys.de);
+    mpi_printf(comm, "Ly/di = %g\n", phys.Ly / phys.di);
+    mpi_printf(comm, "Ly/de = %g\n", phys.Ly / phys.de);
+    mpi_printf(comm, "Lz/di = %g\n", phys.Lz / phys.di);
+    mpi_printf(comm, "Lz/de = %g\n", phys.Lz / phys.de);
     mpi_printf(comm, "nx = %d\n", g.gdims[0]);
     mpi_printf(comm, "ny = %d\n", g.gdims[1]);
     mpi_printf(comm, "nz = %d\n", g.gdims[2]);
-    mpi_printf(comm, "n_global_patches = %d\n", phys_.n_global_patches);
+    mpi_printf(comm, "n_global_patches = %d\n", phys.n_global_patches);
     mpi_printf(comm, "nppc = %g\n", g.nppc);
-    mpi_printf(comm, "b0 = %g\n", phys_.b0);
-    mpi_printf(comm, "v_A (based on nb) = %g\n", phys_.v_A);
-    mpi_printf(comm, "di = %g\n", phys_.di);
-    mpi_printf(comm, "Ne = %g\n", phys_.Ne);
-    mpi_printf(comm, "Ne_sheet = %g\n", phys_.Ne_sheet);
-    mpi_printf(comm, "Ne_back = %g\n", phys_.Ne_back);
-    mpi_printf(comm, "total # of particles = %g\n", 2 * phys_.Ne);
-    mpi_printf(comm, "dt*wpe = %g\n", phys_.wpe * grid().dt);
-    mpi_printf(comm, "dt*wce = %g\n", phys_.wce * grid().dt);
-    mpi_printf(comm, "dt*wci = %g\n", phys_.wci * grid().dt);
-    mpi_printf(comm, "dx/de = %g\n", phys_.Lx / (phys_.de * g.gdims[0]));
-    mpi_printf(comm, "dy/de = %g\n", phys_.Ly / (phys_.de * g.gdims[1]));
-    mpi_printf(comm, "dz/de = %g\n", phys_.Lz / (phys_.de * g.gdims[2]));
+    mpi_printf(comm, "b0 = %g\n", phys.b0);
+    mpi_printf(comm, "v_A (based on nb) = %g\n", phys.v_A);
+    mpi_printf(comm, "di = %g\n", phys.di);
+    mpi_printf(comm, "Ne = %g\n", phys.Ne);
+    mpi_printf(comm, "Ne_sheet = %g\n", phys.Ne_sheet);
+    mpi_printf(comm, "Ne_back = %g\n", phys.Ne_back);
+    mpi_printf(comm, "total # of particles = %g\n", 2 * phys.Ne);
+    mpi_printf(comm, "dt*wpe = %g\n", phys.wpe * grid().dt);
+    mpi_printf(comm, "dt*wce = %g\n", phys.wce * grid().dt);
+    mpi_printf(comm, "dt*wci = %g\n", phys.wci * grid().dt);
+    mpi_printf(comm, "dx/de = %g\n", phys.Lx / (phys.de * g.gdims[0]));
+    mpi_printf(comm, "dy/de = %g\n", phys.Ly / (phys.de * g.gdims[1]));
+    mpi_printf(comm, "dz/de = %g\n", phys.Lz / (phys.de * g.gdims[2]));
     mpi_printf(comm, "dx/rhoi = %g\n",
-               (phys_.Lx / g.gdims[0]) / (phys_.vthi / phys_.wci));
+               (phys.Lx / g.gdims[0]) / (phys.vthi / phys.wci));
     mpi_printf(comm, "dx/rhoe = %g\n",
-               (phys_.Lx / g.gdims[0]) / (phys_.vthe / phys_.wce));
-    mpi_printf(comm, "L/debye = %g\n", phys_.L / (phys_.vthe / phys_.wpe));
+               (phys.Lx / g.gdims[0]) / (phys.vthe / phys.wce));
+    mpi_printf(comm, "L/debye = %g\n", phys.L / (phys.vthe / phys.wpe));
     mpi_printf(comm, "dx/debye = %g\n",
-               (phys_.Lx / g.gdims[0]) / (phys_.vthe / phys_.wpe));
-    mpi_printf(comm, "n0 = %g\n", phys_.n0);
-    mpi_printf(comm, "vthi/c = %g\n", phys_.vthi / phys_.c);
-    mpi_printf(comm, "vthe/c = %g\n", phys_.vthe / phys_.c);
-    mpi_printf(comm, "vdri/c = %g\n", phys_.vdri / phys_.c);
-    mpi_printf(comm, "vdre/c = %g\n", phys_.vdre / phys_.c);
+               (phys.Lx / g.gdims[0]) / (phys.vthe / phys.wpe));
+    mpi_printf(comm, "n0 = %g\n", phys.n0);
+    mpi_printf(comm, "vthi/c = %g\n", phys.vthi / phys.c);
+    mpi_printf(comm, "vthe/c = %g\n", phys.vthe / phys.c);
+    mpi_printf(comm, "vdri/c = %g\n", phys.vdri / phys.c);
+    mpi_printf(comm, "vdre/c = %g\n", phys.vdre / phys.c);
     mpi_printf(comm, "Open BC in x?   = %d\n", g.open_bc_x);
     mpi_printf(comm, "Driven BC in z? = %d\n", g.driven_bc_z);
   }
@@ -624,14 +632,14 @@ struct PscHarris : Psc<PscConfig>
     const auto& grid = this->grid();
 
     double cs = cos(g.theta), sn = sin(g.theta);
-    double Ne_sheet = phys_.Ne_sheet, vthe = phys_.vthe, vthi = phys_.vthi;
-    int n_global_patches = phys_.n_global_patches;
-    double weight_s = phys_.weight_s;
-    double tanhf = phys_.tanhf, L = phys_.L;
-    double gdre = phys_.gdre, udre = phys_.udre, gdri = phys_.gdri,
-           udri = phys_.udri;
-    double Ne_back = phys_.Ne_back, vtheb = phys_.vtheb, vthib = phys_.vthib;
-    double weight_b = phys_.weight_b;
+    double Ne_sheet = phys.Ne_sheet, vthe = phys.vthe, vthi = phys.vthi;
+    int n_global_patches = phys.n_global_patches;
+    double weight_s = phys.weight_s;
+    double tanhf = phys.tanhf, L = phys.L;
+    double gdre = phys.gdre, udre = phys.udre, gdri = phys.gdri,
+           udri = phys.udri;
+    double Ne_back = phys.Ne_back, vtheb = phys.vtheb, vthib = phys.vthib;
+    double weight_b = phys.weight_b;
 
     if (count_only) {
       for (int p = 0; p < grid.n_patches(); p++) {
@@ -734,8 +742,8 @@ struct PscHarris : Psc<PscConfig>
 
   double init_field(double crd[3], int m)
   {
-    double b0 = phys_.b0, dbx = phys_.dbx, dbz = phys_.dbz;
-    double L = phys_.L, Lx = phys_.Lx, Lz = phys_.Lz, Lpert = phys_.Lpert;
+    double b0 = phys.b0, dbx = phys.dbx, dbz = phys.dbz;
+    double L = phys.L, Lx = phys.Lx, Lz = phys.Lz, Lpert = phys.Lpert;
     double x = crd[0], z = crd[2];
 
     double cs = cos(g.theta), sn = sin(g.theta);
@@ -798,8 +806,6 @@ struct PscHarris : Psc<PscConfig>
 #endif
 
 private:
-  globals_physics phys_;
-
   MrcIo io_pfd_;
 };
 
@@ -813,6 +819,7 @@ void run()
   mpi_printf(comm, "*** Setting up simulation\n");
 
   setupHarrisParams();
+  phys = globals_physics{g};
 
   psc_params.cfl = 0.99;
   psc_params.stats_every = 100;
