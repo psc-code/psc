@@ -86,7 +86,64 @@ struct PscHarrisParams
   Int3 np;
 };
 
+// ======================================================================
+// Global parameters
+
+namespace
+{
+
+std::string read_checkpoint_filename;
+
+// Parameters specific to this case. They don't really need to be collected in a
+// struct, but maybe it's nice that they are
 PscHarrisParams g;
+
+// This is a set of generic PSC params (see include/psc.hxx),
+// like number of steps to run, etc, which also should be set by the case
+PscParams psc_params;
+
+} // namespace
+
+// ======================================================================
+// setupHarrisParams()
+
+void setupHarrisParams()
+{
+  g.wpedt_max = .36;
+  g.wpe_wce = 2.;
+  g.mi_me = 25.;
+
+  g.Lx_di = 40.;
+  g.Ly_di = 1.;
+  g.Lz_di = 10.;
+
+  g.electron_sort_interval = 25;
+  g.ion_sort_interval = 25;
+
+  g.taui = 40.;
+  g.t_intervali = 1.;
+  g.output_particle_interval = 10.;
+
+  g.overalloc = 2.;
+
+  g.gdims = {512, 1, 128};
+  g.np = {4, 1, 1};
+
+  g.L_di = .5;
+  g.Ti_Te = 5.;
+  g.nb_n0 = .05;
+  g.Tbe_Te = .333;
+  g.Tbi_Ti = .333;
+
+  g.bg = 0.;
+  g.theta = 0.;
+
+  g.Lpert_Lx = 1.;
+  g.dbz_b0 = .03;
+  g.nppc = 10;
+  g.open_bc_x = false;
+  g.driven_bc_z = false;
+}
 
 // ======================================================================
 // globals_physics
@@ -235,16 +292,11 @@ struct PscHarris : Psc<PscConfig>
   //
   // FIXME: can only use 1st order pushers with current conducting wall b.c.
 
-  PscHarris() : io_pfd_{"pfd"}
+  PscHarris(const PscParams& psc_params) : io_pfd_{"pfd"}
   {
     auto comm = grid().comm();
 
-    mpi_printf(comm, "*** Setting up simulation\n");
-
-    setup_params();
-
-    p_.cfl = 0.99;
-    p_.stats_every = 100;
+    p_ = psc_params;
 
     phys_ = globals_physics{g};
 
@@ -284,8 +336,8 @@ struct PscHarris : Psc<PscConfig>
     double dg = courant_length(grid_domain);
     double dt = p_.cfl * dg / phys_.c; // courant limited time step
     if (phys_.wpe * dt > g.wpedt_max) {
-      dt =
-        g.wpedt_max / phys_.wpe; // override timestep if plasma frequency limited
+      dt = g.wpedt_max /
+           phys_.wpe; // override timestep if plasma frequency limited
     }
 
     assert(phys_.c == 1. && phys_.eps0 == 1.);
@@ -294,7 +346,8 @@ struct PscHarris : Psc<PscConfig>
 
     define_grid(grid_domain, grid_bc, kinds, dt, norm_params);
 
-    p_.nmax = int(g.taui / (phys_.wci * grid().dt)); // number of steps from taui
+    p_.nmax =
+      int(g.taui / (phys_.wci * grid().dt)); // number of steps from taui
 
     // --- setup materials
 
@@ -406,7 +459,8 @@ struct PscHarris : Psc<PscConfig>
     outf_.reset(new OutputFieldsC{grid(), outf_params, std::move(outf_items)});
 
     OutputParticlesParams outp_params{};
-    outp_params.every_step = int((g.output_particle_interval / (phys_.wci * dt)));
+    outp_params.every_step =
+      int((g.output_particle_interval / (phys_.wci * dt)));
     outp_params.data_dir = ".";
     outp_params.basename = "prt";
     outp_params.lo = {192, 0, 48};
@@ -434,47 +488,6 @@ struct PscHarris : Psc<PscConfig>
     setup_log();
 
     mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
-  }
-
-  // ----------------------------------------------------------------------
-  // setup_params()
-
-  void setup_params()
-  {
-    g.wpedt_max = .36;
-    g.wpe_wce = 2.;
-    g.mi_me = 25.;
-
-    g.Lx_di = 40.;
-    g.Ly_di = 1.;
-    g.Lz_di = 10.;
-
-    g.electron_sort_interval = 25;
-    g.ion_sort_interval = 25;
-
-    g.taui = 40.;
-    g.t_intervali = 1.;
-    g.output_particle_interval = 10.;
-
-    g.overalloc = 2.;
-
-    g.gdims = {512, 1, 128};
-    g.np = {4, 1, 1};
-
-    g.L_di = .5;
-    g.Ti_Te = 5.;
-    g.nb_n0 = .05;
-    g.Tbe_Te = .333;
-    g.Tbi_Ti = .333;
-
-    g.bg = 0.;
-    g.theta = 0.;
-
-    g.Lpert_Lx = 1.;
-    g.dbz_b0 = .03;
-    g.nppc = 10;
-    g.open_bc_x = false;
-    g.driven_bc_z = false;
   }
 
   // ----------------------------------------------------------------------
@@ -791,17 +804,33 @@ private:
 };
 
 // ======================================================================
+// run
+
+void run()
+{
+  auto comm = MPI_COMM_WORLD;
+
+  mpi_printf(comm, "*** Setting up simulation\n");
+
+  setupHarrisParams();
+
+  psc_params.cfl = 0.99;
+  psc_params.stats_every = 100;
+
+  auto psc = PscHarris{psc_params};
+
+  psc.initialize();
+  psc.integrate();
+}
+
+// ======================================================================
 // main
 
 int main(int argc, char** argv)
 {
   psc_init(argc, argv);
-  auto psc = new PscHarris;
 
-  psc->initialize();
-  psc->integrate();
-
-  delete psc;
+  run();
 
   libmrc_params_finalize();
   MPI_Finalize();
