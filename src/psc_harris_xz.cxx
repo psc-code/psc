@@ -86,6 +86,8 @@ struct PscHarrisParams
   Int3 np;
 };
 
+PscHarrisParams g;
+
 // ======================================================================
 // globals_physics
 //
@@ -226,9 +228,7 @@ using PscConfig = PscConfig1vbecSingle<dim_xz>;
 // ======================================================================
 // PscHarris
 
-struct PscHarris
-  : Psc<PscConfig>
-  , PscHarrisParams
+struct PscHarris : Psc<PscConfig>
 {
   // ----------------------------------------------------------------------
   // PscHarris ctor
@@ -246,14 +246,14 @@ struct PscHarris
     p_.cfl = 0.99;
     p_.stats_every = 100;
 
-    phys_ = globals_physics{*this};
+    phys_ = globals_physics{g};
 
     // --- set up domain
 
-    auto grid_domain = Grid_t::Domain{gdims,
+    auto grid_domain = Grid_t::Domain{g.gdims,
                                       {phys_.Lx, phys_.Ly, phys_.Lz},
                                       {0., -.5 * phys_.Ly, -.5 * phys_.Lz},
-                                      np};
+                                      g.np};
 
     mpi_printf(comm, "Conducting fields on Z-boundaries\n");
     mpi_printf(comm, "Reflect particles on Z-boundaries\n");
@@ -262,7 +262,7 @@ struct PscHarris
       {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL},
       {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING},
       {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING}};
-    if (open_bc_x) {
+    if (g.open_bc_x) {
       mpi_printf(comm, "Absorbing fields on X-boundaries\n");
       grid_bc.fld_lo[0] = BND_FLD_ABSORBING;
       grid_bc.fld_hi[0] = BND_FLD_ABSORBING;
@@ -271,7 +271,7 @@ struct PscHarris
       grid_bc.prt_hi[1] = BND_PRT_ABSORBING;
     }
 
-    if (driven_bc_z) {
+    if (g.driven_bc_z) {
       mpi_printf(comm, "Absorb particles on Z-boundaries\n");
       grid_bc.prt_lo[2] = BND_PRT_ABSORBING;
       grid_bc.prt_hi[2] = BND_PRT_ABSORBING;
@@ -283,9 +283,9 @@ struct PscHarris
     // determine the time step
     double dg = courant_length(grid_domain);
     double dt = p_.cfl * dg / phys_.c; // courant limited time step
-    if (phys_.wpe * dt > wpedt_max) {
+    if (phys_.wpe * dt > g.wpedt_max) {
       dt =
-        wpedt_max / phys_.wpe; // override timestep if plasma frequency limited
+        g.wpedt_max / phys_.wpe; // override timestep if plasma frequency limited
     }
 
     assert(phys_.c == 1. && phys_.eps0 == 1.);
@@ -294,7 +294,7 @@ struct PscHarris
 
     define_grid(grid_domain, grid_bc, kinds, dt, norm_params);
 
-    p_.nmax = int(taui / (phys_.wci * grid().dt)); // number of steps from taui
+    p_.nmax = int(g.taui / (phys_.wci * grid().dt)); // number of steps from taui
 
     // --- setup materials
 
@@ -382,7 +382,7 @@ struct PscHarris
 
     // ---
 
-    int interval = (int)(t_intervali / (phys_.wci * grid().dt));
+    int interval = int(g.t_intervali / (phys_.wci * grid().dt));
     create_diagnostics(interval);
 
     // -- output fields
@@ -406,7 +406,7 @@ struct PscHarris
     outf_.reset(new OutputFieldsC{grid(), outf_params, std::move(outf_items)});
 
     OutputParticlesParams outp_params{};
-    outp_params.every_step = int((output_particle_interval / (phys_.wci * dt)));
+    outp_params.every_step = int((g.output_particle_interval / (phys_.wci * dt)));
     outp_params.data_dir = ".";
     outp_params.basename = "prt";
     outp_params.lo = {192, 0, 48};
@@ -441,44 +441,40 @@ struct PscHarris
 
   void setup_params()
   {
-    PscHarrisParams params;
+    g.wpedt_max = .36;
+    g.wpe_wce = 2.;
+    g.mi_me = 25.;
 
-    params.wpedt_max = .36;
-    params.wpe_wce = 2.;
-    params.mi_me = 25.;
+    g.Lx_di = 40.;
+    g.Ly_di = 1.;
+    g.Lz_di = 10.;
 
-    params.Lx_di = 40.;
-    params.Ly_di = 1.;
-    params.Lz_di = 10.;
+    g.electron_sort_interval = 25;
+    g.ion_sort_interval = 25;
 
-    params.electron_sort_interval = 25;
-    params.ion_sort_interval = 25;
+    g.taui = 40.;
+    g.t_intervali = 1.;
+    g.output_particle_interval = 10.;
 
-    params.taui = 40.;
-    params.t_intervali = 1.;
-    params.output_particle_interval = 10.;
+    g.overalloc = 2.;
 
-    params.overalloc = 2.;
+    g.gdims = {512, 1, 128};
+    g.np = {4, 1, 1};
 
-    params.gdims = {512, 1, 128};
-    params.np = {4, 1, 1};
+    g.L_di = .5;
+    g.Ti_Te = 5.;
+    g.nb_n0 = .05;
+    g.Tbe_Te = .333;
+    g.Tbi_Ti = .333;
 
-    params.L_di = .5;
-    params.Ti_Te = 5.;
-    params.nb_n0 = .05;
-    params.Tbe_Te = .333;
-    params.Tbi_Ti = .333;
+    g.bg = 0.;
+    g.theta = 0.;
 
-    params.bg = 0.;
-    params.theta = 0.;
-
-    params.Lpert_Lx = 1.;
-    params.dbz_b0 = .03;
-    params.nppc = 10;
-    params.open_bc_x = false;
-    params.driven_bc_z = false;
-
-    static_cast<PscHarrisParams&>(*this) = params;
+    g.Lpert_Lx = 1.;
+    g.dbz_b0 = .03;
+    g.nppc = 10;
+    g.open_bc_x = false;
+    g.driven_bc_z = false;
   }
 
   // ----------------------------------------------------------------------
@@ -511,14 +507,14 @@ struct PscHarris
     MPI_Comm comm = grid().comm();
 
     mpi_printf(comm, "Setting up species.\n");
-    double nmax = overalloc * phys_.Ne / phys_.n_global_patches;
+    double nmax = g.overalloc * phys_.Ne / phys_.n_global_patches;
     double nmovers = .1 * nmax;
     double sort_method = 1; // 0=in place and 1=out of place
 
     mprts_->define_species("electron", -phys_.ec, phys_.me, nmax, nmovers,
-                           electron_sort_interval, sort_method);
+                           g.electron_sort_interval, sort_method);
     mprts_->define_species("ion", phys_.ec, phys_.mi, nmax, nmovers,
-                           ion_sort_interval, sort_method);
+                           g.ion_sort_interval, sort_method);
   }
 
   // ----------------------------------------------------------------------
@@ -529,19 +525,19 @@ struct PscHarris
     MPI_Comm comm = grid().comm();
 
     mpi_printf(comm, "***********************************************\n");
-    mpi_printf(comm, "* Topology: %d x %d x %d\n", np[0], np[1], np[2]);
+    mpi_printf(comm, "* Topology: %d x %d x %d\n", g.np[0], g.np[1], g.np[2]);
     mpi_printf(comm, "tanhf    = %g\n", phys_.tanhf);
-    mpi_printf(comm, "L_di     = %g\n", L_di);
+    mpi_printf(comm, "L_di     = %g\n", g.L_di);
     mpi_printf(comm, "rhoi/L   = %g\n", phys_.rhoi_L);
-    mpi_printf(comm, "Ti/Te    = %g\n", Ti_Te);
-    mpi_printf(comm, "nb/n0    = %g\n", nb_n0);
-    mpi_printf(comm, "wpe/wce  = %g\n", wpe_wce);
-    mpi_printf(comm, "mi/me    = %g\n", mi_me);
-    mpi_printf(comm, "theta    = %g\n", theta);
-    mpi_printf(comm, "Lpert/Lx = %g\n", Lpert_Lx);
-    mpi_printf(comm, "dbz/b0   = %g\n", dbz_b0);
-    mpi_printf(comm, "taui     = %g\n", taui);
-    mpi_printf(comm, "t_intervali = %g\n", t_intervali);
+    mpi_printf(comm, "Ti/Te    = %g\n", g.Ti_Te);
+    mpi_printf(comm, "nb/n0    = %g\n", g.nb_n0);
+    mpi_printf(comm, "wpe/wce  = %g\n", g.wpe_wce);
+    mpi_printf(comm, "mi/me    = %g\n", g.mi_me);
+    mpi_printf(comm, "theta    = %g\n", g.theta);
+    mpi_printf(comm, "Lpert/Lx = %g\n", g.Lpert_Lx);
+    mpi_printf(comm, "dbz/b0   = %g\n", g.dbz_b0);
+    mpi_printf(comm, "taui     = %g\n", g.taui);
+    mpi_printf(comm, "t_intervali = %g\n", g.t_intervali);
     mpi_printf(comm, "num_step = %d\n", p_.nmax);
     mpi_printf(comm, "Lx/di = %g\n", phys_.Lx / phys_.di);
     mpi_printf(comm, "Lx/de = %g\n", phys_.Lx / phys_.de);
@@ -549,11 +545,11 @@ struct PscHarris
     mpi_printf(comm, "Ly/de = %g\n", phys_.Ly / phys_.de);
     mpi_printf(comm, "Lz/di = %g\n", phys_.Lz / phys_.di);
     mpi_printf(comm, "Lz/de = %g\n", phys_.Lz / phys_.de);
-    mpi_printf(comm, "nx = %d\n", gdims[0]);
-    mpi_printf(comm, "ny = %d\n", gdims[1]);
-    mpi_printf(comm, "nz = %d\n", gdims[2]);
+    mpi_printf(comm, "nx = %d\n", g.gdims[0]);
+    mpi_printf(comm, "ny = %d\n", g.gdims[1]);
+    mpi_printf(comm, "nz = %d\n", g.gdims[2]);
     mpi_printf(comm, "n_global_patches = %d\n", phys_.n_global_patches);
-    mpi_printf(comm, "nppc = %g\n", nppc);
+    mpi_printf(comm, "nppc = %g\n", g.nppc);
     mpi_printf(comm, "b0 = %g\n", phys_.b0);
     mpi_printf(comm, "v_A (based on nb) = %g\n", phys_.v_A);
     mpi_printf(comm, "di = %g\n", phys_.di);
@@ -564,23 +560,23 @@ struct PscHarris
     mpi_printf(comm, "dt*wpe = %g\n", phys_.wpe * grid().dt);
     mpi_printf(comm, "dt*wce = %g\n", phys_.wce * grid().dt);
     mpi_printf(comm, "dt*wci = %g\n", phys_.wci * grid().dt);
-    mpi_printf(comm, "dx/de = %g\n", phys_.Lx / (phys_.de * gdims[0]));
-    mpi_printf(comm, "dy/de = %g\n", phys_.Ly / (phys_.de * gdims[1]));
-    mpi_printf(comm, "dz/de = %g\n", phys_.Lz / (phys_.de * gdims[2]));
+    mpi_printf(comm, "dx/de = %g\n", phys_.Lx / (phys_.de * g.gdims[0]));
+    mpi_printf(comm, "dy/de = %g\n", phys_.Ly / (phys_.de * g.gdims[1]));
+    mpi_printf(comm, "dz/de = %g\n", phys_.Lz / (phys_.de * g.gdims[2]));
     mpi_printf(comm, "dx/rhoi = %g\n",
-               (phys_.Lx / gdims[0]) / (phys_.vthi / phys_.wci));
+               (phys_.Lx / g.gdims[0]) / (phys_.vthi / phys_.wci));
     mpi_printf(comm, "dx/rhoe = %g\n",
-               (phys_.Lx / gdims[0]) / (phys_.vthe / phys_.wce));
+               (phys_.Lx / g.gdims[0]) / (phys_.vthe / phys_.wce));
     mpi_printf(comm, "L/debye = %g\n", phys_.L / (phys_.vthe / phys_.wpe));
     mpi_printf(comm, "dx/debye = %g\n",
-               (phys_.Lx / gdims[0]) / (phys_.vthe / phys_.wpe));
+               (phys_.Lx / g.gdims[0]) / (phys_.vthe / phys_.wpe));
     mpi_printf(comm, "n0 = %g\n", phys_.n0);
     mpi_printf(comm, "vthi/c = %g\n", phys_.vthi / phys_.c);
     mpi_printf(comm, "vthe/c = %g\n", phys_.vthe / phys_.c);
     mpi_printf(comm, "vdri/c = %g\n", phys_.vdri / phys_.c);
     mpi_printf(comm, "vdre/c = %g\n", phys_.vdre / phys_.c);
-    mpi_printf(comm, "Open BC in x?   = %d\n", open_bc_x);
-    mpi_printf(comm, "Driven BC in z? = %d\n", driven_bc_z);
+    mpi_printf(comm, "Open BC in x?   = %d\n", g.open_bc_x);
+    mpi_printf(comm, "Driven BC in z? = %d\n", g.driven_bc_z);
   }
 
   // ----------------------------------------------------------------------
@@ -614,7 +610,7 @@ struct PscHarris
     MPI_Comm comm = grid().comm();
     const auto& grid = this->grid();
 
-    double cs = cos(theta), sn = sin(theta);
+    double cs = cos(g.theta), sn = sin(g.theta);
     double Ne_sheet = phys_.Ne_sheet, vthe = phys_.vthe, vthi = phys_.vthi;
     int n_global_patches = phys_.n_global_patches;
     double weight_s = phys_.weight_s;
@@ -729,7 +725,7 @@ struct PscHarris
     double L = phys_.L, Lx = phys_.Lx, Lz = phys_.Lz, Lpert = phys_.Lpert;
     double x = crd[0], z = crd[2];
 
-    double cs = cos(theta), sn = sin(theta);
+    double cs = cos(g.theta), sn = sin(g.theta);
 
     switch (m) {
       case HX:
@@ -737,7 +733,7 @@ struct PscHarris
                dbx * cos(2. * M_PI * (x - .5 * Lx) / Lpert) *
                  sin(M_PI * z / Lz);
 
-      case HY: return -sn * b0 * tanh(z / L) + b0 * bg;
+      case HY: return -sn * b0 * tanh(z / L) + b0 * g.bg;
 
       case HZ:
         return dbz * cos(M_PI * z / Lz) *
