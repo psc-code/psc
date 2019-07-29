@@ -3,6 +3,7 @@
 #include <setup_fields.hxx>
 #include <setup_particles.hxx>
 
+#include "DiagnosticsDefault.h"
 #include "psc_config.hxx"
 #include "psc_integrator.hxx"
 

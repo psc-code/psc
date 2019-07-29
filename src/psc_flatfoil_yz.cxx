@@ -2,6 +2,7 @@
 #include <psc.h>
 #include <psc.hxx>
 
+#include "DiagnosticsDefault.h"
 #include "psc_integrator.hxx"
 #include <balance.hxx>
 #include <bnd.hxx>

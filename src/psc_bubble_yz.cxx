@@ -5,6 +5,7 @@
 #include <psc_fields_single.h>
 #include <psc_particles_single.h>
 
+#include "DiagnosticsDefault.h"
 #include "balance.hxx"
 #include "bnd_particles.hxx"
 #include "checks.hxx"
