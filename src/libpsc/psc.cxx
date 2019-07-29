@@ -87,6 +87,11 @@ void psc_init(int& argc, char**& argv)
 #endif
   libmrc_params_init(argc, argv);
   mrc_set_flags(MRC_FLAG_SUPPRESS_UNPREFIXED_OPTION_WARNING);
+
+  // FIXME, we should use RngPool consistently throughout
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  srandom(rank);
 }
 
 void psc_finalize()
