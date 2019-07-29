@@ -42,19 +42,19 @@ struct SimulationNone
   using Species = void;
 };
 
-template<typename DIM, typename Mparticles, typename MfieldsState>
+template<typename _Dim, typename Mparticles, typename MfieldsState>
 struct PscConfigPushParticles2nd
 {
-  using PushParticles = PushParticlesEsirkepov<Config2nd<Mparticles, MfieldsState, DIM>>;
+  using PushParticles = PushParticlesEsirkepov<Config2nd<Mparticles, MfieldsState, _Dim>>;
 };
 
-template<typename DIM, typename Mparticles, typename MfieldsState>
+template<typename _Dim, typename Mparticles, typename MfieldsState>
 struct PscConfigPushParticles1vbec
 {
-  using PushParticles = PushParticlesVb<Config1vbec<Mparticles, MfieldsState, DIM>>;
+  using PushParticles = PushParticlesVb<Config1vbec<Mparticles, MfieldsState, _Dim>>;
 };
 
-template<typename DIM, typename Mparticles, typename MfieldsState>
+template<typename _Dim, typename Mparticles, typename MfieldsState>
 struct PscConfigPushParticlesCuda
 {
 };
@@ -73,17 +73,17 @@ struct PscConfigPushParticles1vbec<dim_xz, Mparticles, Mfields>
   using PushParticles = PushParticlesVb<Config1vbecSplit<Mparticles, Mfields, dim_xz>>;
 };
 
-template<typename DIM, typename _Mparticles, typename _MfieldsState,
+template<typename _Dim, typename _Mparticles, typename _MfieldsState,
 	 typename _Mfields,
 	 template<typename...> class ConfigPushParticles,
 	 typename _Simulation = SimulationNone>
 struct PscConfig_
 {
-  using dim_t = DIM;
+  using Dim = _Dim;
   using Mparticles = _Mparticles;
   using MfieldsState = _MfieldsState;
   using Mfields = _Mfields;
-  using ConfigPushp = ConfigPushParticles<DIM, Mparticles, MfieldsState>;
+  using ConfigPushp = ConfigPushParticles<_Dim, Mparticles, MfieldsState>;
   using PushParticles = typename ConfigPushp::PushParticles;
   using checks_order = typename PushParticles::checks_order;
   using Sort = SortCountsort2<Mparticles>;
@@ -101,19 +101,19 @@ struct PscConfig_
 
 #ifdef USE_CUDA
 
-template<typename DIM, typename _Mparticles, typename _MfieldsState, typename _Mfields>
-struct PscConfig_<DIM, _Mparticles, _MfieldsState, _Mfields, PscConfigPushParticlesCuda>
+template<typename _Dim, typename _Mparticles, typename _MfieldsState, typename _Mfields>
+struct PscConfig_<_Dim, _Mparticles, _MfieldsState, _Mfields, PscConfigPushParticlesCuda>
 {
-  using dim_t = DIM;
+  using Dim = _Dim;
   using BS = typename _Mparticles::BS;
   using Mparticles = _Mparticles;
   using MfieldsState = _MfieldsState;
   using Mfields = _Mfields;
-  using PushParticles = PushParticlesCuda<CudaConfig1vbec3d<dim_t, BS>>;
+  using PushParticles = PushParticlesCuda<CudaConfig1vbec3d<Dim, BS>>;
   using Sort = SortCuda<BS>;
   using Collision = CollisionCuda<Mparticles>;
   using PushFields = PushFieldsCuda;
-  using BndParticles = BndParticlesCuda<Mparticles, dim_t>;
+  using BndParticles = BndParticlesCuda<Mparticles, Dim>;
   using Bnd = BndCuda3<MfieldsState>;
   using BndFields = BndFieldsNone<MfieldsState>;
   using Balance = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
@@ -125,16 +125,16 @@ struct PscConfig_<DIM, _Mparticles, _MfieldsState, _Mfields, PscConfigPushPartic
 template<typename _Mparticles, typename _MfieldsState, typename _Mfields>
 struct PscConfig_<dim_xyz, _Mparticles, _MfieldsState, _Mfields, PscConfigPushParticlesCuda>
 {
-  using dim_t = dim_xyz;
+  using Dim = dim_xyz;
   using BS = typename _Mparticles::BS;
   using Mparticles = _Mparticles;
   using MfieldsState = _MfieldsState;
   using Mfields = _Mfields;
-  using PushParticles = PushParticlesCuda<CudaConfig1vbec3dGmem<dim_t, BS>>;
+  using PushParticles = PushParticlesCuda<CudaConfig1vbec3dGmem<Dim, BS>>;
   using Sort = SortCuda<BS>;
   using Collision = CollisionCuda<Mparticles>;
   using PushFields = PushFieldsCuda;
-  using BndParticles = BndParticlesCuda<Mparticles, dim_t>;
+  using BndParticles = BndParticlesCuda<Mparticles, Dim>;
   using Bnd_t = BndCuda3<MfieldsState>;
   using BndFields_t = BndFieldsNone<MfieldsState>;
   using Balance = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
@@ -209,7 +209,7 @@ struct PscConfigVpicWrap
   using Marder = MarderVpicWrap<Mparticles, MfieldsState>;
   using OutputParticles = OutputParticlesHdf5<MparticlesSingle>;
   using OutputHydro = OutputHydroVpicWrap<Mparticles, MfieldsHydro, typename VpicConfig::MfieldsInterpolator>;
-  using dim_t = dim_xyz;
+  using Dim = dim_xyz;
 
 #if 0
   using DiagMixin = VpicDiagMixin<Mparticles, MfieldsState, MfieldsInterpolator, MfieldsHydro,
@@ -246,7 +246,7 @@ struct PscConfigVpicPsc
   using Marder = MarderVpic<Mparticles, MfieldsState>;
   using OutputParticles = OutputParticlesHdf5<MparticlesSingle>;
   using OutputHydro = OutputHydroVpic<Mparticles, MfieldsHydro, typename VpicConfig::MfieldsInterpolator>;
-  using dim_t = dim_xyz;
+  using Dim = dim_xyz;
 
 #if 0
   using DiagMixin = VpicDiagMixin<Mparticles, MfieldsState, MfieldsInterpolator, MfieldsHydro,

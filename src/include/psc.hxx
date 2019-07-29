@@ -114,7 +114,7 @@ struct Psc
   using BndFields = typename PscConfig::BndFields;
   using BndParticles = typename PscConfig::BndParticles;
   using OutputParticles = typename PscConfig::OutputParticles;
-  using Dim = typename PscConfig::dim_t;
+  using Dim = typename PscConfig::Dim;
 
 #ifdef VPIC
   using AccumulateOps = typename PushParticles::AccumulateOps;
@@ -397,7 +397,7 @@ struct Psc
 
   void step_psc()
   {
-    using DIM = typename PscConfig::dim_t;
+    using Dim = typename PscConfig::Dim;
 
     static int pr_sort, pr_collision, pr_checks, pr_push_prts, pr_push_flds,
       pr_bndp, pr_bndf, pr_marder, pr_inject_prts;
@@ -456,7 +456,7 @@ struct Psc
 
     // === field propagation B^{n+1/2} -> B^{n+1}
     prof_start(pr_push_flds);
-    pushf_.push_H(mflds_, .5, DIM{});
+    pushf_.push_H(mflds_, .5, Dim{});
     prof_stop(pr_push_flds);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
@@ -477,7 +477,7 @@ struct Psc
     prof_stop(pr_bndf);
 
     prof_restart(pr_push_flds);
-    pushf_.push_E(mflds_, 1., DIM{});
+    pushf_.push_E(mflds_, 1., Dim{});
     prof_stop(pr_push_flds);
 
 #if 1
@@ -490,7 +490,7 @@ struct Psc
 
     // === field propagation B^{n+1} -> B^{n+3/2}
     prof_restart(pr_push_flds);
-    pushf_.push_H(mflds_, .5, DIM{});
+    pushf_.push_H(mflds_, .5, Dim{});
     prof_stop(pr_push_flds);
 
 #if 1
