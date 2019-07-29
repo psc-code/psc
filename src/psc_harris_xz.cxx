@@ -446,10 +446,7 @@ struct PscHarris : Psc<PscConfig>
     p_ = psc_params;
 
     define_grid(grid);
-
     mflds_.reset(&mflds);
-    vpic_define_fields(grid);
-
     mprts_.reset(&mprts);
 
     balance_.reset(&balance);
@@ -803,6 +800,7 @@ void run()
 
   double damp = 0.;
   auto& mflds = *new MfieldsState{grid, vgrid, material_list, damp};
+  vpic_define_fields(grid);
 #else
   auto& mflds = *new MfieldsState{grid};
 #endif

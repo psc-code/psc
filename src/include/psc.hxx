@@ -153,18 +153,6 @@ struct Psc
   void define_particles(Mparticles& mprts) { mprts_.reset(&mprts); }
 
   // ----------------------------------------------------------------------
-  // vpic_define_fields
-
-  void vpic_define_fields(const Grid_t& grid)
-  {
-#ifdef VPIC
-    hydro.reset(new MfieldsHydro{grid, vgrid});
-    interpolator.reset(new MfieldsInterpolator{vgrid});
-    accumulator.reset(new MfieldsAccumulator{vgrid});
-#endif
-  }
-
-  // ----------------------------------------------------------------------
   // init
 
   void init()
@@ -1005,5 +993,17 @@ void vpic_define_grid(const Grid_t& grid)
   }
 
   grid_setup_communication();
+#endif
+}
+
+// ----------------------------------------------------------------------
+// vpic_define_fields
+
+void vpic_define_fields(const Grid_t& grid)
+{
+#ifdef VPIC
+  hydro.reset(new MfieldsHydro{grid, vgrid});
+  interpolator.reset(new MfieldsInterpolator{vgrid});
+  accumulator.reset(new MfieldsAccumulator{vgrid});
 #endif
 }
