@@ -621,6 +621,51 @@ void setup_log(const Grid_t& grid)
   mpi_printf(comm, "Driven BC in z? = %d\n", g.driven_bc_z);
 }
 
+class Diagnostics
+{
+public:
+  Diagnostics(OutputFieldsC& outf, OutputParticles& outp)
+    : io_pfd_{"pfd"}, outf_{outf}, outp_{outp}
+  {}
+
+  void operator()(Mparticles& mprts, MfieldsState& mflds)
+  {
+    vpic_run_diagnostics(mprts, mflds);
+
+    const auto& grid = mprts.grid();
+    MPI_Comm comm = grid.comm();
+
+    int timestep = grid.timestep();
+    if (outf_.pfield_step > 0 && timestep % outf_.pfield_step == 0) {
+      mpi_printf(comm, "***** Writing PFD output\n");
+      io_pfd_.open(grid);
+
+      {
+        OutputFieldsVpic<MfieldsState> out_fields;
+        auto result = out_fields(mflds);
+        io_pfd_.write_mflds(result.mflds, grid, result.name, result.comp_names);
+      }
+
+      {
+        // FIXME, would be better to keep "out_hydro" around
+        OutputHydro out_hydro{grid};
+        auto result = out_hydro(mprts, *hydro, *interpolator);
+        io_pfd_.write_mflds(result.mflds, grid, result.name, result.comp_names);
+      }
+      mrc_io_close(io_pfd_.io_);
+    }
+
+    psc_stats_start(st_time_output);
+    outp_.run(mprts);
+    psc_stats_stop(st_time_output);
+  }
+
+private:
+  MrcIo io_pfd_;
+  OutputFieldsC& outf_;
+  OutputParticles& outp_;
+};
+
 // ======================================================================
 // PscHarris
 
@@ -635,7 +680,7 @@ struct PscHarris : Psc<PscConfig>
             Mparticles& mprts, Balance& balance, Collision& collision,
             Checks& checks, Marder& marder, OutputFieldsC& outf,
             OutputParticles& outp)
-    : io_pfd_{"pfd"}
+    : diag_{outf, outp}
   {
     auto comm = grid.comm();
 
@@ -654,49 +699,18 @@ struct PscHarris : Psc<PscConfig>
     outp_.reset(&outp);
 
     init();
+    initialize();
   }
 
   // ----------------------------------------------------------------------
   // diagnostics
 
 #ifdef VPIC
-  void diagnostics() override
-  {
-    vpic_run_diagnostics(*mprts_, *mflds_);
-
-    MPI_Comm comm = grid().comm();
-    const auto& grid = this->grid();
-
-    int timestep = grid.timestep();
-    if (outf_->pfield_step > 0 && timestep % outf_->pfield_step == 0) {
-      mpi_printf(comm, "***** Writing PFD output\n");
-      io_pfd_.open(grid);
-
-      {
-        OutputFieldsVpic<MfieldsState> out_fields;
-        auto result = out_fields(*mflds_);
-        io_pfd_.write_mflds(result.mflds, grid, result.name, result.comp_names);
-      }
-
-      {
-        // FIXME, would be better to keep "out_hydro" around
-        OutputHydro out_hydro{grid};
-        auto result = out_hydro(*mprts_, *hydro, *interpolator);
-        io_pfd_.write_mflds(result.mflds, grid, result.name, result.comp_names);
-      }
-      mrc_io_close(io_pfd_.io_);
-    }
-
-    if (outp_) {
-      psc_stats_start(st_time_output);
-      (*outp_).run(*mprts_);
-      psc_stats_stop(st_time_output);
-    }
-  }
+  void diagnostics() override { diag_(*mprts_, *mflds_); }
 #endif
 
 private:
-  MrcIo io_pfd_;
+  Diagnostics diag_;
 };
 
 // ======================================================================
@@ -862,11 +876,10 @@ void run()
   setup_log(grid);
 
   mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
-  
+
   auto psc = PscHarris{psc_params, *grid_ptr, mflds,  mprts, balance,
                        collision,  checks,    marder, outf,  outp};
 
-  psc.initialize();
   psc.integrate();
 }
 

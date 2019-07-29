@@ -45,6 +45,7 @@ using Grid = typename MfieldsState::Grid;
 using ParticleBcList = typename Mparticles::ParticleBcList;
 using MaterialList = typename MfieldsState::MaterialList;
 using Material = typename MaterialList::Material;
+using OutputHydro = OutputHydroVpic<Mparticles, MfieldsHydro, MfieldsInterpolator>;
 using DiagMixin =
   NoneDiagMixin<Mparticles, MfieldsState, MfieldsInterpolator, MfieldsHydro>;
 
@@ -116,7 +117,6 @@ struct Psc
 
 #ifdef VPIC
   using AccumulateOps = typename PushParticles_t::AccumulateOps;
-  using OutputHydro = typename PscConfig::OutputHydro;
 #endif
 
   // ----------------------------------------------------------------------
