@@ -38,9 +38,14 @@ struct MaterialList;
 using VpicConfig = VpicConfigPsc;
 using MfieldsState = typename VpicConfig::MfieldsState;
 using MfieldsHydro = typename VpicConfig::MfieldsHydro;
+using MfieldsInterpolator = typename VpicConfig::MfieldsInterpolator;
+using MfieldsAccumulator = typename VpicConfig::MfieldsAccumulator;
 using Grid = typename MfieldsState::Grid;
 
 Grid* vgrid;
+std::unique_ptr<MfieldsHydro> hydro;
+std::unique_ptr<MfieldsInterpolator> interpolator;
+std::unique_ptr<MfieldsAccumulator> accumulator;
 
 #endif
 
@@ -153,9 +158,9 @@ struct Psc
   void vpic_define_fields(const Grid_t& grid)
   {
 #ifdef VPIC
-    hydro_.reset(new MfieldsHydro{grid, vgrid});
-    interpolator_.reset(new MfieldsInterpolator{vgrid});
-    accumulator_.reset(new MfieldsAccumulator{vgrid});
+    hydro.reset(new MfieldsHydro{grid, vgrid});
+    interpolator.reset(new MfieldsInterpolator{vgrid});
+    accumulator.reset(new MfieldsAccumulator{vgrid});
 #endif
   }
 
@@ -349,7 +354,7 @@ struct Psc
 
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
     prof_start(pr_push_prts);
-    pushp_->push_mprts(mprts, mflds, *interpolator_, *accumulator_,
+    pushp_->push_mprts(mprts, mflds, *interpolator, *accumulator,
                        particle_bc_list_, num_comm_round);
     prof_stop(pr_push_prts);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
@@ -412,7 +417,7 @@ struct Psc
     checks_->gauss(mprts, mflds);
 
 #ifdef VPIC
-    pushp_->load_interpolator(mprts, mflds, *interpolator_);
+    pushp_->load_interpolator(mprts, mflds, *interpolator);
 #endif
   }
 #endif
@@ -623,7 +628,7 @@ struct Psc
   void run_diagnostics()
   {
 #ifdef VPIC
-    diag_mixin_.diagnostics_run(*mprts_, *mflds_, *interpolator_, *hydro_,
+    diag_mixin_.diagnostics_run(*mprts_, *mflds_, *interpolator, *hydro,
                                 grid().domain.np);
 #endif
   }
@@ -714,8 +719,8 @@ private:
 
     mpi_printf(comm, "Uncentering particles\n");
     if (!mprts.empty()) {
-      pushp_->load_interpolator(mprts, mflds, *interpolator_);
-      pushp_->uncenter(mprts, *interpolator_);
+      pushp_->load_interpolator(mprts, mflds, *interpolator);
+      pushp_->uncenter(mprts, *interpolator);
     }
   }
 
@@ -815,9 +820,6 @@ protected:
 
   std::unique_ptr<MfieldsState> mflds_;
 #ifdef VPIC
-  std::unique_ptr<MfieldsHydro> hydro_;
-  std::unique_ptr<MfieldsInterpolator> interpolator_;
-  std::unique_ptr<MfieldsAccumulator> accumulator_;
   ParticleBcList particle_bc_list_;
 #endif
   std::unique_ptr<Mparticles> mprts_;
