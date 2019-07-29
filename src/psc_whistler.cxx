@@ -21,10 +21,10 @@ using PscConfig = PscConfig1vbecSingle<Dim>;
 
 using MfieldsState = PscConfig::MfieldsState;
 using Mparticles = PscConfig::Mparticles;
-using Balance = PscConfig::Balance_t;
-using Collision = PscConfig::Collision_t;
-using Checks = PscConfig::Checks_t;
-using Marder = PscConfig::Marder_t;
+using Balance = PscConfig::Balance;
+using Collision = PscConfig::Collision;
+using Checks = PscConfig::Checks;
+using Marder = PscConfig::Marder;
 using OutputParticles = PscConfig::OutputParticles;
 
 // ======================================================================

@@ -70,10 +70,10 @@ using MfieldsState = typename PscConfig::MfieldsState;
 using MaterialList = typename MfieldsState::MaterialList;
 #endif
 using Mparticles = typename PscConfig::Mparticles;
-using Balance = typename PscConfig::Balance_t;
-using Collision = typename PscConfig::Collision_t;
-using Checks = typename PscConfig::Checks_t;
-using Marder = typename PscConfig::Marder_t;
+using Balance = typename PscConfig::Balance;
+using Collision = typename PscConfig::Collision;
+using Checks = typename PscConfig::Checks;
+using Marder = typename PscConfig::Marder;
 using OutputParticles = PscConfig::OutputParticles;
 
 // ======================================================================

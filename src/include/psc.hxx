@@ -103,30 +103,29 @@ struct Psc
 {
   using Mparticles = typename PscConfig::Mparticles;
   using MfieldsState = typename PscConfig::MfieldsState;
-  using Balance_t = typename PscConfig::Balance_t;
-  using Sort_t = typename PscConfig::Sort_t;
-  using Collision_t = typename PscConfig::Collision_t;
-  using PushParticles_t = typename PscConfig::PushParticles_t;
-  using PushFields_t = typename PscConfig::PushFields_t;
-  using Bnd_t = typename PscConfig::Bnd_t;
-  using BndFields_t = typename PscConfig::BndFields_t;
-  using BndParticles_t = typename PscConfig::BndParticles_t;
-  using Checks_t = typename PscConfig::Checks_t;
-  using Marder_t = typename PscConfig::Marder_t;
+  using Balance = typename PscConfig::Balance;
+  using Sort = typename PscConfig::Sort;
+  using Collision = typename PscConfig::Collision;
+  using Checks = typename PscConfig::Checks;
+  using Marder = typename PscConfig::Marder;
+  using PushParticles = typename PscConfig::PushParticles;
+  using PushFields = typename PscConfig::PushFields;
+  using Bnd = typename PscConfig::Bnd;
+  using BndFields = typename PscConfig::BndFields;
+  using BndParticles = typename PscConfig::BndParticles;
   using OutputParticles = typename PscConfig::OutputParticles;
   using Dim = typename PscConfig::dim_t;
 
 #ifdef VPIC
-  using AccumulateOps = typename PushParticles_t::AccumulateOps;
+  using AccumulateOps = typename PushParticles::AccumulateOps;
 #endif
 
   // ----------------------------------------------------------------------
   // ctor
 
   Psc(const PscParams& params, Grid_t& grid, MfieldsState& mflds,
-      Mparticles& mprts, Balance_t& balance, Collision_t& collision,
-      Checks_t& checks, Marder_t& marder, OutputFieldsC& outf,
-      OutputParticles& outp)
+      Mparticles& mprts, Balance& balance, Collision& collision, Checks& checks,
+      Marder& marder, OutputFieldsC& outf, OutputParticles& outp)
     : p_{params},
       grid_{&grid},
       mflds_{mflds},
@@ -148,7 +147,6 @@ struct Psc
 
     diag_ = psc_diag_create(MPI_COMM_WORLD);
     psc_diag_set_from_options(diag_);
-
 
     psc_diag_setup(diag_);
 
@@ -728,19 +726,19 @@ protected:
   MfieldsState& mflds_;
   Mparticles& mprts_;
 
-  Balance_t& balance_;
-  Collision_t& collision_;
-  Checks_t& checks_;
-  Marder_t& marder_;
+  Balance& balance_;
+  Collision& collision_;
+  Checks& checks_;
+  Marder& marder_;
   OutputFieldsC& outf_;
   OutputParticles& outp_;
 
-  Sort_t sort_;
-  PushParticles_t pushp_;
-  PushFields_t pushf_;
-  Bnd_t bnd_;
-  BndFields_t bndf_;
-  BndParticles_t bndp_;
+  Sort sort_;
+  PushParticles pushp_;
+  PushFields pushf_;
+  Bnd bnd_;
+  BndFields bndf_;
+  BndParticles bndp_;
 
   psc_diag* diag_; ///< timeseries diagnostics
 

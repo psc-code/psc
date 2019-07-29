@@ -45,13 +45,13 @@ struct SimulationNone
 template<typename DIM, typename Mparticles, typename MfieldsState>
 struct PscConfigPushParticles2nd
 {
-  using PushParticles_t = PushParticlesEsirkepov<Config2nd<Mparticles, MfieldsState, DIM>>;
+  using PushParticles = PushParticlesEsirkepov<Config2nd<Mparticles, MfieldsState, DIM>>;
 };
 
 template<typename DIM, typename Mparticles, typename MfieldsState>
 struct PscConfigPushParticles1vbec
 {
-  using PushParticles_t = PushParticlesVb<Config1vbec<Mparticles, MfieldsState, DIM>>;
+  using PushParticles = PushParticlesVb<Config1vbec<Mparticles, MfieldsState, DIM>>;
 };
 
 template<typename DIM, typename Mparticles, typename MfieldsState>
@@ -64,13 +64,13 @@ struct PscConfigPushParticlesCuda
 template<typename Mparticles, typename Mfields>
 struct PscConfigPushParticles1vbec<dim_xyz, Mparticles, Mfields>
 {
-  using PushParticles_t = PushParticlesVb<Config1vbecSplit<Mparticles, Mfields, dim_xyz>>;
+  using PushParticles = PushParticlesVb<Config1vbecSplit<Mparticles, Mfields, dim_xyz>>;
 };
 
 template<typename Mparticles, typename Mfields>
 struct PscConfigPushParticles1vbec<dim_xz, Mparticles, Mfields>
 {
-  using PushParticles_t = PushParticlesVb<Config1vbecSplit<Mparticles, Mfields, dim_xz>>;
+  using PushParticles = PushParticlesVb<Config1vbecSplit<Mparticles, Mfields, dim_xz>>;
 };
 
 template<typename DIM, typename _Mparticles, typename _MfieldsState,
@@ -84,17 +84,17 @@ struct PscConfig_
   using MfieldsState = _MfieldsState;
   using Mfields = _Mfields;
   using ConfigPushp = ConfigPushParticles<DIM, Mparticles, MfieldsState>;
-  using PushParticles_t = typename ConfigPushp::PushParticles_t;
-  using checks_order = typename PushParticles_t::checks_order;
-  using Sort_t = SortCountsort2<Mparticles>;
-  using Collision_t = Collision_<Mparticles, MfieldsState, Mfields>;
-  using PushFields_t = PushFields<MfieldsState>;
-  using BndParticles_t = BndParticles_<Mparticles>;
-  using Bnd_t = Bnd_<MfieldsState>;
-  using BndFields_t = BndFieldsNone<MfieldsState>;
-  using Balance_t = Balance_<Mparticles, MfieldsState, Mfields>;
-  using Checks_t = Checks_<Mparticles, MfieldsState, Mfields, checks_order>;
-  using Marder_t = Marder_<Mparticles, MfieldsState, Mfields>;
+  using PushParticles = typename ConfigPushp::PushParticles;
+  using checks_order = typename PushParticles::checks_order;
+  using Sort = SortCountsort2<Mparticles>;
+  using Collision = Collision_<Mparticles, MfieldsState, Mfields>;
+  using PushFields = ::PushFields<MfieldsState>;
+  using BndParticles = BndParticles_<Mparticles>;
+  using Bnd = Bnd_<MfieldsState>;
+  using BndFields = BndFieldsNone<MfieldsState>;
+  using Balance = Balance_<Mparticles, MfieldsState, Mfields>;
+  using Checks = Checks_<Mparticles, MfieldsState, Mfields, checks_order>;
+  using Marder = Marder_<Mparticles, MfieldsState, Mfields>;
   using Simulation = _Simulation;
   using OutputParticles = OutputParticlesDefault<Mparticles>;
 };
@@ -109,16 +109,16 @@ struct PscConfig_<DIM, _Mparticles, _MfieldsState, _Mfields, PscConfigPushPartic
   using Mparticles = _Mparticles;
   using MfieldsState = _MfieldsState;
   using Mfields = _Mfields;
-  using PushParticles_t = PushParticlesCuda<CudaConfig1vbec3d<dim_t, BS>>;
-  using Sort_t = SortCuda<BS>;
-  using Collision_t = CollisionCuda<Mparticles>;
-  using PushFields_t = PushFieldsCuda;
-  using BndParticles_t = BndParticlesCuda<Mparticles, dim_t>;
-  using Bnd_t = BndCuda3<MfieldsState>;
-  using BndFields_t = BndFieldsNone<MfieldsState>;
-  using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
-  using Checks_t = ChecksCuda<Mparticles>;
-  using Marder_t = MarderCuda<BS>;
+  using PushParticles = PushParticlesCuda<CudaConfig1vbec3d<dim_t, BS>>;
+  using Sort = SortCuda<BS>;
+  using Collision = CollisionCuda<Mparticles>;
+  using PushFields = PushFieldsCuda;
+  using BndParticles = BndParticlesCuda<Mparticles, dim_t>;
+  using Bnd = BndCuda3<MfieldsState>;
+  using BndFields = BndFieldsNone<MfieldsState>;
+  using Balance = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
+  using Checks = ChecksCuda<Mparticles>;
+  using Marder = MarderCuda<BS>;
   using OutputParticles = OutputParticlesDefault<MparticlesSingle>;
 };
 
@@ -130,16 +130,16 @@ struct PscConfig_<dim_xyz, _Mparticles, _MfieldsState, _Mfields, PscConfigPushPa
   using Mparticles = _Mparticles;
   using MfieldsState = _MfieldsState;
   using Mfields = _Mfields;
-  using PushParticles_t = PushParticlesCuda<CudaConfig1vbec3dGmem<dim_t, BS>>;
-  using Sort_t = SortCuda<BS>;
-  using Collision_t = CollisionCuda<Mparticles>;
-  using PushFields_t = PushFieldsCuda;
-  using BndParticles_t = BndParticlesCuda<Mparticles, dim_t>;
+  using PushParticles = PushParticlesCuda<CudaConfig1vbec3dGmem<dim_t, BS>>;
+  using Sort = SortCuda<BS>;
+  using Collision = CollisionCuda<Mparticles>;
+  using PushFields = PushFieldsCuda;
+  using BndParticles = BndParticlesCuda<Mparticles, dim_t>;
   using Bnd_t = BndCuda3<MfieldsState>;
   using BndFields_t = BndFieldsNone<MfieldsState>;
-  using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
-  using Checks_t = ChecksCuda<Mparticles>;
-  using Marder_t = MarderCuda<BS>;
+  using Balance = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
+  using Checks = ChecksCuda<Mparticles>;
+  using Marder = MarderCuda<BS>;
   using OutputParticles = OutputParticlesNone;
 };
 
@@ -193,20 +193,20 @@ struct PscConfigVpicWrap
   using Mparticles = typename VpicConfig::Mparticles;
   using MfieldsHydro = typename VpicConfig::MfieldsHydro;
 
-  using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
-  using Sort_t = SortVpicWrap<Mparticles>;
-  using Collision_t = PscCollisionVpic;
-  using PushParticles_t = PushParticlesVpic<Mparticles, MfieldsState,
+  using Balance = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
+  using Sort = SortVpicWrap<Mparticles>;
+  using Collision = PscCollisionVpic;
+  using PushParticles = PushParticlesVpic<Mparticles, MfieldsState,
 					    typename VpicConfig::ParticlesOps,
 					    typename VpicConfig::AccumulatorOps,
 					    typename VpicConfig::AccumulateOps,
 					    typename VpicConfig::InterpolatorOps>;
-  using PushFields_t = PushFieldsVpicWrap<MfieldsState>;
-  using Bnd_t = BndVpic<MfieldsState>;
-  using BndFields_t = BndFieldsVpic<MfieldsState>;
-  using BndParticles_t = BndParticlesVpic<Mparticles>;
-  using Checks_t = ChecksVpic<Mparticles, MfieldsState>;
-  using Marder_t = MarderVpicWrap<Mparticles, MfieldsState>;
+  using PushFields = PushFieldsVpicWrap<MfieldsState>;
+  using Bnd = BndVpic<MfieldsState>;
+  using BndFields = BndFieldsVpic<MfieldsState>;
+  using BndParticles = BndParticlesVpic<Mparticles>;
+  using Checks = ChecksVpic<Mparticles, MfieldsState>;
+  using Marder = MarderVpicWrap<Mparticles, MfieldsState>;
   using OutputParticles = OutputParticlesHdf5<MparticlesSingle>;
   using OutputHydro = OutputHydroVpicWrap<Mparticles, MfieldsHydro, typename VpicConfig::MfieldsInterpolator>;
   using dim_t = dim_xyz;
@@ -230,20 +230,20 @@ struct PscConfigVpicPsc
   using Mparticles = typename VpicConfig::Mparticles;
   using MfieldsHydro = typename VpicConfig::MfieldsHydro;
   
-  using Balance_t = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
-  using Sort_t = SortVpic<Mparticles>;
-  using Collision_t = PscCollisionVpic;
-  using PushParticles_t = PushParticlesVpic<Mparticles, MfieldsState,
+  using Balance = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
+  using Sort = SortVpic<Mparticles>;
+  using Collision = PscCollisionVpic;
+  using PushParticles = PushParticlesVpic<Mparticles, MfieldsState,
 					    typename VpicConfig::ParticlesOps,
 					    typename VpicConfig::AccumulatorOps,
 					    typename VpicConfig::AccumulateOps,
 					    typename VpicConfig::InterpolatorOps>;
-  using PushFields_t = PushFieldsVpic<MfieldsState>;
-  using Bnd_t = BndVpic<MfieldsState>;
-  using BndFields_t = BndFieldsVpic<MfieldsState>;
-  using BndParticles_t = BndParticlesVpic<Mparticles>;
-  using Checks_t = ChecksVpic<Mparticles, MfieldsState>;
-  using Marder_t = MarderVpic<Mparticles, MfieldsState>;
+  using PushFields = PushFieldsVpic<MfieldsState>;
+  using Bnd = BndVpic<MfieldsState>;
+  using BndFields = BndFieldsVpic<MfieldsState>;
+  using BndParticles = BndParticlesVpic<Mparticles>;
+  using Checks = ChecksVpic<Mparticles, MfieldsState>;
+  using Marder = MarderVpic<Mparticles, MfieldsState>;
   using OutputParticles = OutputParticlesHdf5<MparticlesSingle>;
   using OutputHydro = OutputHydroVpic<Mparticles, MfieldsHydro, typename VpicConfig::MfieldsInterpolator>;
   using dim_t = dim_xyz;
