@@ -7,7 +7,11 @@ set(MPIEXEC_COMMAND
 macro(add_psc_test name)
   add_executable(${name} ${name}.cxx)
   target_link_libraries(${name} psc GTest::GTest)
-  gtest_discover_tests(${name} EXEC_WRAPPER ${MPIEXEC_COMMAND})
+  if (USE_GTEST_DISCOVER_TESTS)
+    gtest_discover_tests(${name} EXEC_WRAPPER ${MPIEXEC_COMMAND})
+  else()
+    gtest_add_tests(TARGET ${name} EXEC_WRAPPER ${MPIEXEC_COMMAND})
+  endif()
 endmacro()
 
 add_psc_test(test_grid)

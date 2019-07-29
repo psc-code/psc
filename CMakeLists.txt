@@ -24,6 +24,7 @@ endfunction()
 
 option(USE_CUDA "Build CUDA components" OFF)
 option(USE_VPIC "Interface with VPIC" OFF)
+option(USE_GTEST_DISCOVER_TESTS "Run tests to discover contained googletest cases" OFF)
 psc_option(ADIOS2 "Build with adios2 support" AUTO)
 
 # CUDA

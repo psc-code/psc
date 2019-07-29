@@ -11,7 +11,7 @@ int mpi_rank, mpi_size;
 // MPI test (to be run on 2 procs)
 
 #if 0
-TEST(Grid, CtorComplete)
+TEST(Grid2, CtorComplete)
 {
   EXPECT_EQ(mpi_size, 2);
   
@@ -47,7 +47,7 @@ TEST(Grid, CtorComplete)
   }
 }
 
-TEST(Grid, MoveCtor)
+TEST(Grid2, MoveCtor)
 {
   auto domain = Grid_t::Domain{{8, 4, 2},
 			       {80.,  40., 20.}, {-40., -20., 0.},
@@ -63,7 +63,7 @@ TEST(Grid, MoveCtor)
   auto grid2 = std::move(grid);
 }
   
-TEST(Grid, MoveAssign)
+TEST(Grid2, MoveAssign)
 {
   auto domain = Grid_t::Domain{{8, 4, 2},
 			       {80.,  40., 20.}, {-40., -20., 0.},
@@ -81,7 +81,7 @@ TEST(Grid, MoveAssign)
   grid2 = std::move(grid);
 }
   
-TEST(Grid, Kinds)
+TEST(Grid2, Kinds)
 {
   auto kinds = Grid_t::Kinds{};
   kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
@@ -90,7 +90,7 @@ TEST(Grid, Kinds)
 #endif
 
 #ifdef PSC_HAVE_ADIOS2
-TEST(Grid, adios2_write)
+TEST(Grid2, adios2_write)
 {
   auto io = kg::io::IOAdios2{};
 
