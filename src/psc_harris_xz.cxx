@@ -683,10 +683,7 @@ struct PscHarris : Psc<PscConfig>
     : Psc{psc_params, grid,   mflds,  mprts, balance,
           collision,  checks, marder, outf,  outp},
       diag_{outf, outp}
-  {
-    init();
-    initialize();
-  }
+  {}
 
   // ----------------------------------------------------------------------
   // diagnostics

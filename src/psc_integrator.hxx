@@ -37,10 +37,7 @@ struct PscIntegrator : Psc<PscConfig>
     : Base{params,    grid,   mflds,  mprts, balance,
            collision, checks, marder, outf,  outp},
       inject_particles_{inject_particles}
-  {
-    Base::init();
-    Base::initialize();
-  }
+  {}
 
   // ----------------------------------------------------------------------
   // inject_particles

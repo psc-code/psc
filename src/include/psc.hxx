@@ -146,28 +146,18 @@ struct Psc
 
     diag_ = psc_diag_create(MPI_COMM_WORLD);
     psc_diag_set_from_options(diag_);
-  }
 
-  // ----------------------------------------------------------------------
-  // define_particles
-
-  void define_particles(Mparticles& mprts) { mprts_.reset(&mprts); }
-
-  // ----------------------------------------------------------------------
-  // init
-
-  void init()
-  {
     sort_.reset(new Sort_t{});
     pushp_.reset(new PushParticles_t{});
     pushf_.reset(new PushFields_t{});
-    bnd_.reset(new Bnd_t{grid(), grid().ibn});
+    bnd_.reset(new Bnd_t{grid, grid.ibn});
     bndf_.reset(new BndFields_t{});
-    bndp_.reset(new BndParticles_t{grid()});
+    bndp_.reset(new BndParticles_t{grid});
 
     psc_diag_setup(diag_);
 
     initialize_stats();
+    initialize();
   }
 
   // ----------------------------------------------------------------------
