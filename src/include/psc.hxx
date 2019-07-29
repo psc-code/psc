@@ -133,7 +133,7 @@ private:
 // ======================================================================
 // Psc
 
-template <typename PscConfig>
+template <typename PscConfig, typename Diagnostics>
 struct Psc
 {
   using Mparticles = typename PscConfig::Mparticles;
@@ -148,7 +148,6 @@ struct Psc
   using Bnd = typename PscConfig::Bnd;
   using BndFields = typename PscConfig::BndFields;
   using BndParticles = typename PscConfig::BndParticles;
-  using Diagnostics = DiagnosticsDefault<PscConfig>;
   using Dim = typename PscConfig::Dim;
 
 #ifdef VPIC

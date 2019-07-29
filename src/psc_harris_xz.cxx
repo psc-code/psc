@@ -669,7 +669,7 @@ private:
 // ======================================================================
 // PscHarris
 
-struct PscHarris : Psc<PscConfig>
+struct PscHarris : Psc<PscConfig, DiagnosticsDefault<PscConfig>>
 {
   // ----------------------------------------------------------------------
   // PscHarris ctor
@@ -679,7 +679,7 @@ struct PscHarris : Psc<PscConfig>
   PscHarris(const PscParams& psc_params, Grid_t& grid, MfieldsState& mflds,
             Mparticles& mprts, Balance& balance, Collision& collision,
             Checks& checks, Marder& marder, OutputFieldsC& outf,
-            OutputParticles& outp, Diagnostics& diagnostics)
+            OutputParticles& outp, DiagnosticsDefault<PscConfig>& diagnostics)
     : Psc{psc_params, grid,   mflds,  mprts,      balance,
           collision,  checks, marder, diagnostics},
       diag_{outf, outp}

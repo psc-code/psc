@@ -15,9 +15,9 @@ void injectNone(const Grid_t& grid, Mparticles& mprts)
 // PscIntegrator
 
 template <typename PscConfig, typename InjectFunc>
-struct PscIntegrator : Psc<PscConfig>
+struct PscIntegrator : Psc<PscConfig, DiagnosticsDefault<PscConfig>>
 {
-  using Base = Psc<PscConfig>;
+  using Base = Psc<PscConfig, DiagnosticsDefault<PscConfig>>;
 
   using MfieldsState = typename PscConfig::MfieldsState;
   using Mparticles = typename PscConfig::Mparticles;
@@ -26,7 +26,7 @@ struct PscIntegrator : Psc<PscConfig>
   using Checks = typename PscConfig::Checks;
   using Marder = typename PscConfig::Marder;
   using OutputParticles = typename PscConfig::OutputParticles;
-  using Diagnostics = typename Base::Diagnostics;
+  using Diagnostics = DiagnosticsDefault<PscConfig>;
 
   // ----------------------------------------------------------------------
   // ctor
