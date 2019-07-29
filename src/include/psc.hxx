@@ -136,7 +136,9 @@ struct Psc
       checks_{checks},
       marder_{marder},
       outf_{outf},
-      outp_{outp}
+      outp_{outp},
+      bnd_{grid, grid.ibn},
+      bndp_{grid}
   {
     time_start_ = MPI_Wtime();
 
@@ -147,12 +149,6 @@ struct Psc
     diag_ = psc_diag_create(MPI_COMM_WORLD);
     psc_diag_set_from_options(diag_);
 
-    sort_.reset(new Sort_t{});
-    pushp_.reset(new PushParticles_t{});
-    pushf_.reset(new PushFields_t{});
-    bnd_.reset(new Bnd_t{grid, grid.ibn});
-    bndf_.reset(new BndFields_t{});
-    bndp_.reset(new BndParticles_t{grid});
 
     psc_diag_setup(diag_);
 
@@ -312,7 +308,7 @@ struct Psc
     if (p_.sort_interval > 0 && timestep % p_.sort_interval == 0) {
       // mpi_printf(comm, "***** Sorting...\n");
       prof_start(pr_sort);
-      (*sort_)(mprts_);
+      sort_(mprts_);
       prof_stop(pr_sort);
     }
 
@@ -330,51 +326,51 @@ struct Psc
 
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
     prof_start(pr_push_prts);
-    pushp_->push_mprts(mprts_, mflds_, *interpolator, *accumulator,
-                       particle_bc_list, num_comm_round);
+    pushp_.push_mprts(mprts_, mflds_, *interpolator, *accumulator,
+                      particle_bc_list, num_comm_round);
     prof_stop(pr_push_prts);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
 
     // field propagation B^{n+1/2} -> B^{n+1}
-    pushf_->push_H(mflds_, .5);
+    pushf_.push_H(mflds_, .5);
     // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
     prof_start(pr_bndp);
-    (*bndp_)(mprts_);
+    bndp_(mprts_);
     prof_stop(pr_bndp);
 
     // field propagation E^{n+1/2} -> E^{n+3/2}
 
     // fill ghosts for H
-    bndf_->fill_ghosts_H(mflds_);
-    bnd_->fill_ghosts(mflds_, HX, HX + 3);
+    bndf_.fill_ghosts_H(mflds_);
+    bnd_.fill_ghosts(mflds_, HX, HX + 3);
 
     // add and fill ghost for J
-    bndf_->add_ghosts_J(mflds_);
-    bnd_->add_ghosts(mflds_, JXI, JXI + 3);
-    bnd_->fill_ghosts(mflds_, JXI, JXI + 3);
+    bndf_.add_ghosts_J(mflds_);
+    bnd_.add_ghosts(mflds_, JXI, JXI + 3);
+    bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
 
     // push E
-    pushf_->push_E(mflds_, 1.);
+    pushf_.push_E(mflds_, 1.);
 
-    bndf_->fill_ghosts_E(mflds_);
+    bndf_.fill_ghosts_E(mflds_);
     // if (pushf_->variant == 0) {
-    bnd_->fill_ghosts(mflds_, EX, EX + 3);
+    bnd_.fill_ghosts(mflds_, EX, EX + 3);
     //}
     // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
 
     // field propagation B^{n+1} -> B^{n+3/2}
     // if (pushf_->variant == 0) {
-    bndf_->fill_ghosts_E(mflds_);
-    bnd_->fill_ghosts(mflds_, EX, EX + 3);
+    bndf_.fill_ghosts_E(mflds_);
+    bnd_.fill_ghosts(mflds_, EX, EX + 3);
     //    }
 
     // push H
-    pushf_->push_H(mflds_, .5);
+    pushf_.push_H(mflds_, .5);
 
-    bndf_->fill_ghosts_H(mflds_);
+    bndf_.fill_ghosts_H(mflds_);
     // if (pushf_->variant == 0) {
-    bnd_->fill_ghosts(mflds_, HX, HX + 3);
+    bnd_.fill_ghosts(mflds_, HX, HX + 3);
     //}
     // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 
@@ -393,7 +389,7 @@ struct Psc
     checks_.gauss(mprts_, mflds_);
 
 #ifdef VPIC
-    pushp_->load_interpolator(mprts_, mflds_, *interpolator);
+    pushp_.load_interpolator(mprts_, mflds_, *interpolator);
 #endif
   }
 #endif
@@ -430,7 +426,7 @@ struct Psc
     if (p_.sort_interval > 0 && timestep % p_.sort_interval == 0) {
       mpi_printf(comm, "***** Sorting...\n");
       prof_start(pr_sort);
-      (*sort_)(mprts_);
+      sort_(mprts_);
       prof_stop(pr_sort);
     }
 
@@ -456,53 +452,53 @@ struct Psc
 
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
     prof_start(pr_push_prts);
-    pushp_->push_mprts(mprts_, mflds_);
+    pushp_.push_mprts(mprts_, mflds_);
     prof_stop(pr_push_prts);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
 
     // === field propagation B^{n+1/2} -> B^{n+1}
     prof_start(pr_push_flds);
-    pushf_->push_H(mflds_, .5, DIM{});
+    pushf_.push_H(mflds_, .5, DIM{});
     prof_stop(pr_push_flds);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
     prof_start(pr_bndp);
-    (*bndp_)(mprts_);
+    bndp_(mprts_);
     prof_stop(pr_bndp);
 
     // === field propagation E^{n+1/2} -> E^{n+3/2}
     prof_start(pr_bndf);
 #if 1
-    bndf_->fill_ghosts_H(mflds_);
-    bnd_->fill_ghosts(mflds_, HX, HX + 3);
+    bndf_.fill_ghosts_H(mflds_);
+    bnd_.fill_ghosts(mflds_, HX, HX + 3);
 #endif
 
-    bndf_->add_ghosts_J(mflds_);
-    bnd_->add_ghosts(mflds_, JXI, JXI + 3);
-    bnd_->fill_ghosts(mflds_, JXI, JXI + 3);
+    bndf_.add_ghosts_J(mflds_);
+    bnd_.add_ghosts(mflds_, JXI, JXI + 3);
+    bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
     prof_stop(pr_bndf);
 
     prof_restart(pr_push_flds);
-    pushf_->push_E(mflds_, 1., DIM{});
+    pushf_.push_E(mflds_, 1., DIM{});
     prof_stop(pr_push_flds);
 
 #if 1
     prof_restart(pr_bndf);
-    bndf_->fill_ghosts_E(mflds_);
-    bnd_->fill_ghosts(mflds_, EX, EX + 3);
+    bndf_.fill_ghosts_E(mflds_);
+    bnd_.fill_ghosts(mflds_, EX, EX + 3);
     prof_stop(pr_bndf);
 #endif
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
 
     // === field propagation B^{n+1} -> B^{n+3/2}
     prof_restart(pr_push_flds);
-    pushf_->push_H(mflds_, .5, DIM{});
+    pushf_.push_H(mflds_, .5, DIM{});
     prof_stop(pr_push_flds);
 
 #if 1
     prof_start(pr_bndf);
-    bndf_->fill_ghosts_H(mflds_);
-    bnd_->fill_ghosts(mflds_, HX, HX + 3);
+    bndf_.fill_ghosts_H(mflds_);
+    bnd_.fill_ghosts(mflds_, HX, HX + 3);
     prof_stop(pr_bndf);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 #endif
@@ -631,8 +627,8 @@ private:
 
     mpi_printf(comm, "Uncentering particles\n");
     if (!mprts_.empty()) {
-      pushp_->load_interpolator(mprts_, mflds_, *interpolator);
-      pushp_->uncenter(mprts_, *interpolator);
+      pushp_.load_interpolator(mprts_, mflds_, *interpolator);
+      pushp_.uncenter(mprts_, *interpolator);
     }
   }
 
@@ -733,17 +729,18 @@ protected:
   Mparticles& mprts_;
 
   Balance_t& balance_;
-  std::unique_ptr<Sort_t> sort_;
   Collision_t& collision_;
-  std::unique_ptr<PushParticles_t> pushp_;
-  std::unique_ptr<PushFields_t> pushf_;
-  std::unique_ptr<Bnd_t> bnd_;
-  std::unique_ptr<BndFields_t> bndf_;
-  std::unique_ptr<BndParticles_t> bndp_;
   Checks_t& checks_;
   Marder_t& marder_;
   OutputFieldsC& outf_;
   OutputParticles& outp_;
+
+  Sort_t sort_;
+  PushParticles_t pushp_;
+  PushFields_t pushf_;
+  Bnd_t bnd_;
+  BndFields_t bndf_;
+  BndParticles_t bndp_;
 
   psc_diag* diag_; ///< timeseries diagnostics
 
