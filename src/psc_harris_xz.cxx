@@ -667,24 +667,6 @@ private:
 };
 
 // ======================================================================
-// PscHarris
-
-struct PscHarris : Psc<PscConfig, Diagnostics>
-{
-  // ----------------------------------------------------------------------
-  // PscHarris ctor
-  //
-  // FIXME: can only use 1st order pushers with current conducting wall b.c.
-
-  PscHarris(const PscParams& psc_params, Grid_t& grid, MfieldsState& mflds,
-            Mparticles& mprts, Balance& balance, Collision& collision,
-            Checks& checks, Marder& marder, Diagnostics& diagnostics)
-    : Psc{psc_params, grid,   mflds,  mprts,      balance,
-          collision,  checks, marder, diagnostics}
-  {}
-};
-
-// ======================================================================
 // run
 
 void run()
@@ -850,8 +832,9 @@ void run()
 
   mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
 
-  auto psc = PscHarris{psc_params, *grid_ptr, mflds,  mprts,      balance,
-                       collision,  checks,    marder, diagnostics};
+  auto psc = Psc<PscConfig, Diagnostics>{psc_params, *grid_ptr, mflds,
+                                         mprts,      balance,   collision,
+                                         checks,     marder,    diagnostics};
 
   psc.integrate();
 }
