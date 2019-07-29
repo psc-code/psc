@@ -360,7 +360,7 @@ void run()
   outp_params.basename = "prt";
   OutputParticles outp{grid, outp_params};
 
-  using Diagnostics = DiagnosticsDefault<PscConfig>;
+  using Diagnostics = DiagnosticsDefault<OutputParticles>;
   Diagnostics diagnostics{outf, outp};
 
   // ----------------------------------------------------------------------

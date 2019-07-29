@@ -98,18 +98,15 @@ inline double courant_length(const Grid_t::Domain& domain)
 // ======================================================================
 // DiagnosticsDefault
 
-template <typename PscConfig>
+template <typename OutputParticles>
 class DiagnosticsDefault
 {
-  using OutputParticles = typename PscConfig::OutputParticles;
-  using Mparticles = typename PscConfig::Mparticles;
-  using MfieldsState = typename PscConfig::MfieldsState;
-
 public:
   DiagnosticsDefault(OutputFieldsC& outf, OutputParticles& outp)
     : outf_{outf}, outp_{outp}
   {}
 
+  template <typename Mparticles, typename MfieldsState>
   void operator()(Mparticles& mprts, MfieldsState& mflds)
   {
     psc_stats_start(st_time_output);
