@@ -21,7 +21,6 @@
 #include "fields3d.hxx"
 #include "psc_fields_single.h"
 #include "setup_fields.hxx"
-#include "setup_particles.hxx"
 
 #include "mrc_io.hxx"
 
@@ -35,6 +34,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+extern Grid* vgrid; // FIXME
+
 static RngPool* rngpool; // FIXME, should be member (of struct psc, really)
 
 // FIXME, helper should go somewhere...
@@ -43,6 +44,37 @@ static inline double trunc_granular(double a, double b)
 {
   return b * (int)(a / b);
 }
+
+// ======================================================================
+// PSC configuration
+//
+// This sets up compile-time configuration for the code, in particular
+// what data structures and algorithms to use
+//
+// EDIT to change order / floating point type / cuda / 2d/3d
+
+#ifdef VPIC
+#ifdef DO_VPIC
+using PscConfig = PscConfigVpicWrap;
+#else
+using PscConfig = PscConfigVpicPsc;
+#endif
+#else
+using PscConfig = PscConfig1vbecSingle<dim_xz>;
+#endif
+
+// ----------------------------------------------------------------------
+
+using MfieldsState = typename PscConfig::MfieldsState;
+#ifdef VPIC
+using MaterialList = typename MfieldsState::MaterialList;
+#endif
+using Mparticles = typename PscConfig::Mparticles;
+using Balance = typename PscConfig::Balance_t;
+using Collision = typename PscConfig::Collision_t;
+using Checks = typename PscConfig::Checks_t;
+using Marder = typename PscConfig::Marder_t;
+using OutputParticles = PscConfig::OutputParticles;
 
 // ======================================================================
 // PscHarrisParams
@@ -85,6 +117,65 @@ struct PscHarrisParams
   Int3 gdims;
   Int3 np;
 };
+
+// ======================================================================
+// Global parameters
+
+namespace
+{
+
+std::string read_checkpoint_filename;
+
+// Parameters specific to this case. They don't really need to be collected in a
+// struct, but maybe it's nice that they are
+PscHarrisParams g;
+
+// This is a set of generic PSC params (see include/psc.hxx),
+// like number of steps to run, etc, which also should be set by the case
+PscParams psc_params;
+
+} // namespace
+
+// ======================================================================
+// setupHarrisParams()
+
+void setupHarrisParams()
+{
+  g.wpedt_max = .36;
+  g.wpe_wce = 2.;
+  g.mi_me = 25.;
+
+  g.Lx_di = 40.;
+  g.Ly_di = 1.;
+  g.Lz_di = 10.;
+
+  g.electron_sort_interval = 25;
+  g.ion_sort_interval = 25;
+
+  g.taui = 40.;
+  g.t_intervali = 1.;
+  g.output_particle_interval = 10.;
+
+  g.overalloc = 2.;
+
+  g.gdims = {512, 1, 128};
+  g.np = {4, 1, 1};
+
+  g.L_di = .5;
+  g.Ti_Te = 5.;
+  g.nb_n0 = .05;
+  g.Tbe_Te = .333;
+  g.Tbi_Ti = .333;
+
+  g.bg = 0.;
+  g.theta = 0.;
+
+  g.Lpert_Lx = 1.;
+  g.dbz_b0 = .03;
+  g.nppc = 10;
+  g.open_bc_x = false;
+  g.driven_bc_z = false;
+}
 
 // ======================================================================
 // globals_physics
@@ -213,586 +304,567 @@ struct globals_physics
   }
 };
 
-#ifdef VPIC
-#ifdef DO_VPIC
-using PscConfig = PscConfigVpicWrap;
-#else
-using PscConfig = PscConfigVpicPsc;
-#endif
-#else
-using PscConfig = PscConfig1vbecSingle<dim_xz>;
-#endif
+globals_physics phys;
 
 // ======================================================================
-// PscHarris
+// setupGrid
+//
+// This helper function is responsible for setting up the "Grid",
+// which is really more than just the domain and its decomposition, it
+// also encompasses PC normalization parameters, information about the
+// particle kinds, etc.
 
-struct PscHarris
-  : Psc<PscConfig>
-  , PscHarrisParams
+Grid_t* setupGrid()
 {
-  // ----------------------------------------------------------------------
-  // PscHarris ctor
-  //
-  // FIXME: can only use 1st order pushers with current conducting wall b.c.
+  auto comm = MPI_COMM_WORLD;
 
-  PscHarris() : io_pfd_{"pfd"}
-  {
-    auto comm = grid().comm();
+  // --- set up domain
 
-    mpi_printf(comm, "*** Setting up simulation\n");
+  auto domain = Grid_t::Domain{g.gdims,
+                               {phys.Lx, phys.Ly, phys.Lz},
+                               {0., -.5 * phys.Ly, -.5 * phys.Lz},
+                               g.np};
 
-    setup_params();
+  mpi_printf(comm, "Conducting fields on Z-boundaries\n");
+  mpi_printf(comm, "Reflect particles on Z-boundaries\n");
+  auto bc =
+    psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL},
+                  {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL},
+                  {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING},
+                  {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING}};
+  if (g.open_bc_x) {
+    mpi_printf(comm, "Absorbing fields on X-boundaries\n");
+    bc.fld_lo[0] = BND_FLD_ABSORBING;
+    bc.fld_hi[0] = BND_FLD_ABSORBING;
+    mpi_printf(comm, "Absorb particles on X-boundaries\n");
+    bc.prt_lo[1] = BND_PRT_ABSORBING;
+    bc.prt_hi[1] = BND_PRT_ABSORBING;
+  }
 
-    p_.cfl = 0.99;
-    p_.stats_every = 100;
+  if (g.driven_bc_z) {
+    mpi_printf(comm, "Absorb particles on Z-boundaries\n");
+    bc.prt_lo[2] = BND_PRT_ABSORBING;
+    bc.prt_hi[2] = BND_PRT_ABSORBING;
+  }
 
-    phys_ = globals_physics{*this};
+  auto kinds = Grid_t::Kinds(NR_KINDS);
+  kinds[KIND_ELECTRON] = {-phys.ec, phys.me, "e"};
+  kinds[KIND_ION] = {phys.ec, phys.mi, "i"};
 
-    // --- set up domain
+  // determine the time step
+  double dg = courant_length(domain);
+  double dt = psc_params.cfl * dg / phys.c; // courant limited time step
+  if (phys.wpe * dt > g.wpedt_max) {
+    dt =
+      g.wpedt_max / phys.wpe; // override timestep if plasma frequency limited
+  }
 
-    auto grid_domain = Grid_t::Domain{gdims,
-                                      {phys_.Lx, phys_.Ly, phys_.Lz},
-                                      {0., -.5 * phys_.Ly, -.5 * phys_.Lz},
-                                      np};
+  assert(phys.c == 1. && phys.eps0 == 1.);
+  auto norm_params = Grid_t::NormalizationParams::dimensionless();
+  norm_params.nicell = 1;
+  auto norm = Grid_t::Normalization{norm_params};
 
-    mpi_printf(comm, "Conducting fields on Z-boundaries\n");
-    mpi_printf(comm, "Reflect particles on Z-boundaries\n");
-    auto grid_bc = psc::grid::BC{
-      {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL},
-      {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL},
-      {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING},
-      {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING}};
-    if (open_bc_x) {
-      mpi_printf(comm, "Absorbing fields on X-boundaries\n");
-      grid_bc.fld_lo[0] = BND_FLD_ABSORBING;
-      grid_bc.fld_hi[0] = BND_FLD_ABSORBING;
-      mpi_printf(comm, "Absorb particles on X-boundaries\n");
-      grid_bc.prt_lo[1] = BND_PRT_ABSORBING;
-      grid_bc.prt_hi[1] = BND_PRT_ABSORBING;
-    }
-
-    if (driven_bc_z) {
-      mpi_printf(comm, "Absorb particles on Z-boundaries\n");
-      grid_bc.prt_lo[2] = BND_PRT_ABSORBING;
-      grid_bc.prt_hi[2] = BND_PRT_ABSORBING;
-    }
-
-    auto kinds =
-      Grid_t::Kinds{{-phys_.ec, phys_.me, "e"}, {phys_.ec, phys_.mi, "i"}};
-
-    // determine the time step
-    double dg = courant_length(grid_domain);
-    double dt = p_.cfl * dg / phys_.c; // courant limited time step
-    if (phys_.wpe * dt > wpedt_max) {
-      dt =
-        wpedt_max / phys_.wpe; // override timestep if plasma frequency limited
-    }
-
-    assert(phys_.c == 1. && phys_.eps0 == 1.);
-    auto norm_params = Grid_t::NormalizationParams::dimensionless();
-    norm_params.nicell = 1;
-
-    define_grid(grid_domain, grid_bc, kinds, dt, norm_params);
-
-    p_.nmax = int(taui / (phys_.wci * grid().dt)); // number of steps from taui
-
-    // --- setup materials
-
-    setup_materials();
-
-    // --- create Simulation
-
-#if 0
-    // set high level VPIC simulation parameters
-    // FIXME, will be unneeded eventually
-    setParams(p_.nmax, p_.stats_every,
-	      p_.stats_every / 2, p_.stats_every / 2,
-	      p_.stats_every / 2);
-#endif
-
-    // --- setup field data structures
-
-    define_field_array();
-
-    // --- finalize field advance
-
-    mpi_printf(comm, "*** Finalizing Field Advance\n");
-#if 0
-    assert(psc_->nr_patches > 0);
-    struct globals_physics *phys = &sub->phys;
-    Simulation_set_region_resistive_harris(sub->sim, &sub->prm, phys, psc_->patch[0].dx,
-					   0., resistive);
-#endif
-
-    // --- setup species
-    // FIXME, half-redundant to the PSC species setup
 #ifdef VPIC
-    mprts_.reset(new Mparticles{grid(), vgrid_});
+  Int3 ibn = {1, 1, 1};
 #else
-    mprts_.reset(new Mparticles{grid()});
-#endif
-    setup_species();
-
-    // -- Balance
-    p_.balance_interval = 0;
-    balance_.reset(new Balance_t{p_.balance_interval});
-
-    // -- Sort
-    // FIXME, needs a way to make it gets set?
-    // FIXME: the "vpic" sort actually keeps track of per-species sorting
-    // intervals internally, so it needs to be called every step
-#ifdef VPIC
-    p_.sort_interval = 1;
+  Int3 ibn = {2, 2, 2};
+  if (Dim::InvarX::value) {
+    ibn[0] = 0;
+  }
+  if (Dim::InvarY::value) {
+    ibn[1] = 0;
+  }
+  if (Dim::InvarZ::value) {
+    ibn[2] = 0;
+  }
 #endif
 
-    // -- Collision
-    int collision_interval = 0;
-    double collision_nu = .1; // FIXME, != 0 needed to avoid crash
-    collision_.reset(new Collision_t{grid(), collision_interval, collision_nu});
+  auto grid_ptr = new Grid_t{domain, bc, kinds, norm, dt, -1, ibn};
+  vpic_define_grid(*grid_ptr);
+  return grid_ptr;
+}
 
-    // -- Checks
-    ChecksParams checks_params{};
-    checks_.reset(new Checks_t{grid(), comm, checks_params});
+// ----------------------------------------------------------------------
+// setupMaterials
 
-    // -- Marder correction
-    // FIXME, these are ignored for vpic (?)
-    double marder_diffusion = 0.9;
-    int marder_loop = 3;
-    bool marder_dump = false;
-    // FIXME, how do we make sure that we don't forget to set this?
-    // (maybe make it part of the Marder object, or provide a base class
-    // interface define_marder() that takes the object and the interval
-#ifdef VPIC
-    p_.marder_interval = 1;
-#else
-    p_.marder_interval = 0;
-#endif
+void setupMaterials(MaterialList& material_list)
+{
+  MPI_Comm comm = MPI_COMM_WORLD;
+
+  mpi_printf(comm, "Setting up materials.\n");
+
+  // -- set up MaterialList
+  vpic_define_material(material_list, "vacuum", 1., 1., 0., 0.);
 #if 0
-    // FIXME, marder "vpic" manages its own cleaning intervals
-    psc_marder_set_param_int(psc_->marder, "every_step", 1);
-    psc_marder_set_param_int(psc_->marder, "clean_div_e_interval", 50);
-    psc_marder_set_param_int(psc_->marder, "clean_div_b_interval", 50);
-    psc_marder_set_param_int(psc_->marder, "sync_shared_interval", 50);
-    psc_marder_set_param_int(psc_->marder, "num_div_e_round", 2);
-    psc_marder_set_param_int(psc_->marder, "num_div_b_round", 2);
+  struct material *resistive =
+    vpic_define_material(material_list, "resistive", 1., 1., 1., 0.);
 #endif
 
-    marder_.reset(
-      new Marder_t(grid(), marder_diffusion, marder_loop, marder_dump));
+  // Note: define_material defaults to isotropic materials with mu=1,sigma=0
+  // Tensor electronic, magnetic and conductive materials are supported
+  // though. See "shapes" for how to define them and assign them to regions.
+  // Also, space is initially filled with the first material defined.
+}
 
-    // ---
+// ----------------------------------------------------------------------
+// vpic_setup_species
+//
+// FIXME, half-redundant to the PSC species setup
 
-    int interval = (int)(t_intervali / (phys_.wci * grid().dt));
-    create_diagnostics(interval);
+void vpic_setup_species(Mparticles& mprts)
+{
+  mpi_printf(mprts.grid().comm(), "Setting up species.\n");
+  double nmax = g.overalloc * phys.Ne / phys.n_global_patches;
+  double nmovers = .1 * nmax;
+  double sort_method = 1; // 0=in place and 1=out of place
 
-    // -- output fields
-    OutputFieldsCParams outf_params;
-    double output_field_interval = 1.;
-    std::vector<std::unique_ptr<FieldsItemBase>> outf_items;
-#ifdef VPIC
-    // handled by diagnostics instead
-#else
-    outf_items.emplace_back(std::move(FieldsItemFactory::create("e", grid())));
-    outf_items.emplace_back(std::move(FieldsItemFactory::create("h", grid())));
-    outf_items.emplace_back(std::move(FieldsItemFactory::create("j", grid())));
-    outf_items.emplace_back(
-      std::move(FieldsItemFactory::create("n_1st_single", grid())));
-    outf_items.emplace_back(
-      std::move(FieldsItemFactory::create("v_1st_single", grid())));
-    outf_items.emplace_back(
-      std::move(FieldsItemFactory::create("T_1st_single", grid())));
-#endif
-    outf_params.pfield_step = int((output_field_interval / (phys_.wci * dt)));
-    outf_.reset(new OutputFieldsC{grid(), outf_params, std::move(outf_items)});
+  mprts.define_species("electron", -phys.ec, phys.me, nmax, nmovers,
+                       g.electron_sort_interval, sort_method);
+  mprts.define_species("ion", phys.ec, phys.mi, nmax, nmovers,
+                       g.ion_sort_interval, sort_method);
+}
 
-    OutputParticlesParams outp_params{};
-    outp_params.every_step = int((output_particle_interval / (phys_.wci * dt)));
-    outp_params.data_dir = ".";
-    outp_params.basename = "prt";
-    outp_params.lo = {192, 0, 48};
-    outp_params.hi = {320, 0, 80};
-    outp_.reset(new OutputParticles{grid(), outp_params});
+// ----------------------------------------------------------------------
+// setup_particles
+//
+// set particles x^{n+1/2}, p^{n+1/2}
 
-    // ----------------------------------------------------------------------
-    // rebalance and actually initialize particles / fields
+void setup_particles(Mparticles& mprts,
+                     std::vector<uint>& nr_particles_by_patch, bool count_only)
+{
+  const auto& grid = mprts.grid();
+  MPI_Comm comm = grid.comm();
 
-    // --- partition particles and initial balancing
-    mpi_printf(comm, "**** Partitioning...\n");
-    auto n_prts_by_patch = setup_initial_partition();
-    balance_->initial(grid_, n_prts_by_patch);
-    mprts_->reset(grid());
+  double cs = cos(g.theta), sn = sin(g.theta);
+  double Ne_sheet = phys.Ne_sheet, vthe = phys.vthe, vthi = phys.vthi;
+  int n_global_patches = phys.n_global_patches;
+  double weight_s = phys.weight_s;
+  double tanhf = phys.tanhf, L = phys.L;
+  double gdre = phys.gdre, udre = phys.udre, gdri = phys.gdri, udri = phys.udri;
+  double Ne_back = phys.Ne_back, vtheb = phys.vtheb, vthib = phys.vthib;
+  double weight_b = phys.weight_b;
 
-    mpi_printf(comm, "**** Setting up particles...\n");
-    setup_initial_particles(*mprts_, n_prts_by_patch);
-
-    setup_initial_fields(*mflds_);
-
-    setup_diagnostics();
-
-    init();
-
-    setup_log();
-
-    mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
+  if (count_only) {
+    for (int p = 0; p < grid.n_patches(); p++) {
+      nr_particles_by_patch[p] =
+        2 * (Ne_sheet / n_global_patches + Ne_back / n_global_patches);
+    }
+    return;
   }
 
-  // ----------------------------------------------------------------------
-  // setup_params()
+  // LOAD PARTICLES
 
-  void setup_params()
+  mpi_printf(comm, "Loading particles\n");
+
+  // Do a fast load of the particles
+
+  rngpool =
+    RngPool_create(); // FIXME, should be part of ctor (of struct psc, really)
+
+  int rank;
+  MPI_Comm_rank(comm, &rank);
+  RngPool_seed(rngpool, rank);
+  Rng* rng = RngPool_get(rngpool, 0);
+
+  assert(grid.n_patches() > 0);
+  const Grid_t::Patch& patch = grid.patches[0];
+  double xmin = patch.xb[0], xmax = patch.xe[0];
+  double ymin = patch.xb[1], ymax = patch.xe[1];
+  double zmin = patch.xb[2], zmax = patch.xe[2];
+
+  // Load Harris population
+
   {
-    PscHarrisParams params;
+    auto inj = mprts.injector();
+    auto injector = inj[0];
 
-    params.wpedt_max = .36;
-    params.wpe_wce = 2.;
-    params.mi_me = 25.;
+    mpi_printf(comm, "-> Main Harris Sheet\n");
 
-    params.Lx_di = 40.;
-    params.Ly_di = 1.;
-    params.Lz_di = 10.;
+    for (int64_t n = 0; n < Ne_sheet / n_global_patches; n++) {
+      double x, y, z, ux, uy, uz, d0;
 
-    params.electron_sort_interval = 25;
-    params.ion_sort_interval = 25;
+      do {
+        z = L * atanh(Rng_uniform(rng, -1., 1.) * tanhf);
+      } while (z <= zmin || z >= zmax);
+      x = Rng_uniform(rng, xmin, xmax);
+      y = Rng_uniform(rng, ymin, ymax);
 
-    params.taui = 40.;
-    params.t_intervali = 1.;
-    params.output_particle_interval = 10.;
+      // inject_particles() will return an error for particles not on this
+      // node and will not inject particle locally
 
-    params.overalloc = 2.;
+      ux = Rng_normal(rng, 0, vthe);
+      uy = Rng_normal(rng, 0, vthe);
+      uz = Rng_normal(rng, 0, vthe);
+      d0 = gdre * uy + sqrt(ux * ux + uy * uy + uz * uz + 1) * udre;
+      uy = d0 * cs - ux * sn;
+      ux = d0 * sn + ux * cs;
 
-    params.gdims = {512, 1, 128};
-    params.np = {4, 1, 1};
+      injector.reweight(psc::particle::Inject{
+        {x, y, z}, {ux, uy, uz}, weight_s, KIND_ELECTRON});
 
-    params.L_di = .5;
-    params.Ti_Te = 5.;
-    params.nb_n0 = .05;
-    params.Tbe_Te = .333;
-    params.Tbi_Ti = .333;
+      ux = Rng_normal(rng, 0, vthi);
+      uy = Rng_normal(rng, 0, vthi);
+      uz = Rng_normal(rng, 0, vthi);
+      d0 = gdri * uy + sqrt(ux * ux + uy * uy + uz * uz + 1) * udri;
+      uy = d0 * cs - ux * sn;
+      ux = d0 * sn + ux * cs;
 
-    params.bg = 0.;
-    params.theta = 0.;
-
-    params.Lpert_Lx = 1.;
-    params.dbz_b0 = .03;
-    params.nppc = 10;
-    params.open_bc_x = false;
-    params.driven_bc_z = false;
-
-    static_cast<PscHarrisParams&>(*this) = params;
-  }
-
-  // ----------------------------------------------------------------------
-  // setup_materials
-
-  void setup_materials()
-  {
-    MPI_Comm comm = grid().comm();
-
-    mpi_printf(comm, "Setting up materials.\n");
-
-    // -- set up MaterialList
-    define_material("vacuum", 1., 1., 0., 0.);
-#if 0
-    struct material *resistive =
-      define_material("resistive", 1., 1., 1., 0.);
-#endif
-
-    // Note: define_material defaults to isotropic materials with mu=1,sigma=0
-    // Tensor electronic, magnetic and conductive materials are supported
-    // though. See "shapes" for how to define them and assign them to regions.
-    // Also, space is initially filled with the first material defined.
-  }
-
-  // ----------------------------------------------------------------------
-  // setup_species
-
-  void setup_species()
-  {
-    MPI_Comm comm = grid().comm();
-
-    mpi_printf(comm, "Setting up species.\n");
-    double nmax = overalloc * phys_.Ne / phys_.n_global_patches;
-    double nmovers = .1 * nmax;
-    double sort_method = 1; // 0=in place and 1=out of place
-
-    mprts_->define_species("electron", -phys_.ec, phys_.me, nmax, nmovers,
-                           electron_sort_interval, sort_method);
-    mprts_->define_species("ion", phys_.ec, phys_.mi, nmax, nmovers,
-                           ion_sort_interval, sort_method);
-  }
-
-  // ----------------------------------------------------------------------
-  // setup_log
-
-  void setup_log()
-  {
-    MPI_Comm comm = grid().comm();
-
-    mpi_printf(comm, "***********************************************\n");
-    mpi_printf(comm, "* Topology: %d x %d x %d\n", np[0], np[1], np[2]);
-    mpi_printf(comm, "tanhf    = %g\n", phys_.tanhf);
-    mpi_printf(comm, "L_di     = %g\n", L_di);
-    mpi_printf(comm, "rhoi/L   = %g\n", phys_.rhoi_L);
-    mpi_printf(comm, "Ti/Te    = %g\n", Ti_Te);
-    mpi_printf(comm, "nb/n0    = %g\n", nb_n0);
-    mpi_printf(comm, "wpe/wce  = %g\n", wpe_wce);
-    mpi_printf(comm, "mi/me    = %g\n", mi_me);
-    mpi_printf(comm, "theta    = %g\n", theta);
-    mpi_printf(comm, "Lpert/Lx = %g\n", Lpert_Lx);
-    mpi_printf(comm, "dbz/b0   = %g\n", dbz_b0);
-    mpi_printf(comm, "taui     = %g\n", taui);
-    mpi_printf(comm, "t_intervali = %g\n", t_intervali);
-    mpi_printf(comm, "num_step = %d\n", p_.nmax);
-    mpi_printf(comm, "Lx/di = %g\n", phys_.Lx / phys_.di);
-    mpi_printf(comm, "Lx/de = %g\n", phys_.Lx / phys_.de);
-    mpi_printf(comm, "Ly/di = %g\n", phys_.Ly / phys_.di);
-    mpi_printf(comm, "Ly/de = %g\n", phys_.Ly / phys_.de);
-    mpi_printf(comm, "Lz/di = %g\n", phys_.Lz / phys_.di);
-    mpi_printf(comm, "Lz/de = %g\n", phys_.Lz / phys_.de);
-    mpi_printf(comm, "nx = %d\n", gdims[0]);
-    mpi_printf(comm, "ny = %d\n", gdims[1]);
-    mpi_printf(comm, "nz = %d\n", gdims[2]);
-    mpi_printf(comm, "n_global_patches = %d\n", phys_.n_global_patches);
-    mpi_printf(comm, "nppc = %g\n", nppc);
-    mpi_printf(comm, "b0 = %g\n", phys_.b0);
-    mpi_printf(comm, "v_A (based on nb) = %g\n", phys_.v_A);
-    mpi_printf(comm, "di = %g\n", phys_.di);
-    mpi_printf(comm, "Ne = %g\n", phys_.Ne);
-    mpi_printf(comm, "Ne_sheet = %g\n", phys_.Ne_sheet);
-    mpi_printf(comm, "Ne_back = %g\n", phys_.Ne_back);
-    mpi_printf(comm, "total # of particles = %g\n", 2 * phys_.Ne);
-    mpi_printf(comm, "dt*wpe = %g\n", phys_.wpe * grid().dt);
-    mpi_printf(comm, "dt*wce = %g\n", phys_.wce * grid().dt);
-    mpi_printf(comm, "dt*wci = %g\n", phys_.wci * grid().dt);
-    mpi_printf(comm, "dx/de = %g\n", phys_.Lx / (phys_.de * gdims[0]));
-    mpi_printf(comm, "dy/de = %g\n", phys_.Ly / (phys_.de * gdims[1]));
-    mpi_printf(comm, "dz/de = %g\n", phys_.Lz / (phys_.de * gdims[2]));
-    mpi_printf(comm, "dx/rhoi = %g\n",
-               (phys_.Lx / gdims[0]) / (phys_.vthi / phys_.wci));
-    mpi_printf(comm, "dx/rhoe = %g\n",
-               (phys_.Lx / gdims[0]) / (phys_.vthe / phys_.wce));
-    mpi_printf(comm, "L/debye = %g\n", phys_.L / (phys_.vthe / phys_.wpe));
-    mpi_printf(comm, "dx/debye = %g\n",
-               (phys_.Lx / gdims[0]) / (phys_.vthe / phys_.wpe));
-    mpi_printf(comm, "n0 = %g\n", phys_.n0);
-    mpi_printf(comm, "vthi/c = %g\n", phys_.vthi / phys_.c);
-    mpi_printf(comm, "vthe/c = %g\n", phys_.vthe / phys_.c);
-    mpi_printf(comm, "vdri/c = %g\n", phys_.vdri / phys_.c);
-    mpi_printf(comm, "vdre/c = %g\n", phys_.vdre / phys_.c);
-    mpi_printf(comm, "Open BC in x?   = %d\n", open_bc_x);
-    mpi_printf(comm, "Driven BC in z? = %d\n", driven_bc_z);
-  }
-
-  // ----------------------------------------------------------------------
-  // setup_initial_partition
-
-  std::vector<uint> setup_initial_partition()
-  {
-    std::vector<uint> n_prts_by_patch_old(grid().n_patches());
-    setup_particles(n_prts_by_patch_old, true);
-    return n_prts_by_patch_old;
-  }
-
-  // ----------------------------------------------------------------------
-  // setup_initial_particles
-
-  void setup_initial_particles(Mparticles& mprts,
-                               std::vector<uint>& n_prts_by_patch)
-  {
-    mprts_->reserve_all(n_prts_by_patch);
-    setup_particles(n_prts_by_patch, false);
-  }
-
-  // ----------------------------------------------------------------------
-  // setup_particles
-  //
-  // set particles x^{n+1/2}, p^{n+1/2}
-
-  void setup_particles(std::vector<uint>& nr_particles_by_patch,
-                       bool count_only)
-  {
-    MPI_Comm comm = grid().comm();
-    const auto& grid = this->grid();
-
-    double cs = cos(theta), sn = sin(theta);
-    double Ne_sheet = phys_.Ne_sheet, vthe = phys_.vthe, vthi = phys_.vthi;
-    int n_global_patches = phys_.n_global_patches;
-    double weight_s = phys_.weight_s;
-    double tanhf = phys_.tanhf, L = phys_.L;
-    double gdre = phys_.gdre, udre = phys_.udre, gdri = phys_.gdri,
-           udri = phys_.udri;
-    double Ne_back = phys_.Ne_back, vtheb = phys_.vtheb, vthib = phys_.vthib;
-    double weight_b = phys_.weight_b;
-
-    if (count_only) {
-      for (int p = 0; p < grid.n_patches(); p++) {
-        nr_particles_by_patch[p] =
-          2 * (Ne_sheet / n_global_patches + Ne_back / n_global_patches);
-      }
-      return;
+      injector.reweight(
+        psc::particle::Inject{{x, y, z}, {ux, uy, uz}, weight_s, KIND_ION});
     }
 
-    // LOAD PARTICLES
+    mpi_printf(comm, "-> Background Population\n");
 
-    mpi_printf(comm, "Loading particles\n");
+    for (int64_t n = 0; n < Ne_back / n_global_patches; n++) {
+      Double3 pos{Rng_uniform(rng, xmin, xmax), Rng_uniform(rng, ymin, ymax),
+                  Rng_uniform(rng, zmin, zmax)};
 
-    // Do a fast load of the particles
+      Double3 u{Rng_normal(rng, 0, vtheb), Rng_normal(rng, 0, vtheb),
+                Rng_normal(rng, 0, vtheb)};
+      injector.reweight(psc::particle::Inject{pos, u, weight_b, KIND_ELECTRON});
 
-    rngpool =
-      RngPool_create(); // FIXME, should be part of ctor (of struct psc, really)
-
-    int rank;
-    MPI_Comm_rank(comm, &rank);
-    RngPool_seed(rngpool, rank);
-    Rng* rng = RngPool_get(rngpool, 0);
-
-    assert(grid.n_patches() > 0);
-    const Grid_t::Patch& patch = grid.patches[0];
-    double xmin = patch.xb[0], xmax = patch.xe[0];
-    double ymin = patch.xb[1], ymax = patch.xe[1];
-    double zmin = patch.xb[2], zmax = patch.xe[2];
-
-    // Load Harris population
-
-    {
-      auto inj = mprts_->injector();
-      auto injector = inj[0];
-
-      mpi_printf(comm, "-> Main Harris Sheet\n");
-
-      for (int64_t n = 0; n < Ne_sheet / n_global_patches; n++) {
-        double x, y, z, ux, uy, uz, d0;
-
-        do {
-          z = L * atanh(Rng_uniform(rng, -1., 1.) * tanhf);
-        } while (z <= zmin || z >= zmax);
-        x = Rng_uniform(rng, xmin, xmax);
-        y = Rng_uniform(rng, ymin, ymax);
-
-        // inject_particles() will return an error for particles not on this
-        // node and will not inject particle locally
-
-        ux = Rng_normal(rng, 0, vthe);
-        uy = Rng_normal(rng, 0, vthe);
-        uz = Rng_normal(rng, 0, vthe);
-        d0 = gdre * uy + sqrt(ux * ux + uy * uy + uz * uz + 1) * udre;
-        uy = d0 * cs - ux * sn;
-        ux = d0 * sn + ux * cs;
-
-        injector.reweight(psc::particle::Inject{
-          {x, y, z}, {ux, uy, uz}, weight_s, KIND_ELECTRON});
-
-        ux = Rng_normal(rng, 0, vthi);
-        uy = Rng_normal(rng, 0, vthi);
-        uz = Rng_normal(rng, 0, vthi);
-        d0 = gdri * uy + sqrt(ux * ux + uy * uy + uz * uz + 1) * udri;
-        uy = d0 * cs - ux * sn;
-        ux = d0 * sn + ux * cs;
-
-        injector.reweight(
-          psc::particle::Inject{{x, y, z}, {ux, uy, uz}, weight_s, KIND_ION});
-      }
-
-      mpi_printf(comm, "-> Background Population\n");
-
-      for (int64_t n = 0; n < Ne_back / n_global_patches; n++) {
-        Double3 pos{Rng_uniform(rng, xmin, xmax), Rng_uniform(rng, ymin, ymax),
-                    Rng_uniform(rng, zmin, zmax)};
-
-        Double3 u{Rng_normal(rng, 0, vtheb), Rng_normal(rng, 0, vtheb),
-                  Rng_normal(rng, 0, vtheb)};
-        injector.reweight(
-          psc::particle::Inject{pos, u, weight_b, KIND_ELECTRON});
-
-        u = {Rng_normal(rng, 0, vthib), Rng_normal(rng, 0, vthib),
-             Rng_normal(rng, 0, vthib)};
-        injector.reweight(psc::particle::Inject{pos, u, weight_b, KIND_ION});
-      }
-    }
-    mpi_printf(comm, "Finished loading particles\n");
-  }
-
-  // ----------------------------------------------------------------------
-  // setup_initial_fields
-
-  void setup_initial_fields(MfieldsState& mflds)
-  {
-    setupFields(mflds, [&](int m, double xx[3]) { return init_field(xx, m); });
-  }
-
-  // ----------------------------------------------------------------------
-  // init_field
-
-  double init_field(double crd[3], int m)
-  {
-    double b0 = phys_.b0, dbx = phys_.dbx, dbz = phys_.dbz;
-    double L = phys_.L, Lx = phys_.Lx, Lz = phys_.Lz, Lpert = phys_.Lpert;
-    double x = crd[0], z = crd[2];
-
-    double cs = cos(theta), sn = sin(theta);
-
-    switch (m) {
-      case HX:
-        return cs * b0 * tanh(z / L) +
-               dbx * cos(2. * M_PI * (x - .5 * Lx) / Lpert) *
-                 sin(M_PI * z / Lz);
-
-      case HY: return -sn * b0 * tanh(z / L) + b0 * bg;
-
-      case HZ:
-        return dbz * cos(M_PI * z / Lz) *
-               sin(2.0 * M_PI * (x - 0.5 * Lx) / Lpert);
-
-      case JYI: return 0.; // FIXME
-
-      default: return 0.;
+      u = {Rng_normal(rng, 0, vthib), Rng_normal(rng, 0, vthib),
+           Rng_normal(rng, 0, vthib)};
+      injector.reweight(psc::particle::Inject{pos, u, weight_b, KIND_ION});
     }
   }
+  mpi_printf(comm, "Finished loading particles\n");
+}
 
-  // ----------------------------------------------------------------------
-  // diagnostics
+// ----------------------------------------------------------------------
+// init_fields
 
-#ifdef VPIC
-  void diagnostics() override
+double init_fields(int m, double crd[3])
+{
+  double b0 = phys.b0, dbx = phys.dbx, dbz = phys.dbz;
+  double L = phys.L, Lx = phys.Lx, Lz = phys.Lz, Lpert = phys.Lpert;
+  double x = crd[0], z = crd[2];
+
+  double cs = cos(g.theta), sn = sin(g.theta);
+
+  switch (m) {
+    case HX:
+      return cs * b0 * tanh(z / L) +
+             dbx * cos(2. * M_PI * (x - .5 * Lx) / Lpert) * sin(M_PI * z / Lz);
+
+    case HY: return -sn * b0 * tanh(z / L) + b0 * g.bg;
+
+    case HZ:
+      return dbz * cos(M_PI * z / Lz) *
+             sin(2.0 * M_PI * (x - 0.5 * Lx) / Lpert);
+
+    case JYI: return 0.; // FIXME
+
+    default: return 0.;
+  }
+}
+
+// ----------------------------------------------------------------------
+// setup_log
+
+void setup_log(const Grid_t& grid)
+{
+  MPI_Comm comm = grid.comm();
+
+  mpi_printf(comm, "***********************************************\n");
+  mpi_printf(comm, "* Topology: %d x %d x %d\n", g.np[0], g.np[1], g.np[2]);
+  mpi_printf(comm, "tanhf    = %g\n", phys.tanhf);
+  mpi_printf(comm, "L_di     = %g\n", g.L_di);
+  mpi_printf(comm, "rhoi/L   = %g\n", phys.rhoi_L);
+  mpi_printf(comm, "Ti/Te    = %g\n", g.Ti_Te);
+  mpi_printf(comm, "nb/n0    = %g\n", g.nb_n0);
+  mpi_printf(comm, "wpe/wce  = %g\n", g.wpe_wce);
+  mpi_printf(comm, "mi/me    = %g\n", g.mi_me);
+  mpi_printf(comm, "theta    = %g\n", g.theta);
+  mpi_printf(comm, "Lpert/Lx = %g\n", g.Lpert_Lx);
+  mpi_printf(comm, "dbz/b0   = %g\n", g.dbz_b0);
+  mpi_printf(comm, "taui     = %g\n", g.taui);
+  mpi_printf(comm, "t_intervali = %g\n", g.t_intervali);
+  mpi_printf(comm, "num_step = %d\n", psc_params.nmax);
+  mpi_printf(comm, "Lx/di = %g\n", phys.Lx / phys.di);
+  mpi_printf(comm, "Lx/de = %g\n", phys.Lx / phys.de);
+  mpi_printf(comm, "Ly/di = %g\n", phys.Ly / phys.di);
+  mpi_printf(comm, "Ly/de = %g\n", phys.Ly / phys.de);
+  mpi_printf(comm, "Lz/di = %g\n", phys.Lz / phys.di);
+  mpi_printf(comm, "Lz/de = %g\n", phys.Lz / phys.de);
+  mpi_printf(comm, "nx = %d\n", g.gdims[0]);
+  mpi_printf(comm, "ny = %d\n", g.gdims[1]);
+  mpi_printf(comm, "nz = %d\n", g.gdims[2]);
+  mpi_printf(comm, "n_global_patches = %d\n", phys.n_global_patches);
+  mpi_printf(comm, "nppc = %g\n", g.nppc);
+  mpi_printf(comm, "b0 = %g\n", phys.b0);
+  mpi_printf(comm, "v_A (based on nb) = %g\n", phys.v_A);
+  mpi_printf(comm, "di = %g\n", phys.di);
+  mpi_printf(comm, "Ne = %g\n", phys.Ne);
+  mpi_printf(comm, "Ne_sheet = %g\n", phys.Ne_sheet);
+  mpi_printf(comm, "Ne_back = %g\n", phys.Ne_back);
+  mpi_printf(comm, "total # of particles = %g\n", 2 * phys.Ne);
+  mpi_printf(comm, "dt*wpe = %g\n", phys.wpe * grid.dt);
+  mpi_printf(comm, "dt*wce = %g\n", phys.wce * grid.dt);
+  mpi_printf(comm, "dt*wci = %g\n", phys.wci * grid.dt);
+  mpi_printf(comm, "dx/de = %g\n", phys.Lx / (phys.de * g.gdims[0]));
+  mpi_printf(comm, "dy/de = %g\n", phys.Ly / (phys.de * g.gdims[1]));
+  mpi_printf(comm, "dz/de = %g\n", phys.Lz / (phys.de * g.gdims[2]));
+  mpi_printf(comm, "dx/rhoi = %g\n",
+             (phys.Lx / g.gdims[0]) / (phys.vthi / phys.wci));
+  mpi_printf(comm, "dx/rhoe = %g\n",
+             (phys.Lx / g.gdims[0]) / (phys.vthe / phys.wce));
+  mpi_printf(comm, "L/debye = %g\n", phys.L / (phys.vthe / phys.wpe));
+  mpi_printf(comm, "dx/debye = %g\n",
+             (phys.Lx / g.gdims[0]) / (phys.vthe / phys.wpe));
+  mpi_printf(comm, "n0 = %g\n", phys.n0);
+  mpi_printf(comm, "vthi/c = %g\n", phys.vthi / phys.c);
+  mpi_printf(comm, "vthe/c = %g\n", phys.vthe / phys.c);
+  mpi_printf(comm, "vdri/c = %g\n", phys.vdri / phys.c);
+  mpi_printf(comm, "vdre/c = %g\n", phys.vdre / phys.c);
+  mpi_printf(comm, "Open BC in x?   = %d\n", g.open_bc_x);
+  mpi_printf(comm, "Driven BC in z? = %d\n", g.driven_bc_z);
+}
+
+class Diagnostics
+{
+public:
+  Diagnostics(OutputFieldsC& outf, OutputParticles& outp)
+    : io_pfd_{"pfd"}, outf_{outf}, outp_{outp}
+  {}
+
+  void operator()(Mparticles& mprts, MfieldsState& mflds)
   {
-    run_diagnostics();
+    vpic_run_diagnostics(mprts, mflds);
 
-    MPI_Comm comm = grid().comm();
-    const auto& grid = this->grid();
+    const auto& grid = mprts.grid();
+    MPI_Comm comm = grid.comm();
 
     int timestep = grid.timestep();
-    if (outf_->pfield_step > 0 && timestep % outf_->pfield_step == 0) {
+    if (outf_.pfield_step > 0 && timestep % outf_.pfield_step == 0) {
       mpi_printf(comm, "***** Writing PFD output\n");
       io_pfd_.open(grid);
 
       {
         OutputFieldsVpic<MfieldsState> out_fields;
-        auto result = out_fields(*mflds_);
+        auto result = out_fields(mflds);
         io_pfd_.write_mflds(result.mflds, grid, result.name, result.comp_names);
       }
 
       {
         // FIXME, would be better to keep "out_hydro" around
         OutputHydro out_hydro{grid};
-        auto result = out_hydro(*mprts_, *hydro_, *interpolator_);
+        auto result = out_hydro(mprts, *hydro, *interpolator);
         io_pfd_.write_mflds(result.mflds, grid, result.name, result.comp_names);
       }
       mrc_io_close(io_pfd_.io_);
     }
 
-    if (outp_) {
-      psc_stats_start(st_time_output);
-      (*outp_).run(*mprts_);
-      psc_stats_stop(st_time_output);
-    }
+    psc_stats_start(st_time_output);
+    outp_.run(mprts);
+    psc_stats_stop(st_time_output);
   }
+
+private:
+  MrcIo io_pfd_;
+  OutputFieldsC& outf_;
+  OutputParticles& outp_;
+};
+
+// ======================================================================
+// PscHarris
+
+struct PscHarris : Psc<PscConfig>
+{
+  // ----------------------------------------------------------------------
+  // PscHarris ctor
+  //
+  // FIXME: can only use 1st order pushers with current conducting wall b.c.
+
+  PscHarris(const PscParams& psc_params, Grid_t& grid, MfieldsState& mflds,
+            Mparticles& mprts, Balance& balance, Collision& collision,
+            Checks& checks, Marder& marder, OutputFieldsC& outf,
+            OutputParticles& outp)
+    : Psc{psc_params, grid,   mflds,  mprts, balance,
+          collision,  checks, marder, outf,  outp},
+      diag_{outf, outp}
+  {}
+
+  // ----------------------------------------------------------------------
+  // diagnostics
+
+#ifdef VPIC
+  void diagnostics() override { diag_(*mprts_, *mflds_); }
 #endif
 
 private:
-  globals_physics phys_;
-
-  MrcIo io_pfd_;
+  Diagnostics diag_;
 };
+
+// ======================================================================
+// run
+
+void run()
+{
+  auto comm = MPI_COMM_WORLD;
+
+  mpi_printf(comm, "*** Setting up simulation\n");
+
+  setupHarrisParams();
+  phys = globals_physics{g};
+
+  psc_params.cfl = 0.99;
+  psc_params.stats_every = 100;
+
+  // ----------------------------------------------------------------------
+  // Set up grid, state fields, particles
+
+  auto grid_ptr = setupGrid();
+  auto& grid = *grid_ptr;
+
+  psc_params.nmax =
+    int(g.taui / (phys.wci * grid.dt)); // number of steps from taui
+
+  // --- create Simulation
+#if 0
+  // set high level VPIC simulation parameters
+  // FIXME, will be unneeded eventually
+  setParams(psc_params.nmax, psc_params.stats_every,
+	    psc_params.stats_every / 2, psc_params.stats_every / 2,
+	    psc_params.stats_every / 2);
+#endif
+
+  // --- setup field data structure
+#ifdef VPIC
+  // --- setup materials
+  MaterialList material_list;
+  setupMaterials(material_list);
+
+  // FIXME, mv assert into MfieldsState ctor
+  assert(!material_list.empty());
+
+  double damp = 0.;
+  auto& mflds = *new MfieldsState{grid, vgrid, material_list, damp};
+  vpic_define_fields(grid);
+#else
+  auto& mflds = *new MfieldsState{grid};
+#endif
+
+  mpi_printf(comm, "*** Finalizing Field Advance\n");
+#if 0
+  assert(grid.nr_patches() > 0);
+  Simulation_set_region_resistive_harris(sub->sim, &sub->prm, phys, psc_->patch[0].dx,
+					 0., resistive);
+#endif
+
+  /// --- setup particle data structure
+#ifdef VPIC
+  auto& mprts = *new Mparticles{grid, vgrid};
+  vpic_setup_species(mprts);
+#else
+  auto& mprts = *new Mparticles{grid};
+#endif
+
+  // -- Balance
+  psc_params.balance_interval = 0;
+  auto& balance = *new Balance{psc_params.balance_interval};
+
+  // -- Sort
+  // FIXME: the "vpic" sort actually keeps track of per-species sorting
+  // intervals internally, so it needs to be called every step
+#ifdef VPIC
+  psc_params.sort_interval = 1;
+#endif
+
+  // -- Collision
+  int collision_interval = 0;
+  double collision_nu = .1; // FIXME, != 0 needed to avoid crash
+  auto& collision = *new Collision{grid, collision_interval, collision_nu};
+
+  // -- Checks
+  ChecksParams checks_params{};
+  auto& checks = *new Checks{grid, comm, checks_params};
+
+  // -- Marder correction
+  // FIXME, these are ignored for vpic (?)
+  double marder_diffusion = 0.9;
+  int marder_loop = 3;
+  bool marder_dump = false;
+  // FIXME, how do we make sure that we don't forget to set this?
+  // (maybe make it part of the Marder object, or provide a base class
+  // interface define_marder() that takes the object and the interval
+#ifdef VPIC
+  psc_params.marder_interval = 1;
+#else
+  psc_params.marder_interval = 0;
+#endif
+#if 0
+  // FIXME, marder "vpic" manages its own cleaning intervals
+  psc_marder_set_param_int(psc_->marder, "every_step", 1);
+  psc_marder_set_param_int(psc_->marder, "clean_div_e_interval", 50);
+  psc_marder_set_param_int(psc_->marder, "clean_div_b_interval", 50);
+  psc_marder_set_param_int(psc_->marder, "sync_shared_interval", 50);
+  psc_marder_set_param_int(psc_->marder, "num_div_e_round", 2);
+  psc_marder_set_param_int(psc_->marder, "num_div_b_round", 2);
+#endif
+
+  auto& marder = *new Marder(grid, marder_diffusion, marder_loop, marder_dump);
+
+  // -- output fields
+  OutputFieldsCParams outf_params;
+  double output_field_interval = 1.;
+  std::vector<std::unique_ptr<FieldsItemBase>> outf_items;
+#ifdef VPIC
+  // handled by diagnostics instead
+#else
+  outf_items.emplace_back(new FieldsItem_E_cc(grid));
+  outf_items.emplace_back(new FieldsItem_H_cc(grid));
+  outf_items.emplace_back(new FieldsItem_J_cc(grid));
+  outf_items.emplace_back(new FieldsItem_n_1st_cc<Mparticles>(grid));
+  outf_items.emplace_back(new FieldsItem_v_1st_cc<Mparticles>(grid));
+  outf_items.emplace_back(new FieldsItem_T_1st_cc<Mparticles>(grid));
+#endif
+  outf_params.pfield_step = int((output_field_interval / (phys.wci * grid.dt)));
+  auto& outf = *new OutputFieldsC{grid, outf_params, std::move(outf_items)};
+
+  OutputParticlesParams outp_params{};
+  outp_params.every_step =
+    int((g.output_particle_interval / (phys.wci * grid.dt)));
+  outp_params.data_dir = ".";
+  outp_params.basename = "prt";
+  outp_params.lo = {192, 0, 48};
+  outp_params.hi = {320, 0, 80};
+  auto& outp = *new OutputParticles{grid, outp_params};
+
+  // ---
+
+  int interval = int(g.t_intervali / (phys.wci * grid.dt));
+  vpic_create_diagnostics(interval);
+
+  // ----------------------------------------------------------------------
+  // rebalance and actually initialize particles / fields
+
+  // --- partition particles and initial balancing
+  mpi_printf(comm, "**** Partitioning...\n");
+  std::vector<uint> n_prts_by_patch(mprts.n_patches());
+  setup_particles(mprts, n_prts_by_patch, true);
+
+  balance.initial(grid_ptr, n_prts_by_patch);
+  mprts.reset(*grid_ptr);
+
+  mpi_printf(comm, "**** Setting up particles...\n");
+  mprts.reserve_all(n_prts_by_patch);
+  setup_particles(mprts, n_prts_by_patch, false);
+
+  mpi_printf(comm, "**** Setting up fields...\n");
+  setupFields(mflds, init_fields);
+
+  vpic_setup_diagnostics();
+
+  setup_log(grid);
+
+  mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
+
+  auto psc = PscHarris{psc_params, *grid_ptr, mflds,  mprts, balance,
+                       collision,  checks,    marder, outf,  outp};
+
+  psc.integrate();
+}
 
 // ======================================================================
 // main
@@ -800,12 +872,8 @@ private:
 int main(int argc, char** argv)
 {
   psc_init(argc, argv);
-  auto psc = new PscHarris;
 
-  psc->initialize();
-  psc->integrate();
-
-  delete psc;
+  run();
 
   libmrc_params_finalize();
   MPI_Finalize();

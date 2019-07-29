@@ -224,6 +224,7 @@ struct Grid_<T>::Normalization
   {
     assert(prm.nicell > 0);
     cc = prm.cc;
+    eps0 = prm.eps0;
 
     double wl = 2. * M_PI * cc / prm.lw;
     double ld = cc / wl;
@@ -249,6 +250,7 @@ struct Grid_<T>::Normalization
   }
 
   real_t cc;
+  real_t eps0;
   real_t fnqs = { 1. };
   real_t eta = { 1. };
   real_t beta = { 1. };
