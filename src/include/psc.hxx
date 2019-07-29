@@ -45,7 +45,8 @@ using Grid = typename MfieldsState::Grid;
 using ParticleBcList = typename Mparticles::ParticleBcList;
 using MaterialList = typename MfieldsState::MaterialList;
 using Material = typename MaterialList::Material;
-using OutputHydro = OutputHydroVpic<Mparticles, MfieldsHydro, MfieldsInterpolator>;
+using OutputHydro =
+  OutputHydroVpic<Mparticles, MfieldsHydro, MfieldsInterpolator>;
 using DiagMixin =
   NoneDiagMixin<Mparticles, MfieldsState, MfieldsInterpolator, MfieldsHydro>;
 
@@ -563,33 +564,6 @@ struct Psc
 
   virtual void inject_particles() {}
 
-  // ----------------------------------------------------------------------
-  // define_material
-
-#ifdef VPIC
-  static Material* define_material(MaterialList& material_list,
-                                   const char* name, double eps, double mu = 1.,
-                                   double sigma = 0., double zeta = 0.)
-  {
-    auto m = MaterialList::create(name, eps, eps, eps, mu, mu, mu, sigma, sigma,
-                                  sigma, zeta, zeta, zeta);
-    return material_list.append(m);
-  }
-#else
-  static void define_material(MaterialList& material_list, const char* name,
-                              double eps, double mu = 1., double sigma = 0.,
-                              double zeta = 0.)
-  {}
-#endif
-
-  // ----------------------------------------------------------------------
-  // courant length
-
-  static double courant_length(const Grid_t::Domain& domain)
-  {
-    return ::courant_length(domain);
-  }
-
 private:
   // ----------------------------------------------------------------------
   // print_profiling
@@ -958,6 +932,26 @@ void vpic_define_grid(const Grid_t& grid)
   grid_setup_communication();
 #endif
 }
+
+// ----------------------------------------------------------------------
+// vpic_define_material
+
+#ifdef VPIC
+static Material* vpic_define_material(MaterialList& material_list,
+                                      const char* name, double eps,
+                                      double mu = 1., double sigma = 0.,
+                                      double zeta = 0.)
+{
+  auto m = MaterialList::create(name, eps, eps, eps, mu, mu, mu, sigma, sigma,
+                                sigma, zeta, zeta, zeta);
+  return material_list.append(m);
+}
+#else
+static void vpic_define_material(MaterialList& material_list, const char* name,
+                                 double eps, double mu = 1., double sigma = 0.,
+                                 double zeta = 0.)
+{}
+#endif
 
 // ----------------------------------------------------------------------
 // vpic_define_fields

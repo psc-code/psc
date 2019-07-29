@@ -394,10 +394,10 @@ void setupMaterials(MaterialList& material_list)
   mpi_printf(comm, "Setting up materials.\n");
 
   // -- set up MaterialList
-  Psc<PscConfig>::define_material(material_list, "vacuum", 1., 1., 0., 0.);
+  vpic_define_material(material_list, "vacuum", 1., 1., 0., 0.);
 #if 0
   struct material *resistive =
-    Psc<PscConfig>::define_material(material_list, "resistive", 1., 1., 1., 0.);
+    vpic_define_material(material_list, "resistive", 1., 1., 1., 0.);
 #endif
 
   // Note: define_material defaults to isotropic materials with mu=1,sigma=0
