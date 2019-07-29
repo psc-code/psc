@@ -96,6 +96,41 @@ inline double courant_length(const Grid_t::Domain& domain)
 }
 
 // ======================================================================
+// DiagnosticsDefault
+
+template <typename PscConfig>
+class DiagnosticsDefault
+{
+  using OutputParticles = typename PscConfig::OutputParticles;
+  using Mparticles = typename PscConfig::Mparticles;
+  using MfieldsState = typename PscConfig::MfieldsState;
+
+public:
+  DiagnosticsDefault(OutputFieldsC& outf, OutputParticles& outp)
+    : outf_{outf}, outp_{outp}
+  {}
+
+  void operator()(Mparticles& mprts, MfieldsState& mflds)
+  {
+    psc_stats_start(st_time_output);
+#ifdef VPIC
+#if 0
+    TIC user_diagnostics(); TOC(user_diagnostics, 1);
+#endif
+#else
+    // FIXME
+    outf_(mflds, mprts);
+#endif
+    outp_.run(mprts);
+    psc_stats_stop(st_time_output);
+  }
+
+private:
+  OutputFieldsC& outf_;
+  OutputParticles& outp_;
+};
+
+// ======================================================================
 // Psc
 
 template <typename PscConfig>
@@ -637,19 +672,14 @@ private:
 
   virtual void diagnostics()
   {
-#ifdef VPIC
-#if 0
-    TIC user_diagnostics(); TOC(user_diagnostics, 1);
-#endif
-#else
+    DiagnosticsDefault<PscConfig> diag{outf_, outp_};
+
+#ifndef VPIC
     // FIXME
     psc_diag_run(diag_, mprts_, mflds_);
-    // FIXME
-    outf_(mflds_, mprts_);
 #endif
-    psc_stats_start(st_time_output);
-    outp_.run(mprts_);
-    psc_stats_stop(st_time_output);
+
+    diag(mprts_, mflds_);
   }
 
   // ----------------------------------------------------------------------
