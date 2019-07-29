@@ -35,8 +35,8 @@ struct PscIntegrator : Psc<PscConfig, DiagnosticsDefault<PscConfig>>
                 Mparticles& mprts, Balance& balance, Collision& collision,
                 Checks& checks, Marder& marder, Diagnostics& diagnostics,
                 InjectFunc& inject_particles)
-    : Base{params, grid,   mflds, mprts, balance,    collision,
-           checks, marder, diagnostics},
+    : Base{params,    grid,   mflds,  mprts,      balance,
+           collision, checks, marder, diagnostics},
       inject_particles_{inject_particles}
   {}
 
@@ -54,26 +54,16 @@ private:
 
 template <typename PscConfig, typename MfieldsState, typename Mparticles,
           typename Balance, typename Collision, typename Checks,
-          typename Marder, typename Diagnostics, typename InjectFunc>
+          typename Marder, typename Diagnostics,
+          typename InjectFunc = decltype(injectNone<Mparticles>)>
 PscIntegrator<PscConfig, InjectFunc> makePscIntegrator(
   const PscParams& params, Grid_t& grid, MfieldsState& mflds, Mparticles& mprts,
   Balance& balance, Collision& collision, Checks& checks, Marder& marder,
-  Diagnostics& diagnostics, InjectFunc& inject_particles)
+  Diagnostics& diagnostics,
+  InjectFunc& inject_particles = injectNone<Mparticles>)
 {
   return {params,    grid,   mflds,  mprts,       balance,
           collision, checks, marder, diagnostics, inject_particles};
-}
-
-template <typename PscConfig, typename MfieldsState, typename Mparticles,
-          typename Balance, typename Collision, typename Checks,
-          typename Marder, typename Diagnostics>
-PscIntegrator<PscConfig, decltype(injectNone<Mparticles>)> makePscIntegrator(
-  const PscParams& params, Grid_t& grid, MfieldsState& mflds, Mparticles& mprts,
-  Balance& balance, Collision& collision, Checks& checks, Marder& marder,
-  Diagnostics& diagnostics)
-{
-  return {params,    grid,   mflds,  mprts,       balance,
-          collision, checks, marder, diagnostics, injectNone<Mparticles>};
 }
 
 #endif

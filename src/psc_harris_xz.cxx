@@ -669,7 +669,7 @@ private:
 // ======================================================================
 // PscHarris
 
-struct PscHarris : Psc<PscConfig, DiagnosticsDefault<PscConfig>>
+struct PscHarris : Psc<PscConfig, Diagnostics>
 {
   // ----------------------------------------------------------------------
   // PscHarris ctor
@@ -678,22 +678,10 @@ struct PscHarris : Psc<PscConfig, DiagnosticsDefault<PscConfig>>
 
   PscHarris(const PscParams& psc_params, Grid_t& grid, MfieldsState& mflds,
             Mparticles& mprts, Balance& balance, Collision& collision,
-            Checks& checks, Marder& marder, OutputFieldsC& outf,
-            OutputParticles& outp, DiagnosticsDefault<PscConfig>& diagnostics)
+            Checks& checks, Marder& marder, Diagnostics& diagnostics)
     : Psc{psc_params, grid,   mflds,  mprts,      balance,
-          collision,  checks, marder, diagnostics},
-      diag_{outf, outp}
+          collision,  checks, marder, diagnostics}
   {}
-
-  // ----------------------------------------------------------------------
-  // diagnostics
-
-#ifdef VPIC
-  void diagnostics() override { diag_(mprts_, mflds_); }
-#endif
-
-private:
-  Diagnostics diag_;
 };
 
 // ======================================================================
@@ -831,7 +819,6 @@ void run()
   outp_params.hi = {320, 0, 80};
   OutputParticles outp{grid, outp_params};
 
-  using Diagnostics = DiagnosticsDefault<PscConfig>;
   Diagnostics diagnostics{outf, outp};
 
   // ---
@@ -863,9 +850,8 @@ void run()
 
   mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
 
-  auto psc =
-    PscHarris{psc_params, *grid_ptr, mflds, mprts, balance,    collision,
-              checks,     marder,    outf,  outp,  diagnostics};
+  auto psc = PscHarris{psc_params, *grid_ptr, mflds,  mprts,      balance,
+                       collision,  checks,    marder, diagnostics};
 
   psc.integrate();
 }
