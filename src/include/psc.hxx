@@ -124,8 +124,19 @@ struct Psc
   // ctor
 
   Psc(const PscParams& params, Grid_t& grid, MfieldsState& mflds,
-      Mparticles& mprts)
-    : p_{params}, grid_{&grid}, mflds_{&mflds}, mprts_{&mprts}
+      Mparticles& mprts, Balance_t& balance, Collision_t& collision,
+      Checks_t& checks, Marder_t& marder, OutputFieldsC& outf,
+      OutputParticles& outp)
+    : p_{params},
+      grid_{&grid},
+      mflds_{&mflds},
+      mprts_{&mprts},
+      balance_{&balance},
+      collision_{&collision},
+      checks_{&checks},
+      marder_{&marder},
+      outf_{&outf},
+      outp_{&outp}
   {
     time_start_ = MPI_Wtime();
 
