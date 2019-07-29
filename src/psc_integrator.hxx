@@ -7,16 +7,22 @@
 namespace
 {
 
-template <typename Mparticles>
-void injectNone(const Grid_t& grid, Mparticles& mprts)
-{}
+class InjectParticlesNone
+{
+public:
+  template <typename Mparticles>
+  void operator()(const Grid_t& grid, Mparticles& mprts)
+  {}
+};
+
+InjectParticlesNone injectParticlesNone;
 
 } // namespace
 
 // ======================================================================
 // PscIntegrator
 
-template <typename PscConfig, typename Diagnostics, typename InjectFunc>
+template <typename PscConfig, typename Diagnostics, typename InjectParticles>
 struct PscIntegrator : Psc<PscConfig, Diagnostics>
 {
   using Base = Psc<PscConfig, Diagnostics>;
@@ -34,7 +40,7 @@ struct PscIntegrator : Psc<PscConfig, Diagnostics>
   PscIntegrator(const PscParams& params, Grid_t& grid, MfieldsState& mflds,
                 Mparticles& mprts, Balance& balance, Collision& collision,
                 Checks& checks, Marder& marder, Diagnostics& diagnostics,
-                InjectFunc& inject_particles)
+                InjectParticles& inject_particles)
     : Base{params,    grid,   mflds,  mprts,      balance,
            collision, checks, marder, diagnostics},
       inject_particles_{inject_particles}
@@ -49,18 +55,17 @@ struct PscIntegrator : Psc<PscConfig, Diagnostics>
   }
 
 private:
-  InjectFunc& inject_particles_;
+  InjectParticles& inject_particles_;
 };
 
 template <typename PscConfig, typename MfieldsState, typename Mparticles,
           typename Balance, typename Collision, typename Checks,
           typename Marder, typename Diagnostics,
-          typename InjectFunc = decltype(injectNone<Mparticles>)>
-PscIntegrator<PscConfig, Diagnostics, InjectFunc> makePscIntegrator(
+          typename InjectParticles = InjectParticlesNone>
+PscIntegrator<PscConfig, Diagnostics, InjectParticles> makePscIntegrator(
   const PscParams& params, Grid_t& grid, MfieldsState& mflds, Mparticles& mprts,
   Balance& balance, Collision& collision, Checks& checks, Marder& marder,
-  Diagnostics& diagnostics,
-  InjectFunc& inject_particles = injectNone<Mparticles>)
+  Diagnostics& diagnostics, InjectParticles& inject_particles = injectParticlesNone)
 {
   return {params,    grid,   mflds,  mprts,       balance,
           collision, checks, marder, diagnostics, inject_particles};
