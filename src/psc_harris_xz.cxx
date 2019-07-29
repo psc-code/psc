@@ -457,22 +457,6 @@ struct PscHarris : Psc<PscConfig>
     outf_.reset(&outf);
     outp_.reset(&outp);
 
-    // ----------------------------------------------------------------------
-    // rebalance and actually initialize particles / fields
-
-    // --- partition particles and initial balancing
-    mpi_printf(comm, "**** Partitioning...\n");
-    auto n_prts_by_patch = setup_initial_partition();
-    balance_->initial(grid_, n_prts_by_patch);
-    mprts_->reset(grid);
-
-    mpi_printf(comm, "**** Setting up particles...\n");
-    setup_initial_particles(*mprts_, n_prts_by_patch);
-
-    setup_initial_fields(*mflds_);
-
-    vpic_setup_diagnostics();
-
     init();
 
     setup_log();
@@ -545,21 +529,21 @@ struct PscHarris : Psc<PscConfig>
   // ----------------------------------------------------------------------
   // setup_initial_partition
 
-  std::vector<uint> setup_initial_partition()
+  static std::vector<uint> setup_initial_partition(Mparticles& mprts)
   {
-    std::vector<uint> n_prts_by_patch_old(grid().n_patches());
-    setup_particles(n_prts_by_patch_old, true);
+    std::vector<uint> n_prts_by_patch_old(mprts.n_patches());
+    setup_particles(mprts, n_prts_by_patch_old, true);
     return n_prts_by_patch_old;
   }
 
   // ----------------------------------------------------------------------
   // setup_initial_particles
 
-  void setup_initial_particles(Mparticles& mprts,
-                               std::vector<uint>& n_prts_by_patch)
+  static void setup_initial_particles(Mparticles& mprts,
+				      std::vector<uint>& n_prts_by_patch)
   {
-    mprts_->reserve_all(n_prts_by_patch);
-    setup_particles(n_prts_by_patch, false);
+    mprts.reserve_all(n_prts_by_patch);
+    setup_particles(mprts, n_prts_by_patch, false);
   }
 
   // ----------------------------------------------------------------------
@@ -567,11 +551,12 @@ struct PscHarris : Psc<PscConfig>
   //
   // set particles x^{n+1/2}, p^{n+1/2}
 
-  void setup_particles(std::vector<uint>& nr_particles_by_patch,
-                       bool count_only)
+  static void setup_particles(Mparticles& mprts,
+                              std::vector<uint>& nr_particles_by_patch,
+                              bool count_only)
   {
-    MPI_Comm comm = grid().comm();
-    const auto& grid = this->grid();
+    const auto& grid = mprts.grid();
+    MPI_Comm comm = grid.comm();
 
     double cs = cos(g.theta), sn = sin(g.theta);
     double Ne_sheet = phys.Ne_sheet, vthe = phys.vthe, vthi = phys.vthi;
@@ -614,7 +599,7 @@ struct PscHarris : Psc<PscConfig>
     // Load Harris population
 
     {
-      auto inj = mprts_->injector();
+      auto inj = mprts.injector();
       auto injector = inj[0];
 
       mpi_printf(comm, "-> Main Harris Sheet\n");
@@ -674,7 +659,7 @@ struct PscHarris : Psc<PscConfig>
   // ----------------------------------------------------------------------
   // setup_initial_fields
 
-  void setup_initial_fields(MfieldsState& mflds)
+  static void setup_initial_fields(MfieldsState& mflds)
   {
     setupFields(mflds, [&](int m, double xx[3]) { return init_field(xx, m); });
   }
@@ -682,7 +667,7 @@ struct PscHarris : Psc<PscConfig>
   // ----------------------------------------------------------------------
   // init_field
 
-  double init_field(double crd[3], int m)
+  static double init_field(double crd[3], int m)
   {
     double b0 = phys.b0, dbx = phys.dbx, dbz = phys.dbz;
     double L = phys.L, Lx = phys.Lx, Lz = phys.Lz, Lpert = phys.Lpert;
@@ -891,6 +876,24 @@ void run()
   int interval = int(g.t_intervali / (phys.wci * grid.dt));
   vpic_create_diagnostics(interval);
 
+  // ----------------------------------------------------------------------
+  // rebalance and actually initialize particles / fields
+  
+  // --- partition particles and initial balancing
+  mpi_printf(comm, "**** Partitioning...\n");
+  auto n_prts_by_patch = PscHarris::setup_initial_partition(mprts);
+  balance.initial(grid_ptr, n_prts_by_patch);
+  mprts.reset(*grid_ptr);
+
+  mpi_printf(comm, "**** Setting up particles...\n");
+  PscHarris::setup_initial_particles(mprts, n_prts_by_patch);
+
+  mpi_printf(comm, "**** Setting up fields...\n");
+  PscHarris::setup_initial_fields(mflds);
+
+  vpic_setup_diagnostics();
+
+  
   auto psc = PscHarris{psc_params, *grid_ptr, mflds,  mprts, balance,
                        collision,  checks,    marder, outf,  outp};
 
