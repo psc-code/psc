@@ -1,3 +1,5 @@
 
-add_subdirectory(GTest)
+if (BUILD_TESTING)
+  add_subdirectory(GTest)
+endif()
 

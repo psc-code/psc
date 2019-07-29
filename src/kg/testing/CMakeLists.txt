@@ -2,7 +2,11 @@
 macro(add_kg_test name src)
   add_executable(${name} ${src})
   target_link_libraries(${name} GTest::GTest GTest::Main kg)
-  gtest_discover_tests(${name})
+  if (USE_GTEST_DISCOVER_TESTS)
+    gtest_discover_tests(${name})
+  else()
+    gtest_add_tests(TARGET ${name})
+  endif()
 endmacro()
 
 add_kg_test(TestVec3 TestVec3.cxx)

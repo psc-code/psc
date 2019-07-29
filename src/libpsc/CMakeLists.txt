@@ -77,4 +77,6 @@ if (USE_VPIC)
   target_link_libraries(psc PUBLIC VPIC::VPIC)
 endif()
 
-add_subdirectory(tests)
+if (BUILD_TESTING)
+  add_subdirectory(tests)
+endif()

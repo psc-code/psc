@@ -11,4 +11,6 @@ if (PSC_HAVE_ADIOS2)
   target_link_libraries(kg INTERFACE adios2::adios2)
 endif()
 
-add_subdirectory(testing)
+if (BUILD_TESTING)
+  add_subdirectory(testing)
+endif()
