@@ -680,14 +680,8 @@ struct PscHarris : Psc<PscConfig>
             Mparticles& mprts, Balance& balance, Collision& collision,
             Checks& checks, Marder& marder, OutputFieldsC& outf,
             OutputParticles& outp)
-    : Psc{psc_params}, diag_{outf, outp}
+    : Psc{psc_params, grid, mflds, mprts}, diag_{outf, outp}
   {
-    auto comm = grid.comm();
-
-    define_grid(grid);
-    mflds_.reset(&mflds);
-    mprts_.reset(&mprts);
-
     balance_.reset(&balance);
     collision_.reset(&collision);
     checks_.reset(&checks);

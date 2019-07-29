@@ -123,24 +123,18 @@ struct Psc
   // ----------------------------------------------------------------------
   // ctor
 
-  Psc(const PscParams& params) : p_{params}
+  Psc(const PscParams& params, Grid_t& grid, MfieldsState& mflds,
+      Mparticles& mprts)
+    : p_{params}, grid_{&grid}, mflds_{&mflds}, mprts_{&mprts}
   {
     time_start_ = MPI_Wtime();
 
-    diag_ = psc_diag_create(MPI_COMM_WORLD);
-    psc_diag_set_from_options(diag_);
-  }
-
-  // ----------------------------------------------------------------------
-  // define_grid
-
-  void define_grid(Grid_t& grid)
-  {
     assert(grid.isInvar(0) == Dim::InvarX::value);
     assert(grid.isInvar(1) == Dim::InvarY::value);
     assert(grid.isInvar(2) == Dim::InvarZ::value);
 
-    grid_ = &grid;
+    diag_ = psc_diag_create(MPI_COMM_WORLD);
+    psc_diag_set_from_options(diag_);
   }
 
   // ----------------------------------------------------------------------
