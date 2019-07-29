@@ -312,7 +312,7 @@ void run()
 
   // -- Balance
   psc_params.balance_interval = 300;
-  auto& balance = *new Balance{psc_params.balance_interval, 3, true};
+  Balance balance{psc_params.balance_interval, 3, true};
 
   // -- Sort
   psc_params.sort_interval = 10;
@@ -320,21 +320,21 @@ void run()
   // -- Collision
   int collision_interval = 10;
   double collision_nu = .1;
-  auto& collision = *new Collision{grid, collision_interval, collision_nu};
+  Collision collision{grid, collision_interval, collision_nu};
 
   // -- Checks
   ChecksParams checks_params{};
   checks_params.continuity_every_step = 50;
   checks_params.continuity_threshold = 1e-5;
   checks_params.continuity_verbose = false;
-  auto& checks = *new Checks{grid, MPI_COMM_WORLD, checks_params};
+  Checks checks{grid, MPI_COMM_WORLD, checks_params};
 
   // -- Marder correction
   double marder_diffusion = 0.9;
   int marder_loop = 3;
   bool marder_dump = false;
   psc_params.marder_interval = 0 * 5;
-  auto& marder = *new Marder(grid, marder_diffusion, marder_loop, marder_dump);
+  Marder marder(grid, marder_diffusion, marder_loop, marder_dump);
 
   // ----------------------------------------------------------------------
   // Set up output

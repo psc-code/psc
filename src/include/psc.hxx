@@ -131,10 +131,10 @@ struct Psc
       grid_{&grid},
       mflds_{mflds},
       mprts_{mprts},
-      balance_{&balance},
-      collision_{&collision},
-      checks_{&checks},
-      marder_{&marder},
+      balance_{balance},
+      collision_{collision},
+      checks_{checks},
+      marder_{marder},
       outf_{&outf},
       outp_{&outp}
   {
@@ -303,7 +303,7 @@ struct Psc
     int timestep = grid().timestep();
 
     if (p_.balance_interval > 0 && timestep % p_.balance_interval == 0) {
-      (*balance_)(grid_, mprts_);
+      balance_(grid_, mprts_);
     }
 
     prof_start(pr_time_step_no_comm);
@@ -316,17 +316,17 @@ struct Psc
       prof_stop(pr_sort);
     }
 
-    if (collision_->interval() > 0 && timestep % collision_->interval() == 0) {
+    if (collision_.interval() > 0 && timestep % collision_.interval() == 0) {
       mpi_printf(comm, "***** Performing collisions...\n");
       prof_start(pr_collision);
-      (*collision_)(mprts_);
+      collision_(mprts_);
       prof_stop(pr_collision);
     }
 
     // psc_bnd_particles_open_calc_moments(psc_->bnd_particles,
     // psc_->particles);
 
-    checks_->continuity_before_particle_push(mprts_);
+    checks_.continuity_before_particle_push(mprts_);
 
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
     prof_start(pr_push_prts);
@@ -378,7 +378,7 @@ struct Psc
     //}
     // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 
-    checks_->continuity_after_particle_push(mprts_, mflds_);
+    checks_.continuity_after_particle_push(mprts_, mflds_);
 
     // E at t^{n+3/2}, particles at t^{n+3/2}
     // B at t^{n+3/2} (Note: that is not it's natural time,
@@ -386,11 +386,11 @@ struct Psc
     if (p_.marder_interval > 0 && timestep % p_.marder_interval == 0) {
       // mpi_printf(comm, "***** Performing Marder correction...\n");
       prof_start(pr_marder);
-      (*marder_)(mflds_, mprts_);
+      marder_(mflds_, mprts_);
       prof_stop(pr_marder);
     }
 
-    checks_->gauss(mprts_, mflds_);
+    checks_.gauss(mprts_, mflds_);
 
 #ifdef VPIC
     pushp_->load_interpolator(mprts_, mflds_, *interpolator);
@@ -424,7 +424,7 @@ struct Psc
     int timestep = grid().timestep();
 
     if (p_.balance_interval > 0 && timestep % p_.balance_interval == 0) {
-      (*balance_)(grid_, mprts_);
+      balance_(grid_, mprts_);
     }
 
     if (p_.sort_interval > 0 && timestep % p_.sort_interval == 0) {
@@ -434,10 +434,10 @@ struct Psc
       prof_stop(pr_sort);
     }
 
-    if (collision_->interval() > 0 && timestep % collision_->interval() == 0) {
+    if (collision_.interval() > 0 && timestep % collision_.interval() == 0) {
       mpi_printf(comm, "***** Performing collisions...\n");
       prof_start(pr_collision);
-      (*collision_)(mprts_);
+      collision_(mprts_);
       prof_stop(pr_collision);
     }
 
@@ -446,11 +446,11 @@ struct Psc
     inject_particles();
     prof_stop(pr_inject_prts);
 
-    if (checks_->continuity_every_step > 0 &&
-        timestep % checks_->continuity_every_step == 0) {
+    if (checks_.continuity_every_step > 0 &&
+        timestep % checks_.continuity_every_step == 0) {
       mpi_printf(comm, "***** Checking continuity...\n");
       prof_start(pr_checks);
-      checks_->continuity_before_particle_push(mprts_);
+      checks_.continuity_before_particle_push(mprts_);
       prof_stop(pr_checks);
     }
 
@@ -507,10 +507,10 @@ struct Psc
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 #endif
 
-    if (checks_->continuity_every_step > 0 &&
-        timestep % checks_->continuity_every_step == 0) {
+    if (checks_.continuity_every_step > 0 &&
+        timestep % checks_.continuity_every_step == 0) {
       prof_restart(pr_checks);
-      checks_->continuity_after_particle_push(mprts_, mflds_);
+      checks_.continuity_after_particle_push(mprts_, mflds_);
       prof_stop(pr_checks);
     }
 
@@ -520,14 +520,14 @@ struct Psc
     if (p_.marder_interval > 0 && timestep % p_.marder_interval == 0) {
       mpi_printf(comm, "***** Performing Marder correction...\n");
       prof_start(pr_marder);
-      (*marder_)(mflds_, mprts_);
+      marder_(mflds_, mprts_);
       prof_stop(pr_marder);
     }
 
-    if (checks_->gauss_every_step > 0 &&
-        timestep % checks_->gauss_every_step == 0) {
+    if (checks_.gauss_every_step > 0 &&
+        timestep % checks_.gauss_every_step == 0) {
       prof_restart(pr_checks);
-      checks_->gauss(mprts_, mflds_);
+      checks_.gauss(mprts_, mflds_);
       prof_stop(pr_checks);
     }
 
@@ -579,7 +579,7 @@ private:
   {
     // pushp_.stagger(mprts, mflds); FIXME, vpic does it
 
-    checks_->gauss(mprts_, mflds_);
+    checks_.gauss(mprts_, mflds_);
   }
 #endif
 
@@ -595,14 +595,14 @@ private:
     // Do some consistency checks on user initialized fields
 
     mpi_printf(comm, "Checking interdomain synchronization\n");
-    double err = marder_->synchronize_tang_e_norm_b(mflds_);
+    double err = marder_.synchronize_tang_e_norm_b(mflds_);
     mpi_printf(comm, "Error = %g (arb units)\n", err);
 
     mpi_printf(comm, "Checking magnetic field divergence\n");
-    marder_->compute_div_b_err(mflds_);
-    err = marder_->compute_rms_div_b_err(mflds_);
+    marder_.compute_div_b_err(mflds_);
+    err = marder_.compute_rms_div_b_err(mflds_);
     mpi_printf(comm, "RMS error = %e (charge/volume)\n", err);
-    marder_->clean_div_b(mflds_);
+    marder_.clean_div_b(mflds_);
 
     // Load fields not initialized by the user
 
@@ -611,22 +611,22 @@ private:
     TOC(compute_curl_b, 1);
 
     mpi_printf(comm, "Initializing bound charge density\n");
-    marder_->clear_rhof(mflds_);
-    marder_->accumulate_rho_p(mprts_, mflds_);
-    marder_->synchronize_rho(mflds_);
+    marder_.clear_rhof(mflds_);
+    marder_.accumulate_rho_p(mprts_, mflds_);
+    marder_.synchronize_rho(mflds_);
     TIC AccumulateOps::compute_rhob(mflds_);
     TOC(compute_rhob, 1);
 
     // Internal sanity checks
 
     mpi_printf(comm, "Checking electric field divergence\n");
-    marder_->compute_div_e_err(mflds_);
-    err = marder_->compute_rms_div_e_err(mflds_);
+    marder_.compute_div_e_err(mflds_);
+    err = marder_.compute_rms_div_e_err(mflds_);
     mpi_printf(comm, "RMS error = %e (charge/volume)\n", err);
-    marder_->clean_div_e(mflds_);
+    marder_.clean_div_e(mflds_);
 
     mpi_printf(comm, "Rechecking interdomain synchronization\n");
-    err = marder_->synchronize_tang_e_norm_b(mflds_);
+    err = marder_.synchronize_tang_e_norm_b(mflds_);
     mpi_printf(comm, "Error = %e (arb units)\n", err);
 
     mpi_printf(comm, "Uncentering particles\n");
@@ -734,16 +734,16 @@ protected:
   MfieldsState& mflds_;
   Mparticles& mprts_;
 
-  std::unique_ptr<Balance_t> balance_;
+  Balance_t& balance_;
   std::unique_ptr<Sort_t> sort_;
-  std::unique_ptr<Collision_t> collision_;
+  Collision_t& collision_;
   std::unique_ptr<PushParticles_t> pushp_;
   std::unique_ptr<PushFields_t> pushf_;
   std::unique_ptr<Bnd_t> bnd_;
   std::unique_ptr<BndFields_t> bndf_;
   std::unique_ptr<BndParticles_t> bndp_;
-  std::unique_ptr<Checks_t> checks_;
-  std::unique_ptr<Marder_t> marder_;
+  Checks_t& checks_;
+  Marder_t& marder_;
   std::unique_ptr<OutputFieldsC> outf_;
   std::unique_ptr<OutputParticles> outp_;
 

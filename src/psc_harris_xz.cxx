@@ -762,7 +762,7 @@ void run()
 
   // -- Balance
   psc_params.balance_interval = 0;
-  auto& balance = *new Balance{psc_params.balance_interval};
+  Balance balance{psc_params.balance_interval};
 
   // -- Sort
   // FIXME: the "vpic" sort actually keeps track of per-species sorting
@@ -774,11 +774,11 @@ void run()
   // -- Collision
   int collision_interval = 0;
   double collision_nu = .1; // FIXME, != 0 needed to avoid crash
-  auto& collision = *new Collision{grid, collision_interval, collision_nu};
+  Collision collision{grid, collision_interval, collision_nu};
 
   // -- Checks
   ChecksParams checks_params{};
-  auto& checks = *new Checks{grid, comm, checks_params};
+  Checks checks{grid, comm, checks_params};
 
   // -- Marder correction
   // FIXME, these are ignored for vpic (?)
@@ -803,7 +803,7 @@ void run()
   psc_marder_set_param_int(psc_->marder, "num_div_b_round", 2);
 #endif
 
-  auto& marder = *new Marder(grid, marder_diffusion, marder_loop, marder_dump);
+  Marder marder(grid, marder_diffusion, marder_loop, marder_dump);
 
   // -- output fields
   OutputFieldsCParams outf_params;
