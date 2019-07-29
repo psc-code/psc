@@ -339,6 +339,9 @@ static void run()
   outp_params.basename = "prt";
   OutputParticles outp{grid, outp_params};
 
+  using Diagnostics = DiagnosticsDefault<PscConfig>;
+  Diagnostics diagnostics{outf, outp};
+
   // ----------------------------------------------------------------------
   // Initial conditions
 
@@ -368,7 +371,7 @@ static void run()
 
   auto psc =
     makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts, balance,
-                                 collision, checks, marder, outf, outp);
+                                 collision, checks, marder, diagnostics);
 
   // FIXME, checkpoint reading should be moved to before the integrator
   if (!read_checkpoint_filename.empty()) {

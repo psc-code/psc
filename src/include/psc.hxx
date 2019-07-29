@@ -148,7 +148,6 @@ struct Psc
   using Bnd = typename PscConfig::Bnd;
   using BndFields = typename PscConfig::BndFields;
   using BndParticles = typename PscConfig::BndParticles;
-  using OutputParticles = typename PscConfig::OutputParticles;
   using Diagnostics = DiagnosticsDefault<PscConfig>;
   using Dim = typename PscConfig::Dim;
 
@@ -161,7 +160,7 @@ struct Psc
 
   Psc(const PscParams& params, Grid_t& grid, MfieldsState& mflds,
       Mparticles& mprts, Balance& balance, Collision& collision, Checks& checks,
-      Marder& marder, OutputFieldsC& outf, OutputParticles& outp)
+      Marder& marder, Diagnostics& diagnostics)
     : p_{params},
       grid_{&grid},
       mflds_{mflds},
@@ -172,7 +171,7 @@ struct Psc
       marder_{marder},
       bnd_{grid, grid.ibn},
       bndp_{grid},
-      diagnostics_{outf, outp}
+      diagnostics_{diagnostics}
   {
     time_start_ = MPI_Wtime();
 
@@ -758,6 +757,7 @@ protected:
   Collision& collision_;
   Checks& checks_;
   Marder& marder_;
+  Diagnostics& diagnostics_;
 
   Sort sort_;
   PushParticles pushp_;
@@ -765,7 +765,6 @@ protected:
   Bnd bnd_;
   BndFields bndf_;
   BndParticles bndp_;
-  Diagnostics diagnostics_;
 
   psc_diag* diag_; ///< timeseries diagnostics
 

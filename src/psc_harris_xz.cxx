@@ -679,9 +679,9 @@ struct PscHarris : Psc<PscConfig>
   PscHarris(const PscParams& psc_params, Grid_t& grid, MfieldsState& mflds,
             Mparticles& mprts, Balance& balance, Collision& collision,
             Checks& checks, Marder& marder, OutputFieldsC& outf,
-            OutputParticles& outp)
-    : Psc{psc_params, grid,   mflds,  mprts, balance,
-          collision,  checks, marder, outf,  outp},
+            OutputParticles& outp, Diagnostics& diagnostics)
+    : Psc{psc_params, grid,   mflds,  mprts,      balance,
+          collision,  checks, marder, diagnostics},
       diag_{outf, outp}
   {}
 
@@ -831,6 +831,9 @@ void run()
   outp_params.hi = {320, 0, 80};
   OutputParticles outp{grid, outp_params};
 
+  using Diagnostics = DiagnosticsDefault<PscConfig>;
+  Diagnostics diagnostics{outf, outp};
+
   // ---
 
   int interval = int(g.t_intervali / (phys.wci * grid.dt));
@@ -860,8 +863,9 @@ void run()
 
   mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
 
-  auto psc = PscHarris{psc_params, *grid_ptr, mflds,  mprts, balance,
-                       collision,  checks,    marder, outf,  outp};
+  auto psc =
+    PscHarris{psc_params, *grid_ptr, mflds, mprts, balance,    collision,
+              checks,     marder,    outf,  outp,  diagnostics};
 
   psc.integrate();
 }
