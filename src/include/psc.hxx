@@ -590,37 +590,6 @@ struct Psc
     return ::courant_length(domain);
   }
 
-  // ----------------------------------------------------------------------
-  // create_diagnotics
-
-  void create_diagnostics(int interval)
-  {
-#ifdef VPIC
-    diag_mixin.diagnostics_init(interval);
-#endif
-  }
-
-  // ----------------------------------------------------------------------
-  // setup_diagnostics
-
-  void setup_diagnostics()
-  {
-#ifdef VPIC
-    diag_mixin.diagnostics_setup();
-#endif
-  }
-
-  // ----------------------------------------------------------------------
-  // run_diagnostics
-
-  void run_diagnostics()
-  {
-#ifdef VPIC
-    diag_mixin.diagnostics_run(*mprts_, *mflds_, *interpolator, *hydro,
-			       grid().domain.np);
-#endif
-  }
-
 private:
   // ----------------------------------------------------------------------
   // print_profiling
@@ -1001,3 +970,34 @@ void vpic_define_fields(const Grid_t& grid)
   accumulator.reset(new MfieldsAccumulator{vgrid});
 #endif
 }
+
+// ----------------------------------------------------------------------
+// vpic_create_diagnotics
+
+void vpic_create_diagnostics(int interval)
+{
+#ifdef VPIC
+  diag_mixin.diagnostics_init(interval);
+#endif
+}
+
+// ----------------------------------------------------------------------
+// vpic_setup_diagnostics
+
+void vpic_setup_diagnostics()
+{
+#ifdef VPIC
+  diag_mixin.diagnostics_setup();
+#endif
+}
+
+#ifdef VPIC
+// ----------------------------------------------------------------------
+// vpic_run_diagnostics
+
+void vpic_run_diagnostics(Mparticles& mprts, MfieldsState& mflds)
+{
+  diag_mixin.diagnostics_run(mprts, mflds, *interpolator, *hydro,
+                             mprts.grid().domain.np);
+}
+#endif

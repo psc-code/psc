@@ -457,11 +457,6 @@ struct PscHarris : Psc<PscConfig>
     outf_.reset(&outf);
     outp_.reset(&outp);
 
-    // ---
-
-    int interval = int(g.t_intervali / (phys.wci * grid.dt));
-    create_diagnostics(interval);
-
     // ----------------------------------------------------------------------
     // rebalance and actually initialize particles / fields
 
@@ -476,7 +471,7 @@ struct PscHarris : Psc<PscConfig>
 
     setup_initial_fields(*mflds_);
 
-    setup_diagnostics();
+    vpic_setup_diagnostics();
 
     init();
 
@@ -719,7 +714,7 @@ struct PscHarris : Psc<PscConfig>
 #ifdef VPIC
   void diagnostics() override
   {
-    run_diagnostics();
+    vpic_run_diagnostics(*mprts_, *mflds_);
 
     MPI_Comm comm = grid().comm();
     const auto& grid = this->grid();
@@ -890,6 +885,11 @@ void run()
   outp_params.lo = {192, 0, 48};
   outp_params.hi = {320, 0, 80};
   auto& outp = *new OutputParticles{grid, outp_params};
+
+  // ---
+
+  int interval = int(g.t_intervali / (phys.wci * grid.dt));
+  vpic_create_diagnostics(interval);
 
   auto psc = PscHarris{psc_params, *grid_ptr, mflds,  mprts, balance,
                        collision,  checks,    marder, outf,  outp};
