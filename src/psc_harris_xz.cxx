@@ -559,6 +559,68 @@ double init_fields(int m, double crd[3])
   }
 }
 
+// ----------------------------------------------------------------------
+// setup_log
+
+void setup_log(const Grid_t& grid)
+{
+  MPI_Comm comm = grid.comm();
+
+  mpi_printf(comm, "***********************************************\n");
+  mpi_printf(comm, "* Topology: %d x %d x %d\n", g.np[0], g.np[1], g.np[2]);
+  mpi_printf(comm, "tanhf    = %g\n", phys.tanhf);
+  mpi_printf(comm, "L_di     = %g\n", g.L_di);
+  mpi_printf(comm, "rhoi/L   = %g\n", phys.rhoi_L);
+  mpi_printf(comm, "Ti/Te    = %g\n", g.Ti_Te);
+  mpi_printf(comm, "nb/n0    = %g\n", g.nb_n0);
+  mpi_printf(comm, "wpe/wce  = %g\n", g.wpe_wce);
+  mpi_printf(comm, "mi/me    = %g\n", g.mi_me);
+  mpi_printf(comm, "theta    = %g\n", g.theta);
+  mpi_printf(comm, "Lpert/Lx = %g\n", g.Lpert_Lx);
+  mpi_printf(comm, "dbz/b0   = %g\n", g.dbz_b0);
+  mpi_printf(comm, "taui     = %g\n", g.taui);
+  mpi_printf(comm, "t_intervali = %g\n", g.t_intervali);
+  mpi_printf(comm, "num_step = %d\n", psc_params.nmax);
+  mpi_printf(comm, "Lx/di = %g\n", phys.Lx / phys.di);
+  mpi_printf(comm, "Lx/de = %g\n", phys.Lx / phys.de);
+  mpi_printf(comm, "Ly/di = %g\n", phys.Ly / phys.di);
+  mpi_printf(comm, "Ly/de = %g\n", phys.Ly / phys.de);
+  mpi_printf(comm, "Lz/di = %g\n", phys.Lz / phys.di);
+  mpi_printf(comm, "Lz/de = %g\n", phys.Lz / phys.de);
+  mpi_printf(comm, "nx = %d\n", g.gdims[0]);
+  mpi_printf(comm, "ny = %d\n", g.gdims[1]);
+  mpi_printf(comm, "nz = %d\n", g.gdims[2]);
+  mpi_printf(comm, "n_global_patches = %d\n", phys.n_global_patches);
+  mpi_printf(comm, "nppc = %g\n", g.nppc);
+  mpi_printf(comm, "b0 = %g\n", phys.b0);
+  mpi_printf(comm, "v_A (based on nb) = %g\n", phys.v_A);
+  mpi_printf(comm, "di = %g\n", phys.di);
+  mpi_printf(comm, "Ne = %g\n", phys.Ne);
+  mpi_printf(comm, "Ne_sheet = %g\n", phys.Ne_sheet);
+  mpi_printf(comm, "Ne_back = %g\n", phys.Ne_back);
+  mpi_printf(comm, "total # of particles = %g\n", 2 * phys.Ne);
+  mpi_printf(comm, "dt*wpe = %g\n", phys.wpe * grid.dt);
+  mpi_printf(comm, "dt*wce = %g\n", phys.wce * grid.dt);
+  mpi_printf(comm, "dt*wci = %g\n", phys.wci * grid.dt);
+  mpi_printf(comm, "dx/de = %g\n", phys.Lx / (phys.de * g.gdims[0]));
+  mpi_printf(comm, "dy/de = %g\n", phys.Ly / (phys.de * g.gdims[1]));
+  mpi_printf(comm, "dz/de = %g\n", phys.Lz / (phys.de * g.gdims[2]));
+  mpi_printf(comm, "dx/rhoi = %g\n",
+             (phys.Lx / g.gdims[0]) / (phys.vthi / phys.wci));
+  mpi_printf(comm, "dx/rhoe = %g\n",
+             (phys.Lx / g.gdims[0]) / (phys.vthe / phys.wce));
+  mpi_printf(comm, "L/debye = %g\n", phys.L / (phys.vthe / phys.wpe));
+  mpi_printf(comm, "dx/debye = %g\n",
+             (phys.Lx / g.gdims[0]) / (phys.vthe / phys.wpe));
+  mpi_printf(comm, "n0 = %g\n", phys.n0);
+  mpi_printf(comm, "vthi/c = %g\n", phys.vthi / phys.c);
+  mpi_printf(comm, "vthe/c = %g\n", phys.vthe / phys.c);
+  mpi_printf(comm, "vdri/c = %g\n", phys.vdri / phys.c);
+  mpi_printf(comm, "vdre/c = %g\n", phys.vdre / phys.c);
+  mpi_printf(comm, "Open BC in x?   = %d\n", g.open_bc_x);
+  mpi_printf(comm, "Driven BC in z? = %d\n", g.driven_bc_z);
+}
+
 // ======================================================================
 // PscHarris
 
@@ -592,72 +654,6 @@ struct PscHarris : Psc<PscConfig>
     outp_.reset(&outp);
 
     init();
-
-    setup_log();
-
-    mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
-  }
-
-  // ----------------------------------------------------------------------
-  // setup_log
-
-  void setup_log()
-  {
-    MPI_Comm comm = grid().comm();
-
-    mpi_printf(comm, "***********************************************\n");
-    mpi_printf(comm, "* Topology: %d x %d x %d\n", g.np[0], g.np[1], g.np[2]);
-    mpi_printf(comm, "tanhf    = %g\n", phys.tanhf);
-    mpi_printf(comm, "L_di     = %g\n", g.L_di);
-    mpi_printf(comm, "rhoi/L   = %g\n", phys.rhoi_L);
-    mpi_printf(comm, "Ti/Te    = %g\n", g.Ti_Te);
-    mpi_printf(comm, "nb/n0    = %g\n", g.nb_n0);
-    mpi_printf(comm, "wpe/wce  = %g\n", g.wpe_wce);
-    mpi_printf(comm, "mi/me    = %g\n", g.mi_me);
-    mpi_printf(comm, "theta    = %g\n", g.theta);
-    mpi_printf(comm, "Lpert/Lx = %g\n", g.Lpert_Lx);
-    mpi_printf(comm, "dbz/b0   = %g\n", g.dbz_b0);
-    mpi_printf(comm, "taui     = %g\n", g.taui);
-    mpi_printf(comm, "t_intervali = %g\n", g.t_intervali);
-    mpi_printf(comm, "num_step = %d\n", p_.nmax);
-    mpi_printf(comm, "Lx/di = %g\n", phys.Lx / phys.di);
-    mpi_printf(comm, "Lx/de = %g\n", phys.Lx / phys.de);
-    mpi_printf(comm, "Ly/di = %g\n", phys.Ly / phys.di);
-    mpi_printf(comm, "Ly/de = %g\n", phys.Ly / phys.de);
-    mpi_printf(comm, "Lz/di = %g\n", phys.Lz / phys.di);
-    mpi_printf(comm, "Lz/de = %g\n", phys.Lz / phys.de);
-    mpi_printf(comm, "nx = %d\n", g.gdims[0]);
-    mpi_printf(comm, "ny = %d\n", g.gdims[1]);
-    mpi_printf(comm, "nz = %d\n", g.gdims[2]);
-    mpi_printf(comm, "n_global_patches = %d\n", phys.n_global_patches);
-    mpi_printf(comm, "nppc = %g\n", g.nppc);
-    mpi_printf(comm, "b0 = %g\n", phys.b0);
-    mpi_printf(comm, "v_A (based on nb) = %g\n", phys.v_A);
-    mpi_printf(comm, "di = %g\n", phys.di);
-    mpi_printf(comm, "Ne = %g\n", phys.Ne);
-    mpi_printf(comm, "Ne_sheet = %g\n", phys.Ne_sheet);
-    mpi_printf(comm, "Ne_back = %g\n", phys.Ne_back);
-    mpi_printf(comm, "total # of particles = %g\n", 2 * phys.Ne);
-    mpi_printf(comm, "dt*wpe = %g\n", phys.wpe * grid().dt);
-    mpi_printf(comm, "dt*wce = %g\n", phys.wce * grid().dt);
-    mpi_printf(comm, "dt*wci = %g\n", phys.wci * grid().dt);
-    mpi_printf(comm, "dx/de = %g\n", phys.Lx / (phys.de * g.gdims[0]));
-    mpi_printf(comm, "dy/de = %g\n", phys.Ly / (phys.de * g.gdims[1]));
-    mpi_printf(comm, "dz/de = %g\n", phys.Lz / (phys.de * g.gdims[2]));
-    mpi_printf(comm, "dx/rhoi = %g\n",
-               (phys.Lx / g.gdims[0]) / (phys.vthi / phys.wci));
-    mpi_printf(comm, "dx/rhoe = %g\n",
-               (phys.Lx / g.gdims[0]) / (phys.vthe / phys.wce));
-    mpi_printf(comm, "L/debye = %g\n", phys.L / (phys.vthe / phys.wpe));
-    mpi_printf(comm, "dx/debye = %g\n",
-               (phys.Lx / g.gdims[0]) / (phys.vthe / phys.wpe));
-    mpi_printf(comm, "n0 = %g\n", phys.n0);
-    mpi_printf(comm, "vthi/c = %g\n", phys.vthi / phys.c);
-    mpi_printf(comm, "vthe/c = %g\n", phys.vthe / phys.c);
-    mpi_printf(comm, "vdri/c = %g\n", phys.vdri / phys.c);
-    mpi_printf(comm, "vdre/c = %g\n", phys.vdre / phys.c);
-    mpi_printf(comm, "Open BC in x?   = %d\n", g.open_bc_x);
-    mpi_printf(comm, "Driven BC in z? = %d\n", g.driven_bc_z);
   }
 
   // ----------------------------------------------------------------------
@@ -863,6 +859,10 @@ void run()
 
   vpic_setup_diagnostics();
 
+  setup_log(grid);
+
+  mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
+  
   auto psc = PscHarris{psc_params, *grid_ptr, mflds,  mprts, balance,
                        collision,  checks,    marder, outf,  outp};
 
