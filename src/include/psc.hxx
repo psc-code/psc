@@ -98,7 +98,7 @@ inline double courant_length(const Grid_t::Domain& domain)
 // ======================================================================
 // Psc
 
-template <typename PscConfig, typename Diagnostics>
+template <typename PscConfig, typename Diagnostics, typename InjectParticles>
 struct Psc
 {
   using Mparticles = typename PscConfig::Mparticles;
@@ -124,7 +124,8 @@ struct Psc
 
   Psc(const PscParams& params, Grid_t& grid, MfieldsState& mflds,
       Mparticles& mprts, Balance& balance, Collision& collision, Checks& checks,
-      Marder& marder, Diagnostics& diagnostics)
+      Marder& marder, Diagnostics& diagnostics,
+      InjectParticles inject_particles)
     : p_{params},
       grid_{&grid},
       mflds_{mflds},
@@ -135,7 +136,8 @@ struct Psc
       marder_{marder},
       bnd_{grid, grid.ibn},
       bndp_{grid},
-      diagnostics_{diagnostics}
+      diagnostics_{diagnostics},
+      inject_particles_{inject_particles}
   {
     time_start_ = MPI_Wtime();
 
@@ -526,7 +528,7 @@ struct Psc
     // psc_push_particles_prep(psc->push_particles, psc->particles, psc->flds);
   }
 
-  virtual void step()
+  void step()
   {
 #ifdef VPIC
     step_vpic();
@@ -538,7 +540,10 @@ struct Psc
   // ----------------------------------------------------------------------
   // inject_particles
 
-  virtual void inject_particles() {}
+  void inject_particles()
+  {
+    return this->inject_particles_(grid(), mprts_);
+  }
 
 private:
   // ----------------------------------------------------------------------
@@ -633,7 +638,7 @@ private:
   // ----------------------------------------------------------------------
   // diagnostics
 
-  virtual void diagnostics()
+  void diagnostics()
   {
 #ifndef VPIC
     // FIXME
@@ -722,6 +727,7 @@ protected:
   Checks& checks_;
   Marder& marder_;
   Diagnostics& diagnostics_;
+  InjectParticles& inject_particles_;
 
   Sort sort_;
   PushParticles pushp_;
@@ -740,6 +746,41 @@ protected:
   int st_nr_particles;
   int st_time_step;
 };
+
+// ======================================================================
+// InjectParticlesNone
+
+class InjectParticlesNone
+{
+public:
+  template <typename Mparticles>
+  void operator()(const Grid_t& grid, Mparticles& mprts)
+  {}
+};
+
+namespace
+{
+
+InjectParticlesNone injectParticlesNone;
+
+} // namespace
+
+// ======================================================================
+// makePscIntegrator
+
+template <typename PscConfig, typename MfieldsState, typename Mparticles,
+          typename Balance, typename Collision, typename Checks,
+          typename Marder, typename Diagnostics,
+          typename InjectParticles = InjectParticlesNone>
+Psc<PscConfig, Diagnostics, InjectParticles> makePscIntegrator(
+  const PscParams& params, Grid_t& grid, MfieldsState& mflds, Mparticles& mprts,
+  Balance& balance, Collision& collision, Checks& checks, Marder& marder,
+  Diagnostics& diagnostics,
+  InjectParticles& inject_particles = injectParticlesNone)
+{
+  return {params,    grid,   mflds,  mprts,       balance,
+          collision, checks, marder, diagnostics, inject_particles};
+}
 
 // ======================================================================
 // VPIC-like stuff

@@ -2,7 +2,6 @@
 #define VPIC 1
 
 #include "psc_config.hxx"
-#include "psc_integrator.hxx"
 #include <psc.h>
 #include <psc.hxx>
 

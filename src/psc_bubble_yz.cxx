@@ -11,7 +11,6 @@
 #include "checks.hxx"
 #include "collision.hxx"
 #include "marder.hxx"
-#include "psc_integrator.hxx"
 #include "push_fields.hxx"
 #include "push_particles.hxx"
 #include "sort.hxx"

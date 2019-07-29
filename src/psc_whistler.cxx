@@ -5,7 +5,6 @@
 
 #include "DiagnosticsDefault.h"
 #include "psc_config.hxx"
-#include "psc_integrator.hxx"
 
 // ======================================================================
 // PSC configuration
