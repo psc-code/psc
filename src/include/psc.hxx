@@ -123,7 +123,7 @@ struct Psc
   // ----------------------------------------------------------------------
   // ctor
 
-  Psc()
+  Psc(const PscParams& params) : p_{params}
   {
     time_start_ = MPI_Wtime();
 
@@ -743,10 +743,11 @@ public:
 
   const Grid_t& grid() { return *grid_; }
 
-protected:
+private:
   double time_start_;
-
   PscParams p_;
+
+protected:
   Grid_t* grid_;
 
   std::unique_ptr<MfieldsState> mflds_;

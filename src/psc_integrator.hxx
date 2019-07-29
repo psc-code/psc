@@ -34,11 +34,9 @@ struct PscIntegrator : Psc<PscConfig>
                 Mparticles& mprts, Balance& balance, Collision& collision,
                 Checks& checks, Marder& marder, OutputFieldsC& outf,
                 OutputParticles& outp, InjectFunc& inject_particles)
-    : inject_particles_{inject_particles}
+    : Base{params}, inject_particles_{inject_particles}
   {
     auto comm = grid.comm();
-
-    Base::p_ = params;
 
     Base::define_grid(grid);
     Base::mflds_.reset(&mflds);
