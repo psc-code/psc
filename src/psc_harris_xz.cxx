@@ -407,6 +407,24 @@ void setupMaterials(MaterialList& material_list)
   // Also, space is initially filled with the first material defined.
 }
 
+// ----------------------------------------------------------------------
+// vpic_setup_species
+//
+// FIXME, half-redundant to the PSC species setup
+
+void vpic_setup_species(Mparticles& mprts)
+{
+  mpi_printf(mprts.grid().comm(), "Setting up species.\n");
+  double nmax = g.overalloc * phys.Ne / phys.n_global_patches;
+  double nmovers = .1 * nmax;
+  double sort_method = 1; // 0=in place and 1=out of place
+
+  mprts.define_species("electron", -phys.ec, phys.me, nmax, nmovers,
+                       g.electron_sort_interval, sort_method);
+  mprts.define_species("ion", phys.ec, phys.mi, nmax, nmovers,
+                       g.ion_sort_interval, sort_method);
+}
+
 // ======================================================================
 // PscHarris
 
@@ -419,7 +437,8 @@ struct PscHarris : Psc<PscConfig>
 
   PscHarris(const PscParams& psc_params, Grid_t& grid, MfieldsState& mflds,
             Mparticles& mprts, Balance& balance, Collision& collision,
-            Checks& checks, Marder& marder, OutputFieldsC& outf, OutputParticles& outp)
+            Checks& checks, Marder& marder, OutputFieldsC& outf,
+            OutputParticles& outp)
     : io_pfd_{"pfd"}
   {
     auto comm = grid.comm();
@@ -432,7 +451,6 @@ struct PscHarris : Psc<PscConfig>
     vpic_define_fields(grid);
 
     mprts_.reset(&mprts);
-    vpic_setup_species();
 
     balance_.reset(&balance);
     collision_.reset(&collision);
@@ -468,26 +486,6 @@ struct PscHarris : Psc<PscConfig>
     setup_log();
 
     mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
-  }
-
-  // ----------------------------------------------------------------------
-  // setup_species
-  //
-  // FIXME, half-redundant to the PSC species setup
-
-  void vpic_setup_species()
-  {
-    MPI_Comm comm = grid().comm();
-
-    mpi_printf(comm, "Setting up species.\n");
-    double nmax = g.overalloc * phys.Ne / phys.n_global_patches;
-    double nmovers = .1 * nmax;
-    double sort_method = 1; // 0=in place and 1=out of place
-
-    mprts_->define_species("electron", -phys.ec, phys.me, nmax, nmovers,
-                           g.electron_sort_interval, sort_method);
-    mprts_->define_species("ion", phys.ec, phys.mi, nmax, nmovers,
-                           g.ion_sort_interval, sort_method);
   }
 
   // ----------------------------------------------------------------------
@@ -819,6 +817,7 @@ void run()
   /// --- setup particle data structure
 #ifdef VPIC
   auto& mprts = *new Mparticles{grid, vgrid};
+  vpic_setup_species(mprts);
 #else
   auto& mprts = *new Mparticles{grid};
 #endif
