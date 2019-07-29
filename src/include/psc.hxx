@@ -36,16 +36,24 @@ struct MaterialList;
 // FIXME, global variables are bad...
 
 using VpicConfig = VpicConfigPsc;
+using Mparticles = typename VpicConfig::Mparticles;
 using MfieldsState = typename VpicConfig::MfieldsState;
 using MfieldsHydro = typename VpicConfig::MfieldsHydro;
 using MfieldsInterpolator = typename VpicConfig::MfieldsInterpolator;
 using MfieldsAccumulator = typename VpicConfig::MfieldsAccumulator;
 using Grid = typename MfieldsState::Grid;
+using ParticleBcList = typename Mparticles::ParticleBcList;
+using MaterialList = typename MfieldsState::MaterialList;
+using Material = typename MaterialList::Material;
+using DiagMixin =
+  NoneDiagMixin<Mparticles, MfieldsState, MfieldsInterpolator, MfieldsHydro>;
 
 Grid* vgrid;
 std::unique_ptr<MfieldsHydro> hydro;
 std::unique_ptr<MfieldsInterpolator> interpolator;
 std::unique_ptr<MfieldsAccumulator> accumulator;
+ParticleBcList particle_bc_list;
+DiagMixin diag_mixin;
 
 #endif
 
@@ -107,16 +115,8 @@ struct Psc
   using Dim = typename PscConfig::dim_t;
 
 #ifdef VPIC
-  using Grid = typename MfieldsState::Grid;
-  using MaterialList = typename MfieldsState::MaterialList;
-  using Material = typename MaterialList::Material;
-  using DiagMixin = typename PscConfig::DiagMixin;
   using AccumulateOps = typename PushParticles_t::AccumulateOps;
-  using MfieldsInterpolator = typename PushParticles_t::MfieldsInterpolator;
-  using MfieldsAccumulator = typename PushParticles_t::MfieldsAccumulator;
   using OutputHydro = typename PscConfig::OutputHydro;
-  using MfieldsHydro = typename OutputHydro::MfieldsHydro;
-  using ParticleBcList = typename Mparticles::ParticleBcList;
 #endif
 
   // ----------------------------------------------------------------------
@@ -343,7 +343,7 @@ struct Psc
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
     prof_start(pr_push_prts);
     pushp_->push_mprts(mprts, mflds, *interpolator, *accumulator,
-                       particle_bc_list_, num_comm_round);
+                       particle_bc_list, num_comm_round);
     prof_stop(pr_push_prts);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
 
@@ -596,7 +596,7 @@ struct Psc
   void create_diagnostics(int interval)
   {
 #ifdef VPIC
-    diag_mixin_.diagnostics_init(interval);
+    diag_mixin.diagnostics_init(interval);
 #endif
   }
 
@@ -606,7 +606,7 @@ struct Psc
   void setup_diagnostics()
   {
 #ifdef VPIC
-    diag_mixin_.diagnostics_setup();
+    diag_mixin.diagnostics_setup();
 #endif
   }
 
@@ -616,8 +616,8 @@ struct Psc
   void run_diagnostics()
   {
 #ifdef VPIC
-    diag_mixin_.diagnostics_run(*mprts_, *mflds_, *interpolator, *hydro,
-                                grid().domain.np);
+    diag_mixin.diagnostics_run(*mprts_, *mflds_, *interpolator, *hydro,
+			       grid().domain.np);
 #endif
   }
 
@@ -807,9 +807,6 @@ protected:
   Grid_t* grid_;
 
   std::unique_ptr<MfieldsState> mflds_;
-#ifdef VPIC
-  ParticleBcList particle_bc_list_;
-#endif
   std::unique_ptr<Mparticles> mprts_;
 
   std::unique_ptr<Balance_t> balance_;
@@ -825,9 +822,6 @@ protected:
   std::unique_ptr<OutputFieldsC> outf_;
   std::unique_ptr<OutputParticles> outp_;
 
-#ifdef VPIC
-  DiagMixin diag_mixin_;
-#endif
   psc_diag* diag_; ///< timeseries diagnostics
 
   // FIXME, maybe should be private
