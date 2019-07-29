@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "output_fields_c.hxx"
+
 // ======================================================================
 // DiagnosticsDefault
 
@@ -33,3 +35,9 @@ private:
   OutputParticles& outp_;
 };
 
+template <typename OutputParticles>
+DiagnosticsDefault<OutputParticles> makeDiagnosticsDefault(
+  OutputFieldsC& outf, OutputParticles& outp)
+{
+  return {outf, outp};
+}

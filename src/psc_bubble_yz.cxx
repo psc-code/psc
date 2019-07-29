@@ -339,8 +339,7 @@ static void run()
   outp_params.basename = "prt";
   OutputParticles outp{grid, outp_params};
 
-  using Diagnostics = DiagnosticsDefault<OutputParticles>;
-  Diagnostics diagnostics{outf, outp};
+  auto diagnostics = makeDiagnosticsDefault(outf, outp);
 
   // ----------------------------------------------------------------------
   // Initial conditions
