@@ -13,7 +13,7 @@ add_subdirectory(src/libmrc)
 
 project(PSC)
 
-enable_testing()
+include(CTest)
 
 function(psc_option name description default)
   set(PSC_USE_${name} ${default} CACHE STRING "${description}")
@@ -72,7 +72,10 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/src/include)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/src/libmrc/include)
 
 add_subdirectory(external)
-include(GoogleTest)
+if (BUILD_TESTING)
+  include(GoogleTest)
+endif()
+
 add_subdirectory(src)
 
 
