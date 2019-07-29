@@ -689,7 +689,7 @@ struct PscHarris : Psc<PscConfig>
   // diagnostics
 
 #ifdef VPIC
-  void diagnostics() override { diag_(*mprts_, *mflds_); }
+  void diagnostics() override { diag_(mprts_, mflds_); }
 #endif
 
 private:
@@ -739,10 +739,10 @@ void run()
   assert(!material_list.empty());
 
   double damp = 0.;
-  auto& mflds = *new MfieldsState{grid, vgrid, material_list, damp};
+  MfieldsState mflds{grid, vgrid, material_list, damp};
   vpic_define_fields(grid);
 #else
-  auto& mflds = *new MfieldsState{grid};
+  MfieldsState mflds{grid};
 #endif
 
   mpi_printf(comm, "*** Finalizing Field Advance\n");
@@ -754,10 +754,10 @@ void run()
 
   /// --- setup particle data structure
 #ifdef VPIC
-  auto& mprts = *new Mparticles{grid, vgrid};
+  Mparticles mprts{grid, vgrid};
   vpic_setup_species(mprts);
 #else
-  auto& mprts = *new Mparticles{grid};
+  Mparticles mprts{grid};
 #endif
 
   // -- Balance

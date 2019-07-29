@@ -44,7 +44,7 @@ struct PscIntegrator : Psc<PscConfig>
 
   void inject_particles() override
   {
-    return inject_particles_(Base::grid(), *Base::mprts_);
+    return inject_particles_(Base::grid(), Base::mprts_);
   }
 
 private:

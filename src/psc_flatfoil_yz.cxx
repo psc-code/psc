@@ -304,8 +304,8 @@ void run()
 
   auto grid_ptr = setupGrid();
   auto& grid = *grid_ptr;
-  auto& mflds = *new MfieldsState{grid};
-  auto& mprts = *new Mparticles{grid};
+  MfieldsState mflds{grid};
+  Mparticles mprts{grid};
 
   // ----------------------------------------------------------------------
   // Set up various objects needed to run this case
