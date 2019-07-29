@@ -2,6 +2,7 @@
 #define VPIC 1
 
 #include "psc_config.hxx"
+#include "psc_integrator.hxx"
 #include <psc.h>
 #include <psc.hxx>
 
@@ -832,9 +833,9 @@ void run()
 
   mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
 
-  auto psc = Psc<PscConfig, Diagnostics>{psc_params, *grid_ptr, mflds,
-                                         mprts,      balance,   collision,
-                                         checks,     marder,    diagnostics};
+  auto psc =
+    makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts, balance,
+                                 collision, checks, marder, diagnostics);
 
   psc.integrate();
 }

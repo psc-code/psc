@@ -2,6 +2,8 @@
 #ifndef PSC_INTEGRATOR_HXX
 #define PSC_INTEGRATOR_HXX
 
+#include "psc.hxx"
+
 namespace
 {
 
@@ -14,7 +16,7 @@ void injectNone(const Grid_t& grid, Mparticles& mprts)
 // ======================================================================
 // PscIntegrator
 
-template <typename PscConfig, typename InjectFunc, typename Diagnostics = DiagnosticsDefault<typename PscConfig::OutputParticles>>
+template <typename PscConfig, typename Diagnostics, typename InjectFunc>
 struct PscIntegrator : Psc<PscConfig, Diagnostics>
 {
   using Base = Psc<PscConfig, Diagnostics>;
@@ -54,7 +56,7 @@ template <typename PscConfig, typename MfieldsState, typename Mparticles,
           typename Balance, typename Collision, typename Checks,
           typename Marder, typename Diagnostics,
           typename InjectFunc = decltype(injectNone<Mparticles>)>
-PscIntegrator<PscConfig, InjectFunc> makePscIntegrator(
+PscIntegrator<PscConfig, Diagnostics, InjectFunc> makePscIntegrator(
   const PscParams& params, Grid_t& grid, MfieldsState& mflds, Mparticles& mprts,
   Balance& balance, Collision& collision, Checks& checks, Marder& marder,
   Diagnostics& diagnostics,
