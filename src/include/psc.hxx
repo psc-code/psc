@@ -135,8 +135,8 @@ struct Psc
       collision_{collision},
       checks_{checks},
       marder_{marder},
-      outf_{&outf},
-      outp_{&outp}
+      outf_{outf},
+      outp_{outp}
   {
     time_start_ = MPI_Wtime();
 
@@ -651,13 +651,11 @@ private:
     // FIXME
     psc_diag_run(diag_, mprts_, mflds_);
     // FIXME
-    (*outf_)(mflds_, mprts_);
+    outf_(mflds_, mprts_);
 #endif
-    if (outp_) {
-      psc_stats_start(st_time_output);
-      (*outp_).run(mprts_);
-      psc_stats_stop(st_time_output);
-    }
+    psc_stats_start(st_time_output);
+    outp_.run(mprts_);
+    psc_stats_stop(st_time_output);
   }
 
   // ----------------------------------------------------------------------
@@ -744,8 +742,8 @@ protected:
   std::unique_ptr<BndParticles_t> bndp_;
   Checks_t& checks_;
   Marder_t& marder_;
-  std::unique_ptr<OutputFieldsC> outf_;
-  std::unique_ptr<OutputParticles> outp_;
+  OutputFieldsC& outf_;
+  OutputParticles& outp_;
 
   psc_diag* diag_; ///< timeseries diagnostics
 

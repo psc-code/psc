@@ -351,14 +351,14 @@ void run()
   outf_items.emplace_back(new FieldsItem_n_1st_cc<Mparticles>(grid));
   outf_items.emplace_back(new FieldsItem_v_1st_cc<Mparticles>(grid));
   outf_items.emplace_back(new FieldsItem_T_1st_cc<Mparticles>(grid));
-  auto& outf = *new OutputFieldsC{grid, outf_params, std::move(outf_items)};
+  OutputFieldsC outf{grid, outf_params, std::move(outf_items)};
 
   // -- output particles
   OutputParticlesParams outp_params{};
   outp_params.every_step = 0;
   outp_params.data_dir = ".";
   outp_params.basename = "prt";
-  auto& outp = *new OutputParticles{grid, outp_params};
+  OutputParticles outp{grid, outp_params};
 
   // ----------------------------------------------------------------------
   // Set up objects specific to the flatfoil case

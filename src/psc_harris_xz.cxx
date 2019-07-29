@@ -820,7 +820,7 @@ void run()
   outf_items.emplace_back(new FieldsItem_T_1st_cc<Mparticles>(grid));
 #endif
   outf_params.pfield_step = int((output_field_interval / (phys.wci * grid.dt)));
-  auto& outf = *new OutputFieldsC{grid, outf_params, std::move(outf_items)};
+  OutputFieldsC outf{grid, outf_params, std::move(outf_items)};
 
   OutputParticlesParams outp_params{};
   outp_params.every_step =
@@ -829,7 +829,7 @@ void run()
   outp_params.basename = "prt";
   outp_params.lo = {192, 0, 48};
   outp_params.hi = {320, 0, 80};
-  auto& outp = *new OutputParticles{grid, outp_params};
+  OutputParticles outp{grid, outp_params};
 
   // ---
 
