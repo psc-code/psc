@@ -149,6 +149,7 @@ struct Psc
   using BndFields = typename PscConfig::BndFields;
   using BndParticles = typename PscConfig::BndParticles;
   using OutputParticles = typename PscConfig::OutputParticles;
+  using Diagnostics = DiagnosticsDefault<PscConfig>;
   using Dim = typename PscConfig::Dim;
 
 #ifdef VPIC
@@ -169,10 +170,9 @@ struct Psc
       collision_{collision},
       checks_{checks},
       marder_{marder},
-      outf_{outf},
-      outp_{outp},
       bnd_{grid, grid.ibn},
-      bndp_{grid}
+      bndp_{grid},
+      diagnostics_{outf, outp}
   {
     time_start_ = MPI_Wtime();
 
@@ -672,14 +672,12 @@ private:
 
   virtual void diagnostics()
   {
-    DiagnosticsDefault<PscConfig> diag{outf_, outp_};
-
 #ifndef VPIC
     // FIXME
     psc_diag_run(diag_, mprts_, mflds_);
 #endif
 
-    diag(mprts_, mflds_);
+    diagnostics_(mprts_, mflds_);
   }
 
   // ----------------------------------------------------------------------
@@ -760,8 +758,6 @@ protected:
   Collision& collision_;
   Checks& checks_;
   Marder& marder_;
-  OutputFieldsC& outf_;
-  OutputParticles& outp_;
 
   Sort sort_;
   PushParticles pushp_;
@@ -769,6 +765,7 @@ protected:
   Bnd bnd_;
   BndFields bndf_;
   BndParticles bndp_;
+  Diagnostics diagnostics_;
 
   psc_diag* diag_; ///< timeseries diagnostics
 
