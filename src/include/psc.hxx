@@ -12,10 +12,7 @@
 #include <output_particles.hxx>
 #include <push_particles.hxx>
 
-#include "fields3d.inl"
-#include "grid.inl"
-#include "particles_simple.inl"
-#include <kg/io.h>
+#include "checkpoint.hxx"
 #ifdef USE_CUDA
 #include "../libpsc/cuda/mparticles_cuda.hxx"
 #include "../libpsc/cuda/mparticles_cuda.inl"
@@ -685,28 +682,7 @@ private:
 #endif
   }
 
-  // ----------------------------------------------------------------------
-  // read_checkpoint
-  //
-
 public:
-  void read_checkpoint(const std::string& filename)
-  {
-#ifdef PSC_HAVE_ADIOS2
-    MPI_Barrier(grid().comm());
-
-    auto io = kg::io::IOAdios2{};
-    auto reader = io.open(filename, kg::io::Mode::Read);
-    reader.get("grid", *grid_);
-    reader.get("mflds", mflds_);
-    reader.get("mprts", mprts_);
-    reader.close();
-#else
-    std::cerr << "write_checkpoint not available without adios2" << std::endl;
-    std::abort();
-#endif
-  }
-
   const Grid_t& grid() { return *grid_; }
 
 private:

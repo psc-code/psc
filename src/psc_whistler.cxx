@@ -346,8 +346,7 @@ void run()
 
   // FIXME, checkpoint reading should be moved to before the integrator
   if (!read_checkpoint_filename.empty()) {
-    mpi_printf(MPI_COMM_WORLD, "**** Reading checkpoint...\n");
-    psc.read_checkpoint(read_checkpoint_filename);
+    read_checkpoint(read_checkpoint_filename, *grid_ptr, mprts, mflds);
   }
 
   psc.integrate();
