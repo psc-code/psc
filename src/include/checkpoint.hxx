@@ -60,3 +60,53 @@ inline void read_checkpoint(const std::string& filename, Grid_t& grid,
   std::abort();
 #endif
 }
+
+// ======================================================================
+// Checkpointing
+//
+// This class is responsible for controling checkpointing -- it is called at
+// the beginning of every timestep and decides when / how to write a
+// checkpoint.
+
+class Checkpointing
+{
+public:
+  Checkpointing(int interval) : interval_{interval} {}
+
+  // gets called every step, will checkpoint as required
+  template <typename Mparticles, typename MfieldsState>
+  void operator()(const Grid_t& grid, Mparticles& mprts, MfieldsState& mflds)
+  {
+    if (interval_ <= 0) {
+      return;
+    }
+
+    // don't write a checkpoint immediately after start-up (in particular, not
+    // immediately after just having restarted from a checkpoint)
+    if (first_time_) {
+      return;
+    }
+    first_time_ = false;
+    
+    if (grid.timestep() % interval_ == 0)
+    {
+      write_checkpoint(grid, mprts, mflds);
+    }
+  }
+
+  // gets called after the timeloop is done, should checkpoint
+  // regardless of timestep (unless checkpointing is disabled)
+  template <typename Mparticles, typename MfieldsState>
+  void final(const Grid_t& grid, Mparticles& mprts, MfieldsState& mflds)
+  {
+    if (interval_ <= 0) {
+      return;
+    }
+
+    write_checkpoint(grid, mprts, mflds);
+  }
+
+private:
+  int interval_; // write checkpoint every so many steps
+  bool first_time_ = true;
+};

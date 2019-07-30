@@ -134,7 +134,8 @@ struct Psc
       bnd_{grid, grid.ibn},
       bndp_{grid},
       diagnostics_{diagnostics},
-      inject_particles_{inject_particles}
+      inject_particles_{inject_particles},
+      checkpointing_{params.write_checkpoint_every_step}
   {
     time_start_ = MPI_Wtime();
 
@@ -201,16 +202,11 @@ struct Psc
     mpi_printf(grid().comm(), "*** Advancing\n");
     double elapsed = MPI_Wtime();
 
-    bool first_iteration = true;
     while (grid().timestep() < p_.nmax) {
       prof_start(pr);
       psc_stats_start(st_time_step);
 
-      if (!first_iteration && p_.write_checkpoint_every_step > 0 &&
-          grid().timestep() % p_.write_checkpoint_every_step == 0) {
-        write_checkpoint(grid(), mprts_, mflds_);
-      }
-      first_iteration = false;
+      checkpointing_(grid(), mprts_, mflds_);
 
       mpi_printf(grid().comm(),
                  "**** Step %d / %d, Code Time %g, Wall Time %g\n",
@@ -252,9 +248,7 @@ struct Psc
       }
     }
 
-    if (p_.write_checkpoint_every_step > 0) {
-      write_checkpoint(grid(), mprts_, mflds_);
-    }
+    checkpointing_.final(grid(), mprts_, mflds_);
 
     // FIXME, merge with existing handling of wallclock time
     elapsed = MPI_Wtime() - elapsed;
@@ -684,6 +678,8 @@ protected:
   Bnd bnd_;
   BndFields bndf_;
   BndParticles bndp_;
+
+  Checkpointing checkpointing_;
 
   psc_diag* diag_; ///< timeseries diagnostics
 
