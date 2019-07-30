@@ -61,16 +61,5 @@ void BndParticlesCuda<Mparticles, DIM>::operator()(Mparticles& mprts)
   prof_stop(pr_time_step_no_comm);
 }
 
-// ----------------------------------------------------------------------
-// exchange_particles
-
-template<typename Mparticles, typename DIM>
-void BndParticlesCuda<Mparticles, DIM>::exchange_particles(MparticlesBase& mprts_base)
-{
-  auto& mprts = mprts_base.get_as<Mparticles>();
-  (*this)(mprts);
-  mprts_base.put_as(mprts);
-}
-
 template struct BndParticlesCuda<MparticlesCuda<BS144>, dim_yz>;
 template struct BndParticlesCuda<MparticlesCuda<BS444>, dim_xyz>;

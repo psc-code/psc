@@ -242,14 +242,4 @@ struct BndParticles_ : BndParticlesCommon<MP>
     //psc_mfields_put_as(mflds, psc->flds, JXI, JXI + 3);
   }
 
-  // ----------------------------------------------------------------------
-  // exchange_particles
-
-  void exchange_particles(MparticlesBase& mprts_base) override
-  {
-    auto& mprts = mprts_base.get_as<Mparticles>();
-    (*this)(mprts);
-    mprts_base.put_as(mprts);
-  }
-
 };
