@@ -60,9 +60,10 @@ struct BndCuda2 : BndBase
     if (psc_balance_generation_cnt != balance_generation_cnt_) {
       reset(mflds.grid());
     }
-    auto& mflds_single = mflds.template get_as<MfieldsSingle>(mb, me);
-    mrc_ddc_add_ghosts(ddc_, mb, me, &mflds_single);
-    mflds.put_as(mflds_single, mb, me);
+    auto h_mflds = hostMirror(mflds);
+    copy(mflds, h_mflds);
+    mrc_ddc_add_ghosts(ddc_, mb, me, &h_mflds);
+    copy(h_mflds, mflds);
   }
 
   // ----------------------------------------------------------------------
@@ -76,9 +77,10 @@ struct BndCuda2 : BndBase
     // FIXME
     // I don't think we need as many points, and only stencil star
     // rather then box
-    auto& mflds_single = mflds.template get_as<MfieldsSingle>(mb, me);
-    mrc_ddc_fill_ghosts(ddc_, mb, me, &mflds_single);
-    mflds.put_as(mflds_single, mb, me);
+    auto h_mflds = hostMirror(mflds);
+    copy(mflds, h_mflds);
+    mrc_ddc_fill_ghosts(ddc_, mb, me, &h_mflds);
+    copy(h_mflds, mflds);
   }
 
   // ----------------------------------------------------------------------
@@ -87,7 +89,7 @@ struct BndCuda2 : BndBase
   static void copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3],
 			  void *_buf, void *ctx)
   {
-    auto& mf = *static_cast<MfieldsSingle*>(ctx);
+    auto& mf = *static_cast<HMFields*>(ctx);
     auto F = mf[p];
     real_t *buf = static_cast<real_t*>(_buf);
     
@@ -105,7 +107,7 @@ struct BndCuda2 : BndBase
   static void add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
 			   void *_buf, void *ctx)
   {
-    auto& mf = *static_cast<MfieldsSingle*>(ctx);
+    auto& mf = *static_cast<HMFields*>(ctx);
     auto F = mf[p];
     real_t *buf = static_cast<real_t*>(_buf);
     
@@ -124,7 +126,7 @@ struct BndCuda2 : BndBase
   static void copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
 			    void *_buf, void *ctx)
   {
-    auto& mf = *static_cast<MfieldsSingle*>(ctx);
+    auto& mf = *static_cast<HMFields*>(ctx);
     auto F = mf[p];
     real_t *buf = static_cast<real_t*>(_buf);
     
