@@ -70,27 +70,26 @@ void psc_diag_run(struct psc_diag* diag, MparticlesBase& mprts,
   int rank;
   MPI_Comm_rank(psc_diag_comm(diag), &rank);
 
-  struct psc_diag_item* item;
   if (rank == 0) {
     fprintf(diag->file, "%g", grid.timestep() * grid.dt);
   }
+  struct psc_diag_item* item;
   mrc_obj_for_each_child(item, diag, struct psc_diag_item)
   {
     int nr_values = psc_diag_item_nr_values(item);
-    double* result = (double*)calloc(nr_values, sizeof(*result));
-    psc_diag_item_run(item, mprts, mflds, result);
+    std::vector<double> result(nr_values);
+    psc_diag_item_run(item, mprts, mflds, result.data());
     if (rank == 0) {
-      MPI_Reduce(MPI_IN_PLACE, result, nr_values, MPI_DOUBLE, MPI_SUM, 0,
+      MPI_Reduce(MPI_IN_PLACE, result.data(), result.size(), MPI_DOUBLE, MPI_SUM, 0,
                  grid.comm());
     } else {
-      MPI_Reduce(result, NULL, nr_values, MPI_DOUBLE, MPI_SUM, 0, grid.comm());
+      MPI_Reduce(result.data(), NULL, result.size(), MPI_DOUBLE, MPI_SUM, 0, grid.comm());
     }
     if (rank == 0) {
-      for (int i = 0; i < nr_values; i++) {
-        fprintf(diag->file, " %g", result[i]);
+      for (auto val : result) {
+        fprintf(diag->file, " %g", val);
       }
     }
-    free(result);
   }
   if (rank == 0) {
     fprintf(diag->file, "\n");
