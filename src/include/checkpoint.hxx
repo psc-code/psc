@@ -12,7 +12,8 @@
 //
 
 template <typename Mparticles, typename MfieldsState>
-void write_checkpoint(const Grid_t& grid, Mparticles& mprts, MfieldsState& mflds)
+void write_checkpoint(const Grid_t& grid, Mparticles& mprts,
+                      MfieldsState& mflds)
 {
   mpi_printf(grid.comm(), "**** Writing checkpoint...\n");
 #if defined(PSC_HAVE_ADIOS2) && !defined(VPIC)
