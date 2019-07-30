@@ -208,7 +208,7 @@ struct Psc
 
       if (!first_iteration && p_.write_checkpoint_every_step > 0 &&
           grid().timestep() % p_.write_checkpoint_every_step == 0) {
-        write_checkpoint();
+        write_checkpoint(grid(), mprts_, mflds_);
       }
       first_iteration = false;
 
@@ -253,7 +253,7 @@ struct Psc
     }
 
     if (p_.write_checkpoint_every_step > 0) {
-      write_checkpoint();
+      write_checkpoint(grid(), mprts_, mflds_);
     }
 
     // FIXME, merge with existing handling of wallclock time
@@ -656,30 +656,6 @@ private:
 #endif
     psc_stats_log(grid().timestep());
     print_profiling();
-  }
-
-  // ----------------------------------------------------------------------
-  // write_checkpoint
-  //
-
-  void write_checkpoint()
-  {
-#if defined(PSC_HAVE_ADIOS2) && !defined(VPIC)
-    MPI_Barrier(grid().comm());
-
-    std::string filename =
-      "checkpoint_" + std::to_string(grid().timestep()) + ".bp";
-
-    auto io = kg::io::IOAdios2{};
-    auto writer = io.open(filename, kg::io::Mode::Write);
-    writer.put("grid", *grid_);
-    writer.put("mflds", mflds_);
-    writer.put("mprts", mprts_);
-    writer.close();
-#else
-    std::cerr << "write_checkpoint not available without adios2" << std::endl;
-    std::abort();
-#endif
   }
 
 public:
