@@ -74,6 +74,59 @@ PscParams psc_params;
 } // namespace
 
 // ======================================================================
+// setupParameters
+
+void setupParameters()
+{
+  auto comm = MPI_COMM_WORLD;
+
+  // -- set some generic PSC parameters
+  psc_params.nmax = 16001;
+  psc_params.cfl = 0.98;
+
+  // -- start from checkpoint:
+  //
+  // Uncomment when wanting to start from a checkpoint, ie.,
+  // instead of setting up grid, particles and state fields here,
+  // they'll be read from a file
+  // FIXME: This parameter would be a good candidate to be provided
+  // on the command line, rather than requiring recompilation when change.
+
+  // read_checkpoint_filename = "checkpoint_500.bp";
+
+  // -- Set some parameters specific to this case
+  g.mi_over_me = 10.;
+  g.vA_over_c = .1;
+  g.amplitude = .5;
+  g.beta_e_par = .1;
+  g.beta_i_par = .1;
+  g.Ti_perp_over_Ti_par = 1.;
+  g.Te_perp_over_Te_par = 1.;
+
+  // calculate derived paramters
+  g.B0 = g.vA_over_c;
+  g.Te_par = g.beta_e_par * sqr(g.B0) / 2.;
+  g.Te_perp = g.Te_perp_over_Te_par * g.Te_par;
+  g.Ti_par = g.beta_i_par * sqr(g.B0) / 2.;
+  g.Ti_perp = g.Ti_perp_over_Ti_par * g.Ti_par;
+  g.mi = 1.;
+  g.me = 1. / g.mi_over_me;
+
+  mpi_printf(comm, "d_i = 1., d_e = %g\n", sqrt(g.me));
+  mpi_printf(comm, "om_ci = %g, om_ce = %g\n", g.B0, g.B0 / g.me);
+  mpi_printf(comm, "\n");
+  mpi_printf(comm, "v_i,perp = %g [c] T_i,perp = %g\n", sqrt(2. * g.Ti_perp),
+             g.Ti_perp);
+  mpi_printf(comm, "v_i,par  = %g [c] T_i,par = %g\n", sqrt(2. * g.Ti_par),
+             g.Ti_par);
+  mpi_printf(comm, "v_e,perp = %g [c] T_e,perp = %g\n",
+             sqrt(2 * g.Te_perp / g.me), g.Te_perp);
+  mpi_printf(comm, "v_e,par  = %g [c] T_e,par = %g\n",
+             sqrt(2. * g.Te_par / g.me), g.Te_par);
+  mpi_printf(comm, "\n");
+}
+
+// ======================================================================
 // setupGrid
 //
 // This helper function is responsible for setting up the "Grid",
@@ -124,61 +177,94 @@ Grid_t* setupGrid()
 }
 
 // ======================================================================
-// run
+// initializeParticles
 
-static void run()
+void initializeParticles(Balance& balance, Grid_t* grid_ptr, Mparticles& mprts)
+{
+  SetupParticles<Mparticles> setup_particles(*grid_ptr);
+
+  double kz = (4. * M_PI / grid_ptr->domain.length[2]);
+  double kperp = (2. * M_PI / grid_ptr->domain.length[0]);
+
+  partitionAndSetupParticles(
+    setup_particles, balance, grid_ptr, mprts,
+    [&](int kind, double crd[3], psc_particle_npt& npt) {
+      double x = crd[0], y = crd[1], z = crd[2];
+
+      double envelope1 = exp(-(z - 25.) * (z - 25.) / 40.);
+      double envelope2 = exp(-(z - 75.) * (z - 75.) / 40.);
+
+      switch (kind) {
+        case KIND_ELECTRON:
+          npt.n = 1.;
+
+          npt.T[0] = g.Te_perp;
+          npt.T[1] = g.Te_perp;
+          npt.T[2] = g.Te_par;
+
+          // Set velocities for first wave:
+          npt.p[0] = -g.amplitude * envelope1 * g.B0 * cos(kperp * y + kz * z);
+          npt.p[2] = 0.;
+
+          // Set velocities for second wave:
+          npt.p[1] = g.amplitude * envelope2 * g.B0 * sin(kperp * x - kz * z);
+          break;
+        case KIND_ION:
+          npt.n = 1.;
+
+          npt.T[0] = g.Ti_perp;
+          npt.T[1] = g.Ti_perp;
+          npt.T[2] = g.Ti_par;
+
+          // Set velocities for first wave:
+          npt.p[0] = -g.amplitude * envelope1 * g.B0 * cos(kperp * y + kz * z);
+          npt.p[2] = 0.;
+
+          // Set velocities for second wave:
+          npt.p[1] = g.amplitude * envelope2 * g.B0 * sin(kperp * x - kz * z);
+          break;
+        default: assert(0);
+      }
+    });
+}
+
+// ======================================================================
+// initializeFields
+
+void initializeFields(MfieldsState& mflds)
+{
+  const auto& grid = mflds.grid();
+  double kz = (4. * M_PI / grid.domain.length[2]);
+  double kperp = (2. * M_PI / grid.domain.length[0]);
+
+  setupFields(mflds, [&](int m, double crd[3]) {
+    double x = crd[0], y = crd[1], z = crd[2];
+    double envelope1 = exp(-(z - 25.) * (z - 25.) / 40.);
+    double envelope2 = exp(-(z - 75.) * (z - 75.) / 40.);
+
+    switch (m) {
+      case HX: return g.amplitude * envelope1 * cos(kperp * y + kz * z) * g.B0;
+      case HY: return g.amplitude * envelope2 * sin(kperp * x - kz * z) * g.B0;
+      case HZ: return g.B0;
+      default: return 0.;
+    }
+  });
+}
+
+// ======================================================================
+// run
+//
+// This is basically the main function of this run,
+// which sets up everything and then uses PscIntegrator to run the
+// simulation
+
+void run()
 {
   auto comm = MPI_COMM_WORLD;
 
   mpi_printf(comm, "*** Setting up...\n");
 
-  // ----------------------------------------------------------------------
-  // Set up a bunch of parameters
-
-  // -- set some generic PSC parameters
-  psc_params.nmax = 16001;
-  psc_params.cfl = 0.98;
-
-  // -- start from checkpoint:
-  //
-  // Uncomment when wanting to start from a checkpoint, ie.,
-  // instead of setting up grid, particles and state fields here,
-  // they'll be read from a file
-  // FIXME: This parameter would be a good candidate to be provided
-  // on the command line, rather than requiring recompilation when change.
-
-  // read_checkpoint_filename = "checkpoint_500.bp";
-
-  // -- Set some parameters specific to this case
-  g.mi_over_me = 10.;
-  g.vA_over_c = .1;
-  g.amplitude = .5;
-  g.beta_e_par = .1;
-  g.beta_i_par = .1;
-  g.Ti_perp_over_Ti_par = 1.;
-  g.Te_perp_over_Te_par = 1.;
-
-  // calculate derived paramters
-  g.B0 = g.vA_over_c;
-  g.Te_par = g.beta_e_par * sqr(g.B0) / 2.;
-  g.Te_perp = g.Te_perp_over_Te_par * g.Te_par;
-  g.Ti_par = g.beta_i_par * sqr(g.B0) / 2.;
-  g.Ti_perp = g.Ti_perp_over_Ti_par * g.Ti_par;
-  g.mi = 1.;
-  g.me = 1. / g.mi_over_me;
-
-  mpi_printf(comm, "d_i = 1., d_e = %g\n", sqrt(g.me));
-  mpi_printf(comm, "om_ci = %g, om_ce = %g\n", g.B0, g.B0 / g.me);
-  mpi_printf(comm, "\n");
-  mpi_printf(comm, "v_i,perp = %g [c] T_i,perp = %g\n", sqrt(2. * g.Ti_perp),
-             g.Ti_perp);
-  mpi_printf(comm, "v_i,par  = %g [c] T_i,par = %g\n", sqrt(2. * g.Ti_par),
-             g.Ti_par);
-  mpi_printf(comm, "v_e,perp = %g [c] T_e,perp = %g\n",
-             sqrt(2 * g.Te_perp / g.me), g.Te_perp);
-  mpi_printf(comm, "v_e,par  = %g [c] T_e,par = %g\n",
-             sqrt(2. * g.Te_par / g.me), g.Te_par);
-  mpi_printf(comm, "\n");
+  setupParameters();
 
   // ----------------------------------------------------------------------
   // Set up grid, state fields, particles
@@ -244,86 +330,15 @@ static void run()
   auto diagnostics = makeDiagnosticsDefault(outf, outp);
 
   // ----------------------------------------------------------------------
-  // Initial conditions
-
-  double kz = (4. * M_PI / grid.domain.length[2]);
-  double kperp = (2. * M_PI / grid.domain.length[0]);
-
-  auto lf_init_npt = [&](int kind, double crd[3], psc_particle_npt& npt) {
-    double x = crd[0], y = crd[1], z = crd[2];
-
-    double envelope1 = exp(-(z - 25.) * (z - 25.) / 40.);
-    double envelope2 = exp(-(z - 75.) * (z - 75.) / 40.);
-
-    switch (kind) {
-      case KIND_ELECTRON:
-        npt.n = 1.;
-
-        npt.T[0] = g.Te_perp;
-        npt.T[1] = g.Te_perp;
-        npt.T[2] = g.Te_par;
-
-        // Set velocities for first wave:
-        npt.p[0] = -g.amplitude * envelope1 * g.B0 * cos(kperp * y + kz * z);
-        npt.p[2] = 0.;
-
-        // Set velocities for second wave:
-        npt.p[1] = g.amplitude * envelope2 * g.B0 * sin(kperp * x - kz * z);
-        break;
-      case KIND_ION:
-        npt.n = 1.;
-
-        npt.T[0] = g.Ti_perp;
-        npt.T[1] = g.Ti_perp;
-        npt.T[2] = g.Ti_par;
-
-        // Set velocities for first wave:
-        npt.p[0] = -g.amplitude * envelope1 * g.B0 * cos(kperp * y + kz * z);
-        npt.p[2] = 0.;
-
-        // Set velocities for second wave:
-        npt.p[1] = g.amplitude * envelope2 * g.B0 * sin(kperp * x - kz * z);
-        break;
-      default: assert(0);
-    }
-  };
-
-  auto lf_init_fields = [&](int m, double crd[3]) {
-    double x = crd[0], y = crd[1], z = crd[2];
-    double envelope1 = exp(-(z - 25.) * (z - 25.) / 40.);
-    double envelope2 = exp(-(z - 75.) * (z - 75.) / 40.);
-
-    switch (m) {
-      case HX: return g.amplitude * envelope1 * cos(kperp * y + kz * z) * g.B0;
-      case HY: return g.amplitude * envelope2 * sin(kperp * x - kz * z) * g.B0;
-      case HZ: return g.B0;
-      default: return 0.;
-    }
-  };
+  // setup initial conditions
 
   if (read_checkpoint_filename.empty()) {
-    // --- partition particles and initial balancing
-    mpi_printf(MPI_COMM_WORLD, "**** Partitioning...\n");
-
-    SetupParticles<Mparticles> setup_particles(grid);
-
-    auto n_prts_by_patch = setup_particles.partition(grid, lf_init_npt);
-
-    balance.initial(grid_ptr, n_prts_by_patch);
-    // !!! FIXME! grid is now invalid
-    // balance::initial does not rebalance particles, because the old way of
-    // doing this does't even have the particle data structure created yet --
-    // FIXME?
-    mprts.reset(*grid_ptr);
-
-    // -- set up particles
-    mpi_printf(MPI_COMM_WORLD, "**** Setting up particles...\n");
-    setup_particles(mprts, lf_init_npt);
-
-    // -- set up fields
-    mpi_printf(MPI_COMM_WORLD, "**** Setting up fields...\n");
-    setupFields(mflds, lf_init_fields);
+    initializeParticles(balance, grid_ptr, mprts);
+    initializeFields(mflds);
   }
+
+  // ----------------------------------------------------------------------
+  // hand off to PscIntegrator to run the simulation
 
   auto psc =
     makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts, balance,
@@ -334,9 +349,6 @@ static void run()
     mpi_printf(MPI_COMM_WORLD, "**** Reading checkpoint...\n");
     psc.read_checkpoint(read_checkpoint_filename);
   }
-
-  // ======================================================================
-  // Hand off to PscIntegrator to run the simulation
 
   psc.integrate();
 }

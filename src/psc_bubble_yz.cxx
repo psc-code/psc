@@ -73,6 +73,40 @@ PscParams psc_params;
 } // namespace
 
 // ======================================================================
+// setupParameters
+
+void setupParameters()
+{
+  // -- set some generic PSC parameters
+  psc_params.nmax = 1000; // 32000;
+  psc_params.stats_every = 100;
+
+  // -- start from checkpoint:
+  //
+  // Uncomment when wanting to start from a checkpoint, ie.,
+  // instead of setting up grid, particles and state fields here,
+  // they'll be read from a file
+  // FIXME: This parameter would be a good candidate to be provided
+  // on the command line, rather than requiring recompilation when change.
+
+  // read_checkpoint_filename = "checkpoint_500.bp";
+
+  // -- Set some parameters specific to this case
+  g.BB = .07;
+  g.nnb = .1;
+  g.nn0 = 1.;
+  g.MMach = 3.;
+  g.LLn = 200.;
+  g.LLB = 200. / 6.;
+  g.TTe = .02;
+  g.TTi = .02;
+  g.MMi = 100.;
+
+  g.LLy = 2. * g.LLn;
+  g.LLz = 3. * g.LLn;
+}
+
+// ======================================================================
 // setupGrid
 //
 // This helper function is responsible for setting up the "Grid",
@@ -121,152 +155,140 @@ Grid_t* setupGrid()
 }
 
 // ======================================================================
-// init_npt
+// initializeParticles
 
-static void init_npt(int kind, double crd[3], psc_particle_npt& npt)
+void initializeParticles(Balance& balance, Grid_t* grid_ptr, Mparticles& mprts)
 {
+  SetupParticles<Mparticles> setup_particles(*grid_ptr);
+
   double V0 = g.MMach * sqrt(g.TTe / g.MMi);
 
-  double r1 = sqrt(sqr(crd[2]) + sqr(crd[1] + .5 * g.LLy));
-  double r2 = sqrt(sqr(crd[2]) + sqr(crd[1] - .5 * g.LLy));
+  partitionAndSetupParticles(
+    setup_particles, balance, grid_ptr, mprts,
+    [&](int kind, double crd[3], psc_particle_npt& npt) {
+      double r1 = sqrt(sqr(crd[2]) + sqr(crd[1] + .5 * g.LLy));
+      double r2 = sqrt(sqr(crd[2]) + sqr(crd[1] - .5 * g.LLy));
 
-  npt.n = g.nnb;
-  if (r1 < g.LLn) {
-    npt.n += (g.nn0 - g.nnb) * sqr(cos(M_PI / 2. * r1 / g.LLn));
-    if (r1 > 0.0) {
-      npt.p[2] += V0 * sin(M_PI * r1 / g.LLn) * crd[2] / r1;
-      npt.p[1] += V0 * sin(M_PI * r1 / g.LLn) * (crd[1] + .5 * g.LLy) / r1;
-    }
-  }
-  if (r2 < g.LLn) {
-    npt.n += (g.nn0 - g.nnb) * sqr(cos(M_PI / 2. * r2 / g.LLn));
-    if (r2 > 0.0) {
-      npt.p[2] += V0 * sin(M_PI * r2 / g.LLn) * crd[2] / r2;
-      npt.p[1] += V0 * sin(M_PI * r2 / g.LLn) * (crd[1] - .5 * g.LLy) / r2;
-    }
-  }
-
-  switch (kind) {
-    case KIND_ELECTRON:
-      // electron drift consistent with initial current
-      if ((r1 <= g.LLn) && (r1 >= g.LLn - 2. * g.LLB)) {
-        npt.p[0] = -g.BB * M_PI / (2. * g.LLB) *
-                   cos(M_PI * (g.LLn - r1) / (2. * g.LLB)) / npt.n;
+      npt.n = g.nnb;
+      if (r1 < g.LLn) {
+        npt.n += (g.nn0 - g.nnb) * sqr(cos(M_PI / 2. * r1 / g.LLn));
+        if (r1 > 0.0) {
+          npt.p[2] += V0 * sin(M_PI * r1 / g.LLn) * crd[2] / r1;
+          npt.p[1] += V0 * sin(M_PI * r1 / g.LLn) * (crd[1] + .5 * g.LLy) / r1;
+        }
       }
-      if ((r2 <= g.LLn) && (r2 >= g.LLn - 2. * g.LLB)) {
-        npt.p[0] = -g.BB * M_PI / (2. * g.LLB) *
-                   cos(M_PI * (g.LLn - r2) / (2. * g.LLB)) / npt.n;
+      if (r2 < g.LLn) {
+        npt.n += (g.nn0 - g.nnb) * sqr(cos(M_PI / 2. * r2 / g.LLn));
+        if (r2 > 0.0) {
+          npt.p[2] += V0 * sin(M_PI * r2 / g.LLn) * crd[2] / r2;
+          npt.p[1] += V0 * sin(M_PI * r2 / g.LLn) * (crd[1] - .5 * g.LLy) / r2;
+        }
       }
 
-      npt.T[0] = g.TTe;
-      npt.T[1] = g.TTe;
-      npt.T[2] = g.TTe;
-      break;
-    case KIND_ION:
-      npt.T[0] = g.TTi;
-      npt.T[1] = g.TTi;
-      npt.T[2] = g.TTi;
-      break;
-    default: assert(0);
-  }
+      switch (kind) {
+        case KIND_ELECTRON:
+          // electron drift consistent with initial current
+          if ((r1 <= g.LLn) && (r1 >= g.LLn - 2. * g.LLB)) {
+            npt.p[0] = -g.BB * M_PI / (2. * g.LLB) *
+                       cos(M_PI * (g.LLn - r1) / (2. * g.LLB)) / npt.n;
+          }
+          if ((r2 <= g.LLn) && (r2 >= g.LLn - 2. * g.LLB)) {
+            npt.p[0] = -g.BB * M_PI / (2. * g.LLB) *
+                       cos(M_PI * (g.LLn - r2) / (2. * g.LLB)) / npt.n;
+          }
+
+          npt.T[0] = g.TTe;
+          npt.T[1] = g.TTe;
+          npt.T[2] = g.TTe;
+          break;
+        case KIND_ION:
+          npt.T[0] = g.TTi;
+          npt.T[1] = g.TTi;
+          npt.T[2] = g.TTi;
+          break;
+        default: assert(0);
+      }
+    });
 }
 
 // ======================================================================
-// init_fields
+// initializeFields
 
-static double init_fields(int m, double crd[3])
+void initializeFields(MfieldsState& mflds)
 {
-  double z1 = crd[2];
-  double y1 = crd[1] + .5 * g.LLy;
-  double r1 = sqrt(sqr(z1) + sqr(y1));
-  double z2 = crd[2];
-  double y2 = crd[1] - .5 * g.LLy;
-  double r2 = sqrt(sqr(z2) + sqr(y2));
+  setupFields(mflds, [&](int m, double crd[3]) {
+    double z1 = crd[2];
+    double y1 = crd[1] + .5 * g.LLy;
+    double r1 = sqrt(sqr(z1) + sqr(y1));
+    double z2 = crd[2];
+    double y2 = crd[1] - .5 * g.LLy;
+    double r2 = sqrt(sqr(z2) + sqr(y2));
 
-  double rv = 0.;
-  switch (m) {
-    case HZ:
-      if ((r1 < g.LLn) && (r1 > g.LLn - 2 * g.LLB)) {
-        rv += -g.BB * sin(M_PI * (g.LLn - r1) / (2. * g.LLB)) * y1 / r1;
-      }
-      if ((r2 < g.LLn) && (r2 > g.LLn - 2 * g.LLB)) {
-        rv += -g.BB * sin(M_PI * (g.LLn - r2) / (2. * g.LLB)) * y2 / r2;
-      }
-      return rv;
+    double rv = 0.;
+    switch (m) {
+      case HZ:
+        if ((r1 < g.LLn) && (r1 > g.LLn - 2 * g.LLB)) {
+          rv += -g.BB * sin(M_PI * (g.LLn - r1) / (2. * g.LLB)) * y1 / r1;
+        }
+        if ((r2 < g.LLn) && (r2 > g.LLn - 2 * g.LLB)) {
+          rv += -g.BB * sin(M_PI * (g.LLn - r2) / (2. * g.LLB)) * y2 / r2;
+        }
+        return rv;
 
-    case HY:
-      if ((r1 < g.LLn) && (r1 > g.LLn - 2 * g.LLB)) {
-        rv += g.BB * sin(M_PI * (g.LLn - r1) / (2. * g.LLB)) * z1 / r1;
-      }
-      if ((r2 < g.LLn) && (r2 > g.LLn - 2 * g.LLB)) {
-        rv += g.BB * sin(M_PI * (g.LLn - r2) / (2. * g.LLB)) * z2 / r2;
-      }
-      return rv;
+      case HY:
+        if ((r1 < g.LLn) && (r1 > g.LLn - 2 * g.LLB)) {
+          rv += g.BB * sin(M_PI * (g.LLn - r1) / (2. * g.LLB)) * z1 / r1;
+        }
+        if ((r2 < g.LLn) && (r2 > g.LLn - 2 * g.LLB)) {
+          rv += g.BB * sin(M_PI * (g.LLn - r2) / (2. * g.LLB)) * z2 / r2;
+        }
+        return rv;
 
-    case EX:
-      if ((r1 < g.LLn) && (r1 > g.LLn - 2 * g.LLB)) {
-        rv += g.MMach * sqrt(g.TTe / g.MMi) * g.BB *
-              sin(M_PI * (g.LLn - r1) / (2. * g.LLB)) * sin(M_PI * r1 / g.LLn);
-      }
-      if ((r2 < g.LLn) && (r2 > g.LLn - 2 * g.LLB)) {
-        rv += g.MMach * sqrt(g.TTe / g.MMi) * g.BB *
-              sin(M_PI * (g.LLn - r2) / (2. * g.LLB)) * sin(M_PI * r2 / g.LLn);
-      }
-      return rv;
+      case EX:
+        if ((r1 < g.LLn) && (r1 > g.LLn - 2 * g.LLB)) {
+          rv += g.MMach * sqrt(g.TTe / g.MMi) * g.BB *
+                sin(M_PI * (g.LLn - r1) / (2. * g.LLB)) *
+                sin(M_PI * r1 / g.LLn);
+        }
+        if ((r2 < g.LLn) && (r2 > g.LLn - 2 * g.LLB)) {
+          rv += g.MMach * sqrt(g.TTe / g.MMi) * g.BB *
+                sin(M_PI * (g.LLn - r2) / (2. * g.LLB)) *
+                sin(M_PI * r2 / g.LLn);
+        }
+        return rv;
 
-      // FIXME, JXI isn't really needed anymore (?)
-    case JXI:
-      if ((r1 < g.LLn) && (r1 > g.LLn - 2 * g.LLB)) {
-        rv +=
-          g.BB * M_PI / (2. * g.LLB) * cos(M_PI * (g.LLn - r1) / (2. * g.LLB));
-      }
-      if ((r2 < g.LLn) && (r2 > g.LLn - 2 * g.LLB)) {
-        rv +=
-          g.BB * M_PI / (2. * g.LLB) * cos(M_PI * (g.LLn - r2) / (2. * g.LLB));
-      }
-      return rv;
+        // FIXME, JXI isn't really needed anymore (?)
+      case JXI:
+        if ((r1 < g.LLn) && (r1 > g.LLn - 2 * g.LLB)) {
+          rv += g.BB * M_PI / (2. * g.LLB) *
+                cos(M_PI * (g.LLn - r1) / (2. * g.LLB));
+        }
+        if ((r2 < g.LLn) && (r2 > g.LLn - 2 * g.LLB)) {
+          rv += g.BB * M_PI / (2. * g.LLB) *
+                cos(M_PI * (g.LLn - r2) / (2. * g.LLB));
+        }
+        return rv;
 
-    default: return 0.;
-  }
+      default: return 0.;
+    }
+  });
 }
 
 // ======================================================================
 // run
+//
+// This is basically the main function of this run,
+// which sets up everything and then uses PscIntegrator to run the
+// simulation
 
 static void run()
 {
   mpi_printf(MPI_COMM_WORLD, "*** Setting up...\n");
 
   // ----------------------------------------------------------------------
-  // Set up a bunch of parameters
+  // setup various parameters first
 
-  // -- set some generic PSC parameters
-  psc_params.nmax = 1000; // 32000;
-  psc_params.stats_every = 100;
-
-  // -- start from checkpoint:
-  //
-  // Uncomment when wanting to start from a checkpoint, ie.,
-  // instead of setting up grid, particles and state fields here,
-  // they'll be read from a file
-  // FIXME: This parameter would be a good candidate to be provided
-  // on the command line, rather than requiring recompilation when change.
-
-  // read_checkpoint_filename = "checkpoint_500.bp";
-
-  // -- Set some parameters specific to this case
-  g.BB = .07;
-  g.nnb = .1;
-  g.nn0 = 1.;
-  g.MMach = 3.;
-  g.LLn = 200.;
-  g.LLB = 200. / 6.;
-  g.TTe = .02;
-  g.TTi = .02;
-  g.MMi = 100.;
-
-  g.LLy = 2. * g.LLn;
-  g.LLz = 3. * g.LLn;
+  setupParameters();
 
   // ----------------------------------------------------------------------
   // Set up grid, state fields, particles
@@ -329,31 +351,15 @@ static void run()
   auto diagnostics = makeDiagnosticsDefault(outf, outp);
 
   // ----------------------------------------------------------------------
-  // Initial conditions
+  // setup initial conditions
 
   if (read_checkpoint_filename.empty()) {
-    // --- partition particles and initial balancing
-    mpi_printf(MPI_COMM_WORLD, "**** Partitioning...\n");
-
-    SetupParticles<Mparticles> setup_particles(grid);
-
-    auto n_prts_by_patch = setup_particles.partition(grid, init_npt);
-
-    balance.initial(grid_ptr, n_prts_by_patch);
-    // !!! FIXME! grid is now invalid
-    // balance::initial does not rebalance particles, because the old way of
-    // doing this does't even have the particle data structure created yet --
-    // FIXME?
-    mprts.reset(*grid_ptr);
-
-    // -- set up particles
-    mpi_printf(MPI_COMM_WORLD, "**** Setting up particles...\n");
-    setup_particles(mprts, init_npt);
-
-    // -- set up fields
-    mpi_printf(MPI_COMM_WORLD, "**** Setting up fields...\n");
-    setupFields(mflds, init_fields);
+    initializeParticles(balance, grid_ptr, mprts);
+    initializeFields(mflds);
   }
+
+  // ----------------------------------------------------------------------
+  // hand off to PscIntegrator to run the simulation
 
   auto psc =
     makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts, balance,

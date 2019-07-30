@@ -540,10 +540,7 @@ struct Psc
   // ----------------------------------------------------------------------
   // inject_particles
 
-  void inject_particles()
-  {
-    return this->inject_particles_(grid(), mprts_);
-  }
+  void inject_particles() { return this->inject_particles_(grid(), mprts_); }
 
 private:
   // ----------------------------------------------------------------------
@@ -780,6 +777,34 @@ Psc<PscConfig, Diagnostics, InjectParticles> makePscIntegrator(
 {
   return {params,    grid,   mflds,  mprts,       balance,
           collision, checks, marder, diagnostics, inject_particles};
+}
+
+// ======================================================================
+// partitionAndSetupParticles
+
+template <typename SetupParticles, typename Balance, typename Mparticles,
+          typename FUNC>
+void partitionAndSetupParticles(SetupParticles& setup_particles,
+                                Balance& balance, Grid_t*& grid_ptr,
+                                Mparticles& mprts, FUNC&& init_npt)
+{
+  auto comm = grid_ptr->comm();
+
+  // --- partition particles and initial balancing
+  mpi_printf(comm, "**** Partitioning...\n");
+
+  auto n_prts_by_patch = setup_particles.partition(*grid_ptr, init_npt);
+
+  balance.initial(grid_ptr, n_prts_by_patch);
+  // !!! FIXME! grid is now invalid
+  // balance::initial does not rebalance particles, because the old way of
+  // doing this does't even have the particle data structure created yet --
+  // FIXME?
+  mprts.reset(*grid_ptr);
+
+  // -- set up particles
+  mpi_printf(MPI_COMM_WORLD, "**** Setting up particles...\n");
+  setup_particles(mprts, init_npt);
 }
 
 // ======================================================================

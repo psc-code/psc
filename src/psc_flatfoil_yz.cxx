@@ -169,6 +169,36 @@ PscParams psc_params;
 } // namespace
 
 // ======================================================================
+// setupParameters
+
+void setupParameters()
+{
+  // -- set some generic PSC parameters
+  psc_params.nmax = 2001; // 5001;
+  psc_params.cfl = 0.75;
+  psc_params.write_checkpoint_every_step = 500;
+
+  // -- start from checkpoint:
+  //
+  // Uncomment when wanting to start from a checkpoint, ie.,
+  // instead of setting up grid, particles and state fields here,
+  // they'll be read from a file
+  // FIXME: This parameter would be a good candidate to be provided
+  // on the command line, rather than requiring recompilation when change.
+
+  // read_checkpoint_filename = "checkpoint_500.bp";
+
+  // -- Set some parameters specific to this case
+  g.BB = 0.;
+  g.Zi = 1.;
+  g.mass_ratio = 100.; // 25.
+
+  g.background_n = .002;
+  g.background_Te = .001;
+  g.background_Ti = .001;
+}
+
+// ======================================================================
 // setupGrid
 //
 // This helper function is responsible for setting up the "Grid",
@@ -249,6 +279,53 @@ Grid_t* setupGrid()
 }
 
 // ======================================================================
+// initializeParticles
+
+void initializeParticles(SetupParticles<Mparticles>& setup_particles,
+                         Balance& balance, Grid_t* grid_ptr, Mparticles& mprts,
+                         InjectFoil& inject_target)
+{
+  // -- set particle initial condition
+  partitionAndSetupParticles(
+    setup_particles, balance, grid_ptr, mprts,
+    [&](int kind, double crd[3], psc_particle_npt& npt) {
+      switch (kind) {
+        case MY_ION:
+          npt.n = g.background_n;
+          npt.T[0] = g.background_Ti;
+          npt.T[1] = g.background_Ti;
+          npt.T[2] = g.background_Ti;
+          break;
+        case MY_ELECTRON:
+          npt.n = g.background_n;
+          npt.T[0] = g.background_Te;
+          npt.T[1] = g.background_Te;
+          npt.T[2] = g.background_Te;
+          break;
+        default: assert(0);
+      }
+
+      if (inject_target.is_inside(crd)) {
+        // replace values above by target values
+        inject_target.init_npt(kind, crd, npt);
+      }
+    });
+}
+
+// ======================================================================
+// initializeFields
+
+void initializeFields(MfieldsState& mflds)
+{
+  setupFields(mflds, [&](int m, double crd[3]) {
+    switch (m) {
+      case HY: return g.BB;
+      default: return 0.;
+    }
+  });
+}
+
+// ======================================================================
 // run
 //
 // This is basically the main function of this run,
@@ -260,31 +337,9 @@ void run()
   mpi_printf(MPI_COMM_WORLD, "*** Setting up...\n");
 
   // ----------------------------------------------------------------------
-  // Set up a bunch of parameters
+  // setup various parameters first
 
-  // -- set some generic PSC parameters
-  psc_params.nmax = 2001; // 5001;
-  psc_params.cfl = 0.75;
-  psc_params.write_checkpoint_every_step = 500;
-
-  // -- start from checkpoint:
-  //
-  // Uncomment when wanting to start from a checkpoint, ie.,
-  // instead of setting up grid, particles and state fields here,
-  // they'll be read from a file
-  // FIXME: This parameter would be a good candidate to be provided
-  // on the command line, rather than requiring recompilation when change.
-
-  // read_checkpoint_filename = "checkpoint_500.bp";
-
-  // -- Set some parameters specific to this case
-  g.BB = 0.;
-  g.Zi = 1.;
-  g.mass_ratio = 100.; // 25.
-
-  g.background_n = .002;
-  g.background_Te = .001;
-  g.background_Ti = .001;
+  setupParameters();
 
   // ----------------------------------------------------------------------
   // Set up grid, state fields, particles
@@ -418,63 +473,17 @@ void run()
     }
   };
 
+  // ----------------------------------------------------------------------
+  // setup initial conditions
+
   if (read_checkpoint_filename.empty()) {
-    // ----------------------------------------------------------------------
-    // Initial conditions
-    //
-    // These functions are called to set up initial particle distribution
-    // and state fields
-
-    auto lf_init_npt = [&](int kind, double crd[3], psc_particle_npt& npt) {
-      switch (kind) {
-        case MY_ION:
-          npt.n = g.background_n;
-          npt.T[0] = g.background_Ti;
-          npt.T[1] = g.background_Ti;
-          npt.T[2] = g.background_Ti;
-          break;
-        case MY_ELECTRON:
-          npt.n = g.background_n;
-          npt.T[0] = g.background_Te;
-          npt.T[1] = g.background_Te;
-          npt.T[2] = g.background_Te;
-          break;
-        default: assert(0);
-      }
-
-      if (inject_target.is_inside(crd)) {
-        // replace values above by target values
-        inject_target.init_npt(kind, crd, npt);
-      }
-    };
-
-    auto lf_init_fields = [&](int m, double crd[3]) {
-      switch (m) {
-        case HY: return g.BB;
-        default: return 0.;
-      }
-    };
-
-    // --- partition particles and initial balancing
-    mpi_printf(MPI_COMM_WORLD, "**** Partitioning...\n");
-
-    auto n_prts_by_patch = setup_particles.partition(grid, lf_init_npt);
-
-    balance.initial(grid_ptr, n_prts_by_patch);
-    // !!! FIXME! grid is now invalid
-    // balance::initial does not rebalance particles, because the old way of
-    // doing this does't even have the particle data structure created yet --
-    // FIXME?
-    mprts.reset(*grid_ptr);
-
-    // -- set up particles
-    mpi_printf(MPI_COMM_WORLD, "**** Setting up particles...\n");
-    setup_particles(mprts, lf_init_npt);
-
-    // -- set up fields
-    mpi_printf(MPI_COMM_WORLD, "**** Setting up fields...\n");
-    setupFields(mflds, lf_init_fields);
+    initializeParticles(setup_particles, balance, grid_ptr, mprts,
+                        inject_target);
+    initializeFields(mflds);
   }
+
+  // ----------------------------------------------------------------------
+  // hand off to PscIntegrator to run the simulation
 
   auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
                                           balance, collision, checks, marder,
@@ -485,9 +494,6 @@ void run()
     mpi_printf(MPI_COMM_WORLD, "**** Reading checkpoint...\n");
     psc.read_checkpoint(read_checkpoint_filename);
   }
-
-  // ======================================================================
-  // Hand off to PscIntegrator to run the simulation
 
   psc.integrate();
 }
