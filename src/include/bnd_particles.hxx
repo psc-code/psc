@@ -8,6 +8,5 @@
 
 struct BndParticlesBase
 {
-  virtual void exchange_particles(MparticlesBase& mprts_base) = 0;
 };
 
