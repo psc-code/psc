@@ -1,35 +1,14 @@
 
-#include <psc.h>
 #include <psc.hxx>
-
-#include "DiagnosticsDefault.h"
-#include <balance.hxx>
-#include <bnd.hxx>
-#include <bnd_fields.hxx>
-#include <bnd_particles.hxx>
-#include <collision.hxx>
-#include <fields3d.hxx>
-#include <heating.hxx>
-#include <inject.hxx>
-#include <marder.hxx>
-#include <particles.hxx>
-#include <push_fields.hxx>
-#include <push_particles.hxx>
 #include <setup_fields.hxx>
 #include <setup_particles.hxx>
-#include <sort.hxx>
 
-#include "../libpsc/psc_checks/checks_impl.hxx"
-#include "../libpsc/psc_heating/psc_heating_impl.hxx"
-#include "inject_impl.hxx"
-
-#ifdef USE_CUDA
-#include "../libpsc/cuda/setup_fields_cuda.hxx"
-#endif
-
+#include "DiagnosticsDefault.h"
 #include "psc_config.hxx"
 
+#include "../libpsc/psc_heating/psc_heating_impl.hxx"
 #include "heating_spot_foil.hxx"
+#include "inject_impl.hxx"
 
 // ======================================================================
 // Particle kinds
@@ -141,6 +120,31 @@ using Inject = typename InjectSelector<Mparticles, InjectFoil, Dim>::Inject;
 using Heating = typename HeatingSelector<Mparticles>::Heating;
 
 // ======================================================================
+// PscFlatfoilParams
+
+struct PscFlatfoilParams
+{
+  double BB;
+  double Zi;
+  double mass_ratio;
+
+  double background_n;
+  double background_Te;
+  double background_Ti;
+
+  int inject_interval;
+
+  int heating_begin;
+  int heating_end;
+  int heating_interval;
+
+  // The following parameters are calculated from the above / and other
+  // information
+
+  double d_i;
+};
+
+// ======================================================================
 // Global parameters
 //
 // I'm not a big fan of global parameters, but they're only for
@@ -151,33 +155,16 @@ using Heating = typename HeatingSelector<Mparticles>::Heating;
 namespace
 {
 
-// Here are a bunch of constant parameters, ie, these are values that
-// need to be set for a particular run.
+// Parameters specific to this case. They don't really need to be collected in a
+// struct, but maybe it's nice that they are
+
+PscFlatfoilParams g;
 
 std::string read_checkpoint_filename;
-
-double BB;
-double Zi;
-double mass_ratio;
-
-double background_n;
-double background_Te;
-double background_Ti;
-
-int inject_interval;
-
-int heating_begin;
-int heating_end;
-int heating_interval;
 
 // This is a set of generic PSC params (see include/psc.hxx),
 // like number of steps to run, etc, which also should be set by the case
 PscParams psc_params;
-
-// The following parameters are calculated from the above / and other
-// information
-
-double d_i;
 
 } // namespace
 
@@ -231,14 +218,14 @@ Grid_t* setupGrid()
   // -- setup particle kinds
   // last population ("e") is neutralizing
   Grid_t::Kinds kinds(N_MY_KINDS);
-  kinds[MY_ION] = {Zi, mass_ratio * Zi, "i"};
+  kinds[MY_ION] = {g.Zi, g.mass_ratio * g.Zi, "i"};
   kinds[MY_ELECTRON] = {-1., 1., "e"};
 
-  d_i = sqrt(kinds[MY_ION].m / kinds[MY_ION].q);
+  g.d_i = sqrt(kinds[MY_ION].m / kinds[MY_ION].q);
 
-  mpi_printf(MPI_COMM_WORLD, "d_e = %g, d_i = %g\n", 1., d_i);
+  mpi_printf(MPI_COMM_WORLD, "d_e = %g, d_i = %g\n", 1., g.d_i);
   mpi_printf(MPI_COMM_WORLD, "lambda_De (background) = %g\n",
-             sqrt(background_Te));
+             sqrt(g.background_Te));
 
   // -- setup normalization
   auto norm_params = Grid_t::NormalizationParams::dimensionless();
@@ -291,13 +278,13 @@ void run()
   // read_checkpoint_filename = "checkpoint_500.bp";
 
   // -- Set some parameters specific to this case
-  BB = 0.;
-  Zi = 1.;
-  mass_ratio = 100.; // 25.
+  g.BB = 0.;
+  g.Zi = 1.;
+  g.mass_ratio = 100.; // 25.
 
-  background_n = .002;
-  background_Te = .001;
-  background_Ti = .001;
+  g.background_n = .002;
+  g.background_Te = .001;
+  g.background_Ti = .001;
 
   // ----------------------------------------------------------------------
   // Set up grid, state fields, particles
@@ -367,42 +354,42 @@ void run()
 
   // -- Heating
   HeatingSpotFoilParams heating_foil_params{};
-  heating_foil_params.zl = -1. * d_i;
-  heating_foil_params.zh = 1. * d_i;
-  heating_foil_params.xc = 0. * d_i;
-  heating_foil_params.yc = 0. * d_i;
-  heating_foil_params.rH = 3. * d_i;
+  heating_foil_params.zl = -1. * g.d_i;
+  heating_foil_params.zh = 1. * g.d_i;
+  heating_foil_params.xc = 0. * g.d_i;
+  heating_foil_params.yc = 0. * g.d_i;
+  heating_foil_params.rH = 3. * g.d_i;
   heating_foil_params.T = .04;
   heating_foil_params.Mi = grid.kinds[MY_ION].m;
   HeatingSpotFoil heating_spot{heating_foil_params};
 
-  heating_interval = 20;
-  heating_begin = 0;
-  heating_end = 10000000;
+  g.heating_interval = 20;
+  g.heating_begin = 0;
+  g.heating_end = 10000000;
   auto& heating =
-    *new Heating{grid, heating_interval, MY_ELECTRON, heating_spot};
+    *new Heating{grid, g.heating_interval, MY_ELECTRON, heating_spot};
 
   // -- Particle injection
   InjectFoilParams inject_foil_params;
-  inject_foil_params.yl = -100000. * d_i;
-  inject_foil_params.yh = 100000. * d_i;
+  inject_foil_params.yl = -100000. * g.d_i;
+  inject_foil_params.yh = 100000. * g.d_i;
   double target_zwidth = 1.;
-  inject_foil_params.zl = -target_zwidth * d_i;
-  inject_foil_params.zh = target_zwidth * d_i;
+  inject_foil_params.zl = -target_zwidth * g.d_i;
+  inject_foil_params.zh = target_zwidth * g.d_i;
   inject_foil_params.n = 1.;
   inject_foil_params.Te = .001;
   inject_foil_params.Ti = .001;
   InjectFoil inject_target{inject_foil_params};
 
-  inject_interval = 20;
+  g.inject_interval = 20;
   int inject_tau = 40;
 
   SetupParticles<Mparticles> setup_particles(grid);
   setup_particles.fractional_n_particles_per_cell = true;
   setup_particles.neutralizing_population = MY_ELECTRON;
 
-  Inject inject{grid,        inject_interval, inject_tau,
-                MY_ELECTRON, inject_target,   setup_particles};
+  Inject inject{grid,        g.inject_interval, inject_tau,
+                MY_ELECTRON, inject_target,     setup_particles};
 
   auto lf_inject = [&](const Grid_t& grid, Mparticles& mprts) {
     static int pr_inject, pr_heating;
@@ -414,7 +401,7 @@ void run()
     auto comm = grid.comm();
     auto timestep = grid.timestep();
 
-    if (inject_interval > 0 && timestep % inject_interval == 0) {
+    if (g.inject_interval > 0 && timestep % g.inject_interval == 0) {
       mpi_printf(comm, "***** Performing injection...\n");
       prof_start(pr_inject);
       inject(mprts);
@@ -422,8 +409,8 @@ void run()
     }
 
     // only heating between heating_tb and heating_te
-    if (timestep >= heating_begin && timestep < heating_end &&
-        heating_interval > 0 && timestep % heating_interval == 0) {
+    if (timestep >= g.heating_begin && timestep < g.heating_end &&
+        g.heating_interval > 0 && timestep % g.heating_interval == 0) {
       mpi_printf(comm, "***** Performing heating...\n");
       prof_start(pr_heating);
       heating(mprts);
@@ -441,16 +428,16 @@ void run()
     auto lf_init_npt = [&](int kind, double crd[3], psc_particle_npt& npt) {
       switch (kind) {
         case MY_ION:
-          npt.n = background_n;
-          npt.T[0] = background_Ti;
-          npt.T[1] = background_Ti;
-          npt.T[2] = background_Ti;
+          npt.n = g.background_n;
+          npt.T[0] = g.background_Ti;
+          npt.T[1] = g.background_Ti;
+          npt.T[2] = g.background_Ti;
           break;
         case MY_ELECTRON:
-          npt.n = background_n;
-          npt.T[0] = background_Te;
-          npt.T[1] = background_Te;
-          npt.T[2] = background_Te;
+          npt.n = g.background_n;
+          npt.T[0] = g.background_Te;
+          npt.T[1] = g.background_Te;
+          npt.T[2] = g.background_Te;
           break;
         default: assert(0);
       }
@@ -463,7 +450,7 @@ void run()
 
     auto lf_init_fields = [&](int m, double crd[3]) {
       switch (m) {
-        case HY: return BB;
+        case HY: return g.BB;
         default: return 0.;
       }
     };

@@ -1,64 +1,10 @@
 
-#include "psc_config.hxx"
-#include <psc.h>
 #include <psc.hxx>
-#include <psc_fields_single.h>
-#include <psc_particles_single.h>
+#include <setup_fields.hxx>
+#include <setup_particles.hxx>
 
 #include "DiagnosticsDefault.h"
-#include "balance.hxx"
-#include "bnd_particles.hxx"
-#include "checks.hxx"
-#include "collision.hxx"
-#include "marder.hxx"
-#include "push_fields.hxx"
-#include "push_particles.hxx"
-#include "sort.hxx"
-
-#include "setup_fields.hxx"
-#include "setup_particles.hxx"
-
-#include "../src/libpsc/psc_output_fields/fields_item_moments_1st.hxx"
-
-#include <mrc_params.h>
-
-#include <math.h>
-
-// ======================================================================
-// PscBubbleParams
-
-struct PscBubbleParams
-{
-  double BB;
-  double nnb;
-  double nn0;
-  double MMach;
-  double LLn;
-  double LLB;
-  double LLz;
-  double LLy;
-  double TTe;
-  double TTi;
-  double MMi;
-};
-
-// ======================================================================
-// Global parameters
-
-namespace
-{
-
-std::string read_checkpoint_filename;
-
-// Parameters specific to this case. They don't really need to be collected in a
-// struct, but maybe it's nice that they are
-PscBubbleParams g;
-
-// This is a set of generic PSC params (see include/psc.hxx),
-// like number of steps to run, etc, which also should be set by the case
-PscParams psc_params;
-
-} // namespace
+#include "psc_config.hxx"
 
 // ======================================================================
 // PSC configuration
@@ -84,6 +30,47 @@ using Collision = PscConfig::Collision;
 using Checks = PscConfig::Checks;
 using Marder = PscConfig::Marder;
 using OutputParticles = PscConfig::OutputParticles;
+
+// ======================================================================
+// PscBubbleParams
+
+struct PscBubbleParams
+{
+  double BB;
+  double nnb;
+  double nn0;
+  double MMach;
+  double LLn;
+  double LLB;
+  double LLz;
+  double LLy;
+  double TTe;
+  double TTi;
+  double MMi;
+};
+
+// ======================================================================
+// Global parameters
+//
+// I'm not a big fan of global parameters, but they're only for
+// this particular case and they help make things simpler.
+
+// An "anonymous namespace" makes these variables visible in this source file
+// only
+namespace
+{
+
+// Parameters specific to this case. They don't really need to be collected in a
+// struct, but maybe it's nice that they are
+PscBubbleParams g;
+
+std::string read_checkpoint_filename;
+
+// This is a set of generic PSC params (see include/psc.hxx),
+// like number of steps to run, etc, which also should be set by the case
+PscParams psc_params;
+
+} // namespace
 
 // ======================================================================
 // setupGrid
@@ -390,8 +377,6 @@ int main(int argc, char** argv)
 
   run();
 
-  libmrc_params_finalize();
-  MPI_Finalize();
-
+  psc_finalize();
   return 0;
 }

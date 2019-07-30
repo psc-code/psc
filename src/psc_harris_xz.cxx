@@ -1,38 +1,13 @@
 
 #define VPIC 1
 
-#include "psc_config.hxx"
-#include <psc.h>
 #include <psc.hxx>
+#include <setup_fields.hxx>
+#include <setup_particles.hxx>
 
-#include <bnd_particles.hxx>
-#include <checks.hxx>
-#include <collision.hxx>
-#include <marder.hxx>
-#include <push_fields.hxx>
-#include <push_particles.hxx>
-#include <sort.hxx>
-
-#include "../libpsc/psc_balance/psc_balance_impl.hxx"
-#include "../libpsc/psc_checks/checks_impl.hxx"
-#include "../libpsc/vpic/fields_item_vpic.hxx"
-#include "../libpsc/vpic/setup_fields_vpic.hxx"
-#include "balance.hxx"
-#include "fields3d.hxx"
-#include "psc_fields_single.h"
-#include "setup_fields.hxx"
-
-#include "mrc_io.hxx"
-
-#include <psc_particles_single.h>
+#include "psc_config.hxx"
 
 #include "rngpool_iface.h"
-
-#include <mrc_params.h>
-
-#include <math.h>
-#include <stdlib.h>
-#include <string.h>
 
 extern Grid* vgrid; // FIXME
 
@@ -120,15 +95,20 @@ struct PscHarrisParams
 
 // ======================================================================
 // Global parameters
+//
+// I'm not a big fan of global parameters, but they're only for
+// this particular case and they help make things simpler.
 
+// An "anonymous namespace" makes these variables visible in this source file
+// only
 namespace
 {
-
-std::string read_checkpoint_filename;
 
 // Parameters specific to this case. They don't really need to be collected in a
 // struct, but maybe it's nice that they are
 PscHarrisParams g;
+
+std::string read_checkpoint_filename;
 
 // This is a set of generic PSC params (see include/psc.hxx),
 // like number of steps to run, etc, which also should be set by the case
@@ -832,9 +812,23 @@ void run()
 
   mpi_printf(comm, "*** Finished with user-specified initialization ***\n");
 
+  // ======================================================================
+  // Hand off to PscIntegrator to run the simulation
+
   auto psc =
     makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts, balance,
                                  collision, checks, marder, diagnostics);
+
+#if 0
+  // FIXME, checkpoint reading should be moved to before the integrator
+  if (!read_checkpoint_filename.empty()) {
+    mpi_printf(MPI_COMM_WORLD, "**** Reading checkpoint...\n");
+    psc.read_checkpoint(read_checkpoint_filename);
+  }
+#endif
+
+  // ======================================================================
+  // Hand off to PscIntegrator to run the simulation
 
   psc.integrate();
 }
@@ -848,8 +842,6 @@ int main(int argc, char** argv)
 
   run();
 
-  libmrc_params_finalize();
-  MPI_Finalize();
-
+  psc_finalize();
   return 0;
 }

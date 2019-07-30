@@ -52,15 +52,20 @@ struct PscWhistlerParams
 
 // ======================================================================
 // Global parameters
+//
+// I'm not a big fan of global parameters, but they're only for
+// this particular case and they help make things simpler.
 
+// An "anonymous namespace" makes these variables visible in this source file
+// only
 namespace
 {
-
-std::string read_checkpoint_filename;
 
 // Parameters specific to this case. They don't really need to be collected in a
 // struct, but maybe it's nice that they are
 PscWhistlerParams g;
+
+std::string read_checkpoint_filename;
 
 // This is a set of generic PSC params (see include/psc.hxx),
 // like number of steps to run, etc, which also should be set by the case
@@ -330,6 +335,9 @@ static void run()
     psc.read_checkpoint(read_checkpoint_filename);
   }
 
+  // ======================================================================
+  // Hand off to PscIntegrator to run the simulation
+
   psc.integrate();
 }
 
@@ -342,8 +350,6 @@ int main(int argc, char** argv)
 
   run();
 
-  libmrc_params_finalize();
-  MPI_Finalize();
-
+  psc_finalize();
   return 0;
 }
