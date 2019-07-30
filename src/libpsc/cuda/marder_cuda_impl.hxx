@@ -13,7 +13,10 @@
 template<typename BS>
 struct MarderCuda : MarderBase
 {
-  using real_t = MfieldsStateCuda::real_t;
+  using MfieldsState = MfieldsStateCuda;
+  using Mfields = MfieldsCuda;
+  using Mparticles = MparticlesCuda<BS>;
+  using real_t = MfieldsState::real_t;
   
   MarderCuda(const Grid_t& grid, real_t diffusion, int loop, bool dump)
     : grid_{grid},
@@ -53,9 +56,9 @@ struct MarderCuda : MarderBase
     }
   }
   
-  void calc_aid_fields(MfieldsStateBase& mflds_base, MparticlesBase& mprts_base)
+  void calc_aid_fields(MfieldsState& mflds, Mparticles& mprts)
   {
-    item_div_e_.run(mprts_base.grid(), mflds_base, mprts_base); // FIXME, should accept NULL for particles
+    item_div_e_.run(mprts.grid(), mflds, mprts); // FIXME, should accept NULL for particles
   
     if (dump_) {
       static int cnt;
@@ -78,11 +81,11 @@ struct MarderCuda : MarderBase
   //
   // Do the modified marder correction (See eq.(5, 7, 9, 10) in Mardahl and Verboncoeur, CPC, 1997)
 
-  void correct(MfieldsBase& mflds_base, MfieldsBase& mf_base)
+  void correct(MfieldsState& mflds, Mfields& mf)
   {
-    assert(mflds_base._grid().isInvar(0));
+    assert(mflds._grid().isInvar(0));
 
-    const Grid_t& grid = mflds_base._grid();
+    const Grid_t& grid = mflds._grid();
     // FIXME: how to choose diffusion parameter properly?
     float dx[3];
     for (int d = 0; d < 3; d++) {
@@ -102,8 +105,6 @@ struct MarderCuda : MarderBase
     fac[1] = .5 * grid.dt * diffusion / dx[1];
     fac[2] = .5 * grid.dt * diffusion / dx[2];
 
-    auto& mflds = mflds_base.get_as<MfieldsStateCuda>(EX, EX + 3);
-    auto& mf = mf_base.get_as<MfieldsCuda>(0, 1);
     cuda_mfields *cmflds = mflds.cmflds();
     cuda_mfields *cmf = mf.cmflds();
 
@@ -132,9 +133,6 @@ struct MarderCuda : MarderBase
     
       cuda_marder_correct_yz(cmflds, cmf, p, fac, ly, ry, lz, rz);
     }
-
-    mflds_base.put_as(mflds, EX, EX + 3);
-    mf_base.put_as(mf, 0, 0);
   }
 
   void operator()(MfieldsStateCuda& mflds, MparticlesCuda<BS>& mprts)
