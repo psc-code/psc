@@ -1,109 +1,85 @@
 
+#include "psc_diag.h"
 #include "psc_diag_item_private.h"
-#include "psc_diag_private.h"
 
 #include <mrc_params.h>
 #include <stdlib.h>
 #include <string.h>
 
 // ----------------------------------------------------------------------
-// psc_diag_setup
+// psc_diag ctor
 
-static void _psc_diag_setup(struct psc_diag* diag)
+psc_diag::psc_diag(MPI_Comm comm, int interval)
+  : comm_{comm}, interval_{interval}
 {
-  struct psc_diag_item* item = psc_diag_item_create(psc_diag_comm(diag));
+  MPI_Comm_rank(comm_, &rank_);
+
+  struct psc_diag_item* item = psc_diag_item_create(comm_);
   psc_diag_item_set_type(item, "field_energy");
   psc_diag_item_set_name(item, "field_energy");
-  diag->items_.push_back(item);
+  items_.push_back(item);
 
-  item = psc_diag_item_create(psc_diag_comm(diag));
+  item = psc_diag_item_create(comm_);
   psc_diag_item_set_type(item, "particle_energy");
   psc_diag_item_set_name(item, "particle_energy");
-  diag->items_.push_back(item);
+  items_.push_back(item);
 
-  MPI_Comm_rank(psc_diag_comm(diag), &diag->rank_);
+  if (rank_ == 0) {
+    file_ = fopen("diag.asc", "w");
+    fprintf(file_, "# time");
 
-  if (diag->rank_ == 0) {
-    diag->file_ = fopen("diag.asc", "w");
-    fprintf(diag->file_, "# time");
-    
-    for (auto item: diag->items_) {
+    for (auto item : items_) {
       int nr_values = psc_diag_item_nr_values(item);
       for (int i = 0; i < nr_values; i++) {
-	fprintf(diag->file_, " %s", psc_diag_item_title(item, i));
+        fprintf(file_, " %s", psc_diag_item_title(item, i));
       }
     }
-    fprintf(diag->file_, "\n");
+    fprintf(file_, "\n");
   }
 }
 
 // ----------------------------------------------------------------------
-// psc_diag_destroy
+// psc_diag dtor
 
-static void _psc_diag_destroy(struct psc_diag* diag)
+psc_diag::~psc_diag()
 {
-  if (diag->rank_ == 0) {
-    fclose(diag->file_);
+  if (rank_ == 0) {
+    fclose(file_);
   }
 }
 
 // ----------------------------------------------------------------------
-// psc_diag_run
+// psc_diag::run
 
-void psc_diag_run(struct psc_diag* diag, MparticlesBase& mprts,
-                  MfieldsStateBase& mflds)
+void psc_diag::operator()(MparticlesBase& mprts, MfieldsStateBase& mflds)
 {
   const auto& grid = mprts.grid();
 
-  if (diag->every_step < 0 || grid.timestep() % diag->every_step != 0)
+  if (interval_ <= 0 || grid.timestep() % interval_ != 0)
     return;
 
-  if (diag->rank_ == 0) {
-    fprintf(diag->file_, "%g", grid.timestep() * grid.dt);
+  if (rank_ == 0) {
+    fprintf(file_, "%g", grid.timestep() * grid.dt);
   }
-  for (auto item: diag->items_) {
+  for (auto item : items_) {
     int nr_values = psc_diag_item_nr_values(item);
     std::vector<double> result(nr_values);
     psc_diag_item_run(item, mprts, mflds, result.data());
-    if (diag->rank_ == 0) {
-      MPI_Reduce(MPI_IN_PLACE, result.data(), result.size(), MPI_DOUBLE, MPI_SUM, 0,
-                 grid.comm());
+    if (rank_ == 0) {
+      MPI_Reduce(MPI_IN_PLACE, result.data(), result.size(), MPI_DOUBLE,
+                 MPI_SUM, 0, comm_);
     } else {
-      MPI_Reduce(result.data(), NULL, result.size(), MPI_DOUBLE, MPI_SUM, 0, grid.comm());
+      MPI_Reduce(result.data(), NULL, result.size(), MPI_DOUBLE, MPI_SUM, 0,
+                 comm_);
     }
-    if (diag->rank_ == 0) {
+    if (rank_ == 0) {
       for (auto val : result) {
-        fprintf(diag->file_, " %g", val);
+        fprintf(file_, " %g", val);
       }
     }
   }
-  if (diag->rank_ == 0) {
-    fprintf(diag->file_, "\n");
-    fflush(diag->file_);
+  if (rank_ == 0) {
+    fprintf(file_, "\n");
+    fflush(file_);
   }
 }
-
-// ======================================================================
-
-#define VAR(x) (void*)offsetof(struct psc_diag, x)
-
-static struct param psc_diag_descr[] = {
-  {"every_step", VAR(every_step), PARAM_INT(-1)},
-  {},
-};
-#undef VAR
-
-// ======================================================================
-// psc_diag class
-
-struct mrc_class_psc_diag_ : mrc_class_psc_diag
-{
-  mrc_class_psc_diag_()
-  {
-    name = "psc_diag";
-    size = sizeof(struct psc_diag);
-    param_descr = psc_diag_descr;
-    setup = _psc_diag_setup;
-    destroy = _psc_diag_destroy;
-  }
-} mrc_class_psc_diag;

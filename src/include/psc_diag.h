@@ -7,8 +7,20 @@
 #include "psc.h"
 #include "psc_diag_item.h"
 
-MRC_CLASS_DECLARE(psc_diag, struct psc_diag);
+class psc_diag
+{
+public:
+  psc_diag(MPI_Comm comm, int interval);
+  ~psc_diag();
 
-void psc_diag_run(struct psc_diag *diag, MparticlesBase& mprts, MfieldsStateBase& mflds);
+  void operator()(MparticlesBase& mprts, MfieldsStateBase& mflds);
+
+private:
+  MPI_Comm comm_;
+  int interval_;
+  std::vector<psc_diag_item*> items_;
+  FILE* file_;
+  int rank_;
+};
 
 #endif
