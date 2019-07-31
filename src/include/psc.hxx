@@ -98,45 +98,46 @@ inline double courant_length(const Grid_t::Domain& domain)
 // ======================================================================
 // Psc
 
-template <typename PscConfig>
+template <typename PscConfig, typename Diagnostics, typename InjectParticles>
 struct Psc
 {
   using Mparticles = typename PscConfig::Mparticles;
   using MfieldsState = typename PscConfig::MfieldsState;
-  using Balance_t = typename PscConfig::Balance_t;
-  using Sort_t = typename PscConfig::Sort_t;
-  using Collision_t = typename PscConfig::Collision_t;
-  using PushParticles_t = typename PscConfig::PushParticles_t;
-  using PushFields_t = typename PscConfig::PushFields_t;
-  using Bnd_t = typename PscConfig::Bnd_t;
-  using BndFields_t = typename PscConfig::BndFields_t;
-  using BndParticles_t = typename PscConfig::BndParticles_t;
-  using Checks_t = typename PscConfig::Checks_t;
-  using Marder_t = typename PscConfig::Marder_t;
-  using OutputParticles = typename PscConfig::OutputParticles;
-  using Dim = typename PscConfig::dim_t;
+  using Balance = typename PscConfig::Balance;
+  using Sort = typename PscConfig::Sort;
+  using Collision = typename PscConfig::Collision;
+  using Checks = typename PscConfig::Checks;
+  using Marder = typename PscConfig::Marder;
+  using PushParticles = typename PscConfig::PushParticles;
+  using PushFields = typename PscConfig::PushFields;
+  using Bnd = typename PscConfig::Bnd;
+  using BndFields = typename PscConfig::BndFields;
+  using BndParticles = typename PscConfig::BndParticles;
+  using Dim = typename PscConfig::Dim;
 
 #ifdef VPIC
-  using AccumulateOps = typename PushParticles_t::AccumulateOps;
+  using AccumulateOps = typename PushParticles::AccumulateOps;
 #endif
 
   // ----------------------------------------------------------------------
   // ctor
 
   Psc(const PscParams& params, Grid_t& grid, MfieldsState& mflds,
-      Mparticles& mprts, Balance_t& balance, Collision_t& collision,
-      Checks_t& checks, Marder_t& marder, OutputFieldsC& outf,
-      OutputParticles& outp)
+      Mparticles& mprts, Balance& balance, Collision& collision, Checks& checks,
+      Marder& marder, Diagnostics& diagnostics,
+      InjectParticles inject_particles)
     : p_{params},
       grid_{&grid},
-      mflds_{&mflds},
-      mprts_{&mprts},
-      balance_{&balance},
-      collision_{&collision},
-      checks_{&checks},
-      marder_{&marder},
-      outf_{&outf},
-      outp_{&outp}
+      mflds_{mflds},
+      mprts_{mprts},
+      balance_{balance},
+      collision_{collision},
+      checks_{checks},
+      marder_{marder},
+      bnd_{grid, grid.ibn},
+      bndp_{grid},
+      diagnostics_{diagnostics},
+      inject_particles_{inject_particles}
   {
     time_start_ = MPI_Wtime();
 
@@ -146,13 +147,6 @@ struct Psc
 
     diag_ = psc_diag_create(MPI_COMM_WORLD);
     psc_diag_set_from_options(diag_);
-
-    sort_.reset(new Sort_t{});
-    pushp_.reset(new PushParticles_t{});
-    pushf_.reset(new PushFields_t{});
-    bnd_.reset(new Bnd_t{grid, grid.ibn});
-    bndf_.reset(new BndFields_t{});
-    bndp_.reset(new BndParticles_t{grid});
 
     psc_diag_setup(diag_);
 
@@ -242,7 +236,7 @@ struct Psc
       psc_stats_stop(st_time_step);
       prof_stop(pr);
 
-      psc_stats_val[st_nr_particles] = mprts_->size();
+      psc_stats_val[st_nr_particles] = mprts_.size();
 
       if (grid().timestep() % p_.stats_every == 0) {
         print_status();
@@ -302,11 +296,8 @@ struct Psc
 
     int timestep = grid().timestep();
 
-    auto& mprts = *mprts_;
-    auto& mflds = *mflds_;
-
     if (p_.balance_interval > 0 && timestep % p_.balance_interval == 0) {
-      (*balance_)(grid_, mprts);
+      balance_(grid_, mprts_);
     }
 
     prof_start(pr_time_step_no_comm);
@@ -315,73 +306,73 @@ struct Psc
     if (p_.sort_interval > 0 && timestep % p_.sort_interval == 0) {
       // mpi_printf(comm, "***** Sorting...\n");
       prof_start(pr_sort);
-      (*sort_)(mprts);
+      sort_(mprts_);
       prof_stop(pr_sort);
     }
 
-    if (collision_->interval() > 0 && timestep % collision_->interval() == 0) {
+    if (collision_.interval() > 0 && timestep % collision_.interval() == 0) {
       mpi_printf(comm, "***** Performing collisions...\n");
       prof_start(pr_collision);
-      (*collision_)(mprts);
+      collision_(mprts_);
       prof_stop(pr_collision);
     }
 
     // psc_bnd_particles_open_calc_moments(psc_->bnd_particles,
     // psc_->particles);
 
-    checks_->continuity_before_particle_push(mprts);
+    checks_.continuity_before_particle_push(mprts_);
 
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
     prof_start(pr_push_prts);
-    pushp_->push_mprts(mprts, mflds, *interpolator, *accumulator,
-                       particle_bc_list, num_comm_round);
+    pushp_.push_mprts(mprts_, mflds_, *interpolator, *accumulator,
+                      particle_bc_list, num_comm_round);
     prof_stop(pr_push_prts);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
 
     // field propagation B^{n+1/2} -> B^{n+1}
-    pushf_->push_H(mflds, .5);
+    pushf_.push_H(mflds_, .5);
     // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
     prof_start(pr_bndp);
-    (*bndp_)(mprts);
+    bndp_(mprts_);
     prof_stop(pr_bndp);
 
     // field propagation E^{n+1/2} -> E^{n+3/2}
 
     // fill ghosts for H
-    bndf_->fill_ghosts_H(mflds);
-    bnd_->fill_ghosts(mflds, HX, HX + 3);
+    bndf_.fill_ghosts_H(mflds_);
+    bnd_.fill_ghosts(mflds_, HX, HX + 3);
 
     // add and fill ghost for J
-    bndf_->add_ghosts_J(mflds);
-    bnd_->add_ghosts(mflds, JXI, JXI + 3);
-    bnd_->fill_ghosts(mflds, JXI, JXI + 3);
+    bndf_.add_ghosts_J(mflds_);
+    bnd_.add_ghosts(mflds_, JXI, JXI + 3);
+    bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
 
     // push E
-    pushf_->push_E(mflds, 1.);
+    pushf_.push_E(mflds_, 1.);
 
-    bndf_->fill_ghosts_E(mflds);
+    bndf_.fill_ghosts_E(mflds_);
     // if (pushf_->variant == 0) {
-    bnd_->fill_ghosts(mflds, EX, EX + 3);
+    bnd_.fill_ghosts(mflds_, EX, EX + 3);
     //}
     // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
 
     // field propagation B^{n+1} -> B^{n+3/2}
     // if (pushf_->variant == 0) {
-    bndf_->fill_ghosts_E(mflds);
-    bnd_->fill_ghosts(mflds, EX, EX + 3);
+    bndf_.fill_ghosts_E(mflds_);
+    bnd_.fill_ghosts(mflds_, EX, EX + 3);
     //    }
 
     // push H
-    pushf_->push_H(mflds, .5);
+    pushf_.push_H(mflds_, .5);
 
-    bndf_->fill_ghosts_H(mflds);
+    bndf_.fill_ghosts_H(mflds_);
     // if (pushf_->variant == 0) {
-    bnd_->fill_ghosts(mflds, HX, HX + 3);
+    bnd_.fill_ghosts(mflds_, HX, HX + 3);
     //}
     // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 
-    checks_->continuity_after_particle_push(mprts, mflds);
+    checks_.continuity_after_particle_push(mprts_, mflds_);
 
     // E at t^{n+3/2}, particles at t^{n+3/2}
     // B at t^{n+3/2} (Note: that is not it's natural time,
@@ -389,14 +380,14 @@ struct Psc
     if (p_.marder_interval > 0 && timestep % p_.marder_interval == 0) {
       // mpi_printf(comm, "***** Performing Marder correction...\n");
       prof_start(pr_marder);
-      (*marder_)(mflds, mprts);
+      marder_(mflds_, mprts_);
       prof_stop(pr_marder);
     }
 
-    checks_->gauss(mprts, mflds);
+    checks_.gauss(mprts_, mflds_);
 
 #ifdef VPIC
-    pushp_->load_interpolator(mprts, mflds, *interpolator);
+    pushp_.load_interpolator(mprts_, mflds_, *interpolator);
 #endif
   }
 #endif
@@ -406,7 +397,7 @@ struct Psc
 
   void step_psc()
   {
-    using DIM = typename PscConfig::dim_t;
+    using Dim = typename PscConfig::Dim;
 
     static int pr_sort, pr_collision, pr_checks, pr_push_prts, pr_push_flds,
       pr_bndp, pr_bndf, pr_marder, pr_inject_prts;
@@ -426,24 +417,21 @@ struct Psc
     MPI_Comm comm = grid().comm();
     int timestep = grid().timestep();
 
-    auto& mprts = *mprts_;
-    auto& mflds = *mflds_;
-
     if (p_.balance_interval > 0 && timestep % p_.balance_interval == 0) {
-      (*balance_)(grid_, mprts);
+      balance_(grid_, mprts_);
     }
 
     if (p_.sort_interval > 0 && timestep % p_.sort_interval == 0) {
       mpi_printf(comm, "***** Sorting...\n");
       prof_start(pr_sort);
-      (*sort_)(mprts);
+      sort_(mprts_);
       prof_stop(pr_sort);
     }
 
-    if (collision_->interval() > 0 && timestep % collision_->interval() == 0) {
+    if (collision_.interval() > 0 && timestep % collision_.interval() == 0) {
       mpi_printf(comm, "***** Performing collisions...\n");
       prof_start(pr_collision);
-      (*collision_)(mprts);
+      collision_(mprts_);
       prof_stop(pr_collision);
     }
 
@@ -452,71 +440,71 @@ struct Psc
     inject_particles();
     prof_stop(pr_inject_prts);
 
-    if (checks_->continuity_every_step > 0 &&
-        timestep % checks_->continuity_every_step == 0) {
+    if (checks_.continuity_every_step > 0 &&
+        timestep % checks_.continuity_every_step == 0) {
       mpi_printf(comm, "***** Checking continuity...\n");
       prof_start(pr_checks);
-      checks_->continuity_before_particle_push(mprts);
+      checks_.continuity_before_particle_push(mprts_);
       prof_stop(pr_checks);
     }
 
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
     prof_start(pr_push_prts);
-    pushp_->push_mprts(mprts, mflds);
+    pushp_.push_mprts(mprts_, mflds_);
     prof_stop(pr_push_prts);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
 
     // === field propagation B^{n+1/2} -> B^{n+1}
     prof_start(pr_push_flds);
-    pushf_->push_H(mflds, .5, DIM{});
+    pushf_.push_H(mflds_, .5, Dim{});
     prof_stop(pr_push_flds);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
     prof_start(pr_bndp);
-    (*bndp_)(mprts);
+    bndp_(mprts_);
     prof_stop(pr_bndp);
 
     // === field propagation E^{n+1/2} -> E^{n+3/2}
     prof_start(pr_bndf);
 #if 1
-    bndf_->fill_ghosts_H(mflds);
-    bnd_->fill_ghosts(mflds, HX, HX + 3);
+    bndf_.fill_ghosts_H(mflds_);
+    bnd_.fill_ghosts(mflds_, HX, HX + 3);
 #endif
 
-    bndf_->add_ghosts_J(mflds);
-    bnd_->add_ghosts(mflds, JXI, JXI + 3);
-    bnd_->fill_ghosts(mflds, JXI, JXI + 3);
+    bndf_.add_ghosts_J(mflds_);
+    bnd_.add_ghosts(mflds_, JXI, JXI + 3);
+    bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
     prof_stop(pr_bndf);
 
     prof_restart(pr_push_flds);
-    pushf_->push_E(mflds, 1., DIM{});
+    pushf_.push_E(mflds_, 1., Dim{});
     prof_stop(pr_push_flds);
 
 #if 1
     prof_restart(pr_bndf);
-    bndf_->fill_ghosts_E(mflds);
-    bnd_->fill_ghosts(mflds, EX, EX + 3);
+    bndf_.fill_ghosts_E(mflds_);
+    bnd_.fill_ghosts(mflds_, EX, EX + 3);
     prof_stop(pr_bndf);
 #endif
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
 
     // === field propagation B^{n+1} -> B^{n+3/2}
     prof_restart(pr_push_flds);
-    pushf_->push_H(mflds, .5, DIM{});
+    pushf_.push_H(mflds_, .5, Dim{});
     prof_stop(pr_push_flds);
 
 #if 1
     prof_start(pr_bndf);
-    bndf_->fill_ghosts_H(mflds);
-    bnd_->fill_ghosts(mflds, HX, HX + 3);
+    bndf_.fill_ghosts_H(mflds_);
+    bnd_.fill_ghosts(mflds_, HX, HX + 3);
     prof_stop(pr_bndf);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 #endif
 
-    if (checks_->continuity_every_step > 0 &&
-        timestep % checks_->continuity_every_step == 0) {
+    if (checks_.continuity_every_step > 0 &&
+        timestep % checks_.continuity_every_step == 0) {
       prof_restart(pr_checks);
-      checks_->continuity_after_particle_push(mprts, mflds);
+      checks_.continuity_after_particle_push(mprts_, mflds_);
       prof_stop(pr_checks);
     }
 
@@ -526,21 +514,21 @@ struct Psc
     if (p_.marder_interval > 0 && timestep % p_.marder_interval == 0) {
       mpi_printf(comm, "***** Performing Marder correction...\n");
       prof_start(pr_marder);
-      (*marder_)(mflds, mprts);
+      marder_(mflds_, mprts_);
       prof_stop(pr_marder);
     }
 
-    if (checks_->gauss_every_step > 0 &&
-        timestep % checks_->gauss_every_step == 0) {
+    if (checks_.gauss_every_step > 0 &&
+        timestep % checks_.gauss_every_step == 0) {
       prof_restart(pr_checks);
-      checks_->gauss(mprts, mflds);
+      checks_.gauss(mprts_, mflds_);
       prof_stop(pr_checks);
     }
 
     // psc_push_particles_prep(psc->push_particles, psc->particles, psc->flds);
   }
 
-  virtual void step()
+  void step()
   {
 #ifdef VPIC
     step_vpic();
@@ -552,7 +540,7 @@ struct Psc
   // ----------------------------------------------------------------------
   // inject_particles
 
-  virtual void inject_particles() {}
+  void inject_particles() { return this->inject_particles_(grid(), mprts_); }
 
 private:
   // ----------------------------------------------------------------------
@@ -585,7 +573,7 @@ private:
   {
     // pushp_.stagger(mprts, mflds); FIXME, vpic does it
 
-    checks_->gauss(*mprts_, *mflds_);
+    checks_.gauss(mprts_, mflds_);
   }
 #endif
 
@@ -598,50 +586,47 @@ private:
   {
     MPI_Comm comm = grid().comm();
 
-    auto& mprts = *mprts_;
-    auto& mflds = *mflds_;
-
     // Do some consistency checks on user initialized fields
 
     mpi_printf(comm, "Checking interdomain synchronization\n");
-    double err = marder_->synchronize_tang_e_norm_b(mflds);
+    double err = marder_.synchronize_tang_e_norm_b(mflds_);
     mpi_printf(comm, "Error = %g (arb units)\n", err);
 
     mpi_printf(comm, "Checking magnetic field divergence\n");
-    marder_->compute_div_b_err(mflds);
-    err = marder_->compute_rms_div_b_err(mflds);
+    marder_.compute_div_b_err(mflds_);
+    err = marder_.compute_rms_div_b_err(mflds_);
     mpi_printf(comm, "RMS error = %e (charge/volume)\n", err);
-    marder_->clean_div_b(mflds);
+    marder_.clean_div_b(mflds_);
 
     // Load fields not initialized by the user
 
     mpi_printf(comm, "Initializing radiation damping fields\n");
-    TIC AccumulateOps::compute_curl_b(*mflds_);
+    TIC AccumulateOps::compute_curl_b(mflds_);
     TOC(compute_curl_b, 1);
 
     mpi_printf(comm, "Initializing bound charge density\n");
-    marder_->clear_rhof(mflds);
-    marder_->accumulate_rho_p(mprts, mflds);
-    marder_->synchronize_rho(mflds);
-    TIC AccumulateOps::compute_rhob(*mflds_);
+    marder_.clear_rhof(mflds_);
+    marder_.accumulate_rho_p(mprts_, mflds_);
+    marder_.synchronize_rho(mflds_);
+    TIC AccumulateOps::compute_rhob(mflds_);
     TOC(compute_rhob, 1);
 
     // Internal sanity checks
 
     mpi_printf(comm, "Checking electric field divergence\n");
-    marder_->compute_div_e_err(mflds);
-    err = marder_->compute_rms_div_e_err(mflds);
+    marder_.compute_div_e_err(mflds_);
+    err = marder_.compute_rms_div_e_err(mflds_);
     mpi_printf(comm, "RMS error = %e (charge/volume)\n", err);
-    marder_->clean_div_e(mflds);
+    marder_.clean_div_e(mflds_);
 
     mpi_printf(comm, "Rechecking interdomain synchronization\n");
-    err = marder_->synchronize_tang_e_norm_b(mflds);
+    err = marder_.synchronize_tang_e_norm_b(mflds_);
     mpi_printf(comm, "Error = %e (arb units)\n", err);
 
     mpi_printf(comm, "Uncentering particles\n");
-    if (!mprts.empty()) {
-      pushp_->load_interpolator(mprts, mflds, *interpolator);
-      pushp_->uncenter(mprts, *interpolator);
+    if (!mprts_.empty()) {
+      pushp_.load_interpolator(mprts_, mflds_, *interpolator);
+      pushp_.uncenter(mprts_, *interpolator);
     }
   }
 
@@ -650,23 +635,14 @@ private:
   // ----------------------------------------------------------------------
   // diagnostics
 
-  virtual void diagnostics()
+  void diagnostics()
   {
-#ifdef VPIC
-#if 0
-    TIC user_diagnostics(); TOC(user_diagnostics, 1);
-#endif
-#else
+#ifndef VPIC
     // FIXME
-    psc_diag_run(diag_, *mprts_, *mflds_);
-    // FIXME
-    (*outf_)(*mflds_, *mprts_);
+    psc_diag_run(diag_, mprts_, mflds_);
 #endif
-    if (outp_) {
-      psc_stats_start(st_time_output);
-      (*outp_).run(*mprts_);
-      psc_stats_stop(st_time_output);
-    }
+
+    diagnostics_(mprts_, mflds_);
   }
 
   // ----------------------------------------------------------------------
@@ -700,8 +676,8 @@ private:
     auto io = kg::io::IOAdios2{};
     auto writer = io.open(filename, kg::io::Mode::Write);
     writer.put("grid", *grid_);
-    writer.put("mflds", *mflds_);
-    writer.put("mprts", *mprts_);
+    writer.put("mflds", mflds_);
+    writer.put("mprts", mprts_);
     writer.close();
 #else
     std::cerr << "write_checkpoint not available without adios2" << std::endl;
@@ -722,8 +698,8 @@ public:
     auto io = kg::io::IOAdios2{};
     auto reader = io.open(filename, kg::io::Mode::Read);
     reader.get("grid", *grid_);
-    reader.get("mflds", *mflds_);
-    reader.get("mprts", *mprts_);
+    reader.get("mflds", mflds_);
+    reader.get("mprts", mprts_);
     reader.close();
 #else
     std::cerr << "write_checkpoint not available without adios2" << std::endl;
@@ -740,21 +716,22 @@ private:
 protected:
   Grid_t* grid_;
 
-  std::unique_ptr<MfieldsState> mflds_;
-  std::unique_ptr<Mparticles> mprts_;
+  MfieldsState& mflds_;
+  Mparticles& mprts_;
 
-  std::unique_ptr<Balance_t> balance_;
-  std::unique_ptr<Sort_t> sort_;
-  std::unique_ptr<Collision_t> collision_;
-  std::unique_ptr<PushParticles_t> pushp_;
-  std::unique_ptr<PushFields_t> pushf_;
-  std::unique_ptr<Bnd_t> bnd_;
-  std::unique_ptr<BndFields_t> bndf_;
-  std::unique_ptr<BndParticles_t> bndp_;
-  std::unique_ptr<Checks_t> checks_;
-  std::unique_ptr<Marder_t> marder_;
-  std::unique_ptr<OutputFieldsC> outf_;
-  std::unique_ptr<OutputParticles> outp_;
+  Balance& balance_;
+  Collision& collision_;
+  Checks& checks_;
+  Marder& marder_;
+  Diagnostics& diagnostics_;
+  InjectParticles& inject_particles_;
+
+  Sort sort_;
+  PushParticles pushp_;
+  PushFields pushf_;
+  Bnd bnd_;
+  BndFields bndf_;
+  BndParticles bndp_;
 
   psc_diag* diag_; ///< timeseries diagnostics
 
@@ -766,6 +743,69 @@ protected:
   int st_nr_particles;
   int st_time_step;
 };
+
+// ======================================================================
+// InjectParticlesNone
+
+class InjectParticlesNone
+{
+public:
+  template <typename Mparticles>
+  void operator()(const Grid_t& grid, Mparticles& mprts)
+  {}
+};
+
+namespace
+{
+
+InjectParticlesNone injectParticlesNone;
+
+} // namespace
+
+// ======================================================================
+// makePscIntegrator
+
+template <typename PscConfig, typename MfieldsState, typename Mparticles,
+          typename Balance, typename Collision, typename Checks,
+          typename Marder, typename Diagnostics,
+          typename InjectParticles = InjectParticlesNone>
+Psc<PscConfig, Diagnostics, InjectParticles> makePscIntegrator(
+  const PscParams& params, Grid_t& grid, MfieldsState& mflds, Mparticles& mprts,
+  Balance& balance, Collision& collision, Checks& checks, Marder& marder,
+  Diagnostics& diagnostics,
+  InjectParticles& inject_particles = injectParticlesNone)
+{
+  return {params,    grid,   mflds,  mprts,       balance,
+          collision, checks, marder, diagnostics, inject_particles};
+}
+
+// ======================================================================
+// partitionAndSetupParticles
+
+template <typename SetupParticles, typename Balance, typename Mparticles,
+          typename FUNC>
+void partitionAndSetupParticles(SetupParticles& setup_particles,
+                                Balance& balance, Grid_t*& grid_ptr,
+                                Mparticles& mprts, FUNC&& init_npt)
+{
+  auto comm = grid_ptr->comm();
+
+  // --- partition particles and initial balancing
+  mpi_printf(comm, "**** Partitioning...\n");
+
+  auto n_prts_by_patch = setup_particles.partition(*grid_ptr, init_npt);
+
+  balance.initial(grid_ptr, n_prts_by_patch);
+  // !!! FIXME! grid is now invalid
+  // balance::initial does not rebalance particles, because the old way of
+  // doing this does't even have the particle data structure created yet --
+  // FIXME?
+  mprts.reset(*grid_ptr);
+
+  // -- set up particles
+  mpi_printf(MPI_COMM_WORLD, "**** Setting up particles...\n");
+  setup_particles(mprts, init_npt);
+}
 
 // ======================================================================
 // VPIC-like stuff

@@ -19,6 +19,8 @@ struct SetupFields
   static void run(Mfields& mf, FUNC&& func)
   {
     const auto& grid = mf.grid();
+    mpi_printf(grid.comm(), "**** Setting up fields...\n");
+
   
     for (int p = 0; p < mf.n_patches(); ++p) {
       auto& patch = grid.patches[p];

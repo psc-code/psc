@@ -1,28 +1,35 @@
 
-#include "psc_config.hxx"
-#include <psc.h>
 #include <psc.hxx>
-#include <psc_fields_single.h>
-#include <psc_particles_single.h>
+#include <setup_fields.hxx>
+#include <setup_particles.hxx>
 
-#include "balance.hxx"
-#include "bnd_particles.hxx"
-#include "checks.hxx"
-#include "collision.hxx"
-#include "marder.hxx"
-#include "psc_integrator.hxx"
-#include "push_fields.hxx"
-#include "push_particles.hxx"
-#include "sort.hxx"
+#include "DiagnosticsDefault.h"
+#include "psc_config.hxx"
 
-#include "setup_fields.hxx"
-#include "setup_particles.hxx"
+// ======================================================================
+// PSC configuration
+//
+// This sets up compile-time configuration for the code, in particular
+// what data structures and algorithms to use
+//
+// EDIT to change order / floating point type / cuda / 2d/3d
 
-#include "../src/libpsc/psc_output_fields/fields_item_moments_1st.hxx"
+using Dim = dim_yz;
+#ifdef USE_CUDA
+using PscConfig = PscConfig1vbecCuda<Dim>;
+#else
+using PscConfig = PscConfig1vbecSingle<Dim>;
+#endif
 
-#include <mrc_params.h>
+// ----------------------------------------------------------------------
 
-#include <math.h>
+using MfieldsState = PscConfig::MfieldsState;
+using Mparticles = PscConfig::Mparticles;
+using Balance = PscConfig::Balance;
+using Collision = PscConfig::Collision;
+using Checks = PscConfig::Checks;
+using Marder = PscConfig::Marder;
+using OutputParticles = PscConfig::OutputParticles;
 
 // ======================================================================
 // PscBubbleParams
@@ -44,15 +51,20 @@ struct PscBubbleParams
 
 // ======================================================================
 // Global parameters
+//
+// I'm not a big fan of global parameters, but they're only for
+// this particular case and they help make things simpler.
 
+// An "anonymous namespace" makes these variables visible in this source file
+// only
 namespace
 {
-
-std::string read_checkpoint_filename;
 
 // Parameters specific to this case. They don't really need to be collected in a
 // struct, but maybe it's nice that they are
 PscBubbleParams g;
+
+std::string read_checkpoint_filename;
 
 // This is a set of generic PSC params (see include/psc.hxx),
 // like number of steps to run, etc, which also should be set by the case
@@ -61,29 +73,38 @@ PscParams psc_params;
 } // namespace
 
 // ======================================================================
-// PSC configuration
-//
-// This sets up compile-time configuration for the code, in particular
-// what data structures and algorithms to use
-//
-// EDIT to change order / floating point type / cuda / 2d/3d
+// setupParameters
 
-using Dim = dim_yz;
-#ifdef USE_CUDA
-using PscConfig = PscConfig1vbecCuda<Dim>;
-#else
-using PscConfig = PscConfig1vbecSingle<Dim>;
-#endif
+void setupParameters()
+{
+  // -- set some generic PSC parameters
+  psc_params.nmax = 1000; // 32000;
+  psc_params.stats_every = 100;
 
-// ----------------------------------------------------------------------
+  // -- start from checkpoint:
+  //
+  // Uncomment when wanting to start from a checkpoint, ie.,
+  // instead of setting up grid, particles and state fields here,
+  // they'll be read from a file
+  // FIXME: This parameter would be a good candidate to be provided
+  // on the command line, rather than requiring recompilation when change.
 
-using MfieldsState = PscConfig::MfieldsState;
-using Mparticles = PscConfig::Mparticles;
-using Balance = PscConfig::Balance_t;
-using Collision = PscConfig::Collision_t;
-using Checks = PscConfig::Checks_t;
-using Marder = PscConfig::Marder_t;
-using OutputParticles = PscConfig::OutputParticles;
+  // read_checkpoint_filename = "checkpoint_500.bp";
+
+  // -- Set some parameters specific to this case
+  g.BB = .07;
+  g.nnb = .1;
+  g.nn0 = 1.;
+  g.MMach = 3.;
+  g.LLn = 200.;
+  g.LLB = 200. / 6.;
+  g.TTe = .02;
+  g.TTi = .02;
+  g.MMi = 100.;
+
+  g.LLy = 2. * g.LLn;
+  g.LLz = 3. * g.LLn;
+}
 
 // ======================================================================
 // setupGrid
@@ -134,167 +155,155 @@ Grid_t* setupGrid()
 }
 
 // ======================================================================
-// init_npt
+// initializeParticles
 
-static void init_npt(int kind, double crd[3], psc_particle_npt& npt)
+void initializeParticles(Balance& balance, Grid_t* grid_ptr, Mparticles& mprts)
 {
+  SetupParticles<Mparticles> setup_particles(*grid_ptr);
+
   double V0 = g.MMach * sqrt(g.TTe / g.MMi);
 
-  double r1 = sqrt(sqr(crd[2]) + sqr(crd[1] + .5 * g.LLy));
-  double r2 = sqrt(sqr(crd[2]) + sqr(crd[1] - .5 * g.LLy));
+  partitionAndSetupParticles(
+    setup_particles, balance, grid_ptr, mprts,
+    [&](int kind, double crd[3], psc_particle_npt& npt) {
+      double r1 = sqrt(sqr(crd[2]) + sqr(crd[1] + .5 * g.LLy));
+      double r2 = sqrt(sqr(crd[2]) + sqr(crd[1] - .5 * g.LLy));
 
-  npt.n = g.nnb;
-  if (r1 < g.LLn) {
-    npt.n += (g.nn0 - g.nnb) * sqr(cos(M_PI / 2. * r1 / g.LLn));
-    if (r1 > 0.0) {
-      npt.p[2] += V0 * sin(M_PI * r1 / g.LLn) * crd[2] / r1;
-      npt.p[1] += V0 * sin(M_PI * r1 / g.LLn) * (crd[1] + .5 * g.LLy) / r1;
-    }
-  }
-  if (r2 < g.LLn) {
-    npt.n += (g.nn0 - g.nnb) * sqr(cos(M_PI / 2. * r2 / g.LLn));
-    if (r2 > 0.0) {
-      npt.p[2] += V0 * sin(M_PI * r2 / g.LLn) * crd[2] / r2;
-      npt.p[1] += V0 * sin(M_PI * r2 / g.LLn) * (crd[1] - .5 * g.LLy) / r2;
-    }
-  }
-
-  switch (kind) {
-    case KIND_ELECTRON:
-      // electron drift consistent with initial current
-      if ((r1 <= g.LLn) && (r1 >= g.LLn - 2. * g.LLB)) {
-        npt.p[0] = -g.BB * M_PI / (2. * g.LLB) *
-                   cos(M_PI * (g.LLn - r1) / (2. * g.LLB)) / npt.n;
+      npt.n = g.nnb;
+      if (r1 < g.LLn) {
+        npt.n += (g.nn0 - g.nnb) * sqr(cos(M_PI / 2. * r1 / g.LLn));
+        if (r1 > 0.0) {
+          npt.p[2] += V0 * sin(M_PI * r1 / g.LLn) * crd[2] / r1;
+          npt.p[1] += V0 * sin(M_PI * r1 / g.LLn) * (crd[1] + .5 * g.LLy) / r1;
+        }
       }
-      if ((r2 <= g.LLn) && (r2 >= g.LLn - 2. * g.LLB)) {
-        npt.p[0] = -g.BB * M_PI / (2. * g.LLB) *
-                   cos(M_PI * (g.LLn - r2) / (2. * g.LLB)) / npt.n;
+      if (r2 < g.LLn) {
+        npt.n += (g.nn0 - g.nnb) * sqr(cos(M_PI / 2. * r2 / g.LLn));
+        if (r2 > 0.0) {
+          npt.p[2] += V0 * sin(M_PI * r2 / g.LLn) * crd[2] / r2;
+          npt.p[1] += V0 * sin(M_PI * r2 / g.LLn) * (crd[1] - .5 * g.LLy) / r2;
+        }
       }
 
-      npt.T[0] = g.TTe;
-      npt.T[1] = g.TTe;
-      npt.T[2] = g.TTe;
-      break;
-    case KIND_ION:
-      npt.T[0] = g.TTi;
-      npt.T[1] = g.TTi;
-      npt.T[2] = g.TTi;
-      break;
-    default: assert(0);
-  }
+      switch (kind) {
+        case KIND_ELECTRON:
+          // electron drift consistent with initial current
+          if ((r1 <= g.LLn) && (r1 >= g.LLn - 2. * g.LLB)) {
+            npt.p[0] = -g.BB * M_PI / (2. * g.LLB) *
+                       cos(M_PI * (g.LLn - r1) / (2. * g.LLB)) / npt.n;
+          }
+          if ((r2 <= g.LLn) && (r2 >= g.LLn - 2. * g.LLB)) {
+            npt.p[0] = -g.BB * M_PI / (2. * g.LLB) *
+                       cos(M_PI * (g.LLn - r2) / (2. * g.LLB)) / npt.n;
+          }
+
+          npt.T[0] = g.TTe;
+          npt.T[1] = g.TTe;
+          npt.T[2] = g.TTe;
+          break;
+        case KIND_ION:
+          npt.T[0] = g.TTi;
+          npt.T[1] = g.TTi;
+          npt.T[2] = g.TTi;
+          break;
+        default: assert(0);
+      }
+    });
 }
 
 // ======================================================================
-// init_fields
+// initializeFields
 
-static double init_fields(int m, double crd[3])
+void initializeFields(MfieldsState& mflds)
 {
-  double z1 = crd[2];
-  double y1 = crd[1] + .5 * g.LLy;
-  double r1 = sqrt(sqr(z1) + sqr(y1));
-  double z2 = crd[2];
-  double y2 = crd[1] - .5 * g.LLy;
-  double r2 = sqrt(sqr(z2) + sqr(y2));
+  setupFields(mflds, [&](int m, double crd[3]) {
+    double z1 = crd[2];
+    double y1 = crd[1] + .5 * g.LLy;
+    double r1 = sqrt(sqr(z1) + sqr(y1));
+    double z2 = crd[2];
+    double y2 = crd[1] - .5 * g.LLy;
+    double r2 = sqrt(sqr(z2) + sqr(y2));
 
-  double rv = 0.;
-  switch (m) {
-    case HZ:
-      if ((r1 < g.LLn) && (r1 > g.LLn - 2 * g.LLB)) {
-        rv += -g.BB * sin(M_PI * (g.LLn - r1) / (2. * g.LLB)) * y1 / r1;
-      }
-      if ((r2 < g.LLn) && (r2 > g.LLn - 2 * g.LLB)) {
-        rv += -g.BB * sin(M_PI * (g.LLn - r2) / (2. * g.LLB)) * y2 / r2;
-      }
-      return rv;
+    double rv = 0.;
+    switch (m) {
+      case HZ:
+        if ((r1 < g.LLn) && (r1 > g.LLn - 2 * g.LLB)) {
+          rv += -g.BB * sin(M_PI * (g.LLn - r1) / (2. * g.LLB)) * y1 / r1;
+        }
+        if ((r2 < g.LLn) && (r2 > g.LLn - 2 * g.LLB)) {
+          rv += -g.BB * sin(M_PI * (g.LLn - r2) / (2. * g.LLB)) * y2 / r2;
+        }
+        return rv;
 
-    case HY:
-      if ((r1 < g.LLn) && (r1 > g.LLn - 2 * g.LLB)) {
-        rv += g.BB * sin(M_PI * (g.LLn - r1) / (2. * g.LLB)) * z1 / r1;
-      }
-      if ((r2 < g.LLn) && (r2 > g.LLn - 2 * g.LLB)) {
-        rv += g.BB * sin(M_PI * (g.LLn - r2) / (2. * g.LLB)) * z2 / r2;
-      }
-      return rv;
+      case HY:
+        if ((r1 < g.LLn) && (r1 > g.LLn - 2 * g.LLB)) {
+          rv += g.BB * sin(M_PI * (g.LLn - r1) / (2. * g.LLB)) * z1 / r1;
+        }
+        if ((r2 < g.LLn) && (r2 > g.LLn - 2 * g.LLB)) {
+          rv += g.BB * sin(M_PI * (g.LLn - r2) / (2. * g.LLB)) * z2 / r2;
+        }
+        return rv;
 
-    case EX:
-      if ((r1 < g.LLn) && (r1 > g.LLn - 2 * g.LLB)) {
-        rv += g.MMach * sqrt(g.TTe / g.MMi) * g.BB *
-              sin(M_PI * (g.LLn - r1) / (2. * g.LLB)) * sin(M_PI * r1 / g.LLn);
-      }
-      if ((r2 < g.LLn) && (r2 > g.LLn - 2 * g.LLB)) {
-        rv += g.MMach * sqrt(g.TTe / g.MMi) * g.BB *
-              sin(M_PI * (g.LLn - r2) / (2. * g.LLB)) * sin(M_PI * r2 / g.LLn);
-      }
-      return rv;
+      case EX:
+        if ((r1 < g.LLn) && (r1 > g.LLn - 2 * g.LLB)) {
+          rv += g.MMach * sqrt(g.TTe / g.MMi) * g.BB *
+                sin(M_PI * (g.LLn - r1) / (2. * g.LLB)) *
+                sin(M_PI * r1 / g.LLn);
+        }
+        if ((r2 < g.LLn) && (r2 > g.LLn - 2 * g.LLB)) {
+          rv += g.MMach * sqrt(g.TTe / g.MMi) * g.BB *
+                sin(M_PI * (g.LLn - r2) / (2. * g.LLB)) *
+                sin(M_PI * r2 / g.LLn);
+        }
+        return rv;
 
-      // FIXME, JXI isn't really needed anymore (?)
-    case JXI:
-      if ((r1 < g.LLn) && (r1 > g.LLn - 2 * g.LLB)) {
-        rv +=
-          g.BB * M_PI / (2. * g.LLB) * cos(M_PI * (g.LLn - r1) / (2. * g.LLB));
-      }
-      if ((r2 < g.LLn) && (r2 > g.LLn - 2 * g.LLB)) {
-        rv +=
-          g.BB * M_PI / (2. * g.LLB) * cos(M_PI * (g.LLn - r2) / (2. * g.LLB));
-      }
-      return rv;
+        // FIXME, JXI isn't really needed anymore (?)
+      case JXI:
+        if ((r1 < g.LLn) && (r1 > g.LLn - 2 * g.LLB)) {
+          rv += g.BB * M_PI / (2. * g.LLB) *
+                cos(M_PI * (g.LLn - r1) / (2. * g.LLB));
+        }
+        if ((r2 < g.LLn) && (r2 > g.LLn - 2 * g.LLB)) {
+          rv += g.BB * M_PI / (2. * g.LLB) *
+                cos(M_PI * (g.LLn - r2) / (2. * g.LLB));
+        }
+        return rv;
 
-    default: return 0.;
-  }
+      default: return 0.;
+    }
+  });
 }
 
 // ======================================================================
 // run
+//
+// This is basically the main function of this run,
+// which sets up everything and then uses PscIntegrator to run the
+// simulation
 
 static void run()
 {
   mpi_printf(MPI_COMM_WORLD, "*** Setting up...\n");
 
   // ----------------------------------------------------------------------
-  // Set up a bunch of parameters
+  // setup various parameters first
 
-  // -- set some generic PSC parameters
-  psc_params.nmax = 1000; // 32000;
-  psc_params.stats_every = 100;
-
-  // -- start from checkpoint:
-  //
-  // Uncomment when wanting to start from a checkpoint, ie.,
-  // instead of setting up grid, particles and state fields here,
-  // they'll be read from a file
-  // FIXME: This parameter would be a good candidate to be provided
-  // on the command line, rather than requiring recompilation when change.
-
-  // read_checkpoint_filename = "checkpoint_500.bp";
-
-  // -- Set some parameters specific to this case
-  g.BB = .07;
-  g.nnb = .1;
-  g.nn0 = 1.;
-  g.MMach = 3.;
-  g.LLn = 200.;
-  g.LLB = 200. / 6.;
-  g.TTe = .02;
-  g.TTi = .02;
-  g.MMi = 100.;
-
-  g.LLy = 2. * g.LLn;
-  g.LLz = 3. * g.LLn;
+  setupParameters();
 
   // ----------------------------------------------------------------------
   // Set up grid, state fields, particles
 
   auto grid_ptr = setupGrid();
   auto& grid = *grid_ptr;
-  auto& mflds = *new MfieldsState{grid};
-  auto& mprts = *new Mparticles{grid};
+  MfieldsState mflds{grid};
+  Mparticles mprts{grid};
 
   // ----------------------------------------------------------------------
   // Set up various objects needed to run this case
 
   // -- Balance
   psc_params.balance_interval = 0;
-  auto& balance = *new Balance{psc_params.balance_interval, .1};
+  Balance balance{psc_params.balance_interval, .1};
 
   // -- Sort
   psc_params.sort_interval = 10;
@@ -302,18 +311,18 @@ static void run()
   // -- Collision
   int collision_interval = 10;
   double collision_nu = .1;
-  auto& collision = *new Collision{grid, collision_interval, collision_nu};
+  Collision collision{grid, collision_interval, collision_nu};
 
   // -- Checks
   ChecksParams checks_params{};
-  auto& checks = *new Checks{grid, MPI_COMM_WORLD, checks_params};
+  Checks checks{grid, MPI_COMM_WORLD, checks_params};
 
   // -- Marder correction
   double marder_diffusion = 0.9;
   int marder_loop = 3;
   bool marder_dump = false;
   psc_params.marder_interval = 0; // 5
-  auto& marder = *new Marder(grid, marder_diffusion, marder_loop, marder_dump);
+  Marder marder(grid, marder_diffusion, marder_loop, marder_dump);
 
   // ----------------------------------------------------------------------
   // Set up output
@@ -330,45 +339,31 @@ static void run()
   outf_items.emplace_back(new FieldsItem_n_1st_cc<Mparticles>(grid));
   outf_items.emplace_back(new FieldsItem_v_1st_cc<Mparticles>(grid));
   outf_items.emplace_back(new FieldsItem_T_1st_cc<Mparticles>(grid));
-  auto& outf = *new OutputFieldsC{grid, outf_params, std::move(outf_items)};
+  OutputFieldsC outf{grid, outf_params, std::move(outf_items)};
 
   // -- output particles
   OutputParticlesParams outp_params{};
   outp_params.every_step = 0;
   outp_params.data_dir = ".";
   outp_params.basename = "prt";
-  auto& outp = *new OutputParticles{grid, outp_params};
+  OutputParticles outp{grid, outp_params};
+
+  auto diagnostics = makeDiagnosticsDefault(outf, outp);
 
   // ----------------------------------------------------------------------
-  // Initial conditions
+  // setup initial conditions
 
   if (read_checkpoint_filename.empty()) {
-    // --- partition particles and initial balancing
-    mpi_printf(MPI_COMM_WORLD, "**** Partitioning...\n");
-
-    SetupParticles<Mparticles> setup_particles(grid);
-
-    auto n_prts_by_patch = setup_particles.partition(grid, init_npt);
-
-    balance.initial(grid_ptr, n_prts_by_patch);
-    // !!! FIXME! grid is now invalid
-    // balance::initial does not rebalance particles, because the old way of
-    // doing this does't even have the particle data structure created yet --
-    // FIXME?
-    mprts.reset(*grid_ptr);
-
-    // -- set up particles
-    mpi_printf(MPI_COMM_WORLD, "**** Setting up particles...\n");
-    setup_particles(mprts, init_npt);
-
-    // -- set up fields
-    mpi_printf(MPI_COMM_WORLD, "**** Setting up fields...\n");
-    setupFields(mflds, init_fields);
+    initializeParticles(balance, grid_ptr, mprts);
+    initializeFields(mflds);
   }
+
+  // ----------------------------------------------------------------------
+  // hand off to PscIntegrator to run the simulation
 
   auto psc =
     makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts, balance,
-                                 collision, checks, marder, outf, outp);
+                                 collision, checks, marder, diagnostics);
 
   // FIXME, checkpoint reading should be moved to before the integrator
   if (!read_checkpoint_filename.empty()) {
@@ -388,8 +383,6 @@ int main(int argc, char** argv)
 
   run();
 
-  libmrc_params_finalize();
-  MPI_Finalize();
-
+  psc_finalize();
   return 0;
 }
