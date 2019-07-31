@@ -2,7 +2,7 @@
 #pragma once
 
 #include <mrc_profile.h>
-#include <psc_diag.h>
+#include <DiagEnergies.h>
 
 #include <particles.hxx>
 
@@ -143,7 +143,7 @@ struct Psc
     assert(grid.isInvar(1) == Dim::InvarY::value);
     assert(grid.isInvar(2) == Dim::InvarZ::value);
 
-    diag_ = new psc_diag{MPI_COMM_WORLD, 10}; // FIXME hardcoded interval
+    diag_ = new DiagEnergies{MPI_COMM_WORLD, 10}; // FIXME hardcoded interval
 
     initialize_stats();
     initialize();
@@ -678,7 +678,7 @@ protected:
 
   Checkpointing checkpointing_;
 
-  psc_diag* diag_; ///< timeseries diagnostics
+  DiagEnergies* diag_; ///< timeseries diagnostics
 
   // FIXME, maybe should be private
   // need to make sure derived class sets these (? -- or just leave them off by

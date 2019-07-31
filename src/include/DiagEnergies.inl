@@ -1,15 +1,8 @@
 
-#include "psc_diag.h"
-#include "psc_diag_item_private.h"
-
-#include <mrc_params.h>
-#include <stdlib.h>
-#include <string.h>
-
 // ----------------------------------------------------------------------
-// psc_diag ctor
+// DiagEnergies ctor
 
-psc_diag::psc_diag(MPI_Comm comm, int interval)
+inline DiagEnergies::DiagEnergies(MPI_Comm comm, int interval)
   : comm_{comm}, interval_{interval}
 {
   MPI_Comm_rank(comm_, &rank_);
@@ -39,9 +32,9 @@ psc_diag::psc_diag(MPI_Comm comm, int interval)
 }
 
 // ----------------------------------------------------------------------
-// psc_diag dtor
+// DiagEnergies dtor
 
-psc_diag::~psc_diag()
+inline DiagEnergies::~DiagEnergies()
 {
   if (rank_ == 0) {
     fclose(file_);
@@ -49,9 +42,9 @@ psc_diag::~psc_diag()
 }
 
 // ----------------------------------------------------------------------
-// psc_diag::run
+// DiagEnergies::operator()
 
-void psc_diag::operator()(MparticlesBase& mprts, MfieldsStateBase& mflds)
+inline void DiagEnergies::operator()(MparticlesBase& mprts, MfieldsStateBase& mflds)
 {
   const auto& grid = mprts.grid();
 
@@ -64,7 +57,7 @@ void psc_diag::operator()(MparticlesBase& mprts, MfieldsStateBase& mflds)
   for (auto item : items_) {
     int nr_values = psc_diag_item_nr_values(item);
     std::vector<double> result(nr_values);
-    psc_diag_item_run(item, mprts, mflds, result.data());
+    psc_diag1_item_run(item, mprts, mflds, result.data());
     if (rank_ == 0) {
       MPI_Reduce(MPI_IN_PLACE, result.data(), result.size(), MPI_DOUBLE,
                  MPI_SUM, 0, comm_);
