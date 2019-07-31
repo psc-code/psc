@@ -1,8 +1,10 @@
 
 #pragma once
 
+#include "DiagEnergiesField.h"
+#include "DiagEnergiesParticle.h"
+
 #include "psc.h"
-#include "psc_diag_item.h"
 
 class DiagEnergies
 {
@@ -13,16 +15,21 @@ public:
   void operator()(MparticlesBase& mprts, MfieldsStateBase& mflds);
 
 private:
-  void write_one(psc_diag_item* item, MparticlesBase& mprts,
+  template <typename Item>
+  static std::string legend(const Item& item);
+
+  template <typename Item>
+  void write_one(const Item& item, MparticlesBase& mprts,
                  MfieldsStateBase& mflds);
 
 private:
   MPI_Comm comm_;
   int interval_;
-  struct psc_diag_item *fe_;
-  struct psc_diag_item *pe_;
   std::unique_ptr<FILE, void (*)(FILE*)> file_;
   int rank_;
+
+  DiagEnergiesField ef_;
+  DiagEnergiesParticle ep_;
 };
 
 #include "DiagEnergies.inl"
