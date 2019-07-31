@@ -86,25 +86,25 @@ private:
 // OutputParticlesHdf5
 
 template <typename Mparticles>
-struct OutputParticlesHdf5 : OutputParticlesParams
+struct OutputParticlesHdf5
 {
   using Particle = typename Mparticles::Particle;
   using Particles = typename Mparticles::Patch;
   using real_t = typename Mparticles::real_t;
 
-  OutputParticlesHdf5(const Grid_t& grid, const OutputParticlesParams& params)
-    : OutputParticlesParams{params}, grid_{grid}
+  OutputParticlesHdf5(const Grid_t& grid, const Int3& lo, const Int3& hi)
+    : grid_{grid}, lo_{lo}, hi_{hi}
   {
     // set hi to gdims by default (if not set differently before)
     // and calculate wdims (global dims of region we're writing)
     for (int d = 0; d < 3; d++) {
-      assert(lo[d] >= 0);
-      if (hi[d] == 0) {
-        hi[d] = grid.domain.gdims[d];
+      assert(lo_[d] >= 0);
+      if (hi_[d] == 0) {
+        hi_[d] = grid.domain.gdims[d];
       }
-      assert(hi[d] <= grid.domain.gdims[d]);
-      wdims[d] = hi[d] - lo[d];
+      assert(hi_[d] <= grid.domain.gdims[d]);
     }
+    wdims_ = hi_ - lo_;
   }
 
   // ----------------------------------------------------------------------
@@ -192,8 +192,8 @@ struct OutputParticlesHdf5 : OutputParticlesParams
                         int ihi[3], int ld[3])
   {
     for (int d = 0; d < 3; d++) {
-      ilo[d] = MAX(lo[d], off[d]) - off[d];
-      ihi[d] = MIN(hi[d], off[d] + ldims[d]) - off[d];
+      ilo[d] = MAX(lo_[d], off[d]) - off[d];
+      ihi[d] = MIN(hi_[d], off[d] + ldims[d]) - off[d];
       ilo[d] = MIN(ldims[d], ilo[d]);
       ihi[d] = MAX(0, ihi[d]);
       ld[d] = ihi[d] - ilo[d];
@@ -321,9 +321,9 @@ struct OutputParticlesHdf5 : OutputParticlesParams
 
     hsize_t fdims[4];
     fdims[0] = grid_.kinds.size();
-    fdims[1] = wdims[2];
-    fdims[2] = wdims[1];
-    fdims[3] = wdims[0];
+    fdims[1] = wdims_[2];
+    fdims[2] = wdims_[1];
+    fdims[3] = wdims_[0];
     hid_t filespace = H5Screate_simple(4, fdims, NULL);
     H5_CHK(filespace);
     hid_t memspace;
@@ -367,7 +367,8 @@ struct OutputParticlesHdf5 : OutputParticlesParams
   // ----------------------------------------------------------------------
   // operator()
 
-  void operator()(Mparticles& mprts)
+  void operator()(Mparticles& mprts, const std::string& filename,
+                  const OutputParticlesParams& params)
   {
     const auto& grid = mprts.grid();
     herr_t ierr;
@@ -399,15 +400,16 @@ struct OutputParticlesHdf5 : OutputParticlesParams
     size_t *gidx_begin = NULL, *gidx_end = NULL;
     if (rank == 0) {
       // alloc global idx array
-      gidx_begin = (size_t*)malloc(nr_kinds * wdims[0] * wdims[1] * wdims[2] *
-                                   sizeof(*gidx_begin));
-      gidx_end = (size_t*)malloc(nr_kinds * wdims[0] * wdims[1] * wdims[2] *
+      gidx_begin = (size_t*)malloc(nr_kinds * wdims_[0] * wdims_[1] *
+                                   wdims_[2] * sizeof(*gidx_begin));
+      gidx_end = (size_t*)malloc(nr_kinds * wdims_[0] * wdims_[1] * wdims_[2] *
                                  sizeof(*gidx_end));
-      for (int jz = 0; jz < wdims[2]; jz++) {
-        for (int jy = 0; jy < wdims[1]; jy++) {
-          for (int jx = 0; jx < wdims[0]; jx++) {
+      for (int jz = 0; jz < wdims_[2]; jz++) {
+        for (int jy = 0; jy < wdims_[1]; jy++) {
+          for (int jx = 0; jx < wdims_[0]; jx++) {
             for (int kind = 0; kind < nr_kinds; kind++) {
-              int ii = ((kind * wdims[2] + jz) * wdims[1] + jy) * wdims[0] + jx;
+              int ii =
+                ((kind * wdims_[2] + jz) * wdims_[1] + jy) * wdims_[0] + jx;
               gidx_begin[ii] = -1;
               gidx_end[ii] = -1;
             }
@@ -447,14 +449,14 @@ struct OutputParticlesHdf5 : OutputParticlesParams
           for (int jy = ilo[1]; jy < ihi[1]; jy++) {
             for (int jx = ilo[0]; jx < ihi[0]; jx++) {
               for (int kind = 0; kind < nr_kinds; kind++) {
-                int ix = jx + info.off[0] - lo[0];
-                int iy = jy + info.off[1] - lo[1];
-                int iz = jz + info.off[2] - lo[2];
+                int ix = jx + info.off[0] - lo_[0];
+                int iy = jy + info.off[1] - lo_[1];
+                int iz = jz + info.off[2] - lo_[2];
                 int jj =
                   ((kind * ld[2] + jz - ilo[2]) * ld[1] + jy - ilo[1]) * ld[0] +
                   jx - ilo[0];
                 int ii =
-                  ((kind * wdims[2] + iz) * wdims[1] + iy) * wdims[0] + ix;
+                  ((kind * wdims_[2] + iz) * wdims_[1] + iy) * wdims_[0] + ix;
                 gidx_begin[ii] = idx[p][jj];
                 gidx_end[ii] = idx[p][jj + sz];
               }
@@ -491,14 +493,14 @@ struct OutputParticlesHdf5 : OutputParticlesParams
           for (int jy = ilo[1]; jy < ihi[1]; jy++) {
             for (int jx = ilo[0]; jx < ihi[0]; jx++) {
               for (int kind = 0; kind < nr_kinds; kind++) {
-                int ix = jx + info.off[0] - lo[0];
-                int iy = jy + info.off[1] - lo[1];
-                int iz = jz + info.off[2] - lo[2];
+                int ix = jx + info.off[0] - lo_[0];
+                int iy = jy + info.off[1] - lo_[1];
+                int iz = jz + info.off[2] - lo_[2];
                 int jj =
                   ((kind * ld[2] + jz - ilo[2]) * ld[1] + jy - ilo[1]) * ld[0] +
                   jx - ilo[0];
                 int ii =
-                  ((kind * wdims[2] + iz) * wdims[1] + iy) * wdims[0] + ix;
+                  ((kind * wdims_[2] + iz) * wdims_[1] + iy) * wdims_[0] + ix;
                 gidx_begin[ii] = recv_buf_p[info.rank][jj];
                 gidx_end[ii] = recv_buf_p[info.rank][jj + sz];
               }
@@ -540,25 +542,24 @@ struct OutputParticlesHdf5 : OutputParticlesParams
     prof_stop(pr_B);
 
     prof_start(pr_C);
-    char filename[strlen(data_dir) + strlen(basename) + 20];
-    sprintf(filename, "%s/%s.%06d_p%06d.h5", data_dir, basename,
-            grid.timestep(), 0);
 
     hid_t plist = H5Pcreate(H5P_FILE_ACCESS);
 
     MPI_Info mpi_info;
     MPI_Info_create(&mpi_info);
 #ifdef H5_HAVE_PARALLEL
-    if (romio_cb_write) {
-      MPI_Info_set(mpi_info, (char*)"romio_cb_write", (char*)romio_cb_write);
+    if (params.romio_cb_write) {
+      MPI_Info_set(mpi_info, (char*)"romio_cb_write",
+                   (char*)params.romio_cb_write);
     }
-    if (romio_ds_write) {
-      MPI_Info_set(mpi_info, (char*)"romio_ds_write", (char*)romio_ds_write);
+    if (params.romio_ds_write) {
+      MPI_Info_set(mpi_info, (char*)"romio_ds_write",
+                   (char*)params.romio_ds_write);
     }
     H5Pset_fapl_mpio(plist, grid_.comm(), mpi_info);
 #endif
 
-    hid_t file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, plist);
+    hid_t file = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, plist);
     H5_CHK(file);
     H5Pclose(plist);
     MPI_Info_free(&mpi_info);
@@ -570,15 +571,15 @@ struct OutputParticlesHdf5 : OutputParticlesParams
       H5Gcreate(group, "p0", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     H5_CHK(groupp);
 
-    ierr = H5LTset_attribute_int(group, ".", "lo", lo, 3);
+    ierr = H5LTset_attribute_int(group, ".", "lo", lo_, 3);
     CE;
-    ierr = H5LTset_attribute_int(group, ".", "hi", hi, 3);
+    ierr = H5LTset_attribute_int(group, ".", "hi", hi_, 3);
     CE;
 
     hid_t dxpl = H5Pcreate(H5P_DATASET_XFER);
     H5_CHK(dxpl);
 #ifdef H5_HAVE_PARALLEL
-    if (use_independent_io) {
+    if (params.use_independent_io) {
       ierr = H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT);
       CE;
     } else {
@@ -620,18 +621,21 @@ struct OutputParticlesHdf5 : OutputParticlesParams
   // ----------------------------------------------------------------------
   // run
 
-  void run(MparticlesBase& mprts_base)
+  void run(MparticlesBase& mprts_base, const std::string& filename,
+           const OutputParticlesParams& params)
   {
     auto& mprts = mprts_base.get_as<Mparticles>();
-    (*this)(mprts);
+    (*this)(mprts, filename, params);
     mprts_base.put_as(mprts, MP_DONT_COPY);
   }
 
   // private:
-  Int3 wdims; // dimensions of the subdomain we're actually writing
   const Grid_t& grid_;
 
 private:
+  Int3 lo_;
+  Int3 hi_;
+  Int3 wdims_;
   Hdf5ParticleType prt_type_;
 };
 
@@ -646,17 +650,38 @@ public:
   using Impl = detail::OutputParticlesHdf5<Mparticles>;
 
   OutputParticlesHdf5(const Grid_t& grid, const OutputParticlesParams& params)
-    : OutputParticlesParams{params}, impl_{grid, params}
-  {}
+    : OutputParticlesParams{params}, impl_{grid, params.lo, params.hi}
+  {
+    // set hi to gdims by default (if not set differently before)
+    // and calculate wdims (global dims of region we're writing)
+    for (int d = 0; d < 3; d++) {
+      assert(lo[d] >= 0);
+      if (hi[d] == 0) {
+        hi[d] = grid.domain.gdims[d];
+      }
+      assert(hi[d] <= grid.domain.gdims[d]);
+      wdims_[d] = hi[d] - lo[d];
+    }
+  }
+
+  void operator()(MparticlesBase& mprts_base)
+  {
+    const auto& grid = mprts_base.grid();
+    char filename[strlen(data_dir) + strlen(basename) + 20];
+    sprintf(filename, "%s/%s.%06d_p%06d.h5", data_dir, basename,
+            grid.timestep(), 0);
+    impl_.run(mprts_base, filename, static_cast<OutputParticlesParams&>(*this));
+  }
 
   void run(MparticlesBase& mprts_base) override
   {
     const auto& grid = mprts_base.grid();
     if (every_step >= 0 && grid.timestep() % every_step == 0) {
-      impl_.run(mprts_base);
+      (*this)(mprts_base);
     }
   }
 
 private:
   Impl impl_;
+  Int3 wdims_; // dimensions of the subdomain we're actually writing
 };
