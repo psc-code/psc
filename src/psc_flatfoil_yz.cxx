@@ -4,6 +4,7 @@
 #include <setup_particles.hxx>
 
 #include "DiagnosticsDefault.h"
+#include "OutputFieldsDefault.h"
 #include "psc_config.hxx"
 
 #include "../libpsc/psc_heating/psc_heating_impl.hxx"
@@ -384,9 +385,9 @@ void run()
   // FIXME, this really is too complicated and not very flexible
 
   // -- output fields
-  OutputFieldsCParams outf_params{};
+  OutputFieldsParams outf_params{};
   outf_params.pfield_step = 200;
-  auto outf = defaultOutputFieldsC<Mparticles>(grid, outf_params);
+  auto outf = defaultOutputFields<Mparticles>(grid, outf_params);
 
   // -- output particles
   OutputParticlesParams outp_params{};
