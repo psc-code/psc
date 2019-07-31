@@ -143,7 +143,7 @@ struct Psc
     assert(grid.isInvar(1) == Dim::InvarY::value);
     assert(grid.isInvar(2) == Dim::InvarZ::value);
 
-    diag_ = new DiagEnergies{MPI_COMM_WORLD, 10}; // FIXME hardcoded interval
+    diag_ = DiagEnergies{grid.comm(), 10}; // FIXME hardcoded interval
 
     initialize_stats();
     initialize();
@@ -627,7 +627,7 @@ private:
   {
 #ifndef VPIC
     // FIXME
-    (*diag_)(mprts_, mflds_);
+    diag_(mprts_, mflds_);
 #endif
 
     diagnostics_(mprts_, mflds_);
@@ -678,7 +678,7 @@ protected:
 
   Checkpointing checkpointing_;
 
-  DiagEnergies* diag_; ///< timeseries diagnostics
+  DiagEnergies diag_; ///< timeseries diagnostics
 
   // FIXME, maybe should be private
   // need to make sure derived class sets these (? -- or just leave them off by
