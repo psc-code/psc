@@ -51,6 +51,38 @@ namespace detail
 {
 
 // ======================================================================
+// Hdf5ParticleType
+
+class Hdf5ParticleType
+{
+public:
+  Hdf5ParticleType()
+  {
+    id_ = H5Tcreate(H5T_COMPOUND, sizeof(struct hdf5_prt));
+    H5Tinsert(id_, "x", HOFFSET(struct hdf5_prt, x), H5T_NATIVE_FLOAT);
+    H5Tinsert(id_, "y", HOFFSET(struct hdf5_prt, y), H5T_NATIVE_FLOAT);
+    H5Tinsert(id_, "z", HOFFSET(struct hdf5_prt, z), H5T_NATIVE_FLOAT);
+    H5Tinsert(id_, "px", HOFFSET(struct hdf5_prt, px), H5T_NATIVE_FLOAT);
+    H5Tinsert(id_, "py", HOFFSET(struct hdf5_prt, py), H5T_NATIVE_FLOAT);
+    H5Tinsert(id_, "pz", HOFFSET(struct hdf5_prt, pz), H5T_NATIVE_FLOAT);
+    H5Tinsert(id_, "q", HOFFSET(struct hdf5_prt, q), H5T_NATIVE_FLOAT);
+    H5Tinsert(id_, "m", HOFFSET(struct hdf5_prt, m), H5T_NATIVE_FLOAT);
+    H5Tinsert(id_, "w", HOFFSET(struct hdf5_prt, w), H5T_NATIVE_FLOAT);
+    H5Tinsert(id_, "id", HOFFSET(struct hdf5_prt, id),
+              ToHdf5Type<psc::particle::Id>::H5Type());
+    H5Tinsert(id_, "tag", HOFFSET(struct hdf5_prt, tag),
+              ToHdf5Type<psc::particle::Tag>::H5Type());
+  }
+
+  ~Hdf5ParticleType() { H5Tclose(id_); }
+
+  operator hid_t() const { return id_; }
+
+private:
+  hid_t id_;
+};
+
+// ======================================================================
 // OutputParticlesHdf5
 
 template <typename Mparticles>
@@ -63,22 +95,6 @@ struct OutputParticlesHdf5 : OutputParticlesParams
   OutputParticlesHdf5(const Grid_t& grid, const OutputParticlesParams& params)
     : OutputParticlesParams{params}, grid_{grid}
   {
-    hid_t id = H5Tcreate(H5T_COMPOUND, sizeof(struct hdf5_prt));
-    H5Tinsert(id, "x", HOFFSET(struct hdf5_prt, x), H5T_NATIVE_FLOAT);
-    H5Tinsert(id, "y", HOFFSET(struct hdf5_prt, y), H5T_NATIVE_FLOAT);
-    H5Tinsert(id, "z", HOFFSET(struct hdf5_prt, z), H5T_NATIVE_FLOAT);
-    H5Tinsert(id, "px", HOFFSET(struct hdf5_prt, px), H5T_NATIVE_FLOAT);
-    H5Tinsert(id, "py", HOFFSET(struct hdf5_prt, py), H5T_NATIVE_FLOAT);
-    H5Tinsert(id, "pz", HOFFSET(struct hdf5_prt, pz), H5T_NATIVE_FLOAT);
-    H5Tinsert(id, "q", HOFFSET(struct hdf5_prt, q), H5T_NATIVE_FLOAT);
-    H5Tinsert(id, "m", HOFFSET(struct hdf5_prt, m), H5T_NATIVE_FLOAT);
-    H5Tinsert(id, "w", HOFFSET(struct hdf5_prt, w), H5T_NATIVE_FLOAT);
-    H5Tinsert(id, "id", HOFFSET(struct hdf5_prt, id),
-              ToHdf5Type<psc::particle::Id>::H5Type());
-    H5Tinsert(id, "tag", HOFFSET(struct hdf5_prt, tag),
-              ToHdf5Type<psc::particle::Tag>::H5Type());
-    prt_type = id;
-
     // set hi to gdims by default (if not set differently before)
     // and calculate wdims (global dims of region we're writing)
     for (int d = 0; d < 3; d++) {
@@ -90,8 +106,6 @@ struct OutputParticlesHdf5 : OutputParticlesParams
       wdims[d] = hi[d] - lo[d];
     }
   }
-
-  ~OutputParticlesHdf5() { H5Tclose(prt_type); }
 
   // ----------------------------------------------------------------------
   // get_cell_index
@@ -287,10 +301,10 @@ struct OutputParticlesHdf5 : OutputParticlesParams
       H5Sselect_hyperslab(filespace, H5S_SELECT_SET, foff, NULL, mdims, NULL);
     CE;
 
-    hid_t dset = H5Dcreate(group, "1d", prt_type, filespace, H5P_DEFAULT,
+    hid_t dset = H5Dcreate(group, "1d", prt_type_, filespace, H5P_DEFAULT,
                            H5P_DEFAULT, H5P_DEFAULT);
     H5_CHK(dset);
-    ierr = H5Dwrite(dset, prt_type, memspace, filespace, dxpl, arr);
+    ierr = H5Dwrite(dset, prt_type_, memspace, filespace, dxpl, arr);
     CE;
 
     ierr = H5Dclose(dset);
@@ -619,9 +633,11 @@ struct OutputParticlesHdf5 : OutputParticlesParams
   }
 
   // private:
-  hid_t prt_type;
   Int3 wdims; // dimensions of the subdomain we're actually writing
   const Grid_t& grid_;
+
+private:
+  Hdf5ParticleType prt_type_;
 };
 
 } // namespace detail
