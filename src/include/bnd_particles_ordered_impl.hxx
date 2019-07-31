@@ -180,7 +180,7 @@ struct psc_bnd_particles_ordered : BndParticles_<MP>, bnd_particles_policy_order
   // ----------------------------------------------------------------------
   // exchange_particles
 
-  void exchange_particles(MparticlesBase& mprts_base)
+  void operator()(Mparticles& mprts)
   {
     static int pr_A, pr_B;
     if (!pr_A) {

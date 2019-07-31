@@ -61,16 +61,6 @@ struct Inject_ : InjectBase
     mres.put_as(mf_n, 0, 0);
   }
 
-  // ----------------------------------------------------------------------
-  // run
-
-  void run(MparticlesBase& mprts_base, MfieldsBase& mflds_base) override
-  {
-    auto& mprts = mprts_base.get_as<Mparticles>();
-    (*this)(mprts);
-    mprts_base.put_as(mprts);
-  }
-
 private:
   Target_t target_;
   ItemMoment_t moment_n_;

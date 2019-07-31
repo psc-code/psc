@@ -78,13 +78,6 @@ struct Heating__ : HeatingBase
     }
   }
   
-  void run(MparticlesBase& mprts_base) override
-  {
-    auto& mprts = mprts_base.get_as<Mparticles>();
-    (*this)(mprts);
-    mprts_base.put_as(mprts);
-  }
-  
 private:
   int kind_;
   real_t heating_dt_;
