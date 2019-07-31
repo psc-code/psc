@@ -3,6 +3,7 @@
 
 #include <dim.hxx>
 #include <psc_particles_single.h>
+#include <psc_particles_double.h>
 #include "../libpsc/psc_output_particles/output_particles_ascii_impl.hxx"
 #include "../libpsc/psc_output_particles/output_particles_hdf5_impl.hxx"
 
@@ -53,8 +54,8 @@ private:
 };
 
 using OutputParticlesTestTypes = ::testing::Types<Config<dim_xyz, MparticlesSingle, OutputParticlesAscii>,
-						  Config<dim_xyz, MparticlesSingle, OutputParticlesHdf5<MparticlesSingle>>,
-						  Config<dim_xyz, MparticlesDouble, OutputParticlesHdf5<MparticlesDouble>>>;
+						  Config<dim_xyz, MparticlesSingle, OutputParticlesHdf5>,
+						  Config<dim_xyz, MparticlesDouble, OutputParticlesHdf5>>;
 
 TYPED_TEST_SUITE(OutputParticlesTest, OutputParticlesTestTypes);
 

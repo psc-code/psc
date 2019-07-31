@@ -1,8 +1,6 @@
 
 #include "output_particles.hxx"
 
-#include "psc_particles_double.h"
-
 struct OutputParticlesAscii : OutputParticlesParams, OutputParticlesBase
 {
   OutputParticlesAscii(const Grid_t& grid, const OutputParticlesParams& params)
@@ -13,9 +11,10 @@ struct OutputParticlesAscii : OutputParticlesParams, OutputParticlesBase
   // ----------------------------------------------------------------------
   // operator()
 
-  void operator()(MparticlesBase& mprts_base) 
+  template <typename Mparticles>
+  void operator()(Mparticles& mprts) 
   {
-    const auto& grid = mprts_base.grid();
+    const auto& grid = mprts.grid();
     if (every_step < 0 || grid.timestep() % every_step != 0) {
       return;
     }
@@ -25,8 +24,6 @@ struct OutputParticlesAscii : OutputParticlesParams, OutputParticlesBase
     char filename[strlen(data_dir) + strlen(basename) + 21];
     sprintf(filename, "%s/%s.%06d_p%06d.asc", data_dir,
 	    basename, grid.timestep(), rank);
-    
-    auto& mprts = mprts_base.get_as<MparticlesDouble>();
     
     FILE *file = fopen(filename, "w");
     auto accessor = mprts.accessor();
@@ -40,8 +37,6 @@ struct OutputParticlesAscii : OutputParticlesParams, OutputParticlesBase
 	n++;
       }
     }
-    
-    mprts_base.put_as(mprts, MP_DONT_COPY);
     
     fclose(file);
   }
