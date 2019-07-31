@@ -92,8 +92,13 @@ struct OutputParticlesHdf5
   using Particles = typename Mparticles::Patch;
   using real_t = typename Mparticles::real_t;
 
-  OutputParticlesHdf5(const Grid_t& grid, const Int3& lo, const Int3& hi)
-    : lo_{lo}, hi_{hi}, kinds_{grid.kinds}, comm_{grid.comm()}
+  OutputParticlesHdf5(const Grid_t& grid, const Int3& lo, const Int3& hi,
+                      hid_t prt_type)
+    : lo_{lo},
+      hi_{hi},
+      kinds_{grid.kinds},
+      comm_{grid.comm()},
+      prt_type_{prt_type}
   {
     // set hi to gdims by default (if not set differently before)
     // and calculate wdims (global dims of region we're writing)
@@ -622,7 +627,7 @@ private:
   Int3 lo_;
   Int3 hi_;
   Int3 wdims_;
-  Hdf5ParticleType prt_type_;
+  hid_t prt_type_;
   Grid_t::Kinds kinds_;
   MPI_Comm comm_;
 };
@@ -638,7 +643,7 @@ public:
   using Impl = detail::OutputParticlesHdf5<Mparticles>;
 
   OutputParticlesHdf5(const Grid_t& grid, const OutputParticlesParams& params)
-    : OutputParticlesParams{params}, impl_{grid, params.lo, params.hi}
+    : OutputParticlesParams{params}, impl_{grid, params.lo, params.hi, prt_type_}
   {
     // set hi to gdims by default (if not set differently before)
     // and calculate wdims (global dims of region we're writing)
@@ -673,6 +678,7 @@ public:
   }
 
 private:
+  detail::Hdf5ParticleType prt_type_;
   Impl impl_;
   Int3 wdims_; // dimensions of the subdomain we're actually writing
 };
