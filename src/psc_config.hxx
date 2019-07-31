@@ -34,8 +34,7 @@
 
 #include "../libpsc/vpic/fields_item_vpic.hxx"
 
-template<typename Mparticles>
-using OutputParticlesDefault = OutputParticlesHdf5<Mparticles>;
+using OutputParticlesDefault = OutputParticlesHdf5;
 
 struct SimulationNone
 {
@@ -96,7 +95,7 @@ struct PscConfig_
   using Checks = Checks_<Mparticles, MfieldsState, Mfields, checks_order>;
   using Marder = Marder_<Mparticles, MfieldsState, Mfields>;
   using Simulation = _Simulation;
-  using OutputParticles = OutputParticlesDefault<Mparticles>;
+  using OutputParticles = OutputParticlesDefault;
 };
 
 #ifdef USE_CUDA
@@ -119,7 +118,7 @@ struct PscConfig_<_Dim, _Mparticles, _MfieldsState, _Mfields, PscConfigPushParti
   using Balance = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Checks = ChecksCuda<Mparticles>;
   using Marder = MarderCuda<BS>;
-  using OutputParticles = OutputParticlesDefault<MparticlesSingle>;
+  using OutputParticles = OutputParticlesDefault;
 };
 
 template<typename _Mparticles, typename _MfieldsState, typename _Mfields>
@@ -207,7 +206,7 @@ struct PscConfigVpicWrap
   using BndParticles = BndParticlesVpic<Mparticles>;
   using Checks = ChecksVpic<Mparticles, MfieldsState>;
   using Marder = MarderVpicWrap<Mparticles, MfieldsState>;
-  using OutputParticles = OutputParticlesHdf5<MparticlesSingle>;
+  using OutputParticles = OutputParticlesHdf5;
   using OutputHydro = OutputHydroVpicWrap<Mparticles, MfieldsHydro, typename VpicConfig::MfieldsInterpolator>;
   using Dim = dim_xyz;
 
@@ -244,7 +243,7 @@ struct PscConfigVpicPsc
   using BndParticles = BndParticlesVpic<Mparticles>;
   using Checks = ChecksVpic<Mparticles, MfieldsState>;
   using Marder = MarderVpic<Mparticles, MfieldsState>;
-  using OutputParticles = OutputParticlesHdf5<MparticlesSingle>;
+  using OutputParticles = OutputParticlesHdf5;
   using OutputHydro = OutputHydroVpic<Mparticles, MfieldsHydro, typename VpicConfig::MfieldsInterpolator>;
   using Dim = dim_xyz;
 

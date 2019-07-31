@@ -7,6 +7,12 @@
 
 #include "output_particles.hxx"
 
+#include "psc_particles_single.h"
+#include "../libpsc/vpic/mparticles_vpic.hxx"
+#ifdef USE_CUDA
+#include "mparticles_cuda.hxx"
+#endif
+
 // needs to be changed accordingly
 
 struct hdf5_prt
@@ -618,11 +624,9 @@ private:
 
 } // namespace detail
 
-template <typename Mparticles>
 class OutputParticlesHdf5 : OutputParticlesBase
 {
 public:
-  using Impl = detail::OutputParticlesHdf5<Mparticles>;
 
   OutputParticlesHdf5(const Grid_t& grid, const OutputParticlesParams& params)
     : prm_{params}
@@ -638,9 +642,10 @@ public:
     wdims_ = hi_ - lo_;
   }
 
-  void operator()(MparticlesBase& mprts_base)
+  template <typename Mparticles>
+  void operator()(Mparticles& mprts)
   {
-    const auto& grid = mprts_base.grid();
+    const auto& grid = mprts.grid();
 
     if (prm_.every_step <= 0 || grid.timestep() % prm_.every_step != 0) {
       return;
@@ -650,11 +655,41 @@ public:
     sprintf(filename, "%s/%s.%06d_p%06d.h5", prm_.data_dir, prm_.basename,
             grid.timestep(), 0);
 
-    Impl impl{grid, lo_, hi_, wdims_, prt_type_};
-    auto& mprts = mprts_base.get_as<Mparticles>();
+    detail::OutputParticlesHdf5<Mparticles> impl{grid, lo_, hi_, wdims_, prt_type_};
     impl(mprts, filename, prm_);
-    mprts_base.put_as(mprts, MP_DONT_COPY);
   }
+
+  // FIXME, handles MparticlesVpic by conversion for now
+  template <typename Particles>
+  void operator()(MparticlesVpic_<Particles>& mprts)
+  {
+    const auto& grid = mprts.grid();
+
+    if (prm_.every_step <= 0 || grid.timestep() % prm_.every_step != 0) {
+      return;
+    }
+
+    auto& mprts_single = mprts.template get_as<MparticlesSingle>();
+    (*this)(mprts_single);
+    mprts.put_as(mprts_single, MP_DONT_COPY);
+  }
+
+#ifdef USE_CUDA
+  // FIXME, handles MparticlesCuda by conversion for now
+  template <typename BS>
+  void operator()(MparticlesCuda<BS>& mprts)
+  {
+    const auto& grid = mprts.grid();
+
+    if (prm_.every_step <= 0 || grid.timestep() % prm_.every_step != 0) {
+      return;
+    }
+
+    auto& mprts_single = mprts.template get_as<MparticlesSingle>();
+    (*this)(mprts_single);
+    mprts.put_as(mprts_single, MP_DONT_COPY);
+  }
+#endif
 
 private:
   const OutputParticlesParams prm_;
