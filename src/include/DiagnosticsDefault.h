@@ -28,7 +28,7 @@ public:
     // FIXME
     outf_(mflds, mprts);
 #endif
-    outp_.run(mprts);
+    outp_(mprts);
     oute_(mprts, mflds);
     psc_stats_stop(st_time_output);
   }

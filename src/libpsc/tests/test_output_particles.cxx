@@ -86,7 +86,7 @@ TYPED_TEST(OutputParticlesTest, Test1)
   params.basename = "prt";
 
   auto outp = OutputParticles{grid, params};
-  outp.run(mprts);
+  outp(mprts);
 }
 
 // ----------------------------------------------------------------------

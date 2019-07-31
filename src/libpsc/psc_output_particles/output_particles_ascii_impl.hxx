@@ -11,9 +11,9 @@ struct OutputParticlesAscii : OutputParticlesParams, OutputParticlesBase
   {}
 
   // ----------------------------------------------------------------------
-  // run
+  // operator()
 
-  void run(MparticlesBase& mprts_base) override
+  void operator()(MparticlesBase& mprts_base) 
   {
     const auto& grid = mprts_base.grid();
     if (every_step < 0 || grid.timestep() % every_step != 0) {
