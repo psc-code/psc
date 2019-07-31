@@ -31,8 +31,8 @@ inline DiagEnergies::DiagEnergies(MPI_Comm comm, int interval)
 // ----------------------------------------------------------------------
 // DiagEnergies::operator()
 
-inline void DiagEnergies::operator()(MparticlesBase& mprts,
-                                     MfieldsStateBase& mflds)
+template <typename Mparticles, typename MfieldsState>
+inline void DiagEnergies::operator()(Mparticles& mprts, MfieldsState& mflds)
 {
   const auto& grid = mprts.grid();
 
@@ -57,7 +57,7 @@ inline void DiagEnergies::operator()(MparticlesBase& mprts,
 // legend
 
 template <typename Item>
-std::string DiagEnergies::legend(const Item& item)
+inline std::string DiagEnergies::legend(const Item& item)
 {
   std::string s;
   for (auto& name : item.names()) {
@@ -69,9 +69,9 @@ std::string DiagEnergies::legend(const Item& item)
 // ----------------------------------------------------------------------
 // write_one
 
-template <typename Item>
-void DiagEnergies::write_one(const Item& item, MparticlesBase& mprts,
-                             MfieldsStateBase& mflds)
+template <typename Item, typename Mparticles, typename MfieldsState>
+inline void DiagEnergies::write_one(const Item& item, Mparticles& mprts,
+                                    MfieldsState& mflds)
 {
   auto vals = item(mprts, mflds);
 
@@ -89,4 +89,3 @@ void DiagEnergies::write_one(const Item& item, MparticlesBase& mprts,
     }
   }
 }
-
