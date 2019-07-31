@@ -622,11 +622,6 @@ struct OutputParticlesHdf5 : OutputParticlesParams
 
   void run(MparticlesBase& mprts_base)
   {
-    const auto& grid = mprts_base.grid();
-    if (every_step <= 0 || grid.timestep() % every_step != 0) {
-      return;
-    }
-
     auto& mprts = mprts_base.get_as<Mparticles>();
     (*this)(mprts);
     mprts_base.put_as(mprts, MP_DONT_COPY);
@@ -643,16 +638,24 @@ private:
 } // namespace detail
 
 template <typename Mparticles>
-class OutputParticlesHdf5 : OutputParticlesBase
+class OutputParticlesHdf5
+  : OutputParticlesBase
+  , OutputParticlesParams
 {
 public:
   using Impl = detail::OutputParticlesHdf5<Mparticles>;
 
   OutputParticlesHdf5(const Grid_t& grid, const OutputParticlesParams& params)
-    : impl_{grid, params}
+    : OutputParticlesParams{params}, impl_{grid, params}
   {}
 
-  void run(MparticlesBase& mprts_base) override { impl_.run(mprts_base); }
+  void run(MparticlesBase& mprts_base) override
+  {
+    const auto& grid = mprts_base.grid();
+    if (every_step >= 0 && grid.timestep() % every_step == 0) {
+      impl_.run(mprts_base);
+    }
+  }
 
 private:
   Impl impl_;
