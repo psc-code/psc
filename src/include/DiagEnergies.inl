@@ -9,22 +9,6 @@ void fclose_helper(FILE* fp)
 
 } // namespace
 
-namespace detail
-{
-
-std::string legend(psc_diag_item* item)
-{
-  std::string s;
-
-  int nr_values = psc_diag_item_nr_values(item);
-  for (int i = 0; i < nr_values; i++) {
-    s += std::string(" ") + psc_diag_item_title(item, i);
-  }
-  return s;
-}
-
-} // namespace detail
-
 // ----------------------------------------------------------------------
 // DiagEnergies ctors
 
@@ -35,19 +19,11 @@ inline DiagEnergies::DiagEnergies(MPI_Comm comm, int interval)
 {
   MPI_Comm_rank(comm_, &rank_);
 
-  fe_ = psc_diag_item_create(comm_);
-  psc_diag_item_set_type(fe_, "field_energy");
-  psc_diag_item_set_name(fe_, "field_energy");
-
-  pe_ = psc_diag_item_create(comm_);
-  psc_diag_item_set_type(pe_, "particle_energy");
-  psc_diag_item_set_name(pe_, "particle_energy");
-
   if (rank_ == 0) {
     file_.reset(fopen("diag.asc", "w"));
     std::string s = "# time";
-    s += detail::legend(fe_);
-    s += detail::legend(pe_);
+    s += legend(ef_);
+    s += legend(ep_);
     fprintf(file_.get(), "%s\n", s.c_str());
   }
 }
@@ -68,8 +44,8 @@ inline void DiagEnergies::operator()(MparticlesBase& mprts,
     fprintf(file_.get(), "%g", grid.timestep() * grid.dt);
   }
 
-  write_one(fe_, mprts, mflds);
-  write_one(pe_, mprts, mflds);
+  write_one(ef_, mprts, mflds);
+  write_one(ep_, mprts, mflds);
 
   if (rank_ == 0) {
     fprintf(file_.get(), "\n");
@@ -78,13 +54,26 @@ inline void DiagEnergies::operator()(MparticlesBase& mprts,
 }
 
 // ----------------------------------------------------------------------
+// legend
+
+template <typename Item>
+std::string DiagEnergies::legend(const Item& item)
+{
+  std::string s;
+  for (auto& name : item.names()) {
+    s += std::string(" ") + name;
+  }
+  return s;
+}
+
+// ----------------------------------------------------------------------
 // write_one
 
-void DiagEnergies::write_one(psc_diag_item* item, MparticlesBase& mprts,
+template <typename Item>
+void DiagEnergies::write_one(const Item& item, MparticlesBase& mprts,
                              MfieldsStateBase& mflds)
 {
-  std::vector<double> vals(psc_diag_item_nr_values(item));
-  psc_diag_item_run(item, mprts, mflds, vals.data());
+  auto vals = item(mprts, mflds);
 
   if (rank_ == 0) {
     MPI_Reduce(MPI_IN_PLACE, vals.data(), vals.size(), MPI_DOUBLE, MPI_SUM, 0,
@@ -100,3 +89,4 @@ void DiagEnergies::write_one(psc_diag_item* item, MparticlesBase& mprts,
     }
   }
 }
+
