@@ -117,7 +117,7 @@ void setupParameters()
 
 Grid_t* setupGrid()
 {
-  auto domain = Grid_t::Domain{{1, 512 * 2, 512 * 3},
+  auto domain = Grid_t::Domain{{1, 128 * 2, 128 * 3},
                                {g.LLn, g.LLy, g.LLz},
                                {0., -.5 * g.LLy, -.5 * g.LLz},
                                {1, 16 * 2, 16 * 3}};
