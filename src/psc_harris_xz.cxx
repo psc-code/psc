@@ -472,8 +472,8 @@ void setup_log(const Grid_t& grid)
 class Diagnostics
 {
 public:
-  Diagnostics(OutputFieldsC& outf, OutputParticles& outp)
-    : io_pfd_{"pfd"}, outf_{outf}, outp_{outp}
+  Diagnostics(OutputFieldsC& outf, OutputParticles& outp, DiagEnergies& oute)
+    : io_pfd_{"pfd"}, outf_{outf}, outp_{outp}, oute_{oute}
   {}
 
   void operator()(Mparticles& mprts, MfieldsState& mflds)
@@ -506,12 +506,17 @@ public:
     psc_stats_start(st_time_output);
     outp_.run(mprts);
     psc_stats_stop(st_time_output);
+
+#ifndef VPIC
+    oute_(mprts, mflds);
+#endif
   }
 
 private:
   MrcIo io_pfd_;
   OutputFieldsC& outf_;
   OutputParticles& outp_;
+  DiagEnergies& oute_;
 };
 
 // ----------------------------------------------------------------------
@@ -806,7 +811,10 @@ void run()
   outp_params.hi = {320, 0, 80};
   OutputParticles outp{grid, outp_params};
 
-  Diagnostics diagnostics{outf, outp};
+  int oute_interval = 100;
+  DiagEnergies oute{grid.comm(), oute_interval};
+
+  Diagnostics diagnostics{outf, outp, oute};
 
   // ---
 

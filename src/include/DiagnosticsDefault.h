@@ -1,17 +1,19 @@
 
 #pragma once
 
+#include "DiagEnergies.h"
 #include "output_fields_c.hxx"
 
 // ======================================================================
 // DiagnosticsDefault
 
-template <typename OutputParticles>
+template <typename OutputParticles, typename OutputEnergies>
 class DiagnosticsDefault
 {
 public:
-  DiagnosticsDefault(OutputFieldsC& outf, OutputParticles& outp)
-    : outf_{outf}, outp_{outp}
+  DiagnosticsDefault(OutputFieldsC& outf, OutputParticles& outp,
+                     OutputEnergies& oute)
+    : outf_{outf}, outp_{outp}, oute_{oute}
   {}
 
   template <typename Mparticles, typename MfieldsState>
@@ -27,17 +29,19 @@ public:
     outf_(mflds, mprts);
 #endif
     outp_.run(mprts);
+    oute_(mprts, mflds);
     psc_stats_stop(st_time_output);
   }
 
 private:
   OutputFieldsC& outf_;
   OutputParticles& outp_;
+  OutputEnergies& oute_;
 };
 
-template <typename OutputParticles>
-DiagnosticsDefault<OutputParticles> makeDiagnosticsDefault(
-  OutputFieldsC& outf, OutputParticles& outp)
+template <typename OutputParticles, typename OutputEnergies>
+DiagnosticsDefault<OutputParticles, OutputEnergies> makeDiagnosticsDefault(
+  OutputFieldsC& outf, OutputParticles& outp, OutputEnergies& oute)
 {
-  return {outf, outp};
+  return {outf, outp, oute};
 }
