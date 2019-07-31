@@ -1,9 +1,23 @@
 
+namespace
+{
+
+void fclose_helper(FILE* fp)
+{
+  ::fclose(fp);
+}
+
+} // namespace
+
 // ----------------------------------------------------------------------
-// DiagEnergies ctor
+// DiagEnergies ctors
+
+inline DiagEnergies::DiagEnergies()
+  : file_{nullptr, fclose_helper}
+{}
 
 inline DiagEnergies::DiagEnergies(MPI_Comm comm, int interval)
-  : comm_{comm}, interval_{interval}
+  : comm_{comm}, interval_{interval}, file_{nullptr, fclose_helper}
 {
   MPI_Comm_rank(comm_, &rank_);
 
@@ -18,33 +32,24 @@ inline DiagEnergies::DiagEnergies(MPI_Comm comm, int interval)
   items_.push_back(item);
 
   if (rank_ == 0) {
-    file_ = fopen("diag.asc", "w");
-    fprintf(file_, "# time");
+    file_.reset(fopen("diag.asc", "w"));
+    fprintf(file_.get(), "# time");
 
     for (auto item : items_) {
       int nr_values = psc_diag_item_nr_values(item);
       for (int i = 0; i < nr_values; i++) {
-        fprintf(file_, " %s", psc_diag_item_title(item, i));
+        fprintf(file_.get(), " %s", psc_diag_item_title(item, i));
       }
     }
-    fprintf(file_, "\n");
-  }
-}
-
-// ----------------------------------------------------------------------
-// DiagEnergies dtor
-
-inline DiagEnergies::~DiagEnergies()
-{
-  if (rank_ == 0) {
-    fclose(file_);
+    fprintf(file_.get(), "\n");
   }
 }
 
 // ----------------------------------------------------------------------
 // DiagEnergies::operator()
 
-inline void DiagEnergies::operator()(MparticlesBase& mprts, MfieldsStateBase& mflds)
+inline void DiagEnergies::operator()(MparticlesBase& mprts,
+                                     MfieldsStateBase& mflds)
 {
   const auto& grid = mprts.grid();
 
@@ -52,12 +57,13 @@ inline void DiagEnergies::operator()(MparticlesBase& mprts, MfieldsStateBase& mf
     return;
 
   if (rank_ == 0) {
-    fprintf(file_, "%g", grid.timestep() * grid.dt);
+    assert(file_);
+    fprintf(file_.get(), "%g", grid.timestep() * grid.dt);
   }
   for (auto item : items_) {
     int nr_values = psc_diag_item_nr_values(item);
     std::vector<double> result(nr_values);
-    psc_diag1_item_run(item, mprts, mflds, result.data());
+    psc_diag_item_run(item, mprts, mflds, result.data());
     if (rank_ == 0) {
       MPI_Reduce(MPI_IN_PLACE, result.data(), result.size(), MPI_DOUBLE,
                  MPI_SUM, 0, comm_);
@@ -67,12 +73,12 @@ inline void DiagEnergies::operator()(MparticlesBase& mprts, MfieldsStateBase& mf
     }
     if (rank_ == 0) {
       for (auto val : result) {
-        fprintf(file_, " %g", val);
+        fprintf(file_.get(), " %g", val);
       }
     }
   }
   if (rank_ == 0) {
-    fprintf(file_, "\n");
-    fflush(file_);
+    fprintf(file_.get(), "\n");
+    fflush(file_.get());
   }
 }

@@ -7,8 +7,8 @@
 class DiagEnergies
 {
 public:
+  DiagEnergies();
   DiagEnergies(MPI_Comm comm, int interval);
-  ~DiagEnergies();
 
   void operator()(MparticlesBase& mprts, MfieldsStateBase& mflds);
 
@@ -16,7 +16,7 @@ private:
   MPI_Comm comm_;
   int interval_;
   std::vector<psc_diag_item*> items_;
-  FILE* file_;
+  std::unique_ptr<FILE, void(*)(FILE*)> file_;
   int rank_;
 };
 
