@@ -12,15 +12,15 @@ public:
   DiagEnergies();
   DiagEnergies(MPI_Comm comm, int interval);
 
-  void operator()(MparticlesBase& mprts, MfieldsStateBase& mflds);
+  template <typename Mparticles, typename MfieldsState>
+  void operator()(Mparticles& mprts, MfieldsState& mflds);
 
 private:
   template <typename Item>
   static std::string legend(const Item& item);
 
-  template <typename Item>
-  void write_one(const Item& item, MparticlesBase& mprts,
-                 MfieldsStateBase& mflds);
+  template <typename Item, typename Mparticles, typename MfieldsState>
+  void write_one(const Item& item, Mparticles& mprts, MfieldsState& mflds);
 
 private:
   MPI_Comm comm_;
