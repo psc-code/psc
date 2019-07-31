@@ -20,7 +20,5 @@ struct OutputParticlesParams
 
 class OutputParticlesBase
 {
-public:
-  virtual void run(MparticlesBase& mprts_base) = 0;
 };
 

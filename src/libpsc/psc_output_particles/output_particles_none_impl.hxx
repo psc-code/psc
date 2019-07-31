@@ -5,5 +5,5 @@ struct OutputParticlesNone : OutputParticlesParams, OutputParticlesBase
 {
   OutputParticlesNone(const Grid_t& grid, const OutputParticlesParams& params) {}
 
-  void run(MparticlesBase& mprts_base) override {}
+  void operator()(MparticlesBase& mprts_base) {}
 };

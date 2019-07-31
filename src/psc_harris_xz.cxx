@@ -504,7 +504,7 @@ public:
     }
 
     psc_stats_start(st_time_output);
-    outp_.run(mprts);
+    outp_(mprts);
     psc_stats_stop(st_time_output);
 
 #ifndef VPIC

@@ -647,6 +647,11 @@ public:
   void operator()(MparticlesBase& mprts_base)
   {
     const auto& grid = mprts_base.grid();
+
+    if (prm_.every_step <= 0 || grid.timestep() % prm_.every_step != 0) {
+      return;
+    }
+
     char filename[strlen(prm_.data_dir) + strlen(prm_.basename) + 20];
     sprintf(filename, "%s/%s.%06d_p%06d.h5", prm_.data_dir, prm_.basename,
             grid.timestep(), 0);
@@ -655,14 +660,6 @@ public:
     auto& mprts = mprts_base.get_as<Mparticles>();
     impl(mprts, filename, prm_);
     mprts_base.put_as(mprts, MP_DONT_COPY);
-  }
-
-  void run(MparticlesBase& mprts_base) override
-  {
-    const auto& grid = mprts_base.grid();
-    if (prm_.every_step >= 0 && grid.timestep() % prm_.every_step == 0) {
-      (*this)(mprts_base);
-    }
   }
 
 private:
