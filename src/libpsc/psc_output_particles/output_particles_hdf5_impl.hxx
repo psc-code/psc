@@ -88,9 +88,7 @@ private:
 template <typename Mparticles>
 struct OutputParticlesHdf5
 {
-  using Particle = typename Mparticles::Particle;
   using Particles = typename Mparticles::Patch;
-  using real_t = typename Mparticles::real_t;
 
   OutputParticlesHdf5(const Grid_t& grid, const Int3& lo, const Int3& hi,
                       const Int3& wdims, hid_t prt_type)
@@ -111,14 +109,15 @@ struct OutputParticlesHdf5
     return ((j2)*ldims[1] + j1) * ldims[0] + j0;
   }
 
-  static inline int get_sort_index(Particles& prts, Particle* part)
+  template <typename Particle>
+  static inline int get_sort_index(Particles& prts, const Particle& prt)
   {
     const Grid_t& grid = prts.grid();
     const int* ldims = grid.ldims;
 
-    int j0 = prts.cellPosition(part->x[0], 0);
-    int j1 = prts.cellPosition(part->x[1], 1);
-    int j2 = prts.cellPosition(part->x[2], 2);
+    int j0 = prts.cellPosition(prt.x[0], 0);
+    int j1 = prts.cellPosition(prt.x[1], 1);
+    int j2 = prts.cellPosition(prt.x[2], 2);
     // FIXME, this is hoping that reason is that we were just on the right
     // bnd...
     if (j0 == ldims[0])
@@ -130,11 +129,9 @@ struct OutputParticlesHdf5
     assert(j0 >= 0 && j0 < ldims[0]);
     assert(j1 >= 0 && j1 < ldims[1]);
     assert(j2 >= 0 && j2 < ldims[2]);
+    assert(prt.kind < grid.kinds.size());
 
-    int kind = part->kind;
-    assert(kind < grid.kinds.size());
-
-    return cell_index_3_to_1(ldims, j0, j1, j2) * grid.kinds.size() + kind;
+    return cell_index_3_to_1(ldims, j0, j1, j2) * grid.kinds.size() + prt.kind;
   }
 
   // ----------------------------------------------------------------------
@@ -152,9 +149,8 @@ struct OutputParticlesHdf5
       unsigned int n_prts = prts.size();
 
       // counting sort to get map
-      for (auto prt_iter = prts.begin(); prt_iter != prts.end(); ++prt_iter) {
-        Particle* part = &*prt_iter;
-        int si = get_sort_index(prts, part);
+      for (const auto &prt : prts) {
+        int si = get_sort_index(prts, prt);
         off[p][si]++;
       }
       // prefix sum to get offsets
@@ -170,11 +166,9 @@ struct OutputParticlesHdf5
       // sort a map only, not the actual particles
       map[p] = (int*)malloc(n_prts * sizeof(*map[p]));
       int n = 0;
-      for (auto prt_iter = prts.begin(); prt_iter != prts.end();
-           ++prt_iter, n++) {
-        Particle* part = &*prt_iter;
-        int si = get_sort_index(prts, part);
-        map[p][off2[si]++] = n;
+      for (const auto& prt : prts) {
+        int si = get_sort_index(prts, prt);
+        map[p][off2[si]++] = n++;
       }
       free(off2);
     }
