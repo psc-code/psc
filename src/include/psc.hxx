@@ -143,10 +143,7 @@ struct Psc
     assert(grid.isInvar(1) == Dim::InvarY::value);
     assert(grid.isInvar(2) == Dim::InvarZ::value);
 
-    diag_ = psc_diag_create(MPI_COMM_WORLD);
-    psc_diag_set_from_options(diag_);
-
-    psc_diag_setup(diag_);
+    diag_ = new psc_diag{MPI_COMM_WORLD, 10}; // FIXME hardcoded interval
 
     initialize_stats();
     initialize();
@@ -630,7 +627,7 @@ private:
   {
 #ifndef VPIC
     // FIXME
-    psc_diag_run(diag_, mprts_, mflds_);
+    (*diag_)(mprts_, mflds_);
 #endif
 
     diagnostics_(mprts_, mflds_);
