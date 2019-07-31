@@ -1,17 +1,14 @@
 
-#ifndef PSC_DIAG_H
-#define PSC_DIAG_H
-
-#include <mrc_obj.h>
+#pragma once
 
 #include "psc.h"
 #include "psc_diag_item.h"
 
-class psc_diag
+class DiagEnergies
 {
 public:
-  psc_diag(MPI_Comm comm, int interval);
-  ~psc_diag();
+  DiagEnergies(MPI_Comm comm, int interval);
+  ~DiagEnergies();
 
   void operator()(MparticlesBase& mprts, MfieldsStateBase& mflds);
 
@@ -23,4 +20,4 @@ private:
   int rank_;
 };
 
-#endif
+#include "DiagEnergies.inl"

@@ -15,7 +15,6 @@ add_library(psc
 
   psc_balance/psc_balance.cxx
 
-  psc_diag/psc_diag.cxx
   psc_diag/psc_diag_item.cxx
   psc_diag/psc_diag_item_field_energy.cxx
   psc_diag/psc_diag_item_particle_energy.cxx
