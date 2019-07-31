@@ -11,35 +11,30 @@
 
 static void _psc_diag_setup(struct psc_diag* diag)
 {
-  // parse "items" parameter
-  char *s_orig = strdup(diag->items), *p, *s = s_orig;
-  while ((p = strsep(&s, ", "))) {
-    struct psc_diag_item* item = psc_diag_item_create(psc_diag_comm(diag));
-    psc_diag_item_set_type(item, p);
-    psc_diag_item_set_name(item, p);
-    psc_diag_add_child(diag, (struct mrc_obj*)item);
-  }
-  free(s);
-  free(s_orig);
+  struct psc_diag_item* item = psc_diag_item_create(psc_diag_comm(diag));
+  psc_diag_item_set_type(item, "field_energy");
+  psc_diag_item_set_name(item, "field_energy");
+  diag->items_.push_back(item);
 
-  int rank;
-  MPI_Comm_rank(psc_diag_comm(diag), &rank);
+  item = psc_diag_item_create(psc_diag_comm(diag));
+  psc_diag_item_set_type(item, "particle_energy");
+  psc_diag_item_set_name(item, "particle_energy");
+  diag->items_.push_back(item);
 
-  if (rank != 0)
-    return;
+  MPI_Comm_rank(psc_diag_comm(diag), &diag->rank_);
 
-  diag->file = fopen("diag.asc", "w");
-  fprintf(diag->file, "# time");
-
-  struct psc_diag_item* item;
-  mrc_obj_for_each_child(item, diag, struct psc_diag_item)
-  {
-    int nr_values = psc_diag_item_nr_values(item);
-    for (int i = 0; i < nr_values; i++) {
-      fprintf(diag->file, " %s", psc_diag_item_title(item, i));
+  if (diag->rank_ == 0) {
+    diag->file_ = fopen("diag.asc", "w");
+    fprintf(diag->file_, "# time");
+    
+    for (auto item: diag->items_) {
+      int nr_values = psc_diag_item_nr_values(item);
+      for (int i = 0; i < nr_values; i++) {
+	fprintf(diag->file_, " %s", psc_diag_item_title(item, i));
+      }
     }
+    fprintf(diag->file_, "\n");
   }
-  fprintf(diag->file, "\n");
 }
 
 // ----------------------------------------------------------------------
@@ -47,13 +42,9 @@ static void _psc_diag_setup(struct psc_diag* diag)
 
 static void _psc_diag_destroy(struct psc_diag* diag)
 {
-  int rank;
-  MPI_Comm_rank(psc_diag_comm(diag), &rank);
-
-  if (rank != 0)
-    return;
-
-  fclose(diag->file);
+  if (diag->rank_ == 0) {
+    fclose(diag->file_);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -67,33 +58,28 @@ void psc_diag_run(struct psc_diag* diag, MparticlesBase& mprts,
   if (diag->every_step < 0 || grid.timestep() % diag->every_step != 0)
     return;
 
-  int rank;
-  MPI_Comm_rank(psc_diag_comm(diag), &rank);
-
-  if (rank == 0) {
-    fprintf(diag->file, "%g", grid.timestep() * grid.dt);
+  if (diag->rank_ == 0) {
+    fprintf(diag->file_, "%g", grid.timestep() * grid.dt);
   }
-  struct psc_diag_item* item;
-  mrc_obj_for_each_child(item, diag, struct psc_diag_item)
-  {
+  for (auto item: diag->items_) {
     int nr_values = psc_diag_item_nr_values(item);
     std::vector<double> result(nr_values);
     psc_diag_item_run(item, mprts, mflds, result.data());
-    if (rank == 0) {
+    if (diag->rank_ == 0) {
       MPI_Reduce(MPI_IN_PLACE, result.data(), result.size(), MPI_DOUBLE, MPI_SUM, 0,
                  grid.comm());
     } else {
       MPI_Reduce(result.data(), NULL, result.size(), MPI_DOUBLE, MPI_SUM, 0, grid.comm());
     }
-    if (rank == 0) {
+    if (diag->rank_ == 0) {
       for (auto val : result) {
-        fprintf(diag->file, " %g", val);
+        fprintf(diag->file_, " %g", val);
       }
     }
   }
-  if (rank == 0) {
-    fprintf(diag->file, "\n");
-    fflush(diag->file);
+  if (diag->rank_ == 0) {
+    fprintf(diag->file_, "\n");
+    fflush(diag->file_);
   }
 }
 
@@ -102,7 +88,6 @@ void psc_diag_run(struct psc_diag* diag, MparticlesBase& mprts,
 #define VAR(x) (void*)offsetof(struct psc_diag, x)
 
 static struct param psc_diag_descr[] = {
-  {"items", VAR(items), PARAM_STRING("field_energy,particle_energy")},
   {"every_step", VAR(every_step), PARAM_INT(-1)},
   {},
 };
