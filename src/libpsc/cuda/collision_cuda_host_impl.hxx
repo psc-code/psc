@@ -20,8 +20,6 @@ public:
   
   CollisionCudaHost(MPI_Comm comm, int interval, double nu);
   
-  virtual void run(MparticlesBase& mprts_base) { assert(0); }
-
   void operator()(Mparticles& mprts)
   {
     auto& mprts = _mprts.template get_as<MparticlesSingle>();

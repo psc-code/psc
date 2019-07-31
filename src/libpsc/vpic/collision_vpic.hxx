@@ -16,7 +16,8 @@ public:
     : interval_{interval}
   {}
 
-  void operator()(MparticlesBase& mprts_base) override
+  template <typename Mparticles>
+  void operator()(Mparticles& mprts_base)
   {
 #if 0
     // Note: Particles should not have moved since the last performance sort
