@@ -93,24 +93,14 @@ struct OutputParticlesHdf5
   using real_t = typename Mparticles::real_t;
 
   OutputParticlesHdf5(const Grid_t& grid, const Int3& lo, const Int3& hi,
-                      hid_t prt_type)
+                      const Int3& wdims, hid_t prt_type)
     : lo_{lo},
       hi_{hi},
+      wdims_{wdims},
       kinds_{grid.kinds},
       comm_{grid.comm()},
       prt_type_{prt_type}
-  {
-    // set hi to gdims by default (if not set differently before)
-    // and calculate wdims (global dims of region we're writing)
-    for (int d = 0; d < 3; d++) {
-      assert(lo_[d] >= 0);
-      if (hi_[d] == 0) {
-        hi_[d] = grid.domain.gdims[d];
-      }
-      assert(hi_[d] <= grid.domain.gdims[d]);
-    }
-    wdims_ = hi_ - lo_;
-  }
+  {}
 
   // ----------------------------------------------------------------------
   // get_cell_index
@@ -635,50 +625,50 @@ private:
 } // namespace detail
 
 template <typename Mparticles>
-class OutputParticlesHdf5
-  : OutputParticlesBase
-  , OutputParticlesParams
+class OutputParticlesHdf5 : OutputParticlesBase
 {
 public:
   using Impl = detail::OutputParticlesHdf5<Mparticles>;
 
   OutputParticlesHdf5(const Grid_t& grid, const OutputParticlesParams& params)
-    : OutputParticlesParams{params}
+    : prm_{params}
   {
     // set hi to gdims by default (if not set differently before)
     // and calculate wdims (global dims of region we're writing)
+    lo_ = prm_.lo;
     for (int d = 0; d < 3; d++) {
-      assert(lo[d] >= 0);
-      if (hi[d] == 0) {
-        hi[d] = grid.domain.gdims[d];
-      }
-      assert(hi[d] <= grid.domain.gdims[d]);
-      wdims_[d] = hi[d] - lo[d];
+      hi_[d] = prm_.hi[d] != 0 ? prm_.hi[d] : grid.domain.gdims[d];
+      assert(lo_[d] >= 0);
+      assert(hi_[d] <= grid.domain.gdims[d]);
     }
+    wdims_ = hi_ - lo_;
   }
 
   void operator()(MparticlesBase& mprts_base)
   {
     const auto& grid = mprts_base.grid();
-    char filename[strlen(data_dir) + strlen(basename) + 20];
-    sprintf(filename, "%s/%s.%06d_p%06d.h5", data_dir, basename,
+    char filename[strlen(prm_.data_dir) + strlen(prm_.basename) + 20];
+    sprintf(filename, "%s/%s.%06d_p%06d.h5", prm_.data_dir, prm_.basename,
             grid.timestep(), 0);
 
-    Impl impl{grid, lo, hi, prt_type_};
+    Impl impl{grid, lo_, hi_, wdims_, prt_type_};
     auto& mprts = mprts_base.get_as<Mparticles>();
-    impl(mprts, filename, static_cast<OutputParticlesParams&>(*this));
+    impl(mprts, filename, prm_);
     mprts_base.put_as(mprts, MP_DONT_COPY);
   }
 
   void run(MparticlesBase& mprts_base) override
   {
     const auto& grid = mprts_base.grid();
-    if (every_step >= 0 && grid.timestep() % every_step == 0) {
+    if (prm_.every_step >= 0 && grid.timestep() % prm_.every_step == 0) {
       (*this)(mprts_base);
     }
   }
 
 private:
+  const OutputParticlesParams prm_;
   detail::Hdf5ParticleType prt_type_;
-  Int3 wdims_; // dimensions of the subdomain we're actually writing
+  Int3 lo_; // dimensions of the subdomain we're actually writing
+  Int3 hi_;
+  Int3 wdims_;
 };
