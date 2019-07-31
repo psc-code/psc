@@ -13,10 +13,14 @@ public:
   void operator()(MparticlesBase& mprts, MfieldsStateBase& mflds);
 
 private:
+  void write_one(psc_diag_item* item, MparticlesBase& mprts,
+                 MfieldsStateBase& mflds);
+
+private:
   MPI_Comm comm_;
   int interval_;
   std::vector<psc_diag_item*> items_;
-  std::unique_ptr<FILE, void(*)(FILE*)> file_;
+  std::unique_ptr<FILE, void (*)(FILE*)> file_;
   int rank_;
 };
 
