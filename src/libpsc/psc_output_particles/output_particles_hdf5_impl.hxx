@@ -643,7 +643,7 @@ public:
   using Impl = detail::OutputParticlesHdf5<Mparticles>;
 
   OutputParticlesHdf5(const Grid_t& grid, const OutputParticlesParams& params)
-    : OutputParticlesParams{params}, impl_{grid, params.lo, params.hi, prt_type_}
+    : OutputParticlesParams{params}
   {
     // set hi to gdims by default (if not set differently before)
     // and calculate wdims (global dims of region we're writing)
@@ -664,8 +664,9 @@ public:
     sprintf(filename, "%s/%s.%06d_p%06d.h5", data_dir, basename,
             grid.timestep(), 0);
 
+    Impl impl{grid, lo, hi, prt_type_};
     auto& mprts = mprts_base.get_as<Mparticles>();
-    impl_(mprts, filename, static_cast<OutputParticlesParams&>(*this));
+    impl(mprts, filename, static_cast<OutputParticlesParams&>(*this));
     mprts_base.put_as(mprts, MP_DONT_COPY);
   }
 
@@ -679,6 +680,5 @@ public:
 
 private:
   detail::Hdf5ParticleType prt_type_;
-  Impl impl_;
   Int3 wdims_; // dimensions of the subdomain we're actually writing
 };
