@@ -19,7 +19,8 @@ private:
 private:
   MPI_Comm comm_;
   int interval_;
-  std::vector<psc_diag_item*> items_;
+  struct psc_diag_item *fe_;
+  struct psc_diag_item *pe_;
   std::unique_ptr<FILE, void (*)(FILE*)> file_;
   int rank_;
 };
