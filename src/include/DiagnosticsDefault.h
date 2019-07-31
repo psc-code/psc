@@ -7,11 +7,11 @@
 // ======================================================================
 // DiagnosticsDefault
 
-template <typename OutputParticles, typename OutputEnergies>
+template <typename OutputFields, typename OutputParticles, typename OutputEnergies>
 class DiagnosticsDefault
 {
 public:
-  DiagnosticsDefault(OutputFieldsC& outf, OutputParticles& outp,
+  DiagnosticsDefault(OutputFields& outf, OutputParticles& outp,
                      OutputEnergies& oute)
     : outf_{outf}, outp_{outp}, oute_{oute}
   {}
@@ -34,14 +34,14 @@ public:
   }
 
 private:
-  OutputFieldsC& outf_;
+  OutputFields& outf_;
   OutputParticles& outp_;
   OutputEnergies& oute_;
 };
 
-template <typename OutputParticles, typename OutputEnergies>
-DiagnosticsDefault<OutputParticles, OutputEnergies> makeDiagnosticsDefault(
-  OutputFieldsC& outf, OutputParticles& outp, OutputEnergies& oute)
+template <typename OutputFields, typename OutputParticles, typename OutputEnergies>
+DiagnosticsDefault<OutputFields, OutputParticles, OutputEnergies> makeDiagnosticsDefault(
+  OutputFields& outf, OutputParticles& outp, OutputEnergies& oute)
 {
   return {outf, outp, oute};
 }
