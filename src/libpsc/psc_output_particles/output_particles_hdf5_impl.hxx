@@ -93,7 +93,7 @@ struct OutputParticlesHdf5
   using real_t = typename Mparticles::real_t;
 
   OutputParticlesHdf5(const Grid_t& grid, const Int3& lo, const Int3& hi)
-    : grid_{grid}, lo_{lo}, hi_{hi}
+    : lo_{lo}, hi_{hi}, kinds_{grid.kinds}, comm_{grid.comm()}
   {
     // set hi to gdims by default (if not set differently before)
     // and calculate wdims (global dims of region we're writing)
@@ -198,7 +198,7 @@ struct OutputParticlesHdf5
       ihi[d] = MAX(0, ihi[d]);
       ld[d] = ihi[d] - ilo[d];
     }
-    return grid_.kinds.size() * ld[0] * ld[1] * ld[2];
+    return kinds_.size() * ld[0] * ld[1] * ld[2];
   }
 
   // ----------------------------------------------------------------------
@@ -232,8 +232,8 @@ struct OutputParticlesHdf5
 
     assert(sizeof(size_t) == sizeof(unsigned long));
     size_t n_total, n_off = 0;
-    MPI_Allreduce(&n_write, &n_total, 1, MPI_LONG, MPI_SUM, grid_.comm());
-    MPI_Exscan(&n_write, &n_off, 1, MPI_LONG, MPI_SUM, grid_.comm());
+    MPI_Allreduce(&n_write, &n_total, 1, MPI_LONG, MPI_SUM, comm_);
+    MPI_Exscan(&n_write, &n_off, 1, MPI_LONG, MPI_SUM, comm_);
 
     struct hdf5_prt* arr = (struct hdf5_prt*)malloc(n_write * sizeof(*arr));
 
@@ -320,7 +320,7 @@ struct OutputParticlesHdf5
     herr_t ierr;
 
     hsize_t fdims[4];
-    fdims[0] = grid_.kinds.size();
+    fdims[0] = kinds_.size();
     fdims[1] = wdims_[2];
     fdims[2] = wdims_[1];
     fdims[3] = wdims_[0];
@@ -330,7 +330,7 @@ struct OutputParticlesHdf5
 
     assert(sizeof(size_t) == sizeof(hsize_t));
     int rank;
-    MPI_Comm_rank(grid_.comm(), &rank);
+    MPI_Comm_rank(comm_, &rank);
     if (rank == 0) {
       memspace = H5Screate_simple(4, fdims, NULL);
       H5_CHK(memspace);
@@ -384,8 +384,8 @@ struct OutputParticlesHdf5
 
     prof_start(pr_A);
     int rank, size;
-    MPI_Comm_rank(grid_.comm(), &rank);
-    MPI_Comm_size(grid_.comm(), &size);
+    MPI_Comm_rank(comm_, &rank);
+    MPI_Comm_size(comm_, &size);
 
     struct mrc_patch_info info;
     int nr_kinds = mprts.grid().kinds.size();
@@ -475,8 +475,8 @@ struct OutputParticlesHdf5
         }
         recv_buf[r] = (size_t*)malloc(2 * remote_sz[r] * sizeof(*recv_buf[r]));
         recv_buf_p[r] = recv_buf[r];
-        MPI_Irecv(recv_buf[r], 2 * remote_sz[r], MPI_LONG, r, 0x4000,
-                  grid_.comm(), &recv_req[r]);
+        MPI_Irecv(recv_buf[r], 2 * remote_sz[r], MPI_LONG, r, 0x4000, comm_,
+                  &recv_req[r]);
       }
       MPI_Waitall(size, recv_req, MPI_STATUSES_IGNORE);
       free(recv_req);
@@ -535,7 +535,7 @@ struct OutputParticlesHdf5
         l_idx_p += 2 * sz;
       }
 
-      MPI_Send(l_idx, 2 * local_sz, MPI_LONG, 0, 0x4000, grid_.comm());
+      MPI_Send(l_idx, 2 * local_sz, MPI_LONG, 0, 0x4000, comm_);
 
       free(l_idx);
     }
@@ -556,7 +556,7 @@ struct OutputParticlesHdf5
       MPI_Info_set(mpi_info, (char*)"romio_ds_write",
                    (char*)params.romio_ds_write);
     }
-    H5Pset_fapl_mpio(plist, grid_.comm(), mpi_info);
+    H5Pset_fapl_mpio(plist, comm_, mpi_info);
 #endif
 
     hid_t file = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, plist);
@@ -618,25 +618,13 @@ struct OutputParticlesHdf5
     free(idx);
   }
 
-  // ----------------------------------------------------------------------
-  // run
-
-  void run(MparticlesBase& mprts_base, const std::string& filename,
-           const OutputParticlesParams& params)
-  {
-    auto& mprts = mprts_base.get_as<Mparticles>();
-    (*this)(mprts, filename, params);
-    mprts_base.put_as(mprts, MP_DONT_COPY);
-  }
-
-  // private:
-  const Grid_t& grid_;
-
 private:
   Int3 lo_;
   Int3 hi_;
   Int3 wdims_;
   Hdf5ParticleType prt_type_;
+  Grid_t::Kinds kinds_;
+  MPI_Comm comm_;
 };
 
 } // namespace detail
@@ -670,7 +658,10 @@ public:
     char filename[strlen(data_dir) + strlen(basename) + 20];
     sprintf(filename, "%s/%s.%06d_p%06d.h5", data_dir, basename,
             grid.timestep(), 0);
-    impl_.run(mprts_base, filename, static_cast<OutputParticlesParams&>(*this));
+
+    auto& mprts = mprts_base.get_as<Mparticles>();
+    impl_(mprts, filename, static_cast<OutputParticlesParams&>(*this));
+    mprts_base.put_as(mprts, MP_DONT_COPY);
   }
 
   void run(MparticlesBase& mprts_base) override
