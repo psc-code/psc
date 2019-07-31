@@ -3,10 +3,30 @@
 
 #include "fields_item.hxx"
 #include "../libpsc/psc_output_fields/fields_item_jeh.hxx"
+#include "../libpsc/psc_output_fields/fields_item_moments_1st.hxx"
 
 #include <mrc_io.hxx>
 
 #include <memory>
+
+// ======================================================================
+
+using FieldsItem_E_cc = FieldsItemFields<ItemLoopPatches<Item_e_cc>>;
+using FieldsItem_H_cc = FieldsItemFields<ItemLoopPatches<Item_h_cc>>;
+using FieldsItem_J_cc = FieldsItemFields<ItemLoopPatches<Item_j_cc>>;
+
+template <typename Mparticles>
+using FieldsItem_n_1st_cc =
+  FieldsItemMoment<ItemMomentAddBnd<Moment_n_1st<Mparticles, MfieldsC>>>;
+template <typename Mparticles>
+using FieldsItem_v_1st_cc =
+  FieldsItemMoment<ItemMomentAddBnd<Moment_v_1st<Mparticles, MfieldsC>>>;
+template <typename Mparticles>
+using FieldsItem_p_1st_cc =
+  FieldsItemMoment<ItemMomentAddBnd<Moment_p_1st<Mparticles, MfieldsC>>>;
+template <typename Mparticles>
+using FieldsItem_T_1st_cc =
+  FieldsItemMoment<ItemMomentAddBnd<Moment_T_1st<Mparticles, MfieldsC>>>;
 
 // ======================================================================
 // OutputFieldsCParams
@@ -146,3 +166,16 @@ private:
   std::unique_ptr<MrcIo> io_tfd_;
 };
 
+template <typename Mparticles>
+OutputFieldsC defaultOutputFieldsC(const Grid_t& grid,
+				   const OutputFieldsCParams& params)
+{
+  std::vector<std::unique_ptr<FieldsItemBase>> outf_items;
+  outf_items.emplace_back(new FieldsItem_E_cc(grid));
+  outf_items.emplace_back(new FieldsItem_H_cc(grid));
+  outf_items.emplace_back(new FieldsItem_J_cc(grid));
+  outf_items.emplace_back(new FieldsItem_n_1st_cc<Mparticles>(grid));
+  outf_items.emplace_back(new FieldsItem_v_1st_cc<Mparticles>(grid));
+  outf_items.emplace_back(new FieldsItem_T_1st_cc<Mparticles>(grid));
+  return OutputFieldsC{grid, params, std::move(outf_items)};
+}

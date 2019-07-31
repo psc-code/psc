@@ -386,14 +386,7 @@ void run()
   // -- output fields
   OutputFieldsCParams outf_params{};
   outf_params.pfield_step = 200;
-  std::vector<std::unique_ptr<FieldsItemBase>> outf_items;
-  outf_items.emplace_back(new FieldsItem_E_cc(grid));
-  outf_items.emplace_back(new FieldsItem_H_cc(grid));
-  outf_items.emplace_back(new FieldsItem_J_cc(grid));
-  outf_items.emplace_back(new FieldsItem_n_1st_cc<Mparticles>(grid));
-  outf_items.emplace_back(new FieldsItem_v_1st_cc<Mparticles>(grid));
-  outf_items.emplace_back(new FieldsItem_T_1st_cc<Mparticles>(grid));
-  OutputFieldsC outf{grid, outf_params, std::move(outf_items)};
+  auto outf = defaultOutputFieldsC<Mparticles>(grid, outf_params);
 
   // -- output particles
   OutputParticlesParams outp_params{};
