@@ -35,23 +35,19 @@ inline DiagEnergies::DiagEnergies(MPI_Comm comm, int interval)
 {
   MPI_Comm_rank(comm_, &rank_);
 
-  struct psc_diag_item* item = psc_diag_item_create(comm_);
-  psc_diag_item_set_type(item, "field_energy");
-  psc_diag_item_set_name(item, "field_energy");
-  items_.push_back(item);
+  fe_ = psc_diag_item_create(comm_);
+  psc_diag_item_set_type(fe_, "field_energy");
+  psc_diag_item_set_name(fe_, "field_energy");
 
-  item = psc_diag_item_create(comm_);
-  psc_diag_item_set_type(item, "particle_energy");
-  psc_diag_item_set_name(item, "particle_energy");
-  items_.push_back(item);
+  pe_ = psc_diag_item_create(comm_);
+  psc_diag_item_set_type(pe_, "particle_energy");
+  psc_diag_item_set_name(pe_, "particle_energy");
 
   if (rank_ == 0) {
     file_.reset(fopen("diag.asc", "w"));
     std::string s = "# time";
-
-    for (auto item : items_) {
-      s += detail::legend(item);
-    }
+    s += detail::legend(fe_);
+    s += detail::legend(pe_);
     fprintf(file_.get(), "%s\n", s.c_str());
   }
 }
@@ -71,9 +67,10 @@ inline void DiagEnergies::operator()(MparticlesBase& mprts,
     assert(file_);
     fprintf(file_.get(), "%g", grid.timestep() * grid.dt);
   }
-  for (auto item : items_) {
-    write_one(item, mprts, mflds);
-  }
+
+  write_one(fe_, mprts, mflds);
+  write_one(pe_, mprts, mflds);
+
   if (rank_ == 0) {
     fprintf(file_.get(), "\n");
     fflush(file_.get());
