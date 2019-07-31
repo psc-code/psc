@@ -14,16 +14,15 @@ public:
     return {"EX2", "EY2", "EZ2", "BX2", "BY2", "BZ2"};
   }
 
-  std::vector<double> operator()(MparticlesBase& mprts,
-                                 MfieldsStateBase& mflds_base) const
+  template <typename Mparticles, typename MfieldsState>
+  std::vector<double> operator()(Mparticles& mprts, MfieldsState& mflds) const
   {
     std::vector<double> EH2(6);
 
     const Grid_t& grid = mprts.grid();
-    auto& mf = mflds_base.get_as<MfieldsStateDouble>(EX, HX + 3);
     for (int p = 0; p < grid.n_patches(); p++) {
       double fac = grid.domain.dx[0] * grid.domain.dx[1] * grid.domain.dx[2];
-      auto F = mf[p];
+      auto F = mflds[p];
       // FIXME, this doesn't handle non-periodic b.c. right
       grid.Foreach_3d(0, 0, [&](int ix, int iy, int iz) {
         EH2[0] += sqr(F(EX, ix, iy, iz)) * fac;
@@ -34,7 +33,7 @@ public:
         EH2[5] += sqr(F(HZ, ix, iy, iz)) * fac;
       });
     }
-    mflds_base.put_as(mf, 0, 0);
+
     return EH2;
   }
 };
