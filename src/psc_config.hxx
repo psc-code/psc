@@ -17,7 +17,7 @@
 #include "../libpsc/psc_output_particles/output_particles_hdf5_impl.hxx"
 #include "../libpsc/psc_output_particles/output_particles_none_impl.hxx"
 #include "../libpsc/psc_output_fields/fields_item_moments_1st.hxx"
-#include "../libpsc/psc_output_fields/fields_item_jeh.hxx"
+#include "../libpsc/psc_output_fields/fields_item_fields.hxx"
 
 #ifdef USE_CUDA
 #include "../libpsc/cuda/push_particles_cuda_impl.hxx"
