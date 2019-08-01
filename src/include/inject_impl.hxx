@@ -27,7 +27,9 @@ struct Inject_ : InjectBase
 
   Inject_(const Grid_t& grid, int interval, int tau, int kind_n,
           Target_t target, SetupParticles& setup_particles)
-    : InjectBase{interval, tau, kind_n}, target_{target}, moment_n_{grid},
+    : InjectBase{interval, tau, kind_n},
+      target_{target},
+      moment_n_{grid},
       setup_particles_{setup_particles}
   {}
 
@@ -78,8 +80,8 @@ struct InjectSelector
 {
   using Inject =
     Inject_<Mparticles, MfieldsC, InjectShape,
-            ItemMomentAddBnd<Moment_n_1st<
-              Mparticles, MfieldsC>>>; // FIXME, shouldn't always use MfieldsC
+            ItemMomentAddBnd<Moment_n_1st<MfieldsC>>>; // FIXME, shouldn't
+                                                       // always use MfieldsC
 };
 
 #ifdef USE_CUDA

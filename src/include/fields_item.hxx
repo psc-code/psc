@@ -158,7 +158,6 @@ struct ItemMomentAddBnd : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Mo
 {
   using Base = ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Moment_t::Mfields>;
   using Mfields = typename Moment_t::Mfields;
-  using Mparticles = typename Moment_t::Mparticles;
 
   constexpr static const char* name = Moment_t::name;
   constexpr static int n_comps = Moment_t::n_comps;
@@ -170,6 +169,7 @@ struct ItemMomentAddBnd : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Mo
       bnd_{grid, grid.ibn}
   {}
 
+  template <typename Mparticles>
   void run(Mparticles& mprts)
   {
     auto& mres = this->mres_;
@@ -277,11 +277,9 @@ private:
 // ======================================================================
 // FieldsItemMoment
 
-template<typename Moment_t>
+template<typename Moment_t, typename Mparticles>
 struct FieldsItemMoment : FieldsItemBase
 {
-  using Mparticles = typename Moment_t::Mparticles;
-  
   const char* name() const override { return Moment_t::name; }
 
   int n_comps(const Grid_t& grid) const override
