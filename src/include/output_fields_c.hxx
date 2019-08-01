@@ -11,6 +11,7 @@
 
 // ======================================================================
 
+using FieldsItem_jeh = FieldsItemFields<ItemLoopPatches<Item_jeh>>;
 using FieldsItem_E_cc = FieldsItemFields<ItemLoopPatches<Item_e_cc>>;
 using FieldsItem_H_cc = FieldsItemFields<ItemLoopPatches<Item_h_cc>>;
 using FieldsItem_J_cc = FieldsItemFields<ItemLoopPatches<Item_j_cc>>;
@@ -177,9 +178,7 @@ OutputFieldsC defaultOutputFieldsC(const Grid_t& grid,
                                    const OutputFieldsCParams& params)
 {
   std::vector<std::unique_ptr<FieldsItemBase>> outf_items;
-  outf_items.emplace_back(new FieldsItem_E_cc(grid));
-  outf_items.emplace_back(new FieldsItem_H_cc(grid));
-  outf_items.emplace_back(new FieldsItem_J_cc(grid));
+  outf_items.emplace_back(new FieldsItem_jeh(grid));
   outf_items.emplace_back(new FieldsItem_Moments_1st_cc<Mparticles>(grid));
   return OutputFieldsC{grid, params, std::move(outf_items)};
 }

@@ -347,3 +347,35 @@ struct Item_divb
 };
 
 #undef define_dxdydyz
+
+// ======================================================================
+// Item_jeh
+//
+// Main fiels in their natural staggering
+
+struct Item_jeh
+{
+  using MfieldsState = MfieldsState_t;
+  using Mfields = Mfields_t;
+  
+  constexpr static char const* name = "jeh";
+  constexpr static int n_comps = 9;
+  static fld_names_t fld_names() { return { "jx_ec", "jy_ec", "jz_ec",
+	"ex_ec", "ey_ec", "ez_ec", "hx_fc", "hy_fc", "hz_fc"}; }
+  
+  template<typename FE>
+  static void set(const Grid_t& grid, FE& R, FE&F, int i, int j, int k)
+  {
+    define_dxdydz(dx, dy, dz);
+    R(0, i,j,k) = F(JXI, i,j,k);
+    R(1, i,j,k) = F(JYI, i,j,k);
+    R(2, i,j,k) = F(JZI, i,j,k);
+    R(3, i,j,k) = F(EX, i,j,k);
+    R(4, i,j,k) = F(EY, i,j,k);
+    R(5, i,j,k) = F(EZ, i,j,k);
+    R(6, i,j,k) = F(HX, i,j,k);
+    R(7, i,j,k) = F(HY, i,j,k);
+    R(8, i,j,k) = F(HZ, i,j,k);
+  }
+};
+

@@ -11,6 +11,7 @@
 
 // ======================================================================
 
+using FieldsItem_jeh = FieldsItemFields<ItemLoopPatches<Item_jeh>>;
 using FieldsItem_E_cc = FieldsItemFields<ItemLoopPatches<Item_e_cc>>;
 using FieldsItem_H_cc = FieldsItemFields<ItemLoopPatches<Item_h_cc>>;
 using FieldsItem_J_cc = FieldsItemFields<ItemLoopPatches<Item_j_cc>>;
@@ -56,17 +57,13 @@ public:
 
   OutputFields(const Grid_t& grid, const OutputFieldsParams& prm)
     : OutputFieldsParams{prm},
-      e_cc_{grid},
-      h_cc_{grid},
-      j_cc_{grid},
+      jeh_{grid},
       moments_{grid}
   {
     pfield_next = pfield_first;
     tfield_next = tfield_first;
 
-    tfds_.emplace_back(grid, e_cc_.n_comps(grid), grid.ibn);
-    tfds_.emplace_back(grid, h_cc_.n_comps(grid), grid.ibn);
-    tfds_.emplace_back(grid, j_cc_.n_comps(grid), grid.ibn);
+    tfds_.emplace_back(grid, jeh_.n_comps(grid), grid.ibn);
     tfds_.emplace_back(grid, moments_.n_comps(grid), grid.ibn);
 
     naccum = 0;
@@ -114,20 +111,16 @@ public:
 	  mprintf("name %s %d min %g max %g\n", item->name(), m, min, max);
 	}
 #endif
-      e_cc_.run(grid, mflds, mprts);
-      h_cc_.run(grid, mflds, mprts);
-      j_cc_.run(grid, mflds, mprts);
+      jeh_.run(grid, mflds, mprts);
       moments_.run(grid, mflds, mprts);
     }
 
     if (pfield_step > 0 && timestep >= pfield_next) {
-      mpi_printf(MPI_COMM_WORLD, "***** Writing PFD output\n"); // FIXME
+      mpi_printf(grid.comm(), "***** Writing PFD output\n");
       pfield_next += pfield_step;
 
       io_pfd_->open(grid, rn, rx);
-      write_pfd(e_cc_);
-      write_pfd(h_cc_);
-      write_pfd(j_cc_);
+      write_pfd(jeh_);
       write_pfd(moments_);
       io_pfd_->close();
     }
@@ -136,21 +129,17 @@ public:
       if (doaccum_tfield) {
         // tfd += pfd
         int i = 0;
-        tfds_[i++].axpy(1., e_cc_.mres());
-        tfds_[i++].axpy(1., h_cc_.mres());
-        tfds_[i++].axpy(1., j_cc_.mres());
+        tfds_[i++].axpy(1., jeh_.mres());
         tfds_[i++].axpy(1., moments_.mres());
         naccum++;
       }
       if (timestep >= tfield_next) {
-        mpi_printf(MPI_COMM_WORLD, "***** Writing TFD output\n"); // FIXME
+        mpi_printf(grid.comm(), "***** Writing TFD output\n");
         tfield_next += tfield_step;
 
         io_tfd_->open(grid, rn, rx);
         int i = 0;
-        write_tfd(tfds_[i++], e_cc_);
-        write_tfd(tfds_[i++], h_cc_);
-        write_tfd(tfds_[i++], j_cc_);
+        write_tfd(tfds_[i++], jeh_);
         write_tfd(tfds_[i++], moments_);
         io_tfd_->close();
         naccum = 0;
@@ -182,9 +171,7 @@ public:
   unsigned int naccum;
 
 private:
-  FieldsItem_E_cc e_cc_;
-  FieldsItem_H_cc h_cc_;
-  FieldsItem_J_cc j_cc_;
+  FieldsItem_jeh jeh_;
   _FieldsItem_Moments_1st_cc moments_;
   // tfd -- FIXME?! always MfieldsC
   std::vector<MfieldsC> tfds_;
