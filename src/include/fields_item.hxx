@@ -48,7 +48,6 @@ struct FieldsItemBase
 template<typename Item>
 struct FieldsItemFields : FieldsItemBase
 {
-  using MfieldsState = typename Item::MfieldsState;
   using Mfields = typename Item::Mfields;
   
   const char* name() const override { return Item::name; }
@@ -59,6 +58,7 @@ struct FieldsItemFields : FieldsItemBase
     : mres_{grid, Item::n_comps, grid.ibn}
   {}
 
+  template <typename MfieldsState>
   void operator()(const Grid_t& grid, MfieldsState& mflds)
   {
     Item::run(grid, mflds, mres_);
@@ -66,9 +66,46 @@ struct FieldsItemFields : FieldsItemBase
 
   void run(const Grid_t& grid, MfieldsStateBase& mflds_base, MparticlesBase& mprts_base) override
   {
+    using MfieldsState = typename Item::MfieldsState;
     auto& mflds = mflds_base.get_as<MfieldsState>(0, mflds_base._n_comps());
     (*this)(grid, mflds);
     mflds_base.put_as(mflds, 0, 0);
+  }
+
+  virtual std::vector<std::string> comp_names() override
+  {
+    std::vector<std::string> comp_names;
+    for (int m = 0; m < Item::n_comps; m++) {
+      comp_names.emplace_back(Item::fld_names()[m]);
+    }
+    return comp_names;
+  }
+  
+  virtual MfieldsBase& mres() override { return mres_; }
+
+  Mfields& result() { return mres_; }
+
+private:  
+  Mfields mres_;
+};
+
+template<typename Item>
+struct _FieldsItemFields : FieldsItemBase
+{
+  using Mfields = typename Item::Mfields;
+  
+  const char* name() const override { return Item::name; }
+
+  int n_comps(const Grid_t& grid) const override { return Item::n_comps; }
+ 
+  _FieldsItemFields(const Grid_t& grid)
+    : mres_{grid, Item::n_comps, grid.ibn}
+  {}
+
+  template <typename MfieldsState>
+  void operator()(const Grid_t& grid, MfieldsState& mflds)
+  {
+    Item::run(grid, mflds, mres_);
   }
 
   virtual std::vector<std::string> comp_names() override
@@ -107,6 +144,25 @@ struct ItemLoopPatches : ItemPatch
       mres.Foreach_3d(0, 0, [&](int i, int j, int k) {
 	  ItemPatch::set(grid, R, F, i,j,k);
 	});
+    }
+  }
+};
+
+template<typename ItemPatch>
+struct _ItemLoopPatches : ItemPatch
+{
+  using Mfields = MfieldsC;
+
+  template <typename MfieldsState>
+  static void run(const Grid_t& grid, MfieldsState& mflds, Mfields& mres)
+  {
+    for (int p = 0; p < mres.n_patches(); p++) {
+      auto R = mres[p];
+      for (int m = 0; m < ItemPatch::n_comps; m++) {
+	mres.Foreach_3d(0, 0, [&](int i, int j, int k) {
+	    R(m, i, j, k) = ItemPatch::get(grid, mflds, m, {i,j,k}, p);
+	  });
+      }
     }
   }
 };
