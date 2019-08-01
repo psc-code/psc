@@ -125,7 +125,7 @@ struct Psc
   Psc(const PscParams& params, Grid_t& grid, MfieldsState& mflds,
       Mparticles& mprts, Balance& balance, Collision& collision, Checks& checks,
       Marder& marder, Diagnostics& diagnostics,
-      InjectParticles inject_particles)
+      InjectParticles& inject_particles)
     : p_{params},
       grid_{&grid},
       mflds_{mflds},
