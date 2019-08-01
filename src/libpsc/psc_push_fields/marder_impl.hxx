@@ -185,7 +185,7 @@ struct Marder_ : MarderBase
 
   void operator()(MfieldsState& mflds, Mparticles& mprts)
   {
-    item_rho_.run(mprts);
+    item_rho_(mprts);
 
     // need to fill ghost cells first (should be unnecessary with only variant 1) FIXME
     assert(0);

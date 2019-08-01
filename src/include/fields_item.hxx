@@ -187,7 +187,7 @@ struct ItemMomentAddBnd
   ItemMomentAddBnd(const Grid_t& grid) : Base{grid}, bnd_{grid, grid.ibn} {}
 
   template <typename Mparticles>
-  void run(Mparticles& mprts)
+  void operator()(Mparticles& mprts)
   {
     auto& mres = this->mres_;
     mres.zero();
@@ -313,10 +313,10 @@ struct FieldsItemMoment
 
   FieldsItemMoment(const Grid_t& grid) : moment_(grid) {}
 
-  template <typename MfieldsState, typename Mparticles>
-  void operator()(const Grid_t& grid, MfieldsState& mflds, Mparticles& mprts)
+  template <typename Mparticles>
+  void operator()(const Grid_t& grid, Mparticles& mprts)
   {
-    moment_.run(mprts);
+    moment_(mprts);
   }
 
   MfieldsC& result() { return moment_.result(); }

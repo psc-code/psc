@@ -96,7 +96,7 @@ public:
     FieldsItem_jeh jeh{grid};
     if ((do_pfield || doaccum_tfield)) {
       jeh(grid, mflds);
-      moments_(grid, mflds, mprts);
+      moments_(grid, mprts);
     }
 
     if (do_pfield) {

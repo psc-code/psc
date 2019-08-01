@@ -40,7 +40,7 @@ struct Inject_ : InjectBase
   {
     const auto& grid = mprts.grid();
 
-    moment_n_.run(mprts);
+    moment_n_(mprts);
     auto& mres = moment_n_.result();
     auto& mf_n = mres.template get_as<Mfields>(kind_n, kind_n + 1);
 

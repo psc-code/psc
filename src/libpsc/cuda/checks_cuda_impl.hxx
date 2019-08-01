@@ -32,7 +32,7 @@ struct ChecksCuda
       return;
     }
 
-    item_rho_m_.run(mprts);
+    item_rho_m_(mprts);
   }
 
   void continuity_after_particle_push(Mparticles& mprts,
@@ -44,7 +44,7 @@ struct ChecksCuda
       return;
     }
 
-    item_rho_p_.run(mprts);
+    item_rho_p_(mprts);
 
     auto& h_mflds = mflds.get_as<MfieldsState>(0, mflds._n_comps());
     item_divj_(grid, h_mflds);
@@ -120,7 +120,7 @@ struct ChecksCuda
       return;
     }
 
-    item_rho_.run(mprts);
+    item_rho_(mprts);
 
     auto& h_mflds = mflds.get_as<MfieldsState>(0, mflds._n_comps());
     item_dive_(grid, h_mflds);

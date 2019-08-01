@@ -57,7 +57,7 @@ struct Checks_ : ChecksParams, ChecksBase
       return;
     }
 
-    item_rho_m_.run(mprts);
+    item_rho_m_(mprts);
   }
 
   // ----------------------------------------------------------------------
@@ -70,7 +70,7 @@ struct Checks_ : ChecksParams, ChecksBase
       return;
     }
 
-    item_rho_p_.run(mprts);
+    item_rho_p_(mprts);
     item_divj_(grid, mflds);
 
     auto& rho_p = item_rho_p_.result();
@@ -137,7 +137,7 @@ struct Checks_ : ChecksParams, ChecksBase
       return;
     }
 
-    item_rho_.run(mprts);
+    item_rho_(mprts);
     item_dive_(grid, mflds);
 
     auto& dive = item_dive_.result();

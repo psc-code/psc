@@ -30,7 +30,7 @@ struct Moment_rho_1st_nc_cuda : ItemMomentCRTP<Moment_rho_1st_nc_cuda<_Mparticle
       bnd_{grid, grid.ibn}
   {}
 
-  void run(Mparticles& mprts)
+  void operator()(Mparticles& mprts)
   {
     Mfields& mres  = this->mres_;
     auto& cmprts = *mprts.cmprts();
@@ -67,7 +67,7 @@ struct Moment_n_1st_cuda : ItemMomentCRTP<Moment_n_1st_cuda<_Mparticles, dim>, M
       bnd_{grid, grid.ibn}
   {}
 
-  void run(Mparticles& mprts)
+  void operator()(Mparticles& mprts)
   {
     Mfields& mres = this->mres_;
     auto& cmprts = *mprts.cmprts();
