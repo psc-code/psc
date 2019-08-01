@@ -27,6 +27,9 @@ using FieldsItem_p_1st_cc =
 template <typename Mparticles>
 using FieldsItem_T_1st_cc =
   FieldsItemMoment<ItemMomentAddBnd<Moment_T_1st<MfieldsC>>, Mparticles>;
+template <typename Mparticles>
+using FieldsItem_Moments_1st_cc =
+  FieldsItemMoment<ItemMomentAddBnd<Moments_1st<MfieldsC>>, Mparticles>;
 
 // ======================================================================
 // OutputFieldsCParams
@@ -177,8 +180,6 @@ OutputFieldsC defaultOutputFieldsC(const Grid_t& grid,
   outf_items.emplace_back(new FieldsItem_E_cc(grid));
   outf_items.emplace_back(new FieldsItem_H_cc(grid));
   outf_items.emplace_back(new FieldsItem_J_cc(grid));
-  outf_items.emplace_back(new FieldsItem_n_1st_cc<Mparticles>(grid));
-  outf_items.emplace_back(new FieldsItem_v_1st_cc<Mparticles>(grid));
-  outf_items.emplace_back(new FieldsItem_T_1st_cc<Mparticles>(grid));
+  outf_items.emplace_back(new FieldsItem_Moments_1st_cc<Mparticles>(grid));
   return OutputFieldsC{grid, params, std::move(outf_items)};
 }
