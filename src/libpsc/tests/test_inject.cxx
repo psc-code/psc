@@ -114,7 +114,7 @@ TYPED_TEST(InjectTest, Test1)
   ItemMoment moment_n{grid};
   auto& mflds_n = moment_n.result();
 
-  moment_n.run(mprts);
+  moment_n(mprts);
   for (int p = 0; p < grid.n_patches(); p++) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
 	EXPECT_EQ(mflds_n[p](0, i,j,k), 0.);
@@ -131,7 +131,7 @@ TYPED_TEST(InjectTest, Test1)
   // FIXME, it's worth noting that given the wrong choice of interval / tau / nicell, one may end up never injecting anything because the # particles to be injected turns out to be < 1 and we always round down
   //mprintf("fac = %g, n_injected = %g\n", fac, n_injected);
   
-  moment_n.run(mprts);
+  moment_n(mprts);
   for (int p = 0; p < grid.n_patches(); p++) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
 	double xx[3] = {grid.patches[p].x_cc(i), grid.patches[p].y_cc(j), grid.patches[p].z_cc(k)};
