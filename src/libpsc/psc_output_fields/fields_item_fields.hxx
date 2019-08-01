@@ -27,7 +27,7 @@ struct Item_j_nc
 
   constexpr static char const* name = "j_nc";
   constexpr static int n_comps = 3;
-  static fld_names_t fld_names() { return {"jx_nc", "jy_nc", "jz_nc"}; }
+  static std::vector<std::string> fld_names() { return {"jx_nc", "jy_nc", "jz_nc"}; }
 
   template <typename FE>
   static void set(const Grid_t& grid, FE& R, FE& F, int i, int j, int k)
@@ -58,7 +58,7 @@ struct Item_j_cc
 
   constexpr static char const* name = "j";
   constexpr static int n_comps = 3;
-  static fld_names_t fld_names() { return {"jx", "jy", "jz"}; }
+  static std::vector<std::string> fld_names() { return {"jx", "jy", "jz"}; }
 
   template <typename FE>
   static void set(const Grid_t& grid, FE& R, FE& F, int i, int j, int k)
@@ -79,7 +79,7 @@ struct Item_j_ec
 
   constexpr static char const* name = "j_ec";
   constexpr static int n_comps = 3;
-  static fld_names_t fld_names() { return {"jx_ec", "jy_ec", "jz_ec"}; }
+  static std::vector<std::string> fld_names() { return {"jx_ec", "jy_ec", "jz_ec"}; }
 
   template <typename FE>
   static void set(const Grid_t& grid, FE& R, FE& F, int i, int j, int k)
@@ -104,7 +104,7 @@ struct Item_e_nc
 
   constexpr static char const* name = "e_nc";
   constexpr static int n_comps = 3;
-  static fld_names_t fld_names() { return {"ex_nc", "ey_nc", "ez_nc"}; }
+  static std::vector<std::string> fld_names() { return {"ex_nc", "ey_nc", "ez_nc"}; }
 
   template <typename FE>
   static void set(const Grid_t& grid, FE& R, FE& F, int i, int j, int k)
@@ -135,7 +135,7 @@ struct Item_e_cc
 
   constexpr static char const* name = "e";
   constexpr static int n_comps = 3;
-  static fld_names_t fld_names() { return {"ex", "ey", "ez"}; }
+  static std::vector<std::string> fld_names() { return {"ex", "ey", "ez"}; }
 
   template <typename FE>
   static void set(const Grid_t& grid, FE& R, FE& F, int i, int j, int k)
@@ -156,7 +156,7 @@ struct Item_e_ec
 
   constexpr static char const* name = "e_ec";
   constexpr static int n_comps = 3;
-  static fld_names_t fld_names() { return {"ex_ec", "ey_ec", "ez_ec"}; }
+  static std::vector<std::string> fld_names() { return {"ex_ec", "ey_ec", "ez_ec"}; }
 
   template <typename FE>
   static void set(const Grid_t& grid, FE& R, FE& F, int i, int j, int k)
@@ -187,7 +187,7 @@ struct Item_h_nc
 
   constexpr static char const* name = "h_nc";
   constexpr static int n_comps = 3;
-  static fld_names_t fld_names() { return {"hx_nc", "hy_nc", "hz_nc"}; }
+  static std::vector<std::string> fld_names() { return {"hx_nc", "hy_nc", "hz_nc"}; }
 
   template <typename FE>
   static void set(const Grid_t& grid, FE& R, FE& F, int i, int j, int k)
@@ -212,7 +212,7 @@ struct Item_h_cc
 
   constexpr static char const* name = "h";
   constexpr static int n_comps = 3;
-  static fld_names_t fld_names() { return {"hx", "hy", "hz"}; }
+  static std::vector<std::string> fld_names() { return {"hx", "hy", "hz"}; }
 
   template <typename FE>
   static void set(const Grid_t& grid, FE& R, FE& F, int i, int j, int k)
@@ -233,7 +233,7 @@ struct Item_h_fc
 
   constexpr static char const* name = "h_fc";
   constexpr static int n_comps = 3;
-  static fld_names_t fld_names() { return {"hx_fc", "hy_fc", "hz_fc"}; }
+  static std::vector<std::string> fld_names() { return {"hx_fc", "hy_fc", "hz_fc"}; }
 
   template <typename FE>
   static void set(const Grid_t& grid, FE& R, FE& F, int i, int j, int k)
@@ -254,7 +254,7 @@ struct Item_jdote
 
   constexpr static char const* name = "jdote";
   constexpr static int n_comps = 3;
-  static fld_names_t fld_names() { return {"jxex", "jyey", "jzez"}; }
+  static std::vector<std::string> fld_names() { return {"jxex", "jyey", "jzez"}; }
 
   template <typename FE>
   static void set(const Grid_t& grid, FE& R, FE& F, int i, int j, int k)
@@ -275,7 +275,7 @@ struct Item_poyn
 
   constexpr static char const* name = "poyn";
   constexpr static int n_comps = 3;
-  static fld_names_t fld_names() { return {"poynx", "poyny", "poynz"}; }
+  static std::vector<std::string> fld_names() { return {"poynx", "poyny", "poynz"}; }
 
   template <typename FE>
   static void set(const Grid_t& grid, FE& R, FE& F, int i, int j, int k)
@@ -299,7 +299,7 @@ struct Item_e2
 
   constexpr static char const* name = "e2";
   constexpr static int n_comps = 3;
-  static fld_names_t fld_names() { return {"ex2", "ey2", "ez2"}; }
+  static std::vector<std::string> fld_names() { return {"ex2", "ey2", "ez2"}; }
 
   template <typename FE>
   static void set(const Grid_t& grid, FE& R, FE& F, int i, int j, int k)
@@ -320,7 +320,7 @@ struct Item_h2
 
   constexpr static char const* name = "h2";
   constexpr static int n_comps = 3;
-  static fld_names_t fld_names() { return {"hx2", "hy2", "hz2"}; }
+  static std::vector<std::string> fld_names() { return {"hx2", "hy2", "hz2"}; }
 
   template <typename FE>
   static void set(const Grid_t& grid, FE& R, FE& F, int i, int j, int k)
@@ -341,7 +341,7 @@ struct Item_divb
 
   constexpr static char const* name = "divb";
   constexpr static int n_comps = 1;
-  static fld_names_t fld_names() { return {"divb"}; }
+  static std::vector<std::string> fld_names() { return {"divb"}; }
 
   template <typename FE>
   static void set(const Grid_t& grid, FE& R, FE& F, int i, int j, int k)
@@ -369,7 +369,7 @@ public:
 
   constexpr static char const* name = "jeh";
   constexpr static int n_comps = 9;
-  static fld_names_t fld_names()
+  static std::vector<std::string> fld_names()
   {
     return {"jx_ec", "jy_ec", "jz_ec", "ex_ec", "ey_ec",
             "ez_ec", "hx_fc", "hy_fc", "hz_fc"};
@@ -408,7 +408,7 @@ struct Item_dive
 
   constexpr static char const* name = "dive";
   constexpr static int n_comps = 1;
-  static fld_names_t fld_names() { return {"dive"}; }
+  static std::vector<std::string> fld_names() { return {"dive"}; }
 
   template <typename FE>
   static void set(const Grid_t& grid, FE& R, FE& F, int i, int j, int k)
@@ -434,7 +434,7 @@ struct Item_divj
 
   constexpr static char const* name = "divj";
   constexpr static int n_comps = 1;
-  static fld_names_t fld_names() { return {"divj"}; }
+  static std::vector<std::string> fld_names() { return {"divj"}; }
 
   template <typename FE>
   static void set(const Grid_t& grid, FE& R, FE& F, int i, int j, int k)

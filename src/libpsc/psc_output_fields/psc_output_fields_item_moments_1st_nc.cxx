@@ -18,7 +18,7 @@ struct Moment_n_1st_nc
   
   constexpr static char const* name = "n_1st_nc";
   constexpr static int n_comps = 1;
-  constexpr static fld_names_t fld_names() { return { "n" }; }
+  static std::vector<std::string> fld_names() { return { "n" }; }
   constexpr static int flags = POFI_BY_KIND;
   
   static void run(Mfields& mflds, Mparticles& mprts)
@@ -51,7 +51,7 @@ struct Moment_rho_1st_nc
   
   constexpr static char const* name = "rho_1st_nc";
   constexpr static int n_comps = 1;
-  constexpr static fld_names_t fld_names() { return { "rho" }; }
+  static std::vector<std::string> fld_names() { return { "rho" }; }
   constexpr static int flags = 0;
   
   static void run(Mfields& mflds, Mparticles& mprts)
@@ -83,7 +83,7 @@ struct Moment_v_1st_nc
   
   constexpr static char const* name = "v_1st_nc";
   constexpr static int n_comps = 3;
-  constexpr static fld_names_t fld_names() { return { "vx", "vy", "vz" }; }
+  static std::vector<std::string> fld_names() { return { "vx", "vy", "vz" }; }
   constexpr static int flags = POFI_BY_KIND;
   
   static void run(Mfields& mflds, Mparticles& mprts)
