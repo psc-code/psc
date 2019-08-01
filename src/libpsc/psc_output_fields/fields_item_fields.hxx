@@ -377,18 +377,18 @@ public:
 
   Item_jeh(MfieldsState& mflds) : mflds_{mflds} {}
 
-  Real get(const Grid_t& grid, MfieldsState& mflds, int m, Int3 ijk, int p)
+  Real operator()(int m, Int3 ijk, int p)
   {
     switch (m) {
-      case 0: return mflds[p](JXI, ijk[0], ijk[1], ijk[2]);
-      case 1: return mflds[p](JYI, ijk[0], ijk[1], ijk[2]);
-      case 2: return mflds[p](JZI, ijk[0], ijk[1], ijk[2]);
-      case 3: return mflds[p](EX, ijk[0], ijk[1], ijk[2]);
-      case 4: return mflds[p](EY, ijk[0], ijk[1], ijk[2]);
-      case 5: return mflds[p](EZ, ijk[0], ijk[1], ijk[2]);
-      case 6: return mflds[p](HX, ijk[0], ijk[1], ijk[2]);
-      case 7: return mflds[p](HY, ijk[0], ijk[1], ijk[2]);
-      case 8: return mflds[p](HZ, ijk[0], ijk[1], ijk[2]);
+      case 0: return mflds_[p](JXI, ijk[0], ijk[1], ijk[2]);
+      case 1: return mflds_[p](JYI, ijk[0], ijk[1], ijk[2]);
+      case 2: return mflds_[p](JZI, ijk[0], ijk[1], ijk[2]);
+      case 3: return mflds_[p](EX, ijk[0], ijk[1], ijk[2]);
+      case 4: return mflds_[p](EY, ijk[0], ijk[1], ijk[2]);
+      case 5: return mflds_[p](EZ, ijk[0], ijk[1], ijk[2]);
+      case 6: return mflds_[p](HX, ijk[0], ijk[1], ijk[2]);
+      case 7: return mflds_[p](HY, ijk[0], ijk[1], ijk[2]);
+      case 8: return mflds_[p](HZ, ijk[0], ijk[1], ijk[2]);
       default: std::abort();
     }
   }

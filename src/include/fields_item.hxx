@@ -115,7 +115,7 @@ struct _FieldsItemFields : FieldsItemBase
       auto R = mres_[p];
       for (int m = 0; m < item.n_comps; m++) {
         mres_.Foreach_3d(0, 0, [&](int i, int j, int k) {
-          R(m, i, j, k) = item.get(grid, mflds, m, {i, j, k}, p);
+          R(m, i, j, k) = item(m, {i, j, k}, p);
         });
       }
     }
