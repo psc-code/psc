@@ -96,7 +96,7 @@ private:
 template <typename Item>
 struct _FieldsItemFields : FieldsItemBase
 {
-  using Mfields = typename Item::Mfields;
+  using Mfields = MfieldsC;
 
   const char* name() const override { return Item::name; }
 
@@ -108,7 +108,14 @@ struct _FieldsItemFields : FieldsItemBase
   template <typename MfieldsState>
   void operator()(const Grid_t& grid, MfieldsState& mflds)
   {
-    Item::run(grid, mflds, mres_);
+    for (int p = 0; p < mres_.n_patches(); p++) {
+      auto R = mres_[p];
+      for (int m = 0; m < Item::n_comps; m++) {
+        mres_.Foreach_3d(0, 0, [&](int i, int j, int k) {
+          R(m, i, j, k) = Item::get(grid, mflds, m, {i, j, k}, p);
+        });
+      }
+    }
   }
 
   virtual std::vector<std::string> comp_names() override
@@ -147,25 +154,6 @@ struct ItemLoopPatches : ItemPatch
       mres.Foreach_3d(0, 0, [&](int i, int j, int k) {
         ItemPatch::set(grid, R, F, i, j, k);
       });
-    }
-  }
-};
-
-template <typename ItemPatch>
-struct _ItemLoopPatches : ItemPatch
-{
-  using Mfields = MfieldsC;
-
-  template <typename MfieldsState>
-  static void run(const Grid_t& grid, MfieldsState& mflds, Mfields& mres)
-  {
-    for (int p = 0; p < mres.n_patches(); p++) {
-      auto R = mres[p];
-      for (int m = 0; m < ItemPatch::n_comps; m++) {
-        mres.Foreach_3d(0, 0, [&](int i, int j, int k) {
-          R(m, i, j, k) = ItemPatch::get(grid, mflds, m, {i, j, k}, p);
-        });
-      }
     }
   }
 };

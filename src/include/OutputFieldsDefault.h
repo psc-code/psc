@@ -11,7 +11,7 @@
 
 // ======================================================================
 
-using FieldsItem_jeh = _FieldsItemFields<_ItemLoopPatches<Item_jeh>>;
+using FieldsItem_jeh = _FieldsItemFields<Item_jeh>;
 using FieldsItem_E_cc = FieldsItemFields<ItemLoopPatches<Item_e_cc>>;
 using FieldsItem_H_cc = FieldsItemFields<ItemLoopPatches<Item_h_cc>>;
 using FieldsItem_J_cc = FieldsItemFields<ItemLoopPatches<Item_j_cc>>;
