@@ -363,9 +363,6 @@ struct Item_divb
 
 struct Item_jeh
 {
-  using MfieldsState = MfieldsState_t;
-  using Mfields = Mfields_t;
-
   constexpr static char const* name = "jeh";
   constexpr static int n_comps = 9;
   static fld_names_t fld_names()
@@ -374,19 +371,23 @@ struct Item_jeh
             "ez_ec", "hx_fc", "hy_fc", "hz_fc"};
   }
 
-  template <typename FE>
-  static void set(const Grid_t& grid, FE& R, FE& F, int i, int j, int k)
+  template <typename MfieldsState>
+  static typename MfieldsState::real_t get(const Grid_t& grid,
+                                           MfieldsState& mflds, int m, Int3 ijk,
+                                           int p)
   {
-    define_dxdydz(dx, dy, dz);
-    R(0, i, j, k) = F(JXI, i, j, k);
-    R(1, i, j, k) = F(JYI, i, j, k);
-    R(2, i, j, k) = F(JZI, i, j, k);
-    R(3, i, j, k) = F(EX, i, j, k);
-    R(4, i, j, k) = F(EY, i, j, k);
-    R(5, i, j, k) = F(EZ, i, j, k);
-    R(6, i, j, k) = F(HX, i, j, k);
-    R(7, i, j, k) = F(HY, i, j, k);
-    R(8, i, j, k) = F(HZ, i, j, k);
+    switch (m) {
+      case 0: return mflds[p](JXI, ijk[0], ijk[1], ijk[2]);
+      case 1: return mflds[p](JYI, ijk[0], ijk[1], ijk[2]);
+      case 2: return mflds[p](JZI, ijk[0], ijk[1], ijk[2]);
+      case 3: return mflds[p](EX, ijk[0], ijk[1], ijk[2]);
+      case 4: return mflds[p](EY, ijk[0], ijk[1], ijk[2]);
+      case 5: return mflds[p](EZ, ijk[0], ijk[1], ijk[2]);
+      case 6: return mflds[p](HX, ijk[0], ijk[1], ijk[2]);
+      case 7: return mflds[p](HY, ijk[0], ijk[1], ijk[2]);
+      case 8: return mflds[p](HZ, ijk[0], ijk[1], ijk[2]);
+      default: std::abort();
+    }
   }
 };
 
