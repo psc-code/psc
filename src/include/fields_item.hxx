@@ -29,7 +29,7 @@ struct FieldsItemBase
 {
   virtual ~FieldsItemBase() {};
 
-  virtual void run(const Grid_t& grid, MfieldsStateBase& mflds_base, MparticlesBase& mprts_base) = 0;
+  virtual void run(const Grid_t& grid, MfieldsStateBase& mflds_base, MparticlesBase& mprts_base) {assert(0);}
 
   virtual MfieldsBase& mres() = 0;
 
@@ -296,6 +296,34 @@ struct FieldsItemMoment : FieldsItemBase
     auto& mprts = mprts_base.get_as<Mparticles>();
     moment_.run(mprts);
     mprts_base.put_as(mprts, MP_DONT_COPY);
+  }
+
+  virtual MfieldsBase& mres() override { return moment_.result(); }
+
+  virtual std::vector<std::string> comp_names()  override { return moment_.comp_names(); }
+  
+private:
+  Moment_t moment_;
+};
+
+template<typename Moment_t>
+struct _FieldsItemMoment : FieldsItemBase
+{
+  const char* name() const override { return Moment_t::name; }
+
+  int n_comps(const Grid_t& grid) const override
+  {
+    return Moment_t::n_comps * ((Moment_t::flags & POFI_BY_KIND) ? grid.kinds.size() : 1);
+  }
+  
+  _FieldsItemMoment(const Grid_t& grid)
+    : moment_(grid)
+  {}
+
+  template <typename MfieldsState, typename Mparticles>
+  void operator()(const Grid_t& grid, MfieldsState& mflds, Mparticles& mprts)
+  {
+    moment_.run(mprts);
   }
 
   virtual MfieldsBase& mres() override { return moment_.result(); }

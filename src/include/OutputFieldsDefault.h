@@ -15,18 +15,14 @@ using FieldsItem_E_cc = FieldsItemFields<ItemLoopPatches<Item_e_cc>>;
 using FieldsItem_H_cc = FieldsItemFields<ItemLoopPatches<Item_h_cc>>;
 using FieldsItem_J_cc = FieldsItemFields<ItemLoopPatches<Item_j_cc>>;
 
-template <typename Mparticles>
-using FieldsItem_n_1st_cc =
-  FieldsItemMoment<ItemMomentAddBnd<Moment_n_1st<MfieldsC>>, Mparticles>;
-template <typename Mparticles>
-using FieldsItem_v_1st_cc =
-  FieldsItemMoment<ItemMomentAddBnd<Moment_v_1st<MfieldsC>>, Mparticles>;
-template <typename Mparticles>
-using FieldsItem_p_1st_cc =
-  FieldsItemMoment<ItemMomentAddBnd<Moment_p_1st<MfieldsC>>, Mparticles>;
-template <typename Mparticles>
-using FieldsItem_T_1st_cc =
-  FieldsItemMoment<ItemMomentAddBnd<Moment_T_1st<MfieldsC>>, Mparticles>;
+using _FieldsItem_n_1st_cc =
+  _FieldsItemMoment<ItemMomentAddBnd<Moment_n_1st<MfieldsC>>>;
+using _FieldsItem_v_1st_cc =
+  _FieldsItemMoment<ItemMomentAddBnd<Moment_v_1st<MfieldsC>>>;
+using _FieldsItem_p_1st_cc =
+  _FieldsItemMoment<ItemMomentAddBnd<Moment_p_1st<MfieldsC>>>;
+using _FieldsItem_T_1st_cc =
+  _FieldsItemMoment<ItemMomentAddBnd<Moment_T_1st<MfieldsC>>>;
 
 // ======================================================================
 // OutputFieldsParams
@@ -56,23 +52,24 @@ public:
   // ----------------------------------------------------------------------
   // ctor
 
-  OutputFields(const Grid_t& grid, const OutputFieldsParams& prm,
-               std::vector<std::unique_ptr<FieldsItemBase>>&& items = {})
+  OutputFields(const Grid_t& grid, const OutputFieldsParams& prm)
     : OutputFieldsParams{prm},
-      items_{std::move(items)},
       e_cc_{grid},
       h_cc_{grid},
-      j_cc_{grid}
+      j_cc_{grid},
+      n_cc_{grid},
+      v_cc_{grid},
+      T_cc_{grid}
   {
     pfield_next = pfield_first;
     tfield_next = tfield_first;
 
-    for (auto& item : items_) {
-      tfds_.emplace_back(grid, item->n_comps(grid), grid.ibn);
-    }
     tfds_.emplace_back(grid, e_cc_.n_comps(grid), grid.ibn);
     tfds_.emplace_back(grid, h_cc_.n_comps(grid), grid.ibn);
     tfds_.emplace_back(grid, j_cc_.n_comps(grid), grid.ibn);
+    tfds_.emplace_back(grid, n_cc_.n_comps(grid), grid.ibn);
+    tfds_.emplace_back(grid, v_cc_.n_comps(grid), grid.ibn);
+    tfds_.emplace_back(grid, T_cc_.n_comps(grid), grid.ibn);
 
     naccum = 0;
 
@@ -87,7 +84,8 @@ public:
   // ----------------------------------------------------------------------
   // operator()
 
-  void operator()(MfieldsStateBase& mflds, MparticlesBase& mprts)
+  template <typename MfieldsState, typename Mparticles>
+  void operator()(MfieldsState& mflds, Mparticles& mprts)
   {
     const auto& grid = mflds._grid();
 
@@ -105,8 +103,6 @@ public:
 
     if ((pfield_step > 0 && timestep >= pfield_next) ||
         (tfield_step > 0 && doaccum_tfield)) {
-      for (auto& item : items_) {
-        item->run(grid, mflds, mprts);
 #if 0
 	auto& mres = dynamic_cast<MfieldsC&>(item->mres());
 	double min = 1e10, max = -1e10;
@@ -120,10 +116,12 @@ public:
 	  mprintf("name %s %d min %g max %g\n", item->name(), m, min, max);
 	}
 #endif
-      }
       e_cc_.run(grid, mflds, mprts);
       h_cc_.run(grid, mflds, mprts);
       j_cc_.run(grid, mflds, mprts);
+      n_cc_.run(grid, mflds, mprts);
+      v_cc_.run(grid, mflds, mprts);
+      T_cc_.run(grid, mflds, mprts);
     }
 
     if (pfield_step > 0 && timestep >= pfield_next) {
@@ -131,25 +129,25 @@ public:
       pfield_next += pfield_step;
 
       io_pfd_->open(grid, rn, rx);
-      for (auto& item : items_) {
-        write_pfd(*item);
-      }
       write_pfd(e_cc_);
       write_pfd(h_cc_);
       write_pfd(j_cc_);
+      write_pfd(n_cc_);
+      write_pfd(v_cc_);
+      write_pfd(T_cc_);
       io_pfd_->close();
     }
 
     if (tfield_step > 0) {
       if (doaccum_tfield) {
         // tfd += pfd
-        int i;
-        for (i = 0; i < items_.size(); i++) {
-          tfds_[i].axpy(1., items_[i]->mres());
-        }
+        int i = 0;
         tfds_[i++].axpy(1., e_cc_.mres());
         tfds_[i++].axpy(1., h_cc_.mres());
         tfds_[i++].axpy(1., j_cc_.mres());
+        tfds_[i++].axpy(1., n_cc_.mres());
+        tfds_[i++].axpy(1., v_cc_.mres());
+        tfds_[i++].axpy(1., T_cc_.mres());
         naccum++;
       }
       if (timestep >= tfield_next) {
@@ -159,13 +157,13 @@ public:
         io_tfd_->open(grid, rn, rx);
 
         // convert accumulated values to correct temporal mean
-        int i;
-        for (i = 0; i < items_.size(); i++) {
-          write_tfd(tfds_[i], *items_[i]);
-        }
+        int i = 0;
         write_tfd(tfds_[i++], e_cc_);
         write_tfd(tfds_[i++], h_cc_);
         write_tfd(tfds_[i++], j_cc_);
+        write_tfd(tfds_[i++], n_cc_);
+        write_tfd(tfds_[i++], v_cc_);
+        write_tfd(tfds_[i++], T_cc_);
 
         naccum = 0;
         io_tfd_->close();
@@ -196,23 +194,20 @@ public:
   unsigned int naccum;
 
 private:
-  std::vector<std::unique_ptr<FieldsItemBase>> items_;
   FieldsItem_E_cc e_cc_;
   FieldsItem_H_cc h_cc_;
   FieldsItem_J_cc j_cc_;
+  _FieldsItem_n_1st_cc n_cc_;
+  _FieldsItem_n_1st_cc v_cc_;
+  _FieldsItem_n_1st_cc T_cc_;
   // tfd -- FIXME?! always MfieldsC
   std::vector<MfieldsC> tfds_;
   std::unique_ptr<MrcIo> io_pfd_;
   std::unique_ptr<MrcIo> io_tfd_;
 };
 
-template <typename Mparticles>
 OutputFields defaultOutputFields(const Grid_t& grid,
                                  const OutputFieldsParams& params)
 {
-  std::vector<std::unique_ptr<FieldsItemBase>> outf_items;
-  outf_items.emplace_back(new FieldsItem_n_1st_cc<Mparticles>(grid));
-  outf_items.emplace_back(new FieldsItem_v_1st_cc<Mparticles>(grid));
-  outf_items.emplace_back(new FieldsItem_T_1st_cc<Mparticles>(grid));
-  return OutputFields{grid, params, std::move(outf_items)};
+  return OutputFields{grid, params};
 }
