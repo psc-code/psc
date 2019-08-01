@@ -6,6 +6,7 @@
 #include <setup_particles.hxx>
 #include "../libpsc/vpic/fields_item_vpic.hxx"
 #include "../libpsc/vpic/setup_fields_vpic.hxx"
+#include "OutputFieldsDefault.h"
 #include "psc_config.hxx"
 
 #include "rngpool_iface.h"
@@ -473,7 +474,7 @@ void setup_log(const Grid_t& grid)
 class Diagnostics
 {
 public:
-  Diagnostics(OutputFieldsC& outf, OutputParticles& outp, DiagEnergies& oute)
+  Diagnostics(OutputFields& outf, OutputParticles& outp, DiagEnergies& oute)
     : io_pfd_{"pfd"}, outf_{outf}, outp_{outp}, oute_{oute}
   {}
 
@@ -515,7 +516,7 @@ public:
 
 private:
   MrcIo io_pfd_;
-  OutputFieldsC& outf_;
+  OutputFields& outf_;
   OutputParticles& outp_;
   DiagEnergies& oute_;
 };
@@ -787,21 +788,10 @@ void run()
   Marder marder(grid, marder_diffusion, marder_loop, marder_dump);
 
   // -- output fields
-  OutputFieldsCParams outf_params;
+  OutputFieldsParams outf_params;
   double output_field_interval = 1.;
-  std::vector<std::unique_ptr<FieldsItemBase>> outf_items;
-#ifdef VPIC
-  // handled by diagnostics instead
-#else
-  outf_items.emplace_back(new FieldsItem_E_cc(grid));
-  outf_items.emplace_back(new FieldsItem_H_cc(grid));
-  outf_items.emplace_back(new FieldsItem_J_cc(grid));
-  outf_items.emplace_back(new FieldsItem_n_1st_cc<Mparticles>(grid));
-  outf_items.emplace_back(new FieldsItem_v_1st_cc<Mparticles>(grid));
-  outf_items.emplace_back(new FieldsItem_T_1st_cc<Mparticles>(grid));
-#endif
   outf_params.pfield_step = int((output_field_interval / (phys.wci * grid.dt)));
-  OutputFieldsC outf{grid, outf_params, std::move(outf_items)};
+  OutputFields outf{grid, outf_params};
 
   OutputParticlesParams outp_params{};
   outp_params.every_step =

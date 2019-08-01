@@ -2,7 +2,6 @@
 #pragma once
 
 #include "DiagEnergies.h"
-#include "output_fields_c.hxx"
 
 // ======================================================================
 // DiagnosticsDefault

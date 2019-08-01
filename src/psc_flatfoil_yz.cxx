@@ -387,7 +387,7 @@ void run()
   // -- output fields
   OutputFieldsParams outf_params{};
   outf_params.pfield_step = 200;
-  auto outf = defaultOutputFields(grid, outf_params);
+  OutputFields outf{grid, outf_params};
 
   // -- output particles
   OutputParticlesParams outp_params{};
