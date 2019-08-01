@@ -96,7 +96,7 @@ public:
     FieldsItem_jeh jeh{grid};
     if ((do_pfield || doaccum_tfield)) {
       jeh(grid, mflds);
-      moments_.run(grid, mflds, mprts);
+      moments_(grid, mflds, mprts);
     }
 
     if (do_pfield) {
@@ -111,8 +111,8 @@ public:
 
     if (doaccum_tfield) {
       // tfd += pfd
-      tfd_jeh_.axpy(1., jeh.mres());
-      tfd_moments_.axpy(1., moments_.mres());
+      tfd_jeh_.axpy(1., jeh.result());
+      tfd_moments_.axpy(1., moments_.result());
       naccum_++;
     }
     if (do_tfield) {
@@ -133,7 +133,7 @@ private:
   template <typename Item>
   void write_pfd(Item& item)
   {
-    item.mres().write_as_mrc_fld(io_pfd_->io_, item.name(), item.comp_names());
+    item.result().write_as_mrc_fld(io_pfd_->io_, item.name(), item.comp_names());
   }
 
   template <typename Item>
