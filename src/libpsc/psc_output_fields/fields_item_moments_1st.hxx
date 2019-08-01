@@ -15,7 +15,6 @@ struct Moment_n_1st
 {
   using Mparticles = MP;
   using Mfields = MF;
-  using Particle = typename Mparticles::ConstAccessor::Particle;
 
   constexpr static char const* name = "n_1st";
   constexpr static int n_comps = 1;
@@ -24,6 +23,8 @@ struct Moment_n_1st
 
   static void run(Mfields& mflds, Mparticles& mprts)
   {
+    using Particle = typename Mparticles::ConstAccessor::Particle;
+
     auto deposit = Deposit1stCc<Mparticles, Mfields>{mprts, mflds};
     deposit.process([&](const Particle& prt) {
       int m = prt.kind();
@@ -40,8 +41,6 @@ struct Moment_v_1st
 {
   using Mparticles = MP;
   using Mfields = MF;
-  using real_t = typename Mparticles::real_t;
-  using Particle = typename Mparticles::ConstAccessor::Particle;
 
   constexpr static char const* name = "v_1st";
   constexpr static int n_comps = 3;
@@ -50,9 +49,12 @@ struct Moment_v_1st
 
   static void run(Mfields& mflds, Mparticles& mprts)
   {
+    using Particle = typename Mparticles::ConstAccessor::Particle;
+    using Real = typename Particle::real_t;
+
     auto deposit = Deposit1stCc<Mparticles, Mfields>{mprts, mflds};
     deposit.process([&](const Particle& prt) {
-      real_t vxi[3];
+      Real vxi[3];
       particle_calc_vxi(prt, vxi);
 
       int mm = prt.kind() * 3;
@@ -71,8 +73,6 @@ struct Moment_p_1st
 {
   using Mparticles = MP;
   using Mfields = MF;
-  using real_t = typename Mparticles::real_t;
-  using Particle = typename Mparticles::ConstAccessor::Particle;
 
   constexpr static char const* name = "p_1st";
   constexpr static int n_comps = 3;
@@ -81,6 +81,8 @@ struct Moment_p_1st
 
   static void run(Mfields& mflds, Mparticles& mprts)
   {
+    using Particle = typename Mparticles::ConstAccessor::Particle;
+
     auto deposit = Deposit1stCc<Mparticles, Mfields>{mprts, mflds};
     deposit.process([&](const Particle& prt) {
       int mm = prt.kind() * 3;
@@ -100,8 +102,6 @@ struct Moment_vv_1st
 {
   using Mparticles = MP;
   using Mfields = MF;
-  using real_t = typename Mparticles::real_t;
-  using Particle = typename Mparticles::ConstAccessor::Particle;
 
   constexpr static char const* name = "vv_1st";
   constexpr static int n_comps = 3;
@@ -110,10 +110,13 @@ struct Moment_vv_1st
 
   static void run(Mfields& mflds, Mparticles& mprts)
   {
+    using Particle = typename Mparticles::ConstAccessor::Particle;
+    using Real = typename Particle::real_t;
+
     auto deposit = Deposit1stCc<Mparticles, Mfields>{mprts, mflds};
     deposit.process([&](const Particle& prt) {
       int mm = prt.kind() * 3;
-      real_t vxi[3];
+      Real vxi[3];
       particle_calc_vxi(prt, vxi);
 
       for (int m = 0; m < 3; m++) {
@@ -131,8 +134,6 @@ struct Moment_T_1st
 {
   using Mparticles = MP;
   using Mfields = MF;
-  using real_t = typename Mparticles::real_t;
-  using Particle = typename Mparticles::ConstAccessor::Particle;
 
   constexpr static char const* name = "T_1st";
   constexpr static int n_comps = 6;
@@ -144,11 +145,14 @@ struct Moment_T_1st
 
   static void run(Mfields& mflds, Mparticles& mprts)
   {
+    using Particle = typename Mparticles::ConstAccessor::Particle;
+    using Real = typename Particle::real_t;
+
     auto deposit = Deposit1stCc<Mparticles, Mfields>{mprts, mflds};
     deposit.process([&](const Particle& prt) {
       int mm = prt.kind() * 6;
 
-      real_t vxi[3];
+      Real vxi[3];
       particle_calc_vxi(prt, vxi);
       auto pxi = prt.u();
       deposit(prt, mm + 0, prt.m() * pxi[0] * vxi[0]);
@@ -169,8 +173,6 @@ struct Moment_Tvv_1st
 {
   using Mparticles = MP;
   using Mfields = MF;
-  using real_t = typename Mparticles::real_t;
-  using Particle = typename Mparticles::ConstAccessor::Particle;
 
   constexpr static char const* name = "Tvv_1st";
   constexpr static int n_comps = 6;
@@ -182,11 +184,14 @@ struct Moment_Tvv_1st
 
   static void run(Mfields& mflds, Mparticles& mprts)
   {
+    using Particle = typename Mparticles::ConstAccessor::Particle;
+    using Real = typename Particle::real_t;
+
     auto deposit = Deposit1stCc<Mparticles, Mfields>{mprts, mflds};
     deposit.process([&](const Particle& prt) {
       int mm = prt.kind() * 6;
 
-      real_t vxi[3];
+      Real vxi[3];
       particle_calc_vxi(prt, vxi);
       deposit(prt, mm + 0, prt.m() * vxi[0] * vxi[0]);
       deposit(prt, mm + 1, prt.m() * vxi[1] * vxi[1]);
