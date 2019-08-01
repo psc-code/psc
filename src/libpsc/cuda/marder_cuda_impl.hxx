@@ -58,7 +58,7 @@ struct MarderCuda : MarderBase
   
   void calc_aid_fields(MfieldsState& mflds, Mparticles& mprts)
   {
-    item_div_e_.run(mprts.grid(), mflds, mprts); // FIXME, should accept NULL for particles
+    item_div_e_(mprts.grid(), mflds, mprts); // FIXME, should accept NULL for particles
   
     if (dump_) {
       static int cnt;

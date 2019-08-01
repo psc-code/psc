@@ -24,40 +24,16 @@ enum
 using fld_names_t = std::array<const char*, POFI_MAX_COMPS>;
 
 // ======================================================================
-// FieldsItemBase
-
-struct FieldsItemBase
-{
-  virtual ~FieldsItemBase(){};
-
-  virtual void run(const Grid_t& grid, MfieldsStateBase& mflds_base,
-                   MparticlesBase& mprts_base)
-  {
-    assert(0);
-  }
-
-  virtual MfieldsBase& mres() = 0;
-
-  virtual const char* name() const = 0;
-
-  virtual int n_comps(const Grid_t& grid) const = 0;
-
-  virtual std::vector<std::string> comp_names() = 0;
-
-  bool inited = true; // FIXME hack to avoid dtor call when not yet constructed
-};
-
-// ======================================================================
 // FieldsItemFields
 
 template <typename Item>
-struct FieldsItemFields : FieldsItemBase
+struct FieldsItemFields
 {
   using Mfields = typename Item::Mfields;
 
-  const char* name() const override { return Item::name; }
+  static const char* name() { return Item::name; }
 
-  int n_comps(const Grid_t& grid) const override { return Item::n_comps; }
+  static int n_comps(const Grid_t& grid) { return Item::n_comps; }
 
   FieldsItemFields(const Grid_t& grid) : mres_{grid, Item::n_comps, grid.ibn} {}
 
@@ -67,16 +43,7 @@ struct FieldsItemFields : FieldsItemBase
     Item::run(grid, mflds, mres_);
   }
 
-  void run(const Grid_t& grid, MfieldsStateBase& mflds_base,
-           MparticlesBase& mprts_base) override
-  {
-    using MfieldsState = typename Item::MfieldsState;
-    auto& mflds = mflds_base.get_as<MfieldsState>(0, mflds_base._n_comps());
-    (*this)(grid, mflds);
-    mflds_base.put_as(mflds, 0, 0);
-  }
-
-  virtual std::vector<std::string> comp_names() override
+  std::vector<std::string> comp_names()
   {
     std::vector<std::string> comp_names;
     for (int m = 0; m < Item::n_comps; m++) {
@@ -84,8 +51,6 @@ struct FieldsItemFields : FieldsItemBase
     }
     return comp_names;
   }
-
-  virtual MfieldsBase& mres() override { return mres_; }
 
   Mfields& result() { return mres_; }
 
@@ -98,14 +63,15 @@ struct _FieldsItemFields
 {
   using Mfields = MfieldsC;
 
-  _FieldsItemFields(const Grid_t& grid) : mres_{grid, Item<MfieldsFake>::n_comps, grid.ibn}
+  _FieldsItemFields(const Grid_t& grid)
+    : mres_{grid, Item<MfieldsFake>::n_comps, grid.ibn}
   {}
 
   template <typename MfieldsState>
   void operator()(const Grid_t& grid, MfieldsState& mflds)
   {
     Item<MfieldsState> item{mflds};
-    
+
     for (int p = 0; p < mres_.n_patches(); p++) {
       auto R = mres_[p];
       for (int m = 0; m < item.n_comps; m++) {
@@ -130,7 +96,6 @@ struct _FieldsItemFields
     return comp_names;
   }
 
-  MfieldsBase& mres() { return mres_; }
   Mfields& result() { return mres_; }
 
 private:
@@ -336,11 +301,11 @@ private:
 // FieldsItemMoment
 
 template <typename Moment_t>
-struct FieldsItemMoment : FieldsItemBase
+struct FieldsItemMoment
 {
-  const char* name() const override { return Moment_t::name; }
+  static const char* name() { return Moment_t::name; }
 
-  int n_comps(const Grid_t& grid) const override
+  static int n_comps(const Grid_t& grid)
   {
     return Moment_t::n_comps *
            ((Moment_t::flags & POFI_BY_KIND) ? grid.kinds.size() : 1);
@@ -354,12 +319,9 @@ struct FieldsItemMoment : FieldsItemBase
     moment_.run(mprts);
   }
 
-  virtual MfieldsBase& mres() override { return moment_.result(); }
+  MfieldsC& result() { return moment_.result(); }
 
-  virtual std::vector<std::string> comp_names() override
-  {
-    return moment_.comp_names();
-  }
+  std::vector<std::string> comp_names() { return moment_.comp_names(); }
 
 private:
   Moment_t moment_;
