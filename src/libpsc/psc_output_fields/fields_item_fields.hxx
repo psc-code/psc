@@ -361,8 +361,12 @@ struct Item_divb
 //
 // Main fiels in their natural staggering
 
-struct Item_jeh
+template <typename MfieldsState>
+class Item_jeh
 {
+public:
+  using Real = typename MfieldsState::real_t;
+
   constexpr static char const* name = "jeh";
   constexpr static int n_comps = 9;
   static fld_names_t fld_names()
@@ -371,10 +375,9 @@ struct Item_jeh
             "ez_ec", "hx_fc", "hy_fc", "hz_fc"};
   }
 
-  template <typename MfieldsState>
-  static typename MfieldsState::real_t get(const Grid_t& grid,
-                                           MfieldsState& mflds, int m, Int3 ijk,
-                                           int p)
+  Item_jeh(MfieldsState& mflds) : mflds_{mflds} {}
+
+  Real get(const Grid_t& grid, MfieldsState& mflds, int m, Int3 ijk, int p)
   {
     switch (m) {
       case 0: return mflds[p](JXI, ijk[0], ijk[1], ijk[2]);
@@ -389,6 +392,9 @@ struct Item_jeh
       default: std::abort();
     }
   }
+
+private:
+  MfieldsState& mflds_;
 };
 
 // ======================================================================
