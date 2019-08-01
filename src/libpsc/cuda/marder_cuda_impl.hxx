@@ -147,7 +147,7 @@ private:
   bool dump_; //< dump div_E, rho
 
   FieldsItemFields<Item_dive_cuda> item_div_e_;
-  FieldsItemMoment<Moment_rho_1st_nc_cuda<MparticlesCuda<BS144>, dim_yz>> item_rho_; // FIXME, hardcoded dim_yz
+  FieldsItemMoment<Moment_rho_1st_nc_cuda<MparticlesCuda<BS144>, dim_yz>, MparticlesCuda<BS144>> item_rho_; // FIXME, hardcoded dim_yz
   mrc_io *io_; //< for debug dumping
 };
 

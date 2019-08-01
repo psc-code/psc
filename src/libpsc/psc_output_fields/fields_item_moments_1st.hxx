@@ -10,10 +10,9 @@
 // ======================================================================
 // n_1st
 
-template <typename MP, typename MF>
+template <typename MF>
 struct Moment_n_1st
 {
-  using Mparticles = MP;
   using Mfields = MF;
 
   constexpr static char const* name = "n_1st";
@@ -21,6 +20,7 @@ struct Moment_n_1st
   constexpr static fld_names_t fld_names() { return {"n"}; }
   constexpr static int flags = POFI_BY_KIND;
 
+  template <typename Mparticles>
   static void run(Mfields& mflds, Mparticles& mprts)
   {
     using Particle = typename Mparticles::ConstAccessor::Particle;
@@ -36,10 +36,9 @@ struct Moment_n_1st
 // ======================================================================
 // v_1st
 
-template <typename MP, typename MF>
+template <typename MF>
 struct Moment_v_1st
 {
-  using Mparticles = MP;
   using Mfields = MF;
 
   constexpr static char const* name = "v_1st";
@@ -47,6 +46,7 @@ struct Moment_v_1st
   constexpr static fld_names_t fld_names() { return {"vx", "vy", "vz"}; }
   constexpr static int flags = POFI_BY_KIND;
 
+  template <typename Mparticles>
   static void run(Mfields& mflds, Mparticles& mprts)
   {
     using Particle = typename Mparticles::ConstAccessor::Particle;
@@ -68,10 +68,9 @@ struct Moment_v_1st
 // ======================================================================
 // p_1st
 
-template <typename MP, typename MF>
+template <typename MF>
 struct Moment_p_1st
 {
-  using Mparticles = MP;
   using Mfields = MF;
 
   constexpr static char const* name = "p_1st";
@@ -79,6 +78,7 @@ struct Moment_p_1st
   constexpr static fld_names_t fld_names() { return {"px", "py", "pz"}; }
   constexpr static int flags = POFI_BY_KIND;
 
+  template <typename Mparticles>
   static void run(Mfields& mflds, Mparticles& mprts)
   {
     using Particle = typename Mparticles::ConstAccessor::Particle;
@@ -97,10 +97,9 @@ struct Moment_p_1st
 // ======================================================================
 // vv_1st
 
-template <typename MP, typename MF>
+template <typename MF>
 struct Moment_vv_1st
 {
-  using Mparticles = MP;
   using Mfields = MF;
 
   constexpr static char const* name = "vv_1st";
@@ -108,6 +107,7 @@ struct Moment_vv_1st
   constexpr static fld_names_t fld_names() { return {"vxvx", "vyvy", "vzvz"}; }
   constexpr static int flags = POFI_BY_KIND;
 
+  template <typename Mparticles>
   static void run(Mfields& mflds, Mparticles& mprts)
   {
     using Particle = typename Mparticles::ConstAccessor::Particle;
@@ -129,10 +129,9 @@ struct Moment_vv_1st
 // ======================================================================
 // T_1st
 
-template <typename MP, typename MF>
+template <typename MF>
 struct Moment_T_1st
 {
-  using Mparticles = MP;
   using Mfields = MF;
 
   constexpr static char const* name = "T_1st";
@@ -143,6 +142,7 @@ struct Moment_T_1st
   }
   constexpr static int flags = POFI_BY_KIND;
 
+  template <typename Mparticles>
   static void run(Mfields& mflds, Mparticles& mprts)
   {
     using Particle = typename Mparticles::ConstAccessor::Particle;
@@ -168,10 +168,9 @@ struct Moment_T_1st
 // ======================================================================
 // Tvv_1st
 
-template <typename MP, typename MF>
+template <typename MF>
 struct Moment_Tvv_1st
 {
-  using Mparticles = MP;
   using Mfields = MF;
 
   constexpr static char const* name = "Tvv_1st";
@@ -182,6 +181,7 @@ struct Moment_Tvv_1st
   }
   constexpr static int flags = POFI_BY_KIND;
 
+  template <typename Mparticles>
   static void run(Mfields& mflds, Mparticles& mprts)
   {
     using Particle = typename Mparticles::ConstAccessor::Particle;
