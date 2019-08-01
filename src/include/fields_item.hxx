@@ -94,14 +94,9 @@ private:
 };
 
 template <template <typename> class Item>
-struct _FieldsItemFields : FieldsItemBase
+struct _FieldsItemFields
 {
   using Mfields = MfieldsC;
-  using MfieldsFake = MfieldsC;
-
-  const char* name() const override { return Item<MfieldsFake>::name; }
-
-  int n_comps(const Grid_t& grid) const override { return Item<MfieldsFake>::n_comps; }
 
   _FieldsItemFields(const Grid_t& grid) : mres_{grid, Item<MfieldsFake>::n_comps, grid.ibn}
   {}
@@ -121,7 +116,12 @@ struct _FieldsItemFields : FieldsItemBase
     }
   }
 
-  virtual std::vector<std::string> comp_names() override
+  using MfieldsFake = MfieldsC;
+
+  static const char* name() { return Item<MfieldsFake>::name; }
+  static int n_comps(const Grid_t& grid) { return Item<MfieldsFake>::n_comps; }
+
+  static std::vector<std::string> comp_names()
   {
     std::vector<std::string> comp_names;
     for (int m = 0; m < Item<MfieldsFake>::n_comps; m++) {
@@ -130,8 +130,7 @@ struct _FieldsItemFields : FieldsItemBase
     return comp_names;
   }
 
-  virtual MfieldsBase& mres() override { return mres_; }
-
+  MfieldsBase& mres() { return mres_; }
   Mfields& result() { return mres_; }
 
 private:
