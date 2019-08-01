@@ -57,9 +57,8 @@ public:
 
   OutputFields(const Grid_t& grid, const OutputFieldsParams& prm)
     : OutputFieldsParams{prm},
-      jeh_{grid},
       moments_{grid},
-      tfd_jeh_{grid, jeh_.n_comps(grid), grid.ibn},
+      tfd_jeh_{grid, FieldsItem_jeh::n_comps(grid), grid.ibn},
       tfd_moments_{grid, moments_.n_comps(grid), grid.ibn},
       pfield_next_{pfield_first},
       tfield_next_{tfield_first}
@@ -93,9 +92,10 @@ public:
       tfield_step > 0 && (((timestep >= (tfield_next_ - tfield_length + 1)) &&
                            timestep % tfield_every == 0) ||
                           timestep == 0);
-
+    
+    FieldsItem_jeh jeh{grid};
     if ((do_pfield || doaccum_tfield)) {
-      jeh_(grid, mflds);
+      jeh(grid, mflds);
       moments_.run(grid, mflds, mprts);
     }
 
@@ -104,14 +104,14 @@ public:
       pfield_next_ += pfield_step;
 
       io_pfd_->open(grid, rn, rx);
-      write_pfd(jeh_);
+      write_pfd(jeh);
       write_pfd(moments_);
       io_pfd_->close();
     }
 
     if (doaccum_tfield) {
       // tfd += pfd
-      tfd_jeh_.axpy(1., jeh_.mres());
+      tfd_jeh_.axpy(1., jeh.mres());
       tfd_moments_.axpy(1., moments_.mres());
       naccum_++;
     }
@@ -120,7 +120,7 @@ public:
       tfield_next_ += tfield_step;
       
       io_tfd_->open(grid, rn, rx);
-      write_tfd(tfd_jeh_, jeh_);
+      write_tfd(tfd_jeh_, jeh);
       write_tfd(tfd_moments_, moments_);
       io_tfd_->close();
       naccum_ = 0;
@@ -146,7 +146,6 @@ private:
   }
 
 private:
-  FieldsItem_jeh jeh_;
   FieldsItem_Moments_1st_cc moments_;
   // tfd -- FIXME?! always MfieldsC
   MfieldsC tfd_jeh_;
