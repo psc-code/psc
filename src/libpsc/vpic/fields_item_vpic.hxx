@@ -48,7 +48,7 @@ struct OutputHydroVpic_
     std::vector<std::string> comp_names;
   };
   
-  constexpr static fld_names_t fld_names() {
+  static std::vector<std::string> fld_names() {
     return { "jx_nc", "jy_nc", "jz_nc", "rho_nc",
 	"px_nc", "py_nc", "pz_nc", "ke_nc",
 	"txx_nc", "tyy_nc", "tzz_nc", "tyz_nc",
@@ -89,7 +89,7 @@ struct OutputHydroVpic_
       }
 
       for (int m = 0; m < MfieldsHydro::N_COMP; m++) {
-	comp_names.emplace_back(std::string(fld_names()[m]) + "_" + kinds_[kind].name);
+	comp_names.emplace_back(fld_names()[m] + "_" + kinds_[kind].name);
       }
     }
 

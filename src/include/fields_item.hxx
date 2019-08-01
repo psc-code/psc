@@ -19,10 +19,6 @@ enum
   POFI_BY_KIND = 2, // this item needs to be replicated by kind
 };
 
-#define POFI_MAX_COMPS (16)
-
-using fld_names_t = std::array<const char*, POFI_MAX_COMPS>;
-
 // ======================================================================
 // FieldsItemFields
 
@@ -144,7 +140,6 @@ struct ItemMomentCRTP
     auto n_comps = Derived::n_comps;
     auto fld_names = Derived::fld_names();
     auto& kinds = grid.kinds;
-    assert(n_comps <= POFI_MAX_COMPS);
 
     if (!(Derived::flags & POFI_BY_KIND)) {
       for (int m = 0; m < n_comps; m++) {
@@ -153,8 +148,7 @@ struct ItemMomentCRTP
     } else {
       for (int k = 0; k < kinds.size(); k++) {
         for (int m = 0; m < n_comps; m++) {
-          comp_names_.emplace_back(std::string(fld_names[m]) + "_" +
-                                   kinds[k].name);
+          comp_names_.emplace_back(fld_names[m] + "_" + kinds[k].name);
         }
       }
     }
@@ -181,7 +175,10 @@ struct ItemMomentAddBnd
 
   constexpr static const char* name = Moment_t::name;
   constexpr static int n_comps = Moment_t::n_comps;
-  constexpr static fld_names_t fld_names() { return Moment_t::fld_names(); }
+  static std::vector<std::string> fld_names()
+  {
+    return Moment_t::fld_names();
+  }
   constexpr static int flags = Moment_t::flags;
 
   ItemMomentAddBnd(const Grid_t& grid) : Base{grid}, bnd_{grid, grid.ibn} {}
