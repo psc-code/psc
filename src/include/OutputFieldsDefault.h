@@ -157,8 +157,3 @@ private:
   int naccum_ = 0;
 };
 
-OutputFields defaultOutputFields(const Grid_t& grid,
-                                 const OutputFieldsParams& params)
-{
-  return OutputFields{grid, params};
-}
