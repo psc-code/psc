@@ -93,26 +93,29 @@ private:
   Mfields mres_;
 };
 
-template <typename Item>
+template <template <typename> class Item>
 struct _FieldsItemFields : FieldsItemBase
 {
   using Mfields = MfieldsC;
+  using MfieldsFake = MfieldsC;
 
-  const char* name() const override { return Item::name; }
+  const char* name() const override { return Item<MfieldsFake>::name; }
 
-  int n_comps(const Grid_t& grid) const override { return Item::n_comps; }
+  int n_comps(const Grid_t& grid) const override { return Item<MfieldsFake>::n_comps; }
 
-  _FieldsItemFields(const Grid_t& grid) : mres_{grid, Item::n_comps, grid.ibn}
+  _FieldsItemFields(const Grid_t& grid) : mres_{grid, Item<MfieldsFake>::n_comps, grid.ibn}
   {}
 
   template <typename MfieldsState>
   void operator()(const Grid_t& grid, MfieldsState& mflds)
   {
+    Item<MfieldsState> item{mflds};
+    
     for (int p = 0; p < mres_.n_patches(); p++) {
       auto R = mres_[p];
-      for (int m = 0; m < Item::n_comps; m++) {
+      for (int m = 0; m < item.n_comps; m++) {
         mres_.Foreach_3d(0, 0, [&](int i, int j, int k) {
-          R(m, i, j, k) = Item::get(grid, mflds, m, {i, j, k}, p);
+          R(m, i, j, k) = item.get(grid, mflds, m, {i, j, k}, p);
         });
       }
     }
@@ -121,8 +124,8 @@ struct _FieldsItemFields : FieldsItemBase
   virtual std::vector<std::string> comp_names() override
   {
     std::vector<std::string> comp_names;
-    for (int m = 0; m < Item::n_comps; m++) {
-      comp_names.emplace_back(Item::fld_names()[m]);
+    for (int m = 0; m < Item<MfieldsFake>::n_comps; m++) {
+      comp_names.emplace_back(Item<MfieldsFake>::fld_names()[m]);
     }
     return comp_names;
   }
