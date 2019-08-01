@@ -58,20 +58,16 @@ public:
   OutputFields(const Grid_t& grid, const OutputFieldsParams& prm)
     : OutputFieldsParams{prm},
       jeh_{grid},
-      moments_{grid}
+      moments_{grid},
+      tfd_jeh_{grid, jeh_.n_comps(grid), grid.ibn},
+      tfd_moments_{grid, moments_.n_comps(grid), grid.ibn},
+      pfield_next_{pfield_first},
+      tfield_next_{tfield_first}
   {
-    pfield_next = pfield_first;
-    tfield_next = tfield_first;
-
-    tfds_.emplace_back(grid, jeh_.n_comps(grid), grid.ibn);
-    tfds_.emplace_back(grid, moments_.n_comps(grid), grid.ibn);
-
-    naccum = 0;
-
     if (pfield_step > 0) {
       io_pfd_.reset(new MrcIo{"pfd", data_dir});
     }
-    if (tfield_step) {
+    if (tfield_step > 0) {
       io_tfd_.reset(new MrcIo{"tfd", data_dir});
     }
   }
@@ -91,33 +87,21 @@ public:
     prof_start(pr);
 
     auto timestep = grid.timestep();
+    bool do_pfield = pfield_step > 0 && timestep >= pfield_next_;
+    bool do_tfield = tfield_step > 0 && timestep >= tfield_next_;
     bool doaccum_tfield =
-      tfield_step > 0 && (((timestep >= (tfield_next - tfield_length + 1)) &&
+      tfield_step > 0 && (((timestep >= (tfield_next_ - tfield_length + 1)) &&
                            timestep % tfield_every == 0) ||
                           timestep == 0);
 
-    if ((pfield_step > 0 && timestep >= pfield_next) ||
-        (tfield_step > 0 && doaccum_tfield)) {
-#if 0
-	auto& mres = dynamic_cast<MfieldsC&>(item->mres());
-	double min = 1e10, max = -1e10;
-	for (int m = 0; m < mres.n_comps(); m++) {
-	  for (int p = 0; p < mres.n_patches(); p++) {
-	    mres.grid().Foreach_3d(0, 0, [&](int i, int j, int k) {
-		min = fminf(min, mres[p](m, i,j,k));
-		max = fmaxf(max, mres[p](m, i,j,k));
-	      });
-	  }
-	  mprintf("name %s %d min %g max %g\n", item->name(), m, min, max);
-	}
-#endif
+    if ((do_pfield || doaccum_tfield)) {
       jeh_.run(grid, mflds, mprts);
       moments_.run(grid, mflds, mprts);
     }
 
-    if (pfield_step > 0 && timestep >= pfield_next) {
+    if (do_pfield) {
       mpi_printf(grid.comm(), "***** Writing PFD output\n");
-      pfield_next += pfield_step;
+      pfield_next_ += pfield_step;
 
       io_pfd_->open(grid, rn, rx);
       write_pfd(jeh_);
@@ -125,25 +109,21 @@ public:
       io_pfd_->close();
     }
 
-    if (tfield_step > 0) {
-      if (doaccum_tfield) {
-        // tfd += pfd
-        int i = 0;
-        tfds_[i++].axpy(1., jeh_.mres());
-        tfds_[i++].axpy(1., moments_.mres());
-        naccum++;
-      }
-      if (timestep >= tfield_next) {
-        mpi_printf(grid.comm(), "***** Writing TFD output\n");
-        tfield_next += tfield_step;
-
-        io_tfd_->open(grid, rn, rx);
-        int i = 0;
-        write_tfd(tfds_[i++], jeh_);
-        write_tfd(tfds_[i++], moments_);
-        io_tfd_->close();
-        naccum = 0;
-      }
+    if (doaccum_tfield) {
+      // tfd += pfd
+      tfd_jeh_.axpy(1., jeh_.mres());
+      tfd_moments_.axpy(1., moments_.mres());
+      naccum_++;
+    }
+    if (do_tfield) {
+      mpi_printf(grid.comm(), "***** Writing TFD output\n");
+      tfield_next_ += tfield_step;
+      
+      io_tfd_->open(grid, rn, rx);
+      write_tfd(tfd_jeh_, jeh_);
+      write_tfd(tfd_moments_, moments_);
+      io_tfd_->close();
+      naccum_ = 0;
     }
 
     prof_stop(pr);
@@ -160,23 +140,21 @@ private:
   void write_tfd(MfieldsC& tfd, Item& item)
   {
     // convert accumulated values to correct temporal mean
-    tfd.scale(1. / naccum);
+    tfd.scale(1. / naccum_);
     tfd.write_as_mrc_fld(io_tfd_->io_, item.name(), item.comp_names());
     tfd.zero();
   }
-
-public:
-  int pfield_next, tfield_next;
-  // storage for output
-  unsigned int naccum;
 
 private:
   FieldsItem_jeh jeh_;
   _FieldsItem_Moments_1st_cc moments_;
   // tfd -- FIXME?! always MfieldsC
-  std::vector<MfieldsC> tfds_;
+  MfieldsC tfd_jeh_;
+  MfieldsC tfd_moments_;
   std::unique_ptr<MrcIo> io_pfd_;
   std::unique_ptr<MrcIo> io_tfd_;
+  int pfield_next_, tfield_next_;
+  int naccum_ = 0;
 };
 
 OutputFields defaultOutputFields(const Grid_t& grid,
