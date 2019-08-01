@@ -50,14 +50,19 @@ struct OutputFieldsParams
 // ======================================================================
 // OutputFields
 
-struct OutputFields : public OutputFieldsParams
+class OutputFields : public OutputFieldsParams
 {
+public:
   // ----------------------------------------------------------------------
   // ctor
 
   OutputFields(const Grid_t& grid, const OutputFieldsParams& prm,
                std::vector<std::unique_ptr<FieldsItemBase>>&& items = {})
-    : OutputFieldsParams{prm}, items_{std::move(items)}
+    : OutputFieldsParams{prm},
+      items_{std::move(items)},
+      e_cc_{grid},
+      h_cc_{grid},
+      j_cc_{grid}
   {
     pfield_next = pfield_first;
     tfield_next = tfield_first;
@@ -65,6 +70,9 @@ struct OutputFields : public OutputFieldsParams
     for (auto& item : items_) {
       tfds_.emplace_back(grid, item->n_comps(grid), grid.ibn);
     }
+    tfds_.emplace_back(grid, e_cc_.n_comps(grid), grid.ibn);
+    tfds_.emplace_back(grid, h_cc_.n_comps(grid), grid.ibn);
+    tfds_.emplace_back(grid, j_cc_.n_comps(grid), grid.ibn);
 
     naccum = 0;
 
@@ -113,6 +121,9 @@ struct OutputFields : public OutputFieldsParams
 	}
 #endif
       }
+      e_cc_.run(grid, mflds, mprts);
+      h_cc_.run(grid, mflds, mprts);
+      j_cc_.run(grid, mflds, mprts);
     }
 
     if (pfield_step > 0 && timestep >= pfield_next) {
@@ -121,18 +132,24 @@ struct OutputFields : public OutputFieldsParams
 
       io_pfd_->open(grid, rn, rx);
       for (auto& item : items_) {
-        item->mres().write_as_mrc_fld(io_pfd_->io_, item->name(),
-                                      item->comp_names());
+	write_pfd(*item);
       }
+      write_pfd(e_cc_);
+      write_pfd(h_cc_);
+      write_pfd(j_cc_);
       io_pfd_->close();
     }
 
     if (tfield_step > 0) {
       if (doaccum_tfield) {
         // tfd += pfd
-        for (int i = 0; i < items_.size(); i++) {
+        int i;
+        for (i = 0; i < items_.size(); i++) {
           tfds_[i].axpy(1., items_[i]->mres());
         }
+        tfds_[i++].axpy(1., e_cc_.mres());
+        tfds_[i++].axpy(1., h_cc_.mres());
+        tfds_[i++].axpy(1., j_cc_.mres());
         naccum++;
       }
       if (timestep >= tfield_next) {
@@ -142,12 +159,14 @@ struct OutputFields : public OutputFieldsParams
         io_tfd_->open(grid, rn, rx);
 
         // convert accumulated values to correct temporal mean
-        for (int i = 0; i < items_.size(); i++) {
-          tfds_[i].scale(1. / naccum);
-          tfds_[i].write_as_mrc_fld(io_tfd_->io_, items_[i]->name(),
-                                    items_[i]->comp_names());
-          tfds_[i].zero();
+        int i;
+        for (i = 0; i < items_.size(); i++) {
+          write_tfd(tfds_[i], *items_[i]);
         }
+        write_tfd(tfds_[i++], e_cc_);
+        write_tfd(tfds_[i++], h_cc_);
+        write_tfd(tfds_[i++], j_cc_);
+
         naccum = 0;
         io_tfd_->close();
       }
@@ -156,6 +175,21 @@ struct OutputFields : public OutputFieldsParams
     prof_stop(pr);
   };
 
+private:
+  template <typename Item>
+  void write_pfd(Item& item)
+  {
+    item.mres().write_as_mrc_fld(io_pfd_->io_, item.name(), item.comp_names());
+  }
+
+  template <typename Item>
+  void write_tfd(MfieldsC& tfd, Item& item)
+  {
+    tfd.scale(1. / naccum);
+    tfd.write_as_mrc_fld(io_tfd_->io_, item.name(), item.comp_names());
+    tfd.zero();
+  }
+
 public:
   int pfield_next, tfield_next;
   // storage for output
@@ -163,6 +197,9 @@ public:
 
 private:
   std::vector<std::unique_ptr<FieldsItemBase>> items_;
+  FieldsItem_E_cc e_cc_;
+  FieldsItem_H_cc h_cc_;
+  FieldsItem_J_cc j_cc_;
   // tfd -- FIXME?! always MfieldsC
   std::vector<MfieldsC> tfds_;
   std::unique_ptr<MrcIo> io_pfd_;
@@ -174,9 +211,6 @@ OutputFields defaultOutputFields(const Grid_t& grid,
                                  const OutputFieldsParams& params)
 {
   std::vector<std::unique_ptr<FieldsItemBase>> outf_items;
-  outf_items.emplace_back(new FieldsItem_E_cc(grid));
-  outf_items.emplace_back(new FieldsItem_H_cc(grid));
-  outf_items.emplace_back(new FieldsItem_J_cc(grid));
   outf_items.emplace_back(new FieldsItem_n_1st_cc<Mparticles>(grid));
   outf_items.emplace_back(new FieldsItem_v_1st_cc<Mparticles>(grid));
   outf_items.emplace_back(new FieldsItem_T_1st_cc<Mparticles>(grid));
