@@ -23,6 +23,8 @@ using _FieldsItem_p_1st_cc =
   _FieldsItemMoment<ItemMomentAddBnd<Moment_p_1st<MfieldsC>>>;
 using _FieldsItem_T_1st_cc =
   _FieldsItemMoment<ItemMomentAddBnd<Moment_T_1st<MfieldsC>>>;
+using _FieldsItem_Moments_1st_cc =
+  _FieldsItemMoment<ItemMomentAddBnd<Moments_1st<MfieldsC>>>;
 
 // ======================================================================
 // OutputFieldsParams
@@ -57,9 +59,7 @@ public:
       e_cc_{grid},
       h_cc_{grid},
       j_cc_{grid},
-      n_cc_{grid},
-      v_cc_{grid},
-      T_cc_{grid}
+      moments_{grid}
   {
     pfield_next = pfield_first;
     tfield_next = tfield_first;
@@ -67,9 +67,7 @@ public:
     tfds_.emplace_back(grid, e_cc_.n_comps(grid), grid.ibn);
     tfds_.emplace_back(grid, h_cc_.n_comps(grid), grid.ibn);
     tfds_.emplace_back(grid, j_cc_.n_comps(grid), grid.ibn);
-    tfds_.emplace_back(grid, n_cc_.n_comps(grid), grid.ibn);
-    tfds_.emplace_back(grid, v_cc_.n_comps(grid), grid.ibn);
-    tfds_.emplace_back(grid, T_cc_.n_comps(grid), grid.ibn);
+    tfds_.emplace_back(grid, moments_.n_comps(grid), grid.ibn);
 
     naccum = 0;
 
@@ -119,9 +117,7 @@ public:
       e_cc_.run(grid, mflds, mprts);
       h_cc_.run(grid, mflds, mprts);
       j_cc_.run(grid, mflds, mprts);
-      n_cc_.run(grid, mflds, mprts);
-      v_cc_.run(grid, mflds, mprts);
-      T_cc_.run(grid, mflds, mprts);
+      moments_.run(grid, mflds, mprts);
     }
 
     if (pfield_step > 0 && timestep >= pfield_next) {
@@ -132,9 +128,7 @@ public:
       write_pfd(e_cc_);
       write_pfd(h_cc_);
       write_pfd(j_cc_);
-      write_pfd(n_cc_);
-      write_pfd(v_cc_);
-      write_pfd(T_cc_);
+      write_pfd(moments_);
       io_pfd_->close();
     }
 
@@ -145,9 +139,7 @@ public:
         tfds_[i++].axpy(1., e_cc_.mres());
         tfds_[i++].axpy(1., h_cc_.mres());
         tfds_[i++].axpy(1., j_cc_.mres());
-        tfds_[i++].axpy(1., n_cc_.mres());
-        tfds_[i++].axpy(1., v_cc_.mres());
-        tfds_[i++].axpy(1., T_cc_.mres());
+        tfds_[i++].axpy(1., moments_.mres());
         naccum++;
       }
       if (timestep >= tfield_next) {
@@ -155,18 +147,13 @@ public:
         tfield_next += tfield_step;
 
         io_tfd_->open(grid, rn, rx);
-
-        // convert accumulated values to correct temporal mean
         int i = 0;
         write_tfd(tfds_[i++], e_cc_);
         write_tfd(tfds_[i++], h_cc_);
         write_tfd(tfds_[i++], j_cc_);
-        write_tfd(tfds_[i++], n_cc_);
-        write_tfd(tfds_[i++], v_cc_);
-        write_tfd(tfds_[i++], T_cc_);
-
-        naccum = 0;
+        write_tfd(tfds_[i++], moments_);
         io_tfd_->close();
+        naccum = 0;
       }
     }
 
@@ -183,6 +170,7 @@ private:
   template <typename Item>
   void write_tfd(MfieldsC& tfd, Item& item)
   {
+    // convert accumulated values to correct temporal mean
     tfd.scale(1. / naccum);
     tfd.write_as_mrc_fld(io_tfd_->io_, item.name(), item.comp_names());
     tfd.zero();
@@ -197,9 +185,7 @@ private:
   FieldsItem_E_cc e_cc_;
   FieldsItem_H_cc h_cc_;
   FieldsItem_J_cc j_cc_;
-  _FieldsItem_n_1st_cc n_cc_;
-  _FieldsItem_n_1st_cc v_cc_;
-  _FieldsItem_n_1st_cc T_cc_;
+  _FieldsItem_Moments_1st_cc moments_;
   // tfd -- FIXME?! always MfieldsC
   std::vector<MfieldsC> tfds_;
   std::unique_ptr<MrcIo> io_pfd_;

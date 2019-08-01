@@ -202,3 +202,52 @@ struct Moment_Tvv_1st
     });
   }
 };
+
+// ======================================================================
+// Moments_1st
+//
+// all moments calculated at once
+// FIXME: add KE
+
+template <typename MF>
+struct Moments_1st
+{
+  using Mfields = MF;
+
+  constexpr static char const* name = "all_1st";
+  constexpr static int n_comps = 13;
+  constexpr static fld_names_t fld_names()
+  {
+    return {"rho", "jx",  "jy",  "jz",  "px",  "py", "pz",
+            "txx", "tyy", "tzz", "txy", "tyz", "tzx"};
+  }
+  constexpr static int flags = POFI_BY_KIND;
+
+  template <typename Mparticles>
+  static void run(Mfields& mflds, Mparticles& mprts)
+  {
+    using Particle = typename Mparticles::ConstAccessor::Particle;
+    using Real = typename Particle::real_t;
+
+    auto deposit = Deposit1stCc<Mparticles, Mfields>{mprts, mflds};
+    deposit.process([&](const Particle& prt) {
+      int mm = prt.kind() * n_comps;
+      Real q = prt.q(), m = prt.m();
+      Real vxi[3];
+      particle_calc_vxi(prt, vxi);
+      deposit(prt, mm + 0, prt.q());
+      deposit(prt, mm + 1, prt.q() * vxi[0]);
+      deposit(prt, mm + 2, prt.q() * vxi[1]);
+      deposit(prt, mm + 3, prt.q() * vxi[2]);
+      deposit(prt, mm + 4, prt.m() * prt.u()[0]);
+      deposit(prt, mm + 5, prt.m() * prt.u()[1]);
+      deposit(prt, mm + 6, prt.m() * prt.u()[2]);
+      deposit(prt, mm + 7, prt.m() * prt.u()[0] * vxi[0]);
+      deposit(prt, mm + 8, prt.m() * prt.u()[1] * vxi[1]);
+      deposit(prt, mm + 9, prt.m() * prt.u()[2] * vxi[2]);
+      deposit(prt, mm + 10, prt.m() * prt.u()[0] * vxi[1]);
+      deposit(prt, mm + 11, prt.m() * prt.u()[1] * vxi[2]);
+      deposit(prt, mm + 12, prt.m() * prt.u()[2] * vxi[0]);
+    });
+  }
+};
