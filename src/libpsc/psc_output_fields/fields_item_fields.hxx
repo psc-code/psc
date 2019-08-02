@@ -4,6 +4,70 @@
 #include "fields_item.hxx"
 #include "psc_fields_c.h"
 
+// ======================================================================
+// evalMfields
+
+template <typename EXP>
+MfieldsC evalMfields(const EXP& exp)
+{
+  MfieldsC mflds{exp.grid(), exp.n_comps(), exp.ibn()};
+
+  for (int p = 0; p < mflds.n_patches(); p++) {
+    auto flds = mflds[p];
+    for (int m = 0; m < exp.n_comps(); m++) {
+      mflds.Foreach_3d(0, 0, [&](int i, int j, int k) {
+        flds(m, i, j, k) = exp(m, {i, j, k}, p);
+      });
+    }
+  }
+  return mflds;
+}
+
+// ======================================================================
+// AdaptMfields
+
+template <typename EXP>
+class AdaptMfields
+{
+  class Patch;
+
+public:
+  AdaptMfields(EXP& exp) : exp_{exp} {}
+
+  Patch operator[](int p) const { return {*this, p}; }
+
+  int n_patches() const { return exp_.grid().n_patches(); }
+
+private:
+  EXP& exp_;
+};
+
+template <typename EXP>
+class AdaptMfields<EXP>::Patch
+{
+public:
+  using Real = typename EXP::Real;
+
+  Patch(const AdaptMfields& parent, int p) : parent_{parent}, p_{p} {}
+
+  Real operator()(int m, int i, int j, int k) const
+  {
+    return parent_.exp_(m, {i, j, k}, p_);
+  }
+
+private:
+  const AdaptMfields<EXP>& parent_;
+  int p_;
+};
+
+template <typename EXP>
+AdaptMfields<EXP> adaptMfields(EXP& exp)
+{
+  return {exp};
+}
+
+// ======================================================================
+
 using MfieldsState_t = MfieldsStateDouble;
 using Mfields_t = MfieldsC;
 
@@ -424,22 +488,6 @@ public:
 private:
   MfieldsState& mflds_;
 };
-
-template <typename EXP>
-MfieldsC evalMfields(const EXP& exp)
-{
-  MfieldsC mflds{exp.grid(), exp.n_comps(), exp.ibn()};
-
-  for (int p = 0; p < mflds.n_patches(); p++) {
-    auto flds = mflds[p];
-    for (int m = 0; m < exp.n_comps(); m++) {
-      mflds.Foreach_3d(0, 0, [&](int i, int j, int k) {
-        flds(m, i, j, k) = exp(m, {i, j, k}, p);
-      });
-    }
-  }
-  return mflds;
-}
 
 // ======================================================================
 // Item_dive

@@ -71,9 +71,10 @@ struct MrcIo
 
   // static version so it can be used elsewhere without MrcIo wrapper
   template <typename Mfields>
-  static void write_mflds(mrc_io* io, Mfields& mflds, const Grid_t& grid,
+  static void write_mflds(mrc_io* io, const Mfields& _mflds, const Grid_t& grid,
 			  const std::string& name, const std::vector<std::string>& comp_names)
   {
+    auto& mflds = const_cast<Mfields&>(_mflds);
     int n_comps = comp_names.size();
     // FIXME, should generally equal the # of component in mflds,
     // but this way allows us to write fewer components, useful to hack around 16-bit vpic material ids,
