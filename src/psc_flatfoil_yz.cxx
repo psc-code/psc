@@ -480,20 +480,16 @@ void run()
     initializeParticles(setup_particles, balance, grid_ptr, mprts,
                         inject_target);
     initializeFields(mflds);
+  } else {
+    read_checkpoint(read_checkpoint_filename, *grid_ptr, mprts, mflds);
   }
-
+  
   // ----------------------------------------------------------------------
   // hand off to PscIntegrator to run the simulation
 
   auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
                                           balance, collision, checks, marder,
                                           diagnostics, lf_inject);
-
-  // FIXME, checkpoint reading should be moved to before the integrator
-  if (!read_checkpoint_filename.empty()) {
-    mpi_printf(MPI_COMM_WORLD, "**** Reading checkpoint...\n");
-    psc.read_checkpoint(read_checkpoint_filename);
-  }
 
   psc.integrate();
 }

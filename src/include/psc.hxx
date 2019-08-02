@@ -12,10 +12,7 @@
 #include <output_particles.hxx>
 #include <push_particles.hxx>
 
-#include "fields3d.inl"
-#include "grid.inl"
-#include "particles_simple.inl"
-#include <kg/io.h>
+#include "checkpoint.hxx"
 #ifdef USE_CUDA
 #include "../libpsc/cuda/mparticles_cuda.hxx"
 #include "../libpsc/cuda/mparticles_cuda.inl"
@@ -137,7 +134,8 @@ struct Psc
       bnd_{grid, grid.ibn},
       bndp_{grid},
       diagnostics_{diagnostics},
-      inject_particles_{inject_particles}
+      inject_particles_{inject_particles},
+      checkpointing_{params.write_checkpoint_every_step}
   {
     time_start_ = MPI_Wtime();
 
@@ -204,16 +202,11 @@ struct Psc
     mpi_printf(grid().comm(), "*** Advancing\n");
     double elapsed = MPI_Wtime();
 
-    bool first_iteration = true;
     while (grid().timestep() < p_.nmax) {
       prof_start(pr);
       psc_stats_start(st_time_step);
 
-      if (!first_iteration && p_.write_checkpoint_every_step > 0 &&
-          grid().timestep() % p_.write_checkpoint_every_step == 0) {
-        write_checkpoint();
-      }
-      first_iteration = false;
+      checkpointing_(grid(), mprts_, mflds_);
 
       mpi_printf(grid().comm(),
                  "**** Step %d / %d, Code Time %g, Wall Time %g\n",
@@ -255,9 +248,7 @@ struct Psc
       }
     }
 
-    if (p_.write_checkpoint_every_step > 0) {
-      write_checkpoint();
-    }
+    checkpointing_.final(grid(), mprts_, mflds_);
 
     // FIXME, merge with existing handling of wallclock time
     elapsed = MPI_Wtime() - elapsed;
@@ -661,52 +652,7 @@ private:
     print_profiling();
   }
 
-  // ----------------------------------------------------------------------
-  // write_checkpoint
-  //
-
-  void write_checkpoint()
-  {
-#if defined(PSC_HAVE_ADIOS2) && !defined(VPIC)
-    MPI_Barrier(grid().comm());
-
-    std::string filename =
-      "checkpoint_" + std::to_string(grid().timestep()) + ".bp";
-
-    auto io = kg::io::IOAdios2{};
-    auto writer = io.open(filename, kg::io::Mode::Write);
-    writer.put("grid", *grid_);
-    writer.put("mflds", mflds_);
-    writer.put("mprts", mprts_);
-    writer.close();
-#else
-    std::cerr << "write_checkpoint not available without adios2" << std::endl;
-    std::abort();
-#endif
-  }
-
-  // ----------------------------------------------------------------------
-  // read_checkpoint
-  //
-
 public:
-  void read_checkpoint(const std::string& filename)
-  {
-#ifdef PSC_HAVE_ADIOS2
-    MPI_Barrier(grid().comm());
-
-    auto io = kg::io::IOAdios2{};
-    auto reader = io.open(filename, kg::io::Mode::Read);
-    reader.get("grid", *grid_);
-    reader.get("mflds", mflds_);
-    reader.get("mprts", mprts_);
-    reader.close();
-#else
-    std::cerr << "write_checkpoint not available without adios2" << std::endl;
-    std::abort();
-#endif
-  }
-
   const Grid_t& grid() { return *grid_; }
 
 private:
@@ -732,6 +678,8 @@ protected:
   Bnd bnd_;
   BndFields bndf_;
   BndParticles bndp_;
+
+  Checkpointing checkpointing_;
 
   psc_diag* diag_; ///< timeseries diagnostics
 

@@ -356,6 +356,8 @@ static void run()
   if (read_checkpoint_filename.empty()) {
     initializeParticles(balance, grid_ptr, mprts);
     initializeFields(mflds);
+  } else {
+    read_checkpoint(read_checkpoint_filename, *grid_ptr, mprts, mflds);
   }
 
   // ----------------------------------------------------------------------
@@ -364,12 +366,6 @@ static void run()
   auto psc =
     makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts, balance,
                                  collision, checks, marder, diagnostics);
-
-  // FIXME, checkpoint reading should be moved to before the integrator
-  if (!read_checkpoint_filename.empty()) {
-    mpi_printf(MPI_COMM_WORLD, "**** Reading checkpoint...\n");
-    psc.read_checkpoint(read_checkpoint_filename);
-  }
 
   psc.integrate();
 }
