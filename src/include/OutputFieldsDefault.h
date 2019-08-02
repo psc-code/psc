@@ -91,7 +91,7 @@ public:
 
     FieldsItem_jeh<MfieldsState> jeh{mflds};
     FieldsItem_Moments_1st_cc moments{grid};
-    auto&& pfd_jeh = evalMfields(jeh());
+    auto&& pfd_jeh = jeh();
     moments(mprts);
 
     if (do_pfield) {
@@ -106,7 +106,8 @@ public:
 
     if (doaccum_tfield) {
       // tfd += pfd
-      tfd_jeh_.axpy(1., pfd_jeh);
+      auto tmp_jeh = evalMfields(pfd_jeh);
+      tfd_jeh_.axpy(1., tmp_jeh);
       tfd_moments_.axpy(1., moments.result());
       naccum_++;
     }
@@ -135,8 +136,8 @@ private:
   template <typename Mfields, typename Item>
   void write_pfd(Mfields& pfd, Item& item)
   {
-    pfd.write_as_mrc_fld(io_pfd_->io_, item.name(),
-                         item.comp_names(pfd.grid()));
+    auto tmp = evalMfields(pfd);
+    MrcIo::write_mflds(io_pfd_->io_, tmp, pfd.grid(), item.name(), item.comp_names(pfd.grid()));
   }
 
   template <typename Item>
