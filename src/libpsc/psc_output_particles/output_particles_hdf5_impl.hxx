@@ -8,7 +8,7 @@
 #include "output_particles.hxx"
 
 #include "psc_particles_single.h"
-#include "mparticles_vpic.hxx"
+#include "../libpsc/vpic/mparticles_vpic.hxx"
 #ifdef USE_CUDA
 #include "mparticles_cuda.hxx"
 #endif
