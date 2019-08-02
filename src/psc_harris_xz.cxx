@@ -140,7 +140,7 @@ void setupHarrisParams()
   g.overalloc = 2.;
 
   g.gdims = {2048, 1, 512};
-  g.np = {32, 1, 1};
+  g.np = {128, 1, 1};
 
   g.L_di = .5;
   g.Ti_Te = 5.;
