@@ -133,6 +133,21 @@ protected:
 };
 
 // ======================================================================
+// addKindSuffix
+
+inline std::vector<std::string> addKindSuffix(
+  const std::vector<std::string>& names, const Grid_t::Kinds& kinds)
+{
+  std::vector<std::string> result;
+  for (int k = 0; k < kinds.size(); k++) {
+    for (int m = 0; m < names.size(); m++) {
+      result.emplace_back(names[m] + "_" + kinds[k].name);
+    }
+  }
+  return result;
+}
+
+// ======================================================================
 // ItemMomentAddBnd
 
 template <typename Moment_t, typename Bnd = Bnd_<typename Moment_t::Mfields>>
@@ -145,27 +160,8 @@ struct ItemMomentAddBnd
 
   static const char* name() { return Moment_t::name; }
 
-  static int n_comps(const Grid_t& grid)
-  {
-    return Moment_t::n_comps *
-           ((Moment_t::flags & POFI_BY_KIND) ? grid.kinds.size() : 1);
-  }
-
-  static std::vector<std::string> comp_names(const Grid_t& grid)
-  {
-    if (!(Moment_t::flags & POFI_BY_KIND)) {
-      return Moment_t::fld_names();
-    }
-    
-    std::vector<std::string> result;
-    auto fld_names = Moment_t::fld_names();
-    for (int k = 0; k < grid.kinds.size(); k++) {
-      for (int m = 0; m < Moment_t::n_comps; m++) {
-	result.emplace_back(fld_names[m] + "_" + grid.kinds[k].name);
-      }
-    }
-    return result;
-  }
+  static int n_comps(const Grid_t& grid) { return Moment_t::n_comps(grid); }
+  static std::vector<std::string> comp_names(const Grid_t& grid) { return Moment_t::comp_names(grid); }
 
   ItemMomentAddBnd(const Grid_t& grid) : Base{grid}, bnd_{grid, grid.ibn} {}
 
@@ -279,4 +275,3 @@ struct ItemMomentAddBnd
 private:
   Bnd bnd_;
 };
-

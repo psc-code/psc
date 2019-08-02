@@ -16,9 +16,13 @@ struct Moment_n_1st
   using Mfields = MF;
 
   constexpr static char const* name = "n_1st";
-  constexpr static int n_comps = 1;
-  static std::vector<std::string> fld_names() { return {"n"}; }
-  constexpr static int flags = POFI_BY_KIND;
+
+  static int n_comps(const Grid_t& grid) { return 1 * grid.kinds.size(); }
+
+  static std::vector<std::string> comp_names(const Grid_t& grid)
+  {
+    return addKindSuffix({"n"}, grid.kinds);
+  }
 
   template <typename Mparticles>
   static void run(Mfields& mflds, Mparticles& mprts)
@@ -42,9 +46,13 @@ struct Moment_v_1st
   using Mfields = MF;
 
   constexpr static char const* name = "v_1st";
-  constexpr static int n_comps = 3;
-  static std::vector<std::string> fld_names() { return {"vx", "vy", "vz"}; }
-  constexpr static int flags = POFI_BY_KIND;
+
+  static int n_comps(const Grid_t& grid) { return 3 * grid.kinds.size(); }
+  
+  static std::vector<std::string> comp_names(const Grid_t& grid)
+  {
+    return addKindSuffix({"vx", "vy", "vz"}, grid.kinds);
+  }
 
   template <typename Mparticles>
   static void run(Mfields& mflds, Mparticles& mprts)
@@ -74,9 +82,13 @@ struct Moment_p_1st
   using Mfields = MF;
 
   constexpr static char const* name = "p_1st";
-  constexpr static int n_comps = 3;
-  static std::vector<std::string> fld_names() { return {"px", "py", "pz"}; }
-  constexpr static int flags = POFI_BY_KIND;
+
+  static int n_comps(const Grid_t& grid) { return 3 * grid.kinds.size(); }
+  
+  static std::vector<std::string> comp_names(const Grid_t& grid)
+  {
+    return addKindSuffix({"px", "py", "pz"}, grid.kinds);
+  }
 
   template <typename Mparticles>
   static void run(Mfields& mflds, Mparticles& mprts)
@@ -95,41 +107,6 @@ struct Moment_p_1st
 };
 
 // ======================================================================
-// vv_1st
-
-template <typename MF>
-struct Moment_vv_1st
-{
-  using Mfields = MF;
-
-  constexpr static char const* name = "vv_1st";
-  constexpr static int n_comps = 3;
-  static std::vector<std::string> fld_names()
-  {
-    return {"vxvx", "vyvy", "vzvz"};
-  }
-  constexpr static int flags = POFI_BY_KIND;
-
-  template <typename Mparticles>
-  static void run(Mfields& mflds, Mparticles& mprts)
-  {
-    using Particle = typename Mparticles::ConstAccessor::Particle;
-    using Real = typename Particle::real_t;
-
-    auto deposit = Deposit1stCc<Mparticles, Mfields>{mprts, mflds};
-    deposit.process([&](const Particle& prt) {
-      int mm = prt.kind() * 3;
-      Real vxi[3];
-      particle_calc_vxi(prt, vxi);
-
-      for (int m = 0; m < 3; m++) {
-        deposit(prt, mm + m, vxi[m] * vxi[m]);
-      }
-    });
-  }
-};
-
-// ======================================================================
 // T_1st
 
 template <typename MF>
@@ -138,12 +115,13 @@ struct Moment_T_1st
   using Mfields = MF;
 
   constexpr static char const* name = "T_1st";
-  constexpr static int n_comps = 6;
-  static std::vector<std::string> fld_names()
+
+  static int n_comps(const Grid_t& grid) { return 3 * grid.kinds.size(); }
+  
+  static std::vector<std::string> comp_names(const Grid_t& grid)
   {
-    return {"Txx", "Tyy", "Tzz", "Txy", "Txz", "Tyz"};
+    return addKindSuffix({"Txx", "Tyy", "Tzz", "Txy", "Txz", "Tyz"}, grid.kinds);
   }
-  constexpr static int flags = POFI_BY_KIND;
 
   template <typename Mparticles>
   static void run(Mfields& mflds, Mparticles& mprts)
@@ -169,44 +147,6 @@ struct Moment_T_1st
 };
 
 // ======================================================================
-// Tvv_1st
-
-template <typename MF>
-struct Moment_Tvv_1st
-{
-  using Mfields = MF;
-
-  constexpr static char const* name = "Tvv_1st";
-  constexpr static int n_comps = 6;
-  static std::vector<std::string> fld_names()
-  {
-    return {"vxvx", "vyvy", "vzvz", "vxvy", "vxvz", "vyvz"};
-  }
-  constexpr static int flags = POFI_BY_KIND;
-
-  template <typename Mparticles>
-  static void run(Mfields& mflds, Mparticles& mprts)
-  {
-    using Particle = typename Mparticles::ConstAccessor::Particle;
-    using Real = typename Particle::real_t;
-
-    auto deposit = Deposit1stCc<Mparticles, Mfields>{mprts, mflds};
-    deposit.process([&](const Particle& prt) {
-      int mm = prt.kind() * 6;
-
-      Real vxi[3];
-      particle_calc_vxi(prt, vxi);
-      deposit(prt, mm + 0, prt.m() * vxi[0] * vxi[0]);
-      deposit(prt, mm + 1, prt.m() * vxi[1] * vxi[1]);
-      deposit(prt, mm + 2, prt.m() * vxi[2] * vxi[2]);
-      deposit(prt, mm + 3, prt.m() * vxi[0] * vxi[1]);
-      deposit(prt, mm + 4, prt.m() * vxi[0] * vxi[2]);
-      deposit(prt, mm + 5, prt.m() * vxi[1] * vxi[2]);
-    });
-  }
-};
-
-// ======================================================================
 // Moments_1st
 //
 // all moments calculated at once
@@ -218,13 +158,19 @@ struct Moments_1st
   using Mfields = MF;
 
   constexpr static char const* name = "all_1st";
-  constexpr static int n_comps = 13;
-  static std::vector<std::string> fld_names()
+  constexpr static int n_moments = 13;
+
+  static int n_comps(const Grid_t& grid)
   {
-    return {"rho", "jx",  "jy",  "jz",  "px",  "py", "pz",
-            "txx", "tyy", "tzz", "txy", "tyz", "tzx"};
+    return n_moments * grid.kinds.size();
   }
-  constexpr static int flags = POFI_BY_KIND;
+
+  static std::vector<std::string> comp_names(const Grid_t& grid)
+  {
+    return addKindSuffix({"rho", "jx", "jy", "jz", "px", "py", "pz", "txx",
+                          "tyy", "tzz", "txy", "tyz", "tzx"},
+                         grid.kinds);
+  }
 
   template <typename Mparticles>
   static void run(Mfields& mflds, Mparticles& mprts)
@@ -234,7 +180,7 @@ struct Moments_1st
 
     auto deposit = Deposit1stCc<Mparticles, Mfields>{mprts, mflds};
     deposit.process([&](const Particle& prt) {
-      int mm = prt.kind() * n_comps;
+      int mm = prt.kind() * n_moments;
       Real q = prt.q(), m = prt.m();
       Real vxi[3];
       particle_calc_vxi(prt, vxi);
