@@ -78,10 +78,9 @@ template <typename Mparticles, typename InjectShape, typename Dim,
           typename Enable = void>
 struct InjectSelector
 {
-  using Inject =
-    Inject_<Mparticles, MfieldsC, InjectShape,
-            ItemMomentAddBnd<Moment_n_1st<MfieldsC>>>; // FIXME, shouldn't
-                                                       // always use MfieldsC
+  using Inject = Inject_<Mparticles, MfieldsC, InjectShape,
+                         Moment_n_1st<MfieldsC>>; // FIXME, shouldn't
+                                                  // always use MfieldsC
 };
 
 #ifdef USE_CUDA

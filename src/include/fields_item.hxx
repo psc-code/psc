@@ -128,35 +128,13 @@ inline std::vector<std::string> addKindSuffix(
 }
 
 // ======================================================================
-// ItemMomentCRTP
-//
-// deriving from this class adds the result field mres_
-
-template <typename Derived, typename MF>
-struct ItemMomentCRTP
-{
-  using Mfields = MF;
-
-  ItemMomentCRTP(const Grid_t& grid)
-    : mres_{grid, Derived::n_comps(grid), grid.ibn}
-  {}
-
-  Mfields& result() { return mres_; }
-
-protected:
-  Mfields mres_;
-};
-
-// ======================================================================
 // ItemMomentBnd
 
 template <typename Mfields, typename Bnd = Bnd_<Mfields>>
 class ItemMomentBnd
 {
 public:
-  ItemMomentBnd(const Grid_t& grid)
-    : bnd_{grid, grid.ibn}
-  {}
+  ItemMomentBnd(const Grid_t& grid) : bnd_{grid, grid.ibn} {}
 
   void add_ghosts(Mfields& mres)
   {
@@ -267,36 +245,23 @@ private:
 };
 
 // ======================================================================
-// ItemMomentAddBnd
+// ItemMomentCRTP
+//
+// deriving from this class adds the result field mres_
 
-template <typename Moment_t, typename Bnd = Bnd_<typename Moment_t::Mfields>>
-struct ItemMomentAddBnd
+template <typename Derived, typename MF, typename Bnd = Bnd_<MF>>
+struct ItemMomentCRTP
 {
-  using Mfields = typename Moment_t::Mfields;
+  using Mfields = MF;
 
-  static const char* name() { return Moment_t::name; }
-
-  static int n_comps(const Grid_t& grid) { return Moment_t::n_comps(grid); }
-  static std::vector<std::string> comp_names(const Grid_t& grid)
-  {
-    return Moment_t::comp_names(grid);
-  }
-
-  ItemMomentAddBnd(const Grid_t& grid)
-    : moment_{grid},
-      bnd_{grid}
+  ItemMomentCRTP(const Grid_t& grid)
+    : mres_{grid, Derived::n_comps(grid), grid.ibn}, bnd_{grid}
   {}
 
-  template <typename Mparticles>
-  void operator()(Mparticles& mprts)
-  {
-    moment_(mprts);
-    bnd_.add_ghosts(moment_.result());
-  }
+  Mfields& result() { return mres_; }
 
-  Mfields& result() { return moment_.result(); }
-
-private:
-  Moment_t moment_;
+protected:
+  Mfields mres_;
   ItemMomentBnd<Mfields, Bnd> bnd_;
 };
+

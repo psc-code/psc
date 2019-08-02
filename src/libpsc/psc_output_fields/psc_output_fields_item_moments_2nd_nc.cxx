@@ -70,6 +70,7 @@ struct Moment_rho_2nd_nc : ItemMomentCRTP<Moment_rho_2nd_nc<MP, MF>, MF>
 	DEPOSIT_TO_GRID_2ND_NC(prt, res, 0, prt.q());
       }
     }
+    Base::bnd_.add_ghosts(Base::mres_);
   }
 };
 

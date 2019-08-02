@@ -13,13 +13,13 @@
 struct checks_order_1st
 {
   template<typename Mparticles, typename Mfields>
-  using Moment_rho_nc = ItemMomentAddBnd<Moment_rho_1st_nc<Mparticles, Mfields>>;
+  using Moment_rho_nc = Moment_rho_1st_nc<Mparticles, Mfields>;
 };
 
 struct checks_order_2nd
 {
   template<typename Mparticles, typename Mfields>
-  using Moment_rho_nc = ItemMomentAddBnd<Moment_rho_2nd_nc<Mparticles, Mfields>>;
+  using Moment_rho_nc = Moment_rho_2nd_nc<Mparticles, Mfields>;
 };
 
 template<typename _Mparticles, typename _MfieldsState, typename _Mfields, typename ORDER>
