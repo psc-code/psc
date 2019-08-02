@@ -401,7 +401,7 @@ public:
 
   Item_jeh(MfieldsState& mflds) : mflds_{mflds} {}
 
-  Real operator()(int m, Int3 ijk, int p)
+  Real operator()(int m, Int3 ijk, int p) const
   {
     switch (m) {
       case 0: return mflds_[p](JXI, ijk[0], ijk[1], ijk[2]);
@@ -417,9 +417,29 @@ public:
     }
   }
 
+  const Grid_t& grid() const { return mflds_.grid(); }
+
+  Int3 ibn() const { return {}; }
+
 private:
   MfieldsState& mflds_;
 };
+
+template <typename EXP>
+MfieldsC evalMfields(const EXP& exp)
+{
+  MfieldsC mflds{exp.grid(), exp.n_comps, exp.ibn()};
+
+  for (int p = 0; p < mflds.n_patches(); p++) {
+    auto flds = mflds[p];
+    for (int m = 0; m < exp.n_comps; m++) {
+      mflds.Foreach_3d(0, 0, [&](int i, int j, int k) {
+        flds(m, i, j, k) = exp(m, {i, j, k}, p);
+      });
+    }
+  }
+  return mflds;
+}
 
 template <typename MfieldsState>
 class FieldsItem_jeh
@@ -428,22 +448,12 @@ public:
   using Mfields = MfieldsC;
 
   FieldsItem_jeh(MfieldsState& mflds)
-    : item_{mflds},
-      mres_{mflds.grid(), Item_jeh<MfieldsFake>::n_comps, mflds.grid().ibn}
-  {
-    for (int p = 0; p < mres_.n_patches(); p++) {
-      auto R = mres_[p];
-      for (int m = 0; m < item_.n_comps; m++) {
-        mres_.Foreach_3d(0, 0, [&](int i, int j, int k) {
-          R(m, i, j, k) = item_(m, {i, j, k}, p);
-        });
-      }
-    }
-  }
+    : item_{mflds}
+  {}
 
-  Mfields& operator()()
+  const Item_jeh<MfieldsState>& operator()()
   {
-    return mres_;
+    return item_;
   }
 
   using MfieldsFake = MfieldsC;
@@ -461,7 +471,6 @@ public:
 
 private:
   Item_jeh<MfieldsState> item_;
-  Mfields mres_;
 };
 
 // ======================================================================
