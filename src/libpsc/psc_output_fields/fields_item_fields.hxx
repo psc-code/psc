@@ -397,16 +397,17 @@ private:
   MfieldsState& mflds_;
 };
 
-struct FieldsItem_jeh
+template <typename MfieldsState>
+class FieldsItem_jeh
 {
+public:
   using Mfields = MfieldsC;
 
   FieldsItem_jeh(const Grid_t& grid)
     : mres_{grid, Item_jeh<MfieldsFake>::n_comps, grid.ibn}
   {}
 
-  template <typename MfieldsState>
-  void operator()(const Grid_t& grid, MfieldsState& mflds)
+  Mfields& operator()(const Grid_t& grid, MfieldsState& mflds)
   {
     Item_jeh<MfieldsState> item{mflds};
 
@@ -418,9 +419,8 @@ struct FieldsItem_jeh
         });
       }
     }
+    return mres_;
   }
-
-  Mfields& result() { return mres_; }
 
   using MfieldsFake = MfieldsC;
 

@@ -42,13 +42,15 @@ struct OutputFieldsParams
 
 class OutputFields : public OutputFieldsParams
 {
+  using MfieldsFake = MfieldsC;
+
 public:
   // ----------------------------------------------------------------------
   // ctor
 
   OutputFields(const Grid_t& grid, const OutputFieldsParams& prm)
     : OutputFieldsParams{prm},
-      tfd_jeh_{grid, FieldsItem_jeh::n_comps(grid), grid.ibn},
+      tfd_jeh_{grid, FieldsItem_jeh<MfieldsFake>::n_comps(grid), grid.ibn},
       tfd_moments_{grid, FieldsItem_Moments_1st_cc::n_comps(grid), grid.ibn},
       pfield_next_{pfield_first},
       tfield_next_{tfield_first}
@@ -87,9 +89,9 @@ public:
       return;
     }
 
-    FieldsItem_jeh jeh{grid};
+    FieldsItem_jeh<MfieldsState> jeh{grid};
     FieldsItem_Moments_1st_cc moments{grid};
-    jeh(grid, mflds);
+    auto&& pfd_jeh = jeh(grid, mflds);
     moments(mprts);
 
     if (do_pfield) {
@@ -97,14 +99,14 @@ public:
       pfield_next_ += pfield_step;
 
       io_pfd_->open(grid, rn, rx);
-      write_pfd(jeh);
+      write_pfd(pfd_jeh, jeh);
       write_pfd(moments);
       io_pfd_->close();
     }
 
     if (doaccum_tfield) {
       // tfd += pfd
-      tfd_jeh_.axpy(1., jeh.result());
+      tfd_jeh_.axpy(1., pfd_jeh);
       tfd_moments_.axpy(1., moments.result());
       naccum_++;
     }
@@ -128,6 +130,13 @@ private:
   {
     item.result().write_as_mrc_fld(io_pfd_->io_, item.name(),
                                    item.comp_names(item.result().grid()));
+  }
+
+  template <typename Mfields, typename Item>
+  void write_pfd(Mfields& pfd, Item& item)
+  {
+    pfd.write_as_mrc_fld(io_pfd_->io_, item.name(),
+                         item.comp_names(pfd.grid()));
   }
 
   template <typename Item>
