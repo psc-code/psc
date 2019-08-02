@@ -663,6 +663,8 @@ public:
   template <typename Particles>
   void operator()(MparticlesVpic_<Particles>& mprts)
   {
+    const auto& grid = mprts.grid();
+
     if (prm_.every_step <= 0 || grid.timestep() % prm_.every_step != 0) {
       return;
     }
@@ -677,6 +679,8 @@ public:
   template <typename BS>
   void operator()(MparticlesCuda<BS>& mprts)
   {
+    const auto& grid = mprts.grid();
+
     if (prm_.every_step <= 0 || grid.timestep() % prm_.every_step != 0) {
       return;
     }
