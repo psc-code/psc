@@ -73,7 +73,6 @@ if (USE_VPIC)
     INTERFACE_LINK_LIBRARIES "/Users/kai/build/vpic/build/libvpic.a"
   )
 
-  target_include_directories(psc PUBLIC vpic)
   target_link_libraries(psc PUBLIC VPIC::VPIC)
 endif()
 
