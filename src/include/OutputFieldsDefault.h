@@ -91,7 +91,7 @@ public:
       tfield_step > 0 && (((timestep >= (tfield_next_ - tfield_length + 1)) &&
                            timestep % tfield_every == 0) ||
                           timestep == 0);
-    
+
     FieldsItem_jeh jeh{grid};
     FieldsItem_Moments_1st_cc moments{grid};
     if ((do_pfield || doaccum_tfield)) {
@@ -118,7 +118,7 @@ public:
     if (do_tfield) {
       mpi_printf(grid.comm(), "***** Writing TFD output\n");
       tfield_next_ += tfield_step;
-      
+
       io_tfd_->open(grid, rn, rx);
       write_tfd(tfd_jeh_, jeh);
       write_tfd(tfd_moments_, moments);
@@ -133,7 +133,8 @@ private:
   template <typename Item>
   void write_pfd(Item& item)
   {
-    item.result().write_as_mrc_fld(io_pfd_->io_, item.name(), item.comp_names());
+    item.result().write_as_mrc_fld(io_pfd_->io_, item.name(),
+                                   item.comp_names(item.result().grid()));
   }
 
   template <typename Item>
@@ -141,7 +142,8 @@ private:
   {
     // convert accumulated values to correct temporal mean
     tfd.scale(1. / naccum_);
-    tfd.write_as_mrc_fld(io_tfd_->io_, item.name(), item.comp_names());
+    tfd.write_as_mrc_fld(io_tfd_->io_, item.name(),
+                         item.comp_names(tfd.grid()));
     tfd.zero();
   }
 
@@ -154,4 +156,3 @@ private:
   int pfield_next_, tfield_next_;
   int naccum_ = 0;
 };
-

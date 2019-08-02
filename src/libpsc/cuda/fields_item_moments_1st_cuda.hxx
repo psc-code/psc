@@ -21,7 +21,7 @@ struct Moment_rho_1st_nc_cuda : ItemMomentCRTP<Moment_rho_1st_nc_cuda<_Mparticle
   using Bnd = BndCuda3<Mfields>;
   
   constexpr static const char* name = "rho_1st_nc";
-  constexpr static int n_comps = 1;
+  static int n_comps(const Grid_t::Kinds&) { return 1; }
   static std::vector<std::string> fld_names() { return { "rho_nc_cuda" }; } // FIXME
   constexpr static int flags = 0;
 
@@ -58,7 +58,7 @@ struct Moment_n_1st_cuda : ItemMomentCRTP<Moment_n_1st_cuda<_Mparticles, dim>, M
   using Bnd = BndCuda3<Mfields>;
   
   constexpr static const char* name = "n_1st";
-  constexpr static int n_comps = 1;
+  static int n_comps(const Grid_t::Kinds&) { return 1; }
   static std::vector<std::string> fld_names() { return { "n_1st_cuda" }; }
   constexpr static int flags = POFI_BY_KIND;
 
