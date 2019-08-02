@@ -148,41 +148,26 @@ protected:
 };
 
 // ======================================================================
-// ItemMomentAddBnd
+// ItemMomentBnd
 
-template <typename Moment_t, typename Bnd = Bnd_<typename Moment_t::Mfields>>
-struct ItemMomentAddBnd
+template <typename Mfields, typename Bnd = Bnd_<Mfields>>
+class ItemMomentBnd
 {
-  using Mfields = typename Moment_t::Mfields;
-
-  static const char* name() { return Moment_t::name; }
-
-  static int n_comps(const Grid_t& grid) { return Moment_t::n_comps(grid); }
-  static std::vector<std::string> comp_names(const Grid_t& grid)
-  {
-    return Moment_t::comp_names(grid);
-  }
-
-  ItemMomentAddBnd(const Grid_t& grid)
-    : moment_{grid},
-      bnd_{grid, grid.ibn}
+public:
+  ItemMomentBnd(const Grid_t& grid)
+    : bnd_{grid, grid.ibn}
   {}
 
-  template <typename Mparticles>
-  void operator()(Mparticles& mprts)
+  void add_ghosts(Mfields& mres)
   {
-    moment_(mprts);
-
-    auto& mres = moment_.result();
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      add_ghosts_boundary(mprts.grid(), mres[p], p, 0, mres.n_comps());
+    for (int p = 0; p < mres.n_patches(); p++) {
+      add_ghosts_boundary(mres.grid(), mres[p], p, 0, mres.n_comps());
     }
 
     bnd_.add_ghosts(mres, 0, mres.n_comps());
   }
 
-  Mfields& result() { return moment_.result(); }
-
+private:
   // ----------------------------------------------------------------------
   // boundary stuff FIXME, should go elsewhere...
 
@@ -278,6 +263,40 @@ struct ItemMomentAddBnd
   }
 
 private:
-  Moment_t moment_;
   Bnd bnd_;
+};
+
+// ======================================================================
+// ItemMomentAddBnd
+
+template <typename Moment_t, typename Bnd = Bnd_<typename Moment_t::Mfields>>
+struct ItemMomentAddBnd
+{
+  using Mfields = typename Moment_t::Mfields;
+
+  static const char* name() { return Moment_t::name; }
+
+  static int n_comps(const Grid_t& grid) { return Moment_t::n_comps(grid); }
+  static std::vector<std::string> comp_names(const Grid_t& grid)
+  {
+    return Moment_t::comp_names(grid);
+  }
+
+  ItemMomentAddBnd(const Grid_t& grid)
+    : moment_{grid},
+      bnd_{grid}
+  {}
+
+  template <typename Mparticles>
+  void operator()(Mparticles& mprts)
+  {
+    moment_(mprts);
+    bnd_.add_ghosts(moment_.result());
+  }
+
+  Mfields& result() { return moment_.result(); }
+
+private:
+  Moment_t moment_;
+  ItemMomentBnd<Mfields, Bnd> bnd_;
 };
