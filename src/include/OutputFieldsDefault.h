@@ -135,8 +135,8 @@ private:
   template <typename EXP>
   void _write_pfd(EXP& pfd)
   {
-    auto tmp = evalMfields(pfd);
-    MrcIo::write_mflds(io_pfd_->io_, tmp, pfd.grid(), pfd.name(), pfd.comp_names());
+    MrcIo::write_mflds(io_pfd_->io_, adaptMfields(pfd), pfd.grid(), pfd.name(),
+                       pfd.comp_names());
   }
 
   template <typename Item>
@@ -154,8 +154,7 @@ private:
   {
     // convert accumulated values to correct temporal mean
     tfd.scale(1. / naccum_);
-    tfd.write_as_mrc_fld(io_tfd_->io_, pfd.name(),
-                         pfd.comp_names());
+    tfd.write_as_mrc_fld(io_tfd_->io_, pfd.name(), pfd.comp_names());
     tfd.zero();
   }
 
