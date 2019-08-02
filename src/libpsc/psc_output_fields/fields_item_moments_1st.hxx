@@ -28,11 +28,11 @@ struct Moment_n_1st : ItemMomentCRTP<Moment_n_1st<MF>, MF>
   using Base::Base;
 
   template <typename Mparticles>
-  static void run(Mfields& mflds, Mparticles& mprts)
+  void operator()(Mparticles& mprts)
   {
     using Particle = typename Mparticles::ConstAccessor::Particle;
 
-    auto deposit = Deposit1stCc<Mparticles, Mfields>{mprts, mflds};
+    auto deposit = Deposit1stCc<Mparticles, Mfields>{mprts, Base::mres_};
     deposit.process([&](const Particle& prt) {
       int m = prt.kind();
       deposit(prt, m, 1.f);
@@ -179,15 +179,14 @@ struct Moments_1st : ItemMomentCRTP<Moments_1st<MF>, MF>
   using Base::Base;
 
   template <typename Mparticles>
-  static void run(Mfields& mflds, Mparticles& mprts)
+  void operator()(Mparticles& mprts)
   {
     using Particle = typename Mparticles::ConstAccessor::Particle;
     using Real = typename Particle::real_t;
 
-    auto deposit = Deposit1stCc<Mparticles, Mfields>{mprts, mflds};
+    auto deposit = Deposit1stCc<Mparticles, Mfields>{mprts, Base::mres_};
     deposit.process([&](const Particle& prt) {
       int mm = prt.kind() * n_moments;
-      Real q = prt.q(), m = prt.m();
       Real vxi[3];
       particle_calc_vxi(prt, vxi);
       deposit(prt, mm + 0, prt.q());
