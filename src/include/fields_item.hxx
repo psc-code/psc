@@ -27,10 +27,6 @@ struct FieldsItemFields
 {
   using Mfields = typename Item::Mfields;
 
-  static const char* name() { return Item::name; }
-
-  static int n_comps(const Grid_t& grid) { return Item::n_comps; }
-
   FieldsItemFields(const Grid_t& grid) : mres_{grid, Item::n_comps, grid.ibn} {}
 
   template <typename MfieldsState>
@@ -39,16 +35,15 @@ struct FieldsItemFields
     Item::run(grid, mflds, mres_);
   }
 
+  Mfields& result() { return mres_; }
+
+  static const char* name() { return Item::name; }
+  static int n_comps(const Grid_t& grid) { return Item::n_comps; }
+
   std::vector<std::string> comp_names(const Grid_t& grid)
   {
-    std::vector<std::string> comp_names;
-    for (int m = 0; m < Item::n_comps; m++) {
-      comp_names.emplace_back(Item::fld_names()[m]);
-    }
-    return comp_names;
+    return Item::fld_names();
   }
-
-  Mfields& result() { return mres_; }
 
 private:
   Mfields mres_;
@@ -78,6 +73,8 @@ struct _FieldsItemFields
     }
   }
 
+  Mfields& result() { return mres_; }
+
   using MfieldsFake = MfieldsC;
 
   static const char* name() { return Item<MfieldsFake>::name; }
@@ -85,14 +82,8 @@ struct _FieldsItemFields
 
   static std::vector<std::string> comp_names(const Grid_t& grid)
   {
-    std::vector<std::string> comp_names;
-    for (int m = 0; m < Item<MfieldsFake>::n_comps; m++) {
-      comp_names.emplace_back(Item<MfieldsFake>::fld_names()[m]);
-    }
-    return comp_names;
+    return Item<MfieldsFake>::fld_names();
   }
-
-  Mfields& result() { return mres_; }
 
 private:
   Mfields mres_;
@@ -132,7 +123,7 @@ struct ItemMomentCRTP
   using Mfields = MF;
 
   ItemMomentCRTP(const Grid_t& grid)
-    : mres_{grid, Derived::n_comps(grid.kinds), grid.ibn}
+    : mres_{grid, Derived::n_comps(grid), grid.ibn}
   {}
 
   Mfields& result() { return mres_; }
@@ -154,34 +145,27 @@ struct ItemMomentAddBnd
 
   constexpr static const char* name = Moment_t::name;
 
-  static int n_comps(const Grid_t::Kinds& kinds)
+  static int n_comps(const Grid_t& grid)
   {
     return Moment_t::n_comps *
-           ((Moment_t::flags & POFI_BY_KIND) ? kinds.size() : 1);
+           ((Moment_t::flags & POFI_BY_KIND) ? grid.kinds.size() : 1);
   }
 
-  static std::vector<std::string> comp_names(const Grid_t::Kinds& kinds)
+  static std::vector<std::string> comp_names(const Grid_t& grid)
   {
-    std::vector<std::string> result;
-    auto n_comps = Moment_t::n_comps;
-    auto fld_names = Moment_t::fld_names();
-
     if (!(Moment_t::flags & POFI_BY_KIND)) {
-      for (int m = 0; m < n_comps; m++) {
-        result.emplace_back(fld_names[m]);
-      }
-    } else {
-      for (int k = 0; k < kinds.size(); k++) {
-        for (int m = 0; m < n_comps; m++) {
-          result.emplace_back(fld_names[m] + "_" + kinds[k].name);
-        }
+      return Moment_t::fld_names();
+    }
+    
+    std::vector<std::string> result;
+    auto fld_names = Moment_t::fld_names();
+    for (int k = 0; k < grid.kinds.size(); k++) {
+      for (int m = 0; m < Moment_t::n_comps; m++) {
+	result.emplace_back(fld_names[m] + "_" + grid.kinds[k].name);
       }
     }
     return result;
   }
-
-  static std::vector<std::string> fld_names() { return Moment_t::fld_names(); }
-  constexpr static int flags = Moment_t::flags;
 
   ItemMomentAddBnd(const Grid_t& grid) : Base{grid}, bnd_{grid, grid.ibn} {}
 
@@ -306,7 +290,7 @@ struct FieldsItemMoment
 
   static int n_comps(const Grid_t& grid)
   {
-    return Moment_t::n_comps(grid.kinds);
+    return Moment_t::n_comps(grid);
   }
 
   FieldsItemMoment(const Grid_t& grid) : moment_(grid) {}
@@ -321,7 +305,7 @@ struct FieldsItemMoment
 
   std::vector<std::string> comp_names(const Grid_t& grid)
   {
-    return moment_.comp_names(grid.kinds);
+    return moment_.comp_names(grid);
   }
 
 private:
