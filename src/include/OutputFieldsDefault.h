@@ -89,9 +89,9 @@ public:
       return;
     }
 
-    FieldsItem_jeh<MfieldsState> jeh{grid};
+    FieldsItem_jeh<MfieldsState> jeh{mflds};
     FieldsItem_Moments_1st_cc moments{grid};
-    auto&& pfd_jeh = jeh(grid, mflds);
+    auto&& pfd_jeh = jeh();
     moments(mprts);
 
     if (do_pfield) {

@@ -27,7 +27,10 @@ struct Item_j_nc
 
   constexpr static char const* name = "j_nc";
   constexpr static int n_comps = 3;
-  static std::vector<std::string> fld_names() { return {"jx_nc", "jy_nc", "jz_nc"}; }
+  static std::vector<std::string> fld_names()
+  {
+    return {"jx_nc", "jy_nc", "jz_nc"};
+  }
 
   template <typename FE>
   static void set(const Grid_t& grid, FE& R, FE& F, int i, int j, int k)
@@ -79,7 +82,10 @@ struct Item_j_ec
 
   constexpr static char const* name = "j_ec";
   constexpr static int n_comps = 3;
-  static std::vector<std::string> fld_names() { return {"jx_ec", "jy_ec", "jz_ec"}; }
+  static std::vector<std::string> fld_names()
+  {
+    return {"jx_ec", "jy_ec", "jz_ec"};
+  }
 
   template <typename FE>
   static void set(const Grid_t& grid, FE& R, FE& F, int i, int j, int k)
@@ -104,7 +110,10 @@ struct Item_e_nc
 
   constexpr static char const* name = "e_nc";
   constexpr static int n_comps = 3;
-  static std::vector<std::string> fld_names() { return {"ex_nc", "ey_nc", "ez_nc"}; }
+  static std::vector<std::string> fld_names()
+  {
+    return {"ex_nc", "ey_nc", "ez_nc"};
+  }
 
   template <typename FE>
   static void set(const Grid_t& grid, FE& R, FE& F, int i, int j, int k)
@@ -156,7 +165,10 @@ struct Item_e_ec
 
   constexpr static char const* name = "e_ec";
   constexpr static int n_comps = 3;
-  static std::vector<std::string> fld_names() { return {"ex_ec", "ey_ec", "ez_ec"}; }
+  static std::vector<std::string> fld_names()
+  {
+    return {"ex_ec", "ey_ec", "ez_ec"};
+  }
 
   template <typename FE>
   static void set(const Grid_t& grid, FE& R, FE& F, int i, int j, int k)
@@ -187,7 +199,10 @@ struct Item_h_nc
 
   constexpr static char const* name = "h_nc";
   constexpr static int n_comps = 3;
-  static std::vector<std::string> fld_names() { return {"hx_nc", "hy_nc", "hz_nc"}; }
+  static std::vector<std::string> fld_names()
+  {
+    return {"hx_nc", "hy_nc", "hz_nc"};
+  }
 
   template <typename FE>
   static void set(const Grid_t& grid, FE& R, FE& F, int i, int j, int k)
@@ -233,7 +248,10 @@ struct Item_h_fc
 
   constexpr static char const* name = "h_fc";
   constexpr static int n_comps = 3;
-  static std::vector<std::string> fld_names() { return {"hx_fc", "hy_fc", "hz_fc"}; }
+  static std::vector<std::string> fld_names()
+  {
+    return {"hx_fc", "hy_fc", "hz_fc"};
+  }
 
   template <typename FE>
   static void set(const Grid_t& grid, FE& R, FE& F, int i, int j, int k)
@@ -254,7 +272,10 @@ struct Item_jdote
 
   constexpr static char const* name = "jdote";
   constexpr static int n_comps = 3;
-  static std::vector<std::string> fld_names() { return {"jxex", "jyey", "jzez"}; }
+  static std::vector<std::string> fld_names()
+  {
+    return {"jxex", "jyey", "jzez"};
+  }
 
   template <typename FE>
   static void set(const Grid_t& grid, FE& R, FE& F, int i, int j, int k)
@@ -275,7 +296,10 @@ struct Item_poyn
 
   constexpr static char const* name = "poyn";
   constexpr static int n_comps = 3;
-  static std::vector<std::string> fld_names() { return {"poynx", "poyny", "poynz"}; }
+  static std::vector<std::string> fld_names()
+  {
+    return {"poynx", "poyny", "poynz"};
+  }
 
   template <typename FE>
   static void set(const Grid_t& grid, FE& R, FE& F, int i, int j, int k)
@@ -403,29 +427,32 @@ class FieldsItem_jeh
 public:
   using Mfields = MfieldsC;
 
-  FieldsItem_jeh(const Grid_t& grid)
-    : mres_{grid, Item_jeh<MfieldsFake>::n_comps, grid.ibn}
-  {}
-
-  Mfields& operator()(const Grid_t& grid, MfieldsState& mflds)
+  FieldsItem_jeh(MfieldsState& mflds)
+    : item_{mflds},
+      mres_{mflds.grid(), Item_jeh<MfieldsFake>::n_comps, mflds.grid().ibn}
   {
-    Item_jeh<MfieldsState> item{mflds};
-
     for (int p = 0; p < mres_.n_patches(); p++) {
       auto R = mres_[p];
-      for (int m = 0; m < item.n_comps; m++) {
+      for (int m = 0; m < item_.n_comps; m++) {
         mres_.Foreach_3d(0, 0, [&](int i, int j, int k) {
-          R(m, i, j, k) = item(m, {i, j, k}, p);
+          R(m, i, j, k) = item_(m, {i, j, k}, p);
         });
       }
     }
+  }
+
+  Mfields& operator()()
+  {
     return mres_;
   }
 
   using MfieldsFake = MfieldsC;
 
   static const char* name() { return Item_jeh<MfieldsFake>::name; }
-  static int n_comps(const Grid_t& grid) { return Item_jeh<MfieldsFake>::n_comps; }
+  static int n_comps(const Grid_t& grid)
+  {
+    return Item_jeh<MfieldsFake>::n_comps;
+  }
 
   static std::vector<std::string> comp_names(const Grid_t& grid)
   {
@@ -433,6 +460,7 @@ public:
   }
 
 private:
+  Item_jeh<MfieldsState> item_;
   Mfields mres_;
 };
 
