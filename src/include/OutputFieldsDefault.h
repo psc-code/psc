@@ -105,8 +105,7 @@ public:
 
     if (doaccum_tfield) {
       // tfd += pfd
-      auto tmp_jeh = evalMfields(pfd_jeh);
-      tfd_jeh_.axpy(1., tmp_jeh);
+      tfd_jeh_ += pfd_jeh;
       tfd_moments_.axpy(1., moments.result());
       naccum_++;
     }
