@@ -11,8 +11,9 @@
 // n_1st
 
 template <typename MF>
-struct Moment_n_1st
+struct Moment_n_1st : ItemMomentCRTP<Moment_n_1st<MF>, MF>
 {
+  using Base = ItemMomentCRTP<Moment_n_1st<MF>, MF>;
   using Mfields = MF;
 
   constexpr static char const* name = "n_1st";
@@ -23,6 +24,8 @@ struct Moment_n_1st
   {
     return addKindSuffix({"n"}, grid.kinds);
   }
+
+  using Base::Base;
 
   template <typename Mparticles>
   static void run(Mfields& mflds, Mparticles& mprts)
@@ -153,8 +156,9 @@ struct Moment_T_1st
 // FIXME: add KE
 
 template <typename MF>
-struct Moments_1st
+struct Moments_1st : ItemMomentCRTP<Moments_1st<MF>, MF>
 {
+  using Base = ItemMomentCRTP<Moments_1st<MF>, MF>;
   using Mfields = MF;
 
   constexpr static char const* name = "all_1st";
@@ -171,6 +175,8 @@ struct Moments_1st
                           "tyy", "tzz", "txy", "tyz", "tzx"},
                          grid.kinds);
   }
+
+  using Base::Base;
 
   template <typename Mparticles>
   static void run(Mfields& mflds, Mparticles& mprts)

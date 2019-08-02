@@ -42,8 +42,9 @@ struct Moment_n_2nd_nc
 // rho
 
 template<typename MP, typename MF>
-struct Moment_rho_2nd_nc
+struct Moment_rho_2nd_nc : ItemMomentCRTP<Moment_rho_2nd_nc<MP, MF>, MF>
 {
+  using Base = ItemMomentCRTP<Moment_rho_2nd_nc<MP, MF>, MF>;
   using Mparticles = MP;
   using Mfields = MF;
   using real_t = typename Mparticles::real_t;
@@ -53,6 +54,8 @@ struct Moment_rho_2nd_nc
   static int n_comps(const Grid_t&) { return 1; };
   static std::vector<std::string> fld_names() { return { "rho" }; }
   constexpr static int flags = 0;
+
+  using Base::Base;
   
   static void run(Mfields& mflds, Mparticles& mprts)
   {
