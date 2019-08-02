@@ -91,7 +91,7 @@ public:
 
     FieldsItem_jeh<MfieldsState> jeh{mflds};
     FieldsItem_Moments_1st_cc moments{grid};
-    auto&& pfd_jeh = jeh();
+    auto&& pfd_jeh = evalMfields(jeh());
     moments(mprts);
 
     if (do_pfield) {
