@@ -46,7 +46,7 @@ template<typename DIM, typename _Mfields, typename PUSHP, typename ORDER,
 	 typename BNDP = BndParticles_<typename PUSHP::Mparticles>,
 	 typename PUSHF = PushFields<typename PUSHP::MfieldsState>,
 	 typename BND = Bnd_<typename PUSHP::MfieldsState>,
-	 typename MOMENT_N = ItemMomentAddBnd<Moment_n_1st<_Mfields>>>
+	 typename MOMENT_N = Moment_n_1st<_Mfields>>
 struct TestConfig
 {
   using dim = DIM;

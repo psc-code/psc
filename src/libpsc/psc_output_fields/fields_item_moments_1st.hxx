@@ -37,6 +37,7 @@ struct Moment_n_1st : ItemMomentCRTP<Moment_n_1st<MF>, MF>
       int m = prt.kind();
       deposit(prt, m, 1.f);
     });
+    Base::bnd_.add_ghosts(Base::mres_);
   }
 };
 
@@ -51,7 +52,7 @@ struct Moment_v_1st
   constexpr static char const* name = "v_1st";
 
   static int n_comps(const Grid_t& grid) { return 3 * grid.kinds.size(); }
-  
+
   static std::vector<std::string> comp_names(const Grid_t& grid)
   {
     return addKindSuffix({"vx", "vy", "vz"}, grid.kinds);
@@ -87,7 +88,7 @@ struct Moment_p_1st
   constexpr static char const* name = "p_1st";
 
   static int n_comps(const Grid_t& grid) { return 3 * grid.kinds.size(); }
-  
+
   static std::vector<std::string> comp_names(const Grid_t& grid)
   {
     return addKindSuffix({"px", "py", "pz"}, grid.kinds);
@@ -120,10 +121,11 @@ struct Moment_T_1st
   constexpr static char const* name = "T_1st";
 
   static int n_comps(const Grid_t& grid) { return 3 * grid.kinds.size(); }
-  
+
   static std::vector<std::string> comp_names(const Grid_t& grid)
   {
-    return addKindSuffix({"Txx", "Tyy", "Tzz", "Txy", "Txz", "Tyz"}, grid.kinds);
+    return addKindSuffix({"Txx", "Tyy", "Tzz", "Txy", "Txz", "Tyz"},
+                         grid.kinds);
   }
 
   template <typename Mparticles>
@@ -156,13 +158,14 @@ struct Moment_T_1st
 // FIXME: add KE
 
 template <typename MF>
-struct Moments_1st : ItemMomentCRTP<Moments_1st<MF>, MF>
+class Moments_1st : public ItemMomentCRTP<Moments_1st<MF>, MF>
 {
+public:
   using Base = ItemMomentCRTP<Moments_1st<MF>, MF>;
   using Mfields = MF;
 
-  constexpr static char const* name = "all_1st";
   constexpr static int n_moments = 13;
+  static char const* name() { return "all_1st"; }
 
   static int n_comps(const Grid_t& grid)
   {
@@ -176,7 +179,7 @@ struct Moments_1st : ItemMomentCRTP<Moments_1st<MF>, MF>
                          grid.kinds);
   }
 
-  using Base::Base;
+  Moments_1st(const Grid_t& grid) : Base{grid} {}
 
   template <typename Mparticles>
   void operator()(Mparticles& mprts)
@@ -203,5 +206,6 @@ struct Moments_1st : ItemMomentCRTP<Moments_1st<MF>, MF>
       deposit(prt, mm + 11, prt.m() * prt.u()[1] * vxi[2]);
       deposit(prt, mm + 12, prt.m() * prt.u()[2] * vxi[0]);
     });
+    Base::bnd_.add_ghosts(Base::mres_);
   }
 };

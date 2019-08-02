@@ -16,11 +16,8 @@ using FieldsItem_E_cc = FieldsItemFields<ItemLoopPatches<Item_e_cc>>;
 using FieldsItem_H_cc = FieldsItemFields<ItemLoopPatches<Item_h_cc>>;
 using FieldsItem_J_cc = FieldsItemFields<ItemLoopPatches<Item_j_cc>>;
 
-using FieldsItem_n_1st_cc = ItemMomentAddBnd<Moment_n_1st<MfieldsC>>;
-using FieldsItem_v_1st_cc = ItemMomentAddBnd<Moment_v_1st<MfieldsC>>;
-using FieldsItem_p_1st_cc = ItemMomentAddBnd<Moment_p_1st<MfieldsC>>;
-using FieldsItem_T_1st_cc = ItemMomentAddBnd<Moment_T_1st<MfieldsC>>;
-using FieldsItem_Moments_1st_cc = ItemMomentAddBnd<Moments_1st<MfieldsC>>;
+using FieldsItem_n_1st_cc = Moment_n_1st<MfieldsC>;
+using FieldsItem_Moments_1st_cc = Moments_1st<MfieldsC>;
 
 // ======================================================================
 // OutputFieldsParams
