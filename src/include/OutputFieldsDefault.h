@@ -16,7 +16,8 @@ using FieldsItem_H_cc = FieldsItemFields<ItemLoopPatches<Item_h_cc>>;
 using FieldsItem_J_cc = FieldsItemFields<ItemLoopPatches<Item_j_cc>>;
 
 using FieldsItem_n_1st_cc = Moment_n_1st<MfieldsC>;
-using FieldsItem_Moments_1st_cc = Moments_1st<MfieldsC>;
+template <typename Mparticles>
+using FieldsItem_Moments_1st_cc = Moments_1st<Mparticles, MfieldsC>;
 
 // ======================================================================
 // OutputFieldsParams
@@ -43,6 +44,7 @@ struct OutputFieldsParams
 class OutputFields : public OutputFieldsParams
 {
   using MfieldsFake = MfieldsC;
+  using MparticlesFake = MparticlesDouble;
 
 public:
   // ----------------------------------------------------------------------
@@ -51,7 +53,7 @@ public:
   OutputFields(const Grid_t& grid, const OutputFieldsParams& prm)
     : OutputFieldsParams{prm},
       tfd_jeh_{grid, Item_jeh<MfieldsFake>::n_comps(), grid.ibn},
-      tfd_moments_{grid, FieldsItem_Moments_1st_cc::n_comps(grid), grid.ibn},
+      tfd_moments_{grid, FieldsItem_Moments_1st_cc<MparticlesFake>::n_comps(grid), grid.ibn},
       pfield_next_{pfield_first},
       tfield_next_{tfield_first}
   {
@@ -90,7 +92,7 @@ public:
     }
 
     Item_jeh<MfieldsState> pfd_jeh{mflds};
-    FieldsItem_Moments_1st_cc moments{grid};
+    FieldsItem_Moments_1st_cc<Mparticles> moments{grid};
     moments(mprts);
 
     if (do_pfield) {

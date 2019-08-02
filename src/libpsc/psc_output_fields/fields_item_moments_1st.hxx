@@ -157,11 +157,12 @@ struct Moment_T_1st
 // all moments calculated at once
 // FIXME: add KE
 
-template <typename MF>
-class Moments_1st : public ItemMomentCRTP<Moments_1st<MF>, MF>
+template <typename MP, typename MF>
+class Moments_1st : public ItemMomentCRTP<Moments_1st<MP, MF>, MF>
 {
 public:
-  using Base = ItemMomentCRTP<Moments_1st<MF>, MF>;
+  using Base = ItemMomentCRTP<Moments_1st<MP, MF>, MF>;
+  using Mparticles = MP;
   using Mfields = MF;
 
   constexpr static int n_moments = 13;
@@ -181,7 +182,6 @@ public:
 
   Moments_1st(const Grid_t& grid) : Base{grid} {}
 
-  template <typename Mparticles>
   void operator()(Mparticles& mprts)
   {
     using Particle = typename Mparticles::ConstAccessor::Particle;
