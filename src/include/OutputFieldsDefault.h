@@ -50,7 +50,7 @@ public:
 
   OutputFields(const Grid_t& grid, const OutputFieldsParams& prm)
     : OutputFieldsParams{prm},
-      tfd_jeh_{grid, FieldsItem_jeh<MfieldsFake>::n_comps(grid), grid.ibn},
+      tfd_jeh_{grid, FieldsItem_jeh<MfieldsFake>::n_comps(), grid.ibn},
       tfd_moments_{grid, FieldsItem_Moments_1st_cc::n_comps(grid), grid.ibn},
       pfield_next_{pfield_first},
       tfield_next_{tfield_first}
@@ -99,7 +99,7 @@ public:
       pfield_next_ += pfield_step;
 
       io_pfd_->open(grid, rn, rx);
-      write_pfd(pfd_jeh, jeh);
+      _write_pfd(pfd_jeh);
       write_pfd(moments);
       io_pfd_->close();
     }
@@ -116,7 +116,7 @@ public:
       tfield_next_ += tfield_step;
 
       io_tfd_->open(grid, rn, rx);
-      write_tfd(tfd_jeh_, jeh);
+      _write_tfd(tfd_jeh_, jeh);
       write_tfd(tfd_moments_, moments);
       io_tfd_->close();
       naccum_ = 0;
@@ -133,11 +133,11 @@ private:
                                    item.comp_names(item.result().grid()));
   }
 
-  template <typename Mfields, typename Item>
-  void write_pfd(Mfields& pfd, Item& item)
+  template <typename EXP>
+  void _write_pfd(EXP& pfd)
   {
     auto tmp = evalMfields(pfd);
-    MrcIo::write_mflds(io_pfd_->io_, tmp, pfd.grid(), item.name(), item.comp_names(pfd.grid()));
+    MrcIo::write_mflds(io_pfd_->io_, tmp, pfd.grid(), pfd.name(), pfd.comp_names());
   }
 
   template <typename Item>
@@ -147,6 +147,16 @@ private:
     tfd.scale(1. / naccum_);
     tfd.write_as_mrc_fld(io_tfd_->io_, item.name(),
                          item.comp_names(tfd.grid()));
+    tfd.zero();
+  }
+
+  template <typename EXP>
+  void _write_tfd(MfieldsC& tfd, EXP& pfd)
+  {
+    // convert accumulated values to correct temporal mean
+    tfd.scale(1. / naccum_);
+    tfd.write_as_mrc_fld(io_tfd_->io_, pfd.name(),
+                         pfd.comp_names());
     tfd.zero();
   }
 

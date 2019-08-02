@@ -391,9 +391,9 @@ class Item_jeh
 public:
   using Real = typename MfieldsState::real_t;
 
-  constexpr static char const* name = "jeh";
-  constexpr static int n_comps = 9;
-  static std::vector<std::string> fld_names()
+  static char const* name() { return "jeh"; }
+  static int n_comps() { return 9; }
+  static std::vector<std::string> comp_names()
   {
     return {"jx_ec", "jy_ec", "jz_ec", "ex_ec", "ey_ec",
             "ez_ec", "hx_fc", "hy_fc", "hz_fc"};
@@ -428,11 +428,11 @@ private:
 template <typename EXP>
 MfieldsC evalMfields(const EXP& exp)
 {
-  MfieldsC mflds{exp.grid(), exp.n_comps, exp.ibn()};
+  MfieldsC mflds{exp.grid(), exp.n_comps(), exp.ibn()};
 
   for (int p = 0; p < mflds.n_patches(); p++) {
     auto flds = mflds[p];
-    for (int m = 0; m < exp.n_comps; m++) {
+    for (int m = 0; m < exp.n_comps(); m++) {
       mflds.Foreach_3d(0, 0, [&](int i, int j, int k) {
         flds(m, i, j, k) = exp(m, {i, j, k}, p);
       });
@@ -447,26 +447,23 @@ class FieldsItem_jeh
 public:
   using Mfields = MfieldsC;
 
-  FieldsItem_jeh(MfieldsState& mflds)
-    : item_{mflds}
-  {}
+  FieldsItem_jeh(MfieldsState& mflds) : item_{mflds} {}
 
-  const Item_jeh<MfieldsState>& operator()()
-  {
-    return item_;
-  }
+  const Item_jeh<MfieldsState>& operator()() { return item_; }
 
   using MfieldsFake = MfieldsC;
 
-  static const char* name() { return Item_jeh<MfieldsFake>::name; }
-  static int n_comps(const Grid_t& grid)
+  static int n_comps()
   {
-    return Item_jeh<MfieldsFake>::n_comps;
+    return Item_jeh<MfieldsFake>::n_comps();
   }
 
-  static std::vector<std::string> comp_names(const Grid_t& grid)
-  {
-    return Item_jeh<MfieldsFake>::fld_names();
+  std::string name() const {
+    return item_.name();
+  }
+
+  std::vector<std::string> comp_names() const {
+    return item_.comp_names();
   }
 
 private:
