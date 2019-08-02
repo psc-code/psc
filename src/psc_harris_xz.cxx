@@ -124,7 +124,7 @@ void setupHarrisParams()
 {
   g.wpedt_max = .36;
   g.wpe_wce = 2.;
-  g.mi_me = 25.;
+  g.mi_me = 100.;
 
   g.Lx_di = 40.;
   g.Ly_di = 1.;
@@ -139,8 +139,8 @@ void setupHarrisParams()
 
   g.overalloc = 2.;
 
-  g.gdims = {512, 1, 128};
-  g.np = {4, 1, 1};
+  g.gdims = {2048, 1, 512};
+  g.np = {32, 1, 1};
 
   g.L_di = .5;
   g.Ti_Te = 5.;
@@ -153,7 +153,7 @@ void setupHarrisParams()
 
   g.Lpert_Lx = 1.;
   g.dbz_b0 = .03;
-  g.nppc = 10;
+  g.nppc = 100;
   g.open_bc_x = false;
   g.driven_bc_z = false;
 }
