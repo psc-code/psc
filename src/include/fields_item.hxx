@@ -143,7 +143,7 @@ struct ItemMomentAddBnd
     ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Moment_t::Mfields>;
   using Mfields = typename Moment_t::Mfields;
 
-  constexpr static const char* name = Moment_t::name;
+  static const char* name() { return Moment_t::name; }
 
   static int n_comps(const Grid_t& grid)
   {
@@ -280,34 +280,3 @@ private:
   Bnd bnd_;
 };
 
-// ======================================================================
-// FieldsItemMoment
-
-template <typename Moment_t>
-struct FieldsItemMoment
-{
-  static const char* name() { return Moment_t::name; }
-
-  static int n_comps(const Grid_t& grid)
-  {
-    return Moment_t::n_comps(grid);
-  }
-
-  FieldsItemMoment(const Grid_t& grid) : moment_(grid) {}
-
-  template <typename Mparticles>
-  void operator()(const Grid_t& grid, Mparticles& mprts)
-  {
-    moment_(mprts);
-  }
-
-  MfieldsC& result() { return moment_.result(); }
-
-  std::vector<std::string> comp_names(const Grid_t& grid)
-  {
-    return moment_.comp_names(grid);
-  }
-
-private:
-  Moment_t moment_;
-};
