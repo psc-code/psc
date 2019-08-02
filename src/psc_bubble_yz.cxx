@@ -157,7 +157,7 @@ Grid_t* setupGrid()
 // ======================================================================
 // initializeParticles
 
-void initializeParticles(Balance& balance, Grid_t* grid_ptr, Mparticles& mprts)
+void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
 {
   SetupParticles<Mparticles> setup_particles(*grid_ptr);
 

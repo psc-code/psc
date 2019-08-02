@@ -282,7 +282,7 @@ Grid_t* setupGrid()
 // initializeParticles
 
 void initializeParticles(SetupParticles<Mparticles>& setup_particles,
-                         Balance& balance, Grid_t* grid_ptr, Mparticles& mprts,
+                         Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
                          InjectFoil& inject_target)
 {
   // -- set particle initial condition

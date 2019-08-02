@@ -624,7 +624,7 @@ void setup_particles(Mparticles& mprts,
 // ======================================================================
 // initializeParticles
 
-void initializeParticles(Balance& balance, Grid_t* grid_ptr, Mparticles& mprts)
+void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
 {
   auto comm = grid_ptr->comm();
 
