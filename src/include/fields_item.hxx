@@ -171,9 +171,9 @@ struct ItemMomentAddBnd
   template <typename Mparticles>
   void operator()(Mparticles& mprts)
   {
+    moment_(mprts);
+
     auto& mres = moment_.result();
-    mres.zero();
-    Moment_t::run(mres, mprts);
     for (int p = 0; p < mprts.n_patches(); p++) {
       add_ghosts_boundary(mprts.grid(), mres[p], p, 0, mres.n_comps());
     }

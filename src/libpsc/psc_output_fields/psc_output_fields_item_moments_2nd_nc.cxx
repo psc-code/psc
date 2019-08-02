@@ -57,7 +57,7 @@ struct Moment_rho_2nd_nc : ItemMomentCRTP<Moment_rho_2nd_nc<MP, MF>, MF>
 
   using Base::Base;
   
-  static void run(Mfields& mflds, Mparticles& mprts)
+  void operator()(Mparticles& mprts)
   {
     const auto& grid = mprts.grid();
     real_t fnqs = grid.norm.fnqs;
@@ -65,9 +65,9 @@ struct Moment_rho_2nd_nc : ItemMomentCRTP<Moment_rho_2nd_nc<MP, MF>, MF>
 
     auto accessor = mprts.accessor();
     for (int p = 0; p < mprts.n_patches(); p++) {
-      auto flds = mflds[p];
+      auto res = Base::mres_[p];
       for (auto prt: accessor[p]) {
-	DEPOSIT_TO_GRID_2ND_NC(prt, flds, 0, prt.q());
+	DEPOSIT_TO_GRID_2ND_NC(prt, res, 0, prt.q());
       }
     }
   }
