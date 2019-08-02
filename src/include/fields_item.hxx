@@ -128,6 +128,26 @@ inline std::vector<std::string> addKindSuffix(
 }
 
 // ======================================================================
+// ItemMomentCRTP
+//
+// deriving from this class adds the result field mres_
+
+template <typename Derived, typename MF>
+struct ItemMomentCRTP
+{
+  using Mfields = MF;
+
+  ItemMomentCRTP(const Grid_t& grid)
+    : mres_{grid, Derived::n_comps(grid), grid.ibn}
+  {}
+
+  Mfields& result() { return mres_; }
+
+protected:
+  Mfields mres_;
+};
+
+// ======================================================================
 // ItemMomentAddBnd
 
 template <typename Moment_t, typename Bnd = Bnd_<typename Moment_t::Mfields>>
@@ -144,13 +164,14 @@ struct ItemMomentAddBnd
   }
 
   ItemMomentAddBnd(const Grid_t& grid)
-    : mres_{grid, Moment_t::n_comps(grid), grid.ibn}, bnd_{grid, grid.ibn}
+    : moment_{grid},
+      bnd_{grid, grid.ibn}
   {}
 
   template <typename Mparticles>
   void operator()(Mparticles& mprts)
   {
-    auto& mres = this->mres_;
+    auto& mres = moment_.result();
     mres.zero();
     Moment_t::run(mres, mprts);
     for (int p = 0; p < mprts.n_patches(); p++) {
@@ -160,7 +181,7 @@ struct ItemMomentAddBnd
     bnd_.add_ghosts(mres, 0, mres.n_comps());
   }
 
-  Mfields& result() { return mres_; }
+  Mfields& result() { return moment_.result(); }
 
   // ----------------------------------------------------------------------
   // boundary stuff FIXME, should go elsewhere...
@@ -257,6 +278,6 @@ struct ItemMomentAddBnd
   }
 
 private:
-  Mfields mres_;
+  Moment_t moment_;
   Bnd bnd_;
 };
