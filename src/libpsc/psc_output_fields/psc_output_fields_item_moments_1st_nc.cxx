@@ -50,7 +50,7 @@ struct Moment_rho_1st_nc
   using particles_t = typename Mparticles::Patch;
   
   constexpr static char const* name = "rho_1st_nc";
-  constexpr static int n_comps = 1;
+  static int n_comps(const Grid_t& grid) { return 1; }
   static std::vector<std::string> fld_names() { return { "rho" }; }
   constexpr static int flags = 0;
   
