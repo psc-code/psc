@@ -22,7 +22,7 @@ PSC has the following dependencies:
 
 - (included) `googletest <https://github.com/google/googletest>`_ for testing
 
-- (equired) `HDF5 <https://www.hdfgroup.org/>`_, currently still the only real option
+- (required) `HDF5 <https://www.hdfgroup.org/>`_, currently still the only real option
   for regular field / particle output
 
 - (optional) `ADIOS2 <https://github.com/ornladios/ADIOS2>`_, currently the only
@@ -39,7 +39,8 @@ Build Instructions
    :maxdepth: 2
 
    generic
-   summit
+   summit 
+   trillian
    viscid
 
    

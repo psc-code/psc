@@ -17,3 +17,6 @@ Analyzing and Visualizing PSC data using Python
 
    Particles, tracing, etc
    
+.. todo::
+
+   put links to the actual jupyter notebooks used in docs

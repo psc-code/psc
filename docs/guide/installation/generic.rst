@@ -55,6 +55,3 @@ The PSC code base includes a bunch of unit tests, though coverage is still far f
 
    Total Test time (real) = 120.68 sec
 
-.. todo::
-   psc_harris_xz doesn't compile / work w/o vpic
-   
