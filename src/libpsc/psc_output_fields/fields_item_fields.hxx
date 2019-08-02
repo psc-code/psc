@@ -441,35 +441,6 @@ MfieldsC evalMfields(const EXP& exp)
   return mflds;
 }
 
-template <typename MfieldsState>
-class FieldsItem_jeh
-{
-public:
-  using Mfields = MfieldsC;
-
-  FieldsItem_jeh(MfieldsState& mflds) : item_{mflds} {}
-
-  const Item_jeh<MfieldsState>& operator()() { return item_; }
-
-  using MfieldsFake = MfieldsC;
-
-  static int n_comps()
-  {
-    return Item_jeh<MfieldsFake>::n_comps();
-  }
-
-  std::string name() const {
-    return item_.name();
-  }
-
-  std::vector<std::string> comp_names() const {
-    return item_.comp_names();
-  }
-
-private:
-  Item_jeh<MfieldsState> item_;
-};
-
 // ======================================================================
 // Item_dive
 
