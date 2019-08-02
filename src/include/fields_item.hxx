@@ -49,46 +49,6 @@ private:
   Mfields mres_;
 };
 
-template <template <typename> class Item>
-struct _FieldsItemFields
-{
-  using Mfields = MfieldsC;
-
-  _FieldsItemFields(const Grid_t& grid)
-    : mres_{grid, Item<MfieldsFake>::n_comps, grid.ibn}
-  {}
-
-  template <typename MfieldsState>
-  void operator()(const Grid_t& grid, MfieldsState& mflds)
-  {
-    Item<MfieldsState> item{mflds};
-
-    for (int p = 0; p < mres_.n_patches(); p++) {
-      auto R = mres_[p];
-      for (int m = 0; m < item.n_comps; m++) {
-        mres_.Foreach_3d(0, 0, [&](int i, int j, int k) {
-          R(m, i, j, k) = item(m, {i, j, k}, p);
-        });
-      }
-    }
-  }
-
-  Mfields& result() { return mres_; }
-
-  using MfieldsFake = MfieldsC;
-
-  static const char* name() { return Item<MfieldsFake>::name; }
-  static int n_comps(const Grid_t& grid) { return Item<MfieldsFake>::n_comps; }
-
-  static std::vector<std::string> comp_names(const Grid_t& grid)
-  {
-    return Item<MfieldsFake>::fld_names();
-  }
-
-private:
-  Mfields mres_;
-};
-
 // ======================================================================
 // ItemLoopPatches
 //
