@@ -663,6 +663,10 @@ public:
   template <typename Particles>
   void operator()(MparticlesVpic_<Particles>& mprts)
   {
+    if (prm_.every_step <= 0 || grid.timestep() % prm_.every_step != 0) {
+      return;
+    }
+
     auto& mprts_single = mprts.template get_as<MparticlesSingle>();
     (*this)(mprts_single);
     mprts.put_as(mprts_single, MP_DONT_COPY);
@@ -673,6 +677,10 @@ public:
   template <typename BS>
   void operator()(MparticlesCuda<BS>& mprts)
   {
+    if (prm_.every_step <= 0 || grid.timestep() % prm_.every_step != 0) {
+      return;
+    }
+
     auto& mprts_single = mprts.template get_as<MparticlesSingle>();
     (*this)(mprts_single);
     mprts.put_as(mprts_single, MP_DONT_COPY);
