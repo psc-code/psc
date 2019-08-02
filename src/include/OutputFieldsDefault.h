@@ -50,7 +50,7 @@ public:
 
   OutputFields(const Grid_t& grid, const OutputFieldsParams& prm)
     : OutputFieldsParams{prm},
-      tfd_jeh_{grid, FieldsItem_jeh<MfieldsFake>::n_comps(), grid.ibn},
+      tfd_jeh_{grid, Item_jeh<MfieldsFake>::n_comps(), grid.ibn},
       tfd_moments_{grid, FieldsItem_Moments_1st_cc::n_comps(grid), grid.ibn},
       pfield_next_{pfield_first},
       tfield_next_{tfield_first}
@@ -89,9 +89,8 @@ public:
       return;
     }
 
-    FieldsItem_jeh<MfieldsState> jeh{mflds};
+    Item_jeh<MfieldsState> pfd_jeh{mflds};
     FieldsItem_Moments_1st_cc moments{grid};
-    auto&& pfd_jeh = jeh();
     moments(mprts);
 
     if (do_pfield) {
@@ -116,7 +115,7 @@ public:
       tfield_next_ += tfield_step;
 
       io_tfd_->open(grid, rn, rx);
-      _write_tfd(tfd_jeh_, jeh);
+      _write_tfd(tfd_jeh_, pfd_jeh);
       write_tfd(tfd_moments_, moments);
       io_tfd_->close();
       naccum_ = 0;
