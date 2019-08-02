@@ -67,7 +67,7 @@ public:
 
   int n_comps() const { return Base::mres_.n_comps(); }
 
-  Moment_rho_2nd_nc(const Mparticles& mprts) : Base{mprts.grid()}
+  explicit Moment_rho_2nd_nc(const Mparticles& mprts) : Base{mprts.grid()}
   {
     const auto& grid = mprts.grid();
     real_t fnqs = grid.norm.fnqs;

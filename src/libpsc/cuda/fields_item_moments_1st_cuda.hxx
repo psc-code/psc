@@ -75,7 +75,7 @@ public:
   int n_comps() const { return Base::mres_.n_comps(); }
   Int3 ibn() const { return Base::mres_.ibn(); }
 
-  Moment_n_1st_cuda(const Mparticles& mprts)
+  explicit Moment_n_1st_cuda(const Mparticles& mprts)
     : Base{mprts.grid()},
       bnd_{mprts.grid(), mprts.grid().ibn}
   {

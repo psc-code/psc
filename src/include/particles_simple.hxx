@@ -172,7 +172,7 @@ struct MparticlesSimple : MparticlesBase
     int p_;
   };
 
-  MparticlesSimple(const Grid_t& grid)
+  explicit MparticlesSimple(const Grid_t& grid)
     : MparticlesBase(grid),
       storage_(grid.n_patches()),
       uid_gen(grid.comm()),

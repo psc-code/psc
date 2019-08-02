@@ -30,7 +30,7 @@ public:
   int n_comps() const { return Base::mres_.n_comps(); }
   Int3 ibn() const { return Base::mres_.ibn(); }
 
-  Moment_n_1st(const Mparticles& mprts) : Base{mprts.grid()}
+  explicit Moment_n_1st(const Mparticles& mprts) : Base{mprts.grid()}
   {
     using Particle = typename Mparticles::ConstAccessor::Particle;
 
@@ -182,7 +182,7 @@ public:
                          Base::grid().kinds);
   }
 
-  Moments_1st(const Mparticles& mprts) : Base{mprts.grid()}
+  explicit Moments_1st(const Mparticles& mprts) : Base{mprts.grid()}
   {
     using Particle = typename Mparticles::ConstAccessor::Particle;
     using Real = typename Particle::real_t;
