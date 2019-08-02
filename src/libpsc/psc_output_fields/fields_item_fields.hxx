@@ -397,6 +397,45 @@ private:
   MfieldsState& mflds_;
 };
 
+struct FieldsItem_jeh
+{
+  using Mfields = MfieldsC;
+
+  FieldsItem_jeh(const Grid_t& grid)
+    : mres_{grid, Item_jeh<MfieldsFake>::n_comps, grid.ibn}
+  {}
+
+  template <typename MfieldsState>
+  void operator()(const Grid_t& grid, MfieldsState& mflds)
+  {
+    Item_jeh<MfieldsState> item{mflds};
+
+    for (int p = 0; p < mres_.n_patches(); p++) {
+      auto R = mres_[p];
+      for (int m = 0; m < item.n_comps; m++) {
+        mres_.Foreach_3d(0, 0, [&](int i, int j, int k) {
+          R(m, i, j, k) = item(m, {i, j, k}, p);
+        });
+      }
+    }
+  }
+
+  Mfields& result() { return mres_; }
+
+  using MfieldsFake = MfieldsC;
+
+  static const char* name() { return Item_jeh<MfieldsFake>::name; }
+  static int n_comps(const Grid_t& grid) { return Item_jeh<MfieldsFake>::n_comps; }
+
+  static std::vector<std::string> comp_names(const Grid_t& grid)
+  {
+    return Item_jeh<MfieldsFake>::fld_names();
+  }
+
+private:
+  Mfields mres_;
+};
+
 // ======================================================================
 // Item_dive
 

@@ -11,7 +11,6 @@
 
 // ======================================================================
 
-using FieldsItem_jeh = _FieldsItemFields<Item_jeh>;
 using FieldsItem_E_cc = FieldsItemFields<ItemLoopPatches<Item_e_cc>>;
 using FieldsItem_H_cc = FieldsItemFields<ItemLoopPatches<Item_h_cc>>;
 using FieldsItem_J_cc = FieldsItemFields<ItemLoopPatches<Item_j_cc>>;
@@ -84,12 +83,14 @@ public:
                            timestep % tfield_every == 0) ||
                           timestep == 0);
 
+    if (!do_pfield && !doaccum_tfield) {
+      return;
+    }
+
     FieldsItem_jeh jeh{grid};
     FieldsItem_Moments_1st_cc moments{grid};
-    if ((do_pfield || doaccum_tfield)) {
-      jeh(grid, mflds);
-      moments(mprts);
-    }
+    jeh(grid, mflds);
+    moments(mprts);
 
     if (do_pfield) {
       mpi_printf(grid.comm(), "***** Writing PFD output\n");
