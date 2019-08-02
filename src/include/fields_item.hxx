@@ -113,26 +113,6 @@ struct ItemLoopPatches : ItemPatch
 };
 
 // ======================================================================
-// ItemMomentCRTP
-//
-// deriving from this class adds the result field mres_
-
-template <typename Derived, typename MF>
-struct ItemMomentCRTP
-{
-  using Mfields = MF;
-
-  ItemMomentCRTP(const Grid_t& grid)
-    : mres_{grid, Derived::n_comps(grid), grid.ibn}
-  {}
-
-  Mfields& result() { return mres_; }
-
-protected:
-  Mfields mres_;
-};
-
-// ======================================================================
 // addKindSuffix
 
 inline std::vector<std::string> addKindSuffix(
@@ -152,18 +132,20 @@ inline std::vector<std::string> addKindSuffix(
 
 template <typename Moment_t, typename Bnd = Bnd_<typename Moment_t::Mfields>>
 struct ItemMomentAddBnd
-  : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Moment_t::Mfields>
 {
-  using Base =
-    ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Moment_t::Mfields>;
   using Mfields = typename Moment_t::Mfields;
 
   static const char* name() { return Moment_t::name; }
 
   static int n_comps(const Grid_t& grid) { return Moment_t::n_comps(grid); }
-  static std::vector<std::string> comp_names(const Grid_t& grid) { return Moment_t::comp_names(grid); }
+  static std::vector<std::string> comp_names(const Grid_t& grid)
+  {
+    return Moment_t::comp_names(grid);
+  }
 
-  ItemMomentAddBnd(const Grid_t& grid) : Base{grid}, bnd_{grid, grid.ibn} {}
+  ItemMomentAddBnd(const Grid_t& grid)
+    : mres_{grid, Moment_t::n_comps(grid), grid.ibn}, bnd_{grid, grid.ibn}
+  {}
 
   template <typename Mparticles>
   void operator()(Mparticles& mprts)
@@ -177,6 +159,8 @@ struct ItemMomentAddBnd
 
     bnd_.add_ghosts(mres, 0, mres.n_comps());
   }
+
+  Mfields& result() { return mres_; }
 
   // ----------------------------------------------------------------------
   // boundary stuff FIXME, should go elsewhere...
@@ -273,5 +257,6 @@ struct ItemMomentAddBnd
   }
 
 private:
+  Mfields mres_;
   Bnd bnd_;
 };
