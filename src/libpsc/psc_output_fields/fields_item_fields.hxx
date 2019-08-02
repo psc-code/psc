@@ -482,8 +482,8 @@ public:
   }
 
   const Grid_t& grid() const { return mflds_.grid(); }
-
   Int3 ibn() const { return {}; }
+  int n_patches() const { return grid().n_patches(); }
 
 private:
   MfieldsState& mflds_;
