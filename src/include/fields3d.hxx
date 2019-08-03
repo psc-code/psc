@@ -20,6 +20,14 @@
 #include <list>
 #include <string>
 
+template <typename Derived>
+class MFexpression
+{
+public:
+  Derived& derived() { return static_cast<Derived&>(*this); }
+  const Derived& derived() const { return static_cast<const Derived&>(*this); }
+};
+
 // ======================================================================
 // MfieldsBase
 
@@ -308,9 +316,10 @@ public:
     }
   }
 
-  template <typename MFExp>
-  void assign(const MFExp& rhs)
+  template <typename E>
+  void assign(const MFexpression<E>& xp)
   {
+    const auto& rhs = xp.derived();
     assert(n_comps() == rhs.n_comps());
     assert(n_patches() == rhs.n_patches());
     //assert(box() == rhs.box());
@@ -330,9 +339,10 @@ public:
     }
   }
 
-  template <typename MFExp>
-  Derived& operator+=(const MFExp& rhs)
+  template <typename E>
+  Derived& operator+=(const MFexpression<E>& xp)
   {
+    const auto& rhs = xp.derived();
     assert(n_comps() == rhs.n_comps());
     assert(n_patches() == rhs.n_patches());
     //assert(box() == rhs.box());

@@ -185,8 +185,7 @@ struct Marder_ : MarderBase
 
   void operator()(MfieldsState& mflds, Mparticles& mprts)
   {
-    Moment_t mom{mprts};
-    rho_.assign(mom);
+    rho_.assign(Moment_t{mprts});
 
     // need to fill ghost cells first (should be unnecessary with only variant 1) FIXME
     assert(0);

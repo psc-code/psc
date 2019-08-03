@@ -210,8 +210,9 @@ private:
 // deriving from this class adds the result field mres_
 
 template <typename Derived, typename MF, typename Bnd = Bnd_<MF>>
-struct ItemMomentCRTP
+class ItemMomentCRTP : public MFexpression<Derived>
 {
+public:
   using Mfields = MF;
   using Real = typename Mfields::real_t;
 

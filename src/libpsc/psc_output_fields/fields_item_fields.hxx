@@ -7,9 +7,10 @@
 // ======================================================================
 // evalMfields
 
-template <typename EXP>
-MfieldsC evalMfields(const EXP& exp)
+template <typename E>
+MfieldsC evalMfields(const MFexpression<E>& xp)
 {
+  const auto& exp = xp.derived();
   MfieldsC mflds{exp.grid(), exp.n_comps(), exp.ibn()};
 
   for (int p = 0; p < mflds.n_patches(); p++) {
@@ -32,7 +33,7 @@ class AdaptMfields
   class Patch;
 
 public:
-  AdaptMfields(EXP& exp) : exp_{exp} {}
+  explicit AdaptMfields(EXP& exp) : exp_{exp} {}
 
   Patch operator[](int p) const { return {*this, p}; }
 
@@ -60,10 +61,10 @@ private:
   int p_;
 };
 
-template <typename EXP>
-AdaptMfields<EXP> adaptMfields(EXP& exp)
+template <typename E>
+AdaptMfields<E> adaptMfields(MFexpression<E>& xp)
 {
-  return {exp};
+  return AdaptMfields<E>{xp.derived()};
 }
 
 // ======================================================================
@@ -450,7 +451,7 @@ struct Item_divb
 // Main fiels in their natural staggering
 
 template <typename MfieldsState>
-class Item_jeh
+class Item_jeh : public MFexpression<Item_jeh<MfieldsState>>
 {
 public:
   using Real = typename MfieldsState::real_t;
