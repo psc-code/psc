@@ -18,6 +18,8 @@ public:
   using Mparticles = MP;
   using Mfields = MF;
 
+  using Base::n_comps;
+
   constexpr static char const* name = "n_1st";
 
   static int n_comps(const Grid_t& grid) { return 1 * grid.kinds.size(); }
@@ -166,6 +168,8 @@ public:
   using Base = ItemMomentCRTP<Moments_1st<MP, MF>, MF>;
   using Mparticles = MP;
   using Mfields = MF;
+
+  using Base::n_comps;
 
   constexpr static int n_moments = 13;
   static char const* name() { return "all_1st"; }

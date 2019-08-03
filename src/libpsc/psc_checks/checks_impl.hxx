@@ -58,7 +58,7 @@ struct Checks_ : ChecksParams, ChecksBase
     }
 
     Moment_t mom{mprts};
-    rho_m_.copy_comp(0, mom.result(), 0);
+    rho_m_.assign(mom);
   }
 
   // ----------------------------------------------------------------------
@@ -72,7 +72,7 @@ struct Checks_ : ChecksParams, ChecksBase
     }
 
     Moment_t mom{mprts};
-    rho_p_.copy_comp(0, mom.result(), 0);
+    rho_p_.assign(mom);
     item_divj_(grid, mflds);
 
     auto& d_rho = rho_p_;
@@ -138,7 +138,7 @@ struct Checks_ : ChecksParams, ChecksBase
     }
 
     Moment_t mom{mprts};
-    rho_.copy_comp(0, mom.result(), 0);
+    rho_.assign(mom);
     item_dive_(grid, mflds);
 
     auto& dive = item_dive_.result();

@@ -49,6 +49,8 @@ struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MP, MF>, MF>
   using Mfields = MF;
   using real_t = typename Mparticles::real_t;
   using particles_t = typename Mparticles::Patch;
+
+  using Base::n_comps;
   
   constexpr static char const* name = "rho_1st_nc";
   static int n_comps(const Grid_t& grid) { return 1; }

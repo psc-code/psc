@@ -85,7 +85,7 @@ public:
     }
 
     Item_jeh<MfieldsState> pfd_jeh{mflds};
-    FieldsItem_Moments_1st_cc<Mparticles> moments{mprts};
+    FieldsItem_Moments_1st_cc<Mparticles> pfd_moments{mprts};
 
     if (do_pfield) {
       mpi_printf(grid.comm(), "***** Writing PFD output\n");
@@ -93,14 +93,14 @@ public:
 
       io_pfd_->open(grid, rn, rx);
       _write_pfd(pfd_jeh);
-      _write_pfd(moments);
+      _write_pfd(pfd_moments);
       io_pfd_->close();
     }
 
     if (doaccum_tfield) {
       // tfd += pfd
       tfd_jeh_ += pfd_jeh;
-      tfd_moments_.axpy(1., moments.result());
+      tfd_moments_ += pfd_moments;
       naccum_++;
     }
     if (do_tfield) {
@@ -109,7 +109,7 @@ public:
 
       io_tfd_->open(grid, rn, rx);
       _write_tfd(tfd_jeh_, pfd_jeh);
-      _write_tfd(tfd_moments_, moments);
+      _write_tfd(tfd_moments_, pfd_moments);
       io_tfd_->close();
       naccum_ = 0;
     }

@@ -309,6 +309,28 @@ public:
   }
 
   template <typename MFExp>
+  void assign(const MFExp& rhs)
+  {
+    assert(n_comps() == rhs.n_comps());
+    assert(n_patches() == rhs.n_patches());
+    //assert(box() == rhs.box());
+    assert(derived().ibn() == rhs.ibn());
+    // FIXME check size compat, too
+    for (int p = 0; p < n_patches(); p++) {
+      for (int m = 0; m < n_comps(); m++) {
+	Int3 ijk;
+	for (ijk[2] = box_.ib(2); ijk[2] < box_.ib(2) + box_.im(2); ijk[2]++) {
+	  for (ijk[1] = box_.ib(1); ijk[1] < box_.ib(1) + box_.im(1); ijk[1]++) {
+	    for (ijk[0] = box_.ib(0); ijk[0] < box_.ib(0) + box_.im(0); ijk[0]++) {
+	      (*this)[p](m, ijk[0], ijk[1], ijk[2]) = rhs(m, ijk, p);
+	    }
+	  }
+	}
+      }
+    }
+  }
+
+  template <typename MFExp>
   Derived& operator+=(const MFExp& rhs)
   {
     assert(n_comps() == rhs.n_comps());
