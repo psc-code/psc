@@ -40,7 +40,6 @@ struct Checks_ : ChecksParams, ChecksBase
       rho_{grid, 1, grid.ibn},
       rho_m_{grid, 1, grid.ibn},
       rho_p_{grid, 1, grid.ibn},
-      item_dive_{grid},
       item_divj_{grid}
   {}
   
@@ -136,15 +135,12 @@ struct Checks_ : ChecksParams, ChecksBase
     }
 
     rho_.assign(Moment_t{mprts});
-    item_dive_(grid, mflds);
-
-    auto& dive = item_dive_.result();
+    auto dive = Item_dive<MfieldsState>(mflds);
     
     double eps = gauss_threshold;
     double max_err = 0.;
     for (int p = 0; p < dive.n_patches(); p++) {
       auto Rho = rho_[p];
-      auto DivE = dive[p];
 
       int l[3] = {0, 0, 0}, r[3] = {0, 0, 0};
       for (int d = 0; d < 3; d++) {
@@ -160,7 +156,7 @@ struct Checks_ : ChecksParams, ChecksBase
 	    // nothing
 	  } else {
 	    double v_rho = Rho(0, jx,jy,jz);
-	    double v_dive = DivE(0, jx,jy,jz);
+	    double v_dive = dive(0, {jx,jy,jz}, p);
 	    max_err = fmax(max_err, fabs(v_dive - v_rho));
 #if 1
 	    if (fabs(v_dive - v_rho) > eps) {
@@ -192,7 +188,8 @@ struct Checks_ : ChecksParams, ChecksBase
       }
       mrc_io_open(io, "w", grid.timestep(), grid.timestep() * grid.dt);
       rho_.write_as_mrc_fld(io, "rho", {"rho"});
-      dive.write_as_mrc_fld(io, "Div_E", {"Div_E"});
+      MrcIo::write_mflds(io, adaptMfields(dive), dive.grid(), dive.name(),
+			 dive.comp_names());
       mrc_io_close(io);
     }
 
@@ -204,7 +201,6 @@ struct Checks_ : ChecksParams, ChecksBase
   Mfields rho_p_;
   Mfields rho_m_;
   Mfields rho_;
-  FieldsItemFields<ItemLoopPatches<Item_dive<MfieldsState, Mfields>>> item_dive_;
   FieldsItemFields<ItemLoopPatches<Item_divj<MfieldsState, Mfields>>> item_divj_;
 };
 

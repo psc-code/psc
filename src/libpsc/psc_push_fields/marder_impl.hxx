@@ -24,7 +24,7 @@ struct Marder_ : MarderBase
       dump_{dump},
       bnd_{grid, grid.ibn},
       rho_{grid, 1, grid.ibn},
-      item_dive_{grid}
+      res_{grid, 1, grid.ibn}
   {
     if (dump_) {
       io_ = mrc_io_create(grid.comm());
@@ -52,20 +52,21 @@ struct Marder_ : MarderBase
 
   void calc_aid_fields(MfieldsState& mflds)
   {
-    item_dive_(mflds);
+    auto dive = Item_dive<MfieldsState>(mflds);
 	       
     if (dump_) {
       static int cnt;
       mrc_io_open(io_, "w", cnt, cnt);//ppsc->timestep, ppsc->timestep * ppsc->dt);
       cnt++;
       rho_.write_as_mrc_fld(io_, "rho", {"rho"});
-      item_dive_.result().write_as_mrc_fld(io_, "dive", {"dive"});
+      dive.write_as_mrc_fld(io_, "dive", {"dive"});
       mrc_io_close(io_);
     }
-    
-    item_dive_.result().axpy_comp(0, -1., rho_, 0);
+
+    res_.assign(dive);
+    res_.axpy_comp(0, -1., rho_, 0);
     // FIXME, why is this necessary?
-    bnd_.fill_ghosts(item_dive_.result(), 0, 1);
+    bnd_.fill_ghosts(res_, 0, 1);
   }
 
   // ----------------------------------------------------------------------
@@ -169,7 +170,7 @@ struct Marder_ : MarderBase
 
   void correct(MfieldsState& mf)
   {
-    auto& mf_div_e = item_dive_.result();
+    auto& mf_div_e = res_;
 
     real_t max_err = 0.;
     for (int p = 0; p < mf_div_e.n_patches(); p++) {
@@ -209,7 +210,7 @@ private:
   const Grid_t& grid_;
   Bnd_<Mfields> bnd_;
   Mfields rho_;
-  FieldsItemFields<ItemLoopPatches<Item_dive<MfieldsState, Mfields>>> item_dive_;
+  Mfields res_;
   mrc_io *io_; //< for debug dumping
 };
 

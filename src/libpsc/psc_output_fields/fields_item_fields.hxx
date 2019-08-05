@@ -473,12 +473,10 @@ struct Item_divb
   }
 };
 
-#undef define_dxdydyz
-
 // ======================================================================
 // Item_jeh
 //
-// Main fiels in their natural staggering
+// Main fields in their natural staggering
 
 template <typename MfieldsState>
 class Item_jeh : public MFexpression<Item_jeh<MfieldsState>>
@@ -523,25 +521,40 @@ private:
 // ======================================================================
 // Item_dive
 
-template <typename _MfieldsState, typename _Mfields>
-struct Item_dive
+template <typename MfieldsState>
+class Item_dive : public MFexpression<Item_dive<MfieldsState>>
 {
-  using MfieldsState = _MfieldsState;
-  using Mfields = _Mfields;
+public:
+  using Real = typename MfieldsState::real_t;
 
-  constexpr static char const* name = "dive";
-  constexpr static int n_comps = 1;
-  static std::vector<std::string> fld_names() { return {"dive"}; }
+  static char const* name() { return "dive"; }
+  static int n_comps() { return 1; }
+  static std::vector<std::string> comp_names() { return {"dive"}; }
 
-  template <typename FE>
-  static void set(const Grid_t& grid, FE& R, FE& F, int i, int j, int k)
+  Item_dive(MfieldsState& mflds) : mflds_{mflds} {}
+
+  Real operator()(int m, Int3 ijk, int p) const
   {
+    const auto& grid = mflds_.grid();
     define_dxdydz(dx, dy, dz);
-    R(0, i, j, k) =
-      ((F(EX, i, j, k) - F(EX, i - dx, j, k)) / grid.domain.dx[0] +
-       (F(EY, i, j, k) - F(EY, i, j - dy, k)) / grid.domain.dx[1] +
-       (F(EZ, i, j, k) - F(EZ, i, j, k - dz)) / grid.domain.dx[2]);
+
+    return ((mflds_[p](EX, ijk[0], ijk[1], ijk[2]) -
+             mflds_[p](EX, ijk[0] - dx, ijk[1], ijk[2])) /
+              grid.domain.dx[0] +
+            (mflds_[p](EY, ijk[0], ijk[1], ijk[2]) -
+             mflds_[p](EY, ijk[0], ijk[1] - dy, ijk[2])) /
+              grid.domain.dx[1] +
+            (mflds_[p](EZ, ijk[0], ijk[1], ijk[2]) -
+             mflds_[p](EZ, ijk[0], ijk[1], ijk[2] - dz)) /
+              grid.domain.dx[2]);
   }
+
+  const Grid_t& grid() const { return mflds_.grid(); }
+  Int3 ibn() const { return {}; }
+  int n_patches() const { return grid().n_patches(); }
+
+private:
+  MfieldsState& mflds_;
 };
 
 // ======================================================================

@@ -20,7 +20,6 @@ struct ChecksCuda
       item_rho_{grid},
       item_rho_m_{grid},
       item_rho_p_{grid},
-      item_dive_{grid},
       item_divj_{grid}
   {}
 
@@ -123,10 +122,8 @@ struct ChecksCuda
     item_rho_(mprts);
 
     auto& h_mflds = mflds.get_as<MfieldsState>(0, mflds._n_comps());
-    item_dive_(grid, h_mflds);
-    mflds.put_as(h_mflds, 0, 0);
 
-    auto& dive = item_dive_.result();
+    auto dive = Item_dive<MfieldsState>(h_mflds);
     auto& dev_rho = item_rho_.result();
 
     auto& rho = dev_rho.template get_as<Mfields>(0, 1);
@@ -134,7 +131,6 @@ struct ChecksCuda
     double max_err = 0.;
     for (int p = 0; p < dive.n_patches(); p++) {
       auto Rho = rho[p];
-      auto DivE = dive[p];
 
       int l[3] = {0, 0, 0}, r[3] = {0, 0, 0};
       for (int d = 0; d < 3; d++) {
@@ -150,7 +146,7 @@ struct ChecksCuda
           // nothing
         } else {
           double v_rho = Rho(0, jx, jy, jz);
-          double v_dive = DivE(0, jx, jy, jz);
+          double v_dive = dive(0, {jx, jy, jz}, p);
           max_err = fmax(max_err, fabs(v_dive - v_rho));
 #if 1
           if (fabs(v_dive - v_rho) > eps) {
@@ -182,20 +178,20 @@ struct ChecksCuda
       }
       mrc_io_open(io, "w", grid.timestep(), grid.timestep() * grid.dt);
       rho.write_as_mrc_fld(io, "rho", {"rho"});
-      dive.write_as_mrc_fld(io, "Div_E", {"Div_E"});
+      MrcIo::write_mflds(io, adaptMfields(dive), dive.grid(), dive.name(),
+			 dive.comp_names());
       mrc_io_close(io);
     }
 
     assert(max_err < eps);
     dev_rho.put_as(rho, 0, 0);
+    mflds.put_as(h_mflds, 0, 0);
   }
 
 private:
   Moment_t item_rho_p_;
   Moment_t item_rho_m_;
   Moment_t item_rho_;
-  FieldsItemFields<ItemLoopPatches<Item_dive<MfieldsState, Mfields>>>
-    item_dive_;
   FieldsItemFields<ItemLoopPatches<Item_divj<MfieldsState, Mfields>>>
     item_divj_;
 };
