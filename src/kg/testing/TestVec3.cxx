@@ -86,18 +86,34 @@ TYPED_TEST(Vec3Test, CopyCtorAssign4)
 
 TYPED_TEST(Vec3Test, OperatorEqual)
 {
-  using V3 = Vec3<TypeParam>;
-  EXPECT_EQ((V3{1, 2, 3}), (V3{1, 2, 3}));
-  EXPECT_NE((V3{1, 2, 3}), (V3{1, 3, 2}));
+  using V = Vec3<TypeParam>;
+  EXPECT_EQ((V{1, 2, 3}), (V{1, 2, 3}));
+  EXPECT_NE((V{1, 2, 3}), (V{1, 3, 2}));
+}
+
+TYPED_TEST(Vec3Test, OperatorEqual4)
+{
+  using V = kg::Vec<TypeParam, 4>;
+  EXPECT_EQ((V{1, 2, 3, 4}), (V{1, 2, 3, 4}));
+  EXPECT_NE((V{1, 2, 3, 4}), (V{1, 2, 3, 5}));
 }
 
 TYPED_TEST(Vec3Test, fromPointer)
 {
-  using V3 = Vec3<TypeParam>;
+  using V = Vec3<TypeParam>;
   const TypeParam arr[3] = {1, 2, 3};
-  auto v = V3::fromPointer(arr);
+  auto v = V::fromPointer(arr);
 
-  EXPECT_EQ(v, (V3{1, 2, 3}));
+  EXPECT_EQ(v, (V{1, 2, 3}));
+}
+
+TYPED_TEST(Vec3Test, fromPointer4)
+{
+  using V = kg::Vec<TypeParam, 4>;
+  const TypeParam arr[] = {1, 2, 3, 4};
+  auto v = V::fromPointer(arr);
+
+  EXPECT_EQ(v, (V{1, 2, 3, 4}));
 }
 
 TYPED_TEST(Vec3Test, ConstructorCopy)

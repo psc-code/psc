@@ -34,7 +34,14 @@ struct Vec
   // ----------------------------------------------------------------------
   // construct from pointer to values
 
-  KG_INLINE static Vec fromPointer(const T* p) { return {p[0], p[1], p[2]}; }
+  KG_INLINE static Vec fromPointer(const T* p)
+  {
+    Vec res;
+    for (size_t i = 0; i < N; ++i) {
+      res[i] = p[i];
+    }
+    return res;
+  }
 
   // ----------------------------------------------------------------------
   // converting to Vec of different type (e.g., float -> double)
