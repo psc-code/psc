@@ -13,10 +13,26 @@ using Vec3Types = ::testing::Types<int, float, double>;
 
 TYPED_TEST_SUITE(Vec3Test, Vec3Types);
 
+TYPED_TEST(Vec3Test, ConstructorNoArg)
+{
+  using V = Vec3<TypeParam>;
+  V v;
+  // uninitialized, nothing to check
+}
+
+TYPED_TEST(Vec3Test, ConstructorEmpty)
+{
+  using V = Vec3<TypeParam>;
+  V v{};
+  EXPECT_EQ(v[0], 0);
+  EXPECT_EQ(v[1], 0);
+  EXPECT_EQ(v[2], 0);
+}
+
 TYPED_TEST(Vec3Test, ConstructorInitList)
 {
-  using V3 = Vec3<TypeParam>;
-  V3 v = {1, 2, 3};
+  using V = Vec3<TypeParam>;
+  V v = {1, 2, 3};
 
   EXPECT_EQ(v[0], 1);
   EXPECT_EQ(v[1], 2);
@@ -25,8 +41,8 @@ TYPED_TEST(Vec3Test, ConstructorInitList)
 
 TYPED_TEST(Vec3Test, ConstructorInitList4)
 {
-  using V4 = kg::Vec<TypeParam, 4>;
-  V4 v = {1, 2, 3, 4};
+  using V = kg::Vec<TypeParam, 4>;
+  V v = {1, 2, 3, 4};
 
   EXPECT_EQ(v[0], 1);
   EXPECT_EQ(v[1], 2);
@@ -36,15 +52,36 @@ TYPED_TEST(Vec3Test, ConstructorInitList4)
 
 TYPED_TEST(Vec3Test, CopyCtorAssign)
 {
-  using V3 = Vec3<TypeParam>;
+  using V = Vec3<TypeParam>;
 
-  V3 v = {1, 2, 3};
-  EXPECT_EQ(v, V3({1, 2, 3}));
-  V3 v2 = v;
-  EXPECT_EQ(v2, V3({1, 2, 3}));
-  V3 v3;
-  v3 = v;
-  EXPECT_EQ(v3, V3({1, 2, 3}));
+  V v = {1, 2, 3};
+  EXPECT_EQ(v, V({1, 2, 3}));
+  V v2 = v;
+  V v3 = std::move(v);
+  EXPECT_EQ(v2, V({1, 2, 3}));
+  EXPECT_EQ(v3, V({1, 2, 3}));
+  V v4, v5;
+  v4 = v;
+  v5 = std::move(v);
+  EXPECT_EQ(v4, V({1, 2, 3}));
+  EXPECT_EQ(v5, V({1, 2, 3}));
+}
+
+TYPED_TEST(Vec3Test, CopyCtorAssign4)
+{
+  using V = kg::Vec<TypeParam, 4>;
+
+  V v = {1, 2, 3, 4};
+  EXPECT_EQ(v, V({1, 2, 3, 4}));
+  V v2 = v;
+  V v3 = std::move(v);
+  EXPECT_EQ(v2, V({1, 2, 3, 4}));
+  EXPECT_EQ(v3, V({1, 2, 3, 4}));
+  V v4, v5;
+  v4 = v;
+  v5 = std::move(v);
+  EXPECT_EQ(v4, V({1, 2, 3, 4}));
+  EXPECT_EQ(v5, V({1, 2, 3, 4}));
 }
 
 TYPED_TEST(Vec3Test, OperatorEqual)
