@@ -23,6 +23,17 @@ TYPED_TEST(Vec3Test, ConstructorInitList)
   EXPECT_EQ(v[2], 3);
 }
 
+TYPED_TEST(Vec3Test, ConstructorInitList4)
+{
+  using V4 = kg::Vec<TypeParam, 4>;
+  V4 v = {1, 2, 3, 4};
+
+  EXPECT_EQ(v[0], 1);
+  EXPECT_EQ(v[1], 2);
+  EXPECT_EQ(v[2], 3);
+  EXPECT_EQ(v[3], 4);
+}
+
 TYPED_TEST(Vec3Test, CopyCtorAssign)
 {
   using V3 = Vec3<TypeParam>;
