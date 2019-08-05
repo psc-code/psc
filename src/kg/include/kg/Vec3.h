@@ -67,7 +67,7 @@ struct Vec
   KG_INLINE Vec operator-() const
   {
     Vec res;
-    for (int i = 0; i < 3; i++) {
+    for (size_t i = 0; i < N; i++) {
       res[i] = -(*this)[i];
     }
     return res;
@@ -75,7 +75,7 @@ struct Vec
 
   KG_INLINE Vec& operator+=(const Vec& w)
   {
-    for (int i = 0; i < 3; i++) {
+    for (size_t i = 0; i < N; i++) {
       (*this)[i] += w[i];
     }
     return *this;
@@ -83,7 +83,7 @@ struct Vec
 
   KG_INLINE Vec& operator-=(const Vec& w)
   {
-    for (int i = 0; i < 3; i++) {
+    for (size_t i = 0; i < N; i++) {
       (*this)[i] -= w[i];
     }
     return *this;
@@ -91,7 +91,7 @@ struct Vec
 
   KG_INLINE Vec& operator*=(const Vec& w)
   {
-    for (int i = 0; i < 3; i++) {
+    for (size_t i = 0; i < N; i++) {
       (*this)[i] *= w[i];
     }
     return *this;
@@ -99,7 +99,7 @@ struct Vec
 
   KG_INLINE Vec& operator*=(T s)
   {
-    for (int i = 0; i < 3; i++) {
+    for (size_t i = 0; i < N; i++) {
       (*this)[i] *= s;
     }
     return *this;
@@ -107,7 +107,7 @@ struct Vec
 
   KG_INLINE Vec& operator/=(const Vec& w)
   {
-    for (int i = 0; i < 3; i++) {
+    for (size_t i = 0; i < N; i++) {
       (*this)[i] /= w[i];
     }
     return *this;

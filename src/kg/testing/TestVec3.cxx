@@ -139,124 +139,197 @@ TYPED_TEST(Vec3Test, ConstructorConvertFromFloat4)
 TYPED_TEST(Vec3Test, Negative)
 {
   using T = TypeParam;
-  using V3 = Vec3<TypeParam>;
-  V3 v = {T(1.5), T(2.), T(-3.)};
+  using V = Vec3<TypeParam>;
+  V v = {T(1.5), T(2.), T(-3.)};
 
-  EXPECT_EQ(-v, (V3{-v[0], -v[1], -v[2]}));
+  EXPECT_EQ(-v, (V{-v[0], -v[1], -v[2]}));
+}
+
+TYPED_TEST(Vec3Test, Negative4)
+{
+  using T = TypeParam;
+  using V = kg::Vec<TypeParam, 4>;
+  V v = {T(1.5), T(2.), T(-3.), T(4.)};
+
+  EXPECT_EQ(-v, (V{-v[0], -v[1], -v[2], -v[3]}));
 }
 
 TYPED_TEST(Vec3Test, AddAssign)
 {
   using T = TypeParam;
-  using V3 = Vec3<TypeParam>;
-  V3 v = {T(1.5), T(2.), T(-3.)};
-  V3 w = {T(1.), T(4.), T(-1.)};
-  V3 v0 = v;
+  using V = Vec3<TypeParam>;
+  V v = {T(1.5), T(2.), T(-3.)};
+  V w = {T(1.), T(4.), T(-1.)};
+  V v0 = v;
 
   v += w;
 
-  EXPECT_EQ(v, (V3{v0[0] + w[0], v0[1] + w[1], v0[2] + w[2]}));
+  EXPECT_EQ(v, (V{v0[0] + w[0], v0[1] + w[1], v0[2] + w[2]}));
+}
+
+TYPED_TEST(Vec3Test, AddAssign4)
+{
+  using T = TypeParam;
+  using V = kg::Vec<TypeParam, 4>;
+  V v = {T(1.5), T(2.), T(-3.), T(4.)};
+  V w = {T(1.), T(4.), T(-1.), T(2.)};
+  V v0 = v;
+
+  v += w;
+
+  EXPECT_EQ(v, (V{v0[0] + w[0], v0[1] + w[1], v0[2] + w[2], v0[3] + w[3]}));
 }
 
 TYPED_TEST(Vec3Test, SubtractAssign)
 {
   using T = TypeParam;
-  using V3 = Vec3<TypeParam>;
-  V3 v = {T(1.5), T(2.), T(-3.)};
-  V3 w = {T(1.), T(4.), T(-1.)};
-  V3 v0 = v;
+  using V = Vec3<TypeParam>;
+  V v = {T(1.5), T(2.), T(-3.)};
+  V w = {T(1.), T(4.), T(-1.)};
+  V v0 = v;
 
   v -= w;
 
-  EXPECT_EQ(v, (V3{v0[0] - w[0], v0[1] - w[1], v0[2] - w[2]}));
+  EXPECT_EQ(v, (V{v0[0] - w[0], v0[1] - w[1], v0[2] - w[2]}));
+}
+
+TYPED_TEST(Vec3Test, SubtractAssign4)
+{
+  using T = TypeParam;
+  using V = kg::Vec<TypeParam, 4>;
+  V v = {T(1.5), T(2.), T(-3.), T(4.)};
+  V w = {T(1.), T(4.), T(-1.), T(2.)};
+  V v0 = v;
+
+  v -= w;
+
+  EXPECT_EQ(v, (V{v0[0] - w[0], v0[1] - w[1], v0[2] - w[2], v0[3] - w[3]}));
 }
 
 TYPED_TEST(Vec3Test, MultiplyAssign)
 {
   using T = TypeParam;
-  using V3 = Vec3<TypeParam>;
-  V3 v = {T(1.5), T(2.), T(-3.)};
-  V3 w = {T(1.), T(4.), T(-1.)};
-  V3 v0 = v;
+  using V = Vec3<TypeParam>;
+  V v = {T(1.5), T(2.), T(-3.)};
+  V w = {T(1.), T(4.), T(-1.)};
+  V v0 = v;
 
   v *= w;
 
-  EXPECT_EQ(v, (V3{v0[0] * w[0], v0[1] * w[1], v0[2] * w[2]}));
+  EXPECT_EQ(v, (V{v0[0] * w[0], v0[1] * w[1], v0[2] * w[2]}));
+}
+
+TYPED_TEST(Vec3Test, MultiplyAssign4)
+{
+  using T = TypeParam;
+  using V = kg::Vec<TypeParam, 4>;
+  V v = {T(1.5), T(2.), T(-3.), T(4.)};
+  V w = {T(1.), T(4.), T(-1.), T(2.)};
+  V v0 = v;
+
+  v *= w;
+
+  EXPECT_EQ(v, (V{v0[0] * w[0], v0[1] * w[1], v0[2] * w[2], v0[3] * w[3]}));
 }
 
 TYPED_TEST(Vec3Test, MultiplyAssignScalar)
 {
   using T = TypeParam;
-  using V3 = Vec3<TypeParam>;
-  V3 v = {T(1.5), T(2.), T(-3.)};
-  V3 v0 = v;
+  using V = Vec3<TypeParam>;
+  V v = {T(1.5), T(2.), T(-3.)};
+  V v0 = v;
 
   v *= 3;
 
-  EXPECT_EQ(v, (V3{v0[0] * 3, v0[1] * 3, v0[2] * 3}));
+  EXPECT_EQ(v, (V{v0[0] * 3, v0[1] * 3, v0[2] * 3}));
+}
+
+TYPED_TEST(Vec3Test, MultiplyAssignScalar4)
+{
+  using T = TypeParam;
+  using V = kg::Vec<TypeParam, 4>;
+  V v = {T(1.5), T(2.), T(-3.), T(4.)};
+  V v0 = v;
+
+  v *= 3;
+
+  EXPECT_EQ(v, (V{v0[0] * 3, v0[1] * 3, v0[2] * 3, v0[3] * 3}));
 }
 
 TYPED_TEST(Vec3Test, DivideAssign)
 {
   using T = TypeParam;
-  using V3 = Vec3<TypeParam>;
-  V3 v = {T(1.5), T(2.), T(-3.)};
-  V3 w = {T(1.), T(4.), T(-1.)};
-  V3 v0 = v;
+  using V = Vec3<TypeParam>;
+  V v = {T(1.5), T(2.), T(-3.)};
+  V w = {T(1.), T(4.), T(-1.)};
+  V v0 = v;
 
   v /= w;
 
-  EXPECT_EQ(v, (V3{v0[0] / w[0], v0[1] / w[1], v0[2] / w[2]}));
+  EXPECT_EQ(v, (V{v0[0] / w[0], v0[1] / w[1], v0[2] / w[2]}));
+}
+
+TYPED_TEST(Vec3Test, DivideAssign4)
+{
+  using T = TypeParam;
+  using V = kg::Vec<TypeParam, 4>;
+  V v = {T(1.5), T(2.), T(-3.), T(4.)};
+  V w = {T(1.), T(4.), T(-1.), T(2.)};
+  V v0 = v;
+
+  v /= w;
+
+  EXPECT_EQ(v, (V{v0[0] / w[0], v0[1] / w[1], v0[2] / w[2], v0[3] / w[3]}));
 }
 
 TYPED_TEST(Vec3Test, Add)
 {
   using T = TypeParam;
-  using V3 = Vec3<TypeParam>;
-  V3 v = {T(1.5), T(2.), T(-3.)};
-  V3 w = {T(1.), T(4.), T(-1.)};
+  using V = Vec3<TypeParam>;
+  V v = {T(1.5), T(2.), T(-3.)};
+  V w = {T(1.), T(4.), T(-1.)};
 
-  EXPECT_EQ(v + w, (V3{v[0] + w[0], v[1] + w[1], v[2] + w[2]}));
+  EXPECT_EQ(v + w, (V{v[0] + w[0], v[1] + w[1], v[2] + w[2]}));
 }
 
 TYPED_TEST(Vec3Test, Subtract)
 {
   using T = TypeParam;
-  using V3 = Vec3<TypeParam>;
-  V3 v = {T(1.5), T(2.), T(-3.)};
-  V3 w = {T(1.), T(4.), T(-1.)};
+  using V = Vec3<TypeParam>;
+  V v = {T(1.5), T(2.), T(-3.)};
+  V w = {T(1.), T(4.), T(-1.)};
 
-  EXPECT_EQ(v - w, (V3{v[0] - w[0], v[1] - w[1], v[2] - w[2]}));
+  EXPECT_EQ(v - w, (V{v[0] - w[0], v[1] - w[1], v[2] - w[2]}));
 }
 
 TYPED_TEST(Vec3Test, Multiply)
 {
   using T = TypeParam;
-  using V3 = Vec3<TypeParam>;
-  V3 v = {T(1.5), T(2.), T(-3.)};
-  V3 w = {T(1.), T(4.), T(-1.)};
+  using V = Vec3<TypeParam>;
+  V v = {T(1.5), T(2.), T(-3.)};
+  V w = {T(1.), T(4.), T(-1.)};
 
-  EXPECT_EQ(v * w, (V3{v[0] * w[0], v[1] * w[1], v[2] * w[2]}));
+  EXPECT_EQ(v * w, (V{v[0] * w[0], v[1] * w[1], v[2] * w[2]}));
 }
 
 TYPED_TEST(Vec3Test, MultiplyScalar)
 {
   using T = TypeParam;
-  using V3 = Vec3<TypeParam>;
+  using V = Vec3<TypeParam>;
 
-  V3 v = {T(1.5), T(2.), T(-3.)};
+  V v = {T(1.5), T(2.), T(-3.)};
 
-  EXPECT_EQ(T(2) * v, (V3{T(2) * T(1.5), T(2) * T(2.), T(2) * T(-3.)}));
+  EXPECT_EQ(T(2) * v, (V{T(2) * T(1.5), T(2) * T(2.), T(2) * T(-3.)}));
 }
 
 TYPED_TEST(Vec3Test, Divide)
 {
   using T = TypeParam;
-  using V3 = Vec3<TypeParam>;
-  V3 v = {T(1.5), T(2.), T(-3.)};
-  V3 w = {T(1.), T(4.), T(-1.)};
+  using V = Vec3<TypeParam>;
+  V v = {T(1.5), T(2.), T(-3.)};
+  V w = {T(1.), T(4.), T(-1.)};
 
-  EXPECT_EQ(v / w, (V3{v[0] / w[0], v[1] / w[1], v[2] / w[2]}));
+  EXPECT_EQ(v / w, (V{v[0] / w[0], v[1] / w[1], v[2] / w[2]}));
 }
 
 // ----------------------------------------------------------------------
