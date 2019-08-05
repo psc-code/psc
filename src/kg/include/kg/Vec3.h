@@ -54,7 +54,11 @@ struct Vec
   template <typename U>
   KG_INLINE explicit operator Vec<U, N>() const
   {
-    return {U((*this)[0]), U((*this)[1]), U((*this)[2])};
+    Vec<U, N> res;
+    for (size_t i = 0; i < N; i++) {
+      res[i] = U((*this)[i]);
+    }
+    return res;
   }
 
   // ----------------------------------------------------------------------

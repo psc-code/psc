@@ -116,23 +116,24 @@ TYPED_TEST(Vec3Test, fromPointer4)
   EXPECT_EQ(v, (V{1, 2, 3, 4}));
 }
 
-TYPED_TEST(Vec3Test, ConstructorCopy)
-{
-  using V3 = Vec3<TypeParam>;
-  V3 v = {1, 2, 3};
-  V3 v2(v);
-
-  EXPECT_EQ(v2, v);
-}
-
 TYPED_TEST(Vec3Test, ConstructorConvertFromFloat3)
 {
   using T = TypeParam;
-  using V3 = Vec3<TypeParam>;
+  using V = Vec3<TypeParam>;
   Vec3<float> f = {1.2f, 2.5f, 3.8f};
-  V3 v(f);
+  V v(f);
 
-  EXPECT_EQ(v, (V3{T(1.2f), T(2.5f), T(3.8f)}));
+  EXPECT_EQ(v, (V{T(1.2f), T(2.5f), T(3.8f)}));
+}
+
+TYPED_TEST(Vec3Test, ConstructorConvertFromFloat4)
+{
+  using T = TypeParam;
+  using V = kg::Vec<TypeParam, 4>;
+  kg::Vec<float, 4> f = {1.2f, 2.5f, 3.8f, 4.2f};
+  V v(f);
+
+  EXPECT_EQ(v, (V{T(1.2f), T(2.5f), T(3.8f), T(4.2f)}));
 }
 
 TYPED_TEST(Vec3Test, Negative)
