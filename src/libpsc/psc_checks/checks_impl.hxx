@@ -40,7 +40,7 @@ struct Checks_ : ChecksParams, ChecksBase
       rho_{grid, 1, grid.ibn},
       rho_m_{grid, 1, grid.ibn},
       rho_p_{grid, 1, grid.ibn},
-      item_divj_{grid}
+      divj_{grid, 1, grid.ibn}
   {}
   
   // ======================================================================
@@ -70,19 +70,19 @@ struct Checks_ : ChecksParams, ChecksBase
     }
 
     rho_p_.assign(Moment_t{mprts});
-    item_divj_(grid, mflds);
+    auto item_divj = Item_divj<MfieldsState>(mflds);
 
     auto& d_rho = rho_p_;
     d_rho.axpy(-1., rho_m_);
 
-    auto& div_j = item_divj_.result();
-    div_j.scale(grid.dt);
+    divj_.assign(item_divj);
+    divj_.scale(grid.dt);
 
     double eps = continuity_threshold;
     double max_err = 0.;
-    for (int p = 0; p < div_j.n_patches(); p++) {
+    for (int p = 0; p < divj_.n_patches(); p++) {
       auto D_rho = d_rho[p];
-      auto Div_J = div_j[p];
+      auto Div_J = divj_[p];
       grid.Foreach_3d(0, 0, [&](int jx, int jy, int jz) {
 	  double d_rho = D_rho(0, jx,jy,jz);
 	  double div_j = Div_J(0, jx,jy,jz);
@@ -113,7 +113,7 @@ struct Checks_ : ChecksParams, ChecksBase
 	mrc_io_view(io);
       }
       mrc_io_open(io, "w", grid.timestep(), grid.timestep() * grid.dt);
-      div_j.write_as_mrc_fld(io, "div_j", {"div_j"});
+      divj_.write_as_mrc_fld(io, "div_j", {"div_j"});
       d_rho.write_as_mrc_fld(io, "d_rho", {"d_rho"});
       mrc_io_close(io);
     }
@@ -201,6 +201,6 @@ struct Checks_ : ChecksParams, ChecksBase
   Mfields rho_p_;
   Mfields rho_m_;
   Mfields rho_;
-  FieldsItemFields<ItemLoopPatches<Item_divj<MfieldsState, Mfields>>> item_divj_;
+  Mfields divj_;
 };
 
