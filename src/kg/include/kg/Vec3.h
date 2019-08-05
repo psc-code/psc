@@ -11,43 +11,6 @@
 #include <kg/Macros.h>
 
 // ======================================================================
-// array
-//
-// Basically the same (or at least, a subset) of std::array, but with CUDA
-// support
-
-template <typename T, std::size_t N>
-struct array
-{
-  using value_type = T;
-  using size_t = std::size_t;
-
-  T arr[N];
-
-  KG_INLINE T operator[](size_t i) const { return arr[i]; }
-
-  KG_INLINE T& operator[](size_t i) { return arr[i]; }
-
-  KG_INLINE const T* data() const { return arr; }
-
-  KG_INLINE T* data() { return arr; }
-
-  operator T*() { return arr; } // FIXME, should be data()
-};
-
-template <typename T, std::size_t N>
-bool operator==(const array<T, N>& x, const array<T, N>& y)
-{
-  return std::equal(x.arr, x.arr + N, y.arr);
-}
-
-template <typename T, std::size_t N>
-bool operator!=(const array<T, N>& x, const array<T, N>& y)
-{
-  return !(x == y);
-}
-
-// ======================================================================
 // Vec3
 
 template <typename T>
