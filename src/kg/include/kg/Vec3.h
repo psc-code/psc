@@ -27,6 +27,11 @@ struct Vec
 
   KG_INLINE T& operator[](size_t i) { return arr[i]; }
 
+  KG_INLINE T* begin() { return arr; }
+  KG_INLINE T* end() { return arr + N; }
+  KG_INLINE const T* begin() const { return arr; }
+  KG_INLINE const T* end() const { return arr + N; }
+
   KG_INLINE const T* data() const { return arr; }
 
   KG_INLINE T* data() { return arr; }
@@ -37,8 +42,8 @@ struct Vec
   KG_INLINE static Vec fromPointer(const T* p)
   {
     Vec res;
-    for (size_t i = 0; i < N; ++i) {
-      res[i] = p[i];
+    for (auto& val : res) {
+      val = *p++;
     }
     return res;
   }
@@ -114,7 +119,7 @@ struct Vec
 template <typename T, std::size_t N>
 bool operator==(const Vec<T, N>& x, const Vec<T, N>& y)
 {
-  return std::equal(x.arr, x.arr + N, y.arr);
+  return std::equal(x.begin(), x.end(), y.begin());
 }
 
 template <typename T, std::size_t N>
