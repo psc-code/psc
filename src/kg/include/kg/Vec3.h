@@ -1,22 +1,23 @@
 
-#ifndef KG_VEC3_H
-#define KG_VEC3_H
+#pragma once
 
 #include <algorithm>
 #include <cassert>
-#include <memory>
 #include <iostream>
+#include <memory>
 
 #include "cuda_compat.h"
 #include <kg/Macros.h>
 
-// ======================================================================
-// Vec3
-
-template <typename T>
-struct Vec3
+namespace kg
 {
-  static const int N = 3;
+
+// ======================================================================
+// Vec
+
+template <typename T, std::size_t N>
+struct Vec
+{
   using value_type = T;
   using size_t = std::size_t;
 
@@ -33,13 +34,13 @@ struct Vec3
   // ----------------------------------------------------------------------
   // construct from pointer to values
 
-  KG_INLINE static Vec3 fromPointer(const T* p) { return {p[0], p[1], p[2]}; }
+  KG_INLINE static Vec fromPointer(const T* p) { return {p[0], p[1], p[2]}; }
 
   // ----------------------------------------------------------------------
-  // converting to Vec3 of different type (e.g., float -> double)
+  // converting to Vec of different type (e.g., float -> double)
 
   template <typename U>
-  KG_INLINE explicit operator Vec3<U>() const
+  KG_INLINE explicit operator Vec<U, N>() const
   {
     return {U((*this)[0]), U((*this)[1]), U((*this)[2])};
   }
@@ -47,16 +48,16 @@ struct Vec3
   // ----------------------------------------------------------------------
   // arithmetic
 
-  KG_INLINE Vec3 operator-() const
+  KG_INLINE Vec operator-() const
   {
-    Vec3 res;
+    Vec res;
     for (int i = 0; i < 3; i++) {
       res[i] = -(*this)[i];
     }
     return res;
   }
 
-  KG_INLINE Vec3& operator+=(const Vec3& w)
+  KG_INLINE Vec& operator+=(const Vec& w)
   {
     for (int i = 0; i < 3; i++) {
       (*this)[i] += w[i];
@@ -64,7 +65,7 @@ struct Vec3
     return *this;
   }
 
-  KG_INLINE Vec3& operator-=(const Vec3& w)
+  KG_INLINE Vec& operator-=(const Vec& w)
   {
     for (int i = 0; i < 3; i++) {
       (*this)[i] -= w[i];
@@ -72,7 +73,7 @@ struct Vec3
     return *this;
   }
 
-  KG_INLINE Vec3& operator*=(const Vec3& w)
+  KG_INLINE Vec& operator*=(const Vec& w)
   {
     for (int i = 0; i < 3; i++) {
       (*this)[i] *= w[i];
@@ -80,7 +81,7 @@ struct Vec3
     return *this;
   }
 
-  KG_INLINE Vec3& operator*=(T s)
+  KG_INLINE Vec& operator*=(T s)
   {
     for (int i = 0; i < 3; i++) {
       (*this)[i] *= s;
@@ -88,7 +89,7 @@ struct Vec3
     return *this;
   }
 
-  KG_INLINE Vec3& operator/=(const Vec3& w)
+  KG_INLINE Vec& operator/=(const Vec& w)
   {
     for (int i = 0; i < 3; i++) {
       (*this)[i] /= w[i];
@@ -103,69 +104,78 @@ struct Vec3
   KG_INLINE operator T*() { return data(); }
 };
 
-template <typename T>
-bool operator==(const Vec3<T>& x, const Vec3<T>& y)
+template <typename T, std::size_t N>
+bool operator==(const Vec<T, N>& x, const Vec<T, N>& y)
 {
-  static const int N = 3;
   return std::equal(x.arr, x.arr + N, y.arr);
 }
 
 template <typename T, std::size_t N>
-bool operator!=(const Vec3<T>& x, const Vec3<T>& y)
+bool operator!=(const Vec<T, N>& x, const Vec<T, N>& y)
 {
   return !(x == y);
 }
 
-template <typename T>
-KG_INLINE Vec3<T> operator+(const Vec3<T>& v, const Vec3<T>& w)
+template <typename T, std::size_t N>
+KG_INLINE Vec<T, N> operator+(const Vec<T, N>& v, const Vec<T, N>& w)
 {
-  Vec3<T> res = v;
+  Vec<T, N> res = v;
   res += w;
   return res;
 }
 
-template <typename T>
-KG_INLINE Vec3<T> operator-(const Vec3<T>& v, const Vec3<T>& w)
+template <typename T, std::size_t N>
+KG_INLINE Vec<T, N> operator-(const Vec<T, N>& v, const Vec<T, N>& w)
 {
-  Vec3<T> res = v;
+  Vec<T, N> res = v;
   res -= w;
   return res;
 }
 
-template <typename T>
-KG_INLINE Vec3<T> operator*(const Vec3<T>& v, const Vec3<T>& w)
+template <typename T, std::size_t N>
+KG_INLINE Vec<T, N> operator*(const Vec<T, N>& v, const Vec<T, N>& w)
 {
-  Vec3<T> res = v;
+  Vec<T, N> res = v;
   res *= w;
   return res;
 }
 
-template <typename T>
-KG_INLINE Vec3<T> operator*(T s, const Vec3<T>& v)
+template <typename T, std::size_t N>
+KG_INLINE Vec<T, N> operator*(T s, const Vec<T, N>& v)
 {
-  Vec3<T> res = v;
+  Vec<T, N> res = v;
   res *= s;
   return res;
 }
 
-template <typename T>
-KG_INLINE Vec3<T> operator/(const Vec3<T>& v, const Vec3<T>& w)
+template <typename T, std::size_t N>
+KG_INLINE Vec<T, N> operator/(const Vec<T, N>& v, const Vec<T, N>& w)
 {
-  Vec3<T> res = v;
+  Vec<T, N> res = v;
   res /= w;
   return res;
 }
 
-template <typename T>
-KG_INLINE std::ostream& operator<<(std::ostream& os, const Vec3<T>& v)
+template <typename T, std::size_t N>
+KG_INLINE std::ostream& operator<<(std::ostream& os, const Vec<T, N>& v)
 {
-  os << "Vec3{" << v[0] << ", " << v[1] << ", " << v[2] << "}";
+  os << "Vec<T," << N << ">{";
+  for (std::size_t n = 0; n < N; n++) {
+    os << v[n];
+    if (n < N - 1) {
+      os << ", ";
+    }
+  }
+  os << "}";
   return os;
 }
+
+} // namespace kg
+
+template <typename T>
+using Vec3 = kg::Vec<T, 3>;
 
 using Int3 = Vec3<int>;
 using UInt3 = Vec3<unsigned int>;
 using Float3 = Vec3<float>;
 using Double3 = Vec3<double>;
-
-#endif
