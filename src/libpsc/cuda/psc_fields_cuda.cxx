@@ -16,10 +16,16 @@
 
 static void psc_mfields_cuda_copy_from_c(MfieldsBase& mflds_cuda, MfieldsBase& mflds_c, int mb, int me)
 {
+  if (mb == 0 && me == 0) {
+    return;
+  }
   auto& mf_cuda = dynamic_cast<MfieldsCuda&>(mflds_cuda);
   auto& mf_c = dynamic_cast<MfieldsC&>(mflds_c);
   auto h_mf_cuda = hostMirror(mf_cuda);
 
+  if (!(mb == 0 && me == mflds_cuda._n_comps())) {
+    copy(mf_cuda, h_mf_cuda);
+  }
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
     auto flds = h_mf_cuda[p];
     auto flds_c = mf_c[p];
@@ -61,10 +67,16 @@ static void psc_mfields_cuda_copy_to_c(MfieldsBase& mflds_cuda, MfieldsBase& mfl
 
 static void psc_mfields_state_cuda_copy_from_c(MfieldsStateBase& mflds_cuda, MfieldsStateBase& mflds_c, int mb, int me)
 {
+  if (mb == 0 && me == 0) {
+    return;
+  }
   auto& mf_cuda = dynamic_cast<MfieldsStateCuda&>(mflds_cuda);
   auto& mf_c = dynamic_cast<MfieldsStateDouble&>(mflds_c);
   auto h_mf_cuda = hostMirror(mf_cuda);
 
+  if (!(mb == 0 && me == mflds_cuda._n_comps())) {
+    copy(mf_cuda, h_mf_cuda);
+  }
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
     auto flds = h_mf_cuda[p];
     auto flds_c = mf_c[p];
@@ -109,10 +121,16 @@ static void psc_mfields_state_cuda_copy_to_c(MfieldsStateBase& mflds_cuda, Mfiel
 
 static void psc_mfields_cuda_copy_from_single(MfieldsBase& mflds_cuda, MfieldsBase& mflds_single, int mb, int me)
 {
+  if (mb == 0 && me == 0) {
+    return;
+  }
   auto& mf_cuda = dynamic_cast<MfieldsCuda&>(mflds_cuda);
   auto& mf_single = dynamic_cast<MfieldsSingle&>(mflds_single);
   auto h_mf_cuda = hostMirror(mf_cuda);
   
+  if (!(mb == 0 && me == mflds_cuda._n_comps())) {
+    copy(mf_cuda, h_mf_cuda);
+  }
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
     auto flds = h_mf_cuda[p];
     auto flds_s = mf_single[p];
@@ -132,10 +150,16 @@ static void psc_mfields_cuda_copy_from_single(MfieldsBase& mflds_cuda, MfieldsBa
 
 static void psc_mfields_state_cuda_copy_from_single(MfieldsStateBase& mflds_cuda, MfieldsStateBase& mflds_single, int mb, int me)
 {
+  if (mb == 0 && me == 0) {
+    return;
+  }
   auto& mf_cuda = dynamic_cast<MfieldsStateCuda&>(mflds_cuda);
   auto& mf_single = dynamic_cast<MfieldsStateSingle&>(mflds_single);
   auto h_mf_cuda = hostMirror(mf_cuda);
   
+  if (!(mb == 0 && me == mflds_cuda._n_comps())) {
+    copy(mf_cuda, h_mf_cuda);
+  }
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
     auto flds = h_mf_cuda[p];
     auto flds_s = mf_single[p];
