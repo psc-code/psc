@@ -36,6 +36,15 @@ struct MfieldsBase
     instances.push_back(this);
   }
 
+  MfieldsBase(const MfieldsBase&) = delete;
+  MfieldsBase& operator=(const MfieldsBase&) = delete;
+
+  MfieldsBase(MfieldsBase&& o) : MfieldsBase(*o.grid_, o.n_fields_, o.ibn_)
+  {
+  }
+
+  MfieldsBase& operator=(MfieldsBase&& o) = default;
+  
   virtual ~MfieldsBase()
   {
     instances.remove(this);
