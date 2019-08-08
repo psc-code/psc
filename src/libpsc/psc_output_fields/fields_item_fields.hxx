@@ -4,10 +4,15 @@
 #include "fields_item.hxx"
 #include "psc_fields_c.h"
 
+template <typename E>
+struct isSpaceCuda : std::false_type
+{};
+
 // ======================================================================
 // evalMfields
 
-template <typename E>
+template <typename E,
+          typename std::enable_if<!isSpaceCuda<E>::value, int>::type = 0>
 MfieldsC evalMfields(const MFexpression<E>& xp)
 {
   const auto& exp = xp.derived();
@@ -23,6 +28,31 @@ MfieldsC evalMfields(const MFexpression<E>& xp)
   }
   return mflds;
 }
+
+#ifdef USE_CUDA
+
+template <typename E,
+          typename std::enable_if<isSpaceCuda<E>::value, int>::type = 0>
+MfieldsC evalMfields(const MFexpression<E>& xp)
+{
+  const auto& exp = xp.derived().result();
+  MfieldsC mflds{exp.grid(), exp.n_comps(), exp.ibn()};
+
+  auto h_exp = hostMirror(exp);
+  copy(exp, h_exp);
+
+  for (int p = 0; p < mflds.n_patches(); p++) {
+    auto flds = mflds[p];
+    for (int m = 0; m < exp.n_comps(); m++) {
+      mflds.Foreach_3d(0, 0, [&](int i, int j, int k) {
+        flds(m, i, j, k) = h_exp[p](m, i, j, k);
+      });
+    }
+  }
+  return mflds;
+}
+
+#endif
 
 // ======================================================================
 // AdaptMfields

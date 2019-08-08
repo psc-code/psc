@@ -89,7 +89,13 @@ public:
     bnd_.add_ghosts(Base::mres_, 0, Base::mres_.n_comps());
   }
 
+  const Mfields& result() const { return Base::mres_; }
+
 private:
   Bnd bnd_;
 };
+
+template<typename _Mparticles, typename dim>
+struct isSpaceCuda<Moment_n_1st_cuda<_Mparticles, dim>> : std::true_type {};
+
 

@@ -113,10 +113,11 @@ TYPED_TEST(InjectTest, Test1)
   // density should be all zero
   {
     ItemMoment moment_n{mprts};
+    auto n = evalMfields(moment_n);
     
     for (int p = 0; p < grid.n_patches(); p++) {
       grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-	  EXPECT_EQ(moment_n(0, {i,j,k}, p), 0.);
+	  EXPECT_EQ(n[p](0, i, j, k), 0.);
 	});
     }
   }
@@ -127,6 +128,7 @@ TYPED_TEST(InjectTest, Test1)
   // density should be equal to n_injected inside target
   {
     ItemMoment moment_n{mprts};
+    auto n = evalMfields(moment_n);
     real_t fac = 1. / grid.norm.cori * 
       (inject_interval * grid.dt / inject_tau) / (1. + inject_interval * grid.dt / inject_tau);
     real_t n_injected = int(fac) * grid.norm.cori;
@@ -137,7 +139,7 @@ TYPED_TEST(InjectTest, Test1)
       grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
 	  double xx[3] = {grid.patches[p].x_cc(i), grid.patches[p].y_cc(j), grid.patches[p].z_cc(k)};
 	  real_t n_expected = target.is_inside(xx) ? n_injected : 0.;
-	  EXPECT_NEAR(moment_n(0, {i,j,k}, p), n_expected, 2.*grid.norm.cori) << "ijk " << i << ":" << j << ":" << k;
+	  EXPECT_NEAR(n[p](0, i, j, k), n_expected, 2.*grid.norm.cori) << "ijk " << i << ":" << j << ":" << k;
 	});
     }
   }
