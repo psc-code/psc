@@ -9,15 +9,8 @@
 
 #include <memory>
 
-// ======================================================================
-
-using FieldsItem_E_cc = FieldsItemFields<ItemLoopPatches<Item_e_cc>>;
-using FieldsItem_H_cc = FieldsItemFields<ItemLoopPatches<Item_h_cc>>;
-using FieldsItem_J_cc = FieldsItemFields<ItemLoopPatches<Item_j_cc>>;
-
-using FieldsItem_n_1st_cc = Moment_n_1st<MfieldsC>;
 template <typename Mparticles>
-using FieldsItem_Moments_1st_cc = Moments_1st<Mparticles, MfieldsC>;
+using FieldsItem_Moments_1st_cc = Moments_1st<Mparticles>;
 
 // ======================================================================
 // OutputFieldsParams
@@ -92,8 +85,7 @@ public:
     }
 
     Item_jeh<MfieldsState> pfd_jeh{mflds};
-    FieldsItem_Moments_1st_cc<Mparticles> moments{grid};
-    moments(mprts);
+    FieldsItem_Moments_1st_cc<Mparticles> moments{mprts};
 
     if (do_pfield) {
       mpi_printf(grid.comm(), "***** Writing PFD output\n");
@@ -101,7 +93,7 @@ public:
 
       io_pfd_->open(grid, rn, rx);
       _write_pfd(pfd_jeh);
-      write_pfd(moments);
+      _write_pfd(moments);
       io_pfd_->close();
     }
 
@@ -117,7 +109,7 @@ public:
 
       io_tfd_->open(grid, rn, rx);
       _write_tfd(tfd_jeh_, pfd_jeh);
-      write_tfd(tfd_moments_, moments);
+      _write_tfd(tfd_moments_, moments);
       io_tfd_->close();
       naccum_ = 0;
     }
@@ -126,28 +118,11 @@ public:
   };
 
 private:
-  template <typename Item>
-  void write_pfd(Item& item)
-  {
-    item.result().write_as_mrc_fld(io_pfd_->io_, item.name(),
-                                   item.comp_names(item.result().grid()));
-  }
-
   template <typename EXP>
   void _write_pfd(EXP& pfd)
   {
     MrcIo::write_mflds(io_pfd_->io_, adaptMfields(pfd), pfd.grid(), pfd.name(),
                        pfd.comp_names());
-  }
-
-  template <typename Item>
-  void write_tfd(MfieldsC& tfd, Item& item)
-  {
-    // convert accumulated values to correct temporal mean
-    tfd.scale(1. / naccum_);
-    tfd.write_as_mrc_fld(io_tfd_->io_, item.name(),
-                         item.comp_names(tfd.grid()));
-    tfd.zero();
   }
 
   template <typename EXP>

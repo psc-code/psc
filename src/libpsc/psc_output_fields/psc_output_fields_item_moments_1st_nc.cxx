@@ -55,9 +55,7 @@ struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MP, MF>, MF>
   static std::vector<std::string> fld_names() { return { "rho" }; }
   constexpr static int flags = 0;
 
-  using Base::Base;
-  
-  void operator()(Mparticles& mprts)
+  Moment_rho_1st_nc(const Mparticles& mprts) : Base{mprts.grid()}
   {
     const auto& grid = mprts.grid();
     real_t fnqs = grid.norm.fnqs;

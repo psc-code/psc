@@ -10,10 +10,12 @@
 // ======================================================================
 // n_1st
 
-template <typename MF>
-struct Moment_n_1st : ItemMomentCRTP<Moment_n_1st<MF>, MF>
+template <typename MP, typename MF = Mfields<typename MP::real_t>>
+class Moment_n_1st : public ItemMomentCRTP<Moment_n_1st<MP, MF>, MF>
 {
-  using Base = ItemMomentCRTP<Moment_n_1st<MF>, MF>;
+public:
+  using Base = ItemMomentCRTP<Moment_n_1st<MP, MF>, MF>;
+  using Mparticles = MP;
   using Mfields = MF;
 
   constexpr static char const* name = "n_1st";
@@ -25,10 +27,10 @@ struct Moment_n_1st : ItemMomentCRTP<Moment_n_1st<MF>, MF>
     return addKindSuffix({"n"}, grid.kinds);
   }
 
-  using Base::Base;
+  int n_comps() const { return Base::mres_.n_comps(); }
+  Int3 ibn() const { return Base::mres_.ibn(); }
 
-  template <typename Mparticles>
-  void operator()(Mparticles& mprts)
+  Moment_n_1st(const Mparticles& mprts) : Base{mprts.grid()}
   {
     using Particle = typename Mparticles::ConstAccessor::Particle;
 
@@ -157,7 +159,7 @@ struct Moment_T_1st
 // all moments calculated at once
 // FIXME: add KE
 
-template <typename MP, typename MF>
+template <typename MP, typename MF = Mfields<typename MP::real_t>>
 class Moments_1st : public ItemMomentCRTP<Moments_1st<MP, MF>, MF>
 {
 public:
@@ -173,16 +175,14 @@ public:
     return n_moments * grid.kinds.size();
   }
 
-  static std::vector<std::string> comp_names(const Grid_t& grid)
+  std::vector<std::string> comp_names()
   {
     return addKindSuffix({"rho", "jx", "jy", "jz", "px", "py", "pz", "txx",
                           "tyy", "tzz", "txy", "tyz", "tzx"},
-                         grid.kinds);
+                         Base::grid().kinds);
   }
 
-  Moments_1st(const Grid_t& grid) : Base{grid} {}
-
-  void operator()(Mparticles& mprts)
+  Moments_1st(const Mparticles& mprts) : Base{mprts.grid()}
   {
     using Particle = typename Mparticles::ConstAccessor::Particle;
     using Real = typename Particle::real_t;
@@ -209,3 +209,4 @@ public:
     Base::bnd_.add_ghosts(Base::mres_);
   }
 };
+

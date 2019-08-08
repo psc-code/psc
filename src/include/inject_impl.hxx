@@ -29,7 +29,6 @@ struct Inject_ : InjectBase
           Target_t target, SetupParticles& setup_particles)
     : InjectBase{interval, tau, kind_n},
       target_{target},
-      moment_n_{grid},
       setup_particles_{setup_particles}
   {}
 
@@ -40,8 +39,8 @@ struct Inject_ : InjectBase
   {
     const auto& grid = mprts.grid();
 
-    moment_n_(mprts);
-    auto& mres = moment_n_.result();
+    ItemMoment_t moment_n(mprts);
+    auto mres = evalMfields(moment_n);
     auto& mf_n = mres.template get_as<Mfields>(kind_n, kind_n + 1);
 
     real_t fac = (interval * grid.dt / tau) / (1. + interval * grid.dt / tau);
@@ -65,7 +64,6 @@ struct Inject_ : InjectBase
 
 private:
   Target_t target_;
-  ItemMoment_t moment_n_;
   SetupParticles setup_particles_;
 };
 
@@ -78,9 +76,10 @@ template <typename Mparticles, typename InjectShape, typename Dim,
           typename Enable = void>
 struct InjectSelector
 {
-  using Inject = Inject_<Mparticles, MfieldsC, InjectShape,
-                         Moment_n_1st<MfieldsC>>; // FIXME, shouldn't
-                                                  // always use MfieldsC
+  using Inject =
+    Inject_<Mparticles, MfieldsC, InjectShape,
+            Moment_n_1st<Mparticles, MfieldsC>>; // FIXME, shouldn't
+                                                 // always use MfieldsC
 };
 
 #ifdef USE_CUDA

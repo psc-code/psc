@@ -213,12 +213,21 @@ template <typename Derived, typename MF, typename Bnd = Bnd_<MF>>
 struct ItemMomentCRTP
 {
   using Mfields = MF;
+  using Real = typename Mfields::real_t;
 
+  const Real& operator()(int m, Int3 ijk, int p) const
+  {
+    auto& mres = const_cast<Mfields&>(mres_);
+    return mres[p](m, ijk[0], ijk[1], ijk[2]);
+  }
+
+  Mfields& result() { return mres_; }
+  const Grid_t& grid() const { return mres_.grid(); }
+
+protected:
   ItemMomentCRTP(const Grid_t& grid)
     : mres_{grid, Derived::n_comps(grid), grid.ibn}, bnd_{grid}
   {}
-
-  Mfields& result() { return mres_; }
 
 protected:
   Mfields mres_;

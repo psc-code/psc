@@ -37,9 +37,9 @@ struct Checks_ : ChecksParams, ChecksBase
   Checks_(const Grid_t& grid, MPI_Comm comm, const ChecksParams& params)
     : ChecksParams(params),
       comm_{comm},
-      item_rho_{grid},
-      item_rho_m_{grid},
-      item_rho_p_{grid},
+      rho_{grid, 1, grid.ibn},
+      rho_m_{grid, 1, grid.ibn},
+      rho_p_{grid, 1, grid.ibn},
       item_dive_{grid},
       item_divj_{grid}
   {}
@@ -57,7 +57,8 @@ struct Checks_ : ChecksParams, ChecksBase
       return;
     }
 
-    item_rho_m_(mprts);
+    Moment_t mom{mprts};
+    rho_m_.copy_comp(0, mom.result(), 0);
   }
 
   // ----------------------------------------------------------------------
@@ -70,13 +71,12 @@ struct Checks_ : ChecksParams, ChecksBase
       return;
     }
 
-    item_rho_p_(mprts);
+    Moment_t mom{mprts};
+    rho_p_.copy_comp(0, mom.result(), 0);
     item_divj_(grid, mflds);
 
-    auto& rho_p = item_rho_p_.result();
-    auto& rho_m = item_rho_m_.result();
-    auto& d_rho = rho_p;
-    d_rho.axpy(-1., rho_m);
+    auto& d_rho = rho_p_;
+    d_rho.axpy(-1., rho_m_);
 
     auto& div_j = item_divj_.result();
     div_j.scale(grid.dt);
@@ -137,16 +137,16 @@ struct Checks_ : ChecksParams, ChecksBase
       return;
     }
 
-    item_rho_(mprts);
+    Moment_t mom{mprts};
+    rho_.copy_comp(0, mom.result(), 0);
     item_dive_(grid, mflds);
 
     auto& dive = item_dive_.result();
-    auto& rho = item_rho_.result();
     
     double eps = gauss_threshold;
     double max_err = 0.;
     for (int p = 0; p < dive.n_patches(); p++) {
-      auto Rho = rho[p];
+      auto Rho = rho_[p];
       auto DivE = dive[p];
 
       int l[3] = {0, 0, 0}, r[3] = {0, 0, 0};
@@ -194,7 +194,7 @@ struct Checks_ : ChecksParams, ChecksBase
 	mrc_io_view(io);
       }
       mrc_io_open(io, "w", grid.timestep(), grid.timestep() * grid.dt);
-      rho.write_as_mrc_fld(io, "rho", {"rho"});
+      rho_.write_as_mrc_fld(io, "rho", {"rho"});
       dive.write_as_mrc_fld(io, "Div_E", {"Div_E"});
       mrc_io_close(io);
     }
@@ -204,9 +204,9 @@ struct Checks_ : ChecksParams, ChecksBase
 
   // state
   MPI_Comm comm_;
-  Moment_t item_rho_p_;
-  Moment_t item_rho_m_;
-  Moment_t item_rho_;
+  Mfields rho_p_;
+  Mfields rho_m_;
+  Mfields rho_;
   FieldsItemFields<ItemLoopPatches<Item_dive<MfieldsState, Mfields>>> item_dive_;
   FieldsItemFields<ItemLoopPatches<Item_divj<MfieldsState, Mfields>>> item_divj_;
 };

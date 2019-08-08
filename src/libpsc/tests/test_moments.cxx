@@ -34,12 +34,10 @@ TYPED_TEST(PushParticlesTest, Moment1)
     auto injector = mprts.injector();
     injector[0]({{5., 5., 5.}, {0., 0., 1.}, 1., 0});
   }
-  Moment_n moment_n{grid};
-  moment_n(mprts);
-  auto& mres = moment_n.result();
+  Moment_n moment_n{mprts};
   for (int p = 0; p < grid.n_patches(); p++) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-	real_t val = mres[p](0, i,j,k);
+	real_t val = moment_n(0, {i,j,k}, p);
 	if (i == 0 && j == 0 & k == 0) {
 	  EXPECT_NEAR(val, .005, eps) << "ijk " << i << " " << j << " " << k;
 	} else {
@@ -76,12 +74,10 @@ TYPED_TEST(PushParticlesTest, Moment2) // FIXME, mostly copied
   int i0 = 2;
   if (PushParticlesTest<TypeParam>::dim::InvarX::value) i0 = 0;
   
-  Moment_n moment_n{grid};
-  moment_n(mprts);
-  auto& mres = moment_n.result();
+  Moment_n moment_n{mprts};
   for (int p = 0; p < grid.n_patches(); p++) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-	real_t val = mres[p](0, i,j,k);
+	real_t val = moment_n(0, {i,j,k}, p);
 	if (i == i0 && j == 0 & k == 0) {
 	  EXPECT_NEAR(val, .005, eps) << "ijk " << i << " " << j << " " << k;
 	} else {

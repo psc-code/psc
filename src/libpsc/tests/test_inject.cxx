@@ -111,33 +111,35 @@ TYPED_TEST(InjectTest, Test1)
   }
 
   // density should be all zero
-  ItemMoment moment_n{grid};
-  auto& mflds_n = moment_n.result();
-
-  moment_n(mprts);
-  for (int p = 0; p < grid.n_patches(); p++) {
-    grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-	EXPECT_EQ(mflds_n[p](0, i,j,k), 0.);
-      });
+  {
+    ItemMoment moment_n{mprts};
+    
+    for (int p = 0; p < grid.n_patches(); p++) {
+      grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
+	  EXPECT_EQ(moment_n(0, {i,j,k}, p), 0.);
+	});
+    }
   }
 
   // do one injection
   inject(mprts);
 
   // density should be equal to n_injected inside target
-  real_t fac = 1. / grid.norm.cori * 
-    (inject_interval * grid.dt / inject_tau) / (1. + inject_interval * grid.dt / inject_tau);
-  real_t n_injected = int(fac) * grid.norm.cori;
-  // FIXME, it's worth noting that given the wrong choice of interval / tau / nicell, one may end up never injecting anything because the # particles to be injected turns out to be < 1 and we always round down
+  {
+    ItemMoment moment_n{mprts};
+    real_t fac = 1. / grid.norm.cori * 
+      (inject_interval * grid.dt / inject_tau) / (1. + inject_interval * grid.dt / inject_tau);
+    real_t n_injected = int(fac) * grid.norm.cori;
+    // FIXME, it's worth noting that given the wrong choice of interval / tau / nicell, one may end up never injecting anything because the # particles to be injected turns out to be < 1 and we always round down
   //mprintf("fac = %g, n_injected = %g\n", fac, n_injected);
-  
-  moment_n(mprts);
-  for (int p = 0; p < grid.n_patches(); p++) {
-    grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-	double xx[3] = {grid.patches[p].x_cc(i), grid.patches[p].y_cc(j), grid.patches[p].z_cc(k)};
-	real_t n_expected = target.is_inside(xx) ? n_injected : 0.;
-	EXPECT_NEAR(mflds_n[p](0, i,j,k), n_expected, 2.*grid.norm.cori) << "ijk " << i << ":" << j << ":" << k;
-      });
+    
+    for (int p = 0; p < grid.n_patches(); p++) {
+      grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
+	  double xx[3] = {grid.patches[p].x_cc(i), grid.patches[p].y_cc(j), grid.patches[p].z_cc(k)};
+	  real_t n_expected = target.is_inside(xx) ? n_injected : 0.;
+	  EXPECT_NEAR(moment_n(0, {i,j,k}, p), n_expected, 2.*grid.norm.cori) << "ijk " << i << ":" << j << ":" << k;
+	});
+    }
   }
 }
 

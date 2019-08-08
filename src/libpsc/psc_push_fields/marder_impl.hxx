@@ -23,7 +23,7 @@ struct Marder_ : MarderBase
       loop_{loop},
       dump_{dump},
       bnd_{grid, grid.ibn},
-      item_rho_{grid},
+      rho_{grid, 1, grid.ibn},
       item_dive_{grid}
   {
     if (dump_) {
@@ -58,12 +58,12 @@ struct Marder_ : MarderBase
       static int cnt;
       mrc_io_open(io_, "w", cnt, cnt);//ppsc->timestep, ppsc->timestep * ppsc->dt);
       cnt++;
-      item_rho_.result().write_as_mrc_fld(io_, "rho", {"rho"});
+      rho_.write_as_mrc_fld(io_, "rho", {"rho"});
       item_dive_.result().write_as_mrc_fld(io_, "dive", {"dive"});
       mrc_io_close(io_);
     }
     
-    item_dive_.result().axpy_comp(0, -1., item_rho_.result(), 0);
+    item_dive_.result().axpy_comp(0, -1., rho_, 0);
     // FIXME, why is this necessary?
     bnd_.fill_ghosts(item_dive_.result(), 0, 1);
   }
@@ -185,7 +185,8 @@ struct Marder_ : MarderBase
 
   void operator()(MfieldsState& mflds, Mparticles& mprts)
   {
-    item_rho_(mprts);
+    Moment_t mom{mprts};
+    rho_.copy_comp(0, mom.result(), 0);
 
     // need to fill ghost cells first (should be unnecessary with only variant 1) FIXME
     assert(0);
@@ -208,7 +209,7 @@ private:
 
   const Grid_t& grid_;
   Bnd_<Mfields> bnd_;
-  Moment_t item_rho_;
+  Mfields rho_;
   FieldsItemFields<ItemLoopPatches<Item_dive<MfieldsState, Mfields>>> item_dive_;
   mrc_io *io_; //< for debug dumping
 };
