@@ -58,6 +58,7 @@ struct BndCuda2 : BndBase
   void add_ghosts(Mfields& mflds, int mb, int me)
   {
     if (psc_balance_generation_cnt != balance_generation_cnt_) {
+      balance_generation_cnt_ = psc_balance_generation_cnt;
       reset(mflds.grid());
     }
     auto& mflds_single = mflds.template get_as<MfieldsSingle>(mb, me);
@@ -71,6 +72,7 @@ struct BndCuda2 : BndBase
   void fill_ghosts(Mfields& mflds, int mb, int me)
   {
     if (psc_balance_generation_cnt != balance_generation_cnt_) {
+      balance_generation_cnt_ = psc_balance_generation_cnt;
       reset(mflds.grid());
     }
     // FIXME
