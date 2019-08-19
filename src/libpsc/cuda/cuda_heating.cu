@@ -337,6 +337,7 @@ template<typename BS>
 void HeatingCuda<BS>::operator()(MparticlesCuda<BS>& mprts)
 {
   if (psc_balance_generation_cnt > this->balance_generation_cnt_) {
+    balance_generation_cnt_ = psc_balance_generation_cnt;
     reset(mprts);
   }
   
