@@ -60,6 +60,7 @@ struct Bnd_ : BndBase
   void add_ghosts(Mfields& mflds, int mb, int me)
   {
     if (psc_balance_generation_cnt != balance_generation_cnt_) {
+      balance_generation_cnt_ = psc_balance_generation_cnt;
       reset(mflds.grid());
     }
     mrc_ddc_add_ghosts(ddc_, mb, me, &mflds);
@@ -71,6 +72,7 @@ struct Bnd_ : BndBase
   void fill_ghosts(Mfields& mflds, int mb, int me)
   {
     if (psc_balance_generation_cnt != balance_generation_cnt_) {
+      balance_generation_cnt_ = psc_balance_generation_cnt;
       reset(mflds.grid());
     }
     // FIXME
