@@ -22,8 +22,10 @@ struct CollisionCuda : CollisionBase
   void operator()(MparticlesBase& mprts_base) override { assert(0); }
   void operator()(Mparticles& _mprts);
   int interval() const;
+  void reset(Mparticles& mprts);
   
 private:
   CudaCollision<typename Mparticles::CudaMparticles, RngState> *fwd_;
+  int balance_generation_cnt_;
 };
 

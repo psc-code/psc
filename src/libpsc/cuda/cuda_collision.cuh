@@ -21,6 +21,7 @@ struct CudaCollision;
 struct RngStateFake
 {
   void init(dim3 dim_grid) {}
+  void dtor() {}
 
   __device__
   RngFake  operator[](int id) const { return rng_; }
@@ -69,7 +70,8 @@ struct RngStateCuda
   __device__
   Rng& operator[](int id)       { return rngs_[id]; }
 
-  Rng* rngs_;
+  Rng* rngs_ = {nullptr};
+  std::size_t size_ = 0;
 };
 
 // ----------------------------------------------------------------------
@@ -80,17 +82,21 @@ static void k_curand_setup(RngStateCuda rng_state)
 {
   int id = threadIdx.x + blockIdx.x * THREADS_PER_BLOCK;
 
-  curand_init(1234, id % 1024, 0, &rng_state[id].curand_state); // FIXME, % 1024 hack
+  curand_init(1234, id, 0, &rng_state[id].curand_state); // FIXME, % 1024 hack
 }
 
 void RngStateCuda::init(dim3 dim_grid)
 {
   int n_threads = dim_grid.x * THREADS_PER_BLOCK;
 
-  rngs_ = (RngStateCuda::Rng*) myCudaMalloc(n_threads * sizeof(*rngs_));
-  
-  k_curand_setup<<<dim_grid, THREADS_PER_BLOCK>>>(*this);
-  cuda_sync_if_enabled();
+  if (n_threads > size_) {
+    myCudaFree(rngs_);
+    mprintf("dbg: expanding cuda RNG state\n");
+    rngs_ = (RngStateCuda::Rng*) myCudaMalloc(n_threads * sizeof(*rngs_));
+    size_ = n_threads;
+    k_curand_setup<<<dim_grid, THREADS_PER_BLOCK>>>(*this);
+    cuda_sync_if_enabled();
+  }
 };
 
 template<typename cuda_mparticles, typename RngState>
@@ -125,6 +131,11 @@ struct CudaCollision
     return interval_;
   }
   
+  void reset(cuda_mparticles& cmprts)
+  {
+    first_time_ = true;
+  }
+  
   void operator()(cuda_mparticles& cmprts)
   {
     auto sort_by_cell = cuda_mparticles_sort{cmprts.n_cells()};
@@ -140,10 +151,7 @@ struct CudaCollision
     if (blocks > 32768) blocks = 32768;
     dim3 dimGrid(blocks);
 
-    if (first_time_) {
-      rng_state_.init(dimGrid);
-      first_time_ = false;
-    }
+    rng_state_.init(dimGrid);
     
     // all particles need to have same weight!
     real_t wni = 1.; // FIXME, there should at least be some assert to enforce this //prts[n_start].w());
