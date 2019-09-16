@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cassert>
 #include <memory>
+#include <iostream>
 
 #include "cuda_compat.h"
 #include <kg/Macros.h>
@@ -190,6 +191,13 @@ KG_INLINE Vec3<T> operator/(const Vec3<T>& v, const Vec3<T>& w)
   Vec3<T> res = v;
   res /= w;
   return res;
+}
+
+template <typename T>
+KG_INLINE std::ostream& operator<<(std::ostream& os, const Vec3<T>& v)
+{
+  os << "Vec3{" << v[0] << ", " << v[1] << ", " << v[2] << "}";
+  return os;
 }
 
 using Int3 = Vec3<int>;
