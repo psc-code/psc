@@ -121,10 +121,10 @@ struct CudaCollision
 
   void operator()(cuda_mparticles& cmprts)
   {
-    auto sort_by_cell = cuda_mparticles_sort{cmprts.n_cells()};
-
+    auto sort_by_cell = cuda_mparticles_randomize_sort{cmprts.n_cells()};
+    
     sort_by_cell.find_indices_ids(cmprts);
-    sort_by_cell.stable_sort_cidx();
+    sort_by_cell.sort();
     sort_by_cell.find_offsets();
     // for (int c = 0; c <= cmprts.n_cells(); c++) {
     //   printf("off[%d] = %d\n", c, int(sort_by_cell.d_off[c]));
