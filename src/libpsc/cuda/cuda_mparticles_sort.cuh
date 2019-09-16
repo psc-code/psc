@@ -8,6 +8,8 @@
 #include <thrust/random.h>
 #include <thrust/sort.h>
 
+#include <curand_kernel.h>
+
 template <typename BS>
 struct cuda_mparticles;
 
@@ -69,6 +71,65 @@ inline void find_cell_indices_ids(cuda_mparticles<BS>& cmprts,
   k_find_cell_indices_ids<BS>
     <<<dimGrid, dimBlock>>>(cmprts, d_cidx.data().get(), d_id.data().get(),
                             cmprts.n_patches(), cmprts.n_blocks_per_patch);
+  cuda_sync_if_enabled();
+}
+
+// ----------------------------------------------------------------------
+// find_random_cell_indices_ids
+
+template <typename BS>
+__global__ static void k_find_random_cell_indices_ids(
+  DMparticlesCuda<BS> dmprts, float* d_random_idx, uint* d_id, int n_patches,
+  int n_blocks_per_patch)
+{
+  int n = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
+
+  curandState s;
+  curand_init(n, 0, 0, &s);
+
+  for (int p = 0; p < n_patches; p++) {
+    uint off = dmprts.off_[p * n_blocks_per_patch];
+    uint n_prts = dmprts.off_[(p + 1) * n_blocks_per_patch] - off;
+    if (n < n_prts) {
+      float4 xi4 = dmprts.storage.xi4[n + off];
+      d_random_idx[n + off] =
+        dmprts.validCellIndex(xi4, p) + curand_uniform(&s);
+      d_id[n + off] = n + off;
+    }
+  }
+}
+
+template <typename BS>
+inline void find_random_cell_indices_ids(
+  cuda_mparticles<BS>& cmprts, thrust::device_vector<float>& d_random_idx,
+  thrust::device_vector<uint>& d_id)
+{
+  if (cmprts.n_patches() == 0) {
+    return;
+  }
+
+  // OPT: if we didn't need max_n_prts, we wouldn't have to get the
+  // sizes / offsets at all, and it seems likely we could do a better
+  // job here in general
+  auto n_prts_by_patch = cmprts.sizeByPatch();
+
+  int max_n_prts = 0;
+  for (int p = 0; p < cmprts.n_patches(); p++) {
+    if (n_prts_by_patch[p] > max_n_prts) {
+      max_n_prts = n_prts_by_patch[p];
+    }
+  }
+
+  if (max_n_prts == 0) {
+    return;
+  }
+
+  dim3 dimGrid((max_n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
+  dim3 dimBlock(THREADS_PER_BLOCK);
+
+  k_find_random_cell_indices_ids<BS><<<dimGrid, dimBlock>>>(
+    cmprts, d_random_idx.data().get(), d_id.data().get(), cmprts.n_patches(),
+    cmprts.n_blocks_per_patch);
   cuda_sync_if_enabled();
 }
 
@@ -200,14 +261,9 @@ struct cuda_mparticles_randomize_sort
   template <typename BS>
   void find_indices_ids(cuda_mparticles<BS>& cmprts)
   {
-    d_idx.resize(cmprts.n_prts);
     d_id.resize(cmprts.n_prts);
-    find_cell_indices_ids(cmprts, d_idx, d_id);
     d_random_idx.resize(cmprts.n_prts);
-    thrust::transform(thrust::make_counting_iterator(uint(0)),
-                      thrust::make_counting_iterator(uint(d_idx.size())),
-                      d_idx.begin(), d_random_idx.begin(), AddRandom());
-    // FIXME, no persistent RNG state
+    find_random_cell_indices_ids(cmprts, d_random_idx, d_id);
   }
 
   void sort()
@@ -225,10 +281,8 @@ struct cuda_mparticles_randomize_sort
   }
 
 public:
-  thrust::device_vector<uint> d_idx; // cell index (incl patch) per particle
-  thrust::device_vector<float>
-    d_random_idx;                   // cell index (incl patch) per particle
-  thrust::device_vector<uint> d_id; // particle id used for reordering
+  thrust::device_vector<float> d_random_idx; // randomized cell index
+  thrust::device_vector<uint> d_id;          // particle id used for reordering
   thrust::device_vector<uint>
     d_off; // particles per cell
            // are at indices [offsets[cell] .. offsets[cell+1][

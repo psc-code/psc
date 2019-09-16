@@ -10,7 +10,6 @@
 #include "psc_particles_single.h"
 #include "testing.hxx"
 
-
 using dim = dim_yz;
 using Mparticles = MparticlesCuda<BS144>;
 
@@ -110,13 +109,13 @@ TEST(cuda_mparticles_randomize_sort, sort)
 
   auto& cmprts = *mprts.cmprts();
   auto sort = cuda_mparticles_randomize_sort(cmprts.n_cells());
-  
+
   sort.find_indices_ids(cmprts);
-  EXPECT_EQ(sort.d_idx, (std::vector<int>{0, 0, 17, 17, 17, 1, 1, 1, 1}));
   EXPECT_EQ(sort.d_id, (std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7, 8}));
 
   sort.sort();
-  EXPECT_EQ(sort.d_id, (std::vector<int>{0, 1, 5, 8, 7, 6, 2, 3, 4}));
+  //  EXPECT_EQ(sort.d_id, (std::vector<int>{0, 1, 5, 8, 7, 6, 2, 3, 4}));
+  EXPECT_EQ(sort.d_id, (std::vector<int>{1, 0, 8, 7, 5, 6, 4, 2, 3}));
 
   float last = sort.d_random_idx[0];
   for (int i = 1; i < cmprts.size(); i++) {
@@ -124,10 +123,10 @@ TEST(cuda_mparticles_randomize_sort, sort)
     last = sort.d_random_idx[i];
   }
   for (int i = 0; i < cmprts.size(); i++) {
-    mprintf("i %d idx %d r_idx %g id %d\n", i, (int)sort.d_idx[i],
-            (float)sort.d_random_idx[i], (int)sort.d_id[i]);
+    mprintf("i %d r_idx %g id %d\n", i, (float)sort.d_random_idx[i],
+            (int)sort.d_id[i]);
   }
-  
+
   sort.find_offsets();
   std::vector<int> off(cmprts.n_cells() + 1);
   off[0] = 0;
