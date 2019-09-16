@@ -39,13 +39,11 @@ struct CudaCollision
     : interval_{interval}, nu_{nu}, nicell_(nicell), dt_(dt)
   {}
 
-  ~CudaCollision() { rng_state_.dtor(); }
-
   int interval() const { return interval_; }
 
   void operator()(cuda_mparticles& cmprts)
   {
-    auto sort_by_cell = cuda_mparticles_randomize_sort{cmprts.n_cells()};
+    auto sort_by_cell = cuda_mparticles_randomize_sort();
 
     sort_by_cell.find_indices_ids(cmprts);
     sort_by_cell.sort();

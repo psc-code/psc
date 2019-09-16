@@ -156,7 +156,7 @@ TEST(cuda_mparticles_randomize_sort, sort)
   auto mprts = make_mparticles(grid);
 
   auto& cmprts = *mprts.cmprts();
-  auto sort = cuda_mparticles_randomize_sort(cmprts.n_cells());
+  cuda_mparticles_randomize_sort sort;
 
   sort.find_indices_ids(cmprts);
   EXPECT_EQ(sort.d_id, (std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7, 8}));

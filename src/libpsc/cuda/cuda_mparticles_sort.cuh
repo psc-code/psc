@@ -210,11 +210,10 @@ public:
 
 struct cuda_mparticles_randomize_sort
 {
-  cuda_mparticles_randomize_sort(uint n_cells) : d_off(n_cells + 1) {}
-
   template <typename BS>
   void find_indices_ids(cuda_mparticles<BS>& cmprts)
   {
+    d_off.resize(cmprts.n_cells() + 1);
     d_id.resize(cmprts.n_prts);
     d_random_idx.resize(cmprts.n_prts);
 
