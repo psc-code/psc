@@ -2,6 +2,7 @@
 #pragma once
 
 #include "cuda_bits.h"
+#include "rng_state.cuh"
 
 #include <thrust/binary_search.h>
 #include <thrust/device_vector.h>
@@ -80,57 +81,23 @@ inline void find_cell_indices_ids(cuda_mparticles<BS>& cmprts,
 template <typename BS>
 __global__ static void k_find_random_cell_indices_ids(
   DMparticlesCuda<BS> dmprts, float* d_random_idx, uint* d_id, int n_patches,
-  int n_blocks_per_patch)
+  int n_blocks_per_patch, RngStateCuda::Device rng_state)
 {
   int n = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
 
-  curandState s;
-  curand_init(n, 0, 0, &s);
+  auto rng = rng_state[n];
 
   for (int p = 0; p < n_patches; p++) {
     uint off = dmprts.off_[p * n_blocks_per_patch];
     uint n_prts = dmprts.off_[(p + 1) * n_blocks_per_patch] - off;
     if (n < n_prts) {
       float4 xi4 = dmprts.storage.xi4[n + off];
-      d_random_idx[n + off] =
-        dmprts.validCellIndex(xi4, p) + curand_uniform(&s);
+      d_random_idx[n + off] = dmprts.validCellIndex(xi4, p) + rng.uniform();
       d_id[n + off] = n + off;
     }
   }
-}
 
-template <typename BS>
-inline void find_random_cell_indices_ids(
-  cuda_mparticles<BS>& cmprts, thrust::device_vector<float>& d_random_idx,
-  thrust::device_vector<uint>& d_id)
-{
-  if (cmprts.n_patches() == 0) {
-    return;
-  }
-
-  // OPT: if we didn't need max_n_prts, we wouldn't have to get the
-  // sizes / offsets at all, and it seems likely we could do a better
-  // job here in general
-  auto n_prts_by_patch = cmprts.sizeByPatch();
-
-  int max_n_prts = 0;
-  for (int p = 0; p < cmprts.n_patches(); p++) {
-    if (n_prts_by_patch[p] > max_n_prts) {
-      max_n_prts = n_prts_by_patch[p];
-    }
-  }
-
-  if (max_n_prts == 0) {
-    return;
-  }
-
-  dim3 dimGrid((max_n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
-  dim3 dimBlock(THREADS_PER_BLOCK);
-
-  k_find_random_cell_indices_ids<BS><<<dimGrid, dimBlock>>>(
-    cmprts, d_random_idx.data().get(), d_id.data().get(), cmprts.n_patches(),
-    cmprts.n_blocks_per_patch);
-  cuda_sync_if_enabled();
+  rng_state[n] = rng;
 }
 
 // ----------------------------------------------------------------------
@@ -191,8 +158,6 @@ inline void find_block_indices_ids(cuda_mparticles<BS>& cmprts,
   cuda_sync_if_enabled();
 }
 
-#undef THREADS_PER_BLOCK
-
 // ======================================================================
 // cuda_mparticles_sort
 //
@@ -252,7 +217,38 @@ struct cuda_mparticles_randomize_sort
   {
     d_id.resize(cmprts.n_prts);
     d_random_idx.resize(cmprts.n_prts);
-    find_random_cell_indices_ids(cmprts, d_random_idx, d_id);
+
+    if (cmprts.n_patches() == 0) {
+      return;
+    }
+
+    // OPT: if we didn't need max_n_prts, we wouldn't have to get the
+    // sizes / offsets at all, and it seems likely we could do a better
+    // job here in general
+    auto n_prts_by_patch = cmprts.sizeByPatch();
+
+    int max_n_prts = 0;
+    for (int p = 0; p < cmprts.n_patches(); p++) {
+      if (n_prts_by_patch[p] > max_n_prts) {
+        max_n_prts = n_prts_by_patch[p];
+      }
+    }
+
+    if (max_n_prts == 0) {
+      return;
+    }
+
+    if (max_n_prts > rng_state_.size()) {
+      rng_state_.resize(max_n_prts);
+    }
+    
+    dim3 dimGrid((max_n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
+    dim3 dimBlock(THREADS_PER_BLOCK);
+
+    k_find_random_cell_indices_ids<BS><<<dimGrid, dimBlock>>>(
+      cmprts, d_random_idx.data().get(), d_id.data().get(), cmprts.n_patches(),
+      cmprts.n_blocks_per_patch, rng_state_);
+    cuda_sync_if_enabled();
   }
 
   void sort()
@@ -275,6 +271,7 @@ public:
   thrust::device_vector<uint>
     d_off; // particles per cell
            // are at indices [offsets[cell] .. offsets[cell+1][
+  RngStateCuda rng_state_;
 };
 
 // ======================================================================
@@ -327,3 +324,6 @@ public:
     d_off; // particles per cell
            // are at indices [offsets[block] .. offsets[block+1][
 };
+
+#undef THREADS_PER_BLOCK
+

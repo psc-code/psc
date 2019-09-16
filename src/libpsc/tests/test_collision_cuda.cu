@@ -162,18 +162,19 @@ TEST(cuda_mparticles_randomize_sort, sort)
   EXPECT_EQ(sort.d_id, (std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7, 8}));
 
   sort.sort();
-  //  EXPECT_EQ(sort.d_id, (std::vector<int>{0, 1, 5, 8, 7, 6, 2, 3, 4}));
-  EXPECT_EQ(sort.d_id, (std::vector<int>{1, 0, 8, 7, 5, 6, 4, 2, 3}));
+  // EXPECT_EQ(sort.d_id, (std::vector<int>{0, 1, 5, 8, 7, 6, 2, 3, 4}));
+  // EXPECT_EQ(sort.d_id, (std::vector<int>{1, 0, 8, 7, 5, 6, 4, 2, 3}));
+  EXPECT_EQ(sort.d_id, (std::vector<int>{0, 1, 7, 5, 8, 6, 2, 4, 3}));
 
   float last = sort.d_random_idx[0];
   for (int i = 1; i < cmprts.size(); i++) {
     EXPECT_GE(sort.d_random_idx[i], last);
     last = sort.d_random_idx[i];
   }
-  for (int i = 0; i < cmprts.size(); i++) {
-    mprintf("i %d r_idx %g id %d\n", i, (float)sort.d_random_idx[i],
-            (int)sort.d_id[i]);
-  }
+  // for (int i = 0; i < cmprts.size(); i++) {
+  //   mprintf("i %d r_idx %g id %d\n", i, (float)sort.d_random_idx[i],
+  //           (int)sort.d_id[i]);
+  // }
 
   sort.find_offsets();
   std::vector<int> off(cmprts.n_cells() + 1);
@@ -187,18 +188,15 @@ TEST(cuda_mparticles_randomize_sort, sort)
   }
   EXPECT_EQ(sort.d_off, off);
 
-#if 0
-  // do over
+#if 1
+  // do over, get different permutation
   sort.find_indices_ids(cmprts);
-  thrust::transform(thrust::make_counting_iterator(uint(0)),
-                    thrust::make_counting_iterator(cmprts.size()),
-		    sort.d_idx.begin(),
-                    sort.d_random_idx.begin(), add_random);
   sort.sort();
-  for (int i = 0; i < cmprts.size(); i++) {
-    mprintf("i %d idx %d r_idx %g id %d\n", i, (int)sort.d_idx[i],
-            (float)sort.d_random_idx[i], (int)sort.d_id[i]);
-  }
+  // for (int i = 0; i < cmprts.size(); i++) {
+  //   mprintf("i %d r_idx %g id %d\n", i, (float)sort.d_random_idx[i],
+  //           (int)sort.d_id[i]);
+  // }
+  EXPECT_NE(sort.d_id, (std::vector<int>{0, 1, 7, 5, 8, 6, 2, 4, 3}));
 #endif
 }
 
