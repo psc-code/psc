@@ -235,13 +235,13 @@ public:
 };
 
 // ======================================================================
-// cuda_mparticles_sort2
+// cuda_mparticles_sort_by_block
 //
 // by block
 
-struct cuda_mparticles_sort2
+struct cuda_mparticles_sort_by_block
 {
-  cuda_mparticles_sort2(uint n_blocks) : d_off(n_blocks + 1) {}
+  cuda_mparticles_sort_by_block(uint n_blocks) : d_off(n_blocks + 1) {}
 
   template <typename BS>
   void find_indices_ids(cuda_mparticles<BS>& cmprts)

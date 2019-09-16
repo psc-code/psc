@@ -190,7 +190,7 @@ public:
   MparticlesCudaStorage storage;
 
   // per block
-  cuda_mparticles_sort2 by_block_;
+  cuda_mparticles_sort_by_block by_block_;
 
   uint n_prts = 0;                       // total # of particles across all patches
   const Grid_t& grid_;
