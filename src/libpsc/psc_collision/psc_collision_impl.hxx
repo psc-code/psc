@@ -8,6 +8,7 @@
 #include "fields3d.hxx"
 
 #include <cmath>
+#include <numeric>
 
 extern void* global_collision; // FIXME
 
@@ -68,12 +69,13 @@ struct CollisionHost
       auto F = mflds_stats_[p];
       grid.Foreach_3d(0, 0, [&](int ix, int iy, int iz) {
 	  int c = (iz * ldims[1] + iy) * ldims[0] + ix;
-	  randomize_in_cell(acc, offsets[c], offsets[c+1]);
 	  
 	  update_rei_before(acc, offsets[c], offsets[c+1], p, ix,iy,iz);
 	  
 	  struct psc_collision_stats stats = {};
-	  collide_in_cell(acc, offsets[c], offsets[c+1], &stats);
+	  //mprintf("p %d ijk %d:%d:%d # %d\n", p, ix, iy, iz, offsets[c+1] - offsets[c]);
+	  auto permute = randomize_in_cell(acc, offsets[c], offsets[c+1]);
+	  collide_in_cell(acc, permute, &stats);
 	  
 	  update_rei_after(acc, offsets[c], offsets[c+1], p, ix,iy,iz);
 	  
@@ -159,18 +161,12 @@ struct CollisionHost
   // ----------------------------------------------------------------------
   // randomize_in_cell
 
-  static void randomize_in_cell(AccessorPatch& prts, int n_start, int n_end)
+  static std::vector<int> randomize_in_cell(AccessorPatch& prts, int n_start, int n_end)
   {
-    return;
-    int nn = n_end - n_start;
-    for (int n = 0; n < nn - 1; n++) {
-      int n_partner = n + random() % (nn - n);
-      if (n != n_partner) {
-	// swap n, n_partner
-	using std::swap;
-	swap(prts[n_start + n], prts[n_start + n_partner]);
-      }
-    }
+    std::vector<int> permute(n_end - n_start);
+    std::iota(permute.begin(), permute.end(), n_start);
+    std::random_shuffle(permute.begin(), permute.end());
+    return permute;
   }
 
   // ----------------------------------------------------------------------
@@ -214,32 +210,32 @@ struct CollisionHost
   // ----------------------------------------------------------------------
   // collide_in_cell
 
-  void collide_in_cell(AccessorPatch& prts, int n_start, int n_end,
+  void collide_in_cell(AccessorPatch& prts, const std::vector<int>& permute,
 		       struct psc_collision_stats *stats)
   {
     const auto& grid = prts.grid();
-    int nn = n_end - n_start;
+    int nn = permute.size();
   
-    int n = 0;
     if (nn < 2) { // can't collide only one (or zero) particles
       return;
     }
 
     // all particles need to have same weight!
-    real_t wni = prts[n_start].w();
+    real_t wni = prts[permute[0]].w();
     real_t nudt1 = wni * grid.norm.cori * nn * this->interval_ * grid.dt * nu_;
 
     real_t *nudts = (real_t *) malloc((nn / 2 + 2) * sizeof(*nudts));
     int cnt = 0;
 
+    int n = 0;
     if (nn % 2 == 1) { // odd # of particles: do 3-collision
-      nudts[cnt++] = do_bc(prts, n_start  , n_start+1, .5 * nudt1);
-      nudts[cnt++] = do_bc(prts, n_start  , n_start+2, .5 * nudt1);
-      nudts[cnt++] = do_bc(prts, n_start+1, n_start+2, .5 * nudt1);
+      nudts[cnt++] = do_bc(prts, permute[0], permute[1], .5 * nudt1);
+      nudts[cnt++] = do_bc(prts, permute[0], permute[2], .5 * nudt1);
+      nudts[cnt++] = do_bc(prts, permute[1], permute[2], .5 * nudt1);
       n = 3;
     }
     for (; n < nn;  n += 2) { // do remaining particles as pair
-      nudts[cnt++] = do_bc(prts, n_start+n, n_start+n+1, nudt1);
+      nudts[cnt++] = do_bc(prts, permute[n], permute[n+1], nudt1);
     }
 
     calc_stats(stats, nudts, cnt);
