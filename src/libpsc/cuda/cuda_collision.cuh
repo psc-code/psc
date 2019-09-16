@@ -36,12 +36,12 @@ public:
     RngFake rng_;
   };
 
-  void _init(int size) {}
-
-  Device toDevice() { return Device(*this); }
+  void resize(int size) { size_ = size; }
+  int size() { return size_; }
 
 private:
   RngFake rng_;
+  int size_ = 0;
 };
 
 // ======================================================================
@@ -72,7 +72,7 @@ public:
   class Device
   {
   public:
-    Device(RngStateCuda& rng_state) : rngs_(rng_state.rngs_) {}
+    Device(RngStateCuda& rng_state) : rngs_(rng_state.rngs_.data().get()) {}
 
     __device__ Rng operator[](int id) const { return rngs_[id]; }
     __device__ Rng& operator[](int id) { return rngs_[id]; }
@@ -80,15 +80,15 @@ public:
     Rng* rngs_;
   };
 
-  void _init(int size);
+  RngStateCuda() = default;
+  RngStateCuda(int size) { resize(size); }
 
-  void dtor() // FIXME
-  {
-    myCudaFree(rngs_);
-  }
+  // also reseeds!
+  void resize(int size);
+  int size() { return rngs_.size(); }
 
 private:
-  Rng* rngs_;
+  thrust::device_vector<Rng> rngs_;
 };
 
 // ----------------------------------------------------------------------
@@ -103,9 +103,9 @@ __global__ static void k_curand_setup(RngStateCuda::Device rng_state, int size)
   }
 }
 
-inline void RngStateCuda::_init(int size)
+inline void RngStateCuda::resize(int size)
 {
-  rngs_ = (RngStateCuda::Rng*)myCudaMalloc(size * sizeof(*rngs_));
+  rngs_.resize(size);
 
   dim3 dim_grid = (size + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
   k_curand_setup<<<dim_grid, THREADS_PER_BLOCK>>>(*this, size);
@@ -155,9 +155,8 @@ struct CudaCollision
       blocks = 32768;
     dim3 dimGrid(blocks);
 
-    if (first_time_) {
-      rng_state_._init(blocks * THREADS_PER_BLOCK);
-      first_time_ = false;
+    if (blocks * THREADS_PER_BLOCK > rng_state_.size()) {
+      rng_state_.resize(blocks * THREADS_PER_BLOCK);
     }
 
     // all particles need to have same weight!
@@ -210,5 +209,4 @@ private:
   int nicell_;
   double dt_;
   RngState rng_state_;
-  bool first_time_ = true;
 };
