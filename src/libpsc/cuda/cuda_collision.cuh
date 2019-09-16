@@ -1,10 +1,10 @@
 
 #pragma once
 
-#include "rng_state.cuh"
 #include "cuda_base.cuh"
 #include "cuda_mparticles.cuh"
 #include "cuda_mparticles_sort.cuh"
+#include "rng_state.cuh"
 // FIXME, horrible hack...
 #define DEVICE __device__
 #include "binary_collision.hxx"
@@ -43,11 +43,9 @@ struct CudaCollision
 
   void operator()(cuda_mparticles& cmprts)
   {
-    auto sort_by_cell = cuda_mparticles_randomize_sort();
-
-    sort_by_cell.find_indices_ids(cmprts);
-    sort_by_cell.sort();
-    sort_by_cell.find_offsets();
+    sort_.find_indices_ids(cmprts);
+    sort_.sort();
+    sort_.find_offsets();
     // for (int c = 0; c <= cmprts.n_cells(); c++) {
     //   printf("off[%d] = %d\n", c, int(sort_by_cell.d_off[c]));
     // }
@@ -67,8 +65,8 @@ struct CudaCollision
     real_t nudt0 = wni / nicell_ * interval_ * dt_ * nu_;
 
     k_collide<cuda_mparticles, RngState><<<dimGrid, THREADS_PER_BLOCK>>>(
-      cmprts, sort_by_cell.d_off.data().get(), sort_by_cell.d_id.data().get(),
-      nudt0, rng_state_, cmprts.n_cells());
+      cmprts, sort_.d_off.data().get(), sort_.d_id.data().get(), nudt0,
+      rng_state_, cmprts.n_cells());
     cuda_sync_if_enabled();
   }
 
@@ -111,4 +109,5 @@ private:
   int nicell_;
   double dt_;
   RngState rng_state_;
+  cuda_mparticles_randomize_sort sort_;
 };
