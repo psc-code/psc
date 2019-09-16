@@ -243,17 +243,6 @@ public:
 //
 // by cell
 
-struct AddRandom
-{
-  __device__ float operator()(uint n, uint idx)
-  {
-    thrust::default_random_engine engine;
-    thrust::uniform_real_distribution<float> uniform;
-    engine.discard(n);
-    return uniform(engine) + idx;
-  }
-};
-
 struct cuda_mparticles_randomize_sort
 {
   cuda_mparticles_randomize_sort(uint n_cells) : d_off(n_cells + 1) {}

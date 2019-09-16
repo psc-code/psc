@@ -5,13 +5,54 @@
 #include "../libpsc/cuda/cuda_mparticles_sort.cuh"
 
 #include "../libpsc/cuda/collision_cuda_impl.hxx"
-#include "../libpsc/psc_collision/psc_collision_impl.hxx"
+#include "../libpsc/cuda/cuda_collision.cuh"
 #include "psc_fields_single.h"
 #include "psc_particles_single.h"
 #include "testing.hxx"
 
 using dim = dim_yz;
 using Mparticles = MparticlesCuda<BS144>;
+
+// ======================================================================
+// RngStateCuda
+
+TEST(RngStateCuda, ctor_dtor)
+{
+  RngStateCuda rng_state;
+  rng_state._init(256);
+  rng_state.dtor();
+}
+
+__global__ static void kernel_random(RngStateCuda::Device rng_state,
+                                     thrust::device_ptr<float> x)
+{
+  int n = threadIdx.x + blockDim.x * blockIdx.x;
+
+  // curandState s;
+  // curand_init(0, n, 0, &s);
+  //  x[n] = curand_uniform(&s);
+  auto rng = rng_state[n];
+  x[n] = rng.uniform();
+  rng_state[n] = rng;
+  printf("n %d x %g\n", n, float(x[n]));
+}
+
+TEST(RngStateCuda, access)
+{
+  dim3 dim_grid(2);
+  RngStateCuda rng_state;
+  rng_state._init(dim_grid.x * THREADS_PER_BLOCK);
+
+  ASSERT_EQ(THREADS_PER_BLOCK, 128);
+  thrust::device_vector<float> x(dim_grid.x * THREADS_PER_BLOCK);
+  kernel_random<<<dim_grid, THREADS_PER_BLOCK>>>(rng_state, x.data());
+
+  float sum = thrust::reduce(x.begin(), x.end(), 0.f, thrust::plus<float>());
+  float avg = sum / x.size();
+  EXPECT_NEAR(avg, .5, .05);
+
+  rng_state.dtor();
+}
 
 // ======================================================================
 // make_psc

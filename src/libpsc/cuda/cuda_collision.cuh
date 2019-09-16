@@ -18,14 +18,27 @@ struct CudaCollision;
 // ======================================================================
 // RngStateFake
 
-struct RngStateFake
+class RngStateFake
 {
-  void init(dim3 dim_grid) {}
-  void dtor() {}
+public:
+  // ======================================================================
+  // RngStateFake::Device
 
-  __device__ RngFake operator[](int id) const { return rng_; }
+  class Device
+  {
+  public:
+    Device(RngStateFake& rng) : rng_(rng.rng_) {}
 
-  __device__ RngFake& operator[](int id) { return rng_; }
+    __device__ RngFake operator[](int id) const { return rng_; }
+    __device__ RngFake& operator[](int id) { return rng_; }
+
+  private:
+    RngFake rng_;
+  };
+
+  void _init(int size) {}
+
+  Device toDevice() { return Device(*this); }
 
 private:
   RngFake rng_;
@@ -34,13 +47,15 @@ private:
 // ======================================================================
 // RngStateCuda
 
-struct RngStateCuda
+class RngStateCuda
 {
+public:
   // ======================================================================
   // RngStateCuda::Rng
 
-  struct Rng
+  class Rng
   {
+  public:
     // ----------------------------------------------------------------------
     // uniform
     //
@@ -51,49 +66,56 @@ struct RngStateCuda
     curandState curand_state;
   };
 
-  void init(dim3 dim_grid);
+  // ======================================================================
+  // RngStateCuda::Device
+
+  class Device
+  {
+  public:
+    Device(RngStateCuda& rng_state) : rngs_(rng_state.rngs_) {}
+
+    __device__ Rng operator[](int id) const { return rngs_[id]; }
+    __device__ Rng& operator[](int id) { return rngs_[id]; }
+
+    Rng* rngs_;
+  };
+
+  void _init(int size);
 
   void dtor() // FIXME
   {
     myCudaFree(rngs_);
   }
 
-  __device__ Rng operator[](int id) const { return rngs_[id]; }
-
-  __device__ Rng& operator[](int id) { return rngs_[id]; }
-
-  Rng* rngs_ = {nullptr};
-  std::size_t size_ = 0;
+private:
+  Rng* rngs_;
 };
 
 // ----------------------------------------------------------------------
 // k_curand_setup
 
-__global__ static void k_curand_setup(RngStateCuda rng_state)
+__global__ static void k_curand_setup(RngStateCuda::Device rng_state, int size)
 {
   int id = threadIdx.x + blockIdx.x * THREADS_PER_BLOCK;
 
-  curand_init(1234, id, 0, &rng_state[id].curand_state); // FIXME, % 1024 hack
+  if (id < size) {
+    curand_init(0, id, 0, &rng_state[id].curand_state);
+  }
 }
 
-void RngStateCuda::init(dim3 dim_grid)
+inline void RngStateCuda::_init(int size)
 {
-  int n_threads = dim_grid.x * THREADS_PER_BLOCK;
+  rngs_ = (RngStateCuda::Rng*)myCudaMalloc(size * sizeof(*rngs_));
 
-  if (n_threads > size_) {
-    myCudaFree(rngs_);
-    mprintf("dbg: expanding cuda RNG state\n");
-    rngs_ = (RngStateCuda::Rng*)myCudaMalloc(n_threads * sizeof(*rngs_));
-    size_ = n_threads;
-    k_curand_setup<<<dim_grid, THREADS_PER_BLOCK>>>(*this);
-    cuda_sync_if_enabled();
-  }
+  dim3 dim_grid = (size + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+  k_curand_setup<<<dim_grid, THREADS_PER_BLOCK>>>(*this, size);
+  cuda_sync_if_enabled();
 };
 
 template <typename cuda_mparticles, typename RngState>
 __global__ static void k_collide(
   DMparticlesCuda<typename cuda_mparticles::BS> dmprts, uint* d_off, uint* d_id,
-  float nudt0, RngState rng_state, uint n_cells)
+  float nudt0, typename RngState::Device rng_state, uint n_cells)
 {
   CudaCollision<cuda_mparticles, RngState>::d_collide(
     dmprts, d_off, d_id, nudt0, rng_state, n_cells);
@@ -117,12 +139,10 @@ struct CudaCollision
 
   int interval() const { return interval_; }
 
-  void reset(cuda_mparticles& cmprts) { first_time_ = true; }
-
   void operator()(cuda_mparticles& cmprts)
   {
     auto sort_by_cell = cuda_mparticles_randomize_sort{cmprts.n_cells()};
-    
+
     sort_by_cell.find_indices_ids(cmprts);
     sort_by_cell.sort();
     sort_by_cell.find_offsets();
@@ -135,21 +155,25 @@ struct CudaCollision
       blocks = 32768;
     dim3 dimGrid(blocks);
 
-    rng_state_.init(dimGrid);
+    if (first_time_) {
+      rng_state_._init(blocks * THREADS_PER_BLOCK);
+      first_time_ = false;
+    }
 
     // all particles need to have same weight!
     real_t wni = 1.; // FIXME, there should at least be some assert to enforce
                      // this //prts[n_start].w());
     real_t nudt0 = wni / nicell_ * interval_ * dt_ * nu_;
 
-    k_collide<cuda_mparticles><<<dimGrid, THREADS_PER_BLOCK>>>(
+    k_collide<cuda_mparticles, RngState><<<dimGrid, THREADS_PER_BLOCK>>>(
       cmprts, sort_by_cell.d_off.data().get(), sort_by_cell.d_id.data().get(),
       nudt0, rng_state_, cmprts.n_cells());
     cuda_sync_if_enabled();
   }
 
   __device__ static void d_collide(DMparticles dmprts, uint* d_off, uint* d_id,
-                                   float nudt0, RngState rng_state,
+                                   float nudt0,
+                                   typename RngState::Device rng_state,
                                    uint n_cells)
   {
 
