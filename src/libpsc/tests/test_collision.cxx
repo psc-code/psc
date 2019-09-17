@@ -142,10 +142,10 @@ TYPED_TEST(CollisionTest, Test1)
   // depends on random numbers, but for RngFake, we know
   EXPECT_NEAR(prtf0.u()[0],  0.96226911, eps);
   EXPECT_NEAR(prtf0.u()[1],  0.        , eps);
-  EXPECT_NEAR(prtf0.u()[2], -0.17342988, eps);
+  EXPECT_NEAR(std::abs(prtf0.u()[2]), 0.17342988, eps);
   EXPECT_NEAR(prtf1.u()[0],  0.03773088, eps);
   EXPECT_NEAR(prtf1.u()[1], -0.        , eps);
-  EXPECT_NEAR(prtf1.u()[2],  0.17342988, eps);
+  EXPECT_NEAR(std::abs(prtf1.u()[2]), 0.17342988, eps);
 }
 
 // ======================================================================
