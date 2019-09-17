@@ -3,6 +3,7 @@
 #define GRID_DOMAIN_H
 
 #include <mrc_common.h>
+#include <iostream>
 
 namespace psc
 {
@@ -17,7 +18,7 @@ struct Domain
 {
   using Real = R;
   using Real3 = Vec3<R>;
-  
+
   Domain() {}
 
   Domain(Int3 gdims, Real3 length, Real3 corner = {0., 0., 0.},
@@ -46,6 +47,19 @@ struct Domain
   Int3 ldims;
   Real3 dx;
 };
+
+template <typename R>
+inline std::ostream& operator<<(std::ostream& os, const Domain<R>& domain)
+{
+  os << "Domain{gdims=" << domain.gdims;
+  os << ", length=" << domain.length;
+  os << ", corner=" << domain.corner;
+  os << ", np=" << domain.np;
+  os << ", ldims=" << domain.ldims;
+  os << ", dx=" << domain.dx;
+  os << "}";
+  return os;
+}
 
 } // namespace grid
 } // namespace psc

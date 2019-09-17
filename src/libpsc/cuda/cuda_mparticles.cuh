@@ -190,7 +190,7 @@ public:
   MparticlesCudaStorage storage;
 
   // per block
-  cuda_mparticles_sort2 by_block_;
+  cuda_mparticles_sort_by_block by_block_;
 
   uint n_prts = 0;                       // total # of particles across all patches
   const Grid_t& grid_;
@@ -240,8 +240,6 @@ private:
   std::vector<Particle> get_particles(int beg, int end);
   
 public:
-  void find_block_indices_ids(thrust::device_vector<uint>& d_idx, thrust::device_vector<uint>& d_id);
-  void find_cell_indices_ids(thrust::device_vector<uint>& d_idx, thrust::device_vector<uint>& d_id);
   void reorder();
   void reorder(const thrust::device_vector<uint>& d_id);
   void reorder_and_offsets(const thrust::device_vector<uint>& d_idx, const thrust::device_vector<uint>& d_id,
