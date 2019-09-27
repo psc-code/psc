@@ -4,7 +4,8 @@
 #include <psc.hxx>
 #include <setup_fields.hxx>
 #include <setup_particles.hxx>
-
+#include "../libpsc/vpic/fields_item_vpic.hxx"
+#include "../libpsc/vpic/setup_fields_vpic.hxx"
 #include "psc_config.hxx"
 
 #include "rngpool_iface.h"
