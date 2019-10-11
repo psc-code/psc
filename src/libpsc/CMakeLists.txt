@@ -15,11 +15,6 @@ add_library(psc
 
   psc_balance/psc_balance.cxx
 
-  psc_diag/psc_diag.cxx
-  psc_diag/psc_diag_item.cxx
-  psc_diag/psc_diag_item_field_energy.cxx
-  psc_diag/psc_diag_item_particle_energy.cxx
-
   vpic/psc_particles_vpic.cxx
   vpic/psc_fields_vpic.cxx
   vpic/psc_vpic_bits.cxx
@@ -73,7 +68,6 @@ if (USE_VPIC)
     INTERFACE_LINK_LIBRARIES "/Users/kai/build/vpic/build/libvpic.a"
   )
 
-  target_include_directories(psc PUBLIC vpic)
   target_link_libraries(psc PUBLIC VPIC::VPIC)
 endif()
 

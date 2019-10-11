@@ -2,7 +2,7 @@
 #pragma once
 
 #include <mrc_profile.h>
-#include <psc_diag.h>
+#include <DiagEnergies.h>
 
 #include <particles.hxx>
 
@@ -142,11 +142,6 @@ struct Psc
     assert(grid.isInvar(0) == Dim::InvarX::value);
     assert(grid.isInvar(1) == Dim::InvarY::value);
     assert(grid.isInvar(2) == Dim::InvarZ::value);
-
-    diag_ = psc_diag_create(MPI_COMM_WORLD);
-    psc_diag_set_from_options(diag_);
-
-    psc_diag_setup(diag_);
 
     initialize_stats();
     initialize();
@@ -628,11 +623,6 @@ private:
 
   void diagnostics()
   {
-#ifndef VPIC
-    // FIXME
-    psc_diag_run(diag_, mprts_, mflds_);
-#endif
-
     diagnostics_(mprts_, mflds_);
   }
 
@@ -680,8 +670,6 @@ protected:
   BndParticles bndp_;
 
   Checkpointing checkpointing_;
-
-  psc_diag* diag_; ///< timeseries diagnostics
 
   // FIXME, maybe should be private
   // need to make sure derived class sets these (? -- or just leave them off by
