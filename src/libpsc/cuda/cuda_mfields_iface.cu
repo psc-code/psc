@@ -80,9 +80,9 @@ int MfieldsCuda::index(int m, int i, int j, int k, int p) const
 
 void MfieldsCuda::write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names)
 {
-  auto& mflds = get_as<MfieldsSingle>(0, n_comps());
-  mflds.write_as_mrc_fld(io, name, comp_names);
-  put_as(mflds, 0, 0);
+  auto h_mflds = hostMirror(*this);
+  copy(*this, h_mflds);
+  MrcIo::write_mflds(io, h_mflds, grid(), name, comp_names);
 }
 
 MfieldsCuda::Patch::Patch(MfieldsCuda& mflds, int p)

@@ -17,7 +17,8 @@ struct CollisionNone : CollisionBase
 
   CollisionNone(MPI_Comm comm, int interval, double nu) {}
 
-  void operator()(MparticlesBase& mprts_base) override {}
+  template <typename Mparticles>
+  void operator()(Mparticles& mprts_base) {}
 };
 
 void* global_collision; // FIXME

@@ -11,6 +11,5 @@
 
 struct HeatingBase
 {
-  virtual void run(MparticlesBase& mprts_base) = 0;
 };
 

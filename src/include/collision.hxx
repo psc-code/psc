@@ -8,7 +8,5 @@
 
 class CollisionBase
 {
-public:
-  virtual void operator()(MparticlesBase& mprts_base) = 0;
 };
 
