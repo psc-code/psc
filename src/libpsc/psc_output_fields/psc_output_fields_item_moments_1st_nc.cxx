@@ -18,7 +18,7 @@ struct Moment_n_1st_nc
   
   constexpr static char const* name = "n_1st_nc";
   constexpr static int n_comps = 1;
-  constexpr static fld_names_t fld_names() { return { "n" }; }
+  static std::vector<std::string> fld_names() { return { "n" }; }
   constexpr static int flags = POFI_BY_KIND;
   
   static void run(Mfields& mflds, Mparticles& mprts)
@@ -42,19 +42,22 @@ struct Moment_n_1st_nc
 // rho
 
 template<typename MP, typename MF>
-struct Moment_rho_1st_nc
+struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MP, MF>, MF>
 {
+  using Base = ItemMomentCRTP<Moment_rho_1st_nc<MP, MF>, MF>;
   using Mparticles = MP;
   using Mfields = MF;
   using real_t = typename Mparticles::real_t;
   using particles_t = typename Mparticles::Patch;
+
+  using Base::n_comps;
   
   constexpr static char const* name = "rho_1st_nc";
-  constexpr static int n_comps = 1;
-  constexpr static fld_names_t fld_names() { return { "rho" }; }
+  static int n_comps(const Grid_t& grid) { return 1; }
+  static std::vector<std::string> fld_names() { return { "rho" }; }
   constexpr static int flags = 0;
-  
-  static void run(Mfields& mflds, Mparticles& mprts)
+
+  explicit Moment_rho_1st_nc(const Mparticles& mprts) : Base{mprts.grid()}
   {
     const auto& grid = mprts.grid();
     real_t fnqs = grid.norm.fnqs;
@@ -62,11 +65,12 @@ struct Moment_rho_1st_nc
     
     auto accessor = mprts.accessor();
     for (int p = 0; p < mprts.n_patches(); p++) {
-      auto flds = mflds[p];
+      auto res = Base::mres_[p];
       for (auto prt: accessor[p]) {
-	DEPOSIT_TO_GRID_1ST_NC(prt, flds, 0, prt.q());
+	DEPOSIT_TO_GRID_1ST_NC(prt, res, 0, prt.q());
       }
     }
+    Base::bnd_.add_ghosts(Base::mres_);
   }
 };
 
@@ -83,7 +87,7 @@ struct Moment_v_1st_nc
   
   constexpr static char const* name = "v_1st_nc";
   constexpr static int n_comps = 3;
-  constexpr static fld_names_t fld_names() { return { "vx", "vy", "vz" }; }
+  static std::vector<std::string> fld_names() { return { "vx", "vy", "vz" }; }
   constexpr static int flags = POFI_BY_KIND;
   
   static void run(Mfields& mflds, Mparticles& mprts)

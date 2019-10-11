@@ -13,13 +13,13 @@
 struct checks_order_1st
 {
   template<typename Mparticles, typename Mfields>
-  using Moment_rho_nc = ItemMomentAddBnd<Moment_rho_1st_nc<Mparticles, Mfields>>;
+  using Moment_rho_nc = Moment_rho_1st_nc<Mparticles, Mfields>;
 };
 
 struct checks_order_2nd
 {
   template<typename Mparticles, typename Mfields>
-  using Moment_rho_nc = ItemMomentAddBnd<Moment_rho_2nd_nc<Mparticles, Mfields>>;
+  using Moment_rho_nc = Moment_rho_2nd_nc<Mparticles, Mfields>;
 };
 
 template<typename _Mparticles, typename _MfieldsState, typename _Mfields, typename ORDER>
@@ -37,11 +37,10 @@ struct Checks_ : ChecksParams, ChecksBase
   Checks_(const Grid_t& grid, MPI_Comm comm, const ChecksParams& params)
     : ChecksParams(params),
       comm_{comm},
-      item_rho_{grid},
-      item_rho_m_{grid},
-      item_rho_p_{grid},
-      item_dive_{grid},
-      item_divj_{grid}
+      rho_{grid, 1, grid.ibn},
+      rho_m_{grid, 1, grid.ibn},
+      rho_p_{grid, 1, grid.ibn},
+      divj_{grid, 1, grid.ibn}
   {}
   
   // ======================================================================
@@ -57,7 +56,7 @@ struct Checks_ : ChecksParams, ChecksBase
       return;
     }
 
-    item_rho_m_.run(mprts);
+    rho_m_.assign(Moment_t{mprts});
   }
 
   // ----------------------------------------------------------------------
@@ -70,22 +69,20 @@ struct Checks_ : ChecksParams, ChecksBase
       return;
     }
 
-    item_rho_p_.run(mprts);
-    item_divj_(grid, mflds);
+    rho_p_.assign(Moment_t{mprts});
+    auto item_divj = Item_divj<MfieldsState>(mflds);
 
-    auto& rho_p = item_rho_p_.result();
-    auto& rho_m = item_rho_m_.result();
-    auto& d_rho = rho_p;
-    d_rho.axpy(-1., rho_m);
+    auto& d_rho = rho_p_;
+    d_rho.axpy(-1., rho_m_);
 
-    auto& div_j = item_divj_.result();
-    div_j.scale(grid.dt);
+    divj_.assign(item_divj);
+    divj_.scale(grid.dt);
 
     double eps = continuity_threshold;
     double max_err = 0.;
-    for (int p = 0; p < div_j.n_patches(); p++) {
+    for (int p = 0; p < divj_.n_patches(); p++) {
       auto D_rho = d_rho[p];
-      auto Div_J = div_j[p];
+      auto Div_J = divj_[p];
       grid.Foreach_3d(0, 0, [&](int jx, int jy, int jz) {
 	  double d_rho = D_rho(0, jx,jy,jz);
 	  double div_j = Div_J(0, jx,jy,jz);
@@ -116,7 +113,7 @@ struct Checks_ : ChecksParams, ChecksBase
 	mrc_io_view(io);
       }
       mrc_io_open(io, "w", grid.timestep(), grid.timestep() * grid.dt);
-      div_j.write_as_mrc_fld(io, "div_j", {"div_j"});
+      divj_.write_as_mrc_fld(io, "div_j", {"div_j"});
       d_rho.write_as_mrc_fld(io, "d_rho", {"d_rho"});
       mrc_io_close(io);
     }
@@ -137,17 +134,13 @@ struct Checks_ : ChecksParams, ChecksBase
       return;
     }
 
-    item_rho_.run(mprts);
-    item_dive_(grid, mflds);
-
-    auto& dive = item_dive_.result();
-    auto& rho = item_rho_.result();
+    rho_.assign(Moment_t{mprts});
+    auto dive = Item_dive<MfieldsState>(mflds);
     
     double eps = gauss_threshold;
     double max_err = 0.;
     for (int p = 0; p < dive.n_patches(); p++) {
-      auto Rho = rho[p];
-      auto DivE = dive[p];
+      auto Rho = rho_[p];
 
       int l[3] = {0, 0, 0}, r[3] = {0, 0, 0};
       for (int d = 0; d < 3; d++) {
@@ -163,7 +156,7 @@ struct Checks_ : ChecksParams, ChecksBase
 	    // nothing
 	  } else {
 	    double v_rho = Rho(0, jx,jy,jz);
-	    double v_dive = DivE(0, jx,jy,jz);
+	    double v_dive = dive(0, {jx,jy,jz}, p);
 	    max_err = fmax(max_err, fabs(v_dive - v_rho));
 #if 1
 	    if (fabs(v_dive - v_rho) > eps) {
@@ -194,8 +187,9 @@ struct Checks_ : ChecksParams, ChecksBase
 	mrc_io_view(io);
       }
       mrc_io_open(io, "w", grid.timestep(), grid.timestep() * grid.dt);
-      rho.write_as_mrc_fld(io, "rho", {"rho"});
-      dive.write_as_mrc_fld(io, "Div_E", {"Div_E"});
+      rho_.write_as_mrc_fld(io, "rho", {"rho"});
+      MrcIo::write_mflds(io, adaptMfields(dive), dive.grid(), dive.name(),
+			 dive.comp_names());
       mrc_io_close(io);
     }
 
@@ -204,10 +198,9 @@ struct Checks_ : ChecksParams, ChecksBase
 
   // state
   MPI_Comm comm_;
-  Moment_t item_rho_p_;
-  Moment_t item_rho_m_;
-  Moment_t item_rho_;
-  FieldsItemFields<ItemLoopPatches<Item_dive<MfieldsState, Mfields>>> item_dive_;
-  FieldsItemFields<ItemLoopPatches<Item_divj<MfieldsState, Mfields>>> item_divj_;
+  Mfields rho_p_;
+  Mfields rho_m_;
+  Mfields rho_;
+  Mfields divj_;
 };
 

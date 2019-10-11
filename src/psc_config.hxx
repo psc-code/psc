@@ -17,7 +17,7 @@
 #include "../libpsc/psc_output_particles/output_particles_hdf5_impl.hxx"
 #include "../libpsc/psc_output_particles/output_particles_none_impl.hxx"
 #include "../libpsc/psc_output_fields/fields_item_moments_1st.hxx"
-#include "../libpsc/psc_output_fields/fields_item_jeh.hxx"
+#include "../libpsc/psc_output_fields/fields_item_fields.hxx"
 
 #ifdef USE_CUDA
 #include "../libpsc/cuda/push_particles_cuda_impl.hxx"
@@ -256,21 +256,4 @@ struct PscConfigVpicPsc
 				  typename VpicConfig::MfieldsHydro>;
 #endif
 };
-
-using FieldsItem_E_cc = FieldsItemFields<ItemLoopPatches<Item_e_cc>>;
-using FieldsItem_H_cc = FieldsItemFields<ItemLoopPatches<Item_h_cc>>;
-using FieldsItem_J_cc = FieldsItemFields<ItemLoopPatches<Item_j_cc>>;
-
-template <typename Mparticles>
-using FieldsItem_n_1st_cc =
-  FieldsItemMoment<ItemMomentAddBnd<Moment_n_1st<Mparticles, MfieldsC>>>;
-template <typename Mparticles>
-using FieldsItem_v_1st_cc =
-  FieldsItemMoment<ItemMomentAddBnd<Moment_v_1st<Mparticles, MfieldsC>>>;
-template <typename Mparticles>
-using FieldsItem_p_1st_cc =
-  FieldsItemMoment<ItemMomentAddBnd<Moment_p_1st<Mparticles, MfieldsC>>>;
-template <typename Mparticles>
-using FieldsItem_T_1st_cc =
-  FieldsItemMoment<ItemMomentAddBnd<Moment_T_1st<Mparticles, MfieldsC>>>;
 

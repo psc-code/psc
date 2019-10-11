@@ -4,6 +4,7 @@
 #include <setup_particles.hxx>
 
 #include "DiagnosticsDefault.h"
+#include "OutputFieldsDefault.h"
 #include "psc_config.hxx"
 
 #include "../libpsc/psc_heating/psc_heating_impl.hxx"
@@ -384,16 +385,9 @@ void run()
   // FIXME, this really is too complicated and not very flexible
 
   // -- output fields
-  OutputFieldsCParams outf_params{};
+  OutputFieldsParams outf_params{};
   outf_params.pfield_step = 200;
-  std::vector<std::unique_ptr<FieldsItemBase>> outf_items;
-  outf_items.emplace_back(new FieldsItem_E_cc(grid));
-  outf_items.emplace_back(new FieldsItem_H_cc(grid));
-  outf_items.emplace_back(new FieldsItem_J_cc(grid));
-  outf_items.emplace_back(new FieldsItem_n_1st_cc<Mparticles>(grid));
-  outf_items.emplace_back(new FieldsItem_v_1st_cc<Mparticles>(grid));
-  outf_items.emplace_back(new FieldsItem_T_1st_cc<Mparticles>(grid));
-  OutputFieldsC outf{grid, outf_params, std::move(outf_items)};
+  OutputFields outf{grid, outf_params};
 
   // -- output particles
   OutputParticlesParams outp_params{};

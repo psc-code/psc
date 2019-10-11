@@ -1,90 +1,51 @@
 
 #pragma once
 
-#include "particles.hxx"
-#include "fields3d.hxx"
-#include "fields.hxx"
-#include "bnd.hxx"
-#include "psc_fields_c.h"
 #include "../libpsc/psc_bnd/psc_bnd_impl.hxx"
+#include "bnd.hxx"
+#include "fields.hxx"
+#include "fields3d.hxx"
+#include "particles.hxx"
+#include "psc_fields_c.h"
 
 #include <mrc_profile.h>
 
+#include <array>
 #include <map>
 #include <string>
-#include <array>
 
-enum {
-  POFI_BY_KIND    = 2, // this item needs to be replicated by kind
-};
-
-#define POFI_MAX_COMPS (16)
-
-using fld_names_t = std::array<const char*, POFI_MAX_COMPS>;
-
-// ======================================================================
-// FieldsItemBase
-
-struct FieldsItemBase
+enum
 {
-  virtual ~FieldsItemBase() {};
-
-  virtual void run(const Grid_t& grid, MfieldsStateBase& mflds_base, MparticlesBase& mprts_base) = 0;
-
-  virtual MfieldsBase& mres() = 0;
-
-  virtual const char* name() const = 0;
-
-  virtual int n_comps(const Grid_t& grid) const = 0;
-
-  virtual std::vector<std::string> comp_names() = 0;
-
-  bool inited = true; // FIXME hack to avoid dtor call when not yet constructed
+  POFI_BY_KIND = 2, // this item needs to be replicated by kind
 };
 
 // ======================================================================
 // FieldsItemFields
 
-template<typename Item>
-struct FieldsItemFields : FieldsItemBase
+template <typename Item>
+struct FieldsItemFields
 {
-  using MfieldsState = typename Item::MfieldsState;
   using Mfields = typename Item::Mfields;
-  
-  const char* name() const override { return Item::name; }
 
-  int n_comps(const Grid_t& grid) const override { return Item::n_comps; }
- 
-  FieldsItemFields(const Grid_t& grid)
-    : mres_{grid, Item::n_comps, grid.ibn}
-  {}
+  FieldsItemFields(const Grid_t& grid) : mres_{grid, Item::n_comps, grid.ibn} {}
 
+  template <typename MfieldsState>
   void operator()(const Grid_t& grid, MfieldsState& mflds)
   {
     Item::run(grid, mflds, mres_);
   }
 
-  void run(const Grid_t& grid, MfieldsStateBase& mflds_base, MparticlesBase& mprts_base) override
-  {
-    auto& mflds = mflds_base.get_as<MfieldsState>(0, mflds_base._n_comps());
-    (*this)(grid, mflds);
-    mflds_base.put_as(mflds, 0, 0);
-  }
-
-  virtual std::vector<std::string> comp_names() override
-  {
-    std::vector<std::string> comp_names;
-    for (int m = 0; m < Item::n_comps; m++) {
-      comp_names.emplace_back(Item::fld_names()[m]);
-    }
-    return comp_names;
-  }
-  
-  virtual MfieldsBase& mres() override { return mres_; }
-
   Mfields& result() { return mres_; }
 
-private:  
+  static const char* name() { return Item::name; }
+  static int n_comps(const Grid_t& grid) { return Item::n_comps; }
+
+  std::vector<std::string> comp_names(const Grid_t& grid)
+  {
+    return Item::fld_names();
+  }
+
+private:
   Mfields mres_;
 };
 
@@ -93,179 +54,148 @@ private:
 //
 // Adapter from per-patch Item with ::set
 
-template<typename ItemPatch>
+template <typename ItemPatch>
 struct ItemLoopPatches : ItemPatch
 {
   using MfieldsState = typename ItemPatch::MfieldsState;
   using Mfields = typename ItemPatch::Mfields;
-  
+
   static void run(const Grid_t& grid, MfieldsState& mflds, Mfields& mres)
   {
     for (int p = 0; p < mres.n_patches(); p++) {
       auto F = mflds[p];
       auto R = mres[p];
       mres.Foreach_3d(0, 0, [&](int i, int j, int k) {
-	  ItemPatch::set(grid, R, F, i,j,k);
-	});
+        ItemPatch::set(grid, R, F, i, j, k);
+      });
     }
   }
 };
 
 // ======================================================================
-// ItemMomentCRTP
-//
-// deriving from this class adds the result field mres_
+// addKindSuffix
 
-template<typename Derived, typename MF>
-struct ItemMomentCRTP
+inline std::vector<std::string> addKindSuffix(
+  const std::vector<std::string>& names, const Grid_t::Kinds& kinds)
 {
-  using Mfields = MF;
-  
-  ItemMomentCRTP(const Grid_t& grid)
-    : mres_{grid, int(Derived::n_comps * ((Derived::flags & POFI_BY_KIND) ? grid.kinds.size() : 1)), grid.ibn}
-  {
-    auto n_comps = Derived::n_comps;
-    auto fld_names = Derived::fld_names();
-    auto& kinds = grid.kinds;
-    assert(n_comps <= POFI_MAX_COMPS);
-
-    if (!(Derived::flags & POFI_BY_KIND)) {
-      for (int m = 0; m < n_comps; m++) {
-	comp_names_.emplace_back(fld_names[m]);
-      }
-    } else {
-      for (int k = 0; k < kinds.size(); k++) {
-	for (int m = 0; m < n_comps; m++) {
-	  comp_names_.emplace_back(std::string(fld_names[m]) + "_" + kinds[k].name);
-	}
-      }
+  std::vector<std::string> result;
+  for (int k = 0; k < kinds.size(); k++) {
+    for (int m = 0; m < names.size(); m++) {
+      result.emplace_back(names[m] + "_" + kinds[k].name);
     }
   }
-  
-  Mfields& result() { return mres_; }
-  std::vector<std::string> comp_names() { return comp_names_; }
-
-protected:
-  Mfields mres_;
-  std::vector<std::string> comp_names_;
-};
+  return result;
+}
 
 // ======================================================================
-// ItemMomentAddBnd
+// ItemMomentBnd
 
-template<typename Moment_t, typename Bnd = Bnd_<typename Moment_t::Mfields>>
-struct ItemMomentAddBnd : ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Moment_t::Mfields>
+template <typename Mfields, typename Bnd = Bnd_<Mfields>>
+class ItemMomentBnd
 {
-  using Base = ItemMomentCRTP<ItemMomentAddBnd<Moment_t>, typename Moment_t::Mfields>;
-  using Mfields = typename Moment_t::Mfields;
-  using Mparticles = typename Moment_t::Mparticles;
+public:
+  ItemMomentBnd(const Grid_t& grid) : bnd_{grid, grid.ibn} {}
 
-  constexpr static const char* name = Moment_t::name;
-  constexpr static int n_comps = Moment_t::n_comps;
-  constexpr static fld_names_t fld_names() { return Moment_t::fld_names(); }
-  constexpr static int flags = Moment_t::flags;
-
-  ItemMomentAddBnd(const Grid_t& grid)
-    : Base{grid},
-      bnd_{grid, grid.ibn}
-  {}
-
-  void run(Mparticles& mprts)
+  void add_ghosts(Mfields& mres)
   {
-    auto& mres = this->mres_;
-    mres.zero();
-    Moment_t::run(mres, mprts);
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      add_ghosts_boundary(mprts.grid(), mres[p], p, 0, mres.n_comps());
+    for (int p = 0; p < mres.n_patches(); p++) {
+      add_ghosts_boundary(mres.grid(), mres[p], p, 0, mres.n_comps());
     }
 
     bnd_.add_ghosts(mres, 0, mres.n_comps());
   }
 
+private:
   // ----------------------------------------------------------------------
   // boundary stuff FIXME, should go elsewhere...
 
-  template<typename FE>
-  void add_ghosts_reflecting_lo(const Grid_t& grid, FE flds, int p, int d, int mb, int me)
+  template <typename FE>
+  void add_ghosts_reflecting_lo(const Grid_t& grid, FE flds, int p, int d,
+                                int mb, int me)
   {
     auto ldims = grid.ldims;
 
     int bx = ldims[0] == 1 ? 0 : 1;
     if (d == 1) {
       for (int iz = -1; iz < ldims[2] + 1; iz++) {
-	for (int ix = -bx; ix < ldims[0] + bx; ix++) {
-	  int iy = 0; {
-	    for (int m = mb; m < me; m++) {
-	      flds(m, ix,iy,iz) += flds(m, ix,iy-1,iz);
-	    }
-	  }
-	}
+        for (int ix = -bx; ix < ldims[0] + bx; ix++) {
+          int iy = 0;
+          {
+            for (int m = mb; m < me; m++) {
+              flds(m, ix, iy, iz) += flds(m, ix, iy - 1, iz);
+            }
+          }
+        }
       }
     } else if (d == 2) {
-      for (int iy = 0*-1; iy < ldims[1] + 0*1; iy++) {
-	for (int ix = -bx; ix < ldims[0] + bx; ix++) {
-	  int iz = 0; {
-	    for (int m = mb; m < me; m++) {
-	      flds(m, ix,iy,iz) += flds(m, ix,iy,iz-1);
-	    }
-	  }
-	}
+      for (int iy = 0 * -1; iy < ldims[1] + 0 * 1; iy++) {
+        for (int ix = -bx; ix < ldims[0] + bx; ix++) {
+          int iz = 0;
+          {
+            for (int m = mb; m < me; m++) {
+              flds(m, ix, iy, iz) += flds(m, ix, iy, iz - 1);
+            }
+          }
+        }
       }
     } else {
       assert(0);
     }
   }
 
-  template<typename FE>
-  void add_ghosts_reflecting_hi(const Grid_t& grid, FE flds, int p, int d, int mb, int me)
+  template <typename FE>
+  void add_ghosts_reflecting_hi(const Grid_t& grid, FE flds, int p, int d,
+                                int mb, int me)
   {
     auto ldims = grid.ldims;
 
     int bx = ldims[0] == 1 ? 0 : 1;
     if (d == 1) {
       for (int iz = -1; iz < ldims[2] + 1; iz++) {
-	for (int ix = -bx; ix < ldims[0] + bx; ix++) {
-	  int iy = ldims[1] - 1; {
-	    for (int m = mb; m < me; m++) {
-	      flds(m, ix,iy,iz) += flds(m, ix,iy+1,iz);
-	    }
-	  }
-	}
+        for (int ix = -bx; ix < ldims[0] + bx; ix++) {
+          int iy = ldims[1] - 1;
+          {
+            for (int m = mb; m < me; m++) {
+              flds(m, ix, iy, iz) += flds(m, ix, iy + 1, iz);
+            }
+          }
+        }
       }
     } else if (d == 2) {
-      for (int iy = 0*-1; iy < ldims[1] + 0*1; iy++) {
-	for (int ix = -bx; ix < ldims[0] + bx; ix++) {
-	  int iz = ldims[2] - 1; {
-	    for (int m = mb; m < me; m++) {
-	      flds(m, ix,iy,iz) += flds(m, ix,iy,iz+1);
-	    }
-	  }
-	}
+      for (int iy = 0 * -1; iy < ldims[1] + 0 * 1; iy++) {
+        for (int ix = -bx; ix < ldims[0] + bx; ix++) {
+          int iz = ldims[2] - 1;
+          {
+            for (int m = mb; m < me; m++) {
+              flds(m, ix, iy, iz) += flds(m, ix, iy, iz + 1);
+            }
+          }
+        }
       }
     } else {
       assert(0);
     }
   }
 
-  template<typename FE>
+  template <typename FE>
   void add_ghosts_boundary(const Grid_t& grid, FE res, int p, int mb, int me)
   {
     // lo
     for (int d = 0; d < 3; d++) {
       if (grid.atBoundaryLo(p, d)) {
-	if (grid.bc.prt_lo[d] == BND_PRT_REFLECTING ||
-	    grid.bc.prt_lo[d] == BND_PRT_OPEN) {
-	  add_ghosts_reflecting_lo(grid, res, p, d, mb, me);
-	}
+        if (grid.bc.prt_lo[d] == BND_PRT_REFLECTING ||
+            grid.bc.prt_lo[d] == BND_PRT_OPEN) {
+          add_ghosts_reflecting_lo(grid, res, p, d, mb, me);
+        }
       }
     }
     // hi
     for (int d = 0; d < 3; d++) {
       if (grid.atBoundaryHi(p, d)) {
-	if (grid.bc.prt_hi[d] == BND_PRT_REFLECTING ||
-	    grid.bc.prt_hi[d] == BND_PRT_OPEN) {
-	  add_ghosts_reflecting_hi(grid, res, p, d, mb, me);
-	}
+        if (grid.bc.prt_hi[d] == BND_PRT_REFLECTING ||
+            grid.bc.prt_hi[d] == BND_PRT_OPEN) {
+          add_ghosts_reflecting_hi(grid, res, p, d, mb, me);
+        }
       }
     }
   }
@@ -275,36 +205,35 @@ private:
 };
 
 // ======================================================================
-// FieldsItemMoment
+// ItemMomentCRTP
+//
+// deriving from this class adds the result field mres_
 
-template<typename Moment_t>
-struct FieldsItemMoment : FieldsItemBase
+template <typename Derived, typename MF, typename Bnd = Bnd_<MF>>
+class ItemMomentCRTP : public MFexpression<Derived>
 {
-  using Mparticles = typename Moment_t::Mparticles;
-  
-  const char* name() const override { return Moment_t::name; }
+public:
+  using Mfields = MF;
+  using Real = typename Mfields::real_t;
 
-  int n_comps(const Grid_t& grid) const override
+  const Real& operator()(int m, Int3 ijk, int p) const
   {
-    return Moment_t::n_comps * ((Moment_t::flags & POFI_BY_KIND) ? grid.kinds.size() : 1);
+    auto& mres = const_cast<Mfields&>(mres_);
+    return mres[p](m, ijk[0], ijk[1], ijk[2]);
   }
-  
-  FieldsItemMoment(const Grid_t& grid)
-    : moment_(grid)
+
+  const Grid_t& grid() const { return mres_.grid(); }
+  int n_comps() const { return mres_.n_comps(); }
+  int n_patches() const { return mres_.n_patches(); }
+  Int3 ibn() const { return mres_.ibn(); }
+
+protected:
+  ItemMomentCRTP(const Grid_t& grid)
+    : mres_{grid, Derived::n_comps(grid), grid.ibn}, bnd_{grid}
   {}
 
-  void run(const Grid_t& grid, MfieldsStateBase& mflds_base, MparticlesBase& mprts_base) override
-  {
-    auto& mprts = mprts_base.get_as<Mparticles>();
-    moment_.run(mprts);
-    mprts_base.put_as(mprts, MP_DONT_COPY);
-  }
-
-  virtual MfieldsBase& mres() override { return moment_.result(); }
-
-  virtual std::vector<std::string> comp_names()  override { return moment_.comp_names(); }
-  
-private:
-  Moment_t moment_;
+protected:
+  Mfields mres_;
+  ItemMomentBnd<Mfields, Bnd> bnd_;
 };
 

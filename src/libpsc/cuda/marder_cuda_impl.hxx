@@ -58,7 +58,7 @@ struct MarderCuda : MarderBase
   
   void calc_aid_fields(MfieldsState& mflds, Mparticles& mprts)
   {
-    item_div_e_.run(mprts.grid(), mflds, mprts); // FIXME, should accept NULL for particles
+    item_div_e_(mprts.grid(), mflds, mprts); // FIXME, should accept NULL for particles
   
     if (dump_) {
       static int cnt;
@@ -147,7 +147,7 @@ private:
   bool dump_; //< dump div_E, rho
 
   FieldsItemFields<Item_dive_cuda> item_div_e_;
-  FieldsItemMoment<Moment_rho_1st_nc_cuda<MparticlesCuda<BS144>, dim_yz>> item_rho_; // FIXME, hardcoded dim_yz
+  Moment_rho_1st_nc_cuda<MparticlesCuda<BS144>, dim_yz> item_rho_; // FIXME, hardcoded dim_yz
   mrc_io *io_; //< for debug dumping
 };
 

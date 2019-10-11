@@ -13,36 +13,37 @@ struct cuda_mparticles;
 // Moment_rho_1st_nc_cuda
 
 template<typename _Mparticles, typename dim>
-struct Moment_rho_1st_nc_cuda : ItemMomentCRTP<Moment_rho_1st_nc_cuda<_Mparticles, dim>, MfieldsCuda>
+struct Moment_rho_1st_nc_cuda
 {
-  using Base = ItemMomentCRTP<Moment_rho_1st_nc_cuda, MfieldsCuda>;
   using Mparticles = _Mparticles;
   using Mfields = MfieldsCuda;
   using Bnd = BndCuda3<Mfields>;
   
   constexpr static const char* name = "rho_1st_nc";
-  constexpr static int n_comps = 1;
-  constexpr static fld_names_t fld_names() { return { "rho_nc_cuda" }; } // FIXME
+  static int n_comps(const Grid_t&) { return 1; }
+  static std::vector<std::string> fld_names() { return { "rho_nc_cuda" }; } // FIXME
   constexpr static int flags = 0;
 
   Moment_rho_1st_nc_cuda(const Grid_t& grid)
-    : Base{grid},
+    : mres_{grid, n_comps(grid), grid.ibn},
       bnd_{grid, grid.ibn}
   {}
 
-  void run(Mparticles& mprts)
+  void operator()(Mparticles& mprts)
   {
-    Mfields& mres  = this->mres_;
     auto& cmprts = *mprts.cmprts();
-    cuda_mfields *cmres = mres.cmflds();
+    cuda_mfields *cmres = mres_.cmflds();
     
-    mres.zero();
+    mres_.zero();
     CudaMoments1stNcRho<cuda_mparticles<typename Mparticles::BS>, dim> cmoments;
     cmoments(cmprts, cmres);
-    bnd_.add_ghosts(mres, 0, mres.n_comps());
+    bnd_.add_ghosts(mres_, 0, mres_.n_comps());
   }
 
+  Mfields& result() { return mres_; }
+
 private:
+  Mfields mres_;
   Bnd bnd_;
 };
 
@@ -50,36 +51,51 @@ private:
 // Moment_n_1st_cuda
 
 template<typename _Mparticles, typename dim>
-struct Moment_n_1st_cuda : ItemMomentCRTP<Moment_n_1st_cuda<_Mparticles, dim>, MfieldsCuda>
+class Moment_n_1st_cuda : public ItemMomentCRTP<Moment_n_1st_cuda<_Mparticles, dim>, MfieldsCuda>
 {
-  using Base = ItemMomentCRTP<Moment_n_1st_cuda, MfieldsCuda>;
+public:
+  using Base = ItemMomentCRTP<Moment_n_1st_cuda<_Mparticles, dim>, MfieldsCuda>;
   using Mparticles = _Mparticles;
   using Mfields = MfieldsCuda;
   using Bnd = BndCuda3<Mfields>;
-  
-  constexpr static const char* name = "n_1st";
-  constexpr static int n_comps = 1;
-  constexpr static fld_names_t fld_names() { return { "n_1st_cuda" }; }
-  constexpr static int flags = POFI_BY_KIND;
 
-  Moment_n_1st_cuda(const Grid_t& grid)
-    : Base{grid},
-      bnd_{grid, grid.ibn}
-  {}
+  constexpr static int n_moments = 1;
+  static char const* name() { return "n_1st_cuda"; }
 
-  void run(Mparticles& mprts)
+  static int n_comps(const Grid_t& grid)
   {
-    Mfields& mres = this->mres_;
-    auto& cmprts = *mprts.cmprts();
-    cuda_mfields *cmres = mres.cmflds();
+    return n_moments * grid.kinds.size();
+  }
+
+  static std::vector<std::string> comp_names(const Grid_t& grid)
+  {
+    return addKindSuffix({"n"}, grid.kinds);
+  }
+
+  int n_comps() const { return Base::mres_.n_comps(); }
+  Int3 ibn() const { return Base::mres_.ibn(); }
+
+  explicit Moment_n_1st_cuda(const Mparticles& mprts)
+    : Base{mprts.grid()},
+      bnd_{mprts.grid(), mprts.grid().ibn}
+  {
+    auto& _mprts = const_cast<Mparticles&>(mprts);
+    auto& cmprts = *_mprts.cmprts();
+    cuda_mfields *cmres = Base::mres_.cmflds();
     
-    mres.zero();
+    Base::mres_.zero();
     CudaMoments1stNcN<cuda_mparticles<typename Mparticles::BS>, dim> cmoments;
     cmoments(cmprts, cmres);
-    bnd_.add_ghosts(mres, 0, mres.n_comps());
+    bnd_.add_ghosts(Base::mres_, 0, Base::mres_.n_comps());
   }
+
+  const Mfields& result() const { return Base::mres_; }
 
 private:
   Bnd bnd_;
 };
+
+template<typename _Mparticles, typename dim>
+struct isSpaceCuda<Moment_n_1st_cuda<_Mparticles, dim>> : std::true_type {};
+
 
