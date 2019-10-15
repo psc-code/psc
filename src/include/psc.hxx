@@ -34,15 +34,14 @@ struct MaterialList;
 using VpicConfig = VpicConfigPsc;
 using Mparticles = typename VpicConfig::Mparticles;
 using MfieldsState = typename VpicConfig::MfieldsState;
-using MfieldsHydro = typename VpicConfig::MfieldsHydro;
+using MfieldsHydro = MfieldsHydroQ<typename VpicConfig::Grid>;
 using MfieldsInterpolator = typename VpicConfig::MfieldsInterpolator;
 using MfieldsAccumulator = typename VpicConfig::MfieldsAccumulator;
 using Grid = typename MfieldsState::Grid;
 using ParticleBcList = typename Mparticles::ParticleBcList;
 using MaterialList = typename MfieldsState::MaterialList;
 using Material = typename MaterialList::Material;
-using OutputHydro =
-  OutputHydroVpic<Mparticles, MfieldsHydro, MfieldsInterpolator>;
+using OutputHydro = OutputHydroQ<Mparticles, MfieldsHydro, MfieldsInterpolator>;
 using DiagMixin =
   NoneDiagMixin<Mparticles, MfieldsState, MfieldsInterpolator, MfieldsHydro>;
 

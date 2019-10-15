@@ -560,15 +560,17 @@ public:
         io_tfd_.begin_step(grid);
         mflds_acc_state_.scale(1. / n_accum_);
         io_tfd_.write(mflds_acc_state_, grid, result_state.name,
-                            result_state.comp_names);
+                      result_state.comp_names);
         mflds_acc_state_.zero();
 
         mflds_acc_hydro_.scale(1. / n_accum_);
         io_tfd_.write(mflds_acc_hydro_, grid, result_hydro.name,
-                            result_hydro.comp_names);
+                      result_hydro.comp_names);
         mflds_acc_hydro_.zero();
 
         io_tfd_.end_step();
+
+        n_accum_ = 0;
       }
     }
 

@@ -240,7 +240,7 @@ struct PscConfigVpicPsc
 
   using MfieldsState = typename VpicConfig::MfieldsState;
   using Mparticles = typename VpicConfig::Mparticles;
-  using MfieldsHydro = typename VpicConfig::MfieldsHydro;
+  using MfieldsHydro = MfieldsHydroQ<Grid_t>;
 
   using Balance = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Sort = SortVpic<Mparticles>;
@@ -256,16 +256,16 @@ struct PscConfigVpicPsc
   using Checks = ChecksVpic<Mparticles, MfieldsState>;
   using Marder = MarderVpic<Mparticles, MfieldsState>;
   using OutputParticles = OutputParticlesHdf5;
-  using OutputHydro = OutputHydroVpic<Mparticles, MfieldsHydro,
-                                      typename VpicConfig::MfieldsInterpolator>;
+  using OutputHydro = OutputHydroQ<Mparticles, MfieldsHydro,
+                                   typename VpicConfig::MfieldsInterpolator>;
   using Dim = dim_xz;
 
 #if 0
   using DiagMixin = VpicDiagMixin<Mparticles, MfieldsState, MfieldsInterpolator, MfieldsHydro,
 				  DiagOps, ParticlesOps, HydroArrayOps>;
 #else
-  using DiagMixin = NoneDiagMixin<Mparticles, MfieldsState,
-                                  typename VpicConfig::MfieldsInterpolator,
-                                  typename VpicConfig::MfieldsHydro>;
+  using DiagMixin =
+    NoneDiagMixin<Mparticles, MfieldsState,
+                  typename VpicConfig::MfieldsInterpolator, MfieldsHydro>;
 #endif
 };
