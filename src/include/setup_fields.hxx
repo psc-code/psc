@@ -63,3 +63,7 @@ void setupFields(MF& mflds, FUNC&& func)
 {
   detail::SetupFields<MF>::run(mflds, std::forward<FUNC>(func));
 }
+
+#ifdef USE_CUDA
+#include "../libpsc/cuda/setup_fields_cuda.hxx"
+#endif
