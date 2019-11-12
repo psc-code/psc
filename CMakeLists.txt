@@ -29,7 +29,11 @@ psc_option(ADIOS2 "Build with adios2 support" AUTO)
 
 # CUDA
 if(USE_CUDA)
+  list(APPEND CMAKE_CUDA_FLAGS "-std c++14")
+
   enable_language(CUDA)
+
+  list(REMOVE_ITEM CMAKE_CUDA_FLAGS "-std c++14")
 endif()
 
 find_package(MPI REQUIRED)
