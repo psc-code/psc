@@ -136,6 +136,16 @@ private:
 // ======================================================================
 // MfieldsStatePsc
 
+struct MfieldsStatePscElement
+{
+  float ex,   ey,   ez,   div_e_err;     // Electric field and div E error
+  float cbx,  cby,  cbz,  div_b_err;     // Magnetic field and div B error
+  float tcax, tcay, tcaz, rhob;          // TCA fields and bound charge density
+  float jfx,  jfy,  jfz,  rhof;          // Free current and charge density
+  MaterialId ematx, ematy, ematz, nmat; // Material at edge centers and nodes
+  MaterialId fmatx, fmaty, fmatz, cmat; // Material at face and cell centers
+};
+
 template<typename _Grid, typename _MaterialList>
 struct MfieldsStatePsc
 {
@@ -144,17 +154,8 @@ struct MfieldsStatePsc
   using SfaParams = PscSfaParams<Grid, MaterialList>;
   using MaterialCoefficient = typename SfaParams::MaterialCoefficient;
   using real_t = float;
-
-  struct Element
-  {
-    float ex,   ey,   ez,   div_e_err;     // Electric field and div E error
-    float cbx,  cby,  cbz,  div_b_err;     // Magnetic field and div B error
-    float tcax, tcay, tcaz, rhob;          // TCA fields and bound charge density
-    float jfx,  jfy,  jfz,  rhof;          // Free current and charge density
-    MaterialId ematx, ematy, ematz, nmat; // Material at edge centers and nodes
-    MaterialId fmatx, fmaty, fmatz, cmat; // Material at face and cell centers
-  };
-
+  using Element = MfieldsStatePscElement;
+  
   // FIXME, have to settle on BX or CBX...
   enum {
     CBX = 4,
@@ -172,7 +173,7 @@ struct MfieldsStatePsc
 
   struct Patch
   {
-    using Element = MfieldsStatePsc::Element;
+    using Element = MfieldsStatePscElement;
 
     Patch(Grid* vgrid)
       : fa_{vgrid}
