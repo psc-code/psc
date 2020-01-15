@@ -137,6 +137,9 @@ n_1st_cuda_run(DMparticlesCuda<BS> dmprts, DMFields dmflds)
 template<typename CudaMparticles, typename dim>
 void CudaMoments1stNcRho<CudaMparticles, dim>::operator()(CudaMparticles& cmprts, struct cuda_mfields *cmres)
 {
+  if (cmprts.n_prts == 0) {
+    return;
+  }
   cmprts.reorder(); // FIXME/OPT?
   
   if (!cmprts.need_reorder) {
@@ -166,6 +169,9 @@ void CudaMoments1stNcRho<CudaMparticles, dim>::invoke(CudaMparticles& cmprts, st
 template<typename CudaMparticles, typename dim>
 void CudaMoments1stNcN<CudaMparticles, dim>::operator()(CudaMparticles& cmprts, struct cuda_mfields *cmres)
 {
+  if (cmprts.n_prts == 0) {
+    return;
+  }
   cmprts.reorder(); // FIXME/OPT?
 
   if (!cmprts.need_reorder) {

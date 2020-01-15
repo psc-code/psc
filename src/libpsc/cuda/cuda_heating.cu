@@ -166,6 +166,9 @@ struct cuda_heating_foil : HeatingSpotFoilParams
   template<typename BS>
   void run_foil(cuda_mparticles<BS>* cmprts, curandState *d_curand_states)
   {
+    if (cmprts->n_prts == 0) {
+      return;
+    }
     dim3 dimGrid = BlockSimple<BS, dim_xyz>::dimGrid(*cmprts);
     
     k_heating_run_foil<BS>
