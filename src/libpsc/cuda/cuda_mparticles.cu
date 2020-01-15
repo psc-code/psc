@@ -207,12 +207,17 @@ void cuda_mparticles<BS>::reorder()
 template<typename BS>
 void cuda_mparticles<BS>::reorder(const thrust::device_vector<uint>& d_id)
 {
+  if (this->n_prts == 0) {
+    return;
+  }
+  
   swap_alt();
   resize(this->n_prts);
 
   dim3 dimGrid((this->n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
   
   k_reorder<BS><<<dimGrid, THREADS_PER_BLOCK>>>(*this, this->n_prts, d_id.data().get());
+  cuda_sync_if_enabled();
 }
 
 // ----------------------------------------------------------------------

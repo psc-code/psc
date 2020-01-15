@@ -43,6 +43,9 @@ struct CudaCollision
 
   void operator()(cuda_mparticles& cmprts)
   {
+    if (cmprts.n_prts == 0) {
+      return;
+    }
     sort_.find_indices_ids(cmprts);
     sort_.sort();
     sort_.find_offsets();

@@ -84,7 +84,10 @@ __global__ static void k_find_random_cell_indices_ids(
   int n_blocks_per_patch, RngStateCuda::Device rng_state)
 {
   int n = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
-
+  if (n > rng_state.size()) {
+    return;
+  }
+  
   auto rng = rng_state[n];
 
   for (int p = 0; p < n_patches; p++) {

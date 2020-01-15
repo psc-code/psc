@@ -66,12 +66,15 @@ public:
   class Device
   {
   public:
-    Device(RngStateCuda& rng_state) : rngs_(rng_state.rngs_.data().get()) {}
+    Device(RngStateCuda& rng_state) : rngs_(rng_state.rngs_.data().get()), size_(rng_state.size()) {}
 
     __device__ Rng operator[](int id) const { return rngs_[id]; }
     __device__ Rng& operator[](int id) { return rngs_[id]; }
 
+    __device__ int size() const { return size_; }
+
     Rng* rngs_;
+    int size_;
   };
 
   RngStateCuda() = default;
