@@ -128,7 +128,13 @@ struct PscFlatfoilParams
   double BB;
   double Zi;
   double mass_ratio;
-
+  double lambda0;
+  double target_n; // target density
+  double target_Te; // target electron temperature
+  double target_Ti; // target ion_temperatore
+  double target_Te_heat;
+  double target_Ti_heat;
+  
   double background_n;
   double background_Te;
   double background_Ti;
@@ -175,9 +181,9 @@ PscParams psc_params;
 void setupParameters()
 {
   // -- set some generic PSC parameters
-  psc_params.nmax = 2001; // 5001;
+  psc_params.nmax = 10000001; // 5001;
   psc_params.cfl = 0.75;
-  psc_params.write_checkpoint_every_step = 500;
+  psc_params.write_checkpoint_every_step = 0;
 
   // -- start from checkpoint:
   //
@@ -192,8 +198,15 @@ void setupParameters()
   // -- Set some parameters specific to this case
   g.BB = 0.;
   g.Zi = 1.;
-  g.mass_ratio = 100.; // 25.
+  g.mass_ratio = 100.;
+  g.lambda0 = 20.;
 
+  g.target_n = 2.5;
+  g.target_Te = 0.001;
+  g.target_Ti = 0.001;
+  g.target_Te_heat = 0.04;
+  g.target_Ti_heat = 0.04;
+  
   g.background_n = .002;
   g.background_Te = .001;
   g.background_Ti = .001;
@@ -210,34 +223,9 @@ void setupParameters()
 Grid_t* setupGrid()
 {
   // --- setup domain
-#if 0
-  Grid_t::Real3 LL = {384., 384.*2., 384.*6}; // domain size (in d_e)
-  Int3 gdims = {384, 384*2, 384*6}; // global number of grid points
-  Int3 np = {12, 24, 72}; // division into patches
-#endif
-#if 0
-  Grid_t::Real3 LL = {192., 192.*2, 192.*6}; // domain size (in d_e)
-  Int3 gdims = {192, 192*2, 192*6}; // global number of grid points
-  Int3 np = {6, 12, 36}; // division into patches
-  // -> patch size 32 x 32 x 32
-#endif
-#if 0
-  Grid_t::Real3 LL = {32., 32.*2., 32.*6 }; // domain size (in d_e)
-  Int3 gdims = {32, 32*2, 32*6}; // global number of grid points
-  Int3 np = { 1, 2, 6 }; // division into patches
-#endif
-#if 0
-  Grid_t::Real3 LL = {1., 1600., 400.}; // domain size (in d_e)
-  // Int3 gdims = {40, 10, 20}; // global number of grid points
-  // Int3 np = {4, 1, 2; // division into patches
-  Int3 gdims = {1, 2048, 512}; // global number of grid points
-  Int3 np = {1, 64, 16}; // division into patches
-#endif
-#if 1
-  Grid_t::Real3 LL = {1., 800., 200.}; // domain size (in d_e)
-  Int3 gdims = {1, 1024, 256};         // global number of grid points
-  Int3 np = {1, 8, 2};                 // division into patches
-#endif
+  Grid_t::Real3 LL = {1., 800., 3.*800.}; // domain size (in d_e)
+  Int3 gdims = {1, 1600, 3*1600};         // global number of grid points
+  Int3 np = {1, 50, 3*50};                // division into patches
 
   Grid_t::Domain domain{gdims, LL, -.5 * LL, np};
 
@@ -354,7 +342,7 @@ void run()
   // Set up various objects needed to run this case
 
   // -- Balance
-  psc_params.balance_interval = 300;
+  psc_params.balance_interval = 1000;
   Balance balance{psc_params.balance_interval, 3, true};
 
   // -- Sort
@@ -362,7 +350,7 @@ void run()
 
   // -- Collision
   int collision_interval = 10;
-  double collision_nu = .1;
+  double collision_nu = 3.76 * std::pow(target_Te_heat, 2.) / g.Zi / g.lambda0;
   Collision collision{grid, collision_interval, collision_nu};
 
   // -- Checks
@@ -386,12 +374,13 @@ void run()
 
   // -- output fields
   OutputFieldsParams outf_params{};
-  outf_params.pfield_step = 200;
+  outf_params.pfield_step = 400;
+  //outf_params.tfield_step = 400;
   OutputFields outf{grid, outf_params};
 
   // -- output particles
   OutputParticlesParams outp_params{};
-  outp_params.every_step = 0;
+  outp_params.every_step = 400;
   outp_params.data_dir = ".";
   outp_params.basename = "prt";
   OutputParticles outp{grid, outp_params};
@@ -410,8 +399,8 @@ void run()
   heating_foil_params.zh = 1. * g.d_i;
   heating_foil_params.xc = 0. * g.d_i;
   heating_foil_params.yc = 0. * g.d_i;
-  heating_foil_params.rH = 3. * g.d_i;
-  heating_foil_params.T = .04;
+  heating_foil_params.rH = 12. * g.d_i;
+  heating_foil_params.T = g.target_Te_heat;
   heating_foil_params.Mi = grid.kinds[MY_ION].m;
   HeatingSpotFoil heating_spot{heating_foil_params};
 
@@ -428,7 +417,7 @@ void run()
   double target_zwidth = 1.;
   inject_foil_params.zl = -target_zwidth * g.d_i;
   inject_foil_params.zh = target_zwidth * g.d_i;
-  inject_foil_params.n = 1.;
+  inject_foil_params.n = 2.5;
   inject_foil_params.Te = .001;
   inject_foil_params.Ti = .001;
   InjectFoil inject_target{inject_foil_params};
