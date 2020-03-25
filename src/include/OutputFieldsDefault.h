@@ -81,6 +81,7 @@ public:
                           timestep == 0);
 
     if (!do_pfield && !doaccum_tfield) {
+      prof_stop(pr);
       return;
     }
 
