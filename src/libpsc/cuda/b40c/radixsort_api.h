@@ -475,6 +475,7 @@ DigitPlacePass(const RadixSortStorage<ConvertedKeyType, V> &converted_storage)
 	if ((_device_sm_version == 130) && (_work_decomposition.num_elements > static_cast<unsigned int>(_device_props.multiProcessorCount * _cycle_elements * 2))) { 
 		FlushKernel<void><<<_grid_size, B40C_RADIXSORT_THREADS, scan_scatter_attrs.sharedSizeBytes>>>();
 		//synchronize_if_enabled("FlushKernel");
+		cuda_sync_if_enabled();
 	}
 
 	// GF100 and GT200 get the same smem allocation for every kernel launch (pad the reduction/top-level-scan kernels)
@@ -501,7 +502,7 @@ DigitPlacePass(const RadixSortStorage<ConvertedKeyType, V> &converted_storage)
 		converted_storage.d_spine,
 		_spine_elements);
 	//synchronize_if_enabled("SrtsScanSpine");
-
+    cuda_sync_if_enabled();
 	
 	//
 	// Scanning Scatter
@@ -511,6 +512,7 @@ DigitPlacePass(const RadixSortStorage<ConvertedKeyType, V> &converted_storage)
 	if ((_device_sm_version == 130) && (_work_decomposition.num_elements > static_cast<unsigned int>(_device_props.multiProcessorCount * _cycle_elements * 2))) { 
 		FlushKernel<void><<<_grid_size, B40C_RADIXSORT_THREADS, scan_scatter_attrs.sharedSizeBytes>>>();
 		//synchronize_if_enabled("FlushKernel");
+        cuda_sync_if_enabled();
 	}
 
 	ScanScatterDigits<ConvertedKeyType, V, PASS, RADIX_BITS, BIT, PreprocessFunctor, PostprocessFunctor> <<<_grid_size, threads, 0>>>(
@@ -522,6 +524,7 @@ DigitPlacePass(const RadixSortStorage<ConvertedKeyType, V> &converted_storage)
 		converted_storage.d_alt_values,
 		_work_decomposition);
 	//synchronize_if_enabled("ScanScatterDigits");
+    cuda_sync_if_enabled();
 
 	return cudaSuccess;
 }
