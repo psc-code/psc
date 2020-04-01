@@ -24,8 +24,8 @@ struct OutputFieldsParams
 
   int tfield_interval = 0;
   int tfield_first = 0;
-  int tfield_length = 1000000;
-  int tfield_every = 1;
+  int tfield_average_length = 1000000;
+  int tfield_average_every = 1;
 
   Int3 rn = {};
   Int3 rx = {1000000, 1000000, 100000};
@@ -76,8 +76,8 @@ public:
     bool do_pfield = pfield_interval > 0 && timestep >= pfield_next_;
     bool do_tfield = tfield_interval > 0 && timestep >= tfield_next_;
     bool doaccum_tfield =
-      tfield_interval > 0 && (((timestep >= (tfield_next_ - tfield_length + 1)) &&
-                           timestep % tfield_every == 0) ||
+      tfield_interval > 0 && (((timestep >= (tfield_next_ - tfield_average_length + 1)) &&
+                           timestep % tfield_average_every == 0) ||
                           timestep == 0);
 
     if (!do_pfield && !doaccum_tfield) {
