@@ -376,7 +376,8 @@ void run()
   // -- output fields
   OutputFieldsParams outf_params{};
   outf_params.pfield_interval = 400;
-  //outf_params.tfield_interval = 400;
+  outf_params.tfield_interval = 400;
+  outf_params.tfield_average_every = 40;
   OutputFields outf{grid, outf_params};
 
   // -- output particles
