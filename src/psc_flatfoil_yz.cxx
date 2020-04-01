@@ -11,6 +11,8 @@
 #include "heating_spot_foil.hxx"
 #include "inject_impl.hxx"
 
+//#define DIM_3D
+
 // ======================================================================
 // Particle kinds
 //
@@ -90,7 +92,11 @@ public:
 //
 // EDIT to change order / floating point type / cuda / 2d/3d
 
+#ifdef DIM_3D
+using Dim = dim_xyz;
+#else
 using Dim = dim_yz;
+#endif
 
 #if 1
 #ifdef USE_CUDA
@@ -224,9 +230,15 @@ void setupParameters()
 Grid_t* setupGrid()
 {
   // --- setup domain
+#ifdef DIM_3D
+  Grid_t::Real3 LL = {80., 80., 3.*80.};  // domain size (in d_e)
+  Int3 gdims = {160, 160, 3*160};         // global number of grid points
+  Int3 np = {5, 5, 3*5};                  // division into patches
+#else
   Grid_t::Real3 LL = {1., 800., 3.*800.}; // domain size (in d_e)
   Int3 gdims = {1, 1600, 3*1600};         // global number of grid points
   Int3 np = {1, 50, 3*50};                // division into patches
+#endif
 
   Grid_t::Domain domain{gdims, LL, -.5 * LL, np};
 
