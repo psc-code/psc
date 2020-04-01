@@ -191,22 +191,18 @@ struct cuda_heating_foil : HeatingSpotFoilParams
       cuda_heating_params_free(h_prm_);
       cuda_heating_params_set(h_prm_, cmprts);
 
-      mprintf("heat first n_prts %d\n", cmprts->n_prts);
       dim3 dimGrid = BlockSimple<BS, dim_xyz>::dimGrid(*cmprts);
       int n_threads = dimGrid.x * dimGrid.y * dimGrid.z * THREADS_PER_BLOCK;
       
       myCudaFree(d_curand_states_);
       d_curand_states_ = (curandState*) myCudaMalloc(n_threads * sizeof(*d_curand_states_));
 
-      cuda_sync_if_enabled();
-      mprintf("heat %d %d %d, %d\n", dimGrid.x, dimGrid.y, dimGrid.z, THREADS_PER_BLOCK); 
       k_curand_setup<<<dimGrid, THREADS_PER_BLOCK>>>(d_curand_states_);
       cuda_sync_if_enabled();
       
       first_time_ = false;
     }
     
-    mprintf("heat reg n_prts %d\n", cmprts->n_prts);
     if (cmprts->need_reorder) { 
       cmprts->reorder();
     }
