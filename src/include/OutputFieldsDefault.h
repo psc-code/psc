@@ -19,10 +19,10 @@ struct OutputFieldsParams
 {
   const char* data_dir = {"."};
 
-  int pfield_step = 0;
+  int pfield_interval = 0;
   int pfield_first = 0;
 
-  int tfield_step = 0;
+  int tfield_interval = 0;
   int tfield_first = 0;
   int tfield_length = 1000000;
   int tfield_every = 1;
@@ -50,10 +50,10 @@ public:
       pfield_next_{pfield_first},
       tfield_next_{tfield_first}
   {
-    if (pfield_step > 0) {
+    if (pfield_interval > 0) {
       io_pfd_.reset(new MrcIo{"pfd", data_dir});
     }
-    if (tfield_step > 0) {
+    if (tfield_interval > 0) {
       io_tfd_.reset(new MrcIo{"tfd", data_dir});
     }
   }
@@ -73,10 +73,10 @@ public:
     prof_start(pr);
 
     auto timestep = grid.timestep();
-    bool do_pfield = pfield_step > 0 && timestep >= pfield_next_;
-    bool do_tfield = tfield_step > 0 && timestep >= tfield_next_;
+    bool do_pfield = pfield_interval > 0 && timestep >= pfield_next_;
+    bool do_tfield = tfield_interval > 0 && timestep >= tfield_next_;
     bool doaccum_tfield =
-      tfield_step > 0 && (((timestep >= (tfield_next_ - tfield_length + 1)) &&
+      tfield_interval > 0 && (((timestep >= (tfield_next_ - tfield_length + 1)) &&
                            timestep % tfield_every == 0) ||
                           timestep == 0);
 
@@ -90,7 +90,7 @@ public:
 
     if (do_pfield) {
       mpi_printf(grid.comm(), "***** Writing PFD output\n");
-      pfield_next_ += pfield_step;
+      pfield_next_ += pfield_interval;
 
       io_pfd_->open(grid, rn, rx);
       _write_pfd(pfd_jeh);
@@ -106,7 +106,7 @@ public:
     }
     if (do_tfield) {
       mpi_printf(grid.comm(), "***** Writing TFD output\n");
-      tfield_next_ += tfield_step;
+      tfield_next_ += tfield_interval;
 
       io_tfd_->open(grid, rn, rx);
       _write_tfd(tfd_jeh_, pfd_jeh);

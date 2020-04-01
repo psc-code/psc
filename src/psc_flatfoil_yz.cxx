@@ -224,9 +224,9 @@ Grid_t* setupGrid()
 {
   // --- setup domain
   Grid_t::Real3 LL = {1., 800., 3.*800.}; // domain size (in d_e)
-  Int3 gdims = {1, 800, 3*1800};         // global number of grid points
+  Int3 gdims = {1, 800, 3*800};         // global number of grid points
   //Int3 gdims = {1, 1600, 3*1600};         // global number of grid points
-  Int3 np = {1, 50, 3*50};                // division into patches
+  Int3 np = {1, 25, 3*25};                // division into patches
 
   Grid_t::Domain domain{gdims, LL, -.5 * LL, np};
 
@@ -375,13 +375,13 @@ void run()
 
   // -- output fields
   OutputFieldsParams outf_params{};
-  outf_params.pfield_step = 400;
-  //outf_params.tfield_step = 400;
+  outf_params.pfield_interval = 400;
+  //outf_params.tfield_interval = 400;
   OutputFields outf{grid, outf_params};
 
   // -- output particles
   OutputParticlesParams outp_params{};
-  outp_params.every_step = 400;
+  outp_params.every_step = 0.; //400;
   outp_params.data_dir = ".";
   outp_params.basename = "prt";
   OutputParticles outp{grid, outp_params};
