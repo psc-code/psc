@@ -486,7 +486,7 @@ public:
     MPI_Comm comm = grid.comm();
 
     int timestep = grid.timestep();
-    if (outf_.pfield_step > 0 && timestep % outf_.pfield_step == 0) {
+    if (outf_.pfield_interval > 0 && timestep % outf_.pfield_interval == 0) {
       mpi_printf(comm, "***** Writing PFD output\n");
       io_pfd_.open(grid);
 
@@ -790,7 +790,7 @@ void run()
   // -- output fields
   OutputFieldsParams outf_params;
   double output_field_interval = 1.;
-  outf_params.pfield_step = int((output_field_interval / (phys.wci * grid.dt)));
+  outf_params.pfield_interval = int((output_field_interval / (phys.wci * grid.dt)));
   OutputFields outf{grid, outf_params};
 
   OutputParticlesParams outp_params{};
