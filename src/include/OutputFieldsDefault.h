@@ -80,39 +80,36 @@ public:
                            timestep % tfield_average_every == 0) ||
                           timestep == 0);
 
-    if (!do_pfield && !doaccum_tfield) {
-      prof_stop(pr);
-      return;
-    }
+    if (do_pfield || doaccum_tfield) {
+      Item_jeh<MfieldsState> pfd_jeh{mflds};
+      FieldsItem_Moments_1st_cc<Mparticles> pfd_moments{mprts};
+      
+      if (do_pfield) {
+	mpi_printf(grid.comm(), "***** Writing PFD output\n");
+	pfield_next_ += pfield_interval;
+	
+	io_pfd_->open(grid, rn, rx);
+	_write_pfd(pfd_jeh);
+	_write_pfd(pfd_moments);
+	io_pfd_->close();
+      }
 
-    Item_jeh<MfieldsState> pfd_jeh{mflds};
-    FieldsItem_Moments_1st_cc<Mparticles> pfd_moments{mprts};
+      if (doaccum_tfield) {
+	// tfd += pfd
+	tfd_jeh_ += pfd_jeh;
+	tfd_moments_ += pfd_moments;
+	naccum_++;
+      }
+      if (do_tfield) {
+	mpi_printf(grid.comm(), "***** Writing TFD output\n");
+	tfield_next_ += tfield_interval;
 
-    if (do_pfield) {
-      mpi_printf(grid.comm(), "***** Writing PFD output\n");
-      pfield_next_ += pfield_interval;
-
-      io_pfd_->open(grid, rn, rx);
-      _write_pfd(pfd_jeh);
-      _write_pfd(pfd_moments);
-      io_pfd_->close();
-    }
-
-    if (doaccum_tfield) {
-      // tfd += pfd
-      tfd_jeh_ += pfd_jeh;
-      tfd_moments_ += pfd_moments;
-      naccum_++;
-    }
-    if (do_tfield) {
-      mpi_printf(grid.comm(), "***** Writing TFD output\n");
-      tfield_next_ += tfield_interval;
-
-      io_tfd_->open(grid, rn, rx);
-      _write_tfd(tfd_jeh_, pfd_jeh);
-      _write_tfd(tfd_moments_, pfd_moments);
-      io_tfd_->close();
-      naccum_ = 0;
+	io_tfd_->open(grid, rn, rx);
+	_write_tfd(tfd_jeh_, pfd_jeh);
+	_write_tfd(tfd_moments_, pfd_moments);
+	io_tfd_->close();
+	naccum_ = 0;
+      }
     }
 
     prof_stop(pr);
