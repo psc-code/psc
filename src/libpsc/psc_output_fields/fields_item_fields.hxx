@@ -519,6 +519,64 @@ private:
 };
 
 // ======================================================================
+// Item_jeh
+//
+// Main fields in their natural staggering
+
+template <>
+class Item_jeh<MfieldsStateCuda> : public MFexpression<Item_jeh<MfieldsStateCuda>>
+{
+  using MfieldsState = MfieldsStateCuda;
+  
+public:
+  using Real = typename MfieldsState::real_t;
+
+  static char const* name() { return "jeh"; }
+  static int n_comps() { return 9; }
+  static std::vector<std::string> comp_names()
+  {
+    return {"jx_ec", "jy_ec", "jz_ec", "ex_ec", "ey_ec",
+            "ez_ec", "hx_fc", "hy_fc", "hz_fc"};
+  }
+
+  Item_jeh(MfieldsState& mflds) : mflds_(mflds.grid(), NR_FIELDS, mflds.grid().ibn)
+  {
+    auto hmflds = hostMirror(mflds);
+    copy(mflds, hmflds);
+    for (int p = 0; p < mflds_.n_patches(); p++) {
+      for (int m = 0; m < mflds_.n_comps(); m++) {
+	mflds_.Foreach_3d(0, 0, [&](int i, int j, int k) {
+	    mflds_[p](m, i, j, k) = hmflds[p](m, i, j, k);
+	  });
+      }
+    }
+  }
+
+  Real operator()(int m, Int3 ijk, int p) const
+  {
+    switch (m) {
+      case 0: return mflds_[p](JXI, ijk[0], ijk[1], ijk[2]);
+      case 1: return mflds_[p](JYI, ijk[0], ijk[1], ijk[2]);
+      case 2: return mflds_[p](JZI, ijk[0], ijk[1], ijk[2]);
+      case 3: return mflds_[p](EX, ijk[0], ijk[1], ijk[2]);
+      case 4: return mflds_[p](EY, ijk[0], ijk[1], ijk[2]);
+      case 5: return mflds_[p](EZ, ijk[0], ijk[1], ijk[2]);
+      case 6: return mflds_[p](HX, ijk[0], ijk[1], ijk[2]);
+      case 7: return mflds_[p](HY, ijk[0], ijk[1], ijk[2]);
+      case 8: return mflds_[p](HZ, ijk[0], ijk[1], ijk[2]);
+      default: std::abort();
+    }
+  }
+
+  const Grid_t& grid() const { return mflds_.grid(); }
+  Int3 ibn() const { return {}; }
+  int n_patches() const { return grid().n_patches(); }
+
+private:
+  mutable MfieldsSingle mflds_; // FIXME!!
+};
+
+// ======================================================================
 // Item_dive
 
 template <typename MfieldsState>
