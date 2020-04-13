@@ -36,8 +36,15 @@ if(USE_CUDA)
   list(REMOVE_ITEM CMAKE_CUDA_FLAGS "-std c++14")
 endif()
 
+
 set(MPI_CXX_SKIP_MPICXX ON)
 find_package(MPI REQUIRED)
+foreach(lang IN ITEMS CXX C)
+  get_property(tmp TARGET MPI::MPI_${lang} PROPERTY INTERFACE_COMPILE_OPTIONS)
+  list(TRANSFORM tmp REPLACE "-fexceptions" "-abc $<$<COMPILE_LANGUAGE:CUDA>:SHELL:-Xcompiler >-fexceptions")
+  set_property(TARGET MPI::MPI_${lang} PROPERTY INTERFACE_COMPILE_OPTIONS "${tmp}")
+  unset(tmp)
+endforeach()
 
 # ADIOS2
 if(PSC_USE_ADIOS2 STREQUAL AUTO)
