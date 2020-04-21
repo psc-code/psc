@@ -198,4 +198,5 @@ void CudaMoments1stNcN<CudaMparticles, dim>::invoke(CudaMparticles& cmprts, stru
 template struct CudaMoments1stNcRho<cuda_mparticles<BS144>, dim_yz>;
 template struct CudaMoments1stNcN<cuda_mparticles<BS144>, dim_yz>;
 
+template struct CudaMoments1stNcRho<cuda_mparticles<BS444>, dim_xyz>;
 template struct CudaMoments1stNcN<cuda_mparticles<BS444>, dim_xyz>;

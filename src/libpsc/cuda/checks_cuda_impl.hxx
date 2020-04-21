@@ -5,6 +5,24 @@
 
 #include "fields_item_moments_1st_cuda.hxx"
 
+// FIXME!!! need to get Dim from Mparticles directly!
+
+template <typename BS>
+struct BS_to_Dim;
+
+template <>
+struct BS_to_Dim<BS144>
+{
+  using Dim = dim_yz;
+};
+
+template <>
+struct BS_to_Dim<BS444>
+{
+  using Dim = dim_xyz;
+};
+
+
 template <typename Mparticles>
 struct ChecksCuda
   : ChecksBase
@@ -12,7 +30,8 @@ struct ChecksCuda
 {
   using MfieldsState = MfieldsStateSingle;
   using Mfields = MfieldsSingle;
-  using Dim = dim_yz;
+  using BS = typename Mparticles::BS;
+  using Dim = typename BS_to_Dim<BS>::Dim;
   using Moment_t = Moment_rho_1st_nc_cuda<Mparticles, Dim>;
 
   ChecksCuda(const Grid_t& grid, MPI_Comm comm, const ChecksParams& params)
