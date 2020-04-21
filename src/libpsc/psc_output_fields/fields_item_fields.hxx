@@ -3,7 +3,7 @@
 
 #include "fields_item.hxx"
 #include "psc_fields_c.h"
-
+#include "psc_fields_cuda.h"
 template <typename E>
 struct isSpaceCuda : std::false_type
 {};

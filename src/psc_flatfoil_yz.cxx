@@ -38,6 +38,7 @@ enum
 
 struct InjectFoilParams
 {
+  double xl, xh; 
   double yl, yh;
   double zl, zh;
   double n;
@@ -53,7 +54,7 @@ public:
 
   bool is_inside(double crd[3])
   {
-    return (crd[1] >= yl && crd[1] <= yh && crd[2] >= zl && crd[2] <= zh);
+    return (crd[0] >= xl && crd[0] <= xh && crd[1] >= yl && crd[1] <= yh && crd[2] >= zl && crd[2] <= zh);
   }
 
   void init_npt(int pop, double crd[3], psc_particle_npt& npt)
@@ -89,7 +90,7 @@ public:
 //
 // EDIT to change order / floating point type / cuda / 2d/3d
 
-using Dim = dim_yz;
+using Dim = dim_xyz;
 
 #if 1
 #ifdef USE_CUDA
@@ -223,10 +224,12 @@ void setupParameters()
 Grid_t* setupGrid()
 {
   // --- setup domain
-  Grid_t::Real3 LL = {1., 800., 3.*800.}; // domain size (in d_e)
-  Int3 gdims = {1, 800, 3*800};         // global number of grid points
+  //Grid_t::Real3 LL = {1., 800., 3.*800.}; // domain size (in d_e)
   //Int3 gdims = {1, 1600, 3*1600};         // global number of grid points
-  Int3 np = {1, 25, 3*25};                // division into patches
+  //Int3 np = {1, 50, 3*50};                // division into patches
+  Grid_t::Real3 LL = {80., 80., 3.*80.}; // domain size (in d_e)
+  Int3 gdims = {160, 160, 3*160};         // global number of grid points
+  Int3 np = {5, 5, 3*5};                // division into patches
 
   Grid_t::Domain domain{gdims, LL, -.5 * LL, np};
 
@@ -350,13 +353,13 @@ void run()
   psc_params.sort_interval = 10;
 
   // -- Collision
-  int collision_interval = 10;
+  int collision_interval = 13;
   double collision_nu = 3.76 * std::pow(g.target_Te_heat, 2.) / g.Zi / g.lambda0;
   Collision collision{grid, collision_interval, collision_nu};
 
   // -- Checks
   ChecksParams checks_params{};
-  checks_params.continuity_every_step = 50;
+  checks_params.continuity_every_step = 1;
   checks_params.continuity_threshold = 1e-5;
   checks_params.continuity_verbose = false;
   Checks checks{grid, MPI_COMM_WORLD, checks_params};
@@ -378,11 +381,12 @@ void run()
   outf_params.pfield_interval = 400;
   outf_params.tfield_interval = 400;
   outf_params.tfield_average_every = 40;
+  outf_params.tfield_moments_average_every = 80;
   OutputFields outf{grid, outf_params};
 
   // -- output particles
   OutputParticlesParams outp_params{};
-  outp_params.every_step = 0.; //400;
+  outp_params.every_step = 400;
   outp_params.data_dir = ".";
   outp_params.basename = "prt";
   OutputParticles outp{grid, outp_params};
@@ -400,13 +404,13 @@ void run()
   heating_foil_params.zl = -1. * g.d_i;
   heating_foil_params.zh = 1. * g.d_i;
   heating_foil_params.xc = 0. * g.d_i;
-  heating_foil_params.yc = 0. * g.d_i;
-  heating_foil_params.rH = 12. * g.d_i;
+  heating_foil_params.yc = 20. * g.d_i;
+  heating_foil_params.rH = 20. * g.d_i;
   heating_foil_params.T = g.target_Te_heat;
   heating_foil_params.Mi = grid.kinds[MY_ION].m;
   HeatingSpotFoil heating_spot{heating_foil_params};
 
-  g.heating_interval = 20;
+  g.heating_interval = 17;
   g.heating_begin = 0;
   g.heating_end = 10000000;
   auto& heating =
@@ -414,6 +418,8 @@ void run()
 
   // -- Particle injection
   InjectFoilParams inject_foil_params;
+  inject_foil_params.xl = -100000. * g.d_i;
+  inject_foil_params.xh = 100000. * g.d_i;
   inject_foil_params.yl = -100000. * g.d_i;
   inject_foil_params.yh = 100000. * g.d_i;
   double target_zwidth = 1.;
@@ -424,7 +430,7 @@ void run()
   inject_foil_params.Ti = .001;
   InjectFoil inject_target{inject_foil_params};
 
-  g.inject_interval = 20;
+  g.inject_interval = 11;
   int inject_tau = 40;
 
   SetupParticles<Mparticles> setup_particles(grid);

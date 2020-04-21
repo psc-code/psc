@@ -8,7 +8,6 @@
 // FIXME, horrible hack...
 #define DEVICE __device__
 #include "binary_collision.hxx"
-
 #include <curand_kernel.h>
 
 #define THREADS_PER_BLOCK 128
@@ -66,11 +65,17 @@ struct CudaCollision
     real_t wni = 1.; // FIXME, there should at least be some assert to enforce
                      // this //prts[n_start].w());
     real_t nudt0 = wni / nicell_ * interval_ * dt_ * nu_;
-
+    
+    //JOHNS DEBUG
+    if(!cmprts.check_ordered()) printf("ORDER FAIL! JOHNS DEBUG\n");
+    
     k_collide<cuda_mparticles, RngState><<<dimGrid, THREADS_PER_BLOCK>>>(
       cmprts, sort_.d_off.data().get(), sort_.d_id.data().get(), nudt0,
       rng_state_, cmprts.n_cells());
     cuda_sync_if_enabled();
+    
+    //JOHNS DEBUG
+    if(!cmprts.check_ordered()) printf("ORDER FAIL! JOHNS DEBUG\n");
   }
 
   __device__ static void d_collide(DMparticles dmprts, uint* d_off, uint* d_id,
