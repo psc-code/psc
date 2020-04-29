@@ -131,7 +131,7 @@ struct ConstAccessorCuda_
 
     const_iterator begin() const { return {prts_, 0}; }
     const_iterator end()   const { return {prts_, size()}; };
-    const_accessor operator[](int n) const { return {const_cast<Mparticles&>(prts_.mprts).get_particle(prts_.p, n), prts_}; }
+    const_accessor operator[](int n) const {return {const_cast<Mparticles&>(prts_.mprts).get_particle(prts_.p, n), prts_}; }
 
     uint size() const
     {

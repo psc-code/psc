@@ -142,7 +142,7 @@ struct CudaPushParticles
   curr_vb_cell(DMparticles& dmprts, int i[3], float x[3], float dx[3], float qni_wni,
 	       Curr &scurr, const Block& current_block, dim_yz tag)
   {
-#if 0
+#if 1
     if (i[1] < -1 || i[1] >= int(BS::y::value) + 1 ||
 	i[2] < -1 || i[2] >= int(BS::z::value) + 1) {
       printf("CUDA_ERROR curr_vb_cell jyz %d:%d:%d\n", i[1], i[2]);
@@ -297,7 +297,7 @@ struct CudaPushParticles
     }
 #endif
     int i[3] = { 0, j[1] - current_block.ci0[1], j[2] - current_block.ci0[2] };
-#if 0
+#if 1
     if (i[1] < -1 || i[1] >= int(BS::y::value) + 1 ||
 	i[2] < -1 || i[2] >= int(BS::z::value) + 1) {
       printf("CUDA_ERROR deposit jyz %d:%d\n", i[1], i[2]);

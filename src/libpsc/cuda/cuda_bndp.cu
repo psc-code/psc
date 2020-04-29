@@ -110,8 +110,9 @@ void cuda_bndp<CudaMparticles, DIM>::post(CudaMparticles* cmprts)
   prof_stop(pr_D1);
   
   prof_start(pr_E);
-#if 0
-  cmprts->reorder(cmprts);
+#if 1
+  cmprts->need_reorder = true; //JOHN added for debug
+  cmprts->reorder();
   assert(cmprts->check_ordered());
 #else
   cmprts->need_reorder = true;

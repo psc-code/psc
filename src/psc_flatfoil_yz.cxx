@@ -1,4 +1,5 @@
 
+
 #include <psc.hxx>
 #include <setup_fields.hxx>
 #include <setup_particles.hxx>
@@ -38,7 +39,6 @@ enum
 
 struct InjectFoilParams
 {
-  double xl, xh; 
   double yl, yh;
   double zl, zh;
   double n;
@@ -54,7 +54,7 @@ public:
 
   bool is_inside(double crd[3])
   {
-    return (crd[0] >= xl && crd[0] <= xh && crd[1] >= yl && crd[1] <= yh && crd[2] >= zl && crd[2] <= zh);
+    return (crd[1] >= yl && crd[1] <= yh && crd[2] >= zl && crd[2] <= zh);
   }
 
   void init_npt(int pop, double crd[3], psc_particle_npt& npt)
@@ -90,7 +90,7 @@ public:
 //
 // EDIT to change order / floating point type / cuda / 2d/3d
 
-using Dim = dim_xyz;
+using Dim = dim_yz;
 
 #if 1
 #ifdef USE_CUDA
@@ -224,12 +224,9 @@ void setupParameters()
 Grid_t* setupGrid()
 {
   // --- setup domain
-  //Grid_t::Real3 LL = {1., 800., 3.*800.}; // domain size (in d_e)
-  //Int3 gdims = {1, 1600, 3*1600};         // global number of grid points
-  //Int3 np = {1, 50, 3*50};                // division into patches
-  Grid_t::Real3 LL = {80., 80., 3.*80.}; // domain size (in d_e)
-  Int3 gdims = {160, 160, 3*160};         // global number of grid points
-  Int3 np = {5, 5, 3*5};                // division into patches
+  Grid_t::Real3 LL = {1., 800., 3.*800.}; // domain size (in d_e)
+  Int3 gdims = {1, 1600, 3*1600};         // global number of grid points
+  Int3 np = {1, 50, 3*50};                // division into patches
 
   Grid_t::Domain domain{gdims, LL, -.5 * LL, np};
 
@@ -404,8 +401,8 @@ void run()
   heating_foil_params.zl = -1. * g.d_i;
   heating_foil_params.zh = 1. * g.d_i;
   heating_foil_params.xc = 0. * g.d_i;
-  heating_foil_params.yc = 20. * g.d_i;
-  heating_foil_params.rH = 20. * g.d_i;
+  heating_foil_params.yc = 0. * g.d_i;
+  heating_foil_params.rH = 12. * g.d_i;
   heating_foil_params.T = g.target_Te_heat;
   heating_foil_params.Mi = grid.kinds[MY_ION].m;
   HeatingSpotFoil heating_spot{heating_foil_params};
@@ -418,8 +415,6 @@ void run()
 
   // -- Particle injection
   InjectFoilParams inject_foil_params;
-  inject_foil_params.xl = -100000. * g.d_i;
-  inject_foil_params.xh = 100000. * g.d_i;
   inject_foil_params.yl = -100000. * g.d_i;
   inject_foil_params.yh = 100000. * g.d_i;
   double target_zwidth = 1.;

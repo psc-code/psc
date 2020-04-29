@@ -80,9 +80,15 @@ struct ChecksCuda
 
     double eps = continuity_threshold;
     double max_err = 0.;
+    
+    
+    auto accessor = mprts.accessor();//DEBUG
+
     for (int p = 0; p < divj_.n_patches(); p++) {
       auto D_rho = d_rho[p];
       auto Div_J = divj_[p];
+
+
       grid.Foreach_3d(0, 0, [&](int jx, int jy, int jz) {
         double d_rho = D_rho(0, jx, jy, jz);
         double div_j = Div_J(0, jx, jy, jz);
@@ -90,6 +96,24 @@ struct ChecksCuda
         if (fabs(d_rho + div_j) > eps) {
           mprintf("p%d (%d,%d,%d): %g -- %g diff %g\n", p, jx, jy, jz, d_rho,
                   -div_j, d_rho + div_j);
+             // 
+             //DEBUG
+             // std::string outfile = "violations_" + std::to_string(p) + ".txt";
+             // FILE *debug_file = fopen(outfile.c_str(), "a");//DEBUG
+             // for (auto prt : accessor[p]) {
+             // fprintf(debug_file, "p%d %g %g %g %g %g %g %g %d\n", p,
+             //       prt.x()[0], prt.x()[1], prt.x()[2],
+             //       prt.u()[0], prt.u()[1], prt.u()[2],
+             //       prt.w(), prt.kind()); 
+             //  
+             // }
+             // fclose(debug_file); //DEBUG
+             // abort();
+             // 
+             // //DEBUG
+
+
+            
         }
       });
     }
