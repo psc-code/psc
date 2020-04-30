@@ -212,7 +212,7 @@ struct AccessorSimple
     : mprts_{mprts}
   {}
 
-  Patch operator[](int p) { return {*this, p}; }
+  Patch operator[](int p){ return {*this, p}; }
   const Mparticles& mprts() const { return mprts_; }
   Mparticles& mprts() { return mprts_; }
   uint size(int p) const { return mprts_[p].size(); }

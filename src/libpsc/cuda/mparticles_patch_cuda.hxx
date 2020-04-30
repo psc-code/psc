@@ -26,7 +26,17 @@ struct ConstAccessorCuda
     : mprts_{mprts}, data_{const_cast<Mparticles&>(mprts).get_particles()}, off_{mprts.get_offsets()}
   {}
 
-  Patch operator[](int p) const { return {*this, p}; }
+  Patch operator[](int p) const 
+    {
+        printf("REORDER: %d\n", mprts_.need_reorder());
+        if(mprts_.need_reorder())
+        {
+            printf("Warning: Calling accessor with unordered particles! Expect invalid results\n");
+            abort();
+        } 
+
+         return {*this, p}; 
+    }
   Mparticles& mprts() const { return mprts_; }
   const _Particle* data(int p) const { return &data_[off_[p]]; }
   uint size(int p) const { return off_[p+1] - off_[p]; }

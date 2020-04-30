@@ -83,6 +83,19 @@ struct ChecksCuda
     
     
     auto accessor = mprts.accessor();//DEBUG
+              
+                int p = 0;
+              std::string outfile = "violations_" + std::to_string(p) + ".txt";
+              FILE *debug_file = fopen(outfile.c_str(), "a");//DEBUG
+              for (auto prt : accessor[p]) {
+              fprintf(debug_file, "p%d %g %g %g %g %g %g %g %d\n", p,
+                    prt.x()[0], prt.x()[1], prt.x()[2],
+                    prt.u()[0], prt.u()[1], prt.u()[2],
+                    prt.w(), prt.kind()); 
+               
+              }
+              fclose(debug_file); //DEBUG
+              //abort();
 
     for (int p = 0; p < divj_.n_patches(); p++) {
       auto D_rho = d_rho[p];
@@ -98,18 +111,8 @@ struct ChecksCuda
                   -div_j, d_rho + div_j);
              // 
              //DEBUG
-             // std::string outfile = "violations_" + std::to_string(p) + ".txt";
-             // FILE *debug_file = fopen(outfile.c_str(), "a");//DEBUG
-             // for (auto prt : accessor[p]) {
-             // fprintf(debug_file, "p%d %g %g %g %g %g %g %g %d\n", p,
-             //       prt.x()[0], prt.x()[1], prt.x()[2],
-             //       prt.u()[0], prt.u()[1], prt.u()[2],
-             //       prt.w(), prt.kind()); 
-             //  
-             // }
-             // fclose(debug_file); //DEBUG
-             // abort();
-             // 
+
+              
              // //DEBUG
 
 

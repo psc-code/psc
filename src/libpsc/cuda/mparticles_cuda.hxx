@@ -66,20 +66,12 @@ struct MparticlesCuda : MparticlesBase
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
-
+  
   CudaMparticles* cmprts() { return cmprts_; }
 
   InjectorBuffered<MparticlesCuda> injector() { return {*this}; }
-  ConstAccessorCuda<MparticlesCuda> accessor() const 
-  {
-    if(Iface::need_reorder(cmprts_))
-    {
-        printf("Warning: Calling accessor with unordered particles! Expect invalid results\n");
-        abort();
-    } 
-    return {const_cast<MparticlesCuda&>(*this)}; 
-  } // FIXME cast
-  
+  ConstAccessorCuda<MparticlesCuda> accessor() const { return {const_cast<MparticlesCuda&>(*this)}; } // FIXME cast
+  bool need_reorder() { return Iface::need_reorder(cmprts_); }
 private:
   CudaMparticles* cmprts_;
   ParticleIndexer<real_t> pi_;
