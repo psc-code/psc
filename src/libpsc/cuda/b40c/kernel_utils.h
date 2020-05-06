@@ -54,7 +54,8 @@ namespace b40c_thrust   {
 #endif	
 
 #if __CUDA_ARCH__ >= 120
-	#define WarpVoteAll(active_threads, predicate) (__all(predicate))
+	#define WarpVoteAll(active_threads, predicate)  ( __all_sync(__activemask(), predicate))
+	//#define WarpVoteAll(active_threads, predicate) (__all( predicate))
 #else 
 	#define WarpVoteAll(active_threads, predicate) (EmulatedWarpVoteAll<active_threads>(predicate))
 #endif
