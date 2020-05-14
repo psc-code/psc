@@ -183,6 +183,9 @@ struct cuda_heating_foil : HeatingSpotFoilParams
   void operator()(cuda_mparticles<BS>* cmprts)
   {
     //return cuda_heating_run_foil_gold(cmprts);
+    if (cmprts->n_prts == 0) {
+      return;
+    }
 
     if (first_time_) { // FIXME
       cuda_heating_params_free(h_prm_);
