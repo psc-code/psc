@@ -552,6 +552,9 @@ struct OutputParticlesHdf5
                    (char*)params.romio_ds_write);
     }
     H5Pset_fapl_mpio(plist, comm_, mpi_info);
+#else
+    mprintf("ERROR: particle output requires parallel hdf5\n");
+    abort();
 #endif
 
     hid_t file = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, plist);
