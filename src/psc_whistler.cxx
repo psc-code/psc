@@ -311,7 +311,7 @@ void run()
 
   // -- output fields
   OutputFieldsParams outf_params{};
-  outf_params.pfield_step = 200;
+  outf_params.pfield_interval = 200;
   OutputFields outf{grid, outf_params};
 
   // -- output particles
