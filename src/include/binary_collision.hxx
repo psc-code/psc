@@ -143,11 +143,7 @@ struct BinaryCollision
       nz=0.f;
     }
     bet=nnorm;
-    if(bet == 1.f)
-    {    
-        printf("CRASH!! DIVIDE BY 0\n");  //JOHNS DEBUG
-        abort();
-    }
+    if(bet == 1.f) printf("CRASH!! DIVIDE BY 0\n");  //JOHNS DEBUG
     gam=1.f/std::sqrt(1.f-bet*bet);
   
   
@@ -210,11 +206,7 @@ struct BinaryCollision
     vcy2=pcy2/pc02;
     vcz2=pcz2/pc02;
     real_t mag = (vcx1*vcx2+vcy1*vcy2+vcz1*vcz2);   //JOHNS DEBUG
-    if(mag == 1.f)
-    {
-        printf("CRASH!! DIVIDE BY 0\n");  //JOHNS DEBUG
-        abort();
-    }
+    if(mag == 1.f) printf("CRASH!! DIVIDE BY 0\n");  //JOHNS DEBUG
     vcn=1.f/(1.f-(vcx1*vcx2+vcy1*vcy2+vcz1*vcz2));
     vcxr=vcn*(vcx1-vcx2);
     vcyr=vcn*(vcy1-vcy2);
