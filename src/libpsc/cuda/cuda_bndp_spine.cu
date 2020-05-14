@@ -136,6 +136,7 @@ void cuda_bndp<CudaMparticles, DIM>::count_received(CudaMparticles *cmprts)
 {
   k_count_received<<<n_blocks, THREADS_PER_BLOCK>>>
     (n_blocks, d_spine_cnts.data().get() + 10 * n_blocks, d_spine_cnts.data().get());
+  cuda_sync_if_enabled();
 }
 
 // ----------------------------------------------------------------------

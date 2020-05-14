@@ -406,6 +406,11 @@ struct Psc
       balance_(grid_, mprts_);
     }
 
+    // === particle injection
+    prof_start(pr_inject_prts);
+    inject_particles();
+    prof_stop(pr_inject_prts);
+
     if (p_.sort_interval > 0 && timestep % p_.sort_interval == 0) {
       mpi_printf(comm, "***** Sorting...\n");
       prof_start(pr_sort);
@@ -420,10 +425,6 @@ struct Psc
       prof_stop(pr_collision);
     }
 
-    // === particle injection
-    prof_start(pr_inject_prts);
-    inject_particles();
-    prof_stop(pr_inject_prts);
 
     if (checks_.continuity_every_step > 0 &&
         timestep % checks_.continuity_every_step == 0) {

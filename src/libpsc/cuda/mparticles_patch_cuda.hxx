@@ -28,7 +28,6 @@ struct ConstAccessorCuda
 
   Patch operator[](int p) const 
     {
-        printf("REORDER: %d\n", mprts_.need_reorder());
         if(mprts_.need_reorder())
         {
             printf("Warning: Calling accessor with unordered particles! Expect invalid results\n");

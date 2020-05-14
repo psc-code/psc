@@ -110,8 +110,7 @@ void cuda_bndp<CudaMparticles, DIM>::post(CudaMparticles* cmprts)
   prof_stop(pr_D1);
   
   prof_start(pr_E);
-#if 1
-  cmprts->need_reorder = true; //JOHN added for debug
+#if 0
   cmprts->reorder();
   assert(cmprts->check_ordered());
 #else
@@ -193,7 +192,7 @@ uint cuda_bndp<CudaMparticles, DIM>::convert_and_copy_to_dev(CudaMparticles *cmp
     n_recvs[p] = n_recv;
     
     for (int n = 0; n < n_recv; n++) {
-      h_bnd_storage.store(bufs[p][n], n + off);;
+      h_bnd_storage.store(bufs[p][n], n + off);
       checkInPatchMod(&h_bnd_storage.xi4[n + off].x);
       uint b = blockIndex(h_bnd_storage.xi4[n + off], p);
       assert(b < n_blocks);

@@ -343,20 +343,20 @@ void run()
   // Set up various objects needed to run this case
 
   // -- Balance
-  psc_params.balance_interval = 1000;
+  psc_params.balance_interval = 100;
   Balance balance{psc_params.balance_interval, 3, true};
 
   // -- Sort
-  psc_params.sort_interval = 10;
+  psc_params.sort_interval = 1;
 
   // -- Collision
-  int collision_interval = 13;
+  int collision_interval = 5;
   double collision_nu = 3.76 * std::pow(g.target_Te_heat, 2.) / g.Zi / g.lambda0;
   Collision collision{grid, collision_interval, collision_nu};
 
   // -- Checks
   ChecksParams checks_params{};
-  checks_params.continuity_every_step = 1;
+  checks_params.continuity_every_step = 10;
   checks_params.continuity_threshold = 1e-5;
   checks_params.continuity_verbose = false;
   Checks checks{grid, MPI_COMM_WORLD, checks_params};
@@ -375,15 +375,15 @@ void run()
 
   // -- output fields
   OutputFieldsParams outf_params{};
-  outf_params.pfield_interval = 400;
-  outf_params.tfield_interval = 400;
+  outf_params.pfield_interval = 1000;
+  outf_params.tfield_interval = 1000;
   outf_params.tfield_average_every = 40;
   outf_params.tfield_moments_average_every = 80;
   OutputFields outf{grid, outf_params};
 
   // -- output particles
   OutputParticlesParams outp_params{};
-  outp_params.every_step = 400;
+  outp_params.every_step = 1000;
   outp_params.data_dir = ".";
   outp_params.basename = "prt";
   OutputParticles outp{grid, outp_params};
@@ -407,7 +407,7 @@ void run()
   heating_foil_params.Mi = grid.kinds[MY_ION].m;
   HeatingSpotFoil heating_spot{heating_foil_params};
 
-  g.heating_interval = 17;
+  g.heating_interval = 5;
   g.heating_begin = 0;
   g.heating_end = 10000000;
   auto& heating =
@@ -425,7 +425,7 @@ void run()
   inject_foil_params.Ti = .001;
   InjectFoil inject_target{inject_foil_params};
 
-  g.inject_interval = 11;
+  g.inject_interval = 5;
   int inject_tau = 40;
 
   SetupParticles<Mparticles> setup_particles(grid);

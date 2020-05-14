@@ -488,6 +488,7 @@ DigitPlacePass(const RadixSortStorage<ConvertedKeyType, V> &converted_storage)
 		converted_storage.d_alt_keys,
 		_work_decomposition);
 	//synchronize_if_enabled("RakingReduction");
+		cuda_sync_if_enabled();
 
 	
 	//
