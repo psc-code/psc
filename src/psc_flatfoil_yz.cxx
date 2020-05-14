@@ -38,6 +38,7 @@ enum
 
 struct InjectFoilParams
 {
+  double xl, xh; 
   double yl, yh;
   double zl, zh;
   double n;
@@ -53,7 +54,7 @@ public:
 
   bool is_inside(double crd[3])
   {
-    return (crd[1] >= yl && crd[1] <= yh && crd[2] >= zl && crd[2] <= zh);
+    return (crd[0] >= xl && crd[0] <= xh && crd[1] >= yl && crd[1] <= yh && crd[2] >= zl && crd[2] <= zh);
   }
 
   void init_npt(int pop, double crd[3], psc_particle_npt& npt)
@@ -423,6 +424,8 @@ void run()
 
   // -- Particle injection
   InjectFoilParams inject_foil_params;
+  inject_foil_params.xl = -100000. * g.d_i;
+  inject_foil_params.xh = 100000. * g.d_i;
   inject_foil_params.yl = -100000. * g.d_i;
   inject_foil_params.yh = 100000. * g.d_i;
   double target_zwidth = 1.;
