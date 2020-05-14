@@ -36,8 +36,8 @@ if(USE_CUDA)
   list(REMOVE_ITEM CMAKE_CUDA_FLAGS "-std c++14")
 endif()
 
+set(MPI_CXX_SKIP_MPICXX ON)
 find_package(MPI REQUIRED)
-add_definitions(-DOMPI_SKIP_MPICXX)
 
 # ADIOS2
 if(PSC_USE_ADIOS2 STREQUAL AUTO)

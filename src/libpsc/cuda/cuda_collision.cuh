@@ -88,7 +88,7 @@ struct CudaCollision
       uint beg = d_off[bidx];
       uint end = d_off[bidx + 1];
       real_t nudt1 =
-        nudt0 * (end - beg & ~1); // somewhat counteract that we don't collide
+        nudt0 * (end - beg) * (end - beg) / ((end - beg) & ~1); // somewhat counteract that we don't collide
                                   // the last particle if odd
       for (uint n = beg + 2 * threadIdx.x; n + 1 < end;
            n += 2 * THREADS_PER_BLOCK) {

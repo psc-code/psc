@@ -6,6 +6,7 @@ target_include_directories(kg INTERFACE include)
 target_include_directories(kg INTERFACE ${CMAKE_SOURCE_DIR}/src/libmrc/include)
 # FIXME, hack for vec3.h; PscConfig.h
 target_include_directories(kg INTERFACE ${CMAKE_SOURCE_DIR}/src/include)
+target_link_libraries(kg INTERFACE MPI::MPI_CXX)
 
 if (PSC_HAVE_ADIOS2)
   target_link_libraries(kg INTERFACE adios2::adios2)
