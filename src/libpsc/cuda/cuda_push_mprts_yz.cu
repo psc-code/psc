@@ -86,9 +86,9 @@ struct CudaPushParticles
     real_t dq = dmprts.dq(prt.kind());
     advance.push_p(prt.u(), E, H, dq);
 #if 0
-    if (!isfinite(prt.pxi[0]) || !isfinite(prt.pxi[1]) || !isfinite(prt.pxi[2])) {
+    if (!isfinite(prt.u()[0]) || !isfinite(prt.u()[1]) || !isfinite(prt.u()[2])) {
       printf("CUDA_ERROR push_part_one: n = %d pxi %g %g %g\n", n,
-	     prt.pxi[0], prt.pxi[1], prt.pxi[2]);
+	     prt.u()[0], prt.u()[1], prt.u()[2]);
     }
 #endif
   }
@@ -145,7 +145,7 @@ struct CudaPushParticles
 #if 0
     if (i[1] < -1 || i[1] >= int(BS::y::value) + 1 ||
 	i[2] < -1 || i[2] >= int(BS::z::value) + 1) {
-      printf("CUDA_ERROR curr_vb_cell jyz %d:%d:%d\n", i[1], i[2]);
+      printf("CUDA_ERROR curr_vb_cell jyz %d:%d\n", i[1], i[2]);
     }
 #endif
     float xa[3] = { 0.,
@@ -292,8 +292,8 @@ struct CudaPushParticles
 	idiff[2] < -1 || idiff[2] > 1) {
       printf("A idiff %d %d j %d %d k %d %d\n", idiff[1], idiff[2],
 	     j[1], j[2], k[1], k[2]);
-      printf("A prt.xi %g %g scaled %g %g k %d %d\n", prt.xi[1], prt.xi[2],
-	     dmprts.scalePos(prt.xi[1], 1), dmprts.scalePos(prt.xi[2], 2), k[1], k[2]);
+      printf("A prt.xi %g %g scaled %g %g k %d %d\n", prt.x()[1], prt.x()[2],
+	     dmprts.scalePos(prt.x()[1], 1), dmprts.scalePos(prt.x()[2], 2), k[1], k[2]);
     }
 #endif
     int i[3] = { 0, j[1] - current_block.ci0[1], j[2] - current_block.ci0[2] };
