@@ -29,16 +29,11 @@ psc_option(ADIOS2 "Build with adios2 support" AUTO)
 
 # CUDA
 if(USE_CUDA)
-  #list(APPEND CMAKE_CUDA_FLAGS "-std c++14")
   set(_save_CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS}")
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -std c++14")
-  #set(CUDA_GENCODE  "-gencode=arch=compute_70, code=compute_70")
-  #list(APPEND CMAKE_CUDA_FLAGS ${CUDA_GENCODE})
 
   enable_language(CUDA)
-  #list(REMOVE_ITEM CMAKE_CUDA_FLAGS "-std c++14")
   set(CMAKE_CUDA_FLAGS "${_save_CMAKE_CUDA_FLAGS}")
-  #list(REMOVE_ITEM CMAKE_CUDA_FLAGS ${CUDA_GENCODE})
 endif()
 
 
