@@ -15,68 +15,7 @@
 // cuda_bndp
 
 template <typename CudaMparticles, typename DIM>
-struct cuda_bndp;
-
-template <typename CudaMparticles>
-struct cuda_bndp<CudaMparticles, dim_yz>
-  : cuda_mparticles_indexer<typename CudaMparticles::BS>
-{
-  using BS = typename CudaMparticles::BS;
-  using BndBuffer = std::vector<typename CudaMparticles::Particle>;
-  using BndBuffers = typename CudaMparticles::BndBuffers;
-
-  using cuda_mparticles_indexer<BS>::n_blocks;
-  using cuda_mparticles_indexer<BS>::n_blocks_per_patch;
-  using cuda_mparticles_indexer<BS>::n_patches;
-  using cuda_mparticles_indexer<BS>::checkInPatchMod;
-  using cuda_mparticles_indexer<BS>::blockIndex;
-  using cuda_mparticles_indexer<BS>::b_mx;
-
-  cuda_bndp(const Grid_t& grid);
-
-  BndBuffers& prep(CudaMparticles* cmprts);
-  void post(CudaMparticles* cmprts);
-
-  // pieces for prep
-  void spine_reduce(CudaMparticles* cmprts);
-  uint find_n_send(CudaMparticles* cmprts);
-  void scan_send_buf_total(CudaMparticles* cmprts, uint n_prts_send);
-  void reorder_send_by_id(CudaMparticles* cmprts, uint n_prts_send);
-  void reorder_send_buf_total(CudaMparticles* cmprts, uint n_prts_send);
-  void copy_from_dev_and_convert(CudaMparticles* cmprts, uint n_prts_send);
-
-  // pieces for post
-  uint convert_and_copy_to_dev(CudaMparticles* cmprts);
-  void sort_pairs_device(CudaMparticles* cmprts, uint n_prts_recv);
-  void count_received(CudaMparticles* cmprts);
-  void scan_scatter_received(CudaMparticles* cmprts, uint n_prts_recv);
-  void update_offsets(CudaMparticles* cmprts);
-
-  // gold
-  void spine_reduce_gold(CudaMparticles* cmprts);
-  void scan_send_buf_total_gold(CudaMparticles* cmprts, uint n_prts_send);
-  void reorder_send_by_id_gold(CudaMparticles* cmprts, uint n_prts_send);
-  void sort_pairs_gold(CudaMparticles* cmprts, uint n_prts_recv);
-  void count_received_gold(CudaMparticles* cmprts);
-  void scan_scatter_received_gold(CudaMparticles* cmprts, uint n_prts_recv);
-  void update_offsets_gold(CudaMparticles* cmprts);
-
-  thrust::device_vector<uint> d_spine_cnts;
-  thrust::device_vector<uint> d_spine_sums;
-  uint n_prts_send;
-  thrust::device_vector<uint> d_bnd_off;
-
-  thrust::device_vector<uint>
-    d_sums; // FIXME, should go away (only used in some gold stuff)
-
-  BndBuffers bufs;
-  std::vector<int> n_sends;
-  std::vector<int> n_recvs;
-};
-
-template <typename CudaMparticles>
-struct cuda_bndp<CudaMparticles, dim_xyz>
-  : cuda_mparticles_indexer<typename CudaMparticles::BS>
+struct cuda_bndp : cuda_mparticles_indexer<typename CudaMparticles::BS>
 {
   using BS = typename CudaMparticles::BS;
   using BndBuffer = std::vector<typename CudaMparticles::Particle>;
@@ -188,6 +127,66 @@ struct cuda_bndp<CudaMparticles, dim_xyz>
   std::vector<int> n_recvs;
   BndBuffers bufs_;
   uint n_prts_send;
+};
+
+// ----------------------------------------------------------------------
+// specialized for dim_yz
+
+template <typename CudaMparticles>
+struct cuda_bndp<CudaMparticles, dim_yz>
+  : cuda_mparticles_indexer<typename CudaMparticles::BS>
+{
+  using BS = typename CudaMparticles::BS;
+  using BndBuffer = std::vector<typename CudaMparticles::Particle>;
+  using BndBuffers = typename CudaMparticles::BndBuffers;
+
+  using cuda_mparticles_indexer<BS>::n_blocks;
+  using cuda_mparticles_indexer<BS>::n_blocks_per_patch;
+  using cuda_mparticles_indexer<BS>::n_patches;
+  using cuda_mparticles_indexer<BS>::checkInPatchMod;
+  using cuda_mparticles_indexer<BS>::blockIndex;
+  using cuda_mparticles_indexer<BS>::b_mx;
+
+  cuda_bndp(const Grid_t& grid);
+
+  BndBuffers& prep(CudaMparticles* cmprts);
+  void post(CudaMparticles* cmprts);
+
+  // pieces for prep
+  void spine_reduce(CudaMparticles* cmprts);
+  uint find_n_send(CudaMparticles* cmprts);
+  void scan_send_buf_total(CudaMparticles* cmprts, uint n_prts_send);
+  void reorder_send_by_id(CudaMparticles* cmprts, uint n_prts_send);
+  void reorder_send_buf_total(CudaMparticles* cmprts, uint n_prts_send);
+  void copy_from_dev_and_convert(CudaMparticles* cmprts, uint n_prts_send);
+
+  // pieces for post
+  uint convert_and_copy_to_dev(CudaMparticles* cmprts);
+  void sort_pairs_device(CudaMparticles* cmprts, uint n_prts_recv);
+  void count_received(CudaMparticles* cmprts);
+  void scan_scatter_received(CudaMparticles* cmprts, uint n_prts_recv);
+  void update_offsets(CudaMparticles* cmprts);
+
+  // gold
+  void spine_reduce_gold(CudaMparticles* cmprts);
+  void scan_send_buf_total_gold(CudaMparticles* cmprts, uint n_prts_send);
+  void reorder_send_by_id_gold(CudaMparticles* cmprts, uint n_prts_send);
+  void sort_pairs_gold(CudaMparticles* cmprts, uint n_prts_recv);
+  void count_received_gold(CudaMparticles* cmprts);
+  void scan_scatter_received_gold(CudaMparticles* cmprts, uint n_prts_recv);
+  void update_offsets_gold(CudaMparticles* cmprts);
+
+  thrust::device_vector<uint> d_spine_cnts;
+  thrust::device_vector<uint> d_spine_sums;
+  uint n_prts_send;
+  thrust::device_vector<uint> d_bnd_off;
+
+  thrust::device_vector<uint>
+    d_sums; // FIXME, should go away (only used in some gold stuff)
+
+  BndBuffers bufs;
+  std::vector<int> n_sends;
+  std::vector<int> n_recvs;
 };
 
 #endif
