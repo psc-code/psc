@@ -2,6 +2,8 @@
 #ifndef CUDA_MPARTICLES_INDEXER_H
 #define CUDA_MPARTICLES_INDEXER_H
 
+//#undef CUDA_BNDP_DIM_YZ_SPECIAL
+
 #include "dim.hxx"
 #include "grid.hxx"
 #include "particle_cuda.hxx"
@@ -165,6 +167,20 @@ struct DParticleIndexer
     int bpos[3] = {int(cpos[0] / BS::x::value), int(cpos[1] / BS::y::value),
                    int(cpos[2] / BS::z::value)};
     return validBlockIndex(bpos, p);
+  }
+
+  __device__ int blockNoShift(float xi[3], int p) const
+  {
+    static_assert(BS::x::value == 1, "blockNoShift needs work for dim_xyz");
+    uint block_pos_y = __float2int_rd(xi[1] * dxi_[1]) / BS::y::value;
+    uint block_pos_z = __float2int_rd(xi[2] * dxi_[2]) / BS::z::value;
+
+    if (block_pos_y >= b_mx_[1] || block_pos_z >= b_mx_[2]) {
+      return n_blocks_ + p;
+    } else {
+      int bidx = (p * b_mx_[2] + block_pos_z) * b_mx_[1] + block_pos_y;
+      return bidx;
+    }
   }
 
   __device__ int blockShift(float xi[3], int p, int bid) const

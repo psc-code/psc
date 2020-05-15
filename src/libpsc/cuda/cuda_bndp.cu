@@ -30,6 +30,8 @@
 #include <cstdio>
 #include <cassert>
 
+#ifdef CUDA_BNDP_DIM_YZ_SPECIAL
+
 // ----------------------------------------------------------------------
 // ctor
 
@@ -268,6 +270,8 @@ void cuda_bndp<CudaMparticles, dim_yz>::update_offsets_gold(
 
   thrust::copy(h_off.begin(), h_off.end(), cmprts->by_block_.d_off.begin());
 }
+
+#endif
 
 // ----------------------------------------------------------------------
 // convert_and_copy_to_dev

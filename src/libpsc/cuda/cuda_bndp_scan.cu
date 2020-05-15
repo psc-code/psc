@@ -1,4 +1,6 @@
 
+#ifdef CUDA_BNDP_DIM_YZ_SPECIAL
+
 #include "cuda_bits.h"
 #include "cuda_bndp.h"
 #include "cuda_mparticles.cuh"
@@ -238,3 +240,5 @@ void cuda_bndp<CudaMparticles, dim_yz>::scan_send_buf_total_gold(
 }
 
 template struct cuda_bndp<cuda_mparticles<BS144>, dim_yz>;
+
+#endif

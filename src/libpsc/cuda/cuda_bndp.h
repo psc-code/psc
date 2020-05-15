@@ -129,6 +129,8 @@ struct cuda_bndp : cuda_mparticles_indexer<typename CudaMparticles::BS>
   uint n_prts_send;
 };
 
+#ifdef CUDA_BNDP_DIM_YZ_SPECIAL
+
 // ----------------------------------------------------------------------
 // specialized for dim_yz
 
@@ -188,5 +190,7 @@ struct cuda_bndp<CudaMparticles, dim_yz>
   std::vector<int> n_sends;
   std::vector<int> n_recvs;
 };
+
+#endif
 
 #endif
