@@ -24,8 +24,8 @@ static const int RADIX_BITS = 4;
 // ----------------------------------------------------------------------
 // spine_reduce
 
-template <typename CudaMparticles, typename DIM>
-void cuda_bndp<CudaMparticles, DIM>::spine_reduce(CudaMparticles* cmprts)
+template <typename CudaMparticles>
+void cuda_bndp<CudaMparticles, dim_yz>::spine_reduce(CudaMparticles* cmprts)
 {
   // OPT?
   thrust::fill(d_spine_cnts.data(),
@@ -82,8 +82,9 @@ void cuda_bndp<CudaMparticles, DIM>::spine_reduce(CudaMparticles* cmprts)
 // ----------------------------------------------------------------------
 // cuda_mprts_spine_reduce_gold
 
-template <typename CudaMparticles, typename DIM>
-void cuda_bndp<CudaMparticles, DIM>::spine_reduce_gold(CudaMparticles* cmprts)
+template <typename CudaMparticles>
+void cuda_bndp<CudaMparticles, dim_yz>::spine_reduce_gold(
+  CudaMparticles* cmprts)
 {
   thrust::fill(d_spine_cnts.data(),
                d_spine_cnts.data() + 1 + n_blocks * (CUDA_BND_STRIDE + 1), 0);
@@ -145,8 +146,8 @@ __global__ static void k_count_received(int nr_total_blocks,
 // ----------------------------------------------------------------------
 // count_received
 
-template <typename CudaMparticles, typename DIM>
-void cuda_bndp<CudaMparticles, DIM>::count_received(CudaMparticles* cmprts)
+template <typename CudaMparticles>
+void cuda_bndp<CudaMparticles, dim_yz>::count_received(CudaMparticles* cmprts)
 {
   k_count_received<<<n_blocks, THREADS_PER_BLOCK>>>(
     n_blocks, d_spine_cnts.data().get() + 10 * n_blocks,
@@ -156,8 +157,9 @@ void cuda_bndp<CudaMparticles, DIM>::count_received(CudaMparticles* cmprts)
 // ----------------------------------------------------------------------
 // count_received_gold
 
-template <typename CudaMparticles, typename DIM>
-void cuda_bndp<CudaMparticles, DIM>::count_received_gold(CudaMparticles* cmprts)
+template <typename CudaMparticles>
+void cuda_bndp<CudaMparticles, dim_yz>::count_received_gold(
+  CudaMparticles* cmprts)
 {
   thrust::host_vector<uint> h_spine_cnts(1 + n_blocks * (10 + 1));
 
@@ -213,8 +215,8 @@ static void __global__ k_scan_scatter_received(uint nr_recv, uint nr_prts_prev,
 // ----------------------------------------------------------------------
 // scan_scatter_received
 
-template <typename CudaMparticles, typename DIM>
-void cuda_bndp<CudaMparticles, DIM>::scan_scatter_received(
+template <typename CudaMparticles>
+void cuda_bndp<CudaMparticles, dim_yz>::scan_scatter_received(
   CudaMparticles* cmprts, uint n_prts_recv)
 {
   if (n_prts_recv == 0) {
@@ -234,8 +236,8 @@ void cuda_bndp<CudaMparticles, DIM>::scan_scatter_received(
 // ----------------------------------------------------------------------
 // scan_scatter_received_gold
 
-template <typename CudaMparticles, typename DIM>
-void cuda_bndp<CudaMparticles, DIM>::scan_scatter_received_gold(
+template <typename CudaMparticles>
+void cuda_bndp<CudaMparticles, dim_yz>::scan_scatter_received_gold(
   CudaMparticles* cmprts, uint n_prts_recv)
 {
   thrust::host_vector<uint> h_bidx(cmprts->n_prts);
@@ -261,9 +263,9 @@ void cuda_bndp<CudaMparticles, DIM>::scan_scatter_received_gold(
 // ----------------------------------------------------------------------
 // sort_pairs_device
 
-template <typename CudaMparticles, typename DIM>
-void cuda_bndp<CudaMparticles, DIM>::sort_pairs_device(CudaMparticles* cmprts,
-                                                       uint n_prts_recv)
+template <typename CudaMparticles>
+void cuda_bndp<CudaMparticles, dim_yz>::sort_pairs_device(
+  CudaMparticles* cmprts, uint n_prts_recv)
 {
   static int pr_A, pr_B, pr_C, pr_D;
   if (!pr_B) {
@@ -336,9 +338,9 @@ void cuda_bndp<CudaMparticles, DIM>::sort_pairs_device(CudaMparticles* cmprts,
   // d_ids now contains the indices to reorder by
 }
 
-template <typename CudaMparticles, typename DIM>
-void cuda_bndp<CudaMparticles, DIM>::sort_pairs_gold(CudaMparticles* cmprts,
-                                                     uint n_prts_recv)
+template <typename CudaMparticles>
+void cuda_bndp<CudaMparticles, dim_yz>::sort_pairs_gold(CudaMparticles* cmprts,
+                                                        uint n_prts_recv)
 {
   thrust::host_vector<uint> h_bidx(cmprts->by_block_.d_idx.data(),
                                    cmprts->by_block_.d_idx.data() +

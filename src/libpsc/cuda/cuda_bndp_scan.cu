@@ -49,9 +49,9 @@ static void __global__ k_reorder_send_by_id(uint nr_prts_send, uint* d_xchg_ids,
 // in: d_xi4, d_pxi4[0:n_prts[
 // out: d_xi4, d_pxi4[n_prts:n_prts_send[
 
-template <typename CudaMparticles, typename DIM>
-void cuda_bndp<CudaMparticles, DIM>::reorder_send_by_id(CudaMparticles* cmprts,
-                                                        uint n_prts_send)
+template <typename CudaMparticles>
+void cuda_bndp<CudaMparticles, dim_yz>::reorder_send_by_id(
+  CudaMparticles* cmprts, uint n_prts_send)
 {
   cmprts->storage.xi4.resize(cmprts->n_prts + n_prts_send);
   cmprts->storage.pxi4.resize(cmprts->n_prts + n_prts_send);
@@ -74,8 +74,8 @@ void cuda_bndp<CudaMparticles, DIM>::reorder_send_by_id(CudaMparticles* cmprts,
 // ----------------------------------------------------------------------
 // reorder_send_by_id_gold
 
-template <typename CudaMparticles, typename DIM>
-void cuda_bndp<CudaMparticles, DIM>::reorder_send_by_id_gold(
+template <typename CudaMparticles>
+void cuda_bndp<CudaMparticles, dim_yz>::reorder_send_by_id_gold(
   CudaMparticles* cmprts, uint n_prts_send)
 {
   thrust::host_vector<uint> h_id(cmprts->by_block_.d_id.data(),
@@ -119,8 +119,8 @@ __global__ static void k_reorder_send_buf_total(
 // ----------------------------------------------------------------------
 // reorder_send_buf_total
 
-template <typename CudaMparticles, typename DIM>
-void cuda_bndp<CudaMparticles, DIM>::reorder_send_buf_total(
+template <typename CudaMparticles>
+void cuda_bndp<CudaMparticles, dim_yz>::reorder_send_buf_total(
   CudaMparticles* cmprts, uint n_prts_send)
 {
   if (n_patches() == 0) {
@@ -149,9 +149,9 @@ void cuda_bndp<CudaMparticles, DIM>::reorder_send_buf_total(
 // out: d_spine_sums, d_id[n_prts - n_prts_send: n_prts[
 //
 
-template <typename CudaMparticles, typename DIM>
-void cuda_bndp<CudaMparticles, DIM>::scan_send_buf_total(CudaMparticles* cmprts,
-                                                         uint n_prts_send)
+template <typename CudaMparticles>
+void cuda_bndp<CudaMparticles, dim_yz>::scan_send_buf_total(
+  CudaMparticles* cmprts, uint n_prts_send)
 {
   // OPT, we could do this from the beginning and adapt find_n_send()
   thrust::exclusive_scan(d_spine_cnts.data() + n_blocks * 10,
@@ -211,8 +211,8 @@ void cuda_bndp<CudaMparticles, DIM>::scan_send_buf_total(CudaMparticles* cmprts,
 // ----------------------------------------------------------------------
 // scan_send_buf_total_gold
 
-template <typename CudaMparticles, typename DIM>
-void cuda_bndp<CudaMparticles, DIM>::scan_send_buf_total_gold(
+template <typename CudaMparticles>
+void cuda_bndp<CudaMparticles, dim_yz>::scan_send_buf_total_gold(
   CudaMparticles* cmprts, uint n_prts_send)
 {
   thrust::host_vector<uint> h_off(cmprts->by_block_.d_off);
