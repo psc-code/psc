@@ -70,15 +70,7 @@ struct MparticlesCuda : MparticlesBase
   CudaMparticles* cmprts() { return cmprts_; }
 
   InjectorBuffered<MparticlesCuda> injector() { return {*this}; }
-  ConstAccessorCuda<MparticlesCuda> accessor() const 
-  {
-    if(Iface::need_reorder(cmprts_))
-    {
-        printf("Warning: Calling accessor with unordered particles! Expect invalid results\n");
-        abort();
-    } 
-    return {const_cast<MparticlesCuda&>(*this)}; 
-  } // FIXME cast
+  ConstAccessorCuda<MparticlesCuda> accessor() const { return {const_cast<MparticlesCuda&>(*this)}; } // FIXME cast
 
 private:
   CudaMparticles* cmprts_;
