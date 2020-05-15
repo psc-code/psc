@@ -80,12 +80,6 @@ bool cuda_mparticles_iface<BS>::check_after_push(CudaMparticles* cmprts)
 }
 
 template<typename BS>
-bool cuda_mparticles_iface<BS>::need_reorder(CudaMparticles* cmprts)
-{
-  return cmprts->need_reorder;
-}
-
-template<typename BS>
 void cuda_mparticles_iface<BS>::dump(const CudaMparticles* cmprts, const std::string& filename)
 {
   cmprts->dump(filename);
