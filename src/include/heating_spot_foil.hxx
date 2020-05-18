@@ -22,8 +22,10 @@ struct HeatingSpotFoil : HeatingSpotFoilParams
 {
   HeatingSpotFoil() = default;
   
-  HeatingSpotFoil(const HeatingSpotFoilParams& params)
-    : HeatingSpotFoilParams(params)
+  HeatingSpotFoil(const Grid_t& grid, const HeatingSpotFoilParams& params)
+    : HeatingSpotFoilParams(params),
+      Lx_(grid.domain.length[0]),
+      Ly_(grid.domain.length[1])
   {
     double width = zh - zl;
     fac = (8.f * pow(T, 1.5)) / (sqrt(Mi) * width);
@@ -38,10 +40,20 @@ struct HeatingSpotFoil : HeatingSpotFoilParams
       return 0;
     }
     
-    return fac * exp(-(sqr(x-xc) + sqr(y-yc)) / sqr(rH));
+    return fac * exp(-(sqr(x - xc) + sqr(y - yc) +
+		       sqr(x - xc) + sqr(y - (yc + Ly_)) +
+		       sqr(x - xc) + sqr(y - (yc - Ly_)) +
+		       sqr(x - (xc + Lx_)) + sqr(y - yc) +
+		       sqr(x - (xc + Lx_)) + sqr(y - (yc + Ly_)) +
+		       sqr(x - (xc + Lx_)) + sqr(y - (yc - Ly_)) +
+		       sqr(x - (xc - Lx_)) + sqr(y - yc) +
+		       sqr(x - (xc - Lx_)) + sqr(y - (yc + Ly_)) +
+		       sqr(x - (xc - Lx_)) + sqr(y - (yc - Ly_)))
+		     / sqr(rH));
   }
 
 private:
   double fac;
+  double Lx_, Ly_;
 };
 

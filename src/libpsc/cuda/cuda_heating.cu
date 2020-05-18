@@ -92,8 +92,9 @@ k_heating_run_foil(cuda_heating_foil d_foil, DMparticlesCuda<BS> dmprts, struct 
 
 struct cuda_heating_foil : HeatingSpotFoilParams
 {
-  cuda_heating_foil(const HeatingSpotFoilParams& params, int kind, double heating_dt)
-    : HeatingSpotFoilParams(params), kind(kind), heating_dt(heating_dt),
+  cuda_heating_foil(const HeatingSpotFoilParams& params, int kind, double heating_dt,
+		    double Lx, double Ly)
+    : HeatingSpotFoilParams(params), kind(kind), heating_dt(heating_dt), Lx_(Lx), Ly_(Ly),
       h_prm_{},
       d_curand_states_{},
       first_time_{true}
@@ -120,14 +121,24 @@ struct cuda_heating_foil : HeatingSpotFoilParams
     first_time_ = true;
   }
   
-  __host__  __device__ float get_H(float *xx)
+  __host__  __device__ float get_H(float *crd)
   {
-    if (xx[2] <= zl || xx[2] >= zh) {
+    double x = crd[0], y = crd[1], z = crd[2];
+
+    if (z <= zl || z >= zh) {
       return 0;
     }
     
-    return fac * exp(-(sqr(xx[0] - xc) +
-		       sqr(xx[1] - yc)) / sqr(rH));
+    return fac * exp(-(sqr(x - xc) + sqr(y - yc) +
+		       sqr(x - xc) + sqr(y - (yc + Ly_)) +
+		       sqr(x - xc) + sqr(y - (yc - Ly_)) +
+		       sqr(x - (xc + Lx_)) + sqr(y - yc) +
+		       sqr(x - (xc + Lx_)) + sqr(y - (yc + Ly_)) +
+		       sqr(x - (xc + Lx_)) + sqr(y - (yc - Ly_)) +
+		       sqr(x - (xc - Lx_)) + sqr(y - yc) +
+		       sqr(x - (xc - Lx_)) + sqr(y - (yc + Ly_)) +
+		       sqr(x - (xc - Lx_)) + sqr(y - (yc - Ly_)))
+		     / sqr(rH));
   }
   
   // ----------------------------------------------------------------------
@@ -217,6 +228,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
   bool first_time_;
   float fac;
   float heating_dt;
+  float Lx_, Ly_;
 
   cuda_heating_params h_prm_;
   curandState* d_curand_states_;
@@ -323,7 +335,8 @@ k_heating_run_foil(cuda_heating_foil d_foil, DMparticlesCuda<BS> dmprts, struct 
 template<typename BS>
 template<typename FUNC>
 HeatingCuda<BS>::HeatingCuda(const Grid_t& grid, int interval, int kind, FUNC get_H)
-  : foil_{new cuda_heating_foil{get_H, kind, interval * grid.dt}},
+  : foil_{new cuda_heating_foil{get_H, kind, interval * grid.dt,
+      grid.domain.length[0], grid.domain.length[1]}},
     balance_generation_cnt_{-1}
 {}
 

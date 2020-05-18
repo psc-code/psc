@@ -417,7 +417,7 @@ void run()
   heating_foil_params.rH = 12. * g.d_i;
   heating_foil_params.T = g.target_Te_heat;
   heating_foil_params.Mi = grid.kinds[MY_ION].m;
-  HeatingSpotFoil heating_spot{heating_foil_params};
+  HeatingSpotFoil heating_spot{grid, heating_foil_params};
 
   g.heating_interval = 20;
   g.heating_begin = 0;
