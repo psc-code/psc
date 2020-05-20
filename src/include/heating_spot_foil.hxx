@@ -40,16 +40,15 @@ struct HeatingSpotFoil : HeatingSpotFoilParams
       return 0;
     }
     
-    return fac * exp(-(sqr(x - xc) + sqr(y - yc) +
-		       sqr(x - xc) + sqr(y - (yc + Ly_)) +
-		       sqr(x - xc) + sqr(y - (yc - Ly_)) +
-		       sqr(x - (xc + Lx_)) + sqr(y - yc) +
-		       sqr(x - (xc + Lx_)) + sqr(y - (yc + Ly_)) +
-		       sqr(x - (xc + Lx_)) + sqr(y - (yc - Ly_)) +
-		       sqr(x - (xc - Lx_)) + sqr(y - yc) +
-		       sqr(x - (xc - Lx_)) + sqr(y - (yc + Ly_)) +
-		       sqr(x - (xc - Lx_)) + sqr(y - (yc - Ly_)))
-		     / sqr(rH));
+    return fac * (exp(-(sqr(x - (xc)) + sqr(y - (yc))) / sqr(rH)) +
+		  exp(-(sqr(x - (xc)) + sqr(y - (yc + Ly_))) / sqr(rH)) +
+		  exp(-(sqr(x - (xc)) + sqr(y - (yc - Ly_))) / sqr(rH)) +
+		  exp(-(sqr(x - (xc + Lx_)) + sqr(y - (yc))) / sqr(rH)) +
+		  exp(-(sqr(x - (xc + Lx_)) + sqr(y - (yc + Ly_))) / sqr(rH)) +
+		  exp(-(sqr(x - (xc + Lx_)) + sqr(y - (yc - Ly_))) / sqr(rH)) +
+		  exp(-(sqr(x - (xc - Lx_)) + sqr(y - (yc))) / sqr(rH)) +
+		  exp(-(sqr(x - (xc - Lx_)) + sqr(y - (yc + Ly_))) / sqr(rH)) +
+		  exp(-(sqr(x - (xc - Lx_)) + sqr(y - (yc - Ly_))) / sqr(rH)));
   }
 
 private:
