@@ -400,7 +400,7 @@ void run()
   outp_params.basename = "prt";
   OutputParticles outp{grid, outp_params};
 
-  int oute_interval = 100;
+  int oute_interval = -100;
   DiagEnergies oute{grid.comm(), oute_interval};
 
   auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
