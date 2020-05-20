@@ -102,8 +102,13 @@ public:
   {
     const auto& grid = mflds._grid();
 
-    static int pr, pr_field, pr_moment, pr_field_calc, pr_moment_calc, pr_field_write, pr_moment_write, pr_field_acc, pr_moment_acc;
+    static int pr;
     if (!pr) {
+      pr = prof_register("outf", 1., 0, 0);
+    }
+#if 0
+    static int pr_field, pr_moment, pr_field_calc, pr_moment_calc, pr_field_write, pr_moment_write, pr_field_acc, pr_moment_acc;
+    if (!pr_field) {
       pr = prof_register("outf", 1., 0, 0);
       pr_field = prof_register("outf_field", 1., 0, 0);
       pr_moment = prof_register("outf_moment", 1., 0, 0);
@@ -114,6 +119,7 @@ public:
       pr_field_acc = prof_register("outf_field_acc", 1., 0, 0);
       pr_moment_acc = prof_register("outf_moment_acc", 1., 0, 0);
     }
+#endif
     prof_start(pr);
 
     auto timestep = grid.timestep();
@@ -125,41 +131,41 @@ public:
                           timestep == 0);
 
     if (do_pfield || doaccum_tfield) {
-      prof_start(pr_field);
-      prof_start(pr_field_calc);
+      /* prof_start(pr_field); */
+      /* prof_start(pr_field_calc); */
       Item_jeh<MfieldsState> pfd_jeh{mflds};
-      prof_stop(pr_field_calc);
+      /* prof_stop(pr_field_calc); */
       
       if (do_pfield) {
 	mpi_printf(grid.comm(), "***** Writing PFD output\n");
 	pfield_next_ += pfield_interval;
 	
-	prof_start(pr_field_write);
+	/* prof_start(pr_field_write); */
 	io_pfd_->open(grid, rn, rx);
 	_write_pfd(*io_pfd_, pfd_jeh);
 	io_pfd_->close();
-	prof_stop(pr_field_write);
+	/* prof_stop(pr_field_write); */
       }
 
       if (doaccum_tfield) {
 	// tfd += pfd
-	prof_start(pr_field_acc);
+	/* prof_start(pr_field_acc); */
 	tfd_jeh_ += pfd_jeh;
-	prof_stop(pr_field_acc);
+	/* prof_stop(pr_field_acc); */
 	naccum_++;
       }
       if (do_tfield) {
 	mpi_printf(grid.comm(), "***** Writing TFD output\n");
 	tfield_next_ += tfield_interval;
 
-	prof_start(pr_field_write);
+	/* prof_start(pr_field_write); */
 	io_tfd_->open(grid, rn, rx);
 	_write_tfd(*io_tfd_, tfd_jeh_, pfd_jeh, naccum_);
 	io_tfd_->close();
 	naccum_ = 0;
-	prof_stop(pr_field_write);
+	/* prof_stop(pr_field_write); */
       }
-      prof_stop(pr_field);
+      /* prof_stop(pr_field); */
     }
 
     bool do_pfield_moments = pfield_moments_interval > 0 && timestep >= pfield_moments_next_;
@@ -170,41 +176,41 @@ public:
 				       timestep == 0);
     
     if (do_pfield_moments || doaccum_tfield_moments) {
-      prof_start(pr_moment);
-      prof_start(pr_moment_calc);
+      /* prof_start(pr_moment); */
+      /* prof_start(pr_moment_calc); */
       FieldsItem_Moments_1st_cc<Mparticles> pfd_moments{mprts};
-      prof_stop(pr_moment_calc);
+      /* prof_stop(pr_moment_calc); */
       
       if (do_pfield_moments) {
 	mpi_printf(grid.comm(), "***** Writing PFD moment output\n");
 	pfield_moments_next_ += pfield_moments_interval;
 	
-	prof_start(pr_moment_write);
+	/* prof_start(pr_moment_write); */
 	io_pfd_moments_->open(grid, rn, rx);
 	_write_pfd(*io_pfd_moments_, pfd_moments);
 	io_pfd_moments_->close();
-	prof_stop(pr_moment_write);
+	/* prof_stop(pr_moment_write); */
       }
 
       if (doaccum_tfield_moments) {
 	// tfd += pfd
-	prof_start(pr_moment_acc);
+	/* prof_start(pr_moment_acc); */
 	tfd_moments_ += pfd_moments;
-	prof_stop(pr_moment_acc);
+	/* prof_stop(pr_moment_acc); */
 	naccum_moments_++;
       }
       if (do_tfield_moments) {
 	mpi_printf(grid.comm(), "***** Writing TFD moment output\n");
 	tfield_moments_next_ += tfield_moments_interval;
 
-	prof_start(pr_moment_write);
+	/* prof_start(pr_moment_write); */
 	io_tfd_moments_->open(grid, rn, rx);
 	_write_tfd(*io_tfd_moments_, tfd_moments_, pfd_moments, naccum_moments_);
 	io_tfd_moments_->close();
-	prof_stop(pr_moment_write);
+	/* prof_stop(pr_moment_write); */
 	naccum_moments_ = 0;
       }
-      prof_stop(pr_moment);
+      /* prof_stop(pr_moment); */
     }
 
     prof_stop(pr);
