@@ -556,18 +556,18 @@ private:
   void communicate_particles(struct communicate_ctx *ctx, Mparticles& mp_old, Mparticles& mp_new,
 			     const std::vector<uint>& n_prts_by_patch_new)
   {
-    static int pr, pr_A, pr_B, pr_C, pr_D;
-    if (!pr) {
-      pr   = prof_register("comm prts", 1., 0, 0);
-      pr_A = prof_register("comm prts A", 1., 0, 0);
-      pr_B = prof_register("comm prts B", 1., 0, 0);
-      pr_C = prof_register("comm prts C", 1., 0, 0);
-      pr_D = prof_register("comm prts D", 1., 0, 0);
-    }
+    // static int pr, pr_A, pr_B, pr_C, pr_D;
+    // if (!pr) {
+    //   pr   = prof_register("comm prts", 1., 0, 0);
+    //   pr_A = prof_register("comm prts A", 1., 0, 0);
+    //   pr_B = prof_register("comm prts B", 1., 0, 0);
+    //   pr_C = prof_register("comm prts C", 1., 0, 0);
+    //   pr_D = prof_register("comm prts D", 1., 0, 0);
+    // }
 
-    prof_start(pr);
+    // prof_start(pr);
 
-    prof_start(pr_A);
+    // prof_start(pr_A);
     mp_new.reserve_all(n_prts_by_patch_new);
     mp_new.resize_all(n_prts_by_patch_new);
 
@@ -592,9 +592,9 @@ private:
 		  pi, ctx->comm, &recv_reqs[nr_recv_reqs++]);
       }
     }
-    prof_stop(pr_A);
+    // prof_stop(pr_A);
 
-    prof_start(pr_B);
+    // prof_start(pr_B);
     // send from old local patches
     MPI_Request *send_reqs = new MPI_Request[ctx->nr_patches_old]();
     int nr_send_reqs = 0;
@@ -614,9 +614,9 @@ private:
 		  pi, ctx->comm, &send_reqs[nr_send_reqs++]);
       }
     }
-    prof_stop(pr_B);
+    // prof_stop(pr_B);
 
-    prof_start(pr_C);
+    // prof_start(pr_C);
     // local particles
     // OPT: could keep the alloced arrays, just move pointers...
     for (int p = 0; p < ctx->nr_patches_new; p++) {
@@ -641,16 +641,16 @@ private:
       c_old->n_alloced = 0;
 #endif
     }
-    prof_stop(pr_C);
+    // prof_stop(pr_C);
   
-    prof_start(pr_D);
+    // prof_start(pr_D);
     MPI_Waitall(nr_send_reqs, send_reqs, MPI_STATUSES_IGNORE);
     MPI_Waitall(nr_recv_reqs, recv_reqs, MPI_STATUSES_IGNORE);
     delete[] send_reqs;
     delete[] recv_reqs;
-    prof_stop(pr_D);
+    // prof_stop(pr_D);
 
-    prof_stop(pr);
+    // prof_stop(pr);
   }
 
   void communicate_fields(struct communicate_ctx *ctx, Mfields& mf_old, Mfields& mf_new)
