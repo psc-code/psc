@@ -369,7 +369,7 @@ void run()
   // -- Checks
   ChecksParams checks_params{};
   checks_params.continuity_every_step = 50;
-  checks_params.continuity_threshold = 1e-5;
+  checks_params.continuity_threshold = 1e-4;
   checks_params.continuity_verbose = false;
   Checks checks{grid, MPI_COMM_WORLD, checks_params};
 
@@ -395,7 +395,7 @@ void run()
 
   // -- output particles
   OutputParticlesParams outp_params{};
-  outp_params.every_step = 400;
+  outp_params.every_step = -400;
   outp_params.data_dir = ".";
   outp_params.basename = "prt";
   OutputParticles outp{grid, outp_params};
@@ -413,8 +413,8 @@ void run()
   heating_foil_params.zl = -1. * g.d_i;
   heating_foil_params.zh = 1. * g.d_i;
   heating_foil_params.xc = 0. * g.d_i;
-  heating_foil_params.yc = 0. * g.d_i;
-  heating_foil_params.rH = 12. * g.d_i;
+  heating_foil_params.yc = 20. * g.d_i;
+  heating_foil_params.rH = 20. * g.d_i;
   heating_foil_params.T = g.target_Te_heat;
   heating_foil_params.Mi = grid.kinds[MY_ION].m;
   HeatingSpotFoil heating_spot{grid, heating_foil_params};
