@@ -13,8 +13,13 @@
 class WriterMRC
 {
 public:
-  void reset(MrcIo* ptr = {}) { return io_.reset(ptr); }
   MrcIo& mrc_io() { return *io_; }
+
+  void open(const std::string& pfx, const std::string& dir)
+  {
+    assert(!io_);
+    io_.reset(new MrcIo(pfx.c_str(), dir.c_str()));
+  }
 
   void begin_step(const Grid_t& grid, Int3 rn, Int3 rx)
   {
@@ -101,16 +106,16 @@ public:
     }
 
     if (pfield_interval > 0) {
-      io_pfd_.reset(new MrcIo{"pfd", data_dir});
+      io_pfd_.open("pfd", data_dir);
     }
     if (pfield_moments_interval > 0) {
-      io_pfd_moments_.reset(new MrcIo{"pfd_moments", data_dir});
+      io_pfd_moments_.open("pfd_moments", data_dir);
     }
     if (tfield_interval > 0) {
-      io_tfd_.reset(new MrcIo{"tfd", data_dir});
+      io_tfd_.open("tfd", data_dir);
     }
     if (tfield_moments_interval > 0) {
-      io_tfd_moments_.reset(new MrcIo{"tfd_moments", data_dir});
+      io_tfd_moments_.open("tfd_moments", data_dir);
     }
   }
 
