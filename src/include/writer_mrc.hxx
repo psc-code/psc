@@ -38,6 +38,11 @@ public:
     mrc_obj_destroy(obj);
   }
 
+  void begin_step(int step, double time)
+  {
+    mrc_io_open(io_.get(), "w", step, time);
+  }
+
   void set_subset(const Grid_t& grid, Int3 rn, Int3 rx)
   {
     if (strcmp(mrc_io_type(io_.get()), "xdmf_collective") == 0) {
