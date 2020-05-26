@@ -10,6 +10,8 @@ class WriterMRC
 public:
   WriterMRC() : io_(nullptr, &mrc_io_destroy) {}
 
+  explicit operator bool() const { return static_cast<bool>(io_); }
+
   void open(const std::string& pfx, const std::string& dir = ".")
   {
     assert(!io_);
@@ -88,4 +90,3 @@ public:
 private:
   std::unique_ptr<struct mrc_io, decltype(&mrc_io_close)> io_;
 };
-
