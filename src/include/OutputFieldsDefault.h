@@ -15,7 +15,6 @@ class WriterMRC
 public:
   void reset(MrcIo* ptr = {}) { return io_.reset(ptr); }
   MrcIo* operator->() { return &*io_; }
-  MrcIo& operator*() { return *io_; }
 
 private:
   std::unique_ptr<MrcIo> io_;
@@ -157,7 +156,7 @@ public:
 
         /* prof_start(pr_field_write); */
         io_pfd_->open(grid, rn, rx);
-        _write_pfd(*io_pfd_, pfd_jeh);
+        _write_pfd(io_pfd_, pfd_jeh);
         io_pfd_->close();
         /* prof_stop(pr_field_write); */
       }
@@ -175,7 +174,7 @@ public:
 
         /* prof_start(pr_field_write); */
         io_tfd_->open(grid, rn, rx);
-        _write_tfd(*io_tfd_, tfd_jeh_, pfd_jeh, naccum_);
+        _write_tfd(io_tfd_, tfd_jeh_, pfd_jeh, naccum_);
         io_tfd_->close();
         naccum_ = 0;
         /* prof_stop(pr_field_write); */
@@ -206,7 +205,7 @@ public:
 
         /* prof_start(pr_moment_write); */
         io_pfd_moments_->open(grid, rn, rx);
-        _write_pfd(*io_pfd_moments_, pfd_moments);
+        _write_pfd(io_pfd_moments_, pfd_moments);
         io_pfd_moments_->close();
         /* prof_stop(pr_moment_write); */
       }
@@ -224,8 +223,7 @@ public:
 
         /* prof_start(pr_moment_write); */
         io_tfd_moments_->open(grid, rn, rx);
-        _write_tfd(*io_tfd_moments_, tfd_moments_, pfd_moments,
-                   naccum_moments_);
+        _write_tfd(io_tfd_moments_, tfd_moments_, pfd_moments, naccum_moments_);
         io_tfd_moments_->close();
         /* prof_stop(pr_moment_write); */
         naccum_moments_ = 0;
@@ -238,18 +236,18 @@ public:
 
 private:
   template <typename EXP>
-  static void _write_pfd(MrcIo& io, EXP& pfd)
+  static void _write_pfd(WriterMRC& io, EXP& pfd)
   {
-    MrcIo::write_mflds(io.io_, adaptMfields(pfd), pfd.grid(), pfd.name(),
+    MrcIo::write_mflds(io->io_, adaptMfields(pfd), pfd.grid(), pfd.name(),
                        pfd.comp_names());
   }
 
   template <typename EXP>
-  static void _write_tfd(MrcIo& io, MfieldsC& tfd, EXP& pfd, int naccum)
+  static void _write_tfd(WriterMRC& io, MfieldsC& tfd, EXP& pfd, int naccum)
   {
     // convert accumulated values to correct temporal mean
     tfd.scale(1. / naccum);
-    tfd.write_as_mrc_fld(io.io_, pfd.name(), pfd.comp_names());
+    tfd.write_as_mrc_fld(io->io_, pfd.name(), pfd.comp_names());
     tfd.zero();
   }
 
