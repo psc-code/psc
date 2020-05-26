@@ -14,6 +14,8 @@
 #include "../libpsc/cuda/setup_fields_cuda.hxx"
 #endif
 
+#include "OutputFieldsDefault.h"
+
 #include "kg/io.h"
 #include "fields3d.inl"
 
@@ -24,7 +26,7 @@ static Grid_t make_grid()
   auto domain =
     Grid_t::Domain{{8, 4, 2}, {80., 40., 20.}, {-40., -20., 0.}, {2, 1, 1}};
   auto bc = psc::grid::BC{};
-  auto kinds = Grid_t::Kinds{};
+  auto kinds = Grid_t::Kinds({Grid_t::Kind(1., 1., "test_species")});
   auto norm = Grid_t::Normalization{};
   double dt = .1;
   return Grid_t{domain, bc, kinds, norm, dt};
@@ -161,6 +163,31 @@ TYPED_TEST(MfieldsTest, WriteReadWithGhosts)
 #endif
     });
   }
+}
+
+TYPED_TEST(MfieldsTest, OutputFieldsDefault)
+{
+  using Mfields = TypeParam;
+  using real_t = typename Mfields::real_t;
+
+  auto grid = make_grid();
+  grid.ibn = {2, 2, 2};
+  std::cout << "ibn" << grid.ibn << "\n";
+  auto mflds = Mfields{grid, NR_FIELDS, {2, 2, 2}};
+  auto mprts = MparticlesSimple<ParticleSimple<real_t>>{grid};
+
+  setupFields(mflds, [](int m, double crd[3]) {
+    return m + crd[0] + 100 * crd[1] + 10000 * crd[2];
+  });
+
+  OutputFieldsParams outf_params{};
+  outf_params.pfield_interval = 1;
+  outf_params.tfield_interval = 0;
+  outf_params.tfield_average_every = 40;
+  outf_params.tfield_moments_average_every = 80;
+  OutputFields outf{grid, outf_params};
+
+  outf(mflds, mprts);
 }
 
 // ======================================================================
