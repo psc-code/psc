@@ -28,6 +28,13 @@ public:
 
   void end_step() { io_->close(); }
 
+  template <typename Mfields>
+  void write(const Mfields& mflds, const Grid_t& grid, const std::string& name,
+             const std::vector<std::string>& comp_names)
+  {
+    io_->write_mflds(mflds, grid, name, comp_names);
+  }
+
 private:
   std::unique_ptr<MrcIo> io_;
 };
@@ -250,8 +257,7 @@ private:
   template <typename EXP>
   static void _write_pfd(WriterMRC& io, EXP& pfd)
   {
-    MrcIo::write_mflds(io.mrc_io().io_, adaptMfields(pfd), pfd.grid(),
-                       pfd.name(), pfd.comp_names());
+    io.write(adaptMfields(pfd), pfd.grid(), pfd.name(), pfd.comp_names());
   }
 
   template <typename EXP>
@@ -259,7 +265,7 @@ private:
   {
     // convert accumulated values to correct temporal mean
     tfd.scale(1. / naccum);
-    tfd.write_as_mrc_fld(io.mrc_io().io_, pfd.name(), pfd.comp_names());
+    io.write(tfd, tfd.grid(), pfd.name(), pfd.comp_names());
     tfd.zero();
   }
 

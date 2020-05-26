@@ -63,7 +63,7 @@ struct MrcIo
   }
 
   template <typename Mfields>
-  void write_mflds(Mfields& mflds, const Grid_t& grid, const std::string& name,
+  void write_mflds(const Mfields& mflds, const Grid_t& grid, const std::string& name,
 		   const std::vector<std::string>& comp_names)
   {
     write_mflds(io_, mflds, grid, name, comp_names);
