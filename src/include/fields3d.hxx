@@ -5,7 +5,6 @@
 #include "psc.h"
 
 #include "grid.hxx"
-#include <mrc_io.hxx>
 #include <kg/SArrayView.h>
 
 #include <mrc_profile.h>
