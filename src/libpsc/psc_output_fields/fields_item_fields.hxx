@@ -29,6 +29,8 @@ MfieldsC evalMfields(const MFexpression<E>& xp)
   return mflds;
 }
 
+const MfieldsC& evalMfields(const MfieldsC& mflds) { return mflds; }
+
 #ifdef USE_CUDA
 
 template <typename E,
