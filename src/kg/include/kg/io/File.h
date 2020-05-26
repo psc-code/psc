@@ -18,6 +18,9 @@ public:
   File(File&& other) = default;
   ~File();
   
+  void beginStep(StepMode mode);
+  void endStep();
+
   void close();
   void performPuts();
   void performGets();

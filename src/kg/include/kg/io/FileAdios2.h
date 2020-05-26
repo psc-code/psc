@@ -17,6 +17,9 @@ class FileAdios2 : public FileBase
 public:
   FileAdios2(adios2::ADIOS& ad, const std::string& name, Mode mode);
   ~FileAdios2() override;
+
+  void beginStep(StepMode mode) override;
+  void endStep() override;
   
   void performPuts() override;
   void performGets() override;

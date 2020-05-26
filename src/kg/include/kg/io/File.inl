@@ -16,6 +16,16 @@ inline void File::close()
   impl_.reset();
 }
 
+inline void File::beginStep(StepMode mode)
+{
+  impl_->beginStep(mode);
+}
+
+inline void File::endStep()
+{
+  impl_->endStep();
+}
+
 inline void File::performPuts()
 {
   assert(impl_);

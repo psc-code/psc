@@ -24,6 +24,9 @@ class Engine
 public:
   Engine(File&& file, MPI_Comm comm);
 
+  void beginStep(StepMode mode);
+  void endStep();
+
   // ----------------------------------------------------------------------
   // put
 

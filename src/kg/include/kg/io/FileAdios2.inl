@@ -34,6 +34,22 @@ inline FileAdios2::~FileAdios2()
   ad_.RemoveIO(io_name_);
 }
 
+inline void FileAdios2::beginStep(StepMode mode)
+{
+  adios2::StepMode adios2_mode;
+  switch (mode) {
+    case StepMode::Append: adios2_mode = adios2::StepMode::Append; break;
+    case StepMode::Read: adios2_mode = adios2::StepMode::Read; break;
+    default: std::abort();
+  }
+  engine_.BeginStep(adios2_mode);
+}
+
+inline void FileAdios2::endStep()
+{
+  engine_.EndStep();
+}
+
 inline void FileAdios2::performPuts()
 {
   engine_.PerformPuts();

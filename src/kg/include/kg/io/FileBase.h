@@ -24,6 +24,9 @@ public:
 
   virtual ~FileBase() = default;
 
+  virtual void beginStep(StepMode mode) = 0;
+  virtual void endStep() = 0;
+
   virtual void performPuts() = 0;
   virtual void performGets() = 0;
 

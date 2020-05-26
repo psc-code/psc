@@ -3,8 +3,8 @@
 
 #include <PscConfig.h>
 
-#include <vector>
 #include <limits>
+#include <vector>
 
 namespace kg
 {
@@ -17,6 +17,12 @@ enum class Mode
   Read,
   Blocking,
   NonBlocking,
+};
+
+enum class StepMode
+{
+  Append,
+  Read,
 };
 
 using size_t = std::size_t;
