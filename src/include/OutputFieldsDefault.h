@@ -260,7 +260,7 @@ private:
   int naccum_moments_ = 0;
 };
 
-#ifdef PSC_HAVE_ADIOS2
+#ifdef xPSC_HAVE_ADIOS2
 
 #include "writer_adios2.hxx"
 using OutputFields = OutputFieldsDefault<WriterADIOS2>;
