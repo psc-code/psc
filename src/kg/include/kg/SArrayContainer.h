@@ -6,6 +6,8 @@
 #include <kg/Vec3.h>
 #include <kg/Macros.h>
 
+#include <cstring>
+
 // FIXME, do noexcept?
 // FIXME, use size_t instead of int, at least for 1d offsets?
 
@@ -105,7 +107,7 @@ public:
   void zero(int m)
   {
     // FIXME, only correct for SOA!!!
-    memset(&(*this)(m, ib()[0], ib()[1], ib()[2]), 0,
+    std::memset(&(*this)(m, ib()[0], ib()[1], ib()[2]), 0,
            n_cells() * sizeof(value_type));
   }
 
@@ -116,7 +118,7 @@ public:
     }
   }
 
-  void zero() { memset(storage().data(), 0, sizeof(value_type) * size()); }
+  void zero() { std::memset(storage().data(), 0, sizeof(value_type) * size()); }
 
   void set(int m, const_reference val)
   {
