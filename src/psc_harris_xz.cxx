@@ -475,8 +475,10 @@ class Diagnostics
 {
 public:
   Diagnostics(OutputFields& outf, OutputParticles& outp, DiagEnergies& oute)
-    : io_pfd_{"pfd"}, outf_{outf}, outp_{outp}, oute_{oute}
-  {}
+    : outf_{outf}, outp_{outp}, oute_{oute}
+  {
+    io_pfd_.open("pfd");
+  }
 
   void operator()(Mparticles& mprts, MfieldsState& mflds)
   {
@@ -488,21 +490,22 @@ public:
     int timestep = grid.timestep();
     if (outf_.pfield_interval > 0 && timestep % outf_.pfield_interval == 0) {
       mpi_printf(comm, "***** Writing PFD output\n");
-      io_pfd_.open(grid);
+      io_pfd_.begin_step(grid);
 
       {
         OutputFieldsVpic<MfieldsState> out_fields;
         auto result = out_fields(mflds);
-        io_pfd_.write_mflds(result.mflds, grid, result.name, result.comp_names);
+        io_pfd_.write(result.mflds, grid, result.name, result.comp_names);
       }
 
       {
         // FIXME, would be better to keep "out_hydro" around
         OutputHydro out_hydro{grid};
         auto result = out_hydro(mprts, *hydro, *interpolator);
-        io_pfd_.write_mflds(result.mflds, grid, result.name, result.comp_names);
+        io_pfd_.write(result.mflds, grid, result.name, result.comp_names);
       }
-      mrc_io_close(io_pfd_.io_);
+
+      io_pfd_.end_step();
     }
 
     psc_stats_start(st_time_output);
@@ -515,7 +518,7 @@ public:
   }
 
 private:
-  MrcIo io_pfd_;
+  WriterMRC io_pfd_;
   OutputFields& outf_;
   OutputParticles& outp_;
   DiagEnergies& oute_;

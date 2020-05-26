@@ -27,22 +27,10 @@ struct Marder_ : MarderBase
       res_{grid, 1, grid.ibn}
   {
     if (dump_) {
-      io_ = mrc_io_create(grid.comm());
-      mrc_io_set_type(io_, "xdmf_collective");
-      mrc_io_set_name(io_, "mrc_io_marder");
-      mrc_io_set_param_string(io_, "basename", "marder");
-      mrc_io_set_from_options(io_);
-      mrc_io_setup(io_);
+      io_.open("marder");
     }
   }
 
-  ~Marder_()
-  {
-    if (dump_) {
-      mrc_io_destroy(io_);
-    }
-  }
-  
   // FIXME: checkpointing won't properly restore state
   // FIXME: if the subclass creates objects, it'd be cleaner to have them
   // be part of the subclass
@@ -56,11 +44,11 @@ struct Marder_ : MarderBase
 	       
     if (dump_) {
       static int cnt;
-      mrc_io_open(io_, "w", cnt, cnt);//ppsc->timestep, ppsc->timestep * ppsc->dt);
+      io_.begin_step(cnt, cnt);//ppsc->timestep, ppsc->timestep * ppsc->dt);
       cnt++;
-      rho_.write_as_mrc_fld(io_, "rho", {"rho"});
-      dive.write_as_mrc_fld(io_, "dive", {"dive"});
-      mrc_io_close(io_);
+      io_.write(rho_, "rho", {"rho"});
+      io_.write(dive, "dive", {"dive"});
+      io_.end_step();
     }
 
     res_.assign(dive);
@@ -211,7 +199,7 @@ private:
   Bnd_<Mfields> bnd_;
   Mfields rho_;
   Mfields res_;
-  mrc_io *io_; //< for debug dumping
+  WriterMRC io_; //< for debug dumping
 };
 
 #undef define_dxdydz

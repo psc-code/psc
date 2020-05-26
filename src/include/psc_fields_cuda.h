@@ -99,7 +99,6 @@ struct MfieldsCuda : MfieldsBase
 
   void reset(const Grid_t& new_grid) override;
   void zero_comp(int m);
-  void write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names) override;
 
   void zero();
   void axpy_comp_yz(int ym, float a, MfieldsCuda& x, int xm);

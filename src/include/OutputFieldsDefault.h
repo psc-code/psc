@@ -4,8 +4,8 @@
 #include "../libpsc/psc_output_fields/fields_item_fields.hxx"
 #include "../libpsc/psc_output_fields/fields_item_moments_1st.hxx"
 #include "fields_item.hxx"
-
-#include <mrc_io.hxx>
+#include "psc_particles_double.h"
+#include "writer_mrc.hxx"
 
 #include <memory>
 
@@ -54,7 +54,9 @@ public:
   OutputFields(const Grid_t& grid, const OutputFieldsParams& prm)
     : OutputFieldsParams{prm},
       tfd_jeh_{grid, Item_jeh<MfieldsFake>::n_comps(), {}},
-      tfd_moments_{grid, FieldsItem_Moments_1st_cc<MparticlesFake>::n_comps(grid), grid.ibn},
+      tfd_moments_{grid,
+                   FieldsItem_Moments_1st_cc<MparticlesFake>::n_comps(grid),
+                   grid.ibn},
       pfield_next_{pfield_first},
       pfield_moments_next_{pfield_moments_first},
       tfield_next_{tfield_first},
@@ -66,7 +68,7 @@ public:
     if (pfield_moments_first < 0) {
       pfield_moments_first = pfield_first;
     }
-    
+
     if (tfield_moments_interval < 0) {
       tfield_moments_interval = tfield_interval;
     }
@@ -79,18 +81,18 @@ public:
     if (tfield_moments_average_every < 0) {
       tfield_moments_average_every = tfield_average_every;
     }
-    
+
     if (pfield_interval > 0) {
-      io_pfd_.reset(new MrcIo{"pfd", data_dir});
+      io_pfd_.open("pfd", data_dir);
     }
     if (pfield_moments_interval > 0) {
-      io_pfd_moments_.reset(new MrcIo{"pfd_moments", data_dir});
+      io_pfd_moments_.open("pfd_moments", data_dir);
     }
     if (tfield_interval > 0) {
-      io_tfd_.reset(new MrcIo{"tfd", data_dir});
+      io_tfd_.open("tfd", data_dir);
     }
     if (tfield_moments_interval > 0) {
-      io_tfd_moments_.reset(new MrcIo{"tfd_moments", data_dir});
+      io_tfd_moments_.open("tfd_moments", data_dir);
     }
   }
 
@@ -126,89 +128,98 @@ public:
     bool do_pfield = pfield_interval > 0 && timestep >= pfield_next_;
     bool do_tfield = tfield_interval > 0 && timestep >= tfield_next_;
     bool doaccum_tfield =
-      tfield_interval > 0 && (((timestep >= (tfield_next_ - tfield_average_length + 1)) &&
-                           timestep % tfield_average_every == 0) ||
-                          timestep == 0);
+      tfield_interval > 0 &&
+      (((timestep >= (tfield_next_ - tfield_average_length + 1)) &&
+        timestep % tfield_average_every == 0) ||
+       timestep == 0);
 
     if (do_pfield || doaccum_tfield) {
       /* prof_start(pr_field); */
       /* prof_start(pr_field_calc); */
       Item_jeh<MfieldsState> pfd_jeh{mflds};
       /* prof_stop(pr_field_calc); */
-      
+
       if (do_pfield) {
-	mpi_printf(grid.comm(), "***** Writing PFD output\n");
-	pfield_next_ += pfield_interval;
-	
-	/* prof_start(pr_field_write); */
-	io_pfd_->open(grid, rn, rx);
-	_write_pfd(*io_pfd_, pfd_jeh);
-	io_pfd_->close();
-	/* prof_stop(pr_field_write); */
+        mpi_printf(grid.comm(), "***** Writing PFD output\n");
+        pfield_next_ += pfield_interval;
+
+        /* prof_start(pr_field_write); */
+        io_pfd_.begin_step(grid);
+        io_pfd_.set_subset(grid, rn, rx);
+        _write_pfd(io_pfd_, pfd_jeh);
+        io_pfd_.end_step();
+        /* prof_stop(pr_field_write); */
       }
 
       if (doaccum_tfield) {
-	// tfd += pfd
-	/* prof_start(pr_field_acc); */
-	tfd_jeh_ += pfd_jeh;
-	/* prof_stop(pr_field_acc); */
-	naccum_++;
+        // tfd += pfd
+        /* prof_start(pr_field_acc); */
+        tfd_jeh_ += pfd_jeh;
+        /* prof_stop(pr_field_acc); */
+        naccum_++;
       }
       if (do_tfield) {
-	mpi_printf(grid.comm(), "***** Writing TFD output\n");
-	tfield_next_ += tfield_interval;
+        mpi_printf(grid.comm(), "***** Writing TFD output\n");
+        tfield_next_ += tfield_interval;
 
-	/* prof_start(pr_field_write); */
-	io_tfd_->open(grid, rn, rx);
-	_write_tfd(*io_tfd_, tfd_jeh_, pfd_jeh, naccum_);
-	io_tfd_->close();
-	naccum_ = 0;
-	/* prof_stop(pr_field_write); */
+        /* prof_start(pr_field_write); */
+        io_tfd_.begin_step(grid);
+        io_tfd_.set_subset(grid, rn, rx);
+        _write_tfd(io_tfd_, tfd_jeh_, pfd_jeh, naccum_);
+        io_tfd_.end_step();
+        naccum_ = 0;
+        /* prof_stop(pr_field_write); */
       }
       /* prof_stop(pr_field); */
     }
 
-    bool do_pfield_moments = pfield_moments_interval > 0 && timestep >= pfield_moments_next_;
-    bool do_tfield_moments = tfield_moments_interval > 0 && timestep >= tfield_moments_next_;
+    bool do_pfield_moments =
+      pfield_moments_interval > 0 && timestep >= pfield_moments_next_;
+    bool do_tfield_moments =
+      tfield_moments_interval > 0 && timestep >= tfield_moments_next_;
     bool doaccum_tfield_moments =
-      tfield_moments_interval > 0 && (((timestep >= (tfield_moments_next_ - tfield_moments_average_length + 1)) &&
-					timestep % tfield_moments_average_every == 0) ||
-				       timestep == 0);
-    
+      tfield_moments_interval > 0 &&
+      (((timestep >=
+         (tfield_moments_next_ - tfield_moments_average_length + 1)) &&
+        timestep % tfield_moments_average_every == 0) ||
+       timestep == 0);
+
     if (do_pfield_moments || doaccum_tfield_moments) {
       /* prof_start(pr_moment); */
       /* prof_start(pr_moment_calc); */
       FieldsItem_Moments_1st_cc<Mparticles> pfd_moments{mprts};
       /* prof_stop(pr_moment_calc); */
-      
+
       if (do_pfield_moments) {
-	mpi_printf(grid.comm(), "***** Writing PFD moment output\n");
-	pfield_moments_next_ += pfield_moments_interval;
-	
-	/* prof_start(pr_moment_write); */
-	io_pfd_moments_->open(grid, rn, rx);
-	_write_pfd(*io_pfd_moments_, pfd_moments);
-	io_pfd_moments_->close();
-	/* prof_stop(pr_moment_write); */
+        mpi_printf(grid.comm(), "***** Writing PFD moment output\n");
+        pfield_moments_next_ += pfield_moments_interval;
+
+        /* prof_start(pr_moment_write); */
+        io_pfd_moments_.begin_step(grid);
+        io_pfd_moments_.set_subset(grid, rn, rx);
+        _write_pfd(io_pfd_moments_, pfd_moments);
+        io_pfd_moments_.end_step();
+        /* prof_stop(pr_moment_write); */
       }
 
       if (doaccum_tfield_moments) {
-	// tfd += pfd
-	/* prof_start(pr_moment_acc); */
-	tfd_moments_ += pfd_moments;
-	/* prof_stop(pr_moment_acc); */
-	naccum_moments_++;
+        // tfd += pfd
+        /* prof_start(pr_moment_acc); */
+        tfd_moments_ += pfd_moments;
+        /* prof_stop(pr_moment_acc); */
+        naccum_moments_++;
       }
       if (do_tfield_moments) {
-	mpi_printf(grid.comm(), "***** Writing TFD moment output\n");
-	tfield_moments_next_ += tfield_moments_interval;
+        mpi_printf(grid.comm(), "***** Writing TFD moment output\n");
+        tfield_moments_next_ += tfield_moments_interval;
 
-	/* prof_start(pr_moment_write); */
-	io_tfd_moments_->open(grid, rn, rx);
-	_write_tfd(*io_tfd_moments_, tfd_moments_, pfd_moments, naccum_moments_);
-	io_tfd_moments_->close();
-	/* prof_stop(pr_moment_write); */
-	naccum_moments_ = 0;
+        /* prof_start(pr_moment_write); */
+        io_tfd_moments_.begin_step(grid);
+        io_tfd_moments_.set_subset(grid, rn, rx);
+        _write_tfd(io_tfd_moments_, tfd_moments_, pfd_moments, naccum_moments_);
+        io_tfd_moments_.end_step();
+        /* prof_stop(pr_moment_write); */
+        naccum_moments_ = 0;
       }
       /* prof_stop(pr_moment); */
     }
@@ -218,18 +229,17 @@ public:
 
 private:
   template <typename EXP>
-  static void _write_pfd(MrcIo& io, EXP& pfd)
+  static void _write_pfd(WriterMRC& io, EXP& pfd)
   {
-    MrcIo::write_mflds(io.io_, adaptMfields(pfd), pfd.grid(), pfd.name(),
-                       pfd.comp_names());
+    io.write(adaptMfields(pfd), pfd.grid(), pfd.name(), pfd.comp_names());
   }
 
   template <typename EXP>
-  static void _write_tfd(MrcIo& io, MfieldsC& tfd, EXP& pfd, int naccum)
+  static void _write_tfd(WriterMRC& io, MfieldsC& tfd, EXP& pfd, int naccum)
   {
     // convert accumulated values to correct temporal mean
     tfd.scale(1. / naccum);
-    tfd.write_as_mrc_fld(io.io_, pfd.name(), pfd.comp_names());
+    io.write(tfd, tfd.grid(), pfd.name(), pfd.comp_names());
     tfd.zero();
   }
 
@@ -237,10 +247,10 @@ private:
   // tfd -- FIXME?! always MfieldsC
   MfieldsC tfd_jeh_;
   MfieldsC tfd_moments_;
-  std::unique_ptr<MrcIo> io_pfd_;
-  std::unique_ptr<MrcIo> io_pfd_moments_;
-  std::unique_ptr<MrcIo> io_tfd_;
-  std::unique_ptr<MrcIo> io_tfd_moments_;
+  WriterMRC io_pfd_;
+  WriterMRC io_pfd_moments_;
+  WriterMRC io_tfd_;
+  WriterMRC io_tfd_moments_;
   int pfield_next_;
   int pfield_moments_next_;
   int tfield_next_;

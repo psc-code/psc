@@ -7,6 +7,17 @@
 
 #include <cmath>
 
+template <typename Particle>
+static inline void _particle_calc_vxi(const Particle& prt,
+                                     typename Particle::real_t vxi[3])
+{
+  typename Particle::real_t root =
+    1.f / std::sqrt(1.f + sqr(prt.u()[0]) + sqr(prt.u()[1]) + sqr(prt.u()[2]));
+  vxi[0] = prt.u()[0] * root;
+  vxi[1] = prt.u()[1] * root;
+  vxi[2] = prt.u()[2] * root;
+}
+
 // ======================================================================
 // n_1st
 
@@ -71,7 +82,7 @@ struct Moment_v_1st
     auto deposit = Deposit1stCc<Mparticles, Mfields>{mprts, mflds};
     deposit.process([&](const Particle& prt) {
       Real vxi[3];
-      particle_calc_vxi(prt, vxi);
+      _particle_calc_vxi(prt, vxi);
 
       int mm = prt.kind() * 3;
       for (int m = 0; m < 3; m++) {
@@ -143,7 +154,7 @@ struct Moment_T_1st
       int mm = prt.kind() * 6;
 
       Real vxi[3];
-      particle_calc_vxi(prt, vxi);
+      _particle_calc_vxi(prt, vxi);
       auto pxi = prt.u();
       deposit(prt, mm + 0, prt.m() * pxi[0] * vxi[0]);
       deposit(prt, mm + 1, prt.m() * pxi[1] * vxi[1]);
@@ -195,7 +206,7 @@ public:
     deposit.process([&](const Particle& prt) {
       int mm = prt.kind() * n_moments;
       Real vxi[3];
-      particle_calc_vxi(prt, vxi);
+      _particle_calc_vxi(prt, vxi);
       deposit(prt, mm + 0, prt.q());
       deposit(prt, mm + 1, prt.q() * vxi[0]);
       deposit(prt, mm + 2, prt.q() * vxi[1]);
