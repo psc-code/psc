@@ -104,19 +104,14 @@ struct ChecksCuda
     }
 
     if (continuity_dump_always || max_err >= eps) {
-      static struct mrc_io* io;
-      if (!io) {
-        io = mrc_io_create(grid.comm());
-        mrc_io_set_name(io, "mrc_io_continuity");
-        mrc_io_set_param_string(io, "basename", "continuity");
-        mrc_io_set_from_options(io);
-        mrc_io_setup(io);
-        mrc_io_view(io);
+      static WriterMRC writer;
+      if (!writer) {
+	writer.open("continuity");
       }
-      mrc_io_open(io, "w", grid.timestep(), grid.timestep() * grid.dt);
-      divj_.write_as_mrc_fld(io, "div_j", {"div_j"});
-      d_rho.write_as_mrc_fld(io, "d_rho", {"d_rho"});
-      mrc_io_close(io);
+      writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
+      writer.write(divj_, grid, "div_j", {"div_j"});
+      writer.write(d_rho, grid, "d_rho", {"d_rho"});
+      writer.end_step();
     }
 
     assert(max_err < eps);
@@ -186,20 +181,15 @@ struct ChecksCuda
     }
 
     if (gauss_dump_always || max_err >= eps) {
-      static struct mrc_io* io;
-      if (!io) {
-        io = mrc_io_create(grid.comm());
-        mrc_io_set_name(io, "mrc_io_gauss");
-        mrc_io_set_param_string(io, "basename", "gauss");
-        mrc_io_set_from_options(io);
-        mrc_io_setup(io);
-        mrc_io_view(io);
+      static WriterMRC writer;
+      if (!writer) {
+	writer.open("gauss");
       }
-      mrc_io_open(io, "w", grid.timestep(), grid.timestep() * grid.dt);
-      rho.write_as_mrc_fld(io, "rho", {"rho"});
-      MrcIo::write_mflds(io, adaptMfields(dive), dive.grid(), dive.name(),
-			 dive.comp_names());
-      mrc_io_close(io);
+      writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
+      writer.write(rho, grid, "rho", {"rho"});
+      writer.write(adaptMfields(dive), dive.grid(), dive.name(),
+		   dive.comp_names());
+      writer.end_step();
     }
 
     assert(max_err < eps);
