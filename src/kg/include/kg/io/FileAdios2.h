@@ -2,6 +2,7 @@
 #pragma once
 
 #include <adios2.h>
+
 #include "FileBase.h"
 
 namespace kg
@@ -15,12 +16,13 @@ namespace io
 class FileAdios2 : public FileBase
 {
 public:
-  FileAdios2(adios2::ADIOS& ad, const std::string& name, Mode mode);
+  FileAdios2(adios2::ADIOS& ad, const std::string& name, Mode mode,
+             const std::string& io_name = {});
   ~FileAdios2() override;
 
   void beginStep(StepMode mode) override;
   void endStep() override;
-  
+
   void performPuts() override;
   void performGets() override;
 
@@ -50,8 +52,7 @@ private:
 
   template <typename T>
   void getVariable(const std::string& name, T* data, Mode launch,
-                   const Extents& selection,
-                   const Extents& memory_selection);
+                   const Extents& selection, const Extents& memory_selection);
 
   template <typename T>
   void getAttribute(const std::string& name, T* data);
@@ -63,7 +64,7 @@ private:
 
   adios2::Engine engine_;
   adios2::IO io_;
-  adios2::ADIOS& ad_; // FIXME, could go away
+  adios2::ADIOS& ad_;   // FIXME, could go away
   std::string io_name_; // FIXME, needs io.Name() and/or Remove by name
 };
 

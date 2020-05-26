@@ -35,7 +35,7 @@ public:
   {
     char filename[dir_.size() + pfx_.size() + 20];
     sprintf(filename, "%s/%s.%09d.bp", dir_.c_str(), pfx_.c_str(), step);
-    file_ = io__.open(filename, kg::io::Mode::Write);
+    file_ = io__.open(filename, kg::io::Mode::Write, MPI_COMM_WORLD, pfx_);
     file_.beginStep(kg::io::StepMode::Append);
     file_.put("step", step);
     file_.put("time", time);

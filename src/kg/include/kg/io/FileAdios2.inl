@@ -12,10 +12,14 @@ namespace io
 // FileAdios2
 
 inline FileAdios2::FileAdios2(adios2::ADIOS& ad, const std::string& name,
-                              Mode mode)
+                              Mode mode, const std::string& io_name)
   : ad_{ad}
 {
-  io_name_ = "io-" + name;
+  if (io_name.empty()) {
+    io_name_ = "io-" + name;
+  } else {
+    io_name_ = io_name;
+  }
   io_ = ad.DeclareIO(io_name_);
   adios2::Mode adios2_mode;
   if (mode == Mode::Read) {
