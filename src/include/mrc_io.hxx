@@ -12,16 +12,6 @@
 
 struct MrcIo
 {
-  MrcIo(const char* pfx, const char* outdir = ".")
-  {
-    io_ = mrc_io_create(MPI_COMM_WORLD);
-    mrc_io_set_param_string(io_, "basename", pfx);
-    mrc_io_set_param_string(io_, "outdir", outdir);
-    mrc_io_set_from_options(io_);
-    mrc_io_setup(io_);
-    mrc_io_view(io_);
-  }
-
   // static version so it can be used elsewhere without MrcIo wrapper
   template <typename Mfields>
   static void write_mflds(mrc_io* io, const Mfields& _mflds, const Grid_t& grid,

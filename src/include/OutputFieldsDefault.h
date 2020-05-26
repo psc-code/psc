@@ -23,7 +23,13 @@ public:
   void open(const std::string& pfx, const std::string& dir = ".")
   {
     assert(!io_);
-    io_.reset(new MrcIo(pfx.c_str(), dir.c_str()));
+    io_.reset(new MrcIo);
+    io_->io_ = mrc_io_create(MPI_COMM_WORLD);
+    mrc_io_set_param_string(io_->io_, "basename", pfx.c_str());
+    mrc_io_set_param_string(io_->io_, "outdir", dir.c_str());
+    mrc_io_set_from_options(io_->io_);
+    mrc_io_setup(io_->io_);
+    mrc_io_view(io_->io_);
   }
 
   void close()
