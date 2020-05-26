@@ -65,6 +65,8 @@ class AdaptMfields
 public:
   explicit AdaptMfields(EXP& exp) : exp_{exp} {}
 
+  int n_comps() const { return exp_.n_comps(); }
+
   Patch operator[](int p) const { return {*this, p}; }
 
   int n_patches() const { return exp_.grid().n_patches(); }
