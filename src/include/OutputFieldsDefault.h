@@ -15,7 +15,7 @@ class WriterMRC
 {
 public:
   WriterMRC() : io_(nullptr, &mrc_io_destroy) {}
-  
+
   void open(const std::string& pfx, const std::string& dir = ".")
   {
     assert(!io_);
@@ -33,8 +33,7 @@ public:
     io_.reset();
   }
 
-  void begin_step(const Grid_t& grid, Int3 rn = {},
-                  Int3 rx = {1000000, 1000000, 1000000})
+  void begin_step(const Grid_t& grid)
   {
     mrc_io_open(io_.get(), "w", grid.timestep(), grid.timestep() * grid.dt);
 
@@ -47,7 +46,10 @@ public:
     mrc_obj_dict_add_float(obj, "dt", grid.dt);
     mrc_obj_write(obj, io_.get());
     mrc_obj_destroy(obj);
+  }
 
+  void set_subset(const Grid_t& grid, Int3 rn, Int3 rx)
+  {
     if (strcmp(mrc_io_type(io_.get()), "xdmf_collective") == 0) {
       auto gdims = grid.domain.gdims;
       int slab_off[3], slab_dims[3];
@@ -212,7 +214,8 @@ public:
         pfield_next_ += pfield_interval;
 
         /* prof_start(pr_field_write); */
-        io_pfd_.begin_step(grid, rn, rx);
+        io_pfd_.begin_step(grid);
+        io_pfd_.set_subset(grid, rn, rx);
         _write_pfd(io_pfd_, pfd_jeh);
         io_pfd_.end_step();
         /* prof_stop(pr_field_write); */
@@ -230,7 +233,8 @@ public:
         tfield_next_ += tfield_interval;
 
         /* prof_start(pr_field_write); */
-        io_tfd_.begin_step(grid, rn, rx);
+        io_tfd_.begin_step(grid);
+        io_tfd_.set_subset(grid, rn, rx);
         _write_tfd(io_tfd_, tfd_jeh_, pfd_jeh, naccum_);
         io_tfd_.end_step();
         naccum_ = 0;
@@ -261,7 +265,8 @@ public:
         pfield_moments_next_ += pfield_moments_interval;
 
         /* prof_start(pr_moment_write); */
-        io_pfd_moments_.begin_step(grid, rn, rx);
+        io_pfd_moments_.begin_step(grid);
+        io_pfd_moments_.set_subset(grid, rn, rx);
         _write_pfd(io_pfd_moments_, pfd_moments);
         io_pfd_moments_.end_step();
         /* prof_stop(pr_moment_write); */
@@ -279,7 +284,8 @@ public:
         tfield_moments_next_ += tfield_moments_interval;
 
         /* prof_start(pr_moment_write); */
-        io_tfd_moments_.begin_step(grid, rn, rx);
+        io_tfd_moments_.begin_step(grid);
+        io_tfd_moments_.set_subset(grid, rn, rx);
         _write_tfd(io_tfd_moments_, tfd_moments_, pfd_moments, naccum_moments_);
         io_tfd_moments_.end_step();
         /* prof_stop(pr_moment_write); */
