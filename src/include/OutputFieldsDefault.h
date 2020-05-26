@@ -13,8 +13,6 @@
 class WriterMRC
 {
 public:
-  MrcIo& mrc_io() { return *io_; }
-
   void open(const std::string& pfx, const std::string& dir)
   {
     assert(!io_);
