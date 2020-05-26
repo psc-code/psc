@@ -63,8 +63,6 @@ struct MfieldsBase
   int _n_comps() const { return n_fields_; }
   Int3 ibn() const { return ibn_; }
 
-  virtual void write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names) = 0;
-
   const Grid_t& _grid() const { return *grid_; }
   
   template<typename MF>
@@ -150,11 +148,6 @@ struct MfieldsStateBase
   int _n_patches() const { return grid_->n_patches(); }
   int _n_comps() const { return n_fields_; }
   Int3 ibn() const { return ibn_; }
-
-  virtual void write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names)
-  {
-    assert(0);
-  }
 
   const Grid_t& _grid() { return *grid_; }
 
@@ -468,11 +461,6 @@ struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>>
     domain_ = MfieldsDomain(grid);
   }
   
-  void write_as_mrc_fld(mrc_io *io, const std::string& name, const std::vector<std::string>& comp_names) override
-  {
-    MrcIo::write_mflds(io, *this, grid(), name, comp_names);
-  }
-
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override;
   const Convert& convert_from() override;
