@@ -27,48 +27,6 @@ struct MrcIo
     mrc_io_destroy(io_);
   }
 
-  void open(const Grid_t& grid, Int3 rn = {}, Int3 rx = {1000000, 1000000, 1000000})
-  {
-    auto gdims = grid.domain.gdims;
-    int slab_off[3], slab_dims[3];
-    for (int d = 0; d < 3; d++) {
-      if (rx[d] > gdims[d])
-	rx[d] = gdims[d];
-      
-      slab_off[d] = rn[d];
-      slab_dims[d] = rx[d] - rn[d];
-    }
-    
-    mrc_io_open(io_, "w", grid.timestep(), grid.timestep() * grid.dt);
-    
-    // save some basic info about the run in the output file
-    struct mrc_obj *obj = mrc_obj_create(mrc_io_comm(io_));
-    mrc_obj_set_name(obj, "psc");
-    mrc_obj_dict_add_int(obj, "timestep", grid.timestep());
-    mrc_obj_dict_add_float(obj, "time", grid.timestep() * grid.dt);
-    mrc_obj_dict_add_float(obj, "cc", grid.norm.cc);
-    mrc_obj_dict_add_float(obj, "dt", grid.dt);
-    mrc_obj_write(obj, io_);
-    mrc_obj_destroy(obj);
-    
-    if (strcmp(mrc_io_type(io_), "xdmf_collective") == 0) {
-      mrc_io_set_param_int3(io_, "slab_off", slab_off);
-      mrc_io_set_param_int3(io_, "slab_dims", slab_dims);
-    }
-  }
-
-  void close()
-  {
-    mrc_io_close(io_);
-  }
-
-  template <typename Mfields>
-  void write_mflds(const Mfields& mflds, const Grid_t& grid, const std::string& name,
-		   const std::vector<std::string>& comp_names)
-  {
-    write_mflds(io_, mflds, grid, name, comp_names);
-  }
-
   // static version so it can be used elsewhere without MrcIo wrapper
   template <typename Mfields>
   static void write_mflds(mrc_io* io, const Mfields& _mflds, const Grid_t& grid,

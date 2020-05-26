@@ -22,16 +22,41 @@ public:
   void begin_step(const Grid_t& grid, Int3 rn = {},
                   Int3 rx = {1000000, 1000000, 1000000})
   {
-    io_->open(grid, rn, rx);
+    mrc_io_open(io_->io_, "w", grid.timestep(), grid.timestep() * grid.dt);
+
+    // save some basic info about the run in the output file
+    struct mrc_obj* obj = mrc_obj_create(mrc_io_comm(io_->io_));
+    mrc_obj_set_name(obj, "psc");
+    mrc_obj_dict_add_int(obj, "timestep", grid.timestep());
+    mrc_obj_dict_add_float(obj, "time", grid.timestep() * grid.dt);
+    mrc_obj_dict_add_float(obj, "cc", grid.norm.cc);
+    mrc_obj_dict_add_float(obj, "dt", grid.dt);
+    mrc_obj_write(obj, io_->io_);
+    mrc_obj_destroy(obj);
+
+    if (strcmp(mrc_io_type(io_->io_), "xdmf_collective") == 0) {
+      auto gdims = grid.domain.gdims;
+      int slab_off[3], slab_dims[3];
+      for (int d = 0; d < 3; d++) {
+        if (rx[d] > gdims[d])
+          rx[d] = gdims[d];
+
+        slab_off[d] = rn[d];
+        slab_dims[d] = rx[d] - rn[d];
+      }
+
+      mrc_io_set_param_int3(io_->io_, "slab_off", slab_off);
+      mrc_io_set_param_int3(io_->io_, "slab_dims", slab_dims);
+    }
   }
 
-  void end_step() { io_->close(); }
+  void end_step() { mrc_io_close(io_->io_); }
 
   template <typename Mfields>
   void write(const Mfields& mflds, const Grid_t& grid, const std::string& name,
              const std::vector<std::string>& comp_names)
   {
-    io_->write_mflds(mflds, grid, name, comp_names);
+    MrcIo::write_mflds(io_->io_, mflds, grid, name, comp_names);
   }
 
 private:
