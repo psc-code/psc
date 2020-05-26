@@ -50,10 +50,20 @@ public:
   void write(const Mfields& _mflds, const Grid_t& grid, const std::string& name,
              const std::vector<std::string>& comp_names)
   {
-    auto&& mflds = evalMfields(_mflds);
+    static int pr_write, pr_eval;
+    if (!pr_write) {
+      pr_write = prof_register("adios2_write", 1., 0, 0);
+      pr_eval = prof_register("adios2_eval", 1., 0, 0);
+    }
 
+    prof_start(pr_eval);
+    auto&& mflds = evalMfields(_mflds);
+    prof_stop(pr_eval);
+
+    prof_start(pr_write);
     file_.put(name, mflds);
     file_.performPuts();
+    prof_stop(pr_write);
   }
 
 private:
