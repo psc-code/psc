@@ -22,6 +22,10 @@ class Variable;
 class Engine
 {
 public:
+  Engine() = default;
+  Engine(Engine&&) = default;
+  Engine& operator=(Engine&&) = default;
+
   Engine(File&& file, MPI_Comm comm);
 
   void beginStep(StepMode mode);
