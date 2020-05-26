@@ -22,11 +22,6 @@ struct MrcIo
     mrc_io_view(io_);
   }
 
-  ~MrcIo()
-  {
-    mrc_io_destroy(io_);
-  }
-
   // static version so it can be used elsewhere without MrcIo wrapper
   template <typename Mfields>
   static void write_mflds(mrc_io* io, const Mfields& _mflds, const Grid_t& grid,
