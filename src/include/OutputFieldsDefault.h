@@ -4,10 +4,21 @@
 #include "../libpsc/psc_output_fields/fields_item_fields.hxx"
 #include "../libpsc/psc_output_fields/fields_item_moments_1st.hxx"
 #include "fields_item.hxx"
+#include "psc_particles_double.h"
 
 #include <mrc_io.hxx>
 
 #include <memory>
+
+class WriterMRC : std::unique_ptr<MrcIo>
+{
+  using Base = std::unique_ptr<MrcIo>;
+
+public:
+  void reset(pointer ptr = pointer()) { return Base::reset(ptr); }
+  MrcIo* operator->() { return &*static_cast<Base&>(*this); }
+  MrcIo& operator*() { return *static_cast<Base&>(*this); }
+};
 
 template <typename Mparticles>
 using FieldsItem_Moments_1st_cc = Moments_1st<Mparticles>;
@@ -245,10 +256,10 @@ private:
   // tfd -- FIXME?! always MfieldsC
   MfieldsC tfd_jeh_;
   MfieldsC tfd_moments_;
-  std::unique_ptr<MrcIo> io_pfd_;
-  std::unique_ptr<MrcIo> io_pfd_moments_;
-  std::unique_ptr<MrcIo> io_tfd_;
-  std::unique_ptr<MrcIo> io_tfd_moments_;
+  WriterMRC io_pfd_;
+  WriterMRC io_pfd_moments_;
+  WriterMRC io_tfd_;
+  WriterMRC io_tfd_moments_;
   int pfield_next_;
   int pfield_moments_next_;
   int tfield_next_;
