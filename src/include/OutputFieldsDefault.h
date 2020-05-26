@@ -10,14 +10,15 @@
 
 #include <memory>
 
-class WriterMRC : std::unique_ptr<MrcIo>
+class WriterMRC
 {
-  using Base = std::unique_ptr<MrcIo>;
-
 public:
-  void reset(pointer ptr = pointer()) { return Base::reset(ptr); }
-  MrcIo* operator->() { return &*static_cast<Base&>(*this); }
-  MrcIo& operator*() { return *static_cast<Base&>(*this); }
+  void reset(MrcIo* ptr = {}) { return io_.reset(ptr); }
+  MrcIo* operator->() { return &*io_; }
+  MrcIo& operator*() { return *io_; }
+
+private:
+  std::unique_ptr<MrcIo> io_;
 };
 
 template <typename Mparticles>
