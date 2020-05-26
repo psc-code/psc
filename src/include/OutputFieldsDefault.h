@@ -8,18 +8,6 @@
 
 #include <memory>
 
-#ifdef PSC_HAVE_ADIOS2
-
-#include "writer_adios2.hxx"
-using Writer = WriterADIOS2;
-
-#else
-
-#include "writer_mrc.hxx"
-using Writer = WriterMRC;
-
-#endif
-
 template <typename Mparticles>
 using FieldsItem_Moments_1st_cc = Moments_1st<Mparticles>;
 
@@ -51,9 +39,10 @@ struct OutputFieldsParams
 };
 
 // ======================================================================
-// OutputFields
+// OutputFieldsDefault
 
-class OutputFields : public OutputFieldsParams
+template <typename Writer>
+class OutputFieldsDefault : public OutputFieldsParams
 {
   using MfieldsFake = MfieldsC;
   using MparticlesFake = MparticlesDouble;
@@ -62,7 +51,7 @@ public:
   // ----------------------------------------------------------------------
   // ctor
 
-  OutputFields(const Grid_t& grid, const OutputFieldsParams& prm)
+  OutputFieldsDefault(const Grid_t& grid, const OutputFieldsParams& prm)
     : OutputFieldsParams{prm},
       tfd_jeh_{grid, Item_jeh<MfieldsFake>::n_comps(), {}},
       tfd_moments_{grid,
@@ -270,3 +259,15 @@ private:
   int naccum_ = 0;
   int naccum_moments_ = 0;
 };
+
+#ifdef PSC_HAVE_ADIOS2
+
+#include "writer_adios2.hxx"
+using OutputFields = OutputFieldsDefault<WriterADIOS2>;
+
+#else
+
+#include "writer_mrc.hxx"
+using OutputFields = OutputFieldsDefault<WriterMRC>;
+
+#endif
