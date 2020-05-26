@@ -232,7 +232,7 @@ private:
   template <typename EXP>
   static void _write_pfd(WriterMRC& io, EXP& pfd)
   {
-    io.write(adaptMfields(pfd), pfd.grid(), pfd.name(), pfd.comp_names());
+    io.write(pfd, pfd.grid(), pfd.name(), pfd.comp_names());
   }
 
   template <typename EXP>

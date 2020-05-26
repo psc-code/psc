@@ -13,7 +13,7 @@ struct isSpaceCuda : std::false_type
 
 template <typename E,
           typename std::enable_if<!isSpaceCuda<E>::value, int>::type = 0>
-MfieldsC evalMfields(const MFexpression<E>& xp)
+inline MfieldsC evalMfields(const MFexpression<E>& xp)
 {
   const auto& exp = xp.derived();
   MfieldsC mflds{exp.grid(), exp.n_comps(), exp.ibn()};
@@ -29,13 +29,29 @@ MfieldsC evalMfields(const MFexpression<E>& xp)
   return mflds;
 }
 
-const MfieldsC& evalMfields(const MfieldsC& mflds) { return mflds; }
+inline MfieldsC evalMfields(const MfieldsSingle& _exp)
+{
+  auto& exp = const_cast<MfieldsSingle&>(_exp);
+  MfieldsC mflds{exp.grid(), exp.n_comps(), exp.ibn()};
+
+  for (int p = 0; p < mflds.n_patches(); p++) {
+    auto flds = mflds[p];
+    for (int m = 0; m < exp.n_comps(); m++) {
+      mflds.Foreach_3d(0, 0, [&](int i, int j, int k) {
+        flds(m, i, j, k) = exp[p](m, i, j, k);
+      });
+    }
+  }
+  return mflds;
+}
+
+inline const MfieldsC& evalMfields(const MfieldsC& mflds) { return mflds; }
 
 #ifdef USE_CUDA
 
 template <typename E,
           typename std::enable_if<isSpaceCuda<E>::value, int>::type = 0>
-MfieldsC evalMfields(const MFexpression<E>& xp)
+inline MfieldsC evalMfields(const MFexpression<E>& xp)
 {
   const auto& exp = xp.derived().result();
   MfieldsC mflds{exp.grid(), exp.n_comps(), exp.ibn()};
@@ -48,6 +64,24 @@ MfieldsC evalMfields(const MFexpression<E>& xp)
     for (int m = 0; m < exp.n_comps(); m++) {
       mflds.Foreach_3d(0, 0, [&](int i, int j, int k) {
         flds(m, i, j, k) = h_exp[p](m, i, j, k);
+      });
+    }
+  }
+  return mflds;
+}
+
+inline MfieldsC evalMfields(const MfieldsCuda& mf)
+{
+  MfieldsC mflds{mf.grid(), mf.n_comps(), mf.ibn()};
+
+  auto h_mf = hostMirror(mf);
+  copy(mf, h_mf);
+
+  for (int p = 0; p < mflds.n_patches(); p++) {
+    auto flds = mflds[p];
+    for (int m = 0; m < mf.n_comps(); m++) {
+      mflds.Foreach_3d(0, 0, [&](int i, int j, int k) {
+        flds(m, i, j, k) = h_mf[p](m, i, j, k);
       });
     }
   }
