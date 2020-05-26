@@ -1,6 +1,10 @@
 
 #pragma once
 
+#ifdef USE_CUDA
+#include <psc_fields_cuda.h>
+#endif
+
 class WriterMRC
 {
 public:
@@ -70,6 +74,17 @@ public:
     MrcIo::write_mflds(io_.get(), mflds, grid, name, comp_names);
   }
 
+#ifdef USE_CUDA
+  void write(const MfieldsCuda& mflds, const Grid_t& grid,
+             const std::string& name,
+             const std::vector<std::string>& comp_names)
+  {
+    auto h_mflds = hostMirror(mflds);
+    copy(mflds, h_mflds);
+    MrcIo::write_mflds(io_.get(), h_mflds, grid, name, comp_names);
+  }
+#endif
+  
 private:
   std::unique_ptr<struct mrc_io, decltype(&mrc_io_close)> io_;
 };
