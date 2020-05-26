@@ -13,13 +13,14 @@
 class WriterMRC
 {
 public:
-  void open(const std::string& pfx, const std::string& dir)
+  void open(const std::string& pfx, const std::string& dir = ".")
   {
     assert(!io_);
     io_.reset(new MrcIo(pfx.c_str(), dir.c_str()));
   }
 
-  void begin_step(const Grid_t& grid, Int3 rn, Int3 rx)
+  void begin_step(const Grid_t& grid, Int3 rn = {},
+                  Int3 rx = {1000000, 1000000, 1000000})
   {
     io_->open(grid, rn, rx);
   }
