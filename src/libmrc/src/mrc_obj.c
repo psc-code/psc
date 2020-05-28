@@ -240,6 +240,8 @@ struct mrc_class mrc_class_mrc_obj = {
 struct mrc_obj *
 mrc_obj_create(MPI_Comm comm)
 {
+  int j_size;
+  MPI_Comm_size(comm, &j_size);
   return __mrc_obj_create(comm, &mrc_class_mrc_obj);
 }
 
@@ -583,6 +585,12 @@ mrc_obj_set_param_int(struct mrc_obj *obj, const char *name, int val)
   union param_u uval = { .u_int = val };
   mrc_obj_set_param_type(obj, name, PT_INT, &uval);
 }
+void
+mrc_obj_set_param_ulong(struct mrc_obj *obj, const char *name, unsigned long val)
+{
+  union param_u uval = { .u_ulong = val };
+  mrc_obj_set_param_type(obj, name, PT_ULONG, &uval);
+}
 
 void
 mrc_obj_set_param_float(struct mrc_obj *obj, const char *name, float val)
@@ -685,6 +693,15 @@ mrc_obj_get_param_int(struct mrc_obj *obj, const char *name, int *pval)
   union param_u uval;
   int err = mrc_obj_get_param_type(obj, name, PT_INT, &uval);
   *pval = uval.u_int;
+  return err;
+}
+
+int
+mrc_obj_get_param_ulong(struct mrc_obj *obj, const char *name, unsigned long *pval)
+{
+  union param_u uval;
+  int err = mrc_obj_get_param_type(obj, name, PT_ULONG, &uval);
+  *pval = uval.u_ulong;
   return err;
 }
 
@@ -1260,6 +1277,13 @@ mrc_obj_dict_add_int(struct mrc_obj *obj, const char *name, int val)
   union param_u uval;
   uval.u_int = val;
   mrc_obj_dict_add(obj, PT_INT, name, &uval);
+}
+void
+mrc_obj_dict_add_ulong(struct mrc_obj *obj, const char *name, unsigned long val)
+{
+  union param_u uval;
+  uval.u_ulong = val;
+  mrc_obj_dict_add(obj, PT_ULONG, name, &uval);
 }
 
 void

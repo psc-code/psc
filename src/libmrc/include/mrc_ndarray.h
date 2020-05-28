@@ -16,6 +16,7 @@ BEGIN_C_DECLS
 enum {
   MRC_NT_FLOAT,
   MRC_NT_DOUBLE,
+  MRC_NT_ULONG,
   MRC_NT_INT,
   MRC_NT_NR,
 };
@@ -53,6 +54,7 @@ struct mrc_ndarray_access {
       if (strcmp(#type, "float") == 0) assert((nd_acc)->data_type == MRC_NT_FLOAT); \
       if (strcmp(#type, "double") == 0) assert((nd_acc)->data_type == MRC_NT_DOUBLE); \
       if (strcmp(#type, "int") == 0) assert((nd_acc)->data_type == MRC_NT_INT); \
+      if (strcmp(#type, "unsigned long") == 0) assert((nd_acc)->data_type == MRC_NT_ULONG); \
       assert(i0 >= (nd_acc)->beg[0] && i0 < (nd_acc)->end[0]);		\
       assert(i1 >= (nd_acc)->beg[1] && i1 < (nd_acc)->end[1]);		\
       assert(i2 >= (nd_acc)->beg[2] && i2 < (nd_acc)->end[2]);		\
@@ -103,7 +105,8 @@ struct mrc_ndarray {
   int n_dims;
   int size_of_type;
   int data_type;
-  size_t len; // number of data values in this ndarray
+  int len; // number of data values in this ndarray
+  //unsigned long len; // number of data values in this ndarray
   struct mrc_vec *vec; //< underlying mrc_vec that manages memory alloc/free (could be petsc)
 
   // parameters

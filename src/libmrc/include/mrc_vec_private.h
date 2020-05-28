@@ -8,6 +8,7 @@ struct mrc_vec {
   struct mrc_obj obj;
   // parameters
   int len;
+  //unsigned long len;
   bool with_array;
 
   // state

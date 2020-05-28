@@ -108,6 +108,7 @@ void mrc_obj_set_name(struct mrc_obj *obj, const char *name);
 void mrc_obj_set_type(struct mrc_obj *obj, const char *type);
 void mrc_obj_set_from_options(struct mrc_obj *obj);
 void mrc_obj_set_param_int(struct mrc_obj *obj, const char *name, int val);
+void mrc_obj_set_param_ulong(struct mrc_obj *obj, const char *name, unsigned long val);
 void mrc_obj_set_param_float(struct mrc_obj *obj, const char *name, float val);
 void mrc_obj_set_param_double(struct mrc_obj *obj, const char *name, double val);
 void mrc_obj_set_param_string(struct mrc_obj *obj, const char *name, const char *val);
@@ -122,6 +123,7 @@ void mrc_obj_set_param_ptr(struct mrc_obj *obj, const char *name, void* val);
 void mrc_obj_set_param_obj(struct mrc_obj *obj, const char *name, void* val);
 int mrc_obj_get_param_bool(struct mrc_obj *obj, const char *name, bool *pval);
 int mrc_obj_get_param_int(struct mrc_obj *obj, const char *name, int *pval);
+int mrc_obj_get_param_ulong(struct mrc_obj *obj, const char *name, unsigned long *pval);
 int mrc_obj_get_param_float(struct mrc_obj *obj, const char *name, float *pval);
 int mrc_obj_get_param_double(struct mrc_obj *obj, const char *name, double *pval);
 int mrc_obj_get_param_string(struct mrc_obj *obj, const char *name, const char **val);
@@ -140,6 +142,7 @@ struct mrc_obj *mrc_obj_get_var_obj(struct mrc_obj *obj, const char *name);
 void mrc_obj_dict_add(struct mrc_obj *obj, int type, const char *name,
                       union param_u *pv);
 void mrc_obj_dict_add_int(struct mrc_obj *obj, const char *name, int val);
+void mrc_obj_dict_add_ulong(struct mrc_obj *obj, const char *name, unsigned long val);
 void mrc_obj_dict_add_bool(struct mrc_obj *obj, const char *name, bool val);
 void mrc_obj_dict_add_float(struct mrc_obj *obj, const char *name, float val);
 void mrc_obj_dict_add_double(struct mrc_obj *obj, const char *name, double val);
@@ -259,6 +262,11 @@ int mrc_obj_print_class_info(int verbosity);
   {                                                                     \
     mrc_obj_set_param_int((struct mrc_obj *)obj, name, val);            \
   }                                                                     \
+  static inline void                                                    \
+  pfx ## _set_param_ulong(obj_type *obj, const char *name, unsigned long val)       \
+  {                                                                     \
+    mrc_obj_set_param_ulong((struct mrc_obj *)obj, name, val);            \
+  }                                                                     \
                                                                         \
   static inline void                                                    \
   pfx ## _set_param_float(obj_type *obj, const char *name, float val)   \
@@ -344,6 +352,11 @@ int mrc_obj_print_class_info(int verbosity);
   pfx ## _get_param_int(obj_type *obj, const char *name, int *pval)     \
   {                                                                     \
     return mrc_obj_get_param_int((struct mrc_obj *)obj, name, pval);    \
+  }                                                                     \
+  static inline int                                                     \
+  pfx ## _get_param_ulong(obj_type *obj, const char *name, unsigned long *pval)     \
+  {                                                                     \
+    return mrc_obj_get_param_ulong((struct mrc_obj *)obj, name, pval);    \
   }                                                                     \
                                                                         \
   static inline int                                                     \
@@ -439,6 +452,11 @@ int mrc_obj_print_class_info(int verbosity);
   pfx ## _dict_add_int(obj_type *obj, const char *name, int val)        \
   {                                                                     \
     mrc_obj_dict_add_int((struct mrc_obj *)obj, name, val);             \
+  }                                                                     \
+  static inline void                                                    \
+  pfx ## _dict_add_ulong(obj_type *obj, const char *name, unsigned long val)        \
+  {                                                                     \
+    mrc_obj_dict_add_ulong((struct mrc_obj *)obj, name, val);             \
   }                                                                     \
                                                                         \
   static inline void                                                    \
