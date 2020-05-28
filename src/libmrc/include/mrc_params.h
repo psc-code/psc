@@ -27,16 +27,19 @@ enum param_type {
   PT_OBJ,
   PT_INT_ARRAY,
   PT_FLOAT_ARRAY,
+  PT_ULONG,
   MRC_VAR_INT,
   MRC_VAR_BOOL,
   MRC_VAR_FLOAT,
   MRC_VAR_DOUBLE,
   MRC_VAR_OBJ,
   MRC_VAR_DOUBLE3,
+  MRC_VAR_ULONG,
 };
 
 #define PARAM_INT(x)      PT_INT,    .u = { .ini_int = (x), }
 #define PARAM_UINT(x)     PT_UINT,   .u = { .ini_uint = (x), }
+#define PARAM_ULONG(x)    PT_ULONG,  .u = { .ini_ulong = (x), }
 #define PARAM_BOOL(x)     PT_BOOL,   .u = { .ini_bool = (x), }
 #define PARAM_FLOAT(x)    PT_FLOAT,  .u = { .ini_float = (x), }
 #define PARAM_DOUBLE(x)   PT_DOUBLE, .u = { .ini_double = (x), }
@@ -64,6 +67,7 @@ struct mrc_param_float_array {
 union param_u {
   int u_int;
   unsigned int u_uint;
+  unsigned long u_ulong;
   bool u_bool;
   float u_float;
   double u_double;
@@ -90,6 +94,7 @@ struct param {
   union {
     int    ini_int;
     int    ini_uint;
+    unsigned long ini_ulong;
     int    ini_bool;
     float  ini_float;
     double ini_double;
@@ -113,6 +118,7 @@ void mrc_params_print_all(MPI_Comm comm);
 void mrc_params_insert_option(const char *name, const char *val);
 int  mrc_params_get_option_string(const char *name, const char **pval);
 int  mrc_params_get_option_int(const char *name, int *pval);
+int  mrc_params_get_option_ulong(const char *name, unsigned long *pval);
 int  mrc_params_get_option_uint(const char *name, unsigned int *pval);
 int  mrc_params_get_option_float(const char *name, float *pval);
 int  mrc_params_get_option_double(const char *name, double *pval);
@@ -138,6 +144,7 @@ int  mrc_params_set_type(void *p, struct param *params, const char *name,
 int  mrc_params_get_type(void *p, struct param *params, const char *name,
 			 int type, union param_u *pval);
 int  mrc_params_set_int(void *p, struct param *params, const char *name, int val);
+int  mrc_params_set_ulong(void *p, struct param *params, const char *name, unsigned long val);
 int  mrc_params_set_string(void *p, struct param *params, const char *name, const char *val);
 
 // parses the cmd line for the parameters described

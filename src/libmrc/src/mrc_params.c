@@ -692,6 +692,9 @@ mrc_params_set_default(void *p, struct param *params)
     case PT_INT:
       pv->u_int = params[i].u.ini_int;
       break;
+    case PT_ULONG:
+      pv->u_ulong = params[i].u.ini_ulong;
+      break;
     case PT_UINT:
       pv->u_uint = params[i].u.ini_uint;
       break;
@@ -763,6 +766,7 @@ mrc_params_set_default(void *p, struct param *params)
     case MRC_VAR_DOUBLE:
     case MRC_VAR_DOUBLE3:
     case MRC_VAR_OBJ:
+    case MRC_VAR_ULONG:
       break;
     default:
       assert(0);
@@ -783,12 +787,14 @@ mrc_params_set_type(void *p, struct param *params, const char *name,
       // types have to match
       if (params[i].type == PT_SELECT && type == PT_INT) {
 	// except a PT_SELECT can be set by a PT_INT
+      //} else if (params[i].type == PT_INT && type == PT_ULONG) {
+	// or PT_ULONG can be used to set INT
       } else if (params[i].type == PT_INT_ARRAY && type == PT_INT3) {
 	// or INT3 can be used to set INT_ARRAY
       } else if (params[i].type == PT_FLOAT_ARRAY && type == PT_FLOAT3) {
   // or FLOAT3 can be used to set FLOAT_ARRAY
       } else {
-	error("option '%s' is not of type %d!\n", name, type);
+	error("option '%s' is type %d, not of type %d!\n", name, params[i].type, type);
       }
     }
     switch (type) {
@@ -797,6 +803,9 @@ mrc_params_set_type(void *p, struct param *params, const char *name,
       break;
     case PT_UINT:
       pv->u_uint = pval->u_uint;
+      break;
+    case PT_ULONG:
+      pv->u_ulong = pval->u_ulong;
       break;
     case PT_FLOAT:
       pv->u_float = pval->u_float;
@@ -973,6 +982,12 @@ mrc_params_set_int(void *p, struct param *params, const char *name, int val)
   union param_u uval = { .u_int = val };
   return mrc_params_set_type(p, params, name, PT_INT, &uval);
 }
+int
+mrc_params_set_ulong(void *p, struct param *params, const char *name, unsigned long val)
+{
+  union param_u uval = { .u_ulong = val };
+  return mrc_params_set_type(p, params, name, PT_ULONG, &uval);
+}
 
 int
 mrc_params_set_bool(void *p, struct param *params, const char *name, bool val)
@@ -1082,6 +1097,7 @@ mrc_params_parse_nodefault(void *p, struct param *params, const char *title,
     case MRC_VAR_DOUBLE:
     case MRC_VAR_DOUBLE3:
     case MRC_VAR_OBJ:
+    case MRC_VAR_ULONG:
       break;
     default:
       assert(0);
@@ -1143,6 +1159,7 @@ mrc_params_parse_pfx(void *p, struct param *params, const char *title,
     case MRC_VAR_DOUBLE:
     case MRC_VAR_DOUBLE3:
     case MRC_VAR_OBJ:
+    case MRC_VAR_ULONG:
       break;
     default:
       assert(0);
@@ -1233,6 +1250,7 @@ mrc_params_print_one(void *p, struct param *prm, MPI_Comm comm)
   case MRC_VAR_DOUBLE:
   case MRC_VAR_DOUBLE3:
   case MRC_VAR_OBJ:
+  case MRC_VAR_ULONG:
     break;
   default:
     mprintf("%d\n", prm->type);

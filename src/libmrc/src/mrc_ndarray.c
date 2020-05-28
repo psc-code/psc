@@ -144,8 +144,9 @@ _mrc_ndarray_setup(struct mrc_ndarray *nd)
   }
 
   mrc_vec_set_type(nd->vec, get_vec_type(nd));
-  assert(nd->len < 0x80000000); // FIXME, should support 64-bit for real
+  assert(nd->len < 0x7FFFFFFFFFFFFFFF);//0x80000000); // FIXME, should support 64-bit for real
   mrc_vec_set_param_int(nd->vec, "len", nd->len);
+  //mrc_vec_set_param_ulong(nd->vec, "len", nd->len);
   mrc_vec_setup(nd->vec);
 
   // set up arr
@@ -377,7 +378,7 @@ static struct param mrc_ndarray_descr[] = {
 
   { "data_type"       , VAR(data_type)      , MRC_VAR_INT           },
   { "size_of_type"    , VAR(size_of_type)   , MRC_VAR_INT           },
-  { "len"             , VAR(len)            , MRC_VAR_INT           },
+  { "len"             , VAR(len)            , MRC_VAR_ULONG           },
   { "vec"             , VAR(vec)            , MRC_VAR_OBJ(mrc_vec)  },
   {},
 };
