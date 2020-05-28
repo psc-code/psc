@@ -141,7 +141,7 @@ struct PscConfig_<dim_xyz, _Mparticles, _MfieldsState, _Mfields, PscConfigPushPa
   using Balance = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Checks = ChecksCuda<Mparticles>;
   using Marder = MarderCuda<BS>;
-  using OutputParticles = OutputParticlesNone;
+  using OutputParticles = OutputParticlesDefault;
 };
 
 #endif
