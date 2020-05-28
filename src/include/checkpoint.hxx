@@ -84,9 +84,9 @@ public:
     // don't write a checkpoint immediately after start-up (in particular, not
     // immediately after just having restarted from a checkpoint)
     if (first_time_) {
+      first_time_ = false;
       return;
     }
-    first_time_ = false;
     
     if (grid.timestep() % interval_ == 0)
     {
