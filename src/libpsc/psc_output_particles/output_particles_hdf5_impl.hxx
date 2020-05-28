@@ -395,16 +395,15 @@ struct OutputParticlesHdf5
     size_t *gidx_begin = NULL, *gidx_end = NULL;
     if (rank == 0) {
       // alloc global idx array
-      gidx_begin = (size_t*)malloc(nr_kinds * wdims_[0] * wdims_[1] *
-                                   wdims_[2] * sizeof(*gidx_begin));
-      gidx_end = (size_t*)malloc(nr_kinds * wdims_[0] * wdims_[1] * wdims_[2] *
-                                 sizeof(*gidx_end));
+      long length =((long)nr_kinds * wdims_[0] * wdims_[1] * wdims_[2]);
+      gidx_begin = (size_t*)malloc(length * sizeof(*gidx_begin));
+      gidx_end = (size_t*)malloc(length *  sizeof(*gidx_end));
       for (int jz = 0; jz < wdims_[2]; jz++) {
         for (int jy = 0; jy < wdims_[1]; jy++) {
           for (int jx = 0; jx < wdims_[0]; jx++) {
             for (int kind = 0; kind < nr_kinds; kind++) {
-              int ii =
-                ((kind * wdims_[2] + jz) * wdims_[1] + jy) * wdims_[0] + jx;
+              long ii =
+                (((long)kind * wdims_[2] + jz) * wdims_[1] + jy) * wdims_[0] + jx;
               gidx_begin[ii] = -1;
               gidx_end[ii] = -1;
             }
@@ -447,11 +446,11 @@ struct OutputParticlesHdf5
                 int ix = jx + info.off[0] - lo_[0];
                 int iy = jy + info.off[1] - lo_[1];
                 int iz = jz + info.off[2] - lo_[2];
-                int jj =
-                  ((kind * ld[2] + jz - ilo[2]) * ld[1] + jy - ilo[1]) * ld[0] +
+                long jj =
+                  (((long)kind * ld[2] + jz - ilo[2]) * ld[1] + jy - ilo[1]) * ld[0] +
                   jx - ilo[0];
-                int ii =
-                  ((kind * wdims_[2] + iz) * wdims_[1] + iy) * wdims_[0] + ix;
+                long ii =
+                  (((long)kind * wdims_[2] + iz) * wdims_[1] + iy) * wdims_[0] + ix;
                 gidx_begin[ii] = idx[p][jj];
                 gidx_end[ii] = idx[p][jj + sz];
               }
@@ -491,11 +490,11 @@ struct OutputParticlesHdf5
                 int ix = jx + info.off[0] - lo_[0];
                 int iy = jy + info.off[1] - lo_[1];
                 int iz = jz + info.off[2] - lo_[2];
-                int jj =
-                  ((kind * ld[2] + jz - ilo[2]) * ld[1] + jy - ilo[1]) * ld[0] +
+                long jj =
+                  (((long)kind * ld[2] + jz - ilo[2]) * ld[1] + jy - ilo[1]) * ld[0] +
                   jx - ilo[0];
-                int ii =
-                  ((kind * wdims_[2] + iz) * wdims_[1] + iy) * wdims_[0] + ix;
+                long ii =
+                  (((long)kind * wdims_[2] + iz) * wdims_[1] + iy) * wdims_[0] + ix;
                 gidx_begin[ii] = recv_buf_p[info.rank][jj];
                 gidx_end[ii] = recv_buf_p[info.rank][jj + sz];
               }
