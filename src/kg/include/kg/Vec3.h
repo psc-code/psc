@@ -191,7 +191,9 @@ KG_INLINE std::ostream& operator<<(std::ostream& os, const Vec<T, N>& v)
 template <typename T>
 using Vec3 = kg::Vec<T, 3>;
 
+
 using Int3 = Vec3<int>;
 using UInt3 = Vec3<unsigned int>;
+using Long3 = Vec3<long>;
 using Float3 = Vec3<float>;
 using Double3 = Vec3<double>;

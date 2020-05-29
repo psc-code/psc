@@ -96,8 +96,8 @@ struct OutputParticlesHdf5
 {
   using Particles = typename Mparticles::Patch;
 
-  OutputParticlesHdf5(const Grid_t& grid, const Int3& lo, const Int3& hi,
-                      const Int3& wdims, hid_t prt_type)
+  OutputParticlesHdf5(const Grid_t& grid, const Long3& lo, const Long3& hi,
+                      const Long3& wdims, hid_t prt_type)
     : lo_{lo},
       hi_{hi},
       wdims_{wdims},
@@ -367,7 +367,6 @@ struct OutputParticlesHdf5
   {
     const auto& grid = mprts.grid();
     herr_t ierr;
-
     static int pr_A, pr_B, pr_C, pr_D, pr_E;
     if (!pr_A) {
       pr_A = prof_register("outp: local", 1., 0, 0);
@@ -568,9 +567,9 @@ struct OutputParticlesHdf5
       H5Gcreate(group, "p0", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     H5_CHK(groupp);
 
-    ierr = H5LTset_attribute_int(group, ".", "lo", lo_, 3);
+    ierr = H5LTset_attribute_long(group, ".", "lo", lo_, 3);
     CE;
-    ierr = H5LTset_attribute_int(group, ".", "hi", hi_, 3);
+    ierr = H5LTset_attribute_long(group, ".", "hi", hi_, 3);
     CE;
 
     hid_t dxpl = H5Pcreate(H5P_DATASET_XFER);
@@ -616,9 +615,9 @@ struct OutputParticlesHdf5
   }
 
 private:
-  Int3 lo_;
-  Int3 hi_;
-  Int3 wdims_;
+  Long3 lo_;
+  Long3 hi_;
+  Long3 wdims_;
   hid_t prt_type_;
   Grid_t::Kinds kinds_;
   MPI_Comm comm_;
@@ -696,7 +695,7 @@ public:
 private:
   const OutputParticlesParams prm_;
   detail::Hdf5ParticleType prt_type_;
-  Int3 lo_; // dimensions of the subdomain we're actually writing
-  Int3 hi_;
-  Int3 wdims_;
+  Long3 lo_; // dimensions of the subdomain we're actually writing
+  Long3 hi_;
+  Long3 wdims_;
 };
