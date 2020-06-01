@@ -87,9 +87,8 @@ public:
       first_time_ = false;
       return;
     }
-    
-    if (grid.timestep() % interval_ == 0)
-    {
+
+    if (grid.timestep() % interval_ == 0) {
       write_checkpoint(grid, mprts, mflds);
     }
   }
