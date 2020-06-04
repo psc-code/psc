@@ -50,8 +50,8 @@ struct MarderCuda : MarderBase
       io_.end_step();
     }
 
-    res_.copy_comp_yz(0, dive, 0);
-    res_.axpy_comp_yz(0, -1., rho, 0);
+    res_.copy_comp(0, dive, 0);
+    res_.axpy_comp(0, -1., rho, 0);
     // FIXME, why is this necessary?
     bnd_mf_.fill_ghosts(res_, 0, 1);
   }

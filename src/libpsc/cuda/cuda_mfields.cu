@@ -145,6 +145,18 @@ void cuda_mfields::copy_comp_yz(int ym, cuda_mfields *cmflds_x, int xm)
 }
 
 // ----------------------------------------------------------------------
+// copy_comp
+
+void cuda_mfields::copy_comp(int ym, cuda_mfields *cmflds, int xm)
+{
+  if (grid().isInvar(0)) {
+    copy_comp_yz(ym, cmflds, xm);
+  } else {
+    assert(0);
+  }
+}
+
+// ----------------------------------------------------------------------
 // axpy_comp_yz
 
 __global__ static void
@@ -180,6 +192,18 @@ void cuda_mfields::axpy_comp_yz(int ym, float a, cuda_mfields *cmflds_x, int xm)
 					  (*cmflds_x)[p].data(), xm, my, mz);
   }
   cuda_sync_if_enabled();
+}
+
+// ----------------------------------------------------------------------
+// axpy_comp_yz
+
+void cuda_mfields::axpy_comp(int ym, float a, cuda_mfields *cmflds_x, int xm)
+{
+  if (grid().isInvar(0)) {
+    axpy_comp_yz(ym, a, cmflds_x, xm);
+  } else {
+    assert(0);
+  }
 }
 
 // ----------------------------------------------------------------------

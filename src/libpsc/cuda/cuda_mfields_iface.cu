@@ -47,16 +47,16 @@ void MfieldsCuda::reset(const Grid_t& new_grid)
   grid_ = &new_grid;
 }
 
-void MfieldsCuda::copy_comp_yz(int ym, MfieldsCuda& mflds_x, int xm)
+void MfieldsCuda::copy_comp(int ym, MfieldsCuda& mflds_x, int xm)
 {
-  dprintf("CMFLDS: copy_comp_yz\n");
-  cmflds()->copy_comp_yz(ym, mflds_x.cmflds(), xm);
+  dprintf("CMFLDS: copy_comp_\n");
+  cmflds()->copy_comp(ym, mflds_x.cmflds(), xm);
 }
 
-void MfieldsCuda::axpy_comp_yz(int ym, float a, MfieldsCuda& mflds_x, int xm)
+void MfieldsCuda::axpy_comp(int ym, float a, MfieldsCuda& mflds_x, int xm)
 {
-  dprintf("CMFLDS: axpy_comp_yz\n");
-  cmflds()->axpy_comp_yz(ym, a, mflds_x.cmflds(), xm);
+  dprintf("CMFLDS: axpy_comp\n");
+  cmflds()->axpy_comp(ym, a, mflds_x.cmflds(), xm);
 }
 
 void MfieldsCuda::zero_comp(int m)
