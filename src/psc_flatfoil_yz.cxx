@@ -349,8 +349,6 @@ void run()
 
   auto grid_ptr = setupGrid();
   auto& grid = *grid_ptr;
-  MfieldsState mflds{grid};
-  Mparticles mprts{grid};
 
   // ----------------------------------------------------------------------
   // Set up various objects needed to run this case
@@ -481,6 +479,8 @@ void run()
   // ----------------------------------------------------------------------
   // setup initial conditions
 
+  Mparticles mprts(grid);
+  MfieldsState mflds(grid);
   if (read_checkpoint_filename.empty()) {
     initializeParticles(setup_particles, balance, grid_ptr, mprts,
                         inject_target);
