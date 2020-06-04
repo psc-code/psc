@@ -117,7 +117,7 @@ struct PscConfig_<_Dim, _Mparticles, _MfieldsState, _Mfields, PscConfigPushParti
   using BndFields = BndFieldsNone<MfieldsState>;
   using Balance = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Checks = ChecksCuda<Mparticles>;
-  using Marder = MarderCuda<BS>;
+  using Marder = MarderCuda<BS, _Dim>;
   using OutputParticles = OutputParticlesDefault;
 };
 
@@ -140,7 +140,7 @@ struct PscConfig_<dim_xyz, _Mparticles, _MfieldsState, _Mfields, PscConfigPushPa
   using BndFields_t = BndFieldsNone<MfieldsState>;
   using Balance = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Checks = ChecksCuda<Mparticles>;
-  using Marder = MarderCuda<BS>;
+  using Marder = MarderCuda<BS, dim_xyz>;
   using OutputParticles = OutputParticlesDefault;
 };
 

@@ -10,7 +10,7 @@
 // FIXME: if the subclass creates objects, it'd be cleaner to have them
 // be part of the subclass
 
-template<typename BS>
+template<typename BS, typename dim>
 struct MarderCuda : MarderBase
 {
   using MfieldsState = MfieldsStateCuda;
@@ -150,7 +150,7 @@ private:
   Mfields rho_;
   Mfields res_;
   
-  Moment_rho_1st_nc_cuda<MparticlesCuda<BS144>, dim_yz> item_rho_; // FIXME, hardcoded dim_yz
+  Moment_rho_1st_nc_cuda<Mparticles, dim> item_rho_;
   FieldsItemFields<Item_dive_cuda> item_dive_;
 };
 
