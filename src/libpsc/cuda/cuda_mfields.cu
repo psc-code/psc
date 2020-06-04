@@ -145,6 +145,49 @@ void cuda_mfields::copy_comp_yz(int ym, cuda_mfields *cmflds_x, int xm)
 }
 
 // ----------------------------------------------------------------------
+// copy_comp_xyz
+
+__global__ static void
+k_copy_comp_xyz(float *y_flds, int ym, float *x_flds, int xm,
+		int mx, int my, int mz)
+{
+  int ix = blockIdx.x * blockDim.x + threadIdx.x;
+  int iy = blockIdx.y * blockDim.y + threadIdx.y;
+  int iz = blockIdx.z * blockDim.z + threadIdx.z;
+
+  if (ix >= mx || iy >= my || iz >= mz) {
+    return;
+  }
+
+  ix -= BND;
+  iy -= BND;
+  iz -= BND;
+
+  F3_DDEV(y_flds, ym, ix,iy,iz) =  F3_DDEV(x_flds, xm, ix,iy,iz);
+}
+
+void cuda_mfields::copy_comp_xyz(int ym, cuda_mfields *cmflds_x, int xm)
+{
+  int mx = im(0);
+  int my = im(1);
+  int mz = im(2);
+  assert(ib(0) == -BND);
+  assert(ib(1) == -BND);
+  assert(ib(2) == -BND);
+
+  dim3 dimGrid((mx + 8 - 1) / 8,
+	       (my + 8 - 1) / 8,
+	       (mz + 8 - 1) / 8);
+  dim3 dimBlock(8, 8, 8);
+
+  for (int p = 0; p < n_patches(); p++) {
+    k_copy_comp_xyz<<<dimGrid, dimBlock>>>((*this)[p].data(), ym,
+					   (*cmflds_x)[p].data(), xm, mx, my, mz);
+  }
+  cuda_sync_if_enabled();
+}
+
+// ----------------------------------------------------------------------
 // copy_comp
 
 void cuda_mfields::copy_comp(int ym, cuda_mfields *cmflds, int xm)
@@ -152,7 +195,7 @@ void cuda_mfields::copy_comp(int ym, cuda_mfields *cmflds, int xm)
   if (grid().isInvar(0)) {
     copy_comp_yz(ym, cmflds, xm);
   } else {
-    assert(0);
+    copy_comp_xyz(ym, cmflds, xm);
   }
 }
 
@@ -195,6 +238,49 @@ void cuda_mfields::axpy_comp_yz(int ym, float a, cuda_mfields *cmflds_x, int xm)
 }
 
 // ----------------------------------------------------------------------
+// axpy_comp_xyz
+
+__global__ static void
+k_axpy_comp_xyz(float *y_flds, int ym, float a, float *x_flds, int xm,
+		int mx, int my, int mz)
+{
+  int ix = blockIdx.x * blockDim.x + threadIdx.x;
+  int iy = blockIdx.y * blockDim.y + threadIdx.y;
+  int iz = blockIdx.z * blockDim.z + threadIdx.z;
+
+  if (ix >= mx || iy >= my || iz >= mz) {
+    return;
+  }
+
+  ix -= BND;
+  iy -= BND;
+  iz -= BND;
+
+  F3_DDEV(y_flds, ym, ix,iy,iz) += a * F3_DDEV(x_flds, xm, ix,iy,iz);
+}
+
+void cuda_mfields::axpy_comp_xyz(int ym, float a, cuda_mfields *cmflds_x, int xm)
+{
+  int mx = im(0);
+  int my = im(1);
+  int mz = im(2);
+  assert(ib(0) == -BND);
+  assert(ib(1) == -BND);
+  assert(ib(2) == -BND);
+
+  dim3 dimGrid((mx + 8 - 1) / 8,
+	       (my + 8 - 1) / 8,
+	       (mz + 8 - 1) / 8);
+  dim3 dimBlock(8, 8, 8);
+
+  for (int p = 0; p < n_patches(); p++) {
+    k_axpy_comp_xyz<<<dimGrid, dimBlock>>>((*this)[p].data(), ym, a,
+					   (*cmflds_x)[p].data(), xm, mx, my, mz);
+  }
+  cuda_sync_if_enabled();
+}
+
+// ----------------------------------------------------------------------
 // axpy_comp_yz
 
 void cuda_mfields::axpy_comp(int ym, float a, cuda_mfields *cmflds_x, int xm)
@@ -202,7 +288,7 @@ void cuda_mfields::axpy_comp(int ym, float a, cuda_mfields *cmflds_x, int xm)
   if (grid().isInvar(0)) {
     axpy_comp_yz(ym, a, cmflds_x, xm);
   } else {
-    assert(0);
+    axpy_comp_xyz(ym, a, cmflds_x, xm);
   }
 }
 
