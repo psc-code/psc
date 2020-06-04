@@ -350,6 +350,12 @@ void run()
   auto grid_ptr = setupGrid();
   auto& grid = *grid_ptr;
 
+  Mparticles mprts(grid);
+  MfieldsState mflds(grid);
+  if (!read_checkpoint_filename.empty()) {
+    read_checkpoint(read_checkpoint_filename, grid, mprts, mflds);
+  }
+  
   // ----------------------------------------------------------------------
   // Set up various objects needed to run this case
 
@@ -479,20 +485,16 @@ void run()
   // ----------------------------------------------------------------------
   // setup initial conditions
 
-  Mparticles mprts(grid);
-  MfieldsState mflds(grid);
   if (read_checkpoint_filename.empty()) {
     initializeParticles(setup_particles, balance, grid_ptr, mprts,
                         inject_target);
     initializeFields(mflds);
-  } else {
-    read_checkpoint(read_checkpoint_filename, *grid_ptr, mprts, mflds);
   }
 
   // ----------------------------------------------------------------------
   // hand off to PscIntegrator to run the simulation
 
-  auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
+  auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
                                           balance, collision, checks, marder,
                                           diagnostics, lf_inject);
 
