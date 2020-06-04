@@ -49,7 +49,6 @@ inline void read_checkpoint(const std::string& filename, Grid_t& grid,
   auto io = kg::io::IOAdios2{};
   auto reader = io.open(filename, kg::io::Mode::Read);
   reader.get("grid", grid);
-  psc_balance_generation_cnt++;
   mprts.~Mparticles();
   mflds.~MfieldsState();
   new (&mprts) Mparticles(grid);
