@@ -40,7 +40,7 @@ enum
 
 struct InjectFoilParams
 {
-  double xl, xh; 
+  double xl, xh;
   double yl, yh;
   double zl, zh;
   double n;
@@ -56,7 +56,8 @@ public:
 
   bool is_inside(double crd[3])
   {
-    return (crd[0] >= xl && crd[0] <= xh && crd[1] >= yl && crd[1] <= yh && crd[2] >= zl && crd[2] <= zh);
+    return (crd[0] >= xl && crd[0] <= xh && crd[1] >= yl && crd[1] <= yh &&
+            crd[2] >= zl && crd[2] <= zh);
   }
 
   void init_npt(int pop, double crd[3], psc_particle_npt& npt)
@@ -136,12 +137,12 @@ struct PscFlatfoilParams
   double Zi;
   double mass_ratio;
   double lambda0;
-  double target_n; // target density
+  double target_n;  // target density
   double target_Te; // target electron temperature
   double target_Ti; // target ion_temperatore
   double target_Te_heat;
   double target_Ti_heat;
-  
+
   double background_n;
   double background_Te;
   double background_Ti;
@@ -213,7 +214,7 @@ void setupParameters()
   g.target_Ti = 0.001;
   g.target_Te_heat = 0.04;
   g.target_Ti_heat = 0.04;
-  
+
   g.background_n = .002;
   g.background_Te = .001;
   g.background_Ti = .001;
@@ -231,13 +232,13 @@ Grid_t* setupGrid()
 {
   // --- setup domain
 #ifdef DIM_3D
-  Grid_t::Real3 LL = {80., 80., 3.*80.};  // domain size (in d_e)
-  Int3 gdims = {160, 160, 3*160};         // global number of grid points
-  Int3 np = {5, 5, 3*5};                  // division into patches
+  Grid_t::Real3 LL = {80., 80., 3. * 80.}; // domain size (in d_e)
+  Int3 gdims = {160, 160, 3 * 160};        // global number of grid points
+  Int3 np = {5, 5, 3 * 5};                 // division into patches
 #else
-  Grid_t::Real3 LL = {1., 800., 3.*800.}; // domain size (in d_e)
-  Int3 gdims = {1, 1600, 3*1600};         // global number of grid points
-  Int3 np = {1, 50, 3*50};                // division into patches
+  Grid_t::Real3 LL = {1., 800., 3. * 800.}; // domain size (in d_e)
+  Int3 gdims = {1, 1600, 3 * 1600};         // global number of grid points
+  Int3 np = {1, 50, 3 * 50};                // division into patches
 #endif
 
   Grid_t::Domain domain{gdims, LL, -.5 * LL, np};
@@ -348,8 +349,6 @@ void run()
 
   auto grid_ptr = setupGrid();
   auto& grid = *grid_ptr;
-  MfieldsState mflds{grid};
-  Mparticles mprts{grid};
 
   // ----------------------------------------------------------------------
   // Set up various objects needed to run this case
@@ -363,7 +362,8 @@ void run()
 
   // -- Collision
   int collision_interval = 10;
-  double collision_nu = 3.76 * std::pow(g.target_Te_heat, 2.) / g.Zi / g.lambda0;
+  double collision_nu =
+    3.76 * std::pow(g.target_Te_heat, 2.) / g.Zi / g.lambda0;
   Collision collision{grid, collision_interval, collision_nu};
 
   // -- Checks
@@ -479,6 +479,8 @@ void run()
   // ----------------------------------------------------------------------
   // setup initial conditions
 
+  Mparticles mprts(grid);
+  MfieldsState mflds(grid);
   if (read_checkpoint_filename.empty()) {
     initializeParticles(setup_particles, balance, grid_ptr, mprts,
                         inject_target);
@@ -486,7 +488,7 @@ void run()
   } else {
     read_checkpoint(read_checkpoint_filename, *grid_ptr, mprts, mflds);
   }
-  
+
   // ----------------------------------------------------------------------
   // hand off to PscIntegrator to run the simulation
 
