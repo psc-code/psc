@@ -107,6 +107,44 @@ DFields cuda_mfields::operator[](int p) const
 #define BLOCKSIZE_Z 16
 
 // ----------------------------------------------------------------------
+// copy_comp_yz
+
+__global__ static void
+k_copy_comp_yz(float *y_flds, int ym, float *x_flds, int xm,
+	     int my, int mz)
+{
+  int iy = blockIdx.x * blockDim.x + threadIdx.x;
+  int iz = blockIdx.y * blockDim.y + threadIdx.y;
+
+  if (iy >= my || iz >= mz) {
+    return;
+  }
+
+  iy -= BND;
+  iz -= BND;
+
+  F3_DDEV(y_flds, ym, 0,iy,iz) =  F3_DDEV(x_flds, xm, 0,iy,iz);
+}
+
+void cuda_mfields::copy_comp_yz(int ym, cuda_mfields *cmflds_x, int xm)
+{
+  int my = im(1);
+  int mz = im(2);
+  assert(ib(1) == -BND);
+  assert(ib(2) == -BND);
+
+  dim3 dimGrid((my + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+	       (mz + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
+  dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
+
+  for (int p = 0; p < n_patches(); p++) {
+    k_copy_comp_yz<<<dimGrid, dimBlock>>>((*this)[p].data(), ym,
+					  (*cmflds_x)[p].data(), xm, my, mz);
+  }
+  cuda_sync_if_enabled();
+}
+
+// ----------------------------------------------------------------------
 // axpy_comp_yz
 
 __global__ static void
