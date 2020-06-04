@@ -23,6 +23,7 @@ struct Marder_ : MarderBase
       loop_{loop},
       dump_{dump},
       bnd_{grid, grid.ibn},
+      bnd_mf_{grid, grid.ibn},
       rho_{grid, 1, grid.ibn},
       res_{grid, 1, grid.ibn}
   {
@@ -46,15 +47,15 @@ struct Marder_ : MarderBase
       static int cnt;
       io_.begin_step(cnt, cnt);//ppsc->timestep, ppsc->timestep * ppsc->dt);
       cnt++;
-      io_.write(rho_, "rho", {"rho"});
-      io_.write(dive, "dive", {"dive"});
+      io_.write(rho_, rho_.grid(), "rho", {"rho"});
+      io_.write(adaptMfields(dive), dive.grid(), "dive", {"dive"});
       io_.end_step();
     }
 
     res_.assign(dive);
     res_.axpy_comp(0, -1., rho_, 0);
-    // FIXME, why is this necessary?
-    bnd_.fill_ghosts(res_, 0, 1);
+    // // FIXME, why is this necessary?
+    bnd_mf_.fill_ghosts(res_, 0, 1);
   }
 
   // ----------------------------------------------------------------------
@@ -63,7 +64,6 @@ struct Marder_ : MarderBase
   // Do the modified marder correction (See eq.(5, 7, 9, 10) in Mardahl and Verboncoeur, CPC, 1997)
 
 #define define_dxdydz(dx, dy, dz)				\
-  const auto& grid = flds.grid();				\
   int dx _mrc_unused = (grid.isInvar(0)) ? 0 : 1;		\
   int dy _mrc_unused = (grid.isInvar(1)) ? 0 : 1;		\
   int dz _mrc_unused = (grid.isInvar(2)) ? 0 : 1
@@ -80,7 +80,7 @@ struct Marder_ : MarderBase
 #define psc_foreach_3d_more_end			\
   } } }
 
-  void correct_patch(fields_view_t flds, fields_view_t f, int p, real_t& max_err)
+  void correct_patch(const Grid_t& grid, fields_view_t flds, fields_view_t f, int p, real_t& max_err)
   {
     define_dxdydz(dx, dy, dz);
 
@@ -162,7 +162,7 @@ struct Marder_ : MarderBase
 
     real_t max_err = 0.;
     for (int p = 0; p < mf_div_e.n_patches(); p++) {
-      correct_patch(mf[p], mf_div_e[p], p, max_err);
+      correct_patch(mf.grid(), mf[p], mf_div_e[p], p, max_err);
     }
 
     MPI_Allreduce(MPI_IN_PLACE, &max_err, 1, Mfields_traits<Mfields>::mpi_dtype(), MPI_MAX, grid_.comm());
@@ -177,8 +177,6 @@ struct Marder_ : MarderBase
     rho_.assign(Moment_t{mprts});
 
     // need to fill ghost cells first (should be unnecessary with only variant 1) FIXME
-    assert(0);
-#if 0
     bnd_.fill_ghosts(mflds, EX, EX+3);
 
     for (int i = 0; i < loop_; i++) {
@@ -186,7 +184,6 @@ struct Marder_ : MarderBase
       correct(mflds);
       bnd_.fill_ghosts(mflds, EX, EX+3);
     }
-#endif
   }
   
 
@@ -196,7 +193,8 @@ private:
   bool dump_; //< dump div_E, rho
 
   const Grid_t& grid_;
-  Bnd_<Mfields> bnd_;
+  Bnd_<MfieldsState> bnd_;
+  Bnd_<Mfields> bnd_mf_;
   Mfields rho_;
   Mfields res_;
   WriterMRC io_; //< for debug dumping
