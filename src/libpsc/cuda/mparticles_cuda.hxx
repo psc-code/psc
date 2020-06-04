@@ -53,6 +53,7 @@ struct MparticlesCuda : MparticlesBase
   void inject(const std::vector<Particle>& buf, const std::vector<uint>& buf_n_by_patch) { Iface::inject(cmprts_, buf, buf_n_by_patch); }
   void dump(const std::string& filename) { Iface::dump(cmprts_, filename); }
   bool check_after_push() { return Iface::check_after_push(cmprts_); }
+  void clear() { Iface::clear(cmprts_); }
 
   std::vector<uint> get_offsets() const { return Iface::get_offsets(cmprts_); }
   std::vector<Particle> get_particles() const { return Iface::get_particles(cmprts_); }

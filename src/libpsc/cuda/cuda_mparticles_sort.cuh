@@ -319,6 +319,11 @@ struct cuda_mparticles_sort_by_block
     cmprts.reorder_and_offsets(d_idx, d_id, d_off);
   }
 
+  void clear()
+  {
+    thrust::fill(d_off.begin(), d_off.end(), 0);
+  }
+
 public:
   thrust::device_vector<uint> d_idx; // block index (incl patch) per particle
   thrust::device_vector<uint> d_id;  // particle id used for reordering
