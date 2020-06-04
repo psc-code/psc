@@ -85,8 +85,8 @@ struct Marder_ : MarderBase
     define_dxdydz(dx, dy, dz);
 
     // FIXME: how to choose diffusion parameter properly?
-    //double deltax = ppsc->patch[p].dx[0];
-    double deltay = grid.domain.dx[1]; // FIXME double/float
+    double deltax = grid.domain.dx[0]; // FIXME double/float
+    double deltay = grid.domain.dx[1];
     double deltaz = grid.domain.dx[2];
     double inv_sum = 0.;
     int nr_levels;
@@ -125,9 +125,17 @@ struct Marder_ : MarderBase
 	* .5 * ppsc->dt * diffusion / deltaz;
     } psc_foreach_3d_more_end;
 #endif
-
-    assert(grid.isInvar(0));
-
+    
+    if (!grid.isInvar(0)) {
+      int l[3] = { l_cc[0], l_nc[1], l_nc[2] };
+      int r[3] = { r_cc[0], r_nc[1], r_nc[2] };
+      psc_foreach_3d_more(ppsc, p, ix, iy, iz, l, r) {
+	flds(EX, ix,iy,iz) += 
+	  (f(0, ix+dx,iy,iz) - f(0, ix,iy,iz))
+	  * .5 *grid.dt * diffusion / deltax;
+      } psc_foreach_3d_more_end;
+    }
+    
     {
       int l[3] = { l_nc[0], l_cc[1], l_nc[2] };
       int r[3] = { r_nc[0], r_cc[1], r_nc[2] };
