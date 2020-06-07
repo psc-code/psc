@@ -95,7 +95,7 @@ __global__ static void k_find_random_cell_indices_ids(
     uint n_prts = dmprts.off_[(p + 1) * n_blocks_per_patch] - off;
     if (n < n_prts) {
       float4 xi4 = dmprts.storage.xi4[n + off];
-      d_random_idx[n + off] = dmprts.validCellIndex(xi4, p) + rng.uniform();
+      d_random_idx[n + off] = dmprts.validCellIndex(xi4, p) + .5f * rng.uniform();
       d_id[n + off] = n + off;
     }
   }
