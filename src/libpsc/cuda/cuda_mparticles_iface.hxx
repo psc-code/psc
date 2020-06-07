@@ -33,5 +33,6 @@ struct cuda_mparticles_iface
 
   static bool check_after_push(CudaMparticles* cmprts);
   static void dump(const CudaMparticles* cmprts, const std::string& filename);
+  static void clear(CudaMparticles* cmprts);
 };
 

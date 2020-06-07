@@ -85,6 +85,12 @@ void cuda_mparticles_iface<BS>::dump(const CudaMparticles* cmprts, const std::st
   cmprts->dump(filename);
 }
 
+template<typename BS>
+void cuda_mparticles_iface<BS>::clear(CudaMparticles* cmprts)
+{
+  cmprts->clear();
+}
+
 template struct cuda_mparticles_iface<BS144>;
 template struct cuda_mparticles_iface<BS444>;
 

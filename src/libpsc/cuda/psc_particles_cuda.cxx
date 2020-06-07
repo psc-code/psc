@@ -16,6 +16,7 @@ static void copy_from(MparticlesBase& mprts_base, MparticlesBase& mprts_other_ba
   auto& mprts_other = dynamic_cast<MP&>(mprts_other_base);
   auto n_prts_by_patch = mprts_other.sizeByPatch();
   //mp.reserve_all(n_prts_by_patch); FIXME, would still be a good hint for the injector
+  mprts.clear();
 
   auto accessor = mprts_other.accessor();
   auto inj = mprts.injector();
