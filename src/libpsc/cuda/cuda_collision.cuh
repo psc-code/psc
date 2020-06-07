@@ -46,6 +46,7 @@ struct CudaCollision
     if (cmprts.n_prts == 0) {
       return;
     }
+    cmprts.reorder();
     sort_.find_indices_ids(cmprts);
     sort_.sort();
     sort_.find_offsets();
