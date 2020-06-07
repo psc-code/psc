@@ -494,7 +494,7 @@ void run()
   // ----------------------------------------------------------------------
   // hand off to PscIntegrator to run the simulation
 
-  auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
+  auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
                                           balance, collision, checks, marder,
                                           diagnostics, lf_inject);
 
