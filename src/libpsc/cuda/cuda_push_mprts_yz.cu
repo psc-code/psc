@@ -191,21 +191,21 @@ struct CudaPushParticles
 		    x[1] + .5f * dx[1] + .5f,
 		    x[2] + .5f * dx[2] + .5f, };
     float h = (1.f / 12.f) * dx[0] * dx[1] * dx[2];
-    if (dx[0] != 0.f) {
+    if (1||dx[0] != 0.f) {
       float fnqx = qni_wni * dmprts.fnqxs();
       scurr.add(0, i[0], i[1]  , i[2]  , fnqx * (dx[0] * (1.f - xa[1]) * (1.f - xa[2]) + h), current_block.ci0);
       scurr.add(0, i[0], i[1]+1, i[2]  , fnqx * (dx[0] * (      xa[1]) * (1.f - xa[2]) - h), current_block.ci0);
       scurr.add(0, i[0], i[1]  , i[2]+1, fnqx * (dx[0] * (1.f - xa[1]) * (      xa[2]) + h), current_block.ci0);
       scurr.add(0, i[0], i[1]+1, i[2]+1, fnqx * (dx[0] * (      xa[1]) * (      xa[2]) - h), current_block.ci0);
     }
-    if (dx[1] != 0.f) {
+    if (1||dx[1] != 0.f) {
       float fnqy = qni_wni * dmprts.fnqys();
       scurr.add(1, i[0]  , i[1], i[2]  , fnqy * (dx[1] * (1.f - xa[0]) * (1.f - xa[2]) + h), current_block.ci0);
       scurr.add(1, i[0]+1, i[1], i[2]  , fnqy * (dx[1] * (      xa[0]) * (1.f - xa[2]) - h), current_block.ci0);
       scurr.add(1, i[0]  , i[1], i[2]+1, fnqy * (dx[1] * (1.f - xa[0]) * (      xa[2]) + h), current_block.ci0);
       scurr.add(1, i[0]+1, i[1], i[2]+1, fnqy * (dx[1] * (      xa[0]) * (      xa[2]) - h), current_block.ci0);
     }
-    if (dx[2] != 0.f) {
+    if (1||dx[2] != 0.f) {
       float fnqz = qni_wni * dmprts.fnqzs();
       scurr.add(2, i[0]  , i[1]  , i[2], fnqz * (dx[2] * (1.f - xa[0]) * (1.f - xa[1]) + h), current_block.ci0);
       scurr.add(2, i[0]+1, i[1]  , i[2], fnqz * (dx[2] * (      xa[0]) * (1.f - xa[1]) - h), current_block.ci0);
