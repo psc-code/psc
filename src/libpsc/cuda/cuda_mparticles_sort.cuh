@@ -80,7 +80,7 @@ inline void find_cell_indices_ids(cuda_mparticles<BS>& cmprts,
 
 template <typename BS>
 __global__ static void k_find_random_cell_indices_ids(
-  DMparticlesCuda<BS> dmprts, float* d_random_idx, uint* d_id, int n_patches,
+  DMparticlesCuda<BS> dmprts, double* d_random_idx, uint* d_id, int n_patches,
   int n_blocks_per_patch, RngStateCuda::Device rng_state)
 {
   int n = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
@@ -95,7 +95,7 @@ __global__ static void k_find_random_cell_indices_ids(
     uint n_prts = dmprts.off_[(p + 1) * n_blocks_per_patch] - off;
     if (n < n_prts) {
       float4 xi4 = dmprts.storage.xi4[n + off];
-      d_random_idx[n + off] = dmprts.validCellIndex(xi4, p) + .5f * rng.uniform();
+      d_random_idx[n + off] = dmprts.validCellIndex(xi4, p) + .5 * rng.uniform();
       d_id[n + off] = n + off;
     }
   }
@@ -268,7 +268,7 @@ struct cuda_mparticles_randomize_sort
   }
 
 public:
-  thrust::device_vector<float> d_random_idx; // randomized cell index
+  thrust::device_vector<double> d_random_idx; // randomized cell index
   thrust::device_vector<uint> d_id;          // particle id used for reordering
   thrust::device_vector<uint>
     d_off; // particles per cell
