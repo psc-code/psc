@@ -12,8 +12,10 @@
 #include "push_particles_esirkepov.hxx"
 #include "push_particles_1vb.hxx"
 
+#ifndef __CUDACC__
 #define atomicAdd(addr, val) \
   do { *(addr) += (val); } while (0)
+#endif
 
 template<typename fields_t, typename dim_curr>
 struct curr_cache_t : fields_t
