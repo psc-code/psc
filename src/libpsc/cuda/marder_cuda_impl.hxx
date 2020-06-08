@@ -17,6 +17,7 @@ struct MarderCuda : MarderBase
   using Mfields = MfieldsCuda;
   using Mparticles = MparticlesCuda<BS>;
   using real_t = MfieldsState::real_t;
+  using Moment_t = Moment_rho_1st_nc<MparticlesSingle, MfieldsSingle>;
   
   MarderCuda(const Grid_t& grid, real_t diffusion, int loop, bool dump)
     : grid_{grid},
@@ -24,64 +25,43 @@ struct MarderCuda : MarderBase
       loop_{loop},
       dump_{dump},
       item_rho_{grid},
-      item_div_e_{grid}
+      item_dive_{grid},
+      bnd_{grid, grid.ibn},
+      bnd_mf_{grid, grid.ibn},
+      rho_{grid, 1, grid.ibn},
+      res_{grid, 1, grid.ibn}
   {
-#if 0
-    bnd_ = psc_bnd_create(grid.comm());
-    psc_bnd_set_name(bnd_, "marder_bnd");
-    psc_bnd_set_type(bnd_, "cuda");
-    psc_bnd_set_psc(bnd_, ppsc);
-    psc_bnd_setup(bnd_);
-#endif
-    MHERE;
-    return;
-    assert(0);
-
-    // FIXME, output_fields should be taking care of their own psc_bnd?
     if (dump_) {
-      io_ = mrc_io_create(grid.comm());
-      mrc_io_set_type(io_, "xdmf_collective");
-      mrc_io_set_name(io_, "mrc_io_marder");
-      mrc_io_set_param_string(io_, "basename", "marder");
-      mrc_io_set_from_options(io_);
-      mrc_io_setup(io_);
+      io_.open("marder");
     }
   }
 
-  ~MarderCuda()
+  void calc_aid_fields(MfieldsState& mflds, Mfields& rho)
   {
-    //psc_bnd_destroy(bnd_);
-    if (dump_) {
-      mrc_io_destroy(io_);
-    }
-  }
-  
-  void calc_aid_fields(MfieldsState& mflds, Mparticles& mprts)
-  {
-    item_div_e_(mprts.grid(), mflds, mprts); // FIXME, should accept NULL for particles
-  
+    item_dive_(mflds.grid(), mflds);
+    auto& dive = item_dive_.result();
+	       
     if (dump_) {
       static int cnt;
-      mrc_io_open(io_, "w", cnt, cnt);//ppsc->timestep, ppsc->timestep * ppsc->dt);
+      io_.begin_step(cnt, cnt);//ppsc->timestep, ppsc->timestep * ppsc->dt);
       cnt++;
-      // psc_mfields_write_as_mrc_fld(item_rho_.mres().mflds(), io_);
-      // psc_mfields_write_as_mrc_fld(item_div_e_.mres().mflds(), io_);
-      mrc_io_close(io_);
+      io_.write(rho, rho.grid(), "rho", {"rho"});
+      io_.write(dive, dive.grid(), "dive", {"dive"});
+      io_.end_step();
     }
 
-    assert(0);
-    //item_div_e_.mres().axpy_comp(0, -1., item_rho_.mres(), 0);
+    res_.copy_comp_yz(0, dive, 0);
+    res_.axpy_comp_yz(0, -1., rho, 0);
     // FIXME, why is this necessary?
-    //auto bnd = PscBndBase(bnd_);
-    //bnd.fill_ghosts(item_div_e_.mres(), 0, 1);
+    bnd_mf_.fill_ghosts(res_, 0, 1);
   }
 
   // ----------------------------------------------------------------------
-  // psc_marder_cuda_correct
+  // correct
   //
   // Do the modified marder correction (See eq.(5, 7, 9, 10) in Mardahl and Verboncoeur, CPC, 1997)
 
-  void correct(MfieldsState& mflds, Mfields& mf)
+  void correct(MfieldsState& mflds)
   {
     assert(mflds._grid().isInvar(0));
 
@@ -106,10 +86,10 @@ struct MarderCuda : MarderBase
     fac[2] = .5 * grid.dt * diffusion / dx[2];
 
     cuda_mfields *cmflds = mflds.cmflds();
-    cuda_mfields *cmf = mf.cmflds();
+    cuda_mfields *cmf = res_.cmflds();
 
     // OPT, do all patches in one kernel
-    for (int p = 0; p < mf.n_patches(); p++) {
+    for (int p = 0; p < mflds.n_patches(); p++) {
       int l_cc[3] = {0, 0, 0}, r_cc[3] = {0, 0, 0};
       int l_nc[3] = {0, 0, 0}, r_nc[3] = {0, 0, 0};
       for (int d = 0; d < 3; d++) {
@@ -134,10 +114,27 @@ struct MarderCuda : MarderBase
       cuda_marder_correct_yz(cmflds, cmf, p, fac, ly, ry, lz, rz);
     }
   }
-
+  
   void operator()(MfieldsStateCuda& mflds, MparticlesCuda<BS>& mprts)
   {
-    MHERE;
+    static int pr;
+    if (!pr) {
+      pr = prof_register("marder", 1., 0, 0);
+    }
+
+    prof_start(pr);
+    // need to fill ghost cells first (should be unnecessary with only variant 1) FIXME
+    bnd_.fill_ghosts(mflds, EX, EX+3);
+
+    item_rho_(mprts);
+    auto &rho = item_rho_.result();
+
+    for (int i = 0; i < loop_; i++) {
+      calc_aid_fields(mflds, rho);
+      correct(mflds);
+      bnd_.fill_ghosts(mflds, EX, EX+3);
+    }
+    prof_stop(pr);
   }
   
 private:
@@ -146,8 +143,14 @@ private:
   int loop_; //< execute this many relaxation steps in a loop
   bool dump_; //< dump div_E, rho
 
-  FieldsItemFields<Item_dive_cuda> item_div_e_;
+  WriterMRC io_; //< for debug dumping
+
+  BndCuda3<MfieldsState> bnd_;
+  BndCuda3<Mfields> bnd_mf_;
+  Mfields rho_;
+  Mfields res_;
+  
   Moment_rho_1st_nc_cuda<MparticlesCuda<BS144>, dim_yz> item_rho_; // FIXME, hardcoded dim_yz
-  mrc_io *io_; //< for debug dumping
+  FieldsItemFields<Item_dive_cuda> item_dive_;
 };
 
