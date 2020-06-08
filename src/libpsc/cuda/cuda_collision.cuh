@@ -19,10 +19,10 @@ struct CudaCollision;
 template <typename cuda_mparticles, typename RngState>
 __global__ static void k_collide(
   DMparticlesCuda<typename cuda_mparticles::BS> dmprts, uint* d_off, uint* d_id,
-  float nudt0, typename RngState::Device rng_state, uint n_cells)
+  float nudt0, typename RngState::Device rng_state, uint n_cells, uint n_cells_per_patch)
 {
   CudaCollision<cuda_mparticles, RngState>::d_collide(
-    dmprts, d_off, d_id, nudt0, rng_state, n_cells);
+    dmprts, d_off, d_id, nudt0, rng_state, n_cells, n_cells_per_patch);
 }
 
 // ======================================================================
@@ -46,6 +46,7 @@ struct CudaCollision
     if (cmprts.n_prts == 0) {
       return;
     }
+    cmprts.reorder();
     sort_.find_indices_ids(cmprts);
     sort_.sort();
     sort_.find_offsets();
@@ -62,6 +63,8 @@ struct CudaCollision
       rng_state_.resize(blocks * THREADS_PER_BLOCK);
     }
 
+    int n_cells_per_patch = cmprts.grid().ldims[0] * cmprts.grid().ldims[1] * cmprts.grid().ldims[2];
+
     // all particles need to have same weight!
     real_t wni = 1.; // FIXME, there should at least be some assert to enforce
                      // this //prts[n_start].w());
@@ -69,14 +72,14 @@ struct CudaCollision
 
     k_collide<cuda_mparticles, RngState><<<dimGrid, THREADS_PER_BLOCK>>>(
       cmprts, sort_.d_off.data().get(), sort_.d_id.data().get(), nudt0,
-      rng_state_, cmprts.n_cells());
+      rng_state_, cmprts.n_cells(), n_cells_per_patch);
     cuda_sync_if_enabled();
   }
 
   __device__ static void d_collide(DMparticles dmprts, uint* d_off, uint* d_id,
                                    float nudt0,
                                    typename RngState::Device rng_state,
-                                   uint n_cells)
+                                   uint n_cells, uint n_cells_per_patch)
   {
 
     int id = threadIdx.x + blockIdx.x * THREADS_PER_BLOCK;
@@ -96,6 +99,12 @@ struct CudaCollision
         // d_off[blockIdx.x]);
         auto prt1 = DParticle{dmprts.storage.load_proxy(dmprts, d_id[n])};
         auto prt2 = DParticle{dmprts.storage.load_proxy(dmprts, d_id[n + 1])};
+#ifndef NDEBUG
+	int p = bidx / n_cells_per_patch;
+	int cidx1 = dmprts.validCellIndex(dmprts.storage.xi4[d_id[n]], p);
+	int cidx2 = dmprts.validCellIndex(dmprts.storage.xi4[d_id[n + 1]], p);
+	assert(cidx1 == cidx2);
+#endif
         bc(prt1, prt2, nudt1, rng);
         // xi4 is not modified, don't need to store
         dmprts.storage.store_momentum(prt1, d_id[n]);

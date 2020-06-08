@@ -132,8 +132,8 @@ struct DParticleIndexer
     uint pos_y = __float2int_rd(xi4.y * dxi_[1]);
     uint pos_z = __float2int_rd(xi4.z * dxi_[2]);
 
-    // assert(pos_y < ldims_[1] && pos_z < ldims_[2]); FIXME, assert doesn't
     // work (on macbook)
+    assert(pos_x < ldims_[0] && pos_y < ldims_[1] && pos_z < ldims_[2]);
     return ((p * ldims_[2] + pos_z) * ldims_[1] + pos_y) * ldims_[0] + pos_x;
   }
 
@@ -148,9 +148,9 @@ struct DParticleIndexer
 
   __device__ int validBlockIndex(const int* block_pos, int p) const
   {
-    /* assert(block_pos[0] >= 0 && block_pos[0] < b_mx_[0]); */
-    /* assert(block_pos[1] >= 0 && block_pos[1] < b_mx_[1]); */
-    /* assert(block_pos[2] >= 0 && block_pos[2] < b_mx_[2]); */
+    assert(block_pos[0] >= 0 && block_pos[0] < b_mx_[0]);
+    assert(block_pos[1] >= 0 && block_pos[1] < b_mx_[1]);
+    assert(block_pos[2] >= 0 && block_pos[2] < b_mx_[2]);
 
     return ((p * b_mx_[2] + block_pos[2]) * b_mx_[1] + block_pos[1]) *
              b_mx_[0] +
