@@ -10,7 +10,7 @@
 // FIXME: if the subclass creates objects, it'd be cleaner to have them
 // be part of the subclass
 
-template<typename BS>
+template<typename BS, typename dim>
 struct MarderCuda : MarderBase
 {
   using MfieldsState = MfieldsStateCuda;
@@ -50,8 +50,8 @@ struct MarderCuda : MarderBase
       io_.end_step();
     }
 
-    res_.copy_comp_yz(0, dive, 0);
-    res_.axpy_comp_yz(0, -1., rho, 0);
+    res_.copy_comp(0, dive, 0);
+    res_.axpy_comp(0, -1., rho, 0);
     // FIXME, why is this necessary?
     bnd_mf_.fill_ghosts(res_, 0, 1);
   }
@@ -63,8 +63,6 @@ struct MarderCuda : MarderBase
 
   void correct(MfieldsState& mflds)
   {
-    assert(mflds._grid().isInvar(0));
-
     const Grid_t& grid = mflds._grid();
     // FIXME: how to choose diffusion parameter properly?
     float dx[3];
@@ -81,7 +79,7 @@ struct MarderCuda : MarderBase
     float diffusion     = diffusion_max * diffusion_;
     
     float fac[3];
-    fac[0] = 0.f;
+    fac[0] = .5 * grid.dt * diffusion / dx[0];
     fac[1] = .5 * grid.dt * diffusion / dx[1];
     fac[2] = .5 * grid.dt * diffusion / dx[2];
 
@@ -105,13 +103,20 @@ struct MarderCuda : MarderBase
     
       const int *ldims = grid.ldims;
     
+      int lx[3] = { l_cc[0], l_nc[1], l_nc[2] };
+      int rx[3] = { r_cc[0] + ldims[0], r_nc[1] + ldims[1], r_nc[2] + ldims[2] };
+    
       int ly[3] = { l_nc[0], l_cc[1], l_nc[2] };
       int ry[3] = { r_nc[0] + ldims[0], r_cc[1] + ldims[1], r_nc[2] + ldims[2] };
     
       int lz[3] = { l_nc[0], l_nc[1], l_cc[2] };
       int rz[3] = { r_nc[0] + ldims[0], r_nc[1] + ldims[1], r_cc[2] + ldims[2] };
-    
-      cuda_marder_correct_yz(cmflds, cmf, p, fac, ly, ry, lz, rz);
+
+      if (grid.isInvar(0)) {
+	cuda_marder_correct_yz(cmflds, cmf, p, fac, ly, ry, lz, rz);
+      } else {
+	cuda_marder_correct_xyz(cmflds, cmf, p, fac, lx, rx, ly, ry, lz, rz);
+      }
     }
   }
   
@@ -150,7 +155,7 @@ private:
   Mfields rho_;
   Mfields res_;
   
-  Moment_rho_1st_nc_cuda<MparticlesCuda<BS144>, dim_yz> item_rho_; // FIXME, hardcoded dim_yz
+  Moment_rho_1st_nc_cuda<Mparticles, dim> item_rho_;
   FieldsItemFields<Item_dive_cuda> item_dive_;
 };
 

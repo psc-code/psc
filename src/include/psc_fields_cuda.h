@@ -101,8 +101,8 @@ struct MfieldsCuda : MfieldsBase
   void zero_comp(int m);
 
   void zero();
-  void copy_comp_yz(int m_to, MfieldsCuda& from, int m_from);
-  void axpy_comp_yz(int ym, float a, MfieldsCuda& x, int xm);
+  void copy_comp(int m_to, MfieldsCuda& from, int m_from);
+  void axpy_comp(int ym, float a, MfieldsCuda& x, int xm);
 
   int index(int m, int i, int j, int k, int p) const;
   Patch operator[](int p) { return { *this, p }; }
