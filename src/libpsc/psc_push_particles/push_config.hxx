@@ -32,6 +32,12 @@ struct curr_cache_t : fields_t
     real_t *addr = &J(JXI+m, i,j,k);
     atomicAdd(addr, val);
   }
+  
+  void add(int m, int i, int j, int k, real_t val, const int off[3])
+  {
+    assert(off[0] == 0 && off[1] == 0 && off[2] == 0);
+    add(m, i, j, k, val);
+  }
 };
 
 template<typename _Mparticles, typename _MfieldsState,
