@@ -12,8 +12,10 @@
 #include "push_particles_esirkepov.hxx"
 #include "push_particles_1vb.hxx"
 
+#ifndef __CUDACC__
 #define atomicAdd(addr, val) \
   do { *(addr) += (val); } while (0)
+#endif
 
 template<typename fields_t, typename dim_curr>
 struct curr_cache_t : fields_t
@@ -29,6 +31,12 @@ struct curr_cache_t : fields_t
     Fields3d<fields_t, dim_curr> J(*this);
     real_t *addr = &J(JXI+m, i,j,k);
     atomicAdd(addr, val);
+  }
+  
+  void add(int m, int i, int j, int k, real_t val, const int off[3])
+  {
+    assert(off[0] == 0 && off[1] == 0 && off[2] == 0);
+    add(m, i, j, k, val);
   }
 };
 
