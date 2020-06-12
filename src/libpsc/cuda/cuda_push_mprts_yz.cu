@@ -7,6 +7,7 @@
 #include "range.hxx"
 
 #include "../psc_push_particles/inc_defs.h"
+#include "../libpsc/psc_push_particles/1vb/psc_push_particles_1vb.h"
 
 #include "psc.h" // FIXME
 
