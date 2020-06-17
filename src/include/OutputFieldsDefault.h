@@ -58,9 +58,7 @@ public:
                    FieldsItem_Moments_1st_cc<MparticlesFake>::n_comps(grid),
                    grid.ibn},
       pfield_next_{pfield_first},
-      pfield_moments_next_{pfield_moments_first},
-      tfield_next_{tfield_first},
-      tfield_moments_next_{tfield_moments_first}
+      tfield_next_{tfield_first}
   {
     if (pfield_moments_interval < 0) {
       pfield_moments_interval = pfield_interval;
@@ -81,6 +79,9 @@ public:
     if (tfield_moments_average_every < 0) {
       tfield_moments_average_every = tfield_average_every;
     }
+
+    pfield_moments_next_ = pfield_moments_first;
+    tfield_moments_next_ = tfield_moments_first;
 
     if (pfield_interval > 0) {
       io_pfd_.open("pfd", data_dir);
