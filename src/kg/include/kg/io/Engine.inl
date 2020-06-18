@@ -9,11 +9,20 @@ namespace io
 // ======================================================================
 // Engine
 
-inline Engine::Engine(File&& file, MPI_Comm comm)
-  : file_{std::move(file)}
+inline Engine::Engine(File&& file, MPI_Comm comm) : file_{std::move(file)}
 {
   MPI_Comm_rank(comm, &mpi_rank_);
   MPI_Comm_size(comm, &mpi_size_);
+}
+
+inline void Engine::beginStep(StepMode mode)
+{
+  file_.beginStep(mode);
+}
+
+inline void Engine::endStep()
+{
+  file_.endStep();
 }
 
 // ----------------------------------------------------------------------

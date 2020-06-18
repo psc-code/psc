@@ -12,10 +12,14 @@ namespace io
 // FileAdios2
 
 inline FileAdios2::FileAdios2(adios2::ADIOS& ad, const std::string& name,
-                              Mode mode)
+                              Mode mode, const std::string& io_name)
   : ad_{ad}
 {
-  io_name_ = "io-" + name;
+  if (io_name.empty()) {
+    io_name_ = "io-" + name;
+  } else {
+    io_name_ = io_name;
+  }
   io_ = ad.DeclareIO(io_name_);
   adios2::Mode adios2_mode;
   if (mode == Mode::Read) {
@@ -32,6 +36,22 @@ inline FileAdios2::~FileAdios2()
 {
   engine_.Close();
   ad_.RemoveIO(io_name_);
+}
+
+inline void FileAdios2::beginStep(StepMode mode)
+{
+  adios2::StepMode adios2_mode;
+  switch (mode) {
+    case StepMode::Append: adios2_mode = adios2::StepMode::Append; break;
+    case StepMode::Read: adios2_mode = adios2::StepMode::Read; break;
+    default: std::abort();
+  }
+  engine_.BeginStep(adios2_mode);
+}
+
+inline void FileAdios2::endStep()
+{
+  engine_.EndStep();
 }
 
 inline void FileAdios2::performPuts()

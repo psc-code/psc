@@ -1,4 +1,6 @@
 
+#pragma once
+
 #include "io_common.h"
 #include "kg/io.h"
 

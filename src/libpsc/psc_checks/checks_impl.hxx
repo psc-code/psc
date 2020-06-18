@@ -179,8 +179,7 @@ struct Checks_ : ChecksParams, ChecksBase
       }
       writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
       writer.write(rho_, grid, "rho", {"rho"});
-      writer.write(adaptMfields(dive), dive.grid(), dive.name(),
-		   dive.comp_names());
+      writer.write(dive, dive.grid(), dive.name(), dive.comp_names());
       writer.end_step();
     }
 

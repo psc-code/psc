@@ -13,7 +13,7 @@ struct isSpaceCuda : std::false_type
 
 template <typename E,
           typename std::enable_if<!isSpaceCuda<E>::value, int>::type = 0>
-MfieldsC evalMfields(const MFexpression<E>& xp)
+inline MfieldsC evalMfields(const MFexpression<E>& xp)
 {
   const auto& exp = xp.derived();
   MfieldsC mflds{exp.grid(), exp.n_comps(), exp.ibn()};
@@ -29,11 +29,29 @@ MfieldsC evalMfields(const MFexpression<E>& xp)
   return mflds;
 }
 
+inline MfieldsC evalMfields(const MfieldsSingle& _exp)
+{
+  auto& exp = const_cast<MfieldsSingle&>(_exp);
+  MfieldsC mflds{exp.grid(), exp.n_comps(), exp.ibn()};
+
+  for (int p = 0; p < mflds.n_patches(); p++) {
+    auto flds = mflds[p];
+    for (int m = 0; m < exp.n_comps(); m++) {
+      mflds.Foreach_3d(0, 0, [&](int i, int j, int k) {
+        flds(m, i, j, k) = exp[p](m, i, j, k);
+      });
+    }
+  }
+  return mflds;
+}
+
+inline const MfieldsC& evalMfields(const MfieldsC& mflds) { return mflds; }
+
 #ifdef USE_CUDA
 
 template <typename E,
           typename std::enable_if<isSpaceCuda<E>::value, int>::type = 0>
-MfieldsC evalMfields(const MFexpression<E>& xp)
+inline MfieldsC evalMfields(const MFexpression<E>& xp)
 {
   const auto& exp = xp.derived().result();
   MfieldsC mflds{exp.grid(), exp.n_comps(), exp.ibn()};
@@ -52,50 +70,25 @@ MfieldsC evalMfields(const MFexpression<E>& xp)
   return mflds;
 }
 
-#endif
-
-// ======================================================================
-// AdaptMfields
-
-template <typename EXP>
-class AdaptMfields
+inline MfieldsC evalMfields(const MfieldsCuda& mf)
 {
-  class Patch;
+  MfieldsC mflds{mf.grid(), mf.n_comps(), mf.ibn()};
 
-public:
-  explicit AdaptMfields(EXP& exp) : exp_{exp} {}
+  auto h_mf = hostMirror(mf);
+  copy(mf, h_mf);
 
-  Patch operator[](int p) const { return {*this, p}; }
-
-  int n_patches() const { return exp_.grid().n_patches(); }
-
-private:
-  EXP& exp_;
-};
-
-template <typename EXP>
-class AdaptMfields<EXP>::Patch
-{
-public:
-  using Real = typename EXP::Real;
-
-  Patch(const AdaptMfields& parent, int p) : parent_{parent}, p_{p} {}
-
-  Real operator()(int m, int i, int j, int k) const
-  {
-    return parent_.exp_(m, {i, j, k}, p_);
+  for (int p = 0; p < mflds.n_patches(); p++) {
+    auto flds = mflds[p];
+    for (int m = 0; m < mf.n_comps(); m++) {
+      mflds.Foreach_3d(0, 0, [&](int i, int j, int k) {
+        flds(m, i, j, k) = h_mf[p](m, i, j, k);
+      });
+    }
   }
-
-private:
-  const AdaptMfields<EXP>& parent_;
-  int p_;
-};
-
-template <typename E>
-AdaptMfields<E> adaptMfields(MFexpression<E>& xp)
-{
-  return AdaptMfields<E>{xp.derived()};
+  return mflds;
 }
+
+#endif
 
 // ======================================================================
 

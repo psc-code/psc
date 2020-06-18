@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<adios-config>
+    <io name="pfd">
+        <engine type="BP4">
+            <parameter key="SubStreams" value="16"/>
+        </engine>
+    </io>
+    <io name="tfd">
+        <engine type="BP4">
+            <parameter key="SubStreams" value="16"/>
+        </engine>
+    </io>
+    <io name="pfd_moments">
+        <engine type="BP4">
+            <parameter key="SubStreams" value="16"/>
+        </engine>
+    </io>
+    <io name="tfd_moments">
+        <engine type="BP4">
+            <parameter key="SubStreams" value="16"/>
+        </engine>
+    </io>
+</adios-config>

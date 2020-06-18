@@ -4,6 +4,7 @@
 #include <psc.hxx>
 #include <setup_fields.hxx>
 #include <setup_particles.hxx>
+
 #include "../libpsc/vpic/fields_item_vpic.hxx"
 #include "../libpsc/vpic/setup_fields_vpic.hxx"
 #include "OutputFieldsDefault.h"
@@ -52,6 +53,23 @@ using Collision = typename PscConfig::Collision;
 using Checks = typename PscConfig::Checks;
 using Marder = typename PscConfig::Marder;
 using OutputParticles = PscConfig::OutputParticles;
+
+// FIXME!
+MfieldsC evalMfields(const MfieldsState& _exp)
+{
+  auto& exp = const_cast<MfieldsState&>(_exp);
+  MfieldsC mflds{exp.grid(), exp.n_comps(), exp.ibn()};
+
+  for (int p = 0; p < mflds.n_patches(); p++) {
+    auto flds = mflds[p];
+    for (int m = 0; m < exp.n_comps(); m++) {
+      mflds.Foreach_3d(0, 0, [&](int i, int j, int k) {
+        flds(m, i, j, k) = exp[p](m, i, j, k);
+      });
+    }
+  }
+  return mflds;
+}
 
 // ======================================================================
 // PscHarrisParams

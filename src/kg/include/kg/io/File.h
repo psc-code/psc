@@ -14,10 +14,15 @@ namespace io
 class File
 {
 public:
+  File() = default;
   explicit File(FileBase* impl);
-  File(File&& other) = default;
+  File(File&&) = default;
+  File& operator=(File&&) = default;
   ~File();
-  
+
+  void beginStep(StepMode mode);
+  void endStep();
+
   void close();
   void performPuts();
   void performGets();

@@ -5,7 +5,6 @@
 #include "../libpsc/psc_output_fields/fields_item_moments_1st.hxx"
 #include "fields_item.hxx"
 #include "psc_particles_double.h"
-#include "writer_mrc.hxx"
 
 #include <memory>
 
@@ -40,9 +39,10 @@ struct OutputFieldsParams
 };
 
 // ======================================================================
-// OutputFields
+// OutputFieldsDefault
 
-class OutputFields : public OutputFieldsParams
+template <typename Writer>
+class OutputFieldsDefault : public OutputFieldsParams
 {
   using MfieldsFake = MfieldsC;
   using MparticlesFake = MparticlesDouble;
@@ -51,7 +51,7 @@ public:
   // ----------------------------------------------------------------------
   // ctor
 
-  OutputFields(const Grid_t& grid, const OutputFieldsParams& prm)
+  OutputFieldsDefault(const Grid_t& grid, const OutputFieldsParams& prm)
     : OutputFieldsParams{prm},
       tfd_jeh_{grid, Item_jeh<MfieldsFake>::n_comps(), {}},
       tfd_moments_{grid,
@@ -230,13 +230,13 @@ public:
 
 private:
   template <typename EXP>
-  static void _write_pfd(WriterMRC& io, EXP& pfd)
+  static void _write_pfd(Writer& io, EXP& pfd)
   {
-    io.write(adaptMfields(pfd), pfd.grid(), pfd.name(), pfd.comp_names());
+    io.write(pfd, pfd.grid(), pfd.name(), pfd.comp_names());
   }
 
   template <typename EXP>
-  static void _write_tfd(WriterMRC& io, MfieldsC& tfd, EXP& pfd, int naccum)
+  static void _write_tfd(Writer& io, MfieldsC& tfd, EXP& pfd, int naccum)
   {
     // convert accumulated values to correct temporal mean
     tfd.scale(1. / naccum);
@@ -248,10 +248,10 @@ private:
   // tfd -- FIXME?! always MfieldsC
   MfieldsC tfd_jeh_;
   MfieldsC tfd_moments_;
-  WriterMRC io_pfd_;
-  WriterMRC io_pfd_moments_;
-  WriterMRC io_tfd_;
-  WriterMRC io_tfd_moments_;
+  Writer io_pfd_;
+  Writer io_pfd_moments_;
+  Writer io_tfd_;
+  Writer io_tfd_moments_;
   int pfield_next_;
   int pfield_moments_next_;
   int tfield_next_;
@@ -259,3 +259,15 @@ private:
   int naccum_ = 0;
   int naccum_moments_ = 0;
 };
+
+#ifdef xPSC_HAVE_ADIOS2
+
+#include "writer_adios2.hxx"
+using OutputFields = OutputFieldsDefault<WriterADIOS2>;
+
+#else
+
+#include "writer_mrc.hxx"
+using OutputFields = OutputFieldsDefault<WriterMRC>;
+
+#endif

@@ -3,10 +3,6 @@
 
 #include <mrc_io.h>
 
-#ifdef USE_CUDA
-#include <psc_fields_cuda.h>
-#endif
-
 class WriterMRC
 {
 public:
@@ -75,7 +71,9 @@ public:
   void write(const Mfields& _mflds, const Grid_t& grid, const std::string& name,
              const std::vector<std::string>& comp_names)
   {
-    auto& mflds = const_cast<Mfields&>(_mflds);
+    auto&& eval_mflds = evalMfields(_mflds);
+    auto& mflds = const_cast<MfieldsC&>(eval_mflds);
+    
     int n_comps = comp_names.size();
     // FIXME, should generally equal the # of component in mflds,
     // but this way allows us to write fewer components, useful to hack around
@@ -105,17 +103,6 @@ public:
     mrc_fld_write(fld, io_.get());
     mrc_fld_destroy(fld);
   }
-
-#ifdef USE_CUDA
-  void write(const MfieldsCuda& mflds, const Grid_t& grid,
-             const std::string& name,
-             const std::vector<std::string>& comp_names)
-  {
-    auto h_mflds = hostMirror(mflds);
-    copy(mflds, h_mflds);
-    write(h_mflds, grid, name, comp_names);
-  }
-#endif
 
 private:
   std::unique_ptr<struct mrc_io, decltype(&mrc_io_close)> io_;
