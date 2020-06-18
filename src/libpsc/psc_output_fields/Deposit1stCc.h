@@ -103,7 +103,7 @@ public:
     }
   }
 
-private:
+  //private:
   const Mparticles& mprts_;
   Mfields& mflds_;
   FE flds_;
