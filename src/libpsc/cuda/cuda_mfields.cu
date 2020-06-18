@@ -364,10 +364,22 @@ HMFields hostMirror(const cuda_mfields& cmflds)
 
 void copy(const cuda_mfields& cmflds, HMFields& hmflds)
 {
+  static int pr;
+  if (!pr) {
+    pr = prof_register("cmflds to host", 1., 0, 0);
+  }
+  prof_start(pr);
   thrust::copy(cmflds.begin(), cmflds.end(), hmflds.begin());
+  prof_stop(pr);
 }
 
 void copy(const HMFields& hmflds, cuda_mfields& cmflds)
 {
+  static int pr;
+  if (!pr) {
+    pr = prof_register("cmflds from host", 1., 0, 0);
+  }
+  prof_start(pr);
   thrust::copy(hmflds.begin(), hmflds.end(), cmflds.begin());
+  prof_stop(pr);
 }

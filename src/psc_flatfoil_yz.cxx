@@ -191,7 +191,7 @@ void setupParameters()
   // -- set some generic PSC parameters
   psc_params.nmax = 10000001; // 5001;
   psc_params.cfl = 0.75;
-  psc_params.write_checkpoint_every_step = 0;
+  psc_params.stats_every = 1;
 
   // -- start from checkpoint:
   //

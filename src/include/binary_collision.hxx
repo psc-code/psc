@@ -119,8 +119,8 @@ struct BinaryCollision
     h2=ss-m1*m1-m2*m2;
     h3=(h2*h2-4.f*m1*m1*m2*m2)/(4.f*ss);
     if (h3 < 0.f) {
-      printf("WARNING: ss %g (m1+m1)^2 %g in BinaryCollision\n",
-	     ss, (m1+m2)*(m1+m2));
+      // printf("WARNING: ss %g (m1+m1)^2 %g in BinaryCollision\n",
+      // 	     ss, (m1+m2)*(m1+m2));
       return 0.f; // nudt = 0 because no collision
     }
     ppc=std::sqrt(h3);
