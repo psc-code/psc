@@ -48,12 +48,13 @@ public:
   {
     const auto& grid = mflds_cuda.grid();
     auto mflds = hostMirror(mflds_cuda);
+    auto n_comps = mflds.n_comps();
+    MfieldsSingle h_mflds(grid, n_comps, {});
 
     // FIXME, should just check for consistency? (# ghosts might differ, too)
     // reader.get("ib", mflds.ib, launch);
     // reader.get("im", mflds.im, launch);
 
-    auto n_comps = mflds.n_comps();
     auto shape = makeDims(n_comps, grid.domain.gdims);
     assert(reader.variableShape<DataType>() == shape);
     for (int p = 0; p < mflds.n_patches(); p++) {
@@ -61,10 +62,17 @@ public:
       auto count = makeDims(n_comps, grid.ldims);
       auto ib = makeDims(0, -mflds.box().ib());
       auto im = makeDims(n_comps, mflds.box().im());
-      reader.getVariable(mflds[p].data(), launch, {start, count}, {ib, im});
+      reader.getVariable(h_mflds[p].data(), launch, {start, count});
     }
-
     reader.performGets();
+
+    for (int p = 0; p < mflds.n_patches(); p++) {
+      for (int m = 0; m < n_comps; m++) {
+	h_mflds.Foreach_3d(0, 0, [&](int i, int j, int k) {
+	    mflds[p](m, i, j, k) = h_mflds[p](m, i, j, k);
+	  });
+      }
+    }
     copy(mflds, mflds_cuda);
   }
 };
