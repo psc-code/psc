@@ -91,51 +91,6 @@ inline MfieldsC evalMfields(const MfieldsCuda& mf)
 #endif
 
 // ======================================================================
-// AdaptMfields
-
-template <typename EXP>
-class AdaptMfields
-{
-  class Patch;
-
-public:
-  explicit AdaptMfields(EXP& exp) : exp_{exp} {}
-
-  int n_comps() const { return exp_.n_comps(); }
-
-  Patch operator[](int p) const { return {*this, p}; }
-
-  int n_patches() const { return exp_.grid().n_patches(); }
-
-private:
-  EXP& exp_;
-};
-
-template <typename EXP>
-class AdaptMfields<EXP>::Patch
-{
-public:
-  using Real = typename EXP::Real;
-
-  Patch(const AdaptMfields& parent, int p) : parent_{parent}, p_{p} {}
-
-  Real operator()(int m, int i, int j, int k) const
-  {
-    return parent_.exp_(m, {i, j, k}, p_);
-  }
-
-private:
-  const AdaptMfields<EXP>& parent_;
-  int p_;
-};
-
-template <typename E>
-AdaptMfields<E> adaptMfields(MFexpression<E>& xp)
-{
-  return AdaptMfields<E>{xp.derived()};
-}
-
-// ======================================================================
 
 using MfieldsState_t = MfieldsStateDouble;
 using Mfields_t = MfieldsC;
