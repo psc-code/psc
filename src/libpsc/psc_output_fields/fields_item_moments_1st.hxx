@@ -227,6 +227,9 @@ public:
 
 #ifdef USE_CUDA
 
+#include "../libpsc/cuda/mparticles_cuda.hxx"
+#include "psc_particles_single.h"
+
 // ======================================================================
 // Moments_1st
 //
