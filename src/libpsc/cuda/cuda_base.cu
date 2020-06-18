@@ -22,6 +22,12 @@ cuda_base_init(void)
     return;
   }
 
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  if (rank != 0) {
+    return;
+  }
+  
   for (int dev = 0; dev < deviceCount; ++dev) {
     cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, dev);
