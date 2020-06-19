@@ -54,13 +54,15 @@ struct CudaCollision
     //   printf("off[%d] = %d\n", c, int(sort_by_cell.d_off[c]));
     // }
 
+    const int N_BLOCKS = 512;
+    
     int blocks = cmprts.n_cells();
-    if (blocks > 32768)
-      blocks = 32768;
+    if (blocks > N_BLOCKS)
+      blocks = N_BLOCKS;
     dim3 dimGrid(blocks);
 
     if (blocks * THREADS_PER_BLOCK > rng_state_.size()) {
-      rng_state_.resize(blocks * THREADS_PER_BLOCK);
+      rng_state_.resize(N_BLOCKS * THREADS_PER_BLOCK);
     }
 
     int n_cells_per_patch = cmprts.grid().ldims[0] * cmprts.grid().ldims[1] * cmprts.grid().ldims[2];
