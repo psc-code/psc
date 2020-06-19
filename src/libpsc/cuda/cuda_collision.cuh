@@ -43,13 +43,21 @@ struct CudaCollision
 
   void operator()(cuda_mparticles& cmprts)
   {
+    static int pr, pr_sort;
+    if (!pr) {
+      pr = prof_register("coll kernel", 1., 0, 0);
+      pr_sort = prof_register("coll sort", 1., 0, 0);
+    }
+    
     if (cmprts.n_prts == 0) {
       return;
     }
+    prof_start(pr_sort);
     cmprts.reorder();
     sort_.find_indices_ids(cmprts);
     sort_.sort();
     sort_.find_offsets();
+    prof_stop(pr_sort);
     // for (int c = 0; c <= cmprts.n_cells(); c++) {
     //   printf("off[%d] = %d\n", c, int(sort_by_cell.d_off[c]));
     // }
@@ -72,10 +80,12 @@ struct CudaCollision
                      // this //prts[n_start].w());
     real_t nudt0 = wni / nicell_ * interval_ * dt_ * nu_;
 
+    prof_start(pr);
     k_collide<cuda_mparticles, RngState><<<dimGrid, THREADS_PER_BLOCK>>>(
       cmprts, sort_.d_off.data().get(), sort_.d_id.data().get(), nudt0,
       rng_state_, cmprts.n_cells(), n_cells_per_patch);
     cuda_sync_if_enabled();
+    prof_stop(pr);
   }
 
   __device__ static void d_collide(DMparticles dmprts, uint* d_off, uint* d_id,
