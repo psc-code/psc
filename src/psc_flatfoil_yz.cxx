@@ -11,7 +11,7 @@
 #include "heating_spot_foil.hxx"
 #include "inject_impl.hxx"
 
-//#define DIM_3D
+#define DIM_3D
 
 // ======================================================================
 // Particle kinds
@@ -191,6 +191,7 @@ void setupParameters()
   // -- set some generic PSC parameters
   psc_params.nmax = 10000001; // 5001;
   psc_params.cfl = 0.75;
+  psc_params.write_checkpoint_every_step = 1000;
   psc_params.stats_every = 1;
 
   // -- start from checkpoint:
@@ -206,7 +207,7 @@ void setupParameters()
   // -- Set some parameters specific to this case
   g.BB = 0.;
   g.Zi = 1.;
-  g.mass_ratio = 100.;
+  g.mass_ratio = 64.;
   g.lambda0 = 20.;
 
   g.target_n = 2.5;
@@ -262,7 +263,7 @@ Grid_t* setupGrid()
 
   // -- setup normalization
   auto norm_params = Grid_t::NormalizationParams::dimensionless();
-  norm_params.nicell = 50;
+  norm_params.nicell = 100;
 
   double dt = psc_params.cfl * courant_length(domain);
   Grid_t::Normalization norm{norm_params};
@@ -360,7 +361,7 @@ void run()
   // Set up various objects needed to run this case
 
   // -- Balance
-  psc_params.balance_interval = 1000;
+  psc_params.balance_interval = 500;
   Balance balance{psc_params.balance_interval, 3};
 
   // -- Sort
@@ -374,19 +375,21 @@ void run()
 
   // -- Checks
   ChecksParams checks_params{};
-  checks_params.continuity_every_step = 50;
+  checks_params.continuity_every_step = 0;
   checks_params.continuity_threshold = 1e-4;
   checks_params.continuity_verbose = true;
-  checks_params.gauss_every_step = 50;
+  checks_params.continuity_dump_always = false;
+  checks_params.gauss_every_step = 100;
   checks_params.gauss_threshold = 1e-4;
   checks_params.gauss_verbose = true;
+  checks_params.gauss_dump_always = false;
   Checks checks{grid, MPI_COMM_WORLD, checks_params};
 
   // -- Marder correction
   double marder_diffusion = 0.9;
   int marder_loop = 3;
   bool marder_dump = false;
-  psc_params.marder_interval = 50;
+  psc_params.marder_interval = 100;
   Marder marder(grid, marder_diffusion, marder_loop, marder_dump);
 
   // ----------------------------------------------------------------------
@@ -396,10 +399,10 @@ void run()
 
   // -- output fields
   OutputFieldsParams outf_params{};
-  outf_params.pfield_interval = 400;
-  outf_params.tfield_interval = 400;
-  outf_params.tfield_average_every = 40;
-  outf_params.tfield_moments_average_every = 80;
+  outf_params.pfield_interval = 500;
+  outf_params.tfield_interval = 500;
+  outf_params.tfield_average_every = 50;
+  outf_params.tfield_moments_average_every = 50;
   OutputFields outf{grid, outf_params};
 
   // -- output particles
@@ -423,7 +426,7 @@ void run()
   heating_foil_params.zh = 1. * g.d_i;
   heating_foil_params.xc = 0. * g.d_i;
   heating_foil_params.yc = 20. * g.d_i;
-  heating_foil_params.rH = 20. * g.d_i;
+  heating_foil_params.rH = 12. * g.d_i;
   heating_foil_params.T = g.target_Te_heat;
   heating_foil_params.Mi = grid.kinds[MY_ION].m;
   HeatingSpotFoil heating_spot{grid, heating_foil_params};

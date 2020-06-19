@@ -241,7 +241,7 @@ struct cuda_mparticles_randomize_sort
     }
 
     if (max_n_prts > rng_state_.size()) {
-      rng_state_.resize(max_n_prts);
+      rng_state_.resize(2*max_n_prts);
     }
     
     dim3 dimGrid((max_n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);

@@ -558,7 +558,7 @@ private:
   {
     // pushp_.stagger(mprts, mflds); FIXME, vpic does it
 
-    checks_.gauss(mprts_, mflds_);
+    // checks_.gauss(mprts_, mflds_);
   }
 #endif
 
