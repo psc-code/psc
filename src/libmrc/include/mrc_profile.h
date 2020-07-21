@@ -18,7 +18,16 @@ struct prof_info {
   long long total_time;
 };
 
+struct prof_data {
+  const char *name;
+  float simd;
+  int flops;
+  int bytes;
+};
+
 #define MAX_PROF (100)
+
+extern struct prof_data prof_data[MAX_PROF];
 
 extern struct prof_globals {
   int event_set;
