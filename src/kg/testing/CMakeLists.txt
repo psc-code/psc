@@ -1,7 +1,7 @@
 
 macro(add_kg_test name src)
   add_executable(${name} ${src})
-  target_link_libraries(${name} GTest::GTest GTest::Main kg)
+  target_link_libraries(${name} GTest::GTest GTest::Main kg psc)
   if (USE_GTEST_DISCOVER_TESTS)
     gtest_discover_tests(${name})
   else()

@@ -13,7 +13,7 @@
 #define __host__
 #define __device__
 
-typedef struct { float x; float y; float z; float w; } float4;
+//typedef struct { float x; float y; float z; float w; } float4;
 
 #endif
 

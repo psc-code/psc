@@ -62,6 +62,10 @@ if (USE_CUDA)
   target_include_directories(psc PUBLIC cuda)
 endif()
 
+if (PSC_HAVE_RMM)
+  target_link_libraries(psc PUBLIC rapids::rmm)
+endif()
+
 if (USE_VPIC)
   add_library(VPIC::VPIC INTERFACE IMPORTED)
   set_target_properties(VPIC::VPIC PROPERTIES
