@@ -1,4 +1,13 @@
 
+#include "PscConfig.h"
+
+#ifdef PSC_HAVE_RMM
+#include <rmm/mr/device/cnmem_memory_resource.hpp>
+#include <rmm/mr/device/cuda_memory_resource.hpp>
+#include <rmm/mr/device/default_memory_resource.hpp>
+#include <rmm/thrust_rmm_allocator.h>
+#endif
+
 #include <cstdio>
 #include <cassert>
 #include <cuda_bits.h>
@@ -12,6 +21,11 @@ cuda_base_init(void)
     return;
 
   first_time = false;
+
+#ifdef PSC_HAVE_RMM
+  static rmm::mr::cnmem_memory_resource pool_mr;
+  rmm::mr::set_default_resource(&pool_mr);
+#endif
 
   int deviceCount;
   cudaGetDeviceCount(&deviceCount);

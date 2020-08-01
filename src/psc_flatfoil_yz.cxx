@@ -10,14 +10,7 @@
 #include "../libpsc/psc_heating/psc_heating_impl.hxx"
 #include "heating_spot_foil.hxx"
 #include "inject_impl.hxx"
-#ifdef PSC_HAVE_RMM
-#include "rmm/thrust_rmm_allocator.h"
-#include "rmm/mr/device/default_memory_resource.hpp"
-#include "rmm/mr/device/cuda_memory_resource.hpp"
-#include "rmm/mr/device/cnmem_memory_resource.hpp"
-rmm::mr::cnmem_memory_resource* pool_mr;
 
-#endif
 #define DIM_3D
 
 // ======================================================================
@@ -520,10 +513,7 @@ void run()
 int main(int argc, char** argv)
 {
   psc_init(argc, argv);
-#ifdef PSC_HAVE_RMM
-  pool_mr = new rmm::mr::cnmem_memory_resource{(1<<30)}; 
-  rmm::mr::set_default_resource(pool_mr);
-#endif
+
   run();
 
   psc_finalize();
