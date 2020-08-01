@@ -87,7 +87,7 @@ __global__ static void k_find_random_cell_indices_ids(
   if (n > rng_state.size()) {
     return;
   }
-  
+
   auto rng = rng_state[n];
 
   for (int p = 0; p < n_patches; p++) {
@@ -95,7 +95,8 @@ __global__ static void k_find_random_cell_indices_ids(
     uint n_prts = dmprts.off_[(p + 1) * n_blocks_per_patch] - off;
     if (n < n_prts) {
       float4 xi4 = dmprts.storage.xi4[n + off];
-      d_random_idx[n + off] = dmprts.validCellIndex(xi4, p) + .5 * rng.uniform();
+      d_random_idx[n + off] =
+        dmprts.validCellIndex(xi4, p) + .5 * rng.uniform();
       d_id[n + off] = n + off;
     }
   }
@@ -180,7 +181,12 @@ struct cuda_mparticles_sort
 
   void stable_sort_cidx()
   {
+#ifdef PSC_HAVE_RMM
+    thrust::stable_sort_by_key(rmm::exec_policy(0)->on(0), d_idx.begin(),
+                               d_idx.end(), d_id.begin());
+#else
     thrust::stable_sort_by_key(d_idx.begin(), d_idx.end(), d_id.begin());
+#endif
   }
 
   void find_offsets()
@@ -241,9 +247,9 @@ struct cuda_mparticles_randomize_sort
     }
 
     if (max_n_prts > rng_state_.size()) {
-      rng_state_.resize(2*max_n_prts);
+      rng_state_.resize(2 * max_n_prts);
     }
-    
+
     dim3 dimGrid((max_n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
     dim3 dimBlock(THREADS_PER_BLOCK);
 
@@ -255,7 +261,12 @@ struct cuda_mparticles_randomize_sort
 
   void sort()
   {
+#ifdef PSC_HAVE_RMM
+    thrust::sort_by_key(rmm::exec_policy(0)->on(0), d_random_idx.begin(),
+                        d_random_idx.end(), d_id.begin());
+#else
     thrust::sort_by_key(d_random_idx.begin(), d_random_idx.end(), d_id.begin());
+#endif
   }
 
   void find_offsets()
@@ -269,7 +280,7 @@ struct cuda_mparticles_randomize_sort
 
 public:
   psc::device_vector<double> d_random_idx; // randomized cell index
-  psc::device_vector<uint> d_id;          // particle id used for reordering
+  psc::device_vector<uint> d_id;           // particle id used for reordering
   psc::device_vector<uint>
     d_off; // particles per cell
            // are at indices [offsets[cell] .. offsets[cell+1][
@@ -295,7 +306,12 @@ struct cuda_mparticles_sort_by_block
 
   void stable_sort()
   {
+#ifdef PSC_HAVE_RMM
+    thrust::stable_sort_by_key(rmm::exec_policy(0)->on(0),
+                               d_idx.begin(), d_idx.end(), d_id.begin());
+#else
     thrust::stable_sort_by_key(d_idx.begin(), d_idx.end(), d_id.begin());
+#endif
   }
 
   void find_offsets()
@@ -319,10 +335,7 @@ struct cuda_mparticles_sort_by_block
     cmprts.reorder_and_offsets(d_idx, d_id, d_off);
   }
 
-  void clear()
-  {
-    thrust::fill(d_off.begin(), d_off.end(), 0);
-  }
+  void clear() { thrust::fill(d_off.begin(), d_off.end(), 0); }
 
 public:
   psc::device_vector<uint> d_idx; // block index (incl patch) per particle
@@ -333,4 +346,3 @@ public:
 };
 
 #undef THREADS_PER_BLOCK
-
