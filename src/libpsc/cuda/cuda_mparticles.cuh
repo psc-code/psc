@@ -130,7 +130,7 @@ struct MparticlesCudaStorage_
 // ======================================================================
 // MparticlesCudaStorage
 
-using MparticlesCudaStorage = MparticlesCudaStorage_<thrust::device_vector<float4>>;
+using MparticlesCudaStorage = MparticlesCudaStorage_<psc::device_vector<float4>>;
 
 // ======================================================================
 // HMparticlesCudaStorage
@@ -242,9 +242,9 @@ private:
   
 public:
   void reorder();
-  void reorder(const thrust::device_vector<uint>& d_id);
-  void reorder_and_offsets(const thrust::device_vector<uint>& d_idx, const thrust::device_vector<uint>& d_id,
-			   thrust::device_vector<uint>& d_off);
+  void reorder(const psc::device_vector<uint>& d_id);
+  void reorder_and_offsets(const psc::device_vector<uint>& d_idx, const psc::device_vector<uint>& d_id,
+			   psc::device_vector<uint>& d_off);
   void reorder_and_offsets_slow();
   void swap_alt();
 

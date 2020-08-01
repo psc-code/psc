@@ -45,7 +45,7 @@ TEST(RngStateCuda, access)
   RngStateCuda rng_state(dim_grid.x * THREADS_PER_BLOCK);
 
   ASSERT_EQ(THREADS_PER_BLOCK, 128);
-  thrust::device_vector<float> x(dim_grid.x * THREADS_PER_BLOCK);
+  psc::device_vector<float> x(dim_grid.x * THREADS_PER_BLOCK);
   kernel_random<<<dim_grid, THREADS_PER_BLOCK>>>(rng_state, x.data());
 
   float sum = thrust::reduce(x.begin(), x.end(), 0.f, thrust::plus<float>());

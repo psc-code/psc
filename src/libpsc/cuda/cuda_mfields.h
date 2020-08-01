@@ -2,6 +2,7 @@
 #ifndef CUDA_MFIELDS_H
 #define CUDA_MFIELDS_H
 
+#include "cuda_bits.h"
 #include "cuda_iface.h"
 #include "cuda_iface_bnd.h"
 #include "cuda_base.cuh"
@@ -38,7 +39,7 @@ struct cuda_mfields_bnd {
   int im[3];
   int ib[3];
   struct cuda_mfields_bnd_patch *bnd_by_patch;
-  thrust::device_vector<fields_cuda_real_t> d_buf;
+  psc::device_vector<fields_cuda_real_t> d_buf;
   thrust::host_vector<fields_cuda_real_t> h_buf;
   int *h_nei_patch;
   int *d_nei_patch;
@@ -105,7 +106,7 @@ using DFields = DMFields::fields_view_t;
 // ======================================================================
 // cuda_mfields
 
-using MfieldsStorageDeviceVector = thrust::device_vector<float>;
+using MfieldsStorageDeviceVector = psc::device_vector<float>;
 
 struct cuda_mfields : CudaMfields<MfieldsStorageDeviceVector>
 {

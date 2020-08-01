@@ -43,8 +43,8 @@ __global__ static void k_find_cell_indices_ids(DMparticlesCuda<BS> dmprts,
 
 template <typename BS>
 inline void find_cell_indices_ids(cuda_mparticles<BS>& cmprts,
-                                  thrust::device_vector<uint>& d_cidx,
-                                  thrust::device_vector<uint>& d_id)
+                                  psc::device_vector<uint>& d_cidx,
+                                  psc::device_vector<uint>& d_id)
 {
   if (cmprts.n_patches() == 0) {
     return;
@@ -127,8 +127,8 @@ __global__ static void k_find_block_indices_ids(DMparticlesCuda<BS> dmprts,
 
 template <typename BS>
 inline void find_block_indices_ids(cuda_mparticles<BS>& cmprts,
-                                   thrust::device_vector<uint>& d_idx,
-                                   thrust::device_vector<uint>& d_id)
+                                   psc::device_vector<uint>& d_idx,
+                                   psc::device_vector<uint>& d_id)
 {
   if (cmprts.n_patches() == 0) {
     return;
@@ -199,9 +199,9 @@ struct cuda_mparticles_sort
   }
 
 public:
-  thrust::device_vector<uint> d_idx; // cell index (incl patch) per particle
-  thrust::device_vector<uint> d_id;  // particle id used for reordering
-  thrust::device_vector<uint>
+  psc::device_vector<uint> d_idx; // cell index (incl patch) per particle
+  psc::device_vector<uint> d_id;  // particle id used for reordering
+  psc::device_vector<uint>
     d_off; // particles per cell
            // are at indices [offsets[cell] .. offsets[cell+1][
 };
@@ -268,9 +268,9 @@ struct cuda_mparticles_randomize_sort
   }
 
 public:
-  thrust::device_vector<double> d_random_idx; // randomized cell index
-  thrust::device_vector<uint> d_id;          // particle id used for reordering
-  thrust::device_vector<uint>
+  psc::device_vector<double> d_random_idx; // randomized cell index
+  psc::device_vector<uint> d_id;          // particle id used for reordering
+  psc::device_vector<uint>
     d_off; // particles per cell
            // are at indices [offsets[cell] .. offsets[cell+1][
   RngStateCuda rng_state_;
@@ -325,9 +325,9 @@ struct cuda_mparticles_sort_by_block
   }
 
 public:
-  thrust::device_vector<uint> d_idx; // block index (incl patch) per particle
-  thrust::device_vector<uint> d_id;  // particle id used for reordering
-  thrust::device_vector<uint>
+  psc::device_vector<uint> d_idx; // block index (incl patch) per particle
+  psc::device_vector<uint> d_id;  // particle id used for reordering
+  psc::device_vector<uint>
     d_off; // particles per cell
            // are at indices [offsets[block] .. offsets[block+1][
 };

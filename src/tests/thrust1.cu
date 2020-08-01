@@ -16,7 +16,7 @@ main(void)
   // resize H
   H.resize(2); std::cout << "H now has size " << H.size() << std::endl;
   // Copy host_vector H to device_vector D
-  thrust::device_vector<int> D = H;
+  psc::device_vector<int> D = H;
   // elements of D can be modified
   D[0] = 99; D[1] = 88;
   // print contents of D
