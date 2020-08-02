@@ -24,6 +24,8 @@ class Psc(CMakePackage):
     variant('nvtx', default=False,
             description='Enable NVTX profiling support')
     
+    depends_on('cmake@3.17.0:')
+
     depends_on('hdf5@1.8.0:1.8.999 +hl')
     depends_on('adios2@2.4.0:', when='+adios2')
     depends_on('cuda', when='+cuda')
