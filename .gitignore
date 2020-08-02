@@ -96,3 +96,7 @@ src/libmrc/tests/run.*
 *.aux
 *.synctex.gz
 test-driver
+spack-build/
+spack-build-env.txt
+spack-build-out.txt
+spack-configure-args.txt
