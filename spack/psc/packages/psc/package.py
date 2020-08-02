@@ -17,5 +17,9 @@ class Psc(CMakePackage):
 
     version('develop', branch='master')
 
+    variant('adios2', default=True,
+            description='Enable ADIOS2 support')
+
     depends_on('hdf5@1.8.0:1.8.999 +hl')
+    depends_on('adios2@2.4.0:', when='+adios2')
 
