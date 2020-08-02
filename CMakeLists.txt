@@ -42,9 +42,9 @@ find_package(MPI REQUIRED)
 
 # ADIOS2
 if(PSC_USE_ADIOS2 STREQUAL AUTO)
-  find_package(ADIOS2)
+  find_package(ADIOS2 CONFIG)
 elseif(PSC_USE_ADIOS2)
-  find_package(ADIOS2 REQUIRED)
+  find_package(ADIOS2 CONFIG REQUIRED)
 endif()
 if(ADIOS2_FOUND)
   set(PSC_HAVE_ADIOS2 1)
