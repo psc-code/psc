@@ -2,11 +2,15 @@
 #ifndef PROFILE_H
 #define PROFILE_H
 
+#include <mrc_config.h>
+
 #include <assert.h>
 #include <stdio.h>
 #include <mpi.h>
 
-#include <mrc_config.h>
+#ifdef HAVE_NVTX
+#include <nvToolsExt.h>
+#endif
 
 #define NR_EVENTS (0)
 
@@ -46,6 +50,9 @@ prof_start(int pr)
   struct timeval tv;
   gettimeofday(&tv, NULL);
   prof_globals.info[pr].time -= tv.tv_sec * 1000000ll + tv.tv_usec;
+#ifdef HAVE_NVTX
+  nvtxRangePush(prof_data[pr].name);
+#endif
 }
 
 static inline void
@@ -58,6 +65,9 @@ prof_restart(int pr)
   gettimeofday(&tv, NULL);
   prof_globals.info[pr].time -= tv.tv_sec * 1000000ll + tv.tv_usec;
   prof_globals.info[pr].cnt--;
+#ifdef HAVE_NVTX
+  nvtxRangePush(prof_data[pr].name);
+#endif
 }
 
 static inline void
@@ -70,6 +80,9 @@ prof_stop(int pr)
   gettimeofday(&tv, NULL);
   prof_globals.info[pr].time += tv.tv_sec * 1000000ll + tv.tv_usec;
   prof_globals.info[pr].cnt++;
+#ifdef HAVE_NVTX
+  nvtxRangePop();
+#endif
 }
 
 #ifdef __cplusplus

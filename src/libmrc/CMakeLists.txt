@@ -54,6 +54,11 @@ target_compile_features(mrc
     c_std_99
 )
 
+if (PSC_HAVE_NVTX)
+  target_link_libraries(mrc PUBLIC CUDA::nvToolsExt)
+  set(HAVE_NVTX 1)
+endif()
+
 configure_file (
   "${PROJECT_SOURCE_DIR}/include/mrc_config.h.in"
   "${PROJECT_BINARY_DIR}/include/mrc_config.h"
@@ -61,3 +66,4 @@ configure_file (
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 
 add_subdirectory(tests)
+
