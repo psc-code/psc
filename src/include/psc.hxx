@@ -207,9 +207,9 @@ struct Psc
                  grid().timestep() + 1, p_.nmax, grid().timestep() * grid().dt,
                  MPI_Wtime() - time_start_);
 
-      prof_start(pr_time_step_no_comm);
-      prof_stop(
-        pr_time_step_no_comm); // actual measurements are done w/ restart
+      // prof_start(pr_time_step_no_comm);
+      // prof_stop(
+      //   pr_time_step_no_comm); // actual measurements are done w/ restart
 
       step();
       grid_->timestep_++; // FIXME, too hacky
@@ -285,8 +285,8 @@ struct Psc
       balance_(grid_, mprts_);
     }
 
-    prof_start(pr_time_step_no_comm);
-    prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
+    // prof_start(pr_time_step_no_comm);
+    // prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
 
     if (p_.sort_interval > 0 && timestep % p_.sort_interval == 0) {
       // mpi_printf(comm, "***** Sorting...\n");
