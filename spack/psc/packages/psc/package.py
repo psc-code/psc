@@ -17,5 +17,5 @@ class Psc(CMakePackage):
 
     version('develop', branch='master')
 
-    depends_on('hdf5@1.8.0: +hl')
+    depends_on('hdf5@1.8.0:1.8.999 +hl')
 
