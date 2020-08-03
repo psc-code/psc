@@ -6,16 +6,9 @@
 
 struct prof_globals prof_globals;
 
-struct prof_data {
-  const char *name;
-  float simd;
-  int flops;
-  int bytes;
-};
-
 static int prof_inited;
 static int nr_prof_data;
-static struct prof_data prof_data[MAX_PROF];
+struct prof_data prof_data[MAX_PROF];
 
 void
 prof_init(void)

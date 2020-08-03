@@ -1,5 +1,5 @@
 
-cmake_minimum_required (VERSION 3.9)
+cmake_minimum_required (VERSION 3.17)
 
 foreach(policy
     CMP0074 # CMake 3.12
@@ -8,8 +8,6 @@ foreach(policy
     cmake_policy(SET ${policy} NEW)
   endif()
 endforeach()
-
-add_subdirectory(src/libmrc)
 
 project(PSC)
 
@@ -26,6 +24,7 @@ option(USE_CUDA "Build CUDA components" OFF)
 option(USE_VPIC "Interface with VPIC" OFF)
 option(USE_GTEST_DISCOVER_TESTS "Run tests to discover contained googletest cases" OFF)
 psc_option(ADIOS2 "Build with adios2 support" AUTO)
+option(PSC_USE_NVTX "Build with NVTX support" OFF)
 
 # CUDA
 if(USE_CUDA)
@@ -42,12 +41,18 @@ find_package(MPI REQUIRED)
 
 # ADIOS2
 if(PSC_USE_ADIOS2 STREQUAL AUTO)
-  find_package(ADIOS2)
+  find_package(ADIOS2 CONFIG)
 elseif(PSC_USE_ADIOS2)
-  find_package(ADIOS2 REQUIRED)
+  find_package(ADIOS2 CONFIG REQUIRED)
 endif()
 if(ADIOS2_FOUND)
   set(PSC_HAVE_ADIOS2 1)
+endif()
+
+# NVTX
+if (PSC_USE_NVTX)
+  find_package(CUDAToolkit REQUIRED)
+  set(PSC_HAVE_NVTX 1)
 endif()
 
 function(GenerateHeaderConfig)
@@ -71,7 +76,7 @@ endfunction()
 
 # FIXME, unify USE_CUDA, USE_VPIC options / autodetect
 # FIXME, mv helpers into separate file
-GenerateHeaderConfig(ADIOS2)
+GenerateHeaderConfig(ADIOS2 NVTX)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/src/include)
 # FIXME, this seems too ugly to find mrc_config.h
@@ -82,6 +87,7 @@ if (BUILD_TESTING)
   include(GoogleTest)
 endif()
 
+add_subdirectory(src/libmrc)
 add_subdirectory(src)
 
 

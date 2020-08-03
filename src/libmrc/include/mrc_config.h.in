@@ -1,3 +1,4 @@
 
 #cmakedefine HAVE_HDF5
 #cmakedefine HAVE_HDF5_PARALLEL
+#cmakedefine HAVE_NVTX
