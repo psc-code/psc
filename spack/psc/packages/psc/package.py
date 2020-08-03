@@ -19,7 +19,16 @@ class Psc(CMakePackage):
 
     variant('adios2', default=True,
             description='Enable ADIOS2 support')
-
+    variant('cuda', default=False,
+            description='Enable CUDA support')
+    
     depends_on('hdf5@1.8.0:1.8.999 +hl')
     depends_on('adios2@2.4.0:', when='+adios2')
+    depends_on('cuda', when='+cuda')
 
+    def cmake_args(self):
+        args = []
+        args += ['-DUSE_CUDA={}'.format(
+            'ON' if '+cuda' in self.spec else 'OFF')]
+
+        return args
