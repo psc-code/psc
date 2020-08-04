@@ -4,6 +4,7 @@
 #include <mrc_params.h>
 #include <mrc_domain.h>
 #include <mrc_bits.h>
+#include <mrc_profile.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -373,6 +374,12 @@ mrc_ddc_multi_setup(struct mrc_ddc *ddc)
 {
   struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
 
+  static int pr;
+  if (!pr) {
+    pr = prof_register("mrc_ddc_multi_setup", 1, 0, 0);
+  }
+
+  prof_start(pr);
   assert(sub->domain);
   mrc_domain_get_nr_procs(sub->domain, sub->np);
   mrc_domain_get_bc(sub->domain, sub->bc);
@@ -387,6 +394,7 @@ mrc_ddc_multi_setup(struct mrc_ddc *ddc)
 			       ddc_init_inside, ddc_init_outside, ddc->ibn);
   mrc_ddc_multi_setup_pattern2(ddc, &sub->add_ghosts2,
 			       ddc_init_outside, ddc_init_inside, ddc->ibn);
+  prof_stop(pr);
 }
 
 // ----------------------------------------------------------------------
