@@ -97,4 +97,15 @@ EXTERN_C void prof_print(void);
 EXTERN_C void prof_print_file(FILE* f);
 EXTERN_C void prof_print_mpi(MPI_Comm comm);
 
+#define prof_barrier(str)                                                      \
+  do {                                                                         \
+    static int pr;                                                             \
+    if (!pr) {                                                                 \
+      pr = prof_register(str, 1., 0, 0);                                       \
+    }                                                                          \
+    prof_start(pr);                                                            \
+    MPI_Barrier(MPI_COMM_WORLD);                                               \
+    prof_stop(pr);                                                             \
+  } while (0)
+
 #endif
