@@ -262,9 +262,7 @@ struct CudaBnd
     thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
 #else
     thrust::device_ptr<real_t> d_flds{cmflds.data()};
-    // prof_start(pr_ddc0);
-    MPI_Barrier(MPI_COMM_WORLD);
-    // prof_stop(pr_ddc0);
+    prof_barrier("ddc_run");
 
     // prof_start(pr_ddc1);
     postReceives(maps);
