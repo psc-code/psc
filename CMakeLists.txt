@@ -29,6 +29,11 @@ option(PSC_USE_RMM "Build with RMM memory manager support" OFF)
 
 # CUDA
 if(USE_CUDA)
+  # This is needed on Summit when not using modules (in a spack build) to
+  # make sure that nvcc uses the same host compiler that was otherwise
+  # specified
+  set(CMAKE_CUDA_HOST_COMPILER "${CMAKE_CXX_COMPILER}")
+
   set(_save_CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS}")
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -std c++14")
 
