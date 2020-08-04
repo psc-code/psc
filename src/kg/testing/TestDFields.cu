@@ -29,7 +29,7 @@ void set_dfields(DFields d_flds)
 
 TEST(DFields, Ctor)
 {
-  thrust::device_vector<float> d_storage(6);
+  psc::device_vector<float> d_storage(6);
   
   auto d_flds = DFields{{{0, 0, 0}, {3, 2, 1}}, 1, thrust::raw_pointer_cast(d_storage.data())};
   //set_raw<<<1, 1>>>(d_flds.data());

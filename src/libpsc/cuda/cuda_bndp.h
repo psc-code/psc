@@ -178,12 +178,12 @@ struct cuda_bndp<CudaMparticles, dim_yz>
   void scan_scatter_received_gold(CudaMparticles* cmprts, uint n_prts_recv);
   void update_offsets_gold(CudaMparticles* cmprts);
 
-  thrust::device_vector<uint> d_spine_cnts;
-  thrust::device_vector<uint> d_spine_sums;
+  psc::device_vector<uint> d_spine_cnts;
+  psc::device_vector<uint> d_spine_sums;
   uint n_prts_send;
-  thrust::device_vector<uint> d_bnd_off;
+  psc::device_vector<uint> d_bnd_off;
 
-  thrust::device_vector<uint>
+  psc::device_vector<uint>
     d_sums; // FIXME, should go away (only used in some gold stuff)
 
   BndBuffers bufs;

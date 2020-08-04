@@ -192,18 +192,18 @@ struct psc_bnd_particles_ordered : BndParticles_<MP>, bnd_particles_policy_order
 #if 0
     auto& mprts = mprts_base.get_as<Mparticles>();
 
-    prof_restart(pr_time_step_no_comm);
+    // prof_restart(pr_time_step_no_comm);
     prof_start(pr_A);
     this->exchange_mprts_prep(ddcp, mprts);
     prof_stop(pr_A);
     
     this->process_and_exgchange(mprts);
     
-    prof_restart(pr_time_step_no_comm);
+    // prof_restart(pr_time_step_no_comm);
     prof_start(pr_B);
     this->exchange_mprts_post(ddcp, mprts);
     prof_stop(pr_B);
-    prof_stop(pr_time_step_no_comm);
+    // prof_stop(pr_time_step_no_comm);
 
     mprts_base.put_as(mprts);
 #endif

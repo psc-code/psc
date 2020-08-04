@@ -25,9 +25,15 @@ option(USE_VPIC "Interface with VPIC" OFF)
 option(USE_GTEST_DISCOVER_TESTS "Run tests to discover contained googletest cases" OFF)
 psc_option(ADIOS2 "Build with adios2 support" AUTO)
 option(PSC_USE_NVTX "Build with NVTX support" OFF)
+option(PSC_USE_RMM "Build with RMM memory manager support" OFF)
 
 # CUDA
 if(USE_CUDA)
+  # This is needed on Summit when not using modules (in a spack build) to
+  # make sure that nvcc uses the same host compiler that was otherwise
+  # specified
+  set(CMAKE_CUDA_HOST_COMPILER "${CMAKE_CXX_COMPILER}")
+
   set(_save_CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS}")
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -std c++14")
 
@@ -55,6 +61,12 @@ if (PSC_USE_NVTX)
   set(PSC_HAVE_NVTX 1)
 endif()
 
+# RMM
+if (PSC_USE_RMM)
+  find_package(rmm CONFIG REQUIRED)
+  set(PSC_HAVE_RMM 1)
+endif()
+
 function(GenerateHeaderConfig)
   set(PSC_CONFIG_DEFINES)
   foreach(OPT IN LISTS ARGN)
@@ -76,7 +88,7 @@ endfunction()
 
 # FIXME, unify USE_CUDA, USE_VPIC options / autodetect
 # FIXME, mv helpers into separate file
-GenerateHeaderConfig(ADIOS2 NVTX)
+GenerateHeaderConfig(ADIOS2 NVTX RMM)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/src/include)
 # FIXME, this seems too ugly to find mrc_config.h

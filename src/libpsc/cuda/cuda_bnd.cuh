@@ -58,8 +58,8 @@ struct CudaBnd
       }
     }
 
-    void operator()(const thrust::device_vector<uint>& map,
-		    const thrust::device_vector<real_t>& buf, thrust::device_ptr<real_t> d_flds)
+    void operator()(const psc::device_vector<uint>& map,
+		    const psc::device_vector<real_t>& buf, thrust::device_ptr<real_t> d_flds)
     {
       if (buf.empty()) return;
       
@@ -78,8 +78,8 @@ struct CudaBnd
       thrust::scatter(buf.begin(), buf.end(), map.begin(), h_flds.begin());
     }
 
-    void operator()(const thrust::device_vector<uint>& map,
-		    const thrust::device_vector<real_t>& buf, thrust::device_ptr<real_t> d_flds)
+    void operator()(const psc::device_vector<uint>& map,
+		    const psc::device_vector<real_t>& buf, thrust::device_ptr<real_t> d_flds)
     {
 #if 1
       thrust::scatter(buf.begin(), buf.end(), map.begin(), d_flds);
@@ -149,11 +149,11 @@ struct CudaBnd
     thrust::host_vector<real_t> send_buf;
     thrust::host_vector<real_t> recv_buf;
 
-    thrust::device_vector<uint> d_recv, d_send;
-    thrust::device_vector<uint> d_local_recv, d_local_send;
-    thrust::device_vector<real_t> d_local_buf;
-    thrust::device_vector<real_t> d_send_buf;
-    thrust::device_vector<real_t> d_recv_buf;
+    psc::device_vector<uint> d_recv, d_send;
+    psc::device_vector<uint> d_local_recv, d_local_send;
+    psc::device_vector<real_t> d_local_buf;
+    psc::device_vector<real_t> d_send_buf;
+    psc::device_vector<real_t> d_recv_buf;
 
     mrc_ddc_pattern2* patt;
     int mb, me;

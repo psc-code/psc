@@ -85,7 +85,7 @@ public:
   int size() { return rngs_.size(); }
 
 private:
-  thrust::device_vector<Rng> rngs_;
+  psc::device_vector<Rng> rngs_;
 };
 
 // ----------------------------------------------------------------------
