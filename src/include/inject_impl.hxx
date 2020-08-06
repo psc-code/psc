@@ -29,6 +29,7 @@ struct Inject_ : InjectBase
           Target_t target, SetupParticles& setup_particles)
     : InjectBase{interval, tau, kind_n},
       target_{target},
+      moment_n_{grid},
       setup_particles_{setup_particles}
   {}
 
@@ -52,11 +53,11 @@ struct Inject_ : InjectBase
     prof_barrier("inject_barrier");
 
     prof_start(pr_1);
-    ItemMoment_t moment_n(mprts);
+    moment_n_.update(mprts);
     prof_stop(pr_1);
     
     prof_start(pr_2);
-    auto mres = evalMfields(moment_n);
+    auto mres = evalMfields(moment_n_);
     prof_stop(pr_2);
     
     prof_start(pr_3);
@@ -87,6 +88,7 @@ struct Inject_ : InjectBase
 
 private:
   Target_t target_;
+  ItemMoment_t moment_n_;
   SetupParticles setup_particles_;
 };
 
