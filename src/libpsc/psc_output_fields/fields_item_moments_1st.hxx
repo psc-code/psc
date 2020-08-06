@@ -45,6 +45,11 @@ public:
 
   explicit Moment_n_1st(const Mparticles& mprts) : Base{mprts.grid()}
   {
+    update(mprts);
+  }
+
+  void update(const Mparticles& mprts)
+  {
     using Particle = typename Mparticles::ConstAccessor::Particle;
 
     auto deposit = Deposit1stCc<Mparticles, Mfields>{mprts, Base::mres_};
