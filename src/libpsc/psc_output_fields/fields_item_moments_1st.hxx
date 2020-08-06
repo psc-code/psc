@@ -43,6 +43,8 @@ public:
   int n_comps() const { return Base::mres_.n_comps(); }
   Int3 ibn() const { return Base::mres_.ibn(); }
 
+  explicit Moment_n_1st(const Grid_t& grid) : Base{grid} {}
+
   explicit Moment_n_1st(const Mparticles& mprts) : Base{mprts.grid()}
   {
     update(mprts);
@@ -371,4 +373,3 @@ public:
 };
 
 #endif
-
