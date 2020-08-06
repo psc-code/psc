@@ -107,11 +107,23 @@ struct SetupParticles
   template <typename FUNC>
   void setupParticles(Mparticles& mprts, FUNC init_npt)
   {
+    static int pr, pr_0, pr_1;
+    if (!pr) {
+      pr = prof_register("setupp", 1., 0, 0);
+      pr_0 = prof_register("setupp 0", 1., 0, 0);
+      pr_1 = prof_register("setupp 1", 1., 0, 0);
+    }
+
+    prof_start(pr);
     const auto& grid = mprts.grid();
 
     // mprts.reserve_all(n_prts_by_patch); FIXME
 
+    prof_start(pr_0);
     auto inj = mprts.injector();
+    prof_stop(pr_0);
+
+    prof_start(pr_1);
     for (int p = 0; p < mprts.n_patches(); ++p) {
       auto ldims = grid.ldims;
       auto injector = inj[p];
@@ -163,6 +175,9 @@ struct SetupParticles
         }
       }
     }
+    prof_stop(pr_1);
+
+    prof_stop(pr);
   }
 
   // ----------------------------------------------------------------------
