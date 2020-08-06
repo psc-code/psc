@@ -57,11 +57,11 @@ struct Inject_ : InjectBase
     prof_stop(pr_1);
     
     prof_start(pr_2);
-    auto mres = evalMfields(moment_n_);
+    auto mf_n = evalMfields(moment_n_);
     prof_stop(pr_2);
     
     prof_start(pr_3);
-    auto& mf_n = mres.template get_as<Mfields>(kind_n, kind_n + 1);
+    //auto& mf_n = mres.template get_as<Mfields>(kind_n, kind_n + 1);
     prof_stop(pr_3);
     
     real_t fac = (interval * grid.dt / tau) / (1. + interval * grid.dt / tau);
@@ -82,7 +82,7 @@ struct Inject_ : InjectBase
     setup_particles_.setupParticles(mprts, lf_init_npt);
     prof_stop(pr_4);
     
-    mres.put_as(mf_n, 0, 0);
+    //mres.put_as(mf_n, 0, 0);
     prof_stop(pr);
   }
 
