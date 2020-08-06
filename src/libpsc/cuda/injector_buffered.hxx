@@ -65,6 +65,11 @@ struct InjectorBuffered
     mprts_.inject(buf_, n_prts_by_patch_);
   }
 
+  void reserve(int n_prts_total)
+  {
+    buf_.reserve(n_prts_total);
+  }
+
   Patch operator[](int p)
   {
     // ensure that we inject particles into patches in ascending order

@@ -107,11 +107,13 @@ struct SetupParticles
   template <typename FUNC>
   void setupParticles(Mparticles& mprts, FUNC init_npt)
   {
-    static int pr, pr_0, pr_1;
+    static int pr, pr_0, pr_1, pr_2, pr_3;
     if (!pr) {
       pr = prof_register("setupp", 1., 0, 0);
       pr_0 = prof_register("setupp 0", 1., 0, 0);
       pr_1 = prof_register("setupp 1", 1., 0, 0);
+      pr_2 = prof_register("setupp 2", 1., 0, 0);
+      pr_3 = prof_register("setupp 3", 1., 0, 0);
     }
 
     prof_start(pr);
@@ -124,6 +126,56 @@ struct SetupParticles
     prof_stop(pr_0);
 
     prof_start(pr_1);
+    int n_prts_total = 0;
+    for (int p = 0; p < mprts.n_patches(); ++p) {
+      auto ldims = grid.ldims;
+
+      for (int jz = 0; jz < ldims[2]; jz++) {
+        for (int jy = 0; jy < ldims[1]; jy++) {
+          for (int jx = 0; jx < ldims[0]; jx++) {
+            Double3 pos = {grid.patches[p].x_cc(jx), grid.patches[p].y_cc(jy),
+                           grid.patches[p].z_cc(jz)};
+            // FIXME, the issue really is that (2nd order) particle pushers
+            // don't handle the invariant dim right
+            if (grid.isInvar(0) == 1)
+              pos[0] = grid.patches[p].x_nc(jx);
+            if (grid.isInvar(1) == 1)
+              pos[1] = grid.patches[p].y_nc(jy);
+            if (grid.isInvar(2) == 1)
+              pos[2] = grid.patches[p].z_nc(jz);
+
+            int n_q_in_cell = 0;
+            for (int pop = 0; pop < n_populations_; pop++) {
+              psc_particle_npt npt{};
+              if (pop < kinds_.size()) {
+                npt.kind = pop;
+              }
+              init_npt(pop, pos, p, {jx, jy, jz}, npt);
+
+              int n_in_cell;
+              if (pop != neutralizing_population) {
+                n_in_cell = get_n_in_cell(npt);
+                n_q_in_cell += kinds_[npt.kind].q * n_in_cell;
+              } else {
+                // FIXME, should handle the case where not the last population
+                // is neutralizing
+                assert(neutralizing_population == n_populations_ - 1);
+                n_in_cell = -n_q_in_cell / kinds_[npt.kind].q;
+              }
+	      n_prts_total += n_in_cell;
+            }
+          }
+        }
+      }
+    }
+    prof_stop(pr_1);
+
+    mprintf("n_prts_total %d\n", n_prts_total);
+    prof_start(pr_2);
+    inj.reserve(n_prts_total * 1.2);
+    prof_stop(pr_2);
+
+    prof_start(pr_3);
     for (int p = 0; p < mprts.n_patches(); ++p) {
       auto ldims = grid.ldims;
       auto injector = inj[p];
@@ -175,7 +227,7 @@ struct SetupParticles
         }
       }
     }
-    prof_stop(pr_1);
+    prof_stop(pr_3);
 
     prof_stop(pr);
   }

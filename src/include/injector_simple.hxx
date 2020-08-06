@@ -51,6 +51,9 @@ struct InjectorSimple
     : mprts_{mprts}
   {}
 
+  void reserve(int n_prts_total)
+  {}
+
   Patch operator[](int p) const { return {mprts_, p}; }
 
 private:
