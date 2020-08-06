@@ -38,7 +38,8 @@ struct InjectorBuffered
       auto x = Double3::fromPointer(new_prt.x) - patch.xb;
       auto u = Double3::fromPointer(new_prt.u);
       real_t q = mprts.grid().kinds[new_prt.kind].q;
-      raw(Particle{Real3(x), Real3(u), q * real_t(new_prt.w), new_prt.kind, mprts.uid_gen(), new_prt.tag});
+      injector_.buf_.push_back({Real3(x), Real3(u), q * real_t(new_prt.w), new_prt.kind, mprts.uid_gen(), new_prt.tag});
+      n_prts_++;
     }
 
     // FIXME do we want to keep this? or just have a psc::particle::Inject version instead?
