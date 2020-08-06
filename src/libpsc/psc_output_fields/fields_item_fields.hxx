@@ -53,6 +53,12 @@ template <typename E,
           typename std::enable_if<isSpaceCuda<E>::value, int>::type = 0>
 inline MfieldsC evalMfields(const MFexpression<E>& xp)
 {
+  static int pr;
+  if (!pr) {
+    pr = prof_register("evalMfields cuda", 1., 0, 0);
+  }
+
+  prof_start(pr);
   const auto& exp = xp.derived().result();
   MfieldsC mflds{exp.grid(), exp.n_comps(), exp.ibn()};
 
@@ -67,6 +73,7 @@ inline MfieldsC evalMfields(const MFexpression<E>& xp)
       });
     }
   }
+  prof_stop(pr);
   return mflds;
 }
 
