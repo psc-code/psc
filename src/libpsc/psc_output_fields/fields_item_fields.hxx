@@ -53,18 +53,30 @@ template <typename E,
           typename std::enable_if<isSpaceCuda<E>::value, int>::type = 0>
 inline MfieldsC evalMfields(const MFexpression<E>& xp)
 {
-  static int pr;
+  static int pr, pr_0, pr_1, pr_2, pr_3;
   if (!pr) {
     pr = prof_register("evalMfields cuda", 1., 0, 0);
+    pr_0 = prof_register("evalMfields h", 1., 0, 0);
+    pr_1 = prof_register("evalMfields hm", 1., 0, 0);
+    pr_2 = prof_register("evalMfields dh", 1., 0, 0);
+    pr_3 = prof_register("evalMfields hh", 1., 0, 0);
   }
 
   prof_start(pr);
   const auto& exp = xp.derived().result();
+  prof_start(pr_0);
   MfieldsC mflds{exp.grid(), exp.n_comps(), exp.ibn()};
+  prof_stop(pr_1);
 
+  prof_start(pr_1);
   auto h_exp = hostMirror(exp);
-  copy(exp, h_exp);
+  prof_stop(pr_1);
 
+  prof_start(pr_2);
+  copy(exp, h_exp);
+  prof_stop(pr_2);
+
+  prof_start(pr_3);
   for (int p = 0; p < mflds.n_patches(); p++) {
     auto flds = mflds[p];
     for (int m = 0; m < exp.n_comps(); m++) {
@@ -73,6 +85,7 @@ inline MfieldsC evalMfields(const MFexpression<E>& xp)
       });
     }
   }
+  prof_stop(pr_3);
   prof_stop(pr);
   return mflds;
 }
