@@ -292,7 +292,7 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
   // -- set particle initial condition
   partitionAndSetupParticles(
     setup_particles, balance, grid_ptr, mprts,
-    [&](int kind, double crd[3], psc_particle_npt& npt) {
+    [&](int kind, Double3 crd, psc_particle_npt& npt) {
       switch (kind) {
         case MY_ION:
           npt.n = g.background_n;

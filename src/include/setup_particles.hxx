@@ -95,7 +95,7 @@ struct SetupParticles
   // setup_particles
 
   template <typename FUNC>
-  void operator()(Mparticles& mprts, FUNC init_npt)
+  void operator()(Mparticles& mprts, FUNC&& init_npt)
   {
     setupParticles(mprts, [&](int kind, Double3 pos, int p, Int3 idx,
                               psc_particle_npt& npt) { init_npt(kind, pos, npt); });
@@ -105,7 +105,7 @@ struct SetupParticles
   // setupParticles
 
   template <typename FUNC>
-  void setupParticles(Mparticles& mprts, FUNC init_npt)
+  void setupParticles(Mparticles& mprts, FUNC&& init_npt)
   {
     static int pr, pr_0, pr_1, pr_2, pr_3;
     if (!pr) {
@@ -236,7 +236,7 @@ struct SetupParticles
   // partition
 
   template <typename FUNC>
-  std::vector<uint> partition(const Grid_t& grid, FUNC init_npt)
+  std::vector<uint> partition(const Grid_t& grid, FUNC&& init_npt)
   {
     std::vector<uint> n_prts_by_patch(grid.n_patches());
 
