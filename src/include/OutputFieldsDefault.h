@@ -103,6 +103,11 @@ public:
   template <typename MfieldsState, typename Mparticles>
   void operator()(MfieldsState& mflds, Mparticles& mprts)
   {
+    if(first_time){
+        first_time = false;
+        return;
+    }
+
     const auto& grid = mflds._grid();
 
     static int pr;
@@ -225,6 +230,7 @@ public:
       prof_stop(pr_moment);
     }
 
+
     prof_stop(pr);
   };
 
@@ -258,6 +264,7 @@ private:
   int tfield_moments_next_;
   int naccum_ = 0;
   int naccum_moments_ = 0;
+  bool first_time = true;
 };
 
 #ifdef xPSC_HAVE_ADIOS2
