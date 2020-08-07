@@ -6,9 +6,7 @@ Introduction
 ============
 
 PSC is available from github at https:://github.com/psc-code/psc.git
-. The recommended build method uses Spack package manager.  Spack is a package manager that targets HPC use cases.
-  Installing with spack will automate the installation and linking of dependencies. 
- The Legacy build method uses cmake, but the dependencies must be installed manually.
+. The recommended build method uses Spack package manager.  Spack is a package manager that targets HPC use cases.  Installing with spack will automate the installation and linking of dependencies. The Legacy build method uses cmake, but the dependencies must be installed manually.
 
 Dependencies
 ============
@@ -32,13 +30,15 @@ PSC has the following dependencies:
 - (optional) `viscid <https://viscid-hub.github.io/Viscid-docs/docs/dev/>`_ is
   useful for analyzing / visualizing PSC data
 
-- (optional) `rmm <https://github.com/rapidsai/rmm>`_, Performance optimization, provides 
+- (optional) `rmm <https://github.com/rapidsai/rmm>`_, Performance optimization, provides
   custom cuda allocator to reduce cudaMalloc/cudaFree overhead.
 
 - (optional) `nvtx_pmpi <https://github.com/NVIDIA/cuda-profiler/tree/master/nvtx_pmpi_wrappers>`_ MPI
   hooks so that all MPI calls appear on nsight systems profiler
+
+
 Spack Build Instructions
-==================
+========================
 - Clone Spack
 .. code-block:: sh
 
@@ -55,22 +55,24 @@ Spack Build Instructions
 
   $ spack repo add path/to/psc/spack/psc
   ==> Added repo with namespace 'psc'.
-- And finally, 
+- And finally,
 .. code-block:: sh
 
    $ spack install psc
 
+
 Legacy Build Instructions
-==================
-  
+=========================
+                                           
 .. toctree::
    :maxdepth: 2
 
    generic
-   summit 
+   summit
    trillian
    viscid
 
-   
+
+ 
 
   
