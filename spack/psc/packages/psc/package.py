@@ -42,5 +42,7 @@ class Psc(CMakePackage):
             'ON' if '+nvtx' in self.spec else 'OFF')]
         args += ['-DPSC_USE_RMM={}'.format(
             'ON' if '+rmm' in self.spec else 'OFF')]
+        args += ['-DBUILD_TESTING={}'.format(
+            'ON' if '+tests' in self.spec else 'OFF')]
 
         return args
