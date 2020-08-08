@@ -25,7 +25,9 @@ class Psc(CMakePackage):
             description='Enable NVTX profiling support')
     variant('rmm', default=False,
             description='Enable RMM memory manager support')
-
+    variant('tests', default=False,
+            description='Build with unit testing')
+    
     depends_on('cmake@3.17.0:')
 
     depends_on('hdf5@1.8.0:1.8.999 +hl')
@@ -42,5 +44,7 @@ class Psc(CMakePackage):
             'ON' if '+nvtx' in self.spec else 'OFF')]
         args += ['-DPSC_USE_RMM={}'.format(
             'ON' if '+rmm' in self.spec else 'OFF')]
+        args += ['-DBUILD_TESTING={}'.format(
+            'ON' if '+tests' in self.spec else 'OFF')]
 
         return args
