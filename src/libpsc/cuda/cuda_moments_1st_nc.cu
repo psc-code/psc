@@ -169,16 +169,27 @@ void CudaMoments1stNcRho<CudaMparticles, dim>::invoke(CudaMparticles& cmprts, st
 template<typename CudaMparticles, typename dim>
 void CudaMoments1stNcN<CudaMparticles, dim>::operator()(CudaMparticles& cmprts, struct cuda_mfields *cmres)
 {
+  static int pr, pr_1;
+  if (!pr) {
+    pr = prof_register("cuda_mom_n", 1, 0, 0);
+    pr_1 = prof_register("cuda_mom_n_reorder", 1, 0, 0);
+  }
+
+  prof_start(pr);
   if (cmprts.n_prts == 0) {
     return;
   }
+
+  prof_start(pr_1);
   cmprts.reorder(); // FIXME/OPT?
+  prof_stop(pr_1);
 
   if (!cmprts.need_reorder) {
     invoke<false>(cmprts, cmres);
   } else {
     assert(0);
   }
+  prof_stop(pr);
 }
 
 // ----------------------------------------------------------------------

@@ -99,6 +99,12 @@ struct CudaBnd
   
   CudaBnd(const Grid_t& grid, Int3 ibn)
   {
+    static int pr;
+    if (!pr) {
+      pr = prof_register("CudaBnd_ctor", 1, 0, 0);
+    }
+
+    prof_start(pr);
     static struct mrc_ddc_funcs ddc_funcs;
 
     ddc_ = grid.mrc_domain().create_ddc();
@@ -107,6 +113,7 @@ struct CudaBnd
     mrc_ddc_set_param_int(ddc_, "max_n_fields", 24);
     mrc_ddc_set_param_int(ddc_, "size_of_type", sizeof(real_t));
     mrc_ddc_setup(ddc_);
+    prof_stop(pr);
   }
 
   // ----------------------------------------------------------------------
@@ -262,9 +269,7 @@ struct CudaBnd
     thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
 #else
     thrust::device_ptr<real_t> d_flds{cmflds.data()};
-    // prof_start(pr_ddc0);
-    MPI_Barrier(MPI_COMM_WORLD);
-    // prof_stop(pr_ddc0);
+    prof_barrier("ddc_run");
 
     // prof_start(pr_ddc1);
     postReceives(maps);

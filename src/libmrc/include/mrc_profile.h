@@ -5,8 +5,8 @@
 #include <mrc_config.h>
 
 #include <assert.h>
-#include <stdio.h>
 #include <mpi.h>
+#include <stdio.h>
 
 #ifdef HAVE_NVTX
 #include <nvToolsExt.h>
@@ -14,7 +14,8 @@
 
 #define NR_EVENTS (0)
 
-struct prof_info {
+struct prof_info
+{
   int cnt;
   long long time;
   long long counters[NR_EVENTS];
@@ -22,8 +23,9 @@ struct prof_info {
   long long total_time;
 };
 
-struct prof_data {
-  const char *name;
+struct prof_data
+{
+  const char* name;
   float simd;
   int flops;
   int bytes;
@@ -33,16 +35,16 @@ struct prof_data {
 
 extern struct prof_data prof_data[MAX_PROF];
 
-extern struct prof_globals {
+extern struct prof_globals
+{
   int event_set;
   struct prof_info info[MAX_PROF];
 } prof_globals;
 
-#include <sys/time.h>
 #include <stdlib.h>
+#include <sys/time.h>
 
-static inline void
-prof_start(int pr)
+static inline void prof_start(int pr)
 {
   pr--;
   assert(pr < MAX_PROF);
@@ -55,8 +57,7 @@ prof_start(int pr)
 #endif
 }
 
-static inline void
-prof_restart(int pr)
+static inline void prof_restart(int pr)
 {
   pr--;
   assert(pr < MAX_PROF);
@@ -70,8 +71,7 @@ prof_restart(int pr)
 #endif
 }
 
-static inline void
-prof_stop(int pr)
+static inline void prof_stop(int pr)
 {
   pr--;
   assert(pr < MAX_PROF);
@@ -92,9 +92,20 @@ prof_stop(int pr)
 #endif
 
 EXTERN_C void prof_init(void);
-EXTERN_C int  prof_register(const char *name, float simd, int flops, int bytes);
+EXTERN_C int prof_register(const char* name, float simd, int flops, int bytes);
 EXTERN_C void prof_print(void);
-EXTERN_C void prof_print_file(FILE *f);
+EXTERN_C void prof_print_file(FILE* f);
 EXTERN_C void prof_print_mpi(MPI_Comm comm);
+
+#define prof_barrier(str)                                                      \
+  do {                                                                         \
+    static int pr;                                                             \
+    if (!pr) {                                                                 \
+      pr = prof_register(str, 1., 0, 0);                                       \
+    }                                                                          \
+    prof_start(pr);                                                            \
+    MPI_Barrier(MPI_COMM_WORLD);                                               \
+    prof_stop(pr);                                                             \
+  } while (0)
 
 #endif

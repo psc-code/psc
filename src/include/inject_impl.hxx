@@ -37,10 +37,9 @@ struct Inject_ : InjectBase
 
   void operator()(Mparticles& mprts)
   {
-    static int pr, pr_0, pr_1, pr_2, pr_3, pr_4;
+    static int pr, pr_1, pr_2, pr_3, pr_4;
     if (!pr) {
       pr = prof_register("inject_impl", 1., 0, 0);
-      pr_0 = prof_register("inject_barrer", 1., 0, 0);
       pr_1 = prof_register("inject_moment_n", 1., 0, 0);
       pr_2 = prof_register("inject_eval", 1., 0, 0);
       pr_3 = prof_register("inject_get_as", 1., 0, 0);
@@ -50,10 +49,8 @@ struct Inject_ : InjectBase
     prof_start(pr);
     const auto& grid = mprts.grid();
 
-    prof_start(pr_0);
-    MPI_Barrier(MPI_COMM_WORLD);
-    prof_stop(pr_0);
-    
+    prof_barrier("inject_barrier");
+
     prof_start(pr_1);
     ItemMoment_t moment_n(mprts);
     prof_stop(pr_1);
