@@ -34,6 +34,9 @@ struct SetupParticles
 
   int get_n_in_cell(const psc_particle_npt& npt)
   {
+    if (npt.n == 0) {
+      return 0;
+    }
     if (fractional_n_particles_per_cell) {
       int n_prts = npt.n / norm_.cori;
       float rmndr = npt.n / norm_.cori - n_prts;
@@ -95,7 +98,7 @@ struct SetupParticles
   // setup_particles
 
   template <typename FUNC>
-  void operator()(Mparticles& mprts, FUNC init_npt)
+  void operator()(Mparticles& mprts, FUNC&& init_npt)
   {
     setupParticles(mprts, [&](int kind, Double3 pos, int p, Int3 idx,
                               psc_particle_npt& npt) { init_npt(kind, pos, npt); });
@@ -105,13 +108,20 @@ struct SetupParticles
   // setupParticles
 
   template <typename FUNC>
-  void setupParticles(Mparticles& mprts, FUNC init_npt)
+  void setupParticles(Mparticles& mprts, FUNC&& init_npt)
   {
+    static int pr;
+    if (!pr) {
+      pr = prof_register("setupp", 1., 0, 0);
+    }
+
+    prof_start(pr);
     const auto& grid = mprts.grid();
 
     // mprts.reserve_all(n_prts_by_patch); FIXME
 
     auto inj = mprts.injector();
+
     for (int p = 0; p < mprts.n_patches(); ++p) {
       auto ldims = grid.ldims;
       auto injector = inj[p];
@@ -163,13 +173,15 @@ struct SetupParticles
         }
       }
     }
+
+    prof_stop(pr);
   }
 
   // ----------------------------------------------------------------------
   // partition
 
   template <typename FUNC>
-  std::vector<uint> partition(const Grid_t& grid, FUNC init_npt)
+  std::vector<uint> partition(const Grid_t& grid, FUNC&& init_npt)
   {
     std::vector<uint> n_prts_by_patch(grid.n_patches());
 
