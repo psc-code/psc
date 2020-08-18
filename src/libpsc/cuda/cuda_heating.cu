@@ -92,15 +92,17 @@ k_heating_run_foil(cuda_heating_foil d_foil, DMparticlesCuda<BS> dmprts, struct 
 
 struct cuda_heating_foil : HeatingSpotFoilParams
 {
-  cuda_heating_foil(const HeatingSpotFoilParams& params, int kind, double heating_dt,
+  cuda_heating_foil(const HeatingSpotFoilParams& params, double heating_dt,
 		    double Lx, double Ly)
-    : HeatingSpotFoilParams(params), kind(kind), heating_dt(heating_dt), Lx_(Lx), Ly_(Ly),
+    : HeatingSpotFoilParams(params), heating_dt(heating_dt), Lx_(Lx), Ly_(Ly),
       h_prm_{},
       d_curand_states_{},
       first_time_{true}
   {
+    assert(n_kinds < HEATING_MAX_N_KINDS);
     float width = zh - zl;
-    fac = (8.f * pow(T, 1.5)) / (sqrt(Mi) * width);
+    for(int i=0; i<n_kinds; i++)
+        fac[i] = (8.f * pow(T[i], 1.5)) / (sqrt(Mi) * width);
   }
 
   ~cuda_heating_foil()
@@ -121,15 +123,17 @@ struct cuda_heating_foil : HeatingSpotFoilParams
     first_time_ = true;
   }
   
-  __host__  __device__ float get_H(float *crd)
+  __host__  __device__ float get_H(float *crd, int kind)
   {
     double x = crd[0], y = crd[1], z = crd[2];
+    if(fac[kind] == 0.0)
+      return 0;
 
     if (z <= zl || z >= zh) {
       return 0;
     }
     
-    return fac * (exp(-(sqr(x - (xc)) + sqr(y - (yc))) / sqr(rH)) +
+    return fac[kind] * (exp(-(sqr(x - (xc)) + sqr(y - (yc))) / sqr(rH)) +
 		  exp(-(sqr(x - (xc)) + sqr(y - (yc + Ly_))) / sqr(rH)) +
 		  exp(-(sqr(x - (xc)) + sqr(y - (yc - Ly_))) / sqr(rH)) +
 		  exp(-(sqr(x - (xc + Lx_)) + sqr(y - (yc))) / sqr(rH)) +
@@ -220,12 +224,10 @@ struct cuda_heating_foil : HeatingSpotFoilParams
     run_foil<BS>(cmprts, d_curand_states_);
   }
 
-  // params
-  int kind;
 
   // state (FIXME, shouldn't be part of the interface)
   bool first_time_;
-  float fac;
+  float fac[HEATING_MAX_N_KINDS];
   float heating_dt;
   float Lx_, Ly_;
 
@@ -245,9 +247,6 @@ void cuda_heating_run_foil_gold(cuda_heating_foil& foil, cuda_mparticles<BS>* cm
       float4 xi4 = cmprts->d_xi4[n];
 
       int prt_kind = cuda_float_as_int(xi4.w);
-      if (prt_kind != foil.kind) {
-	continue;
-      }
 
       float *xb = &cmprts->xb_by_patch[p][0];
       float xx[3] = {
@@ -256,7 +255,7 @@ void cuda_heating_run_foil_gold(cuda_heating_foil& foil, cuda_mparticles<BS>* cm
 	xi4.z + xb[2],
       };
 
-      float H = foil.get_H(xx);
+      float H = foil.get_H(xx, prt_kind);
       // float4 pxi4 = d_pxi4[n];
       // printf("%s xx = %g %g %g H = %g px = %g %g %g\n", (H > 0) ? "H" : " ",
       // 	     xx[0], xx[1], xx[2], H,
@@ -308,16 +307,13 @@ k_heating_run_foil(cuda_heating_foil d_foil, DMparticlesCuda<BS> dmprts, struct 
     float4 xi4 = dmprts.storage.xi4[n];
     
     int prt_kind = __float_as_int(xi4.w);
-    if (prt_kind != d_foil.kind) {
-      continue;
-    }
 
     float xx[3] = {
       xi4.x + xb[0],
       xi4.y + xb[1],
       xi4.z + xb[2],
     };
-    float H = d_foil.get_H(xx);
+    float H = d_foil.get_H(xx, prt_kind);
     //d_pxi4[n].w = H;
     if (H > 0.f) {
       float4 pxi4 = dmprts.storage.pxi4[n];
@@ -333,8 +329,8 @@ k_heating_run_foil(cuda_heating_foil d_foil, DMparticlesCuda<BS> dmprts, struct 
 
 template<typename BS>
 template<typename FUNC>
-HeatingCuda<BS>::HeatingCuda(const Grid_t& grid, int interval, int kind, FUNC get_H)
-  : foil_{new cuda_heating_foil{get_H, kind, interval * grid.dt,
+HeatingCuda<BS>::HeatingCuda(const Grid_t& grid, int interval, FUNC get_H)
+  : foil_{new cuda_heating_foil{get_H, interval * grid.dt,
       grid.domain.length[0], grid.domain.length[1]}},
     balance_generation_cnt_{-1}
 {}
@@ -365,7 +361,7 @@ void HeatingCuda<BS>::operator()(MparticlesCuda<BS>& mprts)
 // ======================================================================
 
 template struct HeatingCuda<BS144>;
-template HeatingCuda<BS144>::HeatingCuda(const Grid_t& grid, int interval, int kind, HeatingSpotFoil get_H);
+template HeatingCuda<BS144>::HeatingCuda(const Grid_t& grid, int interval, HeatingSpotFoil get_H);
 
 template struct HeatingCuda<BS444>;
-template HeatingCuda<BS444>::HeatingCuda(const Grid_t& grid, int interval, int kind, HeatingSpotFoil get_H);
+template HeatingCuda<BS444>::HeatingCuda(const Grid_t& grid, int interval, HeatingSpotFoil get_H);

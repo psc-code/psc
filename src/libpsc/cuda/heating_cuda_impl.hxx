@@ -14,7 +14,7 @@ template<typename BS>
 struct HeatingCuda : HeatingBase
 {
   template<typename FUNC>
-  HeatingCuda(const Grid_t& grid, int interval, int kind, FUNC get_H);
+  HeatingCuda(const Grid_t& grid, int interval,FUNC get_H);
 
   ~HeatingCuda();
 

@@ -3,7 +3,7 @@
 
 // ======================================================================
 // HeatingSpotFoilParams
-
+#define HEATING_MAX_N_KINDS (10)
 struct HeatingSpotFoilParams
 {
   double zl; // in internal units (d_e)
@@ -11,8 +11,9 @@ struct HeatingSpotFoilParams
   double xc;
   double yc;
   double rH;
-  double T;
+  double T[HEATING_MAX_N_KINDS];
   double Mi;
+  int n_kinds;
 };
 
 // ======================================================================
@@ -28,19 +29,25 @@ struct HeatingSpotFoil : HeatingSpotFoilParams
       Ly_(grid.domain.length[1])
   {
     double width = zh - zl;
-    fac = (8.f * pow(T, 1.5)) / (sqrt(Mi) * width);
+
+    assert(n_kinds < HEATING_MAX_N_KINDS);
+    //inialize a fac for each population
+    for(int i=0; i<n_kinds; i++)
+        fac[i] = (8.f * pow(T[i], 1.5)) / (sqrt(Mi) * width);
+
     // FIXME, I don't understand the sqrt(Mi) in here
   }
   
-  double operator()(const double *crd)
+  double operator()(const double *crd, const int kind)
   {
     double x = crd[0], y = crd[1], z = crd[2];
-
+    if(fac[kind] == 0.0)
+        return 0;
     if (z <= zl || z >= zh) {
       return 0;
     }
     
-    return fac * (exp(-(sqr(x - (xc)) + sqr(y - (yc))) / sqr(rH)) +
+    return fac[kind] * (exp(-(sqr(x - (xc)) + sqr(y - (yc))) / sqr(rH)) +
 		  exp(-(sqr(x - (xc)) + sqr(y - (yc + Ly_))) / sqr(rH)) +
 		  exp(-(sqr(x - (xc)) + sqr(y - (yc - Ly_))) / sqr(rH)) +
 		  exp(-(sqr(x - (xc + Lx_)) + sqr(y - (yc))) / sqr(rH)) +
@@ -52,7 +59,7 @@ struct HeatingSpotFoil : HeatingSpotFoilParams
   }
 
 private:
-  double fac;
+  double fac[HEATING_MAX_N_KINDS];
   double Lx_, Ly_;
 };
 

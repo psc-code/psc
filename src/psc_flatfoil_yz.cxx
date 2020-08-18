@@ -24,13 +24,70 @@
 // initial setup, the code will add as many electrons as there are ions in a
 // cell, at the same position, to ensure the initial plasma is neutral
 // (so that Gauss's Law is satisfied).
-
 enum
 {
-  MY_ION,
+  MY_ELECTRON_HE,
   MY_ELECTRON,
+  MY_ION,
   N_MY_KINDS,
 };
+
+// ======================================================================
+// PscFlatfoilParams
+
+struct PscFlatfoilParams
+{
+  double BB;
+  double Zi;
+  double mass_ratio;
+  double lambda0;
+  double target_n;  // target density
+  double target_Te; // target electron temperature
+  double target_Ti; // target ion_temperatore
+  double target_Te_heat;
+  double target_Ti_heat;
+  double target_Te_HE_heat;
+
+  double background_n;
+  double background_Te;
+  double background_Ti;
+  double electron_HE_ratio;
+
+  int inject_interval;
+
+  int heating_begin;
+  int heating_end;
+  int heating_interval;
+
+  // The following parameters are calculated from the above / and other
+  // information
+
+  double d_i;
+};
+
+// ======================================================================
+// Global parameters
+//
+// I'm not a big fan of global parameters, but they're only for
+// this particular case and they help make things simpler.
+
+// An "anonymous namespace" makes these variables visible in this source file
+// only
+namespace
+{
+
+// Parameters specific to this case. They don't really need to be collected in a
+// struct, but maybe it's nice that they are
+
+PscFlatfoilParams g;
+
+std::string read_checkpoint_filename;
+
+// This is a set of generic PSC params (see include/psc.hxx),
+// like number of steps to run, etc, which also should be set by the case
+PscParams psc_params;
+
+} // namespace
 
 // ======================================================================
 // InjectFoil
@@ -74,8 +131,14 @@ public:
         npt.T[1] = Ti;
         npt.T[2] = Ti;
         break;
+      case MY_ELECTRON_HE:
+        npt.n = g.electron_HE_ratio * n;
+        npt.T[0] = g.target_Te_HE_heat;
+        npt.T[1] = g.target_Te_HE_heat;
+        npt.T[2] = g.target_Te_HE_heat;
+        break;
       case MY_ELECTRON:
-        npt.n = n;
+        npt.n = (1 - g.electron_HE_ratio) * n;
         npt.T[0] = Te;
         npt.T[1] = Te;
         npt.T[2] = Te;
@@ -129,61 +192,6 @@ using Inject = typename InjectSelector<Mparticles, InjectFoil, Dim>::Inject;
 using Heating = typename HeatingSelector<Mparticles>::Heating;
 
 // ======================================================================
-// PscFlatfoilParams
-
-struct PscFlatfoilParams
-{
-  double BB;
-  double Zi;
-  double mass_ratio;
-  double lambda0;
-  double target_n;  // target density
-  double target_Te; // target electron temperature
-  double target_Ti; // target ion_temperatore
-  double target_Te_heat;
-  double target_Ti_heat;
-
-  double background_n;
-  double background_Te;
-  double background_Ti;
-
-  int inject_interval;
-
-  int heating_begin;
-  int heating_end;
-  int heating_interval;
-
-  // The following parameters are calculated from the above / and other
-  // information
-
-  double d_i;
-};
-
-// ======================================================================
-// Global parameters
-//
-// I'm not a big fan of global parameters, but they're only for
-// this particular case and they help make things simpler.
-
-// An "anonymous namespace" makes these variables visible in this source file
-// only
-namespace
-{
-
-// Parameters specific to this case. They don't really need to be collected in a
-// struct, but maybe it's nice that they are
-
-PscFlatfoilParams g;
-
-std::string read_checkpoint_filename;
-
-// This is a set of generic PSC params (see include/psc.hxx),
-// like number of steps to run, etc, which also should be set by the case
-PscParams psc_params;
-
-} // namespace
-
-// ======================================================================
 // setupParameters
 
 void setupParameters()
@@ -213,8 +221,12 @@ void setupParameters()
   g.target_n = 2.5;
   g.target_Te = 0.001;
   g.target_Ti = 0.001;
+
+  g.electron_HE_ratio = 0.01;
+
   g.target_Te_heat = 0.04;
-  g.target_Ti_heat = 0.04;
+  g.target_Ti_heat = 0.0;
+  g.target_Te_HE_heat = 0.4;
 
   g.background_n = .002;
   g.background_Te = .001;
@@ -250,9 +262,10 @@ Grid_t* setupGrid()
                    {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC}};
 
   // -- setup particle kinds
-  // last population ("e") is neutralizing
+  // last population ("i") is neutralizing
   Grid_t::Kinds kinds(N_MY_KINDS);
   kinds[MY_ION] = {g.Zi, g.mass_ratio * g.Zi, "i"};
+  kinds[MY_ELECTRON_HE] = {-1., 1., "he_e"};
   kinds[MY_ELECTRON] = {-1., 1., "e"};
 
   g.d_i = sqrt(kinds[MY_ION].m / kinds[MY_ION].q);
@@ -290,30 +303,35 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
                          InjectFoil& inject_target)
 {
   // -- set particle initial condition
-  partitionAndSetupParticles(
-    setup_particles, balance, grid_ptr, mprts,
-    [&](int kind, Double3 crd, psc_particle_npt& npt) {
-      switch (kind) {
-        case MY_ION:
-          npt.n = g.background_n;
-          npt.T[0] = g.background_Ti;
-          npt.T[1] = g.background_Ti;
-          npt.T[2] = g.background_Ti;
-          break;
-        case MY_ELECTRON:
-          npt.n = g.background_n;
-          npt.T[0] = g.background_Te;
-          npt.T[1] = g.background_Te;
-          npt.T[2] = g.background_Te;
-          break;
-        default: assert(0);
-      }
+  partitionAndSetupParticles(setup_particles, balance, grid_ptr, mprts,
+                             [&](int kind, Double3 crd, psc_particle_npt& npt) {
+                               switch (kind) {
+                                 case MY_ION:
+                                   npt.n = g.background_n;
+                                   npt.T[0] = g.background_Ti;
+                                   npt.T[1] = g.background_Ti;
+                                   npt.T[2] = g.background_Ti;
+                                   break;
+                                 case MY_ELECTRON_HE:
+                                   npt.n = 0.;
+                                   npt.T[0] = g.background_Te;
+                                   npt.T[1] = g.background_Te;
+                                   npt.T[2] = g.background_Te;
+                                   break;
+                                 case MY_ELECTRON:
+                                   npt.n = g.background_n;
+                                   npt.T[0] = g.background_Te;
+                                   npt.T[1] = g.background_Te;
+                                   npt.T[2] = g.background_Te;
+                                   break;
+                                 default: assert(0);
+                               }
 
-      if (inject_target.is_inside(crd)) {
-        // replace values above by target values
-        inject_target.init_npt(kind, crd, npt);
-      }
-    });
+                               if (inject_target.is_inside(crd)) {
+                                 // replace values above by target values
+                                 inject_target.init_npt(kind, crd, npt);
+                               }
+                             });
 }
 
 // ======================================================================
@@ -356,7 +374,7 @@ void run()
   if (!read_checkpoint_filename.empty()) {
     read_checkpoint(read_checkpoint_filename, grid, mprts, mflds);
   }
-  
+
   // ----------------------------------------------------------------------
   // Set up various objects needed to run this case
 
@@ -427,15 +445,17 @@ void run()
   heating_foil_params.xc = 0. * g.d_i;
   heating_foil_params.yc = 20. * g.d_i;
   heating_foil_params.rH = 12. * g.d_i;
-  heating_foil_params.T = g.target_Te_heat;
+  heating_foil_params.T[MY_ELECTRON_HE] = g.target_Te_HE_heat;
+  heating_foil_params.T[MY_ELECTRON] = g.target_Te_heat;
+  heating_foil_params.T[MY_ION] = g.target_Ti_heat;
   heating_foil_params.Mi = grid.kinds[MY_ION].m;
+  heating_foil_params.n_kinds = N_MY_KINDS;
   HeatingSpotFoil heating_spot{grid, heating_foil_params};
 
   g.heating_interval = 20;
   g.heating_begin = 0;
   g.heating_end = 10000000;
-  auto& heating =
-    *new Heating{grid, g.heating_interval, MY_ELECTRON, heating_spot};
+  auto& heating = *new Heating{grid, g.heating_interval, heating_spot};
 
   // -- Particle injection
   InjectFoilParams inject_foil_params;
@@ -456,7 +476,7 @@ void run()
 
   SetupParticles<Mparticles> setup_particles(grid);
   setup_particles.fractional_n_particles_per_cell = true;
-  setup_particles.neutralizing_population = MY_ELECTRON;
+  setup_particles.neutralizing_population = MY_ION;
 
   Inject inject{grid,        g.inject_interval, inject_tau,
                 MY_ELECTRON, inject_target,     setup_particles};
