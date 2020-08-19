@@ -103,11 +103,6 @@ public:
   template <typename MfieldsState, typename Mparticles>
   void operator()(MfieldsState& mflds, Mparticles& mprts)
   {
-    if(first_time){
-        first_time = false;
-        return;
-    }
-
     const auto& grid = mflds._grid();
 
     static int pr;
@@ -131,6 +126,10 @@ public:
     prof_start(pr);
 
     auto timestep = grid.timestep();
+    if(first_time && timestep != 0){
+        first_time = false;
+        return;
+    }
     bool do_pfield = pfield_interval > 0 && timestep >= pfield_next_;
     bool do_tfield = tfield_interval > 0 && timestep >= tfield_next_;
     bool doaccum_tfield =
@@ -229,7 +228,6 @@ public:
       }
       prof_stop(pr_moment);
     }
-
 
     prof_stop(pr);
   };
