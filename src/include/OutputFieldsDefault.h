@@ -103,12 +103,18 @@ public:
   template <typename MfieldsState, typename Mparticles>
   void operator()(MfieldsState& mflds, Mparticles& mprts)
   {
-    const auto& grid = mflds._grid();
-
-    static int pr;
-    if (!pr) {
-      pr = prof_register("outf", 1., 0, 0);
+    //In the case of continuation from checkpoint, do not write out fields on first step
+    if(first_time && grid.timestep() != 0){
+        first_time = false;
+        return;
     }
+
+    const auto& grid = mflds._grid();
+    
+    static int pr;
+    if(!pr){
+      pr = prof_register("outf", 1., 0, 0);
+    {
 #if 1
     static int pr_field, pr_moment, pr_field_calc, pr_moment_calc, pr_field_write, pr_moment_write, pr_field_acc, pr_moment_acc;
     if (!pr_field) {
@@ -228,6 +234,7 @@ public:
       }
       prof_stop(pr_moment);
     }
+
 
     prof_stop(pr);
   };
