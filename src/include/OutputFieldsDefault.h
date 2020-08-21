@@ -126,9 +126,10 @@ public:
     prof_start(pr);
 
     auto timestep = grid.timestep();
-    if(first_time && timestep != 0){
+    if(first_time){
         first_time = false;
-        return;
+        if(timestep != 0)
+            return;
     }
 
     bool do_pfield = pfield_interval > 0 && timestep >= pfield_next_;
