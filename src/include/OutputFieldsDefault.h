@@ -126,6 +126,12 @@ public:
     prof_start(pr);
 
     auto timestep = grid.timestep();
+    if(first_time){
+        first_time = false;
+        if(timestep != 0)
+            return;
+    }
+
     bool do_pfield = pfield_interval > 0 && timestep >= pfield_next_;
     bool do_tfield = tfield_interval > 0 && timestep >= tfield_next_;
     bool doaccum_tfield =
@@ -258,6 +264,7 @@ private:
   int tfield_moments_next_;
   int naccum_ = 0;
   int naccum_moments_ = 0;
+  bool first_time = true;
 };
 
 #ifdef xPSC_HAVE_ADIOS2
