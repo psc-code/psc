@@ -129,6 +129,10 @@ public:
     if(first_time){
         first_time = false;
         if(timestep != 0)
+            pfield_next_ = timestep + pfield_interval;
+            tfield_next_ = timestep + tfield_interval;
+            pfield_moments_next_ = timestep + pfield_moments_interval;
+            tfield_moments_next_ = timestep + tfield_moments_interval;
             return;
     }
 
