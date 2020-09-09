@@ -11,7 +11,7 @@
 #include "heating_spot_foil.hxx"
 #include "inject_impl.hxx"
 
-#define DIM_3D
+//#define DIM_3D
 
 // ======================================================================
 // Particle kinds
@@ -477,9 +477,12 @@ void run()
   SetupParticles<Mparticles> setup_particles(grid);
   setup_particles.fractional_n_particles_per_cell = true;
   setup_particles.neutralizing_population = MY_ION;
+  setup_particles.HE_population = MY_ELECTRON_HE;
+  setup_particles.non_neutralizing_population = MY_ELECTRON;
+  setup_particles.HE_ratio = g.electron_HE_ratio;
 
   Inject inject{grid,        g.inject_interval, inject_tau,
-                MY_ELECTRON, inject_target,     setup_particles};
+                inject_target,     setup_particles};
 
   auto lf_inject = [&](const Grid_t& grid, Mparticles& mprts) {
     static int pr_inject, pr_heating;
