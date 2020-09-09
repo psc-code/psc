@@ -26,11 +26,15 @@ struct Inject_ : InjectBase
   // ctor
 
   Inject_(const Grid_t& grid, int interval, int tau,
-          Target_t target, SetupParticles& setup_particles)
+          Target_t target, SetupParticles& setup_particles,
+          int base_population, int HE_population, double HE_ratio)
     : InjectBase{interval, tau},
       target_{target},
       moment_n_{grid},
-      setup_particles_{setup_particles}
+      setup_particles_{setup_particles},
+      base_population_{base_population},
+      HE_population_{HE_population},
+      HE_ratio_{HE_ratio}
   {}
 
   // ----------------------------------------------------------------------
@@ -69,8 +73,18 @@ struct Inject_ : InjectBase
     auto lf_init_npt = [&](int kind, Double3 pos, int p, Int3 idx,
                            psc_particle_npt& npt) {
       if (target_.is_inside(pos)) {
-        target_.init_npt(kind, pos, npt);
-        npt.n -= mf_n[p](kind, idx[0], idx[1], idx[2]);
+
+        if(kind == HE_population_){
+          target_.init_npt(base_population_, pos, npt);
+          npt.n -= mf_n[p](base_population_, idx[0], idx[1], idx[2]);
+          npt.n *= HE_ratio_;
+        }else{
+          //should electrons inject by moments and then scale to (1-HE_ratio)?
+          target_.init_npt(kind, pos, npt);
+          npt.n -= mf_n[p](kind, idx[0], idx[1], idx[2]);
+          if(kind == base_population_)
+            npt.n *= (1 - HE_ratio_);
+        }
         if (npt.n < 0) {
           npt.n = 0;
         }
@@ -90,6 +104,9 @@ private:
   Target_t target_;
   ItemMoment_t moment_n_;
   SetupParticles setup_particles_;
+  int base_population_ = 1;
+  int HE_population_ = -1;
+  double HE_ratio_ = 0.0;;
 };
 
 // ======================================================================
