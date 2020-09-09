@@ -25,9 +25,9 @@ struct Inject_ : InjectBase
   // ----------------------------------------------------------------------
   // ctor
 
-  Inject_(const Grid_t& grid, int interval, int tau, int kind_n,
+  Inject_(const Grid_t& grid, int interval, int tau,
           Target_t target, SetupParticles& setup_particles)
-    : InjectBase{interval, tau, kind_n},
+    : InjectBase{interval, tau},
       target_{target},
       moment_n_{grid},
       setup_particles_{setup_particles}
@@ -70,7 +70,7 @@ struct Inject_ : InjectBase
                            psc_particle_npt& npt) {
       if (target_.is_inside(pos)) {
         target_.init_npt(kind, pos, npt);
-        npt.n -= mf_n[p](kind_n, idx[0], idx[1], idx[2]);
+        npt.n -= mf_n[p](kind, idx[0], idx[1], idx[2]);
         if (npt.n < 0) {
           npt.n = 0;
         }

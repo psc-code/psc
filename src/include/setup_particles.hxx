@@ -146,7 +146,12 @@ struct SetupParticles
               if (pop < kinds_.size()) {
                 npt.kind = pop;
               }
-              init_npt(pop, pos, p, {jx, jy, jz}, npt);
+              if(pop == HE_population){
+                init_npt(non_neutralizing_population, pos, p, {jx, jy, jz}, npt);
+                npt.n *= HE_ratio;
+              }else
+                //should electrons inject by moments and then scale to (1-HE_ratio)?
+                init_npt(pop, pos, p, {jx, jy, jz}, npt);
 
               int n_in_cell;
               if (pop != neutralizing_population) {
@@ -235,6 +240,9 @@ struct SetupParticles
   int neutralizing_population = {-1};
   bool fractional_n_particles_per_cell = {false};
   bool initial_momentum_gamma_correction = {false};
+  int non_neutralizing_population = 0;
+  int HE_population = -1;
+  float HE_ratio = 0.0;;
 
 private:
   const Grid_t::Kinds kinds_;

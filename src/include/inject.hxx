@@ -11,13 +11,12 @@
 
 struct InjectBase
 {
-  InjectBase(int interval, int tau, int kind_n)
-    : interval(interval), tau(tau), kind_n(kind_n)
+  InjectBase(int interval, int tau)
+    : interval(interval), tau(tau)
   {}
 
   // param
   const int interval; // inject every so many steps
   const int tau; // in steps
-  const int kind_n; // the number of particles to inject are based on this kind's density
 };
 
