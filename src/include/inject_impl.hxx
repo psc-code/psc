@@ -1,6 +1,7 @@
 
 
 #include "../libpsc/psc_output_fields/fields_item_moments_1st.hxx"
+#include "../libpsc/psc_output_fields/fields_item_fields.hxx"
 #include <bnd.hxx>
 #include <fields.hxx>
 #include <fields_item.hxx>
@@ -8,7 +9,6 @@
 
 #include <stdlib.h>
 #include <string>
-
 // ======================================================================
 // Inject_
 
@@ -21,20 +21,23 @@ struct Inject_ : InjectBase
   using real_t = typename Mparticles::real_t;
   using ItemMoment_t = _ItemMoment;
   using SetupParticles = ::SetupParticles<Mparticles>;
+#ifdef USE_CUDA
+  using MFields = HMFields;  
+#else
+  using MFields = MFieldsC;
+#endif
 
   // ----------------------------------------------------------------------
   // ctor
-
-  Inject_(const Grid_t& grid, int interval, int tau,
-          Target_t target, SetupParticles& setup_particles,
-          int base_population, int HE_population, double HE_ratio)
-    : InjectBase{interval, tau},
-      target_{target},
+  template <typename FUNC>
+  Inject_( Grid_t& grid, int interval,
+          SetupParticles& setup_particles,
+          FUNC init_npt)
+          //std::function<void (int, int, psc_particle_npt&, MFields)> init_npt)
+    : InjectBase{interval},
       moment_n_{grid},
       setup_particles_{setup_particles},
-      base_population_{base_population},
-      HE_population_{HE_population},
-      HE_ratio_{HE_ratio}
+      init_npt_{init_npt}
   {}
 
   // ----------------------------------------------------------------------
@@ -64,49 +67,22 @@ struct Inject_ : InjectBase
     auto mf_n = evalMfields(moment_n_);
     prof_stop(pr_2);
     
-    prof_start(pr_3);
-    //auto& mf_n = mres.template get_as<Mfields>(kind_n, kind_n + 1);
-    prof_stop(pr_3);
-    
-    real_t fac = (interval * grid.dt / tau) / (1. + interval * grid.dt / tau);
-
     auto lf_init_npt = [&](int kind, Double3 pos, int p, Int3 idx,
                            psc_particle_npt& npt) {
-      if (target_.is_inside(pos)) {
 
-        if(kind == HE_population_){
-          target_.init_npt(base_population_, pos, npt);
-          npt.n -= mf_n[p](base_population_, idx[0], idx[1], idx[2]);
-          npt.n *= HE_ratio_;
-        }else{
-          //should electrons inject by moments and then scale to (1-HE_ratio)?
-          target_.init_npt(kind, pos, npt);
-          npt.n -= mf_n[p](kind, idx[0], idx[1], idx[2]);
-          if(kind == base_population_)
-            npt.n *= (1 - HE_ratio_);
-        }
-        if (npt.n < 0) {
-          npt.n = 0;
-        }
-        npt.n *= fac;
-      }
+        init_npt_(kind, pos, p, idx, npt, mf_n);
     };
-
     prof_start(pr_4);
     setup_particles_.setupParticles(mprts, lf_init_npt);
     prof_stop(pr_4);
     
-    //mres.put_as(mf_n, 0, 0);
     prof_stop(pr);
   }
 
 private:
-  Target_t target_;
   ItemMoment_t moment_n_;
   SetupParticles setup_particles_;
-  int base_population_ = 1;
-  int HE_population_ = -1;
-  double HE_ratio_ = 0.0;;
+  std::function<void (int, Double3, int, Int3,  psc_particle_npt&, MFields)> init_npt_;
 };
 
 // ======================================================================

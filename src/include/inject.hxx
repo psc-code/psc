@@ -11,12 +11,12 @@
 
 struct InjectBase
 {
-  InjectBase(int interval, int tau)
-    : interval(interval), tau(tau)
+
+  InjectBase(int interval)
+    : interval(interval)
   {}
 
   // param
   const int interval; // inject every so many steps
-  const int tau; // in steps
 };
 

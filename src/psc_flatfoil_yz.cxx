@@ -11,6 +11,8 @@
 #include "heating_spot_foil.hxx"
 #include "inject_impl.hxx"
 
+#include "../libpsc/psc_output_fields/fields_item_fields.hxx"
+
 //#define DIM_3D
 
 // ======================================================================
@@ -199,7 +201,7 @@ void setupParameters()
   // -- set some generic PSC parameters
   psc_params.nmax = 10000001; // 5001;
   psc_params.cfl = 0.75;
-  psc_params.write_checkpoint_every_step = 1000;
+  psc_params.write_checkpoint_every_step = 100;
   psc_params.stats_every = 1;
 
   // -- start from checkpoint:
@@ -249,9 +251,12 @@ Grid_t* setupGrid()
   Int3 gdims = {160, 160, 3 * 160};        // global number of grid points
   Int3 np = {5, 5, 3 * 5};                 // division into patches
 #else
-  Grid_t::Real3 LL = {1., 800., 3. * 800.}; // domain size (in d_e)
-  Int3 gdims = {1, 1600, 3 * 1600};         // global number of grid points
-  Int3 np = {1, 50, 3 * 50};                // division into patches
+  //Grid_t::Real3 LL = {1., 800., 3. * 800.}; // domain size (in d_e)
+  //Int3 gdims = {1, 1600, 3 * 1600};         // global number of grid points
+  //Int3 np = {1, 50, 3 * 50};                // division into patches
+    Grid_t::Real3 LL = {1., 32., 3200.}; // domain size (in d_e)
+    Int3 gdims = {1, 32, 2*3200};        // global number of grid points
+    Int3 np = {1, 1, 2*100};                 // division into patches
 #endif
 
   Grid_t::Domain domain{gdims, LL, -.5 * LL, np};
@@ -478,9 +483,34 @@ void run()
   setup_particles.fractional_n_particles_per_cell = true;
   setup_particles.neutralizing_population = MY_ION;
 
-  Inject inject{grid, g.inject_interval, inject_tau,
-                inject_target, setup_particles,
-                MY_ELECTRON, MY_ELECTRON_HE, g.electron_HE_ratio};
+#ifdef USE_CUDA
+  using MFields = HMFields;  
+#else
+  using MFields = MFieldsC;
+#endif
+  double fac = (g.inject_interval * grid.dt / inject_tau) / (1. + g.inject_interval * grid.dt / inject_tau);
+  auto lf_init_npt = [&](int kind, Double3 pos, int p, Int3 idx,
+                         psc_particle_npt& npt, MFields mf_n) {
+    if (inject_target.is_inside(pos)) {
+  
+      if(kind == MY_ELECTRON_HE){
+        inject_target.init_npt(MY_ELECTRON, pos, npt);
+        npt.n -= mf_n[p](MY_ELECTRON, idx[0], idx[1], idx[2]);
+        npt.n *= g.electron_HE_ratio;
+      }else{
+        inject_target.init_npt(kind, pos, npt);
+        npt.n -= mf_n[p](kind, idx[0], idx[1], idx[2]);
+        if(kind == MY_ELECTRON)
+          npt.n *= (1 - g.electron_HE_ratio);
+      }
+      if (npt.n < 0) {
+        npt.n = 0;
+      }
+      npt.n *= fac;
+    }
+  };
+
+  Inject inject{grid, g.inject_interval, setup_particles, lf_init_npt};
 
   auto lf_inject = [&](const Grid_t& grid, Mparticles& mprts) {
     static int pr_inject, pr_heating;
