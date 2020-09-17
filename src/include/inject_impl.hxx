@@ -12,19 +12,21 @@
 // ======================================================================
 // Inject_
 
-template <typename Target_t>
+template <typename Target_t, typename ItemMoment>
 class Functor
 {
 public:
   Functor(Target_t& target, int HE_population, int base_population,
-          double HE_ratio, MfieldsC& mf_n, double fac)
+          double HE_ratio, ItemMoment& moment_n, double fac, MfieldsC& mf)
     : target(target),
       HE_population(HE_population),
       base_population(base_population),
       HE_ratio(HE_ratio),
-      mf_n(mf_n),
-      fac(fac)
-  {}
+      fac(fac),
+      mf_n(mf.grid(), mf.n_comps(), mf.grid().ibn)
+  {
+    mf_n = evalMfields(moment_n);
+  }
 
   void operator()(int kind, Double3 pos, int p, Int3 idx, psc_particle_npt& npt)
   {
@@ -53,7 +55,7 @@ private:
   int HE_population;
   int base_population;
   double HE_ratio;
-  MfieldsC& mf_n;
+  MfieldsC mf_n;
   double fac;
 };
 
@@ -105,18 +107,17 @@ struct Inject_ : InjectBase
     moment_n_.update(mprts);
     prof_stop(pr_1);
 
-    prof_start(pr_2);
     auto mf_n = evalMfields(moment_n_);
-    prof_stop(pr_2);
-
+    
     prof_start(pr_3);
     // auto& mf_n = mres.template get_as<Mfields>(kind_n, kind_n + 1);
     prof_stop(pr_3);
 
     real_t fac = (interval * grid.dt / tau) / (1. + interval * grid.dt / tau);
 
-    Functor<Target_t> func(target_, HE_population_, base_population_, HE_ratio_,
-                           mf_n, fac);
+    Functor<Target_t, ItemMoment_t> func(target_, HE_population_,
+                                         base_population_, HE_ratio_, moment_n_,
+                                         fac, mf_n);
     prof_start(pr_4);
     setup_particles_.setupParticles(mprts, func);
     prof_stop(pr_4);
