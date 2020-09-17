@@ -12,13 +12,13 @@
 // ======================================================================
 // Inject_
 
-template <typename Target_t, typename ItemMoment>
+template <typename Target_t, typename ItemMoment, typename Mparticles>
 class Functor
 {
 public:
   Functor(const Grid_t& grid, Target_t& target, int HE_population,
           int base_population, double HE_ratio, ItemMoment& moment_n,
-          double fac)
+          double fac, Mparticles& mprts)
     : target(target),
       HE_population(HE_population),
       base_population(base_population),
@@ -26,6 +26,7 @@ public:
       fac(fac),
       mf_n(grid, grid.kinds.size(), grid.ibn)
   {
+    moment_n.update(mprts);
     mf_n = evalMfields(moment_n);
   }
 
@@ -104,15 +105,11 @@ struct Inject_ : InjectBase
 
     prof_barrier("inject_barrier");
 
-    prof_start(pr_1);
-    moment_n_.update(mprts);
-    prof_stop(pr_1);
-
     real_t fac = (interval * grid.dt / tau) / (1. + interval * grid.dt / tau);
 
-    Functor<Target_t, ItemMoment_t> func(grid, target_, HE_population_,
-                                         base_population_, HE_ratio_, moment_n_,
-                                         fac);
+    Functor<Target_t, ItemMoment_t, Mparticles> func(
+      grid, target_, HE_population_, base_population_, HE_ratio_, moment_n_,
+      fac, mprts);
     prof_start(pr_4);
     setup_particles_.setupParticles(mprts, func);
     prof_stop(pr_4);
