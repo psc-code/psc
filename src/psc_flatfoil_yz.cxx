@@ -482,6 +482,9 @@ void run()
                 inject_target, setup_particles,
                 MY_ELECTRON, MY_ELECTRON_HE, g.electron_HE_ratio};
 
+  using Moment_n = Inject::ItemMoment_t;
+  Moment_n moment_n(grid);
+
   auto lf_inject = [&](const Grid_t& grid, Mparticles& mprts) {
     static int pr_inject, pr_heating;
     if (!pr_inject) {
@@ -495,7 +498,7 @@ void run()
     if (g.inject_interval > 0 && timestep % g.inject_interval == 0) {
       mpi_printf(comm, "***** Performing injection...\n");
       prof_start(pr_inject);
-      inject(mprts);
+      inject(mprts, moment_n);
       prof_stop(pr_inject);
     }
 

@@ -80,7 +80,6 @@ struct Inject_ : InjectBase
           int HE_population, double HE_ratio)
     : InjectBase{interval, tau},
       target_{target},
-      moment_n_{grid},
       setup_particles_{setup_particles},
       base_population_{base_population},
       HE_population_{HE_population},
@@ -90,7 +89,7 @@ struct Inject_ : InjectBase
   // ----------------------------------------------------------------------
   // operator()
 
-  void operator()(Mparticles& mprts)
+  void operator()(Mparticles& mprts, ItemMoment_t& moment_n)
   {
     static int pr, pr_1, pr_2, pr_3, pr_4;
     if (!pr) {
@@ -107,7 +106,7 @@ struct Inject_ : InjectBase
     prof_barrier("inject_barrier");
 
     Functor<Target_t, ItemMoment_t, Mparticles> func(
-      grid, target_, HE_population_, base_population_, HE_ratio_, moment_n_,
+      grid, target_, HE_population_, base_population_, HE_ratio_, moment_n,
       mprts, interval, tau);
     prof_start(pr_4);
     setup_particles_.setupParticles(mprts, func);
@@ -118,7 +117,6 @@ struct Inject_ : InjectBase
 
 private:
   Target_t target_;
-  ItemMoment_t moment_n_;
   SetupParticles setup_particles_;
   int base_population_ = 1;
   int HE_population_ = -1;
