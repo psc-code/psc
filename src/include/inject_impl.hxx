@@ -12,6 +12,51 @@
 // ======================================================================
 // Inject_
 
+template <typename Target_t>
+class Functor
+{
+public:
+  Functor(Target_t& target, int HE_population, int base_population,
+          double HE_ratio, MfieldsC& mf_n, double fac)
+    : target(target),
+      HE_population(HE_population),
+      base_population(base_population),
+      HE_ratio(HE_ratio),
+      mf_n(mf_n),
+      fac(fac)
+  {}
+
+  void operator()(int kind, Double3 pos, int p, Int3 idx, psc_particle_npt& npt)
+  {
+    if (target.is_inside(pos)) {
+
+      if (kind == HE_population) {
+        target.init_npt(base_population, pos, npt);
+        npt.n -= mf_n[p](base_population, idx[0], idx[1], idx[2]);
+        npt.n *= HE_ratio;
+      } else {
+        // should electrons inject by moments and then scale to (1-HE_ratio)?
+        target.init_npt(kind, pos, npt);
+        npt.n -= mf_n[p](kind, idx[0], idx[1], idx[2]);
+        if (kind == base_population)
+          npt.n *= (1 - HE_ratio);
+      }
+      if (npt.n < 0) {
+        npt.n = 0;
+      }
+      npt.n *= fac;
+    }
+  }
+
+private:
+  Target_t& target;
+  int HE_population;
+  int base_population;
+  double HE_ratio;
+  MfieldsC& mf_n;
+  double fac;
+};
+
 template <typename _Mparticles, typename _Mfields, typename Target_t,
           typename _ItemMoment>
 struct Inject_ : InjectBase
@@ -25,9 +70,9 @@ struct Inject_ : InjectBase
   // ----------------------------------------------------------------------
   // ctor
 
-  Inject_(const Grid_t& grid, int interval, int tau,
-          Target_t target, SetupParticles& setup_particles,
-          int base_population, int HE_population, double HE_ratio)
+  Inject_(const Grid_t& grid, int interval, int tau, Target_t target,
+          SetupParticles& setup_particles, int base_population,
+          int HE_population, double HE_ratio)
     : InjectBase{interval, tau},
       target_{target},
       moment_n_{grid},
@@ -59,44 +104,24 @@ struct Inject_ : InjectBase
     prof_start(pr_1);
     moment_n_.update(mprts);
     prof_stop(pr_1);
-    
+
     prof_start(pr_2);
     auto mf_n = evalMfields(moment_n_);
     prof_stop(pr_2);
-    
+
     prof_start(pr_3);
-    //auto& mf_n = mres.template get_as<Mfields>(kind_n, kind_n + 1);
+    // auto& mf_n = mres.template get_as<Mfields>(kind_n, kind_n + 1);
     prof_stop(pr_3);
-    
+
     real_t fac = (interval * grid.dt / tau) / (1. + interval * grid.dt / tau);
 
-    auto lf_init_npt = [&](int kind, Double3 pos, int p, Int3 idx,
-                           psc_particle_npt& npt) {
-      if (target_.is_inside(pos)) {
-
-        if(kind == HE_population_){
-          target_.init_npt(base_population_, pos, npt);
-          npt.n -= mf_n[p](base_population_, idx[0], idx[1], idx[2]);
-          npt.n *= HE_ratio_;
-        }else{
-          //should electrons inject by moments and then scale to (1-HE_ratio)?
-          target_.init_npt(kind, pos, npt);
-          npt.n -= mf_n[p](kind, idx[0], idx[1], idx[2]);
-          if(kind == base_population_)
-            npt.n *= (1 - HE_ratio_);
-        }
-        if (npt.n < 0) {
-          npt.n = 0;
-        }
-        npt.n *= fac;
-      }
-    };
-
+    Functor<Target_t> func(target_, HE_population_, base_population_, HE_ratio_,
+                           mf_n, fac);
     prof_start(pr_4);
-    setup_particles_.setupParticles(mprts, lf_init_npt);
+    setup_particles_.setupParticles(mprts, func);
     prof_stop(pr_4);
-    
-    //mres.put_as(mf_n, 0, 0);
+
+    // mres.put_as(mf_n, 0, 0);
     prof_stop(pr);
   }
 
@@ -106,7 +131,8 @@ private:
   SetupParticles setup_particles_;
   int base_population_ = 1;
   int HE_population_ = -1;
-  double HE_ratio_ = 0.0;;
+  double HE_ratio_ = 0.0;
+  ;
 };
 
 // ======================================================================
