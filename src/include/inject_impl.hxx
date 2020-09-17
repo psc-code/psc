@@ -18,16 +18,17 @@ class Functor
 public:
   Functor(const Grid_t& grid, Target_t& target, int HE_population,
           int base_population, double HE_ratio, ItemMoment& moment_n,
-          double fac, Mparticles& mprts)
+          Mparticles& mprts, int interval, double tau)
     : target(target),
       HE_population(HE_population),
       base_population(base_population),
       HE_ratio(HE_ratio),
-      fac(fac),
       mf_n(grid, grid.kinds.size(), grid.ibn)
   {
     moment_n.update(mprts);
     mf_n = evalMfields(moment_n);
+
+    fac = (interval * grid.dt / tau) / (1. + interval * grid.dt / tau);
   }
 
   void operator()(int kind, Double3 pos, int p, Int3 idx, psc_particle_npt& npt)
@@ -105,11 +106,9 @@ struct Inject_ : InjectBase
 
     prof_barrier("inject_barrier");
 
-    real_t fac = (interval * grid.dt / tau) / (1. + interval * grid.dt / tau);
-
     Functor<Target_t, ItemMoment_t, Mparticles> func(
       grid, target_, HE_population_, base_population_, HE_ratio_, moment_n_,
-      fac, mprts);
+      mprts, interval, tau);
     prof_start(pr_4);
     setup_particles_.setupParticles(mprts, func);
     prof_stop(pr_4);
