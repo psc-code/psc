@@ -16,14 +16,15 @@ template <typename Target_t, typename ItemMoment>
 class Functor
 {
 public:
-  Functor(Target_t& target, int HE_population, int base_population,
-          double HE_ratio, ItemMoment& moment_n, double fac, MfieldsC& mf)
+  Functor(const Grid_t& grid, Target_t& target, int HE_population,
+          int base_population, double HE_ratio, ItemMoment& moment_n,
+          double fac)
     : target(target),
       HE_population(HE_population),
       base_population(base_population),
       HE_ratio(HE_ratio),
       fac(fac),
-      mf_n(mf.grid(), mf.n_comps(), mf.grid().ibn)
+      mf_n(grid, grid.kinds.size(), grid.ibn)
   {
     mf_n = evalMfields(moment_n);
   }
@@ -107,22 +108,15 @@ struct Inject_ : InjectBase
     moment_n_.update(mprts);
     prof_stop(pr_1);
 
-    auto mf_n = evalMfields(moment_n_);
-    
-    prof_start(pr_3);
-    // auto& mf_n = mres.template get_as<Mfields>(kind_n, kind_n + 1);
-    prof_stop(pr_3);
-
     real_t fac = (interval * grid.dt / tau) / (1. + interval * grid.dt / tau);
 
-    Functor<Target_t, ItemMoment_t> func(target_, HE_population_,
+    Functor<Target_t, ItemMoment_t> func(grid, target_, HE_population_,
                                          base_population_, HE_ratio_, moment_n_,
-                                         fac, mf_n);
+                                         fac);
     prof_start(pr_4);
     setup_particles_.setupParticles(mprts, func);
     prof_stop(pr_4);
 
-    // mres.put_as(mf_n, 0, 0);
     prof_stop(pr);
   }
 
