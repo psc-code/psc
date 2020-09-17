@@ -24,7 +24,7 @@ struct Inject_ : InjectBase
 #ifdef USE_CUDA
   using MFields = HMFields;  
 #else
-  using MFields = MFieldsC;
+  using MFields = MfieldsC;
 #endif
 
   // ----------------------------------------------------------------------
@@ -82,7 +82,7 @@ struct Inject_ : InjectBase
 private:
   ItemMoment_t moment_n_;
   SetupParticles setup_particles_;
-  std::function<void (int, Double3, int, Int3,  psc_particle_npt&, MFields)> init_npt_;
+  std::function<void (int, Double3, int, Int3,  psc_particle_npt&, MFields&)> init_npt_;
 };
 
 // ======================================================================
