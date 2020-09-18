@@ -103,7 +103,7 @@ struct InjectFoilParams
   double Te, Ti;
 };
 
-class InjectFoil : InjectFoilParams
+class InjectFoil : public InjectFoilParams
 {
 public:
   InjectFoil() = default;
@@ -529,17 +529,19 @@ void run()
                        psc_particle_npt& npt) {
     if (inject_target.is_inside(pos)) {
 
-      if (kind == MY_ELECTRON_HE) {
-        inject_target.init_npt(MY_ELECTRON, pos, npt);
-        npt.n -= mf_n[p](MY_ELECTRON, idx[0], idx[1], idx[2]);
-        npt.n *= g.electron_HE_ratio;
-      } else {
-        // should electrons inject by moments and then scale to (1-HE_ratio)?
+      if (kind == MY_ELECTRON_HE || kind == MY_ELECTRON) {
+        inject_target.init_npt(kind, pos, npt);
+        npt.n =
+          inject_target.n - (mf_n[p](MY_ELECTRON, idx[0], idx[1], idx[2]) +
+                             mf_n[p](MY_ELECTRON_HE, idx[0], idx[1], idx[2]));
+	if (kind == MY_ELECTRON_HE) {
+	  npt.n *= g.electron_HE_ratio;
+	} else {
+	  npt.n *= (1. - g.electron_HE_ratio);
+	}
+      } else { // ions
         inject_target.init_npt(kind, pos, npt);
         npt.n -= mf_n[p](kind, idx[0], idx[1], idx[2]);
-        if (kind == MY_ELECTRON) {
-          npt.n *= (1 - g.electron_HE_ratio);
-        }
       }
       if (npt.n < 0) {
         npt.n = 0;
