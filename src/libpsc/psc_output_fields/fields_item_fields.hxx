@@ -50,6 +50,28 @@ inline const MfieldsC& evalMfields(const MfieldsC& mflds)
   return mflds;
 }
 
+namespace detail
+{
+template <typename E, class Enable = void>
+struct EvalMfields
+{
+  using type = MfieldsC;
+};
+
+#ifdef USE_CUDA
+
+template <>
+struct EvalMfields<MfieldsCuda>
+{
+  using type = HMFields;
+};
+
+#endif
+} // namespace detail
+
+template <typename Mfields>
+using EvalMfields_t = typename detail::EvalMfields<Mfields>::type;
+
 #ifdef USE_CUDA
 
 template <typename E,

@@ -192,6 +192,24 @@ using Inject = typename InjectSelector<Mparticles, InjectFoil, Dim>::Inject;
 using Heating = typename HeatingSelector<Mparticles>::Heating;
 
 // ======================================================================
+// FIXME, so ugly...
+
+template <typename E>
+EvalMfields_t<E> make_MfieldsMoment_n(const Grid_t& grid)
+{
+  return MfieldsC(grid, grid.kinds.size(), grid.ibn);
+}
+
+#ifdef USE_CUDA
+template <>
+HMFields make_MfieldsMoment_n<MfieldsCuda>(const Grid_t& grid)
+{
+  return HMFields({-grid.ibn, grid.domain.ldims + 2 * grid.ibn},
+                  grid.kinds.size(), grid.n_patches());
+}
+#endif
+
+// ======================================================================
 // setupParameters
 
 void setupParameters()
@@ -484,7 +502,7 @@ void run()
 
   using Moment_n = Inject::ItemMoment_t;
   Moment_n moment_n(grid);
-  MfieldsC mf_n(grid, grid.kinds.size(), grid.ibn);
+  auto mf_n = make_MfieldsMoment_n<Moment_n::Mfields>(grid);
 
   auto lf_inject = [&](int kind, Double3 pos, int p, Int3 idx,
                        psc_particle_npt& npt) {
