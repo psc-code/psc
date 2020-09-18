@@ -41,7 +41,6 @@ add_psc_test(test_collision)
 if (USE_CUDA AND NOT USE_VPIC)
   add_psc_cuda_test(test_collision_cuda)
 endif()
-add_psc_test(test_inject)
 add_psc_test(test_balance)
 add_psc_test(TestUniqueIdGenerator)
 

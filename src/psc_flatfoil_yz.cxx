@@ -9,9 +9,8 @@
 
 #include "../libpsc/psc_heating/psc_heating_impl.hxx"
 #include "heating_spot_foil.hxx"
-#include "inject_impl.hxx"
 
-#define DIM_3D
+//#define DIM_3D
 
 // ======================================================================
 // Particle kinds
@@ -104,7 +103,7 @@ struct InjectFoilParams
   double Te, Ti;
 };
 
-class InjectFoil : InjectFoilParams
+class InjectFoil : public InjectFoilParams
 {
 public:
   InjectFoil() = default;
@@ -179,6 +178,30 @@ using PscConfig =
 
 #endif
 
+// ======================================================================
+// Moment_n_Selector
+//
+// FIXME, should go away eventually
+
+template <typename Mparticles, typename Dim, typename Enable = void>
+struct Moment_n_Selector
+{
+  using type = Moment_n_1st<Mparticles, MfieldsC>;
+};
+
+#ifdef USE_CUDA
+
+// This not particularly pretty template arg specializes InjectSelector for all
+// CUDA Mparticles types
+template <typename Mparticles, typename Dim>
+struct Moment_n_Selector<
+  Mparticles, Dim, typename std::enable_if<Mparticles::is_cuda::value>::type>
+{
+  using type = Moment_n_1st_cuda<Mparticles, Dim>;
+};
+
+#endif
+
 // ----------------------------------------------------------------------
 
 using MfieldsState = PscConfig::MfieldsState;
@@ -188,8 +211,26 @@ using Collision = PscConfig::Collision;
 using Checks = PscConfig::Checks;
 using Marder = PscConfig::Marder;
 using OutputParticles = PscConfig::OutputParticles;
-using Inject = typename InjectSelector<Mparticles, InjectFoil, Dim>::Inject;
+using Moment_n = typename Moment_n_Selector<Mparticles, Dim>::type;
 using Heating = typename HeatingSelector<Mparticles>::Heating;
+
+// ======================================================================
+// FIXME, so ugly...
+
+template <typename E>
+EvalMfields_t<E> make_MfieldsMoment_n(const Grid_t& grid)
+{
+  return MfieldsC(grid, grid.kinds.size(), grid.ibn);
+}
+
+#ifdef USE_CUDA
+template <>
+HMFields make_MfieldsMoment_n<MfieldsCuda>(const Grid_t& grid)
+{
+  return HMFields({-grid.ibn, grid.domain.ldims + 2 * grid.ibn},
+                  grid.kinds.size(), grid.n_patches());
+}
+#endif
 
 // ======================================================================
 // setupParameters
@@ -478,10 +519,38 @@ void run()
   setup_particles.fractional_n_particles_per_cell = true;
   setup_particles.neutralizing_population = MY_ION;
 
-  Inject inject{grid,        g.inject_interval, inject_tau,
-                MY_ELECTRON, inject_target,     setup_particles};
+  double inject_fac = (g.inject_interval * grid.dt / inject_tau) /
+                      (1. + g.inject_interval * grid.dt / inject_tau);
 
-  auto lf_inject = [&](const Grid_t& grid, Mparticles& mprts) {
+  Moment_n moment_n(grid);
+  auto mf_n = make_MfieldsMoment_n<Moment_n::Mfields>(grid);
+
+  auto lf_inject = [&](int kind, Double3 pos, int p, Int3 idx,
+                       psc_particle_npt& npt) {
+    if (inject_target.is_inside(pos)) {
+
+      if (kind == MY_ELECTRON_HE || kind == MY_ELECTRON) {
+        inject_target.init_npt(kind, pos, npt);
+        npt.n =
+          inject_target.n - (mf_n[p](MY_ELECTRON, idx[0], idx[1], idx[2]) +
+                             mf_n[p](MY_ELECTRON_HE, idx[0], idx[1], idx[2]));
+	if (kind == MY_ELECTRON_HE) {
+	  npt.n *= g.electron_HE_ratio;
+	} else {
+	  npt.n *= (1. - g.electron_HE_ratio);
+	}
+      } else { // ions
+        inject_target.init_npt(kind, pos, npt);
+        npt.n -= mf_n[p](kind, idx[0], idx[1], idx[2]);
+      }
+      if (npt.n < 0) {
+        npt.n = 0;
+      }
+      npt.n *= inject_fac;
+    }
+  };
+
+  auto lf_inject_heat = [&](const Grid_t& grid, Mparticles& mprts) {
     static int pr_inject, pr_heating;
     if (!pr_inject) {
       pr_inject = prof_register("inject", 1., 0, 0);
@@ -494,7 +563,9 @@ void run()
     if (g.inject_interval > 0 && timestep % g.inject_interval == 0) {
       mpi_printf(comm, "***** Performing injection...\n");
       prof_start(pr_inject);
-      inject(mprts);
+      moment_n.update(mprts);
+      mf_n = evalMfields(moment_n);
+      setup_particles.setupParticles(mprts, lf_inject);
       prof_stop(pr_inject);
     }
 
@@ -522,7 +593,7 @@ void run()
 
   auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
                                           balance, collision, checks, marder,
-                                          diagnostics, lf_inject);
+                                          diagnostics, lf_inject_heat);
 
   psc.integrate();
 }
