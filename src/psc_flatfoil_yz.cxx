@@ -530,6 +530,10 @@ void run()
 
   using Moment_n = Inject::ItemMoment_t;
   Moment_n moment_n(grid);
+  MfieldsC mf_n(grid, grid.kinds.size(), grid.ibn);
+  Functor<InjectFoil, Moment_n, Mparticles> func(
+    grid, inject_target, MY_ELECTRON_HE, MY_ELECTRON, g.electron_HE_ratio,
+    g.inject_interval, inject_tau, mf_n);
 
   auto lf_inject = [&](const Grid_t& grid, Mparticles& mprts) {
     static int pr_inject, pr_heating;
@@ -544,14 +548,8 @@ void run()
     if (g.inject_interval > 0 && timestep % g.inject_interval == 0) {
       mpi_printf(comm, "***** Performing injection...\n");
       prof_start(pr_inject);
-      MfieldsC mf_n(grid, grid.kinds.size(), grid.ibn);
-      Functor<InjectFoil, Moment_n, Mparticles> func(
-        grid, inject_target, MY_ELECTRON_HE, MY_ELECTRON, g.electron_HE_ratio,
-        g.inject_interval, inject_tau, mf_n);
-
       moment_n.update(mprts);
       mf_n = evalMfields(moment_n);
-
       inject(mprts, func);
       prof_stop(pr_inject);
     }
