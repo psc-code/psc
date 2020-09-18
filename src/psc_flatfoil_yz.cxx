@@ -496,7 +496,6 @@ void run()
   setup_particles.fractional_n_particles_per_cell = true;
   setup_particles.neutralizing_population = MY_ION;
 
-  Inject inject(grid, g.inject_interval, inject_tau, setup_particles);
   double inject_fac = (g.inject_interval * grid.dt / inject_tau) /
                       (1. + g.inject_interval * grid.dt / inject_tau);
 
@@ -542,7 +541,7 @@ void run()
       prof_start(pr_inject);
       moment_n.update(mprts);
       mf_n = evalMfields(moment_n);
-      inject(mprts, lf_inject);
+      setup_particles.setupParticles(mprts, lf_inject);
       prof_stop(pr_inject);
     }
 

@@ -16,46 +16,7 @@ template <typename _Mparticles, typename _Mfields, typename Target_t,
           typename _ItemMoment>
 struct Inject_ : InjectBase
 {
-  using Mfields = _Mfields;
-  using Mparticles = _Mparticles;
-  using real_t = typename Mparticles::real_t;
   using ItemMoment_t = _ItemMoment;
-  using SetupParticles = ::SetupParticles<Mparticles>;
-
-  // ----------------------------------------------------------------------
-  // ctor
-
-  Inject_(const Grid_t& grid, int interval, int tau,
-          SetupParticles& setup_particles)
-    : InjectBase{interval, tau},
-      setup_particles_{setup_particles}
-  {}
-
-  // ----------------------------------------------------------------------
-  // operator()
-
-  template <typename F>
-  void operator()(Mparticles& mprts, F& func)
-  {
-    static int pr, pr_1;
-    if (!pr) {
-      pr_1 = prof_register("inject_setup_prts", 1., 0, 0);
-    }
-
-    prof_start(pr);
-    const auto& grid = mprts.grid();
-
-    prof_barrier("inject_barrier");
-
-    prof_start(pr_1);
-    setup_particles_.setupParticles(mprts, func);
-    prof_stop(pr_1);
-
-    prof_stop(pr);
-  }
-
-private:
-  SetupParticles setup_particles_;
 };
 
 // ======================================================================
