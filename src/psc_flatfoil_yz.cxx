@@ -535,7 +535,7 @@ void run()
     grid, inject_target, MY_ELECTRON_HE, MY_ELECTRON, g.electron_HE_ratio,
     g.inject_interval, inject_tau, mf_n);
 
-  auto lf_inject = [&](const Grid_t& grid, Mparticles& mprts) {
+  auto lf_inject_heat = [&](const Grid_t& grid, Mparticles& mprts) {
     static int pr_inject, pr_heating;
     if (!pr_inject) {
       pr_inject = prof_register("inject", 1., 0, 0);
@@ -578,7 +578,7 @@ void run()
 
   auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
                                           balance, collision, checks, marder,
-                                          diagnostics, lf_inject);
+                                          diagnostics, lf_inject_heat);
 
   psc.integrate();
 }
