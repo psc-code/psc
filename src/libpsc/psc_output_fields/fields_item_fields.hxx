@@ -45,7 +45,10 @@ inline MfieldsC evalMfields(const MfieldsSingle& _exp)
   return mflds;
 }
 
-inline const MfieldsC& evalMfields(const MfieldsC& mflds) { return mflds; }
+inline const MfieldsC& evalMfields(const MfieldsC& mflds)
+{
+  return mflds;
+}
 
 #ifdef USE_CUDA
 
@@ -524,10 +527,11 @@ private:
 // Main fields in their natural staggering
 
 template <>
-class Item_jeh<MfieldsStateCuda> : public MFexpression<Item_jeh<MfieldsStateCuda>>
+class Item_jeh<MfieldsStateCuda>
+  : public MFexpression<Item_jeh<MfieldsStateCuda>>
 {
   using MfieldsState = MfieldsStateCuda;
-  
+
 public:
   using Real = typename MfieldsState::real_t;
 
@@ -539,15 +543,16 @@ public:
             "ez_ec", "hx_fc", "hy_fc", "hz_fc"};
   }
 
-  Item_jeh(MfieldsState& mflds) : mflds_(mflds.grid(), NR_FIELDS, mflds.grid().ibn)
+  Item_jeh(MfieldsState& mflds)
+    : mflds_(mflds.grid(), NR_FIELDS, mflds.grid().ibn)
   {
     auto hmflds = hostMirror(mflds);
     copy(mflds, hmflds);
     for (int p = 0; p < mflds_.n_patches(); p++) {
       for (int m = 0; m < mflds_.n_comps(); m++) {
-	mflds_.Foreach_3d(0, 0, [&](int i, int j, int k) {
-	    mflds_[p](m, i, j, k) = hmflds[p](m, i, j, k);
-	  });
+        mflds_.Foreach_3d(0, 0, [&](int i, int j, int k) {
+          mflds_[p](m, i, j, k) = hmflds[p](m, i, j, k);
+        });
       }
     }
   }
