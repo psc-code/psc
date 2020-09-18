@@ -9,7 +9,6 @@
 
 #include "../libpsc/psc_heating/psc_heating_impl.hxx"
 #include "heating_spot_foil.hxx"
-#include "inject_impl.hxx"
 
 //#define DIM_3D
 
@@ -179,6 +178,30 @@ using PscConfig =
 
 #endif
 
+// ======================================================================
+// Moment_n_Selector
+//
+// FIXME, should go away eventually
+
+template <typename Mparticles, typename Dim, typename Enable = void>
+struct Moment_n_Selector
+{
+  using type = Moment_n_1st<Mparticles, MfieldsC>;
+};
+
+#ifdef USE_CUDA
+
+// This not particularly pretty template arg specializes InjectSelector for all
+// CUDA Mparticles types
+template <typename Mparticles, typename Dim>
+struct Moment_n_Selector<
+  Mparticles, Dim, typename std::enable_if<Mparticles::is_cuda::value>::type>
+{
+  using type = Moment_n_1st_cuda<Mparticles, Dim>;
+};
+
+#endif
+
 // ----------------------------------------------------------------------
 
 using MfieldsState = PscConfig::MfieldsState;
@@ -188,7 +211,7 @@ using Collision = PscConfig::Collision;
 using Checks = PscConfig::Checks;
 using Marder = PscConfig::Marder;
 using OutputParticles = PscConfig::OutputParticles;
-using Inject = typename InjectSelector<Mparticles, InjectFoil, Dim>::Inject;
+using Moment_n = typename Moment_n_Selector<Mparticles, Dim>::type;
 using Heating = typename HeatingSelector<Mparticles>::Heating;
 
 // ======================================================================
@@ -499,7 +522,6 @@ void run()
   double inject_fac = (g.inject_interval * grid.dt / inject_tau) /
                       (1. + g.inject_interval * grid.dt / inject_tau);
 
-  using Moment_n = Inject::ItemMoment_t;
   Moment_n moment_n(grid);
   auto mf_n = make_MfieldsMoment_n<Moment_n::Mfields>(grid);
 
