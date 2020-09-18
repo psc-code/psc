@@ -198,7 +198,7 @@ class Functor
 {
 public:
   Functor(const Grid_t& grid, Target_t& target, int HE_population,
-          int base_population, double HE_ratio, ItemMoment& moment_n,
+          int base_population, double HE_ratio,
           Mparticles& mprts, int interval, double tau)
     : target(target),
       HE_population(HE_population),
@@ -206,9 +206,6 @@ public:
       HE_ratio(HE_ratio),
       mf_n(grid, grid.kinds.size(), grid.ibn)
   {
-    moment_n.update(mprts);
-    mf_n = evalMfields(moment_n);
-
     fac = (interval * grid.dt / tau) / (1. + interval * grid.dt / tau);
   }
 
@@ -234,7 +231,6 @@ public:
     }
   }
 
-private:
   Target_t& target;
   int HE_population;
   int base_population;
@@ -242,8 +238,6 @@ private:
   MfieldsC mf_n;
   double fac;
 };
-
-
 
 // ======================================================================
 // setupParameters
@@ -552,7 +546,11 @@ void run()
       prof_start(pr_inject);
       Functor<InjectFoil, Moment_n, Mparticles> func(
         grid, inject_target, MY_ELECTRON_HE, MY_ELECTRON, g.electron_HE_ratio,
-        moment_n, mprts, g.inject_interval, inject_tau);
+        mprts, g.inject_interval, inject_tau);
+
+      moment_n.update(mprts);
+      func.mf_n = evalMfields(moment_n);
+
       inject(mprts, func);
       prof_stop(pr_inject);
     }
