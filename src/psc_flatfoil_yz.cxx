@@ -498,7 +498,10 @@ void run()
     if (g.inject_interval > 0 && timestep % g.inject_interval == 0) {
       mpi_printf(comm, "***** Performing injection...\n");
       prof_start(pr_inject);
-      inject(mprts, moment_n);
+      Functor<InjectFoil, Moment_n, Mparticles> func(
+        grid, inject_target, MY_ELECTRON_HE, MY_ELECTRON, g.electron_HE_ratio,
+        moment_n, mprts, g.inject_interval, inject_tau);
+      inject(mprts, func);
       prof_stop(pr_inject);
     }
 

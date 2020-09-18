@@ -123,8 +123,8 @@ TYPED_TEST(InjectTest, Test1)
   }
 
   // do one injection
-  typename Inject::ItemMoment_t moment_n(grid);
-  inject(mprts, moment_n);
+  //typename Inject::ItemMoment_t moment_n(grid);
+  //inject(mprts, moment_n);
 
   // density should be equal to n_injected inside target
   {

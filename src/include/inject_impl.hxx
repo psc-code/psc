@@ -89,7 +89,8 @@ struct Inject_ : InjectBase
   // ----------------------------------------------------------------------
   // operator()
 
-  void operator()(Mparticles& mprts, ItemMoment_t& moment_n)
+  template <typename F>
+  void operator()(Mparticles& mprts, F& func)
   {
     static int pr, pr_1, pr_2, pr_3, pr_4;
     if (!pr) {
@@ -105,9 +106,6 @@ struct Inject_ : InjectBase
 
     prof_barrier("inject_barrier");
 
-    Functor<Target_t, ItemMoment_t, Mparticles> func(
-      grid, target_, HE_population_, base_population_, HE_ratio_, moment_n,
-      mprts, interval, tau);
     prof_start(pr_4);
     setup_particles_.setupParticles(mprts, func);
     prof_stop(pr_4);
