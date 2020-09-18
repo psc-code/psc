@@ -192,54 +192,6 @@ using Inject = typename InjectSelector<Mparticles, InjectFoil, Dim>::Inject;
 using Heating = typename HeatingSelector<Mparticles>::Heating;
 
 // ======================================================================
-
-template <typename Target_t, typename ItemMoment, typename Mparticles>
-class Functor
-{
-public:
-  Functor(const Grid_t& grid, Target_t& target, int HE_population,
-          int base_population, double HE_ratio, int interval, double tau,
-          MfieldsC& mf_n)
-    : target(target),
-      HE_population(HE_population),
-      base_population(base_population),
-      HE_ratio(HE_ratio),
-      mf_n(mf_n)
-  {
-    fac = (interval * grid.dt / tau) / (1. + interval * grid.dt / tau);
-  }
-
-  void operator()(int kind, Double3 pos, int p, Int3 idx, psc_particle_npt& npt)
-  {
-    if (target.is_inside(pos)) {
-
-      if (kind == HE_population) {
-        target.init_npt(base_population, pos, npt);
-        npt.n -= mf_n[p](base_population, idx[0], idx[1], idx[2]);
-        npt.n *= HE_ratio;
-      } else {
-        // should electrons inject by moments and then scale to (1-HE_ratio)?
-        target.init_npt(kind, pos, npt);
-        npt.n -= mf_n[p](kind, idx[0], idx[1], idx[2]);
-        if (kind == base_population)
-          npt.n *= (1 - HE_ratio);
-      }
-      if (npt.n < 0) {
-        npt.n = 0;
-      }
-      npt.n *= fac;
-    }
-  }
-
-  Target_t& target;
-  int HE_population;
-  int base_population;
-  double HE_ratio;
-  MfieldsC& mf_n;
-  double fac;
-};
-
-// ======================================================================
 // setupParameters
 
 void setupParameters()
@@ -527,13 +479,35 @@ void run()
   setup_particles.neutralizing_population = MY_ION;
 
   Inject inject(grid, g.inject_interval, inject_tau, setup_particles);
+  double inject_fac = (g.inject_interval * grid.dt / inject_tau) /
+                      (1. + g.inject_interval * grid.dt / inject_tau);
 
   using Moment_n = Inject::ItemMoment_t;
   Moment_n moment_n(grid);
   MfieldsC mf_n(grid, grid.kinds.size(), grid.ibn);
-  Functor<InjectFoil, Moment_n, Mparticles> func(
-    grid, inject_target, MY_ELECTRON_HE, MY_ELECTRON, g.electron_HE_ratio,
-    g.inject_interval, inject_tau, mf_n);
+
+  auto lf_inject = [&](int kind, Double3 pos, int p, Int3 idx,
+                       psc_particle_npt& npt) {
+    if (inject_target.is_inside(pos)) {
+
+      if (kind == MY_ELECTRON_HE) {
+        inject_target.init_npt(MY_ELECTRON, pos, npt);
+        npt.n -= mf_n[p](MY_ELECTRON, idx[0], idx[1], idx[2]);
+        npt.n *= g.electron_HE_ratio;
+      } else {
+        // should electrons inject by moments and then scale to (1-HE_ratio)?
+        inject_target.init_npt(kind, pos, npt);
+        npt.n -= mf_n[p](kind, idx[0], idx[1], idx[2]);
+        if (kind == MY_ELECTRON) {
+          npt.n *= (1 - g.electron_HE_ratio);
+        }
+      }
+      if (npt.n < 0) {
+        npt.n = 0;
+      }
+      npt.n *= inject_fac;
+    }
+  };
 
   auto lf_inject_heat = [&](const Grid_t& grid, Mparticles& mprts) {
     static int pr_inject, pr_heating;
@@ -550,7 +524,7 @@ void run()
       prof_start(pr_inject);
       moment_n.update(mprts);
       mf_n = evalMfields(moment_n);
-      inject(mprts, func);
+      inject(mprts, lf_inject);
       prof_stop(pr_inject);
     }
 
