@@ -75,15 +75,10 @@ struct Inject_ : InjectBase
   // ----------------------------------------------------------------------
   // ctor
 
-  Inject_(const Grid_t& grid, int interval, int tau, Target_t target,
-          SetupParticles& setup_particles, int base_population,
-          int HE_population, double HE_ratio)
+  Inject_(const Grid_t& grid, int interval, int tau,
+          SetupParticles& setup_particles)
     : InjectBase{interval, tau},
-      target_{target},
-      setup_particles_{setup_particles},
-      base_population_{base_population},
-      HE_population_{HE_population},
-      HE_ratio_{HE_ratio}
+      setup_particles_{setup_particles}
   {}
 
   // ----------------------------------------------------------------------
@@ -92,13 +87,9 @@ struct Inject_ : InjectBase
   template <typename F>
   void operator()(Mparticles& mprts, F& func)
   {
-    static int pr, pr_1, pr_2, pr_3, pr_4;
+    static int pr, pr_1;
     if (!pr) {
-      pr = prof_register("inject_impl", 1., 0, 0);
-      pr_1 = prof_register("inject_moment_n", 1., 0, 0);
-      pr_2 = prof_register("inject_eval", 1., 0, 0);
-      pr_3 = prof_register("inject_get_as", 1., 0, 0);
-      pr_4 = prof_register("inject_setup_prts", 1., 0, 0);
+      pr_1 = prof_register("inject_setup_prts", 1., 0, 0);
     }
 
     prof_start(pr);
@@ -106,20 +97,15 @@ struct Inject_ : InjectBase
 
     prof_barrier("inject_barrier");
 
-    prof_start(pr_4);
+    prof_start(pr_1);
     setup_particles_.setupParticles(mprts, func);
-    prof_stop(pr_4);
+    prof_stop(pr_1);
 
     prof_stop(pr);
   }
 
 private:
-  Target_t target_;
   SetupParticles setup_particles_;
-  int base_population_ = 1;
-  int HE_population_ = -1;
-  double HE_ratio_ = 0.0;
-  ;
 };
 
 // ======================================================================
