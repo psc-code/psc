@@ -12,56 +12,6 @@
 // ======================================================================
 // Inject_
 
-template <typename Target_t, typename ItemMoment, typename Mparticles>
-class Functor
-{
-public:
-  Functor(const Grid_t& grid, Target_t& target, int HE_population,
-          int base_population, double HE_ratio, ItemMoment& moment_n,
-          Mparticles& mprts, int interval, double tau)
-    : target(target),
-      HE_population(HE_population),
-      base_population(base_population),
-      HE_ratio(HE_ratio),
-      mf_n(grid, grid.kinds.size(), grid.ibn)
-  {
-    moment_n.update(mprts);
-    mf_n = evalMfields(moment_n);
-
-    fac = (interval * grid.dt / tau) / (1. + interval * grid.dt / tau);
-  }
-
-  void operator()(int kind, Double3 pos, int p, Int3 idx, psc_particle_npt& npt)
-  {
-    if (target.is_inside(pos)) {
-
-      if (kind == HE_population) {
-        target.init_npt(base_population, pos, npt);
-        npt.n -= mf_n[p](base_population, idx[0], idx[1], idx[2]);
-        npt.n *= HE_ratio;
-      } else {
-        // should electrons inject by moments and then scale to (1-HE_ratio)?
-        target.init_npt(kind, pos, npt);
-        npt.n -= mf_n[p](kind, idx[0], idx[1], idx[2]);
-        if (kind == base_population)
-          npt.n *= (1 - HE_ratio);
-      }
-      if (npt.n < 0) {
-        npt.n = 0;
-      }
-      npt.n *= fac;
-    }
-  }
-
-private:
-  Target_t& target;
-  int HE_population;
-  int base_population;
-  double HE_ratio;
-  MfieldsC mf_n;
-  double fac;
-};
-
 template <typename _Mparticles, typename _Mfields, typename Target_t,
           typename _ItemMoment>
 struct Inject_ : InjectBase
