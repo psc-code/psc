@@ -1,10 +1,10 @@
 
 #include <psc.h>
-#include <psc_push_particles.h>
-#include <psc_push_fields.h>
-#include <psc_sort.h>
 #include <psc_balance.h>
 #include <psc_particles_as_single.h>
+#include <psc_push_fields.h>
+#include <psc_push_particles.h>
+#include <psc_sort.h>
 
 #include <mrc_params.h>
 #include <mrc_profile.h>
@@ -14,7 +14,8 @@
 
 // ======================================================================
 
-enum {
+enum
+{
   KH_ELECTRON1,
   KH_ELECTRON2,
   KH_ION1,
@@ -24,7 +25,8 @@ enum {
 
 // ======================================================================
 
-struct psc_kh {
+struct psc_kh
+{
   // parameters
   double beta;
   double theta_B, theta_V;
@@ -43,18 +45,18 @@ struct psc_kh {
 
 #define to_psc_kh(psc) mrc_to_subobj(psc, struct psc_kh)
 
-#define VAR(x) (void *)offsetof(struct psc_kh, x)
+#define VAR(x) (void*)offsetof(struct psc_kh, x)
 static struct param psc_kh_descr[] = {
-  { "theta_B"       , VAR(theta_B)         , PARAM_DOUBLE(M_PI/2. - .05) },
-  { "theta_V"       , VAR(theta_V)         , PARAM_DOUBLE(M_PI/2. - .05) },
-  { "delta"         , VAR(delta)           , PARAM_DOUBLE(2.)            },
-  { "beta"          , VAR(beta)            , PARAM_DOUBLE(.5)            },
-  { "mi_over_me"    , VAR(mi_over_me)      , PARAM_DOUBLE(5.)            },
-  { "wpe_over_wce"  , VAR(wpe_over_wce)    , PARAM_DOUBLE(2.)            },
-  { "Ti_over_Te"    , VAR(Ti_over_Te)      , PARAM_DOUBLE(1.)            },
-  { "pert"          , VAR(pert)            , PARAM_DOUBLE(.0)            },
-  { "pert_vpic"     , VAR(pert_vpic)       , PARAM_DOUBLE(.0)            },
-  { "k_vpic"        , VAR(k_vpic)          , PARAM_DOUBLE(.5)            },
+  {"theta_B", VAR(theta_B), PARAM_DOUBLE(M_PI / 2. - .05)},
+  {"theta_V", VAR(theta_V), PARAM_DOUBLE(M_PI / 2. - .05)},
+  {"delta", VAR(delta), PARAM_DOUBLE(2.)},
+  {"beta", VAR(beta), PARAM_DOUBLE(.5)},
+  {"mi_over_me", VAR(mi_over_me), PARAM_DOUBLE(5.)},
+  {"wpe_over_wce", VAR(wpe_over_wce), PARAM_DOUBLE(2.)},
+  {"Ti_over_Te", VAR(Ti_over_Te), PARAM_DOUBLE(1.)},
+  {"pert", VAR(pert), PARAM_DOUBLE(.0)},
+  {"pert_vpic", VAR(pert_vpic), PARAM_DOUBLE(.0)},
+  {"k_vpic", VAR(k_vpic), PARAM_DOUBLE(.5)},
   {},
 };
 #undef VAR
@@ -62,8 +64,7 @@ static struct param psc_kh_descr[] = {
 // ----------------------------------------------------------------------
 // psc_kh_create
 
-static void
-psc_kh_create(struct psc *psc)
+static void psc_kh_create(struct psc* psc)
 {
   psc_default_dimensionless(psc);
 
@@ -73,10 +74,28 @@ psc_kh_create(struct psc *psc)
   psc->prm.initial_momentum_gamma_correction = true;
 
   struct psc_kind kinds[NR_KH_KINDS] = {
-    [KH_ELECTRON1] = { .name = strdup("e1"), .q = -1., .m = 1, },
-    [KH_ELECTRON2] = { .name = strdup("e2"), .q = -1., .m = 1, },
-    [KH_ION1]      = { .name = strdup("i1"), .q =  1.,         },
-    [KH_ION2]      = { .name = strdup("i2"), .q =  1.,         },
+    [KH_ELECTRON1] =
+      {
+        .name = strdup("e1"),
+        .q = -1.,
+        .m = 1,
+      },
+    [KH_ELECTRON2] =
+      {
+        .name = strdup("e2"),
+        .q = -1.,
+        .m = 1,
+      },
+    [KH_ION1] =
+      {
+        .name = strdup("i1"),
+        .q = 1.,
+      },
+    [KH_ION2] =
+      {
+        .name = strdup("i2"),
+        .q = 1.,
+      },
   };
   psc_set_kinds(psc, NR_KH_KINDS, kinds);
 
@@ -112,10 +131,9 @@ psc_kh_create(struct psc *psc)
 // the parameters are now set, calculate quantities to initialize fields,
 // particles
 
-static void
-psc_kh_setup(struct psc *psc)
+static void psc_kh_setup(struct psc* psc)
 {
-  struct psc_kh *kh = to_psc_kh(psc);
+  struct psc_kh* kh = to_psc_kh(psc);
 
   double me = 1.;
   double mi = me * kh->mi_over_me;
@@ -127,7 +145,7 @@ psc_kh_setup(struct psc *psc)
   double v0 = .5 * vAi;
   double v0z = v0 * cos(kh->theta_V - kh->theta_B);
   double Te = kh->beta * (1. / (1. + kh->Ti_over_Te)) * sqr(B0) / 2.;
-  double Ti = kh->beta * (1. / (1. + 1./kh->Ti_over_Te)) * sqr(B0) / 2.;
+  double Ti = kh->beta * (1. / (1. + 1. / kh->Ti_over_Te)) * sqr(B0) / 2.;
   mpi_printf(MPI_COMM_WORLD, "psc/kh: v0=%g v0z=%g\n", v0, v0z);
   mpi_printf(MPI_COMM_WORLD, "psc/kh: vAe=%g vAe_plane=%g\n", vAe, vAe_plane);
   mpi_printf(MPI_COMM_WORLD, "psc/kh: vAi=%g vAi_plane=%g\n", vAi, vAi_plane);
@@ -152,43 +170,43 @@ psc_kh_setup(struct psc *psc)
 // ----------------------------------------------------------------------
 // vz_profile
 
-static inline double
-vz_profile(struct psc *psc, double y, double z)
+static inline double vz_profile(struct psc* psc, double y, double z)
 {
-  struct psc_kh *kh = to_psc_kh(psc);
+  struct psc_kh* kh = to_psc_kh(psc);
 
   double yl = psc->domain.length[1], zl = psc->domain.length[2];
-  double vz = kh->v0z * tanh((y - .5 * yl * (1. + kh->pert * sin(2*M_PI * z / zl))) / kh->delta);
-  vz += kh->pert_vpic * kh->v0z * sin(kh->k_vpic * z / kh->delta) * exp(-sqr(y - .5 * yl)/sqr(kh->delta));
+  double vz =
+    kh->v0z *
+    tanh((y - .5 * yl * (1. + kh->pert * sin(2 * M_PI * z / zl))) / kh->delta);
+  vz += kh->pert_vpic * kh->v0z * sin(kh->k_vpic * z / kh->delta) *
+        exp(-sqr(y - .5 * yl) / sqr(kh->delta));
   return vz;
 }
 
 // ----------------------------------------------------------------------
 // psc_kh_init_field
 
-static double
-psc_kh_init_field(struct psc *psc, double x[3], int m)
+static double psc_kh_init_field(struct psc* psc, double x[3], int m)
 {
-  struct psc_kh *kh = to_psc_kh(psc);
+  struct psc_kh* kh = to_psc_kh(psc);
 
   double vz = vz_profile(psc, x[1], x[2]);
 
   switch (m) {
-  case HX: return kh->B0 * sin(kh->theta_B);
-  case HZ: return kh->B0 * cos(kh->theta_B);
-  case EY: return -vz * kh->B0 * sin(kh->theta_B);
-  default: return 0.;
+    case HX: return kh->B0 * sin(kh->theta_B);
+    case HZ: return kh->B0 * cos(kh->theta_B);
+    case EY: return -vz * kh->B0 * sin(kh->theta_B);
+    default: return 0.;
   }
 }
 
 // ----------------------------------------------------------------------
 // psc_kh_init_npt
 
-static void
-psc_kh_init_npt(struct psc *psc, int kind, double x[3],
-		struct psc_particle_npt *npt)
+static void psc_kh_init_npt(struct psc* psc, int kind, double x[3],
+                            struct psc_particle_npt* npt)
 {
-  struct psc_kh *kh = to_psc_kh(psc);
+  struct psc_kh* kh = to_psc_kh(psc);
 
   double vz = vz_profile(psc, x[1], x[2]);
   npt->p[2] = vz;
@@ -200,32 +218,30 @@ psc_kh_init_npt(struct psc *psc, int kind, double x[3],
     n += B0x * kh->v0z / (kh->delta * sqr(cosh((x[1] - .5 * yl) / kh->delta)));
   }
   switch (kind) {
-  case KH_ELECTRON1:
-  case KH_ION1:
-    if (vz < 0.) {
-      npt->n = 0.;
-    } else {
-      npt->n = n;
-    }
-    break;
-  case KH_ELECTRON2:
-  case KH_ION2:
-    if (vz < 0.) {
-      npt->n = n;
-    } else {
-      npt->n = 0.;
-    }
-    break;
-  default:
-    assert(0);
+    case KH_ELECTRON1:
+    case KH_ION1:
+      if (vz < 0.) {
+        npt->n = 0.;
+      } else {
+        npt->n = n;
+      }
+      break;
+    case KH_ELECTRON2:
+    case KH_ION2:
+      if (vz < 0.) {
+        npt->n = n;
+      } else {
+        npt->n = 0.;
+      }
+      break;
+    default: assert(0);
   }
 }
 
 // ----------------------------------------------------------------------
 // psc_kh_read
 
-static void
-psc_kh_read(struct psc *psc, struct mrc_io *io)
+static void psc_kh_read(struct psc* psc, struct mrc_io* io)
 {
   // do nothing -- but having this function is important so that
   // psc_kh_create() doesn't get called instead
@@ -236,21 +252,20 @@ psc_kh_read(struct psc *psc, struct mrc_io *io)
 // psc_kh_ops
 
 struct psc_ops psc_kh_ops = {
-  .name             = "kh",
-  .size             = sizeof(struct psc_kh),
-  .param_descr      = psc_kh_descr,
-  .create           = psc_kh_create,
-  .read             = psc_kh_read,
-  .setup            = psc_kh_setup,
-  .init_field       = psc_kh_init_field,
-  .init_npt         = psc_kh_init_npt,
+  .name = "kh",
+  .size = sizeof(struct psc_kh),
+  .param_descr = psc_kh_descr,
+  .create = psc_kh_create,
+  .read = psc_kh_read,
+  .setup = psc_kh_setup,
+  .init_field = psc_kh_init_field,
+  .init_npt = psc_kh_init_npt,
 };
 
 // ======================================================================
 // main
 
-int
-main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   return psc_main(&argc, &argv, &psc_kh_ops);
 }

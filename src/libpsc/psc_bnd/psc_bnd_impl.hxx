@@ -9,7 +9,7 @@
 #include <mrc_profile.h>
 #include <mrc_ddc.h>
 
-template<typename MF>
+template <typename MF>
 struct Bnd_ : BndBase
 {
   using Mfields = MF;
@@ -21,9 +21,9 @@ struct Bnd_ : BndBase
   Bnd_(const Grid_t& grid, const int ibn[3])
   {
     static struct mrc_ddc_funcs ddc_funcs = {
-      .copy_to_buf   = copy_to_buf,
+      .copy_to_buf = copy_to_buf,
       .copy_from_buf = copy_from_buf,
-      .add_from_buf  = add_from_buf,
+      .add_from_buf = add_from_buf,
     };
 
     ddc_ = grid.create_ddc();
@@ -39,24 +39,21 @@ struct Bnd_ : BndBase
   // ----------------------------------------------------------------------
   // dtor
 
-  ~Bnd_()
-  {
-    mrc_ddc_destroy(ddc_);
-  }
-  
+  ~Bnd_() { mrc_ddc_destroy(ddc_); }
+
   // ----------------------------------------------------------------------
   // reset
-  
+
   void reset(const Grid_t& grid)
   {
     // FIXME, not really a pretty way of doing this
     this->~Bnd_();
-    new(this) Bnd_(grid, grid.ibn);
+    new (this) Bnd_(grid, grid.ibn);
   }
-  
+
   // ----------------------------------------------------------------------
   // add_ghosts
-  
+
   void add_ghosts(Mfields& mflds, int mb, int me)
   {
     if (psc_balance_generation_cnt != balance_generation_cnt_) {
@@ -85,60 +82,60 @@ struct Bnd_ : BndBase
   // copy_to_buf
 
   static void copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3],
-			  void *_buf, void *ctx)
+                          void* _buf, void* ctx)
   {
     auto& mf = *static_cast<Mfields*>(ctx);
     auto F = mf[p];
-    real_t *buf = static_cast<real_t*>(_buf);
-    
+    real_t* buf = static_cast<real_t*>(_buf);
+
     for (int m = mb; m < me; m++) {
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	    MRC_DDC_BUF3(buf, m - mb, ix,iy,iz) = F(m, ix,iy,iz);
-	  }
-	}
+        for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+          for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+            MRC_DDC_BUF3(buf, m - mb, ix, iy, iz) = F(m, ix, iy, iz);
+          }
+        }
       }
     }
   }
 
   static void add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
-			   void *_buf, void *ctx)
+                           void* _buf, void* ctx)
   {
     auto& mf = *static_cast<Mfields*>(ctx);
     auto F = mf[p];
-    real_t *buf = static_cast<real_t*>(_buf);
-    
+    real_t* buf = static_cast<real_t*>(_buf);
+
     for (int m = mb; m < me; m++) {
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	    F(m, ix,iy,iz) += MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
-	  }
-	}
+        for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+          for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+            F(m, ix, iy, iz) += MRC_DDC_BUF3(buf, m - mb, ix, iy, iz);
+          }
+        }
       }
     }
   }
-  
+
   static void copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
-			    void *_buf, void *ctx)
+                            void* _buf, void* ctx)
   {
     auto& mf = *static_cast<Mfields*>(ctx);
     auto F = mf[p];
-    real_t *buf = static_cast<real_t*>(_buf);
-    
+    real_t* buf = static_cast<real_t*>(_buf);
+
     for (int m = mb; m < me; m++) {
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	    F(m, ix,iy,iz) = MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
-	  }
-	}
+        for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+          for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+            F(m, ix, iy, iz) = MRC_DDC_BUF3(buf, m - mb, ix, iy, iz);
+          }
+        }
       }
     }
   }
 
 private:
-  mrc_ddc *ddc_;
+  mrc_ddc* ddc_;
   int balance_generation_cnt_;
 };

@@ -22,7 +22,6 @@ struct BS_to_Dim<BS444>
   using Dim = dim_xyz;
 };
 
-
 template <typename Mparticles>
 struct ChecksCuda
   : ChecksBase
@@ -106,7 +105,7 @@ struct ChecksCuda
     if (continuity_dump_always || max_err >= eps) {
       static WriterMRC writer;
       if (!writer) {
-	writer.open("continuity");
+        writer.open("continuity");
       }
       writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
       writer.write(divj_, grid, "div_j", {"div_j"});
@@ -183,7 +182,7 @@ struct ChecksCuda
     if (gauss_dump_always || max_err >= eps) {
       static WriterMRC writer;
       if (!writer) {
-	writer.open("gauss");
+        writer.open("gauss");
       }
       writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
       writer.write(rho, grid, "rho", {"rho"});

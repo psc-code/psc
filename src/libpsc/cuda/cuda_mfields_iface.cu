@@ -9,12 +9,13 @@
 #if 0
 #define dprintf(...) mprintf(__VA_ARGS__)
 #else
-#define dprintf(...) do {} while (0)
+#define dprintf(...)                                                           \
+  do {                                                                         \
+  } while (0)
 #endif
 
 MfieldsCuda::MfieldsCuda(const Grid_t& grid, int n_fields, Int3 ibn)
-  : MfieldsBase{grid, n_fields, ibn},
-    grid_{&grid}
+  : MfieldsBase{grid, n_fields, ibn}, grid_{&grid}
 {
   dprintf("CMFLDS: ctor\n");
   cmflds_ = new cuda_mfields(grid, n_fields, ibn);
@@ -84,13 +85,11 @@ int MfieldsCuda::index(int m, int i, int j, int k, int p) const
   return cmflds_->index(m, i, j, k, p);
 }
 
-MfieldsCuda::Patch::Patch(MfieldsCuda& mflds, int p)
-  : mflds_(mflds), p_(p)
-{}
+MfieldsCuda::Patch::Patch(MfieldsCuda& mflds, int p) : mflds_(mflds), p_(p) {}
 
 MfieldsCuda::Accessor MfieldsCuda::Patch::operator()(int m, int i, int j, int k)
 {
-  return { mflds_, mflds_.index(m, i,j,k, p_) };
+  return {mflds_, mflds_.index(m, i, j, k, p_)};
 }
 
 MfieldsCuda::Accessor::Accessor(MfieldsCuda& mflds, int idx)
@@ -113,7 +112,7 @@ MfieldsCuda::real_t MfieldsCuda::Accessor::operator+=(real_t val)
   val += mflds_.cmflds_->get_value(idx_);
   mflds_.cmflds_->set_value(idx_, val);
   return val;
-}  
+}
 
 HMFields hostMirror(const MfieldsCuda& mflds)
 {
@@ -124,7 +123,7 @@ void copy(const MfieldsCuda& mflds, HMFields& hmflds)
 {
   copy(*mflds.cmflds(), hmflds);
 }
-  
+
 void copy(const HMFields& hmflds, MfieldsCuda& mflds)
 {
   copy(hmflds, *mflds.cmflds());

@@ -16,18 +16,18 @@ struct MrcDomain
   MrcDomain() = default;
 
   template <typename R>
-  MrcDomain(const psc::grid::Domain<R>& grid_domain, const psc::grid::BC& grid_bc,
-            int nr_patches)
+  MrcDomain(const psc::grid::Domain<R>& grid_domain,
+            const psc::grid::BC& grid_bc, int nr_patches)
   {
     domain_ = mrc_domain_create(MPI_COMM_WORLD);
     // create a very simple domain decomposition
     int bc[3] = {};
     for (int d = 0; d < 3; d++) {
       if (grid_bc.fld_lo[d] == BND_FLD_PERIODIC && grid_domain.gdims[d] > 1) {
-	bc[d] = BC_PERIODIC;
+        bc[d] = BC_PERIODIC;
       }
     }
-    
+
     mrc_domain_set_type(domain_, "multi");
     mrc_domain_set_param_int3(domain_, "m", grid_domain.gdims);
     mrc_domain_set_param_int(domain_, "bcx", bc[0]);
@@ -35,17 +35,17 @@ struct MrcDomain
     mrc_domain_set_param_int(domain_, "bcz", bc[2]);
     mrc_domain_set_param_int(domain_, "nr_patches", nr_patches);
     mrc_domain_set_param_int3(domain_, "np", grid_domain.np);
-    
+
     struct mrc_crds* crds = mrc_domain_get_crds(domain_);
     mrc_crds_set_type(crds, "uniform");
     mrc_crds_set_param_int(crds, "sw", 2);
     mrc_crds_set_param_double3(crds, "l", grid_domain.corner);
     mrc_crds_set_param_double3(crds, "h",
-			       grid_domain.corner + grid_domain.length);
-    
+                               grid_domain.corner + grid_domain.length);
+
     mrc_domain_set_from_options(domain_);
     mrc_domain_setup(domain_);
-    
+
     // make sure that np isn't overridden on the command line
     Int3 np;
     mrc_domain_get_param_int3(domain_, "np", np);

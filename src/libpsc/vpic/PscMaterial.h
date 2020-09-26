@@ -14,34 +14,30 @@
 
 struct PscMaterial
 {
-  PscMaterial(const char *name,
-	      float epsx, float epsy, float epsz,
-	      float mux, float muy, float muz,
-	      float sigmax, float sigmay, float sigmaz,
-	      float zetax, float zetay, float zetaz)
+  PscMaterial(const char* name, float epsx, float epsy, float epsz, float mux,
+              float muy, float muz, float sigmax, float sigmay, float sigmaz,
+              float zetax, float zetay, float zetaz)
   {
     int len = name ? strlen(name) : 0;
-    if (!len) LOG_ERROR("Cannot create a nameless material");
+    if (!len)
+      LOG_ERROR("Cannot create a nameless material");
     this->name = strdup(name);
-    this->epsx   = epsx,   this->epsy   = epsy,   this->epsz   = epsz;
-    this->mux    = mux,    this->muy    = muy,    this->muz    = muz;
+    this->epsx = epsx, this->epsy = epsy, this->epsz = epsz;
+    this->mux = mux, this->muy = muy, this->muz = muz;
     this->sigmax = sigmax, this->sigmay = sigmay, this->sigmaz = sigmaz;
-    this->zetax  = zetax,  this->zetay  = zetay,  this->zetaz  = zetaz;
+    this->zetax = zetax, this->zetay = zetay, this->zetaz = zetaz;
     this->next = nullptr;
   }
-  
-  ~PscMaterial()
-  {
-    free(name);
-  }
+
+  ~PscMaterial() { free(name); }
 
   char* name;                   // Name of the material
   float epsx, epsy, epsz;       // Relative permittivity along x,y,z axes
   float mux, muy, muz;          // Relative permeability along x,y,z axes
   float sigmax, sigmay, sigmaz; // Electrical conductivity along x,y,z axes
-  float zetax,  zetay,  zetaz;  // Magnetic conductivity along x,y,z axes
+  float zetax, zetay, zetaz;    // Magnetic conductivity along x,y,z axes
   MaterialId id;                // Unique identifier for material
-  PscMaterial *next;            // Next material in list
+  PscMaterial* next;            // Next material in list
 };
 
 // ======================================================================
@@ -51,23 +47,23 @@ struct PscMaterialList : public VpicListBase<PscMaterial>
 {
   typedef PscMaterial Material;
 
-  static Material* create(const char *name,
-			  float epsx, float epsy, float epsz,
-			  float mux, float muy, float muz,
-			  float sigmax, float sigmay, float sigmaz,
-			  float zetax, float zetay, float zetaz)
+  static Material* create(const char* name, float epsx, float epsy, float epsz,
+                          float mux, float muy, float muz, float sigmax,
+                          float sigmay, float sigmaz, float zetax, float zetay,
+                          float zetaz)
   {
-    return new Material(name, epsx, epsy, epsz, mux, muy, muz,
-    			sigmax, sigmay, sigmaz, zetax, zetay, zetaz);
+    return new Material(name, epsx, epsy, epsz, mux, muy, muz, sigmax, sigmay,
+                        sigmaz, zetax, zetay, zetaz);
   }
 
-  const_iterator find(const char *name) const
+  const_iterator find(const char* name) const
   {
     assert(name);
-    return std::find_if(cbegin(), cend(),
-			[&name](const Material &m) { return strcmp(m.name, name) == 0; });
+    return std::find_if(cbegin(), cend(), [&name](const Material& m) {
+      return strcmp(m.name, name) == 0;
+    });
   }
-  
+
   Material* append(Material* m)
   {
     assert(!m->next);
@@ -76,7 +72,8 @@ struct PscMaterialList : public VpicListBase<PscMaterial>
     }
     int id = size();
     if (id >= MaterialIdMax) {
-      LOG_ERROR("Too many materials in list to append material \"%s\"", m->name);
+      LOG_ERROR("Too many materials in list to append material \"%s\"",
+                m->name);
     }
     m->id = id;
     push_front(*m);

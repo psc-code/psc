@@ -100,8 +100,9 @@ struct SetupParticles
   template <typename FUNC>
   void operator()(Mparticles& mprts, FUNC&& init_npt)
   {
-    setupParticles(mprts, [&](int kind, Double3 pos, int p, Int3 idx,
-                              psc_particle_npt& npt) { init_npt(kind, pos, npt); });
+    setupParticles(mprts,
+                   [&](int kind, Double3 pos, int p, Int3 idx,
+                       psc_particle_npt& npt) { init_npt(kind, pos, npt); });
   }
 
   // ----------------------------------------------------------------------

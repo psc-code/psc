@@ -17,14 +17,11 @@ class GCurr
 public:
   DFields d_flds;
 
-  __device__ GCurr(DFields _d_flds) :
-    d_flds(_d_flds)
-  {
-  }
+  __device__ GCurr(DFields _d_flds) : d_flds(_d_flds) {}
 
   __device__ void add(int m, int jx, int jy, int jz, float val)
   {
-    float *addr = &d_flds(m, jx,jy,jz);
+    float* addr = &d_flds(m, jx, jy, jz);
     atomicAdd(addr, val);
   }
 };
@@ -34,10 +31,9 @@ public:
 // ----------------------------------------------------------------------
 // rho_1st_nc_cuda_run
 
-template<typename DMparticles, typename dim, bool REORDER>
-__global__ static void
-__launch_bounds__(THREADS_PER_BLOCK, 3)
-rho_1st_nc_cuda_run(DMparticles dmprts, DMFields dmflds)
+template <typename DMparticles, typename dim, bool REORDER>
+__global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
+  rho_1st_nc_cuda_run(DMparticles dmprts, DMFields dmflds)
 {
   BlockSimple<typename DMparticles::BS, dim> current_block;
   if (!current_block.init(dmprts)) {
@@ -53,29 +49,37 @@ rho_1st_nc_cuda_run(DMparticles dmprts, DMFields dmflds)
     if (n < block_begin) {
       continue;
     }
-    const auto prt = REORDER ? dmprts.storage.load_proxy(dmprts, dmprts.id_[n]) :
-      dmprts.storage.load_proxy(dmprts, n);
+    const auto prt = REORDER ? dmprts.storage.load_proxy(dmprts, dmprts.id_[n])
+                             : dmprts.storage.load_proxy(dmprts, n);
 
     float fnq = prt.qni_wni() * dmprts.fnqs();
-    
+
     int lf[3];
     float of[3];
     dmprts.find_idx_off_1st(prt.x(), lf, of, float(0.));
 
     if (dim::InvarX::value) { // FIXME, ugly...
-      scurr.add(0, 0, lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnq);
-      scurr.add(0, 0, lf[1]+1, lf[2]  , (      of[1]) * (1.f - of[2]) * fnq);
-      scurr.add(0, 0, lf[1]  , lf[2]+1, (1.f - of[1]) * (      of[2]) * fnq);
-      scurr.add(0, 0, lf[1]+1, lf[2]+1, (      of[1]) * (      of[2]) * fnq);
+      scurr.add(0, 0, lf[1], lf[2], (1.f - of[1]) * (1.f - of[2]) * fnq);
+      scurr.add(0, 0, lf[1] + 1, lf[2], (of[1]) * (1.f - of[2]) * fnq);
+      scurr.add(0, 0, lf[1], lf[2] + 1, (1.f - of[1]) * (of[2]) * fnq);
+      scurr.add(0, 0, lf[1] + 1, lf[2] + 1, (of[1]) * (of[2]) * fnq);
     } else {
-      scurr.add(0, lf[0]  , lf[1]  , lf[2]  , (1.f - of[0]) * (1.f - of[1]) * (1.f - of[2]) * fnq);
-      scurr.add(0, lf[0]+1, lf[1]  , lf[2]  , (      of[0]) * (1.f - of[1]) * (1.f - of[2]) * fnq);
-      scurr.add(0, lf[0]  , lf[1]+1, lf[2]  , (1.f - of[0]) * (      of[1]) * (1.f - of[2]) * fnq);
-      scurr.add(0, lf[0]+1, lf[1]+1, lf[2]  , (      of[0]) * (      of[1]) * (1.f - of[2]) * fnq);
-      scurr.add(0, lf[0]  , lf[1]  , lf[2]+1, (1.f - of[0]) * (1.f - of[1]) * (      of[2]) * fnq);
-      scurr.add(0, lf[0]+1, lf[1]  , lf[2]+1, (      of[0]) * (1.f - of[1]) * (      of[2]) * fnq);
-      scurr.add(0, lf[0]  , lf[1]+1, lf[2]+1, (1.f - of[0]) * (      of[1]) * (      of[2]) * fnq);
-      scurr.add(0, lf[0]+1, lf[1]+1, lf[2]+1, (      of[0]) * (      of[1]) * (      of[2]) * fnq);
+      scurr.add(0, lf[0], lf[1], lf[2],
+                (1.f - of[0]) * (1.f - of[1]) * (1.f - of[2]) * fnq);
+      scurr.add(0, lf[0] + 1, lf[1], lf[2],
+                (of[0]) * (1.f - of[1]) * (1.f - of[2]) * fnq);
+      scurr.add(0, lf[0], lf[1] + 1, lf[2],
+                (1.f - of[0]) * (of[1]) * (1.f - of[2]) * fnq);
+      scurr.add(0, lf[0] + 1, lf[1] + 1, lf[2],
+                (of[0]) * (of[1]) * (1.f - of[2]) * fnq);
+      scurr.add(0, lf[0], lf[1], lf[2] + 1,
+                (1.f - of[0]) * (1.f - of[1]) * (of[2]) * fnq);
+      scurr.add(0, lf[0] + 1, lf[1], lf[2] + 1,
+                (of[0]) * (1.f - of[1]) * (of[2]) * fnq);
+      scurr.add(0, lf[0], lf[1] + 1, lf[2] + 1,
+                (1.f - of[0]) * (of[1]) * (of[2]) * fnq);
+      scurr.add(0, lf[0] + 1, lf[1] + 1, lf[2] + 1,
+                (of[0]) * (of[1]) * (of[2]) * fnq);
     }
   }
 }
@@ -83,10 +87,9 @@ rho_1st_nc_cuda_run(DMparticles dmprts, DMFields dmflds)
 // ----------------------------------------------------------------------
 // n_1st_cuda_run
 
-template<typename BS, typename dim, bool REORDER>
-__global__ static void
-__launch_bounds__(THREADS_PER_BLOCK, 3)
-n_1st_cuda_run(DMparticlesCuda<BS> dmprts, DMFields dmflds)
+template <typename BS, typename dim, bool REORDER>
+__global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
+  n_1st_cuda_run(DMparticlesCuda<BS> dmprts, DMFields dmflds)
 {
   BlockSimple<BS, dim> current_block;
   if (!current_block.init(dmprts)) {
@@ -102,31 +105,39 @@ n_1st_cuda_run(DMparticlesCuda<BS> dmprts, DMFields dmflds)
     if (n < block_begin) {
       continue;
     }
-    const auto prt = REORDER ? dmprts.storage.load_proxy(dmprts, dmprts.id_[n]) :
-      dmprts.storage.load_proxy(dmprts, n);
+    const auto prt = REORDER ? dmprts.storage.load_proxy(dmprts, dmprts.id_[n])
+                             : dmprts.storage.load_proxy(dmprts, n);
 
     int kind = prt.kind();
     float wni = prt.qni_wni() * dmprts.q_inv(kind);
     float fnq = wni * dmprts.fnqs();
-    
+
     int lf[3];
     float of[3];
     dmprts.find_idx_off_1st(prt.x(), lf, of, float(-.5));
 
     if (dim::InvarX::value) { // FIXME, ugly...
-      scurr.add(kind, 0, lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnq);
-      scurr.add(kind, 0, lf[1]+1, lf[2]  , (      of[1]) * (1.f - of[2]) * fnq);
-      scurr.add(kind, 0, lf[1]  , lf[2]+1, (1.f - of[1]) * (      of[2]) * fnq);
-      scurr.add(kind, 0, lf[1]+1, lf[2]+1, (      of[1]) * (      of[2]) * fnq);
+      scurr.add(kind, 0, lf[1], lf[2], (1.f - of[1]) * (1.f - of[2]) * fnq);
+      scurr.add(kind, 0, lf[1] + 1, lf[2], (of[1]) * (1.f - of[2]) * fnq);
+      scurr.add(kind, 0, lf[1], lf[2] + 1, (1.f - of[1]) * (of[2]) * fnq);
+      scurr.add(kind, 0, lf[1] + 1, lf[2] + 1, (of[1]) * (of[2]) * fnq);
     } else {
-      scurr.add(kind, lf[0]  , lf[1]  , lf[2]  , (1.f - of[0]) * (1.f - of[1]) * (1.f - of[2]) * fnq);
-      scurr.add(kind, lf[0]+1, lf[1]  , lf[2]  , (      of[0]) * (1.f - of[1]) * (1.f - of[2]) * fnq);
-      scurr.add(kind, lf[0]  , lf[1]+1, lf[2]  , (1.f - of[0]) * (      of[1]) * (1.f - of[2]) * fnq);
-      scurr.add(kind, lf[0]+1, lf[1]+1, lf[2]  , (      of[0]) * (      of[1]) * (1.f - of[2]) * fnq);
-      scurr.add(kind, lf[0]  , lf[1]  , lf[2]+1, (1.f - of[0]) * (1.f - of[1]) * (      of[2]) * fnq);
-      scurr.add(kind, lf[0]+1, lf[1]  , lf[2]+1, (      of[0]) * (1.f - of[1]) * (      of[2]) * fnq);
-      scurr.add(kind, lf[0]  , lf[1]+1, lf[2]+1, (1.f - of[0]) * (      of[1]) * (      of[2]) * fnq);
-      scurr.add(kind, lf[0]+1, lf[1]+1, lf[2]+1, (      of[0]) * (      of[1]) * (      of[2]) * fnq);
+      scurr.add(kind, lf[0], lf[1], lf[2],
+                (1.f - of[0]) * (1.f - of[1]) * (1.f - of[2]) * fnq);
+      scurr.add(kind, lf[0] + 1, lf[1], lf[2],
+                (of[0]) * (1.f - of[1]) * (1.f - of[2]) * fnq);
+      scurr.add(kind, lf[0], lf[1] + 1, lf[2],
+                (1.f - of[0]) * (of[1]) * (1.f - of[2]) * fnq);
+      scurr.add(kind, lf[0] + 1, lf[1] + 1, lf[2],
+                (of[0]) * (of[1]) * (1.f - of[2]) * fnq);
+      scurr.add(kind, lf[0], lf[1], lf[2] + 1,
+                (1.f - of[0]) * (1.f - of[1]) * (of[2]) * fnq);
+      scurr.add(kind, lf[0] + 1, lf[1], lf[2] + 1,
+                (of[0]) * (1.f - of[1]) * (of[2]) * fnq);
+      scurr.add(kind, lf[0], lf[1] + 1, lf[2] + 1,
+                (1.f - of[0]) * (of[1]) * (of[2]) * fnq);
+      scurr.add(kind, lf[0] + 1, lf[1] + 1, lf[2] + 1,
+                (of[0]) * (of[1]) * (of[2]) * fnq);
     }
   }
 }
@@ -134,14 +145,15 @@ n_1st_cuda_run(DMparticlesCuda<BS> dmprts, DMFields dmflds)
 // ----------------------------------------------------------------------
 // CudaMoments1stNcRho::operator()
 
-template<typename CudaMparticles, typename dim>
-void CudaMoments1stNcRho<CudaMparticles, dim>::operator()(CudaMparticles& cmprts, struct cuda_mfields *cmres)
+template <typename CudaMparticles, typename dim>
+void CudaMoments1stNcRho<CudaMparticles, dim>::operator()(
+  CudaMparticles& cmprts, struct cuda_mfields* cmres)
 {
   if (cmprts.n_prts == 0) {
     return;
   }
   cmprts.reorder(); // FIXME/OPT?
-  
+
   if (!cmprts.need_reorder) {
     invoke<false>(cmprts, cmres);
   } else {
@@ -152,9 +164,10 @@ void CudaMoments1stNcRho<CudaMparticles, dim>::operator()(CudaMparticles& cmprts
 // ----------------------------------------------------------------------
 // CudaMoments1stNcRho::invoke
 
-template<typename CudaMparticles, typename dim>
-template<bool REORDER>
-void CudaMoments1stNcRho<CudaMparticles, dim>::invoke(CudaMparticles& cmprts, struct cuda_mfields *cmres)
+template <typename CudaMparticles, typename dim>
+template <bool REORDER>
+void CudaMoments1stNcRho<CudaMparticles, dim>::invoke(
+  CudaMparticles& cmprts, struct cuda_mfields* cmres)
 {
   dim3 dimGrid = BlockSimple<typename CudaMparticles::BS, dim>::dimGrid(cmprts);
 
@@ -166,8 +179,9 @@ void CudaMoments1stNcRho<CudaMparticles, dim>::invoke(CudaMparticles& cmprts, st
 // ----------------------------------------------------------------------
 // CudaMoments1stNcN::operator()
 
-template<typename CudaMparticles, typename dim>
-void CudaMoments1stNcN<CudaMparticles, dim>::operator()(CudaMparticles& cmprts, struct cuda_mfields *cmres)
+template <typename CudaMparticles, typename dim>
+void CudaMoments1stNcN<CudaMparticles, dim>::operator()(
+  CudaMparticles& cmprts, struct cuda_mfields* cmres)
 {
   static int pr, pr_1;
   if (!pr) {
@@ -195,9 +209,10 @@ void CudaMoments1stNcN<CudaMparticles, dim>::operator()(CudaMparticles& cmprts, 
 // ----------------------------------------------------------------------
 // CudaMoments1stNcN::invoke
 
-template<typename CudaMparticles, typename dim>
-template<bool REORDER>
-void CudaMoments1stNcN<CudaMparticles, dim>::invoke(CudaMparticles& cmprts, struct cuda_mfields *cmres)
+template <typename CudaMparticles, typename dim>
+template <bool REORDER>
+void CudaMoments1stNcN<CudaMparticles, dim>::invoke(CudaMparticles& cmprts,
+                                                    struct cuda_mfields* cmres)
 {
   dim3 dimGrid = BlockSimple<typename CudaMparticles::BS, dim>::dimGrid(cmprts);
 

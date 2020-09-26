@@ -32,14 +32,15 @@ public:
   {
     const auto& grid = mprts.grid();
     real_t fnqs = grid.norm.fnqs;
-    real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
+    real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1],
+           dzi = 1.f / grid.domain.dx[2];
 
     auto accessor = mprts.accessor();
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto flds = Base::mres_[p];
-      for (auto prt: accessor[p]) {
-	int m = prt.kind();
-	DEPOSIT_TO_GRID_2ND_NC(prt, flds, m, 1.f);
+      for (auto prt : accessor[p]) {
+        int m = prt.kind();
+        DEPOSIT_TO_GRID_2ND_NC(prt, flds, m, 1.f);
       }
     }
     Base::bnd_.add_ghosts(Base::mres_);
@@ -71,17 +72,17 @@ public:
   {
     const auto& grid = mprts.grid();
     real_t fnqs = grid.norm.fnqs;
-    real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1], dzi = 1.f / grid.domain.dx[2];
+    real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1],
+           dzi = 1.f / grid.domain.dx[2];
 
     auto accessor = mprts.accessor();
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto flds = Base::mres_[p];
-      for (auto prt: accessor[p]) {
-	int m = prt.kind();
-	DEPOSIT_TO_GRID_2ND_NC(prt, flds, 0, prt.q());
+      for (auto prt : accessor[p]) {
+        int m = prt.kind();
+        DEPOSIT_TO_GRID_2ND_NC(prt, flds, 0, prt.q());
       }
     }
     Base::bnd_.add_ghosts(Base::mres_);
   }
 };
-

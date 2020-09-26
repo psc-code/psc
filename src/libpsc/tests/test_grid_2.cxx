@@ -95,9 +95,8 @@ TEST(Grid2, adios2_write)
   auto io = kg::io::IOAdios2{};
 
   {
-    auto domain = Grid_t::Domain{{8, 4, 2},
-				 {80.,  40., 20.}, {-40., -20., 0.},
-				 {2, 2, 1}};
+    auto domain =
+      Grid_t::Domain{{8, 4, 2}, {80., 40., 20.}, {-40., -20., 0.}, {2, 2, 1}};
     auto offs = std::vector<Int3>{{0, 0, 0}, {4, 0, 0}};
     auto bc = psc::grid::BC{};
     auto kinds = Grid_t::Kinds{{-1., 1., "electron"}, {1., 100., "ion"}};
@@ -113,7 +112,7 @@ TEST(Grid2, adios2_write)
 
   {
     using Real3 = Grid_t::Real3;
-    
+
     double dt;
     Grid_t::Domain domain;
     Grid_t grid;
@@ -131,24 +130,24 @@ TEST(Grid2, adios2_write)
     EXPECT_EQ(grid.domain.gdims, Int3({8, 4, 2}));
 
     if (mpi_rank == 0) {
-      EXPECT_EQ(grid.patches[0].off, Int3({ 0, 0, 0 }));
-      EXPECT_EQ(grid.patches[0].xb, Grid_t::Real3({ -40., -20.,  0. }));
-      EXPECT_EQ(grid.patches[0].xe, Grid_t::Real3({   0.,   0., 20. }));
-      EXPECT_EQ(grid.patches[1].off, Int3({ 4, 0, 0 }));
-      EXPECT_EQ(grid.patches[1].xb, Grid_t::Real3({   0., -20.,  0. }));
-      EXPECT_EQ(grid.patches[1].xe, Grid_t::Real3({  40.,   0., 20. }));
+      EXPECT_EQ(grid.patches[0].off, Int3({0, 0, 0}));
+      EXPECT_EQ(grid.patches[0].xb, Grid_t::Real3({-40., -20., 0.}));
+      EXPECT_EQ(grid.patches[0].xe, Grid_t::Real3({0., 0., 20.}));
+      EXPECT_EQ(grid.patches[1].off, Int3({4, 0, 0}));
+      EXPECT_EQ(grid.patches[1].xb, Grid_t::Real3({0., -20., 0.}));
+      EXPECT_EQ(grid.patches[1].xe, Grid_t::Real3({40., 0., 20.}));
     } else {
-      EXPECT_EQ(grid.patches[0].off, Int3({ 0, 2, 0 }));
-      EXPECT_EQ(grid.patches[0].xb, Grid_t::Real3({ -40.,   0.,  0. }));
-      EXPECT_EQ(grid.patches[0].xe, Grid_t::Real3({   0.,  20., 20. }));
-      EXPECT_EQ(grid.patches[1].off, Int3({ 4, 2, 0 }));
-      EXPECT_EQ(grid.patches[1].xb, Grid_t::Real3({   0.,   0.,  0. }));
-      EXPECT_EQ(grid.patches[1].xe, Grid_t::Real3({  40.,  20., 20. }));
+      EXPECT_EQ(grid.patches[0].off, Int3({0, 2, 0}));
+      EXPECT_EQ(grid.patches[0].xb, Grid_t::Real3({-40., 0., 0.}));
+      EXPECT_EQ(grid.patches[0].xe, Grid_t::Real3({0., 20., 20.}));
+      EXPECT_EQ(grid.patches[1].off, Int3({4, 2, 0}));
+      EXPECT_EQ(grid.patches[1].xb, Grid_t::Real3({0., 0., 0.}));
+      EXPECT_EQ(grid.patches[1].xe, Grid_t::Real3({40., 20., 20.}));
     }
 
     EXPECT_EQ(grid.kinds.size(), 2);
     EXPECT_EQ(grid.kinds[0].q, -1.);
-    EXPECT_EQ(grid.kinds[1].q,  1.);
+    EXPECT_EQ(grid.kinds[1].q, 1.);
     EXPECT_EQ(grid.kinds[0].name, "electron");
     EXPECT_EQ(grid.kinds[1].name, "ion");
   }
@@ -158,7 +157,7 @@ TEST(Grid2, adios2_write)
 // ======================================================================
 // main
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
   ::testing::InitGoogleTest(&argc, argv);

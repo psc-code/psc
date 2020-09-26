@@ -6,35 +6,36 @@
 
 typedef float fields_cuda2_real_t;
 
-struct psc_fields_cuda2 {
-};
+struct psc_fields_cuda2
+{};
 
 #define psc_fields_cuda2(flds) mrc_to_subobj(flds, struct psc_fields_cuda2)
 
 // ----------------------------------------------------------------------
 // macros to access C (host) versions of the fields
 
-#define F3_OFF_CUDA2(flds, fldnr, jx,jy,jz)				\
-  ((((((fldnr)								\
-       * (flds)->im[2] + ((jz)-(flds)->ib[2]))				\
-      * (flds)->im[1] + ((jy)-(flds)->ib[1]))				\
-     * (flds)->im[0] + ((jx)-(flds)->ib[0]))))
+#define F3_OFF_CUDA2(flds, fldnr, jx, jy, jz)                                  \
+  ((((((fldnr) * (flds)->im[2] + ((jz) - (flds)->ib[2])) * (flds)->im[1] +     \
+      ((jy) - (flds)->ib[1])) *                                                \
+       (flds)->im[0] +                                                         \
+     ((jx) - (flds)->ib[0]))))
 
 #ifndef BOUNDS_CHECK
 
-#define F3_CUDA2(flds, fldnr, jx,jy,jz)		\
-  (((fields_cuda2_real_t *) (flds)->data)[F3_OFF_CUDA2(flds, fldnr, jx,jy,jz)])
+#define F3_CUDA2(flds, fldnr, jx, jy, jz)                                      \
+  (((fields_cuda2_real_t*)(flds)->data)[F3_OFF_CUDA2(flds, fldnr, jx, jy, jz)])
 
 #else
 
-#define F3_CUDA2(flds, fldnr, jx,jy,jz)					\
-  (*({int off = F3_OFF_CUDA2(flds, fldnr, jx,jy,jz);			\
-      assert(fldnr >= 0 && fldnr < (flds)->nr_comp);			\
-      assert(jx >= (flds)->ib[0] && jx < (flds)->ib[0] + (flds)->im[0]); \
-      assert(jy >= (flds)->ib[1] && jy < (flds)->ib[1] + (flds)->im[1]); \
-      assert(jz >= (flds)->ib[2] && jz < (flds)->ib[2] + (flds)->im[2]); \
-      &(((fields_cuda2_real_t *) (flds)->data)[off]);			\
-    }))
+#define F3_CUDA2(flds, fldnr, jx, jy, jz)                                      \
+  (*({                                                                         \
+    int off = F3_OFF_CUDA2(flds, fldnr, jx, jy, jz);                           \
+    assert(fldnr >= 0 && fldnr < (flds)->nr_comp);                             \
+    assert(jx >= (flds)->ib[0] && jx < (flds)->ib[0] + (flds)->im[0]);         \
+    assert(jy >= (flds)->ib[1] && jy < (flds)->ib[1] + (flds)->im[1]);         \
+    assert(jz >= (flds)->ib[2] && jz < (flds)->ib[2] + (flds)->im[2]);         \
+    &(((fields_cuda2_real_t*)(flds)->data)[off]);                              \
+  }))
 
 #endif
 
@@ -44,29 +45,27 @@ struct psc_fields_cuda2 {
 
 #if DIM == DIM_YZ
 
-#define F3_DEV_OFF(fldnr, jx,jy,jz)					\
-  ((((fldnr)								\
-     *prm.mx[2] + ((jz)-prm.ilg[2]))					\
-    *prm.mx[1] + ((jy)-prm.ilg[1])))
+#define F3_DEV_OFF(fldnr, jx, jy, jz)                                          \
+  ((((fldnr)*prm.mx[2] + ((jz)-prm.ilg[2])) * prm.mx[1] + ((jy)-prm.ilg[1])))
 
 #else
 
-#define F3_DEV_OFF(fldnr, jx,jy,jz)					\
-  ((((fldnr)								\
-     *prm.mx[2] + ((jz)-prm.ilg[2]))					\
-    *prm.mx[1] + ((jy)-prm.ilg[1]))					\
-   *prm.mx[0] + ((jx)-prm.ilg[0]))
+#define F3_DEV_OFF(fldnr, jx, jy, jz)                                          \
+  ((((fldnr)*prm.mx[2] + ((jz)-prm.ilg[2])) * prm.mx[1] + ((jy)-prm.ilg[1])) * \
+     prm.mx[0] +                                                               \
+   ((jx)-prm.ilg[0]))
 
 #endif
 
-#define F3_DEV(d_flds, fldnr, jx,jy,jz)		\
-  ((d_flds)[F3_DEV_OFF(fldnr, jx,jy,jz)])
+#define F3_DEV(d_flds, fldnr, jx, jy, jz)                                      \
+  ((d_flds)[F3_DEV_OFF(fldnr, jx, jy, jz)])
 
 // ----------------------------------------------------------------------
 
-struct psc_mfields_cuda2 {
-  fields_cuda2_real_t *h_flds;
-  fields_cuda2_real_t *d_flds;
+struct psc_mfields_cuda2
+{
+  fields_cuda2_real_t* h_flds;
+  fields_cuda2_real_t* d_flds;
   int ib[3], im[3];
 };
 

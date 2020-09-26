@@ -11,6 +11,4 @@
 // SortBase
 
 struct SortBase
-{
-};
-
+{};

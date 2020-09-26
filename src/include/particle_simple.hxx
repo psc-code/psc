@@ -7,7 +7,7 @@
 // ======================================================================
 // ParticleSimple
 
-template<typename _Real>
+template <typename _Real>
 struct ParticleSimple
 {
   using real_t = _Real;
@@ -15,23 +15,24 @@ struct ParticleSimple
 
   ParticleSimple() = default;
 
-  KG_INLINE ParticleSimple(Real3 x, Real3 u, real_t qni_wni, int kind, psc::particle::Id id, psc::particle::Tag tag)
-    : x{x},
-      u{u},
-      kind{kind},
-      qni_wni{qni_wni}
+  KG_INLINE ParticleSimple(Real3 x, Real3 u, real_t qni_wni, int kind,
+                           psc::particle::Id id, psc::particle::Tag tag)
+    : x{x}, u{u}, kind{kind}, qni_wni{qni_wni}
   {}
 
   KG_INLINE bool operator==(const ParticleSimple& other) const
   {
-    return (x == other.x && qni_wni == other.qni_wni &&
-	    u == other.u && kind == other.kind);
+    return (x == other.x && qni_wni == other.qni_wni && u == other.u &&
+            kind == other.kind);
   }
 
-  KG_INLINE bool operator!=(const ParticleSimple& other) const { return !(*this == other); }
+  KG_INLINE bool operator!=(const ParticleSimple& other) const
+  {
+    return !(*this == other);
+  }
 
-  KG_INLINE psc::particle::Id id()  const { return 0; }
-  KG_INLINE psc::particle::Tag tag()  const { return 0; }
+  KG_INLINE psc::particle::Id id() const { return 0; }
+  KG_INLINE psc::particle::Tag tag() const { return 0; }
 
 public:
   Real3 x;
@@ -59,4 +60,3 @@ public:
     func("qni_wni", [](Particle& prt) { return &prt.qni_wni; });
   }
 };
-

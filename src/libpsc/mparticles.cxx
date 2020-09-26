@@ -18,29 +18,29 @@ void MparticlesBase::convert(MparticlesBase& mp_from, MparticlesBase& mp_to)
 {
   // FIXME, implementing == wouldn't hurt
   assert(&mp_from.grid() == &mp_to.grid());
-  
+
   auto convert_to = mp_from.convert_to().find(std::type_index(typeid(mp_to)));
   if (convert_to != mp_from.convert_to().cend()) {
     convert_to->second(mp_from, mp_to);
     return;
   }
-  
-  auto convert_from = mp_to.convert_from().find(std::type_index(typeid(mp_from)));
+
+  auto convert_from =
+    mp_to.convert_from().find(std::type_index(typeid(mp_from)));
   if (convert_from != mp_to.convert_from().cend()) {
     convert_from->second(mp_to, mp_from);
     return;
   }
 
   fprintf(stderr, "ERROR: no conversion known from %s to %s!\n",
-	  typeid(mp_from).name(), typeid(mp_to).name());
+          typeid(mp_from).name(), typeid(mp_to).name());
   assert(0);
 }
 
 // ======================================================================
 // psc_mparticles base class
 
-void
-psc_mparticles_check(MparticlesBase& mprts_base)
+void psc_mparticles_check(MparticlesBase& mprts_base)
 {
   int fail_cnt = 0;
 
@@ -52,10 +52,10 @@ psc_mparticles_check(MparticlesBase& mprts_base)
     auto&& prts = mprts[p];
 
     double xb[3], xe[3];
-    
+
     // New-style boundary requirements.
     // These will need revisiting when it comes to non-periodic domains.
-    
+
     for (int d = 0; d < 3; d++) {
       xb[d] = patch.xb[d];
       xe[d] = patch.xb[d] + grid.ldims[d] * grid.domain.dx[d];
@@ -63,11 +63,11 @@ psc_mparticles_check(MparticlesBase& mprts_base)
 
     for (auto prt : prts) {
       if (prt.x[0] < 0.f || prt.x[0] >= xe[0] - xb[0] || // FIXME xz only!
-	  prt.x[2] < 0.f || prt.x[2] >= xe[2] - xb[2]) {
-	if (fail_cnt++ < 10) {
-	  mprintf("FAIL: xi %g [%g:%g]\n", prt.x[0], 0., xe[0] - xb[0]);
-	  mprintf("      zi %g [%g:%g]\n", prt.x[2], 0., xe[2] - xb[2]);
-	}
+          prt.x[2] < 0.f || prt.x[2] >= xe[2] - xb[2]) {
+        if (fail_cnt++ < 10) {
+          mprintf("FAIL: xi %g [%g:%g]\n", prt.x[0], 0., xe[0] - xb[0]);
+          mprintf("      zi %g [%g:%g]\n", prt.x[2], 0., xe[2] - xb[2]);
+        }
       }
     }
   }
@@ -75,4 +75,3 @@ psc_mparticles_check(MparticlesBase& mprts_base)
 
   mprts_base.put_as(mprts, MP_DONT_COPY);
 }
-

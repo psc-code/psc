@@ -1,15 +1,16 @@
 
 #include <psc.h>
-#include <psc_push_particles.h>
-#include <psc_push_fields.h>
-#include <psc_sort.h>
 #include <psc_balance.h>
+#include <psc_push_fields.h>
+#include <psc_push_particles.h>
+#include <psc_sort.h>
 
 #include <mrc_params.h>
 
 #include <math.h>
 
-struct psc_kh {
+struct psc_kh
+{
   // parameters
   double beta;
   double theta_B, theta_V;
@@ -25,14 +26,14 @@ struct psc_kh {
 
 #define to_psc_kh(psc) mrc_to_subobj(psc, struct psc_kh)
 
-#define VAR(x) (void *)offsetof(struct psc_kh, x)
+#define VAR(x) (void*)offsetof(struct psc_kh, x)
 static struct param psc_kh_descr[] = {
-  { "theta_B"       , VAR(theta_B)         , PARAM_DOUBLE(M_PI/2. - .05) },
-  { "theta_V"       , VAR(theta_V)         , PARAM_DOUBLE(M_PI/2. - .05) },
-  { "delta"         , VAR(delta)           , PARAM_DOUBLE(0.8944)        }, // 2/sqrt(5)
-  { "beta"          , VAR(beta)            , PARAM_DOUBLE(.5)            },
-  { "mi_over_me"    , VAR(mi_over_me)      , PARAM_DOUBLE(5.)            },
-  { "wpe_over_wce"  , VAR(wpe_over_wce)    , PARAM_DOUBLE(2.)            },
+  {"theta_B", VAR(theta_B), PARAM_DOUBLE(M_PI / 2. - .05)},
+  {"theta_V", VAR(theta_V), PARAM_DOUBLE(M_PI / 2. - .05)},
+  {"delta", VAR(delta), PARAM_DOUBLE(0.8944)}, // 2/sqrt(5)
+  {"beta", VAR(beta), PARAM_DOUBLE(.5)},
+  {"mi_over_me", VAR(mi_over_me), PARAM_DOUBLE(5.)},
+  {"wpe_over_wce", VAR(wpe_over_wce), PARAM_DOUBLE(2.)},
   {},
 };
 #undef VAR
@@ -40,8 +41,7 @@ static struct param psc_kh_descr[] = {
 // ----------------------------------------------------------------------
 // psc_kh_create
 
-static void
-psc_kh_create(struct psc *psc)
+static void psc_kh_create(struct psc* psc)
 {
   psc_default_dimensionless(psc);
 
@@ -79,10 +79,9 @@ psc_kh_create(struct psc *psc)
 // the parameters are now set, calculate quantities to initialize fields,
 // particles
 
-static void
-psc_kh_setup(struct psc *psc)
+static void psc_kh_setup(struct psc* psc)
 {
-  struct psc_kh *kh = to_psc_kh(psc);
+  struct psc_kh* kh = to_psc_kh(psc);
 
   double me = 1. / kh->mi_over_me;
   double B0 = sqrt(me) / (kh->wpe_over_wce);
@@ -102,42 +101,40 @@ psc_kh_setup(struct psc *psc)
 // ----------------------------------------------------------------------
 // vz_profile
 
-static inline double
-vz_profile(struct psc *psc, double y)
+static inline double vz_profile(struct psc* psc, double y)
 {
-  struct psc_kh *kh = to_psc_kh(psc);
+  struct psc_kh* kh = to_psc_kh(psc);
 
   double yl = psc->domain.length[1];
-  double vz = kh->v0z * (-1 + tanh((y - .25 * yl) / kh->delta) - tanh((y - .75 * yl) / kh->delta));
+  double vz = kh->v0z * (-1 + tanh((y - .25 * yl) / kh->delta) -
+                         tanh((y - .75 * yl) / kh->delta));
   return vz;
 }
 
 // ----------------------------------------------------------------------
 // psc_kh_init_field
 
-static double
-psc_kh_init_field(struct psc *psc, double x[3], int m)
+static double psc_kh_init_field(struct psc* psc, double x[3], int m)
 {
-  struct psc_kh *kh = to_psc_kh(psc);
+  struct psc_kh* kh = to_psc_kh(psc);
 
   double vz = vz_profile(psc, x[1]);
 
   switch (m) {
-  case HX: return kh->B0 * sin(kh->theta_B);
-  case HZ: return kh->B0 * cos(kh->theta_B);
-  case EY: return -vz * kh->B0 * sin(kh->theta_B);
-  default: return 0.;
+    case HX: return kh->B0 * sin(kh->theta_B);
+    case HZ: return kh->B0 * cos(kh->theta_B);
+    case EY: return -vz * kh->B0 * sin(kh->theta_B);
+    default: return 0.;
   }
 }
 
 // ----------------------------------------------------------------------
 // psc_kh_init_npt
 
-static void
-psc_kh_init_npt(struct psc *psc, int kind, double x[3],
-		struct psc_particle_npt *npt)
+static void psc_kh_init_npt(struct psc* psc, int kind, double x[3],
+                            struct psc_particle_npt* npt)
 {
-  struct psc_kh *kh = to_psc_kh(psc);
+  struct psc_kh* kh = to_psc_kh(psc);
 
   double vz = vz_profile(psc, x[1]);
 
@@ -148,16 +145,15 @@ psc_kh_init_npt(struct psc *psc, int kind, double x[3],
   npt->T[2] = kh->T;
 
   switch (kind) {
-  case 0: // electrons
-    npt->q = -1.;
-    npt->m = 1. / kh->mi_over_me;
-    break;
-  case 1: // ions
-    npt->q = 1.;
-    npt->m = 1.;
-    break;
-  default:
-    assert(0);
+    case 0: // electrons
+      npt->q = -1.;
+      npt->m = 1. / kh->mi_over_me;
+      break;
+    case 1: // ions
+      npt->q = 1.;
+      npt->m = 1.;
+      break;
+    default: assert(0);
   }
 }
 
@@ -165,20 +161,19 @@ psc_kh_init_npt(struct psc *psc, int kind, double x[3],
 // psc_kh_ops
 
 struct psc_ops psc_kh_ops = {
-  .name             = "kh",
-  .size             = sizeof(struct psc_kh),
-  .param_descr      = psc_kh_descr,
-  .create           = psc_kh_create,
-  .setup            = psc_kh_setup,
-  .init_field       = psc_kh_init_field,
-  .init_npt         = psc_kh_init_npt,
+  .name = "kh",
+  .size = sizeof(struct psc_kh),
+  .param_descr = psc_kh_descr,
+  .create = psc_kh_create,
+  .setup = psc_kh_setup,
+  .init_field = psc_kh_init_field,
+  .init_npt = psc_kh_init_npt,
 };
 
 // ======================================================================
 // main
 
-int
-main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   return psc_main(&argc, &argv, &psc_kh_ops);
 }

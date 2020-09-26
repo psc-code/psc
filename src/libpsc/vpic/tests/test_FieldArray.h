@@ -4,20 +4,17 @@
 
 #include "test_GridBase.h"
 
-template<typename FieldArray>
-FieldArray* test_FieldArray_create(typename FieldArray::Grid *g)
+template <typename FieldArray>
+FieldArray* test_FieldArray_create(typename FieldArray::Grid* g)
 {
   typename FieldArray::MaterialList material_list;
-  material_list.append(material_list.create("vacuum",
-					    1., 1., 1.,
-					    1., 1., 1.,
-					    0., 0., 0.,
-					    0., 0., 0.));
+  material_list.append(material_list.create("vacuum", 1., 1., 1., 1., 1., 1.,
+                                            0., 0., 0., 0., 0., 0.));
 
   return FieldArray::create(g, material_list, 0.);
 }
 
-template<typename FieldArray>
+template <typename FieldArray>
 void test_FieldArray_methods(FieldArray& fa)
 {
   double en[6];
@@ -45,18 +42,18 @@ void test_FieldArray_methods(FieldArray& fa)
   fa.clean_div_b();
 }
 
-template<typename FieldArray>
+template <typename FieldArray>
 void test_FieldArray_destroy(FieldArray* fa)
 {
   // FIXME
 }
 
-template<typename FieldArray>
+template <typename FieldArray>
 void test_FieldArray()
 {
-  auto *g = test_GridBase_create<typename FieldArray::Grid>();
-  
-  FieldArray *fa = test_FieldArray_create<FieldArray>(g);
+  auto* g = test_GridBase_create<typename FieldArray::Grid>();
+
+  FieldArray* fa = test_FieldArray_create<FieldArray>(g);
   test_FieldArray_methods(*fa);
   test_FieldArray_destroy(fa);
 

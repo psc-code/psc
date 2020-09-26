@@ -236,4 +236,3 @@ protected:
   Mfields mres_;
   ItemMomentBnd<Mfields, Bnd> bnd_;
 };
-

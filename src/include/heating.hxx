@@ -10,6 +10,4 @@
 // HeatingBase
 
 struct HeatingBase
-{
-};
-
+{};

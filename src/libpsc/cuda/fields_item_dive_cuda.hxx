@@ -10,7 +10,7 @@ struct Item_dive_cuda
   using MfieldsState = MfieldsStateCuda;
   constexpr static const char* name = "dive";
   constexpr static int n_comps = 1;
-  static std::vector<std::string> fld_names() { return { "dive" }; } // FIXME
+  static std::vector<std::string> fld_names() { return {"dive"}; } // FIXME
 
   static void run(const Grid_t& grid, MfieldsState& mflds, Mfields& mres)
   {
@@ -19,4 +19,3 @@ struct Item_dive_cuda
     }
   }
 };
-

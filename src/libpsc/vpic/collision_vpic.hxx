@@ -41,8 +41,7 @@ public:
   }
 
   int interval() const { return interval_; }
-  
+
 private:
   int interval_;
 };
-
