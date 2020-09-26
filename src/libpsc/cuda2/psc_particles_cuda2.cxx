@@ -17,27 +17,33 @@
 // ----------------------------------------------------------------------
 // psc_mparticles_cuda2_copy_to_device
 
-void
-psc_mparticles_cuda2_copy_to_device(struct psc_mparticles *mprts)
+void psc_mparticles_cuda2_copy_to_device(struct psc_mparticles* mprts)
 {
-  struct psc_mparticles_cuda2 *sub = psc_mparticles_cuda2(mprts);
+  struct psc_mparticles_cuda2* sub = psc_mparticles_cuda2(mprts);
 
-  cuda_memcpy_device_from_host(sub->d_xi4, sub->h_xi4, sub->n_part_total * sizeof(*sub->d_xi4));
-  cuda_memcpy_device_from_host(sub->d_pxi4, sub->h_pxi4, sub->n_part_total * sizeof(*sub->d_pxi4));
-  cuda_memcpy_device_from_host(sub->d_b_off, sub->h_b_off, (sub->nr_blocks_total + 2) * sizeof(*sub->d_b_off));
+  cuda_memcpy_device_from_host(sub->d_xi4, sub->h_xi4,
+                               sub->n_part_total * sizeof(*sub->d_xi4));
+  cuda_memcpy_device_from_host(sub->d_pxi4, sub->h_pxi4,
+                               sub->n_part_total * sizeof(*sub->d_pxi4));
+  cuda_memcpy_device_from_host(sub->d_b_off, sub->h_b_off,
+                               (sub->nr_blocks_total + 2) *
+                                 sizeof(*sub->d_b_off));
 }
 
 // ----------------------------------------------------------------------
 // psc_mparticles_cuda2_copy_to_host
 
-void
-psc_mparticles_cuda2_copy_to_host(struct psc_mparticles *mprts)
+void psc_mparticles_cuda2_copy_to_host(struct psc_mparticles* mprts)
 {
-  struct psc_mparticles_cuda2 *sub = psc_mparticles_cuda2(mprts);
+  struct psc_mparticles_cuda2* sub = psc_mparticles_cuda2(mprts);
 
-  cuda_memcpy_host_from_device(sub->h_xi4, sub->d_xi4, sub->n_part_total * sizeof(*sub->h_xi4));
-  cuda_memcpy_host_from_device(sub->h_pxi4, sub->d_pxi4, sub->n_part_total * sizeof(*sub->h_pxi4));
-  cuda_memcpy_host_from_device(sub->h_b_off, sub->d_b_off, (sub->nr_blocks_total + 2) * sizeof(*sub->h_b_off));
+  cuda_memcpy_host_from_device(sub->h_xi4, sub->d_xi4,
+                               sub->n_part_total * sizeof(*sub->h_xi4));
+  cuda_memcpy_host_from_device(sub->h_pxi4, sub->d_pxi4,
+                               sub->n_part_total * sizeof(*sub->h_pxi4));
+  cuda_memcpy_host_from_device(sub->h_b_off, sub->d_b_off,
+                               (sub->nr_blocks_total + 2) *
+                                 sizeof(*sub->h_b_off));
 }
 
 // ----------------------------------------------------------------------
@@ -45,9 +51,10 @@ psc_mparticles_cuda2_copy_to_host(struct psc_mparticles *mprts)
 //
 // FIXME, duplicated and only need fixed shift, no og here
 
-static inline void
-find_idx_off_1st_rel(particle_cuda2_real_t xi[3], int lg[3], particle_cuda2_real_t og[3],
-		     particle_cuda2_real_t shift, particle_cuda2_real_t dxi[3])
+static inline void find_idx_off_1st_rel(particle_cuda2_real_t xi[3], int lg[3],
+                                        particle_cuda2_real_t og[3],
+                                        particle_cuda2_real_t shift,
+                                        particle_cuda2_real_t dxi[3])
 {
   for (int d = 0; d < 3; d++) {
     particle_cuda2_real_t pos = xi[d] * dxi[d] + shift;
@@ -59,13 +66,13 @@ find_idx_off_1st_rel(particle_cuda2_real_t xi[3], int lg[3], particle_cuda2_real
 // ----------------------------------------------------------------------
 // psc_particles_cuda2_get_b_idx
 
-static unsigned int
-psc_particles_cuda2_get_b_idx(struct psc_particles *prts, int n)
+static unsigned int psc_particles_cuda2_get_b_idx(struct psc_particles* prts,
+                                                  int n)
 {
   // FIXME, a particle which ends up exactly on the high boundary
   // should not be considered oob -- well, it's a complicated business,
   // but at least for certain b.c.s it's legal
-  struct psc_particles_cuda2 *sub = psc_particles_cuda2(prts);
+  struct psc_particles_cuda2* sub = psc_particles_cuda2(prts);
 
   particle_cuda2_t prt;
   PARTICLE_CUDA2_LOAD_POS(prt, sub->h_xi4, n);
@@ -77,9 +84,8 @@ psc_particles_cuda2_get_b_idx(struct psc_particles *prts, int n)
     b_pos[d] /= psc_particles_cuda2_bs[d];
   }
 
-  if (b_pos[0] >= 0 && b_pos[0] < b_mx[0] &&
-      b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
-      b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
+  if (b_pos[0] >= 0 && b_pos[0] < b_mx[0] && b_pos[1] >= 0 &&
+      b_pos[1] < b_mx[1] && b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
     unsigned int b_idx = (b_pos[2] * b_mx[1] + b_pos[1]) * b_mx[0] + b_pos[0];
     assert(b_idx < sub->nr_blocks);
     return b_idx;
@@ -98,12 +104,11 @@ psc_particles_cuda2_get_b_idx(struct psc_particles *prts, int n)
 // b_idx, b_ids and b_cnt are not valid after returning
 // (they shouldn't be needed for anything, either)
 
-static void
-psc_particles_cuda2_sort(struct psc_particles *prts)
+static void psc_particles_cuda2_sort(struct psc_particles* prts)
 {
-  struct psc_mparticles *mprts = prts->mprts;
+  struct psc_mparticles* mprts = prts->mprts;
   int p = prts->p;
-  struct psc_particles_cuda2 *sub = psc_particles_cuda2(prts);
+  struct psc_particles_cuda2* sub = psc_particles_cuda2(prts);
 
   for (int b = 0; b < sub->nr_blocks; b++) {
     sub->b_cnt[b] = 0;
@@ -117,7 +122,7 @@ psc_particles_cuda2_sort(struct psc_particles *prts)
     sub->b_idx[n] = b_idx;
     sub->b_cnt[b_idx]++;
   }
-  
+
   // b_off = prefix sum(b_cnt), zero b_cnt
   int sum = 0;
   for (int b = 0; b <= sub->nr_blocks; b++) {
@@ -139,13 +144,13 @@ psc_particles_cuda2_sort(struct psc_particles *prts)
   // reorder into alt particle array
   // WARNING: This is reversed to what reorder() does!
   for (int n = 0; n < n_prts; n++) {
-    sub->h_xi4_alt [sub->b_ids[n]] = sub->h_xi4 [n];
+    sub->h_xi4_alt[sub->b_ids[n]] = sub->h_xi4[n];
     sub->h_pxi4_alt[sub->b_ids[n]] = sub->h_pxi4[n];
   }
-  
+
   // swap in alt array
-  float4 *tmp_xi4 = sub->h_xi4;
-  float4 *tmp_pxi4 = sub->h_pxi4;
+  float4* tmp_xi4 = sub->h_xi4;
+  float4* tmp_pxi4 = sub->h_pxi4;
   sub->h_xi4 = sub->h_xi4_alt;
   sub->h_pxi4 = sub->h_pxi4_alt;
   sub->h_xi4_alt = tmp_xi4;
@@ -160,12 +165,11 @@ psc_particles_cuda2_sort(struct psc_particles *prts)
 // block_idx, and that that b_off properly contains the range of
 // particles in each block.
 
-static void
-psc_particles_cuda2_check(struct psc_particles *prts)
+static void psc_particles_cuda2_check(struct psc_particles* prts)
 {
-  struct psc_mparticles *mprts = prts->mprts;
+  struct psc_mparticles* mprts = prts->mprts;
   int p = prts->p;
-  struct psc_particles_cuda2 *sub = psc_particles_cuda2(prts);
+  struct psc_particles_cuda2* sub = psc_particles_cuda2(prts);
 
   int n_prts = psc_mparticles_n_prts_by_patch(mprts, p);
   assert(n_prts <= psc_mparticles_n_alloced(mprts, p));
@@ -187,13 +191,13 @@ psc_particles_cuda2_check(struct psc_particles *prts)
 // ----------------------------------------------------------------------
 // psc_particles_cuda2_copy_to_single
 
-static void
-psc_particles_cuda2_copy_to_single(struct psc_particles *prts_base,
-				   struct psc_particles *prts, unsigned int flags)
+static void psc_particles_cuda2_copy_to_single(struct psc_particles* prts_base,
+                                               struct psc_particles* prts,
+                                               unsigned int flags)
 {
-  struct psc_mparticles *mprts = prts->mprts;
+  struct psc_mparticles* mprts = prts->mprts;
   int p = prts->p;
-  struct psc_particles_cuda2 *sub = psc_particles_cuda2(prts_base);
+  struct psc_particles_cuda2* sub = psc_particles_cuda2(prts_base);
 
   int n_prts = psc_mparticles_n_prts_by_patch(prts_base->mprts, p);
   mprts[p].resize(n_prts);
@@ -201,15 +205,16 @@ psc_particles_cuda2_copy_to_single(struct psc_particles *prts_base,
     particle_cuda2_t prt_base;
     PARTICLE_CUDA2_LOAD_POS(prt_base, sub->h_xi4, n);
     PARTICLE_CUDA2_LOAD_MOM(prt_base, sub->h_pxi4, n);
-    particle_single_t *part = psc_mparticles_single_get_one(prts->mprts, prts->p, n);
-    
-    part->xi      = prt_base.xi[0];
-    part->yi      = prt_base.xi[1];
-    part->zi      = prt_base.xi[2];
-    part->kind    = particle_cuda2_kind(&prt_base);
-    part->pxi     = prt_base.pxi[0];
-    part->pyi     = prt_base.pxi[1];
-    part->pzi     = prt_base.pxi[2];
+    particle_single_t* part =
+      psc_mparticles_single_get_one(prts->mprts, prts->p, n);
+
+    part->xi = prt_base.xi[0];
+    part->yi = prt_base.xi[1];
+    part->zi = prt_base.xi[2];
+    part->kind = particle_cuda2_kind(&prt_base);
+    part->pxi = prt_base.pxi[0];
+    part->pyi = prt_base.pxi[1];
+    part->pzi = prt_base.pxi[2];
     part->qni_wni = prt_base.qni_wni;
   }
 }
@@ -217,26 +222,27 @@ psc_particles_cuda2_copy_to_single(struct psc_particles *prts_base,
 // ----------------------------------------------------------------------
 // psc_particles_cuda2_copy_from_single
 
-static void
-psc_particles_cuda2_copy_from_single(struct psc_particles *prts_base,
-				     struct psc_particles *prts, unsigned int flags)
+static void psc_particles_cuda2_copy_from_single(
+  struct psc_particles* prts_base, struct psc_particles* prts,
+  unsigned int flags)
 {
-  struct psc_particles_cuda2 *sub = psc_particles_cuda2(prts_base);
+  struct psc_particles_cuda2* sub = psc_particles_cuda2(prts_base);
 
   int n_prts = psc_mparticles_n_prts_by_patch(prts->mprts, prts->p);
   prts_base->mprts[prts_base->p].resize(n_prts);
   for (int n = 0; n < n_prts; n++) {
     particle_cuda2_t prt_base;
-    particle_single_t *part = psc_mparticles_single_get_one(prts->mprts, prts->p, n);
+    particle_single_t* part =
+      psc_mparticles_single_get_one(prts->mprts, prts->p, n);
 
-    prt_base.xi[0]         = part->xi;
-    prt_base.xi[1]         = part->yi;
-    prt_base.xi[2]         = part->zi;
+    prt_base.xi[0] = part->xi;
+    prt_base.xi[1] = part->yi;
+    prt_base.xi[2] = part->zi;
     prt_base.kind_as_float = cuda_int_as_float(part->kind);
-    prt_base.pxi[0]        = part->pxi;
-    prt_base.pxi[1]        = part->pyi;
-    prt_base.pxi[2]        = part->pzi;
-    prt_base.qni_wni       = part->qni_wni;
+    prt_base.pxi[0] = part->pxi;
+    prt_base.pxi[1] = part->pyi;
+    prt_base.pxi[2] = part->pzi;
+    prt_base.qni_wni = part->qni_wni;
 
     PARTICLE_CUDA2_STORE_POS(prt_base, sub->h_xi4, n);
     PARTICLE_CUDA2_STORE_MOM(prt_base, sub->h_pxi4, n);
@@ -247,62 +253,63 @@ psc_particles_cuda2_copy_from_single(struct psc_particles *prts_base,
 
 #include "../cuda/psc_cuda.h"
 
-static void
-particles_cuda_to_device(struct psc_particles *prts, float4 *xi4, float4 *pxi4)
+static void particles_cuda_to_device(struct psc_particles* prts, float4* xi4,
+                                     float4* pxi4)
 {
-  struct psc_mparticles *mprts = prts->mprts;
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct psc_mparticles* mprts = prts->mprts;
+  struct psc_mparticles_cuda* mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles* cmprts = mprts_cuda->cmprts;
 
   unsigned int off = 0;
   for (int p = 0; p < prts->p; p++) {
     off += psc_mparticles_n_prts_by_patch(mprts, p);
   }
 
-  cuda_mparticles_to_device(cmprts, xi4, pxi4, psc_mparticles_n_prts_by_patch(mprts, prts->p), off);
+  cuda_mparticles_to_device(
+    cmprts, xi4, pxi4, psc_mparticles_n_prts_by_patch(mprts, prts->p), off);
 }
 
 // ----------------------------------------------------------------------
 // psc_particles_cuda2_copy_to_cuda
 
-static void
-psc_particles_cuda2_copy_to_cuda(struct psc_particles *prts,
-				 struct psc_particles *prts_cuda, unsigned int flags)
+static void psc_particles_cuda2_copy_to_cuda(struct psc_particles* prts,
+                                             struct psc_particles* prts_cuda,
+                                             unsigned int flags)
 {
-  struct psc_particles_cuda2 *sub = psc_particles_cuda2(prts);
+  struct psc_particles_cuda2* sub = psc_particles_cuda2(prts);
 
   int n_prts = psc_mparticles_n_prts_by_patch(prts->mprts, prts->p);
   assert(psc_mparticles_n_prts_by_patch(prts_cuda->mprts, prts->p) == n_prts);
-  
-  float4 *xi4  = calloc(n_prts, sizeof(float4));
-  float4 *pxi4 = calloc(n_prts, sizeof(float4));
-  
+
+  float4* xi4 = calloc(n_prts, sizeof(float4));
+  float4* pxi4 = calloc(n_prts, sizeof(float4));
+
   for (int n = 0; n < n_prts; n++) {
     particle_cuda2_t prt;
     PARTICLE_CUDA2_LOAD_POS(prt, sub->h_xi4, n);
     PARTICLE_CUDA2_LOAD_MOM(prt, sub->h_pxi4, n);
-    
-    xi4[n].x  = prt.xi[0];
-    xi4[n].y  = prt.xi[1];
-    xi4[n].z  = prt.xi[2];
-    xi4[n].w  = prt.kind_as_float;
+
+    xi4[n].x = prt.xi[0];
+    xi4[n].y = prt.xi[1];
+    xi4[n].z = prt.xi[2];
+    xi4[n].w = prt.kind_as_float;
     pxi4[n].x = prt.pxi[0];
     pxi4[n].y = prt.pxi[1];
     pxi4[n].z = prt.pxi[2];
     pxi4[n].w = prt.qni_wni;
   }
-  
+
   particles_cuda_to_device(prts_cuda, xi4, pxi4);
-  
+
   free(xi4);
   free(pxi4);
 }
 
-static void
-psc_particles_cuda2_copy_from_cuda(struct psc_particles *prts,
-				   struct psc_particles *prts_cuda, unsigned int flags)
+static void psc_particles_cuda2_copy_from_cuda(struct psc_particles* prts,
+                                               struct psc_particles* prts_cuda,
+                                               unsigned int flags)
 {
-  struct psc_particles_cuda2 *sub = psc_particles_cuda2(prts);
+  struct psc_particles_cuda2* sub = psc_particles_cuda2(prts);
 
   int n_prts = psc_mparticles_n_prts_by_patch(prts_cuda->mprts, prts_cuda->p);
   prts->mprts[prts->p].resize(n_prts);
@@ -310,23 +317,23 @@ psc_particles_cuda2_copy_from_cuda(struct psc_particles *prts,
   for (int p = 0; p < prts->p; p++) {
     off += psc_mparticles_n_prts_by_patch(prts_cuda->mprts, p);
   }
-  
-  float4 *xi4  = calloc(n_prts, sizeof(float4));
-  float4 *pxi4 = calloc(n_prts, sizeof(float4));
-  
+
+  float4* xi4 = calloc(n_prts, sizeof(float4));
+  float4* pxi4 = calloc(n_prts, sizeof(float4));
+
   __particles_cuda_from_device(prts_cuda->mprts, xi4, pxi4, off, n_prts);
-  
+
   for (int n = 0; n < n_prts; n++) {
     particle_cuda2_t prt;
 
-    prt.xi[0]         = xi4[n].x;
-    prt.xi[1]         = xi4[n].y;
-    prt.xi[2]         = xi4[n].z;
+    prt.xi[0] = xi4[n].x;
+    prt.xi[1] = xi4[n].y;
+    prt.xi[2] = xi4[n].z;
     prt.kind_as_float = xi4[n].w;
-    prt.pxi[0]        = pxi4[n].x;
-    prt.pxi[1]        = pxi4[n].y;
-    prt.pxi[2]        = pxi4[n].z;
-    prt.qni_wni       = pxi4[n].w;
+    prt.pxi[0] = pxi4[n].x;
+    prt.pxi[1] = pxi4[n].y;
+    prt.pxi[2] = pxi4[n].z;
+    prt.qni_wni = pxi4[n].w;
 
     PARTICLE_CUDA2_STORE_POS(prt, sub->h_xi4, n);
     PARTICLE_CUDA2_STORE_MOM(prt, sub->h_pxi4, n);
@@ -342,30 +349,28 @@ psc_particles_cuda2_copy_from_cuda(struct psc_particles *prts,
 // psc_particles_cuda2_methods
 
 static struct mrc_obj_method psc_particles_cuda2_methods[] = {
-  MRC_OBJ_METHOD("copy_to_single"  , psc_particles_cuda2_copy_to_single),
+  MRC_OBJ_METHOD("copy_to_single", psc_particles_cuda2_copy_to_single),
   MRC_OBJ_METHOD("copy_from_single", psc_particles_cuda2_copy_from_single),
 #ifdef USE_CUDA
-  MRC_OBJ_METHOD("copy_to_cuda"    , psc_particles_cuda2_copy_to_cuda),
-  MRC_OBJ_METHOD("copy_from_cuda"  , psc_particles_cuda2_copy_from_cuda),
+  MRC_OBJ_METHOD("copy_to_cuda", psc_particles_cuda2_copy_to_cuda),
+  MRC_OBJ_METHOD("copy_from_cuda", psc_particles_cuda2_copy_from_cuda),
 #endif
-  {}
-};
+  {}};
 
 // ----------------------------------------------------------------------
 // psc_mparticles_cuda2_setup
 
-static void
-psc_mparticles_cuda2_setup(struct psc_mparticles *mprts)
+static void psc_mparticles_cuda2_setup(struct psc_mparticles* mprts)
 {
-  struct psc_mparticles_cuda2 *sub = psc_mparticles_cuda2(mprts);
+  struct psc_mparticles_cuda2* sub = psc_mparticles_cuda2(mprts);
 
   psc_mparticles_setup_super(mprts);
 
   if (mprts->nr_patches == 0) {
     return;
   }
-  
-  int *gdims = ppsc->domain.gdims;
+
+  int* gdims = ppsc->domain.gdims;
   for (int d = 0; d < 3; d++) {
     sub->bs[d] = psc_particles_cuda2_bs[d];
     if (gdims[d] == 1) {
@@ -393,14 +398,14 @@ psc_mparticles_cuda2_setup(struct psc_mparticles *mprts)
   sub->d_xi4 = cuda_calloc(sub->n_alloced_total, sizeof(*sub->d_xi4));
   sub->d_pxi4 = cuda_calloc(sub->n_alloced_total, sizeof(*sub->d_pxi4));
   sub->d_b_off = cuda_calloc(sub->nr_blocks_total + 2, sizeof(*sub->d_b_off));
-  
-  float4 *h_xi4 = sub->h_xi4;
-  float4 *h_pxi4 = sub->h_pxi4;
-  float4 *h_xi4_alt = sub->h_xi4_alt;
-  float4 *h_pxi4_alt = sub->h_pxi4_alt;
+
+  float4* h_xi4 = sub->h_xi4;
+  float4* h_pxi4 = sub->h_pxi4;
+  float4* h_xi4_alt = sub->h_xi4_alt;
+  float4* h_pxi4_alt = sub->h_pxi4_alt;
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_cuda2 *prts_sub = psc_particles_cuda2(prts);
+    struct psc_particles* prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_cuda2* prts_sub = psc_particles_cuda2(prts);
 
     int n_alloced = psc_mparticles_n_prts_by_patch(mprts, p);
     psc_mparticles_set_n_alloced(mprts, p, n_alloced);
@@ -432,14 +437,13 @@ psc_mparticles_cuda2_setup(struct psc_mparticles *mprts)
 // ----------------------------------------------------------------------
 // psc_mparticles_cuda2_destroy
 
-static void
-psc_mparticles_cuda2_destroy(struct psc_mparticles *mprts)
+static void psc_mparticles_cuda2_destroy(struct psc_mparticles* mprts)
 {
-  struct psc_mparticles_cuda2 *sub = psc_mparticles_cuda2(mprts);
+  struct psc_mparticles_cuda2* sub = psc_mparticles_cuda2(mprts);
 
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_cuda2 *prts_sub = psc_particles_cuda2(prts);
+    struct psc_particles* prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_cuda2* prts_sub = psc_particles_cuda2(prts);
 
     free(prts_sub->b_idx);
     free(prts_sub->b_ids);
@@ -463,10 +467,9 @@ psc_mparticles_cuda2_destroy(struct psc_mparticles *mprts)
 //
 // make sure that h_b_off[] is set up properly
 
-static void
-psc_mparticles_cuda2_check(struct psc_mparticles *mprts)
+static void psc_mparticles_cuda2_check(struct psc_mparticles* mprts)
 {
-  struct psc_mparticles_cuda2 *sub = psc_mparticles_cuda2(mprts);
+  struct psc_mparticles_cuda2* sub = psc_mparticles_cuda2(mprts);
 
   assert(sub->n_part_total <= sub->n_alloced_total);
 
@@ -489,26 +492,25 @@ psc_mparticles_cuda2_check(struct psc_mparticles *mprts)
 // ----------------------------------------------------------------------
 // psc_mparticles_cuda2_setup_internals
 
-static void
-psc_mparticles_cuda2_setup_internals(struct psc_mparticles *mprts)
+static void psc_mparticles_cuda2_setup_internals(struct psc_mparticles* mprts)
 {
-  struct psc_mparticles_cuda2 *sub = psc_mparticles_cuda2(mprts);
+  struct psc_mparticles_cuda2* sub = psc_mparticles_cuda2(mprts);
 
   int nr_blocks = sub->nr_blocks;
   // FIXME, should just do the sorting all-in-one
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_cuda2 *prts_sub = psc_particles_cuda2(prts);
+    struct psc_particles* prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_cuda2* prts_sub = psc_particles_cuda2(prts);
 
     psc_particles_cuda2_sort(prts);
     // make sure there are no oob particles
-    assert(prts_sub->b_off[nr_blocks] == prts_sub->b_off[nr_blocks+1]);
+    assert(prts_sub->b_off[nr_blocks] == prts_sub->b_off[nr_blocks + 1]);
     psc_particles_cuda2_check(prts);
   }
   // FIXME, to keep consistency with per-patch
   // swap in alt array
-  float4 *tmp_xi4 = sub->h_xi4;
-  float4 *tmp_pxi4 = sub->h_pxi4;
+  float4* tmp_xi4 = sub->h_xi4;
+  float4* tmp_pxi4 = sub->h_pxi4;
   sub->h_xi4 = sub->h_xi4_alt;
   sub->h_pxi4 = sub->h_pxi4_alt;
   sub->h_xi4_alt = tmp_xi4;
@@ -516,8 +518,8 @@ psc_mparticles_cuda2_setup_internals(struct psc_mparticles *mprts)
 
   unsigned int n_part = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_cuda2 *prts_sub = psc_particles_cuda2(prts);
+    struct psc_particles* prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_cuda2* prts_sub = psc_particles_cuda2(prts);
 
     for (int b = 0; b < nr_blocks; b++) {
       sub->h_b_off[p * nr_blocks + b] = prts_sub->b_off[b] + n_part;
@@ -534,11 +536,10 @@ psc_mparticles_cuda2_setup_internals(struct psc_mparticles *mprts)
 // psc_mparticles: subclass "cuda2"
 
 struct psc_mparticles_ops psc_mparticles_cuda2_ops = {
-  .name                    = "cuda2",
-  .size                    = sizeof(struct psc_mparticles_cuda2),
-  .methods                 = psc_particles_cuda2_methods,
-  .setup                   = psc_mparticles_cuda2_setup,
-  .destroy                 = psc_mparticles_cuda2_destroy,
-  .setup_internals         = psc_mparticles_cuda2_setup_internals,
+  .name = "cuda2",
+  .size = sizeof(struct psc_mparticles_cuda2),
+  .methods = psc_particles_cuda2_methods,
+  .setup = psc_mparticles_cuda2_setup,
+  .destroy = psc_mparticles_cuda2_destroy,
+  .setup_internals = psc_mparticles_cuda2_setup_internals,
 };
-

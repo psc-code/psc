@@ -3,10 +3,10 @@
 
 #include "bnd_particles_impl.hxx"
 
-template<typename CudaMparticles, typename DIM>
+template <typename CudaMparticles, typename DIM>
 struct cuda_bndp;
 
-template<typename Mparticles, typename DIM>
+template <typename Mparticles, typename DIM>
 struct BndParticlesCuda : BndParticlesCommon<Mparticles>
 {
   using Base = BndParticlesCommon<Mparticles>;
@@ -20,4 +20,3 @@ struct BndParticlesCuda : BndParticlesCommon<Mparticles>
 private:
   cuda_bndp<typename Mparticles::CudaMparticles, DIM>* cbndp_;
 };
-

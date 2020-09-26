@@ -7,7 +7,7 @@
 #include "../libpsc/psc_output_particles/output_particles_ascii_impl.hxx"
 #include "../libpsc/psc_output_particles/output_particles_hdf5_impl.hxx"
 
-template<typename _Dim, typename _Mparticles, typename _OutputParticles>
+template <typename _Dim, typename _Mparticles, typename _OutputParticles>
 struct Config
 {
   using Dim = _Dim;
@@ -15,7 +15,7 @@ struct Config
   using OutputParticles = _OutputParticles;
 };
 
-template<typename T>
+template <typename T>
 struct OutputParticlesTest : ::testing::Test
 {
   using Dim = typename T::Dim;
@@ -25,16 +25,26 @@ struct OutputParticlesTest : ::testing::Test
   void make_psc(const Grid_t::Kinds& kinds)
   {
     Int3 gdims = {16, 16, 16};
-    if (Dim::InvarX::value) { gdims[0] = 1; ibn[0] = 0; }
-    if (Dim::InvarY::value) { gdims[1] = 1; ibn[1] = 0; }
-    if (Dim::InvarZ::value) { gdims[2] = 1; ibn[2] = 0; }
+    if (Dim::InvarX::value) {
+      gdims[0] = 1;
+      ibn[0] = 0;
+    }
+    if (Dim::InvarY::value) {
+      gdims[1] = 1;
+      ibn[1] = 0;
+    }
+    if (Dim::InvarZ::value) {
+      gdims[2] = 1;
+      ibn[2] = 0;
+    }
 
     auto grid_domain = Grid_t::Domain{gdims, {L, L, L}};
-    auto grid_bc = psc::grid::BC{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
-			  { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
-			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC },
-			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC }};
-    
+    auto grid_bc =
+      psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
+                    {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
+                    {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC},
+                    {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC}};
+
     auto norm_params = Grid_t::NormalizationParams::dimensionless();
     norm_params.nicell = 200;
     auto coeff = Grid_t::Normalization{norm_params};
@@ -50,12 +60,13 @@ struct OutputParticlesTest : ::testing::Test
 
 private:
   Grid_t* grid_;
-  Int3 ibn = { 2, 2, 2 };
+  Int3 ibn = {2, 2, 2};
 };
 
-using OutputParticlesTestTypes = ::testing::Types<Config<dim_xyz, MparticlesSingle, OutputParticlesAscii>,
-						  Config<dim_xyz, MparticlesSingle, OutputParticlesHdf5>,
-						  Config<dim_xyz, MparticlesDouble, OutputParticlesHdf5>>;
+using OutputParticlesTestTypes =
+  ::testing::Types<Config<dim_xyz, MparticlesSingle, OutputParticlesAscii>,
+                   Config<dim_xyz, MparticlesSingle, OutputParticlesHdf5>,
+                   Config<dim_xyz, MparticlesDouble, OutputParticlesHdf5>>;
 
 TYPED_TEST_SUITE(OutputParticlesTest, OutputParticlesTestTypes);
 
@@ -70,7 +81,7 @@ TYPED_TEST(OutputParticlesTest, Test1)
   auto kinds = Grid_t::Kinds{{1., 100., "ion"}, {-1., 1., "electron"}};
   this->make_psc(kinds);
   const auto& grid = this->grid();
-  
+
   // init particle
   auto n_prts_by_patch = std::vector<uint>{1};
 
@@ -93,7 +104,7 @@ TYPED_TEST(OutputParticlesTest, Test1)
 // ----------------------------------------------------------------------
 // main
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
   ::testing::InitGoogleTest(&argc, argv);
@@ -101,5 +112,3 @@ int main(int argc, char **argv)
   MPI_Finalize();
   return rc;
 }
-
-

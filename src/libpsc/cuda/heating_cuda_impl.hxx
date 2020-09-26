@@ -10,20 +10,19 @@
 
 struct cuda_heating_foil;
 
-template<typename BS>
+template <typename BS>
 struct HeatingCuda : HeatingBase
 {
-  template<typename FUNC>
-  HeatingCuda(const Grid_t& grid, int interval,FUNC get_H);
+  template <typename FUNC>
+  HeatingCuda(const Grid_t& grid, int interval, FUNC get_H);
 
   ~HeatingCuda();
 
   void reset(MparticlesCuda<BS>& mprts);
 
   void operator()(MparticlesCuda<BS>& mprts);
-  
+
 private:
   cuda_heating_foil* foil_;
   int balance_generation_cnt_;
 };
-

@@ -5,7 +5,7 @@
 #include "dim.hxx"
 #include "kg/Vec3.h"
 
-template<typename F, typename D = dim_xyz>
+template <typename F, typename D = dim_xyz>
 class Fields3d
 {
 public:
@@ -16,7 +16,8 @@ public:
   Fields3d(const fields_t& f)
     : data_(const_cast<typename fields_t::real_t*>(f.data())), // FIXME
       n_comp_(f.n_comps()),
-      ib(f.ib()), im(f.im())
+      ib(f.ib()),
+      im(f.im())
   {}
 
   const real_t operator()(int m, int i, int j, int k) const
@@ -42,15 +43,13 @@ private:
     assert(j >= ib[1] && j < ib[1] + im[1]);
     assert(k >= ib[2] && k < ib[2] + im[2]);
 #endif
-  
-      return ((((((m))
-	       * im[2] + (k - ib[2]))
-	      * im[1] + (j - ib[1]))
-	     * im[0] + (i - ib[0])));
-      }
+
+    return ((((((m)) * im[2] + (k - ib[2])) * im[1] + (j - ib[1])) * im[0] +
+             (i - ib[0])));
+  }
 
 private:
-  real_t *data_;
+  real_t* data_;
   Int3 ib, im;
   int n_comp_;
 };

@@ -3,15 +3,16 @@
 
 #include "testing.hxx"
 
-using PushParticlesTestTypes = ::testing::Types<TestConfig2ndDoubleYZ
-						,TestConfig1vbec3dSingle
+using PushParticlesTestTypes =
+  ::testing::Types<TestConfig2ndDoubleYZ, TestConfig1vbec3dSingle
 #ifdef USE_CUDA
-						,TestConfig1vbec3dCudaYZ
-						//,TestConfig1vbec3dCuda444
+                   ,
+                   TestConfig1vbec3dCudaYZ
+//,TestConfig1vbec3dCuda444
 #endif
-						>;
-//TestConfig1vbec3dSingle>;
-//TestConfig2ndDouble>;
+                   >;
+// TestConfig1vbec3dSingle>;
+// TestConfig2ndDouble>;
 
 TYPED_TEST_SUITE(PushParticlesTest, PushParticlesTestTypes);
 
@@ -34,21 +35,21 @@ TYPED_TEST(PushParticlesTest, Accel)
   auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
   this->make_psc(kinds);
   const auto& grid = this->grid();
-  
+
   // init fields
   auto mflds = MfieldsState{grid};
   setupFields(mflds, [](int m, double crd[3]) {
-      switch (m) {
+    switch (m) {
       case EX: return 1.;
       case EY: return 2.;
       case EZ: return 3.;
       default: return 0.;
-      }
-    });
+    }
+  });
 
   // init particles
   RngPool rngpool;
-  Rng *rng = rngpool[0];
+  Rng* rng = rngpool[0];
 
   Mparticles mprts{grid};
   {
@@ -56,8 +57,11 @@ TYPED_TEST(PushParticlesTest, Accel)
     for (int p = 0; p < grid.n_patches(); p++) {
       auto injector = inj[p];
       for (int n = 0; n < n_prts; n++) {
-	injector({{rng->uniform(0, this->L), rng->uniform(0, this->L), rng->uniform(0, this->L)},
-	      {}, 1., 0});
+        injector({{rng->uniform(0, this->L), rng->uniform(0, this->L),
+                   rng->uniform(0, this->L)},
+                  {},
+                  1.,
+                  0});
       }
     }
   }
@@ -74,15 +78,15 @@ TYPED_TEST(PushParticlesTest, Accel)
     checks_.continuity_before_particle_push(mprts);
     pushp_.push_mprts(mprts, mflds);
     bndp_(mprts);
-    bnd_.add_ghosts(mflds, JXI, JXI+3);
-    bnd_.fill_ghosts(mflds, JXI, JXI+3);
+    bnd_.add_ghosts(mflds, JXI, JXI + 3);
+    bnd_.fill_ghosts(mflds, JXI, JXI + 3);
     checks_.continuity_after_particle_push(mprts, mflds);
 
     auto accessor = mprts.accessor();
     for (auto prt : accessor[0]) {
-      EXPECT_NEAR(prt.u()[0], 1*(n+1), eps);
-      EXPECT_NEAR(prt.u()[1], 2*(n+1), eps);
-      EXPECT_NEAR(prt.u()[2], 3*(n+1), eps);
+      EXPECT_NEAR(prt.u()[0], 1 * (n + 1), eps);
+      EXPECT_NEAR(prt.u()[1], 2 * (n + 1), eps);
+      EXPECT_NEAR(prt.u()[2], 3 * (n + 1), eps);
     }
   }
 }
@@ -114,15 +118,15 @@ TYPED_TEST(PushParticlesTest, Cyclo)
   // init fields
   auto mflds = MfieldsState{grid};
   setupFields(mflds, [&](int m, double crd[3]) {
-      switch (m) {
+    switch (m) {
       case HZ: return 2. * M_PI / n_steps;
       default: return 0.;
-      }
-    });
+    }
+  });
 
   // init particles
   RngPool rngpool;
-  Rng *rng = rngpool[0];
+  Rng* rng = rngpool[0];
 
   Mparticles mprts{grid};
   {
@@ -130,9 +134,11 @@ TYPED_TEST(PushParticlesTest, Cyclo)
     for (int p = 0; p < grid.n_patches(); p++) {
       auto injector = inj[p];
       for (int n = 0; n < n_prts; n++) {
-	injector({{rng->uniform(0, this->L), rng->uniform(0, this->L), rng->uniform(0, this->L)},
-	      {1., 1., 1.},
-		rng->uniform(0., 1.), 0});
+        injector({{rng->uniform(0, this->L), rng->uniform(0, this->L),
+                   rng->uniform(0, this->L)},
+                  {1., 1., 1.},
+                  rng->uniform(0., 1.),
+                  0});
       }
     }
   }
@@ -149,14 +155,14 @@ TYPED_TEST(PushParticlesTest, Cyclo)
     checks_.continuity_before_particle_push(mprts);
     pushp_.push_mprts(mprts, mflds);
     bndp_(mprts);
-    bnd_.add_ghosts(mflds, JXI, JXI+3);
-    bnd_.fill_ghosts(mflds, JXI, JXI+3);
+    bnd_.add_ghosts(mflds, JXI, JXI + 3);
+    bnd_.fill_ghosts(mflds, JXI, JXI + 3);
     checks_.continuity_after_particle_push(mprts, mflds);
 
-    double ux = (cos(2*M_PI*(0.125*n_steps-(n+1))/(double)n_steps) /
-		 cos(2*M_PI*(0.125*n_steps)      /(double)n_steps));
-    double uy = (sin(2*M_PI*(0.125*n_steps-(n+1))/(double)n_steps) /
-		 sin(2*M_PI*(0.125*n_steps)      /(double)n_steps));
+    double ux = (cos(2 * M_PI * (0.125 * n_steps - (n + 1)) / (double)n_steps) /
+                 cos(2 * M_PI * (0.125 * n_steps) / (double)n_steps));
+    double uy = (sin(2 * M_PI * (0.125 * n_steps - (n + 1)) / (double)n_steps) /
+                 sin(2 * M_PI * (0.125 * n_steps) / (double)n_steps));
     double uz = 1.;
     auto accessor = mprts.accessor();
     for (auto prt : accessor[0]) {
@@ -170,7 +176,7 @@ TYPED_TEST(PushParticlesTest, Cyclo)
 // ======================================================================
 // main
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
   ::testing::InitGoogleTest(&argc, argv);

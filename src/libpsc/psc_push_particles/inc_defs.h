@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------
 // ORDER
 
-struct opt_order_1st {};
-struct opt_order_2nd {};
-
+struct opt_order_1st
+{};
+struct opt_order_2nd
+{};

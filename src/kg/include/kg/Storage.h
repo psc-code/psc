@@ -50,7 +50,10 @@ public:
 
   KG_INLINE StorageNoOwnership(pointer data) : data_{data} {}
 
-  KG_INLINE const_reference operator[](int offset) const { return data_[offset]; }
+  KG_INLINE const_reference operator[](int offset) const
+  {
+    return data_[offset];
+  }
   KG_INLINE reference operator[](int offset) { return data_[offset]; }
 
   // FIXME access to underlying storage might better be avoided?

@@ -9,7 +9,7 @@ using RngPool = PscRngPool<Rng>;
 TEST(Rng, RngPool)
 {
   RngPool rngpool;
-  Rng *rng = rngpool[0];
+  Rng* rng = rngpool[0];
 
   for (int i = 0; i < 100; ++i) {
     double r = rng->uniform(0., 1000.);
@@ -18,7 +18,7 @@ TEST(Rng, RngPool)
   }
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
   ::testing::InitGoogleTest(&argc, argv);

@@ -11,14 +11,13 @@
 // ======================================================================
 // PushParticles_
 
-template<template<class> class PUSH_P_OPS>
+template <template <class> class PUSH_P_OPS>
 class PushParticles_ : public PushParticlesBase
 {
   using Self = PushParticles_<PUSH_P_OPS>;
-  
+
 public:
   PUSH_P_OPS<dim_yz> push_yz_;
 };
-
 
 #endif

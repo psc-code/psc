@@ -10,7 +10,6 @@
 #define CURR_CACHE CURR_CACHE_NONE
 #define CALC_J CALC_J_1VB_SPLIT
 
-#define SFX(s) s ## _gold_yz
+#define SFX(s) s##_gold_yz
 
 #include "cuda2_push_mprts.cu"
-

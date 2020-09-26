@@ -11,8 +11,7 @@
 // PscParticleBc
 
 struct PscParticleBc
-{
-};
+{};
 
 // ======================================================================
 // PscParticleBcList
@@ -20,7 +19,7 @@ struct PscParticleBc
 struct PscParticleBcList : public VpicListBase<PscParticleBc>
 {
   typedef PscParticleBc ParticleBc;
-  
+
   ParticleBc* append(ParticleBc* pbc)
   {
     assert(0);
@@ -32,6 +31,5 @@ struct PscParticleBcList : public VpicListBase<PscParticleBc>
   /*   return head_; */
   /* } */
 };
-
 
 #endif

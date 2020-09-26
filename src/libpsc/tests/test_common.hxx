@@ -12,8 +12,7 @@ struct MakeTestGrid1
 {
   Grid_t operator()()
   {
-    auto domain = Grid_t::Domain{{8, 4, 2},
-				 {10., 10., 10.}};
+    auto domain = Grid_t::Domain{{8, 4, 2}, {10., 10., 10.}};
     auto bc = psc::grid::BC{};
     auto kinds = Grid_t::Kinds{};
     auto norm = Grid_t::Normalization{};
@@ -34,9 +33,8 @@ struct MakeTestGridYZ
 {
   Grid_t operator()()
   {
-    auto domain = Grid_t::Domain{{1, 8, 16},
-				 {10., 80., 160.}, {0., -40., -80.},
-				 {1, 2, 2}};
+    auto domain =
+      Grid_t::Domain{{1, 8, 16}, {10., 80., 160.}, {0., -40., -80.}, {1, 2, 2}};
     auto bc = psc::grid::BC{};
     auto kinds = Grid_t::Kinds{};
     auto norm = Grid_t::Normalization{};
@@ -55,9 +53,8 @@ struct MakeTestGridYZ1
 {
   Grid_t operator()()
   {
-    auto domain = Grid_t::Domain{{1, 8, 16},
-				 {10., 80., 160.}, {0., -40., -80.},
-				 {1, 1, 1}};
+    auto domain =
+      Grid_t::Domain{{1, 8, 16}, {10., 80., 160.}, {0., -40., -80.}, {1, 1, 1}};
     auto bc = psc::grid::BC{};
     auto kinds = Grid_t::Kinds{};
     auto norm = Grid_t::Normalization{};
@@ -65,4 +62,3 @@ struct MakeTestGridYZ1
     return Grid_t{domain, bc, kinds, norm, dt};
   }
 };
-

@@ -16,12 +16,12 @@ struct PscParticle
 {
   float dx, dy, dz; // Particle position in cell coordinates (on [-1,1])
   int32_t i;        // Voxel containing the particle.  Note that
-  /**/              // particled awaiting processing by boundary_p
-  /**/              // have actually set this to 8*voxel + face where
-  /**/              // face is the index of the face they interacted
-  /**/              // with (on 0:5).  This limits the local number of
-  /**/              // voxels to 2^28 but emitter handling already
-  /**/              // has a stricter limit on this (2^26).
+  /**/                // particled awaiting processing by boundary_p
+  /**/                // have actually set this to 8*voxel + face where
+  /**/                // face is the index of the face they interacted
+  /**/                // with (on 0:5).  This limits the local number of
+  /**/                // voxels to 2^28 but emitter handling already
+  /**/                // has a stricter limit on this (2^26).
   float ux, uy, uz; // Particle normalized momentum
   float w;          // Particle weight (number of physical particles)
 };
@@ -48,18 +48,17 @@ struct PscParticleInjector
   SpeciesId sp_id;           // Species of particle
 };
 
-template<class G>
+template <class G>
 struct PscSpecies
 {
   typedef G Grid;
-  
+
   // ----------------------------------------------------------------------
   // PscSpecies::ctor
-  
-  PscSpecies(const char * name, float q, float m,
-	     int max_local_np, int max_local_nm,
-	     int sort_interval, int sort_out_of_place,
-	     Grid *grid)
+
+  PscSpecies(const char* name, float q, float m, int max_local_np,
+             int max_local_nm, int sort_interval, int sort_out_of_place,
+             Grid* grid)
   {
     memset(this, 0, sizeof(*this)); // FIXME
     int len = name ? strlen(name) : 0;
@@ -70,27 +69,27 @@ struct PscSpecies
     assert(max_local_nm > 0);
 
     this->name = strdup(name);
-    
+
     this->q = q;
     this->m = m;
-    
+
     this->p = new PscParticle[max_local_np];
     this->max_np = max_local_np;
-    
+
     this->pm = new PscParticleMover[max_local_nm];
     this->max_nm = max_local_nm;
-    
-    this->last_sorted       = INT64_MIN;
-    this->sort_interval     = sort_interval;
+
+    this->last_sorted = INT64_MIN;
+    this->sort_interval = sort_interval;
     this->sort_out_of_place = sort_out_of_place;
     this->partition = new int[grid->nv + 1];
-    
+
     this->grid_ = grid;
   }
 
   // ----------------------------------------------------------------------
   // PscSpecies::dtor
-  
+
   ~PscSpecies()
   {
     delete[] partition;
@@ -101,53 +100,53 @@ struct PscSpecies
 
   const Grid& vgrid() const { return *grid_; }
 
-  char * name;                        // Species name
-  float q;                            // Species particle charge
-  float m;                            // Species particle rest mass
+  char* name; // Species name
+  float q;    // Species particle charge
+  float m;    // Species particle rest mass
 
-  int np, max_np;                     // Number and max local particles
-  PscParticle * ALIGNED(128) p;       // Array of particles for the species
+  int np, max_np;              // Number and max local particles
+  PscParticle* ALIGNED(128) p; // Array of particles for the species
 
-  int nm, max_nm;                     // Number and max local movers in use
-  PscParticleMover * ALIGNED(128) pm; // Particle movers
+  int nm, max_nm;                    // Number and max local movers in use
+  PscParticleMover* ALIGNED(128) pm; // Particle movers
 
-  int64_t last_sorted;                // Step when the particles were last
-                                      // sorted.
-  int sort_interval;                  // How often to sort the species
-  int sort_out_of_place;              // Sort method
-  int * ALIGNED(128) partition;       // Static array indexed 0:
-  /**/                                // (nx+2)*(ny+2)*(nz+2).  Each value
-  /**/                                // corresponds to the associated particle
-  /**/                                // array index of the first particle in
-  /**/                                // the cell.  Array is allocated and
-  /**/                                // values computed in sort_p.  Purpose is
-  /**/                                // for implementing collision models
-  /**/                                // This is given in terms of the
-  /**/                                // underlying's grids space filling
-  /**/                                // curve indexing.  Thus, immediately
-  /**/                                // after a sort:
-  /**/                                //   sp->p[sp->partition[g->sfc[i]  ]:
-  /**/                                //         sp->partition[g->sfc[i]+1]-1]
-  /**/                                // are all the particles in voxel
-  /**/                                // with local index i, while:
-  /**/                                //   sp->p[ sp->partition[ j   ]:
-  /**/                                //          sp->partition[ j+1 ] ]
-  /**/                                // are all the particles in voxel
-  /**/                                // with space filling curve index j.
-  /**/                                // Note: SFC NOT IN USE RIGHT NOW THUS
-  /**/                                // g->sfc[i]=i ABOVE.
+  int64_t last_sorted;         // Step when the particles were last
+                               // sorted.
+  int sort_interval;           // How often to sort the species
+  int sort_out_of_place;       // Sort method
+  int* ALIGNED(128) partition; // Static array indexed 0:
+  /**/                           // (nx+2)*(ny+2)*(nz+2).  Each value
+  /**/                           // corresponds to the associated particle
+  /**/                           // array index of the first particle in
+  /**/                           // the cell.  Array is allocated and
+  /**/                           // values computed in sort_p.  Purpose is
+  /**/                           // for implementing collision models
+  /**/                           // This is given in terms of the
+  /**/                           // underlying's grids space filling
+  /**/                           // curve indexing.  Thus, immediately
+  /**/                           // after a sort:
+  /**/                           //   sp->p[sp->partition[g->sfc[i]  ]:
+  /**/                           //         sp->partition[g->sfc[i]+1]-1]
+  /**/                           // are all the particles in voxel
+  /**/                           // with local index i, while:
+  /**/                           //   sp->p[ sp->partition[ j   ]:
+  /**/                           //          sp->partition[ j+1 ] ]
+  /**/                           // are all the particles in voxel
+  /**/                           // with space filling curve index j.
+  /**/                           // Note: SFC NOT IN USE RIGHT NOW THUS
+  /**/                           // g->sfc[i]=i ABOVE.
 private:
-  Grid* grid_;                        // Underlying grid
+  Grid* grid_; // Underlying grid
 
-public: // FIXME, shouldn't be public
-  SpeciesId id;                       // Unique identifier for a species
-  PscSpecies* next;                   // Next species in the list
+public:             // FIXME, shouldn't be public
+  SpeciesId id;     // Unique identifier for a species
+  PscSpecies* next; // Next species in the list
 };
 
 // ======================================================================
 // PscParticlesBase
 
-template<class G, class BCL>
+template <class G, class BCL>
 struct PscParticlesBase : public VpicListBase<PscSpecies<G>>
 {
   typedef G Grid;
@@ -157,21 +156,20 @@ struct PscParticlesBase : public VpicListBase<PscSpecies<G>>
   typedef PscParticle Particle;
   typedef PscParticleMover ParticleMover;
 
-  using typename Base::iterator;
-  using typename Base::const_iterator;
-  using Base::size;
   using Base::begin;
   using Base::end;
   using Base::head_;
   using Base::push_front;
+  using Base::size;
+  using typename Base::const_iterator;
+  using typename Base::iterator;
 
-  static Species* create(const char * name, float q, float m,
-			 int max_local_np, int max_local_nm,
-			 int sort_interval, int sort_out_of_place,
-			 Grid *grid)
+  static Species* create(const char* name, float q, float m, int max_local_np,
+                         int max_local_nm, int sort_interval,
+                         int sort_out_of_place, Grid* grid)
   {
-    return new Species(name, q, m, max_local_np, max_local_nm,
-		       sort_interval, sort_out_of_place, grid);
+    return new Species(name, q, m, max_local_np, max_local_nm, sort_interval,
+                       sort_out_of_place, grid);
   }
 
   size_t getNumSpecies() { return size(); }
@@ -179,16 +177,17 @@ struct PscParticlesBase : public VpicListBase<PscSpecies<G>>
   iterator find(int id)
   {
     return std::find_if(begin(), end(),
-    			[&id](const Species &sp) { return sp.id == id; });
+                        [&id](const Species& sp) { return sp.id == id; });
   }
-  
-  iterator find(const char *name)
+
+  iterator find(const char* name)
   {
-    return std::find_if(begin(), end(),
-    			[&name](const Species &sp) { return strcmp(sp.name, name) == 0; });
+    return std::find_if(begin(), end(), [&name](const Species& sp) {
+      return strcmp(sp.name, name) == 0;
+    });
   }
-  
-  Species *append(Species *sp)
+
+  Species* append(Species* sp)
   {
     assert(!sp->next);
     if (find(sp->name) != end()) {
@@ -198,10 +197,10 @@ struct PscParticlesBase : public VpicListBase<PscSpecies<G>>
     push_front(*sp);
     return sp;
   }
-  
+
   // ----------------------------------------------------------------------
   // inject_particle_reweight
-  
+
   void inject_particle_reweight(const psc::particle::Inject& prt)
   {
     auto sp = find(prt.kind);
@@ -220,59 +219,69 @@ struct PscParticlesBase : public VpicListBase<PscSpecies<G>>
     const auto& vgrid = sp->vgrid();
     double x0 = vgrid.x0, y0 = vgrid.y0, z0 = vgrid.z0;
     double x1 = vgrid.x1, y1 = vgrid.y1, z1 = vgrid.z1;
-    int    nx = vgrid.nx, ny = vgrid.ny, nz = vgrid.nz;
-    
+    int nx = vgrid.nx, ny = vgrid.ny, nz = vgrid.nz;
+
     // Do not inject if the particle is strictly outside the local domain
     // or if a far wall of local domain shared with a neighbor
-    
-    if ((x<x0) | (x>x1) | ( (x==x1) & (vgrid.bc[BOUNDARY(1,0,0)]>=0))) return;
-    if ((y<y0) | (y>y1) | ( (y==y1) & (vgrid.bc[BOUNDARY(0,1,0)]>=0))) return;
-    if ((z<z0) | (z>z1) | ( (z==z1) & (vgrid.bc[BOUNDARY(0,0,1)]>=0))) return;
-    
+
+    if ((x < x0) | (x > x1) | ((x == x1) & (vgrid.bc[BOUNDARY(1, 0, 0)] >= 0)))
+      return;
+    if ((y < y0) | (y > y1) | ((y == y1) & (vgrid.bc[BOUNDARY(0, 1, 0)] >= 0)))
+      return;
+    if ((z < z0) | (z > z1) | ((z == z1) & (vgrid.bc[BOUNDARY(0, 0, 1)] >= 0)))
+      return;
+
     // This node should inject the particle
-    
-    if (sp->np>=sp->max_np) LOG_ERROR("No room to inject particle");
-    
+
+    if (sp->np >= sp->max_np)
+      LOG_ERROR("No room to inject particle");
+
     // Compute the injection cell and coordinate in cell coordinate system
-    // BJA:  Note the use of double precision here for accurate particle 
-    //       placement on large meshes. 
- 
+    // BJA:  Note the use of double precision here for accurate particle
+    //       placement on large meshes.
+
     // The ifs allow for injection on the far walls of the local computational
     // domain when necessary
-    
-    x  = ((double)nx)*((x-x0)/(x1-x0)); // x is rigorously on [0,nx]
-    ix = (int)x;                        // ix is rigorously on [0,nx]
-    x -= (double)ix;                    // x is rigorously on [0,1)
-    x  = (x+x)-1;                       // x is rigorously on [-1,1)
-    if( ix==nx ) x = 1;                 // On far wall ... conditional move
-    if( ix==nx ) ix = nx-1;             // On far wall ... conditional move
-    ix++;                               // Adjust for mesh indexing
 
-    y  = ((double)ny)*((y-y0)/(y1-y0)); // y is rigorously on [0,ny]
-    iy = (int)y;                        // iy is rigorously on [0,ny]
-    y -= (double)iy;                    // y is rigorously on [0,1)
-    y  = (y+y)-1;                       // y is rigorously on [-1,1)
-    if( iy==ny ) y = 1;                 // On far wall ... conditional move
-    if( iy==ny ) iy = ny-1;             // On far wall ... conditional move
-    iy++;                               // Adjust for mesh indexing
+    x = ((double)nx) * ((x - x0) / (x1 - x0)); // x is rigorously on [0,nx]
+    ix = (int)x;                               // ix is rigorously on [0,nx]
+    x -= (double)ix;                           // x is rigorously on [0,1)
+    x = (x + x) - 1;                           // x is rigorously on [-1,1)
+    if (ix == nx)
+      x = 1; // On far wall ... conditional move
+    if (ix == nx)
+      ix = nx - 1; // On far wall ... conditional move
+    ix++;          // Adjust for mesh indexing
 
-    z  = ((double)nz)*((z-z0)/(z1-z0)); // z is rigorously on [0,nz]
-    iz = (int)z;                        // iz is rigorously on [0,nz]
-    z -= (double)iz;                    // z is rigorously on [0,1)
-    z  = (z+z)-1;                       // z is rigorously on [-1,1)
-    if( iz==nz ) z = 1;                 // On far wall ... conditional move
-    if( iz==nz ) iz = nz-1;             // On far wall ... conditional move
-    iz++;                               // Adjust for mesh indexing
+    y = ((double)ny) * ((y - y0) / (y1 - y0)); // y is rigorously on [0,ny]
+    iy = (int)y;                               // iy is rigorously on [0,ny]
+    y -= (double)iy;                           // y is rigorously on [0,1)
+    y = (y + y) - 1;                           // y is rigorously on [-1,1)
+    if (iy == ny)
+      y = 1; // On far wall ... conditional move
+    if (iy == ny)
+      iy = ny - 1; // On far wall ... conditional move
+    iy++;          // Adjust for mesh indexing
+
+    z = ((double)nz) * ((z - z0) / (z1 - z0)); // z is rigorously on [0,nz]
+    iz = (int)z;                               // iz is rigorously on [0,nz]
+    z -= (double)iz;                           // z is rigorously on [0,1)
+    z = (z + z) - 1;                           // z is rigorously on [-1,1)
+    if (iz == nz)
+      z = 1; // On far wall ... conditional move
+    if (iz == nz)
+      iz = nz - 1; // On far wall ... conditional move
+    iz++;          // Adjust for mesh indexing
 
     Particle* p = sp->p + (sp->np++);
     p->dx = (float)x; // Note: Might be rounded to be on [-1,1]
     p->dy = (float)y; // Note: Might be rounded to be on [-1,1]
     p->dz = (float)z; // Note: Might be rounded to be on [-1,1]
-    p->i  = VOXEL(ix,iy,iz, nx,ny,nz);
+    p->i = VOXEL(ix, iy, iz, nx, ny, nz);
     p->ux = (float)ux;
     p->uy = (float)uy;
     p->uz = (float)uz;
-    p->w  = w;
+    p->w = w;
 
 #if 0
     if (update_rhob) accumulate_rhob(fa, p, -sp->q);
@@ -290,13 +299,14 @@ struct PscParticlesBase : public VpicListBase<PscSpecies<G>>
     }
 #endif
   }
-  
-  const Grid& vgrid() const { assert(head_); return head_->vgrid(); }
 
-  Species* head()
+  const Grid& vgrid() const
   {
-    return head_;
+    assert(head_);
+    return head_->vgrid();
   }
+
+  Species* head() { return head_; }
 };
- 
+
 #endif

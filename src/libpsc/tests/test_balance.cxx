@@ -14,8 +14,8 @@
 #include "psc_fields_cuda.h"
 #endif
 
-template<typename _Mparticles, typename _MfieldsState, typename _Mfields,
-	 typename _Balance = Balance_<_Mparticles, _MfieldsState, _Mfields>>
+template <typename _Mparticles, typename _MfieldsState, typename _Mfields,
+          typename _Balance = Balance_<_Mparticles, _MfieldsState, _Mfields>>
 struct Config
 {
   using Mparticles = _Mparticles;
@@ -24,20 +24,22 @@ struct Config
   using Balance = _Balance;
 };
 
-using BalanceTestTypes = ::testing::Types<Config<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>
-					 ,Config<MparticlesDouble, MfieldsStateDouble, MfieldsC>
+using BalanceTestTypes = ::testing::Types<
+  Config<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>,
+  Config<MparticlesDouble, MfieldsStateDouble, MfieldsC>
 #ifdef USE_CUDA
-					 ,Config<MparticlesCuda<BS144>, MfieldsStateCuda, MfieldsCuda,
-						 Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>>
+  ,
+  Config<MparticlesCuda<BS144>, MfieldsStateCuda, MfieldsCuda,
+         Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>>
 #endif
-					 >;
+  >;
 
 TYPED_TEST_SUITE(BalanceTest, BalanceTestTypes);
 
 // ======================================================================
 // BalanceTest
 
-template<typename T>
+template <typename T>
 struct BalanceTest : ::testing::Test
 {
   using Mparticles = typename T::Mparticles;
@@ -45,9 +47,8 @@ struct BalanceTest : ::testing::Test
 
   BalanceTest()
   {
-    auto domain = Grid_t::Domain{{1, 8, 16},
-				 {10., 80., 160.}, {0., -40., -80.},
-				 {1, 2, 2}};
+    auto domain =
+      Grid_t::Domain{{1, 8, 16}, {10., 80., 160.}, {0., -40., -80.}, {1, 2, 2}};
     auto bc = psc::grid::BC{};
     auto kinds = Grid_t::Kinds{};
     auto norm = Grid_t::Normalization{};
@@ -60,13 +61,13 @@ struct BalanceTest : ::testing::Test
   Mparticles mk_mprts()
   {
     Mparticles mprts(grid());
-    mprts.define_species("test_species", 1., 1., 100, 10,
-			 10, 0);
+    mprts.define_species("test_species", 1., 1., 100, 10, 10, 0);
     return mprts;
   }
 
-  template<typename _Mparticles>
-  void inject_test_particles(_Mparticles& mprts, const std::vector<uint>& n_prts_by_patch)
+  template <typename _Mparticles>
+  void inject_test_particles(_Mparticles& mprts,
+                             const std::vector<uint>& n_prts_by_patch)
   {
     auto inj = mprts.injector();
     for (int p = 0; p < mprts.n_patches(); ++p) {
@@ -74,21 +75,23 @@ struct BalanceTest : ::testing::Test
       auto& patch = mprts.grid().patches[p];
       auto n_prts = n_prts_by_patch[p];
       for (int n = 0; n < n_prts; n++) {
-	double nn = double(n) / n_prts;
-	auto L = patch.xe - patch.xb;
-	psc::particle::Inject prt = {
-	  {patch.xb[0] + nn * L[0],
-	   patch.xb[1] + nn * L[1],
-	   patch.xb[2] + nn * L[2]}, {}, 1., 0};
-	injector(prt);
+        double nn = double(n) / n_prts;
+        auto L = patch.xe - patch.xb;
+        psc::particle::Inject prt = {{patch.xb[0] + nn * L[0],
+                                      patch.xb[1] + nn * L[1],
+                                      patch.xb[2] + nn * L[2]},
+                                     {},
+                                     1.,
+                                     0};
+        injector(prt);
       }
     }
   }
 
   const Grid_t& grid() { return *grid_; }
-  
+
 protected:
-  Grid_t *grid_;
+  Grid_t* grid_;
 };
 
 // -----------------------------------------------------------------------
@@ -227,7 +230,7 @@ TYPED_TEST(BalanceTest, Every1)
   balance(this->grid_, mprts);
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
 

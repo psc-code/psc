@@ -1,7 +1,7 @@
 
 #pragma once
 
-template<typename BS>
+template <typename BS>
 class SortCuda : SortBase
 {
 public:
@@ -10,4 +10,3 @@ public:
     // nothing to be done, since MparticlesCuda are kept sorted anyway...
   }
 };
-

@@ -9,6 +9,4 @@ extern int pr_time_step_no_comm; // FIXME
 // class PushFieldsBase
 
 class PushFieldsBase
-{
-};
-
+{};

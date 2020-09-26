@@ -6,9 +6,8 @@
 
 typedef particle_acc_t particle_t;
 
-#define PARTICLE_TYPE               "acc"
+#define PARTICLE_TYPE "acc"
 
 #define PSC_PARTICLES_AS_ACC 1
 
 #endif
-

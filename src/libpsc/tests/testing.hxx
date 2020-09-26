@@ -41,12 +41,14 @@ using RngPool = PscRngPool<Rng>;
 // ======================================================================
 // TestConfig
 
-template<typename DIM, typename _Mfields, typename PUSHP, typename ORDER,
-	 typename CHECKS = Checks_<typename PUSHP::Mparticles, typename PUSHP::MfieldsState, _Mfields, ORDER>,
-	 typename BNDP = BndParticles_<typename PUSHP::Mparticles>,
-	 typename PUSHF = PushFields<typename PUSHP::MfieldsState>,
-	 typename BND = Bnd_<typename PUSHP::MfieldsState>,
-	 typename MOMENT_N = Moment_n_1st<typename PUSHP::Mparticles, _Mfields>>
+template <
+  typename DIM, typename _Mfields, typename PUSHP, typename ORDER,
+  typename CHECKS = Checks_<typename PUSHP::Mparticles,
+                            typename PUSHP::MfieldsState, _Mfields, ORDER>,
+  typename BNDP = BndParticles_<typename PUSHP::Mparticles>,
+  typename PUSHF = PushFields<typename PUSHP::MfieldsState>,
+  typename BND = Bnd_<typename PUSHP::MfieldsState>,
+  typename MOMENT_N = Moment_n_1st<typename PUSHP::Mparticles, _Mfields>>
 struct TestConfig
 {
   using dim = DIM;
@@ -62,66 +64,69 @@ struct TestConfig
   using Moment_n = MOMENT_N;
 };
 
-using TestConfig2ndDouble = TestConfig<dim_xyz, MfieldsC,
-				       PushParticlesEsirkepov<Config2ndDouble<dim_xyz>>,
-				       checks_order_2nd>;
-using TestConfig2ndDoubleYZ = TestConfig<dim_yz, MfieldsC,
-					 PushParticlesEsirkepov<Config2ndDouble<dim_yz>>,
-					 checks_order_2nd>;
-using TestConfig2ndSingle = TestConfig<dim_xyz, MfieldsSingle,
-				       PushParticlesEsirkepov<Config2nd<MparticlesSingle, MfieldsStateSingle, dim_xyz>>,
-				       checks_order_2nd>;
-using TestConfig1vbec3dSingle = TestConfig<dim_xyz, MfieldsSingle,
-					   PushParticlesVb<Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_xyz>>,
-					   checks_order_1st>;
-using TestConfig1vbec3dSingleYZ = TestConfig<dim_yz, MfieldsSingle,
-					     PushParticlesVb<Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_yz>>,
-					     checks_order_1st>;
-using TestConfig1vbec3dSingleXZ = TestConfig<dim_xz, MfieldsSingle,
-					     PushParticlesVb<Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_xz>>,
-					     checks_order_1st>;
+using TestConfig2ndDouble =
+  TestConfig<dim_xyz, MfieldsC,
+             PushParticlesEsirkepov<Config2ndDouble<dim_xyz>>,
+             checks_order_2nd>;
+using TestConfig2ndDoubleYZ =
+  TestConfig<dim_yz, MfieldsC, PushParticlesEsirkepov<Config2ndDouble<dim_yz>>,
+             checks_order_2nd>;
+using TestConfig2ndSingle =
+  TestConfig<dim_xyz, MfieldsSingle,
+             PushParticlesEsirkepov<
+               Config2nd<MparticlesSingle, MfieldsStateSingle, dim_xyz>>,
+             checks_order_2nd>;
+using TestConfig1vbec3dSingle =
+  TestConfig<dim_xyz, MfieldsSingle,
+             PushParticlesVb<
+               Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_xyz>>,
+             checks_order_1st>;
+using TestConfig1vbec3dSingleYZ =
+  TestConfig<dim_yz, MfieldsSingle,
+             PushParticlesVb<
+               Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_yz>>,
+             checks_order_1st>;
+using TestConfig1vbec3dSingleXZ =
+  TestConfig<dim_xz, MfieldsSingle,
+             PushParticlesVb<
+               Config1vbecSplit<MparticlesSingle, MfieldsStateSingle, dim_xz>>,
+             checks_order_1st>;
 
 using VpicConfig = VpicConfigPsc;
 
 using _MfieldsStateVpic = typename VpicConfig::MfieldsState;
 using _MparticlesVpic = typename VpicConfig::Mparticles;
-using _PushParticlesVpic = PushParticlesVpic<_MparticlesVpic, _MfieldsStateVpic,
-					     typename VpicConfig::ParticlesOps,
-					     typename VpicConfig::AccumulatorOps,
-					     typename VpicConfig::AccumulateOps,
-					     typename VpicConfig::InterpolatorOps>;
+using _PushParticlesVpic = PushParticlesVpic<
+  _MparticlesVpic, _MfieldsStateVpic, typename VpicConfig::ParticlesOps,
+  typename VpicConfig::AccumulatorOps, typename VpicConfig::AccumulateOps,
+  typename VpicConfig::InterpolatorOps>;
 
-using TestConfigVpic = TestConfig<dim_xyz,
-				  MfieldsSingle, // FIXME, this is not real nice, but might work...
-				  _PushParticlesVpic,
-				  checks_order_1st,
-				  Checks_<_MparticlesVpic, _MfieldsStateVpic, void, checks_order_1st>,
-				  BndParticlesVpic<_MparticlesVpic>>;
+using TestConfigVpic = TestConfig<
+  dim_xyz,
+  MfieldsSingle, // FIXME, this is not real nice, but might work...
+  _PushParticlesVpic, checks_order_1st,
+  Checks_<_MparticlesVpic, _MfieldsStateVpic, void, checks_order_1st>,
+  BndParticlesVpic<_MparticlesVpic>>;
 
 #ifdef USE_CUDA
-using TestConfig1vbec3dCuda = TestConfig<dim_xyz, MfieldsCuda,
-					 PushParticlesCuda<CudaConfig1vbec3dGmem<dim_xyz, BS144>>,
-					 checks_order_1st,
-					 ChecksCuda<MparticlesCuda<BS144>>,
-					 BndParticlesCuda<MparticlesCuda<BS144>, dim_xyz>,
-					 PushFieldsCuda,
-					 BndCuda2<MfieldsStateCuda>>;
-using TestConfig1vbec3dCuda444 = TestConfig<dim_xyz, MfieldsCuda,
-					    PushParticlesCuda<CudaConfig1vbec3dGmem<dim_xyz, BS444>>,
-					    checks_order_1st,
-					    ChecksCuda<MparticlesCuda<BS444>>,
-					    BndParticlesCuda<MparticlesCuda<BS444>, dim_xyz>,
-					    PushFieldsCuda,
-					    BndCuda3<MfieldsStateCuda>,
-					    Moment_n_1st_cuda<MparticlesCuda<BS444>, dim_xyz>>;
-using TestConfig1vbec3dCudaYZ = TestConfig<dim_yz, MfieldsCuda,
-					   PushParticlesCuda<CudaConfig1vbec3d<dim_yz, BS144>>,
-					   checks_order_1st,
-					   ChecksCuda<MparticlesCuda<BS144>>,
-					   BndParticlesCuda<MparticlesCuda<BS144>, dim_yz>,
-					   PushFieldsCuda,
-					   BndCuda<MfieldsStateCuda>,
-					   Moment_n_1st_cuda<MparticlesCuda<BS144>, dim_yz>>;
+using TestConfig1vbec3dCuda =
+  TestConfig<dim_xyz, MfieldsCuda,
+             PushParticlesCuda<CudaConfig1vbec3dGmem<dim_xyz, BS144>>,
+             checks_order_1st, ChecksCuda<MparticlesCuda<BS144>>,
+             BndParticlesCuda<MparticlesCuda<BS144>, dim_xyz>, PushFieldsCuda,
+             BndCuda2<MfieldsStateCuda>>;
+using TestConfig1vbec3dCuda444 =
+  TestConfig<dim_xyz, MfieldsCuda,
+             PushParticlesCuda<CudaConfig1vbec3dGmem<dim_xyz, BS444>>,
+             checks_order_1st, ChecksCuda<MparticlesCuda<BS444>>,
+             BndParticlesCuda<MparticlesCuda<BS444>, dim_xyz>, PushFieldsCuda,
+             BndCuda3<MfieldsStateCuda>,
+             Moment_n_1st_cuda<MparticlesCuda<BS444>, dim_xyz>>;
+using TestConfig1vbec3dCudaYZ = TestConfig<
+  dim_yz, MfieldsCuda, PushParticlesCuda<CudaConfig1vbec3d<dim_yz, BS144>>,
+  checks_order_1st, ChecksCuda<MparticlesCuda<BS144>>,
+  BndParticlesCuda<MparticlesCuda<BS144>, dim_yz>, PushFieldsCuda,
+  BndCuda<MfieldsStateCuda>, Moment_n_1st_cuda<MparticlesCuda<BS144>, dim_yz>>;
 #endif
 
 // ======================================================================
@@ -137,7 +142,7 @@ struct CurrentReference
 // ======================================================================
 // PushParticlesTest
 
-template<typename T>
+template <typename T>
 struct PushParticlesTest : ::testing::Test
 {
   using dim = typename T::dim;
@@ -151,9 +156,9 @@ struct PushParticlesTest : ::testing::Test
 
   const real_t fnqx = .05, fnqy = .05, fnqz = .05;
   const real_t dx = 10., dy = 10., dz = 10.;
-  
-  Int3 ibn = { 2, 2, 2 };
-  
+
+  Int3 ibn = {2, 2, 2};
+
   ~PushParticlesTest()
   {
     delete mprts;
@@ -163,32 +168,43 @@ struct PushParticlesTest : ::testing::Test
   void make_psc(const Grid_t::Kinds& kinds)
   {
     Int3 gdims = {16, 16, 16};
-    if (dim::InvarX::value) { gdims[0] = 1; ibn[0] = 0; }
-    if (dim::InvarY::value) { gdims[1] = 1; ibn[1] = 0; }
-    if (dim::InvarZ::value) { gdims[2] = 1; ibn[2] = 0; }
+    if (dim::InvarX::value) {
+      gdims[0] = 1;
+      ibn[0] = 0;
+    }
+    if (dim::InvarY::value) {
+      gdims[1] = 1;
+      ibn[1] = 0;
+    }
+    if (dim::InvarZ::value) {
+      gdims[2] = 1;
+      ibn[2] = 0;
+    }
 
     auto grid_domain = Grid_t::Domain{gdims, {L, L, L}};
-    auto grid_bc = psc::grid::BC{{ BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
-			  { BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC },
-			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC },
-			  { BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC }};
-    
+    auto grid_bc =
+      psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
+                    {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
+                    {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC},
+                    {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC}};
+
     auto norm_params = Grid_t::NormalizationParams::dimensionless();
     norm_params.nicell = 200;
     auto coeff = Grid_t::Normalization{norm_params};
 
     grid_ = new Grid_t{grid_domain, grid_bc, kinds, coeff, 1., -1, ibn};
   }
-  
+
   const Grid_t& grid()
   {
     assert(grid_);
     return *grid_;
   }
 
-  template<typename FUNC>
-  void runSingleParticleTest(FUNC init_fields, psc::particle::Inject prt0, psc::particle::Inject prt1,
-			     std::vector<CurrentReference> curr_ref = {})
+  template <typename FUNC>
+  void runSingleParticleTest(FUNC init_fields, psc::particle::Inject prt0,
+                             psc::particle::Inject prt1,
+                             std::vector<CurrentReference> curr_ref = {})
   {
     auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
     make_psc(kinds);
@@ -203,9 +219,9 @@ struct PushParticlesTest : ::testing::Test
       auto injector = mprts->injector();
       injector[0](prt0);
     }
-    
-    //mprts->dump("mprts.dump");
-  
+
+    // mprts->dump("mprts.dump");
+
     // do one step
     PushParticles pushp_;
     pushp_.push_mprts(*mprts, *mflds);
@@ -229,10 +245,9 @@ struct PushParticlesTest : ::testing::Test
     check_after_push(*mprts);
   }
 
-  template<typename Mparticles>
+  template <typename Mparticles>
   void check_after_push(Mparticles& mprts)
-  {
-  }
+  {}
 
 #ifdef USE_CUDA
   void check_after_push(MparticlesCuda<BS444>& mprts)
@@ -240,38 +255,47 @@ struct PushParticlesTest : ::testing::Test
     EXPECT_TRUE(mprts.check_after_push());
   }
 #endif
-  
+
   void checkCurrent(std::vector<CurrentReference>& curr_ref)
   {
     auto mflds_ref = MfieldsState{grid()};
     auto flds_ref = mflds_ref[0];
     for (auto& ref : curr_ref) {
-      if (dim::InvarX::value) { ref.pos[0] = 0; }
-      if (dim::InvarY::value) { ref.pos[1] = 0; }
-      if (dim::InvarZ::value) { ref.pos[2] = 0; }
+      if (dim::InvarX::value) {
+        ref.pos[0] = 0;
+      }
+      if (dim::InvarY::value) {
+        ref.pos[1] = 0;
+      }
+      if (dim::InvarZ::value) {
+        ref.pos[2] = 0;
+      }
       flds_ref(ref.m, ref.pos[0], ref.pos[1], ref.pos[2]) += ref.val;
     }
 
     auto flds = (*mflds)[0];
     this->grid().Foreach_3d(2, 2, [&](int i, int j, int k) {
-	for (int m = JXI; m <= JZI; m++) {
-	  auto val = flds(m, i,j,k);
-	  auto val_ref = flds_ref(m, i,j,k);
-	  EXPECT_NEAR(val, val_ref, eps) << "ijk " << i << " " << j << " " << k << " m " << m;
-	}
-      });
+      for (int m = JXI; m <= JZI; m++) {
+        auto val = flds(m, i, j, k);
+        auto val_ref = flds_ref(m, i, j, k);
+        EXPECT_NEAR(val, val_ref, eps)
+          << "ijk " << i << " " << j << " " << k << " m " << m;
+      }
+    });
   }
-  
-  template<typename Particle>
+
+  template <typename Particle>
   Vec3<double> push_x(const Particle& prt0, Particle& prt1)
   {
-    Vec3<double> xi1 = { prt0.x[0] + vx(prt1),
-			 prt0.x[1] + vy(prt1),
-			 prt0.x[2] + vz(prt1) };
-    
-    if (!dim::InvarX::value) prt1.x[0] = xi1[0];
-    if (!dim::InvarY::value) prt1.x[1] = xi1[1];
-    if (!dim::InvarZ::value) prt1.x[2] = xi1[2];
+    Vec3<double> xi1 = {prt0.x[0] + vx(prt1), prt0.x[1] + vy(prt1),
+                        prt0.x[2] + vz(prt1)};
+
+    if (!dim::InvarX::value)
+      prt1.x[0] = xi1[0];
+    if (!dim::InvarY::value)
+      prt1.x[1] = xi1[1];
+    if (!dim::InvarZ::value)
+      prt1.x[2] = xi1[2];
 
     return xi1;
   }
@@ -280,4 +304,3 @@ struct PushParticlesTest : ::testing::Test
   Mparticles* mprts = {};
   MfieldsState* mflds = {};
 };
-

@@ -34,16 +34,12 @@ Rng* RngPool_get(RngPool* rngpool, int n)
 // ----------------------------------------------------------------------
 // Rng
 
-double Rng_uniform(Rng *rng, double lo, double hi)
+double Rng_uniform(Rng* rng, double lo, double hi)
 {
   return rng->uniform(lo, hi);
 }
 
-double Rng_normal(Rng *rng, double mu, double sigma)
+double Rng_normal(Rng* rng, double mu, double sigma)
 {
   return rng->normal(mu, sigma);
 }
-
-
-
-

@@ -7,6 +7,4 @@
 // BndParticlesBase
 
 struct BndParticlesBase
-{
-};
-
+{};

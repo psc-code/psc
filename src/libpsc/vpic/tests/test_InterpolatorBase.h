@@ -5,31 +5,33 @@
 #include "test_GridBase.h"
 #include "test_InterpolatorBase.h"
 
-template<typename InterpolatorBase>
-InterpolatorBase* test_InterpolatorBase_create(typename InterpolatorBase::Grid *g)
+template <typename InterpolatorBase>
+InterpolatorBase* test_InterpolatorBase_create(
+  typename InterpolatorBase::Grid* g)
 {
   return InterpolatorBase::create(g);
 }
 
-template<typename InterpolatorBase>
+template <typename InterpolatorBase>
 void test_InterpolatorBase_methods(InterpolatorBase* interpolator)
 {
   typename InterpolatorBase::Grid* g = interpolator->grid();
-  (void) g;
+  (void)g;
 }
 
-template<typename InterpolatorBase>
+template <typename InterpolatorBase>
 void test_InterpolatorBase_destroy(InterpolatorBase* fa)
 {
   // FIXME
 }
 
-template<typename InterpolatorBase>
+template <typename InterpolatorBase>
 void test_InterpolatorBase()
 {
-  auto *g = test_GridBase_create<typename InterpolatorBase::Grid>();
-  
-  InterpolatorBase *interpolator = test_InterpolatorBase_create<InterpolatorBase>(g);
+  auto* g = test_GridBase_create<typename InterpolatorBase::Grid>();
+
+  InterpolatorBase* interpolator =
+    test_InterpolatorBase_create<InterpolatorBase>(g);
   test_InterpolatorBase_methods(interpolator);
   test_InterpolatorBase_destroy(interpolator);
 

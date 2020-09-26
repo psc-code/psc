@@ -4,7 +4,7 @@
 
 #include "psc_fields_acc.h"
 
-#define FIELDS_TYPE                   "acc"
+#define FIELDS_TYPE "acc"
 
 #define PSC_FIELDS_AS_ACC 1
 

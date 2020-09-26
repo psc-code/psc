@@ -5,7 +5,7 @@
 #include "VpicGridBase.h"
 #include "VpicInterpolatorBase.h"
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   testing_init(&argc, &argv);
 

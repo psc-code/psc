@@ -11,18 +11,13 @@
 #include "setup_fields.hxx"
 #include "setup_particles.hxx"
 
-using PushParticlesTestTypes = ::testing::Types<TestConfig2ndDoubleYZ,
-						TestConfig1vbec3dSingleYZ,
-						TestConfig1vbec3dSingleXZ,
-						//TestConfigVpic,
+using PushParticlesTestTypes = ::testing::Types<
+  TestConfig2ndDoubleYZ, TestConfig1vbec3dSingleYZ, TestConfig1vbec3dSingleXZ,
+// TestConfigVpic,
 #ifdef USE_CUDA
-						TestConfig1vbec3dCudaYZ,
-						TestConfig1vbec3dCuda,
-						TestConfig1vbec3dCuda444,
+  TestConfig1vbec3dCudaYZ, TestConfig1vbec3dCuda, TestConfig1vbec3dCuda444,
 #endif
-						TestConfig2ndDouble,
-						TestConfig2ndSingle,
-						TestConfig1vbec3dSingle>;
+  TestConfig2ndDouble, TestConfig2ndSingle, TestConfig1vbec3dSingle>;
 
 TYPED_TEST_SUITE(PushParticlesTest, PushParticlesTestTypes);
 
@@ -39,7 +34,7 @@ TYPED_TEST(PushParticlesTest, SingleParticle)
   auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
   this->make_psc(kinds);
   const auto& grid = this->grid();
-  
+
   // init particle
   auto n_prts_by_patch = std::vector<uint>{1};
 
@@ -66,27 +61,30 @@ namespace psc
 {
 namespace particle
 {
-  
+
 typename Inject::Real vx(const Inject& prt)
 {
-  auto gamma = 1./std::sqrt(1. + sqr(prt.u[0]) + sqr(prt.u[1]) + sqr(prt.u[2]));
+  auto gamma =
+    1. / std::sqrt(1. + sqr(prt.u[0]) + sqr(prt.u[1]) + sqr(prt.u[2]));
   return gamma * prt.u[0];
 }
 
 typename Inject::Real vy(const Inject& prt)
 {
-  auto gamma = 1./std::sqrt(1. + sqr(prt.u[0]) + sqr(prt.u[1]) + sqr(prt.u[2]));
+  auto gamma =
+    1. / std::sqrt(1. + sqr(prt.u[0]) + sqr(prt.u[1]) + sqr(prt.u[2]));
   return gamma * prt.u[1];
 }
 
 typename Inject::Real vz(const Inject& prt)
 {
-  auto gamma = 1./std::sqrt(1. + sqr(prt.u[0]) + sqr(prt.u[1]) + sqr(prt.u[2]));
+  auto gamma =
+    1. / std::sqrt(1. + sqr(prt.u[0]) + sqr(prt.u[1]) + sqr(prt.u[2]));
   return gamma * prt.u[2];
 }
 
-}
-}
+} // namespace particle
+} // namespace psc
 
 // ======================================================================
 // SingleParticlePushp1 test
@@ -97,14 +95,14 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp1)
 {
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
-    default: return 0.;
+      default: return 0.;
     }
   };
 
   auto prt0 = psc::particle::Inject{{5., 5., 5.}, {0., 0., 1.}, 1., 0};
   auto prt1 = prt0;
   prt1.x[2] += vz(prt1);
-  
+
   this->runSingleParticleTest(init_fields, prt0, prt1);
 }
 
@@ -117,8 +115,8 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp2)
 {
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
-    case EZ: return 2.;
-    default: return 0.;
+      case EZ: return 2.;
+      default: return 0.;
     }
   };
 
@@ -126,7 +124,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp2)
   auto prt1 = prt0;
   prt1.u[2] = 3.;
   prt1.x[2] += vz(prt1);
-  
+
   this->runSingleParticleTest(init_fields, prt0, prt1);
 }
 
@@ -142,8 +140,8 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp3)
 {
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
-    case EZ: return crd[2];
-    default: return 0.;
+      case EZ: return crd[2];
+      default: return 0.;
     }
   };
 
@@ -151,7 +149,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp3)
   auto prt1 = prt0;
   prt1.u[2] = 6.;
   prt1.x[2] += vz(prt1);
-  
+
   this->runSingleParticleTest(init_fields, prt0, prt1);
 }
 
@@ -166,16 +164,18 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp4)
 
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
-    case EZ: return crd[1];
-    default: return 0.;
+      case EZ: return crd[1];
+      default: return 0.;
     }
   };
 
   auto prt0 = psc::particle::Inject{{5., 4., 5.}, {0., 0., 1.}, 1., 0};
   auto prt1 = prt0;
-  if (!Base::dim::InvarY::value) { prt1.u[2] = 5.; }
+  if (!Base::dim::InvarY::value) {
+    prt1.u[2] = 5.;
+  }
   this->push_x(prt0, prt1);
-  
+
   this->runSingleParticleTest(init_fields, prt0, prt1);
 }
 
@@ -190,17 +190,19 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp5)
 
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
-    case EZ: return crd[0];
-    default: return 0.;
+      case EZ: return crd[0];
+      default: return 0.;
     }
   };
 
   auto prt0 = psc::particle::Inject{{3., 5., 5.}, {0., 0., 1.}, 1., 0};
   auto prt1 = prt0;
   prt1.u[2] = 4.;
-  if (Base::dim::InvarX::value) { prt1.u[2] = 1.; }
+  if (Base::dim::InvarX::value) {
+    prt1.u[2] = 1.;
+  }
   prt1.x[2] += vz(prt1);
-  
+
   this->runSingleParticleTest(init_fields, prt0, prt1);
 }
 
@@ -215,16 +217,19 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp6)
 
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
-    default: return 0.;
+      default: return 0.;
     }
   };
 
   auto prt0 = psc::particle::Inject{{1., 2., 3.}, {1., 1., 1.}, 1., 0};
   auto prt1 = prt0;
-  if (!Base::dim::InvarX::value) prt1.x[0] += vx(prt1);
-  if (!Base::dim::InvarY::value) prt1.x[1] += vy(prt1);
-  if (!Base::dim::InvarZ::value) prt1.x[2] += vz(prt1);
-  
+  if (!Base::dim::InvarX::value)
+    prt1.x[0] += vx(prt1);
+  if (!Base::dim::InvarY::value)
+    prt1.x[1] += vy(prt1);
+  if (!Base::dim::InvarZ::value)
+    prt1.x[2] += vz(prt1);
+
   this->runSingleParticleTest(init_fields, prt0, prt1);
 }
 
@@ -237,8 +242,8 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp7)
 {
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
-    case EZ: return crd[2];
-    default: return 0.;
+      case EZ: return crd[2];
+      default: return 0.;
     }
   };
 
@@ -246,7 +251,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp7)
   auto prt1 = prt0;
   prt1.u[2] = 156;
   this->push_x(prt0, prt1);
-  
+
   this->runSingleParticleTest(init_fields, prt0, prt1);
 }
 
@@ -259,7 +264,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp8)
 {
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
-    default: return 0.;
+      default: return 0.;
     }
   };
 
@@ -270,7 +275,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp8)
   std::vector<CurrentReference> curr_ref;
   if (std::is_same<typename TypeParam::order, checks_order_1st>::value) {
     curr_ref = {
-      { JZI, {1, 1, 1}, this->fnqz / this->dz * (xi1[2] - prt0.x[2]) },
+      {JZI, {1, 1, 1}, this->fnqz / this->dz * (xi1[2] - prt0.x[2])},
     };
   }
   this->runSingleParticleTest(init_fields, prt0, prt1, curr_ref);
@@ -285,7 +290,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp9)
 {
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
-    default: return 0.;
+      default: return 0.;
     }
   };
 
@@ -296,11 +301,11 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp9)
   std::vector<CurrentReference> curr_ref;
   if (std::is_same<typename TypeParam::order, checks_order_1st>::value) {
     curr_ref = {
-      { JZI, {1, 1, 1}, this->fnqz / this->dz * (20. - prt0.x[2]) },
-      { JZI, {1, 1, 2}, this->fnqz / this->dz * (xi1[2] - 20.) },
+      {JZI, {1, 1, 1}, this->fnqz / this->dz * (20. - prt0.x[2])},
+      {JZI, {1, 1, 2}, this->fnqz / this->dz * (xi1[2] - 20.)},
     };
   }
-      
+
   this->runSingleParticleTest(init_fields, prt0, prt1, curr_ref);
 }
 
@@ -313,7 +318,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp10)
 {
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
-    default: return 0.;
+      default: return 0.;
     }
   };
 
@@ -326,11 +331,11 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp10)
     auto fnqy = .05;
     auto dy = 10.;
     curr_ref = {
-      { JYI, {1, 1, 1}, fnqy / dy * (20. - prt0.x[1]) },
-      { JYI, {1, 2, 1}, fnqy / dy * (xi1[1] - 20.) },
+      {JYI, {1, 1, 1}, fnqy / dy * (20. - prt0.x[1])},
+      {JYI, {1, 2, 1}, fnqy / dy * (xi1[1] - 20.)},
     };
   }
-      
+
   this->runSingleParticleTest(init_fields, prt0, prt1, curr_ref);
 }
 
@@ -343,7 +348,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp11)
 {
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
-    default: return 0.;
+      default: return 0.;
     }
   };
 
@@ -354,10 +359,10 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp11)
   std::vector<CurrentReference> curr_ref;
   if (std::is_same<typename TypeParam::order, checks_order_1st>::value) {
     curr_ref = {
-      { JXI, {1, 1, 1}, this->fnqx / this->dx * (xi1[0] - prt0.x[0]) },
+      {JXI, {1, 1, 1}, this->fnqx / this->dx * (xi1[0] - prt0.x[0])},
     };
   }
-      
+
   this->runSingleParticleTest(init_fields, prt0, prt1, curr_ref);
 }
 
@@ -370,7 +375,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp12)
 {
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
-    default: return 0.;
+      default: return 0.;
     }
   };
 
@@ -381,13 +386,13 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp12)
   std::vector<CurrentReference> curr_ref;
   if (std::is_same<typename TypeParam::order, checks_order_1st>::value) {
     curr_ref = {
-      { JYI, {1, 1, 1}, 0.00280342 },
-      { JYI, {1, 1, 2}, 8.333333e-05 },
-      { JZI, {1, 1, 1}, 0.00280342 },
-      { JZI, {1, 2, 1}, 8.333333e-05 },
+      {JYI, {1, 1, 1}, 0.00280342},
+      {JYI, {1, 1, 2}, 8.333333e-05},
+      {JZI, {1, 1, 1}, 0.00280342},
+      {JZI, {1, 2, 1}, 8.333333e-05},
     };
   }
-      
+
   this->runSingleParticleTest(init_fields, prt0, prt1, curr_ref);
 }
 
@@ -400,7 +405,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp13)
 {
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
-    default: return 0.;
+      default: return 0.;
     }
   };
 
@@ -411,15 +416,12 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp13)
   std::vector<CurrentReference> curr_ref;
   if (std::is_same<typename TypeParam::order, checks_order_1st>::value) {
     curr_ref = {
-      { JYI, {1, 1, 1}, 0.00243749 },
-      { JZI, {1, 1, 1}, 6.25e-5 },
-      { JYI, {1, 2, 1}, 0.00036592 },
-      { JZI, {1, 2, 1}, 0.00282275 },
-      { JYI, {1, 1, 2}, 6.25e-5 },
-      { JYI, {1, 2, 2}, 2.08e-5 },
+      {JYI, {1, 1, 1}, 0.00243749}, {JZI, {1, 1, 1}, 6.25e-5},
+      {JYI, {1, 2, 1}, 0.00036592}, {JZI, {1, 2, 1}, 0.00282275},
+      {JYI, {1, 1, 2}, 6.25e-5},    {JYI, {1, 2, 2}, 2.08e-5},
     };
   }
-      
+
   this->runSingleParticleTest(init_fields, prt0, prt1, curr_ref);
 }
 
@@ -432,7 +434,7 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp14)
 {
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
-    default: return 0.;
+      default: return 0.;
     }
   };
 
@@ -443,15 +445,12 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp14)
   std::vector<CurrentReference> curr_ref;
   if (std::is_same<typename TypeParam::order, checks_order_1st>::value) {
     curr_ref = {
-      { JZI, {1, 1, 1}, 0.00243749 },
-      { JYI, {1, 1, 1}, 6.25e-5 },
-      { JZI, {1, 2, 1}, 6.25e-5 },
-      { JZI, {1, 1, 2}, 0.00036592 },
-      { JYI, {1, 1, 2}, 0.00282275 },
-      { JZI, {1, 2, 2}, 2.08e-5 },
+      {JZI, {1, 1, 1}, 0.00243749}, {JYI, {1, 1, 1}, 6.25e-5},
+      {JZI, {1, 2, 1}, 6.25e-5},    {JZI, {1, 1, 2}, 0.00036592},
+      {JYI, {1, 1, 2}, 0.00282275}, {JZI, {1, 2, 2}, 2.08e-5},
     };
   }
-      
+
   this->runSingleParticleTest(init_fields, prt0, prt1, curr_ref);
 }
 
@@ -464,14 +463,14 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp15)
 {
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
-    default: return 0.;
+      default: return 0.;
     }
   };
 
   auto prt0 = psc::particle::Inject{{5., 5., 39.5}, {0., 0., 1.}, 1., 0};
   auto prt1 = prt0;
   this->push_x(prt0, prt1);
-  
+
   this->runSingleParticleTest(init_fields, prt0, prt1);
 }
 
@@ -484,18 +483,18 @@ TYPED_TEST(PushParticlesTest, SingleParticlePushp16)
 {
   auto init_fields = [&](int m, double crd[3]) {
     switch (m) {
-    default: return 0.;
+      default: return 0.;
     }
   };
 
   auto prt0 = psc::particle::Inject{{5., 5., 159.5}, {0., 0., 1.}, 1., 0};
   auto prt1 = prt0;
   this->push_x(prt0, prt1);
-  
+
   this->runSingleParticleTest(init_fields, prt0, prt1);
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
   ::testing::InitGoogleTest(&argc, argv);

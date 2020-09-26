@@ -77,32 +77,35 @@ struct VpicConfigWrap
 
   using MaterialList = VpicMaterialList;
   using MfieldsState = MfieldsStateVpic;
-  
+
   using AccumulateOps = VpicAccumulateOps<MfieldsState>;
 
   using MfieldsInterpolator = MfieldsInterpolatorVpic;
   using InterpolatorOps = PscInterpolatorOps<MfieldsInterpolator, MfieldsState>;
-  
+
   using MfieldsAccumulator = MfieldsAccumulatorVpic;
   using AccumulatorOps = PscAccumulatorOps<MfieldsAccumulator, MfieldsState>;
-  
+
   using MfieldsHydro = MfieldsHydroVpic;
 
-#if 1//def DO_VPIC
-  using ParticlesOps = VpicParticlesOps<Mparticles, MfieldsState, MfieldsInterpolator, MfieldsAccumulator, MfieldsHydro>;
+#if 1 // def DO_VPIC
+  using ParticlesOps =
+    VpicParticlesOps<Mparticles, MfieldsState, MfieldsInterpolator,
+                     MfieldsAccumulator, MfieldsHydro>;
 #else
-  using ParticlesOps = PscParticlesOps<Mparticles, MfieldsState, MfieldsInterpolator, MfieldsAccumulator, MfieldsHydro>;
+  using ParticlesOps =
+    PscParticlesOps<Mparticles, MfieldsState, MfieldsInterpolator,
+                    MfieldsAccumulator, MfieldsHydro>;
 #endif
 
-/* #ifdef DO_VPIC */
-/*   using DiagOps = VpicDiagOps<MfieldsState>; */
-/* #else */
-/*   using DiagOps = PscDiagOps<MfieldsState>; */
-/* #endif */
+  /* #ifdef DO_VPIC */
+  /*   using DiagOps = VpicDiagOps<MfieldsState>; */
+  /* #else */
+  /*   using DiagOps = PscDiagOps<MfieldsState>; */
+  /* #endif */
 };
 
 #endif
-
 
 struct VpicConfigPsc
 {
@@ -114,26 +117,29 @@ struct VpicConfigPsc
 
   using MaterialList = PscMaterialList;
   using MfieldsState = MfieldsStatePsc<Grid, MaterialList>;
-  
+
   using FieldArrayLocalOps = PscFieldArrayLocalOps<MfieldsState>;
   using FieldArrayRemoteOps = PscFieldArrayRemoteOps<MfieldsState>;
-  using AccumulateOps = PscAccumulateOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
+  using AccumulateOps =
+    PscAccumulateOps<MfieldsState, FieldArrayLocalOps, FieldArrayRemoteOps>;
 
   using MfieldsInterpolator = MfieldsInterpolatorPsc<Grid>;
   using InterpolatorOps = PscInterpolatorOps<MfieldsInterpolator, MfieldsState>;
-  
+
   using MfieldsAccumulator = MfieldsAccumulatorPsc<Grid>;
   using AccumulatorOps = PscAccumulatorOps<MfieldsAccumulator, MfieldsState>;
-  
+
   using MfieldsHydro = MfieldsHydroPsc<Grid>;
 
-  using ParticlesOps = PscParticlesOps<Mparticles, MfieldsState, MfieldsInterpolator, MfieldsAccumulator, MfieldsHydro>;
-    
-/* #ifdef DO_VPIC */
-/*   using DiagOps = VpicDiagOps<MfieldsState>; */
-/* #else */
-/*   using DiagOps = PscDiagOps<MfieldsState>; */
-/* #endif */
+  using ParticlesOps =
+    PscParticlesOps<Mparticles, MfieldsState, MfieldsInterpolator,
+                    MfieldsAccumulator, MfieldsHydro>;
+
+  /* #ifdef DO_VPIC */
+  /*   using DiagOps = VpicDiagOps<MfieldsState>; */
+  /* #else */
+  /*   using DiagOps = PscDiagOps<MfieldsState>; */
+  /* #endif */
 };
 
 #if 1
@@ -145,4 +151,3 @@ typedef VpicRngPool<Rng> RngPool;
 #endif
 
 #endif
-

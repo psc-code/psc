@@ -17,12 +17,13 @@ void test_PscFieldArray()
   typedef PscFieldArrayBase<Grid, MaterialList> FieldArrayBase;
   typedef PscFieldArrayLocalOps<FieldArrayBase> FieldArrayLocalOps;
   typedef PscFieldArrayRemoteOps<FieldArrayBase> FieldArrayRemoteOps;
-  typedef PscFieldArray<FieldArrayBase, FieldArrayLocalOps, FieldArrayRemoteOps> FieldArray;
+  typedef PscFieldArray<FieldArrayBase, FieldArrayLocalOps, FieldArrayRemoteOps>
+    FieldArray;
 
   test_FieldArray<FieldArray>();
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   testing_init(&argc, &argv);
 

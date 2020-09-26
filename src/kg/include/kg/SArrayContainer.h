@@ -3,8 +3,8 @@
 #define KG_SARRAY_CONTAINER_H
 
 #include <kg/Array3d.h>
-#include <kg/Vec3.h>
 #include <kg/Macros.h>
+#include <kg/Vec3.h>
 
 #include <cstring>
 
@@ -40,7 +40,8 @@ struct LayoutDataOffset<LayoutAOS>
 } // namespace detail
 
 template <typename Layout>
-KG_INLINE static int layoutDataOffset(int n_comps, const Int3& im, int m, Int3 idx)
+KG_INLINE static int layoutDataOffset(int n_comps, const Int3& im, int m,
+                                      Int3 idx)
 {
   return detail::LayoutDataOffset<Layout>::run(n_comps, im, m, idx);
 }
@@ -108,7 +109,7 @@ public:
   {
     // FIXME, only correct for SOA!!!
     std::memset(&(*this)(m, ib()[0], ib()[1], ib()[2]), 0,
-           n_cells() * sizeof(value_type));
+                n_cells() * sizeof(value_type));
   }
 
   void zero(int mb, int me)
@@ -197,11 +198,14 @@ protected:
   KG_INLINE Storage& storage() { return derived().storageImpl(); }
   KG_INLINE const Storage& storage() const { return derived().storageImpl(); }
   KG_INLINE Derived& derived() { return *static_cast<Derived*>(this); }
-  KG_INLINE const Derived& derived() const { return *static_cast<const Derived*>(this); }
+  KG_INLINE const Derived& derived() const
+  {
+    return *static_cast<const Derived*>(this);
+  }
 
 private:
-  Box3 box_; //> lower bounds and length per direction
-  int n_comps_;  // # of components
+  Box3 box_;    //> lower bounds and length per direction
+  int n_comps_; // # of components
 };
 
 } // namespace kg

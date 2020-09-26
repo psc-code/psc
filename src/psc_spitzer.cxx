@@ -1,10 +1,10 @@
 
 #include <psc.h>
-#include <psc_push_particles.h>
-#include <psc_push_fields.h>
-#include <psc_sort.h>
 #include <psc_balance.h>
 #include <psc_collision.h>
+#include <psc_push_fields.h>
+#include <psc_push_particles.h>
+#include <psc_sort.h>
 
 #include <mrc_params.h>
 #include <mrc_profile.h>
@@ -12,7 +12,8 @@
 #include <math.h>
 #include <time.h>
 
-struct psc_spitzer {
+struct psc_spitzer
+{
   // parameters
   double nu_ei;
 
@@ -21,20 +22,18 @@ struct psc_spitzer {
 
 #define to_psc_spitzer(psc) mrc_to_subobj(psc, struct psc_spitzer)
 
-#define VAR(x) (void *)offsetof(struct psc_spitzer, x)
+#define VAR(x) (void*)offsetof(struct psc_spitzer, x)
 static struct param psc_spitzer_descr[] = {
-  { "nu_ei"           , VAR(nu_ei)           , PARAM_DOUBLE(1.)          },
+  {"nu_ei", VAR(nu_ei), PARAM_DOUBLE(1.)},
 
   {},
 };
 #undef VAR
 
-
 // ----------------------------------------------------------------------
 // psc_spitzer_create
 
-static void
-psc_spitzer_create(struct psc *psc)
+static void psc_spitzer_create(struct psc* psc)
 {
   psc_default_dimensionless(psc);
 
@@ -79,13 +78,13 @@ psc_spitzer_create(struct psc *psc)
 // ----------------------------------------------------------------------
 // psc_spitzer_setup
 
-static void
-psc_spitzer_setup(struct psc *psc)
+static void psc_spitzer_setup(struct psc* psc)
 {
-  struct psc_spitzer *spitzer = to_psc_spitzer(psc);
+  struct psc_spitzer* spitzer = to_psc_spitzer(psc);
 
   double Z = 1.;
-  double nu = 1. / Z * spitzer->nu_ei * pow(psc->kinds[KIND_ELECTRON].T, 1.5) * 3 * sqrt(M_PI/2);
+  double nu = 1. / Z * spitzer->nu_ei * pow(psc->kinds[KIND_ELECTRON].T, 1.5) *
+              3 * sqrt(M_PI / 2);
   spitzer->ez0 = .03 * spitzer->nu_ei * sqrt(psc->kinds[KIND_ELECTRON].T);
   psc_collision_set_param_double(psc->collision, "nu", nu);
 
@@ -97,23 +96,21 @@ psc_spitzer_setup(struct psc *psc)
 // ----------------------------------------------------------------------
 // psc_spitzer_init_field
 
-static double
-psc_spitzer_init_field(struct psc *psc, double x[3], int m)
+static double psc_spitzer_init_field(struct psc* psc, double x[3], int m)
 {
-  struct psc_spitzer *spitzer = to_psc_spitzer(psc);
+  struct psc_spitzer* spitzer = to_psc_spitzer(psc);
 
   switch (m) {
-  case EZ: return spitzer->ez0;
-  default: return 0.;
+    case EZ: return spitzer->ez0;
+    default: return 0.;
   }
 }
 
 // ----------------------------------------------------------------------
 // psc_spitzer_init_npt
 
-static void
-psc_spitzer_init_npt(struct psc *psc, int kind, double x[3],
-		struct psc_particle_npt *npt)
+static void psc_spitzer_init_npt(struct psc* psc, int kind, double x[3],
+                                 struct psc_particle_npt* npt)
 {
   npt->n = 1.;
 }
@@ -122,17 +119,16 @@ psc_spitzer_init_npt(struct psc *psc, int kind, double x[3],
 // psc_spitzer_ops
 
 struct psc_ops psc_spitzer_ops = {
-  .name             = "spitzer",
-  .size             = sizeof(struct psc_spitzer),
-  .param_descr      = psc_spitzer_descr,
-  .create           = psc_spitzer_create,
-  .setup            = psc_spitzer_setup,
-  .init_field       = psc_spitzer_init_field,
-  .init_npt         = psc_spitzer_init_npt,
+  .name = "spitzer",
+  .size = sizeof(struct psc_spitzer),
+  .param_descr = psc_spitzer_descr,
+  .create = psc_spitzer_create,
+  .setup = psc_spitzer_setup,
+  .init_field = psc_spitzer_init_field,
+  .init_npt = psc_spitzer_init_npt,
 };
 
-int
-main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   return psc_main(&argc, &argv, &psc_spitzer_ops);
 }

@@ -10,7 +10,7 @@
 //
 // needs to support:
 // static Rng* create()  (factory)
-// void seed(unsigned int) 
+// void seed(unsigned int)
 // double uniform(double lo, double hi)
 // double normal(double mu, double sigma)
 //
@@ -29,27 +29,18 @@ struct VpicRng : rng_t
   {
     return static_cast<VpicRng*>(::new_rng(seed));
   }
-  
-  void seed(unsigned int s)
-  {
-    ::seed_rng(this, s);
-  }
-  
+
+  void seed(unsigned int s) { ::seed_rng(this, s); }
+
   double uniform(double lo, double hi)
   {
     double dx = ::drand(this);
-    return lo * (1.-dx) + hi * dx;
+    return lo * (1. - dx) + hi * dx;
   }
 
-  double normal(double mu, double sigma)
-  {
-    return mu + sigma * ::drandn(this);
-  }
+  double normal(double mu, double sigma) { return mu + sigma * ::drandn(this); }
 
-  unsigned int operator()()
-  {
-    return ::uirand(this);
-  }
+  unsigned int operator()() { return ::uirand(this); }
 
   static constexpr unsigned int min()
   {
@@ -72,32 +63,26 @@ struct VpicRng : rng_t
 // ======================================================================
 // VpicRngPool
 
-template<class R>
+template <class R>
 struct VpicRngPool
 {
   typedef R Rng;
-  
+
   VpicRngPool()
   {
     int new_rng = 2;
     rng_pool_ = new_rng_pool(new_rng, 0, 0);
   }
-  
-  void seed(int base, int which)
-  {
-    ::seed_rng_pool(rng_pool_, base, which);
-  }
-  
+
+  void seed(int base, int which) { ::seed_rng_pool(rng_pool_, base, which); }
+
   Rng* operator[](int n)
   {
     assert(n == 0);
-    return reinterpret_cast<Rng *>(rng_pool_->rng[n]);
+    return reinterpret_cast<Rng*>(rng_pool_->rng[n]);
   }
 
-  rng_pool *rng_pool_;
+  rng_pool* rng_pool_;
 };
 
-
 #endif
-
-

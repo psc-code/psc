@@ -12,14 +12,14 @@
 // ----------------------------------------------------------------------
 // CollisionCudaHost
 
-template<typename BS>
+template <typename BS>
 class CollisionCudaHost : CollisionBase
 {
 public:
   using Mparticles = MparticlesCuda<BS>;
-  
+
   CollisionCudaHost(MPI_Comm comm, int interval, double nu);
-  
+
   void operator()(Mparticles& mprts)
   {
     auto& mprts = _mprts.template get_as<MparticlesSingle>();
@@ -32,4 +32,3 @@ private:
   SortCountsort2<MparticlesSingle> sort_;
   Collision_<MparticlesSingle, MfieldsSingle> coll_;
 };
-
