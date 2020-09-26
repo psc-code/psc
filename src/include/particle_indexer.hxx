@@ -35,8 +35,8 @@
 //     with the equality at the upper limit only being allowed at a right/top
 //     non-periodic boundary
 //
-// These invariants will be temporarily violated after the particle push, but will
-// be restored by the bnd exchange.
+// These invariants will be temporarily violated after the particle push, but
+// will be restored by the bnd exchange.
 //
 // Tricky issues to deal with:
 // - (1) and (2) should be closely related, but finite precision
@@ -47,7 +47,8 @@
 //   100., which is actually = 100. (in single precision), meaning that
 //   particle violates (1) and (2) in its new patch.
 //
-// - Calculating cpos correctly when legally xi == ldims[d] * xi[d] at a right boundary
+// - Calculating cpos correctly when legally xi == ldims[d] * xi[d] at a right
+// boundary
 //
 // TODO:
 // - have cell index be the primary quantity computed, always, and find
@@ -58,23 +59,19 @@
 // ======================================================================
 // ParticleIndexer
 
-template<class R>
+template <class R>
 struct ParticleIndexer
 {
   using real_t = R;
   using Real3 = Vec3<real_t>;
 
   ParticleIndexer(const Grid_t& grid)
-    : dxi_(Real3{1., 1., 1.} / Real3(grid.domain.dx)),
-      ldims_(grid.ldims)
+    : dxi_(Real3{1., 1., 1.} / Real3(grid.domain.dx)), ldims_(grid.ldims)
   {
     n_cells_ = ldims_[0] * ldims_[1] * ldims_[2];
   }
 
-  int cellPosition(real_t x, int d) const
-  {
-    return fint(x * dxi_[d]);
-  }
+  int cellPosition(real_t x, int d) const { return fint(x * dxi_[d]); }
 
   Int3 cellPosition(const real_t* pos) const
   {
@@ -87,12 +84,11 @@ struct ParticleIndexer
 
   int cellIndex(const Int3& cpos) const
   {
-    if (uint(cpos[0]) >= ldims_[0] ||
-	uint(cpos[1]) >= ldims_[1] ||
-	uint(cpos[2]) >= ldims_[2]) {
+    if (uint(cpos[0]) >= ldims_[0] || uint(cpos[1]) >= ldims_[1] ||
+        uint(cpos[2]) >= ldims_[2]) {
       return -1;
     }
-    
+
     return (cpos[2] * ldims_[1] + cpos[1]) * ldims_[0] + cpos[0];
   }
 
@@ -107,9 +103,10 @@ struct ParticleIndexer
     Int3 cpos = cellPosition(pos);
     for (int d = 0; d < 3; d++) {
       if (uint(cpos[d]) >= ldims_[d]) {
-	printf("validCellIndex: cpos[%d] = %d ldims_[%d] = %d // pos[%d] = %g pos[%d]*dxi_[%d] = %g\n",
-	       d, cpos[d], d, ldims_[d], d, pos[d], d, d, pos[d] * dxi_[d]);
-	assert(0);
+        printf("validCellIndex: cpos[%d] = %d ldims_[%d] = %d // pos[%d] = %g "
+               "pos[%d]*dxi_[%d] = %g\n",
+               d, cpos[d], d, ldims_[d], d, pos[d], d, d, pos[d] * dxi_[d]);
+        assert(0);
       }
     }
     int cidx = cellIndex(cpos);
@@ -122,25 +119,24 @@ struct ParticleIndexer
     for (int d = 0; d < 3; d++) {
       int pos = cellPosition(xi[d], d);
       if (pos < 0 || pos >= ldims_[d]) {
-	printf("checkInPatchMod xi %g %g %g\n", xi[0], xi[1], xi[2]);
-	printf("checkInPatchMod d %d xi %g pos %d // %d\n",
-	       d, xi[d], pos, ldims_[d]);
-	if (pos < 0) {
-	  xi[d] = 0.f;
-	} else {
-	  xi[d] *= (1. - 1e-6);
-	}
-	pos = cellPosition(xi[d], d);
+        printf("checkInPatchMod xi %g %g %g\n", xi[0], xi[1], xi[2]);
+        printf("checkInPatchMod d %d xi %g pos %d // %d\n", d, xi[d], pos,
+               ldims_[d]);
+        if (pos < 0) {
+          xi[d] = 0.f;
+        } else {
+          xi[d] *= (1. - 1e-6);
+        }
+        pos = cellPosition(xi[d], d);
       }
       assert(pos >= 0 && pos < ldims_[d]);
     }
   }
 
   const Int3& ldims() const { return ldims_; }
-  
-  //private:
+
+  // private:
   Real3 dxi_;
   Int3 ldims_;
   uint n_cells_;
 };
-

@@ -3,17 +3,16 @@
 
 #include "testing.hxx"
 
-template<typename T>
+template <typename T>
 struct PushFieldsTest : PushParticlesTest<T>
-{
-};
+{};
 
-using PushFieldsTestTypes = ::testing::Types<TestConfig1vbec3dSingleYZ,
+using PushFieldsTestTypes =
+  ::testing::Types<TestConfig1vbec3dSingleYZ,
 #ifdef USE_CUDA
-					     TestConfig1vbec3dCudaYZ,
-					     TestConfig1vbec3dCuda444,
+                   TestConfig1vbec3dCudaYZ, TestConfig1vbec3dCuda444,
 #endif
-					     TestConfig1vbec3dSingle>;
+                   TestConfig1vbec3dSingle>;
 
 TYPED_TEST_SUITE(PushFieldsTest, PushFieldsTestTypes);
 
@@ -33,15 +32,15 @@ TYPED_TEST(PushFieldsTest, Pushf1)
   const auto& grid = this->grid();
 
   const double kz = 2. * M_PI / grid.domain.length[2];
-  
+
   // init fields
   auto mflds = MfieldsState{grid};
   setupFields(mflds, [&](int m, double crd[3]) {
-      switch (m) {
-      case EY: return sin(kz*crd[2]);
+    switch (m) {
+      case EY: return sin(kz * crd[2]);
       default: return 0.;
-      }
-    });
+    }
+  });
 
   // run test
   PushFields pushf_;
@@ -49,11 +48,11 @@ TYPED_TEST(PushFieldsTest, Pushf1)
 
   auto flds = mflds[0];
   grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-      double z = grid.patches[0].z_cc(k);
-      // printf("ijk %d:%d:%d %g %g dt %g\n", i,j,k, flds(HX, i,j,k),
-      // 	     kz*cos(kz*z), ppsc->dt);
-      EXPECT_NEAR(flds(HX, i,j,k), kz*cos(kz*z), eps);
-    });
+    double z = grid.patches[0].z_cc(k);
+    // printf("ijk %d:%d:%d %g %g dt %g\n", i,j,k, flds(HX, i,j,k),
+    // 	     kz*cos(kz*z), ppsc->dt);
+    EXPECT_NEAR(flds(HX, i, j, k), kz * cos(kz * z), eps);
+  });
 }
 
 TYPED_TEST(PushFieldsTest, Pushf2)
@@ -69,15 +68,15 @@ TYPED_TEST(PushFieldsTest, Pushf2)
   const auto& grid = this->grid();
 
   const double ky = 2. * M_PI / grid.domain.length[1];
-  
+
   // init fields
   auto mflds = MfieldsState{grid};
   setupFields(mflds, [&](int m, double crd[3]) {
-      switch (m) {
-      case HX: return cos(ky*crd[1]);
+    switch (m) {
+      case HX: return cos(ky * crd[1]);
       default: return 0.;
-      }
-    });
+    }
+  });
 
   // run test
   PushFields pushf_;
@@ -85,15 +84,14 @@ TYPED_TEST(PushFieldsTest, Pushf2)
 
   auto flds = mflds[0];
   grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-      double y = grid.patches[0].y_cc(j);
-      // printf("ijk %d:%d:%d %g %g dt %g\n", i,j,k, flds(HX, i,j,k),
-      // 	     kz*cos(kz*z), ppsc->dt);
-      EXPECT_NEAR(flds(EZ, i,j,k), ky*sin(ky*y), eps);
-    });
+    double y = grid.patches[0].y_cc(j);
+    // printf("ijk %d:%d:%d %g %g dt %g\n", i,j,k, flds(HX, i,j,k),
+    // 	     kz*cos(kz*z), ppsc->dt);
+    EXPECT_NEAR(flds(EZ, i, j, k), ky * sin(ky * y), eps);
+  });
 }
 
-
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
   ::testing::InitGoogleTest(&argc, argv);

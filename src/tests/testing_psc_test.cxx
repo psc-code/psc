@@ -13,8 +13,7 @@
 // ----------------------------------------------------------------------
 // psc_test_create
 
-void
-psc_test_create(struct psc *psc)
+void psc_test_create(struct psc* psc)
 {
   // new defaults (dimensionless) for this case
   psc->prm.qq = 1.;
@@ -23,7 +22,7 @@ psc_test_create(struct psc *psc)
   psc->prm.cc = 1.;
   psc->prm.eps0 = 1.;
 
-  psc->prm.lw = 2.*M_PI;
+  psc->prm.lw = 2. * M_PI;
   psc->prm.i0 = 0.;
   psc->prm.n0 = 1.;
   psc->prm.e0 = 1.;
@@ -50,14 +49,12 @@ psc_test_create(struct psc *psc)
   psc->domain.bnd_part_hi[1] = BND_PART_PERIODIC;
   psc->domain.bnd_part_lo[2] = BND_PART_PERIODIC;
   psc->domain.bnd_part_hi[2] = BND_PART_PERIODIC;
-
 }
 
 // ----------------------------------------------------------------------
 // psc_test_step
 
-void
-psc_test_step(struct psc *psc)
+void psc_test_step(struct psc* psc)
 {
   psc_output(psc);
 
@@ -78,39 +75,36 @@ psc_test_step(struct psc *psc)
 // ----------------------------------------------------------------------
 // psc_test_init_field_linear
 
-double
-psc_test_init_field_linear(struct psc *psc, double x[3], int m)
+double psc_test_init_field_linear(struct psc* psc, double x[3], int m)
 {
   switch (m) {
-  case EX: return x[0] + x[1] + x[2];
-  case EY: return x[0] + x[1] + x[2];
-  case EZ: return x[0] + x[1] + x[2];
-  case HX: return x[0] + x[1] + x[2];
-  case HY: return x[0] + x[1] + x[2];
-  case HZ: return x[0] + x[1] + x[2];
-  default: return 0.;
+    case EX: return x[0] + x[1] + x[2];
+    case EY: return x[0] + x[1] + x[2];
+    case EZ: return x[0] + x[1] + x[2];
+    case HX: return x[0] + x[1] + x[2];
+    case HY: return x[0] + x[1] + x[2];
+    case HZ: return x[0] + x[1] + x[2];
+    default: return 0.;
   }
 }
 
 // ----------------------------------------------------------------------
 // psc_test_init_npt
 
-void
-psc_test_init_npt_rest(struct psc *psc, int kind, double x[3],
-		       struct psc_particle_npt *npt)
+void psc_test_init_npt_rest(struct psc* psc, int kind, double x[3],
+                            struct psc_particle_npt* npt)
 {
   npt->n = 1.;
   switch (kind) {
-  case 0: // electrons
-    npt->q = -1.;
-    npt->m = 1.;
-    break;
-  case 1: // ions
-    npt->q = 1.;
-    npt->m = 100;
-    break;
-  default:
-    assert(0);
+    case 0: // electrons
+      npt->q = -1.;
+      npt->m = 1.;
+      break;
+    case 1: // ions
+      npt->q = 1.;
+      npt->m = 100;
+      break;
+    default: assert(0);
   }
 }
 
@@ -118,11 +112,10 @@ psc_test_init_npt_rest(struct psc *psc, int kind, double x[3],
 // psc_test_ops_1
 
 struct psc_ops psc_test_ops_1 = {
-  .name             = "test",
-  .size             = sizeof(struct psc_test),
-  .create           = psc_test_create,
-  .init_field       = psc_test_init_field_linear,
-  .init_npt         = psc_test_init_npt_rest,
-  .step             = psc_test_step,
+  .name = "test",
+  .size = sizeof(struct psc_test),
+  .create = psc_test_create,
+  .init_field = psc_test_init_field_linear,
+  .init_npt = psc_test_init_npt_rest,
+  .step = psc_test_step,
 };
-

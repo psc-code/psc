@@ -4,7 +4,7 @@
 #include "grid.hxx"
 #include "particle_simple.hxx"
 
-template<typename BS>
+template <typename BS>
 struct cuda_mparticles;
 
 // ======================================================================
@@ -13,19 +13,19 @@ struct cuda_mparticles;
 // This is quite a bit of boilerplate code, with the only purpose being to have
 // a separation between nvcc-compiled code and CXX compiled code
 
-template<typename BS>
+template <typename BS>
 struct cuda_mparticles_iface
 {
   using CudaMparticles = cuda_mparticles<BS>;
   using real_t = float;
   using Particle = ParticleSimple<real_t>;
-  
+
   static CudaMparticles* new_(const Grid_t& grid);
   static void delete_(CudaMparticles* cmprts);
   static int size(CudaMparticles* cmprts);
   static std::vector<uint> sizeByPatch(const CudaMparticles* cmprts);
   static void inject(CudaMparticles* cmprts, const std::vector<Particle>& buf,
-		     const std::vector<uint>& buf_n_by_patch);
+                     const std::vector<uint>& buf_n_by_patch);
 
   static std::vector<uint> get_offsets(const CudaMparticles* cmprts);
   static std::vector<Particle> get_particles(const CudaMparticles* cmprts);
@@ -35,4 +35,3 @@ struct cuda_mparticles_iface
   static void dump(const CudaMparticles* cmprts, const std::string& filename);
   static void clear(CudaMparticles* cmprts);
 };
-

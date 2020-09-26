@@ -7,6 +7,4 @@
 // MarderBase
 
 struct MarderBase
-{
-};
-
+{};

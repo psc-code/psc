@@ -75,7 +75,7 @@ _psc_read(struct psc *psc, struct mrc_io *io)
 #endif
 
 // FIXME
-void vpic_base_init(int *pargc, char ***pargv);
+void vpic_base_init(int* pargc, char*** pargv);
 
 void psc_init(int& argc, char**& argv)
 {
@@ -98,4 +98,3 @@ void psc_finalize()
   libmrc_params_finalize();
   MPI_Finalize();
 }
-

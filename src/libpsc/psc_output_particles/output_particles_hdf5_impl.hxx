@@ -155,7 +155,7 @@ struct OutputParticlesHdf5
       unsigned int n_prts = prts.size();
 
       // counting sort to get map
-      for (const auto &prt : prts) {
+      for (const auto& prt : prts) {
         int si = get_sort_index(prts, prt);
         off[p][si]++;
       }
@@ -630,7 +630,6 @@ private:
 class OutputParticlesHdf5 : OutputParticlesBase
 {
 public:
-
   OutputParticlesHdf5(const Grid_t& grid, const OutputParticlesParams& params)
     : prm_{params}
   {
@@ -658,7 +657,8 @@ public:
     sprintf(filename, "%s/%s.%06d_p%06d.h5", prm_.data_dir, prm_.basename,
             grid.timestep(), 0);
 
-    detail::OutputParticlesHdf5<Mparticles> impl{grid, lo_, hi_, wdims_, prt_type_};
+    detail::OutputParticlesHdf5<Mparticles> impl{grid, lo_, hi_, wdims_,
+                                                 prt_type_};
     impl(mprts, filename, prm_);
   }
 

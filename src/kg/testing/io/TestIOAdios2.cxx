@@ -17,7 +17,8 @@ TEST(IOAdios2, OpenWrite)
 TEST(IOAdios2, OpenReadMissingFile)
 {
   auto io = kg::io::IOAdios2{};
-  EXPECT_THROW(io.openFile("test_missing", kg::io::Mode::Read), std::ios_base::failure);
+  EXPECT_THROW(io.openFile("test_missing", kg::io::Mode::Read),
+               std::ios_base::failure);
 }
 
 TEST(IOAdios2, OpenWriteThenRead)
@@ -37,9 +38,12 @@ TEST(IOAdios2, FilePutGetVariable)
   {
     auto file = io.openFile("test3", kg::io::Mode::Write);
     auto dbl = std::vector<double>{1., 2., 3., 4., 5.};
-    file.putVariable("dbl", dbl.data(), kg::io::Mode::NonBlocking, {5}, {{0}, {5}}, {});
-    file.putVariable("dbl2", dbl.data(), kg::io::Mode::NonBlocking, {5}, {{0}, {2}}, {});
-    file.putVariable("dbl2", dbl.data()+3, kg::io::Mode::NonBlocking, {5}, {{3}, {2}}, {});
+    file.putVariable("dbl", dbl.data(), kg::io::Mode::NonBlocking, {5},
+                     {{0}, {5}}, {});
+    file.putVariable("dbl2", dbl.data(), kg::io::Mode::NonBlocking, {5},
+                     {{0}, {2}}, {});
+    file.putVariable("dbl2", dbl.data() + 3, kg::io::Mode::NonBlocking, {5},
+                     {{3}, {2}}, {});
     file.performPuts();
   }
   {
@@ -48,12 +52,14 @@ TEST(IOAdios2, FilePutGetVariable)
     auto shape = file.shapeVariable("dbl");
     EXPECT_EQ(shape, kg::io::Dims{5});
     auto dbl = std::vector<double>(shape[0]);
-    file.getVariable("dbl", dbl.data(), kg::io::Mode::NonBlocking, {{0}, {5}}, {});
+    file.getVariable("dbl", dbl.data(), kg::io::Mode::NonBlocking, {{0}, {5}},
+                     {});
 
     auto shape2 = file.shapeVariable("dbl2");
     EXPECT_EQ(shape2, kg::io::Dims{5});
     auto dbl2 = std::vector<double>(shape[0]);
-    file.getVariable("dbl2", dbl2.data(), kg::io::Mode::NonBlocking, {{0}, {5}}, {});
+    file.getVariable("dbl2", dbl2.data(), kg::io::Mode::NonBlocking, {{0}, {5}},
+                     {});
     file.performGets();
 
     EXPECT_EQ(dbl, (std::vector<double>{1., 2., 3., 4., 5.}));
@@ -89,4 +95,3 @@ int main(int argc, char** argv)
   MPI_Finalize();
   return rc;
 }
-

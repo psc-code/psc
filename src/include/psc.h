@@ -23,18 +23,26 @@
 
 // ----------------------------------------------------------------------
 
-enum {
-  JXI, JYI, JZI,
-  EX , EY , EZ ,
-  HX , HY , HZ ,
+enum
+{
+  JXI,
+  JYI,
+  JZI,
+  EX,
+  EY,
+  EZ,
+  HX,
+  HY,
+  HZ,
   NR_FIELDS,
 };
 
 // ----------------------------------------------------------------------
 // general info / parameters for the code
 
-///Default kinds (electrons + ions)
-enum {
+/// Default kinds (electrons + ions)
+enum
+{
   KIND_ELECTRON,
   KIND_ION,
   NR_KINDS,

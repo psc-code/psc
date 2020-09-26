@@ -11,7 +11,7 @@
 // wraps the actual vpic sort; only works with Mparticles which themselves wrap
 // the vpic particles
 
-template<typename Mparticles>
+template <typename Mparticles>
 struct SortVpicWrap
 {
   void operator()(Mparticles& mprts)
@@ -21,8 +21,9 @@ struct SortVpicWrap
 
     for (auto& sp : mprts[0]) {
       if (sp.sort_interval > 0 && (step % sp.sort_interval) == 0) {
-	mpi_printf(MPI_COMM_WORLD, "Performance sorting \"%s\"\n", sp.name);
-	TIC ::sort_p(&sp); TOC(sort_p, 1);
+        mpi_printf(MPI_COMM_WORLD, "Performance sorting \"%s\"\n", sp.name);
+        TIC ::sort_p(&sp);
+        TOC(sort_p, 1);
       }
     }
   }
@@ -35,7 +36,7 @@ struct SortVpicWrap
 //
 // sorts vpic-style particles
 
-template<typename Mparticles>
+template <typename Mparticles>
 struct SortVpic
 {
   using Grid = typename Mparticles::Grid;
@@ -44,16 +45,17 @@ struct SortVpic
 
   // ----------------------------------------------------------------------
   // operator()
-  
+
   void operator()(Mparticles& mprts)
   {
     auto step = mprts.grid().timestep();
     // Sort the particles for performance if desired.
-    
+
     for (auto& sp : mprts[0]) {
       if (sp.sort_interval > 0 && (step % sp.sort_interval) == 0) {
-	mpi_printf(MPI_COMM_WORLD, "Performance sorting \"%s\"\n", sp.name);
-	TIC sort_p(sp); TOC(sort_p, 1);
+        mpi_printf(MPI_COMM_WORLD, "Performance sorting \"%s\"\n", sp.name);
+        TIC sort_p(sp);
+        TOC(sort_p, 1);
       }
     }
   }
@@ -68,16 +70,16 @@ private:
     sp.last_sorted = g.step;
 
     int n_prts = sp.np;
-    int vl = VOXEL(1,1,1,             g.nx,g.ny,g.nz);
-    int vh = VOXEL(g.nx,g.ny,g.nz, g.nx,g.ny,g.nz) + 1;
+    int vl = VOXEL(1, 1, 1, g.nx, g.ny, g.nz);
+    int vh = VOXEL(g.nx, g.ny, g.nz, g.nx, g.ny, g.nz) + 1;
 
-    static int * RESTRICT ALIGNED(128) next;
+    static int* RESTRICT ALIGNED(128) next;
     if (!next) {
       next = new int[g.nv];
     }
-    int * RESTRICT ALIGNED(128) partition = sp.partition;
+    int* RESTRICT ALIGNED(128) partition = sp.partition;
 
-    static Particle * RESTRICT ALIGNED(128) p_aux;
+    static Particle* RESTRICT ALIGNED(128) p_aux;
     static size_t n_alloced;
     if (n_prts > n_alloced) {
       delete[] p_aux;
@@ -90,12 +92,12 @@ private:
     for (int v = vl; v < vh; v++) {
       next[v] = 0;
     }
-    
+
     // find counts
     for (int i = 0; i < n_prts; i++) {
       next[p[i].i]++;
     }
-    
+
     // prefix sum
     int sum = 0;
     for (int v = vl; v < vh; v++) {
@@ -105,9 +107,9 @@ private:
       sum += count;
     }
     partition[vh] = sum;
-    
+
     // reorder
-    for(int i = 0; i < n_prts; i++) {
+    for (int i = 0; i < n_prts; i++) {
       int v = p[i].i;
       int j = next[v]++;
       p_aux[j] = p[i];
@@ -127,4 +129,3 @@ private:
     }
   }
 };
-

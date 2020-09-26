@@ -31,6 +31,4 @@ struct PushFieldsCuda : PushFieldsBase
   {
     cuda_push_fields_H_xyz(mflds.cmflds(), dt_fac * mflds.grid().dt);
   }
-
 };
-

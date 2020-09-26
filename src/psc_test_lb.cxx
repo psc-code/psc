@@ -1,15 +1,16 @@
 
 #include <psc.h>
-#include <psc_push_fields.h>
-#include <psc_bnd_fields.h>
-#include <psc_sort.h>
 #include <psc_balance.h>
+#include <psc_bnd_fields.h>
+#include <psc_push_fields.h>
+#include <psc_sort.h>
 
 #include <mrc_params.h>
 
 #include <math.h>
 
-struct psc_test_lb {
+struct psc_test_lb
+{
   double nb;
   double nn;
   double sy;
@@ -19,22 +20,18 @@ struct psc_test_lb {
 
 #define psc_test_lb(psc) mrc_to_subobj(psc, struct psc_test_lb)
 
-#define VAR(x) (void *)offsetof(struct psc_test_lb, x)
+#define VAR(x) (void*)offsetof(struct psc_test_lb, x)
 static struct param psc_test_lb_descr[] = {
-  { "nb"            , VAR(nb)              , PARAM_DOUBLE(.1)     },
-  { "nn"            , VAR(nn)              , PARAM_DOUBLE(1.)     },
-  { "sy"            , VAR(sy)              , PARAM_DOUBLE(1.)     },
-  { "sz"            , VAR(sz)              , PARAM_DOUBLE(1.)     },
-  { "sigma"         , VAR(sigma)           , PARAM_DOUBLE(1.)     },
-  {},
+  {"nb", VAR(nb), PARAM_DOUBLE(.1)},       {"nn", VAR(nn), PARAM_DOUBLE(1.)},
+  {"sy", VAR(sy), PARAM_DOUBLE(1.)},       {"sz", VAR(sz), PARAM_DOUBLE(1.)},
+  {"sigma", VAR(sigma), PARAM_DOUBLE(1.)}, {},
 };
 #undef VAR
 
 // ----------------------------------------------------------------------
 // psc_test_lb_create
 
-static void
-psc_test_lb_create(struct psc *psc)
+static void psc_test_lb_create(struct psc* psc)
 {
   psc_default_dimensionless(psc);
 
@@ -66,7 +63,7 @@ psc_test_lb_create(struct psc *psc)
   psc->domain.bnd_part_lo[2] = BND_PART_PERIODIC;
   psc->domain.bnd_part_hi[2] = BND_PART_PERIODIC;
 
-  struct psc_bnd_fields *bnd_fields = 
+  struct psc_bnd_fields* bnd_fields =
     psc_push_fields_get_bnd_fields(psc->push_fields);
   psc_bnd_fields_set_type(bnd_fields, "none");
 }
@@ -74,13 +71,13 @@ psc_test_lb_create(struct psc *psc)
 // ----------------------------------------------------------------------
 // psc_test_lb_init_npt
 
-static void
-psc_test_lb_init_npt(struct psc *psc, int kind, double x[3],
-		    struct psc_particle_npt *npt)
+static void psc_test_lb_init_npt(struct psc* psc, int kind, double x[3],
+                                 struct psc_particle_npt* npt)
 {
-  struct psc_test_lb *sub = psc_test_lb(psc);
+  struct psc_test_lb* sub = psc_test_lb(psc);
 
-  double d = (x[1] * sub->sy + x[2] * sub->sz) / sqrt(sqr(sub->sy) + sqr(sub->sz));
+  double d =
+    (x[1] * sub->sy + x[2] * sub->sz) / sqrt(sqr(sub->sy) + sqr(sub->sz));
   npt->n = sub->nb + sub->nn * exp(-sqr(d / sub->sigma));
 }
 
@@ -88,18 +85,17 @@ psc_test_lb_init_npt(struct psc *psc, int kind, double x[3],
 // psc_test_lb_ops
 
 struct psc_ops psc_test_lb_ops = {
-  .name             = "bubble",
-  .size             = sizeof(struct psc_test_lb),
-  .param_descr      = psc_test_lb_descr,
-  .create           = psc_test_lb_create,
-  .init_npt         = psc_test_lb_init_npt,
+  .name = "bubble",
+  .size = sizeof(struct psc_test_lb),
+  .param_descr = psc_test_lb_descr,
+  .create = psc_test_lb_create,
+  .init_npt = psc_test_lb_init_npt,
 };
 
 // ======================================================================
 // main
 
-int
-main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   return psc_main(&argc, &argv, &psc_test_lb_ops);
 }

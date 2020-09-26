@@ -7,55 +7,55 @@
 #include <stdlib.h>
 #include <assert.h>
 
-void
-particles_cbe_alloc(struct psc_particles *prts, particles_cbe_t *pp, int n_part)
+void particles_cbe_alloc(struct psc_particles* prts, particles_cbe_t* pp,
+                         int n_part)
 {
-  void * m;
+  void* m;
   int n_alloced = n_part * 1.2;
   psc_mparticles_set_n_alloced(prts->mprts, prts->p, n_alloced);
   int ierr = posix_memalign(&m, 16, n_alloced * sizeof(*pp->particles));
   assert(ierr == 0);
-  pp->particles = (particle_cbe_t *) m;
+  pp->particles = (particle_cbe_t*)m;
 }
 
-void particles_cbe_realloc(struct psc_particles *prts, particles_cbe_t *pp, int new_n_part)
+void particles_cbe_realloc(struct psc_particles* prts, particles_cbe_t* pp,
+                           int new_n_part)
 {
   if (new_n_part <= psc_mparticles_n_alloced(prts->mprts, prts->p))
     return;
-  void * m; 
+  void* m;
   int n_alloced = new_n_part * 1.2;
   psc_mparticles_set_n_alloced(prts->mprts, prts->p, n_alloced);
   free(pp->particles);
   int ierr = posix_memalign(&m, 16, n_alloced * sizeof(*pp->particles));
   assert(ierr == 0);
-  pp->particles = (particle_cbe_t *) m;
+  pp->particles = (particle_cbe_t*)m;
 }
 
-void particles_cbe_free(struct psc_particles *prts, particles_cbe_t *pp)
+void particles_cbe_free(struct psc_particles* prts, particles_cbe_t* pp)
 {
   free(pp->particles);
   psc_mparticles_set_n_alloced(prts->mprts, prts->p, 0);
   pp->particles = NULL;
 }
 
-void
-psc_mparticles_cbe_get_cbe(struct psc_mparticles *particles, void *_particles_base)
+void psc_mparticles_cbe_get_cbe(struct psc_mparticles* particles,
+                                void* _particles_base)
 {
-  struct psc_mparticles *particles_base = _particles_base;
+  struct psc_mparticles* particles_base = _particles_base;
   *particles = *particles_base;
 }
 
-void
-psc_mparticles_cbe_put_cbe(struct psc_mparticles *particles, void *particles_base)
-{
-}
+void psc_mparticles_cbe_put_cbe(struct psc_mparticles* particles,
+                                void* particles_base)
+{}
 
 #if 0
 static bool __gotten;
 #endif
 
-void
-psc_mparticles_c_get_cbe(struct psc_mparticles *particles, void *_particles_base)
+void psc_mparticles_c_get_cbe(struct psc_mparticles* particles,
+                              void* _particles_base)
 {
 #if 0
   static int pr;
@@ -104,11 +104,9 @@ psc_mparticles_c_get_cbe(struct psc_mparticles *particles, void *_particles_base
   }
 #endif
 }
-      
 
-
-void
-psc_mparticles_c_cbe_put_cbe(struct psc_mparticles *particles, void *_particles_base)
+void psc_mparticles_c_cbe_put_cbe(struct psc_mparticles* particles,
+                                  void* _particles_base)
 {
 #if 0
   assert(__gotten);
@@ -139,5 +137,3 @@ psc_mparticles_c_cbe_put_cbe(struct psc_mparticles *particles, void *_particles_
   free(particles->data);
 #endif
 }
-
-

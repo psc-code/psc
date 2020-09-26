@@ -7,6 +7,4 @@
 // CollisionBase
 
 class CollisionBase
-{
-};
-
+{};

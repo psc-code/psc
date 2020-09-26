@@ -5,16 +5,14 @@
 
 #include "pushp.hxx"
 
-template<typename real_t>
+template <typename real_t>
 class PI
 {
 public:
   using Real3 = Vec3<real_t>;
-  
-  PI(const Grid_t& grid)
-    : dxi_{ Real3{ 1., 1., 1. } / Real3(grid.domain.dx) }
-  {}
-  
+
+  PI(const Grid_t& grid) : dxi_{Real3{1., 1., 1.} / Real3(grid.domain.dx)} {}
+
   // ----------------------------------------------------------------------
   // find_idx_off_1st_rel
 
@@ -30,7 +28,8 @@ public:
   // ----------------------------------------------------------------------
   // find_idx_off_pos_1st_rel
 
-  void find_idx_off_pos_1st_rel(real_t xi[3], int lg[3], real_t og[3], real_t pos[3], real_t shift)
+  void find_idx_off_pos_1st_rel(real_t xi[3], int lg[3], real_t og[3],
+                                real_t pos[3], real_t shift)
   {
     for (int d = 0; d < 3; d++) {
       pos[d] = xi[d] * dxi_[d] + shift;
@@ -42,4 +41,3 @@ public:
 private:
   Real3 dxi_;
 };
-

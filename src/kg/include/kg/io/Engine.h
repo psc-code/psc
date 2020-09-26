@@ -51,7 +51,8 @@ public:
   void get(const std::string& pfx, T& datum, Args&&... args);
 
   template <class T>
-  void getLocal(const std::string& pfx, T& datum, Mode launch = Mode::NonBlocking);
+  void getLocal(const std::string& pfx, T& datum,
+                Mode launch = Mode::NonBlocking);
 
   template <template <typename...> class Var, class T, class... Args>
   void get(const std::string& pfx, T& datum, Args&&... args);

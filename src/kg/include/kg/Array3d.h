@@ -25,9 +25,7 @@ struct LayoutSOA
 class Box3
 {
 public:
-  Box3(const Int3& ib, const Int3& im)
-    : ib_{ib}, im_{im}
-  {}
+  Box3(const Int3& ib, const Int3& im) : ib_{ib}, im_{im} {}
 
   KG_INLINE int size() const { return im_[0] * im_[1] * im_[2]; }
 

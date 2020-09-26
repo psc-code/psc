@@ -34,8 +34,7 @@ public:
 
   template <typename T>
   void getVariable(const std::string& name, T* data, Mode launch,
-                   const Extents& selection,
-                   const Extents& memory_selection);
+                   const Extents& selection, const Extents& memory_selection);
 
   Dims shapeVariable(const std::string& name) const;
 
@@ -55,4 +54,3 @@ private:
 } // namespace kg
 
 #include "File.inl"
-

@@ -17,4 +17,3 @@ struct BS444
   using y = std::integral_constant<unsigned int, 4>;
   using z = std::integral_constant<unsigned int, 4>;
 };
-

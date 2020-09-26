@@ -9,29 +9,33 @@
 // ======================================================================
 // conversion
 
-template<typename MparticlesCuda, typename MP>
-static void copy_from(MparticlesBase& mprts_base, MparticlesBase& mprts_other_base)
+template <typename MparticlesCuda, typename MP>
+static void copy_from(MparticlesBase& mprts_base,
+                      MparticlesBase& mprts_other_base)
 {
   auto& mprts = dynamic_cast<MparticlesCuda&>(mprts_base);
   auto& mprts_other = dynamic_cast<MP&>(mprts_other_base);
   auto n_prts_by_patch = mprts_other.sizeByPatch();
-  //mp.reserve_all(n_prts_by_patch); FIXME, would still be a good hint for the injector
+  // mp.reserve_all(n_prts_by_patch); FIXME, would still be a good hint for the
+  // injector
   mprts.clear();
 
   auto accessor = mprts_other.accessor();
   auto inj = mprts.injector();
   for (int p = 0; p < mprts.n_patches(); p++) {
     auto injector = inj[p];
-    for (auto prt: accessor[p]) {
+    for (auto prt : accessor[p]) {
       using real_t = typename MparticlesCuda::real_t;
       using Real3 = typename MparticlesCuda::Real3;
-      injector.raw({Real3(prt.x()), Real3(prt.u()), real_t(prt.qni_wni()), prt.kind(), prt.id(), prt.tag()});
+      injector.raw({Real3(prt.x()), Real3(prt.u()), real_t(prt.qni_wni()),
+                    prt.kind(), prt.id(), prt.tag()});
     }
   }
 }
 
-template<typename MparticlesCuda, typename MP>
-static void copy_to(MparticlesBase& mprts_base, MparticlesBase& mprts_other_base)
+template <typename MparticlesCuda, typename MP>
+static void copy_to(MparticlesBase& mprts_base,
+                    MparticlesBase& mprts_other_base)
 {
   auto& mprts = dynamic_cast<MparticlesCuda&>(mprts_base);
   auto& mprts_other = dynamic_cast<MP&>(mprts_other_base);
@@ -39,12 +43,15 @@ static void copy_to(MparticlesBase& mprts_base, MparticlesBase& mprts_other_base
   mprts_other.reserve_all(n_prts_by_patch);
   mprts_other.clear();
 
-  auto accessor = mprts.accessor(); // FIXME, should we use this in the first place?
+  auto accessor =
+    mprts.accessor(); // FIXME, should we use this in the first place?
   for (int p = 0; p < mprts.n_patches(); p++) {
-    for (auto prt: accessor[p]) {
+    for (auto prt : accessor[p]) {
       using real_t = typename MP::real_t;
       using Real3 = typename MP::Real3;
-      mprts_other[p].push_back({Real3(prt.x()), Real3(prt.u()), real_t(prt.qni_wni()), prt.kind(), prt.id(), prt.tag()});
+      mprts_other[p].push_back({Real3(prt.x()), Real3(prt.u()),
+                                real_t(prt.qni_wni()), prt.kind(), prt.id(),
+                                prt.tag()});
     }
   }
 }
@@ -52,16 +59,20 @@ static void copy_to(MparticlesBase& mprts_base, MparticlesBase& mprts_other_base
 // ======================================================================
 // conversion to "single"/"double"
 
-template<typename BS>
+template <typename BS>
 const typename MparticlesCuda<BS>::Convert MparticlesCuda<BS>::convert_to_ = {
-  { std::type_index(typeid(MparticlesSingle)), copy_to<MparticlesCuda<BS>, MparticlesSingle>   },
-  { std::type_index(typeid(MparticlesDouble)), copy_to<MparticlesCuda<BS>, MparticlesDouble>   },
+  {std::type_index(typeid(MparticlesSingle)),
+   copy_to<MparticlesCuda<BS>, MparticlesSingle>},
+  {std::type_index(typeid(MparticlesDouble)),
+   copy_to<MparticlesCuda<BS>, MparticlesDouble>},
 };
 
-template<typename BS>
+template <typename BS>
 const typename MparticlesCuda<BS>::Convert MparticlesCuda<BS>::convert_from_ = {
-  { std::type_index(typeid(MparticlesSingle)), copy_from<MparticlesCuda<BS>, MparticlesSingle>   },
-  { std::type_index(typeid(MparticlesDouble)), copy_from<MparticlesCuda<BS>, MparticlesDouble>   },
+  {std::type_index(typeid(MparticlesSingle)),
+   copy_from<MparticlesCuda<BS>, MparticlesSingle>},
+  {std::type_index(typeid(MparticlesDouble)),
+   copy_from<MparticlesCuda<BS>, MparticlesDouble>},
 };
 
 // ======================================================================
@@ -185,6 +196,6 @@ psc_mparticles_cuda_read(struct psc_mparticles *_mprts, struct mrc_io *io)
 
 // ----------------------------------------------------------------------
 // psc_mparticles: subclass "cuda"
-  
+
 template struct MparticlesCuda<BS144>;
 template struct MparticlesCuda<BS444>;

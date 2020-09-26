@@ -8,8 +8,7 @@
 
 #include <mpi.h>
 
-int
-main(int argc, char **argv)
+int main(int argc, char** argv)
 {
 #if 0
   psc_testing_init(&argc, &argv);

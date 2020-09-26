@@ -150,8 +150,7 @@ run_test(bool is_ref, const char *s_push_particles, double eps_particles, double
 }
 #endif
 
-int
-main(int argc, char **argv)
+int main(int argc, char** argv)
 {
 #if 0
   psc_testing_init(&argc, &argv);

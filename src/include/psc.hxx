@@ -286,7 +286,8 @@ struct Psc
     }
 
     // prof_start(pr_time_step_no_comm);
-    // prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
+    // prof_stop(pr_time_step_no_comm); // actual measurements are done w/
+    // restart
 
     if (p_.sort_interval > 0 && timestep % p_.sort_interval == 0) {
       // mpi_printf(comm, "***** Sorting...\n");
@@ -620,10 +621,7 @@ private:
   // ----------------------------------------------------------------------
   // diagnostics
 
-  void diagnostics()
-  {
-    diagnostics_(mprts_, mflds_);
-  }
+  void diagnostics() { diagnostics_(mprts_, mflds_); }
 
   // ----------------------------------------------------------------------
   // print_status

@@ -16,9 +16,10 @@
 //
 // FIXME, duplicated and only need fixed shift, no og here
 
-static inline void
-find_idx_off_1st_rel(particle_acc_real_t xi[3], int lg[3], particle_acc_real_t og[3],
-		     particle_acc_real_t shift, particle_acc_real_t dxi[3])
+static inline void find_idx_off_1st_rel(particle_acc_real_t xi[3], int lg[3],
+                                        particle_acc_real_t og[3],
+                                        particle_acc_real_t shift,
+                                        particle_acc_real_t dxi[3])
 {
   for (int d = 0; d < 3; d++) {
     particle_acc_real_t pos = xi[d] * dxi[d] + shift;
@@ -30,13 +31,13 @@ find_idx_off_1st_rel(particle_acc_real_t xi[3], int lg[3], particle_acc_real_t o
 // ----------------------------------------------------------------------
 // psc_particles_acc_get_b_idx
 
-static unsigned int
-psc_particles_acc_get_b_idx(struct psc_particles *prts, int n)
+static unsigned int psc_particles_acc_get_b_idx(struct psc_particles* prts,
+                                                int n)
 {
   // FIXME, a particle which ends up exactly on the high boundary
   // should not be considered oob -- well, it's a complicated business,
   // but at least for certain b.c.s it's legal
-  struct psc_particles_acc *sub = psc_particles_acc(prts);
+  struct psc_particles_acc* sub = psc_particles_acc(prts);
 
   particle_acc_t prt;
   PARTICLE_ACC_LOAD_POS(prt, sub->xi4, n);
@@ -48,9 +49,8 @@ psc_particles_acc_get_b_idx(struct psc_particles *prts, int n)
     b_pos[d] /= psc_particles_acc_bs[d];
   }
 
-  if (b_pos[0] >= 0 && b_pos[0] < b_mx[0] &&
-      b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
-      b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
+  if (b_pos[0] >= 0 && b_pos[0] < b_mx[0] && b_pos[1] >= 0 &&
+      b_pos[1] < b_mx[1] && b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
     unsigned int b_idx = (b_pos[2] * b_mx[1] + b_pos[1]) * b_mx[0] + b_pos[0];
     assert(b_idx < sub->nr_blocks);
     return b_idx;
@@ -69,10 +69,9 @@ psc_particles_acc_get_b_idx(struct psc_particles *prts, int n)
 // b_idx, b_ids and b_cnt are not valid after returning
 // (they shouldn't be needed for anything, either)
 
-static void
-psc_particles_acc_sort(struct psc_particles *prts)
+static void psc_particles_acc_sort(struct psc_particles* prts)
 {
-  struct psc_particles_acc *sub = psc_particles_acc(prts);
+  struct psc_particles_acc* sub = psc_particles_acc(prts);
 
   for (int b = 0; b < sub->nr_blocks; b++) {
     sub->b_cnt[b] = 0;
@@ -85,7 +84,7 @@ psc_particles_acc_sort(struct psc_particles *prts)
     sub->b_idx[n] = b_idx;
     sub->b_cnt[b_idx]++;
   }
-  
+
   // b_off = prefix sum(b_cnt), zero b_cnt
   int sum = 0;
   for (int b = 0; b <= sub->nr_blocks; b++) {
@@ -107,13 +106,13 @@ psc_particles_acc_sort(struct psc_particles *prts)
   // reorder into alt particle array
   // WARNING: This is reversed to what reorder() does!
   for (int n = 0; n < prts->n_part; n++) {
-    sub->xi4_alt [sub->b_ids[n]] = sub->xi4 [n];
+    sub->xi4_alt[sub->b_ids[n]] = sub->xi4[n];
     sub->pxi4_alt[sub->b_ids[n]] = sub->pxi4[n];
   }
-  
+
   // swap in alt array
-  float4 *tmp_xi4 = sub->xi4;
-  float4 *tmp_pxi4 = sub->pxi4;
+  float4* tmp_xi4 = sub->xi4;
+  float4* tmp_pxi4 = sub->pxi4;
   sub->xi4 = sub->xi4_alt;
   sub->pxi4 = sub->pxi4_alt;
   sub->xi4_alt = tmp_xi4;
@@ -128,10 +127,9 @@ psc_particles_acc_sort(struct psc_particles *prts)
 // block_idx, and that that b_off properly contains the range of
 // particles in each block.
 
-static void
-psc_particles_acc_check(struct psc_particles *prts)
+static void psc_particles_acc_check(struct psc_particles* prts)
 {
-  struct psc_particles_acc *sub = psc_particles_acc(prts);
+  struct psc_particles_acc* sub = psc_particles_acc(prts);
 
   assert(prts->n_part <= sub->n_alloced);
 
@@ -149,13 +147,13 @@ psc_particles_acc_check(struct psc_particles *prts)
   }
 }
 
-static void
-copy_from(int p, struct psc_mparticles *mprts,
-	  struct psc_mparticles *mprts_acc, unsigned int flags,
-	  void (*get_particle)(particle_double_t *prt, int n, struct psc_particles *prts))
+static void copy_from(int p, struct psc_mparticles* mprts,
+                      struct psc_mparticles* mprts_acc, unsigned int flags,
+                      void (*get_particle)(particle_double_t* prt, int n,
+                                           struct psc_particles* prts))
 {
-  struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-  struct psc_particles *prts_acc = psc_mparticles_get_patch(mprts_acc, p);
+  struct psc_particles* prts = psc_mparticles_get_patch(mprts, p);
+  struct psc_particles* prts_acc = psc_mparticles_get_patch(mprts_acc, p);
   int n_prts = psc_particles_size(prts_acc);
   mprts[p].resize(n_prts);
   for (int n = 0; n < n_prts; n++) {
@@ -166,13 +164,13 @@ copy_from(int p, struct psc_mparticles *mprts,
   }
 }
 
-static void
-copy_to(int p, struct psc_mparticles *mprts,
-	struct psc_mparticles *mprts_acc, unsigned int flags,
-	void (*put_particle)(particle_double_t *prt, int n, struct psc_particles *prts))
+static void copy_to(int p, struct psc_mparticles* mprts,
+                    struct psc_mparticles* mprts_acc, unsigned int flags,
+                    void (*put_particle)(particle_double_t* prt, int n,
+                                         struct psc_particles* prts))
 {
-  struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-  struct psc_particles *prts_acc = psc_mparticles_get_patch(mprts_acc, p);
+  struct psc_particles* prts = psc_mparticles_get_patch(mprts, p);
+  struct psc_particles* prts_acc = psc_mparticles_get_patch(mprts_acc, p);
   int n_prts = psc_particles_size(prts);
   mprts_acc[p].resize(n_prts);
   for (int n = 0; n < n_prts; n++) {
@@ -186,78 +184,77 @@ copy_to(int p, struct psc_mparticles *mprts,
 // ======================================================================
 // conversion to/from "single"
 
-static void
-get_particle_single(particle_acc_t *prt, int n, struct psc_particles *prts_single)
+static void get_particle_single(particle_acc_t* prt, int n,
+                                struct psc_particles* prts_single)
 {
-  particle_single_t *prt_single = particles_single_get_one(prts_single, n);
+  particle_single_t* prt_single = particles_single_get_one(prts_single, n);
 
-  prt->xi      = prt_single->xi;
-  prt->yi      = prt_single->yi;
-  prt->zi      = prt_single->zi;
-  prt->kind    = prt_single->kind;
-  prt->pxi     = prt_single->pxi;
-  prt->pyi     = prt_single->pyi;
-  prt->pzi     = prt_single->pzi;
+  prt->xi = prt_single->xi;
+  prt->yi = prt_single->yi;
+  prt->zi = prt_single->zi;
+  prt->kind = prt_single->kind;
+  prt->pxi = prt_single->pxi;
+  prt->pyi = prt_single->pyi;
+  prt->pzi = prt_single->pzi;
   prt->qni_wni = prt_single->qni_wni;
 }
 
-static void
-put_particle_single(particle_acc_t *prt, int n, struct psc_particles *prts_single)
+static void put_particle_single(particle_acc_t* prt, int n,
+                                struct psc_particles* prts_single)
 {
-  particle_single_t *prt_single = particles_single_get_one(prts_single, n);
+  particle_single_t* prt_single = particles_single_get_one(prts_single, n);
 
-  prt_single->xi      = prt->xi;
-  prt_single->yi      = prt->yi;
-  prt_single->zi      = prt->zi;
-  prt_single->kind    = prt->kind;
-  prt_single->pxi     = prt->pxi;
-  prt_single->pyi     = prt->pyi;
-  prt_single->pzi     = prt->pzi;
+  prt_single->xi = prt->xi;
+  prt_single->yi = prt->yi;
+  prt_single->zi = prt->zi;
+  prt_single->kind = prt->kind;
+  prt_single->pxi = prt->pxi;
+  prt_single->pyi = prt->pyi;
+  prt_single->pzi = prt->pzi;
   prt_single->qni_wni = prt->qni_wni;
 }
 
-static void
-psc_particles_acc_copy_to_single(int p, struct psc_mparticles *mprts_base,
-				 struct psc_mparticles *mprts, unsigned int flags)
+static void psc_particles_acc_copy_to_single(int p,
+                                             struct psc_mparticles* mprts_base,
+                                             struct psc_mparticles* mprts,
+                                             unsigned int flags)
 {
   copy_to(p, mprts_base, mprts, flags, put_particle_single);
 }
 
-static void
-psc_particles_acc_copy_from_single(int p, struct psc_mparticles *mprts_base,
-				   struct psc_mparticles *mprts, unsigned int flags)
+static void psc_particles_acc_copy_from_single(
+  int p, struct psc_mparticles* mprts_base, struct psc_mparticles* mprts,
+  unsigned int flags)
 {
   copy_from(p, mprts_base, mprts, flags, get_particle_single);
-  }
+}
 }
 
 // ----------------------------------------------------------------------
 // psc_particles: subclass "acc"
 
 static struct mrc_obj_method psc_particles_acc_methods[] = {
-  MRC_OBJ_METHOD("copy_to_single"  , psc_particles_acc_copy_to_single),
+  MRC_OBJ_METHOD("copy_to_single", psc_particles_acc_copy_to_single),
   MRC_OBJ_METHOD("copy_from_single", psc_particles_acc_copy_from_single),
-  {}
-};
+  {}};
 
 // ======================================================================
 // psc_mparticles: subclass "acc"
-  
+
 // ----------------------------------------------------------------------
 // psc_mparticles_acc_setup
 
-static void
-psc_mparticles_acc_setup(struct psc_mparticles *mprts)
+static void psc_mparticles_acc_setup(struct psc_mparticles* mprts)
 {
-  struct psc_mparticles_acc *sub = psc_mparticles_acc(mprts);
+  struct psc_mparticles_acc* sub = psc_mparticles_acc(mprts);
 
   psc_mparticles_setup_super(mprts);
 
   if (mprts->nr_patches == 0) {
     return;
   }
-  
-  int *gdims = ppsc->domain.gdims;
+
+  int* gdims = ppsc->domain.gdims;
   for (int d = 0; d < 3; d++) {
     sub->bs[d] = psc_particles_acc_bs[d];
     if (gdims[d] == 1) {
@@ -272,7 +269,7 @@ psc_mparticles_acc_setup(struct psc_mparticles *mprts)
 
   sub->n_part_total = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles* prts = psc_mparticles_get_patch(mprts, p);
 
     sub->n_part_total += prts->n_part;
   }
@@ -283,14 +280,14 @@ psc_mparticles_acc_setup(struct psc_mparticles *mprts)
   sub->xi4_alt = calloc(sub->n_alloced_total, sizeof(*sub->xi4_alt));
   sub->pxi4_alt = calloc(sub->n_alloced_total, sizeof(*sub->pxi4_alt));
   sub->b_off = calloc(sub->nr_blocks_total + 2, sizeof(*sub->b_off));
-  
-  float4 *xi4 = sub->xi4;
-  float4 *pxi4 = sub->pxi4;
-  float4 *xi4_alt = sub->xi4_alt;
-  float4 *pxi4_alt = sub->pxi4_alt;
+
+  float4* xi4 = sub->xi4;
+  float4* pxi4 = sub->pxi4;
+  float4* xi4_alt = sub->xi4_alt;
+  float4* pxi4_alt = sub->pxi4_alt;
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_acc *prts_sub = psc_particles_acc(prts);
+    struct psc_particles* prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_acc* prts_sub = psc_particles_acc(prts);
 
     prts_sub->n_alloced = prts->n_part;
 
@@ -320,14 +317,13 @@ psc_mparticles_acc_setup(struct psc_mparticles *mprts)
 // ----------------------------------------------------------------------
 // psc_mparticles_acc_destroy
 
-static void
-psc_mparticles_acc_destroy(struct psc_mparticles *mprts)
+static void psc_mparticles_acc_destroy(struct psc_mparticles* mprts)
 {
-  struct psc_mparticles_acc *sub = psc_mparticles_acc(mprts);
+  struct psc_mparticles_acc* sub = psc_mparticles_acc(mprts);
 
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_acc *prts_sub = psc_particles_acc(prts);
+    struct psc_particles* prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_acc* prts_sub = psc_particles_acc(prts);
 
     free(prts_sub->b_idx);
     free(prts_sub->b_ids);
@@ -347,10 +343,9 @@ psc_mparticles_acc_destroy(struct psc_mparticles *mprts)
 //
 // make sure that h_b_off[] is set up properly
 
-static void
-psc_mparticles_acc_check(struct psc_mparticles *mprts)
+static void psc_mparticles_acc_check(struct psc_mparticles* mprts)
 {
-  struct psc_mparticles_acc *sub = psc_mparticles_acc(mprts);
+  struct psc_mparticles_acc* sub = psc_mparticles_acc(mprts);
 
   assert(sub->n_part_total <= sub->n_alloced_total);
 
@@ -373,26 +368,25 @@ psc_mparticles_acc_check(struct psc_mparticles *mprts)
 // ----------------------------------------------------------------------
 // psc_mparticles_acc_setup_internals
 
-static void
-psc_mparticles_acc_setup_internals(struct psc_mparticles *mprts)
+static void psc_mparticles_acc_setup_internals(struct psc_mparticles* mprts)
 {
-  struct psc_mparticles_acc *sub = psc_mparticles_acc(mprts);
+  struct psc_mparticles_acc* sub = psc_mparticles_acc(mprts);
 
   int nr_blocks = sub->nr_blocks;
   // FIXME, should just do the sorting all-in-one
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_acc *prts_sub = psc_particles_acc(prts);
+    struct psc_particles* prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_acc* prts_sub = psc_particles_acc(prts);
 
     psc_particles_acc_sort(prts);
     // make sure there are no oob particles
-    assert(prts_sub->b_off[nr_blocks] == prts_sub->b_off[nr_blocks+1]);
+    assert(prts_sub->b_off[nr_blocks] == prts_sub->b_off[nr_blocks + 1]);
     psc_particles_acc_check(prts);
   }
   // FIXME, to keep consistency with per-patch
   // swap in alt array
-  float4 *tmp_xi4 = sub->xi4;
-  float4 *tmp_pxi4 = sub->pxi4;
+  float4* tmp_xi4 = sub->xi4;
+  float4* tmp_pxi4 = sub->pxi4;
   sub->xi4 = sub->xi4_alt;
   sub->pxi4 = sub->pxi4_alt;
   sub->xi4_alt = tmp_xi4;
@@ -400,8 +394,8 @@ psc_mparticles_acc_setup_internals(struct psc_mparticles *mprts)
 
   unsigned int n_part = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_acc *prts_sub = psc_particles_acc(prts);
+    struct psc_particles* prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_acc* prts_sub = psc_particles_acc(prts);
 
     for (int b = 0; b < nr_blocks; b++) {
       sub->b_off[p * nr_blocks + b] = prts_sub->b_off[b] + n_part;
@@ -418,10 +412,9 @@ psc_mparticles_acc_setup_internals(struct psc_mparticles *mprts)
 // psc_mparticles: subclass "acc"
 
 struct psc_mparticles_ops psc_mparticles_acc_ops = {
-  .name                    = "acc",
-  .size                    = sizeof(struct psc_mparticles_acc),
-  .setup                   = psc_mparticles_acc_setup,
-  .destroy                 = psc_mparticles_acc_destroy,
-  .setup_internals         = psc_mparticles_acc_setup_internals,
+  .name = "acc",
+  .size = sizeof(struct psc_mparticles_acc),
+  .setup = psc_mparticles_acc_setup,
+  .destroy = psc_mparticles_acc_destroy,
+  .setup_internals = psc_mparticles_acc_setup_internals,
 };
-

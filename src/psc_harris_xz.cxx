@@ -811,7 +811,8 @@ void run()
   // -- output fields
   OutputFieldsParams outf_params;
   double output_field_interval = 1.;
-  outf_params.pfield_interval = int((output_field_interval / (phys.wci * grid.dt)));
+  outf_params.pfield_interval =
+    int((output_field_interval / (phys.wci * grid.dt)));
   OutputFields outf{grid, outf_params};
 
   OutputParticlesParams outp_params{};

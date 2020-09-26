@@ -36,15 +36,14 @@ struct CudaMfields : MfieldsCRTP<CudaMfields<S>>
   using Base = MfieldsCRTP<CudaMfields<S>>;
   using Storage = typename Base::Storage;
   using real_t = typename Base::Real;
-  
+
   CudaMfields(const kg::Box3& box, int n_comps, int n_patches)
-    : Base{n_comps, box, n_patches},
-      storage_(n_patches * n_comps * box.size())
+    : Base{n_comps, box, n_patches}, storage_(n_patches * n_comps * box.size())
   {}
 
 private:
   Storage storage_;
-  
+
   KG_INLINE Storage& storageImpl() { return storage_; }
   KG_INLINE const Storage& storageImpl() const { return storage_; }
 
@@ -72,14 +71,14 @@ struct MfieldsCuda : MfieldsBase
     MfieldsCuda& mflds_;
     int idx_;
   };
-  
+
   class Patch
   {
   public:
     Patch(MfieldsCuda& mflds, int p);
-    
+
     Accessor operator()(int m, int i, int j, int k);
-    
+
   private:
     MfieldsCuda& mflds_;
     int p_;
@@ -105,12 +104,12 @@ struct MfieldsCuda : MfieldsBase
   void axpy_comp(int ym, float a, MfieldsCuda& x, int xm);
 
   int index(int m, int i, int j, int k, int p) const;
-  Patch operator[](int p) { return { *this, p }; }
+  Patch operator[](int p) { return {*this, p}; }
 
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
-  
+
   cuda_mfields* cmflds_;
   const Grid_t* grid_;
 };
@@ -125,7 +124,7 @@ void copy(const HMFields& hmflds, MfieldsCuda& mflds);
 struct MfieldsStateCuda : MfieldsStateBase
 {
   using real_t = MfieldsCuda::real_t;
-  
+
   MfieldsStateCuda(const Grid_t& grid)
     : MfieldsStateBase{grid, NR_FIELDS, grid.ibn},
       mflds_{grid, NR_FIELDS, grid.ibn}
@@ -150,12 +149,12 @@ struct MfieldsStateCuda : MfieldsStateBase
 
   MfieldsCuda& mflds() { return mflds_; }
   const MfieldsCuda& mflds() const { return mflds_; }
-  
+
 private:
   MfieldsCuda mflds_;
 };
 
-template<>
+template <>
 struct Mfields_traits<MfieldsCuda>
 {
   static constexpr const char* name = "cuda";

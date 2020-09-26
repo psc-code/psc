@@ -35,8 +35,7 @@ setup_fields(struct psc_mfields *flds_base)
 }
 #endif
 
-int
-main(int argc, char **argv)
+int main(int argc, char** argv)
 {
 #if 0
   psc_testing_init(&argc, &argv);

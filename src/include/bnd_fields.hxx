@@ -7,6 +7,4 @@
 // BndFieldsBase
 
 struct BndFieldsBase
-{
-};
-
+{};

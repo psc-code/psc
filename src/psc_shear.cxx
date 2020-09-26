@@ -1,10 +1,10 @@
 
 #include <psc.h>
-#include <psc_push_particles.h>
-#include <psc_push_fields.h>
-#include <psc_sort.h>
 #include <psc_balance.h>
 #include <psc_particles_as_single.h>
+#include <psc_push_fields.h>
+#include <psc_push_particles.h>
+#include <psc_sort.h>
 
 #include <mrc_params.h>
 #include <mrc_profile.h>
@@ -14,7 +14,8 @@
 
 // ======================================================================
 
-struct psc_shear {
+struct psc_shear
+{
   // parameters
   double mi_over_me;
   double wpe_over_wce;
@@ -28,12 +29,12 @@ struct psc_shear {
 
 #define psc_shear(psc) mrc_to_subobj(psc, struct psc_shear)
 
-#define VAR(x) (void *)offsetof(struct psc_shear, x)
+#define VAR(x) (void*)offsetof(struct psc_shear, x)
 static struct param psc_shear_descr[] = {
-  { "mi_over_me"    , VAR(mi_over_me)      , PARAM_DOUBLE(25.)           },
-  { "wpe_over_wce"  , VAR(wpe_over_wce)    , PARAM_DOUBLE(2.)            },
-  { "Te"            , VAR(Te)              , PARAM_DOUBLE(.000625)       },
-  { "Ti"            , VAR(Ti)              , PARAM_DOUBLE(.000625)       },
+  {"mi_over_me", VAR(mi_over_me), PARAM_DOUBLE(25.)},
+  {"wpe_over_wce", VAR(wpe_over_wce), PARAM_DOUBLE(2.)},
+  {"Te", VAR(Te), PARAM_DOUBLE(.000625)},
+  {"Ti", VAR(Ti), PARAM_DOUBLE(.000625)},
   {},
 };
 #undef VAR
@@ -41,8 +42,7 @@ static struct param psc_shear_descr[] = {
 // ----------------------------------------------------------------------
 // psc_shear_create
 
-static void
-psc_shear_create(struct psc *psc)
+static void psc_shear_create(struct psc* psc)
 {
   psc_default_dimensionless(psc);
 
@@ -79,10 +79,9 @@ psc_shear_create(struct psc *psc)
 // the parameters are now set, calculate quantities to initialize fields,
 // particles
 
-static void
-psc_shear_setup(struct psc *psc)
+static void psc_shear_setup(struct psc* psc)
 {
-  struct psc_shear *sub = psc_shear(psc);
+  struct psc_shear* sub = psc_shear(psc);
 
   double me = 1.;
   double mi = me * sub->mi_over_me;
@@ -122,24 +121,22 @@ psc_shear_setup(struct psc *psc)
 // ----------------------------------------------------------------------
 // psc_shear_init_field
 
-static double
-psc_shear_init_field(struct psc *psc, double x[3], int m)
+static double psc_shear_init_field(struct psc* psc, double x[3], int m)
 {
-  struct psc_shear *sub = psc_shear(psc);
+  struct psc_shear* sub = psc_shear(psc);
 
   switch (m) {
-  case HZ: return sub->B0;
+    case HZ: return sub->B0;
 
-  default: return 0.;
+    default: return 0.;
   }
 }
 
 // ----------------------------------------------------------------------
 // psc_shear_init_npt
 
-static void
-psc_shear_init_npt(struct psc *psc, int kind, double x[3],
-				struct psc_particle_npt *npt)
+static void psc_shear_init_npt(struct psc* psc, int kind, double x[3],
+                               struct psc_particle_npt* npt)
 {
   npt->n = 1.;
 }
@@ -147,8 +144,7 @@ psc_shear_init_npt(struct psc *psc, int kind, double x[3],
 // ----------------------------------------------------------------------
 // psc_shear_read
 
-static void
-psc_shear_read(struct psc *psc, struct mrc_io *io)
+static void psc_shear_read(struct psc* psc, struct mrc_io* io)
 {
   // do nothing -- but having this function is important so that
   // psc_shear_create() doesn't get called instead FIXME?
@@ -159,21 +155,20 @@ psc_shear_read(struct psc *psc, struct mrc_io *io)
 // psc_shear_ops
 
 struct psc_ops psc_shear_ops = {
-  .name             = "kh",
-  .size             = sizeof(struct psc_shear),
-  .param_descr      = psc_shear_descr,
-  .create           = psc_shear_create,
-  .read             = psc_shear_read,
-  .setup            = psc_shear_setup,
-  .init_field       = psc_shear_init_field,
-  .init_npt         = psc_shear_init_npt,
+  .name = "kh",
+  .size = sizeof(struct psc_shear),
+  .param_descr = psc_shear_descr,
+  .create = psc_shear_create,
+  .read = psc_shear_read,
+  .setup = psc_shear_setup,
+  .init_field = psc_shear_init_field,
+  .init_npt = psc_shear_init_npt,
 };
 
 // ======================================================================
 // main
 
-int
-main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   return psc_main(&argc, &argv, &psc_shear_ops);
 }

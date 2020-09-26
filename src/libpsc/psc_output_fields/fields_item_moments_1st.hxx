@@ -9,7 +9,7 @@
 
 template <typename Particle>
 static inline void _particle_calc_vxi(const Particle& prt,
-                                     typename Particle::real_t vxi[3])
+                                      typename Particle::real_t vxi[3])
 {
   typename Particle::real_t root =
     1.f / std::sqrt(1.f + sqr(prt.u()[0]) + sqr(prt.u()[1]) + sqr(prt.u()[2]));
@@ -244,10 +244,13 @@ public:
 // FIXME: add KE
 
 template <typename BS>
-class Moments_1st<MparticlesCuda<BS>, MfieldsSingle> : public ItemMomentCRTP<Moments_1st<MparticlesCuda<BS>, MfieldsSingle>, MfieldsSingle>
+class Moments_1st<MparticlesCuda<BS>, MfieldsSingle>
+  : public ItemMomentCRTP<Moments_1st<MparticlesCuda<BS>, MfieldsSingle>,
+                          MfieldsSingle>
 {
 public:
-  using Base = ItemMomentCRTP<Moments_1st<MparticlesCuda<BS>, MfieldsSingle>, MfieldsSingle>;
+  using Base = ItemMomentCRTP<Moments_1st<MparticlesCuda<BS>, MfieldsSingle>,
+                              MfieldsSingle>;
   using Mparticles = MparticlesCuda<BS>;
   using Mfields = MfieldsSingle;
 
@@ -258,10 +261,7 @@ public:
   constexpr static int n_moments = Sub::n_moments;
   static char const* name() { return Sub::name(); }
 
-  static int n_comps(const Grid_t& grid)
-  {
-    return Sub::n_comps(grid);
-  }
+  static int n_comps(const Grid_t& grid) { return Sub::n_comps(grid); }
 
   std::vector<std::string> comp_names()
   {
@@ -286,7 +286,8 @@ public:
     using Real = typename Particle::real_t;
     using R = Real;
 
-    auto deposit = Deposit1stCc<MparticlesSingle, Mfields>{h_mprts, Base::mres_};
+    auto deposit =
+      Deposit1stCc<MparticlesSingle, Mfields>{h_mprts, Base::mres_};
 
     auto accessor = h_mprts.accessor();
 
@@ -295,73 +296,84 @@ public:
       deposit.flds_ = deposit.mflds_[p];
       auto flds = deposit.mflds_[p];
       for (auto prt : accessor[p]) {
-	int mm = prt.kind() * n_moments;
-	Real vxi[3];
-	_particle_calc_vxi(prt, vxi);
+        int mm = prt.kind() * n_moments;
+        Real vxi[3];
+        _particle_calc_vxi(prt, vxi);
 
-	auto xi = prt.x(); /* don't shift back in time */
-	R u = xi[0] * deposit.dxi_[0] - .5f;
-	R v = xi[1] * deposit.dxi_[1] - .5f;
-	R w = xi[2] * deposit.dxi_[2] - .5f;
+        auto xi = prt.x(); /* don't shift back in time */
+        R u = xi[0] * deposit.dxi_[0] - .5f;
+        R v = xi[1] * deposit.dxi_[1] - .5f;
+        R w = xi[2] * deposit.dxi_[2] - .5f;
 
-	int jx = fint(u);
-	int jy = fint(v);
-	int jz = fint(w);
-	R h1 = u - jx;
-	R h2 = v - jy;
-	R h3 = w - jz;
-	
-	R g[2][3] = {{ 1.f - h1, 1.f - h2, 1.f - h3 },
-		     { h1, h2, h3 }};
-	
-	int jxd = 1, jyd = 1, jzd = 1;
-	if (deposit.is_invar_[0]) {
-	  jx = 0;
-	  g[0][0] = 1.;
-	  g[1][0] = 0.;
-	  jxd = 0;
-	}
-	if (deposit.is_invar_[1]) {
-	  jy = 0;
-	  g[0][1] = 1.;
-	  g[1][1] = 0.;
-	  jyd = 0;
-	}
-	if (deposit.is_invar_[2]) {
-	  jz = 0;
-	  g[0][2] = 1.;
-	  g[1][2] = 0.;
-	  jzd = 0;
-	}
+        int jx = fint(u);
+        int jy = fint(v);
+        int jz = fint(w);
+        R h1 = u - jx;
+        R h2 = v - jy;
+        R h3 = w - jz;
 
-	assert(jx >= -1 && jx < deposit.ldims_[0]);
-	assert(jy >= -1 && jy < deposit.ldims_[1]);
-	assert(jz >= -1 && jz < deposit.ldims_[2]);
+        R g[2][3] = {{1.f - h1, 1.f - h2, 1.f - h3}, {h1, h2, h3}};
 
-	R fnq = prt.w() * deposit.fnqs_;
+        int jxd = 1, jyd = 1, jzd = 1;
+        if (deposit.is_invar_[0]) {
+          jx = 0;
+          g[0][0] = 1.;
+          g[1][0] = 0.;
+          jxd = 0;
+        }
+        if (deposit.is_invar_[1]) {
+          jy = 0;
+          g[0][1] = 1.;
+          g[1][1] = 0.;
+          jyd = 0;
+        }
+        if (deposit.is_invar_[2]) {
+          jz = 0;
+          g[0][2] = 1.;
+          g[1][2] = 0.;
+          jzd = 0;
+        }
 
-	R val = prt.q();
-	int d[3];
-	for (d[2] = 0; d[2] <= jzd; d[2]++) {
-	  for (d[1] = 0; d[1] <= jyd; d[1]++) {
-	    for (d[0] = 0; d[0] <= jxd; d[0]++) {
-	      R fac = fnq * g[d[0]][0] * g[d[1]][1] * g[d[2]][2];
-	      flds(mm +  0, jx + d[0], jy + d[1], jz + d[2]) +=  fac * prt.q();
-	      flds(mm +  1, jx + d[0], jy + d[1], jz + d[2]) +=  fac * prt.q() * vxi[0];
-	      flds(mm +  2, jx + d[0], jy + d[1], jz + d[2]) +=  fac * prt.q() * vxi[1];
-	      flds(mm +  3, jx + d[0], jy + d[1], jz + d[2]) +=  fac * prt.q() * vxi[2];
-	      flds(mm +  4, jx + d[0], jy + d[1], jz + d[2]) +=  fac * prt.m() * prt.u()[0];
-	      flds(mm +  5, jx + d[0], jy + d[1], jz + d[2]) +=  fac * prt.m() * prt.u()[1];
-	      flds(mm +  6, jx + d[0], jy + d[1], jz + d[2]) +=  fac * prt.m() * prt.u()[2];
-	      flds(mm +  7, jx + d[0], jy + d[1], jz + d[2]) +=  fac * prt.m() * prt.u()[0] * vxi[0];
-	      flds(mm +  8, jx + d[0], jy + d[1], jz + d[2]) +=  fac * prt.m() * prt.u()[1] * vxi[1];
-	      flds(mm +  9, jx + d[0], jy + d[1], jz + d[2]) +=  fac * prt.m() * prt.u()[2] * vxi[2];
-	      flds(mm + 10, jx + d[0], jy + d[1], jz + d[2]) +=  fac * prt.m() * prt.u()[0] * vxi[1];
-	      flds(mm + 11, jx + d[0], jy + d[1], jz + d[2]) +=  fac * prt.m() * prt.u()[1] * vxi[2];
-	      flds(mm + 12, jx + d[0], jy + d[1], jz + d[2]) +=  fac * prt.m() * prt.u()[2] * vxi[0];
-	    }
-	  }
-	}
+        assert(jx >= -1 && jx < deposit.ldims_[0]);
+        assert(jy >= -1 && jy < deposit.ldims_[1]);
+        assert(jz >= -1 && jz < deposit.ldims_[2]);
+
+        R fnq = prt.w() * deposit.fnqs_;
+
+        R val = prt.q();
+        int d[3];
+        for (d[2] = 0; d[2] <= jzd; d[2]++) {
+          for (d[1] = 0; d[1] <= jyd; d[1]++) {
+            for (d[0] = 0; d[0] <= jxd; d[0]++) {
+              R fac = fnq * g[d[0]][0] * g[d[1]][1] * g[d[2]][2];
+              flds(mm + 0, jx + d[0], jy + d[1], jz + d[2]) += fac * prt.q();
+              flds(mm + 1, jx + d[0], jy + d[1], jz + d[2]) +=
+                fac * prt.q() * vxi[0];
+              flds(mm + 2, jx + d[0], jy + d[1], jz + d[2]) +=
+                fac * prt.q() * vxi[1];
+              flds(mm + 3, jx + d[0], jy + d[1], jz + d[2]) +=
+                fac * prt.q() * vxi[2];
+              flds(mm + 4, jx + d[0], jy + d[1], jz + d[2]) +=
+                fac * prt.m() * prt.u()[0];
+              flds(mm + 5, jx + d[0], jy + d[1], jz + d[2]) +=
+                fac * prt.m() * prt.u()[1];
+              flds(mm + 6, jx + d[0], jy + d[1], jz + d[2]) +=
+                fac * prt.m() * prt.u()[2];
+              flds(mm + 7, jx + d[0], jy + d[1], jz + d[2]) +=
+                fac * prt.m() * prt.u()[0] * vxi[0];
+              flds(mm + 8, jx + d[0], jy + d[1], jz + d[2]) +=
+                fac * prt.m() * prt.u()[1] * vxi[1];
+              flds(mm + 9, jx + d[0], jy + d[1], jz + d[2]) +=
+                fac * prt.m() * prt.u()[2] * vxi[2];
+              flds(mm + 10, jx + d[0], jy + d[1], jz + d[2]) +=
+                fac * prt.m() * prt.u()[0] * vxi[1];
+              flds(mm + 11, jx + d[0], jy + d[1], jz + d[2]) +=
+                fac * prt.m() * prt.u()[1] * vxi[2];
+              flds(mm + 12, jx + d[0], jy + d[1], jz + d[2]) +=
+                fac * prt.m() * prt.u()[2] * vxi[0];
+            }
+          }
+        }
       }
     }
     prof_stop(pr2);
