@@ -101,7 +101,7 @@ struct InjectFoilParams
   double yl, yh;
   double zl, zh;
   double n;
-  double Te_he, Te, Ti;
+  double Te_HE, Te, Ti;
 };
 
 class InjectFoil : public InjectFoilParams
@@ -510,7 +510,7 @@ void run()
   inject_foil_params.zl = -target_zwidth * g.d_i;
   inject_foil_params.zh = target_zwidth * g.d_i;
   inject_foil_params.n = g.target_n;
-  inject_foil_params.Te_he = g.target_Te_HE;
+  inject_foil_params.Te_HE = g.target_Te_HE;
   inject_foil_params.Te = g.target_Te;
   inject_foil_params.Ti = g.target_Ti;
   InjectFoil inject_target{inject_foil_params};
