@@ -18,7 +18,8 @@ struct CollisionNone : CollisionBase
   CollisionNone(MPI_Comm comm, int interval, double nu) {}
 
   template <typename Mparticles>
-  void operator()(Mparticles& mprts_base) {}
+  void operator()(Mparticles& mprts_base)
+  {}
 };
 
 void* global_collision; // FIXME
@@ -26,7 +27,7 @@ void* global_collision; // FIXME
 // ======================================================================
 // psc_collision: subclass "single"/"double"
 
-template<typename Collision>
+template <typename Collision>
 struct Item_coll_stats
 {
   using MfieldsState = typename Collision::MfieldsState;
@@ -34,16 +35,18 @@ struct Item_coll_stats
 
   constexpr static const char* name = "coll_stats";
   constexpr static int n_comps = Collision::NR_STATS;
-  static std::vector<std::string> fld_names() {
-    return { "coll_nudt_min", "coll_nudt_med", "coll_nudt_max",
-	"coll_nudt_large", "coll_ncoll" }; }
+  static std::vector<std::string> fld_names()
+  {
+    return {"coll_nudt_min", "coll_nudt_med", "coll_nudt_max",
+            "coll_nudt_large", "coll_ncoll"};
+  }
   constexpr static int flags = 0;
 
   static void run(MfieldsState& mflds, Mfields& mres)
   {
     assert(global_collision);
     Collision& coll = *reinterpret_cast<Collision*>(global_collision);
-    
+
     for (int m = 0; m < coll.NR_STATS; m++) {
       // FIXME, copy could be avoided (?)
       mres.copy_comp(m, coll.mflds_stats_, m);
@@ -51,7 +54,7 @@ struct Item_coll_stats
   }
 };
 
-template<typename Collision>
+template <typename Collision>
 struct Item_coll_rei
 {
   using MfieldsState = typename Collision::MfieldsState;
@@ -59,8 +62,9 @@ struct Item_coll_rei
 
   constexpr static const char* name = "coll_rei";
   constexpr static int n_comps = 3;
-  static std::vector<std::string> fld_names() {
-    return { "coll_rei_x", "coll_rei_y", "coll_rei_z" };
+  static std::vector<std::string> fld_names()
+  {
+    return {"coll_rei_x", "coll_rei_y", "coll_rei_z"};
   }
   constexpr static int flags = 0;
 
@@ -68,11 +72,10 @@ struct Item_coll_rei
   {
     assert(global_collision);
     Collision& coll = *reinterpret_cast<Collision*>(global_collision);
-    
+
     for (int m = 0; m < 3; m++) {
       // FIXME, copy could be avoided (?)
       mres.copy_comp(m, coll.mflds_rei_, m);
     }
   }
 };
-  

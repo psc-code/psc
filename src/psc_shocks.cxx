@@ -1,7 +1,7 @@
 
-#include <psc.h>
-#include <mrc_params.h>
 #include <math.h>
+#include <mrc_params.h>
+#include <psc.h>
 
 // ======================================================================
 // psc_shocks
@@ -10,16 +10,17 @@
 
 #define psc_shocks(psc) mrc_to_subobj(psc, struct psc_shocks)
 
-struct psc_shocks {
+struct psc_shocks
+{
   // parameters
   double Tl; // left temperature
   double Tr; // right temperature
 };
 
-#define VAR(x) (void *)offsetof(struct psc_shocks, x)
+#define VAR(x) (void*)offsetof(struct psc_shocks, x)
 static struct param psc_shocks_descr[] = {
-  { "Tl"             , VAR(Tl)                , PARAM_DOUBLE(.1)            },
-  { "Tr"             , VAR(Tr)                , PARAM_DOUBLE(.01)           },
+  {"Tl", VAR(Tl), PARAM_DOUBLE(.1)},
+  {"Tr", VAR(Tr), PARAM_DOUBLE(.01)},
 
   {},
 };
@@ -28,8 +29,7 @@ static struct param psc_shocks_descr[] = {
 // ----------------------------------------------------------------------
 // psc_shocks_create
 
-static void
-psc_shocks_create(struct psc *psc)
+static void psc_shocks_create(struct psc* psc)
 {
   psc_default_dimensionless(psc);
   psc->prm.cfl = 0.98;
@@ -47,10 +47,9 @@ psc_shocks_create(struct psc *psc)
 // ----------------------------------------------------------------------
 // psc_shocks_setup
 
-static void
-psc_shocks_setup(struct psc *psc)
+static void psc_shocks_setup(struct psc* psc)
 {
-  struct psc_shocks *sub = psc_shocks(psc);
+  struct psc_shocks* sub = psc_shocks(psc);
 
   psc_setup_super(psc);
 
@@ -63,11 +62,10 @@ psc_shocks_setup(struct psc *psc)
 // ----------------------------------------------------------------------
 // psc_shocks_init_npt
 
-static void
-psc_shocks_init_npt(struct psc *psc, int kind, double x[3],
-		    struct psc_particle_npt *npt)
+static void psc_shocks_init_npt(struct psc* psc, int kind, double x[3],
+                                struct psc_particle_npt* npt)
 {
-  struct psc_shocks *sub = psc_shocks(psc);
+  struct psc_shocks* sub = psc_shocks(psc);
 
   npt->n = 1.;
   double T;
@@ -86,20 +84,18 @@ psc_shocks_init_npt(struct psc *psc, int kind, double x[3],
 // psc_shocks_ops
 
 struct psc_ops psc_shocks_ops = {
-  .name             = "es1",
-  .size             = sizeof(struct psc_shocks),
-  .param_descr      = psc_shocks_descr,
-  .create           = psc_shocks_create,
-  .setup            = psc_shocks_setup,
-  .init_npt         = psc_shocks_init_npt,
+  .name = "es1",
+  .size = sizeof(struct psc_shocks),
+  .param_descr = psc_shocks_descr,
+  .create = psc_shocks_create,
+  .setup = psc_shocks_setup,
+  .init_npt = psc_shocks_init_npt,
 };
 
 // ======================================================================
 // main
 
-int
-main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   return psc_main(&argc, &argv, &psc_shocks_ops);
 }
-

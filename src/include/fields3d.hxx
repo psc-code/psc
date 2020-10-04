@@ -34,11 +34,9 @@ struct MfieldsBase
 {
   using convert_func_t = void (*)(MfieldsBase&, MfieldsBase&, int, int);
   using Convert = std::unordered_map<std::type_index, convert_func_t>;
-  
+
   MfieldsBase(const Grid_t& grid, int n_fields, Int3 ibn)
-    : grid_(&grid),
-      n_fields_(n_fields),
-      ibn_(ibn)
+    : grid_(&grid), n_fields_(n_fields), ibn_(ibn)
   {
     instances.push_back(this);
   }
@@ -46,76 +44,81 @@ struct MfieldsBase
   MfieldsBase(const MfieldsBase&) = delete;
   MfieldsBase& operator=(const MfieldsBase&) = delete;
 
-  MfieldsBase(MfieldsBase&& o) : MfieldsBase(*o.grid_, o.n_fields_, o.ibn_)
-  {
-  }
+  MfieldsBase(MfieldsBase&& o) : MfieldsBase(*o.grid_, o.n_fields_, o.ibn_) {}
 
   MfieldsBase& operator=(MfieldsBase&& o) = default;
-  
-  virtual ~MfieldsBase()
-  {
-    instances.remove(this);
-  }
+
+  virtual ~MfieldsBase() { instances.remove(this); }
 
   virtual void reset(const Grid_t& grid) { grid_ = &grid; }
-  
+
   int _n_comps() const { return n_fields_; }
   Int3 ibn() const { return ibn_; }
 
   const Grid_t& _grid() const { return *grid_; }
-  
-  template<typename MF>
+
+  template <typename MF>
   MF& get_as(int mb, int me)
   {
     // If we're already the subtype, nothing to be done
     if (typeid(*this) == typeid(MF)) {
       return *dynamic_cast<MF*>(this);
     }
-    
+
     static int pr;
     if (!pr) {
       pr = prof_register("Mfields_get_as", 1., 0, 0);
     }
     prof_start(pr);
 
-    // mprintf("get_as %s (%s) %d %d\n", type, psc_mfields_type(mflds_base), mb, me);
-    
+    // mprintf("get_as %s (%s) %d %d\n", type, psc_mfields_type(mflds_base), mb,
+    // me);
+
     auto& mflds = *new MF{_grid(), n_fields_, ibn()};
-    
+
     MfieldsBase::convert(*this, mflds, mb, me);
 
     prof_stop(pr);
     return mflds;
   }
 
-  template<typename MF>
+  template <typename MF>
   void put_as(MF& mflds, int mb, int me)
   {
     // If we're already the subtype, nothing to be done
     if (typeid(*this) == typeid(mflds)) {
       return;
     }
-    
+
     static int pr;
     if (!pr) {
       pr = prof_register("Mfields_put_as", 1., 0, 0);
     }
     prof_start(pr);
-    
+
     MfieldsBase::convert(mflds, *this, mb, me);
     delete &mflds;
-    
+
     prof_stop(pr);
   }
 
-  virtual const Convert& convert_to() { static const Convert convert_to_; return convert_to_; }
-  virtual const Convert& convert_from() { static const Convert convert_from_; return convert_from_; }
+  virtual const Convert& convert_to()
+  {
+    static const Convert convert_to_;
+    return convert_to_;
+  }
+  virtual const Convert& convert_from()
+  {
+    static const Convert convert_from_;
+    return convert_from_;
+  }
   static void convert(MfieldsBase& mf_from, MfieldsBase& mf_to, int mb, int me);
 
   static std::list<MfieldsBase*> instances;
 
 private:
   int n_fields_;
+
 protected:
   const Grid_t* grid_;
   Int3 ibn_;
@@ -126,21 +129,17 @@ protected:
 
 struct MfieldsStateBase
 {
-  using convert_func_t = void (*)(MfieldsStateBase&, MfieldsStateBase&, int, int);
+  using convert_func_t = void (*)(MfieldsStateBase&, MfieldsStateBase&, int,
+                                  int);
   using Convert = std::unordered_map<std::type_index, convert_func_t>;
-  
+
   MfieldsStateBase(const Grid_t& grid, int n_fields, Int3 ibn)
-    : grid_(&grid),
-      n_fields_(n_fields),
-      ibn_(ibn)
+    : grid_(&grid), n_fields_(n_fields), ibn_(ibn)
   {
     instances.push_back(this);
   }
 
-  virtual ~MfieldsStateBase()
-  {
-    instances.remove(this);
-  }
+  virtual ~MfieldsStateBase() { instances.remove(this); }
 
   virtual void reset(const Grid_t& grid) { grid_ = &grid; }
 
@@ -150,53 +149,63 @@ struct MfieldsStateBase
 
   const Grid_t& _grid() { return *grid_; }
 
-  virtual const Convert& convert_to() { static const Convert convert_to_; return convert_to_; }
-  virtual const Convert& convert_from() { static const Convert convert_from_; return convert_from_; }
-  static void convert(MfieldsStateBase& mf_from, MfieldsStateBase& mf_to, int mb, int me);
+  virtual const Convert& convert_to()
+  {
+    static const Convert convert_to_;
+    return convert_to_;
+  }
+  virtual const Convert& convert_from()
+  {
+    static const Convert convert_from_;
+    return convert_from_;
+  }
+  static void convert(MfieldsStateBase& mf_from, MfieldsStateBase& mf_to,
+                      int mb, int me);
 
   static std::list<MfieldsStateBase*> instances;
 
-  template<typename MF>
+  template <typename MF>
   MF& get_as(int mb, int me)
   {
     // If we're already the subtype, nothing to be done
     if (typeid(*this) == typeid(MF)) {
       return *dynamic_cast<MF*>(this);
     }
-    
+
     static int pr;
     if (!pr) {
       pr = prof_register("Mfields_get_as", 1., 0, 0);
     }
     prof_start(pr);
 
-    // mprintf("get_as %s (%s) %d %d\n", type, psc_mfields_type(mflds_base), mb, me);
-    
+    // mprintf("get_as %s (%s) %d %d\n", type, psc_mfields_type(mflds_base), mb,
+    // me);
+
     auto& mflds = *new MF{_grid()};
-    
+
     MfieldsStateBase::convert(*this, mflds, mb, me);
 
     prof_stop(pr);
     return mflds;
   }
 
-  template<typename MF>
+  template <typename MF>
   void put_as(MF& mflds, int mb, int me)
   {
     // If we're already the subtype, nothing to be done
     if (typeid(*this) == typeid(mflds)) {
       return;
     }
-    
+
     static int pr;
     if (!pr) {
       pr = prof_register("Mfields_put_as", 1., 0, 0);
     }
     prof_start(pr);
-    
+
     MfieldsStateBase::convert(mflds, *this, mb, me);
     delete &mflds;
-    
+
     prof_stop(pr);
   }
 
@@ -245,7 +254,7 @@ public:
     n_patches_ = n_patches;
     storage().resize(n_patches * n_comps() * box().size());
   }
-  
+
   KG_INLINE fields_view_t operator[](int p)
   {
     size_t stride = n_comps() * box().size();
@@ -261,16 +270,17 @@ public:
 
   void zero()
   {
-    for (int m = 0; m < n_fields_; m++) zero_comp(m);
+    for (int m = 0; m < n_fields_; m++)
+      zero_comp(m);
   }
-  
+
   void set_comp(int m, double val)
   {
     for (int p = 0; p < n_patches_; p++) {
       (*this)[p].set(m, val);
     }
   }
-  
+
   void scale_comp(int m, double val)
   {
     for (int p = 0; p < n_patches_; p++) {
@@ -280,9 +290,10 @@ public:
 
   void scale(double val)
   {
-    for (int m = 0; m < n_fields_; m++) scale_comp(m, val);
+    for (int m = 0; m < n_fields_; m++)
+      scale_comp(m, val);
   }
-  
+
   void copy_comp(int mto, MfieldsBase& from_base, int mfrom)
   {
     // FIXME? dynamic_cast would actually be more appropriate
@@ -291,7 +302,7 @@ public:
       (*this)[p].copy_comp(mto, from[p], mfrom);
     }
   }
-  
+
   void axpy_comp(int m_y, double alpha, MfieldsBase& x_base, int m_x)
   {
     // FIXME? dynamic_cast would actually be more appropriate
@@ -314,19 +325,21 @@ public:
     const auto& rhs = xp.derived();
     assert(n_comps() == rhs.n_comps());
     assert(n_patches() == rhs.n_patches());
-    //assert(box() == rhs.box());
-    //assert(derived().ibn() == rhs.ibn());
+    // assert(box() == rhs.box());
+    // assert(derived().ibn() == rhs.ibn());
     // FIXME check size compat, too
     for (int p = 0; p < n_patches(); p++) {
       for (int m = 0; m < n_comps(); m++) {
-	Int3 ijk;
-	for (ijk[2] = box_.ib(2); ijk[2] < box_.ib(2) + box_.im(2); ijk[2]++) {
-	  for (ijk[1] = box_.ib(1); ijk[1] < box_.ib(1) + box_.im(1); ijk[1]++) {
-	    for (ijk[0] = box_.ib(0); ijk[0] < box_.ib(0) + box_.im(0); ijk[0]++) {
-	      (*this)[p](m, ijk[0], ijk[1], ijk[2]) = rhs(m, ijk, p);
-	    }
-	  }
-	}
+        Int3 ijk;
+        for (ijk[2] = box_.ib(2); ijk[2] < box_.ib(2) + box_.im(2); ijk[2]++) {
+          for (ijk[1] = box_.ib(1); ijk[1] < box_.ib(1) + box_.im(1);
+               ijk[1]++) {
+            for (ijk[0] = box_.ib(0); ijk[0] < box_.ib(0) + box_.im(0);
+                 ijk[0]++) {
+              (*this)[p](m, ijk[0], ijk[1], ijk[2]) = rhs(m, ijk, p);
+            }
+          }
+        }
       }
     }
   }
@@ -337,19 +350,21 @@ public:
     const auto& rhs = xp.derived();
     assert(n_comps() == rhs.n_comps());
     assert(n_patches() == rhs.n_patches());
-    //assert(box() == rhs.box());
+    // assert(box() == rhs.box());
     assert(derived().ibn() == rhs.ibn());
     // FIXME check size compat, too
     for (int p = 0; p < n_patches(); p++) {
       for (int m = 0; m < n_comps(); m++) {
-	Int3 ijk;
-	for (ijk[2] = box_.ib(2); ijk[2] < box_.ib(2) + box_.im(2); ijk[2]++) {
-	  for (ijk[1] = box_.ib(1); ijk[1] < box_.ib(1) + box_.im(1); ijk[1]++) {
-	    for (ijk[0] = box_.ib(0); ijk[0] < box_.ib(0) + box_.im(0); ijk[0]++) {
-	      (*this)[p](m, ijk[0], ijk[1], ijk[2]) += rhs(m, ijk, p);
-	    }
-	  }
-	}
+        Int3 ijk;
+        for (ijk[2] = box_.ib(2); ijk[2] < box_.ib(2) + box_.im(2); ijk[2]++) {
+          for (ijk[1] = box_.ib(1); ijk[1] < box_.ib(1) + box_.im(1);
+               ijk[1]++) {
+            for (ijk[0] = box_.ib(0); ijk[0] < box_.ib(0) + box_.im(0);
+                 ijk[0]++) {
+              (*this)[p](m, ijk[0], ijk[1], ijk[2]) += rhs(m, ijk, p);
+            }
+          }
+        }
       }
     }
     return derived();
@@ -368,7 +383,10 @@ protected:
   KG_INLINE Storage& storage() { return derived().storageImpl(); }
   KG_INLINE const Storage& storage() const { return derived().storageImpl(); }
   KG_INLINE Derived& derived() { return *static_cast<Derived*>(this); }
-  KG_INLINE const Derived& derived() const { return *static_cast<const Derived*>(this); }
+  KG_INLINE const Derived& derived() const
+  {
+    return *static_cast<const Derived*>(this);
+  }
 
 private:
   kg::Box3 box_; // size of one patch, including ghost points
@@ -399,14 +417,14 @@ public:
   int n_patches() const { return n_patches_; }
   Int3 patchOffset(int p) const { return patch_offsets_[p]; }
 
-  template<typename FUNC>
+  template <typename FUNC>
   void Foreach_3d(int l, int r, FUNC&& F) const
   {
     return grid().Foreach_3d(l, r, std::forward<FUNC>(F));
   }
-  
+
   const Grid_t& grid() const { return *grid_; }
-  
+
 private:
   const Grid_t* grid_;
   Int3 ldims_;
@@ -418,7 +436,7 @@ private:
 // ======================================================================
 // Mfields
 
-template<typename R>
+template <typename R>
 struct Mfields;
 
 template <typename R>
@@ -427,8 +445,10 @@ struct MfieldsCRTPInnerTypes<Mfields<R>>
   using Storage = std::vector<R>;
 };
 
-template<typename R>
-struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>>
+template <typename R>
+struct Mfields
+  : MfieldsBase
+  , MfieldsCRTP<Mfields<R>>
 {
   using real_t = R;
   using Base = MfieldsCRTP<Mfields<R>>;
@@ -447,19 +467,19 @@ struct Mfields : MfieldsBase, MfieldsCRTP<Mfields<R>>
   const MfieldsDomain& domain() const { return domain_; }
   const Grid_t& grid() const { return domain_.grid(); }
 
-  template<typename FUNC>
+  template <typename FUNC>
   void Foreach_3d(int l, int r, FUNC&& F) const
   {
     return domain().Foreach_3d(l, r, std::forward<FUNC>(F));
   }
-  
+
   virtual void reset(const Grid_t& grid) override
   {
     MfieldsBase::reset(grid);
     Base::reset(grid.n_patches());
     domain_ = MfieldsDomain(grid);
   }
-  
+
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override;
   const Convert& convert_from() override;
@@ -474,10 +494,12 @@ private:
   friend class MfieldsCRTP<Mfields<R>>;
 };
 
-template<> const MfieldsBase::Convert Mfields<float>::convert_to_;
+template <>
+const MfieldsBase::Convert Mfields<float>::convert_to_;
 extern template const MfieldsBase::Convert Mfields<float>::convert_to_;
 
-template<> const MfieldsBase::Convert Mfields<float>::convert_from_;
+template <>
+const MfieldsBase::Convert Mfields<float>::convert_from_;
 extern template const MfieldsBase::Convert Mfields<float>::convert_from_;
 
 template <typename R>
@@ -495,20 +517,21 @@ inline auto Mfields<R>::convert_from() -> const Convert&
 // ======================================================================
 // MfieldsStateFromMfields
 
-template<typename Mfields>
+template <typename Mfields>
 struct MfieldsStateFromMfields : MfieldsStateBase
 {
   using fields_view_t = typename Mfields::fields_view_t;
   using real_t = typename Mfields::real_t;
 
   MfieldsStateFromMfields(const Grid_t& grid)
-    : MfieldsStateBase{grid, NR_FIELDS, grid.ibn}, // FIXME, still hacky ibn handling...
+    : MfieldsStateBase{grid, NR_FIELDS,
+                       grid.ibn}, // FIXME, still hacky ibn handling...
       mflds_{grid, NR_FIELDS, grid.ibn}
   {}
 
   const Grid_t& grid() const { return mflds_.grid(); }
   int n_patches() const { return mflds_.n_patches(); }
-  
+
   fields_view_t operator[](int p) { return mflds_[p]; }
 
   static const Convert convert_to_, convert_from_;
@@ -517,9 +540,10 @@ struct MfieldsStateFromMfields : MfieldsStateBase
 
   Mfields& mflds() { return mflds_; }
 
-public: // FIXME public so that we can read/write it, friend needs include which gives nvcc issues
+public: // FIXME public so that we can read/write it, friend needs include which
+        // gives nvcc issues
   Mfields mflds_;
-  
+
   //  friend class kg::io::Descr<MfieldsStateFromMfields<Mfields>>;
 };
 

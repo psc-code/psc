@@ -10,4 +10,3 @@ TEST(CudaBase, Init)
 {
   cuda_base_init();
 }
-

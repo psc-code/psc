@@ -6,7 +6,7 @@
 // ======================================================================
 // MfieldsAccumulatorPsc
 
-template<typename _Grid>
+template <typename _Grid>
 struct MfieldsAccumulatorPsc
 {
   using Grid = _Grid;
@@ -16,9 +16,9 @@ struct MfieldsAccumulatorPsc
 
   struct Element
   {
-    float jx[4];   // jx0@(0,-1,-1),jx1@(0,1,-1),jx2@(0,-1,1),jx3@(0,1,1)
-    float jy[4];   // jy0@(-1,0,-1),jy1@(-1,0,1),jy2@(1,0,-1),jy3@(1,0,1)
-    float jz[4];   // jz0@(-1,-1,0),jz1@(1,-1,0),jz2@(-1,1,0),jz3@(1,1,0)
+    float jx[4]; // jx0@(0,-1,-1),jx1@(0,1,-1),jx2@(0,-1,1),jx3@(0,1,1)
+    float jy[4]; // jy0@(-1,0,-1),jy1@(-1,0,1),jy2@(1,0,-1),jy3@(1,0,1)
+    float jz[4]; // jz0@(-1,-1,0),jz1@(1,-1,0),jz2@(-1,1,0),jz3@(1,1,0)
   };
 
   // ======================================================================
@@ -30,20 +30,15 @@ struct MfieldsAccumulatorPsc
 
     using Base::Base;
   };
-  
-  
-  MfieldsAccumulatorPsc(Grid *grid)
-    : g_(grid)
+
+  MfieldsAccumulatorPsc(Grid* grid) : g_(grid)
   {
     n_pipeline_ = aa_n_pipeline();
-    stride_ = POW2_CEIL(g_->nv,2);
+    stride_ = POW2_CEIL(g_->nv, 2);
     arr_ = new Element[(n_pipeline_ + 1) * stride_]();
   }
 
-  ~MfieldsAccumulatorPsc()
-  {
-    delete[] arr_;
-  }
+  ~MfieldsAccumulatorPsc() { delete[] arr_; }
 
   static int aa_n_pipeline(void)
   {
@@ -58,17 +53,14 @@ struct MfieldsAccumulatorPsc
   }
 
   Element* data() { return arr_; }
-  
+
   // FIXME, not a great interface with c just another index
-  Element& operator()(int c, int idx)
-  {
-    return arr_[c * stride_ + idx];
-  }
+  Element& operator()(int c, int idx) { return arr_[c * stride_ + idx]; }
 
   // FIXME, not a great interface with c just another index
   Element& operator()(int c, int i, int j, int k)
   {
-    return arr_[c * stride_ + VOXEL(i,j,k, g_->nx,g_->ny,g_->nz)];
+    return arr_[c * stride_ + VOXEL(i, j, k, g_->nx, g_->ny, g_->nz)];
   }
 
   Block operator[](int c)
@@ -86,6 +78,6 @@ private:
   int n_pipeline_; // Number of pipelines supported by this accumulator
 
 protected:
-  int stride_;     // Stride be each pipeline's accumulator array
+  int stride_; // Stride be each pipeline's accumulator array
   Grid* g_;
 };

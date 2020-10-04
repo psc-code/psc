@@ -13,50 +13,46 @@ struct MfieldsHydroVpic
   using Element = hydro_t;
   using fields_view_t = kg::SArrayView<float, kg::LayoutAOS>;
 
-  enum {
+  enum
+  {
     N_COMP = 16,
   };
 
-  static_assert(N_COMP == sizeof(Element) / sizeof(real_t), "N_COMP doesn't match Element");
+  static_assert(N_COMP == sizeof(Element) / sizeof(real_t),
+                "N_COMP doesn't match Element");
 
   struct Patch
   {
     using Element = hydro_t;
 
-    Patch(Grid* vgrid)
-      : ha_{::new_hydro_array(vgrid)}
+    Patch(Grid* vgrid) : ha_{::new_hydro_array(vgrid)}
     {
       ::clear_hydro_array(ha_);
     }
 
-    ~Patch()
-    {
-      ::delete_hydro_array(ha_);
-    }
-    
+    ~Patch() { ::delete_hydro_array(ha_); }
+
     Element* data() { return ha_->h; }
-    
-    Element  operator[](int idx) const { return ha_->h[idx]; }
-    Element& operator[](int idx)       { return ha_->h[idx]; }
+
+    Element operator[](int idx) const { return ha_->h[idx]; }
+    Element& operator[](int idx) { return ha_->h[idx]; }
 
     Grid* grid() { return static_cast<Grid*>(ha_->g); }
 
     operator hydro_array_t*() { return ha_; }
-    
+
   private:
     hydro_array_t* ha_;
     Grid* vgrid_;
- };
-    
-  MfieldsHydroVpic(const Grid_t& grid, Grid* vgrid)
-    : grid_{grid},
-      patch_{vgrid}
+  };
+
+  MfieldsHydroVpic(const Grid_t& grid, Grid* vgrid) : grid_{grid}, patch_{vgrid}
   {
     assert(grid.n_patches() == 1);
 
     const int B = 1; // VPIC always uses one ghost cell (on c.c. grid)
-    im_ = { vgrid->nx + 2*B, vgrid->ny + 2*B, vgrid->nz + 2*B };
-    ib_ = { -B, -B, -B };
+    im_ = {vgrid->nx + 2 * B, vgrid->ny + 2 * B, vgrid->nz + 2 * B};
+    ib_ = {-B, -B, -B};
   }
 
   int n_patches() const { return grid_.n_patches(); }
@@ -75,4 +71,3 @@ private:
   Patch patch_;
   Int3 ib_, im_;
 };
-

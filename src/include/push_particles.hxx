@@ -10,6 +10,4 @@ extern int pr_time_step_no_comm; // FIXME
 // PushParticlesBase
 
 class PushParticlesBase
-{
-};
-
+{};

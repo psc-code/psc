@@ -20,7 +20,7 @@ typedef double cbe_real;
 #else
 
 /// Number of elements in a floating point vector (changes with precision)
-#define VEC_SIZE 4 
+#define VEC_SIZE 4
 
 /// CBE floating point type
 typedef float cbe_real;
@@ -31,4 +31,3 @@ typedef float cbe_real;
 #endif
 
 #endif
-

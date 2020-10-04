@@ -49,10 +49,10 @@ TYPED_TEST(TestMfieldsCuda, HostMirror)
 
   auto h_mflds = hostMirror(mflds);
   copy(mflds, h_mflds);
-  
+
   for (int p = 0; p < mflds.n_patches(); ++p) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-	EXPECT_EQ(mflds[p](EX, i, j, k), h_mflds[p](EX, i, j, k));
+      EXPECT_EQ(mflds[p](EX, i, j, k), h_mflds[p](EX, i, j, k));
 #if 0
 	mprintf("[%d, %d, %d] = %06g %06g\n", i, j, k,
 		(double) mflds[p](EX, i, j, k), (double) h_mflds[p](EX, i, j, k));

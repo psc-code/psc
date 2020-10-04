@@ -5,11 +5,11 @@
 
 #include <kg/Vec3.h>
 
-// FIXME, this is still too intermingled, both doing the actual deposit as well as
-// the particle / patch processing
-// OTOH, there is still opportunity for optimization, in particular when
-// operator() gets called back multiple times, we don't have to find the IP coefficients again
-// Obviously, the rest of the IP macro should be converted, too
+// FIXME, this is still too intermingled, both doing the actual deposit as well
+// as the particle / patch processing OTOH, there is still opportunity for
+// optimization, in particular when operator() gets called back multiple times,
+// we don't have to find the IP coefficients again Obviously, the rest of the IP
+// macro should be converted, too
 
 template <typename Mparticles, typename Mfields>
 class Deposit1stCc
@@ -103,7 +103,7 @@ public:
     }
   }
 
-  //private:
+  // private:
   const Mparticles& mprts_;
   Mfields& mflds_;
   FE flds_;

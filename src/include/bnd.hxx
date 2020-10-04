@@ -7,6 +7,4 @@
 // BndBase
 
 struct BndBase
-{
-};
-
+{};

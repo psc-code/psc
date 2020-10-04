@@ -10,8 +10,9 @@
 #include <mpi.h>
 #include <string.h>
 
-static void
-psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count_only)
+static void psc_test_setup_particles(struct psc* psc,
+                                     int* nr_particles_by_patch,
+                                     bool count_only)
 {
   assert(0);
 #if 0
@@ -60,13 +61,11 @@ psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count
 }
 
 // FIXME, make generic
-static int
-get_total_num_particles(struct psc_mparticles *particles_base)
+static int get_total_num_particles(struct psc_mparticles* particles_base)
 {
   int nr_part = psc_mparticles_nr_particles(particles_base);
   int total_nr_part;
-  MPI_Allreduce(&nr_part, &total_nr_part, 1, MPI_INT, MPI_SUM,
-		MPI_COMM_WORLD);
+  MPI_Allreduce(&nr_part, &total_nr_part, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
   return total_nr_part;
 }
@@ -75,20 +74,19 @@ get_total_num_particles(struct psc_mparticles *particles_base)
 // psc_test_ops_xz
 
 static struct psc_ops psc_test_ops_xz = {
-  .name             = "test",
-  .size             = sizeof(struct psc_test),
-  .create           = psc_test_create,
-  .setup_particles  = psc_test_setup_particles,
+  .name = "test",
+  .size = sizeof(struct psc_test),
+  .create = psc_test_create,
+  .setup_particles = psc_test_setup_particles,
 };
 
-int
-main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   psc_testing_init(&argc, &argv);
 
   mrc_class_register_subclass(&mrc_class_psc, &psc_test_ops_xz);
 
-  struct psc *psc = psc_testing_create_test_xz();
+  struct psc* psc = psc_testing_create_test_xz();
   psc_setup(psc);
   int total_num_particles_before = get_total_num_particles(psc->particles);
   psc_bnd_particles_exchange(psc->bnd_particles, psc->particles);

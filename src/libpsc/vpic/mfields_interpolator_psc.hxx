@@ -11,13 +11,13 @@ struct PscInterpolatorT
   float cbx, dcbxdx;
   float cby, dcbydy;
   float cbz, dcbzdz;
-  float _pad[2];  // 16-byte align
+  float _pad[2]; // 16-byte align
 };
 
 // ======================================================================
 // MfieldsInterpolatorPsc
 
-template<typename _Grid>
+template <typename _Grid>
 struct MfieldsInterpolatorPsc
 {
   using Grid = _Grid;
@@ -26,27 +26,22 @@ struct MfieldsInterpolatorPsc
   struct Patch
   {
     using Element = PscInterpolatorT;
-    
-    Patch(Grid* vgrid)
-      : ip_{vgrid}
-    {}
+
+    Patch(Grid* vgrid) : ip_{vgrid} {}
 
     Element* data() { return ip_.data(); }
-    Element  operator[](int idx) const { return ip_[idx]; }
-    Element& operator[](int idx)       { return ip_[idx]; }
+    Element operator[](int idx) const { return ip_[idx]; }
+    Element& operator[](int idx) { return ip_[idx]; }
 
     Grid* grid() { return ip_.grid(); }
 
     PscFieldBase<Element, Grid> ip_;
   };
 
-  MfieldsInterpolatorPsc(Grid* vgrid)
-    : patch_{vgrid}
-  {}
+  MfieldsInterpolatorPsc(Grid* vgrid) : patch_{vgrid} {}
 
   Patch& getPatch(int p) { return patch_; }
-  
+
 private:
   Patch patch_;
 };
-

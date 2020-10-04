@@ -5,8 +5,7 @@
 
 #include <thrust/host_vector.h>
 
-__global__
-void set_raw(float *data)
+__global__ void set_raw(float* data)
 {
   data[0] = 0;
   data[1] = 100;
@@ -16,8 +15,7 @@ void set_raw(float *data)
   data[5] = 210;
 }
 
-__global__
-void set_dfields(DFields d_flds)
+__global__ void set_dfields(DFields d_flds)
 {
   d_flds(0, 0, 0, 0) = 0;
   d_flds(0, 1, 0, 0) = 100;
@@ -30,11 +28,12 @@ void set_dfields(DFields d_flds)
 TEST(DFields, Ctor)
 {
   psc::device_vector<float> d_storage(6);
-  
-  auto d_flds = DFields{{{0, 0, 0}, {3, 2, 1}}, 1, thrust::raw_pointer_cast(d_storage.data())};
-  //set_raw<<<1, 1>>>(d_flds.data());
+
+  auto d_flds = DFields{
+    {{0, 0, 0}, {3, 2, 1}}, 1, thrust::raw_pointer_cast(d_storage.data())};
+  // set_raw<<<1, 1>>>(d_flds.data());
   set_dfields<<<1, 1>>>(d_flds);
-  
+
   thrust::host_vector<float> h_storage = d_storage;
 
 #if 0

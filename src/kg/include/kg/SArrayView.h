@@ -28,7 +28,7 @@ struct SArrayView : kg::SArrayContainer<SArrayView<T, L>>
   using Storage = typename Base::Storage;
   using real_t = typename Base::value_type;
 
-  KG_INLINE SArrayView(const Box3 &box, int n_comps, real_t* data)
+  KG_INLINE SArrayView(const Box3& box, int n_comps, real_t* data)
     : Base{box, n_comps}, storage_{data}
   {}
 

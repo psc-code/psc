@@ -11,7 +11,7 @@
 
 #define N_DIR (27)
 
-template<typename MP>
+template <typename MP>
 struct ddc_particles
 {
   using Mparticles = MP;
@@ -20,51 +20,56 @@ struct ddc_particles
   using Particle = typename Mparticles::BndpParticle;
   using Buffer = std::vector<Particle>;
   using real_t = typename Particle::real_t;
-  
+
   ddc_particles(const Grid_t& grid);
 
   void comm(BndBuffers& bufs);
 
-  struct dsend_entry {
-    int patch; // source patch (source rank is this rank)
+  struct dsend_entry
+  {
+    int patch;     // source patch (source rank is this rank)
     int nei_patch; // target patch (target rank is index in send_entry)
-    int dir1;  // direction
+    int dir1;      // direction
     int dir1neg;
   };
-  
-  struct drecv_entry { // needs to be same as send_entry with different order!
+
+  struct drecv_entry
+  { // needs to be same as send_entry with different order!
     int nei_patch;
     int patch;
     int dir1neg;
     int dir1;
   };
-  
-  struct ddcp_info_by_rank {
+
+  struct ddcp_info_by_rank
+  {
     std::vector<dsend_entry> send_entry;
     std::vector<int> send_cnts;
     int n_send_entries;
     int n_send;
-    
+
     std::vector<drecv_entry> recv_entry;
     std::vector<int> recv_cnts;
     int n_recv_entries;
     int n_recv;
-    
+
     int rank;
   };
 
-  struct dnei {
+  struct dnei
+  {
     Buffer send_buf;
     int n_recv;
     int rank;
     int patch;
   };
 
-  struct patch {
+  struct patch
+  {
     dnei nei[N_DIR];
     int n_recv;
   };
-  
+
   int nr_patches;
   std::vector<patch> patches_;
   std::vector<ddcp_info_by_rank> cinfo_; // compressed info
@@ -76,7 +81,7 @@ struct ddc_particles
 // ----------------------------------------------------------------------
 // ctor
 
-template<typename MP>
+template <typename MP>
 inline ddc_particles<MP>::ddc_particles(const Grid_t& grid)
 {
   std::memset(this, 0, sizeof(*this));
@@ -84,22 +89,22 @@ inline ddc_particles<MP>::ddc_particles(const Grid_t& grid)
   nr_patches = grid.n_patches();
   patches_.resize(nr_patches);
   for (int p = 0; p < nr_patches; p++) {
-    patch *patch = &patches_[p];
+    patch* patch = &patches_[p];
 
     int dir[3];
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
-	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	  int dir1 = mrc_ddc_dir2idx(dir);
-	  dnei *nei = &patch->nei[dir1];
+        for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
+          int dir1 = mrc_ddc_dir2idx(dir);
+          dnei* nei = &patch->nei[dir1];
 
-	  if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	    // use this one as buffer for particles that stay in the same patch
-	    nei->rank = -1;
-	  } else {
-	    grid.neighborRankPatch(p, dir, &nei->rank, &nei->patch);
-	  }
-	}
+          if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
+            // use this one as buffer for particles that stay in the same patch
+            nei->rank = -1;
+          } else {
+            grid.neighborRankPatch(p, dir, &nei->rank, &nei->patch);
+          }
+        }
       }
     }
   }
@@ -115,19 +120,19 @@ inline ddc_particles<MP>::ddc_particles(const Grid_t& grid)
 
   // count how many recv_entries per rank
   for (int p = 0; p < nr_patches; p++) {
-    patch *patch = &patches_[p];
+    patch* patch = &patches_[p];
 
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
-	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	  int dir1 = mrc_ddc_dir2idx(dir);
-	  dnei *nei = &patch->nei[dir1];
-	  if (nei->rank < 0 || nei->rank == rank) {
-	    continue;
-	  }
-	  info[nei->rank].n_recv_entries++;
-	  info[nei->rank].rank = nei->rank;
-	}
+        for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
+          int dir1 = mrc_ddc_dir2idx(dir);
+          dnei* nei = &patch->nei[dir1];
+          if (nei->rank < 0 || nei->rank == rank) {
+            continue;
+          }
+          info[nei->rank].n_recv_entries++;
+          info[nei->rank].rank = nei->rank;
+        }
       }
     }
   }
@@ -168,18 +173,18 @@ inline ddc_particles<MP>::ddc_particles(const Grid_t& grid)
 
   // count send_entries
   for (int p = 0; p < nr_patches; p++) {
-    patch *patch = &patches_[p];
+    patch* patch = &patches_[p];
 
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
-	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	  int dir1 = mrc_ddc_dir2idx(dir);
-	  dnei *nei = &patch->nei[dir1];
-	  if (nei->rank < 0 || nei->rank == rank) {
-	    continue;
-	  }
-	  info[nei->rank].n_send_entries++;
-	}
+        for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
+          int dir1 = mrc_ddc_dir2idx(dir);
+          dnei* nei = &patch->nei[dir1];
+          if (nei->rank < 0 || nei->rank == rank) {
+            continue;
+          }
+          info[nei->rank].n_send_entries++;
+        }
       }
     }
   }
@@ -194,25 +199,25 @@ inline ddc_particles<MP>::ddc_particles(const Grid_t& grid)
 
   // set up send_entries
   for (int p = 0; p < nr_patches; p++) {
-    patch *patch = &patches_[p];
+    patch* patch = &patches_[p];
 
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
-	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	  int dir1 = mrc_ddc_dir2idx(dir);
-	  int dirneg[3] = { -dir[0], -dir[1], -dir[2] };
-	  int dir1neg = mrc_ddc_dir2idx(dirneg);
-	  dnei *nei = &patch->nei[dir1];
-	  if (nei->rank < 0 || nei->rank == rank) {
-	    continue;
-	  }
-	  auto se = dsend_entry{};
-	  se.patch = p;
-	  se.nei_patch = nei->patch;
-	  se.dir1 = dir1;
-	  se.dir1neg = dir1neg;
-	  info[nei->rank].send_entry.push_back(se);
-	}
+        for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
+          int dir1 = mrc_ddc_dir2idx(dir);
+          int dirneg[3] = {-dir[0], -dir[1], -dir[2]};
+          int dir1neg = mrc_ddc_dir2idx(dirneg);
+          dnei* nei = &patch->nei[dir1];
+          if (nei->rank < 0 || nei->rank == rank) {
+            continue;
+          }
+          auto se = dsend_entry{};
+          se.patch = p;
+          se.nei_patch = nei->patch;
+          se.dir1 = dir1;
+          se.dir1neg = dir1neg;
+          info[nei->rank].send_entry.push_back(se);
+        }
       }
     }
   }
@@ -238,19 +243,19 @@ inline ddc_particles<MP>::ddc_particles(const Grid_t& grid)
   for (int r = 0; r < size; r++) {
     if (info[r].n_recv_entries) {
       MPI_Irecv(info[r].recv_entry.data(),
-		sizeof(drecv_entry) / sizeof(int) * info[r].n_recv_entries,
-		MPI_INT, r, 111, comm, &recv_reqs_[n_recv_ranks++]);
+                sizeof(drecv_entry) / sizeof(int) * info[r].n_recv_entries,
+                MPI_INT, r, 111, comm, &recv_reqs_[n_recv_ranks++]);
     }
-  }  
+  }
 
   n_send_ranks = 0;
   for (int r = 0; r < size; r++) {
     if (info[r].n_send_entries) {
       MPI_Isend(info[r].send_entry.data(),
-		sizeof(dsend_entry) / sizeof(int) * info[r].n_send_entries,
-		MPI_INT, r, 111, comm, &send_reqs_[n_send_ranks++]);
+                sizeof(dsend_entry) / sizeof(int) * info[r].n_send_entries,
+                MPI_INT, r, 111, comm, &send_reqs_[n_send_ranks++]);
     }
-  }  
+  }
 
   cinfo_.reserve(n_ranks);
   for (auto& item : info) {
@@ -270,11 +275,11 @@ inline ddc_particles<MP>::ddc_particles(const Grid_t& grid)
 // OPT: 1d instead of 3d loops
 // OPT: make the status buffers only as large as needed?
 
-template<typename MP>
+template <typename MP>
 inline void ddc_particles<MP>::comm(BndBuffers& bufs)
 {
   using iterator_t = typename Buffer::iterator;
-  
+
   MPI_Comm comm = MPI_COMM_WORLD; // FIXME
   int rank, size;
   MPI_Comm_rank(comm, &rank);
@@ -286,41 +291,41 @@ inline void ddc_particles<MP>::comm(BndBuffers& bufs)
   int dir[3];
 
   for (int r = 0; r < n_ranks; r++) {
-    MPI_Irecv(cinfo_[r].recv_cnts.data(), cinfo_[r].n_recv_entries,
-	      MPI_INT, cinfo_[r].rank, 222, comm, &recv_reqs_[r]);
-  }  
+    MPI_Irecv(cinfo_[r].recv_cnts.data(), cinfo_[r].n_recv_entries, MPI_INT,
+              cinfo_[r].rank, 222, comm, &recv_reqs_[r]);
+  }
 
   for (int r = 0; r < n_ranks; r++) {
     cinfo_[r].n_send = 0;
     for (int i = 0; i < cinfo_[r].n_send_entries; i++) {
-      dsend_entry *se = &cinfo_[r].send_entry[i];
-      patch *patch = &patches_[se->patch];
-      dnei *nei = &patch->nei[se->dir1];
+      dsend_entry* se = &cinfo_[r].send_entry[i];
+      patch* patch = &patches_[se->patch];
+      dnei* nei = &patch->nei[se->dir1];
       unsigned int n_send = nei->send_buf.size();
       cinfo_[r].send_cnts[i] = n_send;
       cinfo_[r].n_send += n_send;
     }
-    MPI_Isend(cinfo_[r].send_cnts.data(), cinfo_[r].n_send_entries,
-	      MPI_INT, cinfo_[r].rank, 222, comm, &send_reqs_[r]);
-  }  
+    MPI_Isend(cinfo_[r].send_cnts.data(), cinfo_[r].n_send_entries, MPI_INT,
+              cinfo_[r].rank, 222, comm, &send_reqs_[r]);
+  }
 
   // overlap: count local # particles
   for (int p = 0; p < nr_patches; p++) {
-    patch *patch = &patches_[p];
+    patch* patch = &patches_[p];
     patch->n_recv = 0;
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
-	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	  int dir1 = mrc_ddc_dir2idx(dir);
-	  dnei *nei = &patch->nei[dir1];
-	  if (nei->rank != rank) {
-	    continue;
-	  }
-	  int dirneg[3] = { -dir[0], -dir[1], -dir[2] };
-	  int dir1neg = mrc_ddc_dir2idx(dirneg);
-	  dnei *nei_send = &patches_[nei->patch].nei[dir1neg];
-	  patch->n_recv += nei_send->send_buf.size();
-	}
+        for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
+          int dir1 = mrc_ddc_dir2idx(dir);
+          dnei* nei = &patch->nei[dir1];
+          if (nei->rank != rank) {
+            continue;
+          }
+          int dirneg[3] = {-dir[0], -dir[1], -dir[2]};
+          int dir1neg = mrc_ddc_dir2idx(dirneg);
+          dnei* nei_send = &patches_[nei->patch].nei[dir1neg];
+          patch->n_recv += nei_send->send_buf.size();
+        }
       }
     }
   }
@@ -356,8 +361,8 @@ inline void ddc_particles<MP>::comm(BndBuffers& bufs)
   for (int r = 0; r < n_ranks; r++) {
     cinfo_[r].n_recv = 0;
     for (int i = 0; i < cinfo_[r].n_recv_entries; i++) {
-      drecv_entry *re = &cinfo_[r].recv_entry[i];
-      patch *patch = &patches_[re->patch];
+      drecv_entry* re = &cinfo_[r].recv_entry[i];
+      patch* patch = &patches_[re->patch];
       patch->n_recv += cinfo_[r].recv_cnts[i];
       cinfo_[r].n_recv += cinfo_[r].recv_cnts[i];
     }
@@ -375,14 +380,14 @@ inline void ddc_particles<MP>::comm(BndBuffers& bufs)
 
     auto it0 = it;
     for (int i = 0; i < cinfo_[r].n_send_entries; i++) {
-      dsend_entry *se = &cinfo_[r].send_entry[i];
-      patch *patch = &patches_[se->patch];
+      dsend_entry* se = &cinfo_[r].send_entry[i];
+      patch* patch = &patches_[se->patch];
       auto* send_buf_nei = &patch->nei[se->dir1].send_buf;
       std::copy(send_buf_nei->begin(), send_buf_nei->end(), it);
       it += send_buf_nei->size();
     }
-    MPI_Isend(&*it0, sz * cinfo_[r].n_send, mpi_dtype,
-	      cinfo_[r].rank, 1, comm, &send_reqs_[r]);
+    MPI_Isend(&*it0, sz * cinfo_[r].n_send, mpi_dtype, cinfo_[r].rank, 1, comm,
+              &send_reqs_[r]);
   }
   assert(it == send_buf.begin() + n_send);
 
@@ -394,8 +399,8 @@ inline void ddc_particles<MP>::comm(BndBuffers& bufs)
     if (cinfo_[r].n_recv == 0)
       continue;
 
-    MPI_Irecv(&*it, sz * cinfo_[r].n_recv, mpi_dtype,
-	      cinfo_[r].rank, 1, comm, &recv_reqs_[r]);
+    MPI_Irecv(&*it, sz * cinfo_[r].n_recv, mpi_dtype, cinfo_[r].rank, 1, comm,
+              &recv_reqs_[r]);
     it += cinfo_[r].n_recv;
   }
   assert(it == recv_buf.begin() + n_recv);
@@ -410,35 +415,36 @@ inline void ddc_particles<MP>::comm(BndBuffers& bufs)
   auto* it_recv = new iterator_t[nr_patches];
 
   for (int p = 0; p < nr_patches; p++) {
-    patch *patch = &patches_[p];
+    patch* patch = &patches_[p];
     BndBuffer& buf = bufs[p];
     int size = buf.size();
     buf.reserve(size + patch->n_recv);
     // this is dangerous: we keep using the iterator, knowing that
-    // it won't become invalid due to a realloc since we reserved enough space...
+    // it won't become invalid due to a realloc since we reserved enough
+    // space...
     it_recv[p] = buf.end();
     buf.resize(size + patch->n_recv);
   }
 
   // overlap: copy particles from local proc to the end of recv range
   for (int p = 0; p < nr_patches; p++) {
-    patch *patch = &patches_[p];
+    patch* patch = &patches_[p];
 
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
-	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	  int dir1 = mrc_ddc_dir2idx(dir);
-	  int dirneg[3] = { -dir[0], -dir[1], -dir[2] };
-	  int dir1neg = mrc_ddc_dir2idx(dirneg);
-	  dnei *nei = &patch->nei[dir1];
-	  if (nei->rank != rank) {
-	    continue;
-	  }
-	  auto* nei_send_buf = &patches_[nei->patch].nei[dir1neg].send_buf;
+        for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
+          int dir1 = mrc_ddc_dir2idx(dir);
+          int dirneg[3] = {-dir[0], -dir[1], -dir[2]};
+          int dir1neg = mrc_ddc_dir2idx(dirneg);
+          dnei* nei = &patch->nei[dir1];
+          if (nei->rank != rank) {
+            continue;
+          }
+          auto* nei_send_buf = &patches_[nei->patch].nei[dir1neg].send_buf;
 
-	  std::copy(nei_send_buf->begin(), nei_send_buf->end(), it_recv[p]);
-	  it_recv[p] += nei_send_buf->size();
-	}
+          std::copy(nei_send_buf->begin(), nei_send_buf->end(), it_recv[p]);
+          it_recv[p] += nei_send_buf->size();
+        }
       }
     }
   }
@@ -451,7 +457,7 @@ inline void ddc_particles<MP>::comm(BndBuffers& bufs)
   it = recv_buf.begin();
   for (int r = 0; r < n_ranks; r++) {
     for (int i = 0; i < cinfo_[r].n_recv_entries; i++) {
-      drecv_entry *re = &cinfo_[r].recv_entry[i];
+      drecv_entry* re = &cinfo_[r].recv_entry[i];
       std::copy(it, it + cinfo_[r].recv_cnts[i], it_recv[re->patch]);
       it += cinfo_[r].recv_cnts[i];
       it_recv[re->patch] += cinfo_[r].recv_cnts[i];
@@ -463,9 +469,8 @@ inline void ddc_particles<MP>::comm(BndBuffers& bufs)
     BndBuffer& buf = bufs[p];
     assert(it_recv[p] == buf.end());
   }
-  
+
   delete[] it_recv;
 }
 
 #endif
-

@@ -104,10 +104,12 @@ struct MparticlesTest : ::testing::Test
       for (int n = 0; n < n_prts; n++) {
         double nn = double(n) / n_prts;
         auto L = patch.xe - patch.xb;
-        psc::particle::Inject prt = {
-	  {patch.xb[0] + nn * L[0],
-	   patch.xb[1] + nn * L[1],
-	   patch.xb[2] + nn * L[2]}, {}, 1., 0};
+        psc::particle::Inject prt = {{patch.xb[0] + nn * L[0],
+                                      patch.xb[1] + nn * L[1],
+                                      patch.xb[2] + nn * L[2]},
+                                     {},
+                                     1.,
+                                     0};
         injector(prt);
       }
     }
@@ -205,7 +207,8 @@ TYPED_TEST(MparticlesTest, Inject2)
       auto injector = inj[p];
       auto& patch = mprts.grid().patches[p];
       for (int n = 0; n < n_prts; n++) {
-        psc::particle::Inject prt{.5 * (patch.xb + patch.xe), {}, double(nn), 0};
+        psc::particle::Inject prt{
+          .5 * (patch.xb + patch.xe), {}, double(nn), 0};
         // use weight to store particle number for testing
         injector(prt);
         nn++;
@@ -442,32 +445,28 @@ TYPED_TEST(MparticlesIOTest, WriteRead)
 TEST(TestSetupParticles, Simple)
 {
   using Mparticles = MparticlesDouble;
-  
-  auto domain = Grid_t::Domain{{1, 2, 2},
-			       {10., 20., 20.}, {},
-			       {1, 1, 1}};
+
+  auto domain = Grid_t::Domain{{1, 2, 2}, {10., 20., 20.}, {}, {1, 1, 1}};
   auto kinds = Grid_t::Kinds{{1., 100., "i"}};
   auto prm = Grid_t::NormalizationParams::dimensionless();
   prm.nicell = 2;
   Grid_t grid{domain, {}, kinds, {prm}, .1};
   Mparticles mprts{grid};
-			   
-  SetupParticles<Mparticles> setup_particles(grid);
-  setup_particles(mprts, [&](int kind, Double3 crd, psc_particle_npt& npt) {
-      npt.n = 1;
-    });
 
-  auto n_cells = grid.domain.gdims[0] * grid.domain.gdims[1] * grid.domain.gdims[2];
+  SetupParticles<Mparticles> setup_particles(grid);
+  setup_particles(
+    mprts, [&](int kind, Double3 crd, psc_particle_npt& npt) { npt.n = 1; });
+
+  auto n_cells =
+    grid.domain.gdims[0] * grid.domain.gdims[1] * grid.domain.gdims[2];
   EXPECT_EQ(mprts.size(), n_cells * kinds.size() * prm.nicell);
 }
 
 TEST(TestSetupParticles, NPopulations)
 {
   using Mparticles = MparticlesDouble;
-  
-  auto domain = Grid_t::Domain{{1, 2, 2},
-			       {10., 20., 20.}, {},
-			       {1, 1, 1}};
+
+  auto domain = Grid_t::Domain{{1, 2, 2}, {10., 20., 20.}, {}, {1, 1, 1}};
   auto kinds = Grid_t::Kinds{{1., 100., "i"}};
   auto prm = Grid_t::NormalizationParams::dimensionless();
   prm.nicell = 2;
@@ -477,39 +476,38 @@ TEST(TestSetupParticles, NPopulations)
   int n_populations = 2;
   SetupParticles<Mparticles> setup_particles(grid, n_populations);
   setup_particles(mprts, [&](int pop, Double3 crd, psc_particle_npt& npt) {
-      npt.n = 1;
-      npt.kind = 0;
-      npt.p[0] = double(pop); // save pop in u[0] for testing
-    });
+    npt.n = 1;
+    npt.kind = 0;
+    npt.p[0] = double(pop); // save pop in u[0] for testing
+  });
 
-  auto n_cells = grid.domain.gdims[0] * grid.domain.gdims[1] * grid.domain.gdims[2];
+  auto n_cells =
+    grid.domain.gdims[0] * grid.domain.gdims[1] * grid.domain.gdims[2];
   EXPECT_EQ(mprts.size(), n_cells * n_populations * prm.nicell);
 }
 
 TEST(TestSetupParticles, Id)
 {
   using Mparticles = MparticlesSimple<ParticleWithId<double>>;
-  
-  auto domain = Grid_t::Domain{{1, 2, 2},
-			       {10., 20., 20.}, {},
-			       {1, 1, 1}};
+
+  auto domain = Grid_t::Domain{{1, 2, 2}, {10., 20., 20.}, {}, {1, 1, 1}};
   auto kinds = Grid_t::Kinds{{1., 100., "i"}};
   auto prm = Grid_t::NormalizationParams::dimensionless();
   prm.nicell = 2;
   Grid_t grid{domain, {}, kinds, {prm}, .1};
   Mparticles mprts{grid};
-			   
-  SetupParticles<Mparticles> setup_particles(grid);
-  setup_particles(mprts, [&](int kind, Double3 crd, psc_particle_npt& npt) {
-      npt.n = 1;
-    });
 
-  auto n_cells = grid.domain.gdims[0] * grid.domain.gdims[1] * grid.domain.gdims[2];
+  SetupParticles<Mparticles> setup_particles(grid);
+  setup_particles(
+    mprts, [&](int kind, Double3 crd, psc_particle_npt& npt) { npt.n = 1; });
+
+  auto n_cells =
+    grid.domain.gdims[0] * grid.domain.gdims[1] * grid.domain.gdims[2];
   EXPECT_EQ(mprts.size(), n_cells * kinds.size() * prm.nicell);
 
   psc::particle::Id cnt = 0;
   for (int p = 0; p < mprts.n_patches(); p++) {
-    for (auto &prt : mprts[p]) {
+    for (auto& prt : mprts[p]) {
       EXPECT_EQ(prt.id(), cnt++);
     }
   }
@@ -518,27 +516,26 @@ TEST(TestSetupParticles, Id)
 TEST(TestSetupParticles, Tag)
 {
   using Mparticles = MparticlesSimple<ParticleWithId<double>>;
-  
-  auto domain = Grid_t::Domain{{1, 2, 2},
-			       {10., 20., 20.}, {},
-			       {1, 1, 1}};
+
+  auto domain = Grid_t::Domain{{1, 2, 2}, {10., 20., 20.}, {}, {1, 1, 1}};
   auto kinds = Grid_t::Kinds{{1., 100., "i"}, {-1., 1., "e"}};
   auto prm = Grid_t::NormalizationParams::dimensionless();
   prm.nicell = 2;
   Grid_t grid{domain, {}, kinds, {prm}, .1};
   Mparticles mprts{grid};
-			   
+
   SetupParticles<Mparticles> setup_particles(grid);
   setup_particles(mprts, [&](int kind, Double3 crd, psc_particle_npt& npt) {
-      npt.n = 1;
-      npt.tag = psc::particle::Tag{kind * 10};
-    });
+    npt.n = 1;
+    npt.tag = psc::particle::Tag{kind * 10};
+  });
 
-  auto n_cells = grid.domain.gdims[0] * grid.domain.gdims[1] * grid.domain.gdims[2];
+  auto n_cells =
+    grid.domain.gdims[0] * grid.domain.gdims[1] * grid.domain.gdims[2];
   EXPECT_EQ(mprts.size(), n_cells * kinds.size() * prm.nicell);
 
   for (int p = 0; p < mprts.n_patches(); p++) {
-    for (auto &prt : mprts[p]) {
+    for (auto& prt : mprts[p]) {
       EXPECT_EQ(prt.tag(), prt.kind * 10);
     }
   }

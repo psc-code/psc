@@ -73,7 +73,7 @@ public:
   {
     auto&& eval_mflds = evalMfields(_mflds);
     auto& mflds = const_cast<MfieldsC&>(eval_mflds);
-    
+
     int n_comps = comp_names.size();
     // FIXME, should generally equal the # of component in mflds,
     // but this way allows us to write fewer components, useful to hack around

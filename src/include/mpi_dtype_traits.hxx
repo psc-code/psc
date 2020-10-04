@@ -3,16 +3,16 @@
 
 #include <mpi.h>
 
-template<typename T>
+template <typename T>
 struct MpiDtypeTraits;
 
-template<>
+template <>
 struct MpiDtypeTraits<float>
 {
   static MPI_Datatype value() { return MPI_FLOAT; }
 };
 
-template<>
+template <>
 struct MpiDtypeTraits<double>
 {
   static MPI_Datatype value() { return MPI_DOUBLE; }

@@ -22,14 +22,12 @@ public:
   using iterator = T*;
   using const_iterator = const T*;
 
-  Span(pointer data, size_t size)
-    : begin_{data}, end_{data + size}
-  {}
+  Span(pointer data, size_t size) : begin_{data}, end_{data + size} {}
 
   iterator begin() const { return begin_; }
   iterator end() const { return end_; }
   size_t size() const { return end_ - begin_; }
-  
+
 private:
   pointer begin_;
   pointer end_;
@@ -38,7 +36,7 @@ private:
 // ======================================================================
 // MparticlesStorage
 
-template<typename _Particle>
+template <typename _Particle>
 struct MparticlesStorage
 {
   using Particle = _Particle;
@@ -47,15 +45,10 @@ struct MparticlesStorage
   using Range = Span<Particle>;
   using iterator = typename Range::iterator;
   using const_iterator = typename Range::const_iterator;
-  
-  MparticlesStorage(uint n_patches)
-    : bufs_(n_patches)
-  {}
 
-  void reset(const Grid_t& grid)
-  {
-    bufs_ = Buffers(grid.n_patches());
-  }
+  MparticlesStorage(uint n_patches) : bufs_(n_patches) {}
+
+  void reset(const Grid_t& grid) { bufs_ = Buffers(grid.n_patches()); }
 
   void reserve_all(const std::vector<uint>& n_prts_by_patch)
   {
@@ -98,7 +91,10 @@ struct MparticlesStorage
   }
 
   Range operator[](int p) { return {bufs_[p].data(), bufs_[p].size()}; }
-  Particle& at(int p, int n) { return bufs_[p][n]; } // FIXME, ugly and not great for effciency
+  Particle& at(int p, int n)
+  {
+    return bufs_[p][n];
+  } // FIXME, ugly and not great for effciency
   void push_back(int p, const Particle& prt) { bufs_[p].push_back(prt); }
 
   Buffers& bndBuffers() { return bufs_; }
@@ -110,7 +106,7 @@ private:
 // ======================================================================
 // MparticlesSimple
 
-template<typename P>
+template <typename P>
 struct MparticlesSimple : MparticlesBase
 {
   using Particle = P;
@@ -127,12 +123,9 @@ struct MparticlesSimple : MparticlesBase
   {
     using iterator = typename Storage::iterator;
     using const_iterator = typename Storage::const_iterator;
-    
-    Patch(MparticlesSimple& mprts, int p)
-      : mprts_(mprts),
-	p_(p)
-      {}
-    
+
+    Patch(MparticlesSimple& mprts, int p) : mprts_(mprts), p_(p) {}
+
     Patch(const Patch&) = delete;
     Patch(Patch&&) = default;
 
@@ -140,7 +133,7 @@ struct MparticlesSimple : MparticlesBase
     iterator begin() { return mprts_.storage_[p_].begin(); }
     iterator end() { return mprts_.storage_[p_].end(); }
     unsigned int size() const { return mprts_.storage_[p_].size(); }
-    
+
     void push_back(const Particle& new_prt)
     {
       // need to copy because we modify it
@@ -149,24 +142,33 @@ struct MparticlesSimple : MparticlesBase
       validCellIndex(prt);
       mprts_.storage_.push_back(p_, prt);
     }
-    
+
     void check() const
     {
-      for (auto& prt: mprts_.storage_[p_]) {
-	mprts_.pi_.validCellIndex(prt.x());
+      for (auto& prt : mprts_.storage_[p_]) {
+        mprts_.pi_.validCellIndex(prt.x());
       }
     }
-    
+
     // ParticleIndexer functionality
-    int cellPosition(real_t xi, int d) const { return mprts_.pi_.cellPosition(xi, d); }
-    int validCellIndex(const Particle& prt) const { return mprts_.pi_.validCellIndex(prt.x); }
-    
-    void checkInPatchMod(Particle& prt) const { return mprts_.pi_.checkInPatchMod(prt.x); }
-    
+    int cellPosition(real_t xi, int d) const
+    {
+      return mprts_.pi_.cellPosition(xi, d);
+    }
+    int validCellIndex(const Particle& prt) const
+    {
+      return mprts_.pi_.validCellIndex(prt.x);
+    }
+
+    void checkInPatchMod(Particle& prt) const
+    {
+      return mprts_.pi_.checkInPatchMod(prt.x);
+    }
+
     const Grid_t& grid() const { return mprts_.grid(); }
     const MparticlesSimple& mprts() const { return *mprts_; }
     int p() const { return p_; }
-    
+
   private:
     MparticlesSimple& mprts_;
     int p_;
@@ -190,18 +192,33 @@ struct MparticlesSimple : MparticlesBase
     storage_.reset(grid);
   }
 
-  Patch operator[](int p) const { return {const_cast<MparticlesSimple&>(*this), p}; } // FIXME, isn't actually const
+  Patch operator[](int p) const
+  {
+    return {const_cast<MparticlesSimple&>(*this), p};
+  } // FIXME, isn't actually const
 
-  void reserve_all(const std::vector<uint> &n_prts_by_patch) { storage_.reserve_all(n_prts_by_patch); }
-  void resize_all(const std::vector<uint>& n_prts_by_patch)  { storage_.resize_all(n_prts_by_patch); }
-  void clear()                                               { storage_.clear(); }
-  std::vector<uint> sizeByPatch() const override             { return storage_.sizeByPatch(); }
-  int size() const override                                  { return storage_.size(); }
+  void reserve_all(const std::vector<uint>& n_prts_by_patch)
+  {
+    storage_.reserve_all(n_prts_by_patch);
+  }
+  void resize_all(const std::vector<uint>& n_prts_by_patch)
+  {
+    storage_.resize_all(n_prts_by_patch);
+  }
+  void clear() { storage_.clear(); }
+  std::vector<uint> sizeByPatch() const override
+  {
+    return storage_.sizeByPatch();
+  }
+  int size() const override { return storage_.size(); }
 
   const ParticleIndexer<real_t>& particleIndexer() const { return pi_; }
-  
+
   InjectorSimple<MparticlesSimple> injector() { return {*this}; }
-  ConstAccessor accessor() const { return {const_cast<MparticlesSimple&>(*this)}; } // FIXME
+  ConstAccessor accessor() const
+  {
+    return {const_cast<MparticlesSimple&>(*this)};
+  } // FIXME
   Accessor accessor_() { return {*this}; }
 
   BndBuffers& bndBuffers() { return storage_.bndBuffers(); }
@@ -222,28 +239,29 @@ struct MparticlesSimple : MparticlesBase
       auto& prts = (*this)[p];
       fprintf(file, "mparticles_dump: p%d n_prts = %d\n", p, prts.size());
       for (int n = 0; n < prts.size(); n++) {
-	auto& prt = prts[n];
-	fprintf(file, "mparticles_dump: [%d] %g %g %g // %d // %g %g %g // %g\n",
-		n, prt.xi, prt.yi, prt.zi, prt.kind_,
-		prt.pxi, prt.pyi, prt.pzi, prt.qni_wni_);
+        auto& prt = prts[n];
+        fprintf(file,
+                "mparticles_dump: [%d] %g %g %g // %d // %g %g %g // %g\n", n,
+                prt.xi, prt.yi, prt.zi, prt.kind_, prt.pxi, prt.pyi, prt.pzi,
+                prt.qni_wni_);
       }
     }
     fclose(file);
   }
-  
-  void define_species(const char *name, double q, double m,
-		      double max_local_np, double max_local_nm,
-		      double sort_interval, double sort_out_of_place)
+
+  void define_species(const char* name, double q, double m, double max_local_np,
+                      double max_local_nm, double sort_interval,
+                      double sort_out_of_place)
   {}
-  
+
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
 
 private:
   Storage storage_;
+
 public: // FIXME
   psc::particle::UniqueIdGenerator uid_gen;
   ParticleIndexer<real_t> pi_;
 };
-

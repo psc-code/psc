@@ -7,9 +7,8 @@
 // ----------------------------------------------------------------------
 // psc_collision_fortran_run
 
-static void
-psc_collision_fortran_run(struct psc_collision *collision,
-			  struct psc_mparticles *mprts_base)
+static void psc_collision_fortran_run(struct psc_collision* collision,
+                                      struct psc_mparticles* mprts_base)
 {
   static int pr;
   if (!pr) {
@@ -21,7 +20,7 @@ psc_collision_fortran_run(struct psc_collision *collision,
   prof_start(pr);
 
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles* prts = psc_mparticles_get_patch(mprts, p);
     PIC_bin_coll(prts);
   }
 
@@ -34,6 +33,6 @@ psc_collision_fortran_run(struct psc_collision *collision,
 // psc_collision: subclass "fortran"
 
 struct psc_collision_ops psc_collision_fortran_ops = {
-  .name                  = "fortran",
-  .run                   = psc_collision_fortran_run,
+  .name = "fortran",
+  .run = psc_collision_fortran_run,
 };

@@ -110,7 +110,8 @@ public:
       pr = prof_register("outf", 1., 0, 0);
     }
 #if 1
-    static int pr_field, pr_moment, pr_field_calc, pr_moment_calc, pr_field_write, pr_moment_write, pr_field_acc, pr_moment_acc;
+    static int pr_field, pr_moment, pr_field_calc, pr_moment_calc,
+      pr_field_write, pr_moment_write, pr_field_acc, pr_moment_acc;
     if (!pr_field) {
       pr = prof_register("outf", 1., 0, 0);
       pr_field = prof_register("outf_field", 1., 0, 0);
@@ -126,14 +127,15 @@ public:
     prof_start(pr);
 
     auto timestep = grid.timestep();
-    if(first_time){
-        first_time = false;
-        if(timestep != 0)
-            pfield_next_ = timestep + pfield_interval;
-            tfield_next_ = timestep + tfield_interval;
-            pfield_moments_next_ = timestep + pfield_moments_interval;
-            tfield_moments_next_ = timestep + tfield_moments_interval;
-            return;
+    if (first_time) {
+      first_time = false;
+      if (timestep != 0) {
+        pfield_next_ = timestep + pfield_interval;
+        tfield_next_ = timestep + tfield_interval;
+        pfield_moments_next_ = timestep + pfield_moments_interval;
+        tfield_moments_next_ = timestep + tfield_moments_interval;
+        return;
+      }
     }
 
     bool do_pfield = pfield_interval > 0 && timestep >= pfield_next_;

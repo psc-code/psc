@@ -3,13 +3,11 @@
 
 #include "bnd.hxx"
 
-template<typename MfieldsState>
+template <typename MfieldsState>
 struct BndVpic : BndBase
 {
-  BndVpic(const Grid_t& grid, const int ibn[3])
-  {}
+  BndVpic(const Grid_t& grid, const int ibn[3]) {}
 
   void fill_ghosts(MfieldsState& mflds, int mb, int me) {}
   void add_ghosts(MfieldsState& mflds, int mb, int me) {}
 };
-

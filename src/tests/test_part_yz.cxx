@@ -5,8 +5,9 @@
 
 #include <string.h>
 
-static void
-psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count_only)
+static void psc_test_setup_particles(struct psc* psc,
+                                     int* nr_particles_by_patch,
+                                     bool count_only)
 {
   assert(0);
 #if 0
@@ -31,30 +32,29 @@ psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count
 // psc_test_ops_1a
 
 static struct psc_ops psc_test_ops_1a = {
-  .name             = "test",
-  .size             = sizeof(struct psc_test),
-  .create           = psc_test_create,
-  .init_field       = psc_test_init_field_linear,
-  .setup_particles  = psc_test_setup_particles,
-  .step             = psc_test_step,
+  .name = "test",
+  .size = sizeof(struct psc_test),
+  .create = psc_test_create,
+  .init_field = psc_test_init_field_linear,
+  .setup_particles = psc_test_setup_particles,
+  .step = psc_test_step,
 };
 
 // ----------------------------------------------------------------------
 // check push_particles_push_yz against "fortran" ref
 
 // psc_push_particles_type used as reference
-static const char *s_ref_type = "fortran";
+static const char* s_ref_type = "fortran";
 // psc_push_particles_type to be tested
-static const char *s_type = "fortran";
+static const char* s_type = "fortran";
 // threshold for particles
 static double eps_particles = 1e-7;
 // threshold for fields
 static double eps_fields = 1e-7;
 // which test case to set up particles / fields
-static const char *s_case = "1";
+static const char* s_case = "1";
 
-int
-main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   psc_testing_init(&argc, &argv);
 
@@ -72,7 +72,7 @@ main(int argc, char **argv)
     assert(0);
   }
 
-  struct psc *psc = psc_testing_create_test_yz(s_ref_type, 0);
+  struct psc* psc = psc_testing_create_test_yz(s_ref_type, 0);
   psc_setup(psc);
   psc_testing_push_particles(psc, s_ref_type);
   psc_testing_save_ref(psc);

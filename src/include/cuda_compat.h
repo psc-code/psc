@@ -4,7 +4,6 @@
 
 #include <cmath>
 
-
 // ----------------------------------------------------------------------
 // cuda compatibility stuff
 
@@ -13,19 +12,18 @@
 #define __host__
 #define __device__
 
-//typedef struct { float x; float y; float z; float w; } float4;
+// typedef struct { float x; float y; float z; float w; } float4;
 
 #endif
 
-template<typename T>
+template <typename T>
 T rsqrt(T x);
-
 
 #ifndef __CUDA_ARCH__
 
 // on the host, provide default implementation as 1/sqrt()
 
-template<typename T>
+template <typename T>
 T rsqrt(T x)
 {
   return T(1.) / std::sqrt(x);
@@ -38,7 +36,7 @@ T rsqrt(T x)
 // on the device, provide only specialized implementation for float,
 // using rsqrtf() intrinsic
 
-template<>
+template <>
 float rsqrt(float x)
 {
   return rsqrtf(x);
@@ -46,6 +44,4 @@ float rsqrt(float x)
 
 #endif
 
-
 #endif
-

@@ -1,14 +1,15 @@
 
 #include <psc.h>
+#include <psc_bnd_fields.h>
 #include <psc_push_fields.h>
 #include <psc_push_particles.h>
-#include <psc_bnd_fields.h>
 
 #include <mrc_params.h>
 
 #include <math.h>
 
-struct psc_test_microsphere {
+struct psc_test_microsphere
+{
   // parameters
   double radius;         //< radius of spherical shell
   double thickness;      //< thickness of shell
@@ -17,19 +18,18 @@ struct psc_test_microsphere {
   double width_parallel; //< pulse width along propagation direction
 };
 
-#define VAR(x) (void *)offsetof(struct psc_test_microsphere, x)
+#define VAR(x) (void*)offsetof(struct psc_test_microsphere, x)
 static struct param psc_test_microsphere_descr[] = {
-  { "radius"        , VAR(radius)          , PARAM_DOUBLE(2.e-6)              },
-  { "thickness"     , VAR(thickness)       , PARAM_DOUBLE(.4e-6)              },
-  { "center"        , VAR(xc)              , PARAM_DOUBLE3(5e-6, 5e-6, 5e-6)  },
-  { "width_normal"  , VAR(width_normal)    , PARAM_DOUBLE(3e-6)               },
-  { "width_parallel", VAR(width_parallel)  , PARAM_DOUBLE(2e-6)               },
+  {"radius", VAR(radius), PARAM_DOUBLE(2.e-6)},
+  {"thickness", VAR(thickness), PARAM_DOUBLE(.4e-6)},
+  {"center", VAR(xc), PARAM_DOUBLE3(5e-6, 5e-6, 5e-6)},
+  {"width_normal", VAR(width_normal), PARAM_DOUBLE(3e-6)},
+  {"width_parallel", VAR(width_parallel), PARAM_DOUBLE(2e-6)},
   {},
 };
 #undef VAR
 
-static void
-psc_test_microsphere_create(struct psc *psc)
+static void psc_test_microsphere_create(struct psc* psc)
 {
   psc->prm.nicell = 10;
   psc->prm.nmax = 201;
@@ -57,10 +57,10 @@ psc_test_microsphere_create(struct psc *psc)
   psc->domain.bnd_part_hi[2] = BND_PART_PERIODIC;
 }
 
-static double
-microsphere_dens(struct psc *psc, double x[3])
+static double microsphere_dens(struct psc* psc, double x[3])
 {
-  struct psc_test_microsphere *msphere = mrc_to_subobj(psc, struct psc_test_microsphere);
+  struct psc_test_microsphere* msphere =
+    mrc_to_subobj(psc, struct psc_test_microsphere);
 
   double xr[3];
   for (int d = 0; d < 3; d++) {
@@ -72,8 +72,7 @@ microsphere_dens(struct psc *psc, double x[3])
   return exp(-sqr((r - msphere->radius) / msphere->thickness));
 }
 
-static void
-psc_test_microsphere_set_from_options(struct psc *psc)
+static void psc_test_microsphere_set_from_options(struct psc* psc)
 {
 #if 0
   struct psc_test_microsphere *msphere = mrc_to_subobj(psc, struct psc_test_microsphere);
@@ -124,26 +123,26 @@ psc_test_microsphere_set_from_options(struct psc *psc)
 #endif
 }
 
-static void
-psc_test_microsphere_init_npt(struct psc *psc, int kind, double x[3],
-			      struct psc_particle_npt *npt)
+static void psc_test_microsphere_init_npt(struct psc* psc, int kind,
+                                          double x[3],
+                                          struct psc_particle_npt* npt)
 {
-  //  struct psc_test_microsphere *msphere = mrc_to_subobj(_case, struct psc_test_microsphere);
+  //  struct psc_test_microsphere *msphere = mrc_to_subobj(_case, struct
+  //  psc_test_microsphere);
   double dens = microsphere_dens(psc, x);
 
   switch (kind) {
-  case 0: // electrons
-    npt->q = -1.;
-    npt->m = 1;
-    npt->n = dens;
-    break;
-  case 1: // ions
-    npt->q = 1.;
-    npt->m = 100;
-    npt->n = dens;
-    break;
-  default:
-    assert(0);
+    case 0: // electrons
+      npt->q = -1.;
+      npt->m = 1;
+      npt->n = dens;
+      break;
+    case 1: // ions
+      npt->q = 1.;
+      npt->m = 100;
+      npt->n = dens;
+      break;
+    default: assert(0);
   }
 }
 
@@ -151,19 +150,18 @@ psc_test_microsphere_init_npt(struct psc *psc, int kind, double x[3],
 // psc_test_microsphere_ops
 
 struct psc_ops psc_test_microsphere_ops = {
-  .name             = "microsphere",
-  .size             = sizeof(struct psc_test_microsphere),
-  .param_descr      = psc_test_microsphere_descr,
-  .create           = psc_test_microsphere_create,
+  .name = "microsphere",
+  .size = sizeof(struct psc_test_microsphere),
+  .param_descr = psc_test_microsphere_descr,
+  .create = psc_test_microsphere_create,
   .set_from_options = psc_test_microsphere_set_from_options,
-  .init_npt         = psc_test_microsphere_init_npt,
+  .init_npt = psc_test_microsphere_init_npt,
 };
 
 // ======================================================================
 // main
 
-int
-main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   return psc_main(&argc, &argv, &psc_test_microsphere_ops);
 }
