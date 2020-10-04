@@ -133,9 +133,9 @@ public:
         break;
       case MY_ELECTRON_HE:
         npt.n = g.electron_HE_ratio * n;
-        npt.T[0] = g.target_Te_HE;
-        npt.T[1] = g.target_Te_HE;
-        npt.T[2] = g.target_Te_HE;
+        npt.T[0] = Te_HE;
+        npt.T[1] = Te_HE;
+        npt.T[2] = Te_HE;
         break;
       case MY_ELECTRON:
         npt.n = (1 - g.electron_HE_ratio) * n;
