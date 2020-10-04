@@ -40,10 +40,10 @@ struct PscFlatfoilParams
   double Zi;
   double mass_ratio;
   double lambda0;
-  double target_n;  // target density
+  double target_n;     // target density
   double target_Te_HE; // target high energy electron temperature
-  double target_Te; // target electron temperature
-  double target_Ti; // target ion_temperatore
+  double target_Te;    // target electron temperature
+  double target_Ti;    // target ion_temperatore
   double target_Te_heat;
   double target_Ti_heat;
   double target_Te_HE_heat;
@@ -537,11 +537,11 @@ void run()
         npt.n =
           inject_target.n - (mf_n[p](MY_ELECTRON, idx[0], idx[1], idx[2]) +
                              mf_n[p](MY_ELECTRON_HE, idx[0], idx[1], idx[2]));
-	if (kind == MY_ELECTRON_HE) {
-	  npt.n *= g.electron_HE_ratio;
-	} else {
-	  npt.n *= (1. - g.electron_HE_ratio);
-	}
+        if (kind == MY_ELECTRON_HE) {
+          npt.n *= g.electron_HE_ratio;
+        } else {
+          npt.n *= (1. - g.electron_HE_ratio);
+        }
       } else { // ions
         inject_target.init_npt(kind, pos, npt);
         npt.n -= mf_n[p](kind, idx[0], idx[1], idx[2]);
