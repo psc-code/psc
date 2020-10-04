@@ -40,9 +40,10 @@ struct PscFlatfoilParams
   double Zi;
   double mass_ratio;
   double lambda0;
-  double target_n;  // target density
-  double target_Te; // target electron temperature
-  double target_Ti; // target ion_temperatore
+  double target_n;     // target density
+  double target_Te_HE; // target high energy electron temperature
+  double target_Te;    // target electron temperature
+  double target_Ti;    // target ion_temperatore
   double target_Te_heat;
   double target_Ti_heat;
   double target_Te_HE_heat;
@@ -100,7 +101,7 @@ struct InjectFoilParams
   double yl, yh;
   double zl, zh;
   double n;
-  double Te, Ti;
+  double Te_HE, Te, Ti;
 };
 
 class InjectFoil : public InjectFoilParams
@@ -132,9 +133,9 @@ public:
         break;
       case MY_ELECTRON_HE:
         npt.n = g.electron_HE_ratio * n;
-        npt.T[0] = g.target_Te_HE_heat;
-        npt.T[1] = g.target_Te_HE_heat;
-        npt.T[2] = g.target_Te_HE_heat;
+        npt.T[0] = Te_HE;
+        npt.T[1] = Te_HE;
+        npt.T[2] = Te_HE;
         break;
       case MY_ELECTRON:
         npt.n = (1 - g.electron_HE_ratio) * n;
@@ -261,6 +262,7 @@ void setupParameters()
 
   g.target_n = 2.5;
   g.target_Te = 0.001;
+  g.target_Te_HE = 0.001;
   g.target_Ti = 0.001;
 
   g.electron_HE_ratio = 0.01;
@@ -507,9 +509,10 @@ void run()
   double target_zwidth = 1.;
   inject_foil_params.zl = -target_zwidth * g.d_i;
   inject_foil_params.zh = target_zwidth * g.d_i;
-  inject_foil_params.n = 2.5;
-  inject_foil_params.Te = .001;
-  inject_foil_params.Ti = .001;
+  inject_foil_params.n = g.target_n;
+  inject_foil_params.Te_HE = g.target_Te_HE;
+  inject_foil_params.Te = g.target_Te;
+  inject_foil_params.Ti = g.target_Ti;
   InjectFoil inject_target{inject_foil_params};
 
   g.inject_interval = 20;
