@@ -63,7 +63,7 @@ if (USE_CUDA)
 endif()
 
 if (PSC_HAVE_RMM)
-  target_link_libraries(psc PUBLIC rapids::rmm)
+  target_link_libraries(psc PUBLIC rmm::rmm)
 endif()
 
 if (USE_VPIC)
