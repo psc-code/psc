@@ -40,10 +40,10 @@ struct PscFlatfoilParams
   double Zi;
   double mass_ratio;
   double lambda0;
-  double target_n;  // target density
+  double target_n;     // target density
   double target_Te_HE; // target high energy electron temperature
-  double target_Te; // target electron temperature
-  double target_Ti; // target ion_temperatore
+  double target_Te;    // target electron temperature
+  double target_Ti;    // target ion_temperatore
   double target_Te_heat;
   double target_Ti_heat;
   double target_Te_HE_heat;
