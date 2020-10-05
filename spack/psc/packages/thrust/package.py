@@ -27,6 +27,13 @@ class Thrust(CMakePackage):
     version('1.9.1', sha256='7cf59bf42a7b05bc6799c88269bf41eb637ca2897726a5ade334a1b8b4579ef1')
     version('1.9.0', sha256='a98cf59fc145dd161471291d4816f399b809eb0db2f7085acc7e3ebc06558b37')
     version('1.8.2', sha256='83bc9e7b769daa04324c986eeaf48fcb53c2dda26bcc77cb3c07f4b1c359feb8')
+
+    patch('https://github.com/NVIDIA/thrust/pull/1297.patch', when='@1.10.0',
+              sha256='138aa8533a875f03b9d526f114fca4fc5803311ce6b7c8e022f03c2eefed0e19')
+    patch('https://github.com/NVIDIA/thrust/pull/1298.patch', when='@1.10.0',
+              sha256='0f27f6883e0f16d2d83f8816ab09dad4ad890aed8556ba1c1227e5339ed115c0')
+    patch('https://github.com/NVIDIA/thrust/pull/1300.patch', when='@1.10.0',
+              sha256='dbcbe70de701c5f64c9307cc921c2de06924843ef187fe59f69d11e41dda5211')
     
     def build(self, spec, prefix):
         pass
