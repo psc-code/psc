@@ -40,6 +40,9 @@ if(USE_CUDA)
   enable_language(CUDA)
 
   set(CMAKE_CUDA_FLAGS "${_save_CMAKE_CUDA_FLAGS}")
+
+  find_package(Thrust 1.10.0 REQUIRED)
+  thrust_create_target(Thrust)
 endif()
 
 set(MPI_CXX_SKIP_MPICXX ON)
