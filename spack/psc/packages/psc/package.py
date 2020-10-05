@@ -33,10 +33,13 @@ class Psc(CMakePackage):
     depends_on('hdf5@1.8.0:1.8.999 +hl')
     depends_on('adios2@2.4.0:', when='+adios2')
     depends_on('cuda', when='+cuda')
+    depends_on('thrust@1.10.0:', when='+cuda')
     depends_on('cuda', when='+nvtx')
     depends_on('rmm', when='+rmm')
 
     def cmake_args(self):
+        spec = self.spec
+        
         args = []
         args += ['-DUSE_CUDA={}'.format(
             'ON' if '+cuda' in self.spec else 'OFF')]
@@ -46,5 +49,6 @@ class Psc(CMakePackage):
             'ON' if '+rmm' in self.spec else 'OFF')]
         args += ['-DBUILD_TESTING={}'.format(
             'ON' if '+tests' in self.spec else 'OFF')]
+        args += ['-DThrust_DIR={}/include/thrust/cmake'.format(spec['thrust'].prefix)]
 
         return args
