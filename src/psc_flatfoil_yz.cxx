@@ -553,11 +553,7 @@ void run()
   heating_foil_params.n_kinds = N_MY_KINDS;
   HeatingSpotFoil heating_spot{grid, heating_foil_params};
 
-#if CASE == CASE_1D
-  g.heating_interval = -20;
-#else
   g.heating_interval = 20;
-#endif
   g.heating_begin = 0;
   g.heating_end = 10000000;
   auto& heating = *new Heating{grid, g.heating_interval, heating_spot};
