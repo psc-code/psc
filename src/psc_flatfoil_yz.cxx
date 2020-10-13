@@ -10,6 +10,9 @@
 #include "../libpsc/psc_heating/psc_heating_impl.hxx"
 #include "heating_spot_foil.hxx"
 
+// quasi 1-d
+#define CASE_1D 1
+
 #define CASE_2D 2
 
 #define CASE_3D 3
@@ -300,6 +303,10 @@ Grid_t* setupGrid()
   Grid_t::Real3 LL = {1., 800., 3. * 800.}; // domain size (in d_e)
   Int3 gdims = {1, 1600, 3 * 1600};         // global number of grid points
   Int3 np = {1, 50, 3 * 50};                // division into patches
+#elif CASE == CASE_1D
+  Grid_t::Real3 LL = {1., 8., 3. * 80.}; // domain size (in d_e)
+  Int3 gdims = {1, 16, 3 * 160};         // global number of grid points
+  Int3 np = {1, 1, 3 * 5};               // division into patches
 #endif
 
   Grid_t::Domain domain{gdims, LL, -.5 * LL, np};
@@ -465,8 +472,13 @@ void run()
 
   // -- output fields
   OutputFieldsParams outf_params{};
+#if CASE == CASE_1D
+  outf_params.pfield_interval = 100;
+  outf_params.tfield_interval = -100;
+#else
   outf_params.pfield_interval = 500;
   outf_params.tfield_interval = 500;
+#endif
   outf_params.tfield_average_every = 50;
   outf_params.tfield_moments_average_every = 50;
   OutputFields outf{grid, outf_params};
@@ -500,7 +512,11 @@ void run()
   heating_foil_params.n_kinds = N_MY_KINDS;
   HeatingSpotFoil heating_spot{grid, heating_foil_params};
 
+#if CASE == CASE_1D
+  g.heating_interval = -20;
+#else
   g.heating_interval = 20;
+#endif
   g.heating_begin = 0;
   g.heating_end = 10000000;
   auto& heating = *new Heating{grid, g.heating_interval, heating_spot};
