@@ -10,7 +10,12 @@
 #include "../libpsc/psc_heating/psc_heating_impl.hxx"
 #include "heating_spot_foil.hxx"
 
-//#define DIM_3D
+#define CASE_2D 2
+
+#define CASE_3D 3
+
+// FIXME select a hardcoded case
+#define CASE CASE_2D
 
 // ======================================================================
 // Particle kinds
@@ -156,7 +161,7 @@ public:
 //
 // EDIT to change order / floating point type / cuda / 2d/3d
 
-#ifdef DIM_3D
+#if CASE == CASE_3D
 using Dim = dim_xyz;
 #else
 using Dim = dim_yz;
@@ -287,11 +292,11 @@ void setupParameters()
 Grid_t* setupGrid()
 {
   // --- setup domain
-#ifdef DIM_3D
+#if CASE == CASE_3D
   Grid_t::Real3 LL = {80., 80., 3. * 80.}; // domain size (in d_e)
   Int3 gdims = {160, 160, 3 * 160};        // global number of grid points
   Int3 np = {5, 5, 3 * 5};                 // division into patches
-#else
+#elif CASE == CASE_2D
   Grid_t::Real3 LL = {1., 800., 3. * 800.}; // domain size (in d_e)
   Int3 gdims = {1, 1600, 3 * 1600};         // global number of grid points
   Int3 np = {1, 50, 3 * 50};                // division into patches
