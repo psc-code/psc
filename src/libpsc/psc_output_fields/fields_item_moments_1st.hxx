@@ -54,6 +54,7 @@ public:
   {
     using Particle = typename Mparticles::ConstAccessor::Particle;
 
+    Base::mres_.zero();
     auto deposit = Deposit1stCc<Mparticles, Mfields>{mprts, Base::mres_};
     deposit.process([&](const Particle& prt) {
       int m = prt.kind();
