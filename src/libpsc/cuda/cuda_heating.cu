@@ -102,11 +102,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
     dim3 dimGrid = BlockSimple<BS, dim_xyz>::dimGrid(*cmprts);
 
     if (first_time_) { // FIXME
-      d_xb_by_patch_.resize(cmprts->n_patches());
-      thrust::copy(
-        cmprts->xb_by_patch.data(),
-        cmprts->xb_by_patch.data() + cmprts->n_patches(),
-        d_xb_by_patch_.begin());
+      d_xb_by_patch_ = cmprts->xb_by_patch;
       h_prm_.d_xb_by_patch = d_xb_by_patch_.data().get();
       h_prm_.heating_dt = heating_dt;
 
