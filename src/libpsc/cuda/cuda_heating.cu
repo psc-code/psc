@@ -109,7 +109,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
   ~cuda_heating_foil()
   {
     cuda_heating_params_free(h_prm_);
-    
+
     myCudaFree(d_curand_states_);
     d_curand_states_ = nullptr;
   }
@@ -118,22 +118,6 @@ struct cuda_heating_foil : HeatingSpotFoilParams
   void reset(cuda_mparticles<BS>* cmprts)
   {
     first_time_ = true;
-  }
-
-  // ----------------------------------------------------------------------
-  // run_foil
-
-  template <typename BS>
-  void run_foil(cuda_mparticles<BS>* cmprts)
-  {
-    if (cmprts->n_prts == 0) {
-      return;
-    }
-    dim3 dimGrid = BlockSimple<BS, dim_xyz>::dimGrid(*cmprts);
-
-    k_heating_run_foil<BS>
-      <<<dimGrid, THREADS_PER_BLOCK>>>(heating_spot_, *cmprts, h_prm_, d_curand_states_);
-    cuda_sync_if_enabled();
   }
 
   // ----------------------------------------------------------------------
@@ -147,11 +131,12 @@ struct cuda_heating_foil : HeatingSpotFoilParams
       return;
     }
 
+    dim3 dimGrid = BlockSimple<BS, dim_xyz>::dimGrid(*cmprts);
+
     if (first_time_) { // FIXME
       cuda_heating_params_free(h_prm_);
       cuda_heating_params_set(h_prm_, cmprts, heating_dt);
 
-      dim3 dimGrid = BlockSimple<BS, dim_xyz>::dimGrid(*cmprts);
       int n_threads = dimGrid.x * dimGrid.y * dimGrid.z * THREADS_PER_BLOCK;
 
       myCudaFree(d_curand_states_);
@@ -168,7 +153,9 @@ struct cuda_heating_foil : HeatingSpotFoilParams
       cmprts->reorder();
     }
 
-    run_foil<BS>(cmprts);
+    k_heating_run_foil<BS><<<dimGrid, THREADS_PER_BLOCK>>>(
+      heating_spot_, *cmprts, h_prm_, d_curand_states_);
+    cuda_sync_if_enabled();
   }
 
   // state (FIXME, shouldn't be part of the interface)
