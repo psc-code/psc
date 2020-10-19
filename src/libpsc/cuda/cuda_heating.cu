@@ -124,7 +124,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
   // run_foil
 
   template <typename BS>
-  void run_foil(cuda_mparticles<BS>* cmprts, curandState* d_curand_states)
+  void run_foil(cuda_mparticles<BS>* cmprts)
   {
     if (cmprts->n_prts == 0) {
       return;
@@ -132,7 +132,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
     dim3 dimGrid = BlockSimple<BS, dim_xyz>::dimGrid(*cmprts);
 
     k_heating_run_foil<BS>
-      <<<dimGrid, THREADS_PER_BLOCK>>>(heating_spot_, *cmprts, h_prm_, d_curand_states);
+      <<<dimGrid, THREADS_PER_BLOCK>>>(heating_spot_, *cmprts, h_prm_, d_curand_states_);
     cuda_sync_if_enabled();
   }
 
@@ -168,7 +168,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
       cmprts->reorder();
     }
 
-    run_foil<BS>(cmprts, d_curand_states_);
+    run_foil<BS>(cmprts);
   }
 
   // state (FIXME, shouldn't be part of the interface)
