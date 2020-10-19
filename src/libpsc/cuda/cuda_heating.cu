@@ -127,36 +127,6 @@ struct cuda_heating_foil : HeatingSpotFoilParams
   }
 
   // ----------------------------------------------------------------------
-  // particle_kick
-
-  __host__ void particle_kick(float4* pxi4, float H)
-  {
-    float2 r01 = bm_normal2();
-    float2 r23 = bm_normal2();
-
-    float Dp = sqrtf(H * heating_dt);
-
-    pxi4->x += Dp * r01.x;
-    pxi4->y += Dp * r01.y;
-    pxi4->z += Dp * r23.x;
-  }
-
-  // ----------------------------------------------------------------------
-  // d_particle_kick
-
-  __device__ void d_particle_kick(float4* pxi4, float H, curandState* state)
-  {
-    float2 r01 = curand_normal2(state);
-    float r2 = curand_normal(state);
-
-    float Dp = sqrtf(H * heating_dt);
-
-    pxi4->x += Dp * r01.x;
-    pxi4->y += Dp * r01.y;
-    pxi4->z += Dp * r2;
-  }
-
-  // ----------------------------------------------------------------------
   // run_foil
 
   template <typename BS>
@@ -217,6 +187,37 @@ struct cuda_heating_foil : HeatingSpotFoilParams
 };
 
 // ----------------------------------------------------------------------
+// particle_kick
+
+__host__ void particle_kick(float4* pxi4, float H, float heating_dt)
+{
+  float2 r01 = bm_normal2();
+  float2 r23 = bm_normal2();
+
+  float Dp = sqrtf(H * heating_dt);
+
+  pxi4->x += Dp * r01.x;
+  pxi4->y += Dp * r01.y;
+  pxi4->z += Dp * r23.x;
+}
+
+// ----------------------------------------------------------------------
+// d_particle_kick
+
+__device__ void d_particle_kick(float4* pxi4, float H, float heating_dt,
+                                curandState* state)
+{
+  float2 r01 = curand_normal2(state);
+  float r2 = curand_normal(state);
+
+  float Dp = sqrtf(H * heating_dt);
+
+  pxi4->x += Dp * r01.x;
+  pxi4->y += Dp * r01.y;
+  pxi4->z += Dp * r2;
+}
+
+// ----------------------------------------------------------------------
 // cuda_heating_run_foil_gold
 
 template <typename BS>
@@ -246,7 +247,7 @@ void cuda_heating_run_foil_gold(cuda_heating_foil& foil,
       // d_pxi4[n] = pxi4;
       if (H > 0) {
         float4 pxi4 = cmprts->d_pxi4[n];
-        foil.particle_kick(&pxi4, H);
+        particle_kick(&pxi4, H, foil.heating_dt);
         cmprts->d_pxi4[n] = pxi4;
         // printf("H xx = %g %g %g H = %g px = %g %g %g\n", xx[0], xx[1], xx[2],
         // H,
@@ -299,7 +300,7 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
     // d_pxi4[n].w = H;
     if (H > 0.f) {
       float4 pxi4 = dmprts.storage.pxi4[n];
-      d_foil.d_particle_kick(&pxi4, H, &local_state);
+      d_particle_kick(&pxi4, H, d_foil.heating_dt, &local_state);
       dmprts.storage.pxi4[n] = pxi4;
     }
   }
