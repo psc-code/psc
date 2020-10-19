@@ -99,6 +99,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
       heating_dt(heating_dt),
       Lx_(grid.domain.length[0]),
       Ly_(grid.domain.length[1]),
+      heating_spot_{grid, params},
       h_prm_{},
       d_curand_states_{},
       first_time_{true}
@@ -235,6 +236,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
   float fac[HEATING_MAX_N_KINDS];
   float heating_dt;
   float Lx_, Ly_;
+  HeatingSpotFoil heating_spot_;
 
   cuda_heating_params h_prm_;
   curandState* d_curand_states_;
