@@ -117,12 +117,11 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
 // cuda_heating_foil
 
 template <typename HS>
-struct cuda_heating_foil : HeatingSpotFoilParams
+struct cuda_heating_foil
 {
   cuda_heating_foil(const Grid_t& grid, const HeatingSpotFoilParams& params,
                     double heating_dt)
-    : HeatingSpotFoilParams(params),
-      heating_dt(heating_dt),
+    : heating_dt(heating_dt),
       heating_spot_{grid, params},
       first_time_{true}
   {}
