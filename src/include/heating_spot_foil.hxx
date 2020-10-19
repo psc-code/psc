@@ -19,10 +19,9 @@ struct HeatingSpotFoilParams
 // ======================================================================
 // HeatingSpotFoil
 
-struct HeatingSpotFoil : HeatingSpotFoilParams
+class HeatingSpotFoil : public HeatingSpotFoilParams
 {
-  HeatingSpotFoil() = default;
-
+public:
   HeatingSpotFoil(const Grid_t& grid, const HeatingSpotFoilParams& params)
     : HeatingSpotFoilParams(params),
       Lx_(grid.domain.length[0]),
@@ -62,7 +61,7 @@ struct HeatingSpotFoil : HeatingSpotFoilParams
 #endif
   }
 
-  // private:
+private:
   double fac[HEATING_MAX_N_KINDS];
   double Lx_, Ly_;
 };
