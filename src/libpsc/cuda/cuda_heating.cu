@@ -48,8 +48,6 @@ __global__ static void k_curand_setup(curandState* d_curand_states)
   curand_init(1234, id, 0, &d_curand_states[id]);
 }
 
-struct cuda_heating_foil;
-
 template <typename BS>
 __global__ static void k_heating_run_foil(HeatingSpotFoil foil,
                                           DMparticlesCuda<BS> dmprts,
@@ -69,12 +67,11 @@ struct cuda_heating_foil : HeatingSpotFoilParams
       first_time_{true}
   {}
 
-  // no copy constructor / assign
+  // no copy constructor / assign to catch performance issues
   cuda_heating_foil(const cuda_heating_foil&) = delete;
   cuda_heating_foil& operator=(const cuda_heating_foil&) = delete;
 
-  template <typename BS>
-  void reset(cuda_mparticles<BS>* cmprts)
+  void reset()
   {
     first_time_ = true;
   }
@@ -262,7 +259,7 @@ HeatingCuda<BS>::~HeatingCuda()
 template <typename BS>
 void HeatingCuda<BS>::reset(MparticlesCuda<BS>& mprts)
 {
-  foil_->reset(mprts.cmprts());
+  foil_->reset();
 }
 
 template <typename BS>
