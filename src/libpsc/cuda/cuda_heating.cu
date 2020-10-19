@@ -28,34 +28,6 @@ struct cuda_heating_params
 };
 
 // ----------------------------------------------------------------------
-// cuda_heating_params_set
-
-template <typename BS>
-static void cuda_heating_params_set(cuda_heating_params& h_prm,
-                                    cuda_mparticles<BS>* cmprts,
-                                    float heating_dt)
-{
-  cudaError_t ierr;
-
-  h_prm.d_xb_by_patch =
-    (float_3*)myCudaMalloc(cmprts->n_patches() * sizeof(float_3));
-  ierr =
-    cudaMemcpy(h_prm.d_xb_by_patch, cmprts->xb_by_patch.data(),
-               cmprts->n_patches() * sizeof(float_3), cudaMemcpyHostToDevice);
-  cudaCheck(ierr);
-  h_prm.heating_dt = heating_dt;
-}
-
-// ----------------------------------------------------------------------
-// cuda_heating_params_free
-
-static void cuda_heating_params_free(cuda_heating_params& h_prm)
-{
-  myCudaFree(h_prm.d_xb_by_patch);
-  h_prm.d_xb_by_patch = nullptr;
-}
-
-// ----------------------------------------------------------------------
 // bm_normal2
 
 static inline float2 bm_normal2(void)
@@ -105,7 +77,10 @@ struct cuda_heating_foil : HeatingSpotFoilParams
       first_time_{true}
   {}
 
-  ~cuda_heating_foil() { cuda_heating_params_free(h_prm_); }
+  ~cuda_heating_foil()
+  {
+    myCudaFree(h_prm_.d_xb_by_patch);
+  }
 
   // no copy constructor / assign
   cuda_heating_foil(const cuda_heating_foil&) = delete;
@@ -131,8 +106,17 @@ struct cuda_heating_foil : HeatingSpotFoilParams
     dim3 dimGrid = BlockSimple<BS, dim_xyz>::dimGrid(*cmprts);
 
     if (first_time_) { // FIXME
-      cuda_heating_params_free(h_prm_);
-      cuda_heating_params_set(h_prm_, cmprts, heating_dt);
+      cudaError_t ierr;
+
+      myCudaFree(h_prm_.d_xb_by_patch);
+
+      h_prm_.d_xb_by_patch =
+        (float_3*)myCudaMalloc(cmprts->n_patches() * sizeof(float_3));
+      ierr = cudaMemcpy(h_prm_.d_xb_by_patch, cmprts->xb_by_patch.data(),
+                        cmprts->n_patches() * sizeof(float_3),
+                        cudaMemcpyHostToDevice);
+      cudaCheck(ierr);
+      h_prm_.heating_dt = heating_dt;
 
       d_curand_states_.resize(dimGrid.x * dimGrid.y * dimGrid.z *
                               THREADS_PER_BLOCK);
