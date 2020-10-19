@@ -114,6 +114,10 @@ struct cuda_heating_foil : HeatingSpotFoilParams
     d_curand_states_ = nullptr;
   }
 
+  // no copy constructor / assign
+  cuda_heating_foil(const cuda_heating_foil&) = delete;
+  cuda_heating_foil& operator=(const cuda_heating_foil&) = delete;
+
   template <typename BS>
   void reset(cuda_mparticles<BS>* cmprts)
   {
