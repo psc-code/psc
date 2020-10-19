@@ -86,7 +86,7 @@ __global__ static void k_curand_setup(curandState* d_curand_states)
 struct cuda_heating_foil;
 
 template <typename BS>
-__global__ static void k_heating_run_foil(cuda_heating_foil d_foil,
+__global__ static void k_heating_run_foil(HeatingSpotFoil foil,
                                           DMparticlesCuda<BS> dmprts,
                                           struct cuda_heating_params prm,
                                           curandState* d_curand_states);
@@ -124,11 +124,6 @@ struct cuda_heating_foil : HeatingSpotFoilParams
     first_time_ = true;
   }
 
-  __host__ __device__ float get_H(float* crd, int kind)
-  {
-    return heating_spot_(crd, kind);
-  }
-
   // ----------------------------------------------------------------------
   // run_foil
 
@@ -141,7 +136,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
     dim3 dimGrid = BlockSimple<BS, dim_xyz>::dimGrid(*cmprts);
 
     k_heating_run_foil<BS>
-      <<<dimGrid, THREADS_PER_BLOCK>>>(*this, *cmprts, h_prm_, d_curand_states);
+      <<<dimGrid, THREADS_PER_BLOCK>>>(heating_spot_, *cmprts, h_prm_, d_curand_states);
     cuda_sync_if_enabled();
   }
 
@@ -224,7 +219,7 @@ __device__ void d_particle_kick(float4* pxi4, float H, float heating_dt,
 // cuda_heating_run_foil_gold
 
 template <typename BS>
-void cuda_heating_run_foil_gold(cuda_heating_foil& foil, float heating_dt,
+void cuda_heating_run_foil_gold(HeatingSpotFoil& foil, float heating_dt,
                                 cuda_mparticles<BS>* cmprts)
 {
   for (int b = 0; b < cmprts->n_blocks; b++) {
@@ -241,7 +236,7 @@ void cuda_heating_run_foil_gold(cuda_heating_foil& foil, float heating_dt,
         xi4.z + xb[2],
       };
 
-      float H = foil.get_H(xx, prt_kind);
+      float H = foil(xx, prt_kind);
       // float4 pxi4 = d_pxi4[n];
       // printf("%s xx = %g %g %g H = %g px = %g %g %g\n", (H > 0) ? "H" : " ",
       // 	     xx[0], xx[1], xx[2], H,
@@ -265,7 +260,7 @@ void cuda_heating_run_foil_gold(cuda_heating_foil& foil, float heating_dt,
 
 template <typename BS>
 __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
-  k_heating_run_foil(cuda_heating_foil d_foil, DMparticlesCuda<BS> dmprts,
+  k_heating_run_foil(HeatingSpotFoil foil, DMparticlesCuda<BS> dmprts,
                      struct cuda_heating_params prm,
                      curandState* d_curand_states)
 {
@@ -299,8 +294,7 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
       xi4.y + xb[1],
       xi4.z + xb[2],
     };
-    float H = d_foil.get_H(xx, prt_kind);
-    // d_pxi4[n].w = H;
+    float H = foil(xx, prt_kind);
     if (H > 0.f) {
       float4 pxi4 = dmprts.storage.pxi4[n];
       d_particle_kick(&pxi4, H, prm.heating_dt, &local_state);
