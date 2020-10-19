@@ -67,13 +67,12 @@ __device__ void d_particle_kick(float4* pxi4, float H, float heating_dt,
 // ----------------------------------------------------------------------
 // k_heating_run_foil
 
-template <typename BS>
+template <typename BS, typename HS>
 __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
-  k_heating_run_foil(HeatingSpotFoil foil, DMparticlesCuda<BS> dmprts,
-                     float heating_dt, Float3* d_xb_by_patch,
-                     curandState* d_curand_states)
+  k_heating_run_foil(HS foil, DMparticlesCuda<BS> dmprts, float heating_dt,
+                     Float3* d_xb_by_patch, curandState* d_curand_states)
 {
-  BlockSimple<BS, dim_xyz> current_block;
+  BlockSimple<BS, typename HS::dim> current_block;
   if (!current_block.init(dmprts)) {
     return;
   }
@@ -117,6 +116,7 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
 // ======================================================================
 // cuda_heating_foil
 
+template <typename HS>
 struct cuda_heating_foil : HeatingSpotFoilParams
 {
   cuda_heating_foil(const Grid_t& grid, const HeatingSpotFoilParams& params,
@@ -144,7 +144,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
       return;
     }
 
-    dim3 dimGrid = BlockSimple<BS, dim_xyz>::dimGrid(*cmprts);
+    dim3 dimGrid = BlockSimple<BS, typename HS::dim>::dimGrid(*cmprts);
 
     if (first_time_) { // FIXME
       d_xb_by_patch_ = cmprts->xb_by_patch;
@@ -171,7 +171,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
   // state (FIXME, shouldn't be part of the interface)
   bool first_time_;
   float heating_dt;
-  HeatingSpotFoil heating_spot_;
+  HS heating_spot_;
 
   thrust::device_vector<Float3> d_xb_by_patch_;
   thrust::device_vector<curandState> d_curand_states_;
@@ -195,8 +195,8 @@ __host__ void particle_kick(float4* pxi4, float H, float heating_dt)
 // ----------------------------------------------------------------------
 // cuda_heating_run_foil_gold
 
-template <typename BS>
-void cuda_heating_run_foil_gold(HeatingSpotFoil& foil, float heating_dt,
+template <typename BS, typename HS>
+void cuda_heating_run_foil_gold(HS& foil, float heating_dt,
                                 cuda_mparticles<BS>* cmprts)
 {
   for (int b = 0; b < cmprts->n_blocks; b++) {
@@ -237,7 +237,7 @@ void cuda_heating_run_foil_gold(HeatingSpotFoil& foil, float heating_dt,
 template <typename BS>
 template <typename FUNC>
 HeatingCuda<BS>::HeatingCuda(const Grid_t& grid, int interval, FUNC get_H)
-  : foil_{new cuda_heating_foil{grid, get_H, interval * grid.dt}},
+  : foil_{new cuda_heating_foil<HeatingSpotFoil<dim_xyz>>{grid, get_H, interval * grid.dt}},
     balance_generation_cnt_{-1}
 {}
 
@@ -268,8 +268,8 @@ void HeatingCuda<BS>::operator()(MparticlesCuda<BS>& mprts)
 
 template struct HeatingCuda<BS144>;
 template HeatingCuda<BS144>::HeatingCuda(const Grid_t& grid, int interval,
-                                         HeatingSpotFoil get_H);
+                                         HeatingSpotFoil<dim_yz> get_H);
 
 template struct HeatingCuda<BS444>;
 template HeatingCuda<BS444>::HeatingCuda(const Grid_t& grid, int interval,
-                                         HeatingSpotFoil get_H);
+                                         HeatingSpotFoil<dim_yz> get_H);

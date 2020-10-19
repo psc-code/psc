@@ -556,7 +556,7 @@ void run()
   heating_foil_params.T[MY_ION] = g.target_Ti_heat;
   heating_foil_params.Mi = grid.kinds[MY_ION].m;
   heating_foil_params.n_kinds = N_MY_KINDS;
-  HeatingSpotFoil heating_spot{grid, heating_foil_params};
+  HeatingSpotFoil<Dim> heating_spot{grid, heating_foil_params};
 
   g.heating_interval = 20;
   g.heating_begin = 0;

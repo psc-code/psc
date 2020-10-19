@@ -19,9 +19,12 @@ struct HeatingSpotFoilParams
 // ======================================================================
 // HeatingSpotFoil
 
+template <typename DIM>
 class HeatingSpotFoil : public HeatingSpotFoilParams
 {
 public:
+  using dim = DIM;
+
   HeatingSpotFoil(const Grid_t& grid, const HeatingSpotFoilParams& params)
     : HeatingSpotFoilParams(params),
       Lx_(grid.domain.length[0]),
