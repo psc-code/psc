@@ -38,29 +38,31 @@ struct HeatingSpotFoil : HeatingSpotFoilParams
     // FIXME, I don't understand the sqrt(Mi) in here
   }
 
-  double operator()(const double* crd, const int kind)
+  template <typename R>
+  R operator()(const R* crd, int kind)
   {
-    double x = crd[0], y = crd[1], z = crd[2];
+    R x = crd[0], y = crd[1], z = crd[2];
     if (fac[kind] == 0.0)
       return 0;
     if (z <= zl || z >= zh) {
       return 0;
     }
 
-    return fac[kind] * (exp(-(sqr(x - (xc)) + sqr(y - (yc))) / sqr(rH))); // +
+    return fac[kind] *
+           (std::exp(-(sqr(x - (xc)) + sqr(y - (yc))) / sqr(rH))); // +
 #if 0
-            exp(-(sqr(x - (xc)) + sqr(y - (yc + Ly_))) / sqr(rH)) +
-            exp(-(sqr(x - (xc)) + sqr(y - (yc - Ly_))) / sqr(rH)) +
-            exp(-(sqr(x - (xc + Lx_)) + sqr(y - (yc))) / sqr(rH)) +
-            exp(-(sqr(x - (xc + Lx_)) + sqr(y - (yc + Ly_))) / sqr(rH)) +
-            exp(-(sqr(x - (xc + Lx_)) + sqr(y - (yc - Ly_))) / sqr(rH)) +
-            exp(-(sqr(x - (xc - Lx_)) + sqr(y - (yc))) / sqr(rH)) +
-            exp(-(sqr(x - (xc - Lx_)) + sqr(y - (yc + Ly_))) / sqr(rH)) +
-            exp(-(sqr(x - (xc - Lx_)) + sqr(y - (yc - Ly_))) / sqr(rH)));
+            std::exp(-(sqr(x - (xc)) + sqr(y - (yc + Ly_))) / sqr(rH)) +
+            std::exp(-(sqr(x - (xc)) + sqr(y - (yc - Ly_))) / sqr(rH)) +
+            std::exp(-(sqr(x - (xc + Lx_)) + sqr(y - (yc))) / sqr(rH)) +
+            std::exp(-(sqr(x - (xc + Lx_)) + sqr(y - (yc + Ly_))) / sqr(rH)) +
+            std::exp(-(sqr(x - (xc + Lx_)) + sqr(y - (yc - Ly_))) / sqr(rH)) +
+            std::exp(-(sqr(x - (xc - Lx_)) + sqr(y - (yc))) / sqr(rH)) +
+            std::exp(-(sqr(x - (xc - Lx_)) + sqr(y - (yc + Ly_))) / sqr(rH)) +
+            std::exp(-(sqr(x - (xc - Lx_)) + sqr(y - (yc - Ly_))) / sqr(rH)));
 #endif
   }
 
-//private:
+  // private:
   double fac[HEATING_MAX_N_KINDS];
   double Lx_, Ly_;
 };
