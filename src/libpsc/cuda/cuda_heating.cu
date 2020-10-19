@@ -48,11 +48,71 @@ __global__ static void k_curand_setup(curandState* d_curand_states)
   curand_init(1234, id, 0, &d_curand_states[id]);
 }
 
+// ----------------------------------------------------------------------
+// d_particle_kick
+
+__device__ void d_particle_kick(float4* pxi4, float H, float heating_dt,
+                                curandState* state)
+{
+  float2 r01 = curand_normal2(state);
+  float r2 = curand_normal(state);
+
+  float Dp = sqrtf(H * heating_dt);
+
+  pxi4->x += Dp * r01.x;
+  pxi4->y += Dp * r01.y;
+  pxi4->z += Dp * r2;
+}
+
+// ----------------------------------------------------------------------
+// k_heating_run_foil
+
 template <typename BS>
-__global__ static void k_heating_run_foil(HeatingSpotFoil foil,
-                                          DMparticlesCuda<BS> dmprts,
-                                          Float3* d_xb_by_patch,
-                                          curandState* d_curand_states);
+__global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
+  k_heating_run_foil(HeatingSpotFoil foil, DMparticlesCuda<BS> dmprts,
+                     float heating_dt, Float3* d_xb_by_patch,
+                     curandState* d_curand_states)
+{
+  BlockSimple<BS, dim_xyz> current_block;
+  if (!current_block.init(dmprts)) {
+    return;
+  }
+
+  Float3 xb; // __shared__
+  xb[0] = d_xb_by_patch[current_block.p][0];
+  xb[1] = d_xb_by_patch[current_block.p][1];
+  xb[2] = d_xb_by_patch[current_block.p][2];
+
+  int bid = (blockIdx.z * gridDim.y + blockIdx.y) * gridDim.x + blockIdx.x;
+  int id = threadIdx.x + bid * THREADS_PER_BLOCK;
+  /* Copy state to local memory for efficiency */
+  curandState local_state = d_curand_states[id];
+
+  int block_begin = dmprts.off_[current_block.bid];
+  int block_end = dmprts.off_[current_block.bid + 1];
+  for (int n : in_block_loop(block_begin, block_end)) {
+    if (n < block_begin) {
+      continue;
+    }
+    float4 xi4 = dmprts.storage.xi4[n];
+
+    int prt_kind = __float_as_int(xi4.w);
+
+    float xx[3] = {
+      xi4.x + xb[0],
+      xi4.y + xb[1],
+      xi4.z + xb[2],
+    };
+    float H = foil(xx, prt_kind);
+    if (H > 0.f) {
+      float4 pxi4 = dmprts.storage.pxi4[n];
+      d_particle_kick(&pxi4, H, heating_dt, &local_state);
+      dmprts.storage.pxi4[n] = pxi4;
+    }
+  }
+
+  d_curand_states[id] = local_state;
+}
 
 // ======================================================================
 // cuda_heating_foil
@@ -71,10 +131,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
   cuda_heating_foil(const cuda_heating_foil&) = delete;
   cuda_heating_foil& operator=(const cuda_heating_foil&) = delete;
 
-  void reset()
-  {
-    first_time_ = true;
-  }
+  void reset() { first_time_ = true; }
 
   // ----------------------------------------------------------------------
   // operator()
@@ -136,22 +193,6 @@ __host__ void particle_kick(float4* pxi4, float H, float heating_dt)
 }
 
 // ----------------------------------------------------------------------
-// d_particle_kick
-
-__device__ void d_particle_kick(float4* pxi4, float H, float heating_dt,
-                                curandState* state)
-{
-  float2 r01 = curand_normal2(state);
-  float r2 = curand_normal(state);
-
-  float Dp = sqrtf(H * heating_dt);
-
-  pxi4->x += Dp * r01.x;
-  pxi4->y += Dp * r01.y;
-  pxi4->z += Dp * r2;
-}
-
-// ----------------------------------------------------------------------
 // cuda_heating_run_foil_gold
 
 template <typename BS>
@@ -189,56 +230,6 @@ void cuda_heating_run_foil_gold(HeatingSpotFoil& foil, float heating_dt,
       }
     }
   }
-}
-
-// ----------------------------------------------------------------------
-// k_heating_run_foil
-
-template <typename BS>
-__global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
-  k_heating_run_foil(HeatingSpotFoil foil, DMparticlesCuda<BS> dmprts,
-                     float heating_dt, Float3* d_xb_by_patch,
-                     curandState* d_curand_states)
-{
-  BlockSimple<BS, dim_xyz> current_block;
-  if (!current_block.init(dmprts)) {
-    return;
-  }
-
-  Float3 xb; // __shared__
-  xb[0] = d_xb_by_patch[current_block.p][0];
-  xb[1] = d_xb_by_patch[current_block.p][1];
-  xb[2] = d_xb_by_patch[current_block.p][2];
-
-  int bid = (blockIdx.z * gridDim.y + blockIdx.y) * gridDim.x + blockIdx.x;
-  int id = threadIdx.x + bid * THREADS_PER_BLOCK;
-  /* Copy state to local memory for efficiency */
-  curandState local_state = d_curand_states[id];
-
-  int block_begin = dmprts.off_[current_block.bid];
-  int block_end = dmprts.off_[current_block.bid + 1];
-  for (int n : in_block_loop(block_begin, block_end)) {
-    if (n < block_begin) {
-      continue;
-    }
-    float4 xi4 = dmprts.storage.xi4[n];
-
-    int prt_kind = __float_as_int(xi4.w);
-
-    float xx[3] = {
-      xi4.x + xb[0],
-      xi4.y + xb[1],
-      xi4.z + xb[2],
-    };
-    float H = foil(xx, prt_kind);
-    if (H > 0.f) {
-      float4 pxi4 = dmprts.storage.pxi4[n];
-      d_particle_kick(&pxi4, H, heating_dt, &local_state);
-      dmprts.storage.pxi4[n] = pxi4;
-    }
-  }
-
-  d_curand_states[id] = local_state;
 }
 
 // ======================================================================
