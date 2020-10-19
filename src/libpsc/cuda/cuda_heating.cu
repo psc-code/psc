@@ -108,14 +108,10 @@ struct cuda_heating_foil : HeatingSpotFoilParams
 
   ~cuda_heating_foil()
   {
-    // FIXME, since we're copy-constructing this when passing to device,
-    // implementing the dtor breaks things...
-#if 0
     cuda_heating_params_free(h_prm_);
     
     myCudaFree(d_curand_states_);
     d_curand_states_ = nullptr;
-#endif
   }
 
   template <typename BS>
