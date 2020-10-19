@@ -93,12 +93,12 @@ __global__ static void k_heating_run_foil(cuda_heating_foil d_foil,
 
 struct cuda_heating_foil : HeatingSpotFoilParams
 {
-  cuda_heating_foil(const HeatingSpotFoilParams& params, double heating_dt,
-                    double Lx, double Ly)
+  cuda_heating_foil(const Grid_t& grid, const HeatingSpotFoilParams& params,
+                    double heating_dt)
     : HeatingSpotFoilParams(params),
       heating_dt(heating_dt),
-      Lx_(Lx),
-      Ly_(Ly),
+      Lx_(grid.domain.length[0]),
+      Ly_(grid.domain.length[1]),
       h_prm_{},
       d_curand_states_{},
       first_time_{true}
@@ -336,8 +336,7 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
 template <typename BS>
 template <typename FUNC>
 HeatingCuda<BS>::HeatingCuda(const Grid_t& grid, int interval, FUNC get_H)
-  : foil_{new cuda_heating_foil{get_H, interval * grid.dt,
-                                grid.domain.length[0], grid.domain.length[1]}},
+  : foil_{new cuda_heating_foil{grid, get_H, interval * grid.dt}},
     balance_generation_cnt_{-1}
 {}
 
