@@ -60,7 +60,7 @@ struct HeatingSpotFoil : HeatingSpotFoilParams
 #endif
   }
 
-private:
+//private:
   double fac[HEATING_MAX_N_KINDS];
   double Lx_, Ly_;
 };

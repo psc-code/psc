@@ -97,8 +97,6 @@ struct cuda_heating_foil : HeatingSpotFoilParams
                     double heating_dt)
     : HeatingSpotFoilParams(params),
       heating_dt(heating_dt),
-      Lx_(grid.domain.length[0]),
-      Ly_(grid.domain.length[1]),
       heating_spot_{grid, params},
       h_prm_{},
       d_curand_states_{},
@@ -138,16 +136,19 @@ struct cuda_heating_foil : HeatingSpotFoilParams
       return 0;
     }
 
+    double Lx = heating_spot_.Lx_;
+    double Ly = heating_spot_.Ly_;
+
     return fac[kind] *
            (exp(-(sqr(x - (xc)) + sqr(y - (yc))) / sqr(rH)) +
-            exp(-(sqr(x - (xc)) + sqr(y - (yc + Ly_))) / sqr(rH)) +
-            exp(-(sqr(x - (xc)) + sqr(y - (yc - Ly_))) / sqr(rH)) +
-            exp(-(sqr(x - (xc + Lx_)) + sqr(y - (yc))) / sqr(rH)) +
-            exp(-(sqr(x - (xc + Lx_)) + sqr(y - (yc + Ly_))) / sqr(rH)) +
-            exp(-(sqr(x - (xc + Lx_)) + sqr(y - (yc - Ly_))) / sqr(rH)) +
-            exp(-(sqr(x - (xc - Lx_)) + sqr(y - (yc))) / sqr(rH)) +
-            exp(-(sqr(x - (xc - Lx_)) + sqr(y - (yc + Ly_))) / sqr(rH)) +
-            exp(-(sqr(x - (xc - Lx_)) + sqr(y - (yc - Ly_))) / sqr(rH)));
+            exp(-(sqr(x - (xc)) + sqr(y - (yc + Ly))) / sqr(rH)) +
+            exp(-(sqr(x - (xc)) + sqr(y - (yc - Ly))) / sqr(rH)) +
+            exp(-(sqr(x - (xc + Lx)) + sqr(y - (yc))) / sqr(rH)) +
+            exp(-(sqr(x - (xc + Lx)) + sqr(y - (yc + Ly))) / sqr(rH)) +
+            exp(-(sqr(x - (xc + Lx)) + sqr(y - (yc - Ly))) / sqr(rH)) +
+            exp(-(sqr(x - (xc - Lx)) + sqr(y - (yc))) / sqr(rH)) +
+            exp(-(sqr(x - (xc - Lx)) + sqr(y - (yc + Ly))) / sqr(rH)) +
+            exp(-(sqr(x - (xc - Lx)) + sqr(y - (yc - Ly))) / sqr(rH)));
   }
 
   // ----------------------------------------------------------------------
@@ -235,7 +236,6 @@ struct cuda_heating_foil : HeatingSpotFoilParams
   bool first_time_;
   float fac[HEATING_MAX_N_KINDS];
   float heating_dt;
-  float Lx_, Ly_;
   HeatingSpotFoil heating_spot_;
 
   cuda_heating_params h_prm_;
