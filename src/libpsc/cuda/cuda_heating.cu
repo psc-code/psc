@@ -18,12 +18,14 @@
 
 #define THREADS_PER_BLOCK 256
 
+using Float3 = Vec3<float>;
+
 // ----------------------------------------------------------------------
 // cuda_heating_params
 
 struct cuda_heating_params
 {
-  float_3* d_xb_by_patch;
+  Float3* d_xb_by_patch;
   float heating_dt;
 };
 
@@ -73,14 +75,8 @@ struct cuda_heating_foil : HeatingSpotFoilParams
     : HeatingSpotFoilParams(params),
       heating_dt(heating_dt),
       heating_spot_{grid, params},
-      h_prm_{},
       first_time_{true}
   {}
-
-  ~cuda_heating_foil()
-  {
-    myCudaFree(h_prm_.d_xb_by_patch);
-  }
 
   // no copy constructor / assign
   cuda_heating_foil(const cuda_heating_foil&) = delete;
@@ -106,16 +102,12 @@ struct cuda_heating_foil : HeatingSpotFoilParams
     dim3 dimGrid = BlockSimple<BS, dim_xyz>::dimGrid(*cmprts);
 
     if (first_time_) { // FIXME
-      cudaError_t ierr;
-
-      myCudaFree(h_prm_.d_xb_by_patch);
-
-      h_prm_.d_xb_by_patch =
-        (float_3*)myCudaMalloc(cmprts->n_patches() * sizeof(float_3));
-      ierr = cudaMemcpy(h_prm_.d_xb_by_patch, cmprts->xb_by_patch.data(),
-                        cmprts->n_patches() * sizeof(float_3),
-                        cudaMemcpyHostToDevice);
-      cudaCheck(ierr);
+      d_xb_by_patch_.resize(cmprts->n_patches());
+      thrust::copy(
+        cmprts->xb_by_patch.data(),
+        cmprts->xb_by_patch.data() + cmprts->n_patches(),
+        d_xb_by_patch_.begin());
+      h_prm_.d_xb_by_patch = d_xb_by_patch_.data().get();
       h_prm_.heating_dt = heating_dt;
 
       d_curand_states_.resize(dimGrid.x * dimGrid.y * dimGrid.z *
@@ -142,6 +134,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
   HeatingSpotFoil heating_spot_;
 
   cuda_heating_params h_prm_;
+  thrust::device_vector<Float3> d_xb_by_patch_;
   thrust::device_vector<curandState> d_curand_states_;
 };
 
@@ -230,7 +223,7 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
     return;
   }
 
-  float_3 xb; // __shared__
+  Float3 xb; // __shared__
   xb[0] = prm.d_xb_by_patch[current_block.p][0];
   xb[1] = prm.d_xb_by_patch[current_block.p][1];
   xb[2] = prm.d_xb_by_patch[current_block.p][2];
