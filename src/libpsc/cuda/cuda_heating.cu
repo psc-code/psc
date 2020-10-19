@@ -102,17 +102,10 @@ struct cuda_heating_foil : HeatingSpotFoilParams
       heating_dt(heating_dt),
       heating_spot_{grid, params},
       h_prm_{},
-      d_curand_states_{},
       first_time_{true}
   {}
 
-  ~cuda_heating_foil()
-  {
-    cuda_heating_params_free(h_prm_);
-
-    myCudaFree(d_curand_states_);
-    d_curand_states_ = nullptr;
-  }
+  ~cuda_heating_foil() { cuda_heating_params_free(h_prm_); }
 
   // no copy constructor / assign
   cuda_heating_foil(const cuda_heating_foil&) = delete;
@@ -141,13 +134,10 @@ struct cuda_heating_foil : HeatingSpotFoilParams
       cuda_heating_params_free(h_prm_);
       cuda_heating_params_set(h_prm_, cmprts, heating_dt);
 
-      int n_threads = dimGrid.x * dimGrid.y * dimGrid.z * THREADS_PER_BLOCK;
-
-      myCudaFree(d_curand_states_);
-      d_curand_states_ =
-        (curandState*)myCudaMalloc(n_threads * sizeof(*d_curand_states_));
-
-      k_curand_setup<<<dimGrid, THREADS_PER_BLOCK>>>(d_curand_states_);
+      d_curand_states_.resize(dimGrid.x * dimGrid.y * dimGrid.z *
+                              THREADS_PER_BLOCK);
+      k_curand_setup<<<dimGrid, THREADS_PER_BLOCK>>>(
+        d_curand_states_.data().get());
       cuda_sync_if_enabled();
 
       first_time_ = false;
@@ -158,7 +148,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
     }
 
     k_heating_run_foil<BS><<<dimGrid, THREADS_PER_BLOCK>>>(
-      heating_spot_, *cmprts, h_prm_, d_curand_states_);
+      heating_spot_, *cmprts, h_prm_, d_curand_states_.data().get());
     cuda_sync_if_enabled();
   }
 
@@ -168,7 +158,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
   HeatingSpotFoil heating_spot_;
 
   cuda_heating_params h_prm_;
-  curandState* d_curand_states_;
+  thrust::device_vector<curandState> d_curand_states_;
 };
 
 // ----------------------------------------------------------------------
