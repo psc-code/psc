@@ -24,6 +24,7 @@
 struct cuda_heating_params
 {
   float_3* d_xb_by_patch;
+  float heating_dt;
 };
 
 // ----------------------------------------------------------------------
@@ -31,7 +32,8 @@ struct cuda_heating_params
 
 template <typename BS>
 static void cuda_heating_params_set(cuda_heating_params& h_prm,
-                                    cuda_mparticles<BS>* cmprts)
+                                    cuda_mparticles<BS>* cmprts,
+                                    float heating_dt)
 {
   cudaError_t ierr;
 
@@ -41,6 +43,7 @@ static void cuda_heating_params_set(cuda_heating_params& h_prm,
     cudaMemcpy(h_prm.d_xb_by_patch, cmprts->xb_by_patch.data(),
                cmprts->n_patches() * sizeof(float_3), cudaMemcpyHostToDevice);
   cudaCheck(ierr);
+  h_prm.heating_dt = heating_dt;
 }
 
 // ----------------------------------------------------------------------
@@ -155,7 +158,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
 
     if (first_time_) { // FIXME
       cuda_heating_params_free(h_prm_);
-      cuda_heating_params_set(h_prm_, cmprts);
+      cuda_heating_params_set(h_prm_, cmprts, heating_dt);
 
       dim3 dimGrid = BlockSimple<BS, dim_xyz>::dimGrid(*cmprts);
       int n_threads = dimGrid.x * dimGrid.y * dimGrid.z * THREADS_PER_BLOCK;
@@ -221,7 +224,7 @@ __device__ void d_particle_kick(float4* pxi4, float H, float heating_dt,
 // cuda_heating_run_foil_gold
 
 template <typename BS>
-void cuda_heating_run_foil_gold(cuda_heating_foil& foil,
+void cuda_heating_run_foil_gold(cuda_heating_foil& foil, float heating_dt,
                                 cuda_mparticles<BS>* cmprts)
 {
   for (int b = 0; b < cmprts->n_blocks; b++) {
@@ -247,7 +250,7 @@ void cuda_heating_run_foil_gold(cuda_heating_foil& foil,
       // d_pxi4[n] = pxi4;
       if (H > 0) {
         float4 pxi4 = cmprts->d_pxi4[n];
-        particle_kick(&pxi4, H, foil.heating_dt);
+        particle_kick(&pxi4, H, heating_dt);
         cmprts->d_pxi4[n] = pxi4;
         // printf("H xx = %g %g %g H = %g px = %g %g %g\n", xx[0], xx[1], xx[2],
         // H,
@@ -300,7 +303,7 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
     // d_pxi4[n].w = H;
     if (H > 0.f) {
       float4 pxi4 = dmprts.storage.pxi4[n];
-      d_particle_kick(&pxi4, H, d_foil.heating_dt, &local_state);
+      d_particle_kick(&pxi4, H, prm.heating_dt, &local_state);
       dmprts.storage.pxi4[n] = pxi4;
     }
   }
