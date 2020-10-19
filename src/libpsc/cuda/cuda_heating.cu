@@ -26,7 +26,6 @@ using Float3 = Vec3<float>;
 struct cuda_heating_params
 {
   Float3* d_xb_by_patch;
-  float heating_dt;
 };
 
 // ----------------------------------------------------------------------
@@ -104,7 +103,6 @@ struct cuda_heating_foil : HeatingSpotFoilParams
     if (first_time_) { // FIXME
       d_xb_by_patch_ = cmprts->xb_by_patch;
       h_prm_.d_xb_by_patch = d_xb_by_patch_.data().get();
-      h_prm_.heating_dt = heating_dt;
 
       d_curand_states_.resize(dimGrid.x * dimGrid.y * dimGrid.z *
                               THREADS_PER_BLOCK);
@@ -119,8 +117,9 @@ struct cuda_heating_foil : HeatingSpotFoilParams
       cmprts->reorder();
     }
 
-    k_heating_run_foil<BS><<<dimGrid, THREADS_PER_BLOCK>>>(
-      heating_spot_, *cmprts, h_prm_, d_curand_states_.data().get());
+    k_heating_run_foil<BS>
+      <<<dimGrid, THREADS_PER_BLOCK>>>(heating_spot_, *cmprts, heating_dt,
+                                       h_prm_, d_curand_states_.data().get());
     cuda_sync_if_enabled();
   }
 
@@ -211,7 +210,7 @@ void cuda_heating_run_foil_gold(HeatingSpotFoil& foil, float heating_dt,
 template <typename BS>
 __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
   k_heating_run_foil(HeatingSpotFoil foil, DMparticlesCuda<BS> dmprts,
-                     struct cuda_heating_params prm,
+                     float heating_dt, struct cuda_heating_params prm,
                      curandState* d_curand_states)
 {
   BlockSimple<BS, dim_xyz> current_block;
@@ -247,7 +246,7 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
     float H = foil(xx, prt_kind);
     if (H > 0.f) {
       float4 pxi4 = dmprts.storage.pxi4[n];
-      d_particle_kick(&pxi4, H, prm.heating_dt, &local_state);
+      d_particle_kick(&pxi4, H, heating_dt, &local_state);
       dmprts.storage.pxi4[n] = pxi4;
     }
   }
