@@ -101,12 +101,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
       h_prm_{},
       d_curand_states_{},
       first_time_{true}
-  {
-    assert(n_kinds < HEATING_MAX_N_KINDS);
-    float width = zh - zl;
-    for (int i = 0; i < n_kinds; i++)
-      fac[i] = (8.f * pow(T[i], 1.5)) / (sqrt(Mi) * width);
-  }
+  {}
 
   ~cuda_heating_foil()
   {
@@ -129,7 +124,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
   __host__ __device__ float get_H(float* crd, int kind)
   {
     double x = crd[0], y = crd[1], z = crd[2];
-    if (fac[kind] == 0.0)
+    if (heating_spot_.fac[kind] == 0.0)
       return 0;
 
     if (z <= zl || z >= zh) {
@@ -139,7 +134,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
     double Lx = heating_spot_.Lx_;
     double Ly = heating_spot_.Ly_;
 
-    return fac[kind] *
+    return heating_spot_.fac[kind] *
            (exp(-(sqr(x - (xc)) + sqr(y - (yc))) / sqr(rH)) +
             exp(-(sqr(x - (xc)) + sqr(y - (yc + Ly))) / sqr(rH)) +
             exp(-(sqr(x - (xc)) + sqr(y - (yc - Ly))) / sqr(rH)) +
@@ -234,7 +229,6 @@ struct cuda_heating_foil : HeatingSpotFoilParams
 
   // state (FIXME, shouldn't be part of the interface)
   bool first_time_;
-  float fac[HEATING_MAX_N_KINDS];
   float heating_dt;
   HeatingSpotFoil heating_spot_;
 
