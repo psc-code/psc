@@ -39,7 +39,7 @@ struct HeatingSpotFoil : HeatingSpotFoilParams
   }
 
   template <typename R>
-  R operator()(const R* crd, int kind)
+  KG_INLINE R operator()(const R* crd, int kind)
   {
     R x = crd[0], y = crd[1], z = crd[2];
     if (fac[kind] == 0.0)

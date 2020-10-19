@@ -123,27 +123,7 @@ struct cuda_heating_foil : HeatingSpotFoilParams
 
   __host__ __device__ float get_H(float* crd, int kind)
   {
-    double x = crd[0], y = crd[1], z = crd[2];
-    if (heating_spot_.fac[kind] == 0.0)
-      return 0;
-
-    if (z <= zl || z >= zh) {
-      return 0;
-    }
-
-    double Lx = heating_spot_.Lx_;
-    double Ly = heating_spot_.Ly_;
-
-    return heating_spot_.fac[kind] *
-           (exp(-(sqr(x - (xc)) + sqr(y - (yc))) / sqr(rH)) +
-            exp(-(sqr(x - (xc)) + sqr(y - (yc + Ly))) / sqr(rH)) +
-            exp(-(sqr(x - (xc)) + sqr(y - (yc - Ly))) / sqr(rH)) +
-            exp(-(sqr(x - (xc + Lx)) + sqr(y - (yc))) / sqr(rH)) +
-            exp(-(sqr(x - (xc + Lx)) + sqr(y - (yc + Ly))) / sqr(rH)) +
-            exp(-(sqr(x - (xc + Lx)) + sqr(y - (yc - Ly))) / sqr(rH)) +
-            exp(-(sqr(x - (xc - Lx)) + sqr(y - (yc))) / sqr(rH)) +
-            exp(-(sqr(x - (xc - Lx)) + sqr(y - (yc + Ly))) / sqr(rH)) +
-            exp(-(sqr(x - (xc - Lx)) + sqr(y - (yc - Ly))) / sqr(rH)));
+    return heating_spot_(crd, kind);
   }
 
   // ----------------------------------------------------------------------
