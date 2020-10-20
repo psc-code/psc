@@ -541,7 +541,7 @@ void run()
 #if CASE == CASE_1D
   heating_foil_params.xc = 0. * g.d_i;
   heating_foil_params.yc = 0. * g.d_i;
-  heating_foil_params.rH = 1000. * g.d_i;
+  heating_foil_params.rH = 0.; // uniform
 #elif CASE == CASE_2D_SMALL
   heating_foil_params.xc = 0. * g.d_i;
   heating_foil_params.yc = 2. * g.d_i;

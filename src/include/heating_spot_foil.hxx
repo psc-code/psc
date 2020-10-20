@@ -33,11 +33,9 @@ public:
     double width = zh - zl;
 
     assert(n_kinds < HEATING_MAX_N_KINDS);
-    // inialize a fac for each population
+    // initalize a fac for each population
     for (int i = 0; i < n_kinds; i++)
       fac[i] = (8.f * pow(T[i], 1.5)) / (sqrt(Mi) * width);
-
-    // FIXME, I don't understand the sqrt(Mi) in here
   }
 
   template <typename R>
@@ -48,6 +46,11 @@ public:
 
     if (crd[2] <= zl || crd[2] >= zh) {
       return 0;
+    }
+
+    // uniform heating, not a spot
+    if (rH == 0) {
+      return fac[kind];
     }
 
     return shape_xy(crd, kind, dim{});
