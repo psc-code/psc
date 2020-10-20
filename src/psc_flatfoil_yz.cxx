@@ -10,7 +10,15 @@
 #include "../libpsc/psc_heating/psc_heating_impl.hxx"
 #include "heating_spot_foil.hxx"
 
-//#define DIM_3D
+// quasi 1-d
+#define CASE_1D 1
+
+#define CASE_2D 2
+
+#define CASE_3D 3
+
+// FIXME select a hardcoded case
+#define CASE CASE_2D
 
 // ======================================================================
 // Particle kinds
@@ -156,7 +164,7 @@ public:
 //
 // EDIT to change order / floating point type / cuda / 2d/3d
 
-#ifdef DIM_3D
+#if CASE == CASE_3D
 using Dim = dim_xyz;
 #else
 using Dim = dim_yz;
@@ -287,14 +295,18 @@ void setupParameters()
 Grid_t* setupGrid()
 {
   // --- setup domain
-#ifdef DIM_3D
+#if CASE == CASE_3D
   Grid_t::Real3 LL = {80., 80., 3. * 80.}; // domain size (in d_e)
   Int3 gdims = {160, 160, 3 * 160};        // global number of grid points
   Int3 np = {5, 5, 3 * 5};                 // division into patches
-#else
+#elif CASE == CASE_2D
   Grid_t::Real3 LL = {1., 800., 3. * 800.}; // domain size (in d_e)
   Int3 gdims = {1, 1600, 3 * 1600};         // global number of grid points
   Int3 np = {1, 50, 3 * 50};                // division into patches
+#elif CASE == CASE_1D
+  Grid_t::Real3 LL = {1., 8., 3. * 80.}; // domain size (in d_e)
+  Int3 gdims = {1, 16, 3 * 160};         // global number of grid points
+  Int3 np = {1, 1, 3 * 5};               // division into patches
 #endif
 
   Grid_t::Domain domain{gdims, LL, -.5 * LL, np};
@@ -460,8 +472,13 @@ void run()
 
   // -- output fields
   OutputFieldsParams outf_params{};
+#if CASE == CASE_1D
+  outf_params.pfield_interval = 100;
+  outf_params.tfield_interval = -100;
+#else
   outf_params.pfield_interval = 500;
   outf_params.tfield_interval = 500;
+#endif
   outf_params.tfield_average_every = 50;
   outf_params.tfield_moments_average_every = 50;
   OutputFields outf{grid, outf_params};
@@ -495,7 +512,11 @@ void run()
   heating_foil_params.n_kinds = N_MY_KINDS;
   HeatingSpotFoil heating_spot{grid, heating_foil_params};
 
+#if CASE == CASE_1D
+  g.heating_interval = -20;
+#else
   g.heating_interval = 20;
+#endif
   g.heating_begin = 0;
   g.heating_end = 10000000;
   auto& heating = *new Heating{grid, g.heating_interval, heating_spot};
@@ -531,9 +552,9 @@ void run()
   auto lf_inject = [&](int kind, Double3 pos, int p, Int3 idx,
                        psc_particle_npt& npt) {
     if (inject_target.is_inside(pos)) {
+      inject_target.init_npt(kind, pos, npt);
 
       if (kind == MY_ELECTRON_HE || kind == MY_ELECTRON) {
-        inject_target.init_npt(kind, pos, npt);
         npt.n =
           inject_target.n - (mf_n[p](MY_ELECTRON, idx[0], idx[1], idx[2]) +
                              mf_n[p](MY_ELECTRON_HE, idx[0], idx[1], idx[2]));
@@ -543,7 +564,6 @@ void run()
           npt.n *= (1. - g.electron_HE_ratio);
         }
       } else { // ions
-        inject_target.init_npt(kind, pos, npt);
         npt.n -= mf_n[p](kind, idx[0], idx[1], idx[2]);
       }
       if (npt.n < 0) {

@@ -57,6 +57,7 @@ typedef int32_t SpeciesId; // Must be 32-bit wide for particle_injector_t
 #define UNLIKELY(_c) __builtin_expect((_c), 0)
 #endif
 
+#ifndef mprintf
 #define mprintf(fmt...)                                                        \
   do {                                                                         \
     int __rank;                                                                \
@@ -66,6 +67,9 @@ typedef int32_t SpeciesId; // Must be 32-bit wide for particle_injector_t
       printf(fmt);                                                             \
     }                                                                          \
   } while (0)
+#endif
+
+#ifndef MHERE
 #define MHERE                                                                  \
   do {                                                                         \
     int __rank;                                                                \
@@ -73,6 +77,7 @@ typedef int32_t SpeciesId; // Must be 32-bit wide for particle_injector_t
     printf("[%d] HERE: in %s() at %s:%d\n", __rank, __FUNCTION__, __FILE__,    \
            __LINE__);                                                          \
   } while (0)
+#endif
 
 // FIXME, do some proper logging eventually...
 
