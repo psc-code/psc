@@ -119,14 +119,12 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
 template <typename HS>
 struct cuda_heating_foil
 {
-  cuda_heating_foil(const Grid_t& grid, const HeatingSpotFoilParams& params,
+  cuda_heating_foil(const Grid_t& grid, const HS& heating_spot,
                     double heating_dt)
-    : heating_dt(heating_dt),
-      heating_spot_{grid, params},
-      first_time_{true}
+    : heating_dt_(heating_dt), heating_spot_{heating_spot}, first_time_{true}
   {}
 
-  // no copy constructor / assign to catch performance issues
+  // no copy constructor / assign, to catch performance issues
   cuda_heating_foil(const cuda_heating_foil&) = delete;
   cuda_heating_foil& operator=(const cuda_heating_foil&) = delete;
 
@@ -162,14 +160,14 @@ struct cuda_heating_foil
     }
 
     k_heating_run_foil<BS><<<dimGrid, THREADS_PER_BLOCK>>>(
-      heating_spot_, *cmprts, heating_dt, d_xb_by_patch_.data().get(),
+      heating_spot_, *cmprts, heating_dt_, d_xb_by_patch_.data().get(),
       d_curand_states_.data().get());
     cuda_sync_if_enabled();
   }
 
   // state (FIXME, shouldn't be part of the interface)
   bool first_time_;
-  float heating_dt;
+  float heating_dt_;
   HS heating_spot_;
 
   thrust::device_vector<Float3> d_xb_by_patch_;
@@ -234,7 +232,8 @@ void cuda_heating_run_foil_gold(HS& foil, float heating_dt,
 // ======================================================================
 
 template <typename HS, typename BS>
-HeatingCuda<HS, BS>::HeatingCuda(const Grid_t& grid, int interval, HS heating_spot)
+HeatingCuda<HS, BS>::HeatingCuda(const Grid_t& grid, int interval,
+                                 HS heating_spot)
   : foil_{new cuda_heating_foil<HS>{grid, heating_spot, interval * grid.dt}},
     balance_generation_cnt_{-1}
 {}
