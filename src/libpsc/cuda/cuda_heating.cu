@@ -170,8 +170,8 @@ struct cuda_heating_foil
   float heating_dt_;
   HS heating_spot_;
 
-  thrust::device_vector<Float3> d_xb_by_patch_;
-  thrust::device_vector<curandState> d_curand_states_;
+  psc::device_vector<Float3> d_xb_by_patch_;
+  psc::device_vector<curandState> d_curand_states_;
 };
 
 // ----------------------------------------------------------------------
