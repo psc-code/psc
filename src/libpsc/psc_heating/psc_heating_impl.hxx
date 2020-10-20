@@ -97,14 +97,14 @@ template <>
 struct HeatingSelector<MparticlesCuda<BS444>>
 {
   using Mparticles = MparticlesCuda<BS444>;
-  using Heating = HeatingCuda<HeatingSpotFoil<dim_xyz>, typename Mparticles::BS>;
+  using Heating = HeatingCuda<HeatingSpotFoil<dim_xyz>, Mparticles>;
 };
 
 template <>
 struct HeatingSelector<MparticlesCuda<BS144>>
 {
   using Mparticles = MparticlesCuda<BS144>;
-  using Heating = HeatingCuda<HeatingSpotFoil<dim_yz>, typename Mparticles::BS>;
+  using Heating = HeatingCuda<HeatingSpotFoil<dim_yz>, Mparticles>;
 };
 
 #endif

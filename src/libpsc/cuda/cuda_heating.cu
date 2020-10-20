@@ -231,27 +231,27 @@ void cuda_heating_run_foil_gold(HS& foil, float heating_dt,
 
 // ======================================================================
 
-template <typename HS, typename BS>
-HeatingCuda<HS, BS>::HeatingCuda(const Grid_t& grid, int interval,
+template <typename HS, typename MP>
+HeatingCuda<HS, MP>::HeatingCuda(const Grid_t& grid, int interval,
                                  HS heating_spot)
   : foil_{new cuda_heating_foil<HS>{grid, heating_spot, interval * grid.dt}},
     balance_generation_cnt_{-1}
 {}
 
-template <typename HS, typename BS>
-HeatingCuda<HS, BS>::~HeatingCuda()
+template <typename HS, typename MP>
+HeatingCuda<HS, MP>::~HeatingCuda()
 {
   delete foil_;
 }
 
-template <typename HS, typename BS>
-void HeatingCuda<HS, BS>::reset(MparticlesCuda<BS>& mprts)
+template <typename HS, typename MP>
+void HeatingCuda<HS, MP>::reset(const MP& mprts)
 {
   foil_->reset();
 }
 
-template <typename HS, typename BS>
-void HeatingCuda<HS, BS>::operator()(MparticlesCuda<BS>& mprts)
+template <typename HS, typename MP>
+void HeatingCuda<HS, MP>::operator()(MP& mprts)
 {
   if (psc_balance_generation_cnt > this->balance_generation_cnt_) {
     balance_generation_cnt_ = psc_balance_generation_cnt;
@@ -263,5 +263,5 @@ void HeatingCuda<HS, BS>::operator()(MparticlesCuda<BS>& mprts)
 
 // ======================================================================
 
-template struct HeatingCuda<HeatingSpotFoil<dim_yz>, BS144>;
-template struct HeatingCuda<HeatingSpotFoil<dim_xyz>, BS444>;
+template struct HeatingCuda<HeatingSpotFoil<dim_yz>, MparticlesCuda<BS144>>;
+template struct HeatingCuda<HeatingSpotFoil<dim_xyz>, MparticlesCuda<BS444>>;
