@@ -42,12 +42,23 @@ public:
     auto n_comps = mflds.n_comps();
     auto shape = makeDims(n_comps, mflds.gdims());
     assert(reader.variableShape<DataType>() == shape);
+    // FIXME, working around adios2 bug with selection
+    MfieldsSingle h_mflds(mflds.grid(), n_comps, {});
     for (int p = 0; p < mflds.n_patches(); p++) {
       auto start = makeDims(0, mflds.patchOffset(p));
       auto count = makeDims(n_comps, mflds.ldims());
-      auto ib = makeDims(0, -mflds.box().ib());
-      auto im = makeDims(n_comps, mflds.box().im());
-      reader.getVariable(mflds[p].data(), launch, {start, count}, {ib, im});
+      //auto ib = makeDims(0, -mflds.box().ib());
+      //auto im = makeDims(n_comps, mflds.box().im());
+      reader.getVariable(h_mflds[p].data(), launch, {start, count}, {});//{ib, im});
+    }
+    reader.performGets();
+
+    for (int p = 0; p < mflds.n_patches(); p++) {
+      for (int m = 0; m < n_comps; m++) {
+	h_mflds.Foreach_3d(0, 0, [&](int i, int j, int k) {
+	    mflds[p](m, i, j, k) = h_mflds[p](m, i, j, k);
+	  });
+      }
     }
   }
 };
