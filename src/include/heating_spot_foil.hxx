@@ -50,17 +50,16 @@ public:
       return 0;
     }
 
-    return shape_xy(crd, kind);
+    return shape_xy(crd, kind, dim{});
   }
 
   template <typename R>
-  KG_INLINE R shape_xy(const R* crd, int kind)
+  KG_INLINE R shape_xy(const R* crd, int kind, dim_xyz dim_select)
   {
     R x = crd[0], y = crd[1];
-    
+
     return fac[kind] *
-           (std::exp(-(sqr(x - (xc)) + sqr(y - (yc))) / sqr(rH))); // +
-#if 0
+           (std::exp(-(sqr(x - (xc)) + sqr(y - (yc))) / sqr(rH)) +
             std::exp(-(sqr(x - (xc)) + sqr(y - (yc + Ly_))) / sqr(rH)) +
             std::exp(-(sqr(x - (xc)) + sqr(y - (yc - Ly_))) / sqr(rH)) +
             std::exp(-(sqr(x - (xc + Lx_)) + sqr(y - (yc))) / sqr(rH)) +
@@ -69,7 +68,16 @@ public:
             std::exp(-(sqr(x - (xc - Lx_)) + sqr(y - (yc))) / sqr(rH)) +
             std::exp(-(sqr(x - (xc - Lx_)) + sqr(y - (yc + Ly_))) / sqr(rH)) +
             std::exp(-(sqr(x - (xc - Lx_)) + sqr(y - (yc - Ly_))) / sqr(rH)));
-#endif
+  }
+
+  template <typename R>
+  KG_INLINE R shape_xy(const R* crd, int kind, dim_yz dim_select)
+  {
+    R y = crd[1];
+
+    return fac[kind] * (std::exp(-(sqr(y - (yc))) / sqr(rH)) +
+                        std::exp(-(sqr(y - (yc + Ly_))) / sqr(rH)) +
+                        std::exp(-(sqr(y - (yc - Ly_))) / sqr(rH)));
   }
 
 private:
