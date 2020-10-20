@@ -43,13 +43,21 @@ public:
   template <typename R>
   KG_INLINE R operator()(const R* crd, int kind)
   {
-    R x = crd[0], y = crd[1], z = crd[2];
     if (fac[kind] == 0.0)
       return 0;
-    if (z <= zl || z >= zh) {
+
+    if (crd[2] <= zl || crd[2] >= zh) {
       return 0;
     }
 
+    return shape_xy(crd, kind);
+  }
+
+  template <typename R>
+  KG_INLINE R shape_xy(const R* crd, int kind)
+  {
+    R x = crd[0], y = crd[1];
+    
     return fac[kind] *
            (std::exp(-(sqr(x - (xc)) + sqr(y - (yc))) / sqr(rH))); // +
 #if 0
