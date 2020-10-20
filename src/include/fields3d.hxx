@@ -502,6 +502,14 @@ template <>
 const MfieldsBase::Convert Mfields<float>::convert_from_;
 extern template const MfieldsBase::Convert Mfields<float>::convert_from_;
 
+template <>
+const MfieldsBase::Convert Mfields<double>::convert_to_;
+extern template const MfieldsBase::Convert Mfields<double>::convert_to_;
+
+template <>
+const MfieldsBase::Convert Mfields<double>::convert_from_;
+extern template const MfieldsBase::Convert Mfields<double>::convert_from_;
+
 template <typename R>
 inline auto Mfields<R>::convert_to() -> const Convert&
 {
@@ -546,5 +554,29 @@ public: // FIXME public so that we can read/write it, friend needs include which
 
   //  friend class kg::io::Descr<MfieldsStateFromMfields<Mfields>>;
 };
+
+template <>
+const MfieldsStateBase::Convert
+  MfieldsStateFromMfields<Mfields<float>>::convert_to_;
+extern template const MfieldsStateBase::Convert
+  MfieldsStateFromMfields<Mfields<float>>::convert_to_;
+
+template <>
+const MfieldsStateBase::Convert
+  MfieldsStateFromMfields<Mfields<float>>::convert_from_;
+extern template const MfieldsStateBase::Convert
+  MfieldsStateFromMfields<Mfields<float>>::convert_from_;
+
+template <>
+const MfieldsStateBase::Convert
+  MfieldsStateFromMfields<Mfields<double>>::convert_to_;
+extern template const MfieldsStateBase::Convert
+  MfieldsStateFromMfields<Mfields<double>>::convert_to_;
+
+template <>
+const MfieldsStateBase::Convert
+  MfieldsStateFromMfields<Mfields<double>>::convert_from_;
+extern template const MfieldsStateBase::Convert
+  MfieldsStateFromMfields<Mfields<double>>::convert_from_;
 
 #endif
