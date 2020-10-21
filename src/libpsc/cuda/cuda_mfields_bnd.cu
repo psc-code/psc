@@ -116,8 +116,10 @@ void cuda_mfields_bnd_dtor(struct cuda_mfields_bnd* cbnd)
     map->h_map_out.shrink_to_fit();
     map->h_map_in.clear();
     map->h_map_in.shrink_to_fit();
-    myCudaFree(map->d_map_out);
-    myCudaFree(map->d_map_in);
+    map->d_map_out.clear();
+    map->d_map_out.shrink_to_fit();
+    map->d_map_in.clear();
+    map->d_map_in.shrink_to_fit();
   }
 
   for (int p = 0; p < cbnd->n_patches; p++) {
@@ -1154,25 +1156,11 @@ static void fields_create_map_in_yz(struct cuda_mfields_bnd* cbnd, int n_fields,
 void cuda_mfields_bnd_setup_map(struct cuda_mfields_bnd* cbnd, int n_fields,
                                 struct cuda_mfields_bnd_map* map)
 {
-  cudaError_t ierr;
-
   fields_create_map_out_yz(cbnd, n_fields, 2, map->h_map_out);
-
-  map->d_map_out =
-    (int*)myCudaMalloc(map->h_map_out.size() * sizeof(*map->d_map_out));
-  ierr = cudaMemcpy(map->d_map_out, map->h_map_out.data(),
-                    map->h_map_out.size() * sizeof(*map->d_map_out),
-                    cudaMemcpyHostToDevice);
-  cudaCheck(ierr);
+  map->d_map_out = map->h_map_out;
 
   fields_create_map_in_yz(cbnd, n_fields, 2, map->h_map_in);
-
-  map->d_map_in =
-    (int*)myCudaMalloc(map->h_map_in.size() * sizeof(*map->d_map_in));
-  ierr = cudaMemcpy(map->d_map_in, map->h_map_in.data(),
-                    map->h_map_in.size() * sizeof(*map->d_map_in),
-                    cudaMemcpyHostToDevice);
-  cudaCheck(ierr);
+  map->d_map_in = map->h_map_in;
 }
 
 template <int B, bool pack>
@@ -1189,11 +1177,11 @@ static void fields_device_pack3_yz(struct cuda_mfields* cmflds,
   int n_map;
   int* d_map;
   if (B == 2) {
-    n_map = map->h_map_out.size();
-    d_map = map->d_map_out;
+    n_map = map->d_map_out.size();
+    d_map = map->d_map_out.data().get();
   } else if (B == 4) {
-    n_map = map->h_map_in.size();
-    d_map = map->d_map_in;
+    n_map = map->d_map_in.size();
+    d_map = map->d_map_in.data().get();
   } else {
     assert(0);
   }
