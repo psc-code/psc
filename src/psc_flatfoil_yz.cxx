@@ -12,10 +12,9 @@
 
 // quasi 1-d
 #define CASE_1D 1
-
 #define CASE_2D 2
-
 #define CASE_3D 3
+#define CASE_2D_SMALL 4
 
 // FIXME select a hardcoded case
 #define CASE CASE_2D
@@ -265,7 +264,11 @@ void setupParameters()
   // -- Set some parameters specific to this case
   g.BB = 0.;
   g.Zi = 1.;
+#if CASE == CASE_2D_SMALL
+  g.mass_ratio = 100.;
+#else
   g.mass_ratio = 64.;
+#endif
   g.lambda0 = 20.;
 
   g.target_n = 2.5;
@@ -303,6 +306,10 @@ Grid_t* setupGrid()
   Grid_t::Real3 LL = {1., 800., 3. * 800.}; // domain size (in d_e)
   Int3 gdims = {1, 1600, 3 * 1600};         // global number of grid points
   Int3 np = {1, 50, 3 * 50};                // division into patches
+#elif CASE == CASE_2D_SMALL
+  Grid_t::Real3 LL = {1., 80., 3. * 80.}; // domain size (in d_e)
+  Int3 gdims = {1, 160, 3 * 160};         // global number of grid points
+  Int3 np = {1, 5, 3 * 5};                // division into patches
 #elif CASE == CASE_1D
   Grid_t::Real3 LL = {1., 8., 3. * 80.}; // domain size (in d_e)
   Int3 gdims = {1, 16, 3 * 160};         // global number of grid points
@@ -501,6 +508,9 @@ void run()
 #if CASE == CASE_1D
   outf_params.pfield_interval = 100;
   outf_params.tfield_interval = -100;
+#elif CASE == CASE_2D_SMALL
+  outf_params.pfield_interval = 100;
+  outf_params.tfield_interval = -500;
 #else
   outf_params.pfield_interval = 500;
   outf_params.tfield_interval = 500;
@@ -529,8 +539,13 @@ void run()
   heating_foil_params.zl = -1. * g.d_i;
   heating_foil_params.zh = 1. * g.d_i;
   heating_foil_params.xc = 0. * g.d_i;
+#if CASE == CASE_2D_SMALL
+  heating_foil_params.yc = 2. * g.d_i;
+  heating_foil_params.rH = 1. * g.d_i;
+#else
   heating_foil_params.yc = 20. * g.d_i;
   heating_foil_params.rH = 12. * g.d_i;
+#endif
   heating_foil_params.T[MY_ELECTRON_HE] = g.target_Te_HE_heat;
   heating_foil_params.T[MY_ELECTRON] = g.target_Te_heat;
   heating_foil_params.T[MY_ION] = g.target_Ti_heat;
