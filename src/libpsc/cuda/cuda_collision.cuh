@@ -114,12 +114,12 @@ struct CudaCollision
         auto prt2 = dmprts.storage[d_id[n + 1]];
 #ifndef NDEBUG
         int p = bidx / n_cells_per_patch;
-        int cidx1 = dmprts.validCellIndex(dmprts.storage.xi4[d_id[n]], p);
-        int cidx2 = dmprts.validCellIndex(dmprts.storage.xi4[d_id[n + 1]], p);
+        int cidx1 = dmprts.validCellIndex(dmprts.storage[d_id[n]], p);
+        int cidx2 = dmprts.validCellIndex(dmprts.storage[d_id[n + 1]], p);
         assert(cidx1 == cidx2);
 #endif
         bc(prt1, prt2, nudt1, rng);
-        // xi4 is not modified, don't need to store
+        // position is not modified, don't need to store
         dmprts.storage.store_momentum(prt1, d_id[n]);
         dmprts.storage.store_momentum(prt2, d_id[n + 1]);
       }
