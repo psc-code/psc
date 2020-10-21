@@ -88,15 +88,15 @@ public:
     real_t m12, q12;
     real_t ran1, ran2;
 
-    px1 = prt1.u()[0];
-    py1 = prt1.u()[1];
-    pz1 = prt1.u()[2];
+    px1 = prt1.u[0];
+    py1 = prt1.u[1];
+    pz1 = prt1.u[2];
     q1 = mprts_.prt_q(prt1);
     m1 = mprts_.prt_m(prt1);
 
-    px2 = prt2.u()[0];
-    py2 = prt2.u()[1];
-    pz2 = prt2.u()[2];
+    px2 = prt2.u[0];
+    py2 = prt2.u[1];
+    pz2 = prt2.u[2];
     q2 = mprts_.prt_q(prt2);
     m2 = mprts_.prt_m(prt2);
 
@@ -287,12 +287,12 @@ public:
     py4 = py4 / m4;
     pz4 = pz4 / m4;
 
-    prt1.u()[0] = px3;
-    prt1.u()[1] = py3;
-    prt1.u()[2] = pz3;
-    prt2.u()[0] = px4;
-    prt2.u()[1] = py4;
-    prt2.u()[2] = pz4;
+    prt1.u[0] = px3;
+    prt1.u[1] = py3;
+    prt1.u[2] = pz3;
+    prt2.u[0] = px4;
+    prt2.u[1] = py4;
+    prt2.u[2] = pz4;
 
     return nudt;
   }

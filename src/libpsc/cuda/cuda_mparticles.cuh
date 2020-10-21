@@ -40,7 +40,7 @@ struct DParticleProxy
   __device__ real_t q() const { return dmprts_.q(prt_.kind); }
   __device__ real_t m() const { return dmprts_.m(prt_.kind); }
 
-private:
+  //private:
   DParticleCuda prt_;
   const DMparticlesCuda& dmprts_;
 };
@@ -349,6 +349,13 @@ struct DMparticlesCuda : DParticleIndexer<BS_>
     return prt.m();
   }
 
+  __device__ real_t prt_q(const DParticleCuda& prt) const { return q(prt.kind); }
+
+  __device__ real_t prt_m(const DParticleCuda& prt) const { return m(prt.kind); }
+
+  __device__ real_t prt_w(const DParticleCuda& prt) const { return prt.qni_wni / prt_q(prt); }
+
+  
 private:
   real_t dt_;
   real_t fnqs_;

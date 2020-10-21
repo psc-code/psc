@@ -2,7 +2,6 @@
 #pragma once
 
 #include "collision.hxx"
-#include "const_accessor_simple.hxx"
 #include "binary_collision.hxx"
 #include "fields.hxx"
 #include "fields3d.hxx"
@@ -24,8 +23,7 @@ struct CollisionHost
   using MfieldsState = _MfieldsState;
   using Mfields = _Mfields;
   using Particles = typename Mparticles::Patch;
-  using AccessorPatch = typename Mparticles::Accessor::Patch;
-  using ParticleProxy = typename AccessorPatch::ParticleProxy;
+  using Particle = typename Mparticles::Particle;
 
   enum
   {
@@ -177,8 +175,8 @@ struct CollisionHost
   // ----------------------------------------------------------------------
   // update_rei_before
 
-  void update_rei_before(const Particles& prts, int n_start, int n_end,
-                         int p, int i, int j, int k)
+  void update_rei_before(const Particles& prts, int n_start, int n_end, int p,
+                         int i, int j, int k)
   {
     real_t fnqs = prts.grid().norm.fnqs;
     auto F = mflds_rei_[p];
@@ -187,7 +185,7 @@ struct CollisionHost
     F(2, i, j, k) = 0.;
     auto& mprts = prts.mprts();
     for (int n = n_start; n < n_end; n++) {
-      const auto &prt = prts[n];
+      const auto& prt = prts[n];
       auto fac = mprts.prt_m(prt) * mprts.prt_w(prt) * fnqs;
       F(0, i, j, k) -= prt.u[0] * fac;
       F(1, i, j, k) -= prt.u[1] * fac;
@@ -198,14 +196,14 @@ struct CollisionHost
   // ----------------------------------------------------------------------
   // update_rei_after
 
-  void update_rei_after(const Particles& prts, int n_start, int n_end,
-                        int p, int i, int j, int k)
+  void update_rei_after(const Particles& prts, int n_start, int n_end, int p,
+                        int i, int j, int k)
   {
     real_t fnqs = prts.grid().norm.fnqs, dt = prts.grid().dt;
     auto F = mflds_rei_[p];
     auto& mprts = prts.mprts();
     for (int n = n_start; n < n_end; n++) {
-      const auto &prt = prts[n];
+      const auto& prt = prts[n];
       auto fac = mprts.prt_m(prt) * mprts.prt_w(prt) * fnqs;
       F(0, i, j, k) += prt.u[0] * fac;
       F(1, i, j, k) += prt.u[1] * fac;
@@ -219,8 +217,7 @@ struct CollisionHost
   // ----------------------------------------------------------------------
   // collide_in_cell
 
-  void collide_in_cell(const Particles& prts,
-                       const std::vector<int>& permute,
+  void collide_in_cell(Particles& prts, const std::vector<int>& permute,
                        struct psc_collision_stats* stats)
   {
     const auto& grid = prts.grid();
@@ -253,17 +250,12 @@ struct CollisionHost
     free(nudts);
   }
 
-  real_t do_bc(const Particles &prts, int n1, int n2,
-               real_t nudt1)
+  real_t do_bc(Particles& prts, int n1, int n2, real_t nudt1)
   {
     Rng rng;
     const auto& mprts = prts.mprts();
-    BinaryCollision<Mparticles, ParticleProxy> bc(mprts);
-    auto prt1 = prts[n1];
-    auto prt2 = prts[n2];
-    auto p1 = ParticleProxy{prt1, mprts};
-    auto p2 = ParticleProxy{prt2, mprts};
-    return bc(p1, p2, nudt1, rng);
+    BinaryCollision<Mparticles, Particle> bc(mprts);
+    return bc(prts[n1], prts[n2], nudt1, rng);
   }
 
   int interval() const { return interval_; }
