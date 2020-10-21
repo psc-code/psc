@@ -75,15 +75,9 @@ template <typename CudaMparticles>
 void cuda_bndp<CudaMparticles, dim_yz>::reorder_send_by_id_gold(
   CudaMparticles* cmprts, uint n_prts_send)
 {
-  thrust::host_vector<uint> h_id(cmprts->by_block_.d_id.data(),
-                                 cmprts->by_block_.d_id.data() +
-                                   cmprts->n_prts);
-  thrust::host_vector<float4> h_xi4(cmprts->storage.xi4.data(),
-                                    cmprts->storage.xi4.data() +
-                                      cmprts->n_prts + n_prts_send);
-  thrust::host_vector<float4> h_pxi4(cmprts->storage.pxi4.data(),
-                                     cmprts->storage.pxi4.data() +
-                                       cmprts->n_prts + n_prts_send);
+  thrust::host_vector<uint> h_id(cmprts->by_block_.d_id);
+  thrust::host_vector<float4> h_xi4(cmprts->storage.xi4);
+  thrust::host_vector<float4> h_pxi4(cmprts->storage.pxi4);
 
   for (int n = 0; n < n_prts_send; n++) {
     uint id = h_id[cmprts->n_prts - n_prts_send + n];
@@ -91,8 +85,8 @@ void cuda_bndp<CudaMparticles, dim_yz>::reorder_send_by_id_gold(
     h_pxi4[cmprts->n_prts + n] = h_pxi4[id];
   }
 
-  thrust::copy(h_xi4.begin(), h_xi4.end(), cmprts->storage.xi4.data());
-  thrust::copy(h_pxi4.begin(), h_pxi4.end(), cmprts->storage.pxi4.data());
+  cmprts->storage.xi4 = h_xi4;
+  cmprts->storage.pxi4 = h_pxi4;
 }
 
 // ----------------------------------------------------------------------
