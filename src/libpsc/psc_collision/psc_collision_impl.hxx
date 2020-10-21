@@ -74,7 +74,7 @@ struct CollisionHost
       grid.Foreach_3d(0, 0, [&](int ix, int iy, int iz) {
         int c = (iz * ldims[1] + iy) * ldims[0] + ix;
 
-        update_rei_before(acc, offsets[c], offsets[c + 1], p, ix, iy, iz);
+        update_rei_before(mprts[p], offsets[c], offsets[c + 1], p, ix, iy, iz);
 
         struct psc_collision_stats stats = {};
         // mprintf("p %d ijk %d:%d:%d # %d\n", p, ix, iy, iz, offsets[c+1] -
@@ -82,7 +82,7 @@ struct CollisionHost
         auto permute = randomize_in_cell(offsets[c], offsets[c + 1]);
         collide_in_cell(mprts, acc, permute, &stats);
 
-        update_rei_after(acc, offsets[c], offsets[c + 1], p, ix, iy, iz);
+        update_rei_after(mprts[p], offsets[c], offsets[c + 1], p, ix, iy, iz);
 
         for (int s = 0; s < NR_STATS; s++) {
           F(s, ix, iy, iz) = stats.s[s];
@@ -178,7 +178,7 @@ struct CollisionHost
   // ----------------------------------------------------------------------
   // update_rei_before
 
-  void update_rei_before(/*const*/ AccessorPatch& prts, int n_start, int n_end,
+  void update_rei_before(Particles prts, int n_start, int n_end,
                          int p, int i, int j, int k)
   {
     real_t fnqs = prts.grid().norm.fnqs;
@@ -186,27 +186,31 @@ struct CollisionHost
     F(0, i, j, k) = 0.;
     F(1, i, j, k) = 0.;
     F(2, i, j, k) = 0.;
+    auto& mprts = prts.mprts();
     for (int n = n_start; n < n_end; n++) {
-      auto prt = prts[n];
-      F(0, i, j, k) -= prt.u()[0] * prt.m() * prt.w() * fnqs;
-      F(1, i, j, k) -= prt.u()[1] * prt.m() * prt.w() * fnqs;
-      F(2, i, j, k) -= prt.u()[2] * prt.m() * prt.w() * fnqs;
+      const auto &prt = prts[n];
+      auto fac = mprts.prt_m(prt) * mprts.prt_w(prt) * fnqs;
+      F(0, i, j, k) -= prt.u[0] * fac;
+      F(1, i, j, k) -= prt.u[1] * fac;
+      F(2, i, j, k) -= prt.u[2] * fac;
     }
   }
 
   // ----------------------------------------------------------------------
   // update_rei_after
 
-  void update_rei_after(/*const*/ AccessorPatch& prts, int n_start, int n_end,
+  void update_rei_after(Particles prts, int n_start, int n_end,
                         int p, int i, int j, int k)
   {
     real_t fnqs = prts.grid().norm.fnqs, dt = prts.grid().dt;
     auto F = mflds_rei_[p];
+    auto& mprts = prts.mprts();
     for (int n = n_start; n < n_end; n++) {
-      const auto& prt = prts[n];
-      F(0, i, j, k) += prt.u()[0] * prt.m() * prt.w() * fnqs;
-      F(1, i, j, k) += prt.u()[1] * prt.m() * prt.w() * fnqs;
-      F(2, i, j, k) += prt.u()[2] * prt.m() * prt.w() * fnqs;
+      const auto &prt = prts[n];
+      auto fac = mprts.prt_m(prt) * mprts.prt_w(prt) * fnqs;
+      F(0, i, j, k) += prt.u[0] * fac;
+      F(1, i, j, k) += prt.u[1] * fac;
+      F(2, i, j, k) += prt.u[2] * fac;
     }
     F(0, i, j, k) /= (this->interval_ * dt);
     F(1, i, j, k) /= (this->interval_ * dt);
