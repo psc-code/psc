@@ -472,8 +472,7 @@ struct CudaPushParticles
       if (n < block_begin) {
         continue;
       }
-      auto prt = (REORDER) ? dmprts.storage.load_device(dmprts.id_[n])
-                           : dmprts.storage.load_device(n);
+      auto prt = REORDER ? dmprts.storage[dmprts.id_[n]] : dmprts.storage[n];
       push_part_one(dmprts, prt, n, fld_cache, current_block);
 
       if (REORDER) {

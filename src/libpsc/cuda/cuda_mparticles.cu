@@ -54,7 +54,7 @@ void cuda_mparticles<BS>::dump_by_patch(uint* n_prts_by_patch)
   for (int p = 0; p < this->n_patches(); p++) {
     float* xb = &xb_by_patch[p][0];
     for (int n = 0; n < n_prts_by_patch[p]; n++) {
-      auto prt = this->storage.load(n + off);
+      auto prt = this->storage[n + off];
       uint bidx = this->by_block_.d_idx[n + off],
            id = this->by_block_.d_id[n + off];
       printf("cuda_mparticles_dump_by_patch: [%d/%d] %g %g %g // %d // %g %g "
@@ -85,7 +85,7 @@ void cuda_mparticles<BS>::dump(const std::string& filename) const
             off_b, off_e, p);
     assert(d_off[b] == off);
     for (int n = d_off[b]; n < d_off[b + 1]; n++) {
-      auto prt = this->storage.load(n + off);
+      auto prt = this->storage[n + off];
       uint bidx = this->by_block_.d_idx[n], id = this->by_block_.d_id[n];
       fprintf(file,
               "mparticles_dump: [%d] %g %g %g // %d // %g %g %g // %g || bidx "

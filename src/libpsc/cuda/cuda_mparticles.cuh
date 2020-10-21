@@ -71,14 +71,7 @@ struct MparticlesCudaStorage_
     pxi4.resize(n);
   }
 
-  // FIXME, could be operator[]
-
-  __device__ DParticleCuda load_device(int n) const
-  {
-    return ParticleCudaStorage{xi4[n], pxi4[n]};
-  }
-
-  __host__ DParticleCuda load(int n) const
+  __host__ __device__ DParticleCuda operator[](int n) const
   {
     return ParticleCudaStorage{xi4[n], pxi4[n]};
   }

@@ -49,8 +49,8 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
     if (n < block_begin) {
       continue;
     }
-    const auto prt = REORDER ? dmprts.storage.load_device(dmprts.id_[n])
-                             : dmprts.storage.load_device(n);
+    const auto prt =
+      REORDER ? dmprts.storage[dmprts.id_[n]] : dmprts.storage[n];
 
     float fnq = prt.qni_wni * dmprts.fnqs();
 
@@ -105,8 +105,8 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
     if (n < block_begin) {
       continue;
     }
-    const auto prt = REORDER ? dmprts.storage.load_device(dmprts.id_[n])
-                             : dmprts.storage.load_device(n);
+    const auto prt =
+      REORDER ? dmprts.storage[dmprts.id_[n]] : dmprts.storage[n];
 
     int kind = prt.kind;
     float wni = prt.qni_wni * dmprts.q_inv(kind);

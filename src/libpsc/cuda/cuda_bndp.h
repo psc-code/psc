@@ -97,7 +97,7 @@ struct cuda_bndp : cuda_mparticles_indexer<typename CudaMparticles::BS>
       n_sends[p] = 0;
     }
     for (int n = 0; n < n_prts_send; n++) {
-      auto prt = h_bnd_storage.load(n);
+      auto prt = h_bnd_storage[n];
       int p = h_bidx[n] - cmprts->n_blocks;
       bufs[p].push_back(prt);
       n_sends[p]++;
