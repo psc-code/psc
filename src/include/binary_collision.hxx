@@ -91,14 +91,14 @@ public:
     px1 = prt1.u()[0];
     py1 = prt1.u()[1];
     pz1 = prt1.u()[2];
-    q1 = prt1.q();
-    m1 = prt1.m();
+    q1 = mprts_.prt_q(prt1);
+    m1 = mprts_.prt_m(prt1);
 
     px2 = prt2.u()[0];
     py2 = prt2.u()[1];
     pz2 = prt2.u()[2];
-    q2 = prt2.q();
-    m2 = prt2.m();
+    q2 = mprts_.prt_q(prt2);
+    m2 = mprts_.prt_m(prt2);
 
     if (q1 * q2 == 0.f) {
       return 0.f; // no Coulomb collisions with neutrals

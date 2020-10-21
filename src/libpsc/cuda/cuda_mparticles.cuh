@@ -337,6 +337,18 @@ struct DMparticlesCuda : DParticleIndexer<BS_>
   __device__ real_t q(int k) const { return q_[k]; }
   __device__ real_t m(int k) const { return m_[k]; }
 
+  template <typename PRT>
+  __device__ real_t prt_q(const PRT& prt) const
+  {
+    return prt.q();
+  }
+
+  template <typename PRT>
+  __device__ real_t prt_m(const PRT& prt) const
+  {
+    return prt.m();
+  }
+
 private:
   real_t dt_;
   real_t fnqs_;

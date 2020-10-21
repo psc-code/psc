@@ -249,6 +249,18 @@ struct MparticlesSimple : MparticlesBase
     fclose(file);
   }
 
+  template <typename PRT>
+  real_t prt_q(const PRT& prt) const
+  {
+    return prt.q();
+  }
+
+  template <typename PRT>
+  real_t prt_m(const PRT& prt) const
+  {
+    return prt.m();
+  }
+
   void define_species(const char* name, double q, double m, double max_local_np,
                       double max_local_nm, double sort_interval,
                       double sort_out_of_place)
