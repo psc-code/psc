@@ -61,7 +61,7 @@ bool cuda_mparticles<BS>::check_bidx_id_unordered_slow()
 template <typename BS>
 bool cuda_mparticles<BS>::check_ordered()
 {
-  thrust::host_vector<float4> h_xi4(this->storage.xi4);
+  HMparticlesCudaStorage h_storage(this->storage);
   thrust::host_vector<uint> h_off(this->by_block_.d_off);
   thrust::host_vector<uint> h_id(this->by_block_.d_id);
 
@@ -79,18 +79,18 @@ bool cuda_mparticles<BS>::check_ordered()
     if (!(off_b == off))
       return false;
     for (int n = h_off[b]; n < h_off[b + 1]; n++) {
-      float4 xi4;
+      DParticleCuda prt;
       if (need_reorder) {
-        xi4 = h_xi4[h_id[n]];
+        prt = h_storage[h_id[n]];
       } else {
-        xi4 = h_xi4[n];
+        prt = h_storage[n];
       }
-      uint bidx = this->blockIndex(xi4, p);
+      uint bidx = this->blockIndex(prt, p);
       // printf("check_ordered: bidx %d\n", bidx);
       if (b != bidx) {
-        printf("check_ordered: b %d bidx %d n %d p %d xi4 %g %g %g\n", b, bidx,
-               n, p, xi4.x, xi4.y, xi4.z);
-        Int3 bpos = this->blockPosition(&xi4.x);
+        printf("check_ordered: b %d bidx %d n %d p %d x %g %g %g\n", b, bidx, n,
+               p, prt.x[0], prt.x[1], prt.x[2]);
+        Int3 bpos = this->blockPosition(prt.x);
         printf("block_pos %d %d\n", bpos[1], bpos[2]);
       }
       if (!(b == bidx))
@@ -114,20 +114,20 @@ bool cuda_mparticles<BS>::check_bidx_after_push()
 
   thrust::host_vector<uint> h_off(this->by_block_.d_off);
   thrust::host_vector<uint> h_bidx(this->by_block_.d_idx);
-  thrust::host_vector<float4> h_xi4(this->storage.xi4);
+  HMparticlesCudaStorage h_storage(this->storage);
 
   for (int p = 0; p < this->n_patches(); p++) {
     int begin = h_off[p * this->n_blocks_per_patch];
     int end = h_off[(p + 1) * this->n_blocks_per_patch];
     for (int n = begin; n < end; n++) {
-      float4 xi4 = h_xi4[n];
+      DParticleCuda prt = h_storage[n];
       int bidx = h_bidx[n];
-      int bidx2 = this->blockIndex(xi4, p);
+      int bidx2 = this->blockIndex(prt, p);
       if (bidx2 < 0)
         bidx2 = this->n_blocks;
       if (bidx != bidx2) {
-        mprintf("check_bidx: n %d: xi4 %g %g %g bidx %d/%d\n", n, xi4.x, xi4.y,
-                xi4.z, bidx, bidx2);
+        mprintf("check_bidx: n %d: x %g %g %g bidx %d/%d\n", n, prt.x[0],
+                prt.x[1], prt.x[2], bidx, bidx2);
         ok = false;
       }
     }
