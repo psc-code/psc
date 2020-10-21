@@ -17,31 +17,6 @@
 #include <gtensor/span.h>
 
 // ======================================================================
-// ParticleCudaStorage
-
-struct ParticleCudaStorage
-{
-  __host__ __device__ ParticleCudaStorage(float4 xi4, float4 pxi4)
-    : xi4{xi4}, pxi4{pxi4}
-  {}
-
-  __host__ __device__ ParticleCudaStorage(const DParticleCuda& prt)
-    : xi4{prt.x[0], prt.x[1], prt.x[2], cuda_int_as_float(prt.kind)},
-      pxi4{prt.u[0], prt.u[1], prt.u[2], prt.qni_wni}
-  {}
-
-  __host__ __device__ operator DParticleCuda()
-  {
-    return {
-      {xi4.x, xi4.y, xi4.z},    {pxi4.x, pxi4.y, pxi4.z}, pxi4.w,
-      cuda_float_as_int(xi4.w), psc::particle::Id(),      psc::particle::Tag()};
-  }
-
-  float4 xi4;
-  float4 pxi4;
-};
-
-// ======================================================================
 // MparticlesCudaStorage_
 
 template <typename T>
@@ -73,26 +48,26 @@ struct MparticlesCudaStorage_
 
   __host__ __device__ DParticleCuda operator[](int n) const
   {
-    return ParticleCudaStorage{xi4[n], pxi4[n]};
+    float4 xi4 = this->xi4[n], pxi4 = this->pxi4[n];
+    return DParticleCuda{
+      {xi4.x, xi4.y, xi4.z},    {pxi4.x, pxi4.y, pxi4.z}, pxi4.w,
+      cuda_float_as_int(xi4.w), psc::particle::Id(),      psc::particle::Tag()};
   }
 
   __host__ __device__ void store(const DParticleCuda& prt, int n)
   {
-    auto st = ParticleCudaStorage{prt};
-    xi4[n] = st.xi4;
-    pxi4[n] = st.pxi4;
+    store_position(prt, n);
+    store_momentum(prt, n);
   }
 
   __host__ __device__ void store_position(const DParticleCuda& prt, int n)
   {
-    auto st = ParticleCudaStorage{prt};
-    xi4[n] = st.xi4;
+    xi4[n] = {prt.x[0], prt.x[1], prt.x[2], cuda_int_as_float(prt.kind)};
   }
 
   __host__ __device__ void store_momentum(const DParticleCuda& prt, int n)
   {
-    auto st = ParticleCudaStorage{prt};
-    pxi4[n] = st.pxi4;
+    pxi4[n] = {prt.u[0], prt.u[1], prt.u[2], prt.qni_wni};
   }
 
   T xi4;
