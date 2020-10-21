@@ -51,8 +51,8 @@ struct cuda_bndp : cuda_mparticles_indexer<typename CudaMparticles::BS>
     d_bidx.resize(sz + oob);
     cmprts.storage.resize(sz + oob);
 
-    auto begin = thrust::make_zip_iterator(thrust::make_tuple(
-      d_bidx.begin(), cmprts.storage.xi4.begin(), cmprts.storage.pxi4.begin()));
+    auto begin = thrust::make_zip_iterator(
+      thrust::make_tuple(d_bidx.begin(), cmprts.storage.begin()));
     auto end = begin + sz;
 
     auto oob_end =
@@ -107,7 +107,8 @@ struct cuda_bndp : cuda_mparticles_indexer<typename CudaMparticles::BS>
 
     __host__ __device__ bool operator()(uint bidx) { return bidx >= n_blocks_; }
 
-    __host__ __device__ bool operator()(thrust::tuple<uint, float4, float4> tup)
+    __host__ __device__ bool operator()(
+      thrust::tuple<uint, thrust::tuple<float4, float4>> tup)
     {
       uint bidx = thrust::get<0>(tup);
       return (*this)(bidx);
