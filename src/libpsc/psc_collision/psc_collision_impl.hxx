@@ -23,6 +23,7 @@ struct CollisionHost
   using real_t = typename Mparticles::real_t;
   using MfieldsState = _MfieldsState;
   using Mfields = _Mfields;
+  using Particles = typename Mparticles::Patch;
   using AccessorPatch = typename Mparticles::Accessor::Patch;
   using ParticleProxy = typename AccessorPatch::ParticleProxy;
 
@@ -67,7 +68,7 @@ struct CollisionHost
       int* offsets = (int*)calloc(nr_cells + 1, sizeof(*offsets));
       struct psc_collision_stats stats_total = {};
 
-      find_cell_offsets(offsets, acc);
+      find_cell_offsets(mprts[p], offsets);
 
       auto F = mflds_stats_[p];
       grid.Foreach_3d(0, 0, [&](int ix, int iy, int iz) {
@@ -145,14 +146,14 @@ struct CollisionHost
   // ----------------------------------------------------------------------
   // find_cell_offsets
 
-  static void find_cell_offsets(int offsets[], /*const*/ AccessorPatch& prts)
+  static void find_cell_offsets(Particles prts, int offsets[])
   {
     const int* ldims = prts.grid().ldims;
     int last = 0;
     offsets[last] = 0;
     int n_prts = prts.size();
     for (int n = 0; n < n_prts; n++) {
-      int cell_index = prts[n].validCellIndex();
+      int cell_index = prts.validCellIndex(prts[n]);
       assert(cell_index >= last);
       while (last < cell_index) {
         offsets[++last] = n;

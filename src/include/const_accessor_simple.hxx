@@ -30,8 +30,6 @@ struct ParticleProxySimple
   real_t m() const { return mprts_.prt_m(prt_); }
   int kind() const { return prt_.kind; }
 
-  int validCellIndex() const { return mprts_[p_].validCellIndex(prt_); }
-
   friend void swap(ParticleProxySimple<Mparticles> a,
                    ParticleProxySimple<Mparticles> b)
   {
