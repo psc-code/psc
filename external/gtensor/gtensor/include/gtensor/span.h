@@ -4,10 +4,6 @@
 
 #include <cassert>
 
-#if __cplusplus >= 202000L || (defined(_MSVC_LANG) && _MSVC_LANG >= 202000L)
-#include <span>
-#endif
-
 #include "defs.h"
 
 #ifdef GTENSOR_HAVE_DEVICE
@@ -42,6 +38,8 @@ struct is_allowed_element_type_conversion
 // data type can be const.
 
 #if __cplusplus >= 202000L || (defined(_MSVC_LANG) && _MSVC_LANG >= 202000L)
+
+#include <span>
 
 template <typename T>
 using span = std::span<T>;
