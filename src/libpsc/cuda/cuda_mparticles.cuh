@@ -46,6 +46,17 @@ struct MparticlesCudaStorage_
 
   __host__ MparticlesCudaStorage_(uint n) : xi4(n), pxi4(n) {}
 
+  MparticlesCudaStorage_& operator=(const MparticlesCudaStorage_& other) =
+    default;
+
+  template <typename SO>
+  MparticlesCudaStorage_& operator=(const MparticlesCudaStorage_<SO>& other)
+  {
+    xi4 = other.xi4;
+    pxi4 = other.pxi4;
+    return *this;
+  }
+
   __host__ __device__ size_t size() { return xi4.size(); }
 
   __host__ void resize(size_t n)

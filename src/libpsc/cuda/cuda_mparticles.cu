@@ -304,10 +304,7 @@ void cuda_mparticles<BS>::inject_initial(
   }
   this->n_prts = off;
 
-  thrust::copy(h_storage.xi4.begin(), h_storage.xi4.end(),
-               this->storage.xi4.begin());
-  thrust::copy(h_storage.pxi4.begin(), h_storage.pxi4.end(),
-               this->storage.pxi4.begin());
+  this->storage = h_storage;
   thrust::copy(h_off.begin(), h_off.end(), this->by_block_.d_off.begin());
 }
 
