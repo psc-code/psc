@@ -55,8 +55,7 @@ template <typename CudaMparticles>
 void cuda_bndp<CudaMparticles, dim_yz>::reorder_send_by_id(
   CudaMparticles* cmprts, uint n_prts_send)
 {
-  cmprts->storage.xi4.resize(cmprts->n_prts + n_prts_send);
-  cmprts->storage.pxi4.resize(cmprts->n_prts + n_prts_send);
+  cmprts->storage.resize(cmprts->n_prts + n_prts_send);
 
   if (n_prts_send == 0) {
     return;
