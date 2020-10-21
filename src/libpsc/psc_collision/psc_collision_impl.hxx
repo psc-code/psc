@@ -79,7 +79,7 @@ struct CollisionHost
         struct psc_collision_stats stats = {};
         // mprintf("p %d ijk %d:%d:%d # %d\n", p, ix, iy, iz, offsets[c+1] -
         // offsets[c]);
-        auto permute = randomize_in_cell(acc, offsets[c], offsets[c + 1]);
+        auto permute = randomize_in_cell(offsets[c], offsets[c + 1]);
         collide_in_cell(mprts, acc, permute, &stats);
 
         update_rei_after(acc, offsets[c], offsets[c + 1], p, ix, iy, iz);
@@ -167,8 +167,7 @@ struct CollisionHost
   // ----------------------------------------------------------------------
   // randomize_in_cell
 
-  static std::vector<int> randomize_in_cell(AccessorPatch& prts, int n_start,
-                                            int n_end)
+  static std::vector<int> randomize_in_cell(int n_start, int n_end)
   {
     std::vector<int> permute(n_end - n_start);
     std::iota(permute.begin(), permute.end(), n_start);
