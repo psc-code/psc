@@ -538,11 +538,16 @@ void run()
   HeatingSpotFoilParams heating_foil_params{};
   heating_foil_params.zl = -1. * g.d_i;
   heating_foil_params.zh = 1. * g.d_i;
+#if CASE == CASE_1D
   heating_foil_params.xc = 0. * g.d_i;
-#if CASE == CASE_2D_SMALL
+  heating_foil_params.yc = 0. * g.d_i;
+  heating_foil_params.rH = 0.; // uniform
+#elif CASE == CASE_2D_SMALL
+  heating_foil_params.xc = 0. * g.d_i;
   heating_foil_params.yc = 2. * g.d_i;
   heating_foil_params.rH = 1. * g.d_i;
 #else
+  heating_foil_params.xc = 0. * g.d_i;
   heating_foil_params.yc = 20. * g.d_i;
   heating_foil_params.rH = 12. * g.d_i;
 #endif
@@ -551,13 +556,9 @@ void run()
   heating_foil_params.T[MY_ION] = g.target_Ti_heat;
   heating_foil_params.Mi = grid.kinds[MY_ION].m;
   heating_foil_params.n_kinds = N_MY_KINDS;
-  HeatingSpotFoil heating_spot{grid, heating_foil_params};
+  HeatingSpotFoil<Dim> heating_spot{grid, heating_foil_params};
 
-#if CASE == CASE_1D
-  g.heating_interval = -20;
-#else
   g.heating_interval = 20;
-#endif
   g.heating_begin = 0;
   g.heating_end = 10000000;
   auto& heating = *new Heating{grid, g.heating_interval, heating_spot};

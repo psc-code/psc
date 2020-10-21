@@ -19,9 +19,11 @@ struct HeatingSpotFoilParams
 // ======================================================================
 // HeatingSpotFoil
 
-struct HeatingSpotFoil : HeatingSpotFoilParams
+template <typename DIM>
+class HeatingSpotFoil : public HeatingSpotFoilParams
 {
-  HeatingSpotFoil() = default;
+public:
+  using dim = DIM;
 
   HeatingSpotFoil(const Grid_t& grid, const HeatingSpotFoilParams& params)
     : HeatingSpotFoilParams(params),
@@ -31,32 +33,54 @@ struct HeatingSpotFoil : HeatingSpotFoilParams
     double width = zh - zl;
 
     assert(n_kinds < HEATING_MAX_N_KINDS);
-    // inialize a fac for each population
+    // initalize a fac for each population
     for (int i = 0; i < n_kinds; i++)
       fac[i] = (8.f * pow(T[i], 1.5)) / (sqrt(Mi) * width);
-
-    // FIXME, I don't understand the sqrt(Mi) in here
   }
 
-  double operator()(const double* crd, const int kind)
+  template <typename R>
+  KG_INLINE R operator()(const R* crd, int kind)
   {
-    double x = crd[0], y = crd[1], z = crd[2];
     if (fac[kind] == 0.0)
       return 0;
-    if (z <= zl || z >= zh) {
+
+    if (crd[2] <= zl || crd[2] >= zh) {
       return 0;
     }
 
+    // uniform heating, not a spot
+    if (rH == 0) {
+      return fac[kind];
+    }
+
+    return shape_xy(crd, kind, dim{});
+  }
+
+  template <typename R>
+  KG_INLINE R shape_xy(const R* crd, int kind, dim_xyz dim_select)
+  {
+    R x = crd[0], y = crd[1];
+
     return fac[kind] *
-           (exp(-(sqr(x - (xc)) + sqr(y - (yc))) / sqr(rH)) +
-            exp(-(sqr(x - (xc)) + sqr(y - (yc + Ly_))) / sqr(rH)) +
-            exp(-(sqr(x - (xc)) + sqr(y - (yc - Ly_))) / sqr(rH)) +
-            exp(-(sqr(x - (xc + Lx_)) + sqr(y - (yc))) / sqr(rH)) +
-            exp(-(sqr(x - (xc + Lx_)) + sqr(y - (yc + Ly_))) / sqr(rH)) +
-            exp(-(sqr(x - (xc + Lx_)) + sqr(y - (yc - Ly_))) / sqr(rH)) +
-            exp(-(sqr(x - (xc - Lx_)) + sqr(y - (yc))) / sqr(rH)) +
-            exp(-(sqr(x - (xc - Lx_)) + sqr(y - (yc + Ly_))) / sqr(rH)) +
-            exp(-(sqr(x - (xc - Lx_)) + sqr(y - (yc - Ly_))) / sqr(rH)));
+           (std::exp(-(sqr(x - (xc)) + sqr(y - (yc))) / sqr(rH)) +
+            std::exp(-(sqr(x - (xc)) + sqr(y - (yc + Ly_))) / sqr(rH)) +
+            std::exp(-(sqr(x - (xc)) + sqr(y - (yc - Ly_))) / sqr(rH)) +
+            std::exp(-(sqr(x - (xc + Lx_)) + sqr(y - (yc))) / sqr(rH)) +
+            std::exp(-(sqr(x - (xc + Lx_)) + sqr(y - (yc + Ly_))) / sqr(rH)) +
+            std::exp(-(sqr(x - (xc + Lx_)) + sqr(y - (yc - Ly_))) / sqr(rH)) +
+            std::exp(-(sqr(x - (xc - Lx_)) + sqr(y - (yc))) / sqr(rH)) +
+            std::exp(-(sqr(x - (xc - Lx_)) + sqr(y - (yc + Ly_))) / sqr(rH)) +
+            std::exp(-(sqr(x - (xc - Lx_)) + sqr(y - (yc - Ly_))) / sqr(rH)));
+  }
+
+  template <typename R>
+  KG_INLINE R shape_xy(const R* crd, int kind, dim_yz dim_select)
+  {
+    R y = crd[1];
+
+    return fac[kind] * (std::exp(-(sqr(y - (yc))) / sqr(rH)) +
+                        std::exp(-(sqr(y - (yc + Ly_))) / sqr(rH)) +
+                        std::exp(-(sqr(y - (yc - Ly_))) / sqr(rH)));
   }
 
 private:
