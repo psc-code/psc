@@ -90,6 +90,18 @@ struct MparticlesCudaStorage_
     pxi4[n] = st.pxi4;
   }
 
+  __host__ __device__ void store_position(const DParticleCuda& prt, int n)
+  {
+    auto st = ParticleCudaStorage{prt};
+    xi4[n] = st.xi4;
+  }
+
+  __host__ __device__ void store_momentum(const DParticleCuda& prt, int n)
+  {
+    auto st = ParticleCudaStorage{prt};
+    pxi4[n] = st.pxi4;
+  }
+
   T xi4;
   T pxi4;
 };
@@ -109,22 +121,7 @@ using HMparticlesCudaStorage =
 // ======================================================================
 // DMparticlesCudaStorage
 
-struct DMparticlesCudaStorage : MparticlesCudaStorage_<gt::span<float4>>
-{
-  using Base = MparticlesCudaStorage_<gt::span<float4>>;
-  using Base::Base;
-
-  __device__ void store_position(const DParticleCuda& prt, int n)
-  {
-    auto st = ParticleCudaStorage{prt};
-    xi4[n] = st.xi4;
-  }
-  __device__ void store_momentum(const DParticleCuda& prt, int n)
-  {
-    auto st = ParticleCudaStorage{prt};
-    pxi4[n] = st.pxi4;
-  }
-};
+using DMparticlesCudaStorage = MparticlesCudaStorage_<gt::span<float4>>;
 
 // ======================================================================
 // cuda_mparticles_base
