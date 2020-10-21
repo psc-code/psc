@@ -60,7 +60,7 @@ if (USE_CUDA)
     
     cuda/cuda_heating.cu)
   target_include_directories(psc PUBLIC cuda)
-  target_link_libraries(psc PUBLIC Thrust)
+  target_link_libraries(psc PUBLIC Thrust gtensor::gtensor)
 endif()
 
 if (PSC_HAVE_RMM)
