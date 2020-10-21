@@ -13,6 +13,7 @@
 #include <thrust/device_vector.h>
 #include <thrust/sort.h>
 #include <thrust/binary_search.h>
+#include <thrust/iterator/zip_iterator.h>
 
 #include <gtensor/span.h>
 
@@ -31,20 +32,32 @@ using DMparticlesCudaStorage = MparticlesCudaStorage_<gt::span<float4>>;
 // MparticlesCudaStorage_
 
 template <typename T>
-struct MparticlesCudaStorage_
+class MparticlesCudaStorage_
 {
+  using xi4_iterator = typename T::iterator;
+  using pxi4_iterator = typename T::iterator;
+  using iterator_tuple = thrust::tuple<xi4_iterator, pxi4_iterator>;
+
+public:
+  using iterator = thrust::zip_iterator<iterator_tuple>;
+
   MparticlesCudaStorage_() = default;
 
-  __host__ MparticlesCudaStorage_(const T& xi4, const T& pxi4)
-    : xi4{xi4}, pxi4{pxi4}
-  {}
+  MparticlesCudaStorage_(const T& xi4, const T& pxi4) : xi4{xi4}, pxi4{pxi4} {}
 
   template <typename OtherStorage>
   __host__ MparticlesCudaStorage_(OtherStorage& other)
     : xi4{other.xi4}, pxi4{other.pxi4}
   {}
 
-  __host__ MparticlesCudaStorage_(uint n) : xi4(n), pxi4(n) {}
+  MparticlesCudaStorage_(uint n) : xi4(n), pxi4(n) {}
+
+  template <typename IT>
+  MparticlesCudaStorage_(IT first, IT last)
+  {
+    resize(last - first);
+    thrust::copy(first, last, begin());
+  }
 
   MparticlesCudaStorage_& operator=(const MparticlesCudaStorage_& other) =
     default;
@@ -58,6 +71,16 @@ struct MparticlesCudaStorage_
   }
 
   __host__ __device__ size_t size() { return xi4.size(); }
+
+  __host__ __device__ iterator begin()
+  {
+    return iterator({xi4.begin(), pxi4.begin()});
+  }
+
+  __host__ __device__ iterator end()
+  {
+    return iterator({xi4.end(), pxi4.end()});
+  }
 
   __host__ void resize(size_t n)
   {
