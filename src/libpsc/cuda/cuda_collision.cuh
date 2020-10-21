@@ -34,7 +34,6 @@ struct CudaCollision
 {
   using real_t = typename cuda_mparticles::real_t;
   using DMparticles = DMparticlesCuda<typename cuda_mparticles::BS>;
-  using DParticle = DParticleProxy<DMparticles>;
 
   CudaCollision(int interval, double nu, int nicell, double dt)
     : interval_{interval}, nu_{nu}, nicell_(nicell), dt_(dt)
