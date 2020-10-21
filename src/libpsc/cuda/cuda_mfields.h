@@ -46,7 +46,7 @@ struct cuda_mfields_bnd
   psc::device_vector<fields_cuda_real_t> d_buf;
   thrust::host_vector<fields_cuda_real_t> h_buf;
   thrust::host_vector<int> h_nei_patch;
-  int* d_nei_patch;
+  psc::device_vector<int> d_nei_patch;
   struct cuda_mfields_bnd_map map[MAX_BND_FIELDS];
 };
 

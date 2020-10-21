@@ -49,14 +49,7 @@ static void cuda_mfields_bnd_setup_d_nei_patch(
       recv_entry[i].nei_patch;
   }
 
-  cbnd->d_nei_patch =
-    (int*)myCudaMalloc(9 * cbnd->n_patches * sizeof(*cbnd->d_nei_patch));
-
-  cudaError_t ierr;
-  ierr = cudaMemcpy(cbnd->d_nei_patch, cbnd->h_nei_patch.data(),
-                    9 * cbnd->n_patches * sizeof(*cbnd->d_nei_patch),
-                    cudaMemcpyHostToDevice);
-  cudaCheck(ierr);
+  cbnd->d_nei_patch = cbnd->h_nei_patch;
 }
 
 // ----------------------------------------------------------------------
@@ -112,7 +105,8 @@ void cuda_mfields_bnd_dtor(struct cuda_mfields_bnd* cbnd)
 {
   cbnd->h_nei_patch.clear();
   cbnd->h_nei_patch.shrink_to_fit();
-  myCudaFree(cbnd->d_nei_patch);
+  cbnd->d_nei_patch.clear();
+  cbnd->d_nei_patch.shrink_to_fit();
   cbnd->h_buf.clear(); // FIXME, if we just called an actual dtor...
   cbnd->d_buf.clear(); // FIXME, if we just called an actual dtor...
 
@@ -476,8 +470,8 @@ void cuda_mfields_bnd_fill_ghosts_local_xyz(struct cuda_mfields_bnd* cbnd,
                                                        im[0] * im[1] * im[2]);
 
   for (int tid = 0; tid < n_threads; tid++) {
-    cuda_fill_ghosts_local_gold(&h_flds[0], cbnd->d_nei_patch, mb, me, im,
-                                n_fields, n_patches, n_ghosts, tid);
+    cuda_fill_ghosts_local_gold(&h_flds[0], cbnd->d_nei_patch.data().get(), mb,
+                                me, im, n_fields, n_patches, n_ghosts, tid);
   }
 
   thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
@@ -505,11 +499,13 @@ void cuda_mfields_bnd_fill_ghosts_local(struct cuda_mfields_bnd* cbnd,
 
   float* d_flds = cmflds->data().get() + mb * im[1] * im[2];
   if (me - mb == 3) {
-    k_fill_ghosts_local_yz<B, 3><<<dimGrid, dimBlock>>>(
-      d_flds, cbnd->d_nei_patch, im[1], im[2], n_fields, n_patches);
+    k_fill_ghosts_local_yz<B, 3>
+      <<<dimGrid, dimBlock>>>(d_flds, cbnd->d_nei_patch.data().get(), im[1],
+                              im[2], n_fields, n_patches);
   } else if (me - mb == 1) {
-    k_fill_ghosts_local_yz<B, 1><<<dimGrid, dimBlock>>>(
-      d_flds, cbnd->d_nei_patch, im[1], im[2], n_fields, n_patches);
+    k_fill_ghosts_local_yz<B, 1>
+      <<<dimGrid, dimBlock>>>(d_flds, cbnd->d_nei_patch.data().get(), im[1],
+                              im[2], n_fields, n_patches);
   } else {
     assert(0);
   }
@@ -522,8 +518,8 @@ void cuda_mfields_bnd_fill_ghosts_local(struct cuda_mfields_bnd* cbnd,
                                                        im[1] * im[2]);
 
   for (int tid = 0; tid < n_threads; tid++) {
-    cuda_fill_ghosts_local_gold(&h_flds[0], cbnd->d_nei_patch, mb, me, im,
-                                n_fields, n_patches, n_ghosts, tid);
+    cuda_fill_ghosts_local_gold(&h_flds[0], cbnd->d_nei_patch.data(), mb, me,
+                                im, n_fields, n_patches, n_ghosts, tid);
   }
 
   thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
@@ -1215,12 +1211,12 @@ static void fields_device_pack3_yz(struct cuda_mfields* cmflds,
   float* d_flds = cmflds->data().get() + mb * im[1] * im[2];
   if (me - mb == 3) {
     k_fields_device_pack3_yz<pack><<<dimGrid, dimBlock>>>(
-      cbnd->d_buf.data().get(), d_flds, d_map, cbnd->d_nei_patch, im[1], im[2],
-      n_patches, 3, n_map);
+      cbnd->d_buf.data().get(), d_flds, d_map, cbnd->d_nei_patch.data().get(),
+      im[1], im[2], n_patches, 3, n_map);
   } else if (me - mb == 1) {
     k_fields_device_pack3_yz<pack><<<dimGrid, dimBlock>>>(
-      cbnd->d_buf.data().get(), d_flds, d_map, cbnd->d_nei_patch, im[1], im[2],
-      n_patches, 1, n_map);
+      cbnd->d_buf.data().get(), d_flds, d_map, cbnd->d_nei_patch.data().get(),
+      im[1], im[2], n_patches, 1, n_map);
   } else {
     assert(0);
   }
