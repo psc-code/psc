@@ -130,6 +130,11 @@ struct MparticlesSimple : MparticlesBase
     Patch(Patch&&) = default;
 
     Particle& operator[](int n) { return mprts_.storage_.at(p_, n); }
+    const Particle& operator[](int n) const
+    {
+      return mprts_.storage_.at(p_, n);
+    }
+
     iterator begin() { return mprts_.storage_[p_].begin(); }
     iterator end() { return mprts_.storage_[p_].end(); }
     unsigned int size() const { return mprts_.storage_[p_].size(); }
