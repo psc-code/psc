@@ -99,7 +99,7 @@ struct CudaCollision
     int id = threadIdx.x + blockIdx.x * THREADS_PER_BLOCK;
     /* Copy state to local memory for efficiency */
     auto rng = rng_state[id];
-    BinaryCollision<DParticle> bc;
+    BinaryCollision<DMparticles, DParticle> bc(dmprts);
 
     for (uint bidx = blockIdx.x; bidx < n_cells; bidx += gridDim.x) {
       uint beg = d_off[bidx];

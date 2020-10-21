@@ -79,7 +79,7 @@ struct CollisionHost
         // mprintf("p %d ijk %d:%d:%d # %d\n", p, ix, iy, iz, offsets[c+1] -
         // offsets[c]);
         auto permute = randomize_in_cell(acc, offsets[c], offsets[c + 1]);
-        collide_in_cell(acc, permute, &stats);
+        collide_in_cell(mprts, acc, permute, &stats);
 
         update_rei_after(acc, offsets[c], offsets[c + 1], p, ix, iy, iz);
 
@@ -216,7 +216,8 @@ struct CollisionHost
   // ----------------------------------------------------------------------
   // collide_in_cell
 
-  void collide_in_cell(AccessorPatch& prts, const std::vector<int>& permute,
+  void collide_in_cell(const Mparticles& mprts, AccessorPatch& prts,
+                       const std::vector<int>& permute,
                        struct psc_collision_stats* stats)
   {
     const auto& grid = prts.grid();
@@ -235,23 +236,24 @@ struct CollisionHost
 
     int n = 0;
     if (nn % 2 == 1) { // odd # of particles: do 3-collision
-      nudts[cnt++] = do_bc(prts, permute[0], permute[1], .5 * nudt1);
-      nudts[cnt++] = do_bc(prts, permute[0], permute[2], .5 * nudt1);
-      nudts[cnt++] = do_bc(prts, permute[1], permute[2], .5 * nudt1);
+      nudts[cnt++] = do_bc(mprts, prts, permute[0], permute[1], .5 * nudt1);
+      nudts[cnt++] = do_bc(mprts, prts, permute[0], permute[2], .5 * nudt1);
+      nudts[cnt++] = do_bc(mprts, prts, permute[1], permute[2], .5 * nudt1);
       n = 3;
     }
     for (; n < nn; n += 2) { // do remaining particles as pair
-      nudts[cnt++] = do_bc(prts, permute[n], permute[n + 1], nudt1);
+      nudts[cnt++] = do_bc(mprts, prts, permute[n], permute[n + 1], nudt1);
     }
 
     calc_stats(stats, nudts, cnt);
     free(nudts);
   }
 
-  real_t do_bc(AccessorPatch& prts, int n1, int n2, real_t nudt1)
+  real_t do_bc(const Mparticles& mprts, AccessorPatch& prts, int n1, int n2,
+               real_t nudt1)
   {
     Rng rng;
-    BinaryCollision<ParticleProxy> bc;
+    BinaryCollision<Mparticles, ParticleProxy> bc(mprts);
     auto prt1 = prts[n1];
     auto prt2 = prts[n2];
     return bc(prt1, prt2, nudt1, rng);

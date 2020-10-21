@@ -46,10 +46,13 @@ struct RngFake
 // ======================================================================
 // BinaryCollision
 
-template <typename Particle>
-struct BinaryCollision
+template <typename Mparticles, typename Particle>
+class BinaryCollision
 {
+public:
   using real_t = typename Particle::real_t;
+
+  DEVICE BinaryCollision(const Mparticles& mprts) : mprts_{mprts} {}
 
   // ----------------------------------------------------------------------
   // operator()
@@ -293,4 +296,7 @@ struct BinaryCollision
 
     return nudt;
   }
+
+private:
+  const Mparticles& mprts_;
 };
