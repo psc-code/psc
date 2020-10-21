@@ -16,6 +16,17 @@
 
 #include <gtensor/span.h>
 
+template <typename T>
+struct MparticlesCudaStorage_;
+
+using MparticlesCudaStorage =
+  MparticlesCudaStorage_<psc::device_vector<float4>>;
+
+using HMparticlesCudaStorage =
+  MparticlesCudaStorage_<thrust::host_vector<float4>>;
+
+using DMparticlesCudaStorage = MparticlesCudaStorage_<gt::span<float4>>;
+
 // ======================================================================
 // MparticlesCudaStorage_
 
@@ -72,33 +83,23 @@ struct MparticlesCudaStorage_
     pxi4[n] = {prt.u[0], prt.u[1], prt.u[2], prt.qni_wni};
   }
 
-  friend void swap(MparticlesCudaStorage_& first, MparticlesCudaStorage_& second)
+  friend void swap(MparticlesCudaStorage_& first,
+                   MparticlesCudaStorage_& second)
   {
     using std::swap;
     swap(first.xi4, second.xi4);
     swap(first.pxi4, second.pxi4);
   }
-  
+
+  DMparticlesCudaStorage to_kernel()
+  {
+    return DMparticlesCudaStorage{{xi4.data().get(), xi4.size()},
+                                  {pxi4.data().get(), pxi4.size()}};
+  }
+
   T xi4;
   T pxi4;
 };
-
-// ======================================================================
-// MparticlesCudaStorage
-
-using MparticlesCudaStorage =
-  MparticlesCudaStorage_<psc::device_vector<float4>>;
-
-// ======================================================================
-// HMparticlesCudaStorage
-
-using HMparticlesCudaStorage =
-  MparticlesCudaStorage_<thrust::host_vector<float4>>;
-
-// ======================================================================
-// DMparticlesCudaStorage
-
-using DMparticlesCudaStorage = MparticlesCudaStorage_<gt::span<float4>>;
 
 // ======================================================================
 // cuda_mparticles_base
@@ -221,11 +222,8 @@ struct DMparticlesCuda : DParticleIndexer<BS_>
       fnqys_(cmprts.grid_.domain.dx[1] * fnqs_ / dt_),
       fnqzs_(cmprts.grid_.domain.dx[2] * fnqs_ / dt_),
       dqs_(.5f * cmprts.grid_.norm.eta * dt_),
-      storage{{cmprts.storage.xi4.data().get(), cmprts.storage.xi4.size()},
-              {cmprts.storage.pxi4.data().get(), cmprts.storage.pxi4.size()}},
-      alt_storage{
-        {cmprts.alt_storage.xi4.data().get(), cmprts.alt_storage.xi4.size()},
-        {cmprts.alt_storage.pxi4.data().get(), cmprts.alt_storage.pxi4.size()}},
+      storage{cmprts.storage.to_kernel()},
+      alt_storage{cmprts.alt_storage.to_kernel()},
       off_(cmprts.by_block_.d_off.data().get()),
       bidx_(cmprts.by_block_.d_idx.data().get()),
       id_(cmprts.by_block_.d_id.data().get()),
