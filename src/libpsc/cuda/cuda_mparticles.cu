@@ -125,8 +125,7 @@ __global__ static void k_reorder_and_offsets(DMparticlesCuda<BS> dmprts,
   for (; i <= nr_prts; i += blockDim.x * gridDim.x) {
     int block, prev_block;
     if (i < nr_prts) {
-      dmprts.storage.xi4[i] = dmprts.alt_storage.xi4[d_ids[i]];
-      dmprts.storage.pxi4[i] = dmprts.alt_storage.pxi4[d_ids[i]];
+      dmprts.storage.store(dmprts.alt_storage[d_ids[i]], i); // storage[i] = alt_storage[d_ids[i]];
 
       block = d_bidx[i];
     } else { // needed if there is no particle in the last block
@@ -184,9 +183,7 @@ __global__ static void k_reorder(DMparticlesCuda<BS> dmprts, int n_prts,
   int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
 
   if (i < n_prts) {
-    int j = d_ids[i];
-    dmprts.storage.xi4[i] = dmprts.alt_storage.xi4[j];
-    dmprts.storage.pxi4[i] = dmprts.alt_storage.pxi4[j];
+    dmprts.storage.store(dmprts.alt_storage[d_ids[i]], i); // storage[i] = alt_storage[j]
   }
 }
 
@@ -273,7 +270,7 @@ void cuda_mparticles<BS>::inject_initial(
 {
   thrust::host_vector<uint> h_off(this->by_block_.d_off);
 
-  assert(this->storage.xi4.size() == 0);
+  assert(this->storage.size() == 0);
   assert(this->n_prts == 0);
 
   uint buf_n = 0;
