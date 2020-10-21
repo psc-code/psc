@@ -72,6 +72,13 @@ struct MparticlesCudaStorage_
     pxi4[n] = {prt.u[0], prt.u[1], prt.u[2], prt.qni_wni};
   }
 
+  friend void swap(MparticlesCudaStorage_& first, MparticlesCudaStorage_& second)
+  {
+    using std::swap;
+    swap(first.xi4, second.xi4);
+    swap(first.pxi4, second.pxi4);
+  }
+  
   T xi4;
   T pxi4;
 };
