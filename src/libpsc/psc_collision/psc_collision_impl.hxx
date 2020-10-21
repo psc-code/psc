@@ -59,9 +59,7 @@ struct CollisionHost
   {
     auto& grid = mprts.grid();
 
-    auto accessor = mprts.accessor_();
     for (int p = 0; p < mprts.n_patches(); p++) {
-      auto acc = accessor[p];
       auto prts = mprts[p];
 
       const int* ldims = grid.ldims;
@@ -81,7 +79,7 @@ struct CollisionHost
         // mprintf("p %d ijk %d:%d:%d # %d\n", p, ix, iy, iz, offsets[c+1] -
         // offsets[c]);
         auto permute = randomize_in_cell(offsets[c], offsets[c + 1]);
-        collide_in_cell(mprts, prts, permute, &stats);
+        collide_in_cell(prts, permute, &stats);
 
         update_rei_after(prts, offsets[c], offsets[c + 1], p, ix, iy, iz);
 
@@ -221,7 +219,7 @@ struct CollisionHost
   // ----------------------------------------------------------------------
   // collide_in_cell
 
-  void collide_in_cell(const Mparticles& mprts, const Particles& prts,
+  void collide_in_cell(const Particles& prts,
                        const std::vector<int>& permute,
                        struct psc_collision_stats* stats)
   {
@@ -232,6 +230,7 @@ struct CollisionHost
       return;
     }
 
+    const auto& mprts = prts.mprts();
     // all particles need to have same weight!
     real_t wni = mprts.prt_w(prts[permute[0]]);
     real_t nudt1 = wni * grid.norm.cori * nn * this->interval_ * grid.dt * nu_;
@@ -241,23 +240,24 @@ struct CollisionHost
 
     int n = 0;
     if (nn % 2 == 1) { // odd # of particles: do 3-collision
-      nudts[cnt++] = do_bc(mprts, prts, permute[0], permute[1], .5 * nudt1);
-      nudts[cnt++] = do_bc(mprts, prts, permute[0], permute[2], .5 * nudt1);
-      nudts[cnt++] = do_bc(mprts, prts, permute[1], permute[2], .5 * nudt1);
+      nudts[cnt++] = do_bc(prts, permute[0], permute[1], .5 * nudt1);
+      nudts[cnt++] = do_bc(prts, permute[0], permute[2], .5 * nudt1);
+      nudts[cnt++] = do_bc(prts, permute[1], permute[2], .5 * nudt1);
       n = 3;
     }
     for (; n < nn; n += 2) { // do remaining particles as pair
-      nudts[cnt++] = do_bc(mprts, prts, permute[n], permute[n + 1], nudt1);
+      nudts[cnt++] = do_bc(prts, permute[n], permute[n + 1], nudt1);
     }
 
     calc_stats(stats, nudts, cnt);
     free(nudts);
   }
 
-  real_t do_bc(const Mparticles& mprts, const Particles &prts, int n1, int n2,
+  real_t do_bc(const Particles &prts, int n1, int n2,
                real_t nudt1)
   {
     Rng rng;
+    const auto& mprts = prts.mprts();
     BinaryCollision<Mparticles, ParticleProxy> bc(mprts);
     auto prt1 = prts[n1];
     auto prt2 = prts[n2];
