@@ -24,12 +24,12 @@
 
 struct cuda_mfields_bnd_map
 {
-  int* h_map_out; // maps thread id to a particular offset for ghosts in the
-                  // flds array
+  thrust::host_vector<int> h_map_out; // maps thread id to a particular offset
+                                      // for ghosts in the flds array
   int* d_map_out;
-  int nr_map_out; // number of entries in the map
-  int* h_map_in; // maps thread id to a particular offset for ghosts in the flds
-                 // array
+  int nr_map_out;                    // number of entries in the map
+  thrust::host_vector<int> h_map_in; // maps thread id to a particular offset
+                                     // for ghosts in the flds array
   int* d_map_in;
   int nr_map_in; // number of entries in the map
 };

@@ -112,10 +112,12 @@ void cuda_mfields_bnd_dtor(struct cuda_mfields_bnd* cbnd)
 
   for (int n = 0; n < MAX_BND_FIELDS; n++) {
     struct cuda_mfields_bnd_map* map = &cbnd->map[n];
+    map->h_map_out.clear();
+    map->h_map_out.shrink_to_fit();
+    map->h_map_in.clear();
+    map->h_map_in.shrink_to_fit();
     myCudaFree(map->d_map_out);
     myCudaFree(map->d_map_in);
-    delete[] map->h_map_out;
-    delete[] map->h_map_in;
   }
 
   for (int p = 0; p < cbnd->n_patches; p++) {
@@ -147,7 +149,7 @@ static struct cuda_mfields_bnd_map* cuda_mfields_bnd_get_map(
   assert(n_fields - 1 < MAX_BND_FIELDS);
   struct cuda_mfields_bnd_map* map = &cbnd->map[n_fields - 1];
 
-  if (!map->h_map_out) {
+  if (map->h_map_out.empty()) {
     cuda_mfields_bnd_setup_map(cbnd, n_fields, map);
   }
 
@@ -642,10 +644,10 @@ static void fields_host_pack3_yz(struct cuda_mfields* cmflds,
   int nr_map;
   int* h_map;
   if (B == 2) {
-    h_map = map->h_map_out;
+    h_map = map->h_map_out.data();
     nr_map = map->nr_map_out;
   } else if (B == 4) {
-    h_map = map->h_map_in;
+    h_map = map->h_map_in.data();
     nr_map = map->nr_map_in;
   } else {
     assert(0);
@@ -944,7 +946,7 @@ __global__ static void k_fields_device_pack3_yz(
 
 static void fields_create_map_out_yz(struct cuda_mfields_bnd* cbnd,
                                      int n_fields, int B, int* p_nr_map,
-                                     int** p_h_map)
+                                     thrust::host_vector<int>& h_map)
 {
   bool remote_only = true;
   int* im = cbnd->im;
@@ -967,7 +969,7 @@ static void fields_create_map_out_yz(struct cuda_mfields_bnd* cbnd,
     }
   }
   *p_nr_map = nr_map;
-  *p_h_map = new int[nr_map];
+  h_map.resize(nr_map);
 
   int tid = 0;
   for (int p = 0; p < n_patches; p++) {
@@ -991,7 +993,7 @@ static void fields_create_map_out_yz(struct cuda_mfields_bnd* cbnd,
         }
         int s_p = cbnd->h_nei_patch[p * 9 + 3 * dirz + diry + 4];
         if (!remote_only || s_p < 0) {
-          (*p_h_map)[tid++] = ((p * n_fields + 0) * im[2] + jz) * im[1] + jy;
+          h_map[tid++] = ((p * n_fields + 0) * im[2] + jz) * im[1] + jy;
         }
       }
     }
@@ -1008,7 +1010,7 @@ static void fields_create_map_out_yz(struct cuda_mfields_bnd* cbnd,
         }
         int s_p = cbnd->h_nei_patch[p * 9 + 3 * dirz + diry + 4];
         if (!remote_only || s_p < 0) {
-          (*p_h_map)[tid++] = ((p * n_fields + 0) * im[2] + jz) * im[1] + jy;
+          h_map[tid++] = ((p * n_fields + 0) * im[2] + jz) * im[1] + jy;
         }
       }
     }
@@ -1017,7 +1019,8 @@ static void fields_create_map_out_yz(struct cuda_mfields_bnd* cbnd,
 }
 
 static void fields_create_map_in_yz(struct cuda_mfields_bnd* cbnd, int n_fields,
-                                    int B, int* p_nr_map, int** p_h_map)
+                                    int B, int* p_nr_map,
+                                    thrust::host_vector<int>& h_map)
 {
   bool remote_only = true;
   int* im = cbnd->im;
@@ -1096,7 +1099,7 @@ static void fields_create_map_in_yz(struct cuda_mfields_bnd* cbnd, int n_fields,
     }
   }
   *p_nr_map = nr_map;
-  *p_h_map = new int[nr_map];
+  h_map.resize(nr_map);
 
   int tid = 0;
   for (int p = 0; p < n_patches; p++) {
@@ -1120,7 +1123,7 @@ static void fields_create_map_in_yz(struct cuda_mfields_bnd* cbnd, int n_fields,
         }
         int dir1 = p * 9 + 3 * dirz + diry + 4;
         if (!remote_only || has_nei[dir1]) {
-          (*p_h_map)[tid++] =
+          h_map[tid++] =
             ((p * n_fields + 0) * im[2] + (jz + B)) * im[1] + (jy + B);
         }
       }
@@ -1138,7 +1141,7 @@ static void fields_create_map_in_yz(struct cuda_mfields_bnd* cbnd, int n_fields,
         }
         int dir1 = p * 9 + 3 * dirz + diry + 4;
         if (!remote_only || has_nei[dir1]) {
-          (*p_h_map)[tid++] =
+          h_map[tid++] =
             ((p * n_fields + 0) * im[2] + (jz + B)) * im[1] + (jy + B);
         }
       }
@@ -1156,23 +1159,22 @@ void cuda_mfields_bnd_setup_map(struct cuda_mfields_bnd* cbnd, int n_fields,
 {
   cudaError_t ierr;
 
-  fields_create_map_out_yz(cbnd, n_fields, 2, &map->nr_map_out,
-                           &map->h_map_out);
+  fields_create_map_out_yz(cbnd, n_fields, 2, &map->nr_map_out, map->h_map_out);
   // printf("map_out %d\n", map->nr_map_out);
 
   map->d_map_out =
     (int*)myCudaMalloc(map->nr_map_out * sizeof(*map->d_map_out));
-  ierr = cudaMemcpy(map->d_map_out, map->h_map_out,
+  ierr = cudaMemcpy(map->d_map_out, map->h_map_out.data(),
                     map->nr_map_out * sizeof(*map->d_map_out),
                     cudaMemcpyHostToDevice);
   cudaCheck(ierr);
 
-  fields_create_map_in_yz(cbnd, n_fields, 2, &map->nr_map_in, &map->h_map_in);
+  fields_create_map_in_yz(cbnd, n_fields, 2, &map->nr_map_in, map->h_map_in);
   // printf("map_in %d\n", map->nr_map_in);
 
   map->d_map_in = (int*)myCudaMalloc(map->nr_map_in * sizeof(*map->d_map_in));
   ierr =
-    cudaMemcpy(map->d_map_in, map->h_map_in,
+    cudaMemcpy(map->d_map_in, map->h_map_in.data(),
                map->nr_map_in * sizeof(*map->d_map_in), cudaMemcpyHostToDevice);
   cudaCheck(ierr);
 }
