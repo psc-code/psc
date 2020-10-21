@@ -249,6 +249,16 @@ struct MparticlesSimple : MparticlesBase
     fclose(file);
   }
 
+  real_t prt_q(Particle& prt) const
+  {
+    return grid().kinds[prt.kind].q;
+  }
+
+  real_t prt_m(Particle& prt) const
+  {
+    return grid().kinds[prt.kind].m;
+  }
+
   template <typename PRT>
   real_t prt_q(const PRT& prt) const
   {
