@@ -76,17 +76,16 @@ void cuda_bndp<CudaMparticles, dim_yz>::reorder_send_by_id_gold(
   CudaMparticles* cmprts, uint n_prts_send)
 {
   thrust::host_vector<uint> h_id(cmprts->by_block_.d_id);
-  thrust::host_vector<float4> h_xi4(cmprts->storage.xi4);
-  thrust::host_vector<float4> h_pxi4(cmprts->storage.pxi4);
+  HMparticlesCuda h_storage(cmprts->storage);
 
   for (int n = 0; n < n_prts_send; n++) {
     uint id = h_id[cmprts->n_prts - n_prts_send + n];
-    h_xi4[cmprts->n_prts + n] = h_xi4[id];
-    h_pxi4[cmprts->n_prts + n] = h_pxi4[id];
+    h_storage.store(h_storage[id],
+                    cmprts->n_prts +
+                      n); // h_storage[n_prts + n] = h_storage[id];
   }
 
-  cmprts->storage.xi4 = h_xi4;
-  cmprts->storage.pxi4 = h_pxi4;
+  cmprts->storage = h_storage;
 }
 
 // ----------------------------------------------------------------------
