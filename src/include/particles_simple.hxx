@@ -265,3 +265,25 @@ public: // FIXME
   psc::particle::UniqueIdGenerator uid_gen;
   ParticleIndexer<real_t> pi_;
 };
+
+template <>
+const MparticlesSimple<ParticleSimple<float>>::Convert
+  MparticlesSimple<ParticleSimple<float>>::convert_to_;
+extern template const MparticlesSimple<ParticleSimple<float>>::Convert
+  MparticlesSimple<ParticleSimple<float>>::convert_to_;
+template <>
+const MparticlesSimple<ParticleSimple<float>>::Convert
+  MparticlesSimple<ParticleSimple<float>>::convert_from_;
+extern template const MparticlesSimple<ParticleSimple<float>>::Convert
+  MparticlesSimple<ParticleSimple<float>>::convert_from_;
+
+template <>
+const MparticlesSimple<ParticleSimple<double>>::Convert
+  MparticlesSimple<ParticleSimple<double>>::convert_to_;
+extern template const MparticlesSimple<ParticleSimple<double>>::Convert
+  MparticlesSimple<ParticleSimple<double>>::convert_to_;
+template <>
+const MparticlesSimple<ParticleSimple<double>>::Convert
+  MparticlesSimple<ParticleSimple<double>>::convert_from_;
+extern template const MparticlesSimple<ParticleSimple<double>>::Convert
+  MparticlesSimple<ParticleSimple<double>>::convert_from_;
