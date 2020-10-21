@@ -104,9 +104,10 @@ void cuda_bndp<CudaMparticles, dim_yz>::reorder_send_by_id_gold(
 //
 // add copies of the particles past the regular end of the array
 
-__global__ static void k_reorder_send_buf_total(
-  int nr_prts, int nr_total_blocks, uint* d_bidx, uint* d_sums, float4* d_xi4,
-  float4* d_pxi4)
+__global__ static void k_reorder_send_buf_total(int nr_prts,
+                                                int nr_total_blocks,
+                                                uint* d_bidx, uint* d_sums,
+                                                DMparticlesStorage storage)
 {
   int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
   if (i >= nr_prts)
@@ -114,8 +115,7 @@ __global__ static void k_reorder_send_buf_total(
 
   if (d_bidx[i] == CUDA_BND_S_OOB) {
     int j = d_sums[i];
-    d_xi4[nr_prts + j] = d_xi4[i];
-    d_pxi4[nr_prts + j] = d_pxi4[i];
+    storage.store(storage[i], j); // storage[j] = storage[i]
   }
 }
 
@@ -137,8 +137,7 @@ void cuda_bndp<CudaMparticles, dim_yz>::reorder_send_buf_total(
 
   k_reorder_send_buf_total<<<dimGrid, dimBlock>>>(
     cmprts->n_prts, cmprts->n_blocks, cmprts->by_block_.d_idx.data().get(),
-    d_sums.data().get(), cmprts->storage.xi4.data().get(),
-    cmprts->storage.pxi4.data().get());
+    d_sums.data().get(), cmprts->storage.to_kernel());
   cuda_sync_if_enabled();
 }
 
