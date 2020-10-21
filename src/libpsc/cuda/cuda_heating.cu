@@ -51,7 +51,7 @@ __global__ static void k_curand_setup(curandState* d_curand_states)
 // ----------------------------------------------------------------------
 // d_particle_kick
 
-__device__ void d_particle_kick(float4* pxi4, float H, float heating_dt,
+__device__ void d_particle_kick(DParticleCuda& prt, float H, float heating_dt,
                                 curandState* state)
 {
   float2 r01 = curand_normal2(state);
@@ -59,9 +59,9 @@ __device__ void d_particle_kick(float4* pxi4, float H, float heating_dt,
 
   float Dp = sqrtf(H * heating_dt);
 
-  pxi4->x += Dp * r01.x;
-  pxi4->y += Dp * r01.y;
-  pxi4->z += Dp * r2;
+  prt.u[0] += Dp * r01.x;
+  prt.u[1] += Dp * r01.y;
+  prt.u[2] += Dp * r2;
 }
 
 // ----------------------------------------------------------------------
@@ -93,20 +93,17 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
     if (n < block_begin) {
       continue;
     }
-    float4 xi4 = dmprts.storage.xi4[n];
-
-    int prt_kind = __float_as_int(xi4.w);
+    auto prt = dmprts.storage[n];
 
     float xx[3] = {
-      xi4.x + xb[0],
-      xi4.y + xb[1],
-      xi4.z + xb[2],
+      prt.x[0] + xb[0],
+      prt.x[1] + xb[1],
+      prt.x[2] + xb[2],
     };
-    float H = foil(xx, prt_kind);
+    float H = foil(xx, prt.kind);
     if (H > 0.f) {
-      float4 pxi4 = dmprts.storage.pxi4[n];
-      d_particle_kick(&pxi4, H, heating_dt, &local_state);
-      dmprts.storage.pxi4[n] = pxi4;
+      d_particle_kick(prt, H, heating_dt, &local_state);
+      dmprts.storage.store_momentum(prt, n);
     }
   }
 
