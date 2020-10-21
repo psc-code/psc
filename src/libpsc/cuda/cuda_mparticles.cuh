@@ -35,6 +35,8 @@ struct MparticlesCudaStorage_
 
   __host__ MparticlesCudaStorage_(uint n) : xi4(n), pxi4(n) {}
 
+  __host__ __device__ size_t size() { return xi4.size(); }
+
   __host__ void resize(size_t n)
   {
     // grow arrays by 20% only

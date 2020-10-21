@@ -46,12 +46,10 @@ struct cuda_bndp : cuda_mparticles_indexer<typename CudaMparticles::BS>
     auto oob = thrust::count_if(d_bidx.begin(), d_bidx.end(),
                                 is_outside(cmprts.n_blocks));
     auto sz = d_bidx.size();
-    assert(cmprts.storage.xi4.size() == sz);
-    assert(cmprts.storage.pxi4.size() == sz);
+    assert(cmprts.storage.size() == sz);
     assert(cmprts.n_prts == sz);
     d_bidx.resize(sz + oob);
-    cmprts.storage.xi4.resize(sz + oob);
-    cmprts.storage.pxi4.resize(sz + oob);
+    cmprts.storage.resize(sz + oob);
 
     auto begin = thrust::make_zip_iterator(thrust::make_tuple(
       d_bidx.begin(), cmprts.storage.xi4.begin(), cmprts.storage.pxi4.begin()));
