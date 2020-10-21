@@ -27,8 +27,8 @@ static const int RADIX_BITS = 4;
 // k_reorder_send_by_id
 
 static void __global__ k_reorder_send_by_id(uint nr_prts_send, uint n_prts,
-                                            uint* d_xchg_ids, float4* d_xi4,
-                                            float4* d_pxi4)
+                                            uint* d_xchg_ids,
+                                            DMParticlesStorage storage)
 {
   int n = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
   if (n >= nr_prts_send) {
@@ -36,8 +36,7 @@ static void __global__ k_reorder_send_by_id(uint nr_prts_send, uint n_prts,
   }
 
   uint id = d_xchg_ids[n];
-  d_xchg_xi4[nprts + n] = d_xi4[id];
-  d_xchg_pxi4[nprts + n] = d_pxi4[id];
+  storage.store(storage[id], nprts + n); // storage[nprts+n] = storage[id];
 }
 
 // ----------------------------------------------------------------------
@@ -47,8 +46,8 @@ static void __global__ k_reorder_send_by_id(uint nr_prts_send, uint n_prts,
 // the existing n_prts particles
 //
 // in: d_id[n_prts - n_prts_send:n_prts_send[
-// in: d_xi4, d_pxi4[0:n_prts[
-// out: d_xi4, d_pxi4[n_prts:n_prts_send[
+// in: d_storage[0:n_prts[
+// out: d_storage[n_prts:n_prts_send[
 
 template <typename CudaMparticles>
 void cuda_bndp<CudaMparticles, dim_yz>::reorder_send_by_id(
@@ -65,7 +64,7 @@ void cuda_bndp<CudaMparticles, dim_yz>::reorder_send_by_id(
   k_reorder_send_by_id<<<dimGrid, THREADS_PER_BLOCK>>>(
     n_prts_send, cmprts->n_prts,
     cmprts->by_block_.d_id.data().get() + cmprts->n_prts - n_prts_send,
-    cmprts->storage.xi4.data().get(), cmprts->storage.pxi4.data().get());
+    cmprts->storage.to_kernel());
   cuda_sync_if_enabled();
 }
 
