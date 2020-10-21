@@ -50,24 +50,22 @@ struct CudaPushParticles
   // ----------------------------------------------------------------------
   // push_part_one
 
-  __device__ static void push_part_one(DMparticles& dmprts,
-                                       DParticleProxy<DMparticles>& prt, int n,
-                                       const FldCache& fld_cache,
+  __device__ static void push_part_one(DMparticles& dmprts, DParticleCuda& prt,
+                                       int n, const FldCache& fld_cache,
                                        const Block& current_block)
   {
     // here we have x^{n+.5}, p^n
 
     // field interpolation
     real_t xm[3];
-    dmprts.template scalePos<dim>(xm, prt.x());
+    dmprts.template scalePos<dim>(xm, prt.x);
 #if 1
     const int* ci0 = current_block.ci0;
     if (!dim::InvarX::value &&
           ((xm[0] < ci0[0] || xm[0] > ci0[0] + BS::x::value)) ||
         xm[1] < ci0[1] || xm[1] > ci0[1] + BS::y::value || xm[2] < ci0[2] ||
         xm[2] > ci0[2] + BS::z::value) {
-      printf("xm %g %g (xi %g %g n %d)\n", xm[1], xm[2], prt.x()[0], prt.x()[1],
-             n);
+      printf("xm %g %g (xi %g %g n %d)\n", xm[1], xm[2], prt.x[0], prt.x[1], n);
     }
 #endif
     InterpolateEM<FldCache, typename Config::Ip, dim> ip;
@@ -87,12 +85,12 @@ struct CudaPushParticles
 #endif
 
     // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
-    real_t dq = dmprts.dq(prt.kind());
-    advance.push_p(prt.u(), E, H, dq);
+    real_t dq = dmprts.dq(prt.kind);
+    advance.push_p(prt.u, E, H, dq);
 #if 0
-    if (!isfinite(prt.u()[0]) || !isfinite(prt.u()[1]) || !isfinite(prt.u()[2])) {
+    if (!isfinite(prt.u[0]) || !isfinite(prt.u[1]) || !isfinite(prt.u[2])) {
       printf("CUDA_ERROR push_part_one: n = %d pxi %g %g %g\n", n,
-	     prt.u()[0], prt.u()[1], prt.u()[2]);
+	     prt.u[0], prt.u[1], prt.u[2]);
     }
 #endif
   }
@@ -238,32 +236,31 @@ struct CudaPushParticles
   // ----------------------------------------------------------------------
   // calc_j -- dispatched for dim_yz
 
-  __device__ static void calc_j(DMparticles& dmprts,
-                                DParticleProxy<DMparticles>& prt, int n,
+  __device__ static void calc_j(DMparticles& dmprts, DParticleCuda& prt, int n,
                                 DMparticlesCudaStorage& storage, Curr& scurr,
                                 const Block& current_block, dim_yz tag)
   {
     AdvanceParticle<real_t, dim> advance{dmprts.dt()};
 
-    auto v = advance.calc_v(prt.u());
+    auto v = advance.calc_v(prt.u);
 
     // position xm at x^(n+.5)
     float h0[3], h1[3];
     float xm[3], xp[3];
     int j[3], k[3];
 
-    dmprts.find_idx_off_pos_1st(prt.x(), j, h0, xm, float(0.));
+    dmprts.find_idx_off_pos_1st(prt.x, j, h0, xm, float(0.));
 
     if (Config::Deposit::value == DEPOSIT_VB_2D) {
       // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0)
-      advance.push_x(prt.x(), v, .5f);
+      advance.push_x(prt.x, v, .5f);
 
-      float fnqx = v[0] * prt.qni_wni() * dmprts.fnqs();
+      float fnqx = v[0] * prt.qni_wni * dmprts.fnqs();
 
       // out-of-plane currents at intermediate time
       int lf[3];
       float of[3];
-      dmprts.find_idx_off_1st(prt.x(), lf, of, float(0.));
+      dmprts.find_idx_off_1st(prt.x, lf, of, float(0.));
       lf[1] -= current_block.ci0[1];
       lf[2] -= current_block.ci0[2];
 
@@ -277,23 +274,23 @@ struct CudaPushParticles
                 current_block.ci0);
 
       // x^(n+1.0), p^(n+1.0) -> x^(n+1.5), p^(n+1.0)
-      advance.push_x(prt.x(), v, .5f);
+      advance.push_x(prt.x, v, .5f);
     } else if (Config::Deposit::value == DEPOSIT_VB_3D) {
       // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0)
-      advance.push_x(prt.x(), v);
+      advance.push_x(prt.x, v);
     }
     storage.store_position(prt, n);
 
     // has moved into which block? (given as relative shift)
 #ifdef CUDA_BNDP_DIM_YZ_SPECIAL
     dmprts.bidx_[n] =
-      dmprts.blockShift(prt.x(), current_block.p, current_block.bid);
+      dmprts.blockShift(prt.x, current_block.p, current_block.bid);
 #else
-    dmprts.bidx_[n] = dmprts.blockNoShift(prt.x(), current_block.p);
+    dmprts.bidx_[n] = dmprts.blockNoShift(prt.x, current_block.p);
 #endif
 
     // position xm at x^(n+.5)
-    dmprts.find_idx_off_pos_1st(prt.x(), k, h1, xp, float(0.));
+    dmprts.find_idx_off_pos_1st(prt.x, k, h1, xp, float(0.));
 
     // deposit xm -> xp
     int idiff[3] = {0, k[1] - j[1], k[2] - j[2]};
@@ -302,8 +299,8 @@ struct CudaPushParticles
 	idiff[2] < -1 || idiff[2] > 1) {
       printf("A idiff %d %d j %d %d k %d %d\n", idiff[1], idiff[2],
 	     j[1], j[2], k[1], k[2]);
-      printf("A prt.xi %g %g scaled %g %g k %d %d\n", prt.x()[1], prt.x()[2],
-	     dmprts.scalePos(prt.x()[1], 1), dmprts.scalePos(prt.x()[2], 2), k[1], k[2]);
+      printf("A prt.xi %g %g scaled %g %g k %d %d\n", prt.x[1], prt.x[2],
+	     dmprts.scalePos(prt.x[1], 1), dmprts.scalePos(prt.x[2], 2), k[1], k[2]);
     }
 #endif
     int i[3] = {0, j[1] - current_block.ci0[1], j[2] - current_block.ci0[2]};
@@ -333,46 +330,45 @@ struct CudaPushParticles
 
     float dx1[3];
     calc_dx1(dx1, x, dx, off);
-    curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni(), scurr, current_block, dim{});
+    curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni, scurr, current_block, dim{});
     curr_vb_cell_upd(i, x, dx1, dx, off, dim{});
 
     off[1] = idiff[1] - off[1];
     off[2] = idiff[2] - off[2];
     calc_dx1(dx1, x, dx, off);
-    curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni(), scurr, current_block, dim{});
+    curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni, scurr, current_block, dim{});
     curr_vb_cell_upd(i, x, dx1, dx, off, dim{});
 
-    curr_vb_cell(dmprts, i, x, dx, prt.qni_wni(), scurr, current_block, dim{});
+    curr_vb_cell(dmprts, i, x, dx, prt.qni_wni, scurr, current_block, dim{});
   }
 
   // ----------------------------------------------------------------------
   // calc_j -- dispatched for dim_xyz
 
-  __device__ static void calc_j(DMparticles& dmprts,
-                                DParticleProxy<DMparticles>& prt, int n,
+  __device__ static void calc_j(DMparticles& dmprts, DParticleCuda& prt, int n,
                                 DMparticlesCudaStorage& storage, Curr& scurr,
                                 const Block& current_block, dim_xyz tag)
   {
     AdvanceParticle<real_t, dim> advance{dmprts.dt()};
 
-    auto v = advance.calc_v(prt.u());
+    auto v = advance.calc_v(prt.u);
 
     // position xm at x^(n+.5)
     float h0[3];
     float xm[3], xp[3];
     int j[3];
 
-    dmprts.find_idx_off_pos_1st(prt.x(), j, h0, xm, float(0.));
+    dmprts.find_idx_off_pos_1st(prt.x, j, h0, xm, float(0.));
 
     static_assert(Config::Deposit::value == DEPOSIT_VB_3D,
                   "calc_j dim_xyz needs 3d deposit");
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0)
-    advance.push_x(prt.x(), v);
+    advance.push_x(prt.x, v);
     storage.store_position(prt, n);
 
     // position xp at x^(n+1.5)
     for (int d = 0; d < 3; d++) {
-      xp[d] = dmprts.scalePos(prt.x()[d], d);
+      xp[d] = dmprts.scalePos(prt.x[d], d);
     }
 
     // deposit xm -> xp
@@ -419,8 +415,7 @@ struct CudaPushParticles
       // printf("frac %g %g %g step %g dir %d\n", frac[0], frac[1], frac[2],
       // step, dir); printf("i %d:%d:%d dx1 %g %g %g x %g %g %g\n", i[0], i[1],
       // i[2], dx1[0], dx1[1], dx1[2], 	     x[0], x[1], x[2]);
-      curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni(), scurr, current_block,
-                   dim{});
+      curr_vb_cell(dmprts, i, x, dx1, prt.qni_wni, scurr, current_block, dim{});
       if (dir < 0) {
         break;
       }
@@ -477,8 +472,8 @@ struct CudaPushParticles
       if (n < block_begin) {
         continue;
       }
-      auto prt = (REORDER) ? dmprts.storage.load_proxy(dmprts, dmprts.id_[n])
-                           : dmprts.storage.load_proxy(dmprts, n);
+      auto prt = (REORDER) ? dmprts.storage.load_device(dmprts.id_[n])
+                           : dmprts.storage.load_device(n);
       push_part_one(dmprts, prt, n, fld_cache, current_block);
 
       if (REORDER) {
