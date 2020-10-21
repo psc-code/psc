@@ -14,6 +14,8 @@
 #include <thrust/sort.h>
 #include <thrust/binary_search.h>
 
+#include <gtensor/span.h>
+
 // ======================================================================
 // DParticleProxy
 
@@ -142,9 +144,9 @@ using HMparticlesCudaStorage =
 // ======================================================================
 // DMparticlesCudaStorage
 
-struct DMparticlesCudaStorage : MparticlesCudaStorage_<float4*>
+struct DMparticlesCudaStorage : MparticlesCudaStorage_<gt::span<float4>>
 {
-  using Base = MparticlesCudaStorage_<float4*>;
+  using Base = MparticlesCudaStorage_<gt::span<float4>>;
   using Base::Base;
 
   template <typename DMparticlesCuda>
@@ -292,10 +294,11 @@ struct DMparticlesCuda : DParticleIndexer<BS_>
       fnqys_(cmprts.grid_.domain.dx[1] * fnqs_ / dt_),
       fnqzs_(cmprts.grid_.domain.dx[2] * fnqs_ / dt_),
       dqs_(.5f * cmprts.grid_.norm.eta * dt_),
-      storage{cmprts.storage.xi4.data().get(),
-              cmprts.storage.pxi4.data().get()},
-      alt_storage{cmprts.alt_storage.xi4.data().get(),
-                  cmprts.alt_storage.pxi4.data().get()},
+      storage{{cmprts.storage.xi4.data().get(), cmprts.storage.xi4.size()},
+              {cmprts.storage.pxi4.data().get(), cmprts.storage.pxi4.size()}},
+      alt_storage{
+        {cmprts.alt_storage.xi4.data().get(), cmprts.alt_storage.xi4.size()},
+        {cmprts.alt_storage.pxi4.data().get(), cmprts.alt_storage.pxi4.size()}},
       off_(cmprts.by_block_.d_off.data().get()),
       bidx_(cmprts.by_block_.d_idx.data().get()),
       id_(cmprts.by_block_.d_id.data().get()),
