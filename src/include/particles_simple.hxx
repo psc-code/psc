@@ -166,7 +166,7 @@ struct MparticlesSimple : MparticlesBase
     }
 
     const Grid_t& grid() const { return mprts_.grid(); }
-    const MparticlesSimple& mprts() const { return *mprts_; }
+    const MparticlesSimple& mprts() const { return mprts_; }
     int p() const { return p_; }
 
   private:
