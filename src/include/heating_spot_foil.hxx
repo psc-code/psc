@@ -47,8 +47,8 @@ struct HeatingSpotFoil : HeatingSpotFoilParams
       return 0;
     }
 
-    return fac[kind] *
-           (exp(-(sqr(x - (xc)) + sqr(y - (yc))) / sqr(rH)) +
+    return fac[kind] * (exp(-(sqr(x - (xc)) + sqr(y - (yc))) / sqr(rH))); // +
+#if 0
             exp(-(sqr(x - (xc)) + sqr(y - (yc + Ly_))) / sqr(rH)) +
             exp(-(sqr(x - (xc)) + sqr(y - (yc - Ly_))) / sqr(rH)) +
             exp(-(sqr(x - (xc + Lx_)) + sqr(y - (yc))) / sqr(rH)) +
@@ -57,6 +57,7 @@ struct HeatingSpotFoil : HeatingSpotFoilParams
             exp(-(sqr(x - (xc - Lx_)) + sqr(y - (yc))) / sqr(rH)) +
             exp(-(sqr(x - (xc - Lx_)) + sqr(y - (yc + Ly_))) / sqr(rH)) +
             exp(-(sqr(x - (xc - Lx_)) + sqr(y - (yc - Ly_))) / sqr(rH)));
+#endif
   }
 
 private:
