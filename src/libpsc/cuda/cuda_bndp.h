@@ -80,13 +80,10 @@ struct cuda_bndp : cuda_mparticles_indexer<typename CudaMparticles::BS>
     HMparticlesCudaStorage h_bnd_storage(n_prts_send);
     thrust::host_vector<uint> h_bidx(n_prts_send);
 
-    assert(cmprts->storage.xi4.begin() + n_prts + n_prts_send ==
-           cmprts->storage.xi4.end());
+    assert(cmprts->storage.size() == n_prts + n_prts_send);
 
-    thrust::copy(cmprts->storage.xi4.begin() + n_prts,
-                 cmprts->storage.xi4.end(), h_bnd_storage.xi4.begin());
-    thrust::copy(cmprts->storage.pxi4.begin() + n_prts,
-                 cmprts->storage.pxi4.end(), h_bnd_storage.pxi4.begin());
+    thrust::copy(cmprts->storage.begin() + n_prts, cmprts->storage.end(),
+                 h_bnd_storage.begin());
     thrust::copy(cmprts->by_block_.d_idx.begin() + n_prts,
                  cmprts->by_block_.d_idx.end(), h_bidx.begin());
 
