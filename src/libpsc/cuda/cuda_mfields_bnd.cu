@@ -37,7 +37,7 @@ static void cuda_mfields_bnd_setup_d_nei_patch(
   struct cuda_mfields_bnd* cbnd, int n_recv_entries,
   struct cuda_mfields_bnd_entry* recv_entry)
 {
-  cbnd->h_nei_patch = new int[9 * cbnd->n_patches];
+  cbnd->h_nei_patch.resize(9 * cbnd->n_patches);
 
   for (int p = 0; p < cbnd->n_patches; p++) {
     for (int dir1 = 0; dir1 < 9; dir1++) {
@@ -53,7 +53,7 @@ static void cuda_mfields_bnd_setup_d_nei_patch(
     (int*)myCudaMalloc(9 * cbnd->n_patches * sizeof(*cbnd->d_nei_patch));
 
   cudaError_t ierr;
-  ierr = cudaMemcpy(cbnd->d_nei_patch, cbnd->h_nei_patch,
+  ierr = cudaMemcpy(cbnd->d_nei_patch, cbnd->h_nei_patch.data(),
                     9 * cbnd->n_patches * sizeof(*cbnd->d_nei_patch),
                     cudaMemcpyHostToDevice);
   cudaCheck(ierr);
@@ -110,6 +110,8 @@ void cuda_mfields_bnd_ctor(struct cuda_mfields_bnd* cbnd,
 
 void cuda_mfields_bnd_dtor(struct cuda_mfields_bnd* cbnd)
 {
+  cbnd->h_nei_patch.clear();
+  cbnd->h_nei_patch.shrink_to_fit();
   myCudaFree(cbnd->d_nei_patch);
   cbnd->h_buf.clear(); // FIXME, if we just called an actual dtor...
   cbnd->d_buf.clear(); // FIXME, if we just called an actual dtor...
