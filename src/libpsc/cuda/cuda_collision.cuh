@@ -111,15 +111,15 @@ struct CudaCollision
            n += 2 * THREADS_PER_BLOCK) {
         // printf("%d/%d: n = %d off %d\n", blockIdx.x, threadIdx.x, n,
         // d_off[blockIdx.x]);
-        auto prt1 = DParticle{dmprts.storage.load_proxy(dmprts, d_id[n])};
-        auto prt2 = DParticle{dmprts.storage.load_proxy(dmprts, d_id[n + 1])};
+        auto prt1 = dmprts.storage.load_device(d_id[n]);
+        auto prt2 = dmprts.storage.load_device(d_id[n + 1]);
 #ifndef NDEBUG
         int p = bidx / n_cells_per_patch;
         int cidx1 = dmprts.validCellIndex(dmprts.storage.xi4[d_id[n]], p);
         int cidx2 = dmprts.validCellIndex(dmprts.storage.xi4[d_id[n + 1]], p);
         assert(cidx1 == cidx2);
 #endif
-        bc(prt1.prt_, prt2.prt_, nudt1, rng);
+        bc(prt1, prt2, nudt1, rng);
         // xi4 is not modified, don't need to store
         dmprts.storage.store_momentum(prt1, d_id[n]);
         dmprts.storage.store_momentum(prt2, d_id[n + 1]);
