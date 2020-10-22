@@ -174,16 +174,16 @@ struct cuda_heating_foil
 // ----------------------------------------------------------------------
 // particle_kick
 
-__host__ void particle_kick(float4* pxi4, float H, float heating_dt)
+__host__ void particle_kick(DParticleCuda& prt, float H, float heating_dt)
 {
   float2 r01 = bm_normal2();
   float2 r23 = bm_normal2();
 
   float Dp = sqrtf(H * heating_dt);
 
-  pxi4->x += Dp * r01.x;
-  pxi4->y += Dp * r01.y;
-  pxi4->z += Dp * r23.x;
+  prt.x[0] += Dp * r01.x;
+  prt.x[1] += Dp * r01.y;
+  prt.x[2] += Dp * r23.x;
 }
 
 // ----------------------------------------------------------------------
@@ -196,18 +196,16 @@ void cuda_heating_run_foil_gold(HS& foil, float heating_dt,
   for (int b = 0; b < cmprts->n_blocks; b++) {
     int p = b / cmprts->n_blocks_per_patch;
     for (int n = cmprts->d_off[b]; n < cmprts->d_off[b + 1]; n++) {
-      float4 xi4 = cmprts->d_xi4[n];
-
-      int prt_kind = cuda_float_as_int(xi4.w);
+      auto prt = cmprts->storage[n];
 
       float* xb = &cmprts->xb_by_patch[p][0];
       float xx[3] = {
-        xi4.x + xb[0],
-        xi4.y + xb[1],
-        xi4.z + xb[2],
+        prt.x[0] + xb[0],
+        prt.x[1] + xb[1],
+        prt.x[2] + xb[2],
       };
 
-      float H = foil(xx, prt_kind);
+      float H = foil(xx, prt.kind);
       // float4 pxi4 = d_pxi4[n];
       // printf("%s xx = %g %g %g H = %g px = %g %g %g\n", (H > 0) ? "H" : " ",
       // 	     xx[0], xx[1], xx[2], H,
@@ -215,9 +213,9 @@ void cuda_heating_run_foil_gold(HS& foil, float heating_dt,
       // pxi4.w = H;
       // d_pxi4[n] = pxi4;
       if (H > 0) {
-        float4 pxi4 = cmprts->d_pxi4[n];
-        particle_kick(&pxi4, H, heating_dt);
-        cmprts->d_pxi4[n] = pxi4;
+        auto prt = cmprts->storage[n];
+        particle_kick(prt, H, heating_dt);
+        cmprts->storage.store_momentum(prt, n);
         // printf("H xx = %g %g %g H = %g px = %g %g %g\n", xx[0], xx[1], xx[2],
         // H,
         //        pxi4.x, pxi4.y, pxi4.z);

@@ -370,13 +370,6 @@ void cuda_mparticles<BS>::inject(const std::vector<Particle>& buf,
   thrust::sequence(this->by_block_.d_id.data(),
                    this->by_block_.d_id.data() + this->n_prts + buf_n);
 
-  // for (int i = -5; i <= 5; i++) {
-  //   //    float4 xi4 = d_xi4[cmprts->n_prts + i];
-  //   uint bidx = d_bidx[cmprts->n_prts + i];
-  //   uint id = d_id[cmprts->n_prts + i];
-  //   printf("i %d bidx %d %d\n", i, bidx, id);
-  // }
-
   // assert(check_ordered());
 
   this->n_prts += buf_n;
@@ -397,7 +390,8 @@ cuda_mparticles<BS>::get_particles(int beg, int end)
 {
   reorder(); // FIXME? by means of this, this function disturbs the state...
 
-  HMparticlesCudaStorage h_storage{this->storage.begin() + beg, this->storage.begin() + end};
+  HMparticlesCudaStorage h_storage{this->storage.begin() + beg,
+                                   this->storage.begin() + end};
 
   std::vector<Particle> prts;
   prts.reserve(end - beg);

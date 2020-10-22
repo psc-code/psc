@@ -31,36 +31,24 @@ using DMparticlesCudaStorage = MparticlesCudaStorage_<gt::span<float4>>;
 // ======================================================================
 // MparticlesCudaStorage_
 
-template <typename T>
+template <typename S>
 class MparticlesCudaStorage_
 {
-  using xi4_iterator = typename T::iterator;
-  using pxi4_iterator = typename T::iterator;
+  using xi4_iterator = typename S::iterator;
+  using pxi4_iterator = typename S::iterator;
   using iterator_tuple = thrust::tuple<xi4_iterator, pxi4_iterator>;
 
 public:
   using iterator = thrust::zip_iterator<iterator_tuple>;
 
   MparticlesCudaStorage_() = default;
-
-  MparticlesCudaStorage_(const T& xi4, const T& pxi4) : xi4{xi4}, pxi4{pxi4} {}
-
-  template <typename OtherStorage>
-  __host__ MparticlesCudaStorage_(OtherStorage& other)
-    : xi4{other.xi4}, pxi4{other.pxi4}
-  {}
+  MparticlesCudaStorage_(const MparticlesCudaStorage_& other) = default;
+  MparticlesCudaStorage_& operator=(const MparticlesCudaStorage_& other) =
+    default;
 
   MparticlesCudaStorage_(uint n) : xi4(n), pxi4(n) {}
 
-  template <typename IT>
-  MparticlesCudaStorage_(IT first, IT last)
-  {
-    resize(last - first);
-    thrust::copy(first, last, begin());
-  }
-
-  MparticlesCudaStorage_& operator=(const MparticlesCudaStorage_& other) =
-    default;
+  MparticlesCudaStorage_(const S& xi4, const S& pxi4) : xi4{xi4}, pxi4{pxi4} {}
 
   template <typename SO>
   MparticlesCudaStorage_& operator=(const MparticlesCudaStorage_<SO>& other)
@@ -68,6 +56,18 @@ public:
     xi4 = other.xi4;
     pxi4 = other.pxi4;
     return *this;
+  }
+
+  template <typename SO>
+  __host__ MparticlesCudaStorage_(const SO& other)
+    : xi4{other.xi4}, pxi4{other.pxi4}
+  {}
+
+  template <typename IT>
+  MparticlesCudaStorage_(IT first, IT last)
+  {
+    resize(last - first);
+    thrust::copy(first, last, begin());
   }
 
   __host__ __device__ size_t size() { return xi4.size(); }
@@ -131,8 +131,8 @@ public:
                                   {pxi4.data().get(), pxi4.size()}};
   }
 
-  T xi4;
-  T pxi4;
+  S xi4;
+  S pxi4;
 };
 
 // ======================================================================

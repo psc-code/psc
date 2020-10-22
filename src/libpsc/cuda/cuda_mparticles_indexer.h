@@ -56,12 +56,6 @@ struct cuda_mparticles_indexer
     return pos;
   }
 
-  int blockIndex(const float4& xi4, int p) const
-  {
-    Int3 bpos = blockPosition(&xi4.x);
-    return blockIndex(bpos, p);
-  }
-
   int blockIndex(const DParticleCuda& prt, int p) const
   {
     Int3 bpos = blockPosition(prt.x);
@@ -126,17 +120,6 @@ struct DParticleIndexer
     }
   }
 
-  __device__ int validCellIndex(float4 xi4, int p) const
-  {
-    uint pos_x = __float2int_rd(xi4.x * dxi_[0]);
-    uint pos_y = __float2int_rd(xi4.y * dxi_[1]);
-    uint pos_z = __float2int_rd(xi4.z * dxi_[2]);
-
-    // work (on macbook)
-    assert(pos_x < ldims_[0] && pos_y < ldims_[1] && pos_z < ldims_[2]);
-    return ((p * ldims_[2] + pos_z) * ldims_[1] + pos_y) * ldims_[0] + pos_x;
-  }
-
   __device__ int validCellIndex(const DParticleCuda& prt, int p) const
   {
     uint pos_x = __float2int_rd(prt.x[0] * dxi_[0]);
@@ -148,16 +131,7 @@ struct DParticleIndexer
     return ((p * ldims_[2] + pos_z) * ldims_[1] + pos_y) * ldims_[0] + pos_x;
   }
 
-  __device__ int blockIndex(float4 xi4, int p) const
-  {
-    int block_pos[3] = {int(__float2int_rd(xi4.x * dxi_[0]) / BS::x::value),
-                        int(__float2int_rd(xi4.y * dxi_[1]) / BS::y::value),
-                        int(__float2int_rd(xi4.z * dxi_[2]) / BS::z::value)};
-
-    return validBlockIndex(block_pos, p);
-  }
-
-  __device__ int blockIndex(const DParticleCuda &prt, int p) const
+  __device__ int blockIndex(const DParticleCuda& prt, int p) const
   {
     int block_pos[3] = {int(__float2int_rd(prt.x[0] * dxi_[0]) / BS::x::value),
                         int(__float2int_rd(prt.x[1] * dxi_[1]) / BS::y::value),
