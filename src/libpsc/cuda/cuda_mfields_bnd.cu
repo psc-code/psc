@@ -37,7 +37,7 @@ static void cuda_mfields_bnd_setup_d_nei_patch(
   struct cuda_mfields_bnd* cbnd, int n_recv_entries,
   struct cuda_mfields_bnd_entry* recv_entry)
 {
-  cbnd->h_nei_patch = new int[9 * cbnd->n_patches];
+  cbnd->h_nei_patch.resize(9 * cbnd->n_patches);
 
   for (int p = 0; p < cbnd->n_patches; p++) {
     for (int dir1 = 0; dir1 < 9; dir1++) {
@@ -49,14 +49,7 @@ static void cuda_mfields_bnd_setup_d_nei_patch(
       recv_entry[i].nei_patch;
   }
 
-  cbnd->d_nei_patch =
-    (int*)myCudaMalloc(9 * cbnd->n_patches * sizeof(*cbnd->d_nei_patch));
-
-  cudaError_t ierr;
-  ierr = cudaMemcpy(cbnd->d_nei_patch, cbnd->h_nei_patch,
-                    9 * cbnd->n_patches * sizeof(*cbnd->d_nei_patch),
-                    cudaMemcpyHostToDevice);
-  cudaCheck(ierr);
+  cbnd->d_nei_patch = cbnd->h_nei_patch;
 }
 
 // ----------------------------------------------------------------------
@@ -110,16 +103,23 @@ void cuda_mfields_bnd_ctor(struct cuda_mfields_bnd* cbnd,
 
 void cuda_mfields_bnd_dtor(struct cuda_mfields_bnd* cbnd)
 {
-  myCudaFree(cbnd->d_nei_patch);
+  cbnd->h_nei_patch.clear();
+  cbnd->h_nei_patch.shrink_to_fit();
+  cbnd->d_nei_patch.clear();
+  cbnd->d_nei_patch.shrink_to_fit();
   cbnd->h_buf.clear(); // FIXME, if we just called an actual dtor...
   cbnd->d_buf.clear(); // FIXME, if we just called an actual dtor...
 
   for (int n = 0; n < MAX_BND_FIELDS; n++) {
     struct cuda_mfields_bnd_map* map = &cbnd->map[n];
-    myCudaFree(map->d_map_out);
-    myCudaFree(map->d_map_in);
-    delete[] map->h_map_out;
-    delete[] map->h_map_in;
+    map->h_map_out.clear();
+    map->h_map_out.shrink_to_fit();
+    map->h_map_in.clear();
+    map->h_map_in.shrink_to_fit();
+    map->d_map_out.clear();
+    map->d_map_out.shrink_to_fit();
+    map->d_map_in.clear();
+    map->d_map_in.shrink_to_fit();
   }
 
   for (int p = 0; p < cbnd->n_patches; p++) {
@@ -151,7 +151,7 @@ static struct cuda_mfields_bnd_map* cuda_mfields_bnd_get_map(
   assert(n_fields - 1 < MAX_BND_FIELDS);
   struct cuda_mfields_bnd_map* map = &cbnd->map[n_fields - 1];
 
-  if (!map->h_map_out) {
+  if (map->h_map_out.empty()) {
     cuda_mfields_bnd_setup_map(cbnd, n_fields, map);
   }
 
@@ -474,8 +474,8 @@ void cuda_mfields_bnd_fill_ghosts_local_xyz(struct cuda_mfields_bnd* cbnd,
                                                        im[0] * im[1] * im[2]);
 
   for (int tid = 0; tid < n_threads; tid++) {
-    cuda_fill_ghosts_local_gold(&h_flds[0], cbnd->d_nei_patch, mb, me, im,
-                                n_fields, n_patches, n_ghosts, tid);
+    cuda_fill_ghosts_local_gold(&h_flds[0], cbnd->d_nei_patch.data().get(), mb,
+                                me, im, n_fields, n_patches, n_ghosts, tid);
   }
 
   thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
@@ -503,11 +503,13 @@ void cuda_mfields_bnd_fill_ghosts_local(struct cuda_mfields_bnd* cbnd,
 
   float* d_flds = cmflds->data().get() + mb * im[1] * im[2];
   if (me - mb == 3) {
-    k_fill_ghosts_local_yz<B, 3><<<dimGrid, dimBlock>>>(
-      d_flds, cbnd->d_nei_patch, im[1], im[2], n_fields, n_patches);
+    k_fill_ghosts_local_yz<B, 3>
+      <<<dimGrid, dimBlock>>>(d_flds, cbnd->d_nei_patch.data().get(), im[1],
+                              im[2], n_fields, n_patches);
   } else if (me - mb == 1) {
-    k_fill_ghosts_local_yz<B, 1><<<dimGrid, dimBlock>>>(
-      d_flds, cbnd->d_nei_patch, im[1], im[2], n_fields, n_patches);
+    k_fill_ghosts_local_yz<B, 1>
+      <<<dimGrid, dimBlock>>>(d_flds, cbnd->d_nei_patch.data().get(), im[1],
+                              im[2], n_fields, n_patches);
   } else {
     assert(0);
   }
@@ -520,8 +522,8 @@ void cuda_mfields_bnd_fill_ghosts_local(struct cuda_mfields_bnd* cbnd,
                                                        im[1] * im[2]);
 
   for (int tid = 0; tid < n_threads; tid++) {
-    cuda_fill_ghosts_local_gold(&h_flds[0], cbnd->d_nei_patch, mb, me, im,
-                                n_fields, n_patches, n_ghosts, tid);
+    cuda_fill_ghosts_local_gold(&h_flds[0], cbnd->d_nei_patch.data(), mb, me,
+                                im, n_fields, n_patches, n_ghosts, tid);
   }
 
   thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
@@ -644,11 +646,11 @@ static void fields_host_pack3_yz(struct cuda_mfields* cmflds,
   int nr_map;
   int* h_map;
   if (B == 2) {
-    h_map = map->h_map_out;
-    nr_map = map->nr_map_out;
+    h_map = map->h_map_out.data();
+    nr_map = map->h_map_out.size();
   } else if (B == 4) {
-    h_map = map->h_map_in;
-    nr_map = map->nr_map_in;
+    h_map = map->h_map_in.data();
+    nr_map = map->h_map_in.size();
   } else {
     assert(0);
   }
@@ -756,7 +758,7 @@ static void __fields_cuda_from_device3_yz(struct cuda_mfields* cmflds,
 
   int nr_map;
   if (B == 4) {
-    nr_map = map->nr_map_in;
+    nr_map = map->h_map_in.size();
   } else {
     assert(0);
   }
@@ -798,7 +800,7 @@ static void __fields_cuda_to_device3_yz(struct cuda_mfields* cmflds,
 
   int nr_map;
   if (B == 2) {
-    nr_map = map->nr_map_out;
+    nr_map = map->h_map_out.size();
   } else {
     assert(0);
   }
@@ -945,8 +947,8 @@ __global__ static void k_fields_device_pack3_yz(
 #include <thrust/host_vector.h>
 
 static void fields_create_map_out_yz(struct cuda_mfields_bnd* cbnd,
-                                     int n_fields, int B, int* p_nr_map,
-                                     int** p_h_map)
+                                     int n_fields, int B,
+                                     thrust::host_vector<int>& h_map)
 {
   bool remote_only = true;
   int* im = cbnd->im;
@@ -968,8 +970,7 @@ static void fields_create_map_out_yz(struct cuda_mfields_bnd* cbnd,
       }
     }
   }
-  *p_nr_map = nr_map;
-  *p_h_map = new int[nr_map];
+  h_map.resize(nr_map);
 
   int tid = 0;
   for (int p = 0; p < n_patches; p++) {
@@ -993,7 +994,7 @@ static void fields_create_map_out_yz(struct cuda_mfields_bnd* cbnd,
         }
         int s_p = cbnd->h_nei_patch[p * 9 + 3 * dirz + diry + 4];
         if (!remote_only || s_p < 0) {
-          (*p_h_map)[tid++] = ((p * n_fields + 0) * im[2] + jz) * im[1] + jy;
+          h_map[tid++] = ((p * n_fields + 0) * im[2] + jz) * im[1] + jy;
         }
       }
     }
@@ -1010,7 +1011,7 @@ static void fields_create_map_out_yz(struct cuda_mfields_bnd* cbnd,
         }
         int s_p = cbnd->h_nei_patch[p * 9 + 3 * dirz + diry + 4];
         if (!remote_only || s_p < 0) {
-          (*p_h_map)[tid++] = ((p * n_fields + 0) * im[2] + jz) * im[1] + jy;
+          h_map[tid++] = ((p * n_fields + 0) * im[2] + jz) * im[1] + jy;
         }
       }
     }
@@ -1019,7 +1020,7 @@ static void fields_create_map_out_yz(struct cuda_mfields_bnd* cbnd,
 }
 
 static void fields_create_map_in_yz(struct cuda_mfields_bnd* cbnd, int n_fields,
-                                    int B, int* p_nr_map, int** p_h_map)
+                                    int B, thrust::host_vector<int>& h_map)
 {
   bool remote_only = true;
   int* im = cbnd->im;
@@ -1097,8 +1098,7 @@ static void fields_create_map_in_yz(struct cuda_mfields_bnd* cbnd, int n_fields,
       }
     }
   }
-  *p_nr_map = nr_map;
-  *p_h_map = new int[nr_map];
+  h_map.resize(nr_map);
 
   int tid = 0;
   for (int p = 0; p < n_patches; p++) {
@@ -1122,7 +1122,7 @@ static void fields_create_map_in_yz(struct cuda_mfields_bnd* cbnd, int n_fields,
         }
         int dir1 = p * 9 + 3 * dirz + diry + 4;
         if (!remote_only || has_nei[dir1]) {
-          (*p_h_map)[tid++] =
+          h_map[tid++] =
             ((p * n_fields + 0) * im[2] + (jz + B)) * im[1] + (jy + B);
         }
       }
@@ -1140,7 +1140,7 @@ static void fields_create_map_in_yz(struct cuda_mfields_bnd* cbnd, int n_fields,
         }
         int dir1 = p * 9 + 3 * dirz + diry + 4;
         if (!remote_only || has_nei[dir1]) {
-          (*p_h_map)[tid++] =
+          h_map[tid++] =
             ((p * n_fields + 0) * im[2] + (jz + B)) * im[1] + (jy + B);
         }
       }
@@ -1156,27 +1156,11 @@ static void fields_create_map_in_yz(struct cuda_mfields_bnd* cbnd, int n_fields,
 void cuda_mfields_bnd_setup_map(struct cuda_mfields_bnd* cbnd, int n_fields,
                                 struct cuda_mfields_bnd_map* map)
 {
-  cudaError_t ierr;
+  fields_create_map_out_yz(cbnd, n_fields, 2, map->h_map_out);
+  map->d_map_out = map->h_map_out;
 
-  fields_create_map_out_yz(cbnd, n_fields, 2, &map->nr_map_out,
-                           &map->h_map_out);
-  // printf("map_out %d\n", map->nr_map_out);
-
-  map->d_map_out =
-    (int*)myCudaMalloc(map->nr_map_out * sizeof(*map->d_map_out));
-  ierr = cudaMemcpy(map->d_map_out, map->h_map_out,
-                    map->nr_map_out * sizeof(*map->d_map_out),
-                    cudaMemcpyHostToDevice);
-  cudaCheck(ierr);
-
-  fields_create_map_in_yz(cbnd, n_fields, 2, &map->nr_map_in, &map->h_map_in);
-  // printf("map_in %d\n", map->nr_map_in);
-
-  map->d_map_in = (int*)myCudaMalloc(map->nr_map_in * sizeof(*map->d_map_in));
-  ierr =
-    cudaMemcpy(map->d_map_in, map->h_map_in,
-               map->nr_map_in * sizeof(*map->d_map_in), cudaMemcpyHostToDevice);
-  cudaCheck(ierr);
+  fields_create_map_in_yz(cbnd, n_fields, 2, map->h_map_in);
+  map->d_map_in = map->h_map_in;
 }
 
 template <int B, bool pack>
@@ -1193,11 +1177,11 @@ static void fields_device_pack3_yz(struct cuda_mfields* cmflds,
   int n_map;
   int* d_map;
   if (B == 2) {
-    n_map = map->nr_map_out;
-    d_map = map->d_map_out;
+    n_map = map->d_map_out.size();
+    d_map = map->d_map_out.data().get();
   } else if (B == 4) {
-    n_map = map->nr_map_in;
-    d_map = map->d_map_in;
+    n_map = map->d_map_in.size();
+    d_map = map->d_map_in.data().get();
   } else {
     assert(0);
   }
@@ -1213,12 +1197,12 @@ static void fields_device_pack3_yz(struct cuda_mfields* cmflds,
   float* d_flds = cmflds->data().get() + mb * im[1] * im[2];
   if (me - mb == 3) {
     k_fields_device_pack3_yz<pack><<<dimGrid, dimBlock>>>(
-      cbnd->d_buf.data().get(), d_flds, d_map, cbnd->d_nei_patch, im[1], im[2],
-      n_patches, 3, n_map);
+      cbnd->d_buf.data().get(), d_flds, d_map, cbnd->d_nei_patch.data().get(),
+      im[1], im[2], n_patches, 3, n_map);
   } else if (me - mb == 1) {
     k_fields_device_pack3_yz<pack><<<dimGrid, dimBlock>>>(
-      cbnd->d_buf.data().get(), d_flds, d_map, cbnd->d_nei_patch, im[1], im[2],
-      n_patches, 1, n_map);
+      cbnd->d_buf.data().get(), d_flds, d_map, cbnd->d_nei_patch.data().get(),
+      im[1], im[2], n_patches, 1, n_map);
   } else {
     assert(0);
   }

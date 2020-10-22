@@ -24,14 +24,12 @@
 
 struct cuda_mfields_bnd_map
 {
-  int* h_map_out; // maps thread id to a particular offset for ghosts in the
-                  // flds array
-  int* d_map_out;
-  int nr_map_out; // number of entries in the map
-  int* h_map_in; // maps thread id to a particular offset for ghosts in the flds
-                 // array
-  int* d_map_in;
-  int nr_map_in; // number of entries in the map
+  thrust::host_vector<int> h_map_out; // maps thread id to a particular offset
+                                      // for ghosts in the flds array
+  psc::device_vector<int> d_map_out;
+  thrust::host_vector<int> h_map_in; // maps thread id to a particular offset
+                                     // for ghosts in the flds array
+  psc::device_vector<int> d_map_in;
 };
 
 // ----------------------------------------------------------------------
@@ -45,8 +43,8 @@ struct cuda_mfields_bnd
   struct cuda_mfields_bnd_patch* bnd_by_patch;
   psc::device_vector<fields_cuda_real_t> d_buf;
   thrust::host_vector<fields_cuda_real_t> h_buf;
-  int* h_nei_patch;
-  int* d_nei_patch;
+  thrust::host_vector<int> h_nei_patch;
+  psc::device_vector<int> d_nei_patch;
   struct cuda_mfields_bnd_map map[MAX_BND_FIELDS];
 };
 
