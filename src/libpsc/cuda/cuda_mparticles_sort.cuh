@@ -34,8 +34,8 @@ __global__ static void k_find_cell_indices_ids(DMparticlesCuda<BS> dmprts,
     uint off = dmprts.off_[p * n_blocks_per_patch];
     uint n_prts = dmprts.off_[(p + 1) * n_blocks_per_patch] - off;
     if (n < n_prts) {
-      float4 xi4 = dmprts.storage.xi4[n + off];
-      d_cidx[n + off] = dmprts.validCellIndex(xi4, p);
+      auto prt = dmprts.storage[n + off];
+      d_cidx[n + off] = dmprts.validCellIndex(prt, p);
       d_id[n + off] = n + off;
     }
   }
@@ -94,9 +94,9 @@ __global__ static void k_find_random_cell_indices_ids(
     uint off = dmprts.off_[p * n_blocks_per_patch];
     uint n_prts = dmprts.off_[(p + 1) * n_blocks_per_patch] - off;
     if (n < n_prts) {
-      float4 xi4 = dmprts.storage.xi4[n + off];
+      auto prt = dmprts.storage[n + off];
       d_random_idx[n + off] =
-        dmprts.validCellIndex(xi4, p) + .5 * rng.uniform();
+        dmprts.validCellIndex(prt, p) + .5 * rng.uniform();
       d_id[n + off] = n + off;
     }
   }
@@ -119,8 +119,8 @@ __global__ static void k_find_block_indices_ids(DMparticlesCuda<BS> dmprts,
 
     int n = threadIdx.x + blockDim.x * blockIdx.x;
     for (; n < n_prts; n += gridDim.x * blockDim.x) {
-      float4 xi4 = dmprts.storage.xi4[n + off];
-      d_bidx[n + off] = dmprts.blockIndex(xi4, p);
+      auto prt = dmprts.storage[n + off];
+      d_bidx[n + off] = dmprts.blockIndex(prt, p);
       d_id[n + off] = n + off;
     }
   }
