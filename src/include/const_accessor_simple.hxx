@@ -12,8 +12,8 @@ struct ParticleProxySimple
   using Patch = typename Mparticles::Patch;
   using Real3 = Vec3<real_t>;
 
-  ParticleProxySimple(Particle& prt, const Mparticles& mprts, int p)
-    : prt_{prt}, mprts_{mprts}, p_{p}
+  ParticleProxySimple(Particle& prt, const Mparticles& mprts)
+    : prt_{prt}, mprts_{mprts}
   {}
 
   Real3 x() const { return prt_.x; }
@@ -26,11 +26,9 @@ struct ParticleProxySimple
   // where not desired. should use same info stored elsewhere at right precision
   real_t qni_wni() const { return prt_.qni_wni; }
   real_t w() const { return prt_.qni_wni / q(); }
-  real_t q() const { return mprts_.grid().kinds[kind()].q; }
-  real_t m() const { return mprts_.grid().kinds[kind()].m; }
+  real_t q() const { return mprts_.prt_q(prt_); }
+  real_t m() const { return mprts_.prt_m(prt_); }
   int kind() const { return prt_.kind; }
-
-  int validCellIndex() const { return mprts_[p_].validCellIndex(prt_); }
 
   friend void swap(ParticleProxySimple<Mparticles> a,
                    ParticleProxySimple<Mparticles> b)
@@ -42,7 +40,6 @@ struct ParticleProxySimple
 private:
   Particle& prt_;
   const Mparticles& mprts_;
-  int p_;
 };
 
 // ======================================================================
@@ -132,7 +129,7 @@ struct AccessorPatchSimple
   iterator end() { return {*this, size()}; }
   ParticleProxy operator[](int n)
   {
-    return {accessor_.data(p_)[n], accessor_.mprts(), p_};
+    return {accessor_.data(p_)[n], accessor_.mprts()};
   }
   uint size() const { return accessor_.size(p_); }
   const Grid_t& grid() const { return accessor_.grid(); }

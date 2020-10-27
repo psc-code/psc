@@ -130,6 +130,11 @@ struct MparticlesSimple : MparticlesBase
     Patch(Patch&&) = default;
 
     Particle& operator[](int n) { return mprts_.storage_.at(p_, n); }
+    const Particle& operator[](int n) const
+    {
+      return mprts_.storage_.at(p_, n);
+    }
+
     iterator begin() { return mprts_.storage_[p_].begin(); }
     iterator end() { return mprts_.storage_[p_].end(); }
     unsigned int size() const { return mprts_.storage_[p_].size(); }
@@ -166,7 +171,7 @@ struct MparticlesSimple : MparticlesBase
     }
 
     const Grid_t& grid() const { return mprts_.grid(); }
-    const MparticlesSimple& mprts() const { return *mprts_; }
+    const MparticlesSimple& mprts() const { return mprts_; }
     int p() const { return p_; }
 
   private:
@@ -249,6 +254,12 @@ struct MparticlesSimple : MparticlesBase
     fclose(file);
   }
 
+  real_t prt_q(const Particle& prt) const { return grid().kinds[prt.kind].q; }
+
+  real_t prt_m(const Particle& prt) const { return grid().kinds[prt.kind].m; }
+
+  real_t prt_w(const Particle& prt) const { return prt.qni_wni / prt_q(prt); }
+
   void define_species(const char* name, double q, double m, double max_local_np,
                       double max_local_nm, double sort_interval,
                       double sort_out_of_place)
@@ -265,3 +276,25 @@ public: // FIXME
   psc::particle::UniqueIdGenerator uid_gen;
   ParticleIndexer<real_t> pi_;
 };
+
+template <>
+const MparticlesSimple<ParticleSimple<float>>::Convert
+  MparticlesSimple<ParticleSimple<float>>::convert_to_;
+extern template const MparticlesSimple<ParticleSimple<float>>::Convert
+  MparticlesSimple<ParticleSimple<float>>::convert_to_;
+template <>
+const MparticlesSimple<ParticleSimple<float>>::Convert
+  MparticlesSimple<ParticleSimple<float>>::convert_from_;
+extern template const MparticlesSimple<ParticleSimple<float>>::Convert
+  MparticlesSimple<ParticleSimple<float>>::convert_from_;
+
+template <>
+const MparticlesSimple<ParticleSimple<double>>::Convert
+  MparticlesSimple<ParticleSimple<double>>::convert_to_;
+extern template const MparticlesSimple<ParticleSimple<double>>::Convert
+  MparticlesSimple<ParticleSimple<double>>::convert_to_;
+template <>
+const MparticlesSimple<ParticleSimple<double>>::Convert
+  MparticlesSimple<ParticleSimple<double>>::convert_from_;
+extern template const MparticlesSimple<ParticleSimple<double>>::Convert
+  MparticlesSimple<ParticleSimple<double>>::convert_from_;

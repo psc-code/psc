@@ -2,7 +2,6 @@
 #pragma once
 
 #include "collision.hxx"
-#include "const_accessor_simple.hxx"
 #include "binary_collision.hxx"
 #include "fields.hxx"
 #include "fields3d.hxx"
@@ -23,8 +22,8 @@ struct CollisionHost
   using real_t = typename Mparticles::real_t;
   using MfieldsState = _MfieldsState;
   using Mfields = _Mfields;
-  using AccessorPatch = typename Mparticles::Accessor::Patch;
-  using ParticleProxy = typename AccessorPatch::ParticleProxy;
+  using Particles = typename Mparticles::Patch;
+  using Particle = typename Mparticles::Particle;
 
   enum
   {
@@ -58,30 +57,29 @@ struct CollisionHost
   {
     auto& grid = mprts.grid();
 
-    auto accessor = mprts.accessor_();
     for (int p = 0; p < mprts.n_patches(); p++) {
-      auto acc = accessor[p];
+      auto prts = mprts[p];
 
       const int* ldims = grid.ldims;
       int nr_cells = ldims[0] * ldims[1] * ldims[2];
       int* offsets = (int*)calloc(nr_cells + 1, sizeof(*offsets));
       struct psc_collision_stats stats_total = {};
 
-      find_cell_offsets(offsets, acc);
+      find_cell_offsets(prts, offsets);
 
       auto F = mflds_stats_[p];
       grid.Foreach_3d(0, 0, [&](int ix, int iy, int iz) {
         int c = (iz * ldims[1] + iy) * ldims[0] + ix;
 
-        update_rei_before(acc, offsets[c], offsets[c + 1], p, ix, iy, iz);
+        update_rei_before(prts, offsets[c], offsets[c + 1], p, ix, iy, iz);
 
         struct psc_collision_stats stats = {};
         // mprintf("p %d ijk %d:%d:%d # %d\n", p, ix, iy, iz, offsets[c+1] -
         // offsets[c]);
-        auto permute = randomize_in_cell(acc, offsets[c], offsets[c + 1]);
-        collide_in_cell(acc, permute, &stats);
+        auto permute = randomize_in_cell(offsets[c], offsets[c + 1]);
+        collide_in_cell(prts, permute, &stats);
 
-        update_rei_after(acc, offsets[c], offsets[c + 1], p, ix, iy, iz);
+        update_rei_after(prts, offsets[c], offsets[c + 1], p, ix, iy, iz);
 
         for (int s = 0; s < NR_STATS; s++) {
           F(s, ix, iy, iz) = stats.s[s];
@@ -145,14 +143,14 @@ struct CollisionHost
   // ----------------------------------------------------------------------
   // find_cell_offsets
 
-  static void find_cell_offsets(int offsets[], /*const*/ AccessorPatch& prts)
+  static void find_cell_offsets(const Particles& prts, int offsets[])
   {
     const int* ldims = prts.grid().ldims;
     int last = 0;
     offsets[last] = 0;
     int n_prts = prts.size();
     for (int n = 0; n < n_prts; n++) {
-      int cell_index = prts[n].validCellIndex();
+      int cell_index = prts.validCellIndex(prts[n]);
       assert(cell_index >= last);
       while (last < cell_index) {
         offsets[++last] = n;
@@ -166,8 +164,7 @@ struct CollisionHost
   // ----------------------------------------------------------------------
   // randomize_in_cell
 
-  static std::vector<int> randomize_in_cell(AccessorPatch& prts, int n_start,
-                                            int n_end)
+  static std::vector<int> randomize_in_cell(int n_start, int n_end)
   {
     std::vector<int> permute(n_end - n_start);
     std::iota(permute.begin(), permute.end(), n_start);
@@ -178,35 +175,39 @@ struct CollisionHost
   // ----------------------------------------------------------------------
   // update_rei_before
 
-  void update_rei_before(/*const*/ AccessorPatch& prts, int n_start, int n_end,
-                         int p, int i, int j, int k)
+  void update_rei_before(const Particles& prts, int n_start, int n_end, int p,
+                         int i, int j, int k)
   {
     real_t fnqs = prts.grid().norm.fnqs;
     auto F = mflds_rei_[p];
     F(0, i, j, k) = 0.;
     F(1, i, j, k) = 0.;
     F(2, i, j, k) = 0.;
+    auto& mprts = prts.mprts();
     for (int n = n_start; n < n_end; n++) {
-      auto prt = prts[n];
-      F(0, i, j, k) -= prt.u()[0] * prt.m() * prt.w() * fnqs;
-      F(1, i, j, k) -= prt.u()[1] * prt.m() * prt.w() * fnqs;
-      F(2, i, j, k) -= prt.u()[2] * prt.m() * prt.w() * fnqs;
+      const auto& prt = prts[n];
+      auto fac = mprts.prt_m(prt) * mprts.prt_w(prt) * fnqs;
+      F(0, i, j, k) -= prt.u[0] * fac;
+      F(1, i, j, k) -= prt.u[1] * fac;
+      F(2, i, j, k) -= prt.u[2] * fac;
     }
   }
 
   // ----------------------------------------------------------------------
   // update_rei_after
 
-  void update_rei_after(/*const*/ AccessorPatch& prts, int n_start, int n_end,
-                        int p, int i, int j, int k)
+  void update_rei_after(const Particles& prts, int n_start, int n_end, int p,
+                        int i, int j, int k)
   {
     real_t fnqs = prts.grid().norm.fnqs, dt = prts.grid().dt;
     auto F = mflds_rei_[p];
+    auto& mprts = prts.mprts();
     for (int n = n_start; n < n_end; n++) {
       const auto& prt = prts[n];
-      F(0, i, j, k) += prt.u()[0] * prt.m() * prt.w() * fnqs;
-      F(1, i, j, k) += prt.u()[1] * prt.m() * prt.w() * fnqs;
-      F(2, i, j, k) += prt.u()[2] * prt.m() * prt.w() * fnqs;
+      auto fac = mprts.prt_m(prt) * mprts.prt_w(prt) * fnqs;
+      F(0, i, j, k) += prt.u[0] * fac;
+      F(1, i, j, k) += prt.u[1] * fac;
+      F(2, i, j, k) += prt.u[2] * fac;
     }
     F(0, i, j, k) /= (this->interval_ * dt);
     F(1, i, j, k) /= (this->interval_ * dt);
@@ -216,7 +217,7 @@ struct CollisionHost
   // ----------------------------------------------------------------------
   // collide_in_cell
 
-  void collide_in_cell(AccessorPatch& prts, const std::vector<int>& permute,
+  void collide_in_cell(Particles& prts, const std::vector<int>& permute,
                        struct psc_collision_stats* stats)
   {
     const auto& grid = prts.grid();
@@ -226,8 +227,9 @@ struct CollisionHost
       return;
     }
 
+    const auto& mprts = prts.mprts();
     // all particles need to have same weight!
-    real_t wni = prts[permute[0]].w();
+    real_t wni = mprts.prt_w(prts[permute[0]]);
     real_t nudt1 = wni * grid.norm.cori * nn * this->interval_ * grid.dt * nu_;
 
     real_t* nudts = (real_t*)malloc((nn / 2 + 2) * sizeof(*nudts));
@@ -248,13 +250,12 @@ struct CollisionHost
     free(nudts);
   }
 
-  real_t do_bc(AccessorPatch& prts, int n1, int n2, real_t nudt1)
+  real_t do_bc(Particles& prts, int n1, int n2, real_t nudt1)
   {
     Rng rng;
-    BinaryCollision<ParticleProxy> bc;
-    auto prt1 = prts[n1];
-    auto prt2 = prts[n2];
-    return bc(prt1, prt2, nudt1, rng);
+    const auto& mprts = prts.mprts();
+    BinaryCollision<Mparticles, Particle> bc(mprts);
+    return bc(prts[n1], prts[n2], nudt1, rng);
   }
 
   int interval() const { return interval_; }

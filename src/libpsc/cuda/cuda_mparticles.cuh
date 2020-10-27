@@ -14,34 +14,7 @@
 #include <thrust/sort.h>
 #include <thrust/binary_search.h>
 
-// ======================================================================
-// DParticleProxy
-
-template <typename DMparticlesCuda>
-struct DParticleProxy
-{
-  using real_t = DParticleCuda::real_t;
-  using Real3 = DParticleCuda::Real3;
-
-  __device__ DParticleProxy(const DParticleCuda& prt,
-                            const DMparticlesCuda& dmprts)
-    : prt_{prt}, dmprts_{dmprts}
-  {}
-
-  __device__ Real3 x() const { return prt_.x; }
-  __device__ Real3& x() { return prt_.x; }
-  __device__ Real3 u() const { return prt_.u; }
-  __device__ Real3& u() { return prt_.u; }
-  __device__ int kind() const { return prt_.kind; }
-  __device__ real_t qni_wni() const { return prt_.qni_wni; }
-
-  __device__ real_t q() const { return dmprts_.q(prt_.kind); }
-  __device__ real_t m() const { return dmprts_.m(prt_.kind); }
-
-private:
-  DParticleCuda prt_;
-  const DMparticlesCuda& dmprts_;
-};
+#include <gtensor/span.h>
 
 // ======================================================================
 // ParticleCudaStorage
@@ -55,12 +28,6 @@ struct ParticleCudaStorage
   __host__ __device__ ParticleCudaStorage(const DParticleCuda& prt)
     : xi4{prt.x[0], prt.x[1], prt.x[2], cuda_int_as_float(prt.kind)},
       pxi4{prt.u[0], prt.u[1], prt.u[2], prt.qni_wni}
-  {}
-
-  template <typename DParticleProxy>
-  __device__ ParticleCudaStorage(const DParticleProxy& prt)
-    : xi4{prt.x()[0], prt.x()[1], prt.x()[2], cuda_int_as_float(prt.kind())},
-      pxi4{prt.u()[0], prt.u()[1], prt.u()[2], prt.qni_wni()}
   {}
 
   __host__ __device__ operator DParticleCuda()
@@ -142,32 +109,20 @@ using HMparticlesCudaStorage =
 // ======================================================================
 // DMparticlesCudaStorage
 
-struct DMparticlesCudaStorage : MparticlesCudaStorage_<float4*>
+struct DMparticlesCudaStorage : MparticlesCudaStorage_<gt::span<float4>>
 {
-  using Base = MparticlesCudaStorage_<float4*>;
+  using Base = MparticlesCudaStorage_<gt::span<float4>>;
   using Base::Base;
 
-  template <typename DMparticlesCuda>
-  __device__ void store_position(const DParticleProxy<DMparticlesCuda>& prt,
-                                 int n)
+  __device__ void store_position(const DParticleCuda& prt, int n)
   {
     auto st = ParticleCudaStorage{prt};
     xi4[n] = st.xi4;
   }
-
-  template <typename DMparticlesCuda>
-  __device__ void store_momentum(const DParticleProxy<DMparticlesCuda>& prt,
-                                 int n)
+  __device__ void store_momentum(const DParticleCuda& prt, int n)
   {
     auto st = ParticleCudaStorage{prt};
     pxi4[n] = st.pxi4;
-  }
-
-  template <typename DMparticlesCuda>
-  __device__ DParticleProxy<DMparticlesCuda> load_proxy(
-    const DMparticlesCuda& dmprts, int n)
-  {
-    return {load_device(n), dmprts};
   }
 };
 
@@ -292,10 +247,11 @@ struct DMparticlesCuda : DParticleIndexer<BS_>
       fnqys_(cmprts.grid_.domain.dx[1] * fnqs_ / dt_),
       fnqzs_(cmprts.grid_.domain.dx[2] * fnqs_ / dt_),
       dqs_(.5f * cmprts.grid_.norm.eta * dt_),
-      storage{cmprts.storage.xi4.data().get(),
-              cmprts.storage.pxi4.data().get()},
-      alt_storage{cmprts.alt_storage.xi4.data().get(),
-                  cmprts.alt_storage.pxi4.data().get()},
+      storage{{cmprts.storage.xi4.data().get(), cmprts.storage.xi4.size()},
+              {cmprts.storage.pxi4.data().get(), cmprts.storage.pxi4.size()}},
+      alt_storage{
+        {cmprts.alt_storage.xi4.data().get(), cmprts.alt_storage.xi4.size()},
+        {cmprts.alt_storage.pxi4.data().get(), cmprts.alt_storage.pxi4.size()}},
       off_(cmprts.by_block_.d_off.data().get()),
       bidx_(cmprts.by_block_.d_idx.data().get()),
       id_(cmprts.by_block_.d_id.data().get()),
@@ -322,6 +278,21 @@ struct DMparticlesCuda : DParticleIndexer<BS_>
   __device__ real_t dq(int k) const { return dq_[k]; }
   __device__ real_t q(int k) const { return q_[k]; }
   __device__ real_t m(int k) const { return m_[k]; }
+
+  __device__ real_t prt_q(const DParticleCuda& prt) const
+  {
+    return q(prt.kind);
+  }
+
+  __device__ real_t prt_m(const DParticleCuda& prt) const
+  {
+    return m(prt.kind);
+  }
+
+  __device__ real_t prt_w(const DParticleCuda& prt) const
+  {
+    return prt.qni_wni / prt_q(prt);
+  }
 
 private:
   real_t dt_;

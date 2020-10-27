@@ -10,40 +10,45 @@
 #include "../libpsc/cuda/collision_cuda_impl.hxx"
 #endif
 
-struct TestParticle
+struct ParticleTest
 {
   using real_t = double;
   using Real3 = Vec3<real_t>;
 
-  real_t q() const { return q_; }
-  real_t m() const { return m_; }
-  Real3 u() const { return u_; }
-  Real3& u() { return u_; }
+  Real3 u;
+  real_t q;
+  real_t m;
+};
 
-  Real3 u_;
-  real_t q_;
-  real_t m_;
+class MparticlesTest
+{
+public:
+  using real_t = ParticleTest::real_t;
+
+  real_t prt_q(const ParticleTest& prt) const { return prt.q; }
+  real_t prt_m(const ParticleTest& prt) const { return prt.m; }
 };
 
 TEST(BinaryCollision, Test1)
 {
   double eps = 1e-14;
 
-  TestParticle prt1{{1., 0., 0.}, 1., 1.};
-  TestParticle prt2{{0., 0., 0.}, 1., 1.};
+  ParticleTest prt1{{1., 0., 0.}, 1., 1.};
+  ParticleTest prt2{{0., 0., 0.}, 1., 1.};
 
   RngFake rng;
-  BinaryCollision<TestParticle> bc;
+  MparticlesTest mprts;
+  BinaryCollision<MparticlesTest, ParticleTest> bc(mprts);
 
   double nudt = bc(prt1, prt2, .1, rng);
 
-  EXPECT_NEAR(prt1.u()[0] + prt2.u()[0], 1., eps);
-  EXPECT_NEAR(prt1.u()[1] + prt2.u()[1], 0., eps);
-  EXPECT_NEAR(prt1.u()[2] + prt2.u()[2], 0., eps);
+  EXPECT_NEAR(prt1.u[0] + prt2.u[0], 1., eps);
+  EXPECT_NEAR(prt1.u[1] + prt2.u[1], 0., eps);
+  EXPECT_NEAR(prt1.u[2] + prt2.u[2], 0., eps);
 
 #if 0
-  printf("prt1: %g %g %g\n", prt1.u()[0], prt1.u()[1], prt1.u()[2]);
-  printf("prt2: %g %g %g\n", prt2.u()[0], prt2.u()[1], prt2.u()[2]);
+  printf("prt1: %g %g %g\n", prt1.u[0], prt1.u[1], prt1.u[2]);
+  printf("prt2: %g %g %g\n", prt2.u[0], prt2.u[1], prt2.u[2]);
 #endif
 }
 

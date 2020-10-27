@@ -20,7 +20,6 @@ struct ConstAccessorCuda
   using Mparticles = _Mparticles;
   using _Particle = typename Mparticles::Particle;
   using Patch = ConstAccessorPatchSimple<ConstAccessorCuda>;
-  using Particle = typename Patch::ConstParticleProxy;
 
   ConstAccessorCuda(Mparticles& mprts)
     : mprts_{mprts},

@@ -34,7 +34,6 @@ struct CudaCollision
 {
   using real_t = typename cuda_mparticles::real_t;
   using DMparticles = DMparticlesCuda<typename cuda_mparticles::BS>;
-  using DParticle = DParticleProxy<DMparticles>;
 
   CudaCollision(int interval, double nu, int nicell, double dt)
     : interval_{interval}, nu_{nu}, nicell_(nicell), dt_(dt)
@@ -99,7 +98,7 @@ struct CudaCollision
     int id = threadIdx.x + blockIdx.x * THREADS_PER_BLOCK;
     /* Copy state to local memory for efficiency */
     auto rng = rng_state[id];
-    BinaryCollision<DParticle> bc;
+    BinaryCollision<DMparticles, DParticleCuda> bc(dmprts);
 
     for (uint bidx = blockIdx.x; bidx < n_cells; bidx += gridDim.x) {
       uint beg = d_off[bidx];
@@ -111,8 +110,8 @@ struct CudaCollision
            n += 2 * THREADS_PER_BLOCK) {
         // printf("%d/%d: n = %d off %d\n", blockIdx.x, threadIdx.x, n,
         // d_off[blockIdx.x]);
-        auto prt1 = DParticle{dmprts.storage.load_proxy(dmprts, d_id[n])};
-        auto prt2 = DParticle{dmprts.storage.load_proxy(dmprts, d_id[n + 1])};
+        auto prt1 = dmprts.storage.load_device(d_id[n]);
+        auto prt2 = dmprts.storage.load_device(d_id[n + 1]);
 #ifndef NDEBUG
         int p = bidx / n_cells_per_patch;
         int cidx1 = dmprts.validCellIndex(dmprts.storage.xi4[d_id[n]], p);

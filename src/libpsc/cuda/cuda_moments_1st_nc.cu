@@ -49,14 +49,14 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
     if (n < block_begin) {
       continue;
     }
-    const auto prt = REORDER ? dmprts.storage.load_proxy(dmprts, dmprts.id_[n])
-                             : dmprts.storage.load_proxy(dmprts, n);
+    const auto prt = REORDER ? dmprts.storage.load_device(dmprts.id_[n])
+                             : dmprts.storage.load_device(n);
 
-    float fnq = prt.qni_wni() * dmprts.fnqs();
+    float fnq = prt.qni_wni * dmprts.fnqs();
 
     int lf[3];
     float of[3];
-    dmprts.find_idx_off_1st(prt.x(), lf, of, float(0.));
+    dmprts.find_idx_off_1st(prt.x, lf, of, float(0.));
 
     if (dim::InvarX::value) { // FIXME, ugly...
       scurr.add(0, 0, lf[1], lf[2], (1.f - of[1]) * (1.f - of[2]) * fnq);
@@ -105,16 +105,16 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
     if (n < block_begin) {
       continue;
     }
-    const auto prt = REORDER ? dmprts.storage.load_proxy(dmprts, dmprts.id_[n])
-                             : dmprts.storage.load_proxy(dmprts, n);
+    const auto prt = REORDER ? dmprts.storage.load_device(dmprts.id_[n])
+                             : dmprts.storage.load_device(n);
 
-    int kind = prt.kind();
-    float wni = prt.qni_wni() * dmprts.q_inv(kind);
+    int kind = prt.kind;
+    float wni = prt.qni_wni * dmprts.q_inv(kind);
     float fnq = wni * dmprts.fnqs();
 
     int lf[3];
     float of[3];
-    dmprts.find_idx_off_1st(prt.x(), lf, of, float(-.5));
+    dmprts.find_idx_off_1st(prt.x, lf, of, float(-.5));
 
     if (dim::InvarX::value) { // FIXME, ugly...
       scurr.add(kind, 0, lf[1], lf[2], (1.f - of[1]) * (1.f - of[2]) * fnq);

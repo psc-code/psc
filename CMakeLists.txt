@@ -43,6 +43,9 @@ if(USE_CUDA)
 
   find_package(Thrust 1.10.0 REQUIRED)
   thrust_create_target(Thrust)
+  set(GTENSOR_DEVICE "cuda" CACHE STRING "")
+else()
+  set(GTENSOR_DEVICE "host" CACHE STRING "")
 endif()
 
 set(MPI_CXX_SKIP_MPICXX ON)

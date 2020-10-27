@@ -46,10 +46,13 @@ struct RngFake
 // ======================================================================
 // BinaryCollision
 
-template <typename Particle>
-struct BinaryCollision
+template <typename Mparticles, typename Particle>
+class BinaryCollision
 {
+public:
   using real_t = typename Particle::real_t;
+
+  DEVICE BinaryCollision(const Mparticles& mprts) : mprts_{mprts} {}
 
   // ----------------------------------------------------------------------
   // operator()
@@ -85,17 +88,17 @@ struct BinaryCollision
     real_t m12, q12;
     real_t ran1, ran2;
 
-    px1 = prt1.u()[0];
-    py1 = prt1.u()[1];
-    pz1 = prt1.u()[2];
-    q1 = prt1.q();
-    m1 = prt1.m();
+    px1 = prt1.u[0];
+    py1 = prt1.u[1];
+    pz1 = prt1.u[2];
+    q1 = mprts_.prt_q(prt1);
+    m1 = mprts_.prt_m(prt1);
 
-    px2 = prt2.u()[0];
-    py2 = prt2.u()[1];
-    pz2 = prt2.u()[2];
-    q2 = prt2.q();
-    m2 = prt2.m();
+    px2 = prt2.u[0];
+    py2 = prt2.u[1];
+    pz2 = prt2.u[2];
+    q2 = mprts_.prt_q(prt2);
+    m2 = mprts_.prt_m(prt2);
 
     if (q1 * q2 == 0.f) {
       return 0.f; // no Coulomb collisions with neutrals
@@ -284,13 +287,16 @@ struct BinaryCollision
     py4 = py4 / m4;
     pz4 = pz4 / m4;
 
-    prt1.u()[0] = px3;
-    prt1.u()[1] = py3;
-    prt1.u()[2] = pz3;
-    prt2.u()[0] = px4;
-    prt2.u()[1] = py4;
-    prt2.u()[2] = pz4;
+    prt1.u[0] = px3;
+    prt1.u[1] = py3;
+    prt1.u[2] = pz3;
+    prt2.u[0] = px4;
+    prt2.u[1] = py4;
+    prt2.u[2] = pz4;
 
     return nudt;
   }
+
+private:
+  const Mparticles& mprts_;
 };
