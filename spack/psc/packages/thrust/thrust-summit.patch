@@ -1,0 +1,15 @@
+diff --git a/cmake/ThrustCudaConfig.cmake b/cmake/ThrustCudaConfig.cmake
+index 97d2ec94..7381ee0f 100644
+--- a/cmake/ThrustCudaConfig.cmake
++++ b/cmake/ThrustCudaConfig.cmake
+@@ -1,5 +1,10 @@
++set(_save_CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS}")
++set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -std c++14")
++
+ enable_language(CUDA)
+ 
++set(CMAKE_CUDA_FLAGS "${_save_CMAKE_CUDA_FLAGS}")
++
+ set(THRUST_KNOWN_COMPUTE_ARCHS 35 37 50 52 53 60 61 62 70 72 75 80)
+ 
+ # Split CUDA_FLAGS into 3 parts:

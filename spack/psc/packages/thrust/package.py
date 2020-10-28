@@ -30,6 +30,7 @@ class Thrust(CMakePackage):
     version('1.8.2', sha256='83bc9e7b769daa04324c986eeaf48fcb53c2dda26bcc77cb3c07f4b1c359feb8')
 
     patch('1323-mod.patch', when='@develop')
+    patch('thrust-summit.patch')
     
     patch('https://github.com/NVIDIA/thrust/pull/1297.patch', when='@1.10.0',
               sha256='138aa8533a875f03b9d526f114fca4fc5803311ce6b7c8e022f03c2eefed0e19')
