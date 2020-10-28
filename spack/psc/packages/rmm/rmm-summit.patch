@@ -1,0 +1,18 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index e581344..87b3d8a 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -15,8 +15,13 @@
+ #=============================================================================
+ cmake_minimum_required(VERSION 3.17...3.18 FATAL_ERROR)
+ 
++set(_save_CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS}")
++set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -std c++14")
++
+ project(RMM VERSION 0.16.0 LANGUAGES C CXX CUDA)
+ 
++set(CMAKE_CUDA_FLAGS "${_save_CMAKE_CUDA_FLAGS}")
++
+ include(cmake/CPM.cmake)
+ 
+ ###################################################################################################

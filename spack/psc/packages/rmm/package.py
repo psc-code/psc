@@ -14,8 +14,7 @@ class Rmm(CMakePackage):
 
     maintainers = ['germasch']
 
-    version('branch-0.16', branch='branch-0.16', preferred=True)
-    version('cmake', branch='pr/cmake', git='https://github.com/germasch/rmm') # deprec
+    version('0.16.0', tag='v0.16.0', preferred=True)
 
     variant('tests', default=False, description="Build tests")
     
@@ -23,6 +22,8 @@ class Rmm(CMakePackage):
     depends_on('spdlog@1.7.0')
     #depends_on('thrust@1.10.0:')
     depends_on('googletest@1.10.0 +gmock', type='build', when='+tests')
+
+    patch('rmm-summit.patch', when='@0.16.0:')
 
     def cmake_args(self):
         spec = self.spec
