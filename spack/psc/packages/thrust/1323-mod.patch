@@ -1,0 +1,319 @@
+From f6ca15c839029e43c29f683603de05a9ba9f7d76 Mon Sep 17 00:00:00 2001
+From: Keith Kraus <keith.j.kraus@gmail.com>
+Date: Fri, 16 Oct 2020 18:05:45 -0400
+Subject: [PATCH 1/2] update install rules to install cmake into lib
+
+---
+ cmake/ThrustInstallRules.cmake           | 12 +++++++++++-
+ thrust/cmake/thrust-config-version.cmake |  2 +-
+ thrust/cmake/thrust-config.cmake         |  2 +-
+ 3 files changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/cmake/ThrustInstallRules.cmake b/cmake/ThrustInstallRules.cmake
+index 552a71668..6c63e7523 100644
+--- a/cmake/ThrustInstallRules.cmake
++++ b/cmake/ThrustInstallRules.cmake
+@@ -6,10 +6,15 @@ install(DIRECTORY "${Thrust_SOURCE_DIR}/thrust"
+   FILES_MATCHING
+     PATTERN "*.h"
+     PATTERN "*.inl"
+-    PATTERN "*.cmake"
+     PATTERN "*.md"
+ )
+ 
++install(DIRECTORY "${Thrust_SOURCE_DIR}/thrust"
++  TYPE LIB
++  FILES_MATCHING
++    PATTERN "*.cmake"
++)
++
+ # Depending on how Thrust is configured, CUB's CMake scripts may or may not be
+ # included, so maintain a set of CUB install rules in both projects. By default
+ # CUB headers are installed alongside Thrust -- this may be disabled by turning
+@@ -20,6 +25,11 @@ if (THRUST_INSTALL_CUB_HEADERS)
+     TYPE INCLUDE
+     FILES_MATCHING
+       PATTERN "*.cuh"
++  )
++
++  install(DIRECTORY "${Thrust_SOURCE_DIR}/dependencies/cub/cub"
++    TYPE LIB
++    FILES_MATCHING
+       PATTERN "*.cmake"
+   )
+ endif()
+diff --git a/thrust/cmake/thrust-config-version.cmake b/thrust/cmake/thrust-config-version.cmake
+index a5cad0ad6..9b7db858f 100644
+--- a/thrust/cmake/thrust-config-version.cmake
++++ b/thrust/cmake/thrust-config-version.cmake
+@@ -1,5 +1,5 @@
+ # Parse version information from version.h:
+-file(READ "${CMAKE_CURRENT_LIST_DIR}/../version.h" THRUST_VERSION_HEADER)
++file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../include/thrust/version.h" THRUST_VERSION_HEADER)
+ string(REGEX MATCH "#define[ \t]+THRUST_VERSION[ \t]+([0-9]+)" DUMMY "${THRUST_VERSION_HEADER}")
+ set(THRUST_VERSION_FLAT ${CMAKE_MATCH_1})
+ # Note that Thrust calls this the PATCH number, CMake calls it the TWEAK number:
+diff --git a/thrust/cmake/thrust-config.cmake b/thrust/cmake/thrust-config.cmake
+index eecc05e2f..b5b6bbb96 100644
+--- a/thrust/cmake/thrust-config.cmake
++++ b/thrust/cmake/thrust-config.cmake
+@@ -625,7 +625,7 @@ set(_THRUST_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}" CACHE INTERNAL "Location of th
+ if (NOT TARGET Thrust::Thrust)
+   _thrust_declare_interface_alias(Thrust::Thrust _Thrust_Thrust)
+   # Strip out the 'thrust/cmake/' from '[thrust_include_path]/thrust/cmake/':
+-  get_filename_component(_THRUST_INCLUDE_DIR "../.." ABSOLUTE BASE_DIR "${_THRUST_CMAKE_DIR}")
++  get_filename_component(_THRUST_INCLUDE_DIR "../../../include" ABSOLUTE BASE_DIR "${_THRUST_CMAKE_DIR}")
+   set(_THRUST_INCLUDE_DIR "${_THRUST_INCLUDE_DIR}"
+     CACHE INTERNAL "Location of thrust headers."
+   )
+
+From dfbbd4fdb78e0881552c3d16d6fd79da840b8e79 Mon Sep 17 00:00:00 2001
+From: Allison Vacanti <alliepiper16@gmail.com>
+Date: Mon, 19 Oct 2020 18:38:37 -0400
+Subject: [PATCH 2/2] Fix and add test for cmake config install rules.
+
+---
+ cmake/ThrustInstallRules.cmake            |  10 +-
+ dependencies/cub                          |   2 +-
+ testing/CMakeLists.txt                    |   1 +
+ testing/cmake/CMakeLists.txt              |  17 ++++
+ testing/cmake/test_install/CMakeLists.txt | 110 ++++++++++++++++++++++
+ thrust/cmake/thrust-config-version.cmake  |   9 +-
+ thrust/cmake/thrust-config.cmake          |  10 +-
+ 7 files changed, 149 insertions(+), 10 deletions(-)
+ create mode 100644 testing/cmake/CMakeLists.txt
+ create mode 100644 testing/cmake/test_install/CMakeLists.txt
+
+diff --git a/cmake/ThrustInstallRules.cmake b/cmake/ThrustInstallRules.cmake
+index 6c63e7523..31db9142f 100644
+--- a/cmake/ThrustInstallRules.cmake
++++ b/cmake/ThrustInstallRules.cmake
+@@ -6,13 +6,15 @@ install(DIRECTORY "${Thrust_SOURCE_DIR}/thrust"
+   FILES_MATCHING
+     PATTERN "*.h"
+     PATTERN "*.inl"
+-    PATTERN "*.md"
+ )
+ 
++# Unfortunately this creates a ton of empty directories, see issue:
++# https://gitlab.kitware.com/cmake/cmake/-/issues/19189
+ install(DIRECTORY "${Thrust_SOURCE_DIR}/thrust"
+   TYPE LIB
+   FILES_MATCHING
+-    PATTERN "*.cmake"
++    PATTERN "cmake/*.cmake"
++    PATTERN "cmake/*.md"
+ )
+ 
+ # Depending on how Thrust is configured, CUB's CMake scripts may or may not be
+@@ -27,9 +29,11 @@ if (THRUST_INSTALL_CUB_HEADERS)
+       PATTERN "*.cuh"
+   )
+ 
++  # Unfortunately this creates a ton of empty directories, see issue:
++  # https://gitlab.kitware.com/cmake/cmake/-/issues/19189
+   install(DIRECTORY "${Thrust_SOURCE_DIR}/dependencies/cub/cub"
+     TYPE LIB
+     FILES_MATCHING
+-      PATTERN "*.cmake"
++      PATTERN "cmake/*.cmake"
+   )
+ endif()
+diff --git a/testing/CMakeLists.txt b/testing/CMakeLists.txt
+index fdfc04e97..c71a413bd 100644
+--- a/testing/CMakeLists.txt
++++ b/testing/CMakeLists.txt
+@@ -151,6 +151,7 @@ foreach(thrust_target IN LISTS THRUST_TARGETS)
+ endforeach()
+ 
+ # Add specialized tests:
++add_subdirectory(cmake)
+ add_subdirectory(cpp)
+ add_subdirectory(cuda)
+ add_subdirectory(omp)
+diff --git a/testing/cmake/CMakeLists.txt b/testing/cmake/CMakeLists.txt
+new file mode 100644
+index 000000000..ced32fff8
+--- /dev/null
++++ b/testing/cmake/CMakeLists.txt
+@@ -0,0 +1,17 @@
++thrust_update_system_found_flags()
++
++if (THRUST_CPP_FOUND AND THRUST_CUDA_FOUND)
++  # Test that we can use `find_package` on an installed Thrust:
++  add_test(
++    NAME thrust.test.cmake.test_install
++    COMMAND "${CMAKE_COMMAND}"
++      --log-level=VERBOSE
++      -G "${CMAKE_GENERATOR}"
++      -S "${CMAKE_CURRENT_SOURCE_DIR}/test_install"
++      -B "${CMAKE_CURRENT_BINARY_DIR}/test_install"
++      -D "THRUST_BINARY_DIR=${Thrust_BINARY_DIR}"
++      -D "CMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}"
++      -D "CMAKE_CUDA_COMPILER=${CMAKE_CUDA_COMPILER}"
++      -D "CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
++  )
++endif()
+diff --git a/testing/cmake/test_install/CMakeLists.txt b/testing/cmake/test_install/CMakeLists.txt
+new file mode 100644
+index 000000000..30cf8405c
+--- /dev/null
++++ b/testing/cmake/test_install/CMakeLists.txt
+@@ -0,0 +1,110 @@
++# Test that an installation of the project can be located by find_package() call
++# with appropriate prefix settings.
++#
++# Expects THRUST_BINARY_DIR to be set to an existing thrust build directory.
++
++cmake_minimum_required(VERSION 3.15)
++
++project(ThrustTestInstall CXX CUDA)
++
++# This will eventually get deleted recursively -- keep that in mind if modifying
++set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/install_prefix/")
++
++function(do_manual_install)
++  # Inspired by the VTK-m install tests, we can just glob up all of the
++  # cmake_install.cmake, include (ie. run) them, and they'll effectively
++  # install the project into the current value of CMAKE_INSTALL_PREFIX.
++
++  # Gather all of the install files from Thrust's root:
++  file(GLOB_RECURSE install_files
++    LIST_DIRECTORIES False
++    "${THRUST_BINARY_DIR}/cmake_install.cmake"
++  )
++
++  message(STATUS "Locating install files...")
++  foreach (install_file IN LISTS install_files)
++    message(STATUS "  * ${install_file}")
++  endforeach()
++
++  message(STATUS "Building install tree...")
++  foreach(install_file IN LISTS install_files)
++    include("${install_file}")
++  endforeach()
++endfunction()
++
++function(do_cleanup)
++  message(STATUS "Removing ${CMAKE_INSTALL_PREFIX}")
++  file(REMOVE_RECURSE "${CMAKE_INSTALL_PREFIX}")
++endfunction()
++
++function(assert_boolean var_name expect)
++  if (expect)
++    if (NOT ${var_name})
++      message(FATAL_ERROR "'${var_name}' is false, expected true.")
++    endif()
++  else()
++    if (${var_name})
++      message(FATAL_ERROR "'${var_name}' is true, expected false.")
++    endif()
++  endif()
++endfunction()
++
++function(assert_target target_name)
++  if (NOT TARGET "${target_name}")
++    message(FATAL_ERROR "Target '${target_name}' not defined.")
++  endif()
++endfunction()
++
++function(find_installed_project)
++  set(CMAKE_PREFIX_PATH "${CMAKE_INSTALL_PREFIX}")
++  find_package(Thrust CONFIG COMPONENTS CPP CUDA)
++
++  if (NOT Thrust_FOUND)
++    message(FATAL_ERROR
++      "find_package(Thrust) failed. "
++      "CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}"
++    )
++  endif()
++
++  # Test some internal config vars to check that this is the expected install:
++  # TODO The cmake_path (3.19) command will provide more robust ways to do this
++
++  # Escape regex special characters in the install prefix, see
++  # https://gitlab.kitware.com/cmake/cmake/-/issues/18580
++  string(REGEX REPLACE "([][+.*()^])" "\\\\\\1"
++    prefix_regex
++    "${CMAKE_INSTALL_PREFIX}"
++  )
++  if (NOT _THRUST_INCLUDE_DIR MATCHES "^${prefix_regex}")
++    message(FATAL_ERROR
++      "Found Thrust in unexpected location: "
++      " * _THRUST_INCLUDE_DIR=${_THRUST_INCLUDE_DIR} "
++      " * ExpectedPrefix=${CMAKE_INSTALL_DIR}"
++    )
++  endif()
++  if (NOT _CUB_INCLUDE_DIR MATCHES "^${prefix_regex}")
++    message(FATAL_ERROR
++      "Found CUB in unexpected location: "
++      " * _CUB_INCLUDE_DIR=${_CUB_INCLUDE_DIR} "
++      " * ExpectedPrefix=${CMAKE_INSTALL_DIR}"
++    )
++  endif()
++
++  thrust_create_target(Thrust)
++  assert_target(Thrust)
++  assert_target(CUB::CUB)
++  assert_target(Thrust::CPP::Host)
++  assert_target(Thrust::CUDA::Device)
++
++  thrust_update_system_found_flags()
++  assert_boolean(THRUST_CPP_FOUND TRUE)
++  assert_boolean(THRUST_CUDA_FOUND TRUE)
++  assert_boolean(THRUST_OMP_FOUND FALSE)
++  assert_boolean(THRUST_TBB_FOUND FALSE)
++
++endfunction()
++
++do_cleanup() # Prepare for new installation
++do_manual_install()
++find_installed_project()
++do_cleanup() # Clean up if successful
+diff --git a/thrust/cmake/thrust-config-version.cmake b/thrust/cmake/thrust-config-version.cmake
+index 9b7db858f..4b3a940e3 100644
+--- a/thrust/cmake/thrust-config-version.cmake
++++ b/thrust/cmake/thrust-config-version.cmake
+@@ -1,5 +1,12 @@
+ # Parse version information from version.h:
+-file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../include/thrust/version.h" THRUST_VERSION_HEADER)
++unset(_THRUST_VERSION_INCLUDE_DIR CACHE) # Clear old result to force search
++find_path(_THRUST_VERSION_INCLUDE_DIR thrust/version.h
++  NO_DEFAULT_PATH # Only search explicit paths below:
++  PATHS
++    ${CMAKE_CURRENT_LIST_DIR}/../..            # Source tree
++    ${CMAKE_CURRENT_LIST_DIR}/../../../include # Install tree
++)
++file(READ "${_THRUST_VERSION_INCLUDE_DIR}/thrust/version.h" THRUST_VERSION_HEADER)
+ string(REGEX MATCH "#define[ \t]+THRUST_VERSION[ \t]+([0-9]+)" DUMMY "${THRUST_VERSION_HEADER}")
+ set(THRUST_VERSION_FLAT ${CMAKE_MATCH_1})
+ # Note that Thrust calls this the PATCH number, CMake calls it the TWEAK number:
+diff --git a/thrust/cmake/thrust-config.cmake b/thrust/cmake/thrust-config.cmake
+index b5b6bbb96..c08fcb042 100644
+--- a/thrust/cmake/thrust-config.cmake
++++ b/thrust/cmake/thrust-config.cmake
+@@ -497,7 +497,7 @@ macro(_thrust_find_CUDA required)
+       NO_DEFAULT_PATH # Only check the explicit HINTS below:
+       HINTS
+         "${_THRUST_INCLUDE_DIR}/dependencies/cub" # Source layout
+-        "${_THRUST_INCLUDE_DIR}"                  # Install layout
++        "${_THRUST_INCLUDE_DIR}/.."               # Install layout
+     )
+ 
+     if (TARGET CUB::CUB)
+@@ -624,11 +624,11 @@ set(_THRUST_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}" CACHE INTERNAL "Location of th
+ # Internal target that actually holds the Thrust interface. Used by all other Thrust targets.
+ if (NOT TARGET Thrust::Thrust)
+   _thrust_declare_interface_alias(Thrust::Thrust _Thrust_Thrust)
+-  # Strip out the 'thrust/cmake/' from '[thrust_include_path]/thrust/cmake/':
+-  get_filename_component(_THRUST_INCLUDE_DIR "../../../include" ABSOLUTE BASE_DIR "${_THRUST_CMAKE_DIR}")
+-  set(_THRUST_INCLUDE_DIR "${_THRUST_INCLUDE_DIR}"
+-    CACHE INTERNAL "Location of thrust headers."
++  # Pull in the include dir detected by thrust-config-version.cmake
++  set(_THRUST_INCLUDE_DIR "${_THRUST_VERSION_INCLUDE_DIR}"
++    CACHE INTERNAL "Location of Thrust headers."
+   )
++  unset(_THRUST_VERSION_INCLUDE_DIR CACHE) # Clear tmp variable from cache
+   target_include_directories(_Thrust_Thrust INTERFACE "${_THRUST_INCLUDE_DIR}")
+   thrust_debug_target(Thrust::Thrust "${THRUST_VERSION}" internal)
+ endif()
