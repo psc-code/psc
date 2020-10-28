@@ -145,10 +145,17 @@ struct cuda_heating_foil
 
       d_curand_states_.resize(dimGrid.x * dimGrid.y * dimGrid.z *
                               THREADS_PER_BLOCK);
+      static int pr;
+      if (!pr) {
+        pr = prof_register("heating_curand", 1., 0, 0);
+      }
+      prof_start(pr);
       k_curand_setup<<<dimGrid, THREADS_PER_BLOCK>>>(
         d_curand_states_.data().get());
       cuda_sync_if_enabled();
+      prof_stop(pr);
 
+      prof_barrier("heating first");
       first_time_ = false;
     }
 
