@@ -26,7 +26,7 @@ void cuda_base_init(void)
     rmm::mr::get_current_device_resource(); // Points to `cuda_memory_resource`
   static rmm::mr::pool_memory_resource<rmm::mr::device_memory_resource> pool_mr{
     mr};
-#if 1
+#if 0
   static rmm::mr::logging_resource_adaptor<decltype(pool_mr)> log_mr{
     &pool_mr, std::cout, true};
   rmm::mr::set_current_device_resource(&log_mr);
