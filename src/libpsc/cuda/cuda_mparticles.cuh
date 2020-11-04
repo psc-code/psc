@@ -13,52 +13,74 @@
 #include <thrust/device_vector.h>
 #include <thrust/sort.h>
 #include <thrust/binary_search.h>
+#include <thrust/iterator/zip_iterator.h>
 
 #include <gtensor/span.h>
 
-// ======================================================================
-// ParticleCudaStorage
+template <typename T>
+struct MparticlesCudaStorage_;
 
-struct ParticleCudaStorage
-{
-  __host__ __device__ ParticleCudaStorage(float4 xi4, float4 pxi4)
-    : xi4{xi4}, pxi4{pxi4}
-  {}
+using MparticlesCudaStorage =
+  MparticlesCudaStorage_<psc::device_vector<float4>>;
 
-  __host__ __device__ ParticleCudaStorage(const DParticleCuda& prt)
-    : xi4{prt.x[0], prt.x[1], prt.x[2], cuda_int_as_float(prt.kind)},
-      pxi4{prt.u[0], prt.u[1], prt.u[2], prt.qni_wni}
-  {}
+using HMparticlesCudaStorage =
+  MparticlesCudaStorage_<thrust::host_vector<float4>>;
 
-  __host__ __device__ operator DParticleCuda()
-  {
-    return {
-      {xi4.x, xi4.y, xi4.z},    {pxi4.x, pxi4.y, pxi4.z}, pxi4.w,
-      cuda_float_as_int(xi4.w), psc::particle::Id(),      psc::particle::Tag()};
-  }
-
-  float4 xi4;
-  float4 pxi4;
-};
+using DMparticlesCudaStorage = MparticlesCudaStorage_<gt::span<float4>>;
 
 // ======================================================================
 // MparticlesCudaStorage_
 
-template <typename T>
-struct MparticlesCudaStorage_
+template <typename S>
+class MparticlesCudaStorage_
 {
+  using xi4_iterator = typename S::iterator;
+  using pxi4_iterator = typename S::iterator;
+  using iterator_tuple = thrust::tuple<xi4_iterator, pxi4_iterator>;
+
+public:
+  using iterator = thrust::zip_iterator<iterator_tuple>;
+
   MparticlesCudaStorage_() = default;
+  MparticlesCudaStorage_(const MparticlesCudaStorage_& other) = default;
+  MparticlesCudaStorage_& operator=(const MparticlesCudaStorage_& other) =
+    default;
 
-  __host__ MparticlesCudaStorage_(const T& xi4, const T& pxi4)
-    : xi4{xi4}, pxi4{pxi4}
-  {}
+  MparticlesCudaStorage_(uint n) : xi4(n), pxi4(n) {}
 
-  template <typename OtherStorage>
-  __host__ MparticlesCudaStorage_(OtherStorage& other)
+  MparticlesCudaStorage_(const S& xi4, const S& pxi4) : xi4{xi4}, pxi4{pxi4} {}
+
+  template <typename SO>
+  MparticlesCudaStorage_& operator=(const MparticlesCudaStorage_<SO>& other)
+  {
+    xi4 = other.xi4;
+    pxi4 = other.pxi4;
+    return *this;
+  }
+
+  template <typename SO>
+  __host__ MparticlesCudaStorage_(const SO& other)
     : xi4{other.xi4}, pxi4{other.pxi4}
   {}
 
-  __host__ MparticlesCudaStorage_(uint n) : xi4(n), pxi4(n) {}
+  template <typename IT>
+  MparticlesCudaStorage_(IT first, IT last)
+  {
+    resize(last - first);
+    thrust::copy(first, last, begin());
+  }
+
+  __host__ __device__ size_t size() { return xi4.size(); }
+
+  __host__ __device__ iterator begin()
+  {
+    return iterator({xi4.begin(), pxi4.begin()});
+  }
+
+  __host__ __device__ iterator end()
+  {
+    return iterator({xi4.end(), pxi4.end()});
+  }
 
   __host__ void resize(size_t n)
   {
@@ -71,59 +93,46 @@ struct MparticlesCudaStorage_
     pxi4.resize(n);
   }
 
-  // FIXME, could be operator[]
-
-  __device__ DParticleCuda load_device(int n) const
+  __host__ __device__ DParticleCuda operator[](int n) const
   {
-    return ParticleCudaStorage{xi4[n], pxi4[n]};
-  }
-
-  __host__ DParticleCuda load(int n) const
-  {
-    return ParticleCudaStorage{xi4[n], pxi4[n]};
+    float4 xi4 = this->xi4[n], pxi4 = this->pxi4[n];
+    return DParticleCuda{
+      {xi4.x, xi4.y, xi4.z},    {pxi4.x, pxi4.y, pxi4.z}, pxi4.w,
+      cuda_float_as_int(xi4.w), psc::particle::Id(),      psc::particle::Tag()};
   }
 
   __host__ __device__ void store(const DParticleCuda& prt, int n)
   {
-    auto st = ParticleCudaStorage{prt};
-    xi4[n] = st.xi4;
-    pxi4[n] = st.pxi4;
+    store_position(prt, n);
+    store_momentum(prt, n);
   }
 
-  T xi4;
-  T pxi4;
-};
-
-// ======================================================================
-// MparticlesCudaStorage
-
-using MparticlesCudaStorage =
-  MparticlesCudaStorage_<psc::device_vector<float4>>;
-
-// ======================================================================
-// HMparticlesCudaStorage
-
-using HMparticlesCudaStorage =
-  MparticlesCudaStorage_<thrust::host_vector<float4>>;
-
-// ======================================================================
-// DMparticlesCudaStorage
-
-struct DMparticlesCudaStorage : MparticlesCudaStorage_<gt::span<float4>>
-{
-  using Base = MparticlesCudaStorage_<gt::span<float4>>;
-  using Base::Base;
-
-  __device__ void store_position(const DParticleCuda& prt, int n)
+  __host__ __device__ void store_position(const DParticleCuda& prt, int n)
   {
-    auto st = ParticleCudaStorage{prt};
-    xi4[n] = st.xi4;
+    xi4[n] = {prt.x[0], prt.x[1], prt.x[2], cuda_int_as_float(prt.kind)};
   }
-  __device__ void store_momentum(const DParticleCuda& prt, int n)
+
+  __host__ __device__ void store_momentum(const DParticleCuda& prt, int n)
   {
-    auto st = ParticleCudaStorage{prt};
-    pxi4[n] = st.pxi4;
+    pxi4[n] = {prt.u[0], prt.u[1], prt.u[2], prt.qni_wni};
   }
+
+  friend void swap(MparticlesCudaStorage_& first,
+                   MparticlesCudaStorage_& second)
+  {
+    using std::swap;
+    swap(first.xi4, second.xi4);
+    swap(first.pxi4, second.pxi4);
+  }
+
+  DMparticlesCudaStorage to_kernel()
+  {
+    return DMparticlesCudaStorage{{xi4.data().get(), xi4.size()},
+                                  {pxi4.data().get(), pxi4.size()}};
+  }
+
+  S xi4;
+  S pxi4;
 };
 
 // ======================================================================
@@ -247,11 +256,8 @@ struct DMparticlesCuda : DParticleIndexer<BS_>
       fnqys_(cmprts.grid_.domain.dx[1] * fnqs_ / dt_),
       fnqzs_(cmprts.grid_.domain.dx[2] * fnqs_ / dt_),
       dqs_(.5f * cmprts.grid_.norm.eta * dt_),
-      storage{{cmprts.storage.xi4.data().get(), cmprts.storage.xi4.size()},
-              {cmprts.storage.pxi4.data().get(), cmprts.storage.pxi4.size()}},
-      alt_storage{
-        {cmprts.alt_storage.xi4.data().get(), cmprts.alt_storage.xi4.size()},
-        {cmprts.alt_storage.pxi4.data().get(), cmprts.alt_storage.pxi4.size()}},
+      storage{cmprts.storage.to_kernel()},
+      alt_storage{cmprts.alt_storage.to_kernel()},
       off_(cmprts.by_block_.d_off.data().get()),
       bidx_(cmprts.by_block_.d_idx.data().get()),
       id_(cmprts.by_block_.d_id.data().get()),

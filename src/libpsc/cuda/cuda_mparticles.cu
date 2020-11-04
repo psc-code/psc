@@ -54,7 +54,7 @@ void cuda_mparticles<BS>::dump_by_patch(uint* n_prts_by_patch)
   for (int p = 0; p < this->n_patches(); p++) {
     float* xb = &xb_by_patch[p][0];
     for (int n = 0; n < n_prts_by_patch[p]; n++) {
-      auto prt = this->storage.load(n + off);
+      auto prt = this->storage[n + off];
       uint bidx = this->by_block_.d_idx[n + off],
            id = this->by_block_.d_id[n + off];
       printf("cuda_mparticles_dump_by_patch: [%d/%d] %g %g %g // %d // %g %g "
@@ -85,7 +85,7 @@ void cuda_mparticles<BS>::dump(const std::string& filename) const
             off_b, off_e, p);
     assert(d_off[b] == off);
     for (int n = d_off[b]; n < d_off[b + 1]; n++) {
-      auto prt = this->storage.load(n + off);
+      auto prt = this->storage[n + off];
       uint bidx = this->by_block_.d_idx[n], id = this->by_block_.d_id[n];
       fprintf(file,
               "mparticles_dump: [%d] %g %g %g // %d // %g %g %g // %g || bidx "
@@ -105,10 +105,8 @@ void cuda_mparticles<BS>::dump(const std::string& filename) const
 template <typename BS>
 void cuda_mparticles<BS>::swap_alt()
 {
-  this->storage.xi4.swap(alt_storage.xi4);
-  // thrust::swap(this->storage.xi4, alt_storage.xi4);
-  this->storage.pxi4.swap(alt_storage.pxi4);
-  // thrust::swap(this->storage.pxi4, alt_storage.pxi4);
+  using std::swap;
+  swap(this->storage, this->alt_storage);
 }
 
 #define THREADS_PER_BLOCK 256
@@ -127,8 +125,8 @@ __global__ static void k_reorder_and_offsets(DMparticlesCuda<BS> dmprts,
   for (; i <= nr_prts; i += blockDim.x * gridDim.x) {
     int block, prev_block;
     if (i < nr_prts) {
-      dmprts.storage.xi4[i] = dmprts.alt_storage.xi4[d_ids[i]];
-      dmprts.storage.pxi4[i] = dmprts.alt_storage.pxi4[d_ids[i]];
+      dmprts.storage.store(dmprts.alt_storage[d_ids[i]],
+                           i); // storage[i] = alt_storage[d_ids[i]];
 
       block = d_bidx[i];
     } else { // needed if there is no particle in the last block
@@ -186,9 +184,8 @@ __global__ static void k_reorder(DMparticlesCuda<BS> dmprts, int n_prts,
   int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
 
   if (i < n_prts) {
-    int j = d_ids[i];
-    dmprts.storage.xi4[i] = dmprts.alt_storage.xi4[j];
-    dmprts.storage.pxi4[i] = dmprts.alt_storage.pxi4[j];
+    dmprts.storage.store(dmprts.alt_storage[d_ids[i]],
+                         i); // storage[i] = alt_storage[j]
   }
 }
 
@@ -275,7 +272,7 @@ void cuda_mparticles<BS>::inject_initial(
 {
   thrust::host_vector<uint> h_off(this->by_block_.d_off);
 
-  assert(this->storage.xi4.size() == 0);
+  assert(this->storage.size() == 0);
   assert(this->n_prts == 0);
 
   uint buf_n = 0;
@@ -306,10 +303,7 @@ void cuda_mparticles<BS>::inject_initial(
   }
   this->n_prts = off;
 
-  thrust::copy(h_storage.xi4.begin(), h_storage.xi4.end(),
-               this->storage.xi4.begin());
-  thrust::copy(h_storage.pxi4.begin(), h_storage.pxi4.end(),
-               this->storage.pxi4.begin());
+  this->storage = h_storage;
   thrust::copy(h_off.begin(), h_off.end(), this->by_block_.d_off.begin());
 }
 
@@ -367,23 +361,14 @@ void cuda_mparticles<BS>::inject(const std::vector<Particle>& buf,
 
   resize(this->n_prts + buf_n);
 
-  thrust::copy(h_storage.xi4.begin(), h_storage.xi4.end(),
-               this->storage.xi4.begin() + this->n_prts);
-  thrust::copy(h_storage.pxi4.begin(), h_storage.pxi4.end(),
-               this->storage.pxi4.begin() + this->n_prts);
+  thrust::copy(h_storage.begin(), h_storage.end(),
+               this->storage.begin() + this->n_prts);
   thrust::copy(h_bidx.begin(), h_bidx.end(),
                this->by_block_.d_idx.begin() + this->n_prts);
   // thrust::copy(h_id.begin(), h_id.end(), d_id + n_prts);
   // FIXME, looks like ids up until n_prts have already been set above
   thrust::sequence(this->by_block_.d_id.data(),
                    this->by_block_.d_id.data() + this->n_prts + buf_n);
-
-  // for (int i = -5; i <= 5; i++) {
-  //   //    float4 xi4 = d_xi4[cmprts->n_prts + i];
-  //   uint bidx = d_bidx[cmprts->n_prts + i];
-  //   uint id = d_id[cmprts->n_prts + i];
-  //   printf("i %d bidx %d %d\n", i, bidx, id);
-  // }
 
   // assert(check_ordered());
 
@@ -403,27 +388,16 @@ template <typename BS>
 std::vector<typename cuda_mparticles<BS>::Particle>
 cuda_mparticles<BS>::get_particles(int beg, int end)
 {
-  int n_prts = end - beg;
-  std::vector<Particle> prts;
-  prts.reserve(n_prts);
-
   reorder(); // FIXME? by means of this, this function disturbs the state...
 
-  thrust::host_vector<float4> xi4(&this->storage.xi4[beg],
-                                  &this->storage.xi4[end]);
-  thrust::host_vector<float4> pxi4(&this->storage.pxi4[beg],
-                                   &this->storage.pxi4[end]);
+  HMparticlesCudaStorage h_storage{this->storage.begin() + beg,
+                                   this->storage.begin() + end};
 
-  for (int n = 0; n < n_prts; n++) {
-    int kind = cuda_float_as_int(xi4[n].w);
-    prts.emplace_back(Real3{xi4[n].x, xi4[n].y, xi4[n].z},
-                      Real3{pxi4[n].x, pxi4[n].y, pxi4[n].z}, pxi4[n].w, kind,
-                      psc::particle::Id(), psc::particle::Tag());
+  std::vector<Particle> prts;
+  prts.reserve(end - beg);
 
-#if 0
-    uint b = blockIndex(xi4[n], p);
-    assert(b < n_blocks);
-#endif
+  for (int n = 0; n < end - beg; n++) {
+    prts.emplace_back(h_storage[n]);
   }
 
   return prts;

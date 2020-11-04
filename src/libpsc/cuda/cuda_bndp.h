@@ -46,15 +46,13 @@ struct cuda_bndp : cuda_mparticles_indexer<typename CudaMparticles::BS>
     auto oob = thrust::count_if(d_bidx.begin(), d_bidx.end(),
                                 is_outside(cmprts.n_blocks));
     auto sz = d_bidx.size();
-    assert(cmprts.storage.xi4.size() == sz);
-    assert(cmprts.storage.pxi4.size() == sz);
+    assert(cmprts.storage.size() == sz);
     assert(cmprts.n_prts == sz);
     d_bidx.resize(sz + oob);
-    cmprts.storage.xi4.resize(sz + oob);
-    cmprts.storage.pxi4.resize(sz + oob);
+    cmprts.storage.resize(sz + oob);
 
-    auto begin = thrust::make_zip_iterator(thrust::make_tuple(
-      d_bidx.begin(), cmprts.storage.xi4.begin(), cmprts.storage.pxi4.begin()));
+    auto begin = thrust::make_zip_iterator(
+      thrust::make_tuple(d_bidx.begin(), cmprts.storage.begin()));
     auto end = begin + sz;
 
     auto oob_end =
@@ -82,13 +80,10 @@ struct cuda_bndp : cuda_mparticles_indexer<typename CudaMparticles::BS>
     HMparticlesCudaStorage h_bnd_storage(n_prts_send);
     thrust::host_vector<uint> h_bidx(n_prts_send);
 
-    assert(cmprts->storage.xi4.begin() + n_prts + n_prts_send ==
-           cmprts->storage.xi4.end());
+    assert(cmprts->storage.size() == n_prts + n_prts_send);
 
-    thrust::copy(cmprts->storage.xi4.begin() + n_prts,
-                 cmprts->storage.xi4.end(), h_bnd_storage.xi4.begin());
-    thrust::copy(cmprts->storage.pxi4.begin() + n_prts,
-                 cmprts->storage.pxi4.end(), h_bnd_storage.pxi4.begin());
+    thrust::copy(cmprts->storage.begin() + n_prts, cmprts->storage.end(),
+                 h_bnd_storage.begin());
     thrust::copy(cmprts->by_block_.d_idx.begin() + n_prts,
                  cmprts->by_block_.d_idx.end(), h_bidx.begin());
 
@@ -97,7 +92,7 @@ struct cuda_bndp : cuda_mparticles_indexer<typename CudaMparticles::BS>
       n_sends[p] = 0;
     }
     for (int n = 0; n < n_prts_send; n++) {
-      auto prt = h_bnd_storage.load(n);
+      auto prt = h_bnd_storage[n];
       int p = h_bidx[n] - cmprts->n_blocks;
       bufs[p].push_back(prt);
       n_sends[p]++;
@@ -112,7 +107,8 @@ struct cuda_bndp : cuda_mparticles_indexer<typename CudaMparticles::BS>
 
     __host__ __device__ bool operator()(uint bidx) { return bidx >= n_blocks_; }
 
-    __host__ __device__ bool operator()(thrust::tuple<uint, float4, float4> tup)
+    __host__ __device__ bool operator()(
+      thrust::tuple<uint, thrust::tuple<float4, float4>> tup)
     {
       uint bidx = thrust::get<0>(tup);
       return (*this)(bidx);

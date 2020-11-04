@@ -26,10 +26,9 @@ static const int RADIX_BITS = 4;
 // ----------------------------------------------------------------------
 // k_reorder_send_by_id
 
-static void __global__ k_reorder_send_by_id(uint nr_prts_send, uint* d_xchg_ids,
-                                            float4* d_xi4, float4* d_pxi4,
-                                            float4* d_xchg_xi4,
-                                            float4* d_xchg_pxi4)
+static void __global__ k_reorder_send_by_id(uint nr_prts_send, uint n_prts,
+                                            uint* d_xchg_ids,
+                                            DMParticlesStorage storage)
 {
   int n = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
   if (n >= nr_prts_send) {
@@ -37,8 +36,7 @@ static void __global__ k_reorder_send_by_id(uint nr_prts_send, uint* d_xchg_ids,
   }
 
   uint id = d_xchg_ids[n];
-  d_xchg_xi4[n] = d_xi4[id];
-  d_xchg_pxi4[n] = d_pxi4[id];
+  storage.store(storage[id], nprts + n); // storage[nprts+n] = storage[id];
 }
 
 // ----------------------------------------------------------------------
@@ -48,15 +46,14 @@ static void __global__ k_reorder_send_by_id(uint nr_prts_send, uint* d_xchg_ids,
 // the existing n_prts particles
 //
 // in: d_id[n_prts - n_prts_send:n_prts_send[
-// in: d_xi4, d_pxi4[0:n_prts[
-// out: d_xi4, d_pxi4[n_prts:n_prts_send[
+// in: d_storage[0:n_prts[
+// out: d_storage[n_prts:n_prts_send[
 
 template <typename CudaMparticles>
 void cuda_bndp<CudaMparticles, dim_yz>::reorder_send_by_id(
   CudaMparticles* cmprts, uint n_prts_send)
 {
-  cmprts->storage.xi4.resize(cmprts->n_prts + n_prts_send);
-  cmprts->storage.pxi4.resize(cmprts->n_prts + n_prts_send);
+  cmprts->storage.resize(cmprts->n_prts + n_prts_send);
 
   if (n_prts_send == 0) {
     return;
@@ -65,11 +62,9 @@ void cuda_bndp<CudaMparticles, dim_yz>::reorder_send_by_id(
   int dimGrid = (n_prts_send + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
   k_reorder_send_by_id<<<dimGrid, THREADS_PER_BLOCK>>>(
-    n_prts_send,
+    n_prts_send, cmprts->n_prts,
     cmprts->by_block_.d_id.data().get() + cmprts->n_prts - n_prts_send,
-    cmprts->storage.xi4.data().get(), cmprts->storage.pxi4.data().get(),
-    cmprts->storage.xi4.data().get() + cmprts->n_prts,
-    cmprts->storage.pxi4.data().get() + cmprts->n_prts);
+    cmprts->storage.to_kernel());
   cuda_sync_if_enabled();
 }
 
@@ -80,32 +75,28 @@ template <typename CudaMparticles>
 void cuda_bndp<CudaMparticles, dim_yz>::reorder_send_by_id_gold(
   CudaMparticles* cmprts, uint n_prts_send)
 {
-  thrust::host_vector<uint> h_id(cmprts->by_block_.d_id.data(),
-                                 cmprts->by_block_.d_id.data() +
-                                   cmprts->n_prts);
-  thrust::host_vector<float4> h_xi4(cmprts->storage.xi4.data(),
-                                    cmprts->storage.xi4.data() +
-                                      cmprts->n_prts + n_prts_send);
-  thrust::host_vector<float4> h_pxi4(cmprts->storage.pxi4.data(),
-                                     cmprts->storage.pxi4.data() +
-                                       cmprts->n_prts + n_prts_send);
+  thrust::host_vector<uint> h_id(cmprts->by_block_.d_id);
+  HMparticlesCuda h_storage(cmprts->storage);
 
   for (int n = 0; n < n_prts_send; n++) {
     uint id = h_id[cmprts->n_prts - n_prts_send + n];
-    h_xi4[cmprts->n_prts + n] = h_xi4[id];
-    h_pxi4[cmprts->n_prts + n] = h_pxi4[id];
+    h_storage.store(h_storage[id],
+                    cmprts->n_prts +
+                      n); // h_storage[n_prts + n] = h_storage[id];
   }
 
-  thrust::copy(h_xi4.begin(), h_xi4.end(), cmprts->storage.xi4.data());
-  thrust::copy(h_pxi4.begin(), h_pxi4.end(), cmprts->storage.pxi4.data());
+  cmprts->storage = h_storage;
 }
 
 // ----------------------------------------------------------------------
 // k_reorder_send_buf_total
+//
+// add copies of the particles past the regular end of the array
 
-__global__ static void k_reorder_send_buf_total(
-  int nr_prts, int nr_total_blocks, uint* d_bidx, uint* d_sums, float4* d_xi4,
-  float4* d_pxi4, float4* d_xchg_xi4, float4* d_xchg_pxi4)
+__global__ static void k_reorder_send_buf_total(int nr_prts,
+                                                int nr_total_blocks,
+                                                uint* d_bidx, uint* d_sums,
+                                                DMparticlesStorage storage)
 {
   int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
   if (i >= nr_prts)
@@ -113,8 +104,7 @@ __global__ static void k_reorder_send_buf_total(
 
   if (d_bidx[i] == CUDA_BND_S_OOB) {
     int j = d_sums[i];
-    d_xchg_xi4[j] = d_xi4[i];
-    d_xchg_pxi4[j] = d_pxi4[i];
+    storage.store(storage[i], j); // storage[j] = storage[i]
   }
 }
 
@@ -131,16 +121,12 @@ void cuda_bndp<CudaMparticles, dim_yz>::reorder_send_buf_total(
 
   cmprts->resize(cmprts->n_prts + n_prts_send);
 
-  float4* xchg_xi4 = cmprts->storage.xi4.data().get() + cmprts->n_prts;
-  float4* xchg_pxi4 = cmprts->storage.pxi4.data().get() + cmprts->n_prts;
-
   dim3 dimBlock(THREADS_PER_BLOCK, 1);
   dim3 dimGrid((cmprts->n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1);
 
   k_reorder_send_buf_total<<<dimGrid, dimBlock>>>(
     cmprts->n_prts, cmprts->n_blocks, cmprts->by_block_.d_idx.data().get(),
-    d_sums.data().get(), cmprts->storage.xi4.data().get(),
-    cmprts->storage.pxi4.data().get(), xchg_xi4, xchg_pxi4);
+    d_sums.data().get(), cmprts->storage.to_kernel());
   cuda_sync_if_enabled();
 }
 
