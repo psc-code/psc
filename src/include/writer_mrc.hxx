@@ -89,15 +89,13 @@ public:
     }
 
     for (int p = 0; p < mflds.n_patches(); p++) {
-      mrc_fld_patch* m3p = mrc_fld_patch_get(fld, p);
-      mrc_fld_foreach(fld, i, j, k, 0, 0)
-      {
-        for (int m = 0; m < n_comps; m++) {
-          MRC_M3(m3p, m, i, j, k) = mflds[p](m, i, j, k);
+      for (int m = 0; m < n_comps; m++) {
+        mrc_fld_foreach(fld, i, j, k, 0, 0)
+        {
+          MRC_S5(fld, i, j, k, m, p) = mflds(m, i, j, k, p);
         }
+        mrc_fld_foreach_end;
       }
-      mrc_fld_foreach_end;
-      mrc_fld_patch_put(fld);
     }
 
     mrc_fld_write(fld, io_.get());

@@ -353,7 +353,7 @@ public:
                ijk[1]++) {
             for (ijk[0] = box_.ib(0); ijk[0] < box_.ib(0) + box_.im(0);
                  ijk[0]++) {
-              (*this)[p](m, ijk[0], ijk[1], ijk[2]) = rhs(m, ijk, p);
+              (*this)(m, ijk[0], ijk[1], ijk[2], p) = rhs(m, ijk, p);
             }
           }
         }
@@ -378,7 +378,7 @@ public:
                ijk[1]++) {
             for (ijk[0] = box_.ib(0); ijk[0] < box_.ib(0) + box_.im(0);
                  ijk[0]++) {
-              (*this)[p](m, ijk[0], ijk[1], ijk[2]) += rhs(m, ijk, p);
+              (*this)(m, ijk[0], ijk[1], ijk[2], p) += rhs(m, ijk, p);
             }
           }
         }
