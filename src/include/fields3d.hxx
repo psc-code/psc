@@ -261,6 +261,23 @@ public:
     return fields_view_t(box(), n_comps(), &storage()[p * stride]);
   }
 
+  KG_INLINE int index(int m, int i, int j, int k, int p)
+  {
+    return (((p * n_comps() + m) * im(2) + (k - ib(2))) * im(1) + (j - ib(1))) *
+             im(0) +
+           (i - ib(0));
+  }
+
+  KG_INLINE const Real& operator()(int m, int i, int j, int k, int p) const
+  {
+    return storage()[index(m, i, j, k, p)];
+  }
+
+  KG_INLINE Real& operator()(int m, int i, int j, int k, int p)
+  {
+    return storage()[index(m, i, j, k, p)];
+  }
+
   void zero_comp(int m)
   {
     for (int p = 0; p < n_patches_; p++) {
@@ -541,6 +558,16 @@ struct MfieldsStateFromMfields : MfieldsStateBase
   int n_patches() const { return mflds_.n_patches(); }
 
   fields_view_t operator[](int p) { return mflds_[p]; }
+
+  KG_INLINE const real_t& operator()(int m, int i, int j, int k, int p) const
+  {
+    return mflds_(m, i, j, k, p);
+  }
+
+  KG_INLINE real_t& operator()(int m, int i, int j, int k, int p)
+  {
+    return mflds_(m, i, j, k, p);
+  }
 
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
