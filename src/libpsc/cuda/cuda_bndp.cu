@@ -210,8 +210,13 @@ uint cuda_bndp<CudaMparticles, dim_yz>::convert_and_copy_to_dev(
 
   cmprts->resize(cmprts->n_prts + n_recv);
 
+#ifdef PSC_HAVE_RMM
+  thrust::copy(rmm::exec_policy(0)->on(0), h_bnd_storage.begin(),
+               h_bnd_storage.end(), cmprts->storage.begin() + cmprts->n_prts);
+#else
   thrust::copy(h_bnd_storage.begin(), h_bnd_storage.end(),
                cmprts->storage.begin() + cmprts->n_prts);
+#endif
 
   // for consistency, use same block indices that we counted earlier
   // OPT unneeded?
@@ -305,8 +310,13 @@ uint cuda_bndp<CudaMparticles, DIM>::convert_and_copy_to_dev(
 
   cmprts->resize(cmprts->n_prts + n_recv);
 
+#ifdef PSC_HAVE_RMM
+  thrust::copy(rmm::exec_policy(0)->on(0), h_bnd.begin(), h_bnd.end(),
+               cmprts->storage.begin() + cmprts->n_prts);
+#else
   thrust::copy(h_bnd.begin(), h_bnd.end(),
                cmprts->storage.begin() + cmprts->n_prts);
+#endif
   thrust::copy(h_bnd_idx.begin(), h_bnd_idx.end(),
                cmprts->by_block_.d_idx.begin() + cmprts->n_prts);
   // // slight abuse of the now unused last part of spine_cnts

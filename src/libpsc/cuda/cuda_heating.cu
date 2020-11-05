@@ -16,7 +16,7 @@
 
 #include <cstdio>
 
-#define THREADS_PER_BLOCK 256
+#define THREADS_PER_BLOCK 128
 
 using Float3 = Vec3<float>;
 
@@ -72,38 +72,44 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
   k_heating_run_foil(HS foil, DMparticlesCuda<BS> dmprts, float heating_dt,
                      Float3* d_xb_by_patch, curandState* d_curand_states)
 {
-  BlockSimple<BS, typename HS::dim> current_block;
-  if (!current_block.init(dmprts)) {
-    return;
-  }
+  BlockSimple2<BS, typename HS::dim> current_block;
 
-  Float3 xb; // __shared__
-  xb[0] = d_xb_by_patch[current_block.p][0];
-  xb[1] = d_xb_by_patch[current_block.p][1];
-  xb[2] = d_xb_by_patch[current_block.p][2];
-
+  /* Copy state to local memory for efficiency */
   int bid = (blockIdx.z * gridDim.y + blockIdx.y) * gridDim.x + blockIdx.x;
   int id = threadIdx.x + bid * THREADS_PER_BLOCK;
-  /* Copy state to local memory for efficiency */
+
   curandState local_state = d_curand_states[id];
 
-  int block_begin = dmprts.off_[current_block.bid];
-  int block_end = dmprts.off_[current_block.bid + 1];
-  for (int n : in_block_loop(block_begin, block_end)) {
-    if (n < block_begin) {
-      continue;
-    }
-    auto prt = dmprts.storage[n];
+  unsigned int bidx[3] = {blockIdx.x, blockIdx.y, blockIdx.z};
 
-    float xx[3] = {
-      prt.x[0] + xb[0],
-      prt.x[1] + xb[1],
-      prt.x[2] + xb[2],
-    };
-    float H = foil(xx, prt.kind);
-    if (H > 0.f) {
-      d_particle_kick(prt, H, heating_dt, &local_state);
-      dmprts.storage.store_momentum(prt, n);
+  unsigned int n_bidx_z =
+    dmprts.n_blocks() / (dmprts.b_mx()[0] * dmprts.b_mx()[1]);
+  for (; bidx[2] < n_bidx_z; bidx[2] += blockDim.z) {
+    current_block.init(dmprts, bidx);
+
+    Float3 xb; // __shared__
+    xb[0] = d_xb_by_patch[current_block.p][0];
+    xb[1] = d_xb_by_patch[current_block.p][1];
+    xb[2] = d_xb_by_patch[current_block.p][2];
+
+    int block_begin = dmprts.off_[current_block.bid];
+    int block_end = dmprts.off_[current_block.bid + 1];
+    for (int n : in_block_loop(block_begin, block_end)) {
+      if (n < block_begin) {
+        continue;
+      }
+      auto prt = dmprts.storage[n];
+
+      float xx[3] = {
+        prt.x[0] + xb[0],
+        prt.x[1] + xb[1],
+        prt.x[2] + xb[2],
+      };
+      float H = foil(xx, prt.kind);
+      if (H > 0.f) {
+        d_particle_kick(prt, H, heating_dt, &local_state);
+        dmprts.storage.store_momentum(prt, n);
+      }
     }
   }
 
@@ -133,22 +139,31 @@ struct cuda_heating_foil
   template <typename BS>
   void operator()(cuda_mparticles<BS>* cmprts)
   {
+    prof_barrier("heating start");
+
     // return cuda_heating_run_foil_gold(cmprts);
     if (cmprts->n_prts == 0) {
       return;
     }
 
-    dim3 dimGrid = BlockSimple<BS, typename HS::dim>::dimGrid(*cmprts);
+    dim3 dimGrid = BlockSimple2<BS, typename HS::dim>::dimGrid(*cmprts);
 
     if (first_time_) { // FIXME
       d_xb_by_patch_ = cmprts->xb_by_patch;
 
       d_curand_states_.resize(dimGrid.x * dimGrid.y * dimGrid.z *
                               THREADS_PER_BLOCK);
+      static int pr;
+      if (!pr) {
+        pr = prof_register("heating_curand", 1., 0, 0);
+      }
+      prof_start(pr);
       k_curand_setup<<<dimGrid, THREADS_PER_BLOCK>>>(
         d_curand_states_.data().get());
       cuda_sync_if_enabled();
+      prof_stop(pr);
 
+      prof_barrier("heating first");
       first_time_ = false;
     }
 
