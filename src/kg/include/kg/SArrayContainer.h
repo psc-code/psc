@@ -107,6 +107,8 @@ public:
 
   void zero(int m)
   {
+    static_assert(std::is_same<Layout, LayoutSOA>::value,
+                  "zero only works for SOA");
     // FIXME, only correct for SOA!!!
     std::memset(&(*this)(m, ib()[0], ib()[1], ib()[2]), 0,
                 n_cells() * sizeof(value_type));

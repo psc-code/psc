@@ -19,10 +19,9 @@ inline MfieldsC evalMfields(const MFexpression<E>& xp)
   MfieldsC mflds{exp.grid(), exp.n_comps(), exp.ibn()};
 
   for (int p = 0; p < mflds.n_patches(); p++) {
-    auto flds = mflds[p];
     for (int m = 0; m < exp.n_comps(); m++) {
       mflds.Foreach_3d(0, 0, [&](int i, int j, int k) {
-        flds(m, i, j, k) = exp(m, {i, j, k}, p);
+        mflds(m, i, j, k, p) = exp(m, {i, j, k}, p);
       });
     }
   }
@@ -35,10 +34,9 @@ inline MfieldsC evalMfields(const MfieldsSingle& _exp)
   MfieldsC mflds{exp.grid(), exp.n_comps(), exp.ibn()};
 
   for (int p = 0; p < mflds.n_patches(); p++) {
-    auto flds = mflds[p];
     for (int m = 0; m < exp.n_comps(); m++) {
       mflds.Foreach_3d(0, 0, [&](int i, int j, int k) {
-        flds(m, i, j, k) = exp[p](m, i, j, k);
+        mflds(m, i, j, k, p) = exp(m, i, j, k, p);
       });
     }
   }
@@ -110,10 +108,9 @@ inline MfieldsC evalMfields(const MfieldsCuda& mf)
   copy(mf, h_mf);
 
   for (int p = 0; p < mflds.n_patches(); p++) {
-    auto flds = mflds[p];
     for (int m = 0; m < mf.n_comps(); m++) {
       mflds.Foreach_3d(0, 0, [&](int i, int j, int k) {
-        flds(m, i, j, k) = h_mf[p](m, i, j, k);
+        mflds(m, i, j, k, p) = h_mf(m, i, j, k, p);
       });
     }
   }
@@ -521,18 +518,7 @@ public:
 
   Real operator()(int m, Int3 ijk, int p) const
   {
-    switch (m) {
-      case 0: return mflds_[p](JXI, ijk[0], ijk[1], ijk[2]);
-      case 1: return mflds_[p](JYI, ijk[0], ijk[1], ijk[2]);
-      case 2: return mflds_[p](JZI, ijk[0], ijk[1], ijk[2]);
-      case 3: return mflds_[p](EX, ijk[0], ijk[1], ijk[2]);
-      case 4: return mflds_[p](EY, ijk[0], ijk[1], ijk[2]);
-      case 5: return mflds_[p](EZ, ijk[0], ijk[1], ijk[2]);
-      case 6: return mflds_[p](HX, ijk[0], ijk[1], ijk[2]);
-      case 7: return mflds_[p](HY, ijk[0], ijk[1], ijk[2]);
-      case 8: return mflds_[p](HZ, ijk[0], ijk[1], ijk[2]);
-      default: std::abort();
-    }
+    return mflds_(m, ijk[0], ijk[1], ijk[2], p);
   }
 
   const Grid_t& grid() const { return mflds_.grid(); }
@@ -573,7 +559,7 @@ public:
     for (int p = 0; p < mflds_.n_patches(); p++) {
       for (int m = 0; m < mflds_.n_comps(); m++) {
         mflds_.Foreach_3d(0, 0, [&](int i, int j, int k) {
-          mflds_[p](m, i, j, k) = hmflds[p](m, i, j, k);
+          mflds_(m, i, j, k, p) = hmflds(m, i, j, k, p);
         });
       }
     }
@@ -581,18 +567,7 @@ public:
 
   Real operator()(int m, Int3 ijk, int p) const
   {
-    switch (m) {
-      case 0: return mflds_[p](JXI, ijk[0], ijk[1], ijk[2]);
-      case 1: return mflds_[p](JYI, ijk[0], ijk[1], ijk[2]);
-      case 2: return mflds_[p](JZI, ijk[0], ijk[1], ijk[2]);
-      case 3: return mflds_[p](EX, ijk[0], ijk[1], ijk[2]);
-      case 4: return mflds_[p](EY, ijk[0], ijk[1], ijk[2]);
-      case 5: return mflds_[p](EZ, ijk[0], ijk[1], ijk[2]);
-      case 6: return mflds_[p](HX, ijk[0], ijk[1], ijk[2]);
-      case 7: return mflds_[p](HY, ijk[0], ijk[1], ijk[2]);
-      case 8: return mflds_[p](HZ, ijk[0], ijk[1], ijk[2]);
-      default: std::abort();
-    }
+    return mflds_(m, ijk[0], ijk[1], ijk[2], p);
   }
 
   const Grid_t& grid() const { return mflds_.grid(); }

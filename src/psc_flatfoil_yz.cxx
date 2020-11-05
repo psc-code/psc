@@ -598,15 +598,15 @@ void run()
 
       if (kind == MY_ELECTRON_HE || kind == MY_ELECTRON) {
         npt.n =
-          inject_target.n - (mf_n[p](MY_ELECTRON, idx[0], idx[1], idx[2]) +
-                             mf_n[p](MY_ELECTRON_HE, idx[0], idx[1], idx[2]));
+          inject_target.n - (mf_n(MY_ELECTRON, idx[0], idx[1], idx[2], p) +
+                             mf_n(MY_ELECTRON_HE, idx[0], idx[1], idx[2], p));
         if (kind == MY_ELECTRON_HE) {
           npt.n *= g.electron_HE_ratio;
         } else {
           npt.n *= (1. - g.electron_HE_ratio);
         }
       } else { // ions
-        npt.n -= mf_n[p](kind, idx[0], idx[1], idx[2]);
+        npt.n -= mf_n(kind, idx[0], idx[1], idx[2], p);
       }
       if (npt.n < 0) {
         npt.n = 0;
