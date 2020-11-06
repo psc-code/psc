@@ -11,6 +11,50 @@
 
 // ======================================================================
 
+template <typename DIM>
+class Deposit
+{
+public:
+  using R = float;
+
+  GT_INLINE Deposit(DFields& dflds) : dflds_(dflds) {}
+
+  __device__ void operator()(int m, int lf[3], R of[3], R fnq, dim_yz tag)
+  {
+    atomicAdd(&dflds_(m, 0, lf[1], lf[2]), (1.f - of[1]) * (1.f - of[2]) * fnq);
+    atomicAdd(&dflds_(m, 0, lf[1] + 1, lf[2]), (of[1]) * (1.f - of[2]) * fnq);
+    atomicAdd(&dflds_(m, 0, lf[1], lf[2] + 1), (1.f - of[1]) * (of[2]) * fnq);
+    atomicAdd(&dflds_(m, 0, lf[1] + 1, lf[2] + 1), (of[1]) * (of[2]) * fnq);
+  }
+
+  __device__ void operator()(int m, int lf[3], R of[3], R fnq, dim_xyz tag)
+  {
+    atomicAdd(&dflds_(m, lf[0], lf[1], lf[2]),
+              (1.f - of[0]) * (1.f - of[1]) * (1.f - of[2]) * fnq);
+    atomicAdd(&dflds_(m, lf[0] + 1, lf[1], lf[2]),
+              (of[0]) * (1.f - of[1]) * (1.f - of[2]) * fnq);
+    atomicAdd(&dflds_(m, lf[0], lf[1] + 1, lf[2]),
+              (1.f - of[0]) * (of[1]) * (1.f - of[2]) * fnq);
+    atomicAdd(&dflds_(m, lf[0] + 1, lf[1] + 1, lf[2]),
+              (of[0]) * (of[1]) * (1.f - of[2]) * fnq);
+    atomicAdd(&dflds_(m, lf[0], lf[1], lf[2] + 1),
+              (1.f - of[0]) * (1.f - of[1]) * (of[2]) * fnq);
+    atomicAdd(&dflds_(m, lf[0] + 1, lf[1], lf[2] + 1),
+              (of[0]) * (1.f - of[1]) * (of[2]) * fnq);
+    atomicAdd(&dflds_(m, lf[0], lf[1] + 1, lf[2] + 1),
+              (1.f - of[0]) * (of[1]) * (of[2]) * fnq);
+    atomicAdd(&dflds_(m, lf[0] + 1, lf[1] + 1, lf[2] + 1),
+              (of[0]) * (of[1]) * (of[2]) * fnq);
+  }
+
+  __device__ void operator()(int m, int lf[3], R of[3], R fnq)
+  {
+    (*this)(m, lf, of, fnq, DIM{});
+  }
+
+  DFields& dflds_;
+};
+
 // ----------------------------------------------------------------------
 // rho_1st_nc_cuda_run
 
@@ -42,30 +86,9 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
     float of[3];
     dmprts.find_idx_off_1st(prt.x, lf, of, float(0.));
 
-    if (dim::InvarX::value) { // FIXME, ugly...
-      atomicAdd(&dflds(0, 0, lf[1], lf[2]),
-                (1.f - of[1]) * (1.f - of[2]) * fnq);
-      atomicAdd(&dflds(0, 0, lf[1] + 1, lf[2]), (of[1]) * (1.f - of[2]) * fnq);
-      atomicAdd(&dflds(0, 0, lf[1], lf[2] + 1), (1.f - of[1]) * (of[2]) * fnq);
-      atomicAdd(&dflds(0, 0, lf[1] + 1, lf[2] + 1), (of[1]) * (of[2]) * fnq);
-    } else {
-      atomicAdd(&dflds(0, lf[0], lf[1], lf[2]),
-                (1.f - of[0]) * (1.f - of[1]) * (1.f - of[2]) * fnq);
-      atomicAdd(&dflds(0, lf[0] + 1, lf[1], lf[2]),
-                (of[0]) * (1.f - of[1]) * (1.f - of[2]) * fnq);
-      atomicAdd(&dflds(0, lf[0], lf[1] + 1, lf[2]),
-                (1.f - of[0]) * (of[1]) * (1.f - of[2]) * fnq);
-      atomicAdd(&dflds(0, lf[0] + 1, lf[1] + 1, lf[2]),
-                (of[0]) * (of[1]) * (1.f - of[2]) * fnq);
-      atomicAdd(&dflds(0, lf[0], lf[1], lf[2] + 1),
-                (1.f - of[0]) * (1.f - of[1]) * (of[2]) * fnq);
-      atomicAdd(&dflds(0, lf[0] + 1, lf[1], lf[2] + 1),
-                (of[0]) * (1.f - of[1]) * (of[2]) * fnq);
-      atomicAdd(&dflds(0, lf[0], lf[1] + 1, lf[2] + 1),
-                (1.f - of[0]) * (of[1]) * (of[2]) * fnq);
-      atomicAdd(&dflds(0, lf[0] + 1, lf[1] + 1, lf[2] + 1),
-                (of[0]) * (of[1]) * (of[2]) * fnq);
-    }
+    Deposit<dim> deposit(dflds);
+
+    deposit(0, lf, of, fnq);
   }
 }
 
@@ -102,32 +125,9 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
     float of[3];
     dmprts.find_idx_off_1st(prt.x, lf, of, float(-.5));
 
-    if (dim::InvarX::value) { // FIXME, ugly...
-      atomicAdd(&dflds(kind, 0, lf[1], lf[2]),
-                (1.f - of[1]) * (1.f - of[2]) * fnq);
-      atomicAdd(&dflds(kind, 0, lf[1] + 1, lf[2]),
-                (of[1]) * (1.f - of[2]) * fnq);
-      atomicAdd(&dflds(kind, 0, lf[1], lf[2] + 1),
-                (1.f - of[1]) * (of[2]) * fnq);
-      atomicAdd(&dflds(kind, 0, lf[1] + 1, lf[2] + 1), (of[1]) * (of[2]) * fnq);
-    } else {
-      atomicAdd(&dflds(kind, lf[0], lf[1], lf[2]),
-                (1.f - of[0]) * (1.f - of[1]) * (1.f - of[2]) * fnq);
-      atomicAdd(&dflds(kind, lf[0] + 1, lf[1], lf[2]),
-                (of[0]) * (1.f - of[1]) * (1.f - of[2]) * fnq);
-      atomicAdd(&dflds(kind, lf[0], lf[1] + 1, lf[2]),
-                (1.f - of[0]) * (of[1]) * (1.f - of[2]) * fnq);
-      atomicAdd(&dflds(kind, lf[0] + 1, lf[1] + 1, lf[2]),
-                (of[0]) * (of[1]) * (1.f - of[2]) * fnq);
-      atomicAdd(&dflds(kind, lf[0], lf[1], lf[2] + 1),
-                (1.f - of[0]) * (1.f - of[1]) * (of[2]) * fnq);
-      atomicAdd(&dflds(kind, lf[0] + 1, lf[1], lf[2] + 1),
-                (of[0]) * (1.f - of[1]) * (of[2]) * fnq);
-      atomicAdd(&dflds(kind, lf[0], lf[1] + 1, lf[2] + 1),
-                (1.f - of[0]) * (of[1]) * (of[2]) * fnq);
-      atomicAdd(&dflds(kind, lf[0] + 1, lf[1] + 1, lf[2] + 1),
-                (of[0]) * (of[1]) * (of[2]) * fnq);
-    }
+    Deposit<dim> deposit(dflds);
+
+    deposit(kind, lf, of, fnq);
   }
 }
 
