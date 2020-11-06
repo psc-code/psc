@@ -10,23 +10,6 @@
 // generic moment calculation code first reorders anyway (which it shouldn't)
 
 // ======================================================================
-// GCurr
-
-class GCurr
-{
-public:
-  DFields d_flds;
-
-  __device__ GCurr(DFields _d_flds) : d_flds(_d_flds) {}
-
-  __device__ void add(int m, int jx, int jy, int jz, float val)
-  {
-    float* addr = &d_flds(m, jx, jy, jz);
-    atomicAdd(addr, val);
-  }
-};
-
-// ======================================================================
 
 // ----------------------------------------------------------------------
 // rho_1st_nc_cuda_run
@@ -40,7 +23,8 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
     return;
   }
 
-  GCurr scurr(dmflds[current_block.p]);
+  DFields dflds(dmflds[current_block.p]);
+
   __syncthreads();
 
   int block_begin = dmprts.off_[current_block.bid];
@@ -59,26 +43,27 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
     dmprts.find_idx_off_1st(prt.x, lf, of, float(0.));
 
     if (dim::InvarX::value) { // FIXME, ugly...
-      scurr.add(0, 0, lf[1], lf[2], (1.f - of[1]) * (1.f - of[2]) * fnq);
-      scurr.add(0, 0, lf[1] + 1, lf[2], (of[1]) * (1.f - of[2]) * fnq);
-      scurr.add(0, 0, lf[1], lf[2] + 1, (1.f - of[1]) * (of[2]) * fnq);
-      scurr.add(0, 0, lf[1] + 1, lf[2] + 1, (of[1]) * (of[2]) * fnq);
+      atomicAdd(&dflds(0, 0, lf[1], lf[2]),
+                (1.f - of[1]) * (1.f - of[2]) * fnq);
+      atomicAdd(&dflds(0, 0, lf[1] + 1, lf[2]), (of[1]) * (1.f - of[2]) * fnq);
+      atomicAdd(&dflds(0, 0, lf[1], lf[2] + 1), (1.f - of[1]) * (of[2]) * fnq);
+      atomicAdd(&dflds(0, 0, lf[1] + 1, lf[2] + 1), (of[1]) * (of[2]) * fnq);
     } else {
-      scurr.add(0, lf[0], lf[1], lf[2],
+      atomicAdd(&dflds(0, lf[0], lf[1], lf[2]),
                 (1.f - of[0]) * (1.f - of[1]) * (1.f - of[2]) * fnq);
-      scurr.add(0, lf[0] + 1, lf[1], lf[2],
+      atomicAdd(&dflds(0, lf[0] + 1, lf[1], lf[2]),
                 (of[0]) * (1.f - of[1]) * (1.f - of[2]) * fnq);
-      scurr.add(0, lf[0], lf[1] + 1, lf[2],
+      atomicAdd(&dflds(0, lf[0], lf[1] + 1, lf[2]),
                 (1.f - of[0]) * (of[1]) * (1.f - of[2]) * fnq);
-      scurr.add(0, lf[0] + 1, lf[1] + 1, lf[2],
+      atomicAdd(&dflds(0, lf[0] + 1, lf[1] + 1, lf[2]),
                 (of[0]) * (of[1]) * (1.f - of[2]) * fnq);
-      scurr.add(0, lf[0], lf[1], lf[2] + 1,
+      atomicAdd(&dflds(0, lf[0], lf[1], lf[2] + 1),
                 (1.f - of[0]) * (1.f - of[1]) * (of[2]) * fnq);
-      scurr.add(0, lf[0] + 1, lf[1], lf[2] + 1,
+      atomicAdd(&dflds(0, lf[0] + 1, lf[1], lf[2] + 1),
                 (of[0]) * (1.f - of[1]) * (of[2]) * fnq);
-      scurr.add(0, lf[0], lf[1] + 1, lf[2] + 1,
+      atomicAdd(&dflds(0, lf[0], lf[1] + 1, lf[2] + 1),
                 (1.f - of[0]) * (of[1]) * (of[2]) * fnq);
-      scurr.add(0, lf[0] + 1, lf[1] + 1, lf[2] + 1,
+      atomicAdd(&dflds(0, lf[0] + 1, lf[1] + 1, lf[2] + 1),
                 (of[0]) * (of[1]) * (of[2]) * fnq);
     }
   }
@@ -96,7 +81,8 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
     return;
   }
 
-  GCurr scurr(dmflds[current_block.p]);
+  DFields dflds(dmflds[current_block.p]);
+
   __syncthreads();
 
   int block_begin = dmprts.off_[current_block.bid];
@@ -117,26 +103,29 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
     dmprts.find_idx_off_1st(prt.x, lf, of, float(-.5));
 
     if (dim::InvarX::value) { // FIXME, ugly...
-      scurr.add(kind, 0, lf[1], lf[2], (1.f - of[1]) * (1.f - of[2]) * fnq);
-      scurr.add(kind, 0, lf[1] + 1, lf[2], (of[1]) * (1.f - of[2]) * fnq);
-      scurr.add(kind, 0, lf[1], lf[2] + 1, (1.f - of[1]) * (of[2]) * fnq);
-      scurr.add(kind, 0, lf[1] + 1, lf[2] + 1, (of[1]) * (of[2]) * fnq);
+      atomicAdd(&dflds(kind, 0, lf[1], lf[2]),
+                (1.f - of[1]) * (1.f - of[2]) * fnq);
+      atomicAdd(&dflds(kind, 0, lf[1] + 1, lf[2]),
+                (of[1]) * (1.f - of[2]) * fnq);
+      atomicAdd(&dflds(kind, 0, lf[1], lf[2] + 1),
+                (1.f - of[1]) * (of[2]) * fnq);
+      atomicAdd(&dflds(kind, 0, lf[1] + 1, lf[2] + 1), (of[1]) * (of[2]) * fnq);
     } else {
-      scurr.add(kind, lf[0], lf[1], lf[2],
+      atomicAdd(&dflds(kind, lf[0], lf[1], lf[2]),
                 (1.f - of[0]) * (1.f - of[1]) * (1.f - of[2]) * fnq);
-      scurr.add(kind, lf[0] + 1, lf[1], lf[2],
+      atomicAdd(&dflds(kind, lf[0] + 1, lf[1], lf[2]),
                 (of[0]) * (1.f - of[1]) * (1.f - of[2]) * fnq);
-      scurr.add(kind, lf[0], lf[1] + 1, lf[2],
+      atomicAdd(&dflds(kind, lf[0], lf[1] + 1, lf[2]),
                 (1.f - of[0]) * (of[1]) * (1.f - of[2]) * fnq);
-      scurr.add(kind, lf[0] + 1, lf[1] + 1, lf[2],
+      atomicAdd(&dflds(kind, lf[0] + 1, lf[1] + 1, lf[2]),
                 (of[0]) * (of[1]) * (1.f - of[2]) * fnq);
-      scurr.add(kind, lf[0], lf[1], lf[2] + 1,
+      atomicAdd(&dflds(kind, lf[0], lf[1], lf[2] + 1),
                 (1.f - of[0]) * (1.f - of[1]) * (of[2]) * fnq);
-      scurr.add(kind, lf[0] + 1, lf[1], lf[2] + 1,
+      atomicAdd(&dflds(kind, lf[0] + 1, lf[1], lf[2] + 1),
                 (of[0]) * (1.f - of[1]) * (of[2]) * fnq);
-      scurr.add(kind, lf[0], lf[1] + 1, lf[2] + 1,
+      atomicAdd(&dflds(kind, lf[0], lf[1] + 1, lf[2] + 1),
                 (1.f - of[0]) * (of[1]) * (of[2]) * fnq);
-      scurr.add(kind, lf[0] + 1, lf[1] + 1, lf[2] + 1,
+      atomicAdd(&dflds(kind, lf[0] + 1, lf[1] + 1, lf[2] + 1),
                 (of[0]) * (of[1]) * (of[2]) * fnq);
     }
   }
