@@ -70,22 +70,19 @@ __device__ void d_particle_kick(DParticleCuda& prt, float H, float heating_dt,
 template <typename BS, typename HS>
 __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
   k_heating_run_foil(HS foil, DMparticlesCuda<BS> dmprts, float heating_dt,
-                     Float3* d_xb_by_patch, curandState* d_curand_states)
+                     Float3* d_xb_by_patch, curandState* d_curand_states,
+                     int n_blocks)
 {
   BlockSimple2<BS, typename HS::dim> current_block;
 
   /* Copy state to local memory for efficiency */
-  int bid = (blockIdx.z * gridDim.y + blockIdx.y) * gridDim.x + blockIdx.x;
-  int id = threadIdx.x + bid * THREADS_PER_BLOCK;
+  int bid = blockIdx.x;
+  int id = threadIdx.x + bid * blockDim.x;
 
   curandState local_state = d_curand_states[id];
 
-  unsigned int bidx[3] = {blockIdx.x, blockIdx.y, blockIdx.z};
-
-  unsigned int n_bidx_z =
-    dmprts.n_blocks() / (dmprts.b_mx()[0] * dmprts.b_mx()[1]);
-  for (; bidx[2] < n_bidx_z; bidx[2] += blockDim.z) {
-    current_block.init(dmprts, bidx);
+  for (; bid < n_blocks; bid += gridDim.x) {
+    current_block.init(dmprts, bid);
 
     Float3 xb; // __shared__
     xb[0] = d_xb_by_patch[current_block.p][0];
@@ -171,9 +168,11 @@ struct cuda_heating_foil
       cmprts->reorder();
     }
 
+    int n_blocks = cmprts->b_mx()[0] * cmprts->b_mx()[1] * cmprts->b_mx()[2] *
+                   cmprts->n_patches();
     k_heating_run_foil<BS><<<dimGrid, THREADS_PER_BLOCK>>>(
       heating_spot_, *cmprts, heating_dt_, d_xb_by_patch_.data().get(),
-      d_curand_states_.data().get());
+      d_curand_states_.data().get(), n_blocks);
     cuda_sync_if_enabled();
   }
 
