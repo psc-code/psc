@@ -258,7 +258,7 @@ struct PscConfigVpicPsc
   using OutputParticles = OutputParticlesHdf5;
   using OutputHydro = OutputHydroVpic<Mparticles, MfieldsHydro,
                                       typename VpicConfig::MfieldsInterpolator>;
-  using Dim = dim_xyz;
+  using Dim = dim_xz;
 
 #if 0
   using DiagMixin = VpicDiagMixin<Mparticles, MfieldsState, MfieldsInterpolator, MfieldsHydro,
