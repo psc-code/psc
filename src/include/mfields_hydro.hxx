@@ -33,7 +33,71 @@ struct MfieldsHydroPsc
     N_COMP = 16,
   };
 
+  static_assert(N_COMP == sizeof(Element) / sizeof(real_t),
+                "N_COMP doesn't match Element");
+
   MfieldsHydroPsc(const Grid_t& grid, Grid* vgrid) : grid_{grid}, patch_{vgrid}
+  {
+    assert(grid.n_patches() == 1);
+
+    const int B = 1; // VPIC always uses one ghost cell (on c.c. grid)
+    im_ = {vgrid->nx + 2 * B, vgrid->ny + 2 * B, vgrid->nz + 2 * B};
+    ib_ = {-B, -B, -B};
+  }
+
+  int n_patches() const { return grid_.n_patches(); }
+  int n_comps() const { return N_COMP; }
+
+  real_t* data() { return reinterpret_cast<real_t*>(patch_.data()); }
+
+  fields_view_t operator[](int p) { return {{ib_, im_}, N_COMP, data()}; }
+  Patch& getPatch(int p) { return patch_; }
+  // FIXME the above two kinds of accessing a patch worth of data needs
+  // consolidation
+
+  Grid* vgrid() { return patch_.grid(); }
+
+private:
+  const Grid_t& grid_;
+  Patch patch_;
+  Int3 ib_, im_;
+};
+
+// ======================================================================
+// MfieldsHydroQ
+
+template <typename _Grid>
+struct MfieldsHydroQ
+{
+  using Grid = _Grid;
+  using real_t = float;
+  using fields_t = kg::SArray<real_t, kg::LayoutAOS>;
+  using fields_view_t = kg::SArrayView<real_t, kg::LayoutAOS>;
+
+  struct Element
+  {
+    float jx, jy, jz, rho; // Current and charge density => <q v_i f>, <q f>
+    float px, py, pz,
+      ke; // Momentum and K.E. density  => <p_i f>, <m c^2 (gamma-1) f>
+    float txx, tyy, tzz; // Stress diagonal            => <p_i v_j f>, i==j
+    float tyz, tzx, txy; // Stress off-diagonal        => <p_i v_j f>, i!=j
+    float qxxx, qyyy, qzzz;
+    float qxxy, qyyz, qzzx;
+    float qxxz, qyyx, qzzy;
+    float qxyz;
+  };
+
+  using Patch = PscFieldBase<Element, Grid>;
+
+  enum
+  {
+    N_COMP = 24,
+  };
+
+  static_assert(N_COMP == sizeof(Element) / sizeof(real_t),
+                "N_COMP doesn't match Element");
+
+  MfieldsHydroQ(const Grid_t& grid, Grid* vgrid) : grid_{grid}, patch_{vgrid}
   {
     assert(grid.n_patches() == 1);
 

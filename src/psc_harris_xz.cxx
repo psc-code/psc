@@ -492,10 +492,18 @@ void setup_log(const Grid_t& grid)
 class Diagnostics
 {
 public:
-  Diagnostics(OutputFields& outf, OutputParticles& outp, DiagEnergies& oute)
-    : outf_{outf}, outp_{outp}, oute_{oute}
+  Diagnostics(Grid_t& grid, OutputFields& outf, OutputParticles& outp,
+              DiagEnergies& oute)
+    : outf_{outf},
+      outp_{outp},
+      oute_{oute},
+      outf_state_(),
+      outf_hydro_(grid),
+      mflds_acc_state_(grid, outf_state_.n_comps(), {1, 1, 1}),
+      mflds_acc_hydro_(grid, outf_hydro_.n_comps(), {1, 1, 1})
   {
     io_pfd_.open("pfd");
+    io_tfd_.open("tfd");
   }
 
   void operator()(Mparticles& mprts, MfieldsState& mflds)
@@ -511,19 +519,59 @@ public:
       io_pfd_.begin_step(grid);
 
       {
-        OutputFieldsVpic<MfieldsState> out_fields;
-        auto result = out_fields(mflds);
+        auto result = outf_state_(mflds);
         io_pfd_.write(result.mflds, grid, result.name, result.comp_names);
       }
 
       {
-        // FIXME, would be better to keep "out_hydro" around
-        OutputHydro out_hydro{grid};
-        auto result = out_hydro(mprts, *hydro, *interpolator);
+        auto result = outf_hydro_(mprts, *hydro, *interpolator);
         io_pfd_.write(result.mflds, grid, result.name, result.comp_names);
       }
 
       io_pfd_.end_step();
+    }
+
+    if (outf_.tfield_interval > 0) {
+      auto result_state = outf_state_(mflds);
+
+      for (int p = 0; p < mflds_acc_state_.n_patches(); p++) {
+        for (int m = 0; m < mflds_acc_state_.n_comps(); m++) {
+          mflds_acc_state_.grid().Foreach_3d(0, 0, [&](int i, int j, int k) {
+            mflds_acc_state_[p](m, i, j, k) +=
+              result_state.mflds[p](m, i, j, k);
+          });
+        }
+      }
+
+      auto result_hydro = outf_hydro_(mprts, *hydro, *interpolator);
+      for (int p = 0; p < mflds_acc_hydro_.n_patches(); p++) {
+        for (int m = 0; m < mflds_acc_hydro_.n_comps(); m++) {
+          mflds_acc_hydro_.grid().Foreach_3d(0, 0, [&](int i, int j, int k) {
+            mflds_acc_hydro_[p](m, i, j, k) +=
+              result_hydro.mflds[p](m, i, j, k);
+          });
+        }
+      }
+
+      n_accum_++;
+
+      if (timestep % outf_.tfield_interval == 0) {
+        mpi_printf(comm, "***** Writing TFD output\n");
+        io_tfd_.begin_step(grid);
+        mflds_acc_state_.scale(1. / n_accum_);
+        io_tfd_.write(mflds_acc_state_, grid, result_state.name,
+                      result_state.comp_names);
+        mflds_acc_state_.zero();
+
+        mflds_acc_hydro_.scale(1. / n_accum_);
+        io_tfd_.write(mflds_acc_hydro_, grid, result_hydro.name,
+                      result_hydro.comp_names);
+        mflds_acc_hydro_.zero();
+
+        io_tfd_.end_step();
+
+        n_accum_ = 0;
+      }
     }
 
     psc_stats_start(st_time_output);
@@ -537,9 +585,15 @@ public:
 
 private:
   WriterMRC io_pfd_;
+  WriterMRC io_tfd_;
   OutputFields& outf_;
+  OutputFieldsVpic<MfieldsState> outf_state_;
+  OutputHydro outf_hydro_;
   OutputParticles& outp_;
   DiagEnergies& oute_;
+  MfieldsSingle mflds_acc_state_;
+  MfieldsSingle mflds_acc_hydro_;
+  int n_accum_ = 0;
 };
 
 // ----------------------------------------------------------------------
@@ -813,6 +867,8 @@ void run()
   double output_field_interval = 1.;
   outf_params.pfield_interval =
     int((output_field_interval / (phys.wci * grid.dt)));
+  outf_params.tfield_interval =
+    int((output_field_interval / (phys.wci * grid.dt)));
   OutputFields outf{grid, outf_params};
 
   OutputParticlesParams outp_params{};
@@ -827,7 +883,7 @@ void run()
   int oute_interval = 100;
   DiagEnergies oute{grid.comm(), oute_interval};
 
-  Diagnostics diagnostics{outf, outp, oute};
+  Diagnostics diagnostics{grid, outf, outp, oute};
 
   // ---
 
