@@ -164,10 +164,10 @@ void CudaMoments1stNcRho<CudaMparticles, dim>::operator()(
 }
 
 // ----------------------------------------------------------------------
-// CudaMoments1stNcN::operator()
+// CudaMoments1stN::operator()
 
 template <typename CudaMparticles, typename dim>
-void CudaMoments1stNcN<CudaMparticles, dim>::operator()(
+void CudaMoments1stN<CudaMparticles, dim>::operator()(
   CudaMparticles& cmprts, struct cuda_mfields* cmres)
 {
   static int pr, pr_1;
@@ -199,7 +199,7 @@ void CudaMoments1stNcN<CudaMparticles, dim>::operator()(
 }
 
 template struct CudaMoments1stNcRho<cuda_mparticles<BS144>, dim_yz>;
-template struct CudaMoments1stNcN<cuda_mparticles<BS144>, dim_yz>;
+template struct CudaMoments1stN<cuda_mparticles<BS144>, dim_yz>;
 
 template struct CudaMoments1stNcRho<cuda_mparticles<BS444>, dim_xyz>;
-template struct CudaMoments1stNcN<cuda_mparticles<BS444>, dim_xyz>;
+template struct CudaMoments1stN<cuda_mparticles<BS444>, dim_xyz>;

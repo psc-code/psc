@@ -106,7 +106,7 @@ public:
     Base::mres_.zero();
     prof_stop(pr_1);
 
-    CudaMoments1stNcN<cuda_mparticles<typename Mparticles::BS>, dim> cmoments;
+    CudaMoments1stN<cuda_mparticles<typename Mparticles::BS>, dim> cmoments;
     cmoments(cmprts, cmres);
 
     prof_start(pr_2);

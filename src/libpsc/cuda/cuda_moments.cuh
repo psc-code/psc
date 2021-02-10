@@ -8,7 +8,7 @@ struct CudaMoments1stNcRho
 };
 
 template <typename CudaMparticles, typename dim>
-struct CudaMoments1stNcN
+struct CudaMoments1stN
 {
   void operator()(CudaMparticles& cmprts, struct cuda_mfields* cmres);
 
