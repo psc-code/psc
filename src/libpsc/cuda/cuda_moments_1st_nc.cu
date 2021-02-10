@@ -17,42 +17,49 @@ class Deposit
 public:
   using R = float;
 
-  GT_INLINE Deposit(DFields& dflds) : dflds_(dflds) {}
+  GT_INLINE Deposit(DFields& dflds, R fnq) : dflds_(dflds), fnq_(fnq) {}
 
-  __device__ void operator()(int m, int lf[3], R of[3], R fnq, dim_yz tag)
+  __device__ void operator()(int m, int lf[3], R of[3], R val, dim_yz tag)
   {
-    atomicAdd(&dflds_(m, 0, lf[1], lf[2]), (1.f - of[1]) * (1.f - of[2]) * fnq);
-    atomicAdd(&dflds_(m, 0, lf[1] + 1, lf[2]), (of[1]) * (1.f - of[2]) * fnq);
-    atomicAdd(&dflds_(m, 0, lf[1], lf[2] + 1), (1.f - of[1]) * (of[2]) * fnq);
-    atomicAdd(&dflds_(m, 0, lf[1] + 1, lf[2] + 1), (of[1]) * (of[2]) * fnq);
+    R what = fnq_ * val;
+
+    atomicAdd(&dflds_(m, 0, lf[1], lf[2]),
+              (1.f - of[1]) * (1.f - of[2]) * what);
+    atomicAdd(&dflds_(m, 0, lf[1] + 1, lf[2]), (of[1]) * (1.f - of[2]) * what);
+    atomicAdd(&dflds_(m, 0, lf[1], lf[2] + 1), (1.f - of[1]) * (of[2]) * what);
+    atomicAdd(&dflds_(m, 0, lf[1] + 1, lf[2] + 1), (of[1]) * (of[2]) * what);
   }
 
-  __device__ void operator()(int m, int lf[3], R of[3], R fnq, dim_xyz tag)
+  __device__ void operator()(int m, int lf[3], R of[3], R val, dim_xyz tag)
   {
+    R what = fnq_ * val;
+
     atomicAdd(&dflds_(m, lf[0], lf[1], lf[2]),
-              (1.f - of[0]) * (1.f - of[1]) * (1.f - of[2]) * fnq);
+              (1.f - of[0]) * (1.f - of[1]) * (1.f - of[2]) * what);
     atomicAdd(&dflds_(m, lf[0] + 1, lf[1], lf[2]),
-              (of[0]) * (1.f - of[1]) * (1.f - of[2]) * fnq);
+              (of[0]) * (1.f - of[1]) * (1.f - of[2]) * what);
     atomicAdd(&dflds_(m, lf[0], lf[1] + 1, lf[2]),
-              (1.f - of[0]) * (of[1]) * (1.f - of[2]) * fnq);
+              (1.f - of[0]) * (of[1]) * (1.f - of[2]) * what);
     atomicAdd(&dflds_(m, lf[0] + 1, lf[1] + 1, lf[2]),
-              (of[0]) * (of[1]) * (1.f - of[2]) * fnq);
+              (of[0]) * (of[1]) * (1.f - of[2]) * what);
     atomicAdd(&dflds_(m, lf[0], lf[1], lf[2] + 1),
-              (1.f - of[0]) * (1.f - of[1]) * (of[2]) * fnq);
+              (1.f - of[0]) * (1.f - of[1]) * (of[2]) * what);
     atomicAdd(&dflds_(m, lf[0] + 1, lf[1], lf[2] + 1),
-              (of[0]) * (1.f - of[1]) * (of[2]) * fnq);
+              (of[0]) * (1.f - of[1]) * (of[2]) * what);
     atomicAdd(&dflds_(m, lf[0], lf[1] + 1, lf[2] + 1),
-              (1.f - of[0]) * (of[1]) * (of[2]) * fnq);
+              (1.f - of[0]) * (of[1]) * (of[2]) * what);
     atomicAdd(&dflds_(m, lf[0] + 1, lf[1] + 1, lf[2] + 1),
-              (of[0]) * (of[1]) * (of[2]) * fnq);
+              (of[0]) * (of[1]) * (of[2]) * what);
   }
 
-  __device__ void operator()(int m, int lf[3], R of[3], R fnq)
+  __device__ void operator()(int m, int lf[3], R of[3], R val)
   {
-    (*this)(m, lf, of, fnq, DIM{});
+    (*this)(m, lf, of, val, DIM{});
   }
 
+private:
   DFields& dflds_;
+  R fnq_;
 };
 
 // ----------------------------------------------------------------------
@@ -87,9 +94,9 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
     float of[3];
     dmprts.find_idx_off_1st(prt.x, lf, of, float(0.));
 
-    Deposit<dim> deposit(dflds);
+    Deposit<dim> deposit(dflds, fnq);
 
-    deposit(0, lf, of, fnq * q);
+    deposit(0, lf, of, q);
   }
 }
 
@@ -126,9 +133,9 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
     float of[3];
     dmprts.find_idx_off_1st(prt.x, lf, of, float(-.5));
 
-    Deposit<dim> deposit(dflds);
+    Deposit<dim> deposit(dflds, fnq);
 
-    deposit(kind, lf, of, fnq);
+    deposit(kind, lf, of, 1.f);
   }
 }
 
