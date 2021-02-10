@@ -152,25 +152,15 @@ void CudaMoments1stNcRho<CudaMparticles, dim>::operator()(
   cmprts.reorder(); // FIXME/OPT?
 
   if (!cmprts.need_reorder) {
-    invoke<false>(cmprts, cmres);
+    dim3 dimGrid =
+      BlockSimple<typename CudaMparticles::BS, dim>::dimGrid(cmprts);
+
+    rho_1st_nc_cuda_run<typename CudaMparticles::DMparticles, dim, false>
+      <<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, *cmres);
+    cuda_sync_if_enabled();
   } else {
     assert(0);
   }
-}
-
-// ----------------------------------------------------------------------
-// CudaMoments1stNcRho::invoke
-
-template <typename CudaMparticles, typename dim>
-template <bool REORDER>
-void CudaMoments1stNcRho<CudaMparticles, dim>::invoke(
-  CudaMparticles& cmprts, struct cuda_mfields* cmres)
-{
-  dim3 dimGrid = BlockSimple<typename CudaMparticles::BS, dim>::dimGrid(cmprts);
-
-  rho_1st_nc_cuda_run<typename CudaMparticles::DMparticles, dim, REORDER>
-    <<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, *cmres);
-  cuda_sync_if_enabled();
 }
 
 // ----------------------------------------------------------------------
@@ -196,26 +186,16 @@ void CudaMoments1stNcN<CudaMparticles, dim>::operator()(
   prof_stop(pr_1);
 
   if (!cmprts.need_reorder) {
-    invoke<false>(cmprts, cmres);
+    dim3 dimGrid =
+      BlockSimple<typename CudaMparticles::BS, dim>::dimGrid(cmprts);
+
+    n_1st_cuda_run<typename CudaMparticles::BS, dim, false>
+      <<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, *cmres);
+    cuda_sync_if_enabled();
   } else {
     assert(0);
   }
   prof_stop(pr);
-}
-
-// ----------------------------------------------------------------------
-// CudaMoments1stNcN::invoke
-
-template <typename CudaMparticles, typename dim>
-template <bool REORDER>
-void CudaMoments1stNcN<CudaMparticles, dim>::invoke(CudaMparticles& cmprts,
-                                                    struct cuda_mfields* cmres)
-{
-  dim3 dimGrid = BlockSimple<typename CudaMparticles::BS, dim>::dimGrid(cmprts);
-
-  n_1st_cuda_run<typename CudaMparticles::BS, dim, REORDER>
-    <<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, *cmres);
-  cuda_sync_if_enabled();
 }
 
 template struct CudaMoments1stNcRho<cuda_mparticles<BS144>, dim_yz>;
