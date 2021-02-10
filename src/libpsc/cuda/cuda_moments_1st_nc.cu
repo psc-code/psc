@@ -80,7 +80,8 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
     const auto prt =
       REORDER ? dmprts.storage[dmprts.id_[n]] : dmprts.storage[n];
 
-    float fnq = prt.qni_wni * dmprts.fnqs();
+    float fnq = dmprts.prt_w(prt) * dmprts.fnqs();
+    float q = dmprts.prt_q(prt);
 
     int lf[3];
     float of[3];
@@ -88,7 +89,7 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
 
     Deposit<dim> deposit(dflds);
 
-    deposit(0, lf, of, fnq);
+    deposit(0, lf, of, fnq * q);
   }
 }
 
@@ -118,8 +119,8 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
       REORDER ? dmprts.storage[dmprts.id_[n]] : dmprts.storage[n];
 
     int kind = prt.kind;
-    float wni = prt.qni_wni * dmprts.q_inv(kind);
-    float fnq = wni * dmprts.fnqs();
+    float fnq = dmprts.prt_w(prt) * dmprts.fnqs();
+    float q = dmprts.prt_q(prt);
 
     int lf[3];
     float of[3];
