@@ -282,12 +282,12 @@ struct BlockSimple : BlockBase
     block_pos[0] = blockIdx.x;
     block_pos[1] = blockIdx.y;
     block_pos[2] = blockIdx.z % dpi.b_mx_[2];
+    p = blockIdx.z / dpi.b_mx_[2];
 
     ci0[0] = block_pos[0] * BS::x::value;
     ci0[1] = block_pos[1] * BS::y::value;
     ci0[2] = block_pos[2] * BS::z::value;
 
-    p = blockIdx.z / dpi.b_mx_[2];
     bid = (blockIdx.z * dpi.b_mx_[1] + blockIdx.y) * dpi.b_mx_[0] + blockIdx.x;
     return true;
   }
@@ -304,40 +304,30 @@ struct BlockSimple2 : BlockBase
   static const int MAX_N_BLOCKS = 1024;
 
   template <typename CudaMparticles>
-  static int n_concurrent_blocks(CudaMparticles& cmprts)
-  {
-    int n_blocks_per_patch =
-      cmprts.b_mx()[0] * cmprts.b_mx()[1] * cmprts.b_mx()[2];
-    assert(MAX_N_BLOCKS % n_blocks_per_patch == 0);
-    int n_blocks = n_blocks_per_patch >= MAX_N_BLOCKS
-                     ? 1
-                     : MAX_N_BLOCKS / n_blocks_per_patch;
-    return n_blocks;
-  }
-
-  template <typename CudaMparticles>
   static dim3 dimGrid(CudaMparticles& cmprts)
   {
-    int gx = cmprts.b_mx()[0];
-    int gy = cmprts.b_mx()[1];
-    int gz = cmprts.b_mx()[2] * n_concurrent_blocks(cmprts);
-    return dim3(gx, gy, gz);
+    int n_blocks = cmprts.b_mx()[0] * cmprts.b_mx()[1] * cmprts.b_mx()[2] *
+                   cmprts.n_patches();
+    n_blocks = std::min(n_blocks, MAX_N_BLOCKS);
+
+    return dim3(n_blocks);
   }
 
-  __device__ bool init(const DParticleIndexer<BS>& dpi, uint bidx[3])
+  __device__ void init(const DParticleIndexer<BS>& dpi, uint r)
   {
+    bid = r;
     int block_pos[3];
-    block_pos[0] = bidx[0];
-    block_pos[1] = bidx[1];
-    block_pos[2] = bidx[2] % dpi.b_mx()[2];
+    block_pos[0] = r % dpi.b_mx()[0];
+    r /= dpi.b_mx()[0];
+    block_pos[1] = r % dpi.b_mx()[1];
+    r /= dpi.b_mx()[1];
+    block_pos[2] = r % dpi.b_mx()[2];
+    r /= dpi.b_mx()[2];
+    p = r;
 
     ci0[0] = block_pos[0] * BS::x::value;
     ci0[1] = block_pos[1] * BS::y::value;
     ci0[2] = block_pos[2] * BS::z::value;
-
-    p = bidx[2] / dpi.b_mx()[2];
-    bid = (bidx[2] * dpi.b_mx()[1] + bidx[1]) * dpi.b_mx()[0] + bidx[0];
-    return true;
   }
 };
 
