@@ -68,10 +68,9 @@ public:
   void end_step() { mrc_io_close(io_.get()); }
 
   template <typename Mfields>
-  void write(const Mfields& _mflds, const Grid_t& grid, const std::string& name,
+  void write(const Mfields& mflds, const Grid_t& grid, const std::string& name,
              const std::vector<std::string>& comp_names)
   {
-    auto& mflds = const_cast<Mfields&>(_mflds);
     auto mf = adapt(mflds);
 
     int n_comps = comp_names.size();

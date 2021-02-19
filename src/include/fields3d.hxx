@@ -611,8 +611,9 @@ extern template const MfieldsStateBase::Convert
 using namespace gt::placeholders;
 
 template <typename Mfields>
-auto adapt(Mfields& mflds)
+auto adapt(Mfields& _mflds)
 {
+  auto& mflds = const_cast<std::remove_const_t<Mfields>&>(_mflds);
   auto ib = mflds.ib(), im = mflds.im(), bnd = -ib;
   auto mf_ =
     gt::adapt<5>(&mflds(0, ib[0], ib[1], ib[2], 0),
