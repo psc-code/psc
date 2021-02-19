@@ -308,7 +308,7 @@ Grid_t* setupGrid()
   Int3 np = {1, 50, 3 * 50};                // division into patches
 #elif CASE == CASE_2D_SMALL
   Grid_t::Real3 LL = {1., 80., 3. * 80.}; // domain size (in d_e)
-  Int3 gdims = {1, 160, 3 * 160};         // global number of grid points
+  Int3 gdims = {1, 80, 3 * 80};           // global number of grid points
   Int3 np = {1, 5, 3 * 5};                // division into patches
 #elif CASE == CASE_1D
   Grid_t::Real3 LL = {1., 8., 3. * 80.}; // domain size (in d_e)
