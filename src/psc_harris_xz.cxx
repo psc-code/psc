@@ -520,12 +520,14 @@ public:
 
       {
         auto result = outf_state_(mflds);
-        io_pfd_.write(result.mflds, grid, result.name, result.comp_names);
+        io_pfd_.write(evalMfields(result.mflds), grid, result.name,
+                      result.comp_names);
       }
 
       {
         auto result = outf_hydro_(mprts, *hydro, *interpolator);
-        io_pfd_.write(result.mflds, grid, result.name, result.comp_names);
+        io_pfd_.write(evalMfields(result.mflds), grid, result.name,
+                      result.comp_names);
       }
 
       io_pfd_.end_step();

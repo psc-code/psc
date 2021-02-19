@@ -114,8 +114,8 @@ struct Checks_
         writer.open("continuity");
       }
       writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
-      writer.write(divj_, grid, "div_j", {"div_j"});
-      writer.write(d_rho, grid, "d_rho", {"d_rho"});
+      writer.write(evalMfields(divj_), grid, "div_j", {"div_j"});
+      writer.write(evalMfields(d_rho), grid, "d_rho", {"d_rho"});
       writer.end_step();
     }
 
@@ -183,8 +183,9 @@ struct Checks_
         writer.open("gauss");
       }
       writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
-      writer.write(rho_, grid, "rho", {"rho"});
-      writer.write(dive, dive.grid(), dive.name(), dive.comp_names());
+      writer.write(evalMfields(rho_), grid, "rho", {"rho"});
+      writer.write(evalMfields(dive), dive.grid(), dive.name(),
+                   dive.comp_names());
       writer.end_step();
     }
 

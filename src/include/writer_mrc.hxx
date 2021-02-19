@@ -71,8 +71,7 @@ public:
   void write(const Mfields& _mflds, const Grid_t& grid, const std::string& name,
              const std::vector<std::string>& comp_names)
   {
-    auto&& eval_mflds = evalMfields(_mflds);
-    auto& mflds = const_cast<MfieldsC&>(eval_mflds);
+    auto& mflds = const_cast<Mfields&>(_mflds);
     auto mf = adapt(mflds);
 
     int n_comps = comp_names.size();

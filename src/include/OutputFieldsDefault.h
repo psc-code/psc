@@ -244,7 +244,7 @@ private:
   template <typename EXP>
   static void _write_pfd(Writer& io, EXP& pfd)
   {
-    io.write(pfd, pfd.grid(), pfd.name(), pfd.comp_names());
+    io.write(evalMfields(pfd), pfd.grid(), pfd.name(), pfd.comp_names());
   }
 
   template <typename EXP>
