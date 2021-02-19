@@ -73,6 +73,7 @@ public:
   {
     auto&& eval_mflds = evalMfields(_mflds);
     auto& mflds = const_cast<MfieldsC&>(eval_mflds);
+    auto mf = adapt(mflds);
 
     int n_comps = comp_names.size();
     // FIXME, should generally equal the # of component in mflds,
@@ -92,7 +93,7 @@ public:
       for (int m = 0; m < n_comps; m++) {
         mrc_fld_foreach(fld, i, j, k, 0, 0)
         {
-          MRC_S5(fld, i, j, k, m, p) = mflds(m, i, j, k, p);
+          MRC_S5(fld, i, j, k, m, p) = mf(i, j, k, m, p);
         }
         mrc_fld_foreach_end;
       }
