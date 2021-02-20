@@ -27,6 +27,7 @@ struct OutputFieldsItemParams
 // ======================================================================
 // OutputFieldsItem
 
+template <typename Writer>
 class OutputFieldsItem : public OutputFieldsItemParams
 {
 public:
@@ -39,6 +40,8 @@ public:
   // private:
   int pfield_next_;
   int tfield_next_;
+  Writer io_pfd_;
+  Writer io_tfd_;
 };
 
 // ======================================================================
@@ -80,16 +83,16 @@ public:
                    grid.ibn}
   {
     if (fields.pfield_interval > 0) {
-      io_pfd_.open("pfd", data_dir);
+      fields.io_pfd_.open("pfd", data_dir);
     }
     if (moments.pfield_interval > 0) {
-      io_pfd_moments_.open("pfd_moments", data_dir);
+      moments.io_pfd_.open("pfd_moments", data_dir);
     }
     if (fields.tfield_interval > 0) {
-      io_tfd_.open("tfd", data_dir);
+      fields.io_tfd_.open("tfd", data_dir);
     }
     if (moments.tfield_interval > 0) {
-      io_tfd_moments_.open("tfd_moments", data_dir);
+      moments.io_tfd_.open("tfd_moments", data_dir);
     }
   }
 
@@ -155,10 +158,10 @@ public:
         fields.pfield_next_ += fields.pfield_interval;
 
         prof_start(pr_field_write);
-        io_pfd_.begin_step(grid);
-        io_pfd_.set_subset(grid, rn, rx);
-        _write_pfd(io_pfd_, pfd_jeh);
-        io_pfd_.end_step();
+        fields.io_pfd_.begin_step(grid);
+        fields.io_pfd_.set_subset(grid, rn, rx);
+        _write_pfd(fields.io_pfd_, pfd_jeh);
+        fields.io_pfd_.end_step();
         prof_stop(pr_field_write);
       }
 
@@ -174,10 +177,10 @@ public:
         fields.tfield_next_ += fields.tfield_interval;
 
         prof_start(pr_field_write);
-        io_tfd_.begin_step(grid);
-        io_tfd_.set_subset(grid, rn, rx);
-        _write_tfd(io_tfd_, tfd_jeh_, pfd_jeh, naccum_);
-        io_tfd_.end_step();
+        fields.io_tfd_.begin_step(grid);
+        fields.io_tfd_.set_subset(grid, rn, rx);
+        _write_tfd(fields.io_tfd_, tfd_jeh_, pfd_jeh, naccum_);
+        fields.io_tfd_.end_step();
         naccum_ = 0;
         prof_stop(pr_field_write);
       }
@@ -206,10 +209,10 @@ public:
         moments.pfield_next_ += moments.pfield_interval;
 
         prof_start(pr_moment_write);
-        io_pfd_moments_.begin_step(grid);
-        io_pfd_moments_.set_subset(grid, rn, rx);
-        _write_pfd(io_pfd_moments_, pfd_moments);
-        io_pfd_moments_.end_step();
+        moments.io_pfd_.begin_step(grid);
+        moments.io_pfd_.set_subset(grid, rn, rx);
+        _write_pfd(moments.io_pfd_, pfd_moments);
+        moments.io_pfd_.end_step();
         prof_stop(pr_moment_write);
       }
 
@@ -225,10 +228,10 @@ public:
         moments.tfield_next_ += moments.tfield_interval;
 
         prof_start(pr_moment_write);
-        io_tfd_moments_.begin_step(grid);
-        io_tfd_moments_.set_subset(grid, rn, rx);
-        _write_tfd(io_tfd_moments_, tfd_moments_, pfd_moments, naccum_moments_);
-        io_tfd_moments_.end_step();
+        moments.io_tfd_.begin_step(grid);
+        moments.io_tfd_.set_subset(grid, rn, rx);
+        _write_tfd(moments.io_tfd_, tfd_moments_, pfd_moments, naccum_moments_);
+        moments.io_tfd_.end_step();
         prof_stop(pr_moment_write);
         naccum_moments_ = 0;
       }
@@ -256,8 +259,8 @@ private:
 
 public:
   const char* data_dir;
-  OutputFieldsItem fields;
-  OutputFieldsItem moments;
+  OutputFieldsItem<Writer> fields;
+  OutputFieldsItem<Writer> moments;
   Int3 rn = {};
   Int3 rx = {1000000, 1000000, 100000};
 
@@ -265,10 +268,6 @@ private:
   // tfd -- FIXME?! always MfieldsC
   MfieldsC tfd_jeh_;
   MfieldsC tfd_moments_;
-  Writer io_pfd_;
-  Writer io_pfd_moments_;
-  Writer io_tfd_;
-  Writer io_tfd_moments_;
   int naccum_ = 0;
   int naccum_moments_ = 0;
   bool first_time = true;
