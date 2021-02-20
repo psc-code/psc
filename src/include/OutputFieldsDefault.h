@@ -32,12 +32,19 @@ class OutputFieldsItem : public OutputFieldsItemParams
 {
 public:
   OutputFieldsItem(const Grid_t& grid, const OutputFieldsItemParams& prm,
-                   int n_comps, Int3 ibn)
+                   int n_comps, Int3 ibn, const char* data_dir, std::string sfx)
     : OutputFieldsItemParams{prm},
       pfield_next_{prm.pfield_first},
       tfield_next_{prm.tfield_first},
       tfd_{grid, n_comps, ibn}
-  {}
+  {
+    if (pfield_interval > 0) {
+      io_pfd_.open("pfd" + sfx, data_dir);
+    }
+    if (tfield_interval > 0) {
+      io_tfd_.open("tfd" + sfx, data_dir);
+    }
+  }
 
   // private:
   int pfield_next_;
@@ -78,26 +85,17 @@ public:
 
   OutputFieldsDefault(const Grid_t& grid, const OutputFieldsParams& prm)
     : data_dir{prm.data_dir},
-      fields{grid, prm.fields, Item_jeh<MfieldsFake>::n_comps(), {}},
-      moments{grid, prm.moments,
+      fields{grid, prm.fields, Item_jeh<MfieldsFake>::n_comps(),
+             {},   data_dir,   ""},
+      moments{grid,
+              prm.moments,
               FieldsItem_Moments_1st_cc<MparticlesFake>::n_comps(grid),
-              grid.ibn},
+              grid.ibn,
+              data_dir,
+              "_moments"},
       rn{prm.rn},
       rx{prm.rx}
-  {
-    if (fields.pfield_interval > 0) {
-      fields.io_pfd_.open("pfd", data_dir);
-    }
-    if (moments.pfield_interval > 0) {
-      moments.io_pfd_.open("pfd_moments", data_dir);
-    }
-    if (fields.tfield_interval > 0) {
-      fields.io_tfd_.open("tfd", data_dir);
-    }
-    if (moments.tfield_interval > 0) {
-      moments.io_tfd_.open("tfd_moments", data_dir);
-    }
-  }
+  {}
 
   // ----------------------------------------------------------------------
   // operator()
