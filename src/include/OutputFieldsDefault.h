@@ -46,6 +46,7 @@ public:
   Writer io_tfd_;
   // tfd -- FIXME?! always MfieldsC
   MfieldsC tfd_;
+  int naccum_ = 0;
 };
 
 // ======================================================================
@@ -172,7 +173,7 @@ public:
         prof_start(pr_field_acc);
         fields.tfd_ += pfd_jeh;
         prof_stop(pr_field_acc);
-        naccum_++;
+        fields.naccum_++;
       }
       if (do_tfield) {
         mpi_printf(grid.comm(), "***** Writing TFD output\n");
@@ -181,9 +182,9 @@ public:
         prof_start(pr_field_write);
         fields.io_tfd_.begin_step(grid);
         fields.io_tfd_.set_subset(grid, rn, rx);
-        _write_tfd(fields.io_tfd_, fields.tfd_, pfd_jeh, naccum_);
+        _write_tfd(fields.io_tfd_, fields.tfd_, pfd_jeh, fields.naccum_);
         fields.io_tfd_.end_step();
-        naccum_ = 0;
+        fields.naccum_ = 0;
         prof_stop(pr_field_write);
       }
       prof_stop(pr_field);
@@ -223,7 +224,7 @@ public:
         prof_start(pr_moment_acc);
         moments.tfd_ += pfd_moments;
         prof_stop(pr_moment_acc);
-        naccum_moments_++;
+        moments.naccum_++;
       }
       if (do_tfield_moments) {
         mpi_printf(grid.comm(), "***** Writing TFD moment output\n");
@@ -232,10 +233,10 @@ public:
         prof_start(pr_moment_write);
         moments.io_tfd_.begin_step(grid);
         moments.io_tfd_.set_subset(grid, rn, rx);
-        _write_tfd(moments.io_tfd_, moments.tfd_, pfd_moments, naccum_moments_);
+        _write_tfd(moments.io_tfd_, moments.tfd_, pfd_moments, moments.naccum_);
         moments.io_tfd_.end_step();
         prof_stop(pr_moment_write);
-        naccum_moments_ = 0;
+        moments.naccum_ = 0;
       }
       prof_stop(pr_moment);
     }
@@ -267,8 +268,6 @@ public:
   Int3 rx = {1000000, 1000000, 100000};
 
 private:
-  int naccum_ = 0;
-  int naccum_moments_ = 0;
   bool first_time = true;
 };
 
