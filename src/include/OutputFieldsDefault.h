@@ -51,6 +51,7 @@ public:
   template <typename EXP>
   void write_pfd(EXP& pfd)
   {
+    mpi_printf(pfd.grid().comm(), "***** Writing PFD output\n");
     pfield_next_ += pfield_interval;
     io_pfd_.begin_step(pfd.grid());
     io_pfd_.set_subset(pfd.grid(), rn, rx);
@@ -62,6 +63,7 @@ public:
   template <typename EXP>
   void write_tfd(MfieldsC& tfd, EXP& pfd)
   {
+    mpi_printf(tfd.grid().comm(), "***** Writing TFD output\n");
     tfield_next_ += tfield_interval;
 
     // convert accumulated values to correct temporal mean
@@ -181,7 +183,6 @@ public:
 
       if (do_pfield) {
         prof_start(pr_field_write);
-        mpi_printf(grid.comm(), "***** Writing PFD output\n");
         fields.write_pfd(pfd_jeh);
         prof_stop(pr_field_write);
       }
@@ -195,7 +196,6 @@ public:
       }
       if (do_tfield) {
         prof_start(pr_field_write);
-        mpi_printf(grid.comm(), "***** Writing TFD output\n");
         fields.write_tfd(fields.tfd_, pfd_jeh);
         prof_stop(pr_field_write);
       }
@@ -221,7 +221,6 @@ public:
 
       if (do_pfield_moments) {
         prof_start(pr_moment_write);
-        mpi_printf(grid.comm(), "***** Writing PFD moment output\n");
         moments.write_pfd(pfd_moments);
         prof_stop(pr_moment_write);
       }
@@ -235,7 +234,6 @@ public:
       }
       if (do_tfield_moments) {
         prof_start(pr_moment_write);
-        mpi_printf(grid.comm(), "***** Writing TFD moment output\n");
         moments.write_tfd(moments.tfd_, pfd_moments);
         prof_stop(pr_moment_write);
       }
