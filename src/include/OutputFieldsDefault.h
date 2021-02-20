@@ -179,6 +179,7 @@ public:
       prof_start(pr_field);
       prof_start(pr_field_calc);
       Item_jeh<MfieldsState> pfd_jeh{mflds};
+      auto&& pfd = adapt_item(pfd_jeh);
       prof_stop(pr_field_calc);
 
       if (do_pfield) {
@@ -190,7 +191,7 @@ public:
       if (doaccum_tfield) {
         // tfd += pfd
         prof_start(pr_field_acc);
-        fields.tfd_ += pfd_jeh;
+        adapt(fields.tfd_) = adapt(fields.tfd_) + pfd;
         prof_stop(pr_field_acc);
         fields.naccum_++;
       }
@@ -217,6 +218,7 @@ public:
       prof_start(pr_moment);
       prof_start(pr_moment_calc);
       FieldsItem_Moments_1st_cc<Mparticles> pfd_moments{mprts};
+      auto&& pfd = adapt_item(pfd_moments);
       prof_stop(pr_moment_calc);
 
       if (do_pfield_moments) {
@@ -228,7 +230,7 @@ public:
       if (doaccum_tfield_moments) {
         // tfd += pfd
         prof_start(pr_moment_acc);
-        moments.tfd_ += pfd_moments;
+        adapt(moments.tfd_) = adapt(moments.tfd_) + pfd;
         prof_stop(pr_moment_acc);
         moments.naccum_++;
       }

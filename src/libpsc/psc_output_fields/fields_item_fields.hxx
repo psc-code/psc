@@ -516,7 +516,7 @@ public:
 
   Item_jeh(MfieldsState& mflds) : mflds_{mflds} {}
 
-  Real operator()(int m, Int3 ijk, int p) const
+  const Real& operator()(int m, Int3 ijk, int p) const
   {
     return mflds_(m, ijk[0], ijk[1], ijk[2], p);
   }
@@ -524,6 +524,8 @@ public:
   const Grid_t& grid() const { return mflds_.grid(); }
   Int3 ibn() const { return {}; }
   int n_patches() const { return grid().n_patches(); }
+
+  MfieldsState& result() const { return mflds_; }
 
 private:
   MfieldsState& mflds_;
@@ -565,7 +567,7 @@ public:
     }
   }
 
-  Real operator()(int m, Int3 ijk, int p) const
+  const Real& operator()(int m, Int3 ijk, int p) const
   {
     return mflds_(m, ijk[0], ijk[1], ijk[2], p);
   }
@@ -573,6 +575,8 @@ public:
   const Grid_t& grid() const { return mflds_.grid(); }
   Int3 ibn() const { return {}; }
   int n_patches() const { return grid().n_patches(); }
+
+  MfieldsSingle& result() const { return mflds_; }
 
 private:
   mutable MfieldsSingle mflds_; // FIXME!!

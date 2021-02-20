@@ -242,6 +242,8 @@ public:
     });
     Base::bnd_.add_ghosts(Base::mres_);
   }
+
+  const Mfields& result() const { return Base::mres_; }
 };
 
 #ifdef USE_CUDA
@@ -392,6 +394,8 @@ public:
     mprts.put_as(h_mprts, MP_DONT_COPY);
     prof_stop(pr);
   }
+
+  const Mfields& result() const { return Base::mres_; }
 };
 
 #endif

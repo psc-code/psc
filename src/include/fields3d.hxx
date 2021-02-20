@@ -556,6 +556,9 @@ struct MfieldsStateFromMfields : MfieldsStateBase
 
   const Grid_t& grid() const { return mflds_.grid(); }
   int n_patches() const { return mflds_.n_patches(); }
+  Int3 ib() const { return mflds_.ib(); }
+  Int3 im() const { return mflds_.im(); }
+  int n_comps() const { return mflds_.n_comps(); }
 
   fields_view_t operator[](int p) { return mflds_[p]; }
 
@@ -609,6 +612,12 @@ extern template const MfieldsStateBase::Convert
 #include <gtensor/gtensor.h>
 
 using namespace gt::placeholders;
+
+template <typename Item>
+auto adapt_item(const Item& item)
+{
+  return adapt(item.result());
+}
 
 template <typename Mfields>
 auto adapt(const Mfields& _mflds)
