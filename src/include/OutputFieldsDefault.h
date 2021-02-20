@@ -58,9 +58,17 @@ public:
   template <typename EXP>
   void write_tfd(MfieldsC& tfd, EXP& pfd)
   {
+    tfield_next_ += tfield_interval;
+
     // convert accumulated values to correct temporal mean
     tfd.scale(1. / naccum_);
+
+    io_tfd_.begin_step(tfd.grid());
+    io_tfd_.set_subset(tfd.grid(), rn, rx);
     io_tfd_.write(adapt(tfd), tfd.grid(), pfd.name(), pfd.comp_names());
+    io_tfd_.end_step();
+    naccum_ = 0;
+
     tfd.zero();
   }
 
@@ -187,15 +195,9 @@ public:
         fields.naccum_++;
       }
       if (do_tfield) {
-        mpi_printf(grid.comm(), "***** Writing TFD output\n");
-        fields.tfield_next_ += fields.tfield_interval;
-
         prof_start(pr_field_write);
-        fields.io_tfd_.begin_step(grid);
-        fields.io_tfd_.set_subset(grid, fields.rn, fields.rx);
+        mpi_printf(grid.comm(), "***** Writing TFD output\n");
         fields.write_tfd(fields.tfd_, pfd_jeh);
-        fields.io_tfd_.end_step();
-        fields.naccum_ = 0;
         prof_stop(pr_field_write);
       }
       prof_stop(pr_field);
@@ -238,16 +240,10 @@ public:
         moments.naccum_++;
       }
       if (do_tfield_moments) {
-        mpi_printf(grid.comm(), "***** Writing TFD moment output\n");
-        moments.tfield_next_ += moments.tfield_interval;
-
         prof_start(pr_moment_write);
-        moments.io_tfd_.begin_step(grid);
-        moments.io_tfd_.set_subset(grid, moments.rn, moments.rx);
+        mpi_printf(grid.comm(), "***** Writing TFD moment output\n");
         moments.write_tfd(moments.tfd_, pfd_moments);
-        moments.io_tfd_.end_step();
         prof_stop(pr_moment_write);
-        moments.naccum_ = 0;
       }
       prof_stop(pr_moment);
     }
