@@ -25,6 +25,17 @@ struct OutputFieldsItemParams
 };
 
 // ======================================================================
+// OutputFieldsItem
+
+class OutputFieldsItem : public OutputFieldsItemParams
+{
+public:
+  OutputFieldsItem(const OutputFieldsItemParams& prm)
+    : OutputFieldsItemParams{prm}
+  {}
+};
+
+// ======================================================================
 // OutputFieldsParams
 
 struct OutputFieldsParams
@@ -242,8 +253,8 @@ private:
 
 public:
   const char* data_dir;
-  OutputFieldsItemParams fields;
-  OutputFieldsItemParams moments;
+  OutputFieldsItem fields;
+  OutputFieldsItem moments;
   Int3 rn = {};
   Int3 rx = {1000000, 1000000, 100000};
 
