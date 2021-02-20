@@ -31,8 +31,14 @@ class OutputFieldsItem : public OutputFieldsItemParams
 {
 public:
   OutputFieldsItem(const OutputFieldsItemParams& prm)
-    : OutputFieldsItemParams{prm}
+    : OutputFieldsItemParams{prm},
+      pfield_next_{prm.pfield_first},
+      tfield_next_{prm.tfield_first}
   {}
+
+  // private:
+  int pfield_next_;
+  int tfield_next_;
 };
 
 // ======================================================================
@@ -71,13 +77,8 @@ public:
       tfd_jeh_{grid, Item_jeh<MfieldsFake>::n_comps(), {}},
       tfd_moments_{grid,
                    FieldsItem_Moments_1st_cc<MparticlesFake>::n_comps(grid),
-                   grid.ibn},
-      pfield_next_{fields.pfield_first},
-      tfield_next_{fields.tfield_first}
+                   grid.ibn}
   {
-    pfield_moments_next_ = moments.pfield_first;
-    tfield_moments_next_ = moments.tfield_first;
-
     if (fields.pfield_interval > 0) {
       io_pfd_.open("pfd", data_dir);
     }
@@ -123,23 +124,25 @@ public:
     if (first_time) {
       first_time = false;
       if (timestep != 0) {
-        pfield_next_ = timestep + fields.pfield_interval;
-        tfield_next_ = timestep + fields.tfield_interval;
-        pfield_moments_next_ = timestep + moments.pfield_interval;
-        tfield_moments_next_ = timestep + moments.tfield_interval;
+        fields.pfield_next_ = timestep + fields.pfield_interval;
+        fields.tfield_next_ = timestep + fields.tfield_interval;
+        moments.pfield_next_ = timestep + moments.pfield_interval;
+        moments.tfield_next_ = timestep + moments.tfield_interval;
         return;
       }
     }
 
     prof_start(pr);
 
-    bool do_pfield = fields.pfield_interval > 0 && timestep >= pfield_next_;
-    bool do_tfield = fields.tfield_interval > 0 && timestep >= tfield_next_;
-    bool doaccum_tfield =
-      fields.tfield_interval > 0 &&
-      (((timestep >= (tfield_next_ - fields.tfield_average_length + 1)) &&
-        timestep % fields.tfield_average_every == 0) ||
-       timestep == 0);
+    bool do_pfield =
+      fields.pfield_interval > 0 && timestep >= fields.pfield_next_;
+    bool do_tfield =
+      fields.tfield_interval > 0 && timestep >= fields.tfield_next_;
+    bool doaccum_tfield = fields.tfield_interval > 0 &&
+                          (((timestep >= (fields.tfield_next_ -
+                                          fields.tfield_average_length + 1)) &&
+                            timestep % fields.tfield_average_every == 0) ||
+                           timestep == 0);
 
     if (do_pfield || doaccum_tfield) {
       prof_start(pr_field);
@@ -149,7 +152,7 @@ public:
 
       if (do_pfield) {
         mpi_printf(grid.comm(), "***** Writing PFD output\n");
-        pfield_next_ += fields.pfield_interval;
+        fields.pfield_next_ += fields.pfield_interval;
 
         prof_start(pr_field_write);
         io_pfd_.begin_step(grid);
@@ -168,7 +171,7 @@ public:
       }
       if (do_tfield) {
         mpi_printf(grid.comm(), "***** Writing TFD output\n");
-        tfield_next_ += fields.tfield_interval;
+        fields.tfield_next_ += fields.tfield_interval;
 
         prof_start(pr_field_write);
         io_tfd_.begin_step(grid);
@@ -182,13 +185,13 @@ public:
     }
 
     bool do_pfield_moments =
-      moments.pfield_interval > 0 && timestep >= pfield_moments_next_;
+      moments.pfield_interval > 0 && timestep >= moments.pfield_next_;
     bool do_tfield_moments =
-      moments.tfield_interval > 0 && timestep >= tfield_moments_next_;
+      moments.tfield_interval > 0 && timestep >= moments.tfield_next_;
     bool doaccum_tfield_moments =
       moments.tfield_interval > 0 &&
       (((timestep >=
-         (tfield_moments_next_ - moments.tfield_average_length + 1)) &&
+         (moments.tfield_next_ - moments.tfield_average_length + 1)) &&
         timestep % moments.tfield_average_every == 0) ||
        timestep == 0);
 
@@ -200,7 +203,7 @@ public:
 
       if (do_pfield_moments) {
         mpi_printf(grid.comm(), "***** Writing PFD moment output\n");
-        pfield_moments_next_ += moments.pfield_interval;
+        moments.pfield_next_ += moments.pfield_interval;
 
         prof_start(pr_moment_write);
         io_pfd_moments_.begin_step(grid);
@@ -219,7 +222,7 @@ public:
       }
       if (do_tfield_moments) {
         mpi_printf(grid.comm(), "***** Writing TFD moment output\n");
-        tfield_moments_next_ += moments.tfield_interval;
+        moments.tfield_next_ += moments.tfield_interval;
 
         prof_start(pr_moment_write);
         io_tfd_moments_.begin_step(grid);
@@ -266,10 +269,6 @@ private:
   Writer io_pfd_moments_;
   Writer io_tfd_;
   Writer io_tfd_moments_;
-  int pfield_next_;
-  int pfield_moments_next_;
-  int tfield_next_;
-  int tfield_moments_next_;
   int naccum_ = 0;
   int naccum_moments_ = 0;
   bool first_time = true;
