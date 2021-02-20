@@ -244,7 +244,7 @@ private:
   template <typename EXP>
   static void _write_pfd(Writer& io, EXP& pfd)
   {
-    io.write(evalMfields(pfd), pfd.grid(), pfd.name(), pfd.comp_names());
+    io.write(adapt(evalMfields(pfd)), pfd.grid(), pfd.name(), pfd.comp_names());
   }
 
   template <typename EXP>
@@ -252,7 +252,7 @@ private:
   {
     // convert accumulated values to correct temporal mean
     tfd.scale(1. / naccum);
-    io.write(tfd, tfd.grid(), pfd.name(), pfd.comp_names());
+    io.write(adapt(tfd), tfd.grid(), pfd.name(), pfd.comp_names());
     tfd.zero();
   }
 

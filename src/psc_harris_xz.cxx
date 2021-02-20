@@ -520,13 +520,13 @@ public:
 
       {
         auto result = outf_state_(mflds);
-        io_pfd_.write(evalMfields(result.mflds), grid, result.name,
+        io_pfd_.write(adapt(evalMfields(result.mflds)), grid, result.name,
                       result.comp_names);
       }
 
       {
         auto result = outf_hydro_(mprts, *hydro, *interpolator);
-        io_pfd_.write(evalMfields(result.mflds), grid, result.name,
+        io_pfd_.write(adapt(result.mflds), grid, result.name,
                       result.comp_names);
       }
 
@@ -561,12 +561,12 @@ public:
         mpi_printf(comm, "***** Writing TFD output\n");
         io_tfd_.begin_step(grid);
         mflds_acc_state_.scale(1. / n_accum_);
-        io_tfd_.write(mflds_acc_state_, grid, result_state.name,
+        io_tfd_.write(adapt(mflds_acc_state_), grid, result_state.name,
                       result_state.comp_names);
         mflds_acc_state_.zero();
 
         mflds_acc_hydro_.scale(1. / n_accum_);
-        io_tfd_.write(mflds_acc_hydro_, grid, result_hydro.name,
+        io_tfd_.write(adapt(mflds_acc_hydro_), grid, result_hydro.name,
                       result_hydro.comp_names);
         mflds_acc_hydro_.zero();
 
