@@ -60,26 +60,6 @@ public:
       pfield_next_{fields.pfield_first},
       tfield_next_{fields.tfield_first}
   {
-    if (moments.pfield_interval < 0) {
-      moments.pfield_interval = fields.pfield_interval;
-    }
-    if (moments.pfield_first < 0) {
-      moments.pfield_first = fields.pfield_first;
-    }
-
-    if (moments.tfield_interval < 0) {
-      moments.tfield_interval = fields.tfield_interval;
-    }
-    if (moments.tfield_first < 0) {
-      moments.tfield_first = fields.tfield_first;
-    }
-    if (moments.tfield_average_length < 0) {
-      moments.tfield_average_length = fields.tfield_average_length;
-    }
-    if (moments.tfield_average_every < 0) {
-      moments.tfield_average_every = fields.tfield_average_every;
-    }
-
     pfield_moments_next_ = moments.pfield_first;
     tfield_moments_next_ = moments.tfield_first;
 
