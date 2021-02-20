@@ -51,8 +51,12 @@ public:
   template <typename EXP>
   void write_pfd(EXP& pfd)
   {
+    pfield_next_ += pfield_interval;
+    io_pfd_.begin_step(pfd.grid());
+    io_pfd_.set_subset(pfd.grid(), rn, rx);
     io_pfd_.write(adapt(evalMfields(pfd)), pfd.grid(), pfd.name(),
                   pfd.comp_names());
+    io_pfd_.end_step();
   }
 
   template <typename EXP>
@@ -176,14 +180,9 @@ public:
       prof_stop(pr_field_calc);
 
       if (do_pfield) {
-        mpi_printf(grid.comm(), "***** Writing PFD output\n");
-        fields.pfield_next_ += fields.pfield_interval;
-
         prof_start(pr_field_write);
-        fields.io_pfd_.begin_step(grid);
-        fields.io_pfd_.set_subset(grid, fields.rn, fields.rx);
+        mpi_printf(grid.comm(), "***** Writing PFD output\n");
         fields.write_pfd(pfd_jeh);
-        fields.io_pfd_.end_step();
         prof_stop(pr_field_write);
       }
 
@@ -221,14 +220,9 @@ public:
       prof_stop(pr_moment_calc);
 
       if (do_pfield_moments) {
-        mpi_printf(grid.comm(), "***** Writing PFD moment output\n");
-        moments.pfield_next_ += moments.pfield_interval;
-
         prof_start(pr_moment_write);
-        moments.io_pfd_.begin_step(grid);
-        moments.io_pfd_.set_subset(grid, moments.rn, moments.rx);
+        mpi_printf(grid.comm(), "***** Writing PFD moment output\n");
         moments.write_pfd(pfd_moments);
-        moments.io_pfd_.end_step();
         prof_stop(pr_moment_write);
       }
 
