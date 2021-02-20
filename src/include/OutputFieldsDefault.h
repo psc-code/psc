@@ -22,6 +22,8 @@ struct OutputFieldsItemParams
   int tfield_first = 0;
   int tfield_average_length = 1000000;
   int tfield_average_every = 1;
+  Int3 rn = {};
+  Int3 rx = {1000000, 1000000, 100000};
 };
 
 // ======================================================================
@@ -81,9 +83,6 @@ struct OutputFieldsParams
 
   OutputFieldsItemParams fields;
   OutputFieldsItemParams moments;
-
-  Int3 rn = {};
-  Int3 rx = {1000000, 1000000, 100000};
 };
 
 // ======================================================================
@@ -108,9 +107,7 @@ public:
               FieldsItem_Moments_1st_cc<MparticlesFake>::n_comps(grid),
               grid.ibn,
               data_dir,
-              "_moments"},
-      rn{prm.rn},
-      rx{prm.rx}
+              "_moments"}
   {}
 
   // ----------------------------------------------------------------------
@@ -176,7 +173,7 @@ public:
 
         prof_start(pr_field_write);
         fields.io_pfd_.begin_step(grid);
-        fields.io_pfd_.set_subset(grid, rn, rx);
+        fields.io_pfd_.set_subset(grid, fields.rn, fields.rx);
         fields.write_pfd(pfd_jeh);
         fields.io_pfd_.end_step();
         prof_stop(pr_field_write);
@@ -195,7 +192,7 @@ public:
 
         prof_start(pr_field_write);
         fields.io_tfd_.begin_step(grid);
-        fields.io_tfd_.set_subset(grid, rn, rx);
+        fields.io_tfd_.set_subset(grid, fields.rn, fields.rx);
         fields.write_tfd(fields.tfd_, pfd_jeh);
         fields.io_tfd_.end_step();
         fields.naccum_ = 0;
@@ -227,7 +224,7 @@ public:
 
         prof_start(pr_moment_write);
         moments.io_pfd_.begin_step(grid);
-        moments.io_pfd_.set_subset(grid, rn, rx);
+        moments.io_pfd_.set_subset(grid, moments.rn, moments.rx);
         moments.write_pfd(pfd_moments);
         moments.io_pfd_.end_step();
         prof_stop(pr_moment_write);
@@ -246,7 +243,7 @@ public:
 
         prof_start(pr_moment_write);
         moments.io_tfd_.begin_step(grid);
-        moments.io_tfd_.set_subset(grid, rn, rx);
+        moments.io_tfd_.set_subset(grid, moments.rn, moments.rx);
         moments.write_tfd(moments.tfd_, pfd_moments);
         moments.io_tfd_.end_step();
         prof_stop(pr_moment_write);
@@ -262,8 +259,6 @@ public:
   const char* data_dir;
   OutputFieldsItem<Writer> fields;
   OutputFieldsItem<Writer> moments;
-  Int3 rn = {};
-  Int3 rx = {1000000, 1000000, 100000};
 
 private:
   bool first_time = true;
