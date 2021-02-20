@@ -46,6 +46,22 @@ public:
     }
   }
 
+  template <typename EXP>
+  void write_pfd(EXP& pfd)
+  {
+    io_pfd_.write(adapt(evalMfields(pfd)), pfd.grid(), pfd.name(),
+                  pfd.comp_names());
+  }
+
+  template <typename EXP>
+  void write_tfd(MfieldsC& tfd, EXP& pfd)
+  {
+    // convert accumulated values to correct temporal mean
+    tfd.scale(1. / naccum_);
+    io_tfd_.write(adapt(tfd), tfd.grid(), pfd.name(), pfd.comp_names());
+    tfd.zero();
+  }
+
   // private:
   int pfield_next_;
   int tfield_next_;
@@ -161,7 +177,7 @@ public:
         prof_start(pr_field_write);
         fields.io_pfd_.begin_step(grid);
         fields.io_pfd_.set_subset(grid, rn, rx);
-        _write_pfd(fields.io_pfd_, pfd_jeh);
+        fields.write_pfd(pfd_jeh);
         fields.io_pfd_.end_step();
         prof_stop(pr_field_write);
       }
@@ -180,7 +196,7 @@ public:
         prof_start(pr_field_write);
         fields.io_tfd_.begin_step(grid);
         fields.io_tfd_.set_subset(grid, rn, rx);
-        _write_tfd(fields.io_tfd_, fields.tfd_, pfd_jeh, fields.naccum_);
+        fields.write_tfd(fields.tfd_, pfd_jeh);
         fields.io_tfd_.end_step();
         fields.naccum_ = 0;
         prof_stop(pr_field_write);
@@ -212,7 +228,7 @@ public:
         prof_start(pr_moment_write);
         moments.io_pfd_.begin_step(grid);
         moments.io_pfd_.set_subset(grid, rn, rx);
-        _write_pfd(moments.io_pfd_, pfd_moments);
+        moments.write_pfd(pfd_moments);
         moments.io_pfd_.end_step();
         prof_stop(pr_moment_write);
       }
@@ -231,7 +247,7 @@ public:
         prof_start(pr_moment_write);
         moments.io_tfd_.begin_step(grid);
         moments.io_tfd_.set_subset(grid, rn, rx);
-        _write_tfd(moments.io_tfd_, moments.tfd_, pfd_moments, moments.naccum_);
+        moments.write_tfd(moments.tfd_, pfd_moments);
         moments.io_tfd_.end_step();
         prof_stop(pr_moment_write);
         moments.naccum_ = 0;
@@ -241,22 +257,6 @@ public:
 
     prof_stop(pr);
   };
-
-private:
-  template <typename EXP>
-  static void _write_pfd(Writer& io, EXP& pfd)
-  {
-    io.write(adapt(evalMfields(pfd)), pfd.grid(), pfd.name(), pfd.comp_names());
-  }
-
-  template <typename EXP>
-  static void _write_tfd(Writer& io, MfieldsC& tfd, EXP& pfd, int naccum)
-  {
-    // convert accumulated values to correct temporal mean
-    tfd.scale(1. / naccum);
-    io.write(adapt(tfd), tfd.grid(), pfd.name(), pfd.comp_names());
-    tfd.zero();
-  }
 
 public:
   const char* data_dir;
