@@ -31,10 +31,12 @@ template <typename Writer>
 class OutputFieldsItem : public OutputFieldsItemParams
 {
 public:
-  OutputFieldsItem(const OutputFieldsItemParams& prm)
+  OutputFieldsItem(const Grid_t& grid, const OutputFieldsItemParams& prm,
+                   int n_comps, Int3 ibn)
     : OutputFieldsItemParams{prm},
       pfield_next_{prm.pfield_first},
-      tfield_next_{prm.tfield_first}
+      tfield_next_{prm.tfield_first},
+      tfd_{grid, n_comps, ibn}
   {}
 
   // private:
@@ -42,6 +44,8 @@ public:
   int tfield_next_;
   Writer io_pfd_;
   Writer io_tfd_;
+  // tfd -- FIXME?! always MfieldsC
+  MfieldsC tfd_;
 };
 
 // ======================================================================
@@ -73,14 +77,12 @@ public:
 
   OutputFieldsDefault(const Grid_t& grid, const OutputFieldsParams& prm)
     : data_dir{prm.data_dir},
-      fields{prm.fields},
-      moments{prm.moments},
+      fields{grid, prm.fields, Item_jeh<MfieldsFake>::n_comps(), {}},
+      moments{grid, prm.moments,
+              FieldsItem_Moments_1st_cc<MparticlesFake>::n_comps(grid),
+              grid.ibn},
       rn{prm.rn},
-      rx{prm.rx},
-      tfd_jeh_{grid, Item_jeh<MfieldsFake>::n_comps(), {}},
-      tfd_moments_{grid,
-                   FieldsItem_Moments_1st_cc<MparticlesFake>::n_comps(grid),
-                   grid.ibn}
+      rx{prm.rx}
   {
     if (fields.pfield_interval > 0) {
       fields.io_pfd_.open("pfd", data_dir);
@@ -168,7 +170,7 @@ public:
       if (doaccum_tfield) {
         // tfd += pfd
         prof_start(pr_field_acc);
-        tfd_jeh_ += pfd_jeh;
+        fields.tfd_ += pfd_jeh;
         prof_stop(pr_field_acc);
         naccum_++;
       }
@@ -179,7 +181,7 @@ public:
         prof_start(pr_field_write);
         fields.io_tfd_.begin_step(grid);
         fields.io_tfd_.set_subset(grid, rn, rx);
-        _write_tfd(fields.io_tfd_, tfd_jeh_, pfd_jeh, naccum_);
+        _write_tfd(fields.io_tfd_, fields.tfd_, pfd_jeh, naccum_);
         fields.io_tfd_.end_step();
         naccum_ = 0;
         prof_stop(pr_field_write);
@@ -219,7 +221,7 @@ public:
       if (doaccum_tfield_moments) {
         // tfd += pfd
         prof_start(pr_moment_acc);
-        tfd_moments_ += pfd_moments;
+        moments.tfd_ += pfd_moments;
         prof_stop(pr_moment_acc);
         naccum_moments_++;
       }
@@ -230,7 +232,7 @@ public:
         prof_start(pr_moment_write);
         moments.io_tfd_.begin_step(grid);
         moments.io_tfd_.set_subset(grid, rn, rx);
-        _write_tfd(moments.io_tfd_, tfd_moments_, pfd_moments, naccum_moments_);
+        _write_tfd(moments.io_tfd_, moments.tfd_, pfd_moments, naccum_moments_);
         moments.io_tfd_.end_step();
         prof_stop(pr_moment_write);
         naccum_moments_ = 0;
@@ -265,9 +267,6 @@ public:
   Int3 rx = {1000000, 1000000, 100000};
 
 private:
-  // tfd -- FIXME?! always MfieldsC
-  MfieldsC tfd_jeh_;
-  MfieldsC tfd_moments_;
   int naccum_ = 0;
   int naccum_moments_ = 0;
   bool first_time = true;
