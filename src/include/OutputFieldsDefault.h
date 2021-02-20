@@ -42,7 +42,7 @@ struct OutputFieldsParams
 // OutputFieldsDefault
 
 template <typename Writer>
-class OutputFieldsDefault : public OutputFieldsParams
+class OutputFieldsDefault
 {
   using MfieldsFake = MfieldsC;
   using MparticlesFake = MparticlesDouble;
@@ -52,7 +52,11 @@ public:
   // ctor
 
   OutputFieldsDefault(const Grid_t& grid, const OutputFieldsParams& prm)
-    : OutputFieldsParams{prm},
+    : data_dir{prm.data_dir},
+      fields{prm.fields},
+      moments{prm.moments},
+      rn{prm.rn},
+      rx{prm.rx},
       tfd_jeh_{grid, Item_jeh<MfieldsFake>::n_comps(), {}},
       tfd_moments_{grid,
                    FieldsItem_Moments_1st_cc<MparticlesFake>::n_comps(grid),
@@ -235,6 +239,13 @@ private:
     io.write(adapt(tfd), tfd.grid(), pfd.name(), pfd.comp_names());
     tfd.zero();
   }
+
+public:
+  const char* data_dir;
+  OutputFieldsItemParams fields;
+  OutputFieldsItemParams moments;
+  Int3 rn = {};
+  Int3 rx = {1000000, 1000000, 100000};
 
 private:
   // tfd -- FIXME?! always MfieldsC
