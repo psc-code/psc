@@ -38,6 +38,8 @@ class Thrust(CMakePackage):
               sha256='0f27f6883e0f16d2d83f8816ab09dad4ad890aed8556ba1c1227e5339ed115c0')
     patch('https://github.com/NVIDIA/thrust/pull/1300.patch', when='@1.10.0',
               sha256='dbcbe70de701c5f64c9307cc921c2de06924843ef187fe59f69d11e41dda5211')
+
+    depends_on('cuda')
     
     def build(self, spec, prefix):
         pass
