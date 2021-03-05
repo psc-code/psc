@@ -100,3 +100,4 @@ spack-build/
 spack-build-env.txt
 spack-build-out.txt
 spack-configure-args.txt
+.vscode/

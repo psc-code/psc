@@ -40,9 +40,11 @@ PSC has the following dependencies:
 Spack Build Instructions
 ========================
 - Clone Spack
+
 .. code-block:: sh
 
-   $ git clone -b releases/v0.14 https://github.com/spack/spack.git
+   $ git clone -b releases/v0.15 https://github.com/spack/spack.git
+
 - Enable shell support for Spack.
 
 .. code-block:: sh
@@ -50,19 +52,44 @@ Spack Build Instructions
   # For bash/zsh users
   $ export SPACK_ROOT=/path/to/spack
   $ . $SPACK_ROOT/share/spack/setup-env.sh
+
+- Set up spack for your machine
+
+Generally speaking, ``spack`` should be configured for your particular system, so that it
+uses preinstalled system software, like MPI and compilers rather than building everything
+from scratch.
+
+We do provide a config for Summit, which you can use by doing
+
+.. code-block:: sh
+
+  $ mkdir -p ~/.spack/linux
+  $ ln -s path/to/psc/spack/configs/summit/*.yaml ~/.spack/linux
+
+.. note::
+
+  It'd be nice to add configurations for more systems, including an Ubuntu docker image.
+
 - Add the PSC package repo to Spack
+
 .. code-block:: sh
 
   $ spack repo add path/to/psc/spack/psc
   ==> Added repo with namespace 'psc'.
+
 - And finally,
+
 .. code-block:: sh
 
    $ spack install psc
-
+   
 
 Legacy Build Instructions
 =========================
+
+.. warning::
+
+  This instructions are likely quite out of date, try to follow the spack approach instead.
                                            
 .. toctree::
    :maxdepth: 2
