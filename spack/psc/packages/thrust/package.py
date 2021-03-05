@@ -33,7 +33,7 @@ class Thrust(CMakePackage):
     patch('thrust-summit.patch')
     
     patch('https://github.com/NVIDIA/thrust/pull/1297.patch', when='@1.10.0',
-              sha256='138aa8533a875f03b9d526f114fca4fc5803311ce6b7c8e022f03c2eefed0e19')
+              sha256='30f8c67a0e8fd8584a233dc95e2ff68a37cfc58a55872381bae7281c8c74045a')
     patch('https://github.com/NVIDIA/thrust/pull/1298.patch', when='@1.10.0',
               sha256='0f27f6883e0f16d2d83f8816ab09dad4ad890aed8556ba1c1227e5339ed115c0')
     patch('https://github.com/NVIDIA/thrust/pull/1300.patch', when='@1.10.0',
