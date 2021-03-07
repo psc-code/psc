@@ -49,6 +49,7 @@ class Psc(CMakePackage):
             'ON' if '+rmm' in self.spec else 'OFF')]
         args += ['-DBUILD_TESTING={}'.format(
             'ON' if '+tests' in self.spec else 'OFF')]
-        args += ['-DThrust_DIR={}/include/thrust/cmake'.format(spec['thrust'].prefix)]
+        if 'thrust' in spec:
+            args += ['-DThrust_DIR={}/include/thrust/cmake'.format(spec['thrust'].prefix)]
 
         return args
