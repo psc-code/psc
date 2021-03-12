@@ -405,8 +405,8 @@ struct OutputParticlesHdf5
             for (int kind = 0; kind < nr_kinds; kind++) {
               int ii =
                 ((kind * wdims_[2] + jz) * wdims_[1] + jy) * wdims_[0] + jx;
-              gidx_begin[ii] = -1;
-              gidx_end[ii] = -1;
+              gidx_begin[ii] = size_t(-1);
+              gidx_end[ii] = size_t(-1);
             }
           }
         }
