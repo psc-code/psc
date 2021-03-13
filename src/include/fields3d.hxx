@@ -240,11 +240,6 @@ public:
   KG_INLINE int n_comps() const { return n_fields_; }
   KG_INLINE int n_patches() const { return n_patches_; }
 
-  typename Storage::iterator begin() { return storage().begin(); }
-  typename Storage::iterator end() { return storage().end(); }
-  typename Storage::const_iterator begin() const { return storage().begin(); }
-  typename Storage::const_iterator end() const { return storage().end(); }
-
   MfieldsCRTP(int n_fields, const kg::Box3& box, int n_patches)
     : n_fields_(n_fields), box_{box}, n_patches_{n_patches}
   {}
@@ -396,7 +391,7 @@ public:
     return rv;
   }
 
-protected:
+  // protected:
   KG_INLINE Storage& storage() { return derived().storageImpl(); }
   KG_INLINE const Storage& storage() const { return derived().storageImpl(); }
   KG_INLINE Derived& derived() { return *static_cast<Derived*>(this); }
