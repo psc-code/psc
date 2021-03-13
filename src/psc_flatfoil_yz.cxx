@@ -227,6 +227,28 @@ using Heating = typename HeatingSelector<Mparticles>::Heating;
 // ======================================================================
 // FIXME, so ugly...
 
+namespace detail
+{
+template <typename E>
+struct EvalMfields
+{
+  using type = MfieldsC;
+};
+
+#ifdef USE_CUDA
+
+template <>
+struct EvalMfields<MfieldsCuda>
+{
+  using type = HMFields;
+};
+
+#endif
+} // namespace detail
+
+template <typename Mfields>
+using EvalMfields_t = typename detail::EvalMfields<Mfields>::type;
+
 template <typename E>
 EvalMfields_t<E> make_MfieldsMoment_n(const Grid_t& grid)
 {
