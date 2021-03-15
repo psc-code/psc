@@ -115,7 +115,7 @@ using DFields = DMFields::fields_view_t;
 // ======================================================================
 // cuda_mfields
 
-using MfieldsStorageDeviceVector = psc::device_vector<float>;
+using MfieldsStorageDeviceVector = gt::gtensor<float, 5, gt::space::device>;
 
 struct cuda_mfields : CudaMfields<MfieldsStorageDeviceVector>
 {
@@ -161,8 +161,8 @@ struct cuda_mfields : CudaMfields<MfieldsStorageDeviceVector>
       (i - ib(0)));
   }
 
-  real_t get_value(int idx) const { return storage()[idx]; }
-  void set_value(int idx, real_t val) { storage()[idx] = val; }
+  real_t get_value(int idx) const { return storage().data()[idx]; }
+  void set_value(int idx, real_t val) { storage().data()[idx] = val; }
 
 private:
   const Grid_t& grid_;

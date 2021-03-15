@@ -248,7 +248,8 @@ public:
   void reset(int n_patches)
   {
     n_patches_ = n_patches;
-    storage().resize(n_patches * n_comps() * box().size());
+    storage().resize(
+      {box().im(0), box().im(1), box().im(2), n_comps(), n_patches});
     std::fill(storage().data(), storage().data() + storage().size(), Real{});
   }
 
@@ -456,7 +457,7 @@ struct Mfields;
 template <typename R>
 struct MfieldsCRTPInnerTypes<Mfields<R>>
 {
-  using Storage = gt::gtensor<R, 1>;
+  using Storage = gt::gtensor<R, 5>;
 };
 
 template <typename R>
@@ -471,7 +472,8 @@ struct Mfields
   Mfields(const MfieldsDomain& domain, int n_fields, Int3 ibn)
     : MfieldsBase(domain.grid(), n_fields, ibn),
       Base(n_fields, {-ibn, domain.ldims() + 2 * ibn}, domain.n_patches()),
-      storage_(gt::shape(Base::box().size() * n_fields * Base::n_patches())),
+      storage_(gt::shape(Base::box().im(0), Base::box().im(1),
+                         Base::box().im(2), n_fields, Base::n_patches())),
       domain_{domain}
   {
     std::fill(storage_.data(), storage_.data() + storage_.size(), real_t{});

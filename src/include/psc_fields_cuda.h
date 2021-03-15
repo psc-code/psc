@@ -38,7 +38,8 @@ struct CudaMfields : MfieldsCRTP<CudaMfields<S>>
   using real_t = typename Base::Real;
 
   CudaMfields(const kg::Box3& box, int n_comps, int n_patches)
-    : Base{n_comps, box, n_patches}, storage_(n_patches * n_comps * box.size())
+    : Base{n_comps, box, n_patches},
+      storage_({box.im(0), box.im(1), box.im(2), n_comps, n_patches})
   {}
 
 private:
@@ -50,7 +51,7 @@ private:
   friend class MfieldsCRTP<CudaMfields>;
 };
 
-using HMFields = CudaMfields<gt::gtensor<float, 1>>;
+using HMFields = CudaMfields<gt::gtensor<float, 5>>;
 
 // ======================================================================
 // MfieldsCuda
