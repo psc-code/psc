@@ -50,7 +50,7 @@ private:
   friend class MfieldsCRTP<CudaMfields>;
 };
 
-using HMFields = CudaMfields<std::vector<float>>;
+using HMFields = CudaMfields<gt::gtensor<float, 1>>;
 
 // ======================================================================
 // MfieldsCuda

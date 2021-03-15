@@ -8,6 +8,7 @@
 #include <kg/SArrayView.h>
 
 #include <mrc_profile.h>
+#include <gtensor/gtensor.h>
 
 #include <type_traits>
 #include <cstdlib>
@@ -248,12 +249,13 @@ public:
   {
     n_patches_ = n_patches;
     storage().resize(n_patches * n_comps() * box().size());
+    std::fill(storage().data(), storage().data() + storage().size(), Real{});
   }
 
   KG_INLINE fields_view_t operator[](int p)
   {
     size_t stride = n_comps() * box().size();
-    return fields_view_t(box(), n_comps(), &storage()[p * stride]);
+    return fields_view_t(box(), n_comps(), &storage().data()[p * stride]);
   }
 
   KG_INLINE int index(int m, int i, int j, int k, int p)
@@ -265,12 +267,12 @@ public:
 
   KG_INLINE const Real& operator()(int m, int i, int j, int k, int p) const
   {
-    return storage()[index(m, i, j, k, p)];
+    return storage().data()[index(m, i, j, k, p)];
   }
 
   KG_INLINE Real& operator()(int m, int i, int j, int k, int p)
   {
-    return storage()[index(m, i, j, k, p)];
+    return storage().data()[index(m, i, j, k, p)];
   }
 
   void zero_comp(int m)
@@ -454,7 +456,7 @@ struct Mfields;
 template <typename R>
 struct MfieldsCRTPInnerTypes<Mfields<R>>
 {
-  using Storage = std::vector<R>;
+  using Storage = gt::gtensor<R, 1>;
 };
 
 template <typename R>
@@ -469,9 +471,11 @@ struct Mfields
   Mfields(const MfieldsDomain& domain, int n_fields, Int3 ibn)
     : MfieldsBase(domain.grid(), n_fields, ibn),
       Base(n_fields, {-ibn, domain.ldims() + 2 * ibn}, domain.n_patches()),
-      storage_(size_t(Base::box().size() * n_fields * Base::n_patches())),
+      storage_(gt::shape(Base::box().size() * n_fields * Base::n_patches())),
       domain_{domain}
-  {}
+  {
+    std::fill(storage_.data(), storage_.data() + storage_.size(), real_t{});
+  }
 
   Int3 ldims() const { return domain_.ldims(); }
   Int3 gdims() const { return domain_.gdims(); }

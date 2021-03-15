@@ -62,6 +62,8 @@ public:
   using const_reference = const float&;
   using iterator = float*;
   using const_iterator = const float*;
+  using pointer = float*;
+  using const_pointer = float*;
 
   MfieldsStorageDeviceRaw(uint stride, value_type* data)
     : stride_{stride}, data_{data}
@@ -69,6 +71,8 @@ public:
 
   KG_INLINE reference operator[](size_t i) { return data_[i]; }
   KG_INLINE const_reference operator[](size_t i) const { return data_[i]; }
+  KG_INLINE pointer data() { return data_; }
+  KG_INLINE const_pointer data() const { return data_; }
 
 private:
   value_type* data_;
