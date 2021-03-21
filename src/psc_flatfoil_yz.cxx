@@ -509,14 +509,19 @@ void run()
   outf_params.pfield_interval = 100;
   outf_params.tfield_interval = -100;
 #elif CASE == CASE_2D_SMALL
-  outf_params.pfield_interval = 100;
-  outf_params.tfield_interval = -500;
+  outf_params.pfield_interval = 4;
+  outf_params.tfield_interval = 4;
 #else
   outf_params.pfield_interval = 500;
   outf_params.tfield_interval = 500;
 #endif
+#if CASE == CASE_2D_SMALL
+  outf_params.tfield_average_every = 2;
+  outf_params.tfield_moments_average_every = 2;
+#else
   outf_params.tfield_average_every = 50;
   outf_params.tfield_moments_average_every = 50;
+#endif
   OutputFields outf{grid, outf_params};
 
   // -- output particles
