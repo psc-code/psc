@@ -46,25 +46,11 @@ public:
 
   KG_INLINE const_reference operator()(int m, int i, int j, int k) const
   {
-#ifdef BOUNDS_CHECK
-    assert(m >= 0 && m < storage().shape(3));
-    assert(i >= ib()[0] && i < ib()[0] + im()[0]);
-    assert(j >= ib()[1] && j < ib()[1] + im()[1]);
-    assert(k >= ib()[2] && k < ib()[2] + im()[2]);
-#endif
-
     return storage()(i - ib()[0], j - ib()[1], k - ib()[2], m);
   }
 
   KG_INLINE reference operator()(int m, int i, int j, int k)
   {
-#if defined(BOUNDS_CHECK) && !defined(__CUDACC__)
-    assert(m >= 0 && m < storage().shape(3));
-    assert(i >= ib()[0] && i < ib()[0] + im()[0]);
-    assert(j >= ib()[1] && j < ib()[1] + im()[1]);
-    assert(k >= ib()[2] && k < ib()[2] + im()[2]);
-#endif
-
     return storage()(i - ib()[0], j - ib()[1], k - ib()[2], m);
   }
 
