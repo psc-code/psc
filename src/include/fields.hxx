@@ -16,7 +16,8 @@ public:
   using dim = D;
 
   Fields3d(const fields_t& f)
-    : data_(const_cast<typename fields_t::real_t*>(f.data())), // FIXME
+    : data_(
+        const_cast<typename fields_t::real_t*>(f.storage().data())), // FIXME
       n_comp_(f.n_comps()),
       ib(f.ib()),
       im(f.im())

@@ -45,9 +45,6 @@ public:
   KG_INLINE const Int3& im() const { return box().im(); }
   KG_INLINE int n_comps() const { return storage().shape(3); }
 
-  const_pointer data() const { return storage().data(); }
-  pointer data() { return storage().data(); }
-
   KG_INLINE const_reference operator()(int m, int i, int j, int k) const
   {
 #ifdef BOUNDS_CHECK
