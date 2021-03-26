@@ -79,20 +79,6 @@ public:
     return storage()(i - ib()[0], j - ib()[1], k - ib()[2], m);
   }
 
-  template <typename F>
-  void copy_comp(int mto, const F& from, int mfrom)
-  {
-    storage().view(_all, _all, _all, mto) = from.view(_all, _all, _all, mfrom);
-  }
-
-  template <typename F>
-  void axpy_comp(int m_y, const_reference alpha, const F& x, int m_x)
-  {
-    storage().view(_all, _all, _all, m_y) =
-      storage().view(_all, _all, _all, m_y) +
-      alpha * x.storage().view(_all, _all, _all, m_x);
-  }
-
   value_type max_comp(int m)
   {
     value_type rv = std::numeric_limits<value_type>::lowest();

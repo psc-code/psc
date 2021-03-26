@@ -324,7 +324,9 @@ public:
     // FIXME? dynamic_cast would actually be more appropriate
     Derived& x = static_cast<Derived&>(x_base);
     for (int p = 0; p < n_patches_; p++) {
-      (*this)[p].axpy_comp(m_y, alpha, x[p], m_x);
+      (*this)[p].storage().view(_all, _all, _all, m_y) =
+        (*this)[p].storage().view(_all, _all, _all, m_y) +
+        alpha * x[p].storage().view(_all, _all, _all, m_x);
     }
   }
 
