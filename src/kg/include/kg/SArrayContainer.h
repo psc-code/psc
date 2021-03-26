@@ -39,9 +39,7 @@ public:
   using pointer = typename Storage::pointer;
   using const_pointer = typename Storage::const_pointer;
 
-  KG_INLINE SArrayContainer(const Box3& box, int n_comps)
-    : box_{box}, n_comps_{n_comps}
-  {}
+  KG_INLINE SArrayContainer(const Box3& box) : box_{box} {}
 
   KG_INLINE const Box3& box() const { return box_; }
   KG_INLINE const Int3& ib() const { return box().ib(); }
@@ -49,8 +47,8 @@ public:
   KG_INLINE int ib(int d) const { return box().ib(d); }
   KG_INLINE int im(int d) const { return box().im(d); }
   KG_INLINE int n_cells() const { return box().size(); }
-  KG_INLINE int n_comps() const { return n_comps_; }
-  KG_INLINE int size() const { return n_comps() * n_cells(); }
+  KG_INLINE int n_comps() const { return storage().shape(3); }
+  KG_INLINE int size() const { return storage().size(); }
 
   const_pointer data() const { return storage().data(); }
   pointer data() { return storage().data(); }
@@ -58,7 +56,7 @@ public:
   KG_INLINE const_reference operator()(int m, int i, int j, int k) const
   {
 #ifdef BOUNDS_CHECK
-    assert(m >= 0 && m < n_comps_);
+    assert(m >= 0 && m < n_comps());
     assert(i >= ib()[0] && i < ib()[0] + im()[0]);
     assert(j >= ib()[1] && j < ib()[1] + im()[1]);
     assert(k >= ib()[2] && k < ib()[2] + im()[2]);
@@ -70,7 +68,7 @@ public:
   KG_INLINE reference operator()(int m, int i, int j, int k)
   {
 #if defined(BOUNDS_CHECK) && !defined(__CUDACC__)
-    assert(m >= 0 && m < n_comps_);
+    assert(m >= 0 && m < n_comps());
     assert(i >= ib()[0] && i < ib()[0] + im()[0]);
     assert(j >= ib()[1] && j < ib()[1] + im()[1]);
     assert(k >= ib()[2] && k < ib()[2] + im()[2]);
@@ -97,7 +95,7 @@ public:
     for (int k = ib()[2]; k < ib()[2] + im()[2]; k++) {
       for (int j = ib()[1]; j < ib()[1] + im()[1]; j++) {
         for (int i = ib()[0]; i < ib()[0] + im()[0]; i++) {
-          for (int m = 0; m < n_comps_; m++) {
+          for (int m = 0; m < n_comps(); m++) {
             mprintf("dump: ijk %d:%d:%d m %d: %g\n", i, j, k, m,
                     (*this)(m, i, j, k));
           }
@@ -118,8 +116,7 @@ protected:
   }
 
 private:
-  Box3 box_;    //> lower bounds and length per direction
-  int n_comps_; // # of components
+  Box3 box_; //> lower bounds and length per direction
 };
 
 } // namespace kg

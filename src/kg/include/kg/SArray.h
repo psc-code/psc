@@ -30,8 +30,7 @@ struct SArray : SArrayContainer<SArray<T, L>>
   using real_t = typename Base::value_type;
 
   SArray(const Box3& box, int n_comps)
-    : Base{box, n_comps},
-      storage_(gt::shape(box.im(0), box.im(1), box.im(2), n_comps))
+    : Base(box), storage_(gt::shape(box.im(0), box.im(1), box.im(2), n_comps))
   {
     static_assert(std::is_same<L, LayoutSOA>::value,
                   "FIXME need to support LayoutAOS");
