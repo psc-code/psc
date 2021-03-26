@@ -38,18 +38,18 @@ public:
   using pointer = typename Storage::pointer;
   using const_pointer = typename Storage::const_pointer;
 
-  KG_INLINE SArrayContainer(const Box3& box) : box_{box} {}
+  KG_INLINE SArrayContainer(const Int3& ib) : ib_(ib) {}
 
-  KG_INLINE const Int3& ib() const { return box_.ib(); }
+  KG_INLINE const Int3& ib() const { return ib_; }
 
   KG_INLINE const_reference operator()(int m, int i, int j, int k) const
   {
-    return storage()(i - ib()[0], j - ib()[1], k - ib()[2], m);
+    return storage()(i - ib_[0], j - ib_[1], k - ib_[2], m);
   }
 
   KG_INLINE reference operator()(int m, int i, int j, int k)
   {
-    return storage()(i - ib()[0], j - ib()[1], k - ib()[2], m);
+    return storage()(i - ib_[0], j - ib_[1], k - ib_[2], m);
   }
 
 public:
@@ -64,7 +64,7 @@ protected:
   }
 
 private:
-  Box3 box_; //> lower bounds and length per direction
+  Int3 ib_; //> lower bounds and length per direction
 };
 
 } // namespace kg
