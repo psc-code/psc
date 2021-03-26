@@ -6,7 +6,11 @@
 #include <kg/Macros.h>
 #include <kg/Vec3.h>
 
+#include <gtensor/gtensor.h>
+
 #include <cstring>
+
+using namespace gt::placeholders;
 
 // FIXME, do noexcept?
 // FIXME, use size_t instead of int, at least for 1d offsets?
@@ -75,68 +79,38 @@ public:
     return storage()(i - ib()[0], j - ib()[1], k - ib()[2], m);
   }
 
-  void zero(int m)
-  {
-    static_assert(std::is_same<Layout, LayoutSOA>::value,
-                  "zero only works for SOA");
-    // FIXME, only correct for SOA!!!
-    std::memset(&(*this)(m, ib()[0], ib()[1], ib()[2]), 0,
-                n_cells() * sizeof(value_type));
-  }
+  void zero(int m) { storage().view(_all, _all, _all, m) = value_type(); }
 
   void zero(int mb, int me)
   {
-    for (int m = mb; m < me; m++) {
-      zero(m);
-    }
+    storage().view(_all, _all, _all, _s(mb, me)) = value_type();
   }
 
-  void zero() { std::memset(storage().data(), 0, sizeof(value_type) * size()); }
+  void zero() { storage() = value_type(); }
 
   void set(int m, const_reference val)
   {
-    for (int k = ib()[2]; k < ib()[2] + im()[2]; k++) {
-      for (int j = ib()[1]; j < ib()[1] + im()[1]; j++) {
-        for (int i = ib()[0]; i < ib()[0] + im()[0]; i++) {
-          (*this)(m, i, j, k) = val;
-        }
-      }
-    }
+    storage().view(_all, _all, _all, m) = val;
   }
 
   void scale(int m, const_reference val)
   {
-    for (int k = ib()[2]; k < ib()[2] + im()[2]; k++) {
-      for (int j = ib()[1]; j < ib()[1] + im()[1]; j++) {
-        for (int i = ib()[0]; i < ib()[0] + im()[0]; i++) {
-          (*this)(m, i, j, k) *= val;
-        }
-      }
-    }
+    storage().view(_all, _all, _all, m) =
+      storage().view(_all, _all, _all, m) * val;
   }
 
   template <typename F>
   void copy_comp(int mto, const F& from, int mfrom)
   {
-    for (int k = ib()[2]; k < ib()[2] + im()[2]; k++) {
-      for (int j = ib()[1]; j < ib()[1] + im()[1]; j++) {
-        for (int i = ib()[0]; i < ib()[0] + im()[0]; i++) {
-          (*this)(mto, i, j, k) = from(mfrom, i, j, k);
-        }
-      }
-    }
+    storage().view(_all, _all, _all, mto) = from.view(_all, _all, _all, mfrom);
   }
 
   template <typename F>
   void axpy_comp(int m_y, const_reference alpha, const F& x, int m_x)
   {
-    for (int k = ib()[2]; k < ib()[2] + im()[2]; k++) {
-      for (int j = ib()[1]; j < ib()[1] + im()[1]; j++) {
-        for (int i = ib()[0]; i < ib()[0] + im()[0]; i++) {
-          (*this)(m_y, i, j, k) += alpha * x(m_x, i, j, k);
-        }
-      }
-    }
+    storage().view(_all, _all, _all, m_y) =
+      storage().view(_all, _all, _all, m_y) +
+      alpha * x.storage().view(_all, _all, _all, m_x);
   }
 
   value_type max_comp(int m)
