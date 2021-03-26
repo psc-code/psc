@@ -79,15 +79,6 @@ public:
     return storage()(i - ib()[0], j - ib()[1], k - ib()[2], m);
   }
 
-  void zero(int m) { storage().view(_all, _all, _all, m) = value_type(); }
-
-  void zero(int mb, int me)
-  {
-    storage().view(_all, _all, _all, _s(mb, me)) = value_type();
-  }
-
-  void zero() { storage() = value_type(); }
-
   void set(int m, const_reference val)
   {
     storage().view(_all, _all, _all, m) = val;
@@ -140,9 +131,11 @@ public:
     }
   }
 
-protected:
+public:
   KG_INLINE Storage& storage() { return derived().storageImpl(); }
   KG_INLINE const Storage& storage() const { return derived().storageImpl(); }
+
+protected:
   KG_INLINE Derived& derived() { return *static_cast<Derived*>(this); }
   KG_INLINE const Derived& derived() const
   {

@@ -50,7 +50,7 @@ struct PushParticlesEsirkepov
       typename InterpolateEM_t::fields_t EM(flds);
       typename Current::fields_t J(flds);
 
-      flds.zero(JXI, JXI + 3);
+      flds.storage().view(_all, _all, _all, _s(JXI, JXI + 3)) = real_t(0);
 
       for (auto prt : prts) {
         Real3& x = prt.x();

@@ -279,7 +279,7 @@ public:
   void zero_comp(int m)
   {
     for (int p = 0; p < n_patches_; p++) {
-      (*this)[p].zero(m);
+      (*this)[p].storage().view(_all, _all, _all, m) = Real();
     }
   }
 
