@@ -69,20 +69,6 @@ public:
     return storage()(i - ib()[0], j - ib()[1], k - ib()[2], m);
   }
 
-  void dump()
-  {
-    for (int k = ib()[2]; k < ib()[2] + im()[2]; k++) {
-      for (int j = ib()[1]; j < ib()[1] + im()[1]; j++) {
-        for (int i = ib()[0]; i < ib()[0] + im()[0]; i++) {
-          for (int m = 0; m < n_comps(); m++) {
-            mprintf("dump: ijk %d:%d:%d m %d: %g\n", i, j, k, m,
-                    (*this)(m, i, j, k));
-          }
-        }
-      }
-    }
-  }
-
 public:
   KG_INLINE Storage& storage() { return derived().storageImpl(); }
   KG_INLINE const Storage& storage() const { return derived().storageImpl(); }
