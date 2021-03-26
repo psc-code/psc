@@ -15,11 +15,11 @@ public:
   using real_t = typename fields_t::real_t;
   using dim = D;
 
-  Fields3d(const fields_t& f)
+  Fields3d(const fields_t& f, const Int3& ib)
     : data_(
         const_cast<typename fields_t::real_t*>(f.storage().data())), // FIXME
       n_comp_(f.storage().shape(3)),
-      ib(f.ib()),
+      ib(ib),
       im({f.storage().shape(0), f.storage().shape(1), f.storage().shape(2)})
   {}
 

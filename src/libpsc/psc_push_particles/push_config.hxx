@@ -35,7 +35,7 @@ struct curr_cache_t : fields_t
 
   GT_INLINE void add(int m, int i, int j, int k, real_t val)
   {
-    Fields3d<fields_t, dim_curr> J(*this);
+    Fields3d<fields_t, dim_curr> J(*this, this->ib());
     real_t* addr = &J(JXI + m, i, j, k);
     atomicAdd(addr, val);
   }
