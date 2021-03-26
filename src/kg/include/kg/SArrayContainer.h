@@ -73,11 +73,6 @@ public:
     return storage()(i - ib()[0], j - ib()[1], k - ib()[2], m);
   }
 
-  value_type max_comp(int m)
-  {
-    return max(storage().view(_all, _all, _all, m));
-  }
-
   void dump()
   {
     for (int k = ib()[2]; k < ib()[2] + im()[2]; k++) {
