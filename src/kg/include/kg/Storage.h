@@ -48,7 +48,7 @@ public:
   using pointer = T*;
   using const_pointer = const T*;
 
-  KG_INLINE StorageNoOwnership(pointer data) : data_{data} {}
+  KG_INLINE StorageNoOwnership(pointer data, std::size_t size) : data_{data} {}
 
   KG_INLINE const_reference operator[](int offset) const
   {
