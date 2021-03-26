@@ -269,30 +269,6 @@ public:
     return storage()(i - ib(0), j - ib(1), k - ib(2), m, p);
   }
 
-  void copy_comp(int mto, MfieldsBase& from_base, int mfrom)
-  {
-    // FIXME? dynamic_cast would actually be more appropriate
-    Derived& from = static_cast<Derived&>(from_base);
-    storage().view(_all, _all, _all, mto, _all) =
-      from.storage().view(_all, _all, _all, mfrom, _all);
-  }
-
-  void axpy_comp(int m_y, double alpha, MfieldsBase& x_base, int m_x)
-  {
-    // FIXME? dynamic_cast would actually be more appropriate
-    Derived& x = static_cast<Derived&>(x_base);
-    storage().view(_all, _all, _all, m_y, _all) =
-      storage().view(_all, _all, _all, m_y, _all) +
-      alpha * x.storage().view(_all, _all, _all, m_x, _all);
-  }
-
-  void axpy(double alpha, MfieldsBase& x_base)
-  {
-    // FIXME? dynamic_cast would actually be more appropriate
-    Derived& x = static_cast<Derived&>(x_base);
-    storage() = storage() + alpha * x.storage();
-  }
-
   template <typename E>
   void assign(const MFexpression<E>& xp)
   {

@@ -67,7 +67,9 @@ struct Marder_ : MarderBase
       }
     }
 
-    res_.axpy_comp(0, -1., rho_, 0);
+    res_.storage().view(_all, _all, _all, 0, _all) =
+      res_.storage().view(_all, _all, _all, 0, _all) -
+      rho_.storage().view(_all, _all, _all, 0, _all);
     // FIXME, why is this necessary?
     bnd_mf_.fill_ghosts(res_, 0, 1);
   }
