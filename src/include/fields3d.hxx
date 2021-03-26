@@ -269,19 +269,6 @@ public:
     return storage()(i - ib(0), j - ib(1), k - ib(2), m, p);
   }
 
-  void set_comp(int m, double val)
-  {
-    storage().view(_all, _all, _all, m, _all) = val;
-  }
-
-  void scale_comp(int m, double val)
-  {
-    storage().view(_all, _all, _all, m, _all) =
-      val * storage().view(_all, _all, _all, m, _all);
-  }
-
-  void scale(double val) { storage() = val * storage(); }
-
   void copy_comp(int mto, MfieldsBase& from_base, int mfrom)
   {
     // FIXME? dynamic_cast would actually be more appropriate

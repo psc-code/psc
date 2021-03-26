@@ -561,12 +561,14 @@ public:
       if (timestep % outf_.fields.tfield_interval == 0) {
         mpi_printf(comm, "***** Writing TFD output\n");
         io_tfd_.begin_step(grid);
-        mflds_acc_state_.scale(1. / n_accum_);
+        mflds_acc_state_.storage() =
+          (1. / n_accum_) * mflds_acc_state_.storage();
         io_tfd_.write(adapt(mflds_acc_state_), grid, result_state.name,
                       result_state.comp_names);
         mflds_acc_state_.storage().view() = 0.;
 
-        mflds_acc_hydro_.scale(1. / n_accum_);
+        mflds_acc_hydro_.storage() =
+          (1. / n_accum_) * mflds_acc_hydro_.storage();
         io_tfd_.write(adapt(mflds_acc_hydro_), grid, result_hydro.name,
                       result_hydro.comp_names);
         mflds_acc_hydro_.storage().view() = 0.;

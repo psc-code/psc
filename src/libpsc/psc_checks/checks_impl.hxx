@@ -82,7 +82,7 @@ struct Checks_
     d_rho.axpy(-1., rho_m_);
 
     divj_.assign(item_divj);
-    divj_.scale(grid.dt);
+    divj_.storage() = grid.dt * divj_.storage();
 
     double eps = continuity_threshold;
     double max_err = 0.;
