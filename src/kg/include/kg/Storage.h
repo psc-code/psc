@@ -23,18 +23,18 @@ public:
   using pointer = T*;
   using const_pointer = const T*;
 
-  StorageUniquePtr(size_t size) : data_{new T[size]} {}
+  StorageUniquePtr(size_t size) : data_(gt::shape(size)) {}
 
-  const_reference operator[](int offset) const { return data_[offset]; }
-  reference operator[](int offset) { return data_[offset]; }
+  const_reference operator[](int offset) const { return data_(offset); }
+  reference operator[](int offset) { return data_(offset); }
 
   // FIXME access to underlying storage might better be avoided?
   // use of this makes assumption that storage is contiguous
-  const_pointer data() const { return data_.get(); }
-  pointer data() { return data_.get(); }
+  const_pointer data() const { return data_.data(); }
+  pointer data() { return data_.data(); }
 
 private:
-  std::unique_ptr<value_type[]> data_;
+  gt::gtensor<T, 1> data_;
 };
 
 // ======================================================================
