@@ -14,38 +14,6 @@
 namespace kg
 {
 
-namespace detail
-{
-template <typename Layout>
-struct LayoutDataOffset;
-
-template <>
-struct LayoutDataOffset<LayoutSOA>
-{
-  KG_INLINE static int run(int n_comps, const Int3& im, int m, Int3 idx)
-  {
-    return (((((m)*im[2] + idx[2]) * im[1] + idx[1]) * im[0] + idx[0]));
-  }
-};
-
-template <>
-struct LayoutDataOffset<LayoutAOS>
-{
-  KG_INLINE static int run(int n_comps, const Int3& im, int m, Int3 idx)
-  {
-    return ((((idx[2]) * im[1] + idx[1]) * im[0] + idx[0]) * n_comps + m);
-  }
-};
-
-} // namespace detail
-
-template <typename Layout>
-KG_INLINE static int layoutDataOffset(int n_comps, const Int3& im, int m,
-                                      Int3 idx)
-{
-  return detail::LayoutDataOffset<Layout>::run(n_comps, im, m, idx);
-}
-
 // ======================================================================
 // SArrayContainer
 
@@ -85,24 +53,26 @@ public:
 
   KG_INLINE const_reference operator()(int m, int i, int j, int k) const
   {
+#ifdef BOUNDS_CHECK
+    assert(m >= 0 && m < n_comps_);
+    assert(i >= ib()[0] && i < ib()[0] + im()[0]);
+    assert(j >= ib()[1] && j < ib()[1] + im()[1]);
+    assert(k >= ib()[2] && k < ib()[2] + im()[2]);
+#endif
+
     return storage()(i - ib()[0], j - ib()[1], k - ib()[2], m);
   }
 
   KG_INLINE reference operator()(int m, int i, int j, int k)
   {
-    return storage()(i - ib()[0], j - ib()[1], k - ib()[2], m);
-  }
-
-  KG_INLINE int index(int m, Int3 idx) const
-  {
 #if defined(BOUNDS_CHECK) && !defined(__CUDACC__)
     assert(m >= 0 && m < n_comps_);
-    assert(idx[0] >= ib()[0] && idx[0] < ib()[0] + im()[0]);
-    assert(idx[1] >= ib()[1] && idx[1] < ib()[1] + im()[1]);
-    assert(idx[2] >= ib()[2] && idx[2] < ib()[2] + im()[2]);
+    assert(i >= ib()[0] && i < ib()[0] + im()[0]);
+    assert(j >= ib()[1] && j < ib()[1] + im()[1]);
+    assert(k >= ib()[2] && k < ib()[2] + im()[2]);
 #endif
 
-    return layoutDataOffset<Layout>(n_comps_, im(), m, idx - ib());
+    return storage()(i - ib()[0], j - ib()[1], k - ib()[2], m);
   }
 
   void zero(int m)

@@ -66,15 +66,6 @@ TEST(SArray, AccessAOS)
                            .begin()));
 }
 
-TEST(SArray, index)
-{
-  auto f = kg::SArray<Real, kg::LayoutSOA>{{{1, 2, 3}, {2, 3, 4}}, 2};
-
-  EXPECT_EQ(f.index(0, {1, 2, 3}), 0);
-  EXPECT_EQ(f.index(0, {2, 2, 3}), 1);
-  EXPECT_EQ(f.index(1, {1, 2, 3}), 2 * 3 * 4);
-}
-
 TEST(SArray, data)
 {
   auto f = kg::SArray<Real, Layout>{{{1, 2, 3}, {2, 3, 4}}, 2};
