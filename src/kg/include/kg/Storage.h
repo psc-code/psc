@@ -2,6 +2,8 @@
 #ifndef KG_STORAGE_H
 #define KG_STORAGE_H
 
+#include <gtensor/gtensor.h>
+
 namespace kg
 {
 
@@ -48,21 +50,23 @@ public:
   using pointer = T*;
   using const_pointer = const T*;
 
-  KG_INLINE StorageNoOwnership(pointer data, std::size_t size) : data_{data} {}
+  KG_INLINE StorageNoOwnership(pointer data, std::size_t size)
+    : data_(data, {size}, {1})
+  {}
 
   KG_INLINE const_reference operator[](int offset) const
   {
-    return data_[offset];
+    return data_(offset);
   }
-  KG_INLINE reference operator[](int offset) { return data_[offset]; }
+  KG_INLINE reference operator[](int offset) { return data_(offset); }
 
   // FIXME access to underlying storage might better be avoided?
   // use of this makes assumption that storage is contiguous
-  const_pointer data() const { return data_; }
-  pointer data() { return data_; }
+  const_pointer data() const { return data_.data(); }
+  pointer data() { return data_.data(); }
 
 private:
-  pointer data_;
+  gt::gtensor_span<T, 1> data_;
 };
 
 } // namespace kg
