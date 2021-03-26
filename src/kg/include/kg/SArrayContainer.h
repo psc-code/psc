@@ -42,7 +42,6 @@ public:
 
   KG_INLINE const Box3& box() const { return box_; }
   KG_INLINE const Int3& ib() const { return box().ib(); }
-  KG_INLINE const Int3& im() const { return box().im(); }
 
   KG_INLINE const_reference operator()(int m, int i, int j, int k) const
   {

@@ -20,7 +20,7 @@ public:
         const_cast<typename fields_t::real_t*>(f.storage().data())), // FIXME
       n_comp_(f.storage().shape(3)),
       ib(f.ib()),
-      im(f.im())
+      im({f.storage().shape(0), f.storage().shape(1), f.storage().shape(2)})
   {}
 
   GT_INLINE const real_t operator()(int m, int i, int j, int k) const

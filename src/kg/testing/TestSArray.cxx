@@ -17,8 +17,7 @@ TEST(SArray, BoundsEtc)
   auto f = kg::SArray<Real, Layout>{{{1, 2, 3}, {2, 3, 4}}, 2};
 
   EXPECT_EQ(f.ib(), Int3({1, 2, 3}));
-  EXPECT_EQ(f.im(), Int3({2, 3, 4}));
-  EXPECT_EQ(f.storage().shape(3), 2);
+  EXPECT_EQ(f.storage().shape(), gt::shape(2, 3, 4, 2));
 }
 
 template <typename SA>
