@@ -85,12 +85,12 @@ public:
 
   KG_INLINE const_reference operator()(int m, int i, int j, int k) const
   {
-    return storage().data()[index(m, {i, j, k})];
+    return storage()(i - ib()[0], j - ib()[1], k - ib()[2], m);
   }
 
   KG_INLINE reference operator()(int m, int i, int j, int k)
   {
-    return storage().data()[index(m, {i, j, k})];
+    return storage()(i - ib()[0], j - ib()[1], k - ib()[2], m);
   }
 
   KG_INLINE int index(int m, Int3 idx) const
