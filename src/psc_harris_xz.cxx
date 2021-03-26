@@ -564,12 +564,12 @@ public:
         mflds_acc_state_.scale(1. / n_accum_);
         io_tfd_.write(adapt(mflds_acc_state_), grid, result_state.name,
                       result_state.comp_names);
-        mflds_acc_state_.zero();
+        mflds_acc_state_.storage().view() = 0.;
 
         mflds_acc_hydro_.scale(1. / n_accum_);
         io_tfd_.write(adapt(mflds_acc_hydro_), grid, result_hydro.name,
                       result_hydro.comp_names);
-        mflds_acc_hydro_.zero();
+        mflds_acc_hydro_.storage().view() = 0.;
 
         io_tfd_.end_step();
 

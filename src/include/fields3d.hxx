@@ -250,7 +250,7 @@ public:
     n_patches_ = n_patches;
     storage().resize(
       {box().im(0), box().im(1), box().im(2), n_comps(), n_patches});
-    zero();
+    storage().view(_all, _all, _all, _all, _all) = Real{};
   }
 
   KG_INLINE fields_view_t operator[](int p)
@@ -268,10 +268,6 @@ public:
   {
     return storage()(i - ib(0), j - ib(1), k - ib(2), m, p);
   }
-
-  void zero_comp(int m) { storage().view(_all, _all, _all, m, _all) = Real{}; }
-
-  void zero() { storage().view(_all, _all, _all, _all, _all) = Real{}; }
 
   void set_comp(int m, double val)
   {

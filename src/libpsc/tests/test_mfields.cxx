@@ -75,7 +75,7 @@ TYPED_TEST(MfieldsTest, ZeroComp)
   mflds[0](EY, 4, 2, 2) = 4.;
   mflds[0](EZ, -1, -1, -1) = 5.;
 
-  mflds.zero_comp(EY);
+  mflds.storage().view(_all, _all, _all, EY, _all) = 0.;
 
   EXPECT_EQ(mflds[0](EX, 4, 2, 2), 1.);
   EXPECT_EQ(mflds[0](EY, -1, -1, -1), 0.);
