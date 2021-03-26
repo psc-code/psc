@@ -5,6 +5,8 @@
 #include "dim.hxx"
 #include "kg/Vec3.h"
 
+#include <gtensor/gtensor.h>
+
 template <typename F, typename D = dim_xyz>
 class Fields3d
 {
@@ -20,18 +22,18 @@ public:
       im(f.im())
   {}
 
-  const real_t operator()(int m, int i, int j, int k) const
+  GT_INLINE const real_t operator()(int m, int i, int j, int k) const
   {
     return data_[index(m, i, j, k)];
   }
 
-  real_t& operator()(int m, int i, int j, int k)
+  GT_INLINE real_t& operator()(int m, int i, int j, int k)
   {
     return data_[index(m, i, j, k)];
   }
 
 private:
-  int index(int m, int i_, int j_, int k_) const
+  GT_INLINE int index(int m, int i_, int j_, int k_) const
   {
     int i = dim::InvarX::value ? 0 : i_;
     int j = dim::InvarY::value ? 0 : j_;
