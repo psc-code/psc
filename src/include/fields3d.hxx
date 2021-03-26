@@ -250,7 +250,7 @@ public:
     n_patches_ = n_patches;
     storage().resize(
       {box().im(0), box().im(1), box().im(2), n_comps(), n_patches});
-    std::fill(storage().data(), storage().data() + storage().size(), Real{});
+    zero();
   }
 
   KG_INLINE fields_view_t operator[](int p)
@@ -269,65 +269,45 @@ public:
     return storage()(i - ib(0), j - ib(1), k - ib(2), m, p);
   }
 
-  void zero_comp(int m)
-  {
-    for (int p = 0; p < n_patches_; p++) {
-      (*this)[p].storage().view(_all, _all, _all, m) = Real();
-    }
-  }
+  void zero_comp(int m) { storage().view(_all, _all, _all, m, _all) = Real{}; }
 
-  void zero()
-  {
-    for (int m = 0; m < n_fields_; m++)
-      zero_comp(m);
-  }
+  void zero() { storage().view(_all, _all, _all, _all, _all) = Real{}; }
 
   void set_comp(int m, double val)
   {
-    for (int p = 0; p < n_patches_; p++) {
-      (*this)[p].set(m, val);
-    }
+    storage().view(_all, _all, _all, m, _all) = val;
   }
 
   void scale_comp(int m, double val)
   {
-    for (int p = 0; p < n_patches_; p++) {
-      (*this)[p].storage().view(_all, _all, _all, m) =
-        val * (*this)[p].storage().view(_all, _all, _all, m);
-    }
+    storage().view(_all, _all, _all, m, _all) =
+      val * storage().view(_all, _all, _all, m, _all);
   }
 
-  void scale(double val)
-  {
-    for (int m = 0; m < n_fields_; m++)
-      scale_comp(m, val);
-  }
+  void scale(double val) { storage() = val * storage(); }
 
   void copy_comp(int mto, MfieldsBase& from_base, int mfrom)
   {
     // FIXME? dynamic_cast would actually be more appropriate
     Derived& from = static_cast<Derived&>(from_base);
-    for (int p = 0; p < n_patches_; p++) {
-      (*this)[p].copy_comp(mto, from[p], mfrom);
-    }
+    storage().view(_all, _all, _all, mto, _all) =
+      from.storage().view(_all, _all, _all, mfrom, _all);
   }
 
   void axpy_comp(int m_y, double alpha, MfieldsBase& x_base, int m_x)
   {
     // FIXME? dynamic_cast would actually be more appropriate
     Derived& x = static_cast<Derived&>(x_base);
-    for (int p = 0; p < n_patches_; p++) {
-      (*this)[p].storage().view(_all, _all, _all, m_y) =
-        (*this)[p].storage().view(_all, _all, _all, m_y) +
-        alpha * x[p].storage().view(_all, _all, _all, m_x);
-    }
+    storage().view(_all, _all, _all, m_y, _all) =
+      storage().view(_all, _all, _all, m_y, _all) +
+      alpha * x.storage().view(_all, _all, _all, m_x, _all);
   }
 
-  void axpy(double alpha, MfieldsBase& x)
+  void axpy(double alpha, MfieldsBase& x_base)
   {
-    for (int m = 0; m < n_fields_; m++) {
-      axpy_comp(m, alpha, x, m);
-    }
+    // FIXME? dynamic_cast would actually be more appropriate
+    Derived& x = static_cast<Derived&>(x_base);
+    storage() = storage() + alpha * x.storage();
   }
 
   template <typename E>
