@@ -3,7 +3,8 @@
 #define KG_SARRAY_VIEW_H
 
 #include <kg/SArrayContainer.h>
-#include <kg/Storage.h>
+
+#include <gtensor/gtensor.h>
 
 namespace kg
 {
