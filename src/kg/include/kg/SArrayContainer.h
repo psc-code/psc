@@ -40,8 +40,7 @@ public:
 
   KG_INLINE SArrayContainer(const Box3& box) : box_{box} {}
 
-  KG_INLINE const Box3& box() const { return box_; }
-  KG_INLINE const Int3& ib() const { return box().ib(); }
+  KG_INLINE const Int3& ib() const { return box_.ib(); }
 
   KG_INLINE const_reference operator()(int m, int i, int j, int k) const
   {
