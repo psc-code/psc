@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 
 #include <kg/SArray.h>
+#include <kg/SArrayView.h>
 
 using Real = double;
 using Layout = kg::LayoutSOA;
@@ -53,7 +54,10 @@ TEST(SArray, AccessSOA)
 
 TEST(SArray, AccessAOS)
 {
-  auto f = kg::SArray<Real, kg::LayoutAOS>{{{1, 2, 3}, {2, 3, 1}}, 2};
+  // FIXME, should also be made to work for SArray
+  std::vector<Real> storage(12);
+  auto f = kg::SArrayView<Real, kg::LayoutAOS>({{1, 2, 3}, {2, 3, 1}}, 2,
+                                               storage.data());
   setSArray(f);
 
   EXPECT_TRUE(std::equal(f.data(), f.data() + 12,

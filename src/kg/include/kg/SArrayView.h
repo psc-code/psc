@@ -19,8 +19,29 @@ template <typename T, typename L>
 struct SArrayContainerInnerTypes<SArrayView<T, L>>
 {
   using Layout = L;
-  using Storage = gt::gtensor_span<T, 1>;
+  using Storage = gt::gtensor_span<T, 4>;
 };
+
+namespace detail
+{
+template <typename L>
+gt::shape_type<4> strides(const Box3& box, int n_comps);
+
+template <>
+GT_INLINE gt::shape_type<4> strides<LayoutSOA>(const Box3& box, int n_comps)
+{
+  return gt::shape(1, box.im(0), box.im(0) * box.im(1),
+                   box.im(0) * box.im(1) * box.im(2));
+}
+
+template <>
+GT_INLINE gt::shape_type<4> strides<LayoutAOS>(const Box3& box, int n_comps)
+{
+  return gt::shape(n_comps, n_comps * box.im(0),
+                   n_comps * box.im(0) * box.im(1), 1);
+}
+
+} // namespace detail
 
 template <typename T, typename L>
 struct SArrayView : kg::SArrayContainer<SArrayView<T, L>>
@@ -30,7 +51,9 @@ struct SArrayView : kg::SArrayContainer<SArrayView<T, L>>
   using real_t = typename Base::value_type;
 
   KG_INLINE SArrayView(const Box3& box, int n_comps, real_t* data)
-    : Base(box, n_comps), storage_(data, gt::shape(Base::size()), gt::shape(1))
+    : Base(box, n_comps),
+      storage_(data, gt::shape(box.im(0), box.im(1), box.im(2), n_comps),
+               detail::strides<L>(box, n_comps))
   {}
 
 private:
