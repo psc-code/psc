@@ -299,7 +299,8 @@ public:
   void scale_comp(int m, double val)
   {
     for (int p = 0; p < n_patches_; p++) {
-      (*this)[p].scale(m, val);
+      (*this)[p].storage().view(_all, _all, _all, m) =
+        val * (*this)[p].storage().view(_all, _all, _all, m);
     }
   }
 

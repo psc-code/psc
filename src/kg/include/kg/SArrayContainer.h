@@ -79,17 +79,6 @@ public:
     return storage()(i - ib()[0], j - ib()[1], k - ib()[2], m);
   }
 
-  void set(int m, const_reference val)
-  {
-    storage().view(_all, _all, _all, m) = val;
-  }
-
-  void scale(int m, const_reference val)
-  {
-    storage().view(_all, _all, _all, m) =
-      storage().view(_all, _all, _all, m) * val;
-  }
-
   template <typename F>
   void copy_comp(int mto, const F& from, int mfrom)
   {
