@@ -25,8 +25,8 @@ public:
 
   StorageUniquePtr(size_t size) : data_(gt::shape(size)) {}
 
-  const_reference operator[](int offset) const { return data_(offset); }
-  reference operator[](int offset) { return data_(offset); }
+  const_reference operator()(int offset) const { return data_(offset); }
+  reference operator()(int offset) { return data_(offset); }
 
   // FIXME access to underlying storage might better be avoided?
   // use of this makes assumption that storage is contiguous
@@ -54,11 +54,11 @@ public:
     : data_(data, {size}, {1})
   {}
 
-  KG_INLINE const_reference operator[](int offset) const
+  KG_INLINE const_reference operator()(int offset) const
   {
     return data_(offset);
   }
-  KG_INLINE reference operator[](int offset) { return data_(offset); }
+  KG_INLINE reference operator()(int offset) { return data_(offset); }
 
   // FIXME access to underlying storage might better be avoided?
   // use of this makes assumption that storage is contiguous
