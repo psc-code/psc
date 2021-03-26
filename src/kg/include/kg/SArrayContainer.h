@@ -75,15 +75,7 @@ public:
 
   value_type max_comp(int m)
   {
-    value_type rv = std::numeric_limits<value_type>::lowest();
-    for (int k = ib()[2]; k < ib()[2] + im()[2]; k++) {
-      for (int j = ib()[1]; j < ib()[1] + im()[1]; j++) {
-        for (int i = ib()[0]; i < ib()[0] + im()[0]; i++) {
-          rv = std::max(rv, (*this)(m, i, j, k));
-        }
-      }
-    }
-    return rv;
+    return max(storage().view(_all, _all, _all, m));
   }
 
   void dump()
