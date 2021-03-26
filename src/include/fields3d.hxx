@@ -320,11 +320,6 @@ public:
     return derived();
   }
 
-  double max_comp(int m)
-  {
-    return max(storage().view(_all, _all, _all, m, _all));
-  }
-
   // protected:
   KG_INLINE Storage& storage() { return derived().storageImpl(); }
   KG_INLINE const Storage& storage() const { return derived().storageImpl(); }
