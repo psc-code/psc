@@ -322,11 +322,7 @@ public:
 
   double max_comp(int m)
   {
-    double rv = -std::numeric_limits<double>::max();
-    for (int p = 0; p < n_patches_; p++) {
-      rv = std::max(rv, double((*this)[p].max_comp(m)));
-    }
-    return rv;
+    return max(storage().view(_all, _all, _all, m, _all));
   }
 
   // protected:
