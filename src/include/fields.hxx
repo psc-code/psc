@@ -18,7 +18,7 @@ public:
   Fields3d(const fields_t& f)
     : data_(
         const_cast<typename fields_t::real_t*>(f.storage().data())), // FIXME
-      n_comp_(f.n_comps()),
+      n_comp_(f.storage().shape(3)),
       ib(f.ib()),
       im(f.im())
   {}

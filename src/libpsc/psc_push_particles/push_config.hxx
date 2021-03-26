@@ -27,7 +27,7 @@ struct curr_cache_t : fields_t
   using real_t = typename fields_t::real_t;
 
   curr_cache_t(fields_t& f)
-    : fields_t({f.ib(), f.im()}, f.n_comps(), f.storage().data())
+    : fields_t({f.ib(), f.im()}, f.storage().shape(3), f.storage().data())
   {}
 
   GT_INLINE void add(int m, int i, int j, int k, real_t val)

@@ -744,8 +744,7 @@ private:
 
       auto flds_old = mf_old[ctx->recv_info[p].patch];
       auto flds_new = mf_new[p];
-      assert(flds_old.n_comps() == flds_new.n_comps());
-      assert(flds_old.storage().size() == flds_new.storage().size());
+      assert(flds_old.storage().shape() == flds_new.storage().shape());
       int size = flds_old.storage().size();
       Int3 ib = flds_new.ib();
       void* addr_new = &flds_new(0, ib[0], ib[1], ib[2]);
