@@ -97,9 +97,9 @@ public:
   {
 #ifdef BOUNDS_CHECK
     assert(m >= 0 && m < n_comps_);
-    assert(idx[0] >= ib_[0] && idx[0] < ib_[0] + im_[0]);
-    assert(idx[1] >= ib_[1] && idx[1] < ib_[1] + im_[1]);
-    assert(idx[2] >= ib_[2] && idx[2] < ib_[2] + im_[2]);
+    assert(idx[0] >= ib()[0] && idx[0] < ib()[0] + im()[0]);
+    assert(idx[1] >= ib()[1] && idx[1] < ib()[1] + im()[1]);
+    assert(idx[2] >= ib()[2] && idx[2] < ib()[2] + im()[2]);
 #endif
 
     return layoutDataOffset<Layout>(n_comps_, im(), m, idx - ib());
