@@ -18,7 +18,6 @@ struct SArray;
 template <typename T, typename L>
 struct SArrayContainerInnerTypes<SArray<T, L>>
 {
-  using Layout = L;
   using Storage = gt::gtensor<T, 4>;
 };
 

@@ -31,7 +31,6 @@ public:
   using Derived = D;
 
   using InnerTypes = SArrayContainerInnerTypes<D>;
-  using Layout = typename InnerTypes::Layout;
   using Storage = typename InnerTypes::Storage;
   using value_type = typename Storage::value_type;
   using reference = typename Storage::reference;
