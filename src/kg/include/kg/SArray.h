@@ -18,8 +18,7 @@ template <typename T, typename L>
 struct SArrayContainerInnerTypes<SArray<T, L>>
 {
   using Layout = L;
-  using Storage = StorageUniquePtr<T>;
-  // using Storage = std::vector<T>;
+  using Storage = gt::gtensor<T, 1>;
 };
 
 template <typename T, typename L>
@@ -30,7 +29,7 @@ struct SArray : SArrayContainer<SArray<T, L>>
   using real_t = typename Base::value_type;
 
   SArray(const Box3& box, int n_comps)
-    : Base{box, n_comps}, storage_(Base::size())
+    : Base{box, n_comps}, storage_(gt::shape(Base::size()))
   {}
 
 private:
