@@ -697,7 +697,7 @@ private:
       } else {
         auto flds_old = mf_old[p];
         auto F_old(flds_old);
-        int nn = flds_old.size();
+        int nn = flds_old.storage().size();
         Int3 ib = flds_old.ib();
         void* addr_old = &F_old(0, ib[0], ib[1], ib[2]);
         int tag = nr_patches_new_by_rank[new_rank]++;
@@ -719,7 +719,7 @@ private:
         // Seed new data
       } else {
         auto flds_new = mf_new[p];
-        int nn = flds_new.size();
+        int nn = flds_new.storage().size();
         Int3 ib = flds_new.ib();
         void* addr_new = &flds_new(0, ib[0], ib[1], ib[2]);
         int tag = nr_patches_old_by_rank[old_rank]++;
@@ -745,8 +745,8 @@ private:
       auto flds_old = mf_old[ctx->recv_info[p].patch];
       auto flds_new = mf_new[p];
       assert(flds_old.n_comps() == flds_new.n_comps());
-      assert(flds_old.size() == flds_new.size());
-      int size = flds_old.size();
+      assert(flds_old.storage().size() == flds_new.storage().size());
+      int size = flds_old.storage().size();
       Int3 ib = flds_new.ib();
       void* addr_new = &flds_new(0, ib[0], ib[1], ib[2]);
       void* addr_old = &flds_old(0, ib[0], ib[1], ib[2]);

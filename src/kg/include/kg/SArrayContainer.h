@@ -48,7 +48,6 @@ public:
   KG_INLINE int im(int d) const { return box().im(d); }
   KG_INLINE int n_cells() const { return box().size(); }
   KG_INLINE int n_comps() const { return storage().shape(3); }
-  KG_INLINE int size() const { return storage().size(); }
 
   const_pointer data() const { return storage().data(); }
   pointer data() { return storage().data(); }
