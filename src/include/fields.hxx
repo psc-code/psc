@@ -65,9 +65,7 @@ public:
   using dim = D;
 
   _Fields3d(const fields_t& f, const Int3& ib)
-    : data_(const_cast<value_type*>(f.data())), // FIXME
-      shape_(f.shape()),
-      ib(ib)
+    : data_(f.data()), shape_(f.shape()), ib(ib)
   {}
 
   const value_type& operator()(int m, int i, int j, int k) const
