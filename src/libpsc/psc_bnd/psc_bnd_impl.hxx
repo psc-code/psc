@@ -85,7 +85,7 @@ struct Bnd_ : BndBase
                           void* _buf, void* ctx)
   {
     auto& mf = *static_cast<Mfields*>(ctx);
-    auto F = mf[p];
+    auto F = make_Fields3d<dim_xyz>(mf[p]);
     real_t* buf = static_cast<real_t*>(_buf);
 
     for (int m = mb; m < me; m++) {

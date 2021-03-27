@@ -66,15 +66,6 @@ TEST(SArray, AccessAOS)
                            .begin()));
 }
 
-TEST(SArray, data)
-{
-  auto f = kg::SArray<Real, Layout>{{{1, 2, 3}, {2, 3, 4}}, 2};
-
-  EXPECT_EQ(f.storage().data(), &f(0, 1, 2, 3));
-  const auto& fc = const_cast<const kg::SArray<Real, Layout>&>(f);
-  EXPECT_EQ(fc.storage().data(), &fc(0, 1, 2, 3));
-}
-
 // ======================================================================
 // main
 

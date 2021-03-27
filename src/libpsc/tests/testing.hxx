@@ -273,7 +273,7 @@ struct PushParticlesTest : ::testing::Test
       flds_ref(ref.m, ref.pos[0], ref.pos[1], ref.pos[2]) += ref.val;
     }
 
-    auto flds = (*mflds)[0];
+    auto flds = make_Fields3d<dim_xyz>((*mflds)[0]);
     this->grid().Foreach_3d(2, 2, [&](int i, int j, int k) {
       for (int m = JXI; m <= JZI; m++) {
         auto val = flds(m, i, j, k);

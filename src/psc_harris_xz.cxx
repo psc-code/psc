@@ -62,9 +62,10 @@ MfieldsC evalMfields(const MfieldsState& _exp)
 
   for (int p = 0; p < mflds.n_patches(); p++) {
     auto flds = make_Fields3d<dim_xyz>(mflds[p]);
+    auto _exp = make_Fields3d<dim_xyz>(exp[p]);
     for (int m = 0; m < exp.n_comps(); m++) {
       mflds.Foreach_3d(0, 0, [&](int i, int j, int k) {
-        flds(m, i, j, k) = exp[p](m, i, j, k);
+        flds(m, i, j, k) = _exp(m, i, j, k);
       });
     }
   }
@@ -539,9 +540,10 @@ public:
 
       for (int p = 0; p < mflds_acc_state_.n_patches(); p++) {
         auto flds_acc_state = make_Fields3d<dim_xyz>(mflds_acc_state_[p]);
+        auto flds_state = make_Fields3d<dim_xyz>(result_state.mflds[p]);
         for (int m = 0; m < mflds_acc_state_.n_comps(); m++) {
           mflds_acc_state_.grid().Foreach_3d(0, 0, [&](int i, int j, int k) {
-            flds_acc_state(m, i, j, k) += result_state.mflds[p](m, i, j, k);
+            flds_acc_state(m, i, j, k) += flds_state(m, i, j, k);
           });
         }
       }
@@ -549,9 +551,10 @@ public:
       auto result_hydro = outf_hydro_(mprts, *hydro, *interpolator);
       for (int p = 0; p < mflds_acc_hydro_.n_patches(); p++) {
         auto flds_acc_hydro = make_Fields3d<dim_xyz>(mflds_acc_hydro_[p]);
+        auto flds_hydro = make_Fields3d<dim_xyz>(result_hydro.mflds[p]);
         for (int m = 0; m < mflds_acc_hydro_.n_comps(); m++) {
           mflds_acc_hydro_.grid().Foreach_3d(0, 0, [&](int i, int j, int k) {
-            flds_acc_hydro(m, i, j, k) += result_hydro.mflds[p](m, i, j, k);
+            flds_acc_hydro(m, i, j, k) += flds_hydro(m, i, j, k);
           });
         }
       }

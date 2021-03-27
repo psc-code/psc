@@ -580,14 +580,15 @@ public:
     const auto& grid = mflds_.grid();
     define_dxdydz(dx, dy, dz);
 
-    return ((mflds_[p](EX, ijk[0], ijk[1], ijk[2]) -
-             mflds_[p](EX, ijk[0] - dx, ijk[1], ijk[2])) /
+    auto flds = make_Fields3d<dim_xyz>(mflds_[p]);
+    return ((flds(EX, ijk[0], ijk[1], ijk[2]) -
+             flds(EX, ijk[0] - dx, ijk[1], ijk[2])) /
               grid.domain.dx[0] +
-            (mflds_[p](EY, ijk[0], ijk[1], ijk[2]) -
-             mflds_[p](EY, ijk[0], ijk[1] - dy, ijk[2])) /
+            (flds(EY, ijk[0], ijk[1], ijk[2]) -
+             flds(EY, ijk[0], ijk[1] - dy, ijk[2])) /
               grid.domain.dx[1] +
-            (mflds_[p](EZ, ijk[0], ijk[1], ijk[2]) -
-             mflds_[p](EZ, ijk[0], ijk[1], ijk[2] - dz)) /
+            (flds(EZ, ijk[0], ijk[1], ijk[2]) -
+             flds(EZ, ijk[0], ijk[1], ijk[2] - dz)) /
               grid.domain.dx[2]);
   }
 
@@ -620,15 +621,16 @@ public:
   {
     const auto& grid = mflds_.grid();
     define_dxdydz(dx, dy, dz);
+    auto flds = make_Fields3d<dim_xyz>(mflds_[p]);
 
-    return ((mflds_[p](JXI, ijk[0], ijk[1], ijk[2]) -
-             mflds_[p](JXI, ijk[0] - dx, ijk[1], ijk[2])) /
+    return ((flds(JXI, ijk[0], ijk[1], ijk[2]) -
+             flds(JXI, ijk[0] - dx, ijk[1], ijk[2])) /
               grid.domain.dx[0] +
-            (mflds_[p](JYI, ijk[0], ijk[1], ijk[2]) -
-             mflds_[p](JYI, ijk[0], ijk[1] - dy, ijk[2])) /
+            (flds(JYI, ijk[0], ijk[1], ijk[2]) -
+             flds(JYI, ijk[0], ijk[1] - dy, ijk[2])) /
               grid.domain.dx[1] +
-            (mflds_[p](JZI, ijk[0], ijk[1], ijk[2]) -
-             mflds_[p](JZI, ijk[0], ijk[1], ijk[2] - dz)) /
+            (flds(JZI, ijk[0], ijk[1], ijk[2]) -
+             flds(JZI, ijk[0], ijk[1], ijk[2] - dz)) /
               grid.domain.dx[2]);
   }
 

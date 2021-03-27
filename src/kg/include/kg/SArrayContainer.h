@@ -42,16 +42,6 @@ public:
 
   KG_INLINE const Int3& ib() const { return ib_; }
 
-  KG_INLINE const_reference operator()(int m, int i, int j, int k) const
-  {
-    return storage()(i - ib_[0], j - ib_[1], k - ib_[2], m);
-  }
-
-  // KG_INLINE reference operator()(int m, int i, int j, int k)
-  // {
-  //   return storage()(i - ib_[0], j - ib_[1], k - ib_[2], m);
-  // }
-
 public:
   KG_INLINE Storage& storage() { return derived().storageImpl(); }
   KG_INLINE const Storage& storage() const { return derived().storageImpl(); }

@@ -55,9 +55,11 @@ public:
     reader.performGets();
 
     for (int p = 0; p < mflds.n_patches(); p++) {
+      auto h_flds = make_Fields3d<dim_xyz>(h_mflds[p]);
+      auto flds = make_Fields3d<dim_xyz>(mflds[p]);
       for (int m = 0; m < n_comps; m++) {
         h_mflds.Foreach_3d(0, 0, [&](int i, int j, int k) {
-          mflds[p](m, i, j, k) = h_mflds[p](m, i, j, k);
+          flds(m, i, j, k) = h_flds(m, i, j, k);
         });
       }
     }
