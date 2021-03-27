@@ -35,8 +35,8 @@ struct curr_cache_t : fields_t
 
   GT_INLINE void add(int m, int i, int j, int k, real_t val)
   {
-    _Fields3d<typename fields_t::Storage, dim_curr> J(this->storage(),
-                                                      this->ib());
+    Fields3d<typename fields_t::Storage, dim_curr> J(this->storage(),
+                                                     this->ib());
     real_t* addr = &J(JXI + m, i, j, k);
     atomicAdd(addr, val);
   }
@@ -58,7 +58,7 @@ struct PushpConfigEsirkepov
   using Dim = _Dim;
   using Order = _Order;
   using InterpolateEM_t =
-    _InterpolateEM<_Fields3d<typename MfieldsState::fields_view_t::Storage>,
+    _InterpolateEM<Fields3d<typename MfieldsState::fields_view_t::Storage>,
                    Dim>;
   using AdvanceParticle_t = AdvanceParticle<typename Mparticles::real_t, Dim>;
 };
@@ -99,15 +99,15 @@ using Config1stDouble =
 template <typename Mparticles, typename Mfields, typename dim>
 using Config1vbec = PushpConfigVb<
   Mparticles, Mfields,
-  InterpolateEM1vbec<_Fields3d<typename Mfields::fields_view_t::Storage>, dim>,
+  InterpolateEM1vbec<Fields3d<typename Mfields::fields_view_t::Storage>, dim>,
   dim, opt_order_1st, Current1vbVar1>;
 
 template <typename Mparticles, typename MfieldsState, typename dim>
-using Config1vbecSplit = PushpConfigVb<
-  Mparticles, MfieldsState,
-  InterpolateEM1vbec<_Fields3d<typename MfieldsState::fields_view_t::Storage>,
-                     dim>,
-  dim, opt_order_1st, Current1vbSplit>;
+using Config1vbecSplit =
+  PushpConfigVb<Mparticles, MfieldsState,
+                InterpolateEM1vbec<
+                  Fields3d<typename MfieldsState::fields_view_t::Storage>, dim>,
+                dim, opt_order_1st, Current1vbSplit>;
 
 template <typename dim>
 using Config1vbecDouble =
@@ -120,10 +120,10 @@ using Config1vbecSingle =
 using Config1vbecSingleXZ = PushpConfigVb<
   MparticlesSingle, MfieldsStateSingle,
   InterpolateEM1vbec<
-    _Fields3d<MfieldsStateSingle::fields_view_t::Storage, dim_xz>, dim_xyz>,
+    Fields3d<MfieldsStateSingle::fields_view_t::Storage, dim_xz>, dim_xyz>,
   dim_xyz, opt_order_1st, Current1vbSplit, dim_xz>;
 using Config1vbecSingle1 = PushpConfigVb<
   MparticlesSingle, MfieldsStateSingle,
   InterpolateEM1vbec<
-    _Fields3d<MfieldsStateSingle::fields_view_t::Storage, dim_1>, dim_1>,
+    Fields3d<MfieldsStateSingle::fields_view_t::Storage, dim_1>, dim_1>,
   dim_1, opt_order_1st, Current1vbVar1, dim_1>;
