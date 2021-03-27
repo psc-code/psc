@@ -45,21 +45,27 @@ GT_INLINE gt::shape_type<4> strides<LayoutAOS>(const Box3& box, int n_comps)
 template <typename T, typename L>
 struct SArrayView : kg::SArrayContainer<SArrayView<T, L>>
 {
-  using Base = kg::SArrayContainer<SArrayView<T, L>>;
-  using Storage = typename Base::Storage;
-  using real_t = typename Base::value_type;
+  using Storage = gt::gtensor_span<T, 4>;
+  using real_t = typename Storage::value_type;
+  using value_type = typename Storage::value_type;
+  using reference = typename Storage::reference;
+  using const_reference = typename Storage::const_reference;
+  using pointer = typename Storage::pointer;
+  using const_pointer = typename Storage::const_pointer;
 
   KG_INLINE SArrayView(const Box3& box, int n_comps, real_t* data)
-    : Base(box.ib()),
+    : ib_(box.ib()),
       storage_(data, gt::shape(box.im(0), box.im(1), box.im(2), n_comps),
                detail::strides<L>(box, n_comps))
   {}
 
+  KG_INLINE const Int3& ib() const { return ib_; }
+  KG_INLINE Storage& storagel() { return storage_; }
+  KG_INLINE const Storage& storage() const { return storage_; }
+
 private:
   Storage storage_;
-
-  KG_INLINE Storage& storageImpl() { return storage_; }
-  KG_INLINE const Storage& storageImpl() const { return storage_; }
+  Int3 ib_; //> lower bounds per direction
 
   friend class kg::SArrayContainer<SArrayView<T, L>>;
 };
