@@ -65,7 +65,7 @@ public:
   using dim = D;
 
   _Fields3d(const fields_t& f, const Int3& ib)
-    : data_(f.data()), shape_(f.shape()), ib(ib)
+    : data_(f.data()), shape_(f.shape()), ib_(ib)
   {}
 
   const value_type& operator()(int m, int i, int j, int k) const
@@ -81,9 +81,9 @@ public:
 private:
   int index(int m, int i_, int j_, int k_) const
   {
-    int i = dim::InvarX::value ? 0 : i_ - ib[0];
-    int j = dim::InvarY::value ? 0 : j_ - ib[1];
-    int k = dim::InvarZ::value ? 0 : k_ - ib[2];
+    int i = dim::InvarX::value ? 0 : i_ - ib_[0];
+    int j = dim::InvarY::value ? 0 : j_ - ib_[1];
+    int k = dim::InvarZ::value ? 0 : k_ - ib_[2];
 
 #ifdef BOUNDS_CHECK
     assert(m >= 0 && m < shape_[3]);
@@ -98,7 +98,7 @@ private:
 private:
   value_type* data_;
   gt::shape_type<4> shape_;
-  Int3 ib;
+  Int3 ib_;
 };
 
 #endif
