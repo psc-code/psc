@@ -7,6 +7,12 @@
 
 #include <gtensor/gtensor.h>
 
+// ======================================================================
+// Fields3d
+//
+// wrappers a gtensor expression, shifting the offset from zero and
+// setting to 0 indices in the invariant direction
+
 template <typename F, typename D = dim_xyz>
 class Fields3d
 {
@@ -16,42 +22,31 @@ public:
   using shape_type = typename fields_t::shape_type;
   using dim = D;
 
-  Fields3d(const fields_t& e, const Int3& ib) : e_(e), data_(e.data()), ib_(ib)
-  {}
+  Fields3d(const fields_t& e, const Int3& ib) : e_(e), ib_(ib) {}
 
   shape_type shape() const { return e_.shape(); }
   int shape(int d) const { return e_.shape(d); }
 
-  const value_type& operator()(int m, int i, int j, int k) const
+  const value_type& operator()(int m, int _i, int _j, int _k) const
   {
-    return data_[index(m, i, j, k)];
+    int i = dim::InvarX::value ? 0 : _i - ib_[0];
+    int j = dim::InvarY::value ? 0 : _j - ib_[1];
+    int k = dim::InvarZ::value ? 0 : _k - ib_[2];
+
+    return e_(i, j, k, m);
   }
 
-  value_type& operator()(int m, int i, int j, int k)
+  value_type& operator()(int m, int _i, int _j, int _k)
   {
-    return data_[index(m, i, j, k)];
-  }
+    int i = dim::InvarX::value ? 0 : _i - ib_[0];
+    int j = dim::InvarY::value ? 0 : _j - ib_[1];
+    int k = dim::InvarZ::value ? 0 : _k - ib_[2];
 
-private:
-  int index(int m, int i_, int j_, int k_) const
-  {
-    int i = dim::InvarX::value ? 0 : i_ - ib_[0];
-    int j = dim::InvarY::value ? 0 : j_ - ib_[1];
-    int k = dim::InvarZ::value ? 0 : k_ - ib_[2];
-
-#ifdef BOUNDS_CHECK
-    assert(m >= 0 && m < shape(3));
-    assert(i >= 0 && i < shape(0));
-    assert(j >= 0 && j < shape(1));
-    assert(k >= 0 && k < shape(2));
-#endif
-
-    return ((m * shape(2) + k) * shape(1) + j) * shape(0) + i;
+    return e_(i, j, k, m);
   }
 
 private:
   fields_t e_;
-  value_type* data_;
   Int3 ib_;
 };
 
