@@ -41,14 +41,13 @@ template <typename T, typename L = kg::LayoutSOA>
 struct SArrayView
 {
   using Storage = gt::gtensor_span<T, 4>;
-  using real_t = typename Storage::value_type;
   using value_type = typename Storage::value_type;
   using reference = typename Storage::reference;
   using const_reference = typename Storage::const_reference;
   using pointer = typename Storage::pointer;
   using const_pointer = typename Storage::const_pointer;
 
-  KG_INLINE SArrayView(const Box3& box, int n_comps, real_t* data)
+  KG_INLINE SArrayView(const Box3& box, int n_comps, pointer data)
     : ib_(box.ib()),
       storage_(data, gt::shape(box.im(0), box.im(1), box.im(2), n_comps),
                detail::strides<L>(box, n_comps))

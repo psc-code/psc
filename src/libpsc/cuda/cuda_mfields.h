@@ -9,8 +9,6 @@
 #include "psc_fields_cuda.h"
 #include "dim.hxx"
 
-#include <kg/SArrayView.h>
-
 #define MAX_BND_FIELDS (17)
 #define MAX_BND_COMPONENTS (3)
 
