@@ -13,11 +13,14 @@ class Fields3d
 public:
   using fields_t = F;
   using value_type = typename fields_t::value_type;
+  using shape_type = typename fields_t::shape_type;
   using dim = D;
 
-  Fields3d(const fields_t& f, const Int3& ib)
-    : data_(f.data()), shape_(f.shape()), ib_(ib)
+  Fields3d(const fields_t& e, const Int3& ib) : e_(e), data_(e.data()), ib_(ib)
   {}
+
+  shape_type shape() const { return e_.shape(); }
+  int shape(int d) const { return e_.shape(d); }
 
   const value_type& operator()(int m, int i, int j, int k) const
   {
@@ -37,18 +40,18 @@ private:
     int k = dim::InvarZ::value ? 0 : k_ - ib_[2];
 
 #ifdef BOUNDS_CHECK
-    assert(m >= 0 && m < shape_[3]);
-    assert(i >= 0 && i < shape_[0]);
-    assert(j >= 0 && j < shape_[1]);
-    assert(k >= 0 && k < shape_[2]);
+    assert(m >= 0 && m < shape(3));
+    assert(i >= 0 && i < shape(0));
+    assert(j >= 0 && j < shape(1));
+    assert(k >= 0 && k < shape(2));
 #endif
 
-    return ((m * shape_[2] + k) * shape_[1] + j) * shape_[0] + i;
+    return ((m * shape(2) + k) * shape(1) + j) * shape(0) + i;
   }
 
 private:
+  fields_t e_;
   value_type* data_;
-  gt::shape_type<4> shape_;
   Int3 ib_;
 };
 
