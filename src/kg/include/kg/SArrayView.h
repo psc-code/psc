@@ -2,24 +2,19 @@
 #ifndef KG_SARRAY_VIEW_H
 #define KG_SARRAY_VIEW_H
 
-#include <kg/SArrayContainer.h>
+#include <kg/Array3d.h>
+#include <kg/Macros.h>
+#include <kg/Vec3.h>
 
 #include <gtensor/gtensor.h>
+
+using namespace gt::placeholders;
 
 namespace kg
 {
 
 // ======================================================================
 // SArrayView
-
-template <typename T, typename L = kg::LayoutSOA>
-struct SArrayView;
-
-template <typename T, typename L>
-struct SArrayContainerInnerTypes<SArrayView<T, L>>
-{
-  using Storage = gt::gtensor_span<T, 4>;
-};
 
 namespace detail
 {
@@ -42,8 +37,8 @@ GT_INLINE gt::shape_type<4> strides<LayoutAOS>(const Box3& box, int n_comps)
 
 } // namespace detail
 
-template <typename T, typename L>
-struct SArrayView : kg::SArrayContainer<SArrayView<T, L>>
+template <typename T, typename L = kg::LayoutSOA>
+struct SArrayView
 {
   using Storage = gt::gtensor_span<T, 4>;
   using real_t = typename Storage::value_type;
@@ -60,14 +55,12 @@ struct SArrayView : kg::SArrayContainer<SArrayView<T, L>>
   {}
 
   KG_INLINE const Int3& ib() const { return ib_; }
-  KG_INLINE Storage& storagel() { return storage_; }
+  KG_INLINE Storage& storage() { return storage_; }
   KG_INLINE const Storage& storage() const { return storage_; }
 
 private:
   Storage storage_;
   Int3 ib_; //> lower bounds per direction
-
-  friend class kg::SArrayContainer<SArrayView<T, L>>;
 };
 
 } // namespace kg
