@@ -291,11 +291,10 @@ public:
 
   KG_INLINE fields_view_t operator[](int p)
   {
-    size_t stride = n_comps() * box().size();
     return fields_view_t(
       box(), n_comps(),
       gt::gtensor_span<Real, 4, typename Storage::space_type>(
-        &storage().data()[p * stride],
+        &storage()(0, 0, 0, 0, p),
         gt::shape(box().im(0), box().im(1), box().im(2), n_comps()),
         detail::strides(box().im(), n_comps())));
   }
