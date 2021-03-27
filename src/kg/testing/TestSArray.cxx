@@ -1,26 +1,12 @@
 
 #include <gtest/gtest.h>
 
-#include <kg/SArray.h>
 #include <kg/SArrayView.h>
 
 #include "fields.hxx"
 
 using Real = double;
 using Layout = kg::LayoutSOA;
-
-TEST(SArray, Ctor)
-{
-  auto f = kg::SArray<Real, Layout>{{{1, 2, 3}, {2, 3, 4}}, 2};
-}
-
-TEST(SArray, BoundsEtc)
-{
-  auto f = kg::SArray<Real, Layout>{{{1, 2, 3}, {2, 3, 4}}, 2};
-
-  EXPECT_EQ(f.ib(), Int3({1, 2, 3}));
-  EXPECT_EQ(f.storage().shape(), gt::shape(2, 3, 4, 2));
-}
 
 template <typename SA>
 static void setSArray(SA& _f)
@@ -41,9 +27,11 @@ static void setSArray(SA& _f)
   f(1, 2, 4, 3) = -243;
 }
 
-TEST(SArray, AccessSOA)
+TEST(SArrayView, AccessSOA)
 {
-  auto f = kg::SArray<Real, kg::LayoutSOA>{{{1, 2, 3}, {2, 3, 1}}, 2};
+  std::vector<Real> storage(12);
+  auto f = kg::SArrayView<Real, kg::LayoutSOA>{
+    {{1, 2, 3}, {2, 3, 1}}, 2, storage.data()};
   setSArray(f);
 
   EXPECT_TRUE(std::equal(f.storage().data(), f.storage().data() + 12,
@@ -52,9 +40,8 @@ TEST(SArray, AccessSOA)
                            .begin()));
 }
 
-TEST(SArray, AccessAOS)
+TEST(SArrayView, AccessAOS)
 {
-  // FIXME, should also be made to work for SArray
   std::vector<Real> storage(12);
   auto f = kg::SArrayView<Real, kg::LayoutAOS>({{1, 2, 3}, {2, 3, 1}}, 2,
                                                storage.data());
