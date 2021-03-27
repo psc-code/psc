@@ -25,28 +25,15 @@
 
 namespace detail
 {
-template <typename L>
-gt::shape_type<4> strides(const kg::Box3& box, int n_comps);
 
-template <>
-GT_INLINE gt::shape_type<4> strides<kg::LayoutSOA>(const kg::Box3& box,
-                                                   int n_comps)
+GT_INLINE gt::shape_type<4> strides(const Int3& im, int n_comps)
 {
-  return gt::shape(1, box.im(0), box.im(0) * box.im(1),
-                   box.im(0) * box.im(1) * box.im(2));
-}
-
-template <>
-GT_INLINE gt::shape_type<4> strides<kg::LayoutAOS>(const kg::Box3& box,
-                                                   int n_comps)
-{
-  return gt::shape(n_comps, n_comps * box.im(0),
-                   n_comps * box.im(0) * box.im(1), 1);
+  return gt::shape(1, im[0], im[0] * im[1], im[0] * im[1] * im[2]);
 }
 
 } // namespace detail
 
-template <typename T, typename L = kg::LayoutSOA>
+template <typename T>
 struct SArrayView
 {
   using Storage = gt::gtensor_span<T, 4>;
@@ -59,7 +46,7 @@ struct SArrayView
   KG_INLINE SArrayView(const kg::Box3& box, int n_comps, pointer data)
     : ib_(box.ib()),
       storage_(data, gt::shape(box.im(0), box.im(1), box.im(2), n_comps),
-               detail::strides<L>(box, n_comps))
+               detail::strides(box.im(), n_comps))
   {}
 
   KG_INLINE const Int3& ib() const { return ib_; }
