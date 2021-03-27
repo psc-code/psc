@@ -47,10 +47,10 @@ public:
     return storage()(i - ib_[0], j - ib_[1], k - ib_[2], m);
   }
 
-  KG_INLINE reference operator()(int m, int i, int j, int k)
-  {
-    return storage()(i - ib_[0], j - ib_[1], k - ib_[2], m);
-  }
+  // KG_INLINE reference operator()(int m, int i, int j, int k)
+  // {
+  //   return storage()(i - ib_[0], j - ib_[1], k - ib_[2], m);
+  // }
 
 public:
   KG_INLINE Storage& storage() { return derived().storageImpl(); }

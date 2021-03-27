@@ -4,6 +4,8 @@
 #include <kg/SArray.h>
 #include <kg/SArrayView.h>
 
+#include "fields.hxx"
+
 using Real = double;
 using Layout = kg::LayoutSOA;
 
@@ -21,8 +23,9 @@ TEST(SArray, BoundsEtc)
 }
 
 template <typename SA>
-static void setSArray(SA& f)
+static void setSArray(SA& _f)
 {
+  auto f = make_Fields3d<dim_xyz>(_f);
   f(0, 1, 2, 3) = 123;
   f(0, 2, 2, 3) = 223;
   f(0, 1, 3, 3) = 133;
