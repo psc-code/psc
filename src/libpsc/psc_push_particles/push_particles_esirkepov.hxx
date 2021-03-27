@@ -18,7 +18,7 @@ struct PushParticlesEsirkepov
   using InterpolateEM_t = typename C::InterpolateEM_t;
   using Current =
     CurrentEsirkepov<typename C::Order, typename C::Dim,
-                     Fields3d<typename MfieldsState::fields_view_t>,
+                     _Fields3d<typename MfieldsState::fields_view_t::Storage>,
                      InterpolateEM_t>;
   using real_t = typename Mparticles::real_t;
   using Real3 = Vec3<real_t>;
@@ -47,8 +47,8 @@ struct PushParticlesEsirkepov
     for (int p = 0; p < mflds.n_patches(); p++) {
       auto flds = mflds[p];
       auto prts = accessor[p];
-      typename InterpolateEM_t::fields_t EM(flds, flds.ib());
-      typename Current::fields_t J(flds, flds.ib());
+      typename InterpolateEM_t::fields_t EM(flds.storage(), flds.ib());
+      typename Current::fields_t J(flds.storage(), flds.ib());
 
       flds.storage().view(_all, _all, _all, _s(JXI, JXI + 3)) = real_t(0);
 
