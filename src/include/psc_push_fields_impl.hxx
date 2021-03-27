@@ -27,7 +27,7 @@ template <typename Fields>
 class PushBase
 {
 public:
-  using real_t = typename Fields::real_t;
+  using real_t = typename Fields::value_type;
   using fields_t = typename Fields::fields_t;
   using dim = typename Fields::dim;
 

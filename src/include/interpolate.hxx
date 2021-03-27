@@ -140,7 +140,7 @@ struct InterpolateEM_Helper
 template <typename F, typename IP>
 struct InterpolateEM_Helper<F, IP, opt_ip_1st_ec, dim_xyz>
 {
-  using real_t = typename F::real_t;
+  using real_t = typename F::value_type;
 
   __host__ __device__ static real_t ex(const IP& ip, const F& EM)
   {
@@ -197,7 +197,7 @@ struct InterpolateEM_Helper<F, IP, opt_ip_1st_ec, dim_xyz>
 template <typename F, typename IP>
 struct InterpolateEM_Helper<F, IP, opt_ip_1st_ec, dim_xz>
 {
-  using real_t = typename F::real_t;
+  using real_t = typename F::value_type;
 
   __host__ __device__ static real_t ex(const IP& ip, const F& EM)
   {
@@ -245,7 +245,7 @@ struct InterpolateEM_Helper<F, IP, opt_ip_1st_ec, dim_xz>
 template <typename F, typename IP>
 struct InterpolateEM_Helper<F, IP, opt_ip_1st_ec, dim_yz>
 {
-  using real_t = typename F::real_t;
+  using real_t = typename F::value_type;
 
   __host__ __device__ static real_t ex(const IP& ip, const F& EM)
   {
@@ -585,7 +585,7 @@ struct InterpolateEM_Helper<F, IP, opt_ip_2nd, dim_xz>
 template <typename F, typename IP>
 struct InterpolateEM_Helper<F, IP, opt_ip_2nd, dim_yz>
 {
-  using real_t = typename F::real_t;
+  using real_t = typename F::value_type;
   using ip_coeff_t = typename IP::ip_coeff_t;
 
   static real_t cc(const ip_coeff_t& gx, const ip_coeff_t& gy,
@@ -634,7 +634,7 @@ struct InterpolateEM_Helper<F, IP, opt_ip_2nd, dim_yz>
 template <typename F, typename IP>
 struct InterpolateEM_Helper<F, IP, opt_ip_2nd, dim_xyz>
 {
-  using real_t = typename F::real_t;
+  using real_t = typename F::value_type;
   using ip_coeff_t = typename IP::ip_coeff_t;
 
   static real_t cc(const ip_coeff_t& gx, const ip_coeff_t& gy,
@@ -703,7 +703,7 @@ struct InterpolateEM
 {
   using IP = InterpolateEM<F, OPT_IP, OPT_DIM>;
   using fields_t = F;
-  using real_t = typename F::real_t;
+  using real_t = typename F::value_type;
   using ip_coeffs_t = ip_coeffs<real_t, OPT_IP>;
   using ip_coeff_t = typename ip_coeffs_t::ip_coeff_t;
 

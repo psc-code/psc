@@ -8,7 +8,7 @@ template <typename BS, typename DIM>
 struct FldCache
 {
   using dim = DIM;
-  using real_t = float;
+  using value_type = float;
 
   const static int BLOCKSIZE_X = BS::x::value;
   const static int BLOCKSIZE_Y = BS::y::value;
@@ -95,7 +95,7 @@ template <typename BS>
 struct FldCache<BS, dim_yz>
 {
   using dim = dim_yz;
-  using real_t = float;
+  using value_type = float;
 
   static_assert(BS::x::value == 1, "FldCache: dim_yz needs BS::x == 1");
   const static int BLOCKSIZE_X = BS::x::value;

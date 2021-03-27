@@ -12,23 +12,22 @@ class Fields3d
 {
 public:
   using fields_t = F;
-  using real_t = typename fields_t::real_t;
+  using value_type = typename fields_t::real_t;
   using dim = D;
 
   Fields3d(const fields_t& f, const Int3& ib)
-    : data_(
-        const_cast<typename fields_t::real_t*>(f.storage().data())), // FIXME
+    : data_(const_cast<value_type*>(f.storage().data())), // FIXME
       n_comp_(f.storage().shape(3)),
       ib(ib),
       im({f.storage().shape(0), f.storage().shape(1), f.storage().shape(2)})
   {}
 
-  GT_INLINE const real_t operator()(int m, int i, int j, int k) const
+  const value_type operator()(int m, int i, int j, int k) const
   {
     return data_[index(m, i, j, k)];
   }
 
-  GT_INLINE real_t& operator()(int m, int i, int j, int k)
+  GT_INLINE value_type& operator()(int m, int i, int j, int k)
   {
     return data_[index(m, i, j, k)];
   }
@@ -52,7 +51,7 @@ private:
   }
 
 private:
-  real_t* data_;
+  value_type* data_;
   Int3 ib, im;
   int n_comp_;
 };
