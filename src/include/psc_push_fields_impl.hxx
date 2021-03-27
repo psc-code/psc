@@ -147,7 +147,7 @@ public:
   template <typename dim>
   void push_E(MfieldsState& mflds, double dt_fac, dim tag)
   {
-    using Fields = Fields3d<typename MfieldsState::fields_view_t, dim>;
+    using Fields = _Fields3d<typename MfieldsState::fields_view_t, dim>;
 
     for (int p = 0; p < mflds.n_patches(); p++) {
       PushE<Fields> push_E(mflds.grid(), mflds[p], dt_fac);
@@ -166,7 +166,7 @@ public:
   template <typename dim>
   void push_H(MfieldsState& mflds, double dt_fac, dim tag)
   {
-    using Fields = Fields3d<typename MfieldsState::fields_view_t, dim>;
+    using Fields = _Fields3d<typename MfieldsState::fields_view_t, dim>;
 
     for (int p = 0; p < mflds.n_patches(); p++) {
       PushH<Fields> push_H(mflds.grid(), mflds[p], dt_fac);
