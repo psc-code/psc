@@ -55,8 +55,9 @@ public:
   using typename Base::fields_t;
   using typename Base::real_t;
 
-  PushE(const Grid_t& grid, fields_t&& flds, double dt_fac)
-    : Base(grid, dt_fac), F(flds, flds.ib())
+  template <typename FF>
+  PushE(const Grid_t& grid, FF&& flds, double dt_fac)
+    : Base(grid, dt_fac), F(flds.storage(), flds.ib())
   {}
 
   void x(int i, int j, int k)
@@ -96,8 +97,9 @@ public:
   using typename Base::fields_t;
   using typename Base::real_t;
 
-  PushH(const Grid_t& grid, fields_t&& flds, double dt_fac)
-    : Base(grid, dt_fac), F(flds, flds.ib())
+  template <typename FF>
+  PushH(const Grid_t& grid, FF&& flds, double dt_fac)
+    : Base(grid, dt_fac), F(flds.storage(), flds.ib())
   {}
 
   void x(int i, int j, int k)
@@ -147,7 +149,8 @@ public:
   template <typename dim>
   void push_E(MfieldsState& mflds, double dt_fac, dim tag)
   {
-    using Fields = _Fields3d<typename MfieldsState::fields_view_t, dim>;
+    using Fields =
+      _Fields3d<typename MfieldsState::fields_view_t::Storage, dim>;
 
     for (int p = 0; p < mflds.n_patches(); p++) {
       PushE<Fields> push_E(mflds.grid(), mflds[p], dt_fac);
@@ -166,7 +169,8 @@ public:
   template <typename dim>
   void push_H(MfieldsState& mflds, double dt_fac, dim tag)
   {
-    using Fields = _Fields3d<typename MfieldsState::fields_view_t, dim>;
+    using Fields =
+      _Fields3d<typename MfieldsState::fields_view_t::Storage, dim>;
 
     for (int p = 0; p < mflds.n_patches(); p++) {
       PushH<Fields> push_H(mflds.grid(), mflds[p], dt_fac);

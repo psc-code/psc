@@ -61,14 +61,14 @@ class _Fields3d
 {
 public:
   using fields_t = F;
-  using value_type = typename fields_t::real_t;
+  using value_type = typename fields_t::value_type;
   using dim = D;
 
   _Fields3d(const fields_t& f, const Int3& ib)
-    : data_(const_cast<value_type*>(f.storage().data())), // FIXME
-      n_comp_(f.storage().shape(3)),
+    : data_(const_cast<value_type*>(f.data())), // FIXME
+      n_comp_(f.shape(3)),
       ib(ib),
-      im({f.storage().shape(0), f.storage().shape(1), f.storage().shape(2)})
+      im({f.shape(0), f.shape(1), f.shape(2)})
   {}
 
   const value_type& operator()(int m, int i, int j, int k) const
