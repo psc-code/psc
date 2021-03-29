@@ -259,7 +259,7 @@ struct PushParticlesTest : ::testing::Test
   void checkCurrent(std::vector<CurrentReference>& curr_ref)
   {
     auto mflds_ref = MfieldsState{grid()};
-    auto flds_ref = mflds_ref[0];
+    auto flds_ref = make_Fields3d<dim_xyz>(mflds_ref[0]);
     for (auto& ref : curr_ref) {
       if (dim::InvarX::value) {
         ref.pos[0] = 0;

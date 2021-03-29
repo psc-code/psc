@@ -22,13 +22,13 @@ public:
   using shape_type = typename fields_t::shape_type;
   using dim = D;
 
-  Fields3d(const fields_t& e, const Int3& ib) : e_(e), ib_(ib) {}
+  GT_INLINE Fields3d(const fields_t& e, const Int3& ib) : e_(e), ib_(ib) {}
 
-  shape_type shape() const { return e_.shape(); }
-  int shape(int d) const { return e_.shape(d); }
-  Int3 ib() const { return ib_; }
+  GT_INLINE shape_type shape() const { return e_.shape(); }
+  GT_INLINE int shape(int d) const { return e_.shape(d); }
+  GT_INLINE Int3 ib() const { return ib_; }
 
-  const value_type& operator()(int m, int _i, int _j, int _k) const
+  GT_INLINE const value_type& operator()(int m, int _i, int _j, int _k) const
   {
     int i = dim::InvarX::value ? 0 : _i - ib_[0];
     int j = dim::InvarY::value ? 0 : _j - ib_[1];
@@ -37,7 +37,7 @@ public:
     return e_(i, j, k, m);
   }
 
-  value_type& operator()(int m, int _i, int _j, int _k)
+  GT_INLINE value_type& operator()(int m, int _i, int _j, int _k)
   {
     int i = dim::InvarX::value ? 0 : _i - ib_[0];
     int j = dim::InvarY::value ? 0 : _j - ib_[1];
@@ -52,7 +52,7 @@ private:
 };
 
 template <typename D, typename F>
-auto make_Fields3d(const F& f)
+GT_INLINE auto make_Fields3d(const F& f)
 {
   return Fields3d<typename F::Storage, D>(f.storage(), f.ib());
 }

@@ -148,13 +148,14 @@ struct Marder_ : MarderBase
     } psc_foreach_3d_more_end;
 #endif
 
+    auto flds_ = make_Fields3d<dim_xyz>(flds);
     if (!grid.isInvar(0)) {
       int l[3] = {l_cc[0], l_nc[1], l_nc[2]};
       int r[3] = {r_cc[0], r_nc[1], r_nc[2]};
       psc_foreach_3d_more(ppsc, p, ix, iy, iz, l, r)
       {
-        flds(EX, ix, iy, iz) += (f(0, ix + dx, iy, iz) - f(0, ix, iy, iz)) *
-                                .5 * grid.dt * diffusion / deltax;
+        flds_(EX, ix, iy, iz) += (f(0, ix + dx, iy, iz) - f(0, ix, iy, iz)) *
+                                 .5 * grid.dt * diffusion / deltax;
       }
       psc_foreach_3d_more_end;
     }
@@ -165,8 +166,8 @@ struct Marder_ : MarderBase
       psc_foreach_3d_more(ppsc, p, ix, iy, iz, l, r)
       {
         max_err = std::max(max_err, std::abs(f(0, ix, iy, iz)));
-        flds(EY, ix, iy, iz) += (f(0, ix, iy + dy, iz) - f(0, ix, iy, iz)) *
-                                .5 * grid.dt * diffusion / deltay;
+        flds_(EY, ix, iy, iz) += (f(0, ix, iy + dy, iz) - f(0, ix, iy, iz)) *
+                                 .5 * grid.dt * diffusion / deltay;
       }
       psc_foreach_3d_more_end;
     }
@@ -176,8 +177,8 @@ struct Marder_ : MarderBase
       int r[3] = {r_nc[0], r_nc[1], r_cc[2]};
       psc_foreach_3d_more(ppsc, p, ix, iy, iz, l, r)
       {
-        flds(EZ, ix, iy, iz) += (f(0, ix, iy, iz + dz) - f(0, ix, iy, iz)) *
-                                .5 * grid.dt * diffusion / deltaz;
+        flds_(EZ, ix, iy, iz) += (f(0, ix, iy, iz + dz) - f(0, ix, iy, iz)) *
+                                 .5 * grid.dt * diffusion / deltaz;
       }
       psc_foreach_3d_more_end;
     }

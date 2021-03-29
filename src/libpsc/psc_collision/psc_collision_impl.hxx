@@ -67,7 +67,7 @@ struct CollisionHost
 
       find_cell_offsets(prts, offsets);
 
-      auto F = mflds_stats_[p];
+      auto F = make_Fields3d<dim_xyz>(mflds_stats_[p]);
       grid.Foreach_3d(0, 0, [&](int ix, int iy, int iz) {
         int c = (iz * ldims[1] + iy) * ldims[0] + ix;
 
@@ -179,7 +179,7 @@ struct CollisionHost
                          int i, int j, int k)
   {
     real_t fnqs = prts.grid().norm.fnqs;
-    auto F = mflds_rei_[p];
+    auto F = make_Fields3d<dim_xyz>(mflds_rei_[p]);
     F(0, i, j, k) = 0.;
     F(1, i, j, k) = 0.;
     F(2, i, j, k) = 0.;
@@ -200,7 +200,7 @@ struct CollisionHost
                         int i, int j, int k)
   {
     real_t fnqs = prts.grid().norm.fnqs, dt = prts.grid().dt;
-    auto F = mflds_rei_[p];
+    auto F = make_Fields3d<dim_xyz>(mflds_rei_[p]);
     auto& mprts = prts.mprts();
     for (int n = n_start; n < n_end; n++) {
       const auto& prt = prts[n];

@@ -51,14 +51,16 @@
                                                                                \
     real_t fnq = prt.w() * fnqs;                                               \
                                                                                \
-    flds(m, jx, jy, jz) += fnq * g0x * g0y * g0z * (val);                      \
-    flds(m, jx + jxd, jy, jz) += fnq * g1x * g0y * g0z * (val);                \
-    flds(m, jx, jy + jyd, jz) += fnq * g0x * g1y * g0z * (val);                \
-    flds(m, jx + jxd, jy + jyd, jz) += fnq * g1x * g1y * g0z * (val);          \
-    flds(m, jx, jy, jz + jzd) += fnq * g0x * g0y * g1z * (val);                \
-    flds(m, jx + jxd, jy, jz + jzd) += fnq * g1x * g0y * g1z * (val);          \
-    flds(m, jx, jy + jyd, jz + jzd) += fnq * g0x * g1y * g1z * (val);          \
-    flds(m, jx + jxd, jy + jyd, jz + jzd) += fnq * g1x * g1y * g1z * (val);    \
+    auto f = make_Fields3d<dim_xyz>(flds);                                     \
+                                                                               \
+    f(m, jx, jy, jz) += fnq * g0x * g0y * g0z * (val);                         \
+    f(m, jx + jxd, jy, jz) += fnq * g1x * g0y * g0z * (val);                   \
+    f(m, jx, jy + jyd, jz) += fnq * g0x * g1y * g0z * (val);                   \
+    f(m, jx + jxd, jy + jyd, jz) += fnq * g1x * g1y * g0z * (val);             \
+    f(m, jx, jy, jz + jzd) += fnq * g0x * g0y * g1z * (val);                   \
+    f(m, jx + jxd, jy, jz + jzd) += fnq * g1x * g0y * g1z * (val);             \
+    f(m, jx, jy + jyd, jz + jzd) += fnq * g0x * g1y * g1z * (val);             \
+    f(m, jx + jxd, jy + jyd, jz + jzd) += fnq * g1x * g1y * g1z * (val);       \
   } while (0)
 
 #define DEPOSIT_TO_GRID_2ND_NC(prt, flds, m, val)                              \
@@ -113,33 +115,35 @@
                                                                                \
     real_t fnq = prt.w() * fnqs;                                               \
                                                                                \
-    flds(m, jx - jxd, jy - jyd, jz - jzd) += fnq * gmx * gmy * gmz * (val);    \
-    flds(m, jx, jy - jyd, jz - jzd) += fnq * g0x * gmy * gmz * (val);          \
-    flds(m, jx + jxd, jy - jyd, jz - jzd) += fnq * g1x * gmy * gmz * (val);    \
-    flds(m, jx - jxd, jy, jz - jzd) += fnq * gmx * g0y * gmz * (val);          \
-    flds(m, jx, jy, jz - jzd) += fnq * g0x * g0y * gmz * (val);                \
-    flds(m, jx + jxd, jy, jz - jzd) += fnq * g1x * g0y * gmz * (val);          \
-    flds(m, jx - jxd, jy + jyd, jz - jzd) += fnq * gmx * g1y * gmz * (val);    \
-    flds(m, jx, jy + jyd, jz - jzd) += fnq * g0x * g1y * gmz * (val);          \
-    flds(m, jx + jxd, jy + jyd, jz - jzd) += fnq * g1x * g1y * gmz * (val);    \
-    flds(m, jx - jxd, jy - jyd, jz) += fnq * gmx * gmy * g0z * (val);          \
-    flds(m, jx, jy - jyd, jz) += fnq * g0x * gmy * g0z * (val);                \
-    flds(m, jx + jxd, jy - jyd, jz) += fnq * g1x * gmy * g0z * (val);          \
-    flds(m, jx - jxd, jy, jz) += fnq * gmx * g0y * g0z * (val);                \
-    flds(m, jx, jy, jz) += fnq * g0x * g0y * g0z * (val);                      \
-    flds(m, jx + jxd, jy, jz) += fnq * g1x * g0y * g0z * (val);                \
-    flds(m, jx - jxd, jy + jyd, jz) += fnq * gmx * g1y * g0z * (val);          \
-    flds(m, jx, jy + jyd, jz) += fnq * g0x * g1y * g0z * (val);                \
-    flds(m, jx + jxd, jy + jyd, jz) += fnq * g1x * g1y * g0z * (val);          \
-    flds(m, jx - jxd, jy - jyd, jz + jzd) += fnq * gmx * gmy * g1z * (val);    \
-    flds(m, jx, jy - jyd, jz + jzd) += fnq * g0x * gmy * g1z * (val);          \
-    flds(m, jx + jxd, jy - jyd, jz + jzd) += fnq * g1x * gmy * g1z * (val);    \
-    flds(m, jx - jxd, jy, jz + jzd) += fnq * gmx * g0y * g1z * (val);          \
-    flds(m, jx, jy, jz + jzd) += fnq * g0x * g0y * g1z * (val);                \
-    flds(m, jx + jxd, jy, jz + jzd) += fnq * g1x * g0y * g1z * (val);          \
-    flds(m, jx - jxd, jy + jyd, jz + jzd) += fnq * gmx * g1y * g1z * (val);    \
-    flds(m, jx, jy + jyd, jz + jzd) += fnq * g0x * g1y * g1z * (val);          \
-    flds(m, jx + jxd, jy + jyd, jz + jzd) += fnq * g1x * g1y * g1z * (val);    \
+    auto f = make_Fields3d<dim_xyz>(flds);                                     \
+                                                                               \
+    f(m, jx - jxd, jy - jyd, jz - jzd) += fnq * gmx * gmy * gmz * (val);       \
+    f(m, jx, jy - jyd, jz - jzd) += fnq * g0x * gmy * gmz * (val);             \
+    f(m, jx + jxd, jy - jyd, jz - jzd) += fnq * g1x * gmy * gmz * (val);       \
+    f(m, jx - jxd, jy, jz - jzd) += fnq * gmx * g0y * gmz * (val);             \
+    f(m, jx, jy, jz - jzd) += fnq * g0x * g0y * gmz * (val);                   \
+    f(m, jx + jxd, jy, jz - jzd) += fnq * g1x * g0y * gmz * (val);             \
+    f(m, jx - jxd, jy + jyd, jz - jzd) += fnq * gmx * g1y * gmz * (val);       \
+    f(m, jx, jy + jyd, jz - jzd) += fnq * g0x * g1y * gmz * (val);             \
+    f(m, jx + jxd, jy + jyd, jz - jzd) += fnq * g1x * g1y * gmz * (val);       \
+    f(m, jx - jxd, jy - jyd, jz) += fnq * gmx * gmy * g0z * (val);             \
+    f(m, jx, jy - jyd, jz) += fnq * g0x * gmy * g0z * (val);                   \
+    f(m, jx + jxd, jy - jyd, jz) += fnq * g1x * gmy * g0z * (val);             \
+    f(m, jx - jxd, jy, jz) += fnq * gmx * g0y * g0z * (val);                   \
+    f(m, jx, jy, jz) += fnq * g0x * g0y * g0z * (val);                         \
+    f(m, jx + jxd, jy, jz) += fnq * g1x * g0y * g0z * (val);                   \
+    f(m, jx - jxd, jy + jyd, jz) += fnq * gmx * g1y * g0z * (val);             \
+    f(m, jx, jy + jyd, jz) += fnq * g0x * g1y * g0z * (val);                   \
+    f(m, jx + jxd, jy + jyd, jz) += fnq * g1x * g1y * g0z * (val);             \
+    f(m, jx - jxd, jy - jyd, jz + jzd) += fnq * gmx * gmy * g1z * (val);       \
+    f(m, jx, jy - jyd, jz + jzd) += fnq * g0x * gmy * g1z * (val);             \
+    f(m, jx + jxd, jy - jyd, jz + jzd) += fnq * g1x * gmy * g1z * (val);       \
+    f(m, jx - jxd, jy, jz + jzd) += fnq * gmx * g0y * g1z * (val);             \
+    f(m, jx, jy, jz + jzd) += fnq * g0x * g0y * g1z * (val);                   \
+    f(m, jx + jxd, jy, jz + jzd) += fnq * g1x * g0y * g1z * (val);             \
+    f(m, jx - jxd, jy + jyd, jz + jzd) += fnq * gmx * g1y * g1z * (val);       \
+    f(m, jx, jy + jyd, jz + jzd) += fnq * g0x * g1y * g1z * (val);             \
+    f(m, jx + jxd, jy + jyd, jz + jzd) += fnq * g1x * g1y * g1z * (val);       \
   } while (0)
 
 // FIXME, this function exists about 100x all over the place, should

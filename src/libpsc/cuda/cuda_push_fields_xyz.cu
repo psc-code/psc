@@ -31,7 +31,7 @@ __global__ static void push_fields_E_xyz(DMFields dmflds, float dt, float cnx,
   iy -= BND;
   iz -= BND;
 
-  DFields F = dmflds[p];
+  auto F = make_Fields3d<dim_xyz>(dmflds[p]);
 
   F(EX, ix, iy, iz) += cny * (F(HZ, ix, iy, iz) - F(HZ, ix, iy - 1, iz)) -
                        cnz * (F(HY, ix, iy, iz) - F(HY, ix, iy, iz - 1)) -
@@ -63,7 +63,7 @@ __global__ static void push_fields_H_xyz(DMFields dmflds, float cnx, float cny,
   iy -= BND;
   iz -= BND;
 
-  DFields F = dmflds[p];
+  auto F = make_Fields3d<dim_xyz>(dmflds[p]);
 
   F(HX, ix, iy, iz) -= cny * (F(EZ, ix, iy + 1, iz) - F(EZ, ix, iy, iz)) -
                        cnz * (F(EY, ix, iy, iz + 1) - F(EY, ix, iy, iz));
@@ -138,22 +138,25 @@ __global__ static void marder_correct_xyz(
   iy -= BND;
   iz -= BND;
 
+  auto _d_flds = make_Fields3d<dim_xyz>(d_flds);
+  auto _d_f = make_Fields3d<dim_xyz>(d_f);
+
   if (ix >= -lxx && ix < rxx && iy >= -lxy && iy < rxy && iz >= -lxz &&
       iz < rxz) {
-    d_flds(EX, ix, iy, iz) +=
-      facx * (d_f(0, ix + 1, iy, iz) - d_f(0, ix, iy, iz));
+    _d_flds(EX, ix, iy, iz) +=
+      facx * (_d_f(0, ix + 1, iy, iz) - _d_f(0, ix, iy, iz));
   }
 
   if (ix >= -lyx && ix < ryx && iy >= -lyy && iy < ryy && iz >= -lyz &&
       iz < ryz) {
-    d_flds(EY, ix, iy, iz) +=
-      facy * (d_f(0, ix, iy + 1, iz) - d_f(0, ix, iy, iz));
+    _d_flds(EY, ix, iy, iz) +=
+      facy * (_d_f(0, ix, iy + 1, iz) - _d_f(0, ix, iy, iz));
   }
 
   if (ix >= -lzx && ix < rzx && iy >= -lzy && iy < rzy && iz >= -lzz &&
       iz < rzz) {
-    d_flds(EZ, ix, iy, iz) +=
-      facz * (d_f(0, ix, iy, iz + 1) - d_f(0, ix, iy, iz));
+    _d_flds(EZ, ix, iy, iz) +=
+      facz * (_d_f(0, ix, iy, iz + 1) - _d_f(0, ix, iy, iz));
   }
 }
 

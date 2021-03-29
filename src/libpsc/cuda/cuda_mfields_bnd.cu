@@ -3,6 +3,8 @@
 #include "cuda_bits.h"
 #include "cuda_base.cuh"
 
+#include "fields.hxx"
+
 #include <mrc_profile.h>
 
 // FIXME, hardcoding is bad, needs to be consistent, etc...
@@ -210,10 +212,11 @@ __global__ static void k_fields_device_pack_yz(float* d_buf, DMFields d_flds,
     jz += gmz - B;
   }
 
+  auto flds = make_Fields3d<dim_xyz>(d_flds[p]);
   if (WHAT == PACK) {
-    d_buf[tid] = d_flds[p](mb + m, jx, jy - BND, jz - BND);
+    d_buf[tid] = flds(mb + m, jx, jy - BND, jz - BND);
   } else if (WHAT == UNPACK) {
-    d_flds[p](mb + m, jx, jy - BND, jz - BND) = d_buf[tid];
+    flds(mb + m, jx, jy - BND, jz - BND) = d_buf[tid];
   }
 }
 

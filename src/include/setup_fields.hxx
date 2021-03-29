@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "fields.hxx"
+
 #include <algorithm>
 
 // ======================================================================
@@ -23,7 +25,7 @@ struct SetupFields
 
     for (int p = 0; p < mf.n_patches(); ++p) {
       auto& patch = grid.patches[p];
-      auto F = mf[p];
+      auto F = make_Fields3d<dim_xyz>(mf[p]);
 
       int n_ghosts =
         std::max({mf.ibn()[0], mf.ibn()[1], mf.ibn()[2]}); // FIXME, not pretty

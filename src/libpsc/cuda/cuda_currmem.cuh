@@ -43,6 +43,7 @@ public:
     __syncthreads();
     int i = threadIdx.x;
     int stride = STRIDE_Y * STRIDE_Z;
+    auto _d_flds = make_Fields3d<dim_xyz>(d_flds);
     while (i < stride) {
       int rem = i;
       int jz = rem / STRIDE_Y;
@@ -56,7 +57,7 @@ public:
         for (int wid = 0; wid < N_COPIES; wid++) {
           val += (*this)(wid, jy, jz, m);
         }
-        d_flds(JXI + m, 0, jy + ci0[1], jz + ci0[2]) += val;
+        _d_flds(JXI + m, 0, jy + ci0[1], jz + ci0[2]) += val;
         i += THREADS_PER_BLOCK;
       }
     }
@@ -123,13 +124,15 @@ public:
 
   __device__ void add(int m, int jy, int jz, float val, const int* ci0)
   {
-    float* addr = &d_flds(JXI + m, 0, jy + ci0[1], jz + ci0[2]);
+    auto _d_flds = make_Fields3d<dim_xyz>(d_flds);
+    float* addr = &_d_flds(JXI + m, 0, jy + ci0[1], jz + ci0[2]);
     atomicAdd(addr, val);
   }
 
   __device__ void add(int m, int jx, int jy, int jz, float val, const int* ci0)
   {
-    float* addr = &d_flds(JXI + m, jx + ci0[0], jy + ci0[1], jz + ci0[2]);
+    auto _d_flds = make_Fields3d<dim_xyz>(d_flds);
+    float* addr = &_d_flds(JXI + m, jx + ci0[0], jy + ci0[1], jz + ci0[2]);
     atomicAdd(addr, val);
   }
 };

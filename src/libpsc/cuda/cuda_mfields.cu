@@ -32,7 +32,7 @@ mrc_json_t cuda_mfields::to_json()
   auto h_mflds = hostMirror(*this);
   copy(*this, h_mflds);
   for (int p = 0; p < n_patches(); p++) {
-    auto flds = h_mflds[p];
+    auto flds = make_Fields3d<dim_xyz>(h_mflds[p]);
 
     mrc_json_t json_flds_comps = mrc_json_array_new(n_comps());
     mrc_json_array_push(json_flds_patches, json_flds_comps);

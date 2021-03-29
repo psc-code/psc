@@ -120,9 +120,10 @@ TYPED_TEST(BndTest, FillGhosts)
     int i0 = grid.patches[p].off[0];
     int j0 = grid.patches[p].off[1];
     int k0 = grid.patches[p].off[2];
+    auto flds = make_Fields3d<dim_xyz>(mflds[p]);
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       int ii = i + i0, jj = j + j0, kk = k + k0;
-      mflds[p](0, i, j, k) = 100 * ii + 10 * jj + kk;
+      flds(0, i, j, k) = 100 * ii + 10 * jj + kk;
     });
   }
 
@@ -179,11 +180,11 @@ TYPED_TEST(BndTest, AddGhosts)
   EXPECT_EQ(mflds.n_patches(), grid.n_patches());
 
   for (int p = 0; p < mflds.n_patches(); p++) {
+    auto flds = make_Fields3d<dim_xyz>(mflds[p]);
     int i0 = grid.patches[p].off[0];
     int j0 = grid.patches[p].off[1];
     int k0 = grid.patches[p].off[2];
-    grid.Foreach_3d(B, B,
-                    [&](int i, int j, int k) { mflds[p](0, i, j, k) = 1; });
+    grid.Foreach_3d(B, B, [&](int i, int j, int k) { flds(0, i, j, k) = 1; });
   }
 
   // Mfields_dump(mflds, B);

@@ -80,14 +80,16 @@ public:
 
     R fnq = prt.w() * fnqs_;
 
-    flds_(m, jx, jy, jz) += fnq * g0x * g0y * g0z * (val);
-    flds_(m, jx + jxd, jy, jz) += fnq * g1x * g0y * g0z * (val);
-    flds_(m, jx, jy + jyd, jz) += fnq * g0x * g1y * g0z * (val);
-    flds_(m, jx + jxd, jy + jyd, jz) += fnq * g1x * g1y * g0z * (val);
-    flds_(m, jx, jy, jz + jzd) += fnq * g0x * g0y * g1z * (val);
-    flds_(m, jx + jxd, jy, jz + jzd) += fnq * g1x * g0y * g1z * (val);
-    flds_(m, jx, jy + jyd, jz + jzd) += fnq * g0x * g1y * g1z * (val);
-    flds_(m, jx + jxd, jy + jyd, jz + jzd) += fnq * g1x * g1y * g1z * (val);
+    auto flds = make_Fields3d<dim_xyz>(flds_);
+
+    flds(m, jx, jy, jz) += fnq * g0x * g0y * g0z * (val);
+    flds(m, jx + jxd, jy, jz) += fnq * g1x * g0y * g0z * (val);
+    flds(m, jx, jy + jyd, jz) += fnq * g0x * g1y * g0z * (val);
+    flds(m, jx + jxd, jy + jyd, jz) += fnq * g1x * g1y * g0z * (val);
+    flds(m, jx, jy, jz + jzd) += fnq * g0x * g0y * g1z * (val);
+    flds(m, jx + jxd, jy, jz + jzd) += fnq * g1x * g0y * g1z * (val);
+    flds(m, jx, jy + jyd, jz + jzd) += fnq * g0x * g1y * g1z * (val);
+    flds(m, jx + jxd, jy + jyd, jz + jzd) += fnq * g1x * g1y * g1z * (val);
   }
 
   template <typename F>

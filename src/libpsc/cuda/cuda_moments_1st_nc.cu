@@ -4,6 +4,7 @@
 #include "cuda_moments.cuh"
 #include "bs.hxx"
 #include "pushp.hxx"
+#include "fields.hxx"
 
 #define THREADS_PER_BLOCK (512)
 
@@ -22,34 +23,35 @@ public:
 
   __device__ void operator()(int m, int lf[3], R of[3], R val, dim_yz tag)
   {
+    auto dflds = make_Fields3d<dim_xyz>(dflds_);
     R what = fnq_ * val;
 
-    atomicAdd(&dflds_(m, 0, lf[1], lf[2]),
-              (1.f - of[1]) * (1.f - of[2]) * what);
-    atomicAdd(&dflds_(m, 0, lf[1] + 1, lf[2]), (of[1]) * (1.f - of[2]) * what);
-    atomicAdd(&dflds_(m, 0, lf[1], lf[2] + 1), (1.f - of[1]) * (of[2]) * what);
-    atomicAdd(&dflds_(m, 0, lf[1] + 1, lf[2] + 1), (of[1]) * (of[2]) * what);
+    atomicAdd(&dflds(m, 0, lf[1], lf[2]), (1.f - of[1]) * (1.f - of[2]) * what);
+    atomicAdd(&dflds(m, 0, lf[1] + 1, lf[2]), (of[1]) * (1.f - of[2]) * what);
+    atomicAdd(&dflds(m, 0, lf[1], lf[2] + 1), (1.f - of[1]) * (of[2]) * what);
+    atomicAdd(&dflds(m, 0, lf[1] + 1, lf[2] + 1), (of[1]) * (of[2]) * what);
   }
 
   __device__ void operator()(int m, int lf[3], R of[3], R val, dim_xyz tag)
   {
+    auto dflds = make_Fields3d<dim_xyz>(dflds_);
     R what = fnq_ * val;
 
-    atomicAdd(&dflds_(m, lf[0], lf[1], lf[2]),
+    atomicAdd(&dflds(m, lf[0], lf[1], lf[2]),
               (1.f - of[0]) * (1.f - of[1]) * (1.f - of[2]) * what);
-    atomicAdd(&dflds_(m, lf[0] + 1, lf[1], lf[2]),
+    atomicAdd(&dflds(m, lf[0] + 1, lf[1], lf[2]),
               (of[0]) * (1.f - of[1]) * (1.f - of[2]) * what);
-    atomicAdd(&dflds_(m, lf[0], lf[1] + 1, lf[2]),
+    atomicAdd(&dflds(m, lf[0], lf[1] + 1, lf[2]),
               (1.f - of[0]) * (of[1]) * (1.f - of[2]) * what);
-    atomicAdd(&dflds_(m, lf[0] + 1, lf[1] + 1, lf[2]),
+    atomicAdd(&dflds(m, lf[0] + 1, lf[1] + 1, lf[2]),
               (of[0]) * (of[1]) * (1.f - of[2]) * what);
-    atomicAdd(&dflds_(m, lf[0], lf[1], lf[2] + 1),
+    atomicAdd(&dflds(m, lf[0], lf[1], lf[2] + 1),
               (1.f - of[0]) * (1.f - of[1]) * (of[2]) * what);
-    atomicAdd(&dflds_(m, lf[0] + 1, lf[1], lf[2] + 1),
+    atomicAdd(&dflds(m, lf[0] + 1, lf[1], lf[2] + 1),
               (of[0]) * (1.f - of[1]) * (of[2]) * what);
-    atomicAdd(&dflds_(m, lf[0], lf[1] + 1, lf[2] + 1),
+    atomicAdd(&dflds(m, lf[0], lf[1] + 1, lf[2] + 1),
               (1.f - of[0]) * (of[1]) * (of[2]) * what);
-    atomicAdd(&dflds_(m, lf[0] + 1, lf[1] + 1, lf[2] + 1),
+    atomicAdd(&dflds(m, lf[0] + 1, lf[1] + 1, lf[2] + 1),
               (of[0]) * (of[1]) * (of[2]) * what);
   }
 

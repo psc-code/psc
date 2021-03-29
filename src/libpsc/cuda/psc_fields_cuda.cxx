@@ -29,15 +29,12 @@ static void psc_mfields_cuda_copy_from_c(MfieldsBase& mflds_cuda,
     copy(mf_cuda, h_mf_cuda);
   }
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
-    auto flds = h_mf_cuda[p];
-    auto flds_c = mf_c[p];
+    auto flds = make_Fields3d<dim_xyz>(h_mf_cuda[p]);
+    auto flds_c = make_Fields3d<dim_xyz>(mf_c[p]);
     for (int m = mb; m < me; m++) {
-      for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.storage().shape(2);
-           jz++) {
-        for (int jy = flds.ib()[1]; jy < flds.ib()[1] + flds.storage().shape(1);
-             jy++) {
-          for (int jx = flds.ib()[0];
-               jx < flds.ib()[0] + flds.storage().shape(0); jx++) {
+      for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.shape(2); jz++) {
+        for (int jy = flds.ib()[1]; jy < flds.ib()[1] + flds.shape(1); jy++) {
+          for (int jx = flds.ib()[0]; jx < flds.ib()[0] + flds.shape(0); jx++) {
             flds(m, jx, jy, jz) = flds_c(m, jx, jy, jz);
           }
         }
@@ -56,16 +53,13 @@ static void psc_mfields_cuda_copy_to_c(MfieldsBase& mflds_cuda,
 
   copy(mf_cuda, h_mf_cuda);
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
-    auto flds = h_mf_cuda[p];
-    auto flds_c = mf_c[p];
+    auto flds = make_Fields3d<dim_xyz>(h_mf_cuda[p]);
+    auto flds_c = make_Fields3d<dim_xyz>(mf_c[p]);
 
     for (int m = mb; m < me; m++) {
-      for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.storage().shape(2);
-           jz++) {
-        for (int jy = flds.ib()[1]; jy < flds.ib()[1] + flds.storage().shape(1);
-             jy++) {
-          for (int jx = flds.ib()[0];
-               jx < flds.ib()[0] + flds.storage().shape(0); jx++) {
+      for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.shape(2); jz++) {
+        for (int jy = flds.ib()[1]; jy < flds.ib()[1] + flds.shape(1); jy++) {
+          for (int jx = flds.ib()[0]; jx < flds.ib()[0] + flds.shape(0); jx++) {
             flds_c(m, jx, jy, jz) = flds(m, jx, jy, jz);
           }
         }
@@ -89,15 +83,12 @@ static void psc_mfields_state_cuda_copy_from_c(MfieldsStateBase& mflds_cuda,
     copy(mf_cuda, h_mf_cuda);
   }
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
-    auto flds = h_mf_cuda[p];
-    auto flds_c = mf_c[p];
+    auto flds = make_Fields3d<dim_xyz>(h_mf_cuda[p]);
+    auto flds_c = make_Fields3d<dim_xyz>(mf_c[p]);
     for (int m = mb; m < me; m++) {
-      for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.storage().shape(2);
-           jz++) {
-        for (int jy = flds.ib()[1]; jy < flds.ib()[1] + flds.storage().shape(1);
-             jy++) {
-          for (int jx = flds.ib()[0];
-               jx < flds.ib()[0] + flds.storage().shape(0); jx++) {
+      for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.shape(2); jz++) {
+        for (int jy = flds.ib()[1]; jy < flds.ib()[1] + flds.shape(1); jy++) {
+          for (int jx = flds.ib()[0]; jx < flds.ib()[0] + flds.shape(0); jx++) {
             flds(m, jx, jy, jz) = flds_c(m, jx, jy, jz);
           }
         }
@@ -117,16 +108,13 @@ static void psc_mfields_state_cuda_copy_to_c(MfieldsStateBase& mflds_cuda,
 
   copy(mf_cuda, h_mf_cuda);
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
-    auto flds = h_mf_cuda[p];
-    auto flds_c = mf_c[p];
+    auto flds = make_Fields3d<dim_xyz>(h_mf_cuda[p]);
+    auto flds_c = make_Fields3d<dim_xyz>(mf_c[p]);
 
     for (int m = mb; m < me; m++) {
-      for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.storage().shape(2);
-           jz++) {
-        for (int jy = flds.ib()[1]; jy < flds.ib()[1] + flds.storage().shape(1);
-             jy++) {
-          for (int jx = flds.ib()[0];
-               jx < flds.ib()[0] + flds.storage().shape(0); jx++) {
+      for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.shape(2); jz++) {
+        for (int jy = flds.ib()[1]; jy < flds.ib()[1] + flds.shape(1); jy++) {
+          for (int jx = flds.ib()[0]; jx < flds.ib()[0] + flds.shape(0); jx++) {
             flds_c(m, jx, jy, jz) = flds(m, jx, jy, jz);
           }
         }
@@ -153,16 +141,13 @@ static void psc_mfields_cuda_copy_from_single(MfieldsBase& mflds_cuda,
     copy(mf_cuda, h_mf_cuda);
   }
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
-    auto flds = h_mf_cuda[p];
-    auto flds_s = mf_single[p];
+    auto flds = make_Fields3d<dim_xyz>(h_mf_cuda[p]);
+    auto flds_s = make_Fields3d<dim_xyz>(mf_single[p]);
 
     for (int m = mb; m < me; m++) {
-      for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.storage().shape(2);
-           jz++) {
-        for (int jy = flds.ib()[1]; jy < flds.ib()[1] + flds.storage().shape(1);
-             jy++) {
-          for (int jx = flds.ib()[0];
-               jx < flds.ib()[0] + flds.storage().shape(0); jx++) {
+      for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.shape(2); jz++) {
+        for (int jy = flds.ib()[1]; jy < flds.ib()[1] + flds.shape(1); jy++) {
+          for (int jx = flds.ib()[0]; jx < flds.ib()[0] + flds.shape(0); jx++) {
             flds(m, jx, jy, jz) = flds_s(m, jx, jy, jz);
           }
         }
@@ -186,16 +171,13 @@ static void psc_mfields_state_cuda_copy_from_single(
     copy(mf_cuda, h_mf_cuda);
   }
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
-    auto flds = h_mf_cuda[p];
-    auto flds_s = mf_single[p];
+    auto flds = make_Fields3d<dim_xyz>(h_mf_cuda[p]);
+    auto flds_s = make_Fields3d<dim_xyz>(mf_single[p]);
 
     for (int m = mb; m < me; m++) {
-      for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.storage().shape(2);
-           jz++) {
-        for (int jy = flds.ib()[1]; jy < flds.ib()[1] + flds.storage().shape(1);
-             jy++) {
-          for (int jx = flds.ib()[0];
-               jx < flds.ib()[0] + flds.storage().shape(0); jx++) {
+      for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.shape(2); jz++) {
+        for (int jy = flds.ib()[1]; jy < flds.ib()[1] + flds.shape(1); jy++) {
+          for (int jx = flds.ib()[0]; jx < flds.ib()[0] + flds.shape(0); jx++) {
             flds(m, jx, jy, jz) = flds_s(m, jx, jy, jz);
           }
         }
@@ -215,16 +197,13 @@ static void psc_mfields_cuda_copy_to_single(MfieldsBase& mflds_cuda,
 
   copy(mf_cuda, h_mf_cuda);
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
-    auto flds = h_mf_cuda[p];
-    auto flds_s = mf_single[p];
+    auto flds = make_Fields3d<dim_xyz>(h_mf_cuda[p]);
+    auto flds_s = make_Fields3d<dim_xyz>(mf_single[p]);
 
     for (int m = mb; m < me; m++) {
-      for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.storage().shape(2);
-           jz++) {
-        for (int jy = flds.ib()[1]; jy < flds.ib()[1] + flds.storage().shape(1);
-             jy++) {
-          for (int jx = flds.ib()[0];
-               jx < flds.ib()[0] + flds.storage().shape(0); jx++) {
+      for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.shape(2); jz++) {
+        for (int jy = flds.ib()[1]; jy < flds.ib()[1] + flds.shape(1); jy++) {
+          for (int jx = flds.ib()[0]; jx < flds.ib()[0] + flds.shape(0); jx++) {
             flds_s(m, jx, jy, jz) = flds(m, jx, jy, jz);
           }
         }
@@ -242,16 +221,13 @@ static void psc_mfields_state_cuda_copy_to_single(
 
   copy(mf_cuda, h_mf_cuda);
   for (int p = 0; p < mf_cuda.n_patches(); p++) {
-    auto flds = h_mf_cuda[p];
-    auto flds_s = mf_single[p];
+    auto flds = make_Fields3d<dim_xyz>(h_mf_cuda[p]);
+    auto flds_s = make_Fields3d<dim_xyz>(mf_single[p]);
 
     for (int m = mb; m < me; m++) {
-      for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.storage().shape(2);
-           jz++) {
-        for (int jy = flds.ib()[1]; jy < flds.ib()[1] + flds.storage().shape(1);
-             jy++) {
-          for (int jx = flds.ib()[0];
-               jx < flds.ib()[0] + flds.storage().shape(0); jx++) {
+      for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.shape(2); jz++) {
+        for (int jy = flds.ib()[1]; jy < flds.ib()[1] + flds.shape(1); jy++) {
+          for (int jx = flds.ib()[0]; jx < flds.ib()[0] + flds.shape(0); jx++) {
             flds_s(m, jx, jy, jz) = flds(m, jx, jy, jz);
           }
         }
