@@ -26,6 +26,7 @@ public:
 
   shape_type shape() const { return e_.shape(); }
   int shape(int d) const { return e_.shape(d); }
+  Int3 ib() const { return ib_; }
 
   const value_type& operator()(int m, int _i, int _j, int _k) const
   {
@@ -49,5 +50,11 @@ private:
   fields_t e_;
   Int3 ib_;
 };
+
+template <typename D, typename F>
+auto make_Fields3d(const F& f)
+{
+  return Fields3d<typename F::Storage, D>(f.storage(), f.ib());
+}
 
 #endif
