@@ -175,6 +175,12 @@ inline void copy(const HMFields& hmflds, MfieldsStateCuda& mflds)
   copy(hmflds, mflds.mflds());
 }
 
+template <typename D>
+auto make_Fields3d(const MfieldsCuda::Patch& f)
+{
+  return f;
+}
+
 // ----------------------------------------------------------------------
 
 #endif
