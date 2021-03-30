@@ -63,9 +63,7 @@ public:
   using pointer = float*;
   using const_pointer = float*;
 
-  MfieldsStorageDeviceRaw(uint stride, value_type* data)
-    : stride_{stride}, data_{data}
-  {}
+  MfieldsStorageDeviceRaw(pointer data) : data_{data} {}
 
   KG_INLINE reference operator[](size_t i) { return data_[i]; }
   KG_INLINE const_reference operator[](size_t i) const { return data_[i]; }
@@ -74,7 +72,6 @@ public:
 
 private:
   value_type* data_;
-  uint stride_;
 };
 
 // ======================================================================
@@ -95,8 +92,7 @@ struct DMFields : MfieldsCRTP<DMFields>
   using real_t = typename Base::Real;
 
   DMFields(const kg::Box3& box, int n_comps, int n_patches, real_t* d_flds)
-    : Base{n_comps, box, n_patches},
-      storage_{uint(n_comps * box.size()), d_flds}
+    : Base{n_comps, box, n_patches}, storage_{d_flds}
   {}
 
 private:
