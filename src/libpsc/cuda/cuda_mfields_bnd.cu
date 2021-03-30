@@ -266,13 +266,14 @@ __global__ static void k_fields_device_pack2_yz(float* d_buf, DMFields d_flds,
   }
 
   int s_p = d_nei_patch_by_dir1[p * 9 + 3 * dirz + diry + 4];
+  auto _d_flds = make_Fields3d<dim_xyz>(d_flds[p]);
   // copy only ghost areas that interface with remote patches
   if (1 || s_p < 0) {
     for (int m = 0; m < NR_COMPONENTS; m++) {
       if (WHAT == PACK) {
-        d_buf[m * nr_ghosts * nr_patches + tid] = d_flds[p](m + mb, 0, jy, jz);
+        d_buf[m * nr_ghosts * nr_patches + tid] = _d_flds(m + mb, 0, jy, jz);
       } else if (WHAT == UNPACK) {
-        d_flds[p](m + mb, 0, jy, jz) = d_buf[m * nr_ghosts * nr_patches + tid];
+        _d_flds(m + mb, 0, jy, jz) = d_buf[m * nr_ghosts * nr_patches + tid];
       }
     }
   }

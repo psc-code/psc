@@ -15,8 +15,9 @@ __global__ void set_raw(float* data)
   data[5] = 210;
 }
 
-__global__ void set_dfields(DFields d_flds)
+__global__ void set_dfields(DFields _d_flds)
 {
+  auto d_flds = _d_flds.storage();
   d_flds(0, 0, 0, 0) = 0;
   d_flds(0, 1, 0, 0) = 100;
   d_flds(0, 2, 0, 0) = 200;
