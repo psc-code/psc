@@ -76,4 +76,10 @@ GT_INLINE auto make_Fields3d(const F& f)
   return Fields3d<typename F::Storage, D>(f.storage(), f.ib());
 }
 
+template <typename D, typename F>
+GT_INLINE auto make_Fields3d(const F& f, Int3 ib)
+{
+  return Fields3d<F, D>(f, ib);
+}
+
 #endif
