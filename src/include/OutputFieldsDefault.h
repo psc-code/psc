@@ -190,7 +190,7 @@ public:
       if (doaccum_tfield) {
         // tfd += pfd
         prof_start(pr_field_acc);
-        fields.tfd_.storage() = fields.tfd_.storage() + pfd;
+        fields.tfd_.gt() = fields.tfd_.gt() + pfd;
         prof_stop(pr_field_acc);
         fields.naccum_++;
       }
@@ -229,7 +229,7 @@ public:
       if (doaccum_tfield_moments) {
         // tfd += pfd
         prof_start(pr_moment_acc);
-        moments.tfd_.storage() = moments.tfd_.storage() + pfd;
+        moments.tfd_.gt() = moments.tfd_.gt() + pfd;
         prof_stop(pr_moment_acc);
         moments.naccum_++;
       }
