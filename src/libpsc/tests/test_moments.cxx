@@ -80,17 +80,13 @@ TYPED_TEST(PushParticlesTest, Moment2) // FIXME, mostly copied
   Moment_n moment_n{mprts};
   auto n = evalMfields(moment_n);
   for (int p = 0; p < grid.n_patches(); p++) {
-    auto nn = make_Fields3d<dim_xyz>(n[p]);
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-      real_t val = nn(0, i, j, k);
+      real_t val = n(0, i, j, k, p);
       if (i == i0 && j == 0 & k == 0) {
         EXPECT_NEAR(val, .005, eps) << "ijk " << i << " " << j << " " << k;
       } else {
         EXPECT_NEAR(val, 0., eps) << "ijk " << i << " " << j << " " << k;
       }
-      // if (val) {
-      //   printf("ijk %d %d %d val %g\n", i, j, k, val);
-      // }
     });
   }
 }
