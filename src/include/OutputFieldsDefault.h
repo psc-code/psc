@@ -38,7 +38,7 @@ public:
     : OutputFieldsItemParams{prm},
       pfield_next_{prm.pfield_first},
       tfield_next_{prm.tfield_first},
-      tfd_{grid, n_comps, ibn}
+      tfd_{grid, n_comps, {}}
   {
     if (pfield_interval > 0) {
       io_pfd_.open("pfd" + sfx, data_dir);
@@ -191,7 +191,7 @@ public:
       if (doaccum_tfield) {
         // tfd += pfd
         prof_start(pr_field_acc);
-        adapt(fields.tfd_) = adapt(fields.tfd_) + pfd;
+        fields.tfd_.storage() = fields.tfd_.storage() + pfd;
         prof_stop(pr_field_acc);
         fields.naccum_++;
       }
@@ -230,7 +230,7 @@ public:
       if (doaccum_tfield_moments) {
         // tfd += pfd
         prof_start(pr_moment_acc);
-        adapt(moments.tfd_) = adapt(moments.tfd_) + pfd;
+        moments.tfd_.storage() = moments.tfd_.storage() + pfd;
         prof_stop(pr_moment_acc);
         moments.naccum_++;
       }
