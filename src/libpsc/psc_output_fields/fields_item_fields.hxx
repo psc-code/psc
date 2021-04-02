@@ -4,9 +4,27 @@
 #include "fields_item.hxx"
 #include "psc_fields_c.h"
 #include "psc_fields_cuda.h"
+
 template <typename E>
 struct isSpaceCuda : std::false_type
 {};
+
+template <typename E>
+inline auto to_gt(const E& e)
+{
+  auto& grid = e.grid();
+  assert(e.ibn() == Int3{});
+  auto res = gt::empty<typename E::Real>(
+    {grid.ldims[0], grid.ldims[1], grid.ldims[2], e.n_comps(), e.n_patches()});
+  auto k_res = res.to_kernel();
+
+  gt::launch<5, gt::space::host>(res.shape(),
+                                 [=](int i, int j, int k, int m, int p) {
+                                   k_res(i, j, k, m, p) = e(m, {i, j, k}, p);
+                                 });
+
+  return res;
+}
 
 // ======================================================================
 // evalMfields
@@ -596,20 +614,7 @@ public:
               grid.domain.dx[2]);
   }
 
-  gt::gtensor<Real, 5> gt() const
-  {
-    auto res =
-      gt::empty<Real>({grid().ldims[0], grid().ldims[1], grid().ldims[2],
-                       n_comps(), grid().n_patches()});
-    auto k_res = res.to_kernel();
-
-    gt::launch<5>(
-      res.shape(), GT_LAMBDA(int i, int j, int k, int m, int p) {
-        k_res(i, j, k, m, p) = (*this)(m, {i, j, k}, p);
-      });
-
-    return res;
-  }
+  auto gt() const { return to_gt(*this); }
 
   const Grid_t& grid() const { return mflds_.grid(); }
   Int3 ibn() const { return {}; }
