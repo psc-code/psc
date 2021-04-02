@@ -42,8 +42,8 @@ struct Checks_
     : ChecksParams(params),
       comm_{comm},
       rho_{grid, 1, grid.ibn},
-      rho_m_{grid, 1, grid.ibn},
-      rho_p_{grid, 1, grid.ibn},
+      rho_m_{grid, 1, {}},
+      rho_p_{grid, 1, {}},
       divj_{grid, 1, {}}
   {}
 
@@ -114,8 +114,8 @@ struct Checks_
         writer.open("continuity");
       }
       writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
-      writer.write(adapt(evalMfields(divj_)), grid, "div_j", {"div_j"});
-      writer.write(adapt(evalMfields(d_rho)), grid, "d_rho", {"d_rho"});
+      writer.write(divj_.gt(), grid, "div_j", {"div_j"});
+      writer.write(d_rho.gt(), grid, "d_rho", {"d_rho"});
       writer.end_step();
     }
 
