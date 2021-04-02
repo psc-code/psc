@@ -118,6 +118,16 @@ public:
 
   const Mfields& result() const { return Base::mres_; }
 
+  auto gt()
+  {
+    auto h_mres = hostMirror(Base::mres_);
+    copy(Base::mres_, h_mres);
+
+    Int3 bnd = Base::mres_.ibn();
+    return std::move(gt::eval(h_mres.gt()))
+      .view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]), _s(bnd[2], -bnd[2]));
+  }
+
 private:
   Bnd bnd_;
 };

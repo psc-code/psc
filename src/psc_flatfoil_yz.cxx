@@ -640,10 +640,7 @@ void run()
       mpi_printf(comm, "***** Performing injection...\n");
       prof_start(pr_inject);
       moment_n.update(mprts);
-      auto mflds_n = evalMfields(moment_n);
-      auto bnd = -mflds_n.ib();
-      gt_n = mflds_n.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                               _s(bnd[2], -bnd[2]));
+      gt_n = moment_n.gt();
       setup_particles.setupParticles(mprts, lf_inject);
       prof_stop(pr_inject);
     }
