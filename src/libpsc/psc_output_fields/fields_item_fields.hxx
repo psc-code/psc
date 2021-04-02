@@ -494,11 +494,6 @@ public:
 
   Item_jeh(MfieldsState& mflds) : mflds_{mflds} {}
 
-  const Real& operator()(int m, Int3 ijk, int p) const
-  {
-    return mflds_(m, ijk[0], ijk[1], ijk[2], p);
-  }
-
   auto gt() const
   {
     auto bnd = -mflds_.ib();
@@ -550,11 +545,6 @@ public:
         });
       }
     }
-  }
-
-  const Real& operator()(int m, Int3 ijk, int p) const
-  {
-    return mflds_(m, ijk[0], ijk[1], ijk[2], p);
   }
 
   auto gt() const

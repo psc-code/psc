@@ -585,12 +585,6 @@ extern template const MfieldsStateBase::Convert
 
 using namespace gt::placeholders;
 
-template <typename Item>
-auto adapt_item(const Item& item)
-{
-  return adapt(item.result());
-}
-
 template <typename Mfields>
 auto adapt(const Mfields& _mflds)
 {

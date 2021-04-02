@@ -178,12 +178,12 @@ public:
       prof_start(pr_field);
       prof_start(pr_field_calc);
       Item_jeh<MfieldsState> pfd_jeh{mflds};
-      auto&& pfd = adapt_item(pfd_jeh);
+      auto&& pfd = pfd_jeh.gt();
       prof_stop(pr_field_calc);
 
       if (do_pfield) {
         prof_start(pr_field_write);
-        fields.write_pfd(pfd_jeh.gt(), pfd_jeh);
+        fields.write_pfd(pfd, pfd_jeh);
         prof_stop(pr_field_write);
       }
 
@@ -217,12 +217,12 @@ public:
       prof_start(pr_moment);
       prof_start(pr_moment_calc);
       FieldsItem_Moments_1st_cc<Mparticles> pfd_moments{mprts};
-      auto&& pfd = adapt_item(pfd_moments);
+      auto&& pfd = pfd_moments.gt();
       prof_stop(pr_moment_calc);
 
       if (do_pfield_moments) {
         prof_start(pr_moment_write);
-        moments.write_pfd(adapt(evalMfields(pfd_moments)), pfd_moments);
+        moments.write_pfd(pfd, pfd_moments);
         prof_stop(pr_moment_write);
       }
 
