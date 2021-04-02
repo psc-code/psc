@@ -451,6 +451,8 @@ struct Mfields
   const MfieldsDomain& domain() const { return domain_; }
   const Grid_t& grid() const { return domain_.grid(); }
 
+  auto gt() { return Base::storage().view(); }
+
   template <typename FUNC>
   void Foreach_3d(int l, int r, FUNC&& F) const
   {
