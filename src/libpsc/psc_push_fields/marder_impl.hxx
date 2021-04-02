@@ -52,9 +52,23 @@ struct Marder_ : MarderBase
       io_.end_step();
     }
 
-    res_.assign(dive);
+    // res_.assign(dive);
+    for (int p = 0; p < res_.n_patches(); p++) {
+      for (int m = 0; m < res_.n_comps(); m++) {
+        kg::Box3 box = res_.box();
+        Int3 ijk;
+        for (ijk[2] = 0; ijk[2] < 2 * box.ib(2) + box.im(2); ijk[2]++) {
+          for (ijk[1] = 0; ijk[1] < 2 * box.ib(1) + box.im(1); ijk[1]++) {
+            for (ijk[0] = 0; ijk[0] < 2 * box.ib(0) + box.im(0); ijk[0]++) {
+              res_(m, ijk[0], ijk[1], ijk[2], p) = dive(m, ijk, p);
+            }
+          }
+        }
+      }
+    }
+
     res_.axpy_comp(0, -1., rho_, 0);
-    // // FIXME, why is this necessary?
+    // FIXME, why is this necessary?
     bnd_mf_.fill_ghosts(res_, 0, 1);
   }
 

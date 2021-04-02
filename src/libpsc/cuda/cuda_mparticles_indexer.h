@@ -301,7 +301,7 @@ struct BlockSimple2 : BlockBase
 {
   static Range<int> block_starts() { return range(1); }
 
-  static const int MAX_N_BLOCKS = 1024;
+  static constexpr int MAX_N_BLOCKS = 1024;
 
   template <typename CudaMparticles>
   static dim3 dimGrid(CudaMparticles& cmprts)
@@ -330,6 +330,9 @@ struct BlockSimple2 : BlockBase
     ci0[2] = block_pos[2] * BS::z::value;
   }
 };
+
+template <typename BS, typename DIM>
+constexpr int BlockSimple2<BS, DIM>::MAX_N_BLOCKS;
 
 // ======================================================================
 // BlockSimple specialized for dim_yz
