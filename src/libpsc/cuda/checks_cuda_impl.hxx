@@ -38,7 +38,7 @@ struct ChecksCuda
       item_rho_{grid},
       item_rho_m_{grid},
       item_rho_p_{grid},
-      divj_{grid, 1, grid.ibn}
+      divj_{grid, 1, {}}
   {}
 
   void continuity_before_particle_push(Mparticles& mprts)
