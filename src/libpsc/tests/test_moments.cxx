@@ -5,7 +5,7 @@
 
 using PushParticlesTestTypes =
   ::testing::Types<TestConfig1vbec3dSingleYZ, TestConfig1vbec3dSingle
-#ifdef USE_CUDA
+#ifdef xUSE_CUDA
                    ,
                    TestConfig1vbec3dCudaYZ, TestConfig1vbec3dCuda444
 #endif
@@ -35,11 +35,10 @@ TYPED_TEST(PushParticlesTest, Moment1)
     injector[0]({{5., 5., 5.}, {0., 0., 1.}, 1., 0});
   }
   Moment_n moment_n{mprts};
-  auto n = evalMfields(moment_n);
+  auto gt_n = moment_n.gt();
   for (int p = 0; p < grid.n_patches(); p++) {
-    auto nn = make_Fields3d<dim_xyz>(n[p]);
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-      real_t val = nn(0, i, j, k);
+      real_t val = gt_n(i, j, k, 0, p);
       if (i == 0 && j == 0 & k == 0) {
         EXPECT_NEAR(val, .005, eps) << "ijk " << i << " " << j << " " << k;
       } else {
@@ -78,10 +77,10 @@ TYPED_TEST(PushParticlesTest, Moment2) // FIXME, mostly copied
     i0 = 0;
 
   Moment_n moment_n{mprts};
-  auto n = evalMfields(moment_n);
+  auto gt_n = moment_n.gt();
   for (int p = 0; p < grid.n_patches(); p++) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-      real_t val = n(0, i, j, k, p);
+      real_t val = gt_n(i, j, k, 0, p);
       if (i == i0 && j == 0 & k == 0) {
         EXPECT_NEAR(val, .005, eps) << "ijk " << i << " " << j << " " << k;
       } else {
