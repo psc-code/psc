@@ -639,7 +639,7 @@ void run()
                       (1. + g.inject_interval * grid.dt / inject_tau);
 
   Moment_n moment_n(grid);
-  auto mf_n = make_MfieldsMoment_n<Moment_n::Mfields>(grid);
+  gt::gtensor<Moment_n::Mfields::Real, 5> gt_n;
 
   auto lf_inject = [&](int kind, Double3 pos, int p, Int3 idx,
                        psc_particle_npt& npt) {
@@ -648,15 +648,15 @@ void run()
 
       if (kind == MY_ELECTRON_HE || kind == MY_ELECTRON) {
         npt.n =
-          inject_target.n - (mf_n(MY_ELECTRON, idx[0], idx[1], idx[2], p) +
-                             mf_n(MY_ELECTRON_HE, idx[0], idx[1], idx[2], p));
+          inject_target.n - (gt_n(idx[0], idx[1], idx[2], MY_ELECTRON, p) +
+                             gt_n(idx[0], idx[1], idx[2], MY_ELECTRON_HE, p));
         if (kind == MY_ELECTRON_HE) {
           npt.n *= g.electron_HE_ratio;
         } else {
           npt.n *= (1. - g.electron_HE_ratio);
         }
       } else { // ions
-        npt.n -= mf_n(kind, idx[0], idx[1], idx[2], p);
+        npt.n -= gt_n(idx[0], idx[1], idx[2], kind, p);
       }
       if (npt.n < 0) {
         npt.n = 0;
@@ -679,7 +679,10 @@ void run()
       mpi_printf(comm, "***** Performing injection...\n");
       prof_start(pr_inject);
       moment_n.update(mprts);
-      mf_n = evalMfields(moment_n);
+      auto mflds_n = evalMfields(moment_n);
+      auto bnd = -mflds_n.ib();
+      gt_n = mflds_n.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
+                               _s(bnd[2], -bnd[2]));
       setup_particles.setupParticles(mprts, lf_inject);
       prof_stop(pr_inject);
     }
