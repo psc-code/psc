@@ -51,7 +51,7 @@ struct Marder_ : MarderBase
       io_.write(rho_.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
                                _s(bnd[2], -bnd[2])),
                 rho_.grid(), "rho", {"rho"});
-      io_.write(adapt(evalMfields(dive)), dive.grid(), "dive", {"dive"});
+      io_.write(dive.gt(), dive.grid(), "dive", {"dive"});
       io_.end_step();
     }
 

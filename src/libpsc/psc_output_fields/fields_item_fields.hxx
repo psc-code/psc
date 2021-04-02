@@ -596,6 +596,21 @@ public:
               grid.domain.dx[2]);
   }
 
+  gt::gtensor<Real, 5> gt() const
+  {
+    auto res =
+      gt::empty<Real>({grid().ldims[0], grid().ldims[1], grid().ldims[2],
+                       n_comps(), grid().n_patches()});
+    auto k_res = res.to_kernel();
+
+    gt::launch<5>(
+      res.shape(), GT_LAMBDA(int i, int j, int k, int m, int p) {
+        k_res(i, j, k, m, p) = (*this)(m, {i, j, k}, p);
+      });
+
+    return res;
+  }
+
   const Grid_t& grid() const { return mflds_.grid(); }
   Int3 ibn() const { return {}; }
   int n_patches() const { return grid().n_patches(); }
