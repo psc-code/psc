@@ -225,45 +225,6 @@ using Moment_n = typename Moment_n_Selector<Mparticles, Dim>::type;
 using Heating = typename HeatingSelector<Mparticles>::Heating;
 
 // ======================================================================
-// FIXME, so ugly...
-
-namespace detail
-{
-template <typename E>
-struct EvalMfields
-{
-  using type = MfieldsC;
-};
-
-#ifdef USE_CUDA
-
-template <>
-struct EvalMfields<MfieldsCuda>
-{
-  using type = HMFields;
-};
-
-#endif
-} // namespace detail
-
-template <typename Mfields>
-using EvalMfields_t = typename detail::EvalMfields<Mfields>::type;
-
-template <typename E>
-EvalMfields_t<E> make_MfieldsMoment_n(const Grid_t& grid)
-{
-  return MfieldsC(grid, grid.kinds.size(), {});
-}
-
-#ifdef USE_CUDA
-template <>
-HMFields make_MfieldsMoment_n<MfieldsCuda>(const Grid_t& grid)
-{
-  return HMFields({{}, grid.domain.ldims}, grid.kinds.size(), grid.n_patches());
-}
-#endif
-
-// ======================================================================
 // setupParameters
 
 void setupParameters()
