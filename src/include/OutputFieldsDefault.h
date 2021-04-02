@@ -48,15 +48,14 @@ public:
     }
   }
 
-  template <typename EXP>
-  void write_pfd(EXP& pfd)
+  template <typename E, typename EXP>
+  void write_pfd(const E& gt_pfd, EXP& pfd)
   {
     mpi_printf(pfd.grid().comm(), "***** Writing PFD output\n");
     pfield_next_ += pfield_interval;
     io_pfd_.begin_step(pfd.grid());
     io_pfd_.set_subset(pfd.grid(), rn, rx);
-    io_pfd_.write(adapt(evalMfields(pfd)), pfd.grid(), pfd.name(),
-                  pfd.comp_names());
+    io_pfd_.write(gt_pfd, pfd.grid(), pfd.name(), pfd.comp_names());
     io_pfd_.end_step();
   }
 
@@ -184,7 +183,7 @@ public:
 
       if (do_pfield) {
         prof_start(pr_field_write);
-        fields.write_pfd(pfd_jeh);
+        fields.write_pfd(adapt(evalMfields(pfd_jeh)), pfd_jeh);
         prof_stop(pr_field_write);
       }
 
@@ -223,7 +222,7 @@ public:
 
       if (do_pfield_moments) {
         prof_start(pr_moment_write);
-        moments.write_pfd(pfd_moments);
+        moments.write_pfd(adapt(evalMfields(pfd_moments)), pfd_moments);
         prof_stop(pr_moment_write);
       }
 
