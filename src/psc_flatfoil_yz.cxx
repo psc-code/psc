@@ -252,15 +252,14 @@ using EvalMfields_t = typename detail::EvalMfields<Mfields>::type;
 template <typename E>
 EvalMfields_t<E> make_MfieldsMoment_n(const Grid_t& grid)
 {
-  return MfieldsC(grid, grid.kinds.size(), grid.ibn);
+  return MfieldsC(grid, grid.kinds.size(), {});
 }
 
 #ifdef USE_CUDA
 template <>
 HMFields make_MfieldsMoment_n<MfieldsCuda>(const Grid_t& grid)
 {
-  return HMFields({-grid.ibn, grid.domain.ldims + 2 * grid.ibn},
-                  grid.kinds.size(), grid.n_patches());
+  return HMFields({{}, grid.domain.ldims}, grid.kinds.size(), grid.n_patches());
 }
 #endif
 

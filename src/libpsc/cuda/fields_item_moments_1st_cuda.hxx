@@ -76,7 +76,7 @@ public:
   }
 
   int n_comps() const { return Base::mres_.n_comps(); }
-  Int3 ibn() const { return Base::mres_.ibn(); }
+  Int3 ibn() const { return {}; }
 
   explicit Moment_n_1st_cuda(const Grid_t& grid)
     : Base{grid}, bnd_{grid, grid.ibn}

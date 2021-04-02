@@ -52,7 +52,7 @@ public:
   }
 
   int n_comps() const { return Base::mres_.n_comps(); }
-  Int3 ibn() const { return Base::mres_.ibn(); }
+  Int3 ibn() const { return {}; }
 
   explicit Moment_n_1st(const Grid_t& grid) : Base{grid} {}
 
@@ -76,7 +76,7 @@ public:
 
   auto gt()
   {
-    Int3 bnd = ibn();
+    Int3 bnd = Base::mres_.ibn();
     return Base::mres_.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
                                  _s(bnd[2], -bnd[2]));
   }
