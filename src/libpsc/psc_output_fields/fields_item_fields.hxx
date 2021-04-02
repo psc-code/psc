@@ -499,6 +499,13 @@ public:
     return mflds_(m, ijk[0], ijk[1], ijk[2], p);
   }
 
+  auto gt() const
+  {
+    auto bnd = -mflds_.ib();
+    return mflds_.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
+                            _s(bnd[2], -bnd[2]));
+  }
+
   const Grid_t& grid() const { return mflds_.grid(); }
   Int3 ibn() const { return {}; }
   int n_patches() const { return grid().n_patches(); }
@@ -548,6 +555,13 @@ public:
   const Real& operator()(int m, Int3 ijk, int p) const
   {
     return mflds_(m, ijk[0], ijk[1], ijk[2], p);
+  }
+
+  auto gt() const
+  {
+    auto bnd = -mflds_.ib();
+    return mflds_.storage().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
+                                 _s(bnd[2], -bnd[2]));
   }
 
   const Grid_t& grid() const { return mflds_.grid(); }

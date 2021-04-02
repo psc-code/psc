@@ -183,7 +183,7 @@ public:
 
       if (do_pfield) {
         prof_start(pr_field_write);
-        fields.write_pfd(adapt(evalMfields(pfd_jeh)), pfd_jeh);
+        fields.write_pfd(pfd_jeh.gt(), pfd_jeh);
         prof_stop(pr_field_write);
       }
 
