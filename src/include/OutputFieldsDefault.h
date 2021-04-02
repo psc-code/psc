@@ -196,7 +196,7 @@ public:
       }
       if (do_tfield) {
         prof_start(pr_field_write);
-        fields.write_tfd(adapt(fields.tfd_), pfd_jeh);
+        fields.write_tfd(fields.tfd_.gt(), pfd_jeh);
         prof_stop(pr_field_write);
       }
       prof_stop(pr_field);
@@ -235,7 +235,7 @@ public:
       }
       if (do_tfield_moments) {
         prof_start(pr_moment_write);
-        moments.write_tfd(adapt(moments.tfd_), pfd_moments);
+        moments.write_tfd(moments.tfd_.gt(), pfd_moments);
         prof_stop(pr_moment_write);
       }
       prof_stop(pr_moment);
