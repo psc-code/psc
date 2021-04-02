@@ -82,7 +82,7 @@ struct DMFields;
 template <>
 struct MfieldsCRTPInnerTypes<DMFields>
 {
-  using Storage = MfieldsStorageDeviceRaw;
+  using Storage = gt::gtensor_span_device<float, 5>;
 };
 
 struct DMFields : MfieldsCRTP<DMFields>
@@ -92,7 +92,9 @@ struct DMFields : MfieldsCRTP<DMFields>
   using real_t = typename Base::Real;
 
   DMFields(const kg::Box3& box, int n_comps, int n_patches, real_t* d_flds)
-    : Base{n_comps, box, n_patches}, storage_{d_flds}
+    : Base{n_comps, box, n_patches},
+      storage_{gt::adapt_device(
+        d_flds, gt::shape(box.im(0), box.im(1), box.im(2), n_comps, n_patches))}
   {}
 
 private:

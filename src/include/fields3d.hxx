@@ -33,10 +33,10 @@ GT_INLINE gt::shape_type<4> strides(const Int3& im, int n_comps)
 
 } // namespace detail
 
-template <typename T>
+template <typename T, typename S>
 struct SArrayView
 {
-  using Storage = gt::gtensor_span<T, 4>;
+  using Storage = gt::gtensor_span<T, 4, S>;
   using value_type = typename Storage::value_type;
   using reference = typename Storage::reference;
   using const_reference = typename Storage::const_reference;
@@ -267,7 +267,7 @@ public:
   using InnerTypes = MfieldsCRTPInnerTypes<D>;
   using Storage = typename InnerTypes::Storage;
   using Real = typename Storage::value_type;
-  using fields_view_t = SArrayView<Real>;
+  using fields_view_t = SArrayView<Real, typename Storage::space_type>;
 
   KG_INLINE const kg::Box3& box() const { return box_; }
   KG_INLINE const Int3& ib() const { return box_.ib(); }
@@ -294,7 +294,7 @@ public:
     size_t stride = n_comps() * box().size();
     return fields_view_t(
       box(), n_comps(),
-      gt::gtensor_span<Real, 4>(
+      gt::gtensor_span<Real, 4, typename Storage::space_type>(
         &storage().data()[p * stride],
         gt::shape(box().im(0), box().im(1), box().im(2), n_comps()),
         detail::strides(box().im(), n_comps())));

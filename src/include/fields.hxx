@@ -13,12 +13,31 @@
 // wrappers a gtensor expression, shifting the offset from zero and
 // setting to 0 indices in the invariant direction
 
+template <typename F>
+struct type_traits
+{
+  using value_type = typename F::value_type;
+  using reference = typename F::value_type&;
+  using const_reference = const typename F::value_type&;
+
+#ifdef USE_CUDA
+  static reference get(thrust::device_reference<value_type> ref)
+  {
+    return *((&ref).get());
+  }
+#endif
+
+  static reference get(reference ref) { return ref; }
+};
+
 template <typename F, typename D = dim_xyz>
 class Fields3d
 {
 public:
   using fields_t = F;
   using value_type = typename fields_t::value_type;
+  using reference = typename type_traits<fields_t>::reference;
+  using const_reference = typename type_traits<fields_t>::const_reference;
   using shape_type = typename fields_t::shape_type;
   using dim = D;
 
@@ -28,7 +47,7 @@ public:
   GT_INLINE int shape(int d) const { return e_.shape(d); }
   GT_INLINE Int3 ib() const { return ib_; }
 
-  GT_INLINE const value_type& operator()(int m, int _i, int _j, int _k) const
+  GT_INLINE const_reference operator()(int m, int _i, int _j, int _k) const
   {
     int i = dim::InvarX::value ? 0 : _i - ib_[0];
     int j = dim::InvarY::value ? 0 : _j - ib_[1];
@@ -37,13 +56,13 @@ public:
     return e_(i, j, k, m);
   }
 
-  GT_INLINE value_type& operator()(int m, int _i, int _j, int _k)
+  GT_INLINE reference operator()(int m, int _i, int _j, int _k)
   {
     int i = dim::InvarX::value ? 0 : _i - ib_[0];
     int j = dim::InvarY::value ? 0 : _j - ib_[1];
     int k = dim::InvarZ::value ? 0 : _k - ib_[2];
 
-    return e_(i, j, k, m);
+    return type_traits<F>::get(e_(i, j, k, m));
   }
 
 private:
