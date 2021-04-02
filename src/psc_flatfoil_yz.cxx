@@ -625,7 +625,11 @@ void run()
   inject_foil_params.Ti = g.target_Ti;
   InjectFoil inject_target{inject_foil_params};
 
+#if CASE == CASE_2D_SMALL
+  g.inject_interval = 2;
+#else
   g.inject_interval = 20;
+#endif
   int inject_tau = 40;
 
   SetupParticles<Mparticles> setup_particles(grid);
