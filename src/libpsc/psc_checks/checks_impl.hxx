@@ -41,7 +41,7 @@ struct Checks_
   Checks_(const Grid_t& grid, MPI_Comm comm, const ChecksParams& params)
     : ChecksParams(params),
       comm_{comm},
-      rho_{grid, 1, grid.ibn},
+      rho_{grid, 1, {}},
       rho_m_{grid, 1, {}},
       rho_p_{grid, 1, {}},
       divj_{grid, 1, {}}
@@ -183,9 +183,8 @@ struct Checks_
         writer.open("gauss");
       }
       writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
-      writer.write(adapt(evalMfields(rho_)), grid, "rho", {"rho"});
-      writer.write(adapt(evalMfields(dive)), dive.grid(), dive.name(),
-                   dive.comp_names());
+      writer.write(rho_.gt(), grid, "rho", {"rho"});
+      writer.write(dive.gt(), dive.grid(), dive.name(), dive.comp_names());
       writer.end_step();
     }
 
