@@ -6,10 +6,6 @@
 #include "psc_fields_cuda.h"
 
 template <typename E>
-struct isSpaceCuda : std::false_type
-{};
-
-template <typename E>
 inline auto to_gt(const E& e)
 {
   auto& grid = e.grid();
