@@ -600,31 +600,6 @@ void run()
                       (1. + g.inject_interval * grid.dt / inject_tau);
 
   Moment_n moment_n(grid);
-  gt::gtensor<Moment_n::Mfields::Real, 5> gt_n;
-
-  auto lf_inject = [&](int kind, Double3 pos, int p, Int3 idx,
-                       psc_particle_npt& npt) {
-    if (inject_target.is_inside(pos)) {
-      inject_target.init_npt(kind, pos, npt);
-
-      if (kind == MY_ELECTRON_HE || kind == MY_ELECTRON) {
-        npt.n =
-          inject_target.n - (gt_n(idx[0], idx[1], idx[2], MY_ELECTRON, p) +
-                             gt_n(idx[0], idx[1], idx[2], MY_ELECTRON_HE, p));
-        if (kind == MY_ELECTRON_HE) {
-          npt.n *= g.electron_HE_ratio;
-        } else {
-          npt.n *= (1. - g.electron_HE_ratio);
-        }
-      } else { // ions
-        npt.n -= gt_n(idx[0], idx[1], idx[2], kind, p);
-      }
-      if (npt.n < 0) {
-        npt.n = 0;
-      }
-      npt.n *= inject_fac;
-    }
-  };
 
   auto lf_inject_heat = [&](const Grid_t& grid, Mparticles& mprts) {
     static int pr_inject, pr_heating;
@@ -640,8 +615,32 @@ void run()
       mpi_printf(comm, "***** Performing injection...\n");
       prof_start(pr_inject);
       moment_n.update(mprts);
-      gt_n = moment_n.gt();
-      setup_particles.setupParticles(mprts, lf_inject);
+      auto gt_n = moment_n.gt();
+
+      setup_particles.setupParticles(
+        mprts,
+        [&](int kind, Double3 pos, int p, Int3 idx, psc_particle_npt& npt) {
+          if (inject_target.is_inside(pos)) {
+            inject_target.init_npt(kind, pos, npt);
+
+            if (kind == MY_ELECTRON_HE || kind == MY_ELECTRON) {
+              npt.n = inject_target.n -
+                      (gt_n(idx[0], idx[1], idx[2], MY_ELECTRON, p) +
+                       gt_n(idx[0], idx[1], idx[2], MY_ELECTRON_HE, p));
+              if (kind == MY_ELECTRON_HE) {
+                npt.n *= g.electron_HE_ratio;
+              } else {
+                npt.n *= (1. - g.electron_HE_ratio);
+              }
+            } else { // ions
+              npt.n -= gt_n(idx[0], idx[1], idx[2], kind, p);
+            }
+            if (npt.n < 0) {
+              npt.n = 0;
+            }
+            npt.n *= inject_fac;
+          }
+        });
       prof_stop(pr_inject);
     }
 
