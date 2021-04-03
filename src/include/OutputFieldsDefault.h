@@ -181,15 +181,8 @@ public:
       auto&& pfd = pfd_jeh.gt();
       prof_stop(pr_field_calc);
 
-      run(fields, pfd, pfd_jeh, do_pfield);
+      run(fields, pfd, pfd_jeh, do_pfield, doaccum_tfield);
 
-      if (doaccum_tfield) {
-        // tfd += pfd
-        prof_start(pr_field_acc);
-        fields.tfd_.gt() = fields.tfd_.gt() + pfd;
-        prof_stop(pr_field_acc);
-        fields.naccum_++;
-      }
       if (do_tfield) {
         prof_start(pr_field_write);
         fields.write_tfd(fields.tfd_.gt(), pfd_jeh);
@@ -216,15 +209,8 @@ public:
       auto&& pfd = pfd_moments.gt();
       prof_stop(pr_moment_calc);
 
-      run(moments, pfd, pfd_moments, do_pfield_moments);
+      run(moments, pfd, pfd_moments, do_pfield_moments, doaccum_tfield_moments);
 
-      if (doaccum_tfield_moments) {
-        // tfd += pfd
-        prof_start(pr_moment_acc);
-        moments.tfd_.gt() = moments.tfd_.gt() + pfd;
-        prof_stop(pr_moment_acc);
-        moments.naccum_++;
-      }
       if (do_tfield_moments) {
         prof_start(pr_moment_write);
         moments.write_tfd(moments.tfd_.gt(), pfd_moments);
@@ -239,10 +225,16 @@ public:
 private:
   template <typename E, typename Item>
   void run(OutputFieldsItem<Writer>& out, const E& pfd, Item& item,
-           bool do_pfield)
+           bool do_pfield, bool doaccum_tfield)
   {
     if (do_pfield) {
       out.write_pfd(pfd, item);
+    }
+
+    if (doaccum_tfield) {
+      // tfd += pfd
+      out.tfd_.gt() = out.tfd_.gt() + pfd;
+      out.naccum_++;
     }
   }
 
