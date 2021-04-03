@@ -48,37 +48,6 @@ public:
     }
   }
 
-  template <typename E, typename EXP>
-  void write_pfd(const E& gt_pfd, EXP& pfd)
-  {
-    mpi_printf(pfd.grid().comm(), "***** Writing PFD output for '%s'\n",
-               pfd.name());
-    pfield_next_ += pfield_interval;
-    io_pfd_.begin_step(pfd.grid());
-    io_pfd_.set_subset(pfd.grid(), rn, rx);
-    io_pfd_.write(gt_pfd, pfd.grid(), pfd.name(), pfd.comp_names());
-    io_pfd_.end_step();
-  }
-
-  template <typename E, typename EXP>
-  void write_tfd(E tfd, EXP& pfd)
-  {
-    mpi_printf(pfd.grid().comm(), "***** Writing TFD output for '%s'\n",
-               pfd.name());
-    tfield_next_ += tfield_interval;
-
-    // convert accumulated values to correct temporal mean
-    tfd = (1. / naccum_) * tfd;
-
-    io_tfd_.begin_step(pfd.grid());
-    io_tfd_.set_subset(pfd.grid(), rn, rx);
-    io_tfd_.write(tfd, pfd.grid(), pfd.name(), pfd.comp_names());
-    io_tfd_.end_step();
-    naccum_ = 0;
-
-    tfd = 0;
-  }
-
   template <typename F>
   void operator()(int timestep, F&& get_item)
   {
@@ -103,7 +72,13 @@ public:
       auto&& pfd = item.gt();
 
       if (do_pfield) {
-        write_pfd(pfd, item);
+        mpi_printf(item.grid().comm(), "***** Writing PFD output for '%s'\n",
+                   item.name());
+        pfield_next_ += pfield_interval;
+        io_pfd_.begin_step(item.grid());
+        io_pfd_.set_subset(item.grid(), rn, rx);
+        io_pfd_.write(pfd, item.grid(), item.name(), item.comp_names());
+        io_pfd_.end_step();
       }
 
       if (doaccum_tfield) {
@@ -113,7 +88,20 @@ public:
       }
 
       if (do_tfield) {
-        write_tfd(tfd_.gt(), item);
+        mpi_printf(item.grid().comm(), "***** Writing TFD output for '%s'\n",
+                   item.name());
+        tfield_next_ += tfield_interval;
+
+        // convert accumulated values to correct temporal mean
+        tfd_.gt() = (1. / naccum_) * tfd_.gt();
+
+        io_tfd_.begin_step(item.grid());
+        io_tfd_.set_subset(item.grid(), rn, rx);
+        io_tfd_.write(tfd_.gt(), item.grid(), item.name(), item.comp_names());
+        io_tfd_.end_step();
+        naccum_ = 0;
+
+        tfd_.gt() = 0;
       }
     }
   }
