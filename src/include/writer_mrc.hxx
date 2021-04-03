@@ -67,8 +67,8 @@ public:
 
   void end_step() { mrc_io_close(io_.get()); }
 
-  template <typename Mfields>
-  void write(const Mfields& mf, const Grid_t& grid, const std::string& name,
+  template <typename E>
+  void write(const E& e, const Grid_t& grid, const std::string& name,
              const std::vector<std::string>& comp_names)
   {
     int n_comps = comp_names.size();
@@ -85,13 +85,13 @@ public:
       mrc_fld_set_comp_name(fld, m, comp_names[m].c_str());
     }
 
-    assert(mf.shape() == gt::shape(grid.ldims[0], grid.ldims[1], grid.ldims[2],
-                                   n_comps, mf.shape(4)));
-    for (int p = 0; p < mf.shape(4); p++) {
+    assert(e.shape() == gt::shape(grid.ldims[0], grid.ldims[1], grid.ldims[2],
+                                  n_comps, grid.n_patches()));
+    for (int p = 0; p < e.shape(4); p++) {
       for (int m = 0; m < n_comps; m++) {
         mrc_fld_foreach(fld, i, j, k, 0, 0)
         {
-          MRC_S5(fld, i, j, k, m, p) = mf(i, j, k, m, p);
+          MRC_S5(fld, i, j, k, m, p) = e(i, j, k, m, p);
         }
         mrc_fld_foreach_end;
       }
