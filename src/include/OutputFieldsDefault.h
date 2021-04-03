@@ -177,7 +177,9 @@ public:
     if (do_pfield || doaccum_tfield) {
       prof_start(pr_field);
       Item_jeh<MfieldsState> item_jeh{mflds};
-      run(fields, item_jeh, do_pfield, doaccum_tfield, do_tfield);
+      run(
+        fields, do_pfield, doaccum_tfield,
+        do_tfield, [&]() -> auto& { return item_jeh; });
       prof_stop(pr_field);
     }
 
@@ -195,8 +197,9 @@ public:
     if (do_pfield_moments || doaccum_tfield_moments) {
       prof_start(pr_moment);
       FieldsItem_Moments_1st_cc<Mparticles> item_moments{mprts};
-      run(moments, item_moments, do_pfield_moments, doaccum_tfield_moments,
-          do_tfield_moments);
+      run(
+        moments, do_pfield_moments, doaccum_tfield_moments,
+        do_tfield_moments, [&]() -> auto& { return item_moments; });
       prof_stop(pr_moment);
     }
 
@@ -204,10 +207,11 @@ public:
   };
 
 private:
-  template <typename Item>
-  void run(OutputFieldsItem<Writer>& out, Item& item, bool do_pfield,
-           bool doaccum_tfield, bool do_tfield)
+  template <typename F>
+  void run(OutputFieldsItem<Writer>& out, bool do_pfield, bool doaccum_tfield,
+           bool do_tfield, F&& get_item)
   {
+    auto&& item = get_item();
     auto&& pfd = item.gt();
 
     if (do_pfield) {
