@@ -9,6 +9,18 @@
 template <typename BS>
 struct cuda_mparticles;
 
+namespace gt
+{
+
+template <typename E>
+auto host_mirror(const E& e)
+{
+  // FIXME, empty_like with space would be helpful
+  return gt::empty<typename E::value_type>(e.shape());
+}
+
+} // namespace gt
+
 // ======================================================================
 // Moment_rho_1st_nc_cuda
 
@@ -120,12 +132,12 @@ public:
 
   auto gt()
   {
-    auto h_mres = hostMirror(Base::mres_);
-    copy(Base::mres_, h_mres);
+    auto h_gt = gt::host_mirror(Base::mres_.gt());
+    gt::copy(Base::mres_.gt(), h_gt);
 
     Int3 bnd = Base::mres_.ibn();
-    return std::move(gt::eval(h_mres.gt()))
-      .view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]), _s(bnd[2], -bnd[2]));
+    return std::move(h_gt).view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
+                                _s(bnd[2], -bnd[2]));
   }
 
 private:

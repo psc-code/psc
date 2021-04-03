@@ -109,6 +109,8 @@ struct MfieldsCuda : MfieldsBase
   int index(int m, int i, int j, int k, int p) const;
   Patch operator[](int p) { return {*this, p}; }
 
+  gt::gtensor_span_device<real_t, 5> gt();
+
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
