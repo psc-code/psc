@@ -27,41 +27,6 @@ inline auto to_gt(const E& e)
 }
 
 // ======================================================================
-// evalMfields
-
-#ifdef USE_CUDA
-
-template <typename E,
-          typename std::enable_if<isSpaceCuda<E>::value, int>::type = 0>
-inline HMFields evalMfields(const MFexpression<E>& xp)
-{
-  static int pr, pr_0, pr_1, pr_2, pr_3;
-  if (!pr) {
-    pr = prof_register("evalMfields cuda", 1., 0, 0);
-    pr_0 = prof_register("evalMfields h", 1., 0, 0);
-    pr_1 = prof_register("evalMfields hm", 1., 0, 0);
-    pr_2 = prof_register("evalMfields dh", 1., 0, 0);
-    pr_3 = prof_register("evalMfields hh", 1., 0, 0);
-  }
-
-  prof_start(pr);
-  const auto& exp = xp.derived().result();
-
-  prof_start(pr_1);
-  auto h_exp = hostMirror(exp);
-  prof_stop(pr_1);
-
-  prof_start(pr_2);
-  copy(exp, h_exp);
-  prof_stop(pr_2);
-
-  prof_stop(pr);
-  return h_exp;
-}
-
-#endif
-
-// ======================================================================
 
 using MfieldsState_t = MfieldsStateDouble;
 using Mfields_t = MfieldsC;
