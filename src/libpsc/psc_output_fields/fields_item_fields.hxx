@@ -91,23 +91,6 @@ inline HMFields evalMfields(const MFexpression<E>& xp)
   return h_exp;
 }
 
-inline MfieldsC evalMfields(const MfieldsCuda& mf)
-{
-  MfieldsC mflds{mf.grid(), mf.n_comps(), mf.ibn()};
-
-  auto h_mf = hostMirror(mf);
-  copy(mf, h_mf);
-
-  for (int p = 0; p < mflds.n_patches(); p++) {
-    for (int m = 0; m < mf.n_comps(); m++) {
-      mflds.Foreach_3d(0, 0, [&](int i, int j, int k) {
-        mflds(m, i, j, k, p) = h_mf(m, i, j, k, p);
-      });
-    }
-  }
-  return mflds;
-}
-
 #endif
 
 // ======================================================================
