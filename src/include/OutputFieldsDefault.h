@@ -16,6 +16,7 @@ using FieldsItem_Moments_1st_cc = Moments_1st<Mparticles>;
 
 struct OutputFieldsItemParams
 {
+  std::string data_dir = ".";
   int pfield_interval = 0;
   int pfield_first = 0;
   int tfield_interval = 0;
@@ -34,17 +35,17 @@ class OutputFieldsItem : public OutputFieldsItemParams
 {
 public:
   OutputFieldsItem(const Grid_t& grid, const OutputFieldsItemParams& prm,
-                   int n_comps, Int3 ibn, const char* data_dir, std::string sfx)
+                   int n_comps, Int3 ibn, std::string sfx)
     : OutputFieldsItemParams{prm},
       pfield_next_{prm.pfield_first},
       tfield_next_{prm.tfield_first},
       tfd_{grid, n_comps, {}}
   {
     if (pfield_interval > 0) {
-      io_pfd_.open("pfd" + sfx, data_dir);
+      io_pfd_.open("pfd" + sfx, prm.data_dir);
     }
     if (tfield_interval > 0) {
-      io_tfd_.open("tfd" + sfx, data_dir);
+      io_tfd_.open("tfd" + sfx, prm.data_dir);
     }
   }
 
@@ -123,8 +124,6 @@ private:
 
 struct OutputFieldsParams
 {
-  const char* data_dir = {"."};
-
   OutputFieldsItemParams fields;
   OutputFieldsItemParams moments;
 };
@@ -143,14 +142,10 @@ public:
   // ctor
 
   OutputFieldsDefault(const Grid_t& grid, const OutputFieldsParams& prm)
-    : fields{grid, prm.fields,   Item_jeh<MfieldsFake>::n_comps(),
-             {},   prm.data_dir, ""},
-      moments{grid,
-              prm.moments,
+    : fields{grid, prm.fields, Item_jeh<MfieldsFake>::n_comps(), {}, ""},
+      moments{grid, prm.moments,
               FieldsItem_Moments_1st_cc<MparticlesFake>::n_comps(grid),
-              grid.ibn,
-              prm.data_dir,
-              "_moments"}
+              grid.ibn, "_moments"}
   {}
 
   // ----------------------------------------------------------------------
