@@ -174,12 +174,10 @@ public:
                             timestep % fields.tfield_average_every == 0) ||
                            timestep == 0);
 
-    if (do_pfield || doaccum_tfield) {
-      prof_start(pr_field);
-      run(fields, do_pfield, doaccum_tfield, do_tfield,
-          [&]() { return Item_jeh<MfieldsState>(mflds); });
-      prof_stop(pr_field);
-    }
+    prof_start(pr_field);
+    run(fields, do_pfield, doaccum_tfield, do_tfield,
+        [&]() { return Item_jeh<MfieldsState>(mflds); });
+    prof_stop(pr_field);
 
     bool do_pfield_moments =
       moments.pfield_interval > 0 && timestep >= moments.pfield_next_;
@@ -192,12 +190,10 @@ public:
         timestep % moments.tfield_average_every == 0) ||
        timestep == 0);
 
-    if (do_pfield_moments || doaccum_tfield_moments) {
-      prof_start(pr_moment);
-      run(moments, do_pfield_moments, doaccum_tfield_moments, do_tfield_moments,
-          [&]() { return FieldsItem_Moments_1st_cc<Mparticles>(mprts); });
-      prof_stop(pr_moment);
-    }
+    prof_start(pr_moment);
+    run(moments, do_pfield_moments, doaccum_tfield_moments, do_tfield_moments,
+        [&]() { return FieldsItem_Moments_1st_cc<Mparticles>(mprts); });
+    prof_stop(pr_moment);
 
     prof_stop(pr);
   };
@@ -207,21 +203,23 @@ private:
   void run(OutputFieldsItem<Writer>& out, bool do_pfield, bool doaccum_tfield,
            bool do_tfield, F&& get_item)
   {
-    auto&& item = get_item();
-    auto&& pfd = item.gt();
+    if (do_pfield || doaccum_tfield) {
+      auto&& item = get_item();
+      auto&& pfd = item.gt();
 
-    if (do_pfield) {
-      out.write_pfd(pfd, item);
-    }
+      if (do_pfield) {
+        out.write_pfd(pfd, item);
+      }
 
-    if (doaccum_tfield) {
-      // tfd += pfd
-      out.tfd_.gt() = out.tfd_.gt() + pfd;
-      out.naccum_++;
-    }
+      if (doaccum_tfield) {
+        // tfd += pfd
+        out.tfd_.gt() = out.tfd_.gt() + pfd;
+        out.naccum_++;
+      }
 
-    if (do_tfield) {
-      out.write_tfd(out.tfd_.gt(), item);
+      if (do_tfield) {
+        out.write_tfd(out.tfd_.gt(), item);
+      }
     }
   }
 
