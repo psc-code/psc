@@ -131,24 +131,12 @@ public:
   {
     const auto& grid = mflds._grid();
 
-    static int pr;
+    static int pr, pr_fields, pr_moments;
     if (!pr) {
       pr = prof_register("outf", 1., 0, 0);
+      pr_fields = prof_register("outf_fields", 1., 0, 0);
+      pr_moments = prof_register("outf_moments", 1., 0, 0);
     }
-#if 1
-    static int pr_field, pr_moment, pr_field_calc, pr_moment_calc,
-      pr_field_write, pr_moment_write, pr_field_acc, pr_moment_acc;
-    if (!pr_field) {
-      pr_field = prof_register("outf_field", 1., 0, 0);
-      pr_moment = prof_register("outf_moment", 1., 0, 0);
-      pr_field_calc = prof_register("outf_field_calc", 1., 0, 0);
-      pr_moment_calc = prof_register("outf_moment_calc", 1., 0, 0);
-      pr_field_write = prof_register("outf_field_write", 1., 0, 0);
-      pr_moment_write = prof_register("outf_moment_write", 1., 0, 0);
-      pr_field_acc = prof_register("outf_field_acc", 1., 0, 0);
-      pr_moment_acc = prof_register("outf_moment_acc", 1., 0, 0);
-    }
-#endif
 
     auto timestep = grid.timestep();
     if (first_time) {
@@ -164,14 +152,14 @@ public:
 
     prof_start(pr);
 
-    prof_start(pr_field);
+    prof_start(pr_fields);
     run(fields, timestep, [&]() { return Item_jeh<MfieldsState>(mflds); });
-    prof_stop(pr_field);
+    prof_stop(pr_fields);
 
-    prof_start(pr_moment);
+    prof_start(pr_moments);
     run(moments, timestep,
         [&]() { return FieldsItem_Moments_1st_cc<Mparticles>(mprts); });
-    prof_stop(pr_moment);
+    prof_stop(pr_moments);
 
     prof_stop(pr);
   };
