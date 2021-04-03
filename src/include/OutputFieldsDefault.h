@@ -77,6 +77,45 @@ public:
     tfd = 0;
   }
 
+  template <typename F>
+  void operator()(int timestep, F&& get_item)
+  {
+    if (first_time_) {
+      first_time_ = false;
+      if (timestep != 0) {
+        pfield_next_ = timestep + pfield_interval;
+        tfield_next_ = timestep + tfield_interval;
+      }
+    }
+
+    bool do_pfield = pfield_interval > 0 && timestep >= pfield_next_;
+    bool do_tfield = tfield_interval > 0 && timestep >= tfield_next_;
+    bool doaccum_tfield =
+      tfield_interval > 0 &&
+      (((timestep >= (tfield_next_ - tfield_average_length + 1)) &&
+        timestep % tfield_average_every == 0) ||
+       timestep == 0);
+
+    if (do_pfield || doaccum_tfield) {
+      auto&& item = get_item();
+      auto&& pfd = item.gt();
+
+      if (do_pfield) {
+        write_pfd(pfd, item);
+      }
+
+      if (doaccum_tfield) {
+        // tfd += pfd
+        tfd_.gt() = tfd_.gt() + pfd;
+        naccum_++;
+      }
+
+      if (do_tfield) {
+        write_tfd(tfd_.gt(), item);
+      }
+    }
+  }
+
   // private:
   int pfield_next_;
   int tfield_next_;
@@ -144,56 +183,16 @@ public:
     prof_start(pr);
 
     prof_start(pr_fields);
-    run(fields, timestep, [&]() { return Item_jeh<MfieldsState>(mflds); });
+    fields(timestep, [&]() { return Item_jeh<MfieldsState>(mflds); });
     prof_stop(pr_fields);
 
     prof_start(pr_moments);
-    run(moments, timestep,
-        [&]() { return FieldsItem_Moments_1st_cc<Mparticles>(mprts); });
+    moments(timestep,
+            [&]() { return FieldsItem_Moments_1st_cc<Mparticles>(mprts); });
     prof_stop(pr_moments);
 
     prof_stop(pr);
   };
-
-private:
-  template <typename F>
-  void run(OutputFieldsItem<Writer>& out, int timestep, F&& get_item)
-  {
-    if (out.first_time_) {
-      out.first_time_ = false;
-      if (timestep != 0) {
-        out.pfield_next_ = timestep + out.pfield_interval;
-        out.tfield_next_ = timestep + out.tfield_interval;
-      }
-    }
-
-    bool do_pfield = out.pfield_interval > 0 && timestep >= out.pfield_next_;
-    bool do_tfield = out.tfield_interval > 0 && timestep >= out.tfield_next_;
-    bool doaccum_tfield =
-      out.tfield_interval > 0 &&
-      (((timestep >= (out.tfield_next_ - out.tfield_average_length + 1)) &&
-        timestep % out.tfield_average_every == 0) ||
-       timestep == 0);
-
-    if (do_pfield || doaccum_tfield) {
-      auto&& item = get_item();
-      auto&& pfd = item.gt();
-
-      if (do_pfield) {
-        out.write_pfd(pfd, item);
-      }
-
-      if (doaccum_tfield) {
-        // tfd += pfd
-        out.tfd_.gt() = out.tfd_.gt() + pfd;
-        out.naccum_++;
-      }
-
-      if (do_tfield) {
-        out.write_tfd(out.tfd_.gt(), item);
-      }
-    }
-  }
 
 public:
   const char* data_dir;
