@@ -50,29 +50,6 @@ private:
 };
 
 // ======================================================================
-// ItemLoopPatches
-//
-// Adapter from per-patch Item with ::set
-
-template <typename ItemPatch>
-struct ItemLoopPatches : ItemPatch
-{
-  using MfieldsState = typename ItemPatch::MfieldsState;
-  using Mfields = typename ItemPatch::Mfields;
-
-  static void run(const Grid_t& grid, MfieldsState& mflds, Mfields& mres)
-  {
-    for (int p = 0; p < mres.n_patches(); p++) {
-      auto F = mflds[p];
-      auto R = mres[p];
-      mres.Foreach_3d(0, 0, [&](int i, int j, int k) {
-        ItemPatch::set(grid, R, F, i, j, k);
-      });
-    }
-  }
-};
-
-// ======================================================================
 // addKindSuffix
 
 inline std::vector<std::string> addKindSuffix(
