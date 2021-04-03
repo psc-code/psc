@@ -615,7 +615,9 @@ void run()
       mpi_printf(comm, "***** Performing injection...\n");
       prof_start(pr_inject);
       moment_n.update(mprts);
-      auto gt_n = moment_n.gt();
+      auto d_n = moment_n.gt();
+      auto h_n = gt::host_mirror(d_n);
+      gt::copy(gt::eval(d_n), h_n); // FIXME shouldn't need eval (?)
 
       setup_particles.setupParticles(
         mprts,
@@ -625,15 +627,15 @@ void run()
 
             if (kind == MY_ELECTRON_HE || kind == MY_ELECTRON) {
               npt.n = inject_target.n -
-                      (gt_n(idx[0], idx[1], idx[2], MY_ELECTRON, p) +
-                       gt_n(idx[0], idx[1], idx[2], MY_ELECTRON_HE, p));
+                      (h_n(idx[0], idx[1], idx[2], MY_ELECTRON, p) +
+                       h_n(idx[0], idx[1], idx[2], MY_ELECTRON_HE, p));
               if (kind == MY_ELECTRON_HE) {
                 npt.n *= g.electron_HE_ratio;
               } else {
                 npt.n *= (1. - g.electron_HE_ratio);
               }
             } else { // ions
-              npt.n -= gt_n(idx[0], idx[1], idx[2], kind, p);
+              npt.n -= h_n(idx[0], idx[1], idx[2], kind, p);
             }
             if (npt.n < 0) {
               npt.n = 0;
