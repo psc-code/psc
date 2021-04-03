@@ -51,7 +51,8 @@ public:
   template <typename E, typename EXP>
   void write_pfd(const E& gt_pfd, EXP& pfd)
   {
-    mpi_printf(pfd.grid().comm(), "***** Writing PFD output\n");
+    mpi_printf(pfd.grid().comm(), "***** Writing PFD output for '%s'\n",
+               pfd.name());
     pfield_next_ += pfield_interval;
     io_pfd_.begin_step(pfd.grid());
     io_pfd_.set_subset(pfd.grid(), rn, rx);
@@ -62,7 +63,8 @@ public:
   template <typename E, typename EXP>
   void write_tfd(E tfd, EXP& pfd)
   {
-    mpi_printf(pfd.grid().comm(), "***** Writing TFD output\n");
+    mpi_printf(pfd.grid().comm(), "***** Writing TFD output for '%s'\n",
+               pfd.name());
     tfield_next_ += tfield_interval;
 
     // convert accumulated values to correct temporal mean
@@ -116,7 +118,7 @@ public:
     }
   }
 
-  // private:
+private:
   int pfield_next_;
   int tfield_next_;
   Writer io_pfd_;
