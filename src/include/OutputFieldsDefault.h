@@ -164,34 +164,12 @@ public:
 
     prof_start(pr);
 
-    bool do_pfield =
-      fields.pfield_interval > 0 && timestep >= fields.pfield_next_;
-    bool do_tfield =
-      fields.tfield_interval > 0 && timestep >= fields.tfield_next_;
-    bool doaccum_tfield = fields.tfield_interval > 0 &&
-                          (((timestep >= (fields.tfield_next_ -
-                                          fields.tfield_average_length + 1)) &&
-                            timestep % fields.tfield_average_every == 0) ||
-                           timestep == 0);
-
     prof_start(pr_field);
-    run(fields, do_pfield, doaccum_tfield, do_tfield,
-        [&]() { return Item_jeh<MfieldsState>(mflds); });
+    run(fields, timestep, [&]() { return Item_jeh<MfieldsState>(mflds); });
     prof_stop(pr_field);
 
-    bool do_pfield_moments =
-      moments.pfield_interval > 0 && timestep >= moments.pfield_next_;
-    bool do_tfield_moments =
-      moments.tfield_interval > 0 && timestep >= moments.tfield_next_;
-    bool doaccum_tfield_moments =
-      moments.tfield_interval > 0 &&
-      (((timestep >=
-         (moments.tfield_next_ - moments.tfield_average_length + 1)) &&
-        timestep % moments.tfield_average_every == 0) ||
-       timestep == 0);
-
     prof_start(pr_moment);
-    run(moments, do_pfield_moments, doaccum_tfield_moments, do_tfield_moments,
+    run(moments, timestep,
         [&]() { return FieldsItem_Moments_1st_cc<Mparticles>(mprts); });
     prof_stop(pr_moment);
 
@@ -200,9 +178,16 @@ public:
 
 private:
   template <typename F>
-  void run(OutputFieldsItem<Writer>& out, bool do_pfield, bool doaccum_tfield,
-           bool do_tfield, F&& get_item)
+  void run(OutputFieldsItem<Writer>& out, int timestep, F&& get_item)
   {
+    bool do_pfield = out.pfield_interval > 0 && timestep >= out.pfield_next_;
+    bool do_tfield = out.tfield_interval > 0 && timestep >= out.tfield_next_;
+    bool doaccum_tfield =
+      out.tfield_interval > 0 &&
+      (((timestep >= (out.tfield_next_ - out.tfield_average_length + 1)) &&
+        timestep % out.tfield_average_every == 0) ||
+       timestep == 0);
+
     if (do_pfield || doaccum_tfield) {
       auto&& item = get_item();
       auto&& pfd = item.gt();
