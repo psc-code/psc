@@ -176,10 +176,8 @@ public:
 
     if (do_pfield || doaccum_tfield) {
       prof_start(pr_field);
-      Item_jeh<MfieldsState> item_jeh{mflds};
-      run(
-        fields, do_pfield, doaccum_tfield,
-        do_tfield, [&]() -> auto& { return item_jeh; });
+      run(fields, do_pfield, doaccum_tfield, do_tfield,
+          [&]() { return Item_jeh<MfieldsState>(mflds); });
       prof_stop(pr_field);
     }
 
@@ -196,10 +194,8 @@ public:
 
     if (do_pfield_moments || doaccum_tfield_moments) {
       prof_start(pr_moment);
-      FieldsItem_Moments_1st_cc<Mparticles> item_moments{mprts};
-      run(
-        moments, do_pfield_moments, doaccum_tfield_moments,
-        do_tfield_moments, [&]() -> auto& { return item_moments; });
+      run(moments, do_pfield_moments, doaccum_tfield_moments, do_tfield_moments,
+          [&]() { return FieldsItem_Moments_1st_cc<Mparticles>(mprts); });
       prof_stop(pr_moment);
     }
 
