@@ -141,22 +141,6 @@ public:
     }
 
     auto timestep = grid.timestep();
-    if (fields.first_time_) {
-      fields.first_time_ = false;
-      if (timestep != 0) {
-        fields.pfield_next_ = timestep + fields.pfield_interval;
-        fields.tfield_next_ = timestep + fields.tfield_interval;
-      }
-    }
-    if (moments.first_time_) {
-      moments.first_time_ = false;
-      if (timestep != 0) {
-        moments.pfield_next_ = timestep + moments.pfield_interval;
-        moments.tfield_next_ = timestep + moments.tfield_interval;
-        return;
-      }
-    }
-
     prof_start(pr);
 
     prof_start(pr_fields);
@@ -175,6 +159,14 @@ private:
   template <typename F>
   void run(OutputFieldsItem<Writer>& out, int timestep, F&& get_item)
   {
+    if (out.first_time_) {
+      out.first_time_ = false;
+      if (timestep != 0) {
+        out.pfield_next_ = timestep + out.pfield_interval;
+        out.tfield_next_ = timestep + out.tfield_interval;
+      }
+    }
+
     bool do_pfield = out.pfield_interval > 0 && timestep >= out.pfield_next_;
     bool do_tfield = out.tfield_interval > 0 && timestep >= out.tfield_next_;
     bool doaccum_tfield =
