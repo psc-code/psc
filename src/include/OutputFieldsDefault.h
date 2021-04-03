@@ -176,13 +176,8 @@ public:
 
     if (do_pfield || doaccum_tfield) {
       prof_start(pr_field);
-      prof_start(pr_field_calc);
-      Item_jeh<MfieldsState> pfd_jeh{mflds};
-      auto&& pfd = pfd_jeh.gt();
-      prof_stop(pr_field_calc);
-
-      run(fields, pfd, pfd_jeh, do_pfield, doaccum_tfield, do_tfield);
-
+      Item_jeh<MfieldsState> item_jeh{mflds};
+      run(fields, item_jeh, do_pfield, doaccum_tfield, do_tfield);
       prof_stop(pr_field);
     }
 
@@ -199,14 +194,9 @@ public:
 
     if (do_pfield_moments || doaccum_tfield_moments) {
       prof_start(pr_moment);
-      prof_start(pr_moment_calc);
-      FieldsItem_Moments_1st_cc<Mparticles> pfd_moments{mprts};
-      auto&& pfd = pfd_moments.gt();
-      prof_stop(pr_moment_calc);
-
-      run(moments, pfd, pfd_moments, do_pfield_moments, doaccum_tfield_moments,
+      FieldsItem_Moments_1st_cc<Mparticles> item_moments{mprts};
+      run(moments, item_moments, do_pfield_moments, doaccum_tfield_moments,
           do_tfield_moments);
-
       prof_stop(pr_moment);
     }
 
@@ -214,10 +204,12 @@ public:
   };
 
 private:
-  template <typename E, typename Item>
-  void run(OutputFieldsItem<Writer>& out, const E& pfd, Item& item,
-           bool do_pfield, bool doaccum_tfield, bool do_tfield)
+  template <typename Item>
+  void run(OutputFieldsItem<Writer>& out, Item& item, bool do_pfield,
+           bool doaccum_tfield, bool do_tfield)
   {
+    auto&& pfd = item.gt();
+
     if (do_pfield) {
       out.write_pfd(pfd, item);
     }
