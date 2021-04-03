@@ -29,38 +29,6 @@ inline auto to_gt(const E& e)
 // ======================================================================
 // evalMfields
 
-template <typename E,
-          typename std::enable_if<!isSpaceCuda<E>::value, int>::type = 0>
-inline MfieldsC evalMfields(const MFexpression<E>& xp)
-{
-  const auto& exp = xp.derived();
-  MfieldsC mflds{exp.grid(), exp.n_comps(), exp.ibn()};
-
-  for (int p = 0; p < mflds.n_patches(); p++) {
-    for (int m = 0; m < exp.n_comps(); m++) {
-      mflds.Foreach_3d(0, 0, [&](int i, int j, int k) {
-        mflds(m, i, j, k, p) = exp(m, {i, j, k}, p);
-      });
-    }
-  }
-  return mflds;
-}
-
-inline MfieldsC evalMfields(const MfieldsSingle& _exp)
-{
-  auto& exp = const_cast<MfieldsSingle&>(_exp);
-  MfieldsC mflds{exp.grid(), exp.n_comps(), exp.ibn()};
-
-  for (int p = 0; p < mflds.n_patches(); p++) {
-    for (int m = 0; m < exp.n_comps(); m++) {
-      mflds.Foreach_3d(0, 0, [&](int i, int j, int k) {
-        mflds(m, i, j, k, p) = exp(m, i, j, k, p);
-      });
-    }
-  }
-  return mflds;
-}
-
 #ifdef USE_CUDA
 
 template <typename E,
