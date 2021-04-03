@@ -68,9 +68,12 @@ public:
   void end_step() { mrc_io_close(io_.get()); }
 
   template <typename E>
-  void write(const E& e, const Grid_t& grid, const std::string& name,
+  void write(const E& expr, const Grid_t& grid, const std::string& name,
              const std::vector<std::string>& comp_names)
   {
+    auto e = gt::host_mirror(expr);
+    gt::copy(gt::eval(expr), e);
+
     int n_comps = comp_names.size();
     // FIXME, should generally equal the # of component in mflds,
     // but this way allows us to write fewer components, useful to hack around
