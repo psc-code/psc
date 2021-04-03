@@ -181,11 +181,7 @@ public:
       auto&& pfd = pfd_jeh.gt();
       prof_stop(pr_field_calc);
 
-      if (do_pfield) {
-        prof_start(pr_field_write);
-        fields.write_pfd(pfd, pfd_jeh);
-        prof_stop(pr_field_write);
-      }
+      run(fields, pfd, pfd_jeh, do_pfield);
 
       if (doaccum_tfield) {
         // tfd += pfd
@@ -220,11 +216,7 @@ public:
       auto&& pfd = pfd_moments.gt();
       prof_stop(pr_moment_calc);
 
-      if (do_pfield_moments) {
-        prof_start(pr_moment_write);
-        moments.write_pfd(pfd, pfd_moments);
-        prof_stop(pr_moment_write);
-      }
+      run(moments, pfd, pfd_moments, do_pfield_moments);
 
       if (doaccum_tfield_moments) {
         // tfd += pfd
@@ -243,6 +235,16 @@ public:
 
     prof_stop(pr);
   };
+
+private:
+  template <typename E, typename Item>
+  void run(OutputFieldsItem<Writer>& out, const E& pfd, Item& item,
+           bool do_pfield)
+  {
+    if (do_pfield) {
+      out.write_pfd(pfd, item);
+    }
+  }
 
 public:
   const char* data_dir;
