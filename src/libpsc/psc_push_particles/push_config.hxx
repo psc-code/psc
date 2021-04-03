@@ -12,6 +12,8 @@
 #include "push_particles_esirkepov.hxx"
 #include "push_particles_1vb.hxx"
 
+#include <gtensor/gtensor.h>
+
 #ifndef __CUDACC__
 #define atomicAdd(addr, val)                                                   \
   do {                                                                         \
@@ -27,14 +29,14 @@ struct curr_cache_t : fields_t
   curr_cache_t(fields_t& f) : fields_t({f.ib(), f.im()}, f.n_comps(), f.data())
   {}
 
-  void add(int m, int i, int j, int k, real_t val)
+  GT_INLINE void add(int m, int i, int j, int k, real_t val)
   {
     Fields3d<fields_t, dim_curr> J(*this);
     real_t* addr = &J(JXI + m, i, j, k);
     atomicAdd(addr, val);
   }
 
-  void add(int m, int i, int j, int k, real_t val, const int off[3])
+  GT_INLINE void add(int m, int i, int j, int k, real_t val, const int off[3])
   {
     assert(off[0] == 0 && off[1] == 0 && off[2] == 0);
     add(m, i, j, k, val);
