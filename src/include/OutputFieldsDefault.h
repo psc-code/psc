@@ -143,14 +143,13 @@ public:
   // ctor
 
   OutputFieldsDefault(const Grid_t& grid, const OutputFieldsParams& prm)
-    : data_dir{prm.data_dir},
-      fields{grid, prm.fields, Item_jeh<MfieldsFake>::n_comps(),
-             {},   data_dir,   ""},
+    : fields{grid, prm.fields,   Item_jeh<MfieldsFake>::n_comps(),
+             {},   prm.data_dir, ""},
       moments{grid,
               prm.moments,
               FieldsItem_Moments_1st_cc<MparticlesFake>::n_comps(grid),
               grid.ibn,
-              data_dir,
+              prm.data_dir,
               "_moments"}
   {}
 
@@ -185,7 +184,6 @@ public:
   };
 
 public:
-  const char* data_dir;
   OutputFieldsItem<Writer> fields;
   OutputFieldsItem<Writer> moments;
 };
