@@ -85,6 +85,8 @@ public:
   // tfd -- FIXME?! always MfieldsC
   MfieldsC tfd_;
   int naccum_ = 0;
+  bool first_time_ =
+    true; // to keep track so we can skip first output on restart
 };
 
 // ======================================================================
@@ -139,11 +141,16 @@ public:
     }
 
     auto timestep = grid.timestep();
-    if (first_time) {
-      first_time = false;
+    if (fields.first_time_) {
+      fields.first_time_ = false;
       if (timestep != 0) {
         fields.pfield_next_ = timestep + fields.pfield_interval;
         fields.tfield_next_ = timestep + fields.tfield_interval;
+      }
+    }
+    if (moments.first_time_) {
+      moments.first_time_ = false;
+      if (timestep != 0) {
         moments.pfield_next_ = timestep + moments.pfield_interval;
         moments.tfield_next_ = timestep + moments.tfield_interval;
         return;
@@ -200,9 +207,6 @@ public:
   const char* data_dir;
   OutputFieldsItem<Writer> fields;
   OutputFieldsItem<Writer> moments;
-
-private:
-  bool first_time = true;
 };
 
 #ifdef xPSC_HAVE_ADIOS2
