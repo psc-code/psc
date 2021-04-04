@@ -30,7 +30,7 @@ template <typename T>
 class MfieldsTest : public ::testing::Test
 {};
 
-#ifdef USE_CUDA
+#ifdef xUSE_CUDA
 using MfieldsTestTypes = ::testing::Types<MfieldsSingle, MfieldsC, MfieldsCuda>;
 #else
 using MfieldsTestTypes = ::testing::Types<MfieldsSingle, MfieldsC>;
