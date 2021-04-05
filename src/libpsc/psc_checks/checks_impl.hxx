@@ -44,7 +44,7 @@ struct Checks_
       rho_{grid, 1, grid.ibn},
       rho_m_{grid, 1, grid.ibn},
       rho_p_{grid, 1, grid.ibn},
-      divj_{grid, 1, grid.ibn}
+      divj_{grid, 1, {}}
   {}
 
   // ======================================================================
