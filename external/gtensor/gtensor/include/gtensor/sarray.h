@@ -29,12 +29,15 @@ template <typename T, std::size_t N>
 class sarray
 {
 public:
+  constexpr static std::size_t dimension = N;
+
   sarray() = default;
 
   // construct from exactly N elements provided
   template <typename... U, std::enable_if_t<sizeof...(U) == N, int> = 0>
-  sarray(U... args);
+  GT_INLINE sarray(U... args);
   sarray(const T* p, std::size_t n);
+  sarray(const T data[N]);
 
   template <typename O>
   bool operator==(const O& o) const;
@@ -66,14 +69,20 @@ inline std::ostream& operator<<(std::ostream& os, const sarray<T, N>& arr);
 
 template <typename T, std::size_t N>
 template <typename... U, std::enable_if_t<sizeof...(U) == N, int>>
-sarray<T, N>::sarray(U... args) : data_{T(args)...}
+GT_INLINE sarray<T, N>::sarray(U... args) : data_{T(args)...}
 {}
 
 template <typename T, std::size_t N>
-inline sarray<T, N>::sarray(const T* p, std::size_t n)
+sarray<T, N>::sarray(const T* p, std::size_t n)
 {
   assert(n == N);
   std::copy(p, p + n, data_);
+}
+
+template <typename T, std::size_t N>
+sarray<T, N>::sarray(const T data[N])
+{
+  std::copy(data, data + N, data_);
 }
 
 template <typename T, std::size_t N>
@@ -132,6 +141,34 @@ template <typename T, std::size_t N>
 GT_INLINE T* sarray<T, N>::end()
 {
   return data_ + N;
+}
+
+template <typename T, std::size_t N>
+GT_INLINE sarray<T, N + 1> insert(const sarray<T, N>& in, std::size_t i,
+                                  T value)
+{
+  sarray<T, N + 1> out;
+  for (int j = 0; j < i; j++) {
+    out[j] = in[j];
+  }
+  out[i] = value;
+  for (int j = i; j < N; j++) {
+    out[j + 1] = in[j];
+  }
+  return out;
+}
+
+template <typename T, std::size_t N>
+GT_INLINE sarray<T, N - 1> remove(const sarray<T, N>& in, std::size_t i)
+{
+  sarray<T, N - 1> out;
+  for (int j = 0; j < i; j++) {
+    out[j] = in[j];
+  }
+  for (int j = i; j < N - 1; j++) {
+    out[j] = in[j + 1];
+  }
+  return out;
 }
 
 template <typename T, std::size_t N>
