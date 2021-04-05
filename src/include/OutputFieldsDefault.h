@@ -53,8 +53,7 @@ struct moment_selector<
 } // namespace detail
 
 template <typename Mparticles>
-using FieldsItem_Moments_1st_cc =
-  typename detail::moment_selector<Mparticles, dim_yz>::type;
+using Item_Moments = typename detail::moment_selector<Mparticles, dim_yz>::type;
 
 // ======================================================================
 // OutputFieldsItemParams
@@ -184,8 +183,8 @@ public:
 
   OutputFieldsDefault(const Grid_t& grid, const OutputFieldsParams& prm)
     : fields{grid, prm.fields, Item_jeh<MfieldsState>::n_comps(), ""},
-      moments{grid, prm.moments,
-              FieldsItem_Moments_1st_cc<Mparticles>::n_comps(grid), "_moments"}
+      moments{grid, prm.moments, Item_Moments<Mparticles>::n_comps(grid),
+              "_moments"}
   {}
 
   // ----------------------------------------------------------------------
@@ -210,8 +209,7 @@ public:
     prof_stop(pr_fields);
 
     prof_start(pr_moments);
-    moments(timestep,
-            [&]() { return FieldsItem_Moments_1st_cc<Mparticles>(mprts); });
+    moments(timestep, [&]() { return Item_Moments<Mparticles>(mprts); });
     prof_stop(pr_moments);
 
     prof_stop(pr);
@@ -219,9 +217,7 @@ public:
 
 public:
   OutputFieldsItem<Mfields_from_gt_t<Item_jeh<MfieldsState>>, Writer> fields;
-  OutputFieldsItem<Mfields_from_gt_t<FieldsItem_Moments_1st_cc<Mparticles>>,
-                   Writer>
-    moments;
+  OutputFieldsItem<Mfields_from_gt_t<Item_Moments<Mparticles>>, Writer> moments;
 };
 
 #ifdef xPSC_HAVE_ADIOS2
