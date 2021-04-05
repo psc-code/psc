@@ -599,6 +599,38 @@ auto adapt(const Mfields& _mflds)
                               _s(bnd[2], -bnd[2]));
 }
 
+// ======================================================================
+// Mfields_from_gt_T
+
+#ifdef USE_CUDA
+#include "psc_fields_cuda.h"
+#endif
+
+namespace detail
+{
+template <typename T, typename S>
+struct Mfields_from_type_space
+{
+  using type = Mfields<T>;
+};
+
+#ifdef USE_CUDA
+template <typename T>
+struct Mfields_from_type_space<T, gt::space::device>
+{
+  static_assert(std::is_same<T, float>::value, "CUDA only supports float");
+  using type = MfieldsCuda;
+};
+#endif
+} // namespace detail
+
+template <typename E>
+using Mfields_from_gt_t =
+  typename detail::Mfields_from_type_space<typename E::value_type,
+                                           typename E::space>::type;
+
+// ======================================================================
+
 namespace gt
 {
 
