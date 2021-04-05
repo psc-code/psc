@@ -3,6 +3,7 @@
 #define GTENSOR_HELPER_H
 
 #include "defs.h"
+#include "meta.h"
 #include "sarray.h"
 
 #include <tuple>
@@ -11,7 +12,7 @@ namespace gt
 {
 
 template <typename... Args>
-auto shape(Args... args)
+GT_INLINE auto shape(Args... args)
 {
   return shape_type<sizeof...(args)>(std::forward<Args>(args)...);
 }
@@ -54,6 +55,68 @@ constexpr size_type expr_dimension()
 {
   return std::decay_t<E>::dimension();
 }
+
+// ======================================================================
+// has_data_method
+
+template <typename T, typename = void>
+struct has_data_method : std::false_type
+{};
+
+template <typename T>
+struct has_data_method<T, gt::meta::void_t<decltype(std::declval<T>().data())>>
+  : std::true_type
+{};
+
+template <typename T>
+constexpr bool has_data_method_v = has_data_method<T>::value;
+
+// ======================================================================
+// has_strides_method
+
+template <typename T, typename = void>
+struct has_strides_method : std::false_type
+{};
+
+template <typename T>
+struct has_strides_method<
+  T, gt::meta::void_t<decltype(std::declval<T>().strides())>> : std::true_type
+{};
+
+template <typename T>
+constexpr bool has_strides_method_v = has_strides_method<T>::value;
+
+// ======================================================================
+// has_size_method
+
+template <typename T, typename = void>
+struct has_size_method : std::false_type
+{};
+
+template <typename T>
+struct has_size_method<T, gt::meta::void_t<decltype(std::declval<T>().size())>>
+  : std::true_type
+{};
+
+template <typename T>
+constexpr bool has_size_method_v = has_size_method<T>::value;
+
+// ======================================================================
+// has_container_methods
+
+template <typename T, typename = void>
+struct has_container_methods : std::false_type
+{};
+
+template <typename T>
+struct has_container_methods<
+  T, gt::meta::void_t<
+       std::enable_if_t<has_data_method_v<T> && has_size_method_v<T>>>>
+  : std::true_type
+{};
+
+template <typename T>
+constexpr bool has_container_methods_v = has_container_methods<T>::value;
 
 namespace helper
 {
@@ -265,6 +328,7 @@ size_type max(F&& f, const std::tuple<E...>& tpl)
 }
 
 } // namespace helper
+
 } // namespace gt
 
 #endif
