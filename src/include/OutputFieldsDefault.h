@@ -35,7 +35,7 @@ class OutputFieldsItem : public OutputFieldsItemParams
 {
 public:
   OutputFieldsItem(const Grid_t& grid, const OutputFieldsItemParams& prm,
-                   int n_comps, Int3 ibn, std::string sfx)
+                   int n_comps, std::string sfx)
     : OutputFieldsItemParams{prm},
       pfield_next_{prm.pfield_first},
       tfield_next_{prm.tfield_first},
@@ -138,10 +138,9 @@ public:
   // ctor
 
   OutputFieldsDefault(const Grid_t& grid, const OutputFieldsParams& prm)
-    : fields{grid, prm.fields, Item_jeh<MfieldsState>::n_comps(), {}, ""},
+    : fields{grid, prm.fields, Item_jeh<MfieldsState>::n_comps(), ""},
       moments{grid, prm.moments,
-              FieldsItem_Moments_1st_cc<Mparticles>::n_comps(grid), grid.ibn,
-              "_moments"}
+              FieldsItem_Moments_1st_cc<Mparticles>::n_comps(grid), "_moments"}
   {}
 
   // ----------------------------------------------------------------------
