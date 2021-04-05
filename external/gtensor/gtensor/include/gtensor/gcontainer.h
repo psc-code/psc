@@ -4,8 +4,10 @@
 
 #include "defs.h"
 #include "expression.h"
+#include "gscalar.h"
 #include "gstrided.h"
 #include "helper.h"
+#include "memset.h"
 
 namespace gt
 {
@@ -48,6 +50,9 @@ public:
   template <typename... Args>
   GT_INLINE reference operator()(Args&&... args);
 
+  GT_INLINE const_reference operator[](const shape_type& idx) const;
+  GT_INLINE reference operator[](const shape_type& idx);
+
   GT_INLINE const_reference data_access(size_type i) const;
   GT_INLINE reference data_access(size_type i);
 
@@ -56,6 +61,22 @@ public:
 
   GT_INLINE const storage_type& storage() const;
   GT_INLINE storage_type& storage();
+
+  inline void fill(const value_type v);
+
+private:
+  template <typename S, size_type... I>
+  GT_INLINE const_reference access(std::index_sequence<I...>,
+                                   const S& idx) const
+  {
+    return (*this)(idx[I]...);
+  }
+
+  template <typename S, size_type... I>
+  GT_INLINE reference access(std::index_sequence<I...>, const S& idx)
+  {
+    return (*this)(idx[I]...);
+  }
 };
 
 // ----------------------------------------------------------------------
@@ -68,6 +89,18 @@ inline D& gcontainer<D>::operator=(const expression<E>& e)
   resize(e.derived().shape());
   assign(derived(), e.derived());
   return derived();
+}
+
+template <typename D>
+inline void gcontainer<D>::fill(const value_type v)
+{
+  if (v == value_type(0)) {
+    auto data = gt::backend::raw_pointer_cast(this->data());
+    backend::memset<expr_space_type<D>>(data, 0,
+                                        sizeof(value_type) * this->size());
+  } else {
+    assign(derived(), scalar(v));
+  }
 }
 
 template <typename D>
@@ -108,6 +141,19 @@ GT_INLINE auto gcontainer<D>::operator()(Args&&... args) -> reference
 }
 
 template <typename D>
+GT_INLINE auto gcontainer<D>::operator[](const shape_type& idx) const
+  -> const_reference
+{
+  return access(std::make_index_sequence<shape_type::dimension>(), idx);
+}
+
+template <typename D>
+GT_INLINE auto gcontainer<D>::operator[](const shape_type& idx) -> reference
+{
+  return access(std::make_index_sequence<shape_type::dimension>(), idx);
+}
+
+template <typename D>
 GT_INLINE auto gcontainer<D>::data_access(size_type i) const -> const_reference
 {
   return derived().data_access_impl(i);
@@ -130,6 +176,13 @@ GT_INLINE auto gcontainer<D>::storage() -> storage_type&
 {
   return derived().storage_impl();
 }
+
+// ======================================================================
+// is_gcontainer
+
+template <typename E>
+using is_gcontainer =
+  std::is_base_of<gcontainer<std::decay_t<E>>, std::decay_t<E>>;
 
 } // namespace gt
 

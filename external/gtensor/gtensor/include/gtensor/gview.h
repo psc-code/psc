@@ -5,6 +5,7 @@
 #include "assign.h"
 #include "expression.h"
 #include "gslice.h"
+#include "meta.h"
 
 namespace gt
 {
@@ -35,13 +36,15 @@ public:
   decltype(auto) to_kernel() const { return e_.to_kernel(); }
   decltype(auto) to_kernel() { return e_.to_kernel(); }
 
-  GT_INLINE const_reference data_access(size_type i) const
+  GT_INLINE size_type size() const { return e_.size(); };
+
+  GT_INLINE decltype(auto) data_access(size_type i) const
   {
     shape_type idx = unravel(i, strides_);
     return access(std::make_index_sequence<idx.size()>(), idx);
   }
 
-  GT_INLINE reference data_access(size_type i)
+  GT_INLINE decltype(auto) data_access(size_type i)
   {
     shape_type idx = unravel(i, strides_);
     return access(std::make_index_sequence<idx.size()>(), idx);
@@ -49,14 +52,15 @@ public:
 
 private:
   template <size_type... I>
-  GT_INLINE const_reference access(std::index_sequence<I...>,
-                                   const shape_type& idx) const
+  GT_INLINE decltype(auto) access(std::index_sequence<I...>,
+                                  const shape_type& idx) const
   {
     return e_(idx[I]...);
   }
 
   template <size_type... I>
-  GT_INLINE reference access(std::index_sequence<I...>, const shape_type& idx)
+  GT_INLINE decltype(auto) access(std::index_sequence<I...>,
+                                  const shape_type& idx)
   {
     return e_(idx[I]...);
   }
@@ -70,9 +74,6 @@ private:
 // ----------------------------------------------------------------------
 // select_gview_adaptor
 
-template <typename... Ts>
-using void_t = void;
-
 namespace detail
 {
 
@@ -83,7 +84,26 @@ struct select_gview_adaptor
 };
 
 template <typename E>
-struct select_gview_adaptor<E, void_t<decltype(std::declval<E>().strides())>>
+struct select_gview_adaptor<
+  E, gt::meta::void_t<decltype(std::declval<E>().strides())>>
+{
+  using type = E;
+};
+
+// special requirements for reshape, which replaces strides rather than
+// adapting them
+template <typename E, typename Enable = void>
+struct select_reshape_gview_adaptor
+{
+  using type = detail::gview_adaptor<E>;
+};
+
+// gcontainers and gtensor_spans have the default stride and layout, so they
+// are safe to override without layering via an adaptor
+template <typename E>
+struct select_reshape_gview_adaptor<
+  E, gt::meta::void_t<
+       std::enable_if_t<is_gcontainer<E>::value || is_gtensor_span<E>::value>>>
 {
   using type = E;
 };
@@ -93,13 +113,17 @@ struct select_gview_adaptor<E, void_t<decltype(std::declval<E>().strides())>>
 template <typename E>
 using select_gview_adaptor_t = typename detail::select_gview_adaptor<E>::type;
 
+template <typename E>
+using select_reshape_gview_adaptor_t =
+  typename detail::select_reshape_gview_adaptor<E>::type;
+
 // ======================================================================
 // gview
 
-template <typename EC, int N>
+template <typename EC, size_type N>
 class gview;
 
-template <typename EC, int N>
+template <typename EC, size_type N>
 struct gtensor_inner_types<gview<EC, N>>
 {
   using space_type = expr_space_type<EC>;
@@ -114,7 +138,7 @@ struct gtensor_inner_types<gview<EC, N>>
   using const_reference = typename inner_expression_type::const_reference;
 };
 
-template <typename EC, int N>
+template <typename EC, size_type N>
 class gview : public gstrided<gview<EC, N>>
 {
 public:
@@ -149,6 +173,8 @@ public:
   self_type& operator=(const expression<E>& e);
   self_type& operator=(value_type val);
 
+  void fill(const value_type v);
+
   const_kernel_type to_kernel() const;
   kernel_type to_kernel();
 
@@ -162,6 +188,9 @@ public:
   template <typename... Args>
   GT_INLINE decltype(auto) operator()(Args&&... args);
 
+  GT_INLINE decltype(auto) operator[](const shape_type& idx) const;
+  GT_INLINE decltype(auto) operator[](const shape_type& idx);
+
   GT_INLINE decltype(auto) data_access(size_type i) const;
   GT_INLINE decltype(auto) data_access(size_type i);
 
@@ -170,64 +199,88 @@ private:
   size_type offset_;
 
   friend class gstrided<self_type>;
+
+  template <typename S, size_type... I>
+  GT_INLINE decltype(auto) access(std::index_sequence<I...>, const S& idx) const
+  {
+    return (*this)(idx[I]...);
+  }
+
+  template <typename S, size_type... I>
+  GT_INLINE decltype(auto) access(std::index_sequence<I...>, const S& idx)
+  {
+    return (*this)(idx[I]...);
+  }
 };
 
 // ======================================================================
 // gview implementation
 
-template <typename EC, int N>
+template <typename EC, size_type N>
 inline gview<EC, N>::gview(EC&& e, size_type offset, const shape_type& shape,
                            const strides_type& strides)
   : base_type(shape, strides), e_(std::forward<EC>(e)), offset_(offset)
 {}
 
-template <typename EC, int N>
+template <typename EC, size_type N>
 inline auto gview<EC, N>::to_kernel() const -> const_kernel_type
 {
   return const_kernel_type(e_.to_kernel(), offset_, this->shape(),
                            this->strides());
 }
 
-template <typename EC, int N>
+template <typename EC, size_type N>
 inline auto gview<EC, N>::to_kernel() -> kernel_type
 {
   return kernel_type(e_.to_kernel(), offset_, this->shape(), this->strides());
 }
 
-template <typename EC, int N>
+template <typename EC, size_type N>
 template <typename... Args>
 GT_INLINE decltype(auto) gview<EC, N>::operator()(Args&&... args) const
 {
   return data_access(base_type::index(std::forward<Args>(args)...));
 }
 
-template <typename EC, int N>
+template <typename EC, size_type N>
 template <typename... Args>
 GT_INLINE decltype(auto) gview<EC, N>::operator()(Args&&... args)
 {
   return data_access(base_type::index(std::forward<Args>(args)...));
 }
 
-template <typename EC, int N>
+template <typename EC, size_type N>
+GT_INLINE decltype(auto) gview<EC, N>::operator[](const shape_type& idx) const
+{
+  return access(std::make_index_sequence<shape_type::dimension>(), idx);
+}
+
+template <typename EC, size_type N>
+GT_INLINE decltype(auto) gview<EC, N>::operator[](const shape_type& idx)
+{
+  return access(std::make_index_sequence<shape_type::dimension>(), idx);
+}
+
+template <typename EC, size_type N>
 GT_INLINE decltype(auto) gview<EC, N>::data_access(size_t i) const
 {
   return e_.data_access(offset_ + i);
 }
 
-template <typename EC, int N>
+template <typename EC, size_type N>
 GT_INLINE decltype(auto) gview<EC, N>::data_access(size_t i)
 {
   return e_.data_access(offset_ + i);
 }
 
-template <typename EC, int N>
+template <typename EC, size_type N>
 inline auto gview<EC, N>::operator=(const gview<EC, N>& o) -> gview&
 {
   assign(*this, o);
   return *this;
 }
 
-template <typename EC, int N>
+template <typename EC, size_type N>
 template <typename E>
 inline auto gview<EC, N>::operator=(const expression<E>& e) -> gview&
 {
@@ -235,11 +288,17 @@ inline auto gview<EC, N>::operator=(const expression<E>& e) -> gview&
   return *this;
 }
 
-template <typename EC, int N>
+template <typename EC, size_type N>
 inline auto gview<EC, N>::operator=(value_type val) -> gview&
 {
   assign(*this, scalar(val));
   return *this;
+}
+
+template <typename EC, size_type N>
+inline void gview<EC, N>::fill(const value_type v)
+{
+  assign(*this, scalar(v));
 }
 
 // ======================================================================
@@ -353,7 +412,11 @@ auto view(E&& e, Args&&... args)
 template <size_type N, typename E>
 inline auto reshape(E&& _e, gt::shape_type<N> shape)
 {
-  using EC = select_gview_adaptor_t<E>;
+  // Note: use gview adapter more broadly, in particular for nested views,
+  // since this routine simply replaces strides. The adapter is not needed
+  // for containers and spans, because their data layout implicitly encodes
+  // their striding. gviews on the other hand, do require an adapter.
+  using EC = select_reshape_gview_adaptor_t<E>;
 
   EC e(std::forward<E>(_e));
 
@@ -375,7 +438,16 @@ inline auto reshape(E&& _e, gt::shape_type<N> shape)
     shape[dim_adjust] = e.size() / size;
   }
   assert(calc_size(shape) == calc_size(e.shape()));
-  return gview<E, N>(std::forward<EC>(e), 0, shape, calc_strides(shape));
+  return gview<EC, N>(std::forward<EC>(e), 0, shape, calc_strides(shape));
+}
+
+// ======================================================================
+// flatten
+
+template <typename E>
+inline auto flatten(E&& e)
+{
+  return reshape(std::forward<E>(e), shape(e.size()));
 }
 
 // ======================================================================

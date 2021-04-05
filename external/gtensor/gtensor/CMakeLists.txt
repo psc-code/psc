@@ -11,14 +11,33 @@ set(GTENSOR_USE_THRUST ON CACHE BOOL "Use thrust (cuda and hip devices)")
 set(GTENSOR_TEST_DEBUG OFF CACHE BOOL "Turn on debug printing for unit tests")
 set(GTENSOR_BUILD_DEVICES "" CACHE STRING "List of device types 'host', 'cuda', 'hip', and 'sycl' (semicolon separated)")
 set(GTENSOR_BUILD_EXAMPLES OFF CACHE BOOL "Build example programs")
-set(GTENSOR_BUILD_CLIB OFF CACHE BOOL "build cgtensor.a")
+
+# Experimental library features
+set(GTENSOR_ENABLE_CLIB OFF CACHE BOOL "Enable libcgtensor")
+set(GTENSOR_ENABLE_BLAS OFF CACHE BOOL "Enable gtblas")
+set(GTENSOR_ENABLE_FFT  OFF CACHE BOOL "Enable gtfft")
+
+# HIP specific configuration
+set(HIP_GCC_TOOLCHAIN "" CACHE STRING "pass gcc-toolchain option to hipcc")
+set(ROCM_PATH "/opt/rocm" CACHE STRING "path to ROCm installation")
+set(HIP_PATH "/opt/rocm/hip" CACHE STRING "path to HIP installation")
+set(HIP_GPU_ARCHITECTURES "gfx803,gfx906,gfx908" CACHE
+    STRING "comma separated list of AMD gpu architectures to build for")
 
 # SYCL specific configuration
-set(GTENSOR_DEVICE_SYCL_SELECTOR "gpu" CACHE STRING "Use specified sycl device selector ('gpu', 'cpu',  or 'host')")
-set(GTENSOR_DEVICE_SYCL_INTEL ON CACHE BOOL "Using Intel OneAPI SYCL implementation")
-set(DPCPP_ROOT "/opt/intel/inteloneapi/compiler/latest/linux" CACHE STRING "Path to DPCPP / Intel OneAPI root")
-set(DPCPP_LIBDIR "${DPCPP_ROOT}/lib" CACHE STRING "Path to DPCPP compiler lib dir")
-set(DPCPP_INCDIR "${DPCPP_ROOT}/include/sycl" CACHE STRING "Path to DPCPP include dir")
+set(GTENSOR_DEVICE_SYCL_SELECTOR "default" CACHE STRING
+    "Use specified sycl device selector ('default', 'gpu', 'cpu',  or 'host')")
+set(GTENSOR_DEVICE_SYCL_INTEL ON CACHE BOOL
+    "Using Intel OneAPI SYCL implementation")
+set(ONEAPI_PATH "/opt/intel/oneapi" CACHE STRING "path to oneAPI installation")
+set(DPCPP_PATH "${ONEAPI_PATH}/compiler/latest/linux" CACHE STRING
+    "Path to DPCPP compiler")
+set(DPCPP_LIBDIR "${DPCPP_ROOT}/lib" CACHE STRING
+    "Path to DPCPP compiler lib dir")
+set(DPCPP_INCDIR "${DPCPP_ROOT}/include/sycl" CACHE STRING
+    "Path to DPCPP include dir")
+set(MKL_PATH "${ONEAPI_PATH}/mkl/latest" CACHE STRING "path to oneAPI MKL")
+set(MKL_ARCH "intel64" CACHE STRING "MKL architecture (lib subdir)")
 
 set(GTENSOR_SUPPORTED_DEVICES "host;cuda;hip;sycl")
 set(GTENSOR_TARGETS "")
@@ -81,6 +100,11 @@ if ("cuda" IN_LIST GTENSOR_BUILD_DEVICES)
 endif()
 
 if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
+
+  if (${CMAKE_VERSION} VERSION_LESS "3.18.0")
+    message(FATAL_ERROR "gtensor HIP support requires cmake 3.18+")
+  endif()
+
   message(STATUS "${PROJECT_NAME}: adding gtensor_hip target")
   add_gtensor_library(hip)
 
@@ -88,21 +112,58 @@ if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
     message(FATAL_ERROR "For GTENSOR_BUILD_DEVICES=hip, 'hcc' or 'hipcc' must be used as C++ compiler.")
   endif()
 
-  find_package(HIP REQUIRED CONFIG PATHS "/opt/rocm/hip")
-  if(HIP_PLATFORM STREQUAL "nvcc")
-    message(FATAL_ERROR "Error: use GTENSOR_DEVICE=cuda for nVidia GPU support")
-  endif()
+  # The official ROCm/HIP cmake support causes problems on mixed language
+  # executables, where hipcc specific flags leak into the other language
+  # and break the build. In particular GENE with Fortran does not work when
+  # using any ROCm cmake supplied targets, which depend on hip::device which
+  # has these flags.
+  #find_package(HIP REQUIRED CONFIG PATHS "${HIP_PATH}")
+  #if(HIP_PLATFORM STREQUAL "nvcc")
+  #  message(FATAL_ERROR "Error: use GTENSOR_DEVICE=cuda for nVidia GPU support")
+  #endif()
 
   target_compile_definitions(gtensor_hip INTERFACE GTENSOR_HAVE_DEVICE)
   target_compile_definitions(gtensor_hip INTERFACE GTENSOR_DEVICE_HIP)
 
   if (GTENSOR_USE_THRUST)
     target_compile_definitions(gtensor_hip INTERFACE GTENSOR_USE_THRUST)
-    find_package(rocprim REQUIRED CONFIG
-                 PATHS "/opt/rocm/rocprim")
-    find_package(rocthrust REQUIRED CONFIG
-                 PATHS "/opt/rocm/rocthrust")
-    target_link_libraries(gtensor_hip INTERFACE roc::rocthrust)
+
+    add_library(rocthrust INTERFACE IMPORTED)
+    target_include_directories(rocthrust INTERFACE
+                               "${ROCM_PATH}/rocprim/include")
+    target_include_directories(rocthrust INTERFACE
+                               "${ROCM_PATH}/rocthrust/include")
+
+    add_library(rocblas INTERFACE IMPORTED)
+    target_link_libraries(rocblas INTERFACE "${ROCM_PATH}/lib/librocblas.so")
+    target_include_directories(rocblas INTERFACE "${ROCM_PATH}/include")
+
+    add_library(rocsolver INTERFACE IMPORTED)
+    target_link_libraries(rocsolver INTERFACE
+                          "${ROCM_PATH}/lib/librocsolver.so")
+    target_include_directories(rocsolver INTERFACE "${ROCM_PATH}/include")
+
+    add_library(rocfft INTERFACE IMPORTED)
+    target_link_libraries(rocfft INTERFACE "${ROCM_PATH}/lib/librocfft.so")
+    target_include_directories(rocfft INTERFACE "${ROCM_PATH}/include")
+
+    #find_package(rocprim REQUIRED CONFIG
+    #             PATHS "${ROCM_PATH}/rocprim")
+    #find_package(rocthrust REQUIRED CONFIG
+    #             PATHS "${ROCM_PATH}/rocthrust")
+
+    target_link_libraries(gtensor_hip INTERFACE rocthrust)
+    target_compile_options(gtensor_hip INTERFACE
+      $<$<COMPILE_LANGUAGE:CXX>:--amdgpu-target=${HIP_GPU_ARCHITECTURES}>)
+    target_link_options(gtensor_hip INTERFACE
+      $<$<LINK_LANGUAGE:CXX>:--amdgpu-target=${HIP_GPU_ARCHITECTURES}>)
+
+    if (HIP_GCC_TOOLCHAIN)
+      target_compile_options(gtensor_hip INTERFACE
+        $<$<COMPILE_LANGUAGE:CXX>:-gcc-toolchain ${HIP_GCC_TOOLCHAIN}>)
+      target_link_options(gtensor_hip INTERFACE
+        $<$<LINK_LANGUAGE:CXX>:-gcc-toolchain ${HIP_GCC_TOOLCHAIN}>)
+    endif()
   endif()
 
   # Enable to see the full hcc command and include search paths
@@ -118,7 +179,10 @@ if ("sycl" IN_LIST GTENSOR_BUILD_DEVICES)
   target_compile_definitions(gtensor_sycl INTERFACE GTENSOR_HAVE_DEVICE)
   target_compile_definitions(gtensor_sycl INTERFACE GTENSOR_DEVICE_SYCL)
 
-  if (${GTENSOR_DEVICE_SYCL_SELECTOR} STREQUAL "gpu")
+  if (${GTENSOR_DEVICE_SYCL_SELECTOR} STREQUAL "default")
+    target_compile_definitions(gtensor_sycl INTERFACE
+                               GTENSOR_DEVICE_SYCL_DEFAULT)
+  elseif (${GTENSOR_DEVICE_SYCL_SELECTOR} STREQUAL "gpu")
     target_compile_definitions(gtensor_sycl INTERFACE GTENSOR_DEVICE_SYCL_GPU)
   elseif (${GTENSOR_DEVICE_SYCL_SELECTOR} STREQUAL "cpu")
     target_compile_definitions(gtensor_sycl INTERFACE GTENSOR_DEVICE_SYCL_CPU)
@@ -130,14 +194,25 @@ if ("sycl" IN_LIST GTENSOR_BUILD_DEVICES)
 
   target_include_directories(gtensor_sycl INTERFACE ${DPCPP_INCDIR})
 
-  if (GTENSOR_DEVICE_SYCL_INTEL
-      AND NOT (${GTENSOR_DEVICE_SYCL_SELECTOR} STREQUAL "host"))
-    target_link_options(gtensor_sycl INTERFACE -device-math-lib=fp32,fp64)
-    #target_sources(gtensor_sycl INTERFACE
-    #               ${DPCPP_LIBDIR}/libsycl-complex-fp64.o
-    #               ${DPCPP_LIBDIR}/libsycl-cmath-fp64.o
-    #               ${DPCPP_LIBDIR}/libsycl-complex.o
-    #               ${DPCPP_LIBDIR}/libsycl-cmath.o)
+  if (GTENSOR_DEVICE_SYCL_INTEL)
+    if (NOT (${GTENSOR_DEVICE_SYCL_SELECTOR} STREQUAL "host"))
+        target_link_options(gtensor_sycl INTERFACE
+                            -fsycl-device-lib=libm-fp32,libm-fp64)
+    endif()
+
+    add_library(oneapi_mkl_sycl INTERFACE IMPORTED)
+    target_compile_definitions(oneapi_mkl_sycl INTERFACE MKL_ILP64)
+    target_include_directories(oneapi_mkl_sycl INTERFACE "${MKL_PATH}/include")
+    target_link_libraries(oneapi_mkl_sycl INTERFACE
+                          "${MKL_PATH}/lib/${MKL_ARCH}/libmkl_sycl.so")
+    # NOTE: we could support gnu here to, but when using DPCPP it must be intel,
+    # and that is the expected case here.
+    target_link_libraries(oneapi_mkl_sycl INTERFACE
+                          "${MKL_PATH}/lib/${MKL_ARCH}/libmkl_intel_ilp64.so")
+    target_link_libraries(oneapi_mkl_sycl INTERFACE
+                          "${MKL_PATH}/lib/${MKL_ARCH}/libmkl_sequential.so")
+    target_link_libraries(oneapi_mkl_sycl INTERFACE
+                          "${MKL_PATH}/lib/${MKL_ARCH}/libmkl_core.so")
   endif()
 endif()
 
@@ -188,6 +263,8 @@ function(target_gtensor_sources TARGET)
   target_sources(${TARGET} PRIVATE ${target_gtensor_sources_PRIVATE})
   if ("${GTENSOR_DEVICE}" STREQUAL "cuda")
     set_source_files_properties(${target_gtensor_sources_PRIVATE} PROPERTIES LANGUAGE CUDA)
+  else()
+    set_source_files_properties(${target_gtensor_sources_PRIVATE} PROPERTIES LANGUAGE CXX)
   endif()
 endfunction()
 
@@ -200,10 +277,63 @@ if (GTENSOR_BUILD_EXAMPLES)
   add_subdirectory(examples)
 endif()
 
-if (GTENSOR_BUILD_CLIB)
+if (GTENSOR_BUILD_BENCHMARKS)
+  message(STATUS "${PROJECT_NAME}: build benchmarks is ON")
+  add_subdirectory(benchmarks)
+endif()
+
+if (GTENSOR_ENABLE_CLIB)
+  message(STATUS "${PROJECT_NAME}: CLIB is ENABLED")
   add_library(cgtensor)
   target_gtensor_sources(cgtensor PRIVATE src/cgtensor.cxx)
   target_link_libraries(cgtensor gtensor::gtensor)
+
+  list(APPEND GTENSOR_TARGETS cgtensor)
+  add_library(gtensor::cgtensor ALIAS cgtensor)
+endif()
+
+if (GTENSOR_ENABLE_BLAS)
+  message(STATUS "${PROJECT_NAME}: BLAS is ENABLED")
+  add_library(gtblas INTERFACE)
+  #target_gtensor_sources(gtblas PRIVATE src/gtblas.cxx)
+  target_link_libraries(gtblas INTERFACE gtensor::gtensor)
+
+  if (${GTENSOR_DEVICE} STREQUAL "cuda")
+    target_link_libraries(gtblas INTERFACE "cublas")
+  elseif (${GTENSOR_DEVICE} STREQUAL "hip")
+    target_link_libraries(gtblas INTERFACE rocblas rocsolver)
+  elseif (${GTENSOR_DEVICE} STREQUAL "sycl")
+    target_link_libraries(gtblas INTERFACE oneapi_mkl_sycl)
+  endif()
+
+  list(APPEND GTENSOR_TARGETS gtblas)
+  add_library(gtensor::blas ALIAS gtblas)
+
+  if (GTENSOR_ENABLE_CLIB)
+    message(STATUS "${PROJECT_NAME}: CBLAS is ENABLED")
+    add_library(cgtblas)
+    target_gtensor_sources(cgtblas PRIVATE src/cgtblas.cxx)
+    target_link_libraries(cgtblas gtblas)
+    list(APPEND GTENSOR_TARGETS cgtblas)
+    add_library(gtensor::cgtblas ALIAS cgtblas)
+  endif()
+endif()
+
+if (GTENSOR_ENABLE_FFT)
+  message(STATUS "${PROJECT_NAME}: FFT is ENABLED")
+  add_library(gtfft INTERFACE)
+  target_link_libraries(gtfft INTERFACE gtensor::gtensor)
+
+  if (${GTENSOR_DEVICE} STREQUAL "cuda")
+    target_link_libraries(gtfft INTERFACE cufft)
+  elseif (${GTENSOR_DEVICE} STREQUAL "hip")
+    target_link_libraries(gtfft INTERFACE rocfft)
+  elseif (${GTENSOR_DEVICE} STREQUAL "sycl")
+    target_link_libraries(gtfft INTERFACE oneapi_mkl_sycl)
+  endif()
+
+  list(APPEND GTENSOR_TARGETS gtfft)
+  add_library(gtensor::gtfft ALIAS gtfft)
 endif()
 
 # See https://github.com/pabloariasal/modern-cmake-sample
@@ -216,6 +346,7 @@ set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/gtensor)
 install(TARGETS ${GTENSOR_TARGETS}
     EXPORT gtensor-targets
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
