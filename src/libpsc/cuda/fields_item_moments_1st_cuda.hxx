@@ -141,6 +141,8 @@ public:
   using Mparticles = _Mparticles;
   using Mfields = MfieldsCuda;
   using Bnd = BndCuda3<Mfields>;
+  using value_type = typename Mfields::real_t;
+  using space = gt::space::device;
 
   constexpr static int n_moments = 13;
   static char const* name() { return "all_1st"; }

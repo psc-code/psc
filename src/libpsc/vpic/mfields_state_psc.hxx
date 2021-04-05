@@ -165,6 +165,7 @@ struct MfieldsStatePsc
   using real_t = float;
   using Real = real_t;
   using Element = MfieldsStatePscElement;
+  using space = gt::space::host;
 
   // FIXME, have to settle on BX or CBX...
   enum

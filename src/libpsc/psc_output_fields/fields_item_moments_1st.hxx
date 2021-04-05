@@ -205,6 +205,8 @@ public:
   using Base = ItemMomentCRTP<Moments_1st<MP, MF>, MF>;
   using Mparticles = MP;
   using Mfields = MF;
+  using value_type = typename Mfields::real_t;
+  using space = typename Mfields::space;
 
   using Base::n_comps;
 

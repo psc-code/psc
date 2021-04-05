@@ -13,25 +13,26 @@
 
 namespace detail
 {
-
-template <typename MfieldsState>
-struct tfd_Item_jeh
+template <typename T, typename S>
+struct Mfields_from_type_space
 {
-  using type = Mfields<typename MfieldsState::Real>;
+  using type = Mfields<T>;
 };
 
 #ifdef USE_CUDA
-template <>
-struct tfd_Item_jeh<MfieldsStateCuda>
+template <typename T>
+struct Mfields_from_type_space<T, gt::space::device>
 {
+  static_assert(std::is_same<T, float>::value, "CUDA only supports float");
   using type = MfieldsCuda;
 };
 #endif
-
 } // namespace detail
 
-template <typename MfieldsState>
-using tfd_Item_jeh_t = typename detail::tfd_Item_jeh<MfieldsState>::type;
+template <typename E>
+using Mfields_from_gt_t =
+  typename detail::Mfields_from_type_space<typename E::value_type,
+                                           typename E::space>::type;
 
 namespace detail
 {
@@ -39,7 +40,6 @@ template <typename Mparticles, typename Dim, typename Enable = void>
 struct moment_selector
 {
   using type = Moments_1st<Mparticles>;
-  using Mfields = Mfields<typename Mparticles::real_t>;
 };
 
 #ifdef USE_CUDA
@@ -48,7 +48,6 @@ struct moment_selector<
   Mparticles, Dim, typename std::enable_if<Mparticles::is_cuda::value>::type>
 {
   using type = Moment_1st_cuda<Mparticles, Dim>;
-  using Mfields = MfieldsCuda;
 };
 #endif
 } // namespace detail
@@ -56,10 +55,6 @@ struct moment_selector<
 template <typename Mparticles>
 using FieldsItem_Moments_1st_cc =
   typename detail::moment_selector<Mparticles, dim_yz>::type;
-
-template <typename Mparticles>
-using tfd_Item_moments_t =
-  typename detail::moment_selector<Mparticles, dim_yz>::Mfields;
 
 // ======================================================================
 // OutputFieldsItemParams
@@ -223,8 +218,10 @@ public:
   };
 
 public:
-  OutputFieldsItem<tfd_Item_jeh_t<MfieldsState>, Writer> fields;
-  OutputFieldsItem<tfd_Item_moments_t<Mparticles>, Writer> moments;
+  OutputFieldsItem<Mfields_from_gt_t<Item_jeh<MfieldsState>>, Writer> fields;
+  OutputFieldsItem<Mfields_from_gt_t<FieldsItem_Moments_1st_cc<Mparticles>>,
+                   Writer>
+    moments;
 };
 
 #ifdef xPSC_HAVE_ADIOS2

@@ -434,6 +434,7 @@ struct Mfields
   using real_t = R;
   using Base = MfieldsCRTP<Mfields<R>>;
   using Storage = typename Base::Storage;
+  using space = gt::space::host;
 
   Mfields(const MfieldsDomain& domain, int n_fields, Int3 ibn)
     : MfieldsBase(domain.grid(), n_fields, ibn),
