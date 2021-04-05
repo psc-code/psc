@@ -102,7 +102,7 @@ public:
         io_tfd_.end_step();
         naccum_ = 0;
 
-        tfd_.gt() = 0;
+        tfd_.gt().view() = 0;
       }
     }
   }

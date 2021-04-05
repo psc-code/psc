@@ -155,6 +155,8 @@ struct MfieldsStateCuda : MfieldsStateBase
   MfieldsCuda& mflds() { return mflds_; }
   const MfieldsCuda& mflds() const { return mflds_; }
 
+  auto gt() { return mflds_.gt(); }
+
 private:
   MfieldsCuda mflds_;
 };
