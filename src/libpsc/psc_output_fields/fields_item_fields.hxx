@@ -44,6 +44,8 @@ class Item_jeh : public MFexpression<Item_jeh<MfieldsState>>
 {
 public:
   using Real = typename MfieldsState::real_t;
+  using value_type = Real;
+  using space = typename MfieldsState::space;
 
   static char const* name() { return "jeh"; }
   static int n_comps() { return 9; }

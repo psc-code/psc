@@ -129,6 +129,7 @@ void copy(const HMFields& hmflds, MfieldsCuda& mflds);
 struct MfieldsStateCuda : MfieldsStateBase
 {
   using real_t = MfieldsCuda::real_t;
+  using space = gt::space::device;
 
   MfieldsStateCuda(const Grid_t& grid)
     : MfieldsStateBase{grid, NR_FIELDS, grid.ibn},
