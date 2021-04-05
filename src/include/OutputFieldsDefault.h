@@ -8,6 +8,28 @@
 
 #include <memory>
 
+namespace detail
+{
+
+template <typename MfieldsState>
+struct tfd_Item_jeh
+{
+  using type = Mfields<typename MfieldsState::Real>;
+};
+
+#ifdef USE_CUDA
+template <>
+struct tfd_Item_jeh<MfieldsStateCuda>
+{
+  using type = MfieldsCuda;
+};
+#endif
+
+} // namespace detail
+
+template <typename MfieldsState>
+using tfd_Item_jeh_t = typename detail::tfd_Item_jeh<MfieldsState>::type;
+
 template <typename Mparticles>
 using FieldsItem_Moments_1st_cc = Moments_1st<Mparticles>;
 
@@ -173,7 +195,7 @@ public:
   };
 
 public:
-  OutputFieldsItem<MfieldsC, Writer> fields;
+  OutputFieldsItem<tfd_Item_jeh_t<MfieldsState>, Writer> fields;
   OutputFieldsItem<MfieldsC, Writer> moments;
 };
 

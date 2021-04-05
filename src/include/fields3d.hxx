@@ -516,6 +516,7 @@ struct MfieldsStateFromMfields : MfieldsStateBase
 {
   using fields_view_t = typename Mfields::fields_view_t;
   using real_t = typename Mfields::real_t;
+  using Real = typename Mfields::Real;
 
   MfieldsStateFromMfields(const Grid_t& grid)
     : MfieldsStateBase{grid, NR_FIELDS,

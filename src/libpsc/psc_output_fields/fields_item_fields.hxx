@@ -73,59 +73,6 @@ private:
 };
 
 // ======================================================================
-// Item_jeh
-//
-// Main fields in their natural staggering
-
-template <>
-class Item_jeh<MfieldsStateCuda>
-  : public MFexpression<Item_jeh<MfieldsStateCuda>>
-{
-  using MfieldsState = MfieldsStateCuda;
-
-public:
-  using Real = typename MfieldsState::real_t;
-
-  static char const* name() { return "jeh"; }
-  static int n_comps() { return 9; }
-  static std::vector<std::string> comp_names()
-  {
-    return {"jx_ec", "jy_ec", "jz_ec", "ex_ec", "ey_ec",
-            "ez_ec", "hx_fc", "hy_fc", "hz_fc"};
-  }
-
-  Item_jeh(MfieldsState& mflds)
-    : mflds_(mflds.grid(), NR_FIELDS, mflds.grid().ibn)
-  {
-    auto hmflds = hostMirror(mflds);
-    copy(mflds, hmflds);
-    for (int p = 0; p < mflds_.n_patches(); p++) {
-      for (int m = 0; m < mflds_.n_comps(); m++) {
-        mflds_.Foreach_3d(0, 0, [&](int i, int j, int k) {
-          mflds_(m, i, j, k, p) = hmflds(m, i, j, k, p);
-        });
-      }
-    }
-  }
-
-  auto gt() const
-  {
-    auto bnd = -mflds_.ib();
-    return mflds_.storage().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                                 _s(bnd[2], -bnd[2]));
-  }
-
-  const Grid_t& grid() const { return mflds_.grid(); }
-  Int3 ibn() const { return {}; }
-  int n_patches() const { return grid().n_patches(); }
-
-  MfieldsSingle& result() const { return mflds_; }
-
-private:
-  mutable MfieldsSingle mflds_; // FIXME!!
-};
-
-// ======================================================================
 // Item_dive
 
 template <typename MfieldsState>
