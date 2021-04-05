@@ -150,11 +150,11 @@ public:
     return n_moments * grid.kinds.size();
   }
 
-  static std::vector<std::string> comp_names(const Grid_t& grid)
+  std::vector<std::string> comp_names()
   {
     return addKindSuffix({"rho", "jx", "jy", "jz", "px", "py", "pz", "txx",
                           "tyy", "tzz", "txy", "tyz", "tzx"},
-                         grid.kinds);
+                         Base::grid().kinds);
   }
 
   int n_comps() const { return Base::mres_.n_comps(); }
@@ -202,6 +202,13 @@ public:
   }
 
   const Mfields& result() const { return Base::mres_; }
+
+  auto gt()
+  {
+    auto bnd = Base::mres_.ibn();
+    return Base::mres_.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
+                                 _s(bnd[2], -bnd[2]));
+  }
 
 private:
   Bnd bnd_;

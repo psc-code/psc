@@ -3,6 +3,9 @@
 
 #include "../libpsc/psc_output_fields/fields_item_fields.hxx"
 #include "../libpsc/psc_output_fields/fields_item_moments_1st.hxx"
+#ifdef USE_CUDA
+#include "../libpsc/cuda/fields_item_moments_1st_cuda.hxx"
+#endif
 #include "fields_item.hxx"
 #include "psc_particles_double.h"
 
@@ -30,8 +33,33 @@ struct tfd_Item_jeh<MfieldsStateCuda>
 template <typename MfieldsState>
 using tfd_Item_jeh_t = typename detail::tfd_Item_jeh<MfieldsState>::type;
 
+namespace detail
+{
+template <typename Mparticles, typename Dim, typename Enable = void>
+struct moment_selector
+{
+  using type = Moments_1st<Mparticles>;
+  using Mfields = Mfields<typename Mparticles::real_t>;
+};
+
+#ifdef USE_CUDA
+template <typename Mparticles, typename Dim>
+struct moment_selector<
+  Mparticles, Dim, typename std::enable_if<Mparticles::is_cuda::value>::type>
+{
+  using type = Moment_1st_cuda<Mparticles, Dim>;
+  using Mfields = MfieldsCuda;
+};
+#endif
+} // namespace detail
+
 template <typename Mparticles>
-using FieldsItem_Moments_1st_cc = Moments_1st<Mparticles>;
+using FieldsItem_Moments_1st_cc =
+  typename detail::moment_selector<Mparticles, dim_yz>::type;
+
+template <typename Mparticles>
+using tfd_Item_moments_t =
+  typename detail::moment_selector<Mparticles, dim_yz>::Mfields;
 
 // ======================================================================
 // OutputFieldsItemParams
@@ -196,7 +224,7 @@ public:
 
 public:
   OutputFieldsItem<tfd_Item_jeh_t<MfieldsState>, Writer> fields;
-  OutputFieldsItem<MfieldsC, Writer> moments;
+  OutputFieldsItem<tfd_Item_moments_t<Mparticles>, Writer> moments;
 };
 
 #ifdef xPSC_HAVE_ADIOS2
