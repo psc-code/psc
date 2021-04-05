@@ -493,8 +493,8 @@ void setup_log(const Grid_t& grid)
 class Diagnostics
 {
 public:
-  Diagnostics(Grid_t& grid, OutputFields& outf, OutputParticles& outp,
-              DiagEnergies& oute)
+  Diagnostics(Grid_t& grid, OutputFields<MfieldsState, Mparticles>& outf,
+              OutputParticles& outp, DiagEnergies& oute)
     : outf_{outf},
       outp_{outp},
       oute_{oute},
@@ -594,7 +594,7 @@ public:
 private:
   WriterMRC io_pfd_;
   WriterMRC io_tfd_;
-  OutputFields& outf_;
+  OutputFields<MfieldsState, Mparticles>& outf_;
   OutputFieldsVpic<MfieldsState> outf_state_;
   OutputHydro outf_hydro_;
   OutputParticles& outp_;
@@ -877,7 +877,7 @@ void run()
     int((output_field_interval / (phys.wci * grid.dt)));
   outf_params.fields.tfield_interval =
     int((output_field_interval / (phys.wci * grid.dt)));
-  OutputFields outf{grid, outf_params};
+  OutputFields<MfieldsState, Mparticles> outf{grid, outf_params};
 
   OutputParticlesParams outp_params{};
   outp_params.every_step =

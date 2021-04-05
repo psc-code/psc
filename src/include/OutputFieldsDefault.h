@@ -130,27 +130,23 @@ struct OutputFieldsParams
 // ======================================================================
 // OutputFieldsDefault
 
-template <typename Writer>
+template <typename MfieldsState, typename Mparticles, typename Writer>
 class OutputFieldsDefault
 {
-  using MfieldsFake = MfieldsC;
-  using MparticlesFake = MparticlesDouble;
-
 public:
   // ----------------------------------------------------------------------
   // ctor
 
   OutputFieldsDefault(const Grid_t& grid, const OutputFieldsParams& prm)
-    : fields{grid, prm.fields, Item_jeh<MfieldsFake>::n_comps(), {}, ""},
+    : fields{grid, prm.fields, Item_jeh<MfieldsState>::n_comps(), {}, ""},
       moments{grid, prm.moments,
-              FieldsItem_Moments_1st_cc<MparticlesFake>::n_comps(grid),
-              grid.ibn, "_moments"}
+              FieldsItem_Moments_1st_cc<Mparticles>::n_comps(grid), grid.ibn,
+              "_moments"}
   {}
 
   // ----------------------------------------------------------------------
   // operator()
 
-  template <typename MfieldsState, typename Mparticles>
   void operator()(MfieldsState& mflds, Mparticles& mprts)
   {
     const auto& grid = mflds._grid();
@@ -185,11 +181,14 @@ public:
 #ifdef xPSC_HAVE_ADIOS2
 
 #include "writer_adios2.hxx"
-using OutputFields = OutputFieldsDefault<WriterADIOS2>;
+template <typename MfieldsState, typename Mparticles>
+using OutputFields =
+  OutputFieldsDefault<MfieldsState, Mparticles, WriterADIOS2>;
 
 #else
 
 #include "writer_mrc.hxx"
-using OutputFields = OutputFieldsDefault<WriterMRC>;
+template <typename MfieldsState, typename Mparticles>
+using OutputFields = OutputFieldsDefault<MfieldsState, Mparticles, WriterMRC>;
 
 #endif
