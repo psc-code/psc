@@ -30,7 +30,7 @@ struct OutputFieldsItemParams
 // ======================================================================
 // OutputFieldsItem
 
-template <typename Writer>
+template <typename Mfields, typename Writer>
 class OutputFieldsItem : public OutputFieldsItemParams
 {
 public:
@@ -112,8 +112,7 @@ private:
   int tfield_next_;
   Writer io_pfd_;
   Writer io_tfd_;
-  // tfd -- FIXME?! always MfieldsC
-  MfieldsC tfd_;
+  Mfields tfd_;
   int naccum_ = 0;
   bool first_time_ =
     true; // to keep track so we can skip first output on restart
@@ -179,8 +178,8 @@ public:
   };
 
 public:
-  OutputFieldsItem<Writer> fields;
-  OutputFieldsItem<Writer> moments;
+  OutputFieldsItem<MfieldsC, Writer> fields;
+  OutputFieldsItem<MfieldsC, Writer> moments;
 };
 
 #ifdef xPSC_HAVE_ADIOS2
