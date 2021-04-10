@@ -381,36 +381,20 @@ private:
 class MfieldsDomain
 {
 public:
-  MfieldsDomain(const Grid_t& grid)
-    : grid_{&grid},
-      n_patches_{grid.n_patches()},
-      ldims_{grid.ldims},
-      gdims_{grid.domain.gdims}
+  MfieldsDomain(const Grid_t& grid) : grid_{&grid}
   {
-    patch_offsets_.reserve(n_patches());
+    patch_offsets_.reserve(grid.n_patches());
     for (auto& patch : grid.patches) {
       patch_offsets_.emplace_back(patch.off);
     }
   }
 
-  Int3 ldims() const { return ldims_; }
-  Int3 gdims() const { return gdims_; }
-  int n_patches() const { return n_patches_; }
   Int3 patchOffset(int p) const { return patch_offsets_[p]; }
-
-  template <typename FUNC>
-  void Foreach_3d(int l, int r, FUNC&& F) const
-  {
-    return grid().Foreach_3d(l, r, std::forward<FUNC>(F));
-  }
 
   const Grid_t& grid() const { return *grid_; }
 
 private:
   const Grid_t* grid_;
-  Int3 ldims_;
-  Int3 gdims_;
-  int n_patches_;
   std::vector<Int3> patch_offsets_;
 };
 
@@ -446,8 +430,8 @@ struct Mfields
     std::fill(storage_.data(), storage_.data() + storage_.size(), real_t{});
   }
 
-  Int3 ldims() const { return domain_.ldims(); }
-  Int3 gdims() const { return domain_.gdims(); }
+  Int3 ldims() const { return grid().ldims; }
+  Int3 gdims() const { return grid().gdims; }
   Int3 patchOffset(int p) const { return domain_.patchOffset(p); }
   const Grid_t& grid() const { return domain_.grid(); }
 
@@ -456,7 +440,7 @@ struct Mfields
   template <typename FUNC>
   void Foreach_3d(int l, int r, FUNC&& F) const
   {
-    return domain_.Foreach_3d(l, r, std::forward<FUNC>(F));
+    return grid().Foreach_3d(l, r, std::forward<FUNC>(F));
   }
 
   virtual void reset(const Grid_t& grid) override
