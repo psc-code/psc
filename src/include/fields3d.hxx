@@ -376,20 +376,6 @@ private:
 };
 
 // ======================================================================
-// MfieldsDomain
-
-class MfieldsDomain
-{
-public:
-  MfieldsDomain(const Grid_t& grid) : grid_{&grid} {}
-
-  const Grid_t& grid() const { return *grid_; }
-
-private:
-  const Grid_t* grid_;
-};
-
-// ======================================================================
 // Mfields
 
 template <typename R>
@@ -416,7 +402,7 @@ struct Mfields
       Base(n_fields, {-ibn, grid.ldims + 2 * ibn}, grid.n_patches()),
       storage_(gt::shape(Base::box().im(0), Base::box().im(1),
                          Base::box().im(2), n_fields, Base::n_patches())),
-      domain_{grid}
+      grid_{&grid}
   {
     std::fill(storage_.data(), storage_.data() + storage_.size(), real_t{});
   }
@@ -424,7 +410,7 @@ struct Mfields
   Int3 ldims() const { return grid().ldims; }
   Int3 gdims() const { return grid().gdims; }
   Int3 patchOffset(int p) const { return grid().patches[p].off; }
-  const Grid_t& grid() const { return domain_.grid(); }
+  const Grid_t& grid() const { return *grid_; }
 
   auto gt() { return Base::storage().view(); }
 
@@ -438,7 +424,7 @@ struct Mfields
   {
     MfieldsBase::reset(grid);
     Base::reset(grid.n_patches());
-    domain_ = MfieldsDomain(grid);
+    grid_ = &grid;
   }
 
   static const Convert convert_to_, convert_from_;
@@ -447,7 +433,7 @@ struct Mfields
 
 private:
   Storage storage_;
-  MfieldsDomain domain_;
+  const Grid_t* grid_;
 
   Storage& storageImpl() { return storage_; }
   const Storage& storageImpl() const { return storage_; }
