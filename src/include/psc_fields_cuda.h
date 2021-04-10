@@ -102,7 +102,6 @@ struct MfieldsCuda : MfieldsBase
   void reset(const Grid_t& new_grid) override;
 
   int index(int m, int i, int j, int k, int p) const;
-  Patch operator[](int p) { return {*this, p}; }
 
   gt::gtensor_span_device<real_t, 5> gt();
 
@@ -142,8 +141,6 @@ struct MfieldsStateCuda : MfieldsStateBase
 
   int n_patches() const { return mflds_.n_patches(); };
   const Grid_t& grid() const { return *grid_; }
-
-  MfieldsCuda::Patch operator[](int p) { return mflds_[p]; }
 
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
