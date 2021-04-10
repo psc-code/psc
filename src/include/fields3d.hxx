@@ -649,4 +649,11 @@ MF& hostMirror(MF& mflds)
   return mflds;
 }
 
+// FIXME, doesn't actually copy, only for hostMirror use
+template <typename MF>
+void copy(const MF& from, MF& to)
+{
+  assert(from.storage().data() == to.storage().data());
+}
+
 #endif
