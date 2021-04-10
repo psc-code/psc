@@ -95,12 +95,12 @@ DFields cuda_mfields::operator[](int p) const
 
 HMFields hostMirror(cuda_mfields& cmflds)
 {
-  return HMFields{cmflds.box(), cmflds.n_comps(), cmflds.n_patches()};
+  return HMFields{cmflds.grid(), cmflds.n_comps(), -cmflds.ib()};
 }
 
 HMFields hostMirror(const cuda_mfields& cmflds)
 {
-  return HMFields{cmflds.box(), cmflds.n_comps(), cmflds.n_patches()};
+  return HMFields{cmflds.grid(), cmflds.n_comps(), -cmflds.ib()};
 }
 
 void copy(const cuda_mfields& cmflds, HMFields& hmflds)
