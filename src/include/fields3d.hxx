@@ -309,31 +309,6 @@ public:
     return storage()(i - ib(0), j - ib(1), k - ib(2), m, p);
   }
 
-  template <typename E>
-  void assign(const MFexpression<E>& xp)
-  {
-    const auto& rhs = xp.derived();
-    assert(n_comps() == rhs.n_comps());
-    assert(n_patches() == rhs.n_patches());
-    // assert(box() == rhs.box());
-    // assert(derived().ibn() == rhs.ibn());
-    // FIXME check size compat, too
-    for (int p = 0; p < n_patches(); p++) {
-      for (int m = 0; m < n_comps(); m++) {
-        Int3 ijk;
-        for (ijk[2] = box_.ib(2); ijk[2] < box_.ib(2) + box_.im(2); ijk[2]++) {
-          for (ijk[1] = box_.ib(1); ijk[1] < box_.ib(1) + box_.im(1);
-               ijk[1]++) {
-            for (ijk[0] = box_.ib(0); ijk[0] < box_.ib(0) + box_.im(0);
-                 ijk[0]++) {
-              (*this)(m, ijk[0], ijk[1], ijk[2], p) = rhs(m, ijk, p);
-            }
-          }
-        }
-      }
-    }
-  }
-
   // protected:
   KG_INLINE Storage& storage() { return derived().storageImpl(); }
   KG_INLINE const Storage& storage() const { return derived().storageImpl(); }
