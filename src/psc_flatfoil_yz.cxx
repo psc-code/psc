@@ -492,10 +492,11 @@ void run()
   int marder_loop = 3;
 #if CASE == CASE_2D_SMALL
   bool marder_dump = true;
+  psc_params.marder_interval = 2;
 #else
   bool marder_dump = false;
-#endif
   psc_params.marder_interval = 100;
+#endif
   Marder marder(grid, marder_diffusion, marder_loop, marder_dump);
 
   // ----------------------------------------------------------------------
