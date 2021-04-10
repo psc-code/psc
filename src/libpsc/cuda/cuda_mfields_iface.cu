@@ -59,35 +59,6 @@ gt::gtensor_span_device<MfieldsCuda::real_t, 5> MfieldsCuda::gt()
                           cmflds_->storage().shape());
 }
 
-MfieldsCuda::Patch::Patch(MfieldsCuda& mflds, int p) : mflds_(mflds), p_(p) {}
-
-MfieldsCuda::Accessor MfieldsCuda::Patch::operator()(int m, int i, int j, int k)
-{
-  return {mflds_, mflds_.index(m, i, j, k, p_)};
-}
-
-MfieldsCuda::Accessor::Accessor(MfieldsCuda& mflds, int idx)
-  : mflds_(mflds), idx_(idx)
-{}
-
-MfieldsCuda::Accessor::operator real_t() const
-{
-  return mflds_.cmflds_->get_value(idx_);
-}
-
-MfieldsCuda::real_t MfieldsCuda::Accessor::operator=(real_t val)
-{
-  mflds_.cmflds_->set_value(idx_, val);
-  return val;
-}
-
-MfieldsCuda::real_t MfieldsCuda::Accessor::operator+=(real_t val)
-{
-  val += mflds_.cmflds_->get_value(idx_);
-  mflds_.cmflds_->set_value(idx_, val);
-  return val;
-}
-
 HMFields hostMirror(MfieldsCuda& mflds)
 {
   return hostMirror(*mflds.cmflds());

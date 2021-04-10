@@ -62,31 +62,6 @@ struct MfieldsCuda : MfieldsBase
   using real_t = fields_cuda_t::real_t;
   using Real = real_t;
 
-  class Accessor
-  {
-  public:
-    Accessor(MfieldsCuda& mflds, int idx);
-    operator real_t() const;
-    real_t operator=(real_t val);
-    real_t operator+=(real_t val);
-
-  private:
-    MfieldsCuda& mflds_;
-    int idx_;
-  };
-
-  class Patch
-  {
-  public:
-    Patch(MfieldsCuda& mflds, int p);
-
-    Accessor operator()(int m, int i, int j, int k);
-
-  private:
-    MfieldsCuda& mflds_;
-    int p_;
-  };
-
   MfieldsCuda(const Grid_t& grid, int n_fields, Int3 ibn);
   MfieldsCuda(const MfieldsCuda&) = delete;
   MfieldsCuda(MfieldsCuda&&) = default;
@@ -179,12 +154,6 @@ inline void copy(const MfieldsStateCuda& mflds, HMFields& hmflds)
 inline void copy(const HMFields& hmflds, MfieldsStateCuda& mflds)
 {
   copy(hmflds, mflds.mflds());
-}
-
-template <typename D>
-auto make_Fields3d(const MfieldsCuda::Patch& f)
-{
-  return f;
 }
 
 // ----------------------------------------------------------------------
