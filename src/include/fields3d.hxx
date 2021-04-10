@@ -381,21 +381,12 @@ private:
 class MfieldsDomain
 {
 public:
-  MfieldsDomain(const Grid_t& grid) : grid_{&grid}
-  {
-    patch_offsets_.reserve(grid.n_patches());
-    for (auto& patch : grid.patches) {
-      patch_offsets_.emplace_back(patch.off);
-    }
-  }
-
-  Int3 patchOffset(int p) const { return patch_offsets_[p]; }
+  MfieldsDomain(const Grid_t& grid) : grid_{&grid} {}
 
   const Grid_t& grid() const { return *grid_; }
 
 private:
   const Grid_t* grid_;
-  std::vector<Int3> patch_offsets_;
 };
 
 // ======================================================================
@@ -432,7 +423,7 @@ struct Mfields
 
   Int3 ldims() const { return grid().ldims; }
   Int3 gdims() const { return grid().gdims; }
-  Int3 patchOffset(int p) const { return domain_.patchOffset(p); }
+  Int3 patchOffset(int p) const { return grid().patches[p].off; }
   const Grid_t& grid() const { return domain_.grid(); }
 
   auto gt() { return Base::storage().view(); }
