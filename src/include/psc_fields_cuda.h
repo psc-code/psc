@@ -10,46 +10,9 @@
 
 #include "mrc_json.h"
 
-struct cuda_mfields;
-
 struct fields_cuda_t
 {
   using real_t = float;
-};
-
-// ======================================================================
-// CudaMfields
-
-template <typename S>
-struct CudaMfields;
-
-template <typename S>
-struct MfieldsCRTPInnerTypes<CudaMfields<S>>
-{
-  using Storage = S;
-};
-
-template <typename S>
-struct CudaMfields : MfieldsCRTP<CudaMfields<S>>
-{
-  using Base = MfieldsCRTP<CudaMfields<S>>;
-  using Storage = typename Base::Storage;
-  using real_t = typename Base::Real;
-
-  CudaMfields(const kg::Box3& box, int n_comps, int n_patches)
-    : Base{n_comps, box, n_patches},
-      storage_({box.im(0), box.im(1), box.im(2), n_comps, n_patches})
-  {}
-
-  auto gt() { return Base::storage().view(); }
-
-private:
-  Storage storage_;
-
-  KG_INLINE Storage& storageImpl() { return storage_; }
-  KG_INLINE const Storage& storageImpl() const { return storage_; }
-
-  friend class MfieldsCRTP<CudaMfields>;
 };
 
 // ======================================================================
