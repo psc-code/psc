@@ -643,4 +643,10 @@ auto host_mirror(const E& e)
 
 } // namespace gt
 
+template <typename MF>
+MF& hostMirror(MF& mflds)
+{
+  return mflds;
+}
+
 #endif
