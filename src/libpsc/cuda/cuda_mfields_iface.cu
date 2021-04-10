@@ -72,14 +72,6 @@ void MfieldsCuda::zero_comp(int m)
   }
 }
 
-void MfieldsCuda::zero()
-{
-  dprintf("CMFLDS: zero\n");
-  for (int m = 0; m < cmflds()->n_comps(); m++) {
-    zero_comp(m);
-  }
-}
-
 int MfieldsCuda::index(int m, int i, int j, int k, int p) const
 {
   return cmflds_->index(m, i, j, k, p);

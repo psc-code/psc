@@ -36,7 +36,7 @@ struct Moment_rho_1st_nc_cuda
     auto& cmprts = *mprts.cmprts();
     cuda_mfields* cmres = mres_.cmflds();
 
-    mres_.zero();
+    mres_.gt().view() = 0.;
     CudaMoments1stNcRho<cuda_mparticles<typename Mparticles::BS>, dim> cmoments;
     cmoments(cmprts, cmres);
     bnd_.add_ghosts(mres_, 0, mres_.n_comps());
@@ -103,7 +103,7 @@ public:
     cuda_mfields* cmres = Base::mres_.cmflds();
 
     prof_start(pr_1);
-    Base::mres_.zero();
+    Base::mres_.gt().view() = 0.;
     prof_stop(pr_1);
 
     CudaMoments1stN<cuda_mparticles<typename Mparticles::BS>, dim> cmoments;
@@ -188,7 +188,7 @@ public:
     cuda_mfields* cmres = Base::mres_.cmflds();
 
     prof_start(pr_1);
-    Base::mres_.zero();
+    Base::mres_.gt().view() = 0.;
     prof_stop(pr_1);
 
     prof_start(pr_2);
