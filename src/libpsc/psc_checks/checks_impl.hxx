@@ -61,7 +61,7 @@ struct Checks_
       return;
     }
 
-    rho_m_.assign(Moment_t{mprts});
+    rho_m_.storage() = Moment_t{mprts}.gt();
   }
 
   // ----------------------------------------------------------------------
@@ -75,13 +75,13 @@ struct Checks_
       return;
     }
 
-    rho_p_.assign(Moment_t{mprts});
+    rho_p_.storage() = Moment_t{mprts}.gt();
     auto item_divj = Item_divj<MfieldsState>(mflds);
 
     auto& d_rho = rho_p_;
     d_rho.storage() = d_rho.storage() - rho_m_.storage();
 
-    divj_.assign(item_divj);
+    divj_.storage() = item_divj.gt();
     divj_.storage() = grid.dt * divj_.storage();
 
     double eps = continuity_threshold;
@@ -135,7 +135,7 @@ struct Checks_
       return;
     }
 
-    rho_.assign(Moment_t{mprts});
+    rho_.storage() = Moment_t{mprts}.gt();
     auto dive = Item_dive<MfieldsState>(mflds);
 
     double eps = gauss_threshold;
