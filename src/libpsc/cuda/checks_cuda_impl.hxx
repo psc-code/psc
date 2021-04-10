@@ -74,8 +74,7 @@ struct ChecksCuda
     auto& d_rho = rho_p;
     d_rho.storage() = d_rho.storage() - rho_m.storage();
 
-    divj_.assign(item_divj);
-    divj_.storage() = grid.dt * divj_.storage();
+    divj_.storage() = grid.dt * item_divj.gt();
 
     double eps = continuity_threshold;
     double max_err = 0.;
