@@ -600,6 +600,37 @@ auto adapt(const Mfields& _mflds)
 }
 
 // ======================================================================
+
+namespace gt
+{
+
+template <typename E>
+auto host_mirror(const E& e)
+{
+  // FIXME, empty_like with space would be helpful
+  return gt::empty<typename E::value_type>(e.shape());
+}
+
+} // namespace gt
+
+template <typename MF>
+using hostMirror_t =
+  std::decay_t<decltype(hostMirror(std::declval<const MF>()))>;
+
+template <typename MF>
+MF& hostMirror(MF& mflds)
+{
+  return mflds;
+}
+
+// FIXME, doesn't actually copy, only for hostMirror use
+template <typename MF>
+void copy(const MF& from, MF& to)
+{
+  assert(from.storage().data() == to.storage().data());
+}
+
+// ======================================================================
 // Mfields_from_gt_T
 
 #ifdef USE_CUDA
@@ -628,32 +659,5 @@ template <typename E>
 using Mfields_from_gt_t =
   typename detail::Mfields_from_type_space<typename E::value_type,
                                            typename E::space>::type;
-
-// ======================================================================
-
-namespace gt
-{
-
-template <typename E>
-auto host_mirror(const E& e)
-{
-  // FIXME, empty_like with space would be helpful
-  return gt::empty<typename E::value_type>(e.shape());
-}
-
-} // namespace gt
-
-template <typename MF>
-MF& hostMirror(MF& mflds)
-{
-  return mflds;
-}
-
-// FIXME, doesn't actually copy, only for hostMirror use
-template <typename MF>
-void copy(const MF& from, MF& to)
-{
-  assert(from.storage().data() == to.storage().data());
-}
 
 #endif
