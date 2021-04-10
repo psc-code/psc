@@ -100,7 +100,6 @@ struct MfieldsCuda : MfieldsBase
   const Grid_t& grid() const { return *grid_; }
 
   void reset(const Grid_t& new_grid) override;
-  void zero_comp(int m);
 
   void copy_comp(int m_to, MfieldsCuda& from, int m_from);
   void axpy_comp(int ym, float a, MfieldsCuda& x, int xm);

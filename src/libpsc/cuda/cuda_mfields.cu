@@ -317,38 +317,6 @@ __global__ static void k_zero_comp_xyz(float* data, uint n, uint stride)
   }
 }
 
-void cuda_mfields::zero_comp(int m, dim_yz tag)
-{
-  int my = im(1);
-  int mz = im(2);
-  assert(ib(1) == -BND);
-  assert(ib(2) == -BND);
-
-  dim3 dimGrid((my + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-               (mz + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
-  dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
-
-  // OPT, should be done in a single kernel
-  for (int p = 0; p < n_patches(); p++) {
-    k_zero_comp_yz<<<dimGrid, dimBlock>>>((*this)[p].storage().data().get(), m,
-                                          my, mz);
-  }
-  cuda_sync_if_enabled();
-}
-
-void cuda_mfields::zero_comp(int m, dim_xyz tag)
-{
-  int n = box().size();
-  int stride = n * n_comps();
-
-  const int THREADS_PER_BLOCK = 512;
-  dim3 dimBlock(THREADS_PER_BLOCK);
-  dim3 dimGrid((n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, n_patches());
-
-  k_zero_comp_xyz<<<dimGrid, dimBlock>>>(data().get() + m * n, n, stride);
-  cuda_sync_if_enabled();
-}
-
 HMFields hostMirror(const cuda_mfields& cmflds)
 {
   return HMFields{cmflds.box(), cmflds.n_comps(), cmflds.n_patches()};
