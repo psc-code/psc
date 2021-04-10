@@ -5,6 +5,7 @@
 #include <mpi.h>
 #include "fields3d.hxx"
 #include "fields_traits.hxx"
+#include "cuda_mfields.h"
 
 #include "psc_fields_single.h"
 
