@@ -504,14 +504,8 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
 
 static void zero_currents(struct cuda_mfields* cmflds)
 {
-  // OPT: j as separate field, so we can use a single memset?
-  for (int p = 0; p < cmflds->n_patches(); p++) {
-    uint size = cmflds->box().size();
-    cudaError ierr =
-      cudaMemset((*cmflds)[p].storage().data().get() + JXI * size, 0,
-                 3 * size * sizeof(fields_cuda_real_t));
-    cudaCheck(ierr);
-  }
+  auto& gt = cmflds->storage();
+  gt.view(_all, _all, _all, _s(JXI, JXI + 3), _all) = 0.;
 }
 
 // ----------------------------------------------------------------------
