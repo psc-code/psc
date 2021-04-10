@@ -52,8 +52,6 @@ private:
   friend class MfieldsCRTP<CudaMfields>;
 };
 
-using HMFields = MfieldsSingle;
-
 // ======================================================================
 // MfieldsCuda
 
@@ -88,10 +86,10 @@ struct MfieldsCuda : MfieldsBase
   const Grid_t* grid_;
 };
 
-HMFields hostMirror(MfieldsCuda& mflds);
-HMFields hostMirror(const MfieldsCuda& mflds);
-void copy(const MfieldsCuda& mflds, HMFields& hmflds);
-void copy(const HMFields& hmflds, MfieldsCuda& mflds);
+MfieldsSingle hostMirror(MfieldsCuda& mflds);
+MfieldsSingle hostMirror(const MfieldsCuda& mflds);
+void copy(const MfieldsCuda& mflds, MfieldsSingle& hmflds);
+void copy(const MfieldsSingle& hmflds, MfieldsCuda& mflds);
 
 // ======================================================================
 // MfieldsStateCuda
@@ -146,22 +144,22 @@ struct Mfields_from_type_space<T, gt::space::device>
 };
 } // namespace detail
 
-inline HMFields hostMirror(MfieldsStateCuda& mflds)
+inline MfieldsSingle hostMirror(MfieldsStateCuda& mflds)
 {
   return hostMirror(mflds.mflds());
 }
 
-inline HMFields hostMirror(const MfieldsStateCuda& mflds)
+inline MfieldsSingle hostMirror(const MfieldsStateCuda& mflds)
 {
   return hostMirror(mflds.mflds());
 }
 
-inline void copy(const MfieldsStateCuda& mflds, HMFields& hmflds)
+inline void copy(const MfieldsStateCuda& mflds, MfieldsSingle& hmflds)
 {
   copy(mflds.mflds(), hmflds);
 }
 
-inline void copy(const HMFields& hmflds, MfieldsStateCuda& mflds)
+inline void copy(const MfieldsSingle& hmflds, MfieldsStateCuda& mflds)
 {
   copy(hmflds, mflds.mflds());
 }

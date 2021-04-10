@@ -88,7 +88,7 @@ struct BndCuda2 : BndBase
   static void copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3],
                           void* _buf, void* ctx)
   {
-    auto& mf = *static_cast<HMFields*>(ctx);
+    auto& mf = *static_cast<MfieldsSingle*>(ctx);
     auto F = make_Fields3d<dim_xyz>(mf[p]);
     real_t* buf = static_cast<real_t*>(_buf);
 
@@ -106,7 +106,7 @@ struct BndCuda2 : BndBase
   static void add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
                            void* _buf, void* ctx)
   {
-    auto& mf = *static_cast<HMFields*>(ctx);
+    auto& mf = *static_cast<MfieldsSingle*>(ctx);
     auto F = make_Fields3d<dim_xyz>(mf[p]);
     real_t* buf = static_cast<real_t*>(_buf);
 
@@ -126,7 +126,7 @@ struct BndCuda2 : BndBase
   static void copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
                             void* _buf, void* ctx)
   {
-    auto& mf = *static_cast<HMFields*>(ctx);
+    auto& mf = *static_cast<MfieldsSingle*>(ctx);
     auto F = make_Fields3d<dim_xyz>(mf[p]);
     real_t* buf = static_cast<real_t*>(_buf);
 

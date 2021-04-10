@@ -153,9 +153,9 @@ private:
   const Grid_t& grid_;
 };
 
-HMFields hostMirror(cuda_mfields& cmflds);
-HMFields hostMirror(const cuda_mfields& cmflds);
-void copy(const cuda_mfields& cmflds, HMFields& hmflds);
-void copy(const HMFields& hmflds, cuda_mfields& cmflds);
+MfieldsSingle hostMirror(cuda_mfields& cmflds);
+MfieldsSingle hostMirror(const cuda_mfields& cmflds);
+void copy(const cuda_mfields& cmflds, MfieldsSingle& hmflds);
+void copy(const MfieldsSingle& hmflds, cuda_mfields& cmflds);
 
 #endif

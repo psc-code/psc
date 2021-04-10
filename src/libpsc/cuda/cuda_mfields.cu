@@ -93,17 +93,17 @@ DFields cuda_mfields::operator[](int p) const
   return static_cast<DMFields>(const_cast<cuda_mfields&>(*this))[p];
 }
 
-HMFields hostMirror(cuda_mfields& cmflds)
+MfieldsSingle hostMirror(cuda_mfields& cmflds)
 {
-  return HMFields{cmflds.grid(), cmflds.n_comps(), -cmflds.ib()};
+  return MfieldsSingle{cmflds.grid(), cmflds.n_comps(), -cmflds.ib()};
 }
 
-HMFields hostMirror(const cuda_mfields& cmflds)
+MfieldsSingle hostMirror(const cuda_mfields& cmflds)
 {
-  return HMFields{cmflds.grid(), cmflds.n_comps(), -cmflds.ib()};
+  return MfieldsSingle{cmflds.grid(), cmflds.n_comps(), -cmflds.ib()};
 }
 
-void copy(const cuda_mfields& cmflds, HMFields& hmflds)
+void copy(const cuda_mfields& cmflds, MfieldsSingle& hmflds)
 {
   static int pr;
   if (!pr) {
@@ -116,7 +116,7 @@ void copy(const cuda_mfields& cmflds, HMFields& hmflds)
   prof_stop(pr);
 }
 
-void copy(const HMFields& hmflds, cuda_mfields& cmflds)
+void copy(const MfieldsSingle& hmflds, cuda_mfields& cmflds)
 {
   static int pr;
   if (!pr) {

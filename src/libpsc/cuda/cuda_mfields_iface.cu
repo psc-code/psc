@@ -59,22 +59,22 @@ gt::gtensor_span_device<MfieldsCuda::real_t, 5> MfieldsCuda::gt()
                           cmflds_->storage().shape());
 }
 
-HMFields hostMirror(MfieldsCuda& mflds)
+MfieldsSingle hostMirror(MfieldsCuda& mflds)
 {
   return hostMirror(*mflds.cmflds());
 }
 
-HMFields hostMirror(const MfieldsCuda& mflds)
+MfieldsSingle hostMirror(const MfieldsCuda& mflds)
 {
   return hostMirror(*mflds.cmflds());
 }
 
-void copy(const MfieldsCuda& mflds, HMFields& hmflds)
+void copy(const MfieldsCuda& mflds, MfieldsSingle& hmflds)
 {
   copy(*mflds.cmflds(), hmflds);
 }
 
-void copy(const HMFields& hmflds, MfieldsCuda& mflds)
+void copy(const MfieldsSingle& hmflds, MfieldsCuda& mflds)
 {
   copy(hmflds, *mflds.cmflds());
 }
