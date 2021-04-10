@@ -13,6 +13,7 @@ template <typename MF>
 struct Bnd_ : BndBase
 {
   using Mfields = MF;
+  using MfieldsHost = hostMirror_t<Mfields>;
   using real_t = typename Mfields::real_t;
 
   // ----------------------------------------------------------------------
@@ -60,7 +61,13 @@ struct Bnd_ : BndBase
       balance_generation_cnt_ = psc_balance_generation_cnt;
       reset(mflds.grid());
     }
-    mrc_ddc_add_ghosts(ddc_, mb, me, &mflds);
+    {
+      auto&& h_mflds = hostMirror(mflds);
+      copy(mflds, h_mflds);
+
+      mrc_ddc_add_ghosts(ddc_, mb, me, &h_mflds);
+      copy(h_mflds, mflds);
+    }
   }
 
   // ----------------------------------------------------------------------
@@ -75,7 +82,12 @@ struct Bnd_ : BndBase
     // FIXME
     // I don't think we need as many points, and only stencil star
     // rather then box
-    mrc_ddc_fill_ghosts(ddc_, mb, me, &mflds);
+    {
+      auto&& h_mflds = hostMirror(mflds);
+      copy(mflds, h_mflds);
+      mrc_ddc_fill_ghosts(ddc_, mb, me, &h_mflds);
+      copy(h_mflds, mflds);
+    }
   }
 
   // ----------------------------------------------------------------------
@@ -84,7 +96,7 @@ struct Bnd_ : BndBase
   static void copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3],
                           void* _buf, void* ctx)
   {
-    auto& mf = *static_cast<Mfields*>(ctx);
+    auto& mf = *static_cast<MfieldsHost*>(ctx);
     auto F = make_Fields3d<dim_xyz>(mf[p]);
     real_t* buf = static_cast<real_t*>(_buf);
 
@@ -102,7 +114,7 @@ struct Bnd_ : BndBase
   static void add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
                            void* _buf, void* ctx)
   {
-    auto& mf = *static_cast<Mfields*>(ctx);
+    auto& mf = *static_cast<MfieldsHost*>(ctx);
     auto F = make_Fields3d<dim_xyz>(mf[p]);
     real_t* buf = static_cast<real_t*>(_buf);
 
@@ -120,7 +132,7 @@ struct Bnd_ : BndBase
   static void copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
                             void* _buf, void* ctx)
   {
-    auto& mf = *static_cast<Mfields*>(ctx);
+    auto& mf = *static_cast<MfieldsHost*>(ctx);
     auto F = make_Fields3d<dim_xyz>(mf[p]);
     real_t* buf = static_cast<real_t*>(_buf);
 
