@@ -631,11 +631,7 @@ void copy(const MF& from, MF& to)
 }
 
 // ======================================================================
-// Mfields_from_gt_T
-
-#ifdef USE_CUDA
-#include "psc_fields_cuda.h"
-#endif
+// Mfields_from_gt_t
 
 namespace detail
 {
@@ -644,15 +640,6 @@ struct Mfields_from_type_space
 {
   using type = Mfields<T>;
 };
-
-#ifdef USE_CUDA
-template <typename T>
-struct Mfields_from_type_space<T, gt::space::device>
-{
-  static_assert(std::is_same<T, float>::value, "CUDA only supports float");
-  using type = MfieldsCuda;
-};
-#endif
 } // namespace detail
 
 template <typename E>

@@ -3,7 +3,9 @@
 
 #include "fields_item.hxx"
 #include "psc_fields_c.h"
+#ifdef USE_CUDA
 #include "psc_fields_cuda.h"
+#endif
 
 template <typename E>
 inline auto to_gt(const E& e)

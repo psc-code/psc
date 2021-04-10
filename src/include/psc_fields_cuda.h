@@ -136,6 +136,16 @@ struct Mfields_traits<MfieldsCuda>
   static constexpr const char* name = "cuda";
 };
 
+namespace detail
+{
+template <typename T>
+struct Mfields_from_type_space<T, gt::space::device>
+{
+  static_assert(std::is_same<T, float>::value, "CUDA only supports float");
+  using type = MfieldsCuda;
+};
+} // namespace detail
+
 inline HMFields hostMirror(MfieldsStateCuda& mflds)
 {
   return hostMirror(mflds.mflds());
