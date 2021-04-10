@@ -436,12 +436,12 @@ struct Mfields
   using Storage = typename Base::Storage;
   using space = gt::space::host;
 
-  Mfields(const MfieldsDomain& domain, int n_fields, Int3 ibn)
-    : MfieldsBase(domain.grid(), n_fields, ibn),
-      Base(n_fields, {-ibn, domain.ldims() + 2 * ibn}, domain.n_patches()),
+  Mfields(const Grid_t& grid, int n_fields, Int3 ibn)
+    : MfieldsBase(grid, n_fields, ibn),
+      Base(n_fields, {-ibn, grid.ldims + 2 * ibn}, grid.n_patches()),
       storage_(gt::shape(Base::box().im(0), Base::box().im(1),
                          Base::box().im(2), n_fields, Base::n_patches())),
-      domain_{domain}
+      domain_{grid}
   {
     std::fill(storage_.data(), storage_.data() + storage_.size(), real_t{});
   }
@@ -449,7 +449,6 @@ struct Mfields
   Int3 ldims() const { return domain_.ldims(); }
   Int3 gdims() const { return domain_.gdims(); }
   Int3 patchOffset(int p) const { return domain_.patchOffset(p); }
-  const MfieldsDomain& domain() const { return domain_; }
   const Grid_t& grid() const { return domain_.grid(); }
 
   auto gt() { return Base::storage().view(); }
@@ -457,7 +456,7 @@ struct Mfields
   template <typename FUNC>
   void Foreach_3d(int l, int r, FUNC&& F) const
   {
-    return domain().Foreach_3d(l, r, std::forward<FUNC>(F));
+    return domain_.Foreach_3d(l, r, std::forward<FUNC>(F));
   }
 
   virtual void reset(const Grid_t& grid) override
