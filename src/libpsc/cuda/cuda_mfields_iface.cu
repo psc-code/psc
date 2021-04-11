@@ -14,11 +14,6 @@
   } while (0)
 #endif
 
-int MfieldsCuda::index(int m, int i, int j, int k, int p) const
-{
-  return cmflds_->index(m, i, j, k, p);
-}
-
 MfieldsSingle hostMirror(MfieldsCuda& mflds)
 {
   return hostMirror(*mflds.cmflds());

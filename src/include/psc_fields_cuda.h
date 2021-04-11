@@ -45,8 +45,6 @@ struct MfieldsCuda : MfieldsBase
     grid_ = &new_grid;
   }
 
-  int index(int m, int i, int j, int k, int p) const;
-
   gt::gtensor_span_device<real_t, 5> gt()
   {
     return gt::adapt_device(cmflds_->storage().data().get(),
