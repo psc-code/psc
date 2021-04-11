@@ -38,7 +38,6 @@ if (USE_CUDA)
     
     cuda/psc_fields_cuda.cxx
     cuda/cuda_mfields.cu
-    cuda/cuda_mfields_iface.cu
     
     cuda/cuda_push_mprts_yz.cu
     

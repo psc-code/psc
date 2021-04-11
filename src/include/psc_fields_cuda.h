@@ -59,10 +59,25 @@ struct MfieldsCuda : MfieldsBase
   const Grid_t* grid_;
 };
 
-MfieldsSingle hostMirror(MfieldsCuda& mflds);
-MfieldsSingle hostMirror(const MfieldsCuda& mflds);
-void copy(const MfieldsCuda& mflds, MfieldsSingle& hmflds);
-void copy(const MfieldsSingle& hmflds, MfieldsCuda& mflds);
+inline MfieldsSingle hostMirror(MfieldsCuda& mflds)
+{
+  return hostMirror(*mflds.cmflds());
+}
+
+inline MfieldsSingle hostMirror(const MfieldsCuda& mflds)
+{
+  return hostMirror(*mflds.cmflds());
+}
+
+inline void copy(const MfieldsCuda& mflds, MfieldsSingle& hmflds)
+{
+  copy(*mflds.cmflds(), hmflds);
+}
+
+inline void copy(const MfieldsSingle& hmflds, MfieldsCuda& mflds)
+{
+  copy(hmflds, *mflds.cmflds());
+}
 
 // ======================================================================
 // MfieldsStateCuda
