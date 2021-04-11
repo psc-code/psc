@@ -58,8 +58,8 @@ __global__ static void marder_correct_yz(E1 gt_flds, E2 gt_f, float facy,
 }
 
 void cuda_marder_correct_yz(struct cuda_mfields* cmflds,
-                            struct cuda_mfields* cmf, int p, float fac[3],
-                            int ly[3], int ry[3], int lz[3], int rz[3])
+                            struct cuda_mfields* cmf, int p, Float3 fac,
+                            Int3 ly, Int3 ry, Int3 lz, Int3 rz)
 {
 #if 0
   cuda_marder_correct_yz_gold(mflds, mf, p, fac, ly, ry, lz, rz);
