@@ -43,30 +43,6 @@ GT_INLINE static void push_fields_E_yz(E gt, float dt, float cny, float cnz,
 }
 #endif
 
-__global__ static void push_fields_H_yz(DMFields dmflds, float cny, float cnz,
-                                        int gridy)
-{
-  int bidx_y = blockIdx.y % gridy;
-  int p = blockIdx.y / gridy;
-  int iy = blockIdx.x * blockDim.x + threadIdx.x;
-  int iz = bidx_y * blockDim.y + threadIdx.y;
-
-  if (!(iy < dmflds.im(1) - 2 * (2 - BND) - 1 &&
-        iz < dmflds.im(2) - 2 * (2 - BND) - 1))
-    return;
-  iy -= BND;
-  iz -= BND;
-
-  auto F = make_Fields3d<dim_xyz>(dmflds[p]);
-
-  F(HX, 0, iy, iz) -= cny * (F(EZ, 0, iy + 1, iz) - F(EZ, 0, iy, iz)) -
-                      cnz * (F(EY, 0, iy, iz + 1) - F(EY, 0, iy, iz));
-
-  F(HY, 0, iy, iz) -= cnz * (F(EX, 0, iy, iz + 1) - F(EX, 0, iy, iz)) - 0.f;
-
-  F(HZ, 0, iy, iz) -= 0.f - cny * (F(EX, 0, iy + 1, iz) - F(EX, 0, iy, iz));
-}
-
 void PushFieldsCuda::push_E(MfieldsStateCuda& mflds, double dt_fac, dim_yz tag)
 {
   if (mflds.n_patches() == 0) {
@@ -121,19 +97,29 @@ void PushFieldsCuda::push_H(MfieldsStateCuda& mflds, double dt_fac, dim_yz tag)
     return;
   }
 
-  auto cmflds = mflds.cmflds();
   double dt = dt_fac * mflds.grid().dt;
-
   float cny = dt / mflds.grid().domain.dx[1];
   float cnz = dt / mflds.grid().domain.dx[2];
 
-  auto shape = mflds.gt().shape();
-  int grid[2] = {(shape[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-                 (shape[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z};
-  dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
-  dim3 dimGrid(grid[0], grid[1] * mflds.n_patches());
+  auto gt = mflds.gt();
 
-  push_fields_H_yz<<<dimGrid, dimBlock>>>(*cmflds, cny, cnz, grid[1]);
+  gt.view(0, _s(_, -1), _s(_, -1), HX) =
+    gt.view(0, _s(_, -1), _s(_, -1), HX) -
+    (cny * (gt.view(0, _s(1, _), _s(_, -1), EZ) -
+            gt.view(0, _s(_, -1), _s(_, -1), EZ)) -
+     cnz * (gt.view(0, _s(_, -1), _s(1, _), EY) -
+            gt.view(0, _s(_, -1), _s(_, -1), EY)));
+
+  gt.view(0, _s(_, -1), _s(_, -1), HY) =
+    gt.view(0, _s(_, -1), _s(_, -1), HY) -
+    (cnz * (gt.view(0, _s(_, -1), _s(1, _), EX) -
+            gt.view(0, _s(_, -1), _s(_, -1), EX)));
+
+  gt.view(0, _s(_, -1), _s(_, -1), HZ) =
+    gt.view(0, _s(_, -1), _s(_, -1), HZ) -
+    (0.f - cny * (gt.view(0, _s(1, _), _s(_, -1), EX) -
+                  gt.view(0, _s(_, -1), _s(_, -1), EX)));
+
   cuda_sync_if_enabled();
 }
 
