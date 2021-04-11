@@ -84,10 +84,11 @@ void PushFieldsCuda::push_E(MfieldsStateCuda& mflds, double dt_fac, dim_yz tag)
   float cny = dt / mflds.grid().domain.dx[1];
   float cnz = dt / mflds.grid().domain.dx[2];
 
-  int grid[2] = {(cmflds->im(1) + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-                 (cmflds->im(2) + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z};
+  auto shape = mflds.gt().shape();
+  int grid[2] = {(shape[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+                 (shape[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z};
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
-  dim3 dimGrid(grid[0], grid[1] * cmflds->n_patches());
+  dim3 dimGrid(grid[0], grid[1] * mflds.n_patches());
 
   push_fields_E_yz<<<dimGrid, dimBlock>>>(*cmflds, dt, cny, cnz, grid[1]);
   cuda_sync_if_enabled();
@@ -105,10 +106,11 @@ void PushFieldsCuda::push_H(MfieldsStateCuda& mflds, double dt_fac, dim_yz tag)
   float cny = dt / mflds.grid().domain.dx[1];
   float cnz = dt / mflds.grid().domain.dx[2];
 
-  int grid[2] = {(cmflds->im(1) + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-                 (cmflds->im(2) + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z};
+  auto shape = mflds.gt().shape();
+  int grid[2] = {(shape[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+                 (shape[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z};
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
-  dim3 dimGrid(grid[0], grid[1] * cmflds->n_patches());
+  dim3 dimGrid(grid[0], grid[1] * mflds.n_patches());
 
   push_fields_H_yz<<<dimGrid, dimBlock>>>(*cmflds, cny, cnz, grid[1]);
   cuda_sync_if_enabled();
