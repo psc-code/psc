@@ -6,7 +6,6 @@
 #include "cuda_iface.h"
 #include "cuda_iface_bnd.h"
 #include "cuda_base.cuh"
-#include "psc_fields_cuda.h"
 #include "dim.hxx"
 
 #define MAX_BND_FIELDS (17)
