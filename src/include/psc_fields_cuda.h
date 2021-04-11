@@ -11,17 +11,12 @@
 
 #include "mrc_json.h"
 
-struct fields_cuda_t
-{
-  using real_t = float;
-};
-
 // ======================================================================
 // MfieldsCuda
 
 struct MfieldsCuda : MfieldsBase
 {
-  using real_t = fields_cuda_t::real_t;
+  using real_t = float;
   using Real = real_t;
 
   MfieldsCuda(const Grid_t& grid, int n_fields, Int3 ibn);
