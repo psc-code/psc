@@ -9,9 +9,8 @@
 
 #include <mrc_io.h>
 
-void cuda_marder_correct_yz(struct cuda_mfields* cmflds,
-                            struct cuda_mfields* cmf, int p, Float3 fac,
-                            Int3 ly, Int3 ry, Int3 lz, Int3 rz);
+void cuda_marder_correct_yz(MfieldsStateCuda& mflds, MfieldsCuda& mf, int p,
+                            Float3 fac, Int3 ly, Int3 ry, Int3 lz, Int3 rz);
 
 namespace psc
 {
@@ -59,7 +58,7 @@ inline void correct(MfieldsStateCuda& mflds, MfieldsCuda& mf, float diffusion)
     Int3 rz = {r_nc[0] + ldims[0], r_nc[1] + ldims[1], r_cc[2] + ldims[2]};
 
     if (grid.isInvar(0)) {
-      cuda_marder_correct_yz(cmflds, cmf, p, fac, ly, ry, lz, rz);
+      cuda_marder_correct_yz(mflds, mf, p, fac, ly, ry, lz, rz);
     } else {
       cuda_marder_correct_xyz(cmflds, cmf, p, fac, lx, rx, ly, ry, lz, rz);
     }
