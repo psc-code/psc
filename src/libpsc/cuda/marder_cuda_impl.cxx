@@ -35,28 +35,6 @@ void cuda_marder_correct_yz_gold(struct cuda_mfields* cmflds,
   copy(mflds, *cmflds);
 }
 
-template <typename E1, typename E2>
-__global__ static void marder_correct_yz(E1 gt_flds, E2 gt_f, float facy,
-                                         float facz, int lyy, int lyz, int ryy,
-                                         int ryz, int lzy, int lzz, int rzy,
-                                         int rzz, int my, int mz)
-{
-  int iy = blockIdx.x * blockDim.x + threadIdx.x;
-  int iz = blockIdx.y * blockDim.y + threadIdx.y;
-
-  if (iy - BND >= -lyy && iy - BND < ryy && iz - BND >= -lyz &&
-      iz - BND < ryz) {
-    gt_flds(0, iy, iz, EY) =
-      gt_flds(0, iy, iz, EY) + facy * (gt_f(0, iy + 1, iz) - gt_f(0, iy, iz));
-  }
-
-  if (iy - BND >= -lzy && iy - BND < rzy && iz - BND >= -lzz &&
-      iz - BND < rzz) {
-    gt_flds(0, iy, iz, EZ) =
-      gt_flds(0, iy, iz, EZ) + facz * (gt_f(0, iy, iz + 1) - gt_f(0, iy, iz));
-  }
-}
-
 void cuda_marder_correct_yz(struct cuda_mfields* cmflds,
                             struct cuda_mfields* cmf, int p, Float3 fac,
                             Int3 ly, Int3 ry, Int3 lz, Int3 rz)
@@ -70,17 +48,22 @@ void cuda_marder_correct_yz(struct cuda_mfields* cmflds,
     return;
   }
 
-  int my = cmflds->im(1);
-  int mz = cmflds->im(2);
+  auto gt_flds = cmflds->storage().view(_all, _all, _all, _all, p).to_kernel();
+  auto gt_f = cmf->storage().view(_all, _all, _all, 0, p).to_kernel();
 
-  int grid[2] = {(my + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-                 (mz + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z};
-  dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
-  dim3 dimGrid(grid[0], grid[1]);
+  gt::launch<2>({gt_flds.shape(1), gt_flds.shape(2)}, GT_LAMBDA(int iy,
+                                                                int iz) {
+    if (iy - BND >= -ly[1] && iy - BND < ry[1] && iz - BND >= -ly[2] &&
+        iz - BND < ry[2]) {
+      gt_flds(0, iy, iz, EY) = gt_flds(0, iy, iz, EY) +
+                               fac[1] * (gt_f(0, iy + 1, iz) - gt_f(0, iy, iz));
+    }
 
-  marder_correct_yz<<<dimGrid, dimBlock>>>(
-    cmflds->storage().view(_all, _all, _all, _all, p).to_kernel(),
-    cmf->storage().view(_all, _all, _all, 0, p).to_kernel(), fac[1], fac[2],
-    ly[1], ly[2], ry[1], ry[2], lz[1], lz[2], rz[1], rz[2], my, mz);
+    if (iy - BND >= -lz[1] && iy - BND < rz[1] && iz - BND >= -lz[2] &&
+        iz - BND < rz[2]) {
+      gt_flds(0, iy, iz, EZ) = gt_flds(0, iy, iz, EZ) +
+                               fac[2] * (gt_f(0, iy, iz + 1) - gt_f(0, iy, iz));
+    }
+  });
   cuda_sync_if_enabled();
 }
