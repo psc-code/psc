@@ -57,27 +57,6 @@ mrc_json_t cuda_mfields::to_json()
 }
 
 // ----------------------------------------------------------------------
-// dump
-
-void cuda_mfields::dump(const char* filename)
-{
-  mrc_json_t json = to_json();
-
-  const char* buf = mrc_json_to_string(json);
-  if (filename) {
-    FILE* file = fopen(filename, "w");
-    assert(file);
-    fwrite(buf, 1, strlen(buf), file);
-    fclose(file);
-  } else {
-    printf("cuda_mfields (json):\n%s\n", buf);
-  }
-  free((void*)buf);
-
-  // FIXME free json
-}
-
-// ----------------------------------------------------------------------
 // cast to DMFields
 
 cuda_mfields::operator DMFields()

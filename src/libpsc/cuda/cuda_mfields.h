@@ -116,7 +116,6 @@ struct cuda_mfields : MfieldsCRTP<cuda_mfields>
   cuda_mfields(const cuda_mfields&) = delete;
 
   mrc_json_t to_json();
-  void dump(const char* filename);
 
   pointer data() { return storage().data(); }
   operator DMFields();
