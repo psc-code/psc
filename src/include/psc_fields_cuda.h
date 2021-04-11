@@ -19,23 +19,39 @@ struct MfieldsCuda : MfieldsBase
   using real_t = float;
   using Real = real_t;
 
-  MfieldsCuda(const Grid_t& grid, int n_fields, Int3 ibn);
+  MfieldsCuda(const Grid_t& grid, int n_fields, Int3 ibn)
+    : MfieldsBase{grid, n_fields, ibn},
+      grid_{&grid},
+      cmflds_{new cuda_mfields(grid, n_fields, ibn)}
+  {}
   MfieldsCuda(const MfieldsCuda&) = delete;
   MfieldsCuda(MfieldsCuda&&) = default;
-  ~MfieldsCuda();
+  ~MfieldsCuda() { delete cmflds_; }
 
   cuda_mfields* cmflds() { return cmflds_; }
   const cuda_mfields* cmflds() const { return cmflds_; }
 
-  int n_comps() const;
-  int n_patches() const;
+  int n_comps() const { return cmflds_->n_comps(); }
+  int n_patches() const { return cmflds_->n_patches(); };
   const Grid_t& grid() const { return *grid_; }
 
-  void reset(const Grid_t& new_grid) override;
+  void reset(const Grid_t& new_grid) override
+  {
+    MfieldsBase::reset(new_grid);
+    Int3 ibn = -cmflds()->ib();
+    int n_comps = cmflds()->n_comps();
+    delete cmflds_;
+    cmflds_ = new cuda_mfields(new_grid, n_comps, ibn);
+    grid_ = &new_grid;
+  }
 
   int index(int m, int i, int j, int k, int p) const;
 
-  gt::gtensor_span_device<real_t, 5> gt();
+  gt::gtensor_span_device<real_t, 5> gt()
+  {
+    return gt::adapt_device(cmflds_->storage().data().get(),
+                            cmflds_->storage().shape());
+  }
 
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
