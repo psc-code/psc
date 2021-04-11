@@ -112,7 +112,6 @@ struct cuda_mfields : MfieldsCRTP<cuda_mfields>
     cuda_base_init();
   }
 
-  using Base::Base;
   cuda_mfields(const cuda_mfields&) = delete;
 
   pointer data() { return storage().data(); }
