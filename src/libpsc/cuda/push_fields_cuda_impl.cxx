@@ -3,15 +3,6 @@
 
 #include "fields.hxx"
 
-// the loops include 2 levels of ghost cells
-// they really only need -1:2 and -1:1, respectively (for 1st order)
-// but always doing 2:2 seems cheap enough
-
-#define BND 2
-#define BLOCKSIZE_X 1
-#define BLOCKSIZE_Y 16
-#define BLOCKSIZE_Z 16
-
 // OPT: precalc offset
 
 // ======================================================================
@@ -50,7 +41,7 @@ void PushFieldsCuda::push_E(MfieldsStateCuda& mflds, double dt_fac, dim_yz tag)
   }
 
   assert(mflds.n_comps() == NR_FIELDS);
-  assert(mflds.ibn() == Int3({0, BND, BND}));
+  assert(mflds.ibn() == Int3({0, 2, 2}));
 
   double dt = dt_fac * mflds.grid().dt;
   float cny = dt / mflds.grid().domain.dx[1];
