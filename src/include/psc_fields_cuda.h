@@ -90,7 +90,9 @@ struct MfieldsStateCuda : MfieldsStateBase
 
   cuda_mfields* cmflds() { return mflds_.cmflds(); }
 
-  int n_patches() const { return mflds_.n_patches(); };
+  int n_patches() const { return mflds_.n_patches(); }
+  int n_comps() const { return mflds_.n_comps(); }
+
   const Grid_t& grid() const { return *grid_; }
 
   static const Convert convert_to_, convert_from_;
