@@ -131,9 +131,6 @@ struct cuda_mfields : MfieldsCRTP<cuda_mfields>
       (i - ib(0)));
   }
 
-  real_t get_value(int idx) const { return storage().data()[idx]; }
-  void set_value(int idx, real_t val) { storage().data()[idx] = val; }
-
 private:
   const Grid_t& grid_;
   Storage storage_;
