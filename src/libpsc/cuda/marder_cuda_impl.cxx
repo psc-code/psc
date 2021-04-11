@@ -44,21 +44,16 @@ __global__ static void marder_correct_yz(E1 gt_flds, E2 gt_f, float facy,
   int iy = blockIdx.x * blockDim.x + threadIdx.x;
   int iz = blockIdx.y * blockDim.y + threadIdx.y;
 
-  iy -= BND;
-  iz -= BND;
-
-  if (iy >= -lyy && iy < ryy && iz >= -lyz && iz < ryz) {
-    gt_flds(0, iy + BND, iz + BND, EY) =
-      gt_flds(0, iy + BND, iz + BND, EY) +
-      facy *
-        (gt_f(0, iy + 1 + BND, iz + BND, 0) - gt_f(0, iy + BND, iz + BND, 0));
+  if (iy - BND >= -lyy && iy - BND < ryy && iz - BND >= -lyz &&
+      iz - BND < ryz) {
+    gt_flds(0, iy, iz, EY) =
+      gt_flds(0, iy, iz, EY) + facy * (gt_f(0, iy + 1, iz) - gt_f(0, iy, iz));
   }
 
-  if (iy >= -lzy && iy < rzy && iz >= -lzz && iz < rzz) {
-    gt_flds(0, iy + BND, iz + BND, EZ) =
-      gt_flds(0, iy + BND, iz + BND, EZ) +
-      facz *
-        (gt_f(0, iy + BND, iz + 1 + BND, 0) - gt_f(0, iy + BND, iz + BND, 0));
+  if (iy - BND >= -lzy && iy - BND < rzy && iz - BND >= -lzz &&
+      iz - BND < rzz) {
+    gt_flds(0, iy, iz, EZ) =
+      gt_flds(0, iy, iz, EZ) + facz * (gt_f(0, iy, iz + 1) - gt_f(0, iy, iz));
   }
 }
 
@@ -83,10 +78,9 @@ void cuda_marder_correct_yz(struct cuda_mfields* cmflds,
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
   dim3 dimGrid(grid[0], grid[1]);
 
-  MHERE;
   marder_correct_yz<<<dimGrid, dimBlock>>>(
     cmflds->storage().view(_all, _all, _all, _all, p).to_kernel(),
-    cmf->storage().view(_all, _all, _all, _all, p).to_kernel(), fac[1], fac[2],
+    cmf->storage().view(_all, _all, _all, 0, p).to_kernel(), fac[1], fac[2],
     ly[1], ly[2], ry[1], ry[2], lz[1], lz[2], rz[1], rz[2], my, mz);
   cuda_sync_if_enabled();
 }
