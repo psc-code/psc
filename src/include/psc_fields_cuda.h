@@ -21,16 +21,15 @@ struct MfieldsCuda : MfieldsBase
 
   MfieldsCuda(const Grid_t& grid, int n_fields, Int3 ibn)
     : MfieldsBase{grid, n_fields, ibn},
-      grid_{&grid},
       cmflds_{new cuda_mfields(grid, n_fields, ibn)}
   {}
 
   cuda_mfields* cmflds() { return cmflds_.get(); }
   const cuda_mfields* cmflds() const { return cmflds_.get(); }
 
-  int n_comps() const { return cmflds_->n_comps(); }
+  int n_comps() const { return _n_comps(); }
   int n_patches() const { return cmflds_->n_patches(); };
-  const Grid_t& grid() const { return *grid_; }
+  const Grid_t& grid() const { return _grid(); }
 
   void reset(const Grid_t& new_grid) override
   {
@@ -48,7 +47,6 @@ struct MfieldsCuda : MfieldsBase
   const Convert& convert_from() override { return convert_from_; }
 
   std::unique_ptr<cuda_mfields> cmflds_;
-  const Grid_t* grid_;
 };
 
 inline MfieldsSingle hostMirror(MfieldsCuda& mflds)
