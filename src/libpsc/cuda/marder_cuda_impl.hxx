@@ -1,10 +1,17 @@
 
 #pragma once
 
+#include "../libpsc/psc_push_fields/marder_impl.hxx"
+#include "psc_particles_single.h"
+#include "mparticles_cuda.hxx"
 #include "fields_item_dive_cuda.hxx"
 #include "fields_item_moments_1st_cuda.hxx"
 
 #include <mrc_io.h>
+
+void cuda_marder_correct_yz(struct cuda_mfields* cmflds,
+                            struct cuda_mfields* cmf, int p, float fac[3],
+                            int ly[3], int ry[3], int lz[3], int rz[3]);
 
 namespace psc
 {

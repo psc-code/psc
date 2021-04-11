@@ -1,6 +1,9 @@
 
+#pragma once
+
 #include "marder.hxx"
 #include "fields.hxx"
+#include "writer_mrc.hxx"
 #include "../libpsc/psc_output_fields/fields_item_fields.hxx"
 #include "../libpsc/psc_output_fields/psc_output_fields_item_moments_1st_nc.cxx"
 #include "../libpsc/psc_bnd/psc_bnd_impl.hxx"
