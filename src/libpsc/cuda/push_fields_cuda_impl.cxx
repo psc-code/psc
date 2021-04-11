@@ -183,21 +183,21 @@ __global__ static void push_fields_H_xyz(DMFields dmflds, float cnx, float cny,
                        cny * (F(EX, ix, iy + 1, iz) - F(EX, ix, iy, iz));
 }
 
-void cuda_push_fields_E_xyz(struct cuda_mfields* cmflds, float dt)
+void PushFieldsCuda::push_E(MfieldsStateCuda& mflds, double dt_fac, dim_xyz tag)
 {
-  if (cmflds->n_patches() == 0) {
+  if (mflds.n_patches() == 0) {
     return;
   }
 
-  assert(cmflds->n_comps() == NR_FIELDS);
-  assert(cmflds->ib(0) == -BND);
-  assert(cmflds->ib(1) == -BND);
-  assert(cmflds->ib(2) == -BND);
+  assert(mflds.n_comps() == NR_FIELDS);
+  assert(mflds.ibn() == Int3({BND, BND, BND}));
 
-  float cnx = dt / cmflds->grid().domain.dx[0];
-  float cny = dt / cmflds->grid().domain.dx[1];
-  float cnz = dt / cmflds->grid().domain.dx[2];
+  double dt = dt_fac * mflds.grid().dt;
+  float cnx = dt / mflds.grid().domain.dx[0];
+  float cny = dt / mflds.grid().domain.dx[1];
+  float cnz = dt / mflds.grid().domain.dx[2];
 
+  auto cmflds = mflds.cmflds();
   int grid[3] = {(cmflds->im(0) + BLOCKSIZE_X - 1) / BLOCKSIZE_X,
                  (cmflds->im(1) + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
                  (cmflds->im(2) + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z};
@@ -208,16 +208,18 @@ void cuda_push_fields_E_xyz(struct cuda_mfields* cmflds, float dt)
   cuda_sync_if_enabled();
 }
 
-void cuda_push_fields_H_xyz(struct cuda_mfields* cmflds, float dt)
+void PushFieldsCuda::push_H(MfieldsStateCuda& mflds, double dt_fac, dim_xyz tag)
 {
-  if (cmflds->n_patches() == 0) {
+  if (mflds.n_patches() == 0) {
     return;
   }
 
-  float cnx = dt / cmflds->grid().domain.dx[0];
-  float cny = dt / cmflds->grid().domain.dx[1];
-  float cnz = dt / cmflds->grid().domain.dx[2];
+  double dt = dt_fac * mflds.grid().dt;
+  float cnx = dt / mflds.grid().domain.dx[0];
+  float cny = dt / mflds.grid().domain.dx[1];
+  float cnz = dt / mflds.grid().domain.dx[2];
 
+  auto cmflds = mflds.cmflds();
   int grid[3] = {(cmflds->im(0) + BLOCKSIZE_X - 1) / BLOCKSIZE_X,
                  (cmflds->im(1) + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
                  (cmflds->im(2) + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z};
@@ -226,20 +228,4 @@ void cuda_push_fields_H_xyz(struct cuda_mfields* cmflds, float dt)
 
   push_fields_H_xyz<<<dimGrid, dimBlock>>>(*cmflds, cnx, cny, cnz, grid[2]);
   cuda_sync_if_enabled();
-}
-
-// ----------------------------------------------------------------------
-// push_E
-
-void PushFieldsCuda::push_E(MfieldsStateCuda& mflds, double dt_fac, dim_xyz tag)
-{
-  cuda_push_fields_E_xyz(mflds.cmflds(), dt_fac * mflds.grid().dt);
-}
-
-// ----------------------------------------------------------------------
-// push_H
-
-void PushFieldsCuda::push_H(MfieldsStateCuda& mflds, double dt_fac, dim_xyz tag)
-{
-  cuda_push_fields_H_xyz(mflds.cmflds(), dt_fac * mflds.grid().dt);
 }
