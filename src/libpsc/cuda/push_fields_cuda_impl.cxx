@@ -30,30 +30,21 @@ __global__ static void push_fields_E_yz(DMFields dmflds, E gt, float dt,
         iz < dmflds.im(2) - 2 * (2 - BND)))
     return;
 
-  iy -= BND;
-  iz -= BND;
+  gt(0, iy, iz, EX, p) =
+    gt(0, iy, iz, EX, p) +
+    cny * (gt(0, iy, iz, HZ, p) - gt(0, iy - 1, iz, HZ, p)) -
+    cnz * (gt(0, iy, iz, HY, p) - gt(0, iy, iz - 1, HY, p)) -
+    dt * gt(0, iy, iz, JXI, p);
 
-  auto F = make_Fields3d<dim_xyz>(dmflds[p]);
+  gt(0, iy, iz, EY, p) =
+    gt(0, iy, iz, EY, p) +
+    cnz * (gt(0, iy, iz, HX, p) - gt(0, iy, iz - 1, HX, p)) - 0.f -
+    dt * gt(0, iy, iz, JYI, p);
 
-  gt(0, iy + BND, iz + BND, EX, p) =
-    gt(0, iy + BND, iz + BND, EX, p) +
-    cny * (gt(0, iy + BND, iz + BND, HZ, p) -
-           gt(0, iy - 1 + BND, iz + BND, HZ, p)) -
-    cnz * (gt(0, iy + BND, iz + BND, HY, p) -
-           gt(0, iy + BND, iz - 1 + BND, HY, p)) -
-    dt * gt(0, iy + BND, iz + BND, JXI, p);
-
-  gt(0, iy + BND, iz + BND, EY, p) =
-    gt(0, iy + BND, iz + BND, EY, p) +
-    cnz * (gt(0, iy + BND, iz + BND, HX, p) -
-           gt(0, iy + BND, iz - 1 + BND, HX, p)) -
-    0.f - dt * gt(0, iy + BND, iz + BND, JYI, p);
-
-  gt(0, iy + BND, iz + BND, EZ, p) =
-    gt(0, iy + BND, iz + BND, EZ, p) + 0.f -
-    cny * (gt(0, iy + BND, iz + BND, HX, p) -
-           gt(0, iy - 1 + BND, iz + BND, HX, p)) -
-    dt * gt(0, iy + BND, iz + BND, JZI, p);
+  gt(0, iy, iz, EZ, p) =
+    gt(0, iy, iz, EZ, p) + 0.f -
+    cny * (gt(0, iy, iz, HX, p) - gt(0, iy - 1, iz, HX, p)) -
+    dt * gt(0, iy, iz, JZI, p);
 }
 
 __global__ static void push_fields_H_yz(DMFields dmflds, float cny, float cnz,
