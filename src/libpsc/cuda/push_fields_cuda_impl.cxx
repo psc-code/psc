@@ -18,16 +18,10 @@
 // dim_yz
 
 template <typename E>
-__global__ static void push_fields_E_yz(DMFields dmflds, E gt, float dt,
-                                        float cny, float cnz, int gridy)
+GT_INLINE static void push_fields_E_yz(E gt, float dt, float cny, float cnz,
+                                       int iy, int iz, int p)
 {
-  int bidx_y = blockIdx.y % gridy;
-  int p = blockIdx.y / gridy;
-  int iy = blockIdx.x * blockDim.x + threadIdx.x;
-  int iz = bidx_y * blockDim.y + threadIdx.y;
-
-  if (!(iy >= 1 && iy < dmflds.im(1) - 2 * (2 - BND) && iz >= 1 &&
-        iz < dmflds.im(2) - 2 * (2 - BND)))
+  if (!(iy >= 1 && iz >= 1))
     return;
 
   gt(0, iy, iz, EX, p) =
@@ -80,20 +74,16 @@ void PushFieldsCuda::push_E(MfieldsStateCuda& mflds, double dt_fac, dim_yz tag)
   assert(mflds.n_comps() == NR_FIELDS);
   assert(mflds.ibn() == Int3({0, BND, BND}));
 
-  auto cmflds = mflds.cmflds();
   double dt = dt_fac * mflds.grid().dt;
-
   float cny = dt / mflds.grid().domain.dx[1];
   float cnz = dt / mflds.grid().domain.dx[2];
 
   auto shape = mflds.gt().shape();
-  int grid[2] = {(shape[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-                 (shape[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z};
-  dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
-  dim3 dimGrid(grid[0], grid[1] * mflds.n_patches());
-
   auto gt = mflds.gt().to_kernel();
-  push_fields_E_yz<<<dimGrid, dimBlock>>>(*cmflds, gt, dt, cny, cnz, grid[1]);
+  gt::launch<3>({shape[1], shape[2], mflds.n_patches()},
+                GT_LAMBDA(int iy, int iz, int p) {
+                  push_fields_E_yz(gt, dt, cny, cnz, iy, iz, p);
+                });
   cuda_sync_if_enabled();
 }
 
