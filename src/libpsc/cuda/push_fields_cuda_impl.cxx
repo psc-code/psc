@@ -122,36 +122,31 @@ void PushFieldsCuda::push_H(MfieldsStateCuda& mflds, double dt_fac, dim_yz tag)
 #define BLOCKSIZE_Y 8
 #define BLOCKSIZE_Z 8
 
-__global__ static void push_fields_E_xyz(DMFields dmflds, float dt, float cnx,
-                                         float cny, float cnz, int gridz)
+template <typename E>
+GT_INLINE static void push_fields_E_xyz(E F, float dt, float cnx, float cny,
+                                        float cnz, int ix, int iy, int iz,
+                                        int p)
 {
-  int bidx_z = blockIdx.z % gridz;
-  int p = blockIdx.z / gridz;
-  int ix = blockIdx.x * blockDim.x + threadIdx.x;
-  int iy = blockIdx.y * blockDim.y + threadIdx.y;
-  int iz = bidx_z * blockDim.z + threadIdx.z;
-
-  if (!((ix >= 1 && ix < dmflds.im(0) - 2 * (2 - BND)) &&
-        (iy >= 1 && iy < dmflds.im(1) - 2 * (2 - BND)) &&
-        (iz >= 1 && iz < dmflds.im(2) - 2 * (2 - BND))))
+  if (!(ix >= 1 && iy >= 1 && iz >= 1))
     return;
-  ix -= BND;
-  iy -= BND;
-  iz -= BND;
 
-  auto F = make_Fields3d<dim_xyz>(dmflds[p]);
+  F(ix, iy, iz, EX, p) =
+    F(ix, iy, iz, EX, p) +
+    (cny * (F(ix, iy, iz, HZ, p) - F(ix, iy - 1, iz, HZ, p)) -
+     cnz * (F(ix, iy, iz, HY, p) - F(ix, iy, iz - 1, HY, p)) -
+     dt * F(ix, iy, iz, JXI, p));
 
-  F(EX, ix, iy, iz) += cny * (F(HZ, ix, iy, iz) - F(HZ, ix, iy - 1, iz)) -
-                       cnz * (F(HY, ix, iy, iz) - F(HY, ix, iy, iz - 1)) -
-                       dt * F(JXI, ix, iy, iz);
+  F(ix, iy, iz, EY, p) =
+    F(ix, iy, iz, EY, p) +
+    (cnz * (F(ix, iy, iz, HX, p) - F(ix, iy, iz - 1, HX, p)) -
+     cnx * (F(ix, iy, iz, HZ, p) - F(ix - 1, iy, iz, HZ, p)) -
+     dt * F(ix, iy, iz, JYI, p));
 
-  F(EY, ix, iy, iz) += cnz * (F(HX, ix, iy, iz) - F(HX, ix, iy, iz - 1)) -
-                       cnx * (F(HZ, ix, iy, iz) - F(HZ, ix - 1, iy, iz)) -
-                       dt * F(JYI, ix, iy, iz);
-
-  F(EZ, ix, iy, iz) += cnx * (F(HY, ix, iy, iz) - F(HY, ix - 1, iy, iz)) -
-                       cny * (F(HX, ix, iy, iz) - F(HX, ix, iy - 1, iz)) -
-                       dt * F(JZI, ix, iy, iz);
+  F(ix, iy, iz, EZ, p) =
+    F(ix, iy, iz, EZ, p) +
+    (cnx * (F(ix, iy, iz, HY, p) - F(ix - 1, iy, iz, HY, p)) -
+     cny * (F(ix, iy, iz, HX, p) - F(ix, iy - 1, iz, HX, p)) -
+     dt * F(ix, iy, iz, JZI, p));
 }
 
 __global__ static void push_fields_H_xyz(DMFields dmflds, float cnx, float cny,
@@ -197,14 +192,12 @@ void PushFieldsCuda::push_E(MfieldsStateCuda& mflds, double dt_fac, dim_xyz tag)
   float cny = dt / mflds.grid().domain.dx[1];
   float cnz = dt / mflds.grid().domain.dx[2];
 
-  auto cmflds = mflds.cmflds();
-  int grid[3] = {(cmflds->im(0) + BLOCKSIZE_X - 1) / BLOCKSIZE_X,
-                 (cmflds->im(1) + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-                 (cmflds->im(2) + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z};
-  dim3 dimBlock(BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z);
-  dim3 dimGrid(grid[0], grid[1], grid[2] * cmflds->n_patches());
-
-  push_fields_E_xyz<<<dimGrid, dimBlock>>>(*cmflds, dt, cnx, cny, cnz, grid[2]);
+  auto shape = mflds.gt().shape();
+  auto gt = mflds.gt().to_kernel();
+  gt::launch<4>({shape[0], shape[1], shape[2], mflds.n_patches()},
+                GT_LAMBDA(int ix, int iy, int iz, int p) {
+                  push_fields_E_xyz(gt, dt, cnx, cny, cnz, ix, iy, iz, p);
+                });
   cuda_sync_if_enabled();
 }
 
