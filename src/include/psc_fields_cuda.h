@@ -24,12 +24,9 @@ struct MfieldsCuda : MfieldsBase
       grid_{&grid},
       cmflds_{new cuda_mfields(grid, n_fields, ibn)}
   {}
-  MfieldsCuda(const MfieldsCuda&) = delete;
-  MfieldsCuda(MfieldsCuda&&) = default;
-  ~MfieldsCuda() { delete cmflds_; }
 
-  cuda_mfields* cmflds() { return cmflds_; }
-  const cuda_mfields* cmflds() const { return cmflds_; }
+  cuda_mfields* cmflds() { return cmflds_.get(); }
+  const cuda_mfields* cmflds() const { return cmflds_.get(); }
 
   int n_comps() const { return cmflds_->n_comps(); }
   int n_patches() const { return cmflds_->n_patches(); };
@@ -37,12 +34,7 @@ struct MfieldsCuda : MfieldsBase
 
   void reset(const Grid_t& new_grid) override
   {
-    MfieldsBase::reset(new_grid);
-    Int3 ibn = -cmflds()->ib();
-    int n_comps = cmflds()->n_comps();
-    delete cmflds_;
-    cmflds_ = new cuda_mfields(new_grid, n_comps, ibn);
-    grid_ = &new_grid;
+    *this = MfieldsCuda(new_grid, n_comps(), ibn());
   }
 
   gt::gtensor_span_device<real_t, 5> gt()
@@ -55,7 +47,7 @@ struct MfieldsCuda : MfieldsBase
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
 
-  cuda_mfields* cmflds_;
+  std::unique_ptr<cuda_mfields> cmflds_;
   const Grid_t* grid_;
 };
 
