@@ -12,51 +12,6 @@
 // cuda_mfields
 
 // ----------------------------------------------------------------------
-// to_json
-
-mrc_json_t cuda_mfields::to_json()
-{
-  mrc_json_t json = mrc_json_object_new(9);
-  mrc_json_object_push_integer(json, "n_patches", n_patches());
-  mrc_json_object_push_integer(json, "n_fields", n_comps());
-
-  // mrc_json_object_push(json, "ib", mrc_json_integer_array_new(3, ib()));
-  // mrc_json_object_push(json, "im", mrc_json_integer_array_new(3, im()));
-
-  mrc_json_t json_flds = mrc_json_object_new(2);
-  mrc_json_object_push(json, "flds", json_flds);
-  mrc_json_object_push_boolean(json_flds, "__field5d__", true);
-  mrc_json_t json_flds_patches = mrc_json_array_new(n_patches());
-  mrc_json_object_push(json_flds, "data", json_flds_patches);
-
-  auto h_mflds = hostMirror(*this);
-  copy(*this, h_mflds);
-  for (int p = 0; p < n_patches(); p++) {
-    auto flds = make_Fields3d<dim_xyz>(h_mflds[p]);
-
-    mrc_json_t json_flds_comps = mrc_json_array_new(n_comps());
-    mrc_json_array_push(json_flds_patches, json_flds_comps);
-    for (int m = 0; m < n_comps(); m++) {
-      mrc_json_t json_fld_z = mrc_json_array_new(im(2));
-      mrc_json_array_push(json_flds_comps, json_fld_z);
-      for (int k = ib(2); k < ib(2) + im(2); k++) {
-        mrc_json_t json_fld_y = mrc_json_array_new(im(1));
-        mrc_json_array_push(json_fld_z, json_fld_y);
-        for (int j = ib(1); j < ib(1) + im(1); j++) {
-          mrc_json_t json_fld_x = mrc_json_array_new(im(0));
-          mrc_json_array_push(json_fld_y, json_fld_x);
-          for (int i = ib(0); i < ib(0) + im(0); i++) {
-            mrc_json_array_push_double(json_fld_x, flds(m, i, j, k));
-          }
-        }
-      }
-    }
-  }
-
-  return json;
-}
-
-// ----------------------------------------------------------------------
 // cast to DMFields
 
 cuda_mfields::operator DMFields()
