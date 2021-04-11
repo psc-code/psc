@@ -6,20 +6,19 @@
 #define BLOCKSIZE_Y 16
 #define BLOCKSIZE_Z 16
 
-void cuda_marder_correct_yz_gold(struct cuda_mfields* cmflds,
-                                 struct cuda_mfields* cmf, int p, float fac[3],
-                                 int ly[3], int ry[3], int lz[3], int rz[3])
+void cuda_marder_correct_yz_gold(MfieldsCuda& cmflds, MfieldsCuda& cmf, int p,
+                                 Float3 fac, Int3 ly, Int3 ry, Int3 lz, Int3 rz)
 {
-  auto mflds = hostMirror(*cmflds);
-  auto mf = hostMirror(*cmf);
+  auto mflds = hostMirror(cmflds);
+  auto mf = hostMirror(cmf);
 
-  copy(*cmflds, mflds);
-  copy(*cmf, mf);
+  copy(cmflds, mflds);
+  copy(cmf, mf);
 
   auto flds = make_Fields3d<dim_xyz>(mflds[p]);
   auto f = make_Fields3d<dim_xyz>(mf[p]);
 
-  Int3 ldims = cmflds->grid().ldims;
+  Int3 ldims = cmflds.grid().ldims;
   for (int iz = -1; iz < ldims[2]; iz++) {
     for (int iy = -1; iy < ldims[1]; iy++) {
       if (iy >= -ly[1] && iy < ry[1] && iz >= -ly[2] && iz < ry[2]) {
@@ -32,7 +31,7 @@ void cuda_marder_correct_yz_gold(struct cuda_mfields* cmflds,
     }
   }
 
-  copy(mflds, *cmflds);
+  copy(mflds, cmflds);
 }
 
 void cuda_marder_correct_yz(struct cuda_mfields* cmflds,
