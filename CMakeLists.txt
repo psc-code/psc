@@ -3,6 +3,7 @@ cmake_minimum_required (VERSION 3.17)
 
 foreach(policy
     CMP0074 # CMake 3.12
+    CMP0104 # CMAKE_CUDA_ARCHITECTURES
     )
   if(POLICY ${policy})
     cmake_policy(SET ${policy} NEW)

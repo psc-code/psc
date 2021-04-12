@@ -514,24 +514,27 @@ public:
     MPI_Comm comm = grid.comm();
 
     int timestep = grid.timestep();
-    if (outf_.pfield_interval > 0 && timestep % outf_.pfield_interval == 0) {
+    if (outf_.fields.pfield_interval > 0 &&
+        timestep % outf_.fields.pfield_interval == 0) {
       mpi_printf(comm, "***** Writing PFD output\n");
       io_pfd_.begin_step(grid);
 
       {
         auto result = outf_state_(mflds);
-        io_pfd_.write(result.mflds, grid, result.name, result.comp_names);
+        io_pfd_.write(adapt(evalMfields(result.mflds)), grid, result.name,
+                      result.comp_names);
       }
 
       {
         auto result = outf_hydro_(mprts, *hydro, *interpolator);
-        io_pfd_.write(result.mflds, grid, result.name, result.comp_names);
+        io_pfd_.write(adapt(result.mflds), grid, result.name,
+                      result.comp_names);
       }
 
       io_pfd_.end_step();
     }
 
-    if (outf_.tfield_interval > 0) {
+    if (outf_.fields.tfield_interval > 0) {
       auto result_state = outf_state_(mflds);
 
       for (int p = 0; p < mflds_acc_state_.n_patches(); p++) {
@@ -555,16 +558,16 @@ public:
 
       n_accum_++;
 
-      if (timestep % outf_.tfield_interval == 0) {
+      if (timestep % outf_.fields.tfield_interval == 0) {
         mpi_printf(comm, "***** Writing TFD output\n");
         io_tfd_.begin_step(grid);
         mflds_acc_state_.scale(1. / n_accum_);
-        io_tfd_.write(mflds_acc_state_, grid, result_state.name,
+        io_tfd_.write(adapt(mflds_acc_state_), grid, result_state.name,
                       result_state.comp_names);
         mflds_acc_state_.zero();
 
         mflds_acc_hydro_.scale(1. / n_accum_);
-        io_tfd_.write(mflds_acc_hydro_, grid, result_hydro.name,
+        io_tfd_.write(adapt(mflds_acc_hydro_), grid, result_hydro.name,
                       result_hydro.comp_names);
         mflds_acc_hydro_.zero();
 
@@ -865,9 +868,9 @@ void run()
   // -- output fields
   OutputFieldsParams outf_params;
   double output_field_interval = 1.;
-  outf_params.pfield_interval =
+  outf_params.fields.pfield_interval =
     int((output_field_interval / (phys.wci * grid.dt)));
-  outf_params.tfield_interval =
+  outf_params.fields.tfield_interval =
     int((output_field_interval / (phys.wci * grid.dt)));
   OutputFields outf{grid, outf_params};
 

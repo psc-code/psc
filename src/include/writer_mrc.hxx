@@ -68,12 +68,9 @@ public:
   void end_step() { mrc_io_close(io_.get()); }
 
   template <typename Mfields>
-  void write(const Mfields& _mflds, const Grid_t& grid, const std::string& name,
+  void write(const Mfields& mf, const Grid_t& grid, const std::string& name,
              const std::vector<std::string>& comp_names)
   {
-    auto&& eval_mflds = evalMfields(_mflds);
-    auto& mflds = const_cast<MfieldsC&>(eval_mflds);
-
     int n_comps = comp_names.size();
     // FIXME, should generally equal the # of component in mflds,
     // but this way allows us to write fewer components, useful to hack around
@@ -88,11 +85,11 @@ public:
       mrc_fld_set_comp_name(fld, m, comp_names[m].c_str());
     }
 
-    for (int p = 0; p < mflds.n_patches(); p++) {
+    for (int p = 0; p < mf.shape(4); p++) {
       for (int m = 0; m < n_comps; m++) {
         mrc_fld_foreach(fld, i, j, k, 0, 0)
         {
-          MRC_S5(fld, i, j, k, m, p) = mflds(m, i, j, k, p);
+          MRC_S5(fld, i, j, k, m, p) = mf(i, j, k, m, p);
         }
         mrc_fld_foreach_end;
       }

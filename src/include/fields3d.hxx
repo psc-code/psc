@@ -556,6 +556,9 @@ struct MfieldsStateFromMfields : MfieldsStateBase
 
   const Grid_t& grid() const { return mflds_.grid(); }
   int n_patches() const { return mflds_.n_patches(); }
+  Int3 ib() const { return mflds_.ib(); }
+  Int3 im() const { return mflds_.im(); }
+  int n_comps() const { return mflds_.n_comps(); }
 
   fields_view_t operator[](int p) { return mflds_[p]; }
 
@@ -605,5 +608,29 @@ const MfieldsStateBase::Convert
   MfieldsStateFromMfields<Mfields<double>>::convert_from_;
 extern template const MfieldsStateBase::Convert
   MfieldsStateFromMfields<Mfields<double>>::convert_from_;
+
+#include <gtensor/gtensor.h>
+
+using namespace gt::placeholders;
+
+template <typename Item>
+auto adapt_item(const Item& item)
+{
+  return adapt(item.result());
+}
+
+template <typename Mfields>
+auto adapt(const Mfields& _mflds)
+{
+  auto& mflds = const_cast<std::remove_const_t<Mfields>&>(_mflds);
+  auto ib = mflds.ib(), im = mflds.im(), bnd = -ib;
+  auto mf_ =
+    gt::adapt<5>(&mflds(0, ib[0], ib[1], ib[2], 0),
+                 {im[0], im[1], im[2], mflds.n_comps(), mflds.n_patches()});
+  auto mf = std::move(mf_).view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
+                                _s(bnd[2], -bnd[2]));
+
+  return mf;
+}
 
 #endif
