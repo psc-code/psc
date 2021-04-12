@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include <gtensor/gtensor.h>
+
 // ----------------------------------------------------------------------
 
 template <typename _Order, typename _Dim, typename _fields_t>
@@ -9,10 +11,9 @@ struct CurrentNone;
 // ----------------------------------------------------------------------
 
 template <typename Curr, typename real_t = typename Curr::real_t>
-__host__ __device__ inline void deposit(Curr& curr, const int i[3],
-                                        const real_t fnq[3], const real_t dx[3],
-                                        const real_t xa[3], real_t h,
-                                        const int off[3])
+GT_INLINE void deposit(Curr& curr, const int i[3], const real_t fnq[3],
+                       const real_t dx[3], const real_t xa[3], real_t h,
+                       const int off[3])
 {
   curr.add(0, i[0], i[1], i[2],
            fnq[0] * (dx[0] * (1.f - xa[1]) * (1.f - xa[2]) + h), off);

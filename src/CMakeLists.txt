@@ -3,7 +3,8 @@ add_subdirectory(kg)
 add_subdirectory(libpsc)
 
 macro(add_psc_executable name)
-  add_executable(${name} ${name}.cxx)
+  add_executable(${name})
+  target_gtensor_sources(${name} PRIVATE ${name}.cxx)
   target_link_libraries(${name} psc)
 endmacro(add_psc_executable)
 

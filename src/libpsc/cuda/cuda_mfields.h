@@ -15,6 +15,7 @@
 #define MAX_BND_COMPONENTS (3)
 
 #include <thrust/device_vector.h>
+#include <thrust/host_vector.h>
 
 // ----------------------------------------------------------------------
 // cuda_mfields_bnd_map
@@ -24,6 +25,8 @@
 
 struct cuda_mfields_bnd_map
 {
+  ~cuda_mfields_bnd_map() {}
+
   thrust::host_vector<int> h_map_out; // maps thread id to a particular offset
                                       // for ghosts in the flds array
   psc::device_vector<int> d_map_out;

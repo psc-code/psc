@@ -5,7 +5,8 @@ set(MPIEXEC_COMMAND
 )
 
 macro(add_psc_test name)
-  add_executable(${name} ${name}.cxx)
+  add_executable(${name})
+  target_gtensor_sources(${name} PRIVATE ${name}.cxx)
   target_link_libraries(${name} psc GTest::GTest)
   if (USE_GTEST_DISCOVER_TESTS)
     gtest_discover_tests(${name} EXEC_WRAPPER ${MPIEXEC_COMMAND})
