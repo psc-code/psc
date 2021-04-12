@@ -8,6 +8,7 @@
 #include <kg/SArrayView.h>
 
 #include <mrc_profile.h>
+#include <gtensor/gtensor.h>
 
 #include <type_traits>
 #include <cstdlib>
@@ -240,11 +241,6 @@ public:
   KG_INLINE int n_comps() const { return n_fields_; }
   KG_INLINE int n_patches() const { return n_patches_; }
 
-  typename Storage::iterator begin() { return storage().begin(); }
-  typename Storage::iterator end() { return storage().end(); }
-  typename Storage::const_iterator begin() const { return storage().begin(); }
-  typename Storage::const_iterator end() const { return storage().end(); }
-
   MfieldsCRTP(int n_fields, const kg::Box3& box, int n_patches)
     : n_fields_(n_fields), box_{box}, n_patches_{n_patches}
   {}
@@ -252,13 +248,15 @@ public:
   void reset(int n_patches)
   {
     n_patches_ = n_patches;
-    storage().resize(n_patches * n_comps() * box().size());
+    storage().resize(
+      {box().im(0), box().im(1), box().im(2), n_comps(), n_patches});
+    std::fill(storage().data(), storage().data() + storage().size(), Real{});
   }
 
   KG_INLINE fields_view_t operator[](int p)
   {
     size_t stride = n_comps() * box().size();
-    return fields_view_t(box(), n_comps(), &storage()[p * stride]);
+    return fields_view_t(box(), n_comps(), &storage().data()[p * stride]);
   }
 
   KG_INLINE int index(int m, int i, int j, int k, int p)
@@ -270,18 +268,18 @@ public:
 
   KG_INLINE const Real& operator()(int m, int i, int j, int k, int p) const
   {
-    return storage()[index(m, i, j, k, p)];
+    return storage().data()[index(m, i, j, k, p)];
   }
 
   KG_INLINE Real& operator()(int m, int i, int j, int k, int p)
   {
-    return storage()[index(m, i, j, k, p)];
+    return storage().data()[index(m, i, j, k, p)];
   }
 
   void zero_comp(int m)
   {
     for (int p = 0; p < n_patches_; p++) {
-      (*this)[p].zero(m);
+      (*this)[p].storage().view(_all, _all, _all, m) = Real();
     }
   }
 
@@ -301,7 +299,8 @@ public:
   void scale_comp(int m, double val)
   {
     for (int p = 0; p < n_patches_; p++) {
-      (*this)[p].scale(m, val);
+      (*this)[p].storage().view(_all, _all, _all, m) =
+        val * (*this)[p].storage().view(_all, _all, _all, m);
     }
   }
 
@@ -325,7 +324,9 @@ public:
     // FIXME? dynamic_cast would actually be more appropriate
     Derived& x = static_cast<Derived&>(x_base);
     for (int p = 0; p < n_patches_; p++) {
-      (*this)[p].axpy_comp(m_y, alpha, x[p], m_x);
+      (*this)[p].storage().view(_all, _all, _all, m_y) =
+        (*this)[p].storage().view(_all, _all, _all, m_y) +
+        alpha * x[p].storage().view(_all, _all, _all, m_x);
     }
   }
 
@@ -396,7 +397,7 @@ public:
     return rv;
   }
 
-protected:
+  // protected:
   KG_INLINE Storage& storage() { return derived().storageImpl(); }
   KG_INLINE const Storage& storage() const { return derived().storageImpl(); }
   KG_INLINE Derived& derived() { return *static_cast<Derived*>(this); }
@@ -459,7 +460,7 @@ struct Mfields;
 template <typename R>
 struct MfieldsCRTPInnerTypes<Mfields<R>>
 {
-  using Storage = std::vector<R>;
+  using Storage = gt::gtensor<R, 5>;
 };
 
 template <typename R>
@@ -474,9 +475,12 @@ struct Mfields
   Mfields(const MfieldsDomain& domain, int n_fields, Int3 ibn)
     : MfieldsBase(domain.grid(), n_fields, ibn),
       Base(n_fields, {-ibn, domain.ldims() + 2 * ibn}, domain.n_patches()),
-      storage_(size_t(Base::box().size() * n_fields * Base::n_patches())),
+      storage_(gt::shape(Base::box().im(0), Base::box().im(1),
+                         Base::box().im(2), n_fields, Base::n_patches())),
       domain_{domain}
-  {}
+  {
+    std::fill(storage_.data(), storage_.data() + storage_.size(), real_t{});
+  }
 
   Int3 ldims() const { return domain_.ldims(); }
   Int3 gdims() const { return domain_.gdims(); }

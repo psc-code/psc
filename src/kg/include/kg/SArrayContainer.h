@@ -6,45 +6,17 @@
 #include <kg/Macros.h>
 #include <kg/Vec3.h>
 
+#include <gtensor/gtensor.h>
+
 #include <cstring>
+
+using namespace gt::placeholders;
 
 // FIXME, do noexcept?
 // FIXME, use size_t instead of int, at least for 1d offsets?
 
 namespace kg
 {
-
-namespace detail
-{
-template <typename Layout>
-struct LayoutDataOffset;
-
-template <>
-struct LayoutDataOffset<LayoutSOA>
-{
-  KG_INLINE static int run(int n_comps, const Int3& im, int m, Int3 idx)
-  {
-    return (((((m)*im[2] + idx[2]) * im[1] + idx[1]) * im[0] + idx[0]));
-  }
-};
-
-template <>
-struct LayoutDataOffset<LayoutAOS>
-{
-  KG_INLINE static int run(int n_comps, const Int3& im, int m, Int3 idx)
-  {
-    return ((((idx[2]) * im[1] + idx[1]) * im[0] + idx[0]) * n_comps + m);
-  }
-};
-
-} // namespace detail
-
-template <typename Layout>
-KG_INLINE static int layoutDataOffset(int n_comps, const Int3& im, int m,
-                                      Int3 idx)
-{
-  return detail::LayoutDataOffset<Layout>::run(n_comps, im, m, idx);
-}
 
 // ======================================================================
 // SArrayContainer
@@ -85,88 +57,26 @@ public:
 
   KG_INLINE const_reference operator()(int m, int i, int j, int k) const
   {
-    return storage()[index(m, {i, j, k})];
+#ifdef BOUNDS_CHECK
+    assert(m >= 0 && m < n_comps_);
+    assert(i >= ib()[0] && i < ib()[0] + im()[0]);
+    assert(j >= ib()[1] && j < ib()[1] + im()[1]);
+    assert(k >= ib()[2] && k < ib()[2] + im()[2]);
+#endif
+
+    return storage()(i - ib()[0], j - ib()[1], k - ib()[2], m);
   }
 
   KG_INLINE reference operator()(int m, int i, int j, int k)
   {
-    return storage()[index(m, {i, j, k})];
-  }
-
-  KG_INLINE int index(int m, Int3 idx) const
-  {
 #if defined(BOUNDS_CHECK) && !defined(__CUDACC__)
     assert(m >= 0 && m < n_comps_);
-    assert(idx[0] >= ib()[0] && idx[0] < ib()[0] + im()[0]);
-    assert(idx[1] >= ib()[1] && idx[1] < ib()[1] + im()[1]);
-    assert(idx[2] >= ib()[2] && idx[2] < ib()[2] + im()[2]);
+    assert(i >= ib()[0] && i < ib()[0] + im()[0]);
+    assert(j >= ib()[1] && j < ib()[1] + im()[1]);
+    assert(k >= ib()[2] && k < ib()[2] + im()[2]);
 #endif
 
-    return layoutDataOffset<Layout>(n_comps_, im(), m, idx - ib());
-  }
-
-  void zero(int m)
-  {
-    static_assert(std::is_same<Layout, LayoutSOA>::value,
-                  "zero only works for SOA");
-    // FIXME, only correct for SOA!!!
-    std::memset(&(*this)(m, ib()[0], ib()[1], ib()[2]), 0,
-                n_cells() * sizeof(value_type));
-  }
-
-  void zero(int mb, int me)
-  {
-    for (int m = mb; m < me; m++) {
-      zero(m);
-    }
-  }
-
-  void zero() { std::memset(storage().data(), 0, sizeof(value_type) * size()); }
-
-  void set(int m, const_reference val)
-  {
-    for (int k = ib()[2]; k < ib()[2] + im()[2]; k++) {
-      for (int j = ib()[1]; j < ib()[1] + im()[1]; j++) {
-        for (int i = ib()[0]; i < ib()[0] + im()[0]; i++) {
-          (*this)(m, i, j, k) = val;
-        }
-      }
-    }
-  }
-
-  void scale(int m, const_reference val)
-  {
-    for (int k = ib()[2]; k < ib()[2] + im()[2]; k++) {
-      for (int j = ib()[1]; j < ib()[1] + im()[1]; j++) {
-        for (int i = ib()[0]; i < ib()[0] + im()[0]; i++) {
-          (*this)(m, i, j, k) *= val;
-        }
-      }
-    }
-  }
-
-  template <typename F>
-  void copy_comp(int mto, const F& from, int mfrom)
-  {
-    for (int k = ib()[2]; k < ib()[2] + im()[2]; k++) {
-      for (int j = ib()[1]; j < ib()[1] + im()[1]; j++) {
-        for (int i = ib()[0]; i < ib()[0] + im()[0]; i++) {
-          (*this)(mto, i, j, k) = from(mfrom, i, j, k);
-        }
-      }
-    }
-  }
-
-  template <typename F>
-  void axpy_comp(int m_y, const_reference alpha, const F& x, int m_x)
-  {
-    for (int k = ib()[2]; k < ib()[2] + im()[2]; k++) {
-      for (int j = ib()[1]; j < ib()[1] + im()[1]; j++) {
-        for (int i = ib()[0]; i < ib()[0] + im()[0]; i++) {
-          (*this)(m_y, i, j, k) += alpha * x(m_x, i, j, k);
-        }
-      }
-    }
+    return storage()(i - ib()[0], j - ib()[1], k - ib()[2], m);
   }
 
   value_type max_comp(int m)
@@ -196,9 +106,11 @@ public:
     }
   }
 
-protected:
+public:
   KG_INLINE Storage& storage() { return derived().storageImpl(); }
   KG_INLINE const Storage& storage() const { return derived().storageImpl(); }
+
+protected:
   KG_INLINE Derived& derived() { return *static_cast<Derived*>(this); }
   KG_INLINE const Derived& derived() const
   {

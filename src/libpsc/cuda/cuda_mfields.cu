@@ -356,7 +356,9 @@ void copy(const cuda_mfields& cmflds, HMFields& hmflds)
     pr = prof_register("cmflds to host", 1., 0, 0);
   }
   prof_start(pr);
-  thrust::copy(cmflds.begin(), cmflds.end(), hmflds.begin());
+  thrust::copy(cmflds.storage().data(),
+               cmflds.storage().data() + cmflds.storage().size(),
+               hmflds.storage().data());
   prof_stop(pr);
 }
 
@@ -367,6 +369,8 @@ void copy(const HMFields& hmflds, cuda_mfields& cmflds)
     pr = prof_register("cmflds from host", 1., 0, 0);
   }
   prof_start(pr);
-  thrust::copy(hmflds.begin(), hmflds.end(), cmflds.begin());
+  thrust::copy(hmflds.storage().data(),
+               hmflds.storage().data() + hmflds.storage().size(),
+               cmflds.storage().data());
   prof_stop(pr);
 }
