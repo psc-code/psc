@@ -16,8 +16,10 @@
 #define CASE_3D 3
 #define CASE_2D_SMALL 4
 
-// FIXME select a hardcoded case
+// FIXME select a hardcoded case, if not already specified
+#ifndef CASE
 #define CASE CASE_2D
+#endif
 
 // ======================================================================
 // Particle kinds
@@ -308,7 +310,7 @@ Grid_t* setupGrid()
   Int3 np = {1, 50, 3 * 50};                // division into patches
 #elif CASE == CASE_2D_SMALL
   Grid_t::Real3 LL = {1., 80., 3. * 80.}; // domain size (in d_e)
-  Int3 gdims = {1, 160, 3 * 160};         // global number of grid points
+  Int3 gdims = {1, 80, 3 * 80};           // global number of grid points
   Int3 np = {1, 5, 3 * 5};                // division into patches
 #elif CASE == CASE_1D
   Grid_t::Real3 LL = {1., 8., 3. * 80.}; // domain size (in d_e)
@@ -481,11 +483,19 @@ void run()
 
   // -- Checks
   ChecksParams checks_params{};
+#if CASE == CASE_2D_SMALL
+  checks_params.continuity_every_step = 1;
+#else
   checks_params.continuity_every_step = 0;
+#endif
   checks_params.continuity_threshold = 1e-4;
   checks_params.continuity_verbose = true;
   checks_params.continuity_dump_always = false;
+#if CASE == CASE_2D_SMALL
+  checks_params.gauss_every_step = 1;
+#else
   checks_params.gauss_every_step = 100;
+#endif
   checks_params.gauss_threshold = 1e-4;
   checks_params.gauss_verbose = true;
   checks_params.gauss_dump_always = false;
@@ -494,7 +504,11 @@ void run()
   // -- Marder correction
   double marder_diffusion = 0.9;
   int marder_loop = 3;
+#if CASE == CASE_2D_SMALL
+  bool marder_dump = true;
+#else
   bool marder_dump = false;
+#endif
   psc_params.marder_interval = 100;
   Marder marder(grid, marder_diffusion, marder_loop, marder_dump);
 
@@ -509,14 +523,19 @@ void run()
   outf_params.pfield_interval = 100;
   outf_params.tfield_interval = -100;
 #elif CASE == CASE_2D_SMALL
-  outf_params.pfield_interval = 100;
-  outf_params.tfield_interval = -500;
+  outf_params.pfield_interval = 4;
+  outf_params.tfield_interval = 4;
 #else
   outf_params.pfield_interval = 500;
   outf_params.tfield_interval = 500;
 #endif
+#if CASE == CASE_2D_SMALL
+  outf_params.tfield_average_every = 2;
+  outf_params.tfield_moments_average_every = 2;
+#else
   outf_params.tfield_average_every = 50;
   outf_params.tfield_moments_average_every = 50;
+#endif
   OutputFields outf{grid, outf_params};
 
   // -- output particles
