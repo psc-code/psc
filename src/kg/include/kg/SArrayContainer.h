@@ -95,7 +95,7 @@ public:
 
   KG_INLINE int index(int m, Int3 idx) const
   {
-#ifdef BOUNDS_CHECK
+#if defined(BOUNDS_CHECK) && !defined(__CUDACC__)
     assert(m >= 0 && m < n_comps_);
     assert(idx[0] >= ib()[0] && idx[0] < ib()[0] + im()[0]);
     assert(idx[1] >= ib()[1] && idx[1] < ib()[1] + im()[1]);
