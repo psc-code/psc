@@ -26,6 +26,7 @@ option(USE_GTEST_DISCOVER_TESTS "Run tests to discover contained googletest case
 psc_option(ADIOS2 "Build with adios2 support" AUTO)
 option(PSC_USE_NVTX "Build with NVTX support" OFF)
 option(PSC_USE_RMM "Build with RMM memory manager support" OFF)
+option(PSC_BOUNDS_CHECK "Turn on bounds-checking" OFF)
 
 # CUDA
 if(USE_CUDA)

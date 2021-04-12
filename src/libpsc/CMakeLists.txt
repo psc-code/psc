@@ -68,6 +68,10 @@ if (PSC_HAVE_RMM)
   target_link_libraries(psc PUBLIC rmm::rmm)
 endif()
 
+if (PSC_BOUNDS_CHECK)
+  target_compile_definitions(psc PUBLIC BOUNDS_CHECK)
+endif()
+
 if (USE_VPIC)
   add_library(VPIC::VPIC INTERFACE IMPORTED)
   set_target_properties(VPIC::VPIC PROPERTIES

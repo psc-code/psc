@@ -37,7 +37,7 @@ private:
     int j = dim::InvarY::value ? 0 : j_;
     int k = dim::InvarZ::value ? 0 : k_;
 
-#ifdef BOUNDS_CHECK
+#if defined(BOUNDS_CHECK) && !defined(__CUDACC__)
     assert(m >= 0 && m < n_comp_);
     assert(i >= ib[0] && i < ib[0] + im[0]);
     assert(j >= ib[1] && j < ib[1] + im[1]);
