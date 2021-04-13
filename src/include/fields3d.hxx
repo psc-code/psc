@@ -596,4 +596,16 @@ auto adapt(const Mfields& _mflds)
                               _s(bnd[2], -bnd[2]));
 }
 
+namespace gt
+{
+
+template <typename E>
+auto host_mirror(const E& e)
+{
+  // FIXME, empty_like with space would be helpful
+  return gt::empty<typename E::value_type>(e.shape());
+}
+
+} // namespace gt
+
 #endif

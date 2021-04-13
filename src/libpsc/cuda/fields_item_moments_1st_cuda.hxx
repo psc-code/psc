@@ -76,7 +76,7 @@ public:
   }
 
   int n_comps() const { return Base::mres_.n_comps(); }
-  Int3 ibn() const { return Base::mres_.ibn(); }
+  Int3 ibn() const { return {}; }
 
   explicit Moment_n_1st_cuda(const Grid_t& grid)
     : Base{grid}, bnd_{grid, grid.ibn}
@@ -117,6 +117,13 @@ public:
   }
 
   const Mfields& result() const { return Base::mres_; }
+
+  auto gt()
+  {
+    Int3 bnd = Base::mres_.ibn();
+    return std::move(Base::mres_.gt())
+      .view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]), _s(bnd[2], -bnd[2]));
+  }
 
 private:
   Bnd bnd_;

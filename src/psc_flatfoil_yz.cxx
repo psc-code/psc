@@ -225,46 +225,6 @@ using Moment_n = typename Moment_n_Selector<Mparticles, Dim>::type;
 using Heating = typename HeatingSelector<Mparticles>::Heating;
 
 // ======================================================================
-// FIXME, so ugly...
-
-namespace detail
-{
-template <typename E>
-struct EvalMfields
-{
-  using type = MfieldsC;
-};
-
-#ifdef USE_CUDA
-
-template <>
-struct EvalMfields<MfieldsCuda>
-{
-  using type = HMFields;
-};
-
-#endif
-} // namespace detail
-
-template <typename Mfields>
-using EvalMfields_t = typename detail::EvalMfields<Mfields>::type;
-
-template <typename E>
-EvalMfields_t<E> make_MfieldsMoment_n(const Grid_t& grid)
-{
-  return MfieldsC(grid, grid.kinds.size(), grid.ibn);
-}
-
-#ifdef USE_CUDA
-template <>
-HMFields make_MfieldsMoment_n<MfieldsCuda>(const Grid_t& grid)
-{
-  return HMFields({-grid.ibn, grid.domain.ldims + 2 * grid.ibn},
-                  grid.kinds.size(), grid.n_patches());
-}
-#endif
-
-// ======================================================================
 // setupParameters
 
 void setupParameters()
@@ -625,7 +585,11 @@ void run()
   inject_foil_params.Ti = g.target_Ti;
   InjectFoil inject_target{inject_foil_params};
 
+#if CASE == CASE_2D_SMALL
+  g.inject_interval = 2;
+#else
   g.inject_interval = 20;
+#endif
   int inject_tau = 40;
 
   SetupParticles<Mparticles> setup_particles(grid);
@@ -636,31 +600,6 @@ void run()
                       (1. + g.inject_interval * grid.dt / inject_tau);
 
   Moment_n moment_n(grid);
-  auto mf_n = make_MfieldsMoment_n<Moment_n::Mfields>(grid);
-
-  auto lf_inject = [&](int kind, Double3 pos, int p, Int3 idx,
-                       psc_particle_npt& npt) {
-    if (inject_target.is_inside(pos)) {
-      inject_target.init_npt(kind, pos, npt);
-
-      if (kind == MY_ELECTRON_HE || kind == MY_ELECTRON) {
-        npt.n =
-          inject_target.n - (mf_n(MY_ELECTRON, idx[0], idx[1], idx[2], p) +
-                             mf_n(MY_ELECTRON_HE, idx[0], idx[1], idx[2], p));
-        if (kind == MY_ELECTRON_HE) {
-          npt.n *= g.electron_HE_ratio;
-        } else {
-          npt.n *= (1. - g.electron_HE_ratio);
-        }
-      } else { // ions
-        npt.n -= mf_n(kind, idx[0], idx[1], idx[2], p);
-      }
-      if (npt.n < 0) {
-        npt.n = 0;
-      }
-      npt.n *= inject_fac;
-    }
-  };
 
   auto lf_inject_heat = [&](const Grid_t& grid, Mparticles& mprts) {
     static int pr_inject, pr_heating;
@@ -676,8 +615,34 @@ void run()
       mpi_printf(comm, "***** Performing injection...\n");
       prof_start(pr_inject);
       moment_n.update(mprts);
-      mf_n = evalMfields(moment_n);
-      setup_particles.setupParticles(mprts, lf_inject);
+      auto d_n = moment_n.gt();
+      auto h_n = gt::host_mirror(d_n);
+      gt::copy(gt::eval(d_n), h_n); // FIXME shouldn't need eval (?)
+
+      setup_particles.setupParticles(
+        mprts,
+        [&](int kind, Double3 pos, int p, Int3 idx, psc_particle_npt& npt) {
+          if (inject_target.is_inside(pos)) {
+            inject_target.init_npt(kind, pos, npt);
+
+            if (kind == MY_ELECTRON_HE || kind == MY_ELECTRON) {
+              npt.n = inject_target.n -
+                      (h_n(idx[0], idx[1], idx[2], MY_ELECTRON, p) +
+                       h_n(idx[0], idx[1], idx[2], MY_ELECTRON_HE, p));
+              if (kind == MY_ELECTRON_HE) {
+                npt.n *= g.electron_HE_ratio;
+              } else {
+                npt.n *= (1. - g.electron_HE_ratio);
+              }
+            } else { // ions
+              npt.n -= h_n(idx[0], idx[1], idx[2], kind, p);
+            }
+            if (npt.n < 0) {
+              npt.n = 0;
+            }
+            npt.n *= inject_fac;
+          }
+        });
       prof_stop(pr_inject);
     }
 

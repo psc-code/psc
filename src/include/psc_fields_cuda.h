@@ -41,6 +41,8 @@ struct CudaMfields : MfieldsCRTP<CudaMfields<S>>
       storage_({box.im(0), box.im(1), box.im(2), n_comps, n_patches})
   {}
 
+  auto gt() { return Base::storage().view(); }
+
 private:
   Storage storage_;
 
@@ -58,6 +60,7 @@ using HMFields = CudaMfields<gt::gtensor<float, 5>>;
 struct MfieldsCuda : MfieldsBase
 {
   using real_t = fields_cuda_t::real_t;
+  using Real = real_t;
 
   class Accessor
   {
@@ -105,6 +108,8 @@ struct MfieldsCuda : MfieldsBase
 
   int index(int m, int i, int j, int k, int p) const;
   Patch operator[](int p) { return {*this, p}; }
+
+  gt::gtensor_span_device<real_t, 5> gt();
 
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }

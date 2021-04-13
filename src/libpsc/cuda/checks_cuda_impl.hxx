@@ -108,8 +108,18 @@ struct ChecksCuda
         writer.open("continuity");
       }
       writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
-      writer.write(adapt(divj_), grid, "div_j", {"div_j"});
-      writer.write(adapt(d_rho), grid, "d_rho", {"d_rho"});
+      {
+        Int3 bnd = divj_.ibn();
+        writer.write(divj_.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
+                                     _s(bnd[2], -bnd[2])),
+                     grid, "div_j", {"div_j"});
+      }
+      {
+        Int3 bnd = d_rho.ibn();
+        writer.write(d_rho.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
+                                     _s(bnd[2], -bnd[2])),
+                     grid, "d_rho", {"d_rho"});
+      }
       writer.end_step();
     }
 
@@ -185,9 +195,18 @@ struct ChecksCuda
         writer.open("gauss");
       }
       writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
-      writer.write(adapt(evalMfields(rho)), grid, "rho", {"rho"});
-      writer.write(adapt(evalMfields(dive)), dive.grid(), dive.name(),
-                   dive.comp_names());
+      {
+        Int3 bnd = rho.ibn();
+        writer.write(rho.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
+                                   _s(bnd[2], -bnd[2])),
+                     grid, "rho", {"rho"});
+      }
+      {
+        Int3 bnd = dive.ibn();
+        writer.write(dive.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
+                                    _s(bnd[2], -bnd[2])),
+                     dive.grid(), dive.name(), dive.comp_names());
+      }
       writer.end_step();
     }
 

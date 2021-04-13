@@ -4,98 +4,27 @@
 #include "fields_item.hxx"
 #include "psc_fields_c.h"
 #include "psc_fields_cuda.h"
+
 template <typename E>
 struct isSpaceCuda : std::false_type
 {};
 
-// ======================================================================
-// evalMfields
-
-template <typename E,
-          typename std::enable_if<!isSpaceCuda<E>::value, int>::type = 0>
-inline MfieldsC evalMfields(const MFexpression<E>& xp)
+template <typename E>
+inline auto to_gt(const E& e)
 {
-  const auto& exp = xp.derived();
-  MfieldsC mflds{exp.grid(), exp.n_comps(), exp.ibn()};
+  auto& grid = e.grid();
+  assert(e.ibn() == Int3{});
+  auto res = gt::empty<typename E::Real>(
+    {grid.ldims[0], grid.ldims[1], grid.ldims[2], e.n_comps(), e.n_patches()});
+  auto k_res = res.to_kernel();
 
-  for (int p = 0; p < mflds.n_patches(); p++) {
-    for (int m = 0; m < exp.n_comps(); m++) {
-      mflds.Foreach_3d(0, 0, [&](int i, int j, int k) {
-        mflds(m, i, j, k, p) = exp(m, {i, j, k}, p);
-      });
-    }
-  }
-  return mflds;
+  gt::launch<5, gt::space::host>(res.shape(),
+                                 [=](int i, int j, int k, int m, int p) {
+                                   k_res(i, j, k, m, p) = e(m, {i, j, k}, p);
+                                 });
+
+  return res;
 }
-
-inline MfieldsC evalMfields(const MfieldsSingle& _exp)
-{
-  auto& exp = const_cast<MfieldsSingle&>(_exp);
-  MfieldsC mflds{exp.grid(), exp.n_comps(), exp.ibn()};
-
-  for (int p = 0; p < mflds.n_patches(); p++) {
-    for (int m = 0; m < exp.n_comps(); m++) {
-      mflds.Foreach_3d(0, 0, [&](int i, int j, int k) {
-        mflds(m, i, j, k, p) = exp(m, i, j, k, p);
-      });
-    }
-  }
-  return mflds;
-}
-
-inline const MfieldsC& evalMfields(const MfieldsC& mflds)
-{
-  return mflds;
-}
-
-#ifdef USE_CUDA
-
-template <typename E,
-          typename std::enable_if<isSpaceCuda<E>::value, int>::type = 0>
-inline HMFields evalMfields(const MFexpression<E>& xp)
-{
-  static int pr, pr_0, pr_1, pr_2, pr_3;
-  if (!pr) {
-    pr = prof_register("evalMfields cuda", 1., 0, 0);
-    pr_0 = prof_register("evalMfields h", 1., 0, 0);
-    pr_1 = prof_register("evalMfields hm", 1., 0, 0);
-    pr_2 = prof_register("evalMfields dh", 1., 0, 0);
-    pr_3 = prof_register("evalMfields hh", 1., 0, 0);
-  }
-
-  prof_start(pr);
-  const auto& exp = xp.derived().result();
-
-  prof_start(pr_1);
-  auto h_exp = hostMirror(exp);
-  prof_stop(pr_1);
-
-  prof_start(pr_2);
-  copy(exp, h_exp);
-  prof_stop(pr_2);
-
-  prof_stop(pr);
-  return h_exp;
-}
-
-inline MfieldsC evalMfields(const MfieldsCuda& mf)
-{
-  MfieldsC mflds{mf.grid(), mf.n_comps(), mf.ibn()};
-
-  auto h_mf = hostMirror(mf);
-  copy(mf, h_mf);
-
-  for (int p = 0; p < mflds.n_patches(); p++) {
-    for (int m = 0; m < mf.n_comps(); m++) {
-      mflds.Foreach_3d(0, 0, [&](int i, int j, int k) {
-        mflds(m, i, j, k, p) = h_mf(m, i, j, k, p);
-      });
-    }
-  }
-  return mflds;
-}
-
-#endif
 
 // ======================================================================
 
@@ -596,20 +525,7 @@ public:
               grid.domain.dx[2]);
   }
 
-  gt::gtensor<Real, 5> gt() const
-  {
-    auto res =
-      gt::empty<Real>({grid().ldims[0], grid().ldims[1], grid().ldims[2],
-                       n_comps(), grid().n_patches()});
-    auto k_res = res.to_kernel();
-
-    gt::launch<5>(
-      res.shape(), GT_LAMBDA(int i, int j, int k, int m, int p) {
-        k_res(i, j, k, m, p) = (*this)(m, {i, j, k}, p);
-      });
-
-    return res;
-  }
+  auto gt() const { return to_gt(*this); }
 
   const Grid_t& grid() const { return mflds_.grid(); }
   Int3 ibn() const { return {}; }

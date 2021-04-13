@@ -85,6 +85,12 @@ int MfieldsCuda::index(int m, int i, int j, int k, int p) const
   return cmflds_->index(m, i, j, k, p);
 }
 
+gt::gtensor_span_device<MfieldsCuda::real_t, 5> MfieldsCuda::gt()
+{
+  return gt::adapt_device(cmflds_->storage().data().get(),
+                          cmflds_->storage().shape());
+}
+
 MfieldsCuda::Patch::Patch(MfieldsCuda& mflds, int p) : mflds_(mflds), p_(p) {}
 
 MfieldsCuda::Accessor MfieldsCuda::Patch::operator()(int m, int i, int j, int k)
