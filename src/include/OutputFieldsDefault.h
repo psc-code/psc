@@ -3,13 +3,34 @@
 
 #include "../libpsc/psc_output_fields/fields_item_fields.hxx"
 #include "../libpsc/psc_output_fields/fields_item_moments_1st.hxx"
+#ifdef USE_CUDA
+#include "../libpsc/cuda/fields_item_moments_1st_cuda.hxx"
+#endif
 #include "fields_item.hxx"
 #include "psc_particles_double.h"
 
 #include <memory>
 
-template <typename Mparticles>
-using FieldsItem_Moments_1st_cc = Moments_1st<Mparticles>;
+namespace detail
+{
+template <typename Mparticles, typename Dim, typename Enable = void>
+struct moment_selector
+{
+  using type = Moments_1st<Mparticles>;
+};
+
+#ifdef USE_CUDA
+template <typename Mparticles, typename Dim>
+struct moment_selector<
+  Mparticles, Dim, typename std::enable_if<Mparticles::is_cuda::value>::type>
+{
+  using type = Moment_1st_cuda<Mparticles, Dim>;
+};
+#endif
+} // namespace detail
+
+template <typename Mparticles, typename Dim>
+using Item_Moments = typename detail::moment_selector<Mparticles, Dim>::type;
 
 // ======================================================================
 // OutputFieldsItemParams
@@ -30,12 +51,12 @@ struct OutputFieldsItemParams
 // ======================================================================
 // OutputFieldsItem
 
-template <typename Writer>
+template <typename Mfields, typename Writer>
 class OutputFieldsItem : public OutputFieldsItemParams
 {
 public:
   OutputFieldsItem(const Grid_t& grid, const OutputFieldsItemParams& prm,
-                   int n_comps, Int3 ibn, std::string sfx)
+                   int n_comps, std::string sfx)
     : OutputFieldsItemParams{prm},
       pfield_next_{prm.pfield_first},
       tfield_next_{prm.tfield_first},
@@ -102,7 +123,7 @@ public:
         io_tfd_.end_step();
         naccum_ = 0;
 
-        tfd_.gt() = 0;
+        tfd_.gt().view() = 0;
       }
     }
   }
@@ -112,8 +133,7 @@ private:
   int tfield_next_;
   Writer io_pfd_;
   Writer io_tfd_;
-  // tfd -- FIXME?! always MfieldsC
-  MfieldsC tfd_;
+  Mfields tfd_;
   int naccum_ = 0;
   bool first_time_ =
     true; // to keep track so we can skip first output on restart
@@ -131,27 +151,23 @@ struct OutputFieldsParams
 // ======================================================================
 // OutputFieldsDefault
 
-template <typename Writer>
+template <typename MfieldsState, typename Mparticles, typename Dim,
+          typename Writer>
 class OutputFieldsDefault
 {
-  using MfieldsFake = MfieldsC;
-  using MparticlesFake = MparticlesDouble;
-
 public:
   // ----------------------------------------------------------------------
   // ctor
 
   OutputFieldsDefault(const Grid_t& grid, const OutputFieldsParams& prm)
-    : fields{grid, prm.fields, Item_jeh<MfieldsFake>::n_comps(), {}, ""},
-      moments{grid, prm.moments,
-              FieldsItem_Moments_1st_cc<MparticlesFake>::n_comps(grid),
-              grid.ibn, "_moments"}
+    : fields{grid, prm.fields, Item_jeh<MfieldsState>::n_comps(), ""},
+      moments{grid, prm.moments, Item_Moments<Mparticles, Dim>::n_comps(grid),
+              "_moments"}
   {}
 
   // ----------------------------------------------------------------------
   // operator()
 
-  template <typename MfieldsState, typename Mparticles>
   void operator()(MfieldsState& mflds, Mparticles& mprts)
   {
     const auto& grid = mflds._grid();
@@ -171,26 +187,30 @@ public:
     prof_stop(pr_fields);
 
     prof_start(pr_moments);
-    moments(timestep,
-            [&]() { return FieldsItem_Moments_1st_cc<Mparticles>(mprts); });
+    moments(timestep, [&]() { return Item_Moments<Mparticles, Dim>(mprts); });
     prof_stop(pr_moments);
 
     prof_stop(pr);
   };
 
 public:
-  OutputFieldsItem<Writer> fields;
-  OutputFieldsItem<Writer> moments;
+  OutputFieldsItem<Mfields_from_gt_t<Item_jeh<MfieldsState>>, Writer> fields;
+  OutputFieldsItem<Mfields_from_gt_t<Item_Moments<Mparticles, Dim>>, Writer>
+    moments;
 };
 
 #ifdef xPSC_HAVE_ADIOS2
 
 #include "writer_adios2.hxx"
-using OutputFields = OutputFieldsDefault<WriterADIOS2>;
+template <typename MfieldsState, typename Mparticles, typename Dim>
+using OutputFields =
+  OutputFieldsDefault<MfieldsState, Mparticles, Dim, WriterADIOS2>;
 
 #else
 
 #include "writer_mrc.hxx"
-using OutputFields = OutputFieldsDefault<WriterMRC>;
+template <typename MfieldsState, typename Mparticles, typename Dim>
+using OutputFields =
+  OutputFieldsDefault<MfieldsState, Mparticles, Dim, WriterMRC>;
 
 #endif

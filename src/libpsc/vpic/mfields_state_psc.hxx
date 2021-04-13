@@ -163,7 +163,9 @@ struct MfieldsStatePsc
   using SfaParams = PscSfaParams<Grid, MaterialList>;
   using MaterialCoefficient = typename SfaParams::MaterialCoefficient;
   using real_t = float;
+  using Real = real_t;
   using Element = MfieldsStatePscElement;
+  using space = gt::space::host;
 
   // FIXME, have to settle on BX or CBX...
   enum

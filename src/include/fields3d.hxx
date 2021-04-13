@@ -434,6 +434,7 @@ struct Mfields
   using real_t = R;
   using Base = MfieldsCRTP<Mfields<R>>;
   using Storage = typename Base::Storage;
+  using space = gt::space::host;
 
   Mfields(const MfieldsDomain& domain, int n_fields, Int3 ibn)
     : MfieldsBase(domain.grid(), n_fields, ibn),
@@ -516,6 +517,8 @@ struct MfieldsStateFromMfields : MfieldsStateBase
 {
   using fields_view_t = typename Mfields::fields_view_t;
   using real_t = typename Mfields::real_t;
+  using Real = typename Mfields::Real;
+  using space = gt::space::host;
 
   MfieldsStateFromMfields(const Grid_t& grid)
     : MfieldsStateBase{grid, NR_FIELDS,
@@ -595,6 +598,38 @@ auto adapt(const Mfields& _mflds)
   return mflds.storage().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
                               _s(bnd[2], -bnd[2]));
 }
+
+// ======================================================================
+// Mfields_from_gt_T
+
+#ifdef USE_CUDA
+#include "psc_fields_cuda.h"
+#endif
+
+namespace detail
+{
+template <typename T, typename S>
+struct Mfields_from_type_space
+{
+  using type = Mfields<T>;
+};
+
+#ifdef USE_CUDA
+template <typename T>
+struct Mfields_from_type_space<T, gt::space::device>
+{
+  static_assert(std::is_same<T, float>::value, "CUDA only supports float");
+  using type = MfieldsCuda;
+};
+#endif
+} // namespace detail
+
+template <typename E>
+using Mfields_from_gt_t =
+  typename detail::Mfields_from_type_space<typename E::value_type,
+                                           typename E::space>::type;
+
+// ======================================================================
 
 namespace gt
 {
