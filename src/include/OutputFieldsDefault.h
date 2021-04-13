@@ -29,8 +29,8 @@ struct moment_selector<
 #endif
 } // namespace detail
 
-template <typename Mparticles>
-using Item_Moments = typename detail::moment_selector<Mparticles, dim_yz>::type;
+template <typename Mparticles, typename Dim>
+using Item_Moments = typename detail::moment_selector<Mparticles, Dim>::type;
 
 // ======================================================================
 // OutputFieldsItemParams
@@ -151,7 +151,8 @@ struct OutputFieldsParams
 // ======================================================================
 // OutputFieldsDefault
 
-template <typename MfieldsState, typename Mparticles, typename Writer>
+template <typename MfieldsState, typename Mparticles, typename Dim,
+          typename Writer>
 class OutputFieldsDefault
 {
 public:
@@ -160,7 +161,7 @@ public:
 
   OutputFieldsDefault(const Grid_t& grid, const OutputFieldsParams& prm)
     : fields{grid, prm.fields, Item_jeh<MfieldsState>::n_comps(), ""},
-      moments{grid, prm.moments, Item_Moments<Mparticles>::n_comps(grid),
+      moments{grid, prm.moments, Item_Moments<Mparticles, Dim>::n_comps(grid),
               "_moments"}
   {}
 
@@ -186,7 +187,7 @@ public:
     prof_stop(pr_fields);
 
     prof_start(pr_moments);
-    moments(timestep, [&]() { return Item_Moments<Mparticles>(mprts); });
+    moments(timestep, [&]() { return Item_Moments<Mparticles, Dim>(mprts); });
     prof_stop(pr_moments);
 
     prof_stop(pr);
@@ -194,20 +195,22 @@ public:
 
 public:
   OutputFieldsItem<Mfields_from_gt_t<Item_jeh<MfieldsState>>, Writer> fields;
-  OutputFieldsItem<Mfields_from_gt_t<Item_Moments<Mparticles>>, Writer> moments;
+  OutputFieldsItem<Mfields_from_gt_t<Item_Moments<Mparticles, Dim>>, Writer>
+    moments;
 };
 
 #ifdef xPSC_HAVE_ADIOS2
 
 #include "writer_adios2.hxx"
-template <typename MfieldsState, typename Mparticles>
+template <typename MfieldsState, typename Mparticles, typename Dim>
 using OutputFields =
-  OutputFieldsDefault<MfieldsState, Mparticles, WriterADIOS2>;
+  OutputFieldsDefault<MfieldsState, Mparticles, Dim, WriterADIOS2>;
 
 #else
 
 #include "writer_mrc.hxx"
-template <typename MfieldsState, typename Mparticles>
-using OutputFields = OutputFieldsDefault<MfieldsState, Mparticles, WriterMRC>;
+template <typename MfieldsState, typename Mparticles, typename Dim>
+using OutputFields =
+  OutputFieldsDefault<MfieldsState, Mparticles, Dim, WriterMRC>;
 
 #endif
