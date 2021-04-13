@@ -206,7 +206,3 @@ public:
 private:
   Bnd bnd_;
 };
-
-template <typename _Mparticles, typename dim>
-struct isSpaceCuda<Moment_n_1st_cuda<_Mparticles, dim>> : std::true_type
-{};
