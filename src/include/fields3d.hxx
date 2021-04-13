@@ -309,57 +309,6 @@ public:
     return storage()(i - ib(0), j - ib(1), k - ib(2), m, p);
   }
 
-  template <typename E>
-  void assign(const MFexpression<E>& xp)
-  {
-    const auto& rhs = xp.derived();
-    assert(n_comps() == rhs.n_comps());
-    assert(n_patches() == rhs.n_patches());
-    // assert(box() == rhs.box());
-    // assert(derived().ibn() == rhs.ibn());
-    // FIXME check size compat, too
-    for (int p = 0; p < n_patches(); p++) {
-      for (int m = 0; m < n_comps(); m++) {
-        Int3 ijk;
-        for (ijk[2] = box_.ib(2); ijk[2] < box_.ib(2) + box_.im(2); ijk[2]++) {
-          for (ijk[1] = box_.ib(1); ijk[1] < box_.ib(1) + box_.im(1);
-               ijk[1]++) {
-            for (ijk[0] = box_.ib(0); ijk[0] < box_.ib(0) + box_.im(0);
-                 ijk[0]++) {
-              (*this)(m, ijk[0], ijk[1], ijk[2], p) = rhs(m, ijk, p);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  template <typename E>
-  Derived& operator+=(const MFexpression<E>& xp)
-  {
-    const auto& rhs = xp.derived();
-    assert(n_comps() == rhs.n_comps());
-    assert(n_patches() == rhs.n_patches());
-    // assert(box() == rhs.box());
-    assert(derived().ibn() == rhs.ibn());
-    // FIXME check size compat, too
-    for (int p = 0; p < n_patches(); p++) {
-      for (int m = 0; m < n_comps(); m++) {
-        Int3 ijk;
-        for (ijk[2] = box_.ib(2); ijk[2] < box_.ib(2) + box_.im(2); ijk[2]++) {
-          for (ijk[1] = box_.ib(1); ijk[1] < box_.ib(1) + box_.im(1);
-               ijk[1]++) {
-            for (ijk[0] = box_.ib(0); ijk[0] < box_.ib(0) + box_.im(0);
-                 ijk[0]++) {
-              (*this)(m, ijk[0], ijk[1], ijk[2], p) += rhs(m, ijk, p);
-            }
-          }
-        }
-      }
-    }
-    return derived();
-  }
-
   // protected:
   KG_INLINE Storage& storage() { return derived().storageImpl(); }
   KG_INLINE const Storage& storage() const { return derived().storageImpl(); }
@@ -373,45 +322,6 @@ private:
   kg::Box3 box_; // size of one patch, including ghost points
   int n_fields_;
   int n_patches_;
-};
-
-// ======================================================================
-// MfieldsDomain
-
-class MfieldsDomain
-{
-public:
-  MfieldsDomain(const Grid_t& grid)
-    : grid_{&grid},
-      n_patches_{grid.n_patches()},
-      ldims_{grid.ldims},
-      gdims_{grid.domain.gdims}
-  {
-    patch_offsets_.reserve(n_patches());
-    for (auto& patch : grid.patches) {
-      patch_offsets_.emplace_back(patch.off);
-    }
-  }
-
-  Int3 ldims() const { return ldims_; }
-  Int3 gdims() const { return gdims_; }
-  int n_patches() const { return n_patches_; }
-  Int3 patchOffset(int p) const { return patch_offsets_[p]; }
-
-  template <typename FUNC>
-  void Foreach_3d(int l, int r, FUNC&& F) const
-  {
-    return grid().Foreach_3d(l, r, std::forward<FUNC>(F));
-  }
-
-  const Grid_t& grid() const { return *grid_; }
-
-private:
-  const Grid_t* grid_;
-  Int3 ldims_;
-  Int3 gdims_;
-  int n_patches_;
-  std::vector<Int3> patch_offsets_;
 };
 
 // ======================================================================
@@ -436,35 +346,34 @@ struct Mfields
   using Storage = typename Base::Storage;
   using space = gt::space::host;
 
-  Mfields(const MfieldsDomain& domain, int n_fields, Int3 ibn)
-    : MfieldsBase(domain.grid(), n_fields, ibn),
-      Base(n_fields, {-ibn, domain.ldims() + 2 * ibn}, domain.n_patches()),
+  Mfields(const Grid_t& grid, int n_fields, Int3 ibn)
+    : MfieldsBase(grid, n_fields, ibn),
+      Base(n_fields, {-ibn, grid.ldims + 2 * ibn}, grid.n_patches()),
       storage_(gt::shape(Base::box().im(0), Base::box().im(1),
                          Base::box().im(2), n_fields, Base::n_patches())),
-      domain_{domain}
+      grid_{&grid}
   {
     std::fill(storage_.data(), storage_.data() + storage_.size(), real_t{});
   }
 
-  Int3 ldims() const { return domain_.ldims(); }
-  Int3 gdims() const { return domain_.gdims(); }
-  Int3 patchOffset(int p) const { return domain_.patchOffset(p); }
-  const MfieldsDomain& domain() const { return domain_; }
-  const Grid_t& grid() const { return domain_.grid(); }
+  Int3 ldims() const { return grid().ldims; }
+  Int3 gdims() const { return grid().gdims; }
+  Int3 patchOffset(int p) const { return grid().patches[p].off; }
+  const Grid_t& grid() const { return *grid_; }
 
   auto gt() { return Base::storage().view(); }
 
   template <typename FUNC>
   void Foreach_3d(int l, int r, FUNC&& F) const
   {
-    return domain().Foreach_3d(l, r, std::forward<FUNC>(F));
+    return grid().Foreach_3d(l, r, std::forward<FUNC>(F));
   }
 
   virtual void reset(const Grid_t& grid) override
   {
     MfieldsBase::reset(grid);
     Base::reset(grid.n_patches());
-    domain_ = MfieldsDomain(grid);
+    grid_ = &grid;
   }
 
   static const Convert convert_to_, convert_from_;
@@ -473,7 +382,7 @@ struct Mfields
 
 private:
   Storage storage_;
-  MfieldsDomain domain_;
+  const Grid_t* grid_;
 
   Storage& storageImpl() { return storage_; }
   const Storage& storageImpl() const { return storage_; }

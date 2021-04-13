@@ -156,6 +156,8 @@ public:
   Int3 ibn() const { return {}; }
   int n_patches() const { return grid().n_patches(); }
 
+  auto gt() const { return to_gt(*this); }
+
 private:
   MfieldsState& mflds_;
 };

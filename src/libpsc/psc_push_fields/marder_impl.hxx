@@ -47,11 +47,13 @@ struct Marder_ : MarderBase
       static int cnt;
       io_.begin_step(cnt, cnt); // ppsc->timestep, ppsc->timestep * ppsc->dt);
       cnt++;
-      Int3 bnd = -rho_.ib();
-      io_.write(rho_.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                               _s(bnd[2], -bnd[2])),
-                rho_.grid(), "rho", {"rho"});
-      io_.write(dive.gt(), dive.grid(), "dive", {"dive"});
+      io_.write(rho_.gt(), rho_.grid(), "rho", {"rho"});
+      {
+        Int3 bnd = dive.ibn();
+        io_.write(dive.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
+                                 _s(bnd[2], -bnd[2])),
+                  dive.grid(), "dive", {"dive"});
+      }
       io_.end_step();
     }
 
@@ -70,9 +72,12 @@ struct Marder_ : MarderBase
       }
     }
 
-    res_.storage().view(_all, _all, _all, 0, _all) =
-      res_.storage().view(_all, _all, _all, 0, _all) -
-      rho_.storage().view(_all, _all, _all, 0, _all);
+    Int3 bnd = res_.ibn();
+    res_.storage().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
+                        _s(bnd[2], -bnd[2])) =
+      res_.storage().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
+                          _s(bnd[2], -bnd[2])) -
+      rho_.storage().view(_all, _all, _all);
     // FIXME, why is this necessary?
     bnd_mf_.fill_ghosts(res_, 0, 1);
   }
@@ -213,7 +218,7 @@ struct Marder_ : MarderBase
 
   void operator()(MfieldsState& mflds, Mparticles& mprts)
   {
-    rho_.assign(Moment_t{mprts});
+    rho_.storage() = Moment_t{mprts}.gt();
 
     // need to fill ghost cells first (should be unnecessary with only variant
     // 1) FIXME
