@@ -50,31 +50,6 @@ struct cuda_mfields_bnd
 };
 
 // ======================================================================
-// MfieldsStorageDeviceRaw
-
-class MfieldsStorageDeviceRaw
-{
-public:
-  using value_type = float;
-  using reference = float&;
-  using const_reference = const float&;
-  using iterator = float*;
-  using const_iterator = const float*;
-  using pointer = float*;
-  using const_pointer = float*;
-
-  MfieldsStorageDeviceRaw(pointer data) : data_{data} {}
-
-  KG_INLINE reference operator[](size_t i) { return data_[i]; }
-  KG_INLINE const_reference operator[](size_t i) const { return data_[i]; }
-  KG_INLINE pointer data() { return data_; }
-  KG_INLINE const_pointer data() const { return data_; }
-
-private:
-  value_type* data_;
-};
-
-// ======================================================================
 // DMfields
 
 struct DMFields;
@@ -153,9 +128,9 @@ private:
   const Grid_t& grid_;
 };
 
-HMFields hostMirror(cuda_mfields& cmflds);
-HMFields hostMirror(const cuda_mfields& cmflds);
-void copy(const cuda_mfields& cmflds, HMFields& hmflds);
-void copy(const HMFields& hmflds, cuda_mfields& cmflds);
+MfieldsSingle hostMirror(cuda_mfields& cmflds);
+MfieldsSingle hostMirror(const cuda_mfields& cmflds);
+void copy(const cuda_mfields& cmflds, MfieldsSingle& hmflds);
+void copy(const MfieldsSingle& hmflds, cuda_mfields& cmflds);
 
 #endif

@@ -52,8 +52,6 @@ private:
   friend class MfieldsCRTP<CudaMfields>;
 };
 
-using HMFields = CudaMfields<gt::gtensor<float, 5>>;
-
 // ======================================================================
 // MfieldsCuda
 
@@ -61,31 +59,6 @@ struct MfieldsCuda : MfieldsBase
 {
   using real_t = fields_cuda_t::real_t;
   using Real = real_t;
-
-  class Accessor
-  {
-  public:
-    Accessor(MfieldsCuda& mflds, int idx);
-    operator real_t() const;
-    real_t operator=(real_t val);
-    real_t operator+=(real_t val);
-
-  private:
-    MfieldsCuda& mflds_;
-    int idx_;
-  };
-
-  class Patch
-  {
-  public:
-    Patch(MfieldsCuda& mflds, int p);
-
-    Accessor operator()(int m, int i, int j, int k);
-
-  private:
-    MfieldsCuda& mflds_;
-    int p_;
-  };
 
   MfieldsCuda(const Grid_t& grid, int n_fields, Int3 ibn);
   MfieldsCuda(const MfieldsCuda&) = delete;
@@ -102,7 +75,6 @@ struct MfieldsCuda : MfieldsBase
   void reset(const Grid_t& new_grid) override;
 
   int index(int m, int i, int j, int k, int p) const;
-  Patch operator[](int p) { return {*this, p}; }
 
   gt::gtensor_span_device<real_t, 5> gt();
 
@@ -114,10 +86,10 @@ struct MfieldsCuda : MfieldsBase
   const Grid_t* grid_;
 };
 
-HMFields hostMirror(MfieldsCuda& mflds);
-HMFields hostMirror(const MfieldsCuda& mflds);
-void copy(const MfieldsCuda& mflds, HMFields& hmflds);
-void copy(const HMFields& hmflds, MfieldsCuda& mflds);
+MfieldsSingle hostMirror(MfieldsCuda& mflds);
+MfieldsSingle hostMirror(const MfieldsCuda& mflds);
+void copy(const MfieldsCuda& mflds, MfieldsSingle& hmflds);
+void copy(const MfieldsSingle& hmflds, MfieldsCuda& mflds);
 
 // ======================================================================
 // MfieldsStateCuda
@@ -143,8 +115,6 @@ struct MfieldsStateCuda : MfieldsStateBase
   int n_patches() const { return mflds_.n_patches(); };
   const Grid_t& grid() const { return *grid_; }
 
-  MfieldsCuda::Patch operator[](int p) { return mflds_[p]; }
-
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
@@ -164,30 +134,34 @@ struct Mfields_traits<MfieldsCuda>
   static constexpr const char* name = "cuda";
 };
 
-inline HMFields hostMirror(MfieldsStateCuda& mflds)
+namespace detail
+{
+template <typename T>
+struct Mfields_from_type_space<T, gt::space::device>
+{
+  static_assert(std::is_same<T, float>::value, "CUDA only supports float");
+  using type = MfieldsCuda;
+};
+} // namespace detail
+
+inline MfieldsSingle hostMirror(MfieldsStateCuda& mflds)
 {
   return hostMirror(mflds.mflds());
 }
 
-inline HMFields hostMirror(const MfieldsStateCuda& mflds)
+inline MfieldsSingle hostMirror(const MfieldsStateCuda& mflds)
 {
   return hostMirror(mflds.mflds());
 }
 
-inline void copy(const MfieldsStateCuda& mflds, HMFields& hmflds)
+inline void copy(const MfieldsStateCuda& mflds, MfieldsSingle& hmflds)
 {
   copy(mflds.mflds(), hmflds);
 }
 
-inline void copy(const HMFields& hmflds, MfieldsStateCuda& mflds)
+inline void copy(const MfieldsSingle& hmflds, MfieldsStateCuda& mflds)
 {
   copy(hmflds, mflds.mflds());
-}
-
-template <typename D>
-auto make_Fields3d(const MfieldsCuda::Patch& f)
-{
-  return f;
 }
 
 // ----------------------------------------------------------------------
