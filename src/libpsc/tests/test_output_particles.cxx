@@ -64,9 +64,13 @@ private:
 };
 
 using OutputParticlesTestTypes =
-  ::testing::Types<Config<dim_xyz, MparticlesSingle, OutputParticlesAscii>,
+  ::testing::Types<Config<dim_xyz, MparticlesSingle, OutputParticlesAscii>
+#ifdef H5_HAVE_PARALLEL
+                   ,
                    Config<dim_xyz, MparticlesSingle, OutputParticlesHdf5>,
-                   Config<dim_xyz, MparticlesDouble, OutputParticlesHdf5>>;
+                   Config<dim_xyz, MparticlesDouble, OutputParticlesHdf5>
+#endif
+                   >;
 
 TYPED_TEST_SUITE(OutputParticlesTest, OutputParticlesTestTypes);
 
