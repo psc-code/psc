@@ -47,8 +47,8 @@ struct PushParticlesEsirkepov
     for (int p = 0; p < mflds.n_patches(); p++) {
       auto flds = mflds[p];
       auto prts = accessor[p];
-      typename InterpolateEM_t::fields_t EM(flds);
-      typename Current::fields_t J(flds);
+      typename InterpolateEM_t::fields_t EM(flds, flds.ib());
+      typename Current::fields_t J(flds, flds.ib());
 
       flds.storage().view(_all, _all, _all, _s(JXI, JXI + 3)) = real_t(0);
 

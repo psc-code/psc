@@ -34,7 +34,7 @@ public:
       auto count = makeDims(n_comps, grid.ldims);
       auto ib = makeDims(0, -mflds.box().ib());
       auto im = makeDims(n_comps, mflds.box().im());
-      writer.putVariable(mflds[p].data(), launch, shape, {start, count},
+      writer.putVariable(mflds[p].storage().data(), launch, shape, {start, count},
                          {ib, im}); // FIXME cast
     }
 
@@ -62,7 +62,7 @@ public:
       auto count = makeDims(n_comps, grid.ldims);
       auto ib = makeDims(0, -mflds.box().ib());
       auto im = makeDims(n_comps, mflds.box().im());
-      reader.getVariable(h_mflds[p].data(), launch, {start, count});
+      reader.getVariable(h_mflds[p].storage().data(), launch, {start, count});
     }
     reader.performGets();
 

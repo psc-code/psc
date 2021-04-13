@@ -27,8 +27,8 @@ public:
       auto count = makeDims(n_comps, mflds.ldims());
       auto ib = makeDims(0, -mflds.box().ib());
       auto im = makeDims(n_comps, mflds.box().im());
-      writer.putVariable(const_cast<Mfields&>(mflds)[p].data(), launch, shape,
-                         {start, count}, {ib, im}); // FIXME cast
+      writer.putVariable(const_cast<Mfields&>(mflds)[p].storage().data(),
+                         launch, shape, {start, count}, {ib, im}); // FIXME cast
     }
   }
 
@@ -47,17 +47,18 @@ public:
     for (int p = 0; p < mflds.n_patches(); p++) {
       auto start = makeDims(0, mflds.patchOffset(p));
       auto count = makeDims(n_comps, mflds.ldims());
-      //auto ib = makeDims(0, -mflds.box().ib());
-      //auto im = makeDims(n_comps, mflds.box().im());
-      reader.getVariable(h_mflds[p].data(), launch, {start, count}, {});//{ib, im});
+      // auto ib = makeDims(0, -mflds.box().ib());
+      // auto im = makeDims(n_comps, mflds.box().im());
+      reader.getVariable(h_mflds[p].storage().data(), launch, {start, count},
+                         {}); //{ib, im});
     }
     reader.performGets();
 
     for (int p = 0; p < mflds.n_patches(); p++) {
       for (int m = 0; m < n_comps; m++) {
-	h_mflds.Foreach_3d(0, 0, [&](int i, int j, int k) {
-	    mflds[p](m, i, j, k) = h_mflds[p](m, i, j, k);
-	  });
+        h_mflds.Foreach_3d(0, 0, [&](int i, int j, int k) {
+          mflds[p](m, i, j, k) = h_mflds[p](m, i, j, k);
+        });
       }
     }
   }

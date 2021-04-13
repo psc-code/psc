@@ -72,10 +72,10 @@ struct ChecksCuda
     auto& rho_m = dev_rho_m.template get_as<Mfields>(0, 1);
 
     auto& d_rho = rho_p;
-    d_rho.axpy(-1., rho_m);
+    d_rho.storage() = d_rho.storage() - rho_m.storage();
 
     divj_.assign(item_divj);
-    divj_.scale(grid.dt);
+    divj_.storage() = grid.dt * divj_.storage();
 
     double eps = continuity_threshold;
     double max_err = 0.;

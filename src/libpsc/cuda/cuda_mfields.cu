@@ -134,8 +134,9 @@ void cuda_mfields::copy_comp_yz(int ym, cuda_mfields* cmflds_x, int xm)
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
 
   for (int p = 0; p < n_patches(); p++) {
-    k_copy_comp_yz<<<dimGrid, dimBlock>>>((*this)[p].data(), ym,
-                                          (*cmflds_x)[p].data(), xm, my, mz);
+    k_copy_comp_yz<<<dimGrid, dimBlock>>>((*this)[p].storage().data(), ym,
+                                          (*cmflds_x)[p].storage().data(), xm,
+                                          my, mz);
   }
   cuda_sync_if_enabled();
 }
@@ -174,8 +175,9 @@ void cuda_mfields::copy_comp_xyz(int ym, cuda_mfields* cmflds_x, int xm)
   dim3 dimBlock(8, 8, 8);
 
   for (int p = 0; p < n_patches(); p++) {
-    k_copy_comp_xyz<<<dimGrid, dimBlock>>>(
-      (*this)[p].data(), ym, (*cmflds_x)[p].data(), xm, mx, my, mz);
+    k_copy_comp_xyz<<<dimGrid, dimBlock>>>((*this)[p].storage().data(), ym,
+                                           (*cmflds_x)[p].storage().data(), xm,
+                                           mx, my, mz);
   }
   cuda_sync_if_enabled();
 }
@@ -223,8 +225,9 @@ void cuda_mfields::axpy_comp_yz(int ym, float a, cuda_mfields* cmflds_x, int xm)
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
 
   for (int p = 0; p < n_patches(); p++) {
-    k_axpy_comp_yz<<<dimGrid, dimBlock>>>((*this)[p].data(), ym, a,
-                                          (*cmflds_x)[p].data(), xm, my, mz);
+    k_axpy_comp_yz<<<dimGrid, dimBlock>>>((*this)[p].storage().data(), ym, a,
+                                          (*cmflds_x)[p].storage().data(), xm,
+                                          my, mz);
   }
   cuda_sync_if_enabled();
 }
@@ -265,8 +268,9 @@ void cuda_mfields::axpy_comp_xyz(int ym, float a, cuda_mfields* cmflds_x,
   dim3 dimBlock(8, 8, 8);
 
   for (int p = 0; p < n_patches(); p++) {
-    k_axpy_comp_xyz<<<dimGrid, dimBlock>>>(
-      (*this)[p].data(), ym, a, (*cmflds_x)[p].data(), xm, mx, my, mz);
+    k_axpy_comp_xyz<<<dimGrid, dimBlock>>>((*this)[p].storage().data(), ym, a,
+                                           (*cmflds_x)[p].storage().data(), xm,
+                                           mx, my, mz);
   }
   cuda_sync_if_enabled();
 }
@@ -326,7 +330,8 @@ void cuda_mfields::zero_comp(int m, dim_yz tag)
 
   // OPT, should be done in a single kernel
   for (int p = 0; p < n_patches(); p++) {
-    k_zero_comp_yz<<<dimGrid, dimBlock>>>((*this)[p].data(), m, my, mz);
+    k_zero_comp_yz<<<dimGrid, dimBlock>>>((*this)[p].storage().data(), m, my,
+                                          mz);
   }
   cuda_sync_if_enabled();
 }

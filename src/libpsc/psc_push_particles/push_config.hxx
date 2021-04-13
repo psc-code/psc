@@ -26,12 +26,16 @@ struct curr_cache_t : fields_t
 {
   using real_t = typename fields_t::real_t;
 
-  curr_cache_t(fields_t& f) : fields_t({f.ib(), f.im()}, f.n_comps(), f.data())
+  curr_cache_t(fields_t& f)
+    : fields_t(
+        {f.ib(),
+         {f.storage().shape(0), f.storage().shape(1), f.storage().shape(2)}},
+        f.storage().shape(3), f.storage().data())
   {}
 
   GT_INLINE void add(int m, int i, int j, int k, real_t val)
   {
-    Fields3d<fields_t, dim_curr> J(*this);
+    Fields3d<fields_t, dim_curr> J(*this, this->ib());
     real_t* addr = &J(JXI + m, i, j, k);
     atomicAdd(addr, val);
   }

@@ -18,7 +18,6 @@ struct SArrayView;
 template <typename T, typename L>
 struct SArrayContainerInnerTypes<SArrayView<T, L>>
 {
-  using Layout = L;
   using Storage = gt::gtensor_span<T, 4>;
 };
 
@@ -51,7 +50,7 @@ struct SArrayView : kg::SArrayContainer<SArrayView<T, L>>
   using real_t = typename Base::value_type;
 
   KG_INLINE SArrayView(const Box3& box, int n_comps, real_t* data)
-    : Base(box, n_comps),
+    : Base(box.ib()),
       storage_(data, gt::shape(box.im(0), box.im(1), box.im(2), n_comps),
                detail::strides<L>(box, n_comps))
   {}

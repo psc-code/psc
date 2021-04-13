@@ -79,10 +79,10 @@ struct Checks_
     auto item_divj = Item_divj<MfieldsState>(mflds);
 
     auto& d_rho = rho_p_;
-    d_rho.axpy(-1., rho_m_);
+    d_rho.storage() = d_rho.storage() - rho_m_.storage();
 
     divj_.assign(item_divj);
-    divj_.scale(grid.dt);
+    divj_.storage() = grid.dt * divj_.storage();
 
     double eps = continuity_threshold;
     double max_err = 0.;
