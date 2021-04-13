@@ -42,8 +42,12 @@ TYPED_TEST(TestMfieldsCuda, HostMirror)
 
   auto grid = make_grid();
   auto mflds = Mfields{grid, NR_FIELDS, {}};
+  auto h_mflds_ref = MfieldsSingle{grid, NR_FIELDS, {}};
 
   setupFields(mflds, [](int m, double crd[3]) {
+    return m + crd[0] + 100 * crd[1] + 10000 * crd[2];
+  });
+  setupFields(h_mflds_ref, [](int m, double crd[3]) {
     return m + crd[0] + 100 * crd[1] + 10000 * crd[2];
   });
 
@@ -52,11 +56,7 @@ TYPED_TEST(TestMfieldsCuda, HostMirror)
 
   for (int p = 0; p < mflds.n_patches(); ++p) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-      EXPECT_EQ(mflds[p](EX, i, j, k), h_mflds[p](EX, i, j, k));
-#if 0
-	mprintf("[%d, %d, %d] = %06g %06g\n", i, j, k,
-		(double) mflds[p](EX, i, j, k), (double) h_mflds[p](EX, i, j, k));
-#endif
+      EXPECT_EQ(h_mflds(EX, i, j, k, p), h_mflds_ref(EX, i, j, k, p));
     });
   }
 }

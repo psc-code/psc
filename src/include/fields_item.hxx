@@ -99,7 +99,8 @@ public:
   void add_ghosts(Mfields& mres)
   {
     for (int p = 0; p < mres.n_patches(); p++) {
-      add_ghosts_boundary(mres.grid(), mres[p], p, 0, mres.n_comps());
+      auto res = make_Fields3d<dim_xyz>(mres[p]);
+      add_ghosts_boundary(mres.grid(), res, p, 0, mres.n_comps());
     }
 
     bnd_.add_ghosts(mres, 0, mres.n_comps());
@@ -110,8 +111,8 @@ private:
   // boundary stuff FIXME, should go elsewhere...
 
   template <typename FE>
-  void add_ghosts_reflecting_lo(const Grid_t& grid, FE flds, int p, int d,
-                                int mb, int me)
+  void add_ghosts_reflecting_lo(const Grid_t& grid, FE f, int p, int d, int mb,
+                                int me)
   {
     auto ldims = grid.ldims;
 
@@ -122,7 +123,7 @@ private:
           int iy = 0;
           {
             for (int m = mb; m < me; m++) {
-              flds(m, ix, iy, iz) += flds(m, ix, iy - 1, iz);
+              f(m, ix, iy, iz) += f(m, ix, iy - 1, iz);
             }
           }
         }
@@ -133,7 +134,7 @@ private:
           int iz = 0;
           {
             for (int m = mb; m < me; m++) {
-              flds(m, ix, iy, iz) += flds(m, ix, iy, iz - 1);
+              f(m, ix, iy, iz) += f(m, ix, iy, iz - 1);
             }
           }
         }
@@ -144,8 +145,8 @@ private:
   }
 
   template <typename FE>
-  void add_ghosts_reflecting_hi(const Grid_t& grid, FE flds, int p, int d,
-                                int mb, int me)
+  void add_ghosts_reflecting_hi(const Grid_t& grid, FE f, int p, int d, int mb,
+                                int me)
   {
     auto ldims = grid.ldims;
 
@@ -156,7 +157,7 @@ private:
           int iy = ldims[1] - 1;
           {
             for (int m = mb; m < me; m++) {
-              flds(m, ix, iy, iz) += flds(m, ix, iy + 1, iz);
+              f(m, ix, iy, iz) += f(m, ix, iy + 1, iz);
             }
           }
         }
@@ -167,7 +168,7 @@ private:
           int iz = ldims[2] - 1;
           {
             for (int m = mb; m < me; m++) {
-              flds(m, ix, iy, iz) += flds(m, ix, iy, iz + 1);
+              f(m, ix, iy, iz) += f(m, ix, iy, iz + 1);
             }
           }
         }
@@ -219,7 +220,7 @@ public:
   const Real& operator()(int m, Int3 ijk, int p) const
   {
     auto& mres = const_cast<Mfields&>(mres_);
-    return mres[p](m, ijk[0], ijk[1], ijk[2]);
+    return make_Fields3d<dim_xyz>(mres[p])(m, ijk[0], ijk[1], ijk[2]);
   }
 
   const Grid_t& grid() const { return mres_.grid(); }

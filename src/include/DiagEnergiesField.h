@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "psc_fields_c.h"
+#include "fields.hxx"
 
 class DiagEnergiesField
 {
@@ -22,7 +23,7 @@ public:
     const Grid_t& grid = mprts.grid();
     for (int p = 0; p < grid.n_patches(); p++) {
       double fac = grid.domain.dx[0] * grid.domain.dx[1] * grid.domain.dx[2];
-      auto F = mflds[p];
+      auto F = make_Fields3d<dim_xyz>(mflds[p]);
       // FIXME, this doesn't handle non-periodic b.c. right
       grid.Foreach_3d(0, 0, [&](int ix, int iy, int iz) {
         EH2[0] += sqr(F(EX, ix, iy, iz)) * fac;

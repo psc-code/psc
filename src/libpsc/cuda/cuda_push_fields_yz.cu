@@ -29,7 +29,7 @@ __global__ static void push_fields_E_yz(DMFields dmflds, float dt, float cny,
   iy -= BND;
   iz -= BND;
 
-  DFields F = dmflds[p];
+  auto F = make_Fields3d<dim_xyz>(dmflds[p]);
 
   F(EX, 0, iy, iz) += cny * (F(HZ, 0, iy, iz) - F(HZ, 0, iy - 1, iz)) -
                       cnz * (F(HY, 0, iy, iz) - F(HY, 0, iy, iz - 1)) -
@@ -56,7 +56,7 @@ __global__ static void push_fields_H_yz(DMFields dmflds, float cny, float cnz,
   iy -= BND;
   iz -= BND;
 
-  DFields F = dmflds[p];
+  auto F = make_Fields3d<dim_xyz>(dmflds[p]);
 
   F(HX, 0, iy, iz) -= cny * (F(EZ, 0, iy + 1, iz) - F(EZ, 0, iy, iz)) -
                       cnz * (F(EY, 0, iy, iz + 1) - F(EY, 0, iy, iz));
@@ -121,8 +121,8 @@ void cuda_marder_correct_yz_gold(struct cuda_mfields* cmflds,
   copy(*cmflds, mflds);
   copy(*cmf, mf);
 
-  auto flds = mflds[p];
-  auto f = mf[p];
+  auto flds = make_Fields3d<dim_xyz>(mflds[p]);
+  auto f = make_Fields3d<dim_xyz>(mf[p]);
 
   Int3 ldims = cmflds->grid().ldims;
   for (int iz = -1; iz < ldims[2]; iz++) {
@@ -152,12 +152,17 @@ __global__ static void marder_correct_yz(DFields d_flds, DFields d_f,
   iy -= BND;
   iz -= BND;
 
+  auto _d_flds = make_Fields3d<dim_xyz>(d_flds);
+  auto _d_f = make_Fields3d<dim_xyz>(d_f);
+
   if (iy >= -lyy && iy < ryy && iz >= -lyz && iz < ryz) {
-    d_flds(EY, 0, iy, iz) += facy * (d_f(0, 0, iy + 1, iz) - d_f(0, 0, iy, iz));
+    _d_flds(EY, 0, iy, iz) +=
+      facy * (_d_f(0, 0, iy + 1, iz) - _d_f(0, 0, iy, iz));
   }
 
   if (iy >= -lzy && iy < rzy && iz >= -lzz && iz < rzz) {
-    d_flds(EZ, 0, iy, iz) += facz * (d_f(0, 0, iy, iz + 1) - d_f(0, 0, iy, iz));
+    _d_flds(EZ, 0, iy, iz) +=
+      facz * (_d_f(0, 0, iy, iz + 1) - _d_f(0, 0, iy, iz));
   }
 }
 
@@ -200,8 +205,10 @@ __global__ static void calc_dive_yz(DFields flds, DFields f, float dy, float dz,
     return;
   }
 
-  f(0, 0, iy, iz) = ((flds(EY, 0, iy, iz) - flds(EY, 0, iy - 1, iz)) / dy +
-                     (flds(EZ, 0, iy, iz) - flds(EZ, 0, iy, iz - 1)) / dz);
+  auto _flds = make_Fields3d<dim_xyz>(flds);
+  auto _f = make_Fields3d<dim_xyz>(f);
+  _f(0, 0, iy, iz) = ((_flds(EY, 0, iy, iz) - _flds(EY, 0, iy - 1, iz)) / dy +
+                      (_flds(EZ, 0, iy, iz) - _flds(EZ, 0, iy, iz - 1)) / dz);
 }
 
 void cuda_mfields_calc_dive_yz(struct cuda_mfields* cmflds,

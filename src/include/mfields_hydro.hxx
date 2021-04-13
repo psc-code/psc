@@ -3,8 +3,6 @@
 
 #include <fields3d.hxx>
 
-#include <kg/SArray.h>
-
 // ======================================================================
 // MfieldsHydroPsc
 

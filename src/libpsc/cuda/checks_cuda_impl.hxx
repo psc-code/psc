@@ -80,8 +80,8 @@ struct ChecksCuda
     double eps = continuity_threshold;
     double max_err = 0.;
     for (int p = 0; p < divj_.n_patches(); p++) {
-      auto D_rho = d_rho[p];
-      auto Div_J = divj_[p];
+      auto D_rho = make_Fields3d<dim_xyz>(d_rho[p]);
+      auto Div_J = make_Fields3d<dim_xyz>(divj_[p]);
       grid.Foreach_3d(0, 0, [&](int jx, int jy, int jz) {
         double d_rho = D_rho(0, jx, jy, jz);
         double div_j = Div_J(0, jx, jy, jz);
@@ -143,7 +143,7 @@ struct ChecksCuda
     double eps = gauss_threshold;
     double max_err = 0.;
     for (int p = 0; p < dive.n_patches(); p++) {
-      auto Rho = rho[p];
+      auto Rho = make_Fields3d<dim_xyz>(rho[p]);
 
       int l[3] = {0, 0, 0}, r[3] = {0, 0, 0};
       for (int d = 0; d < 3; d++) {

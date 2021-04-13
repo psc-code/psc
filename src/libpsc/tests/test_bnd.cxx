@@ -120,14 +120,16 @@ TYPED_TEST(BndTest, FillGhosts)
     int i0 = grid.patches[p].off[0];
     int j0 = grid.patches[p].off[1];
     int k0 = grid.patches[p].off[2];
+    auto flds = make_Fields3d<dim_xyz>(mflds[p]);
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       int ii = i + i0, jj = j + j0, kk = k + k0;
-      mflds[p](0, i, j, k) = 100 * ii + 10 * jj + kk;
+      flds(0, i, j, k) = 100 * ii + 10 * jj + kk;
     });
   }
 
   // Mfields_dump(mflds, B);
   for (int p = 0; p < mflds.n_patches(); p++) {
+    auto flds = make_Fields3d<dim_xyz>(mflds[p]);
     int i0 = grid.patches[p].off[0];
     int j0 = grid.patches[p].off[1];
     int k0 = grid.patches[p].off[2];
@@ -135,9 +137,9 @@ TYPED_TEST(BndTest, FillGhosts)
       int ii = i + i0, jj = j + j0, kk = k + k0;
       if (i >= 0 && i < grid.ldims[0] && j >= 0 && j < grid.ldims[1] &&
           k >= 0 && k < grid.ldims[2]) {
-        EXPECT_EQ(mflds[p](0, i, j, k), 100 * ii + 10 * jj + kk);
+        EXPECT_EQ(flds(0, i, j, k), 100 * ii + 10 * jj + kk);
       } else {
-        EXPECT_EQ(mflds[p](0, i, j, k), 0);
+        EXPECT_EQ(flds(0, i, j, k), 0);
       }
     });
   }
@@ -147,6 +149,7 @@ TYPED_TEST(BndTest, FillGhosts)
 
   // Mfields_dump(mflds, B);
   for (int p = 0; p < mflds.n_patches(); p++) {
+    auto flds = make_Fields3d<dim_xyz>(mflds[p]);
     int i0 = grid.patches[p].off[0];
     int j0 = grid.patches[p].off[1];
     int k0 = grid.patches[p].off[2];
@@ -155,7 +158,7 @@ TYPED_TEST(BndTest, FillGhosts)
       ii = (ii + grid.domain.gdims[0]) % grid.domain.gdims[0];
       jj = (jj + grid.domain.gdims[1]) % grid.domain.gdims[1];
       kk = (kk + grid.domain.gdims[2]) % grid.domain.gdims[2];
-      EXPECT_EQ(mflds[p](0, i, j, k), 100 * ii + 10 * jj + kk);
+      EXPECT_EQ(flds(0, i, j, k), 100 * ii + 10 * jj + kk);
     });
   }
 
@@ -179,11 +182,11 @@ TYPED_TEST(BndTest, AddGhosts)
   EXPECT_EQ(mflds.n_patches(), grid.n_patches());
 
   for (int p = 0; p < mflds.n_patches(); p++) {
+    auto flds = make_Fields3d<dim_xyz>(mflds[p]);
     int i0 = grid.patches[p].off[0];
     int j0 = grid.patches[p].off[1];
     int k0 = grid.patches[p].off[2];
-    grid.Foreach_3d(B, B,
-                    [&](int i, int j, int k) { mflds[p](0, i, j, k) = 1; });
+    grid.Foreach_3d(B, B, [&](int i, int j, int k) { flds(0, i, j, k) = 1; });
   }
 
   // Mfields_dump(mflds, B);
@@ -193,6 +196,7 @@ TYPED_TEST(BndTest, AddGhosts)
 
   // Mfields_dump(mflds, 0*B);
   for (int p = 0; p < mflds.n_patches(); p++) {
+    auto flds = make_Fields3d<dim_xyz>(mflds[p]);
     int j0 = grid.patches[p].off[1];
     int k0 = grid.patches[p].off[2];
     auto& ldims = grid.ldims;
@@ -213,7 +217,7 @@ TYPED_TEST(BndTest, AddGhosts)
         else if (n_nei == 3)
           n_nei = 11; // corner -> why? FIXME why not 7?
       }
-      EXPECT_EQ(mflds[p](0, i, j, k), 1 + n_nei)
+      EXPECT_EQ(flds(0, i, j, k), 1 + n_nei)
         << "ijk " << i << " " << j << " " << k;
     });
   }

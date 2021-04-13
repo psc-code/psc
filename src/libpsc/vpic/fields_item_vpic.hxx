@@ -163,8 +163,8 @@ struct OutputHydroQ_
       HydroOps::synchronize(mflds_hydro);
 
       for (int p = 0; p < mflds_res_.n_patches(); p++) {
-        auto res = mflds_res_[p];
-        auto H = mflds_hydro[p];
+        auto res = make_Fields3d<dim_xyz>(mflds_res_[p]);
+        auto H = make_Fields3d<dim_xyz>(mflds_hydro[p]);
         mflds_res_.Foreach_3d(0, 0, [&](int i, int j, int k) {
           for (int m = 0; m < MfieldsHydro::N_COMP; m++) {
             res(m + kind * MfieldsHydro::N_COMP, i, j, k) = H(m, i, j, k);

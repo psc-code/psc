@@ -311,7 +311,7 @@ public:
     printf("np %d\n", h_mprts.size());
     for (int p = 0; p < h_mprts.n_patches(); p++) {
       deposit.flds_ = deposit.mflds_[p];
-      auto flds = deposit.mflds_[p];
+      auto flds = make_Fields3d<dim_xyz>(deposit.mflds_[p]);
       auto prts = h_mprts[p];
       for (const auto& prt : prts) {
         int mm = prt.kind * n_moments;

@@ -7,54 +7,54 @@
 
 #include <gtensor/gtensor.h>
 
+// ======================================================================
+// Fields3d
+//
+// wrappers a gtensor expression, shifting the offset from zero and
+// setting to 0 indices in the invariant direction
+
 template <typename F, typename D = dim_xyz>
 class Fields3d
 {
 public:
   using fields_t = F;
-  using real_t = typename fields_t::real_t;
+  using value_type = typename fields_t::value_type;
+  using shape_type = typename fields_t::shape_type;
   using dim = D;
 
-  Fields3d(const fields_t& f, const Int3& ib)
-    : data_(
-        const_cast<typename fields_t::real_t*>(f.storage().data())), // FIXME
-      n_comp_(f.storage().shape(3)),
-      ib(ib),
-      im({f.storage().shape(0), f.storage().shape(1), f.storage().shape(2)})
-  {}
+  GT_INLINE Fields3d(const fields_t& e, const Int3& ib) : e_(e), ib_(ib) {}
 
-  GT_INLINE const real_t operator()(int m, int i, int j, int k) const
+  GT_INLINE shape_type shape() const { return e_.shape(); }
+  GT_INLINE int shape(int d) const { return e_.shape(d); }
+  GT_INLINE Int3 ib() const { return ib_; }
+
+  GT_INLINE const value_type& operator()(int m, int _i, int _j, int _k) const
   {
-    return data_[index(m, i, j, k)];
+    int i = dim::InvarX::value ? 0 : _i - ib_[0];
+    int j = dim::InvarY::value ? 0 : _j - ib_[1];
+    int k = dim::InvarZ::value ? 0 : _k - ib_[2];
+
+    return e_(i, j, k, m);
   }
 
-  GT_INLINE real_t& operator()(int m, int i, int j, int k)
+  GT_INLINE value_type& operator()(int m, int _i, int _j, int _k)
   {
-    return data_[index(m, i, j, k)];
-  }
+    int i = dim::InvarX::value ? 0 : _i - ib_[0];
+    int j = dim::InvarY::value ? 0 : _j - ib_[1];
+    int k = dim::InvarZ::value ? 0 : _k - ib_[2];
 
-private:
-  GT_INLINE int index(int m, int i_, int j_, int k_) const
-  {
-    int i = dim::InvarX::value ? 0 : i_;
-    int j = dim::InvarY::value ? 0 : j_;
-    int k = dim::InvarZ::value ? 0 : k_;
-
-#if defined(BOUNDS_CHECK) && !defined(__CUDACC__)
-    assert(m >= 0 && m < n_comp_);
-    assert(i >= ib[0] && i < ib[0] + im[0]);
-    assert(j >= ib[1] && j < ib[1] + im[1]);
-    assert(k >= ib[2] && k < ib[2] + im[2]);
-#endif
-
-    return ((((((m)) * im[2] + (k - ib[2])) * im[1] + (j - ib[1])) * im[0] +
-             (i - ib[0])));
+    return e_(i, j, k, m);
   }
 
 private:
-  real_t* data_;
-  Int3 ib, im;
-  int n_comp_;
+  fields_t e_;
+  Int3 ib_;
 };
+
+template <typename D, typename F>
+GT_INLINE auto make_Fields3d(const F& f)
+{
+  return Fields3d<typename F::Storage, D>(f.storage(), f.ib());
+}
 
 #endif

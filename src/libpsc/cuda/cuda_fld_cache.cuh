@@ -8,7 +8,7 @@ template <typename BS, typename DIM>
 struct FldCache
 {
   using dim = DIM;
-  using real_t = float;
+  using value_type = float;
 
   const static int BLOCKSIZE_X = BS::x::value;
   const static int BLOCKSIZE_Y = BS::y::value;
@@ -29,6 +29,7 @@ struct FldCache
     ci0_[2] = ci0[2];
 #endif
 
+    auto _d_flds = make_Fields3d<dim_xyz>(d_flds);
     int n = (BLOCKSIZE_X + 4) * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4);
     for (int ti = threadIdx.x; ti < n; ti += THREADS_PER_BLOCK) {
       int tmp = ti;
@@ -39,7 +40,7 @@ struct FldCache
       int jz = tmp % (BLOCKSIZE_Z + 4) - 2;
       for (int m = EX; m <= HZ; m++) {
 #if 1
-        float val = d_flds(m, jx + ci0[0], jy + ci0[1], jz + ci0[2]);
+        float val = _d_flds(m, jx + ci0[0], jy + ci0[1], jz + ci0[2]);
         // printf("C load %d %d %d: %g (%d)\n", jx+ci0[0], jy+ci0[1], jz+ci0[2],
         // val, m);
         if (!isfinite(val)) {
@@ -48,7 +49,7 @@ struct FldCache
         }
 #endif
         (*this)(m, jx + ci0[0], jy + ci0[1], jz + ci0[2]) =
-          d_flds(m, jx + ci0[0], jy + ci0[1], jz + ci0[2]);
+          _d_flds(m, jx + ci0[0], jy + ci0[1], jz + ci0[2]);
       }
     }
   }
@@ -95,7 +96,7 @@ template <typename BS>
 struct FldCache<BS, dim_yz>
 {
   using dim = dim_yz;
-  using real_t = float;
+  using value_type = float;
 
   static_assert(BS::x::value == 1, "FldCache: dim_yz needs BS::x == 1");
   const static int BLOCKSIZE_X = BS::x::value;
@@ -113,6 +114,7 @@ struct FldCache<BS, dim_yz>
     ci0z_ = ci0[2];
 #endif
 
+    auto _d_flds = make_Fields3d<dim_xyz>(d_flds);
     int ti = threadIdx.x;
     int n = BLOCKSIZE_X * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4);
     while (ti < n) {
@@ -124,14 +126,14 @@ struct FldCache<BS, dim_yz>
       // threadidx
       for (int m = EX; m <= HZ; m++) {
 #if 0
-	float val = d_flds(m, 0,jy+ci0[1],jz+ci0[2]);
+	float val = _d_flds(m, 0,jy+ci0[1],jz+ci0[2]);
 	//printf("C load %d %d: %g (%d)\n", jy+ci0[1], jz+ci0[2], val, m);
 	if (!isfinite(val)) {
 	  printf("CUDA_ERROR: load %g m %d jz %d %d ci0 %d %d\n", val, m, jy, jz, ci0[1], ci0[2]);
 	}
 #endif
         (*this)(m, 0, jy + ci0[1], jz + ci0[2]) =
-          d_flds(m, 0, jy + ci0[1], jz + ci0[2]);
+          _d_flds(m, 0, jy + ci0[1], jz + ci0[2]);
       }
       ti += THREADS_PER_BLOCK;
     }
