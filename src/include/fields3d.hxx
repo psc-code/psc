@@ -548,8 +548,8 @@ struct MfieldsStateFromMfields : MfieldsStateBase
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
 
-  auto storage() const { return mflds_.storage(); }
-  auto storage() { return mflds_.storage(); }
+  auto& storage() const { return mflds_.storage(); }
+  auto& storage() { return mflds_.storage(); }
 
   Mfields& mflds() { return mflds_; }
 
