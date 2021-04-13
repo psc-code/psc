@@ -16,6 +16,7 @@ using FieldsItem_Moments_1st_cc = Moments_1st<Mparticles>;
 
 struct OutputFieldsItemParams
 {
+  std::string data_dir = ".";
   int pfield_interval = 0;
   int pfield_first = 0;
   int tfield_interval = 0;
@@ -34,50 +35,79 @@ class OutputFieldsItem : public OutputFieldsItemParams
 {
 public:
   OutputFieldsItem(const Grid_t& grid, const OutputFieldsItemParams& prm,
-                   int n_comps, Int3 ibn, const char* data_dir, std::string sfx)
+                   int n_comps, Int3 ibn, std::string sfx)
     : OutputFieldsItemParams{prm},
       pfield_next_{prm.pfield_first},
       tfield_next_{prm.tfield_first},
       tfd_{grid, n_comps, {}}
   {
     if (pfield_interval > 0) {
-      io_pfd_.open("pfd" + sfx, data_dir);
+      io_pfd_.open("pfd" + sfx, prm.data_dir);
     }
     if (tfield_interval > 0) {
-      io_tfd_.open("tfd" + sfx, data_dir);
+      io_tfd_.open("tfd" + sfx, prm.data_dir);
     }
   }
 
-  template <typename E, typename EXP>
-  void write_pfd(const E& gt_pfd, EXP& pfd)
+  template <typename F>
+  void operator()(int timestep, F&& get_item)
   {
-    mpi_printf(pfd.grid().comm(), "***** Writing PFD output\n");
-    pfield_next_ += pfield_interval;
-    io_pfd_.begin_step(pfd.grid());
-    io_pfd_.set_subset(pfd.grid(), rn, rx);
-    io_pfd_.write(gt_pfd, pfd.grid(), pfd.name(), pfd.comp_names());
-    io_pfd_.end_step();
+    if (first_time_) {
+      first_time_ = false;
+      if (timestep != 0) {
+        pfield_next_ = timestep + pfield_interval;
+        tfield_next_ = timestep + tfield_interval;
+      }
+    }
+
+    bool do_pfield = pfield_interval > 0 && timestep >= pfield_next_;
+    bool do_tfield = tfield_interval > 0 && timestep >= tfield_next_;
+    bool doaccum_tfield =
+      tfield_interval > 0 &&
+      (((timestep >= (tfield_next_ - tfield_average_length + 1)) &&
+        timestep % tfield_average_every == 0) ||
+       timestep == 0);
+
+    if (do_pfield || doaccum_tfield) {
+      auto&& item = get_item();
+      auto&& pfd = item.gt();
+
+      if (do_pfield) {
+        mpi_printf(item.grid().comm(), "***** Writing PFD output for '%s'\n",
+                   item.name());
+        pfield_next_ += pfield_interval;
+        io_pfd_.begin_step(item.grid());
+        io_pfd_.set_subset(item.grid(), rn, rx);
+        io_pfd_.write(pfd, item.grid(), item.name(), item.comp_names());
+        io_pfd_.end_step();
+      }
+
+      if (doaccum_tfield) {
+        // tfd += pfd
+        tfd_.gt() = tfd_.gt() + pfd;
+        naccum_++;
+      }
+
+      if (do_tfield) {
+        mpi_printf(item.grid().comm(), "***** Writing TFD output for '%s'\n",
+                   item.name());
+        tfield_next_ += tfield_interval;
+
+        // convert accumulated values to correct temporal mean
+        tfd_.gt() = (1. / naccum_) * tfd_.gt();
+
+        io_tfd_.begin_step(item.grid());
+        io_tfd_.set_subset(item.grid(), rn, rx);
+        io_tfd_.write(tfd_.gt(), item.grid(), item.name(), item.comp_names());
+        io_tfd_.end_step();
+        naccum_ = 0;
+
+        tfd_.gt() = 0;
+      }
+    }
   }
 
-  template <typename E, typename EXP>
-  void write_tfd(E tfd, EXP& pfd)
-  {
-    mpi_printf(pfd.grid().comm(), "***** Writing TFD output\n");
-    tfield_next_ += tfield_interval;
-
-    // convert accumulated values to correct temporal mean
-    tfd = (1. / naccum_) * tfd;
-
-    io_tfd_.begin_step(pfd.grid());
-    io_tfd_.set_subset(pfd.grid(), rn, rx);
-    io_tfd_.write(tfd, pfd.grid(), pfd.name(), pfd.comp_names());
-    io_tfd_.end_step();
-    naccum_ = 0;
-
-    tfd = 0;
-  }
-
-  // private:
+private:
   int pfield_next_;
   int tfield_next_;
   Writer io_pfd_;
@@ -85,6 +115,8 @@ public:
   // tfd -- FIXME?! always MfieldsC
   MfieldsC tfd_;
   int naccum_ = 0;
+  bool first_time_ =
+    true; // to keep track so we can skip first output on restart
 };
 
 // ======================================================================
@@ -92,8 +124,6 @@ public:
 
 struct OutputFieldsParams
 {
-  const char* data_dir = {"."};
-
   OutputFieldsItemParams fields;
   OutputFieldsItemParams moments;
 };
@@ -112,15 +142,10 @@ public:
   // ctor
 
   OutputFieldsDefault(const Grid_t& grid, const OutputFieldsParams& prm)
-    : data_dir{prm.data_dir},
-      fields{grid, prm.fields, Item_jeh<MfieldsFake>::n_comps(),
-             {},   data_dir,   ""},
-      moments{grid,
-              prm.moments,
+    : fields{grid, prm.fields, Item_jeh<MfieldsFake>::n_comps(), {}, ""},
+      moments{grid, prm.moments,
               FieldsItem_Moments_1st_cc<MparticlesFake>::n_comps(grid),
-              grid.ibn,
-              data_dir,
-              "_moments"}
+              grid.ibn, "_moments"}
   {}
 
   // ----------------------------------------------------------------------
@@ -131,126 +156,31 @@ public:
   {
     const auto& grid = mflds._grid();
 
-    static int pr;
+    static int pr, pr_fields, pr_moments;
     if (!pr) {
       pr = prof_register("outf", 1., 0, 0);
+      pr_fields = prof_register("outf_fields", 1., 0, 0);
+      pr_moments = prof_register("outf_moments", 1., 0, 0);
     }
-#if 1
-    static int pr_field, pr_moment, pr_field_calc, pr_moment_calc,
-      pr_field_write, pr_moment_write, pr_field_acc, pr_moment_acc;
-    if (!pr_field) {
-      pr_field = prof_register("outf_field", 1., 0, 0);
-      pr_moment = prof_register("outf_moment", 1., 0, 0);
-      pr_field_calc = prof_register("outf_field_calc", 1., 0, 0);
-      pr_moment_calc = prof_register("outf_moment_calc", 1., 0, 0);
-      pr_field_write = prof_register("outf_field_write", 1., 0, 0);
-      pr_moment_write = prof_register("outf_moment_write", 1., 0, 0);
-      pr_field_acc = prof_register("outf_field_acc", 1., 0, 0);
-      pr_moment_acc = prof_register("outf_moment_acc", 1., 0, 0);
-    }
-#endif
 
     auto timestep = grid.timestep();
-    if (first_time) {
-      first_time = false;
-      if (timestep != 0) {
-        fields.pfield_next_ = timestep + fields.pfield_interval;
-        fields.tfield_next_ = timestep + fields.tfield_interval;
-        moments.pfield_next_ = timestep + moments.pfield_interval;
-        moments.tfield_next_ = timestep + moments.tfield_interval;
-        return;
-      }
-    }
-
     prof_start(pr);
 
-    bool do_pfield =
-      fields.pfield_interval > 0 && timestep >= fields.pfield_next_;
-    bool do_tfield =
-      fields.tfield_interval > 0 && timestep >= fields.tfield_next_;
-    bool doaccum_tfield = fields.tfield_interval > 0 &&
-                          (((timestep >= (fields.tfield_next_ -
-                                          fields.tfield_average_length + 1)) &&
-                            timestep % fields.tfield_average_every == 0) ||
-                           timestep == 0);
+    prof_start(pr_fields);
+    fields(timestep, [&]() { return Item_jeh<MfieldsState>(mflds); });
+    prof_stop(pr_fields);
 
-    if (do_pfield || doaccum_tfield) {
-      prof_start(pr_field);
-      prof_start(pr_field_calc);
-      Item_jeh<MfieldsState> pfd_jeh{mflds};
-      auto&& pfd = pfd_jeh.gt();
-      prof_stop(pr_field_calc);
-
-      if (do_pfield) {
-        prof_start(pr_field_write);
-        fields.write_pfd(pfd, pfd_jeh);
-        prof_stop(pr_field_write);
-      }
-
-      if (doaccum_tfield) {
-        // tfd += pfd
-        prof_start(pr_field_acc);
-        fields.tfd_.gt() = fields.tfd_.gt() + pfd;
-        prof_stop(pr_field_acc);
-        fields.naccum_++;
-      }
-      if (do_tfield) {
-        prof_start(pr_field_write);
-        fields.write_tfd(fields.tfd_.gt(), pfd_jeh);
-        prof_stop(pr_field_write);
-      }
-      prof_stop(pr_field);
-    }
-
-    bool do_pfield_moments =
-      moments.pfield_interval > 0 && timestep >= moments.pfield_next_;
-    bool do_tfield_moments =
-      moments.tfield_interval > 0 && timestep >= moments.tfield_next_;
-    bool doaccum_tfield_moments =
-      moments.tfield_interval > 0 &&
-      (((timestep >=
-         (moments.tfield_next_ - moments.tfield_average_length + 1)) &&
-        timestep % moments.tfield_average_every == 0) ||
-       timestep == 0);
-
-    if (do_pfield_moments || doaccum_tfield_moments) {
-      prof_start(pr_moment);
-      prof_start(pr_moment_calc);
-      FieldsItem_Moments_1st_cc<Mparticles> pfd_moments{mprts};
-      auto&& pfd = pfd_moments.gt();
-      prof_stop(pr_moment_calc);
-
-      if (do_pfield_moments) {
-        prof_start(pr_moment_write);
-        moments.write_pfd(pfd, pfd_moments);
-        prof_stop(pr_moment_write);
-      }
-
-      if (doaccum_tfield_moments) {
-        // tfd += pfd
-        prof_start(pr_moment_acc);
-        moments.tfd_.gt() = moments.tfd_.gt() + pfd;
-        prof_stop(pr_moment_acc);
-        moments.naccum_++;
-      }
-      if (do_tfield_moments) {
-        prof_start(pr_moment_write);
-        moments.write_tfd(moments.tfd_.gt(), pfd_moments);
-        prof_stop(pr_moment_write);
-      }
-      prof_stop(pr_moment);
-    }
+    prof_start(pr_moments);
+    moments(timestep,
+            [&]() { return FieldsItem_Moments_1st_cc<Mparticles>(mprts); });
+    prof_stop(pr_moments);
 
     prof_stop(pr);
   };
 
 public:
-  const char* data_dir;
   OutputFieldsItem<Writer> fields;
   OutputFieldsItem<Writer> moments;
-
-private:
-  bool first_time = true;
 };
 
 #ifdef xPSC_HAVE_ADIOS2
