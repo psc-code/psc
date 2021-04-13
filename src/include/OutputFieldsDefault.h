@@ -38,7 +38,7 @@ public:
     : OutputFieldsItemParams{prm},
       pfield_next_{prm.pfield_first},
       tfield_next_{prm.tfield_first},
-      tfd_{grid, n_comps, ibn}
+      tfd_{grid, n_comps, {}}
   {
     if (pfield_interval > 0) {
       io_pfd_.open("pfd" + sfx, data_dir);
@@ -48,15 +48,14 @@ public:
     }
   }
 
-  template <typename EXP>
-  void write_pfd(EXP& pfd)
+  template <typename E, typename EXP>
+  void write_pfd(const E& gt_pfd, EXP& pfd)
   {
     mpi_printf(pfd.grid().comm(), "***** Writing PFD output\n");
     pfield_next_ += pfield_interval;
     io_pfd_.begin_step(pfd.grid());
     io_pfd_.set_subset(pfd.grid(), rn, rx);
-    io_pfd_.write(adapt(evalMfields(pfd)), pfd.grid(), pfd.name(),
-                  pfd.comp_names());
+    io_pfd_.write(gt_pfd, pfd.grid(), pfd.name(), pfd.comp_names());
     io_pfd_.end_step();
   }
 
@@ -179,25 +178,25 @@ public:
       prof_start(pr_field);
       prof_start(pr_field_calc);
       Item_jeh<MfieldsState> pfd_jeh{mflds};
-      auto&& pfd = adapt_item(pfd_jeh);
+      auto&& pfd = pfd_jeh.gt();
       prof_stop(pr_field_calc);
 
       if (do_pfield) {
         prof_start(pr_field_write);
-        fields.write_pfd(pfd_jeh);
+        fields.write_pfd(pfd, pfd_jeh);
         prof_stop(pr_field_write);
       }
 
       if (doaccum_tfield) {
         // tfd += pfd
         prof_start(pr_field_acc);
-        adapt(fields.tfd_) = adapt(fields.tfd_) + pfd;
+        fields.tfd_.gt() = fields.tfd_.gt() + pfd;
         prof_stop(pr_field_acc);
         fields.naccum_++;
       }
       if (do_tfield) {
         prof_start(pr_field_write);
-        fields.write_tfd(adapt(fields.tfd_), pfd_jeh);
+        fields.write_tfd(fields.tfd_.gt(), pfd_jeh);
         prof_stop(pr_field_write);
       }
       prof_stop(pr_field);
@@ -218,25 +217,25 @@ public:
       prof_start(pr_moment);
       prof_start(pr_moment_calc);
       FieldsItem_Moments_1st_cc<Mparticles> pfd_moments{mprts};
-      auto&& pfd = adapt_item(pfd_moments);
+      auto&& pfd = pfd_moments.gt();
       prof_stop(pr_moment_calc);
 
       if (do_pfield_moments) {
         prof_start(pr_moment_write);
-        moments.write_pfd(pfd_moments);
+        moments.write_pfd(pfd, pfd_moments);
         prof_stop(pr_moment_write);
       }
 
       if (doaccum_tfield_moments) {
         // tfd += pfd
         prof_start(pr_moment_acc);
-        adapt(moments.tfd_) = adapt(moments.tfd_) + pfd;
+        moments.tfd_.gt() = moments.tfd_.gt() + pfd;
         prof_stop(pr_moment_acc);
         moments.naccum_++;
       }
       if (do_tfield_moments) {
         prof_start(pr_moment_write);
-        moments.write_tfd(adapt(moments.tfd_), pfd_moments);
+        moments.write_tfd(moments.tfd_.gt(), pfd_moments);
         prof_stop(pr_moment_write);
       }
       prof_stop(pr_moment);

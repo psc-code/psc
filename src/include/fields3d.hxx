@@ -451,6 +451,8 @@ struct Mfields
   const MfieldsDomain& domain() const { return domain_; }
   const Grid_t& grid() const { return domain_.grid(); }
 
+  auto gt() { return Base::storage().view(); }
+
   template <typename FUNC>
   void Foreach_3d(int l, int r, FUNC&& F) const
   {
@@ -543,7 +545,12 @@ struct MfieldsStateFromMfields : MfieldsStateBase
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
 
+  auto storage() const { return mflds_.storage(); }
+  auto storage() { return mflds_.storage(); }
+
   Mfields& mflds() { return mflds_; }
+
+  auto gt() { return mflds_.storage(); }
 
 public: // FIXME public so that we can read/write it, friend needs include which
         // gives nvcc issues
@@ -580,24 +587,13 @@ extern template const MfieldsStateBase::Convert
 
 using namespace gt::placeholders;
 
-template <typename Item>
-auto adapt_item(const Item& item)
-{
-  return adapt(item.result());
-}
-
 template <typename Mfields>
 auto adapt(const Mfields& _mflds)
 {
   auto& mflds = const_cast<std::remove_const_t<Mfields>&>(_mflds);
   auto ib = mflds.ib(), im = mflds.im(), bnd = -ib;
-  auto mf_ =
-    gt::adapt<5>(&mflds(0, ib[0], ib[1], ib[2], 0),
-                 {im[0], im[1], im[2], mflds.n_comps(), mflds.n_patches()});
-  auto mf = std::move(mf_).view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                                _s(bnd[2], -bnd[2]));
-
-  return mf;
+  return mflds.storage().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
+                              _s(bnd[2], -bnd[2]));
 }
 
 #endif
