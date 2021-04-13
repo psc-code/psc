@@ -20,6 +20,42 @@
 #include <list>
 #include <string>
 
+// ======================================================================
+// SArrayView
+
+namespace detail
+{
+
+GT_INLINE gt::shape_type<4> strides(const Int3& im, int n_comps)
+{
+  return gt::shape(1, im[0], im[0] * im[1], im[0] * im[1] * im[2]);
+}
+
+} // namespace detail
+
+template <typename T, typename S>
+struct SArrayView
+{
+  using Storage = gt::gtensor_span<T, 4, S>;
+  using value_type = typename Storage::value_type;
+  using reference = typename Storage::reference;
+  using const_reference = typename Storage::const_reference;
+  using pointer = typename Storage::pointer;
+  using const_pointer = typename Storage::const_pointer;
+
+  KG_INLINE SArrayView(const kg::Box3& box, int n_comps, const Storage& storage)
+    : ib_(box.ib()), storage_(storage)
+  {}
+
+  KG_INLINE const Int3& ib() const { return ib_; }
+  KG_INLINE Storage& storage() { return storage_; }
+  KG_INLINE const Storage& storage() const { return storage_; }
+
+private:
+  Storage storage_;
+  Int3 ib_; //> lower bounds per direction
+};
+
 template <typename Derived>
 class MFexpression
 {
@@ -231,7 +267,7 @@ public:
   using InnerTypes = MfieldsCRTPInnerTypes<D>;
   using Storage = typename InnerTypes::Storage;
   using Real = typename Storage::value_type;
-  using fields_view_t = kg::SArrayView<Real>;
+  using fields_view_t = SArrayView<Real, typename Storage::space_type>;
 
   KG_INLINE const kg::Box3& box() const { return box_; }
   KG_INLINE const Int3& ib() const { return box_.ib(); }
@@ -255,8 +291,12 @@ public:
 
   KG_INLINE fields_view_t operator[](int p)
   {
-    size_t stride = n_comps() * box().size();
-    return fields_view_t(box(), n_comps(), &storage().data()[p * stride]);
+    return fields_view_t(
+      box(), n_comps(),
+      gt::gtensor_span<Real, 4, typename Storage::space_type>(
+        &storage()(0, 0, 0, 0, p),
+        gt::shape(box().im(0), box().im(1), box().im(2), n_comps()),
+        detail::strides(box().im(), n_comps())));
   }
 
   KG_INLINE const Real& operator()(int m, int i, int j, int k, int p) const

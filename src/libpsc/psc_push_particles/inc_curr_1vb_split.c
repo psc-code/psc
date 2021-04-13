@@ -10,7 +10,7 @@ struct Current1vbSplit
                 "Current1vbSplit only works with 1st order");
 
   using fields_t = _fields_t;
-  using real_t = typename fields_t::real_t;
+  using real_t = typename fields_t::value_type;
   using Real3 = Vec3<real_t>;
 
   Current1vbSplit(const Grid_t& grid)

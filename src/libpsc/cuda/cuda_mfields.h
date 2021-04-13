@@ -9,8 +9,6 @@
 #include "psc_fields_cuda.h"
 #include "dim.hxx"
 
-#include <kg/SArrayView.h>
-
 #define MAX_BND_FIELDS (17)
 #define MAX_BND_COMPONENTS (3)
 
@@ -65,9 +63,7 @@ public:
   using pointer = float*;
   using const_pointer = float*;
 
-  MfieldsStorageDeviceRaw(uint stride, value_type* data)
-    : stride_{stride}, data_{data}
-  {}
+  MfieldsStorageDeviceRaw(pointer data) : data_{data} {}
 
   KG_INLINE reference operator[](size_t i) { return data_[i]; }
   KG_INLINE const_reference operator[](size_t i) const { return data_[i]; }
@@ -76,7 +72,6 @@ public:
 
 private:
   value_type* data_;
-  uint stride_;
 };
 
 // ======================================================================
@@ -87,7 +82,7 @@ struct DMFields;
 template <>
 struct MfieldsCRTPInnerTypes<DMFields>
 {
-  using Storage = MfieldsStorageDeviceRaw;
+  using Storage = gt::gtensor_span_device<float, 5>;
 };
 
 struct DMFields : MfieldsCRTP<DMFields>
@@ -98,7 +93,8 @@ struct DMFields : MfieldsCRTP<DMFields>
 
   DMFields(const kg::Box3& box, int n_comps, int n_patches, real_t* d_flds)
     : Base{n_comps, box, n_patches},
-      storage_{uint(n_comps * box.size()), d_flds}
+      storage_{gt::adapt_device(
+        d_flds, gt::shape(box.im(0), box.im(1), box.im(2), n_comps, n_patches))}
   {}
 
 private:
