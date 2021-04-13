@@ -88,6 +88,11 @@ MfieldsCuda::real_t MfieldsCuda::Accessor::operator+=(real_t val)
   return val;
 }
 
+HMFields hostMirror(MfieldsCuda& mflds)
+{
+  return hostMirror(*mflds.cmflds());
+}
+
 HMFields hostMirror(const MfieldsCuda& mflds)
 {
   return hostMirror(*mflds.cmflds());

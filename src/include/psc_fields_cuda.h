@@ -114,6 +114,7 @@ struct MfieldsCuda : MfieldsBase
   const Grid_t* grid_;
 };
 
+HMFields hostMirror(MfieldsCuda& mflds);
 HMFields hostMirror(const MfieldsCuda& mflds);
 void copy(const MfieldsCuda& mflds, HMFields& hmflds);
 void copy(const HMFields& hmflds, MfieldsCuda& mflds);
@@ -162,6 +163,11 @@ struct Mfields_traits<MfieldsCuda>
 {
   static constexpr const char* name = "cuda";
 };
+
+inline HMFields hostMirror(MfieldsStateCuda& mflds)
+{
+  return hostMirror(mflds.mflds());
+}
 
 inline HMFields hostMirror(const MfieldsStateCuda& mflds)
 {

@@ -259,29 +259,36 @@ struct PushParticlesTest : ::testing::Test
   void checkCurrent(std::vector<CurrentReference>& curr_ref)
   {
     auto mflds_ref = MfieldsState{grid()};
-    auto flds_ref = make_Fields3d<dim_xyz>(mflds_ref[0]);
-    for (auto& ref : curr_ref) {
-      if (dim::InvarX::value) {
-        ref.pos[0] = 0;
-      }
-      if (dim::InvarY::value) {
-        ref.pos[1] = 0;
-      }
-      if (dim::InvarZ::value) {
-        ref.pos[2] = 0;
-      }
-      flds_ref(ref.m, ref.pos[0], ref.pos[1], ref.pos[2]) += ref.val;
-    }
+    {
+      auto&& h_mflds = hostMirror(*mflds);
+      copy(*mflds, h_mflds);
+      auto&& h_mflds_ref = hostMirror(mflds_ref);
 
-    auto flds = make_Fields3d<dim_xyz>((*mflds)[0]);
-    this->grid().Foreach_3d(2, 2, [&](int i, int j, int k) {
-      for (int m = JXI; m <= JZI; m++) {
-        auto val = flds(m, i, j, k);
-        auto val_ref = flds_ref(m, i, j, k);
-        EXPECT_NEAR(val, val_ref, eps)
-          << "ijk " << i << " " << j << " " << k << " m " << m;
+      auto flds = make_Fields3d<dim_xyz>((h_mflds)[0]);
+      auto flds_ref = make_Fields3d<dim_xyz>(h_mflds_ref[0]);
+
+      for (auto& ref : curr_ref) {
+        if (dim::InvarX::value) {
+          ref.pos[0] = 0;
+        }
+        if (dim::InvarY::value) {
+          ref.pos[1] = 0;
+        }
+        if (dim::InvarZ::value) {
+          ref.pos[2] = 0;
+        }
+        flds_ref(ref.m, ref.pos[0], ref.pos[1], ref.pos[2]) += ref.val;
       }
-    });
+
+      this->grid().Foreach_3d(2, 2, [&](int i, int j, int k) {
+        for (int m = JXI; m <= JZI; m++) {
+          auto val = flds(m, i, j, k);
+          auto val_ref = flds_ref(m, i, j, k);
+          EXPECT_NEAR(val, val_ref, eps)
+            << "ijk " << i << " " << j << " " << k << " m " << m;
+        }
+      });
+    }
   }
 
   template <typename Particle>

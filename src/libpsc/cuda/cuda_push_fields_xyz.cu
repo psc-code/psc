@@ -23,9 +23,9 @@ __global__ static void push_fields_E_xyz(DMFields dmflds, float dt, float cnx,
   int iy = blockIdx.y * blockDim.y + threadIdx.y;
   int iz = bidx_z * blockDim.z + threadIdx.z;
 
-  if (!(ix < dmflds.im(0) - 2 * (2 - BND) - 1 &&
-        iy < dmflds.im(1) - 2 * (2 - BND) - 1 &&
-        iz < dmflds.im(2) - 2 * (2 - BND) - 1))
+  if (!((ix >= 1 && ix < dmflds.im(0) - 2 * (2 - BND)) &&
+        (iy >= 1 && iy < dmflds.im(1) - 2 * (2 - BND)) &&
+        (iz >= 1 && iz < dmflds.im(2) - 2 * (2 - BND))))
     return;
   ix -= BND;
   iy -= BND;

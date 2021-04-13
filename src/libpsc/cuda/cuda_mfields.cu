@@ -93,6 +93,11 @@ DFields cuda_mfields::operator[](int p) const
   return static_cast<DMFields>(const_cast<cuda_mfields&>(*this))[p];
 }
 
+HMFields hostMirror(cuda_mfields& cmflds)
+{
+  return HMFields{cmflds.box(), cmflds.n_comps(), cmflds.n_patches()};
+}
+
 HMFields hostMirror(const cuda_mfields& cmflds)
 {
   return HMFields{cmflds.box(), cmflds.n_comps(), cmflds.n_patches()};

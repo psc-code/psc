@@ -46,7 +46,10 @@ TYPED_TEST(PushFieldsTest, Pushf1)
   PushFields pushf_;
   pushf_.push_H(mflds, 1., dim{});
 
-  auto flds = make_Fields3d<dim_xyz>(mflds[0]);
+  // check result
+  auto&& h_mflds = hostMirror(mflds);
+  copy(mflds, h_mflds);
+  auto flds = make_Fields3d<dim_xyz>(h_mflds[0]);
   grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
     double z = grid.patches[0].z_cc(k);
     // printf("ijk %d:%d:%d %g %g dt %g\n", i,j,k, flds(HX, i,j,k),
@@ -82,7 +85,10 @@ TYPED_TEST(PushFieldsTest, Pushf2)
   PushFields pushf_;
   pushf_.push_E(mflds, 1., dim{});
 
-  auto flds = make_Fields3d<dim_xyz>(mflds[0]);
+  // check result
+  auto&& h_mflds = hostMirror(mflds);
+  copy(mflds, h_mflds);
+  auto flds = make_Fields3d<dim_xyz>(h_mflds[0]);
   grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
     double y = grid.patches[0].y_cc(j);
     // printf("ijk %d:%d:%d %g %g dt %g\n", i,j,k, flds(HX, i,j,k),
