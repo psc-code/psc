@@ -130,9 +130,6 @@ struct cuda_mfields : CudaMfields<MfieldsStorageDeviceVector>
   using Base::Base;
   cuda_mfields(const cuda_mfields&) = delete;
 
-  void zero_comp(int m, dim_yz tag);
-  void zero_comp(int m, dim_xyz tag);
-
   void copy_comp_yz(int m_to, cuda_mfields* from, int m_from);
   void copy_comp_xyz(int m_to, cuda_mfields* from, int m_from);
   void copy_comp(int m_to, cuda_mfields* from, int m_from);

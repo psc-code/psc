@@ -60,26 +60,6 @@ void MfieldsCuda::axpy_comp(int ym, float a, MfieldsCuda& mflds_x, int xm)
   cmflds()->axpy_comp(ym, a, mflds_x.cmflds(), xm);
 }
 
-void MfieldsCuda::zero_comp(int m)
-{
-  dprintf("CMFLDS: zero_comp\n");
-  assert(!grid_->isInvar(1));
-  assert(!grid_->isInvar(2));
-  if (grid_->isInvar(0)) {
-    cmflds()->zero_comp(m, dim_yz{});
-  } else {
-    cmflds()->zero_comp(m, dim_xyz{});
-  }
-}
-
-void MfieldsCuda::zero()
-{
-  dprintf("CMFLDS: zero\n");
-  for (int m = 0; m < cmflds()->n_comps(); m++) {
-    zero_comp(m);
-  }
-}
-
 int MfieldsCuda::index(int m, int i, int j, int k, int p) const
 {
   return cmflds_->index(m, i, j, k, p);
