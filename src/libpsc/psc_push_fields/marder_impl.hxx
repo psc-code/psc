@@ -206,13 +206,7 @@ struct Marder_ : MarderBase
   // ----------------------------------------------------------------------
   // correct
 
-  void correct(MfieldsState& mf)
-  {
-    auto& mf_div_e = res_;
-
-    print_max(mf_div_e);
-    correct(mf.grid(), mf, mf_div_e, diffusion_);
-  }
+  void correct(MfieldsState& mf) { correct(mf.grid(), mf, res_, diffusion_); }
 
   // ----------------------------------------------------------------------
   // operator()
@@ -227,6 +221,7 @@ struct Marder_ : MarderBase
 
     for (int i = 0; i < loop_; i++) {
       calc_aid_fields(mflds);
+      print_max(res_);
       correct(mflds);
       bnd_.fill_ghosts(mflds, EX, EX + 3);
     }
