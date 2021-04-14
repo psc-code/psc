@@ -136,7 +136,6 @@ TYPED_TEST(PushFieldsTest, MarderCorrect)
   using Mfields = typename TypeParam::Mfields;
   using dim = typename TypeParam::dim;
   using PushFields = typename TypeParam::PushFields;
-  using Marder = marder_selector_t<Mparticles, MfieldsState, Mfields, dim>;
 
   const typename Mparticles::real_t eps = 1e-2;
 
@@ -177,7 +176,7 @@ TYPED_TEST(PushFieldsTest, MarderCorrect)
     copy(h_mphi, mphi);
   }
 
-  Marder::correct(mflds, mphi, diffusion);
+  psc::marder::correct(mflds, mphi, diffusion);
 
   // check result
   auto&& h_mflds = hostMirror(mflds);
