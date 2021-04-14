@@ -41,6 +41,7 @@ if (USE_CUDA)
     
     cuda/cuda_push_mprts_yz.cu
     
+    cuda/push_fields_cuda_impl.cxx
     cuda/cuda_push_fields_yz.cu
     cuda/cuda_push_fields_xyz.cu
     
