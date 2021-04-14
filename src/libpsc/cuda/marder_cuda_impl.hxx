@@ -154,7 +154,7 @@ struct MarderCuda : MarderBase
     prof_stop(pr);
   }
 
-private:
+  // private:
   const Grid_t& grid_;
   real_t diffusion_; //< diffusion coefficient for Marder correction
   int loop_;         //< execute this many relaxation steps in a loop

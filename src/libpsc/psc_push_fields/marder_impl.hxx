@@ -231,7 +231,7 @@ struct Marder_ : MarderBase
     }
   }
 
-private:
+  // private:
   real_t diffusion_; //< diffusion coefficient for Marder correction
   int loop_;         //< execute this many relaxation steps in a loop
   bool dump_;        //< dump div_E, rho
