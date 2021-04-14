@@ -14,13 +14,6 @@
 
 #include <gtensor/gtensor.h>
 
-#ifndef __CUDACC__
-#define atomicAdd(addr, val)                                                   \
-  do {                                                                         \
-    *(addr) += (val);                                                          \
-  } while (0)
-#endif
-
 template <typename fields_t, typename dim_curr>
 struct curr_cache_t : fields_t
 {
@@ -33,12 +26,11 @@ struct curr_cache_t : fields_t
         f.storage().shape(3), f.storage())
   {}
 
-  GT_INLINE void add(int m, int i, int j, int k, real_t val)
+  void add(int m, int i, int j, int k, real_t val)
   {
     Fields3d<typename fields_t::Storage, dim_curr> J(this->storage(),
                                                      this->ib());
-    real_t* addr = &J(JXI + m, i, j, k);
-    atomicAdd(addr, val);
+    J(JXI + m, i, j, k) += val;
   }
 
   GT_INLINE void add(int m, int i, int j, int k, real_t val, const int off[3])
