@@ -107,8 +107,8 @@ struct Marder_ : MarderBase
   }                                                                            \
   }
 
-  static void correct_patch(const Grid_t& grid, fields_view_t flds,
-                            fields_view_t f, int p, real_t diffusion_)
+  static void correct(const Grid_t& grid, MfieldsState& mflds, Mfields& mf,
+                      real_t diffusion_)
   {
     define_dxdydz(dx, dy, dz);
 
@@ -126,69 +126,59 @@ struct Marder_ : MarderBase
     double diffusion_max = 1. / 2. / (.5 * grid.dt) / inv_sum;
     double diffusion = diffusion_max * diffusion_;
 
-    int l_cc[3] = {0, 0, 0}, r_cc[3] = {0, 0, 0};
-    int l_nc[3] = {0, 0, 0}, r_nc[3] = {0, 0, 0};
-    for (int d = 0; d < 3; d++) {
-      if (grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL &&
-          grid.atBoundaryLo(p, d)) {
-        l_cc[d] = -1;
-        l_nc[d] = -1;
+    for (int p = 0; p < mf.n_patches(); p++) {
+      int l_cc[3] = {0, 0, 0}, r_cc[3] = {0, 0, 0};
+      int l_nc[3] = {0, 0, 0}, r_nc[3] = {0, 0, 0};
+      for (int d = 0; d < 3; d++) {
+        if (grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL &&
+            grid.atBoundaryLo(p, d)) {
+          l_cc[d] = -1;
+          l_nc[d] = -1;
+        }
+        if (grid.bc.fld_hi[d] == BND_FLD_CONDUCTING_WALL &&
+            grid.atBoundaryHi(p, d)) {
+          r_cc[d] = -1;
+          r_nc[d] = 0;
+        }
       }
-      if (grid.bc.fld_hi[d] == BND_FLD_CONDUCTING_WALL &&
-          grid.atBoundaryHi(p, d)) {
-        r_cc[d] = -1;
-        r_nc[d] = 0;
+
+      auto flds_ = make_Fields3d<dim_xyz>(mflds[p]);
+      auto f_ = make_Fields3d<dim_xyz>(mf[p]);
+      if (!grid.isInvar(0)) {
+        int l[3] = {l_cc[0], l_nc[1], l_nc[2]};
+        int r[3] = {r_cc[0], r_nc[1], r_nc[2]};
+        psc_foreach_3d_more(ppsc, p, ix, iy, iz, l, r)
+        {
+          flds_(EX, ix, iy, iz) +=
+            (f_(0, ix + dx, iy, iz) - f_(0, ix, iy, iz)) * .5 * grid.dt *
+            diffusion / deltax;
+        }
+        psc_foreach_3d_more_end;
       }
-    }
 
-#if 0
-    psc_foreach_3d_more(ppsc, p, ix, iy, iz, l, r) {
-      // FIXME: F3 correct?
-      flds(EX, ix,iy,iz) += 
-	(f(DIVE_MARDER, ix+dx,iy,iz) - f(DIVE_MARDER, ix,iy,iz))
-	* .5 * ppsc->dt * diffusion / deltax;
-      flds(EY, ix,iy,iz) += 
-	(f(DIVE_MARDER, ix,iy+dy,iz) - f(DIVE_MARDER, ix,iy,iz))
-	* .5 * ppsc->dt * diffusion / deltay;
-      flds(EZ, ix,iy,iz) += 
-	(f(DIVE_MARDER, ix,iy,iz+dz) - f(DIVE_MARDER, ix,iy,iz))
-	* .5 * ppsc->dt * diffusion / deltaz;
-    } psc_foreach_3d_more_end;
-#endif
-
-    auto flds_ = make_Fields3d<dim_xyz>(flds);
-    auto f_ = make_Fields3d<dim_xyz>(f);
-    if (!grid.isInvar(0)) {
-      int l[3] = {l_cc[0], l_nc[1], l_nc[2]};
-      int r[3] = {r_cc[0], r_nc[1], r_nc[2]};
-      psc_foreach_3d_more(ppsc, p, ix, iy, iz, l, r)
       {
-        flds_(EX, ix, iy, iz) += (f_(0, ix + dx, iy, iz) - f_(0, ix, iy, iz)) *
-                                 .5 * grid.dt * diffusion / deltax;
+        int l[3] = {l_nc[0], l_cc[1], l_nc[2]};
+        int r[3] = {r_nc[0], r_cc[1], r_nc[2]};
+        psc_foreach_3d_more(ppsc, p, ix, iy, iz, l, r)
+        {
+          flds_(EY, ix, iy, iz) +=
+            (f_(0, ix, iy + dy, iz) - f_(0, ix, iy, iz)) * .5 * grid.dt *
+            diffusion / deltay;
+        }
+        psc_foreach_3d_more_end;
       }
-      psc_foreach_3d_more_end;
-    }
 
-    {
-      int l[3] = {l_nc[0], l_cc[1], l_nc[2]};
-      int r[3] = {r_nc[0], r_cc[1], r_nc[2]};
-      psc_foreach_3d_more(ppsc, p, ix, iy, iz, l, r)
       {
-        flds_(EY, ix, iy, iz) += (f_(0, ix, iy + dy, iz) - f_(0, ix, iy, iz)) *
-                                 .5 * grid.dt * diffusion / deltay;
+        int l[3] = {l_nc[0], l_nc[1], l_cc[2]};
+        int r[3] = {r_nc[0], r_nc[1], r_cc[2]};
+        psc_foreach_3d_more(ppsc, p, ix, iy, iz, l, r)
+        {
+          flds_(EZ, ix, iy, iz) +=
+            (f_(0, ix, iy, iz + dz) - f_(0, ix, iy, iz)) * .5 * grid.dt *
+            diffusion / deltaz;
+        }
+        psc_foreach_3d_more_end;
       }
-      psc_foreach_3d_more_end;
-    }
-
-    {
-      int l[3] = {l_nc[0], l_nc[1], l_cc[2]};
-      int r[3] = {r_nc[0], r_nc[1], r_cc[2]};
-      psc_foreach_3d_more(ppsc, p, ix, iy, iz, l, r)
-      {
-        flds_(EZ, ix, iy, iz) += (f_(0, ix, iy, iz + dz) - f_(0, ix, iy, iz)) *
-                                 .5 * grid.dt * diffusion / deltaz;
-      }
-      psc_foreach_3d_more_end;
     }
   }
 
@@ -215,9 +205,7 @@ struct Marder_ : MarderBase
                   Mfields_traits<Mfields>::mpi_dtype(), MPI_MAX, grid_.comm());
     mpi_printf(grid_.comm(), "marder: err %g\n", max_err);
 
-    for (int p = 0; p < mf_div_e.n_patches(); p++) {
-      correct_patch(mf.grid(), mf[p], mf_div_e[p], p, diffusion_);
-    }
+    correct(mf.grid(), mf, mf_div_e, diffusion_);
   }
 
   // ----------------------------------------------------------------------
