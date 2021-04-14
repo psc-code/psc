@@ -151,15 +151,6 @@ TYPED_TEST(PushFieldsTest, MarderCorrect)
   bool dump = false;
   Marder marder(grid, diffusion, loop, dump);
 
-  double inv_sum = 0.;
-  for (int d = 0; d < 3; d++) {
-    if (!grid.isInvar(d)) {
-      inv_sum += 1. / sqr(grid.domain.dx[d]);
-    }
-  }
-  double diffusion_max = 1. / 2. / (.5 * grid.dt) / inv_sum;
-  double diff = diffusion_max * diffusion;
-
   // init fields
   auto mflds = MfieldsState{grid};
   setupFields(mflds, [&](int m, double crd[3]) {
@@ -172,7 +163,8 @@ TYPED_TEST(PushFieldsTest, MarderCorrect)
   setupFields(mflds_ref, [&](int m, double crd[3]) {
     switch (m) {
       case EZ:
-        return sin(kz * crd[2]) + .5 * grid.dt * diff * kz * cos(kz * crd[2]);
+        return sin(kz * crd[2]) +
+               .5 * grid.dt * diffusion * kz * cos(kz * crd[2]);
       default: return 0.;
     }
   });
@@ -187,7 +179,7 @@ TYPED_TEST(PushFieldsTest, MarderCorrect)
     copy(h_res, marder.res_);
   }
 
-  marder.correct(mflds);
+  marder.correct(mflds, marder.res_, diffusion);
 
   // check result
   auto&& h_mflds = hostMirror(mflds);

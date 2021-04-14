@@ -83,7 +83,7 @@ struct Marder_ : MarderBase
   }
 
   // ----------------------------------------------------------------------
-  // correct_patch
+  // correct
   //
   // Do the modified marder correction (See eq.(5, 7, 9, 10) in Mardahl and
   // Verboncoeur, CPC, 1997)
@@ -107,24 +107,15 @@ struct Marder_ : MarderBase
   }                                                                            \
   }
 
-  static void correct(const Grid_t& grid, MfieldsState& mflds, Mfields& mf,
-                      real_t diffusion_)
+  static void correct(MfieldsState& mflds, Mfields& mf, real_t diffusion)
   {
+    const auto& grid = mflds.grid();
     define_dxdydz(dx, dy, dz);
 
     // FIXME: how to choose diffusion parameter properly?
     double deltax = grid.domain.dx[0]; // FIXME double/float
     double deltay = grid.domain.dx[1];
     double deltaz = grid.domain.dx[2];
-    double inv_sum = 0.;
-    int nr_levels;
-    for (int d = 0; d < 3; d++) {
-      if (!grid.isInvar(d)) {
-        inv_sum += 1. / sqr(grid.domain.dx[d]);
-      }
-    }
-    double diffusion_max = 1. / 2. / (.5 * grid.dt) / inv_sum;
-    double diffusion = diffusion_max * diffusion_;
 
     for (int p = 0; p < mf.n_patches(); p++) {
       int l_cc[3] = {0, 0, 0}, r_cc[3] = {0, 0, 0};
@@ -206,7 +197,22 @@ struct Marder_ : MarderBase
   // ----------------------------------------------------------------------
   // correct
 
-  void correct(MfieldsState& mf) { correct(mf.grid(), mf, res_, diffusion_); }
+  void correct(MfieldsState& mflds)
+  {
+    auto& grid = mflds.grid();
+
+    double inv_sum = 0.;
+    int nr_levels;
+    for (int d = 0; d < 3; d++) {
+      if (!grid.isInvar(d)) {
+        inv_sum += 1. / sqr(grid.domain.dx[d]);
+      }
+    }
+    double diffusion_max = 1. / 2. / (.5 * grid.dt) / inv_sum;
+    double diffusion = diffusion_max * diffusion_;
+
+    correct(mflds, res_, diffusion);
+  }
 
   // ----------------------------------------------------------------------
   // operator()

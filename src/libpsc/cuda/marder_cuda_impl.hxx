@@ -74,10 +74,6 @@ struct MarderCuda : MarderBase
   {
     const Grid_t& grid = mflds._grid();
     // FIXME: how to choose diffusion parameter properly?
-    float dx[3];
-    for (int d = 0; d < 3; d++) {
-      dx[d] = grid.domain.dx[d];
-    }
     float inv_sum = 0.;
     for (int d = 0; d < 3; d++) {
       if (!grid.isInvar(d)) {
@@ -86,6 +82,16 @@ struct MarderCuda : MarderBase
     }
     float diffusion_max = 1. / 2. / (.5 * grid.dt) / inv_sum;
     float diffusion = diffusion_max * diffusion_;
+    correct(mflds, res_, diffusion);
+  }
+
+  static void correct(MfieldsState& mflds, Mfields& mf, float diffusion)
+  {
+    const auto& grid = mflds.grid();
+    float dx[3];
+    for (int d = 0; d < 3; d++) {
+      dx[d] = grid.domain.dx[d];
+    }
 
     float fac[3];
     fac[0] = .5 * grid.dt * diffusion / dx[0];
@@ -93,7 +99,7 @@ struct MarderCuda : MarderBase
     fac[2] = .5 * grid.dt * diffusion / dx[2];
 
     cuda_mfields* cmflds = mflds.cmflds();
-    cuda_mfields* cmf = res_.cmflds();
+    cuda_mfields* cmf = mf.cmflds();
 
     // OPT, do all patches in one kernel
     for (int p = 0; p < mflds.n_patches(); p++) {
