@@ -168,18 +168,19 @@ TYPED_TEST(PushFieldsTest, MarderCorrect)
       default: return 0.;
     }
   });
+  auto mphi = Mfields{grid, 1, grid.ibn};
   {
-    auto&& h_res = hostMirror(marder.res_);
+    auto&& h_mphi = hostMirror(mphi);
     double dz = grid.domain.dx[2];
-    auto res = make_Fields3d<dim_xyz>(h_res[0]);
-    h_res.Foreach_3d(2, 2, [&](int i, int j, int k) {
+    auto phi = make_Fields3d<dim_xyz>(h_mphi[0]);
+    h_mphi.Foreach_3d(2, 2, [&](int i, int j, int k) {
       double z = k * dz;
-      res(0, i, j, k) = sin(kz * z);
+      phi(0, i, j, k) = sin(kz * z);
     });
-    copy(h_res, marder.res_);
+    copy(h_mphi, mphi);
   }
 
-  marder.correct(mflds, marder.res_, diffusion);
+  marder.correct(mflds, mphi, diffusion);
 
   // check result
   auto&& h_mflds = hostMirror(mflds);
