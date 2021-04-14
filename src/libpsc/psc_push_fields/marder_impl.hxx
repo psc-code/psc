@@ -186,25 +186,31 @@ struct Marder_ : MarderBase
 #undef psc_foreach_3d_more_end
 
   // ----------------------------------------------------------------------
+  // max
+
+  static void print_max(Mfields& mf)
+  {
+    real_t max_err = 0.;
+    for (int p = 0; p < mf.n_patches(); p++) {
+      auto f_ = make_Fields3d<dim_xyz>(mf[p]);
+      mf.Foreach_3d(0, 0, [&](int i, int j, int k) {
+        max_err = std::max(max_err, std::abs(f_(0, i, j, k)));
+      });
+    }
+    MPI_Allreduce(MPI_IN_PLACE, &max_err, 1,
+                  Mfields_traits<Mfields>::mpi_dtype(), MPI_MAX,
+                  mf.grid().comm());
+    mpi_printf(mf.grid().comm(), "marder: err %g\n", max_err);
+  }
+
+  // ----------------------------------------------------------------------
   // correct
 
   void correct(MfieldsState& mf)
   {
     auto& mf_div_e = res_;
-    auto& grid = mf.grid();
 
-    real_t max_err = 0.;
-    for (int p = 0; p < mf_div_e.n_patches(); p++) {
-      auto flds_ = make_Fields3d<dim_xyz>(mf[p]);
-      auto f_ = make_Fields3d<dim_xyz>(mf_div_e[p]);
-      grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-        max_err = std::max(max_err, std::abs(f_(0, i, j, k)));
-      });
-    }
-    MPI_Allreduce(MPI_IN_PLACE, &max_err, 1,
-                  Mfields_traits<Mfields>::mpi_dtype(), MPI_MAX, grid_.comm());
-    mpi_printf(grid_.comm(), "marder: err %g\n", max_err);
-
+    print_max(mf_div_e);
     correct(mf.grid(), mf, mf_div_e, diffusion_);
   }
 
