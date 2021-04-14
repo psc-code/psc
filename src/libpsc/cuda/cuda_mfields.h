@@ -112,11 +112,7 @@ struct cuda_mfields : MfieldsCRTP<cuda_mfields>
     cuda_base_init();
   }
 
-  using Base::Base;
   cuda_mfields(const cuda_mfields&) = delete;
-
-  mrc_json_t to_json();
-  void dump(const char* filename);
 
   pointer data() { return storage().data(); }
   operator DMFields();
@@ -130,9 +126,6 @@ struct cuda_mfields : MfieldsCRTP<cuda_mfields>
         im(0) +
       (i - ib(0)));
   }
-
-  real_t get_value(int idx) const { return storage().data()[idx]; }
-  void set_value(int idx, real_t val) { storage().data()[idx] = val; }
 
 private:
   const Grid_t& grid_;
