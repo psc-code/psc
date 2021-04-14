@@ -108,8 +108,7 @@ struct Marder_ : MarderBase
   }
 
   static void correct_patch(const Grid_t& grid, fields_view_t flds,
-                            fields_view_t f, int p, real_t& max_err,
-                            real_t diffusion_)
+                            fields_view_t f, int p, real_t diffusion_)
   {
     define_dxdydz(dx, dy, dz);
 
@@ -175,7 +174,6 @@ struct Marder_ : MarderBase
       int r[3] = {r_nc[0], r_cc[1], r_nc[2]};
       psc_foreach_3d_more(ppsc, p, ix, iy, iz, l, r)
       {
-        max_err = std::max(max_err, std::abs(f_(0, ix, iy, iz)));
         flds_(EY, ix, iy, iz) += (f_(0, ix, iy + dy, iz) - f_(0, ix, iy, iz)) *
                                  .5 * grid.dt * diffusion / deltay;
       }
@@ -203,15 +201,23 @@ struct Marder_ : MarderBase
   void correct(MfieldsState& mf)
   {
     auto& mf_div_e = res_;
+    auto& grid = mf.grid();
 
     real_t max_err = 0.;
     for (int p = 0; p < mf_div_e.n_patches(); p++) {
-      correct_patch(mf.grid(), mf[p], mf_div_e[p], p, max_err, diffusion_);
+      auto flds_ = make_Fields3d<dim_xyz>(mf[p]);
+      auto f_ = make_Fields3d<dim_xyz>(mf_div_e[p]);
+      grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
+        max_err = std::max(max_err, std::abs(f_(0, i, j, k)));
+      });
     }
-
     MPI_Allreduce(MPI_IN_PLACE, &max_err, 1,
                   Mfields_traits<Mfields>::mpi_dtype(), MPI_MAX, grid_.comm());
     mpi_printf(grid_.comm(), "marder: err %g\n", max_err);
+
+    for (int p = 0; p < mf_div_e.n_patches(); p++) {
+      correct_patch(mf.grid(), mf[p], mf_div_e[p], p, diffusion_);
+    }
   }
 
   // ----------------------------------------------------------------------
