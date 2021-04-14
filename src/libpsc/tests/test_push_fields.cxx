@@ -147,9 +147,6 @@ TYPED_TEST(PushFieldsTest, MarderCorrect)
 
   // run test
   double diffusion = .1;
-  int loop = 1;
-  bool dump = false;
-  Marder marder(grid, diffusion, loop, dump);
 
   // init fields
   auto mflds = MfieldsState{grid};
@@ -180,7 +177,7 @@ TYPED_TEST(PushFieldsTest, MarderCorrect)
     copy(h_mphi, mphi);
   }
 
-  marder.correct(mflds, mphi, diffusion);
+  Marder::correct(mflds, mphi, diffusion);
 
   // check result
   auto&& h_mflds = hostMirror(mflds);
