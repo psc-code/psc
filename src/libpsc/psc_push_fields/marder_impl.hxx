@@ -107,8 +107,9 @@ struct Marder_ : MarderBase
   }                                                                            \
   }
 
-  void correct_patch(const Grid_t& grid, fields_view_t flds, fields_view_t f,
-                     int p, real_t& max_err)
+  static void correct_patch(const Grid_t& grid, fields_view_t flds,
+                            fields_view_t f, int p, real_t& max_err,
+                            real_t diffusion_)
   {
     define_dxdydz(dx, dy, dz);
 
@@ -205,7 +206,7 @@ struct Marder_ : MarderBase
 
     real_t max_err = 0.;
     for (int p = 0; p < mf_div_e.n_patches(); p++) {
-      correct_patch(mf.grid(), mf[p], mf_div_e[p], p, max_err);
+      correct_patch(mf.grid(), mf[p], mf_div_e[p], p, max_err, diffusion_);
     }
 
     MPI_Allreduce(MPI_IN_PLACE, &max_err, 1,
