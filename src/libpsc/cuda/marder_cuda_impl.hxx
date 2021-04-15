@@ -113,7 +113,7 @@ struct MarderCuda : MarderBase
                   rho.grid(), "rho", {"rho"});
       }
       {
-        Int3 bnd = rho.ibn();
+        Int3 bnd = dive.ibn();
         io_.write(dive.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
                                  _s(bnd[2], -bnd[2])),
                   dive.grid(), "dive", {"dive"});
