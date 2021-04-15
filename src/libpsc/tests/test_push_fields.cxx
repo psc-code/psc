@@ -195,12 +195,12 @@ template <typename T>
 struct ItemTest : PushParticlesTest<T>
 {};
 
-using ItemTestTypes = ::testing::Types<TestConfig1vbec3dSingleYZ,
+using ItemTestTypes =
+  ::testing::Types<TestConfig1vbec3dSingleYZ,
 #ifdef USE_CUDA
-                                       TestConfig1vbec3dCudaYZ,
-// TestConfig1vbec3dCuda444,
+                   TestConfig1vbec3dCudaYZ, TestConfig1vbec3dCuda444,
 #endif
-                                       TestConfig1vbec3dSingle>;
+                   TestConfig1vbec3dSingle>;
 
 TYPED_TEST_SUITE(ItemTest, ItemTestTypes);
 
