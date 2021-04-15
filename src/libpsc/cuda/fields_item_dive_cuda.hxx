@@ -4,6 +4,8 @@
 
 #include "cuda_iface.h"
 
+void cuda_mfields_calc_dive_yz(MfieldsStateCuda& mflds, MfieldsCuda& mf, int p);
+
 template <>
 struct Item_dive<MfieldsStateCuda>
 {
@@ -18,7 +20,7 @@ struct Item_dive<MfieldsStateCuda>
   {
     assert(mflds.grid().isInvar(0));
     for (int p = 0; p < mflds.n_patches(); p++) {
-      cuda_mfields_calc_dive_yz(mflds.cmflds(), mres_.cmflds(), p);
+      cuda_mfields_calc_dive_yz(mflds, mres_, p);
     }
   }
 

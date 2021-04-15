@@ -26,9 +26,6 @@ typedef double double_3[3];
 
 struct cuda_mfields;
 
-void cuda_mfields_calc_dive_yz(struct cuda_mfields* cmflds,
-                               struct cuda_mfields* cmf, int p);
-
 void cuda_push_fields_E_xyz(struct cuda_mfields* cmflds, float dt);
 void cuda_push_fields_H_xyz(struct cuda_mfields* cmflds, float dt);
 void cuda_marder_correct_xyz(struct cuda_mfields* cmflds,
