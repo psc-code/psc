@@ -29,10 +29,6 @@ struct cuda_mfields;
 void cuda_mfields_calc_dive_yz(struct cuda_mfields* cmflds,
                                struct cuda_mfields* cmf, int p);
 
-void cuda_marder_correct_yz(struct cuda_mfields* cmflds,
-                            struct cuda_mfields* cmf, int p, float fac[3],
-                            int ly[3], int ry[3], int lz[3], int rz[3]);
-
 void cuda_push_fields_E_xyz(struct cuda_mfields* cmflds, float dt);
 void cuda_push_fields_H_xyz(struct cuda_mfields* cmflds, float dt);
 void cuda_marder_correct_xyz(struct cuda_mfields* cmflds,
