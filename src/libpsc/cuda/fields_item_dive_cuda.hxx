@@ -15,12 +15,20 @@ struct Item_dive_cuda
   Item_dive_cuda(MfieldsState& mflds)
     : mres_{mflds.grid(), n_comps, mflds.grid().ibn}
   {
+    assert(mflds.grid().isInvar(0));
     for (int p = 0; p < mflds.n_patches(); p++) {
       cuda_mfields_calc_dive_yz(mflds.cmflds(), mres_.cmflds(), p);
     }
   }
 
   Mfields& result() { return mres_; }
+
+  auto gt()
+  {
+    auto bnd = mres_.ibn();
+    return mres_.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
+                           _s(bnd[2], -bnd[2]));
+  }
 
 private:
   Mfields mres_;
