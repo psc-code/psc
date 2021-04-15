@@ -12,10 +12,17 @@ struct Item_dive_cuda
   constexpr static int n_comps = 1;
   static std::vector<std::string> fld_names() { return {"dive"}; } // FIXME
 
-  static void run(const Grid_t& grid, MfieldsState& mflds, Mfields& mres)
+  Item_dive_cuda(const Grid_t& grid) : mres_{grid, n_comps, grid.ibn} {}
+
+  void operator()(MfieldsState& mflds)
   {
-    for (int p = 0; p < mres.n_patches(); p++) {
-      cuda_mfields_calc_dive_yz(mflds.cmflds(), mres.cmflds(), p);
+    for (int p = 0; p < mflds.n_patches(); p++) {
+      cuda_mfields_calc_dive_yz(mflds.cmflds(), mres_.cmflds(), p);
     }
   }
+
+  Mfields& result() { return mres_; }
+
+private:
+  Mfields mres_;
 };
