@@ -207,32 +207,11 @@ TYPED_TEST_SUITE(ItemTest, ItemTestTypes);
 // ======================================================================
 // ItemDivE
 
-namespace detail
-{
-template <typename MfieldsState>
-struct item_dive_selector
-{
-  using type = Item_dive<MfieldsState>;
-};
-
-#ifdef USE_CUDA
-template <>
-struct item_dive_selector<MfieldsStateCuda>
-{
-  using type = Item_dive_cuda;
-};
-#endif
-} // namespace detail
-
-template <typename MfieldsState>
-using item_dive_selector =
-  typename detail::item_dive_selector<MfieldsState>::type;
-
 TYPED_TEST(ItemTest, ItemDivE)
 {
   using MfieldsState = typename TypeParam::MfieldsState;
   using Mfields = typename TypeParam::Mfields;
-  using Item_dive = item_dive_selector<MfieldsState>;
+  using Item = Item_dive<MfieldsState>;
 
   const typename MfieldsState::real_t eps = 1e-2;
 
@@ -253,7 +232,7 @@ TYPED_TEST(ItemTest, ItemDivE)
   });
   auto dx = grid.domain.dx;
 
-  auto item_dive = Item_dive(mflds);
+  auto item_dive = Item(mflds);
   auto&& rho = gt::eval(item_dive.gt());
 
   auto rho_ref = gt::empty_like(rho);

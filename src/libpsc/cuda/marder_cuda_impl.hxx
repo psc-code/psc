@@ -99,7 +99,7 @@ struct MarderCuda : MarderBase
 
   void calc_aid_fields(MfieldsState& mflds, Mfields& rho)
   {
-    Item_dive_cuda item_dive(mflds);
+    Item_dive<MfieldsStateCuda> item_dive(mflds);
     auto& dive = item_dive.result();
 
     if (dump_) {

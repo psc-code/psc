@@ -4,7 +4,8 @@
 
 #include "cuda_iface.h"
 
-struct Item_dive_cuda
+template <>
+struct Item_dive<MfieldsStateCuda>
 {
   using Mfields = MfieldsCuda;
   using MfieldsState = MfieldsStateCuda;
@@ -12,7 +13,7 @@ struct Item_dive_cuda
   constexpr static int n_comps = 1;
   static std::vector<std::string> fld_names() { return {"dive"}; } // FIXME
 
-  Item_dive_cuda(MfieldsState& mflds)
+  Item_dive(MfieldsState& mflds)
     : mres_{mflds.grid(), n_comps, mflds.grid().ibn}
   {
     assert(mflds.grid().isInvar(0));
