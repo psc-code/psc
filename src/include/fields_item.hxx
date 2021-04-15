@@ -20,36 +20,6 @@ enum
 };
 
 // ======================================================================
-// FieldsItemFields
-
-template <typename Item>
-struct FieldsItemFields
-{
-  using Mfields = typename Item::Mfields;
-
-  FieldsItemFields(const Grid_t& grid) : mres_{grid, Item::n_comps, grid.ibn} {}
-
-  template <typename MfieldsState>
-  void operator()(const Grid_t& grid, MfieldsState& mflds)
-  {
-    Item::run(grid, mflds, mres_);
-  }
-
-  Mfields& result() { return mres_; }
-
-  static const char* name() { return Item::name; }
-  static int n_comps(const Grid_t& grid) { return Item::n_comps; }
-
-  std::vector<std::string> comp_names(const Grid_t& grid)
-  {
-    return Item::fld_names();
-  }
-
-private:
-  Mfields mres_;
-};
-
-// ======================================================================
 // addKindSuffix
 
 inline std::vector<std::string> addKindSuffix(
