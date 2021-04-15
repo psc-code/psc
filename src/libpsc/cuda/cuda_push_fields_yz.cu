@@ -9,22 +9,25 @@
 
 // ======================================================================
 
-void cuda_mfields_calc_dive_yz(MfieldsStateCuda& mflds, MfieldsCuda& mf)
+void cuda_mfields_calc_dive_yz(MfieldsStateCuda& mflds, MfieldsCuda& mdive)
 {
   auto dx = mflds.grid().domain.dx;
 
+  assert(mflds.ibn() == Int3({0, BND, BND}));
   for (int p = 0; p < mflds.grid().n_patches(); p++) {
     auto flds = mflds.gt().view(_all, _all, _all, _all, p).to_kernel();
-    auto f = mf.gt().view(_all, _all, _all, _all, p).to_kernel();
-    gt::launch<2>({mflds.grid().ldims[1], mflds.grid().ldims[2]},
-                  GT_LAMBDA(int j, int k) {
-                    int iy = j + BND;
-                    int iz = k + BND;
+    auto bd = mdive.ibn();
+    auto dive =
+      mdive.gt()
+        .view(_s(bd[0], -bd[0]), _s(bd[1], -bd[1]), _s(bd[2], -bd[2]), 0, p)
+        .to_kernel();
+    gt::launch<3>(dive.shape(), GT_LAMBDA(int i, int j, int k) {
+      int iy = j + BND;
+      int iz = k + BND;
 
-                    f(0, iy, iz, 0) =
-                      ((flds(0, iy, iz, EY) - flds(0, iy - 1, iz, EY)) / dx[1] +
+      dive(0, j, k) = ((flds(0, iy, iz, EY) - flds(0, iy - 1, iz, EY)) / dx[1] +
                        (flds(0, iy, iz, EZ) - flds(0, iy, iz - 1, EZ)) / dx[2]);
-                  });
+    });
   }
   cuda_sync_if_enabled();
 }
