@@ -19,11 +19,11 @@ __global__ static void calc_dive_yz(E1 flds, E2 f, float dy, float dz,
   if (iy >= ldimsy || iz >= ldimsz) {
     return;
   }
+  iy += BND;
+  iz += BND;
 
-  auto _flds = make_Fields3d<dim_xyz>(flds, {0, -BND, -BND});
-  auto _f = make_Fields3d<dim_xyz>(f, {0, -BND, -BND});
-  _f(0, 0, iy, iz) = ((_flds(EY, 0, iy, iz) - _flds(EY, 0, iy - 1, iz)) / dy +
-                      (_flds(EZ, 0, iy, iz) - _flds(EZ, 0, iy, iz - 1)) / dz);
+  f(0, iy, iz, 0) = ((flds(0, iy, iz, EY) - flds(0, iy - 1, iz, EY)) / dy +
+                     (flds(0, iy, iz, EZ) - flds(0, iy, iz - 1, EZ)) / dz);
 }
 
 void cuda_mfields_calc_dive_yz(MfieldsStateCuda& mflds, MfieldsCuda& mf, int p)
