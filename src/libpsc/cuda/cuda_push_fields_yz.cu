@@ -9,7 +9,8 @@
 
 // ======================================================================
 
-__global__ static void calc_dive_yz(DFields flds, DFields f, float dy, float dz,
+template <typename E1, typename E2>
+__global__ static void calc_dive_yz(E1 flds, E2 f, float dy, float dz,
                                     int ldimsy, int ldimsz)
 {
   int iy = blockIdx.x * blockDim.x + threadIdx.x;
@@ -19,16 +20,14 @@ __global__ static void calc_dive_yz(DFields flds, DFields f, float dy, float dz,
     return;
   }
 
-  auto _flds = make_Fields3d<dim_xyz>(flds);
-  auto _f = make_Fields3d<dim_xyz>(f);
+  auto _flds = make_Fields3d<dim_xyz>(flds, {0, -BND, -BND});
+  auto _f = make_Fields3d<dim_xyz>(f, {0, -BND, -BND});
   _f(0, 0, iy, iz) = ((_flds(EY, 0, iy, iz) - _flds(EY, 0, iy - 1, iz)) / dy +
                       (_flds(EZ, 0, iy, iz) - _flds(EZ, 0, iy, iz - 1)) / dz);
 }
 
 void cuda_mfields_calc_dive_yz(MfieldsStateCuda& mflds, MfieldsCuda& mf, int p)
 {
-  auto cmflds = mflds.cmflds();
-  auto cmf = mf.cmflds();
   auto dx = mflds.grid().domain.dx;
 
   int my = mflds.gt().shape(1);
@@ -39,8 +38,9 @@ void cuda_mfields_calc_dive_yz(MfieldsStateCuda& mflds, MfieldsCuda& mf, int p)
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
   dim3 dimGrid(grid[0], grid[1]);
 
-  calc_dive_yz<<<dimGrid, dimBlock>>>((*cmflds)[p], (*cmf)[p], dx[1], dx[2],
-                                      cmflds->grid().ldims[1],
-                                      cmflds->grid().ldims[2]);
+  auto flds = mflds.gt().view(_all, _all, _all, _all, p).to_kernel();
+  auto f = mf.gt().view(_all, _all, _all, _all, p).to_kernel();
+  calc_dive_yz<<<dimGrid, dimBlock>>>(
+    flds, f, dx[1], dx[2], mflds.grid().ldims[1], mflds.grid().ldims[2]);
   cuda_sync_if_enabled();
 }
