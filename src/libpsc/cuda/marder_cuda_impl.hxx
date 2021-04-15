@@ -87,7 +87,6 @@ struct MarderCuda : MarderBase
       loop_{loop},
       dump_{dump},
       item_rho_{grid},
-      item_dive_{grid},
       bnd_{grid, grid.ibn},
       bnd_mf_{grid, grid.ibn},
       rho_{grid, 1, grid.ibn},
@@ -100,8 +99,9 @@ struct MarderCuda : MarderBase
 
   void calc_aid_fields(MfieldsState& mflds, Mfields& rho)
   {
-    item_dive_(mflds.grid(), mflds);
-    auto& dive = item_dive_.result();
+    FieldsItemFields<Item_dive_cuda> item_dive(mflds.grid());
+    item_dive(mflds.grid(), mflds);
+    auto& dive = item_dive.result();
 
     if (dump_) {
       static int cnt;
@@ -184,5 +184,4 @@ struct MarderCuda : MarderBase
   Mfields res_;
 
   Moment_rho_1st_nc_cuda<Mparticles, dim> item_rho_;
-  FieldsItemFields<Item_dive_cuda> item_dive_;
 };
