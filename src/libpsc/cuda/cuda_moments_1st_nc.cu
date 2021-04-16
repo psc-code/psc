@@ -67,20 +67,19 @@ GT_INLINE Deposit<E, DIM> make_Deposit(E& gt, const Int3& ib)
 // ----------------------------------------------------------------------
 // rho_1st_nc_cuda_run
 
-template <typename DMparticles, typename dim, bool REORDER>
+template <typename DMparticles, typename dim, bool REORDER, typename E>
 __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
-  rho_1st_nc_cuda_run(DMparticles dmprts, DMFields dmflds)
+  rho_1st_nc_cuda_run(DMparticles dmprts, E mflds_gt, Int3 ib)
 {
   BlockSimple<typename DMparticles::BS, dim> current_block;
   if (!current_block.init(dmprts)) {
     return;
   }
 
-  auto& mflds_gt = dmflds.storage();
   auto gt = gt::adapt_device<4>((&mflds_gt(0, 0, 0, 0, current_block.p)).get(),
                                 {mflds_gt.shape(0), mflds_gt.shape(1),
                                  mflds_gt.shape(2), mflds_gt.shape(3)});
-  auto deposit = make_Deposit<dim>(gt, dmflds.ib());
+  auto deposit = make_Deposit<dim>(gt, ib);
   __syncthreads();
 
   int block_begin = dmprts.off_[current_block.bid];
@@ -106,20 +105,19 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
 // ----------------------------------------------------------------------
 // n_1st_cuda_run
 
-template <typename BS, typename dim, bool REORDER>
+template <typename BS, typename dim, bool REORDER, typename E>
 __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
-  n_1st_cuda_run(DMparticlesCuda<BS> dmprts, DMFields dmflds)
+  n_1st_cuda_run(DMparticlesCuda<BS> dmprts, E mflds_gt, Int3 ib)
 {
   BlockSimple<BS, dim> current_block;
   if (!current_block.init(dmprts)) {
     return;
   }
 
-  auto& mflds_gt = dmflds.storage();
   auto gt = gt::adapt_device<4>((&mflds_gt(0, 0, 0, 0, current_block.p)).get(),
                                 {mflds_gt.shape(0), mflds_gt.shape(1),
                                  mflds_gt.shape(2), mflds_gt.shape(3)});
-  auto deposit = make_Deposit<dim>(gt, dmflds.ib());
+  auto deposit = make_Deposit<dim>(gt, ib);
   __syncthreads();
 
   int block_begin = dmprts.off_[current_block.bid];
@@ -146,20 +144,19 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
 // ----------------------------------------------------------------------
 // all_1st_cuda_run
 
-template <typename BS, typename dim, bool REORDER>
+template <typename BS, typename dim, bool REORDER, typename E>
 __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
-  all_1st_cuda_run(DMparticlesCuda<BS> dmprts, DMFields dmflds)
+  all_1st_cuda_run(DMparticlesCuda<BS> dmprts, E mflds_gt, Int3 ib)
 {
   BlockSimple<BS, dim> current_block;
   if (!current_block.init(dmprts)) {
     return;
   }
 
-  auto& mflds_gt = dmflds.storage();
   auto gt = gt::adapt_device<4>((&mflds_gt(0, 0, 0, 0, current_block.p)).get(),
                                 {mflds_gt.shape(0), mflds_gt.shape(1),
                                  mflds_gt.shape(2), mflds_gt.shape(3)});
-  auto deposit = make_Deposit<dim>(gt, dmflds.ib());
+  auto deposit = make_Deposit<dim>(gt, ib);
   __syncthreads();
 
   int block_begin = dmprts.off_[current_block.bid];
@@ -217,7 +214,7 @@ void CudaMoments1stNcRho<CudaMparticles, dim>::operator()(
       BlockSimple<typename CudaMparticles::BS, dim>::dimGrid(cmprts);
 
     rho_1st_nc_cuda_run<typename CudaMparticles::DMparticles, dim, false>
-      <<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, *mres.cmflds());
+      <<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, mres.gt(), -mres.ibn());
     cuda_sync_if_enabled();
   } else {
     assert(0);
@@ -251,7 +248,7 @@ void CudaMoments1stN<CudaMparticles, dim>::operator()(CudaMparticles& cmprts,
       BlockSimple<typename CudaMparticles::BS, dim>::dimGrid(cmprts);
 
     n_1st_cuda_run<typename CudaMparticles::BS, dim, false>
-      <<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, *mres.cmflds());
+      <<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, mres.gt(), -mres.ibn());
     cuda_sync_if_enabled();
   } else {
     assert(0);
@@ -286,7 +283,7 @@ void CudaMoments1stAll<CudaMparticles, dim>::operator()(CudaMparticles& cmprts,
       BlockSimple<typename CudaMparticles::BS, dim>::dimGrid(cmprts);
 
     all_1st_cuda_run<typename CudaMparticles::BS, dim, false>
-      <<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, *mres.cmflds());
+      <<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, mres.gt(), -mres.ibn());
     cuda_sync_if_enabled();
   } else {
     assert(0);
