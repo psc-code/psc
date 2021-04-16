@@ -11,10 +11,9 @@
 
 void cuda_marder_correct_yz(MfieldsStateCuda& mflds, MfieldsCuda& mf, int p,
                             Float3 fac, Int3 ly, Int3 ry, Int3 lz, Int3 rz);
-void cuda_marder_correct_xyz(struct cuda_mfields* cmflds,
-                             struct cuda_mfields* cmf, int p, float fac[3],
-                             int lx[3], int rx[3], int ly[3], int ry[3],
-                             int lz[3], int rz[3]);
+void cuda_marder_correct_xyz(MfieldsStateCuda& mflds, MfieldsCuda& mf, int p,
+                             Float3 fac, Int3 lx, Int3 rx, Int3 ly, Int3 ry,
+                             Int3 lz, Int3 rz);
 
 namespace psc
 {
@@ -64,7 +63,7 @@ inline void correct(MfieldsStateCuda& mflds, MfieldsCuda& mf, float diffusion)
     if (grid.isInvar(0)) {
       cuda_marder_correct_yz(mflds, mf, p, fac, ly, ry, lz, rz);
     } else {
-      cuda_marder_correct_xyz(cmflds, cmf, p, fac, lx, rx, ly, ry, lz, rz);
+      cuda_marder_correct_xyz(mflds, mf, p, fac, lx, rx, ly, ry, lz, rz);
     }
   }
 }

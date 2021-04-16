@@ -101,18 +101,17 @@ __global__ static void marder_correct_xyz(
   }
 }
 
-void cuda_marder_correct_xyz(struct cuda_mfields* cmflds,
-                             struct cuda_mfields* cmf, int p, float fac[3],
-                             int lx[3], int rx[3], int ly[3], int ry[3],
-                             int lz[3], int rz[3])
+void cuda_marder_correct_xyz(MfieldsStateCuda& mflds, MfieldsCuda& mf, int p,
+                             Float3 fac, Int3 lx, Int3 rx, Int3 ly, Int3 ry,
+                             Int3 lz, Int3 rz)
 {
-  if (cmflds->n_patches() == 0) {
+  if (mflds.n_patches() == 0) {
     return;
   }
 
-  int mx = cmflds->im(0);
-  int my = cmflds->im(1);
-  int mz = cmflds->im(2);
+  int mx = mflds.gt().shape(0);
+  int my = mflds.gt().shape(1);
+  int mz = mflds.gt().shape(2);
 
   int grid[3] = {(mx + BLOCKSIZE_X - 1) / BLOCKSIZE_X,
                  (my + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
@@ -121,8 +120,8 @@ void cuda_marder_correct_xyz(struct cuda_mfields* cmflds,
   dim3 dimGrid(grid[0], grid[1], grid[2]);
 
   marder_correct_xyz<<<dimGrid, dimBlock>>>(
-    (*cmflds)[p], (*cmf)[p], fac[0], fac[1], fac[2], lx[0], lx[1], lx[2], rx[0],
-    rx[1], rx[2], ly[0], ly[1], ly[2], ry[0], ry[1], ry[2], lz[0], lz[1], lz[2],
-    rz[0], rz[1], rz[2], mx, my, mz);
+    (*mflds.cmflds())[p], (*mf.cmflds())[p], fac[0], fac[1], fac[2], lx[0],
+    lx[1], lx[2], rx[0], rx[1], rx[2], ly[0], ly[1], ly[2], ry[0], ry[1], ry[2],
+    lz[0], lz[1], lz[2], rz[0], rz[1], rz[2], mx, my, mz);
   cuda_sync_if_enabled();
 }
