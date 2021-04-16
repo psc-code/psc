@@ -13,13 +13,13 @@
 
 // ======================================================================
 
-template <typename DIM>
+template <typename E, typename DIM>
 class Deposit
 {
 public:
   using R = float;
 
-  GT_INLINE Deposit(DFields& dflds, R fnq)
+  GT_INLINE Deposit(E& dflds, R fnq)
     : dflds_(dflds.storage(), dflds.ib()), fnq_(fnq)
   {}
 
@@ -62,7 +62,7 @@ public:
   }
 
 private:
-  Fields3d<typename DFields::Storage, dim_xyz> dflds_;
+  Fields3d<typename E::Storage, dim_xyz> dflds_;
   R fnq_;
 };
 
@@ -98,7 +98,7 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
     float of[3];
     dmprts.find_idx_off_1st(prt.x, lf, of, float(0.));
 
-    Deposit<dim> deposit(dflds, fnq);
+    Deposit<DFields, dim> deposit(dflds, fnq);
 
     deposit(0, lf, of, q);
   }
@@ -137,7 +137,7 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
     float of[3];
     dmprts.find_idx_off_1st(prt.x, lf, of, float(-.5));
 
-    Deposit<dim> deposit(dflds, fnq);
+    Deposit<DFields, dim> deposit(dflds, fnq);
 
     deposit(kind, lf, of, 1.f);
   }
@@ -179,7 +179,7 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
     AdvanceParticle<float, dim> advance{dmprts.dt()};
     auto v = advance.calc_v(prt.u);
 
-    Deposit<dim> deposit(dflds, fnq);
+    Deposit<DFields, dim> deposit(dflds, fnq);
 
     int n_moments = 13;
     int mm = prt.kind * n_moments;
