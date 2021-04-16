@@ -203,7 +203,7 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
 
 template <typename CudaMparticles, typename dim>
 void CudaMoments1stNcRho<CudaMparticles, dim>::operator()(
-  CudaMparticles& cmprts, struct cuda_mfields* cmres)
+  CudaMparticles& cmprts, MfieldsCuda& mres)
 {
   if (cmprts.n_prts == 0) {
     return;
@@ -215,7 +215,7 @@ void CudaMoments1stNcRho<CudaMparticles, dim>::operator()(
       BlockSimple<typename CudaMparticles::BS, dim>::dimGrid(cmprts);
 
     rho_1st_nc_cuda_run<typename CudaMparticles::DMparticles, dim, false>
-      <<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, *cmres);
+      <<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, *mres.cmflds());
     cuda_sync_if_enabled();
   } else {
     assert(0);
@@ -226,8 +226,8 @@ void CudaMoments1stNcRho<CudaMparticles, dim>::operator()(
 // CudaMoments1stN::operator()
 
 template <typename CudaMparticles, typename dim>
-void CudaMoments1stN<CudaMparticles, dim>::operator()(
-  CudaMparticles& cmprts, struct cuda_mfields* cmres)
+void CudaMoments1stN<CudaMparticles, dim>::operator()(CudaMparticles& cmprts,
+                                                      MfieldsCuda& mres)
 {
   static int pr, pr_1;
   if (!pr) {
@@ -249,7 +249,7 @@ void CudaMoments1stN<CudaMparticles, dim>::operator()(
       BlockSimple<typename CudaMparticles::BS, dim>::dimGrid(cmprts);
 
     n_1st_cuda_run<typename CudaMparticles::BS, dim, false>
-      <<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, *cmres);
+      <<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, *mres.cmflds());
     cuda_sync_if_enabled();
   } else {
     assert(0);
@@ -261,8 +261,8 @@ void CudaMoments1stN<CudaMparticles, dim>::operator()(
 // CudaMoments1stAll::operator()
 
 template <typename CudaMparticles, typename dim>
-void CudaMoments1stAll<CudaMparticles, dim>::operator()(
-  CudaMparticles& cmprts, struct cuda_mfields* cmres)
+void CudaMoments1stAll<CudaMparticles, dim>::operator()(CudaMparticles& cmprts,
+                                                        MfieldsCuda& mres)
 {
   static int pr, pr_1;
   if (!pr) {
@@ -284,7 +284,7 @@ void CudaMoments1stAll<CudaMparticles, dim>::operator()(
       BlockSimple<typename CudaMparticles::BS, dim>::dimGrid(cmprts);
 
     all_1st_cuda_run<typename CudaMparticles::BS, dim, false>
-      <<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, *cmres);
+      <<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, *mres.cmflds());
     cuda_sync_if_enabled();
   } else {
     assert(0);

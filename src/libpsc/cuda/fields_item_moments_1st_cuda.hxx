@@ -34,11 +34,10 @@ struct Moment_rho_1st_nc_cuda
   void operator()(Mparticles& mprts)
   {
     auto& cmprts = *mprts.cmprts();
-    cuda_mfields* cmres = mres_.cmflds();
 
     mres_.gt().view() = 0.;
     CudaMoments1stNcRho<cuda_mparticles<typename Mparticles::BS>, dim> cmoments;
-    cmoments(cmprts, cmres);
+    cmoments(cmprts, mres_);
     bnd_.add_ghosts(mres_, 0, mres_.n_comps());
   }
 
@@ -100,14 +99,13 @@ public:
     prof_start(pr);
     auto& _mprts = const_cast<Mparticles&>(mprts);
     auto& cmprts = *_mprts.cmprts();
-    cuda_mfields* cmres = Base::mres_.cmflds();
 
     prof_start(pr_1);
     Base::mres_.gt().view() = 0.;
     prof_stop(pr_1);
 
     CudaMoments1stN<cuda_mparticles<typename Mparticles::BS>, dim> cmoments;
-    cmoments(cmprts, cmres);
+    cmoments(cmprts, Base::mres_);
 
     prof_start(pr_2);
     bnd_.add_ghosts(Base::mres_, 0, Base::mres_.n_comps());
@@ -185,7 +183,6 @@ public:
     prof_start(pr);
     auto& _mprts = const_cast<Mparticles&>(mprts);
     auto& cmprts = *_mprts.cmprts();
-    cuda_mfields* cmres = Base::mres_.cmflds();
 
     prof_start(pr_1);
     Base::mres_.gt().view() = 0.;
@@ -193,7 +190,7 @@ public:
 
     prof_start(pr_2);
     CudaMoments1stAll<cuda_mparticles<typename Mparticles::BS>, dim> cmoments;
-    cmoments(cmprts, cmres);
+    cmoments(cmprts, Base::mres_);
     prof_stop(pr_2);
 
     prof_start(pr_3);
