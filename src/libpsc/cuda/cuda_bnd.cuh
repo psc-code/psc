@@ -450,13 +450,14 @@ struct CudaBnd
                         int me, int p, int ilo[3], int ihi[3],
                         MfieldsCuda& mflds)
   {
-    auto& cmflds = *mflds.cmflds();
     auto cur = &map[off];
+    Int3 ib = -mflds.ibn();
     for (int m = mb; m < me; m++) {
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
         for (int iy = ilo[1]; iy < ihi[1]; iy++) {
           for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-            *cur++ = cmflds.index(m, ix, iy, iz, p);
+            *cur++ = &mflds.gt()(ix - ib[0], iy - ib[1], iz - ib[2], m, p) -
+                     mflds.gt().data();
           }
         }
       }
