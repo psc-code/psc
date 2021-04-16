@@ -514,13 +514,13 @@ static void zero_currents(struct cuda_mfields* cmflds)
 template <typename Config>
 template <bool REORDER>
 void CudaPushParticles_<Config>::push_mprts_ab(CudaMparticles* cmprts,
-                                               struct cuda_mfields* cmflds)
+                                               MfieldsStateCuda& mflds)
 {
   using Currmem = typename Config::Currmem;
   using Block =
     typename Currmem::Block<typename Config::Bs, typename Config::dim>;
 
-  zero_currents(cmflds);
+  zero_currents(mflds.cmflds());
 
   dim3 dimGrid = Block::dimGrid(*cmprts);
 
@@ -531,7 +531,7 @@ void CudaPushParticles_<Config>::push_mprts_ab(CudaMparticles* cmprts,
 
   for (auto block_start : Block::block_starts()) {
     ::push_mprts_ab<Config, REORDER>
-      <<<dimGrid, THREADS_PER_BLOCK>>>(block_start, *cmprts, *cmflds);
+      <<<dimGrid, THREADS_PER_BLOCK>>>(block_start, *cmprts, *mflds.cmflds());
     cuda_sync_if_enabled();
   }
 
@@ -546,7 +546,7 @@ void CudaPushParticles_<Config>::push_mprts_ab(CudaMparticles* cmprts,
 
 template <typename Config>
 void CudaPushParticles_<Config>::push_mprts(CudaMparticles* cmprts,
-                                            struct cuda_mfields* cmflds)
+                                            MfieldsStateCuda& mflds)
 {
   if (cmprts->n_prts == 0) {
     return;
@@ -554,9 +554,9 @@ void CudaPushParticles_<Config>::push_mprts(CudaMparticles* cmprts,
 
   if (!cmprts->need_reorder) {
     //    printf("INFO: push_mprts: need_reorder == false\n");
-    push_mprts_ab<false>(cmprts, cmflds);
+    push_mprts_ab<false>(cmprts, mflds);
   } else {
-    push_mprts_ab<true>(cmprts, cmflds);
+    push_mprts_ab<true>(cmprts, mflds);
   }
 }
 

@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "psc_fields_cuda.h"
+
 enum DEPOSIT
 {
   DEPOSIT_VB_2D,
@@ -19,9 +21,8 @@ struct CudaPushParticles_
   using BS = typename Config::Bs;
   using CudaMparticles = cuda_mparticles<BS>;
 
-  static void push_mprts(CudaMparticles* cmprts, struct cuda_mfields* cmflds);
+  static void push_mprts(CudaMparticles* cmprts, MfieldsStateCuda& mflds);
 
   template <bool REORDER>
-  static void push_mprts_ab(CudaMparticles* cmprts,
-                            struct cuda_mfields* cmflds);
+  static void push_mprts_ab(CudaMparticles* cmprts, MfieldsStateCuda& mflds);
 };

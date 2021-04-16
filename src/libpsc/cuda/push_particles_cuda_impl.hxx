@@ -52,6 +52,6 @@ public:
 
   void push_mprts(Mparticles& mprts, MfieldsState& mflds)
   {
-    CudaPushParticles_<Config>::push_mprts(mprts.cmprts(), mflds.cmflds());
+    CudaPushParticles_<Config>::push_mprts(mprts.cmprts(), mflds);
   }
 };
