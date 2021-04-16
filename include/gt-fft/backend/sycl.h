@@ -77,39 +77,40 @@ class FFTPlanManySYCL
   using Desc = typename detail::fft_config<D, R>::Desc;
 
 public:
-  FFTPlanManySYCL(int rank, int* n, int istride, int idist, int ostride,
-                  int odist, int batch_size)
+  FFTPlanManySYCL(std::vector<MKL_FFT_LONG> lengths, int batch_size = 1)
   {
     MKL_FFT_LONG fwd_distance, bwd_distance;
 
-    fwd_distance = idist;
-    bwd_distance = odist;
+    int rank = lengths.size();
+
+    fwd_distance = std::accumulate(lengths.begin(), lengths.end(), 1,
+                                   std::multiplies<MKL_FFT_LONG>());
+    if (D == gt::fft::Domain::REAL) {
+      bwd_distance =
+        fwd_distance / lengths[rank - 1] * (lengths[rank - 1] / 2 + 1);
+    } else {
+      bwd_distance = fwd_distance;
+    }
 
     try {
       if (rank > 1) {
-        std::vector<MKL_FFT_LONG> dims(rank);
-        for (int i = 0; i < rank; i++) {
-          dims[i] = n[i];
-        }
-        assert(dims.size() == rank);
-        plan_ = std::make_unique<Desc>(dims);
+        plan_ = std::make_unique<Desc>(lengths);
       } else {
-        plan_ = std::make_unique<Desc>(n[0]);
+        plan_ = std::make_unique<Desc>(lengths[0]);
       }
 
       // set up strides arrays
-      // TODO: is this correct column major?
       std::int64_t rstrides[rank + 1];
       std::int64_t cstrides[rank + 1];
       rstrides[0] = 0;
       cstrides[0] = 0;
-      std::int64_t rs = istride;
-      std::int64_t cs = ostride;
+      std::int64_t rs = 1;
+      std::int64_t cs = 1;
       for (int i = 1; i <= rank; i++) {
         rstrides[i] = rs;
         cstrides[i] = cs;
-        rs *= n[i - 1];
-        cs *= n[i - 1];
+        rs *= lengths[i - 1];
+        cs *= lengths[i - 1];
       }
 
       plan_->set_value(oneapi::mkl::dft::config_param::NUMBER_OF_TRANSFORMS,
@@ -125,6 +126,8 @@ public:
                        DFTI_NOT_INPLACE);
       plan_->set_value(oneapi::mkl::dft::config_param::CONJUGATE_EVEN_STORAGE,
                        DFTI_COMPLEX_COMPLEX);
+      plan_->set_value(oneapi::mkl::dft::config_param::FORWARD_SCALE, R(1));
+      plan_->set_value(oneapi::mkl::dft::config_param::BACKWARD_SCALE, R(1));
       plan_->commit(gt::backend::sycl::get_queue());
     } catch (std::exception const& e) {
       std::cerr << "Error creating dft descriptor:" << e.what() << std::endl;
@@ -141,31 +144,29 @@ public:
   FFTPlanManySYCL(FFTPlanManySYCL&& other) = default;
   FFTPlanManySYCL& operator=(FFTPlanManySYCL&& other) = default;
 
-  void operator()(const typename detail::fft_config<D, R>::Tin* indata,
+  void operator()(typename detail::fft_config<D, R>::Tin* indata,
                   typename detail::fft_config<D, R>::Tout* outdata) const
   {
     if (plan_ == nullptr) {
       throw std::runtime_error("can't use a moved-from plan");
     }
-    using Tin = typename detail::fft_config<D, R>::Tin;
     using Bin = typename detail::fft_config<D, R>::Bin;
     using Bout = typename detail::fft_config<D, R>::Bout;
-    auto bin = reinterpret_cast<Bin*>(const_cast<Tin*>(indata));
+    auto bin = reinterpret_cast<Bin*>(indata);
     auto bout = reinterpret_cast<Bout*>(outdata);
     auto e = oneapi::mkl::dft::compute_forward(*plan_, bin, bout);
     e.wait();
   }
 
-  void inverse(const typename detail::fft_config<D, R>::Tout* indata,
+  void inverse(typename detail::fft_config<D, R>::Tout* indata,
                typename detail::fft_config<D, R>::Tin* outdata) const
   {
     if (plan_ == nullptr) {
       throw std::runtime_error("can't use a moved-from plan");
     }
-    using Tout = typename detail::fft_config<D, R>::Tout;
     using Bin = typename detail::fft_config<D, R>::Bin;
     using Bout = typename detail::fft_config<D, R>::Bout;
-    auto bin = reinterpret_cast<Bout*>(const_cast<Tout*>(indata));
+    auto bin = reinterpret_cast<Bout*>(indata);
     auto bout = reinterpret_cast<Bin*>(outdata);
     auto e = oneapi::mkl::dft::compute_backward(*plan_, bin, bout);
     e.wait();
