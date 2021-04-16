@@ -192,7 +192,6 @@ struct CudaBnd
     prof_stop(pr_ddc_sync1);
 #endif
 
-    auto& cmflds = *mflds.cmflds();
     int key = mb + 100 * me;
     auto map = maps.find(key);
     if (map == maps.cend()) {
@@ -202,7 +201,7 @@ struct CudaBnd
     }
 
     // prof_start(pr_ddc_run);
-    ddc_run(map->second, patt2, mb, me, cmflds, scatter);
+    ddc_run(map->second, patt2, mb, me, mflds, scatter);
     // prof_stop(pr_ddc_run);
 
 #if 0
@@ -240,7 +239,7 @@ struct CudaBnd
 
   template <typename S>
   void ddc_run(Maps& maps, mrc_ddc_pattern2* patt2, int mb, int me,
-               cuda_mfields& cmflds, S scatter)
+               MfieldsCuda& mflds, S scatter)
   {
     // static int pr_ddc0, pr_ddc1, pr_ddc2, pr_ddc3, pr_ddc4, pr_ddc5;
     // static int pr_ddc6, pr_ddc7, pr_ddc8, pr_ddc9, pr_ddc10;
@@ -259,7 +258,7 @@ struct CudaBnd
     // }
 
 #if 0
-    thrust::device_ptr<real_t> d_flds{cmflds.data()};
+    thrust::device_ptr<real_t> d_flds{mflds.gt().data()};
     thrust::host_vector<real_t> h_flds{d_flds, d_flds + cmflds.n_fields * cmflds.n_cells};
 
     postReceives(maps);
@@ -276,7 +275,7 @@ struct CudaBnd
     scatter(maps.local_recv, maps.local_buf, h_flds);
     thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
 #else
-    thrust::device_ptr<real_t> d_flds{cmflds.data()};
+    auto d_flds = mflds.gt().data();
     prof_barrier("ddc_run");
 
     // prof_start(pr_ddc1);
