@@ -119,14 +119,6 @@ struct cuda_mfields : MfieldsCRTP<cuda_mfields>
   DFields operator[](int p) const; // FIXME, const correctness
   const Grid_t& grid() const { return grid_; }
 
-  int index(int m, int i, int j, int k, int p) const
-  {
-    return (
-      ((((p)*n_comps() + m) * im(2) + (k - ib(2))) * im(1) + (j - ib(1))) *
-        im(0) +
-      (i - ib(0)));
-  }
-
 private:
   const Grid_t& grid_;
   Storage storage_;
