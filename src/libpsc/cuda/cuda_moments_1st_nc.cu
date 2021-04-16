@@ -77,6 +77,7 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
   }
 
   DFields dflds(dmflds[current_block.p]);
+  auto deposit = make_Deposit<dim>(dflds.storage(), dmflds.ib());
 
   __syncthreads();
 
@@ -96,8 +97,6 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
     float of[3];
     dmprts.find_idx_off_1st(prt.x, lf, of, float(0.));
 
-    auto deposit = make_Deposit<dim>(dflds.storage(), dmflds.ib());
-
     deposit(0, lf, of, q * fnq);
   }
 }
@@ -115,6 +114,7 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
   }
 
   DFields dflds(dmflds[current_block.p]);
+  auto deposit = make_Deposit<dim>(dflds.storage(), dmflds.ib());
 
   __syncthreads();
 
@@ -135,8 +135,6 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
     float of[3];
     dmprts.find_idx_off_1st(prt.x, lf, of, float(-.5));
 
-    auto deposit = make_Deposit<dim>(dflds.storage(), dmflds.ib());
-
     deposit(kind, lf, of, fnq);
   }
 }
@@ -154,6 +152,7 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
   }
 
   DFields dflds(dmflds[current_block.p]);
+  auto deposit = make_Deposit<dim>(dflds.storage(), dmflds.ib());
 
   __syncthreads();
 
@@ -176,8 +175,6 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
 
     AdvanceParticle<float, dim> advance{dmprts.dt()};
     auto v = advance.calc_v(prt.u);
-
-    auto deposit = make_Deposit<dim>(dflds.storage(), dmflds.ib());
 
     int n_moments = 13;
     int mm = prt.kind * n_moments;
