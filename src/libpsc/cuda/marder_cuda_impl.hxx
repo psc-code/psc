@@ -11,6 +11,10 @@
 
 void cuda_marder_correct_yz(MfieldsStateCuda& mflds, MfieldsCuda& mf, int p,
                             Float3 fac, Int3 ly, Int3 ry, Int3 lz, Int3 rz);
+void cuda_marder_correct_xyz(struct cuda_mfields* cmflds,
+                             struct cuda_mfields* cmf, int p, float fac[3],
+                             int lx[3], int rx[3], int ly[3], int ry[3],
+                             int lz[3], int rz[3]);
 
 namespace psc
 {
