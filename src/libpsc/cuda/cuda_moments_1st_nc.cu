@@ -19,39 +19,40 @@ class Deposit
 public:
   using R = float;
 
-  GT_INLINE Deposit(DFields& dflds, R fnq) : dflds_(dflds), fnq_(fnq) {}
+  GT_INLINE Deposit(DFields& dflds, R fnq)
+    : dflds_(dflds.storage(), dflds.ib()), fnq_(fnq)
+  {}
 
   __device__ void operator()(int m, int lf[3], R of[3], R val, dim_yz tag)
   {
-    auto dflds = make_Fields3d<dim_xyz>(dflds_);
     R what = fnq_ * val;
 
-    atomicAdd(&dflds(m, 0, lf[1], lf[2]), (1.f - of[1]) * (1.f - of[2]) * what);
-    atomicAdd(&dflds(m, 0, lf[1] + 1, lf[2]), (of[1]) * (1.f - of[2]) * what);
-    atomicAdd(&dflds(m, 0, lf[1], lf[2] + 1), (1.f - of[1]) * (of[2]) * what);
-    atomicAdd(&dflds(m, 0, lf[1] + 1, lf[2] + 1), (of[1]) * (of[2]) * what);
+    atomicAdd(&dflds_(m, 0, lf[1], lf[2]),
+              (1.f - of[1]) * (1.f - of[2]) * what);
+    atomicAdd(&dflds_(m, 0, lf[1] + 1, lf[2]), (of[1]) * (1.f - of[2]) * what);
+    atomicAdd(&dflds_(m, 0, lf[1], lf[2] + 1), (1.f - of[1]) * (of[2]) * what);
+    atomicAdd(&dflds_(m, 0, lf[1] + 1, lf[2] + 1), (of[1]) * (of[2]) * what);
   }
 
   __device__ void operator()(int m, int lf[3], R of[3], R val, dim_xyz tag)
   {
-    auto dflds = make_Fields3d<dim_xyz>(dflds_);
     R what = fnq_ * val;
 
-    atomicAdd(&dflds(m, lf[0], lf[1], lf[2]),
+    atomicAdd(&dflds_(m, lf[0], lf[1], lf[2]),
               (1.f - of[0]) * (1.f - of[1]) * (1.f - of[2]) * what);
-    atomicAdd(&dflds(m, lf[0] + 1, lf[1], lf[2]),
+    atomicAdd(&dflds_(m, lf[0] + 1, lf[1], lf[2]),
               (of[0]) * (1.f - of[1]) * (1.f - of[2]) * what);
-    atomicAdd(&dflds(m, lf[0], lf[1] + 1, lf[2]),
+    atomicAdd(&dflds_(m, lf[0], lf[1] + 1, lf[2]),
               (1.f - of[0]) * (of[1]) * (1.f - of[2]) * what);
-    atomicAdd(&dflds(m, lf[0] + 1, lf[1] + 1, lf[2]),
+    atomicAdd(&dflds_(m, lf[0] + 1, lf[1] + 1, lf[2]),
               (of[0]) * (of[1]) * (1.f - of[2]) * what);
-    atomicAdd(&dflds(m, lf[0], lf[1], lf[2] + 1),
+    atomicAdd(&dflds_(m, lf[0], lf[1], lf[2] + 1),
               (1.f - of[0]) * (1.f - of[1]) * (of[2]) * what);
-    atomicAdd(&dflds(m, lf[0] + 1, lf[1], lf[2] + 1),
+    atomicAdd(&dflds_(m, lf[0] + 1, lf[1], lf[2] + 1),
               (of[0]) * (1.f - of[1]) * (of[2]) * what);
-    atomicAdd(&dflds(m, lf[0], lf[1] + 1, lf[2] + 1),
+    atomicAdd(&dflds_(m, lf[0], lf[1] + 1, lf[2] + 1),
               (1.f - of[0]) * (of[1]) * (of[2]) * what);
-    atomicAdd(&dflds(m, lf[0] + 1, lf[1] + 1, lf[2] + 1),
+    atomicAdd(&dflds_(m, lf[0] + 1, lf[1] + 1, lf[2] + 1),
               (of[0]) * (of[1]) * (of[2]) * what);
   }
 
@@ -61,7 +62,7 @@ public:
   }
 
 private:
-  DFields& dflds_;
+  Fields3d<typename DFields::Storage, dim_xyz> dflds_;
   R fnq_;
 };
 
