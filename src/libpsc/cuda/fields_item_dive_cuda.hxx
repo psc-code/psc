@@ -4,7 +4,11 @@
 
 #include "cuda_iface.h"
 
-struct Item_dive_cuda
+void cuda_mfields_calc_dive_yz(MfieldsStateCuda& mflds, MfieldsCuda& mf);
+void cuda_mfields_calc_dive_xyz(MfieldsStateCuda& mflds, MfieldsCuda& mf);
+
+template <>
+struct Item_dive<MfieldsStateCuda>
 {
   using Mfields = MfieldsCuda;
   using MfieldsState = MfieldsStateCuda;
@@ -12,10 +16,25 @@ struct Item_dive_cuda
   constexpr static int n_comps = 1;
   static std::vector<std::string> fld_names() { return {"dive"}; } // FIXME
 
-  static void run(const Grid_t& grid, MfieldsState& mflds, Mfields& mres)
+  Item_dive(MfieldsState& mflds)
+    : mres_{mflds.grid(), n_comps, mflds.grid().ibn}
   {
-    for (int p = 0; p < mres.n_patches(); p++) {
-      cuda_mfields_calc_dive_yz(mflds.cmflds(), mres.cmflds(), p);
+    if (mflds.grid().isInvar(0)) {
+      cuda_mfields_calc_dive_yz(mflds, mres_);
+    } else {
+      cuda_mfields_calc_dive_xyz(mflds, mres_);
     }
   }
+
+  Mfields& result() { return mres_; }
+
+  auto gt()
+  {
+    auto bnd = mres_.ibn();
+    return mres_.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
+                           _s(bnd[2], -bnd[2]));
+  }
+
+private:
+  Mfields mres_;
 };

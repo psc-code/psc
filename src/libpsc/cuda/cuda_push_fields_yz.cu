@@ -1,10 +1,6 @@
 
-#include "cuda_bits.h"
-#include "cuda_mfields.h"
-
-#include "fields.hxx"
-
-#include <psc.h>
+#include "../libpsc/psc_output_fields/fields_item_fields.hxx"
+#include "fields_item_dive_cuda.hxx"
 
 #define BND 2
 #define BLOCKSIZE_X 1
@@ -13,38 +9,43 @@
 
 // ======================================================================
 
-__global__ static void calc_dive_yz(DFields flds, DFields f, float dy, float dz,
-                                    int ldimsy, int ldimsz, int my, int mz)
+void cuda_mfields_calc_dive_yz(MfieldsStateCuda& mflds, MfieldsCuda& mdive)
 {
-  int iy = blockIdx.x * blockDim.x + threadIdx.x;
-  int iz = blockIdx.y * blockDim.y + threadIdx.y;
+  auto dx = mflds.grid().domain.dx;
 
-  if (iy >= ldimsy || iz >= ldimsz) {
-    return;
-  }
+  auto bnd = mflds.ibn();
+  auto flds = mflds.gt().view(_s(bnd[0], -bnd[0]), _s(-1 + bnd[1], -bnd[1]),
+                              _s(-1 + bnd[2], -bnd[2]));
 
-  auto _flds = make_Fields3d<dim_xyz>(flds);
-  auto _f = make_Fields3d<dim_xyz>(f);
-  _f(0, 0, iy, iz) = ((_flds(EY, 0, iy, iz) - _flds(EY, 0, iy - 1, iz)) / dy +
-                      (_flds(EZ, 0, iy, iz) - _flds(EZ, 0, iy, iz - 1)) / dz);
+  auto bd = mdive.ibn();
+  auto dive = mdive.gt().view(0, _s(bd[1], -bd[1]), _s(bd[2], -bd[2]), 0);
+
+  auto s0 = _s(1, _);
+  auto sm = _s(_, -1);
+  dive = (flds.view(0, s0, s0, EY) - flds.view(0, sm, s0, EY)) / dx[1] +
+         (flds.view(0, s0, s0, EZ) - flds.view(0, s0, sm, EZ)) / dx[2];
+
+  cuda_sync_if_enabled();
 }
 
-void cuda_mfields_calc_dive_yz(struct cuda_mfields* cmflds,
-                               struct cuda_mfields* cmf, int p)
+void cuda_mfields_calc_dive_xyz(MfieldsStateCuda& mflds, MfieldsCuda& mdive)
 {
-  float dy = cmflds->grid().domain.dx[1];
-  float dz = cmflds->grid().domain.dx[2];
+  auto dx = mflds.grid().domain.dx;
 
-  int my = cmflds->im(1);
-  int mz = cmflds->im(2);
+  auto bnd = mflds.ibn();
+  auto flds =
+    mflds.gt().view(_s(-1 + bnd[0], -bnd[0]), _s(-1 + bnd[1], -bnd[1]),
+                    _s(-1 + bnd[2], -bnd[2]));
 
-  int grid[2] = {(my + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-                 (mz + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z};
-  dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
-  dim3 dimGrid(grid[0], grid[1]);
+  auto bd = mdive.ibn();
+  auto dive =
+    mdive.gt().view(_s(bd[0], -bd[0]), _s(bd[1], -bd[1]), _s(bd[2], -bd[2]), 0);
 
-  calc_dive_yz<<<dimGrid, dimBlock>>>((*cmflds)[p], (*cmf)[p], dy, dz,
-                                      cmflds->grid().ldims[1],
-                                      cmflds->grid().ldims[2], my, mz);
+  auto s0 = _s(1, _);
+  auto sm = _s(_, -1);
+  dive = (flds.view(s0, s0, s0, EX) - flds.view(sm, s0, s0, EX)) / dx[0] +
+         (flds.view(s0, s0, s0, EY) - flds.view(s0, sm, s0, EY)) / dx[1] +
+         (flds.view(s0, s0, s0, EZ) - flds.view(s0, s0, sm, EZ)) / dx[2];
+
   cuda_sync_if_enabled();
 }

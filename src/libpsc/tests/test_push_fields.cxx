@@ -191,6 +191,71 @@ TYPED_TEST(PushFieldsTest, MarderCorrect)
   });
 }
 
+template <typename T>
+struct ItemTest : PushParticlesTest<T>
+{};
+
+using ItemTestTypes =
+  ::testing::Types<TestConfig1vbec3dSingleYZ,
+#ifdef USE_CUDA
+                   TestConfig1vbec3dCudaYZ, TestConfig1vbec3dCuda444,
+#endif
+                   TestConfig1vbec3dSingle>;
+
+TYPED_TEST_SUITE(ItemTest, ItemTestTypes);
+
+// ======================================================================
+// ItemDivE
+
+TYPED_TEST(ItemTest, ItemDivE)
+{
+  using MfieldsState = typename TypeParam::MfieldsState;
+  using Mfields = typename TypeParam::Mfields;
+  using Item = Item_dive<MfieldsState>;
+
+  const typename MfieldsState::real_t eps = 1e-2;
+
+  this->make_psc({});
+  const auto& grid = this->grid();
+
+  double ky = 2. * M_PI / grid.domain.length[1];
+  double kz = 2. * M_PI / grid.domain.length[2];
+
+  // init fields
+  auto mflds = MfieldsState{grid};
+  setupFields(mflds, [&](int m, double crd[3]) {
+    switch (m) {
+      case EY: return cos(ky * crd[1]);
+      case EZ: return sin(kz * crd[2]);
+      default: return 0.;
+    }
+  });
+  auto dx = grid.domain.dx;
+
+  auto item_dive = Item(mflds);
+  auto&& rho = gt::eval(item_dive.gt());
+
+  auto rho_ref = gt::empty_like(rho);
+  auto k_rho_ref = rho_ref.to_kernel();
+  gt::launch<5, gt::space::host>(
+    rho_ref.shape(), [=](int i, int j, int k, int m, int p) {
+      double y = j * dx[1], z = k * dx[2];
+      k_rho_ref(i, j, k, 0, p) = -ky * sin(ky * y) + kz * cos(kz * z);
+    });
+
+  // check result
+  auto&& h_rho = host_mirror(rho);
+  auto&& h_rho_ref = host_mirror(rho_ref);
+  gt::copy(rho, h_rho);
+  gt::copy(rho_ref, h_rho_ref);
+  for (int p = 0; p < grid.n_patches(); p++) {
+    grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
+      EXPECT_NEAR(h_rho(i, j, k, 0, p), h_rho_ref(i, j, k, 0, p), eps)
+        << "i " << i << " j " << j << " k " << k << "\n";
+    });
+  }
+}
+
 int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
