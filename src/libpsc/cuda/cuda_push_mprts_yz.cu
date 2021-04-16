@@ -464,7 +464,8 @@ struct CudaPushParticles
                    current_block.ci0);
 
     __shared__ float _scurr[Curr::shared_size];
-    Curr scurr(_scurr, d_mflds[current_block.p]);
+    Curr scurr(_scurr, view_patch(d_mflds.storage(), current_block.p),
+               d_mflds.ib());
     __syncthreads();
 
     int block_begin = dmprts.off_[current_block.bid];

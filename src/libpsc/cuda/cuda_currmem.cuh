@@ -32,8 +32,9 @@ private:
   Int3 ib_;
 
 public:
-  __device__ SCurr(float* _scurr, DFields d_flds)
-    : scurr(_scurr), gt_(d_flds.storage()), ib_(d_flds.ib())
+  template <typename E>
+  __device__ SCurr(float* _scurr, const E& gt, const Int3& ib)
+    : scurr(_scurr), gt_(gt), ib_(ib)
   {
     int i = threadIdx.x;
     while (i < shared_size) {
@@ -124,8 +125,9 @@ private:
   Int3 ib_;
 
 public:
-  __device__ GCurr(float* _scurr, DFields d_flds)
-    : scurr(_scurr), gt_(d_flds.storage()), ib_(d_flds.ib())
+  template <typename E>
+  __device__ GCurr(float* _scurr, const E& gt, const Int3& ib)
+    : scurr(_scurr), gt_(gt), ib_(ib)
   {}
 
   __device__ void add_to_fld(int* ci0) {}
