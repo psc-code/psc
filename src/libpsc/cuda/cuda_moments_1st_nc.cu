@@ -19,7 +19,7 @@ class Deposit
 public:
   using R = float;
 
-  GT_INLINE Deposit(E& gt, const Int3& ib) : dflds_(gt, ib) {}
+  GT_INLINE Deposit(E& flds) : dflds_(flds) {}
 
   __device__ void operator()(int m, int lf[3], R of[3], R val, dim_yz tag)
   {
@@ -55,13 +55,13 @@ public:
   }
 
 private:
-  Fields3d<E, dim_xyz> dflds_;
+  E dflds_;
 };
 
 template <typename DIM, typename E>
-GT_INLINE Deposit<E, DIM> make_Deposit(E& gt, const Int3& ib)
+GT_INLINE Deposit<E, DIM> make_Deposit(E& flds)
 {
-  return Deposit<E, DIM>(gt, ib);
+  return {flds};
 }
 
 // ----------------------------------------------------------------------
@@ -79,7 +79,8 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
   auto gt = gt::adapt_device<4>((&mflds_gt(0, 0, 0, 0, current_block.p)).get(),
                                 {mflds_gt.shape(0), mflds_gt.shape(1),
                                  mflds_gt.shape(2), mflds_gt.shape(3)});
-  auto deposit = make_Deposit<dim>(gt, ib);
+  auto flds = make_Fields3d<dim>(gt, ib);
+  auto deposit = make_Deposit<dim>(flds);
   __syncthreads();
 
   int block_begin = dmprts.off_[current_block.bid];
@@ -117,7 +118,8 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
   auto gt = gt::adapt_device<4>((&mflds_gt(0, 0, 0, 0, current_block.p)).get(),
                                 {mflds_gt.shape(0), mflds_gt.shape(1),
                                  mflds_gt.shape(2), mflds_gt.shape(3)});
-  auto deposit = make_Deposit<dim>(gt, ib);
+  auto flds = make_Fields3d<dim>(gt, ib);
+  auto deposit = make_Deposit<dim>(flds);
   __syncthreads();
 
   int block_begin = dmprts.off_[current_block.bid];
@@ -156,7 +158,8 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
   auto gt = gt::adapt_device<4>((&mflds_gt(0, 0, 0, 0, current_block.p)).get(),
                                 {mflds_gt.shape(0), mflds_gt.shape(1),
                                  mflds_gt.shape(2), mflds_gt.shape(3)});
-  auto deposit = make_Deposit<dim>(gt, ib);
+  auto flds = make_Fields3d<dim>(gt, ib);
+  auto deposit = make_Deposit<dim>(flds);
   __syncthreads();
 
   int block_begin = dmprts.off_[current_block.bid];
