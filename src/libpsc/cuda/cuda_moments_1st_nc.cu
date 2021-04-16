@@ -70,9 +70,7 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
     return;
   }
 
-  auto gt = gt::adapt_device<4>((&mflds_gt(0, 0, 0, 0, current_block.p)).get(),
-                                {mflds_gt.shape(0), mflds_gt.shape(1),
-                                 mflds_gt.shape(2), mflds_gt.shape(3)});
+  auto gt = view_patch(mflds_gt, current_block.p);
   auto flds = make_Fields3d<dim>(gt, ib);
   Deposit<dim> deposit;
   __syncthreads();
@@ -109,9 +107,7 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
     return;
   }
 
-  auto gt = gt::adapt_device<4>((&mflds_gt(0, 0, 0, 0, current_block.p)).get(),
-                                {mflds_gt.shape(0), mflds_gt.shape(1),
-                                 mflds_gt.shape(2), mflds_gt.shape(3)});
+  auto gt = view_patch(mflds_gt, current_block.p);
   auto flds = make_Fields3d<dim>(gt, ib);
   Deposit<dim> deposit;
   __syncthreads();
@@ -149,9 +145,7 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
     return;
   }
 
-  auto gt = gt::adapt_device<4>((&mflds_gt(0, 0, 0, 0, current_block.p)).get(),
-                                {mflds_gt.shape(0), mflds_gt.shape(1),
-                                 mflds_gt.shape(2), mflds_gt.shape(3)});
+  auto gt = view_patch(mflds_gt, current_block.p);
   auto flds = make_Fields3d<dim>(gt, ib);
   Deposit<dim> deposit;
   __syncthreads();
