@@ -502,9 +502,9 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
 // ----------------------------------------------------------------------
 // zero_currents
 
-static void zero_currents(struct cuda_mfields* cmflds)
+static void zero_currents(MfieldsStateCuda& mflds)
 {
-  auto& gt = cmflds->storage();
+  auto&& gt = mflds.gt();
   gt.view(_all, _all, _all, _s(JXI, JXI + 3), _all) = 0.;
 }
 
@@ -520,7 +520,7 @@ void CudaPushParticles_<Config>::push_mprts_ab(CudaMparticles* cmprts,
   using Block =
     typename Currmem::Block<typename Config::Bs, typename Config::dim>;
 
-  zero_currents(mflds.cmflds());
+  zero_currents(mflds);
 
   dim3 dimGrid = Block::dimGrid(*cmprts);
 
