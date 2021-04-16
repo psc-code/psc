@@ -43,7 +43,6 @@ if (USE_CUDA)
     
     cuda/push_fields_cuda_impl.cxx
     cuda/cuda_push_fields_yz.cu
-    cuda/cuda_push_fields_xyz.cu
 
     cuda/marder_cuda_impl.cxx
     
