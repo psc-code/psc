@@ -460,7 +460,8 @@ struct CudaPushParticles
     }
 
     __shared__ FldCache fld_cache;
-    fld_cache.load(d_mflds[current_block.p], current_block.ci0);
+    fld_cache.load(view_patch(d_mflds.storage(), current_block.p), d_mflds.ib(),
+                   current_block.ci0);
 
     __shared__ float _scurr[Curr::shared_size];
     Curr scurr(_scurr, d_mflds[current_block.p]);

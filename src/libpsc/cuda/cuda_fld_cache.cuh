@@ -17,7 +17,8 @@ struct FldCache
   FldCache() = default;
   __device__ FldCache(const FldCache&) = delete;
 
-  __device__ void load(DFields d_flds, int* ci0)
+  template <typename E>
+  __device__ void load(E&& gt, Int3 ib, int* ci0)
   {
     off_ =
       ((-(ci0[2] - 2) * (BLOCKSIZE_Y + 4) + -(ci0[1] - 2)) * (BLOCKSIZE_X + 4) +
@@ -29,7 +30,7 @@ struct FldCache
     ci0_[2] = ci0[2];
 #endif
 
-    auto _d_flds = make_Fields3d<dim_xyz>(d_flds);
+    auto _d_flds = make_Fields3d<dim_xyz>(gt, ib);
     int n = (BLOCKSIZE_X + 4) * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4);
     for (int ti = threadIdx.x; ti < n; ti += THREADS_PER_BLOCK) {
       int tmp = ti;
@@ -106,7 +107,8 @@ struct FldCache<BS, dim_yz>
   FldCache() = default;
   __device__ FldCache(const FldCache&) = delete;
 
-  __device__ void load(DFields d_flds, int* ci0)
+  template <typename E>
+  __device__ void load(E&& gt, Int3 ib, int* ci0)
   {
     off_ = (-(ci0[2] - 2) * (BLOCKSIZE_Y + 4) + -(ci0[1] - 2));
 #if 0
@@ -114,7 +116,7 @@ struct FldCache<BS, dim_yz>
     ci0z_ = ci0[2];
 #endif
 
-    auto _d_flds = make_Fields3d<dim_xyz>(d_flds);
+    auto _d_flds = make_Fields3d<dim_yz>(gt, ib);
     int ti = threadIdx.x;
     int n = BLOCKSIZE_X * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4);
     while (ti < n) {
