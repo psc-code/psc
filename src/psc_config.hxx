@@ -21,7 +21,6 @@
 
 #ifdef USE_CUDA
 #include "../libpsc/cuda/bnd_cuda_3_impl.hxx"
-#include "../libpsc/cuda/bnd_cuda_impl.hxx"
 #include "../libpsc/cuda/bnd_particles_cuda_impl.hxx"
 #include "../libpsc/cuda/checks_cuda_impl.hxx"
 #include "../libpsc/cuda/collision_cuda_impl.hxx"
