@@ -29,9 +29,6 @@ inline void correct(MfieldsStateCuda& mflds, MfieldsCuda& mf, float diffusion)
   fac[1] = .5 * grid.dt * diffusion / grid.domain.dx[1];
   fac[2] = .5 * grid.dt * diffusion / grid.domain.dx[2];
 
-  cuda_mfields* cmflds = mflds.cmflds();
-  cuda_mfields* cmf = mf.cmflds();
-
   // OPT, do all patches in one kernel
   for (int p = 0; p < mflds.n_patches(); p++) {
     int l_cc[3] = {0, 0, 0}, r_cc[3] = {0, 0, 0};
