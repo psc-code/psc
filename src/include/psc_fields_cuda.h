@@ -18,14 +18,13 @@ struct MfieldsCuda : MfieldsBase
 {
   using real_t = float;
   using Real = real_t;
+  using Storage = gt::gtensor<float, 5, gt::space::device>;
 
   MfieldsCuda(const Grid_t& grid, int n_fields, Int3 ibn)
     : MfieldsBase{grid, n_fields, ibn},
-      cmflds_{new cuda_mfields(grid, n_fields, ibn)}
+      storage_({grid.ldims[0] + 2 * ibn[0], grid.ldims[1] + 2 * ibn[1],
+                grid.ldims[2] + 2 * ibn[2], n_fields, grid.n_patches()})
   {}
-
-  cuda_mfields* cmflds() { return cmflds_.get(); }
-  const cuda_mfields* cmflds() const { return cmflds_.get(); }
 
   int n_comps() const { return _n_comps(); }
   int n_patches() const { return _grid().n_patches(); };
@@ -36,23 +35,22 @@ struct MfieldsCuda : MfieldsBase
     *this = MfieldsCuda(new_grid, n_comps(), ibn());
   }
 
-  gt::gtensor_span_device<real_t, 5> gt()
+  auto gt()
   {
-    return gt::adapt_device(cmflds_->storage().data().get(),
-                            cmflds_->storage().shape());
+    return gt::adapt_device(storage_.data().get(), storage_.shape());
   }
 
-  gt::gtensor_span_device<real_t, 5> gt() const
+  auto gt() const
   {
-    return gt::adapt_device(cmflds_->storage().data().get(),
-                            cmflds_->storage().shape());
+    return gt::adapt_device(storage_.data().get(), storage_.shape());
   }
 
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
 
-  std::unique_ptr<cuda_mfields> cmflds_;
+private:
+  Storage storage_;
 };
 
 inline MfieldsSingle hostMirror(MfieldsCuda& mflds)
@@ -72,7 +70,9 @@ inline void copy(const MfieldsCuda& mflds, MfieldsSingle& hmflds)
     pr = prof_register("mflds to host", 1., 0, 0);
   }
   prof_start(pr);
-  gt::copy(mflds.gt(), hmflds.storage());
+  // gt::copy(mflds.gt(), hmflds.storage());
+  thrust::copy(mflds.gt().data(), mflds.gt().data() + mflds.gt().size(),
+               hmflds.storage().data());
   prof_stop(pr);
 }
 
@@ -102,14 +102,6 @@ struct MfieldsStateCuda : MfieldsStateBase
     : MfieldsStateBase{grid, NR_FIELDS, grid.ibn},
       mflds_{grid, NR_FIELDS, grid.ibn}
   {}
-
-  /* void reset(const Grid_t& new_grid) override */
-  /* { */
-  /*   MfieldsStateBase::reset(new_grid); */
-  /*   mflds_.reset(new_grid); */
-  /* } */
-
-  cuda_mfields* cmflds() { return mflds_.cmflds(); }
 
   int n_patches() const { return mflds_.n_patches(); }
   int n_comps() const { return mflds_.n_comps(); }
