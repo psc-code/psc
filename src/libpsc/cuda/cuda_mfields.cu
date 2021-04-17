@@ -11,17 +11,6 @@
 // ======================================================================
 // cuda_mfields
 
-// ----------------------------------------------------------------------
-// cast to DMFields
-
-cuda_mfields::operator DMFields()
-{
-  return DMFields{box(), n_comps(), n_patches(), storage().data().get()};
-}
-
-// ----------------------------------------------------------------------
-// operator[]
-
 MfieldsSingle hostMirror(cuda_mfields& cmflds)
 {
   return MfieldsSingle{cmflds.grid(), cmflds.n_comps(), -cmflds.ib()};

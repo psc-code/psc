@@ -15,38 +15,6 @@
 #include <thrust/host_vector.h>
 
 // ======================================================================
-// DMfields
-
-struct DMFields;
-
-template <>
-struct MfieldsCRTPInnerTypes<DMFields>
-{
-  using Storage = gt::gtensor_span_device<float, 5>;
-};
-
-struct DMFields : MfieldsCRTP<DMFields>
-{
-  using Base = MfieldsCRTP<DMFields>;
-  using Storage = typename Base::Storage;
-  using real_t = typename Base::Real;
-
-  DMFields(const kg::Box3& box, int n_comps, int n_patches, real_t* d_flds)
-    : Base{n_comps, box, n_patches},
-      storage_{gt::adapt_device(
-        d_flds, gt::shape(box.im(0), box.im(1), box.im(2), n_comps, n_patches))}
-  {}
-
-private:
-  Storage storage_;
-
-  KG_INLINE Storage& storageImpl() { return storage_; }
-  KG_INLINE const Storage& storageImpl() const { return storage_; }
-
-  friend class MfieldsCRTP<DMFields>;
-};
-
-// ======================================================================
 // cuda_mfields
 
 using MfieldsStorageDeviceVector = gt::gtensor<float, 5, gt::space::device>;
@@ -79,7 +47,6 @@ struct cuda_mfields : MfieldsCRTP<cuda_mfields>
   cuda_mfields(const cuda_mfields&) = delete;
 
   pointer data() { return storage().data(); }
-  operator DMFields();
   const Grid_t& grid() const { return grid_; }
 
 private:
