@@ -20,7 +20,6 @@
 #include "psc_push_fields_impl.hxx"
 
 #ifdef USE_CUDA
-#include "../libpsc/cuda/bnd_cuda_2_impl.hxx"
 #include "../libpsc/cuda/bnd_cuda_3_impl.hxx"
 #include "../libpsc/cuda/bnd_cuda_impl.hxx"
 #include "../libpsc/cuda/bnd_particles_cuda_impl.hxx"

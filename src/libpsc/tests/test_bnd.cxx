@@ -6,7 +6,6 @@
 #include "../libpsc/psc_bnd/psc_bnd_impl.hxx"
 #ifdef USE_CUDA
 #include "../libpsc/cuda/bnd_cuda_impl.hxx"
-#include "../libpsc/cuda/bnd_cuda_2_impl.hxx"
 #include "../libpsc/cuda/bnd_cuda_3_impl.hxx"
 #endif
 
@@ -92,7 +91,6 @@ using BndTestTypes =
                    TestConfigBnd<Bnd_<MfieldsC>, dim_yz>,
 #ifdef USE_CUDA
                    TestConfigBnd<BndCuda<MfieldsCuda>, dim_yz>,
-                   TestConfigBnd<BndCuda2<MfieldsCuda>, dim_xyz>,
                    TestConfigBnd<BndCuda3<MfieldsCuda>, dim_xyz>,
 #endif
                    TestConfigBnd<Bnd_<MfieldsSingle>, dim_xyz>>;
