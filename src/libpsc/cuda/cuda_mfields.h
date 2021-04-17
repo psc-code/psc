@@ -38,19 +38,12 @@ struct cuda_mfields : MfieldsCRTP<cuda_mfields>
   cuda_mfields(const Grid_t& grid, int n_comps, const Int3& ibn)
     : Base{n_comps, {-ibn, grid.ldims + 2 * ibn}, grid.n_patches()},
       storage_(
-        {box().im(0), box().im(1), box().im(2), n_comps, grid.n_patches()}),
-      grid_{grid}
-  {
-    cuda_base_init();
-  }
+        {box().im(0), box().im(1), box().im(2), n_comps, grid.n_patches()})
+  {}
 
   cuda_mfields(const cuda_mfields&) = delete;
 
-  pointer data() { return storage().data(); }
-  const Grid_t& grid() const { return grid_; }
-
 private:
-  const Grid_t& grid_;
   Storage storage_;
 
   KG_INLINE Storage& storageImpl() { return storage_; }
