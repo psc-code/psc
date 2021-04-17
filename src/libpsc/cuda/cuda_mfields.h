@@ -59,9 +59,4 @@ private:
   friend class MfieldsCRTP<cuda_mfields>;
 };
 
-MfieldsSingle hostMirror(cuda_mfields& cmflds);
-MfieldsSingle hostMirror(const cuda_mfields& cmflds);
-void copy(const cuda_mfields& cmflds, MfieldsSingle& hmflds);
-void copy(const MfieldsSingle& hmflds, cuda_mfields& cmflds);
-
 #endif

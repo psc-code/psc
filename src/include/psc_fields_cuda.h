@@ -42,6 +42,12 @@ struct MfieldsCuda : MfieldsBase
                             cmflds_->storage().shape());
   }
 
+  gt::gtensor_span_device<real_t, 5> gt() const
+  {
+    return gt::adapt_device(cmflds_->storage().data().get(),
+                            cmflds_->storage().shape());
+  }
+
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
@@ -51,22 +57,37 @@ struct MfieldsCuda : MfieldsBase
 
 inline MfieldsSingle hostMirror(MfieldsCuda& mflds)
 {
-  return hostMirror(*mflds.cmflds());
+  return MfieldsSingle{mflds.grid(), mflds.n_comps(), mflds.ibn()};
 }
 
 inline MfieldsSingle hostMirror(const MfieldsCuda& mflds)
 {
-  return hostMirror(*mflds.cmflds());
+  return MfieldsSingle{mflds.grid(), mflds.n_comps(), mflds.ibn()};
 }
 
 inline void copy(const MfieldsCuda& mflds, MfieldsSingle& hmflds)
 {
-  copy(*mflds.cmflds(), hmflds);
+  static int pr;
+  if (!pr) {
+    pr = prof_register("mflds to host", 1., 0, 0);
+  }
+  prof_start(pr);
+  gt::copy(mflds.gt(), hmflds.storage());
+  prof_stop(pr);
 }
 
 inline void copy(const MfieldsSingle& hmflds, MfieldsCuda& mflds)
 {
-  copy(hmflds, *mflds.cmflds());
+  static int pr;
+  if (!pr) {
+    pr = prof_register("mflds from host", 1., 0, 0);
+  }
+  prof_start(pr);
+  // gt::copy(hmflds.storage(), mflds.gt());
+  thrust::copy(hmflds.storage().data(),
+               hmflds.storage().data() + hmflds.storage().size(),
+               mflds.gt().data());
+  prof_stop(pr);
 }
 
 // ======================================================================
