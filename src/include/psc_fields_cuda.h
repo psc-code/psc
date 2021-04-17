@@ -28,7 +28,7 @@ struct MfieldsCuda : MfieldsBase
   const cuda_mfields* cmflds() const { return cmflds_.get(); }
 
   int n_comps() const { return _n_comps(); }
-  int n_patches() const { return cmflds_->n_patches(); };
+  int n_patches() const { return _grid().n_patches(); };
   const Grid_t& grid() const { return _grid(); }
 
   void reset(const Grid_t& new_grid) override

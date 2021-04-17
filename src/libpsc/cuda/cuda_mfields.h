@@ -27,7 +27,7 @@ struct MfieldsCRTPInnerTypes<cuda_mfields>
   using Storage = gt::gtensor<float, 5, gt::space::device>;
 };
 
-struct cuda_mfields : MfieldsCRTP<cuda_mfields>
+struct cuda_mfields
 {
   using Base = MfieldsCRTP<cuda_mfields>;
   using Storage = typename Base::Storage;
@@ -36,20 +36,17 @@ struct cuda_mfields : MfieldsCRTP<cuda_mfields>
   using const_pointer = typename Storage::const_pointer;
 
   cuda_mfields(const Grid_t& grid, int n_comps, const Int3& ibn)
-    : Base{n_comps, {-ibn, grid.ldims + 2 * ibn}, grid.n_patches()},
-      storage_(
-        {box().im(0), box().im(1), box().im(2), n_comps, grid.n_patches()})
+    : storage_({grid.ldims[0] + 2 * ibn[0], grid.ldims[1] + 2 * ibn[1],
+                grid.ldims[2] + 2 * ibn[2], n_comps, grid.n_patches()})
   {}
 
   cuda_mfields(const cuda_mfields&) = delete;
 
+  Storage& storage() { return storage_; }
+  const Storage& storage() const { return storage_; }
+
 private:
   Storage storage_;
-
-  KG_INLINE Storage& storageImpl() { return storage_; }
-  KG_INLINE const Storage& storageImpl() const { return storage_; }
-
-  friend class MfieldsCRTP<cuda_mfields>;
 };
 
 #endif
