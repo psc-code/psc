@@ -115,7 +115,7 @@ git clone "$repo" "$upstreamdir"
 
 if [ -n "$basehash" ]; then
     # Use the existing package's history
-    git worktree add "$extractdir" "$basehash"
+    git worktree add -f "$extractdir" "$basehash"
     # Clear out the working tree
     pushd "$extractdir"
     git ls-files | xargs rm -v
