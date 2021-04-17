@@ -13,20 +13,33 @@
 // ======================================================================
 // MfieldsCuda
 
-struct MfieldsCuda : MfieldsBase
+struct MfieldsCuda;
+
+template <>
+struct MfieldsCRTPInnerTypes<MfieldsCuda>
+{
+  using Storage = gt::gtensor<float, 5, gt::space::device>;
+};
+
+struct MfieldsCuda
+  : MfieldsBase
+  , MfieldsCRTP<MfieldsCuda>
 {
   using real_t = float;
   using Real = real_t;
-  using Storage = gt::gtensor<float, 5, gt::space::device>;
+  using Base = MfieldsCRTP<MfieldsCuda>;
+  using Storage = typename Base::Storage;
+  using space = gt::space::device;
 
   MfieldsCuda(const Grid_t& grid, int n_fields, Int3 ibn)
     : MfieldsBase{grid, n_fields, ibn},
-      storage_({grid.ldims[0] + 2 * ibn[0], grid.ldims[1] + 2 * ibn[1],
-                grid.ldims[2] + 2 * ibn[2], n_fields, grid.n_patches()})
-  {}
+      Base(n_fields, {-ibn, grid.ldims + 2 * ibn}, grid.n_patches()),
+      storage_(gt::shape(Base::box().im(0), Base::box().im(1),
+                         Base::box().im(2), n_fields, Base::n_patches()))
+  {
+    thrust::fill(storage_.data(), storage_.data() + storage_.size(), real_t{});
+  }
 
-  int n_comps() const { return _n_comps(); }
-  int n_patches() const { return _grid().n_patches(); };
   const Grid_t& grid() const { return _grid(); }
 
   void reset(const Grid_t& new_grid) override
@@ -50,6 +63,11 @@ struct MfieldsCuda : MfieldsBase
 
 private:
   Storage storage_;
+
+  Storage& storageImpl() { return storage_; }
+  const Storage& storageImpl() const { return storage_; }
+
+  friend class MfieldsCRTP<MfieldsCuda>;
 };
 
 inline MfieldsSingle hostMirror(MfieldsCuda& mflds)
