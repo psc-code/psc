@@ -37,7 +37,6 @@ if (USE_CUDA)
     cuda/cuda_mparticles_iface.cu
     
     cuda/psc_fields_cuda.cxx
-    cuda/cuda_mfields.cu
     
     cuda/cuda_push_mprts_yz.cu
     

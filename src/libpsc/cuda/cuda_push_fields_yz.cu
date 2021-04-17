@@ -1,6 +1,7 @@
 
 #include "../libpsc/psc_output_fields/fields_item_fields.hxx"
 #include "fields_item_dive_cuda.hxx"
+#include "cuda_bits.h"
 
 #define BND 2
 #define BLOCKSIZE_X 1

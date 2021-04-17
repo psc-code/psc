@@ -6,6 +6,7 @@
 #include "mparticles_cuda.hxx"
 #include "fields_item_dive_cuda.hxx"
 #include "fields_item_moments_1st_cuda.hxx"
+#include "cuda_bits.h"
 
 #include <mrc_io.h>
 
