@@ -46,8 +46,6 @@ private:
   friend class MfieldsCRTP<DMFields>;
 };
 
-using DFields = DMFields::fields_view_t;
-
 // ======================================================================
 // cuda_mfields
 
@@ -82,7 +80,6 @@ struct cuda_mfields : MfieldsCRTP<cuda_mfields>
 
   pointer data() { return storage().data(); }
   operator DMFields();
-  DFields operator[](int p) const; // FIXME, const correctness
   const Grid_t& grid() const { return grid_; }
 
 private:

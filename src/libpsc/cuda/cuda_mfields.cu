@@ -22,11 +22,6 @@ cuda_mfields::operator DMFields()
 // ----------------------------------------------------------------------
 // operator[]
 
-DFields cuda_mfields::operator[](int p) const
-{
-  return static_cast<DMFields>(const_cast<cuda_mfields&>(*this))[p];
-}
-
 MfieldsSingle hostMirror(cuda_mfields& cmflds)
 {
   return MfieldsSingle{cmflds.grid(), cmflds.n_comps(), -cmflds.ib()};
