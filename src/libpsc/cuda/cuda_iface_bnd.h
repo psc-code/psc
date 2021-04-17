@@ -64,18 +64,6 @@ void cuda_mfields_bnd_fill_ghosts_local(struct cuda_mfields_bnd* cbnd,
                                         struct cuda_mfields* cmflds, int mb,
                                         int me);
 
-// special cases for single GPU, single patch, which can be handled
-// entirely on the GPU
-
-void cuda_fill_ghosts_periodic_yz(struct cuda_mfields* cmflds, int p, int mb,
-                                  int me);
-void cuda_fill_ghosts_periodic_z(struct cuda_mfields* cmflds, int p, int mb,
-                                 int me);
-void cuda_add_ghosts_periodic_yz(struct cuda_mfields* cmflds, int p, int mb,
-                                 int me);
-void cuda_add_ghosts_periodic_z(struct cuda_mfields* cmflds, int p, int mb,
-                                int me);
-
 // These fields are for field boundary exchange, so they could, eventually, miss
 // the interior part
 
