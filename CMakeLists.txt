@@ -12,6 +12,8 @@ endforeach()
 
 project(PSC)
 
+include(cmake/CPM.cmake)
+
 include(CTest)
 
 function(psc_option name description default)
