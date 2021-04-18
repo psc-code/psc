@@ -26,10 +26,15 @@ public:
   static const int shared_size = 3 * STRIDE_Y * STRIDE_Z * N_COPIES;
 
   float* scurr;
-  DFields d_flds;
 
-  __device__ SCurr(float* _scurr, DFields _d_flds)
-    : scurr(_scurr), d_flds(_d_flds)
+private:
+  gt::gtensor_span_device<float, 4> gt_;
+  Int3 ib_;
+
+public:
+  template <typename E>
+  __device__ SCurr(float* _scurr, const E& gt, const Int3& ib)
+    : scurr(_scurr), gt_(gt), ib_(ib)
   {
     int i = threadIdx.x;
     while (i < shared_size) {
@@ -43,7 +48,7 @@ public:
     __syncthreads();
     int i = threadIdx.x;
     int stride = STRIDE_Y * STRIDE_Z;
-    auto _d_flds = make_Fields3d<dim_xyz>(d_flds);
+    auto _d_flds = make_Fields3d<dim_xyz>(gt_, ib_);
     while (i < stride) {
       int rem = i;
       int jz = rem / STRIDE_Y;
@@ -114,24 +119,29 @@ public:
   static const int shared_size = 1;
 
   float* scurr;
-  DFields d_flds;
 
-  __device__ GCurr(float* _scurr, DFields _d_flds)
-    : scurr(_scurr), d_flds(_d_flds)
+private:
+  gt::gtensor_span_device<float, 4> gt_;
+  Int3 ib_;
+
+public:
+  template <typename E>
+  __device__ GCurr(float* _scurr, const E& gt, const Int3& ib)
+    : scurr(_scurr), gt_(gt), ib_(ib)
   {}
 
   __device__ void add_to_fld(int* ci0) {}
 
   __device__ void add(int m, int jy, int jz, float val, const int* ci0)
   {
-    auto _d_flds = make_Fields3d<dim_xyz>(d_flds);
+    auto _d_flds = make_Fields3d<dim_xyz>(gt_, ib_);
     float* addr = &_d_flds(JXI + m, 0, jy + ci0[1], jz + ci0[2]);
     atomicAdd(addr, val);
   }
 
   __device__ void add(int m, int jx, int jy, int jz, float val, const int* ci0)
   {
-    auto _d_flds = make_Fields3d<dim_xyz>(d_flds);
+    auto _d_flds = make_Fields3d<dim_xyz>(gt_, ib_);
     float* addr = &_d_flds(JXI + m, jx + ci0[0], jy + ci0[1], jz + ci0[2]);
     atomicAdd(addr, val);
   }
