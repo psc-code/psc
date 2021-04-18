@@ -8,6 +8,8 @@
 #include "../libpsc/cuda/marder_cuda_impl.hxx"
 #endif
 
+#include <gtensor/reductions.h>
+
 template <typename T>
 struct PushFieldsTest : PushParticlesTest<T>
 {};
@@ -139,8 +141,6 @@ TYPED_TEST(PushFieldsTest, MarderCorrect)
   using dim = typename TypeParam::dim;
   using PushFields = typename TypeParam::PushFields;
 
-  const typename Mparticles::real_t eps = 1e-2;
-
   this->make_psc({});
   const auto& grid = this->grid();
 
@@ -185,10 +185,7 @@ TYPED_TEST(PushFieldsTest, MarderCorrect)
   auto&& h_gt_ref = gt::host_mirror(mflds_ref.gt());
   gt::copy(mflds.gt(), h_gt);
   gt::copy(mflds_ref.gt(), h_gt_ref);
-  gt::launch<5, gt::space::host>(
-    h_gt.shape(), [&](int i, int j, int k, int m, int p) {
-      EXPECT_NEAR(h_gt(i, j, k, m, p), h_gt_ref(i, j, k, m, p), eps);
-    });
+  EXPECT_LT(gt::norm_linf(h_gt - h_gt_ref), 1e-2);
 }
 
 template <typename T>
@@ -212,8 +209,6 @@ TYPED_TEST(ItemTest, ItemDivE)
   using MfieldsState = typename TypeParam::MfieldsState;
   using Mfields = typename TypeParam::Mfields;
   using Item = Item_dive<MfieldsState>;
-
-  const typename MfieldsState::real_t eps = 1e-2;
 
   this->make_psc({});
   const auto& grid = this->grid();
@@ -248,11 +243,7 @@ TYPED_TEST(ItemTest, ItemDivE)
   auto&& h_rho_ref = host_mirror(rho_ref);
   gt::copy(rho, h_rho);
   gt::copy(rho_ref, h_rho_ref);
-  gt::launch<5, gt::space::host>(
-    h_rho.shape(), [=](int i, int j, int k, int m, int p) {
-      EXPECT_NEAR(h_rho(i, j, k, m, p), h_rho_ref(i, j, k, m, p), eps)
-        << "i " << i << " j " << j << " k " << k << "\n";
-    });
+  EXPECT_LT(gt::norm_linf(h_rho - h_rho_ref), 1e-2);
 }
 
 int main(int argc, char** argv)
