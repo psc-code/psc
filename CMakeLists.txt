@@ -52,6 +52,24 @@ else()
   set(GTENSOR_DEVICE "host" CACHE STRING "")
 endif()
 
+if (BUILD_TESTING)
+  CPMAddPackage(
+    NAME googletest
+    GITHUB_REPOSITORY google/googletest
+    # post 1.10.0 with cmake_minimum_required updated
+    GIT_TAG 32f4f52d95dc99c35f51deed552a6ba700567f94
+    VERSION 1.10.0x
+    OPTIONS
+        "INSTALL_GTEST OFF"
+        "gtest_force_shared_crt ON"
+  )
+  if (googletest_ADDED)
+     add_library(GTest::GTest ALIAS gtest)
+     add_library(GTest::Main ALIAS gtest_main)
+  endif()
+  include(GoogleTest)
+endif()
+
 set(MPI_CXX_SKIP_MPICXX ON)
 find_package(MPI REQUIRED)
 
@@ -105,9 +123,6 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/src/include)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/src/libmrc/include)
 
 add_subdirectory(external)
-if (BUILD_TESTING)
-  include(GoogleTest)
-endif()
 
 add_subdirectory(src/libmrc)
 add_subdirectory(src)
