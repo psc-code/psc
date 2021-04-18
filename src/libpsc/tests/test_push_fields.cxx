@@ -133,6 +133,20 @@ using marder_selector_t =
   typename detail::marder_selector<Mparticles, MfieldsState, Mfields,
                                    Dim>::type;
 
+// need separate init_phi to work around device lambda limitations
+
+template <typename E>
+inline void init_phi(E&& mphi, Int3 ib, const Grid_t& grid, double kz)
+{
+  auto&& k_mphi = mphi.to_kernel();
+  double dz = grid.domain.dx[2];
+  gt::launch<5, gt::expr_space_type<decltype(k_mphi)>>(
+    k_mphi.shape(), GT_LAMBDA(int i, int j, int k, int m, int p) {
+      double z = (k - ib[2]) * dz;
+      k_mphi(i, j, k, 0, p) = sin(kz * z);
+    });
+}
+
 TYPED_TEST(PushFieldsTest, MarderCorrect)
 {
   using Mparticles = typename TypeParam::Mparticles;
@@ -167,18 +181,7 @@ TYPED_TEST(PushFieldsTest, MarderCorrect)
     }
   });
   auto mphi = Mfields{grid, 1, grid.ibn};
-  {
-    auto&& h_mphi = hostMirror(mphi);
-    auto k_mphi = h_mphi.gt().to_kernel();
-    double dz = grid.domain.dx[2];
-    Int3 ib = h_mphi.ib();
-    gt::launch<5, gt::space::host>(k_mphi.shape(),
-                                   [=](int i, int j, int k, int m, int p) {
-                                     double z = (k - ib[2]) * dz;
-                                     k_mphi(i, j, k, 0, p) = sin(kz * z);
-                                   });
-    copy(h_mphi, mphi);
-  }
+  init_phi(mphi.gt(), mphi.ib(), grid, kz);
 
   psc::marder::correct(mflds, mphi, diffusion);
 
