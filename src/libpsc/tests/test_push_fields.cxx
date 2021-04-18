@@ -169,12 +169,14 @@ TYPED_TEST(PushFieldsTest, MarderCorrect)
   auto mphi = Mfields{grid, 1, grid.ibn};
   {
     auto&& h_mphi = hostMirror(mphi);
+    auto k_mphi = h_mphi.gt().to_kernel();
     double dz = grid.domain.dx[2];
-    auto phi = make_Fields3d<dim_xyz>(h_mphi[0]);
-    h_mphi.Foreach_3d(2, 2, [&](int i, int j, int k) {
-      double z = k * dz;
-      phi(0, i, j, k) = sin(kz * z);
-    });
+    Int3 ib = h_mphi.ib();
+    gt::launch<5, gt::space::host>(k_mphi.shape(),
+                                   [=](int i, int j, int k, int m, int p) {
+                                     double z = (k - ib[2]) * dz;
+                                     k_mphi(i, j, k, 0, p) = sin(kz * z);
+                                   });
     copy(h_mphi, mphi);
   }
 
