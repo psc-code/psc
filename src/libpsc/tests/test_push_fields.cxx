@@ -181,11 +181,7 @@ TYPED_TEST(PushFieldsTest, MarderCorrect)
   psc::marder::correct(mflds, mphi, diffusion);
 
   // check result
-  auto&& h_gt = gt::host_mirror(mflds.gt());
-  auto&& h_gt_ref = gt::host_mirror(mflds_ref.gt());
-  gt::copy(mflds.gt(), h_gt);
-  gt::copy(mflds_ref.gt(), h_gt_ref);
-  EXPECT_LT(gt::norm_linf(h_gt - h_gt_ref), 1e-2);
+  EXPECT_LT(gt::norm_linf(mflds.gt() - mflds_ref.gt()), 1e-2);
 }
 
 template <typename T>
@@ -239,11 +235,7 @@ TYPED_TEST(ItemTest, ItemDivE)
     });
 
   // check result
-  auto&& h_rho = host_mirror(rho);
-  auto&& h_rho_ref = host_mirror(rho_ref);
-  gt::copy(rho, h_rho);
-  gt::copy(rho_ref, h_rho_ref);
-  EXPECT_LT(gt::norm_linf(h_rho - h_rho_ref), 1e-2);
+  EXPECT_LT(gt::norm_linf(rho - rho_ref), 1e-2);
 }
 
 int main(int argc, char** argv)
