@@ -70,6 +70,13 @@ if (BUILD_TESTING)
   include(GoogleTest)
 endif()
 
+CPMAddPackage(
+  NAME gtensor
+  GITHUB_REPOSITORY wdmapp/gtensor
+  GIT_TAG main
+  VERSION 0.0.0
+)
+
 set(MPI_CXX_SKIP_MPICXX ON)
 find_package(MPI REQUIRED)
 
@@ -121,8 +128,6 @@ GenerateHeaderConfig(ADIOS2 NVTX RMM)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/src/include)
 # FIXME, this seems too ugly to find mrc_config.h
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/src/libmrc/include)
-
-add_subdirectory(external)
 
 add_subdirectory(src/libmrc)
 add_subdirectory(src)
