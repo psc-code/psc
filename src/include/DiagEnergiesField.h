@@ -21,23 +21,23 @@ public:
     std::vector<double> EH2(6);
 
     const Grid_t& grid = mprts.grid();
-    {
-      auto&& h_mflds = hostMirror(mflds);
-      copy(mflds, h_mflds);
-      for (int p = 0; p < grid.n_patches(); p++) {
-        double fac = grid.domain.dx[0] * grid.domain.dx[1] * grid.domain.dx[2];
-        auto gt = h_mflds.gt().view(_all, _all, _all, _all, p);
-        auto F = make_Fields3d<dim_xyz>(gt, h_mflds.ib());
-        // FIXME, this doesn't handle non-periodic b.c. right
-        grid.Foreach_3d(0, 0, [&](int ix, int iy, int iz) {
-          EH2[0] += sqr(F(EX, ix, iy, iz)) * fac;
-          EH2[1] += sqr(F(EY, ix, iy, iz)) * fac;
-          EH2[2] += sqr(F(EZ, ix, iy, iz)) * fac;
-          EH2[3] += sqr(F(HX, ix, iy, iz)) * fac;
-          EH2[4] += sqr(F(HY, ix, iy, iz)) * fac;
-          EH2[5] += sqr(F(HZ, ix, iy, iz)) * fac;
-        });
-      }
+    auto&& h_gt_mflds = gt::host_mirror(mflds.gt());
+    gt::copy(mflds.gt(), h_gt_mflds);
+
+    double fac = grid.domain.dx[0] * grid.domain.dx[1] * grid.domain.dx[2];
+    for (int p = 0; p < grid.n_patches(); p++) {
+      auto bnd = mflds.ibn();
+      auto flds = h_gt_mflds.view(_s(-bnd[0], bnd[0]), _s(-bnd[1], bnd[1]),
+                                  _s(-bnd[2], bnd[2]), _all, p);
+      // FIXME, this doesn't handle non-periodic b.c. right
+      grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
+        EH2[0] += sqr(flds(i, j, k, EX)) * fac;
+        EH2[1] += sqr(flds(i, j, k, EY)) * fac;
+        EH2[2] += sqr(flds(i, j, k, EZ)) * fac;
+        EH2[3] += sqr(flds(i, j, k, HX)) * fac;
+        EH2[4] += sqr(flds(i, j, k, HY)) * fac;
+        EH2[5] += sqr(flds(i, j, k, HZ)) * fac;
+      });
     }
     return EH2;
   }
