@@ -556,4 +556,14 @@ using Mfields_from_gt_t =
   typename detail::Mfields_from_type_space<typename E::value_type,
                                            typename E::space>::type;
 
+// ======================================================================
+// view_interior
+
+template <typename E>
+inline auto view_interior(E&& e, const Int3& bnd)
+{
+  return std::forward<E>(e).view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
+                                 _s(bnd[2], -bnd[2]));
+}
+
 #endif

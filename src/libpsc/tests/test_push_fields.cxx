@@ -10,13 +10,6 @@
 
 #include <gtensor/reductions.h>
 
-template <typename E>
-inline auto view_interior(E&& e, const Int3& bnd)
-{
-  return std::forward<E>(e).view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                                 _s(bnd[2], -bnd[2]));
-}
-
 template <typename T>
 struct PushFieldsTest : PushParticlesTest<T>
 {};
