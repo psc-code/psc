@@ -26,7 +26,8 @@ public:
       copy(mflds, h_mflds);
       for (int p = 0; p < grid.n_patches(); p++) {
         double fac = grid.domain.dx[0] * grid.domain.dx[1] * grid.domain.dx[2];
-        auto F = make_Fields3d<dim_xyz>(h_mflds[p]);
+        auto gt = h_mflds.gt().view(_all, _all, _all, _all, p);
+        auto F = make_Fields3d<dim_xyz>(gt, h_mflds.ib());
         // FIXME, this doesn't handle non-periodic b.c. right
         grid.Foreach_3d(0, 0, [&](int ix, int iy, int iz) {
           EH2[0] += sqr(F(EX, ix, iy, iz)) * fac;
