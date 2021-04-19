@@ -10,6 +10,13 @@
 
 #include <gtensor/reductions.h>
 
+template <typename E>
+inline auto view_interior(E&& e, const Int3& bnd)
+{
+  return std::forward<E>(e).view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
+                                 _s(bnd[2], -bnd[2]));
+}
+
 template <typename T>
 struct PushFieldsTest : PushParticlesTest<T>
 {};
@@ -136,13 +143,13 @@ using marder_selector_t =
 // need separate init_phi to work around device lambda limitations
 
 template <typename E>
-inline void init_phi(E&& mphi, Int3 ib, const Grid_t& grid, double kz)
+inline void init_phi(E&& mphi, Int3 bnd, const Grid_t& grid, double kz)
 {
   auto&& k_mphi = mphi.to_kernel();
   double dz = grid.domain.dx[2];
   gt::launch<5, gt::expr_space_type<decltype(k_mphi)>>(
     k_mphi.shape(), GT_LAMBDA(int i, int j, int k, int m, int p) {
-      double z = (k - ib[2]) * dz;
+      double z = (k - bnd[2]) * dz;
       k_mphi(i, j, k, 0, p) = sin(kz * z);
     });
 }
@@ -161,7 +168,7 @@ TYPED_TEST(PushFieldsTest, MarderCorrect)
   const double kz = 2. * M_PI / grid.domain.length[2];
 
   // run test
-  double diffusion = .1;
+  double diffusion = 5;
 
   // init fields
   auto mflds = MfieldsState{grid};
@@ -181,12 +188,14 @@ TYPED_TEST(PushFieldsTest, MarderCorrect)
     }
   });
   auto mphi = Mfields{grid, 1, grid.ibn};
-  init_phi(mphi.gt(), mphi.ib(), grid, kz);
+  init_phi(mphi.gt(), mphi.ibn(), grid, kz);
 
   psc::marder::correct(mflds, mphi, diffusion);
 
   // check result
-  EXPECT_LT(gt::norm_linf(mflds.gt() - mflds_ref.gt()), 1e-2);
+  EXPECT_LT(gt::norm_linf(view_interior(mflds.gt(), mflds.ibn()) -
+                          view_interior(mflds_ref.gt(), mflds_ref.ibn())),
+            1e-3);
 }
 
 template <typename T>
