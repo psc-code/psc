@@ -142,28 +142,32 @@ public:
   auto gt() const
   {
     const auto& grid = mflds_.grid();
-    define_dxdydz(dx, dy, dz);
-
-    assert(ibn() == Int3{});
-    auto res = gt::empty<Real>(
-      {grid.ldims[0], grid.ldims[1], grid.ldims[2], n_comps(), n_patches()});
-    auto k_res = res.to_kernel();
-
     auto dxyz = grid.domain.dx;
-    gt::launch<5, gt::space::host>(
-      k_res.shape(), [=](int i, int j, int k, int m, int p) {
-        auto flds = make_Fields3d<dim_xyz>(mflds_[p]);
-        Int3 ijk = {i, j, k};
-        k_res(i, j, k, m, p) = ((flds(JXI, ijk[0], ijk[1], ijk[2]) -
-                                 flds(JXI, ijk[0] - dx, ijk[1], ijk[2])) /
-                                  dxyz[0] +
-                                (flds(JYI, ijk[0], ijk[1], ijk[2]) -
-                                 flds(JYI, ijk[0], ijk[1] - dy, ijk[2])) /
-                                  dxyz[1] +
-                                (flds(JZI, ijk[0], ijk[1], ijk[2]) -
-                                 flds(JZI, ijk[0], ijk[1], ijk[2] - dz)) /
-                                  dxyz[2]);
-      });
+    auto bnd = mflds_.ibn();
+    auto s0 = _s(1, _);
+    auto sm = _s(_, -1);
+
+    auto res = gt::empty<Real>(
+      {grid.ldims[0], grid.ldims[1], grid.ldims[2], 1, grid.n_patches()});
+
+    if (grid.isInvar(0)) {
+      auto flds = mflds_.gt().view(_all, _s(-1 + bnd[1], -bnd[1]),
+                                   _s(-1 + bnd[2], -bnd[2]));
+
+      res.view(_all, _all, _all, 0) =
+        (flds.view(_all, s0, s0, JYI) - flds.view(_all, sm, s0, JYI)) /
+          dxyz[1] +
+        (flds.view(_all, s0, s0, JZI) - flds.view(_all, s0, sm, JZI)) / dxyz[2];
+    } else {
+      auto flds =
+        mflds_.gt().view(_s(-1 + bnd[0], -bnd[0]), _s(-1 + bnd[1], -bnd[1]),
+                         _s(-1 + bnd[2], -bnd[2]));
+
+      res.view(_all, _all, _all, 0) =
+        (flds.view(s0, s0, s0, JXI) - flds.view(sm, s0, s0, JXI)) / dxyz[0] +
+        (flds.view(s0, s0, s0, JYI) - flds.view(s0, sm, s0, JYI)) / dxyz[1] +
+        (flds.view(s0, s0, s0, JZI) - flds.view(s0, s0, sm, JZI)) / dxyz[2];
+    }
     return res;
   }
 
