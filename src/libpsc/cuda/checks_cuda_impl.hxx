@@ -67,11 +67,13 @@ struct ChecksCuda
 
     auto&& rho_p = gt::host_mirror(item_rho_p_.gt());
     auto&& rho_m = gt::host_mirror(item_rho_m_.gt());
+    auto&& h_divj = gt::host_mirror(item_divj.gt());
     gt::copy(gt::eval(item_rho_p_.gt()), rho_p);
     gt::copy(gt::eval(item_rho_m_.gt()), rho_m);
+    gt::copy(gt::eval(item_divj.gt()), h_divj);
 
     auto&& d_rho = rho_p - rho_m;
-    auto&& dt_divj = grid.dt * item_divj.gt();
+    auto&& dt_divj = grid.dt * h_divj;
 
     double eps = continuity_threshold;
     double max_err = 0.;
