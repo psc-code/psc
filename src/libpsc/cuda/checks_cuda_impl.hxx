@@ -62,8 +62,7 @@ struct ChecksCuda
 
     item_rho_p_(mprts);
 
-    auto& h_mflds = mflds.get_as<MfieldsState>(0, mflds._n_comps());
-    auto item_divj = Item_divj<MfieldsState>(h_mflds);
+    auto item_divj = Item_divj<MfieldsStateCuda>(mflds);
 
     auto&& rho_p = gt::host_mirror(item_rho_p_.gt());
     auto&& rho_m = gt::host_mirror(item_rho_m_.gt());
@@ -110,7 +109,6 @@ struct ChecksCuda
     }
 
     assert(max_err < eps);
-    mflds.put_as(h_mflds, 0, 0);
   }
 
   // ======================================================================
