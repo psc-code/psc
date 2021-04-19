@@ -67,11 +67,13 @@ struct ChecksCuda
 
     auto& dev_rho_p = item_rho_p_.result();
     auto& dev_rho_m = item_rho_m_.result();
-    auto& rho_p = dev_rho_p.template get_as<Mfields>(0, 1);
-    auto& rho_m = dev_rho_m.template get_as<Mfields>(0, 1);
+    auto&& rho_p = gt::host_mirror(dev_rho_p.gt());
+    auto&& rho_m = gt::host_mirror(dev_rho_m.gt());
+    gt::copy(dev_rho_p.gt(), rho_p);
+    gt::copy(dev_rho_m.gt(), rho_m);
 
-    auto&& d_rho = view_interior(rho_p.gt(), rho_p.ibn()) -
-                   view_interior(rho_m.gt(), rho_m.ibn());
+    auto&& d_rho = view_interior(rho_p, dev_rho_p.ibn()) -
+                   view_interior(rho_m, dev_rho_m.ibn());
     auto&& dt_divj = grid.dt * item_divj.gt();
 
     double eps = continuity_threshold;
@@ -109,8 +111,6 @@ struct ChecksCuda
     }
 
     assert(max_err < eps);
-    dev_rho_p.put_as(rho_p, 0, 0);
-    dev_rho_m.put_as(rho_m, 0, 0);
     mflds.put_as(h_mflds, 0, 0);
   }
 
