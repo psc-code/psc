@@ -21,21 +21,23 @@ public:
            const kg::io::Mode launch = kg::io::Mode::NonBlocking)
   {
     const auto& grid = mflds_cuda.grid();
-    auto mflds = hostMirror(mflds_cuda);
-    copy(mflds_cuda, mflds);
+    auto n_comps = mflds_cuda.n_comps();
 
-    writer.put("ib", mflds.box().ib(), launch);
-    writer.put("im", mflds.box().im(), launch);
+    writer.put("ib", mflds_cuda.ib(), launch);
+    writer.put("im", mflds_cuda.im(), launch);
 
-    auto n_comps = mflds.n_comps();
+    auto h_mflds = gt::host_mirror(mflds_cuda.gt());
+    gt::copy(mflds_cuda.gt(), h_mflds);
+
     auto shape = makeDims(n_comps, grid.domain.gdims);
-    for (int p = 0; p < mflds.n_patches(); p++) {
+    for (int p = 0; p < mflds_cuda.n_patches(); p++) {
       auto start = makeDims(0, grid.patches[p].off);
       auto count = makeDims(n_comps, grid.ldims);
-      auto ib = makeDims(0, -mflds.box().ib());
-      auto im = makeDims(n_comps, mflds.box().im());
-      writer.putVariable(mflds[p].storage().data(), launch, shape,
-                         {start, count}, {ib, im}); // FIXME cast
+      auto ib = makeDims(0, -mflds_cuda.ib());
+      auto im = makeDims(n_comps, mflds_cuda.im());
+      writer.putVariable(&h_mflds.gt()(mflds_cuda.ib(0), mflds_cuda.ib(1),
+                                       mflds_cuda.ib(2), 0, p),
+                         launch, shape, {start, count}, {ib, im});
     }
 
     // host mirror will go away as this function returns, so need
