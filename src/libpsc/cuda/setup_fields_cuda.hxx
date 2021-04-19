@@ -8,14 +8,16 @@ template <>
 template <typename FUNC>
 void detail::SetupFields<MfieldsStateCuda>::run(Mfields& mf, FUNC&& func)
 {
-  auto h_mf = hostMirror(mf);
-  copy(mf, h_mf);
+  auto bnd = mf.ibn();
+  auto h_mf = gt::host_mirror(mf.gt());
+  gt::copy(mf.storage(), h_mf);
+
   for (int p = 0; p < mf.n_patches(); ++p) {
     auto& patch = mf.grid().patches[p];
-    auto flds = make_Fields3d<dim_xyz>(h_mf[p]);
+    auto flds =
+      make_Fields3d<dim_xyz>(h_mf.view(_all, _all, _all, _all, p), -bnd);
 
-    int n_ghosts =
-      std::max({mf.ibn()[0], mf.ibn()[1], mf.ibn()[2]}); // FIXME, not pretty
+    int n_ghosts = std::max({bnd[0], bnd[1], bnd[2]});
     // FIXME, do we need the ghost points?
     mf.grid().Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
       double x_nc = patch.x_nc(jx), y_nc = patch.y_nc(jy),
@@ -44,21 +46,24 @@ void detail::SetupFields<MfieldsStateCuda>::run(Mfields& mf, FUNC&& func)
       flds(JZI, jx, jy, jz) += func(JZI, nnc);
     });
   }
-  copy(h_mf, mf);
+  gt::copy(h_mf, mf.storage());
 }
 
 template <>
 template <typename FUNC>
 void detail::SetupFields<MfieldsCuda>::run(Mfields& mf, FUNC&& func)
 {
-  auto h_mf = hostMirror(mf);
-  copy(mf, h_mf);
+  auto bnd = mf.ibn();
+  auto h_mf = gt::host_mirror(mf.gt());
+  gt::copy(mf.storage(), h_mf);
+
   for (int p = 0; p < mf.n_patches(); ++p) {
     auto& patch = mf.grid().patches[p];
-    auto flds = make_Fields3d<dim_xyz>(h_mf[p]);
+    auto flds =
+      make_Fields3d<dim_xyz>(h_mf.view(_all, _all, _all, _all, p), -bnd);
 
-    int n_ghosts =
-      std::max({mf.ibn()[0], mf.ibn()[1], mf.ibn()[2]}); // FIXME, not pretty
+    int n_ghosts = std::max({bnd[0], bnd[1], bnd[2]});
+
     // FIXME, do we need the ghost points?
     mf.grid().Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
       double x_nc = patch.x_nc(jx), y_nc = patch.y_nc(jy),
@@ -87,5 +92,5 @@ void detail::SetupFields<MfieldsCuda>::run(Mfields& mf, FUNC&& func)
       flds(JZI, jx, jy, jz) += func(JZI, nnc);
     });
   }
-  copy(h_mf, mf);
+  gt::copy(h_mf, mf.storage());
 }
