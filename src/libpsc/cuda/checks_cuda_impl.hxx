@@ -78,15 +78,15 @@ struct ChecksCuda
 
     double eps = continuity_threshold;
     double max_err = 0.;
+    auto D_rho = view_interior(d_rho.gt(), d_rho.ibn());
+    auto Div_J = view_interior(divj_.gt(), divj_.ibn());
     for (int p = 0; p < divj_.n_patches(); p++) {
-      auto D_rho = make_Fields3d<dim_xyz>(d_rho[p]);
-      auto Div_J = make_Fields3d<dim_xyz>(divj_[p]);
-      grid.Foreach_3d(0, 0, [&](int jx, int jy, int jz) {
-        double d_rho = D_rho(0, jx, jy, jz);
-        double div_j = Div_J(0, jx, jy, jz);
+      grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
+        double d_rho = D_rho(i, j, k, 0, p);
+        double div_j = Div_J(i, j, k, 0, p);
         max_err = fmax(max_err, fabs(d_rho + div_j));
         if (fabs(d_rho + div_j) > eps) {
-          mprintf("p%d (%d,%d,%d): %g -- %g diff %g\n", p, jx, jy, jz, d_rho,
+          mprintf("p%d (%d,%d,%d): %g -- %g diff %g\n", p, i, j, k, d_rho,
                   -div_j, d_rho + div_j);
         }
       });
