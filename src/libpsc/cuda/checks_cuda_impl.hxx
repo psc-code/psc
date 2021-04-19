@@ -124,19 +124,17 @@ struct ChecksCuda
       return;
     }
 
-    item_rho_(mprts);
-
     auto& h_mflds = mflds.get_as<MfieldsState>(0, mflds._n_comps());
 
     auto dive = Item_dive<MfieldsState>(h_mflds);
-    auto& dev_rho = item_rho_.result();
 
-    auto& rho = dev_rho.template get_as<Mfields>(0, 1);
+    item_rho_(mprts);
+    auto&& rho = gt::host_mirror(item_rho_.gt());
+    gt::copy(gt::eval(item_rho_.gt()), rho);
+
     double eps = gauss_threshold;
     double max_err = 0.;
     for (int p = 0; p < dive.n_patches(); p++) {
-      auto Rho = make_Fields3d<dim_xyz>(rho[p]);
-
       int l[3] = {0, 0, 0}, r[3] = {0, 0, 0};
       for (int d = 0; d < 3; d++) {
         if (grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL &&
@@ -150,7 +148,7 @@ struct ChecksCuda
             jz >= grid.ldims[2] - r[2]) {
           // nothing
         } else {
-          double v_rho = Rho(0, jx, jy, jz);
+          double v_rho = rho(jx, jy, jz, 0, p);
           double v_dive = dive(0, {jx, jy, jz}, p);
           max_err = fmax(max_err, fabs(v_dive - v_rho));
 #if 1
@@ -177,23 +175,13 @@ struct ChecksCuda
         writer.open("gauss");
       }
       writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
-      {
-        Int3 bnd = rho.ibn();
-        writer.write(rho.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                                   _s(bnd[2], -bnd[2])),
-                     grid, "rho", {"rho"});
-      }
-      {
-        Int3 bnd = dive.ibn();
-        writer.write(dive.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                                    _s(bnd[2], -bnd[2])),
-                     dive.grid(), dive.name(), dive.comp_names());
-      }
+      writer.write(rho, grid, "rho", {"rho"});
+      writer.write(view_interior(dive.gt(), dive.ibn()), dive.grid(),
+                   dive.name(), dive.comp_names());
       writer.end_step();
     }
 
     assert(max_err < eps);
-    dev_rho.put_as(rho, 0, 0);
     mflds.put_as(h_mflds, 0, 0);
   }
 
