@@ -80,12 +80,12 @@ struct ChecksCuda
     auto D_rho = view_interior(d_rho.gt(), d_rho.ibn());
     for (int p = 0; p < grid.n_patches(); p++) {
       grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-        double d_rho = D_rho(i, j, k, 0, p);
-        double div_j = dt_divj(i, j, k, 0, p);
-        max_err = fmax(max_err, fabs(d_rho + div_j));
-        if (fabs(d_rho + div_j) > eps) {
-          mprintf("p%d (%d,%d,%d): %g -- %g diff %g\n", p, i, j, k, d_rho,
-                  -div_j, d_rho + div_j);
+        double _d_rho = D_rho(i, j, k, 0, p);
+        double _dt_divj = dt_divj(i, j, k, 0, p);
+        max_err = std::max(max_err, std::abs(_d_rho + _dt_divj));
+        if (std::abs(_d_rho + _dt_divj) > eps) {
+          mprintf("p%d (%d,%d,%d): %g -- %g diff %g\n", p, i, j, k, _d_rho,
+                  -_dt_divj, _d_rho + _dt_divj);
         }
       });
     }
