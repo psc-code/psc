@@ -147,7 +147,7 @@ public:
     auto s0 = _s(1, _);
     auto sm = _s(_, -1);
 
-    auto res = gt::empty<Real>(
+    auto res = gt::empty<Real, gt::expr_space_type<decltype(mflds_.gt())>>(
       {grid.ldims[0], grid.ldims[1], grid.ldims[2], 1, grid.n_patches()});
 
     if (grid.isInvar(0)) {
