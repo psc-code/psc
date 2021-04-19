@@ -135,23 +135,6 @@ public:
 
   Item_divj(MfieldsState& mflds) : mflds_{mflds} {}
 
-  Real operator()(int m, Int3 ijk, int p) const
-  {
-    const auto& grid = mflds_.grid();
-    define_dxdydz(dx, dy, dz);
-    auto flds = make_Fields3d<dim_xyz>(mflds_[p]);
-
-    return ((flds(JXI, ijk[0], ijk[1], ijk[2]) -
-             flds(JXI, ijk[0] - dx, ijk[1], ijk[2])) /
-              grid.domain.dx[0] +
-            (flds(JYI, ijk[0], ijk[1], ijk[2]) -
-             flds(JYI, ijk[0], ijk[1] - dy, ijk[2])) /
-              grid.domain.dx[1] +
-            (flds(JZI, ijk[0], ijk[1], ijk[2]) -
-             flds(JZI, ijk[0], ijk[1], ijk[2] - dz)) /
-              grid.domain.dx[2]);
-  }
-
   const Grid_t& grid() const { return mflds_.grid(); }
   Int3 ibn() const { return {}; }
   int n_patches() const { return grid().n_patches(); }
