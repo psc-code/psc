@@ -70,17 +70,15 @@ struct ChecksCuda
     auto& rho_p = dev_rho_p.template get_as<Mfields>(0, 1);
     auto& rho_m = dev_rho_m.template get_as<Mfields>(0, 1);
 
-    auto& d_rho = rho_p;
-    d_rho.storage() = d_rho.storage() - rho_m.storage();
-
+    auto&& d_rho = view_interior(rho_p.gt(), rho_p.ibn()) -
+                   view_interior(rho_m.gt(), rho_m.ibn());
     auto&& dt_divj = grid.dt * item_divj.gt();
 
     double eps = continuity_threshold;
     double max_err = 0.;
-    auto D_rho = view_interior(d_rho.gt(), d_rho.ibn());
     for (int p = 0; p < grid.n_patches(); p++) {
       grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-        double _d_rho = D_rho(i, j, k, 0, p);
+        double _d_rho = d_rho(i, j, k, 0, p);
         double _dt_divj = dt_divj(i, j, k, 0, p);
         max_err = std::max(max_err, std::abs(_d_rho + _dt_divj));
         if (std::abs(_d_rho + _dt_divj) > eps) {
@@ -106,8 +104,7 @@ struct ChecksCuda
       }
       writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
       writer.write(dt_divj, grid, "div_j", {"div_j"});
-      writer.write(view_interior(d_rho.gt(), d_rho.ibn()), grid, "d_rho",
-                   {"d_rho"});
+      writer.write(d_rho, grid, "d_rho", {"d_rho"});
       writer.end_step();
     }
 
