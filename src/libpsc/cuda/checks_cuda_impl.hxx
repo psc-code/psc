@@ -37,8 +37,7 @@ struct ChecksCuda
     : ChecksParams(params),
       item_rho_{grid},
       item_rho_m_{grid},
-      item_rho_p_{grid},
-      divj_{grid, 1, {}}
+      item_rho_p_{grid}
   {}
 
   void continuity_before_particle_push(Mparticles& mprts)
@@ -74,16 +73,15 @@ struct ChecksCuda
     auto& d_rho = rho_p;
     d_rho.storage() = d_rho.storage() - rho_m.storage();
 
-    divj_.storage() = grid.dt * item_divj.gt();
+    auto&& dt_divj = grid.dt * item_divj.gt();
 
     double eps = continuity_threshold;
     double max_err = 0.;
     auto D_rho = view_interior(d_rho.gt(), d_rho.ibn());
-    auto Div_J = view_interior(divj_.gt(), divj_.ibn());
-    for (int p = 0; p < divj_.n_patches(); p++) {
+    for (int p = 0; p < grid.n_patches(); p++) {
       grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
         double d_rho = D_rho(i, j, k, 0, p);
-        double div_j = Div_J(i, j, k, 0, p);
+        double div_j = dt_divj(i, j, k, 0, p);
         max_err = fmax(max_err, fabs(d_rho + div_j));
         if (fabs(d_rho + div_j) > eps) {
           mprintf("p%d (%d,%d,%d): %g -- %g diff %g\n", p, i, j, k, d_rho,
@@ -107,18 +105,9 @@ struct ChecksCuda
         writer.open("continuity");
       }
       writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
-      {
-        Int3 bnd = divj_.ibn();
-        writer.write(divj_.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                                     _s(bnd[2], -bnd[2])),
-                     grid, "div_j", {"div_j"});
-      }
-      {
-        Int3 bnd = d_rho.ibn();
-        writer.write(d_rho.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                                     _s(bnd[2], -bnd[2])),
-                     grid, "d_rho", {"d_rho"});
-      }
+      writer.write(dt_divj, grid, "div_j", {"div_j"});
+      writer.write(view_interior(d_rho.gt(), d_rho.ibn()), grid, "d_rho",
+                   {"d_rho"});
       writer.end_step();
     }
 
@@ -218,5 +207,4 @@ private:
   Moment_t item_rho_p_;
   Moment_t item_rho_m_;
   Moment_t item_rho_;
-  Mfields divj_;
 };
