@@ -91,28 +91,40 @@ public:
 
   Item_dive(MfieldsState& mflds) : mflds_{mflds} {}
 
-  Real operator()(int m, Int3 ijk, int p) const
-  {
-    const auto& grid = mflds_.grid();
-    define_dxdydz(dx, dy, dz);
-
-    auto flds = make_Fields3d<dim_xyz>(mflds_[p]);
-    return ((flds(EX, ijk[0], ijk[1], ijk[2]) -
-             flds(EX, ijk[0] - dx, ijk[1], ijk[2])) /
-              grid.domain.dx[0] +
-            (flds(EY, ijk[0], ijk[1], ijk[2]) -
-             flds(EY, ijk[0], ijk[1] - dy, ijk[2])) /
-              grid.domain.dx[1] +
-            (flds(EZ, ijk[0], ijk[1], ijk[2]) -
-             flds(EZ, ijk[0], ijk[1], ijk[2] - dz)) /
-              grid.domain.dx[2]);
-  }
-
-  auto gt() const { return to_gt(*this); }
-
   const Grid_t& grid() const { return mflds_.grid(); }
   Int3 ibn() const { return {}; }
   int n_patches() const { return grid().n_patches(); }
+
+  auto gt() const
+  {
+    const auto& grid = mflds_.grid();
+    auto dxyz = grid.domain.dx;
+    auto bnd = mflds_.ibn();
+    auto s0 = _s(1, _);
+    auto sm = _s(_, -1);
+
+    auto res = gt::empty<Real, gt::expr_space_type<decltype(mflds_.gt())>>(
+      {grid.ldims[0], grid.ldims[1], grid.ldims[2], 1, grid.n_patches()});
+
+    if (grid.isInvar(0)) {
+      auto flds = mflds_.gt().view(_all, _s(-1 + bnd[1], -bnd[1]),
+                                   _s(-1 + bnd[2], -bnd[2]));
+
+      res.view(_all, _all, _all, 0) =
+        (flds.view(_all, s0, s0, EY) - flds.view(_all, sm, s0, EY)) / dxyz[1] +
+        (flds.view(_all, s0, s0, EZ) - flds.view(_all, s0, sm, EZ)) / dxyz[2];
+    } else {
+      auto flds =
+        mflds_.gt().view(_s(-1 + bnd[0], -bnd[0]), _s(-1 + bnd[1], -bnd[1]),
+                         _s(-1 + bnd[2], -bnd[2]));
+
+      res.view(_all, _all, _all, 0) =
+        (flds.view(s0, s0, s0, EX) - flds.view(sm, s0, s0, EX)) / dxyz[0] +
+        (flds.view(s0, s0, s0, EY) - flds.view(s0, sm, s0, EY)) / dxyz[1] +
+        (flds.view(s0, s0, s0, EZ) - flds.view(s0, s0, sm, EZ)) / dxyz[2];
+    }
+    return res;
+  }
 
 private:
   MfieldsState& mflds_;

@@ -137,6 +137,7 @@ struct Checks_
 
     rho_.storage() = Moment_t{mprts}.gt();
     auto dive = Item_dive<MfieldsState>(mflds);
+    auto&& dive_gt = view_interior(dive.gt(), dive.ibn());
 
     double eps = gauss_threshold;
     double max_err = 0.;
@@ -157,7 +158,7 @@ struct Checks_
           // nothing
         } else {
           double v_rho = Rho(0, jx, jy, jz);
-          double v_dive = dive(0, {jx, jy, jz}, p);
+          double v_dive = dive_gt(jx, jy, jz, 0, p);
           max_err = fmax(max_err, fabs(v_dive - v_rho));
 #if 1
           if (fabs(v_dive - v_rho) > eps) {

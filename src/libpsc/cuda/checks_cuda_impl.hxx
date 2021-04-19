@@ -125,16 +125,17 @@ struct ChecksCuda
     }
 
     auto& h_mflds = mflds.get_as<MfieldsState>(0, mflds._n_comps());
-
-    auto dive = Item_dive<MfieldsState>(h_mflds);
+    auto item_dive = Item_dive<MfieldsState>(h_mflds);
 
     item_rho_(mprts);
     auto&& rho = gt::host_mirror(item_rho_.gt());
+    auto&& dive = gt::host_mirror(item_dive.gt());
     gt::copy(gt::eval(item_rho_.gt()), rho);
+    gt::copy(gt::eval(item_dive.gt()), dive);
 
     double eps = gauss_threshold;
     double max_err = 0.;
-    for (int p = 0; p < dive.n_patches(); p++) {
+    for (int p = 0; p < grid.n_patches(); p++) {
       int l[3] = {0, 0, 0}, r[3] = {0, 0, 0};
       for (int d = 0; d < 3; d++) {
         if (grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL &&
@@ -149,7 +150,7 @@ struct ChecksCuda
           // nothing
         } else {
           double v_rho = rho(jx, jy, jz, 0, p);
-          double v_dive = dive(0, {jx, jy, jz}, p);
+          double v_dive = dive(jx, jy, jz, 0, p);
           max_err = fmax(max_err, fabs(v_dive - v_rho));
 #if 1
           if (fabs(v_dive - v_rho) > eps) {
@@ -176,8 +177,7 @@ struct ChecksCuda
       }
       writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
       writer.write(rho, grid, "rho", {"rho"});
-      writer.write(view_interior(dive.gt(), dive.ibn()), dive.grid(),
-                   dive.name(), dive.comp_names());
+      writer.write(dive, grid, "dive", {"dive"});
       writer.end_step();
     }
 
