@@ -4,6 +4,8 @@
 
 #include "cuda_iface.h"
 
+// FIXME this is all unused
+
 void cuda_mfields_calc_dive_yz(MfieldsStateCuda& mflds, MfieldsCuda& mf);
 void cuda_mfields_calc_dive_xyz(MfieldsStateCuda& mflds, MfieldsCuda& mf);
 
