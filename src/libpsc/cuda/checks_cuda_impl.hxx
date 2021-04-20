@@ -124,8 +124,7 @@ struct ChecksCuda
       return;
     }
 
-    auto& h_mflds = mflds.get_as<MfieldsState>(0, mflds._n_comps());
-    auto item_dive = Item_dive<MfieldsState>(h_mflds);
+    auto item_dive = Item_dive<MfieldsStateCuda>(mflds);
 
     item_rho_(mprts);
     auto&& rho = gt::host_mirror(item_rho_.gt());
@@ -182,7 +181,6 @@ struct ChecksCuda
     }
 
     assert(max_err < eps);
-    mflds.put_as(h_mflds, 0, 0);
   }
 
 private:
