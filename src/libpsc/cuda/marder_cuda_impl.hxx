@@ -98,7 +98,8 @@ struct MarderCuda : MarderBase
     }
   }
 
-  void calc_aid_fields(MfieldsState& mflds, Mfields& rho)
+  template <typename E>
+  void calc_aid_fields(MfieldsState& mflds, const E& rho)
   {
     const auto& grid = mflds.grid();
     Item_dive<MfieldsStateCuda> item_dive(mflds);
@@ -108,13 +109,12 @@ struct MarderCuda : MarderBase
       static int cnt;
       io_.begin_step(cnt, cnt); // ppsc->timestep, ppsc->timestep * ppsc->dt);
       cnt++;
-      io_.write(view_interior(rho.gt(), rho.ibn()), grid, "rho", {"rho"});
+      io_.write(rho, grid, "rho", {"rho"});
       io_.write(dive, grid, "dive", {"dive"});
       io_.end_step();
     }
 
-    view_interior(res_.gt(), res_.ibn()) =
-      dive - view_interior(rho.gt(), rho.ibn());
+    view_interior(res_.gt(), res_.ibn()) = dive - rho;
     bnd_mf_.fill_ghosts(res_, 0, 1);
   }
 
@@ -155,7 +155,7 @@ struct MarderCuda : MarderBase
     auto& rho = item_rho_.result();
 
     for (int i = 0; i < loop_; i++) {
-      calc_aid_fields(mflds, rho);
+      calc_aid_fields(mflds, view_interior(rho.gt(), rho.ibn()));
       correct(mflds);
       bnd_.fill_ghosts(mflds, EX, EX + 3);
     }
