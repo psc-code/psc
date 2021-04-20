@@ -101,28 +101,20 @@ struct MarderCuda : MarderBase
   void calc_aid_fields(MfieldsState& mflds, Mfields& rho)
   {
     Item_dive<MfieldsStateCuda> item_dive(mflds);
-    auto& dive = item_dive.result();
+    auto& _dive = item_dive.result();
+    auto&& dive = _dive.gt();
 
     if (dump_) {
       static int cnt;
       io_.begin_step(cnt, cnt); // ppsc->timestep, ppsc->timestep * ppsc->dt);
       cnt++;
-      {
-        Int3 bnd = rho.ibn();
-        io_.write(rho.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                                _s(bnd[2], -bnd[2])),
-                  rho.grid(), "rho", {"rho"});
-      }
-      {
-        Int3 bnd = dive.ibn();
-        io_.write(dive.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                                 _s(bnd[2], -bnd[2])),
-                  dive.grid(), "dive", {"dive"});
-      }
+      io_.write(view_interior(rho.gt(), rho.ibn()), rho.grid(), "rho", {"rho"});
+      io_.write(view_interior(dive, _dive.ibn()), _dive.grid(), "dive",
+                {"dive"});
       io_.end_step();
     }
 
-    res_.gt() = dive.gt() - rho.gt();
+    res_.gt() = dive - rho.gt();
     bnd_mf_.fill_ghosts(res_, 0, 1);
   }
 
