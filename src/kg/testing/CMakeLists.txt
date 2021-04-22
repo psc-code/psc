@@ -13,11 +13,6 @@ endmacro()
 add_kg_test(TestVec3 TestVec3.cxx)
 add_kg_test(TestSArray TestSArray.cxx)
 
-if (USE_CUDA)
-  add_kg_test(TestDFields TestDFields.cu)
-  target_include_directories(TestDFields PRIVATE ../../libpsc/cuda)
-endif()
-
 if (PSC_HAVE_ADIOS2)
   add_kg_test(TestIOAdios2 io/TestIOAdios2.cxx)
   add_kg_test(TestIO io/TestIO.cxx)

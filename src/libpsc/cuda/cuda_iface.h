@@ -22,26 +22,10 @@ typedef float float_3[3];
 typedef double double_3[3];
 
 // ----------------------------------------------------------------------
-// cuda_mfields
-
-struct cuda_mfields;
-
-void cuda_push_fields_E_xyz(struct cuda_mfields* cmflds, float dt);
-void cuda_push_fields_H_xyz(struct cuda_mfields* cmflds, float dt);
-
-// ----------------------------------------------------------------------
 // cuda_moments
 
 template <typename BS>
 struct cuda_mparticles;
-
-template <typename BS>
-void cuda_moments_yz_rho_1st_nc(cuda_mparticles<BS>* cmprts,
-                                struct cuda_mfields* cmres);
-
-template <typename BS>
-void cuda_moments_yz_n_1st(cuda_mparticles<BS>* cmprts,
-                           struct cuda_mfields* cmres);
 
 // FIXME, mv elsewhere
 #define HERE                                                                   \

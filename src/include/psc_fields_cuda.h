@@ -5,7 +5,6 @@
 #include <mpi.h>
 #include "fields3d.hxx"
 #include "fields_traits.hxx"
-#include "cuda_mfields.h"
 
 #include "psc_fields_single.h"
 
@@ -14,21 +13,33 @@
 // ======================================================================
 // MfieldsCuda
 
-struct MfieldsCuda : MfieldsBase
+struct MfieldsCuda;
+
+template <>
+struct MfieldsCRTPInnerTypes<MfieldsCuda>
+{
+  using Storage = gt::gtensor<float, 5, gt::space::device>;
+};
+
+struct MfieldsCuda
+  : MfieldsBase
+  , MfieldsCRTP<MfieldsCuda>
 {
   using real_t = float;
   using Real = real_t;
+  using Base = MfieldsCRTP<MfieldsCuda>;
+  using Storage = typename Base::Storage;
+  using space = gt::space::device;
 
   MfieldsCuda(const Grid_t& grid, int n_fields, Int3 ibn)
     : MfieldsBase{grid, n_fields, ibn},
-      cmflds_{new cuda_mfields(grid, n_fields, ibn)}
-  {}
+      Base(n_fields, {-ibn, grid.ldims + 2 * ibn}, grid.n_patches()),
+      storage_(gt::shape(Base::box().im(0), Base::box().im(1),
+                         Base::box().im(2), n_fields, Base::n_patches()))
+  {
+    thrust::fill(storage_.data(), storage_.data() + storage_.size(), real_t{});
+  }
 
-  cuda_mfields* cmflds() { return cmflds_.get(); }
-  const cuda_mfields* cmflds() const { return cmflds_.get(); }
-
-  int n_comps() const { return _n_comps(); }
-  int n_patches() const { return cmflds_->n_patches(); };
   const Grid_t& grid() const { return _grid(); }
 
   void reset(const Grid_t& new_grid) override
@@ -36,37 +47,64 @@ struct MfieldsCuda : MfieldsBase
     *this = MfieldsCuda(new_grid, n_comps(), ibn());
   }
 
-  gt::gtensor_span_device<real_t, 5> gt()
+  auto gt()
   {
-    return gt::adapt_device(cmflds_->storage().data().get(),
-                            cmflds_->storage().shape());
+    return gt::adapt_device(storage_.data().get(), storage_.shape());
+  }
+
+  auto gt() const
+  {
+    return gt::adapt_device(storage_.data().get(), storage_.shape());
   }
 
   static const Convert convert_to_, convert_from_;
   const Convert& convert_to() override { return convert_to_; }
   const Convert& convert_from() override { return convert_from_; }
 
-  std::unique_ptr<cuda_mfields> cmflds_;
+private:
+  Storage storage_;
+
+  Storage& storageImpl() { return storage_; }
+  const Storage& storageImpl() const { return storage_; }
+
+  friend class MfieldsCRTP<MfieldsCuda>;
 };
 
 inline MfieldsSingle hostMirror(MfieldsCuda& mflds)
 {
-  return hostMirror(*mflds.cmflds());
+  return MfieldsSingle{mflds.grid(), mflds.n_comps(), mflds.ibn()};
 }
 
 inline MfieldsSingle hostMirror(const MfieldsCuda& mflds)
 {
-  return hostMirror(*mflds.cmflds());
+  return MfieldsSingle{mflds.grid(), mflds.n_comps(), mflds.ibn()};
 }
 
 inline void copy(const MfieldsCuda& mflds, MfieldsSingle& hmflds)
 {
-  copy(*mflds.cmflds(), hmflds);
+  static int pr;
+  if (!pr) {
+    pr = prof_register("mflds to host", 1., 0, 0);
+  }
+  prof_start(pr);
+  // gt::copy(mflds.gt(), hmflds.storage());
+  thrust::copy(mflds.gt().data(), mflds.gt().data() + mflds.gt().size(),
+               hmflds.storage().data());
+  prof_stop(pr);
 }
 
 inline void copy(const MfieldsSingle& hmflds, MfieldsCuda& mflds)
 {
-  copy(hmflds, *mflds.cmflds());
+  static int pr;
+  if (!pr) {
+    pr = prof_register("mflds from host", 1., 0, 0);
+  }
+  prof_start(pr);
+  // gt::copy(hmflds.storage(), mflds.gt());
+  thrust::copy(hmflds.storage().data(),
+               hmflds.storage().data() + hmflds.storage().size(),
+               mflds.gt().data());
+  prof_stop(pr);
 }
 
 // ======================================================================
@@ -81,14 +119,6 @@ struct MfieldsStateCuda : MfieldsStateBase
     : MfieldsStateBase{grid, NR_FIELDS, grid.ibn},
       mflds_{grid, NR_FIELDS, grid.ibn}
   {}
-
-  /* void reset(const Grid_t& new_grid) override */
-  /* { */
-  /*   MfieldsStateBase::reset(new_grid); */
-  /*   mflds_.reset(new_grid); */
-  /* } */
-
-  cuda_mfields* cmflds() { return mflds_.cmflds(); }
 
   int n_patches() const { return mflds_.n_patches(); }
   int n_comps() const { return mflds_.n_comps(); }

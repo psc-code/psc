@@ -2,7 +2,6 @@
 #pragma once
 
 #include "psc_fields_cuda.h"
-#include "cuda_mfields.h"
 #include "fields.hxx"
 #include "cuda_bits.h"
 

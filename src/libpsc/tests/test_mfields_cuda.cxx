@@ -51,14 +51,15 @@ TYPED_TEST(TestMfieldsCuda, HostMirror)
     return m + crd[0] + 100 * crd[1] + 10000 * crd[2];
   });
 
-  auto h_mflds = hostMirror(mflds);
-  copy(mflds, h_mflds);
+  auto&& gt = mflds.storage();
+  auto&& h_gt = gt::host_mirror(gt);
+  gt::copy(gt, h_gt);
+  auto&& h_gt_ref = h_mflds_ref.storage();
 
-  for (int p = 0; p < mflds.n_patches(); ++p) {
-    grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-      EXPECT_EQ(h_mflds(EX, i, j, k, p), h_mflds_ref(EX, i, j, k, p));
+  gt::launch<5, gt::space::host>(
+    h_gt.shape(), [=](int i, int j, int k, int m, int p) {
+      EXPECT_EQ(h_gt(i, j, k, m, p), h_gt_ref(i, j, k, m, p));
     });
-  }
 }
 
 #endif

@@ -52,15 +52,16 @@ TYPED_TEST(PushFieldsTest, Pushf1)
   pushf_.push_H(mflds, 1., dim{});
 
   // check result
-  auto&& h_mflds = hostMirror(mflds);
-  copy(mflds, h_mflds);
-  auto flds = make_Fields3d<dim_xyz>(h_mflds[0]);
-  grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-    double z = grid.patches[0].z_cc(k);
-    // printf("ijk %d:%d:%d %g %g dt %g\n", i,j,k, flds(HX, i,j,k),
-    // 	     kz*cos(kz*z), ppsc->dt);
-    EXPECT_NEAR(flds(HX, i, j, k), kz * cos(kz * z), eps);
-  });
+  auto&& h_gt = gt::host_mirror(mflds.gt());
+  gt::copy(mflds.gt(), h_gt);
+  auto bnd = mflds.ibn();
+  auto&& i_gt =
+    h_gt.view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]), _s(bnd[2], -bnd[2]));
+  gt::launch<5, gt::space::host>(
+    i_gt.shape(), [&](int i, int j, int k, int m, int p) {
+      double z = grid.patches[p].z_cc(k);
+      EXPECT_NEAR(i_gt(i, j, k, HX, p), kz * cos(kz * z), eps);
+    });
 }
 
 TYPED_TEST(PushFieldsTest, Pushf2)
@@ -91,15 +92,16 @@ TYPED_TEST(PushFieldsTest, Pushf2)
   pushf_.push_E(mflds, 1., dim{});
 
   // check result
-  auto&& h_mflds = hostMirror(mflds);
-  copy(mflds, h_mflds);
-  auto flds = make_Fields3d<dim_xyz>(h_mflds[0]);
-  grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-    double y = grid.patches[0].y_cc(j);
-    // printf("ijk %d:%d:%d %g %g dt %g\n", i,j,k, flds(HX, i,j,k),
-    // 	     kz*cos(kz*z), ppsc->dt);
-    EXPECT_NEAR(flds(EZ, i, j, k), ky * sin(ky * y), eps);
-  });
+  auto&& h_gt = gt::host_mirror(mflds.gt());
+  gt::copy(mflds.gt(), h_gt);
+  auto bnd = mflds.ibn();
+  auto&& i_gt =
+    h_gt.view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]), _s(bnd[2], -bnd[2]));
+  gt::launch<5, gt::space::host>(
+    i_gt.shape(), [&](int i, int j, int k, int m, int p) {
+      double y = grid.patches[p].y_cc(j);
+      EXPECT_NEAR(i_gt(i, j, k, EZ, p), ky * sin(ky * y), eps);
+    });
 }
 
 // ======================================================================
@@ -179,16 +181,14 @@ TYPED_TEST(PushFieldsTest, MarderCorrect)
   psc::marder::correct(mflds, mphi, diffusion);
 
   // check result
-  auto&& h_mflds = hostMirror(mflds);
-  auto&& h_mflds_ref = hostMirror(mflds_ref);
-  copy(mflds, h_mflds);
-  copy(mflds_ref, h_mflds_ref);
-  auto flds = make_Fields3d<dim_xyz>(h_mflds[0]);
-  auto flds_ref = make_Fields3d<dim_xyz>(h_mflds_ref[0]);
-  grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-    double z = grid.patches[0].z_cc(k);
-    EXPECT_NEAR(flds(EZ, i, j, k), flds_ref(EZ, i, j, k), eps);
-  });
+  auto&& h_gt = gt::host_mirror(mflds.gt());
+  auto&& h_gt_ref = gt::host_mirror(mflds_ref.gt());
+  gt::copy(mflds.gt(), h_gt);
+  gt::copy(mflds_ref.gt(), h_gt_ref);
+  gt::launch<5, gt::space::host>(
+    h_gt.shape(), [&](int i, int j, int k, int m, int p) {
+      EXPECT_NEAR(h_gt(i, j, k, m, p), h_gt_ref(i, j, k, m, p), eps);
+    });
 }
 
 template <typename T>
@@ -248,12 +248,11 @@ TYPED_TEST(ItemTest, ItemDivE)
   auto&& h_rho_ref = host_mirror(rho_ref);
   gt::copy(rho, h_rho);
   gt::copy(rho_ref, h_rho_ref);
-  for (int p = 0; p < grid.n_patches(); p++) {
-    grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-      EXPECT_NEAR(h_rho(i, j, k, 0, p), h_rho_ref(i, j, k, 0, p), eps)
+  gt::launch<5, gt::space::host>(
+    h_rho.shape(), [=](int i, int j, int k, int m, int p) {
+      EXPECT_NEAR(h_rho(i, j, k, m, p), h_rho_ref(i, j, k, m, p), eps)
         << "i " << i << " j " << j << " k " << k << "\n";
     });
-  }
 }
 
 int main(int argc, char** argv)

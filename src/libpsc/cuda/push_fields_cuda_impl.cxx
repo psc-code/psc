@@ -2,6 +2,7 @@
 #include "push_fields_cuda_impl.hxx"
 
 #include "fields.hxx"
+#include "cuda_bits.h"
 
 // OPT: precalc offset
 

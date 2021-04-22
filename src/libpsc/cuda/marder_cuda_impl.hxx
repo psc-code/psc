@@ -6,6 +6,7 @@
 #include "mparticles_cuda.hxx"
 #include "fields_item_dive_cuda.hxx"
 #include "fields_item_moments_1st_cuda.hxx"
+#include "cuda_bits.h"
 
 #include <mrc_io.h>
 
@@ -28,9 +29,6 @@ inline void correct(MfieldsStateCuda& mflds, MfieldsCuda& mf, float diffusion)
   fac[0] = .5 * grid.dt * diffusion / grid.domain.dx[0];
   fac[1] = .5 * grid.dt * diffusion / grid.domain.dx[1];
   fac[2] = .5 * grid.dt * diffusion / grid.domain.dx[2];
-
-  cuda_mfields* cmflds = mflds.cmflds();
-  cuda_mfields* cmf = mf.cmflds();
 
   // OPT, do all patches in one kernel
   for (int p = 0; p < mflds.n_patches(); p++) {
