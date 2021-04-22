@@ -187,10 +187,11 @@ void PushFieldsCuda::push_E(MfieldsStateCuda& mflds, double dt_fac, dim_xyz tag)
 
   auto shape = mflds.gt().shape();
   auto gt = mflds.gt().to_kernel();
-  gt::launch<4>({shape[0], shape[1], shape[2], mflds.n_patches()},
-                GT_LAMBDA(int ix, int iy, int iz, int p) {
-                  push_fields_E_xyz(gt, dt, cnx, cny, cnz, ix, iy, iz, p);
-                });
+  gt::launch<4>(
+    {shape[0], shape[1], shape[2], mflds.n_patches()},
+    GT_LAMBDA(int ix, int iy, int iz, int p) {
+      push_fields_E_xyz(gt, dt, cnx, cny, cnz, ix, iy, iz, p);
+    });
   cuda_sync_if_enabled();
 }
 
@@ -207,9 +208,10 @@ void PushFieldsCuda::push_H(MfieldsStateCuda& mflds, double dt_fac, dim_xyz tag)
 
   auto shape = mflds.gt().shape();
   auto gt = mflds.gt().to_kernel();
-  gt::launch<4>({shape[0] - 1, shape[1] - 1, shape[2] - 1, mflds.n_patches()},
-                GT_LAMBDA(int ix, int iy, int iz, int p) {
-                  push_fields_H_xyz(gt, dt, cnx, cny, cnz, ix, iy, iz, p);
-                });
+  gt::launch<4>(
+    {shape[0] - 1, shape[1] - 1, shape[2] - 1, mflds.n_patches()},
+    GT_LAMBDA(int ix, int iy, int iz, int p) {
+      push_fields_H_xyz(gt, dt, cnx, cny, cnz, ix, iy, iz, p);
+    });
   cuda_sync_if_enabled();
 }
