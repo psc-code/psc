@@ -114,6 +114,7 @@ TYPED_TEST(BndTest, FillGhosts)
 
   {
     auto&& h_mflds = gt::host_mirror(mflds.gt());
+    h_mflds.view() = 0.;
     for (int p = 0; p < mflds.n_patches(); p++) {
       int i0 = grid.patches[p].off[0];
       int j0 = grid.patches[p].off[1];
