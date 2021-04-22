@@ -5,6 +5,7 @@
 #include "cuda_bits.h"
 
 #include "psc.h"
+#include "psc_fields_cuda.h"
 #include "fields.hxx"
 
 #define BLOCKSIZE_X 1
@@ -13,218 +14,17 @@
 
 #define SW (2) // FIXME
 
-// OPT lots of optimization opportunity in the single-proc/patch ones,
-// but they may not be that important for float production
-
-__global__ static void fill_ghosts_periodic_yz(DFields d_flds, int mb, int me)
-{
-  int iy = blockIdx.x * blockDim.x + threadIdx.x;
-  int iz = blockIdx.y * blockDim.y + threadIdx.y;
-
-  if (!(iy < d_flds.storage().shape(1) && iz < d_flds.storage().shape(2)))
-    return;
-
-  bool inside = true;
-  int jy = iy, jz = iz;
-  if (jy < SW) {
-    jy += d_flds.storage().shape(1) - 2 * SW;
-    inside = false;
-  }
-  if (jy >= d_flds.storage().shape(1) - SW) {
-    jy -= d_flds.storage().shape(1) - 2 * SW;
-    inside = false;
-  }
-  if (jz < SW) {
-    jz += d_flds.storage().shape(2) - 2 * SW;
-    inside = false;
-  }
-  if (jz >= d_flds.storage().shape(2) - SW) {
-    jz -= d_flds.storage().shape(2) - 2 * SW;
-    inside = false;
-  }
-
-  if (inside)
-    return;
-
-  auto _d_flds = make_Fields3d<dim_xyz>(d_flds);
-  for (int m = mb; m < me; m++) {
-    _d_flds(m, 0, iy - SW, iz - SW) = _d_flds(m, 0, jy - SW, jz - SW);
-  }
-}
-
-void cuda_fill_ghosts_periodic_yz(struct cuda_mfields* cmflds, int p, int mb,
-                                  int me)
-{
-  assert(cmflds->ib(1) == -SW);
-  assert(cmflds->ib(2) == -SW);
-
-  dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
-  dim3 dimGrid((cmflds->im(1) + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-               (cmflds->im(2) + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
-  fill_ghosts_periodic_yz<<<dimGrid, dimBlock>>>((*cmflds)[p], mb, me);
-  cuda_sync_if_enabled();
-}
-
-__global__ static void fill_ghosts_periodic_z(DFields d_flds, int mb, int me)
-{
-  int iy = blockIdx.x * blockDim.x + threadIdx.x;
-  int iz = blockIdx.y * blockDim.y + threadIdx.y;
-
-  if (!(iy < d_flds.storage().shape(1) && iz < d_flds.storage().shape(2)))
-    return;
-
-  bool inside = true;
-  int jy = iy, jz = iz;
-  if (jz < SW) {
-    jz += d_flds.storage().shape(2) - 2 * SW;
-    inside = false;
-  }
-  if (jz >= d_flds.storage().shape(2) - SW) {
-    jz -= d_flds.storage().shape(2) - 2 * SW;
-    inside = false;
-  }
-
-  if (inside)
-    return;
-
-  auto _d_flds = make_Fields3d<dim_xyz>(d_flds);
-  for (int m = mb; m < me; m++) {
-    _d_flds(m, 0, iy - SW, iz - SW) = _d_flds(m, 0, jy - SW, jz - SW);
-  }
-}
-
-void cuda_fill_ghosts_periodic_z(struct cuda_mfields* cmflds, int p, int mb,
-                                 int me)
-{
-  dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
-  dim3 dimGrid((cmflds->im(1) + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-               (cmflds->im(2) + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
-  fill_ghosts_periodic_z<<<dimGrid, dimBlock>>>((*cmflds)[p], mb, me);
-  cuda_sync_if_enabled();
-}
-
-__global__ static void add_ghosts_periodic_yz(DFields d_flds, int mb, int me)
-{
-  int iy = blockIdx.x * blockDim.x + threadIdx.x;
-  int iz = blockIdx.y * blockDim.y + threadIdx.y;
-
-  auto _d_flds = make_Fields3d<dim_xyz>(d_flds);
-
-  if (!(iy < d_flds.storage().shape(1) - 2 * SW &&
-        iz < d_flds.storage().shape(2) - 2 * SW))
-    return;
-
-  if (iy < SW) {
-    int jy = iy + (d_flds.storage().shape(1) - 2 * SW);
-    int jz = iz;
-    for (int m = mb; m < me; m++) {
-      _d_flds(m, 0, iy, iz) += _d_flds(m, 0, jy, jz);
-    }
-    if (iz < SW) {
-      jz = iz + (d_flds.storage().shape(2) - 2 * SW);
-      for (int m = mb; m < me; m++) {
-        _d_flds(m, 0, iy, iz) += _d_flds(m, 0, jy, jz);
-      }
-    }
-    if (iz >= d_flds.storage().shape(2) - 3 * SW) {
-      jz = iz - (d_flds.storage().shape(2) - 2 * SW);
-      for (int m = mb; m < me; m++) {
-        _d_flds(m, 0, iy, iz) += _d_flds(m, 0, jy, jz);
-      }
-    }
-  }
-  if (iy >= d_flds.storage().shape(1) - 3 * SW) {
-    int jy = iy - (d_flds.storage().shape(1) - 2 * SW);
-    int jz = iz;
-    for (int m = mb; m < me; m++) {
-      _d_flds(m, 0, iy, iz) += _d_flds(m, 0, jy, jz);
-    }
-    if (iz < SW) {
-      jz = iz + (d_flds.storage().shape(2) - 2 * SW);
-      for (int m = mb; m < me; m++) {
-        _d_flds(m, 0, iy, iz) += _d_flds(m, 0, jy, jz);
-      }
-    }
-    if (iz >= d_flds.storage().shape(2) - 3 * SW) {
-      jz = iz - (d_flds.storage().shape(2) - 2 * SW);
-      for (int m = mb; m < me; m++) {
-        _d_flds(m, 0, iy, iz) += _d_flds(m, 0, jy, jz);
-      }
-    }
-  }
-  if (iz < SW) {
-    int jy = iy, jz = iz + (d_flds.storage().shape(2) - 2 * SW);
-    for (int m = mb; m < me; m++) {
-      _d_flds(m, 0, iy, iz) += _d_flds(m, 0, jy, jz);
-    }
-  }
-  if (iz >= d_flds.storage().shape(2) - 3 * SW) {
-    int jy = iy, jz = iz - (d_flds.storage().shape(2) - 2 * SW);
-    for (int m = mb; m < me; m++) {
-      _d_flds(m, 0, iy, iz) += _d_flds(m, 0, jy, jz);
-    }
-  }
-}
-
-void cuda_add_ghosts_periodic_yz(struct cuda_mfields* cmflds, int p, int mb,
-                                 int me)
-{
-  Int3 ldims = cmflds->grid().ldims;
-  dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
-  dim3 dimGrid((ldims[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-               (ldims[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
-
-  add_ghosts_periodic_yz<<<dimGrid, dimBlock>>>((*cmflds)[p], mb, me);
-  cuda_sync_if_enabled();
-}
-
-__global__ static void add_ghosts_periodic_z(DFields d_flds, int mb, int me)
-{
-  int iy = blockIdx.x * blockDim.x + threadIdx.x;
-  int iz = blockIdx.y * blockDim.y + threadIdx.y;
-
-  auto _d_flds = make_Fields3d<dim_xyz>(d_flds);
-
-  if (!(iy < d_flds.storage().shape(1) - 2 * SW &&
-        iz < d_flds.storage().shape(2) - 2 * SW))
-    return;
-
-  if (iz < SW) {
-    int jy = iy, jz = iz + (d_flds.storage().shape(2) - 2 * SW);
-    for (int m = mb; m < me; m++) {
-      _d_flds(m, 0, iy, iz) += _d_flds(m, 0, jy, jz);
-    }
-  }
-  if (iz >= d_flds.storage().shape(2) - 3 * SW) {
-    int jy = iy, jz = iz - (d_flds.storage().shape(2) - 2 * SW);
-    for (int m = mb; m < me; m++) {
-      _d_flds(m, 0, iy, iz) += _d_flds(m, 0, jy, jz);
-    }
-  }
-}
-
-void cuda_add_ghosts_periodic_z(struct cuda_mfields* cmflds, int p, int mb,
-                                int me)
-{
-  Int3 ldims = cmflds->grid().ldims;
-  dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
-  dim3 dimGrid((ldims[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-               (ldims[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
-  add_ghosts_periodic_z<<<dimGrid, dimBlock>>>((*cmflds)[p], mb, me);
-  cuda_sync_if_enabled();
-}
-
-template <bool lo, bool hi>
-__global__ static void conducting_wall_H_y(DFields d_flds)
+template <bool lo, bool hi, typename E>
+__global__ static void conducting_wall_H_y(E gt, Int3 ib)
 {
   int iz = blockIdx.x * blockDim.x + threadIdx.x - SW;
 
-  auto _d_flds = make_Fields3d<dim_xyz>(d_flds);
+  auto _d_flds = make_Fields3d<dim_xyz>(gt, ib);
 
-  if (iz >= d_flds.storage().shape(2) - SW)
+  if (iz >= gt.shape(2) - SW)
     return;
 
-  int my = d_flds.storage().shape(1) - 2 * SW;
+  int my = gt.shape(1) - 2 * SW;
 
   if (lo) {
     _d_flds(HY, 0, -1, iz) = _d_flds(HY, 0, 1, iz);
@@ -239,17 +39,17 @@ __global__ static void conducting_wall_H_y(DFields d_flds)
   }
 }
 
-template <bool lo, bool hi>
-__global__ static void conducting_wall_E_y(DFields d_flds)
+template <bool lo, bool hi, typename E>
+__global__ static void conducting_wall_E_y(E gt, Int3 ib)
 {
   int iz = blockIdx.x * blockDim.x + threadIdx.x - SW;
 
-  auto _d_flds = make_Fields3d<dim_xyz>(d_flds);
+  auto _d_flds = make_Fields3d<dim_xyz>(gt, ib);
 
-  if (iz >= d_flds.storage().shape(2) - SW)
+  if (iz >= gt.shape(2) - SW)
     return;
 
-  int my = d_flds.storage().shape(1) - 2 * SW;
+  int my = gt.shape(1) - 2 * SW;
 
   if (lo) {
     _d_flds(EX, 0, 0, iz) = 0.;
@@ -268,17 +68,17 @@ __global__ static void conducting_wall_E_y(DFields d_flds)
   }
 }
 
-template <bool lo, bool hi>
-__global__ static void conducting_wall_J_y(DFields d_flds)
+template <bool lo, bool hi, typename E>
+__global__ static void conducting_wall_J_y(E gt, Int3 ib)
 {
   int iz = blockIdx.x * blockDim.x + threadIdx.x - SW;
 
-  auto _d_flds = make_Fields3d<dim_xyz>(d_flds);
+  auto _d_flds = make_Fields3d<dim_xyz>(gt, ib);
 
-  if (iz >= d_flds.storage().shape(2) - SW)
+  if (iz >= gt.shape(2) - SW)
     return;
 
-  int my = d_flds.storage().shape(1) - 2 * SW;
+  int my = gt.shape(1) - 2 * SW;
 
   if (lo) {
     _d_flds(JYI, 0, 0, iz) -= _d_flds(JYI, 0, -1, iz);
@@ -300,70 +100,73 @@ __global__ static void conducting_wall_J_y(DFields d_flds)
 }
 
 template <bool lo, bool hi>
-static void cuda_conducting_wall_H_y(struct cuda_mfields* cmflds, int p)
+static void cuda_conducting_wall_H_y(MfieldsCuda& mflds, int p)
 {
-  int dimGrid = (cmflds->im(2) + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
-  conducting_wall_H_y<lo, hi><<<dimGrid, BLOCKSIZE_Z>>>((*cmflds)[p]);
+  int dimGrid = (mflds.gt().shape(2) + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
+  conducting_wall_H_y<lo, hi>
+    <<<dimGrid, BLOCKSIZE_Z>>>(view_patch(mflds.gt(), p), -mflds.ibn());
   cuda_sync_if_enabled();
 }
 
 template <bool lo, bool hi>
-static void cuda_conducting_wall_E_y(struct cuda_mfields* cmflds, int p)
+static void cuda_conducting_wall_E_y(MfieldsCuda& mflds, int p)
 {
-  int dimGrid = (cmflds->im(2) + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
-  conducting_wall_E_y<lo, hi><<<dimGrid, BLOCKSIZE_Z>>>((*cmflds)[p]);
+  int dimGrid = (mflds.gt().shape(2) + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
+  conducting_wall_E_y<lo, hi>
+    <<<dimGrid, BLOCKSIZE_Z>>>(view_patch(mflds.gt(), p), -mflds.ibn());
   cuda_sync_if_enabled();
 }
 
 template <bool lo, bool hi>
-static void cuda_conducting_wall_J_y(struct cuda_mfields* cmflds, int p)
+static void cuda_conducting_wall_J_y(MfieldsCuda& mflds, int p)
 {
-  int dimGrid = (cmflds->im(2) + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
-  conducting_wall_J_y<lo, hi><<<dimGrid, BLOCKSIZE_Z>>>((*cmflds)[p]);
+  int dimGrid = (mflds.gt().shape(2) + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
+  conducting_wall_J_y<lo, hi>
+    <<<dimGrid, BLOCKSIZE_Z>>>(view_patch(mflds.gt(), p), -mflds.ibn());
   cuda_sync_if_enabled();
 }
 
-void cuda_conducting_wall_H_lo_y(struct cuda_mfields* cmflds, int p)
+void cuda_conducting_wall_H_lo_y(MfieldsCuda& mflds, int p)
 {
-  cuda_conducting_wall_H_y<true, false>(cmflds, p);
+  cuda_conducting_wall_H_y<true, false>(mflds, p);
 }
 
-void cuda_conducting_wall_H_hi_y(struct cuda_mfields* cmflds, int p)
+void cuda_conducting_wall_H_hi_y(MfieldsCuda& mflds, int p)
 {
-  cuda_conducting_wall_H_y<false, true>(cmflds, p);
+  cuda_conducting_wall_H_y<false, true>(mflds, p);
 }
 
-void cuda_conducting_wall_H_lo_hi_y(struct cuda_mfields* cmflds, int p)
+void cuda_conducting_wall_H_lo_hi_y(MfieldsCuda& mflds, int p)
 {
-  cuda_conducting_wall_H_y<true, true>(cmflds, p);
+  cuda_conducting_wall_H_y<true, true>(mflds, p);
 }
 
-void cuda_conducting_wall_E_lo_y(struct cuda_mfields* cmflds, int p)
+void cuda_conducting_wall_E_lo_y(MfieldsCuda& mflds, int p)
 {
-  cuda_conducting_wall_E_y<true, false>(cmflds, p);
+  cuda_conducting_wall_E_y<true, false>(mflds, p);
 }
 
-void cuda_conducting_wall_E_hi_y(struct cuda_mfields* cmflds, int p)
+void cuda_conducting_wall_E_hi_y(MfieldsCuda& mflds, int p)
 {
-  cuda_conducting_wall_E_y<false, true>(cmflds, p);
+  cuda_conducting_wall_E_y<false, true>(mflds, p);
 }
 
-void cuda_conducting_wall_E_lo_hi_y(struct cuda_mfields* cmflds, int p)
+void cuda_conducting_wall_E_lo_hi_y(MfieldsCuda& mflds, int p)
 {
-  cuda_conducting_wall_E_y<true, true>(cmflds, p);
+  cuda_conducting_wall_E_y<true, true>(mflds, p);
 }
 
-void cuda_conducting_wall_J_lo_y(struct cuda_mfields* cmflds, int p)
+void cuda_conducting_wall_J_lo_y(MfieldsCuda& mflds, int p)
 {
-  cuda_conducting_wall_J_y<true, false>(cmflds, p);
+  cuda_conducting_wall_J_y<true, false>(mflds, p);
 }
 
-void cuda_conducting_wall_J_hi_y(struct cuda_mfields* cmflds, int p)
+void cuda_conducting_wall_J_hi_y(MfieldsCuda& mflds, int p)
 {
-  cuda_conducting_wall_J_y<false, true>(cmflds, p);
+  cuda_conducting_wall_J_y<false, true>(mflds, p);
 }
 
-void cuda_conducting_wall_J_lo_hi_y(struct cuda_mfields* cmflds, int p)
+void cuda_conducting_wall_J_lo_hi_y(MfieldsCuda& mflds, int p)
 {
-  cuda_conducting_wall_J_y<true, true>(cmflds, p);
+  cuda_conducting_wall_J_y<true, true>(mflds, p);
 }

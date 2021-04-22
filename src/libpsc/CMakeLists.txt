@@ -55,7 +55,6 @@ if (USE_CUDA)
     cuda/bnd_cuda_3_impl.cu
     
     cuda/psc_bnd_fields_cuda.cxx
-    cuda/cuda_mfields_bnd.cu
     
     cuda/cuda_moments_1st_nc.cu
     

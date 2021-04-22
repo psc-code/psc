@@ -14,40 +14,6 @@
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
 
-// ----------------------------------------------------------------------
-// cuda_mfields_bnd_map
-//
-// the maps differs depending on the number of components in the field
-// (incorporates specific strides)
-
-struct cuda_mfields_bnd_map
-{
-  ~cuda_mfields_bnd_map() {}
-
-  thrust::host_vector<int> h_map_out; // maps thread id to a particular offset
-                                      // for ghosts in the flds array
-  psc::device_vector<int> d_map_out;
-  thrust::host_vector<int> h_map_in; // maps thread id to a particular offset
-                                     // for ghosts in the flds array
-  psc::device_vector<int> d_map_in;
-};
-
-// ----------------------------------------------------------------------
-// cuda_mfields_bnd
-
-struct cuda_mfields_bnd
-{
-  int n_patches;
-  int im[3];
-  int ib[3];
-  struct cuda_mfields_bnd_patch* bnd_by_patch;
-  psc::device_vector<fields_cuda_real_t> d_buf;
-  thrust::host_vector<fields_cuda_real_t> h_buf;
-  thrust::host_vector<int> h_nei_patch;
-  psc::device_vector<int> d_nei_patch;
-  struct cuda_mfields_bnd_map map[MAX_BND_FIELDS];
-};
-
 // ======================================================================
 // DMfields
 
@@ -118,14 +84,6 @@ struct cuda_mfields : MfieldsCRTP<cuda_mfields>
   operator DMFields();
   DFields operator[](int p) const; // FIXME, const correctness
   const Grid_t& grid() const { return grid_; }
-
-  int index(int m, int i, int j, int k, int p) const
-  {
-    return (
-      ((((p)*n_comps() + m) * im(2) + (k - ib(2))) * im(1) + (j - ib(1))) *
-        im(0) +
-      (i - ib(0)));
-  }
 
 private:
   const Grid_t& grid_;

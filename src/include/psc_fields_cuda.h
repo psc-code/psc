@@ -148,7 +148,7 @@ inline void copy(const MfieldsSingle& hmflds, MfieldsStateCuda& mflds)
 // FIXME hacky workaround for lack of gt::view on device
 
 template <typename E>
-GT_INLINE auto view_patch(E& gt, int p)
+GT_INLINE auto view_patch(E&& gt, int p)
 {
   return gt::adapt_device<4>(
     (&gt(0, 0, 0, 0, p)).get(),

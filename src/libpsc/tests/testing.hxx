@@ -24,8 +24,6 @@
 #include "../libpsc/cuda/bnd_particles_cuda_impl.hxx"
 #include "../libpsc/cuda/checks_cuda_impl.hxx"
 #include "../libpsc/cuda/push_fields_cuda_impl.hxx"
-#include "../libpsc/cuda/bnd_cuda_impl.hxx"
-#include "../libpsc/cuda/bnd_cuda_2_impl.hxx"
 #include "../libpsc/cuda/bnd_cuda_3_impl.hxx"
 #include "../libpsc/cuda/fields_item_moments_1st_cuda.hxx"
 #endif
@@ -114,7 +112,7 @@ using TestConfig1vbec3dCuda =
              PushParticlesCuda<CudaConfig1vbec3dGmem<dim_xyz, BS144>>,
              checks_order_1st, ChecksCuda<MparticlesCuda<BS144>>,
              BndParticlesCuda<MparticlesCuda<BS144>, dim_xyz>, PushFieldsCuda,
-             BndCuda2<MfieldsStateCuda>>;
+             BndCuda3<MfieldsStateCuda>>;
 using TestConfig1vbec3dCuda444 =
   TestConfig<dim_xyz, MfieldsCuda,
              PushParticlesCuda<CudaConfig1vbec3dGmem<dim_xyz, BS444>>,
@@ -126,7 +124,7 @@ using TestConfig1vbec3dCudaYZ = TestConfig<
   dim_yz, MfieldsCuda, PushParticlesCuda<CudaConfig1vbec3d<dim_yz, BS144>>,
   checks_order_1st, ChecksCuda<MparticlesCuda<BS144>>,
   BndParticlesCuda<MparticlesCuda<BS144>, dim_yz>, PushFieldsCuda,
-  BndCuda<MfieldsStateCuda>, Moment_n_1st_cuda<MparticlesCuda<BS144>, dim_yz>>;
+  BndCuda3<MfieldsStateCuda>, Moment_n_1st_cuda<MparticlesCuda<BS144>, dim_yz>>;
 #endif
 
 // ======================================================================

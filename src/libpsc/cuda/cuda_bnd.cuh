@@ -135,11 +135,11 @@ struct CudaBnd
   struct Maps
   {
     Maps(mrc_ddc* ddc, mrc_ddc_pattern2* patt2, int mb, int me,
-         cuda_mfields& cmflds)
+         MfieldsCuda& mflds)
       : patt{patt2}, mb{mb}, me{me}
     {
-      setup_remote_maps(send, recv, ddc, patt2, mb, me, cmflds);
-      setup_local_maps(local_send, local_recv, ddc, patt2, mb, me, cmflds);
+      setup_remote_maps(send, recv, ddc, patt2, mb, me, mflds);
+      setup_local_maps(local_send, local_recv, ddc, patt2, mb, me, mflds);
       local_buf.resize(local_send.size());
       send_buf.resize(send.size());
       recv_buf.resize(recv.size());
@@ -176,7 +176,7 @@ struct CudaBnd
   // run
 
   template <typename T>
-  void run(cuda_mfields& cmflds, int mb, int me, mrc_ddc_pattern2* patt2,
+  void run(MfieldsCuda& mflds, int mb, int me, mrc_ddc_pattern2* patt2,
            std::unordered_map<int, Maps>& maps, T scatter)
   {
     // static int pr_ddc_run, pr_ddc_sync1, pr_ddc_sync2;
@@ -196,12 +196,12 @@ struct CudaBnd
     auto map = maps.find(key);
     if (map == maps.cend()) {
       auto pair =
-        maps.emplace(std::make_pair(key, Maps{ddc_, patt2, mb, me, cmflds}));
+        maps.emplace(std::make_pair(key, Maps{ddc_, patt2, mb, me, mflds}));
       map = pair.first;
     }
 
     // prof_start(pr_ddc_run);
-    ddc_run(map->second, patt2, mb, me, cmflds, scatter);
+    ddc_run(map->second, patt2, mb, me, mflds, scatter);
     // prof_stop(pr_ddc_run);
 
 #if 0
@@ -214,24 +214,24 @@ struct CudaBnd
   // ----------------------------------------------------------------------
   // add_ghosts
 
-  void add_ghosts(cuda_mfields& cmflds, int mb, int me)
+  void add_ghosts(MfieldsCuda& mflds, int mb, int me)
   {
     mrc_ddc_multi* sub = mrc_ddc_multi(ddc_);
 
-    run(cmflds, mb, me, &sub->add_ghosts2, maps_add_, ScatterAdd{});
+    run(mflds, mb, me, &sub->add_ghosts2, maps_add_, ScatterAdd{});
   }
 
   // ----------------------------------------------------------------------
   // fill_ghosts
 
-  void fill_ghosts(cuda_mfields& cmflds, int mb, int me)
+  void fill_ghosts(MfieldsCuda& mflds, int mb, int me)
   {
     // FIXME
     // I don't think we need as many points, and only stencil star
     // rather then box
     mrc_ddc_multi* sub = mrc_ddc_multi(ddc_);
 
-    run(cmflds, mb, me, &sub->fill_ghosts2, maps_fill_, Scatter{});
+    run(mflds, mb, me, &sub->fill_ghosts2, maps_fill_, Scatter{});
   }
 
   // ----------------------------------------------------------------------
@@ -239,7 +239,7 @@ struct CudaBnd
 
   template <typename S>
   void ddc_run(Maps& maps, mrc_ddc_pattern2* patt2, int mb, int me,
-               cuda_mfields& cmflds, S scatter)
+               MfieldsCuda& mflds, S scatter)
   {
     // static int pr_ddc0, pr_ddc1, pr_ddc2, pr_ddc3, pr_ddc4, pr_ddc5;
     // static int pr_ddc6, pr_ddc7, pr_ddc8, pr_ddc9, pr_ddc10;
@@ -258,7 +258,7 @@ struct CudaBnd
     // }
 
 #if 0
-    thrust::device_ptr<real_t> d_flds{cmflds.data()};
+    thrust::device_ptr<real_t> d_flds{mflds.gt().data()};
     thrust::host_vector<real_t> h_flds{d_flds, d_flds + cmflds.n_fields * cmflds.n_cells};
 
     postReceives(maps);
@@ -275,7 +275,7 @@ struct CudaBnd
     scatter(maps.local_recv, maps.local_buf, h_flds);
     thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
 #else
-    thrust::device_ptr<real_t> d_flds{cmflds.data()};
+    auto d_flds = mflds.gt().data();
     prof_barrier("ddc_run");
 
     // prof_start(pr_ddc1);
@@ -377,7 +377,7 @@ struct CudaBnd
   static void setup_remote_maps(thrust::host_vector<uint>& map_send,
                                 thrust::host_vector<uint>& map_recv,
                                 mrc_ddc* ddc, struct mrc_ddc_pattern2* patt2,
-                                int mb, int me, cuda_mfields& cmflds)
+                                int mb, int me, MfieldsCuda& mflds)
   {
     struct mrc_ddc_multi* sub = mrc_ddc_multi(ddc);
     struct mrc_ddc_rank_info* ri = patt2->ri;
@@ -394,13 +394,13 @@ struct CudaBnd
       for (int i = 0; i < ri[r].n_send_entries; i++) {
         struct mrc_ddc_sendrecv_entry* se = &ri[r].send_entry[i];
         map_setup(map_send, off_send, mb, me, se->patch, se->ilo, se->ihi,
-                  cmflds);
+                  mflds);
         off_send += se->len * (me - mb);
       }
       for (int i = 0; i < ri[r].n_recv_entries; i++) {
         struct mrc_ddc_sendrecv_entry* re = &ri[r].recv_entry[i];
         map_setup(map_recv, off_recv, mb, me, re->patch, re->ilo, re->ihi,
-                  cmflds);
+                  mflds);
         off_recv += re->len * (me - mb);
       }
     }
@@ -412,7 +412,7 @@ struct CudaBnd
   static void setup_local_maps(thrust::host_vector<uint>& map_send,
                                thrust::host_vector<uint>& map_recv,
                                mrc_ddc* ddc, struct mrc_ddc_pattern2* patt2,
-                               int mb, int me, cuda_mfields& cmflds)
+                               int mb, int me, MfieldsCuda& mflds)
   {
     struct mrc_ddc_multi* sub = mrc_ddc_multi(ddc);
     struct mrc_ddc_rank_info* ri = patt2->ri;
@@ -439,22 +439,24 @@ struct CudaBnd
         continue;
       }
       uint size = se->len * (me - mb);
-      map_setup(map_send, off, mb, me, se->patch, se->ilo, se->ihi, cmflds);
-      map_setup(map_recv, off, mb, me, re->patch, re->ilo, re->ihi, cmflds);
+      map_setup(map_send, off, mb, me, se->patch, se->ilo, se->ihi, mflds);
+      map_setup(map_recv, off, mb, me, re->patch, re->ilo, re->ihi, mflds);
       off += size;
     }
   }
 
   static void map_setup(thrust::host_vector<uint>& map, uint off, int mb,
                         int me, int p, int ilo[3], int ihi[3],
-                        cuda_mfields& cmflds)
+                        MfieldsCuda& mflds)
   {
     auto cur = &map[off];
+    Int3 ib = -mflds.ibn();
     for (int m = mb; m < me; m++) {
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
         for (int iy = ilo[1]; iy < ihi[1]; iy++) {
           for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-            *cur++ = cmflds.index(m, ix, iy, iz, p);
+            *cur++ = &mflds.gt()(ix - ib[0], iy - ib[1], iz - ib[2], m, p) -
+                     mflds.gt().data();
           }
         }
       }
