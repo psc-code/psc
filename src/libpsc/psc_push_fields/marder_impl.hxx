@@ -162,6 +162,7 @@ struct Marder_ : MarderBase
     }
 
     // res_.assign(dive);
+    auto&& dive_gt = view_interior(dive.gt(), dive.ibn());
     for (int p = 0; p < res_.n_patches(); p++) {
       for (int m = 0; m < res_.n_comps(); m++) {
         kg::Box3 box = res_.box();
@@ -169,7 +170,8 @@ struct Marder_ : MarderBase
         for (ijk[2] = 0; ijk[2] < 2 * box.ib(2) + box.im(2); ijk[2]++) {
           for (ijk[1] = 0; ijk[1] < 2 * box.ib(1) + box.im(1); ijk[1]++) {
             for (ijk[0] = 0; ijk[0] < 2 * box.ib(0) + box.im(0); ijk[0]++) {
-              res_(m, ijk[0], ijk[1], ijk[2], p) = dive(m, ijk, p);
+              res_(m, ijk[0], ijk[1], ijk[2], p) =
+                dive_gt(ijk[0], ijk[1], ijk[2], m, p);
             }
           }
         }

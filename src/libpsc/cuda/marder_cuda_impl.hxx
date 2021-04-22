@@ -4,7 +4,7 @@
 #include "../libpsc/psc_push_fields/marder_impl.hxx"
 #include "psc_particles_single.h"
 #include "mparticles_cuda.hxx"
-#include "fields_item_dive_cuda.hxx"
+//#include "fields_item_dive_cuda.hxx"
 #include "fields_item_moments_1st_cuda.hxx"
 #include "cuda_bits.h"
 
@@ -98,31 +98,23 @@ struct MarderCuda : MarderBase
     }
   }
 
-  void calc_aid_fields(MfieldsState& mflds, Mfields& rho)
+  template <typename E>
+  void calc_aid_fields(MfieldsState& mflds, const E& rho)
   {
+    const auto& grid = mflds.grid();
     Item_dive<MfieldsStateCuda> item_dive(mflds);
-    auto& dive = item_dive.result();
+    auto&& dive = item_dive.gt();
 
     if (dump_) {
       static int cnt;
       io_.begin_step(cnt, cnt); // ppsc->timestep, ppsc->timestep * ppsc->dt);
       cnt++;
-      {
-        Int3 bnd = rho.ibn();
-        io_.write(rho.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                                _s(bnd[2], -bnd[2])),
-                  rho.grid(), "rho", {"rho"});
-      }
-      {
-        Int3 bnd = dive.ibn();
-        io_.write(dive.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                                 _s(bnd[2], -bnd[2])),
-                  dive.grid(), "dive", {"dive"});
-      }
+      io_.write(rho, grid, "rho", {"rho"});
+      io_.write(dive, grid, "dive", {"dive"});
       io_.end_step();
     }
 
-    res_.gt() = dive.gt() - rho.gt();
+    view_interior(res_.gt(), res_.ibn()) = dive - rho;
     bnd_mf_.fill_ghosts(res_, 0, 1);
   }
 
@@ -160,7 +152,7 @@ struct MarderCuda : MarderBase
     bnd_.fill_ghosts(mflds, EX, EX + 3);
 
     item_rho_(mprts);
-    auto& rho = item_rho_.result();
+    auto&& rho = item_rho_.gt();
 
     for (int i = 0; i < loop_; i++) {
       calc_aid_fields(mflds, rho);

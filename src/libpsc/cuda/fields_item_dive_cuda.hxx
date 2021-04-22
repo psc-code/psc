@@ -4,6 +4,8 @@
 
 #include "cuda_iface.h"
 
+// FIXME this is all unused
+
 void cuda_mfields_calc_dive_yz(MfieldsStateCuda& mflds, MfieldsCuda& mf);
 void cuda_mfields_calc_dive_xyz(MfieldsStateCuda& mflds, MfieldsCuda& mf);
 
@@ -26,14 +28,7 @@ struct Item_dive<MfieldsStateCuda>
     }
   }
 
-  Mfields& result() { return mres_; }
-
-  auto gt()
-  {
-    auto bnd = mres_.ibn();
-    return mres_.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                           _s(bnd[2], -bnd[2]));
-  }
+  auto gt() { return view_interior(mres_.gt(), mres_.ibn()); }
 
 private:
   Mfields mres_;

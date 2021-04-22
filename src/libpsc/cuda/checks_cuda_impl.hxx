@@ -37,8 +37,7 @@ struct ChecksCuda
     : ChecksParams(params),
       item_rho_{grid},
       item_rho_m_{grid},
-      item_rho_p_{grid},
-      divj_{grid, 1, {}}
+      item_rho_p_{grid}
   {}
 
   void continuity_before_particle_push(Mparticles& mprts)
@@ -63,31 +62,28 @@ struct ChecksCuda
 
     item_rho_p_(mprts);
 
-    auto& h_mflds = mflds.get_as<MfieldsState>(0, mflds._n_comps());
-    auto item_divj = Item_divj<MfieldsState>(h_mflds);
+    auto item_divj = Item_divj<MfieldsStateCuda>(mflds);
 
-    auto& dev_rho_p = item_rho_p_.result();
-    auto& dev_rho_m = item_rho_m_.result();
-    auto& rho_p = dev_rho_p.template get_as<Mfields>(0, 1);
-    auto& rho_m = dev_rho_m.template get_as<Mfields>(0, 1);
+    auto&& rho_p = gt::host_mirror(item_rho_p_.gt());
+    auto&& rho_m = gt::host_mirror(item_rho_m_.gt());
+    auto&& h_divj = gt::host_mirror(item_divj.gt());
+    gt::copy(gt::eval(item_rho_p_.gt()), rho_p);
+    gt::copy(gt::eval(item_rho_m_.gt()), rho_m);
+    gt::copy(gt::eval(item_divj.gt()), h_divj);
 
-    auto& d_rho = rho_p;
-    d_rho.storage() = d_rho.storage() - rho_m.storage();
-
-    divj_.storage() = grid.dt * item_divj.gt();
+    auto&& d_rho = rho_p - rho_m;
+    auto&& dt_divj = grid.dt * h_divj;
 
     double eps = continuity_threshold;
     double max_err = 0.;
-    for (int p = 0; p < divj_.n_patches(); p++) {
-      auto D_rho = make_Fields3d<dim_xyz>(d_rho[p]);
-      auto Div_J = make_Fields3d<dim_xyz>(divj_[p]);
-      grid.Foreach_3d(0, 0, [&](int jx, int jy, int jz) {
-        double d_rho = D_rho(0, jx, jy, jz);
-        double div_j = Div_J(0, jx, jy, jz);
-        max_err = fmax(max_err, fabs(d_rho + div_j));
-        if (fabs(d_rho + div_j) > eps) {
-          mprintf("p%d (%d,%d,%d): %g -- %g diff %g\n", p, jx, jy, jz, d_rho,
-                  -div_j, d_rho + div_j);
+    for (int p = 0; p < grid.n_patches(); p++) {
+      grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
+        double _d_rho = d_rho(i, j, k, 0, p);
+        double _dt_divj = dt_divj(i, j, k, 0, p);
+        max_err = std::max(max_err, std::abs(_d_rho + _dt_divj));
+        if (std::abs(_d_rho + _dt_divj) > eps) {
+          mprintf("p%d (%d,%d,%d): %g -- %g diff %g\n", p, i, j, k, _d_rho,
+                  -_dt_divj, _d_rho + _dt_divj);
         }
       });
     }
@@ -107,25 +103,12 @@ struct ChecksCuda
         writer.open("continuity");
       }
       writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
-      {
-        Int3 bnd = divj_.ibn();
-        writer.write(divj_.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                                     _s(bnd[2], -bnd[2])),
-                     grid, "div_j", {"div_j"});
-      }
-      {
-        Int3 bnd = d_rho.ibn();
-        writer.write(d_rho.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                                     _s(bnd[2], -bnd[2])),
-                     grid, "d_rho", {"d_rho"});
-      }
+      writer.write(dt_divj, grid, "div_j", {"div_j"});
+      writer.write(d_rho, grid, "d_rho", {"d_rho"});
       writer.end_step();
     }
 
     assert(max_err < eps);
-    dev_rho_p.put_as(rho_p, 0, 0);
-    dev_rho_m.put_as(rho_m, 0, 0);
-    mflds.put_as(h_mflds, 0, 0);
   }
 
   // ======================================================================
@@ -141,19 +124,17 @@ struct ChecksCuda
       return;
     }
 
+    auto item_dive = Item_dive<MfieldsStateCuda>(mflds);
+
     item_rho_(mprts);
+    auto&& rho = gt::host_mirror(item_rho_.gt());
+    auto&& dive = gt::host_mirror(item_dive.gt());
+    gt::copy(gt::eval(item_rho_.gt()), rho);
+    gt::copy(gt::eval(item_dive.gt()), dive);
 
-    auto& h_mflds = mflds.get_as<MfieldsState>(0, mflds._n_comps());
-
-    auto dive = Item_dive<MfieldsState>(h_mflds);
-    auto& dev_rho = item_rho_.result();
-
-    auto& rho = dev_rho.template get_as<Mfields>(0, 1);
     double eps = gauss_threshold;
     double max_err = 0.;
-    for (int p = 0; p < dive.n_patches(); p++) {
-      auto Rho = make_Fields3d<dim_xyz>(rho[p]);
-
+    for (int p = 0; p < grid.n_patches(); p++) {
       int l[3] = {0, 0, 0}, r[3] = {0, 0, 0};
       for (int d = 0; d < 3; d++) {
         if (grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL &&
@@ -167,8 +148,8 @@ struct ChecksCuda
             jz >= grid.ldims[2] - r[2]) {
           // nothing
         } else {
-          double v_rho = Rho(0, jx, jy, jz);
-          double v_dive = dive(0, {jx, jy, jz}, p);
+          double v_rho = rho(jx, jy, jz, 0, p);
+          double v_dive = dive(jx, jy, jz, 0, p);
           max_err = fmax(max_err, fabs(v_dive - v_rho));
 #if 1
           if (fabs(v_dive - v_rho) > eps) {
@@ -194,29 +175,16 @@ struct ChecksCuda
         writer.open("gauss");
       }
       writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
-      {
-        Int3 bnd = rho.ibn();
-        writer.write(rho.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                                   _s(bnd[2], -bnd[2])),
-                     grid, "rho", {"rho"});
-      }
-      {
-        Int3 bnd = dive.ibn();
-        writer.write(dive.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                                    _s(bnd[2], -bnd[2])),
-                     dive.grid(), dive.name(), dive.comp_names());
-      }
+      writer.write(rho, grid, "rho", {"rho"});
+      writer.write(dive, grid, "dive", {"dive"});
       writer.end_step();
     }
 
     assert(max_err < eps);
-    dev_rho.put_as(rho, 0, 0);
-    mflds.put_as(h_mflds, 0, 0);
   }
 
 private:
   Moment_t item_rho_p_;
   Moment_t item_rho_m_;
   Moment_t item_rho_;
-  Mfields divj_;
 };

@@ -43,6 +43,8 @@ struct Moment_rho_1st_nc_cuda
 
   Mfields& result() { return mres_; }
 
+  auto gt() { return view_interior(mres_.gt(), mres_.ibn()); }
+
 private:
   Mfields mres_;
   Bnd bnd_;
