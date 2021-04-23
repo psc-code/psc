@@ -25,6 +25,8 @@
 
 #include "psc.h" // FIXME, just for EX etc
 
+#include <gtensor/reductions.h>
+
 static Grid_t make_grid()
 {
   auto domain =
@@ -60,7 +62,6 @@ TYPED_TEST(MfieldsTest, WriteRead)
   });
 
   auto io = kg::io::IOAdios2{};
-
   {
     auto writer = io.open("test.bp", kg::io::Mode::Write);
     writer.put("mflds", mflds);
@@ -74,17 +75,9 @@ TYPED_TEST(MfieldsTest, WriteRead)
     reader.close();
   }
 
-  for (int p = 0; p < mflds.n_patches(); ++p) {
-    grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-#if 0
-	mprintf("[%d, %d, %d] = %06g %06g %06g\n", i, j, k,
-		(double) mflds[p](EX, i, j, k), (double) mflds[p](EY, i, j, k), (double) mflds[p](EZ, i, j, k));
-#endif
-      for (int m = 0; m < NR_FIELDS; m++) {
-        EXPECT_EQ(mflds[p](m, i, j, k), mflds2[p](m, i, j, k));
-      }
-    });
-  }
+  EXPECT_EQ(gt::norm_linf(view_interior(mflds.gt(), mflds.ibn()) -
+                          view_interior(mflds2.gt(), mflds2.ibn())),
+            0);
 }
 
 TYPED_TEST(MfieldsTest, WriteWithGhostsRead)
@@ -113,18 +106,9 @@ TYPED_TEST(MfieldsTest, WriteWithGhostsRead)
     reader.close();
   }
 
-  for (int p = 0; p < mflds.n_patches(); ++p) {
-    grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-#if 0
-	mprintf("[%d, %d, %d] = %06g %06g %06g\n", i, j, k,
-		(double) mflds[p](EX, i, j, k), (double) mflds[p](EY, i, j, k), (double) mflds[p](EZ, i, j, k));
-#endif
-      for (int m = 0; m < NR_FIELDS; m++) {
-        EXPECT_EQ(mflds[p](m, i, j, k), mflds2[p](m, i, j, k))
-          << " i " << i << " j " << j << " k " << k << " m " << m;
-      }
-    });
-  }
+  EXPECT_EQ(gt::norm_linf(view_interior(mflds.gt(), mflds.ibn()) -
+                          view_interior(mflds2.gt(), mflds2.ibn())),
+            0);
 }
 
 TYPED_TEST(MfieldsTest, WriteReadWithGhosts)
@@ -153,43 +137,35 @@ TYPED_TEST(MfieldsTest, WriteReadWithGhosts)
     reader.close();
   }
 
-  for (int p = 0; p < mflds.n_patches(); ++p) {
-    grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-#if 0
-	mprintf("p%d [%d, %d, %d] = %06g %06g %06g\n", p, i, j, k,
-		(double) mflds2[p](EX, i, j, k), (double) mflds2[p](EY, i, j, k), (double) mflds2[p](EZ, i, j, k));
-#endif
-#if 1
-      for (int m = 0; m < NR_FIELDS; m++) {
-        EXPECT_EQ(mflds[p](m, i, j, k), mflds2[p](m, i, j, k))
-          << " i " << i << " j " << j << " k " << k << " m " << m;
-      }
-#endif
-    });
-  }
+  EXPECT_EQ(gt::norm_linf(view_interior(mflds.gt(), mflds.ibn()) -
+                          view_interior(mflds2.gt(), mflds2.ibn())),
+            0);
 }
 
 TYPED_TEST(MfieldsTest, OutputFieldsMRC)
 {
   using Mfields = TypeParam;
   using real_t = typename Mfields::real_t;
+  using Mparticles = MparticlesSimple<ParticleSimple<real_t>>;
 
   auto grid = make_grid();
   grid.ibn = {2, 2, 2};
-  std::cout << "ibn" << grid.ibn << "\n";
   auto mflds = Mfields{grid, NR_FIELDS, {2, 2, 2}};
-  auto mprts = MparticlesSimple<ParticleSimple<real_t>>{grid};
+  auto mprts = Mparticles{grid};
 
   setupFields(mflds, [](int m, double crd[3]) {
     return m + crd[0] + 100 * crd[1] + 10000 * crd[2];
   });
 
   OutputFieldsParams outf_params{};
-  outf_params.pfield_interval = 1;
-  outf_params.tfield_interval = 0;
-  outf_params.tfield_average_every = 40;
-  outf_params.tfield_moments_average_every = 80;
-  OutputFieldsDefault<WriterMRC> outf{grid, outf_params};
+  OutputFieldsItemParams outf_item_params{};
+  outf_item_params.pfield_interval = 1;
+  outf_item_params.tfield_interval = 0;
+  outf_item_params.tfield_average_every = 40;
+  outf_params.fields = outf_item_params;
+  outf_params.moments = outf_item_params;
+  OutputFieldsDefault<Mfields, Mparticles, dim_xyz, WriterMRC> outf{
+    grid, outf_params};
 
   outf(mflds, mprts);
 }
@@ -200,23 +176,26 @@ TYPED_TEST(MfieldsTest, OutputFieldsADIOS2)
 {
   using Mfields = TypeParam;
   using real_t = typename Mfields::real_t;
+  using Mparticles = MparticlesSimple<ParticleSimple<real_t>>;
 
   auto grid = make_grid();
   grid.ibn = {2, 2, 2};
-  std::cout << "ibn" << grid.ibn << "\n";
   auto mflds = Mfields{grid, NR_FIELDS, {2, 2, 2}};
-  auto mprts = MparticlesSimple<ParticleSimple<real_t>>{grid};
+  auto mprts = Mparticles{grid};
 
   setupFields(mflds, [](int m, double crd[3]) {
     return m + crd[0] + 100 * crd[1] + 10000 * crd[2];
   });
 
   OutputFieldsParams outf_params{};
-  outf_params.pfield_interval = 1;
-  outf_params.tfield_interval = 0;
-  outf_params.tfield_average_every = 40;
-  outf_params.tfield_moments_average_every = 80;
-  OutputFieldsDefault<WriterADIOS2> outf{grid, outf_params};
+  OutputFieldsItemParams outf_item_params{};
+  outf_item_params.pfield_interval = 1;
+  outf_item_params.tfield_interval = 0;
+  outf_item_params.tfield_average_every = 40;
+  outf_params.fields = outf_item_params;
+  outf_params.moments = outf_item_params;
+  OutputFieldsDefault<Mfields, Mparticles, dim_xyz, WriterADIOS2> outf{
+    grid, outf_params};
 
   outf(mflds, mprts);
 }
