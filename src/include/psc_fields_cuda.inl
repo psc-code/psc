@@ -2,6 +2,8 @@
 #include "io_common.h"
 #include <kg/io.h>
 
+#include "fields.hxx"
+
 // ======================================================================
 // Variable<MfieldsCuda>
 //
