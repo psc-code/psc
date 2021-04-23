@@ -134,6 +134,7 @@ struct MfieldsStateCuda : MfieldsStateBase
 
   auto gt() { return mflds_.gt(); }
   auto& storage() { return mflds_.storage(); }
+  auto& storage() const { return mflds_.storage(); }
 
 private:
   MfieldsCuda mflds_;

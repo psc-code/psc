@@ -357,7 +357,7 @@ struct Mfields
   }
 
   Int3 ldims() const { return grid().ldims; }
-  Int3 gdims() const { return grid().gdims; }
+  Int3 gdims() const { return grid().domain.gdims; }
   Int3 patchOffset(int p) const { return grid().patches[p].off; }
   const Grid_t& grid() const { return *grid_; }
 
