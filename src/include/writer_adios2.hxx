@@ -46,8 +46,8 @@ public:
 
   void set_subset(const Grid_t& grid, Int3 rn, Int3 rx) {}
 
-  template <typename Mfields>
-  void write(const Mfields& _mflds, const Grid_t& grid, const std::string& name,
+  template <typename E>
+  void write(const E& expr, const Grid_t& grid, const std::string& name,
              const std::vector<std::string>& comp_names)
   {
     static int pr_write, pr_eval;
@@ -57,11 +57,14 @@ public:
     }
 
     prof_start(pr_eval);
-    auto&& mflds = evalMfields(_mflds);
+    auto h_expr = gt::host_mirror(expr);
+    gt::copy(gt::eval(expr), h_expr);
+    Mfields<gt::expr_value_type<E>> h_mflds(grid, h_expr.shape(4), {});
+    h_mflds.gt() = h_expr;
     prof_stop(pr_eval);
 
     prof_start(pr_write);
-    file_.put(name, mflds);
+    file_.put(name, h_mflds);
     file_.performPuts();
     prof_stop(pr_write);
   }
