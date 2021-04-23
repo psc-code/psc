@@ -43,7 +43,7 @@ public:
     auto shape = makeDims(n_comps, mflds.gdims());
     assert(reader.variableShape<DataType>() == shape);
     // FIXME, working around adios2 bug with selection
-    MfieldsSingle h_mflds(mflds.grid(), n_comps, {});
+    Mfields h_mflds(mflds.grid(), n_comps, {});
     for (int p = 0; p < mflds.n_patches(); p++) {
       auto start = makeDims(0, mflds.patchOffset(p));
       auto count = makeDims(n_comps, mflds.ldims());
