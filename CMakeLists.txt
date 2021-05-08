@@ -54,18 +54,18 @@ endif()
 
 if (BUILD_TESTING)
   CPMAddPackage(
-    NAME googletest
+    NAME GTest
     GITHUB_REPOSITORY google/googletest
     # post 1.10.0 with cmake_minimum_required updated
     GIT_TAG 32f4f52d95dc99c35f51deed552a6ba700567f94
-    VERSION 1.10.0x
+    VERSION 1.10.0
     OPTIONS
         "INSTALL_GTEST OFF"
         "gtest_force_shared_crt ON"
   )
-  if (googletest_ADDED)
-     add_library(GTest::GTest ALIAS gtest)
-     add_library(GTest::Main ALIAS gtest_main)
+  if (GTest_ADDED)
+     add_library(GTest::gtest ALIAS gtest)
+     add_library(GTest::gtest_main ALIAS gtest_main)
   endif()
   include(GoogleTest)
 endif()
