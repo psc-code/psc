@@ -17,6 +17,8 @@
 
 #define THREADS_PER_BLOCK 128
 
+extern std::size_t mem_heating;
+
 using Float3 = Vec3<float>;
 
 // ----------------------------------------------------------------------
@@ -127,6 +129,8 @@ struct cuda_heating_foil
   cuda_heating_foil(const cuda_heating_foil&) = delete;
   cuda_heating_foil& operator=(const cuda_heating_foil&) = delete;
 
+  ~cuda_heating_foil() { mem_heating -= allocated_bytes(d_curand_states_); }
+
   void reset() { first_time_ = true; }
 
   // ----------------------------------------------------------------------
@@ -145,10 +149,14 @@ struct cuda_heating_foil
     dim3 dimGrid = BlockSimple2<BS, typename HS::dim>::dimGrid(*cmprts);
 
     if (first_time_) { // FIXME
+      mem_heating -= allocated_bytes(d_xb_by_patch_);
       d_xb_by_patch_ = cmprts->xb_by_patch;
+      mem_heating += allocated_bytes(d_xb_by_patch_);
 
+      mem_heating -= allocated_bytes(d_curand_states_);
       d_curand_states_.resize(dimGrid.x * dimGrid.y * dimGrid.z *
                               THREADS_PER_BLOCK);
+      mem_heating += allocated_bytes(d_curand_states_);
       static int pr;
       if (!pr) {
         pr = prof_register("heating_curand", 1., 0, 0);

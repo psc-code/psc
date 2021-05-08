@@ -19,6 +19,8 @@
 #include "psc_fields_cuda.inl"
 #endif
 
+#include <fstream>
+
 #ifdef VPIC
 #include "../libpsc/vpic/vpic_iface.h"
 #endif
@@ -140,6 +142,10 @@ struct Psc
     assert(grid.isInvar(0) == Dim::InvarX::value);
     assert(grid.isInvar(1) == Dim::InvarY::value);
     assert(grid.isInvar(2) == Dim::InvarZ::value);
+
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    log_.open("mem-" + std::to_string(rank) + ".log");
 
     initialize_stats();
     initialize();
@@ -401,6 +407,10 @@ struct Psc
     // state is at: x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
     MPI_Comm comm = grid().comm();
     int timestep = grid().timestep();
+
+#ifdef USE_CUDA
+    mem_stats_csv(log_, timestep, grid().n_patches(), mprts_.size());
+#endif
 
     if (p_.balance_interval > 0 && timestep % p_.balance_interval == 0) {
       balance_(grid_, mprts_);
@@ -671,6 +681,7 @@ protected:
   BndParticles bndp_;
 
   Checkpointing checkpointing_;
+  std::ofstream log_;
 
   // FIXME, maybe should be private
   // need to make sure derived class sets these (? -- or just leave them off by

@@ -5,12 +5,27 @@
 #include <rmm/mr/device/pool_memory_resource.hpp>
 #include <rmm/mr/device/per_device_resource.hpp>
 #include <rmm/mr/device/logging_resource_adaptor.hpp>
+#include <rmm/mr/device/tracking_resource_adaptor.hpp>
 #endif
 
 #include <cstdio>
 #include <cassert>
 #include <cuda_bits.h>
 #include <mrc_common.h>
+
+std::size_t mem_particles;
+std::size_t mem_sort;
+std::size_t mem_sort_by_block;
+std::size_t mem_bnd;
+std::size_t mem_heating;
+std::size_t mem_collisions;
+
+#ifdef PSC_HAVE_RMM
+using device_mr_type = rmm::mr::device_memory_resource;
+using pool_mr_type = rmm::mr::pool_memory_resource<device_mr_type>;
+using track_mr_type = rmm::mr::tracking_resource_adaptor<pool_mr_type>;
+using log_mr_type = rmm::mr::logging_resource_adaptor<track_mr_type>;
+#endif
 
 void cuda_base_init(void)
 {
@@ -21,17 +36,12 @@ void cuda_base_init(void)
   first_time = false;
 
 #ifdef PSC_HAVE_RMM
-  rmm::mr::device_memory_resource* mr =
+  device_mr_type* mr =
     rmm::mr::get_current_device_resource(); // Points to `cuda_memory_resource`
-  static rmm::mr::pool_memory_resource<rmm::mr::device_memory_resource> pool_mr{
-    mr};
-#if 0
-  static rmm::mr::logging_resource_adaptor<decltype(pool_mr)> log_mr{
-    &pool_mr, std::cout, true};
+  static pool_mr_type pool_mr{mr};
+  static track_mr_type track_mr{&pool_mr};
+  static log_mr_type log_mr{&track_mr, std::cout, true};
   rmm::mr::set_current_device_resource(&log_mr);
-#else
-  rmm::mr::set_current_device_resource(&pool_mr);
-#endif
 #endif
 
   int deviceCount;
@@ -120,4 +130,17 @@ void cuda_base_init(void)
                 : "Unknown");
 #endif
   }
+}
+
+std::size_t mem_cuda_allocated()
+{
+#ifdef PSC_HAVE_RMM
+  auto mr = rmm::mr::get_current_device_resource();
+  auto log_mr = dynamic_cast<log_mr_type*>(mr);
+  assert(log_mr);
+  auto track_mr = log_mr->get_upstream();
+  return track_mr->get_allocated_bytes();
+#else
+  return 0;
+#endif
 }

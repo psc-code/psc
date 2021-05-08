@@ -29,6 +29,13 @@ cuda_mparticles<BS>::cuda_mparticles(const Grid_t& grid)
   }
 }
 
+template <typename BS>
+cuda_mparticles<BS>::~cuda_mparticles()
+{
+  mem_particles -= allocated_bytes(this->by_block_.d_idx);
+  mem_particles -= allocated_bytes(this->by_block_.d_id);
+}
+
 // ----------------------------------------------------------------------
 // resize
 //
@@ -39,8 +46,12 @@ template <typename BS>
 void cuda_mparticles<BS>::resize(uint n_prts)
 {
   cuda_mparticles_base<BS>::resize(n_prts);
+  mem_particles -= allocated_bytes(this->by_block_.d_idx);
   this->by_block_.d_idx.resize(n_prts);
+  mem_particles += allocated_bytes(this->by_block_.d_idx);
+  mem_particles -= allocated_bytes(this->by_block_.d_id);
   this->by_block_.d_id.resize(n_prts);
+  mem_particles += allocated_bytes(this->by_block_.d_id);
 }
 
 // ----------------------------------------------------------------------

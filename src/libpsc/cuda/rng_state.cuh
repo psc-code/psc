@@ -30,8 +30,11 @@ public:
     RngFake rng_;
   };
 
+  using value_type = Device;
+
   void resize(int size) { size_ = size; }
-  int size() { return size_; }
+  int size() const { return size_; }
+  int capacity() const { return size_; }
 
 private:
   RngFake rng_;
@@ -60,6 +63,8 @@ public:
     curandState curand_state;
   };
 
+  using value_type = Rng;
+
   // ======================================================================
   // RngStateCuda::Device
 
@@ -84,7 +89,8 @@ public:
 
   // also reseeds!
   void resize(int size);
-  int size() { return rngs_.size(); }
+  int size() const { return rngs_.size(); }
+  int capacity() const { return rngs_.capacity(); }
 
 private:
   psc::device_vector<Rng> rngs_;

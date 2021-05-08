@@ -13,6 +13,8 @@
 #include <thrust/scatter.h>
 #include <thrust/sort.h>
 
+extern std::size_t mem_bnd;
+
 #define mrc_ddc_multi(ddc) mrc_to_subobj(ddc, struct mrc_ddc_multi)
 
 template <typename real_t>
@@ -144,16 +146,36 @@ struct CudaBnd
       recv_buf.resize(recv.size());
 
       d_send = send;
+      mem_bnd += allocated_bytes(d_send);
       d_recv = recv;
+      mem_bnd += allocated_bytes(d_recv);
       d_local_send = local_send;
+      mem_bnd += allocated_bytes(d_local_send);
       d_local_recv = local_recv;
+      mem_bnd += allocated_bytes(d_local_recv);
+
       d_local_buf.resize(local_buf.size());
+      mem_bnd += allocated_bytes(d_local_buf);
       d_send_buf.resize(send_buf.size());
+      mem_bnd += allocated_bytes(d_send_buf);
       d_recv_buf.resize(recv_buf.size());
+      mem_bnd += allocated_bytes(d_recv_buf);
     }
 
     Maps(const Maps&) = delete;
     Maps(Maps&&) = default;
+
+    ~Maps()
+    {
+      mem_bnd -= allocated_bytes(d_send);
+      mem_bnd -= allocated_bytes(d_recv);
+      mem_bnd -= allocated_bytes(d_local_send);
+      mem_bnd -= allocated_bytes(d_local_recv);
+
+      mem_bnd -= allocated_bytes(d_local_buf);
+      mem_bnd -= allocated_bytes(d_send_buf);
+      mem_bnd -= allocated_bytes(d_recv_buf);
+    }
 
     thrust::host_vector<uint> send, recv;
     thrust::host_vector<uint> local_send, local_recv;
