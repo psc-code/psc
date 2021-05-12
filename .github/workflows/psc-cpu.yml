@@ -9,6 +9,19 @@ on:
 jobs:
   tests-cpu:
     runs-on: ubuntu-latest
+    container: ghcr.io/germasch/psc-cpp-ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: cmake
+      run: cmake -S . -B build-cpu -DCMAKE_BUILD_TYPE=RelWithDebInfo
+    - name: build
+      run: cmake --build build-cpu
+    - name: test
+      run: cmake --build build-cpu -t test
+
+  tests-spack-cpu:
+    runs-on: ubuntu-latest
     container: ghcr.io/germasch/psc-spack-ubuntu-20.04
 
     steps:
