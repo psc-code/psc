@@ -15,7 +15,11 @@ class Thrust(CMakePackage):
     git      = "https://github.com/NVIDIA/thrust"
 
     version('develop', branch='main', submodules=True)
+    # FIXME, releases should be based on tarball, but need cub then
+    version('1.12.0', tag='1.12.0', submodules=True)
     version('1.10.0', tag='1.10.0', submodules=True)
+    #version('1.12.0', sha256='d68f89937ed1a0dadafd4f77d3e65ab9a5baa48dd5fa5698f8d3f7e3d6749da2')
+    #version('1.11.0', sha256='c65211a66fe0dce9f5470cc8fcb80ae6b04da12fd94707ed63ddddbd82fa9444')
     version('1.9.10', sha256='5071c995a03e97e2bcfe0c5cc265330160316733336bb87dfcea3fc381065316')
     version('1.9.9', sha256='74740b94e0c62e1e54f9880cf1eeb2d0bfb2203ae35fd72ece608f9b8e073ef7')
     version('1.9.8', sha256='d014396a2128417bd1421ba80d2601422577094c0ff727c60bd3c6eb4856af9b')
