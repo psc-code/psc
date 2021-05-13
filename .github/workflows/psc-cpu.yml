@@ -1,4 +1,4 @@
-name: PSC CI (CPU)
+name: PSC CI
 
 on:
   push:
@@ -14,11 +14,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: cmake
-      run: cmake -S . -B build-cpu -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      run: cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -G Ninja
     - name: build
-      run: cmake --build build-cpu
+      run: cmake --build build
     - name: test
-      run: cmake --build build-cpu -t test
+      run: cmake --build build -t test
 
   tests-spack-cpu:
     runs-on: ubuntu-latest
@@ -27,8 +27,24 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: cmake
-      run: cmake -S . -B build-cpu -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      run: cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -G Ninja
     - name: build
-      run: cmake --build build-cpu
+      run: cmake --build build
     - name: test
-      run: cmake --build build-cpu -t test
+      run: cmake --build build -t test
+
+  build-spack-cuda:
+    runs-on: ubuntu-latest
+    container: ghcr.io/germasch/psc-spack-cuda-ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: cmake
+      run: |
+        #. /opt/spack/share/spack/setup-env.sh
+        #spack repo list
+        #spack env activate /root/psc-env
+        export CMAKE_PREFIX_PATH=/root/psc-env/.spack-env/view
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DUSE_CUDA=ON -G Ninja
+    - name: build
+      run: cmake --build build

@@ -696,7 +696,6 @@ private:
         send_reqs[p] = MPI_REQUEST_NULL;
       } else {
         auto flds_old = mf_old[p];
-        auto F_old(flds_old);
         int nn = flds_old.storage().size();
         void* addr_old = flds_old.storage().data();
         int tag = nr_patches_new_by_rank[new_rank]++;
