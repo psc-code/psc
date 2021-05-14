@@ -9,7 +9,7 @@ on:
 jobs:
   spack-psc:
     runs-on: ubuntu-latest
-    container: ghcr.io/germasch/psc-spack-ubuntu-20.04
+    container: ghcr.io/psc-code/psc-spack-ubuntu-20.04
 
     steps:
     - uses: actions/checkout@v2
@@ -20,7 +20,7 @@ jobs:
 
   spack-psc-cuda:
     runs-on: ubuntu-latest
-    container: ghcr.io/germasch/psc-spack-cuda-ubuntu-20.04
+    container: ghcr.io/psc-code/psc-spack-cuda-ubuntu-20.04
 
     steps:
     - uses: actions/checkout@v2
@@ -31,7 +31,7 @@ jobs:
 
   spack-psc-cuda-rmm:
     runs-on: ubuntu-latest
-    container: ghcr.io/germasch/psc-spack-cuda-ubuntu-20.04
+    container: ghcr.io/psc-code/psc-spack-cuda-ubuntu-20.04
 
     steps:
     - uses: actions/checkout@v2
