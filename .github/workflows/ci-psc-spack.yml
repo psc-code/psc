@@ -1,0 +1,41 @@
+name: PSC Spack CI
+
+on:
+  push:
+    branches: [ main, 'pr/*' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  spack-psc:
+    runs-on: ubuntu-latest
+    container: ghcr.io/germasch/psc-spack-ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: dev-build psc
+      run: |
+        . /opt/spack/share/spack/setup-env.sh
+        spack dev-build psc@local
+
+  spack-psc-cuda:
+    runs-on: ubuntu-latest
+    container: ghcr.io/germasch/psc-spack-cuda-ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: dev-build psc +cuda
+      run: |
+        . /opt/spack/share/spack/setup-env.sh
+        spack dev-build psc@local +cuda
+
+  spack-psc-cuda-rmm:
+    runs-on: ubuntu-latest
+    container: ghcr.io/germasch/psc-spack-cuda-ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: dev-build psc +cuda +rmm
+      run: |
+        . /opt/spack/share/spack/setup-env.sh
+        spack dev-build psc@local +cuda +rmm
