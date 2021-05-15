@@ -5,7 +5,6 @@
 #include <rmm/mr/device/pool_memory_resource.hpp>
 #include <rmm/mr/device/per_device_resource.hpp>
 #include <rmm/mr/device/logging_resource_adaptor.hpp>
-#include <rmm/thrust_rmm_allocator.h>
 #endif
 
 #include <cstdio>

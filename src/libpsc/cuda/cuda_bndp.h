@@ -44,7 +44,7 @@ struct cuda_bndp : cuda_mparticles_indexer<typename CudaMparticles::BS>
     auto& d_bidx = cmprts.by_block_.d_idx;
 
 #ifdef PSC_HAVE_RMM
-    auto oob = thrust::count_if(rmm::exec_policy(0)->on(0), d_bidx.begin(),
+    auto oob = thrust::count_if(rmm::exec_policy(), d_bidx.begin(),
                                 d_bidx.end(), is_outside(cmprts.n_blocks));
 #else
     auto oob = thrust::count_if(d_bidx.begin(), d_bidx.end(),
@@ -61,8 +61,8 @@ struct cuda_bndp : cuda_mparticles_indexer<typename CudaMparticles::BS>
     auto end = begin + sz;
 
 #ifdef PSC_HAVE_RMM
-    auto oob_end = thrust::copy_if(rmm::exec_policy(0)->on(0), begin, end,
-                                   begin + sz, is_outside(cmprts.n_blocks));
+    auto oob_end = thrust::copy_if(rmm::exec_policy(), begin, end, begin + sz,
+                                   is_outside(cmprts.n_blocks));
 #else
     auto oob_end =
       thrust::copy_if(begin, end, begin + sz, is_outside(cmprts.n_blocks));
@@ -93,7 +93,7 @@ struct cuda_bndp : cuda_mparticles_indexer<typename CudaMparticles::BS>
     assert(cmprts->storage.size() == n_prts + n_prts_send);
 
 #ifdef PSC_HAVE_RMM
-    thrust::copy(rmm::exec_policy(0)->on(0), cmprts->storage.begin() + n_prts,
+    thrust::copy(rmm::exec_policy(), cmprts->storage.begin() + n_prts,
                  cmprts->storage.end(), h_bnd_storage.begin());
 #else
     thrust::copy(cmprts->storage.begin() + n_prts, cmprts->storage.end(),

@@ -182,8 +182,8 @@ struct cuda_mparticles_sort
   void stable_sort_cidx()
   {
 #ifdef PSC_HAVE_RMM
-    thrust::stable_sort_by_key(rmm::exec_policy(0)->on(0), d_idx.begin(),
-                               d_idx.end(), d_id.begin());
+    thrust::stable_sort_by_key(rmm::exec_policy(), d_idx.begin(), d_idx.end(),
+                               d_id.begin());
 #else
     thrust::stable_sort_by_key(d_idx.begin(), d_idx.end(), d_id.begin());
 #endif
@@ -262,7 +262,7 @@ struct cuda_mparticles_randomize_sort
   void sort()
   {
 #ifdef PSC_HAVE_RMM
-    thrust::sort_by_key(rmm::exec_policy(0)->on(0), d_random_idx.begin(),
+    thrust::sort_by_key(rmm::exec_policy(), d_random_idx.begin(),
                         d_random_idx.end(), d_id.begin());
 #else
     thrust::sort_by_key(d_random_idx.begin(), d_random_idx.end(), d_id.begin());
@@ -307,8 +307,8 @@ struct cuda_mparticles_sort_by_block
   void stable_sort()
   {
 #ifdef PSC_HAVE_RMM
-    thrust::stable_sort_by_key(rmm::exec_policy(0)->on(0), d_idx.begin(),
-                               d_idx.end(), d_id.begin());
+    thrust::stable_sort_by_key(rmm::exec_policy(), d_idx.begin(), d_idx.end(),
+                               d_id.begin());
 #else
     thrust::stable_sort_by_key(d_idx.begin(), d_idx.end(), d_id.begin());
 #endif
