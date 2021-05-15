@@ -15,9 +15,18 @@ template <typename Mparticles, typename MfieldsState>
 void write_checkpoint(const Grid_t& grid, Mparticles& mprts,
                       MfieldsState& mflds)
 {
+  static int pr, pr_A;
+  if (!pr) {
+    pr = prof_register("cp_write", 1., 0, 0);
+    pr_A = prof_register("cp_write_barier", 1., 0, 0);
+  }
+
+  prof_start(pr);
   mpi_printf(grid.comm(), "**** Writing checkpoint...\n");
 #if defined(PSC_HAVE_ADIOS2) && !defined(VPIC)
+  prof_start(pr_A);
   MPI_Barrier(grid.comm()); // not really necessary
+  prof_stop(pr_A);
 
   std::string filename =
     "checkpoint_" + std::to_string(grid.timestep()) + ".bp";
@@ -32,6 +41,7 @@ void write_checkpoint(const Grid_t& grid, Mparticles& mprts,
   std::cerr << "write_checkpoint not available without adios2" << std::endl;
   std::abort();
 #endif
+  prof_stop(pr);
 }
 
 // ----------------------------------------------------------------------
