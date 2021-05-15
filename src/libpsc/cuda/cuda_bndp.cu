@@ -211,8 +211,8 @@ uint cuda_bndp<CudaMparticles, dim_yz>::convert_and_copy_to_dev(
   cmprts->resize(cmprts->n_prts + n_recv);
 
 #ifdef PSC_HAVE_RMM
-  thrust::copy(rmm::exec_policy(0)->on(0), h_bnd_storage.begin(),
-               h_bnd_storage.end(), cmprts->storage.begin() + cmprts->n_prts);
+  thrust::copy(rmm::exec_policy(), h_bnd_storage.begin(), h_bnd_storage.end(),
+               cmprts->storage.begin() + cmprts->n_prts);
 #else
   thrust::copy(h_bnd_storage.begin(), h_bnd_storage.end(),
                cmprts->storage.begin() + cmprts->n_prts);
@@ -311,7 +311,7 @@ uint cuda_bndp<CudaMparticles, DIM>::convert_and_copy_to_dev(
   cmprts->resize(cmprts->n_prts + n_recv);
 
 #ifdef PSC_HAVE_RMM
-  thrust::copy(rmm::exec_policy(0)->on(0), h_bnd.begin(), h_bnd.end(),
+  thrust::copy(rmm::exec_policy(), h_bnd.begin(), h_bnd.end(),
                cmprts->storage.begin() + cmprts->n_prts);
 #else
   thrust::copy(h_bnd.begin(), h_bnd.end(),
@@ -341,8 +341,8 @@ void cuda_bndp<CudaMparticles, DIM>::post(CudaMparticles* _cmprts)
 
   thrust::sequence(cmprts.by_block_.d_id.begin(), cmprts.by_block_.d_id.end());
 #ifdef PSC_HAVE_RMM
-  thrust::stable_sort_by_key(rmm::exec_policy(0)->on(0), d_bidx.begin(),
-                             d_bidx.end(), cmprts.by_block_.d_id.begin());
+  thrust::stable_sort_by_key(rmm::exec_policy(), d_bidx.begin(), d_bidx.end(),
+                             cmprts.by_block_.d_id.begin());
 #else
   thrust::stable_sort_by_key(d_bidx.begin(), d_bidx.end(),
                              cmprts.by_block_.d_id.begin());

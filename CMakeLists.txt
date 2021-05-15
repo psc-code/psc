@@ -98,7 +98,7 @@ endif()
 
 # RMM
 if (PSC_USE_RMM)
-  find_package(rmm CONFIG REQUIRED)
+  find_package(rmm 0.18.0 CONFIG REQUIRED)
   set(PSC_HAVE_RMM 1)
 endif()
 

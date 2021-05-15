@@ -5,7 +5,8 @@
 #include "PscConfig.h"
 
 #ifdef PSC_HAVE_RMM
-#include <rmm/thrust_rmm_allocator.h>
+#include <rmm/device_vector.hpp>
+#include <rmm/exec_policy.hpp>
 
 namespace psc
 {
