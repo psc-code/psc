@@ -13,10 +13,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: dev-build psc
+    - name: dev-build psc +tests
       run: |
         . /opt/spack/share/spack/setup-env.sh
-        spack dev-build psc@local
+        spack dev-build psc@local +tests
 
   spack-psc-cuda:
     runs-on: ubuntu-latest
@@ -24,10 +24,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: dev-build psc +cuda
+    - name: dev-build psc +tests +cuda
       run: |
         . /opt/spack/share/spack/setup-env.sh
-        spack dev-build psc@local +cuda
+        spack dev-build psc@local +tests +cuda
 
   spack-psc-cuda-rmm:
     runs-on: ubuntu-latest
@@ -35,7 +35,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: dev-build psc +cuda +rmm
+    - name: dev-build psc +tests +cuda +rmm
       run: |
         . /opt/spack/share/spack/setup-env.sh
-        spack dev-build psc@local +cuda +rmm
+        spack dev-build psc@local +tests +cuda +rmm
