@@ -3,6 +3,7 @@
 #define PSC_FIELDS_CUDA_H
 
 #include <mpi.h>
+#include "cuda_bits.h"
 #include "fields3d.hxx"
 #include "fields_traits.hxx"
 
@@ -13,12 +14,18 @@
 // ======================================================================
 // MfieldsCuda
 
+namespace psc
+{
+template <typename T, gt::size_type N>
+using gtensor_device = gt::gtensor_container<psc::device_vector<T>, N>;
+}
+
 struct MfieldsCuda;
 
 template <>
 struct MfieldsCRTPInnerTypes<MfieldsCuda>
 {
-  using Storage = gt::gtensor<float, 5, gt::space::device>;
+  using Storage = psc::gtensor_device<float, 5>;
 };
 
 struct MfieldsCuda
