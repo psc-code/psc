@@ -326,6 +326,8 @@ Grid_t* setupGrid()
 
   double dt = psc_params.cfl * courant_length(domain);
   Grid_t::Normalization norm{norm_params};
+  
+  mpi_printf(MPI_COMM_WORLD, "dt = %g\n", dt);
 
   Int3 ibn = {2, 2, 2};
   if (Dim::InvarX::value) {
