@@ -59,7 +59,10 @@ if (USE_CUDA)
     
     cuda/collision_cuda_impl.cu
     
-    cuda/cuda_heating.cu)
+    cuda/cuda_heating.cu
+    
+    cuda/mem.cxx
+    )
   target_include_directories(psc PUBLIC cuda)
 endif()
 

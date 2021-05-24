@@ -18,6 +18,8 @@
 
 #include <gtensor/span.h>
 
+extern std::size_t mem_particles;
+
 template <typename T>
 struct MparticlesCudaStorage_;
 
@@ -40,29 +42,72 @@ class MparticlesCudaStorage_
   using iterator_tuple = thrust::tuple<xi4_iterator, pxi4_iterator>;
 
 public:
+  using value_type = typename S::value_type[2];
   using iterator = thrust::zip_iterator<iterator_tuple>;
 
   MparticlesCudaStorage_() = default;
   MparticlesCudaStorage_(const MparticlesCudaStorage_& other) = default;
   MparticlesCudaStorage_& operator=(const MparticlesCudaStorage_& other) =
-    default;
+    delete;
 
-  MparticlesCudaStorage_(uint n) : xi4(n), pxi4(n) {}
+  MparticlesCudaStorage_(uint n) : xi4(n), pxi4(n)
+  {
+    mem_add(xi4);
+    mem_add(pxi4);
+  }
 
   MparticlesCudaStorage_(const S& xi4, const S& pxi4) : xi4{xi4}, pxi4{pxi4} {}
+
+  template <typename U>
+  GT_INLINE void mem_add(const U&)
+  {}
+
+  template <typename T>
+  GT_INLINE void mem_add(const psc::device_vector<T>& v)
+  {
+#ifndef __CUDA_ARCH__
+    mem_particles += allocated_bytes(v);
+#endif
+  }
+
+  template <typename U>
+  GT_INLINE void mem_sub(const U&)
+  {}
+
+  template <typename T>
+  GT_INLINE void mem_sub(const psc::device_vector<T>& v)
+  {
+#ifndef __CUDA_ARCH__
+    mem_particles -= allocated_bytes(v);
+#endif
+  }
+
+  GT_INLINE ~MparticlesCudaStorage_()
+  {
+    mem_sub(xi4);
+    mem_sub(pxi4);
+  }
 
   template <typename SO>
   MparticlesCudaStorage_& operator=(const MparticlesCudaStorage_<SO>& other)
   {
+    mem_sub(xi4);
     xi4 = other.xi4;
+    mem_add(xi4);
+
+    mem_sub(pxi4);
     pxi4 = other.pxi4;
+    mem_add(pxi4);
     return *this;
   }
 
   template <typename SO>
   __host__ MparticlesCudaStorage_(const SO& other)
     : xi4{other.xi4}, pxi4{other.pxi4}
-  {}
+  {
+    mem_add(xi4);
+    mem_add(pxi4);
+  }
 
   template <typename IT>
   MparticlesCudaStorage_(IT first, IT last)
@@ -85,6 +130,9 @@ public:
 
   __host__ void resize(size_t n)
   {
+    mem_sub(xi4);
+    mem_sub(pxi4);
+
     // grow arrays by 20% only
     if (n > xi4.capacity()) {
       xi4.reserve(1.2 * n);
@@ -92,6 +140,9 @@ public:
     }
     xi4.resize(n);
     pxi4.resize(n);
+
+    mem_add(xi4);
+    mem_add(pxi4);
   }
 
   __host__ __device__ DParticleCuda operator[](int n) const
@@ -189,6 +240,7 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   using BndBuffers = std::vector<BndBuffer>;
 
   cuda_mparticles(const Grid_t& grid);
+  ~cuda_mparticles();
 
   InjectorBuffered<cuda_mparticles> injector() { return {*this}; }
   ConstAccessorCuda_<cuda_mparticles> accessor() { return {*this}; }

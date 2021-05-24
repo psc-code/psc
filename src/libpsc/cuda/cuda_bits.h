@@ -4,6 +4,9 @@
 
 #include "PscConfig.h"
 
+#include <iostream>
+#include <fstream>
+
 #ifdef PSC_HAVE_RMM
 #include <rmm/device_vector.hpp>
 #include <rmm/exec_policy.hpp>
@@ -67,5 +70,24 @@ __host__ __device__ static inline int cuda_float_as_int(float f)
   u.f = f;
   return u.i;
 };
+
+extern std::size_t mem_particles;
+extern std::size_t mem_collisions;
+extern std::size_t mem_sort;
+extern std::size_t mem_sort_by_block;
+extern std::size_t mem_bnd;
+extern std::size_t mem_heating;
+
+template <typename V>
+std::size_t allocated_bytes(const V& v)
+{
+  return v.capacity() * sizeof(typename V::value_type);
+}
+
+void mem_stats_csv(std::ostream& of, int timestep, int n_patches, int n_prts);
+
+void mem_stats(std::string file, int line, std::ostream& of);
+
+#define MEM_STATS() mem_stats(__FILE__, __LINE__, std::cout)
 
 #endif

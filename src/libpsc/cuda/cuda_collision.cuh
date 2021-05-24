@@ -13,6 +13,8 @@
 
 #define THREADS_PER_BLOCK 128
 
+extern std::size_t mem_collisions;
+
 template <typename cuda_mparticles, typename RngState>
 struct CudaCollision;
 
@@ -38,6 +40,8 @@ struct CudaCollision
   CudaCollision(int interval, double nu, int nicell, double dt)
     : interval_{interval}, nu_{nu}, nicell_(nicell), dt_(dt)
   {}
+
+  ~CudaCollision() { mem_collisions -= allocated_bytes(rng_state_); }
 
   int interval() const { return interval_; }
 
@@ -70,7 +74,9 @@ struct CudaCollision
     dim3 dimGrid(blocks);
 
     if (blocks * THREADS_PER_BLOCK > rng_state_.size()) {
+      mem_collisions -= allocated_bytes(rng_state_);
       rng_state_.resize(N_BLOCKS * THREADS_PER_BLOCK);
+      mem_collisions += allocated_bytes(rng_state_);
     }
 
     int n_cells_per_patch =

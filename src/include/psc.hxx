@@ -19,6 +19,8 @@
 #include "psc_fields_cuda.inl"
 #endif
 
+#include <fstream>
+
 #ifdef VPIC
 #include "../libpsc/vpic/vpic_iface.h"
 #endif
@@ -140,6 +142,10 @@ struct Psc
     assert(grid.isInvar(0) == Dim::InvarX::value);
     assert(grid.isInvar(1) == Dim::InvarY::value);
     assert(grid.isInvar(2) == Dim::InvarZ::value);
+
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    log_.open("mem-" + std::to_string(rank) + ".log");
 
     initialize_stats();
     initialize();
@@ -402,6 +408,10 @@ struct Psc
     MPI_Comm comm = grid().comm();
     int timestep = grid().timestep();
 
+#ifdef USE_CUDA
+    mem_stats_csv(log_, timestep, grid().n_patches(), mprts_.size());
+#endif
+
     if (p_.balance_interval > 0 && timestep % p_.balance_interval == 0) {
       balance_(grid_, mprts_);
     }
@@ -434,22 +444,26 @@ struct Psc
     }
 
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
+    mpi_printf(comm, "***** Pushing particles...\n");
     prof_start(pr_push_prts);
     pushp_.push_mprts(mprts_, mflds_);
     prof_stop(pr_push_prts);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
 
     // === field propagation B^{n+1/2} -> B^{n+1}
+    mpi_printf(comm, "***** Pushing B...\n");
     prof_start(pr_push_flds);
     pushf_.push_H(mflds_, .5, Dim{});
     prof_stop(pr_push_flds);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
+    mpi_printf(comm, "***** Bnd particles...\n");
     prof_start(pr_bndp);
     bndp_(mprts_);
     prof_stop(pr_bndp);
 
     // === field propagation E^{n+1/2} -> E^{n+3/2}
+    mpi_printf(comm, "***** Push fields E\n");
     prof_start(pr_bndf);
 #if 1
     bndf_.fill_ghosts_H(mflds_);
@@ -474,6 +488,7 @@ struct Psc
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
 
     // === field propagation B^{n+1} -> B^{n+3/2}
+    mpi_printf(comm, "***** Push fields B\n");
     prof_restart(pr_push_flds);
     pushf_.push_H(mflds_, .5, Dim{});
     prof_stop(pr_push_flds);
@@ -666,6 +681,7 @@ protected:
   BndParticles bndp_;
 
   Checkpointing checkpointing_;
+  std::ofstream log_;
 
   // FIXME, maybe should be private
   // need to make sure derived class sets these (? -- or just leave them off by

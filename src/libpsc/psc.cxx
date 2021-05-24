@@ -3,6 +3,9 @@
 #include "psc_fields_as_c.h"
 #include "fields.hxx"
 #include "setup_fields.hxx"
+#ifdef USE_CUDA
+#include "cuda_base.cuh"
+#endif
 
 #include <mrc_common.h>
 #include <mrc_params.h>
@@ -86,6 +89,9 @@ void psc_init(int& argc, char**& argv)
 #endif
   libmrc_params_init(argc, argv);
   mrc_set_flags(MRC_FLAG_SUPPRESS_UNPREFIXED_OPTION_WARNING);
+#ifdef USE_CUDA
+  cuda_base_init();
+#endif
 
   // FIXME, we should use RngPool consistently throughout
   int rank;

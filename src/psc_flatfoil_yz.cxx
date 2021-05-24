@@ -10,6 +10,14 @@
 #include "../libpsc/psc_heating/psc_heating_impl.hxx"
 #include "heating_spot_foil.hxx"
 
+#ifdef USE_CUDA
+#include "cuda_bits.h"
+#else
+#define MEM_STATS()                                                            \
+  do {                                                                         \
+  } while (0)
+#endif
+
 // quasi 1-d
 #define CASE_1D 1
 #define CASE_2D 2
@@ -611,6 +619,8 @@ void run()
       pr_heating = prof_register("heating", 1., 0, 0);
     }
 
+    MEM_STATS();
+
     auto comm = grid.comm();
     auto timestep = grid.timestep();
 
@@ -675,7 +685,9 @@ void run()
                                           balance, collision, checks, marder,
                                           diagnostics, lf_inject_heat);
 
+  MEM_STATS();
   psc.integrate();
+  MEM_STATS();
 }
 
 // ======================================================================
@@ -686,6 +698,8 @@ int main(int argc, char** argv)
   psc_init(argc, argv);
 
   run();
+
+  MEM_STATS();
 
   psc_finalize();
   return 0;
