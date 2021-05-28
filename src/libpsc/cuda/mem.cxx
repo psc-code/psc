@@ -32,7 +32,7 @@ void mem_stats(std::string file, int line, std::ostream& of)
   std::size_t mem_fields = mem_mfields();
 
   std::size_t total = mem_fields + mem_particles + mem_collisions + mem_sort +
-                      mem_sort_by_block + mem_bnd + mem_heating;
+                      mem_sort_by_block + mem_bnd + mem_heating + mem_bndp;
 
   std::size_t allocated = mem_cuda_allocated();
 
@@ -44,6 +44,7 @@ void mem_stats(std::string file, int line, std::ostream& of)
   of << "===== sort       " << mem_sort << " bytes\n";
   of << "===== sort_block " << mem_sort_by_block << " bytes\n";
   of << "===== bnd        " << mem_bnd << " bytes\n";
+  of << "===== bndp       " << mem_bndp << " bytes\n";
   of << "===== heating    " << mem_heating << " bytes\n";
   of << "===== alloced " << allocated << " total " << total << " unaccounted "
      << std::ptrdiff_t(allocated - total) << "\n";
@@ -54,7 +55,7 @@ void mem_stats_csv(std::ostream& of, int timestep, int n_patches, int n_prts)
   std::size_t mem_fields = mem_mfields();
 
   std::size_t total = mem_fields + mem_particles + mem_collisions + mem_sort +
-                      mem_sort_by_block + mem_bnd + mem_heating;
+                      mem_sort_by_block + mem_bnd + mem_heating + mem_bndp;
 
   std::size_t allocated = mem_cuda_allocated();
 
@@ -69,6 +70,7 @@ void mem_stats_csv(std::ostream& of, int timestep, int n_patches, int n_prts)
   of << "===== sort       " << mem_sort << " bytes\n";
   of << "===== sort_block " << mem_sort_by_block << " bytes\n";
   of << "===== bnd        " << mem_bnd << " bytes\n";
+  of << "===== bndp       " << mem_bndp << " bytes\n";
   of << "===== heating    " << mem_heating << " bytes\n";
   of << "===== alloced " << allocated << " total " << total << " unaccounted "
      << std::ptrdiff_t(allocated - total) << "\n";

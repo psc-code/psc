@@ -77,6 +77,7 @@ extern std::size_t mem_sort;
 extern std::size_t mem_sort_by_block;
 extern std::size_t mem_bnd;
 extern std::size_t mem_heating;
+extern std::size_t mem_bndp;
 
 template <typename V>
 std::size_t allocated_bytes(const V& v)

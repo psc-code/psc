@@ -19,6 +19,7 @@ std::size_t mem_sort_by_block;
 std::size_t mem_bnd;
 std::size_t mem_heating;
 std::size_t mem_collisions;
+std::size_t mem_bndp;
 
 #ifdef PSC_HAVE_RMM
 using device_mr_type = rmm::mr::device_memory_resource;
