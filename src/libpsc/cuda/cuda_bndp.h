@@ -53,7 +53,9 @@ struct cuda_bndp : cuda_mparticles_indexer<typename CudaMparticles::BS>
     auto sz = d_bidx.size();
     assert(cmprts.storage.size() == sz);
     assert(cmprts.n_prts == sz);
+    mem_bndp -= allocated_bytes(d_bidx);
     d_bidx.resize(sz + oob);
+    mem_bndp += allocated_bytes(d_bidx);
     cmprts.storage.resize(sz + oob);
 
     auto begin = thrust::make_zip_iterator(
