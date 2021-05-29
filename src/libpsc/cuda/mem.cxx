@@ -59,20 +59,10 @@ void mem_stats_csv(std::ostream& of, int timestep, int n_patches, int n_prts)
 
   std::size_t allocated = mem_cuda_allocated();
 
-  of << "========== STEP  " << timestep << "\n";
-  of << "===== n_patches  " << n_patches << "\n";
-  of << "===== n_prts     " << n_prts << "\n";
-
-  of << "===== fields     " << mem_fields << " bytes  # "
-     << MfieldsBase::instances.size() << "\n";
-  of << "===== particles  " << mem_particles << " bytes\n";
-  of << "===== collisions " << mem_collisions << " bytes\n";
-  of << "===== sort       " << mem_sort << " bytes\n";
-  of << "===== sort_block " << mem_sort_by_block << " bytes\n";
-  of << "===== bnd        " << mem_bnd << " bytes\n";
-  of << "===== bndp       " << mem_bndp << " bytes\n";
-  of << "===== heating    " << mem_heating << " bytes\n";
-  of << "===== alloced " << allocated << " total " << total << " unaccounted "
-     << std::ptrdiff_t(allocated - total) << "\n";
-  of << std::endl;
+  of << timestep << "," << n_patches << "," << n_prts << "," << mem_fields
+     << "," << MfieldsBase::instances.size() << "," << mem_particles << ","
+     << mem_collisions << "," << mem_sort << "," << mem_sort_by_block << ","
+     << mem_bnd << "," << mem_bndp << "," << mem_heating << "," << allocated
+     << "," << total << "," << std::ptrdiff_t(allocated - total) << ","
+     << "\n";
 }
