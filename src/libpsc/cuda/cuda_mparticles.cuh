@@ -32,6 +32,22 @@ using HMparticlesCudaStorage =
 using DMparticlesCudaStorage = MparticlesCudaStorage_<gt::span<float4>>;
 
 // ======================================================================
+// helper
+
+namespace helper
+{
+template <typename S>
+void reserve(S& vec, std::size_t n)
+{
+  assert(n >= vec.size());
+  S new_vec(n);
+  new_vec.resize(vec.size());
+  thrust::copy(vec.begin(), vec.end(), new_vec.begin());
+  vec = std::move(new_vec);
+}
+} // namespace helper
+
+// ======================================================================
 // MparticlesCudaStorage_
 
 template <typename S>
@@ -135,8 +151,14 @@ public:
 
     // grow arrays by 20% only
     if (n > xi4.capacity()) {
+#if 0
       xi4.reserve(1.2 * n);
       pxi4.reserve(1.2 * n);
+#else
+      // work around thrust mem leak and exponential growth
+      helper::reserve(xi4, 1.2 * n);
+      helper::reserve(pxi4, 1.2 * n);
+#endif
     }
     xi4.resize(n);
     pxi4.resize(n);
