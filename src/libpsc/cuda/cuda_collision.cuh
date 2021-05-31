@@ -58,9 +58,7 @@ struct CudaCollision
     }
     prof_start(pr_sort);
     cmprts.reorder();
-    sort_.find_indices_ids(cmprts);
-    sort_.sort();
-    sort_.find_offsets();
+    sort_(cmprts);
     prof_stop(pr_sort);
     // for (int c = 0; c <= cmprts.n_cells(); c++) {
     //   printf("off[%d] = %d\n", c, int(sort_by_cell.d_off[c]));

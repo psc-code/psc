@@ -201,25 +201,29 @@ TEST(cuda_mparticles_randomize_sort, sort)
   auto& cmprts = *mprts.cmprts();
   cuda_mparticles_randomize_sort sort;
 
-  sort.find_indices_ids(cmprts);
-  EXPECT_EQ(sort.d_id, (std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
-                                         12, 13, 14}));
+  psc::device_vector<double> d_random_idx(cmprts.n_prts);
+  psc::device_vector<uint> d_id(cmprts.n_prts);
+  psc::device_vector<uint> d_off(cmprts.n_cells() + 1);
 
-  sort.sort();
-  EXPECT_EQ(sort.d_id, (std::vector<int>{0, 1, 7, 5, 8, 6, 2, 4, 3, 9, 10, 14,
-                                         13, 11, 12}));
+  sort.find_indices_ids(cmprts, d_random_idx, d_id);
+  EXPECT_EQ(
+    d_id, (std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}));
 
-  auto last = sort.d_random_idx[0];
+  sort.sort(d_random_idx, d_id);
+  EXPECT_EQ(
+    d_id, (std::vector<int>{0, 1, 7, 5, 8, 6, 2, 4, 3, 9, 10, 14, 13, 11, 12}));
+
+  auto last = d_random_idx[0];
   for (int i = 1; i < cmprts.size(); i++) {
-    EXPECT_GE(sort.d_random_idx[i], last);
-    last = sort.d_random_idx[i];
+    EXPECT_GE(d_random_idx[i], last);
+    last = d_random_idx[i];
   }
   // std::cout << "rnd idx ";
   // std::copy(sort.d_random_idx.begin(), sort.d_random_idx.end(),
   //           std::ostream_iterator<double>(std::cout, " "));
   // std::cout << "\n";
 
-  sort.find_offsets();
+  sort.find_offsets(d_random_idx, d_off);
   std::vector<int> off(cmprts.n_cells() + 1);
   off[0] = 0;
   off[1] = 2;
@@ -238,20 +242,21 @@ TEST(cuda_mparticles_randomize_sort, sort)
   for (int i = 92; i <= 256; i++) {
     off[i] = 15;
   }
-  // std::copy(sort.d_off.begin(), sort.d_off.end(),
+  // std::copy(d_off.begin(), d_off.end(),
   //           std::ostream_iterator<int>(std::cout, " "));
   // std::cout << "\n";
-  EXPECT_EQ(sort.d_off, off);
+  EXPECT_EQ(d_off, off);
 
 #if 1
   // do over, get different permutation
-  sort.find_indices_ids(cmprts);
-  sort.sort();
+  sort.find_indices_ids(cmprts, d_random_idx, d_id);
+  sort.sort(d_random_idx, d_id);
   // for (int i = 0; i < cmprts.size(); i++) {
   //   mprintf("i %d r_idx %g id %d\n", i, (float)sort.d_random_idx[i],
   //           (int)sort.d_id[i]);
   // }
-  EXPECT_NE(sort.d_id, (std::vector<int>{0, 1, 7, 5, 8, 6, 2, 4, 3}));
+  EXPECT_EQ(
+    d_id, (std::vector<int>{0, 1, 5, 6, 8, 7, 4, 2, 3, 10, 9, 13, 14, 11, 12}));
 #endif
 }
 
