@@ -58,11 +58,11 @@ struct CudaCollision
     }
     prof_start(pr_sort);
     cmprts.reorder();
-    sort_(cmprts);
+    psc::device_vector<uint> d_off(cmprts.n_cells() + 1);
+    psc::device_vector<uint> d_id(cmprts.n_prts);
+
+    sort_(cmprts, d_off, d_id);
     prof_stop(pr_sort);
-    // for (int c = 0; c <= cmprts.n_cells(); c++) {
-    //   printf("off[%d] = %d\n", c, int(sort_by_cell.d_off[c]));
-    // }
 
     const int N_BLOCKS = 512;
 
@@ -87,8 +87,8 @@ struct CudaCollision
 
     prof_start(pr);
     k_collide<cuda_mparticles, RngState><<<dimGrid, THREADS_PER_BLOCK>>>(
-      cmprts, sort_.d_off.data().get(), sort_.d_id.data().get(), nudt0,
-      rng_state_, cmprts.n_cells(), n_cells_per_patch);
+      cmprts, d_off.data().get(), d_id.data().get(), nudt0, rng_state_,
+      cmprts.n_cells(), n_cells_per_patch);
     cuda_sync_if_enabled();
     prof_stop(pr);
   }

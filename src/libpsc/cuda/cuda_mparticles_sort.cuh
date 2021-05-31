@@ -241,26 +241,18 @@ struct cuda_mparticles_randomize_sort
 {
   cuda_mparticles_randomize_sort() {}
 
-  ~cuda_mparticles_randomize_sort()
-  {
-    mem_sort -= allocated_bytes(d_off);
-    mem_sort -= allocated_bytes(d_id);
-  }
+  ~cuda_mparticles_randomize_sort() { mem_sort -= allocated_bytes(rng_state_); }
 
   template <typename CMPRTS>
-  void operator()(CMPRTS& cmprts)
+  void operator()(CMPRTS& cmprts, psc::device_vector<uint>& d_off,
+                  psc::device_vector<uint>& d_id)
   {
     if (cmprts.n_patches() == 0) {
       return;
     }
 
-    mem_sort -= allocated_bytes(d_off);
-    d_off.resize(cmprts.n_cells() + 1);
-    mem_sort += allocated_bytes(d_off);
-
-    mem_sort -= allocated_bytes(d_id);
-    d_id.resize(cmprts.n_prts);
-    mem_sort += allocated_bytes(d_id);
+    assert(d_off.size() == cmprts.n_cells() + 1);
+    assert(d_id.size() == cmprts.n_prts);
 
     psc::device_vector<double> d_random_idx(cmprts.n_prts);
 
@@ -317,12 +309,6 @@ struct cuda_mparticles_randomize_sort
                         search_begin + n_cells, d_off.begin());
     d_off[n_cells] = d_random_idx.size();
   }
-
-public:
-  psc::device_vector<uint> d_id; // particle id used for reordering
-  psc::device_vector<uint>
-    d_off; // particles per cell
-           // are at indices [offsets[cell] .. offsets[cell+1][
 
 private:
   RngStateCuda rng_state_;
