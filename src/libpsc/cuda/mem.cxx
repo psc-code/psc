@@ -31,8 +31,9 @@ void mem_stats(std::string file, int line, std::ostream& of)
 {
   std::size_t mem_fields = mem_mfields();
 
-  std::size_t total = mem_fields + mem_particles + mem_collisions + mem_sort +
-                      mem_sort_by_block + mem_bnd + mem_heating + mem_bndp;
+  std::size_t total = mem_fields + mem_particles + mem_collisions +
+                      mem_randomize_sort + mem_sort_by_block + mem_bnd +
+                      mem_heating + mem_bndp;
 
   std::size_t allocated = mem_cuda_allocated();
 
@@ -41,7 +42,7 @@ void mem_stats(std::string file, int line, std::ostream& of)
      << MfieldsBase::instances.size() << "\n";
   of << "===== particles  " << mem_particles << " bytes\n";
   of << "===== collisions " << mem_collisions << " bytes\n";
-  of << "===== sort       " << mem_sort << " bytes\n";
+  of << "===== rnd_sort   " << mem_randomize_sort << " bytes\n";
   of << "===== sort_block " << mem_sort_by_block << " bytes\n";
   of << "===== bnd        " << mem_bnd << " bytes\n";
   of << "===== bndp       " << mem_bndp << " bytes\n";
@@ -50,19 +51,29 @@ void mem_stats(std::string file, int line, std::ostream& of)
      << std::ptrdiff_t(allocated - total) << "\n";
 }
 
+void mem_stats_csv_header(std::ostream& of)
+{
+  of << "step,n_patches,n_prts,fields,nfields,particles,collisions,"
+        "randomize_sort,"
+        "sort_block,bnd,bndp,heating,allocated,total,unaccounted"
+     << "\n";
+}
+
 void mem_stats_csv(std::ostream& of, int timestep, int n_patches, int n_prts)
 {
   std::size_t mem_fields = mem_mfields();
 
-  std::size_t total = mem_fields + mem_particles + mem_collisions + mem_sort +
-                      mem_sort_by_block + mem_bnd + mem_heating + mem_bndp;
+  std::size_t total = mem_fields + mem_particles + mem_collisions +
+                      mem_randomize_sort + mem_sort_by_block + mem_bnd +
+                      mem_heating + mem_bndp;
 
   std::size_t allocated = mem_cuda_allocated();
 
   of << timestep << "," << n_patches << "," << n_prts << "," << mem_fields
      << "," << MfieldsBase::instances.size() << "," << mem_particles << ","
-     << mem_collisions << "," << mem_sort << "," << mem_sort_by_block << ","
-     << mem_bnd << "," << mem_bndp << "," << mem_heating << "," << allocated
-     << "," << total << "," << std::ptrdiff_t(allocated - total) << ","
+     << mem_collisions << "," << mem_randomize_sort << "," << mem_sort_by_block
+     << "," << mem_bnd << "," << mem_bndp << "," << mem_heating << ","
+     << allocated << "," << total << "," << std::ptrdiff_t(allocated - total)
+     << ","
      << "\n";
 }

@@ -73,7 +73,7 @@ __host__ __device__ static inline int cuda_float_as_int(float f)
 
 extern std::size_t mem_particles;
 extern std::size_t mem_collisions;
-extern std::size_t mem_sort;
+extern std::size_t mem_randomize_sort;
 extern std::size_t mem_sort_by_block;
 extern std::size_t mem_bnd;
 extern std::size_t mem_heating;
@@ -85,6 +85,7 @@ std::size_t allocated_bytes(const V& v)
   return v.capacity() * sizeof(typename V::value_type);
 }
 
+void mem_stats_csv_header(std::ostream& of);
 void mem_stats_csv(std::ostream& of, int timestep, int n_patches, int n_prts);
 
 void mem_stats(std::string file, int line, std::ostream& of);

@@ -14,7 +14,7 @@
 #include <mrc_common.h>
 
 std::size_t mem_particles;
-std::size_t mem_sort;
+std::size_t mem_randomize_sort;
 std::size_t mem_sort_by_block;
 std::size_t mem_bnd;
 std::size_t mem_heating;

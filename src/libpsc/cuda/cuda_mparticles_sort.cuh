@@ -12,7 +12,7 @@
 
 #include <curand_kernel.h>
 
-extern std::size_t mem_sort;
+extern std::size_t mem_randomize_sort;
 extern std::size_t mem_sort_by_block;
 
 template <typename BS>
@@ -241,7 +241,10 @@ struct cuda_mparticles_randomize_sort
 {
   cuda_mparticles_randomize_sort() {}
 
-  ~cuda_mparticles_randomize_sort() { mem_sort -= allocated_bytes(rng_state_); }
+  ~cuda_mparticles_randomize_sort()
+  {
+    mem_randomize_sort -= allocated_bytes(rng_state_);
+  }
 
   template <typename CMPRTS>
   void operator()(CMPRTS& cmprts, psc::device_vector<uint>& d_off,
@@ -278,9 +281,9 @@ struct cuda_mparticles_randomize_sort
                    cmprts.n_patches();
 
     if (dimGrid.x * THREADS_PER_BLOCK > rng_state_.size()) {
-      mem_sort -= allocated_bytes(rng_state_);
+      mem_randomize_sort -= allocated_bytes(rng_state_);
       rng_state_.resize(dimGrid.x * THREADS_PER_BLOCK);
-      mem_sort += allocated_bytes(rng_state_);
+      mem_randomize_sort += allocated_bytes(rng_state_);
     }
 
     ::k_find_random_cell_indices_ids<BS, Block>
