@@ -239,38 +239,29 @@ public:
 
 struct cuda_mparticles_randomize_sort
 {
-  cuda_mparticles_randomize_sort()
-  {
-    mem_sort += d_off.capacity() * sizeof(typename decltype(d_off)::value_type);
-    mem_sort += d_id.capacity() * sizeof(typename decltype(d_id)::value_type);
-    mem_sort += d_random_idx.capacity() *
-                sizeof(typename decltype(d_random_idx)::value_type);
-  }
+  cuda_mparticles_randomize_sort() {}
 
   ~cuda_mparticles_randomize_sort()
   {
-    mem_sort -= d_off.capacity() * sizeof(typename decltype(d_off)::value_type);
-    mem_sort -= d_id.capacity() * sizeof(typename decltype(d_id)::value_type);
-    mem_sort -= d_random_idx.capacity() *
-                sizeof(typename decltype(d_random_idx)::value_type);
+    mem_sort -= allocated_bytes(d_off);
+    mem_sort -= allocated_bytes(d_id);
+    mem_sort -= allocated_bytes(d_random_idx);
   }
 
   template <typename CMPRTS>
   void find_indices_ids(CMPRTS& cmprts)
   {
-    mem_sort -= d_off.capacity() * sizeof(typename decltype(d_off)::value_type);
+    mem_sort -= allocated_bytes(d_off);
     d_off.resize(cmprts.n_cells() + 1);
-    mem_sort += d_off.capacity() * sizeof(typename decltype(d_off)::value_type);
+    mem_sort += allocated_bytes(d_off);
 
-    mem_sort -= d_id.capacity() * sizeof(typename decltype(d_id)::value_type);
+    mem_sort -= allocated_bytes(d_id);
     d_id.resize(cmprts.n_prts);
-    mem_sort += d_id.capacity() * sizeof(typename decltype(d_id)::value_type);
+    mem_sort += allocated_bytes(d_id);
 
-    mem_sort -= d_random_idx.capacity() *
-                sizeof(typename decltype(d_random_idx)::value_type);
+    mem_sort -= allocated_bytes(d_random_idx);
     d_random_idx.resize(cmprts.n_prts);
-    mem_sort += d_random_idx.capacity() *
-                sizeof(typename decltype(d_random_idx)::value_type);
+    mem_sort += allocated_bytes(d_random_idx);
 
     if (cmprts.n_patches() == 0) {
       return;
