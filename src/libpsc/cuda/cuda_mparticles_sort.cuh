@@ -3,6 +3,7 @@
 
 #include "cuda_bits.h"
 #include "rng_state.cuh"
+#include "bs.hxx"
 
 #include <thrust/binary_search.h>
 #include <thrust/device_vector.h>
@@ -22,30 +23,56 @@ struct DMparticlesCuda;
 
 #define THREADS_PER_BLOCK 256
 
+namespace detail
+{
+template <typename BS>
+struct bs_to_dim;
+
+template <>
+struct bs_to_dim<BS144>
+{
+  using type = dim_yz;
+};
+
+template <>
+struct bs_to_dim<BS444>
+{
+  using type = dim_xyz;
+};
+} // namespace detail
+
+template <typename BS>
+using bs_to_dim_t = typename detail::bs_to_dim<BS>::type;
+
 // ----------------------------------------------------------------------
 // find_cell_indices_ids
 
-template <typename BS>
+template <typename BS, typename Block>
 __global__ static void k_find_cell_indices_ids(DMparticlesCuda<BS> dmprts,
                                                uint* d_cidx, uint* d_id,
-                                               int n_patches,
-                                               int n_blocks_per_patch)
+                                               int n_blocks)
 {
-  int n = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
+  int bid = blockIdx.x;
 
-  for (int p = 0; p < n_patches; p++) {
-    uint off = dmprts.off_[p * n_blocks_per_patch];
-    uint n_prts = dmprts.off_[(p + 1) * n_blocks_per_patch] - off;
-    if (n < n_prts) {
-      auto prt = dmprts.storage[n + off];
-      d_cidx[n + off] = dmprts.validCellIndex(prt, p);
-      d_id[n + off] = n + off;
+  Block current_block;
+  for (; bid < n_blocks; bid += gridDim.x) {
+    current_block.init(dmprts, bid);
+
+    int block_begin = dmprts.off_[current_block.bid];
+    int block_end = dmprts.off_[current_block.bid + 1];
+    for (int n : in_block_loop(block_begin, block_end)) {
+      if (n < block_begin) {
+        continue;
+      }
+      auto prt = dmprts.storage[n];
+      d_cidx[n] = dmprts.validCellIndex(prt, current_block.p);
+      d_id[n] = n;
     }
   }
 }
 
-template <typename BS>
-inline void find_cell_indices_ids(cuda_mparticles<BS>& cmprts,
+template <typename CMPRTS>
+inline void find_cell_indices_ids(CMPRTS& cmprts,
                                   psc::device_vector<uint>& d_cidx,
                                   psc::device_vector<uint>& d_id)
 {
@@ -53,29 +80,16 @@ inline void find_cell_indices_ids(cuda_mparticles<BS>& cmprts,
     return;
   }
 
-  // OPT: if we didn't need max_n_prts, we wouldn't have to get the
-  // sizes / offsets at all, and it seems likely we could do a better
-  // job here in general
-  auto n_prts_by_patch = cmprts.sizeByPatch();
+  using BS = typename CMPRTS::BS;
+  using dim = bs_to_dim_t<BS>;
+  using Block = BlockSimple2<BS, dim>;
+  dim3 dimGrid = Block::dimGrid(cmprts);
 
-  int max_n_prts = 0;
-  for (int p = 0; p < cmprts.n_patches(); p++) {
-    if (n_prts_by_patch[p] > max_n_prts) {
-      max_n_prts = n_prts_by_patch[p];
-    }
-  }
+  int n_blocks =
+    cmprts.b_mx()[0] * cmprts.b_mx()[1] * cmprts.b_mx()[2] * cmprts.n_patches();
 
-  if (max_n_prts == 0) {
-    return;
-  }
-
-  dim3 dimGrid((max_n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
-  dim3 dimBlock(THREADS_PER_BLOCK);
-
-  k_find_cell_indices_ids<BS>
-    <<<dimGrid, dimBlock>>>(cmprts, d_cidx.data().get(), d_id.data().get(),
-                            cmprts.n_patches(), cmprts.n_blocks_per_patch);
-  cuda_sync_if_enabled();
+  ::k_find_cell_indices_ids<BS, Block><<<dimGrid, THREADS_PER_BLOCK>>>(
+    cmprts, d_cidx.data().get(), d_id.data().get(), n_blocks);
 }
 
 // ----------------------------------------------------------------------
@@ -174,8 +188,8 @@ struct cuda_mparticles_sort
 {
   cuda_mparticles_sort(uint n_cells) : d_off(n_cells + 1) {}
 
-  template <typename BS>
-  void find_indices_ids(cuda_mparticles<BS>& cmprts)
+  template <typename CMPRTS>
+  void find_indices_ids(CMPRTS& cmprts)
   {
     d_idx.resize(cmprts.n_prts);
     d_id.resize(cmprts.n_prts);
