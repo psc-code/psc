@@ -95,30 +95,33 @@ inline void find_cell_indices_ids(CMPRTS& cmprts,
 // ----------------------------------------------------------------------
 // find_random_cell_indices_ids
 
-template <typename BS>
+template <typename BS, typename Block>
 __global__ static void k_find_random_cell_indices_ids(
-  DMparticlesCuda<BS> dmprts, double* d_random_idx, uint* d_id, int n_patches,
-  int n_blocks_per_patch, RngStateCuda::Device rng_state)
+  DMparticlesCuda<BS> dmprts, double* d_random_idx, uint* d_id,
+  RngStateCuda::Device rng_state, int n_blocks)
 {
-  int n = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
-  if (n > rng_state.size()) {
-    return;
-  }
+  Block current_block;
+  int bid = blockIdx.x;
+  int id = blockIdx.x * blockDim.x + threadIdx.x;
+  auto rng = rng_state[id];
 
-  auto rng = rng_state[n];
+  for (; bid < n_blocks; bid += gridDim.x) {
+    current_block.init(dmprts, bid);
 
-  for (int p = 0; p < n_patches; p++) {
-    uint off = dmprts.off_[p * n_blocks_per_patch];
-    uint n_prts = dmprts.off_[(p + 1) * n_blocks_per_patch] - off;
-    if (n < n_prts) {
-      auto prt = dmprts.storage[n + off];
-      d_random_idx[n + off] =
-        dmprts.validCellIndex(prt, p) + .5 * rng.uniform();
-      d_id[n + off] = n + off;
+    int block_begin = dmprts.off_[current_block.bid];
+    int block_end = dmprts.off_[current_block.bid + 1];
+    for (int n : in_block_loop(block_begin, block_end)) {
+      if (n < block_begin) {
+        continue;
+      }
+
+      auto prt = dmprts.storage[n];
+      d_random_idx[n] =
+        dmprts.validCellIndex(prt, current_block.p) + .5 * rng.uniform();
+      d_id[n] = n;
     }
   }
-
-  rng_state[n] = rng;
+  rng_state[id] = rng;
 }
 
 // ----------------------------------------------------------------------
@@ -252,8 +255,8 @@ struct cuda_mparticles_randomize_sort
                 sizeof(typename decltype(d_random_idx)::value_type);
   }
 
-  template <typename BS>
-  void find_indices_ids(cuda_mparticles<BS>& cmprts)
+  template <typename CMPRTS>
+  void find_indices_ids(CMPRTS& cmprts)
   {
     mem_sort -= d_off.capacity() * sizeof(typename decltype(d_off)::value_type);
     d_off.resize(cmprts.n_cells() + 1);
@@ -273,36 +276,23 @@ struct cuda_mparticles_randomize_sort
       return;
     }
 
-    // OPT: if we didn't need max_n_prts, we wouldn't have to get the
-    // sizes / offsets at all, and it seems likely we could do a better
-    // job here in general
-    auto n_prts_by_patch = cmprts.sizeByPatch();
+    using BS = typename CMPRTS::BS;
+    using dim = bs_to_dim_t<BS>;
+    using Block = BlockSimple2<BS, dim>;
+    dim3 dimGrid = Block::dimGrid(cmprts);
 
-    int max_n_prts = 0;
-    for (int p = 0; p < cmprts.n_patches(); p++) {
-      if (n_prts_by_patch[p] > max_n_prts) {
-        max_n_prts = n_prts_by_patch[p];
-      }
+    int n_blocks = cmprts.b_mx()[0] * cmprts.b_mx()[1] * cmprts.b_mx()[2] *
+                   cmprts.n_patches();
+
+    if (dimGrid.x * THREADS_PER_BLOCK > rng_state_.size()) {
+      mem_sort -= allocated_bytes(rng_state_);
+      rng_state_.resize(dimGrid.x * THREADS_PER_BLOCK);
+      mem_sort += allocated_bytes(rng_state_);
     }
 
-    if (max_n_prts == 0) {
-      return;
-    }
-
-    if (max_n_prts > rng_state_.size()) {
-      mem_sort -= rng_state_.capacity() *
-                  sizeof(typename decltype(rng_state_)::value_type);
-      rng_state_.resize(2 * max_n_prts);
-      mem_sort += rng_state_.capacity() *
-                  sizeof(typename decltype(rng_state_)::value_type);
-    }
-
-    dim3 dimGrid((max_n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
-    dim3 dimBlock(THREADS_PER_BLOCK);
-
-    k_find_random_cell_indices_ids<BS><<<dimGrid, dimBlock>>>(
-      cmprts, d_random_idx.data().get(), d_id.data().get(), cmprts.n_patches(),
-      cmprts.n_blocks_per_patch, rng_state_);
+    ::k_find_random_cell_indices_ids<BS, Block>
+      <<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, d_random_idx.data().get(),
+                                       d_id.data().get(), rng_state_, n_blocks);
     cuda_sync_if_enabled();
   }
 

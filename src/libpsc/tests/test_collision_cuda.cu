@@ -206,18 +206,18 @@ TEST(cuda_mparticles_randomize_sort, sort)
                                          12, 13, 14}));
 
   sort.sort();
-  EXPECT_EQ(sort.d_id, (std::vector<int>{0, 1, 7, 5, 8, 6, 2, 4, 3, 9, 10, 13,
-                                         14, 11, 12}));
+  EXPECT_EQ(sort.d_id, (std::vector<int>{0, 1, 7, 5, 8, 6, 2, 4, 3, 9, 10, 14,
+                                         13, 11, 12}));
 
-  float last = sort.d_random_idx[0];
+  auto last = sort.d_random_idx[0];
   for (int i = 1; i < cmprts.size(); i++) {
     EXPECT_GE(sort.d_random_idx[i], last);
     last = sort.d_random_idx[i];
   }
-  // for (int i = 0; i < cmprts.size(); i++) {
-  //   mprintf("i %d r_idx %g id %d\n", i, (float)sort.d_random_idx[i],
-  //           (int)sort.d_id[i]);
-  // }
+  // std::cout << "rnd idx ";
+  // std::copy(sort.d_random_idx.begin(), sort.d_random_idx.end(),
+  //           std::ostream_iterator<double>(std::cout, " "));
+  // std::cout << "\n";
 
   sort.find_offsets();
   std::vector<int> off(cmprts.n_cells() + 1);
