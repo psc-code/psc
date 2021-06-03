@@ -25,22 +25,15 @@ static void psc_mfields_cuda_copy_from_c(MfieldsBase& mflds_cuda,
   auto& mf_c = dynamic_cast<MfieldsC&>(mflds_c);
   auto h_mf_cuda = hostMirror(mf_cuda);
 
+  assert(h_mf_cuda.gt().shape() == mf_c.gt().shape());
+
   if (!(mb == 0 && me == mflds_cuda._n_comps())) {
     copy(mf_cuda, h_mf_cuda);
   }
-  for (int p = 0; p < mf_cuda.n_patches(); p++) {
-    auto flds = make_Fields3d<dim_xyz>(h_mf_cuda[p]);
-    auto flds_c = make_Fields3d<dim_xyz>(mf_c[p]);
-    for (int m = mb; m < me; m++) {
-      for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.shape(2); jz++) {
-        for (int jy = flds.ib()[1]; jy < flds.ib()[1] + flds.shape(1); jy++) {
-          for (int jx = flds.ib()[0]; jx < flds.ib()[0] + flds.shape(0); jx++) {
-            flds(m, jx, jy, jz) = flds_c(m, jx, jy, jz);
-          }
-        }
-      }
-    }
-  }
+
+  h_mf_cuda.gt().view(_all, _all, _all, _s(mb, me)) =
+    mf_c.gt().view(_all, _all, _all, _s(mb, me));
+
   copy(h_mf_cuda, mf_cuda);
 }
 
@@ -51,21 +44,12 @@ static void psc_mfields_cuda_copy_to_c(MfieldsBase& mflds_cuda,
   auto& mf_c = dynamic_cast<MfieldsC&>(mflds_c);
   auto h_mf_cuda = hostMirror(mf_cuda);
 
-  copy(mf_cuda, h_mf_cuda);
-  for (int p = 0; p < mf_cuda.n_patches(); p++) {
-    auto flds = make_Fields3d<dim_xyz>(h_mf_cuda[p]);
-    auto flds_c = make_Fields3d<dim_xyz>(mf_c[p]);
+  assert(h_mf_cuda.gt().shape() == mf_c.gt().shape());
 
-    for (int m = mb; m < me; m++) {
-      for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.shape(2); jz++) {
-        for (int jy = flds.ib()[1]; jy < flds.ib()[1] + flds.shape(1); jy++) {
-          for (int jx = flds.ib()[0]; jx < flds.ib()[0] + flds.shape(0); jx++) {
-            flds_c(m, jx, jy, jz) = flds(m, jx, jy, jz);
-          }
-        }
-      }
-    }
-  }
+  copy(mf_cuda, h_mf_cuda);
+
+  mf_c.gt().view(_all, _all, _all, _s(mb, me)) =
+    h_mf_cuda.gt().view(_all, _all, _all, _s(mb, me));
 }
 
 static void psc_mfields_state_cuda_copy_from_c(MfieldsStateBase& mflds_cuda,
@@ -102,23 +86,15 @@ static void psc_mfields_cuda_copy_from_single(MfieldsBase& mflds_cuda,
   auto& mf_single = dynamic_cast<MfieldsSingle&>(mflds_single);
   auto h_mf_cuda = hostMirror(mf_cuda);
 
+  assert(h_mf_cuda.gt().shape() == mf_single.gt().shape());
+
   if (!(mb == 0 && me == mflds_cuda._n_comps())) {
     copy(mf_cuda, h_mf_cuda);
   }
-  for (int p = 0; p < mf_cuda.n_patches(); p++) {
-    auto flds = make_Fields3d<dim_xyz>(h_mf_cuda[p]);
-    auto flds_s = make_Fields3d<dim_xyz>(mf_single[p]);
 
-    for (int m = mb; m < me; m++) {
-      for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.shape(2); jz++) {
-        for (int jy = flds.ib()[1]; jy < flds.ib()[1] + flds.shape(1); jy++) {
-          for (int jx = flds.ib()[0]; jx < flds.ib()[0] + flds.shape(0); jx++) {
-            flds(m, jx, jy, jz) = flds_s(m, jx, jy, jz);
-          }
-        }
-      }
-    }
-  }
+  h_mf_cuda.gt().view(_all, _all, _all, _s(mb, me)) =
+    mf_single.gt().view(_all, _all, _all, _s(mb, me));
+
   copy(h_mf_cuda, mf_cuda);
 }
 
@@ -140,21 +116,12 @@ static void psc_mfields_cuda_copy_to_single(MfieldsBase& mflds_cuda,
 
   auto h_mf_cuda = hostMirror(mf_cuda);
 
-  copy(mf_cuda, h_mf_cuda);
-  for (int p = 0; p < mf_cuda.n_patches(); p++) {
-    auto flds = make_Fields3d<dim_xyz>(h_mf_cuda[p]);
-    auto flds_s = make_Fields3d<dim_xyz>(mf_single[p]);
+  assert(mf_cuda.gt().shape() == mf_single.gt().shape());
 
-    for (int m = mb; m < me; m++) {
-      for (int jz = flds.ib()[2]; jz < flds.ib()[2] + flds.shape(2); jz++) {
-        for (int jy = flds.ib()[1]; jy < flds.ib()[1] + flds.shape(1); jy++) {
-          for (int jx = flds.ib()[0]; jx < flds.ib()[0] + flds.shape(0); jx++) {
-            flds_s(m, jx, jy, jz) = flds(m, jx, jy, jz);
-          }
-        }
-      }
-    }
-  }
+  copy(mf_cuda, h_mf_cuda);
+
+  mf_single.gt().view(_all, _all, _all, _s(mb, me)) =
+    h_mf_cuda.gt().view(_all, _all, _all, _s(mb, me));
 }
 
 static void psc_mfields_state_cuda_copy_to_single(
