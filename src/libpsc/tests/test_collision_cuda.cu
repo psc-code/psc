@@ -71,21 +71,25 @@ static Grid_t& make_psc(const Grid_t::Kinds& kinds)
 {
   Int3 gdims = {16, 16, 16};
   Int3 ibn = {2, 2, 2};
+  Int3 np = {2, 2, 2};
   Vec3<double> length = {160., 160., 160.};
   if (dim::InvarX::value) {
     gdims[0] = 1;
     ibn[0] = 0;
+    np[0] = 1;
   }
   if (dim::InvarY::value) {
     gdims[1] = 1;
     ibn[1] = 0;
+    np[1] = 1;
   }
   if (dim::InvarZ::value) {
     gdims[2] = 1;
     ibn[2] = 0;
+    np[2] = 1;
   }
 
-  auto grid_domain = Grid_t::Domain{gdims, length};
+  auto grid_domain = Grid_t::Domain{gdims, length, {}, np};
   auto grid_bc =
     psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
                   {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
@@ -100,18 +104,41 @@ static Grid_t& make_psc(const Grid_t::Kinds& kinds)
 
 static Mparticles make_mparticles(const Grid_t& grid)
 {
+  //                                   y
+  //     10  20  30  40  50  60  70  80    90 100 110 120 130 140 150 160
+  // +---+---+---+---+---+---+---+---+ +---+---+---+---+---+---+---+---+ 0
+  // | AB|FGHI   |   |   |   |   |   | |   |   |   |   |   |   |   |   |
+  // +---+---+---+---+---+---+---+---+ +---+---+---+---+---+---+---+---+ 10
+  // |   |CDE|   |   |   |   |   |   | |   |   |   |   |   |   |   |   |
+  // +---+---+---+---+---+---+---+---+ +---+---+---+---+---+---+---+---+ 20  z
+  // |   |   |   |   |   |   |   |   | |   |   | IJ|NO |   |   |   |   |
+  // +---+---+---+---+---+---+---+---+ +---+---+---+---+---+---+---+---+ 30
+  // |   |   |   |   |   |   |   |   | |   |   |   |LM |   |   |   |   |
+  // +---+---+---+---+---+---+---+---+ +---+---+---+---+---+---+---+---+ 40
+
   Mparticles mprts{grid};
   auto inj = mprts.injector();
-  auto injector = inj[0];
-  injector({{5., 5., 5.}, {1., 0., 0.}, 1., 0});
-  injector({{5., 5., 5.}, {0., 0., 0.}, 1., 0});
-  injector({{5., 15., 15.}, {.6, 0., 0.}, 1., 0});
-  injector({{5., 15., 15.}, {.7, 0., 0.}, 1., 0});
-  injector({{5., 15., 15.}, {.8, 0., 0.}, 1., 0});
-  injector({{5., 15., 5.}, {.1, 0., 0.}, 1., 0});
-  injector({{5., 15., 5.}, {.2, 0., 0.}, 1., 0});
-  injector({{5., 15., 5.}, {.3, 0., 0.}, 1., 0});
-  injector({{5., 15., 5.}, {.4, 0., 0.}, 1., 0});
+  {
+    auto injector = inj[0];
+    injector({{5., 5., 5.}, {0., 0., 0.}, 1., 0});    // A
+    injector({{5., 5., 5.}, {0.01, 0., 0.}, 1., 0});  // B
+    injector({{5., 15., 15.}, {.02, 0., 0.}, 1., 0}); // C
+    injector({{5., 15., 15.}, {.03, 0., 0.}, 1., 0}); // D
+    injector({{5., 15., 15.}, {.04, 0., 0.}, 1., 0}); // E
+    injector({{5., 15., 5.}, {.05, 0., 0.}, 1., 0});  // F
+    injector({{5., 15., 5.}, {.06, 0., 0.}, 1., 0});  // G
+    injector({{5., 15., 5.}, {.07, 0., 0.}, 1., 0});  // H
+    injector({{5., 15., 5.}, {.08, 0., 0.}, 1., 0});  // I
+  }
+  {
+    auto injector = inj[1];
+    injector({{5., 105., 25.}, {.09, 0., 0.}, 1., 0}); // J
+    injector({{5., 105., 25.}, {.10, 0., 0.}, 1., 0}); // K
+    injector({{5., 115., 35.}, {.11, 0., 0.}, 1., 0}); // L
+    injector({{5., 115., 35.}, {.12, 0., 0.}, 1., 0}); // M
+    injector({{5., 115., 25.}, {.13, 0., 0.}, 1., 0}); // N
+    injector({{5., 115., 25.}, {.14, 0., 0.}, 1., 0}); // O
+  }
   return mprts;
 }
 
@@ -127,23 +154,39 @@ TEST(cuda_mparticles_sort, sort)
   auto sort = cuda_mparticles_sort(cmprts.n_cells());
 
   sort.find_indices_ids(cmprts);
-  EXPECT_EQ(sort.d_idx, (std::vector<int>{0, 0, 17, 17, 17, 1, 1, 1, 1}));
-  EXPECT_EQ(sort.d_id, (std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7, 8}));
+  EXPECT_EQ(sort.d_idx, (std::vector<int>{0, 0, 9, 9, 9, 1, 1, 1, 1, 82, 82, 91,
+                                          91, 83, 83}));
+  EXPECT_EQ(sort.d_id, (std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+                                         12, 13, 14}));
 
   sort.stable_sort_cidx();
-  EXPECT_EQ(sort.d_idx, (std::vector<int>{0, 0, 1, 1, 1, 1, 17, 17, 17}));
-  EXPECT_EQ(sort.d_id, (std::vector<int>{0, 1, 5, 6, 7, 8, 2, 3, 4}));
+  EXPECT_EQ(sort.d_idx, (std::vector<int>{0, 0, 1, 1, 1, 1, 9, 9, 9, 82, 82, 83,
+                                          83, 91, 91}));
+  EXPECT_EQ(sort.d_id, (std::vector<int>{0, 1, 5, 6, 7, 8, 2, 3, 4, 9, 10, 13,
+                                         14, 11, 12}));
 
   sort.find_offsets();
   std::vector<int> off(cmprts.n_cells() + 1);
   off[0] = 0;
   off[1] = 2;
-  for (int i = 2; i < 18; i++) {
+  for (int i = 2; i < 10; i++) {
     off[i] = 6;
   }
-  for (int i = 18; i <= 256; i++) {
+  for (int i = 10; i < 83; i++) {
     off[i] = 9;
   }
+  for (int i = 83; i < 84; i++) {
+    off[i] = 11;
+  }
+  for (int i = 84; i < 92; i++) {
+    off[i] = 13;
+  }
+  for (int i = 92; i <= 256; i++) {
+    off[i] = 15;
+  }
+  // std::copy(sort.d_off.begin(), sort.d_off.end(),
+  //           std::ostream_iterator<int>(std::cout, " "));
+  // std::cout << "\n";
   EXPECT_EQ(sort.d_off, off);
 }
 
@@ -159,12 +202,12 @@ TEST(cuda_mparticles_randomize_sort, sort)
   cuda_mparticles_randomize_sort sort;
 
   sort.find_indices_ids(cmprts);
-  EXPECT_EQ(sort.d_id, (std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7, 8}));
+  EXPECT_EQ(sort.d_id, (std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+                                         12, 13, 14}));
 
   sort.sort();
-  // EXPECT_EQ(sort.d_id, (std::vector<int>{0, 1, 5, 8, 7, 6, 2, 3, 4}));
-  // EXPECT_EQ(sort.d_id, (std::vector<int>{1, 0, 8, 7, 5, 6, 4, 2, 3}));
-  EXPECT_EQ(sort.d_id, (std::vector<int>{0, 1, 7, 5, 8, 6, 2, 4, 3}));
+  EXPECT_EQ(sort.d_id, (std::vector<int>{0, 1, 7, 5, 8, 6, 2, 4, 3, 9, 10, 13,
+                                         14, 11, 12}));
 
   float last = sort.d_random_idx[0];
   for (int i = 1; i < cmprts.size(); i++) {
@@ -180,12 +223,24 @@ TEST(cuda_mparticles_randomize_sort, sort)
   std::vector<int> off(cmprts.n_cells() + 1);
   off[0] = 0;
   off[1] = 2;
-  for (int i = 2; i < 18; i++) {
+  for (int i = 2; i < 10; i++) {
     off[i] = 6;
   }
-  for (int i = 18; i <= 256; i++) {
+  for (int i = 10; i < 83; i++) {
     off[i] = 9;
   }
+  for (int i = 83; i < 84; i++) {
+    off[i] = 11;
+  }
+  for (int i = 84; i < 92; i++) {
+    off[i] = 13;
+  }
+  for (int i = 92; i <= 256; i++) {
+    off[i] = 15;
+  }
+  // std::copy(sort.d_off.begin(), sort.d_off.end(),
+  //           std::ostream_iterator<int>(std::cout, " "));
+  // std::cout << "\n";
   EXPECT_EQ(sort.d_off, off);
 
 #if 1
@@ -216,13 +271,15 @@ TEST(CollisionTest, Test2)
   auto& cmprts = *mprts.cmprts();
   auto sort_by_cell = cuda_mparticles_sort(cmprts.n_cells());
   sort_by_cell.find_indices_ids(cmprts);
-  EXPECT_EQ(sort_by_cell.d_idx,
-            (std::vector<int>{0, 0, 17, 17, 17, 1, 1, 1, 1}));
-  EXPECT_EQ(sort_by_cell.d_id, (std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7, 8}));
+  EXPECT_EQ(sort_by_cell.d_idx, (std::vector<int>{0, 0, 9, 9, 9, 1, 1, 1, 1, 82,
+                                                  82, 91, 91, 83, 83}));
+  EXPECT_EQ(sort_by_cell.d_id, (std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+                                                 10, 11, 12, 13, 14}));
   sort_by_cell.stable_sort_cidx();
-  EXPECT_EQ(sort_by_cell.d_idx,
-            (std::vector<int>{0, 0, 1, 1, 1, 1, 17, 17, 17}));
-  EXPECT_EQ(sort_by_cell.d_id, (std::vector<int>{0, 1, 5, 6, 7, 8, 2, 3, 4}));
+  EXPECT_EQ(sort_by_cell.d_idx, (std::vector<int>{0, 0, 1, 1, 1, 1, 9, 9, 9, 82,
+                                                  82, 83, 83, 91, 91}));
+  EXPECT_EQ(sort_by_cell.d_id, (std::vector<int>{0, 1, 5, 6, 7, 8, 2, 3, 4, 9,
+                                                 10, 13, 14, 11, 12}));
   sort_by_cell.find_offsets();
   // for (int i = 0; i < cmprts.size(); i++) {
   //   mprintf("i %d idx %d id %d\n", i, (int)sort_by_cell.d_idx[i],
@@ -234,7 +291,7 @@ TEST(CollisionTest, Test2)
   auto it = accessor[0].begin();
   auto prtf0 = *it++;
   auto prtf1 = *it++;
-  EXPECT_NEAR(prtf0.u()[0] + prtf1.u()[0], 1., eps);
+  EXPECT_NEAR(prtf0.u()[0] + prtf1.u()[0], 0.01, eps);
   EXPECT_NEAR(prtf0.u()[1] + prtf1.u()[1], 0., eps);
   EXPECT_NEAR(prtf0.u()[2] + prtf1.u()[2], 0., eps);
 
@@ -256,6 +313,7 @@ int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
   ::testing::InitGoogleTest(&argc, argv);
+  cuda_base_init();
   int rc = RUN_ALL_TESTS();
   MPI_Finalize();
   return rc;
