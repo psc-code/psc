@@ -152,12 +152,12 @@ public:
     // grow arrays by 20% only
     if (n > xi4.capacity()) {
 #if 0
-      xi4.reserve(1.2 * n);
-      pxi4.reserve(1.2 * n);
+      xi4.reserve(1.1 * n);
+      pxi4.reserve(1.1 * n);
 #else
       // work around thrust mem leak and exponential growth
-      helper::reserve(xi4, 1.2 * n);
-      helper::reserve(pxi4, 1.2 * n);
+      helper::reserve(xi4, 1.1 * n);
+      helper::reserve(pxi4, 1.1 * n);
 #endif
     }
     xi4.resize(n);
