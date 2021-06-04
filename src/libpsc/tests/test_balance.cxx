@@ -249,7 +249,8 @@ TEST(Balance, best_mapping)
   std::cout << "\n";
 
   std::vector<int> n_patches_all(n_procs);
-  psc::balance::best_mapping(capability, loads, n_patches_all, true);
+  psc::balance::best_mapping(capability, loads, n_patches_all);
+  psc::balance::print_stats(n_patches_all, capability, loads, true);
 }
 
 int main(int argc, char** argv)

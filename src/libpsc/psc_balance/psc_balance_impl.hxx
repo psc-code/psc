@@ -27,18 +27,17 @@ namespace balance
 
 inline void best_mapping(const std::vector<double>& capability,
                          const std::vector<double>& loads_all,
-                         std::vector<int>& nr_patches_all_new,
-                         bool print_loads_)
+                         std::vector<int>& nr_patches_all_new)
 {
   int size = capability.size();
 
   double loads_sum = 0.;
-  for (int i = 0; i < loads_all.size(); i++) {
-    loads_sum += loads_all[i];
+  for (auto load : loads_all) {
+    loads_sum += load;
   }
   double capability_sum = 0.;
-  for (int p = 0; p < size; p++) {
-    capability_sum += capability[p];
+  for (auto cap : capability) {
+    capability_sum += cap;
   }
   double load_target = loads_sum / capability_sum;
   mprintf("psc_balance: loads_sum %g capability_sum %g load_target %g\n",
@@ -71,19 +70,35 @@ inline void best_mapping(const std::vector<double>& capability,
       nr_patches_all_new[size - 1] = nr_new_patches;
     }
   }
+}
+
+inline void print_stats(const std::vector<int>& nr_patches_all_new,
+                        const std::vector<double>& capability,
+                        const std::vector<double>& loads_all, bool verbose)
+{
+  double loads_sum = 0.;
+  for (auto load : loads_all) {
+    loads_sum += load;
+  }
+  double capability_sum = 0.;
+  for (auto cap : capability) {
+    capability_sum += cap;
+  }
+  double load_target = loads_sum / capability_sum;
+  int n_procs = capability.size();
 
   int pp = 0;
   double min_diff = 0, max_diff = 0;
-  for (int p = 0; p < size; p++) {
+  for (int p = 0; p < n_procs; p++) {
     double load = 0.;
     for (int i = 0; i < nr_patches_all_new[p]; i++) {
       load += loads_all[pp++];
-      if (print_loads_) {
+      if (verbose) {
         mprintf("  pp %d load %g : %g\n", pp - 1, loads_all[pp - 1], load);
       }
     }
     double diff = load - load_target * capability[p];
-    if (print_loads_) {
+    if (verbose) {
       mprintf("p %d # = %d load %g / %g : diff %g %%\n", p,
               nr_patches_all_new[p], load, load_target * capability[p],
               100. * diff / (load_target * capability[p]));
@@ -564,8 +579,9 @@ private:
         capability[p] = capability_default(p);
       }
 
-      psc::balance::best_mapping(capability, loads_all, nr_patches_all_new,
-                                 print_loads_);
+      psc::balance::best_mapping(capability, loads_all, nr_patches_all_new);
+      psc::balance::print_stats(nr_patches_all_new, capability, loads_all,
+                                print_loads_);
 
       if (write_loads_) {
         int gp = 0;
