@@ -48,6 +48,7 @@ struct input
   double load_target() const { return total_load() / total_capability(); }
 };
 
+#if 0
 inline std::vector<int> best_mapping(const input& input)
 {
   int n_procs = input.n_procs();
@@ -91,6 +92,73 @@ inline std::vector<int> best_mapping(const input& input)
   return nr_patches_all_new;
 }
 
+#else
+
+inline void best_mapping_recursive(const input& input,
+                                   std::vector<int>& n_patches_by_proc,
+                                   int proc_begin, int proc_end,
+                                   int patch_begin, int patch_end)
+{
+  // we always must have at least one patch per proc
+  assert(patch_end - patch_begin >= proc_end - proc_begin);
+
+  if (proc_end == proc_begin + 1) {
+    n_patches_by_proc[proc_begin] = patch_end - patch_begin;
+  } else {
+    int proc_middle = (proc_begin + proc_end) / 2;
+    double load_total = std::accumulate(&input.load_by_patch[patch_begin],
+                                        &input.load_by_patch[patch_end], 0.);
+    double load_target =
+      (load_total * (proc_middle - proc_begin)) / (proc_end - proc_begin);
+    std::cout << "[" << proc_begin << ":" << proc_end << "] total "
+              << load_total << " target " << load_target << "\n";
+    double load = 0.;
+    int patch_middle = patch_begin;
+    for (;;) {
+      double prev_load = load;
+      load += input.load_by_patch[patch_middle];
+      patch_middle++;
+      if (load > load_target) {
+        double above = load - load_target;
+        double below = load_target - prev_load;
+        // std::cout << "above " << above << " below " << below << "\n";
+
+        // if we were closer to the target load one step ago, go with that
+        if (below < above && patch_middle) {
+          patch_middle--;
+          load = prev_load;
+        }
+        break;
+      }
+    }
+    std::cout << "middle " << patch_middle << " load " << load << "\n";
+
+    // make sure there are at least as many patches as procs on either side
+    if (patch_middle - patch_begin < proc_middle - proc_begin) {
+      patch_middle = patch_begin + (proc_middle - proc_begin);
+    }
+    if (patch_end - patch_middle < proc_end - proc_middle) {
+      patch_middle = patch_end - (proc_end - proc_middle);
+    }
+
+    best_mapping_recursive(input, n_patches_by_proc, proc_begin, proc_middle,
+                           patch_begin, patch_middle);
+    best_mapping_recursive(input, n_patches_by_proc, proc_middle, proc_end,
+                           patch_middle, patch_end);
+  }
+}
+
+inline std::vector<int> best_mapping(const input& input)
+{
+  int n_procs = input.n_procs();
+  std::vector<int> n_patches_by_proc(n_procs);
+  best_mapping_recursive(input, n_patches_by_proc, 0, n_procs, 0,
+                         input.load_by_patch.size());
+
+  return n_patches_by_proc;
+}
+
+#endif
 inline void print_stats(const input& input,
                         const std::vector<int>& nr_patches_all_new,
                         bool verbose)
