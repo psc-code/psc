@@ -248,8 +248,7 @@ TEST(Balance, best_mapping)
             std::ostream_iterator<double>(std::cout, " "));
   std::cout << "\n";
 
-  std::vector<int> n_patches_all(n_procs);
-  psc::balance::best_mapping({capability, loads}, n_patches_all);
+  auto n_patches_all = psc::balance::best_mapping({capability, loads});
   psc::balance::print_stats({capability, loads}, n_patches_all, true);
 }
 

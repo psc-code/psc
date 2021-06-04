@@ -48,13 +48,13 @@ struct input
   double load_target() const { return total_load() / total_capability(); }
 };
 
-inline void best_mapping(const input& input,
-                         std::vector<int>& nr_patches_all_new)
+inline std::vector<int> best_mapping(const input& input)
 {
+  int n_procs = input.n_procs();
+  std::vector<int> nr_patches_all_new(n_procs);
+
   auto& capability = input.capability_by_proc;
   auto& loads_all = input.load_by_patch;
-
-  int n_procs = input.n_procs();
 
   double load_target = input.load_target();
   mprintf("psc_balance: loads_sum %g capability_sum %g load_target %g\n",
@@ -87,6 +87,8 @@ inline void best_mapping(const input& input,
       nr_patches_all_new[n_procs - 1] = nr_new_patches;
     }
   }
+
+  return nr_patches_all_new;
 }
 
 inline void print_stats(const input& input,
@@ -602,7 +604,7 @@ private:
     MPI_Allgather(&nr_patches_old, 1, MPI_INT, nr_patches_all_old.data(), 1,
                   MPI_INT, comm);
 
-    std::vector<int> nr_patches_all_new(size);
+    int nr_patches_new;
 
     if (rank == 0) { // do the mapping on proc 0
       std::vector<double> capability(size);
@@ -610,10 +612,10 @@ private:
         capability[p] = capability_default(p);
       }
 
-      psc::balance::best_mapping({capability, loads_all}, nr_patches_all_new);
+      auto nr_patches_all_new =
+        psc::balance::best_mapping({capability, loads_all});
       psc::balance::print_stats({capability, loads_all}, nr_patches_all_new,
                                 print_loads_);
-
       if (write_loads_) {
         psc::balance::write_loads({capability, loads_all}, nr_patches_all_new,
                                   grid.timestep());
@@ -623,12 +625,12 @@ private:
         std::fill(nr_patches_all_new.begin(), nr_patches_all_new.end(),
                   -1); // unchanged mapping, no communication etc needed
       }
-    }
 
-    // then scatter
-    int nr_patches_new;
-    MPI_Scatter(nr_patches_all_new.data(), 1, MPI_INT, &nr_patches_new, 1,
-                MPI_INT, 0, comm);
+      MPI_Scatter(nr_patches_all_new.data(), 1, MPI_INT, &nr_patches_new, 1,
+                  MPI_INT, 0, comm);
+    } else {
+      MPI_Scatter(nullptr, 1, MPI_INT, &nr_patches_new, 1, MPI_INT, 0, comm);
+    }
     return nr_patches_new;
   }
 
