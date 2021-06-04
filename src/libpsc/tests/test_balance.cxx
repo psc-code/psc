@@ -230,6 +230,28 @@ TYPED_TEST(BalanceTest, Every1)
   balance(this->grid_, mprts);
 }
 
+TEST(Balance, best_mapping)
+{
+  const int n_procs = 3;
+  const int n_patches = 10;
+  std::vector<double> capability(n_procs, 1.);
+  std::vector<double> loads(n_patches);
+  std::iota(loads.begin(), loads.end(), 1.);
+
+  std::cout << "capability ";
+  std::copy(capability.begin(), capability.end(),
+            std::ostream_iterator<double>(std::cout, " "));
+  std::cout << "\n";
+
+  std::cout << "loads ";
+  std::copy(loads.begin(), loads.end(),
+            std::ostream_iterator<double>(std::cout, " "));
+  std::cout << "\n";
+
+  std::vector<int> n_patches_all(n_procs);
+  psc::balance::best_mapping(capability, loads, n_patches_all, true);
+}
+
 int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
