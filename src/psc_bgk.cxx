@@ -39,10 +39,10 @@ using Marder = PscConfig::Marder;
 using OutputParticles = PscConfig::OutputParticles;
 
 // ======================================================================
-// Parser
+// Parsed
 // TODO: where should I put other files?
 
-class Parser
+class Parsed
 {
 private:
   static const int n_rows = 4401;
@@ -66,10 +66,11 @@ private:
   }
 
 public:
-  // TODO I'd like to make these static, but then I can't access them in lambdas >:(
+  // TODO I'd like to make these static, but then I can't access them in lambdas
+  // >:(
   const int COL_RHO = 0, COL_NE = 1, COL_V_PHI = 2, COL_TE = 3, COL_E_RHO = 4;
 
-  Parser()
+  Parsed()
   {
     // first populate data
     // note the use of normalized version (no carriage returns allowed!!)
@@ -156,7 +157,7 @@ struct PscBgkParams
 namespace
 {
 
-Parser parser;
+Parsed parsed;
 
 // Parameters specific to this case. They don't really need to be collected in a
 // struct, but maybe it's nice that they are
@@ -219,7 +220,7 @@ Grid_t* setupGrid()
 
   auto kinds = Grid_t::Kinds(NR_KINDS);
   kinds[KIND_ELECTRON] = {-1., 1., "e"};
-  // kinds[KIND_ION] = {1., 100., "i"}; // TODO no ions?
+  kinds[KIND_ION] = {1., 1e9, "i"}; // really heavy to keep them fixed
 
   // TODO not necessary?
   // mpi_printf(MPI_COMM_WORLD, "lambda_D = %g\n", sqrt(g.TTe));
@@ -255,27 +256,39 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
   partitionAndSetupParticles(
     setup_particles, balance, grid_ptr, mprts,
     [&](int kind, double crd[3], psc_particle_npt& npt) {
-      // TODO is kind always KIND_ELECTRON? apparently not.
-      assert(kind == KIND_ELECTRON);
-
       double y = crd[1];
       double z = crd[2];
       double rho = sqrt(sqr(y) + sqr(z));
 
-      // velocities/momenta
-      if (rho != 0) {
-        double v_phi = parser.get_interpolated(parser.COL_V_PHI, rho);
-        npt.p[1] = v_phi * (-y) / rho;
-        npt.p[2] = v_phi * z / rho;
+      switch (kind) {
+        case KIND_ELECTRON:
+          // velocities/momenta
+          if (rho != 0) {
+            double v_phi = parsed.get_interpolated(parsed.COL_V_PHI, rho);
+            npt.p[1] = v_phi * (-y) / rho;
+            npt.p[2] = v_phi * z / rho;
+          }
+          // otherwise, npt.p[i] = 0
+
+          // number density
+          npt.n = parsed.get_interpolated(parsed.COL_NE, rho);
+
+          // temperature
+          npt.T[0] = parsed.get_interpolated(parsed.COL_TE, rho);
+          npt.T[1] = npt.T[2] = npt.T[0];
+          break;
+        case KIND_ION:
+          // momenta are 0
+
+          // number density
+          npt.n = 1;
+
+          // temperature
+          npt.T[0] = parsed.get_interpolated(parsed.COL_TE, rho);
+          npt.T[1] = npt.T[2] = npt.T[0];
+          break;
+        default: assert(false);
       }
-      // otherwise, npt.p[i] = 0
-
-      // number density
-      npt.n = parser.get_interpolated(parser.COL_NE, rho);
-
-      // temperature
-      npt.T[0] = npt.T[1] = npt.T[2] =
-        parser.get_interpolated(parser.COL_TE, rho);
 
       // TODO are the above x-components correct?
     });
@@ -295,7 +308,7 @@ void initializeFields(MfieldsState& mflds)
       default: return 0.;
     }
 
-    // otherwise, parse from file
+    // otherwise, interpolate from file
 
     double y = crd[1];
     double z = crd[2];
@@ -304,7 +317,7 @@ void initializeFields(MfieldsState& mflds)
     if (rho == 0)
       return 0.;
 
-    double E_rho = parser.get_interpolated(parser.COL_E_RHO, rho);
+    double E_rho = parsed.get_interpolated(parsed.COL_E_RHO, rho);
 
     if (m == EY) {
       return E_rho * y / rho;
