@@ -7,6 +7,12 @@
 #include "OutputFieldsDefault.h"
 #include "psc_config.hxx"
 
+// for parsing
+#include <iostream>
+#include <string>
+#include <fstream>
+#include <sstream>
+
 // ======================================================================
 // PSC configuration
 //
@@ -33,21 +39,110 @@ using Marder = PscConfig::Marder;
 using OutputParticles = PscConfig::OutputParticles;
 
 // ======================================================================
-// PscBubbleParams
+// Parser
+// TODO: where should I put other files?
 
-struct PscBubbleParams
+class Parser
 {
-  double BB;
-  double nnb;
-  double nn0;
-  double MMach;
+private:
+  static const int n_rows = 4401;
+  static const int n_cols = 5;
+  static constexpr auto file_path = "../../input/bgk-input-1.txt";
+
+  // the data parsed from file_path
+  double data[n_rows][n_cols];
+  // step size between first and second entries of rho (and presumably between
+  // all consecutive entries)
+  double rho_step;
+
+  // gets index of row containing greatest lower bound of given rho
+  int get_row(double rho)
+  {
+    int row = rho / rho_step; // initial guess; should be precise assuming rho
+                              // is linearly spaced
+    while (rho < data[row][COL_RHO])
+      row--;
+    return row;
+  }
+
+public:
+  // TODO I'd like to make these static, but then I can't access them in lambdas >:(
+  const int COL_RHO = 0, COL_NE = 1, COL_V_PHI = 2, COL_TE = 3, COL_E_RHO = 4;
+
+  Parser()
+  {
+    // first populate data
+    // note the use of normalized version (no carriage returns allowed!!)
+    std::ifstream file(file_path);
+
+    // skip first line
+    file.ignore(256, '\n');
+
+    // iterate over each line
+    int row = 0;
+    std::string line;
+
+    while (std::getline(file, line)) {
+      assert(row < n_rows);
+
+      // iterate over each entry within a line
+      std::istringstream iss(line);
+      std::string result;
+      int col = 0;
+
+      while (std::getline(iss, result, '\t')) {
+        assert(col < n_cols);
+
+        // write entry to data
+        data[row][col] = stod(result);
+        col++;
+      }
+      assert(col == n_cols);
+      row++;
+    }
+    assert(row == n_rows);
+    file.close();
+
+    // initialize other values
+    rho_step = data[1][COL_RHO] - data[0][COL_RHO];
+  }
+
+  // calculates and returns an interpolated value (specified by col) at
+  // corresponding rho
+  double get_interpolated(int col, double rho)
+  {
+    // ensure we are in bounds
+    assert(rho >= data[0][COL_RHO]);
+    assert(rho <= data[n_rows - 1][COL_RHO]);
+
+    int row = get_row(rho);
+
+    // check if we can return an exact value
+
+    if (data[row][COL_RHO] == rho)
+      return data[row][col];
+
+    // otherwise, return linear interpolation
+
+    // weights
+    double w1 = rho - data[row][COL_RHO];
+    double w2 = data[row + 1][COL_RHO] - rho;
+
+    return (w1 * data[row][col] + w2 * data[row + 1][col]) / (w1 + w2);
+  }
+};
+
+// ======================================================================
+// PscBgkParams
+
+struct PscBgkParams
+{
+  // physical length in x-direction (?)
   double LLn;
-  double LLB;
+  // physical length in y-direction
   double LLz;
+  // physical length in z-direction
   double LLy;
-  double TTe;
-  double TTi;
-  double MMi;
 };
 
 // ======================================================================
@@ -61,9 +156,11 @@ struct PscBubbleParams
 namespace
 {
 
+Parser parser;
+
 // Parameters specific to this case. They don't really need to be collected in a
 // struct, but maybe it's nice that they are
-PscBubbleParams g;
+PscBgkParams g;
 
 std::string read_checkpoint_filename;
 
@@ -93,18 +190,9 @@ void setupParameters()
   // read_checkpoint_filename = "checkpoint_500.bp";
 
   // -- Set some parameters specific to this case
-  g.BB = .07;
-  g.nnb = .1;
-  g.nn0 = 1.;
-  g.MMach = 3.;
-  g.LLn = 200.;
-  g.LLB = 200. / 6.;
-  g.TTe = .02;
-  g.TTi = .02;
-  g.MMi = 100.;
-
-  g.LLy = 2. * g.LLn;
-  g.LLz = 3. * g.LLn;
+  g.LLn = .015 * 2; // TODO does this affect physics?
+  g.LLy = g.LLn;
+  g.LLz = g.LLn;
 }
 
 // ======================================================================
@@ -117,10 +205,11 @@ void setupParameters()
 
 Grid_t* setupGrid()
 {
-  auto domain = Grid_t::Domain{{1, 128 * 2, 128 * 3},
-                               {g.LLn, g.LLy, g.LLz},
-                               {0., -.5 * g.LLy, -.5 * g.LLz},
-                               {1, 16 * 2, 16 * 3}};
+  auto domain =
+    Grid_t::Domain{{1, 128 * 2, 128 * 2},          // # grid points
+                   {g.LLn, g.LLy, g.LLz},          // physical lengths
+                   {0., -.5 * g.LLy, -.5 * g.LLz}, // TODO *offset* for origin?
+                   {1, 16 * 2, 16 * 2}};           // # patches
 
   auto bc =
     psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
@@ -130,9 +219,10 @@ Grid_t* setupGrid()
 
   auto kinds = Grid_t::Kinds(NR_KINDS);
   kinds[KIND_ELECTRON] = {-1., 1., "e"};
-  kinds[KIND_ION] = {1., 100., "i"};
+  // kinds[KIND_ION] = {1., 100., "i"}; // TODO no ions?
 
-  mpi_printf(MPI_COMM_WORLD, "lambda_D = %g\n", sqrt(g.TTe));
+  // TODO not necessary?
+  // mpi_printf(MPI_COMM_WORLD, "lambda_D = %g\n", sqrt(g.TTe));
 
   // --- generic setup
   auto norm_params = Grid_t::NormalizationParams::dimensionless();
@@ -162,53 +252,32 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
 {
   SetupParticles<Mparticles> setup_particles(*grid_ptr);
 
-  double V0 = g.MMach * sqrt(g.TTe / g.MMi);
-
   partitionAndSetupParticles(
     setup_particles, balance, grid_ptr, mprts,
     [&](int kind, double crd[3], psc_particle_npt& npt) {
-      double r1 = sqrt(sqr(crd[2]) + sqr(crd[1] + .5 * g.LLy));
-      double r2 = sqrt(sqr(crd[2]) + sqr(crd[1] - .5 * g.LLy));
+      // TODO is kind always KIND_ELECTRON? apparently not.
+      assert(kind == KIND_ELECTRON);
 
-      npt.n = g.nnb;
-      if (r1 < g.LLn) {
-        npt.n += (g.nn0 - g.nnb) * sqr(cos(M_PI / 2. * r1 / g.LLn));
-        if (r1 > 0.0) {
-          npt.p[2] += V0 * sin(M_PI * r1 / g.LLn) * crd[2] / r1;
-          npt.p[1] += V0 * sin(M_PI * r1 / g.LLn) * (crd[1] + .5 * g.LLy) / r1;
-        }
-      }
-      if (r2 < g.LLn) {
-        npt.n += (g.nn0 - g.nnb) * sqr(cos(M_PI / 2. * r2 / g.LLn));
-        if (r2 > 0.0) {
-          npt.p[2] += V0 * sin(M_PI * r2 / g.LLn) * crd[2] / r2;
-          npt.p[1] += V0 * sin(M_PI * r2 / g.LLn) * (crd[1] - .5 * g.LLy) / r2;
-        }
-      }
+      double y = crd[1];
+      double z = crd[2];
+      double rho = sqrt(sqr(y) + sqr(z));
 
-      switch (kind) {
-        case KIND_ELECTRON:
-          // electron drift consistent with initial current
-          if ((r1 <= g.LLn) && (r1 >= g.LLn - 2. * g.LLB)) {
-            npt.p[0] = -g.BB * M_PI / (2. * g.LLB) *
-                       cos(M_PI * (g.LLn - r1) / (2. * g.LLB)) / npt.n;
-          }
-          if ((r2 <= g.LLn) && (r2 >= g.LLn - 2. * g.LLB)) {
-            npt.p[0] = -g.BB * M_PI / (2. * g.LLB) *
-                       cos(M_PI * (g.LLn - r2) / (2. * g.LLB)) / npt.n;
-          }
-
-          npt.T[0] = g.TTe;
-          npt.T[1] = g.TTe;
-          npt.T[2] = g.TTe;
-          break;
-        case KIND_ION:
-          npt.T[0] = g.TTi;
-          npt.T[1] = g.TTi;
-          npt.T[2] = g.TTi;
-          break;
-        default: assert(0);
+      // velocities/momenta
+      if (rho != 0) {
+        double v_phi = parser.get_interpolated(parser.COL_V_PHI, rho);
+        npt.p[1] = v_phi * (-y) / rho;
+        npt.p[2] = v_phi * z / rho;
       }
+      // otherwise, npt.p[i] = 0
+
+      // number density
+      npt.n = parser.get_interpolated(parser.COL_NE, rho);
+
+      // temperature
+      npt.T[0] = npt.T[1] = npt.T[2] =
+        parser.get_interpolated(parser.COL_TE, rho);
+
+      // TODO are the above x-components correct?
     });
 }
 
@@ -218,60 +287,32 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
 void initializeFields(MfieldsState& mflds)
 {
   setupFields(mflds, [&](int m, double crd[3]) {
-    double z1 = crd[2];
-    double y1 = crd[1] + .5 * g.LLy;
-    double r1 = sqrt(sqr(z1) + sqr(y1));
-    double z2 = crd[2];
-    double y2 = crd[1] - .5 * g.LLy;
-    double r2 = sqrt(sqr(z2) + sqr(y2));
-
-    double rv = 0.;
+    // take care of the easy cases
     switch (m) {
-      case HZ:
-        if ((r1 < g.LLn) && (r1 > g.LLn - 2 * g.LLB)) {
-          rv += -g.BB * sin(M_PI * (g.LLn - r1) / (2. * g.LLB)) * y1 / r1;
-        }
-        if ((r2 < g.LLn) && (r2 > g.LLn - 2 * g.LLB)) {
-          rv += -g.BB * sin(M_PI * (g.LLn - r2) / (2. * g.LLB)) * y2 / r2;
-        }
-        return rv;
-
-      case HY:
-        if ((r1 < g.LLn) && (r1 > g.LLn - 2 * g.LLB)) {
-          rv += g.BB * sin(M_PI * (g.LLn - r1) / (2. * g.LLB)) * z1 / r1;
-        }
-        if ((r2 < g.LLn) && (r2 > g.LLn - 2 * g.LLB)) {
-          rv += g.BB * sin(M_PI * (g.LLn - r2) / (2. * g.LLB)) * z2 / r2;
-        }
-        return rv;
-
-      case EX:
-        if ((r1 < g.LLn) && (r1 > g.LLn - 2 * g.LLB)) {
-          rv += g.MMach * sqrt(g.TTe / g.MMi) * g.BB *
-                sin(M_PI * (g.LLn - r1) / (2. * g.LLB)) *
-                sin(M_PI * r1 / g.LLn);
-        }
-        if ((r2 < g.LLn) && (r2 > g.LLn - 2 * g.LLB)) {
-          rv += g.MMach * sqrt(g.TTe / g.MMi) * g.BB *
-                sin(M_PI * (g.LLn - r2) / (2. * g.LLB)) *
-                sin(M_PI * r2 / g.LLn);
-        }
-        return rv;
-
-        // FIXME, JXI isn't really needed anymore (?)
-      case JXI:
-        if ((r1 < g.LLn) && (r1 > g.LLn - 2 * g.LLB)) {
-          rv += g.BB * M_PI / (2. * g.LLB) *
-                cos(M_PI * (g.LLn - r1) / (2. * g.LLB));
-        }
-        if ((r2 < g.LLn) && (r2 > g.LLn - 2 * g.LLB)) {
-          rv += g.BB * M_PI / (2. * g.LLB) *
-                cos(M_PI * (g.LLn - r2) / (2. * g.LLB));
-        }
-        return rv;
-
+      case EY:
+      case EZ: break;
+      case HX: return 1.;
       default: return 0.;
     }
+
+    // otherwise, parse from file
+
+    double y = crd[1];
+    double z = crd[2];
+    double rho = sqrt(sqr(y) + sqr(z));
+
+    if (rho == 0)
+      return 0.;
+
+    double E_rho = parser.get_interpolated(parser.COL_E_RHO, rho);
+
+    if (m == EY) {
+      return E_rho * y / rho;
+    } else if (m == EZ) {
+      return E_rho * z / rho;
+    }
+
+    assert(false);
   });
 }
 
@@ -333,6 +374,7 @@ static void run()
   // -- output fields
   OutputFieldsParams outf_params{};
   outf_params.fields.pfield_interval = 200;
+  outf_params.moments.pfield_interval = 200;
   OutputFields<MfieldsState, Mparticles, Dim> outf{grid, outf_params};
 
   // -- output particles
