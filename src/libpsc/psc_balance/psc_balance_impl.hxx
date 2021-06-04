@@ -11,6 +11,8 @@
 #include <mrc_profile.h>
 #include <string.h>
 
+#include <numeric>
+
 extern double* psc_balance_comp_time_by_patch;
 
 static double capability_default(int p)
@@ -25,33 +27,48 @@ namespace psc
 namespace balance
 {
 
-inline void best_mapping(const std::vector<double>& capability,
-                         const std::vector<double>& loads_all,
+struct input
+{
+  std::vector<double> capability_by_proc;
+  std::vector<double> load_by_patch;
+
+  int n_procs() const { return capability_by_proc.size(); }
+
+  double total_capability() const
+  {
+    return std::accumulate(capability_by_proc.begin(), capability_by_proc.end(),
+                           0.);
+  }
+
+  double total_load() const
+  {
+    return std::accumulate(load_by_patch.begin(), load_by_patch.end(), 0.);
+  }
+
+  double load_target() const { return total_load() / total_capability(); }
+};
+
+inline void best_mapping(const input& input,
                          std::vector<int>& nr_patches_all_new)
 {
-  int size = capability.size();
+  auto& capability = input.capability_by_proc;
+  auto& loads_all = input.load_by_patch;
 
-  double loads_sum = 0.;
-  for (auto load : loads_all) {
-    loads_sum += load;
-  }
-  double capability_sum = 0.;
-  for (auto cap : capability) {
-    capability_sum += cap;
-  }
-  double load_target = loads_sum / capability_sum;
+  int n_procs = input.n_procs();
+
+  double load_target = input.load_target();
   mprintf("psc_balance: loads_sum %g capability_sum %g load_target %g\n",
-          loads_sum, capability_sum, load_target);
+          input.total_load(), input.total_capability(), load_target);
   int p = 0, nr_new_patches = 0;
   double load = 0.;
   double next_target = load_target * capability[0];
   for (int i = 0; i < loads_all.size(); i++) {
     load += loads_all[i];
     nr_new_patches++;
-    if (p < size - 1) {
+    if (p < n_procs - 1) {
       // if load limit is reached, or we have only as many patches as
       // processors left
-      if (load > next_target || size - p >= loads_all.size() - i) {
+      if (load > next_target || n_procs - p >= loads_all.size() - i) {
         double above_target = load - next_target;
         double below_target = next_target - (load - loads_all[i]);
         if (above_target > below_target && nr_new_patches > 1) {
@@ -67,25 +84,20 @@ inline void best_mapping(const std::vector<double>& capability,
     }
     // last proc takes what's left
     if (i == loads_all.size() - 1) {
-      nr_patches_all_new[size - 1] = nr_new_patches;
+      nr_patches_all_new[n_procs - 1] = nr_new_patches;
     }
   }
 }
 
-inline void print_stats(const std::vector<int>& nr_patches_all_new,
-                        const std::vector<double>& capability,
-                        const std::vector<double>& loads_all, bool verbose)
+inline void print_stats(const input& input,
+                        const std::vector<int>& nr_patches_all_new,
+                        bool verbose)
 {
-  double loads_sum = 0.;
-  for (auto load : loads_all) {
-    loads_sum += load;
-  }
-  double capability_sum = 0.;
-  for (auto cap : capability) {
-    capability_sum += cap;
-  }
-  double load_target = loads_sum / capability_sum;
-  int n_procs = capability.size();
+  auto& capability = input.capability_by_proc;
+  auto& loads_all = input.load_by_patch;
+
+  int n_procs = input.n_procs();
+  double load_target = input.load_target();
 
   int pp = 0;
   double min_diff = 0, max_diff = 0;
@@ -579,8 +591,8 @@ private:
         capability[p] = capability_default(p);
       }
 
-      psc::balance::best_mapping(capability, loads_all, nr_patches_all_new);
-      psc::balance::print_stats(nr_patches_all_new, capability, loads_all,
+      psc::balance::best_mapping({capability, loads_all}, nr_patches_all_new);
+      psc::balance::print_stats({capability, loads_all}, nr_patches_all_new,
                                 print_loads_);
 
       if (write_loads_) {
