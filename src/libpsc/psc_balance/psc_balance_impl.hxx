@@ -126,6 +126,25 @@ inline void print_stats(const input& input,
           100 * min_diff / load_target, 100 * max_diff / load_target);
 }
 
+inline void write_loads(const input& input,
+                        const std::vector<int>& nr_patches_all_new,
+                        int timestep)
+{
+  char s[20];
+  sprintf(s, "loads2-%06d.asc", timestep);
+  FILE* f = fopen(s, "w");
+
+  int gp = 0;
+  for (int r = 0; r < nr_patches_all_new.size(); r++) {
+    for (int p = 0; p < nr_patches_all_new[r]; p++) {
+      fprintf(f, "%d %g %d\n", gp, input.load_by_patch[gp], r);
+      gp++;
+    }
+  }
+
+  fclose(f);
+}
+
 } // namespace balance
 } // namespace psc
 
@@ -596,17 +615,8 @@ private:
                                 print_loads_);
 
       if (write_loads_) {
-        int gp = 0;
-        char s[20];
-        sprintf(s, "loads2-%06d.asc", grid.timestep());
-        FILE* f = fopen(s, "w");
-        for (int r = 0; r < size; r++) {
-          for (int p = 0; p < nr_patches_all_new[r]; p++) {
-            fprintf(f, "%d %g %d\n", gp, loads_all[gp], r);
-            gp++;
-          }
-        }
-        fclose(f);
+        psc::balance::write_loads({capability, loads_all}, nr_patches_all_new,
+                                  grid.timestep());
       }
 
       if (nr_patches_all_new == nr_patches_all_old) {
