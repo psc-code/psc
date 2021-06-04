@@ -18,15 +18,6 @@ static double capability_default(int p)
   return 1.;
 }
 
-static double _mrc_unused capability_jaguar(int p)
-{
-  if (p % 16 == 0) {
-    return 16.;
-  } else {
-    return 1.;
-  }
-}
-
 // ======================================================================
 // Communicate
 
