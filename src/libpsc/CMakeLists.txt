@@ -34,7 +34,6 @@ if (USE_CUDA)
     cuda/psc_particles_cuda.cxx
     cuda/cuda_mparticles_base.cu
     cuda/cuda_mparticles.cu
-    cuda/cuda_mparticles_iface.cu
     
     cuda/psc_fields_cuda.cxx
     

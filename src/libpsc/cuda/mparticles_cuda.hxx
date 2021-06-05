@@ -6,9 +6,10 @@
 #include "particle_indexer.hxx"
 #include "mparticles_patch_cuda.hxx"
 #include "injector_buffered.hxx"
-#include "cuda_mparticles_iface.hxx"
 #include "bs.hxx"
 #include "UniqueIdGenerator.h"
+
+#include "cuda_mparticles.cuh"
 
 // ======================================================================
 // MparticlesCuda
@@ -29,15 +30,14 @@ struct MparticlesCuda : MparticlesBase
   using is_cuda = std::true_type;
 
   using Patch = ConstPatchCuda<MparticlesCuda>;
-  using Iface = cuda_mparticles_iface<BS>;
 
   MparticlesCuda(const Grid_t& grid)
     : MparticlesBase(grid), pi_(grid), uid_gen(grid.comm())
   {
-    cmprts_ = Iface::new_(grid);
+    cmprts_ = new CudaMparticles(grid);
   }
 
-  ~MparticlesCuda() { Iface::delete_(cmprts_); }
+  ~MparticlesCuda() { delete cmprts_; }
 
   void reset(const Grid_t& grid) override
   {
@@ -45,30 +45,38 @@ struct MparticlesCuda : MparticlesBase
     new (this) MparticlesCuda(grid);
   }
 
-  int size() const override { return Iface::size(cmprts_); }
+  int size() const override { return cmprts_->size(); }
+
   std::vector<uint> sizeByPatch() const override
   {
-    return Iface::sizeByPatch(cmprts_);
+    return cmprts_->sizeByPatch();
   }
 
   void inject(const std::vector<Particle>& buf,
               const std::vector<uint>& buf_n_by_patch)
   {
-    Iface::inject(cmprts_, buf, buf_n_by_patch);
+    cmprts_->inject(buf, buf_n_by_patch);
   }
-  void dump(const std::string& filename) { Iface::dump(cmprts_, filename); }
-  bool check_after_push() { return Iface::check_after_push(cmprts_); }
-  void clear() { Iface::clear(cmprts_); }
 
-  std::vector<uint> get_offsets() const { return Iface::get_offsets(cmprts_); }
+  void dump(const std::string& filename) { cmprts_->dump(filename); }
+
+  bool check_after_push() { return cmprts_->check_bidx_after_push(); }
+
+  void clear() { cmprts_->clear(); }
+
+  std::vector<uint> get_offsets() const { return cmprts_->get_offsets(); }
+
   std::vector<Particle> get_particles() const
   {
-    return Iface::get_particles(cmprts_);
+    return const_cast<CudaMparticles*>(cmprts_)->get_particles(); // FIXME cast
   }
+
   Particle get_particle(int p, int n) const
   {
-    return Iface::get_particle(cmprts_, p, n);
+    return const_cast<CudaMparticles*>(cmprts_)->get_particle(p,
+                                                              n); // FIXME cast
   }
+
   const ParticleIndexer<real_t>& particleIndexer() const { return pi_; }
   void define_species(const char* name, double q, double m, double max_local_np,
                       double max_local_nm, double sort_interval,
