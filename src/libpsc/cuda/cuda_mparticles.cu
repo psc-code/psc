@@ -392,29 +392,7 @@ void cuda_mparticles<BS>::inject(const std::vector<Particle>& buf,
 }
 
 // ----------------------------------------------------------------------
-// get_particles
-
-template <typename BS>
-std::vector<typename cuda_mparticles<BS>::Particle>
-cuda_mparticles<BS>::get_particles(int beg, int end)
-{
-  reorder(); // FIXME? by means of this, this function disturbs the state...
-
-  HMparticlesCudaStorage h_storage{this->storage.begin() + beg,
-                                   this->storage.begin() + end};
-
-  std::vector<Particle> prts;
-  prts.reserve(end - beg);
-
-  for (int n = 0; n < end - beg; n++) {
-    prts.emplace_back(h_storage[n]);
-  }
-
-  return prts;
-}
-
-// ----------------------------------------------------------------------
-// get_particles
+// get_offsets
 
 template <typename BS>
 std::vector<uint> cuda_mparticles<BS>::get_offsets() const
@@ -434,24 +412,19 @@ template <typename BS>
 std::vector<typename cuda_mparticles<BS>::Particle>
 cuda_mparticles<BS>::get_particles()
 {
-  return get_particles(0, this->n_prts);
-}
+  reorder(); // FIXME? by means of this, this function disturbs the state...
 
-// ----------------------------------------------------------------------
-// get_particles
+  HMparticlesCudaStorage h_storage{this->storage.begin(),
+                                   this->storage.begin() + this->n_prts};
 
-template <typename BS>
-std::vector<typename cuda_mparticles<BS>::Particle>
-cuda_mparticles<BS>::get_particles(int p)
-{
-  // FIXME, doing the copy here all the time would be nice to avoid
-  // making sure we actually have a valid d_off would't hurt, either
-  thrust::host_vector<uint> h_off(this->by_block_.d_off);
+  std::vector<Particle> prts;
+  prts.reserve(this->n_prts);
 
-  uint beg = h_off[p * this->n_blocks_per_patch];
-  uint end = h_off[(p + 1) * this->n_blocks_per_patch];
+  for (int n = 0; n < this->n_prts; n++) {
+    prts.emplace_back(h_storage[n]);
+  }
 
-  return get_particles(beg, end);
+  return prts;
 }
 
 #include "cuda_mparticles_gold.cu"
