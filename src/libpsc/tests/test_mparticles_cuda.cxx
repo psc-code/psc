@@ -105,6 +105,26 @@ TYPED_TEST(MparticlesCudaTest, ConvertFromSingle)
       nn++;
     }
   }
+
+  auto&& mprts2 = mprts.template get_as<MparticlesSingle>();
+  {
+    nn = 0;
+    auto accessor = mprts2.accessor();
+    for (int p = 0; p < mprts2.n_patches(); ++p) {
+      auto prts = accessor[p];
+      auto& patch = mprts2.grid().patches[p];
+
+      for (auto prt : prts) {
+        auto x = .5 * (patch.xb + patch.xe);
+        EXPECT_EQ(prt.position()[0], x[0]);
+        EXPECT_EQ(prt.position()[1], x[1]);
+        EXPECT_EQ(prt.position()[2], x[2]);
+        EXPECT_EQ(prt.w(), nn);
+        EXPECT_EQ(prt.kind(), 0);
+        nn++;
+      }
+    }
+  }
 }
 
 #endif
