@@ -132,7 +132,7 @@ public:
     thrust::copy(first, last, begin());
   }
 
-  __host__ __device__ size_t size() { return xi4.size(); }
+  __host__ __device__ size_t size() const { return xi4.size(); }
 
   __host__ __device__ iterator begin()
   {
