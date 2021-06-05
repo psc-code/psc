@@ -212,9 +212,11 @@ public:
 // ======================================================================
 // cuda_mparticles_base
 
-template <typename BS>
+template <typename BS, typename S>
 struct cuda_mparticles_base : cuda_mparticles_indexer<BS>
 {
+  using storage_type = S;
+
   cuda_mparticles_base(const Grid_t& grid);
   // copy constructor would work fine, but we don't want to copy everything
   // by accident
@@ -233,7 +235,7 @@ public:
   }
 
   // per particle
-  MparticlesCudaStorage storage;
+  storage_type storage;
 
   // per block
   cuda_mparticles_sort_by_block by_block_;
@@ -249,8 +251,9 @@ template <typename BS>
 struct DMparticlesCuda;
 
 template <typename _BS>
-struct cuda_mparticles : cuda_mparticles_base<_BS>
+struct cuda_mparticles : cuda_mparticles_base<_BS, MparticlesCudaStorage>
 {
+  using base_type = cuda_mparticles_base<_BS, MparticlesCudaStorage>;
   using BS = _BS;
   using Particle = DParticleCuda;
   using real_t = Particle::real_t;

@@ -18,8 +18,7 @@
 // ctor
 
 template <typename BS>
-cuda_mparticles<BS>::cuda_mparticles(const Grid_t& grid)
-  : cuda_mparticles_base<BS>(grid)
+cuda_mparticles<BS>::cuda_mparticles(const Grid_t& grid) : base_type(grid)
 {
   cuda_base_init();
 
@@ -45,7 +44,7 @@ cuda_mparticles<BS>::~cuda_mparticles()
 template <typename BS>
 void cuda_mparticles<BS>::resize(uint n_prts)
 {
-  cuda_mparticles_base<BS>::resize(n_prts);
+  base_type::resize(n_prts);
   mem_particles -= allocated_bytes(this->by_block_.d_idx);
   this->by_block_.d_idx.resize(n_prts);
   mem_particles += allocated_bytes(this->by_block_.d_idx);

@@ -11,16 +11,16 @@
 // ----------------------------------------------------------------------
 // ctor
 
-template <typename BS>
-cuda_mparticles_base<BS>::cuda_mparticles_base(const Grid_t& grid)
+template <typename BS, typename S>
+cuda_mparticles_base<BS, S>::cuda_mparticles_base(const Grid_t& grid)
   : cuda_mparticles_indexer<BS>(grid), grid_(grid), by_block_(this->n_blocks)
 {}
 
 // ----------------------------------------------------------------------
 // reserve_all
 
-template <typename BS>
-void cuda_mparticles_base<BS>::resize(uint size)
+template <typename BS, typename S>
+void cuda_mparticles_base<BS, S>::resize(uint size)
 {
   storage.resize(size);
 }
@@ -28,8 +28,8 @@ void cuda_mparticles_base<BS>::resize(uint size)
 // ----------------------------------------------------------------------
 // sizeByPatch
 
-template <typename BS>
-std::vector<uint> cuda_mparticles_base<BS>::sizeByPatch() const
+template <typename BS, typename S>
+std::vector<uint> cuda_mparticles_base<BS, S>::sizeByPatch() const
 {
   std::vector<uint> n_prts_by_patch(this->n_patches());
   thrust::host_vector<uint> h_off(by_block_.d_off);
@@ -42,5 +42,5 @@ std::vector<uint> cuda_mparticles_base<BS>::sizeByPatch() const
   return n_prts_by_patch;
 }
 
-template struct cuda_mparticles_base<BS144>;
-template struct cuda_mparticles_base<BS444>;
+template struct cuda_mparticles_base<BS144, MparticlesCudaStorage>;
+template struct cuda_mparticles_base<BS444, MparticlesCudaStorage>;
