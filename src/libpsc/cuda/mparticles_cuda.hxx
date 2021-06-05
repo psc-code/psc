@@ -71,12 +71,6 @@ struct MparticlesCuda : MparticlesBase
     return const_cast<CudaMparticles*>(cmprts_)->get_particles(); // FIXME cast
   }
 
-  Particle get_particle(int p, int n) const
-  {
-    return const_cast<CudaMparticles*>(cmprts_)->get_particle(p,
-                                                              n); // FIXME cast
-  }
-
   const ParticleIndexer<real_t>& particleIndexer() const { return pi_; }
   void define_species(const char* name, double q, double m, double max_local_np,
                       double max_local_nm, double sort_interval,

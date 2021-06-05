@@ -454,18 +454,6 @@ cuda_mparticles<BS>::get_particles(int p)
   return get_particles(beg, end);
 }
 
-// ----------------------------------------------------------------------
-// get_particle
-
-template <typename BS>
-typename cuda_mparticles<BS>::Particle cuda_mparticles<BS>::get_particle(int p,
-                                                                         int n)
-{
-  auto off = this->by_block_.d_off[p * this->n_blocks_per_patch];
-  auto cprts = get_particles(off + n, off + n + 1);
-  return cprts[0];
-}
-
 #include "cuda_mparticles_gold.cu"
 #include "cuda_mparticles_checks.cu"
 

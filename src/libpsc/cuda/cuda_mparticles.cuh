@@ -274,7 +274,6 @@ struct cuda_mparticles : cuda_mparticles_base<_BS, MparticlesCudaStorage>
   std::vector<uint> get_offsets() const;
   std::vector<Particle> get_particles();
   std::vector<Particle> get_particles(int p);
-  Particle get_particle(int p, int n);
 
   void dump(const std::string& filename) const;
   void dump_by_patch(uint* n_prts_by_patch);
