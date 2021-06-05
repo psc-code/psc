@@ -405,6 +405,13 @@ std::vector<uint> cuda_mparticles<BS>::get_offsets() const
   return off;
 }
 
+inline void copy(const MparticlesCudaStorage& from, HMparticlesCudaStorage& to)
+{
+  assert(from.size() == to.size());
+  thrust::copy(from.xi4.begin(), from.xi4.end(), to.xi4.begin());
+  thrust::copy(from.pxi4.begin(), from.pxi4.end(), to.pxi4.begin());
+}
+
 // ----------------------------------------------------------------------
 // get_particles
 
@@ -414,8 +421,9 @@ cuda_mparticles<BS>::get_particles()
 {
   reorder(); // FIXME? by means of this, this function disturbs the state...
 
-  HMparticlesCudaStorage h_storage{this->storage.begin(),
-                                   this->storage.begin() + this->n_prts};
+  assert(this->storage.size() == this->n_prts);
+  HMparticlesCudaStorage h_storage{this->n_prts};
+  copy(this->storage, h_storage);
 
   std::vector<Particle> prts;
   prts.reserve(this->n_prts);
