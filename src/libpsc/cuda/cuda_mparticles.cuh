@@ -268,7 +268,6 @@ struct cuda_mparticles : cuda_mparticles_base<_BS, MparticlesCudaStorage>
   ~cuda_mparticles();
 
   InjectorBuffered<cuda_mparticles> injector() { return {*this}; }
-  ConstAccessorCuda_<cuda_mparticles> accessor() { return {*this}; }
 
   uint size();
   void inject(const std::vector<Particle>& buf,
