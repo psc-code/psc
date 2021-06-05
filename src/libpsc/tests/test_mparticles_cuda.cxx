@@ -1,15 +1,18 @@
 
 #include <gtest/gtest.h>
 
+#include <mpi.h>
+
+#ifdef USE_CUDA
+
 #include "test_common.hxx"
 #include "PscConfig.h"
 #include "../libpsc/cuda/mparticles_cuda.hxx"
-#include "mpi.h"
+#include "cuda_base.cuh"
 
 // FIXME, the general tests should be moved -> test_mparticles,
 // and the real cuda ones to test_cuda_mparticle?
 
-#ifdef USE_CUDA
 #include "psc_particles_single.h"
 
 template <typename _Mparticles, typename _MakeGrid = MakeTestGrid1>
@@ -112,7 +115,9 @@ TYPED_TEST(MparticlesCudaTest, ConvertFromSingle)
 int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
-
+#ifdef USE_CUDA
+  cuda_base_init();
+#endif
   ::testing::InitGoogleTest(&argc, argv);
   int rc = RUN_ALL_TESTS();
 
