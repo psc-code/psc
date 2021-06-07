@@ -12,7 +12,7 @@
 #include "push_particles_esirkepov.hxx"
 #include "push_particles_1vb.hxx"
 
-#include <gtensor/gtensor.h>
+#include <psc/gtensor.h>
 
 template <typename fields_t, typename dim_curr>
 struct curr_cache_t : fields_t

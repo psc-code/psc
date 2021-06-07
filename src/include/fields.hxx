@@ -5,7 +5,7 @@
 #include "dim.hxx"
 #include "kg/Vec3.h"
 
-#include <gtensor/gtensor.h>
+#include <psc/gtensor.h>
 
 // ======================================================================
 // Fields3d

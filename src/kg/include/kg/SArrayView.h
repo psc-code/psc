@@ -6,7 +6,7 @@
 #include <kg/Macros.h>
 #include <kg/Vec3.h>
 
-#include <gtensor/gtensor.h>
+#include <psc/gtensor.h>
 
 using namespace gt::placeholders;
 

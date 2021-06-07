@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <gtensor/gtensor.h>
+#include <psc/gtensor.h>
 
 // ----------------------------------------------------------------------
 
