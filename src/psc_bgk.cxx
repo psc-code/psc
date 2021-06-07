@@ -138,12 +138,8 @@ public:
 
 struct PscBgkParams
 {
-  // physical length in x-direction (?)
-  double LLn;
-  // physical length in y-direction
-  double LLz;
-  // physical length in z-direction
-  double LLy;
+  // physical length of region along y and z
+  double box_size;
 };
 
 // ======================================================================
@@ -191,9 +187,7 @@ void setupParameters()
   // read_checkpoint_filename = "checkpoint_500.bp";
 
   // -- Set some parameters specific to this case
-  g.LLn = .015 * 2; // TODO does this affect physics?
-  g.LLy = g.LLn;
-  g.LLz = g.LLn;
+  g.box_size = .03;
 }
 
 // ======================================================================
@@ -206,11 +200,12 @@ void setupParameters()
 
 Grid_t* setupGrid()
 {
+  int n_grid = 256;
   auto domain =
-    Grid_t::Domain{{1, 128 * 2, 128 * 2},          // # grid points
-                   {g.LLn, g.LLy, g.LLz},          // physical lengths
-                   {0., -.5 * g.LLy, -.5 * g.LLz}, // TODO *offset* for origin?
-                   {1, 16 * 2, 16 * 2}};           // # patches
+    Grid_t::Domain{{1, n_grid, n_grid},            // # grid points
+                   {1, g.box_size, g.box_size},          // physical lengths
+                   {0., -.5 * g.box_size, -.5 * g.box_size}, // *offset* for origin
+                   {1, n_grid / 16, n_grid / 16}}; // # patches
 
   auto bc =
     psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
@@ -222,7 +217,7 @@ Grid_t* setupGrid()
   kinds[KIND_ELECTRON] = {-1., 1., "e"};
   kinds[KIND_ION] = {1., 1e9, "i"}; // really heavy to keep them fixed
 
-  // TODO not necessary?
+  // TODO make this print Debye length
   // mpi_printf(MPI_COMM_WORLD, "lambda_D = %g\n", sqrt(g.TTe));
 
   // --- generic setup
@@ -283,9 +278,7 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
           // number density
           npt.n = 1;
 
-          // temperature
-          npt.T[0] = parsed.get_interpolated(parsed.COL_TE, rho);
-          npt.T[1] = npt.T[2] = npt.T[0];
+          // temperature is 0
           break;
         default: assert(false);
       }
@@ -370,13 +363,17 @@ static void run()
 
   // -- Checks
   ChecksParams checks_params{};
+  checks_params.gauss_every_step = 1;
+  // checks_params.gauss_dump_always = true;
+  checks_params.gauss_threshold = 1e-2;
+
   Checks checks{grid, MPI_COMM_WORLD, checks_params};
 
   // -- Marder correction
   double marder_diffusion = 0.9;
   int marder_loop = 3;
   bool marder_dump = false;
-  psc_params.marder_interval = 0; // 5
+  psc_params.marder_interval = 1; // 5
   Marder marder(grid, marder_diffusion, marder_loop, marder_dump);
 
   // ----------------------------------------------------------------------
@@ -386,8 +383,8 @@ static void run()
 
   // -- output fields
   OutputFieldsParams outf_params{};
-  outf_params.fields.pfield_interval = 200;
-  outf_params.moments.pfield_interval = 200;
+  outf_params.fields.pfield_interval = 20;
+  outf_params.moments.pfield_interval = 20;
   OutputFields<MfieldsState, Mparticles, Dim> outf{grid, outf_params};
 
   // -- output particles
