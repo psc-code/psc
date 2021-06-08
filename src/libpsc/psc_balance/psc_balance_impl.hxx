@@ -707,8 +707,7 @@ private:
   }
 
   void communicate_particles(struct communicate_ctx* ctx, Mparticles& mp_old,
-                             Mparticles& mp_new,
-                             const std::vector<uint>& n_prts_by_patch_new)
+                             Mparticles& mp_new)
   {
     // static int pr, pr_A, pr_B, pr_C, pr_D;
     // if (!pr) {
@@ -720,6 +719,8 @@ private:
     // }
 
     // prof_start(pr);
+
+    auto n_prts_by_patch_new = ctx->new_n_prts(mp_old.sizeByPatch());
 
     // prof_start(pr_A);
     mp_new.reserve_all(n_prts_by_patch_new);
@@ -975,8 +976,7 @@ private:
         auto& mp_old = dynamic_cast<Mparticles&>(mp_base);
         auto mp_new = Mparticles{*new_grid};
 
-        auto n_prts_by_patch_new = ctx.new_n_prts(mp_old.sizeByPatch());
-        communicate_particles(&ctx, mp_old, mp_new, n_prts_by_patch_new);
+        communicate_particles(&ctx, mp_old, mp_new);
 
         mp_old = std::move(mp_new);
       } else {
@@ -984,8 +984,7 @@ private:
         auto& mp_old = *p_mp_old;
 
         auto mp_new = Mparticles{*new_grid};
-        auto n_prts_by_patch_new = ctx.new_n_prts(mp_old.sizeByPatch());
-        communicate_particles(&ctx, mp_old, mp_new, n_prts_by_patch_new);
+        communicate_particles(&ctx, mp_old, mp_new);
         mp_old.reset(*new_grid); // free memory
 
         MparticlesBase::convert(mp_new, mp_base);
