@@ -12,6 +12,7 @@
 #ifdef USE_CUDA
 #include "../libpsc/cuda/mparticles_cuda.hxx"
 #include "psc_fields_cuda.h"
+#include "cuda_base.cuh"
 #endif
 
 template <typename _Mparticles, typename _MfieldsState, typename _Mfields,
@@ -255,6 +256,9 @@ TEST(Balance, best_mapping)
 int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
+#ifdef USE_CUDA
+  cuda_base_init();
+#endif
 
   ::testing::InitGoogleTest(&argc, argv);
   int rc = RUN_ALL_TESTS();
