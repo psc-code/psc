@@ -918,12 +918,7 @@ private:
 
       MfieldsBase::convert(mf_new, mf_base, 0, mf_base._n_comps());
     } else {
-      auto mf_new = Mfields{new_grid, mf_base._n_comps(), mf_base.ibn()};
-      auto& mf_old = dynamic_cast<Mfields&>(mf_base);
-
-      communicate_fields(&ctx, mf_old, mf_new);
-
-      mf_old = std::move(mf_new);
+      assert(0);
     }
   }
 
@@ -1019,8 +1014,30 @@ private:
     }
 
     // fields
+    std::vector<MfieldsBase*> mfields_todo;
+    mfields_todo.reserve(MfieldsBase::instances.size());
     for (auto mf : MfieldsBase::instances) {
-      mpi_printf(old_grid->comm(), "***** Balance: balancing field\n");
+      if (typeid(*mf) != typeid(Mfields)) {
+        mprintf("todo %d\n", mf->_n_comps());
+        mfields_todo.push_back(mf);
+      } else {
+        mpi_printf(old_grid->comm(),
+                   "***** Balance: balancing field, %d components\n",
+                   mf->_n_comps());
+        auto& mf_old = dynamic_cast<Mfields&>(*mf);
+        auto mf_new = Mfields{*new_grid, mf_old.n_comps(), mf_old.ibn()};
+
+        communicate_fields(&ctx, mf_old, mf_new);
+
+        mf_old = std::move(mf_new);
+      }
+    }
+
+    // fields that live on the GPU (or elsewhere?)
+    for (auto mf : mfields_todo) {
+      mpi_printf(old_grid->comm(),
+                 "***** Balance: balancing field convert, %d components\n",
+                 mf->_n_comps());
       balance_field(ctx, *new_grid, *mf);
     }
     prof_stop(pr_bal_flds);
