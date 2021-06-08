@@ -8,6 +8,10 @@
 #include "bnd.hxx"
 #include "mpi_dtype_traits.hxx"
 
+#ifdef USE_CUDA
+#include "psc_fields_cuda.h"
+#endif
+
 #include <mrc_profile.h>
 #include <string.h>
 
@@ -994,14 +998,13 @@ private:
       balance_state_field(ctx, *new_grid, *mf);
     }
 
-    // fields
-    std::vector<MfieldsBase*> mfields_todo;
-    mfields_todo.reserve(MfieldsBase::instances.size());
+// fields
+#ifdef USE_CUDA
+    std::vector<MfieldsBase*> mfields_cuda;
+#endif
+    mfields_cuda.reserve(MfieldsBase::instances.size());
     for (auto mf : MfieldsBase::instances) {
-      if (typeid(*mf) != typeid(Mfields)) {
-        mprintf("todo %d\n", mf->_n_comps());
-        mfields_todo.push_back(mf);
-      } else {
+      if (typeid(*mf) == typeid(Mfields)) {
         mpi_printf(old_grid->comm(),
                    "***** Balance: balancing field, %d components\n",
                    mf->_n_comps());
@@ -1011,24 +1014,46 @@ private:
         communicate_fields(&ctx, mf_old, mf_new);
 
         mf_old = std::move(mf_new);
+#ifdef USE_CUDA
+      } else if (typeid(*mf) == typeid(MfieldsCuda)) {
+        mprintf("MfieldsCuda #components %d\n", mf->_n_comps());
+        mfields_cuda.push_back(mf);
+#endif
+      } else {
+        std::cerr << "balance: unexpected type " << typeid(*mf).name() << "\n";
+        std::abort();
       }
     }
 
-    // fields that live on the GPU (or elsewhere?)
-    for (auto mf : mfields_todo) {
+#ifdef USE_CUDA
+    // copy cuda fields to host, free on gpu
+    std::vector<Mfields*> mfields_old;
+    mfields_old.reserve(mfields_cuda.size());
+
+    for (int n = 0; n < mfields_cuda.size(); n++) {
+      MfieldsBase* mf_cuda = mfields_cuda[n];
       mpi_printf(old_grid->comm(),
-                 "***** Balance: balancing field convert, %d components\n",
-                 mf->_n_comps());
-      auto& mf_old = *new Mfields{*old_grid, mf->_n_comps(), mf->ibn()};
-      MfieldsBase::convert(*mf, mf_old, 0, mf_old.n_comps());
-      mf->reset(*new_grid); // free old memory
-
-      auto mf_new = Mfields{*new_grid, mf_old._n_comps(), mf_old.ibn()};
-      communicate_fields(&ctx, mf_old, mf_new);
-      delete &mf_old; // delete as early as possible
-
-      MfieldsBase::convert(mf_new, *mf, 0, mf_new._n_comps());
+                 "***** Balance: balancing CUDA field, %d components\n",
+                 mf_cuda->_n_comps());
+      auto mf_old = new Mfields{*old_grid, mf_cuda->_n_comps(), mf_cuda->ibn()};
+      MfieldsBase::convert(*mf_cuda, *mf_old, 0, mf_cuda->_n_comps());
+      mfields_old.push_back(mf_old);
+      mf_cuda->~MfieldsBase();
     }
+
+    //  communicate on host, move back to gpu
+    for (int n = 0; n < mfields_cuda.size(); n++) {
+      Mfields* mf_old = mfields_old[n];
+      auto mf_new = Mfields{*new_grid, mf_old->n_comps(), mf_old->ibn()};
+
+      communicate_fields(&ctx, *mf_old, mf_new);
+      delete mfields_old[n]; // delete as early as possible
+
+      MfieldsBase* mf_cuda = mfields_cuda[n];
+      new (mf_cuda) MfieldsCuda{*new_grid, mf_new.n_comps(), mf_new.ibn()};
+      MfieldsBase::convert(mf_new, *mf_cuda, 0, mf_new._n_comps());
+    }
+#endif
     prof_stop(pr_bal_flds);
 
     // update psc etc
