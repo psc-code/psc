@@ -966,13 +966,14 @@ private:
       return n_prts_by_patch_old;
     }
 
+    mpi_printf(old_grid->comm(),
+               "***** Balance: new decomposition: balancing\n");
+
     auto new_grid = new Grid_t{old_grid->domain, old_grid->bc, old_grid->kinds,
                                old_grid->norm,   old_grid->dt, n_patches_new};
     new_grid->ibn = old_grid->ibn; // FIXME, sucky ibn handling...
     new_grid->timestep_ = old_grid->timestep_;
 
-    mpi_printf(old_grid->comm(),
-               "***** Balance: new decomposition: balancing\n");
     delete[] psc_balance_comp_time_by_patch;
     psc_balance_comp_time_by_patch = new double[new_grid->n_patches()];
 
@@ -998,11 +999,35 @@ private:
       balance_state_field(ctx, *new_grid, *mf);
     }
 
-// fields
+    // fields
 #ifdef USE_CUDA
     std::vector<std::reference_wrapper<MfieldsCuda>> mfields_cuda;
-#endif
     mfields_cuda.reserve(MfieldsBase::instances.size());
+
+    for (auto mf : MfieldsBase::instances) {
+      if (typeid(*mf) == typeid(MfieldsCuda)) {
+        auto& mf_cuda = dynamic_cast<MfieldsCuda&>(*mf);
+        mprintf("MfieldsCuda #components %d\n", mf_cuda.n_comps());
+        mfields_cuda.emplace_back(mf_cuda);
+      }
+    }
+
+    // copy cuda fields to host, free on gpu
+    std::vector<Mfields> mfields_old;
+    mfields_old.reserve(mfields_cuda.size());
+
+    for (int n = 0; n < mfields_cuda.size(); n++) {
+      MfieldsCuda& mf_cuda = mfields_cuda[n];
+      mpi_printf(old_grid->comm(),
+                 "***** Balance: copying CUDA field to host, #components %d\n",
+                 mf_cuda.n_comps());
+      mfields_old.emplace_back(*old_grid, mf_cuda.n_comps(), mf_cuda.ibn());
+      auto& mf_old = mfields_old.back();
+      MfieldsBase::convert(mf_cuda, mf_old, 0, mf_cuda.n_comps());
+      mf_cuda.~MfieldsCuda();
+    }
+#endif
+
     for (auto mf : MfieldsBase::instances) {
       if (typeid(*mf) == typeid(Mfields)) {
         mpi_printf(old_grid->comm(),
@@ -1015,10 +1040,9 @@ private:
 
         mf_old = std::move(mf_new);
 #ifdef USE_CUDA
-      } else if (typeid(*mf) == typeid(MfieldsCuda)) {
-        auto& mf_cuda = dynamic_cast<MfieldsCuda&>(*mf);
-        mprintf("MfieldsCuda #components %d\n", mf_cuda.n_comps());
-        mfields_cuda.emplace_back(mf_cuda);
+        if (typeid(*mf) == typeid(MfieldsCuda)) {
+          // skip, handled separately
+        }
 #endif
       } else {
         std::cerr << "balance: unexpected type " << typeid(*mf).name() << "\n";
@@ -1027,28 +1051,20 @@ private:
     }
 
 #ifdef USE_CUDA
-    // copy cuda fields to host, free on gpu
-    std::vector<Mfields*> mfields_old;
-    mfields_old.reserve(mfields_cuda.size());
-
-    for (int n = 0; n < mfields_cuda.size(); n++) {
-      MfieldsCuda& mf_cuda = mfields_cuda[n];
-      mpi_printf(old_grid->comm(),
-                 "***** Balance: balancing CUDA field, %d components\n",
-                 mf_cuda.n_comps());
-      auto mf_old = new Mfields{*old_grid, mf_cuda.n_comps(), mf_cuda.ibn()};
-      MfieldsBase::convert(mf_cuda, *mf_old, 0, mf_cuda.n_comps());
-      mfields_old.emplace_back(mf_old);
-      mf_cuda.~MfieldsCuda();
-    }
-
     //  communicate on host, move back to gpu
     for (int n = 0; n < mfields_cuda.size(); n++) {
-      Mfields* mf_old = mfields_old[n];
-      auto mf_new = Mfields{*new_grid, mf_old->n_comps(), mf_old->ibn()};
+      Mfields& mf_old = mfields_old[n];
+      mpi_printf(
+        old_grid->comm(),
+        "***** Balance: balancing field, copy back to device, #components %d\n",
+        mf_old.n_comps());
 
-      communicate_fields(&ctx, *mf_old, mf_new);
-      delete mfields_old[n]; // delete as early as possible
+      auto mf_new = Mfields{*new_grid, mf_old.n_comps(), mf_old.ibn()};
+
+      communicate_fields(&ctx, mf_old, mf_new);
+      // FIXME, not possible anymore, could be recovered by some "= {}" empty
+      // default behavior. delete mfields_old[n]; // delete as early as
+      // possible
 
       MfieldsCuda& mf_cuda = mfields_cuda[n];
       new (&mf_cuda) MfieldsCuda{*new_grid, mf_new.n_comps(), mf_new.ibn()};
