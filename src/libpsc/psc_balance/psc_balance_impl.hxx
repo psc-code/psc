@@ -1000,7 +1000,7 @@ private:
 
 // fields
 #ifdef USE_CUDA
-    std::vector<MfieldsCuda*> mfields_cuda;
+    std::vector<std::reference_wrapper<MfieldsCuda>> mfields_cuda;
 #endif
     mfields_cuda.reserve(MfieldsBase::instances.size());
     for (auto mf : MfieldsBase::instances) {
@@ -1016,9 +1016,9 @@ private:
         mf_old = std::move(mf_new);
 #ifdef USE_CUDA
       } else if (typeid(*mf) == typeid(MfieldsCuda)) {
-        auto mf_cuda = dynamic_cast<MfieldsCuda*>(mf);
-        mprintf("MfieldsCuda #components %d\n", mf_cuda->n_comps());
-        mfields_cuda.push_back(mf_cuda);
+        auto& mf_cuda = dynamic_cast<MfieldsCuda&>(*mf);
+        mprintf("MfieldsCuda #components %d\n", mf_cuda.n_comps());
+        mfields_cuda.emplace_back(mf_cuda);
 #endif
       } else {
         std::cerr << "balance: unexpected type " << typeid(*mf).name() << "\n";
@@ -1032,14 +1032,14 @@ private:
     mfields_old.reserve(mfields_cuda.size());
 
     for (int n = 0; n < mfields_cuda.size(); n++) {
-      MfieldsCuda* mf_cuda = mfields_cuda[n];
+      MfieldsCuda& mf_cuda = mfields_cuda[n];
       mpi_printf(old_grid->comm(),
                  "***** Balance: balancing CUDA field, %d components\n",
-                 mf_cuda->_n_comps());
-      auto mf_old = new Mfields{*old_grid, mf_cuda->_n_comps(), mf_cuda->ibn()};
-      MfieldsBase::convert(*mf_cuda, *mf_old, 0, mf_cuda->_n_comps());
-      mfields_old.push_back(mf_old);
-      mf_cuda->~MfieldsCuda();
+                 mf_cuda.n_comps());
+      auto mf_old = new Mfields{*old_grid, mf_cuda.n_comps(), mf_cuda.ibn()};
+      MfieldsBase::convert(mf_cuda, *mf_old, 0, mf_cuda.n_comps());
+      mfields_old.emplace_back(mf_old);
+      mf_cuda.~MfieldsCuda();
     }
 
     //  communicate on host, move back to gpu
@@ -1050,9 +1050,9 @@ private:
       communicate_fields(&ctx, *mf_old, mf_new);
       delete mfields_old[n]; // delete as early as possible
 
-      MfieldsCuda* mf_cuda = mfields_cuda[n];
-      new (mf_cuda) MfieldsCuda{*new_grid, mf_new.n_comps(), mf_new.ibn()};
-      MfieldsBase::convert(mf_new, *mf_cuda, 0, mf_new._n_comps());
+      MfieldsCuda& mf_cuda = mfields_cuda[n];
+      new (&mf_cuda) MfieldsCuda{*new_grid, mf_new.n_comps(), mf_new.ibn()};
+      MfieldsBase::convert(mf_new, mf_cuda, 0, mf_new._n_comps());
     }
 #endif
     prof_stop(pr_bal_flds);
