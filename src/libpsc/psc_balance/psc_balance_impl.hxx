@@ -954,6 +954,16 @@ private:
     communicate_ctx ctx(old_grid->mrc_domain(), new_grid->mrc_domain());
     prof_stop(pr_bal_ctx);
 
+    Mparticles* p_mp_old = nullptr;
+    if (mp && typeid(*mp) != typeid(Mparticles)) {
+      auto& mp_base = *mp;
+      mpi_printf(old_grid->comm(), "***** Balance: particles to host\n");
+      p_mp_old = new Mparticles{mp_base.grid()};
+      auto& mp_old = *p_mp_old;
+      MparticlesBase::convert(mp_base, mp_old);
+      mp_base.reset(*new_grid); // frees memory here already
+    }
+
     // particles
     std::vector<uint> n_prts_by_patch_new;
     if (mp) {
@@ -961,21 +971,20 @@ private:
       prof_start(pr_bal_prts);
 
       auto& mp_base = *mp;
-      auto n_prts_by_patch_new = ctx.new_n_prts(mp_base.sizeByPatch());
-
       if (typeid(mp_base) == typeid(Mparticles)) {
         auto& mp_old = dynamic_cast<Mparticles&>(mp_base);
         auto mp_new = Mparticles{*new_grid};
 
+        auto n_prts_by_patch_new = ctx.new_n_prts(mp_old.sizeByPatch());
         communicate_particles(&ctx, mp_old, mp_new, n_prts_by_patch_new);
 
         mp_old = std::move(mp_new);
       } else {
-        auto mp_old = Mparticles{mp_base.grid()};
-        MparticlesBase::convert(mp_base, mp_old);
-        mp_base.reset(*new_grid); // frees memory here already
+        assert(p_mp_old);
+        auto& mp_old = *p_mp_old;
 
         auto mp_new = Mparticles{*new_grid};
+        auto n_prts_by_patch_new = ctx.new_n_prts(mp_old.sizeByPatch());
         communicate_particles(&ctx, mp_old, mp_new, n_prts_by_patch_new);
         mp_old.reset(*new_grid); // free memory
 
