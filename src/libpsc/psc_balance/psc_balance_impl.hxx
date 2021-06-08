@@ -888,13 +888,13 @@ private:
     auto n_prts_by_patch_new = ctx.new_n_prts(n_prts_by_patch_old);
 
     if (typeid(mp_base) != typeid(Mparticles)) {
-      auto& mp_old = *new Mparticles{mp_base.grid()};
+      auto mp_old = Mparticles{mp_base.grid()};
       MparticlesBase::convert(mp_base, mp_old);
       mp_base.reset(new_grid); // frees memory here already
 
       auto mp_new = Mparticles{new_grid};
       communicate_particles(&ctx, mp_old, mp_new, n_prts_by_patch_new);
-      delete &mp_old;
+      mp_old.reset(new_grid); // free memory
 
       MparticlesBase::convert(mp_new, mp_base);
     } else {
