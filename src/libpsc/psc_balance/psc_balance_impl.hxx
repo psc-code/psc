@@ -880,31 +880,6 @@ private:
     delete[] recv_reqs;
   }
 
-  void balance_particles(communicate_ctx& ctx, const Grid_t& new_grid,
-                         MparticlesBase& mp_base)
-  {
-    auto n_prts_by_patch_new = ctx.new_n_prts(mp_base.sizeByPatch());
-
-    if (typeid(mp_base) == typeid(Mparticles)) {
-      auto& mp_old = dynamic_cast<Mparticles&>(mp_base);
-      auto mp_new = Mparticles{new_grid};
-
-      communicate_particles(&ctx, mp_old, mp_new, n_prts_by_patch_new);
-
-      mp_old = std::move(mp_new);
-    } else {
-      auto mp_old = Mparticles{mp_base.grid()};
-      MparticlesBase::convert(mp_base, mp_old);
-      mp_base.reset(new_grid); // frees memory here already
-
-      auto mp_new = Mparticles{new_grid};
-      communicate_particles(&ctx, mp_old, mp_new, n_prts_by_patch_new);
-      mp_old.reset(new_grid); // free memory
-
-      MparticlesBase::convert(mp_new, mp_base);
-    }
-  }
-
   void balance_state_field(communicate_ctx& ctx, const Grid_t& new_grid,
                            MfieldsStateBase& mf_base)
   {
@@ -984,7 +959,29 @@ private:
     if (mp) {
       mpi_printf(old_grid->comm(), "***** Balance: balancing particles\n");
       prof_start(pr_bal_prts);
-      balance_particles(ctx, *new_grid, *mp);
+
+      auto& mp_base = *mp;
+      auto n_prts_by_patch_new = ctx.new_n_prts(mp_base.sizeByPatch());
+
+      if (typeid(mp_base) == typeid(Mparticles)) {
+        auto& mp_old = dynamic_cast<Mparticles&>(mp_base);
+        auto mp_new = Mparticles{*new_grid};
+
+        communicate_particles(&ctx, mp_old, mp_new, n_prts_by_patch_new);
+
+        mp_old = std::move(mp_new);
+      } else {
+        auto mp_old = Mparticles{mp_base.grid()};
+        MparticlesBase::convert(mp_base, mp_old);
+        mp_base.reset(*new_grid); // frees memory here already
+
+        auto mp_new = Mparticles{*new_grid};
+        communicate_particles(&ctx, mp_old, mp_new, n_prts_by_patch_new);
+        mp_old.reset(*new_grid); // free memory
+
+        MparticlesBase::convert(mp_new, mp_base);
+      }
+
       prof_stop(pr_bal_prts);
     } else {
       n_prts_by_patch_new = ctx.new_n_prts(n_prts_by_patch_old);
