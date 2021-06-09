@@ -153,8 +153,6 @@ struct CudaBnd
       d_local_recv = local_recv;
       mem_bnd += allocated_bytes(d_local_recv);
 
-      d_send_buf.resize(send_buf.size());
-      mem_bnd += allocated_bytes(d_send_buf);
       d_recv_buf.resize(recv_buf.size());
       mem_bnd += allocated_bytes(d_recv_buf);
     }
@@ -169,7 +167,6 @@ struct CudaBnd
       mem_bnd -= allocated_bytes(d_local_send);
       mem_bnd -= allocated_bytes(d_local_recv);
 
-      mem_bnd -= allocated_bytes(d_send_buf);
       mem_bnd -= allocated_bytes(d_recv_buf);
     }
 
@@ -180,7 +177,6 @@ struct CudaBnd
 
     psc::device_vector<uint> d_recv, d_send;
     psc::device_vector<uint> d_local_recv, d_local_send;
-    psc::device_vector<real_t> d_send_buf;
     psc::device_vector<real_t> d_recv_buf;
 
     mrc_ddc_pattern2* patt;
@@ -297,15 +293,17 @@ struct CudaBnd
     postReceives(maps);
     // prof_stop(pr_ddc1);
 
-    // prof_start(pr_ddc2);
-    thrust::gather(maps.d_send.begin(), maps.d_send.end(), d_flds,
-                   maps.d_send_buf.begin());
-    // prof_stop(pr_ddc2);
+    {
+      psc::device_vector<real_t> d_send_buf(maps.send_buf.size());
+      // prof_start(pr_ddc2);
+      thrust::gather(maps.d_send.begin(), maps.d_send.end(), d_flds,
+                     d_send_buf.begin());
+      // prof_stop(pr_ddc2);
 
-    // prof_start(pr_ddc3);
-    thrust::copy(maps.d_send_buf.begin(), maps.d_send_buf.end(),
-                 maps.send_buf.begin());
-    // prof_stop(pr_ddc3);
+      // prof_start(pr_ddc3);
+      thrust::copy(d_send_buf.begin(), d_send_buf.end(), maps.send_buf.begin());
+      // prof_stop(pr_ddc3);
+    }
 
     // prof_start(pr_ddc4);
     postSends(maps);
