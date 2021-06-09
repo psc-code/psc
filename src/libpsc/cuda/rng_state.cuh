@@ -101,11 +101,9 @@ private:
 // ----------------------------------------------------------------------
 // k_curand_setup
 
-#define THREADS_PER_BLOCK 256
-
 __global__ static void k_curand_setup(RngStateCuda::Device rng_state, int size)
 {
-  int id = threadIdx.x + blockIdx.x * THREADS_PER_BLOCK;
+  int id = threadIdx.x + blockIdx.x * blockDim.x;
 
   if (id < size) {
     curand_init(0, id, 0, &rng_state[id].curand_state);
@@ -114,11 +112,11 @@ __global__ static void k_curand_setup(RngStateCuda::Device rng_state, int size)
 
 inline void RngStateCuda::resize(int size)
 {
+  const int threads_per_block = 256;
+
   rngs_.resize(size);
 
-  dim3 dim_grid = (size + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
-  k_curand_setup<<<dim_grid, THREADS_PER_BLOCK>>>(*this, size);
+  dim3 dim_grid = (size + threads_per_block - 1) / threads_per_block;
+  k_curand_setup<<<dim_grid, threads_per_block>>>(*this, size);
   cuda_sync_if_enabled();
 };
-
-#undef THREADS_PER_BLOCK
