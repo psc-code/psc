@@ -41,10 +41,10 @@ static inline float2 bm_normal2(void)
 // d_particle_kick
 
 __device__ void d_particle_kick(DParticleCuda& prt, float H, float heating_dt,
-                                curandState* state)
+                                RngStateCuda::Rng& rng)
 {
-  float2 r01 = curand_normal2(state);
-  float r2 = curand_normal(state);
+  float2 r01 = rng.normal2();
+  float r2 = rng.normal();
 
   float Dp = sqrtf(H * heating_dt);
 
@@ -68,7 +68,7 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
   int bid = blockIdx.x;
   int id = threadIdx.x + bid * blockDim.x;
 
-  curandState local_state = rng_state[id].curand_state;
+  auto local_rng = rng_state[id];
 
   for (; bid < n_blocks; bid += gridDim.x) {
     current_block.init(dmprts, bid);
@@ -93,13 +93,13 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
       };
       float H = foil(xx, prt.kind);
       if (H > 0.f) {
-        d_particle_kick(prt, H, heating_dt, &local_state);
+        d_particle_kick(prt, H, heating_dt, local_rng);
         dmprts.storage.store_momentum(prt, n);
       }
     }
   }
 
-  rng_state[id].curand_state = local_state;
+  rng_state[id] = local_rng;
 }
 
 // ======================================================================

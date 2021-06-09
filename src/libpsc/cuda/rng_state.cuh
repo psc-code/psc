@@ -59,6 +59,8 @@ public:
     // returns random number in ]0:1]
 
     __device__ float uniform() { return curand_uniform(&curand_state); }
+    __device__ float normal() { return curand_normal(&curand_state); }
+    __device__ float2 normal2() { return curand_normal2(&curand_state); }
 
     curandState curand_state;
   };
