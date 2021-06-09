@@ -25,6 +25,8 @@ struct BndCuda3 : BndBase
   void fill_ghosts(MfieldsCuda& mflds, int mb, int me);
   void fill_ghosts(MfieldsStateCuda& mflds, int mb, int me);
 
+  static void clear();
+
 private:
   static CudaBnd* cbnd_;
   static int balance_generation_cnt_;

@@ -481,6 +481,12 @@ struct CudaBnd
     }
   }
 
+  void clear()
+  {
+    maps_add_.clear();
+    maps_fill_.clear();
+  }
+
 private:
   mrc_ddc* ddc_;
   std::unordered_map<int, Maps> maps_add_;

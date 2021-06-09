@@ -10,6 +10,8 @@
 
 #ifdef USE_CUDA
 #include "psc_fields_cuda.h"
+#include "mparticles_cuda.hxx"
+#include "bnd_cuda_3_impl.hxx"
 #endif
 
 #include <mrc_profile.h>
@@ -928,7 +930,11 @@ private:
       p_mp_host = new Mparticles{mp_base.grid()};
       auto& mp_host = *p_mp_host;
       MparticlesBase::convert(mp_base, mp_host);
+#ifdef USE_CUDA
+      mp_base.~MparticlesBase();
+#else
       mp_base.reset(*new_grid); // frees memory here already
+#endif
     }
 
 #ifdef USE_CUDA
@@ -965,6 +971,9 @@ private:
       MfieldsBase::convert(mf_cuda, mf_old, 0, mf_cuda.n_comps());
       mf_cuda.~MfieldsCuda();
     }
+    MEM_STATS();
+    BndCuda3<MfieldsCuda>::clear();
+    BndCuda3<MfieldsStateCuda>::clear();
 #endif
 
     // particles
@@ -1040,12 +1049,16 @@ private:
 
     // mv particles back to gpu
     if (mp && typeid(*mp) != typeid(Mparticles)) {
+#ifdef USE_CUDA
+      new (mp) MparticlesCuda<BS444>{*new_grid};
       auto& mp_base = *mp;
+
       mpi_printf(old_grid->comm(), "***** Balance: particles to device\n");
       assert(p_mp_host);
       auto& mp_host = *p_mp_host;
       MparticlesBase::convert(mp_host, mp_base);
       delete p_mp_host;
+#endif
     }
 
     // update psc etc

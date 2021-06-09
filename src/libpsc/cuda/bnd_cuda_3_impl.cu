@@ -74,6 +74,12 @@ void BndCuda3<MF>::add_ghosts(MfieldsStateCuda& mflds, int mb, int me)
 }
 
 template <typename MF>
+void BndCuda3<MF>::clear()
+{
+  cbnd_->clear();
+}
+
+template <typename MF>
 int BndCuda3<MF>::balance_generation_cnt_;
 template <typename MF>
 CudaBnd* BndCuda3<MF>::cbnd_;
