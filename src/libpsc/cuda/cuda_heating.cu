@@ -38,19 +38,6 @@ static inline float2 bm_normal2(void)
 }
 
 // ----------------------------------------------------------------------
-// k_curand_setup
-
-__global__ static void k_curand_setup(RngStateCuda::Device rng_state)
-{
-  int bid = (blockIdx.z * gridDim.y + blockIdx.y) * gridDim.x + blockIdx.x;
-  int id = threadIdx.x + bid * THREADS_PER_BLOCK;
-
-  if (id < rng_state.size()) {
-    curand_init(1234, id, 0, &rng_state[id].curand_state);
-  }
-}
-
-// ----------------------------------------------------------------------
 // d_particle_kick
 
 __device__ void d_particle_kick(DParticleCuda& prt, float H, float heating_dt,
@@ -157,14 +144,6 @@ struct cuda_heating_foil
       mem_heating -= allocated_bytes(rng_state_);
       rng_state_.resize(dimGrid.x * dimGrid.y * dimGrid.z * THREADS_PER_BLOCK);
       mem_heating += allocated_bytes(rng_state_);
-      static int pr;
-      if (!pr) {
-        pr = prof_register("heating_curand", 1., 0, 0);
-      }
-      prof_start(pr);
-      k_curand_setup<<<dimGrid, THREADS_PER_BLOCK>>>(rng_state_);
-      cuda_sync_if_enabled();
-      prof_stop(pr);
 
       prof_barrier("heating first");
       first_time_ = false;
@@ -189,7 +168,6 @@ struct cuda_heating_foil
 
   psc::device_vector<Float3> d_xb_by_patch_;
   RngStateCuda rng_state_;
-  // psc::device_vector<curandState> d_curand_states_;
 };
 
 // ----------------------------------------------------------------------
