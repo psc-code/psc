@@ -125,6 +125,10 @@ struct CudaBnd
     prof_stop(pr);
   }
 
+  CudaBnd(const CudaBnd& bnd) = delete;
+
+  CudaBnd& operator=(const CudaBnd& bnd) = delete;
+
   // ----------------------------------------------------------------------
   // dtor
 
