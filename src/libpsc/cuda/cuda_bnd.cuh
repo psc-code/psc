@@ -141,7 +141,6 @@ struct CudaBnd
     {
       setup_remote_maps(send, recv, ddc, patt2, mb, me, mflds);
       setup_local_maps(local_send, local_recv, ddc, patt2, mb, me, mflds);
-      local_buf.resize(local_send.size());
       send_buf.resize(send.size());
       recv_buf.resize(recv.size());
 
@@ -154,8 +153,6 @@ struct CudaBnd
       d_local_recv = local_recv;
       mem_bnd += allocated_bytes(d_local_recv);
 
-      d_local_buf.resize(local_buf.size());
-      mem_bnd += allocated_bytes(d_local_buf);
       d_send_buf.resize(send_buf.size());
       mem_bnd += allocated_bytes(d_send_buf);
       d_recv_buf.resize(recv_buf.size());
@@ -172,20 +169,17 @@ struct CudaBnd
       mem_bnd -= allocated_bytes(d_local_send);
       mem_bnd -= allocated_bytes(d_local_recv);
 
-      mem_bnd -= allocated_bytes(d_local_buf);
       mem_bnd -= allocated_bytes(d_send_buf);
       mem_bnd -= allocated_bytes(d_recv_buf);
     }
 
     thrust::host_vector<uint> send, recv;
     thrust::host_vector<uint> local_send, local_recv;
-    thrust::host_vector<real_t> local_buf;
     thrust::host_vector<real_t> send_buf;
     thrust::host_vector<real_t> recv_buf;
 
     psc::device_vector<uint> d_recv, d_send;
     psc::device_vector<uint> d_local_recv, d_local_send;
-    psc::device_vector<real_t> d_local_buf;
     psc::device_vector<real_t> d_send_buf;
     psc::device_vector<real_t> d_recv_buf;
 
@@ -318,14 +312,17 @@ struct CudaBnd
     // prof_stop(pr_ddc4);
 
     // local part
-    // prof_start(pr_ddc5);
-    thrust::gather(maps.d_local_send.begin(), maps.d_local_send.end(), d_flds,
-                   maps.d_local_buf.begin());
-    // prof_stop(pr_ddc5);
+    {
+      psc::device_vector<real_t> d_local_buf(maps.d_local_send.size());
+      // prof_start(pr_ddc5);
+      thrust::gather(maps.d_local_send.begin(), maps.d_local_send.end(), d_flds,
+                     d_local_buf.begin());
+      // prof_stop(pr_ddc5);
 
-    // prof_start(pr_ddc6);
-    scatter(maps.d_local_recv, maps.d_local_buf, d_flds);
-    // prof_stop(pr_ddc6);
+      // prof_start(pr_ddc6);
+      scatter(maps.d_local_recv, d_local_buf, d_flds);
+      // prof_stop(pr_ddc6);
+    }
 
     // prof_start(pr_ddc7);
     MPI_Waitall(maps.patt->recv_cnt, maps.patt->recv_req, MPI_STATUSES_IGNORE);
