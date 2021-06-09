@@ -152,9 +152,6 @@ struct CudaBnd
       mem_bnd += allocated_bytes(d_local_send);
       d_local_recv = local_recv;
       mem_bnd += allocated_bytes(d_local_recv);
-
-      d_recv_buf.resize(recv_buf.size());
-      mem_bnd += allocated_bytes(d_recv_buf);
     }
 
     Maps(const Maps&) = delete;
@@ -166,8 +163,6 @@ struct CudaBnd
       mem_bnd -= allocated_bytes(d_recv);
       mem_bnd -= allocated_bytes(d_local_send);
       mem_bnd -= allocated_bytes(d_local_recv);
-
-      mem_bnd -= allocated_bytes(d_recv_buf);
     }
 
     thrust::host_vector<uint> send, recv;
@@ -177,7 +172,6 @@ struct CudaBnd
 
     psc::device_vector<uint> d_recv, d_send;
     psc::device_vector<uint> d_local_recv, d_local_send;
-    psc::device_vector<real_t> d_recv_buf;
 
     mrc_ddc_pattern2* patt;
     int mb, me;
@@ -322,18 +316,22 @@ struct CudaBnd
       // prof_stop(pr_ddc6);
     }
 
-    // prof_start(pr_ddc7);
-    MPI_Waitall(maps.patt->recv_cnt, maps.patt->recv_req, MPI_STATUSES_IGNORE);
-    // prof_stop(pr_ddc7);
+    {
+      psc::device_vector<real_t> d_recv_buf(maps.recv_buf.size());
+      // prof_start(pr_ddc7);
+      MPI_Waitall(maps.patt->recv_cnt, maps.patt->recv_req,
+                  MPI_STATUSES_IGNORE);
+      // prof_stop(pr_ddc7);
 
-    // prof_start(pr_ddc8);
-    thrust::copy(maps.recv_buf.begin(), maps.recv_buf.end(),
-                 maps.d_recv_buf.begin());
-    // prof_stop(pr_ddc8);
+      // prof_start(pr_ddc8);
+      thrust::copy(maps.recv_buf.begin(), maps.recv_buf.end(),
+                   d_recv_buf.begin());
+      // prof_stop(pr_ddc8);
 
-    // prof_start(pr_ddc9);
-    scatter(maps.d_recv, maps.d_recv_buf, d_flds);
-    // prof_stop(pr_ddc9);
+      // prof_start(pr_ddc9);
+      scatter(maps.d_recv, d_recv_buf, d_flds);
+      // prof_stop(pr_ddc9);
+    }
 
     // prof_start(pr_ddc10);
     MPI_Waitall(maps.patt->send_cnt, maps.patt->send_req, MPI_STATUSES_IGNORE);
