@@ -40,7 +40,6 @@ using OutputParticles = PscConfig::OutputParticles;
 
 // ======================================================================
 // Parsed
-// TODO: where should I put other files?
 
 class Parsed
 {
@@ -66,8 +65,6 @@ private:
   }
 
 public:
-  // TODO I'd like to make these static, but then I can't access them in lambdas
-  // >:(
   const int COL_RHO = 0, COL_NE = 1, COL_V_PHI = 2, COL_TE = 3, COL_E_RHO = 4;
 
   Parsed()
@@ -140,6 +137,18 @@ struct PscBgkParams
 {
   // physical length of region along y and z
   double box_size;
+
+  // strength of transverse magnetic field
+  double Hx;
+
+  // ion charge
+  double q_i;
+
+  // ion number density
+  double n_i;
+
+  // number of grid cells 
+  int n_grid;
 };
 
 // ======================================================================
@@ -188,6 +197,10 @@ void setupParameters()
 
   // -- Set some parameters specific to this case
   g.box_size = .03;
+  g.Hx = 1;
+  g.n_i = 1;
+  g.q_i = 1.0000111539638505; // from psc-scrap/check_case1.ipynb
+  g.n_grid = 256;
 }
 
 // ======================================================================
@@ -200,12 +213,11 @@ void setupParameters()
 
 Grid_t* setupGrid()
 {
-  int n_grid = 256;
   auto domain =
-    Grid_t::Domain{{1, n_grid, n_grid},            // # grid points
+    Grid_t::Domain{{1, g.n_grid, g.n_grid},            // # grid points
                    {1, g.box_size, g.box_size},          // physical lengths
                    {0., -.5 * g.box_size, -.5 * g.box_size}, // *offset* for origin
-                   {1, n_grid / 16, n_grid / 16}}; // # patches
+                   {1, g.n_grid / 16, g.n_grid / 16}}; // # patches
 
   auto bc =
     psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
@@ -217,8 +229,7 @@ Grid_t* setupGrid()
   kinds[KIND_ELECTRON] = {-1., 1., "e"};
   kinds[KIND_ION] = {1., 1e9, "i"}; // really heavy to keep them fixed
 
-  // TODO make this print Debye length
-  // mpi_printf(MPI_COMM_WORLD, "lambda_D = %g\n", sqrt(g.TTe));
+  mpi_printf(MPI_COMM_WORLD, "lambda_D = %g\n", sqrt(parsed.get_interpolated(parsed.COL_TE,.022)));
 
   // --- generic setup
   auto norm_params = Grid_t::NormalizationParams::dimensionless();
@@ -282,8 +293,6 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
           break;
         default: assert(false);
       }
-
-      // TODO are the above x-components correct?
     });
 }
 
@@ -297,7 +306,7 @@ void initializeFields(MfieldsState& mflds)
     switch (m) {
       case EY:
       case EZ: break;
-      case HX: return 1.;
+      case HX: return g.Hx;
       default: return 0.;
     }
 
@@ -319,6 +328,7 @@ void initializeFields(MfieldsState& mflds)
     }
 
     assert(false);
+    return 0.0;
   });
 }
 
@@ -363,7 +373,7 @@ static void run()
 
   // -- Checks
   ChecksParams checks_params{};
-  checks_params.gauss_every_step = 1;
+  checks_params.gauss_every_step = 100;
   // checks_params.gauss_dump_always = true;
   checks_params.gauss_threshold = 1e-2;
 
