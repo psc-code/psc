@@ -7,11 +7,10 @@
 #include "heating_spot_foil.hxx"
 #include "heating_cuda_impl.hxx"
 #include "balance.hxx"
+#include "rng_state.cuh"
 
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
-
-#include <curand_kernel.h>
 
 #include <cstdio>
 
@@ -41,12 +40,14 @@ static inline float2 bm_normal2(void)
 // ----------------------------------------------------------------------
 // k_curand_setup
 
-__global__ static void k_curand_setup(curandState* d_curand_states)
+__global__ static void k_curand_setup(RngStateCuda::Device rng_state)
 {
   int bid = (blockIdx.z * gridDim.y + blockIdx.y) * gridDim.x + blockIdx.x;
   int id = threadIdx.x + bid * THREADS_PER_BLOCK;
 
-  curand_init(1234, id, 0, &d_curand_states[id]);
+  if (id < rng_state.size()) {
+    curand_init(1234, id, 0, &rng_state[id].curand_state);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -71,7 +72,7 @@ __device__ void d_particle_kick(DParticleCuda& prt, float H, float heating_dt,
 template <typename BS, typename HS>
 __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
   k_heating_run_foil(HS foil, DMparticlesCuda<BS> dmprts, float heating_dt,
-                     Float3* d_xb_by_patch, curandState* d_curand_states,
+                     Float3* d_xb_by_patch, RngStateCuda::Device rng_state,
                      int n_blocks)
 {
   BlockSimple2<BS, typename HS::dim> current_block;
@@ -80,7 +81,7 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
   int bid = blockIdx.x;
   int id = threadIdx.x + bid * blockDim.x;
 
-  curandState local_state = d_curand_states[id];
+  curandState local_state = rng_state[id].curand_state;
 
   for (; bid < n_blocks; bid += gridDim.x) {
     current_block.init(dmprts, bid);
@@ -111,7 +112,7 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
     }
   }
 
-  d_curand_states[id] = local_state;
+  rng_state[id].curand_state = local_state;
 }
 
 // ======================================================================
@@ -129,7 +130,7 @@ struct cuda_heating_foil
   cuda_heating_foil(const cuda_heating_foil&) = delete;
   cuda_heating_foil& operator=(const cuda_heating_foil&) = delete;
 
-  ~cuda_heating_foil() { mem_heating -= allocated_bytes(d_curand_states_); }
+  ~cuda_heating_foil() { mem_heating -= allocated_bytes(rng_state_); }
 
   void reset() { first_time_ = true; }
 
@@ -153,17 +154,15 @@ struct cuda_heating_foil
       d_xb_by_patch_ = cmprts->xb_by_patch;
       mem_heating += allocated_bytes(d_xb_by_patch_);
 
-      mem_heating -= allocated_bytes(d_curand_states_);
-      d_curand_states_.resize(dimGrid.x * dimGrid.y * dimGrid.z *
-                              THREADS_PER_BLOCK);
-      mem_heating += allocated_bytes(d_curand_states_);
+      mem_heating -= allocated_bytes(rng_state_);
+      rng_state_.resize(dimGrid.x * dimGrid.y * dimGrid.z * THREADS_PER_BLOCK);
+      mem_heating += allocated_bytes(rng_state_);
       static int pr;
       if (!pr) {
         pr = prof_register("heating_curand", 1., 0, 0);
       }
       prof_start(pr);
-      k_curand_setup<<<dimGrid, THREADS_PER_BLOCK>>>(
-        d_curand_states_.data().get());
+      k_curand_setup<<<dimGrid, THREADS_PER_BLOCK>>>(rng_state_);
       cuda_sync_if_enabled();
       prof_stop(pr);
 
@@ -179,7 +178,7 @@ struct cuda_heating_foil
                    cmprts->n_patches();
     k_heating_run_foil<BS><<<dimGrid, THREADS_PER_BLOCK>>>(
       heating_spot_, *cmprts, heating_dt_, d_xb_by_patch_.data().get(),
-      d_curand_states_.data().get(), n_blocks);
+      rng_state_, n_blocks);
     cuda_sync_if_enabled();
   }
 
@@ -189,7 +188,8 @@ struct cuda_heating_foil
   HS heating_spot_;
 
   psc::device_vector<Float3> d_xb_by_patch_;
-  psc::device_vector<curandState> d_curand_states_;
+  RngStateCuda rng_state_;
+  // psc::device_vector<curandState> d_curand_states_;
 };
 
 // ----------------------------------------------------------------------
