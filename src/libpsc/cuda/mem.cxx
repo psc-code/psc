@@ -33,7 +33,7 @@ void mem_stats(std::string file, int line, std::ostream& of)
 
   std::size_t total = mem_fields + mem_particles + mem_collisions +
                       mem_randomize_sort + mem_sort_by_block + mem_bnd +
-                      mem_heating + mem_bndp;
+                      mem_heating + mem_bndp + mem_rnd;
 
   std::size_t allocated = mem_cuda_allocated();
 
@@ -47,6 +47,7 @@ void mem_stats(std::string file, int line, std::ostream& of)
   of << "===== bnd        " << mem_bnd << " bytes\n";
   of << "===== bndp       " << mem_bndp << " bytes\n";
   of << "===== heating    " << mem_heating << " bytes\n";
+  of << "===== rnd        " << mem_rnd << " bytes\n";
   of << "===== alloced " << allocated << " total " << total << " unaccounted "
      << std::ptrdiff_t(allocated - total) << "\n";
 }
@@ -55,7 +56,7 @@ void mem_stats_csv_header(std::ostream& of)
 {
   of << "step,n_patches,n_prts,fields,nfields,particles,collisions,"
         "randomize_sort,"
-        "sort_block,bnd,bndp,heating,allocated,total,unaccounted"
+        "sort_block,bnd,bndp,heating,rnd,allocated,total,unaccounted"
      << "\n";
 }
 
@@ -65,7 +66,7 @@ void mem_stats_csv(std::ostream& of, int timestep, int n_patches, int n_prts)
 
   std::size_t total = mem_fields + mem_particles + mem_collisions +
                       mem_randomize_sort + mem_sort_by_block + mem_bnd +
-                      mem_heating + mem_bndp;
+                      mem_heating + mem_bndp + mem_rnd;
 
   std::size_t allocated = mem_cuda_allocated();
 
@@ -73,7 +74,7 @@ void mem_stats_csv(std::ostream& of, int timestep, int n_patches, int n_prts)
      << "," << MfieldsBase::instances.size() << "," << mem_particles << ","
      << mem_collisions << "," << mem_randomize_sort << "," << mem_sort_by_block
      << "," << mem_bnd << "," << mem_bndp << "," << mem_heating << ","
-     << allocated << "," << total << "," << std::ptrdiff_t(allocated - total)
-     << ","
+     << mem_rnd << "," << allocated << "," << total << ","
+     << std::ptrdiff_t(allocated - total) << ","
      << "\n";
 }

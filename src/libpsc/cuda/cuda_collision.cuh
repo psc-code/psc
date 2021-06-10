@@ -36,13 +36,19 @@ struct CudaCollision
   using DMparticles = DMparticlesCuda<typename cuda_mparticles::BS>;
 
   CudaCollision(int interval, double nu, int nicell, double dt)
-    : interval_{interval}, nu_{nu}, nicell_(nicell), dt_(dt)
+    : interval_{interval},
+      nu_{nu},
+      nicell_(nicell),
+      dt_(dt),
+      rng_state_{&get_rng_state()}
   {}
 
-  ~CudaCollision() { mem_collisions -= allocated_bytes(rng_state_); }
+  CudaCollision(const CudaCollision&) = delete;
+  ~CudaCollision() {}
 
   int interval() const { return interval_; }
 
+#if 1
   void operator()(cuda_mparticles& cmprts)
   {
     static int pr, pr_sort;
@@ -62,17 +68,19 @@ struct CudaCollision
     sort_(cmprts, d_off, d_id);
     prof_stop(pr_sort);
 
-    const int N_BLOCKS = 512;
+    // same as BlockSimple2::MAX_N_BLOCKS, though not required, but maybe this
+    // could be unified, anyway
+    const int N_BLOCKS = 1024;
 
     int blocks = cmprts.n_cells();
     if (blocks > N_BLOCKS)
       blocks = N_BLOCKS;
     dim3 dimGrid(blocks);
 
-    if (blocks * THREADS_PER_BLOCK > rng_state_.size()) {
-      mem_collisions -= allocated_bytes(rng_state_);
-      rng_state_.resize(N_BLOCKS * THREADS_PER_BLOCK);
-      mem_collisions += allocated_bytes(rng_state_);
+    if (blocks * THREADS_PER_BLOCK > rng_state_->size()) {
+      mprintf("rng coll %d %d\n", blocks, THREADS_PER_BLOCK);
+
+      rng_state_->resize(N_BLOCKS * THREADS_PER_BLOCK);
     }
 
     int n_cells_per_patch =
@@ -85,7 +93,7 @@ struct CudaCollision
 
     prof_start(pr);
     k_collide<cuda_mparticles, RngState><<<dimGrid, THREADS_PER_BLOCK>>>(
-      cmprts, d_off.data().get(), d_id.data().get(), nudt0, rng_state_,
+      cmprts, d_off.data().get(), d_id.data().get(), nudt0, *rng_state_,
       cmprts.n_cells(), n_cells_per_patch);
     cuda_sync_if_enabled();
     prof_stop(pr);
@@ -129,12 +137,13 @@ struct CudaCollision
 
     rng_state[id] = rng;
   }
+#endif
 
 private:
   int interval_;
   double nu_;
   int nicell_;
   double dt_;
-  RngState rng_state_;
+  RngState* rng_state_;
   cuda_mparticles_randomize_sort sort_;
 };

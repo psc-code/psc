@@ -87,7 +87,10 @@ public:
   };
 
   RngStateCuda() = default;
+  RngStateCuda(const RngStateCuda&) = delete;
   RngStateCuda(int size) { resize(size); }
+
+  ~RngStateCuda() { mem_rnd -= allocated_bytes(rngs_); }
 
   // also reseeds!
   void resize(int size);
@@ -112,11 +115,16 @@ __global__ static void k_curand_setup(RngStateCuda::Device rng_state, int size)
 
 inline void RngStateCuda::resize(int size)
 {
-  const int threads_per_block = 256;
+  if (size > rngs_.size()) {
+    const int threads_per_block = 256;
 
-  rngs_.resize(size);
+    std::cout << "RngState resize " << size << "\n";
+    mem_rnd -= allocated_bytes(rngs_);
+    rngs_.resize(size);
+    mem_rnd += allocated_bytes(rngs_);
 
-  dim3 dim_grid = (size + threads_per_block - 1) / threads_per_block;
-  k_curand_setup<<<dim_grid, threads_per_block>>>(*this, size);
-  cuda_sync_if_enabled();
+    dim3 dim_grid = (size + threads_per_block - 1) / threads_per_block;
+    k_curand_setup<<<dim_grid, threads_per_block>>>(*this, size);
+    cuda_sync_if_enabled();
+  }
 };

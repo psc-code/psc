@@ -110,14 +110,17 @@ struct cuda_heating_foil
 {
   cuda_heating_foil(const Grid_t& grid, const HS& heating_spot,
                     double heating_dt)
-    : heating_dt_(heating_dt), heating_spot_{heating_spot}, first_time_{true}
+    : heating_dt_(heating_dt),
+      heating_spot_{heating_spot},
+      first_time_{true},
+      rng_state_{get_rng_state()}
   {}
 
   // no copy constructor / assign, to catch performance issues
   cuda_heating_foil(const cuda_heating_foil&) = delete;
   cuda_heating_foil& operator=(const cuda_heating_foil&) = delete;
 
-  ~cuda_heating_foil() { mem_heating -= allocated_bytes(rng_state_); }
+  ~cuda_heating_foil() { mem_heating -= allocated_bytes(d_xb_by_patch_); }
 
   void reset() { first_time_ = true; }
 
@@ -141,9 +144,7 @@ struct cuda_heating_foil
       d_xb_by_patch_ = cmprts->xb_by_patch;
       mem_heating += allocated_bytes(d_xb_by_patch_);
 
-      mem_heating -= allocated_bytes(rng_state_);
       rng_state_.resize(dimGrid.x * dimGrid.y * dimGrid.z * THREADS_PER_BLOCK);
-      mem_heating += allocated_bytes(rng_state_);
 
       prof_barrier("heating first");
       first_time_ = false;
@@ -167,7 +168,7 @@ struct cuda_heating_foil
   HS heating_spot_;
 
   psc::device_vector<Float3> d_xb_by_patch_;
-  RngStateCuda rng_state_;
+  RngStateCuda& rng_state_;
 };
 
 // ----------------------------------------------------------------------
