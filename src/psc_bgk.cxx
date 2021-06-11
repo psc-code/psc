@@ -123,8 +123,8 @@ public:
     // otherwise, return linear interpolation
 
     // weights
-    double w1 = rho - data[row][COL_RHO];
-    double w2 = data[row + 1][COL_RHO] - rho;
+    double w1 = data[row + 1][COL_RHO] - rho;
+    double w2 = rho - data[row][COL_RHO];
 
     return (w1 * data[row][col] + w2 * data[row + 1][col]) / (w1 + w2);
   }
@@ -149,6 +149,9 @@ struct PscBgkParams
 
   // number of grid cells 
   int n_grid;
+
+  // whether or not to negate v (if true, we should not see stability)
+  bool reverse_v;
 };
 
 // ======================================================================
@@ -182,7 +185,7 @@ PscParams psc_params;
 void setupParameters()
 {
   // -- set some generic PSC parameters
-  psc_params.nmax = 1000; // 32000;
+  psc_params.nmax = 5000; // 32000;
   psc_params.stats_every = 100;
 
   // -- start from checkpoint:
@@ -199,8 +202,10 @@ void setupParameters()
   g.box_size = .03;
   g.Hx = 1;
   g.n_i = 1;
-  g.q_i = 1.0000111539638505; // from psc-scrap/check_case1.ipynb
-  g.n_grid = 256;
+  g.q_i = 1;
+  // g.q_i = 1.0000111539638505; // from psc-scrap/check_case1.ipynb
+  g.n_grid = 64;
+  g.reverse_v = true;
 }
 
 // ======================================================================
@@ -271,8 +276,9 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
           // velocities/momenta
           if (rho != 0) {
             double v_phi = parsed.get_interpolated(parsed.COL_V_PHI, rho);
-            npt.p[1] = v_phi * (-y) / rho;
-            npt.p[2] = v_phi * z / rho;
+            double sign = g.reverse_v ? -1 : 1;
+            npt.p[1] = sign * v_phi * -z / rho;
+            npt.p[2] = sign * v_phi * y / rho;
           }
           // otherwise, npt.p[i] = 0
 
@@ -393,8 +399,8 @@ static void run()
 
   // -- output fields
   OutputFieldsParams outf_params{};
-  outf_params.fields.pfield_interval = 20;
-  outf_params.moments.pfield_interval = 20;
+  outf_params.fields.pfield_interval = 200;
+  outf_params.moments.pfield_interval = 200;
   OutputFields<MfieldsState, Mparticles, Dim> outf{grid, outf_params};
 
   // -- output particles
