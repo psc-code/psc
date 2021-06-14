@@ -46,7 +46,7 @@ class Parsed
 private:
   static const int n_rows = 4401;
   static const int n_cols = 5;
-  static constexpr auto file_path = "../../input/bgk-input-1.txt";
+  static constexpr auto file_path = "../../input/bgk-input-1-fromphi.txt";
 
   // the data parsed from file_path
   double data[n_rows][n_cols];
@@ -384,7 +384,7 @@ static void run()
 
   // -- Checks
   ChecksParams checks_params{};
-  checks_params.gauss_every_step = 100;
+  checks_params.gauss_every_step = 200;
   // checks_params.gauss_dump_always = true;
   checks_params.gauss_threshold = 1e-4;
 
