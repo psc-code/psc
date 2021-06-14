@@ -200,11 +200,16 @@ void setupParameters()
 
   // -- Set some parameters specific to this case
   g.box_size = .03;
-  g.Hx = 1;
+
+  g.Hx = .1;
+
   g.n_i = 1;
+
   g.q_i = 1;
   // g.q_i = 1.0000111539638505; // from psc-scrap/check_case1.ipynb
-  g.n_grid = 64;
+  
+  g.n_grid = 128;
+
   g.reverse_v = true;
 }
 
@@ -381,7 +386,7 @@ static void run()
   ChecksParams checks_params{};
   checks_params.gauss_every_step = 100;
   // checks_params.gauss_dump_always = true;
-  checks_params.gauss_threshold = 1e-2;
+  checks_params.gauss_threshold = 1e-4;
 
   Checks checks{grid, MPI_COMM_WORLD, checks_params};
 
