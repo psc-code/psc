@@ -3,6 +3,7 @@
 
 #include "cuda_bits.h"
 #include "rng_state.cuh"
+#include "bs.hxx"
 
 #include <thrust/binary_search.h>
 #include <thrust/device_vector.h>
@@ -11,7 +12,7 @@
 
 #include <curand_kernel.h>
 
-extern std::size_t mem_sort;
+extern std::size_t mem_randomize_sort;
 extern std::size_t mem_sort_by_block;
 
 template <typename BS>
@@ -22,30 +23,56 @@ struct DMparticlesCuda;
 
 #define THREADS_PER_BLOCK 256
 
+namespace detail
+{
+template <typename BS>
+struct bs_to_dim;
+
+template <>
+struct bs_to_dim<BS144>
+{
+  using type = dim_yz;
+};
+
+template <>
+struct bs_to_dim<BS444>
+{
+  using type = dim_xyz;
+};
+} // namespace detail
+
+template <typename BS>
+using bs_to_dim_t = typename detail::bs_to_dim<BS>::type;
+
 // ----------------------------------------------------------------------
 // find_cell_indices_ids
 
-template <typename BS>
+template <typename BS, typename Block>
 __global__ static void k_find_cell_indices_ids(DMparticlesCuda<BS> dmprts,
                                                uint* d_cidx, uint* d_id,
-                                               int n_patches,
-                                               int n_blocks_per_patch)
+                                               int n_blocks)
 {
-  int n = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
+  int bid = blockIdx.x;
 
-  for (int p = 0; p < n_patches; p++) {
-    uint off = dmprts.off_[p * n_blocks_per_patch];
-    uint n_prts = dmprts.off_[(p + 1) * n_blocks_per_patch] - off;
-    if (n < n_prts) {
-      auto prt = dmprts.storage[n + off];
-      d_cidx[n + off] = dmprts.validCellIndex(prt, p);
-      d_id[n + off] = n + off;
+  Block current_block;
+  for (; bid < n_blocks; bid += gridDim.x) {
+    current_block.init(dmprts, bid);
+
+    int block_begin = dmprts.off_[current_block.bid];
+    int block_end = dmprts.off_[current_block.bid + 1];
+    for (int n : in_block_loop(block_begin, block_end)) {
+      if (n < block_begin) {
+        continue;
+      }
+      auto prt = dmprts.storage[n];
+      d_cidx[n] = dmprts.validCellIndex(prt, current_block.p);
+      d_id[n] = n;
     }
   }
 }
 
-template <typename BS>
-inline void find_cell_indices_ids(cuda_mparticles<BS>& cmprts,
+template <typename CMPRTS>
+inline void find_cell_indices_ids(CMPRTS& cmprts,
                                   psc::device_vector<uint>& d_cidx,
                                   psc::device_vector<uint>& d_id)
 {
@@ -53,58 +80,48 @@ inline void find_cell_indices_ids(cuda_mparticles<BS>& cmprts,
     return;
   }
 
-  // OPT: if we didn't need max_n_prts, we wouldn't have to get the
-  // sizes / offsets at all, and it seems likely we could do a better
-  // job here in general
-  auto n_prts_by_patch = cmprts.sizeByPatch();
+  using BS = typename CMPRTS::BS;
+  using dim = bs_to_dim_t<BS>;
+  using Block = BlockSimple2<BS, dim>;
+  dim3 dimGrid = Block::dimGrid(cmprts);
 
-  int max_n_prts = 0;
-  for (int p = 0; p < cmprts.n_patches(); p++) {
-    if (n_prts_by_patch[p] > max_n_prts) {
-      max_n_prts = n_prts_by_patch[p];
-    }
-  }
+  int n_blocks =
+    cmprts.b_mx()[0] * cmprts.b_mx()[1] * cmprts.b_mx()[2] * cmprts.n_patches();
 
-  if (max_n_prts == 0) {
-    return;
-  }
-
-  dim3 dimGrid((max_n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
-  dim3 dimBlock(THREADS_PER_BLOCK);
-
-  k_find_cell_indices_ids<BS>
-    <<<dimGrid, dimBlock>>>(cmprts, d_cidx.data().get(), d_id.data().get(),
-                            cmprts.n_patches(), cmprts.n_blocks_per_patch);
-  cuda_sync_if_enabled();
+  ::k_find_cell_indices_ids<BS, Block><<<dimGrid, THREADS_PER_BLOCK>>>(
+    cmprts, d_cidx.data().get(), d_id.data().get(), n_blocks);
 }
 
 // ----------------------------------------------------------------------
 // find_random_cell_indices_ids
 
-template <typename BS>
+template <typename BS, typename Block>
 __global__ static void k_find_random_cell_indices_ids(
-  DMparticlesCuda<BS> dmprts, double* d_random_idx, uint* d_id, int n_patches,
-  int n_blocks_per_patch, RngStateCuda::Device rng_state)
+  DMparticlesCuda<BS> dmprts, double* d_random_idx, uint* d_id,
+  RngStateCuda::Device rng_state, int n_blocks)
 {
-  int n = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
-  if (n > rng_state.size()) {
-    return;
-  }
+  Block current_block;
+  int bid = blockIdx.x;
+  int id = blockIdx.x * blockDim.x + threadIdx.x;
+  auto rng = rng_state[id];
 
-  auto rng = rng_state[n];
+  for (; bid < n_blocks; bid += gridDim.x) {
+    current_block.init(dmprts, bid);
 
-  for (int p = 0; p < n_patches; p++) {
-    uint off = dmprts.off_[p * n_blocks_per_patch];
-    uint n_prts = dmprts.off_[(p + 1) * n_blocks_per_patch] - off;
-    if (n < n_prts) {
-      auto prt = dmprts.storage[n + off];
-      d_random_idx[n + off] =
-        dmprts.validCellIndex(prt, p) + .5 * rng.uniform();
-      d_id[n + off] = n + off;
+    int block_begin = dmprts.off_[current_block.bid];
+    int block_end = dmprts.off_[current_block.bid + 1];
+    for (int n : in_block_loop(block_begin, block_end)) {
+      if (n < block_begin) {
+        continue;
+      }
+
+      auto prt = dmprts.storage[n];
+      d_random_idx[n] =
+        dmprts.validCellIndex(prt, current_block.p) + .5 * rng.uniform();
+      d_id[n] = n;
     }
   }
-
-  rng_state[n] = rng;
+  rng_state[id] = rng;
 }
 
 // ----------------------------------------------------------------------
@@ -174,8 +191,8 @@ struct cuda_mparticles_sort
 {
   cuda_mparticles_sort(uint n_cells) : d_off(n_cells + 1) {}
 
-  template <typename BS>
-  void find_indices_ids(cuda_mparticles<BS>& cmprts)
+  template <typename CMPRTS>
+  void find_indices_ids(CMPRTS& cmprts)
   {
     d_idx.resize(cmprts.n_prts);
     d_id.resize(cmprts.n_prts);
@@ -222,77 +239,61 @@ public:
 
 struct cuda_mparticles_randomize_sort
 {
-  cuda_mparticles_randomize_sort()
-  {
-    mem_sort += d_off.capacity() * sizeof(typename decltype(d_off)::value_type);
-    mem_sort += d_id.capacity() * sizeof(typename decltype(d_id)::value_type);
-    mem_sort += d_random_idx.capacity() *
-                sizeof(typename decltype(d_random_idx)::value_type);
-  }
+  cuda_mparticles_randomize_sort() {}
 
   ~cuda_mparticles_randomize_sort()
   {
-    mem_sort -= d_off.capacity() * sizeof(typename decltype(d_off)::value_type);
-    mem_sort -= d_id.capacity() * sizeof(typename decltype(d_id)::value_type);
-    mem_sort -= d_random_idx.capacity() *
-                sizeof(typename decltype(d_random_idx)::value_type);
+    mem_randomize_sort -= allocated_bytes(rng_state_);
   }
 
-  template <typename BS>
-  void find_indices_ids(cuda_mparticles<BS>& cmprts)
+  template <typename CMPRTS>
+  void operator()(CMPRTS& cmprts, psc::device_vector<uint>& d_off,
+                  psc::device_vector<uint>& d_id)
   {
-    mem_sort -= d_off.capacity() * sizeof(typename decltype(d_off)::value_type);
-    d_off.resize(cmprts.n_cells() + 1);
-    mem_sort += d_off.capacity() * sizeof(typename decltype(d_off)::value_type);
-
-    mem_sort -= d_id.capacity() * sizeof(typename decltype(d_id)::value_type);
-    d_id.resize(cmprts.n_prts);
-    mem_sort += d_id.capacity() * sizeof(typename decltype(d_id)::value_type);
-
-    mem_sort -= d_random_idx.capacity() *
-                sizeof(typename decltype(d_random_idx)::value_type);
-    d_random_idx.resize(cmprts.n_prts);
-    mem_sort += d_random_idx.capacity() *
-                sizeof(typename decltype(d_random_idx)::value_type);
-
     if (cmprts.n_patches() == 0) {
       return;
     }
 
-    // OPT: if we didn't need max_n_prts, we wouldn't have to get the
-    // sizes / offsets at all, and it seems likely we could do a better
-    // job here in general
-    auto n_prts_by_patch = cmprts.sizeByPatch();
+    assert(d_off.size() == cmprts.n_cells() + 1);
+    assert(d_id.size() == cmprts.n_prts);
 
-    int max_n_prts = 0;
-    for (int p = 0; p < cmprts.n_patches(); p++) {
-      if (n_prts_by_patch[p] > max_n_prts) {
-        max_n_prts = n_prts_by_patch[p];
-      }
+    psc::device_vector<double> d_random_idx(cmprts.n_prts);
+
+    find_indices_ids(cmprts, d_random_idx, d_id);
+    sort(d_random_idx, d_id);
+    find_offsets(d_random_idx, d_off);
+  }
+
+  template <typename CMPRTS>
+  void find_indices_ids(CMPRTS& cmprts,
+                        psc::device_vector<double>& d_random_idx,
+                        psc::device_vector<uint>& d_id)
+  {
+    using BS = typename CMPRTS::BS;
+    using dim = bs_to_dim_t<BS>;
+    using Block = BlockSimple2<BS, dim>;
+    dim3 dimGrid = Block::dimGrid(cmprts);
+
+    assert(d_random_idx.size() == cmprts.n_prts);
+    assert(d_id.size() == cmprts.n_prts);
+
+    int n_blocks = cmprts.b_mx()[0] * cmprts.b_mx()[1] * cmprts.b_mx()[2] *
+                   cmprts.n_patches();
+
+    if (dimGrid.x * THREADS_PER_BLOCK > rng_state_.size()) {
+      mem_randomize_sort -= allocated_bytes(rng_state_);
+      rng_state_.resize(dimGrid.x * THREADS_PER_BLOCK);
+      mem_randomize_sort += allocated_bytes(rng_state_);
     }
 
-    if (max_n_prts == 0) {
-      return;
-    }
-
-    if (max_n_prts > rng_state_.size()) {
-      mem_sort -= rng_state_.capacity() *
-                  sizeof(typename decltype(rng_state_)::value_type);
-      rng_state_.resize(2 * max_n_prts);
-      mem_sort += rng_state_.capacity() *
-                  sizeof(typename decltype(rng_state_)::value_type);
-    }
-
-    dim3 dimGrid((max_n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
-    dim3 dimBlock(THREADS_PER_BLOCK);
-
-    k_find_random_cell_indices_ids<BS><<<dimGrid, dimBlock>>>(
-      cmprts, d_random_idx.data().get(), d_id.data().get(), cmprts.n_patches(),
-      cmprts.n_blocks_per_patch, rng_state_);
+    ::k_find_random_cell_indices_ids<BS, Block>
+      <<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, d_random_idx.data().get(),
+                                       d_id.data().get(), rng_state_, n_blocks);
     cuda_sync_if_enabled();
   }
 
-  void sort()
+  void sort(psc::device_vector<double>& d_random_idx,
+            psc::device_vector<uint>& d_id)
   {
 #ifdef PSC_HAVE_RMM
     thrust::sort_by_key(rmm::exec_policy(), d_random_idx.begin(),
@@ -302,7 +303,8 @@ struct cuda_mparticles_randomize_sort
 #endif
   }
 
-  void find_offsets()
+  void find_offsets(psc::device_vector<double>& d_random_idx,
+                    psc::device_vector<uint>& d_off)
   {
     int n_cells = d_off.size() - 1;
     thrust::counting_iterator<uint> search_begin(0);
@@ -311,12 +313,7 @@ struct cuda_mparticles_randomize_sort
     d_off[n_cells] = d_random_idx.size();
   }
 
-public:
-  psc::device_vector<double> d_random_idx; // randomized cell index
-  psc::device_vector<uint> d_id;           // particle id used for reordering
-  psc::device_vector<uint>
-    d_off; // particles per cell
-           // are at indices [offsets[cell] .. offsets[cell+1][
+private:
   RngStateCuda rng_state_;
 };
 
