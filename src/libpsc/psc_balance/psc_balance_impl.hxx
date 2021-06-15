@@ -881,41 +881,6 @@ private:
     delete[] recv_reqs;
   }
 
-  void balance_state_field(communicate_ctx& ctx, const Grid_t& new_grid,
-                           MfieldsStateBase& mf_base)
-  {
-    if (typeid(mf_base) != typeid(MfieldsState)) {
-      // FIXME, for the most part we rely on the underlying MfieldsCuda to be
-      // rebalanced together with all the other Mfields
-      mf_base.reset(new_grid);
-#if 0
-      auto& mf_old = *new MfieldsState{mf_base.grid()};
-      MfieldsStateBase::convert(mf_base, mf_old, 0, mf_old.n_comps());
-      mf_base.reset(new_grid); // free old memory
-
-      auto mf_new = MfieldsState{new_grid};
-      communicate_fields(&ctx, mf_old.mflds(), mf_new.mflds());
-      delete &mf_old; // delete as early as possible
-      
-      MfieldsStateBase::convert(mf_new, mf_base, 0, mf_base.n_comps());
-#endif
-    } else {
-      // for now MfieldsStateFromMfields will have its underlying Mfields
-      // rebalanced, anyway, so all we need ot do is reset the grid.
-      // FIXME, that his however broken if using MfieldsState that isn't
-      // MfieldsStateFromMfields...
-      mf_base.reset(new_grid);
-#if 0
-      auto mf_new = MfieldsState{new_grid};
-      auto &mf_old = dynamic_cast<MfieldsState&>(mf_base);
-
-      communicate_fields(&ctx, mf_old.mflds(), mf_new.mflds());
-
-      mf_old = std::move(mf_new);
-#endif
-    }
-  }
-
   std::vector<uint> balance(Grid_t*& gridp, std::vector<double> loads,
                             MparticlesBase* mp,
                             std::vector<uint> n_prts_by_patch_old = {})
@@ -1033,7 +998,11 @@ private:
     // state field
     mpi_printf(old_grid->comm(), "***** Balance: balancing state field\n");
     for (auto mf : MfieldsStateBase::instances) {
-      balance_state_field(ctx, *new_grid, *mf);
+      // for now MfieldsStateFromMfields will have its underlying Mfields
+      // rebalanced, anyway, so all we need ot do is reset the grid.
+      // FIXME, that his however broken if using MfieldsState that isn't
+      // MfieldsStateFromMfields...
+      mf->reset(*new_grid);
     }
 
     // fields
