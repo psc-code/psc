@@ -11,6 +11,8 @@
 #include <mrc_profile.h>
 #include <string.h>
 
+#include <numeric>
+
 extern double* psc_balance_comp_time_by_patch;
 
 static double capability_default(int p)
@@ -18,14 +20,203 @@ static double capability_default(int p)
   return 1.;
 }
 
-static double _mrc_unused capability_jaguar(int p)
+// ======================================================================
+
+namespace psc
 {
-  if (p % 16 == 0) {
-    return 16.;
+namespace balance
+{
+
+struct input
+{
+  std::vector<double> capability_by_proc;
+  std::vector<double> load_by_patch;
+
+  int n_procs() const { return capability_by_proc.size(); }
+
+  double total_capability() const
+  {
+    return std::accumulate(capability_by_proc.begin(), capability_by_proc.end(),
+                           0.);
+  }
+
+  double total_load() const
+  {
+    return std::accumulate(load_by_patch.begin(), load_by_patch.end(), 0.);
+  }
+
+  double load_target() const { return total_load() / total_capability(); }
+};
+
+#if 0
+inline std::vector<int> best_mapping(const input& input)
+{
+  int n_procs = input.n_procs();
+  std::vector<int> nr_patches_all_new(n_procs);
+
+  auto& capability = input.capability_by_proc;
+  auto& loads_all = input.load_by_patch;
+
+  double load_target = input.load_target();
+  mprintf("psc_balance: loads_sum %g capability_sum %g load_target %g\n",
+          input.total_load(), input.total_capability(), load_target);
+  int p = 0, nr_new_patches = 0;
+  double load = 0.;
+  double next_target = load_target * capability[0];
+  for (int i = 0; i < loads_all.size(); i++) {
+    load += loads_all[i];
+    nr_new_patches++;
+    if (p < n_procs - 1) {
+      // if load limit is reached, or we have only as many patches as
+      // processors left
+      if (load > next_target || n_procs - p >= loads_all.size() - i) {
+        double above_target = load - next_target;
+        double below_target = next_target - (load - loads_all[i]);
+        if (above_target > below_target && nr_new_patches > 1) {
+          nr_patches_all_new[p] = nr_new_patches - 1;
+          nr_new_patches = 1;
+        } else {
+          nr_patches_all_new[p] = nr_new_patches;
+          nr_new_patches = 0;
+        }
+        p++;
+        next_target += load_target * capability[p];
+      }
+    }
+    // last proc takes what's left
+    if (i == loads_all.size() - 1) {
+      nr_patches_all_new[n_procs - 1] = nr_new_patches;
+    }
+  }
+
+  return nr_patches_all_new;
+}
+
+#else
+
+inline void best_mapping_recursive(const input& input,
+                                   std::vector<int>& n_patches_by_proc,
+                                   int proc_begin, int proc_end,
+                                   int patch_begin, int patch_end)
+{
+  // we always must have at least one patch per proc
+  assert(patch_end - patch_begin >= proc_end - proc_begin);
+
+  if (proc_end == proc_begin + 1) {
+    n_patches_by_proc[proc_begin] = patch_end - patch_begin;
   } else {
-    return 1.;
+    int proc_middle = (proc_begin + proc_end) / 2;
+    double load_total = std::accumulate(&input.load_by_patch[patch_begin],
+                                        &input.load_by_patch[patch_end], 0.);
+    double load_target =
+      (load_total * (proc_middle - proc_begin)) / (proc_end - proc_begin);
+    std::cout << "[" << proc_begin << ":" << proc_end << "] total "
+              << load_total << " target " << load_target << "\n";
+    double load = 0.;
+    int patch_middle = patch_begin;
+    for (;;) {
+      double prev_load = load;
+      load += input.load_by_patch[patch_middle];
+      patch_middle++;
+      if (load > load_target) {
+        double above = load - load_target;
+        double below = load_target - prev_load;
+        // std::cout << "above " << above << " below " << below << "\n";
+
+        // if we were closer to the target load one step ago, go with that
+        if (below < above && patch_middle) {
+          patch_middle--;
+          load = prev_load;
+        }
+        break;
+      }
+    }
+    std::cout << "middle " << patch_middle << " load " << load << "\n";
+
+    // make sure there are at least as many patches as procs on either side
+    if (patch_middle - patch_begin < proc_middle - proc_begin) {
+      patch_middle = patch_begin + (proc_middle - proc_begin);
+    }
+    if (patch_end - patch_middle < proc_end - proc_middle) {
+      patch_middle = patch_end - (proc_end - proc_middle);
+    }
+
+    best_mapping_recursive(input, n_patches_by_proc, proc_begin, proc_middle,
+                           patch_begin, patch_middle);
+    best_mapping_recursive(input, n_patches_by_proc, proc_middle, proc_end,
+                           patch_middle, patch_end);
   }
 }
+
+inline std::vector<int> best_mapping(const input& input)
+{
+  int n_procs = input.n_procs();
+  std::vector<int> n_patches_by_proc(n_procs);
+  best_mapping_recursive(input, n_patches_by_proc, 0, n_procs, 0,
+                         input.load_by_patch.size());
+
+  return n_patches_by_proc;
+}
+
+#endif
+inline void print_stats(const input& input,
+                        const std::vector<int>& nr_patches_all_new,
+                        bool verbose)
+{
+  auto& capability = input.capability_by_proc;
+  auto& loads_all = input.load_by_patch;
+
+  int n_procs = input.n_procs();
+  double load_target = input.load_target();
+
+  int pp = 0;
+  double min_diff = 0, max_diff = 0;
+  for (int p = 0; p < n_procs; p++) {
+    double load = 0.;
+    for (int i = 0; i < nr_patches_all_new[p]; i++) {
+      load += loads_all[pp++];
+      if (verbose) {
+        mprintf("  pp %d load %g : %g\n", pp - 1, loads_all[pp - 1], load);
+      }
+    }
+    double diff = load - load_target * capability[p];
+    if (verbose) {
+      mprintf("p %d # = %d load %g / %g : diff %g %%\n", p,
+              nr_patches_all_new[p], load, load_target * capability[p],
+              100. * diff / (load_target * capability[p]));
+    }
+    if (diff < min_diff) {
+      min_diff = diff;
+    }
+    if (diff > max_diff) {
+      max_diff = diff;
+    }
+  }
+  mprintf("psc_balance: achieved target %g (%g %% -- %g %%)\n", load_target,
+          100 * min_diff / load_target, 100 * max_diff / load_target);
+}
+
+inline void write_loads(const input& input,
+                        const std::vector<int>& nr_patches_all_new,
+                        int timestep)
+{
+  char s[20];
+  sprintf(s, "loads2-%06d.asc", timestep);
+  FILE* f = fopen(s, "w");
+
+  int gp = 0;
+  for (int r = 0; r < nr_patches_all_new.size(); r++) {
+    for (int p = 0; p < nr_patches_all_new[r]; p++) {
+      fprintf(f, "%d %g %d\n", gp, input.load_by_patch[gp], r);
+      gp++;
+    }
+  }
+
+  fclose(f);
+}
+
+} // namespace balance
+} // namespace psc
 
 // ======================================================================
 // Communicate
@@ -481,103 +672,33 @@ private:
     MPI_Allgather(&nr_patches_old, 1, MPI_INT, nr_patches_all_old.data(), 1,
                   MPI_INT, comm);
 
-    std::vector<int> nr_patches_all_new(size);
+    int nr_patches_new;
 
     if (rank == 0) { // do the mapping on proc 0
       std::vector<double> capability(size);
       for (int p = 0; p < size; p++) {
         capability[p] = capability_default(p);
       }
-      double loads_sum = 0.;
-      for (int i = 0; i < loads_all.size(); i++) {
-        loads_sum += loads_all[i];
-      }
-      double capability_sum = 0.;
-      for (int p = 0; p < size; p++) {
-        capability_sum += capability[p];
-      }
-      double load_target = loads_sum / capability_sum;
-      mprintf("psc_balance: loads_sum %g capability_sum %g load_target %g\n",
-              loads_sum, capability_sum, load_target);
-      int p = 0, nr_new_patches = 0;
-      double load = 0.;
-      double next_target = load_target * capability[0];
-      for (int i = 0; i < loads_all.size(); i++) {
-        load += loads_all[i];
-        nr_new_patches++;
-        if (p < size - 1) {
-          // if load limit is reached, or we have only as many patches as
-          // processors left
-          if (load > next_target || size - p >= loads_all.size() - i) {
-            double above_target = load - next_target;
-            double below_target = next_target - (load - loads_all[i]);
-            if (above_target > below_target && nr_new_patches > 1) {
-              nr_patches_all_new[p] = nr_new_patches - 1;
-              nr_new_patches = 1;
-            } else {
-              nr_patches_all_new[p] = nr_new_patches;
-              nr_new_patches = 0;
-            }
-            p++;
-            next_target += load_target * capability[p];
-          }
-        }
-        // last proc takes what's left
-        if (i == loads_all.size() - 1) {
-          nr_patches_all_new[size - 1] = nr_new_patches;
-        }
-      }
 
-      int pp = 0;
-      double min_diff = 0, max_diff = 0;
-      for (int p = 0; p < size; p++) {
-        double load = 0.;
-        for (int i = 0; i < nr_patches_all_new[p]; i++) {
-          load += loads_all[pp++];
-          if (print_loads_) {
-            mprintf("  pp %d load %g : %g\n", pp - 1, loads_all[pp - 1], load);
-          }
-        }
-        double diff = load - load_target * capability[p];
-        if (print_loads_) {
-          mprintf("p %d # = %d load %g / %g : diff %g %%\n", p,
-                  nr_patches_all_new[p], load, load_target * capability[p],
-                  100. * diff / (load_target * capability[p]));
-        }
-        if (diff < min_diff) {
-          min_diff = diff;
-        }
-        if (diff > max_diff) {
-          max_diff = diff;
-        }
-      }
-      mprintf("psc_balance: achieved target %g (%g %% -- %g %%)\n", load_target,
-              100 * min_diff / load_target, 100 * max_diff / load_target);
-
+      auto nr_patches_all_new =
+        psc::balance::best_mapping({capability, loads_all});
+      psc::balance::print_stats({capability, loads_all}, nr_patches_all_new,
+                                print_loads_);
       if (write_loads_) {
-        int gp = 0;
-        char s[20];
-        sprintf(s, "loads2-%06d.asc", grid.timestep());
-        FILE* f = fopen(s, "w");
-        for (int r = 0; r < size; r++) {
-          for (int p = 0; p < nr_patches_all_new[r]; p++) {
-            fprintf(f, "%d %g %d\n", gp, loads_all[gp], r);
-            gp++;
-          }
-        }
-        fclose(f);
+        psc::balance::write_loads({capability, loads_all}, nr_patches_all_new,
+                                  grid.timestep());
       }
 
       if (nr_patches_all_new == nr_patches_all_old) {
         std::fill(nr_patches_all_new.begin(), nr_patches_all_new.end(),
                   -1); // unchanged mapping, no communication etc needed
       }
-    }
 
-    // then scatter
-    int nr_patches_new;
-    MPI_Scatter(nr_patches_all_new.data(), 1, MPI_INT, &nr_patches_new, 1,
-                MPI_INT, 0, comm);
+      MPI_Scatter(nr_patches_all_new.data(), 1, MPI_INT, &nr_patches_new, 1,
+                  MPI_INT, 0, comm);
+    } else {
+      MPI_Scatter(nullptr, 1, MPI_INT, &nr_patches_new, 1, MPI_INT, 0, comm);
+    }
     return nr_patches_new;
   }
 
