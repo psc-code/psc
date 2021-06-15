@@ -8,7 +8,7 @@
 #include <kg/SArrayView.h>
 
 #include <mrc_profile.h>
-#include <gtensor/gtensor.h>
+#include <psc/gtensor.h>
 
 #include <type_traits>
 #include <cstdlib>
@@ -494,8 +494,6 @@ const MfieldsStateBase::Convert
   MfieldsStateFromMfields<Mfields<double>>::convert_from_;
 extern template const MfieldsStateBase::Convert
   MfieldsStateFromMfields<Mfields<double>>::convert_from_;
-
-#include <gtensor/gtensor.h>
 
 using namespace gt::placeholders;
 
