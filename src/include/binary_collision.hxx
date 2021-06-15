@@ -5,10 +5,6 @@
 
 #include <cmath>
 
-#ifndef DEVICE
-#define DEVICE
-#endif
-
 // ======================================================================
 // RngC
 
@@ -52,14 +48,15 @@ class BinaryCollision
 public:
   using real_t = typename Particle::real_t;
 
-  DEVICE BinaryCollision(const Mparticles& mprts) : mprts_{mprts} {}
+  __host__ __device__ BinaryCollision(const Mparticles& mprts) : mprts_{mprts}
+  {}
 
   // ----------------------------------------------------------------------
   // operator()
 
   template <typename Rng>
-  DEVICE real_t operator()(Particle& prt1, Particle& prt2, real_t nudt1,
-                           Rng& rng)
+  __host__ __device__ real_t operator()(Particle& prt1, Particle& prt2,
+                                        real_t nudt1, Rng& rng)
   {
     real_t nudt;
 

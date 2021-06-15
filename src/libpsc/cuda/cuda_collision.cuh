@@ -5,8 +5,6 @@
 #include "cuda_mparticles.cuh"
 #include "cuda_mparticles_sort.cuh"
 #include "rng_state.cuh"
-// FIXME, horrible hack...
-#define DEVICE __device__
 #include "binary_collision.hxx"
 
 #include <curand_kernel.h>
