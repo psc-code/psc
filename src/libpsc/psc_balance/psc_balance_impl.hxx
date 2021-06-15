@@ -969,15 +969,23 @@ private:
 #ifdef USE_CUDA
     std::vector<std::reference_wrapper<MfieldsCuda>> mfields_cuda;
     mfields_cuda.reserve(MfieldsBase::instances.size());
+#endif
+    std::vector<std::reference_wrapper<Mfields>> mfields_host;
+    mfields_host.reserve(MfieldsBase::instances.size());
 
     for (auto mf : MfieldsBase::instances) {
+#ifdef USE_CUDA
       if (typeid(*mf) == typeid(MfieldsCuda)) {
         auto& mf_cuda = dynamic_cast<MfieldsCuda&>(*mf);
-        mprintf("MfieldsCuda #components %d\n", mf_cuda.n_comps());
-        mfields_cuda.emplace_back(mf_cuda);
+        mprintf("MfieldsCuda #components %d\n", mf->_n_comps());
+        mfields_cuda.emplace_back(dynamic_cast<MfieldsCuda&>(*mf));
+        continue;
       }
+#endif
+      mfields_host.emplace_back(dynamic_cast<Mfields&>(*mf));
     }
 
+#ifdef USE_CUDA
     // copy fields to host, free on gpu
     std::vector<Mfields> mfields_old;
     mfields_old.reserve(mfields_cuda.size());
@@ -1029,26 +1037,13 @@ private:
     }
 
     // fields
-    for (auto mf : MfieldsBase::instances) {
-      if (typeid(*mf) == typeid(Mfields)) {
-        mpi_printf(old_grid->comm(),
-                   "***** Balance: balancing field, #components %d\n",
-                   mf->_n_comps());
-        auto& mf_old = dynamic_cast<Mfields&>(*mf);
-        auto mf_new = Mfields{*new_grid, mf_old.n_comps(), mf_old.ibn()};
-
-        communicate_fields(&ctx, mf_old, mf_new);
-
-        mf_old = std::move(mf_new);
-#ifdef USE_CUDA
-        if (typeid(*mf) == typeid(MfieldsCuda)) {
-          // skip, handled separately
-        }
-#endif
-      } else {
-        std::cerr << "balance: unexpected type " << typeid(*mf).name() << "\n";
-        std::abort();
-      }
+    for (Mfields& mf : mfields_host) {
+      mpi_printf(old_grid->comm(),
+                 "***** Balance: balancing field, #components %d\n",
+                 mf.n_comps());
+      auto mf_new = Mfields{*new_grid, mf.n_comps(), mf.ibn()};
+      communicate_fields(&ctx, mf, mf_new);
+      mf = std::move(mf_new);
     }
 
 #ifdef USE_CUDA
