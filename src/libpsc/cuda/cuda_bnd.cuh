@@ -125,6 +125,10 @@ struct CudaBnd
     prof_stop(pr);
   }
 
+  CudaBnd(const CudaBnd& bnd) = delete;
+
+  CudaBnd& operator=(const CudaBnd& bnd) = delete;
+
   // ----------------------------------------------------------------------
   // dtor
 
@@ -141,7 +145,6 @@ struct CudaBnd
     {
       setup_remote_maps(send, recv, ddc, patt2, mb, me, mflds);
       setup_local_maps(local_send, local_recv, ddc, patt2, mb, me, mflds);
-      local_buf.resize(local_send.size());
       send_buf.resize(send.size());
       recv_buf.resize(recv.size());
 
@@ -153,13 +156,6 @@ struct CudaBnd
       mem_bnd += allocated_bytes(d_local_send);
       d_local_recv = local_recv;
       mem_bnd += allocated_bytes(d_local_recv);
-
-      d_local_buf.resize(local_buf.size());
-      mem_bnd += allocated_bytes(d_local_buf);
-      d_send_buf.resize(send_buf.size());
-      mem_bnd += allocated_bytes(d_send_buf);
-      d_recv_buf.resize(recv_buf.size());
-      mem_bnd += allocated_bytes(d_recv_buf);
     }
 
     Maps(const Maps&) = delete;
@@ -171,23 +167,15 @@ struct CudaBnd
       mem_bnd -= allocated_bytes(d_recv);
       mem_bnd -= allocated_bytes(d_local_send);
       mem_bnd -= allocated_bytes(d_local_recv);
-
-      mem_bnd -= allocated_bytes(d_local_buf);
-      mem_bnd -= allocated_bytes(d_send_buf);
-      mem_bnd -= allocated_bytes(d_recv_buf);
     }
 
     thrust::host_vector<uint> send, recv;
     thrust::host_vector<uint> local_send, local_recv;
-    thrust::host_vector<real_t> local_buf;
     thrust::host_vector<real_t> send_buf;
     thrust::host_vector<real_t> recv_buf;
 
     psc::device_vector<uint> d_recv, d_send;
     psc::device_vector<uint> d_local_recv, d_local_send;
-    psc::device_vector<real_t> d_local_buf;
-    psc::device_vector<real_t> d_send_buf;
-    psc::device_vector<real_t> d_recv_buf;
 
     mrc_ddc_pattern2* patt;
     int mb, me;
@@ -303,42 +291,51 @@ struct CudaBnd
     postReceives(maps);
     // prof_stop(pr_ddc1);
 
-    // prof_start(pr_ddc2);
-    thrust::gather(maps.d_send.begin(), maps.d_send.end(), d_flds,
-                   maps.d_send_buf.begin());
-    // prof_stop(pr_ddc2);
+    {
+      psc::device_vector<real_t> d_send_buf(maps.send_buf.size());
+      // prof_start(pr_ddc2);
+      thrust::gather(maps.d_send.begin(), maps.d_send.end(), d_flds,
+                     d_send_buf.begin());
+      // prof_stop(pr_ddc2);
 
-    // prof_start(pr_ddc3);
-    thrust::copy(maps.d_send_buf.begin(), maps.d_send_buf.end(),
-                 maps.send_buf.begin());
-    // prof_stop(pr_ddc3);
+      // prof_start(pr_ddc3);
+      thrust::copy(d_send_buf.begin(), d_send_buf.end(), maps.send_buf.begin());
+      // prof_stop(pr_ddc3);
+    }
 
     // prof_start(pr_ddc4);
     postSends(maps);
     // prof_stop(pr_ddc4);
 
     // local part
-    // prof_start(pr_ddc5);
-    thrust::gather(maps.d_local_send.begin(), maps.d_local_send.end(), d_flds,
-                   maps.d_local_buf.begin());
-    // prof_stop(pr_ddc5);
+    {
+      psc::device_vector<real_t> d_local_buf(maps.d_local_send.size());
+      // prof_start(pr_ddc5);
+      thrust::gather(maps.d_local_send.begin(), maps.d_local_send.end(), d_flds,
+                     d_local_buf.begin());
+      // prof_stop(pr_ddc5);
 
-    // prof_start(pr_ddc6);
-    scatter(maps.d_local_recv, maps.d_local_buf, d_flds);
-    // prof_stop(pr_ddc6);
+      // prof_start(pr_ddc6);
+      scatter(maps.d_local_recv, d_local_buf, d_flds);
+      // prof_stop(pr_ddc6);
+    }
 
-    // prof_start(pr_ddc7);
-    MPI_Waitall(maps.patt->recv_cnt, maps.patt->recv_req, MPI_STATUSES_IGNORE);
-    // prof_stop(pr_ddc7);
+    {
+      psc::device_vector<real_t> d_recv_buf(maps.recv_buf.size());
+      // prof_start(pr_ddc7);
+      MPI_Waitall(maps.patt->recv_cnt, maps.patt->recv_req,
+                  MPI_STATUSES_IGNORE);
+      // prof_stop(pr_ddc7);
 
-    // prof_start(pr_ddc8);
-    thrust::copy(maps.recv_buf.begin(), maps.recv_buf.end(),
-                 maps.d_recv_buf.begin());
-    // prof_stop(pr_ddc8);
+      // prof_start(pr_ddc8);
+      thrust::copy(maps.recv_buf.begin(), maps.recv_buf.end(),
+                   d_recv_buf.begin());
+      // prof_stop(pr_ddc8);
 
-    // prof_start(pr_ddc9);
-    scatter(maps.d_recv, maps.d_recv_buf, d_flds);
-    // prof_stop(pr_ddc9);
+      // prof_start(pr_ddc9);
+      scatter(maps.d_recv, d_recv_buf, d_flds);
+      // prof_stop(pr_ddc9);
+    }
 
     // prof_start(pr_ddc10);
     MPI_Waitall(maps.patt->send_cnt, maps.patt->send_req, MPI_STATUSES_IGNORE);
@@ -482,6 +479,12 @@ struct CudaBnd
         }
       }
     }
+  }
+
+  void clear()
+  {
+    maps_add_.clear();
+    maps_fill_.clear();
   }
 
 private:
