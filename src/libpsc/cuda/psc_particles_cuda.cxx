@@ -4,6 +4,8 @@
 #include "psc_particles_single.h"
 #include "psc_particles_double.h"
 
+#include "cuda_mparticles.cuh"
+
 #include <mrc_io.h>
 
 // ======================================================================
@@ -13,6 +15,8 @@ template <typename MparticlesCuda, typename MP>
 static void copy_from(MparticlesBase& mprts_base,
                       MparticlesBase& mprts_other_base)
 {
+  using BS = typename MparticlesCuda::BS;
+
   auto& mprts = dynamic_cast<MparticlesCuda&>(mprts_base);
   auto& mprts_other = dynamic_cast<MP&>(mprts_other_base);
   auto n_prts_by_patch = mprts_other.sizeByPatch();

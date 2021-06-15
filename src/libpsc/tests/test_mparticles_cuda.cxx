@@ -1,14 +1,18 @@
 
 #include <gtest/gtest.h>
 
+#include <mpi.h>
+
+#ifdef USE_CUDA
+
 #include "test_common.hxx"
+#include "PscConfig.h"
 #include "../libpsc/cuda/mparticles_cuda.hxx"
-#include "mpi.h"
+#include "cuda_base.cuh"
 
 // FIXME, the general tests should be moved -> test_mparticles,
 // and the real cuda ones to test_cuda_mparticle?
 
-#ifdef USE_CUDA
 #include "psc_particles_single.h"
 
 template <typename _Mparticles, typename _MakeGrid = MakeTestGrid1>
@@ -101,6 +105,26 @@ TYPED_TEST(MparticlesCudaTest, ConvertFromSingle)
       nn++;
     }
   }
+
+  auto&& mprts2 = mprts.template get_as<MparticlesSingle>();
+  {
+    nn = 0;
+    auto accessor = mprts2.accessor();
+    for (int p = 0; p < mprts2.n_patches(); ++p) {
+      auto prts = accessor[p];
+      auto& patch = mprts2.grid().patches[p];
+
+      for (auto prt : prts) {
+        auto x = .5 * (patch.xb + patch.xe);
+        EXPECT_EQ(prt.position()[0], x[0]);
+        EXPECT_EQ(prt.position()[1], x[1]);
+        EXPECT_EQ(prt.position()[2], x[2]);
+        EXPECT_EQ(prt.w(), nn);
+        EXPECT_EQ(prt.kind(), 0);
+        nn++;
+      }
+    }
+  }
 }
 
 #endif
@@ -111,7 +135,9 @@ TYPED_TEST(MparticlesCudaTest, ConvertFromSingle)
 int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
-
+#ifdef USE_CUDA
+  cuda_base_init();
+#endif
   ::testing::InitGoogleTest(&argc, argv);
   int rc = RUN_ALL_TESTS();
 

@@ -132,7 +132,7 @@ public:
     thrust::copy(first, last, begin());
   }
 
-  __host__ __device__ size_t size() { return xi4.size(); }
+  __host__ __device__ size_t size() const { return xi4.size(); }
 
   __host__ __device__ iterator begin()
   {
@@ -212,9 +212,11 @@ public:
 // ======================================================================
 // cuda_mparticles_base
 
-template <typename BS>
+template <typename BS, typename S>
 struct cuda_mparticles_base : cuda_mparticles_indexer<BS>
 {
+  using storage_type = S;
+
   cuda_mparticles_base(const Grid_t& grid);
   // copy constructor would work fine, but we don't want to copy everything
   // by accident
@@ -233,7 +235,7 @@ public:
   }
 
   // per particle
-  MparticlesCudaStorage storage;
+  storage_type storage;
 
   // per block
   cuda_mparticles_sort_by_block by_block_;
@@ -249,8 +251,9 @@ template <typename BS>
 struct DMparticlesCuda;
 
 template <typename _BS>
-struct cuda_mparticles : cuda_mparticles_base<_BS>
+struct cuda_mparticles : cuda_mparticles_base<_BS, MparticlesCudaStorage>
 {
+  using base_type = cuda_mparticles_base<_BS, MparticlesCudaStorage>;
   using BS = _BS;
   using Particle = DParticleCuda;
   using real_t = Particle::real_t;
@@ -264,17 +267,12 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   cuda_mparticles(const Grid_t& grid);
   ~cuda_mparticles();
 
-  InjectorBuffered<cuda_mparticles> injector() { return {*this}; }
-  ConstAccessorCuda_<cuda_mparticles> accessor() { return {*this}; }
-
   uint size();
   void inject(const std::vector<Particle>& buf,
               const std::vector<uint>& buf_n_by_patch);
 
   std::vector<uint> get_offsets() const;
   std::vector<Particle> get_particles();
-  std::vector<Particle> get_particles(int p);
-  Particle get_particle(int p, int n);
 
   void dump(const std::string& filename) const;
   void dump_by_patch(uint* n_prts_by_patch);
@@ -283,9 +281,6 @@ struct cuda_mparticles : cuda_mparticles_base<_BS>
   void inject_initial(const std::vector<Particle>& buf,
                       const std::vector<uint>& n_prts_by_patch);
   void setup_internals();
-
-private:
-  std::vector<Particle> get_particles(int beg, int end);
 
 public:
   void reorder();

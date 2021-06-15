@@ -18,8 +18,7 @@
 // ctor
 
 template <typename BS>
-cuda_mparticles<BS>::cuda_mparticles(const Grid_t& grid)
-  : cuda_mparticles_base<BS>(grid)
+cuda_mparticles<BS>::cuda_mparticles(const Grid_t& grid) : base_type(grid)
 {
   cuda_base_init();
 
@@ -45,7 +44,7 @@ cuda_mparticles<BS>::~cuda_mparticles()
 template <typename BS>
 void cuda_mparticles<BS>::resize(uint n_prts)
 {
-  cuda_mparticles_base<BS>::resize(n_prts);
+  base_type::resize(n_prts);
   mem_particles -= allocated_bytes(this->by_block_.d_idx);
   this->by_block_.d_idx.resize(n_prts);
   mem_particles += allocated_bytes(this->by_block_.d_idx);
@@ -393,29 +392,7 @@ void cuda_mparticles<BS>::inject(const std::vector<Particle>& buf,
 }
 
 // ----------------------------------------------------------------------
-// get_particles
-
-template <typename BS>
-std::vector<typename cuda_mparticles<BS>::Particle>
-cuda_mparticles<BS>::get_particles(int beg, int end)
-{
-  reorder(); // FIXME? by means of this, this function disturbs the state...
-
-  HMparticlesCudaStorage h_storage{this->storage.begin() + beg,
-                                   this->storage.begin() + end};
-
-  std::vector<Particle> prts;
-  prts.reserve(end - beg);
-
-  for (int n = 0; n < end - beg; n++) {
-    prts.emplace_back(h_storage[n]);
-  }
-
-  return prts;
-}
-
-// ----------------------------------------------------------------------
-// get_particles
+// get_offsets
 
 template <typename BS>
 std::vector<uint> cuda_mparticles<BS>::get_offsets() const
@@ -428,6 +405,13 @@ std::vector<uint> cuda_mparticles<BS>::get_offsets() const
   return off;
 }
 
+inline void copy(const MparticlesCudaStorage& from, HMparticlesCudaStorage& to)
+{
+  assert(from.size() == to.size());
+  thrust::copy(from.xi4.begin(), from.xi4.end(), to.xi4.begin());
+  thrust::copy(from.pxi4.begin(), from.pxi4.end(), to.pxi4.begin());
+}
+
 // ----------------------------------------------------------------------
 // get_particles
 
@@ -435,36 +419,20 @@ template <typename BS>
 std::vector<typename cuda_mparticles<BS>::Particle>
 cuda_mparticles<BS>::get_particles()
 {
-  return get_particles(0, this->n_prts);
-}
+  reorder(); // FIXME? by means of this, this function disturbs the state...
 
-// ----------------------------------------------------------------------
-// get_particles
+  assert(this->storage.size() == this->n_prts);
+  HMparticlesCudaStorage h_storage{this->n_prts};
+  copy(this->storage, h_storage);
 
-template <typename BS>
-std::vector<typename cuda_mparticles<BS>::Particle>
-cuda_mparticles<BS>::get_particles(int p)
-{
-  // FIXME, doing the copy here all the time would be nice to avoid
-  // making sure we actually have a valid d_off would't hurt, either
-  thrust::host_vector<uint> h_off(this->by_block_.d_off);
+  std::vector<Particle> prts;
+  prts.reserve(this->n_prts);
 
-  uint beg = h_off[p * this->n_blocks_per_patch];
-  uint end = h_off[(p + 1) * this->n_blocks_per_patch];
+  for (int n = 0; n < this->n_prts; n++) {
+    prts.emplace_back(h_storage[n]);
+  }
 
-  return get_particles(beg, end);
-}
-
-// ----------------------------------------------------------------------
-// get_particle
-
-template <typename BS>
-typename cuda_mparticles<BS>::Particle cuda_mparticles<BS>::get_particle(int p,
-                                                                         int n)
-{
-  auto off = this->by_block_.d_off[p * this->n_blocks_per_patch];
-  auto cprts = get_particles(off + n, off + n + 1);
-  return cprts[0];
+  return prts;
 }
 
 #include "cuda_mparticles_gold.cu"
