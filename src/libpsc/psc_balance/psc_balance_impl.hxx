@@ -8,6 +8,10 @@
 #include "bnd.hxx"
 #include "mpi_dtype_traits.hxx"
 
+#ifdef USE_CUDA
+#include "psc_fields_cuda.h"
+#endif
+
 #include <mrc_profile.h>
 #include <string.h>
 
@@ -703,8 +707,7 @@ private:
   }
 
   void communicate_particles(struct communicate_ctx* ctx, Mparticles& mp_old,
-                             Mparticles& mp_new,
-                             const std::vector<uint>& n_prts_by_patch_new)
+                             Mparticles& mp_new)
   {
     // static int pr, pr_A, pr_B, pr_C, pr_D;
     // if (!pr) {
@@ -716,6 +719,8 @@ private:
     // }
 
     // prof_start(pr);
+
+    auto n_prts_by_patch_new = ctx->new_n_prts(mp_old.sizeByPatch());
 
     // prof_start(pr_A);
     mp_new.reserve_all(n_prts_by_patch_new);
@@ -876,92 +881,6 @@ private:
     delete[] recv_reqs;
   }
 
-  void balance_particles(communicate_ctx& ctx, const Grid_t& new_grid,
-                         MparticlesBase& mp_base)
-  {
-    int n_patches = mp_base.n_patches();
-    auto n_prts_by_patch_old = mp_base.sizeByPatch();
-    auto n_prts_by_patch_new = ctx.new_n_prts(n_prts_by_patch_old);
-
-    if (typeid(mp_base) != typeid(Mparticles)) {
-      auto& mp_old = *new Mparticles{mp_base.grid()};
-      MparticlesBase::convert(mp_base, mp_old);
-      mp_base.reset(new_grid); // frees memory here already
-
-      auto mp_new = Mparticles{new_grid};
-      communicate_particles(&ctx, mp_old, mp_new, n_prts_by_patch_new);
-      delete &mp_old;
-
-      MparticlesBase::convert(mp_new, mp_base);
-    } else {
-      auto mp_new = Mparticles{new_grid};
-      auto& mp_old = dynamic_cast<Mparticles&>(mp_base);
-
-      communicate_particles(&ctx, mp_old, mp_new, n_prts_by_patch_new);
-
-      mp_old = std::move(mp_new);
-    }
-  }
-
-  void balance_field(communicate_ctx& ctx, const Grid_t& new_grid,
-                     MfieldsBase& mf_base)
-  {
-    if (typeid(mf_base) != typeid(Mfields)) {
-      auto& mf_old =
-        *new Mfields{mf_base._grid(), mf_base._n_comps(), mf_base.ibn()};
-      MfieldsBase::convert(mf_base, mf_old, 0, mf_old.n_comps());
-      mf_base.reset(new_grid); // free old memory
-
-      auto mf_new = Mfields{new_grid, mf_base._n_comps(), mf_base.ibn()};
-      communicate_fields(&ctx, mf_old, mf_new);
-      delete &mf_old; // delete as early as possible
-
-      MfieldsBase::convert(mf_new, mf_base, 0, mf_base._n_comps());
-    } else {
-      auto mf_new = Mfields{new_grid, mf_base._n_comps(), mf_base.ibn()};
-      auto& mf_old = dynamic_cast<Mfields&>(mf_base);
-
-      communicate_fields(&ctx, mf_old, mf_new);
-
-      mf_old = std::move(mf_new);
-    }
-  }
-
-  void balance_state_field(communicate_ctx& ctx, const Grid_t& new_grid,
-                           MfieldsStateBase& mf_base)
-  {
-    if (typeid(mf_base) != typeid(MfieldsState)) {
-      // FIXME, for the most part we rely on the underlying MfieldsCuda to be
-      // rebalanced together with all the other Mfields
-      mf_base.reset(new_grid);
-#if 0
-      auto& mf_old = *new MfieldsState{mf_base.grid()};
-      MfieldsStateBase::convert(mf_base, mf_old, 0, mf_old.n_comps());
-      mf_base.reset(new_grid); // free old memory
-
-      auto mf_new = MfieldsState{new_grid};
-      communicate_fields(&ctx, mf_old.mflds(), mf_new.mflds());
-      delete &mf_old; // delete as early as possible
-      
-      MfieldsStateBase::convert(mf_new, mf_base, 0, mf_base.n_comps());
-#endif
-    } else {
-      // for now MfieldsStateFromMfields will have its underlying Mfields
-      // rebalanced, anyway, so all we need ot do is reset the grid.
-      // FIXME, that his however broken if using MfieldsState that isn't
-      // MfieldsStateFromMfields...
-      mf_base.reset(new_grid);
-#if 0
-      auto mf_new = MfieldsState{new_grid};
-      auto &mf_old = dynamic_cast<MfieldsState&>(mf_base);
-
-      communicate_fields(&ctx, mf_old.mflds(), mf_new.mflds());
-
-      mf_old = std::move(mf_new);
-#endif
-    }
-  }
-
   std::vector<uint> balance(Grid_t*& gridp, std::vector<double> loads,
                             MparticlesBase* mp,
                             std::vector<uint> n_prts_by_patch_old = {})
@@ -986,13 +905,14 @@ private:
       return n_prts_by_patch_old;
     }
 
+    mpi_printf(old_grid->comm(),
+               "***** Balance: new decomposition: balancing\n");
+
     auto new_grid = new Grid_t{old_grid->domain, old_grid->bc, old_grid->kinds,
                                old_grid->norm,   old_grid->dt, n_patches_new};
     new_grid->ibn = old_grid->ibn; // FIXME, sucky ibn handling...
     new_grid->timestep_ = old_grid->timestep_;
 
-    mpi_printf(old_grid->comm(),
-               "***** Balance: new decomposition: balancing\n");
     delete[] psc_balance_comp_time_by_patch;
     psc_balance_comp_time_by_patch = new double[new_grid->n_patches()];
 
@@ -1000,12 +920,75 @@ private:
     communicate_ctx ctx(old_grid->mrc_domain(), new_grid->mrc_domain());
     prof_stop(pr_bal_ctx);
 
+    // copy particles to host, free on gpu
+    Mparticles* p_mp_host = nullptr;
+    if (mp && typeid(*mp) != typeid(Mparticles)) {
+      auto& mp_base = *mp;
+      mpi_printf(old_grid->comm(), "***** Balance: particles to host\n");
+      p_mp_host = new Mparticles{mp_base.grid()};
+      auto& mp_host = *p_mp_host;
+      MparticlesBase::convert(mp_base, mp_host);
+      mp_base.reset(*new_grid); // frees memory here already
+    }
+
+#ifdef USE_CUDA
+    std::vector<std::reference_wrapper<MfieldsCuda>> mfields_cuda;
+    mfields_cuda.reserve(MfieldsBase::instances.size());
+#endif
+    std::vector<std::reference_wrapper<Mfields>> mfields_host;
+    mfields_host.reserve(MfieldsBase::instances.size());
+
+    for (auto mf : MfieldsBase::instances) {
+#ifdef USE_CUDA
+      if (typeid(*mf) == typeid(MfieldsCuda)) {
+        auto& mf_cuda = dynamic_cast<MfieldsCuda&>(*mf);
+        mprintf("MfieldsCuda #components %d\n", mf->_n_comps());
+        mfields_cuda.emplace_back(dynamic_cast<MfieldsCuda&>(*mf));
+        continue;
+      }
+#endif
+      mfields_host.emplace_back(dynamic_cast<Mfields&>(*mf));
+    }
+
+#ifdef USE_CUDA
+    // copy fields to host, free on gpu
+    std::vector<Mfields> mfields_old;
+    mfields_old.reserve(mfields_cuda.size());
+
+    for (int n = 0; n < mfields_cuda.size(); n++) {
+      MfieldsCuda& mf_cuda = mfields_cuda[n];
+      mpi_printf(old_grid->comm(),
+                 "***** Balance: copying CUDA field to host, #components %d\n",
+                 mf_cuda.n_comps());
+      mfields_old.emplace_back(*old_grid, mf_cuda.n_comps(), mf_cuda.ibn());
+      auto& mf_old = mfields_old.back();
+      MfieldsBase::convert(mf_cuda, mf_old, 0, mf_cuda.n_comps());
+      mf_cuda.~MfieldsCuda();
+    }
+#endif
+
     // particles
     std::vector<uint> n_prts_by_patch_new;
     if (mp) {
       mpi_printf(old_grid->comm(), "***** Balance: balancing particles\n");
       prof_start(pr_bal_prts);
-      balance_particles(ctx, *new_grid, *mp);
+
+      auto& mp_base = *mp;
+      if (typeid(mp_base) == typeid(Mparticles)) {
+        auto& mp_host = dynamic_cast<Mparticles&>(mp_base);
+
+        auto mp_new = Mparticles{*new_grid};
+        communicate_particles(&ctx, mp_host, mp_new);
+        mp_host = std::move(mp_new);
+      } else {
+        assert(p_mp_host);
+        auto& mp_host = *p_mp_host;
+
+        auto mp_new = Mparticles{*new_grid};
+        communicate_particles(&ctx, mp_host, mp_new);
+        mp_host = std::move(mp_new);
+      }
+
       prof_stop(pr_bal_prts);
     } else {
       n_prts_by_patch_new = ctx.new_n_prts(n_prts_by_patch_old);
@@ -1015,15 +998,55 @@ private:
     // state field
     mpi_printf(old_grid->comm(), "***** Balance: balancing state field\n");
     for (auto mf : MfieldsStateBase::instances) {
-      balance_state_field(ctx, *new_grid, *mf);
+      // for now MfieldsStateFromMfields will have its underlying Mfields
+      // rebalanced, anyway, so all we need ot do is reset the grid.
+      // FIXME, that his however broken if using MfieldsState that isn't
+      // MfieldsStateFromMfields...
+      mf->reset(*new_grid);
     }
 
     // fields
-    for (auto mf : MfieldsBase::instances) {
-      mpi_printf(old_grid->comm(), "***** Balance: balancing field\n");
-      balance_field(ctx, *new_grid, *mf);
+    for (Mfields& mf : mfields_host) {
+      mpi_printf(old_grid->comm(),
+                 "***** Balance: balancing field, #components %d\n",
+                 mf.n_comps());
+      auto mf_new = Mfields{*new_grid, mf.n_comps(), mf.ibn()};
+      communicate_fields(&ctx, mf, mf_new);
+      mf = std::move(mf_new);
     }
+
+#ifdef USE_CUDA
+    //  communicate on host, move back to gpu
+    for (int n = 0; n < mfields_cuda.size(); n++) {
+      Mfields& mf_old = mfields_old[n];
+      mpi_printf(
+        old_grid->comm(),
+        "***** Balance: balancing field, copy back to device, #components %d\n",
+        mf_old.n_comps());
+
+      auto mf_new = Mfields{*new_grid, mf_old.n_comps(), mf_old.ibn()};
+
+      communicate_fields(&ctx, mf_old, mf_new);
+      // FIXME, not possible anymore, could be recovered by some "= {}" empty
+      // default behavior. delete mfields_old[n]; // delete as early as
+      // possible
+
+      MfieldsCuda& mf_cuda = mfields_cuda[n];
+      new (&mf_cuda) MfieldsCuda{*new_grid, mf_new.n_comps(), mf_new.ibn()};
+      MfieldsBase::convert(mf_new, mf_cuda, 0, mf_new._n_comps());
+    }
+#endif
     prof_stop(pr_bal_flds);
+
+    // mv particles back to gpu
+    if (mp && typeid(*mp) != typeid(Mparticles)) {
+      auto& mp_base = *mp;
+      mpi_printf(old_grid->comm(), "***** Balance: particles to device\n");
+      assert(p_mp_host);
+      auto& mp_host = *p_mp_host;
+      MparticlesBase::convert(mp_host, mp_base);
+      delete p_mp_host;
+    }
 
     // update psc etc
     delete gridp;
