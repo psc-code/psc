@@ -267,8 +267,6 @@ struct cuda_mparticles : cuda_mparticles_base<_BS, MparticlesCudaStorage>
   cuda_mparticles(const Grid_t& grid);
   ~cuda_mparticles();
 
-  InjectorBuffered<cuda_mparticles> injector() { return {*this}; }
-
   uint size();
   void inject(const std::vector<Particle>& buf,
               const std::vector<uint>& buf_n_by_patch);
