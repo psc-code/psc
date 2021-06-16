@@ -57,6 +57,37 @@ DiagMixin diag_mixin;
 #endif
 
 // ======================================================================
+
+// FIXME, handle mem_fraction better
+namespace detail
+{
+template <typename Mparticles, typename Enable = void>
+struct mem_fraction
+{
+  static double get(const Mparticles& mprts) { return 0.; }
+};
+
+template <typename Mparticles>
+struct mem_fraction<Mparticles, gt::meta::void_t<decltype(
+                                  std::declval<Mparticles>().mem_fraction())>>
+{
+  static double get(const Mparticles& mprts)
+  {
+    double res = mprts.mem_fraction();
+    MPI_Allreduce(MPI_IN_PLACE, &res, 1, MPI_DOUBLE, MPI_MAX,
+                  mprts.grid().comm());
+  }
+};
+
+} // namespace detail
+
+template <typename Mparticles>
+double mem_fraction(const Mparticles& mprts)
+{
+  return detail::mem_fraction<Mparticles>::get(mprts);
+}
+
+// ======================================================================
 // PscParams
 
 struct PscParams
@@ -71,6 +102,9 @@ struct PscParams
   int stats_every = 10; // output timing and other info every so many steps
 
   int balance_interval = 0;
+  double balance_mem_fraction =
+    1.; // balance if mprts.mem_fraction() exceeds this limit
+
   int sort_interval = 0;
   int marder_interval = 0;
 };
@@ -416,7 +450,9 @@ struct Psc
     mem_stats_csv(log_, timestep, grid().n_patches(), mprts_.size());
 #endif
 
-    if (p_.balance_interval > 0 && timestep % p_.balance_interval == 0) {
+    double mem_fraction = ::mem_fraction(mprts_);
+    if (p_.balance_interval > 0 && (timestep % p_.balance_interval == 0 ||
+                                    mem_fraction > p_.balance_mem_fraction)) {
       balance_(grid_, mprts_);
     }
 
