@@ -31,4 +31,4 @@ int CollisionCuda<Mparticles, RngState>::interval() const
 template struct CollisionCuda<MparticlesCuda<BS144>>;
 template struct CollisionCuda<MparticlesCuda<BS444>>;
 
-template struct CollisionCuda<MparticlesCuda<BS144>, RngStateFake>;
+// template struct CollisionCuda<MparticlesCuda<BS144>, RngStateFake>;
