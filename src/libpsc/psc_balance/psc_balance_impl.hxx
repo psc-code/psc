@@ -948,7 +948,7 @@ private:
 #ifdef USE_CUDA
       if (typeid(*mf) == typeid(MfieldsCuda)) {
         auto& mf_cuda = dynamic_cast<MfieldsCuda&>(*mf);
-        mprintf("MfieldsCuda #components %d\n", mf->_n_comps());
+        // mprintf("MfieldsCuda #components %d\n", mf->_n_comps());
         mfields_cuda.emplace_back(dynamic_cast<MfieldsCuda&>(*mf));
         continue;
       }
