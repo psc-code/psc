@@ -59,7 +59,7 @@ public:
     prof_start(pr_eval);
     auto h_expr = gt::host_mirror(expr);
     gt::copy(gt::eval(expr), h_expr);
-    Mfields<gt::expr_value_type<E>> h_mflds(grid, h_expr.shape(4), {});
+    Mfields<gt::expr_value_type<E>> h_mflds(grid, h_expr.shape(3), {});
     h_mflds.gt() = h_expr;
     prof_stop(pr_eval);
 
