@@ -18,7 +18,7 @@ To enable spack commands, run
 
    $ . ${HOME}/spack/share/spack/setup-env.sh
 
-or just edit ``.bashrc`` as appropriate.
+or just add the line to ``.bash_profile``.
 
 To clone PSC, one may need to set up an RSA key (via ``ssh-keygen``; hit "enter" on all prompts). Copy the full contents of ``id_rsa.pub`` (ie, the output of ``cat`` below) to a new RSA key on GitHub.
 
@@ -54,31 +54,33 @@ Finally, to complete installation of PSC, run
 
 (this will take a while).
 
+It may also be necessary to run
+
+.. code-block:: sh
+
+   $ spack repo add psc-infrastructure/spack/psc
+
 Diagnostics
 ===========
 
-To diagnose problems with spack, one may use
+See the `spack docs <https://spack.readthedocs.io/en/latest/>`_ for how to use spack. Useful commands include ``spack spec``, ``spack compiler list``, and ``spack find``. The ``spack --version`` used here was 0.16.1.
+
+
+Building
+========
+
+In ``psc``, run 
 
 .. code-block:: sh
 
-   $ spack spec psc
+   $ cmake -B build
 
-to see a list of psc's dependencies;
-
-.. code-block:: sh
-
-   $ spack --version
-
-to see the version (mine was 0.16.1);
+If that fails, most or all of the following may need to be run (or installed, e.g. ``spack install git``). This may not be an exhaustive list. If CMake fails to find anything, identify the relevant package with ``spack find`` and load them as below.
 
 .. code-block:: sh
 
-   $ spack --help
-
-to see options;
-
-.. code-block:: sh
-
-   $ spack compiler list
-
-to see available compilers.
+   $ spack load cmake
+   $ spack load git
+   $ spack load openmpi
+   $ spack load adios2
+   $ spack load hdf5
