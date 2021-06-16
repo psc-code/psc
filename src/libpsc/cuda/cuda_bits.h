@@ -91,6 +91,8 @@ void mem_stats_csv(std::ostream& of, int timestep, int n_patches, int n_prts);
 
 void mem_stats(std::string file, int line, std::ostream& of);
 
+void mem_pool_print();
+
 #define MEM_STATS() mem_stats(__FILE__, __LINE__, std::cout)
 
 #endif
