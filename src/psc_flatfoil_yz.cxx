@@ -12,10 +12,6 @@
 
 #ifdef USE_CUDA
 #include "cuda_bits.h"
-#else
-#define MEM_STATS()                                                            \
-  do {                                                                         \
-  } while (0)
 #endif
 
 // quasi 1-d
