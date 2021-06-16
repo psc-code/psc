@@ -260,6 +260,7 @@ TEST(cuda_mparticles_randomize_sort, sort)
 #endif
 }
 
+#if 0
 TEST(CollisionTest, Test2)
 {
   using Collision = CollisionCuda<MparticlesCuda<BS144>, RngStateFake>;
@@ -310,6 +311,7 @@ TEST(CollisionTest, Test2)
   EXPECT_NEAR(prtf1.u()[2],  0.17342988, eps);
 #endif
 }
+#endif
 
 // ======================================================================
 // main

@@ -4,6 +4,7 @@
 #include "cuda_bits.h"
 #include "rng_state.cuh"
 #include "bs.hxx"
+#include "cuda_base.cuh"
 
 #include <thrust/binary_search.h>
 #include <thrust/device_vector.h>
@@ -21,7 +22,7 @@ struct cuda_mparticles;
 template <typename BS>
 struct DMparticlesCuda;
 
-#define THREADS_PER_BLOCK 256
+#define THREADS_PER_BLOCK 128
 
 namespace detail
 {
@@ -239,12 +240,9 @@ public:
 
 struct cuda_mparticles_randomize_sort
 {
-  cuda_mparticles_randomize_sort() {}
+  cuda_mparticles_randomize_sort() : rng_state_{get_rng_state()} {}
 
-  ~cuda_mparticles_randomize_sort()
-  {
-    mem_randomize_sort -= allocated_bytes(rng_state_);
-  }
+  ~cuda_mparticles_randomize_sort() {}
 
   template <typename CMPRTS>
   void operator()(CMPRTS& cmprts, psc::device_vector<uint>& d_off,
@@ -281,9 +279,7 @@ struct cuda_mparticles_randomize_sort
                    cmprts.n_patches();
 
     if (dimGrid.x * THREADS_PER_BLOCK > rng_state_.size()) {
-      mem_randomize_sort -= allocated_bytes(rng_state_);
       rng_state_.resize(dimGrid.x * THREADS_PER_BLOCK);
-      mem_randomize_sort += allocated_bytes(rng_state_);
     }
 
     ::k_find_random_cell_indices_ids<BS, Block>
@@ -314,7 +310,7 @@ struct cuda_mparticles_randomize_sort
   }
 
 private:
-  RngStateCuda rng_state_;
+  RngStateCuda& rng_state_;
 };
 
 // ======================================================================

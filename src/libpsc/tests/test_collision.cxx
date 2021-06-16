@@ -118,7 +118,7 @@ using CollisionTestConfigCuda =
 
 using CollisionTestTypes =
   ::testing::Types<CollisionTestConfigSingle, CollisionTestConfigDouble
-#ifdef USE_CUDA
+#ifdef xUSE_CUDA // FIXME
                    ,
                    CollisionTestConfigCuda
 #endif

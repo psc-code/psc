@@ -1,5 +1,6 @@
 
 #include "PscConfig.h"
+#include "cuda_base.cuh"
 
 #ifdef PSC_HAVE_RMM
 #include <rmm/mr/device/pool_memory_resource.hpp>
@@ -20,6 +21,7 @@ std::size_t mem_bnd;
 std::size_t mem_heating;
 std::size_t mem_collisions;
 std::size_t mem_bndp;
+std::size_t mem_rnd;
 
 #ifdef PSC_HAVE_RMM
 using device_mr_type = rmm::mr::device_memory_resource;
@@ -53,6 +55,8 @@ void cuda_base_init(void)
     printf("There is no device supporting CUDA\n");
     return;
   }
+
+  get_rng_state().resize(131072);
 
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -144,4 +148,10 @@ std::size_t mem_cuda_allocated()
 #else
   return 0;
 #endif
+}
+
+RngStateCuda& get_rng_state()
+{
+  static RngStateCuda rng_state;
+  return rng_state;
 }

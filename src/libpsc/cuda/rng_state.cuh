@@ -59,6 +59,8 @@ public:
     // returns random number in ]0:1]
 
     __device__ float uniform() { return curand_uniform(&curand_state); }
+    __device__ float normal() { return curand_normal(&curand_state); }
+    __device__ float2 normal2() { return curand_normal2(&curand_state); }
 
     curandState curand_state;
   };
@@ -85,7 +87,10 @@ public:
   };
 
   RngStateCuda() = default;
+  RngStateCuda(const RngStateCuda&) = delete;
   RngStateCuda(int size) { resize(size); }
+
+  ~RngStateCuda() { mem_rnd -= allocated_bytes(rngs_); }
 
   // also reseeds!
   void resize(int size);
@@ -99,11 +104,9 @@ private:
 // ----------------------------------------------------------------------
 // k_curand_setup
 
-#define THREADS_PER_BLOCK 256
-
 __global__ static void k_curand_setup(RngStateCuda::Device rng_state, int size)
 {
-  int id = threadIdx.x + blockIdx.x * THREADS_PER_BLOCK;
+  int id = threadIdx.x + blockIdx.x * blockDim.x;
 
   if (id < size) {
     curand_init(0, id, 0, &rng_state[id].curand_state);
@@ -112,11 +115,16 @@ __global__ static void k_curand_setup(RngStateCuda::Device rng_state, int size)
 
 inline void RngStateCuda::resize(int size)
 {
-  rngs_.resize(size);
+  if (size > rngs_.size()) {
+    const int threads_per_block = 256;
 
-  dim3 dim_grid = (size + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
-  k_curand_setup<<<dim_grid, THREADS_PER_BLOCK>>>(*this, size);
-  cuda_sync_if_enabled();
+    std::cout << "RngState resize " << size << "\n";
+    mem_rnd -= allocated_bytes(rngs_);
+    rngs_.resize(size);
+    mem_rnd += allocated_bytes(rngs_);
+
+    dim3 dim_grid = (size + threads_per_block - 1) / threads_per_block;
+    k_curand_setup<<<dim_grid, threads_per_block>>>(*this, size);
+    cuda_sync_if_enabled();
+  }
 };
-
-#undef THREADS_PER_BLOCK
