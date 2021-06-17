@@ -25,6 +25,8 @@
 // FIXME
 #define CUDA_BND_S_OOB (10)
 
+//#define DEBUG_PUSH
+
 // ----------------------------------------------------------------------
 
 // OPT: use more shmem?
@@ -58,13 +60,14 @@ struct CudaPushParticles
     // field interpolation
     real_t xm[3];
     dmprts.template scalePos<dim>(xm, prt.x);
-#if 1
+#ifdef DEBUG_PUSH
     const int* ci0 = current_block.ci0;
-    if (!dim::InvarX::value &&
-          ((xm[0] < ci0[0] || xm[0] > ci0[0] + BS::x::value)) ||
+    if ((!dim::InvarX::value &&
+         ((xm[0] < ci0[0] || xm[0] > ci0[0] + BS::x::value))) ||
         xm[1] < ci0[1] || xm[1] > ci0[1] + BS::y::value || xm[2] < ci0[2] ||
         xm[2] > ci0[2] + BS::z::value) {
-      printf("xm %g %g (xi %g %g n %d)\n", xm[1], xm[2], prt.x[0], prt.x[1], n);
+      printf("xm %g %g %g (xi %g %g %g n %d ci %d %d %d)\n", xm[0], xm[1],
+             xm[2], prt.x[0], prt.x[1], prt.x[2], n, ci0[0], ci0[1], ci0[2]);
     }
 #endif
     InterpolateEM<FldCache, typename Config::Ip, dim> ip;
@@ -74,7 +77,7 @@ struct CudaPushParticles
 
     Real3 E = {ip.ex(fld_cache), ip.ey(fld_cache), ip.ez(fld_cache)};
     Real3 H = {ip.hx(fld_cache), ip.hy(fld_cache), ip.hz(fld_cache)};
-#if 1
+#ifdef DEBUG_PUSH
     if (!isfinite(E[0]) || !isfinite(E[1]) || !isfinite(E[2]) ||
         !isfinite(H[0]) || !isfinite(H[1]) || !isfinite(H[2])) {
       printf("CUDA_ERROR push_part_one: n = %d E %g %g %g H %g %g %g\n", n,
@@ -86,10 +89,10 @@ struct CudaPushParticles
     // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
     real_t dq = dmprts.dq(prt.kind);
     advance.push_p(prt.u, E, H, dq);
-#if 0
+#ifdef DEBUG_PUSH
     if (!isfinite(prt.u[0]) || !isfinite(prt.u[1]) || !isfinite(prt.u[2])) {
-      printf("CUDA_ERROR push_part_one: n = %d pxi %g %g %g\n", n,
-	     prt.u[0], prt.u[1], prt.u[2]);
+      printf("CUDA_ERROR push_part_one: n = %d pxi %g %g %g\n", n, prt.u[0],
+             prt.u[1], prt.u[2]);
     }
 #endif
   }
@@ -143,9 +146,9 @@ struct CudaPushParticles
                                       float dx[3], float qni_wni, Curr& scurr,
                                       const Block& current_block, dim_yz tag)
   {
-#if 0
-    if (i[1] < -1 || i[1] >= int(BS::y::value) + 1 ||
-	i[2] < -1 || i[2] >= int(BS::z::value) + 1) {
+#ifdef DEBUG_PUSH
+    if (i[1] < -1 || i[1] >= int(BS::y::value) + 1 || i[2] < -1 ||
+        i[2] >= int(BS::z::value) + 1) {
       printf("CUDA_ERROR curr_vb_cell jyz %d:%d\n", i[1], i[2]);
     }
 #endif
@@ -193,7 +196,7 @@ struct CudaPushParticles
                                       float dx[3], float qni_wni, Curr& scurr,
                                       const Block& current_block, dim_xyz tag)
   {
-#if 1
+#ifdef DEBUG_PUSH
     if (i[0] < -1 || i[0] >= int(BS::x::value) + 1 || i[1] < -1 ||
         i[1] >= int(BS::y::value) + 1 || i[2] < -1 ||
         i[2] >= int(BS::z::value) + 1) {
@@ -373,7 +376,7 @@ struct CudaPushParticles
     // deposit xm -> xp
     int i[3] = {j[0] - current_block.ci0[0], j[1] - current_block.ci0[1],
                 j[2] - current_block.ci0[2]};
-#if 1
+#ifdef DEBUG_PUSH
     if (i[0] < 0 || i[0] >= int(BS::x::value) || i[1] < 0 ||
         i[1] >= int(BS::y::value) || i[2] < 0 || i[2] >= int(BS::z::value)) {
       printf("CUDA_ERROR deposit jxyz %d:%d:%d\n", i[0], i[1], i[2]);
