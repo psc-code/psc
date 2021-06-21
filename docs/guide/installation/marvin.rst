@@ -1,6 +1,8 @@
 
-Installing on Marvin (at UNH)
+Installing on Marvin
 *****************************************
+
+This is a temporary solution to installing PSC on Marvin. A better solution would use a spack environment.
 
 Starting from scratch
 =====================
@@ -40,7 +42,7 @@ Continuing with spack...
 
    $ spack repo add ${HOME}/psc-infrastructure/spack/psc
 
-At this point, copy the files in ``psc-infrastructure/TODO`` to spack (TODO or symlink them? Is that easier?):
+At this point, copy the files in ``psc-infrastructure/TODO`` to spack (TODO: currently, one needs to copy the contents of .spack from another user):
 
 .. code-block:: sh
 
@@ -53,12 +55,6 @@ Finally, to complete installation of PSC, run
    $ spack install psc
 
 (this will take a while).
-
-It may also be necessary to run
-
-.. code-block:: sh
-
-   $ spack repo add psc-infrastructure/spack/psc
 
 Diagnostics
 ===========
