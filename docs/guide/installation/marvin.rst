@@ -75,7 +75,7 @@ In ``psc``, run
 
    $ cmake -B build
 
-If that fails, most or all of the following may need to be run (or installed, e.g. ``spack install git``). This may not be an exhaustive list. If CMake fails to find anything, identify the relevant package with ``spack find`` and load them as below.
+Make sure it builds with gcc 10.2. If it fails, most or all of the following may need to be run (or installed, e.g. ``spack install git``). This may not be an exhaustive list. If CMake fails to find anything, identify the relevant package with ``spack find`` and load them as below.
 
 .. code-block:: sh
 
@@ -84,3 +84,4 @@ If that fails, most or all of the following may need to be run (or installed, e.
    $ spack load openmpi
    $ spack load adios2
    $ spack load hdf5
+   $ spack load gcc
