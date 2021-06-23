@@ -245,6 +245,47 @@ TYPED_TEST(ItemTest, ItemDivE)
   EXPECT_LT(gt::norm_linf(rho - rho_ref), 1e-2);
 }
 
+// ======================================================================
+// ItemDivJ
+
+TYPED_TEST(ItemTest, ItemDivJ)
+{
+  using MfieldsState = typename TypeParam::MfieldsState;
+  using Mfields = typename TypeParam::Mfields;
+  using Item = Item_divj<MfieldsState>;
+
+  this->make_psc({});
+  const auto& grid = this->grid();
+
+  double ky = 2. * M_PI / grid.domain.length[1];
+  double kz = 2. * M_PI / grid.domain.length[2];
+
+  // init fields
+  auto mflds = MfieldsState{grid};
+  setupFields(mflds, [&](int m, double crd[3]) {
+    switch (m) {
+      case JYI: return cos(ky * crd[1]);
+      case JZI: return sin(kz * crd[2]);
+      default: return 0.;
+    }
+  });
+  auto dx = grid.domain.dx;
+
+  auto item_divj = Item(mflds);
+  auto&& rho = gt::eval(item_divj.gt());
+
+  auto rho_ref = gt::empty_like(rho);
+  auto k_rho_ref = rho_ref.to_kernel();
+  gt::launch<5, gt::space::host>(
+    rho_ref.shape(), [=](int i, int j, int k, int m, int p) {
+      double y = j * dx[1], z = k * dx[2];
+      k_rho_ref(i, j, k, 0, p) = -ky * sin(ky * y) + kz * cos(kz * z);
+    });
+
+  // check result
+  EXPECT_LT(gt::norm_linf(rho - rho_ref), 1e-2);
+}
+
 int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);

@@ -189,21 +189,15 @@ public:
 
     if (grid.isInvar(0)) {
       auto flds = mflds_.gt().view(_all, _s(-1 + bnd[1], -bnd[1]),
-                                   _s(-1 + bnd[2], -bnd[2]));
+                                   _s(-1 + bnd[2], -bnd[2]), _s(JXI, JXI + 3));
 
-      res.view(_all, _all, _all, 0) =
-        (flds.view(_all, s0, s0, JYI) - flds.view(_all, sm, s0, JYI)) /
-          dxyz[1] +
-        (flds.view(_all, s0, s0, JZI) - flds.view(_all, s0, sm, JZI)) / dxyz[2];
+      psc::item::div_yz(res, flds, dxyz);
     } else {
       auto flds =
         mflds_.gt().view(_s(-1 + bnd[0], -bnd[0]), _s(-1 + bnd[1], -bnd[1]),
-                         _s(-1 + bnd[2], -bnd[2]));
+                         _s(-1 + bnd[2], -bnd[2]), _s(JXI, JXI + 3));
 
-      res.view(_all, _all, _all, 0) =
-        (flds.view(s0, s0, s0, JXI) - flds.view(sm, s0, s0, JXI)) / dxyz[0] +
-        (flds.view(s0, s0, s0, JYI) - flds.view(s0, sm, s0, JYI)) / dxyz[1] +
-        (flds.view(s0, s0, s0, JZI) - flds.view(s0, s0, sm, JZI)) / dxyz[2];
+      psc::item::div_xyz(res, flds, dxyz);
     }
     return res;
   }
