@@ -54,6 +54,9 @@ class reader:
             self._varname = "all_1st"
         else:
             raise(f'{what} not supported!')
+            
+    def close(self):
+        self._file.close()
         
     def read(self, fldname, start, count):
         m = self._to_index(fldname)
@@ -77,4 +80,5 @@ def read(run, time):
     pfd = reader(run, "pfd_moments", time)
     py_e = pfd.read('py_he_e', [0, 0, 0], run.gdims)
     n_e = -pfd.read('rho_he_e', [0, 0, 0], run.gdims)
+    pfd.close()
     return {"n_e" : n_e, "py_e" : py_e}

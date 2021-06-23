@@ -11,9 +11,14 @@ class variable:
 
 class file:
     def __init__(self, filename):
-        self._io = _ad.DeclareIO(f'io-{filename}')
+        self._io_name = f'io-{filename}'
+        self._io = _ad.DeclareIO(self._io_name)
         self._engine = self._io.Open(filename, adios2.Mode.Read)
         self.vars = self._io.AvailableVariables().keys()
+        
+    def close(self):
+        self._engine.Close()
+        _ad.RemoveIO(self._io_name)
         
     def read(self, varname, sel_start, sel_count):
         var = self._io.InquireVariable(varname)
