@@ -79,6 +79,74 @@ private:
 // ======================================================================
 // Item_dive
 
+namespace psc
+{
+namespace item
+{
+
+template <typename E>
+inline auto div_yz(const E& flds, const Grid_t& grid)
+{
+  Int3 bnd = {(flds.shape(0) - grid.domain.ldims[0]) / 2,
+              (flds.shape(1) - grid.domain.ldims[1]) / 2,
+              (flds.shape(2) - grid.domain.ldims[2]) / 2};
+
+  auto dxyz = grid.domain.dx;
+
+  auto s0 = _s(1, _);
+  auto sm = _s(_, -1);
+
+  auto res = gt::empty<gt::expr_value_type<E>, gt::expr_space_type<E>>(
+    {grid.ldims[0], grid.ldims[1], grid.ldims[2], 1, grid.n_patches()});
+
+  auto _flds =
+    flds.view(_all, _s(-1 + bnd[1], -bnd[1]), _s(-1 + bnd[2], -bnd[2]));
+
+  res.view(_all, _all, _all, 0) =
+    (_flds.view(_all, s0, s0, 1) - _flds.view(_all, sm, s0, 1)) / dxyz[1] +
+    (_flds.view(_all, s0, s0, 2) - _flds.view(_all, s0, sm, 2)) / dxyz[2];
+
+  return res;
+}
+
+template <typename E>
+inline auto div_xyz(const E& flds, const Grid_t& grid)
+{
+  Int3 bnd = {(flds.shape(0) - grid.domain.ldims[0]) / 2,
+              (flds.shape(1) - grid.domain.ldims[1]) / 2,
+              (flds.shape(2) - grid.domain.ldims[2]) / 2};
+  auto dxyz = grid.domain.dx;
+
+  auto s0 = _s(1, _);
+  auto sm = _s(_, -1);
+
+  auto res = gt::empty<gt::expr_value_type<E>, gt::expr_space_type<E>>(
+    {grid.ldims[0], grid.ldims[1], grid.ldims[2], 1, grid.n_patches()});
+
+  auto _flds = flds.view(_s(-1 + bnd[0], -bnd[0]), _s(-1 + bnd[1], -bnd[1]),
+                         _s(-1 + bnd[2], -bnd[2]));
+
+  res.view(_all, _all, _all, 0) =
+    (_flds.view(s0, s0, s0, 0) - _flds.view(sm, s0, s0, 0)) / dxyz[0] +
+    (_flds.view(s0, s0, s0, 1) - _flds.view(s0, sm, s0, 1)) / dxyz[1] +
+    (_flds.view(s0, s0, s0, 2) - _flds.view(s0, s0, sm, 2)) / dxyz[2];
+
+  return res;
+}
+
+template <typename E>
+static auto div_nc(const E& flds, const Grid_t& grid)
+{
+  if (grid.isInvar(0)) {
+    return psc::item::div_yz(flds, grid);
+  } else {
+    return psc::item::div_xyz(flds, grid);
+  }
+}
+
+} // namespace item
+} // namespace psc
+
 template <typename MfieldsState>
 class Item_dive : public MFexpression<Item_dive<MfieldsState>>
 {
@@ -97,33 +165,8 @@ public:
 
   auto gt() const
   {
-    const auto& grid = mflds_.grid();
-    auto dxyz = grid.domain.dx;
-    auto bnd = mflds_.ibn();
-    auto s0 = _s(1, _);
-    auto sm = _s(_, -1);
-
-    auto res = gt::empty<Real, gt::expr_space_type<decltype(mflds_.gt())>>(
-      {grid.ldims[0], grid.ldims[1], grid.ldims[2], 1, grid.n_patches()});
-
-    if (grid.isInvar(0)) {
-      auto flds = mflds_.gt().view(_all, _s(-1 + bnd[1], -bnd[1]),
-                                   _s(-1 + bnd[2], -bnd[2]));
-
-      res.view(_all, _all, _all, 0) =
-        (flds.view(_all, s0, s0, EY) - flds.view(_all, sm, s0, EY)) / dxyz[1] +
-        (flds.view(_all, s0, s0, EZ) - flds.view(_all, s0, sm, EZ)) / dxyz[2];
-    } else {
-      auto flds =
-        mflds_.gt().view(_s(-1 + bnd[0], -bnd[0]), _s(-1 + bnd[1], -bnd[1]),
-                         _s(-1 + bnd[2], -bnd[2]));
-
-      res.view(_all, _all, _all, 0) =
-        (flds.view(s0, s0, s0, EX) - flds.view(sm, s0, s0, EX)) / dxyz[0] +
-        (flds.view(s0, s0, s0, EY) - flds.view(s0, sm, s0, EY)) / dxyz[1] +
-        (flds.view(s0, s0, s0, EZ) - flds.view(s0, s0, sm, EZ)) / dxyz[2];
-    }
-    return res;
+    return psc::item::div_nc(mflds_.gt().view(_all, _all, _all, _s(EX, EX + 3)),
+                             mflds_.grid());
   }
 
 private:
@@ -153,34 +196,8 @@ public:
 
   auto gt() const
   {
-    const auto& grid = mflds_.grid();
-    auto dxyz = grid.domain.dx;
-    auto bnd = mflds_.ibn();
-    auto s0 = _s(1, _);
-    auto sm = _s(_, -1);
-
-    auto res = gt::empty<Real, gt::expr_space_type<decltype(mflds_.gt())>>(
-      {grid.ldims[0], grid.ldims[1], grid.ldims[2], 1, grid.n_patches()});
-
-    if (grid.isInvar(0)) {
-      auto flds = mflds_.gt().view(_all, _s(-1 + bnd[1], -bnd[1]),
-                                   _s(-1 + bnd[2], -bnd[2]));
-
-      res.view(_all, _all, _all, 0) =
-        (flds.view(_all, s0, s0, JYI) - flds.view(_all, sm, s0, JYI)) /
-          dxyz[1] +
-        (flds.view(_all, s0, s0, JZI) - flds.view(_all, s0, sm, JZI)) / dxyz[2];
-    } else {
-      auto flds =
-        mflds_.gt().view(_s(-1 + bnd[0], -bnd[0]), _s(-1 + bnd[1], -bnd[1]),
-                         _s(-1 + bnd[2], -bnd[2]));
-
-      res.view(_all, _all, _all, 0) =
-        (flds.view(s0, s0, s0, JXI) - flds.view(sm, s0, s0, JXI)) / dxyz[0] +
-        (flds.view(s0, s0, s0, JYI) - flds.view(s0, sm, s0, JYI)) / dxyz[1] +
-        (flds.view(s0, s0, s0, JZI) - flds.view(s0, s0, sm, JZI)) / dxyz[2];
-    }
-    return res;
+    return psc::item::div_nc(
+      mflds_.gt().view(_all, _all, _all, _s(JXI, JXI + 3)), mflds_.grid());
   }
 
 private:
