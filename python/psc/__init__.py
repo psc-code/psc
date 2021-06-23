@@ -1,11 +1,11 @@
 
 import numpy as np
+import psc.adios2py
 import adios2
 import os
 import xarray as xr
 
-
-#ad_ = adios2.ADIOS()
+_ad = adios2.ADIOS()
 
 class run:
     def __init__(self, path, L, gdims):
@@ -18,7 +18,7 @@ class run:
         self.x = np.linspace(self.corner[0], self.corner[0] + self.L[0], self.gdims[0], endpoint=False)
         self.y = np.linspace(self.corner[1], self.corner[1] + self.L[1], self.gdims[1], endpoint=False)
         self.z = np.linspace(self.corner[2], self.corner[2] + self.L[2], self.gdims[2], endpoint=False)
-
+        
 class reader:
     _jeh_to_index = { 'jx_ec': 0, 'jy_ec': 1, 'jz_ec' : 2,
                       'ex_ec': 3, 'ey_ec': 4, 'ez_ec' : 5,
@@ -36,24 +36,19 @@ class reader:
         self._run = run
         self._what = what
         self._time = time
-        self._ad = adios2.ADIOS()
-        self._io = self._ad.DeclareIO('io')
-        self._engine = self._io.Open(os.path.join(run.path, f'{what}.{time:09d}.bp'), adios2.Mode.Read)
+        self._file = adios2py.file(run.path, what, time)
         if what in ('pfd', 'tfd'):
             self._varname = 'jeh'
         elif what in ('pfd_moments', 'tfd_moments'):
             self._varname = "all_1st"
         else:
             raise(f'{what} not supported!')
-        self._var = self._io.InquireVariable(self._varname)
         
     def read(self, fldname, start, count):
         m = self._to_index(fldname)
         sel_start = np.array([start[0], start[1], start[2], m])
         sel_count = np.array([count[0], count[1], count[2], 1])
-        self._var.SetSelection((sel_start[::-1], sel_count[::-1]))
-        arr = np.empty(count, dtype='f', order='F')
-        self._engine.Get(self._var, arr, adios2.Mode.Sync)
+        arr = self._file.read(self._varname, sel_start, sel_count)
         coords = { "x": self._run.x[start[0]:start[0]+count[0]],
                    "y": self._run.y[start[1]:start[1]+count[1]],
                    "z": self._run.z[start[2]:start[2]+count[2]], }
