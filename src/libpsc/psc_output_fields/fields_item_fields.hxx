@@ -79,6 +79,37 @@ private:
 // ======================================================================
 // Item_dive
 
+namespace psc
+{
+namespace item
+{
+
+template <typename E1, typename E2>
+static auto div_yz(E1& res, const E2& flds, const Vec3<double>& dxyz)
+{
+  auto s0 = _s(1, _);
+  auto sm = _s(_, -1);
+
+  res.view(_all, _all, _all, 0) =
+    (flds.view(_all, s0, s0, 1) - flds.view(_all, sm, s0, 1)) / dxyz[1] +
+    (flds.view(_all, s0, s0, 2) - flds.view(_all, s0, sm, 2)) / dxyz[2];
+}
+
+template <typename E1, typename E2>
+static auto div_xyz(E1& res, const E2& flds, const Vec3<double>& dxyz)
+{
+  auto s0 = _s(1, _);
+  auto sm = _s(_, -1);
+
+  res.view(_all, _all, _all, 0) =
+    (flds.view(s0, s0, s0, 0) - flds.view(sm, s0, s0, 0)) / dxyz[0] +
+    (flds.view(s0, s0, s0, 1) - flds.view(s0, sm, s0, 1)) / dxyz[1] +
+    (flds.view(s0, s0, s0, 2) - flds.view(s0, s0, sm, 2)) / dxyz[2];
+}
+
+} // namespace item
+} // namespace psc
+
 template <typename MfieldsState>
 class Item_dive : public MFexpression<Item_dive<MfieldsState>>
 {
@@ -110,37 +141,14 @@ public:
       auto flds = mflds_.gt().view(_all, _s(-1 + bnd[1], -bnd[1]),
                                    _s(-1 + bnd[2], -bnd[2]), _s(EX, EX + 3));
 
-      div_yz(res, flds, dxyz);
+      psc::item::div_yz(res, flds, dxyz);
     } else {
       auto flds =
         mflds_.gt().view(_s(-1 + bnd[0], -bnd[0]), _s(-1 + bnd[1], -bnd[1]),
                          _s(-1 + bnd[2], -bnd[2]), _s(EX, EX + 3));
-      div_xyz(res, flds, dxyz);
+      psc::item::div_xyz(res, flds, dxyz);
     }
     return res;
-  }
-
-  template <typename E1, typename E2>
-  static auto div_yz(E1& res, const E2& flds, const Vec3<double>& dxyz)
-  {
-    auto s0 = _s(1, _);
-    auto sm = _s(_, -1);
-
-    res.view(_all, _all, _all, 0) =
-      (flds.view(_all, s0, s0, 1) - flds.view(_all, sm, s0, 1)) / dxyz[1] +
-      (flds.view(_all, s0, s0, 2) - flds.view(_all, s0, sm, 2)) / dxyz[2];
-  }
-
-  template <typename E1, typename E2>
-  static auto div_xyz(E1& res, const E2& flds, const Vec3<double>& dxyz)
-  {
-    auto s0 = _s(1, _);
-    auto sm = _s(_, -1);
-
-    res.view(_all, _all, _all, 0) =
-      (flds.view(s0, s0, s0, 0) - flds.view(sm, s0, s0, 0)) / dxyz[0] +
-      (flds.view(s0, s0, s0, 1) - flds.view(s0, sm, s0, 1)) / dxyz[1] +
-      (flds.view(s0, s0, s0, 2) - flds.view(s0, s0, sm, 2)) / dxyz[2];
   }
 
 private:
