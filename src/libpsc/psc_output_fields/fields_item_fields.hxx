@@ -90,7 +90,6 @@ static auto div_yz(E1& res, const E2& flds, const Grid_t& grid)
   Int3 bnd = {(flds.shape(0) - grid.domain.ldims[0]) / 2,
               (flds.shape(1) - grid.domain.ldims[1]) / 2,
               (flds.shape(2) - grid.domain.ldims[2]) / 2};
-  std::cout << "B bnd " << bnd << "\n";
 
   auto dxyz = grid.domain.dx;
 
@@ -125,14 +124,19 @@ static auto div_xyz(E1& res, const E2& flds, const Grid_t& grid)
     (_flds.view(s0, s0, s0, 2) - _flds.view(s0, s0, sm, 2)) / dxyz[2];
 }
 
-template <typename E1, typename E2>
-static auto div_nc(E1& res, const E2& flds, const Grid_t& grid)
+template <typename E>
+static auto div_nc(const E& flds, const Grid_t& grid)
 {
+  auto res = gt::empty<gt::expr_value_type<E>, gt::expr_space_type<E>>(
+    {grid.ldims[0], grid.ldims[1], grid.ldims[2], 1, grid.n_patches()});
+
   if (grid.isInvar(0)) {
     psc::item::div_yz(res, flds, grid);
   } else {
     psc::item::div_xyz(res, flds, grid);
   }
+
+  return res;
 }
 
 } // namespace item
@@ -160,11 +164,7 @@ public:
 
     auto mflds3 = mflds_.gt().view(_all, _all, _all, _s(EX, EX + 3));
 
-    auto res = gt::empty<Real, gt::expr_space_type<decltype(mflds_.gt())>>(
-      {grid.ldims[0], grid.ldims[1], grid.ldims[2], 1, grid.n_patches()});
-
-    psc::item::div_nc(res, mflds3, grid);
-    return res;
+    return psc::item::div_nc(mflds3, grid);
   }
 
 private:
@@ -198,11 +198,7 @@ public:
 
     auto mflds3 = mflds_.gt().view(_all, _all, _all, _s(JXI, JXI + 3));
 
-    auto res = gt::empty<Real, gt::expr_space_type<decltype(mflds_.gt())>>(
-      {grid.ldims[0], grid.ldims[1], grid.ldims[2], 1, grid.n_patches()});
-
-    psc::item::div_nc(res, mflds3, grid);
-    return res;
+    return psc::item::div_nc(mflds3, grid);
   }
 
 private:
