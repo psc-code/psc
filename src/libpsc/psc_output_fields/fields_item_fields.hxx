@@ -85,8 +85,10 @@ namespace item
 {
 
 template <typename E1, typename E2>
-static auto div_yz(E1& res, const E2& flds, const Vec3<double>& dxyz)
+static auto div_yz(E1& res, const E2& flds, const Grid_t& grid)
 {
+  auto dxyz = grid.domain.dx;
+
   auto s0 = _s(1, _);
   auto sm = _s(_, -1);
 
@@ -96,8 +98,10 @@ static auto div_yz(E1& res, const E2& flds, const Vec3<double>& dxyz)
 }
 
 template <typename E1, typename E2>
-static auto div_xyz(E1& res, const E2& flds, const Vec3<double>& dxyz)
+static auto div_xyz(E1& res, const E2& flds, const Grid_t& grid)
 {
+  auto dxyz = grid.domain.dx;
+
   auto s0 = _s(1, _);
   auto sm = _s(_, -1);
 
@@ -129,7 +133,6 @@ public:
   auto gt() const
   {
     const auto& grid = mflds_.grid();
-    auto dxyz = grid.domain.dx;
     auto bnd = mflds_.ibn();
     auto s0 = _s(1, _);
     auto sm = _s(_, -1);
@@ -143,12 +146,12 @@ public:
       auto flds =
         mflds3.view(_all, _s(-1 + bnd[1], -bnd[1]), _s(-1 + bnd[2], -bnd[2]));
 
-      psc::item::div_yz(res, flds, dxyz);
+      psc::item::div_yz(res, flds, grid);
     } else {
       auto flds =
         mflds3.view(_s(-1 + bnd[0], -bnd[0]), _s(-1 + bnd[1], -bnd[1]),
                     _s(-1 + bnd[2], -bnd[2]));
-      psc::item::div_xyz(res, flds, dxyz);
+      psc::item::div_xyz(res, flds, grid);
     }
     return res;
   }
@@ -181,7 +184,6 @@ public:
   auto gt() const
   {
     const auto& grid = mflds_.grid();
-    auto dxyz = grid.domain.dx;
     auto bnd = mflds_.ibn();
     auto s0 = _s(1, _);
     auto sm = _s(_, -1);
@@ -195,13 +197,13 @@ public:
       auto flds =
         mflds3.view(_all, _s(-1 + bnd[1], -bnd[1]), _s(-1 + bnd[2], -bnd[2]));
 
-      psc::item::div_yz(res, flds, dxyz);
+      psc::item::div_yz(res, flds, grid);
     } else {
       auto flds =
         mflds3.view(_s(-1 + bnd[0], -bnd[0]), _s(-1 + bnd[1], -bnd[1]),
                     _s(-1 + bnd[2], -bnd[2]));
 
-      psc::item::div_xyz(res, flds, dxyz);
+      psc::item::div_xyz(res, flds, grid);
     }
     return res;
   }
