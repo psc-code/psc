@@ -84,8 +84,8 @@ namespace psc
 namespace item
 {
 
-template <typename E1, typename E2>
-static auto div_yz(E1& res, const E2& flds, const Grid_t& grid)
+template <typename E>
+inline auto div_yz(const E& flds, const Grid_t& grid)
 {
   Int3 bnd = {(flds.shape(0) - grid.domain.ldims[0]) / 2,
               (flds.shape(1) - grid.domain.ldims[1]) / 2,
@@ -95,6 +95,9 @@ static auto div_yz(E1& res, const E2& flds, const Grid_t& grid)
 
   auto s0 = _s(1, _);
   auto sm = _s(_, -1);
+
+  auto res = gt::empty<gt::expr_value_type<E>, gt::expr_space_type<E>>(
+    {grid.ldims[0], grid.ldims[1], grid.ldims[2], 1, grid.n_patches()});
 
   auto _flds =
     flds.view(_all, _s(-1 + bnd[1], -bnd[1]), _s(-1 + bnd[2], -bnd[2]));
@@ -102,10 +105,12 @@ static auto div_yz(E1& res, const E2& flds, const Grid_t& grid)
   res.view(_all, _all, _all, 0) =
     (_flds.view(_all, s0, s0, 1) - _flds.view(_all, sm, s0, 1)) / dxyz[1] +
     (_flds.view(_all, s0, s0, 2) - _flds.view(_all, s0, sm, 2)) / dxyz[2];
+
+  return res;
 }
 
-template <typename E1, typename E2>
-static auto div_xyz(E1& res, const E2& flds, const Grid_t& grid)
+template <typename E>
+inline auto div_xyz(const E& flds, const Grid_t& grid)
 {
   Int3 bnd = {(flds.shape(0) - grid.domain.ldims[0]) / 2,
               (flds.shape(1) - grid.domain.ldims[1]) / 2,
@@ -114,6 +119,9 @@ static auto div_xyz(E1& res, const E2& flds, const Grid_t& grid)
 
   auto s0 = _s(1, _);
   auto sm = _s(_, -1);
+
+  auto res = gt::empty<gt::expr_value_type<E>, gt::expr_space_type<E>>(
+    {grid.ldims[0], grid.ldims[1], grid.ldims[2], 1, grid.n_patches()});
 
   auto _flds = flds.view(_s(-1 + bnd[0], -bnd[0]), _s(-1 + bnd[1], -bnd[1]),
                          _s(-1 + bnd[2], -bnd[2]));
@@ -122,21 +130,18 @@ static auto div_xyz(E1& res, const E2& flds, const Grid_t& grid)
     (_flds.view(s0, s0, s0, 0) - _flds.view(sm, s0, s0, 0)) / dxyz[0] +
     (_flds.view(s0, s0, s0, 1) - _flds.view(s0, sm, s0, 1)) / dxyz[1] +
     (_flds.view(s0, s0, s0, 2) - _flds.view(s0, s0, sm, 2)) / dxyz[2];
+
+  return res;
 }
 
 template <typename E>
 static auto div_nc(const E& flds, const Grid_t& grid)
 {
-  auto res = gt::empty<gt::expr_value_type<E>, gt::expr_space_type<E>>(
-    {grid.ldims[0], grid.ldims[1], grid.ldims[2], 1, grid.n_patches()});
-
   if (grid.isInvar(0)) {
-    psc::item::div_yz(res, flds, grid);
+    return psc::item::div_yz(flds, grid);
   } else {
-    psc::item::div_xyz(res, flds, grid);
+    return psc::item::div_xyz(flds, grid);
   }
-
-  return res;
 }
 
 } // namespace item
@@ -160,11 +165,8 @@ public:
 
   auto gt() const
   {
-    const auto& grid = mflds_.grid();
-
-    auto mflds3 = mflds_.gt().view(_all, _all, _all, _s(EX, EX + 3));
-
-    return psc::item::div_nc(mflds3, grid);
+    return psc::item::div_nc(mflds_.gt().view(_all, _all, _all, _s(EX, EX + 3)),
+                             mflds_.grid());
   }
 
 private:
@@ -194,11 +196,8 @@ public:
 
   auto gt() const
   {
-    const auto& grid = mflds_.grid();
-
-    auto mflds3 = mflds_.gt().view(_all, _all, _all, _s(JXI, JXI + 3));
-
-    return psc::item::div_nc(mflds3, grid);
+    return psc::item::div_nc(
+      mflds_.gt().view(_all, _all, _all, _s(JXI, JXI + 3)), mflds_.grid());
   }
 
 private:
