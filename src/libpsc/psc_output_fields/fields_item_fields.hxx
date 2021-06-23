@@ -110,20 +110,37 @@ public:
       auto flds = mflds_.gt().view(_all, _s(-1 + bnd[1], -bnd[1]),
                                    _s(-1 + bnd[2], -bnd[2]));
 
-      res.view(_all, _all, _all, 0) =
-        (flds.view(_all, s0, s0, EY) - flds.view(_all, sm, s0, EY)) / dxyz[1] +
-        (flds.view(_all, s0, s0, EZ) - flds.view(_all, s0, sm, EZ)) / dxyz[2];
+      div_yz(res, flds, dxyz);
     } else {
       auto flds =
         mflds_.gt().view(_s(-1 + bnd[0], -bnd[0]), _s(-1 + bnd[1], -bnd[1]),
                          _s(-1 + bnd[2], -bnd[2]));
-
-      res.view(_all, _all, _all, 0) =
-        (flds.view(s0, s0, s0, EX) - flds.view(sm, s0, s0, EX)) / dxyz[0] +
-        (flds.view(s0, s0, s0, EY) - flds.view(s0, sm, s0, EY)) / dxyz[1] +
-        (flds.view(s0, s0, s0, EZ) - flds.view(s0, s0, sm, EZ)) / dxyz[2];
+      div_xyz(res, flds, dxyz);
     }
     return res;
+  }
+
+  template <typename E1, typename E2>
+  static auto div_yz(E1& res, const E2& flds, const Vec3<double>& dxyz)
+  {
+    auto s0 = _s(1, _);
+    auto sm = _s(_, -1);
+
+    res.view(_all, _all, _all, 0) =
+      (flds.view(_all, s0, s0, EY) - flds.view(_all, sm, s0, EY)) / dxyz[1] +
+      (flds.view(_all, s0, s0, EZ) - flds.view(_all, s0, sm, EZ)) / dxyz[2];
+  }
+
+  template <typename E1, typename E2>
+  static auto div_xyz(E1& res, const E2& flds, const Vec3<double>& dxyz)
+  {
+    auto s0 = _s(1, _);
+    auto sm = _s(_, -1);
+
+    res.view(_all, _all, _all, 0) =
+      (flds.view(s0, s0, s0, EX) - flds.view(sm, s0, s0, EX)) / dxyz[0] +
+      (flds.view(s0, s0, s0, EY) - flds.view(s0, sm, s0, EY)) / dxyz[1] +
+      (flds.view(s0, s0, s0, EZ) - flds.view(s0, s0, sm, EZ)) / dxyz[2];
   }
 
 private:
