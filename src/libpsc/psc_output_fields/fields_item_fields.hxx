@@ -125,6 +125,16 @@ static auto div_xyz(E1& res, const E2& flds, const Grid_t& grid)
     (_flds.view(s0, s0, s0, 2) - _flds.view(s0, s0, sm, 2)) / dxyz[2];
 }
 
+template <typename E1, typename E2>
+static auto div_nc(E1& res, const E2& flds, const Grid_t& grid)
+{
+  if (grid.isInvar(0)) {
+    psc::item::div_yz(res, flds, grid);
+  } else {
+    psc::item::div_xyz(res, flds, grid);
+  }
+}
+
 } // namespace item
 } // namespace psc
 
@@ -153,11 +163,7 @@ public:
     auto res = gt::empty<Real, gt::expr_space_type<decltype(mflds_.gt())>>(
       {grid.ldims[0], grid.ldims[1], grid.ldims[2], 1, grid.n_patches()});
 
-    if (grid.isInvar(0)) {
-      psc::item::div_yz(res, mflds3, grid);
-    } else {
-      psc::item::div_xyz(res, mflds3, grid);
-    }
+    psc::item::div_nc(res, mflds3, grid);
     return res;
   }
 
@@ -195,11 +201,7 @@ public:
     auto res = gt::empty<Real, gt::expr_space_type<decltype(mflds_.gt())>>(
       {grid.ldims[0], grid.ldims[1], grid.ldims[2], 1, grid.n_patches()});
 
-    if (grid.isInvar(0)) {
-      psc::item::div_yz(res, mflds3, grid);
-    } else {
-      psc::item::div_xyz(res, mflds3, grid);
-    }
+    psc::item::div_nc(res, mflds3, grid);
     return res;
   }
 
