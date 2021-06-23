@@ -134,18 +134,20 @@ public:
     auto s0 = _s(1, _);
     auto sm = _s(_, -1);
 
+    auto mflds3 = mflds_.gt().view(_all, _all, _all, _s(EX, EX + 3));
+
     auto res = gt::empty<Real, gt::expr_space_type<decltype(mflds_.gt())>>(
       {grid.ldims[0], grid.ldims[1], grid.ldims[2], 1, grid.n_patches()});
 
     if (grid.isInvar(0)) {
-      auto flds = mflds_.gt().view(_all, _s(-1 + bnd[1], -bnd[1]),
-                                   _s(-1 + bnd[2], -bnd[2]), _s(EX, EX + 3));
+      auto flds =
+        mflds3.view(_all, _s(-1 + bnd[1], -bnd[1]), _s(-1 + bnd[2], -bnd[2]));
 
       psc::item::div_yz(res, flds, dxyz);
     } else {
       auto flds =
-        mflds_.gt().view(_s(-1 + bnd[0], -bnd[0]), _s(-1 + bnd[1], -bnd[1]),
-                         _s(-1 + bnd[2], -bnd[2]), _s(EX, EX + 3));
+        mflds3.view(_s(-1 + bnd[0], -bnd[0]), _s(-1 + bnd[1], -bnd[1]),
+                    _s(-1 + bnd[2], -bnd[2]));
       psc::item::div_xyz(res, flds, dxyz);
     }
     return res;
@@ -184,18 +186,20 @@ public:
     auto s0 = _s(1, _);
     auto sm = _s(_, -1);
 
+    auto mflds3 = mflds_.gt().view(_all, _all, _all, _s(JXI, JXI + 3));
+
     auto res = gt::empty<Real, gt::expr_space_type<decltype(mflds_.gt())>>(
       {grid.ldims[0], grid.ldims[1], grid.ldims[2], 1, grid.n_patches()});
 
     if (grid.isInvar(0)) {
-      auto flds = mflds_.gt().view(_all, _s(-1 + bnd[1], -bnd[1]),
-                                   _s(-1 + bnd[2], -bnd[2]), _s(JXI, JXI + 3));
+      auto flds =
+        mflds3.view(_all, _s(-1 + bnd[1], -bnd[1]), _s(-1 + bnd[2], -bnd[2]));
 
       psc::item::div_yz(res, flds, dxyz);
     } else {
       auto flds =
-        mflds_.gt().view(_s(-1 + bnd[0], -bnd[0]), _s(-1 + bnd[1], -bnd[1]),
-                         _s(-1 + bnd[2], -bnd[2]), _s(JXI, JXI + 3));
+        mflds3.view(_s(-1 + bnd[0], -bnd[0]), _s(-1 + bnd[1], -bnd[1]),
+                    _s(-1 + bnd[2], -bnd[2]));
 
       psc::item::div_xyz(res, flds, dxyz);
     }
