@@ -147,7 +147,7 @@ struct PscBgkParams
   // ion number density
   double n_i;
 
-  // number of grid cells 
+  // number of grid cells
   int n_grid;
 
   // whether or not to negate v (if true, we should not see stability)
@@ -207,7 +207,7 @@ void setupParameters()
 
   g.q_i = 1;
   // g.q_i = 1.0000111539638505; // from psc-scrap/check_case1.ipynb
-  
+
   g.n_grid = 128;
 
   g.reverse_v = true;
@@ -223,11 +223,11 @@ void setupParameters()
 
 Grid_t* setupGrid()
 {
-  auto domain =
-    Grid_t::Domain{{1, g.n_grid, g.n_grid},            // # grid points
-                   {1, g.box_size, g.box_size},          // physical lengths
-                   {0., -.5 * g.box_size, -.5 * g.box_size}, // *offset* for origin
-                   {1, g.n_grid / 16, g.n_grid / 16}}; // # patches
+  auto domain = Grid_t::Domain{
+    {1, g.n_grid, g.n_grid},                  // # grid points
+    {1, g.box_size, g.box_size},              // physical lengths
+    {0., -.5 * g.box_size, -.5 * g.box_size}, // *offset* for origin
+    {1, g.n_grid / 16, g.n_grid / 16}};       // # patches
 
   auto bc =
     psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
@@ -239,7 +239,8 @@ Grid_t* setupGrid()
   kinds[KIND_ELECTRON] = {-1., 1., "e"};
   kinds[KIND_ION] = {1., 1e9, "i"}; // really heavy to keep them fixed
 
-  mpi_printf(MPI_COMM_WORLD, "lambda_D = %g\n", sqrt(parsed.get_interpolated(parsed.COL_TE,.022)));
+  mpi_printf(MPI_COMM_WORLD, "lambda_D = %g\n",
+             sqrt(parsed.get_interpolated(parsed.COL_TE, .022)));
 
   // --- generic setup
   auto norm_params = Grid_t::NormalizationParams::dimensionless();
