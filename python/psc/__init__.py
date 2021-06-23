@@ -5,7 +5,7 @@ import os
 import xarray as xr
 
 class run:
-    def __init__(self, path, L):
+    def __init__(self, path, L=None):
         self.path = path
 
         # open first var in first file to figure out global dims
@@ -19,10 +19,15 @@ class run:
         assert len(file.vars) > 0
         var = next(iter(file.vars))
         self.gdims = np.asarray(file[var].shape)[0:3]
+        file.close() # FIXME, should support with ... as 
 
-        self.L = np.asarray(L)
-        # FIXME, corner should also be passed (or rather read)
-        self.corner = -.5 * self.L
+        if L is not None:
+            self.L = np.asarray(L)
+            # FIXME, corner should also be passed (or rather read)
+            self.corner = -.5 * self.L
+        else:
+            self.L = self.gdims
+            self.corner = np.array([0., 0., 0.])
 
         self.x = np.linspace(self.corner[0], self.corner[0] + self.L[0], self.gdims[0], endpoint=False)
         self.y = np.linspace(self.corner[1], self.corner[1] + self.L[1], self.gdims[1], endpoint=False)
