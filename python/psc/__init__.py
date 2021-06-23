@@ -32,14 +32,13 @@ class reader:
                           'tzz_he_e': 9, 'tzz_e': 22, 'tzz_i' : 35,
                         }
 
-    def __init__(self, domain, root, what, time):
-        self._domain = domain
-        self._root = root
+    def __init__(self, run, what, time):
+        self._run = run
         self._what = what
         self._time = time
         self._ad = adios2.ADIOS()
         self._io = self._ad.DeclareIO('io')
-        self._engine = self._io.Open(os.path.join(root, f'{what}.{time:09d}.bp'), adios2.Mode.Read)
+        self._engine = self._io.Open(os.path.join(run.path, f'{what}.{time:09d}.bp'), adios2.Mode.Read)
         if what in ('pfd', 'tfd'):
             self._varname = 'jeh'
         elif what in ('pfd_moments', 'tfd_moments'):
@@ -55,21 +54,11 @@ class reader:
         self._var.SetSelection((sel_start[::-1], sel_count[::-1]))
         arr = np.empty(count, dtype='f', order='F')
         self._engine.Get(self._var, arr, adios2.Mode.Sync)
-        coords = { "x": self._domain.x[start[0]:start[0]+count[0]],
-                   "y": self._domain.y[start[1]:start[1]+count[1]],
-                   "z": self._domain.z[start[2]:start[2]+count[2]], }
+        coords = { "x": self._run.x[start[0]:start[0]+count[0]],
+                   "y": self._run.y[start[1]:start[1]+count[1]],
+                   "z": self._run.z[start[2]:start[2]+count[2]], }
         return xr.DataArray(arr, dims=['x', 'y', 'z'], coords=coords)
         
-    def read_xy(self, fldname):
-        arr = self.read(fldname, self._domain.start, self._domain.count)
-        assert domain.count[2] == 1
-        return arr[:,:,0].T
-    
-    def read_yz(self, fldname):
-        arr = self.read(fldname, self._domain.start, self._domain.count)
-        assert domain.count[0] == 1
-        return arr[0,:,:].T
-    
     def _to_index(self, fldname):
         if self._varname == 'jeh':
             return self._jeh_to_index[fldname]
@@ -78,8 +67,8 @@ class reader:
         else:
             assert False
             
-def read(root, run, time):
-    pfd = reader(run, root, "pfd_moments", time)
+def read(run, time):
+    pfd = reader(run, "pfd_moments", time)
     py_e = pfd.read('py_he_e', [0, 0, 0], run.gdims)
     n_e = -pfd.read('rho_he_e', [0, 0, 0], run.gdims)
     return {"n_e" : n_e, "py_e" : py_e}
