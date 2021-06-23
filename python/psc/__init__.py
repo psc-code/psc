@@ -5,16 +5,29 @@ import os
 import xarray as xr
 
 class run:
-    def __init__(self, path, L, gdims):
-        # FIXME, corner should also be passed (or rather read)
+    def __init__(self, path, L):
         self.path = path
+
+        # open first var in first file to figure out global dims
+        self._files = [f for f in os.listdir(path) if f.endswith('.bp')]
+        if not self._files:
+            raise RuntimeError(f'No data files found in "{path}"')
+            
+        self._files.sort()
+        file = adios2py.file(os.path.join(path, next(iter(self._files))))
+
+        assert len(file.vars) > 0
+        var = next(iter(file.vars))
+        self.gdims = np.asarray(file[var].shape)[0:3]
+
         self.L = np.asarray(L)
-        self.gdims = np.asarray(gdims, dtype=int)
-        self.dx = self.L / self.gdims
+        # FIXME, corner should also be passed (or rather read)
         self.corner = -.5 * self.L
+
         self.x = np.linspace(self.corner[0], self.corner[0] + self.L[0], self.gdims[0], endpoint=False)
         self.y = np.linspace(self.corner[1], self.corner[1] + self.L[1], self.gdims[1], endpoint=False)
         self.z = np.linspace(self.corner[2], self.corner[2] + self.L[2], self.gdims[2], endpoint=False)
+        
         
 class reader:
     _jeh_to_index = { 'jx_ec': 0, 'jy_ec': 1, 'jz_ec' : 2,

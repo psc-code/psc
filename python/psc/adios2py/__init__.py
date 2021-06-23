@@ -4,10 +4,16 @@ import numpy as np
 
 _ad = adios2.ADIOS()
 
+class variable:
+    def __init__(self, var):
+        self._var = var
+        self.shape = var.Shape()[::-1]
+
 class file:
     def __init__(self, filename):
         self._io = _ad.DeclareIO(f'io-{filename}')
         self._engine = self._io.Open(filename, adios2.Mode.Read)
+        self.vars = self._io.AvailableVariables().keys()
         
     def read(self, varname, sel_start, sel_count):
         var = self._io.InquireVariable(varname)
@@ -15,4 +21,7 @@ class file:
         arr = np.empty(sel_count, dtype='f', order='F')
         self._engine.Get(var, arr, adios2.Mode.Sync)
         return arr[:,:,:,0]
+    
+    def __getitem__(self, varname):
+        return variable(self._io.InquireVariable(varname))
 
