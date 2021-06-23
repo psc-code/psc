@@ -1,11 +1,8 @@
 
 import numpy as np
 import psc.adios2py
-import adios2
 import os
 import xarray as xr
-
-_ad = adios2.ADIOS()
 
 class run:
     def __init__(self, path, L, gdims):
@@ -36,7 +33,8 @@ class reader:
         self._run = run
         self._what = what
         self._time = time
-        self._file = adios2py.file(run.path, what, time)
+        
+        self._file = adios2py.file(os.path.join(run.path, f'{what}.{time:09d}.bp'))
         if what in ('pfd', 'tfd'):
             self._varname = 'jeh'
         elif what in ('pfd_moments', 'tfd_moments'):
