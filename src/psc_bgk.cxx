@@ -46,8 +46,8 @@ class Parsed
 {
 private:
   static const int n_rows = 4401;
-  static const int n_cols = 5;
-  static constexpr auto file_path = "../../input/bgk-input-1-fromphi.txt";
+  static const int n_cols = 6;
+  static constexpr auto file_path = "../../input/bgk-input-1-phi.txt";
 
   // the data parsed from file_path
   double data[n_rows][n_cols];
@@ -66,7 +66,7 @@ private:
   }
 
 public:
-  const int COL_RHO = 0, COL_NE = 1, COL_V_PHI = 2, COL_TE = 3, COL_E_RHO = 4;
+  const int COL_RHO = 0, COL_NE = 1, COL_V_PHI = 2, COL_TE = 3, COL_E_RHO = 4, COL_PHI = 5;
 
   Parsed()
   {
