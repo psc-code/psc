@@ -30,6 +30,7 @@ using PscConfig = PscConfig1vbecSingle<Dim>;
 
 // ----------------------------------------------------------------------
 
+using PhiField = PscConfig::Mfields;
 using MfieldsState = PscConfig::MfieldsState;
 using Mparticles = PscConfig::Mparticles;
 using Balance = PscConfig::Balance;
@@ -208,7 +209,7 @@ void setupParameters()
   g.q_i = 1;
   // g.q_i = 1.0000111539638505; // from psc-scrap/check_case1.ipynb
 
-  g.n_grid = 128;
+  g.n_grid = 32;
 
   g.reverse_v = true;
 }
@@ -309,6 +310,17 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
 }
 
 // ======================================================================
+// initializePhi
+
+void initializePhi(PhiField& phi)
+{
+  setupFields(phi, [&](int, double crd[3]) {
+    return 0.0;
+  });
+}
+
+
+// ======================================================================
 // initializeFields
 
 void initializeFields(MfieldsState& mflds)
@@ -367,6 +379,7 @@ static void run()
   auto& grid = *grid_ptr;
   MfieldsState mflds{grid};
   Mparticles mprts{grid};
+  PhiField phi{grid, 1, mflds.ibn()};
 
   // ----------------------------------------------------------------------
   // Set up various objects needed to run this case
@@ -426,6 +439,7 @@ static void run()
 
   if (read_checkpoint_filename.empty()) {
     initializeParticles(balance, grid_ptr, mprts);
+    initializePhi(phi);
     initializeFields(mflds);
   } else {
     read_checkpoint(read_checkpoint_filename, *grid_ptr, mprts, mflds);
