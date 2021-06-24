@@ -196,6 +196,8 @@ using PscConfig =
 
 #endif
 
+using Writer = WriterDefault; // can choose WriterMrc, WriterAdios2
+
 // ======================================================================
 // Moment_n_Selector
 //
@@ -535,7 +537,7 @@ void run()
 
   outf_params.fields = outf_item_params;
   outf_params.moments = outf_item_params;
-  OutputFields<MfieldsState, Mparticles, Dim> outf{grid, outf_params};
+  OutputFields<MfieldsState, Mparticles, Dim, Writer> outf{grid, outf_params};
 
   // -- output particles
   OutputParticlesParams outp_params{};
