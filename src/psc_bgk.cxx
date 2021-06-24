@@ -42,11 +42,20 @@ using OutputParticles = PscConfig::OutputParticles;
 // ======================================================================
 // Parsed
 
+enum {
+  COL_RHO,
+  COL_NE,
+  COL_V_PHI,
+  COL_TE,
+  COL_E_RHO,
+  COL_PHI,
+  n_cols
+};
+
 class Parsed
 {
 private:
   static const int n_rows = 4401;
-  static const int n_cols = 6;
   static constexpr auto file_path = "../../input/bgk-input-1-phi.txt";
 
   // the data parsed from file_path
@@ -66,8 +75,6 @@ private:
   }
 
 public:
-  const int COL_RHO = 0, COL_NE = 1, COL_V_PHI = 2, COL_TE = 3, COL_E_RHO = 4, COL_PHI = 5;
-
   Parsed()
   {
     // first populate data
@@ -241,7 +248,7 @@ Grid_t* setupGrid()
   kinds[KIND_ION] = {1., 1e9, "i"}; // really heavy to keep them fixed
 
   mpi_printf(MPI_COMM_WORLD, "lambda_D = %g\n",
-             sqrt(parsed.get_interpolated(parsed.COL_TE, .022)));
+             sqrt(parsed.get_interpolated(COL_TE, .022)));
 
   // --- generic setup
   auto norm_params = Grid_t::NormalizationParams::dimensionless();
@@ -282,7 +289,7 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
         case KIND_ELECTRON:
           // velocities/momenta
           if (rho != 0) {
-            double v_phi = parsed.get_interpolated(parsed.COL_V_PHI, rho);
+            double v_phi = parsed.get_interpolated(COL_V_PHI, rho);
             double sign = g.reverse_v ? -1 : 1;
             npt.p[1] = sign * v_phi * -z / rho;
             npt.p[2] = sign * v_phi * y / rho;
@@ -290,10 +297,10 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
           // otherwise, npt.p[i] = 0
 
           // number density
-          npt.n = parsed.get_interpolated(parsed.COL_NE, rho);
+          npt.n = parsed.get_interpolated(COL_NE, rho);
 
           // temperature
-          npt.T[0] = parsed.get_interpolated(parsed.COL_TE, rho);
+          npt.T[0] = parsed.get_interpolated(COL_TE, rho);
           npt.T[1] = npt.T[2] = npt.T[0];
           break;
         case KIND_ION:
@@ -343,7 +350,7 @@ void initializeFields(MfieldsState& mflds)
     if (rho == 0)
       return 0.;
 
-    double E_rho = parsed.get_interpolated(parsed.COL_E_RHO, rho);
+    double E_rho = parsed.get_interpolated(COL_E_RHO, rho);
 
     if (m == EY) {
       return E_rho * y / rho;
