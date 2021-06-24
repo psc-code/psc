@@ -3,25 +3,11 @@ import numpy as np
 import psc.adios2py
 import os
 import xarray as xr
-from collections import OrderedDict, namedtuple
+from collections import namedtuple
 
 field_entry = namedtuple('field_entry', ['filename', 'varname', 'index'])
 
 class run:
-    _jeh_to_index = { 'jx_ec': 0, 'jy_ec': 1, 'jz_ec' : 2,
-                      'ex_ec': 3, 'ey_ec': 4, 'ez_ec' : 5,
-                      'hx_fc': 6, 'hy_fc': 7, 'hz_fc' : 8 }
-
-    _all_1st_to_index = { 'rho_he_e': 0, 'rho_e': 13, 'rho_i' : 26,
-                          'px_he_e': 4, 'px_e': 17, 'px_i' : 30,
-                          'py_he_e': 5, 'py_e': 18, 'py_i' : 31,
-                          'txx_he_e': 7, 'txx_e': 20, 'txx_i' : 33,
-                          'tyy_he_e': 8, 'tyy_e': 21, 'tyy_i' : 34,
-                          'tzz_he_e': 9, 'tzz_e': 22, 'tzz_i' : 35,
-                        }
-    
-    _fields_to_index = { "jeh": _jeh_to_index, "all_1st": _all_1st_to_index }
-    
     def __init__(self, path, L=None, pfx='pfd'):
         self._path = path
         self._pfx = pfx
@@ -32,7 +18,7 @@ class run:
             raise RuntimeError(f'No "{self._pfx}" data files found in "{path}"')
             
         self._files.sort()
-        self._steps = OrderedDict()
+        self._steps = {}
         for file in self._files:
             _, step, _ = file.split('.')
             step = int(step)
@@ -49,6 +35,12 @@ class run:
         self.gdims = np.asarray(file[var].shape)[0:3]
         file.close() # FIXME, should support with ... as 
 
+        self._fields_to_index = {}
+        self._fields_to_index['jeh'] = { 'jx_ec': 0, 'jy_ec': 1, 'jz_ec' : 2,
+                                         'ex_ec': 3, 'ey_ec': 4, 'ez_ec' : 5,
+                                         'hx_fc': 6, 'hy_fc': 7, 'hz_fc' : 8 }
+        self._fields_to_index["all_1st"] = self._make_all_1st_to_index(['he_e', 'e', 'i'])
+
         if L is not None:
             self.L = np.asarray(L)
             # FIXME, corner should also be passed (or rather read)
@@ -64,6 +56,22 @@ class run:
         first_step = next(iter(self._steps))
         self.activate_time(first_step)
         
+    def _make_all_1st_to_index(self, species):
+        to_index = {}
+        for i, s in enumerate(species):
+            to_index[f'rho_{s}'] = 0 + 13 * i
+            to_index[f'jx_{s}']  = 1 + 13 * i
+            to_index[f'jy_{s}']  = 2 + 13 * i
+            to_index[f'jz_{s}']  = 3 + 13 * i
+            to_index[f'px_{s}']  = 4 + 13 * i
+            to_index[f'py_{s}']  = 5 + 13 * i
+            to_index[f'pz_{s}']  = 6 + 13 * i
+            to_index[f'txx_{s}'] = 7 + 13 * i
+            to_index[f'txx_{s}'] = 8 + 13 * i
+            to_index[f'txx_{s}'] = 9 + 13 * i
+            
+        return to_index
+    
     def activate_time(self, step):
         if not step in self._steps:
             raise ValueError(f'step {step} not found!')
@@ -95,7 +103,6 @@ class run:
                    "y": self.y[start[1]:start[1]+count[1]],
                    "z": self.z[start[2]:start[2]+count[2]], }
         return xr.DataArray(arr, dims=['x', 'y', 'z'], coords=coords)
-                   
 
 def read(run, time):
     py_e = run.read('py_he_e', [0, 0, 0], run.gdims)
