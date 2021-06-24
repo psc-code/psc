@@ -65,9 +65,11 @@ class reader:
         
     def read(self, fldname, start, count):
         m = self._to_index(fldname)
-        sel_start = np.array([start[0], start[1], start[2], m])
-        sel_count = np.array([count[0], count[1], count[2], 1])
-        arr = self._file.read(self._varname, sel_start, sel_count)[:,:,:,0]
+        var = self._file[self._varname]
+        arr = var[start[0]:start[0]+count[0],
+                  start[1]:start[1]+count[1],
+                  start[2]:start[2]+count[2],
+                  m]
         coords = { "x": self._run.x[start[0]:start[0]+count[0]],
                    "y": self._run.y[start[1]:start[1]+count[1]],
                    "z": self._run.z[start[2]:start[2]+count[2]], }
