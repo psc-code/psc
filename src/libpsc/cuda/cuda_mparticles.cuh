@@ -274,6 +274,11 @@ struct cuda_mparticles : cuda_mparticles_base<_BS, MparticlesCudaStorage>
   std::vector<uint> get_offsets() const;
   std::vector<Particle> get_particles();
 
+  double mem_fraction() const
+  {
+    return double(this->storage.xi4.size()) / this->storage.xi4.capacity();
+  }
+
   void dump(const std::string& filename) const;
   void dump_by_patch(uint* n_prts_by_patch);
 

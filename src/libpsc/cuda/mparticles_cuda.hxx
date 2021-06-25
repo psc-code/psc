@@ -58,6 +58,8 @@ struct MparticlesCuda : MparticlesBase
     cmprts_->inject(buf, buf_n_by_patch);
   }
 
+  double mem_fraction() const { return cmprts_->mem_fraction(); }
+
   void dump(const std::string& filename) { cmprts_->dump(filename); }
 
   bool check_after_push() { return cmprts_->check_bidx_after_push(); }
