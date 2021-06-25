@@ -144,6 +144,43 @@ static auto div_nc(const E& flds, const Grid_t& grid)
   }
 }
 
+template <typename E>
+inline auto grad_yz(const E& fld, const Grid_t& grid)
+{
+  Int3 bnd = {(fld.shape(0) - grid.domain.ldims[0]) / 2,
+              (fld.shape(1) - grid.domain.ldims[1]) / 2,
+              (fld.shape(2) - grid.domain.ldims[2]) / 2};
+  auto dxyz = grid.domain.dx;
+
+  auto s0 = _s(1, _);
+  auto sm = _s(_, -1);
+
+  auto res = gt::empty<gt::expr_value_type<E>, gt::expr_space_type<E>>(
+    {grid.ldims[0], grid.ldims[1], grid.ldims[2], 3, grid.n_patches()});
+
+  auto _fld = fld.view(_s(-1 + bnd[0], -bnd[0]), _s(-1 + bnd[1], -bnd[1]),
+                       _s(-1 + bnd[2], -bnd[2]));
+
+  res.view(_all, _all, _all, 1) =
+    (_fld.view(_all, s0, s0, 0) - _fld.view(_all, sm, s0, 0)) / dxyz[1];
+  res.view(_all, _all, _all, 2) =
+    (_fld.view(_all, s0, s0, 0) - _fld.view(_all, s0, sm, 0)) / dxyz[2];
+
+  return res;
+}
+
+template <typename E>
+static auto grad_ec(const E& fld, const Grid_t& grid)
+{
+  if (grid.isInvar(0)) {
+    return psc::item::grad_yz(fld, grid);
+  } else {
+    // FIXME implement the following
+    // return psc::item::grad_xyz(fld, grid);
+    assert(false);
+  }
+}
+
 } // namespace item
 } // namespace psc
 
@@ -202,6 +239,38 @@ public:
 
 private:
   MfieldsState& mflds_;
+};
+
+// ======================================================================
+// Item_grad
+
+template <typename Mfields>
+class Item_grad : public MFexpression<Item_grad<Mfields>>
+{
+public:
+  using Real = typename Mfields::real_t;
+
+  static char const* name() { return "grad"; }
+  static int n_comps() { return 3; }
+  static std::vector<std::string> comp_names()
+  {
+    return {"gradx", "grady", "gradz"};
+  }
+
+  Item_grad(Mfields& mflds) : mflds_{mflds} {}
+
+  const Grid_t& grid() const { return mflds_.grid(); }
+  Int3 ibn() const { return {}; }
+  int n_patches() const { return grid().n_patches(); }
+
+  auto gt() const
+  {
+    return psc::item::grad_ec(mflds_.gt().view(_all, _all, _all, _all),
+                              mflds_.grid());
+  }
+
+private:
+  Mfields& mflds_;
 };
 
 #undef define_dxdydz

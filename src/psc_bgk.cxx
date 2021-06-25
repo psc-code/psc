@@ -330,6 +330,24 @@ void initializePhi(PhiField& phi)
 }
 
 // ======================================================================
+// initializeE from phi
+
+void initializeE(MfieldsState& mflds, PhiField& phi)
+{
+  auto grad = Item_grad<PhiField>(phi);
+
+  // for now, just write results
+  static WriterMRC writer;
+  if (!writer) {
+    writer.open("grad");
+  }
+  auto& grid = phi.grid();
+  writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
+  writer.write(grad.gt(), grad.grid(), grad.name(), grad.comp_names());
+  writer.end_step();
+}
+
+// ======================================================================
 // initializeFields
 
 void initializeFields(MfieldsState& mflds)
@@ -464,6 +482,7 @@ static void run()
     initializeParticles(balance, grid_ptr, mprts);
     initializePhi(phi);
     initializeFields(mflds);
+    initializeE(mflds, phi);
   } else {
     read_checkpoint(read_checkpoint_filename, *grid_ptr, mprts, mflds);
   }
