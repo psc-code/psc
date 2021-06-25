@@ -4,11 +4,15 @@ import numpy as np
 
 _ad = adios2.ADIOS()
 
+_dtype_map = {"float": np.float32, "double": np.float64}
+
 class variable:
     def __init__(self, var, engine):
         self._var = var
         self._engine = engine
+        self.name = var.Name()
         self.shape = var.Shape()[::-1]
+        self.dtype = _dtype_map[var.Type()]
         
     def set_selection(self, start, count):
         self._var.SetSelection((start[::-1], count[::-1]))
@@ -43,7 +47,8 @@ class variable:
 
         self.set_selection(sel_start, sel_count)
 
-        arr = np.empty(arr_shape, dtype='f', order='F')
+        arr = np.empty(arr_shape, dtype=self.dtype, order='F')
+        print("reading ", self.name, sel_start, sel_count)
         self._engine.Get(self._var, arr, adios2.Mode.Sync)
         return arr
 
