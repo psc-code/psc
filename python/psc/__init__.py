@@ -30,6 +30,69 @@ class Psc:
     def __repr__(self):
         return f"Psc(gdims={self.gdims}, length={self.length}, corner={self.corner})"
 
+class File:
+    def __init__(self, filename, length=None):
+        # FIXME, opens and closes the file, ie, slows things unnecessarily
+        self.psc = Psc(filename, length=length)
+        
+        self._fields_to_index = FieldsToIndex(['he_e', 'e', 'i'])
+
+        self._file = adios2py.file(filename)
+        
+        self._fields = {}
+        for var in self._file.vars:
+            for field, idx in self._fields_to_index[var].items():
+                self._fields[field] = { 'var' : var, 'index' : idx }
+
+    def __del__(self):
+        print("DBG: File closing")
+        self._file.close()
+
+    @property
+    def fields(self):
+        return self._fields.keys()
+
+    def read(self, fldname, start, count):
+        field = self._fields[fldname]
+        var = self._file[field['var']]
+        arr = var[start[0]:start[0]+count[0],
+                  start[1]:start[1]+count[1],
+                  start[2]:start[2]+count[2],
+                  field['index']]
+        coords = { "x": self.psc.x[start[0]:start[0]+count[0]],
+                   "y": self.psc.y[start[1]:start[1]+count[1]],
+                   "z": self.psc.z[start[2]:start[2]+count[2]], }
+        return xr.DataArray(arr, dims=['x', 'y', 'z'], coords=coords)
+
+
+class FieldsToIndex:
+    def __init__(self, species):
+        self._map = {}
+        self._map['jeh'] = { 'jx_ec': 0, 'jy_ec': 1, 'jz_ec' : 2,
+                                         'ex_ec': 3, 'ey_ec': 4, 'ez_ec' : 5,
+                                         'hx_fc': 6, 'hy_fc': 7, 'hz_fc' : 8 }
+        self._map["all_1st"] = self._make_all_1st_to_index(species)
+        
+    def __getitem__(self, field):
+        return self._map[field]
+
+    def _make_all_1st_to_index(self, species):
+        to_index = {}
+        for i, s in enumerate(species):
+            to_index[f'rho_{s}'] = 0 + 13 * i
+            to_index[f'jx_{s}']  = 1 + 13 * i
+            to_index[f'jy_{s}']  = 2 + 13 * i
+            to_index[f'jz_{s}']  = 3 + 13 * i
+            to_index[f'px_{s}']  = 4 + 13 * i
+            to_index[f'py_{s}']  = 5 + 13 * i
+            to_index[f'pz_{s}']  = 6 + 13 * i
+            to_index[f'txx_{s}'] = 7 + 13 * i
+            to_index[f'txx_{s}'] = 8 + 13 * i
+            to_index[f'txx_{s}'] = 9 + 13 * i
+            
+        return to_index
+    
+        
 class run:
     def __init__(self, path, L=None, pfx='pfd'):
         self._path = path
@@ -53,11 +116,7 @@ class run:
 
         self.psc = Psc(os.path.join(path, next(iter(self._files))), length=L)
 
-        self._fields_to_index = {}
-        self._fields_to_index['jeh'] = { 'jx_ec': 0, 'jy_ec': 1, 'jz_ec' : 2,
-                                         'ex_ec': 3, 'ey_ec': 4, 'ez_ec' : 5,
-                                         'hx_fc': 6, 'hy_fc': 7, 'hz_fc' : 8 }
-        self._fields_to_index["all_1st"] = self._make_all_1st_to_index(['he_e', 'e', 'i'])
+        self._fields_to_index = FieldsToIndex(['he_e', 'e', 'i'])
 
         first_step = next(iter(self._steps))
         self.activate_time(first_step)
