@@ -11,6 +11,14 @@
 namespace detail
 {
 
+enum Centering
+{
+  NC, // node-centered
+  EC, // edge-centered
+  FC, // face-centered
+  CC, // cell-centered
+};
+
 template <typename MF>
 struct SetupFields
 {
@@ -58,6 +66,29 @@ struct SetupFields
       });
     }
   }
+
+  template <typename FUNC>
+  static void runScalar(Mfields& mf, FUNC&& func)
+  {
+    const auto& grid = mf.grid();
+    mpi_printf(grid.comm(), "**** Setting up fields...\n");
+
+    for (int p = 0; p < mf.n_patches(); ++p) {
+      auto& patch = grid.patches[p];
+      auto F = make_Fields3d<dim_xyz>(mf[p]);
+
+      int n_ghosts =
+        std::max({mf.ibn()[0], mf.ibn()[1], mf.ibn()[2]}); // FIXME, not pretty
+      // FIXME, do we need the ghost points?
+      grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
+        double x_nc = patch.x_nc(jx), y_nc = patch.y_nc(jy),
+               z_nc = patch.z_nc(jz);
+
+        double nnn[3] = {x_nc, y_nc, z_nc};
+        F(0, jx, jy, jz) += func(0, nnn);
+      });
+    }
+  }
 };
 
 } // namespace detail
@@ -66,6 +97,12 @@ template <typename MF, typename FUNC>
 void setupFields(MF& mflds, FUNC&& func)
 {
   detail::SetupFields<MF>::run(mflds, std::forward<FUNC>(func));
+}
+
+template <typename MF, typename FUNC>
+void setupScalarField(MF& fld, FUNC&& func)
+{
+  detail::SetupFields<MF>::runScalar(fld, std::forward<FUNC>(func));
 }
 
 #ifdef USE_CUDA
