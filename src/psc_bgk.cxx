@@ -42,7 +42,8 @@ using OutputParticles = PscConfig::OutputParticles;
 // ======================================================================
 // Parsed
 
-enum {
+enum
+{
   COL_RHO,
   COL_NE,
   COL_V_PHI,
@@ -68,7 +69,7 @@ private:
   int get_row(double rho)
   {
     // initial guess; should be precise assuming rho is linearly spaced
-    int row = std::max(int(rho / rho_step), n_rows-1);
+    int row = std::max(int(rho / rho_step), n_rows - 1);
     while (rho < data[row][COL_RHO])
       row--;
     return row;
@@ -328,7 +329,6 @@ void initializePhi(PhiField& phi)
   });
 }
 
-
 // ======================================================================
 // initializeFields
 
@@ -362,6 +362,21 @@ void initializeFields(MfieldsState& mflds)
 
     return 0.0;
   });
+}
+
+// ======================================================================
+// write phi
+
+void writePhi(PhiField& phi)
+{
+  static WriterMRC writer;
+  if (!writer) {
+    writer.open("phi");
+  }
+  auto& grid = phi.grid();
+  writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
+  writer.write(view_interior(phi.gt(), phi.ibn()), grid, "phi", {"phi"});
+  writer.end_step();
 }
 
 // ======================================================================
@@ -452,6 +467,10 @@ static void run()
   } else {
     read_checkpoint(read_checkpoint_filename, *grid_ptr, mprts, mflds);
   }
+
+  // ----------------------------------------------------------------------
+  // write phi (so it can be visually checked)
+  writePhi(phi);
 
   // ----------------------------------------------------------------------
   // hand off to PscIntegrator to run the simulation
