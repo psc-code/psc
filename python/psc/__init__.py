@@ -7,6 +7,29 @@ from collections import namedtuple
 
 field_entry = namedtuple('field_entry', ['filename', 'varname', 'index'])
 
+class Psc:
+    def __init__(self, filename, length=None):
+        file = adios2py.file(filename)
+        assert len(file.vars) > 0
+        var = next(iter(file.vars))
+        self.gdims = np.asarray(file[var].shape)[0:3]
+        file.close() # FIXME, should support with ... as
+
+        if length is not None:
+            self.length = np.asarray(length)
+            # FIXME, corner should also be passed (or rather read)
+            self.corner = -.5 * self.length
+        else:
+            self.length = self.gdims
+            self.corner = np.array([0., 0., 0.])
+            
+        self.x = np.linspace(self.corner[0], self.corner[0] + self.length[0], self.gdims[0], endpoint=False)
+        self.y = np.linspace(self.corner[1], self.corner[1] + self.length[1], self.gdims[1], endpoint=False)
+        self.z = np.linspace(self.corner[2], self.corner[2] + self.length[2], self.gdims[2], endpoint=False)
+
+    def __repr__(self):
+        return f"Psc(gdims={self.gdims}, length={self.length}, corner={self.corner})"
+
 class run:
     def __init__(self, path, L=None, pfx='pfd'):
         self._path = path
@@ -28,12 +51,7 @@ class run:
                 self._steps[step] = [file]
         # print("steps", self._steps.keys())
 
-        # hacky way of figuring out gdims
-        file = adios2py.file(os.path.join(path, next(iter(self._files))))
-        assert len(file.vars) > 0
-        var = next(iter(file.vars))
-        self.gdims = np.asarray(file[var].shape)[0:3]
-        file.close() # FIXME, should support with ... as 
+        self.psc = Psc(os.path.join(path, next(iter(self._files))), length=L)
 
         self._fields_to_index = {}
         self._fields_to_index['jeh'] = { 'jx_ec': 0, 'jy_ec': 1, 'jz_ec' : 2,
@@ -41,18 +59,6 @@ class run:
                                          'hx_fc': 6, 'hy_fc': 7, 'hz_fc' : 8 }
         self._fields_to_index["all_1st"] = self._make_all_1st_to_index(['he_e', 'e', 'i'])
 
-        if L is not None:
-            self.L = np.asarray(L)
-            # FIXME, corner should also be passed (or rather read)
-            self.corner = -.5 * self.L
-        else:
-            self.L = self.gdims
-            self.corner = np.array([0., 0., 0.])
-
-        self.x = np.linspace(self.corner[0], self.corner[0] + self.L[0], self.gdims[0], endpoint=False)
-        self.y = np.linspace(self.corner[1], self.corner[1] + self.L[1], self.gdims[1], endpoint=False)
-        self.z = np.linspace(self.corner[2], self.corner[2] + self.L[2], self.gdims[2], endpoint=False)
-        
         first_step = next(iter(self._steps))
         self.activate_time(first_step)
         
@@ -99,12 +105,12 @@ class run:
                   start[2]:start[2]+count[2],
                   m]
         file.close()
-        coords = { "x": self.x[start[0]:start[0]+count[0]],
-                   "y": self.y[start[1]:start[1]+count[1]],
-                   "z": self.z[start[2]:start[2]+count[2]], }
+        coords = { "x": self.psc.x[start[0]:start[0]+count[0]],
+                   "y": self.psc.y[start[1]:start[1]+count[1]],
+                   "z": self.psc.z[start[2]:start[2]+count[2]], }
         return xr.DataArray(arr, dims=['x', 'y', 'z'], coords=coords)
 
 def read(run, time):
-    py_e = run.read('py_he_e', [0, 0, 0], run.gdims)
-    n_e = -run.read('rho_he_e', [0, 0, 0], run.gdims)
+    py_e = run.read('py_he_e', [0, 0, 0], run.psc.gdims)
+    n_e = -run.read('rho_he_e', [0, 0, 0], run.psc.gdims)
     return {"n_e" : n_e, "py_e" : py_e}
