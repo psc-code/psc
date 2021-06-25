@@ -323,7 +323,9 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
 
 void initializePhi(PhiField& phi)
 {
-  setupFields(phi, [&](int, double crd[3]) {
+  setupFields(phi, [&](int m, double crd[3]) {
+    if (m > 0)
+      return 0.0;
     double rho = sqrt(sqr(crd[1]) + sqr(crd[2]));
     return parsed.get_interpolated(COL_PHI, rho);
   });
