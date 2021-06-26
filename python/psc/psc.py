@@ -3,7 +3,7 @@ from . import adios2py
 
 import numpy as np
 
-class Psc:
+class RunInfo:
     """Global information about the PSC run
     
     Currently stores domain info.

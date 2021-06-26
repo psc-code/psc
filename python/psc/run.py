@@ -5,7 +5,7 @@ now this is pretty much just out-of-date hacky stuff.
 
 import os
 
-from .psc import Psc, FieldToComponent
+from .psc import RunInfo, FieldToComponent
 from . import adios2py
 
 import xarray as xr
@@ -35,7 +35,7 @@ class Run:
                 self._steps[step] = [file]
         # print("steps", self._steps.keys())
 
-        self.psc = Psc(os.path.join(path, next(iter(self._files))), length=L)
+        self.psc = RunInfo(os.path.join(path, next(iter(self._files))), length=L)
 
         self._fields_to_index = FieldToComponent(['he_e', 'e', 'i'])
 

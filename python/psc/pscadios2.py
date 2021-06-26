@@ -1,5 +1,5 @@
 
-from .psc import Psc, FieldToComponent
+from .psc import RunInfo, FieldToComponent
 from . import adios2py
 
 import xarray as xr
@@ -29,10 +29,10 @@ class PscAdios2Array(BackendArray):
 
 _FieldInfo = namedtuple('FieldInfo', ['varname', 'component'])
 
-class File:   
+class PscAdios2Store:   
     def __init__(self, filename, length=None):
         # FIXME, opens and closes the file, ie, slows things unnecessarily
-        self.psc = Psc(filename, length=length)
+        self.psc = RunInfo(filename, length=length)
         
         self._fields_to_index = FieldToComponent(['he_e', 'e', 'i'])
 
@@ -54,15 +54,15 @@ class File:
 
 
 def psc_open_dataset(filename, length=None, drop_variables=None):
-    file = File(filename, length)
-    fields = file.fields
+    store = PscAdios2Store(filename, length)
+    fields = store.fields
     vars = {}
     for f in fields:
-        field = file._fields[f]
-        var = file._file[field.varname]
-        coords = { "x": file.psc.x,
-                   "y": file.psc.y,
-                   "z": file.psc.z }
+        field = store._fields[f]
+        var = store._file[field.varname]
+        coords = { "x": store.psc.x,
+                   "y": store.psc.y,
+                   "z": store.psc.z }
         arr = PscAdios2Array(var, field.component)
         vars[f] = xr.DataArray(arr, dims=['x', 'y', 'z'], coords=coords)
 
