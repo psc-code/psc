@@ -1,6 +1,7 @@
 
 import adios2
 import numpy as np
+import logging
 
 _ad = adios2.ADIOS()
 
@@ -14,7 +15,7 @@ class variable:
         self.shape = var.Shape()[::-1]
         self.dtype = _dtype_map[var.Type()]
         
-    def set_selection(self, start, count):
+    def _set_selection(self, start, count):
         self._var.SetSelection((start[::-1], count[::-1]))
 
     def __getitem__(self, args):
@@ -45,7 +46,7 @@ class variable:
             
             raise RuntimeError(f"invalid args to __getitem__: {args}")
 
-        self.set_selection(sel_start, sel_count)
+        self._set_selection(sel_start, sel_count)
 
         arr = np.empty(arr_shape, dtype=self.dtype, order='F')
         print("reading ", self.name, sel_start, sel_count)
@@ -54,12 +55,22 @@ class variable:
 
 class file:
     def __init__(self, filename):
+        logging.debug(f"adios2py: __init__ {filename}")
         self._io_name = f'io-{filename}'
         self._io = _ad.DeclareIO(self._io_name)
         self._engine = self._io.Open(filename, adios2.Mode.Read)
         self.vars = self._io.AvailableVariables().keys()
         
+    def __enter__(self):
+        logging.debug(f"adios2py: __enter__")
+        return self
+    
+    def __exit__(self, type, value, traceback):
+        logging.debug(f"adios2py: __exit__")
+        self.close()
+        
     def close(self):
+        logging.debug(f"adios2py: close")
         self._engine.Close()
         _ad.RemoveIO(self._io_name)
         
