@@ -2,10 +2,9 @@
 from .psc import RunInfo, FieldToComponent
 from . import adios2py
 
-import xarray as xr
-from xarray.backends.common import BACKEND_ENTRYPOINTS
-from xarray.backends import BackendEntrypoint, BackendArray
+import xarray
 from xarray.core import indexing
+from xarray.backends.common import BACKEND_ENTRYPOINTS, BackendEntrypoint, BackendArray, _normalize_path
 
 from collections import namedtuple
 
@@ -51,22 +50,27 @@ class PscAdios2Store:
     @property
     def fields(self):
         return self._fields.keys()
+    
+    def load(self):
+        vars = {}
+        attrs = {}
+        for name, field in self._fields.items():
+            var = self._file[field.varname]
+            coords = { "x": self.psc.x, "y": self.psc.y, "z": self.psc.z }
+            arr = PscAdios2Array(var, field.component)
+            vars[name] = xarray.DataArray(arr, dims=['x', 'y', 'z'], coords=coords)
+        
+        return vars, attrs
 
 
-def psc_open_dataset(filename, length=None, drop_variables=None):
-    store = PscAdios2Store(filename, length)
-    fields = store.fields
-    vars = {}
-    for f in fields:
-        field = store._fields[f]
-        var = store._file[field.varname]
-        coords = { "x": store.psc.x,
-                   "y": store.psc.y,
-                   "z": store.psc.z }
-        arr = PscAdios2Array(var, field.component)
-        vars[f] = xr.DataArray(arr, dims=['x', 'y', 'z'], coords=coords)
+def psc_open_dataset(filename_or_obj, length=None, drop_variables=None):
 
-    return xr.Dataset(vars)
+    filename_or_obj = _normalize_path(filename_or_obj)
+    store = PscAdios2Store(filename_or_obj, length)
+    
+    vars, attrs = store.load()
+    
+    return xarray.Dataset(vars, attrs=attrs)
 
 class PscAdios2BackendEntrypoint(BackendEntrypoint):
     def open_dataset(
