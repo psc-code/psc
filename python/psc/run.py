@@ -50,25 +50,24 @@ class Run:
 
         self.fields = {}
         for filename in filenames:
-            file = adios2py.file(os.path.join(self._path, filename))
-            for varname in file.vars:
-                fields_to_index = self._fields_to_index[varname]
-                # assert # of comps (and gdims?) match
-                for f in fields_to_index:
-                    self.fields[f] = field_entry(filename=filename, varname=varname, index=fields_to_index[f])
-            file.close() # FIXME, should support with ... as 
+            with adios2py.file(os.path.join(self._path, filename)) as file:
+                for varname in file.vars:
+                    fields_to_index = self._fields_to_index[varname]
+                    # assert # of comps (and gdims?) match
+                    for f in fields_to_index:
+                        self.fields[f] = field_entry(filename=filename, varname=varname, index=fields_to_index[f])
         # print(f'fields {self.fields.keys()}')
         
     def read(self, fldname, start, count):
         field = self.fields[fldname]
-        file = adios2py.file(os.path.join(self._path, field.filename))
-        var = file[field.varname]
-        m = field.index
-        arr = var[start[0]:start[0]+count[0],
-                  start[1]:start[1]+count[1],
-                  start[2]:start[2]+count[2],
-                  m]
-        file.close()
+        with adios2py.file(os.path.join(self._path, field.filename)) as file:
+            var = file[field.varname]
+            m = field.index
+            arr = var[start[0]:start[0]+count[0],
+                      start[1]:start[1]+count[1],
+                      start[2]:start[2]+count[2],
+                      m]
+
         coords = { "x": self.psc.x[start[0]:start[0]+count[0]],
                    "y": self.psc.y[start[1]:start[1]+count[1]],
                    "z": self.psc.z[start[2]:start[2]+count[2]], }

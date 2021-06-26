@@ -10,11 +10,10 @@ class Psc:
     TODO: Should also know about timestep, species, whatever...
     """
     def __init__(self, filename, length=None):
-        file = adios2py.file(filename)
-        assert len(file.vars) > 0
-        var = next(iter(file.vars))
-        self.gdims = np.asarray(file[var].shape)[0:3]
-        file.close() # FIXME, should support with ... as
+        with adios2py.file(filename) as file:
+            assert len(file.vars) > 0
+            var = next(iter(file.vars))
+            self.gdims = np.asarray(file[var].shape)[0:3]
 
         if length is not None:
             self.length = np.asarray(length)

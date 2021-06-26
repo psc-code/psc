@@ -74,8 +74,9 @@ class PscAdios2BackendEntrypoint(BackendEntrypoint):
         filename_or_obj,
         *,
         drop_variables=None,
+        length=None
     ):
-        return psc_open_dataset(filename_or_obj, drop_variables=drop_variables)
+        return psc_open_dataset(filename_or_obj, drop_variables=drop_variables, length=length)
 
     open_dataset_parameters = ["filename_or_obj", "drop_variables"]
 
