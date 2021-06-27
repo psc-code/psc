@@ -3,18 +3,16 @@ from . import adios2py
 
 import numpy as np
 
-class Psc:
+class RunInfo:
     """Global information about the PSC run
     
     Currently stores domain info.
     TODO: Should also know about timestep, species, whatever...
     """
-    def __init__(self, filename, length=None):
-        file = adios2py.file(filename)
-        assert len(file.vars) > 0
-        var = next(iter(file.vars))
+    def __init__(self, file, length=None):
+        assert len(file.variables) > 0
+        var = next(iter(file.variables))
         self.gdims = np.asarray(file[var].shape)[0:3]
-        file.close() # FIXME, should support with ... as
 
         if length is not None:
             self.length = np.asarray(length)

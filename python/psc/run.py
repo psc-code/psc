@@ -5,7 +5,7 @@ now this is pretty much just out-of-date hacky stuff.
 
 import os
 
-from .psc import Psc, FieldToComponent
+from .psc import RunInfo, FieldToComponent
 from . import adios2py
 
 import xarray as xr
@@ -35,7 +35,8 @@ class Run:
                 self._steps[step] = [file]
         # print("steps", self._steps.keys())
 
-        self.psc = Psc(os.path.join(path, next(iter(self._files))), length=L)
+        with adios2py.file(os.path.join(path, next(iter(self._files)))) as file:
+            self.psc = RunInfo(file, length=L)
 
         self._fields_to_index = FieldToComponent(['he_e', 'e', 'i'])
 
@@ -50,25 +51,24 @@ class Run:
 
         self.fields = {}
         for filename in filenames:
-            file = adios2py.file(os.path.join(self._path, filename))
-            for varname in file.vars:
-                fields_to_index = self._fields_to_index[varname]
-                # assert # of comps (and gdims?) match
-                for f in fields_to_index:
-                    self.fields[f] = field_entry(filename=filename, varname=varname, index=fields_to_index[f])
-            file.close() # FIXME, should support with ... as 
+            with adios2py.file(os.path.join(self._path, filename)) as file:
+                for varname in file.variables:
+                    fields_to_index = self._fields_to_index[varname]
+                    # assert # of comps (and gdims?) match
+                    for f in fields_to_index:
+                        self.fields[f] = field_entry(filename=filename, varname=varname, index=fields_to_index[f])
         # print(f'fields {self.fields.keys()}')
         
     def read(self, fldname, start, count):
         field = self.fields[fldname]
-        file = adios2py.file(os.path.join(self._path, field.filename))
-        var = file[field.varname]
-        m = field.index
-        arr = var[start[0]:start[0]+count[0],
-                  start[1]:start[1]+count[1],
-                  start[2]:start[2]+count[2],
-                  m]
-        file.close()
+        with adios2py.file(os.path.join(self._path, field.filename)) as file:
+            var = file[field.varname]
+            m = field.index
+            arr = var[start[0]:start[0]+count[0],
+                      start[1]:start[1]+count[1],
+                      start[2]:start[2]+count[2],
+                      m]
+
         coords = { "x": self.psc.x[start[0]:start[0]+count[0]],
                    "y": self.psc.y[start[1]:start[1]+count[1]],
                    "z": self.psc.z[start[2]:start[2]+count[2]], }

@@ -1,72 +1,104 @@
 
-from .psc import Psc, FieldToComponent
+from .psc import RunInfo, FieldToComponent
 from . import adios2py
 
-import xarray as xr
-from xarray.backends.common import BACKEND_ENTRYPOINTS
-from xarray.backends import BackendEntrypoint, BackendArray
+import xarray
 from xarray.core import indexing
+from xarray.backends.common import BACKEND_ENTRYPOINTS, BackendEntrypoint, BackendArray, _normalize_path, AbstractDataStore
+from xarray.backends import CachingFileManager
+from xarray.backends.locks import SerializableLock, get_write_lock, ensure_lock
+from xarray.core.utils import FrozenDict
 
 from collections import namedtuple
+import logging
+
+# adios2 is not thread safe
+ADIOS2_LOCK = SerializableLock()
 
 class PscAdios2Array(BackendArray):
     """Lazy evaluation of a variable stored in PSC's adios2 field output.
     
-    This takes care of slicing out the specific component of the data stored as 4-d array.
+    This also takes care of slicing out the specific component of the data stored as 4-d array.
     """
-    def __init__(self, var, m):
-        self._var = var
-        self._m = m
-        self.shape = var.shape[:-1]
-        self.dtype = var.dtype
+    def __init__(self, variable_name, datastore, orig_varname, component):
+        self.variable_name = variable_name
+        self.datastore = datastore
+        self._orig_varname = orig_varname
+        self._component = component
+        array = self.get_array()
+        self.shape = array.shape[:-1]
+        self.dtype = array.dtype
+        
+    def get_array(self, needs_lock=True):
+        ds = self.datastore._acquire(needs_lock)
+        return ds[self._orig_varname]
         
     def __getitem__(self, key):
         return indexing.explicit_indexing_adapter(
             key, self.shape, indexing.IndexingSupport.BASIC, self._getitem)
     
     def _getitem(self, args):
-        return self._var[(*args, self._m)]
-
-_FieldInfo = namedtuple('FieldInfo', ['varname', 'component'])
-
-class File:   
-    def __init__(self, filename, length=None):
-        # FIXME, opens and closes the file, ie, slows things unnecessarily
-        self.psc = Psc(filename, length=length)
+        with self.datastore.lock:
+            array = self.get_array(needs_lock=False)
+            return array[(*args, self._component)] # FIXME add ... in between
         
-        self._fields_to_index = FieldToComponent(['he_e', 'e', 'i'])
 
-        self._file = adios2py.file(filename)
+class PscAdios2Store(AbstractDataStore):   
+    def __init__(self, manager, mode=None, lock=ADIOS2_LOCK, length=None):
+        self._manager = manager
+        self._mode = mode
+        self.lock = ensure_lock(lock)
+        self.psc = RunInfo(self.ds, length=length)        
         
-        self._fields = {}
-        for var in self._file.vars:
-            for field, idx in self._fields_to_index[var].items():
-                self._fields[field] = _FieldInfo(varname=var, component=idx)
-
-    def __del__(self):
-        pass
-        #print("DBG: File closing")
-        #self._file.close()
+    @classmethod
+    def open(cls, filename, mode='r', lock=None, length=None):
+        if lock is None:
+            if mode == "r":
+                lock = ADIOS2_LOCK
+            else:
+                lock = combine_locks([ADIOS2_LOCK, get_write_lock(filename)])
+                
+        manager = CachingFileManager(adios2py.file, filename, mode=mode)
+        return cls(manager, mode=mode, lock=lock, length=length)
+    
+    def _acquire(self, needs_lock=True):
+        with self._manager.acquire_context(needs_lock) as root:
+            ds = root
+        return ds
 
     @property
-    def fields(self):
-        return self._fields.keys()
+    def ds(self):
+        return self._acquire()
+
+    def get_variables(self):
+        fields_to_index = FieldToComponent(['he_e', 'e', 'i'])
+
+        vars = {}
+        for varname in self.ds.variables:
+            for field, idx in fields_to_index[varname].items():
+                vars[field] = (varname, idx)
+
+        return FrozenDict((k, self.open_store_variable(k, v)) for k, v in vars.items())
+        
+    def open_store_variable(self, name, tpl):
+        orig_varname, idx = tpl
+        data = indexing.LazilyIndexedArray(PscAdios2Array(name, self, orig_varname, idx))
+        dims = ['x', 'y', 'z']
+        coords = { "x": self.psc.x, "y": self.psc.y, "z": self.psc.z }
+        return xarray.DataArray(data, dims=dims, coords=coords)
+
+    def get_attrs(self):
+        return {}
 
 
-def psc_open_dataset(filename, length=None, drop_variables=None):
-    file = File(filename, length)
-    fields = file.fields
-    vars = {}
-    for f in fields:
-        field = file._fields[f]
-        var = file._file[field.varname]
-        coords = { "x": file.psc.x,
-                   "y": file.psc.y,
-                   "z": file.psc.z }
-        arr = PscAdios2Array(var, field.component)
-        vars[f] = xr.DataArray(arr, dims=['x', 'y', 'z'], coords=coords)
-
-    return xr.Dataset(vars)
+def psc_open_dataset(filename_or_obj, length=None, drop_variables=None):
+    filename_or_obj = _normalize_path(filename_or_obj)
+    store = PscAdios2Store.open(filename_or_obj, length=length)
+    
+    vars, attrs = store.load()
+    ds = xarray.Dataset(vars, attrs=attrs)
+    ds.set_close(store.close)
+    return ds
 
 class PscAdios2BackendEntrypoint(BackendEntrypoint):
     def open_dataset(
@@ -74,8 +106,9 @@ class PscAdios2BackendEntrypoint(BackendEntrypoint):
         filename_or_obj,
         *,
         drop_variables=None,
+        length=None
     ):
-        return psc_open_dataset(filename_or_obj, drop_variables=drop_variables)
+        return psc_open_dataset(filename_or_obj, drop_variables=drop_variables, length=length)
 
     open_dataset_parameters = ["filename_or_obj", "drop_variables"]
 
