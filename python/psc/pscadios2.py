@@ -5,6 +5,7 @@ from . import adios2py
 import xarray
 from xarray.core import indexing
 from xarray.backends.common import BACKEND_ENTRYPOINTS, BackendEntrypoint, BackendArray, _normalize_path, AbstractDataStore
+from xarray.backends import CachingFileManager
 
 from collections import namedtuple
 import logging
@@ -30,31 +31,35 @@ class PscAdios2Array(BackendArray):
 _FieldInfo = namedtuple('FieldInfo', ['varname', 'component'])
 
 class PscAdios2Store(AbstractDataStore):   
-    def __init__(self, filename, length=None):
-        # FIXME, opens and closes the file, ie, slows things unnecessarily
-        self.psc = RunInfo(filename, length=length)
+    def __init__(self, manager, length=None):
+        self._manager = manager
+        self.psc = RunInfo(self.ds, length=length)        
         
-        self._fields_to_index = FieldToComponent(['he_e', 'e', 'i'])
+    @classmethod
+    def open(cls, filename, length=None):
+        manager = CachingFileManager(adios2py.file, filename)
+        #manager = adios2py.file(filename)
+        return cls(manager, length=length)
+    
+    def _acquire(self, needs_lock=True):
+        with self._manager.acquire_context(needs_lock) as root:
+            ds = root
+        return ds
 
-        self._file = adios2py.file(filename)
-        
-    def __del__(self):
-        pass
-        #print("DBG: File closing")
-        #self._file.close()
+    @property
+    def ds(self):
+        return self._acquire()
 
     def get_variables(self):
-        logging.debug("get_vars 1")
-        fields = {}
+        fields_to_index = FieldToComponent(['he_e', 'e', 'i'])
+
         vars = {}
-        for var in self._file.variables:
-            for field, idx in self._fields_to_index[var].items():
-                fields[field] = _FieldInfo(varname=var, component=idx)
+        for var in self.ds.variables:
+            for field, idx in fields_to_index[var].items():
                 coords = { "x": self.psc.x, "y": self.psc.y, "z": self.psc.z }
-                arr = PscAdios2Array(self._file[var], idx)
+                arr = PscAdios2Array(self.ds[var], idx)
                 vars[field] = xarray.DataArray(arr, dims=['x', 'y', 'z'], coords=coords)
 
-        logging.debug("get_vars 1")
         return vars
 
     def get_attrs(self):
@@ -62,12 +67,10 @@ class PscAdios2Store(AbstractDataStore):
 
 
 def psc_open_dataset(filename_or_obj, length=None, drop_variables=None):
-
     filename_or_obj = _normalize_path(filename_or_obj)
-    store = PscAdios2Store(filename_or_obj, length)
+    store = PscAdios2Store.open(filename_or_obj, length)
     
     vars, attrs = store.load()
-    logging.debug("open_ds")
     ds = xarray.Dataset(vars, attrs=attrs)
     ds.set_close(store.close)
     return ds

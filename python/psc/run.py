@@ -35,7 +35,8 @@ class Run:
                 self._steps[step] = [file]
         # print("steps", self._steps.keys())
 
-        self.psc = RunInfo(os.path.join(path, next(iter(self._files))), length=L)
+        with adios2py.file(os.path.join(path, next(iter(self._files)))) as file:
+            self.psc = RunInfo(file, length=L)
 
         self._fields_to_index = FieldToComponent(['he_e', 'e', 'i'])
 
