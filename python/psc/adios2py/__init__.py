@@ -79,7 +79,7 @@ class variable:
         self._set_selection(sel_start, sel_count)
 
         arr = np.empty(arr_shape, dtype=self.dtype, order='F')
-        print("reading ", self.name, sel_start, sel_count)
+        print("reading ", self.name, args)
         self._engine.Get(self._var, arr, adios2.Mode.Sync)
         return arr
 
@@ -88,8 +88,9 @@ class variable:
     
 
 class file:
-    def __init__(self, filename):
+    def __init__(self, filename, mode='r'):
         logging.debug(f"adios2py: __init__ {filename}")
+        assert mode == 'r'
         self._io_name = f'io-{filename}'
         self._io = _ad.DeclareIO(self._io_name)
         self._engine = self._io.Open(filename, adios2.Mode.Read)
