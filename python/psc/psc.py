@@ -11,8 +11,8 @@ class RunInfo:
     """
     def __init__(self, filename, length=None):
         with adios2py.file(filename) as file:
-            assert len(file.vars) > 0
-            var = next(iter(file.vars))
+            assert len(file.variables) > 0
+            var = next(iter(file.variables))
             self.gdims = np.asarray(file[var].shape)[0:3]
 
         if length is not None:

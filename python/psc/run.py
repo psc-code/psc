@@ -51,7 +51,7 @@ class Run:
         self.fields = {}
         for filename in filenames:
             with adios2py.file(os.path.join(self._path, filename)) as file:
-                for varname in file.vars:
+                for varname in file.variables:
                     fields_to_index = self._fields_to_index[varname]
                     # assert # of comps (and gdims?) match
                     for f in fields_to_index:
