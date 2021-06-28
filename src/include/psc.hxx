@@ -218,6 +218,13 @@ struct Psc
 #else
     initialize_default();
 #endif
+    bndf_.fill_ghosts_H(mflds_);
+    bnd_.fill_ghosts(mflds_, HX, HX + 3);
+
+    bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
+
+    bndf_.fill_ghosts_E(mflds_);
+    bnd_.fill_ghosts(mflds_, EX, EX + 3);
 
     // initial output / stats
     mpi_printf(grid().comm(), "Performing initial diagnostics.\n");
