@@ -218,7 +218,7 @@ void setupParameters()
   g.q_i = 1;
   // g.q_i = 1.0000111539638505; // from psc-scrap/check_case1.ipynb
 
-  g.n_grid = 128;
+  g.n_grid = 32;
 
   g.reverse_v = true;
 }
@@ -382,17 +382,9 @@ void initializeE(MfieldsState& mflds, PhiField& phi)
     auto& patch = grid.patches[p];
     auto F = make_Fields3d<dim_xyz>(mflds[p]);
 
-    int n_ghosts = std::max(
-      {mflds.ibn()[0], mflds.ibn()[1], mflds.ibn()[2]}); // FIXME, not pretty
-    // FIXME, do we need the ghost points?
-    int lens[3] = {grad.shape()[0], grad.shape()[1], grad.shape()[2]};
-    grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
+    grid.Foreach_3d(0, 0, [&](int jx, int jy, int jz) {
       for (int i = 0; i < 3; i++) {
-        int offset = 1;
-        int jx2 = (jx + (i == 0 ? offset : 0) + lens[0]) % lens[0];
-        int jy2 = (jy + (i == 1 ? offset : 0) + lens[1]) % lens[1];
-        int jz2 = (jz + (i == 2 ? offset : 0) + lens[2]) % lens[2];
-        F(EX + i, jx, jy, jz) += -killNan(grad(jx2, jy2, jz2, i, 0));
+        F(EX + i, jx, jy, jz) += -killNan(grad(jx, jy, jz, i, p));
       }
     });
   }
