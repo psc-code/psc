@@ -76,6 +76,7 @@ struct mem_fraction<Mparticles, gt::meta::void_t<decltype(
     double res = mprts.mem_fraction();
     MPI_Allreduce(MPI_IN_PLACE, &res, 1, MPI_DOUBLE, MPI_MAX,
                   mprts.grid().comm());
+    return res;
   }
 };
 
