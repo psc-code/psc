@@ -364,10 +364,35 @@ void initializePhi(PhiField& phi)
 
 void initializeE(MfieldsState& mflds, PhiField& phi)
 {
-  auto grad = Item_grad<PhiField>(phi);
+  auto grad_item = Item_grad<PhiField>(phi);
+  // write results so they can be checked
+  writeGrad(grad_item);
 
-  // for now, just write results
-  writeGrad(grad);
+  auto grad = grad_item.gt();
+
+  const auto& grid = mflds.grid();
+  for (int p = 0; p < mflds.n_patches(); ++p) {
+    auto& patch = grid.patches[p];
+    auto F = make_Fields3d<dim_xyz>(mflds[p]);
+
+    int n_ghosts = std::max(
+      {mflds.ibn()[0], mflds.ibn()[1], mflds.ibn()[2]}); // FIXME, not pretty
+    // FIXME, do we need the ghost points?
+    int lens[3] = {grad.shape()[0], grad.shape()[1], grad.shape()[2]};
+    grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
+      int jx2 = (jx + lens[0]) % lens[0];
+      int jy2 = (jy + lens[1]) % lens[1];
+      int jz2 = (jz + lens[2]) % lens[2];
+      
+      for (int i = 0; i < 3; i++) {
+        F(EX + i, jx, jy, jz) += -grad(jx2, jy2, jz2, i, p);
+      }
+    });
+  }
+
+  // this does not work, but something like it would be nice
+  // view_interior(mflds.gt(), mflds.ibn())
+  //   .view(_all, _all, _all, _s(EX, EX + 3)) = grad;
 }
 
 // ======================================================================
@@ -378,8 +403,8 @@ void initializeFields(MfieldsState& mflds)
   setupFields(mflds, [&](int m, double crd[3]) {
     // take care of the easy cases
     switch (m) {
-      case EY:
-      case EZ: break;
+      // case EY:
+      // case EZ: break;
       case HX: return g.Hx;
       default: return 0.;
     }
