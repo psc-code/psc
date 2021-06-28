@@ -274,6 +274,36 @@ Grid_t* setupGrid()
 }
 
 // ======================================================================
+// write phi
+
+void writePhi(PhiField& phi)
+{
+  static WriterMRC writer;
+  if (!writer) {
+    writer.open("phi");
+  }
+  auto& grid = phi.grid();
+  writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
+  writer.write(view_interior(phi.gt(), phi.ibn()), grid, "phi", {"phi"});
+  writer.end_step();
+}
+
+// ======================================================================
+// write grad
+
+void writeGrad(Item_grad<PhiField>& grad)
+{
+  static WriterMRC writer;
+  if (!writer) {
+    writer.open("grad");
+  }
+  auto& grid = grad.grid();
+  writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
+  writer.write(grad.gt(), grad.grid(), grad.name(), grad.comp_names());
+  writer.end_step();
+}
+
+// ======================================================================
 // initializeParticles
 
 void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
@@ -337,14 +367,7 @@ void initializeE(MfieldsState& mflds, PhiField& phi)
   auto grad = Item_grad<PhiField>(phi);
 
   // for now, just write results
-  static WriterMRC writer;
-  if (!writer) {
-    writer.open("grad");
-  }
-  auto& grid = phi.grid();
-  writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
-  writer.write(grad.gt(), grad.grid(), grad.name(), grad.comp_names());
-  writer.end_step();
+  writeGrad(grad);
 }
 
 // ======================================================================
@@ -380,21 +403,6 @@ void initializeFields(MfieldsState& mflds)
 
     return 0.0;
   });
-}
-
-// ======================================================================
-// write phi
-
-void writePhi(PhiField& phi)
-{
-  static WriterMRC writer;
-  if (!writer) {
-    writer.open("phi");
-  }
-  auto& grid = phi.grid();
-  writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
-  writer.write(view_interior(phi.gt(), phi.ibn()), grid, "phi", {"phi"});
-  writer.end_step();
 }
 
 // ======================================================================
