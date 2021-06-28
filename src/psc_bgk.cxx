@@ -218,7 +218,7 @@ void setupParameters()
   g.q_i = 1;
   // g.q_i = 1.0000111539638505; // from psc-scrap/check_case1.ipynb
 
-  g.n_grid = 32;
+  g.n_grid = 128;
 
   g.reverse_v = true;
 }
@@ -362,6 +362,13 @@ void initializePhi(PhiField& phi)
 // ======================================================================
 // initializeE from phi
 
+inline double killNan(double maybenan)
+{
+  if (isnan(maybenan))
+    return 0;
+  return maybenan;
+}
+
 void initializeE(MfieldsState& mflds, PhiField& phi)
 {
   auto grad_item = Item_grad<PhiField>(phi);
@@ -380,12 +387,12 @@ void initializeE(MfieldsState& mflds, PhiField& phi)
     // FIXME, do we need the ghost points?
     int lens[3] = {grad.shape()[0], grad.shape()[1], grad.shape()[2]};
     grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
-      int jx2 = (jx + lens[0]) % lens[0];
-      int jy2 = (jy + lens[1]) % lens[1];
-      int jz2 = (jz + lens[2]) % lens[2];
-      
       for (int i = 0; i < 3; i++) {
-        F(EX + i, jx, jy, jz) += -grad(jx2, jy2, jz2, i, p);
+        int offset = 1;
+        int jx2 = (jx + (i == 0 ? offset : 0) + lens[0]) % lens[0];
+        int jy2 = (jy + (i == 1 ? offset : 0) + lens[1]) % lens[1];
+        int jz2 = (jz + (i == 2 ? offset : 0) + lens[2]) % lens[2];
+        F(EX + i, jx, jy, jz) += -killNan(grad(jx2, jy2, jz2, i, 0));
       }
     });
   }
