@@ -104,6 +104,17 @@ public:
     mrc_fld_destroy(fld);
   }
 
+  template <typename E>
+  void write_step(const Grid_t& grid, const Int3& rn, const Int3& rx,
+                  const E& expr, const std::string& name,
+                  const std::vector<std::string>& comp_names)
+  {
+    begin_step(grid);
+    set_subset(grid, rn, rx);
+    write(expr, grid, name, comp_names);
+    end_step();
+  }
+
 private:
   std::unique_ptr<struct mrc_io, decltype(&mrc_io_close)> io_;
 };

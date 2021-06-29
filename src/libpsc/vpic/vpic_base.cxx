@@ -34,7 +34,9 @@ void vpic_base_init(int* pargc, char*** pargv)
 
     boot_mp(pargc, pargv);
 #else
-    MPI_Init(pargc, pargv);
+    // MPI_Init(pargc, pargv);
+    int provided;
+    MPI_Init_thread(pargc, pargv, MPI_THREAD_MULTIPLE, &provided);
 #endif
 
     MPI_Comm_dup(MPI_COMM_WORLD, &psc_comm_world);

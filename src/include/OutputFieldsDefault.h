@@ -109,10 +109,12 @@ public:
         mpi_printf(item.grid().comm(), "***** Writing PFD output for '%s'\n",
                    item.name());
         pfield_next_ += pfield_interval;
-        io_pfd_.begin_step(item.grid());
-        io_pfd_.set_subset(item.grid(), rn, rx);
-        io_pfd_.write(pfd, item.grid(), item.name(), item.comp_names());
-        io_pfd_.end_step();
+        io_pfd_.write_step(item.grid(), rn, rx, pfd, item.name(),
+                           item.comp_names());
+        // io_pfd_.begin_step(item.grid());
+        // io_pfd_.set_subset(item.grid(), rn, rx);
+        // io_pfd_.write(pfd, item.grid(), item.name(), item.comp_names());
+        // io_pfd_.end_step();
       }
 
       if (doaccum_tfield) {
