@@ -362,13 +362,6 @@ void initializePhi(PhiField& phi)
 // ======================================================================
 // initializeE from phi
 
-inline double killNan(double maybenan)
-{
-  if (isnan(maybenan))
-    return 0;
-  return maybenan;
-}
-
 void initializeE(MfieldsState& mflds, PhiField& phi)
 {
   auto grad_item = Item_grad<PhiField>(phi);
@@ -377,21 +370,8 @@ void initializeE(MfieldsState& mflds, PhiField& phi)
 
   auto grad = grad_item.gt();
 
-  const auto& grid = mflds.grid();
-  for (int p = 0; p < mflds.n_patches(); ++p) {
-    auto& patch = grid.patches[p];
-    auto F = make_Fields3d<dim_xyz>(mflds[p]);
-
-    grid.Foreach_3d(0, 0, [&](int jx, int jy, int jz) {
-      for (int i = 0; i < 3; i++) {
-        F(EX + i, jx, jy, jz) += -killNan(grad(jx, jy, jz, i, p));
-      }
-    });
-  }
-
-  // this does not work, but something like it would be nice
-  // view_interior(mflds.gt(), mflds.ibn())
-  //   .view(_all, _all, _all, _s(EX, EX + 3)) = grad;
+  view_interior(mflds.storage(), mflds.ibn())
+    .view(_all, _all, _all, _s(EX, EX + 3)) = -grad;
 }
 
 // ======================================================================
