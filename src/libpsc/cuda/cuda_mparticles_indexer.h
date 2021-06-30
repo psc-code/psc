@@ -34,9 +34,15 @@ struct cuda_mparticles_indexer
 
   cuda_mparticles_indexer(const Grid_t& grid)
     : pi_(grid),
-      b_mx_{int(grid.ldims[0] / BS::x::value) > 0 ? int(grid.ldims[0] / BS::x::value) : 1,
-            int(grid.ldims[1] / BS::y::value) > 0 ? int(grid.ldims[1] / BS::y::value) : 1,
-            int(grid.ldims[2] / BS::z::value) > 0 ? int(grid.ldims[2] / BS::z::value) : 1}
+      b_mx_{int(grid.ldims[0] / BS::x::value) > 0
+              ? int(grid.ldims[0] / BS::x::value)
+              : 1,
+            int(grid.ldims[1] / BS::y::value) > 0
+              ? int(grid.ldims[1] / BS::y::value)
+              : 1,
+            int(grid.ldims[2] / BS::z::value) > 0
+              ? int(grid.ldims[2] / BS::z::value)
+              : 1}
   {
     n_patches_ = grid.n_patches();
     n_blocks_per_patch = b_mx_[0] * b_mx_[1] * b_mx_[2];
