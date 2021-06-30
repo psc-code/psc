@@ -306,46 +306,53 @@ void writeGrad(Item_grad<PhiField>& grad)
 // ======================================================================
 // initializeParticles
 
-void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
+void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
+                         PhiField& phi)
 {
   SetupParticles<Mparticles> setup_particles(*grid_ptr);
 
-  partitionAndSetupParticles(
-    setup_particles, balance, grid_ptr, mprts,
-    [&](int kind, double crd[3], psc_particle_npt& npt) {
-      double y = crd[1];
-      double z = crd[2];
-      double rho = sqrt(sqr(y) + sqr(z));
+  // auto gradPhi = Item_grad<PhiField>(phi).gt();
+  // auto divGradPhi = psc::item::div_nc(gradPhi, *grid_ptr);
 
-      switch (kind) {
-        case KIND_ELECTRON:
-          // velocities/momenta
-          if (rho != 0) {
-            double v_phi = parsed.get_interpolated(COL_V_PHI, rho);
-            double sign = g.reverse_v ? -1 : 1;
-            npt.p[1] = sign * v_phi * -z / rho;
-            npt.p[2] = sign * v_phi * y / rho;
-          }
-          // otherwise, npt.p[i] = 0
+  auto npt_init = [&](int kind, double crd[3], int p, Int3 idx,
+                      psc_particle_npt& npt) {
+    double y = crd[1];
+    double z = crd[2];
+    double rho = sqrt(sqr(y) + sqr(z));
 
-          // number density
-          npt.n = parsed.get_interpolated(COL_NE, rho);
+    switch (kind) {
+      case KIND_ELECTRON:
+        // velocities/momenta
+        if (rho != 0) {
+          double v_phi = parsed.get_interpolated(COL_V_PHI, rho);
+          double sign = g.reverse_v ? -1 : 1;
+          npt.p[1] = sign * v_phi * -z / rho;
+          npt.p[2] = sign * v_phi * y / rho;
+        }
+        // otherwise, npt.p[i] = 0
 
-          // temperature
-          npt.T[0] = parsed.get_interpolated(COL_TE, rho);
-          npt.T[1] = npt.T[2] = npt.T[0];
-          break;
-        case KIND_ION:
-          // momenta are 0
+        // number density
+        npt.n = parsed.get_interpolated(COL_NE, rho);
 
-          // number density
-          npt.n = 1;
+        // temperature
+        npt.T[0] = parsed.get_interpolated(COL_TE, rho);
+        npt.T[1] = npt.T[2] = npt.T[0];
+        break;
+      case KIND_ION:
+        // momenta are 0
 
-          // temperature is 0
-          break;
-        default: assert(false);
-      }
-    });
+        // number density
+        npt.n = 1;
+
+        // temperature is 0
+        break;
+      default: assert(false);
+    }
+  };
+
+  partitionParticlesGeneralInit(setup_particles, balance, grid_ptr, mprts,
+                                npt_init);
+  setupParticlesGeneralInit(setup_particles, mprts, npt_init);
 }
 
 // ======================================================================
@@ -491,8 +498,8 @@ static void run()
   // setup initial conditions
 
   if (read_checkpoint_filename.empty()) {
-    initializeParticles(balance, grid_ptr, mprts);
     initializePhi(phi);
+    initializeParticles(balance, grid_ptr, mprts, phi);
     initializeFields(mflds);
     initializeE(mflds, phi);
   } else {
