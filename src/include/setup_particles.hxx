@@ -96,6 +96,7 @@ struct SetupParticles
 
   // ----------------------------------------------------------------------
   // setup_particles
+  // init_npt signature: (int kind, Double3 pos, npt) -> void
 
   template <typename FUNC>
   void operator()(Mparticles& mprts, FUNC&& init_npt)
@@ -107,6 +108,7 @@ struct SetupParticles
 
   // ----------------------------------------------------------------------
   // setupParticles
+  // init_npt signature: (int kind, Double3 pos, int p, Int3 index, npt) -> void
 
   template <typename FUNC>
   void setupParticles(Mparticles& mprts, FUNC&& init_npt)
@@ -180,9 +182,23 @@ struct SetupParticles
 
   // ----------------------------------------------------------------------
   // partition
+  // init_npt signature: (int kind, Double3 pos, npt) -> void
 
   template <typename FUNC>
   std::vector<uint> partition(const Grid_t& grid, FUNC&& init_npt)
+  {
+    return partition_general_init(
+      grid, [&](int kind, Double3 pos, int, Int3, psc_particle_npt& npt) {
+        init_npt(kind, pos, npt);
+      });
+  }
+
+  // ----------------------------------------------------------------------
+  // partition_general_init
+  // init_npt signature: (int kind, Double3 pos, int p, Int3 index, npt) -> void
+
+  template <typename FUNC>
+  std::vector<uint> partition_general_init(const Grid_t& grid, FUNC&& init_npt)
   {
     std::vector<uint> n_prts_by_patch(grid.n_patches());
 
@@ -209,7 +225,7 @@ struct SetupParticles
               if (pop < kinds_.size()) {
                 npt.kind = pop;
               };
-              init_npt(pop, pos, npt);
+              init_npt(pop, pos, p, {jx, jy, jz}, npt);
 
               int n_in_cell;
               if (pop != neutralizing_population) {
