@@ -304,6 +304,24 @@ void writeGrad(Item_grad<PhiField>& grad)
 }
 
 // ======================================================================
+// getPadded
+
+template <typename GT>
+auto getPadded(GT& gt, Int3 paddings)
+{
+  auto shape = gt.shape();
+  for (int i = 0; i < 3; i++)
+    shape[i] += paddings[i] * 2;
+
+  auto padded =
+    gt::empty<gt::expr_value_type<GT>, gt::expr_space_type<GT>>(shape);
+  
+  view_interior(padded, paddings) = gt;
+
+  return padded;
+}
+
+// ======================================================================
 // initializeParticles
 
 void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
@@ -311,8 +329,8 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
 {
   SetupParticles<Mparticles> setup_particles(*grid_ptr);
 
-  // auto gradPhi = Item_grad<PhiField>(phi).gt();
-  // auto divGradPhi = psc::item::div_nc(gradPhi, *grid_ptr);
+  auto gradPhi = Item_grad<PhiField>(phi).gt();
+  auto divGradPhi = psc::item::div_nc(getPadded(gradPhi, {0, 2, 2}), *grid_ptr);
 
   auto npt_init = [&](int kind, double crd[3], int p, Int3 idx,
                       psc_particle_npt& npt) {
