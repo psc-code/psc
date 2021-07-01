@@ -5,7 +5,8 @@ import logging
 
 _ad = adios2.ADIOS()
 
-_dtype_map = {"float": np.float32, "double": np.float64}
+_dtype_map = {"float": np.float32, "double": np.float64, "uint64_t": np.uint64,
+              "int64_t": np.int64, "int32_t": np.int32, "uint32_t": np.uint32}
 
 
 class variable:
@@ -49,13 +50,14 @@ class variable:
     def __getitem__(self, args):
         self._assert_not_closed()
 
-        #print('args', args)
+        if not isinstance(args, tuple):
+            args = (args, )
+
         shape = self.shape
         sel_start = np.zeros_like(shape)
         sel_count = np.zeros_like(shape)
         arr_shape = []
-        # FIXME, empty dims don't go -> ":"
-        assert len(args) == len(shape)
+
         for d, arg in enumerate(args):
             if isinstance(arg, slice):
                 start, stop, step = arg.indices(shape[d])
@@ -78,6 +80,17 @@ class variable:
                 continue
 
             raise RuntimeError(f"invalid args to __getitem__: {args}")
+
+        # print("A sel_start", sel_start, "sel_count",
+        #       sel_count, "arr_shape", arr_shape)
+
+        for d in range(len(args), len(shape)):
+            sel_start[d] = 0
+            sel_count[d] = shape[d]
+            arr_shape.append(sel_count[d])
+
+        # print("B sel_start", sel_start, "sel_count",
+        #       sel_count, "arr_shape", arr_shape)
 
         self._set_selection(sel_start, sel_count)
 
