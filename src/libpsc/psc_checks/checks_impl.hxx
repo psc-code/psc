@@ -4,12 +4,23 @@
 #include "fields.hxx"
 #include "fields_item.hxx"
 #include "checks.hxx"
-#include "writer_mrc.hxx"
 #include "../libpsc/psc_output_fields/fields_item_fields.hxx"
 #include "../libpsc/psc_output_fields/psc_output_fields_item_moments_1st_nc.cxx"
 #include "../libpsc/psc_output_fields/psc_output_fields_item_moments_2nd_nc.cxx"
 
 #include <mrc_io.h>
+
+#ifdef PSC_HAVE_ADIOS2
+
+#include "writer_adios2.hxx"
+using WriterDefault = WriterADIOS2;
+
+#else
+
+#include "writer_mrc.hxx"
+using WriterDefault = WriterMRC;
+
+#endif
 
 struct checks_order_1st
 {
@@ -109,7 +120,7 @@ struct Checks_
     }
 
     if (continuity_dump_always || max_err >= eps) {
-      static WriterMRC writer;
+      static WriterDefault writer;
       if (!writer) {
         writer.open("continuity");
       }
@@ -117,6 +128,7 @@ struct Checks_
       writer.write(divj_.gt(), grid, "div_j", {"div_j"});
       writer.write(d_rho.gt(), grid, "d_rho", {"d_rho"});
       writer.end_step();
+      MPI_Barrier(grid.comm());
     }
 
     assert(max_err < eps);
@@ -179,7 +191,7 @@ struct Checks_
     }
 
     if (gauss_dump_always || max_err >= eps) {
-      static WriterMRC writer;
+      static WriterDefault writer;
       if (!writer) {
         writer.open("gauss");
       }
