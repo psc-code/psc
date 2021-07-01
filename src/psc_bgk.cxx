@@ -288,33 +288,34 @@ Grid_t* setupGrid()
 }
 
 // ======================================================================
-// write phi
+// writeGT
 
-void writePhi(PhiField& phi)
+template <typename GT>
+void writeGT(const GT& gt, const Grid_t& grid, const std::string& name,
+             const std::vector<std::string>& compNames)
 {
-  static WriterMRC writer;
-  if (!writer) {
-    writer.open("phi");
-  }
-  auto& grid = phi.grid();
+  WriterMRC writer;
+  writer.open(name);
   writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
-  writer.write(view_interior(phi.gt(), phi.ibn()), grid, "phi", {"phi"});
+  writer.write(gt, grid, name, compNames);
   writer.end_step();
+  writer.close();
 }
 
 // ======================================================================
-// write grad
+// writePhi
+
+void writePhi(PhiField& phi)
+{
+  writeGT(view_interior(phi.gt(), phi.ibn()), phi.grid(), "phi", {"phi"});
+}
+
+// ======================================================================
+// writeGrad
 
 void writeGrad(Item_grad<PhiField>& grad)
 {
-  static WriterMRC writer;
-  if (!writer) {
-    writer.open("grad");
-  }
-  auto& grid = grad.grid();
-  writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
-  writer.write(grad.gt(), grad.grid(), grad.name(), grad.comp_names());
-  writer.end_step();
+  writeGT(grad.gt(), grad.grid(), grad.name(), grad.comp_names());
 }
 
 // ======================================================================
@@ -329,7 +330,7 @@ auto getPadded(GT& gt, Int3 paddings)
 
   auto padded =
     gt::empty<gt::expr_value_type<GT>, gt::expr_space_type<GT>>(shape);
-  
+
   view_interior(padded, paddings) = gt;
 
   return padded;
