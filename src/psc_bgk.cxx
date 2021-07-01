@@ -347,6 +347,8 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
   auto gradPhi = Item_grad<PhiField>(phi).gt();
   auto divGradPhi = psc::item::div_nc(getPadded(gradPhi, {0, 2, 2}), *grid_ptr);
 
+  writeGT(divGradPhi, *grid_ptr, "divgrad", {"divgrad"});
+
   auto npt_init = [&](int kind, double crd[3], int p, Int3 idx,
                       psc_particle_npt& npt) {
     double y = crd[1];
@@ -365,7 +367,8 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
         // otherwise, npt.p[i] = 0
 
         // number density
-        npt.n = parsed.get_interpolated(COL_NE, rho);
+        npt.n =
+          (-divGradPhi(idx[0], idx[1], idx[2], 0, p) - g.n_i * g.q_i) / g.q_e;
 
         // temperature
         npt.T[0] = parsed.get_interpolated(COL_TE, rho);
