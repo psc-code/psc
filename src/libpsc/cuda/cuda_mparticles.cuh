@@ -31,6 +31,8 @@ using HMparticlesCudaStorage =
 
 using DMparticlesCudaStorage = MparticlesCudaStorage_<gt::span<float4>>;
 
+static const double growth_factor = 1.5;
+
 // ======================================================================
 // helper
 
@@ -149,15 +151,15 @@ public:
     mem_sub(xi4);
     mem_sub(pxi4);
 
-    // grow arrays by 20% only
+    // grow arrays by fixed growth factor only
     if (n > xi4.capacity()) {
 #if 0
-      xi4.reserve(1.1 * n);
-      pxi4.reserve(1.1 * n);
+      xi4.reserve(growth_factor * n);
+      pxi4.reserve(growth_factor * n);
 #else
       // work around thrust mem leak and exponential growth
-      helper::reserve(xi4, 1.1 * n);
-      helper::reserve(pxi4, 1.1 * n);
+      helper::reserve(xi4, growth_factor * n);
+      helper::reserve(pxi4, growth_factor * n);
 #endif
     }
     xi4.resize(n);

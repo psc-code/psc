@@ -56,4 +56,12 @@ extern int pr_time_step_no_comm;
 void psc_init(int& argc, char**& argv);
 void psc_finalize();
 
+#if 0
+#define MEM_STATS() mem_stats(__FILE__, __LINE__, std::cout)
+#else
+#define MEM_STATS()                                                            \
+  do {                                                                         \
+  } while (0)
+#endif
+
 #endif

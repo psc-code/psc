@@ -1,6 +1,8 @@
 
 #pragma once
 
+// #define DEBUG_CURRMEM
+
 // ----------------------------------------------------------------------
 // SCurr
 
@@ -90,21 +92,23 @@ public:
 private:
   __device__ uint index(int jy, int jz, uint m, uint wid) const
   {
-#if 0
-    if (jy < -N_GHOSTS_L || jy >= BS_Y + N_GHOSTS_R ||
-	jz < -N_GHOSTS_L || jz >= BS_Z + N_GHOSTS_R ||
-	m >= 3 || wid >= N_COPIES) {
-      printf("CUDA_ERROR jyz %d:%d BS %d:%d m %d/3 wid %d/%d\n", jy, jz, BS_Y, BS_Z, m, wid, N_COPIES);
+#ifdef DEBUG_CURRMEM
+    if (jy < -N_GHOSTS_L || jy >= BS_Y + N_GHOSTS_R || jz < -N_GHOSTS_L ||
+        jz >= BS_Z + N_GHOSTS_R || m >= 3 || wid >= N_COPIES) {
+      printf("CUDA_ERROR jyz %d:%d BS %d:%d m %d/3 wid %d/%d\n", jy, jz, BS_Y,
+             BS_Z, m, wid, N_COPIES);
     }
 #endif
     uint off =
       ((((m)*STRIDE_Z + ((jz) + N_GHOSTS_L)) * STRIDE_Y + ((jy) + N_GHOSTS_L)) *
          (N_COPIES) +
        wid);
+#ifdef DEBUG_CURRMEM
     if (off >= shared_size) {
       printf("CUDA_ERROR off %d %d wid %d %d:%d m %d\n", off, shared_size, wid,
              jy, jz, m);
     }
+#endif
     return off;
   }
 };
