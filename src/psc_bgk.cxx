@@ -157,6 +157,15 @@ struct PscBgkParams
   // ion number density
   double n_i;
 
+  // ion mass
+  double m_i;
+
+  // electron charge
+  double q_e;
+
+  // electron mass
+  double m_e;
+
   // number of grid cells
   int n_grid;
 
@@ -216,7 +225,12 @@ void setupParameters()
   g.n_i = 1;
 
   g.q_i = 1;
-  // g.q_i = 1.0000111539638505; // from psc-scrap/check_case1.ipynb
+
+  g.q_e = -1;
+
+  g.m_i = 1e9;
+
+  g.m_e = 1;
 
   g.n_grid = 32;
 
@@ -246,8 +260,8 @@ Grid_t* setupGrid()
                   {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC}};
 
   auto kinds = Grid_t::Kinds(NR_KINDS);
-  kinds[KIND_ELECTRON] = {-1., 1., "e"};
-  kinds[KIND_ION] = {1., 1e9, "i"}; // really heavy to keep them fixed
+  kinds[KIND_ELECTRON] = {g.q_e, g.m_e, "e"};
+  kinds[KIND_ION] = {g.q_i, g.m_i, "i"}; // really heavy to keep them fixed
 
   mpi_printf(MPI_COMM_WORLD, "lambda_D = %g\n",
              sqrt(parsed.get_interpolated(COL_TE, .022)));
@@ -360,7 +374,7 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
         // momenta are 0
 
         // number density
-        npt.n = 1;
+        npt.n = g.n_i;
 
         // temperature is 0
         break;
