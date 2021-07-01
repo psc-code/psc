@@ -42,7 +42,7 @@ struct FldCache
       tmp /= BLOCKSIZE_Y + 4;
       int jz = tmp % (BLOCKSIZE_Z + 4) - 2;
       for (int m = EX; m <= HZ; m++) {
-#if DEBUG_FLDCACHE
+#ifdef DEBUG_FLDCACHE
         float val = _d_flds(m, jx + ci0[0], jy + ci0[1], jz + ci0[2]);
         // printf("C load %d %d %d: %g (%d)\n", jx+ci0[0], jy+ci0[1], jz+ci0[2],
         // val, m);
