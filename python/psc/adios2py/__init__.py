@@ -5,7 +5,9 @@ import logging
 
 _ad = adios2.ADIOS()
 
-_dtype_map = {"float": np.float32, "double": np.float64}
+_dtype_map = {"float": np.float32, "double": np.float64, "uint64_t": np.uint64,
+              "int64_t": np.int64, "int32_t": np.int32, "uint32_t": np.uint32}
+
 
 class variable:
     def __init__(self, var, engine):
@@ -15,20 +17,21 @@ class variable:
         self.shape = self._shape()
         self.dtype = self._dtype()
         logging.debug(f"variable __init__ var {var} engine {engine}")
-        
+
     def close(self):
         logging.debug("adios2py.variable close")
         self._var = None
         self._engine = None
-        
+
     def _assert_not_closed(self):
-        if not self._var: raise ValueError("adios2py: variable is closed")
-        
+        if not self._var:
+            raise ValueError("adios2py: variable is closed")
+
     def _set_selection(self, start, count):
         self._assert_not_closed()
 
         self._var.SetSelection((start[::-1], count[::-1]))
-        
+
     def _shape(self):
         self._assert_not_closed()
 
@@ -38,7 +41,7 @@ class variable:
         self._assert_not_closed()
 
         return self._var.Name()
-    
+
     def _dtype(self):
         self._assert_not_closed()
 
@@ -47,13 +50,14 @@ class variable:
     def __getitem__(self, args):
         self._assert_not_closed()
 
-        #print('args', args)
+        if not isinstance(args, tuple):
+            args = (args, )
+
         shape = self.shape
         sel_start = np.zeros_like(shape)
         sel_count = np.zeros_like(shape)
         arr_shape = []
-        # FIXME, empty dims don't go -> ":"
-        assert len(args) == len(shape)
+
         for d, arg in enumerate(args):
             if isinstance(arg, slice):
                 start, stop, step = arg.indices(shape[d])
@@ -63,18 +67,30 @@ class variable:
                 sel_count[d] = stop - start
                 arr_shape.append(sel_count[d])
                 continue
-                
+
             try:
                 idx = int(arg)
             except:
                 pass
             else:
-                if idx < 0: idx += shape[d]
+                if idx < 0:
+                    idx += shape[d]
                 sel_start[d] = idx
                 sel_count[d] = 1
                 continue
-            
+
             raise RuntimeError(f"invalid args to __getitem__: {args}")
+
+        # print("A sel_start", sel_start, "sel_count",
+        #       sel_count, "arr_shape", arr_shape)
+
+        for d in range(len(args), len(shape)):
+            sel_start[d] = 0
+            sel_count[d] = shape[d]
+            arr_shape.append(sel_count[d])
+
+        # print("B sel_start", sel_start, "sel_count",
+        #       sel_count, "arr_shape", arr_shape)
 
         self._set_selection(sel_start, sel_count)
 
@@ -85,7 +101,7 @@ class variable:
 
     def __repr__(self):
         return f"adios2py.variable(name={self.name}, shape={self.shape}, dtype={self.dtype}"
-    
+
 
 class file:
     def __init__(self, filename, mode='r'):
@@ -97,20 +113,20 @@ class file:
         self._open_vars = {}
 
         self.variables = self._io.AvailableVariables().keys()
-        
+
     def __enter__(self):
         logging.debug(f"adios2py: __enter__")
         return self
-    
+
     def __exit__(self, type, value, traceback):
         logging.debug(f"adios2py: __exit__")
         self.close()
-        
+
     def __del__(self):
         logging.debug(f"adios2py: __del__")
         if self._engine:
             self.close()
-        
+
     def close(self):
         logging.debug(f"adios2py: close")
         logging.debug(f"open vars {self._open_vars}")
@@ -123,9 +139,8 @@ class file:
         _ad.RemoveIO(self._io_name)
         self._io = None
         self._io_name = None
-        
+
     def __getitem__(self, varname):
         var = variable(self._io.InquireVariable(varname), self._engine)
         self._open_vars[varname] = var
         return var
-
