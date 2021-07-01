@@ -257,7 +257,7 @@ void setupParameters()
 #if CASE == CASE_2D_SMALL
   g.mass_ratio = 100.;
 #else
-  g.mass_ratio = 64.;
+  g.mass_ratio = 100.;
 #endif
   g.lambda0 = 20.;
 
