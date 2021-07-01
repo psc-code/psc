@@ -339,7 +339,7 @@ static void run(int argc, char** argv)
 
   // -- Balance
   psc_params.balance_interval = 0;
-  Balance balance{psc_params.balance_interval, .1};
+  Balance balance{.1};
 
   // -- Sort
   psc_params.sort_interval = 10;

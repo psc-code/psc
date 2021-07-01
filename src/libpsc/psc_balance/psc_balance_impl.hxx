@@ -533,10 +533,9 @@ struct Balance_ : BalanceBase
   using Particle = typename Mparticles::Particle;
   using real_t = typename Mparticles::real_t;
 
-  Balance_(int every, double factor_fields = 1., bool print_loads = false,
+  Balance_(double factor_fields = 1., bool print_loads = false,
            bool write_loads = false)
-    : every_(every),
-      factor_fields_(factor_fields),
+    : factor_fields_(factor_fields),
       print_loads_(print_loads),
       write_loads_(write_loads)
   {}
@@ -1072,7 +1071,6 @@ private:
   }
 
 private:
-  int every_;
   double factor_fields_;
   bool print_loads_;
   bool write_loads_;
