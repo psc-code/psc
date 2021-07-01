@@ -303,22 +303,6 @@ void writeGT(const GT& gt, const Grid_t& grid, const std::string& name,
 }
 
 // ======================================================================
-// writePhi
-
-void writePhi(PhiField& phi)
-{
-  writeGT(view_interior(phi.gt(), phi.ibn()), phi.grid(), "phi", {"phi"});
-}
-
-// ======================================================================
-// writeGrad
-
-void writeGrad(Item_grad<PhiField>& grad)
-{
-  writeGT(grad.gt(), grad.grid(), grad.name(), grad.comp_names());
-}
-
-// ======================================================================
 // getPadded
 
 template <typename GT>
@@ -408,10 +392,10 @@ void initializePhi(PhiField& phi)
 void initializeE(MfieldsState& mflds, PhiField& phi)
 {
   auto grad_item = Item_grad<PhiField>(phi);
-  // write results so they can be checked
-  writeGrad(grad_item);
+  auto&& grad = grad_item.gt();
 
-  auto grad = grad_item.gt();
+  // write results so they can be checked
+  writeGT(grad, grad_item.grid(), grad_item.name(), grad_item.comp_names());
 
   view_interior(mflds.storage(), mflds.ibn())
     .view(_all, _all, _all, _s(EX, EX + 3)) = -grad;
@@ -544,7 +528,7 @@ static void run()
 
   // ----------------------------------------------------------------------
   // write phi (so it can be visually checked)
-  writePhi(phi);
+  writeGT(view_interior(phi.gt(), phi.ibn()), phi.grid(), "phi", {"phi"});
 
   // ----------------------------------------------------------------------
   // hand off to PscIntegrator to run the simulation
