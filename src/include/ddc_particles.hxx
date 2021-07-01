@@ -6,6 +6,10 @@
 #include <mrc_domain.h>
 #include <mpi_dtype_traits.hxx>
 
+#include <grid.hxx>
+
+#include <vector>
+
 // ======================================================================
 // ddc_particles
 

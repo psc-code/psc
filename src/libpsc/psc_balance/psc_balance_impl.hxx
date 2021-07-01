@@ -528,7 +528,7 @@ struct communicate_ctx
 // Balance_
 
 template <typename Mparticles, typename MfieldsState, typename Mfields>
-struct Balance_ : BalanceBase
+struct Balance_
 {
   using Particle = typename Mparticles::Particle;
   using real_t = typename Mparticles::real_t;
@@ -546,13 +546,13 @@ struct Balance_ : BalanceBase
     psc_balance_comp_time_by_patch = nullptr;
   }
 
-  void initial(Grid_t*& grid, std::vector<uint>& n_prts_by_patch) override
+  void initial(Grid_t*& grid, std::vector<uint>& n_prts_by_patch)
   {
     auto loads = get_loads_initial(*grid, n_prts_by_patch);
     n_prts_by_patch = balance(grid, loads, nullptr, n_prts_by_patch);
   }
 
-  void operator()(Grid_t*& grid, MparticlesBase& mp) override
+  void operator()(Grid_t*& grid, MparticlesBase& mp)
   {
     static int st_time_balance;
     if (!st_time_balance) {
