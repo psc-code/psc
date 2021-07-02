@@ -221,6 +221,62 @@ inline void write_loads(const input& input,
   fclose(f);
 }
 
+// ======================================================================
+// get_loads
+
+class get_loads
+{
+public:
+  get_loads(double factor_fields) : factor_fields_{factor_fields} {}
+
+  // given the number of particles for each patch (even though they don't
+  // actually exist yet), figure out the load for each patch
+  std::vector<double> initial(const Grid_t& grid,
+                              const std::vector<uint>& n_prts_by_patch)
+  {
+    assert(n_prts_by_patch.size() == grid.n_patches());
+    std::vector<double> loads;
+    loads.reserve(n_prts_by_patch.size());
+
+    auto& ldims = grid.ldims;
+    for (auto n_prts : n_prts_by_patch) {
+      loads.push_back(n_prts + factor_fields_ * ldims[0] * ldims[1] * ldims[2]);
+    }
+
+    return loads;
+  }
+
+  std::vector<double> operator()(const Grid_t& grid, MparticlesBase& mprts)
+  {
+    auto n_prts_by_patch = mprts.sizeByPatch();
+
+    std::vector<double> loads;
+    loads.reserve(mprts.n_patches());
+    for (int p = 0; p < mprts.n_patches(); p++) {
+      double load;
+      if (factor_fields_ >= 0.) {
+        const int* ldims = grid.ldims;
+        load =
+          n_prts_by_patch[p] + factor_fields_ * ldims[0] * ldims[1] * ldims[2];
+        // mprintf("loads p %d %g %g ratio %g\n", p, loads[p], comp_time,
+        // loads[p] / comp_time);
+      } else {
+        load = psc_balance_comp_time_by_patch[p];
+      }
+#if 0
+      int rank;
+      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+      load = 1 + rank;
+#endif
+      loads.push_back(load);
+    }
+    return loads;
+  }
+
+private:
+  double factor_fields_;
+};
+
 } // namespace balance
 } // namespace psc
 
@@ -536,6 +592,7 @@ struct Balance_
   Balance_(double factor_fields = 1., bool print_loads = false,
            bool write_loads = false)
     : factor_fields_(factor_fields),
+      get_loads_{factor_fields},
       print_loads_(print_loads),
       write_loads_(write_loads)
   {}
@@ -548,11 +605,11 @@ struct Balance_
 
   void initial(Grid_t*& grid, std::vector<uint>& n_prts_by_patch)
   {
-    auto loads = get_loads_initial(*grid, n_prts_by_patch);
+    auto loads = get_loads_.initial(*grid, n_prts_by_patch);
     n_prts_by_patch = balance(grid, loads, nullptr, n_prts_by_patch);
   }
 
-  void operator()(Grid_t*& grid, MparticlesBase& mp)
+  void operator()(Grid_t*& grid, MparticlesBase& mprts)
   {
     static int st_time_balance;
     if (!st_time_balance) {
@@ -560,54 +617,12 @@ struct Balance_
     }
 
     psc_stats_start(st_time_balance);
-    auto loads = get_loads(mp.grid(), mp);
-    balance(grid, loads, &mp);
+    auto loads = get_loads_(mprts.grid(), mprts);
+    balance(grid, loads, &mprts);
     psc_stats_stop(st_time_balance);
   }
 
 private:
-  std::vector<double> get_loads_initial(
-    const Grid_t& grid, const std::vector<uint>& n_prts_by_patch)
-  {
-    assert(n_prts_by_patch.size() == grid.n_patches());
-    std::vector<double> loads;
-    loads.reserve(n_prts_by_patch.size());
-
-    const int* ldims = grid.ldims;
-    for (auto n_prts : n_prts_by_patch) {
-      loads.push_back(n_prts + factor_fields_ * ldims[0] * ldims[1] * ldims[2]);
-    }
-
-    return loads;
-  }
-
-  std::vector<double> get_loads(const Grid_t& grid, MparticlesBase& mp)
-  {
-    auto n_prts_by_patch = mp.sizeByPatch();
-
-    std::vector<double> loads;
-    loads.reserve(mp.n_patches());
-    for (int p = 0; p < mp.n_patches(); p++) {
-      double load;
-      if (factor_fields_ >= 0.) {
-        const int* ldims = grid.ldims;
-        load =
-          n_prts_by_patch[p] + factor_fields_ * ldims[0] * ldims[1] * ldims[2];
-        // mprintf("loads p %d %g %g ratio %g\n", p, loads[p], comp_time,
-        // loads[p] / comp_time);
-      } else {
-        load = psc_balance_comp_time_by_patch[p];
-      }
-#if 0
-      int rank;
-      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-      load = 1 + rank;
-#endif
-      loads.push_back(load);
-    }
-    return loads;
-  }
-
   std::vector<double> gather_loads(const Grid_t& grid,
                                    std::vector<double> loads)
   {
@@ -1072,6 +1087,7 @@ private:
 
 private:
   double factor_fields_;
+  psc::balance::get_loads get_loads_;
   bool print_loads_;
   bool write_loads_;
 };
