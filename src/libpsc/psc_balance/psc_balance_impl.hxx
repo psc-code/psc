@@ -277,6 +277,59 @@ private:
   double factor_fields_;
 };
 
+inline std::vector<double> gather_loads(const Grid_t& grid,
+                                        std::vector<double> loads)
+{
+  const MrcDomain& domain = grid.mrc_domain_;
+  MPI_Comm comm = domain.comm();
+  int rank, size;
+  MPI_Comm_rank(comm, &rank);
+  MPI_Comm_size(comm, &size);
+
+  // gather nr_patches for all procs on proc 0
+  int* nr_patches_all = NULL;
+  if (rank == 0) {
+    nr_patches_all = (int*)calloc(size, sizeof(*nr_patches_all));
+  }
+  int n_patches = loads.size();
+  MPI_Gather(&n_patches, 1, MPI_INT, nr_patches_all, 1, MPI_INT, 0, comm);
+
+  // gather loads for all patches on proc 0
+  int* displs = NULL;
+  std::vector<double> loads_all;
+  if (rank == 0) {
+    displs = (int*)calloc(size, sizeof(*displs));
+    int off = 0;
+    for (int i = 0; i < size; i++) {
+      displs[i] = off;
+      off += nr_patches_all[i];
+    }
+    int n_global_patches = domain.nGlobalPatches();
+    loads_all.resize(n_global_patches);
+  }
+  MPI_Gatherv(loads.data(), n_patches, MPI_DOUBLE, loads_all.data(),
+              nr_patches_all, displs, MPI_DOUBLE, 0, comm);
+
+  if (rank == 0) {
+#if 0
+      int rl = 0;
+      char s[20]; sprintf(s, "loads-%06d.asc", grid.timestep());
+      FILE *f = fopen(s, "w");
+      for (int p = 0; p < *p_nr_global_patches; p++) {
+	if (rl < size - 1 && p >= displs[rl+1]) {
+	  rl++;
+	}
+	fprintf(f, "%d %g %d\n", p, loads_all[p], rl);
+      }
+      fclose(f);
+#endif
+    free(nr_patches_all);
+    free(displs);
+  }
+
+  return loads_all;
+}
+
 } // namespace balance
 } // namespace psc
 
@@ -623,59 +676,6 @@ struct Balance_
   }
 
 private:
-  std::vector<double> gather_loads(const Grid_t& grid,
-                                   std::vector<double> loads)
-  {
-    const MrcDomain& domain = grid.mrc_domain_;
-    MPI_Comm comm = domain.comm();
-    int rank, size;
-    MPI_Comm_rank(comm, &rank);
-    MPI_Comm_size(comm, &size);
-
-    // gather nr_patches for all procs on proc 0
-    int* nr_patches_all = NULL;
-    if (rank == 0) {
-      nr_patches_all = (int*)calloc(size, sizeof(*nr_patches_all));
-    }
-    int n_patches = loads.size();
-    MPI_Gather(&n_patches, 1, MPI_INT, nr_patches_all, 1, MPI_INT, 0, comm);
-
-    // gather loads for all patches on proc 0
-    int* displs = NULL;
-    std::vector<double> loads_all;
-    if (rank == 0) {
-      displs = (int*)calloc(size, sizeof(*displs));
-      int off = 0;
-      for (int i = 0; i < size; i++) {
-        displs[i] = off;
-        off += nr_patches_all[i];
-      }
-      int n_global_patches = domain.nGlobalPatches();
-      loads_all.resize(n_global_patches);
-    }
-    MPI_Gatherv(loads.data(), n_patches, MPI_DOUBLE, loads_all.data(),
-                nr_patches_all, displs, MPI_DOUBLE, 0, comm);
-
-    if (rank == 0) {
-#if 0
-      int rl = 0;
-      char s[20]; sprintf(s, "loads-%06d.asc", grid.timestep());
-      FILE *f = fopen(s, "w");
-      for (int p = 0; p < *p_nr_global_patches; p++) {
-	if (rl < size - 1 && p >= displs[rl+1]) {
-	  rl++;
-	}
-	fprintf(f, "%d %g %d\n", p, loads_all[p], rl);
-      }
-      fclose(f);
-#endif
-      free(nr_patches_all);
-      free(displs);
-    }
-
-    return loads_all;
-  }
-
   int find_best_mapping(const Grid_t& grid,
                         const std::vector<double>& loads_all)
   {
@@ -912,7 +912,7 @@ private:
     prof_start(pr_bal_load);
     auto old_grid = gridp;
 
-    auto loads_all = gather_loads(*old_grid, loads);
+    auto loads_all = psc::balance::gather_loads(*old_grid, loads);
     int n_patches_new = find_best_mapping(*old_grid, loads_all);
     prof_stop(pr_bal_load);
 
