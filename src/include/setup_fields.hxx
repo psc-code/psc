@@ -2,7 +2,7 @@
 #pragma once
 
 #include "fields.hxx"
-
+#include "centering.hxx"
 #include <algorithm>
 
 // ======================================================================
