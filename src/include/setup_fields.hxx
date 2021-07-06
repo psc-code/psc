@@ -31,30 +31,17 @@ struct SetupFields
         std::max({mf.ibn()[0], mf.ibn()[1], mf.ibn()[2]}); // FIXME, not pretty
       // FIXME, do we need the ghost points?
       grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
-        double x_nc = patch.x_nc(jx), y_nc = patch.y_nc(jy),
-               z_nc = patch.z_nc(jz);
-        double x_cc = patch.x_cc(jx), y_cc = patch.y_cc(jy),
-               z_cc = patch.z_cc(jz);
+        int index[3] = {jx, jy, jz};
+        std::cout << Centering::getPos(patch, index, Centering::NC, -1) << " setup\n";
 
-        double ncc[3] = {x_nc, y_cc, z_cc};
-        double cnc[3] = {x_cc, y_nc, z_cc};
-        double ccn[3] = {x_cc, y_cc, z_nc};
-
-        double cnn[3] = {x_cc, y_nc, z_nc};
-        double ncn[3] = {x_nc, y_cc, z_nc};
-        double nnc[3] = {x_nc, y_nc, z_cc};
-
-        F(HX, jx, jy, jz) += func(HX, ncc);
-        F(HY, jx, jy, jz) += func(HY, cnc);
-        F(HZ, jx, jy, jz) += func(HZ, ccn);
-
-        F(EX, jx, jy, jz) += func(EX, cnn);
-        F(EY, jx, jy, jz) += func(EY, ncn);
-        F(EZ, jx, jy, jz) += func(EZ, nnc);
-
-        F(JXI, jx, jy, jz) += func(JXI, cnn);
-        F(JYI, jx, jy, jz) += func(JYI, ncn);
-        F(JZI, jx, jy, jz) += func(JZI, nnc);
+        for (int c = 0; c < 3; c++) {
+          F(HX + c, jx, jy, jz) +=
+            func(HX + c, Centering::getPos(patch, index, Centering::FC, c));
+          F(EX + c, jx, jy, jz) +=
+            func(EX + c, Centering::getPos(patch, index, Centering::EC, c));
+          F(JXI + c, jx, jy, jz) +=
+            func(JXI + c, Centering::getPos(patch, index, Centering::EC, c));
+        }
       });
     }
   }
@@ -73,11 +60,9 @@ struct SetupFields
         std::max({mf.ibn()[0], mf.ibn()[1], mf.ibn()[2]}); // FIXME, not pretty
       // FIXME, do we need the ghost points?
       grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
-        double x_nc = patch.x_nc(jx), y_nc = patch.y_nc(jy),
-               z_nc = patch.z_nc(jz);
-
-        double nnn[3] = {x_nc, y_nc, z_nc};
-        F(0, jx, jy, jz) += func(0, nnn);
+        int index[3] = {jx, jy, jz};
+        F(0, jx, jy, jz) +=
+          func(0, Centering::getPos(patch, index, Centering::NC));
       });
     }
   }
