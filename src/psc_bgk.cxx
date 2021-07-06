@@ -407,32 +407,10 @@ void initializeE(MfieldsState& mflds, PhiField& phi)
 void initializeFields(MfieldsState& mflds)
 {
   setupFields(mflds, [&](int m, double crd[3]) {
-    // take care of the easy cases
     switch (m) {
-      // case EY:
-      // case EZ: break;
       case HX: return g.Hx;
       default: return 0.;
     }
-
-    // otherwise, interpolate from file
-
-    double y = crd[1];
-    double z = crd[2];
-    double rho = sqrt(sqr(y) + sqr(z));
-
-    if (rho == 0)
-      return 0.;
-
-    double E_rho = parsed.get_interpolated(COL_E_RHO, rho);
-
-    if (m == EY) {
-      return E_rho * y / rho;
-    } else if (m == EZ) {
-      return E_rho * z / rho;
-    }
-
-    return 0.0;
   });
 }
 
