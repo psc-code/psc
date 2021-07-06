@@ -11,14 +11,6 @@
 namespace detail
 {
 
-enum Centering
-{
-  NC, // node-centered
-  EC, // edge-centered
-  FC, // face-centered
-  CC, // cell-centered
-};
-
 template <typename MF>
 struct SetupFields
 {
