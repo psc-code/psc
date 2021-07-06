@@ -788,7 +788,8 @@ void partitionAndSetupParticles(SetupParticles& setup_particles,
                                 Balance& balance, Grid_t*& grid_ptr,
                                 Mparticles& mprts, FUNC&& init_npt)
 {
-  auto init_npt_general = [&](int kind, Double3 pos, int, Int3, psc_particle_npt& npt) {
+  auto init_npt_general = [&](int kind, Double3 pos, int, Int3,
+                              psc_particle_npt& npt) {
     init_npt(kind, pos, npt);
   };
   partitionParticlesGeneralInit(setup_particles, balance, grid_ptr, mprts,
