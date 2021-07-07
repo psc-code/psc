@@ -358,9 +358,6 @@ struct by_ri
 class communicate_ctx
 {
 public:
-  int* send_rank_to_ri; // map from send target rank to contiguous "rank index"
-  int* recv_rank_to_ri; // map from recv source rank to contiguous "rank index"
-
   int nr_send_ranks;
   struct by_ri* send_by_ri;
 
@@ -397,11 +394,11 @@ public:
 
     // maps rank <-> rank index
 
-    send_rank_to_ri = (int*)malloc(mpi_size_ * sizeof(*send_rank_to_ri));
-    recv_rank_to_ri = (int*)malloc(mpi_size_ * sizeof(*recv_rank_to_ri));
+    send_rank_to_ri_.resize(mpi_size_);
+    recv_rank_to_ri_.resize(mpi_size_);
     for (int r = 0; r < mpi_size_; r++) {
-      send_rank_to_ri[r] = -1;
-      recv_rank_to_ri[r] = -1;
+      send_rank_to_ri_[r] = -1;
+      recv_rank_to_ri_[r] = -1;
     }
 
     nr_send_ranks = 0;
@@ -409,16 +406,16 @@ public:
     for (int p = 0; p < nr_patches_old_; p++) {
       int send_rank = send_info_[p].rank;
       if (send_rank >= 0) {
-        if (send_rank_to_ri[send_rank] < 0) {
-          send_rank_to_ri[send_rank] = nr_send_ranks++;
+        if (send_rank_to_ri_[send_rank] < 0) {
+          send_rank_to_ri_[send_rank] = nr_send_ranks++;
         }
       }
     }
     for (int p = 0; p < nr_patches_new_; p++) {
       int recv_rank = recv_info_[p].rank;
       if (recv_rank >= 0) {
-        if (recv_rank_to_ri[recv_rank] < 0) {
-          recv_rank_to_ri[recv_rank] = nr_recv_ranks++;
+        if (recv_rank_to_ri_[recv_rank] < 0) {
+          recv_rank_to_ri_[recv_rank] = nr_recv_ranks++;
         }
       }
     }
@@ -429,13 +426,13 @@ public:
     for (int p = 0; p < nr_patches_old_; p++) {
       int send_rank = send_info_[p].rank;
       if (send_rank >= 0) {
-        send_by_ri[send_rank_to_ri[send_rank]].rank = send_rank;
+        send_by_ri[send_rank_to_ri_[send_rank]].rank = send_rank;
       }
     }
     for (int p = 0; p < nr_patches_new_; p++) {
       int recv_rank = recv_info_[p].rank;
       if (recv_rank >= 0) {
-        recv_by_ri[recv_rank_to_ri[recv_rank]].rank = recv_rank;
+        recv_by_ri[recv_rank_to_ri_[recv_rank]].rank = recv_rank;
       }
     }
 
@@ -448,7 +445,7 @@ public:
     for (int p = 0; p < nr_patches_old_; p++) {
       int send_rank = send_info_[p].rank;
       if (send_rank >= 0) {
-        send_by_ri[send_rank_to_ri[send_rank]].nr_patches++;
+        send_by_ri[send_rank_to_ri_[send_rank]].nr_patches++;
       }
     }
 
@@ -465,7 +462,7 @@ public:
       if (send_rank < 0) {
         continue;
       }
-      int ri = send_rank_to_ri[send_rank];
+      int ri = send_rank_to_ri_[send_rank];
       int pi = send_by_ri[ri].nr_patches++;
       send_by_ri[ri].pi_to_patch[pi] = p;
     }
@@ -475,7 +472,7 @@ public:
     for (int p = 0; p < nr_patches_new_; p++) {
       int recv_rank = recv_info_[p].rank;
       if (recv_rank >= 0) {
-        int ri = recv_rank_to_ri[recv_rank];
+        int ri = recv_rank_to_ri_[recv_rank];
         recv_by_ri[ri].nr_patches++;
       }
     }
@@ -493,7 +490,7 @@ public:
       if (recv_rank < 0) {
         continue;
       }
-      int ri = recv_rank_to_ri[recv_rank];
+      int ri = recv_rank_to_ri_[recv_rank];
       int pi = recv_by_ri[ri].nr_patches++;
       recv_by_ri[ri].pi_to_patch[pi] = p;
     }
@@ -501,9 +498,6 @@ public:
 
   ~communicate_ctx()
   {
-    free(send_rank_to_ri);
-    free(recv_rank_to_ri);
-
     for (int ri = 0; ri < nr_send_ranks; ri++) {
       free(send_by_ri[ri].pi_to_patch);
     }
@@ -573,8 +567,8 @@ public:
 
     // copy local particle numbers
     {
-      int send_ri = send_rank_to_ri[mpi_rank_];
-      int recv_ri = recv_rank_to_ri[mpi_rank_];
+      int send_ri = send_rank_to_ri_[mpi_rank_];
+      int recv_ri = recv_rank_to_ri_[mpi_rank_];
       if (send_ri < 0) { // no local patches to copy
         assert(recv_ri < 0);
       } else {
@@ -806,6 +800,10 @@ private:
   int nr_patches_new_;
   std::vector<send_info> send_info_; // by old patch on this proc
   std::vector<recv_info> recv_info_; // by new patch on this proc
+  std::vector<int>
+    send_rank_to_ri_; // map from send target rank to contiguous "rank index"
+  std::vector<int>
+    recv_rank_to_ri_; // map from recv source rank to contiguous "rank index"
 };
 
 // ======================================================================
