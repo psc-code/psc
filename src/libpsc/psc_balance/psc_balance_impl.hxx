@@ -517,8 +517,7 @@ public:
 
     // post sends
 
-    MPI_Request* send_reqs =
-      (MPI_Request*)calloc(nr_send_ranks_, sizeof(*send_reqs));
+    std::vector<MPI_Request> send_reqs(nr_send_ranks_);
     int nr_send_reqs = 0;
 
     int** nr_particles_send_by_ri =
@@ -576,7 +575,7 @@ public:
     }
     free(nr_particles_recv_by_ri);
 
-    MPI_Waitall(nr_send_reqs, send_reqs, MPI_STATUSES_IGNORE);
+    MPI_Waitall(nr_send_reqs, send_reqs.data(), MPI_STATUSES_IGNORE);
 
     // clean up send
 
@@ -584,7 +583,6 @@ public:
       free(nr_particles_send_by_ri[ri]);
     }
     free(nr_particles_send_by_ri);
-    free(send_reqs);
 
     // return result
 
@@ -639,7 +637,7 @@ public:
 
     // prof_start(pr_B);
     // send from old local patches
-    MPI_Request* send_reqs = new MPI_Request[nr_patches_old_]();
+    std::vector<MPI_Request> send_reqs(nr_patches_old_);
     int nr_send_reqs = 0;
 
     for (int ri = 0; ri < nr_send_ranks_; ri++) {
@@ -687,9 +685,8 @@ public:
     // prof_stop(pr_C);
 
     // prof_start(pr_D);
-    MPI_Waitall(nr_send_reqs, send_reqs, MPI_STATUSES_IGNORE);
+    MPI_Waitall(nr_send_reqs, send_reqs.data(), MPI_STATUSES_IGNORE);
     MPI_Waitall(nr_recv_reqs, recv_reqs.data(), MPI_STATUSES_IGNORE);
-    delete[] send_reqs;
     // prof_stop(pr_D);
 
     // prof_stop(pr);
@@ -701,7 +698,7 @@ public:
     MPI_Datatype mpi_dtype = Mfields_traits<Mfields>::mpi_dtype();
 
     // send from old local patches
-    MPI_Request* send_reqs = new MPI_Request[nr_patches_old_]();
+    std::vector<MPI_Request> send_reqs(nr_patches_old_);
     int* nr_patches_new_by_rank = new int[mpi_size_]();
     for (int p = 0; p < nr_patches_old_; p++) {
       int new_rank = send_info_[p].rank;
@@ -760,9 +757,8 @@ public:
     }
     prof_stop(pr);
 
-    MPI_Waitall(nr_patches_old_, send_reqs, MPI_STATUSES_IGNORE);
+    MPI_Waitall(nr_patches_old_, send_reqs.data(), MPI_STATUSES_IGNORE);
     MPI_Waitall(nr_patches_new_, recv_reqs.data(), MPI_STATUSES_IGNORE);
-    delete[] send_reqs;
   }
 
 private:
