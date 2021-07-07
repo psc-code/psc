@@ -633,102 +633,13 @@ public:
     prof_stop(pr);
     return n_prts_by_patch_new;
   }
-};
 
-// ======================================================================
-// Balance_
-
-template <typename Mparticles, typename MfieldsState, typename Mfields>
-struct Balance_
-{
-  using Particle = typename Mparticles::Particle;
-  using real_t = typename Mparticles::real_t;
-
-  Balance_(double factor_fields = 1., bool print_loads = false,
-           bool write_loads = false)
-    : factor_fields_(factor_fields),
-      get_loads_{factor_fields},
-      print_loads_(print_loads),
-      write_loads_(write_loads)
-  {}
-
-  ~Balance_()
+  template <typename Mparticles>
+  void communicate_particles(Mparticles& mp_old, Mparticles& mp_new)
   {
-    delete[] psc_balance_comp_time_by_patch;
-    psc_balance_comp_time_by_patch = nullptr;
-  }
-
-  void initial(Grid_t*& grid, std::vector<uint>& n_prts_by_patch)
-  {
-    auto loads = get_loads_.initial(*grid, n_prts_by_patch);
-    auto loads_all = psc::balance::gather_loads(*grid, loads);
-    n_prts_by_patch = balance(grid, loads_all, nullptr, n_prts_by_patch);
-  }
-
-  void operator()(Grid_t*& grid, MparticlesBase& mprts)
-  {
-    static int st_time_balance;
-    if (!st_time_balance) {
-      st_time_balance = psc_stats_register("time balancing");
-    }
-
-    psc_stats_start(st_time_balance);
-    auto loads = get_loads_(mprts.grid(), mprts);
-    auto loads_all = psc::balance::gather_loads(*grid, loads);
-    balance(grid, loads_all, &mprts);
-    psc_stats_stop(st_time_balance);
-  }
-
-private:
-  int find_best_mapping(const Grid_t& grid,
-                        const std::vector<double>& loads_all)
-  {
-    const MrcDomain& domain = grid.mrc_domain_;
-
-    MPI_Comm comm = domain.comm();
-    int rank, size;
-    MPI_Comm_rank(comm, &rank);
-    MPI_Comm_size(comm, &size);
-
-    int nr_patches_old = domain.nPatches();
-
-    std::vector<int> nr_patches_all_old(size);
-    MPI_Allgather(&nr_patches_old, 1, MPI_INT, nr_patches_all_old.data(), 1,
-                  MPI_INT, comm);
-
-    int nr_patches_new;
-
-    if (rank == 0) { // do the mapping on proc 0
-      std::vector<double> capability(size);
-      for (int p = 0; p < size; p++) {
-        capability[p] = capability_default(p);
-      }
-
-      auto nr_patches_all_new =
-        psc::balance::best_mapping({capability, loads_all});
-      psc::balance::print_stats({capability, loads_all}, nr_patches_all_new,
-                                print_loads_);
-      if (write_loads_) {
-        psc::balance::write_loads({capability, loads_all}, nr_patches_all_new,
-                                  grid.timestep());
-      }
-
-      if (nr_patches_all_new == nr_patches_all_old) {
-        std::fill(nr_patches_all_new.begin(), nr_patches_all_new.end(),
-                  -1); // unchanged mapping, no communication etc needed
-      }
-
-      MPI_Scatter(nr_patches_all_new.data(), 1, MPI_INT, &nr_patches_new, 1,
-                  MPI_INT, 0, comm);
-    } else {
-      MPI_Scatter(nullptr, 1, MPI_INT, &nr_patches_new, 1, MPI_INT, 0, comm);
-    }
-    return nr_patches_new;
-  }
-
-  void communicate_particles(struct communicate_ctx* ctx, Mparticles& mp_old,
-                             Mparticles& mp_new)
-  {
+    using Particle = typename Mparticles::Particle;
+    using real_t = typename Mparticles::real_t;
+    communicate_ctx* ctx = this;
     // static int pr, pr_A, pr_B, pr_C, pr_D;
     // if (!pr) {
     //   pr   = prof_register("comm prts", 1., 0, 0);
@@ -826,6 +737,98 @@ private:
     // prof_stop(pr_D);
 
     // prof_stop(pr);
+  }
+};
+
+// ======================================================================
+// Balance_
+
+template <typename Mparticles, typename MfieldsState, typename Mfields>
+struct Balance_
+{
+  using Particle = typename Mparticles::Particle;
+  using real_t = typename Mparticles::real_t;
+
+  Balance_(double factor_fields = 1., bool print_loads = false,
+           bool write_loads = false)
+    : factor_fields_(factor_fields),
+      get_loads_{factor_fields},
+      print_loads_(print_loads),
+      write_loads_(write_loads)
+  {}
+
+  ~Balance_()
+  {
+    delete[] psc_balance_comp_time_by_patch;
+    psc_balance_comp_time_by_patch = nullptr;
+  }
+
+  void initial(Grid_t*& grid, std::vector<uint>& n_prts_by_patch)
+  {
+    auto loads = get_loads_.initial(*grid, n_prts_by_patch);
+    auto loads_all = psc::balance::gather_loads(*grid, loads);
+    n_prts_by_patch = balance(grid, loads_all, nullptr, n_prts_by_patch);
+  }
+
+  void operator()(Grid_t*& grid, MparticlesBase& mprts)
+  {
+    static int st_time_balance;
+    if (!st_time_balance) {
+      st_time_balance = psc_stats_register("time balancing");
+    }
+
+    psc_stats_start(st_time_balance);
+    auto loads = get_loads_(mprts.grid(), mprts);
+    auto loads_all = psc::balance::gather_loads(*grid, loads);
+    balance(grid, loads_all, &mprts);
+    psc_stats_stop(st_time_balance);
+  }
+
+private:
+  int find_best_mapping(const Grid_t& grid,
+                        const std::vector<double>& loads_all)
+  {
+    const MrcDomain& domain = grid.mrc_domain_;
+
+    MPI_Comm comm = domain.comm();
+    int rank, size;
+    MPI_Comm_rank(comm, &rank);
+    MPI_Comm_size(comm, &size);
+
+    int nr_patches_old = domain.nPatches();
+
+    std::vector<int> nr_patches_all_old(size);
+    MPI_Allgather(&nr_patches_old, 1, MPI_INT, nr_patches_all_old.data(), 1,
+                  MPI_INT, comm);
+
+    int nr_patches_new;
+
+    if (rank == 0) { // do the mapping on proc 0
+      std::vector<double> capability(size);
+      for (int p = 0; p < size; p++) {
+        capability[p] = capability_default(p);
+      }
+
+      auto nr_patches_all_new =
+        psc::balance::best_mapping({capability, loads_all});
+      psc::balance::print_stats({capability, loads_all}, nr_patches_all_new,
+                                print_loads_);
+      if (write_loads_) {
+        psc::balance::write_loads({capability, loads_all}, nr_patches_all_new,
+                                  grid.timestep());
+      }
+
+      if (nr_patches_all_new == nr_patches_all_old) {
+        std::fill(nr_patches_all_new.begin(), nr_patches_all_new.end(),
+                  -1); // unchanged mapping, no communication etc needed
+      }
+
+      MPI_Scatter(nr_patches_all_new.data(), 1, MPI_INT, &nr_patches_new, 1,
+                  MPI_INT, 0, comm);
+    } else {
+      MPI_Scatter(nullptr, 1, MPI_INT, &nr_patches_new, 1, MPI_INT, 0, comm);
+    }
+    return nr_patches_new;
   }
 
   void communicate_fields(struct communicate_ctx* ctx, Mfields& mf_old,
@@ -1088,7 +1091,7 @@ private:
                          communicate_ctx& ctx)
   {
     auto mprts_new = Mparticles{new_grid};
-    communicate_particles(&ctx, mprts, mprts_new);
+    ctx.communicate_particles(mprts, mprts_new);
     mprts = std::move(mprts_new);
   }
 
