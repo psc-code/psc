@@ -639,7 +639,6 @@ public:
   {
     using Particle = typename Mparticles::Particle;
     using real_t = typename Mparticles::real_t;
-    communicate_ctx* ctx = this;
     // static int pr, pr_A, pr_B, pr_C, pr_D;
     // if (!pr) {
     //   pr   = prof_register("comm prts", 1., 0, 0);
@@ -651,7 +650,7 @@ public:
 
     // prof_start(pr);
 
-    auto n_prts_by_patch_new = ctx->new_n_prts(mp_old.sizeByPatch());
+    auto n_prts_by_patch_new = new_n_prts(mp_old.sizeByPatch());
 
     // prof_start(pr_A);
     mp_new.reserve_all(n_prts_by_patch_new);
@@ -661,12 +660,12 @@ public:
 
     auto mpi_dtype = MpiDtypeTraits<typename Mparticles::real_t>::value();
     // recv for new local patches
-    MPI_Request* recv_reqs = new MPI_Request[ctx->nr_patches_new]();
+    MPI_Request* recv_reqs = new MPI_Request[nr_patches_new]();
     int nr_recv_reqs = 0;
 
-    for (int ri = 0; ri < ctx->nr_recv_ranks; ri++) {
-      struct by_ri* recv = &ctx->recv_by_ri[ri];
-      if (recv->rank == ctx->mpi_rank) {
+    for (int ri = 0; ri < nr_recv_ranks; ri++) {
+      struct by_ri* recv = &recv_by_ri[ri];
+      if (recv->rank == mpi_rank) {
         continue;
       }
 
@@ -674,7 +673,7 @@ public:
         int p = recv->pi_to_patch[pi];
         auto&& prts_new = mp_new[p];
         int nn = prts_new.size() * (sizeof(Particle) / sizeof(real_t));
-        MPI_Irecv(&*prts_new.begin(), nn, mpi_dtype, recv->rank, pi, ctx->comm,
+        MPI_Irecv(&*prts_new.begin(), nn, mpi_dtype, recv->rank, pi, comm,
                   &recv_reqs[nr_recv_reqs++]);
       }
     }
@@ -682,12 +681,12 @@ public:
 
     // prof_start(pr_B);
     // send from old local patches
-    MPI_Request* send_reqs = new MPI_Request[ctx->nr_patches_old]();
+    MPI_Request* send_reqs = new MPI_Request[nr_patches_old]();
     int nr_send_reqs = 0;
 
-    for (int ri = 0; ri < ctx->nr_send_ranks; ri++) {
-      struct by_ri* send = &ctx->send_by_ri[ri];
-      if (send->rank == ctx->mpi_rank) {
+    for (int ri = 0; ri < nr_send_ranks; ri++) {
+      struct by_ri* send = &send_by_ri[ri];
+      if (send->rank == mpi_rank) {
         continue;
       }
 
@@ -696,7 +695,7 @@ public:
         auto&& prts_old = mp_old[p];
         int nn = prts_old.size() * (sizeof(Particle) / sizeof(real_t));
         // mprintf("A send -> %d tag %d (patch %d)\n", send->rank, pi, p);
-        MPI_Isend(&*prts_old.begin(), nn, mpi_dtype, send->rank, pi, ctx->comm,
+        MPI_Isend(&*prts_old.begin(), nn, mpi_dtype, send->rank, pi, comm,
                   &send_reqs[nr_send_reqs++]);
       }
     }
@@ -705,12 +704,12 @@ public:
     // prof_start(pr_C);
     // local particles
     // OPT: could keep the alloced arrays, just move pointers...
-    for (int p = 0; p < ctx->nr_patches_new; p++) {
-      if (ctx->recv_info[p].rank != ctx->mpi_rank) {
+    for (int p = 0; p < nr_patches_new; p++) {
+      if (recv_info[p].rank != mpi_rank) {
         continue;
       }
 
-      auto&& prts_old = mp_old[ctx->recv_info[p].patch];
+      auto&& prts_old = mp_old[recv_info[p].patch];
       auto&& prts_new = mp_new[p];
       assert(prts_old.size() == prts_new.size());
 #if 1
