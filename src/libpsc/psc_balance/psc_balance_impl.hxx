@@ -355,8 +355,9 @@ struct by_ri
   int* pi_to_patch;
 };
 
-struct communicate_ctx
+class communicate_ctx
 {
+public:
   MPI_Comm comm;
   int mpi_rank;
   int mpi_size;
@@ -374,6 +375,7 @@ struct communicate_ctx
   int nr_recv_ranks;
   struct by_ri* recv_by_ri;
 
+public:
   communicate_ctx(const MrcDomain& domain_old, const MrcDomain& domain_new)
   {
     comm = domain_old.comm();
