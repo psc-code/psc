@@ -498,8 +498,7 @@ public:
     std::vector<uint> n_prts_by_patch_new(nr_patches_new_);
     // post receives
 
-    MPI_Request* recv_reqs =
-      (MPI_Request*)calloc(nr_patches_new_, sizeof(*recv_reqs));
+    std::vector<MPI_Request> recv_reqs(nr_patches_new_);
     int nr_recv_reqs = 0;
 
     int** nr_particles_recv_by_ri =
@@ -558,7 +557,7 @@ public:
       }
     }
 
-    MPI_Waitall(nr_recv_reqs, recv_reqs, MPI_STATUSES_IGNORE);
+    MPI_Waitall(nr_recv_reqs, recv_reqs.data(), MPI_STATUSES_IGNORE);
 
     // update from received data
 
@@ -576,7 +575,6 @@ public:
       free(nr_particles_recv_by_ri[ri]);
     }
     free(nr_particles_recv_by_ri);
-    free(recv_reqs);
 
     MPI_Waitall(nr_send_reqs, send_reqs, MPI_STATUSES_IGNORE);
 
@@ -620,7 +618,7 @@ public:
 
     auto mpi_dtype = MpiDtypeTraits<typename Mparticles::real_t>::value();
     // recv for new local patches
-    MPI_Request* recv_reqs = new MPI_Request[nr_patches_new_]();
+    std::vector<MPI_Request> recv_reqs(nr_patches_new_);
     int nr_recv_reqs = 0;
 
     for (int ri = 0; ri < nr_recv_ranks_; ri++) {
@@ -690,9 +688,8 @@ public:
 
     // prof_start(pr_D);
     MPI_Waitall(nr_send_reqs, send_reqs, MPI_STATUSES_IGNORE);
-    MPI_Waitall(nr_recv_reqs, recv_reqs, MPI_STATUSES_IGNORE);
+    MPI_Waitall(nr_recv_reqs, recv_reqs.data(), MPI_STATUSES_IGNORE);
     delete[] send_reqs;
-    delete[] recv_reqs;
     // prof_stop(pr_D);
 
     // prof_stop(pr);
@@ -721,7 +718,7 @@ public:
     delete[] nr_patches_new_by_rank;
 
     // recv for new local patches
-    MPI_Request* recv_reqs = new MPI_Request[nr_patches_new_]();
+    std::vector<MPI_Request> recv_reqs(nr_patches_new_);
     int* nr_patches_old_by_rank = new int[mpi_size_]();
     for (int p = 0; p < nr_patches_new_; p++) {
       int old_rank = recv_info_[p].rank;
@@ -764,9 +761,8 @@ public:
     prof_stop(pr);
 
     MPI_Waitall(nr_patches_old_, send_reqs, MPI_STATUSES_IGNORE);
-    MPI_Waitall(nr_patches_new_, recv_reqs, MPI_STATUSES_IGNORE);
+    MPI_Waitall(nr_patches_new_, recv_reqs.data(), MPI_STATUSES_IGNORE);
     delete[] send_reqs;
-    delete[] recv_reqs;
   }
 
 private:
