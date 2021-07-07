@@ -986,21 +986,19 @@ private:
 #ifdef USE_CUDA
     //  communicate on host, move back to gpu
     for (int n = 0; n < mfields_cuda.size(); n++) {
-      Mfields& mf_old = mfields_old[n];
+      Mfields& mf = mfields_old[n];
       mpi_printf(old_grid->comm(),
                  "***** Balance: balancing field, copy back to device, "
                  "#components %d\n",
-                 mf_old.n_comps());
+                 mf.n_comps());
 
-      auto mf_new = Mfields{*new_grid, mf_old.n_comps(), mf_old.ibn()};
-      ctx.communicate_fields(mf_old, mf_new);
-      // FIXME, not possible anymore, could be recovered by some "= {}" empty
-      // default behavior. delete mfields_old[n]; // delete as early as
-      // possible
+      auto mf_new = Mfields{*new_grid, mf.n_comps(), mf.ibn()};
+      ctx.communicate_fields(mf, mf_new);
+      mf = std::move(mf_new);
 
       MfieldsCuda& mf_cuda = mfields_cuda[n];
-      new (&mf_cuda) MfieldsCuda{*new_grid, mf_new.n_comps(), mf_new.ibn()};
-      MfieldsBase::convert(mf_new, mf_cuda, 0, mf_new._n_comps());
+      new (&mf_cuda) MfieldsCuda{*new_grid, mf.n_comps(), mf.ibn()};
+      MfieldsBase::convert(mf, mf_cuda, 0, mf._n_comps());
     }
 #endif
     prof_stop(pr_bal_flds);
