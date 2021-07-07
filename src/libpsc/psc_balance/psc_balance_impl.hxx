@@ -501,16 +501,14 @@ public:
     std::vector<MPI_Request> recv_reqs(nr_patches_new_);
     int nr_recv_reqs = 0;
 
-    int** nr_particles_recv_by_ri =
-      (int**)calloc(nr_recv_ranks_, sizeof(*nr_particles_recv_by_ri));
+    std::vector<std::vector<int>> nr_particles_recv_by_ri(nr_recv_ranks_);
     for (int ri = 0; ri < nr_recv_ranks_; ri++) {
       struct by_ri* recv = &recv_by_ri_[ri];
-      nr_particles_recv_by_ri[ri] =
-        (int*)calloc(recv->nr_patches, sizeof(*nr_particles_recv_by_ri[ri]));
+      nr_particles_recv_by_ri[ri].resize(recv->nr_patches);
 
       if (recv->rank != mpi_rank_) {
         // mprintf("recv <- %d (len %d)\n", r, nr_patches_recv_by_ri[ri]);
-        MPI_Irecv(nr_particles_recv_by_ri[ri], recv->nr_patches, MPI_INT,
+        MPI_Irecv(nr_particles_recv_by_ri[ri].data(), recv->nr_patches, MPI_INT,
                   recv->rank, 10, comm_, &recv_reqs[nr_recv_reqs++]);
       }
     }
@@ -520,12 +518,10 @@ public:
     std::vector<MPI_Request> send_reqs(nr_send_ranks_);
     int nr_send_reqs = 0;
 
-    int** nr_particles_send_by_ri =
-      (int**)calloc(nr_send_ranks_, sizeof(*nr_particles_send_by_ri));
+    std::vector<std::vector<int>> nr_particles_send_by_ri(nr_send_ranks_);
     for (int ri = 0; ri < nr_send_ranks_; ri++) {
       struct by_ri* send = &send_by_ri_[ri];
-      nr_particles_send_by_ri[ri] =
-        (int*)calloc(send->nr_patches, sizeof(*nr_particles_send_by_ri[ri]));
+      nr_particles_send_by_ri[ri].resize(send->nr_patches);
 
       for (int pi = 0; pi < send->nr_patches; pi++) {
         nr_particles_send_by_ri[ri][pi] =
@@ -534,7 +530,7 @@ public:
 
       if (send->rank != mpi_rank_) {
         // mprintf("send -> %d (len %d)\n", r, nr_patches_send_by_ri[ri]);
-        MPI_Isend(nr_particles_send_by_ri[ri], send->nr_patches, MPI_INT,
+        MPI_Isend(nr_particles_send_by_ri[ri].data(), send->nr_patches, MPI_INT,
                   send->rank, 10, comm_, &send_reqs[nr_send_reqs++]);
       }
     }
@@ -568,21 +564,7 @@ public:
       }
     }
 
-    // clean up recv
-
-    for (int ri = 0; ri < nr_recv_ranks_; ri++) {
-      free(nr_particles_recv_by_ri[ri]);
-    }
-    free(nr_particles_recv_by_ri);
-
     MPI_Waitall(nr_send_reqs, send_reqs.data(), MPI_STATUSES_IGNORE);
-
-    // clean up send
-
-    for (int ri = 0; ri < nr_send_ranks_; ri++) {
-      free(nr_particles_send_by_ri[ri]);
-    }
-    free(nr_particles_send_by_ri);
 
     // return result
 
