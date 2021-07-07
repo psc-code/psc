@@ -358,8 +358,6 @@ struct by_ri
 class communicate_ctx
 {
 public:
-  struct recv_info* recv_info; // by new patch on this proc
-
   int* send_rank_to_ri; // map from send target rank to contiguous "rank index"
   int* recv_rank_to_ri; // map from recv source rank to contiguous "rank index"
 
@@ -388,13 +386,13 @@ public:
       send_info_[p].patch = info_new.patch;
     }
 
-    recv_info = (struct recv_info*)calloc(nr_patches_new_, sizeof(*recv_info));
+    recv_info_.resize(nr_patches_new_);
     for (int p = 0; p < nr_patches_new_; p++) {
       auto info_new = domain_new.localPatchInfo(p);
       auto info_old =
         domain_old.levelIdx3PatchInfo(info_new.level, info_new.idx3);
-      recv_info[p].rank = info_old.rank;
-      recv_info[p].patch = info_old.patch;
+      recv_info_[p].rank = info_old.rank;
+      recv_info_[p].patch = info_old.patch;
     }
 
     // maps rank <-> rank index
@@ -417,7 +415,7 @@ public:
       }
     }
     for (int p = 0; p < nr_patches_new_; p++) {
-      int recv_rank = recv_info[p].rank;
+      int recv_rank = recv_info_[p].rank;
       if (recv_rank >= 0) {
         if (recv_rank_to_ri[recv_rank] < 0) {
           recv_rank_to_ri[recv_rank] = nr_recv_ranks++;
@@ -435,7 +433,7 @@ public:
       }
     }
     for (int p = 0; p < nr_patches_new_; p++) {
-      int recv_rank = recv_info[p].rank;
+      int recv_rank = recv_info_[p].rank;
       if (recv_rank >= 0) {
         recv_by_ri[recv_rank_to_ri[recv_rank]].rank = recv_rank;
       }
@@ -475,7 +473,7 @@ public:
     // count number of patches received from each rank
 
     for (int p = 0; p < nr_patches_new_; p++) {
-      int recv_rank = recv_info[p].rank;
+      int recv_rank = recv_info_[p].rank;
       if (recv_rank >= 0) {
         int ri = recv_rank_to_ri[recv_rank];
         recv_by_ri[ri].nr_patches++;
@@ -491,7 +489,7 @@ public:
     }
 
     for (int p = 0; p < nr_patches_new_; p++) {
-      int recv_rank = recv_info[p].rank;
+      int recv_rank = recv_info_[p].rank;
       if (recv_rank < 0) {
         continue;
       }
@@ -503,8 +501,6 @@ public:
 
   ~communicate_ctx()
   {
-    free(recv_info);
-
     free(send_rank_to_ri);
     free(recv_rank_to_ri);
 
@@ -698,11 +694,11 @@ public:
     // local particles
     // OPT: could keep the alloced arrays, just move pointers...
     for (int p = 0; p < nr_patches_new_; p++) {
-      if (recv_info[p].rank != mpi_rank_) {
+      if (recv_info_[p].rank != mpi_rank_) {
         continue;
       }
 
-      auto&& prts_old = mp_old[recv_info[p].patch];
+      auto&& prts_old = mp_old[recv_info_[p].patch];
       auto&& prts_new = mp_new[p];
       assert(prts_old.size() == prts_new.size());
 #if 1
@@ -757,7 +753,7 @@ public:
     MPI_Request* recv_reqs = new MPI_Request[nr_patches_new_]();
     int* nr_patches_old_by_rank = new int[mpi_size_]();
     for (int p = 0; p < nr_patches_new_; p++) {
-      int old_rank = recv_info[p].rank;
+      int old_rank = recv_info_[p].rank;
       if (old_rank == mpi_rank_) {
         recv_reqs[p] = MPI_REQUEST_NULL;
       } else if (old_rank < 0) { // this patch did not exist before
@@ -782,11 +778,11 @@ public:
     // local fields
     // OPT: could keep the alloced arrays, just move pointers...
     for (int p = 0; p < nr_patches_new_; p++) {
-      if (recv_info[p].rank != mpi_rank_) {
+      if (recv_info_[p].rank != mpi_rank_) {
         continue;
       }
 
-      auto flds_old = mf_old[recv_info[p].patch];
+      auto flds_old = mf_old[recv_info_[p].patch];
       auto flds_new = mf_new[p];
       assert(flds_old.storage().shape() == flds_new.storage().shape());
       int size = flds_old.storage().size();
@@ -809,6 +805,7 @@ private:
   int nr_patches_old_;
   int nr_patches_new_;
   std::vector<send_info> send_info_; // by old patch on this proc
+  std::vector<recv_info> recv_info_; // by new patch on this proc
 };
 
 // ======================================================================
@@ -1043,10 +1040,10 @@ private:
     //  communicate on host, move back to gpu
     for (int n = 0; n < mfields_cuda.size(); n++) {
       Mfields& mf_old = mfields_old[n];
-      mpi_printf(
-        old_grid->comm(),
-        "***** Balance: balancing field, copy back to device, #components %d\n",
-        mf_old.n_comps());
+      mpi_printf(old_grid->comm(),
+                 "***** Balance: balancing field, copy back to device, "
+                 "#components %d\n",
+                 mf_old.n_comps());
 
       auto mf_new = Mfields{*new_grid, mf_old.n_comps(), mf_old.ibn()};
       ctx.communicate_fields(mf_old, mf_new);
