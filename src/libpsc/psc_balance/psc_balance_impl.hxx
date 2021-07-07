@@ -287,12 +287,13 @@ inline std::vector<double> gather_loads(const Grid_t& grid,
   MPI_Comm_size(comm, &size);
 
   // gather nr_patches for all procs on proc 0
-  int* nr_patches_all = NULL;
+  std::vector<int> nr_patches_all;
   if (rank == 0) {
-    nr_patches_all = (int*)calloc(size, sizeof(*nr_patches_all));
+    nr_patches_all.resize(size);
   }
   int n_patches = loads.size();
-  MPI_Gather(&n_patches, 1, MPI_INT, nr_patches_all, 1, MPI_INT, 0, comm);
+  MPI_Gather(&n_patches, 1, MPI_INT, nr_patches_all.data(), 1, MPI_INT, 0,
+             comm);
 
   // gather loads for all patches on proc 0
   int* displs = NULL;
@@ -308,7 +309,7 @@ inline std::vector<double> gather_loads(const Grid_t& grid,
     loads_all.resize(n_global_patches);
   }
   MPI_Gatherv(loads.data(), n_patches, MPI_DOUBLE, loads_all.data(),
-              nr_patches_all, displs, MPI_DOUBLE, 0, comm);
+              nr_patches_all.data(), displs, MPI_DOUBLE, 0, comm);
 
   if (rank == 0) {
 #if 0
@@ -323,7 +324,6 @@ inline std::vector<double> gather_loads(const Grid_t& grid,
       }
       fclose(f);
 #endif
-    free(nr_patches_all);
     free(displs);
   }
 
