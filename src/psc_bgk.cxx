@@ -380,7 +380,7 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
 
 void initializePhi(PhiField& phi)
 {
-  setupScalarField(phi, [&](int m, double crd[3]) {
+  setupScalarField(phi, Centering::Centerer(Centering::NC), [&](int m, double crd[3]) {
     double rho = sqrt(sqr(crd[1]) + sqr(crd[2]));
     return parsed.get_interpolated(COL_PHI, rho);
   });

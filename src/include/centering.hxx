@@ -1,3 +1,4 @@
+
 #pragma once
 
 namespace Centering
@@ -18,17 +19,14 @@ enum Component
   Z
 };
 
-struct Centerer
-{
-  CenterStyle style;
-  Centerer(CenterStyle style) : style(style) {}
-
-  template <typename Patch>
-  inline Double3 getPos(Patch patch, int index[3], int comp = X)
-  {
-    return getPos(patch, index, style, comp);
-  }
-};
+/*  Centering Guide
+         X   Y   Z
+       -------------
+NC  |   nnn nnn nnn
+EC  |   cnn ncn nnc
+FC  |   ncc cnc ccn
+CC  |   ccc ccc ccc
+*/
 
 template <typename Patch>
 Double3 getPos(Patch patch, int index[3], int style, int comp = X)
@@ -45,13 +43,16 @@ Double3 getPos(Patch patch, int index[3], int style, int comp = X)
   return pos;
 }
 
-/*
-         X   Y   Z
-       -------------
-NC  |   nnn nnn nnn
-EC  |   cnn ncn nnc
-FC  |   ncc cnc ccn
-CC  |   ccc ccc ccc
-*/
+struct Centerer
+{
+  CenterStyle style;
+  Centerer(CenterStyle style) : style(style) {}
+
+  template <typename Patch>
+  inline Double3 getPos(Patch patch, int index[3], int comp = X) const
+  {
+    return Centering::getPos(patch, index, style, comp);
+  }
+};
 
 } // namespace Centering

@@ -47,7 +47,7 @@ struct SetupFields
   }
 
   template <typename FUNC>
-  static void runScalar(Mfields& mf, FUNC&& func)
+  static void runScalar(Mfields& mf, FUNC&& func, const Centering::Centerer& centerer)
   {
     const auto& grid = mf.grid();
     mpi_printf(grid.comm(), "**** Setting up fields...\n");
@@ -62,7 +62,7 @@ struct SetupFields
       grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
         int index[3] = {jx, jy, jz};
         F(0, jx, jy, jz) +=
-          func(0, Centering::getPos(patch, index, Centering::NC));
+          func(0, centerer.getPos(patch, index));
       });
     }
   }
@@ -77,9 +77,9 @@ void setupFields(MF& mflds, FUNC&& func)
 }
 
 template <typename MF, typename FUNC>
-void setupScalarField(MF& fld, FUNC&& func)
+void setupScalarField(MF& fld, const Centering::Centerer& centerer, FUNC&& func)
 {
-  detail::SetupFields<MF>::runScalar(fld, std::forward<FUNC>(func));
+  detail::SetupFields<MF>::runScalar(fld, std::forward<FUNC>(func), centerer);
 }
 
 #ifdef USE_CUDA
