@@ -1002,16 +1002,12 @@ private:
       if (typeid(mp_base) == typeid(Mparticles)) {
         auto& mp_host = dynamic_cast<Mparticles&>(mp_base);
 
-        auto mp_new = Mparticles{*new_grid};
-        communicate_particles(&ctx, mp_host, mp_new);
-        mp_host = std::move(mp_new);
+        balance_particles(mp_host, *new_grid, ctx);
       } else {
         assert(p_mp_host);
         auto& mp_host = *p_mp_host;
 
-        auto mp_new = Mparticles{*new_grid};
-        communicate_particles(&ctx, mp_host, mp_new);
-        mp_host = std::move(mp_new);
+        balance_particles(mp_host, *new_grid, ctx);
       }
 
       prof_stop(pr_bal_prts);
@@ -1083,6 +1079,15 @@ private:
     psc_balance_generation_cnt++;
 
     return n_prts_by_patch_new;
+  }
+
+private:
+  void balance_particles(Mparticles& mprts, Grid_t& new_grid,
+                         communicate_ctx& ctx)
+  {
+    auto mprts_new = Mparticles{new_grid};
+    communicate_particles(&ctx, mprts, mprts_new);
+    mprts = std::move(mprts_new);
   }
 
 private:
