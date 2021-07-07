@@ -31,7 +31,7 @@ struct SetupFields
         std::max({mf.ibn()[0], mf.ibn()[1], mf.ibn()[2]}); // FIXME, not pretty
       // FIXME, do we need the ghost points?
       grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
-        int index[3] = {jx, jy, jz};
+        Int3 index{jx, jy, jz};
 
         for (int c = 0; c < 3; c++) {
           F(HX + c, jx, jy, jz) +=
@@ -46,7 +46,8 @@ struct SetupFields
   }
 
   template <typename FUNC>
-  static void runScalar(Mfields& mf, FUNC&& func, const Centering::Centerer& centerer)
+  static void runScalar(Mfields& mf, FUNC&& func,
+                        const Centering::Centerer& centerer)
   {
     const auto& grid = mf.grid();
     mpi_printf(grid.comm(), "**** Setting up fields...\n");
@@ -59,9 +60,7 @@ struct SetupFields
         std::max({mf.ibn()[0], mf.ibn()[1], mf.ibn()[2]}); // FIXME, not pretty
       // FIXME, do we need the ghost points?
       grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
-        int index[3] = {jx, jy, jz};
-        F(0, jx, jy, jz) +=
-          func(0, centerer.getPos(patch, index));
+        F(0, jx, jy, jz) += func(0, centerer.getPos(patch, {jx, jy, jz}));
       });
     }
   }

@@ -74,7 +74,8 @@ struct SetupParticles
     for (int jz = ilo[2]; jz < ihi[2]; jz++) {
       for (int jy = ilo[1]; jy < ihi[1]; jy++) {
         for (int jx = ilo[0]; jx < ihi[0]; jx++) {
-          int index[3] = {jx, jy, jz};
+          Int3 index{jx, jy, jz};
+
           Double3 pos = centerer.getPos(grid.patches[patch], index);
           // FIXME, the issue really is that (2nd order) particle pushers
           // don't handle the invariant dim right
@@ -89,8 +90,8 @@ struct SetupParticles
             psc_particle_npt npt{};
             if (pop < kinds_.size()) {
               npt.kind = pop;
-            };
-            init_npt(pop, pos, patch, {jx, jy, jz}, npt);
+            }
+            init_npt(pop, pos, patch, index, npt);
 
             int n_in_cell;
             if (pop != neutralizing_population) {

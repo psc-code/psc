@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "kg/Vec3.h"
+
 namespace Centering
 {
 
@@ -28,8 +30,8 @@ FC  |   ncc cnc ccn
 CC  |   ccc ccc ccc
 */
 
-template <typename Patch>
-Double3 getPos(Patch patch, int index[3], int style, int comp = X)
+template <typename PATCH>
+Double3 getPos(PATCH patch, Int3 index, int style, int comp = X)
 {
   Double3 pos;
   for (int a = 0; a < 3; a++) {
@@ -48,8 +50,8 @@ struct Centerer
   CenterStyle style;
   Centerer(CenterStyle style) : style(style) {}
 
-  template <typename Patch>
-  inline Double3 getPos(Patch patch, int index[3], int comp = X) const
+  template <typename PATCH>
+  inline Double3 getPos(PATCH patch, Int3 index, int comp = X) const
   {
     return Centering::getPos(patch, index, style, comp);
   }
