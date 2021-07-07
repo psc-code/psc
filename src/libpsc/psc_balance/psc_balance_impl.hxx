@@ -358,10 +358,6 @@ struct by_ri
 class communicate_ctx
 {
 public:
-  int nr_recv_ranks;
-  struct by_ri* recv_by_ri;
-
-public:
   communicate_ctx(const MrcDomain& domain_old, const MrcDomain& domain_new)
   {
     comm_ = domain_old.comm();
@@ -399,7 +395,6 @@ public:
     }
 
     nr_send_ranks_ = 0;
-    nr_recv_ranks = 0;
     for (int p = 0; p < nr_patches_old_; p++) {
       int send_rank = send_info_[p].rank;
       if (send_rank >= 0) {
@@ -408,17 +403,18 @@ public:
         }
       }
     }
+    nr_recv_ranks_ = 0;
     for (int p = 0; p < nr_patches_new_; p++) {
       int recv_rank = recv_info_[p].rank;
       if (recv_rank >= 0) {
         if (recv_rank_to_ri_[recv_rank] < 0) {
-          recv_rank_to_ri_[recv_rank] = nr_recv_ranks++;
+          recv_rank_to_ri_[recv_rank] = nr_recv_ranks_++;
         }
       }
     }
 
     send_by_ri_.resize(nr_send_ranks_);
-    recv_by_ri = (struct by_ri*)calloc(nr_recv_ranks, sizeof(*recv_by_ri));
+    recv_by_ri_.resize(nr_recv_ranks_);
 
     for (int p = 0; p < nr_patches_old_; p++) {
       int send_rank = send_info_[p].rank;
@@ -429,7 +425,7 @@ public:
     for (int p = 0; p < nr_patches_new_; p++) {
       int recv_rank = recv_info_[p].rank;
       if (recv_rank >= 0) {
-        recv_by_ri[recv_rank_to_ri_[recv_rank]].rank = recv_rank;
+        recv_by_ri_[recv_rank_to_ri_[recv_rank]].rank = recv_rank;
       }
     }
 
@@ -469,15 +465,15 @@ public:
       int recv_rank = recv_info_[p].rank;
       if (recv_rank >= 0) {
         int ri = recv_rank_to_ri_[recv_rank];
-        recv_by_ri[ri].nr_patches++;
+        recv_by_ri_[ri].nr_patches++;
       }
     }
 
     // map received patch index by ri back to local patch number
 
-    for (int ri = 0; ri < nr_recv_ranks; ri++) {
-      recv_by_ri[ri].pi_to_patch.resize(recv_by_ri[ri].nr_patches);
-      recv_by_ri[ri].nr_patches = 0;
+    for (int ri = 0; ri < nr_recv_ranks_; ri++) {
+      recv_by_ri_[ri].pi_to_patch.resize(recv_by_ri_[ri].nr_patches);
+      recv_by_ri_[ri].nr_patches = 0;
     }
 
     for (int p = 0; p < nr_patches_new_; p++) {
@@ -486,17 +482,9 @@ public:
         continue;
       }
       int ri = recv_rank_to_ri_[recv_rank];
-      int pi = recv_by_ri[ri].nr_patches++;
-      recv_by_ri[ri].pi_to_patch[pi] = p;
+      int pi = recv_by_ri_[ri].nr_patches++;
+      recv_by_ri_[ri].pi_to_patch[pi] = p;
     }
-  }
-
-  ~communicate_ctx()
-  {
-    for (int ri = 0; ri < nr_recv_ranks; ri++) {
-      recv_by_ri[ri].~by_ri();
-    }
-    free(recv_by_ri);
   }
 
   std::vector<uint> new_n_prts(std::vector<uint> n_prts_by_patch_old)
@@ -516,9 +504,9 @@ public:
     int nr_recv_reqs = 0;
 
     int** nr_particles_recv_by_ri =
-      (int**)calloc(nr_recv_ranks, sizeof(*nr_particles_recv_by_ri));
-    for (int ri = 0; ri < nr_recv_ranks; ri++) {
-      struct by_ri* recv = &recv_by_ri[ri];
+      (int**)calloc(nr_recv_ranks_, sizeof(*nr_particles_recv_by_ri));
+    for (int ri = 0; ri < nr_recv_ranks_; ri++) {
+      struct by_ri* recv = &recv_by_ri_[ri];
       nr_particles_recv_by_ri[ri] =
         (int*)calloc(recv->nr_patches, sizeof(*nr_particles_recv_by_ri[ri]));
 
@@ -563,7 +551,7 @@ public:
         assert(recv_ri < 0);
       } else {
         assert(send_by_ri_[send_ri].nr_patches ==
-               recv_by_ri[recv_ri].nr_patches);
+               recv_by_ri_[recv_ri].nr_patches);
         for (int n = 0; n < send_by_ri_[send_ri].nr_patches; n++) {
           nr_particles_recv_by_ri[recv_ri][n] =
             nr_particles_send_by_ri[send_ri][n];
@@ -575,9 +563,9 @@ public:
 
     // update from received data
 
-    for (int ri = 0; ri < nr_recv_ranks; ri++) {
-      struct by_ri* recv = &recv_by_ri[ri];
-      for (int pi = 0; pi < recv_by_ri[ri].nr_patches; pi++) {
+    for (int ri = 0; ri < nr_recv_ranks_; ri++) {
+      struct by_ri* recv = &recv_by_ri_[ri];
+      for (int pi = 0; pi < recv_by_ri_[ri].nr_patches; pi++) {
         n_prts_by_patch_new[recv->pi_to_patch[pi]] =
           nr_particles_recv_by_ri[ri][pi];
       }
@@ -585,7 +573,7 @@ public:
 
     // clean up recv
 
-    for (int ri = 0; ri < nr_recv_ranks; ri++) {
+    for (int ri = 0; ri < nr_recv_ranks_; ri++) {
       free(nr_particles_recv_by_ri[ri]);
     }
     free(nr_particles_recv_by_ri);
@@ -636,8 +624,8 @@ public:
     MPI_Request* recv_reqs = new MPI_Request[nr_patches_new_]();
     int nr_recv_reqs = 0;
 
-    for (int ri = 0; ri < nr_recv_ranks; ri++) {
-      struct by_ri* recv = &recv_by_ri[ri];
+    for (int ri = 0; ri < nr_recv_ranks_; ri++) {
+      struct by_ri* recv = &recv_by_ri_[ri];
       if (recv->rank == mpi_rank_) {
         continue;
       }
@@ -797,6 +785,8 @@ private:
 
   int nr_send_ranks_;
   std::vector<by_ri> send_by_ri_;
+  int nr_recv_ranks_;
+  std::vector<by_ri> recv_by_ri_;
 };
 
 // ======================================================================
