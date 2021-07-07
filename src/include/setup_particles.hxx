@@ -53,7 +53,7 @@ struct SetupParticles
   // op_cellwise
   // Performs a given operation in each cell.
   // init_npt signature: (int kind, Double3 pos, int p, Int3 index, npt) -> void
-  // op signature: (int n_in_cell) -> void
+  // op signature: (int n_in_cell, npt, Double3 pos) -> void
 
   template <typename InitFunc, typename OpFunc>
   void op_cellwise(const Grid_t& grid, int patch, InitFunc&& init_npt,
@@ -94,7 +94,7 @@ struct SetupParticles
               assert(neutralizing_population == n_populations_ - 1);
               n_in_cell = -n_q_in_cell / kinds_[npt.kind].q;
             }
-            op(n_in_cell);
+            op(n_in_cell, npt, pos);
           }
         }
       }
@@ -178,55 +178,21 @@ struct SetupParticles
     auto inj = mprts.injector();
 
     for (int p = 0; p < mprts.n_patches(); ++p) {
-      auto ldims = grid.ldims;
       auto injector = inj[p];
 
-      for (int jz = 0; jz < ldims[2]; jz++) {
-        for (int jy = 0; jy < ldims[1]; jy++) {
-          for (int jx = 0; jx < ldims[0]; jx++) {
-            Double3 pos = {grid.patches[p].x_cc(jx), grid.patches[p].y_cc(jy),
-                           grid.patches[p].z_cc(jz)};
-            // FIXME, the issue really is that (2nd order) particle pushers
-            // don't handle the invariant dim right
-            if (grid.isInvar(0) == 1)
-              pos[0] = grid.patches[p].x_nc(jx);
-            if (grid.isInvar(1) == 1)
-              pos[1] = grid.patches[p].y_nc(jy);
-            if (grid.isInvar(2) == 1)
-              pos[2] = grid.patches[p].z_nc(jz);
-
-            int n_q_in_cell = 0;
-            for (int pop = 0; pop < n_populations_; pop++) {
-              psc_particle_npt npt{};
-              if (pop < kinds_.size()) {
-                npt.kind = pop;
-              }
-              init_npt(pop, pos, p, {jx, jy, jz}, npt);
-
-              int n_in_cell;
-              if (pop != neutralizing_population) {
-                n_in_cell = get_n_in_cell(npt);
-                n_q_in_cell += kinds_[npt.kind].q * n_in_cell;
-              } else {
-                // FIXME, should handle the case where not the last population
-                // is neutralizing
-                assert(neutralizing_population == n_populations_ - 1);
-                n_in_cell = -n_q_in_cell / kinds_[npt.kind].q;
-              }
-              for (int cnt = 0; cnt < n_in_cell; cnt++) {
-                real_t wni;
-                if (fractional_n_particles_per_cell) {
-                  wni = 1.;
-                } else {
-                  wni = npt.n / (n_in_cell * norm_.cori);
-                }
-                auto prt = setupParticle(npt, pos, wni);
-                injector(prt);
-              }
-            }
-          }
-        }
-      }
+      op_cellwise(grid, p, std::forward<FUNC>(init_npt),
+                  [&](int n_in_cell, psc_particle_npt& npt, Double3& pos) {
+                    for (int cnt = 0; cnt < n_in_cell; cnt++) {
+                      real_t wni;
+                      if (fractional_n_particles_per_cell) {
+                        wni = 1.;
+                      } else {
+                        wni = npt.n / (n_in_cell * norm_.cori);
+                      }
+                      auto prt = setupParticle(npt, pos, wni);
+                      injector(prt);
+                    }
+                  });
     }
 
     prof_stop(pr);
@@ -256,7 +222,9 @@ struct SetupParticles
 
     for (int p = 0; p < grid.n_patches(); ++p) {
       op_cellwise(grid, p, std::forward<FUNC>(init_npt),
-                  [&](int n_in_cell) { n_prts_by_patch[p] += n_in_cell; });
+                  [&](int n_in_cell, psc_particle_npt&, Double3&) {
+                    n_prts_by_patch[p] += n_in_cell;
+                  });
     }
 
     return n_prts_by_patch;
