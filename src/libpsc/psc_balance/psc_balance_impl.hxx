@@ -950,16 +950,11 @@ private:
       mpi_printf(old_grid->comm(), "***** Balance: balancing particles\n");
       prof_start(pr_bal_prts);
 
-      auto& mp_base = *mp;
-      if (typeid(mp_base) == typeid(Mparticles)) {
-        auto& mp_host = dynamic_cast<Mparticles&>(mp_base);
-
-        balance_particles(mp_host, *new_grid, ctx);
+      if (typeid(*mp) == typeid(Mparticles)) {
+        balance_particles(dynamic_cast<Mparticles&>(*mp), *new_grid, ctx);
       } else {
         assert(p_mp_host);
-        auto& mp_host = *p_mp_host;
-
-        balance_particles(mp_host, *new_grid, ctx);
+        balance_particles(*p_mp_host, *new_grid, ctx);
       }
 
       prof_stop(pr_bal_prts);
