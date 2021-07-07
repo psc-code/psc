@@ -255,45 +255,8 @@ struct SetupParticles
     std::vector<uint> n_prts_by_patch(grid.n_patches());
 
     for (int p = 0; p < grid.n_patches(); ++p) {
-      auto ilo = Int3{}, ihi = grid.ldims;
-
-      for (int jz = ilo[2]; jz < ihi[2]; jz++) {
-        for (int jy = ilo[1]; jy < ihi[1]; jy++) {
-          for (int jx = ilo[0]; jx < ihi[0]; jx++) {
-            Double3 pos = {grid.patches[p].x_cc(jx), grid.patches[p].y_cc(jy),
-                           grid.patches[p].z_cc(jz)};
-            // FIXME, the issue really is that (2nd order) particle pushers
-            // don't handle the invariant dim right
-            if (grid.isInvar(0) == 1)
-              pos[0] = grid.patches[p].x_nc(jx);
-            if (grid.isInvar(1) == 1)
-              pos[1] = grid.patches[p].y_nc(jy);
-            if (grid.isInvar(2) == 1)
-              pos[2] = grid.patches[p].z_nc(jz);
-
-            int n_q_in_cell = 0;
-            for (int pop = 0; pop < n_populations_; pop++) {
-              psc_particle_npt npt{};
-              if (pop < kinds_.size()) {
-                npt.kind = pop;
-              };
-              init_npt(pop, pos, p, {jx, jy, jz}, npt);
-
-              int n_in_cell;
-              if (pop != neutralizing_population) {
-                n_in_cell = get_n_in_cell(npt);
-                n_q_in_cell += kinds_[npt.kind].q * n_in_cell;
-              } else {
-                // FIXME, should handle the case where not the last population
-                // is neutralizing
-                assert(neutralizing_population == n_populations_ - 1);
-                n_in_cell = -n_q_in_cell / kinds_[npt.kind].q;
-              }
-              n_prts_by_patch[p] += n_in_cell;
-            }
-          }
-        }
-      }
+      op_cellwise(grid, p, std::forward<FUNC>(init_npt),
+                  [&](int n_in_cell) { n_prts_by_patch[p] += n_in_cell; });
     }
 
     return n_prts_by_patch;
