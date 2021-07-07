@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "centering.hxx"
+
 struct psc_particle_npt
 {
   int kind;    ///< particle kind
@@ -13,6 +15,11 @@ struct psc_particle_npt
 // ======================================================================
 // SetupParticles
 
+namespace
+{
+const Centering::Centerer defaultCenterer(Centering::CC);
+}
+
 template <typename MP>
 struct SetupParticles
 {
@@ -20,7 +27,10 @@ struct SetupParticles
   using real_t = typename MP::real_t;
 
   SetupParticles(const Grid_t& grid, int n_populations = 0)
-    : kinds_{grid.kinds}, norm_{grid.norm}, n_populations_{n_populations}
+    : kinds_{grid.kinds},
+      norm_{grid.norm},
+      n_populations_{n_populations},
+      centerer(defaultCenterer)
   {
     if (n_populations_ == 0) {
       n_populations_ = kinds_.size();
@@ -64,17 +74,15 @@ struct SetupParticles
     for (int jz = ilo[2]; jz < ihi[2]; jz++) {
       for (int jy = ilo[1]; jy < ihi[1]; jy++) {
         for (int jx = ilo[0]; jx < ihi[0]; jx++) {
-          Double3 pos = {grid.patches[patch].x_cc(jx),
-                         grid.patches[patch].y_cc(jy),
-                         grid.patches[patch].z_cc(jz)};
+          int index[3] = {jx, jy, jz};
+          Double3 pos = centerer.getPos(grid.patches[patch], index);
           // FIXME, the issue really is that (2nd order) particle pushers
           // don't handle the invariant dim right
-          if (grid.isInvar(0) == 1)
-            pos[0] = grid.patches[patch].x_nc(jx);
-          if (grid.isInvar(1) == 1)
-            pos[1] = grid.patches[patch].y_nc(jy);
-          if (grid.isInvar(2) == 1)
-            pos[2] = grid.patches[patch].z_nc(jz);
+          for (int a = 0; a < 3; ++a) {
+            if (grid.isInvar(a) == 1) {
+              pos[a] = grid.patches[patch].get_nc(index[a], a);
+            }
+          }
 
           int n_q_in_cell = 0;
           for (int pop = 0; pop < n_populations_; pop++) {
@@ -235,6 +243,8 @@ struct SetupParticles
   int neutralizing_population = {-1};
   bool fractional_n_particles_per_cell = {false};
   bool initial_momentum_gamma_correction = {false};
+
+  Centering::Centerer centerer;
 
 private:
   const Grid_t::Kinds kinds_;
