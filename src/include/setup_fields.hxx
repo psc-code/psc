@@ -32,7 +32,6 @@ struct SetupFields
       // FIXME, do we need the ghost points?
       grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
         int index[3] = {jx, jy, jz};
-        std::cout << Centering::getPos(patch, index, Centering::NC, -1) << " setup\n";
 
         for (int c = 0; c < 3; c++) {
           F(HX + c, jx, jy, jz) +=
