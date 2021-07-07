@@ -352,7 +352,7 @@ struct by_ri
 {
   int rank;
   int nr_patches;
-  int* pi_to_patch;
+  std::vector<int> pi_to_patch;
 };
 
 class communicate_ctx
@@ -452,8 +452,7 @@ public:
     // map send patch index by ri back to local patch number
 
     for (int ri = 0; ri < nr_send_ranks; ri++) {
-      send_by_ri[ri].pi_to_patch = (int*)calloc(
-        send_by_ri[ri].nr_patches, sizeof(*send_by_ri[ri].pi_to_patch));
+      send_by_ri[ri].pi_to_patch.resize(send_by_ri[ri].nr_patches);
       send_by_ri[ri].nr_patches = 0;
     }
 
@@ -480,8 +479,7 @@ public:
     // map received patch index by ri back to local patch number
 
     for (int ri = 0; ri < nr_recv_ranks; ri++) {
-      recv_by_ri[ri].pi_to_patch = (int*)calloc(
-        recv_by_ri[ri].nr_patches, sizeof(*recv_by_ri[ri].pi_to_patch));
+      recv_by_ri[ri].pi_to_patch.resize(recv_by_ri[ri].nr_patches);
       recv_by_ri[ri].nr_patches = 0;
     }
 
@@ -499,12 +497,12 @@ public:
   ~communicate_ctx()
   {
     for (int ri = 0; ri < nr_send_ranks; ri++) {
-      free(send_by_ri[ri].pi_to_patch);
+      send_by_ri[ri].~by_ri();
     }
     free(send_by_ri);
 
     for (int ri = 0; ri < nr_recv_ranks; ri++) {
-      free(recv_by_ri[ri].pi_to_patch);
+      recv_by_ri[ri].~by_ri();
     }
     free(recv_by_ri);
   }
