@@ -358,11 +358,6 @@ struct by_ri
 class communicate_ctx
 {
 public:
-  MPI_Comm comm;
-  int mpi_rank;
-  int mpi_size;
-  int nr_patches_old;
-  int nr_patches_new;
   struct send_info* send_info; // by old patch on this proc
   struct recv_info* recv_info; // by new patch on this proc
 
@@ -378,24 +373,24 @@ public:
 public:
   communicate_ctx(const MrcDomain& domain_old, const MrcDomain& domain_new)
   {
-    comm = domain_old.comm();
-    MPI_Comm_rank(comm, &mpi_rank);
-    MPI_Comm_size(comm, &mpi_size);
+    comm_ = domain_old.comm();
+    MPI_Comm_rank(comm_, &mpi_rank_);
+    MPI_Comm_size(comm_, &mpi_size_);
 
-    nr_patches_old = domain_old.nPatches();
-    nr_patches_new = domain_new.nPatches();
+    nr_patches_old_ = domain_old.nPatches();
+    nr_patches_new_ = domain_new.nPatches();
 
-    send_info = (struct send_info*)calloc(nr_patches_old, sizeof(*send_info));
-    recv_info = (struct recv_info*)calloc(nr_patches_new, sizeof(*recv_info));
+    send_info = (struct send_info*)calloc(nr_patches_old_, sizeof(*send_info));
+    recv_info = (struct recv_info*)calloc(nr_patches_new_, sizeof(*recv_info));
 
-    for (int p = 0; p < nr_patches_old; p++) {
+    for (int p = 0; p < nr_patches_old_; p++) {
       auto info_old = domain_old.localPatchInfo(p);
       auto info_new =
         domain_new.levelIdx3PatchInfo(info_old.level, info_old.idx3);
       send_info[p].rank = info_new.rank;
       send_info[p].patch = info_new.patch;
     }
-    for (int p = 0; p < nr_patches_new; p++) {
+    for (int p = 0; p < nr_patches_new_; p++) {
       auto info_new = domain_new.localPatchInfo(p);
       auto info_old =
         domain_old.levelIdx3PatchInfo(info_new.level, info_new.idx3);
@@ -405,16 +400,16 @@ public:
 
     // maps rank <-> rank index
 
-    send_rank_to_ri = (int*)malloc(mpi_size * sizeof(*send_rank_to_ri));
-    recv_rank_to_ri = (int*)malloc(mpi_size * sizeof(*recv_rank_to_ri));
-    for (int r = 0; r < mpi_size; r++) {
+    send_rank_to_ri = (int*)malloc(mpi_size_ * sizeof(*send_rank_to_ri));
+    recv_rank_to_ri = (int*)malloc(mpi_size_ * sizeof(*recv_rank_to_ri));
+    for (int r = 0; r < mpi_size_; r++) {
       send_rank_to_ri[r] = -1;
       recv_rank_to_ri[r] = -1;
     }
 
     nr_send_ranks = 0;
     nr_recv_ranks = 0;
-    for (int p = 0; p < nr_patches_old; p++) {
+    for (int p = 0; p < nr_patches_old_; p++) {
       int send_rank = send_info[p].rank;
       if (send_rank >= 0) {
         if (send_rank_to_ri[send_rank] < 0) {
@@ -422,7 +417,7 @@ public:
         }
       }
     }
-    for (int p = 0; p < nr_patches_new; p++) {
+    for (int p = 0; p < nr_patches_new_; p++) {
       int recv_rank = recv_info[p].rank;
       if (recv_rank >= 0) {
         if (recv_rank_to_ri[recv_rank] < 0) {
@@ -434,13 +429,13 @@ public:
     send_by_ri = (struct by_ri*)calloc(nr_send_ranks, sizeof(*send_by_ri));
     recv_by_ri = (struct by_ri*)calloc(nr_recv_ranks, sizeof(*recv_by_ri));
 
-    for (int p = 0; p < nr_patches_old; p++) {
+    for (int p = 0; p < nr_patches_old_; p++) {
       int send_rank = send_info[p].rank;
       if (send_rank >= 0) {
         send_by_ri[send_rank_to_ri[send_rank]].rank = send_rank;
       }
     }
-    for (int p = 0; p < nr_patches_new; p++) {
+    for (int p = 0; p < nr_patches_new_; p++) {
       int recv_rank = recv_info[p].rank;
       if (recv_rank >= 0) {
         recv_by_ri[recv_rank_to_ri[recv_rank]].rank = recv_rank;
@@ -453,7 +448,7 @@ public:
 
     // count number of patches sent to each rank
 
-    for (int p = 0; p < nr_patches_old; p++) {
+    for (int p = 0; p < nr_patches_old_; p++) {
       int send_rank = send_info[p].rank;
       if (send_rank >= 0) {
         send_by_ri[send_rank_to_ri[send_rank]].nr_patches++;
@@ -468,7 +463,7 @@ public:
       send_by_ri[ri].nr_patches = 0;
     }
 
-    for (int p = 0; p < nr_patches_old; p++) {
+    for (int p = 0; p < nr_patches_old_; p++) {
       int send_rank = send_info[p].rank;
       if (send_rank < 0) {
         continue;
@@ -480,7 +475,7 @@ public:
 
     // count number of patches received from each rank
 
-    for (int p = 0; p < nr_patches_new; p++) {
+    for (int p = 0; p < nr_patches_new_; p++) {
       int recv_rank = recv_info[p].rank;
       if (recv_rank >= 0) {
         int ri = recv_rank_to_ri[recv_rank];
@@ -496,7 +491,7 @@ public:
       recv_by_ri[ri].nr_patches = 0;
     }
 
-    for (int p = 0; p < nr_patches_new; p++) {
+    for (int p = 0; p < nr_patches_new_; p++) {
       int recv_rank = recv_info[p].rank;
       if (recv_rank < 0) {
         continue;
@@ -535,11 +530,11 @@ public:
 
     prof_start(pr);
 
-    std::vector<uint> n_prts_by_patch_new(nr_patches_new);
+    std::vector<uint> n_prts_by_patch_new(nr_patches_new_);
     // post receives
 
     MPI_Request* recv_reqs =
-      (MPI_Request*)calloc(nr_patches_new, sizeof(*recv_reqs));
+      (MPI_Request*)calloc(nr_patches_new_, sizeof(*recv_reqs));
     int nr_recv_reqs = 0;
 
     int** nr_particles_recv_by_ri =
@@ -549,10 +544,10 @@ public:
       nr_particles_recv_by_ri[ri] =
         (int*)calloc(recv->nr_patches, sizeof(*nr_particles_recv_by_ri[ri]));
 
-      if (recv->rank != mpi_rank) {
+      if (recv->rank != mpi_rank_) {
         // mprintf("recv <- %d (len %d)\n", r, nr_patches_recv_by_ri[ri]);
         MPI_Irecv(nr_particles_recv_by_ri[ri], recv->nr_patches, MPI_INT,
-                  recv->rank, 10, comm, &recv_reqs[nr_recv_reqs++]);
+                  recv->rank, 10, comm_, &recv_reqs[nr_recv_reqs++]);
       }
     }
 
@@ -574,18 +569,18 @@ public:
           n_prts_by_patch_old[send->pi_to_patch[pi]];
       }
 
-      if (send->rank != mpi_rank) {
+      if (send->rank != mpi_rank_) {
         // mprintf("send -> %d (len %d)\n", r, nr_patches_send_by_ri[ri]);
         MPI_Isend(nr_particles_send_by_ri[ri], send->nr_patches, MPI_INT,
-                  send->rank, 10, comm, &send_reqs[nr_send_reqs++]);
+                  send->rank, 10, comm_, &send_reqs[nr_send_reqs++]);
       }
     }
     assert(nr_send_reqs <= nr_send_ranks);
 
     // copy local particle numbers
     {
-      int send_ri = send_rank_to_ri[mpi_rank];
-      int recv_ri = recv_rank_to_ri[mpi_rank];
+      int send_ri = send_rank_to_ri[mpi_rank_];
+      int recv_ri = recv_rank_to_ri[mpi_rank_];
       if (send_ri < 0) { // no local patches to copy
         assert(recv_ri < 0);
       } else {
@@ -660,12 +655,12 @@ public:
 
     auto mpi_dtype = MpiDtypeTraits<typename Mparticles::real_t>::value();
     // recv for new local patches
-    MPI_Request* recv_reqs = new MPI_Request[nr_patches_new]();
+    MPI_Request* recv_reqs = new MPI_Request[nr_patches_new_]();
     int nr_recv_reqs = 0;
 
     for (int ri = 0; ri < nr_recv_ranks; ri++) {
       struct by_ri* recv = &recv_by_ri[ri];
-      if (recv->rank == mpi_rank) {
+      if (recv->rank == mpi_rank_) {
         continue;
       }
 
@@ -673,7 +668,7 @@ public:
         int p = recv->pi_to_patch[pi];
         auto&& prts_new = mp_new[p];
         int nn = prts_new.size() * (sizeof(Particle) / sizeof(real_t));
-        MPI_Irecv(&*prts_new.begin(), nn, mpi_dtype, recv->rank, pi, comm,
+        MPI_Irecv(&*prts_new.begin(), nn, mpi_dtype, recv->rank, pi, comm_,
                   &recv_reqs[nr_recv_reqs++]);
       }
     }
@@ -681,12 +676,12 @@ public:
 
     // prof_start(pr_B);
     // send from old local patches
-    MPI_Request* send_reqs = new MPI_Request[nr_patches_old]();
+    MPI_Request* send_reqs = new MPI_Request[nr_patches_old_]();
     int nr_send_reqs = 0;
 
     for (int ri = 0; ri < nr_send_ranks; ri++) {
       struct by_ri* send = &send_by_ri[ri];
-      if (send->rank == mpi_rank) {
+      if (send->rank == mpi_rank_) {
         continue;
       }
 
@@ -695,7 +690,7 @@ public:
         auto&& prts_old = mp_old[p];
         int nn = prts_old.size() * (sizeof(Particle) / sizeof(real_t));
         // mprintf("A send -> %d tag %d (patch %d)\n", send->rank, pi, p);
-        MPI_Isend(&*prts_old.begin(), nn, mpi_dtype, send->rank, pi, comm,
+        MPI_Isend(&*prts_old.begin(), nn, mpi_dtype, send->rank, pi, comm_,
                   &send_reqs[nr_send_reqs++]);
       }
     }
@@ -704,8 +699,8 @@ public:
     // prof_start(pr_C);
     // local particles
     // OPT: could keep the alloced arrays, just move pointers...
-    for (int p = 0; p < nr_patches_new; p++) {
-      if (recv_info[p].rank != mpi_rank) {
+    for (int p = 0; p < nr_patches_new_; p++) {
+      if (recv_info[p].rank != mpi_rank_) {
         continue;
       }
 
@@ -744,28 +739,28 @@ public:
     MPI_Datatype mpi_dtype = Mfields_traits<Mfields>::mpi_dtype();
 
     // send from old local patches
-    MPI_Request* send_reqs = new MPI_Request[nr_patches_old]();
-    int* nr_patches_new_by_rank = new int[mpi_size]();
-    for (int p = 0; p < nr_patches_old; p++) {
+    MPI_Request* send_reqs = new MPI_Request[nr_patches_old_]();
+    int* nr_patches_new_by_rank = new int[mpi_size_]();
+    for (int p = 0; p < nr_patches_old_; p++) {
       int new_rank = send_info[p].rank;
-      if (new_rank == mpi_rank || new_rank < 0) {
+      if (new_rank == mpi_rank_ || new_rank < 0) {
         send_reqs[p] = MPI_REQUEST_NULL;
       } else {
         auto flds_old = mf_old[p];
         int nn = flds_old.storage().size();
         void* addr_old = flds_old.storage().data();
         int tag = nr_patches_new_by_rank[new_rank]++;
-        MPI_Isend(addr_old, nn, mpi_dtype, new_rank, tag, comm, &send_reqs[p]);
+        MPI_Isend(addr_old, nn, mpi_dtype, new_rank, tag, comm_, &send_reqs[p]);
       }
     }
     delete[] nr_patches_new_by_rank;
 
     // recv for new local patches
-    MPI_Request* recv_reqs = new MPI_Request[nr_patches_new]();
-    int* nr_patches_old_by_rank = new int[mpi_size]();
-    for (int p = 0; p < nr_patches_new; p++) {
+    MPI_Request* recv_reqs = new MPI_Request[nr_patches_new_]();
+    int* nr_patches_old_by_rank = new int[mpi_size_]();
+    for (int p = 0; p < nr_patches_new_; p++) {
       int old_rank = recv_info[p].rank;
-      if (old_rank == mpi_rank) {
+      if (old_rank == mpi_rank_) {
         recv_reqs[p] = MPI_REQUEST_NULL;
       } else if (old_rank < 0) { // this patch did not exist before
         recv_reqs[p] = MPI_REQUEST_NULL;
@@ -775,7 +770,7 @@ public:
         int nn = flds_new.storage().size();
         void* addr_new = flds_new.storage().data();
         int tag = nr_patches_old_by_rank[old_rank]++;
-        MPI_Irecv(addr_new, nn, mpi_dtype, old_rank, tag, comm, &recv_reqs[p]);
+        MPI_Irecv(addr_new, nn, mpi_dtype, old_rank, tag, comm_, &recv_reqs[p]);
       }
     }
     delete[] nr_patches_old_by_rank;
@@ -788,8 +783,8 @@ public:
     prof_start(pr);
     // local fields
     // OPT: could keep the alloced arrays, just move pointers...
-    for (int p = 0; p < nr_patches_new; p++) {
-      if (recv_info[p].rank != mpi_rank) {
+    for (int p = 0; p < nr_patches_new_; p++) {
+      if (recv_info[p].rank != mpi_rank_) {
         continue;
       }
 
@@ -803,11 +798,18 @@ public:
     }
     prof_stop(pr);
 
-    MPI_Waitall(nr_patches_old, send_reqs, MPI_STATUSES_IGNORE);
-    MPI_Waitall(nr_patches_new, recv_reqs, MPI_STATUSES_IGNORE);
+    MPI_Waitall(nr_patches_old_, send_reqs, MPI_STATUSES_IGNORE);
+    MPI_Waitall(nr_patches_new_, recv_reqs, MPI_STATUSES_IGNORE);
     delete[] send_reqs;
     delete[] recv_reqs;
   }
+
+private:
+  MPI_Comm comm_;
+  int mpi_rank_;
+  int mpi_size_;
+  int nr_patches_old_;
+  int nr_patches_new_;
 };
 
 // ======================================================================
