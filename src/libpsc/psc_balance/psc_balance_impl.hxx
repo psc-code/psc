@@ -699,7 +699,7 @@ public:
 
     // send from old local patches
     std::vector<MPI_Request> send_reqs(nr_patches_old_);
-    int* nr_patches_new_by_rank = new int[mpi_size_]();
+    std::vector<int> nr_patches_new_by_rank(mpi_size_);
     for (int p = 0; p < nr_patches_old_; p++) {
       int new_rank = send_info_[p].rank;
       if (new_rank == mpi_rank_ || new_rank < 0) {
@@ -712,11 +712,10 @@ public:
         MPI_Isend(addr_old, nn, mpi_dtype, new_rank, tag, comm_, &send_reqs[p]);
       }
     }
-    delete[] nr_patches_new_by_rank;
 
     // recv for new local patches
     std::vector<MPI_Request> recv_reqs(nr_patches_new_);
-    int* nr_patches_old_by_rank = new int[mpi_size_]();
+    std::vector<int> nr_patches_old_by_rank(mpi_size_);
     for (int p = 0; p < nr_patches_new_; p++) {
       int old_rank = recv_info_[p].rank;
       if (old_rank == mpi_rank_) {
@@ -732,7 +731,6 @@ public:
         MPI_Irecv(addr_new, nn, mpi_dtype, old_rank, tag, comm_, &recv_reqs[p]);
       }
     }
-    delete[] nr_patches_old_by_rank;
 
     static int pr;
     if (!pr) {
