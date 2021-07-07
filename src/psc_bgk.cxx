@@ -327,6 +327,7 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
                          PhiField& phi)
 {
   SetupParticles<Mparticles> setup_particles(*grid_ptr);
+  setup_particles.centerer = Centering::Centerer(Centering::NC);
 
   auto gradPhi = Item_grad<PhiField>(phi).gt();
   auto divGradPhi = psc::item::div_nc(getPadded(gradPhi, {0, 2, 2}), *grid_ptr);
