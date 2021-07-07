@@ -358,7 +358,6 @@ struct by_ri
 class communicate_ctx
 {
 public:
-  struct send_info* send_info; // by old patch on this proc
   struct recv_info* recv_info; // by new patch on this proc
 
   int* send_rank_to_ri; // map from send target rank to contiguous "rank index"
@@ -380,16 +379,16 @@ public:
     nr_patches_old_ = domain_old.nPatches();
     nr_patches_new_ = domain_new.nPatches();
 
-    send_info = (struct send_info*)calloc(nr_patches_old_, sizeof(*send_info));
-    recv_info = (struct recv_info*)calloc(nr_patches_new_, sizeof(*recv_info));
-
+    send_info_.resize(nr_patches_old_);
     for (int p = 0; p < nr_patches_old_; p++) {
       auto info_old = domain_old.localPatchInfo(p);
       auto info_new =
         domain_new.levelIdx3PatchInfo(info_old.level, info_old.idx3);
-      send_info[p].rank = info_new.rank;
-      send_info[p].patch = info_new.patch;
+      send_info_[p].rank = info_new.rank;
+      send_info_[p].patch = info_new.patch;
     }
+
+    recv_info = (struct recv_info*)calloc(nr_patches_new_, sizeof(*recv_info));
     for (int p = 0; p < nr_patches_new_; p++) {
       auto info_new = domain_new.localPatchInfo(p);
       auto info_old =
@@ -410,7 +409,7 @@ public:
     nr_send_ranks = 0;
     nr_recv_ranks = 0;
     for (int p = 0; p < nr_patches_old_; p++) {
-      int send_rank = send_info[p].rank;
+      int send_rank = send_info_[p].rank;
       if (send_rank >= 0) {
         if (send_rank_to_ri[send_rank] < 0) {
           send_rank_to_ri[send_rank] = nr_send_ranks++;
@@ -430,7 +429,7 @@ public:
     recv_by_ri = (struct by_ri*)calloc(nr_recv_ranks, sizeof(*recv_by_ri));
 
     for (int p = 0; p < nr_patches_old_; p++) {
-      int send_rank = send_info[p].rank;
+      int send_rank = send_info_[p].rank;
       if (send_rank >= 0) {
         send_by_ri[send_rank_to_ri[send_rank]].rank = send_rank;
       }
@@ -449,7 +448,7 @@ public:
     // count number of patches sent to each rank
 
     for (int p = 0; p < nr_patches_old_; p++) {
-      int send_rank = send_info[p].rank;
+      int send_rank = send_info_[p].rank;
       if (send_rank >= 0) {
         send_by_ri[send_rank_to_ri[send_rank]].nr_patches++;
       }
@@ -464,7 +463,7 @@ public:
     }
 
     for (int p = 0; p < nr_patches_old_; p++) {
-      int send_rank = send_info[p].rank;
+      int send_rank = send_info_[p].rank;
       if (send_rank < 0) {
         continue;
       }
@@ -504,7 +503,6 @@ public:
 
   ~communicate_ctx()
   {
-    free(send_info);
     free(recv_info);
 
     free(send_rank_to_ri);
@@ -742,7 +740,7 @@ public:
     MPI_Request* send_reqs = new MPI_Request[nr_patches_old_]();
     int* nr_patches_new_by_rank = new int[mpi_size_]();
     for (int p = 0; p < nr_patches_old_; p++) {
-      int new_rank = send_info[p].rank;
+      int new_rank = send_info_[p].rank;
       if (new_rank == mpi_rank_ || new_rank < 0) {
         send_reqs[p] = MPI_REQUEST_NULL;
       } else {
@@ -810,6 +808,7 @@ private:
   int mpi_size_;
   int nr_patches_old_;
   int nr_patches_new_;
+  std::vector<send_info> send_info_; // by old patch on this proc
 };
 
 // ======================================================================
