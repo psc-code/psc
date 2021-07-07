@@ -659,7 +659,8 @@ struct Balance_
   void initial(Grid_t*& grid, std::vector<uint>& n_prts_by_patch)
   {
     auto loads = get_loads_.initial(*grid, n_prts_by_patch);
-    n_prts_by_patch = balance(grid, loads, nullptr, n_prts_by_patch);
+    auto loads_all = psc::balance::gather_loads(*grid, loads);
+    n_prts_by_patch = balance(grid, loads_all, nullptr, n_prts_by_patch);
   }
 
   void operator()(Grid_t*& grid, MparticlesBase& mprts)
@@ -671,7 +672,8 @@ struct Balance_
 
     psc_stats_start(st_time_balance);
     auto loads = get_loads_(mprts.grid(), mprts);
-    balance(grid, loads, &mprts);
+    auto loads_all = psc::balance::gather_loads(*grid, loads);
+    balance(grid, loads_all, &mprts);
     psc_stats_stop(st_time_balance);
   }
 
@@ -897,7 +899,7 @@ private:
     delete[] recv_reqs;
   }
 
-  std::vector<uint> balance(Grid_t*& gridp, std::vector<double> loads,
+  std::vector<uint> balance(Grid_t*& gridp, std::vector<double> loads_all,
                             MparticlesBase* mp,
                             std::vector<uint> n_prts_by_patch_old = {})
   {
@@ -911,8 +913,6 @@ private:
 
     prof_start(pr_bal_load);
     auto old_grid = gridp;
-
-    auto loads_all = psc::balance::gather_loads(*old_grid, loads);
     int n_patches_new = find_best_mapping(*old_grid, loads_all);
     prof_stop(pr_bal_load);
 
