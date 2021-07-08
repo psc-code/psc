@@ -573,7 +573,7 @@ public:
   }
 
   template <typename Mparticles>
-  void communicate_particles(Mparticles& mp_old, Mparticles& mp_new)
+  void communicate_particles(Mparticles& mp_old, Grid_t& new_grid)
   {
     using Particle = typename Mparticles::Particle;
     using real_t = typename Mparticles::real_t;
@@ -587,6 +587,8 @@ public:
     // }
 
     // prof_start(pr);
+
+    auto mp_new = Mparticles{new_grid};
 
     auto n_prts_by_patch_new = new_n_prts(mp_old.sizeByPatch());
 
@@ -671,6 +673,7 @@ public:
     MPI_Waitall(nr_recv_reqs, recv_reqs.data(), MPI_STATUSES_IGNORE);
     // prof_stop(pr_D);
 
+    mp_old = std::move(mp_new);
     // prof_stop(pr);
   }
 
@@ -951,10 +954,10 @@ private:
       prof_start(pr_bal_prts);
 
       if (typeid(*mp) == typeid(Mparticles)) {
-        balance_particles(dynamic_cast<Mparticles&>(*mp), *new_grid, ctx);
+        ctx.communicate_particles(dynamic_cast<Mparticles&>(*mp), *new_grid);
       } else {
         assert(p_mp_host);
-        balance_particles(*p_mp_host, *new_grid, ctx);
+        ctx.communicate_particles(*p_mp_host, *new_grid);
       }
 
       prof_stop(pr_bal_prts);
@@ -995,7 +998,10 @@ private:
       auto mf_new = Mfields{*new_grid, mf.n_comps(), mf.ibn()};
       ctx.communicate_fields(mf, mf_new);
       mf = std::move(mf_new);
+    }
 
+    for (int n = 0; n < mfields_cuda.size(); n++) {
+      Mfields& mf = mfields_old[n];
       MfieldsCuda& mf_cuda = mfields_cuda[n];
       new (&mf_cuda) MfieldsCuda{*new_grid, mf.n_comps(), mf.ibn()};
       MfieldsBase::convert(mf, mf_cuda, 0, mf._n_comps());
@@ -1023,15 +1029,6 @@ private:
     psc_balance_generation_cnt++;
 
     return n_prts_by_patch_new;
-  }
-
-private:
-  void balance_particles(Mparticles& mprts, Grid_t& new_grid,
-                         communicate_ctx& ctx)
-  {
-    auto mprts_new = Mparticles{new_grid};
-    ctx.communicate_particles(mprts, mprts_new);
-    mprts = std::move(mprts_new);
   }
 
 private:
