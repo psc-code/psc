@@ -678,9 +678,15 @@ public:
   }
 
   template <typename Mfields>
-  void communicate_fields(Mfields& mf_old, Mfields& mf_new)
+  void communicate_fields(Mfields& mf_old, Grid_t& new_grid)
   {
     MPI_Datatype mpi_dtype = Mfields_traits<Mfields>::mpi_dtype();
+
+    mpi_printf(new_grid.comm(),
+               "***** Balance: balancing field, #components %d\n",
+               mf_old.n_comps());
+
+    auto mf_new = Mfields{new_grid, mf_old.n_comps(), mf_old.ibn()};
 
     // send from old local patches
     std::vector<MPI_Request> send_reqs(nr_patches_old_);
@@ -742,6 +748,8 @@ public:
 
     MPI_Waitall(nr_patches_old_, send_reqs.data(), MPI_STATUSES_IGNORE);
     MPI_Waitall(nr_patches_new_, recv_reqs.data(), MPI_STATUSES_IGNORE);
+
+    mf_old = std::move(mf_new);
   }
 
 private:
@@ -978,25 +986,13 @@ private:
 
     // fields
     for (Mfields& mf : mfields_host) {
-      mpi_printf(old_grid->comm(),
-                 "***** Balance: balancing field, #components %d\n",
-                 mf.n_comps());
-      auto mf_new = Mfields{*new_grid, mf.n_comps(), mf.ibn()};
-      ctx.communicate_fields(mf, mf_new);
-      mf = std::move(mf_new);
+      ctx.communicate_fields(mf, *new_grid);
     }
 
 #ifdef USE_CUDA
     //  communicate on host
-    for (int n = 0; n < mfields_cuda.size(); n++) {
-      Mfields& mf = mfields_old[n];
-      mpi_printf(old_grid->comm(),
-                 "***** Balance: balancing field, #components %d\n",
-                 mf.n_comps());
-
-      auto mf_new = Mfields{*new_grid, mf.n_comps(), mf.ibn()};
-      ctx.communicate_fields(mf, mf_new);
-      mf = std::move(mf_new);
+    for (Mfields& mf : mfields_old) {
+      ctx.communicate_fields(mf, *new_grid);
     }
 
     // move back to gpu
