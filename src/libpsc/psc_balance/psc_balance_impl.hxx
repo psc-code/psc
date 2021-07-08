@@ -987,12 +987,11 @@ private:
     }
 
 #ifdef USE_CUDA
-    //  communicate on host, move back to gpu
+    //  communicate on host
     for (int n = 0; n < mfields_cuda.size(); n++) {
       Mfields& mf = mfields_old[n];
       mpi_printf(old_grid->comm(),
-                 "***** Balance: balancing field, copy back to device, "
-                 "#components %d\n",
+                 "***** Balance: balancing field, #components %d\n",
                  mf.n_comps());
 
       auto mf_new = Mfields{*new_grid, mf.n_comps(), mf.ibn()};
@@ -1000,6 +999,7 @@ private:
       mf = std::move(mf_new);
     }
 
+    // move back to gpu
     for (int n = 0; n < mfields_cuda.size(); n++) {
       Mfields& mf = mfields_old[n];
       MfieldsCuda& mf_cuda = mfields_cuda[n];
