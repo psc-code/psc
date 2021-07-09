@@ -306,7 +306,7 @@ void writeGT(const GT& gt, const Grid_t& grid, const std::string& name,
 // getPadded
 
 template <typename GT>
-auto getPadded(GT& gt, Int3 paddings)
+auto getPadded(const GT& gt, Int3 paddings)
 {
   auto shape = gt.shape();
   for (int i = 0; i < 3; i++)
