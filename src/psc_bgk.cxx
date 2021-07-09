@@ -120,7 +120,7 @@ public:
   {
     // ensure we are in bounds
     assert(rho >= data[0][COL_RHO]);
-    
+
     assert(rho <= data[n_rows - 1][COL_RHO]);
 
     int row = get_row(rho);
@@ -328,23 +328,21 @@ auto& fillGhosts(GT& gt, Int3 bnd)
 {
   auto shape = gt.shape();
 
-  // extend x
-  gt.view(_s(_, bnd[0]), _all, _all) =
-    gt.view(_s(-2 * bnd[0], -bnd[0]), _all, _all);
-  gt.view(_s(-bnd[0], _), _all, _all) =
-    gt.view(_s(bnd[0], 2 * bnd[0]), _all, _all);
+  auto rev = _s(_, _, -1);
 
-  // extend y
-  gt.view(_all, _s(_, bnd[1]), _all) =
-    gt.view(_all, _s(-2 * bnd[1], -bnd[1]), _all);
-  gt.view(_all, _s(-bnd[1], _), _all) =
-    gt.view(_all, _s(bnd[1], 2 * bnd[1]), _all);
+  for (int a = 0; a < 3; ++a) {
+    gt::gslice sLhs[] = {_all, _all, _all};
+    gt::gslice sRhs[] = {_all, _all, _all};
 
-  // extend z
-  gt.view(_all, _all, _s(_, bnd[2])) =
-    gt.view(_all, _all, _s(-2 * bnd[2], -bnd[2]));
-  gt.view(_all, _all, _s(-bnd[2], _)) =
-    gt.view(_all, _all, _s(bnd[2], 2 * bnd[2]));
+    // selects lower half of ghost points along axis a
+    sLhs[a] = _s(_, bnd[a]);
+    // selects source for those ghost points
+    sRhs[a] = _s(-2 * bnd[a], -bnd[a]);
+
+    gt.view(sLhs[0], sLhs[1], sLhs[2]) = gt.view(sRhs[0], sRhs[1], sRhs[2]);
+    gt.view(rev, rev, rev).view(sLhs[0], sLhs[1], sLhs[2]) =
+      gt.view(rev, rev, rev).view(sRhs[0], sRhs[1], sRhs[2]);
+  }
 
   return gt;
 }
@@ -358,8 +356,10 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
   SetupParticles<Mparticles> setup_particles(*grid_ptr);
   setup_particles.centerer = Centering::Centerer(Centering::NC);
 
-  auto gradPhi = Item_grad<PhiField>(phi).gt();
-  auto divGradPhi = psc::item::div_nc(getPadded(gradPhi, {0, 2, 2}), *grid_ptr);
+  Int3 ibn{0, 2, 2};
+  auto gradPhi = getPadded(Item_grad<PhiField>(phi).gt(), ibn);
+  fillGhosts(gradPhi, ibn);
+  auto divGradPhi = psc::item::div_nc(gradPhi, *grid_ptr);
 
   writeGT(divGradPhi, *grid_ptr, "divgrad", {"divgrad"});
 
@@ -368,7 +368,6 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
     double y = crd[1];
     double z = crd[2];
     double rho = sqrt(sqr(y) + sqr(z));
-
     switch (kind) {
       case KIND_ELECTRON:
         // velocities/momenta
