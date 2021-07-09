@@ -77,7 +77,7 @@ private:
 };
 
 // ======================================================================
-// Item_dive
+// div_nc
 
 namespace psc
 {
@@ -144,6 +144,9 @@ static auto div_nc(const E& flds, const Grid_t& grid)
   }
 }
 
+// ======================================================================
+// grad_ec
+
 template <typename E>
 inline auto grad_yz(const E& fld, const Grid_t& grid)
 {
@@ -158,15 +161,15 @@ inline auto grad_yz(const E& fld, const Grid_t& grid)
   auto res = gt::empty<gt::expr_value_type<E>, gt::expr_space_type<E>>(
     {grid.ldims[0], grid.ldims[1], grid.ldims[2], 3, grid.n_patches()});
 
-  auto _fldy = fld.view(_s(-1 + bnd[0], -bnd[0]), _s(bnd[1], 1 - bnd[1]),
-                        _s(-1 + bnd[2], -bnd[2]));
-  auto _fldz = fld.view(_s(-1 + bnd[0], -bnd[0]), _s(-1 + bnd[1], -bnd[1]),
-                        _s(bnd[2], 1 - bnd[2]));
+  auto trimmed_fld = fld.view(_s(bnd[0], 1 - bnd[0]), _s(bnd[1], 1 - bnd[1]),
+                              _s(bnd[2], 1 - bnd[2]));
 
   res.view(_all, _all, _all, 1) =
-    (_fldy.view(_all, s0, s0, 0) - _fldy.view(_all, sm, s0, 0)) / dxyz[1];
+    (trimmed_fld.view(_all, s0, sm, 0) - trimmed_fld.view(_all, sm, sm, 0)) /
+    dxyz[1];
   res.view(_all, _all, _all, 2) =
-    (_fldz.view(_all, s0, s0, 0) - _fldz.view(_all, s0, sm, 0)) / dxyz[2];
+    (trimmed_fld.view(_all, sm, s0, 0) - trimmed_fld.view(_all, sm, sm, 0)) /
+    dxyz[2];
 
   return res;
 }
@@ -185,6 +188,9 @@ static auto grad_ec(const E& fld, const Grid_t& grid)
 
 } // namespace item
 } // namespace psc
+
+// ======================================================================
+// Item_dive
 
 template <typename MfieldsState>
 class Item_dive : public MFexpression<Item_dive<MfieldsState>>
