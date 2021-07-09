@@ -232,7 +232,7 @@ void setupParameters()
 
   g.m_e = 1;
 
-  g.n_grid = 32;
+  g.n_grid = 128;
 
   g.reverse_v = true;
 }
@@ -321,6 +321,35 @@ auto getPadded(GT& gt, Int3 paddings)
 }
 
 // ======================================================================
+// fillGhosts
+
+template <typename GT>
+auto& fillGhosts(GT& gt, Int3 bnd)
+{
+  auto shape = gt.shape();
+
+  // extend x
+  gt.view(_s(_, bnd[0]), _all, _all) =
+    gt.view(_s(-2 * bnd[0], -bnd[0]), _all, _all);
+  gt.view(_s(-bnd[0], _), _all, _all) =
+    gt.view(_s(bnd[0], 2 * bnd[0]), _all, _all);
+
+  // extend y
+  gt.view(_all, _s(_, bnd[1]), _all) =
+    gt.view(_all, _s(-2 * bnd[1], -bnd[1]), _all);
+  gt.view(_all, _s(-bnd[1], _), _all) =
+    gt.view(_all, _s(bnd[1], 2 * bnd[1]), _all);
+
+  // extend z
+  gt.view(_all, _all, _s(_, bnd[2])) =
+    gt.view(_all, _all, _s(-2 * bnd[2], -bnd[2]));
+  gt.view(_all, _all, _s(-bnd[2], _)) =
+    gt.view(_all, _all, _s(bnd[2], 2 * bnd[2]));
+
+  return gt;
+}
+
+// ======================================================================
 // initializeParticles
 
 void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
@@ -381,10 +410,11 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
 
 void initializePhi(PhiField& phi)
 {
-  setupScalarField(phi, Centering::Centerer(Centering::NC), [&](int m, double crd[3]) {
-    double rho = sqrt(sqr(crd[1]) + sqr(crd[2]));
-    return parsed.get_interpolated(COL_PHI, rho);
-  });
+  setupScalarField(phi, Centering::Centerer(Centering::NC),
+                   [&](int m, double crd[3]) {
+                     double rho = sqrt(sqr(crd[1]) + sqr(crd[2]));
+                     return parsed.get_interpolated(COL_PHI, rho);
+                   });
 }
 
 // ======================================================================
