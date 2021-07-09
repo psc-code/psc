@@ -120,8 +120,8 @@ public:
   {
     // ensure we are in bounds
     assert(rho >= data[0][COL_RHO]);
-    // FIXME this assert fails because setupFields requests out-of-bounds points
-    // assert(rho <= data[n_rows - 1][COL_RHO]);
+    
+    assert(rho <= data[n_rows - 1][COL_RHO]);
 
     int row = get_row(rho);
 
