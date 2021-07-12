@@ -89,15 +89,32 @@ namespace
 // FIXME is this namespace appropriate?
 auto s0 = _s(1, _);
 auto sm = _s(_, -1);
+
+template <typename GT, typename... SLICES>
+auto viewFromSlices(GT& gt, gt::gslice slices[], SLICES... moreSlices)
+{
+  return gt.view(slices[0], slices[1], slices[2], moreSlices...);
+}
+
+template <typename GT1, typename GT2>
+void plusEquals(GT1&& lhs, GT2&& rhs)
+{
+  lhs = lhs + rhs;
+}
+
+template <typename E>
+Int3 getBnd(const E& flds, const Grid_t& grid)
+{
+  return {(flds.shape(0) - grid.domain.ldims[0]) / 2,
+          (flds.shape(1) - grid.domain.ldims[1]) / 2,
+          (flds.shape(2) - grid.domain.ldims[2]) / 2};
+}
 } // namespace
 
 template <typename E>
 static auto div_nc(const E& flds, const Grid_t& grid)
 {
-  Int3 bnd = {(flds.shape(0) - grid.domain.ldims[0]) / 2,
-              (flds.shape(1) - grid.domain.ldims[1]) / 2,
-              (flds.shape(2) - grid.domain.ldims[2]) / 2};
-
+  Int3 bnd = getBnd(flds, grid);
   auto dxyz = grid.domain.dx;
 
   auto res = gt::full<gt::expr_value_type<E>, gt::expr_space_type<E>>(
@@ -119,15 +136,14 @@ static auto div_nc(const E& flds, const Grid_t& grid)
     }
   }
 
-  auto trimmed_flds = flds.view(trims[0], trims[1], trims[2]);
+  auto&& trimmed_flds = viewFromSlices(flds, trims);
 
   for (int a = 0; a < 3; ++a) {
     if (!grid.isInvar(a)) {
-      res.view(_all, _all, _all, 0) =
-        res.view(_all, _all, _all, 0) +
-        (trimmed_flds.view(lhs[0], lhs[1], lhs[2], a) -
-         trimmed_flds.view(rhs[a][0], rhs[a][1], rhs[a][2], a)) /
-          dxyz[a];
+      plusEquals(res.view(_all, _all, _all, 0),
+                 (viewFromSlices(trimmed_flds, lhs, a) -
+                  viewFromSlices(trimmed_flds, rhs[a], a)) /
+                   dxyz[a]);
     }
   }
 
