@@ -99,13 +99,17 @@ inline auto div_yz(const E& flds, const Grid_t& grid)
   auto res = gt::empty<gt::expr_value_type<E>, gt::expr_space_type<E>>(
     {grid.ldims[0], grid.ldims[1], grid.ldims[2], 1, grid.n_patches()});
 
-  auto trimmed_flds = flds.view(_s(bnd[0], 1 - bnd[0]), _s(bnd[1], 1 - bnd[1]),
-                                _s(bnd[2], 1 - bnd[2]));
+  gt::gslice trim_view[3] = {_all, _all, _all};
+  for (int a = 0; a < 3; ++a)
+    if (!grid.isInvar(a))
+      trim_view[a] = _s(bnd[a] - 1, -bnd[a]);
+
+  auto trimmed_flds = flds.view(trim_view[0], trim_view[1], trim_view[2]);
 
   res.view(_all, _all, _all, 0) =
-    (trimmed_flds.view(_all, s0, sm, 1) - trimmed_flds.view(_all, sm, sm, 1)) /
+    (trimmed_flds.view(_all, s0, s0, 1) - trimmed_flds.view(_all, sm, s0, 1)) /
       dxyz[1] +
-    (trimmed_flds.view(_all, sm, s0, 2) - trimmed_flds.view(_all, sm, sm, 2)) /
+    (trimmed_flds.view(_all, s0, s0, 2) - trimmed_flds.view(_all, s0, sm, 2)) /
       dxyz[2];
 
   return res;
