@@ -96,21 +96,36 @@ inline auto div_yz(const E& flds, const Grid_t& grid)
   auto s0 = _s(1, _);
   auto sm = _s(_, -1);
 
-  auto res = gt::empty<gt::expr_value_type<E>, gt::expr_space_type<E>>(
-    {grid.ldims[0], grid.ldims[1], grid.ldims[2], 1, grid.n_patches()});
+  auto res = gt::full<gt::expr_value_type<E>, gt::expr_space_type<E>>(
+    {grid.ldims[0], grid.ldims[1], grid.ldims[2], 1, grid.n_patches()}, 0);
 
-  gt::gslice trim_view[3] = {_all, _all, _all};
-  for (int a = 0; a < 3; ++a)
-    if (!grid.isInvar(a))
-      trim_view[a] = _s(bnd[a] - 1, -bnd[a]);
+  // initial values for slices
+  gt::gslice trims[3] = {_all, _all, _all};
+  gt::gslice lhs[3] = {s0, s0, s0};
+  gt::gslice rhs[3][3] = {{sm, s0, s0}, {s0, sm, s0}, {s0, s0, sm}};
 
-  auto trimmed_flds = flds.view(trim_view[0], trim_view[1], trim_view[2]);
+  // modify slices to accommodate invariant axes
+  for (int a = 0; a < 3; ++a) {
+    if (!grid.isInvar(a)) {
+      trims[a] = _s(bnd[a] - 1, -bnd[a]);
+    } else {
+      lhs[a] = _all;
+      for (int a2 = 0; a2 < 3; ++a2)
+        rhs[a2][a] = _all;
+    }
+  }
 
-  res.view(_all, _all, _all, 0) =
-    (trimmed_flds.view(_all, s0, s0, 1) - trimmed_flds.view(_all, sm, s0, 1)) /
-      dxyz[1] +
-    (trimmed_flds.view(_all, s0, s0, 2) - trimmed_flds.view(_all, s0, sm, 2)) /
-      dxyz[2];
+  auto trimmed_flds = flds.view(trims[0], trims[1], trims[2]);
+
+  for (int a = 0; a < 3; ++a) {
+    if (!grid.isInvar(a)) {
+      res.view(_all, _all, _all, 0) =
+        res.view(_all, _all, _all, 0) +
+        (trimmed_flds.view(lhs[0], lhs[1], lhs[2], a) -
+         trimmed_flds.view(rhs[a][0], rhs[a][1], rhs[a][2], a)) /
+          dxyz[a];
+    }
+  }
 
   return res;
 }
