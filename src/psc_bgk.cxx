@@ -169,6 +169,9 @@ struct PscBgkParams
   // number of grid cells
   int n_grid;
 
+  // number of patches
+  int n_patches;
+
   // whether or not to negate v (if true, we should not see stability)
   bool reverse_v;
 };
@@ -232,7 +235,9 @@ void setupParameters()
 
   g.m_e = 1;
 
-  g.n_grid = 128;
+  g.n_grid = 16;
+
+  g.n_patches = g.n_grid / 16;
 
   g.reverse_v = true;
 }
@@ -251,7 +256,7 @@ Grid_t* setupGrid()
     {1, g.n_grid, g.n_grid},                  // # grid points
     {1, g.box_size, g.box_size},              // physical lengths
     {0., -.5 * g.box_size, -.5 * g.box_size}, // *offset* for origin
-    {1, g.n_grid / 16, g.n_grid / 16}};       // # patches
+    {1, g.n_patches, g.n_patches}};           // # patches
 
   auto bc =
     psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
