@@ -154,39 +154,42 @@ static auto div_nc(const E& flds, const Grid_t& grid)
 // grad_ec
 
 template <typename E>
-inline auto grad_yz(const E& fld, const Grid_t& grid)
-{
-  Int3 bnd = {(fld.shape(0) - grid.domain.ldims[0]) / 2,
-              (fld.shape(1) - grid.domain.ldims[1]) / 2,
-              (fld.shape(2) - grid.domain.ldims[2]) / 2};
-  auto dxyz = grid.domain.dx;
-
-  auto res = gt::empty<gt::expr_value_type<E>, gt::expr_space_type<E>>(
-    {grid.ldims[0], grid.ldims[1], grid.ldims[2], 3, grid.n_patches()});
-
-  auto trimmed_fld = fld.view(_s(bnd[0], 1 - bnd[0]), _s(bnd[1], 1 - bnd[1]),
-                              _s(bnd[2], 1 - bnd[2]));
-
-  res.view(_all, _all, _all, 1) =
-    (trimmed_fld.view(_all, s0, sm, 0) - trimmed_fld.view(_all, sm, sm, 0)) /
-    dxyz[1];
-  res.view(_all, _all, _all, 2) =
-    (trimmed_fld.view(_all, sm, s0, 0) - trimmed_fld.view(_all, sm, sm, 0)) /
-    dxyz[2];
-
-  return res;
-}
-
-template <typename E>
 static auto grad_ec(const E& fld, const Grid_t& grid)
 {
-  if (grid.isInvar(0)) {
-    return psc::item::grad_yz(fld, grid);
-  } else {
-    // FIXME implement the following
-    // return psc::item::grad_xyz(fld, grid);
-    assert(false);
+  Int3 bnd = getBnd(fld, grid);
+  auto dxyz = grid.domain.dx;
+
+  auto res = gt::full<gt::expr_value_type<E>, gt::expr_space_type<E>>(
+    {grid.ldims[0], grid.ldims[1], grid.ldims[2], 3, grid.n_patches()}, 0);
+
+  // initial values for slices
+  gt::gslice trims[3] = {_all, _all, _all};
+  gt::gslice lhs[3] = {s0, s0, s0};
+  gt::gslice rhs[3][3] = {{sm, s0, s0}, {s0, sm, s0}, {s0, s0, sm}};
+
+  // modify slices to accommodate invariant axes
+  for (int a = 0; a < 3; ++a) {
+    if (!grid.isInvar(a)) {
+      trims[a] = _s(bnd[a] - 1, -bnd[a]);
+    } else {
+      lhs[a] = _all;
+      for (int a2 = 0; a2 < 3; ++a2)
+        rhs[a2][a] = _all;
+    }
   }
+
+  auto&& trimmed_flds = viewFromSlices(fld, trims);
+
+  for (int a = 0; a < 3; ++a) {
+    if (!grid.isInvar(a)) {
+      res.view(_all, _all, _all, a) =
+        (viewFromSlices(trimmed_flds, lhs, a) -
+         viewFromSlices(trimmed_flds, rhs[a], a)) /
+        dxyz[a];
+    }
+  }
+
+  return res;
 }
 
 } // namespace item
