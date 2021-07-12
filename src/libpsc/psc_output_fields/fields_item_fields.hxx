@@ -84,17 +84,21 @@ namespace psc
 namespace item
 {
 
+namespace
+{
+// FIXME is this namespace appropriate?
+auto s0 = _s(1, _);
+auto sm = _s(_, -1);
+} // namespace
+
 template <typename E>
-inline auto div_yz(const E& flds, const Grid_t& grid)
+static auto div_nc(const E& flds, const Grid_t& grid)
 {
   Int3 bnd = {(flds.shape(0) - grid.domain.ldims[0]) / 2,
               (flds.shape(1) - grid.domain.ldims[1]) / 2,
               (flds.shape(2) - grid.domain.ldims[2]) / 2};
 
   auto dxyz = grid.domain.dx;
-
-  auto s0 = _s(1, _);
-  auto sm = _s(_, -1);
 
   auto res = gt::full<gt::expr_value_type<E>, gt::expr_space_type<E>>(
     {grid.ldims[0], grid.ldims[1], grid.ldims[2], 1, grid.n_patches()}, 0);
@@ -130,41 +134,6 @@ inline auto div_yz(const E& flds, const Grid_t& grid)
   return res;
 }
 
-template <typename E>
-inline auto div_xyz(const E& flds, const Grid_t& grid)
-{
-  Int3 bnd = {(flds.shape(0) - grid.domain.ldims[0]) / 2,
-              (flds.shape(1) - grid.domain.ldims[1]) / 2,
-              (flds.shape(2) - grid.domain.ldims[2]) / 2};
-  auto dxyz = grid.domain.dx;
-
-  auto s0 = _s(1, _);
-  auto sm = _s(_, -1);
-
-  auto res = gt::empty<gt::expr_value_type<E>, gt::expr_space_type<E>>(
-    {grid.ldims[0], grid.ldims[1], grid.ldims[2], 1, grid.n_patches()});
-
-  auto _flds = flds.view(_s(-1 + bnd[0], -bnd[0]), _s(-1 + bnd[1], -bnd[1]),
-                         _s(-1 + bnd[2], -bnd[2]));
-
-  res.view(_all, _all, _all, 0) =
-    (_flds.view(s0, s0, s0, 0) - _flds.view(sm, s0, s0, 0)) / dxyz[0] +
-    (_flds.view(s0, s0, s0, 1) - _flds.view(s0, sm, s0, 1)) / dxyz[1] +
-    (_flds.view(s0, s0, s0, 2) - _flds.view(s0, s0, sm, 2)) / dxyz[2];
-
-  return res;
-}
-
-template <typename E>
-static auto div_nc(const E& flds, const Grid_t& grid)
-{
-  if (grid.isInvar(0)) {
-    return psc::item::div_yz(flds, grid);
-  } else {
-    return psc::item::div_xyz(flds, grid);
-  }
-}
-
 // ======================================================================
 // grad_ec
 
@@ -175,9 +144,6 @@ inline auto grad_yz(const E& fld, const Grid_t& grid)
               (fld.shape(1) - grid.domain.ldims[1]) / 2,
               (fld.shape(2) - grid.domain.ldims[2]) / 2};
   auto dxyz = grid.domain.dx;
-
-  auto s0 = _s(1, _);
-  auto sm = _s(_, -1);
 
   auto res = gt::empty<gt::expr_value_type<E>, gt::expr_space_type<E>>(
     {grid.ldims[0], grid.ldims[1], grid.ldims[2], 3, grid.n_patches()});
