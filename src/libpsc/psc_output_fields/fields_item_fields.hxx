@@ -76,9 +76,6 @@ private:
   MfieldsState& mflds_;
 };
 
-// ======================================================================
-// div_nc
-
 namespace psc
 {
 namespace item
@@ -110,6 +107,9 @@ Int3 getBnd(const E& flds, const Grid_t& grid)
           (flds.shape(2) - grid.domain.ldims[2]) / 2};
 }
 } // namespace
+
+// ======================================================================
+// div_nc
 
 template <typename E>
 static auto div_nc(const E& flds, const Grid_t& grid)
