@@ -237,7 +237,7 @@ void setupParameters()
 
   g.n_grid = 16;
 
-  g.n_patches = g.n_grid / 16;
+  g.n_patches = 2;
 
   g.reverse_v = true;
 }
@@ -346,25 +346,43 @@ void printGT(const GT& gt)
 // ======================================================================
 // fillGhosts
 
+int getNeighborPatch(int p, int dy, int dz)
+{
+  // FIXME THIS WILL NOT WORK EXCEPT IN YZ PLANE
+  int iy = (p % g.n_patches + dy) % g.n_patches;
+  int iz = (p / g.n_patches + dz) % g.n_patches;
+  iy += iy < 0 ? g.n_patches : 0;
+  iz += iz < 0 ? g.n_patches : 0;
+  return iz * g.n_patches + iy;
+}
+
 template <typename GT>
-auto& fillGhosts(GT& gt, Int3 bnd)
+auto& fillGhosts(GT&& gt, Int3 bnd)
 {
   auto shape = gt.shape();
 
   auto rev = _s(_, _, -1);
+  auto&& gt_rev = gt.view(rev, rev, rev);
 
-  for (int a = 0; a < 3; ++a) {
-    gt::gslice sLhs[] = {_all, _all, _all};
-    gt::gslice sRhs[] = {_all, _all, _all};
+  for (int p = 0; p < shape[4]; ++p) {
 
-    // selects lower half of ghost points along axis a
-    sLhs[a] = _s(_, bnd[a]);
-    // selects source for those ghost points
-    sRhs[a] = _s(-2 * bnd[a], -bnd[a]);
+    for (int a = 0; a < 3; ++a) {
+      gt::gslice sLhs[] = {_all, _all, _all};
+      gt::gslice sRhs[] = {_all, _all, _all};
 
-    gt.view(sLhs[0], sLhs[1], sLhs[2]) = gt.view(sRhs[0], sRhs[1], sRhs[2]);
-    gt.view(rev, rev, rev).view(sLhs[0], sLhs[1], sLhs[2]) =
-      gt.view(rev, rev, rev).view(sRhs[0], sRhs[1], sRhs[2]);
+      // selects lower half of ghost points along axis a
+      sLhs[a] = _s(_, bnd[a]);
+      // selects source for those ghost points
+      sRhs[a] = _s(-2 * bnd[a], -bnd[a]);
+
+      int dy = a == 1 ? 1 : 0;
+      int dz = a == 2 ? 1 : 0;
+
+      gt.view(sLhs[0], sLhs[1], sLhs[2], _all, p) =
+        gt.view(sRhs[0], sRhs[1], sRhs[2], _all, getNeighborPatch(p, dy, dz));
+      gt_rev.view(sLhs[0], sLhs[1], sLhs[2], _all, p) = gt_rev.view(
+        sRhs[0], sRhs[1], sRhs[2], _all, getNeighborPatch(p, -dy, -dz));
+    }
   }
 
   return gt;
