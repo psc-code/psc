@@ -353,6 +353,18 @@ auto& fillGhosts(GT& gt, Int3 bnd)
 }
 
 // ======================================================================
+// getCoord
+
+inline double getCoord(double crd)
+{
+  if (crd < -g.box_size / 2)
+    return crd + g.box_size;
+  if (crd > g.box_size / 2)
+    return crd - g.box_size;
+  return crd;
+}
+
+// ======================================================================
 // initializeParticles
 
 void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
@@ -370,8 +382,8 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
 
   auto npt_init = [&](int kind, double crd[3], int p, Int3 idx,
                       psc_particle_npt& npt) {
-    double y = crd[1];
-    double z = crd[2];
+    double y = getCoord(crd[1]);
+    double z = getCoord(crd[2]);
     double rho = sqrt(sqr(y) + sqr(z));
     switch (kind) {
       case KIND_ELECTRON:
@@ -414,11 +426,11 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
 
 void initializePhi(PhiField& phi)
 {
-  setupScalarField(phi, Centering::Centerer(Centering::NC),
-                   [&](int m, double crd[3]) {
-                     double rho = sqrt(sqr(crd[1]) + sqr(crd[2]));
-                     return parsed.get_interpolated(COL_PHI, rho);
-                   });
+  setupScalarField(
+    phi, Centering::Centerer(Centering::NC), [&](int m, double crd[3]) {
+      double rho = sqrt(sqr(getCoord(crd[1])) + sqr(getCoord(crd[2])));
+      return parsed.get_interpolated(COL_PHI, rho);
+    });
 }
 
 // ======================================================================
