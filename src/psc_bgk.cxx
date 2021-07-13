@@ -326,6 +326,24 @@ auto getPadded(const GT& gt, Int3 paddings)
 }
 
 // ======================================================================
+// printGT
+
+template <typename GT>
+void printGT(const GT& gt)
+{
+  auto shape = gt.shape();
+  for (int p = 0; p < shape[4]; p++) {
+    std::cout << "===== " << p << " =====\n";
+    for (int j = 0; j < shape[1]; ++j) {
+      for (int k = 0; k < shape[2]; ++k) {
+        std::cout << gt(0, j, k, 0, p) << '\t';
+      }
+      std::cout << "\n";
+    }
+  }
+}
+
+// ======================================================================
 // fillGhosts
 
 template <typename GT>
