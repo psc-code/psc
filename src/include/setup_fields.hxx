@@ -50,7 +50,7 @@ struct SetupFields
                         const Centering::Centerer& centerer)
   {
     const auto& grid = mf.grid();
-    mpi_printf(grid.comm(), "**** Setting up fields...\n");
+    mpi_printf(grid.comm(), "**** Setting up scalar field...\n");
 
     for (int p = 0; p < mf.n_patches(); ++p) {
       auto& patch = grid.patches[p];
