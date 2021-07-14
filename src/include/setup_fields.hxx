@@ -68,12 +68,14 @@ struct SetupFields
 
 } // namespace detail
 
+// func signature: (int component, Double3 position) -> double fieldValue
 template <typename MF, typename FUNC>
 void setupFields(MF& mflds, FUNC&& func)
 {
   detail::SetupFields<MF>::run(mflds, std::forward<FUNC>(func));
 }
 
+// func signature: (int component, Double3 position) -> double fieldValue
 template <typename MF, typename FUNC>
 void setupScalarField(MF& fld, const Centering::Centerer& centerer, FUNC&& func)
 {

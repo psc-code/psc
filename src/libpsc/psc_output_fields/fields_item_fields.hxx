@@ -76,6 +76,9 @@ private:
   MfieldsState& mflds_;
 };
 
+// ======================================================================
+// psc::item::
+
 namespace psc
 {
 namespace item
@@ -150,7 +153,7 @@ static auto div_nc(const E& flds, const Grid_t& grid)
   return res;
 }
 
-// ======================================================================
+// ----------------------------------------------------------------------
 // grad_ec
 
 template <typename E>
