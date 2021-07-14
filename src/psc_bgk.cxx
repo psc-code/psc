@@ -237,9 +237,9 @@ void setupParameters()
 
   g.m_e = 1;
 
-  g.n_grid = 128;
+  g.n_grid = 16;
 
-  g.n_patches = std::max(g.n_grid / 16, 16);
+  g.n_patches = std::max(g.n_grid / 16, 2);
 
   g.reverse_v = true;
 }
@@ -309,6 +309,13 @@ void writeGT(const GT& gt, const Grid_t& grid, const std::string& name,
   writer.close();
 }
 
+template <typename MF>
+void writeMF(MF&& mfld, const std::string& name,
+             const std::vector<std::string>& compNames)
+{
+  writeGT(view_interior(mfld.gt(), mfld.ibn()), mfld.grid(), name, compNames);
+}
+
 // ======================================================================
 // getPadded
 
@@ -347,57 +354,6 @@ void printGT(const GT& gt)
 }
 
 // ======================================================================
-// fillGhosts
-
-// int getNeighborPatch(int p, int dy, int dz)
-// {
-//   // FIXME THIS WILL NOT WORK EXCEPT IN YZ PLANE
-//   int iy = (p % g.n_patches + dy) % g.n_patches;
-//   int iz = (p / g.n_patches + dz) % g.n_patches;
-//   iy += iy < 0 ? g.n_patches : 0;
-//   iz += iz < 0 ? g.n_patches : 0;
-//   return iz * g.n_patches + iy;
-// }
-
-// template <typename GT>
-// void fillGhosts(GT&& gt, Int3 bnd)
-// {
-//   auto shape = gt.shape();
-
-//   auto rev = _s(_, _, -1);
-//   auto&& gt_rev = gt.view(rev, rev, rev);
-
-//   for (int a = 0; a < 3; ++a) {
-//     for (int p = 0; p < shape[4]; ++p) {
-//       gt::gslice sLhs[] = {_all, _all, _all};
-//       gt::gslice sRhs[] = {_all, _all, _all};
-
-//       // selects lower half of ghost points along axis a
-//       sLhs[a] = _s(_, bnd[a]);
-//       // selects source for those ghost points
-//       sRhs[a] = _s(-2 * bnd[a], -bnd[a]);
-
-//       int dy = a == 1 ? 1 : 0;
-//       int dz = a == 2 ? 1 : 0;
-
-//       gt.view(sLhs[0], sLhs[1], sLhs[2], _all, p) =
-//         gt.view(sRhs[0], sRhs[1], sRhs[2], _all, getNeighborPatch(p, dy,
-//         dz));
-//       gt_rev.view(sLhs[0], sLhs[1], sLhs[2], _all, p) = gt_rev.view(
-//         sRhs[0], sRhs[1], sRhs[2], _all, getNeighborPatch(p, -dy, -dz));
-//     }
-//   }
-// }
-
-// template <typename GT>
-// auto getPaddedWithGhosts(const GT& gt, Int3 bnd)
-// {
-//   auto padded = getPadded(gt, bnd);
-//   fillGhosts(padded, bnd);
-//   return padded;
-// }
-
-// ======================================================================
 // getCoord
 
 inline double getCoord(double crd)
@@ -418,7 +374,7 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
   SetupParticles<Mparticles> setup_particles(*grid_ptr);
   setup_particles.centerer = Centering::Centerer(Centering::NC);
 
-  auto&& qDensity = -divGradPhi.gt();
+  auto&& qDensity = -view_interior(divGradPhi.gt(), divGradPhi.ibn());
 
   auto npt_init = [&](int kind, double crd[3], int p, Int3 idx,
                       psc_particle_npt& npt) {
@@ -474,6 +430,18 @@ void initializePhi(BgkMfields& phi)
 }
 
 // ======================================================================
+// fillGhosts
+
+template <typename MF>
+void fillGhosts(MF& mfld, int compBegin, int compEnd)
+{
+  auto ibn = mfld.ibn();
+  int ibn_arr[3] = {ibn[0], ibn[1], ibn[2]};
+  Bnd_<MF> bnd{mfld.grid(), ibn_arr};
+  bnd.fill_ghosts(mfld, compBegin, compEnd);
+}
+
+// ======================================================================
 // initializeGradPhi
 
 void initializeGradPhi(BgkMfields& phi, BgkMfields& gradPhi)
@@ -481,7 +449,9 @@ void initializeGradPhi(BgkMfields& phi, BgkMfields& gradPhi)
   auto&& grad = psc::item::grad_ec(phi.gt(), phi.grid());
   view_interior(gradPhi.storage(), phi.ibn()) = grad;
 
-  writeGT(grad, phi.grid(), "grad_phi", {"gradx", "grady", "gradz"});
+  fillGhosts(gradPhi, 0, 3);
+
+  writeMF(gradPhi, "grad_phi", {"gradx", "grady", "gradz"});
 }
 
 // ======================================================================
@@ -492,7 +462,9 @@ void initializeDivGradPhi(BgkMfields& gradPhi, BgkMfields& divGradPhi)
   auto&& divGrad = psc::item::div_nc(gradPhi.gt(), gradPhi.grid());
   view_interior(divGradPhi.storage(), gradPhi.ibn()) = divGrad;
 
-  writeGT(divGrad, gradPhi.grid(), "div_grad_phi", {"divgrad"});
+  fillGhosts(divGradPhi, 0, 1);
+
+  writeMF(divGradPhi, "div_grad_phi", {"divgrad"});
 }
 
 // ======================================================================
@@ -556,7 +528,7 @@ static void run()
   ChecksParams checks_params{};
   checks_params.gauss_every_step = 200;
   // checks_params.gauss_dump_always = true;
-  checks_params.gauss_threshold = 1e-4;
+  checks_params.gauss_threshold = 0;
 
   Checks checks{grid, MPI_COMM_WORLD, checks_params};
 
