@@ -13,8 +13,6 @@
 #include <fstream>
 #include <sstream>
 
-#include <iomanip>
-
 // ======================================================================
 // PSC configuration
 //
@@ -44,7 +42,7 @@ using OutputParticles = PscConfig::OutputParticles;
 // ======================================================================
 // Parsed
 
-enum
+enum DATA_COL
 {
   COL_RHO,
   COL_NE,
@@ -80,8 +78,6 @@ private:
 public:
   Parsed()
   {
-    // first populate data
-    // note the use of normalized version (no carriage returns allowed!!)
     std::ifstream file(file_path);
 
     // skip first line
@@ -118,7 +114,7 @@ public:
 
   // calculates and returns an interpolated value (specified by col) at
   // corresponding rho
-  double get_interpolated(int col, double rho)
+  double get_interpolated(DATA_COL col, double rho)
   {
     // ensure we are in bounds
     assert(rho >= data[0][COL_RHO]);
@@ -174,25 +170,22 @@ struct PscBgkParams
   // number of patches
   int n_patches;
 
-  // whether or not to negate v (if true, we should not see stability)
+  // whether or not to negate v (affects stability)
   bool reverse_v;
+
+  // whether or not to negate v for y<0 (should destroy stability)
+  bool reverse_v_half;
 };
 
 // ======================================================================
 // Global parameters
-//
-// I'm not a big fan of global parameters, but they're only for
-// this particular case and they help make things simpler.
 
-// An "anonymous namespace" makes these variables visible in this source file
-// only
 namespace
 {
 
 Parsed parsed;
 
-// Parameters specific to this case. They don't really need to be collected in a
-// struct, but maybe it's nice that they are
+// parameters specific to this case
 PscBgkParams g;
 
 std::string read_checkpoint_filename;
@@ -241,7 +234,9 @@ void setupParameters()
 
   g.n_patches = std::max(g.n_grid / 16, 2);
 
-  g.reverse_v = true;
+  g.reverse_v = false;
+
+  g.reverse_v_half = false;
 }
 
 // ======================================================================
@@ -268,10 +263,10 @@ Grid_t* setupGrid()
 
   auto kinds = Grid_t::Kinds(NR_KINDS);
   kinds[KIND_ELECTRON] = {g.q_e, g.m_e, "e"};
-  kinds[KIND_ION] = {g.q_i, g.m_i, "i"}; // really heavy to keep them fixed
+  kinds[KIND_ION] = {g.q_i, g.m_i, "i"};
 
   mpi_printf(MPI_COMM_WORLD, "lambda_D = %g\n",
-             sqrt(parsed.get_interpolated(COL_TE, .022)));
+             sqrt(parsed.get_interpolated(COL_TE, g.box_size / sqrt(2))));
 
   // --- generic setup
   auto norm_params = Grid_t::NormalizationParams::dimensionless();
@@ -309,6 +304,9 @@ void writeGT(const GT& gt, const Grid_t& grid, const std::string& name,
   writer.close();
 }
 
+// ----------------------------------------------------------------------
+// writeMF
+
 template <typename MF>
 void writeMF(MF&& mfld, const std::string& name,
              const std::vector<std::string>& compNames)
@@ -317,44 +315,7 @@ void writeMF(MF&& mfld, const std::string& name,
 }
 
 // ======================================================================
-// getPadded
-
-template <typename GT>
-auto getPadded(const GT& gt, Int3 paddings)
-{
-  auto shape = gt.shape();
-  for (int i = 0; i < 3; i++)
-    shape[i] += paddings[i] * 2;
-
-  auto padded =
-    gt::full<gt::expr_value_type<GT>, gt::expr_space_type<GT>>(shape, 0);
-
-  view_interior(padded, paddings) = gt;
-
-  return padded;
-}
-
-// ======================================================================
-// printGT
-
-template <typename GT>
-void printGT(const GT& gt)
-{
-  auto shape = gt.shape();
-  for (int p = 0; p < shape[4]; p++) {
-    std::cout << "===== " << p << " =====\n";
-    for (int j = 0; j < shape[1]; ++j) {
-      for (int k = 0; k < shape[2]; ++k) {
-        std::cout << std::setprecision(0) << std::scientific
-                  << gt(0, j, k, 1, p) << '\t';
-      }
-      std::cout << "\n";
-    }
-  }
-}
-
-// ======================================================================
-// getCoord
+// helper methods
 
 inline double getCoord(double crd)
 {
@@ -363,6 +324,13 @@ inline double getCoord(double crd)
   if (crd > g.box_size / 2)
     return crd - g.box_size;
   return crd;
+}
+
+template <int LEN>
+inline void setAll(double (&vals)[LEN], double newval)
+{
+  for (int i = 0; i < LEN; i++)
+    vals[i] = newval;
 }
 
 // ======================================================================
@@ -381,33 +349,31 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
     double y = getCoord(crd[1]);
     double z = getCoord(crd[2]);
     double rho = sqrt(sqr(y) + sqr(z));
-    switch (kind) {
-      case KIND_ELECTRON:
-        // velocities/momenta
-        if (rho != 0) {
-          double v_phi = parsed.get_interpolated(COL_V_PHI, rho);
-          double sign = g.reverse_v ? -1 : 1;
-          npt.p[1] = sign * v_phi * -z / rho;
-          npt.p[2] = sign * v_phi * y / rho;
-        }
-        // otherwise, npt.p[i] = 0
 
-        // number density
+    switch (kind) {
+
+      case KIND_ELECTRON:
         npt.n =
           (qDensity(idx[0], idx[1], idx[2], 0, p) - g.n_i * g.q_i) / g.q_e;
-
-        // temperature
-        npt.T[0] = parsed.get_interpolated(COL_TE, rho);
-        npt.T[1] = npt.T[2] = npt.T[0];
+        if (rho != 0) {
+          double v_phi = parsed.get_interpolated(COL_V_PHI, rho);
+          double sign =
+            (g.reverse_v ? -1 : 1) * (g.reverse_v_half && y < 0 ? -1 : 1);
+          npt.p[0] = 0;
+          npt.p[1] = sign * g.m_e * v_phi * -z / rho;
+          npt.p[2] = sign * g.m_e * v_phi * y / rho;
+        } else {
+          setAll(npt.p, 0);
+        }
+        setAll(npt.T, parsed.get_interpolated(COL_TE, rho));
         break;
+
       case KIND_ION:
-        // momenta are 0
-
-        // number density
         npt.n = g.n_i;
-
-        // temperature is 0
+        setAll(npt.p, 0);
+        setAll(npt.T, 0);
         break;
+
       default: assert(false);
     }
   };
@@ -415,18 +381,6 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
   partitionParticlesGeneralInit(setup_particles, balance, grid_ptr, mprts,
                                 npt_init);
   setupParticlesGeneralInit(setup_particles, mprts, npt_init);
-}
-
-// ======================================================================
-// initializePhi
-
-void initializePhi(BgkMfields& phi)
-{
-  setupScalarField(
-    phi, Centering::Centerer(Centering::NC), [&](int m, double crd[3]) {
-      double rho = sqrt(sqr(getCoord(crd[1])) + sqr(getCoord(crd[2])));
-      return parsed.get_interpolated(COL_PHI, rho);
-    });
 }
 
 // ======================================================================
@@ -439,6 +393,20 @@ void fillGhosts(MF& mfld, int compBegin, int compEnd)
   int ibn_arr[3] = {ibn[0], ibn[1], ibn[2]};
   Bnd_<MF> bnd{mfld.grid(), ibn_arr};
   bnd.fill_ghosts(mfld, compBegin, compEnd);
+}
+
+// ======================================================================
+// initializePhi
+
+void initializePhi(BgkMfields& phi)
+{
+  setupScalarField(
+    phi, Centering::Centerer(Centering::NC), [&](int m, double crd[3]) {
+      double rho = sqrt(sqr(getCoord(crd[1])) + sqr(getCoord(crd[2])));
+      return parsed.get_interpolated(COL_PHI, rho);
+    });
+
+  writeMF(phi, "phi", {"phi"});
 }
 
 // ======================================================================
@@ -479,15 +447,12 @@ void initializeFields(MfieldsState& mflds, BgkMfields& gradPhi)
     }
   });
 
+  // initialize E separately
   mflds.storage().view(_all, _all, _all, _s(EX, EX + 3)) = -gradPhi.gt();
 }
 
 // ======================================================================
 // run
-//
-// This is basically the main function of this run,
-// which sets up everything and then uses PscIntegrator to run the
-// simulation
 
 static void run()
 {
@@ -563,7 +528,7 @@ static void run()
   auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
 
   // ----------------------------------------------------------------------
-  // setup initial conditions
+  // Set up initial conditions
 
   if (read_checkpoint_filename.empty()) {
     initializePhi(phi);
@@ -576,11 +541,7 @@ static void run()
   }
 
   // ----------------------------------------------------------------------
-  // write phi (so it can be visually checked)
-  writeGT(view_interior(phi.gt(), phi.ibn()), phi.grid(), "phi", {"phi"});
-
-  // ----------------------------------------------------------------------
-  // hand off to PscIntegrator to run the simulation
+  // Hand off to PscIntegrator to run the simulation
 
   auto psc =
     makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts, balance,
