@@ -167,17 +167,17 @@ static auto grad_ec(const E& fld, const Grid_t& grid)
 
   // initial values for slices
   gt::gslice trims[3] = {_all, _all, _all};
-  gt::gslice lhs[3] = {s0, s0, s0};
-  gt::gslice rhs[3][3] = {{sm, s0, s0}, {s0, sm, s0}, {s0, s0, sm}};
+  gt::gslice lhs[3][3] = {{s0, sm, sm}, {sm, s0, sm}, {sm, sm, s0}};
+  gt::gslice rhs[3] = {sm, sm, sm};
 
   // modify slices to accommodate invariant axes
   for (int a = 0; a < 3; ++a) {
     if (!grid.isInvar(a)) {
-      trims[a] = _s(bnd[a] - 1, -bnd[a]);
+      trims[a] = _s(bnd[a], 1 - bnd[a]);
     } else {
-      lhs[a] = _all;
+      rhs[a] = _all;
       for (int a2 = 0; a2 < 3; ++a2)
-        rhs[a2][a] = _all;
+        lhs[a2][a] = _all;
     }
   }
 
@@ -185,10 +185,9 @@ static auto grad_ec(const E& fld, const Grid_t& grid)
 
   for (int a = 0; a < 3; ++a) {
     if (!grid.isInvar(a)) {
-      res.view(_all, _all, _all, a) =
-        (viewFromSlices(trimmed_flds, lhs, a) -
-         viewFromSlices(trimmed_flds, rhs[a], a)) /
-        dxyz[a];
+      res.view(_all, _all, _all, a) = (viewFromSlices(trimmed_flds, lhs[a], a) -
+                                       viewFromSlices(trimmed_flds, rhs, a)) /
+                                      dxyz[a];
     }
   }
 
