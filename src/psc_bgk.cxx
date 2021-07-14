@@ -32,7 +32,7 @@ using PscConfig = PscConfig1vbecSingle<Dim>;
 
 // ----------------------------------------------------------------------
 
-using Mfields = PscConfig::Mfields;
+using BgkMfields = PscConfig::Mfields;
 using MfieldsState = PscConfig::MfieldsState;
 using Mparticles = PscConfig::Mparticles;
 using Balance = PscConfig::Balance;
@@ -349,52 +349,53 @@ void printGT(const GT& gt)
 // ======================================================================
 // fillGhosts
 
-int getNeighborPatch(int p, int dy, int dz)
-{
-  // FIXME THIS WILL NOT WORK EXCEPT IN YZ PLANE
-  int iy = (p % g.n_patches + dy) % g.n_patches;
-  int iz = (p / g.n_patches + dz) % g.n_patches;
-  iy += iy < 0 ? g.n_patches : 0;
-  iz += iz < 0 ? g.n_patches : 0;
-  return iz * g.n_patches + iy;
-}
+// int getNeighborPatch(int p, int dy, int dz)
+// {
+//   // FIXME THIS WILL NOT WORK EXCEPT IN YZ PLANE
+//   int iy = (p % g.n_patches + dy) % g.n_patches;
+//   int iz = (p / g.n_patches + dz) % g.n_patches;
+//   iy += iy < 0 ? g.n_patches : 0;
+//   iz += iz < 0 ? g.n_patches : 0;
+//   return iz * g.n_patches + iy;
+// }
 
-template <typename GT>
-void fillGhosts(GT&& gt, Int3 bnd)
-{
-  auto shape = gt.shape();
+// template <typename GT>
+// void fillGhosts(GT&& gt, Int3 bnd)
+// {
+//   auto shape = gt.shape();
 
-  auto rev = _s(_, _, -1);
-  auto&& gt_rev = gt.view(rev, rev, rev);
+//   auto rev = _s(_, _, -1);
+//   auto&& gt_rev = gt.view(rev, rev, rev);
 
-  for (int a = 0; a < 3; ++a) {
-    for (int p = 0; p < shape[4]; ++p) {
-      gt::gslice sLhs[] = {_all, _all, _all};
-      gt::gslice sRhs[] = {_all, _all, _all};
+//   for (int a = 0; a < 3; ++a) {
+//     for (int p = 0; p < shape[4]; ++p) {
+//       gt::gslice sLhs[] = {_all, _all, _all};
+//       gt::gslice sRhs[] = {_all, _all, _all};
 
-      // selects lower half of ghost points along axis a
-      sLhs[a] = _s(_, bnd[a]);
-      // selects source for those ghost points
-      sRhs[a] = _s(-2 * bnd[a], -bnd[a]);
+//       // selects lower half of ghost points along axis a
+//       sLhs[a] = _s(_, bnd[a]);
+//       // selects source for those ghost points
+//       sRhs[a] = _s(-2 * bnd[a], -bnd[a]);
 
-      int dy = a == 1 ? 1 : 0;
-      int dz = a == 2 ? 1 : 0;
+//       int dy = a == 1 ? 1 : 0;
+//       int dz = a == 2 ? 1 : 0;
 
-      gt.view(sLhs[0], sLhs[1], sLhs[2], _all, p) =
-        gt.view(sRhs[0], sRhs[1], sRhs[2], _all, getNeighborPatch(p, dy, dz));
-      gt_rev.view(sLhs[0], sLhs[1], sLhs[2], _all, p) = gt_rev.view(
-        sRhs[0], sRhs[1], sRhs[2], _all, getNeighborPatch(p, -dy, -dz));
-    }
-  }
-}
+//       gt.view(sLhs[0], sLhs[1], sLhs[2], _all, p) =
+//         gt.view(sRhs[0], sRhs[1], sRhs[2], _all, getNeighborPatch(p, dy,
+//         dz));
+//       gt_rev.view(sLhs[0], sLhs[1], sLhs[2], _all, p) = gt_rev.view(
+//         sRhs[0], sRhs[1], sRhs[2], _all, getNeighborPatch(p, -dy, -dz));
+//     }
+//   }
+// }
 
-template <typename GT>
-auto getPaddedWithGhosts(const GT& gt, Int3 bnd)
-{
-  auto padded = getPadded(gt, bnd);
-  fillGhosts(padded, bnd);
-  return padded;
-}
+// template <typename GT>
+// auto getPaddedWithGhosts(const GT& gt, Int3 bnd)
+// {
+//   auto padded = getPadded(gt, bnd);
+//   fillGhosts(padded, bnd);
+//   return padded;
+// }
 
 // ======================================================================
 // getCoord
@@ -412,16 +413,12 @@ inline double getCoord(double crd)
 // initializeParticles
 
 void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
-                         Mfields& phi)
+                         BgkMfields& divGradPhi)
 {
   SetupParticles<Mparticles> setup_particles(*grid_ptr);
   setup_particles.centerer = Centering::Centerer(Centering::NC);
 
-  Int3 ibn{0, 2, 2}; // FIXME don't hardcode
-  auto gradPhi = getPaddedWithGhosts(Item_grad<Mfields>(phi).gt(), ibn);
-  auto divGradPhi = psc::item::div_nc(gradPhi, *grid_ptr);
-
-  writeGT(divGradPhi, *grid_ptr, "divgrad", {"divgrad"});
+  auto&& qDensity = -divGradPhi.gt();
 
   auto npt_init = [&](int kind, double crd[3], int p, Int3 idx,
                       psc_particle_npt& npt) {
@@ -441,7 +438,7 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
 
         // number density
         npt.n =
-          (-divGradPhi(idx[0], idx[1], idx[2], 0, p) - g.n_i * g.q_i) / g.q_e;
+          (qDensity(idx[0], idx[1], idx[2], 0, p) - g.n_i * g.q_i) / g.q_e;
 
         // temperature
         npt.T[0] = parsed.get_interpolated(COL_TE, rho);
@@ -467,7 +464,7 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
 // ======================================================================
 // initializePhi
 
-void initializePhi(Mfields& phi)
+void initializePhi(BgkMfields& phi)
 {
   setupScalarField(
     phi, Centering::Centerer(Centering::NC), [&](int m, double crd[3]) {
@@ -477,27 +474,31 @@ void initializePhi(Mfields& phi)
 }
 
 // ======================================================================
-// initializeE from phi
+// initializeGradPhi
 
-void initializeE(MfieldsState& mflds, Mfields& phi)
+void initializeGradPhi(BgkMfields& phi, BgkMfields& gradPhi)
 {
-  auto ibn = mflds.ibn();
+  auto&& grad = psc::item::grad_ec(phi.gt(), phi.grid());
+  view_interior(gradPhi.storage(), phi.ibn()) = grad;
 
-  auto grad_item = Item_grad<Mfields>(phi);
-  auto&& grad = getPadded(grad_item.gt(), ibn);
-  fillGhosts(grad, ibn);
+  writeGT(grad, phi.grid(), "grad_phi", {"gradx", "grady", "gradz"});
+}
 
-  // write results so they can be checked
-  writeGT(view_interior(grad, ibn), grad_item.grid(), grad_item.name(),
-          grad_item.comp_names());
+// ======================================================================
+// initializeDivGradPhi
 
-  mflds.storage().view(_all, _all, _all, _s(EX, EX + 3)) = -grad;
+void initializeDivGradPhi(BgkMfields& gradPhi, BgkMfields& divGradPhi)
+{
+  auto&& divGrad = psc::item::div_nc(gradPhi.gt(), gradPhi.grid());
+  view_interior(divGradPhi.storage(), gradPhi.ibn()) = divGrad;
+
+  writeGT(divGrad, gradPhi.grid(), "div_grad_phi", {"divgrad"});
 }
 
 // ======================================================================
 // initializeFields
 
-void initializeFields(MfieldsState& mflds)
+void initializeFields(MfieldsState& mflds, BgkMfields& gradPhi)
 {
   setupFields(mflds, [&](int m, double crd[3]) {
     switch (m) {
@@ -505,6 +506,8 @@ void initializeFields(MfieldsState& mflds)
       default: return 0.;
     }
   });
+
+  mflds.storage().view(_all, _all, _all, _s(EX, EX + 3)) = -gradPhi.gt();
 }
 
 // ======================================================================
@@ -530,7 +533,9 @@ static void run()
   auto& grid = *grid_ptr;
   MfieldsState mflds{grid};
   Mparticles mprts{grid};
-  Mfields phi{grid, 1, mflds.ibn()};
+  BgkMfields phi{grid, 1, mflds.ibn()};
+  BgkMfields gradPhi{grid, 3, mflds.ibn()};
+  BgkMfields divGradPhi{grid, 1, mflds.ibn()};
 
   // ----------------------------------------------------------------------
   // Set up various objects needed to run this case
@@ -590,9 +595,10 @@ static void run()
 
   if (read_checkpoint_filename.empty()) {
     initializePhi(phi);
-    initializeParticles(balance, grid_ptr, mprts, phi);
-    initializeFields(mflds);
-    initializeE(mflds, phi);
+    initializeGradPhi(phi, gradPhi);
+    initializeDivGradPhi(gradPhi, divGradPhi);
+    initializeParticles(balance, grid_ptr, mprts, divGradPhi);
+    initializeFields(mflds, gradPhi);
   } else {
     read_checkpoint(read_checkpoint_filename, *grid_ptr, mprts, mflds);
   }
