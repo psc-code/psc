@@ -13,6 +13,8 @@
 #include <fstream>
 #include <sstream>
 
+#include <iomanip>
+
 // ======================================================================
 // PSC configuration
 //
@@ -30,7 +32,7 @@ using PscConfig = PscConfig1vbecSingle<Dim>;
 
 // ----------------------------------------------------------------------
 
-using PhiField = PscConfig::Mfields;
+using Mfields = PscConfig::Mfields;
 using MfieldsState = PscConfig::MfieldsState;
 using Mparticles = PscConfig::Mparticles;
 using Balance = PscConfig::Balance;
@@ -235,9 +237,9 @@ void setupParameters()
 
   g.m_e = 1;
 
-  g.n_grid = 16;
+  g.n_grid = 128;
 
-  g.n_patches = 2;
+  g.n_patches = std::max(g.n_grid / 16, 16);
 
   g.reverse_v = true;
 }
@@ -318,7 +320,7 @@ auto getPadded(const GT& gt, Int3 paddings)
     shape[i] += paddings[i] * 2;
 
   auto padded =
-    gt::empty<gt::expr_value_type<GT>, gt::expr_space_type<GT>>(shape);
+    gt::full<gt::expr_value_type<GT>, gt::expr_space_type<GT>>(shape, 0);
 
   view_interior(padded, paddings) = gt;
 
@@ -336,7 +338,8 @@ void printGT(const GT& gt)
     std::cout << "===== " << p << " =====\n";
     for (int j = 0; j < shape[1]; ++j) {
       for (int k = 0; k < shape[2]; ++k) {
-        std::cout << gt(0, j, k, 0, p) << '\t';
+        std::cout << std::setprecision(0) << std::scientific
+                  << gt(0, j, k, 1, p) << '\t';
       }
       std::cout << "\n";
     }
@@ -357,16 +360,15 @@ int getNeighborPatch(int p, int dy, int dz)
 }
 
 template <typename GT>
-auto& fillGhosts(GT&& gt, Int3 bnd)
+void fillGhosts(GT&& gt, Int3 bnd)
 {
   auto shape = gt.shape();
 
   auto rev = _s(_, _, -1);
   auto&& gt_rev = gt.view(rev, rev, rev);
 
-  for (int p = 0; p < shape[4]; ++p) {
-
-    for (int a = 0; a < 3; ++a) {
+  for (int a = 0; a < 3; ++a) {
+    for (int p = 0; p < shape[4]; ++p) {
       gt::gslice sLhs[] = {_all, _all, _all};
       gt::gslice sRhs[] = {_all, _all, _all};
 
@@ -384,8 +386,14 @@ auto& fillGhosts(GT&& gt, Int3 bnd)
         sRhs[0], sRhs[1], sRhs[2], _all, getNeighborPatch(p, -dy, -dz));
     }
   }
+}
 
-  return gt;
+template <typename GT>
+auto getPaddedWithGhosts(const GT& gt, Int3 bnd)
+{
+  auto padded = getPadded(gt, bnd);
+  fillGhosts(padded, bnd);
+  return padded;
 }
 
 // ======================================================================
@@ -404,14 +412,13 @@ inline double getCoord(double crd)
 // initializeParticles
 
 void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
-                         PhiField& phi)
+                         Mfields& phi)
 {
   SetupParticles<Mparticles> setup_particles(*grid_ptr);
   setup_particles.centerer = Centering::Centerer(Centering::NC);
 
-  Int3 ibn{0, 2, 2};
-  auto gradPhi = getPadded(Item_grad<PhiField>(phi).gt(), ibn);
-  fillGhosts(gradPhi, ibn);
+  Int3 ibn{0, 2, 2}; // FIXME don't hardcode
+  auto gradPhi = getPaddedWithGhosts(Item_grad<Mfields>(phi).gt(), ibn);
   auto divGradPhi = psc::item::div_nc(gradPhi, *grid_ptr);
 
   writeGT(divGradPhi, *grid_ptr, "divgrad", {"divgrad"});
@@ -460,7 +467,7 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
 // ======================================================================
 // initializePhi
 
-void initializePhi(PhiField& phi)
+void initializePhi(Mfields& phi)
 {
   setupScalarField(
     phi, Centering::Centerer(Centering::NC), [&](int m, double crd[3]) {
@@ -472,16 +479,19 @@ void initializePhi(PhiField& phi)
 // ======================================================================
 // initializeE from phi
 
-void initializeE(MfieldsState& mflds, PhiField& phi)
+void initializeE(MfieldsState& mflds, Mfields& phi)
 {
-  auto grad_item = Item_grad<PhiField>(phi);
-  auto&& grad = grad_item.gt();
+  auto ibn = mflds.ibn();
+
+  auto grad_item = Item_grad<Mfields>(phi);
+  auto&& grad = getPadded(grad_item.gt(), ibn);
+  fillGhosts(grad, ibn);
 
   // write results so they can be checked
-  writeGT(grad, grad_item.grid(), grad_item.name(), grad_item.comp_names());
+  writeGT(view_interior(grad, ibn), grad_item.grid(), grad_item.name(),
+          grad_item.comp_names());
 
-  view_interior(mflds.storage(), mflds.ibn())
-    .view(_all, _all, _all, _s(EX, EX + 3)) = -grad;
+  mflds.storage().view(_all, _all, _all, _s(EX, EX + 3)) = -grad;
 }
 
 // ======================================================================
@@ -520,7 +530,7 @@ static void run()
   auto& grid = *grid_ptr;
   MfieldsState mflds{grid};
   Mparticles mprts{grid};
-  PhiField phi{grid, 1, mflds.ibn()};
+  Mfields phi{grid, 1, mflds.ibn()};
 
   // ----------------------------------------------------------------------
   // Set up various objects needed to run this case
