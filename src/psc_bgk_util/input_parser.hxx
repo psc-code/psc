@@ -37,8 +37,9 @@ public:
   // ctor
   // Parses all the data
 
-  Parsed(const std::string file_path, int indep_col, int lines_to_skip)
-    : indep_col(indep_col)
+  Parsed(int indep_col) : indep_col(indep_col) {}
+
+  void loadData(const std::string file_path, int lines_to_skip)
   {
     std::ifstream file(file_path);
 

@@ -14,6 +14,7 @@ m_e 1
 q_e -1
 
 # Do touch
+path_to_data ../../input/bgk-input-1-phi.txt
 H_x .1
 
 n_grid 128

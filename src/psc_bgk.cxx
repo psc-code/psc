@@ -54,7 +54,7 @@ enum DATA_COL
 
 namespace
 {
-Parsed<4401, n_cols> parsed("../../input/bgk-input-1-phi.txt", COL_RHO, 1);
+Parsed<4401, n_cols> parsed(COL_RHO);
 
 std::string read_checkpoint_filename;
 
@@ -73,6 +73,7 @@ void setupParameters()
 {
   ParsedParams parsedParams("../../src/psc_bgk_params.txt");
   g.loadParams(parsedParams);
+  parsed.loadData(parsedParams.get<std::string>("path_to_data"), 1);
 
   psc_params.nmax = parsedParams.get<int>("nmax");
   psc_params.stats_every = parsedParams.get<int>("stats_every");
