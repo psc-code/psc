@@ -7,11 +7,7 @@
 #include "OutputFieldsDefault.h"
 #include "psc_config.hxx"
 
-// for parsing
-#include <iostream>
-#include <string>
-#include <fstream>
-#include <sstream>
+#include "psc_bgk_util/input_parser.hxx"
 
 // ======================================================================
 // PSC configuration
@@ -39,9 +35,7 @@ using Checks = PscConfig::Checks;
 using Marder = PscConfig::Marder;
 using OutputParticles = PscConfig::OutputParticles;
 
-// ======================================================================
-// Parsed
-
+// for parser
 enum DATA_COL
 {
   COL_RHO,
@@ -51,91 +45,6 @@ enum DATA_COL
   COL_E_RHO,
   COL_PHI,
   n_cols
-};
-
-class Parsed
-{
-private:
-  static const int n_rows = 4401;
-  static constexpr auto file_path = "../../input/bgk-input-1-phi.txt";
-
-  // the data parsed from file_path
-  double data[n_rows][n_cols];
-  // step size between first and second entries of rho (and presumably between
-  // all consecutive entries)
-  double rho_step;
-
-  // gets index of row containing greatest lower bound of given rho
-  int get_row(double rho)
-  {
-    // initial guess; should be precise assuming rho is linearly spaced
-    int row = std::max(int(rho / rho_step), n_rows - 1);
-    while (rho < data[row][COL_RHO])
-      row--;
-    return row;
-  }
-
-public:
-  Parsed()
-  {
-    std::ifstream file(file_path);
-
-    // skip first line
-    file.ignore(256, '\n');
-
-    // iterate over each line
-    int row = 0;
-    std::string line;
-
-    while (std::getline(file, line)) {
-      assert(row < n_rows);
-
-      // iterate over each entry within a line
-      std::istringstream iss(line);
-      std::string result;
-      int col = 0;
-
-      while (std::getline(iss, result, '\t')) {
-        assert(col < n_cols);
-
-        // write entry to data
-        data[row][col] = stod(result);
-        col++;
-      }
-      assert(col == n_cols);
-      row++;
-    }
-    assert(row == n_rows);
-    file.close();
-
-    // initialize other values
-    rho_step = data[1][COL_RHO] - data[0][COL_RHO];
-  }
-
-  // calculates and returns an interpolated value (specified by col) at
-  // corresponding rho
-  double get_interpolated(DATA_COL col, double rho)
-  {
-    // ensure we are in bounds
-    assert(rho >= data[0][COL_RHO]);
-
-    assert(rho <= data[n_rows - 1][COL_RHO]);
-
-    int row = get_row(rho);
-
-    // check if we can return an exact value
-
-    if (data[row][COL_RHO] == rho)
-      return data[row][col];
-
-    // otherwise, return linear interpolation
-
-    // weights
-    double w1 = data[row + 1][COL_RHO] - rho;
-    double w2 = rho - data[row][COL_RHO];
-
-    return (w1 * data[row][col] + w2 * data[row + 1][col]) / (w1 + w2);
-  }
 };
 
 // ======================================================================
@@ -183,7 +92,7 @@ struct PscBgkParams
 namespace
 {
 
-Parsed parsed;
+Parsed<4401, n_cols> parsed("../../input/bgk-input-1-phi.txt", COL_RHO, 1);
 
 // parameters specific to this case
 PscBgkParams g;
@@ -230,7 +139,7 @@ void setupParameters()
 
   g.m_e = 1;
 
-  g.n_grid = 16;
+  g.n_grid = 128;
 
   g.n_patches = std::max(g.n_grid / 16, 2);
 
