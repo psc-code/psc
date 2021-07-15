@@ -7,7 +7,9 @@
 #include "OutputFieldsDefault.h"
 #include "psc_config.hxx"
 
+#include "psc_bgk_util/bgk_params.hxx"
 #include "psc_bgk_util/input_parser.hxx"
+#include "psc_bgk_util/params_parser.hxx"
 
 // ======================================================================
 // PSC configuration
@@ -48,59 +50,18 @@ enum DATA_COL
 };
 
 // ======================================================================
-// PscBgkParams
-
-struct PscBgkParams
-{
-  // physical length of region along y and z
-  double box_size;
-
-  // strength of transverse magnetic field
-  double Hx;
-
-  // ion charge
-  double q_i;
-
-  // ion number density
-  double n_i;
-
-  // ion mass
-  double m_i;
-
-  // electron charge
-  double q_e;
-
-  // electron mass
-  double m_e;
-
-  // number of grid cells
-  int n_grid;
-
-  // number of patches
-  int n_patches;
-
-  // whether or not to negate v (affects stability)
-  bool reverse_v;
-
-  // whether or not to negate v for y<0 (should destroy stability)
-  bool reverse_v_half;
-};
-
-// ======================================================================
 // Global parameters
 
 namespace
 {
-
 Parsed<4401, n_cols> parsed("../../input/bgk-input-1-phi.txt", COL_RHO, 1);
-
-// parameters specific to this case
-PscBgkParams g;
 
 std::string read_checkpoint_filename;
 
-// This is a set of generic PSC params (see include/psc.hxx),
-// like number of steps to run, etc, which also should be set by the case
+// Parameters specific to BGK simulation
+PscBgkParams g;
+
+// General PSC parameters (see include/psc.hxx),
 PscParams psc_params;
 
 } // namespace
@@ -110,9 +71,11 @@ PscParams psc_params;
 
 void setupParameters()
 {
-  // -- set some generic PSC parameters
-  psc_params.nmax = 5000; // 32000;
-  psc_params.stats_every = 100;
+  ParsedParams parsedParams("../../src/psc_bgk_params.txt");
+  g.loadParams(parsedParams);
+
+  psc_params.nmax = parsedParams.get<int>("nmax");
+  psc_params.stats_every = parsedParams.get<int>("stats_every");
 
   // -- start from checkpoint:
   //
@@ -123,29 +86,6 @@ void setupParameters()
   // on the command line, rather than requiring recompilation when change.
 
   // read_checkpoint_filename = "checkpoint_500.bp";
-
-  // -- Set some parameters specific to this case
-  g.box_size = .03;
-
-  g.Hx = .1;
-
-  g.n_i = 1;
-
-  g.q_i = 1;
-
-  g.q_e = -1;
-
-  g.m_i = 1e9;
-
-  g.m_e = 1;
-
-  g.n_grid = 128;
-
-  g.n_patches = std::max(g.n_grid / 16, 2);
-
-  g.reverse_v = false;
-
-  g.reverse_v_half = false;
 }
 
 // ======================================================================
