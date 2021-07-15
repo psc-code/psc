@@ -71,7 +71,8 @@ PscParams psc_params;
 
 void setupParameters()
 {
-  ParsedParams parsedParams("../../src/psc_bgk_params.txt");
+  std::string path_to_params = "../../src/psc_bgk_params.txt";
+  ParsedParams parsedParams(path_to_params);
   g.loadParams(parsedParams);
   parsed.loadData(parsedParams.get<std::string>("path_to_data"), 1);
 
@@ -87,6 +88,10 @@ void setupParameters()
   // on the command line, rather than requiring recompilation when change.
 
   // read_checkpoint_filename = "checkpoint_500.bp";
+
+  std::ifstream src(path_to_params, std::ios::binary);
+  std::ofstream dst("psc_bgk_params_record.txt", std::ios::binary);
+  dst << src.rdbuf();
 }
 
 // ======================================================================
