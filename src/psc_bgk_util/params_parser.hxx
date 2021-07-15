@@ -6,6 +6,11 @@
 #include <fstream>
 #include <sstream>
 
+// ======================================================================
+// ParsedParams
+// A simple parser intended for reading run parameters from a file, rather than
+// hard-coding them. See psc_bgk_params.txt for an example.
+
 class ParsedParams
 {
 private:
@@ -21,8 +26,10 @@ public:
       // parse first two words within line
       std::istringstream iss(line);
       std::string paramName, paramVal;
-      std::getline(iss, paramName, ' ');
-      std::getline(iss, paramVal, ' ');
+      if (!std::getline(iss, paramName, ' '))
+        continue;
+      if (!std::getline(iss, paramVal, ' '))
+        continue;
 
       params[paramName] = paramVal;
     }

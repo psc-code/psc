@@ -1,0 +1,27 @@
+// Pretty much anything can go here. The first word on each line is a parameter name, and the second word is the parameter value.
+// Words are separated by SPACES. Any words after the first two of a line are ignored, as are any lines with <2 words.
+// Duplicate parameter names are overridden.
+// For example, "//" will be parsed as a parameter and will have value "For".
+
+# Don't touch
+box_size .03
+
+m_i 1e9
+q_i 1
+n_i 1
+
+m_e 1
+q_e -1
+
+# Do touch
+H_x .1
+
+n_grid 128
+n_patches 16
+
+reverse_v false
+reverse_v_half false
+
+# Also touch (for PscParams)
+nmax 5000
+stats_every 100
