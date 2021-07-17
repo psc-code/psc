@@ -48,17 +48,15 @@ public:
 
     // iterate over each line
     int row = 0;
-    std::string line;
 
-    while (std::getline(file, line)) {
+    for (std::string line; std::getline(file, line);) {
       assert(row < n_rows);
 
       // iterate over each entry within a line
       std::istringstream iss(line);
-      std::string result;
       int col = 0;
 
-      while (std::getline(iss, result, '\t')) {
+      for (std::string result; iss >> result;) {
         assert(col < n_cols);
 
         // write entry to data

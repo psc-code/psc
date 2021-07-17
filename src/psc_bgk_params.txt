@@ -1,5 +1,5 @@
 // Pretty much anything can go here. The first word on each line is a parameter name, and the second word is the parameter value.
-// Words are separated by SPACES. Any words after the first two of a line are ignored, as are any lines with <2 words.
+// Words are separated by whitespace. Any words after the first two of a line are ignored, as are any lines with <2 words.
 // Duplicate parameter names are overridden.
 // For example, "//" will be parsed as a parameter and will have value "For".
 
@@ -14,11 +14,12 @@ m_e 1
 q_e -1
 
 # Do touch
-path_to_data /mnt/lustre/IAM851/jm1667/psc/input/bgk-input-1-phi.txt
+path_to_data /Users/james/Code/cpp/PSC/psc/inputs/case1-B=1-input.txt
 H_x 1
 
-n_grid 1024
-n_patches 64
+n_grid 16
+n_patches -1 (nonpositive values signal to use n_cells_per_patch instead)
+n_cells_per_patch 16
 
 reverse_v false
 reverse_v_half false

@@ -39,8 +39,10 @@ struct PscBgkParams
     m_i = parsedParams.get<double>("m_i");
     q_e = parsedParams.get<double>("q_e");
     m_e = parsedParams.get<double>("m_e");
-    n_grid = parsedParams.get<double>("n_grid");
-    n_patches = parsedParams.get<double>("n_patches");
+    n_grid = parsedParams.get<int>("n_grid");
+    n_patches = parsedParams.get<int>("n_patches");
+    if (n_patches <= 0)
+      n_patches = n_grid / parsedParams.get<int>("n_cells_per_patch");
     reverse_v = parsedParams.get<bool>("reverse_v");
     reverse_v_half = parsedParams.get<bool>("reverse_v_half");
   }

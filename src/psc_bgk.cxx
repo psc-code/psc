@@ -54,7 +54,7 @@ enum DATA_COL
 
 namespace
 {
-Parsed<4401, n_cols> parsed(COL_RHO);
+Parsed<10001, n_cols> parsed(COL_RHO);
 
 std::string read_checkpoint_filename;
 
@@ -73,7 +73,7 @@ void setupParameters()
 {
   // CHANGE ME
   std::string path_to_params =
-    "/mnt/lustre/IAM851/jm1667/psc-runs/psc_bgk_params.txt";
+    "/Users/james/Code/cpp/PSC/psc/src/psc_bgk_params.txt";
   ParsedParams parsedParams(path_to_params);
   g.loadParams(parsedParams);
   parsed.loadData(parsedParams.get<std::string>("path_to_data"), 1);

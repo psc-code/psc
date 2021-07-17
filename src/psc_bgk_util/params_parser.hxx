@@ -28,12 +28,8 @@ public:
         // parse first two words within line
         std::istringstream iss(line);
         std::string paramName, paramVal;
-        if (!std::getline(iss, paramName, ' '))
-          continue;
-        if (!std::getline(iss, paramVal, ' '))
-          continue;
-
-        params[paramName] = paramVal;
+        if (iss >> paramName >> paramVal)
+          params[paramName] = paramVal;
       }
 
       ifs.close();
