@@ -40,10 +40,15 @@ struct Grid_
     real_t x_nc(int i) const { return xb[0] + i * dx_[0]; }
     real_t y_nc(int j) const { return xb[1] + j * dx_[1]; }
     real_t z_nc(int k) const { return xb[2] + k * dx_[2]; }
+    real_t get_nc(int i, int axis) const { return xb[axis] + i * dx_[axis]; }
 
     real_t x_cc(int i) const { return xb[0] + (i + .5f) * dx_[0]; }
     real_t y_cc(int j) const { return xb[1] + (j + .5f) * dx_[1]; }
     real_t z_cc(int k) const { return xb[2] + (k + .5f) * dx_[2]; }
+    real_t get_cc(int i, int axis) const
+    {
+      return xb[axis] + (i + .5f) * dx_[axis];
+    }
 
     Int3 off;
     Real3 xb;

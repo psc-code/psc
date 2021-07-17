@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "centering.hxx"
+
 struct psc_particle_npt
 {
   int kind;    ///< particle kind
@@ -13,6 +15,11 @@ struct psc_particle_npt
 // ======================================================================
 // SetupParticles
 
+namespace
+{
+const Centering::Centerer defaultCenterer(Centering::CC);
+}
+
 template <typename MP>
 struct SetupParticles
 {
@@ -20,7 +27,10 @@ struct SetupParticles
   using real_t = typename MP::real_t;
 
   SetupParticles(const Grid_t& grid, int n_populations = 0)
-    : kinds_{grid.kinds}, norm_{grid.norm}, n_populations_{n_populations}
+    : kinds_{grid.kinds},
+      norm_{grid.norm},
+      n_populations_{n_populations},
+      centerer(defaultCenterer)
   {
     if (n_populations_ == 0) {
       n_populations_ = kinds_.size();
@@ -47,6 +57,57 @@ struct SetupParticles
       return n_prts;
     }
     return npt.n / norm_.cori + .5;
+  }
+
+  // ----------------------------------------------------------------------
+  // op_cellwise
+  // Performs a given operation in each cell.
+  // init_npt signature: (int kind, Double3 pos, int p, Int3 index, npt) -> void
+  // op signature: (int n_in_cell, npt, Double3 pos) -> void
+
+  template <typename InitFunc, typename OpFunc>
+  void op_cellwise(const Grid_t& grid, int patch, InitFunc&& init_npt,
+                   OpFunc&& op)
+  {
+    Int3 ilo = Int3{}, ihi = grid.ldims;
+
+    for (int jz = ilo[2]; jz < ihi[2]; jz++) {
+      for (int jy = ilo[1]; jy < ihi[1]; jy++) {
+        for (int jx = ilo[0]; jx < ihi[0]; jx++) {
+          Int3 index{jx, jy, jz};
+
+          Double3 pos = centerer.getPos(grid.patches[patch], index);
+          // FIXME, the issue really is that (2nd order) particle pushers
+          // don't handle the invariant dim right
+          for (int a = 0; a < 3; ++a) {
+            if (grid.isInvar(a) == 1) {
+              pos[a] = grid.patches[patch].get_nc(index[a], a);
+            }
+          }
+
+          int n_q_in_cell = 0;
+          for (int pop = 0; pop < n_populations_; pop++) {
+            psc_particle_npt npt{};
+            if (pop < kinds_.size()) {
+              npt.kind = pop;
+            }
+            init_npt(pop, pos, patch, index, npt);
+
+            int n_in_cell;
+            if (pop != neutralizing_population) {
+              n_in_cell = get_n_in_cell(npt);
+              n_q_in_cell += kinds_[npt.kind].q * n_in_cell;
+            } else {
+              // FIXME, should handle the case where not the last population
+              // is neutralizing
+              assert(neutralizing_population == n_populations_ - 1);
+              n_in_cell = -n_q_in_cell / kinds_[npt.kind].q;
+            }
+            op(n_in_cell, npt, pos);
+          }
+        }
+      }
+    }
   }
 
   // ----------------------------------------------------------------------
@@ -96,6 +157,7 @@ struct SetupParticles
 
   // ----------------------------------------------------------------------
   // setup_particles
+  // init_npt signature: (int kind, Double3 pos, npt) -> void
 
   template <typename FUNC>
   void operator()(Mparticles& mprts, FUNC&& init_npt)
@@ -107,6 +169,7 @@ struct SetupParticles
 
   // ----------------------------------------------------------------------
   // setupParticles
+  // init_npt signature: (int kind, Double3 pos, int p, Int3 index, npt) -> void
 
   template <typename FUNC>
   void setupParticles(Mparticles& mprts, FUNC&& init_npt)
@@ -124,55 +187,21 @@ struct SetupParticles
     auto inj = mprts.injector();
 
     for (int p = 0; p < mprts.n_patches(); ++p) {
-      auto ldims = grid.ldims;
       auto injector = inj[p];
 
-      for (int jz = 0; jz < ldims[2]; jz++) {
-        for (int jy = 0; jy < ldims[1]; jy++) {
-          for (int jx = 0; jx < ldims[0]; jx++) {
-            Double3 pos = {grid.patches[p].x_cc(jx), grid.patches[p].y_cc(jy),
-                           grid.patches[p].z_cc(jz)};
-            // FIXME, the issue really is that (2nd order) particle pushers
-            // don't handle the invariant dim right
-            if (grid.isInvar(0) == 1)
-              pos[0] = grid.patches[p].x_nc(jx);
-            if (grid.isInvar(1) == 1)
-              pos[1] = grid.patches[p].y_nc(jy);
-            if (grid.isInvar(2) == 1)
-              pos[2] = grid.patches[p].z_nc(jz);
-
-            int n_q_in_cell = 0;
-            for (int pop = 0; pop < n_populations_; pop++) {
-              psc_particle_npt npt{};
-              if (pop < kinds_.size()) {
-                npt.kind = pop;
-              }
-              init_npt(pop, pos, p, {jx, jy, jz}, npt);
-
-              int n_in_cell;
-              if (pop != neutralizing_population) {
-                n_in_cell = get_n_in_cell(npt);
-                n_q_in_cell += kinds_[npt.kind].q * n_in_cell;
-              } else {
-                // FIXME, should handle the case where not the last population
-                // is neutralizing
-                assert(neutralizing_population == n_populations_ - 1);
-                n_in_cell = -n_q_in_cell / kinds_[npt.kind].q;
-              }
-              for (int cnt = 0; cnt < n_in_cell; cnt++) {
-                real_t wni;
-                if (fractional_n_particles_per_cell) {
-                  wni = 1.;
-                } else {
-                  wni = npt.n / (n_in_cell * norm_.cori);
-                }
-                auto prt = setupParticle(npt, pos, wni);
-                injector(prt);
-              }
-            }
-          }
-        }
-      }
+      op_cellwise(grid, p, std::forward<FUNC>(init_npt),
+                  [&](int n_in_cell, psc_particle_npt& npt, Double3& pos) {
+                    for (int cnt = 0; cnt < n_in_cell; cnt++) {
+                      real_t wni;
+                      if (fractional_n_particles_per_cell) {
+                        wni = 1.;
+                      } else {
+                        wni = npt.n / (n_in_cell * norm_.cori);
+                      }
+                      auto prt = setupParticle(npt, pos, wni);
+                      injector(prt);
+                    }
+                  });
     }
 
     prof_stop(pr);
@@ -180,52 +209,31 @@ struct SetupParticles
 
   // ----------------------------------------------------------------------
   // partition
+  // init_npt signature: (int kind, Double3 pos, npt) -> void
 
   template <typename FUNC>
   std::vector<uint> partition(const Grid_t& grid, FUNC&& init_npt)
   {
+    return partition_general_init(
+      grid, [&](int kind, Double3 pos, int, Int3, psc_particle_npt& npt) {
+        init_npt(kind, pos, npt);
+      });
+  }
+
+  // ----------------------------------------------------------------------
+  // partition_general_init
+  // init_npt signature: (int kind, Double3 pos, int p, Int3 index, npt) -> void
+
+  template <typename FUNC>
+  std::vector<uint> partition_general_init(const Grid_t& grid, FUNC&& init_npt)
+  {
     std::vector<uint> n_prts_by_patch(grid.n_patches());
 
     for (int p = 0; p < grid.n_patches(); ++p) {
-      auto ilo = Int3{}, ihi = grid.ldims;
-
-      for (int jz = ilo[2]; jz < ihi[2]; jz++) {
-        for (int jy = ilo[1]; jy < ihi[1]; jy++) {
-          for (int jx = ilo[0]; jx < ihi[0]; jx++) {
-            Double3 pos = {grid.patches[p].x_cc(jx), grid.patches[p].y_cc(jy),
-                           grid.patches[p].z_cc(jz)};
-            // FIXME, the issue really is that (2nd order) particle pushers
-            // don't handle the invariant dim right
-            if (grid.isInvar(0) == 1)
-              pos[0] = grid.patches[p].x_nc(jx);
-            if (grid.isInvar(1) == 1)
-              pos[1] = grid.patches[p].y_nc(jy);
-            if (grid.isInvar(2) == 1)
-              pos[2] = grid.patches[p].z_nc(jz);
-
-            int n_q_in_cell = 0;
-            for (int pop = 0; pop < n_populations_; pop++) {
-              psc_particle_npt npt{};
-              if (pop < kinds_.size()) {
-                npt.kind = pop;
-              };
-              init_npt(pop, pos, npt);
-
-              int n_in_cell;
-              if (pop != neutralizing_population) {
-                n_in_cell = get_n_in_cell(npt);
-                n_q_in_cell += kinds_[npt.kind].q * n_in_cell;
-              } else {
-                // FIXME, should handle the case where not the last population
-                // is neutralizing
-                assert(neutralizing_population == n_populations_ - 1);
-                n_in_cell = -n_q_in_cell / kinds_[npt.kind].q;
-              }
-              n_prts_by_patch[p] += n_in_cell;
-            }
-          }
-        }
-      }
+      op_cellwise(grid, p, std::forward<FUNC>(init_npt),
+                  [&](int n_in_cell, psc_particle_npt&, Double3&) {
+                    n_prts_by_patch[p] += n_in_cell;
+                  });
     }
 
     return n_prts_by_patch;
@@ -236,6 +244,8 @@ struct SetupParticles
   int neutralizing_population = {-1};
   bool fractional_n_particles_per_cell = {false};
   bool initial_momentum_gamma_correction = {false};
+
+  Centering::Centerer centerer;
 
 private:
   const Grid_t::Kinds kinds_;
