@@ -73,7 +73,7 @@ void setupParameters()
 {
   // CHANGE ME
   std::string path_to_params =
-    "/mnt/lustre/IAM851/jm1667/psc/src/psc_bgk_params.txt";
+    "/mnt/lustre/IAM851/jm1667/psc-runs/psc_bgk_params.txt";
   ParsedParams parsedParams(path_to_params);
   g.loadParams(parsedParams);
   parsed.loadData(parsedParams.get<std::string>("path_to_data"), 1);
