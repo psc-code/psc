@@ -20,21 +20,27 @@ public:
   ParsedParams(const std::string file_path)
   {
     // iterate over each line
-    std::ifstream file(file_path);
-    for (std::string line; std::getline(file, line);) {
+    std::ifstream ifs(file_path);
 
-      // parse first two words within line
-      std::istringstream iss(line);
-      std::string paramName, paramVal;
-      if (!std::getline(iss, paramName, ' '))
-        continue;
-      if (!std::getline(iss, paramVal, ' '))
-        continue;
+    if (ifs.is_open()) {
+      for (std::string line; std::getline(ifs, line);) {
 
-      params[paramName] = paramVal;
+        // parse first two words within line
+        std::istringstream iss(line);
+        std::string paramName, paramVal;
+        if (!std::getline(iss, paramName, ' '))
+          continue;
+        if (!std::getline(iss, paramVal, ' '))
+          continue;
+
+        params[paramName] = paramVal;
+      }
+
+      ifs.close();
+    } else {
+      std::cout << "Failed to open params file: " << file_path << std::endl;
+      exit(EXIT_FAILURE);
     }
-
-    file.close();
   }
 
   template <typename T>

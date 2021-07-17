@@ -62,7 +62,7 @@ public:
         assert(col < n_cols);
 
         // write entry to data
-        data[row][col] = stod(result);
+        data[row][col] = std::stod(result);
         col++;
       }
       assert(col == n_cols);

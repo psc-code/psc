@@ -14,15 +14,15 @@ m_e 1
 q_e -1
 
 # Do touch
-path_to_data ../../input/bgk-input-1-phi.txt
-H_x .1
+path_to_data /mnt/lustre/IAM851/jm1667/psc/input/bgk-input-1-phi.txt
+H_x 1
 
-n_grid 128
-n_patches 16
+n_grid 1024
+n_patches 64
 
 reverse_v false
 reverse_v_half false
 
 # Also touch (for PscParams)
-nmax 5000
-stats_every 100
+nmax 100000
+stats_every 500
