@@ -69,11 +69,14 @@ PscParams psc_params;
 // ======================================================================
 // setupParameters
 
-void setupParameters()
+void setupParameters(int argc, char** argv)
 {
-  // CHANGE ME
-  std::string path_to_params =
-    "/Users/james/Code/cpp/PSC/psc/src/psc_bgk_params.txt";
+  if (argc != 2) {
+    std::cout << "Usage: " << argv[0] << " path/to/params\nExiting."
+              << std::endl;
+    exit(1);
+  }
+  std::string path_to_params(argv[1]);
   ParsedParams parsedParams(path_to_params);
   g.loadParams(parsedParams);
   parsed.loadData(parsedParams.get<std::string>("path_to_data"), 1);
@@ -311,14 +314,14 @@ void initializeFields(MfieldsState& mflds, BgkMfields& gradPhi)
 // ======================================================================
 // run
 
-static void run()
+static void run(int argc, char** argv)
 {
   mpi_printf(MPI_COMM_WORLD, "*** Setting up...\n");
 
   // ----------------------------------------------------------------------
   // setup various parameters first
 
-  setupParameters();
+  setupParameters(argc, argv);
 
   // ----------------------------------------------------------------------
   // Set up grid, state fields, particles
@@ -350,7 +353,7 @@ static void run()
   ChecksParams checks_params{};
   checks_params.gauss_every_step = 200;
   // checks_params.gauss_dump_always = true;
-  checks_params.gauss_threshold = 0;
+  checks_params.gauss_threshold = 1e-5;
 
   Checks checks{grid, MPI_COMM_WORLD, checks_params};
 
@@ -358,7 +361,7 @@ static void run()
   double marder_diffusion = 0.9;
   int marder_loop = 3;
   bool marder_dump = false;
-  psc_params.marder_interval = 1; // 5
+  psc_params.marder_interval = 5;
   Marder marder(grid, marder_diffusion, marder_loop, marder_dump);
 
   // ----------------------------------------------------------------------
@@ -412,9 +415,12 @@ static void run()
 
 int main(int argc, char** argv)
 {
-  psc_init(argc, argv);
+  // psc_init(argc, argv);
+  // FIXME restore whatever previous functionality there was with options
+  int temp = 1;
+  psc_init(temp, argv);
 
-  run();
+  run(argc, argv);
 
   psc_finalize();
   return 0;
