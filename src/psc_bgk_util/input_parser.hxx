@@ -43,6 +43,11 @@ public:
   {
     std::ifstream file(file_path);
 
+    if (!file.is_open()) {
+      std::cout << "Failed to open input file: " << file_path << std::endl;
+      exit(EXIT_FAILURE);
+    }
+
     for (int i = 0; i < lines_to_skip; i++)
       file.ignore(512, '\n');
 
