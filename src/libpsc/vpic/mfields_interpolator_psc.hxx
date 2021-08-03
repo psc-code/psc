@@ -25,7 +25,7 @@ struct MfieldsInterpolatorPsc
 
   struct Patch
   {
-    using Element = Element;
+    using Element = PscInterpolatorT;
     
     Patch(Grid* vgrid)
       : ip_{vgrid}
