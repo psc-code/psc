@@ -351,7 +351,7 @@ static void run(int argc, char** argv)
 
   // -- Checks
   ChecksParams checks_params{};
-  checks_params.gauss_every_step = 200;
+  checks_params.gauss_every_step = g.gauss_every;
   // checks_params.gauss_dump_always = true;
   checks_params.gauss_threshold = 1e-5;
 
@@ -371,8 +371,8 @@ static void run(int argc, char** argv)
 
   // -- output fields
   OutputFieldsParams outf_params{};
-  outf_params.fields.pfield_interval = 200;
-  outf_params.moments.pfield_interval = 200;
+  outf_params.fields.pfield_interval = g.fields_every;
+  outf_params.moments.pfield_interval = g.moments_every;
   OutputFields<MfieldsState, Mparticles, Dim> outf{grid, outf_params};
 
   // -- output particles

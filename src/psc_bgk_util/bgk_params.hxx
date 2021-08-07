@@ -30,6 +30,13 @@ struct PscBgkParams
   // whether or not to negate v for y<0 (should destroy stability)
   bool reverse_v_half;
 
+  // interval for pfd output
+  int fields_every;
+  // interval for pfd_moments output
+  int moments_every;
+  // interval for gauss output/checking
+  int gauss_every;
+
   void loadParams(ParsedParams parsedParams)
   {
     box_size = parsedParams.get<double>("box_size");
@@ -45,5 +52,8 @@ struct PscBgkParams
       n_patches = n_grid / parsedParams.get<int>("n_cells_per_patch");
     reverse_v = parsedParams.get<bool>("reverse_v");
     reverse_v_half = parsedParams.get<bool>("reverse_v_half");
+    fields_every = parsedParams.get<int>("fields_every");
+    moments_every = parsedParams.get<int>("moments_every");
+    gauss_every = parsedParams.get<int>("gauss_every");
   }
 };

@@ -27,3 +27,8 @@ reverse_v_half false
 # Also touch (for PscParams)
 nmax 100000
 stats_every 500
+
+# other stuff
+fields_every 200
+moments_every 200
+gauss_every 200
