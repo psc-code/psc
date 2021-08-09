@@ -47,7 +47,8 @@ public:
   {
     if (params.count(paramName) == 1)
       return get<T>(paramName);
-    std::cout << "Warning: using default value for parameter '" << paramName << "': " << deflt << std::endl;
+    std::cout << "Warning: using default value for parameter '" << paramName
+              << "': " << deflt << std::endl;
     return deflt;
   }
 };
