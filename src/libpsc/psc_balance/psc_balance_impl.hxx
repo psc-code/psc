@@ -922,6 +922,7 @@ private:
     communicate_ctx ctx(old_grid->mrc_domain(), new_grid->mrc_domain());
     prof_stop(pr_bal_ctx);
 
+    MEM_STATS();
     // copy particles to host, free on gpu
     Mparticles* p_mp_host = nullptr;
     if (mp && typeid(*mp) != typeid(Mparticles)) {
@@ -948,7 +949,7 @@ private:
 #ifdef USE_CUDA
       if (typeid(*mf) == typeid(MfieldsCuda)) {
         auto& mf_cuda = dynamic_cast<MfieldsCuda&>(*mf);
-        mprintf("MfieldsCuda #components %d\n", mf->_n_comps());
+        // mprintf("MfieldsCuda #components %d\n", mf->_n_comps());
         mfields_cuda.emplace_back(dynamic_cast<MfieldsCuda&>(*mf));
         continue;
       }
@@ -975,6 +976,7 @@ private:
     BndCuda3<MfieldsCuda>::clear();
     BndCuda3<MfieldsStateCuda>::clear();
 #endif
+    MEM_STATS();
 
     // particles
     std::vector<uint> n_prts_by_patch_new;

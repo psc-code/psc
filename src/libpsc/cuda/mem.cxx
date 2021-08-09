@@ -50,6 +50,8 @@ void mem_stats(std::string file, int line, std::ostream& of)
   of << "===== rnd        " << mem_rnd << " bytes\n";
   of << "===== alloced " << allocated << " total " << total << " unaccounted "
      << std::ptrdiff_t(allocated - total) << "\n";
+
+  mem_pool_print();
 }
 
 void mem_stats_csv_header(std::ostream& of)

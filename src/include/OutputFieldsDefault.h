@@ -71,13 +71,13 @@ public:
                    int n_comps, std::string sfx)
     : OutputFieldsItemParams{prm},
       pfield_next_{prm.pfield_first},
-      tfield_next_{prm.tfield_first},
-      tfd_{grid, n_comps, {}}
+      tfield_next_{prm.tfield_first}
   {
     if (pfield_interval > 0) {
       io_pfd_.open("pfd" + sfx, prm.data_dir);
     }
     if (tfield_interval > 0) {
+      tfd_.reset(new Mfields{grid, n_comps, {}});
       io_tfd_.open("tfd" + sfx, prm.data_dir);
     }
   }
@@ -117,7 +117,7 @@ public:
 
       if (doaccum_tfield) {
         // tfd += pfd
-        tfd_.gt() = tfd_.gt() + pfd;
+        tfd_->gt() = tfd_->gt() + pfd;
         naccum_++;
       }
 
@@ -127,15 +127,15 @@ public:
         tfield_next_ += tfield_interval;
 
         // convert accumulated values to correct temporal mean
-        tfd_.gt() = (1. / naccum_) * tfd_.gt();
+        tfd_->gt() = (1. / naccum_) * tfd_->gt();
 
         io_tfd_.begin_step(item.grid());
         io_tfd_.set_subset(item.grid(), rn, rx);
-        io_tfd_.write(tfd_.gt(), item.grid(), item.name(), item.comp_names());
+        io_tfd_.write(tfd_->gt(), item.grid(), item.name(), item.comp_names());
         io_tfd_.end_step();
         naccum_ = 0;
 
-        tfd_.gt().view() = 0;
+        tfd_->gt().view() = 0;
       }
     }
   }
@@ -145,7 +145,7 @@ private:
   int tfield_next_;
   Writer io_pfd_;
   Writer io_tfd_;
-  Mfields tfd_;
+  std::unique_ptr<Mfields> tfd_;
   int naccum_ = 0;
   bool first_time_ =
     true; // to keep track so we can skip first output on restart
