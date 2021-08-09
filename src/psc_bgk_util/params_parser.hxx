@@ -41,6 +41,15 @@ public:
 
   template <typename T>
   T get(const std::string paramName);
+
+  template <typename T>
+  T getOrDefault(const std::string paramName, T deflt)
+  {
+    if (params.count(paramName) == 1)
+      return get<T>(paramName);
+    std::cout << "Warning: using default value for parameter '" << paramName << "': " << deflt << std::endl;
+    return deflt;
+  }
 };
 
 // implementations

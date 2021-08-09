@@ -52,8 +52,9 @@ struct PscBgkParams
       n_patches = n_grid / parsedParams.get<int>("n_cells_per_patch");
     reverse_v = parsedParams.get<bool>("reverse_v");
     reverse_v_half = parsedParams.get<bool>("reverse_v_half");
-    fields_every = parsedParams.get<int>("fields_every");
-    moments_every = parsedParams.get<int>("moments_every");
-    gauss_every = parsedParams.get<int>("gauss_every");
+
+    fields_every = parsedParams.getOrDefault<int>("fields_every", 200);
+    moments_every = parsedParams.getOrDefault<int>("moments_every", 200);
+    gauss_every = parsedParams.getOrDefault<int>("gauss_every", 200);
   }
 };
