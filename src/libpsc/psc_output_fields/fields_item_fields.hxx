@@ -96,12 +96,6 @@ auto viewFromSlices(GT& gt, gt::gslice slices[], SLICES... moreSlices)
   return gt.view(slices[0], slices[1], slices[2], moreSlices...);
 }
 
-template <typename GT1, typename GT2>
-void plusEquals(GT1&& lhs, GT2&& rhs)
-{
-  lhs = lhs + rhs;
-}
-
 template <typename E>
 Int3 getBnd(const E& flds, const Grid_t& grid)
 {
@@ -143,10 +137,12 @@ static auto div_nc(const E& flds, const Grid_t& grid)
 
   for (int a = 0; a < 3; ++a) {
     if (!grid.isInvar(a)) {
-      plusEquals(res.view(_all, _all, _all, 0),
-                 (viewFromSlices(trimmed_flds, lhs, a) -
-                  viewFromSlices(trimmed_flds, rhs[a], a)) /
-                   dxyz[a]);
+      // FIXME use +=
+      res.view(_all, _all, _all, 0) =
+        res.view(_all, _all, _all, 0) +
+        (viewFromSlices(trimmed_flds, lhs, a) -
+         viewFromSlices(trimmed_flds, rhs[a], a)) /
+          dxyz[a];
     }
   }
 
@@ -279,11 +275,7 @@ public:
   Int3 ibn() const { return {}; }
   int n_patches() const { return grid().n_patches(); }
 
-  auto gt() const
-  {
-    return psc::item::grad_ec(mflds_.gt().view(_all, _all, _all, _all),
-                              mflds_.grid());
-  }
+  auto gt() const { return psc::item::grad_ec(mflds_.gt(), mflds_.grid()); }
 
 private:
   Mfields& mflds_;
