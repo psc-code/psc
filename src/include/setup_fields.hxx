@@ -2,7 +2,7 @@
 #pragma once
 
 #include "fields.hxx"
-
+#include "centering.hxx"
 #include <algorithm>
 
 // ======================================================================
@@ -31,30 +31,36 @@ struct SetupFields
         std::max({mf.ibn()[0], mf.ibn()[1], mf.ibn()[2]}); // FIXME, not pretty
       // FIXME, do we need the ghost points?
       grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
-        double x_nc = patch.x_nc(jx), y_nc = patch.y_nc(jy),
-               z_nc = patch.z_nc(jz);
-        double x_cc = patch.x_cc(jx), y_cc = patch.y_cc(jy),
-               z_cc = patch.z_cc(jz);
+        Int3 index{jx, jy, jz};
 
-        double ncc[3] = {x_nc, y_cc, z_cc};
-        double cnc[3] = {x_cc, y_nc, z_cc};
-        double ccn[3] = {x_cc, y_cc, z_nc};
+        for (int c = 0; c < 3; c++) {
+          F(HX + c, jx, jy, jz) +=
+            func(HX + c, Centering::getPos(patch, index, Centering::FC, c));
+          F(EX + c, jx, jy, jz) +=
+            func(EX + c, Centering::getPos(patch, index, Centering::EC, c));
+          F(JXI + c, jx, jy, jz) +=
+            func(JXI + c, Centering::getPos(patch, index, Centering::EC, c));
+        }
+      });
+    }
+  }
 
-        double cnn[3] = {x_cc, y_nc, z_nc};
-        double ncn[3] = {x_nc, y_cc, z_nc};
-        double nnc[3] = {x_nc, y_nc, z_cc};
+  template <typename FUNC>
+  static void runScalar(Mfields& mf, FUNC&& func,
+                        const Centering::Centerer& centerer)
+  {
+    const auto& grid = mf.grid();
+    mpi_printf(grid.comm(), "**** Setting up scalar field...\n");
 
-        F(HX, jx, jy, jz) += func(HX, ncc);
-        F(HY, jx, jy, jz) += func(HY, cnc);
-        F(HZ, jx, jy, jz) += func(HZ, ccn);
+    for (int p = 0; p < mf.n_patches(); ++p) {
+      auto& patch = grid.patches[p];
+      auto F = make_Fields3d<dim_xyz>(mf[p]);
 
-        F(EX, jx, jy, jz) += func(EX, cnn);
-        F(EY, jx, jy, jz) += func(EY, ncn);
-        F(EZ, jx, jy, jz) += func(EZ, nnc);
-
-        F(JXI, jx, jy, jz) += func(JXI, cnn);
-        F(JYI, jx, jy, jz) += func(JYI, ncn);
-        F(JZI, jx, jy, jz) += func(JZI, nnc);
+      int n_ghosts =
+        std::max({mf.ibn()[0], mf.ibn()[1], mf.ibn()[2]}); // FIXME, not pretty
+      // FIXME, do we need the ghost points?
+      grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
+        F(0, jx, jy, jz) += func(0, centerer.getPos(patch, {jx, jy, jz}));
       });
     }
   }
@@ -62,10 +68,18 @@ struct SetupFields
 
 } // namespace detail
 
+// func signature: (int component, Double3 position) -> double fieldValue
 template <typename MF, typename FUNC>
 void setupFields(MF& mflds, FUNC&& func)
 {
   detail::SetupFields<MF>::run(mflds, std::forward<FUNC>(func));
+}
+
+// func signature: (int component, Double3 position) -> double fieldValue
+template <typename MF, typename FUNC>
+void setupScalarField(MF& fld, const Centering::Centerer& centerer, FUNC&& func)
+{
+  detail::SetupFields<MF>::runScalar(fld, std::forward<FUNC>(func), centerer);
 }
 
 #ifdef USE_CUDA

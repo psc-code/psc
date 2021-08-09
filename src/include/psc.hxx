@@ -5,6 +5,7 @@
 #include <DiagEnergies.h>
 
 #include <particles.hxx>
+#include <setup_particles.hxx>
 
 #include "../libpsc/vpic/fields_item_vpic.hxx"
 #include <checks.hxx>
@@ -777,6 +778,8 @@ Psc<PscConfig, Diagnostics, InjectParticles> makePscIntegrator(
 
 // ======================================================================
 // partitionAndSetupParticles
+// convenience/backward compatibility method to allow simpler function signature
+// init_npt signature: (int kind, Double3 pos, npt) -> void
 
 template <typename SetupParticles, typename Balance, typename Mparticles,
           typename FUNC>
@@ -784,12 +787,30 @@ void partitionAndSetupParticles(SetupParticles& setup_particles,
                                 Balance& balance, Grid_t*& grid_ptr,
                                 Mparticles& mprts, FUNC&& init_npt)
 {
-  auto comm = grid_ptr->comm();
+  auto init_npt_general = [&](int kind, Double3 pos, int, Int3,
+                              psc_particle_npt& npt) {
+    init_npt(kind, pos, npt);
+  };
+  partitionParticlesGeneralInit(setup_particles, balance, grid_ptr, mprts,
+                                init_npt_general);
+  setupParticlesGeneralInit(setup_particles, mprts, init_npt_general);
+}
 
-  // --- partition particles and initial balancing
+// ----------------------------------------------------------------------
+// partitionParticlesGeneralInit
+// init_npt signature: (int kind, Double3 pos, int p, Int3 index, npt) -> void
+
+template <typename SetupParticles, typename Balance, typename Mparticles,
+          typename FUNC>
+void partitionParticlesGeneralInit(SetupParticles& setup_particles,
+                                   Balance& balance, Grid_t*& grid_ptr,
+                                   Mparticles& mprts, FUNC&& init_npt)
+{
+  auto comm = grid_ptr->comm();
   mpi_printf(comm, "**** Partitioning...\n");
 
-  auto n_prts_by_patch = setup_particles.partition(*grid_ptr, init_npt);
+  auto n_prts_by_patch =
+    setup_particles.partition_general_init(*grid_ptr, init_npt);
 
   balance.initial(grid_ptr, n_prts_by_patch);
   // !!! FIXME! grid is now invalid
@@ -797,10 +818,18 @@ void partitionAndSetupParticles(SetupParticles& setup_particles,
   // doing this does't even have the particle data structure created yet --
   // FIXME?
   mprts.reset(*grid_ptr);
+}
 
-  // -- set up particles
+// ----------------------------------------------------------------------
+// setupParticlesGeneralInit
+// init_npt signature: (int kind, Double3 pos, int p, Int3 index, npt) -> void
+
+template <typename SetupParticles, typename Mparticles, typename FUNC>
+void setupParticlesGeneralInit(SetupParticles& setup_particles,
+                               Mparticles& mprts, FUNC&& init_npt)
+{
   mpi_printf(MPI_COMM_WORLD, "**** Setting up particles...\n");
-  setup_particles(mprts, init_npt);
+  setup_particles.setupParticles(mprts, init_npt);
 }
 
 // ======================================================================
