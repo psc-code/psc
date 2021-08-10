@@ -65,9 +65,11 @@ public:
 
   ~WriterADIOS2()
   {
+#ifdef PSC_USE_IO_THREADS
     if (writer_thread_.joinable()) {
       writer_thread_.join();
     }
+#endif
   }
 
   void open(const std::string& pfx, const std::string& dir = ".")
