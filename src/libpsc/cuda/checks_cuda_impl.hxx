@@ -5,6 +5,18 @@
 
 #include "fields_item_moments_1st_cuda.hxx"
 
+#ifdef PSC_HAVE_ADIOS2
+
+#include "writer_adios2.hxx"
+using WriterDefault = WriterADIOS2;
+
+#else
+
+#include "writer_mrc.hxx"
+using WriterDefault = WriterMRC;
+
+#endif
+
 // FIXME!!! need to get Dim from Mparticles directly!
 
 template <typename BS>
@@ -98,7 +110,7 @@ struct ChecksCuda
     }
 
     if (continuity_dump_always || max_err >= eps) {
-      static WriterMRC writer;
+      static WriterDefault writer;
       if (!writer) {
         writer.open("continuity");
       }
@@ -107,6 +119,7 @@ struct ChecksCuda
       writer.write(d_rho, grid, "d_rho", {"d_rho"});
       writer.end_step();
     }
+    MPI_Barrier(grid.comm());
 
     assert(max_err < eps);
   }
@@ -170,7 +183,7 @@ struct ChecksCuda
     }
 
     if (gauss_dump_always || max_err >= eps) {
-      static WriterMRC writer;
+      static WriterDefault writer;
       if (!writer) {
         writer.open("gauss");
       }
@@ -180,6 +193,7 @@ struct ChecksCuda
       writer.end_step();
     }
 
+    MPI_Barrier(grid.comm());
     assert(max_err < eps);
   }
 

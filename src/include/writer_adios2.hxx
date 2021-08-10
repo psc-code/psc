@@ -16,11 +16,11 @@
 
 static std::mutex writer_mutex;
 
-void WriterThread(std::reference_wrapper<const Grid_t> grid_ref,
-                  std::reference_wrapper<kg::io::IOAdios2> io, std::string pfx,
-                  std::string dir, int step, double time,
-                  gt::gtensor<double, 5>&& h_expr, std::string name,
-                  std::vector<std::string> comp_names)
+inline void WriterThread(std::reference_wrapper<const Grid_t> grid_ref,
+                         std::reference_wrapper<kg::io::IOAdios2> io,
+                         std::string pfx, std::string dir, int step,
+                         double time, gt::gtensor<double, 5>&& h_expr,
+                         std::string name, std::vector<std::string> comp_names)
 {
   static int pr;
   if (!pr) {
