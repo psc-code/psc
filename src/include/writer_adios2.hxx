@@ -7,7 +7,7 @@
 
 #include <cstdio>
 
-#define PSC_USE_IO_THREADS
+//#define PSC_USE_IO_THREADS
 
 #ifdef PSC_USE_IO_THREADS
 
