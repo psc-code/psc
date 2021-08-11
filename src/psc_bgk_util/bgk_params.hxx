@@ -37,6 +37,10 @@ struct PscBgkParams
   // interval for gauss output/checking
   int gauss_every;
 
+  // for boltzmann distr
+  bool do_ion;
+  double T_i;
+
   void loadParams(ParsedParams parsedParams)
   {
     box_size = parsedParams.get<double>("box_size");
@@ -56,5 +60,8 @@ struct PscBgkParams
     fields_every = parsedParams.getOrDefault<int>("fields_every", 200);
     moments_every = parsedParams.getOrDefault<int>("moments_every", 200);
     gauss_every = parsedParams.getOrDefault<int>("gauss_every", 200);
+
+    do_ion = parsedParams.getOrDefault<bool>("ion", false);
+    T_i = parsedParams.getOrDefault<double>("T_i", 0);
   }
 };
