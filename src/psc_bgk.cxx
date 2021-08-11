@@ -79,7 +79,8 @@ void setupParameters(int argc, char** argv)
   std::string path_to_params(argv[1]);
   ParsedParams parsedParams(path_to_params);
   g.loadParams(parsedParams);
-  parsedData = new Parsed(parsedParams.getOrDefault<int>("nrows", 10001), n_cols, COL_RHO);
+  parsedData =
+    new Parsed(parsedParams.getOrDefault<int>("nrows", 10001), n_cols, COL_RHO);
   parsedData->loadData(parsedParams.get<std::string>("path_to_data"), 1);
 
   psc_params.nmax = parsedParams.get<int>("nmax");
@@ -96,7 +97,7 @@ void setupParameters(int argc, char** argv)
   // read_checkpoint_filename = "checkpoint_500.bp";
 
   std::ifstream src(path_to_params, std::ios::binary);
-  std::ofstream dst("psc_bgk_params_record.txt", std::ios::binary);
+  std::ofstream dst("params_record.txt", std::ios::binary);
   dst << src.rdbuf();
 }
 
