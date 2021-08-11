@@ -195,6 +195,14 @@ inline void setAll(double (&vals)[LEN], double newval)
     vals[i] = newval;
 }
 
+inline double getIonDensity(double rho)
+{
+  if (!g.do_ion)
+    return g.n_i;
+  double potential = parsedData->get_interpolated(COL_PHI, rho);
+  return std::exp(-potential / g.T_i);
+}
+
 // ======================================================================
 // initializeParticles
 
@@ -216,7 +224,7 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
 
       case KIND_ELECTRON:
         npt.n =
-          (qDensity(idx[0], idx[1], idx[2], 0, p) - g.n_i * g.q_i) / g.q_e;
+          (qDensity(idx[0], idx[1], idx[2], 0, p) - getIonDensity(rho) * g.q_i) / g.q_e;
         if (rho != 0) {
           double v_phi = parsedData->get_interpolated(COL_V_PHI, rho);
           double sign =
@@ -231,9 +239,9 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
         break;
 
       case KIND_ION:
-        npt.n = g.n_i;
+        npt.n = getIonDensity(rho);
         setAll(npt.p, 0);
-        setAll(npt.T, 0);
+        setAll(npt.T, g.T_i);
         break;
 
       default: assert(false);
