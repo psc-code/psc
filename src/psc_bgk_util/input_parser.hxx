@@ -60,23 +60,40 @@ public:
     int row = 0;
 
     for (std::string line; std::getline(file, line);) {
-      assert(row < nrows);
+      if (row >= nrows) {
+        std ::cout << "Error: too many rows. Expected " << nrows
+                   << ", got at least " << row + 1 << std::endl;
+        exit(EXIT_FAILURE);
+      }
 
       // iterate over each entry within a line
       std::istringstream iss(line);
       int col = 0;
 
       for (std::string result; iss >> result;) {
-        assert(col < ncols);
+        if (col >= ncols) {
+          std ::cout << "Error: too many columns. Expected " << ncols
+                     << ", got at least " << col + 1 << " in line \"" << line
+                     << "\"" << std::endl;
+          exit(EXIT_FAILURE);
+        }
 
         // write entry to data
         (*this)[row][col] = std::stod(result);
         col++;
       }
-      assert(col == ncols);
+      if (col != ncols) {
+        std ::cout << "Error: not enough columns. Expected " << ncols
+                   << ", got " << col << std::endl;
+        exit(EXIT_FAILURE);
+      }
       row++;
     }
-    assert(row == nrows);
+    if (row != nrows) {
+      std ::cout << "Error: not enough rows. Expected " << nrows << ", got "
+                 << row << std::endl;
+      exit(EXIT_FAILURE);
+    }
     file.close();
 
     indep_var_step = (*this)[1][indep_col] - (*this)[0][indep_col];
