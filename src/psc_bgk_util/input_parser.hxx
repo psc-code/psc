@@ -128,7 +128,8 @@ public:
     }
     file.close();
 
-    indep_var_step = (*this)[1][indep_col] - (*this)[0][indep_col];
+    indep_var_step =
+      ((*this)[nrows - 1][indep_col] - (*this)[0][indep_col]) / nrows;
   }
 
   // ----------------------------------------------------------------------
