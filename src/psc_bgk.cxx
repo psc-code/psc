@@ -411,6 +411,8 @@ static void run(int argc, char** argv)
     read_checkpoint(read_checkpoint_filename, *grid_ptr, mprts, mflds);
   }
 
+  delete parsedData;
+
   // ----------------------------------------------------------------------
   // Hand off to PscIntegrator to run the simulation
 
