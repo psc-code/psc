@@ -57,8 +57,10 @@ private:
 
   int get_row(double indep_var_val)
   {
-    // initial guess; should be precise assuming indep_var is linearly spaced
+    // initial guess; is precise when indep_var is linearly spaced
     int row = std::min((int)(indep_var_val / indep_var_step), nrows - 1);
+    while (row < nrows && indep_var_val > (*this)[row][indep_col])
+      row++;
     while (row >= 0 && indep_var_val < (*this)[row][indep_col])
       row--;
     return row;
