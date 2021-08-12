@@ -41,6 +41,9 @@ struct PscBgkParams
   bool do_ion;
   double T_i;
 
+  // multiplier for electron velocity
+  double v_e_coef;
+
   void loadParams(ParsedParams parsedParams)
   {
     box_size = parsedParams.get<double>("box_size");
@@ -63,5 +66,7 @@ struct PscBgkParams
 
     do_ion = parsedParams.getOrDefault<bool>("ion", false);
     T_i = parsedParams.getOrDefault<double>("T_i", 0);
+
+    v_e_coef = parsedParams.getOrDefault<double>("v_e_coef", 1);
   }
 };

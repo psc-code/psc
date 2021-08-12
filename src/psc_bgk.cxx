@@ -223,15 +223,16 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
     switch (kind) {
 
       case KIND_ELECTRON:
-        npt.n =
-          (qDensity(idx[0], idx[1], idx[2], 0, p) - getIonDensity(rho) * g.q_i) / g.q_e;
+        npt.n = (qDensity(idx[0], idx[1], idx[2], 0, p) -
+                 getIonDensity(rho) * g.q_i) /
+                g.q_e;
         if (rho != 0) {
           double v_phi = parsedData->get_interpolated(COL_V_PHI, rho);
-          double sign =
-            (g.reverse_v ? -1 : 1) * (g.reverse_v_half && y < 0 ? -1 : 1);
+          double coef = g.v_e_coef * (g.reverse_v ? -1 : 1) *
+                        (g.reverse_v_half && y < 0 ? -1 : 1);
           npt.p[0] = 0;
-          npt.p[1] = sign * g.m_e * v_phi * -z / rho;
-          npt.p[2] = sign * g.m_e * v_phi * y / rho;
+          npt.p[1] = coef * g.m_e * v_phi * -z / rho;
+          npt.p[2] = coef * g.m_e * v_phi * y / rho;
         } else {
           setAll(npt.p, 0);
         }
