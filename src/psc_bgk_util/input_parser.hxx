@@ -37,6 +37,22 @@ std::istream& safeGetline(std::istream& is, std::string& t)
   }
 }
 
+// https://stackoverflow.com/questions/3482064/counting-the-number-of-lines-in-a-text-file
+int countLines(const std::string file_path)
+{
+  std::ifstream file(file_path);
+  if (!file.is_open()) {
+    std::cout << "Failed to open input file: " << file_path << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  file.unsetf(std::ios_base::skipws);
+  unsigned newline_count = std::count(std::istream_iterator<char>(file),
+                                   std::istream_iterator<char>(), '\n');
+  file.close();
+  return newline_count + 1;
+}
+
 // ======================================================================
 // Parsed
 // Parses a space-separated list of values, such as a tsv file.
