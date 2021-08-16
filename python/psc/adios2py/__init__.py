@@ -113,6 +113,7 @@ class file:
         self._open_vars = {}
 
         self.variables = self._io.AvailableVariables().keys()
+        self.attributes = self._io.AvailableAttributes().keys()
 
     def __enter__(self):
         logging.debug(f"adios2py: __enter__")

@@ -91,7 +91,13 @@ class PscAdios2Store(AbstractDataStore):
         return xarray.DataArray(data, dims=dims, coords=coords)
 
     def get_attrs(self):
-        return {}
+        # FIXME this is not the best way to get attributes
+        def expandAttr(attr):
+            data = attr.Data()
+            if len(data) == 1:
+                return data[0]
+            return data
+        return FrozenDict((name, expandAttr(self.ds._io.InquireAttribute(name))) for name in self.ds.attributes)
 
 
 def psc_open_dataset(filename_or_obj, length=None, drop_variables=None):
