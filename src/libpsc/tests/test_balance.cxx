@@ -101,7 +101,7 @@ protected:
 TYPED_TEST(BalanceTest, Constructor)
 {
   using Balance = typename TypeParam::Balance;
-  auto balance = Balance{1, 1., true};
+  auto balance = Balance{1., true};
 }
 
 #if 0
@@ -117,7 +117,7 @@ TYPED_TEST(BalanceTest, Initial1)
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
-  auto balance = Balance{1, 0., true};
+  auto balance = Balance{0., true};
 
   auto n_prts_by_patch = std::vector<uint>{};
   if (size == 1) {
@@ -142,7 +142,7 @@ TYPED_TEST(BalanceTest, Initial2)
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
-  auto balance = Balance{1, 0., true};
+  auto balance = Balance{0., true};
 
   auto n_prts_by_patch = std::vector<uint>{};
   if (size == 1) {
@@ -174,7 +174,7 @@ TYPED_TEST(BalanceTest, Initial3)
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
-  auto balance = Balance{1, 0., true};
+  auto balance = Balance{0., true};
 
   auto mflds_state = MfieldsState{this->grid()};
   auto mflds = Mfields{this->grid(), 3, {2, 2, 2}};
@@ -208,7 +208,7 @@ TYPED_TEST(BalanceTest, Every1)
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
-  auto balance = Balance{1, 0., true};
+  auto balance = Balance{0., true};
 
   auto mflds_state = MfieldsState{this->grid()};
   auto mflds = Mfields{this->grid(), 3, {2, 2, 2}};

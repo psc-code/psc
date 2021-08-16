@@ -828,7 +828,7 @@ void run()
 
   // -- Balance
   psc_params.balance_interval = 0;
-  Balance balance{psc_params.balance_interval};
+  Balance balance{};
 
   // -- Sort
   // FIXME: the "vpic" sort actually keeps track of per-species sorting
