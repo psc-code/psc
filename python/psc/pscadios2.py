@@ -105,6 +105,7 @@ def psc_open_dataset(filename_or_obj, length=None, drop_variables=None):
 
 
 class PscAdios2BackendEntrypoint(BackendEntrypoint):
+    available=True
     def open_dataset(
         self,
         filename_or_obj,
