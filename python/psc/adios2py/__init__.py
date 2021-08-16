@@ -95,7 +95,7 @@ class variable:
         self._set_selection(sel_start, sel_count)
 
         arr = np.empty(arr_shape, dtype=self.dtype, order='F')
-        print("reading ", self.name, args)
+        # print("reading ", self.name, args)
         self._engine.Get(self._var, arr, adios2.Mode.Sync)
         return arr
 
