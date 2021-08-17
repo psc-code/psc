@@ -54,7 +54,7 @@ enum DATA_COL
 
 namespace
 {
-Parsed<10001, n_cols> parsed(COL_RHO);
+Parsed* parsedData;
 
 std::string read_checkpoint_filename;
 
@@ -79,7 +79,9 @@ void setupParameters(int argc, char** argv)
   std::string path_to_params(argv[1]);
   ParsedParams parsedParams(path_to_params);
   g.loadParams(parsedParams);
-  parsed.loadData(parsedParams.get<std::string>("path_to_data"), 1);
+  parsedData =
+    new Parsed(parsedParams.getOrDefault<int>("nrows", 10001), n_cols, COL_RHO);
+  parsedData->loadData(parsedParams.get<std::string>("path_to_data"), 1);
 
   psc_params.nmax = parsedParams.get<int>("nmax");
   psc_params.stats_every = parsedParams.get<int>("stats_every");
@@ -95,7 +97,7 @@ void setupParameters(int argc, char** argv)
   // read_checkpoint_filename = "checkpoint_500.bp";
 
   std::ifstream src(path_to_params, std::ios::binary);
-  std::ofstream dst("psc_bgk_params_record.txt", std::ios::binary);
+  std::ofstream dst("params_record.txt", std::ios::binary);
   dst << src.rdbuf();
 }
 
@@ -126,7 +128,7 @@ Grid_t* setupGrid()
   kinds[KIND_ION] = {g.q_i, g.m_i, "i"};
 
   mpi_printf(MPI_COMM_WORLD, "lambda_D = %g\n",
-             sqrt(parsed.get_interpolated(COL_TE, g.box_size / sqrt(2))));
+             sqrt(parsedData->get_interpolated(COL_TE, g.box_size / sqrt(2))));
 
   // --- generic setup
   auto norm_params = Grid_t::NormalizationParams::dimensionless();
@@ -193,6 +195,14 @@ inline void setAll(double (&vals)[LEN], double newval)
     vals[i] = newval;
 }
 
+inline double getIonDensity(double rho)
+{
+  if (!g.do_ion)
+    return g.n_i;
+  double potential = parsedData->get_interpolated(COL_PHI, rho);
+  return std::exp(-potential / g.T_i);
+}
+
 // ======================================================================
 // initializeParticles
 
@@ -213,25 +223,26 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
     switch (kind) {
 
       case KIND_ELECTRON:
-        npt.n =
-          (qDensity(idx[0], idx[1], idx[2], 0, p) - g.n_i * g.q_i) / g.q_e;
+        npt.n = (qDensity(idx[0], idx[1], idx[2], 0, p) -
+                 getIonDensity(rho) * g.q_i) /
+                g.q_e;
         if (rho != 0) {
-          double v_phi = parsed.get_interpolated(COL_V_PHI, rho);
-          double sign =
-            (g.reverse_v ? -1 : 1) * (g.reverse_v_half && y < 0 ? -1 : 1);
+          double v_phi = parsedData->get_interpolated(COL_V_PHI, rho);
+          double coef = g.v_e_coef * (g.reverse_v ? -1 : 1) *
+                        (g.reverse_v_half && y < 0 ? -1 : 1);
           npt.p[0] = 0;
-          npt.p[1] = sign * g.m_e * v_phi * -z / rho;
-          npt.p[2] = sign * g.m_e * v_phi * y / rho;
+          npt.p[1] = coef * g.m_e * v_phi * -z / rho;
+          npt.p[2] = coef * g.m_e * v_phi * y / rho;
         } else {
           setAll(npt.p, 0);
         }
-        setAll(npt.T, parsed.get_interpolated(COL_TE, rho));
+        setAll(npt.T, parsedData->get_interpolated(COL_TE, rho));
         break;
 
       case KIND_ION:
-        npt.n = g.n_i;
+        npt.n = getIonDensity(rho);
         setAll(npt.p, 0);
-        setAll(npt.T, 0);
+        setAll(npt.T, g.T_i);
         break;
 
       default: assert(false);
@@ -263,7 +274,7 @@ void initializePhi(BgkMfields& phi)
   setupScalarField(
     phi, Centering::Centerer(Centering::NC), [&](int m, double crd[3]) {
       double rho = sqrt(sqr(getCoord(crd[1])) + sqr(getCoord(crd[2])));
-      return parsed.get_interpolated(COL_PHI, rho);
+      return parsedData->get_interpolated(COL_PHI, rho);
     });
 
   writeMF(phi, "phi", {"phi"});
@@ -399,6 +410,8 @@ static void run(int argc, char** argv)
   } else {
     read_checkpoint(read_checkpoint_filename, *grid_ptr, mprts, mflds);
   }
+
+  delete parsedData;
 
   // ----------------------------------------------------------------------
   // Hand off to PscIntegrator to run the simulation
