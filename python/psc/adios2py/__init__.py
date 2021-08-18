@@ -95,7 +95,7 @@ class variable:
         self._set_selection(sel_start, sel_count)
 
         arr = np.empty(arr_shape, dtype=self.dtype, order='F')
-        print("reading ", self.name, args)
+        # print("reading ", self.name, args)
         self._engine.Get(self._var, arr, adios2.Mode.Sync)
         return arr
 
@@ -113,6 +113,7 @@ class file:
         self._open_vars = {}
 
         self.variables = self._io.AvailableVariables().keys()
+        self.attributes = self._io.AvailableAttributes().keys()
 
     def __enter__(self):
         logging.debug(f"adios2py: __enter__")
