@@ -104,19 +104,26 @@ setup_ndarray(struct mrc_fld *fld)
 
     if (!fld->_aos && !fld->_c_order) {
       // original order
-      perm = (int[5]) { 0, 1, 2, 3, 4 };
+      static int perm1[5] = { 0, 1, 2, 3, 4 };
+      perm = perm1;
     } else if (fld->_aos && !fld->_c_order) {
       // x,y,z,m,p to m,x,y,z,p
-      perm = (int[5]) { 3, 0, 1, 2, 4 };
+      static int perm2[5] = { 3, 0, 1, 2, 4 };
+      perm = perm2;
     } else if (fld->_aos && fld->_c_order) {
       // x,y,z,m,p to m,z,y,x,p
-      perm = (int[5]) { 3, 2, 1, 0, 4 };
+      static int perm3[5] = { 3, 2, 1, 0, 4 };
+      perm = perm3;
     } else if (!fld->_aos && fld->_c_order) {
       // x,y,z,m,p to z,y,x,m,p
-      perm = (int[5]) { 2, 1, 0, 3, 4 };
+      static int perm4[5] = { 2, 1, 0, 3, 4 };
+      perm = perm4;
+    } else {
+      assert(0);
     }
   } else {
-    perm = (int[5]) { 0, 1, 2, 3, 4 };
+    static int perm1[5] = { 0, 1, 2, 3, 4 };
+    perm = perm1;
   }
       
   struct mrc_ndarray *nd = fld->_nd;
