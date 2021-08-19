@@ -3,4 +3,4 @@ export CMAKE_PREFIX_PATH=/mnt/lustre/germaschewski/kaig/src/spack/opt/spack/cray
 export CC=/mnt/lustre/germaschewski/kaig/src/spack/opt/spack/linux-rhel7-zen/gcc-8.2.0/gcc-10.2.0-isfcn6dvyw2zpm75iiormpuwjsqxecnx/bin/gcc
 export CXX=/mnt/lustre/germaschewski/kaig/src/spack/opt/spack/linux-rhel7-zen/gcc-8.2.0/gcc-10.2.0-isfcn6dvyw2zpm75iiormpuwjsqxecnx/bin/g++
 
-cmake -S .. -DCMAKE_BUILD_TYPE=Debug
+cmake -S .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
