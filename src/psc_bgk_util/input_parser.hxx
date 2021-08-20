@@ -19,13 +19,7 @@ std::istream& safeGetline(std::istream& is, std::string& t)
 {
   t.clear();
 
-  // The characters in the stream are read one-by-one using a std::streambuf.
-  // That is faster than reading them one-by-one using the std::istream.
-  // Code that uses streambuf this way must be guarded by a sentry object.
-  // The sentry object performs various tasks,
-  // such as thread synchronization and updating the stream state.
-
-  std::istream::sentry se(is, true);
+  std::istream::sentry se(is, true); // this does stuff, apparently
   std::streambuf* sb = is.rdbuf();
 
   for (;;) {
@@ -36,7 +30,6 @@ std::istream& safeGetline(std::istream& is, std::string& t)
           sb->sbumpc();
       case '\n': return is;
       case std::streambuf::traits_type::eof():
-        // Also handle the case when the last line has no line ending
         if (t.empty())
           is.setstate(std::ios::eofbit);
         return is;
@@ -45,6 +38,7 @@ std::istream& safeGetline(std::istream& is, std::string& t)
   }
 }
 
+// from
 // https://stackoverflow.com/questions/3482064/counting-the-number-of-lines-in-a-text-file
 int countLines(const std::string file_path)
 {
