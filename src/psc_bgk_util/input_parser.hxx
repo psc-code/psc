@@ -5,6 +5,14 @@
 #include <fstream>
 #include <sstream>
 
+void assertFileOpen(const std::ifstream& file, const std::string file_path)
+{
+  if (!file.is_open()) {
+    std::cout << "Failed to open input file: " << file_path << std::endl;
+    exit(EXIT_FAILURE);
+  }
+}
+
 // from
 // https://stackoverflow.com/questions/6089231/getting-std-ifstream-to-handle-lf-cr-and-crlf
 std::istream& safeGetline(std::istream& is, std::string& t)
@@ -41,14 +49,11 @@ std::istream& safeGetline(std::istream& is, std::string& t)
 int countLines(const std::string file_path)
 {
   std::ifstream file(file_path);
-  if (!file.is_open()) {
-    std::cout << "Failed to open input file: " << file_path << std::endl;
-    exit(EXIT_FAILURE);
-  }
+  assertFileOpen(file, file_path);
 
   file.unsetf(std::ios_base::skipws);
   unsigned newline_count = std::count(std::istream_iterator<char>(file),
-                                   std::istream_iterator<char>(), '\n');
+                                      std::istream_iterator<char>(), '\n');
   file.close();
   return newline_count + 1;
 }
@@ -86,8 +91,12 @@ public:
   // ----------------------------------------------------------------------
   // ctor
 
-  Parsed(const std::string file_path, int ncols, int indep_col, int lines_to_skip)
-    : nrows(countLines(file_path) - lines_to_skip), ncols(ncols), data(nrows * ncols), indep_col(indep_col)
+  Parsed(const std::string file_path, int ncols, int indep_col,
+         int lines_to_skip)
+    : nrows(countLines(file_path) - lines_to_skip),
+      ncols(ncols),
+      data(nrows * ncols),
+      indep_col(indep_col)
   {
     loadData(file_path, lines_to_skip);
   }
@@ -99,11 +108,7 @@ public:
   void loadData(const std::string file_path, int lines_to_skip)
   {
     std::ifstream file(file_path);
-
-    if (!file.is_open()) {
-      std::cout << "Failed to open input file: " << file_path << std::endl;
-      exit(EXIT_FAILURE);
-    }
+    assertFileOpen(file, file_path);
 
     for (int i = 0; i < lines_to_skip; i++)
       file.ignore(512, '\n');
