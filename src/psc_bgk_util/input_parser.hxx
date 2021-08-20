@@ -53,12 +53,12 @@ int countLines(const std::string file_path)
 }
 
 // ======================================================================
-// Parsed
+// ParsedData
 // Parses a space-separated list of values, such as a tsv file.
 // Assuming there is a single independent variable, linearly interpolates other
 // values.
 
-class Parsed
+class ParsedData
 {
 private:
   const int nrows, ncols;
@@ -85,8 +85,8 @@ public:
   // ----------------------------------------------------------------------
   // ctor
 
-  Parsed(const std::string file_path, int ncols, int indep_col,
-         int lines_to_skip)
+  ParsedData(const std::string file_path, int ncols, int indep_col,
+             int lines_to_skip)
     : nrows(countLines(file_path) - lines_to_skip),
       ncols(ncols),
       data(nrows * ncols),
