@@ -5,6 +5,11 @@
 #include <fstream>
 #include <sstream>
 
+// ======================================================================
+// parsing util
+
+namespace parsing
+{
 void assertFileOpen(const std::ifstream& file, const std::string file_path)
 {
   if (!file.is_open()) {
@@ -52,6 +57,8 @@ int countLines(const std::string file_path)
   return newline_count + 1;
 }
 
+} // namespace parsing
+
 // ======================================================================
 // ParsedData
 // Parses a space-separated list of values, such as a tsv file.
@@ -87,7 +94,7 @@ public:
 
   ParsedData(const std::string file_path, int ncols, int indep_col,
              int lines_to_skip)
-    : nrows(countLines(file_path) - lines_to_skip),
+    : nrows(parsing::countLines(file_path) - lines_to_skip),
       ncols(ncols),
       data(nrows * ncols),
       indep_col(indep_col)
@@ -102,7 +109,7 @@ public:
   void loadData(const std::string file_path, int lines_to_skip)
   {
     std::ifstream file(file_path);
-    assertFileOpen(file, file_path);
+    parsing::assertFileOpen(file, file_path);
 
     for (int i = 0; i < lines_to_skip; i++)
       file.ignore(512, '\n');
@@ -110,7 +117,7 @@ public:
     // iterate over each line
     int row = 0;
 
-    for (std::string line; !safeGetline(file, line).eof();) {
+    for (std::string line; !parsing::safeGetline(file, line).eof();) {
       if (row >= nrows) {
         std ::cout << "Error: too many rows. Expected " << nrows
                    << ", got at least " << row + 1 << std::endl;
