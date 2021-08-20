@@ -86,9 +86,11 @@ public:
   // ----------------------------------------------------------------------
   // ctor
 
-  Parsed(int nrows, int ncols, int indep_col)
-    : nrows(nrows), ncols(ncols), data(nrows * ncols), indep_col(indep_col)
-  {}
+  Parsed(const std::string file_path, int ncols, int indep_col, int lines_to_skip)
+    : nrows(countLines(file_path) - lines_to_skip), ncols(ncols), data(nrows * ncols), indep_col(indep_col)
+  {
+    loadData(file_path, lines_to_skip);
+  }
 
   // ----------------------------------------------------------------------
   // loadData
