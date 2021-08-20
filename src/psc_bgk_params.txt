@@ -3,7 +3,7 @@
 // Duplicate parameter names are overridden.
 // For example, "//" will be parsed as a parameter and will have value "For".
 
-# Don't touch
+# Case-specific parameters
 box_size .03
 
 m_i 1e9
@@ -13,22 +13,28 @@ n_i 1
 m_e 1
 q_e -1
 
-# Do touch
-path_to_data /Users/james/Code/cpp/PSC/psc/inputs/case1-B=1-input.txt
+ion false whether or not to use boltzmann distribution for ions
+T_i 0 normally 0, or 1e-6 for boltzmann
+
+# Run-specific parameters
+path_to_data /CHANGE/ME
 H_x 1
 
 n_grid 16
 n_patches -1 (nonpositive values signal to use n_cells_per_patch instead)
 n_cells_per_patch 16
 
-reverse_v false
+v_e_coef 1
 reverse_v_half false
 
-# Also touch (for PscParams)
+# Output parameters
 nmax 100000
 stats_every 500
 
-# other stuff
 fields_every 200
 moments_every 200
 gauss_every 200
+
+checkpoint_every 0 (0 to disable checkpoints)
+read_checkpoint false
+path_to_checkpoint /CHANGE/ME
