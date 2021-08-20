@@ -89,15 +89,11 @@ void setupParameters(int argc, char** argv)
   psc_params.nmax = parsedParams.get<int>("nmax");
   psc_params.stats_every = parsedParams.get<int>("stats_every");
 
-  // -- start from checkpoint:
-  //
-  // Uncomment when wanting to start from a checkpoint, ie.,
-  // instead of setting up grid, particles and state fields here,
-  // they'll be read from a file
-  // FIXME: This parameter would be a good candidate to be provided
-  // on the command line, rather than requiring recompilation when change.
-
-  // read_checkpoint_filename = "checkpoint_500.bp";
+  psc_params.write_checkpoint_every_step =
+    parsedParams.getOrDefault<int>("checkpoint_every", 0);
+  if (parsedParams.getOrDefault<bool>("read_checkpoint", false))
+    read_checkpoint_filename =
+      parsedParams.get<std::string>("path_to_checkpoint");
 
   std::ifstream src(path_to_params, std::ios::binary);
   std::ofstream dst("params_record.txt", std::ios::binary);
