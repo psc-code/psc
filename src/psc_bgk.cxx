@@ -79,9 +79,12 @@ void setupParameters(int argc, char** argv)
   std::string path_to_params(argv[1]);
   ParsedParams parsedParams(path_to_params);
   g.loadParams(parsedParams);
-  parsedData =
-    new Parsed(parsedParams.getOrDefault<int>("nrows", 10001), n_cols, COL_RHO);
-  parsedData->loadData(parsedParams.get<std::string>("path_to_data"), 1);
+
+  // TODO move countLines to within Parsed ctor
+  const int lines_in_header = 1;
+  std::string path_to_data = parsedParams.get<std::string>("path_to_data");
+  parsedData = new Parsed(countLines(path_to_data) - lines_in_header, n_cols, COL_RHO);
+  parsedData->loadData(path_to_data, lines_in_header);
 
   psc_params.nmax = parsedParams.get<int>("nmax");
   psc_params.stats_every = parsedParams.get<int>("stats_every");
