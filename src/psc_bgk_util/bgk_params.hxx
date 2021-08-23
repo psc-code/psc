@@ -57,7 +57,7 @@ struct PscBgkParams
     n_patches = parsedParams.get<int>("n_patches");
     if (n_patches <= 0)
       n_patches = n_grid / parsedParams.get<int>("n_cells_per_patch");
-    if (parsedParams.warnIfPresent("reverse_v", "Set v_e_coef to -1 instead."))
+    if (parsedParams.warnIfPresent("reverse_v", "Set v_e_coef to +-1 instead."))
       exit(0);
     reverse_v_half = parsedParams.get<bool>("reverse_v_half");
 
