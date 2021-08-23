@@ -64,11 +64,13 @@ T ParsedParams::getOrDefault(const std::string paramName, T deflt)
 bool ParsedParams::warnIfPresent(const std::string paramName,
                                  const std::string advice)
 {
-  if (params.count(paramName) == 1)
+  if (params.count(paramName) == 1) {
+
     std::cout << "Warning: parameter " << paramName << " is deprecated."
               << std::endl;
-  std::cout << advice << std::endl;
-  return true;
+    std::cout << advice << std::endl;
+    return true;
+  }
   return false;
 }
 
