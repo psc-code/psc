@@ -5,19 +5,26 @@
 #include <fstream>
 #include <sstream>
 
+// ======================================================================
+// parsing util
+
+namespace parsing
+{
+void assertFileOpen(const std::ifstream& file, const std::string file_path)
+{
+  if (!file.is_open()) {
+    std::cout << "Failed to open input file: " << file_path << std::endl;
+    exit(EXIT_FAILURE);
+  }
+}
+
 // from
 // https://stackoverflow.com/questions/6089231/getting-std-ifstream-to-handle-lf-cr-and-crlf
 std::istream& safeGetline(std::istream& is, std::string& t)
 {
   t.clear();
 
-  // The characters in the stream are read one-by-one using a std::streambuf.
-  // That is faster than reading them one-by-one using the std::istream.
-  // Code that uses streambuf this way must be guarded by a sentry object.
-  // The sentry object performs various tasks,
-  // such as thread synchronization and updating the stream state.
-
-  std::istream::sentry se(is, true);
+  std::istream::sentry se(is, true); // this does stuff, apparently
   std::streambuf* sb = is.rdbuf();
 
   for (;;) {
@@ -28,7 +35,6 @@ std::istream& safeGetline(std::istream& is, std::string& t)
           sb->sbumpc();
       case '\n': return is;
       case std::streambuf::traits_type::eof():
-        // Also handle the case when the last line has no line ending
         if (t.empty())
           is.setstate(std::ios::eofbit);
         return is;
@@ -37,13 +43,29 @@ std::istream& safeGetline(std::istream& is, std::string& t)
   }
 }
 
+// from
+// https://stackoverflow.com/questions/3482064/counting-the-number-of-lines-in-a-text-file
+int countLines(const std::string file_path)
+{
+  std::ifstream file(file_path);
+  assertFileOpen(file, file_path);
+
+  file.unsetf(std::ios_base::skipws);
+  unsigned newline_count = std::count(std::istream_iterator<char>(file),
+                                      std::istream_iterator<char>(), '\n');
+  file.close();
+  return newline_count + 1;
+}
+
+} // namespace parsing
+
 // ======================================================================
-// Parsed
+// ParsedData
 // Parses a space-separated list of values, such as a tsv file.
 // Assuming there is a single independent variable, linearly interpolates other
 // values.
 
-class Parsed
+class ParsedData
 {
 private:
   const int nrows, ncols;
@@ -70,9 +92,15 @@ public:
   // ----------------------------------------------------------------------
   // ctor
 
-  Parsed(int nrows, int ncols, int indep_col)
-    : nrows(nrows), ncols(ncols), data(nrows * ncols), indep_col(indep_col)
-  {}
+  ParsedData(const std::string file_path, int ncols, int indep_col,
+             int lines_to_skip)
+    : nrows(parsing::countLines(file_path) - lines_to_skip),
+      ncols(ncols),
+      data(nrows * ncols),
+      indep_col(indep_col)
+  {
+    loadData(file_path, lines_to_skip);
+  }
 
   // ----------------------------------------------------------------------
   // loadData
@@ -81,11 +109,7 @@ public:
   void loadData(const std::string file_path, int lines_to_skip)
   {
     std::ifstream file(file_path);
-
-    if (!file.is_open()) {
-      std::cout << "Failed to open input file: " << file_path << std::endl;
-      exit(EXIT_FAILURE);
-    }
+    parsing::assertFileOpen(file, file_path);
 
     for (int i = 0; i < lines_to_skip; i++)
       file.ignore(512, '\n');
@@ -93,7 +117,7 @@ public:
     // iterate over each line
     int row = 0;
 
-    for (std::string line; !safeGetline(file, line).eof();) {
+    for (std::string line; !parsing::safeGetline(file, line).eof();) {
       if (row >= nrows) {
         std ::cout << "Error: too many rows. Expected " << nrows
                    << ", got at least " << row + 1 << std::endl;

@@ -43,17 +43,36 @@ public:
   T get(const std::string paramName);
 
   template <typename T>
-  T getOrDefault(const std::string paramName, T deflt)
-  {
-    if (params.count(paramName) == 1)
-      return get<T>(paramName);
-    std::cout << "Warning: using default value for parameter '" << paramName
-              << "': " << deflt << std::endl;
-    return deflt;
-  }
+  T getOrDefault(const std::string paramName, T deflt);
+
+  // return true and display warning iff paramName is present
+  bool warnIfPresent(const std::string paramName, const std::string advice);
 };
 
 // implementations
+
+template <typename T>
+T ParsedParams::getOrDefault(const std::string paramName, T deflt)
+{
+  if (params.count(paramName) == 1)
+    return get<T>(paramName);
+  std::cout << "Warning: using default value for parameter '" << paramName
+            << "': " << deflt << std::endl;
+  return deflt;
+}
+
+bool ParsedParams::warnIfPresent(const std::string paramName,
+                                 const std::string advice)
+{
+  if (params.count(paramName) == 1) {
+
+    std::cout << "Warning: parameter " << paramName << " is deprecated."
+              << std::endl;
+    std::cout << advice << std::endl;
+    return true;
+  }
+  return false;
+}
 
 template <>
 bool ParsedParams::get<bool>(const std::string paramName)
