@@ -27,6 +27,8 @@ n_cells_per_patch 16
 v_e_coef 1
 reverse_v_half false
 
+T_e_coef 1
+
 # Output parameters
 nmax 100000
 stats_every 500
