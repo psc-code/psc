@@ -43,6 +43,8 @@ struct PscBgkParams
 
   // multiplier for electron velocity
   double v_e_coef;
+  // multiplier for electron temperature
+  double T_e_coef;
 
   void loadParams(ParsedParams parsedParams)
   {
@@ -69,5 +71,6 @@ struct PscBgkParams
     T_i = parsedParams.getOrDefault<double>("T_i", 0);
 
     v_e_coef = parsedParams.getOrDefault<double>("v_e_coef", 1);
+    T_e_coef = parsedParams.getOrDefault<double>("T_e_coef", 1);
   }
 };

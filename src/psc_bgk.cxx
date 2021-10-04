@@ -232,7 +232,7 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
         } else {
           setAll(npt.p, 0);
         }
-        setAll(npt.T, parsedData->get_interpolated(COL_TE, rho));
+        setAll(npt.T, g.T_e_coef * parsedData->get_interpolated(COL_TE, rho));
         break;
 
       case KIND_ION:
