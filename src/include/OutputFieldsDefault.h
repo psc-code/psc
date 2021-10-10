@@ -127,10 +127,12 @@ public:
         // convert accumulated values to correct temporal mean
         tfd_->gt() = (1. / naccum_) * tfd_->gt();
 
-        io_tfd_.begin_step(item.grid());
-        io_tfd_.set_subset(item.grid(), rn, rx);
-        io_tfd_.write(tfd_->gt(), item.grid(), item.name(), item.comp_names());
-        io_tfd_.end_step();
+        // io_tfd_.begin_step(item.grid());
+        // io_tfd_.set_subset(item.grid(), rn, rx);
+        // io_tfd_.write(tfd_->gt(), item.grid(), item.name(),
+        // item.comp_names()); io_tfd_.end_step();
+        io_tfd_.write_step(item.grid(), rn, rx, tfd_->gt(), item.name(),
+                           item.comp_names());
         naccum_ = 0;
 
         tfd_->gt().view() = 0;
