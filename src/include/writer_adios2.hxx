@@ -22,13 +22,6 @@ inline void WriterThread(const Grid_t& grid, kg::io::IOAdios2& io,
                          std::string name, std::vector<std::string> comp_names,
                          MPI_Comm comm)
 {
-  static int pr;
-  if (!pr) {
-    pr = prof_register("writer thread", 1., 0, 0);
-  }
-
-  prof_start(pr);
-
   Mfields<double> h_mflds(grid, h_expr.shape(3), {});
   h_mflds.gt() = h_expr;
 
@@ -47,7 +40,6 @@ inline void WriterThread(const Grid_t& grid, kg::io::IOAdios2& io,
     file.endStep();
     file.close();
   }
-  prof_stop(pr);
 }
 
 #endif
@@ -135,12 +127,13 @@ public:
                   const std::vector<std::string>& comp_names)
   {
 
-    static int pr, pr_copy, pr_wait, pr_write;
+    static int pr, pr_copy, pr_wait, pr_write, pr_thread;
     if (!pr) {
       pr = prof_register("write_step", 1., 0, 0);
       pr_copy = prof_register("ws copy", 1., 0, 0);
       pr_wait = prof_register("ws wait", 1., 0, 0);
       pr_write = prof_register("ws write", 1., 0, 0);
+      pr_thread = prof_register("ws thread", 1., 0, 0);
     }
 
     prof_start(pr);
@@ -164,6 +157,9 @@ public:
     auto write_func = [this, &grid, step, time, h_expr = move(h_expr), name,
                        comp_names]() {
       // std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+      prof_start(pr_thread);
+
       // FIXME, the definitely unsafe idea here is to copy the grid right away
       // as the thread starts, so that hopefully grid won't have changed (been
       // rebalanced) yet.
@@ -172,6 +168,8 @@ public:
 
       WriterThread(g, io_, pfx_, dir_, step, time, std::move(h_expr), name,
                    comp_names, comm_);
+
+      prof_stop(pr_thread);
     };
     writer_thread_ = std::thread{write_func};
     prof_stop(pr_write);
