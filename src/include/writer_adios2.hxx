@@ -16,28 +16,6 @@
 
 static std::mutex writer_mutex;
 
-inline void WriterThread(kg::io::IOAdios2& io, std::string pfx, std::string dir,
-                         int step, double time, const Mfields<double>& h_mflds,
-                         std::string name, std::vector<std::string> comp_names,
-                         MPI_Comm comm)
-{
-  char filename[dir.size() + pfx.size() + 20];
-  sprintf(filename, "%s/%s.%09d.bp", dir.c_str(), pfx.c_str(), step);
-  {
-    std::lock_guard<std::mutex> guard(writer_mutex);
-    auto file = io.open(filename, kg::io::Mode::Write, comm, pfx);
-
-    file.beginStep(kg::io::StepMode::Append);
-    file.put("step", step);
-    file.put("time", time);
-
-    file.put(name, h_mflds);
-    file.performPuts();
-    file.endStep();
-    file.close();
-  }
-}
-
 #endif
 
 class WriterADIOS2
@@ -165,8 +143,23 @@ public:
       Mfields<double> h_mflds(g, h_expr.shape(3), {});
       h_mflds.gt() = h_expr;
 
-      WriterThread(io_, pfx_, dir_, step, time, h_mflds, name, comp_names,
-                   comm_);
+      char filename[dir_.size() + pfx_.size() + 20];
+      sprintf(filename, "%s/%s.%09d.bp", dir_.c_str(), pfx_.c_str(), step);
+      {
+        // FIXME not sure how necessary this lock really is, it certainly could
+        // spin for a long time if another thread is writing another file
+        std::lock_guard<std::mutex> guard(writer_mutex);
+        auto file = io_.open(filename, kg::io::Mode::Write, comm_, pfx_);
+
+        file.beginStep(kg::io::StepMode::Append);
+        file.put("step", step);
+        file.put("time", time);
+
+        file.put(name, h_mflds);
+        file.performPuts();
+        file.endStep();
+        file.close();
+      }
 
       prof_stop(pr_thread);
     };
