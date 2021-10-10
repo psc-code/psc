@@ -7,7 +7,7 @@
 
 #include <cstdio>
 
-//#define PSC_USE_IO_THREADS
+#define PSC_USE_IO_THREADS
 
 #ifdef PSC_USE_IO_THREADS
 
@@ -19,7 +19,7 @@ static std::mutex writer_mutex;
 inline void WriterThread(std::reference_wrapper<const Grid_t> grid_ref,
                          std::reference_wrapper<kg::io::IOAdios2> io,
                          std::string pfx, std::string dir, int step,
-                         double time, gt::gtensor<double, 5>&& h_expr,
+                         double time, const gt::gtensor<double, 5>&& h_expr,
                          std::string name, std::vector<std::string> comp_names)
 {
   static int pr;
@@ -161,9 +161,13 @@ public:
     prof_start(pr_write);
     int step = grid.timestep();
     double time = step * grid.dt;
-    writer_thread_ = std::thread{
-      WriterThread, std::cref(grid),   std::ref(io__), pfx_,      dir_, step,
-      time,         std::move(h_expr), name,           comp_names};
+    auto write_func = [this, &grid, step, time, h_expr = move(h_expr), name,
+                       comp_names]() {
+      // std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+      WriterThread(grid, io__, pfx_, dir_, step, time, std::move(h_expr), name,
+                   comp_names);
+    };
+    writer_thread_ = std::thread{write_func};
     prof_stop(pr_write);
 #else
     prof_start(pr_write);
