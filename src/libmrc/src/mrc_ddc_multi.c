@@ -194,6 +194,21 @@ static void mrc_ddc_multi_alloc_buffers(struct mrc_ddc* ddc,
 }
 
 // ----------------------------------------------------------------------
+//
+
+struct mrc_ddc_sendrecv_entry* find_recv_entry_(struct mrc_ddc_rank_info* ri,
+                                                int p, int dir1neg)
+{
+  for (int i = 0; i < ri->n_recv_entries; i++) {
+    struct mrc_ddc_sendrecv_entry* re = &ri->recv_entry_[i];
+    if (re->nei_patch == p && re->dir1 == dir1neg) {
+      return re;
+    }
+  }
+  return NULL;
+}
+
+// ----------------------------------------------------------------------
 // mrc_ddc_multi_setup_pattern2
 
 static void mrc_ddc_multi_setup_pattern2(
@@ -304,12 +319,10 @@ static void mrc_ddc_multi_setup_pattern2(
           for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
             int dir1neg = mrc_ddc_dir2idx((int[3]){-dir[0], -dir[1], -dir[2]});
 
-            for (int i = 0; i < ri[r].n_recv_entries; i++) {
-              struct mrc_ddc_sendrecv_entry* re = &ri[r].recv_entry_[i];
-              if (re->nei_patch == p && re->dir1 == dir1neg) {
-                ri[r].recv_entry[cnt++] = *re;
-                break;
-              }
+            struct mrc_ddc_sendrecv_entry* re =
+              find_recv_entry_(&ri[r], p, dir1neg);
+            if (re) {
+              ri[r].recv_entry[cnt++] = *re;
             }
           }
         }
