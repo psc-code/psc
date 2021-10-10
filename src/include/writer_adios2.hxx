@@ -16,10 +16,9 @@
 
 static std::mutex writer_mutex;
 
-inline void WriterThread(const Grid_t& grid,
-                         std::reference_wrapper<kg::io::IOAdios2> io,
+inline void WriterThread(const Grid_t& grid, kg::io::IOAdios2& io,
                          std::string pfx, std::string dir, int step,
-                         double time, const gt::gtensor<double, 5>&& h_expr,
+                         double time, const gt::gtensor<double, 5>& h_expr,
                          std::string name, std::vector<std::string> comp_names,
                          MPI_Comm comm)
 {
@@ -37,7 +36,7 @@ inline void WriterThread(const Grid_t& grid,
   sprintf(filename, "%s/%s.%09d.bp", dir.c_str(), pfx.c_str(), step);
   {
     std::lock_guard<std::mutex> guard(writer_mutex);
-    auto file = io.get().open(filename, kg::io::Mode::Write, comm, pfx);
+    auto file = io.open(filename, kg::io::Mode::Write, comm, pfx);
 
     file.beginStep(kg::io::StepMode::Append);
     file.put("step", step);
