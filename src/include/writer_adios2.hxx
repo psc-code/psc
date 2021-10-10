@@ -16,7 +16,7 @@
 
 static std::mutex writer_mutex;
 
-inline void WriterThread(std::reference_wrapper<const Grid_t> grid_ref,
+inline void WriterThread(const Grid_t& grid,
                          std::reference_wrapper<kg::io::IOAdios2> io,
                          std::string pfx, std::string dir, int step,
                          double time, const gt::gtensor<double, 5>&& h_expr,
@@ -29,9 +29,6 @@ inline void WriterThread(std::reference_wrapper<const Grid_t> grid_ref,
   }
 
   prof_start(pr);
-
-  const Grid_t& g = grid_ref;
-  Grid_t grid(g.domain, g.bc, g.kinds, g.norm, g.dt, g.n_patches(), g.ibn);
 
   Mfields<double> h_mflds(grid, h_expr.shape(3), {});
   h_mflds.gt() = h_expr;
@@ -168,7 +165,13 @@ public:
     auto write_func = [this, &grid, step, time, h_expr = move(h_expr), name,
                        comp_names]() {
       // std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-      WriterThread(grid, io_, pfx_, dir_, step, time, std::move(h_expr), name,
+      // FIXME, the definitely unsafe idea here is to copy the grid right away
+      // as the thread starts, so that hopefully grid won't have changed (been
+      // rebalanced) yet.
+      Grid_t g(grid.domain, grid.bc, grid.kinds, grid.norm, grid.dt,
+               grid.n_patches(), grid.ibn);
+
+      WriterThread(g, io_, pfx_, dir_, step, time, std::move(h_expr), name,
                    comp_names, comm_);
     };
     writer_thread_ = std::thread{write_func};
