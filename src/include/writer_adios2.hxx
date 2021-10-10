@@ -20,7 +20,8 @@ inline void WriterThread(std::reference_wrapper<const Grid_t> grid_ref,
                          std::reference_wrapper<kg::io::IOAdios2> io,
                          std::string pfx, std::string dir, int step,
                          double time, const gt::gtensor<double, 5>&& h_expr,
-                         std::string name, std::vector<std::string> comp_names)
+                         std::string name, std::vector<std::string> comp_names,
+                         MPI_Comm comm)
 {
   static int pr;
   if (!pr) {
@@ -28,8 +29,6 @@ inline void WriterThread(std::reference_wrapper<const Grid_t> grid_ref,
   }
 
   prof_start(pr);
-  MPI_Comm comm;
-  MPI_Comm_dup(MPI_COMM_WORLD, &comm);
 
   const Grid_t& g = grid_ref;
   Grid_t grid(g.domain, g.bc, g.kinds, g.norm, g.dt, g.n_patches(), g.ibn);
@@ -52,7 +51,6 @@ inline void WriterThread(std::reference_wrapper<const Grid_t> grid_ref,
     file.endStep();
     file.close();
   }
-  MPI_Comm_free(&comm);
   prof_stop(pr);
 }
 
@@ -61,7 +59,10 @@ inline void WriterThread(std::reference_wrapper<const Grid_t> grid_ref,
 class WriterADIOS2
 {
 public:
-  explicit operator bool() const { return pfx_.size() != 0; }
+  WriterADIOS2() { MPI_Comm_dup(MPI_COMM_WORLD, &comm_); }
+
+  WriterADIOS2(const WriterADIOS2&) = delete;
+  WriterADIOS2& operator=(const WriterADIOS2&) = delete;
 
   ~WriterADIOS2()
   {
@@ -70,7 +71,10 @@ public:
       writer_thread_.join();
     }
 #endif
+    MPI_Comm_free(&comm_);
   }
+
+  explicit operator bool() const { return pfx_.size() != 0; }
 
   void open(const std::string& pfx, const std::string& dir = ".")
   {
@@ -95,7 +99,7 @@ public:
   {
     char filename[dir_.size() + pfx_.size() + 20];
     sprintf(filename, "%s/%s.%09d.bp", dir_.c_str(), pfx_.c_str(), step);
-    file_ = io_.open(filename, kg::io::Mode::Write, MPI_COMM_WORLD, pfx_);
+    file_ = io_.open(filename, kg::io::Mode::Write, comm_, pfx_);
     file_.beginStep(kg::io::StepMode::Append);
     file_.put("step", step);
     file_.put("time", time);
@@ -165,7 +169,7 @@ public:
                        comp_names]() {
       // std::this_thread::sleep_for(std::chrono::milliseconds(1000));
       WriterThread(grid, io_, pfx_, dir_, step, time, std::move(h_expr), name,
-                   comp_names);
+                   comp_names, comm_);
     };
     writer_thread_ = std::thread{write_func};
     prof_stop(pr_write);
@@ -181,6 +185,11 @@ public:
   }
 
 private:
+  // Our writer thread may be writing one file via adios2 at the same time that
+  // another thread is writing another file, and adios2 isn't thread safe at
+  // all, so both threads may be making MPI calls that interfere with each
+  // other, which we prevent by using a unique communicator.
+  MPI_Comm comm_;
   kg::io::IOAdios2 io_;
   kg::io::Engine file_;
   std::string pfx_;
