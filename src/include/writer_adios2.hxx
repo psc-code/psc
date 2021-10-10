@@ -16,15 +16,11 @@
 
 static std::mutex writer_mutex;
 
-inline void WriterThread(const Grid_t& grid, kg::io::IOAdios2& io,
-                         std::string pfx, std::string dir, int step,
-                         double time, const gt::gtensor<double, 5>& h_expr,
+inline void WriterThread(kg::io::IOAdios2& io, std::string pfx, std::string dir,
+                         int step, double time, const Mfields<double>& h_mflds,
                          std::string name, std::vector<std::string> comp_names,
                          MPI_Comm comm)
 {
-  Mfields<double> h_mflds(grid, h_expr.shape(3), {});
-  h_mflds.gt() = h_expr;
-
   char filename[dir.size() + pfx.size() + 20];
   sprintf(filename, "%s/%s.%09d.bp", dir.c_str(), pfx.c_str(), step);
   {
@@ -166,8 +162,11 @@ public:
       Grid_t g(grid.domain, grid.bc, grid.kinds, grid.norm, grid.dt,
                grid.n_patches(), grid.ibn);
 
-      WriterThread(g, io_, pfx_, dir_, step, time, std::move(h_expr), name,
-                   comp_names, comm_);
+      Mfields<double> h_mflds(g, h_expr.shape(3), {});
+      h_mflds.gt() = h_expr;
+
+      WriterThread(io_, pfx_, dir_, step, time, h_mflds, name, comp_names,
+                   comm_);
 
       prof_stop(pr_thread);
     };
