@@ -95,7 +95,7 @@ public:
   {
     char filename[dir_.size() + pfx_.size() + 20];
     sprintf(filename, "%s/%s.%09d.bp", dir_.c_str(), pfx_.c_str(), step);
-    file_ = io__.open(filename, kg::io::Mode::Write, MPI_COMM_WORLD, pfx_);
+    file_ = io_.open(filename, kg::io::Mode::Write, MPI_COMM_WORLD, pfx_);
     file_.beginStep(kg::io::StepMode::Append);
     file_.put("step", step);
     file_.put("time", time);
@@ -164,7 +164,7 @@ public:
     auto write_func = [this, &grid, step, time, h_expr = move(h_expr), name,
                        comp_names]() {
       // std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-      WriterThread(grid, io__, pfx_, dir_, step, time, std::move(h_expr), name,
+      WriterThread(grid, io_, pfx_, dir_, step, time, std::move(h_expr), name,
                    comp_names);
     };
     writer_thread_ = std::thread{write_func};
@@ -181,7 +181,7 @@ public:
   }
 
 private:
-  kg::io::IOAdios2 io__;
+  kg::io::IOAdios2 io_;
   kg::io::Engine file_;
   std::string pfx_;
   std::string dir_;
