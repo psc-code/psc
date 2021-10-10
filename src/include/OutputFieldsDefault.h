@@ -85,6 +85,14 @@ public:
   template <typename F>
   void operator()(int timestep, F&& get_item)
   {
+    static int pr_eval, pr_accum, pr_pfd, pr_tfd;
+    if (!pr_eval) {
+      pr_eval = prof_register("outf eval", 1., 0, 0);
+      pr_accum = prof_register("outf accum", 1., 0, 0);
+      pr_pfd = prof_register("outf pfd", 1., 0, 0);
+      pr_tfd = prof_register("outf tfd", 1., 0, 0);
+    }
+
     if (first_time_) {
       first_time_ = false;
       if (timestep != 0) {
@@ -102,24 +110,31 @@ public:
        timestep == 0);
 
     if (do_pfield || doaccum_tfield) {
+      prof_start(pr_eval);
       auto&& item = get_item();
       auto&& pfd = item.gt();
+      prof_stop(pr_eval);
 
       if (do_pfield) {
+        prof_start(pr_pfd);
         mpi_printf(item.grid().comm(), "***** Writing PFD output for '%s'\n",
                    item.name());
         pfield_next_ += pfield_interval;
         io_pfd_.write_step(item.grid(), rn, rx, pfd, item.name(),
                            item.comp_names());
+        prof_stop(pr_pfd);
       }
 
       if (doaccum_tfield) {
+        prof_start(pr_accum);
         // tfd += pfd
         tfd_->gt() = tfd_->gt() + pfd;
         naccum_++;
+        prof_stop(pr_accum);
       }
 
       if (do_tfield) {
+        prof_start(pr_tfd);
         mpi_printf(item.grid().comm(), "***** Writing TFD output for '%s'\n",
                    item.name());
         tfield_next_ += tfield_interval;
@@ -136,6 +151,7 @@ public:
         naccum_ = 0;
 
         tfd_->gt().view() = 0;
+        prof_stop(pr_tfd);
       }
     }
   }
