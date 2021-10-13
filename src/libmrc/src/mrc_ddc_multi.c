@@ -196,16 +196,32 @@ static void mrc_ddc_multi_alloc_buffers(struct mrc_ddc* ddc,
 // ----------------------------------------------------------------------
 //
 
-struct mrc_ddc_sendrecv_entry* find_recv_entry_(struct mrc_ddc_rank_info* ri,
-                                                int p, int dir1neg)
+static int recv_entry_compare(const struct mrc_ddc_sendrecv_entry* a,
+                              const struct mrc_ddc_sendrecv_entry* b)
 {
-  for (int i = 0; i < ri->n_recv_entries; i++) {
-    struct mrc_ddc_sendrecv_entry* re = &ri->recv_entry_[i];
-    if (re->nei_patch == p && re->dir1 == dir1neg) {
-      return re;
+  if (a->nei_patch < b->nei_patch) {
+    return -1;
+  } else if (a->nei_patch == b->nei_patch) {
+    if (a->dir1 < b->dir1) {
+      return -1;
+    } else if (a->dir1 == b->dir1) {
+      return 0;
+    } else {
+      return 1;
     }
+  } else {
+    return 1;
   }
-  return NULL;
+}
+
+static struct mrc_ddc_sendrecv_entry* find_recv_entry_(
+  struct mrc_ddc_rank_info* ri, int p, int dir1neg)
+{
+  struct mrc_ddc_sendrecv_entry key;
+  key.nei_patch = p;
+  key.dir1 = dir1neg;
+  return bsearch(&key, ri->recv_entry_, ri->n_recv_entries, sizeof(key),
+                 (int (*)(const void*, const void*))recv_entry_compare);
 }
 
 // ----------------------------------------------------------------------
@@ -311,6 +327,10 @@ static void mrc_ddc_multi_setup_pattern2(
     }
   }
 
+  for (int r = 0; r < sub->mpi_size; r++) {
+    qsort(ri[r].recv_entry_, ri[r].n_recv_entries, sizeof(*ri[r].recv_entry_),
+          (int (*)(const void*, const void*))recv_entry_compare);
+  }
   // reorganize recv_entries into right order (same as send on the sending rank)
   for (int r = 0; r < sub->mpi_size; r++) {
     for (int p = 0, cnt = 0; cnt < ri[r].n_recv_entries; p++) {
