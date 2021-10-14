@@ -206,7 +206,8 @@ TYPED_TEST(MfieldsTest, OutputFieldsADIOS2)
 
 int main(int argc, char** argv)
 {
-  MPI_Init(&argc, &argv);
+  int provided;
+  MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
   ::testing::InitGoogleTest(&argc, argv);
   int rc = RUN_ALL_TESTS();
   MPI_Finalize();

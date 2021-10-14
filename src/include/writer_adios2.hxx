@@ -7,7 +7,7 @@
 
 #include <cstdio>
 
-//#define PSC_USE_IO_THREADS
+#define PSC_USE_IO_THREADS
 
 #ifdef PSC_USE_IO_THREADS
 
@@ -16,52 +16,15 @@
 
 static std::mutex writer_mutex;
 
-inline void WriterThread(std::reference_wrapper<const Grid_t> grid_ref,
-                         std::reference_wrapper<kg::io::IOAdios2> io,
-                         std::string pfx, std::string dir, int step,
-                         double time, gt::gtensor<double, 5>&& h_expr,
-                         std::string name, std::vector<std::string> comp_names)
-{
-  static int pr;
-  if (!pr) {
-    pr = prof_register("writer thread", 1., 0, 0);
-  }
-
-  prof_start(pr);
-  MPI_Comm comm;
-  MPI_Comm_dup(MPI_COMM_WORLD, &comm);
-
-  const Grid_t& g = grid_ref;
-  Grid_t grid(g.domain, g.bc, g.kinds, g.norm, g.dt, g.n_patches(), g.ibn);
-
-  Mfields<double> h_mflds(grid, h_expr.shape(3), {});
-  h_mflds.gt() = h_expr;
-
-  char filename[dir.size() + pfx.size() + 20];
-  sprintf(filename, "%s/%s.%09d.bp", dir.c_str(), pfx.c_str(), step);
-  {
-    std::lock_guard<std::mutex> guard(writer_mutex);
-    auto file = io.get().open(filename, kg::io::Mode::Write, comm, pfx);
-
-    file.beginStep(kg::io::StepMode::Append);
-    file.put("step", step);
-    file.put("time", time);
-
-    file.put(name, h_mflds);
-    file.performPuts();
-    file.endStep();
-    file.close();
-  }
-  MPI_Comm_free(&comm);
-  prof_stop(pr);
-}
-
 #endif
 
 class WriterADIOS2
 {
 public:
-  explicit operator bool() const { return pfx_.size() != 0; }
+  WriterADIOS2() { MPI_Comm_dup(MPI_COMM_WORLD, &comm_); }
+
+  WriterADIOS2(const WriterADIOS2&) = delete;
+  WriterADIOS2& operator=(const WriterADIOS2&) = delete;
 
   ~WriterADIOS2()
   {
@@ -70,7 +33,10 @@ public:
       writer_thread_.join();
     }
 #endif
+    MPI_Comm_free(&comm_);
   }
+
+  explicit operator bool() const { return pfx_.size() != 0; }
 
   void open(const std::string& pfx, const std::string& dir = ".")
   {
@@ -95,7 +61,7 @@ public:
   {
     char filename[dir_.size() + pfx_.size() + 20];
     sprintf(filename, "%s/%s.%09d.bp", dir_.c_str(), pfx_.c_str(), step);
-    file_ = io__.open(filename, kg::io::Mode::Write, MPI_COMM_WORLD, pfx_);
+    file_ = io_.open(filename, kg::io::Mode::Write, comm_, pfx_);
     file_.beginStep(kg::io::StepMode::Append);
     file_.put("step", step);
     file_.put("time", time);
@@ -135,12 +101,13 @@ public:
                   const std::vector<std::string>& comp_names)
   {
 
-    static int pr, pr_copy, pr_wait, pr_write;
+    static int pr, pr_copy, pr_wait, pr_write, pr_thread;
     if (!pr) {
       pr = prof_register("write_step", 1., 0, 0);
       pr_copy = prof_register("ws copy", 1., 0, 0);
       pr_wait = prof_register("ws wait", 1., 0, 0);
       pr_write = prof_register("ws write", 1., 0, 0);
+      pr_thread = prof_register("ws thread", 1., 0, 0);
     }
 
     prof_start(pr);
@@ -161,9 +128,42 @@ public:
     prof_start(pr_write);
     int step = grid.timestep();
     double time = step * grid.dt;
-    writer_thread_ = std::thread{
-      WriterThread, std::cref(grid),   std::ref(io__), pfx_,      dir_, step,
-      time,         std::move(h_expr), name,           comp_names};
+    auto write_func = [this, &grid, step, time, h_expr = move(h_expr), name,
+                       comp_names]() {
+      // std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+      prof_start(pr_thread);
+
+      // FIXME, the definitely unsafe idea here is to copy the grid right away
+      // as the thread starts, so that hopefully grid won't have changed (been
+      // rebalanced) yet.
+      Grid_t g(grid.domain, grid.bc, grid.kinds, grid.norm, grid.dt,
+               grid.n_patches(), grid.ibn);
+
+      Mfields<double> h_mflds(g, h_expr.shape(3), {});
+      h_mflds.gt() = h_expr;
+
+      char filename[dir_.size() + pfx_.size() + 20];
+      sprintf(filename, "%s/%s.%09d.bp", dir_.c_str(), pfx_.c_str(), step);
+      {
+        // FIXME not sure how necessary this lock really is, it certainly could
+        // spin for a long time if another thread is writing another file
+        std::lock_guard<std::mutex> guard(writer_mutex);
+        auto file = io_.open(filename, kg::io::Mode::Write, comm_, pfx_);
+
+        file.beginStep(kg::io::StepMode::Append);
+        file.put("step", step);
+        file.put("time", time);
+
+        file.put(name, h_mflds);
+        file.performPuts();
+        file.endStep();
+        file.close();
+      }
+
+      prof_stop(pr_thread);
+    };
+    writer_thread_ = std::thread{write_func};
     prof_stop(pr_write);
 #else
     prof_start(pr_write);
@@ -177,7 +177,12 @@ public:
   }
 
 private:
-  kg::io::IOAdios2 io__;
+  // Our writer thread may be writing one file via adios2 at the same time that
+  // another thread is writing another file, and adios2 isn't thread safe at
+  // all, so both threads may be making MPI calls that interfere with each
+  // other, which we prevent by using a unique communicator.
+  MPI_Comm comm_;
+  kg::io::IOAdios2 io_;
   kg::io::Engine file_;
   std::string pfx_;
   std::string dir_;
