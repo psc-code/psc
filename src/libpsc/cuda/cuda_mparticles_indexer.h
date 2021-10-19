@@ -38,6 +38,9 @@ struct cuda_mparticles_indexer
             int(grid.ldims[1] / BS::y::value),
             int(grid.ldims[2] / BS::z::value)}
   {
+    if (grid.domain.gdims[0] == 1) { // dim_yz hack
+      b_mx_[0] = 1;
+    }
     n_patches_ = grid.n_patches();
     n_blocks_per_patch = b_mx_[0] * b_mx_[1] * b_mx_[2];
     n_blocks = n_patches_ * n_blocks_per_patch;
@@ -333,6 +336,47 @@ struct BlockSimple2 : BlockBase
 
 template <typename BS, typename DIM>
 constexpr int BlockSimple2<BS, DIM>::MAX_N_BLOCKS;
+
+// ======================================================================
+// BlockSimple2
+
+#if 1
+template <typename BS>
+struct BlockSimple2<BS, dim_yz> : BlockBase
+{
+  static Range<int> block_starts() { return range(1); }
+
+  static constexpr int MAX_N_BLOCKS = 1024;
+
+  template <typename CudaMparticles>
+  static dim3 dimGrid(CudaMparticles& cmprts)
+  {
+    int n_blocks = cmprts.b_mx()[1] * cmprts.b_mx()[2] * cmprts.n_patches();
+    n_blocks = std::min(n_blocks, MAX_N_BLOCKS);
+
+    return dim3(n_blocks);
+  }
+
+  __device__ void init(const DParticleIndexer<BS>& dpi, uint r)
+  {
+    bid = r;
+    int block_pos[3];
+    block_pos[0] = 0;
+    block_pos[1] = r % dpi.b_mx()[1];
+    r /= dpi.b_mx()[1];
+    block_pos[2] = r % dpi.b_mx()[2];
+    r /= dpi.b_mx()[2];
+    p = r;
+
+    ci0[0] = 0;
+    ci0[1] = block_pos[1] * BS::y::value;
+    ci0[2] = block_pos[2] * BS::z::value;
+  }
+};
+
+template <typename BS>
+constexpr int BlockSimple2<BS, dim_yz>::MAX_N_BLOCKS;
+#endif
 
 // ======================================================================
 // BlockSimple specialized for dim_yz
