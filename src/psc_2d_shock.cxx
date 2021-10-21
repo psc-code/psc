@@ -146,7 +146,6 @@ public:
         npt.T[1] = Te;
         npt.T[2] = Te;
         break;
-      default: assert(0);
     }
   }
 };
