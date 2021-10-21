@@ -86,11 +86,8 @@ inline void find_cell_indices_ids(CMPRTS& cmprts,
   using Block = BlockSimple2<BS, dim>;
   dim3 dimGrid = Block::dimGrid(cmprts);
 
-  int n_blocks =
-    cmprts.b_mx()[0] * cmprts.b_mx()[1] * cmprts.b_mx()[2] * cmprts.n_patches();
-
   ::k_find_cell_indices_ids<BS, Block><<<dimGrid, THREADS_PER_BLOCK>>>(
-    cmprts, d_cidx.data().get(), d_id.data().get(), n_blocks);
+    cmprts, d_cidx.data().get(), d_id.data().get(), cmprts.n_blocks);
 }
 
 // ----------------------------------------------------------------------
@@ -275,16 +272,13 @@ struct cuda_mparticles_randomize_sort
     assert(d_random_idx.size() == cmprts.n_prts);
     assert(d_id.size() == cmprts.n_prts);
 
-    int n_blocks = cmprts.b_mx()[0] * cmprts.b_mx()[1] * cmprts.b_mx()[2] *
-                   cmprts.n_patches();
-
     if (dimGrid.x * THREADS_PER_BLOCK > rng_state_.size()) {
       rng_state_.resize(dimGrid.x * THREADS_PER_BLOCK);
     }
 
-    ::k_find_random_cell_indices_ids<BS, Block>
-      <<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, d_random_idx.data().get(),
-                                       d_id.data().get(), rng_state_, n_blocks);
+    ::k_find_random_cell_indices_ids<BS, Block><<<dimGrid, THREADS_PER_BLOCK>>>(
+      cmprts, d_random_idx.data().get(), d_id.data().get(), rng_state_,
+      cmprts.n_blocks);
     cuda_sync_if_enabled();
   }
 
