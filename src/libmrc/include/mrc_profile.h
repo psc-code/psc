@@ -31,7 +31,7 @@ struct prof_data
   int bytes;
 };
 
-#define MAX_PROF (100)
+#define MAX_PROF (1000)
 
 extern struct prof_data prof_data[MAX_PROF];
 
