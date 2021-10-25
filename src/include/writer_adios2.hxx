@@ -162,7 +162,7 @@ public:
         // FIXME not sure how necessary this lock really is, it certainly could
         // spin for a long time if another thread is writing another file
         prof_start(pr_lock);
-        std::lock_guard<std::mutex> guard(writer_mutex);
+        // std::lock_guard<std::mutex> guard(writer_mutex);
         prof_stop(pr_lock);
         auto file = io_.open(filename, kg::io::Mode::Write, comm_, pfx_);
 
