@@ -101,13 +101,15 @@ public:
                   const std::vector<std::string>& comp_names)
   {
 
-    static int pr, pr_copy, pr_wait, pr_write, pr_thread;
+    static int pr, pr_copy, pr_wait, pr_write, pr_thread, pr_lock, pr_adios2;
     if (!pr) {
       pr = prof_register("write_step", 1., 0, 0);
       pr_copy = prof_register("ws copy", 1., 0, 0);
       pr_wait = prof_register("ws wait", 1., 0, 0);
       pr_write = prof_register("ws write", 1., 0, 0);
       pr_thread = prof_register("ws thread", 1., 0, 0);
+      pr_lock = prof_register("ws lock", 1., 0, 0);
+      pr_adios2 = prof_register("ws adios2", 1., 0, 0);
     }
 
     prof_start(pr);
@@ -148,17 +150,21 @@ public:
       {
         // FIXME not sure how necessary this lock really is, it certainly could
         // spin for a long time if another thread is writing another file
+        prof_start(pr_lock);
         std::lock_guard<std::mutex> guard(writer_mutex);
+        prof_stop(pr_lock);
         auto file = io_.open(filename, kg::io::Mode::Write, comm_, pfx_);
 
         file.beginStep(kg::io::StepMode::Append);
         file.put("step", step);
         file.put("time", time);
 
+        prof_start(pr_adios2);
         file.put(name, h_mflds);
         file.performPuts();
         file.endStep();
         file.close();
+        prof_stop(pr_adios2);
       }
 
       prof_stop(pr_thread);
