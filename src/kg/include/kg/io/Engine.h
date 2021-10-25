@@ -119,7 +119,7 @@ public:
     return s;
   }
 
-private:
+  // private:
   File file_;
   std::deque<std::string> prefixes_;
   int mpi_rank_;
