@@ -46,6 +46,7 @@ target_include_directories(mrc
 )
 target_link_libraries(mrc
   PUBLIC
+    m
     MPI::MPI_C
     HDF5::HL
 )
