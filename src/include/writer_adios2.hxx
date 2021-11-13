@@ -13,6 +13,8 @@
 
 #include <thread>
 #include <mutex>
+#include <condition_variable>
+#include <queue>
 
 static std::mutex writer_mutex;
 
@@ -20,8 +22,18 @@ static std::mutex writer_mutex;
 
 class WriterADIOS2
 {
+#ifdef PSC_USE_IO_THREADS
+  using task_type = std::function<void(void)>;
+#endif
+
 public:
-  WriterADIOS2() { MPI_Comm_dup(MPI_COMM_WORLD, &comm_); }
+  WriterADIOS2()
+  {
+    MPI_Comm_dup(MPI_COMM_WORLD, &comm_);
+#ifdef PSC_USE_IO_THREADS
+    writer_thread_ = std::thread(&WriterADIOS2::thread_func, this);
+#endif
+  }
 
   WriterADIOS2(const WriterADIOS2&) = delete;
   WriterADIOS2& operator=(const WriterADIOS2&) = delete;
@@ -29,6 +41,11 @@ public:
   ~WriterADIOS2()
   {
 #ifdef PSC_USE_IO_THREADS
+    std::unique_lock<std::mutex> lock(queue_lock_);
+    exit_ = true;
+    lock.unlock();
+    cv_.notify_all();
+
     if (writer_thread_.joinable()) {
       writer_thread_.join();
     }
@@ -121,12 +138,6 @@ public:
     prof_stop(pr_copy);
 
 #ifdef PSC_USE_IO_THREADS
-    if (writer_thread_.joinable()) {
-      // make sure previous I/O is finished
-      prof_start(pr_wait);
-      writer_thread_.join();
-      prof_stop(pr_wait);
-    }
     prof_start(pr_write);
     int step = grid.timestep();
     double time = step * grid.dt;
@@ -146,7 +157,6 @@ public:
       // std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
       prof_start(pr_thread);
-      fprintf(stderr, "%s:%d\n", __FILE__, __LINE__);
 
       int n_comps = h_expr.shape(3);
       int n_patches = h_expr.shape(4);
@@ -193,8 +203,11 @@ public:
 
       prof_stop(pr_thread);
     };
-    writer_thread_ = std::thread{write_func};
-    prof_stop(pr_write);
+
+    std::unique_lock<std::mutex> lock(queue_lock_);
+    queue_.push(write_func);
+    lock.unlock();
+    cv_.notify_one();
 #else
     prof_start(pr_write);
     begin_step(grid);
@@ -207,6 +220,24 @@ public:
   }
 
 private:
+  void thread_func()
+  {
+    std::unique_lock<std::mutex> lock(queue_lock_);
+
+    do {
+      cv_.wait(lock, [this] { return queue_.size() || exit_; });
+
+      if (!exit_ && queue_.size()) {
+        auto task = std::move(queue_.front());
+        queue_.pop();
+
+        lock.unlock();
+        task();
+        lock.lock();
+      }
+    } while (!exit_);
+  }
+
   // Our writer thread may be writing one file via adios2 at the same time that
   // another thread is writing another file, and adios2 isn't thread safe at
   // all, so both threads may be making MPI calls that interfere with each
@@ -218,5 +249,9 @@ private:
   std::string dir_;
 #ifdef PSC_USE_IO_THREADS
   std::thread writer_thread_;
+  std::queue<task_type> queue_;
+  std::mutex queue_lock_;
+  std::condition_variable cv_;
+  bool exit_ = false;
 #endif
 };
