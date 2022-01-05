@@ -521,13 +521,13 @@ collective_m1_recv_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
     }
     
     int ib = info.off[dim];
-    if (ib == 0) {
-      ib = xdmf->slab_off[dim];
-    }
+    // if (ib == 0) {
+    //   ib = xdmf->slab_off[dim];
+    // }
     int ie = info.off[dim] + info.ldims[dim];
-    if (ie == ctx->gdims[dim]) {
-      ie = xdmf->slab_off[dim] + xdmf->slab_dims[dim];
-    }
+    // if (ie == ctx->gdims[dim]) {
+    //   ie = xdmf->slab_off[dim] + xdmf->slab_dims[dim];
+    // }
     //mprintf("recv from %d tag %d len %d\n", info.rank, gp, ie - ib);
     MPI_Irecv(&MRC_S1(nd1, ib), ie - ib, MPI_FLOAT, info.rank,
 	      gp, mrc_io_comm(io), &ctx->recv_reqs[ctx->nr_recv_reqs++]);
