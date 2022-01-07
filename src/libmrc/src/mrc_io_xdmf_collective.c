@@ -507,13 +507,13 @@ static void collective_m1_send_begin(struct mrc_io* io,
     // FIXME, should use intersection, probably won't work if slab_dims are
     // actually smaller
     int ib = 0;
-    if (info.off[dim] == 0) { // FIXME, -> generic code
-      ib = xdmf->slab_off[dim];
-    }
+    // if (info.off[dim] == 0) { // FIXME, -> generic code
+    //   ib = xdmf->slab_off[dim];
+    // }
     int ie = info.ldims[dim];
-    if (info.off[dim] + info.ldims[dim] == ctx->gdims[dim]) {
-      ie = xdmf->slab_off[dim] + xdmf->slab_dims[dim] - info.off[dim];
-    }
+    // if (info.off[dim] + info.ldims[dim] == ctx->gdims[dim]) {
+    //   ie = xdmf->slab_off[dim] + xdmf->slab_dims[dim] - info.off[dim];
+    // }
     // mprintf("send to %d tag %d len %d\n", xdmf->writers[0],
     // info.global_patch, ie - ib);
     assert(ib < ie);
