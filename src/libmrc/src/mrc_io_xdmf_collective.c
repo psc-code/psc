@@ -475,8 +475,13 @@ struct collective_m1_ctx
   int np[3];
   MPI_Request* send_reqs;
   int nr_send_reqs;
+  float* send_buf;
+  MPI_Request send_req;
   MPI_Request* recv_reqs;
   int nr_recv_reqs;
+  int* nr_recv_by_rank;
+  float** recv_buf_by_rank;
+  MPI_Request* recv_req_by_rank;
   char comp_name[100];
 };
 
@@ -488,9 +493,35 @@ static void collective_m1_send_begin(struct mrc_io* io,
   int dim = ctx->dim;
 
   assert(mrc_fld_data_type(m1) == MRC_NT_FLOAT);
-  ctx->send_reqs = calloc(ctx->nr_patches, sizeof(*ctx->send_reqs));
-  ctx->nr_send_reqs = 0;
+  int nr_send_patches = 0;
 
+  // count first
+  int ldim = 0;
+  for (int p = 0; p < ctx->nr_patches; p++) {
+    struct mrc_patch_info info;
+    mrc_domain_get_local_patch_info(m1->_domain, p, &info);
+    bool skip = false;
+    for (int d = 0; d < 3; d++) {
+      if (d != dim && info.off[d] != 0) {
+        skip = true;
+      }
+    }
+    if (skip) {
+      continue;
+    }
+    nr_send_patches++;
+    ldim = info.ldims[dim];
+  }
+
+  if (nr_send_patches == 0) {
+    ctx->send_buf = 0;
+    ctx->send_req = MPI_REQUEST_NULL;
+    return;
+  }
+
+  ctx->send_buf = malloc(nr_send_patches * ldim * sizeof(*ctx->send_buf));
+  nr_send_patches = 0;
+  int last_gp = -1;
   for (int p = 0; p < ctx->nr_patches; p++) {
     struct mrc_patch_info info;
     mrc_domain_get_local_patch_info(m1->_domain, p, &info);
@@ -515,19 +546,26 @@ static void collective_m1_send_begin(struct mrc_io* io,
     //   ie = xdmf->slab_off[dim] + xdmf->slab_dims[dim] - info.off[dim];
     // }
     // mprintf("send to %d tag %d len %d\n", xdmf->writers[0],
-    // info.global_patch, ie - ib);
+    // info.global_patch,
+    //       ie - ib);
     assert(ib < ie);
-    MPI_Isend(&MRC_M1(m1, m, ib, p), ie - ib, MPI_FLOAT, xdmf->writers[0],
-              info.global_patch, mrc_io_comm(io),
-              &ctx->send_reqs[ctx->nr_send_reqs++]);
+    memcpy(&ctx->send_buf[nr_send_patches++ * info.ldims[dim]],
+           &MRC_M1(m1, m, 0, p),
+           info.ldims[dim] * sizeof(MRC_M1(m1, m, ib, p)));
+    assert(info.global_patch > last_gp);
+    last_gp = info.global_patch;
   }
+
+  // mprintf("sending %d batched patches\n", nr_send_patches);
+  MPI_Isend(ctx->send_buf, nr_send_patches * ldim, MPI_FLOAT, xdmf->writers[0],
+            11111, mrc_io_comm(io), &ctx->send_req);
 }
 
 static void collective_m1_send_end(struct mrc_io* io,
                                    struct collective_m1_ctx* ctx)
 {
-  MPI_Waitall(ctx->nr_send_reqs, ctx->send_reqs, MPI_STATUSES_IGNORE);
-  free(ctx->send_reqs);
+  MPI_Wait(&ctx->send_req, MPI_STATUS_IGNORE);
+  free(ctx->send_buf);
 }
 
 static void collective_m1_recv_begin(struct mrc_io* io,
@@ -542,8 +580,70 @@ static void collective_m1_recv_begin(struct mrc_io* io,
 
   int dim = ctx->dim;
 
-  ctx->recv_reqs = calloc(ctx->np[dim], sizeof(*ctx->recv_reqs));
-  ctx->nr_recv_reqs = 0;
+  int size;
+  MPI_Comm_size(mrc_io_comm(io), &size);
+  ctx->nr_recv_by_rank = calloc(size, sizeof(*ctx->nr_recv_by_rank));
+  int ldim = 0;
+  for (int gp = 0; gp < ctx->nr_global_patches; gp++) {
+    struct mrc_patch_info info;
+    mrc_domain_get_global_patch_info(domain, gp, &info);
+    bool skip = false;
+    for (int d = 0; d < 3; d++) {
+      if (d != dim && info.off[d] != 0) {
+        skip = true;
+      }
+    }
+    if (skip) {
+      continue;
+    }
+
+    ldim = info.ldims[dim];
+    int ib = info.off[dim];
+    // if (ib == 0) {
+    //   ib = xdmf->slab_off[dim];
+    // }
+    int ie = info.off[dim] + info.ldims[dim];
+    // if (ie == ctx->gdims[dim]) {
+    //   ie = xdmf->slab_off[dim] + xdmf->slab_dims[dim];
+    // }
+    //    mprintf("recv from %d tag %d len %d\n", info.rank, gp, ie - ib);
+    ctx->nr_recv_by_rank[info.rank]++;
+  }
+
+  ctx->recv_buf_by_rank = calloc(size, sizeof(*ctx->recv_buf_by_rank));
+  ctx->recv_req_by_rank = calloc(size, sizeof(*ctx->recv_req_by_rank));
+
+  for (int rank = 0; rank < size; rank++) {
+    ctx->recv_req_by_rank[rank] = MPI_REQUEST_NULL;
+    if (ctx->nr_recv_by_rank[rank] > 0) {
+      ctx->recv_buf_by_rank[rank] =
+        malloc(ctx->nr_recv_by_rank[rank] * ldim *
+               sizeof(*ctx->recv_buf_by_rank[rank]));
+      // mprintf("recv %d patches from %d\n", ctx->nr_recv_by_rank[rank], rank);
+      MPI_Irecv(ctx->recv_buf_by_rank[rank], ctx->nr_recv_by_rank[rank] * ldim,
+                MPI_FLOAT, rank, 11111, mrc_io_comm(io),
+                &ctx->recv_req_by_rank[rank]);
+    }
+  }
+}
+
+static void collective_m1_recv_end(struct mrc_io* io,
+                                   struct collective_m1_ctx* ctx,
+                                   struct mrc_domain* domain,
+                                   struct mrc_ndarray* nd1)
+{
+  struct xdmf* xdmf = to_xdmf(io);
+
+  if (io->rank != xdmf->writers[0])
+    return;
+
+  int dim = ctx->dim;
+
+  int size;
+  MPI_Comm_size(mrc_io_comm(io), &size);
+  memset(ctx->nr_recv_by_rank, 0, size * sizeof(*ctx->nr_recv_by_rank));
+
+  MPI_Waitall(size, ctx->recv_req_by_rank, MPI_STATUSES_IGNORE);
 
   for (int gp = 0; gp < ctx->nr_global_patches; gp++) {
     struct mrc_patch_info info;
@@ -559,30 +659,19 @@ static void collective_m1_recv_begin(struct mrc_io* io,
     }
 
     int ib = info.off[dim];
-    // if (ib == 0) {
-    //   ib = xdmf->slab_off[dim];
-    // }
-    int ie = info.off[dim] + info.ldims[dim];
-    // if (ie == ctx->gdims[dim]) {
-    //   ie = xdmf->slab_off[dim] + xdmf->slab_dims[dim];
-    // }
-    // mprintf("recv from %d tag %d len %d\n", info.rank, gp, ie - ib);
-    MPI_Irecv(&MRC_S1(nd1, ib), ie - ib, MPI_FLOAT, info.rank, gp,
-              mrc_io_comm(io), &ctx->recv_reqs[ctx->nr_recv_reqs++]);
+    int ldim = info.ldims[dim];
+    //    mprintf("copy from %d gp %d len %d\n", info.rank, gp, ldim);
+    memcpy(&MRC_S1(nd1, ib),
+           ctx->recv_buf_by_rank[info.rank] +
+             ldim * ctx->nr_recv_by_rank[info.rank],
+           ldim * sizeof(MRC_S1(nd1, ib)));
+    ctx->nr_recv_by_rank[info.rank]++;
   }
-  assert(ctx->nr_recv_reqs == ctx->np[dim]);
-}
-
-static void collective_m1_recv_end(struct mrc_io* io,
-                                   struct collective_m1_ctx* ctx)
-{
-  struct xdmf* xdmf = to_xdmf(io);
-
-  if (io->rank != xdmf->writers[0])
-    return;
-
-  MPI_Waitall(ctx->nr_recv_reqs, ctx->recv_reqs, MPI_STATUSES_IGNORE);
-  free(ctx->recv_reqs);
+  for (int r = 0; r < size; r++) {
+    free(ctx->recv_buf_by_rank[r]);
+  }
+  free(ctx->recv_buf_by_rank);
+  free(ctx->recv_req_by_rank);
 }
 
 // ----------------------------------------------------------------------
@@ -634,7 +723,7 @@ static void xdmf_collective_write_m1(struct mrc_io* io, const char* path,
     for (int m = 0; m < nr_comps; m++) {
       collective_m1_recv_begin(io, &ctx, m1->_domain, nd1);
       collective_m1_send_begin(io, &ctx, m1, m);
-      collective_m1_recv_end(io, &ctx);
+      collective_m1_recv_end(io, &ctx, m1->_domain, nd1);
       collective_m1_write_f1(io, path, nd1, 0, mrc_fld_comp_name(m1, m),
                              group0);
       collective_m1_send_end(io, &ctx);
@@ -649,6 +738,7 @@ static void xdmf_collective_write_m1(struct mrc_io* io, const char* path,
       collective_m1_send_end(io, &ctx);
     }
   }
+  MPI_Barrier(MPI_COMM_WORLD);
   xdmf->slab_dims[dim] = slab_dims_save;
   xdmf->slab_off[dim] = slab_off_save;
 }
@@ -672,7 +762,7 @@ static void collective_m1_read_recv_begin(struct mrc_io* io,
     mrc_domain_get_local_patch_info(m1->_domain, p, &info);
     int ib = -ctx->sw;
     int ie = info.ldims[ctx->dim] + ctx->sw;
-    //	mprintf("recv to %d tag %d\n", xdmf->writers[0], info.global_patch);
+    // mprintf("recv to %d tag %d\n", xdmf->writers[0], info.global_patch);
     MPI_Irecv(&MRC_M1(m1, m, ib, p), ie - ib, MPI_FLOAT, xdmf->writers[0],
               info.global_patch, mrc_io_comm(io),
               &ctx->recv_reqs[ctx->nr_recv_reqs++]);
