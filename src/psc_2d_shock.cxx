@@ -17,7 +17,7 @@
 #define CASE_2D_SMALL 4
 
 // FIXME select a hardcoded case
-#define CASE CASE_2D
+#define CASE CASE_1D
 
 // ======================================================================
 // Particle kinds
@@ -181,7 +181,7 @@ using PscConfig =
 
 #endif
 
-using Writer = WriterDefault; // can choose WriterMrc, WriterAdios2
+using Writer = WriterMRC; // can choose WriterMrc, WriterAdios2
 
 // ======================================================================
 // Moment_n_Selector
@@ -227,7 +227,7 @@ void setupParameters()
   // -- set some generic PSC parameters
   psc_params.nmax = 10000001; // 5001;
   psc_params.cfl = 0.75;
-  psc_params.write_checkpoint_every_step = 1500;
+  psc_params.write_checkpoint_every_step = 5000;
   psc_params.stats_every = 1;
 
   // -- start from checkpoint:
@@ -287,9 +287,9 @@ Grid_t* setupGrid()
   Int3 gdims = {1, 160, 3 * 160};         // global number of grid points
   Int3 np = {1, 5, 3 * 5};                // division into patches
 #elif CASE == CASE_1D
-  Grid_t::Real3 LL = {1., 13.3333, 18000.}; // domain size (in d_e)
-  Int3 gdims = {1, 32, 60000};              // global number of grid points
-  Int3 np = {1, 1, 1875};                   // division into patches
+  Grid_t::Real3 LL = {1., 9.6, 60000.0}; // domain size (in d_e)
+  Int3 gdims = {1, 32, 200000};          // global number of grid points
+  Int3 np = {1, 1, 6250};                // division into patches
 #endif
 
   Grid_t::Domain domain{gdims, LL, -.5 * LL, np};
@@ -315,7 +315,7 @@ Grid_t* setupGrid()
 
   // -- setup normalization
   auto norm_params = Grid_t::NormalizationParams::dimensionless();
-  norm_params.nicell = 100;
+  norm_params.nicell = 2000;
 
   double dt = psc_params.cfl * courant_length(domain);
   Grid_t::Normalization norm{norm_params};
@@ -465,8 +465,8 @@ void run()
   OutputFieldsItemParams outf_item_params{};
   OutputFieldsParams outf_params{};
 #if CASE == CASE_1D
-  outf_item_params.pfield_interval = 10000;
-  outf_item_params.tfield_interval = 10000;
+  outf_item_params.pfield_interval = 5000;
+  outf_item_params.tfield_interval = 5000;
 #elif CASE == CASE_2D_SMALL
   outf_item_params.pfield_interval = 10000;
   outf_item_params.tfield_interval = 10000;
@@ -482,7 +482,7 @@ void run()
 
   // -- output particles
   OutputParticlesParams outp_params{};
-  outp_params.every_step = -1;
+  outp_params.every_step = 20000;
   outp_params.data_dir = ".";
   outp_params.basename = "prt";
   OutputParticles outp{grid, outp_params};
