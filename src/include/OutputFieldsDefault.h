@@ -57,7 +57,7 @@ struct OutputFieldsItemParams
   int tfield_average_length = 1000000;
   int tfield_average_every = 1;
   Int3 rn = {};
-  Int3 rx = {1000000, 1000000, 100000};
+  Int3 rx = {10000000, 10000000, 10000000};
 };
 
 // ======================================================================
