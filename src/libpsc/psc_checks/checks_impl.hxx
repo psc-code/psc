@@ -120,14 +120,13 @@ struct Checks_
     }
 
     if (continuity_dump_always || max_err >= eps) {
-      static WriterDefault writer;
-      if (!writer) {
-        writer.open("continuity");
+      if (!writer_continuity_) {
+        writer_continuity_.open("continuity");
       }
-      writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
-      writer.write(divj_.gt(), grid, "div_j", {"div_j"});
-      writer.write(d_rho.gt(), grid, "d_rho", {"d_rho"});
-      writer.end_step();
+      writer_continuity_.begin_step(grid.timestep(), grid.timestep() * grid.dt);
+      writer_continuity_.write(divj_.gt(), grid, "div_j", {"div_j"});
+      writer_continuity_.write(d_rho.gt(), grid, "d_rho", {"d_rho"});
+      writer_continuity_.end_step();
       MPI_Barrier(grid.comm());
     }
 
@@ -191,14 +190,14 @@ struct Checks_
     }
 
     if (gauss_dump_always || max_err >= eps) {
-      static WriterDefault writer;
-      if (!writer) {
-        writer.open("gauss");
+      if (!writer_gauss_) {
+        writer_gauss_.open("gauss");
       }
-      writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
-      writer.write(rho_.gt(), grid, "rho", {"rho"});
-      writer.write(dive.gt(), dive.grid(), dive.name(), dive.comp_names());
-      writer.end_step();
+      writer_gauss_.begin_step(grid.timestep(), grid.timestep() * grid.dt);
+      writer_gauss_.write(rho_.gt(), grid, "rho", {"rho"});
+      writer_gauss_.write(dive.gt(), dive.grid(), dive.name(),
+                          dive.comp_names());
+      writer_gauss_.end_step();
     }
 
     assert(max_err < eps);
@@ -210,4 +209,6 @@ struct Checks_
   Mfields rho_m_;
   Mfields rho_;
   Mfields divj_;
+  WriterDefault writer_continuity_;
+  WriterDefault writer_gauss_;
 };
