@@ -11,6 +11,9 @@
 #ifdef HAVE_NVTX
 #include <nvToolsExt.h>
 #endif
+#ifdef HAVE_PERFETTO
+#include "mrc_perfetto.h"
+#endif
 
 #define NR_EVENTS (0)
 
@@ -55,6 +58,9 @@ static inline void prof_start(int pr)
 #ifdef HAVE_NVTX
   nvtxRangePush(prof_data[pr].name);
 #endif
+#ifdef HAVE_PERFETTO
+  perfetto_event_begin(prof_data[pr].name);
+#endif
 }
 
 static inline void prof_restart(int pr)
@@ -69,6 +75,9 @@ static inline void prof_restart(int pr)
 #ifdef HAVE_NVTX
   nvtxRangePush(prof_data[pr].name);
 #endif
+#ifdef HAVE_PERFETTO
+  perfetto_event_begin(prof_data[pr].name);
+#endif
 }
 
 static inline void prof_stop(int pr)
@@ -82,6 +91,9 @@ static inline void prof_stop(int pr)
   prof_globals.info[pr].cnt++;
 #ifdef HAVE_NVTX
   nvtxRangePop();
+#endif
+#ifdef HAVE_PERFETTO
+  perfetto_event_end();
 #endif
 }
 

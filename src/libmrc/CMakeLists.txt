@@ -37,7 +37,9 @@ endif()
 
 # FIXME!!!
 file(GLOB LIBMRC_SOURCES src/*)
-file(GLOB LIBMRC_REMOVE src/mrc_ddc_mb.c src/mrc_fld_common.c src/mrc_mat_petsc.c src/mrc_ndarray_common.c src/mrc_ts_petsc.c src/mrc_vec_petsc.c)
+file(GLOB LIBMRC_REMOVE src/mrc_ddc_mb.c src/mrc_fld_common.c src/mrc_mat_petsc.c
+  src/mrc_ndarray_common.c src/mrc_ts_petsc.c src/mrc_vec_petsc.c
+  src/mrc_perfetto.cxx)
 list(REMOVE_ITEM LIBMRC_SOURCES ${LIBMRC_REMOVE})
 
 add_library(mrc ${LIBMRC_SOURCES})
@@ -60,6 +62,12 @@ if (PSC_HAVE_NVTX)
   set(HAVE_NVTX 1)
 endif()
 
+if (PSC_USE_PERFETTO)
+  target_sources(mrc PRIVATE src/mrc_perfetto.cxx)
+  target_link_libraries(mrc PRIVATE perfetto::perfetto)
+  target_compile_definitions(mrc PRIVATE HAVE_PERFETTO)
+endif()
+
 configure_file (
   "${PROJECT_SOURCE_DIR}/include/mrc_config.h.in"
   "${PROJECT_BINARY_DIR}/include/mrc_config.h"
@@ -67,4 +75,3 @@ configure_file (
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 
 add_subdirectory(tests)
-
