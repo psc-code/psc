@@ -15,6 +15,9 @@
 #include <petsc.h>
 #endif
 
+#ifdef HAVE_PERFETTO
+#include <mrc_perfetto.h>
+#endif
 
 struct option {
   char *name;
@@ -63,6 +66,10 @@ warn(const char *fmt, ...)
 void
 libmrc_params_init(int argc, char **argv)
 {
+#ifdef HAVE_PERFETTO
+  perfetto_initialize();
+#endif
+
   MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
 
 #ifdef HAVE_PETSC
@@ -136,6 +143,9 @@ libmrc_params_finalize()
     free(opt->value);
     free(opt);
   }
+#ifdef HAVE_PERFETTO
+  perfetto_finalize();
+#endif
 }
 
 void

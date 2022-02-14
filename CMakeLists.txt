@@ -30,6 +30,7 @@ psc_option(ADIOS2 "Build with adios2 support" AUTO)
 option(PSC_USE_NVTX "Build with NVTX support" OFF)
 option(PSC_USE_RMM "Build with RMM memory manager support" OFF)
 option(PSC_BOUNDS_CHECK "Turn on bounds-checking" OFF)
+option(PSC_USE_PERFETTO "Turn on perfetto-based tracing" OFF)
 
 # CUDA
 if(USE_CUDA)
@@ -102,6 +103,15 @@ if (PSC_USE_RMM)
   set(PSC_HAVE_RMM 1)
 endif()
 
+if (PSC_USE_PERFETTO)
+  CPMAddPackage("gh:google/perfetto@24.2")
+  find_package(Threads REQUIRED)
+  add_library(perfetto STATIC ${perfetto_SOURCE_DIR}/sdk/perfetto.cc)
+  add_library(perfetto::perfetto ALIAS perfetto)
+  target_include_directories(perfetto PUBLIC ${perfetto_SOURCE_DIR}/sdk)
+  target_link_libraries(perfetto PRIVATE Threads::Threads)
+endif()
+
 function(GenerateHeaderConfig)
   set(PSC_CONFIG_DEFINES)
   foreach(OPT IN LISTS ARGN)
@@ -131,6 +141,3 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/src/libmrc/include)
 
 add_subdirectory(src/libmrc)
 add_subdirectory(src)
-
-
-
