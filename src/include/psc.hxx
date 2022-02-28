@@ -230,6 +230,9 @@ struct Psc
     // initial output / stats
     mpi_printf(grid().comm(), "Performing initial diagnostics.\n");
     diagnostics();
+
+    psc_stats_val[st_nr_particles] = mprts_.size();
+
     print_status();
 
     mpi_printf(grid().comm(), "Initialization complete.\n");
