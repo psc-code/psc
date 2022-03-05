@@ -25,6 +25,9 @@ target_include_directories(psc PUBLIC ../include)
 target_link_libraries(psc PUBLIC kg mrc)
 target_link_libraries(psc PUBLIC MPI::MPI_CXX)
 target_link_libraries(psc PUBLIC gtensor::gtensor)
+if(USE_CUDA)
+  target_compile_definitions(psc PUBLIC GTENSOR_USE_THRUST)
+endif()
 target_compile_features(psc PUBLIC cxx_std_11)
 
 if (USE_CUDA)
@@ -34,32 +37,32 @@ if (USE_CUDA)
     cuda/psc_particles_cuda.cxx
     cuda/cuda_mparticles_base.cu
     cuda/cuda_mparticles.cu
-    
+
     cuda/psc_fields_cuda.cxx
-    
+
     cuda/cuda_push_mprts_yz.cu
-    
+
     cuda/push_fields_cuda_impl.cxx
     cuda/cuda_push_fields_yz.cu
 
     cuda/marder_cuda_impl.cxx
-    
+
     cuda/bnd_particles_cuda_impl.cu
     cuda/cuda_bndp.cu
     cuda/cuda_bndp_scan.cu
     cuda/cuda_bndp_spine.cu
-    
+
     cuda/cuda_bnd.cu
     cuda/bnd_cuda_3_impl.cu
-    
+
     cuda/psc_bnd_fields_cuda.cxx
-    
+
     cuda/cuda_moments_1st_nc.cu
-    
+
     cuda/collision_cuda_impl.cu
-    
+
     cuda/cuda_heating.cu
-    
+
     cuda/mem.cxx
     )
   target_include_directories(psc PUBLIC cuda)

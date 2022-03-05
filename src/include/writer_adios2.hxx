@@ -220,6 +220,7 @@ public:
   }
 
 private:
+#ifdef PSC_USE_IO_THREADS
   void thread_func()
   {
     std::unique_lock<std::mutex> lock(queue_lock_);
@@ -237,6 +238,7 @@ private:
       }
     } while (!exit_);
   }
+#endif
 
   // Our writer thread may be writing one file via adios2 at the same time that
   // another thread is writing another file, and adios2 isn't thread safe at
