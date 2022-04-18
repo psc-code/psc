@@ -11,7 +11,7 @@ class RunInfo:
     TODO: Should also know about timestep, species, whatever...
     """
 
-    def __init__(self, file, length=None):
+    def __init__(self, file, length=None, corner=None):
         assert len(file.variables) > 0
         var = next(iter(file.variables))
         self.gdims = np.asarray(file[var].shape)[0:3]
@@ -19,7 +19,10 @@ class RunInfo:
         if length is not None:
             self.length = np.asarray(length)
             # FIXME, corner should also be passed (or rather read)
-            self.corner = -.5 * self.length
+            if corner is not None:
+                self.corner = np.asarray(corner)
+            else:
+                self.corner = -.5 * self.length
         else:
             self.length = self.gdims
             self.corner = np.array([0., 0., 0.])
