@@ -90,7 +90,7 @@ struct PscConfig_
   using PushFields = ::PushFields<MfieldsState>;
   using BndParticles = BndParticles_<Mparticles>;
   using Bnd = Bnd_<MfieldsState>;
-  using BndFields = BndFieldsNone<MfieldsState>;
+  using BndFields = BndFields_<MfieldsState, Dim>;
   using Balance = Balance_<Mparticles, MfieldsState, Mfields>;
   using Checks = Checks_<Mparticles, MfieldsState, Mfields, checks_order>;
   using Marder = Marder_<Mparticles, MfieldsState, Mfields>;
