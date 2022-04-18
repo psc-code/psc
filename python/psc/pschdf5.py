@@ -42,11 +42,19 @@ class RunInfo:
                     group = mrc_fld[kk]
                     dsets = [group[p]['3d'] for p in group]
                     self._fields[kk] = dsets
+            if k.startswith('mrc_fld_'):
+                mrc_fld = self._file[k]
+                for kk in mrc_fld:
+                    group = mrc_fld[kk]
+                    dsets = [group[p]['3d'] for p in group]
+                    self._fields[kk] = dsets
                     
     def read_mcrds(self, bnd=0):
         mcrds = {}
         for d, crd in enumerate(['x', 'y', 'z']):
             mcrds_path = self.find_pfx('crd[{}]-'.format(d))
+            if mcrds_path is None:
+                return self.read_mcrds_2(bnd)
             group = self._file[mcrds_path + '/crd[{}]'.format(d)]
             paths = [p + "/1d" for p in group]
             dsets = [group[path] for path in paths]
@@ -55,6 +63,22 @@ class RunInfo:
             mcrds[crd] = dsets
         
         self._crds = mcrds                    
+        
+    def read_mcrds_2(self, bnd):
+        bnd = 2 # FIXME
+        mrc_crds = self._file[self.find_pfx('mrc_crds')]
+
+        mcrds = {}
+        for d, crd in enumerate(['x', 'y', 'z']):
+            mcrds_path = 'mrc_m1_{}/crd{}'.format(mrc_crds.attrs['mcrd{}'.format(d)][0], d)
+            group = self._file[mcrds_path]
+            paths = [p + "/1d" for p in group]
+            dsets = [group[path] for path in paths]
+            if (bnd):
+                dsets = [dset[bnd:-bnd] for dset in dsets]
+            mcrds[crd] = dsets
+
+        self._crds = mcrds
     
 def psc_open_dataset(filename_or_obj, drop_variables=None):
     run = RunInfo(filename_or_obj)
