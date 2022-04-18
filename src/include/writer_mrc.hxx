@@ -88,8 +88,9 @@ public:
       mrc_fld_set_comp_name(fld, m, comp_names[m].c_str());
     }
 
+    assert(n_comps <= e.shape(3));
     assert(e.shape() == gt::shape(grid.ldims[0], grid.ldims[1], grid.ldims[2],
-                                  n_comps, grid.n_patches()));
+                                  e.shape(3), grid.n_patches()));
     for (int p = 0; p < e.shape(4); p++) {
       for (int m = 0; m < n_comps; m++) {
         mrc_fld_foreach(fld, i, j, k, 0, 0)
