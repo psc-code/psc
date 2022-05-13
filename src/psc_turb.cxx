@@ -39,17 +39,11 @@ struct PscFlatfoilParams
   double Zi;
   double mass_ratio;
   double lambda0;
-  double target_n;     // target density
-  double target_Te_HE; // target high energy electron temperature
-  double target_Te;    // target electron temperature
-  double target_Ti;    // target ion_temperatore
 
   double background_n;
   double background_Te;
   double background_Ti;
   double electron_HE_ratio;
-
-  int inject_interval;
 
   // The following parameters are calculated from the above / and other
   // information
@@ -82,65 +76,6 @@ PscParams psc_params;
 } // namespace
 
 // ======================================================================
-// InjectFoil
-//
-// This class describes the actual foil, specifically, where the foil
-// is located and what its plasma parameters are
-
-struct InjectFoilParams
-{
-  double xl, xh;
-  double yl, yh;
-  double zl, zh;
-  double n;
-  double Te_HE, Te, Ti;
-};
-
-class InjectFoil : public InjectFoilParams
-{
-public:
-  InjectFoil() = default;
-
-  InjectFoil(const InjectFoilParams& params) : InjectFoilParams(params) {}
-
-  bool is_inside(double crd[3])
-  {
-    return (crd[0] >= xl && crd[0] <= xh && crd[1] >= yl && crd[1] <= yh &&
-            crd[2] >= zl && crd[2] <= zh);
-  }
-
-  void init_npt(int pop, double crd[3], psc_particle_npt& npt)
-  {
-    if (!is_inside(crd)) {
-      npt.n = 0;
-      return;
-    }
-
-    switch (pop) {
-      case MY_ION:
-        npt.n = n;
-        npt.T[0] = Ti;
-        npt.T[1] = Ti;
-        npt.T[2] = Ti;
-        break;
-      case MY_ELECTRON_HE:
-        npt.n = g.electron_HE_ratio * n;
-        npt.T[0] = Te_HE;
-        npt.T[1] = Te_HE;
-        npt.T[2] = Te_HE;
-        break;
-      case MY_ELECTRON:
-        npt.n = (1 - g.electron_HE_ratio) * n;
-        npt.T[0] = Te;
-        npt.T[1] = Te;
-        npt.T[2] = Te;
-        break;
-      default: assert(0);
-    }
-  }
-};
-
-// ======================================================================
 // PSC configuration
 //
 // This sets up compile-time configuration for the code, in particular
@@ -169,30 +104,6 @@ using PscConfig =
 
 using Writer = WriterDefault; // can choose WriterMrc, WriterAdios2
 
-// ======================================================================
-// Moment_n_Selector
-//
-// FIXME, should go away eventually
-
-template <typename Mparticles, typename Dim, typename Enable = void>
-struct Moment_n_Selector
-{
-  using type = Moment_n_1st<Mparticles, MfieldsSingle>;
-};
-
-#ifdef USE_CUDA
-
-// This not particularly pretty template arg specializes InjectSelector for all
-// CUDA Mparticles types
-template <typename Mparticles, typename Dim>
-struct Moment_n_Selector<
-  Mparticles, Dim, typename std::enable_if<Mparticles::is_cuda::value>::type>
-{
-  using type = Moment_n_1st_cuda<Mparticles, Dim>;
-};
-
-#endif
-
 // ----------------------------------------------------------------------
 
 using MfieldsState = PscConfig::MfieldsState;
@@ -202,7 +113,6 @@ using Collision = PscConfig::Collision;
 using Checks = PscConfig::Checks;
 using Marder = PscConfig::Marder;
 using OutputParticles = PscConfig::OutputParticles;
-using Moment_n = typename Moment_n_Selector<Mparticles, Dim>::type;
 
 // ======================================================================
 // setupParameters
@@ -230,11 +140,6 @@ void setupParameters()
   g.Zi = 1.;
   g.mass_ratio = 100.;
   g.lambda0 = 20.;
-
-  g.target_n = 2.5;
-  g.target_Te = 0.001;
-  g.target_Te_HE = 0.001;
-  g.target_Ti = 0.001;
 
   g.electron_HE_ratio = 0.01;
 
@@ -305,8 +210,7 @@ Grid_t* setupGrid()
 // initializeParticles
 
 void initializeParticles(SetupParticles<Mparticles>& setup_particles,
-                         Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
-                         InjectFoil& inject_target)
+                         Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
 {
   // -- set particle initial condition
   partitionAndSetupParticles(setup_particles, balance, grid_ptr, mprts,
@@ -332,11 +236,6 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
                                    break;
                                  default: assert(0);
                                }
-
-                               //  if (inject_target.is_inside(crd)) {
-                               //    // replace values above by target values
-                               //    inject_target.init_npt(kind, crd, npt);
-                               //  }
                              });
 }
 
@@ -420,7 +319,7 @@ void run()
   // -- Collision
   int collision_interval = 0;
   double collision_nu = 1e-10;
-  //    3.76 * std::pow(g.target_Te_heat, 2.) / g.Zi / g.lambda0;
+  //    3.76 * std::pow(g.target_Te, 2.) / g.Zi / g.lambda0;
   Collision collision{grid, collision_interval, collision_nu};
 
   // -- Checks
@@ -474,96 +373,24 @@ void run()
   // ----------------------------------------------------------------------
   // Set up objects specific to the flatfoil case
 
-  // -- Particle injection
-  InjectFoilParams inject_foil_params;
-  inject_foil_params.xl = -100000. * g.d_i;
-  inject_foil_params.xh = 100000. * g.d_i;
-  inject_foil_params.yl = -100000. * g.d_i;
-  inject_foil_params.yh = 100000. * g.d_i;
-  double target_zwidth = 1.;
-  inject_foil_params.zl = -target_zwidth * g.d_i;
-  inject_foil_params.zh = target_zwidth * g.d_i;
-  inject_foil_params.n = g.target_n;
-  inject_foil_params.Te_HE = g.target_Te_HE;
-  inject_foil_params.Te = g.target_Te;
-  inject_foil_params.Ti = g.target_Ti;
-  InjectFoil inject_target{inject_foil_params};
-
-  g.inject_interval = 20;
-  int inject_tau = 40;
-
   SetupParticles<Mparticles> setup_particles(grid);
   setup_particles.fractional_n_particles_per_cell = true;
   setup_particles.neutralizing_population = MY_ION;
-
-  double inject_fac = (g.inject_interval * grid.dt / inject_tau) /
-                      (1. + g.inject_interval * grid.dt / inject_tau);
-
-  Moment_n moment_n(grid);
-
-  auto lf_inject_heat = [&](const Grid_t& grid, Mparticles& mprts) {
-    static int pr_inject, pr_heating;
-    if (!pr_inject) {
-      pr_inject = prof_register("inject", 1., 0, 0);
-      pr_heating = prof_register("heating", 1., 0, 0);
-    }
-
-    MEM_STATS();
-
-    auto comm = grid.comm();
-    auto timestep = grid.timestep();
-
-    if (g.inject_interval > 0 && timestep % g.inject_interval == 0) {
-      mpi_printf(comm, "***** Performing injection...\n");
-      prof_start(pr_inject);
-      moment_n.update(mprts);
-      auto d_n = moment_n.gt();
-      auto h_n = gt::host_mirror(d_n);
-      gt::copy(gt::eval(d_n), h_n); // FIXME shouldn't need eval (?)
-
-      setup_particles.setupParticles(
-        mprts,
-        [&](int kind, Double3 pos, int p, Int3 idx, psc_particle_npt& npt) {
-          if (inject_target.is_inside(pos)) {
-            inject_target.init_npt(kind, pos, npt);
-
-            if (kind == MY_ELECTRON_HE || kind == MY_ELECTRON) {
-              npt.n = inject_target.n -
-                      (h_n(idx[0], idx[1], idx[2], MY_ELECTRON, p) +
-                       h_n(idx[0], idx[1], idx[2], MY_ELECTRON_HE, p));
-              if (kind == MY_ELECTRON_HE) {
-                npt.n *= g.electron_HE_ratio;
-              } else {
-                npt.n *= (1. - g.electron_HE_ratio);
-              }
-            } else { // ions
-              npt.n -= h_n(idx[0], idx[1], idx[2], kind, p);
-            }
-            if (npt.n < 0) {
-              npt.n = 0;
-            }
-            npt.n *= inject_fac;
-          }
-        });
-      prof_stop(pr_inject);
-    }
-  };
 
   // ----------------------------------------------------------------------
   // setup initial conditions
 
   if (read_checkpoint_filename.empty()) {
-    initializeParticles(setup_particles, balance, grid_ptr, mprts,
-                        inject_target);
+    initializeParticles(setup_particles, balance, grid_ptr, mprts);
     initializeFields(mflds);
   }
 
   // ----------------------------------------------------------------------
   // hand off to PscIntegrator to run the simulation
 
-  auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
-                                          balance, collision, checks, marder,
-                                          diagnostics, lf_inject_heat);
+  auto psc =
+    makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts, balance,
+                                 collision, checks, marder, diagnostics);
 
   MEM_STATS();
   psc.integrate();
