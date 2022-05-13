@@ -24,7 +24,6 @@
 // (so that Gauss's Law is satisfied).
 enum
 {
-  MY_ELECTRON_HE,
   MY_ELECTRON,
   MY_ION,
   N_MY_KINDS,
@@ -43,7 +42,6 @@ struct PscFlatfoilParams
   double background_n;
   double background_Te;
   double background_Ti;
-  double electron_HE_ratio;
 
   // The following parameters are calculated from the above / and other
   // information
@@ -141,8 +139,6 @@ void setupParameters()
   g.mass_ratio = 100.;
   g.lambda0 = 20.;
 
-  g.electron_HE_ratio = 0.01;
-
   g.background_n = 1.;
   g.background_Te = .01;
   g.background_Ti = .01;
@@ -174,7 +170,6 @@ Grid_t* setupGrid()
   // last population ("i") is neutralizing
   Grid_t::Kinds kinds(N_MY_KINDS);
   kinds[MY_ION] = {g.Zi, g.mass_ratio * g.Zi, "i"};
-  kinds[MY_ELECTRON_HE] = {-1., 1., "he_e"};
   kinds[MY_ELECTRON] = {-1., 1., "e"};
 
   g.d_i = sqrt(kinds[MY_ION].m / kinds[MY_ION].q);
@@ -221,12 +216,6 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
                                    npt.T[0] = g.background_Ti;
                                    npt.T[1] = g.background_Ti;
                                    npt.T[2] = g.background_Ti;
-                                   break;
-                                 case MY_ELECTRON_HE:
-                                   npt.n = 0.;
-                                   npt.T[0] = g.background_Te;
-                                   npt.T[1] = g.background_Te;
-                                   npt.T[2] = g.background_Te;
                                    break;
                                  case MY_ELECTRON:
                                    npt.n = g.background_n;
@@ -278,32 +267,6 @@ void run()
   MfieldsState mflds(grid);
   if (!read_checkpoint_filename.empty()) {
     read_checkpoint(read_checkpoint_filename, grid, mprts, mflds);
-    if (grid.kinds.size() == 2) {
-      // we restarted from an old run that was using MY_ION = 0, MY_ELECTRON = 1
-
-      // restore kinds to original order
-      Grid_t::Kinds kinds(N_MY_KINDS);
-      kinds[MY_ION] = {g.Zi, g.mass_ratio * g.Zi, "i"};
-      kinds[MY_ELECTRON_HE] = {-1., 1., "he_e"};
-      kinds[MY_ELECTRON] = {-1., 1., "e"};
-      grid.kinds = kinds;
-
-      // fix up renumbered particle kind
-      auto& mp = mprts.template get_as<MparticlesSingle>();
-      for (int p = 0; p < mp.n_patches(); p++) {
-        auto prts = mp[p];
-        for (int n = 0; n < prts.size(); n++) {
-          if (prts[n].kind == 0) {
-            prts[n].kind = MY_ION;
-          } else if (prts[n].kind == 1) {
-            prts[n].kind = MY_ELECTRON;
-          } else {
-            assert(0);
-          }
-        }
-      }
-      mprts.put_as(mp);
-    }
   }
 
   // ----------------------------------------------------------------------
