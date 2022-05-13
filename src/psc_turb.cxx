@@ -253,9 +253,9 @@ void setupParameters()
   g.target_Ti_heat = 0.0;
   g.target_Te_HE_heat = 0.4;
 
-  g.background_n = .002;
-  g.background_Te = .001;
-  g.background_Ti = .001;
+  g.background_n = 1.;
+  g.background_Te = .01;
+  g.background_Ti = .01;
 }
 
 // ======================================================================
@@ -348,10 +348,10 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
                                  default: assert(0);
                                }
 
-                               if (inject_target.is_inside(crd)) {
-                                 // replace values above by target values
-                                 inject_target.init_npt(kind, crd, npt);
-                               }
+                               //  if (inject_target.is_inside(crd)) {
+                               //    // replace values above by target values
+                               //    inject_target.init_npt(kind, crd, npt);
+                               //  }
                              });
 }
 
