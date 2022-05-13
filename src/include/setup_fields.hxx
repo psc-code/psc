@@ -46,6 +46,37 @@ struct SetupFields
   }
 
   template <typename FUNC>
+  static void run_general(Mfields& mf, FUNC&& func)
+  {
+    const auto& grid = mf.grid();
+    mpi_printf(grid.comm(), "**** Setting up fields...\n");
+
+    for (int p = 0; p < mf.n_patches(); ++p) {
+      auto& patch = grid.patches[p];
+      auto F = make_Fields3d<dim_xyz>(mf[p]);
+
+      int n_ghosts =
+        std::max({mf.ibn()[0], mf.ibn()[1], mf.ibn()[2]}); // FIXME, not pretty
+      // FIXME, do we need the ghost points?
+      grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
+        Int3 index{jx, jy, jz};
+
+        for (int c = 0; c < 3; c++) {
+          F(HX + c, jx, jy, jz) +=
+            func(HX + c, index, p,
+                 Centering::getPos(patch, index, Centering::FC, c));
+          F(EX + c, jx, jy, jz) +=
+            func(EX + c, index, p,
+                 Centering::getPos(patch, index, Centering::EC, c));
+          F(JXI + c, jx, jy, jz) +=
+            func(JXI + c, index, p,
+                 Centering::getPos(patch, index, Centering::EC, c));
+        }
+      });
+    }
+  }
+
+  template <typename FUNC>
   static void runScalar(Mfields& mf, FUNC&& func,
                         const Centering::Centerer& centerer)
   {
@@ -73,6 +104,12 @@ template <typename MF, typename FUNC>
 void setupFields(MF& mflds, FUNC&& func)
 {
   detail::SetupFields<MF>::run(mflds, std::forward<FUNC>(func));
+}
+
+template <typename MF, typename FUNC>
+void setupFieldsGeneral(MF& mflds, FUNC&& func)
+{
+  detail::SetupFields<MF>::run_general(mflds, std::forward<FUNC>(func));
 }
 
 // func signature: (int component, Double3 position) -> double fieldValue
