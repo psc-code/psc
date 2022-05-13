@@ -17,6 +17,7 @@ add_psc_executable(psc_flatfoil_yz_small)
 add_psc_executable(psc_whistler)
 add_psc_executable(psc_harris_xz)
 add_psc_executable(psc_2d_shock)
+add_psc_executable(psc_turb)
 
 if (NOT USE_CUDA)
   install(
