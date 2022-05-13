@@ -6,6 +6,7 @@
 #include "DiagnosticsDefault.h"
 #include "OutputFieldsDefault.h"
 #include "psc_config.hxx"
+#include "writer_mrc.hxx"
 
 #ifdef USE_CUDA
 #include "cuda_bits.h"
@@ -89,7 +90,7 @@ using PscConfig = PscConfig1vbecCuda<Dim>;
 using PscConfig = PscConfig1vbecSingle<Dim>;
 #endif
 
-using Writer = WriterDefault; // can choose WriterMrc, WriterAdios2
+using Writer = WriterMRC; // can choose WriterMRC, WriterAdios2
 
 // ----------------------------------------------------------------------
 
