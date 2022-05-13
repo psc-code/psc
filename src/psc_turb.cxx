@@ -83,21 +83,10 @@ PscParams psc_params;
 
 using Dim = dim_yz;
 
-#if 1
 #ifdef USE_CUDA
 using PscConfig = PscConfig1vbecCuda<Dim>;
 #else
 using PscConfig = PscConfig1vbecSingle<Dim>;
-#endif
-
-#else
-
-#include "particle_with_id.h"
-
-using PscConfig =
-  PscConfig_<Dim, MparticlesSimple<ParticleWithId<float>>, MfieldsStateSingle,
-             MfieldsSingle, PscConfigPushParticles1vbec>;
-
 #endif
 
 using Writer = WriterDefault; // can choose WriterMrc, WriterAdios2
@@ -315,7 +304,7 @@ void run()
   OutputFieldsItemParams outf_item_params{};
   OutputFieldsParams outf_params{};
   outf_item_params.pfield_interval = 10;
-  outf_item_params.tfield_interval = 10;
+  outf_item_params.tfield_interval = -10;
 
   outf_params.fields = outf_item_params;
   outf_params.moments = outf_item_params;
