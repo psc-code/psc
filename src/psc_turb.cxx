@@ -225,7 +225,7 @@ void initializeAlfven(MfieldsAlfven& mflds)
       auto crd_fc = Centering::getPos(patch, index, Centering::FC);
       auto crd_cc = Centering::getPos(patch, index, Centering::CC);
       F(PERT_HY, jx, jy, jz) = g.BB + .1 * sin(ky * crd_fc[1]);
-      F(PERT_VY, jx, jy, jz) = g.BB - .1 * sin(ky * crd_cc[1]);
+      F(PERT_VY, jx, jy, jz) = -.1 * sin(ky * crd_cc[1]);
     });
   }
 }
@@ -234,27 +234,35 @@ void initializeAlfven(MfieldsAlfven& mflds)
 // initializeParticles
 
 void initializeParticles(SetupParticles<Mparticles>& setup_particles,
-                         Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
+                         Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
+                         MfieldsAlfven& mflds_alfven)
 {
   // -- set particle initial condition
-  partitionAndSetupParticles(setup_particles, balance, grid_ptr, mprts,
-                             [&](int kind, Double3 crd, psc_particle_npt& npt) {
-                               switch (kind) {
-                                 case MY_ION:
-                                   npt.n = g.background_n;
-                                   npt.T[0] = g.background_Ti;
-                                   npt.T[1] = g.background_Ti;
-                                   npt.T[2] = g.background_Ti;
-                                   break;
-                                 case MY_ELECTRON:
-                                   npt.n = g.background_n;
-                                   npt.T[0] = g.background_Te;
-                                   npt.T[1] = g.background_Te;
-                                   npt.T[2] = g.background_Te;
-                                   break;
-                                 default: assert(0);
-                               }
-                             });
+  partitionAndSetupParticlesGeneral(
+    setup_particles, balance, grid_ptr, mprts,
+    [&](int kind, Double3 crd, int p, Int3 idx, psc_particle_npt& npt) {
+      switch (kind) {
+        case MY_ION:
+          npt.n = g.background_n;
+          npt.T[0] = g.background_Ti;
+          npt.T[1] = g.background_Ti;
+          npt.T[2] = g.background_Ti;
+          npt.p[0] = mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p);
+          npt.p[1] = mflds_alfven(PERT_VY, idx[0], idx[1], idx[2], p);
+          npt.p[2] = mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
+          break;
+        case MY_ELECTRON:
+          npt.n = g.background_n;
+          npt.T[0] = g.background_Te;
+          npt.T[1] = g.background_Te;
+          npt.T[2] = g.background_Te;
+          npt.p[0] = mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p);
+          npt.p[1] = mflds_alfven(PERT_VY, idx[0], idx[1], idx[2], p);
+          npt.p[2] = mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
+          break;
+        default: assert(0);
+      }
+    });
 }
 
 // ======================================================================
@@ -375,7 +383,8 @@ void run()
   if (read_checkpoint_filename.empty()) {
     MfieldsAlfven mflds_alfven(grid, N_PERT, grid.ibn);
     initializeAlfven(mflds_alfven);
-    initializeParticles(setup_particles, balance, grid_ptr, mprts);
+    initializeParticles(setup_particles, balance, grid_ptr, mprts,
+                        mflds_alfven);
     initializeFields(mflds, mflds_alfven);
   }
 

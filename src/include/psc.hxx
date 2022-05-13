@@ -799,6 +799,22 @@ void partitionAndSetupParticles(SetupParticles& setup_particles,
   setupParticlesGeneralInit(setup_particles, mprts, init_npt_general);
 }
 
+// ======================================================================
+// partitionAndSetupParticlesGeneral
+// convenience/backward compatibility method to allow simpler function signature
+// init_npt signature: (int kind, Double3 pos, npt) -> void
+
+template <typename SetupParticles, typename Balance, typename Mparticles,
+          typename FUNC>
+void partitionAndSetupParticlesGeneral(SetupParticles& setup_particles,
+                                       Balance& balance, Grid_t*& grid_ptr,
+                                       Mparticles& mprts, FUNC&& init_npt)
+{
+  partitionParticlesGeneralInit(setup_particles, balance, grid_ptr, mprts,
+                                init_npt);
+  setupParticlesGeneralInit(setup_particles, mprts, init_npt);
+}
+
 // ----------------------------------------------------------------------
 // partitionParticlesGeneralInit
 // init_npt signature: (int kind, Double3 pos, int p, Int3 index, npt) -> void
