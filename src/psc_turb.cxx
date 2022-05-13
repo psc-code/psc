@@ -30,6 +30,17 @@ enum
   N_MY_KINDS,
 };
 
+enum
+{
+  PERT_HX,
+  PERT_HY,
+  PERT_HZ,
+  PERT_VX,
+  PERT_VY,
+  PERT_VZ,
+  N_PERT,
+};
+
 // ======================================================================
 // PscFlatfoilParams
 
@@ -95,6 +106,7 @@ using Writer = WriterMRC; // can choose WriterMRC, WriterAdios2
 // ----------------------------------------------------------------------
 
 using MfieldsState = PscConfig::MfieldsState;
+using MfieldsAlfven = PscConfig::Mfields;
 using Mparticles = PscConfig::Mparticles;
 using Balance = PscConfig::Balance;
 using Collision = PscConfig::Collision;
@@ -194,16 +206,28 @@ Grid_t* setupGrid()
 // ======================================================================
 // initializeAlfven
 
-void initializeAlfven(MfieldsState& mflds)
+void initializeAlfven(MfieldsAlfven& mflds)
 {
   const auto& grid = mflds.grid();
   double ky = 2. * M_PI / grid.domain.length[1];
-  setupFields(mflds, [&](int m, double crd[3]) {
-    switch (m) {
-      case HY: return g.BB + .1 * sin(ky * crd[1]);
-      default: return 0.;
-    }
-  });
+
+  mpi_printf(grid.comm(), "**** Setting up Alfven fields...\n");
+
+  for (int p = 0; p < mflds.n_patches(); ++p) {
+    auto& patch = grid.patches[p];
+    auto F = make_Fields3d<dim_xyz>(mflds[p]);
+
+    int n_ghosts = std::max(
+      {mflds.ibn()[0], mflds.ibn()[1], mflds.ibn()[2]}); // FIXME, not pretty
+
+    grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
+      Int3 index{jx, jy, jz};
+      auto crd_fc = Centering::getPos(patch, index, Centering::FC);
+      auto crd_cc = Centering::getPos(patch, index, Centering::CC);
+      F(PERT_HY, jx, jy, jz) = g.BB + .1 * sin(ky * crd_fc[1]);
+      F(PERT_VY, jx, jy, jz) = g.BB - .1 * sin(ky * crd_cc[1]);
+    });
+  }
 }
 
 // ======================================================================
@@ -236,11 +260,11 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
 // ======================================================================
 // initializeFields
 
-void initializeFields(MfieldsState& mflds, MfieldsState& mflds_alfven)
+void initializeFields(MfieldsState& mflds, MfieldsAlfven& mflds_alfven)
 {
   setupFieldsGeneral(mflds, [&](int m, Int3 idx, int p, double crd[3]) {
     switch (m) {
-      case HY: return double(mflds_alfven(m, idx[0], idx[1], idx[2], p));
+      case HY: return double(mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p));
       default: return 0.;
     }
   });
@@ -349,7 +373,7 @@ void run()
   // setup initial conditions
 
   if (read_checkpoint_filename.empty()) {
-    MfieldsState mflds_alfven(grid);
+    MfieldsAlfven mflds_alfven(grid, N_PERT, grid.ibn);
     initializeAlfven(mflds_alfven);
     initializeParticles(setup_particles, balance, grid_ptr, mprts);
     initializeFields(mflds, mflds_alfven);
