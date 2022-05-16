@@ -270,12 +270,13 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
 
 void initializeFields(MfieldsState& mflds, MfieldsAlfven& mflds_alfven)
 {
-  setupFieldsGeneral(mflds, [&](int m, Int3 idx, int p, double crd[3]) {
-    switch (m) {
-      case HY: return double(mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p));
-      default: return 0.;
-    }
-  });
+  setupFieldsGeneral(
+    mflds, [&](int m, Int3 idx, int p, double crd[3]) -> MfieldsState::real_t {
+      switch (m) {
+        case HY: return mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p);
+        default: return 0.;
+      }
+    });
 }
 
 // ======================================================================
