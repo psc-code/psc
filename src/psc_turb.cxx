@@ -106,7 +106,7 @@ using Writer = WriterMRC; // can choose WriterMRC, WriterAdios2
 // ----------------------------------------------------------------------
 
 using MfieldsState = PscConfig::MfieldsState;
-using MfieldsAlfven = PscConfig::Mfields;
+using MfieldsAlfven = Mfields<MfieldsState::real_t>;
 using Mparticles = PscConfig::Mparticles;
 using Balance = PscConfig::Balance;
 using Collision = PscConfig::Collision;
