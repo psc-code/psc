@@ -6,3 +6,4 @@ import xarray as xr
 from collections import namedtuple
 
 from . import pscadios2
+from . import pschdf5
