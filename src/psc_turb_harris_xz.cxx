@@ -276,7 +276,7 @@ void setupParameters()
 
   //Non-dimensional ratios
   g.wpe_wce = 2.5;
-  g.mi_me = 100.;
+  g.mi_me = 1.;
   g.Ti_Te = 1.;
   g.nb_n0 = .05;
   g.Tbe_Te = .333; //Is this ratio correct and consistent with the rest?
@@ -446,8 +446,8 @@ Grid_t* setupGrid()
   //Both and each of them generate the discontinuity error 
   psc::grid::BC bc{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL},
                    {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL},
-                   {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC},
-                   {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC}};
+                   {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING},
+                   {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING}};
 
   // -- setup particle kinds
   // last population ("i") is neutralizing
@@ -528,21 +528,21 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
       double x = crd[0], y=crd[1], z = crd[2];
       switch (kind) {
         case 0: //Ion drifting up
-          npt.n = g.n0 / sqr(cosh(z / g.L)); 
+          npt.n = g.n0 / sqr(cosh(z / g.L)) + g.nb_n0 * g.n0; 
           npt.T[0] = g.Ti;
           npt.T[1] = g.Ti;
           npt.T[2] = g.Ti;
-          npt.p[0] = g.vdri;//  + mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p); //this is actually the velocity? the mass shouldnd be here
+          npt.p[0] = g.udri;//  + mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p); //this is actually the velocity? the mass shouldnd be here
           npt.p[1] = 0.;//mflds_alfven(PERT_VY, idx[0], idx[1], idx[2], p);
           npt.p[2] = 0.;//mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
           npt.kind = MY_ION_UP;
           break;
         case 1: //Electron drifting up
-          npt.n = g.n0 / sqr(cosh(z / g.L)) ;
+          npt.n = g.n0 / sqr(cosh(z / g.L)) + g.nb_n0 * g.n0;
           npt.T[0] = g.Te;
           npt.T[1] = g.Te;
           npt.T[2] = g.Te;
-          npt.p[0] = g.vdre;//  + mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p);
+          npt.p[0] = -g.udri;//  + mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p);
           npt.p[1] = 0.;//mflds_alfven(PERT_VY, idx[0], idx[1], idx[2], p);
           npt.p[2] = 0.;//mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
           npt.kind = MY_ELECTRON_UP;
@@ -634,7 +634,7 @@ void initializeFields(MfieldsState& mflds, MfieldsAlfven& mflds_alfven)
       case HZ:
         return g.dbz * cos(M_PI * z / g.Lz) * sin(2.0 * M_PI * (x - 0.5 * g.Lx) / g.Lpert);// + dB_azT;
 
-      case JYI: return 0.; // FIXME
+      //case JYI: return 0.; // FIXME
 
       default: return 0.;
       }
@@ -738,7 +738,7 @@ void run()
 
   SetupParticles<Mparticles> setup_particles(grid);
   setup_particles.fractional_n_particles_per_cell = true;
-  setup_particles.neutralizing_population = MY_ION_UP;
+  setup_particles.neutralizing_population = MY_ION_UP; //It has to be the ions
 
   // ----------------------------------------------------------------------
   // setup initial conditions
