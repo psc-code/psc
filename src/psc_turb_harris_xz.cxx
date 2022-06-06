@@ -40,8 +40,8 @@ enum
 {
   MY_ELECTRON_UP,
   MY_ION_UP,
-  MY_ELECTRON_BO,
-  MY_ION_BO,
+  //MY_ELECTRON_BO,
+  //MY_ION_BO,
   N_MY_KINDS,
 };
 
@@ -94,6 +94,8 @@ struct PscTurbHarrisxzParams
 
   double bg; // Guide field
   double theta;
+  double cs;
+  double sn;
 
   double dbz_b0;   // perturbation in Bz relative to B0
   double nppc;     // Average number of macro particle per cell per species
@@ -159,6 +161,7 @@ struct PscTurbHarrisxzParams
   double Npe_back; // N physical e's in backgrnd
   double Npe; //??
 
+
   //--------------------------------------------------
 };
 
@@ -223,8 +226,8 @@ using OutputParticles = PscConfig::OutputParticles;
 void setupParameters()
 {
   // -- set some generic PSC parameters
-  psc_params.nmax = 101;
-  psc_params.cfl = 0.75;
+  psc_params.nmax = 4001;
+  psc_params.cfl = 0.99;
   psc_params.write_checkpoint_every_step = -100; //This is not working
   psc_params.stats_every = 1;
 
@@ -252,13 +255,15 @@ void setupParameters()
 
   //----------------------------------
   // Space dimensions
-  g.Lx_di = 3. * 80.;  
+  g.Lx_di = 3. * 20.; 
   g.Ly_di = 1.; 
-  g.Lz_di = 80.;
-  g.L_di = .5;
+  g.Lz_di = 20.; 
+
+  g.L_di = 1.0; 
 
   g.gdims = {3 * 80, 1, 80};
-  g.np = {3 * 5, 1, 3};
+  g.np = {3 * 5, 1, 2};
+
   g.Lpert_Lx = 1.;
 
   //Time dimensions
@@ -271,7 +276,7 @@ void setupParameters()
 
   //Non-dimensional ratios
   g.wpe_wce = 2.5;
-  g.mi_me = 25.;
+  g.mi_me = 100.;
   g.Ti_Te = 1.;
   g.nb_n0 = .05;
   g.Tbe_Te = .333; //Is this ratio correct and consistent with the rest?
@@ -280,16 +285,16 @@ void setupParameters()
   //Background field
   g.bg = 0.;
   g.theta = 0.;
+  g.cs=cos(g.theta);
+  g.sn=sin(g.theta);
 
   //Amplitud of the fluctuation
   g.dbz_b0 = .03;
 
   //Number of macro particles
-  g.nppc = 2;
+  g.nppc = 20;
 
   g.wpedt_max = .36; // what is this for?
-  g.open_bc_x = false;
-  g.driven_bc_z = false;
 
   //----------------------------------
 
@@ -320,16 +325,16 @@ void setupParameters()
   g.vtheb = sqrt(g.Tbe_Te * g.Te / g.me); // normalized background e thermal vel.
   g.vthib = sqrt(g.Tbi_Ti * g.Ti / g.mi); // normalized background ion thermal vel.
 
-  g.L = g.L_di * g.di;                  // Harris sheet thickness
+  g.L = g.L_di;// * g.di;                  // Harris sheet thickness in di
   g.rhoi_L = sqrt(g.Ti_Te / (1. + g.Ti_Te)) / g.L_di;
   g.v_A = (g.wci / g.wpi) / sqrt(g.nb_n0); // based on nb
 
-  g.Lx = g.Lx_di * g.di; // size of box in x dimension 
+  g.Lx = g.Lx_di * g.di; // size of box in x dimension (non-dimensional Jeff)
   g.Ly = g.Ly_di * g.di; // size of box in y dimension
   g.Lz = g.Lz_di * g.di; // size of box in z dimension
 
   g.b0 = g.me * g.c * g.wce / g.ec; // Asymptotic magnetic field strength
-  g.n0 = g.me * g.eps0 * g.wpe * g.wpe / (g.ec * g.ec); // Peak electron (ion) density
+  g.n0 = g.me * g.eps0 * sqr(g.wpe) / sqr(g.ec); // Peak electron (ion) density
   g.vdri = 2 * g.c * g.Ti / (g.ec * g.b0 * g.L);      // Ion drift velocity
   g.vdre = -g.vdri / (g.Ti_Te);               // electron drift velocity
 
@@ -378,6 +383,8 @@ Grid_t* setupGrid()
   mpi_printf(MPI_COMM_WORLD, "L_di     = %g\n", g.L_di);
   mpi_printf(MPI_COMM_WORLD, "rhoi/L   = %g\n", g.rhoi_L);
   mpi_printf(MPI_COMM_WORLD, "Ti/Te    = %g\n", g.Ti_Te);
+  mpi_printf(MPI_COMM_WORLD, "Ti    = %g\n", g.Ti);
+  mpi_printf(MPI_COMM_WORLD, "Te    = %g\n", g.Te);
   mpi_printf(MPI_COMM_WORLD, "nb/n0    = %g\n", g.nb_n0);
   mpi_printf(MPI_COMM_WORLD, "wpe/wce  = %g\n", g.wpe_wce);
   mpi_printf(MPI_COMM_WORLD, "mi/me    = %g\n", g.mi_me);
@@ -387,6 +394,7 @@ Grid_t* setupGrid()
   mpi_printf(MPI_COMM_WORLD, "taui     = %g\n", g.taui);
   mpi_printf(MPI_COMM_WORLD, "t_intervali = %g\n", g.t_intervali);
   mpi_printf(MPI_COMM_WORLD, "num_step = %d\n", psc_params.nmax);
+  mpi_printf(MPI_COMM_WORLD, "n0 = %g\n", g.n0);
   mpi_printf(MPI_COMM_WORLD, "Lx/di = %g\n", g.Lx / g.di);
   mpi_printf(MPI_COMM_WORLD, "Lx/de = %g\n", g.Lx / g.de);
   mpi_printf(MPI_COMM_WORLD, "Ly/di = %g\n", g.Ly / g.di);
@@ -423,22 +431,21 @@ Grid_t* setupGrid()
   mpi_printf(MPI_COMM_WORLD, "vthe/c = %g\n", g.vthe / g.c);
   mpi_printf(MPI_COMM_WORLD, "vdri/c = %g\n", g.vdri / g.c);
   mpi_printf(MPI_COMM_WORLD, "vdre/c = %g\n", g.vdre / g.c);
-  mpi_printf(MPI_COMM_WORLD, "Open BC in x?   = %d\n", g.open_bc_x);
-  mpi_printf(MPI_COMM_WORLD, "Driven BC in z? = %d\n", g.driven_bc_z);
-
-  mpi_printf(MPI_COMM_WORLD, "mi = %g, nppc = %g\n", g.mi, g.nppc); 
+  mpi_printf(MPI_COMM_WORLD, "gdri = %g\n", g.gdri);
+  mpi_printf(MPI_COMM_WORLD, "gdre = %g\n", g.gdre);
   //-------------------------------------------------------------
 
   // --- setup domain
-  //Grid_t::Real3 LL = {g.Lx, g.Ly, g.Lz}; // domain size (in d_e)
-  Grid_t::Real3 LL = {3. * 80., 1., 80.}; // domain size (in d_e) 
-  Int3 gdims = {3 * 80, 1, 80};           // global number of grid points
-  Int3 np = {3*5, 1, 2};                // division into patches
+  Grid_t::Real3 LL = {g.Lx_di, g.Ly_di, g.Lz_di}; // domain size (in d_i) !!!! This is important (jeff)
+  //Grid_t::Real3 LL = {3. * 80., 1., 80.}; // domain size (in d_e) 
+  //Int3 gdims = {3 * 80, 1, 80};           // global number of grid points
+  //Int3 np = {3*5, 1, 2};                // division into patches
 
-  Grid_t::Domain domain{gdims, LL, -.5 * LL, np};
-
-  psc::grid::BC bc{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
-                   {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
+  Grid_t::Domain domain{g.gdims, LL, -.5 * LL, g.np};
+  // There was an issue with the conducting and reflective boundary conditions. This returns continuity diff messages. 
+  //Both and each of them generate the discontinuity error 
+  psc::grid::BC bc{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL},
+                   {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL},
                    {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC},
                    {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC}};
 
@@ -447,10 +454,10 @@ Grid_t* setupGrid()
   Grid_t::Kinds kinds(N_MY_KINDS);
   kinds[MY_ION_UP] = {g.Zi, g.mi_me * g.Zi, "i_UP"};
   kinds[MY_ELECTRON_UP] = {-1., 1., "e_UP"};
-  kinds[MY_ION_BO] = {g.Zi, g.mi_me * g.Zi, "i_BO"};
-  kinds[MY_ELECTRON_BO] = {-1., 1., "e_BO"};
+  //kinds[MY_ION_BO] = {g.Zi, g.mi_me * g.Zi, "i_BO"};
+  //kinds[MY_ELECTRON_BO] = {-1., 1., "e_BO"};
 
-  g.di = sqrt(kinds[MY_ION_BO].m / kinds[MY_ION_BO].q);
+  g.di = sqrt(kinds[MY_ION_UP].m / kinds[MY_ION_UP].q);
 
   mpi_printf(MPI_COMM_WORLD, "de = %g, di = %g\n", 1., g.di);
   mpi_printf(MPI_COMM_WORLD, "lambda_De (background) = %g\n",
@@ -458,7 +465,7 @@ Grid_t* setupGrid()
 
   // -- setup normalization
   auto norm_params = Grid_t::NormalizationParams::dimensionless();
-  norm_params.nicell = 10;
+  norm_params.nicell = g.nppc ;
 
   double dt = psc_params.cfl * courant_length(domain);
   Grid_t::Normalization norm{norm_params};
@@ -518,48 +525,50 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
   partitionAndSetupParticlesGeneral(
     setup_particles, balance, grid_ptr, mprts,
     [&](int kind, Double3 crd, int p, Int3 idx, psc_particle_npt& npt) {
+      double x = crd[0], y=crd[1], z = crd[2];
       switch (kind) {
         case 0: //Ion drifting up
-          npt.n = g.background_n; 
-          npt.T[0] = g.background_Ti;
-          npt.T[1] = g.background_Ti;
-          npt.T[2] = g.background_Ti;
-          npt.p[0] = mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p);
-          npt.p[1] = mflds_alfven(PERT_VY, idx[0], idx[1], idx[2], p);
-          npt.p[2] = mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
+          npt.n = g.n0 / sqr(cosh(z / g.L)); 
+          npt.T[0] = g.Ti;
+          npt.T[1] = g.Ti;
+          npt.T[2] = g.Ti;
+          npt.p[0] = g.vdri;//  + mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p); //this is actually the velocity? the mass shouldnd be here
+          npt.p[1] = 0.;//mflds_alfven(PERT_VY, idx[0], idx[1], idx[2], p);
+          npt.p[2] = 0.;//mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
           npt.kind = MY_ION_UP;
           break;
         case 1: //Electron drifting up
-          npt.n = g.background_n;
-          npt.T[0] = g.background_Te;
-          npt.T[1] = g.background_Te;
-          npt.T[2] = g.background_Te;
-          npt.p[0] = mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p);
-          npt.p[1] = mflds_alfven(PERT_VY, idx[0], idx[1], idx[2], p);
-          npt.p[2] = mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
+          npt.n = g.n0 / sqr(cosh(z / g.L)) ;
+          npt.T[0] = g.Te;
+          npt.T[1] = g.Te;
+          npt.T[2] = g.Te;
+          npt.p[0] = g.vdre;//  + mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p);
+          npt.p[1] = 0.;//mflds_alfven(PERT_VY, idx[0], idx[1], idx[2], p);
+          npt.p[2] = 0.;//mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
           npt.kind = MY_ELECTRON_UP;
           break;
         case 2: //Ion background up
-          npt.n = g.background_n;
-          npt.T[0] = g.background_Ti;
-          npt.T[1] = g.background_Ti;
-          npt.T[2] = g.background_Ti;
-          npt.p[0] = mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p);
-          npt.p[1] = mflds_alfven(PERT_VY, idx[0], idx[1], idx[2], p);
-          npt.p[2] = mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
+          npt.n =  g.nb_n0 * g.n0;
+          npt.T[0] = g.Ti * g.Tbi_Ti;
+          npt.T[1] = g.Ti * g.Tbi_Ti;
+          npt.T[2] = g.Ti * g.Tbi_Ti;
+          npt.p[0] = 0.;// mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p);
+          npt.p[1] = 0.;// mflds_alfven(PERT_VY, idx[0], idx[1], idx[2], p);
+          npt.p[2] = 0.;// mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
           npt.kind = MY_ION_UP;
           break;
         case 3: //Electron Background up
-          npt.n = g.background_n;
-          npt.T[0] = g.background_Te;
-          npt.T[1] = g.background_Te;
-          npt.T[2] = g.background_Te;
-          npt.p[0] = mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p);
-          npt.p[1] = mflds_alfven(PERT_VY, idx[0], idx[1], idx[2], p);
-          npt.p[2] = mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
+          npt.n =  g.nb_n0 * g.n0;
+          npt.T[0] = g.Te * g.Tbe_Te;
+          npt.T[1] = g.Te * g.Tbe_Te;
+          npt.T[2] = g.Te * g.Tbe_Te;
+          npt.p[0] = 0.;// mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p);
+          npt.p[1] = 0.;// mflds_alfven(PERT_VY, idx[0], idx[1], idx[2], p);
+          npt.p[2] = 0.;// mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
           npt.kind = MY_ELECTRON_UP;
           break;
-        case 4: //Ion drifting Bottom
+/***        
+          case 4: //Ion drifting Bottom
           npt.n = g.background_n;
           npt.T[0] = g.background_Ti;
           npt.T[1] = g.background_Ti;
@@ -599,101 +608,10 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
           npt.p[2] = mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
           npt.kind = MY_ELECTRON_BO;
           break;
+***/        
         default: assert(0);
       }
     });
-  /***/
-  /***
-  // -- set particle initial condition
-  partitionAndSetupParticlesGeneral(
-    setup_particles, balance, grid_ptr, mprts,
-    [&](int kind, Double3 crd, int p, Int3 idx, psc_particle_npt& npt) {
-      double x = crd[0], y=crd[1], z = crd[2];
-      switch (kind) {
-        case 0://MY_ION_UP: //Ion drifting up
-          npt.n = g.n0 / sqr(cosh(z / g.L)) + g.nb_n0*g.n0;
-          npt.T[0] = g.Ti; //check what are the background temperature
-          npt.T[1] = g.Ti;
-          npt.T[2] = g.Ti;
-          npt.p[0] = mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p);
-          npt.p[1] = mflds_alfven(PERT_VY, idx[0], idx[1], idx[2], p);
-          npt.p[2] = mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
-          npt.kind = MY_ION_UP;
-          break;
-        case 1://Ion background up
-          npt.n = g.nb_n0*g.n0;
-          npt.T[0] = g.background_Ti;
-          npt.T[1] = g.background_Ti;
-          npt.T[2] = g.background_Ti;
-          npt.p[0] = mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p);
-          npt.p[1] = mflds_alfven(PERT_VY, idx[0], idx[1], idx[2], p);
-          npt.p[2] = mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
-          npt.kind = MY_ION_UP;
-          break;
-        case 2://Ion drifting Bottom
-          npt.n = g.n0 / sqr(cosh(z / g.L)) + g.nb_n0*g.n0;
-          npt.T[0] = g.Ti; //check what are the background temperature
-          npt.T[1] = g.Ti;
-          npt.T[2] = g.Ti;
-          npt.p[0] = mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p);
-          npt.p[1] = mflds_alfven(PERT_VY, idx[0], idx[1], idx[2], p);
-          npt.p[2] = mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
-          npt.kind = MY_ION_BO;
-          break;
-        case 3://Ion background Bottom
-          npt.n = g.nb_n0*g.n0;
-          npt.T[0] = g.background_Ti;
-          npt.T[1] = g.background_Ti;
-          npt.T[2] = g.background_Ti;
-          npt.p[0] = mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p);
-          npt.p[1] = mflds_alfven(PERT_VY, idx[0], idx[1], idx[2], p);
-          npt.p[2] = mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
-          npt.kind = MY_ION_UP;
-          break;
-        case 4://Electron drifting UP
-          npt.n = g.n0 / sqr(cosh(z / g.L)) + g.nb_n0*g.n0;
-          npt.T[0] = g.Te;
-          npt.T[1] = g.Te;
-          npt.T[2] = g.Te;
-          npt.p[0] = mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p);
-          npt.p[1] = mflds_alfven(PERT_VY, idx[0], idx[1], idx[2], p);
-          npt.p[2] = mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
-          npt.kind = MY_ELECTRON_UP;
-          break;
-        case 5://Electron background UP
-          npt.n = g.nb_n0*g.n0;
-          npt.T[0] = g.background_Te;
-          npt.T[1] = g.background_Te;
-          npt.T[2] = g.background_Te;
-          npt.p[0] = mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p);
-          npt.p[1] = mflds_alfven(PERT_VY, idx[0], idx[1], idx[2], p);
-          npt.p[2] = mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
-          npt.kind = MY_ELECTRON_UP;
-          break;
-        case 6://Electron drifting Bottom
-          npt.n = g.n0 / sqr(cosh(z / g.L)) + g.nb_n0*g.n0;
-          npt.T[0] = g.Te;
-          npt.T[1] = g.Te;
-          npt.T[2] = g.Te;
-          npt.p[0] = mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p);
-          npt.p[1] = mflds_alfven(PERT_VY, idx[0], idx[1], idx[2], p);
-          npt.p[2] = mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
-          npt.kind = MY_ELECTRON_BO;
-          break;
-        case 7://Electron background Bottom
-          npt.n = g.nb_n0*g.n0;
-          npt.T[0] = g.background_Te;
-          npt.T[1] = g.background_Te;
-          npt.T[2] = g.background_Te;
-          npt.p[0] = mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p);
-          npt.p[1] = mflds_alfven(PERT_VY, idx[0], idx[1], idx[2], p);
-          npt.p[2] = mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
-          npt.kind = MY_ELECTRON_BO;
-          break;          
-        default: assert(0);
-      }
-    });
-    ***/
 }
 
 // ======================================================================
@@ -703,9 +621,22 @@ void initializeFields(MfieldsState& mflds, MfieldsAlfven& mflds_alfven)
 {
   setupFieldsGeneral(
     mflds, [&](int m, Int3 idx, int p, double crd[3]) -> MfieldsState::real_t {
+      double x = crd[0], y=crd[1], z = crd[2];
       switch (m) {
-        case HY: return mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p);
-        default: return 0.;
+        //case HY: return mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p);
+        //default: return 0.;
+      case HX:
+        return g.cs * g.b0 * tanh(z / g.L) + g.dbx * cos(2. * M_PI * (x - .5 * g.Lx) / g.Lpert) * sin(M_PI * z / g.Lz);
+
+      case HY:
+        return -g.sn * g.b0 * tanh(z / g.L) + g.b0 * g.bg;// this part is just to change the inclination of the harris Bfield + dB_azT;
+
+      case HZ:
+        return g.dbz * cos(M_PI * z / g.Lz) * sin(2.0 * M_PI * (x - 0.5 * g.Lx) / g.Lpert);// + dB_azT;
+
+      case JYI: return 0.; // FIXME
+
+      default: return 0.;
       }
     });
 }
@@ -756,12 +687,12 @@ void run()
 
   // -- Checks
   ChecksParams checks_params{};
-  checks_params.continuity_every_step = 10;
+  checks_params.continuity_every_step = 100;
   checks_params.continuity_dump_always = false;
   checks_params.continuity_threshold = 1e-4;
   checks_params.continuity_verbose = true;
 
-  checks_params.gauss_every_step = 10;
+  checks_params.gauss_every_step = 100;
   checks_params.gauss_dump_always = false;
   checks_params.gauss_threshold = 1e-4;
   checks_params.gauss_verbose = true;
@@ -783,7 +714,7 @@ void run()
   // -- output fields
   OutputFieldsItemParams outf_item_params{};
   OutputFieldsParams outf_params{};
-  outf_item_params.pfield_interval = 50;
+  outf_item_params.pfield_interval = 100;
   outf_item_params.tfield_interval = -10;
 
   outf_params.fields = outf_item_params;
@@ -792,7 +723,7 @@ void run()
 
   // -- output particles
   OutputParticlesParams outp_params{};
-  outp_params.every_step = 100;
+  outp_params.every_step = -100;
   outp_params.data_dir = ".";
   outp_params.basename = "prt";
   OutputParticles outp{grid, outp_params};
@@ -807,7 +738,7 @@ void run()
 
   SetupParticles<Mparticles> setup_particles(grid);
   setup_particles.fractional_n_particles_per_cell = true;
-  //setup_particles.neutralizing_population = MY_ION_UP;
+  setup_particles.neutralizing_population = MY_ION_UP;
 
   // ----------------------------------------------------------------------
   // setup initial conditions

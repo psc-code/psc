@@ -19,6 +19,7 @@ add_psc_executable(psc_harris_xz)
 add_psc_executable(psc_2d_shock)
 add_psc_executable(psc_turb_harris_xz)
 add_psc_executable(psc_turb)
+#add_psc_executable(psc_harris_yz)
 
 if (NOT USE_CUDA)
   install(

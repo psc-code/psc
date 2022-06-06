@@ -540,12 +540,12 @@ struct Psc
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
 
     // === field propagation B^{n+1} -> B^{n+3/2}
-    mpi_printf(comm, "***** before Push fields jeff\n");
+    //mpi_printf(comm, "***** before Push fields jeff\n");
     mpi_printf(comm, "***** Push fields B\n");
     prof_restart(pr_push_flds);
     pushf_.push_H(mflds_, .5, Dim{});
     prof_stop(pr_push_flds);
-    mpi_printf(comm, "***** before if fields jeff\n");
+    //mpi_printf(comm, "***** before if fields jeff\n");
 
 #if 1
     prof_start(pr_bndf);
@@ -554,7 +554,7 @@ struct Psc
     prof_stop(pr_bndf);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 #endif
-    mpi_printf(comm, "***** before continuity jeff\n");
+    //mpi_printf(comm, "***** before continuity jeff\n");
 
     if (checks_.continuity_every_step > 0 &&
         timestep % checks_.continuity_every_step == 0) {
@@ -562,7 +562,7 @@ struct Psc
       checks_.continuity_after_particle_push(mprts_, mflds_);
       prof_stop(pr_checks);
     }
-    mpi_printf(comm, "***** before marder correction jeff\n");
+    //mpi_printf(comm, "***** before marder correction jeff\n");
 
     // E at t^{n+3/2}, particles at t^{n+3/2}
     // B at t^{n+3/2} (Note: that is not its natural time,
