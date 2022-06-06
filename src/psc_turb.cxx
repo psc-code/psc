@@ -93,7 +93,7 @@ PscParams psc_params;
 //
 // EDIT to change order / floating point type / cuda / 2d/3d
 
-using Dim = dim_yz;
+using Dim = dim_xz;
 
 #ifdef USE_CUDA
 using PscConfig = PscConfig1vbecCuda<Dim>;
@@ -120,7 +120,7 @@ using OutputParticles = PscConfig::OutputParticles;
 void setupParameters()
 {
   // -- set some generic PSC parameters
-  psc_params.nmax = 501;
+  psc_params.nmax = 111;
   psc_params.cfl = 0.75;
   psc_params.write_checkpoint_every_step = -100; //This is not working
   psc_params.stats_every = 1;
@@ -157,9 +157,12 @@ void setupParameters()
 Grid_t* setupGrid()
 {
   // --- setup domain
-  Grid_t::Real3 LL = {1., 80., 3. * 80.}; // domain size (in d_e)
-  Int3 gdims = {1, 80, 3 * 80};           // global number of grid points
-  Int3 np = {1, 5, 3 * 5};                // division into patches
+  //Grid_t::Real3 LL = {1., 80., 3. * 80.}; // domain size (in d_e)
+  //Int3 gdims = {1, 80, 3 * 80};           // global number of grid points
+  //Int3 np = {1, 2, 3 * 5};                // division into patches
+  Grid_t::Real3 LL = {3. * 80., 1., 80.}; // domain size (in d_e) 
+  Int3 gdims = {3 * 80, 1, 80};           // global number of grid points
+  Int3 np = {3*5, 1, 2};                // division into patches
 
   Grid_t::Domain domain{gdims, LL, -.5 * LL, np};
 
