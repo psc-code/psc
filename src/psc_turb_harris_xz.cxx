@@ -16,14 +16,14 @@
 
 //extern Grid* vgrid; // FIXME
 
-static RngPool* rngpool; // FIXME, should be member (of struct psc, really)
+//static RngPool* rngpool; // FIXME, should be member (of struct psc, really)
 
 // FIXME, helper should go somewhere...
 
-static inline double trunc_granular(double a, double b)
-{
-  return b * (int)(a / b);
-}
+//static inline double trunc_granular(double a, double b)
+//{
+//  return b * (int)(a / b);
+//}
 
 // ======================================================================
 // Particle kinds
@@ -231,8 +231,8 @@ using OutputParticles = PscConfig::OutputParticles;
 void setupParameters()
 {
   // -- set some generic PSC parameters
-  psc_params.nmax = 4001;
-  psc_params.cfl = 0.99;
+  psc_params.nmax = 451;
+  psc_params.cfl = 0.75;
   psc_params.write_checkpoint_every_step = -100; //This is not working
   psc_params.stats_every = 1;
 
@@ -260,14 +260,14 @@ void setupParameters()
 
   //----------------------------------
   // Space dimensions
-  g.Lx_di = 3. * 20.; 
+  g.Lx_di = 40.; 
   g.Ly_di = 1.; 
-  g.Lz_di = 20.; 
+  g.Lz_di = 10.; 
 
-  g.L_di = 0.5; 
+  g.L_di = 1.; 
 
-  g.gdims = {3 * 80, 1, 80};
-  g.np = {3 * 5, 1, 2};
+  g.gdims = {512, 1, 128};
+  g.np = {4, 1, 4};
 
   g.Lpert_Lx = 1.;
 
@@ -283,7 +283,7 @@ void setupParameters()
   g.wpe_wce = 2.5;
   g.mi_me = 1.;
   g.Ti_Te = 1.;
-  g.nb_n0 = .05;
+  g.nb_n0 = .25;
 
   g.Tbe_Te = .333; //How to stimate this ratio???? It is now consistent but I need an extra condition to estimate this ratio.
   g.Tbi_Ti = .333; 
@@ -299,7 +299,7 @@ void setupParameters()
   g.dbz_b0 = .03;
 
   //Number of macro particles
-  g.nppc = 30;
+  g.nppc = 10;
 
   g.wpedt_max = .36; // what is this for?
 
@@ -337,7 +337,8 @@ void setupParameters()
       (8. * M_PI * g.kb * g.n0 * (1. + g.Ti_Te));    // Electron temperature neglecting the background  plasma pressure
 
   //g.Te = sqr(g.b0) /
-  //    (8. * M_PI * g.kb * g.n0 * ((1. + g.Ti_Te) - g.nb_n0 * g.Tbe_Te * (1 + g.Tbi_Tbe) ) );    // Electron temperature INCLUDING the background  plasma pressure
+   //   (8. * M_PI * g.kb * g.n0 * ((1. + g.Ti_Te) - g.nb_n0 * g.Tbe_Te * (1 + g.Tbi_Tbe) ) );    // Electron temperature INCLUDING the background 
+      // plasma pressure which is important here due to the way psc inject particles
 
   g.Ti = g.Te * g.Ti_Te;                        // Ion temperature
 
@@ -366,8 +367,8 @@ void setupParameters()
   g.Ne_sheet = g.Ne * g.Npe_sheet / g.Npe;
   g.Ne_back = g.Ne * g.Npe_back / g.Npe;
 
-  g.Ne_sheet = trunc_granular(g.Ne_sheet, g.n_global_patches); // Make it divisible by # subdomains
-  g.Ne_back = trunc_granular( g.Ne_back, g.n_global_patches); // Make it divisible by # subdomains
+  //g.Ne_sheet = trunc_granular(g.Ne_sheet, g.n_global_patches); // Make it divisible by # subdomains
+  //g.Ne_back = trunc_granular( g.Ne_back, g.n_global_patches); // Make it divisible by # subdomains
   g.Ne = g.Ne_sheet + g.Ne_back;
   //g.weight_s = g.ec * g.Npe_sheet / g.Ne_sheet; // Charge per macro electron
   //g.weight_b = g.ec * g.Npe_back / g.Ne_back;   // Charge per macro electron
@@ -547,6 +548,29 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
     [&](int kind, Double3 crd, int p, Int3 idx, psc_particle_npt& npt) {
       double x = crd[0], y=crd[1], z = crd[2];
       switch (kind) {
+        ///***
+        case 0: //Ion drifting up
+          npt.n = (g.nb_n0 + 1 / sqr(cosh(z / g.L)) ) ; 
+          npt.T[0] = g.Ti / sqr(cosh(z / g.L)) + g.Tbi;
+          npt.T[1] = g.Ti / sqr(cosh(z / g.L)) + g.Tbi;
+          npt.T[2] = g.Ti / sqr(cosh(z / g.L)) + g.Tbi;
+          npt.p[0] = g.udri / sqr(cosh(z / g.L)) ;//  + mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p); //this is actually the velocity? the mass shouldnd be here
+          npt.p[1] = 0.;//mflds_alfven(PERT_VY, idx[0], idx[1], idx[2], p);
+          npt.p[2] = 0.;//mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
+          npt.kind = MY_ION_UP;
+          break;
+        case 1: //Electron drifting up
+          npt.n = (g.nb_n0 + 1 / sqr(cosh(z / g.L)) ) ; 
+          npt.T[0] = g.Te / sqr(cosh(z / g.L)) + g.Tbe;
+          npt.T[1] = g.Te / sqr(cosh(z / g.L)) + g.Tbe;
+          npt.T[2] = g.Te / sqr(cosh(z / g.L)) + g.Tbe;
+          npt.p[0] = g.udre / sqr(cosh(z / g.L)) ;//  + mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p);
+          npt.p[1] = 0.;//mflds_alfven(PERT_VY, idx[0], idx[1], idx[2], p);
+          npt.p[2] = 0.;//mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
+          npt.kind = MY_ELECTRON_UP;
+          break;
+          //***/
+        /***
         case 0: //Ion drifting up
           npt.n = g.n0 / sqr(cosh(z / g.L)) + g.nb_n0 * g.n0; 
           npt.T[0] = g.Ti;
@@ -587,6 +611,7 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
           npt.p[2] = 0.;// mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
           npt.kind = MY_ELECTRON_UP;
           break;
+***/
 /***        
           case 4: //Ion drifting Bottom
           npt.n = g.background_n;
@@ -649,7 +674,7 @@ void initializeFields(MfieldsState& mflds, MfieldsAlfven& mflds_alfven)
         return g.cs * g.b0 * tanh(z / g.L) ;//+ g.dbx * cos(2. * M_PI * (x - .5 * g.Lx) / g.Lpert) * sin(M_PI * z / g.Lz);
 
       case HY:
-        return -g.sn * g.b0 * tanh(z / g.L) ;//+ g.b0 * g.bg;// this part is just to change the inclination of the harris Bfield + dB_azT;
+        return 0.;//-g.sn * g.b0 * tanh(z / g.L) ;//+ g.b0 * g.bg;// this part is just to change the inclination of the harris Bfield + dB_azT;
 
       case HZ:
         return 0. ;//+ g.dbz * cos(M_PI * z / g.Lz) * sin(2.0 * M_PI * (x - 0.5 * g.Lx) / g.Lpert);// + dB_azT;
@@ -707,12 +732,12 @@ void run()
 
   // -- Checks
   ChecksParams checks_params{};
-  checks_params.continuity_every_step = -100;
+  checks_params.continuity_every_step = -10;
   checks_params.continuity_dump_always = false;
   checks_params.continuity_threshold = 1e-4;
   checks_params.continuity_verbose = true;
 
-  checks_params.gauss_every_step = -100;
+  checks_params.gauss_every_step = -10;
   checks_params.gauss_dump_always = false;
   checks_params.gauss_threshold = 1e-4;
   checks_params.gauss_verbose = true;
@@ -723,7 +748,7 @@ void run()
   double marder_diffusion = 0.9;
   int marder_loop = 3;
   bool marder_dump = false;
-  psc_params.marder_interval = 100;
+  psc_params.marder_interval = 10;
   Marder marder(grid, marder_diffusion, marder_loop, marder_dump);
 
   // ----------------------------------------------------------------------
@@ -734,7 +759,7 @@ void run()
   // -- output fields
   OutputFieldsItemParams outf_item_params{};
   OutputFieldsParams outf_params{};
-  outf_item_params.pfield_interval = 100;
+  outf_item_params.pfield_interval = 45;
   outf_item_params.tfield_interval = -10;
 
   outf_params.fields = outf_item_params;
