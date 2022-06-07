@@ -89,8 +89,10 @@ struct PscTurbHarrisxzParams
   double wpedt_max; //Is rhis necessary?  
   double Ti_Te;  // Ion temperature / electron temperature
   double nb_n0;  // background plasma density
+ 
   double Tbe_Te; // Ratio of background T_e to Harris T_e
   double Tbi_Ti; // Ratio of background T_i to Harris T_i
+  double Tbi_Tbe; // Ratio of background T_i to background T_e
 
   double bg; // Guide field
   double theta;
@@ -113,6 +115,7 @@ struct PscTurbHarrisxzParams
   double c;
   double eps0;
   double de;
+  double kb;
 
   double mi;
   double di;
@@ -133,8 +136,10 @@ struct PscTurbHarrisxzParams
   double dbz;        // Set Bx perturbation so that div(B) = 0
   double tanhf;
 
-  double Te;         // Electron temperature
-  double Ti;         // Ion temperature
+  double Te;         // Electron temperature main harris
+  double Ti;         // Ion temperature main harris
+  double Tbe;        // Electron temperature backgroung
+  double Tbi;        // Ion temperature backgroung
 
   double weight_s; // Charge per macro electron
   
@@ -259,7 +264,7 @@ void setupParameters()
   g.Ly_di = 1.; 
   g.Lz_di = 20.; 
 
-  g.L_di = 1.0; 
+  g.L_di = 0.5; 
 
   g.gdims = {3 * 80, 1, 80};
   g.np = {3 * 5, 1, 2};
@@ -279,8 +284,10 @@ void setupParameters()
   g.mi_me = 1.;
   g.Ti_Te = 1.;
   g.nb_n0 = .05;
-  g.Tbe_Te = .333; //Is this ratio correct and consistent with the rest?
-  g.Tbi_Ti = .333;
+
+  g.Tbe_Te = .333; //How to stimate this ratio???? It is now consistent but I need an extra condition to estimate this ratio.
+  g.Tbi_Ti = .333; 
+  g.Tbi_Tbe = 1.;
 
   //Background field
   g.bg = 0.;
@@ -292,7 +299,7 @@ void setupParameters()
   g.dbz_b0 = .03;
 
   //Number of macro particles
-  g.nppc = 20;
+  g.nppc = 30;
 
   g.wpedt_max = .36; // what is this for?
 
@@ -300,42 +307,53 @@ void setupParameters()
 
   //-----------------------------------
   // use natural PIC units
-  g.ec = 1;   // Charge normalization
-  g.me = 1;   // Mass normalization
-  g.c = 1;    // Speed of light
-  g.de = 1;   // Length normalization (electron inertial length)
-  g.eps0 = 1; // Permittivity of space
-
+  g.ec = 1.;   // Charge normalization
+  g.me = 1.;   // Mass normalization
+  g.c = 1.;    // Speed of light
+  g.de = 1.;   // Length normalization (electron inertial length)
+  g.eps0 = 1.; // Permittivity of space
+  g.wpe = 1.; // g.wce * g.wpe_wce;             // electron plasma frequency
+  g.kb =1.;    //  k Boltzman
+  
   // derived quantities
-  g.mi = g.me * g.mi_me; // Ion mass
+  g.wce = g.wpe / g.wpe_wce ;                   // Electron cyclotron frequency
+  g.wci = g.wce / g.mi_me ;                     // Ion cyclotron frequency
+  g.mi = g.me * g.mi_me;                        // Ion mass
+  g.wpi = g.wpe / sqrt(g.mi_me);                // ion plasma frequency
 
-  g.wci = 1. / (g.mi_me * g.wpe_wce); // Ion cyclotron frequency
-  g.wce = g.wci * g.mi_me;              // Electron cyclotron freqeuncy
-  g.wpe = g.wce * g.wpe_wce;            // electron plasma frequency
-  g.wpi = g.wpe / sqrt(g.mi_me);        // ion plasma frequency
-    
-  g.di = g.c / g.wpi;                     // ion inertial length
+  g.di = g.c / g.wpi;                           // ion inertial length
+  g.L = g.L_di * g.di;                          // Harris sheet thickness in di // Jeff check the thickness. It works best for g.L_di alone
+  g.Lx = g.Lx_di * g.di;                        // size of box in x dimension (non-dimensional Jeff)
+  g.Ly = g.Ly_di * g.di;                        // size of box in y dimension
+  g.Lz = g.Lz_di * g.di;                        // size of box in z dimension
 
-  g.Te = g.me * sqr(g.c) /
-      (2. * g.eps0 * sqr(g.wpe_wce) * (1. + g.Ti_Te)); // Electron temperature //Is this in the main harris sheet?
+  g.b0 = g.me * g.c * g.wce / g.ec;               // Asymptotic magnetic field strength
+  g.n0 = g.me * sqr(g.wpe) / (4. * M_PI * sqr(g.ec));  // Peak electron (ion) density
+
+  //g.Te = g.me * sqr(g.c) /
+  //    (2. * g.kb * sqr(g.wpe_wce) * (1. + g.Ti_Te)); // Electron temperature neglecting the background  plasma pressure
+
+  g.Te = sqr(g.b0) /
+      (8. * M_PI * g.kb * g.n0 * (1. + g.Ti_Te));    // Electron temperature neglecting the background  plasma pressure
+
+  //g.Te = sqr(g.b0) /
+  //    (8. * M_PI * g.kb * g.n0 * ((1. + g.Ti_Te) - g.nb_n0 * g.Tbe_Te * (1 + g.Tbi_Tbe) ) );    // Electron temperature INCLUDING the background  plasma pressure
+
   g.Ti = g.Te * g.Ti_Te;                        // Ion temperature
-   
+
+  g.Tbe = g.Te * g.Tbe_Te;
+  g.Tbi = g.Ti * g.Tbi_Ti; 
+
+  g.v_A = g.c * (g.wci / g.wpi);//                      / sqrt(g.nb_n0); // based on nb
+  g.rhoi_L = sqrt(g.Ti_Te / (1. + g.Ti_Te)) / g.L_di;
+  
   g.vthe = sqrt(g.Te / g.me);             // Electron thermal velocity
   g.vthi = sqrt(g.Ti / g.mi);             // Ion thermal velocity
   g.vtheb = sqrt(g.Tbe_Te * g.Te / g.me); // normalized background e thermal vel.
   g.vthib = sqrt(g.Tbi_Ti * g.Ti / g.mi); // normalized background ion thermal vel.
 
-  g.L = g.L_di;// * g.di;                  // Harris sheet thickness in di
-  g.rhoi_L = sqrt(g.Ti_Te / (1. + g.Ti_Te)) / g.L_di;
-  g.v_A = (g.wci / g.wpi) / sqrt(g.nb_n0); // based on nb
 
-  g.Lx = g.Lx_di * g.di; // size of box in x dimension (non-dimensional Jeff)
-  g.Ly = g.Ly_di * g.di; // size of box in y dimension
-  g.Lz = g.Lz_di * g.di; // size of box in z dimension
-
-  g.b0 = g.me * g.c * g.wce / g.ec; // Asymptotic magnetic field strength
-  g.n0 = g.me * g.eps0 * sqr(g.wpe) / sqr(g.ec); // Peak electron (ion) density
-  g.vdri = 2 * g.c * g.Ti / (g.ec * g.b0 * g.L);      // Ion drift velocity
+  g.vdri = g.c * g.b0 / (8 * M_PI * g.L * g.ec * g.n0 * (1 + 1/g.Ti_Te));      // Ion drift velocity
   g.vdre = -g.vdri / (g.Ti_Te);               // electron drift velocity
 
   g.n_global_patches = g.np[0] * g.np[1] * g.np[2];
@@ -356,10 +374,12 @@ void setupParameters()
 
   g.gdri = 1. / sqrt(1. - sqr(g.vdri) / sqr(g.c)); // gamma of ion drift frame
   g.gdre = 1. / sqrt(1. - sqr(g.vdre) / sqr(g.c)); // gamma of electron drift frame
+
   g.udri = g.vdri * g.gdri;                        // 4-velocity of ion drift frame
   g.udre = g.vdre * g.gdre; // 4-velocity of electron drift frame
   g.tanhf = tanh(0.5 * g.Lz / g.L);
   g.Lpert = g.Lpert_Lx * g.Lx; // wavelength of perturbation
+
   g.dbz = g.dbz_b0 * g.b0; // Perturbation in Bz relative to Bo (Only change here)
   g.dbx = -g.dbz * g.Lpert / (2. * g.Lz); // Set Bx perturbation so that div(B) = 0
   //-----------------------------------
@@ -542,16 +562,16 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
           npt.T[0] = g.Te;
           npt.T[1] = g.Te;
           npt.T[2] = g.Te;
-          npt.p[0] = -g.udri;//  + mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p);
+          npt.p[0] = g.udre;//  + mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p);
           npt.p[1] = 0.;//mflds_alfven(PERT_VY, idx[0], idx[1], idx[2], p);
           npt.p[2] = 0.;//mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
           npt.kind = MY_ELECTRON_UP;
           break;
         case 2: //Ion background up
           npt.n =  g.nb_n0 * g.n0;
-          npt.T[0] = g.Ti * g.Tbi_Ti;
-          npt.T[1] = g.Ti * g.Tbi_Ti;
-          npt.T[2] = g.Ti * g.Tbi_Ti;
+          npt.T[0] = g.Tbi;
+          npt.T[1] = g.Tbi;
+          npt.T[2] = g.Tbi;
           npt.p[0] = 0.;// mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p);
           npt.p[1] = 0.;// mflds_alfven(PERT_VY, idx[0], idx[1], idx[2], p);
           npt.p[2] = 0.;// mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
@@ -559,9 +579,9 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
           break;
         case 3: //Electron Background up
           npt.n =  g.nb_n0 * g.n0;
-          npt.T[0] = g.Te * g.Tbe_Te;
-          npt.T[1] = g.Te * g.Tbe_Te;
-          npt.T[2] = g.Te * g.Tbe_Te;
+          npt.T[0] = g.Tbe;
+          npt.T[1] = g.Tbe;
+          npt.T[2] = g.Tbe;
           npt.p[0] = 0.;// mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p);
           npt.p[1] = 0.;// mflds_alfven(PERT_VY, idx[0], idx[1], idx[2], p);
           npt.p[2] = 0.;// mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
@@ -626,13 +646,13 @@ void initializeFields(MfieldsState& mflds, MfieldsAlfven& mflds_alfven)
         //case HY: return mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p);
         //default: return 0.;
       case HX:
-        return g.cs * g.b0 * tanh(z / g.L) + g.dbx * cos(2. * M_PI * (x - .5 * g.Lx) / g.Lpert) * sin(M_PI * z / g.Lz);
+        return g.cs * g.b0 * tanh(z / g.L) ;//+ g.dbx * cos(2. * M_PI * (x - .5 * g.Lx) / g.Lpert) * sin(M_PI * z / g.Lz);
 
       case HY:
-        return -g.sn * g.b0 * tanh(z / g.L) + g.b0 * g.bg;// this part is just to change the inclination of the harris Bfield + dB_azT;
+        return -g.sn * g.b0 * tanh(z / g.L) ;//+ g.b0 * g.bg;// this part is just to change the inclination of the harris Bfield + dB_azT;
 
       case HZ:
-        return g.dbz * cos(M_PI * z / g.Lz) * sin(2.0 * M_PI * (x - 0.5 * g.Lx) / g.Lpert);// + dB_azT;
+        return 0. ;//+ g.dbz * cos(M_PI * z / g.Lz) * sin(2.0 * M_PI * (x - 0.5 * g.Lx) / g.Lpert);// + dB_azT;
 
       //case JYI: return 0.; // FIXME
 
@@ -687,12 +707,12 @@ void run()
 
   // -- Checks
   ChecksParams checks_params{};
-  checks_params.continuity_every_step = 100;
+  checks_params.continuity_every_step = -100;
   checks_params.continuity_dump_always = false;
   checks_params.continuity_threshold = 1e-4;
   checks_params.continuity_verbose = true;
 
-  checks_params.gauss_every_step = 100;
+  checks_params.gauss_every_step = -100;
   checks_params.gauss_dump_always = false;
   checks_params.gauss_threshold = 1e-4;
   checks_params.gauss_verbose = true;
