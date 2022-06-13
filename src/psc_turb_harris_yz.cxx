@@ -285,16 +285,6 @@ void setupParameters()
   //---------------------------------- 
   // Space dimensions
   //--------------------------------------------------------------------------------  
-  /*** This is in the case of xz geometry
-  g.Lx_di = 40.; 
-  g.Ly_di = 1.; 
-  g.Lz_di = 10.;
-  g.gdims = {512, 1, 128};
-  g.np = {4, 1, 2};
-  ***/
-  //--------------------------------------------------------------------------------  
-
-  //--------------------------------------------------------------------------------  
   ///*** // This is ion the case of yz geometry
   g.Lz_di = 40.; 
   g.Lx_di = 1.; 
@@ -422,12 +412,6 @@ void setupParameters()
   g.Lpert = g.Lpert_Lx * g.Lx; // wavelength of perturbation
 
   //--------------------------------------------------------------------------------  
-  // This is in the case of xz geometry
-  //g.dbx = g.db_b0 * g.b0 * M_PI * g.L / g.Lz; // Set Bx perturbation so that div(B) = 0
-  //g.dbz = -g.db_b0 * g.b0 * 2 * M_PI * g.L / g.Lx; // Perturbation in Bz relative to Bo (Only change here)
-  //--------------------------------------------------------------------------------  
-
-  //--------------------------------------------------------------------------------  
   // This is in the case of yz geometry
   g.dbz = g.db_b0 * g.b0 * M_PI * g.L / g.Ly; // Set Bz perturbation so that div(B) = 0 in the case of yz geometry
   g.dby = -g.db_b0 * g.b0 * 2 * M_PI * g.L / g.Lz; // Perturbation in By relative to Bo (Only change here) in the case of yz geometry
@@ -521,14 +505,6 @@ Grid_t* setupGrid()
   Grid_t::Domain domain{g.gdims, LL, -.5 * LL, g.np};
   // There was an issue with the conducting and reflective boundary conditions. This returns continuity diff messages. 
   //Both and each of them generate the discontinuity error 
-  //--------------------------------------------------------------------------------  
-  /*** // This is in the case og xz geometry
-  psc::grid::BC bc{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL},
-                   {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL},
-                   {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING},
-                   {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_REFLECTING}};
-  ***/
-  //--------------------------------------------------------------------------------  
 
   //--------------------------------------------------------------------------------  
   // This is in the case of yz geometry
@@ -762,30 +738,6 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
     [&](int kind, Double3 crd, int p, Int3 idx, psc_particle_npt& npt) {
       double x = crd[0], y=crd[1], z = crd[2];
        switch (kind) {
-        //--------------------------------------------------------------------------------
-        /*** // This is a block for the xz configuration using single popullation
-        case 0: //Ion drifting up
-          npt.n = g.n0 * (g.nb_n0 + (1 / sqr(cosh(z / g.L))) ) ; 
-          npt.T[0] = g.Ti / sqr(cosh(z / g.L)) + g.Tbi;
-          npt.T[1] = g.Ti / sqr(cosh(z / g.L)) + g.Tbi;
-          npt.T[2] = g.Ti / sqr(cosh(z / g.L)) + g.Tbi;
-          npt.p[0] = 0.;
-          npt.p[1] = g.udri / sqr(cosh(z / g.L)); 
-          npt.p[2] = 0.;//mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
-          npt.kind = MY_ION_UP;
-          break;
-        case 1: //Electron drifting up
-          npt.n =  g.n0 * (g.nb_n0 + (1 / sqr(cosh(z / g.L))) ) ; 
-          npt.T[0] = g.Te / sqr(cosh(z / g.L)) + g.Tbe;
-          npt.T[1] = g.Te / sqr(cosh(z / g.L)) + g.Tbe;
-          npt.T[2] = g.Te / sqr(cosh(z / g.L)) + g.Tbe;
-          npt.p[0] = 0.;
-          npt.p[1] = g.udre / sqr(cosh(z / g.L));
-          npt.p[2] = 0.;//mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
-          npt.kind = MY_ELECTRON_UP;
-          break;
-          ***/
-        //--------------------------------------------------------------------------------
 
         //--------------------------------------------------------------------------------        
         /*** // This is a block for the yz configuration using a single poppulation
@@ -860,96 +812,7 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
           break;
           /***/
         //--------------------------------------------------------------------------------
-
-        //--------------------------------------------------------------------------------          
-        /*** // This is a block for the xz configuration using two popullations
-        case 0: //Ion drifting up
-          npt.n = g.n0 / sqr(cosh(z / g.L)) + g.nb_n0 * g.n0; 
-          npt.T[0] = g.Ti;
-          npt.T[1] = g.Ti;
-          npt.T[2] = g.Ti;
-          npt.p[0] = g.udri;// 
-          npt.p[1] = 0.;
-          npt.p[2] = 0.;
-          npt.kind = MY_ION_UP;
-          break;
-        case 1: //Electron drifting up
-          npt.n = g.n0 / sqr(cosh(z / g.L)) + g.nb_n0 * g.n0;
-          npt.T[0] = g.Te;
-          npt.T[1] = g.Te;
-          npt.T[2] = g.Te;
-          npt.p[0] = g.udre;
-          npt.p[1] = 0.;
-          npt.p[2] = 0.;
-          npt.kind = MY_ELECTRON_UP;
-          break;
-        case 2: //Ion background up
-          npt.n =  g.nb_n0 * g.n0;
-          npt.T[0] = g.Tbi;
-          npt.T[1] = g.Tbi;
-          npt.T[2] = g.Tbi;
-          npt.p[0] = 0.;
-          npt.p[1] = 0.;
-          npt.p[2] = 0.;
-          npt.kind = MY_ION_UP;
-          break;
-        case 3: //Electron Background up
-          npt.n =  g.nb_n0 * g.n0;
-          npt.T[0] = g.Tbe;
-          npt.T[1] = g.Tbe;
-          npt.T[2] = g.Tbe;
-          npt.p[0] = 0.;
-          npt.p[1] = 0.;
-          npt.p[2] = 0.;
-          npt.kind = MY_ELECTRON_UP;
-          break;
-          ***/
-          //--------------------------------------------------------------------------------  
-
-          //--------------------------------------------------------------------------------  
-          /***  // This is to include the up and bottom labels using two popullations in xz geometry      
-          case 4: //Ion drifting Bottom
-          npt.n = g.background_n;
-          npt.T[0] = g.background_Ti;
-          npt.T[1] = g.background_Ti;
-          npt.T[2] = g.background_Ti;
-          npt.p[0] = mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p);
-          npt.p[1] = mflds_alfven(PERT_VY, idx[0], idx[1], idx[2], p);
-          npt.p[2] = mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
-          npt.kind = MY_ION_BO;
-          break;
-        case 5: //Electron drifting Bottom
-          npt.n = g.background_n;
-          npt.T[0] = g.background_Te;
-          npt.T[1] = g.background_Te;
-          npt.T[2] = g.background_Te;
-          npt.p[0] = mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p);
-          npt.p[1] = mflds_alfven(PERT_VY, idx[0], idx[1], idx[2], p);
-          npt.p[2] = mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
-          npt.kind = MY_ELECTRON_UP;
-          break;
-        case 6: //Ion background bottom
-          npt.n = g.background_n;
-          npt.T[0] = g.background_Ti;
-          npt.T[1] = g.background_Ti;
-          npt.T[2] = g.background_Ti;
-          npt.p[0] = mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p);
-          npt.p[1] = mflds_alfven(PERT_VY, idx[0], idx[1], idx[2], p);
-          npt.p[2] = mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
-          npt.kind = MY_ION_BO;
-          break;
-        case 7: //Electron background bottom
-          npt.n = g.background_n;
-          npt.T[0] = g.background_Te;
-          npt.T[1] = g.background_Te;
-          npt.T[2] = g.background_Te;
-          npt.p[0] = mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p);
-          npt.p[1] = mflds_alfven(PERT_VY, idx[0], idx[1], idx[2], p);
-          npt.p[2] = mflds_alfven(PERT_VZ, idx[0], idx[1], idx[2], p);
-          npt.kind = MY_ELECTRON_BO;
-          break;
-          ***/  
-          //--------------------------------------------------------------------------------        
+      
         default: assert(0);
       }
     });
@@ -968,17 +831,6 @@ void initializeFields(MfieldsState& mflds, MfieldsAlfven& mflds_alfven)
         //case HY: return mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p);
         //default: return 0.;
       //--------------------------------------------------------------------------------  
-
-      //--------------------------------------------------------------------------------  
-      /*** //This is the magnetic field in the case xz geometry
-      case HX:
-        return g.b0 * tanh(z / g.L) + g.dbx * cos(2. * M_PI * x / g.Lx) * sin(M_PI * z / g.Lz);
-      case HY:
-        return 0.;//-g.sn * g.b0 * tanh(z / g.L) ;//+ g.b0 * g.bg;// this part is just to change the inclination of the harris Bfield + dB_azT;
-      case HZ:
-        return 0. + g.dbz * sin(2. * M_PI * x / g.Lx) * cos(M_PI * z / g.Lz); // + dB_azT;
-      ***/
-
       //--------------------------------------------------------------------------------  
       ///*** This is the magnetic field in the case yz geometry  
       case HX:
