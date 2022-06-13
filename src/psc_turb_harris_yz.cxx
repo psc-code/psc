@@ -253,7 +253,7 @@ void setupParameters()
   // -- set some generic PSC parameters
   //-----------------------------------------------
   //-----------------------------------------------
-  psc_params.nmax = 1801;
+  psc_params.nmax = 1000;//1801;
   psc_params.cfl = 0.75;
   psc_params.write_checkpoint_every_step = -100; //This is not working
   psc_params.stats_every = -1;
@@ -307,7 +307,7 @@ void setupParameters()
 
   //Non-dimensional ratios
   g.wpe_wce = 2.5;
-  g.mi_me = 1.;
+  g.mi_me = 25.;
   g.Ti_Te = 1.;
   g.nb_n0 = 0.1;
 
@@ -347,11 +347,11 @@ void setupParameters()
   g.mi = g.me * g.mi_me;                        // Ion mass
   g.wpi = g.wpe / sqrt(g.mi_me);                // ion plasma frequency
 
-  g.di = g.c / g.wpi;                           // ion inertial length
-  g.L = g.L_di * g.di;                          // Harris sheet thickness in di // Jeff check the thickness. It works best for g.L_di alone
-  g.Lx = g.Lx_di * g.di;                        // size of box in x dimension (non-dimensional Jeff)
-  g.Ly = g.Ly_di * g.di;                        // size of box in y dimension
-  g.Lz = g.Lz_di * g.di;                        // size of box in z dimension
+  g.di = g.c / g.wpi;                            // ion inertial length
+  g.L = g.L_di ;                                 // Harris sheet thickness in di // Jeff check the thickness. It works best for g.L_di alone
+  g.Lx = g.Lx_di ;                               // size of box in x dimension (in di Jeff)
+  g.Ly = g.Ly_di ;                               // size of box in y dimension
+  g.Lz = g.Lz_di ;                               // size of box in z dimension
 
   g.b0 = g.me * g.c * g.wce / g.ec;               // Asymptotic magnetic field strength
   g.n0 = g.me * g.eps0 * sqr(g.wpe) / (sqr(g.ec));  // Peak electron (ion) density this is the cgs correct one but gives n0 = 0.07 
@@ -386,6 +386,7 @@ void setupParameters()
 
   g.vdri = g.c * g.b0 / (8 * M_PI * g.L * g.ec * g.n0 * (1 + 1/g.Ti_Te));      // Ion drift velocity
   g.vdre = -g.vdri / (g.Ti_Te);               // electron drift velocity
+
 
   g.n_global_patches = g.np[0] * g.np[1] * g.np[2];
     
@@ -450,18 +451,12 @@ Grid_t* setupGrid()
   mpi_printf(MPI_COMM_WORLD, "t_intervali = %g\n", g.t_intervali);
   mpi_printf(MPI_COMM_WORLD, "num_step = %d\n", psc_params.nmax);
   mpi_printf(MPI_COMM_WORLD, "n0 = %g\n", g.n0);
-  mpi_printf(MPI_COMM_WORLD, "Lx/di = %g\n", g.Lx / g.di);
-  mpi_printf(MPI_COMM_WORLD, "Lx/de = %g\n", g.Lx / g.de);
-  mpi_printf(MPI_COMM_WORLD, "Ly/di = %g\n", g.Ly / g.di);
-  mpi_printf(MPI_COMM_WORLD, "Ly/de = %g\n", g.Ly / g.de);
-  mpi_printf(MPI_COMM_WORLD, "Lz/di = %g\n", g.Lz / g.di);
-  mpi_printf(MPI_COMM_WORLD, "Lz/de = %g\n", g.Lz / g.de);
-  mpi_printf(MPI_COMM_WORLD, "Lx = %g\n", g.Lx);
-  mpi_printf(MPI_COMM_WORLD, "Ly = %g\n", g.Ly);
-  mpi_printf(MPI_COMM_WORLD, "Lz = %g\n", g.Lz);
-  mpi_printf(MPI_COMM_WORLD, "Lx_di = %g\n", g.Lx_di);
-  mpi_printf(MPI_COMM_WORLD, "Ly_di = %g\n", g.Ly_di);
-  mpi_printf(MPI_COMM_WORLD, "Lz_di = %g\n", g.Lz_di);  
+  mpi_printf(MPI_COMM_WORLD, "Lx/di = %g\n", g.Lx );
+  mpi_printf(MPI_COMM_WORLD, "Lx/de = %g\n", g.Lx * g.de /g.di);
+  mpi_printf(MPI_COMM_WORLD, "Ly/di = %g\n", g.Ly );
+  mpi_printf(MPI_COMM_WORLD, "Ly/de = %g\n", g.Ly * g.de /g.di);
+  mpi_printf(MPI_COMM_WORLD, "Lz/di = %g\n", g.Lz );
+  mpi_printf(MPI_COMM_WORLD, "Lz/de = %g\n", g.Lz * g.de /g.di);
   mpi_printf(MPI_COMM_WORLD, "nx = %d\n", g.gdims[0]);
   mpi_printf(MPI_COMM_WORLD, "ny = %d\n", g.gdims[1]);
   mpi_printf(MPI_COMM_WORLD, "nz = %d\n", g.gdims[2]);
