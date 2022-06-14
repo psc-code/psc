@@ -253,7 +253,7 @@ void setupParameters()
   // -- set some generic PSC parameters
   //-----------------------------------------------
   //-----------------------------------------------
-  psc_params.nmax = 1000;//1801;
+  psc_params.nmax = 2;//1801;
   psc_params.cfl = 0.75;
   psc_params.write_checkpoint_every_step = -100; //This is not working
   psc_params.stats_every = -1;
@@ -307,7 +307,7 @@ void setupParameters()
 
   //Non-dimensional ratios
   g.wpe_wce = 2.5;
-  g.mi_me = 25.;
+  g.mi_me = 1.;
   g.Ti_Te = 1.;
   g.nb_n0 = 0.1;
 
@@ -550,150 +550,11 @@ Grid_t* setupGrid()
 // ======================================================================
 // initializeAlfven
 
-void initializeAlfven(MfieldsAlfven& mflds)
-{
+void initializeAlfven(MfieldsAlfven& mflds){
   const auto& grid = mflds.grid();
   double ky = 2. * M_PI / grid.domain.length[1];
 
-// This is for the implementation of the Langevin antena
-//------------------------------------------------------------------------------------------------------------
-
-//  double x = crd[0], y=crd[1], z = crd[2];
-//Following the same 8 modes, background field along the z direction (direction of the harris field)
-
-//To compute J_ext = (c/4pi) \nabla \times B_ext 
-
-double Nk = 8; 
-double L_per=sqrt(sqr(g.Lx) + sqr(g.Ly)) ;
-
-double dB0 = g.b0 * g.db_b0; // I'm not sure this is the right one Jeff
-double dB_bar = 0.5 * g.b0 * g.db_b0 * L_per/g.Lz ;
-
-double k_x = 2 * M_PI / g.Lx;
-double k_y = 2 * M_PI / g.Ly;
-double k_z = 2 * M_PI / g.Lz;
-
-Double3 k1 = {1 * k_x, 0 * k_y, 1 * k_z}; 
-Double3 k2 = {1 * k_x, 0 * k_y, -1 * k_z}; 
-Double3 k3 = {0 * k_x, 1 * k_y, 1 * k_z}; 
-Double3 k4 = {0 * k_x, 1 * k_y, -1 * k_z}; 
-Double3 k5 = {-1 * k_x, 0 * k_y, 1 * k_z}; 
-Double3 k6 = {-1 * k_x, 0 * k_y, -1 * k_z}; 
-Double3 k7 = {0 * k_x, -1 * k_y, 1 * k_z}; 
-Double3 k8 = {0 * k_x, -1 * k_y, -1 * k_z}; 
-
-double k_per[8]={sqrt( sqr(k1[0]) + sqr(k1[1]) ),
-                sqrt( sqr(k2[0]) + sqr(k2[1]) ),
-                sqrt( sqr(k3[0]) + sqr(k3[1]) ),
-                sqrt( sqr(k4[0]) + sqr(k4[1]) ),
-                sqrt( sqr(k5[0]) + sqr(k5[1]) ),
-                sqrt( sqr(k6[0]) + sqr(k6[1]) ),
-                sqrt( sqr(k7[0]) + sqr(k7[1]) ),
-                sqrt( sqr(k8[0]) + sqr(k8[1]) )};
-
-// For reproducibility;
-//double rand_ph[8]={0.987*2.*M_PI, 0.666*2.*M_PI, 0.025*2.*M_PI, 0.954*2.*M_PI, 0.781*2.*M_PI, 0.846*2.*M_PI, 0.192*2.*M_PI, 0.778*2.*M_PI};
-
-
-// Generate the random numbers
-//-------------------------------------------
-rngpool =
-  RngPool_create(); 
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  RngPool_seed(rngpool, rank);
-  Rng* rng = RngPool_get(rngpool, 0);
-//-------------------------------------------
-double ua = -0.5;
-double ub = 0.5;
-double rph_a = -1;
-double rph_b = 1;
-//-----------------------------------------------------------
-double rand_ph[8]={2 * M_PI * Rng_uniform(rng, rph_a, rph_b), // I think this numbers need to change at each time
-                    2 * M_PI * Rng_uniform(rng, rph_a, rph_b),
-                    2 * M_PI * Rng_uniform(rng, rph_a, rph_b),
-                    2 * M_PI * Rng_uniform(rng, rph_a, rph_b),
-                    2 * M_PI * Rng_uniform(rng, rph_a, rph_b),
-                    2 * M_PI * Rng_uniform(rng, rph_a, rph_b),
-                    2 * M_PI * Rng_uniform(rng, rph_a, rph_b),
-                    2 * M_PI * Rng_uniform(rng, rph_a, rph_b)};
-dcomp unk[8]={2. * M_PI * Rng_uniform(rng, ua, ub) + 2.i * M_PI * Rng_uniform(rng, ua, ub), // This needs to change at each time
-              2. * M_PI * Rng_uniform(rng, ua, ub) + 2.i * M_PI * Rng_uniform(rng, ua, ub),
-              2. * M_PI * Rng_uniform(rng, ua, ub) + 2.i * M_PI * Rng_uniform(rng, ua, ub),
-              2. * M_PI * Rng_uniform(rng, ua, ub) + 2.i * M_PI * Rng_uniform(rng, ua, ub),
-              2. * M_PI * Rng_uniform(rng, ua, ub) + 2.i * M_PI * Rng_uniform(rng, ua, ub),
-              2. * M_PI * Rng_uniform(rng, ua, ub) + 2.i * M_PI * Rng_uniform(rng, ua, ub),
-              2. * M_PI * Rng_uniform(rng, ua, ub) + 2.i * M_PI * Rng_uniform(rng, ua, ub),
-              2. * M_PI * Rng_uniform(rng, ua, ub) + 2.i * M_PI * Rng_uniform(rng, ua, ub)};
-dcomp b0k[8] = {polar(dB0,rand_ph[0]),
-                polar(dB0,rand_ph[1]),
-                polar(dB0,rand_ph[2]),
-                polar(dB0,rand_ph[3]),
-                polar(dB0,rand_ph[4]),
-                polar(dB0,rand_ph[5]),
-                polar(dB0,rand_ph[6]),
-                polar(dB0,rand_ph[7])};
-//-----------------------------------------------------------
-
-//-----------------------------------------------------------
-double omega_0 = 0.9 * (2 * M_PI * g.v_A / g.Lz); // These are the values according to Daniel Groselj
-double gamma_0 = 0.6 * omega_0;
-
-double delta_t_n = 1.; //dt; // This is the time step that has to be calculated 
-double dBn = dB0; // This is the magnetic field of the previous step. It needs to be included
-
-dcomp bn_k[8] = { b0k[0] , b0k[1] , b0k[2] , b0k[3] , b0k[4] , b0k[5] , b0k[6] , b0k[7] }; // This needs to be calculated properly
-
-// This is an iterative formula
-double Cnp1 = 1. + delta_t_n * (dB_bar - dBn) / dB_bar  ;
-
-double dBnp1 = Cnp1 * dBn;
-
-dcomp bnp1_k[8] = {Cnp1 * bn_k[0] * exp ( -(gamma_0 + omega_0*1.i) * delta_t_n ) + dBnp1 * sqrt(12 * gamma_0 * delta_t_n) * unk[0],  
-                Cnp1 * bn_k[1] * exp ( -(gamma_0 + omega_0*1.i) * delta_t_n ) + dBnp1 * sqrt(12 * gamma_0 * delta_t_n) * unk[1],
-                Cnp1 * bn_k[2] * exp ( -(gamma_0 + omega_0*1.i) * delta_t_n ) + dBnp1 * sqrt(12 * gamma_0 * delta_t_n) * unk[2],
-                Cnp1 * bn_k[3] * exp ( -(gamma_0 + omega_0*1.i) * delta_t_n ) + dBnp1 * sqrt(12 * gamma_0 * delta_t_n) * unk[3],
-                Cnp1 * bn_k[4] * exp ( -(gamma_0 + omega_0*1.i) * delta_t_n ) + dBnp1 * sqrt(12 * gamma_0 * delta_t_n) * unk[4],
-                Cnp1 * bn_k[5] * exp ( -(gamma_0 + omega_0*1.i) * delta_t_n ) + dBnp1 * sqrt(12 * gamma_0 * delta_t_n) * unk[5],
-                Cnp1 * bn_k[6] * exp ( -(gamma_0 + omega_0*1.i) * delta_t_n ) + dBnp1 * sqrt(12 * gamma_0 * delta_t_n) * unk[6],
-                Cnp1 * bn_k[7] * exp ( -(gamma_0 + omega_0*1.i) * delta_t_n ) + dBnp1 * sqrt(12 * gamma_0 * delta_t_n) * unk[7]} ;
-//-----------------------------------------------------------
-
-
-//-----------------------------------------------------------
-//dcomp kp_k_exp_1 = polar ((k_per[0] / k_z), (k1[0] * x + k1[1] * y + k1[2] * z)); 
-//double pol_ar = kp_k_exp_1.real();
-
-//-----------------------------------------------------------                    
-const dcomp i(0.0,1.0);
-//----------------------------------------------------------- 
-dcomp pol = std::polar(1.,0.);
-double pol_r = pol.real();
-//dcomp pol = ;
-
-dcomp pol_1 = g.b0 * 3. + 4.i;
-dcomp pol_2 = 3. + -4.i;
-dcomp pol_3 = pol_1*pol_2;
-double pol_3r = pol_3.real();
-double b0kr = b0k[0].real();
-
-mpi_printf(MPI_COMM_WORLD, "rand_ph = %g\n", rand_ph[0]);
-mpi_printf(MPI_COMM_WORLD, "uk = %g\n", unk[0].real());
-mpi_printf(MPI_COMM_WORLD, "polr = %g\n", pol_r);
-mpi_printf(MPI_COMM_WORLD, "pol3r = %g\n", pol_3r);
-mpi_printf(MPI_COMM_WORLD, "b0kr = %g\n", b0kr);
-//mpi_printf(MPI_COMM_WORLD, "pola3 = %g\n", pol_ar);
-//-----------------------------------------------------------
-
-
-//-----------------------------------------------------------
-double B_ext_x_r = 1. / sqrt(Nk) ;
-double B_ext_y_r = 1. / sqrt(Nk) ;
-double B_ext_z_r = 1. / sqrt(Nk) ;
-
-//-----------------------------------------------------------
-
-//--------------------------------------------------------------------------------  
+  //--------------------------------------------------------------------------------  
   mpi_printf(grid.comm(), "**** Setting up Alfven fields...\n");
 
   for (int p = 0; p < mflds.n_patches(); ++p) {
@@ -709,16 +570,198 @@ double B_ext_z_r = 1. / sqrt(Nk) ;
       auto crd_cc = Centering::getPos(patch, index, Centering::CC);
       F(PERT_HY, jx, jy, jz) = g.BB + .1 * sin(ky * crd_fc[1]);
       F(PERT_VY, jx, jy, jz) = -.1 * sin(ky * crd_cc[1]);
-
-      F(PERT_HX, jx, jy, jz) = sin(k_x * crd_cc[0]); // This neads to be the real part of B_ext_x
-
-
     });
-
   }
-//--------------------------------------------------------------------------------  
+  //-------------------------------------------------------------------------------- 
+
+
+  // This is for the implementation of the Langevin antena
+  //------------------------------------------------------------------------------------------------------------
+  //------------------------------------------------------------------------------------------------------------
+  //  double x = crd[0], y=crd[1], z = crd[2];
+  //Following the same 8 modes, background field along the z direction (direction of the harris field)
+
+  //To compute J_ext = (c/4pi) \nabla \times B_ext 
+
+  int Nk = 8; 
+  double L_per=sqrt(sqr(g.Lx) + sqr(g.Ly)) ;
+
+  double dB_bar = 0.5 * g.b0 * L_per/g.Lz ; //0.5 * g.b0 * g.db_b0 * L_per/g.Lz ;
+  double dB0 = dB_bar; 
+
+  double k_x = 2. * M_PI / g.Lx;
+  double k_y = 2. * M_PI / g.Ly;
+  double k_z = 2. * M_PI / g.Lz;
+
+  Double3 k1 = {1. * k_x, 0. * k_y, 1. * k_z}; 
+  Double3 k2 = {1. * k_x, 0. * k_y, -1. * k_z}; 
+  Double3 k3 = {0. * k_x, 1. * k_y, 1. * k_z}; 
+  Double3 k4 = {0. * k_x, 1. * k_y, -1. * k_z}; 
+  Double3 k5 = {-1. * k_x, 0. * k_y, 1. * k_z}; 
+  Double3 k6 = {-1. * k_x, 0. * k_y, -1. * k_z}; 
+  Double3 k7 = {0. * k_x, -1. * k_y, 1. * k_z}; 
+  Double3 k8 = {0. * k_x, -1. * k_y, -1. * k_z}; 
+
+    double k_per[8]={sqrt( sqr(k1[0]) + sqr(k1[1]) ),
+                sqrt( sqr(k2[0]) + sqr(k2[1]) ),
+                sqrt( sqr(k3[0]) + sqr(k3[1]) ),
+                sqrt( sqr(k4[0]) + sqr(k4[1]) ),
+                sqrt( sqr(k5[0]) + sqr(k5[1]) ),
+                sqrt( sqr(k6[0]) + sqr(k6[1]) ),
+                sqrt( sqr(k7[0]) + sqr(k7[1]) ),
+                sqrt( sqr(k8[0]) + sqr(k8[1]) )};
+
+  // For reproducibility;
+  //double rand_ph[8]={0.987*2.*M_PI, 0.666*2.*M_PI, 0.025*2.*M_PI, 0.954*2.*M_PI, 0.781*2.*M_PI, 0.846*2.*M_PI, 0.192*2.*M_PI, 0.778*2.*M_PI};
+
+
+  // Generate the random numbers
+  //-------------------------------------------
+  rngpool =
+   RngPool_create(); 
+   int rank;
+   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+   RngPool_seed(rngpool, rank);
+   Rng* rng = RngPool_get(rngpool, 0);
+  //-------------------------------------------
+  double ua = -0.5;
+  double ub = 0.5;
+  double rph_a = -1.;
+  double rph_b = 1.;
+  //-------------------------------------------
+  //const dcomp i(0.0,1.0);
+  //-----------------------------------------------------------
+  double rand_ph[8]={2. * M_PI * Rng_uniform(rng, rph_a, rph_b), // I think this numbers need to change at each time
+                    2. * M_PI * Rng_uniform(rng, rph_a, rph_b),
+                    2. * M_PI * Rng_uniform(rng, rph_a, rph_b),
+                    2. * M_PI * Rng_uniform(rng, rph_a, rph_b),
+                    2. * M_PI * Rng_uniform(rng, rph_a, rph_b),
+                    2. * M_PI * Rng_uniform(rng, rph_a, rph_b),
+                    2. * M_PI * Rng_uniform(rng, rph_a, rph_b),
+                    2. * M_PI * Rng_uniform(rng, rph_a, rph_b)};
+  dcomp unk[8]={2. * M_PI * Rng_uniform(rng, ua, ub) + 2.i * M_PI * Rng_uniform(rng, ua, ub), // This needs to change at each time
+              2. * M_PI * Rng_uniform(rng, ua, ub) + 2.i * M_PI * Rng_uniform(rng, ua, ub),
+              2. * M_PI * Rng_uniform(rng, ua, ub) + 2.i * M_PI * Rng_uniform(rng, ua, ub),
+              2. * M_PI * Rng_uniform(rng, ua, ub) + 2.i * M_PI * Rng_uniform(rng, ua, ub),
+              2. * M_PI * Rng_uniform(rng, ua, ub) + 2.i * M_PI * Rng_uniform(rng, ua, ub),
+              2. * M_PI * Rng_uniform(rng, ua, ub) + 2.i * M_PI * Rng_uniform(rng, ua, ub),
+              2. * M_PI * Rng_uniform(rng, ua, ub) + 2.i * M_PI * Rng_uniform(rng, ua, ub),
+              2. * M_PI * Rng_uniform(rng, ua, ub) + 2.i * M_PI * Rng_uniform(rng, ua, ub)};  
+  dcomp b0k[8] = {polar(dB0,rand_ph[0]),
+                polar(dB0,rand_ph[1]),
+                polar(dB0,rand_ph[2]),
+                polar(dB0,rand_ph[3]),
+                polar(dB0,rand_ph[4]),
+                polar(dB0,rand_ph[5]),
+                polar(dB0,rand_ph[6]),
+                polar(dB0,rand_ph[7])};
+  //-----------------------------------------------------------
+
+  //-----------------------------------------------------------
+  double omega_0 = 0.9 * (2. * M_PI * g.v_A / g.Lz); // These are the values according to Daniel Groselj
+  double gamma_0 = 0.6 * omega_0;
+  double g_rate = 0.1; // This is chosen so omega_0 << g_rate << wpe;
+
+  double delta_t_n = grid.timestep();//psc_params.cfl * courant_length(grid.domain); //dt; 
+  // This is the time step that has to be calculated 
+  
+  double dBn = dB0; // Checking the iterations, assuming B_bar remains constant, then dBn is always dB0.
+  double Cnp1 = 1.; // Since dBn = dB0 always, Cnp1=1 always.
+ //double Cnp1 = 1. + delta_t_n * g_rate * (dB_bar - dBn) / dB_bar  ;
+
+
+  dcomp bn_k[8] = { b0k[0] , b0k[1] , b0k[2] , b0k[3] , b0k[4] , b0k[5] , b0k[6] , b0k[7] }; // This needs to be calculated properly
+
+  // This is an iterative formula
+
+  double dBnp1 = Cnp1 * dBn;
+
+  dcomp bnp1_k[8] = {Cnp1 * bn_k[0] * exp ( -(gamma_0 + omega_0*1.i) * delta_t_n ) + dBnp1 * sqrt(12. * gamma_0 * delta_t_n) * unk[0],  
+                Cnp1 * bn_k[1] * exp ( -(gamma_0 + omega_0*1.i) * delta_t_n ) + dBnp1 * sqrt(12. * gamma_0 * delta_t_n) * unk[1],
+                Cnp1 * bn_k[2] * exp ( -(gamma_0 + omega_0*1.i) * delta_t_n ) + dBnp1 * sqrt(12. * gamma_0 * delta_t_n) * unk[2],
+                Cnp1 * bn_k[3] * exp ( -(gamma_0 + omega_0*1.i) * delta_t_n ) + dBnp1 * sqrt(12. * gamma_0 * delta_t_n) * unk[3],
+                Cnp1 * bn_k[4] * exp ( -(gamma_0 + omega_0*1.i) * delta_t_n ) + dBnp1 * sqrt(12. * gamma_0 * delta_t_n) * unk[4],
+                Cnp1 * bn_k[5] * exp ( -(gamma_0 + omega_0*1.i) * delta_t_n ) + dBnp1 * sqrt(12. * gamma_0 * delta_t_n) * unk[5],
+                Cnp1 * bn_k[6] * exp ( -(gamma_0 + omega_0*1.i) * delta_t_n ) + dBnp1 * sqrt(12. * gamma_0 * delta_t_n) * unk[6],
+                Cnp1 * bn_k[7] * exp ( -(gamma_0 + omega_0*1.i) * delta_t_n ) + dBnp1 * sqrt(12. * gamma_0 * delta_t_n) * unk[7]} ;
+  
+  //-----------------------------------------------------------
+  // Now the components of the total external field
+  //-----------------------------------------------------------
+  //
+  dcomp Bext_x,Bext_y;
+  double Bext_x_r,Bext_y_r;
+
+  // How to use the crd ??
+  //double x = crd[0], y=crd[1], z = crd[2];
+  double x, y, z;
+  x=1.; y=1.; z=1.,
+   
+  //The x component
+  Bext_x = (bnp1_k[0] * exp(1i * (k1[0] * x + k1[1] * y + k1[2] * z)) ) * k1[1] / k_per[0]
+          +(bnp1_k[1] * exp(1i * (k2[0] * x + k2[1] * y + k2[2] * z)) ) * k2[1] / k_per[1]
+          +(bnp1_k[2] * exp(1i * (k3[0] * x + k3[1] * y + k3[2] * z)) ) * k3[1] / k_per[2]
+          +(bnp1_k[3] * exp(1i * (k4[0] * x + k4[1] * y + k4[2] * z)) ) * k4[1] / k_per[3]
+          +(bnp1_k[4] * exp(1i * (k5[0] * x + k5[1] * y + k5[2] * z)) ) * k5[1] / k_per[4]
+          +(bnp1_k[5] * exp(1i * (k6[0] * x + k6[1] * y + k6[2] * z)) ) * k6[1] / k_per[5]
+          +(bnp1_k[6] * exp(1i * (k7[0] * x + k7[1] * y + k7[2] * z)) ) * k7[1] / k_per[6]
+          +(bnp1_k[7] * exp(1i * (k8[0] * x + k8[1] * y + k8[2] * z)) ) * k8[1] / k_per[7] ;
+
+  Bext_x_r = - (1. / sqrt(Nk)) * Bext_x.real()  ;           
+
+  //The y component
+  Bext_y = (bnp1_k[0] * exp(1i * (k1[0] * x + k1[1] * y + k1[2] * z)) ) * k1[0] / k_per[0]
+          +(bnp1_k[1] * exp(1i * (k2[0] * x + k2[1] * y + k2[2] * z)) ) * k2[0] / k_per[1]
+          +(bnp1_k[2] * exp(1i * (k3[0] * x + k3[1] * y + k3[2] * z)) ) * k3[0] / k_per[2]
+          +(bnp1_k[3] * exp(1i * (k4[0] * x + k4[1] * y + k4[2] * z)) ) * k4[0] / k_per[3]
+          +(bnp1_k[4] * exp(1i * (k5[0] * x + k5[1] * y + k5[2] * z)) ) * k5[0] / k_per[4]
+          +(bnp1_k[5] * exp(1i * (k6[0] * x + k6[1] * y + k6[2] * z)) ) * k6[0] / k_per[5]
+          +(bnp1_k[6] * exp(1i * (k7[0] * x + k7[1] * y + k7[2] * z)) ) * k7[0] / k_per[6]
+          +(bnp1_k[7] * exp(1i * (k8[0] * x + k8[1] * y + k8[2] * z)) ) * k8[0] / k_per[7] ;
+
+  Bext_y_r = (1. / sqrt(Nk)) * Bext_y.real()  ;
+
+  //-----------------------------------------------------------
+  //Then continuining the iteration 
+  //bn_k[8] = { bnp1_k[0] , bnp1_k[1] , bnp1_k[2] , bnp1_k[3] , bnp1_k[4] , bnp1_k[5] , bnp1_k[6] , bnp1_k[7] };
+  // This returns the error: no viable overloaded
+  //-----------------------------------------------------------
+ 
+
+  //-----------------------------------------------------------
+  mpi_printf(MPI_COMM_WORLD, "omega_0 = %g\n", omega_0);
+  mpi_printf(MPI_COMM_WORLD, "gamma_0 = %g\n", gamma_0);
+  mpi_printf(MPI_COMM_WORLD, "delta_t_n = %g\n", delta_t_n);
+
+  //-----------------------------------------------------------
+  //dcomp kp_k_exp_1 = polar ((k_per[0] / k_z), (k1[0] * x + k1[1] * y + k1[2] * z)); 
+  //double pol_ar = kp_k_exp_1.real();
+  //-----------------------------------------------------------                    
+  const dcomp i(0.0,1.0);
+  //----------------------------------------------------------- 
+  dcomp pol = std::polar(1.,0.);
+  double pol_r = pol.real();
+
+  dcomp pol_1 = g.b0 * 3. + 4.i;
+  dcomp pol_2 = 3. + -4.i;
+  dcomp pol_3 = pol_1*pol_2;
+  double pol_3r = pol_3.real();
+  double b0kr = b0k[0].real();
+
+  mpi_printf(MPI_COMM_WORLD, "rand_ph = %g\n", rand_ph[0]);
+  mpi_printf(MPI_COMM_WORLD, "uk = %g\n", unk[0].real());
+  mpi_printf(MPI_COMM_WORLD, "polr = %g\n", pol_r);
+  mpi_printf(MPI_COMM_WORLD, "pol3r = %g\n", pol_3r);
+  mpi_printf(MPI_COMM_WORLD, "b0kr = %g\n", b0kr);
+  //mpi_printf(MPI_COMM_WORLD, "pola3 = %g\n", pol_ar);
+  //-----------------------------------------------------------
+
+  //------------------------------------------------------------------------------------------------------------
+  //------------------------------------------------------------------------------------------------------------
+ 
 }
 
+///***
 // ======================================================================
 // initializeParticles
 
@@ -829,7 +872,7 @@ void initializeFields(MfieldsState& mflds, MfieldsAlfven& mflds_alfven)
       //--------------------------------------------------------------------------------  
       ///*** This is the magnetic field in the case yz geometry  
       case HX:
-        return 0. ; 
+        return mflds_alfven(PERT_VX, idx[0], idx[1], idx[2], p); //0. ; 
       case HY:
         return  0. + g.dby * sin(2. * M_PI * (z - 0.5 * g.Lz) / g.Lz) * cos(M_PI * y / g.Ly); // + dB_azT //In  the case of yz geometry
       case HZ:
