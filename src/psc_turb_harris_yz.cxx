@@ -614,7 +614,6 @@ void initializeAlfven(MfieldsAlfven& mflds){
   // For reproducibility;
   //double rand_ph[8]={0.987*2.*M_PI, 0.666*2.*M_PI, 0.025*2.*M_PI, 0.954*2.*M_PI, 0.781*2.*M_PI, 0.846*2.*M_PI, 0.192*2.*M_PI, 0.778*2.*M_PI};
 
-
   // Generate the random numbers
   //-------------------------------------------
   rngpool =
@@ -688,15 +687,17 @@ void initializeAlfven(MfieldsAlfven& mflds){
   //-----------------------------------------------------------
   // Now the components of the total external field
   //-----------------------------------------------------------
-  //
+
   dcomp Bext_x,Bext_y;
-  double Bext_x_r,Bext_y_r;
+  double Bext_x_r, Bext_y_r;
+  double Bext_z_r = 0.; // From the definition there is no fluctuation in the z direction.
 
   // How to use the crd ??
   //double x = crd[0], y=crd[1], z = crd[2];
   double x, y, z;
   x=1.; y=1.; z=1.,
    
+  // This can be implemented as a function? 
   //The x component
   Bext_x = (bnp1_k[0] * exp(1i * (k1[0] * x + k1[1] * y + k1[2] * z)) ) * k1[1] / k_per[0]
           +(bnp1_k[1] * exp(1i * (k2[0] * x + k2[1] * y + k2[2] * z)) ) * k2[1] / k_per[1]
@@ -721,18 +722,38 @@ void initializeAlfven(MfieldsAlfven& mflds){
 
   Bext_y_r = (1. / sqrt(Nk)) * Bext_y.real()  ;
 
+  // There is no alfvenic fluctuation along z. 
+  double Bext_z_r = 0.; 
+
+
+  //-----------------------------------------------------------
+  //To compute Jext = (c/4pi) \nabla \times B_ext 
+  // It is Jext_x_r, Jext_y_r and Jext_z_r what need to be passed to push the electric field 
+  //-----------------------------------------------------------
+  double Jext_x_r = 1.; 
+  double Jext_y_r = 1.; 
+  double Jext_z_r = 1.; 
+  //-----------------------------------------------------------
+
+  // These values have to be passed to the next time step and the random numbers need to be generated again
   //-----------------------------------------------------------
   //Then continuining the iteration 
-  //bn_k[8] = { bnp1_k[0] , bnp1_k[1] , bnp1_k[2] , bnp1_k[3] , bnp1_k[4] , bnp1_k[5] , bnp1_k[6] , bnp1_k[7] };
-  // This returns the error: no viable overloaded
+    bn_k[0] = bnp1_k[0];
+    bn_k[1] = bnp1_k[1];
+    bn_k[2] = bnp1_k[2];
+    bn_k[3] = bnp1_k[3];
+    bn_k[4] = bnp1_k[4];
+    bn_k[5] = bnp1_k[5];
+    bn_k[6] = bnp1_k[6];
+    bn_k[7] = bnp1_k[7];
   //-----------------------------------------------------------
- 
 
+ 
+  // This is just to check that things work
   //-----------------------------------------------------------
   mpi_printf(MPI_COMM_WORLD, "omega_0 = %g\n", omega_0);
   mpi_printf(MPI_COMM_WORLD, "gamma_0 = %g\n", gamma_0);
   mpi_printf(MPI_COMM_WORLD, "delta_t_n = %g\n", delta_t_n);
-
   //-----------------------------------------------------------
   //dcomp kp_k_exp_1 = polar ((k_per[0] / k_z), (k1[0] * x + k1[1] * y + k1[2] * z)); 
   //double pol_ar = kp_k_exp_1.real();
