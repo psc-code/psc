@@ -64,9 +64,7 @@ enum
   PERT_HX,
   PERT_HY,
   PERT_HZ,
-  PERT_VX,
-  PERT_VY,
-  PERT_VZ,
+  PERT_AZ,
   N_PERT,
 };
 
@@ -219,8 +217,8 @@ PscParams psc_params;
 
 // There is something not quite right here ask Kai Jeff
 //--------------------------------------------------------------------------------
-using Dim = dim_yz;
-// using Dim = dim_xyz;
+// using Dim = dim_yz;
+using Dim = dim_xyz;
 //--------------------------------------------------------------------------------
 
 #ifdef USE_CUDA
@@ -283,11 +281,15 @@ void setupParameters()
   // Space dimensions
   //--------------------------------------------------------------------------------
   ///*** // This is ion the case of yz geometry
-  g.Lz_di = 40.;
-  g.Lx_di = 1.;
+  // g.Lz_di = 40.;
+  // g.Lx_di = 1.;
+  // g.Ly_di = 10.;
+  // g.gdims = {1, 64, 256};
+  g.Lz_di = 10.;
+  g.Lx_di = 10.;
   g.Ly_di = 10.;
-  g.gdims = {1, 64, 256};
-  g.np = {1, 2, 4};
+  g.gdims = {32, 32, 32};
+  g.np = {2, 2, 2};
   //***/
   //--------------------------------------------------------------------------------
 
@@ -704,28 +706,33 @@ void initializeAlfven(MfieldsAlfven& mflds, Langevin& lng)
 
     grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
       Int3 index{jx, jy, jz};
-      auto crd_fc = Centering::getPos(patch, index, Centering::FC);
-      auto crd_cc = Centering::getPos(patch, index, Centering::CC);
-      //     F(PERT_HX, jx, jy, jz) = g.BB + .1 * sin(ky * crd_fc[1]);
-      //     F(PERT_HY, jx, jy, jz) = g.BB + .1 * sin(ky * crd_fc[1]);
-      //     F(PERT_VY, jx, jy, jz) = -.1 * sin(ky * crd_cc[1]);
+      auto crd_ec_z = Centering::getPos(patch, index, Centering::EC, 2);
 
-      double x = crd_cc[0], y = crd_cc[1], z = crd_cc[2]; // fixme, staggering
-
-      dcomp Bext_x = 0., Bext_y = 0.;
+      dcomp Bext_x = 0., Bext_y = 0., Az = 0.;
       for (int n = 0; n < lng.Nk; n++) {
-        Bext_x +=
-          (lng.bn_k[n] *
-           exp(1i * (lng.k[n][0] * x + lng.k[n][1] * y + lng.k[n][2] * z))) *
-          lng.k[n][1] / lng.k_per[n];
-        Bext_y +=
-          (lng.bn_k[n] *
-           exp(1i * (lng.k[n][0] * x + lng.k[n][1] * y + lng.k[n][2] * z))) *
-          lng.k[n][0] / lng.k_per[n];
+        Az += (lng.bn_k[n] *
+               exp(1i * (lng.k[n][0] * crd_ec_z[0] + lng.k[n][1] * crd_ec_z[1] +
+                         lng.k[n][2] * crd_ec_z[2]))) /
+              lng.k_per[n];
       }
 
-      F(PERT_HX, jx, jy, jz) = -(1. / sqrt(lng.Nk)) * Bext_x.real();
-      F(PERT_HY, jx, jy, jz) = (1. / sqrt(lng.Nk)) * Bext_y.real();
+      F(PERT_AZ, jx, jy, jz) = Az.real();
+    });
+
+    grid.Foreach_3d(0, 0, [&](int jx, int jy, int jz) {
+      Int3 index{jx, jy, jz};
+
+      dcomp Bext_x = 0., Bext_y = 0., Az = 0.;
+
+      // Bx_{i, j+1/2, k+1/2} = (Az(i, j+1, k+1/2) - Az(i, j, k+1/2)) / dy
+      // Bx_{i, j, k} =  (Az(i, j+1, k) - Az(i, j, k)) / dy
+
+      F(PERT_HX, jx, jy, jz) =
+        (F(PERT_AZ, jx, jy + 1, jz) - F(PERT_AZ, jx, jy, jz)) /
+        (patch.y_nc(1) - patch.y_nc(0));
+      F(PERT_HY, jx, jy, jz) =
+        -(F(PERT_AZ, jx + 1, jy, jz) - F(PERT_AZ, jx, jy, jz)) /
+        (patch.x_nc(1) - patch.x_nc(0));
       F(PERT_HZ, jx, jy, jz) = 0.;
     });
   }
@@ -923,21 +930,19 @@ void initializeFields(MfieldsState& mflds, MfieldsAlfven& mflds_alfven)
         //--------------------------------------------------------------------------------
         ///*** This is the magnetic field in the case yz geometry
         case HX:
-          return mflds_alfven(PERT_HZ, idx[0], idx[1], idx[2], p); // 0.
+          return mflds_alfven(PERT_HX, idx[0], idx[1], idx[2], p); // 0.
                                                                    // ;
         case HY:
-          return mflds_alfven(PERT_HX, idx[0], idx[1], idx[2], p); // 0.
-        // return 0. + g.dby * sin(2. * M_PI * (z - 0.5 * g.Lz) / g.Lz) *
-        //               cos(M_PI * y /
-        //                   g.Ly); // + dB_azT //In  the case of yz
-        //                   geometry
+          return mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p);
+          // return 0. + g.dby * sin(2. * M_PI * (z - 0.5 * g.Lz) / g.Lz) *
+          //               cos(M_PI * y / g.Ly); // + dB_azT //In  the case of
+          //               yz
+          //                                     // geometry
         case HZ:
-          return mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p); // 0.
+          return mflds_alfven(PERT_HZ, idx[0], idx[1], idx[2], p);
           // return g.b0 * tanh(y / g.L) +
           //        g.dbz * cos(2. * M_PI * (z - 0.5 * g.Lz) / g.Lz) *
           //          sin(M_PI * y / g.Ly);
-          //***/
-          //--------------------------------------------------------------------------------
 
         default: return 0.;
       }
