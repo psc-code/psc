@@ -860,7 +860,7 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
         //--------------------------------------------------------------------------------
         //*** // This is a block for the yz configuration using two
         // popullations
-        case 0: // Ion drifting up
+        case MY_ION_UP: // Ion drifting up
           npt.n = g.n0 * (g.nb_n0 + (1 / sqr(cosh(y / g.L))));
           npt.T[0] = g.Ti;
           npt.T[1] = g.Ti;
@@ -870,7 +870,7 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
           npt.p[2] = 0.;
           npt.kind = MY_ION_UP;
           break;
-        case 1: // Electron drifting up
+        case MY_ELECTRON_UP: // Electron drifting up
           npt.n = g.n0 * (g.nb_n0 + (1 / sqr(cosh(y / g.L))));
           npt.T[0] = g.Te;
           npt.T[1] = g.Te;
@@ -880,26 +880,26 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
           npt.p[2] = 0.;
           npt.kind = MY_ELECTRON_UP;
           break;
-        case 2: // Ion background up
-          npt.n = g.n0 * g.nb_n0;
-          npt.T[0] = g.Tbi;
-          npt.T[1] = g.Tbi;
-          npt.T[2] = g.Tbi;
-          npt.p[0] = 0.;
-          npt.p[1] = 0.;
-          npt.p[2] = 0.;
-          npt.kind = MY_ION_UP;
-          break;
-        case 3: // Electron background up
-          npt.n = g.n0 * g.nb_n0;
-          npt.T[0] = g.Tbe;
-          npt.T[1] = g.Tbe;
-          npt.T[2] = g.Tbe;
-          npt.p[0] = 0.;
-          npt.p[1] = 0.;
-          npt.p[2] = 0.;
-          npt.kind = MY_ELECTRON_UP;
-          break;
+          // case 2: // Ion background up
+          //   npt.n = g.n0 * g.nb_n0;
+          //   npt.T[0] = g.Tbi;
+          //   npt.T[1] = g.Tbi;
+          //   npt.T[2] = g.Tbi;
+          //   npt.p[0] = 0.;
+          //   npt.p[1] = 0.;
+          //   npt.p[2] = 0.;
+          //   npt.kind = MY_ION_UP;
+          //   break;
+          // case 3: // Electron background up
+          //   npt.n = g.n0 * g.nb_n0;
+          //   npt.T[0] = g.Tbe;
+          //   npt.T[1] = g.Tbe;
+          //   npt.T[2] = g.Tbe;
+          //   npt.p[0] = 0.;
+          //   npt.p[1] = 0.;
+          //   npt.p[2] = 0.;
+          //   npt.kind = MY_ELECTRON_UP;
+          //   break;
           /***/
           //--------------------------------------------------------------------------------
 
