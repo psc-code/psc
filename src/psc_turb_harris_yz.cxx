@@ -728,7 +728,7 @@ void initializeAlfven(MfieldsAlfven& mflds, Langevin& lng)
     });
     //--------------------------------------------------------------------------------
     // Calculate the magnetic field components from the vector potential
-    grid.Foreach_3d(0, 1, [&](int jx, int jy, int jz) {
+    grid.Foreach_3d(1, 0, [&](int jx, int jy, int jz) {
       Int3 index{jx, jy, jz};
 
       dcomp Bext_x = 0., Bext_y = 0., Az = 0.;
@@ -736,6 +736,9 @@ void initializeAlfven(MfieldsAlfven& mflds, Langevin& lng)
       // Bx_{i, j+1/2, k+1/2} = (Az(i, j+1, k+1/2) - Az(i, j, k+1/2)) / dy
       // Bx_{i, j, k} =  (Az(i, j+1, k) - Az(i, j, k)) / dy
 
+      // Bx_{i, j+1/2, k+1/2}
+      // By_{i+1/2, j, k+1/2}
+      // Bz_{i+1/2, j+1/2, k}
       F(PERT_HX, jx, jy, jz) =
         (F(PERT_AZ, jx, jy + 1, jz) - F(PERT_AZ, jx, jy, jz)) /
         (patch.y_nc(1) - patch.y_nc(0));
@@ -759,6 +762,10 @@ void initializeAlfven(MfieldsAlfven& mflds, Langevin& lng)
 
       double Jext_x = 0., Jext_y = 0., Jext_z = 0.;
 
+      // Bx_{i, j+1/2, k+1/2}
+      // By_{i+1/2, j, k+1/2}
+      // Bz_{i+1/2, j+1/2, k}
+
       // This is where the current compomemts live
       //---------------------------------------------------------------------------
       // Jx_{i+1/2, j, k} = (Bz(i+1/2, j+1/2, k+1) - Bz(i+1/2, j-1/2, k+1)) / dy
@@ -768,38 +775,38 @@ void initializeAlfven(MfieldsAlfven& mflds, Langevin& lng)
       // dx
       //                  + (Bx(i+1, j+1/2, k+1/2) - Bx(i+1, j+1/2, k-1/2)) / dz
 
-      // Jz_{i, j, k+1/2} = (By(i+1, j+1/2, k+1/2) - By(i, j+1/2, k+1/2)) / dx
-      //                  - (Bx(i+1, j+1/2, k+1/2) - Bx(i+1, j-1/2, k+1/2)) / dy
+      // Jz_{i, j, k+1/2} = (By(i+1/2, j, k+1/2) - By(i-1/2, j, k+1/2)) / dx
+      //                  - (Bx(i, j+1/2, k+1/2) - Bx(i, j-1/2, k+1/2)) / dy
       //--------------------------------------------------------------------------------
       // This is how it is implemented assuming that the right coordinates take
       // care of the 1/2's
       //--------------------------------------------------------------------------------
-      // Jx_{i, j, k} =  (Bz(i, j+1, k) - Bz(i, j, k)) / dy
-      //                  - (By(i, j, k+1) - By(i, j, k)) / dz
+      // Jx_{i, j, k} =  (Bz(i, j, k) - Bz(i, j-1, k)) / dy
+      //                  - (By(i, j, k) - By(i, j, k-1)) / dz
 
-      // Jy_{i, j, k} =  -(Bz(i+1, j, k) - Bz(i, j, k)) / dx
-      //                  + (Bx(i, j, k+1) - Bx(i, j, k)) / dz
+      // Jy_{i, j, k} =  -(Bz(i, j, k) - Bz(i-1, j, k)) / dx
+      //                  + (Bx(i, j, k) - Bx(i, j, k-1)) / dz
 
-      // Jz_{i, j, k} =  (By(i+1, j, k) - By(i, j, k)) / dx
-      //                  - (Bx(i, j+1, k) - Bx(i, j, k)) / dy
+      // Jz_{i, j, k} =  (By(i, j, k) - By(i-1, j, k)) / dx
+      //                  - (Bx(i, j, k) - Bx(i, j-1, k)) / dy
       //--------------------------------------------------------------------------------
 
       F(PERT_JX_ext, jx, jy, jz) =
-        +(F(PERT_HZ, jx, jy + 1, jz) - F(PERT_HZ, jx, jy, jz)) /
+        (F(PERT_HZ, jx, jy, jz) - F(PERT_HZ, jx, jy - 1, jz)) /
           (patch.y_nc(1) - patch.y_nc(0)) -
-        (F(PERT_HY, jx, jy, jz + 1) - F(PERT_HY, jx, jy, jz)) /
+        (F(PERT_HY, jx, jy, jz) - F(PERT_HY, jx, jy, jz - 1)) /
           (patch.z_nc(1) - patch.z_nc(0));
 
       F(PERT_JY_ext, jx, jy, jz) =
-        -(F(PERT_HZ, jx + 1, jy, jz) - F(PERT_HZ, jx, jy, jz)) /
-          (patch.x_nc(1) - patch.x_nc(0)) +
-        (F(PERT_HX, jx, jy, jz + 1) - F(PERT_HX, jx, jy, jz)) /
-          (patch.z_nc(1) - patch.z_nc(0));
+        (F(PERT_HX, jx, jy, jz) - F(PERT_HX, jx, jy, jz - 1)) /
+          (patch.z_nc(1) - patch.z_nc(0)) -
+        (F(PERT_HZ, jx, jy, jz) - F(PERT_HZ, jx - 1, jy, jz)) /
+          (patch.x_nc(1) - patch.x_nc(0));
 
       F(PERT_JZ_ext, jx, jy, jz) =
-        +(F(PERT_HY, jx + 1, jy, jz) - F(PERT_HY, jx, jy, jz)) /
+        (F(PERT_HY, jx, jy, jz) - F(PERT_HY, jx - 1, jy, jz)) /
           (patch.x_nc(1) - patch.x_nc(0)) -
-        (F(PERT_HX, jx, jy + 1, jz) - F(PERT_HX, jx, jy, jz)) /
+        (F(PERT_HX, jx, jy, jz) - F(PERT_HX, jx, jy - 1, jz)) /
           (patch.y_nc(1) - patch.y_nc(0));
     });
   }
