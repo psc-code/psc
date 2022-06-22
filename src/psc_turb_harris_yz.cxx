@@ -595,9 +595,9 @@ struct Langevin
   std::array<dcomp, 8> bn_k;
   std::array<Double3, 8> k;
   std::array<double, 8> k_per;
-  std::array<double, 8> rand_ph;
 
-  Rng* rng;
+  Rng* rng_;
+  int rank_;
 };
 
 Langevin::Langevin()
@@ -633,25 +633,25 @@ Langevin::Langevin()
     k_per[n] = std::sqrt(sqr(k[n][0]) + sqr(k[n][1]));
   }
 
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank_);
   rngpool = RngPool_create();
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  RngPool_seed(rngpool, rank);
-  rng = RngPool_get(rngpool, 0);
+  RngPool_seed(rngpool, rank_);
+  rng_ = RngPool_get(rngpool, 0);
+  if (rank_ == 0) {
+    double rph_a = 0.;
+    double rph_b = 2. * M_PI;
 
-  double rph_a = 0.;
-  double rph_b = 2. * M_PI;
+    //-------------------------------------------
+    // const dcomp i(0.0,1.0);
+    //-----------------------------------------------------------
 
-  //-------------------------------------------
-  // const dcomp i(0.0,1.0);
-  //-----------------------------------------------------------
-  dcomp b0k[8];
-
-  for (int n = 0; n < Nk; n++) {
-    // I think this numbers need to change at each time
-    rand_ph[n] = Rng_uniform(rng, rph_a, rph_b);
-    bn_k[n] = std::polar(dBn, rand_ph[n]);
+    for (int n = 0; n < Nk; n++) {
+      // I think this numbers need to change at each time
+      double rand_ph = Rng_uniform(rng_, rph_a, rph_b);
+      bn_k[n] = std::polar(dBn, rand_ph);
+    }
   }
+  MPI_Bcast(bn_k.data(), Nk, MPI_DOUBLE_COMPLEX, 0, MPI_COMM_WORLD);
 }
 
 void Langevin::step(double dt)
@@ -667,9 +667,12 @@ void Langevin::step(double dt)
   double dBnp1 = Cnp1 * dBn;
 
   dcomp unk[8];
-  for (int n = 0; n < Nk; n++) {
-    unk[n] = Rng_uniform(rng, ua, ub) + 1.i * Rng_uniform(rng, ua, ub);
+  if (rank_ == 0) {
+    for (int n = 0; n < Nk; n++) {
+      unk[n] = Rng_uniform(rng_, ua, ub) + 1.i * Rng_uniform(rng_, ua, ub);
+    }
   }
+  MPI_Bcast(unk, Nk, MPI_DOUBLE_COMPLEX, 0, MPI_COMM_WORLD);
 
   // This is an iterative formula
 
