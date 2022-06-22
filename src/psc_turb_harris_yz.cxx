@@ -680,7 +680,7 @@ void Langevin::step(double dt)
   for (int n = 0; n < Nk; n++) {
     bnp1_k[n] =
       Cnp1 * bn_k[n] * std::exp(-(gamma_0 + omega_0 * 1.i) * delta_t_n) +
-      0 * dBnp1 * sqrt(12. * gamma_0 * delta_t_n) * unk[n];
+      dBnp1 * sqrt(12. * gamma_0 * delta_t_n) * unk[n];
   }
 
   // update n -> n + 1
