@@ -65,6 +65,10 @@ enum
   PERT_HY,
   PERT_HZ,
   PERT_AZ,
+  DIV_B,
+  PERT_JX_ext,
+  PERT_JY_ext,
+  PERT_JZ_ext,
   N_PERT,
 };
 
@@ -586,10 +590,9 @@ struct Langevin
   double omega_0;
   double gamma_0;
   double g_rate;
-
   double dBn;
-  std::array<dcomp, 8> bn_k;
 
+  std::array<dcomp, 8> bn_k;
   std::array<Double3, 8> k;
   std::array<double, 8> k_per;
   std::array<double, 8> rand_ph;
@@ -699,7 +702,7 @@ void initializeAlfven(MfieldsAlfven& mflds, Langevin& lng)
 
   for (int p = 0; p < mflds.n_patches(); ++p) {
     auto& patch = grid.patches[p];
-    auto F = make_Fields3d<Dim>(mflds[p]); // In here the dim_xyz works!
+    auto F = make_Fields3d<Dim>(mflds[p]); 
 
     int n_ghosts = std::max(
       {mflds.ibn()[0], mflds.ibn()[1], mflds.ibn()[2]}); // FIXME, not pretty
@@ -707,18 +710,22 @@ void initializeAlfven(MfieldsAlfven& mflds, Langevin& lng)
     grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
       Int3 index{jx, jy, jz};
       auto crd_ec_z = Centering::getPos(patch, index, Centering::EC, 2);
-
+  //--------------------------------------------------------------------------------
+  //Calculate the vector potential    
       dcomp Bext_x = 0., Bext_y = 0., Az = 0.;
-      for (int n = 0; n < lng.Nk; n++) {
-        Az += (lng.bn_k[n] *
-               exp(1i * (lng.k[n][0] * crd_ec_z[0] + lng.k[n][1] * crd_ec_z[1] +
-                         lng.k[n][2] * crd_ec_z[2]))) /
-              lng.k_per[n];
-      }
-
+      // for (int n = 0; n < lng.Nk; n++) {
+      //   //if(n!=0){
+      //   Az += (lng.bn_k[n] *
+      //          exp(1i * (lng.k[n][0] * crd_ec_z[0] + lng.k[n][1] * crd_ec_z[1] +
+      //                    lng.k[n][2] * crd_ec_z[2]))) /
+      //         lng.k_per[n];
+      //         //}
+      // }
+        Az=cos((2*M_PI * crd_ec_z[0]/g.Lx_di) + (2*M_PI * crd_ec_z[1]/g.Ly_di));
       F(PERT_AZ, jx, jy, jz) = Az.real();
     });
-
+  //--------------------------------------------------------------------------------
+  //Calculate the magnetic field components from the vector potential    
     grid.Foreach_3d(0, 0, [&](int jx, int jy, int jz) {
       Int3 index{jx, jy, jz};
 
@@ -734,90 +741,70 @@ void initializeAlfven(MfieldsAlfven& mflds, Langevin& lng)
         -(F(PERT_AZ, jx + 1, jy, jz) - F(PERT_AZ, jx, jy, jz)) /
         (patch.x_nc(1) - patch.x_nc(0));
       F(PERT_HZ, jx, jy, jz) = 0.;
+      
+      F(DIV_B, jx, jy, jz) = (F(PERT_HX, jx+1, jy, jz) - F(PERT_HX, jx, jy, jz)) /
+                    (patch.x_nc(1) - patch.x_nc(0))
+                    +(F(PERT_HY, jx, jy+1, jz) - F(PERT_HY, jx, jy, jz)) /
+                     (patch.y_nc(1) - patch.y_nc(0))
+                    +(F(PERT_HZ, jx, jy, jz+1) - F(PERT_HZ, jx, jy, jz)) /
+                     (patch.z_nc(1) - patch.z_nc(0));
+    });
+  //--------------------------------------------------------------------------------
+  //Calculate the external current componentfrom the magnetuc field    
+    grid.Foreach_3d(0, 0, [&](int jx, int jy, int jz) {
+      Int3 index{jx, jy, jz};
+
+      double Jext_x = 0., Jext_y = 0., Jext_z = 0.;
+
+      // This is where the current compomemts live
+      //---------------------------------------------------------------------------
+      // Jx_{i+1/2, j, k} = (Bz(i+1/2, j+1/2, k+1) - Bz(i+1/2, j-1/2, k+1)) / dy 
+      //                  - (By(i, j+1/2, k+1/2) - By(i, j+1/2, k-1/2)) / dz 
+
+      // Jy_{i+1, j+1/2, k} = -(Bz(i+1/2, j+1/2, k+1) - Bz(i-1/2, j+1/2, k+1)) / dx 
+      //                  + (Bx(i+1, j+1/2, k+1/2) - Bx(i+1, j+1/2, k-1/2)) / dz 
+
+      // Jz_{i, j, k+1/2} = (By(i+1, j+1/2, k+1/2) - By(i, j+1/2, k+1/2)) / dx 
+      //                  - (Bx(i+1, j+1/2, k+1/2) - Bx(i+1, j-1/2, k+1/2)) / dy 
+      //--------------------------------------------------------------------------------
+      // This is how it is implemented assuming that the right coordinates take care of the 1/2's 
+      //--------------------------------------------------------------------------------
+      // Jx_{i, j, k} =  (Bz(i, j+1, k) - Bz(i, j, k)) / dy 
+      //                  - (By(i, j, k+1) - By(i, j, k)) / dz
+
+      // Jy_{i, j, k} =  -(Bz(i+1, j, k) - Bz(i, j, k)) / dx 
+      //                  + (Bx(i, j, k+1) - Bx(i, j, k)) / dz
+
+      // Jz_{i, j, k} =  (By(i+1, j, k) - By(i, j, k)) / dx 
+      //                  - (Bx(i, j+1, k) - Bx(i, j, k)) / dy
+      //--------------------------------------------------------------------------------
+
+
+      F(PERT_JX_ext, jx, jy, jz) =
+        +(F(PERT_HZ, jx, jy+1, jz) - F(PERT_HZ, jx, jy, jz)) /
+        (patch.y_nc(1) - patch.y_nc(0)) 
+        -(F(PERT_HY, jx, jy , jz+1) - F(PERT_HY, jx, jy, jz)) /
+        (patch.z_nc(1) - patch.z_nc(0)) ;
+      
+      F(PERT_JY_ext, jx, jy, jz) =
+        -(F(PERT_HZ, jx+1, jy, jz) - F(PERT_HZ, jx, jy, jz)) /
+        (patch.x_nc(1) - patch.x_nc(0)) 
+        +(F(PERT_HX, jx, jy , jz+1) - F(PERT_HX, jx, jy, jz)) /
+        (patch.z_nc(1) - patch.z_nc(0)) ;
+
+      F(PERT_JZ_ext, jx, jy, jz) =
+        +(F(PERT_HY, jx+1, jy, jz) - F(PERT_HY, jx, jy, jz)) /
+        (patch.x_nc(1) - patch.x_nc(0)) 
+        -(F(PERT_HX, jx, jy+1, jz) - F(PERT_HX, jx, jy, jz)) /
+        (patch.y_nc(1) - patch.y_nc(0)) ;
+
+
     });
   }
   //--------------------------------------------------------------------------------
 
 #if 0
-  // This is for the implementation of the Langevin antena
-  //------------------------------------------------------------------------------------------------------------
-  //------------------------------------------------------------------------------------------------------------
-  //  double x = crd[0], y=crd[1], z = crd[2];
-  //Following the same 8 modes, background field along the z direction (direction of the harris field)
 
-  //To compute J_ext = (c/4pi) \nabla \times B_ext
-
-  // For reproducibility;
-  //double rand_ph[8]={0.987*2.*M_PI, 0.666*2.*M_PI, 0.025*2.*M_PI, 0.954*2.*M_PI, 0.781*2.*M_PI, 0.846*2.*M_PI, 0.192*2.*M_PI, 0.778*2.*M_PI};
-
-  // Generate the random numbers
-  //-------------------------------------------
-  //-------------------------------------------
-  //-----------------------------------------------------------
-
-  //-----------------------------------------------------------
-
-
-  //-----------------------------------------------------------
-  // Now the components of the total external field
-  //-----------------------------------------------------------
-
-  // There is no alfvenic fluctuation along z.
-  double Bext_z_r = 0.;
-
-
-  //-----------------------------------------------------------
-  //To compute Jext = (c/4pi) \nabla \times B_ext
-  // It is Jext_x_r, Jext_y_r and Jext_z_r what need to be passed to push the electric field
-  //-----------------------------------------------------------
-  double Jext_x_r = 1.;
-  double Jext_y_r = 1.;
-  double Jext_z_r = 1.;
-  //-----------------------------------------------------------
-
-  // These values have to be passed to the next time step and the random numbers need to be generated again
-  //-----------------------------------------------------------
-  //Then continuining the iteration
-    bn_k[0] = bnp1_k[0];
-    bn_k[1] = bnp1_k[1];
-    bn_k[2] = bnp1_k[2];
-    bn_k[3] = bnp1_k[3];
-    bn_k[4] = bnp1_k[4];
-    bn_k[5] = bnp1_k[5];
-    bn_k[6] = bnp1_k[6];
-    bn_k[7] = bnp1_k[7];
-  //-----------------------------------------------------------
-
-
-  // This is just to check that things work
-  //-----------------------------------------------------------
-  mpi_printf(MPI_COMM_WORLD, "omega_0 = %g\n", omega_0);
-  mpi_printf(MPI_COMM_WORLD, "gamma_0 = %g\n", gamma_0);
-  mpi_printf(MPI_COMM_WORLD, "delta_t_n = %g\n", delta_t_n);
-  //-----------------------------------------------------------
-  //dcomp kp_k_exp_1 = polar ((k_per[0] / k_z), (k1[0] * x + k1[1] * y + k1[2] * z));
-  //double pol_ar = kp_k_exp_1.real();
-  //-----------------------------------------------------------
-  const dcomp i(0.0,1.0);
-  //-----------------------------------------------------------
-  dcomp pol = std::polar(1.,0.);
-  double pol_r = pol.real();
-
-  dcomp pol_1 = g.b0 * 3. + 4.i;
-  dcomp pol_2 = 3. + -4.i;
-  dcomp pol_3 = pol_1*pol_2;
-  double pol_3r = pol_3.real();
-  double b0kr = b0k[0].real();
-
-  mpi_printf(MPI_COMM_WORLD, "rand_ph = %g\n", rand_ph[0]);
-  mpi_printf(MPI_COMM_WORLD, "uk = %g\n", unk[0].real());
-  mpi_printf(MPI_COMM_WORLD, "polr = %g\n", pol_r);
-  mpi_printf(MPI_COMM_WORLD, "pol3r = %g\n", pol_3r);
-  mpi_printf(MPI_COMM_WORLD, "b0kr = %g\n", b0kr);
-  //mpi_printf(MPI_COMM_WORLD, "pola3 = %g\n", pol_ar);
-  //-----------------------------------------------------------
-
-  //------------------------------------------------------------------------------------------------------------
   //------------------------------------------------------------------------------------------------------------
 #endif
 }
@@ -929,21 +916,25 @@ void initializeFields(MfieldsState& mflds, MfieldsAlfven& mflds_alfven)
         //--------------------------------------------------------------------------------
         //--------------------------------------------------------------------------------
         ///*** This is the magnetic field in the case yz geometry
+        // case HX:
+        //   return mflds_alfven(PERT_HX, idx[0], idx[1], idx[2], p); // 0.
+        // case HY:
+        //   return mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p);
+        //   // return 0. + g.dby * sin(2. * M_PI * (z - 0.5 * g.Lz) / g.Lz) *
+        //   //               cos(M_PI * y / g.Ly); // + dB_azT //In  the case of
+        //   //               yz geometry
+        // case HZ:
+        //   //return mflds_alfven(PERT_HZ, idx[0], idx[1], idx[2], p);
+        //   // return g.b0 * tanh(y / g.L) +
+        //   //        g.dbz * cos(2. * M_PI * (z - 0.5 * g.Lz) / g.Lz) *
+        //   //          sin(M_PI * y / g.Ly);
+        //   return mflds_alfven(DIV_B, idx[0], idx[1], idx[2], p); // To check the divB
         case HX:
-          return mflds_alfven(PERT_HX, idx[0], idx[1], idx[2], p); // 0.
-                                                                   // ;
+          return mflds_alfven(PERT_JX_ext, idx[0], idx[1], idx[2], p);
         case HY:
-          return mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p);
-          // return 0. + g.dby * sin(2. * M_PI * (z - 0.5 * g.Lz) / g.Lz) *
-          //               cos(M_PI * y / g.Ly); // + dB_azT //In  the case of
-          //               yz
-          //                                     // geometry
+          return mflds_alfven(PERT_JY_ext, idx[0], idx[1], idx[2], p);
         case HZ:
-          return mflds_alfven(PERT_HZ, idx[0], idx[1], idx[2], p);
-          // return g.b0 * tanh(y / g.L) +
-          //        g.dbz * cos(2. * M_PI * (z - 0.5 * g.Lz) / g.Lz) *
-          //          sin(M_PI * y / g.Ly);
-
+          return mflds_alfven(PERT_JZ_ext, idx[0], idx[1], idx[2], p);
         default: return 0.;
       }
     });
