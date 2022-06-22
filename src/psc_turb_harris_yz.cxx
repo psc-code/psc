@@ -716,17 +716,12 @@ void initializeAlfven(MfieldsAlfven& mflds, Langevin& lng)
       //--------------------------------------------------------------------------------
       // Calculate the vector potential
       dcomp Bext_x = 0., Bext_y = 0., Az = 0.;
-      // for (int n = 0; n < lng.Nk; n++) {
-      //   //if(n!=0){
-      //   Az += (lng.bn_k[n] *
-      //          exp(1i * (lng.k[n][0] * crd_ec_z[0] + lng.k[n][1] *
-      //          crd_ec_z[1] +
-      //                    lng.k[n][2] * crd_ec_z[2]))) /
-      //         lng.k_per[n];
-      //         //}
-      // }
-      Az = cos((2 * M_PI * crd_ec_z[0] / g.Lx_di) +
-               (2 * M_PI * crd_ec_z[1] / g.Ly_di));
+      for (int n = 0; n < lng.Nk; n++) {
+        Az += (lng.bn_k[n] *
+               exp(1i * (lng.k[n][0] * crd_ec_z[0] + lng.k[n][1] * crd_ec_z[1] +
+                         lng.k[n][2] * crd_ec_z[2]))) /
+              lng.k_per[n];
+      }
       F(PERT_AZ, jx, jy, jz) = Az.real();
     });
     //--------------------------------------------------------------------------------
