@@ -923,24 +923,18 @@ void initializeFields(MfieldsState& mflds, MfieldsAlfven& mflds_alfven)
         //--------------------------------------------------------------------------------
         //--------------------------------------------------------------------------------
         ///*** This is the magnetic field in the case yz geometry
-        // case HX:
-        //   return mflds_alfven(PERT_HX, idx[0], idx[1], idx[2], p); // 0.
-        // case HY:
-        //   return mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p);
-        //   // return 0. + g.dby * sin(2. * M_PI * (z - 0.5 * g.Lz) / g.Lz) *
-        //   //               cos(M_PI * y / g.Ly); // + dB_azT //In  the case
-        //   of
-        //   //               yz geometry
-        // case HZ:
-        //   //return mflds_alfven(PERT_HZ, idx[0], idx[1], idx[2], p);
-        //   // return g.b0 * tanh(y / g.L) +
-        //   //        g.dbz * cos(2. * M_PI * (z - 0.5 * g.Lz) / g.Lz) *
-        //   //          sin(M_PI * y / g.Ly);
-        //   return mflds_alfven(DIV_B, idx[0], idx[1], idx[2], p); // To check
-        //   the divB
-        case HX: return mflds_alfven(PERT_JX_ext, idx[0], idx[1], idx[2], p);
-        case HY: return mflds_alfven(PERT_JY_ext, idx[0], idx[1], idx[2], p);
-        case HZ: return mflds_alfven(PERT_JZ_ext, idx[0], idx[1], idx[2], p);
+        case HX: return 0.;
+        case HY:
+          return 0. + 0. * g.dby * sin(2. * M_PI * (z - 0.5 * g.Lz) / g.Lz) *
+                        cos(M_PI * y / g.Ly); // + dB_azT //In  the case  of
+                                              //               yz geometry
+        case HZ:
+          return g.b0 * tanh(y / g.L) +
+                 0. * g.dbz * cos(2. * M_PI * (z - 0.5 * g.Lz) / g.Lz) *
+                   sin(M_PI * y / g.Ly);
+        // case HX: return mflds_alfven(PERT_HX, idx[0], idx[1], idx[2], p);
+        // case HY: return mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p);
+        // case HZ: return mflds_alfven(PERT_HZ, idx[0], idx[1], idx[2], p);
         default: return 0.;
       }
     });
