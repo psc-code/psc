@@ -728,7 +728,7 @@ void initializeAlfven(MfieldsAlfven& mflds, Langevin& lng)
     });
     //--------------------------------------------------------------------------------
     // Calculate the magnetic field components from the vector potential
-    grid.Foreach_3d(0, 0, [&](int jx, int jy, int jz) {
+    grid.Foreach_3d(0, 1, [&](int jx, int jy, int jz) {
       Int3 index{jx, jy, jz};
 
       dcomp Bext_x = 0., Bext_y = 0., Az = 0.;
