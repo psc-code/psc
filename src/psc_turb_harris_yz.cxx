@@ -252,7 +252,7 @@ void setupParameters()
   // -- set some generic PSC parameters
   //-----------------------------------------------
   //-----------------------------------------------
-  psc_params.nmax = 2; // 1801;
+  psc_params.nmax = 10; // 1801;
   psc_params.cfl = 0.75;
   psc_params.write_checkpoint_every_step = -100; // This is not working
   psc_params.stats_every = -1;
@@ -1019,7 +1019,7 @@ void run()
   // -- output fields
   OutputFieldsItemParams outf_item_params{};
   OutputFieldsParams outf_params{};
-  outf_item_params.pfield_interval = 45;
+  outf_item_params.pfield_interval = 1;
   outf_item_params.tfield_interval = -10;
 
   outf_params.fields = outf_item_params;
