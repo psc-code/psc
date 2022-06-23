@@ -252,7 +252,7 @@ void setupParameters()
   // -- set some generic PSC parameters
   //-----------------------------------------------
   //-----------------------------------------------
-  psc_params.nmax = 10; // 1801;
+  psc_params.nmax = 101; // 1801;
   psc_params.cfl = 0.75;
   psc_params.write_checkpoint_every_step = -100; // This is not working
   psc_params.stats_every = -1;
@@ -944,6 +944,7 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
 
         default: assert(0);
       }
+      npt.n = 0;
     });
 }
 
