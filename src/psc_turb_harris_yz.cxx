@@ -694,44 +694,18 @@ void Langevin::step(double dt)
 
 struct Langevin* lng;
 
-// ======================================================================
-// initializeAlfven
+//--------------------------------------------------------------------------------
+// Calculate the magnetic field components from the vector potential
 
-void initializeAlfven(MfieldsAlfven& mflds, Langevin& lng)
+void calc_curl_Az(MfieldsAlfven& mflds)
 {
   const auto& grid = mflds.grid();
-  double ky = 2. * M_PI / grid.domain.length[1];
-
-  //--------------------------------------------------------------------------------
-  mpi_printf(grid.comm(), "**** Setting up Alfven fields...\n");
 
   for (int p = 0; p < mflds.n_patches(); ++p) {
     auto& patch = grid.patches[p];
     auto F = make_Fields3d<Dim>(mflds[p]);
-
-    int n_ghosts = std::max(
-      {mflds.ibn()[0], mflds.ibn()[1], mflds.ibn()[2]}); // FIXME, not pretty
-
-    grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
-      Int3 index{jx, jy, jz};
-      auto crd_ec_z = Centering::getPos(patch, index, Centering::EC, 2);
-      //--------------------------------------------------------------------------------
-      // Calculate the vector potential
-      dcomp Bext_x = 0., Bext_y = 0., Az = 0.;
-      for (int n = 0; n < lng.Nk; n++) {
-        Az += (lng.bn_k[n] *
-               exp(1i * (lng.k[n][0] * crd_ec_z[0] + lng.k[n][1] * crd_ec_z[1] +
-                         lng.k[n][2] * crd_ec_z[2]))) /
-              lng.k_per[n];
-      }
-      F(PERT_AZ, jx, jy, jz) = Az.real();
-    });
-    //--------------------------------------------------------------------------------
-    // Calculate the magnetic field components from the vector potential
     grid.Foreach_3d(1, 0, [&](int jx, int jy, int jz) {
       Int3 index{jx, jy, jz};
-
-      dcomp Bext_x = 0., Bext_y = 0., Az = 0.;
 
       // Bx_{i, j+1/2, k+1/2} = (Az(i, j+1, k+1/2) - Az(i, j, k+1/2)) / dy
       // Bx_{i, j, k} =  (Az(i, j+1, k) - Az(i, j, k)) / dy
@@ -746,6 +720,22 @@ void initializeAlfven(MfieldsAlfven& mflds, Langevin& lng)
         -(F(PERT_AZ, jx + 1, jy, jz) - F(PERT_AZ, jx, jy, jz)) /
         (patch.x_nc(1) - patch.x_nc(0));
       F(PERT_HZ, jx, jy, jz) = 0.;
+    });
+  }
+}
+
+//--------------------------------------------------------------------------------
+// Calculate the magnetic field divergence
+
+void calc_div_B(MfieldsAlfven& mflds)
+{
+  const auto& grid = mflds.grid();
+
+  for (int p = 0; p < mflds.n_patches(); ++p) {
+    auto& patch = grid.patches[p];
+    auto F = make_Fields3d<Dim>(mflds[p]);
+    grid.Foreach_3d(1, 0, [&](int jx, int jy, int jz) {
+      Int3 index{jx, jy, jz};
 
       F(DIV_B, jx, jy, jz) =
         (F(PERT_HX, jx + 1, jy, jz) - F(PERT_HX, jx, jy, jz)) /
@@ -755,12 +745,21 @@ void initializeAlfven(MfieldsAlfven& mflds, Langevin& lng)
         (F(PERT_HZ, jx, jy, jz + 1) - F(PERT_HZ, jx, jy, jz)) /
           (patch.z_nc(1) - patch.z_nc(0));
     });
-    //--------------------------------------------------------------------------------
-    // Calculate the external current componentfrom the magnetuc field
+  }
+}
+
+//--------------------------------------------------------------------------------
+// Calculate the external current componentfrom the magnetuc field
+
+void calc_curl_H(MfieldsAlfven& mflds)
+{
+  const auto& grid = mflds.grid();
+
+  for (int p = 0; p < mflds.n_patches(); ++p) {
+    auto& patch = grid.patches[p];
+    auto F = make_Fields3d<Dim>(mflds[p]);
     grid.Foreach_3d(0, 0, [&](int jx, int jy, int jz) {
       Int3 index{jx, jy, jz};
-
-      double Jext_x = 0., Jext_y = 0., Jext_z = 0.;
 
       // Bx_{i, j+1/2, k+1/2}
       // By_{i+1/2, j, k+1/2}
@@ -809,6 +808,44 @@ void initializeAlfven(MfieldsAlfven& mflds, Langevin& lng)
         (F(PERT_HX, jx, jy, jz) - F(PERT_HX, jx, jy - 1, jz)) /
           (patch.y_nc(1) - patch.y_nc(0));
     });
+  }
+}
+
+// ======================================================================
+// initializeAlfven
+
+void initializeAlfven(MfieldsAlfven& mflds, Langevin& lng)
+{
+  const auto& grid = mflds.grid();
+
+  //--------------------------------------------------------------------------------
+  mpi_printf(grid.comm(), "**** Setting up Alfven fields...\n");
+
+  for (int p = 0; p < mflds.n_patches(); ++p) {
+    auto& patch = grid.patches[p];
+    auto F = make_Fields3d<Dim>(mflds[p]);
+
+    int n_ghosts = std::max(
+      {mflds.ibn()[0], mflds.ibn()[1], mflds.ibn()[2]}); // FIXME, not pretty
+
+    grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
+      Int3 index{jx, jy, jz};
+      auto crd_ec_z = Centering::getPos(patch, index, Centering::EC, 2);
+      //--------------------------------------------------------------------------------
+      // Calculate the vector potential
+      dcomp Bext_x = 0., Bext_y = 0., Az = 0.;
+      for (int n = 0; n < lng.Nk; n++) {
+        Az += (lng.bn_k[n] *
+               exp(1i * (lng.k[n][0] * crd_ec_z[0] + lng.k[n][1] * crd_ec_z[1] +
+                         lng.k[n][2] * crd_ec_z[2]))) /
+              lng.k_per[n];
+      }
+      F(PERT_AZ, jx, jy, jz) = Az.real();
+    });
+
+    calc_curl_Az(mflds);
+    // calc_div_B(mflds);
+    calc_curl_H(mflds);
   }
   //--------------------------------------------------------------------------------
 
@@ -937,6 +974,9 @@ void initializeFields(MfieldsState& mflds, MfieldsAlfven& mflds_alfven)
         case HX: return mflds_alfven(PERT_HX, idx[0], idx[1], idx[2], p);
         case HY: return mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p);
         case HZ: return mflds_alfven(PERT_HZ, idx[0], idx[1], idx[2], p);
+        case JXI: return mflds_alfven(PERT_JX_ext, idx[0], idx[1], idx[2], p);
+        case JYI: return mflds_alfven(PERT_JY_ext, idx[0], idx[1], idx[2], p);
+        case JZI: return mflds_alfven(PERT_JZ_ext, idx[0], idx[1], idx[2], p);
         default: return 0.;
       }
     });
