@@ -531,12 +531,14 @@ Grid_t* setupGrid()
 
   //--------------------------------------------------------------------------------
   // This is in the case of yz geometry
-  psc::grid::BC bc{
-    {BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL,
-     BND_FLD_PERIODIC}, // this is in the case of yz geometry
-    {BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL, BND_FLD_PERIODIC},
-    {BND_PRT_PERIODIC, BND_PRT_REFLECTING, BND_PRT_PERIODIC},
-    {BND_PRT_PERIODIC, BND_PRT_REFLECTING, BND_PRT_PERIODIC}};
+  psc::grid::BC bc{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, // CONDUCTING_WALL,
+                    BND_FLD_PERIODIC}, // this is in the case of yz geometry
+                   {BND_FLD_PERIODIC, BND_FLD_PERIODIC, // CONDUCTING_WALL,
+                    BND_FLD_PERIODIC},
+                   {BND_PRT_PERIODIC, BND_PRT_PERIODIC, // REFLECTING,
+                    BND_PRT_PERIODIC},
+                   {BND_PRT_PERIODIC, BND_PRT_PERIODIC, // REFLECTING,
+                    BND_PRT_PERIODIC}};
   //--------------------------------------------------------------------------------
 
   // -- setup particle kinds
@@ -923,18 +925,18 @@ void initializeFields(MfieldsState& mflds, MfieldsAlfven& mflds_alfven)
         //--------------------------------------------------------------------------------
         //--------------------------------------------------------------------------------
         ///*** This is the magnetic field in the case yz geometry
-        case HX: return 0.;
-        case HY:
-          return 0. + 0. * g.dby * sin(2. * M_PI * (z - 0.5 * g.Lz) / g.Lz) *
-                        cos(M_PI * y / g.Ly); // + dB_azT //In  the case  of
-                                              //               yz geometry
-        case HZ:
-          return g.b0 * tanh(y / g.L) +
-                 0. * g.dbz * cos(2. * M_PI * (z - 0.5 * g.Lz) / g.Lz) *
-                   sin(M_PI * y / g.Ly);
-        // case HX: return mflds_alfven(PERT_HX, idx[0], idx[1], idx[2], p);
-        // case HY: return mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p);
-        // case HZ: return mflds_alfven(PERT_HZ, idx[0], idx[1], idx[2], p);
+        // case HX: return 0.;
+        // case HY:
+        //   return 0. + 0. * g.dby * sin(2. * M_PI * (z - 0.5 * g.Lz) / g.Lz) *
+        //                 cos(M_PI * y / g.Ly); // + dB_azT //In  the case  of
+        //                                       //               yz geometry
+        // case HZ:
+        //   return g.b0 * tanh(y / g.L) +
+        //          0. * g.dbz * cos(2. * M_PI * (z - 0.5 * g.Lz) / g.Lz) *
+        //            sin(M_PI * y / g.Ly);
+        case HX: return mflds_alfven(PERT_HX, idx[0], idx[1], idx[2], p);
+        case HY: return mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p);
+        case HZ: return mflds_alfven(PERT_HZ, idx[0], idx[1], idx[2], p);
         default: return 0.;
       }
     });
