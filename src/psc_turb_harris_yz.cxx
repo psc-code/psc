@@ -1086,11 +1086,25 @@ void run()
   // setup initial conditions
 
   lng = new Langevin();
-  // for (int n = 0; n < 10; n++) {
-  //   lng->step(.1);
-  // }
 
   MfieldsAlfven mflds_alfven(grid, N_PERT, grid.ibn);
+
+  auto lf_ext_current = [&](const Grid_t& grid, MfieldsState& mflds) {
+    lng->step(grid.dt);
+    initializeAlfven(mflds_alfven, *lng);
+
+    for (int p = 0; p < mflds.n_patches(); ++p) {
+      auto F = make_Fields3d<Dim>(mflds[p]);
+      auto FA = make_Fields3d<Dim>(mflds_alfven[p]);
+      grid.Foreach_3d(0, 0, [&](int jx, int jy, int jz) {
+        Int3 index{jx, jy, jz};
+
+        F(JXI, jx, jy, jz) += FA(PERT_JX_ext, jx, jy, jz);
+        F(JYI, jx, jy, jz) += FA(PERT_JY_ext, jx, jy, jz);
+        F(JZI, jx, jy, jz) += FA(PERT_JZ_ext, jx, jy, jz);
+      });
+    }
+  };
 
   if (read_checkpoint_filename
         .empty()) { // This is the block which is returning the
@@ -1103,9 +1117,9 @@ void run()
   // ----------------------------------------------------------------------
   // hand off to PscIntegrator to run the simulation
 
-  auto psc =
-    makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts, balance,
-                                 collision, checks, marder, diagnostics);
+  auto psc = makePscIntegrator<PscConfig>(
+    psc_params, *grid_ptr, mflds, mprts, balance, collision, checks, marder,
+    diagnostics, injectParticlesNone, lf_ext_current);
 
   MEM_STATS();
   psc.integrate();
