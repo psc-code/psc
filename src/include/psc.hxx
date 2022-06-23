@@ -131,7 +131,8 @@ inline double courant_length(const Grid_t::Domain& domain)
 // ======================================================================
 // Psc
 
-template <typename PscConfig, typename Diagnostics, typename InjectParticles>
+template <typename PscConfig, typename Diagnostics, typename InjectParticles,
+          typename ExtCurrent>
 struct Psc
 {
   using Mparticles = typename PscConfig::Mparticles;
@@ -158,7 +159,7 @@ struct Psc
   Psc(const PscParams& params, Grid_t& grid, MfieldsState& mflds,
       Mparticles& mprts, Balance& balance, Collision& collision, Checks& checks,
       Marder& marder, Diagnostics& diagnostics,
-      InjectParticles& inject_particles)
+      InjectParticles& inject_particles, ExtCurrent& ext_current)
     : p_{params},
       grid_{&grid},
       mflds_{mflds},
@@ -171,6 +172,7 @@ struct Psc
       bndp_{grid},
       diagnostics_{diagnostics},
       inject_particles_{inject_particles},
+      ext_current_{ext_current},
       checkpointing_{params.write_checkpoint_every_step}
   {
     time_start_ = MPI_Wtime();
@@ -484,7 +486,7 @@ struct Psc
 
     // === particle injection
     prof_start(pr_inject_prts);
-    inject_particles();
+    inject_particles_(grid(), mprts_);
     prof_stop(pr_inject_prts);
 
     if (checks_.continuity_every_step > 0 &&
@@ -522,6 +524,9 @@ struct Psc
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
 #endif
 
+    // === external current
+    this->ext_current_(grid(), mflds_);
+
     bndf_.add_ghosts_J(mflds_);
     bnd_.add_ghosts(mflds_, JXI, JXI + 3);
     bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
@@ -540,12 +545,12 @@ struct Psc
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
 
     // === field propagation B^{n+1} -> B^{n+3/2}
-    //mpi_printf(comm, "***** before Push fields jeff\n");
+    // mpi_printf(comm, "***** before Push fields jeff\n");
     mpi_printf(comm, "***** Push fields B\n");
     prof_restart(pr_push_flds);
     pushf_.push_H(mflds_, .5, Dim{});
     prof_stop(pr_push_flds);
-    //mpi_printf(comm, "***** before if fields jeff\n");
+    // mpi_printf(comm, "***** before if fields jeff\n");
 
 #if 1
     prof_start(pr_bndf);
@@ -554,7 +559,7 @@ struct Psc
     prof_stop(pr_bndf);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 #endif
-    //mpi_printf(comm, "***** before continuity jeff\n");
+    // mpi_printf(comm, "***** before continuity jeff\n");
 
     if (checks_.continuity_every_step > 0 &&
         timestep % checks_.continuity_every_step == 0) {
@@ -562,7 +567,7 @@ struct Psc
       checks_.continuity_after_particle_push(mprts_, mflds_);
       prof_stop(pr_checks);
     }
-    //mpi_printf(comm, "***** before marder correction jeff\n");
+    // mpi_printf(comm, "***** before marder correction jeff\n");
 
     // E at t^{n+3/2}, particles at t^{n+3/2}
     // B at t^{n+3/2} (Note: that is not its natural time,
@@ -592,11 +597,6 @@ struct Psc
     step_psc();
 #endif
   }
-
-  // ----------------------------------------------------------------------
-  // inject_particles
-
-  void inject_particles() { return this->inject_particles_(grid(), mprts_); }
 
 private:
   // ----------------------------------------------------------------------
@@ -728,6 +728,7 @@ protected:
   Marder& marder_;
   Diagnostics& diagnostics_;
   InjectParticles& inject_particles_;
+  ExtCurrent& ext_current_;
 
   Sort sort_;
   PushParticles pushp_;
@@ -767,20 +768,41 @@ InjectParticlesNone injectParticlesNone;
 } // namespace
 
 // ======================================================================
+// ExtCurrentNone
+
+class ExtCurrentNone
+{
+public:
+  template <typename MfieldsState>
+  void operator()(const Grid_t& grid, MfieldsState& mflds)
+  {}
+};
+
+namespace
+{
+
+ExtCurrentNone extCurrentNone;
+
+} // namespace
+
+// ======================================================================
 // makePscIntegrator
 
 template <typename PscConfig, typename MfieldsState, typename Mparticles,
           typename Balance, typename Collision, typename Checks,
           typename Marder, typename Diagnostics,
-          typename InjectParticles = InjectParticlesNone>
-Psc<PscConfig, Diagnostics, InjectParticles> makePscIntegrator(
+          typename InjectParticles = InjectParticlesNone,
+          typename ExtCurrent = ExtCurrentNone>
+Psc<PscConfig, Diagnostics, InjectParticles, ExtCurrent> makePscIntegrator(
   const PscParams& params, Grid_t& grid, MfieldsState& mflds, Mparticles& mprts,
   Balance& balance, Collision& collision, Checks& checks, Marder& marder,
   Diagnostics& diagnostics,
-  InjectParticles& inject_particles = injectParticlesNone)
+  InjectParticles& inject_particles = injectParticlesNone,
+  ExtCurrent& ext_current = extCurrentNone)
 {
-  return {params,    grid,   mflds,  mprts,       balance,
-          collision, checks, marder, diagnostics, inject_particles};
+  return {params,     grid,   mflds,  mprts,       balance,
+          collision,  checks, marder, diagnostics, inject_particles,
+          ext_current};
 }
 
 // ======================================================================

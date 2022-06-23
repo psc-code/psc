@@ -1085,13 +1085,14 @@ void run()
   // setup initial conditions
 
   lng = new Langevin();
-  for (int n = 0; n < 10; n++) {
-    lng->step(.1);
-  }
+  // for (int n = 0; n < 10; n++) {
+  //   lng->step(.1);
+  // }
+
+  MfieldsAlfven mflds_alfven(grid, N_PERT, grid.ibn);
 
   if (read_checkpoint_filename
         .empty()) { // This is the block which is returning the
-    MfieldsAlfven mflds_alfven(grid, N_PERT, grid.ibn);
     initializeAlfven(mflds_alfven, *lng);
     initializeParticles(setup_particles, balance, grid_ptr, mprts,
                         mflds_alfven);
