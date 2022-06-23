@@ -252,7 +252,7 @@ void setupParameters()
   // -- set some generic PSC parameters
   //-----------------------------------------------
   //-----------------------------------------------
-  psc_params.nmax = 2; // 1801;
+  psc_params.nmax = 101; // 1801;
   psc_params.cfl = 0.75;
   psc_params.write_checkpoint_every_step = -100; // This is not working
   psc_params.stats_every = -1;
@@ -531,12 +531,14 @@ Grid_t* setupGrid()
 
   //--------------------------------------------------------------------------------
   // This is in the case of yz geometry
-  psc::grid::BC bc{
-    {BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL,
-     BND_FLD_PERIODIC}, // this is in the case of yz geometry
-    {BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL, BND_FLD_PERIODIC},
-    {BND_PRT_PERIODIC, BND_PRT_REFLECTING, BND_PRT_PERIODIC},
-    {BND_PRT_PERIODIC, BND_PRT_REFLECTING, BND_PRT_PERIODIC}};
+  psc::grid::BC bc{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, // CONDUCTING_WALL,
+                    BND_FLD_PERIODIC}, // this is in the case of yz geometry
+                   {BND_FLD_PERIODIC, BND_FLD_PERIODIC, // CONDUCTING_WALL,
+                    BND_FLD_PERIODIC},
+                   {BND_PRT_PERIODIC, BND_PRT_PERIODIC, // REFLECTING,
+                    BND_PRT_PERIODIC},
+                   {BND_PRT_PERIODIC, BND_PRT_PERIODIC, // REFLECTING,
+                    BND_PRT_PERIODIC}};
   //--------------------------------------------------------------------------------
 
   // -- setup particle kinds
@@ -595,9 +597,9 @@ struct Langevin
   std::array<dcomp, 8> bn_k;
   std::array<Double3, 8> k;
   std::array<double, 8> k_per;
-  std::array<double, 8> rand_ph;
 
-  Rng* rng;
+  Rng* rng_;
+  int rank_;
 };
 
 Langevin::Langevin()
@@ -633,25 +635,25 @@ Langevin::Langevin()
     k_per[n] = std::sqrt(sqr(k[n][0]) + sqr(k[n][1]));
   }
 
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank_);
   rngpool = RngPool_create();
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  RngPool_seed(rngpool, rank);
-  rng = RngPool_get(rngpool, 0);
+  RngPool_seed(rngpool, rank_);
+  rng_ = RngPool_get(rngpool, 0);
+  if (rank_ == 0) {
+    double rph_a = 0.;
+    double rph_b = 2. * M_PI;
 
-  double rph_a = 0.;
-  double rph_b = 2. * M_PI;
+    //-------------------------------------------
+    // const dcomp i(0.0,1.0);
+    //-----------------------------------------------------------
 
-  //-------------------------------------------
-  // const dcomp i(0.0,1.0);
-  //-----------------------------------------------------------
-  dcomp b0k[8];
-
-  for (int n = 0; n < Nk; n++) {
-    // I think this numbers need to change at each time
-    rand_ph[n] = Rng_uniform(rng, rph_a, rph_b);
-    bn_k[n] = std::polar(dBn, rand_ph[n]);
+    for (int n = 0; n < Nk; n++) {
+      // I think this numbers need to change at each time
+      double rand_ph = Rng_uniform(rng_, rph_a, rph_b);
+      bn_k[n] = std::polar(dBn, rand_ph);
+    }
   }
+  MPI_Bcast(bn_k.data(), Nk, MPI_DOUBLE_COMPLEX, 0, MPI_COMM_WORLD);
 }
 
 void Langevin::step(double dt)
@@ -667,9 +669,12 @@ void Langevin::step(double dt)
   double dBnp1 = Cnp1 * dBn;
 
   dcomp unk[8];
-  for (int n = 0; n < Nk; n++) {
-    unk[n] = Rng_uniform(rng, ua, ub) + 1.i * Rng_uniform(rng, ua, ub);
+  if (rank_ == 0) {
+    for (int n = 0; n < Nk; n++) {
+      unk[n] = Rng_uniform(rng_, ua, ub) + 1.i * Rng_uniform(rng_, ua, ub);
+    }
   }
+  MPI_Bcast(unk, Nk, MPI_DOUBLE_COMPLEX, 0, MPI_COMM_WORLD);
 
   // This is an iterative formula
 
@@ -677,7 +682,7 @@ void Langevin::step(double dt)
   for (int n = 0; n < Nk; n++) {
     bnp1_k[n] =
       Cnp1 * bn_k[n] * std::exp(-(gamma_0 + omega_0 * 1.i) * delta_t_n) +
-      0 * dBnp1 * sqrt(12. * gamma_0 * delta_t_n) * unk[n];
+      dBnp1 * sqrt(12. * gamma_0 * delta_t_n) * unk[n];
   }
 
   // update n -> n + 1
@@ -689,51 +694,25 @@ void Langevin::step(double dt)
 
 struct Langevin* lng;
 
-// ======================================================================
-// initializeAlfven
+//--------------------------------------------------------------------------------
+// Calculate the magnetic field components from the vector potential
 
-void initializeAlfven(MfieldsAlfven& mflds, Langevin& lng)
+void calc_curl_Az(MfieldsAlfven& mflds)
 {
   const auto& grid = mflds.grid();
-  double ky = 2. * M_PI / grid.domain.length[1];
-
-  //--------------------------------------------------------------------------------
-  mpi_printf(grid.comm(), "**** Setting up Alfven fields...\n");
 
   for (int p = 0; p < mflds.n_patches(); ++p) {
     auto& patch = grid.patches[p];
-    auto F = make_Fields3d<Dim>(mflds[p]); 
-
-    int n_ghosts = std::max(
-      {mflds.ibn()[0], mflds.ibn()[1], mflds.ibn()[2]}); // FIXME, not pretty
-
-    grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
+    auto F = make_Fields3d<Dim>(mflds[p]);
+    grid.Foreach_3d(1, 0, [&](int jx, int jy, int jz) {
       Int3 index{jx, jy, jz};
-      auto crd_ec_z = Centering::getPos(patch, index, Centering::EC, 2);
-  //--------------------------------------------------------------------------------
-  //Calculate the vector potential    
-      dcomp Bext_x = 0., Bext_y = 0., Az = 0.;
-      // for (int n = 0; n < lng.Nk; n++) {
-      //   //if(n!=0){
-      //   Az += (lng.bn_k[n] *
-      //          exp(1i * (lng.k[n][0] * crd_ec_z[0] + lng.k[n][1] * crd_ec_z[1] +
-      //                    lng.k[n][2] * crd_ec_z[2]))) /
-      //         lng.k_per[n];
-      //         //}
-      // }
-        Az=cos((2*M_PI * crd_ec_z[0]/g.Lx_di) + (2*M_PI * crd_ec_z[1]/g.Ly_di));
-      F(PERT_AZ, jx, jy, jz) = Az.real();
-    });
-  //--------------------------------------------------------------------------------
-  //Calculate the magnetic field components from the vector potential    
-    grid.Foreach_3d(0, 0, [&](int jx, int jy, int jz) {
-      Int3 index{jx, jy, jz};
-
-      dcomp Bext_x = 0., Bext_y = 0., Az = 0.;
 
       // Bx_{i, j+1/2, k+1/2} = (Az(i, j+1, k+1/2) - Az(i, j, k+1/2)) / dy
       // Bx_{i, j, k} =  (Az(i, j+1, k) - Az(i, j, k)) / dy
 
+      // Bx_{i, j+1/2, k+1/2}
+      // By_{i+1/2, j, k+1/2}
+      // Bz_{i+1/2, j+1/2, k}
       F(PERT_HX, jx, jy, jz) =
         (F(PERT_AZ, jx, jy + 1, jz) - F(PERT_AZ, jx, jy, jz)) /
         (patch.y_nc(1) - patch.y_nc(0));
@@ -741,65 +720,132 @@ void initializeAlfven(MfieldsAlfven& mflds, Langevin& lng)
         -(F(PERT_AZ, jx + 1, jy, jz) - F(PERT_AZ, jx, jy, jz)) /
         (patch.x_nc(1) - patch.x_nc(0));
       F(PERT_HZ, jx, jy, jz) = 0.;
-      
-      F(DIV_B, jx, jy, jz) = (F(PERT_HX, jx+1, jy, jz) - F(PERT_HX, jx, jy, jz)) /
-                    (patch.x_nc(1) - patch.x_nc(0))
-                    +(F(PERT_HY, jx, jy+1, jz) - F(PERT_HY, jx, jy, jz)) /
-                     (patch.y_nc(1) - patch.y_nc(0))
-                    +(F(PERT_HZ, jx, jy, jz+1) - F(PERT_HZ, jx, jy, jz)) /
-                     (patch.z_nc(1) - patch.z_nc(0));
     });
-  //--------------------------------------------------------------------------------
-  //Calculate the external current componentfrom the magnetuc field    
+  }
+}
+
+//--------------------------------------------------------------------------------
+// Calculate the magnetic field divergence
+
+void calc_div_B(MfieldsAlfven& mflds)
+{
+  const auto& grid = mflds.grid();
+
+  for (int p = 0; p < mflds.n_patches(); ++p) {
+    auto& patch = grid.patches[p];
+    auto F = make_Fields3d<Dim>(mflds[p]);
+    grid.Foreach_3d(1, 0, [&](int jx, int jy, int jz) {
+      Int3 index{jx, jy, jz};
+
+      F(DIV_B, jx, jy, jz) =
+        (F(PERT_HX, jx + 1, jy, jz) - F(PERT_HX, jx, jy, jz)) /
+          (patch.x_nc(1) - patch.x_nc(0)) +
+        (F(PERT_HY, jx, jy + 1, jz) - F(PERT_HY, jx, jy, jz)) /
+          (patch.y_nc(1) - patch.y_nc(0)) +
+        (F(PERT_HZ, jx, jy, jz + 1) - F(PERT_HZ, jx, jy, jz)) /
+          (patch.z_nc(1) - patch.z_nc(0));
+    });
+  }
+}
+
+//--------------------------------------------------------------------------------
+// Calculate the external current componentfrom the magnetuc field
+
+void calc_curl_H(MfieldsAlfven& mflds)
+{
+  const auto& grid = mflds.grid();
+
+  for (int p = 0; p < mflds.n_patches(); ++p) {
+    auto& patch = grid.patches[p];
+    auto F = make_Fields3d<Dim>(mflds[p]);
     grid.Foreach_3d(0, 0, [&](int jx, int jy, int jz) {
       Int3 index{jx, jy, jz};
 
-      double Jext_x = 0., Jext_y = 0., Jext_z = 0.;
+      // Bx_{i, j+1/2, k+1/2}
+      // By_{i+1/2, j, k+1/2}
+      // Bz_{i+1/2, j+1/2, k}
 
       // This is where the current compomemts live
       //---------------------------------------------------------------------------
-      // Jx_{i+1/2, j, k} = (Bz(i+1/2, j+1/2, k+1) - Bz(i+1/2, j-1/2, k+1)) / dy 
-      //                  - (By(i, j+1/2, k+1/2) - By(i, j+1/2, k-1/2)) / dz 
+      // Jx_{i+1/2, j, k} = (Bz(i+1/2, j+1/2, k+1) - Bz(i+1/2, j-1/2, k+1)) / dy
+      //                  - (By(i, j+1/2, k+1/2) - By(i, j+1/2, k-1/2)) / dz
 
-      // Jy_{i+1, j+1/2, k} = -(Bz(i+1/2, j+1/2, k+1) - Bz(i-1/2, j+1/2, k+1)) / dx 
-      //                  + (Bx(i+1, j+1/2, k+1/2) - Bx(i+1, j+1/2, k-1/2)) / dz 
+      // Jy_{i+1, j+1/2, k} = -(Bz(i+1/2, j+1/2, k+1) - Bz(i-1/2, j+1/2, k+1)) /
+      // dx
+      //                  + (Bx(i+1, j+1/2, k+1/2) - Bx(i+1, j+1/2, k-1/2)) / dz
 
-      // Jz_{i, j, k+1/2} = (By(i+1, j+1/2, k+1/2) - By(i, j+1/2, k+1/2)) / dx 
-      //                  - (Bx(i+1, j+1/2, k+1/2) - Bx(i+1, j-1/2, k+1/2)) / dy 
+      // Jz_{i, j, k+1/2} = (By(i+1/2, j, k+1/2) - By(i-1/2, j, k+1/2)) / dx
+      //                  - (Bx(i, j+1/2, k+1/2) - Bx(i, j-1/2, k+1/2)) / dy
       //--------------------------------------------------------------------------------
-      // This is how it is implemented assuming that the right coordinates take care of the 1/2's 
+      // This is how it is implemented assuming that the right coordinates take
+      // care of the 1/2's
       //--------------------------------------------------------------------------------
-      // Jx_{i, j, k} =  (Bz(i, j+1, k) - Bz(i, j, k)) / dy 
-      //                  - (By(i, j, k+1) - By(i, j, k)) / dz
+      // Jx_{i, j, k} =  (Bz(i, j, k) - Bz(i, j-1, k)) / dy
+      //                  - (By(i, j, k) - By(i, j, k-1)) / dz
 
-      // Jy_{i, j, k} =  -(Bz(i+1, j, k) - Bz(i, j, k)) / dx 
-      //                  + (Bx(i, j, k+1) - Bx(i, j, k)) / dz
+      // Jy_{i, j, k} =  -(Bz(i, j, k) - Bz(i-1, j, k)) / dx
+      //                  + (Bx(i, j, k) - Bx(i, j, k-1)) / dz
 
-      // Jz_{i, j, k} =  (By(i+1, j, k) - By(i, j, k)) / dx 
-      //                  - (Bx(i, j+1, k) - Bx(i, j, k)) / dy
+      // Jz_{i, j, k} =  (By(i, j, k) - By(i-1, j, k)) / dx
+      //                  - (Bx(i, j, k) - Bx(i, j-1, k)) / dy
       //--------------------------------------------------------------------------------
-
 
       F(PERT_JX_ext, jx, jy, jz) =
-        +(F(PERT_HZ, jx, jy+1, jz) - F(PERT_HZ, jx, jy, jz)) /
-        (patch.y_nc(1) - patch.y_nc(0)) 
-        -(F(PERT_HY, jx, jy , jz+1) - F(PERT_HY, jx, jy, jz)) /
-        (patch.z_nc(1) - patch.z_nc(0)) ;
-      
+        (F(PERT_HZ, jx, jy, jz) - F(PERT_HZ, jx, jy - 1, jz)) /
+          (patch.y_nc(1) - patch.y_nc(0)) -
+        (F(PERT_HY, jx, jy, jz) - F(PERT_HY, jx, jy, jz - 1)) /
+          (patch.z_nc(1) - patch.z_nc(0));
+
       F(PERT_JY_ext, jx, jy, jz) =
-        -(F(PERT_HZ, jx+1, jy, jz) - F(PERT_HZ, jx, jy, jz)) /
-        (patch.x_nc(1) - patch.x_nc(0)) 
-        +(F(PERT_HX, jx, jy , jz+1) - F(PERT_HX, jx, jy, jz)) /
-        (patch.z_nc(1) - patch.z_nc(0)) ;
+        (F(PERT_HX, jx, jy, jz) - F(PERT_HX, jx, jy, jz - 1)) /
+          (patch.z_nc(1) - patch.z_nc(0)) -
+        (F(PERT_HZ, jx, jy, jz) - F(PERT_HZ, jx - 1, jy, jz)) /
+          (patch.x_nc(1) - patch.x_nc(0));
 
       F(PERT_JZ_ext, jx, jy, jz) =
-        +(F(PERT_HY, jx+1, jy, jz) - F(PERT_HY, jx, jy, jz)) /
-        (patch.x_nc(1) - patch.x_nc(0)) 
-        -(F(PERT_HX, jx, jy+1, jz) - F(PERT_HX, jx, jy, jz)) /
-        (patch.y_nc(1) - patch.y_nc(0)) ;
-
-
+        (F(PERT_HY, jx, jy, jz) - F(PERT_HY, jx - 1, jy, jz)) /
+          (patch.x_nc(1) - patch.x_nc(0)) -
+        (F(PERT_HX, jx, jy, jz) - F(PERT_HX, jx, jy - 1, jz)) /
+          (patch.y_nc(1) - patch.y_nc(0));
     });
+  }
+}
+
+// ======================================================================
+// initializeAlfven
+
+void initializeAlfven(MfieldsAlfven& mflds, Langevin& lng)
+{
+  const auto& grid = mflds.grid();
+
+  //--------------------------------------------------------------------------------
+  mpi_printf(grid.comm(), "**** Setting up Alfven fields...\n");
+
+  for (int p = 0; p < mflds.n_patches(); ++p) {
+    auto& patch = grid.patches[p];
+    auto F = make_Fields3d<Dim>(mflds[p]);
+
+    int n_ghosts = std::max(
+      {mflds.ibn()[0], mflds.ibn()[1], mflds.ibn()[2]}); // FIXME, not pretty
+
+    grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
+      Int3 index{jx, jy, jz};
+      auto crd_ec_z = Centering::getPos(patch, index, Centering::EC, 2);
+      //--------------------------------------------------------------------------------
+      // Calculate the vector potential
+      dcomp Bext_x = 0., Bext_y = 0., Az = 0.;
+      for (int n = 0; n < lng.Nk; n++) {
+        Az += (lng.bn_k[n] *
+               exp(1i * (lng.k[n][0] * crd_ec_z[0] + lng.k[n][1] * crd_ec_z[1] +
+                         lng.k[n][2] * crd_ec_z[2]))) /
+              lng.k_per[n];
+      }
+      F(PERT_AZ, jx, jy, jz) = Az.real();
+    });
+
+    calc_curl_Az(mflds);
+    // calc_div_B(mflds);
+    calc_curl_H(mflds);
   }
   //--------------------------------------------------------------------------------
 
@@ -853,7 +899,7 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
         //--------------------------------------------------------------------------------
         //*** // This is a block for the yz configuration using two
         // popullations
-        case 0: // Ion drifting up
+        case MY_ION_UP: // Ion drifting up
           npt.n = g.n0 * (g.nb_n0 + (1 / sqr(cosh(y / g.L))));
           npt.T[0] = g.Ti;
           npt.T[1] = g.Ti;
@@ -863,7 +909,7 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
           npt.p[2] = 0.;
           npt.kind = MY_ION_UP;
           break;
-        case 1: // Electron drifting up
+        case MY_ELECTRON_UP: // Electron drifting up
           npt.n = g.n0 * (g.nb_n0 + (1 / sqr(cosh(y / g.L))));
           npt.T[0] = g.Te;
           npt.T[1] = g.Te;
@@ -873,31 +919,32 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
           npt.p[2] = 0.;
           npt.kind = MY_ELECTRON_UP;
           break;
-        case 2: // Ion background up
-          npt.n = g.n0 * g.nb_n0;
-          npt.T[0] = g.Tbi;
-          npt.T[1] = g.Tbi;
-          npt.T[2] = g.Tbi;
-          npt.p[0] = 0.;
-          npt.p[1] = 0.;
-          npt.p[2] = 0.;
-          npt.kind = MY_ION_UP;
-          break;
-        case 3: // Electron background up
-          npt.n = g.n0 * g.nb_n0;
-          npt.T[0] = g.Tbe;
-          npt.T[1] = g.Tbe;
-          npt.T[2] = g.Tbe;
-          npt.p[0] = 0.;
-          npt.p[1] = 0.;
-          npt.p[2] = 0.;
-          npt.kind = MY_ELECTRON_UP;
-          break;
+          // case 2: // Ion background up
+          //   npt.n = g.n0 * g.nb_n0;
+          //   npt.T[0] = g.Tbi;
+          //   npt.T[1] = g.Tbi;
+          //   npt.T[2] = g.Tbi;
+          //   npt.p[0] = 0.;
+          //   npt.p[1] = 0.;
+          //   npt.p[2] = 0.;
+          //   npt.kind = MY_ION_UP;
+          //   break;
+          // case 3: // Electron background up
+          //   npt.n = g.n0 * g.nb_n0;
+          //   npt.T[0] = g.Tbe;
+          //   npt.T[1] = g.Tbe;
+          //   npt.T[2] = g.Tbe;
+          //   npt.p[0] = 0.;
+          //   npt.p[1] = 0.;
+          //   npt.p[2] = 0.;
+          //   npt.kind = MY_ELECTRON_UP;
+          //   break;
           /***/
           //--------------------------------------------------------------------------------
 
         default: assert(0);
       }
+      npt.n = 0;
     });
 }
 
@@ -916,25 +963,21 @@ void initializeFields(MfieldsState& mflds, MfieldsAlfven& mflds_alfven)
         //--------------------------------------------------------------------------------
         //--------------------------------------------------------------------------------
         ///*** This is the magnetic field in the case yz geometry
-        // case HX:
-        //   return mflds_alfven(PERT_HX, idx[0], idx[1], idx[2], p); // 0.
+        // case HX: return 0.;
         // case HY:
-        //   return mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p);
-        //   // return 0. + g.dby * sin(2. * M_PI * (z - 0.5 * g.Lz) / g.Lz) *
-        //   //               cos(M_PI * y / g.Ly); // + dB_azT //In  the case of
-        //   //               yz geometry
+        //   return 0. + 0. * g.dby * sin(2. * M_PI * (z - 0.5 * g.Lz) / g.Lz) *
+        //                 cos(M_PI * y / g.Ly); // + dB_azT //In  the case  of
+        //                                       //               yz geometry
         // case HZ:
-        //   //return mflds_alfven(PERT_HZ, idx[0], idx[1], idx[2], p);
-        //   // return g.b0 * tanh(y / g.L) +
-        //   //        g.dbz * cos(2. * M_PI * (z - 0.5 * g.Lz) / g.Lz) *
-        //   //          sin(M_PI * y / g.Ly);
-        //   return mflds_alfven(DIV_B, idx[0], idx[1], idx[2], p); // To check the divB
-        case HX:
-          return mflds_alfven(PERT_JX_ext, idx[0], idx[1], idx[2], p);
-        case HY:
-          return mflds_alfven(PERT_JY_ext, idx[0], idx[1], idx[2], p);
-        case HZ:
-          return mflds_alfven(PERT_JZ_ext, idx[0], idx[1], idx[2], p);
+        //   return g.b0 * tanh(y / g.L) +
+        //          0. * g.dbz * cos(2. * M_PI * (z - 0.5 * g.Lz) / g.Lz) *
+        //            sin(M_PI * y / g.Ly);
+        case HX: return mflds_alfven(PERT_HX, idx[0], idx[1], idx[2], p);
+        case HY: return mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p);
+        case HZ: return mflds_alfven(PERT_HZ, idx[0], idx[1], idx[2], p);
+        case JXI: return mflds_alfven(PERT_JX_ext, idx[0], idx[1], idx[2], p);
+        case JYI: return mflds_alfven(PERT_JY_ext, idx[0], idx[1], idx[2], p);
+        case JZI: return mflds_alfven(PERT_JZ_ext, idx[0], idx[1], idx[2], p);
         default: return 0.;
       }
     });
@@ -1013,7 +1056,7 @@ void run()
   // -- output fields
   OutputFieldsItemParams outf_item_params{};
   OutputFieldsParams outf_params{};
-  outf_item_params.pfield_interval = 45;
+  outf_item_params.pfield_interval = 1;
   outf_item_params.tfield_interval = -10;
 
   outf_params.fields = outf_item_params;
@@ -1043,13 +1086,28 @@ void run()
   // setup initial conditions
 
   lng = new Langevin();
-  for (int n = 0; n < 10; n++) {
-    lng->step(.1);
-  }
+
+  MfieldsAlfven mflds_alfven(grid, N_PERT, grid.ibn);
+
+  auto lf_ext_current = [&](const Grid_t& grid, MfieldsState& mflds) {
+    lng->step(grid.dt);
+    initializeAlfven(mflds_alfven, *lng);
+
+    for (int p = 0; p < mflds.n_patches(); ++p) {
+      auto F = make_Fields3d<Dim>(mflds[p]);
+      auto FA = make_Fields3d<Dim>(mflds_alfven[p]);
+      grid.Foreach_3d(0, 0, [&](int jx, int jy, int jz) {
+        Int3 index{jx, jy, jz};
+
+        F(JXI, jx, jy, jz) += FA(PERT_JX_ext, jx, jy, jz);
+        F(JYI, jx, jy, jz) += FA(PERT_JY_ext, jx, jy, jz);
+        F(JZI, jx, jy, jz) += FA(PERT_JZ_ext, jx, jy, jz);
+      });
+    }
+  };
 
   if (read_checkpoint_filename
         .empty()) { // This is the block which is returning the
-    MfieldsAlfven mflds_alfven(grid, N_PERT, grid.ibn);
     initializeAlfven(mflds_alfven, *lng);
     initializeParticles(setup_particles, balance, grid_ptr, mprts,
                         mflds_alfven);
@@ -1059,9 +1117,9 @@ void run()
   // ----------------------------------------------------------------------
   // hand off to PscIntegrator to run the simulation
 
-  auto psc =
-    makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts, balance,
-                                 collision, checks, marder, diagnostics);
+  auto psc = makePscIntegrator<PscConfig>(
+    psc_params, *grid_ptr, mflds, mprts, balance, collision, checks, marder,
+    diagnostics, injectParticlesNone, lf_ext_current);
 
   MEM_STATS();
   psc.integrate();
