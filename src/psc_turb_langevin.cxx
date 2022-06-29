@@ -761,33 +761,33 @@ void calc_curl_H(MfieldsAlfven& mflds)
     grid.Foreach_3d(0, 0, [&](int jx, int jy, int jz) {
       Int3 index{jx, jy, jz};
 
-      // Bx_{i, j+1/2, k+1/2}
-      // By_{i+1/2, j, k+1/2}
-      // Bz_{i+1/2, j+1/2, k}
+      // Hx_{i, j+1/2, k+1/2}
+      // Hy_{i+1/2, j, k+1/2}
+      // Hz_{i+1/2, j+1/2, k}
 
       // This is where the current compomemts live
       //---------------------------------------------------------------------------
-      // Jx_{i+1/2, j, k} = (Bz(i+1/2, j+1/2, k+1) - Bz(i+1/2, j-1/2, k+1)) / dy
-      //                  - (By(i, j+1/2, k+1/2) - By(i, j+1/2, k-1/2)) / dz
+      // Jx_{i+1/2, j, k} = (Hz(i+1/2, j+1/2, k+1) - Hz(i+1/2, j-1/2, k+1)) / dy
+      //                  - (Hy(i, j+1/2, k+1/2) - Hy(i, j+1/2, k-1/2)) / dz
 
-      // Jy_{i+1, j+1/2, k} = -(Bz(i+1/2, j+1/2, k+1) - Bz(i-1/2, j+1/2, k+1)) /
+      // Jy_{i+1, j+1/2, k} = -(Hz(i+1/2, j+1/2, k+1) - Hz(i-1/2, j+1/2, k+1)) /
       // dx
-      //                  + (Bx(i+1, j+1/2, k+1/2) - Bx(i+1, j+1/2, k-1/2)) / dz
+      //                  + (Hx(i+1, j+1/2, k+1/2) - Hx(i+1, j+1/2, k-1/2)) / dz
 
-      // Jz_{i, j, k+1/2} = (By(i+1/2, j, k+1/2) - By(i-1/2, j, k+1/2)) / dx
-      //                  - (Bx(i, j+1/2, k+1/2) - Bx(i, j-1/2, k+1/2)) / dy
+      // Jz_{i, j, k+1/2} = (Hy(i+1/2, j, k+1/2) - Hy(i-1/2, j, k+1/2)) / dx
+      //                  - (Hx(i, j+1/2, k+1/2) - Hx(i, j-1/2, k+1/2)) / dy
       //--------------------------------------------------------------------------------
       // This is how it is implemented assuming that the right coordinates take
       // care of the 1/2's
       //--------------------------------------------------------------------------------
-      // Jx_{i, j, k} =  (Bz(i, j, k) - Bz(i, j-1, k)) / dy
-      //                  - (By(i, j, k) - By(i, j, k-1)) / dz
+      // Jx_{i, j, k} =  (Hz(i, j, k) - Hz(i, j-1, k)) / dy
+      //                  - (Hy(i, j, k) - Hy(i, j, k-1)) / dz
 
-      // Jy_{i, j, k} =  -(Bz(i, j, k) - Bz(i-1, j, k)) / dx
-      //                  + (Bx(i, j, k) - Bx(i, j, k-1)) / dz
+      // Jy_{i, j, k} =  -(Hz(i, j, k) - Hz(i-1, j, k)) / dx
+      //                  + (Hx(i, j, k) - Hx(i, j, k-1)) / dz
 
-      // Jz_{i, j, k} =  (By(i, j, k) - By(i-1, j, k)) / dx
-      //                  - (Bx(i, j, k) - Bx(i, j-1, k)) / dy
+      // Jz_{i, j, k} =  (Hy(i, j, k) - Hy(i-1, j, k)) / dx
+      //                  - (Hx(i, j, k) - Hx(i, j-1, k)) / dy
       //--------------------------------------------------------------------------------
 
       F(PERT_JX_ext, jx, jy, jz) =
@@ -871,75 +871,26 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
       double x = crd[0], y = crd[1], z = crd[2];
       switch (kind) {
 
-        //--------------------------------------------------------------------------------
-        /*** // This is a block for the yz configuration using a single
-        poppulation double psi; if (y<=g.L && y>=0.) psi=1.; else if (y<0. &&
-        y>=-g.L) psi=1.; else psi=0.; case 0: //Ion drifting up npt.n = g.n0 *
-        (g.nb_n0 + (1 / sqr(cosh(y / g.L))) ) ; npt.T[0] = g.Ti * psi + g.Tbi;
-          npt.T[1] = g.Ti * psi + g.Tbi;
-          npt.T[2] = g.Ti * psi + g.Tbi;
-          npt.p[0] = g.udri * psi;
-          npt.p[1] = 0.;
-          npt.p[2] = 0.;
-          npt.kind = MY_ION_UP;
-          break;
-        case 1: //Electron drifting up
-          npt.n =  g.n0 * (g.nb_n0 + (1 / sqr(cosh(y / g.L))) ) ;
-          npt.T[0] = g.Te * psi + g.Tbe;
-          npt.T[1] = g.Te * psi + g.Tbe;
-          npt.T[2] = g.Te * psi + g.Tbe;
-          npt.p[0] = g.udre * psi ;
-          npt.p[1] = 0.;
-          npt.p[2] = 0.;
-          npt.kind = MY_ELECTRON_UP;
-          break;
-        ***/
-        //--------------------------------------------------------------------------------
-
-        //--------------------------------------------------------------------------------
-        //*** // This is a block for the yz configuration using two
-        // popullations
-        case MY_ION_UP: // Ion drifting up
-          npt.n = g.n0 * (g.nb_n0 + (1 / sqr(cosh(y / g.L))));
+        case MY_ION_UP: 
+          npt.n = g.n0;
           npt.T[0] = g.Ti;
           npt.T[1] = g.Ti;
           npt.T[2] = g.Ti;
-          npt.p[0] = g.udri;
+          npt.p[0] = 0.;
           npt.p[1] = 0.;
           npt.p[2] = 0.;
           npt.kind = MY_ION_UP;
           break;
-        case MY_ELECTRON_UP: // Electron drifting up
-          npt.n = g.n0 * (g.nb_n0 + (1 / sqr(cosh(y / g.L))));
+        case MY_ELECTRON_UP: 
+          npt.n = g.n0;
           npt.T[0] = g.Te;
           npt.T[1] = g.Te;
           npt.T[2] = g.Te;
-          npt.p[0] = g.udre;
+          npt.p[0] = 0.;//g.udre;
           npt.p[1] = 0.;
           npt.p[2] = 0.;
           npt.kind = MY_ELECTRON_UP;
           break;
-          // case 3: // Ion background up
-          //   npt.n = g.n0 * g.nb_n0;
-          //   npt.T[0] = g.Tbi;
-          //   npt.T[1] = g.Tbi;
-          //   npt.T[2] = g.Tbi;
-          //   npt.p[0] = 0.;
-          //   npt.p[1] = 0.;
-          //   npt.p[2] = 0.;
-          //   npt.kind = MY_ION_UP;
-          //   break;
-          // case 4: // Electron background up
-          //   npt.n = g.n0 * g.nb_n0;
-          //   npt.T[0] = g.Tbe;
-          //   npt.T[1] = g.Tbe;
-          //   npt.T[2] = g.Tbe;
-          //   npt.p[0] = 0.;
-          //   npt.p[1] = 0.;
-          //   npt.p[2] = 0.;
-          //   npt.kind = MY_ELECTRON_UP;
-          //   break;
-          /***/
           //--------------------------------------------------------------------------------
 
         default: assert(0);
@@ -963,25 +914,12 @@ void initializeFields(MfieldsState& mflds, MfieldsAlfven& mflds_alfven)
         //--------------------------------------------------------------------------------
         //--------------------------------------------------------------------------------
         ///*** This is the magnetic field in the case yz geometry
-        //case HX: return mflds_alfven(PERT_HX, idx[0], idx[1], idx[2], p);
-        //case HY: return mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p);
-        //case HZ: return mflds_alfven(PERT_HZ, idx[0], idx[1], idx[2], p);
-        //case JXI: return mflds_alfven(PERT_JX_ext, idx[0], idx[1], idx[2], p);
-        //case JYI: return mflds_alfven(PERT_JY_ext, idx[0], idx[1], idx[2], p);
-        //case JZI: return mflds_alfven(PERT_JZ_ext, idx[0], idx[1], idx[2], p);
-
-        //double db_la_x = mflds_alfven(PERT_HX, idx[0], idx[1], idx[2], p);
-        //double db_la_y = mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p);
-        //double db_la_z = mflds_alfven(PERT_HZ, idx[0], idx[1], idx[2], p);
-        
-        case HX: return 0. + mflds_alfven(PERT_HX, idx[0], idx[1], idx[2], p);
-        case HY:
-           return 1. * g.dby * sin(2. * M_PI * (z - 0.5 * g.Lz) / g.Lz) *
-                         cos(M_PI * y / g.Ly) + mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p);
-        case HZ:
-           return g.b0 * tanh(y / g.L) +
-                  1. * g.dbz * cos(2. * M_PI * (z - 0.5 * g.Lz) / g.Lz) *
-                    sin(M_PI * y / g.Ly) + mflds_alfven(PERT_HZ, idx[0], idx[1], idx[2], p);
+        case HX: return mflds_alfven(PERT_HX, idx[0], idx[1], idx[2], p);
+        case HY: return mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p);
+        case HZ: return mflds_alfven(PERT_HZ, idx[0], idx[1], idx[2], p);
+        case JXI: return mflds_alfven(PERT_JX_ext, idx[0], idx[1], idx[2], p);
+        case JYI: return mflds_alfven(PERT_JY_ext, idx[0], idx[1], idx[2], p);
+        case JZI: return mflds_alfven(PERT_JZ_ext, idx[0], idx[1], idx[2], p);
         default: return 0.;
       }
     });
