@@ -93,7 +93,7 @@ PscParams psc_params;
 //
 // EDIT to change order / floating point type / cuda / 2d/3d
 
-using Dim = dim_xz;
+using Dim = dim_xyz;
 
 #ifdef USE_CUDA
 using PscConfig = PscConfig1vbecCuda<Dim>;
@@ -160,9 +160,9 @@ Grid_t* setupGrid()
   //Grid_t::Real3 LL = {1., 80., 3. * 80.}; // domain size (in d_e)
   //Int3 gdims = {1, 80, 3 * 80};           // global number of grid points
   //Int3 np = {1, 2, 3 * 5};                // division into patches
-  Grid_t::Real3 LL = {3. * 80., 1., 80.}; // domain size (in d_e) 
-  Int3 gdims = {3 * 80, 1, 80};           // global number of grid points
-  Int3 np = {3*5, 1, 2};                // division into patches
+  Grid_t::Real3 LL = {3. * 80., 4., 80.}; // domain size (in d_e) 
+  Int3 gdims = {3 * 80, 4, 80};           // global number of grid points
+  Int3 np = {4, 1, 2};                // division into patches
 
   Grid_t::Domain domain{gdims, LL, -.5 * LL, np};
 
@@ -185,7 +185,7 @@ Grid_t* setupGrid()
 
   // -- setup normalization
   auto norm_params = Grid_t::NormalizationParams::dimensionless();
-  norm_params.nicell = 100;
+  norm_params.nicell = 20;
 
   double dt = psc_params.cfl * courant_length(domain);
   Grid_t::Normalization norm{norm_params};
