@@ -120,7 +120,7 @@ using OutputParticles = PscConfig::OutputParticles;
 void setupParameters()
 {
   // -- set some generic PSC parameters
-  psc_params.nmax = 111;
+  psc_params.nmax = 11;
   psc_params.cfl = 0.75;
   psc_params.write_checkpoint_every_step = -100; //This is not working
   psc_params.stats_every = 1;
@@ -160,8 +160,8 @@ Grid_t* setupGrid()
   //Grid_t::Real3 LL = {1., 80., 3. * 80.}; // domain size (in d_e)
   //Int3 gdims = {1, 80, 3 * 80};           // global number of grid points
   //Int3 np = {1, 2, 3 * 5};                // division into patches
-  Grid_t::Real3 LL = {3. * 80., 4., 80.}; // domain size (in d_e) 
-  Int3 gdims = {3 * 80, 4, 80};           // global number of grid points
+  Grid_t::Real3 LL = {2.*M_PI, 2.*M_PI, 2.*M_PI}; // domain size (in d_e) 
+  Int3 gdims = {32, 32, 32};           // global number of grid points
   Int3 np = {4, 1, 2};                // division into patches
 
   Grid_t::Domain domain{gdims, LL, -.5 * LL, np};
@@ -212,7 +212,9 @@ Grid_t* setupGrid()
 void initializeAlfven(MfieldsAlfven& mflds)
 {
   const auto& grid = mflds.grid();
+  double kx = 2. * M_PI / grid.domain.length[0];
   double ky = 2. * M_PI / grid.domain.length[1];
+  double kz = 2. * M_PI / grid.domain.length[2];
 
   mpi_printf(grid.comm(), "**** Setting up Alfven fields...\n");
 
@@ -227,8 +229,12 @@ void initializeAlfven(MfieldsAlfven& mflds)
       Int3 index{jx, jy, jz};
       auto crd_fc = Centering::getPos(patch, index, Centering::FC);
       auto crd_cc = Centering::getPos(patch, index, Centering::CC);
-      F(PERT_HY, jx, jy, jz) = g.BB + .1 * sin(ky * crd_fc[1]);
+      F(PERT_HX, jx, jy, jz) = 0.*g.BB + .1 * sin(kx * crd_fc[0]);
+      F(PERT_VX, jx, jy, jz) = -.1 * sin(kx * crd_cc[0]);
+      F(PERT_HY, jx, jy, jz) = 0.*g.BB + .1 * sin(ky * crd_fc[1]);
       F(PERT_VY, jx, jy, jz) = -.1 * sin(ky * crd_cc[1]);
+      F(PERT_HZ, jx, jy, jz) = 0.*g.BB + .1 * sin(kz * crd_fc[2]);
+      F(PERT_VZ, jx, jy, jz) = -.1 * sin(kz * crd_cc[2]);
     });
   }
 }
@@ -276,7 +282,9 @@ void initializeFields(MfieldsState& mflds, MfieldsAlfven& mflds_alfven)
   setupFieldsGeneral(
     mflds, [&](int m, Int3 idx, int p, double crd[3]) -> MfieldsState::real_t {
       switch (m) {
+        case HX: return mflds_alfven(PERT_HX, idx[0], idx[1], idx[2], p);
         case HY: return mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p);
+        case HZ: return mflds_alfven(PERT_HZ, idx[0], idx[1], idx[2], p);
         default: return 0.;
       }
     });
@@ -364,7 +372,7 @@ void run()
 
   // -- output particles
   OutputParticlesParams outp_params{};
-  outp_params.every_step = 100;
+  outp_params.every_step = -100;
   outp_params.data_dir = ".";
   outp_params.basename = "prt";
   OutputParticles outp{grid, outp_params};

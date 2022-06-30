@@ -147,7 +147,7 @@ using OutputParticles = PscConfig::OutputParticles;
 void setupParameters()
 {
   // -- set some generic PSC parameters
-  psc_params.nmax = 111;
+  psc_params.nmax = 2001;
   psc_params.cfl = 0.75;
   psc_params.write_checkpoint_every_step = -100; //This is not working
   psc_params.stats_every = 1;
@@ -253,9 +253,9 @@ Grid_t* setupGrid()
 void initializeAlfven(MfieldsAlfven& mflds)
 {  
   const auto& grid = mflds.grid();
-  Rng* rng_;
-  int rank_;
   std::array<Double3, 8> k;
+  std::array<double, 8> mn_per;
+  std::array<double, 8> mn_par;
   std::array<double, 8> k_a_per;
   std::array<double, 8> k_a_par;
   std::array<double, 8> phi;
@@ -263,6 +263,8 @@ void initializeAlfven(MfieldsAlfven& mflds)
   std::array<double, 8> Amp;
   std::array<double, 8> dB_ax;
   std::array<double, 8> dB_ay;
+  std::array<double, 8> dv_ax;
+  std::array<double, 8> dv_ay;
   //-----------------------------------------------------------------------
   double vA_over_c_ = .1; 
   double B0 = vA_over_c_; 
@@ -287,31 +289,44 @@ void initializeAlfven(MfieldsAlfven& mflds)
   int m_per=2; //modes in the perpendicular directions
   int m_par=1; //modes in the parallel direction acording to critical balance    
   int Nk = 8;
+
+  // This part didn't work. there is a conflict that I don't understand yet
   //---------------------------------------------------------------------
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank_);
-  rngpool = RngPool_create();
-  RngPool_seed(rngpool, rank_);
-  rng_ = RngPool_get(rngpool, 0);
+  //Rng* rng_;
+  //int rank_;
+  //MPI_Comm_rank(MPI_COMM_WORLD, &rank_);
+  //rngpool = RngPool_create();
+  //RngPool_seed(rngpool, rank_);
+  //rng_ = RngPool_get(rngpool, 0);
+  //for (int n = 0; n < Nk; n++) {
+  //        phase[n] = Rng_uniform(rng_, rph_a, rph_b); // random phase
+  //        }  
+  //---------------------------------------------------------------------
+ 
+  //if (rank_ == 0) {
+  double rph_a = 0.;
+  double rph_b = 2. * M_PI;
+  //----------------------------------------------------------------------
+  double dB_axT, dB_ayT, dv_axT, dv_ayT; 
 
-  if (rank_ == 0) {
-    double rph_a = 0.;
-    double rph_b = 2. * M_PI;
-    //----------------------------------------------------------------------
-    double dB_axT, dB_ayT, dv_axT, dv_ayT; 
+  for (int n = 0; n < Nk; n++) {
+    mn_per[n] = 1. * m_per;
+    mn_par[n] = 1. * m_par;
+  }
 
-    double mn_per[8] = {1. * m_per, 1. * m_per, 1. * m_per, 1. * m_per, 1. * m_per, 1. * m_per, 1. * m_per};
-    double mn_par[8] = {1. * m_par, 1. * m_par, 1. * m_par, 1. * m_par, 1. * m_par, 1. * m_par, 1. * m_par};
+  k[0] = {1. * k_x * mn_per[0], 0. * k_y * mn_per[0], 1. * k_z * mn_par[0]};
+  k[1] = {0. * k_x * mn_per[1], 1. * k_y * mn_per[1], -1. * k_z * mn_par[1]};
+  k[2] = {-1. * k_x * mn_per[2], 0. * k_y * mn_per[2], 1. * k_z * mn_par[2]};
+  k[3] = {0. * k_x * mn_per[3], -1. * k_y * mn_per[3], -1. * k_z * mn_par[3]};
+  k[4] = {1. * k_x * mn_per[4], 1. * k_y * mn_per[4], 1. * k_z * mn_par[4]};
+  k[5] = {-1. * k_x * mn_per[5], 1. * k_y * mn_per[5], -1. * k_z * mn_par[5]};
+  k[6] = {-1. * k_x * mn_per[6], -1. * k_y * mn_per[6], 1. * k_z * mn_par[6]};
+  k[7] = {1. * k_x * mn_per[7], -1. * k_y * mn_per[7], -1. * k_z * mn_par[7]};
 
-    k[0] = {1. * k_x * mn_per[0], 0. * k_y * mn_per[0], 1. * k_z * mn_par[0]};
-    k[1] = {0. * k_x * mn_per[1], 1. * k_y * mn_per[1], -1. * k_z * mn_par[1]};
-    k[2] = {-1. * k_x * mn_per[2], 0. * k_y * mn_per[2], 1. * k_z * mn_par[2]};
-    k[3] = {0. * k_x * mn_per[3], -1. * k_y * mn_per[3], -1. * k_z * mn_par[3]};
-    k[4] = {1. * k_x * mn_per[4], 1. * k_y * mn_per[4], 1. * k_z * mn_par[4]};
-    k[5] = {-1. * k_x * mn_per[5], 1. * k_y * mn_per[5], -1. * k_z * mn_par[5]};
-    k[6] = {-1. * k_x * mn_per[6], -1. * k_y * mn_per[6], 1. * k_z * mn_par[6]};
-    k[7] = {1. * k_x * mn_per[7], -1. * k_y * mn_per[7], -1. * k_z * mn_par[7]};
+  phase={0.987*2.*M_PI, 0.666*2.*M_PI, 0.025*2.*M_PI, 0.954*2.*M_PI,
+         0.781*2.*M_PI, 0.846*2.*M_PI, 0.192*2.*M_PI, 0.778*2.*M_PI}; // random phases   
 
-    //-----------------------------------------------------------------------
+  //-----------------------------------------------------------------------
   mpi_printf(grid.comm(), "**** Setting up Alfven fields...\n");
 
   for (int p = 0; p < mflds.n_patches(); ++p) {
@@ -327,34 +342,38 @@ void initializeAlfven(MfieldsAlfven& mflds)
       auto crd_cc = Centering::getPos(patch, index, Centering::CC); 
 
       for (int n = 0; n < Nk; n++) {
-        k_a_per[n] = std::sqrt(sqr(k[n][0]) + sqr(k[n][1])); // k_per
+        k_a_per[n] = sqrt(sqr(k[n][0]) + sqr(k[n][1])); // k_per
         k_a_par[n] = k[n][2]; //k_par
 
         phi[n] = n * M_PI/2.; // Polarization angle
-        phase[n] = Rng_uniform(rng_, rph_a, rph_b); // random phase
+        //phase[n] = Rng_uniform(rng_, rph_a, rph_b); // random phase
 
         Amp[n] = B0 * crit_fact *pow((k_a_per[n]), -sp);//According to the critical balance Amp[i]=B0*crit_fact * K_a_perp[i]^(-sp);
         dB_ax[n] = -Amp[n] * cos ( k[n][0] * crd_fc[0] + k[n][1] * crd_fc[1] + k[n][2] * crd_fc[2] + phase[n] ) * sin(phi[n]) ;
         dB_ay[n] =  Amp[n] * cos ( k[n][0] * crd_fc[0] + k[n][1] * crd_fc[1] + k[n][2] * crd_fc[2] + phase[n] ) * cos(phi[n]) ;
+        
+        dv_ax[n] = -Amp[n] * cos ( k[n][0] * crd_cc[0] + k[n][1] * crd_cc[1] + k[n][2] * crd_cc[2] + phase[n] ) * sin(phi[n]) ;
+        dv_ay[n] =  Amp[n] * cos ( k[n][0] * crd_cc[0] + k[n][1] * crd_cc[1] + k[n][2] * crd_cc[2] + phase[n] ) * cos(phi[n]) ;        
       }
 
       dB_axT = dB_ax[0] + dB_ax[1] + dB_ax[2] + dB_ax[3] + dB_ax[4] + dB_ax[5] + dB_ax[6] + dB_ax[7];
       dB_ayT = dB_ay[0] + dB_ay[1] + dB_ay[2] + dB_ay[3] + dB_ay[4] + dB_ay[5] + dB_ay[6] + dB_ay[7];
-      dv_axT = -dB_ax[0] + dB_ax[1] - dB_ax[2] + dB_ax[3] - dB_ax[4] + dB_ax[5] - dB_ax[6] + dB_ax[7];
-      dv_ayT = -dB_ay[0] + dB_ay[1] - dB_ay[2] + dB_ay[3] - dB_ay[4] + dB_ay[5] - dB_ay[6] + dB_ay[7];
+      
+      dv_axT = -dv_ax[0] + dv_ax[1] - dv_ax[2] + dv_ax[3] - dv_ax[4] + dv_ax[5] - dv_ax[6] + dv_ax[7];
+      dv_ayT = -dv_ay[0] + dv_ay[1] - dv_ay[2] + dv_ay[3] - dv_ay[4] + dv_ay[5] - dv_ay[6] + dv_ay[7];
 
       C1 = B0/sqrt(sqr(Amp[0])+sqr(Amp[1])+sqr(Amp[2])+sqr(Amp[3])+sqr(Amp[4])+sqr(Amp[5])+sqr(Amp[6])+sqr(Amp[7])); //    
 
       F(PERT_HX, jx, jy, jz) = C1 * dB_axT;//g.BB + .1 * sin(ky * crd_fc[1]);
       F(PERT_HY, jx, jy, jz) = C1 * dB_ayT;//g.BB + .1 * sin(ky * crd_fc[1]);
-      F(PERT_HZ, jx, jy, jz) = 0.;//g.BB + .1 * sin(ky * crd_fc[1]);
-
+      F(PERT_HZ, jx, jy, jz) = B0;//g.BB + .1 * sin(ky * crd_fc[1]);
+      
       F(PERT_VX, jx, jy, jz) = C1 * dv_axT;//-.1 * sin(ky * crd_cc[1]);
-      F(PERT_VY, jx, jy, jz) = 0.;//C1* dv_ayT;//-.1 * sin(ky * crd_cc[1]);
+      F(PERT_VY, jx, jy, jz) = C1 * dv_ayT;//-.1 * sin(ky * crd_cc[1]);
       F(PERT_VZ, jx, jy, jz) = 0.;//g.BB + .1 * sin(ky * crd_fc[1]);
     });
   }
-  }
+  //}
 }
 
 // ======================================================================
@@ -400,9 +419,9 @@ void initializeAlfven(MfieldsAlfven& mflds)
       setupFieldsGeneral(
         mflds, [&](int m, Int3 idx, int p, double crd[3]) -> MfieldsState::real_t {
           switch (m) {
-            case HX: return 0.;//mflds_alfven(PERT_HX, idx[0], idx[1], idx[2], p);
-            case HY: return 0.;//mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p); 
-            case HZ: return 0.;//mflds_alfven(PERT_HZ, idx[0], idx[1], idx[2], p);                   
+            case HX: return mflds_alfven(PERT_HX, idx[0], idx[1], idx[2], p);
+            case HY: return mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p); 
+            case HZ: return mflds_alfven(PERT_HZ, idx[0], idx[1], idx[2], p);                   
             default: return 0.;
           }
         });
