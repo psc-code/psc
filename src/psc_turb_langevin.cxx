@@ -252,7 +252,7 @@ void setupParameters()
   // -- set some generic PSC parameters
   //-----------------------------------------------
   //-----------------------------------------------
-  psc_params.nmax = 10001; // 1801;
+  psc_params.nmax = 2001; // 1801;
   psc_params.cfl = 0.75;
   psc_params.write_checkpoint_every_step = -100; // This is not working
   psc_params.stats_every = -1;
@@ -292,7 +292,7 @@ void setupParameters()
   g.Lz_di = 2.*M_PI;
   g.Lx_di = 2.*M_PI;
   g.Ly_di = 2.*M_PI;
-  g.gdims = {32, 32, 32};
+  g.gdims = {100, 100, 100};
   g.np = {2, 2, 2};
   //***/
   //--------------------------------------------------------------------------------
@@ -310,7 +310,7 @@ void setupParameters()
 
   // Non-dimensional ratios
   g.wpe_wce = 2.5;
-  g.mi_me = 1.;
+  g.mi_me = 25.;
   g.Ti_Te = 1.;
   g.nb_n0 = 0.1;
 
@@ -544,8 +544,8 @@ Grid_t* setupGrid()
   // -- setup particle kinds
   // last population ("i") is neutralizing
   Grid_t::Kinds kinds(N_MY_KINDS);
-  kinds[MY_ION_UP] = {g.Zi, g.mi_me * g.Zi, "i_UP"};
-  kinds[MY_ELECTRON_UP] = {-1., 1., "e_UP"};
+  kinds[MY_ION_UP] = {g.Zi, g.mi_me * g.Zi, "i"};
+  kinds[MY_ELECTRON_UP] = {-1., 1., "e"};
   // kinds[MY_ION_BO] = {g.Zi, g.mi_me * g.Zi, "i_BO"};
   // kinds[MY_ELECTRON_BO] = {-1., 1., "e_BO"};
 

@@ -165,7 +165,7 @@ void setupParameters()
   // -- Set some parameters specific to this case
   g.BB = 1.;
   g.Zi = 1.;
-  g.mass_ratio = 100.;
+  g.mass_ratio = 25.;
   g.lambda0 = 20.;
 
   double vA_over_c_ = .1; //Why 0.1?? 
@@ -202,7 +202,7 @@ Grid_t* setupGrid()
   //Int3 gdims = {1, 80, 3 * 80};           // global number of grid points
   //Int3 np = {1, 2, 3 * 5};                // division into patches
   Grid_t::Real3 LL = {2. * M_PI, 2. * M_PI, 2. * M_PI}; // domain size (in d_e) 
-  Int3 gdims = {32, 32, 32};           // global number of grid points
+  Int3 gdims = {100, 100, 100};           // global number of grid points
   Int3 np = {2, 2, 2};                // division into patches
 
   Grid_t::Domain domain{gdims, LL, -.5 * LL, np};
@@ -286,7 +286,7 @@ void initializeAlfven(MfieldsAlfven& mflds)
   double crit_fact = 0.1;   //critical balance /normalization coefficient       
   double C1; // normalization factor
   
-  int m_per=2; //modes in the perpendicular directions
+  int m_per=1; //modes in the perpendicular directions
   int m_par=1; //modes in the parallel direction acording to critical balance    
   int Nk = 8;
 
