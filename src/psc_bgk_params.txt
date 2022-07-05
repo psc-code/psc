@@ -5,6 +5,7 @@
 
 # Case-specific parameters
 box_size .03
+box_size_3 1 
 
 m_i 1e9
 q_i 1
@@ -21,7 +22,9 @@ path_to_data /CHANGE/ME
 H_x 1
 
 n_grid 16
+n_grid_3 1 number of gridpoints on x axis; 1 for 2D, 2+ for 3D
 n_patches -1 (nonpositive values signal to use n_cells_per_patch instead)
+n_patches_3 -1 as above, but for 3rd dimension
 n_cells_per_patch 16
 
 v_e_coef 1
