@@ -31,6 +31,11 @@ struct PscBgkParams
   bool reverse_v;      // whether or not to reverse electron velocity
   bool reverse_v_half; // whether or not to reverse electron velocity for y<0
 
+  // For 3D cases
+  int n_grid_3;      // number of grid points in 3rd dimension
+  double box_size_3; // physical length of 3rd dimension
+  int n_patches_3;   // number of patches in 3rd dimension
+
   void loadParams(ParsedParams parsedParams)
   {
     box_size = parsedParams.get<double>("box_size");
@@ -57,5 +62,11 @@ struct PscBgkParams
 
     v_e_coef = parsedParams.getOrDefault<double>("v_e_coef", 1);
     T_e_coef = parsedParams.getOrDefault<double>("T_e_coef", 1);
+
+    n_grid_3 = parsedParams.getOrDefault<int>("n_grid_3", 1);
+    box_size_3 = parsedParams.getOrDefault<double>("box_size_3", 1);
+    n_patches_3 = parsedParams.getOrDefault<int>("n_patches_3", 1);
+    if (n_patches_3 <= 0)
+      n_patches_3 = n_grid_3 / parsedParams.get<int>("n_cells_per_patch");
   }
 };
