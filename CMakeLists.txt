@@ -12,6 +12,8 @@ endforeach()
 
 project(PSC)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 include(cmake/CPM.cmake)
 
 include(CTest)
