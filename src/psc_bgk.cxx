@@ -95,6 +95,14 @@ void setupParameters(int argc, char** argv)
   std::ifstream src(path_to_params, std::ios::binary);
   std::ofstream dst("params_record.txt", std::ios::binary);
   dst << src.rdbuf();
+
+  if (g.n_grid_3 > 1 && typeid(Dim) != typeid(dim_xyz)) {
+    LOG_ERROR("3D runs require Dim = dim_xyz\n");
+    exit(1);
+  } else if (g.n_grid == 1 && typeid(Dim) != typeid(dim_yz)) {
+    LOG_ERROR("2D runs require Dim = dim_yz\n");
+    exit(1);
+  }
 }
 
 // ======================================================================
