@@ -54,8 +54,8 @@ enum
 {
   MY_ELECTRON_UP,
   MY_ION_UP,
-  // MY_ELECTRON_BO,
-  // MY_ION_BO,
+  MY_ELECTRON_BA,
+  MY_ION_BA,
   N_MY_KINDS,
 };
 
@@ -252,7 +252,7 @@ void setupParameters()
   // -- set some generic PSC parameters
   //-----------------------------------------------
   //-----------------------------------------------
-  psc_params.nmax = 10001; // 1801;
+  psc_params.nmax = 4001; // 1801;
   psc_params.cfl = 0.75;
   psc_params.write_checkpoint_every_step = -100; // This is not working
   psc_params.stats_every = -1;
@@ -289,15 +289,16 @@ void setupParameters()
   // g.Lx_di = 1.;
   // g.Ly_di = 10.;
   // g.gdims = {1, 64, 256};
-  g.Lz_di = 2.*M_PI;
+  
   g.Lx_di = 2.*M_PI;
   g.Ly_di = 2.*M_PI;
-  g.gdims = {32, 32, 32};
+  g.Lz_di = 10.*2.*M_PI;
+  g.gdims = {40, 40, 10*40};
   g.np = {2, 2, 2};
   //***/
   //--------------------------------------------------------------------------------
 
-  g.L_di = 1.0;
+  g.L_di = 1.5;
   g.Lpert_Lx = 1.;
 
   // Time dimensions
@@ -531,13 +532,13 @@ Grid_t* setupGrid()
 
   //--------------------------------------------------------------------------------
   // This is in the case of yz geometry
-  psc::grid::BC bc{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, // CONDUCTING_WALL,
+  psc::grid::BC bc{{BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL,
                     BND_FLD_PERIODIC}, // this is in the case of yz geometry
-                   {BND_FLD_PERIODIC, BND_FLD_PERIODIC, // CONDUCTING_WALL,
+                   {BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL,
                     BND_FLD_PERIODIC},
-                   {BND_PRT_PERIODIC, BND_PRT_PERIODIC, // REFLECTING,
+                   {BND_PRT_PERIODIC, BND_PRT_REFLECTING,
                     BND_PRT_PERIODIC},
-                   {BND_PRT_PERIODIC, BND_PRT_PERIODIC, // REFLECTING,
+                   {BND_PRT_PERIODIC, BND_PRT_REFLECTING,
                     BND_PRT_PERIODIC}};
   //--------------------------------------------------------------------------------
 
@@ -546,8 +547,8 @@ Grid_t* setupGrid()
   Grid_t::Kinds kinds(N_MY_KINDS);
   kinds[MY_ION_UP] = {g.Zi, g.mi_me * g.Zi, "i_UP"};
   kinds[MY_ELECTRON_UP] = {-1., 1., "e_UP"};
-  // kinds[MY_ION_BO] = {g.Zi, g.mi_me * g.Zi, "i_BO"};
-  // kinds[MY_ELECTRON_BO] = {-1., 1., "e_BO"};
+  kinds[MY_ION_BA] = {g.Zi, g.mi_me * g.Zi, "i_BA"};
+  kinds[MY_ELECTRON_BA] = {-1., 1., "e_BA"};
 
   g.di = sqrt(kinds[MY_ION_UP].m / kinds[MY_ION_UP].q);
 
@@ -900,7 +901,8 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
         //*** // This is a block for the yz configuration using two
         // popullations
         case MY_ION_UP: // Ion drifting up
-          npt.n = g.n0 * (g.nb_n0 + (1 / sqr(cosh(y / g.L))));
+          //npt.n = (g.n0 * (g.nb_n0 + (1 / sqr(cosh(y / g.L)))))/(g.nb_n0 + g.n0);
+          npt.n = g.n0 / sqr(cosh(y / g.L));
           npt.T[0] = g.Ti;
           npt.T[1] = g.Ti;
           npt.T[2] = g.Ti;
@@ -910,7 +912,8 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
           npt.kind = MY_ION_UP;
           break;
         case MY_ELECTRON_UP: // Electron drifting up
-          npt.n = g.n0 * (g.nb_n0 + (1 / sqr(cosh(y / g.L))));
+          //npt.n = (g.n0 * (g.nb_n0 + (1 / sqr(cosh(y / g.L)))))/(g.nb_n0 + g.n0);
+          npt.n = g.n0 / sqr(cosh(y / g.L));
           npt.T[0] = g.Te;
           npt.T[1] = g.Te;
           npt.T[2] = g.Te;
@@ -919,26 +922,26 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
           npt.p[2] = 0.;
           npt.kind = MY_ELECTRON_UP;
           break;
-          // case 3: // Ion background up
-          //   npt.n = g.n0 * g.nb_n0;
-          //   npt.T[0] = g.Tbi;
-          //   npt.T[1] = g.Tbi;
-          //   npt.T[2] = g.Tbi;
-          //   npt.p[0] = 0.;
-          //   npt.p[1] = 0.;
-          //   npt.p[2] = 0.;
-          //   npt.kind = MY_ION_UP;
-          //   break;
-          // case 4: // Electron background up
-          //   npt.n = g.n0 * g.nb_n0;
-          //   npt.T[0] = g.Tbe;
-          //   npt.T[1] = g.Tbe;
-          //   npt.T[2] = g.Tbe;
-          //   npt.p[0] = 0.;
-          //   npt.p[1] = 0.;
-          //   npt.p[2] = 0.;
-          //   npt.kind = MY_ELECTRON_UP;
-          //   break;
+        case MY_ION_BA: // Ion background up
+          npt.n = g.n0 * g.nb_n0;
+          npt.T[0] = g.Tbi;
+          npt.T[1] = g.Tbi;
+          npt.T[2] = g.Tbi;
+          npt.p[0] = 0.;
+          npt.p[1] = 0.;
+          npt.p[2] = 0.;
+          npt.kind = MY_ION_BA;
+          break;
+        case MY_ELECTRON_BA: // Electron background up
+          npt.n = g.n0 * g.nb_n0;
+          npt.T[0] = g.Tbe;
+          npt.T[1] = g.Tbe;
+          npt.T[2] = g.Tbe;
+          npt.p[0] = 0.;
+          npt.p[1] = 0.;
+          npt.p[2] = 0.;
+          npt.kind = MY_ELECTRON_BA;
+          break;
           /***/
           //--------------------------------------------------------------------------------
 
@@ -974,14 +977,14 @@ void initializeFields(MfieldsState& mflds, MfieldsAlfven& mflds_alfven)
         //double db_la_y = mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p);
         //double db_la_z = mflds_alfven(PERT_HZ, idx[0], idx[1], idx[2], p);
         
-        case HX: return 0. + mflds_alfven(PERT_HX, idx[0], idx[1], idx[2], p);
+        case HX: return 0. + 1.*mflds_alfven(PERT_HX, idx[0], idx[1], idx[2], p);
         case HY:
-           return 1. * g.dby * sin(2. * M_PI * (z - 0.5 * g.Lz) / g.Lz) *
-                         cos(M_PI * y / g.Ly) + mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p);
+           return 0. * g.dby * sin(2. * M_PI * (z - 0.5 * g.Lz) / g.Lz) *
+                         cos(M_PI * y / g.Ly) + 1.*mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p);
         case HZ:
            return g.b0 * tanh(y / g.L) +
-                  1. * g.dbz * cos(2. * M_PI * (z - 0.5 * g.Lz) / g.Lz) *
-                    sin(M_PI * y / g.Ly) + mflds_alfven(PERT_HZ, idx[0], idx[1], idx[2], p);
+                  0. * g.dbz * cos(2. * M_PI * (z - 0.5 * g.Lz) / g.Lz) *
+                    sin(M_PI * y / g.Ly) + 1.*mflds_alfven(PERT_HZ, idx[0], idx[1], idx[2], p);
         default: return 0.;
       }
     });

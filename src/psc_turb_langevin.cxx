@@ -289,9 +289,9 @@ void setupParameters()
   // g.Lx_di = 1.;
   // g.Ly_di = 10.;
   // g.gdims = {1, 64, 256};
-  g.Lz_di = 2.*M_PI;
-  g.Lx_di = 2.*M_PI;
-  g.Ly_di = 2.*M_PI;
+  g.Lz_di = 3*2.*M_PI;
+  g.Lx_di = 3*2.*M_PI;
+  g.Ly_di = 3*2.*M_PI;
   g.gdims = {100, 100, 100};
   g.np = {2, 2, 2};
   //***/
@@ -613,8 +613,8 @@ Langevin::Langevin()
   // Checking the iterations, assuming B_bar remains constant,
   // then dBn is always dB0.
 
-  omega_0 = 0.9 * (2. * M_PI * g.v_A /
-                   g.Lz); // These are the values according to Daniel Groselj
+  omega_0 = 0.6 * (2. * M_PI * g.v_A /
+                   (sqrt(3) * g.Lz)); // These are the values according to Daniel Groselj, Zhdakin
   gamma_0 = 0.6 * omega_0;
   g_rate = 0.1; // This is chosen so omega_0 << g_rate << wpe;
 
