@@ -108,10 +108,10 @@ void setupParameters(int argc, char** argv)
 Grid_t* setupGrid()
 {
   auto domain = Grid_t::Domain{
-    {1, g.n_grid, g.n_grid},                  // # grid points
-    {1, g.box_size, g.box_size},              // physical lengths
-    {0., -.5 * g.box_size, -.5 * g.box_size}, // *offset* for origin
-    {1, g.n_patches, g.n_patches}};           // # patches
+    {g.n_grid_3, g.n_grid, g.n_grid},           // # grid points
+    {g.box_size_3, g.box_size, g.box_size},     // physical lengths
+    {0., -.5 * g.box_size, -.5 * g.box_size},   // *offset* for origin
+    {g.n_patches_3, g.n_patches, g.n_patches}}; // # patches
 
   auto bc =
     psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
