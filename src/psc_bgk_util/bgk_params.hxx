@@ -7,44 +7,29 @@
 
 struct PscBgkParams
 {
-  // physical length of region along y and z
-  double box_size;
-  // strength of transverse magnetic field
-  double Hx;
-  // ion charge
-  double q_i;
-  // ion number density
-  double n_i;
-  // ion mass
-  double m_i;
-  // electron charge
-  double q_e;
-  // electron mass
-  double m_e;
-  // number of grid cells
-  int n_grid;
-  // number of patches
-  int n_patches;
-  // whether or not to negate v (affects stability)
-  bool reverse_v;
-  // whether or not to negate v for y<0 (should destroy stability)
-  bool reverse_v_half;
+  double box_size; // physical length of region along y and z
+  double Hx;       // strength of transverse magnetic field
+  double q_i;      // ion charge
+  double n_i;      // ion number density
+  double m_i;      // ion mass
+  double q_e;      // electron charge
+  double m_e;      // electron mass
+  int n_grid;      // number of grid cells
+  int n_patches;   // number of patches
 
-  // interval for pfd output
-  int fields_every;
-  // interval for pfd_moments output
-  int moments_every;
-  // interval for gauss output/checking
-  int gauss_every;
+  int fields_every;  // interval for pfd output
+  int moments_every; // interval for pfd_moments output
+  int gauss_every;   // interval for gauss output/checking
 
-  // for boltzmann distr
-  bool do_ion;
-  double T_i;
+  // For Boltzmann ion cases
+  bool do_ion; // whether or not to make ions follow B.D.
+  double T_i;  // ion temperature
 
-  // multiplier for electron velocity
-  double v_e_coef;
-  // multiplier for electron temperature
-  double T_e_coef;
+  // For modifying initial conditions
+  double v_e_coef;     // multiplier for electron velocity
+  double T_e_coef;     // multiplier for electron temperature
+  bool reverse_v;      // whether or not to reverse electron velocity
+  bool reverse_v_half; // whether or not to reverse electron velocity for y<0
 
   void loadParams(ParsedParams parsedParams)
   {
