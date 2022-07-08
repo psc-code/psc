@@ -252,7 +252,7 @@ void setupParameters()
   // -- set some generic PSC parameters
   //-----------------------------------------------
   //-----------------------------------------------
-  psc_params.nmax = 4001; // 1801;
+  psc_params.nmax = 5000; // 1801;
   psc_params.cfl = 0.75;
   psc_params.write_checkpoint_every_step = -100; // This is not working
   psc_params.stats_every = -1;
@@ -285,20 +285,20 @@ void setupParameters()
   // Space dimensions
   //--------------------------------------------------------------------------------
   ///*** // This is ion the case of yz geometry
-  // g.Lz_di = 40.;
-  // g.Lx_di = 1.;
-  // g.Ly_di = 10.;
-  // g.gdims = {1, 64, 256};
+  //g.Lx_di = 2.*M_PI;
+  //g.Ly_di = 2.*M_PI;
+  //g.Lz_di = 10.*2.*M_PI;
+  //g.gdims = {40, 40, 10*40};
   
-  g.Lx_di = 2.*M_PI;
-  g.Ly_di = 2.*M_PI;
-  g.Lz_di = 10.*2.*M_PI;
-  g.gdims = {40, 40, 10*40};
+  g.Lx_di = 1.;
+  g.Ly_di = 6.;
+  g.Lz_di = 1.;
+  g.gdims = {10, 30, 10};
   g.np = {2, 2, 2};
   //***/
   //--------------------------------------------------------------------------------
 
-  g.L_di = 1.5;
+  g.L_di = 1.;
   g.Lpert_Lx = 1.;
 
   // Time dimensions
@@ -330,7 +330,7 @@ void setupParameters()
   g.db_b0 = 0.1;
 
   // Number of macro particles
-  g.nppc = 20;
+  g.nppc = 30;
 
   g.wpedt_max = .36; // what is this for?
 
@@ -398,10 +398,13 @@ void setupParameters()
   g.vthib =
     sqrt(g.Tbi_Ti * g.Ti / g.mi); // normalized background ion thermal vel.
 
-  g.vdri =
-    g.c * g.b0 /
-    (8 * M_PI * g.L * g.ec * g.n0 * (1 + 1 / g.Ti_Te)); // Ion drift velocity
-  g.vdre = -g.vdri / (g.Ti_Te); // electron drift velocity
+  // g.vdri =
+  //   g.c * g.b0 /
+  //   (8 * M_PI * g.L * g.ec * g.n0 * (1 + 1 / g.Ti_Te)); // Ion drift velocity
+  // g.vdre = -g.vdri / (g.Ti_Te); // electron drift velocity
+  
+  g.vdri = 2.*g.c*g.Ti/(g.ec*g.b0*g.L);   // Ion drift velocity
+  g.vdre = -g.vdri/(g.Ti_Te);           // electron drift velocity
 
   g.n_global_patches = g.np[0] * g.np[1] * g.np[2];
 
@@ -429,6 +432,14 @@ void setupParameters()
 
   g.udri = g.vdri * g.gdri; // 4-velocity of ion drift frame
   g.udre = g.vdre * g.gdre; // 4-velocity of electron drift frame
+
+  mpi_printf(MPI_COMM_WORLD, "vdre    = %g\n", g.vdre);
+  mpi_printf(MPI_COMM_WORLD, "vdri    = %g\n", g.vdri);
+  mpi_printf(MPI_COMM_WORLD, "gdre    = %g\n", g.gdre);
+  mpi_printf(MPI_COMM_WORLD, "gdri    = %g\n", g.gdri);
+  mpi_printf(MPI_COMM_WORLD, "udre    = %g\n", g.udre);
+  mpi_printf(MPI_COMM_WORLD, "udri    = %g\n", g.udri);
+
   g.tanhf = tanh(0.5 * g.Lz / g.L);
   g.Lpert = g.Lpert_Lx * g.Lx; // wavelength of perturbation
 
@@ -791,22 +802,22 @@ void calc_curl_H(MfieldsAlfven& mflds)
       //                  - (Bx(i, j, k) - Bx(i, j-1, k)) / dy
       //--------------------------------------------------------------------------------
 
-      F(PERT_JX_ext, jx, jy, jz) =
-        (F(PERT_HZ, jx, jy, jz) - F(PERT_HZ, jx, jy - 1, jz)) /
+      F(PERT_JX_ext, jx, jy, jz) = // remember to remove the zeros when including the external current. Jeff
+        0.*(F(PERT_HZ, jx, jy, jz) - F(PERT_HZ, jx, jy - 1, jz)) /
           (patch.y_nc(1) - patch.y_nc(0)) -
-        (F(PERT_HY, jx, jy, jz) - F(PERT_HY, jx, jy, jz - 1)) /
+        0.*(F(PERT_HY, jx, jy, jz) - F(PERT_HY, jx, jy, jz - 1)) /
           (patch.z_nc(1) - patch.z_nc(0));
 
       F(PERT_JY_ext, jx, jy, jz) =
-        (F(PERT_HX, jx, jy, jz) - F(PERT_HX, jx, jy, jz - 1)) /
+        0.*(F(PERT_HX, jx, jy, jz) - F(PERT_HX, jx, jy, jz - 1)) /
           (patch.z_nc(1) - patch.z_nc(0)) -
-        (F(PERT_HZ, jx, jy, jz) - F(PERT_HZ, jx - 1, jy, jz)) /
+        0.*(F(PERT_HZ, jx, jy, jz) - F(PERT_HZ, jx - 1, jy, jz)) /
           (patch.x_nc(1) - patch.x_nc(0));
 
       F(PERT_JZ_ext, jx, jy, jz) =
-        (F(PERT_HY, jx, jy, jz) - F(PERT_HY, jx - 1, jy, jz)) /
+        0.*(F(PERT_HY, jx, jy, jz) - F(PERT_HY, jx - 1, jy, jz)) /
           (patch.x_nc(1) - patch.x_nc(0)) -
-        (F(PERT_HX, jx, jy, jz) - F(PERT_HX, jx, jy - 1, jz)) /
+        0.*(F(PERT_HX, jx, jy, jz) - F(PERT_HX, jx, jy - 1, jz)) /
           (patch.y_nc(1) - patch.y_nc(0));
     });
   }
@@ -909,7 +920,7 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
           npt.p[0] = g.udri;
           npt.p[1] = 0.;
           npt.p[2] = 0.;
-          npt.kind = MY_ION_UP;
+          //npt.kind = MY_ION_UP;
           break;
         case MY_ELECTRON_UP: // Electron drifting up
           //npt.n = (g.n0 * (g.nb_n0 + (1 / sqr(cosh(y / g.L)))))/(g.nb_n0 + g.n0);
@@ -920,7 +931,7 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
           npt.p[0] = g.udre;
           npt.p[1] = 0.;
           npt.p[2] = 0.;
-          npt.kind = MY_ELECTRON_UP;
+          //npt.kind = MY_ELECTRON_UP;
           break;
         case MY_ION_BA: // Ion background up
           npt.n = g.n0 * g.nb_n0;
@@ -930,7 +941,7 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
           npt.p[0] = 0.;
           npt.p[1] = 0.;
           npt.p[2] = 0.;
-          npt.kind = MY_ION_BA;
+          //npt.kind = MY_ION_BA;
           break;
         case MY_ELECTRON_BA: // Electron background up
           npt.n = g.n0 * g.nb_n0;
@@ -940,7 +951,7 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
           npt.p[0] = 0.;
           npt.p[1] = 0.;
           npt.p[2] = 0.;
-          npt.kind = MY_ELECTRON_BA;
+          //npt.kind = MY_ELECTRON_BA;
           break;
           /***/
           //--------------------------------------------------------------------------------
@@ -977,14 +988,14 @@ void initializeFields(MfieldsState& mflds, MfieldsAlfven& mflds_alfven)
         //double db_la_y = mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p);
         //double db_la_z = mflds_alfven(PERT_HZ, idx[0], idx[1], idx[2], p);
         
-        case HX: return 0. + 1.*mflds_alfven(PERT_HX, idx[0], idx[1], idx[2], p);
+        case HX: return 0. + 0.*mflds_alfven(PERT_HX, idx[0], idx[1], idx[2], p);
         case HY:
            return 0. * g.dby * sin(2. * M_PI * (z - 0.5 * g.Lz) / g.Lz) *
-                         cos(M_PI * y / g.Ly) + 1.*mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p);
+                         cos(M_PI * y / g.Ly) + 0.*mflds_alfven(PERT_HY, idx[0], idx[1], idx[2], p);
         case HZ:
            return g.b0 * tanh(y / g.L) +
                   0. * g.dbz * cos(2. * M_PI * (z - 0.5 * g.Lz) / g.Lz) *
-                    sin(M_PI * y / g.Ly) + 1.*mflds_alfven(PERT_HZ, idx[0], idx[1], idx[2], p);
+                    sin(M_PI * y / g.Ly) + 0.*mflds_alfven(PERT_HZ, idx[0], idx[1], idx[2], p);
         default: return 0.;
       }
     });
