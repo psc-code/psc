@@ -28,6 +28,8 @@ n_patches_3 -1 as above, but for 3rd dimension
 n_cells_per_patch 16
 nicell 100 number of particles per gridpoint corresponding to density of 1
 
+cfl .75 cfl number for determining time step
+
 v_e_coef 1
 reverse_v_half false
 

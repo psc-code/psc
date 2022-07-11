@@ -85,6 +85,7 @@ void setupParameters(int argc, char** argv)
 
   psc_params.nmax = parsedParams.get<int>("nmax");
   psc_params.stats_every = parsedParams.get<int>("stats_every");
+  psc_params.cfl = parsedParams.getOrDefault<double>("cfl", .75);
 
   psc_params.write_checkpoint_every_step =
     parsedParams.getOrDefault<int>("checkpoint_every", 0);
