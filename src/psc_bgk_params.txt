@@ -26,6 +26,7 @@ n_grid_3 1 number of gridpoints on x axis; 1 for 2D, 2+ for 3D
 n_patches -1 (nonpositive values signal to use n_cells_per_patch instead)
 n_patches_3 -1 as above, but for 3rd dimension
 n_cells_per_patch 16
+nicell 100 number of particles per gridpoint corresponding to density of 1
 
 v_e_coef 1
 reverse_v_half false

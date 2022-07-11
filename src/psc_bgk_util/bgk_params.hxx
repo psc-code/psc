@@ -16,6 +16,7 @@ struct PscBgkParams
   double m_e;      // electron mass
   int n_grid;      // number of grid cells
   int n_patches;   // number of patches
+  int nicell;      // number of particles per gripdoint when density=1
 
   int fields_every;  // interval for pfd output
   int moments_every; // interval for pfd_moments output
@@ -49,6 +50,7 @@ struct PscBgkParams
     n_patches = parsedParams.get<int>("n_patches");
     if (n_patches <= 0)
       n_patches = n_grid / parsedParams.get<int>("n_cells_per_patch");
+    nicell = parsedParams.getOrDefault<int>("nicell", 100);
     if (parsedParams.warnIfPresent("reverse_v", "Set v_e_coef to +-1 instead."))
       exit(0);
     reverse_v_half = parsedParams.get<bool>("reverse_v_half");
