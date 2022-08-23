@@ -9,176 +9,200 @@
 #include <hdf5.h>
 #include <hdf5_hl.h>
 
-
 #ifdef H5_HAVE_PARALLEL
 #define H5_CHK(ierr) assert(ierr >= 0)
 #define CE assert(ierr == 0)
 
 // ----------------------------------------------------------------------
 
-struct ph5 {
+struct ph5
+{
   hid_t h5_file;
   int sw;
   // parallel only
   bool use_independent_io;
-  char *separator; // seperator between basename & numbers
+  char* separator; // seperator between basename & numbers
 };
 
-#define VAR(x) (void *)offsetof(struct ph5, x)
+#define VAR(x) (void*)offsetof(struct ph5, x)
 static struct param ph5_descr[] = {
-  { "sw"                     , VAR(sw)                      , PARAM_INT(0)           },
-  { "independent"            , VAR(use_independent_io)      , PARAM_BOOL(true)       },
-  { "separator"              , VAR(separator)               , PARAM_STRING(".")      },
+  {"sw", VAR(sw), PARAM_INT(0)},
+  {"independent", VAR(use_independent_io), PARAM_BOOL(true)},
+  {"separator", VAR(separator), PARAM_STRING(".")},
   {},
 };
 #undef VAR
 
-#define to_ph5(io) ((struct ph5 *)((io)->obj.subctx))
+#define to_ph5(io) ((struct ph5*)((io)->obj.subctx))
 
 // ======================================================================
 // hdf5_parallel
 
-
-static void
-phdf5_write_attr(struct mrc_io *io, const char *path, int type,
-		const char *name, union param_u *pv)
+static void phdf5_write_attr(struct mrc_io* io, const char* path, int type,
+                             const char* name, union param_u* pv)
 {
   // the HDF5 docs claim attribute writing calls can be done collectively.
   // Not sure I believe them, but let's see...
-  struct ph5 *ph5 = to_ph5(io);
-  
+  struct ph5* ph5 = to_ph5(io);
+
   hid_t group;
   if (H5Lexists(ph5->h5_file, path, H5P_DEFAULT) > 0) {
-    group = H5Gopen(ph5->h5_file, path, H5P_DEFAULT); H5_CHK(group);
+    group = H5Gopen(ph5->h5_file, path, H5P_DEFAULT);
+    H5_CHK(group);
   } else {
-    group = H5Gcreate(ph5->h5_file, path, H5P_DEFAULT, H5P_DEFAULT,
-		      H5P_DEFAULT); H5_CHK(group);
+    group =
+      H5Gcreate(ph5->h5_file, path, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    H5_CHK(group);
   }
 
   int ierr;
 
   switch (type) {
-  case PT_SELECT:
-  case PT_INT:
-  case MRC_VAR_INT:
-    ierr = H5LTset_attribute_int(group, ".", name, &pv->u_int, 1); CE;
-    break;
-  case PT_BOOL: 
-  case MRC_VAR_BOOL: {
-    int val = pv->u_bool;
-    ierr = H5LTset_attribute_int(group, ".", name, &val, 1); CE;
-    break;
-  }
-  case PT_FLOAT:
-  case MRC_VAR_FLOAT:
-    ierr = H5LTset_attribute_float(group, ".", name, &pv->u_float, 1); CE;
-    break;
-  case PT_DOUBLE:
-  case MRC_VAR_DOUBLE:
-    ierr = H5LTset_attribute_double(group, ".", name, &pv->u_double, 1); CE;
-    break;
-  case PT_STRING:
-    if (pv->u_string) {
-      ierr = H5LTset_attribute_string(group, ".", name, pv->u_string); CE;
-    } else {
-      ierr = H5LTset_attribute_string(group, ".", name, "(NULL)"); CE;
+    case PT_SELECT:
+    case PT_INT:
+    case MRC_VAR_INT:
+      ierr = H5LTset_attribute_int(group, ".", name, &pv->u_int, 1);
+      CE;
+      break;
+    case PT_BOOL:
+    case MRC_VAR_BOOL: {
+      int val = pv->u_bool;
+      ierr = H5LTset_attribute_int(group, ".", name, &val, 1);
+      CE;
+      break;
     }
-    break;
+    case PT_FLOAT:
+    case MRC_VAR_FLOAT:
+      ierr = H5LTset_attribute_float(group, ".", name, &pv->u_float, 1);
+      CE;
+      break;
+    case PT_DOUBLE:
+    case MRC_VAR_DOUBLE:
+      ierr = H5LTset_attribute_double(group, ".", name, &pv->u_double, 1);
+      CE;
+      break;
+    case PT_STRING:
+      if (pv->u_string) {
+        ierr = H5LTset_attribute_string(group, ".", name, pv->u_string);
+        CE;
+      } else {
+        ierr = H5LTset_attribute_string(group, ".", name, "(NULL)");
+        CE;
+      }
+      break;
 
-  case PT_INT3:
-    ierr = H5LTset_attribute_int(group, ".", name, pv->u_int3, 3); CE;
-    break;
+    case PT_INT3:
+      ierr = H5LTset_attribute_int(group, ".", name, pv->u_int3, 3);
+      CE;
+      break;
 
-  case PT_FLOAT3:
-    ierr = H5LTset_attribute_float(group, ".", name, pv->u_float3, 3); CE;
-    break;
+    case PT_FLOAT3:
+      ierr = H5LTset_attribute_float(group, ".", name, pv->u_float3, 3);
+      CE;
+      break;
 
-  case PT_DOUBLE3:
-    ierr = H5LTset_attribute_double(group, ".", name, pv->u_double3, 3); CE;
-    break;
-  case PT_INT_ARRAY:
-    ierr = H5LTset_attribute_int(group, ".", name, pv->u_int_array.vals,
-				 pv->u_int_array.nr_vals); CE;
-    break;
-  case PT_PTR:
-    break;
-  default:
-    mpi_printf(mrc_io_comm(io), "mrc_io_hdf5_parallel: not writing attr '%s' (type %d)\n",
-	    name, type);
-    assert(0);
+    case PT_DOUBLE3:
+      ierr = H5LTset_attribute_double(group, ".", name, pv->u_double3, 3);
+      CE;
+      break;
+    case PT_INT_ARRAY:
+      ierr = H5LTset_attribute_int(group, ".", name, pv->u_int_array.vals,
+                                   pv->u_int_array.nr_vals);
+      CE;
+      break;
+    case PT_PTR: break;
+    default:
+      mpi_printf(mrc_io_comm(io),
+                 "mrc_io_hdf5_parallel: not writing attr '%s' (type %d)\n",
+                 name, type);
+      assert(0);
   }
-  ierr = H5Gclose(group); CE;
-
+  ierr = H5Gclose(group);
+  CE;
 }
 
-static void
-phdf5_read_attr(struct mrc_io *io, const char *path, int type,
-		const char *name, union param_u *pv)
+static void phdf5_read_attr(struct mrc_io* io, const char* path, int type,
+                            const char* name, union param_u* pv)
 {
   // the HDF5 docs claim attribute writing calls can be done collectively.
   // Not sure I believe them, but let's see...
-  struct ph5 *ph5 = to_ph5(io);
+  struct ph5* ph5 = to_ph5(io);
   int ierr;
-  hid_t group = H5Gopen(ph5->h5_file, path, H5P_DEFAULT); H5_CHK(group);
+  hid_t group = H5Gopen(ph5->h5_file, path, H5P_DEFAULT);
+  H5_CHK(group);
   switch (type) {
-  case PT_SELECT:
-  case PT_INT:
-  case MRC_VAR_INT:
-    ierr = H5LTget_attribute_int(group, ".", name, &pv->u_int); CE;
-    break;
-  case PT_BOOL:
-  case MRC_VAR_BOOL: ;
-    int val;
-    ierr = H5LTget_attribute_int(group, ".", name, &val); CE;
-    pv->u_bool = val;
-    break;
-  case PT_FLOAT:
-    ierr = H5LTget_attribute_float(group, ".", name, &pv->u_float); CE;
-    break;
-  case PT_DOUBLE:
-    ierr = H5LTget_attribute_double(group, ".", name, &pv->u_double); CE;
-    break;
-  case PT_STRING: ;
-    hsize_t dims;
-    H5T_class_t class;
-    size_t sz;
-    ierr = H5LTget_attribute_info(group, ".", name, &dims, &class, &sz); CE;
-    pv->u_string = malloc(sz);
-    ierr = H5LTget_attribute_string(group, ".", name, (char *)pv->u_string); CE;
-    if (strcmp(pv->u_string, "(NULL)") == 0) {
-      free((char *) pv->u_string);
-      pv->u_string = NULL;
+    case PT_SELECT:
+    case PT_INT:
+    case MRC_VAR_INT:
+      ierr = H5LTget_attribute_int(group, ".", name, &pv->u_int);
+      CE;
+      break;
+    case PT_BOOL:
+    case MRC_VAR_BOOL:;
+      int val;
+      ierr = H5LTget_attribute_int(group, ".", name, &val);
+      CE;
+      pv->u_bool = val;
+      break;
+    case PT_FLOAT:
+      ierr = H5LTget_attribute_float(group, ".", name, &pv->u_float);
+      CE;
+      break;
+    case PT_DOUBLE:
+      ierr = H5LTget_attribute_double(group, ".", name, &pv->u_double);
+      CE;
+      break;
+    case PT_STRING:;
+      hsize_t dims;
+      H5T_class_t class;
+      size_t sz;
+      ierr = H5LTget_attribute_info(group, ".", name, &dims, &class, &sz);
+      CE;
+      pv->u_string = malloc(sz);
+      ierr = H5LTget_attribute_string(group, ".", name, (char*)pv->u_string);
+      CE;
+      if (strcmp(pv->u_string, "(NULL)") == 0) {
+        free((char*)pv->u_string);
+        pv->u_string = NULL;
+      }
+      break;
+    case PT_INT3:
+      ierr = H5LTget_attribute_int(group, ".", name, pv->u_int3);
+      CE;
+      break;
+    case PT_FLOAT3:
+      ierr = H5LTget_attribute_float(group, ".", name, pv->u_float3);
+      CE;
+      break;
+    case PT_DOUBLE3:
+      ierr = H5LTget_attribute_double(group, ".", name, pv->u_double3);
+      CE;
+      break;
+    case PT_INT_ARRAY: {
+      int attr = H5Aopen(group, name, H5P_DEFAULT);
+      H5_CHK(attr);
+      H5A_info_t ainfo;
+      ierr = H5Aget_info(attr, &ainfo);
+      CE;
+      ierr = H5Aclose(attr);
+      CE;
+      pv->u_int_array.nr_vals = ainfo.data_size / sizeof(int);
+      pv->u_int_array.vals = calloc(pv->u_int_array.nr_vals, sizeof(int));
+      ierr = H5LTget_attribute_int(group, ".", name, pv->u_int_array.vals);
+      CE;
+      break;
     }
-    break;
-  case PT_INT3:
-    ierr = H5LTget_attribute_int(group, ".", name, pv->u_int3); CE;
-    break;
-  case PT_FLOAT3:
-    ierr = H5LTget_attribute_float(group, ".", name, pv->u_float3); CE;
-    break;
-  case PT_DOUBLE3:
-    ierr = H5LTget_attribute_double(group, ".", name, pv->u_double3); CE;
-    break;
-  case PT_INT_ARRAY: {
-    int attr = H5Aopen(group, name, H5P_DEFAULT); H5_CHK(attr);
-    H5A_info_t ainfo;
-    ierr = H5Aget_info(attr, &ainfo); CE;
-    ierr = H5Aclose(attr); CE;
-    pv->u_int_array.nr_vals = ainfo.data_size / sizeof(int);
-    pv->u_int_array.vals = calloc(pv->u_int_array.nr_vals, sizeof(int));
-    ierr = H5LTget_attribute_int(group, ".", name, pv->u_int_array.vals); CE;
-    break;
+    case PT_PTR: break;
+    default:
+      mpi_printf(mrc_io_comm(io),
+                 "mrc_io_hdf5_parallel: not reading attr '%s' (type %d)\n",
+                 name, type);
+      assert(0);
+      break;
   }
-  case PT_PTR:
-    break;
-  default:
-    mpi_printf(mrc_io_comm(io), "mrc_io_hdf5_parallel: not reading attr '%s' (type %d)\n", name, type);
-    assert(0);
-    break;
-  }
-  ierr = H5Gclose(group); CE;
+  ierr = H5Gclose(group);
+  CE;
 }
-
 
 #if 0 
 static void
@@ -245,11 +269,9 @@ xdmf_write_m1(struct mrc_io *io, const char *path, struct mrc_fld *f1)
 
 #endif
 
-
-static void
-hdf5_parallel_open(struct mrc_io *io, const char *mode)
+static void hdf5_parallel_open(struct mrc_io* io, const char* mode)
 {
-  struct ph5 *ph5 = to_ph5(io);
+  struct ph5* ph5 = to_ph5(io);
   // FIXME: There may be some future speed improvement on lustre if we use
   // a real mpi_info here and set romio_[cb/ds]_write bits
 
@@ -257,11 +279,11 @@ hdf5_parallel_open(struct mrc_io *io, const char *mode)
   // using '.' as a separator causes all sorts of problems with io/analysis in
   // mrc-v3, but I don't want to break compatibility with the other io types
   sprintf(filename, "%s/%s%s%06d.h5", io->par.outdir, io->par.basename,
-	  ph5->separator, io->step);
+          ph5->separator, io->step);
 
   hid_t plist = H5Pcreate(H5P_FILE_ACCESS);
   H5Pset_fapl_mpio(plist, io->obj.comm, MPI_INFO_NULL);
-  
+
   if (strcmp(mode, "w") == 0) {
     ph5->h5_file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, plist);
   } else if (strcmp(mode, "r") == 0) {
@@ -271,43 +293,40 @@ hdf5_parallel_open(struct mrc_io *io, const char *mode)
   }
 
   H5Pclose(plist);
-
 }
 
 // ----------------------------------------------------------------------
 // xdmf_parallel_close
 
-static void
-hdf5_parallel_close(struct mrc_io *io)
+static void hdf5_parallel_close(struct mrc_io* io)
 {
-  struct ph5 *ph5 = to_ph5(io);
+  struct ph5* ph5 = to_ph5(io);
 
   H5Fclose(ph5->h5_file);
 }
 
-
 // ----------------------------------------------------------------------
 // xdmf_parallel_write_fld
 
-static void
-hdf5_parallel_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
+static void hdf5_parallel_write_fld(struct mrc_io* io, const char* path,
+                                    struct mrc_fld* fld)
 {
 
   // FIXME: This should be able to work without a domain.
-  // maybe sub mpi size in for nr_patches later on? 
+  // maybe sub mpi size in for nr_patches later on?
   assert(fld->_domain);
-  
-  struct ph5 *ph5 = to_ph5(io);
+
+  struct ph5* ph5 = to_ph5(io);
 
   hid_t group0;
   if (H5Lexists(ph5->h5_file, path, H5P_DEFAULT) > 0) {
     group0 = H5Gopen(ph5->h5_file, path, H5P_DEFAULT);
   } else {
-    group0 = H5Gcreate(ph5->h5_file, path, H5P_DEFAULT,
-		       H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group0);
+    group0 =
+      H5Gcreate(ph5->h5_file, path, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    H5_CHK(group0);
   }
-  
- 
+
   int nr_patches;
   mrc_domain_get_nr_global_patches(fld->_domain, &nr_patches);
   H5LTset_attribute_int(group0, ".", "nr_patches", &nr_patches, 1);
@@ -315,11 +334,11 @@ hdf5_parallel_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld
   // FIXME: This dumps everything together (best for aos). There's no single
   // write cached way to do separate the fields in either aos or soa, though
   // aos has worse data fragmentation.
-  
+
   // line up patches in file
   int nr_spatial_dims = fld->_nr_spatial_dims;
   int nr_file_dims = nr_spatial_dims + 2;
-  const int *fld_dims = mrc_fld_dims(fld);
+  const int* fld_dims = mrc_fld_dims(fld);
   int nr_local_patches = mrc_fld_nr_patches(fld);
 
   hsize_t fdims[nr_file_dims],
@@ -327,7 +346,7 @@ hdf5_parallel_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld
 
   fdims[0] = nr_patches;
   mdims[0] = nr_local_patches;
-  for (int d=1; d<nr_file_dims; d++) {
+  for (int d = 1; d < nr_file_dims; d++) {
     fdims[d] = fld_dims[nr_file_dims - 1 - d];
     mdims[d] = fld->_ghost_dims[nr_file_dims - 1 - d];
   }
@@ -336,7 +355,7 @@ hdf5_parallel_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld
   // I actually would like it if we added an interface to choose to write ghosts
   // for mrc_flds, since then I could just read trafo bits back in too.
   if (nr_spatial_dims == 1) {
-    fdims[2] += 2*fld->_nr_ghosts;
+    fdims[2] += 2 * fld->_nr_ghosts;
   }
 
   hid_t filespace = H5Screate_simple(nr_file_dims, fdims, NULL);
@@ -344,21 +363,14 @@ hdf5_parallel_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld
 
   hid_t datatype;
   switch (mrc_fld_data_type(fld)) {
-  case MRC_NT_FLOAT:
-    datatype = H5T_NATIVE_FLOAT;
-    break;
-  case MRC_NT_DOUBLE:
-    datatype = H5T_NATIVE_DOUBLE;
-    break;
-  case MRC_NT_INT:
-    datatype = H5T_NATIVE_INT;
-    break;
-  default:
-    assert(0);
+    case MRC_NT_FLOAT: datatype = H5T_NATIVE_FLOAT; break;
+    case MRC_NT_DOUBLE: datatype = H5T_NATIVE_DOUBLE; break;
+    case MRC_NT_INT: datatype = H5T_NATIVE_INT; break;
+    default: assert(0);
   }
 
   hid_t dset = H5Dcreate(group0, "3d", datatype, filespace, H5P_DEFAULT,
-			 H5P_DEFAULT, H5P_DEFAULT);
+                         H5P_DEFAULT, H5P_DEFAULT);
   hid_t dxpl = H5Pcreate(H5P_DATASET_XFER);
   if (ph5->use_independent_io) {
     H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT);
@@ -366,15 +378,16 @@ hdf5_parallel_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld
     H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE);
   }
 
-  hsize_t mcount[nr_file_dims],  // number of elements we'll transfer in each slab
-    moff[nr_file_dims], // offset of that slab into the full memory block
-    foff[nr_file_dims]; // offset of the corresponding slab in the file
-  struct mrc_patch_info info; 
+  hsize_t
+    mcount[nr_file_dims], // number of elements we'll transfer in each slab
+    moff[nr_file_dims],   // offset of that slab into the full memory block
+    foff[nr_file_dims];   // offset of the corresponding slab in the file
+  struct mrc_patch_info info;
   mrc_domain_get_local_patch_info(fld->_domain, 0, &info);
   mcount[0] = nr_local_patches;
   moff[0] = 0;
   foff[0] = info.global_patch;
-  for (int d=1; d < nr_file_dims; d++) {
+  for (int d = 1; d < nr_file_dims; d++) {
     mcount[d] = fdims[d];
     moff[d] = fld->_sw.vals[nr_file_dims - 1 - d];
     foff[d] = 0;
@@ -388,43 +401,39 @@ hdf5_parallel_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld
   H5Sselect_hyperslab(filespace, H5S_SELECT_SET, foff, NULL, mcount, NULL);
   H5Sselect_hyperslab(memspace, H5S_SELECT_SET, moff, NULL, mcount, NULL);
 
-  
   H5Dwrite(dset, datatype, memspace, filespace, dxpl, fld->_nd->arr);
-  
+
   H5Sclose(memspace);
   H5Dclose(dset);
   H5Sclose(filespace);
   H5Pclose(dxpl);
-  
-  
+
   H5Gclose(group0);
 }
 
-static void
-hdf5_parallel_read_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
+static void hdf5_parallel_read_fld(struct mrc_io* io, const char* path,
+                                   struct mrc_fld* fld)
 {
 
   // FIXME: This should be able to work without a domain.
-  // maybe sub mpi size in for nr_patches later on? 
+  // maybe sub mpi size in for nr_patches later on?
   assert(fld->_domain);
-  
-  struct ph5 *ph5 = to_ph5(io);
+
+  struct ph5* ph5 = to_ph5(io);
 
   hid_t group0;
   group0 = H5Gopen(ph5->h5_file, path, H5P_DEFAULT);
-  
- 
+
   int nr_patches;
   mrc_domain_get_nr_global_patches(fld->_domain, &nr_patches);
   int file_patches;
   H5LTget_attribute_int(group0, ".", "nr_patches", &file_patches);
   assert(nr_patches == file_patches);
 
-  
   // line up patches in file
   int nr_spatial_dims = fld->_nr_spatial_dims;
   int nr_file_dims = nr_spatial_dims + 2;
-  const int *fld_dims = mrc_fld_dims(fld);
+  const int* fld_dims = mrc_fld_dims(fld);
   int nr_local_patches = mrc_fld_nr_patches(fld);
 
   hsize_t fdims[nr_file_dims],
@@ -432,33 +441,25 @@ hdf5_parallel_read_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
 
   fdims[0] = nr_patches;
   mdims[0] = nr_local_patches;
-  for (int d=1; d<nr_file_dims; d++) {
+  for (int d = 1; d < nr_file_dims; d++) {
     fdims[d] = fld_dims[nr_file_dims - 1 - d];
     mdims[d] = fld->_ghost_dims[nr_file_dims - 1 - d];
   }
   // FIXME: crds write ghost points, but this is a really hacky way to do this
-  // I actually would like it if we added an interface to choose to write/read ghosts
-  // for mrc_flds, since then I could just read trafo bits back in too.
+  // I actually would like it if we added an interface to choose to write/read
+  // ghosts for mrc_flds, since then I could just read trafo bits back in too.
   if (nr_spatial_dims == 1) {
-    fdims[2] += 2*fld->_nr_ghosts;
+    fdims[2] += 2 * fld->_nr_ghosts;
   }
-
 
   hid_t memspace = H5Screate_simple(nr_file_dims, mdims, NULL);
 
   hid_t datatype;
   switch (mrc_fld_data_type(fld)) {
-  case MRC_NT_FLOAT:
-    datatype = H5T_NATIVE_FLOAT;
-    break;
-  case MRC_NT_DOUBLE:
-    datatype = H5T_NATIVE_DOUBLE;
-    break;
-  case MRC_NT_INT:
-    datatype = H5T_NATIVE_INT;
-    break;
-  default:
-    assert(0);
+    case MRC_NT_FLOAT: datatype = H5T_NATIVE_FLOAT; break;
+    case MRC_NT_DOUBLE: datatype = H5T_NATIVE_DOUBLE; break;
+    case MRC_NT_INT: datatype = H5T_NATIVE_INT; break;
+    default: assert(0);
   }
 
   hid_t dset = H5Dopen(group0, "3d", H5P_DEFAULT);
@@ -481,15 +482,16 @@ hdf5_parallel_read_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
     H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE);
   }
 
-  hsize_t mcount[nr_file_dims],  // number of elements we'll transfer in each slab
-    moff[nr_file_dims], // offset of that slab into the full memory block
-    foff[nr_file_dims]; // offset of the corresponding slab in the file
-  struct mrc_patch_info info; 
+  hsize_t
+    mcount[nr_file_dims], // number of elements we'll transfer in each slab
+    moff[nr_file_dims],   // offset of that slab into the full memory block
+    foff[nr_file_dims];   // offset of the corresponding slab in the file
+  struct mrc_patch_info info;
   mrc_domain_get_local_patch_info(fld->_domain, 0, &info);
   mcount[0] = nr_local_patches;
   moff[0] = 0;
   foff[0] = info.global_patch;
-  for (int d=1; d < nr_file_dims; d++) {
+  for (int d = 1; d < nr_file_dims; d++) {
     mcount[d] = fdims[d];
     moff[d] = fld->_sw.vals[nr_file_dims - 1 - d];
     foff[d] = 0;
@@ -504,31 +506,29 @@ hdf5_parallel_read_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
   H5Sselect_hyperslab(memspace, H5S_SELECT_SET, moff, NULL, mcount, NULL);
 
   H5Dread(dset, datatype, memspace, filespace, dxpl, fld->_nd->arr);
-  
+
   H5Sclose(memspace);
   H5Dclose(dset);
   H5Sclose(filespace);
   H5Pclose(dxpl);
-  
-  
+
   H5Gclose(group0);
 }
-
 
 // ----------------------------------------------------------------------
 // mrc_io_ops_hdf5_parallel
 
 struct mrc_io_ops mrc_io_hdf5_parallel_ops = {
-  .name          = "hdf5_parallel",
-  .size          = sizeof(struct ph5),
-  .param_descr   = ph5_descr,
-  .parallel      = true,
-  .open          = hdf5_parallel_open,
-  .close         = hdf5_parallel_close,
-  .write_fld     = hdf5_parallel_write_fld,
-  .read_fld      = hdf5_parallel_read_fld,
-  .write_attr    = phdf5_write_attr,
-  .read_attr     = phdf5_read_attr,
+  .name = "hdf5_parallel",
+  .size = sizeof(struct ph5),
+  .param_descr = ph5_descr,
+  .parallel = true,
+  .open = hdf5_parallel_open,
+  .close = hdf5_parallel_close,
+  .write_fld = hdf5_parallel_write_fld,
+  .read_fld = hdf5_parallel_read_fld,
+  .write_attr = phdf5_write_attr,
+  .read_attr = phdf5_read_attr,
 };
 
 #endif
