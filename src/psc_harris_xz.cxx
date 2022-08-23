@@ -143,8 +143,8 @@ PscParams psc_params;
 void setupHarrisParams()
 {
   g.wpedt_max = .36;
-  g.wpe_wce = 2.;
-  g.mi_me = 25.;
+  g.wpe_wce = 2.5;
+  g.mi_me = 1.;
 
   g.Lx_di = 40.;
   g.Ly_di = 1.;
@@ -153,18 +153,18 @@ void setupHarrisParams()
   g.electron_sort_interval = 25;
   g.ion_sort_interval = 25;
 
-  g.taui = 40.;
+  g.taui = 10.;
   g.t_intervali = 1.;
   g.output_particle_interval = 10.;
 
   g.overalloc = 2.;
 
   g.gdims = {512, 1, 128};
-  g.np = {4, 1, 1};
+  g.np = {4, 1, 4};
 
-  g.L_di = .5;
+  g.L_di = 1.0;
   g.Ti_Te = 5.;
-  g.nb_n0 = .05;
+  g.nb_n0 = .25;
   g.Tbe_Te = .333;
   g.Tbi_Ti = .333;
 
@@ -459,6 +459,7 @@ void setup_log(const Grid_t& grid)
   mpi_printf(comm, "n_global_patches = %d\n", phys.n_global_patches);
   mpi_printf(comm, "nppc = %g\n", g.nppc);
   mpi_printf(comm, "b0 = %g\n", phys.b0);
+  mpi_printf(comm, "n0 = %g\n", phys.n0);
   mpi_printf(comm, "v_A (based on nb) = %g\n", phys.v_A);
   mpi_printf(comm, "di = %g\n", phys.di);
   mpi_printf(comm, "Ne = %g\n", phys.Ne);
@@ -745,15 +746,15 @@ void initializeFields(MfieldsState& mflds)
 
     switch (m) {
       case HX:
-        return cs * b0 * tanh(z / L) +
-               dbx * cos(2. * M_PI * (x - .5 * Lx) / Lpert) *
-                 sin(M_PI * z / Lz);
+        return cs * b0 * tanh(z / L) ;//+
+               //dbx * cos(2. * M_PI * (x - .5 * Lx) / Lpert) *
+               //  sin(M_PI * z / Lz);
 
-      case HY: return -sn * b0 * tanh(z / L) + b0 * g.bg;
+      case HY: return 0.;//-sn * b0 * tanh(z / L) ;//+ b0 * g.bg;
 
       case HZ:
-        return dbz * cos(M_PI * z / Lz) *
-               sin(2.0 * M_PI * (x - 0.5 * Lx) / Lpert);
+        return 0. ;//+ dbz * cos(M_PI * z / Lz) *
+               //sin(2.0 * M_PI * (x - 0.5 * Lx) / Lpert);
 
       case JYI: return 0.; // FIXME
 
@@ -877,19 +878,19 @@ void run()
   outf_params.fields.pfield_interval =
     int((output_field_interval / (phys.wci * grid.dt)));
   outf_params.fields.tfield_interval =
-    int((output_field_interval / (phys.wci * grid.dt)));
+    -int((output_field_interval / (phys.wci * grid.dt)));
   OutputFields<MfieldsState, Mparticles, dim_xz> outf{grid, outf_params};
 
   OutputParticlesParams outp_params{};
   outp_params.every_step =
-    int((g.output_particle_interval / (phys.wci * grid.dt)));
+    -int((g.output_particle_interval / (phys.wci * grid.dt)));
   outp_params.data_dir = ".";
   outp_params.basename = "prt";
   outp_params.lo = {192, 0, 48};
   outp_params.hi = {320, 0, 80};
   OutputParticles outp{grid, outp_params};
 
-  int oute_interval = 100;
+  int oute_interval = -100;
   DiagEnergies oute{grid.comm(), oute_interval};
 
   Diagnostics diagnostics{grid, outf, outp, oute};
