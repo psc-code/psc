@@ -67,8 +67,12 @@ struct PscBgkParams
 
     n_grid_3 = parsedParams.getOrDefault<int>("n_grid_3", 1);
     box_size_3 = parsedParams.getOrDefault<double>("box_size_3", 1);
-    n_patches_3 = parsedParams.getOrDefault<int>("n_patches_3", 1);
-    if (n_patches_3 <= 0)
-      n_patches_3 = n_grid_3 / parsedParams.get<int>("n_cells_per_patch");
+    if (n_grid_3 < parsedParams.get<int>("n_cells_per_patch")) {
+      n_patches_3 = 1;
+    } else {
+      n_patches_3 = parsedParams.getOrDefault<int>("n_patches_3", 1);
+      if (n_patches_3 <= 0)
+        n_patches_3 = n_grid_3 / parsedParams.get<int>("n_cells_per_patch");
+    }
   }
 };
