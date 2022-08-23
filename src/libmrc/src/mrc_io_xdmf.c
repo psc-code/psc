@@ -131,7 +131,7 @@ static void make_sfx(char* sfx, int outtype, float sheet)
 static void hdf5_open(struct mrc_io* io, const char* mode)
 {
   struct diag_hdf5* hdf5 = diag_hdf5(io);
-  char filename[strlen(io->par.outdir) + strlen(io->par.basename) + 20];
+  char filename[strlen(io->par.outdir) + strlen(io->par.basename) + 30];
   sprintf(filename, "%s/%s.%06d_p%06d.h5", io->par.outdir, io->par.basename,
           io->step, io->rank);
   if (strcmp(mode, "w") == 0) {
@@ -541,7 +541,7 @@ static void xdmf_write_spatial_collection(struct mrc_io* io,
     fprintf(f, "   <Grid Name=\"mesh-%s-%d\" GridType=\"Uniform\">\n", xs->sfx,
             s);
 
-    char fname[strlen(io->par.outdir) + strlen(io->par.basename) + 20];
+    char fname[strlen(io->par.outdir) + strlen(io->par.basename) + 30];
     sprintf(fname, "%s/%s.%06d_p%06d.h5", io->par.outdir, io->par.basename,
             io->step, s);
     int* im = xs->subdomains[s].im;
@@ -1978,7 +1978,7 @@ static void ds_xdmf_parallel_open(struct mrc_io* io, const char* mode)
   hdf5->mode = strdup(mode);
   hdf5->crds_done = false;
 
-  char filename[strlen(io->par.outdir) + strlen(io->par.basename) + 20];
+  char filename[strlen(io->par.outdir) + strlen(io->par.basename) + 30];
   sprintf(filename, "%s/%s.%06d_p%06d.h5", io->par.outdir, io->par.basename,
           io->step, 0);
 

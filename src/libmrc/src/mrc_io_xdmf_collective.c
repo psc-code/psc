@@ -110,7 +110,7 @@ static void xdmf_collective_open(struct mrc_io* io, const char* mode)
   xdmf->mode = strdup(mode);
   //  assert(strcmp(mode, "w") == 0);
 
-  char filename[strlen(io->par.outdir) + strlen(io->par.basename) + 20];
+  char filename[strlen(io->par.outdir) + strlen(io->par.basename) + 30];
   sprintf(filename, "%s/%s.%06d_p%06d.h5", io->par.outdir, io->par.basename,
           io->step, 0);
 

@@ -275,7 +275,7 @@ static void hdf5_parallel_open(struct mrc_io* io, const char* mode)
   // FIXME: There may be some future speed improvement on lustre if we use
   // a real mpi_info here and set romio_[cb/ds]_write bits
 
-  char filename[strlen(io->par.outdir) + strlen(io->par.basename) + 20];
+  char filename[strlen(io->par.outdir) + strlen(io->par.basename) + 30];
   // using '.' as a separator causes all sorts of problems with io/analysis in
   // mrc-v3, but I don't want to break compatibility with the other io types
   sprintf(filename, "%s/%s%s%06d.h5", io->par.outdir, io->par.basename,

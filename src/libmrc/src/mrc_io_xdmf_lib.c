@@ -392,7 +392,7 @@ void xdmf_spatial_write(struct xdmf_spatial* xs, const char* filename,
       fprintf(f, "<Time Type=\"Single\" Value=\"%g\" />\n", io->time);
     }
 
-    char fname[strlen(io->par.outdir) + strlen(io->par.basename) + 20];
+    char fname[strlen(io->par.outdir) + strlen(io->par.basename) + 30];
     int rank = xs->patch_infos[s].rank;
     int patch = xs->patch_infos[s].patch;
     sprintf(fname, "%s.%06d_p%06d.h5", io->par.basename, io->step, rank);

@@ -75,7 +75,7 @@ static void xdmf_open(struct mrc_io* io, const char* mode)
   struct xdmf* xdmf = to_xdmf(io);
 
   struct xdmf_file* file = &xdmf->file;
-  char filename[strlen(io->par.outdir) + strlen(io->par.basename) + 20];
+  char filename[strlen(io->par.outdir) + strlen(io->par.basename) + 30];
   sprintf(filename, "%s/%s.%06d_p%06d.h5", io->par.outdir, io->par.basename,
           io->step, io->rank);
 
@@ -937,7 +937,7 @@ static void xdmf_parallel_open(struct mrc_io* io, const char* mode)
   assert(strcmp(mode, "w") == 0);
 
   struct xdmf_file* file = &xdmf->file;
-  char filename[strlen(io->par.outdir) + strlen(io->par.basename) + 20];
+  char filename[strlen(io->par.outdir) + strlen(io->par.basename) + 30];
   sprintf(filename, "%s/%s.%06d_p%06d.h5", io->par.outdir, io->par.basename,
           io->step, 0);
 
