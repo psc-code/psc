@@ -23,7 +23,7 @@ using Dim = dim_yz;
 #ifdef USE_CUDA
 using PscConfig = PscConfig1vbecCuda<Dim>;
 #else
-using PscConfig = PscConfig1vbecSingle<Dim>;
+using PscConfig = PscConfig1vbecDouble<Dim>;
 #endif
 
 // ----------------------------------------------------------------------
