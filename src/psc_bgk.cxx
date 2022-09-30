@@ -361,7 +361,7 @@ static void run(int argc, char** argv)
   psc_params.sort_interval = 10;
 
   // -- Collision
-  int collision_interval = 10;
+  int collision_interval = 0;
   double collision_nu = .1;
   Collision collision{grid, collision_interval, collision_nu};
 
