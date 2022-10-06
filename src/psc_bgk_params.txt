@@ -42,6 +42,7 @@ stats_every 500
 fields_every 200
 moments_every 200
 gauss_every 200
+particles_every 0
 
 checkpoint_every 0 (0 to disable checkpoints)
 read_checkpoint false

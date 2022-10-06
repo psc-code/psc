@@ -18,9 +18,10 @@ struct PscBgkParams
   int n_patches;   // number of patches
   int nicell;      // number of particles per gripdoint when density=1
 
-  int fields_every;  // interval for pfd output
-  int moments_every; // interval for pfd_moments output
-  int gauss_every;   // interval for gauss output/checking
+  int fields_every;    // interval for pfd output
+  int moments_every;   // interval for pfd_moments output
+  int gauss_every;     // interval for gauss output/checking
+  int particles_every; // interval for particle output
 
   // For Boltzmann ion cases
   bool do_ion; // whether or not to make ions follow B.D.
@@ -58,6 +59,7 @@ struct PscBgkParams
     fields_every = parsedParams.getOrDefault<int>("fields_every", 200);
     moments_every = parsedParams.getOrDefault<int>("moments_every", 200);
     gauss_every = parsedParams.getOrDefault<int>("gauss_every", 200);
+    particles_every = parsedParams.getOrDefault<int>("particles_every", 0);
 
     do_ion = parsedParams.getOrDefault<bool>("ion", false);
     T_i = parsedParams.getOrDefault<double>("T_i", 0);
