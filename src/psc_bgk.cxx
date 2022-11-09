@@ -23,7 +23,7 @@ using Dim = dim_yz;
 #ifdef USE_CUDA
 using PscConfig = PscConfig1vbecCuda<Dim>;
 #else
-using PscConfig = PscConfig1vbecSingle<Dim>;
+using PscConfig = PscConfig1vbecDouble<Dim>;
 #endif
 
 // ----------------------------------------------------------------------
@@ -85,6 +85,7 @@ void setupParameters(int argc, char** argv)
 
   psc_params.nmax = parsedParams.get<int>("nmax");
   psc_params.stats_every = parsedParams.get<int>("stats_every");
+  psc_params.cfl = parsedParams.getOrDefault<double>("cfl", .75);
 
   psc_params.write_checkpoint_every_step =
     parsedParams.getOrDefault<int>("checkpoint_every", 0);
@@ -95,6 +96,14 @@ void setupParameters(int argc, char** argv)
   std::ifstream src(path_to_params, std::ios::binary);
   std::ofstream dst("params_record.txt", std::ios::binary);
   dst << src.rdbuf();
+
+  if (g.n_grid_3 > 1 && typeid(Dim) != typeid(dim_xyz)) {
+    LOG_ERROR("3D runs require Dim = dim_xyz\n");
+    exit(1);
+  } else if (g.n_grid == 1 && typeid(Dim) != typeid(dim_yz)) {
+    LOG_ERROR("2D runs require Dim = dim_yz\n");
+    exit(1);
+  }
 }
 
 // ======================================================================
@@ -108,10 +117,10 @@ void setupParameters(int argc, char** argv)
 Grid_t* setupGrid()
 {
   auto domain = Grid_t::Domain{
-    {1, g.n_grid, g.n_grid},                  // # grid points
-    {1, g.box_size, g.box_size},              // physical lengths
-    {0., -.5 * g.box_size, -.5 * g.box_size}, // *offset* for origin
-    {1, g.n_patches, g.n_patches}};           // # patches
+    {g.n_grid_3, g.n_grid, g.n_grid},           // # grid points
+    {g.box_size_3, g.box_size, g.box_size},     // physical lengths
+    {0., -.5 * g.box_size, -.5 * g.box_size},   // *offset* for origin
+    {g.n_patches_3, g.n_patches, g.n_patches}}; // # patches
 
   auto bc =
     psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
@@ -128,7 +137,7 @@ Grid_t* setupGrid()
 
   // --- generic setup
   auto norm_params = Grid_t::NormalizationParams::dimensionless();
-  norm_params.nicell = 100;
+  norm_params.nicell = g.nicell;
 
   double dt = psc_params.cfl * courant_length(domain);
   Grid_t::Normalization norm{norm_params};
@@ -232,7 +241,7 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
         } else {
           setAll(npt.p, 0);
         }
-        setAll(npt.T, parsedData->get_interpolated(COL_TE, rho));
+        setAll(npt.T, g.T_e_coef * parsedData->get_interpolated(COL_TE, rho));
         break;
 
       case KIND_ION:
@@ -352,7 +361,7 @@ static void run(int argc, char** argv)
   psc_params.sort_interval = 10;
 
   // -- Collision
-  int collision_interval = 10;
+  int collision_interval = 0;
   double collision_nu = .1;
   Collision collision{grid, collision_interval, collision_nu};
 
@@ -384,7 +393,7 @@ static void run(int argc, char** argv)
 
   // -- output particles
   OutputParticlesParams outp_params{};
-  outp_params.every_step = 0;
+  outp_params.every_step = g.particles_every;
   outp_params.data_dir = ".";
   outp_params.basename = "prt";
   OutputParticles outp{grid, outp_params};

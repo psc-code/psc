@@ -7,42 +7,36 @@
 
 struct PscBgkParams
 {
-  // physical length of region along y and z
-  double box_size;
-  // strength of transverse magnetic field
-  double Hx;
-  // ion charge
-  double q_i;
-  // ion number density
-  double n_i;
-  // ion mass
-  double m_i;
-  // electron charge
-  double q_e;
-  // electron mass
-  double m_e;
-  // number of grid cells
-  int n_grid;
-  // number of patches
-  int n_patches;
-  // whether or not to negate v (affects stability)
-  bool reverse_v;
-  // whether or not to negate v for y<0 (should destroy stability)
-  bool reverse_v_half;
+  double box_size; // physical length of region along y and z
+  double Hx;       // strength of transverse magnetic field
+  double q_i;      // ion charge
+  double n_i;      // ion number density
+  double m_i;      // ion mass
+  double q_e;      // electron charge
+  double m_e;      // electron mass
+  int n_grid;      // number of grid cells
+  int n_patches;   // number of patches
+  int nicell;      // number of particles per gripdoint when density=1
 
-  // interval for pfd output
-  int fields_every;
-  // interval for pfd_moments output
-  int moments_every;
-  // interval for gauss output/checking
-  int gauss_every;
+  int fields_every;    // interval for pfd output
+  int moments_every;   // interval for pfd_moments output
+  int gauss_every;     // interval for gauss output/checking
+  int particles_every; // interval for particle output
 
-  // for boltzmann distr
-  bool do_ion;
-  double T_i;
+  // For Boltzmann ion cases
+  bool do_ion; // whether or not to make ions follow B.D.
+  double T_i;  // ion temperature
 
-  // multiplier for electron velocity
-  double v_e_coef;
+  // For modifying initial conditions
+  double v_e_coef;     // multiplier for electron velocity
+  double T_e_coef;     // multiplier for electron temperature
+  bool reverse_v;      // whether or not to reverse electron velocity
+  bool reverse_v_half; // whether or not to reverse electron velocity for y<0
+
+  // For 3D cases
+  int n_grid_3;      // number of grid points in 3rd dimension
+  double box_size_3; // physical length of 3rd dimension
+  int n_patches_3;   // number of patches in 3rd dimension
 
   void loadParams(ParsedParams parsedParams)
   {
@@ -57,6 +51,7 @@ struct PscBgkParams
     n_patches = parsedParams.get<int>("n_patches");
     if (n_patches <= 0)
       n_patches = n_grid / parsedParams.get<int>("n_cells_per_patch");
+    nicell = parsedParams.getOrDefault<int>("nicell", 100);
     if (parsedParams.warnIfPresent("reverse_v", "Set v_e_coef to +-1 instead."))
       exit(0);
     reverse_v_half = parsedParams.get<bool>("reverse_v_half");
@@ -64,10 +59,22 @@ struct PscBgkParams
     fields_every = parsedParams.getOrDefault<int>("fields_every", 200);
     moments_every = parsedParams.getOrDefault<int>("moments_every", 200);
     gauss_every = parsedParams.getOrDefault<int>("gauss_every", 200);
+    particles_every = parsedParams.getOrDefault<int>("particles_every", 0);
 
     do_ion = parsedParams.getOrDefault<bool>("ion", false);
     T_i = parsedParams.getOrDefault<double>("T_i", 0);
 
     v_e_coef = parsedParams.getOrDefault<double>("v_e_coef", 1);
+    T_e_coef = parsedParams.getOrDefault<double>("T_e_coef", 1);
+
+    n_grid_3 = parsedParams.getOrDefault<int>("n_grid_3", 1);
+    box_size_3 = parsedParams.getOrDefault<double>("box_size_3", 1);
+    if (n_grid_3 < parsedParams.get<int>("n_cells_per_patch")) {
+      n_patches_3 = 1;
+    } else {
+      n_patches_3 = parsedParams.getOrDefault<int>("n_patches_3", 1);
+      if (n_patches_3 <= 0)
+        n_patches_3 = n_grid_3 / parsedParams.get<int>("n_cells_per_patch");
+    }
   }
 };
