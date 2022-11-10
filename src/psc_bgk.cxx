@@ -220,7 +220,7 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
 
   auto&& qDensity = -psc::mflds::interior(divGradPhi.grid(), divGradPhi.gt());
 
-  auto npt_init = [&](int kind, double crd[3], int p, Int3 idx,
+  auto npt_init = [&](int kind, Double3 crd, int p, Int3 idx,
                       psc_particle_npt& npt) {
     double y = getCoord(crd[1]);
     double z = getCoord(crd[2]);
@@ -255,9 +255,8 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
     }
   };
 
-  partitionParticlesGeneralInit(setup_particles, balance, grid_ptr, mprts,
-                                npt_init);
-  setupParticlesGeneralInit(setup_particles, mprts, npt_init);
+  partitionAndSetupParticles(setup_particles, balance, grid_ptr, mprts,
+                             npt_init);
 }
 
 // ======================================================================

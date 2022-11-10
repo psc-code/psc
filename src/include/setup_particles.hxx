@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include <functional>
+#include <type_traits>
 #include "centering.hxx"
 
 struct psc_particle_npt
@@ -19,6 +21,43 @@ namespace
 {
 const Centering::Centerer defaultCenterer(Centering::CC);
 }
+
+struct InitNptFunc
+{
+  // Initialize particles according to a Maxwellian.
+  // (int kind, Double3 pos, psc_particle_npt& npt) -> void
+  template <
+    typename INIT_NPT,
+    std::enable_if_t<
+      std::is_convertible<
+        INIT_NPT, std::function<void(int, Double3, psc_particle_npt&)>>::value,
+      bool> = true>
+  InitNptFunc(INIT_NPT init_npt_simple)
+    : func{[&](int kind, Double3 pos, int p, Int3 idx, psc_particle_npt& npt) {
+        init_npt_simple(kind, pos, npt);
+      }}
+  {}
+
+  // Initialize particles according to a Maxwellian.
+  // (int kind, Double3 pos, int patch, Int3 idx, psc_particle_npt& npt) -> void
+  template <
+    typename INIT_NPT,
+    std::enable_if_t<std::is_convertible<
+                       INIT_NPT, std::function<void(int, Double3, int, Int3,
+                                                    psc_particle_npt&)>>::value,
+                     bool> = true>
+  InitNptFunc(INIT_NPT init_npt) : func{init_npt}
+  {}
+
+  void operator()(int kind, Double3 pos, int patch, Int3 index,
+                  psc_particle_npt& npt)
+  {
+    func(kind, pos, patch, index, npt);
+  }
+
+private:
+  std::function<void(int, Double3, int, Int3, psc_particle_npt&)> func;
+};
 
 template <typename MP>
 struct SetupParticles
@@ -62,11 +101,10 @@ struct SetupParticles
   // ----------------------------------------------------------------------
   // op_cellwise
   // Performs a given operation in each cell.
-  // init_npt signature: (int kind, Double3 pos, int p, Int3 index, npt) -> void
   // op signature: (int n_in_cell, npt, Double3 pos) -> void
 
-  template <typename InitFunc, typename OpFunc>
-  void op_cellwise(const Grid_t& grid, int patch, InitFunc&& init_npt,
+  template <typename OpFunc>
+  void op_cellwise(const Grid_t& grid, int patch, InitNptFunc init_npt,
                    OpFunc&& op)
   {
     Int3 ilo = Int3{}, ihi = grid.ldims;
@@ -157,22 +195,16 @@ struct SetupParticles
 
   // ----------------------------------------------------------------------
   // setup_particles
-  // init_npt signature: (int kind, Double3 pos, npt) -> void
 
-  template <typename FUNC>
-  void operator()(Mparticles& mprts, FUNC&& init_npt)
+  void operator()(Mparticles& mprts, InitNptFunc init_npt)
   {
-    setupParticles(mprts,
-                   [&](int kind, Double3 pos, int p, Int3 idx,
-                       psc_particle_npt& npt) { init_npt(kind, pos, npt); });
+    setupParticles(mprts, init_npt);
   }
 
   // ----------------------------------------------------------------------
   // setupParticles
-  // init_npt signature: (int kind, Double3 pos, int p, Int3 index, npt) -> void
 
-  template <typename FUNC>
-  void setupParticles(Mparticles& mprts, FUNC&& init_npt)
+  void setupParticles(Mparticles& mprts, InitNptFunc init_npt)
   {
     static int pr;
     if (!pr) {
@@ -189,7 +221,7 @@ struct SetupParticles
     for (int p = 0; p < mprts.n_patches(); ++p) {
       auto injector = inj[p];
 
-      op_cellwise(grid, p, std::forward<FUNC>(init_npt),
+      op_cellwise(grid, p, init_npt,
                   [&](int n_in_cell, psc_particle_npt& npt, Double3& pos) {
                     for (int cnt = 0; cnt < n_in_cell; cnt++) {
                       real_t wni;
@@ -209,28 +241,13 @@ struct SetupParticles
 
   // ----------------------------------------------------------------------
   // partition
-  // init_npt signature: (int kind, Double3 pos, npt) -> void
 
-  template <typename FUNC>
-  std::vector<uint> partition(const Grid_t& grid, FUNC&& init_npt)
-  {
-    return partition_general_init(
-      grid, [&](int kind, Double3 pos, int, Int3, psc_particle_npt& npt) {
-        init_npt(kind, pos, npt);
-      });
-  }
-
-  // ----------------------------------------------------------------------
-  // partition_general_init
-  // init_npt signature: (int kind, Double3 pos, int p, Int3 index, npt) -> void
-
-  template <typename FUNC>
-  std::vector<uint> partition_general_init(const Grid_t& grid, FUNC&& init_npt)
+  std::vector<uint> partition(const Grid_t& grid, InitNptFunc init_npt)
   {
     std::vector<uint> n_prts_by_patch(grid.n_patches());
 
     for (int p = 0; p < grid.n_patches(); ++p) {
-      op_cellwise(grid, p, std::forward<FUNC>(init_npt),
+      op_cellwise(grid, p, init_npt,
                   [&](int n_in_cell, psc_particle_npt&, Double3&) {
                     n_prts_by_patch[p] += n_in_cell;
                   });
