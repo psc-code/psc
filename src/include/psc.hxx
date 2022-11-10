@@ -781,39 +781,28 @@ Psc<PscConfig, Diagnostics, InjectParticles> makePscIntegrator(
 
 // ======================================================================
 // partitionAndSetupParticles
-// convenience/backward compatibility method to allow simpler function signature
-// init_npt signature: (int kind, Double3 pos, npt) -> void
 
-template <typename SetupParticles, typename Balance, typename Mparticles,
-          typename FUNC>
+template <typename SetupParticles, typename Balance, typename Mparticles>
 void partitionAndSetupParticles(SetupParticles& setup_particles,
                                 Balance& balance, Grid_t*& grid_ptr,
-                                Mparticles& mprts, FUNC&& init_npt)
+                                Mparticles& mprts, InitNptFunc init_npt)
 {
-  auto init_npt_general = [&](int kind, Double3 pos, int, Int3,
-                              psc_particle_npt& npt) {
-    init_npt(kind, pos, npt);
-  };
-  partitionParticlesGeneralInit(setup_particles, balance, grid_ptr, mprts,
-                                init_npt_general);
-  setupParticlesGeneralInit(setup_particles, mprts, init_npt_general);
+  partitionParticles(setup_particles, balance, grid_ptr, mprts, init_npt);
+  setupParticles(setup_particles, mprts, init_npt);
 }
 
 // ----------------------------------------------------------------------
-// partitionParticlesGeneralInit
-// init_npt signature: (int kind, Double3 pos, int p, Int3 index, npt) -> void
+// partitionParticles
 
-template <typename SetupParticles, typename Balance, typename Mparticles,
-          typename FUNC>
-void partitionParticlesGeneralInit(SetupParticles& setup_particles,
-                                   Balance& balance, Grid_t*& grid_ptr,
-                                   Mparticles& mprts, FUNC&& init_npt)
+template <typename SetupParticles, typename Balance, typename Mparticles>
+void partitionParticles(SetupParticles& setup_particles, Balance& balance,
+                        Grid_t*& grid_ptr, Mparticles& mprts,
+                        InitNptFunc init_npt)
 {
   auto comm = grid_ptr->comm();
   mpi_printf(comm, "**** Partitioning...\n");
 
-  auto n_prts_by_patch =
-    setup_particles.partition_general_init(*grid_ptr, init_npt);
+  auto n_prts_by_patch = setup_particles.partition(*grid_ptr, init_npt);
 
   balance.initial(grid_ptr, n_prts_by_patch);
   // !!! FIXME! grid is now invalid
@@ -824,12 +813,11 @@ void partitionParticlesGeneralInit(SetupParticles& setup_particles,
 }
 
 // ----------------------------------------------------------------------
-// setupParticlesGeneralInit
-// init_npt signature: (int kind, Double3 pos, int p, Int3 index, npt) -> void
+// setupParticles
 
-template <typename SetupParticles, typename Mparticles, typename FUNC>
-void setupParticlesGeneralInit(SetupParticles& setup_particles,
-                               Mparticles& mprts, FUNC&& init_npt)
+template <typename SetupParticles, typename Mparticles>
+void setupParticles(SetupParticles& setup_particles, Mparticles& mprts,
+                    InitNptFunc init_npt)
 {
   mpi_printf(MPI_COMM_WORLD, "**** Setting up particles...\n");
   setup_particles.setupParticles(mprts, init_npt);
