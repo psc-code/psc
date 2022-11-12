@@ -210,6 +210,39 @@ inline double getIonDensity(double rho)
 }
 
 // ======================================================================
+// v_phi_cdf
+// Cumulative distribution function for azimuthal electron velocity
+
+double v_phi_cdf(double v_phi, double rho)
+{
+  // convert units
+  v_phi *= 1000;
+  rho *= 1000;
+
+  double k = .1;
+  double h0 = .9;
+  double B = g.Hx;
+  double sqrt2 = std::sqrt(2);
+
+  double rho_sqr = sqr(rho);
+
+  double gamma = 1 + 8 * k * rho_sqr;
+  double alpha =
+    1 - h0 / std::sqrt(gamma) * std::exp(-k * sqr(B) * sqr(rho_sqr) / gamma);
+
+  double mean0 = 0;
+  double stdev0 = 1;
+
+  double mean1 = 4 * k * B * rho_sqr * rho / gamma;
+  double stdev1 = 1 / std::sqrt(gamma);
+
+  double m0 = (1 + std::erf((v_phi - mean0) / (stdev0 * sqrt2))) / 2;
+  double m1 = (1 + std::erf((v_phi - mean1) / (stdev1 * sqrt2))) / 2;
+
+  return m0 / alpha + m1 * (1 - 1 / alpha);
+}
+
+// ======================================================================
 // initializeParticles
 
 void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
@@ -220,8 +253,8 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
 
   auto&& qDensity = -psc::mflds::interior(divGradPhi.grid(), divGradPhi.gt());
 
-  auto npt_init = [&](int kind, Double3 crd, int p, Int3 idx,
-                      psc_particle_npt& npt) {
+  auto init_np = [&](int kind, Double3 crd, int p, Int3 idx,
+                     psc_particle_np& np) {
     double y = getCoord(crd[1]);
     double z = getCoord(crd[2]);
     double rho = sqrt(sqr(y) + sqr(z));
@@ -229,26 +262,32 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
     switch (kind) {
 
       case KIND_ELECTRON:
-        npt.n = (qDensity(idx[0], idx[1], idx[2], 0, p) -
-                 getIonDensity(rho) * g.q_i) /
-                g.q_e;
+        np.n = (qDensity(idx[0], idx[1], idx[2], 0, p) -
+                getIonDensity(rho) * g.q_i) /
+               g.q_e;
         if (rho != 0) {
-          double v_phi = parsedData->get_interpolated(COL_V_PHI, rho);
-          double coef = g.v_e_coef * (g.reverse_v ? -1 : 1) *
-                        (g.reverse_v_half && y < 0 ? -1 : 1);
-          npt.p[0] = 0;
-          npt.p[1] = coef * g.m_e * v_phi * -z / rho;
-          npt.p[2] = coef * g.m_e * v_phi * y / rho;
+          np.p = [=]() {
+            rng::InvertedCdf<double> v_phi_dist{
+              [=](double v_phi) { return v_phi_cdf(v_phi, rho); }};
+            rng::Normal<double> v_rho_dist{0, 1};
+            double v_phi = v_phi_dist.get();
+            double v_rho = v_rho_dist.get();
+
+            double coef = g.v_e_coef * (g.reverse_v ? -1 : 1) *
+                          (g.reverse_v_half && y < 0 ? -1 : 1);
+            double p_x = 0;
+            double p_y = coef * g.m_e * v_phi * -z / rho;
+            double p_z = coef * g.m_e * v_phi * y / rho;
+            return Double3{p_x, p_y, p_z};
+          };
         } else {
-          setAll(npt.p, 0);
+          np.p = [=]() { return Double3{0, 0, 0}; };
         }
-        setAll(npt.T, g.T_e_coef * parsedData->get_interpolated(COL_TE, rho));
         break;
 
       case KIND_ION:
-        npt.n = getIonDensity(rho);
-        setAll(npt.p, 0);
-        setAll(npt.T, g.T_i);
+        np.n = getIonDensity(rho);
+        np.p = [=]() { return Double3{0, 0, 0}; };
         break;
 
       default: assert(false);
@@ -256,7 +295,7 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
   };
 
   partitionAndSetupParticles(setup_particles, balance, grid_ptr, mprts,
-                             npt_init);
+                             init_np);
 }
 
 // ======================================================================
