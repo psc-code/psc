@@ -84,17 +84,12 @@ struct SetupParticles
 
   int get_n_in_cell(const psc_particle_npt& npt)
   {
+    static distribution::Uniform<float> dist{0, 1};
     if (npt.n == 0) {
       return 0;
     }
     if (fractional_n_particles_per_cell) {
-      int n_prts = npt.n / norm_.cori;
-      float rmndr = npt.n / norm_.cori - n_prts;
-      float ran = random() / ((float)RAND_MAX + 1);
-      if (ran < rmndr) {
-        n_prts++;
-      }
-      return n_prts;
+      return npt.n / norm_.cori + dist.get();
     }
     return npt.n / norm_.cori + .5;
   }
