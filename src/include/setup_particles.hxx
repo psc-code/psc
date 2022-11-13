@@ -156,21 +156,19 @@ struct SetupParticles
     assert(npt.kind >= 0 && npt.kind < kinds_.size());
     double m = kinds_[npt.kind].m;
 
-    double pxi = dist.get(npt.p[0], beta * std::sqrt(npt.T[0] / m));
-    double pyi = dist.get(npt.p[1], beta * std::sqrt(npt.T[1] / m));
-    double pzi = dist.get(npt.p[2], beta * std::sqrt(npt.T[2] / m));
+    Double3 p;
+    for (int i = 0; i < 3; i++)
+      p[i] = dist.get(npt.p[i], beta * std::sqrt(npt.T[i] / m));
 
     if (initial_momentum_gamma_correction) {
-      double gam;
-      if (sqr(pxi) + sqr(pyi) + sqr(pzi) < 1.) {
-        gam = 1. / sqrt(1. - sqr(pxi) - sqr(pyi) - sqr(pzi));
-        pxi *= gam;
-        pyi *= gam;
-        pzi *= gam;
+      double p_squared = sqr(p[0]) + sqr(p[1]) + sqr(p[2]);
+      if (p_squared < 1.) {
+        double gamma = 1. / sqrt(1. - p_squared);
+        p *= gamma;
       }
     }
 
-    return psc::particle::Inject{pos, {pxi, pyi, pzi}, wni, npt.kind, npt.tag};
+    return psc::particle::Inject{pos, p, wni, npt.kind, npt.tag};
   }
 
   // ----------------------------------------------------------------------
