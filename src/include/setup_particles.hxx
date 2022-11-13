@@ -4,6 +4,7 @@
 #include <functional>
 #include <type_traits>
 #include "centering.hxx"
+#include "distribution.hxx"
 
 struct psc_particle_npt
 {
@@ -154,31 +155,21 @@ struct SetupParticles
   psc::particle::Inject setupParticle(const psc_particle_npt& npt, Double3 pos,
                                       double wni)
   {
+    static distribution::Uniform<float> dist(0, 1);
     double beta = norm_.beta;
 
     assert(npt.kind >= 0 && npt.kind < kinds_.size());
     double m = kinds_[npt.kind].m;
 
-    float ran1, ran2, ran3, ran4, ran5, ran6;
-    do {
-      ran1 = random() / ((float)RAND_MAX + 1);
-      ran2 = random() / ((float)RAND_MAX + 1);
-      ran3 = random() / ((float)RAND_MAX + 1);
-      ran4 = random() / ((float)RAND_MAX + 1);
-      ran5 = random() / ((float)RAND_MAX + 1);
-      ran6 = random() / ((float)RAND_MAX + 1);
-    } while (ran1 >= 1.f || ran2 >= 1.f || ran3 >= 1.f || ran4 >= 1.f ||
-             ran5 >= 1.f || ran6 >= 1.f);
-
-    double pxi =
-      npt.p[0] + sqrtf(-2.f * npt.T[0] / m * sqr(beta) * logf(1.0 - ran1)) *
-                   cosf(2.f * M_PI * ran2);
-    double pyi =
-      npt.p[1] + sqrtf(-2.f * npt.T[1] / m * sqr(beta) * logf(1.0 - ran3)) *
-                   cosf(2.f * M_PI * ran4);
-    double pzi =
-      npt.p[2] + sqrtf(-2.f * npt.T[2] / m * sqr(beta) * logf(1.0 - ran5)) *
-                   cosf(2.f * M_PI * ran6);
+    double pxi = npt.p[0] + sqrtf(-2.f * npt.T[0] / m * sqr(beta) *
+                                  logf(1.0 - dist.get())) *
+                              cosf(2.f * M_PI * dist.get());
+    double pyi = npt.p[1] + sqrtf(-2.f * npt.T[1] / m * sqr(beta) *
+                                  logf(1.0 - dist.get())) *
+                              cosf(2.f * M_PI * dist.get());
+    double pzi = npt.p[2] + sqrtf(-2.f * npt.T[2] / m * sqr(beta) *
+                                  logf(1.0 - dist.get())) *
+                              cosf(2.f * M_PI * dist.get());
 
     if (initial_momentum_gamma_correction) {
       double gam;
