@@ -155,21 +155,15 @@ struct SetupParticles
   psc::particle::Inject setupParticle(const psc_particle_npt& npt, Double3 pos,
                                       double wni)
   {
-    static distribution::Uniform<float> dist(0, 1);
+    static distribution::Normal<double> dist;
     double beta = norm_.beta;
 
     assert(npt.kind >= 0 && npt.kind < kinds_.size());
     double m = kinds_[npt.kind].m;
 
-    double pxi = npt.p[0] + sqrtf(-2.f * npt.T[0] / m * sqr(beta) *
-                                  logf(1.0 - dist.get())) *
-                              cosf(2.f * M_PI * dist.get());
-    double pyi = npt.p[1] + sqrtf(-2.f * npt.T[1] / m * sqr(beta) *
-                                  logf(1.0 - dist.get())) *
-                              cosf(2.f * M_PI * dist.get());
-    double pzi = npt.p[2] + sqrtf(-2.f * npt.T[2] / m * sqr(beta) *
-                                  logf(1.0 - dist.get())) *
-                              cosf(2.f * M_PI * dist.get());
+    double pxi = dist.get(npt.p[0], beta * std::sqrt(npt.T[0] / m));
+    double pyi = dist.get(npt.p[1], beta * std::sqrt(npt.T[1] / m));
+    double pzi = dist.get(npt.p[2], beta * std::sqrt(npt.T[2] / m));
 
     if (initial_momentum_gamma_correction) {
       double gam;
