@@ -134,7 +134,7 @@ struct SetupParticles
               npt.kind = pop;
             }
             init_npt(pop, pos, patch, index, npt);
-            auto np = npt_to_np(npt);
+            psc_particle_np np{npt.kind, npt.n, createMaxwellian(npt), npt.tag};
 
             int n_in_cell;
             if (pop != neutralizing_population) {
@@ -160,14 +160,6 @@ struct SetupParticles
                                       double wni)
   {
     return psc::particle::Inject{pos, np.p(), wni, np.kind, np.tag};
-  }
-
-  // ----------------------------------------------------------------------
-  // npt_to_np
-
-  psc_particle_np npt_to_np(const psc_particle_npt& npt)
-  {
-    return psc_particle_np{npt.kind, npt.n, createMaxwellian(npt), npt.tag};
   }
 
   // ----------------------------------------------------------------------
