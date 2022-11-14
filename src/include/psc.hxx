@@ -782,27 +782,28 @@ Psc<PscConfig, Diagnostics, InjectParticles> makePscIntegrator(
 // ======================================================================
 // partitionAndSetupParticles
 
-template <typename SetupParticles, typename Balance, typename Mparticles>
+template <typename SetupParticles, typename Balance, typename Mparticles,
+          typename InitFunc>
 void partitionAndSetupParticles(SetupParticles& setup_particles,
                                 Balance& balance, Grid_t*& grid_ptr,
-                                Mparticles& mprts, InitNptFunc init_npt)
+                                Mparticles& mprts, InitFunc init_np)
 {
-  partitionParticles(setup_particles, balance, grid_ptr, mprts, init_npt);
-  setupParticles(setup_particles, mprts, init_npt);
+  partitionParticles(setup_particles, balance, grid_ptr, mprts, init_np);
+  setupParticles(setup_particles, mprts, init_np);
 }
 
 // ----------------------------------------------------------------------
 // partitionParticles
 
-template <typename SetupParticles, typename Balance, typename Mparticles>
+template <typename SetupParticles, typename Balance, typename Mparticles,
+          typename InitFunc>
 void partitionParticles(SetupParticles& setup_particles, Balance& balance,
-                        Grid_t*& grid_ptr, Mparticles& mprts,
-                        InitNptFunc init_npt)
+                        Grid_t*& grid_ptr, Mparticles& mprts, InitFunc init_np)
 {
   auto comm = grid_ptr->comm();
   mpi_printf(comm, "**** Partitioning...\n");
 
-  auto n_prts_by_patch = setup_particles.partition(*grid_ptr, init_npt);
+  auto n_prts_by_patch = setup_particles.partition(*grid_ptr, init_np);
 
   balance.initial(grid_ptr, n_prts_by_patch);
   // !!! FIXME! grid is now invalid
@@ -815,12 +816,12 @@ void partitionParticles(SetupParticles& setup_particles, Balance& balance,
 // ----------------------------------------------------------------------
 // setupParticles
 
-template <typename SetupParticles, typename Mparticles>
+template <typename SetupParticles, typename Mparticles, typename InitFunc>
 void setupParticles(SetupParticles& setup_particles, Mparticles& mprts,
-                    InitNptFunc init_npt)
+                    InitFunc init_np)
 {
   mpi_printf(MPI_COMM_WORLD, "**** Setting up particles...\n");
-  setup_particles.setupParticles(mprts, init_npt);
+  setup_particles.setupParticles(mprts, init_np);
 }
 
 // ======================================================================
