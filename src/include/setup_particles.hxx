@@ -21,28 +21,6 @@ struct psc_particle_np
   double n;                   ///< density
   std::function<Double3()> p; ///< returns a random momentum
   psc::particle::Tag tag;
-
-  psc_particle_np(const psc_particle_npt& npt, double m, double beta,
-                  bool initial_momentum_gamma_correction)
-    : kind{npt.kind}, n{npt.n}, tag{npt.tag}
-  {
-    p = [=]() {
-      static distribution::Normal<double> dist;
-
-      Double3 p;
-      for (int i = 0; i < 3; i++)
-        p[i] = dist.get(npt.p[i], beta * std::sqrt(npt.T[i] / m));
-
-      if (initial_momentum_gamma_correction) {
-        double p_squared = sqr(p[0]) + sqr(p[1]) + sqr(p[2]);
-        if (p_squared < 1.) {
-          double gamma = 1. / sqrt(1. - p_squared);
-          p *= gamma;
-        }
-      }
-      return p;
-    };
-  };
 };
 
 // ======================================================================
@@ -189,9 +167,34 @@ struct SetupParticles
 
   psc_particle_np npt_to_np(const psc_particle_npt& npt)
   {
+    return psc_particle_np{npt.kind, npt.n, createMaxwellian(npt), npt.tag};
+  }
+
+  // ----------------------------------------------------------------------
+  // createMaxwellian
+
+  std::function<Double3()> createMaxwellian(const psc_particle_npt& npt)
+  {
     assert(npt.kind >= 0 && npt.kind < kinds_.size());
-    return psc_particle_np(npt, kinds_[npt.kind].m, norm_.beta,
-                           initial_momentum_gamma_correction);
+    double beta = norm_.beta;
+    double m = kinds_[npt.kind].m;
+
+    return [=]() {
+      static distribution::Normal<double> dist;
+
+      Double3 p;
+      for (int i = 0; i < 3; i++)
+        p[i] = dist.get(npt.p[i], beta * std::sqrt(npt.T[i] / m));
+
+      if (initial_momentum_gamma_correction) {
+        double p_squared = sqr(p[0]) + sqr(p[1]) + sqr(p[2]);
+        if (p_squared < 1.) {
+          double gamma = 1. / sqrt(1. - p_squared);
+          p *= gamma;
+        }
+      }
+      return p;
+    };
   }
 
   // ----------------------------------------------------------------------
