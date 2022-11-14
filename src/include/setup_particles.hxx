@@ -214,6 +214,11 @@ struct SetupParticles
   // ----------------------------------------------------------------------
   // setup_particles
 
+  void operator()(Mparticles& mprts, InitNpFunc init_np)
+  {
+    setupParticles(mprts, init_np);
+  }
+
   void operator()(Mparticles& mprts, InitNptFunc init_npt)
   {
     setupParticles(mprts, init_npt);
@@ -240,6 +245,11 @@ struct SetupParticles
 
   void setupParticles(Mparticles& mprts, InitNptFunc init_npt)
   {
+    setupParticles(mprts, initNpt_to_initNp(init_npt));
+  }
+
+  void setupParticles(Mparticles& mprts, InitNpFunc init_np)
+  {
     static int pr;
     if (!pr) {
       pr = prof_register("setupp", 1., 0, 0);
@@ -255,7 +265,7 @@ struct SetupParticles
     for (int p = 0; p < mprts.n_patches(); ++p) {
       auto injector = inj[p];
 
-      op_cellwise(grid, p, initNpt_to_initNp(init_npt),
+      op_cellwise(grid, p, init_np,
                   [&](int n_in_cell, psc_particle_np& np, Double3& pos) {
                     for (int cnt = 0; cnt < n_in_cell; cnt++) {
                       real_t wni;
@@ -278,10 +288,15 @@ struct SetupParticles
 
   std::vector<uint> partition(const Grid_t& grid, InitNptFunc init_npt)
   {
+    return partition(grid, initNpt_to_initNp(init_npt));
+  }
+
+  std::vector<uint> partition(const Grid_t& grid, InitNpFunc init_np)
+  {
     std::vector<uint> n_prts_by_patch(grid.n_patches());
 
     for (int p = 0; p < grid.n_patches(); ++p) {
-      op_cellwise(grid, p, initNpt_to_initNp(init_npt),
+      op_cellwise(grid, p, init_np,
                   [&](int n_in_cell, psc_particle_np&, Double3&) {
                     n_prts_by_patch[p] += n_in_cell;
                   });
