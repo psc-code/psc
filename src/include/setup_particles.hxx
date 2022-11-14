@@ -177,12 +177,6 @@ struct SetupParticles
   // ----------------------------------------------------------------------
   // setupParticle
 
-  psc::particle::Inject setupParticle(const psc_particle_npt& npt, Double3 pos,
-                                      double wni)
-  {
-    return setupParticle(npt_to_np(npt), pos, wni);
-  }
-
   psc::particle::Inject setupParticle(const psc_particle_np& np, Double3 pos,
                                       double wni)
   {
@@ -236,7 +230,7 @@ struct SetupParticles
                       } else {
                         wni = npt.n / (n_in_cell * norm_.cori);
                       }
-                      auto prt = setupParticle(npt, pos, wni);
+                      auto prt = setupParticle(npt_to_np(npt), pos, wni);
                       injector(prt);
                     }
                   });
