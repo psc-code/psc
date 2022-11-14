@@ -15,6 +15,36 @@ struct psc_particle_npt
   psc::particle::Tag tag;
 };
 
+struct psc_particle_np
+{
+  int kind;                   ///< particle kind
+  double n;                   ///< density
+  std::function<Double3()> p; ///< returns a random momentum
+  psc::particle::Tag tag;
+
+  psc_particle_np(const psc_particle_npt& npt, double m, double beta,
+                  bool initial_momentum_gamma_correction)
+    : kind{npt.kind}, n{npt.n}, tag{npt.tag}
+  {
+    p = [=]() {
+      static distribution::Normal<double> dist;
+
+      Double3 p;
+      for (int i = 0; i < 3; i++)
+        p[i] = dist.get(npt.p[i], beta * std::sqrt(npt.T[i] / m));
+
+      if (initial_momentum_gamma_correction) {
+        double p_squared = sqr(p[0]) + sqr(p[1]) + sqr(p[2]);
+        if (p_squared < 1.) {
+          double gamma = 1. / sqrt(1. - p_squared);
+          p *= gamma;
+        }
+      }
+      return p;
+    };
+  };
+};
+
 // ======================================================================
 // SetupParticles
 
@@ -150,25 +180,16 @@ struct SetupParticles
   psc::particle::Inject setupParticle(const psc_particle_npt& npt, Double3 pos,
                                       double wni)
   {
-    static distribution::Normal<double> dist;
-    double beta = norm_.beta;
-
     assert(npt.kind >= 0 && npt.kind < kinds_.size());
-    double m = kinds_[npt.kind].m;
+    return setupParticle(psc_particle_np(npt, kinds_[npt.kind].m, norm_.beta,
+                                         initial_momentum_gamma_correction),
+                         pos, wni);
+  }
 
-    Double3 p;
-    for (int i = 0; i < 3; i++)
-      p[i] = dist.get(npt.p[i], beta * std::sqrt(npt.T[i] / m));
-
-    if (initial_momentum_gamma_correction) {
-      double p_squared = sqr(p[0]) + sqr(p[1]) + sqr(p[2]);
-      if (p_squared < 1.) {
-        double gamma = 1. / sqrt(1. - p_squared);
-        p *= gamma;
-      }
-    }
-
-    return psc::particle::Inject{pos, p, wni, npt.kind, npt.tag};
+  psc::particle::Inject setupParticle(const psc_particle_np& np, Double3 pos,
+                                      double wni)
+  {
+    return psc::particle::Inject{pos, np.p(), wni, np.kind, np.tag};
   }
 
   // ----------------------------------------------------------------------
