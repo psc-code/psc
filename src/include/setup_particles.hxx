@@ -112,16 +112,16 @@ struct SetupParticles
   //
   // helper function for partition / particle setup
 
-  int get_n_in_cell(const psc_particle_npt& npt)
+  int get_n_in_cell(const psc_particle_np& np)
   {
     static distribution::Uniform<float> dist{0, 1};
-    if (npt.n == 0) {
+    if (np.n == 0) {
       return 0;
     }
     if (fractional_n_particles_per_cell) {
-      return npt.n / norm_.cori + dist.get();
+      return np.n / norm_.cori + dist.get();
     }
-    return npt.n / norm_.cori + .5;
+    return np.n / norm_.cori + .5;
   }
 
   // ----------------------------------------------------------------------
@@ -156,18 +156,18 @@ struct SetupParticles
               npt.kind = pop;
             }
             init_npt(pop, pos, patch, index, npt);
+            auto np = npt_to_np(npt);
 
             int n_in_cell;
             if (pop != neutralizing_population) {
-              n_in_cell = get_n_in_cell(npt);
-              n_q_in_cell += kinds_[npt.kind].q * n_in_cell;
+              n_in_cell = get_n_in_cell(np);
+              n_q_in_cell += kinds_[np.kind].q * n_in_cell;
             } else {
               // FIXME, should handle the case where not the last population
               // is neutralizing
               assert(neutralizing_population == n_populations_ - 1);
-              n_in_cell = -n_q_in_cell / kinds_[npt.kind].q;
+              n_in_cell = -n_q_in_cell / kinds_[np.kind].q;
             }
-            auto np = npt_to_np(npt);
             op(n_in_cell, np, pos);
           }
         }
