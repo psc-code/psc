@@ -180,16 +180,23 @@ struct SetupParticles
   psc::particle::Inject setupParticle(const psc_particle_npt& npt, Double3 pos,
                                       double wni)
   {
-    assert(npt.kind >= 0 && npt.kind < kinds_.size());
-    return setupParticle(psc_particle_np(npt, kinds_[npt.kind].m, norm_.beta,
-                                         initial_momentum_gamma_correction),
-                         pos, wni);
+    return setupParticle(npt_to_np(npt), pos, wni);
   }
 
   psc::particle::Inject setupParticle(const psc_particle_np& np, Double3 pos,
                                       double wni)
   {
     return psc::particle::Inject{pos, np.p(), wni, np.kind, np.tag};
+  }
+
+  // ----------------------------------------------------------------------
+  // npt_to_np
+
+  psc_particle_np npt_to_np(const psc_particle_npt& npt)
+  {
+    assert(npt.kind >= 0 && npt.kind < kinds_.size());
+    return psc_particle_np(npt, kinds_[npt.kind].m, norm_.beta,
+                           initial_momentum_gamma_correction);
   }
 
   // ----------------------------------------------------------------------
