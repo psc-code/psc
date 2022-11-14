@@ -223,6 +223,7 @@ struct SetupParticles
 
       op_cellwise(grid, p, init_npt,
                   [&](int n_in_cell, psc_particle_npt& npt, Double3& pos) {
+                    auto np = npt_to_np(npt);
                     for (int cnt = 0; cnt < n_in_cell; cnt++) {
                       real_t wni;
                       if (fractional_n_particles_per_cell) {
@@ -230,7 +231,7 @@ struct SetupParticles
                       } else {
                         wni = npt.n / (n_in_cell * norm_.cori);
                       }
-                      auto prt = setupParticle(npt_to_np(npt), pos, wni);
+                      auto prt = setupParticle(np, pos, wni);
                       injector(prt);
                     }
                   });
