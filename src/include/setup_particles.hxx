@@ -127,7 +127,7 @@ struct SetupParticles
   // ----------------------------------------------------------------------
   // op_cellwise
   // Performs a given operation in each cell.
-  // op signature: (int n_in_cell, npt, Double3 pos) -> void
+  // op signature: (int n_in_cell, np, Double3 pos) -> void
 
   template <typename OpFunc>
   void op_cellwise(const Grid_t& grid, int patch, InitNptFunc init_npt,
@@ -167,7 +167,8 @@ struct SetupParticles
               assert(neutralizing_population == n_populations_ - 1);
               n_in_cell = -n_q_in_cell / kinds_[npt.kind].q;
             }
-            op(n_in_cell, npt, pos);
+            auto np = npt_to_np(npt);
+            op(n_in_cell, np, pos);
           }
         }
       }
@@ -222,14 +223,13 @@ struct SetupParticles
       auto injector = inj[p];
 
       op_cellwise(grid, p, init_npt,
-                  [&](int n_in_cell, psc_particle_npt& npt, Double3& pos) {
-                    auto np = npt_to_np(npt);
+                  [&](int n_in_cell, psc_particle_np& np, Double3& pos) {
                     for (int cnt = 0; cnt < n_in_cell; cnt++) {
                       real_t wni;
                       if (fractional_n_particles_per_cell) {
                         wni = 1.;
                       } else {
-                        wni = npt.n / (n_in_cell * norm_.cori);
+                        wni = np.n / (n_in_cell * norm_.cori);
                       }
                       auto prt = setupParticle(np, pos, wni);
                       injector(prt);
@@ -249,7 +249,7 @@ struct SetupParticles
 
     for (int p = 0; p < grid.n_patches(); ++p) {
       op_cellwise(grid, p, init_npt,
-                  [&](int n_in_cell, psc_particle_npt&, Double3&) {
+                  [&](int n_in_cell, psc_particle_np&, Double3&) {
                     n_prts_by_patch[p] += n_in_cell;
                   });
     }
