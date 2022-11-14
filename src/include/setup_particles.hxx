@@ -112,22 +112,22 @@ struct SetupParticles
   //
   // helper function for partition / particle setup
 
-  int get_n_in_cell(const psc_particle_npt& npt)
+  int get_n_in_cell(const psc_particle_np& np)
   {
     static distribution::Uniform<float> dist{0, 1};
-    if (npt.n == 0) {
+    if (np.n == 0) {
       return 0;
     }
     if (fractional_n_particles_per_cell) {
-      return npt.n / norm_.cori + dist.get();
+      return np.n / norm_.cori + dist.get();
     }
-    return npt.n / norm_.cori + .5;
+    return np.n / norm_.cori + .5;
   }
 
   // ----------------------------------------------------------------------
   // op_cellwise
   // Performs a given operation in each cell.
-  // op signature: (int n_in_cell, npt, Double3 pos) -> void
+  // op signature: (int n_in_cell, np, Double3 pos) -> void
 
   template <typename OpFunc>
   void op_cellwise(const Grid_t& grid, int patch, InitNptFunc init_npt,
@@ -156,18 +156,19 @@ struct SetupParticles
               npt.kind = pop;
             }
             init_npt(pop, pos, patch, index, npt);
+            auto np = npt_to_np(npt);
 
             int n_in_cell;
             if (pop != neutralizing_population) {
-              n_in_cell = get_n_in_cell(npt);
-              n_q_in_cell += kinds_[npt.kind].q * n_in_cell;
+              n_in_cell = get_n_in_cell(np);
+              n_q_in_cell += kinds_[np.kind].q * n_in_cell;
             } else {
               // FIXME, should handle the case where not the last population
               // is neutralizing
               assert(neutralizing_population == n_populations_ - 1);
-              n_in_cell = -n_q_in_cell / kinds_[npt.kind].q;
+              n_in_cell = -n_q_in_cell / kinds_[np.kind].q;
             }
-            op(n_in_cell, npt, pos);
+            op(n_in_cell, np, pos);
           }
         }
       }
@@ -222,15 +223,15 @@ struct SetupParticles
       auto injector = inj[p];
 
       op_cellwise(grid, p, init_npt,
-                  [&](int n_in_cell, psc_particle_npt& npt, Double3& pos) {
+                  [&](int n_in_cell, psc_particle_np& np, Double3& pos) {
                     for (int cnt = 0; cnt < n_in_cell; cnt++) {
                       real_t wni;
                       if (fractional_n_particles_per_cell) {
                         wni = 1.;
                       } else {
-                        wni = npt.n / (n_in_cell * norm_.cori);
+                        wni = np.n / (n_in_cell * norm_.cori);
                       }
-                      auto prt = setupParticle(npt_to_np(npt), pos, wni);
+                      auto prt = setupParticle(np, pos, wni);
                       injector(prt);
                     }
                   });
@@ -248,7 +249,7 @@ struct SetupParticles
 
     for (int p = 0; p < grid.n_patches(); ++p) {
       op_cellwise(grid, p, init_npt,
-                  [&](int n_in_cell, psc_particle_npt&, Double3&) {
+                  [&](int n_in_cell, psc_particle_np&, Double3&) {
                     n_prts_by_patch[p] += n_in_cell;
                   });
     }
