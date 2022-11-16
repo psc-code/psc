@@ -97,12 +97,24 @@ struct InvertedCdf : public Distribution<Real>
     Real u = uniform.get();
     int guess_idx = cdf.size() * u;
 
-    while (cdf[guess_idx] > u)
-      --guess_idx;
-    while (cdf[guess_idx] < u)
-      ++guess_idx;
+    while (u < cdf[guess_idx]) {
+      --guess_idx; // decrease cdf
+    }
+    while (u > cdf[guess_idx]) {
+      ++guess_idx; // increase cdf
+    }
 
-    return x[guess_idx];
+    Real d_cdf = cdf[guess_idx] - cdf[guess_idx - 1];
+    if (d_cdf == 0.)
+      return x[guess_idx];
+
+    // now: cdf[guess_idx-1] <= u < cdf[guess_idx]
+    // so linearly interpolate between points
+
+    Real w1 = (cdf[guess_idx] - u) / d_cdf;
+    Real w2 = (u - cdf[guess_idx - 1]) / d_cdf;
+
+    return w1 * x[guess_idx - 1] + w2 * x[guess_idx];
   }
 
 private:
