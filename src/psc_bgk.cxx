@@ -242,6 +242,34 @@ double v_phi_cdf(double v_phi, double rho)
   return m0 / alpha + m1 * (1 - 1 / alpha);
 }
 
+struct pdist
+{
+  pdist(double y, double z, double rho)
+    : y{y}, z{z}, rho{rho}, v_phi_dist{[=](double v_phi) {
+        return v_phi_cdf(v_phi, rho);
+      }}
+  {}
+
+  Double3 operator()()
+  {
+    double v_phi = v_phi_dist.get();
+    double v_rho = v_rho_dist.get();
+
+    double coef = g.v_e_coef * (g.reverse_v ? -1 : 1) *
+                  (g.reverse_v_half && y < 0 ? -1 : 1);
+    double p_x = 0;
+    double p_y = coef * g.m_e * (v_phi * -z + v_rho * y) / rho;
+    double p_z = coef * g.m_e * (v_phi * y + v_rho * z) / rho;
+    return Double3{p_x, p_y, p_z};
+  }
+
+private:
+  double y, z, rho;
+  rng::InvertedCdf<double> v_phi_dist;
+  rng::Normal<double> v_rho_dist{
+    0, 1. / 1000.}; // FIXME magic number 1000 here and elsewhere
+};
+
 // ======================================================================
 // initializeParticles
 
@@ -266,20 +294,7 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
                 getIonDensity(rho) * g.q_i) /
                g.q_e;
         if (rho != 0) {
-          np.p = [=]() {
-            rng::InvertedCdf<double> v_phi_dist{
-              [=](double v_phi) { return v_phi_cdf(v_phi, rho); }};
-            rng::Normal<double> v_rho_dist{0, 1};
-            double v_phi = v_phi_dist.get();
-            double v_rho = v_rho_dist.get();
-
-            double coef = g.v_e_coef * (g.reverse_v ? -1 : 1) *
-                          (g.reverse_v_half && y < 0 ? -1 : 1);
-            double p_x = 0;
-            double p_y = coef * g.m_e * v_phi * -z / rho;
-            double p_z = coef * g.m_e * v_phi * y / rho;
-            return Double3{p_x, p_y, p_z};
-          };
+          np.p = pdist(y, z, rho);
         } else {
           np.p = [=]() { return Double3{0, 0, 0}; };
         }
