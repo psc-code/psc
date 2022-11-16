@@ -1,6 +1,8 @@
-#include <random>
 #include <vector>
 #include <cmath>
+#include "stdlib.h"
+#include <random>
+#include <chrono>
 
 namespace distribution
 {
@@ -21,11 +23,15 @@ struct Distribution
 template <typename Real>
 struct Uniform : public Distribution<Real>
 {
-  Uniform(Real min, Real max) : dist{min, max} {}
-  Real get() override { return dist(generator); }
+  Uniform(Real min, Real max)
+    : dist(min, max),
+      gen(std::chrono::system_clock::now().time_since_epoch().count())
+  {}
+
+  Real get() override { return dist(gen); }
 
 private:
-  std::default_random_engine generator;
+  std::default_random_engine gen;
   std::uniform_real_distribution<Real> dist;
 };
 
@@ -35,30 +41,23 @@ private:
 template <typename Real>
 struct Normal : public Distribution<Real>
 {
-  Normal(Real mean, Real stdev) : mean{mean}, stdev{stdev} {}
+  Normal(Real mean, Real stdev)
+    : dist(mean, stdev),
+      gen(std::chrono::system_clock::now().time_since_epoch().count())
+  {}
   Normal() : Normal(0, 1) {}
 
-  Real get() override { return get(mean, stdev); }
+  Real get() override { return dist(gen); }
+  // FIXME remove me, or make standalone func
   Real get(Real mean, Real stdev)
   {
-    if (has_next_value) {
-      has_next_value = false;
-      return next_value;
-    }
-
-    // Box-Muller transform to generate 2 independent values at once
-    Real r = stdev * std::sqrt(-2 * std::log(1 - uniform.get()));
-    Real theta = uniform.get() * 2 * M_PI;
-
-    next_value = r * std::cos(theta) + mean;
-    return r * std::sin(theta) + mean;
+    // should be possible to pass params to existing dist
+    return std::normal_distribution<Real>(mean, stdev)(gen);
   }
 
 private:
-  Uniform<Real> uniform{0, 1};
-  Real mean, stdev;
-  Real next_value;
-  bool has_next_value;
+  std::default_random_engine gen;
+  std::normal_distribution<Real> dist;
 };
 
 // ======================================================================
