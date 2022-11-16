@@ -68,17 +68,17 @@ template <typename Real>
 struct InvertedCdf : public Distribution<Real>
 {
   InvertedCdf(std::function<Real(Real)> cdf, int n_points = 100,
-              Real eps = .0001)
+              Real eps = .0001, int max_n_iter = 50)
   {
     Real xmin = -1, xmax = 1;
 
-    while (cdf(xmin) < eps)
+    for (int n_iter = 0; cdf(xmin) < eps && n_iter < max_n_iter; ++n_iter)
       xmin += .5;
-    while (cdf(xmin) > eps)
+    for (int n_iter = 0; cdf(xmin) > eps && n_iter < max_n_iter; ++n_iter)
       xmin -= 1 / 16.;
-    while (cdf(xmax) > 1 - eps)
+    for (int n_iter = 0; cdf(xmax) > 1 - eps && n_iter < max_n_iter; ++n_iter)
       xmax -= .5;
-    while (cdf(xmax) < 1 - eps)
+    for (int n_iter = 0; cdf(xmax) < 1 - eps && n_iter < max_n_iter; ++n_iter)
       xmax += 1 / 16.;
 
     x.push_back(xmin);
