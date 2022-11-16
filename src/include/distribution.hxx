@@ -1,4 +1,5 @@
 #include <random>
+#include <vector>
 #include <cmath>
 
 namespace distribution
@@ -58,6 +59,55 @@ private:
   Real mean, stdev;
   Real next_value;
   bool has_next_value;
+};
+
+// ======================================================================
+// InvertedCdf
+
+template <typename Real>
+struct InvertedCdf : public Distribution<Real>
+{
+  InvertedCdf(std::function<Real(Real)> cdf, int n_points = 100,
+              Real eps = .0001)
+  {
+    Real xmin = -1, xmax = 1;
+
+    while (cdf(xmin) < eps)
+      xmin += .5;
+    while (cdf(xmin) > eps)
+      xmin -= 1 / 16.;
+    while (cdf(xmax) > 1 - eps)
+      xmax -= .5;
+    while (cdf(xmax) < 1 - eps)
+      xmax += 1 / 16.;
+
+    x.push_back(xmin);
+    this->cdf.push_back(0);
+    Real dx = (xmax - xmin) / (n_points - 1);
+    for (int i = 1; i < n_points - 1; i++) {
+      x.push_back(xmin + i * dx);
+      this->cdf.push_back(cdf(xmin + i * dx));
+    }
+    x.push_back(xmax);
+    this->cdf.push_back(1);
+  }
+
+  Real get()
+  {
+    Real u = uniform.get();
+    int guess_idx = cdf.size() * u;
+
+    while (cdf[guess_idx] > u)
+      --guess_idx;
+    while (cdf[guess_idx] < u)
+      ++guess_idx;
+
+    return x[guess_idx];
+  }
+
+private:
+  std::vector<Real> cdf, x;
+  Uniform<Real> uniform{0, 1};
 };
 
 } // namespace distribution
