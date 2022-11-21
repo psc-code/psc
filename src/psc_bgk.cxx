@@ -287,6 +287,7 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
     double z = getCoord(crd[2]);
     double rho = sqrt(sqr(y) + sqr(z));
 
+    double Ti = g.T_i;
     switch (kind) {
 
       case KIND_ELECTRON:
@@ -296,13 +297,16 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
         if (rho != 0) {
           np.p = pdist(y, z, rho);
         } else {
-          np.p = [=]() { return Double3{0, 0, 0}; };
+          double Te = parsedData->get_interpolated(COL_TE, 0);
+          np.p = setup_particles.createMaxwellian(
+            {np.kind, np.n, {0, 0, 0}, {Te, Te, Te}, np.tag});
         }
         break;
 
       case KIND_ION:
         np.n = getIonDensity(rho);
-        np.p = [=]() { return Double3{0, 0, 0}; };
+        np.p = setup_particles.createMaxwellian(
+          {np.kind, np.n, {0, 0, 0}, {Ti, Ti, Ti}, np.tag});
         break;
 
       default: assert(false);
