@@ -20,7 +20,7 @@ public:
   // ----------------------------------------------------------------------
   // class iterator
 
-  class iterator : public std::iterator<std::forward_iterator_tag, T>
+  class iterator
   {
     friend class VpicListBase<T>;
 
@@ -29,6 +29,12 @@ public:
     iterator(T* node) : node_(node) {}
 
   public:
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = T;
+    using difference_type = std::ptrdiff_t;
+    using pointer = T*;
+    using reference = T&;
+
     iterator() {}
     bool operator==(const iterator& x) const { return node_ == x.node_; }
     bool operator!=(const iterator& x) const { return node_ != x.node_; }
@@ -47,7 +53,7 @@ public:
   // ----------------------------------------------------------------------
   // class const_iterator
 
-  class const_iterator : public std::iterator<std::input_iterator_tag, T>
+  class const_iterator
   {
     friend class VpicListBase<T>;
 
@@ -55,6 +61,12 @@ public:
     const_iterator(const T* node) : node_(node) {}
 
   public:
+    using iterator_category = std::input_iterator_tag;
+    using value_type = T;
+    using difference_type = std::ptrdiff_t;
+    using pointer = T*;
+    using reference = T&;
+
     const_iterator() {}
     const_iterator(const iterator& x) : node_(x.node_) {}
     bool operator==(const const_iterator& x) const { return node_ == x.node_; }

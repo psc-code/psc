@@ -91,13 +91,13 @@ struct AccessorPatchSimple
   using ParticleProxy = ParticleProxySimple<Mparticles>;
 
   struct iterator
-    : std::iterator<std::forward_iterator_tag,
-                    ParticleProxy,  // value type
-                    ptrdiff_t,      // difference type
-                    ParticleProxy*, // pointer type
-                    ParticleProxy&> // reference type
-
   {
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = ParticleProxy;
+    using difference_type = std::ptrdiff_t;
+    using pointer = ParticleProxy*;
+    using reference = ParticleProxy&;
+
     iterator(AccessorPatchSimple& patch, uint n) : patch_{patch}, n_{n} {}
 
     bool operator==(iterator other) const { return n_ == other.n_; }
@@ -149,13 +149,13 @@ struct ConstAccessorPatchSimple
   using ConstParticleProxy = ConstParticleProxySimple<Mparticles>;
 
   struct const_iterator
-    : std::iterator<std::forward_iterator_tag,
-                    ConstParticleProxy,  // value type
-                    ptrdiff_t,           // difference type
-                    ConstParticleProxy*, // pointer type
-                    ConstParticleProxy&> // reference type
-
   {
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = ConstParticleProxy;
+    using difference_type = std::ptrdiff_t;
+    using pointer = ConstParticleProxy*;
+    using reference = ConstParticleProxy&;
+
     const_iterator(const ConstAccessorPatchSimple& patch, uint n)
       : patch_{patch}, n_{n}
     {}
