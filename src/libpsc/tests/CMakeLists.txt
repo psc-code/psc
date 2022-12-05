@@ -1,6 +1,6 @@
 
 set(MPIEXEC_COMMAND
-  ${MPIEXEC_EXECUTABLE} 
+  ${MPIEXEC_EXECUTABLE}
 #  ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS}
 )
 
@@ -34,6 +34,7 @@ add_psc_test(test_output_particles)
 add_psc_test(test_mfields)
 add_psc_test(test_mfields_cuda)
 add_psc_test(test_bnd)
+add_psc_test(test_deposit)
 add_psc_test(test_push_particles)
 add_psc_test(test_push_particles_2)
 add_psc_test(test_push_fields)
@@ -48,4 +49,3 @@ add_psc_test(TestUniqueIdGenerator)
 if (PSC_HAVE_ADIOS2)
   add_psc_test(test_mfields_io)
 endif()
-
