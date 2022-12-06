@@ -11,6 +11,28 @@
 #include "setup_fields.hxx"
 #include "setup_particles.hxx"
 
+// ---------------------------------------------------------------------------
+// DepositNc
+
+template <typename R>
+class DepositNc
+{
+public:
+  using real_t = R;
+  using real3_t = Vec3<R>;
+
+  template <typename F>
+  void operator()(F& flds, Int3 l, real3_t h)
+  {
+    flds(0, l[1] + 0, l[2] + 0) += (1. - h[1]) * (1. - h[2]);
+    flds(0, l[1] + 0, l[2] + 1) += (1. - h[1]) * h[2];
+    flds(0, l[1] + 1, l[2] + 0) += h[1] * (1. - h[2]);
+    flds(0, l[1] + 1, l[2] + 1) += h[1] * h[2];
+  }
+};
+
+// ---------------------------------------------------------------------------
+
 template <typename T>
 struct DepositTest : ::testing::Test
 {
@@ -32,6 +54,26 @@ struct DepositTest : ::testing::Test
   }
 
   const Grid_t& grid() const { return *grid_; }
+
+  template <typename F>
+  void test_charge(real3_t x, const F& rho_ref)
+  {
+    const real_t eps = 1e-7;
+
+    Int3 l;
+    real3_t h;
+    for (int d = 0; d < 3; d++) {
+      l[d] = fint(x[d]);
+      h[d] = x[d] - l[d];
+    }
+    DepositNc<real_t> deposit;
+
+    auto flds = gt::zeros<real_t>(gt::shape(1, 4, 4));
+    deposit(flds, l, h);
+
+    // std::cout << flds.view(0, _all, _all);
+    EXPECT_LT(gt::norm_linf(flds.view(0, _all, _all) - rho_ref), eps);
+  }
 
   template <typename F>
   void test_deposit(real3_t xm, real3_t xp, Int3 lf, Int3 lg, real3_t vxi,
@@ -75,6 +117,38 @@ struct DepositTest : ::testing::Test
 using DepositTestTypes = ::testing::Types<TestConfig1vbec3dSingleYZ>;
 
 TYPED_TEST_SUITE(DepositTest, DepositTestTypes);
+
+TYPED_TEST(DepositTest, ChargeCenter)
+{
+  using self_type = DepositTest<TypeParam>;
+  using real_t = typename self_type::real_t;
+  using real3_t = typename self_type::real3_t;
+
+  real3_t x = {.5, 1.5, 1.5};
+  // clang-format off
+  gt::gtensor<real_t, 2> rho_ref = {{0., 0.  , 0.  , 0.},
+                                    {0., 0.25, 0.25, 0.},
+                                    {0., 0.25, 0.25, 0.},
+                                    {0., 0.  , 0.  , 0.}};
+  // clang-format on
+  this->test_charge(x, rho_ref);
+}
+
+TYPED_TEST(DepositTest, ChargeLowerLeft)
+{
+  using self_type = DepositTest<TypeParam>;
+  using real_t = typename self_type::real_t;
+  using real3_t = typename self_type::real3_t;
+
+  real3_t x = {.5, 1., 1.};
+  // clang-format off
+  gt::gtensor<real_t, 2> rho_ref = {{0., 0., 0., 0.},
+                                    {0., 1., 0., 0.},
+                                    {0., 0., 0., 0.},
+                                    {0., 0., 0., 0.}};
+  // clang-format on
+  this->test_charge(x, rho_ref);
+}
 
 TYPED_TEST(DepositTest, NotMoving)
 {
