@@ -17,6 +17,18 @@ public:
   using real3_t = Vec3<R>;
 
   template <typename F>
+  void operator()(F& flds, real3_t x)
+  {
+    Int3 l;
+    real3_t h;
+    for (int d = 0; d < 3; d++) {
+      l[d] = fint(x[d]);
+      h[d] = x[d] - l[d];
+    }
+    (*this)(flds, l, h);
+  }
+
+  template <typename F>
   void operator()(F& flds, Int3 l, real3_t h)
   {
     flds(0, l[1] + 0, l[2] + 0) += (1. - h[1]) * (1. - h[2]);
@@ -55,16 +67,10 @@ struct DepositTest : ::testing::Test
   {
     const real_t eps = 1e-7;
 
-    Int3 l;
-    real3_t h;
-    for (int d = 0; d < 3; d++) {
-      l[d] = fint(x[d]);
-      h[d] = x[d] - l[d];
-    }
     DepositNc<real_t> deposit;
 
     auto flds = gt::zeros<real_t>(gt::shape(1, 4, 4));
-    deposit(flds, l, h);
+    deposit(flds, x);
 
     // std::cout << flds.view(0, _all, _all);
     EXPECT_LT(gt::norm_linf(flds.view(0, _all, _all) - rho_ref), eps);
