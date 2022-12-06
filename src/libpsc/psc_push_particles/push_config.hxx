@@ -19,12 +19,7 @@ struct curr_cache_t : fields_t
 {
   using real_t = typename fields_t::value_type;
 
-  curr_cache_t(fields_t& f)
-    : fields_t(
-        {f.ib(),
-         {f.storage().shape(0), f.storage().shape(1), f.storage().shape(2)}},
-        f.storage().shape(3), f.storage())
-  {}
+  curr_cache_t(fields_t& f) : fields_t(f.ib(), f.storage()) {}
 
   void add(int m, int i, int j, int k, real_t val)
   {
