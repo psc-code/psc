@@ -201,6 +201,32 @@ TYPED_TEST(DepositTest, CurrentY)
   this->test_current(xm, xp, lf, lg, vxi, jxi_ref, jyi_ref, jzi_ref);
 }
 
+TYPED_TEST(DepositTest, CurrentYCross)
+{
+  using self_type = DepositTest<TypeParam>;
+  using real_t = typename self_type::real_t;
+  using real3_t = typename self_type::real3_t;
+
+  real3_t xm = {.5, 1.9, 1.}, xp = {.5, 2.1, 1.};
+  Int3 lf = {0, 1, 1}, lg = {0, 1, 1};
+  real3_t vxi = {0., .2, 0.};
+  // clang-format off
+  gt::gtensor<real_t, 2> jxi_ref = {{0., 0., 0., 0.},
+                                    {0., 0., 0., 0.},
+                                    {0., 0., 0., 0.},
+                                    {0., 0., 0., 0.}};
+  gt::gtensor<real_t, 2> jyi_ref = {{0., 0. , 0., 0.},
+                                    {0., 0.1, 0.1, 0.},
+                                    {0., 0. , 0., 0.},
+                                    {0., 0. , 0., 0.}};
+  gt::gtensor<real_t, 2> jzi_ref = {{0., 0., 0., 0.},
+                                    {0., 0., 0., 0.},
+                                    {0., 0., 0., 0.},
+                                    {0., 0., 0., 0.}};
+  // clang-format on
+  this->test_current(xm, xp, lf, lg, vxi, jxi_ref, jyi_ref, jzi_ref);
+}
+
 int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
