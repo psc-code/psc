@@ -62,6 +62,7 @@ struct DepositTest : ::testing::Test
 {
   using real_t = typename T::real_t;
   using real3_t = Vec3<real_t>;
+  using Current = typename T::Current;
 
   DepositTest()
   {
@@ -99,7 +100,6 @@ struct DepositTest : ::testing::Test
   {
     using fields_view_t = SArrayView<real_t, gt::space::host>;
     using fields_t = curr_cache_t<fields_view_t, dim_xyz>;
-    using Current = Current1vbSplit<opt_order_1st, dim_yz, fields_t>;
 
     const real_t eps = std::numeric_limits<real_t>::epsilon();
 
@@ -151,17 +151,24 @@ struct DepositTest : ::testing::Test
   std::unique_ptr<Grid_t> grid_;
 };
 
-template <typename R>
-struct DepositTestConfig
+template <typename R, template <typename, typename, typename> class C>
+class DepositTestConfig
 {
+public:
   using real_t = R;
+
+private:
+  using fields_view_t = SArrayView<real_t, gt::space::host>;
+  using fields_t = curr_cache_t<fields_view_t, dim_xyz>;
+
+public:
+  using Current = C<opt_order_1st, dim_yz, fields_t>;
 };
 
-using DepositTestConfigFloat = DepositTestConfig<float>;
-using DepositTestConfigDouble = DepositTestConfig<double>;
-
 using DepositTestTypes =
-  ::testing::Types<DepositTestConfigFloat, DepositTestConfigDouble>;
+  ::testing::Types< // DepositTestConfig<float, Current1vbSplit>,
+    DepositTestConfig<double, CurrentZigzag>,
+    DepositTestConfig<double, Current1vbSplit>>;
 
 TYPED_TEST_SUITE(DepositTest, DepositTestTypes);
 
