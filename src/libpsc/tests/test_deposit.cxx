@@ -5,11 +5,6 @@
 
 #include "grid.hxx"
 #include "fields.hxx"
-#include "psc_particles_double.h"
-#include "psc_fields_c.h"
-#include "push_particles.hxx"
-#include "setup_fields.hxx"
-#include "setup_particles.hxx"
 
 // ---------------------------------------------------------------------------
 // DepositNc
@@ -36,7 +31,7 @@ public:
 template <typename T>
 struct DepositTest : ::testing::Test
 {
-  using real_t = typename T::Mfields::real_t;
+  using real_t = typename T::real_t;
   using real3_t = Vec3<real_t>;
 
   DepositTest()
@@ -115,7 +110,15 @@ struct DepositTest : ::testing::Test
   std::unique_ptr<Grid_t> grid_;
 };
 
-using DepositTestTypes = ::testing::Types<TestConfig1vbec3dSingleYZ>;
+template <typename R>
+struct DepositTestConfig
+{
+  using real_t = R;
+};
+
+using DepositTestConfigFloat = DepositTestConfig<float>;
+
+using DepositTestTypes = ::testing::Types<DepositTestConfigFloat>;
 
 TYPED_TEST_SUITE(DepositTest, DepositTestTypes);
 
