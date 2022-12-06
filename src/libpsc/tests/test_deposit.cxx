@@ -49,7 +49,9 @@ public:
   auto operator()(const F& flds)
   {
     return (flds.view(_all, _s(1, _), _s(1, _), 1) -
-            flds.view(_all, _s(_, -1), _s(1, _), 1));
+            flds.view(_all, _s(0, -1), _s(1, _), 1)) +
+           (flds.view(_all, _s(1, _), _s(1, _), 2) -
+            flds.view(_all, _s(1, _), _s(0, -1), 2));
   }
 };
 
@@ -239,6 +241,31 @@ TYPED_TEST(DepositTest, CurrentY)
                                     {0., 0. , 0., 0.}};
   gt::gtensor<real_t, 2> jzi_ref = {{0., 0., 0., 0.},
                                     {0., 0., 0., 0.},
+                                    {0., 0., 0., 0.},
+                                    {0., 0., 0., 0.}};
+  // clang-format on
+  this->test_current(xm, xp, vxi, jxi_ref, jyi_ref, jzi_ref);
+}
+
+TYPED_TEST(DepositTest, CurrentZ)
+{
+  using self_type = DepositTest<TypeParam>;
+  using real_t = typename self_type::real_t;
+  using real3_t = typename self_type::real3_t;
+
+  real3_t xm = {.5, 1., 1.3}, xp = {.5, 1., 1.6};
+  real3_t vxi = {0., 0., 3.};
+  // clang-format off
+  gt::gtensor<real_t, 2> jxi_ref = {{0., 0., 0., 0.},
+                                    {0., 0., 0., 0.},
+                                    {0., 0., 0., 0.},
+                                    {0., 0., 0., 0.}};
+  gt::gtensor<real_t, 2> jyi_ref = {{0., 0., 0., 0.},
+                                    {0., 0., 0., 0.},
+                                    {0., 0., 0., 0.},
+                                    {0., 0., 0., 0.}};
+  gt::gtensor<real_t, 2> jzi_ref = {{0., 0., 0., 0.},
+                                    {0., 0.3, 0., 0.},
                                     {0., 0., 0., 0.},
                                     {0., 0., 0., 0.}};
   // clang-format on
