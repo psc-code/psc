@@ -6,6 +6,8 @@
 #include "grid.hxx"
 #include "fields.hxx"
 
+#include <limits>
+
 // ---------------------------------------------------------------------------
 // DepositNc
 
@@ -65,7 +67,7 @@ struct DepositTest : ::testing::Test
   template <typename F>
   void test_charge(real3_t x, const F& rho_ref)
   {
-    const real_t eps = 1e-7;
+    const real_t eps = std::numeric_limits<real_t>::epsilon();
 
     DepositNc<real_t> deposit;
 
@@ -84,7 +86,7 @@ struct DepositTest : ::testing::Test
     using fields_t = curr_cache_t<fields_view_t, dim_xyz>;
     using Current = Current1vbSplit<opt_order_1st, dim_yz, fields_t>;
 
-    const real_t eps = 1e-7;
+    const real_t eps = std::numeric_limits<real_t>::epsilon();
 
     const Grid_t& grid = this->grid();
     Current curr{grid};
@@ -123,8 +125,10 @@ struct DepositTestConfig
 };
 
 using DepositTestConfigFloat = DepositTestConfig<float>;
+using DepositTestConfigDouble = DepositTestConfig<double>;
 
-using DepositTestTypes = ::testing::Types<DepositTestConfigFloat>;
+using DepositTestTypes =
+  ::testing::Types<DepositTestConfigFloat, DepositTestConfigDouble>;
 
 TYPED_TEST_SUITE(DepositTest, DepositTestTypes);
 
