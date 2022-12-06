@@ -117,21 +117,11 @@ struct DepositTest : ::testing::Test
   }
 
   template <typename F>
-  void test_current(real3_t xm, real3_t xp, real3_t vxi, const F& jxi_ref,
-                    const F& jyi_ref, const F& jzi_ref)
+  void check_continuity(real3_t xm, real3_t xp, const F& flds)
   {
     const real_t eps = 2. * std::numeric_limits<real_t>::epsilon();
 
     const Grid_t& grid = this->grid();
-    auto flds = calc_current(xm, xp, vxi);
-
-    EXPECT_LT(gt::norm_linf(flds.view(0, _all, _all, JXI) - jxi_ref), eps)
-      << flds.view(0, _all, _all, JXI);
-    EXPECT_LT(gt::norm_linf(flds.view(0, _all, _all, JYI) - jyi_ref), eps)
-      << flds.view(0, _all, _all, JYI);
-    EXPECT_LT(gt::norm_linf(flds.view(0, _all, _all, JZI) - jzi_ref), eps)
-      << flds.view(0, _all, _all, JZI);
-
     auto rho_m =
       gt::zeros<real_t>(gt::shape(grid.ldims[0], grid.ldims[1], grid.ldims[2]));
     auto rho_p =
@@ -148,30 +138,28 @@ struct DepositTest : ::testing::Test
     EXPECT_LT(gt::norm_linf(d_rho + div_j), eps);
   }
 
-  void test_current(real3_t xm, real3_t xp, real3_t vxi)
+  template <typename F>
+  void test_current(real3_t xm, real3_t xp, real3_t vxi, const F& jxi_ref,
+                    const F& jyi_ref, const F& jzi_ref)
   {
-    using fields_view_t = SArrayView<real_t, gt::space::host>;
-    using fields_t = curr_cache_t<fields_view_t, dim_xyz>;
-
     const real_t eps = 2. * std::numeric_limits<real_t>::epsilon();
 
-    const Grid_t& grid = this->grid();
     auto flds = calc_current(xm, xp, vxi);
 
-    auto rho_m =
-      gt::zeros<real_t>(gt::shape(grid.ldims[0], grid.ldims[1], grid.ldims[2]));
-    auto rho_p =
-      gt::zeros<real_t>(gt::shape(grid.ldims[0], grid.ldims[1], grid.ldims[2]));
-    DepositNc<real_t> deposit;
-    deposit(rho_m, xm);
-    deposit(rho_p, xp);
-    auto d_rho = (rho_p - rho_m).view(_all, _s(1, _), _s(1, _));
+    EXPECT_LT(gt::norm_linf(flds.view(0, _all, _all, JXI) - jxi_ref), eps)
+      << flds.view(0, _all, _all, JXI);
+    EXPECT_LT(gt::norm_linf(flds.view(0, _all, _all, JYI) - jyi_ref), eps)
+      << flds.view(0, _all, _all, JYI);
+    EXPECT_LT(gt::norm_linf(flds.view(0, _all, _all, JZI) - jzi_ref), eps)
+      << flds.view(0, _all, _all, JZI);
 
-    CalcDivNc div;
-    auto div_j = div(flds.view(_all, _all, _all, _s(JXI, JXI + 3)));
-    // std::cout << "d_rho\n" << d_rho.view(0, _all, _all) << "\n";
-    // std::cout << "div_j\n" << div_j.view(0, _all, _all) << "\n";
-    EXPECT_LT(gt::norm_linf(d_rho + div_j), eps);
+    check_continuity(xm, xp, flds);
+  }
+
+  void test_current(real3_t xm, real3_t xp, real3_t vxi)
+  {
+    auto flds = calc_current(xm, xp, vxi);
+    check_continuity(xm, xp, flds);
   }
 
   Int3 ibn = {0, 0, 0};

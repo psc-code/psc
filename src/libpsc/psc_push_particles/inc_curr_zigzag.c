@@ -73,7 +73,7 @@ struct CurrentZigzag
     xm[0] = .5f; // this way, we guarantee that the average position will remain
                  // in the 0th cell
     xp[0] = xm[0] + vxi[0] * dt_ * dxi_[0];
-    //    calc_j2_split_dim_z(curr_cache, qni_wni, xm, xp);
+
     real_t xr[3];
     bool crossed = false;
     for (int d = 0; d < 3; d++) {
