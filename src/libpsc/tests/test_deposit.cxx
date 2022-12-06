@@ -76,7 +76,7 @@ struct DepositTest : ::testing::Test
   }
 
   template <typename F>
-  void test_deposit(real3_t xm, real3_t xp, Int3 lf, Int3 lg, real3_t vxi,
+  void test_current(real3_t xm, real3_t xp, Int3 lf, Int3 lg, real3_t vxi,
                     const F& jxi_ref, const F& jyi_ref, const F& jzi_ref)
   {
     using Mfields = typename T::Mfields;
@@ -150,7 +150,7 @@ TYPED_TEST(DepositTest, ChargeLowerLeft)
   this->test_charge(x, rho_ref);
 }
 
-TYPED_TEST(DepositTest, NotMoving)
+TYPED_TEST(DepositTest, CurrentNotMoving)
 {
   using self_type = DepositTest<TypeParam>;
   using real_t = typename self_type::real_t;
@@ -173,10 +173,10 @@ TYPED_TEST(DepositTest, NotMoving)
                                     {0., 0., 0., 0.},
                                     {0., 0., 0., 0.}};
   // clang-format on
-  this->test_deposit(xm, xp, lf, lg, vxi, jxi_ref, jyi_ref, jzi_ref);
+  this->test_current(xm, xp, lf, lg, vxi, jxi_ref, jyi_ref, jzi_ref);
 }
 
-TYPED_TEST(DepositTest, MovingY)
+TYPED_TEST(DepositTest, CurrentY)
 {
   using self_type = DepositTest<TypeParam>;
   using real_t = typename self_type::real_t;
@@ -199,7 +199,7 @@ TYPED_TEST(DepositTest, MovingY)
                                     {0., 0., 0., 0.},
                                     {0., 0., 0., 0.}};
   // clang-format on
-  this->test_deposit(xm, xp, lf, lg, vxi, jxi_ref, jyi_ref, jzi_ref);
+  this->test_current(xm, xp, lf, lg, vxi, jxi_ref, jyi_ref, jzi_ref);
 }
 
 int main(int argc, char** argv)
