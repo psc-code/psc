@@ -42,6 +42,19 @@ public:
 
 // ---------------------------------------------------------------------------
 
+class CalcDivNc
+{
+public:
+  template <typename F>
+  auto operator()(const F& flds)
+  {
+    return (flds.view(_all, _s(1, _), _s(1, _), 1) -
+            flds.view(_all, _s(_, -1), _s(1, _), 1));
+  }
+};
+
+// ---------------------------------------------------------------------------
+
 template <typename T>
 struct DepositTest : ::testing::Test
 {
@@ -108,9 +121,27 @@ struct DepositTest : ::testing::Test
     // std::cout << "JYI\n" << flds.view(0, _all, _all, JYI) << "\n";
     // std::cout << "JZI\n" << flds.view(0, _all, _all, JZI) << "\n";
 
-    EXPECT_LT(gt::norm_linf(flds.view(0, _all, _all, JXI) - jxi_ref), eps);
-    EXPECT_LT(gt::norm_linf(flds.view(0, _all, _all, JYI) - jyi_ref), eps);
-    EXPECT_LT(gt::norm_linf(flds.view(0, _all, _all, JZI) - jzi_ref), eps);
+    EXPECT_LT(gt::norm_linf(flds.view(0, _all, _all, JXI) - jxi_ref), eps)
+      << flds.view(0, _all, _all, JXI);
+    EXPECT_LT(gt::norm_linf(flds.view(0, _all, _all, JYI) - jyi_ref), eps)
+      << flds.view(0, _all, _all, JYI);
+    EXPECT_LT(gt::norm_linf(flds.view(0, _all, _all, JZI) - jzi_ref), eps)
+      << flds.view(0, _all, _all, JZI);
+
+    auto rho_m =
+      gt::zeros<real_t>(gt::shape(grid.ldims[0], grid.ldims[1], grid.ldims[2]));
+    auto rho_p =
+      gt::zeros<real_t>(gt::shape(grid.ldims[0], grid.ldims[1], grid.ldims[2]));
+    DepositNc<real_t> deposit;
+    deposit(rho_m, xm);
+    deposit(rho_p, xp);
+    auto d_rho = (rho_p - rho_m).view(_all, _s(1, _), _s(1, _));
+
+    CalcDivNc div;
+    auto div_j = div(flds.view(_all, _all, _all, _s(JXI, JXI + 3)));
+    // std::cout << "d_rho\n" << d_rho.view(0, _all, _all) << "\n";
+    // std::cout << "div_j\n" << div_j.view(0, _all, _all) << "\n";
+    EXPECT_LT(gt::norm_linf(d_rho + div_j), eps);
   }
 
   Int3 ibn = {0, 0, 0};
