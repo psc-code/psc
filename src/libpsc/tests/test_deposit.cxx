@@ -79,34 +79,33 @@ struct DepositTest : ::testing::Test
   void test_current(real3_t xm, real3_t xp, Int3 lf, Int3 lg, real3_t vxi,
                     const F& jxi_ref, const F& jyi_ref, const F& jzi_ref)
   {
-    using Mfields = typename T::Mfields;
-    using fields_t = curr_cache_t<typename Mfields::fields_view_t, dim_xyz>;
+    using fields_view_t = SArrayView<real_t, gt::space::host>;
+    using fields_t = curr_cache_t<fields_view_t, dim_xyz>;
     using Current = Current1vbSplit<opt_order_1st, dim_yz, fields_t>;
 
     const real_t eps = 1e-7;
 
-    Current curr{this->grid()};
+    const Grid_t& grid = this->grid();
+    Current curr{grid};
 
-    Mfields mflds{this->grid(), NR_FIELDS, this->ibn};
-    int p = 0;
-    auto flds = mflds[p];
-    ASSERT_EQ(gt::norm_linf(flds.storage()), 0.);
+    auto flds = gt::zeros<real_t>(
+      gt::shape(grid.ldims[0], grid.ldims[1], grid.ldims[2], NR_FIELDS));
+    ASSERT_EQ(gt::norm_linf(flds), 0.);
 
-    typename Current::fields_t J{flds};
+    // FIXME, to_kernel() is a hack to get a gtensor_view
+    auto flds_view = fields_view_t({0, 0, 0}, flds.to_kernel());
+    fields_t J{flds_view};
 
     real_t qni_wni = 1.;
     curr.calc_j(J, xm, xp, lf, lg, qni_wni, vxi);
 
-    // std::cout << "JXI\n" << flds.storage().view(0, _all, _all, JXI) << "\n";
-    // std::cout << "JYI\n" << flds.storage().view(0, _all, _all, JYI) << "\n";
-    // std::cout << "JZI\n" << flds.storage().view(0, _all, _all, JZI) << "\n";
+    // std::cout << "JXI\n" << flds.view(0, _all, _all, JXI) << "\n";
+    // std::cout << "JYI\n" << flds.view(0, _all, _all, JYI) << "\n";
+    // std::cout << "JZI\n" << flds.view(0, _all, _all, JZI) << "\n";
 
-    EXPECT_LT(gt::norm_linf(flds.storage().view(0, _all, _all, JXI) - jxi_ref),
-              eps);
-    EXPECT_LT(gt::norm_linf(flds.storage().view(0, _all, _all, JYI) - jyi_ref),
-              eps);
-    EXPECT_LT(gt::norm_linf(flds.storage().view(0, _all, _all, JZI) - jzi_ref),
-              eps);
+    EXPECT_LT(gt::norm_linf(flds.view(0, _all, _all, JXI) - jxi_ref), eps);
+    EXPECT_LT(gt::norm_linf(flds.view(0, _all, _all, JYI) - jyi_ref), eps);
+    EXPECT_LT(gt::norm_linf(flds.view(0, _all, _all, JZI) - jzi_ref), eps);
   }
 
   Int3 ibn = {0, 0, 0};
