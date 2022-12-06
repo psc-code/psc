@@ -94,21 +94,16 @@ struct DepositTest : ::testing::Test
     EXPECT_LT(gt::norm_linf(flds.view(0, _all, _all) - rho_ref), eps);
   }
 
-  template <typename F>
-  void test_current(real3_t xm, real3_t xp, real3_t vxi, const F& jxi_ref,
-                    const F& jyi_ref, const F& jzi_ref)
+  auto calc_current(real3_t xm, real3_t xp, real3_t vxi)
   {
     using fields_view_t = SArrayView<real_t, gt::space::host>;
     using fields_t = curr_cache_t<fields_view_t, dim_xyz>;
-
-    const real_t eps = std::numeric_limits<real_t>::epsilon();
 
     const Grid_t& grid = this->grid();
     Current curr{grid};
 
     auto flds = gt::zeros<real_t>(
       gt::shape(grid.ldims[0], grid.ldims[1], grid.ldims[2], NR_FIELDS));
-    ASSERT_EQ(gt::norm_linf(flds), 0.);
 
     // FIXME, to_kernel() is a hack to get a gtensor_view
     auto flds_view = fields_view_t({0, 0, 0}, flds.to_kernel());
@@ -118,10 +113,17 @@ struct DepositTest : ::testing::Test
     Int3 lf = {}, lg = {}; // FIXME, those aren't actually used at all in
                            // Current1VbSplit, at least
     curr.calc_j(J, xm, xp, lf, lg, qni_wni, vxi);
+    return flds;
+  }
 
-    // std::cout << "JXI\n" << flds.view(0, _all, _all, JXI) << "\n";
-    // std::cout << "JYI\n" << flds.view(0, _all, _all, JYI) << "\n";
-    // std::cout << "JZI\n" << flds.view(0, _all, _all, JZI) << "\n";
+  template <typename F>
+  void test_current(real3_t xm, real3_t xp, real3_t vxi, const F& jxi_ref,
+                    const F& jyi_ref, const F& jzi_ref)
+  {
+    const real_t eps = 2. * std::numeric_limits<real_t>::epsilon();
+
+    const Grid_t& grid = this->grid();
+    auto flds = calc_current(xm, xp, vxi);
 
     EXPECT_LT(gt::norm_linf(flds.view(0, _all, _all, JXI) - jxi_ref), eps)
       << flds.view(0, _all, _all, JXI);
@@ -129,6 +131,32 @@ struct DepositTest : ::testing::Test
       << flds.view(0, _all, _all, JYI);
     EXPECT_LT(gt::norm_linf(flds.view(0, _all, _all, JZI) - jzi_ref), eps)
       << flds.view(0, _all, _all, JZI);
+
+    auto rho_m =
+      gt::zeros<real_t>(gt::shape(grid.ldims[0], grid.ldims[1], grid.ldims[2]));
+    auto rho_p =
+      gt::zeros<real_t>(gt::shape(grid.ldims[0], grid.ldims[1], grid.ldims[2]));
+    DepositNc<real_t> deposit;
+    deposit(rho_m, xm);
+    deposit(rho_p, xp);
+    auto d_rho = (rho_p - rho_m).view(_all, _s(1, _), _s(1, _));
+
+    CalcDivNc div;
+    auto div_j = div(flds.view(_all, _all, _all, _s(JXI, JXI + 3)));
+    // std::cout << "d_rho\n" << d_rho.view(0, _all, _all) << "\n";
+    // std::cout << "div_j\n" << div_j.view(0, _all, _all) << "\n";
+    EXPECT_LT(gt::norm_linf(d_rho + div_j), eps);
+  }
+
+  void test_current(real3_t xm, real3_t xp, real3_t vxi)
+  {
+    using fields_view_t = SArrayView<real_t, gt::space::host>;
+    using fields_t = curr_cache_t<fields_view_t, dim_xyz>;
+
+    const real_t eps = 2. * std::numeric_limits<real_t>::epsilon();
+
+    const Grid_t& grid = this->grid();
+    auto flds = calc_current(xm, xp, vxi);
 
     auto rho_m =
       gt::zeros<real_t>(gt::shape(grid.ldims[0], grid.ldims[1], grid.ldims[2]));
@@ -156,19 +184,15 @@ class DepositTestConfig
 {
 public:
   using real_t = R;
-
-private:
   using fields_view_t = SArrayView<real_t, gt::space::host>;
   using fields_t = curr_cache_t<fields_view_t, dim_xyz>;
-
-public:
   using Current = C<opt_order_1st, dim_yz, fields_t>;
 };
 
 using DepositTestTypes =
   ::testing::Types< // DepositTestConfig<float, Current1vbSplit>,
-    DepositTestConfig<double, CurrentZigzag>,
-    DepositTestConfig<double, Current1vbSplit>>;
+    DepositTestConfig<double, Current1vbSplit>,
+    DepositTestConfig<double, CurrentZigzag>>;
 
 TYPED_TEST_SUITE(DepositTest, DepositTestTypes);
 
@@ -330,6 +354,32 @@ TYPED_TEST(DepositTest, CurrentYCross)
   this->test_current(xm, xp, vxi, jxi_ref, jyi_ref, jzi_ref);
 }
 
+TYPED_TEST(DepositTest, CurrentYCrossShift)
+{
+  using self_type = DepositTest<TypeParam>;
+  using real_t = typename self_type::real_t;
+  using real3_t = typename self_type::real3_t;
+
+  real3_t xm = {.5, 1.9, 1.3}, xp = {.5, 2.1, 1.3};
+  Int3 lf = {0, 1, 1}, lg = {0, 1, 1};
+  real3_t vxi = {0., .2, 0.};
+  // clang-format off
+  gt::gtensor<real_t, 2> jxi_ref = {{0., 0., 0., 0.},
+                                    {0., 0., 0., 0.},
+                                    {0., 0., 0., 0.},
+                                    {0., 0., 0., 0.}};
+  gt::gtensor<real_t, 2> jyi_ref = {{0., 0.  , 0.  , 0.},
+                                    {0., 0.07, 0.07, 0.},
+                                    {0., 0.03, 0.03, 0.},
+                                    {0., 0.  , 0.  , 0.}};
+  gt::gtensor<real_t, 2> jzi_ref = {{0., 0., 0., 0.},
+                                    {0., 0., 0., 0.},
+                                    {0., 0., 0., 0.},
+                                    {0., 0., 0., 0.}};
+  // clang-format on
+  this->test_current(xm, xp, vxi, jxi_ref, jyi_ref, jzi_ref);
+}
+
 TYPED_TEST(DepositTest, CurrentXY)
 {
   using self_type = DepositTest<TypeParam>;
@@ -354,6 +404,64 @@ TYPED_TEST(DepositTest, CurrentXY)
                                     {0., 0.  , 0.  , 0.}};
   // clang-format on
   this->test_current(xm, xp, vxi, jxi_ref, jyi_ref, jzi_ref);
+}
+
+TYPED_TEST(DepositTest, CurrentXYCrossShift)
+{
+  using self_type = DepositTest<TypeParam>;
+  using real_t = typename self_type::real_t;
+  using real3_t = typename self_type::real3_t;
+
+  real3_t xm = {.5, 1.9, 1.3}, xp = {.5, 2.1, 1.4};
+  Int3 lf = {0, 1, 1}, lg = {0, 1, 1};
+  real3_t vxi = {0., .2, 0.};
+  // clang-format off
+  gt::gtensor<real_t, 2> jxi_ref = {{0., 0., 0., 0.},
+                                    {0., 0., 0., 0.},
+                                    {0., 0., 0., 0.},
+                                    {0., 0., 0., 0.}};
+  gt::gtensor<real_t, 2> jyi_ref = {{0., 0.  , 0.  , 0.},
+                                    {0., 0.0675, 0.0625, 0.},
+                                    {0., 0.0325, 0.0375, 0.},
+                                    {0., 0.  , 0.  , 0.}};
+  gt::gtensor<real_t, 2> jzi_ref = {{0., 0., 0., 0.},
+                                    {0., 0.0025, 0.095, 0.0025},
+                                    {0., 0., 0., 0.},
+                                    {0., 0., 0., 0.}};
+  // clang-format on
+  this->test_current(xm, xp, vxi, jxi_ref, jyi_ref, jzi_ref);
+}
+
+TYPED_TEST(DepositTest, CurrentXYCrossXY)
+{
+  using self_type = DepositTest<TypeParam>;
+  using real_t = typename self_type::real_t;
+  using real3_t = typename self_type::real3_t;
+
+  real3_t xm = {.5, 1.9, 1.6}, xp = {.5, 2.1, 2.2};
+  Int3 lf = {0, 1, 1}, lg = {0, 1, 1};
+  real3_t vxi = {0., .2, 0.};
+  if (std::is_same<typename TypeParam::Current,
+                   Current1vbSplit<opt_order_1st, dim_yz,
+                                   typename TypeParam::fields_t>>::value) {
+    // clang-format off
+    gt::gtensor<real_t, 2> jxi_ref = {{0., 0., 0., 0.},
+                                      {0., 0., 0., 0.},
+                                      {0., 0., 0., 0.},
+                                      {0., 0., 0., 0.}};
+    gt::gtensor<real_t, 2> jyi_ref = {{0., 0.  , 0.  , 0.},
+                                      {0., 0.025, 1./600., 0.},
+                                      {0., 0.075, .09+1./600, 0.},
+                                      {0., 0., 2./300., 0.}};
+    gt::gtensor<real_t, 2> jzi_ref = {{0., 0., 0., 0.},
+                                      {0., 0.015, 0.38+1/300., 1./600.},
+                                      {0., 0., 0.18 + 2./300., 4./300.},
+                                      {0., 0., 0., 0.}};
+    // clang-format on
+    this->test_current(xm, xp, vxi, jxi_ref, jyi_ref, jzi_ref);
+  } else { // CurrentZigzag
+    this->test_current(xm, xp, vxi);
+  }
 }
 
 int main(int argc, char** argv)
