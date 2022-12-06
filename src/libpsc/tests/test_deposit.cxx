@@ -76,8 +76,8 @@ struct DepositTest : ::testing::Test
   }
 
   template <typename F>
-  void test_current(real3_t xm, real3_t xp, Int3 lf, Int3 lg, real3_t vxi,
-                    const F& jxi_ref, const F& jyi_ref, const F& jzi_ref)
+  void test_current(real3_t xm, real3_t xp, real3_t vxi, const F& jxi_ref,
+                    const F& jyi_ref, const F& jzi_ref)
   {
     using fields_view_t = SArrayView<real_t, gt::space::host>;
     using fields_t = curr_cache_t<fields_view_t, dim_xyz>;
@@ -97,6 +97,8 @@ struct DepositTest : ::testing::Test
     fields_t J{flds_view};
 
     real_t qni_wni = 1.;
+    Int3 lf = {}, lg = {}; // FIXME, those aren't actually used at all in
+                           // Current1VbSplit, at least
     curr.calc_j(J, xm, xp, lf, lg, qni_wni, vxi);
 
     // std::cout << "JXI\n" << flds.view(0, _all, _all, JXI) << "\n";
@@ -156,7 +158,6 @@ TYPED_TEST(DepositTest, CurrentNotMoving)
   using real3_t = typename self_type::real3_t;
 
   real3_t xm = {.5, 1., 1.}, xp = {.5, 1., 1.};
-  Int3 lf = {0, 1, 1}, lg = {0, 1, 1};
   real3_t vxi = {0., 0., 0.};
   // clang-format off
   gt::gtensor<real_t, 2> jxi_ref = {{0., 0., 0., 0.},
@@ -172,7 +173,7 @@ TYPED_TEST(DepositTest, CurrentNotMoving)
                                     {0., 0., 0., 0.},
                                     {0., 0., 0., 0.}};
   // clang-format on
-  this->test_current(xm, xp, lf, lg, vxi, jxi_ref, jyi_ref, jzi_ref);
+  this->test_current(xm, xp, vxi, jxi_ref, jyi_ref, jzi_ref);
 }
 
 TYPED_TEST(DepositTest, CurrentY)
@@ -182,7 +183,6 @@ TYPED_TEST(DepositTest, CurrentY)
   using real3_t = typename self_type::real3_t;
 
   real3_t xm = {.5, 1., 1.}, xp = {.5, 1.2, 1.};
-  Int3 lf = {0, 1, 1}, lg = {0, 1, 1};
   real3_t vxi = {0., .2, 0.};
   // clang-format off
   gt::gtensor<real_t, 2> jxi_ref = {{0., 0., 0., 0.},
@@ -198,7 +198,7 @@ TYPED_TEST(DepositTest, CurrentY)
                                     {0., 0., 0., 0.},
                                     {0., 0., 0., 0.}};
   // clang-format on
-  this->test_current(xm, xp, lf, lg, vxi, jxi_ref, jyi_ref, jzi_ref);
+  this->test_current(xm, xp, vxi, jxi_ref, jyi_ref, jzi_ref);
 }
 
 TYPED_TEST(DepositTest, CurrentYCross)
@@ -224,7 +224,7 @@ TYPED_TEST(DepositTest, CurrentYCross)
                                     {0., 0., 0., 0.},
                                     {0., 0., 0., 0.}};
   // clang-format on
-  this->test_current(xm, xp, lf, lg, vxi, jxi_ref, jyi_ref, jzi_ref);
+  this->test_current(xm, xp, vxi, jxi_ref, jyi_ref, jzi_ref);
 }
 
 int main(int argc, char** argv)
