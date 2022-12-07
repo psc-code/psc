@@ -541,6 +541,39 @@ TYPED_TEST(DepositTest, CurrentX)
   this->test_current(xm, xp, vxi);
 }
 
+TYPED_TEST(DepositTest, CurrentXY)
+{
+  using self_type = DepositTest<TypeParam>;
+  using real_t = typename self_type::real_t;
+  using real3_t = typename self_type::real3_t;
+
+  real3_t xm = {1.1, 1.2, 1.3}, xp = {1.4, 1.8, 1.3};
+  real3_t vxi = {.3, .6, 0.};
+  this->test_current(xm, xp, vxi);
+}
+
+TYPED_TEST(DepositTest, CurrentXYZ)
+{
+  using self_type = DepositTest<TypeParam>;
+  using real_t = typename self_type::real_t;
+  using real3_t = typename self_type::real3_t;
+
+  real3_t xm = {1.1, 1.2, 1.3}, xp = {1.4, 1.6, 1.8};
+  real3_t vxi = {.3, .4, .5};
+  this->test_current(xm, xp, vxi);
+}
+
+TYPED_TEST(DepositTest, CurrentXYZCrossXYZ)
+{
+  using self_type = DepositTest<TypeParam>;
+  using real_t = typename self_type::real_t;
+  using real3_t = typename self_type::real3_t;
+
+  real3_t xm = {1.9, 1.8, 1.7}, xp = {2.2, 2.4, 2.6};
+  real3_t vxi = {.3, .6, .9};
+  this->test_current(xm, xp, vxi);
+}
+
 int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
