@@ -233,6 +233,7 @@ using DepositTestTypes =
   ::testing::Types< // DepositTestConfig<float, dim_yz, Current1vbSplit>,
     DepositTestConfig<double, dim_yz, Current1vbSplit>,
     DepositTestConfig<double, dim_yz, CurrentZigzag>,
+    DepositTestConfig<double, dim_xyz, CurrentZigzag>,
     DepositTestConfig<double, dim_xyz, Current1vbSplit>>;
 
 TYPED_TEST_SUITE(DepositTest, DepositTestTypes);

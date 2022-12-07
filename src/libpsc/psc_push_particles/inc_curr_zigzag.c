@@ -28,7 +28,7 @@ struct CurrentZigzag
     real_t dx[3] = {xp[0] - xm[0], xp[1] - xm[1], xp[2] - xm[2]};
     real_t xa[3] = {.5f * (xm[0] + xp[0]), .5f * (xm[1] + xp[1]),
                     .5f * (xm[2] + xp[2])};
-    real_t h = (1.f / 12.f) * dx[0] * dx[1] * dx[2];
+    real_t h = (1.f / real_t(12.f)) * dx[0] * dx[1] * dx[2];
 
     int i[3];
     for (int d = 0; d < 3; d++) {
@@ -59,6 +59,25 @@ struct CurrentZigzag
   }
 
   void calc_j2_one_cell(fields_t curr_cache, real_t qni_wni, real_t xm[3],
+                        real_t xp[3], dim_xyz tag_dim)
+  {
+    real_t dx[3] = {xp[0] - xm[0], xp[1] - xm[1], xp[2] - xm[2]};
+    real_t xa[3] = {.5f * (xm[0] + xp[0]), .5f * (xm[1] + xp[1]),
+                    .5f * (xm[2] + xp[2])};
+    real_t h = (1.f / real_t(12.f)) * dx[0] * dx[1] * dx[2];
+
+    int i[3] = {};
+    for (int d = 0; d < 3; d++) {
+      i[d] = fint(xa[d]);
+      xa[d] -= i[d];
+    }
+
+    int ci0[3] = {};
+    real_t fnq[3] = {qni_wni * fnqxs_, qni_wni * fnqys_, qni_wni * fnqzs_};
+    deposit(curr_cache, i, fnq, dx, xa, h, ci0);
+  }
+
+  void calc_j2_one_cell(fields_t curr_cache, real_t qni_wni, real_t xm[3],
                         real_t xp[3])
   {
     calc_j2_one_cell(curr_cache, qni_wni, xm, xp, Dim{});
@@ -74,6 +93,31 @@ struct CurrentZigzag
                  // in the 0th cell
     xp[0] = xm[0] + vxi[0] * dt_ * dxi_[0];
 
+    real_t xr[3];
+    bool crossed = false;
+    for (int d = 0; d < 3; d++) {
+      int im = fint(xm[d]), ip = fint(xp[d]);
+      if (im == ip) {
+        xr[d] = .5 * (xm[d] + xp[d]);
+      } else {
+        xr[d] = std::max(im, ip);
+        crossed = true;
+      }
+    }
+    if (crossed) { // could choose this path always
+      calc_j2_one_cell(curr_cache, qni_wni, xm, xr);
+      calc_j2_one_cell(curr_cache, qni_wni, xr, xp);
+    } else {
+      calc_j2_one_cell(curr_cache, qni_wni, xm, xp);
+    }
+  }
+
+  // ----------------------------------------------------------------------
+  // dim_xyz
+
+  void calc_j(fields_t curr_cache, real_t* xm, real_t* xp, int* lf, int* lg,
+              real_t qni_wni, real_t* vxi, dim_xyz tag)
+  {
     real_t xr[3];
     bool crossed = false;
     for (int d = 0; d < 3; d++) {
