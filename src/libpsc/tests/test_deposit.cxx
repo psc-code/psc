@@ -127,8 +127,7 @@ struct DepositTest : ::testing::Test
     using fields_view_t = SArrayView<real_t, gt::space::host>;
     using fields_t = curr_cache_t<fields_view_t, dim_xyz>;
 
-    const Grid_t& grid = this->grid();
-    Current curr{grid};
+    Current curr{grid()};
 
     auto flds =
       gt::zeros<real_t>(gt::shape(ldims_[0], ldims_[1], ldims_[2], NR_FIELDS));
@@ -149,7 +148,6 @@ struct DepositTest : ::testing::Test
   {
     const real_t eps = 2. * std::numeric_limits<real_t>::epsilon();
 
-    const Grid_t& grid = this->grid();
     auto rho_m = gt::zeros<real_t>(ldims_);
     auto rho_p = gt::zeros<real_t>(ldims_);
     DepositNc<real_t, dim_t> deposit;
