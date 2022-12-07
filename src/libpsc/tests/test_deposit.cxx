@@ -425,7 +425,7 @@ TYPED_TEST(DepositTest, CurrentYCrossShift)
   this->test_current(xm, xp, vxi, jxi_ref, jyi_ref, jzi_ref);
 }
 
-TYPED_TEST(DepositTest, CurrentXY)
+TYPED_TEST(DepositTest, CurrentYZ)
 {
   using self_type = DepositTest<TypeParam>;
   using real_t = typename self_type::real_t;
@@ -451,7 +451,7 @@ TYPED_TEST(DepositTest, CurrentXY)
   this->test_current(xm, xp, vxi, jxi_ref, jyi_ref, jzi_ref);
 }
 
-TYPED_TEST(DepositTest, CurrentXYCrossShift)
+TYPED_TEST(DepositTest, CurrentYZCrossShift)
 {
   using self_type = DepositTest<TypeParam>;
   using real_t = typename self_type::real_t;
@@ -477,7 +477,7 @@ TYPED_TEST(DepositTest, CurrentXYCrossShift)
   this->test_current(xm, xp, vxi, jxi_ref, jyi_ref, jzi_ref);
 }
 
-TYPED_TEST(DepositTest, CurrentXYCrossXY)
+TYPED_TEST(DepositTest, CurrentYZCrossYZ)
 {
   using self_type = DepositTest<TypeParam>;
   using real_t = typename self_type::real_t;
