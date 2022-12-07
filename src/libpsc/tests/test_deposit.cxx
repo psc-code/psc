@@ -11,12 +11,13 @@
 // ---------------------------------------------------------------------------
 // DepositNc
 
-template <typename R>
+template <typename R, typename D>
 class DepositNc
 {
 public:
   using real_t = R;
   using real3_t = Vec3<R>;
+  using dim_t = D;
 
   template <typename F>
   void operator()(F& flds, real3_t x)
@@ -31,12 +32,18 @@ public:
   }
 
   template <typename F>
-  void operator()(F& flds, Int3 l, real3_t h)
+  void operator()(F& flds, Int3 l, real3_t h, dim_yz tag)
   {
     flds(0, l[1] + 0, l[2] + 0) += (1. - h[1]) * (1. - h[2]);
     flds(0, l[1] + 0, l[2] + 1) += (1. - h[1]) * h[2];
     flds(0, l[1] + 1, l[2] + 0) += h[1] * (1. - h[2]);
     flds(0, l[1] + 1, l[2] + 1) += h[1] * h[2];
+  }
+
+  template <typename F>
+  void operator()(F& flds, Int3 l, real3_t h)
+  {
+    (*this)(flds, l, h, dim_t{});
   }
 };
 
@@ -62,6 +69,7 @@ struct DepositTest : ::testing::Test
 {
   using real_t = typename T::real_t;
   using real3_t = Vec3<real_t>;
+  using dim_t = typename T::dim_t;
   using Current = typename T::Current;
 
   DepositTest()
@@ -85,7 +93,7 @@ struct DepositTest : ::testing::Test
   {
     const real_t eps = std::numeric_limits<real_t>::epsilon();
 
-    DepositNc<real_t> deposit;
+    DepositNc<real_t, dim_t> deposit;
 
     auto flds = gt::zeros<real_t>(gt::shape(1, 4, 4));
     deposit(flds, x);
@@ -126,7 +134,7 @@ struct DepositTest : ::testing::Test
       gt::zeros<real_t>(gt::shape(grid.ldims[0], grid.ldims[1], grid.ldims[2]));
     auto rho_p =
       gt::zeros<real_t>(gt::shape(grid.ldims[0], grid.ldims[1], grid.ldims[2]));
-    DepositNc<real_t> deposit;
+    DepositNc<real_t, dim_t> deposit;
     deposit(rho_m, xm);
     deposit(rho_p, xp);
     auto d_rho = (rho_p - rho_m).view(_all, _s(1, _), _s(1, _));
@@ -167,20 +175,22 @@ struct DepositTest : ::testing::Test
   std::unique_ptr<Grid_t> grid_;
 };
 
-template <typename R, template <typename, typename, typename> class C>
+template <typename R, typename D,
+          template <typename, typename, typename> class C>
 class DepositTestConfig
 {
 public:
   using real_t = R;
+  using dim_t = D;
   using fields_view_t = SArrayView<real_t, gt::space::host>;
   using fields_t = curr_cache_t<fields_view_t, dim_xyz>;
   using Current = C<opt_order_1st, dim_yz, fields_t>;
 };
 
 using DepositTestTypes =
-  ::testing::Types< // DepositTestConfig<float, Current1vbSplit>,
-    DepositTestConfig<double, Current1vbSplit>,
-    DepositTestConfig<double, CurrentZigzag>>;
+  ::testing::Types< // DepositTestConfig<float, dim_yz, Current1vbSplit>,
+    DepositTestConfig<double, dim_yz, Current1vbSplit>,
+    DepositTestConfig<double, dim_yz, CurrentZigzag>>;
 
 TYPED_TEST_SUITE(DepositTest, DepositTestTypes);
 
