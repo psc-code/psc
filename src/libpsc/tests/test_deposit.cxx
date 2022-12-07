@@ -63,16 +63,36 @@ public:
 
 // ---------------------------------------------------------------------------
 
+template <typename D>
 class CalcDivNc
 {
 public:
+  using dim_t = D;
+
   template <typename F>
-  auto operator()(const F& flds)
+  auto operator()(const F& flds, dim_yz tag)
   {
     return (flds.view(_all, _s(1, _), _s(1, _), 1) -
             flds.view(_all, _s(0, -1), _s(1, _), 1)) +
            (flds.view(_all, _s(1, _), _s(1, _), 2) -
             flds.view(_all, _s(1, _), _s(0, -1), 2));
+  }
+
+  template <typename F>
+  auto operator()(const F& flds, dim_xyz tag)
+  {
+    return (flds.view(_s(1, _), _s(1, _), _s(1, _), 0) -
+            flds.view(_s(0, -1), _s(1, _), _s(1, _), 0)) +
+           (flds.view(_s(1, _), _s(1, _), _s(1, _), 1) -
+            flds.view(_s(1, _), _s(0, -1), _s(1, _), 1)) +
+           (flds.view(_s(1, _), _s(1, _), _s(1, _), 2) -
+            flds.view(_s(1, _), _s(1, _), _s(0, -1), 2));
+  }
+
+  template <typename F>
+  auto operator()(const F& flds)
+  {
+    return (*this)(flds, dim_t{});
   }
 };
 
@@ -124,8 +144,8 @@ struct DepositTest : ::testing::Test
 
   auto calc_current(real3_t xm, real3_t xp, real3_t vxi)
   {
-    using fields_view_t = SArrayView<real_t, gt::space::host>;
-    using fields_t = curr_cache_t<fields_view_t, dim_xyz>;
+    using fields_view_t = typename T::fields_view_t;
+    using fields_t = typename T::fields_t;
 
     Current curr{grid()};
 
@@ -153,9 +173,14 @@ struct DepositTest : ::testing::Test
     DepositNc<real_t, dim_t> deposit;
     deposit(rho_m, xm);
     deposit(rho_p, xp);
-    auto d_rho = (rho_p - rho_m).view(_all, _s(1, _), _s(1, _));
+    gt::gtensor<real_t, 3> d_rho;
+    if (std::is_same_v<dim_t, dim_yz>) {
+      d_rho = (rho_p - rho_m).view(_all, _s(1, _), _s(1, _));
+    } else {
+      d_rho = (rho_p - rho_m).view(_s(1, _), _s(1, _), _s(1, _));
+    };
 
-    CalcDivNc div;
+    CalcDivNc<dim_t> div;
     auto div_j = div(flds.view(_all, _all, _all, _s(JXI, JXI + 3)));
     // std::cout << "d_rho\n" << d_rho.view(0, _all, _all) << "\n";
     // std::cout << "div_j\n" << div_j.view(0, _all, _all) << "\n";
@@ -183,9 +208,6 @@ struct DepositTest : ::testing::Test
 
   void test_current(real3_t xm, real3_t xp, real3_t vxi)
   {
-    if (!std::is_same_v<dim_t, dim_yz>) {
-      return;
-    }
     auto flds = calc_current(xm, xp, vxi);
     check_continuity(xm, xp, flds);
   }
@@ -204,7 +226,7 @@ public:
   using dim_t = D;
   using fields_view_t = SArrayView<real_t, gt::space::host>;
   using fields_t = curr_cache_t<fields_view_t, dim_xyz>;
-  using Current = C<opt_order_1st, dim_yz, fields_t>;
+  using Current = C<opt_order_1st, dim_t, fields_t>;
 };
 
 using DepositTestTypes =
@@ -484,7 +506,6 @@ TYPED_TEST(DepositTest, CurrentYZCrossYZ)
   using real3_t = typename self_type::real3_t;
 
   real3_t xm = {.5, 1.9, 1.6}, xp = {.5, 2.1, 2.2};
-  Int3 lf = {0, 1, 1}, lg = {0, 1, 1};
   real3_t vxi = {0., .2, 0.};
   if (std::is_same_v<
         typename TypeParam::Current,
@@ -507,6 +528,17 @@ TYPED_TEST(DepositTest, CurrentYZCrossYZ)
   } else { // CurrentZigzag
     this->test_current(xm, xp, vxi);
   }
+}
+
+TYPED_TEST(DepositTest, CurrentX)
+{
+  using self_type = DepositTest<TypeParam>;
+  using real_t = typename self_type::real_t;
+  using real3_t = typename self_type::real3_t;
+
+  real3_t xm = {1.3, 1., 1.}, xp = {1.6, 1., 1.};
+  real3_t vxi = {.3, 0., 0.};
+  this->test_current(xm, xp, vxi);
 }
 
 int main(int argc, char** argv)
