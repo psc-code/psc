@@ -34,10 +34,24 @@ public:
   template <typename F>
   void operator()(F& flds, Int3 l, real3_t h, dim_yz tag)
   {
-    flds(0, l[1] + 0, l[2] + 0) += (1. - h[1]) * (1. - h[2]);
-    flds(0, l[1] + 0, l[2] + 1) += (1. - h[1]) * h[2];
-    flds(0, l[1] + 1, l[2] + 0) += h[1] * (1. - h[2]);
+    flds(0, l[1] + 0, l[2] + 0) += (1.f - h[1]) * (1.f - h[2]);
+    flds(0, l[1] + 1, l[2] + 0) += h[1] * (1.f - h[2]);
+    flds(0, l[1] + 0, l[2] + 1) += (1.f - h[1]) * h[2];
     flds(0, l[1] + 1, l[2] + 1) += h[1] * h[2];
+  }
+
+  template <typename F>
+  void operator()(F& flds, Int3 l, real3_t h, dim_xyz tag)
+  {
+    flds(l[0] + 0, l[1] + 0, l[2] + 0) +=
+      (1.f - h[0]) * (1.f - h[1]) * (1.f - h[2]);
+    flds(l[0] + 1, l[1] + 0, l[2] + 0) += h[0] * (1.f - h[1]) * (1.f - h[2]);
+    flds(l[0] + 0, l[1] + 1, l[2] + 0) += (1.f - h[0]) * h[1] * (1.f - h[2]);
+    flds(l[0] + 1, l[1] + 1, l[2] + 0) += h[0] * h[1] * (1.f - h[2]);
+    flds(l[0] + 0, l[1] + 0, l[2] + 1) += (1.f - h[0]) * (1.f - h[1]) * h[2];
+    flds(l[0] + 1, l[1] + 0, l[2] + 1) += h[0] * (1.f - h[1]) * h[2];
+    flds(l[0] + 0, l[1] + 1, l[2] + 1) += (1.f - h[0]) * h[1] * h[2];
+    flds(l[0] + 1, l[1] + 1, l[2] + 1) += h[0] * h[1] * h[2];
   }
 
   template <typename F>
@@ -75,8 +89,14 @@ struct DepositTest : ::testing::Test
   DepositTest()
   {
     double dt = 1.;
-    Int3 gdims = {1, 4, 4};
-    Double3 length = {1., 4., 4.};
+    Int3 gdims = {4, 4, 4};
+    if (dim_t::InvarX::value) {
+      gdims[0] = 1;
+    }
+    Double3 length;
+    for (int d = 0; d < 3; d++) {
+      length[d] = double(gdims[d]);
+    } // make length == gdims, so that dx = 1
     psc::grid::Domain<double> grid_domain{gdims, length};
     psc::grid::BC grid_bc;
     Grid_t::Normalization grid_norm;
@@ -148,22 +168,26 @@ struct DepositTest : ::testing::Test
   void test_current(real3_t xm, real3_t xp, real3_t vxi, const F& jxi_ref,
                     const F& jyi_ref, const F& jzi_ref)
   {
-    const real_t eps = 2. * std::numeric_limits<real_t>::epsilon();
-
+    if (!std::is_same_v<dim_t, dim_yz>) {
+      return;
+    }
     auto flds = calc_current(xm, xp, vxi);
+    check_continuity(xm, xp, flds);
 
+    const real_t eps = 2. * std::numeric_limits<real_t>::epsilon();
     EXPECT_LT(gt::norm_linf(flds.view(0, _all, _all, JXI) - jxi_ref), eps)
       << flds.view(0, _all, _all, JXI);
     EXPECT_LT(gt::norm_linf(flds.view(0, _all, _all, JYI) - jyi_ref), eps)
       << flds.view(0, _all, _all, JYI);
     EXPECT_LT(gt::norm_linf(flds.view(0, _all, _all, JZI) - jzi_ref), eps)
       << flds.view(0, _all, _all, JZI);
-
-    check_continuity(xm, xp, flds);
   }
 
   void test_current(real3_t xm, real3_t xp, real3_t vxi)
   {
+    if (!std::is_same_v<dim_t, dim_yz>) {
+      return;
+    }
     auto flds = calc_current(xm, xp, vxi);
     check_continuity(xm, xp, flds);
   }
@@ -188,7 +212,8 @@ public:
 using DepositTestTypes =
   ::testing::Types< // DepositTestConfig<float, dim_yz, Current1vbSplit>,
     DepositTestConfig<double, dim_yz, Current1vbSplit>,
-    DepositTestConfig<double, dim_yz, CurrentZigzag>>;
+    DepositTestConfig<double, dim_yz, CurrentZigzag>,
+    DepositTestConfig<double, dim_xyz, Current1vbSplit>>;
 
 TYPED_TEST_SUITE(DepositTest, DepositTestTypes);
 
@@ -197,15 +222,29 @@ TYPED_TEST(DepositTest, ChargeCenter)
   using self_type = DepositTest<TypeParam>;
   using real_t = typename self_type::real_t;
   using real3_t = typename self_type::real3_t;
+  using dim_t = typename self_type::dim_t;
 
-  real3_t x = {.5, 1.5, 1.5};
+  real3_t x = {1.5, 1.5, 1.5};
   auto rho_ref = gt::zeros<real_t>(this->ldims_);
-  // clang-format off
-  rho_ref.view(0, _all, _all) = gt::gtensor<real_t, 2>({{0., 0.  , 0.  , 0.},
-                                                        {0., 0.25, 0.25, 0.},
-                                                        {0., 0.25, 0.25, 0.},
-                                                        {0., 0.  , 0.  , 0.}});
-  // clang-format on
+  if (std::is_same_v<dim_t, dim_xyz>) {
+    // clang-format off
+    rho_ref.view(1, _all, _all) = gt::gtensor<real_t, 2>({{0., 0.   , 0.   , 0.},
+                                                          {0., 0.125, 0.125, 0.},
+                                                          {0., 0.125, 0.125, 0.},
+                                                          {0., 0.   , 0.   , 0.}});
+    rho_ref.view(2, _all, _all) = gt::gtensor<real_t, 2>({{0., 0.   , 0.   , 0.},
+                                                          {0., 0.125, 0.125, 0.},
+                                                          {0., 0.125, 0.125, 0.},
+                                                          {0., 0.   , 0.   , 0.}});
+    // clang-format on
+  } else if (std::is_same_v<dim_t, dim_yz>) {
+    // clang-format off
+    rho_ref.view(0, _all, _all) = gt::gtensor<real_t, 2>({{0., 0.  , 0.  , 0.},
+                                                          {0., 0.25, 0.25, 0.},
+                                                          {0., 0.25, 0.25, 0.},
+                                                          {0., 0.  , 0.  , 0.}});
+    // clang-format on
+  }
   this->test_charge(x, rho_ref);
 }
 
@@ -214,15 +253,25 @@ TYPED_TEST(DepositTest, ChargeLowerLeft)
   using self_type = DepositTest<TypeParam>;
   using real_t = typename self_type::real_t;
   using real3_t = typename self_type::real3_t;
+  using dim_t = typename self_type::dim_t;
 
-  real3_t x = {.5, 1., 1.};
+  real3_t x = {1., 1., 1.};
   auto rho_ref = gt::zeros<real_t>(this->ldims_);
-  // clang-format off
-  rho_ref.view(0, _all, _all) = gt::gtensor<real_t, 2>({{0., 0., 0., 0.},
-                                                        {0., 1., 0., 0.},
-                                                        {0., 0., 0., 0.},
-                                                        {0., 0., 0., 0.}});
-  // clang-format on
+  if (std::is_same_v<dim_t, dim_xyz>) {
+    // clang-format off
+    rho_ref.view(1, _all, _all) = gt::gtensor<real_t, 2>({{0., 0., 0., 0.},
+                                                          {0., 1., 0., 0.},
+                                                          {0., 0., 0., 0.},
+                                                          {0., 0., 0., 0.}});
+    // clang-format on
+  } else if (std::is_same_v<dim_t, dim_yz>) {
+    // clang-format off
+    rho_ref.view(0, _all, _all) = gt::gtensor<real_t, 2>({{0., 0., 0., 0.},
+                                                          {0., 1., 0., 0.},
+                                                          {0., 0., 0., 0.},
+                                                          {0., 0., 0., 0.}});
+    // clang-format on
+  }
   this->test_charge(x, rho_ref);
 }
 
@@ -439,9 +488,9 @@ TYPED_TEST(DepositTest, CurrentXYCrossXY)
   real3_t xm = {.5, 1.9, 1.6}, xp = {.5, 2.1, 2.2};
   Int3 lf = {0, 1, 1}, lg = {0, 1, 1};
   real3_t vxi = {0., .2, 0.};
-  if (std::is_same<typename TypeParam::Current,
-                   Current1vbSplit<opt_order_1st, dim_yz,
-                                   typename TypeParam::fields_t>>::value) {
+  if (std::is_same_v<
+        typename TypeParam::Current,
+        Current1vbSplit<opt_order_1st, dim_yz, typename TypeParam::fields_t>>) {
     // clang-format off
     gt::gtensor<real_t, 2> jxi_ref = {{0., 0., 0., 0.},
                                       {0., 0., 0., 0.},
