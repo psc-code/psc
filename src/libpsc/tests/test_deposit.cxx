@@ -100,8 +100,8 @@ struct DepositTest : ::testing::Test
     auto flds = gt::zeros<real_t>(ldims_);
     deposit(flds, x);
 
-    // std::cout << flds.view(0, _all, _all);
-    EXPECT_LT(gt::norm_linf(flds.view(0, _all, _all) - rho_ref), eps);
+    EXPECT_LT(gt::norm_linf(flds.view(0, _all, _all) - rho_ref), eps)
+      << flds.view(0, _all, _all);
   }
 
   auto calc_current(real3_t xm, real3_t xp, real3_t vxi)
