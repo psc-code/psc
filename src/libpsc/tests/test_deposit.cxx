@@ -84,6 +84,8 @@ struct DepositTest : ::testing::Test
 
     grid_.reset(
       new Grid_t{grid_domain, grid_bc, kinds, grid_norm, dt, 1, this->ibn});
+
+    ldims_ = gt::shape_type<3>(grid().ldims);
   }
 
   const Grid_t& grid() const { return *grid_; }
@@ -95,7 +97,7 @@ struct DepositTest : ::testing::Test
 
     DepositNc<real_t, dim_t> deposit;
 
-    auto flds = gt::zeros<real_t>(gt::shape(1, 4, 4));
+    auto flds = gt::zeros<real_t>(ldims_);
     deposit(flds, x);
 
     // std::cout << flds.view(0, _all, _all);
@@ -110,8 +112,8 @@ struct DepositTest : ::testing::Test
     const Grid_t& grid = this->grid();
     Current curr{grid};
 
-    auto flds = gt::zeros<real_t>(
-      gt::shape(grid.ldims[0], grid.ldims[1], grid.ldims[2], NR_FIELDS));
+    auto flds =
+      gt::zeros<real_t>(gt::shape(ldims_[0], ldims_[1], ldims_[2], NR_FIELDS));
 
     // FIXME, to_kernel() is a hack to get a gtensor_view
     auto flds_view = fields_view_t({0, 0, 0}, flds.to_kernel());
@@ -130,10 +132,8 @@ struct DepositTest : ::testing::Test
     const real_t eps = 2. * std::numeric_limits<real_t>::epsilon();
 
     const Grid_t& grid = this->grid();
-    auto rho_m =
-      gt::zeros<real_t>(gt::shape(grid.ldims[0], grid.ldims[1], grid.ldims[2]));
-    auto rho_p =
-      gt::zeros<real_t>(gt::shape(grid.ldims[0], grid.ldims[1], grid.ldims[2]));
+    auto rho_m = gt::zeros<real_t>(ldims_);
+    auto rho_p = gt::zeros<real_t>(ldims_);
     DepositNc<real_t, dim_t> deposit;
     deposit(rho_m, xm);
     deposit(rho_p, xp);
@@ -171,8 +171,8 @@ struct DepositTest : ::testing::Test
   }
 
   Int3 ibn = {0, 0, 0};
-
   std::unique_ptr<Grid_t> grid_;
+  gt::shape_type<3> ldims_;
 };
 
 template <typename R, typename D,
