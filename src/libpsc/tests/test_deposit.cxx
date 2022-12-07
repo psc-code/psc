@@ -95,13 +95,11 @@ struct DepositTest : ::testing::Test
   {
     const real_t eps = std::numeric_limits<real_t>::epsilon();
 
-    DepositNc<real_t, dim_t> deposit;
-
     auto flds = gt::zeros<real_t>(ldims_);
+    DepositNc<real_t, dim_t> deposit;
     deposit(flds, x);
 
-    EXPECT_LT(gt::norm_linf(flds.view(0, _all, _all) - rho_ref), eps)
-      << flds.view(0, _all, _all);
+    EXPECT_LT(gt::norm_linf(flds - rho_ref), eps) << flds;
   }
 
   auto calc_current(real3_t xm, real3_t xp, real3_t vxi)
@@ -201,11 +199,12 @@ TYPED_TEST(DepositTest, ChargeCenter)
   using real3_t = typename self_type::real3_t;
 
   real3_t x = {.5, 1.5, 1.5};
+  auto rho_ref = gt::zeros<real_t>(this->ldims_);
   // clang-format off
-  gt::gtensor<real_t, 2> rho_ref = {{0., 0.  , 0.  , 0.},
-                                    {0., 0.25, 0.25, 0.},
-                                    {0., 0.25, 0.25, 0.},
-                                    {0., 0.  , 0.  , 0.}};
+  rho_ref.view(0, _all, _all) = gt::gtensor<real_t, 2>({{0., 0.  , 0.  , 0.},
+                                                        {0., 0.25, 0.25, 0.},
+                                                        {0., 0.25, 0.25, 0.},
+                                                        {0., 0.  , 0.  , 0.}});
   // clang-format on
   this->test_charge(x, rho_ref);
 }
@@ -217,11 +216,12 @@ TYPED_TEST(DepositTest, ChargeLowerLeft)
   using real3_t = typename self_type::real3_t;
 
   real3_t x = {.5, 1., 1.};
+  auto rho_ref = gt::zeros<real_t>(this->ldims_);
   // clang-format off
-  gt::gtensor<real_t, 2> rho_ref = {{0., 0., 0., 0.},
-                                    {0., 1., 0., 0.},
-                                    {0., 0., 0., 0.},
-                                    {0., 0., 0., 0.}};
+  rho_ref.view(0, _all, _all) = gt::gtensor<real_t, 2>({{0., 0., 0., 0.},
+                                                        {0., 1., 0., 0.},
+                                                        {0., 0., 0., 0.},
+                                                        {0., 0., 0., 0.}});
   // clang-format on
   this->test_charge(x, rho_ref);
 }
