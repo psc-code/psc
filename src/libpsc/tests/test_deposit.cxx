@@ -225,7 +225,7 @@ public:
   using real_t = R;
   using dim_t = D;
   using fields_view_t = SArrayView<real_t, gt::space::host>;
-  using fields_t = curr_cache_t<fields_view_t, dim_xyz>;
+  using fields_t = curr_cache_t<fields_view_t>;
   using Current = C<opt_order_1st, dim_t, fields_t>;
 };
 

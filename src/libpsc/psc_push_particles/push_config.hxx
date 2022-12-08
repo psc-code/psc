@@ -14,7 +14,7 @@
 
 #include <psc/gtensor.h>
 
-template <typename fields_t, typename dim_curr>
+template <typename fields_t>
 struct curr_cache_t : fields_t
 {
   using real_t = typename fields_t::value_type;
@@ -51,8 +51,7 @@ struct PushpConfigEsirkepov
 
 template <typename _Mparticles, typename _MfieldsState, typename _InterpolateEM,
           typename _Dim, typename _Order,
-          template <typename, typename, typename> class _Current,
-          typename dim_curr = dim_xyz>
+          template <typename, typename, typename> class _Current>
 struct PushpConfigVb
 {
   using Mparticles = _Mparticles;
@@ -60,8 +59,7 @@ struct PushpConfigVb
   using Dim = _Dim;
   using InterpolateEM_t = _InterpolateEM;
   using Current_t =
-    _Current<_Order, _Dim,
-             curr_cache_t<typename _MfieldsState::fields_view_t, dim_curr>>;
+    _Current<_Order, _Dim, curr_cache_t<typename _MfieldsState::fields_view_t>>;
   using AdvanceParticle_t = AdvanceParticle<typename Mparticles::real_t, Dim>;
 };
 
@@ -107,9 +105,9 @@ using Config1vbecSingleXZ = PushpConfigVb<
   MparticlesSingle, MfieldsStateSingle,
   InterpolateEM1vbec<
     Fields3d<MfieldsStateSingle::fields_view_t::Storage, dim_xz>, dim_xyz>,
-  dim_xyz, opt_order_1st, Current1vbSplit, dim_xz>;
+  dim_xyz, opt_order_1st, Current1vbSplit>;
 using Config1vbecSingle1 = PushpConfigVb<
   MparticlesSingle, MfieldsStateSingle,
   InterpolateEM1vbec<
     Fields3d<MfieldsStateSingle::fields_view_t::Storage, dim_1>, dim_1>,
-  dim_1, opt_order_1st, Current1vbVar1, dim_1>;
+  dim_1, opt_order_1st, Current1vbVar1>;
