@@ -26,6 +26,7 @@ class SCurr
 
 public:
   static const int shared_size = 3 * STRIDE_Y * STRIDE_Z * N_COPIES;
+  using real_t = float;
 
   float* scurr;
 
@@ -120,6 +121,7 @@ template <typename BS>
 class GCurr
 {
 public:
+  using real_t = float;
   static const int shared_size = 1;
 
   float* scurr;
