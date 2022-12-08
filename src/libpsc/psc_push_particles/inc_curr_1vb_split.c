@@ -107,9 +107,8 @@ struct Current1vbSplit
       xa[d] -= i[d];
     }
 
-    int ci0[3] = {};
     real_t fnq[3] = {qni_wni * fnqxs_, qni_wni * fnqys_, qni_wni * fnqzs_};
-    deposit(curr_cache, i, fnq, dx, xa, h, ci0);
+    deposition(curr_cache, i, fnq, dx, xa, h);
   }
 
   void calc_j2_one_cell(fields_t curr_cache, real_t qni_wni, real_t xm[3],
@@ -295,4 +294,5 @@ private:
   real_t dt_;
   real_t fnqxs_, fnqys_, fnqzs_;
   Real3 dxi_;
+  psc::CurrentDeposition1vb<fields_t> deposition;
 };
