@@ -15,16 +15,18 @@
 #include <psc/gtensor.h>
 
 template <typename fields_t>
-struct curr_cache_t : fields_t
+class curr_cache_t
 {
+public:
   using real_t = typename fields_t::value_type;
+  using value_type = typename fields_t::value_type;
+  using storage_type = typename fields_t::Storage;
 
-  curr_cache_t(fields_t& f) : fields_t(f.ib(), f.storage()) {}
+  curr_cache_t(fields_t& f) : storage_(f.storage()), ib_(f.ib()) {}
 
   void add(int m, int i, int j, int k, real_t val)
   {
-    this->storage()(i - this->ib()[0], j - this->ib()[1], k - this->ib()[2],
-                    JXI + m) += val;
+    storage_(i - ib_[0], j - ib_[1], k - ib_[2], JXI + m) += val;
   }
 
   GT_INLINE void add(int m, int i, int j, int k, real_t val, const int off[3])
@@ -32,6 +34,10 @@ struct curr_cache_t : fields_t
     assert(off[0] == 0 && off[1] == 0 && off[2] == 0);
     add(m, i, j, k, val);
   }
+
+private:
+  storage_type storage_;
+  Int3 ib_;
 };
 
 template <typename _Mparticles, typename _MfieldsState,
