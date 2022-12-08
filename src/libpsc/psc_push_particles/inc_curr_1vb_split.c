@@ -99,16 +99,15 @@ struct Current1vbSplit
     real_t dx[3] = {xp[0] - xm[0], xp[1] - xm[1], xp[2] - xm[2]};
     real_t xa[3] = {.5f * (xm[0] + xp[0]), .5f * (xm[1] + xp[1]),
                     .5f * (xm[2] + xp[2])};
-    real_t h = (1.f / real_t(12.f)) * dx[0] * dx[1] * dx[2];
 
-    int i[3] = {};
+    int i[3];
     for (int d = 0; d < 3; d++) {
       i[d] = fint(xa[d]);
       xa[d] -= i[d];
     }
 
     real_t fnq[3] = {qni_wni * fnqxs_, qni_wni * fnqys_, qni_wni * fnqzs_};
-    deposition(curr_cache, i, fnq, dx, xa, h);
+    deposition(curr_cache, i, fnq, dx, xa);
   }
 
   void calc_j2_one_cell(fields_t curr_cache, real_t qni_wni, real_t xm[3],

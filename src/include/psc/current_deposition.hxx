@@ -12,8 +12,10 @@ public:
   using real_t = typename Curr::real_t;
 
   GT_INLINE void operator()(Curr& curr, const int i[3], const real_t fnq[3],
-                            const real_t dx[3], const real_t xa[3], real_t h)
+                            const real_t dx[3], const real_t xa[3])
   {
+    real_t h = (1.f / real_t(12.f)) * dx[0] * dx[1] * dx[2];
+
     curr.add(0, i[0], i[1], i[2],
              fnq[0] * (dx[0] * (1.f - xa[1]) * (1.f - xa[2]) + h));
     curr.add(0, i[0], i[1] + 1, i[2],

@@ -22,7 +22,7 @@ GT_INLINE void deposit(Curr& curr, const int _i[3], const real_t fnq[3],
   for (int d = 0; d < 3; d++) {
     i[d] = _i[d] + off[d];
   }
-  deposition(curr, i, fnq, dx, xa, h);
+  deposition(curr, i, fnq, dx, xa);
 }
 
 #include "inc_curr_1vb_split.c"
