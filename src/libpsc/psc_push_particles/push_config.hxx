@@ -23,9 +23,8 @@ struct curr_cache_t : fields_t
 
   void add(int m, int i, int j, int k, real_t val)
   {
-    Fields3d<typename fields_t::Storage, dim_curr> J(this->storage(),
-                                                     this->ib());
-    J(JXI + m, i, j, k) += val;
+    this->storage()(i - this->ib()[0], j - this->ib()[1], k - this->ib()[2],
+                    JXI + m) += val;
   }
 
   GT_INLINE void add(int m, int i, int j, int k, real_t val, const int off[3])
