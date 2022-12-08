@@ -29,12 +29,6 @@ public:
     storage_(i - ib_[0], j - ib_[1], k - ib_[2], JXI + m) += val;
   }
 
-  GT_INLINE void add(int m, int i, int j, int k, real_t val, const int off[3])
-  {
-    assert(off[0] == 0 && off[1] == 0 && off[2] == 0);
-    add(m, i, j, k, val);
-  }
-
 private:
   storage_type storage_;
   Int3 ib_;

@@ -143,10 +143,10 @@ public:
     atomicAdd(addr, val);
   }
 
-  __device__ void add(int m, int jx, int jy, int jz, float val, const int* ci0)
+  __device__ void add(int m, int jx, int jy, int jz, float val)
   {
     auto _d_flds = make_Fields3d<dim_xyz>(gt_, ib_);
-    float* addr = &_d_flds(JXI + m, jx + ci0[0], jy + ci0[1], jz + ci0[2]);
+    float* addr = &_d_flds(JXI + m, jx, jy, jz);
     atomicAdd(addr, val);
   }
 };
