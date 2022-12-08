@@ -25,6 +25,7 @@ macro(add_psc_cuda_test name)
   endif()
 endmacro()
 
+add_psc_test(test_atomic)
 add_psc_test(test_grid)
 add_psc_test(test_grid_2)
 add_psc_test(test_rng)
