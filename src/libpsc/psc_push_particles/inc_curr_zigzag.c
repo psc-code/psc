@@ -36,15 +36,9 @@ struct CurrentZigzag
   }
 
   // ----------------------------------------------------------------------
-  // dim_yz
 
-  void calc_j(fields_t curr_cache, real_t* xm, real_t* xp, int* lf, int* lg,
-              real_t qni_wni, real_t* vxi, dim_yz tag)
+  void calc_zigzag(fields_t curr_cache, real_t* xm, real_t* xp, real_t qni_wni)
   {
-    xm[0] = .5f; // this way, we guarantee that the average position will remain
-                 // in the 0th cell
-    xp[0] = xm[0] + vxi[0] * dt_ * dxi_[0];
-
     real_t xr[3];
     bool crossed = false;
     for (int d = 0; d < 3; d++) {
@@ -65,28 +59,25 @@ struct CurrentZigzag
   }
 
   // ----------------------------------------------------------------------
+  // dim_yz
+
+  void calc_j(fields_t curr_cache, real_t* xm, real_t* xp, real_t* vxi,
+              real_t qni_wni, dim_yz tag)
+  {
+    xm[0] = .5f; // this way, we guarantee that the average position will remain
+                 // in the 0th cell
+    xp[0] = xm[0] + vxi[0] * dt_ * dxi_[0];
+
+    calc_zigzag(curr_cache, xm, xp, qni_wni);
+  }
+
+  // ----------------------------------------------------------------------
   // dim_xyz
 
-  void calc_j(fields_t curr_cache, real_t* xm, real_t* xp, int* lf, int* lg,
-              real_t qni_wni, real_t* vxi, dim_xyz tag)
+  void calc_j(fields_t curr_cache, real_t* xm, real_t* xp, real_t* vxi,
+              real_t qni_wni, dim_xyz tag)
   {
-    real_t xr[3];
-    bool crossed = false;
-    for (int d = 0; d < 3; d++) {
-      int im = fint(xm[d]), ip = fint(xp[d]);
-      if (im == ip) {
-        xr[d] = .5 * (xm[d] + xp[d]);
-      } else {
-        xr[d] = std::max(im, ip);
-        crossed = true;
-      }
-    }
-    if (crossed) { // could choose this path always
-      calc_j2_one_cell(curr_cache, qni_wni, xm, xr);
-      calc_j2_one_cell(curr_cache, qni_wni, xr, xp);
-    } else {
-      calc_j2_one_cell(curr_cache, qni_wni, xm, xp);
-    }
+    calc_zigzag(curr_cache, xm, xp, qni_wni);
   }
 
   // ----------------------------------------------------------------------
@@ -95,7 +86,7 @@ struct CurrentZigzag
   void calc_j(fields_t curr_cache, real_t* xm, real_t* xp, int* lf, int* lg,
               real_t qni_wni, real_t* vxi)
   {
-    calc_j(curr_cache, xm, xp, lf, lg, qni_wni, vxi, Dim{});
+    calc_j(curr_cache, xm, xp, vxi, qni_wni, Dim{});
   }
 
 private:

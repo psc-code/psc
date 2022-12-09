@@ -175,8 +175,8 @@ struct Current1vbSplit
     calc_j2_split_dim_z(curr_cache, qni_wni, xm, xp, Dim{});
   }
 
-  void calc_j(fields_t curr_cache, real_t* xm, real_t* xp, int* lf, int* lg,
-              real_t qni_wni, real_t* vxi, dim_yz tag)
+  void calc_j(fields_t curr_cache, real_t* xm, real_t* xp, real_t* vxi,
+              real_t qni_wni, dim_yz tag)
   {
     xm[0] = .5f; // this way, we guarantee that the average position will remain
                  // in the 0th cell
@@ -184,8 +184,8 @@ struct Current1vbSplit
     calc_j2_split_dim_z(curr_cache, qni_wni, xm, xp);
   }
 
-  void calc_j(fields_t curr_cache, real_t* xm, real_t* xp, int* lf, int* lg,
-              real_t qni_wni, real_t* vxi, dim_xz tag)
+  void calc_j(fields_t curr_cache, real_t* xm, real_t* xp, real_t* vxi,
+              real_t qni_wni, dim_xz tag)
   {
     xm[1] = .5f; // this way, we guarantee that the average position will remain
                  // in the 0th cell
@@ -193,8 +193,8 @@ struct Current1vbSplit
     calc_j2_split_dim_z(curr_cache, qni_wni, xm, xp);
   }
 
-  void calc_j(fields_t curr_cache, real_t* xm, real_t* xp, int* lf, int* lg,
-              real_t qni_wni, real_t* vxi, dim_xyz tag)
+  void calc_j(fields_t curr_cache, real_t* xm, real_t* xp, real_t* vxi,
+              real_t qni_wni, dim_xyz tag)
   {
     calc_j2_split_dim_z(curr_cache, qni_wni, xm, xp);
   }
@@ -205,7 +205,7 @@ struct Current1vbSplit
   void calc_j(fields_t curr_cache, real_t* xm, real_t* xp, int* lf, int* lg,
               real_t qni_wni, real_t* vxi)
   {
-    calc_j(curr_cache, xm, xp, lf, lg, qni_wni, vxi, Dim{});
+    calc_j(curr_cache, xm, xp, vxi, qni_wni, Dim{});
   }
 
 private:
