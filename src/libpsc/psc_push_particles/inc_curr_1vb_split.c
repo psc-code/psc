@@ -14,7 +14,9 @@ struct Current1vbSplit
   using Real3 = Vec3<real_t>;
 
   Current1vbSplit(const Grid_t& grid)
-    : dt_(grid.dt), dxi_{Real3{1., 1., 1.} / Real3(grid.domain.dx)}
+    : dt_(grid.dt),
+      dxi_{Real3{1., 1., 1.} / Real3(grid.domain.dx)},
+      deposition_(real_t(grid.norm.fnqs / grid.dt) * Real3(grid.domain.dx))
   {
     fnqxs_ = grid.domain.dx[0] * grid.norm.fnqs / grid.dt;
     fnqys_ = grid.domain.dx[1] * grid.norm.fnqs / grid.dt;
@@ -106,8 +108,7 @@ struct Current1vbSplit
       xa[d] -= i[d];
     }
 
-    real_t fnq[3] = {qni_wni * fnqxs_, qni_wni * fnqys_, qni_wni * fnqzs_};
-    deposition(curr_cache, i, fnq, dx, xa);
+    deposition_(curr_cache, i, qni_wni, dx, xa);
   }
 
   void calc_j2_one_cell(fields_t curr_cache, real_t qni_wni, real_t xm[3],
@@ -293,5 +294,5 @@ private:
   real_t dt_;
   real_t fnqxs_, fnqys_, fnqzs_;
   Real3 dxi_;
-  psc::CurrentDeposition1vb<fields_t> deposition;
+  psc::CurrentDeposition1vb<fields_t> deposition_;
 };

@@ -73,8 +73,8 @@ struct CurrentZigzag
     }
 
     int ci0[3] = {};
-    real_t fnq[3] = {qni_wni * fnqxs_, qni_wni * fnqys_, qni_wni * fnqzs_};
-    deposit(curr_cache, i, fnq, dx, xa, h, ci0);
+    real_t fnqs[3] = {fnqxs_, fnqys_, fnqzs_};
+    deposit(curr_cache, i, fnqs, qni_wni, dx, xa, h, ci0);
   }
 
   void calc_j2_one_cell(fields_t curr_cache, real_t qni_wni, real_t xm[3],

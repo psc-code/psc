@@ -209,9 +209,8 @@ struct CudaPushParticles
       x[2] + .5f * dx[2] + .5f,
     };
     float h = (1.f / 12.f) * dx[0] * dx[1] * dx[2];
-    float fnq[3] = {qni_wni * dmprts.fnqxs(), qni_wni * dmprts.fnqys(),
-                    qni_wni * dmprts.fnqzs()};
-    deposit(scurr, i, fnq, dx, xa, h, current_block.ci0);
+    float fnqs[3] = {dmprts.fnqxs(), dmprts.fnqys(), dmprts.fnqzs()};
+    deposit(scurr, i, fnqs, qni_wni, dx, xa, h, current_block.ci0);
   }
 
   // ----------------------------------------------------------------------
