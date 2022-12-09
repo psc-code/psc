@@ -38,11 +38,12 @@ public:
   real_t fnqs_;
 };
 
-template <typename R>
+template <typename R, typename D>
 class Moments_n
 {
 public:
   using real_t = R;
+  using dim_t = D;
 
   Moments_n(const Grid_t& grid)
     : deposit_({grid.domain.dx[0], grid.domain.dx[1], grid.domain.dx[2]},
@@ -67,11 +68,12 @@ public:
   const Grid_t& grid_;
 };
 
-template <typename R>
+template <typename R, typename D>
 class Moments_rho
 {
 public:
   using real_t = R;
+  using dim_t = D;
 
   Moments_rho(const Grid_t& grid)
     : deposit_({grid.domain.dx[0], grid.domain.dx[1], grid.domain.dx[2]},
@@ -113,8 +115,16 @@ struct Moment_n_1st_nc
 
   static void run(Mfields& mflds, Mparticles& mprts)
   {
-    Moments_n<real_t> moments{mprts.grid()};
-    moments(mflds, mprts);
+    const Grid_t& grid = mprts.grid();
+    if (!grid.isInvar(0) && !grid.isInvar(1) && !grid.isInvar(2)) {
+      Moments_n<real_t, dim_xyz> moments{grid};
+      moments(mflds, mprts);
+    } else if (grid.isInvar(0) && !grid.isInvar(1) && !grid.isInvar(2)) {
+      Moments_n<real_t, dim_yz> moments{grid};
+      moments(mflds, mprts);
+    } else {
+      assert(0);
+    }
   }
 };
 
@@ -139,8 +149,16 @@ struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MP, MF>, MF>
 
   explicit Moment_rho_1st_nc(const Mparticles& mprts) : Base{mprts.grid()}
   {
-    Moments_rho<real_t> moments{mprts.grid()};
-    moments(Base::mres_, mprts);
+    const Grid_t& grid = mprts.grid();
+    if (!grid.isInvar(0) && !grid.isInvar(1) && !grid.isInvar(2)) {
+      Moments_rho<real_t, dim_xyz> moments{grid};
+      moments(Base::mres_, mprts);
+    } else if (grid.isInvar(0) && !grid.isInvar(1) && !grid.isInvar(2)) {
+      Moments_rho<real_t, dim_yz> moments{grid};
+      moments(Base::mres_, mprts);
+    } else {
+      assert(0);
+    }
     Base::bnd_.add_ghosts(Base::mres_);
   }
 
