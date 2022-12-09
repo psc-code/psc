@@ -17,64 +17,22 @@ struct Current1vbSplit
     : dt_(grid.dt),
       dxi_{Real3{1., 1., 1.} / Real3(grid.domain.dx)},
       deposition_(real_t(grid.norm.fnqs / grid.dt) * Real3(grid.domain.dx))
-  {
-    fnqxs_ = grid.domain.dx[0] * grid.norm.fnqs / grid.dt;
-    fnqys_ = grid.domain.dx[1] * grid.norm.fnqs / grid.dt;
-    fnqzs_ = grid.domain.dx[2] * grid.norm.fnqs / grid.dt;
-  }
-
-  void calc_j2_one_cell(fields_t curr_cache, real_t qni_wni, real_t xm[3],
-                        real_t xp[3], dim_yz tag_dim)
-  {
-    real_t dx[3] = {xp[0] - xm[0], xp[1] - xm[1], xp[2] - xm[2]};
-    real_t xa[3] = {.5f * (xm[0] + xp[0]), .5f * (xm[1] + xp[1]),
-                    .5f * (xm[2] + xp[2])};
-
-    int i[3];
-    for (int d = 0; d < 3; d++) {
-      i[d] = fint(xa[d]);
-      xa[d] -= i[d];
-    }
-
-    deposition_(curr_cache, i, qni_wni, dx, xa, tag_dim);
-  }
-
-  void calc_j2_one_cell(fields_t curr_cache, real_t qni_wni, real_t xm[3],
-                        real_t xp[3], dim_xz tag_dim)
-  {
-    real_t dx[3] = {xp[0] - xm[0], xp[1] - xm[1], xp[2] - xm[2]};
-    real_t xa[3] = {.5f * (xm[0] + xp[0]), .5f * (xm[1] + xp[1]),
-                    .5f * (xm[2] + xp[2])};
-
-    int i[3];
-    for (int d = 0; d < 3; d++) {
-      i[d] = fint(xa[d]);
-      xa[d] -= i[d];
-    }
-
-    deposition_(curr_cache, i, qni_wni, dx, xa, tag_dim);
-  }
-
-  void calc_j2_one_cell(fields_t curr_cache, real_t qni_wni, real_t xm[3],
-                        real_t xp[3], dim_xyz tag_dim)
-  {
-    real_t dx[3] = {xp[0] - xm[0], xp[1] - xm[1], xp[2] - xm[2]};
-    real_t xa[3] = {.5f * (xm[0] + xp[0]), .5f * (xm[1] + xp[1]),
-                    .5f * (xm[2] + xp[2])};
-
-    int i[3];
-    for (int d = 0; d < 3; d++) {
-      i[d] = fint(xa[d]);
-      xa[d] -= i[d];
-    }
-
-    deposition_(curr_cache, i, qni_wni, dx, xa, tag_dim);
-  }
+  {}
 
   void calc_j2_one_cell(fields_t curr_cache, real_t qni_wni, real_t xm[3],
                         real_t xp[3])
   {
-    calc_j2_one_cell(curr_cache, qni_wni, xm, xp, Dim{});
+    real_t dx[3] = {xp[0] - xm[0], xp[1] - xm[1], xp[2] - xm[2]};
+    real_t xa[3] = {.5f * (xm[0] + xp[0]), .5f * (xm[1] + xp[1]),
+                    .5f * (xm[2] + xp[2])};
+
+    int i[3];
+    for (int d = 0; d < 3; d++) {
+      i[d] = fint(xa[d]);
+      xa[d] -= i[d];
+    }
+
+    deposition_(curr_cache, i, qni_wni, dx, xa, Dim{});
   }
 
   static void calc_j2_split_along_dim(int dim, int im, real_t x1[3],
@@ -252,7 +210,6 @@ struct Current1vbSplit
 
 private:
   real_t dt_;
-  real_t fnqxs_, fnqys_, fnqzs_;
   Real3 dxi_;
   psc::CurrentDeposition1vb<fields_t> deposition_;
 };
