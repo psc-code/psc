@@ -43,8 +43,8 @@ struct SArrayView
   using pointer = typename Storage::pointer;
   using const_pointer = typename Storage::const_pointer;
 
-  KG_INLINE SArrayView(const kg::Box3& box, int n_comps, const Storage& storage)
-    : ib_(box.ib()), storage_(storage)
+  KG_INLINE SArrayView(const Int3& ib, const Storage& storage)
+    : ib_(ib), storage_(storage)
   {}
 
   KG_INLINE const Int3& ib() const { return ib_; }
@@ -292,11 +292,10 @@ public:
   KG_INLINE fields_view_t operator[](int p)
   {
     return fields_view_t(
-      box(), n_comps(),
-      gt::gtensor_span<Real, 4, typename Storage::space_type>(
-        &storage()(0, 0, 0, 0, p),
-        gt::shape(box().im(0), box().im(1), box().im(2), n_comps()),
-        detail::strides(box().im(), n_comps())));
+      box().ib(), gt::gtensor_span<Real, 4, typename Storage::space_type>(
+                    &storage()(0, 0, 0, 0, p),
+                    gt::shape(box().im(0), box().im(1), box().im(2), n_comps()),
+                    detail::strides(box().im(), n_comps())));
   }
 
   KG_INLINE const Real& operator()(int m, int i, int j, int k, int p) const

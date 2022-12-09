@@ -46,6 +46,7 @@ GT_INLINE void deposit(Curr& curr, const int i[3], const real_t fnq[3],
 #include "inc_curr_1vb_split.c"
 #include "inc_curr_1vb_var1.c"
 #include "inc_curr_1vb_2d.c"
+#include "inc_curr_zigzag.c"
 
 template <typename _Order, typename _Dim, typename _fields_t>
 struct Current1vb;
