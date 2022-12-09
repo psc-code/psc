@@ -73,7 +73,7 @@ struct CurrentZigzag
       xa[d] -= i[d];
     }
 
-    deposition_(curr_cache, i, qni_wni, dx, xa);
+    deposition_(curr_cache, i, qni_wni, dx, xa, tag_dim);
   }
 
   void calc_j2_one_cell(fields_t curr_cache, real_t qni_wni, real_t xm[3],

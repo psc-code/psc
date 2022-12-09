@@ -15,7 +15,8 @@ public:
   GT_INLINE CurrentDeposition1vb(real3_t fnqs) : fnqs_{fnqs} {}
 
   GT_INLINE void operator()(Curr& curr, const int i[3], real_t qni_wni,
-                            const real_t dx[3], const real_t xa[3])
+                            const real_t dx[3], const real_t xa[3],
+                            dim_xyz tag_dim) const
   {
     real_t h = (1.f / real_t(12.f)) * dx[0] * dx[1] * dx[2];
     real3_t fnq = qni_wni * fnqs_;
