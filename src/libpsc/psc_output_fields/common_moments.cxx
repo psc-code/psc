@@ -5,62 +5,23 @@
 
 #include <string>
 
+#include <psc/deposit.hxx>
+
 #define DEPOSIT_TO_GRID_1ST_NC(prt, flds, m, val)                              \
   do {                                                                         \
     auto xi = prt.x(); /* don't shift back in time */                          \
-    real_t u = xi[0] * dxi;                                                    \
-    real_t v = xi[1] * dyi;                                                    \
-    real_t w = xi[2] * dzi;                                                    \
-    int jx = fint(u);                                                          \
-    int jy = fint(v);                                                          \
-    int jz = fint(w);                                                          \
-    real_t h1 = u - jx;                                                        \
-    real_t h2 = v - jy;                                                        \
-    real_t h3 = w - jz;                                                        \
+    Vec3<real_t> x = {xi[0] * dxi, xi[1] * dyi, xi[2] * dzi};                  \
+    real_t value = prt.w() * fnqs * val;                                       \
                                                                                \
-    real_t g0x = 1.f - h1;                                                     \
-    real_t g0y = 1.f - h2;                                                     \
-    real_t g0z = 1.f - h3;                                                     \
-    real_t g1x = h1;                                                           \
-    real_t g1y = h2;                                                           \
-    real_t g1z = h3;                                                           \
-                                                                               \
-    int jxd = 1, jyd = 1, jzd = 1;                                             \
-    if (grid.isInvar(0)) {                                                     \
-      jx = 0;                                                                  \
-      g0x = 1.;                                                                \
-      g1x = 0.;                                                                \
-      jxd = 0;                                                                 \
+    auto fm = flds.storage().view(_all, _all, _all, m);                        \
+    auto ib = gt::shape(flds.ib()[0], flds.ib()[1], flds.ib()[2]);             \
+    if (!grid.isInvar(0) && !grid.isInvar(1) && !grid.isInvar(2)) {            \
+      psc::DepositNc<real_t, dim_xyz> deposit;                                 \
+      deposit(fm, ib, x, value);                                               \
+    } else if (grid.isInvar(0) && !grid.isInvar(1) && !grid.isInvar(2)) {      \
+      psc::DepositNc<real_t, dim_yz> deposit;                                  \
+      deposit(fm, ib, x, value);                                               \
     }                                                                          \
-    if (grid.isInvar(1)) {                                                     \
-      jy = 0;                                                                  \
-      g0y = 1.;                                                                \
-      g1y = 0.;                                                                \
-      jyd = 0;                                                                 \
-    }                                                                          \
-    if (grid.isInvar(2)) {                                                     \
-      jz = 0;                                                                  \
-      g0z = 1.;                                                                \
-      g1z = 0.;                                                                \
-      jzd = 0;                                                                 \
-    }                                                                          \
-                                                                               \
-    assert(jx >= -1 && jx < grid.ldims[0]);                                    \
-    assert(jy >= -1 && jy < grid.ldims[1]);                                    \
-    assert(jz >= -1 && jz < grid.ldims[2]);                                    \
-                                                                               \
-    real_t fnq = prt.w() * fnqs;                                               \
-                                                                               \
-    auto f = make_Fields3d<dim_xyz>(flds);                                     \
-                                                                               \
-    f(m, jx, jy, jz) += fnq * g0x * g0y * g0z * (val);                         \
-    f(m, jx + jxd, jy, jz) += fnq * g1x * g0y * g0z * (val);                   \
-    f(m, jx, jy + jyd, jz) += fnq * g0x * g1y * g0z * (val);                   \
-    f(m, jx + jxd, jy + jyd, jz) += fnq * g1x * g1y * g0z * (val);             \
-    f(m, jx, jy, jz + jzd) += fnq * g0x * g0y * g1z * (val);                   \
-    f(m, jx + jxd, jy, jz + jzd) += fnq * g1x * g0y * g1z * (val);             \
-    f(m, jx, jy + jyd, jz + jzd) += fnq * g0x * g1y * g1z * (val);             \
-    f(m, jx + jxd, jy + jyd, jz + jzd) += fnq * g1x * g1y * g1z * (val);       \
   } while (0)
 
 #define DEPOSIT_TO_GRID_2ND_NC(prt, flds, m, val)                              \
