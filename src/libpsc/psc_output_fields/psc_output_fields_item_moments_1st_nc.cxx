@@ -16,6 +16,24 @@ public:
     : dxi_{real_t(1.) / dx}, fnqs_{fnqs}
   {}
 
+  template <typename P, typename F>
+  void operator()(const P& prt, F& flds, int m, real_t val, const Grid_t& grid)
+  {
+    auto xi = prt.x(); /* don't shift back in time */
+    Vec3<real_t> x = {xi[0] * dxi_[0], xi[1] * dxi_[1], xi[2] * dxi_[2]};
+    real_t value = prt.w() * fnqs_ * val;
+
+    auto fm = flds.storage().view(_all, _all, _all, m);
+    auto ib = gt::shape(flds.ib()[0], flds.ib()[1], flds.ib()[2]);
+    if (!grid.isInvar(0) && !grid.isInvar(1) && !grid.isInvar(2)) {
+      psc::DepositNc<real_t, dim_xyz> deposit;
+      deposit(fm, ib, x, value);
+    } else if (grid.isInvar(0) && !grid.isInvar(1) && !grid.isInvar(2)) {
+      psc::DepositNc<real_t, dim_yz> deposit;
+      deposit(fm, ib, x, value);
+    }
+  }
+
   real3_t dxi_;
   real_t fnqs_;
 };
@@ -48,7 +66,7 @@ struct Moment_n_1st_nc
       auto flds = mflds[p];
       for (auto prt : accessor[p]) {
         int m = prt.kind();
-        DEPOSIT_TO_GRID_1ST_NC(prt, flds, m, 1.f);
+        deposit(prt, flds, m, 1.f, grid);
       }
     }
   }
@@ -84,7 +102,7 @@ struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MP, MF>, MF>
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto res = Base::mres_[p];
       for (auto prt : accessor[p]) {
-        DEPOSIT_TO_GRID_1ST_NC(prt, res, 0, prt.q());
+        deposit(prt, res, 0, prt.q(), grid);
       }
     }
     Base::bnd_.add_ghosts(Base::mres_);
@@ -131,7 +149,7 @@ struct Moment_v_1st_nc
         particle_calc_vxi(prt, vxi);
 
         for (int m = 0; m < 3; m++) {
-          DEPOSIT_TO_GRID_1ST_NC(prt, flds, mm + m, vxi[m]);
+          deposit(prt, flds, mm + m, vxi[m], grid);
         }
       }
     }
