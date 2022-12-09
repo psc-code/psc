@@ -31,10 +31,10 @@ struct DepositTest : ::testing::Test
   {
     const real_t eps = std::numeric_limits<real_t>::epsilon();
 
-    auto ib = gt::shape(0, 0, 0);
-    auto flds = gt::zeros<real_t>(ldims_ - 2 * ib);
+    auto flds = gt::zeros_like(rho_ref);
+    auto ibn = (flds.shape() - ldims_) / 2;
     psc::DepositNc<real_t, dim_t> deposit;
-    deposit(flds, ib, x);
+    deposit(flds, -ibn, x);
 
     EXPECT_LT(gt::norm_linf(flds - rho_ref), eps) << flds;
   }
@@ -85,6 +85,24 @@ TYPED_TEST(DepositTest, ChargeLowerLeft)
     rho_ref(1, 1, 1) = 1.f;
   } else if (std::is_same<dim_t, dim_yz>::value) {
     rho_ref(0, 1, 1) = 1.f;
+  }
+  this->test_charge(x, rho_ref);
+}
+
+TYPED_TEST(DepositTest, ChargeCenterWithBnd)
+{
+  using self_type = DepositTest<TypeParam>;
+  using real_t = typename self_type::real_t;
+  using real3_t = typename self_type::real3_t;
+  using dim_t = typename self_type::dim_t;
+
+  real3_t x = {.5, .5, .5};
+  auto ibn = gt::shape(1, 1, 1);
+  auto rho_ref = gt::zeros<real_t>(this->ldims_ + 2 * ibn);
+  if (std::is_same<dim_t, dim_xyz>::value) {
+    rho_ref.view(_s(1, 3), _s(1, 3), _s(1, 3)) = 0.125f;
+  } else if (std::is_same<dim_t, dim_yz>::value) {
+    rho_ref.view(0, _s(1, 3), _s(1, 3)) = 0.25f;
   }
   this->test_charge(x, rho_ref);
 }
