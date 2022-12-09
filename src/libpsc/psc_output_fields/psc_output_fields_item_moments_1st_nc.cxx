@@ -48,12 +48,12 @@ public:
   template <typename MF, typename MP>
   void operator()(MF& mflds, MP& mprts)
   {
+    auto ib = gt::shape(mflds.ib()[0], mflds.ib()[1], mflds.ib()[2]);
     auto accessor = mprts.accessor();
     for (int p = 0; p < mprts.n_patches(); p++) {
-      auto flds = mflds[p];
-      auto ib = gt::shape(flds.ib()[0], flds.ib()[1], flds.ib()[2]);
+      auto flds = mflds.gt().view(_all, _all, _all, _all, p);
       for (auto prt : accessor[p]) {
-        auto fld = flds.storage().view(_all, _all, _all, prt.kind());
+        auto fld = flds.view(_all, _all, _all, prt.kind());
         deposit_(prt, fld, ib, prt.w());
       }
     }
@@ -77,11 +77,10 @@ public:
   template <typename MF, typename MP>
   void operator()(MF& mflds, MP& mprts)
   {
+    auto ib = gt::shape(mflds.ib()[0], mflds.ib()[1], mflds.ib()[2]);
     auto accessor = mprts.accessor();
     for (int p = 0; p < mprts.n_patches(); p++) {
-      auto flds = mflds[p];
-      auto fld = flds.storage().view(_all, _all, _all, 0);
-      auto ib = gt::shape(flds.ib()[0], flds.ib()[1], flds.ib()[2]);
+      auto fld = mflds.gt().view(_all, _all, _all, 0, p);
       for (auto prt : accessor[p]) {
         deposit_(prt, fld, ib, prt.q());
       }
