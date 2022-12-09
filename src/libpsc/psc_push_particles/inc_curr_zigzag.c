@@ -14,7 +14,9 @@ struct CurrentZigzag
   using Real3 = Vec3<real_t>;
 
   CurrentZigzag(const Grid_t& grid)
-    : dt_(grid.dt), dxi_{Real3{1., 1., 1.} / Real3(grid.domain.dx)}
+    : dt_(grid.dt),
+      dxi_{Real3{1., 1., 1.} / Real3(grid.domain.dx)},
+      deposition_(real_t(grid.norm.fnqs / grid.dt) * Real3(grid.domain.dx))
   {
     fnqxs_ = grid.domain.dx[0] * grid.norm.fnqs / grid.dt;
     fnqys_ = grid.domain.dx[1] * grid.norm.fnqs / grid.dt;
@@ -64,17 +66,14 @@ struct CurrentZigzag
     real_t dx[3] = {xp[0] - xm[0], xp[1] - xm[1], xp[2] - xm[2]};
     real_t xa[3] = {.5f * (xm[0] + xp[0]), .5f * (xm[1] + xp[1]),
                     .5f * (xm[2] + xp[2])};
-    real_t h = (1.f / real_t(12.f)) * dx[0] * dx[1] * dx[2];
 
-    int i[3] = {};
+    int i[3];
     for (int d = 0; d < 3; d++) {
       i[d] = fint(xa[d]);
       xa[d] -= i[d];
     }
 
-    int ci0[3] = {};
-    real_t fnqs[3] = {fnqxs_, fnqys_, fnqzs_};
-    deposit(curr_cache, i, fnqs, qni_wni, dx, xa, h, ci0);
+    deposition_(curr_cache, i, qni_wni, dx, xa);
   }
 
   void calc_j2_one_cell(fields_t curr_cache, real_t qni_wni, real_t xm[3],
@@ -150,4 +149,5 @@ private:
   real_t dt_;
   real_t fnqxs_, fnqys_, fnqzs_;
   Real3 dxi_;
+  psc::CurrentDeposition1vb<fields_t> deposition_;
 };
