@@ -3,63 +3,11 @@
 
 #include "testing.hxx"
 
+#include <psc/deposit.hxx>
 #include "grid.hxx"
 #include "fields.hxx"
 
 #include <limits>
-
-// ---------------------------------------------------------------------------
-// DepositNc
-
-template <typename R, typename D>
-class DepositNc
-{
-public:
-  using real_t = R;
-  using real3_t = Vec3<R>;
-  using dim_t = D;
-
-  template <typename F>
-  void operator()(F& flds, real3_t x)
-  {
-    Int3 l;
-    real3_t h;
-    for (int d = 0; d < 3; d++) {
-      l[d] = fint(x[d]);
-      h[d] = x[d] - l[d];
-    }
-    (*this)(flds, l, h);
-  }
-
-  template <typename F>
-  void operator()(F& flds, Int3 l, real3_t h, dim_yz tag)
-  {
-    flds(0, l[1] + 0, l[2] + 0) += (1.f - h[1]) * (1.f - h[2]);
-    flds(0, l[1] + 1, l[2] + 0) += h[1] * (1.f - h[2]);
-    flds(0, l[1] + 0, l[2] + 1) += (1.f - h[1]) * h[2];
-    flds(0, l[1] + 1, l[2] + 1) += h[1] * h[2];
-  }
-
-  template <typename F>
-  void operator()(F& flds, Int3 l, real3_t h, dim_xyz tag)
-  {
-    flds(l[0] + 0, l[1] + 0, l[2] + 0) +=
-      (1.f - h[0]) * (1.f - h[1]) * (1.f - h[2]);
-    flds(l[0] + 1, l[1] + 0, l[2] + 0) += h[0] * (1.f - h[1]) * (1.f - h[2]);
-    flds(l[0] + 0, l[1] + 1, l[2] + 0) += (1.f - h[0]) * h[1] * (1.f - h[2]);
-    flds(l[0] + 1, l[1] + 1, l[2] + 0) += h[0] * h[1] * (1.f - h[2]);
-    flds(l[0] + 0, l[1] + 0, l[2] + 1) += (1.f - h[0]) * (1.f - h[1]) * h[2];
-    flds(l[0] + 1, l[1] + 0, l[2] + 1) += h[0] * (1.f - h[1]) * h[2];
-    flds(l[0] + 0, l[1] + 1, l[2] + 1) += (1.f - h[0]) * h[1] * h[2];
-    flds(l[0] + 1, l[1] + 1, l[2] + 1) += h[0] * h[1] * h[2];
-  }
-
-  template <typename F>
-  void operator()(F& flds, Int3 l, real3_t h)
-  {
-    (*this)(flds, l, h, dim_t{});
-  }
-};
 
 // ---------------------------------------------------------------------------
 
@@ -136,7 +84,7 @@ struct DepositTest : ::testing::Test
     const real_t eps = std::numeric_limits<real_t>::epsilon();
 
     auto flds = gt::zeros<real_t>(ldims_);
-    DepositNc<real_t, dim_t> deposit;
+    psc::DepositNc<real_t, dim_t> deposit;
     deposit(flds, x);
 
     EXPECT_LT(gt::norm_linf(flds - rho_ref), eps) << flds;
@@ -170,7 +118,7 @@ struct DepositTest : ::testing::Test
 
     auto rho_m = gt::zeros<real_t>(ldims_);
     auto rho_p = gt::zeros<real_t>(ldims_);
-    DepositNc<real_t, dim_t> deposit;
+    psc::DepositNc<real_t, dim_t> deposit;
     deposit(rho_m, xm);
     deposit(rho_p, xp);
     gt::gtensor<real_t, 3> d_rho;
