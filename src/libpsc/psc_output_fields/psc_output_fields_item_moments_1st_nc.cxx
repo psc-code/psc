@@ -5,11 +5,12 @@
 
 #include "common_moments.cxx"
 
-template <typename R>
+template <typename R, typename D>
 class Deposit1stNc
 {
 public:
   using real_t = R;
+  using dim_t = D;
   using real3_t = gt::sarray<real_t, 3>;
 
   Deposit1stNc(const real3_t& dx, real_t fnqs)
@@ -25,13 +26,8 @@ public:
 
     auto fm = flds.storage().view(_all, _all, _all, m);
     auto ib = gt::shape(flds.ib()[0], flds.ib()[1], flds.ib()[2]);
-    if (!grid.isInvar(0) && !grid.isInvar(1) && !grid.isInvar(2)) {
-      psc::DepositNc<real_t, dim_xyz> deposit;
-      deposit(fm, ib, x, value);
-    } else if (grid.isInvar(0) && !grid.isInvar(1) && !grid.isInvar(2)) {
-      psc::DepositNc<real_t, dim_yz> deposit;
-      deposit(fm, ib, x, value);
-    }
+    psc::DepositNc<real_t, dim_t> deposit;
+    deposit(fm, ib, x, value);
   }
 
   real3_t dxi_;
@@ -64,7 +60,7 @@ public:
     }
   }
 
-  Deposit1stNc<real_t> deposit_;
+  Deposit1stNc<real_t, dim_t> deposit_;
   const Grid_t& grid_;
 };
 
@@ -93,7 +89,7 @@ public:
     }
   }
 
-  Deposit1stNc<real_t> deposit_;
+  Deposit1stNc<real_t, dim_t> deposit_;
   const Grid_t& grid_;
 };
 
