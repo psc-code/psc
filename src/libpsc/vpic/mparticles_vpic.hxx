@@ -118,13 +118,13 @@ struct ConstAccessorVpic
     using Species = typename Mparticles::Species;
 
     struct const_iterator
-      : std::iterator<std::forward_iterator_tag,
-                      accessor,        // value type
-                      ptrdiff_t,       // difference type
-                      const accessor*, // pointer type
-                      const accessor&> // reference type
-
     {
+      using iterator_category = std::forward_iterator_tag;
+      using value_type = accessor;
+      using difference_type = std::ptrdiff_t;
+      using pointer = const accessor*;
+      using reference = const accessor&;
+
       const_iterator(const Patch& patch, ConstSpeciesIterator sp, uint n)
         : patch_{patch}, sp_{sp}, n_{n}
       {}
