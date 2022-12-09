@@ -18,16 +18,15 @@ public:
   {}
 
   template <typename P, typename F>
-  void operator()(const P& prt, F& flds, int m, real_t val, const Grid_t& grid)
+  void operator()(const P& prt, const F& flds, const gt::shape_type<3>& ib,
+                  real_t val)
   {
     auto xi = prt.x(); /* don't shift back in time */
     Vec3<real_t> x = {xi[0] * dxi_[0], xi[1] * dxi_[1], xi[2] * dxi_[2]};
-    real_t value = prt.w() * fnqs_ * val;
+    real_t value = fnqs_ * val;
 
-    auto fm = flds.storage().view(_all, _all, _all, m);
-    auto ib = gt::shape(flds.ib()[0], flds.ib()[1], flds.ib()[2]);
     psc::DepositNc<real_t, dim_t> deposit;
-    deposit(fm, ib, x, value);
+    deposit(flds, ib, x, value);
   }
 
   real3_t dxi_;
@@ -43,8 +42,7 @@ public:
 
   Moments_n(const Grid_t& grid)
     : deposit_({grid.domain.dx[0], grid.domain.dx[1], grid.domain.dx[2]},
-               grid.norm.fnqs),
-      grid_{grid}
+               grid.norm.fnqs)
   {}
 
   template <typename MF, typename MP>
@@ -53,15 +51,15 @@ public:
     auto accessor = mprts.accessor();
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto flds = mflds[p];
+      auto ib = gt::shape(flds.ib()[0], flds.ib()[1], flds.ib()[2]);
       for (auto prt : accessor[p]) {
-        int m = prt.kind();
-        deposit_(prt, flds, m, 1.f, grid_);
+        auto fld = flds.storage().view(_all, _all, _all, prt.kind());
+        deposit_(prt, fld, ib, prt.w());
       }
     }
   }
 
   Deposit1stNc<real_t, dim_t> deposit_;
-  const Grid_t& grid_;
 };
 
 template <typename R, typename D>
@@ -73,8 +71,7 @@ public:
 
   Moments_rho(const Grid_t& grid)
     : deposit_({grid.domain.dx[0], grid.domain.dx[1], grid.domain.dx[2]},
-               grid.norm.fnqs),
-      grid_{grid}
+               grid.norm.fnqs)
   {}
 
   template <typename MF, typename MP>
@@ -83,14 +80,15 @@ public:
     auto accessor = mprts.accessor();
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto flds = mflds[p];
+      auto fld = flds.storage().view(_all, _all, _all, 0);
+      auto ib = gt::shape(flds.ib()[0], flds.ib()[1], flds.ib()[2]);
       for (auto prt : accessor[p]) {
-        deposit_(prt, flds, 0, prt.q(), grid_);
+        deposit_(prt, fld, ib, prt.q());
       }
     }
   }
 
   Deposit1stNc<real_t, dim_t> deposit_;
-  const Grid_t& grid_;
 };
 
 // ======================================================================
