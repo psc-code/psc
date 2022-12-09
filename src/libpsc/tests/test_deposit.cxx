@@ -1,8 +1,6 @@
 
 #include "gtest/gtest.h"
 
-#include <dim.hxx>
-#include <psc/gtensor.h>
 #include <psc/deposit.hxx>
 
 #include <gtensor/reductions.h>
@@ -33,9 +31,10 @@ struct DepositTest : ::testing::Test
   {
     const real_t eps = std::numeric_limits<real_t>::epsilon();
 
-    auto flds = gt::zeros<real_t>(ldims_);
+    auto ib = gt::shape(0, 0, 0);
+    auto flds = gt::zeros<real_t>(ldims_ - 2 * ib);
     psc::DepositNc<real_t, dim_t> deposit;
-    deposit(flds, x);
+    deposit(flds, ib, x);
 
     EXPECT_LT(gt::norm_linf(flds - rho_ref), eps) << flds;
   }

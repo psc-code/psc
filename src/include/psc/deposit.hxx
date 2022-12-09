@@ -2,7 +2,9 @@
 #pragma once
 
 #include <kg/Vec3.h>
+#include <dim.hxx>
 #include <psc_bits.h>
+#include <psc/gtensor.h>
 
 namespace psc
 {
@@ -19,13 +21,14 @@ public:
   using dim_t = D;
 
   template <typename F>
-  void operator()(F& flds, real3_t x)
+  void operator()(F& flds, const gt::shape_type<3>& ib, real3_t x)
   {
     Int3 l;
     real3_t h;
     for (int d = 0; d < 3; d++) {
       l[d] = fint(x[d]);
       h[d] = x[d] - l[d];
+      l[d] -= ib[d];
     }
     (*this)(flds, l, h);
   }
