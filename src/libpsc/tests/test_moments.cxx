@@ -90,6 +90,107 @@ TYPED_TEST(PushParticlesTest, Moment2) // FIXME, mostly copied
   }
 }
 
+TYPED_TEST(PushParticlesTest, Moment_rho_1st_nc_cc)
+{
+  using Mparticles = typename TypeParam::Mparticles;
+  using Mfields = typename TypeParam::Mfields;
+  using Bnd = typename TypeParam::Bnd;
+  using Particle = typename Mparticles::Particle;
+  using real_t = typename Mfields::real_t;
+  using Moment_t = Moment_rho_1st_nc<Mparticles, Mfields>;
+
+  const real_t eps = 1e-6;
+  auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
+  this->make_psc(kinds);
+  const auto& grid = this->grid();
+
+  // init particles
+  Mparticles mprts{grid};
+  {
+    auto injector = mprts.injector();
+    injector[0]({{5., 5., 5.}, {0., 0., 0.}, 1., 0});
+  }
+  Moment_t moment{mprts};
+  auto gt = moment.gt();
+  for (int p = 0; p < grid.n_patches(); p++) {
+    grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
+      real_t val = gt(i, j, k, 0, p);
+      if (std::is_same<typename PushParticlesTest<TypeParam>::dim,
+                       dim_xyz>::value) {
+        if ((i == 0 && j == 0 && k == 0) || (i == 1 && j == 0 && k == 0) ||
+            (i == 0 && j == 1 && k == 0) || (i == 1 && j == 1 && k == 0) ||
+            (i == 0 && j == 0 && k == 1) || (i == 1 && j == 0 && k == 1) ||
+            (i == 0 && j == 1 && k == 1) || (i == 1 && j == 1 && k == 1)) {
+          EXPECT_NEAR(val, .005 / 8., eps)
+            << "ijk " << i << " " << j << " " << k;
+        } else {
+          EXPECT_NEAR(val, 0., eps) << "ijk " << i << " " << j << " " << k;
+        }
+      } else if (std::is_same<typename PushParticlesTest<TypeParam>::dim,
+                              dim_yz>::value) {
+        if ((i == 0 && j == 0 && k == 0) || (i == 0 && j == 1 && k == 0) ||
+            (i == 0 && j == 0 && k == 1) || (i == 0 && j == 1 && k == 1)) {
+          EXPECT_NEAR(val, .005 / 4., eps)
+            << "ijk " << i << " " << j << " " << k;
+
+        } else {
+          EXPECT_NEAR(val, 0., eps) << "ijk " << i << " " << j << " " << k;
+        }
+      }
+      // if (val) {
+      //   printf("ijk %d %d %d val %g\n", i, j, k, val);
+      // }
+    });
+  }
+}
+
+TYPED_TEST(PushParticlesTest, Moment_rho_1st_nc_nc)
+{
+  using Mparticles = typename TypeParam::Mparticles;
+  using Mfields = typename TypeParam::Mfields;
+  using Bnd = typename TypeParam::Bnd;
+  using Particle = typename Mparticles::Particle;
+  using real_t = typename Mfields::real_t;
+  using Moment_t = Moment_rho_1st_nc<Mparticles, Mfields>;
+
+  const real_t eps = 1e-4;
+  auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
+  this->make_psc(kinds);
+  const auto& grid = this->grid();
+
+  // init particles
+  Mparticles mprts{grid};
+  {
+    auto injector = mprts.injector();
+    injector[0]({{10., 10., 10.}, {0., 0., 0.}, 1., 0});
+  }
+  Moment_t moment{mprts};
+  auto gt = moment.gt();
+  for (int p = 0; p < grid.n_patches(); p++) {
+    grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
+      real_t val = gt(i, j, k, 0, p);
+      if (std::is_same<typename PushParticlesTest<TypeParam>::dim,
+                       dim_xyz>::value) {
+        if (i == 1 && j == 1 && k == 1) {
+          EXPECT_NEAR(val, .005, eps) << "ijk " << i << " " << j << " " << k;
+        } else {
+          EXPECT_NEAR(val, 0., eps) << "ijk " << i << " " << j << " " << k;
+        }
+      } else if (std::is_same<typename PushParticlesTest<TypeParam>::dim,
+                              dim_yz>::value) {
+        if (j == 1 && k == 1) {
+          EXPECT_NEAR(val, .005, eps) << "ijk " << i << " " << j << " " << k;
+        } else {
+          EXPECT_NEAR(val, 0., eps) << "ijk " << i << " " << j << " " << k;
+        }
+      }
+      // if (val) {
+      //   printf("ijk %d %d %d val %g\n", i, j, k, val);
+      // }
+    });
+  }
+}
+
 int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
