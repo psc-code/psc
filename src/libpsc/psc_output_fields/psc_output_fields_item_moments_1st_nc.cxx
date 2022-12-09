@@ -161,9 +161,3 @@ struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MP, MF>, MF>
                                       _s(bnd[2], -bnd[2]));
   }
 };
-
-#define MAKE_POFI_OPS(MP, MF, TYPE)                                            \
-  FieldsItemMomentOps<Moment_n_1st_nc<MP, MF>>                                 \
-    psc_output_fields_item_n_1st_nc_##TYPE##_ops;                              \
-  FieldsItemMomentOps<Moment_rho_1st_nc<MP, MF>>                               \
-    psc_output_fields_item_rho_1st_nc_##TYPE##_ops;
