@@ -65,23 +65,9 @@ TYPED_TEST(DepositTest, ChargeCenter)
   real3_t x = {1.5, 1.5, 1.5};
   auto rho_ref = gt::zeros<real_t>(this->ldims_);
   if (std::is_same<dim_t, dim_xyz>::value) {
-    // clang-format off
-    rho_ref.view(1, _all, _all) = gt::gtensor<real_t, 2>({{0., 0.   , 0.   , 0.},
-                                                          {0., 0.125, 0.125, 0.},
-                                                          {0., 0.125, 0.125, 0.},
-                                                          {0., 0.   , 0.   , 0.}});
-    rho_ref.view(2, _all, _all) = gt::gtensor<real_t, 2>({{0., 0.   , 0.   , 0.},
-                                                          {0., 0.125, 0.125, 0.},
-                                                          {0., 0.125, 0.125, 0.},
-                                                          {0., 0.   , 0.   , 0.}});
-    // clang-format on
+    rho_ref.view(_s(1, 3), _s(1, 3), _s(1, 3)) = 0.125f;
   } else if (std::is_same<dim_t, dim_yz>::value) {
-    // clang-format off
-    rho_ref.view(0, _all, _all) = gt::gtensor<real_t, 2>({{0., 0.  , 0.  , 0.},
-                                                          {0., 0.25, 0.25, 0.},
-                                                          {0., 0.25, 0.25, 0.},
-                                                          {0., 0.  , 0.  , 0.}});
-    // clang-format on
+    rho_ref.view(0, _s(1, 3), _s(1, 3)) = 0.25f;
   }
   this->test_charge(x, rho_ref);
 }
@@ -96,19 +82,9 @@ TYPED_TEST(DepositTest, ChargeLowerLeft)
   real3_t x = {1., 1., 1.};
   auto rho_ref = gt::zeros<real_t>(this->ldims_);
   if (std::is_same<dim_t, dim_xyz>::value) {
-    // clang-format off
-    rho_ref.view(1, _all, _all) = gt::gtensor<real_t, 2>({{0., 0., 0., 0.},
-                                                          {0., 1., 0., 0.},
-                                                          {0., 0., 0., 0.},
-                                                          {0., 0., 0., 0.}});
-    // clang-format on
+    rho_ref(1, 1, 1) = 1.f;
   } else if (std::is_same<dim_t, dim_yz>::value) {
-    // clang-format off
-    rho_ref.view(0, _all, _all) = gt::gtensor<real_t, 2>({{0., 0., 0., 0.},
-                                                          {0., 1., 0., 0.},
-                                                          {0., 0., 0., 0.},
-                                                          {0., 0., 0., 0.}});
-    // clang-format on
+    rho_ref(0, 1, 1) = 1.f;
   }
   this->test_charge(x, rho_ref);
 }
