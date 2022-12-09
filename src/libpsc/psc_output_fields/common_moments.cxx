@@ -10,8 +10,9 @@
 #define DEPOSIT_TO_GRID_1ST_NC(prt, flds, m, val)                              \
   do {                                                                         \
     auto xi = prt.x(); /* don't shift back in time */                          \
-    Vec3<real_t> x = {xi[0] * dxi, xi[1] * dyi, xi[2] * dzi};                  \
-    real_t value = prt.w() * fnqs * val;                                       \
+    Vec3<real_t> x = {xi[0] * deposit.dxi_[0], xi[1] * deposit.dxi_[1],        \
+                      xi[2] * deposit.dxi_[2]};                                \
+    real_t value = prt.w() * deposit.fnqs_ * val;                              \
                                                                                \
     auto fm = flds.storage().view(_all, _all, _all, m);                        \
     auto ib = gt::shape(flds.ib()[0], flds.ib()[1], flds.ib()[2]);             \

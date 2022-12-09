@@ -5,6 +5,21 @@
 
 #include "common_moments.cxx"
 
+template <typename R>
+class Deposit1stNc
+{
+public:
+  using real_t = R;
+  using real3_t = gt::sarray<real_t, 3>;
+
+  Deposit1stNc(const real3_t& dx, real_t fnqs)
+    : dxi_{real_t(1.) / dx}, fnqs_{fnqs}
+  {}
+
+  real3_t dxi_;
+  real_t fnqs_;
+};
+
 // ======================================================================
 // n
 
@@ -24,9 +39,9 @@ struct Moment_n_1st_nc
   static void run(Mfields& mflds, Mparticles& mprts)
   {
     const auto& grid = mprts.grid();
-    real_t fnqs = grid.norm.fnqs;
-    real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1],
-           dzi = 1.f / grid.domain.dx[2];
+    Deposit1stNc<real_t> deposit(
+      {grid.domain.dx[0], grid.domain.dx[1], grid.domain.dx[2]},
+      grid.norm.fnqs);
 
     auto accessor = mprts.accessor();
     for (int p = 0; p < mprts.n_patches(); p++) {
@@ -61,9 +76,9 @@ struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MP, MF>, MF>
   explicit Moment_rho_1st_nc(const Mparticles& mprts) : Base{mprts.grid()}
   {
     const auto& grid = mprts.grid();
-    real_t fnqs = grid.norm.fnqs;
-    real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1],
-           dzi = 1.f / grid.domain.dx[2];
+    Deposit1stNc<real_t> deposit(
+      {grid.domain.dx[0], grid.domain.dx[1], grid.domain.dx[2]},
+      grid.norm.fnqs);
 
     auto accessor = mprts.accessor();
     for (int p = 0; p < mprts.n_patches(); p++) {
@@ -102,9 +117,9 @@ struct Moment_v_1st_nc
   static void run(Mfields& mflds, Mparticles& mprts)
   {
     const Grid_t& grid = mprts.grid();
-    real_t fnqs = grid.norm.fnqs;
-    real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1],
-           dzi = 1.f / grid.domain.dx[2];
+    Deposit1stNc<real_t> deposit(
+      {grid.domain.dx[0], grid.domain.dx[1], grid.domain.dx[2]},
+      grid.norm.fnqs);
 
     auto accessor = mprts.accessor();
     for (int p = 0; p < mprts.n_patches(); p++) {
