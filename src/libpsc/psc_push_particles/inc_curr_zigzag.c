@@ -36,9 +36,26 @@ struct CurrentZigzag
   }
 
   // ----------------------------------------------------------------------
+  // calc_j
 
-  void calc_zigzag(fields_t curr_cache, real_t* xm, real_t* xp, real_t qni_wni)
+  void calc_j(fields_t curr_cache, real_t* xm, real_t* xp, int* lf, int* lg,
+              real_t qni_wni, real_t* vxi)
   {
+    // this way, we guarantee that the average position in invar directions
+    // will remain in the 0th cell
+    if (Dim::InvarX::value) {
+      xm[0] = .5f;
+      xp[0] = xm[0] + vxi[0] * dt_ * dxi_[0];
+    }
+    if (Dim::InvarY::value) {
+      xm[1] = .5f;
+      xp[1] = xm[1] + vxi[1] * dt_ * dxi_[1];
+    }
+    if (Dim::InvarZ::value) {
+      xm[1] = .5f;
+      xp[1] = xm[1] + vxi[1] * dt_ * dxi_[1];
+    }
+
     real_t xr[3];
     bool crossed = false;
     for (int d = 0; d < 3; d++) {
@@ -56,37 +73,6 @@ struct CurrentZigzag
     } else {
       calc_j2_one_cell(curr_cache, qni_wni, xm, xp);
     }
-  }
-
-  // ----------------------------------------------------------------------
-  // dim_yz
-
-  void calc_j(fields_t curr_cache, real_t* xm, real_t* xp, real_t* vxi,
-              real_t qni_wni, dim_yz tag)
-  {
-    xm[0] = .5f; // this way, we guarantee that the average position will remain
-                 // in the 0th cell
-    xp[0] = xm[0] + vxi[0] * dt_ * dxi_[0];
-
-    calc_zigzag(curr_cache, xm, xp, qni_wni);
-  }
-
-  // ----------------------------------------------------------------------
-  // dim_xyz
-
-  void calc_j(fields_t curr_cache, real_t* xm, real_t* xp, real_t* vxi,
-              real_t qni_wni, dim_xyz tag)
-  {
-    calc_zigzag(curr_cache, xm, xp, qni_wni);
-  }
-
-  // ----------------------------------------------------------------------
-  // calc_j
-
-  void calc_j(fields_t curr_cache, real_t* xm, real_t* xp, int* lf, int* lg,
-              real_t qni_wni, real_t* vxi)
-  {
-    calc_j(curr_cache, xm, xp, vxi, qni_wni, Dim{});
   }
 
 private:

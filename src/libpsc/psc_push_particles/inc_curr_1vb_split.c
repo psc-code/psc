@@ -178,18 +178,12 @@ struct Current1vbSplit
   void calc_j(fields_t curr_cache, real_t* xm, real_t* xp, real_t* vxi,
               real_t qni_wni, dim_yz tag)
   {
-    xm[0] = .5f; // this way, we guarantee that the average position will remain
-                 // in the 0th cell
-    xp[0] = xm[0] + vxi[0] * dt_ * dxi_[0];
     calc_j2_split_dim_z(curr_cache, qni_wni, xm, xp);
   }
 
   void calc_j(fields_t curr_cache, real_t* xm, real_t* xp, real_t* vxi,
               real_t qni_wni, dim_xz tag)
   {
-    xm[1] = .5f; // this way, we guarantee that the average position will remain
-                 // in the 0th cell
-    xp[1] = xm[1] + vxi[1] * dt_ * dxi_[1];
     calc_j2_split_dim_z(curr_cache, qni_wni, xm, xp);
   }
 
@@ -205,6 +199,20 @@ struct Current1vbSplit
   void calc_j(fields_t curr_cache, real_t* xm, real_t* xp, int* lf, int* lg,
               real_t qni_wni, real_t* vxi)
   {
+    // this way, we guarantee that the average position in invar directions
+    // will remain in the 0th cell
+    if (Dim::InvarX::value) {
+      xm[0] = .5f;
+      xp[0] = xm[0] + vxi[0] * dt_ * dxi_[0];
+    }
+    if (Dim::InvarY::value) {
+      xm[1] = .5f;
+      xp[1] = xm[1] + vxi[1] * dt_ * dxi_[1];
+    }
+    if (Dim::InvarZ::value) {
+      xm[2] = .5f;
+      xp[2] = xm[2] + vxi[2] * dt_ * dxi_[2];
+    }
     calc_j(curr_cache, xm, xp, vxi, qni_wni, Dim{});
   }
 
