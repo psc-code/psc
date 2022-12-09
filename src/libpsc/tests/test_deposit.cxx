@@ -174,7 +174,7 @@ struct DepositTest : ::testing::Test
     deposit(rho_m, xm);
     deposit(rho_p, xp);
     gt::gtensor<real_t, 3> d_rho;
-    if (std::is_same_v<dim_t, dim_yz>) {
+    if (std::is_same<dim_t, dim_yz>::value) {
       d_rho = (rho_p - rho_m).view(_all, _s(1, _), _s(1, _));
     } else {
       d_rho = (rho_p - rho_m).view(_s(1, _), _s(1, _), _s(1, _));
@@ -191,7 +191,7 @@ struct DepositTest : ::testing::Test
   void test_current(real3_t xm, real3_t xp, real3_t vxi, const F& jxi_ref,
                     const F& jyi_ref, const F& jzi_ref)
   {
-    if (!std::is_same_v<dim_t, dim_yz>) {
+    if (!std::is_same<dim_t, dim_yz>::value) {
       return;
     }
     auto flds = calc_current(xm, xp, vxi);
@@ -247,7 +247,7 @@ TYPED_TEST(DepositTest, ChargeCenter)
 
   real3_t x = {1.5, 1.5, 1.5};
   auto rho_ref = gt::zeros<real_t>(this->ldims_);
-  if (std::is_same_v<dim_t, dim_xyz>) {
+  if (std::is_same<dim_t, dim_xyz>::value) {
     // clang-format off
     rho_ref.view(1, _all, _all) = gt::gtensor<real_t, 2>({{0., 0.   , 0.   , 0.},
                                                           {0., 0.125, 0.125, 0.},
@@ -258,7 +258,7 @@ TYPED_TEST(DepositTest, ChargeCenter)
                                                           {0., 0.125, 0.125, 0.},
                                                           {0., 0.   , 0.   , 0.}});
     // clang-format on
-  } else if (std::is_same_v<dim_t, dim_yz>) {
+  } else if (std::is_same<dim_t, dim_yz>::value) {
     // clang-format off
     rho_ref.view(0, _all, _all) = gt::gtensor<real_t, 2>({{0., 0.  , 0.  , 0.},
                                                           {0., 0.25, 0.25, 0.},
@@ -278,14 +278,14 @@ TYPED_TEST(DepositTest, ChargeLowerLeft)
 
   real3_t x = {1., 1., 1.};
   auto rho_ref = gt::zeros<real_t>(this->ldims_);
-  if (std::is_same_v<dim_t, dim_xyz>) {
+  if (std::is_same<dim_t, dim_xyz>::value) {
     // clang-format off
     rho_ref.view(1, _all, _all) = gt::gtensor<real_t, 2>({{0., 0., 0., 0.},
                                                           {0., 1., 0., 0.},
                                                           {0., 0., 0., 0.},
                                                           {0., 0., 0., 0.}});
     // clang-format on
-  } else if (std::is_same_v<dim_t, dim_yz>) {
+  } else if (std::is_same<dim_t, dim_yz>::value) {
     // clang-format off
     rho_ref.view(0, _all, _all) = gt::gtensor<real_t, 2>({{0., 0., 0., 0.},
                                                           {0., 1., 0., 0.},
@@ -508,9 +508,9 @@ TYPED_TEST(DepositTest, CurrentYZCrossYZ)
 
   real3_t xm = {.5, 1.9, 1.6}, xp = {.5, 2.1, 2.2};
   real3_t vxi = {0., .2, 0.};
-  if (std::is_same_v<
-        typename TypeParam::Current,
-        Current1vbSplit<opt_order_1st, dim_yz, typename TypeParam::fields_t>>) {
+  if (std::is_same<typename TypeParam::Current,
+                   Current1vbSplit<opt_order_1st, dim_yz,
+                                   typename TypeParam::fields_t>>::value) {
     // clang-format off
     gt::gtensor<real_t, 2> jxi_ref = {{0., 0., 0., 0.},
                                       {0., 0., 0., 0.},
