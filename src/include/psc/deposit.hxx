@@ -17,7 +17,7 @@ class DepositNc
 {
 public:
   using real_t = R;
-  using real3_t = Vec3<R>;
+  using real3_t = gt::sarray<R, 3>;
   using dim_t = D;
 
   template <typename F>

@@ -21,8 +21,7 @@ public:
   void operator()(const P& prt, const F& flds, const gt::shape_type<3>& ib,
                   real_t val)
   {
-    auto xi = prt.x(); /* don't shift back in time */
-    Vec3<real_t> x = {xi[0] * dxi_[0], xi[1] * dxi_[1], xi[2] * dxi_[2]};
+    real3_t x = prt.x() * dxi_;
     real_t value = fnqs_ * val;
 
     psc::DepositNc<real_t, dim_t> deposit;
