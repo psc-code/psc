@@ -1,6 +1,9 @@
 
 #pragma once
 
+#include <kg/Vec3.h>
+#include <psc_bits.h>
+
 namespace psc
 {
 
