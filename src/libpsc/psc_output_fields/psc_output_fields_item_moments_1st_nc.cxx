@@ -24,8 +24,7 @@ public:
     real3_t x = prt.x() * dxi_;
     real_t value = fnqs_ * val;
 
-    psc::DepositNc<real_t, dim_t> deposit;
-    deposit(flds, ib, x, value);
+    psc::deposit::nc<dim_t>(flds, ib, x, value);
   }
 
   real3_t dxi_;

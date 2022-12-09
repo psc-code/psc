@@ -16,7 +16,7 @@ template <typename T>
 struct DepositTest : ::testing::Test
 {
   using real_t = typename T::real_t;
-  using real3_t = Vec3<real_t>;
+  using real3_t = gt::sarray<real_t, 3>;
   using dim_t = typename T::dim_t;
 
   DepositTest() : ldims_{4, 4, 4}
@@ -33,8 +33,7 @@ struct DepositTest : ::testing::Test
 
     auto flds = gt::zeros_like(rho_ref);
     auto ibn = (flds.shape() - ldims_) / 2;
-    psc::DepositNc<real_t, dim_t> deposit;
-    deposit(flds, -ibn, x, val);
+    psc::deposit::nc<dim_t>(flds, -ibn, x, val);
 
     EXPECT_LT(gt::norm_linf(flds - rho_ref), eps) << flds << "\nref\n"
                                                   << rho_ref;

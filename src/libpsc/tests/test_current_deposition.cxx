@@ -79,18 +79,6 @@ struct CurrentDepositionTest : ::testing::Test
 
   const Grid_t& grid() const { return *grid_; }
 
-  template <typename F>
-  void test_charge(real3_t x, const F& rho_ref)
-  {
-    const real_t eps = std::numeric_limits<real_t>::epsilon();
-
-    auto flds = gt::zeros<real_t>(ldims_);
-    psc::DepositNc<real_t, dim_t> deposit;
-    deposit(flds, x);
-
-    EXPECT_LT(gt::norm_linf(flds - rho_ref), eps) << flds;
-  }
-
   auto calc_current(real3_t xm, real3_t xp, real3_t vxi)
   {
     using fields_view_t = typename T::fields_view_t;
@@ -120,9 +108,8 @@ struct CurrentDepositionTest : ::testing::Test
     auto ib = gt::shape(0, 0, 0);
     auto rho_m = gt::zeros<real_t>(ldims_);
     auto rho_p = gt::zeros<real_t>(ldims_);
-    psc::DepositNc<real_t, dim_t> deposit;
-    deposit(rho_m, ib, xm, 1.);
-    deposit(rho_p, ib, xp, 1.);
+    psc::deposit::nc<dim_t>(rho_m, ib, xm, 1.);
+    psc::deposit::nc<dim_t>(rho_p, ib, xp, 1.);
     gt::gtensor<real_t, 3> d_rho;
     if (std::is_same<dim_t, dim_yz>::value) {
       d_rho = (rho_p - rho_m).view(_all, _s(1, _), _s(1, _));

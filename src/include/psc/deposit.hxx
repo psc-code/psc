@@ -10,31 +10,20 @@ namespace psc
 {
 
 // ---------------------------------------------------------------------------
-// DepositNc
+// Deposit1st
 
 template <typename R, typename D>
-class DepositNc
+class Deposit1st
 {
 public:
   using real_t = R;
   using real3_t = gt::sarray<R, 3>;
   using dim_t = D;
 
+private:
   template <typename F>
-  void operator()(F& flds, const gt::shape_type<3>& ib, real3_t x, real_t val)
-  {
-    Int3 l;
-    real3_t h;
-    for (int d = 0; d < 3; d++) {
-      l[d] = fint(x[d]);
-      h[d] = x[d] - l[d];
-      l[d] -= ib[d];
-    }
-    (*this)(flds, l, h, val);
-  }
-
-  template <typename F>
-  void operator()(F& flds, Int3 l, real3_t h, real_t val, dim_yz tag)
+  void operator()(F& flds, const gt::sarray<int, 3>& l, const real3_t& h,
+                  real_t val, dim_yz tag)
   {
     flds(0, l[1] + 0, l[2] + 0) += val * (1.f - h[1]) * (1.f - h[2]);
     flds(0, l[1] + 1, l[2] + 0) += val * h[1] * (1.f - h[2]);
@@ -43,7 +32,8 @@ public:
   }
 
   template <typename F>
-  void operator()(F& flds, Int3 l, real3_t h, real_t val, dim_xyz tag)
+  void operator()(F& flds, const gt::sarray<int, 3>& l, const real3_t& h,
+                  real_t val, dim_xyz tag)
   {
     // clang-format off
     flds(l[0] + 0, l[1] + 0, l[2] + 0) += val * (1.f - h[0]) * (1.f - h[1]) * (1.f - h[2]);
@@ -57,11 +47,32 @@ public:
     // clang-format on
   }
 
+public:
   template <typename F>
-  void operator()(F& flds, Int3 l, real3_t h, real_t val)
+  void operator()(F& flds, const gt::sarray<int, 3>& l, const real3_t& h,
+                  real_t val)
   {
     (*this)(flds, l, h, val, dim_t{});
   }
 };
+
+namespace deposit
+{
+
+template <typename D, typename F, typename T>
+void nc(F& flds, const gt::sarray<int, 3>& ib, const gt::sarray<T, 3>& x, T val)
+{
+  gt::sarray<int, 3> l;
+  gt::sarray<T, 3> h;
+  for (int d = 0; d < 3; d++) {
+    l[d] = fint(x[d]);
+    h[d] = x[d] - l[d];
+    l[d] -= ib[d];
+  }
+  Deposit1st<T, D> deposit;
+  deposit(flds, l, h, val);
+}
+
+} // namespace deposit
 
 } // namespace psc
