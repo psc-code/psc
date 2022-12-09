@@ -38,6 +38,63 @@ public:
   real_t fnqs_;
 };
 
+template <typename R>
+class Moments_n
+{
+public:
+  using real_t = R;
+
+  Moments_n(const Grid_t& grid)
+    : deposit_({grid.domain.dx[0], grid.domain.dx[1], grid.domain.dx[2]},
+               grid.norm.fnqs),
+      grid_{grid}
+  {}
+
+  template <typename MF, typename MP>
+  void operator()(MF& mflds, MP& mprts)
+  {
+    auto accessor = mprts.accessor();
+    for (int p = 0; p < mprts.n_patches(); p++) {
+      auto flds = mflds[p];
+      for (auto prt : accessor[p]) {
+        int m = prt.kind();
+        deposit_(prt, flds, m, 1.f, grid_);
+      }
+    }
+  }
+
+  Deposit1stNc<real_t> deposit_;
+  const Grid_t& grid_;
+};
+
+template <typename R>
+class Moments_rho
+{
+public:
+  using real_t = R;
+
+  Moments_rho(const Grid_t& grid)
+    : deposit_({grid.domain.dx[0], grid.domain.dx[1], grid.domain.dx[2]},
+               grid.norm.fnqs),
+      grid_{grid}
+  {}
+
+  template <typename MF, typename MP>
+  void operator()(MF& mflds, MP& mprts)
+  {
+    auto accessor = mprts.accessor();
+    for (int p = 0; p < mprts.n_patches(); p++) {
+      auto flds = mflds[p];
+      for (auto prt : accessor[p]) {
+        deposit_(prt, flds, 0, prt.q(), grid_);
+      }
+    }
+  }
+
+  Deposit1stNc<real_t> deposit_;
+  const Grid_t& grid_;
+};
+
 // ======================================================================
 // n
 
@@ -56,19 +113,8 @@ struct Moment_n_1st_nc
 
   static void run(Mfields& mflds, Mparticles& mprts)
   {
-    const auto& grid = mprts.grid();
-    Deposit1stNc<real_t> deposit(
-      {grid.domain.dx[0], grid.domain.dx[1], grid.domain.dx[2]},
-      grid.norm.fnqs);
-
-    auto accessor = mprts.accessor();
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      auto flds = mflds[p];
-      for (auto prt : accessor[p]) {
-        int m = prt.kind();
-        deposit(prt, flds, m, 1.f, grid);
-      }
-    }
+    Moments_n<real_t> moments{mprts.grid()};
+    moments(mflds, mprts);
   }
 };
 
@@ -93,18 +139,8 @@ struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MP, MF>, MF>
 
   explicit Moment_rho_1st_nc(const Mparticles& mprts) : Base{mprts.grid()}
   {
-    const auto& grid = mprts.grid();
-    Deposit1stNc<real_t> deposit(
-      {grid.domain.dx[0], grid.domain.dx[1], grid.domain.dx[2]},
-      grid.norm.fnqs);
-
-    auto accessor = mprts.accessor();
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      auto res = Base::mres_[p];
-      for (auto prt : accessor[p]) {
-        deposit(prt, res, 0, prt.q(), grid);
-      }
-    }
+    Moments_rho<real_t> moments{mprts.grid()};
+    moments(Base::mres_, mprts);
     Base::bnd_.add_ghosts(Base::mres_);
   }
 
