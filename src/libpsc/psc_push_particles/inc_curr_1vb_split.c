@@ -38,11 +38,14 @@ struct Current1vbSplit
   static void calc_j2_split_along_dim(int dim, int im, real_t x1[3],
                                       real_t xm[3], real_t xp[3])
   {
-    real_t bnd = 0.f;       // quell warning
-    if (xp[dim] > im + 1) { // crossed boundary to right
-      bnd = im + 1;
-    } else if (xp[dim] < im) { // crosses boundary to left
+    real_t bnd = 0.f; // quell warning
+    int ip = fint(xp[dim]);
+    if (ip == im + 1) { // crossed boundary to right
+      bnd = ip;
+    } else if (ip == im - 1) { // crosses boundary to left
       bnd = im;
+    } else {
+      assert(0);
     }
     real_t frac = (bnd - xm[dim]) / (xp[dim] - xm[dim]);
     // FIXME, set d == dim value to exact boundary?
