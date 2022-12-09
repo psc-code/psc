@@ -27,16 +27,17 @@ struct DepositTest : ::testing::Test
   }
 
   template <typename F>
-  void test_charge(real3_t x, const F& rho_ref)
+  void test_deposit(real3_t x, real_t val, const F& rho_ref)
   {
     const real_t eps = std::numeric_limits<real_t>::epsilon();
 
     auto flds = gt::zeros_like(rho_ref);
     auto ibn = (flds.shape() - ldims_) / 2;
     psc::DepositNc<real_t, dim_t> deposit;
-    deposit(flds, -ibn, x);
+    deposit(flds, -ibn, x, val);
 
-    EXPECT_LT(gt::norm_linf(flds - rho_ref), eps) << flds;
+    EXPECT_LT(gt::norm_linf(flds - rho_ref), eps) << flds << "\nref\n"
+                                                  << rho_ref;
   }
 
   gt::shape_type<3> ldims_;
@@ -63,13 +64,14 @@ TYPED_TEST(DepositTest, ChargeCenter)
   using dim_t = typename self_type::dim_t;
 
   real3_t x = {1.5, 1.5, 1.5};
+  real_t val = .1;
   auto rho_ref = gt::zeros<real_t>(this->ldims_);
   if (std::is_same<dim_t, dim_xyz>::value) {
-    rho_ref.view(_s(1, 3), _s(1, 3), _s(1, 3)) = 0.125f;
+    rho_ref.view(_s(1, 3), _s(1, 3), _s(1, 3)) = val / 8.f;
   } else if (std::is_same<dim_t, dim_yz>::value) {
-    rho_ref.view(0, _s(1, 3), _s(1, 3)) = 0.25f;
+    rho_ref.view(0, _s(1, 3), _s(1, 3)) = val / 4.f;
   }
-  this->test_charge(x, rho_ref);
+  this->test_deposit(x, val, rho_ref);
 }
 
 TYPED_TEST(DepositTest, ChargeLowerLeft)
@@ -80,13 +82,14 @@ TYPED_TEST(DepositTest, ChargeLowerLeft)
   using dim_t = typename self_type::dim_t;
 
   real3_t x = {1., 1., 1.};
+  real_t val = .1;
   auto rho_ref = gt::zeros<real_t>(this->ldims_);
   if (std::is_same<dim_t, dim_xyz>::value) {
-    rho_ref(1, 1, 1) = 1.f;
+    rho_ref(1, 1, 1) = val;
   } else if (std::is_same<dim_t, dim_yz>::value) {
-    rho_ref(0, 1, 1) = 1.f;
+    rho_ref(0, 1, 1) = val;
   }
-  this->test_charge(x, rho_ref);
+  this->test_deposit(x, val, rho_ref);
 }
 
 TYPED_TEST(DepositTest, ChargeCenterWithBnd)
@@ -97,14 +100,15 @@ TYPED_TEST(DepositTest, ChargeCenterWithBnd)
   using dim_t = typename self_type::dim_t;
 
   real3_t x = {.5, .5, .5};
+  real_t val = 1.;
   auto ibn = gt::shape(1, 1, 1);
   auto rho_ref = gt::zeros<real_t>(this->ldims_ + 2 * ibn);
   if (std::is_same<dim_t, dim_xyz>::value) {
-    rho_ref.view(_s(1, 3), _s(1, 3), _s(1, 3)) = 0.125f;
+    rho_ref.view(_s(1, 3), _s(1, 3), _s(1, 3)) = val / 8.f;
   } else if (std::is_same<dim_t, dim_yz>::value) {
-    rho_ref.view(0, _s(1, 3), _s(1, 3)) = 0.25f;
+    rho_ref.view(0, _s(1, 3), _s(1, 3)) = val / 4.f;
   }
-  this->test_charge(x, rho_ref);
+  this->test_deposit(x, val, rho_ref);
 }
 
 int main(int argc, char** argv)

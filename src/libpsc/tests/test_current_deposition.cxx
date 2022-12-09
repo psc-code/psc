@@ -121,8 +121,8 @@ struct CurrentDepositionTest : ::testing::Test
     auto rho_m = gt::zeros<real_t>(ldims_);
     auto rho_p = gt::zeros<real_t>(ldims_);
     psc::DepositNc<real_t, dim_t> deposit;
-    deposit(rho_m, ib, xm);
-    deposit(rho_p, ib, xp);
+    deposit(rho_m, ib, xm, 1.);
+    deposit(rho_p, ib, xp, 1.);
     gt::gtensor<real_t, 3> d_rho;
     if (std::is_same<dim_t, dim_yz>::value) {
       d_rho = (rho_p - rho_m).view(_all, _s(1, _), _s(1, _));

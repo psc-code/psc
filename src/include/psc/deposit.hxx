@@ -21,7 +21,7 @@ public:
   using dim_t = D;
 
   template <typename F>
-  void operator()(F& flds, const gt::shape_type<3>& ib, real3_t x)
+  void operator()(F& flds, const gt::shape_type<3>& ib, real3_t x, real_t val)
   {
     Int3 l;
     real3_t h;
@@ -30,36 +30,37 @@ public:
       h[d] = x[d] - l[d];
       l[d] -= ib[d];
     }
-    (*this)(flds, l, h);
+    (*this)(flds, l, h, val);
   }
 
   template <typename F>
-  void operator()(F& flds, Int3 l, real3_t h, dim_yz tag)
+  void operator()(F& flds, Int3 l, real3_t h, real_t val, dim_yz tag)
   {
-    flds(0, l[1] + 0, l[2] + 0) += (1.f - h[1]) * (1.f - h[2]);
-    flds(0, l[1] + 1, l[2] + 0) += h[1] * (1.f - h[2]);
-    flds(0, l[1] + 0, l[2] + 1) += (1.f - h[1]) * h[2];
-    flds(0, l[1] + 1, l[2] + 1) += h[1] * h[2];
+    flds(0, l[1] + 0, l[2] + 0) += val * (1.f - h[1]) * (1.f - h[2]);
+    flds(0, l[1] + 1, l[2] + 0) += val * h[1] * (1.f - h[2]);
+    flds(0, l[1] + 0, l[2] + 1) += val * (1.f - h[1]) * h[2];
+    flds(0, l[1] + 1, l[2] + 1) += val * h[1] * h[2];
   }
 
   template <typename F>
-  void operator()(F& flds, Int3 l, real3_t h, dim_xyz tag)
+  void operator()(F& flds, Int3 l, real3_t h, real_t val, dim_xyz tag)
   {
-    flds(l[0] + 0, l[1] + 0, l[2] + 0) +=
-      (1.f - h[0]) * (1.f - h[1]) * (1.f - h[2]);
-    flds(l[0] + 1, l[1] + 0, l[2] + 0) += h[0] * (1.f - h[1]) * (1.f - h[2]);
-    flds(l[0] + 0, l[1] + 1, l[2] + 0) += (1.f - h[0]) * h[1] * (1.f - h[2]);
-    flds(l[0] + 1, l[1] + 1, l[2] + 0) += h[0] * h[1] * (1.f - h[2]);
-    flds(l[0] + 0, l[1] + 0, l[2] + 1) += (1.f - h[0]) * (1.f - h[1]) * h[2];
-    flds(l[0] + 1, l[1] + 0, l[2] + 1) += h[0] * (1.f - h[1]) * h[2];
-    flds(l[0] + 0, l[1] + 1, l[2] + 1) += (1.f - h[0]) * h[1] * h[2];
-    flds(l[0] + 1, l[1] + 1, l[2] + 1) += h[0] * h[1] * h[2];
+    // clang-format off
+    flds(l[0] + 0, l[1] + 0, l[2] + 0) += val * (1.f - h[0]) * (1.f - h[1]) * (1.f - h[2]);
+    flds(l[0] + 1, l[1] + 0, l[2] + 0) += val *        h[0]  * (1.f - h[1]) * (1.f - h[2]);
+    flds(l[0] + 0, l[1] + 1, l[2] + 0) += val * (1.f - h[0]) *        h[1]  * (1.f - h[2]);
+    flds(l[0] + 1, l[1] + 1, l[2] + 0) += val *        h[0]  *        h[1]  * (1.f - h[2]);
+    flds(l[0] + 0, l[1] + 0, l[2] + 1) += val * (1.f - h[0]) * (1.f - h[1]) *        h[2];
+    flds(l[0] + 1, l[1] + 0, l[2] + 1) += val *        h[0]  * (1.f - h[1]) *        h[2];
+    flds(l[0] + 0, l[1] + 1, l[2] + 1) += val * (1.f - h[0]) *        h[1]  *        h[2];
+    flds(l[0] + 1, l[1] + 1, l[2] + 1) += val *        h[0]  *        h[1]  *        h[2];
+    // clang-format on
   }
 
   template <typename F>
-  void operator()(F& flds, Int3 l, real3_t h)
+  void operator()(F& flds, Int3 l, real3_t h, real_t val)
   {
-    (*this)(flds, l, h, dim_t{});
+    (*this)(flds, l, h, val, dim_t{});
   }
 };
 
