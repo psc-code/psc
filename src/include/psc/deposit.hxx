@@ -121,6 +121,37 @@ public:
   real_t fnqs_;
 };
 
+// ----------------------------------------------------------------------------
+// Deposit1stCc
+//
+// Deposition to CC grid in code units
+
+template <typename R, typename D>
+class Deposit1stCc
+{
+public:
+  using real_t = R;
+  using dim_t = D;
+  using real3_t = gt::sarray<real_t, 3>;
+
+  Deposit1stCc(const real3_t& dx, real_t fnqs)
+    : dxi_{real_t(1.) / dx}, fnqs_{fnqs}
+  {}
+
+  template <typename P, typename F>
+  void operator()(const P& prt, const F& flds, const gt::shape_type<3>& ib,
+                  real_t val)
+  {
+    real3_t x = prt.x() * dxi_;
+    real_t value = fnqs_ * val;
+
+    psc::deposit::cc<dim_t>(flds, ib, x, value);
+  }
+
+  real3_t dxi_;
+  real_t fnqs_;
+};
+
 } // namespace deposit
 
 } // namespace psc
