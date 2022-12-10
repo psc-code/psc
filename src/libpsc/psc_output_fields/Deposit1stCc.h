@@ -46,5 +46,5 @@ public:
 
 private:
   int p_;
-  psc::deposit::Deposit1stCc<real_t, dim_t> deposit_;
+  psc::deposit::code::Deposit1stCc<real_t, dim_t> deposit_;
 };

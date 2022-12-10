@@ -25,7 +25,7 @@ struct Moment_n_1st_nc
   static void run(Mfields& mflds, Mparticles& mprts)
   {
     const Grid_t& grid = mprts.grid();
-    psc::deposit::Deposit1stNc<real_t, dim_t> deposit(
+    psc::deposit::code::Deposit1stNc<real_t, dim_t> deposit(
       {grid.domain.dx[0], grid.domain.dx[1], grid.domain.dx[2]},
       grid.norm.fnqs);
 
@@ -64,7 +64,7 @@ struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MP, MF, D>, MF>
   explicit Moment_rho_1st_nc(const Mparticles& mprts) : Base{mprts.grid()}
   {
     const Grid_t& grid = mprts.grid();
-    psc::deposit::Deposit1stNc<real_t, dim_t> deposit(
+    psc::deposit::code::Deposit1stNc<real_t, dim_t> deposit(
       {grid.domain.dx[0], grid.domain.dx[1], grid.domain.dx[2]},
       grid.norm.fnqs);
 

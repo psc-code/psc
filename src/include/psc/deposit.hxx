@@ -93,6 +93,9 @@ void cc(F& flds, const gt::sarray<int, 3>& ib, const gt::sarray<T, 3>& x, T val)
   deposit(flds, l, h, val);
 }
 
+namespace code // deposition in code units
+{
+
 // ----------------------------------------------------------------------------
 // Deposit1stNc
 //
@@ -155,6 +158,6 @@ public:
   real_t fnqs_;
 };
 
+} // namespace code
 } // namespace deposit
-
 } // namespace psc
