@@ -67,7 +67,7 @@ public:
     using Particle = typename Mparticles::ConstAccessor::Particle;
 
     Base::mres_.storage().view() = 0.;
-    auto deposit = Deposit1stCc<Mparticles, Mfields>{mprts, Base::mres_};
+    auto deposit = Deposit1stCc<Mparticles, Mfields, dim_t>{mprts, Base::mres_};
     deposit.process([&](const Particle& prt) {
       int m = prt.kind();
       deposit(prt, m, 1.f);
@@ -107,7 +107,7 @@ struct Moment_v_1st
     using Particle = typename Mparticles::ConstAccessor::Particle;
     using Real = typename Particle::real_t;
 
-    auto deposit = Deposit1stCc<Mparticles, Mfields>{mprts, mflds};
+    auto deposit = Deposit1stCc<Mparticles, Mfields, dim_t>{mprts, mflds};
     deposit.process([&](const Particle& prt) {
       Real vxi[3];
       _particle_calc_vxi(prt, vxi);
@@ -143,7 +143,7 @@ struct Moment_p_1st
   {
     using Particle = typename Mparticles::ConstAccessor::Particle;
 
-    auto deposit = Deposit1stCc<Mparticles, Mfields>{mprts, mflds};
+    auto deposit = Deposit1stCc<Mparticles, Mfields, dim_t>{mprts, mflds};
     deposit.process([&](const Particle& prt) {
       int mm = prt.kind() * 3;
       auto pxi = prt.u();
@@ -179,7 +179,7 @@ struct Moment_T_1st
     using Particle = typename Mparticles::ConstAccessor::Particle;
     using Real = typename Particle::real_t;
 
-    auto deposit = Deposit1stCc<Mparticles, Mfields>{mprts, mflds};
+    auto deposit = Deposit1stCc<Mparticles, Mfields, dim_t>{mprts, mflds};
     deposit.process([&](const Particle& prt) {
       int mm = prt.kind() * 6;
 
@@ -235,7 +235,7 @@ public:
     using Particle = typename Mparticles::ConstAccessor::Particle;
     using Real = typename Particle::real_t;
 
-    auto deposit = Deposit1stCc<Mparticles, Mfields>{mprts, Base::mres_};
+    auto deposit = Deposit1stCc<Mparticles, Mfields, dim_t>{mprts, Base::mres_};
     deposit.process([&](const Particle& prt) {
       int mm = prt.kind() * n_moments;
       Real vxi[3];
@@ -284,6 +284,7 @@ class Moments_1st<MparticlesCuda<BS>, MfieldsSingle, D>
 public:
   using Base = ItemMomentCRTP<Moments_1st<MparticlesCuda<BS>, MfieldsSingle, D>,
                               MfieldsSingle>;
+  using dim_t = D;
   using Mparticles = MparticlesCuda<BS>;
   using Mfields = MfieldsSingle;
 
@@ -324,7 +325,7 @@ public:
     using R = Real;
 
     auto deposit =
-      Deposit1stCc<MparticlesSingle, Mfields>{h_mprts, Base::mres_};
+      Deposit1stCc<MparticlesSingle, Mfields, dim_t>{h_mprts, Base::mres_};
 
     prof_start(pr_B);
     printf("np %d\n", h_mprts.size());

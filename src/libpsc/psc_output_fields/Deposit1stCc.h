@@ -11,10 +11,11 @@
 // we don't have to find the IP coefficients again Obviously, the rest of the IP
 // macro should be converted, too
 
-template <typename Mparticles, typename Mfields>
+template <typename Mparticles, typename Mfields, typename D>
 class Deposit1stCc
 {
 public:
+  using dim_t = D;
   using FE = typename Mfields::fields_view_t;
   using R = typename Mfields::real_t;
   using ConstAccessor = typename Mparticles::ConstAccessor;
