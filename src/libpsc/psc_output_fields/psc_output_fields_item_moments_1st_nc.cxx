@@ -91,11 +91,12 @@ public:
 // ======================================================================
 // n
 
-template <typename MP, typename MF>
+template <typename MP, typename MF, typename D>
 struct Moment_n_1st_nc
 {
   using Mparticles = MP;
   using Mfields = MF;
+  using dim_t = D;
   using real_t = typename Mparticles::real_t;
   using particles_t = typename Mparticles::Patch;
 
@@ -122,12 +123,13 @@ struct Moment_n_1st_nc
 // ======================================================================
 // rho
 
-template <typename MP, typename MF>
-struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MP, MF>, MF>
+template <typename MP, typename MF, typename D>
+struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MP, MF, D>, MF>
 {
-  using Base = ItemMomentCRTP<Moment_rho_1st_nc<MP, MF>, MF>;
+  using Base = ItemMomentCRTP<Moment_rho_1st_nc<MP, MF, D>, MF>;
   using Mparticles = MP;
   using Mfields = MF;
+  using dim_t = D;
   using real_t = typename Mparticles::real_t;
   using particles_t = typename Mparticles::Patch;
 
