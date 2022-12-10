@@ -17,12 +17,10 @@ class Deposit1stCc
 {
 public:
   using dim_t = D;
-  using FE = typename Mfields::fields_view_t;
   using real_t = typename Mfields::real_t;
 
   Deposit1stCc(Mfields& mflds)
     : mflds_{mflds},
-      flds_{mflds[0]},
       deposit_({mflds.grid().domain.dx[0], mflds.grid().domain.dx[1],
                 mflds.grid().domain.dx[2]},
                mflds.grid().norm.fnqs)
@@ -32,8 +30,8 @@ public:
   template <typename PRT>
   void operator()(const PRT& prt, int m, real_t val)
   {
-    auto ib = flds_.ib();
-    deposit_(prt, flds_.storage().view(_all, _all, _all, m), ib, val);
+    auto ib = mflds_.ib();
+    deposit_(prt, mflds_.storage().view(_all, _all, _all, m, p_), ib, val);
   }
 
   template <typename Mparticles, typename F>
@@ -41,9 +39,8 @@ public:
   {
     auto accessor = mprts.accessor();
 
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      flds_ = mflds_[p];
-      for (auto prt : accessor[p]) {
+    for (p_ = 0; p_ < mprts.n_patches(); p_++) {
+      for (auto prt : accessor[p_]) {
         func(prt);
       }
     }
@@ -51,6 +48,6 @@ public:
 
 private:
   Mfields& mflds_;
-  FE flds_;
+  int p_;
   psc::deposit::Deposit1stCc<real_t, dim_t> deposit_;
 };
