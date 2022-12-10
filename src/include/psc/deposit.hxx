@@ -9,11 +9,17 @@
 namespace psc
 {
 
+namespace deposit
+{
+
 // ---------------------------------------------------------------------------
-// Deposit1st
+// DepositNorm1st
+//
+// 1st order deposition given cell index l and normalized
+// in-cell position h in [0,1[
 
 template <typename R, typename D>
-class Deposit1st
+class DepositNorm1st
 {
 public:
   using real_t = R;
@@ -56,9 +62,6 @@ public:
   }
 };
 
-namespace deposit
-{
-
 // ----------------------------------------------------------------------------
 // deposit directly, assuming grid spacing == 1
 
@@ -72,7 +75,7 @@ void nc(F& flds, const gt::sarray<int, 3>& ib, const gt::sarray<T, 3>& x, T val)
     h[d] = x[d] - l[d];
     l[d] -= ib[d];
   }
-  Deposit1st<T, D> deposit;
+  DepositNorm1st<T, D> deposit;
   deposit(flds, l, h, val);
 }
 
@@ -86,7 +89,7 @@ void cc(F& flds, const gt::sarray<int, 3>& ib, const gt::sarray<T, 3>& x, T val)
     h[d] = x[d] - .5f - l[d];
     l[d] -= ib[d];
   }
-  Deposit1st<T, D> deposit;
+  DepositNorm1st<T, D> deposit;
   deposit(flds, l, h, val);
 }
 
