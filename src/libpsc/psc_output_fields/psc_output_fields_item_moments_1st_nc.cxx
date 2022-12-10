@@ -5,32 +5,6 @@
 
 #include "common_moments.cxx"
 
-template <typename R, typename D>
-class Deposit1stNc
-{
-public:
-  using real_t = R;
-  using dim_t = D;
-  using real3_t = gt::sarray<real_t, 3>;
-
-  Deposit1stNc(const real3_t& dx, real_t fnqs)
-    : dxi_{real_t(1.) / dx}, fnqs_{fnqs}
-  {}
-
-  template <typename P, typename F>
-  void operator()(const P& prt, const F& flds, const gt::shape_type<3>& ib,
-                  real_t val)
-  {
-    real3_t x = prt.x() * dxi_;
-    real_t value = fnqs_ * val;
-
-    psc::deposit::nc<dim_t>(flds, ib, x, value);
-  }
-
-  real3_t dxi_;
-  real_t fnqs_;
-};
-
 // ======================================================================
 // n
 
@@ -51,7 +25,7 @@ struct Moment_n_1st_nc
   static void run(Mfields& mflds, Mparticles& mprts)
   {
     const Grid_t& grid = mprts.grid();
-    Deposit1stNc<real_t, dim_t> deposit(
+    psc::deposit::Deposit1stNc<real_t, dim_t> deposit(
       {grid.domain.dx[0], grid.domain.dx[1], grid.domain.dx[2]},
       grid.norm.fnqs);
 
@@ -90,7 +64,7 @@ struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MP, MF, D>, MF>
   explicit Moment_rho_1st_nc(const Mparticles& mprts) : Base{mprts.grid()}
   {
     const Grid_t& grid = mprts.grid();
-    Deposit1stNc<real_t, dim_t> deposit(
+    psc::deposit::Deposit1stNc<real_t, dim_t> deposit(
       {grid.domain.dx[0], grid.domain.dx[1], grid.domain.dx[2]},
       grid.norm.fnqs);
 
