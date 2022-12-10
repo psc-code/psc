@@ -108,15 +108,8 @@ struct Moment_n_1st_nc
   static void run(Mfields& mflds, Mparticles& mprts)
   {
     const Grid_t& grid = mprts.grid();
-    if (!grid.isInvar(0) && !grid.isInvar(1) && !grid.isInvar(2)) {
-      Moments_n<real_t, dim_xyz> moments{grid};
-      moments(mflds, mprts);
-    } else if (grid.isInvar(0) && !grid.isInvar(1) && !grid.isInvar(2)) {
-      Moments_n<real_t, dim_yz> moments{grid};
-      moments(mflds, mprts);
-    } else {
-      assert(0);
-    }
+    Moments_n<real_t, dim_t> moments{grid};
+    moments(mflds, mprts);
   }
 };
 
@@ -143,15 +136,8 @@ struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MP, MF, D>, MF>
   explicit Moment_rho_1st_nc(const Mparticles& mprts) : Base{mprts.grid()}
   {
     const Grid_t& grid = mprts.grid();
-    if (!grid.isInvar(0) && !grid.isInvar(1) && !grid.isInvar(2)) {
-      Moments_rho<real_t, dim_xyz> moments{grid};
-      moments(Base::mres_, mprts);
-    } else if (grid.isInvar(0) && !grid.isInvar(1) && !grid.isInvar(2)) {
-      Moments_rho<real_t, dim_yz> moments{grid};
-      moments(Base::mres_, mprts);
-    } else {
-      assert(0);
-    }
+    Moments_rho<real_t, dim_t> moments{grid};
+    moments(Base::mres_, mprts);
     Base::bnd_.add_ghosts(Base::mres_);
   }
 
