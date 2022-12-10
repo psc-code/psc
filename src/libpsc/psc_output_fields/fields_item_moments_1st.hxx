@@ -67,8 +67,8 @@ public:
     using Particle = typename Mparticles::ConstAccessor::Particle;
 
     Base::mres_.storage().view() = 0.;
-    auto deposit = Deposit1stCc<Mparticles, Mfields, dim_t>{mprts, Base::mres_};
-    deposit.process([&](const Particle& prt) {
+    auto deposit = Deposit1stCc<Mfields, dim_t>{Base::mres_};
+    deposit.process(mprts, [&](const Particle& prt) {
       int m = prt.kind();
       deposit(prt, m, 1.f);
     });
@@ -107,8 +107,8 @@ struct Moment_v_1st
     using Particle = typename Mparticles::ConstAccessor::Particle;
     using Real = typename Particle::real_t;
 
-    auto deposit = Deposit1stCc<Mparticles, Mfields, dim_t>{mprts, mflds};
-    deposit.process([&](const Particle& prt) {
+    auto deposit = Deposit1stCc<Mfields, dim_t>{mflds};
+    deposit.process(mprts, [&](const Particle& prt) {
       Real vxi[3];
       _particle_calc_vxi(prt, vxi);
 
@@ -143,8 +143,8 @@ struct Moment_p_1st
   {
     using Particle = typename Mparticles::ConstAccessor::Particle;
 
-    auto deposit = Deposit1stCc<Mparticles, Mfields, dim_t>{mprts, mflds};
-    deposit.process([&](const Particle& prt) {
+    auto deposit = Deposit1stCc<Mfields, dim_t>{mflds};
+    deposit.process(mprts, [&](const Particle& prt) {
       int mm = prt.kind() * 3;
       auto pxi = prt.u();
       for (int m = 0; m < 3; m++) {
@@ -179,8 +179,8 @@ struct Moment_T_1st
     using Particle = typename Mparticles::ConstAccessor::Particle;
     using Real = typename Particle::real_t;
 
-    auto deposit = Deposit1stCc<Mparticles, Mfields, dim_t>{mprts, mflds};
-    deposit.process([&](const Particle& prt) {
+    auto deposit = Deposit1stCc<Mfields, dim_t>{mflds};
+    deposit.process(mprts, [&](const Particle& prt) {
       int mm = prt.kind() * 6;
 
       Real vxi[3];
@@ -235,8 +235,8 @@ public:
     using Particle = typename Mparticles::ConstAccessor::Particle;
     using Real = typename Particle::real_t;
 
-    auto deposit = Deposit1stCc<Mparticles, Mfields, dim_t>{mprts, Base::mres_};
-    deposit.process([&](const Particle& prt) {
+    auto deposit = Deposit1stCc<Mfields, dim_t>{Base::mres_};
+    deposit.process(mprts, [&](const Particle& prt) {
       int mm = prt.kind() * n_moments;
       Real vxi[3];
       _particle_calc_vxi(prt, vxi);
@@ -324,8 +324,7 @@ public:
     using Real = typename Particle::real_t;
     using R = Real;
 
-    auto deposit =
-      Deposit1stCc<MparticlesSingle, Mfields, dim_t>{h_mprts, Base::mres_};
+    auto deposit = Deposit1stCc<Mfields, dim_t>{h_mprts, Base::mres_};
 
     prof_start(pr_B);
     printf("np %d\n", h_mprts.size());
