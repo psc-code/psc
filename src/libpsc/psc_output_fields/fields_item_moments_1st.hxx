@@ -32,13 +32,14 @@ static inline void __particle_calc_vxi(const Particle& prt,
 // ======================================================================
 // n_1st
 
-template <typename MP, typename MF = Mfields<typename MP::real_t>>
-class Moment_n_1st : public ItemMomentCRTP<Moment_n_1st<MP, MF>, MF>
+template <typename MP, typename MF, typename D>
+class Moment_n_1st : public ItemMomentCRTP<Moment_n_1st<MP, MF, D>, MF>
 {
 public:
-  using Base = ItemMomentCRTP<Moment_n_1st<MP, MF>, MF>;
+  using Base = ItemMomentCRTP<Moment_n_1st<MP, MF, D>, MF>;
   using Mparticles = MP;
   using Mfields = MF;
+  using dim_t = D;
 
   using Base::n_comps;
 
@@ -85,10 +86,11 @@ public:
 // ======================================================================
 // v_1st
 
-template <typename MF>
+template <typename MF, typename D>
 struct Moment_v_1st
 {
   using Mfields = MF;
+  using dim_t = D;
 
   constexpr static char const* name = "v_1st";
 
@@ -121,10 +123,11 @@ struct Moment_v_1st
 // ======================================================================
 // p_1st
 
-template <typename MF>
+template <typename MF, typename D>
 struct Moment_p_1st
 {
   using Mfields = MF;
+  using dim_t = D;
 
   constexpr static char const* name = "p_1st";
 
@@ -154,10 +157,11 @@ struct Moment_p_1st
 // ======================================================================
 // T_1st
 
-template <typename MF>
+template <typename MF, typename D>
 struct Moment_T_1st
 {
   using Mfields = MF;
+  using dim_t = D;
 
   constexpr static char const* name = "T_1st";
 
@@ -198,13 +202,14 @@ struct Moment_T_1st
 // all moments calculated at once
 // FIXME: add KE
 
-template <typename MP, typename MF = Mfields<typename MP::real_t>>
-class Moments_1st : public ItemMomentCRTP<Moments_1st<MP, MF>, MF>
+template <typename MP, typename MF, typename D>
+class Moments_1st : public ItemMomentCRTP<Moments_1st<MP, MF, D>, MF>
 {
 public:
-  using Base = ItemMomentCRTP<Moments_1st<MP, MF>, MF>;
+  using Base = ItemMomentCRTP<Moments_1st<MP, MF, D>, MF>;
   using Mparticles = MP;
   using Mfields = MF;
+  using dim_t = D;
   using value_type = typename Mfields::real_t;
   using space = typename Mfields::space;
 
@@ -271,20 +276,20 @@ public:
 // all moments calculated at once
 // FIXME: add KE
 
-template <typename BS>
-class Moments_1st<MparticlesCuda<BS>, MfieldsSingle>
-  : public ItemMomentCRTP<Moments_1st<MparticlesCuda<BS>, MfieldsSingle>,
+template <typename BS, typename D>
+class Moments_1st<MparticlesCuda<BS>, MfieldsSingle, D>
+  : public ItemMomentCRTP<Moments_1st<MparticlesCuda<BS>, MfieldsSingle, D>,
                           MfieldsSingle>
 {
 public:
-  using Base = ItemMomentCRTP<Moments_1st<MparticlesCuda<BS>, MfieldsSingle>,
+  using Base = ItemMomentCRTP<Moments_1st<MparticlesCuda<BS>, MfieldsSingle, D>,
                               MfieldsSingle>;
   using Mparticles = MparticlesCuda<BS>;
   using Mfields = MfieldsSingle;
 
   using Base::n_comps;
 
-  using Sub = Moments_1st<MparticlesSingle, Mfields>;
+  using Sub = Moments_1st<MparticlesSingle, Mfields, D>;
 
   constexpr static int n_moments = Sub::n_moments;
   static char const* name() { return Sub::name(); }
