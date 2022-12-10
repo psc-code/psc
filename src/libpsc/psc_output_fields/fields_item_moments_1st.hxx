@@ -39,6 +39,7 @@ public:
   using Base = ItemMomentCRTP<Moment_n_1st<MP, MF, D>, MF>;
   using Mparticles = MP;
   using Mfields = MF;
+  using real_t = typename Mfields::real_t;
   using dim_t = D;
 
   using Base::n_comps;
@@ -66,8 +67,8 @@ public:
   {
     using Particle = typename Mparticles::ConstAccessor::Particle;
 
-    Base::mres_.storage().view() = 0.;
-    auto deposit = Deposit1stCc<Mfields, dim_t>{Base::grid()};
+    Base::mres_.storage().view() = 0.f;
+    auto deposit = Deposit1stCc<real_t, dim_t>{Base::grid()};
     deposit.process(mprts, [&](const Particle& prt) {
       int m = prt.kind();
       deposit(Base::mres_, prt, m, 1.f);
@@ -105,11 +106,11 @@ struct Moment_v_1st
   static void run(Mfields& mflds, Mparticles& mprts)
   {
     using Particle = typename Mparticles::ConstAccessor::Particle;
-    using Real = typename Particle::real_t;
+    using real_t = typename Particle::real_t;
 
-    auto deposit = Deposit1stCc<Mfields, dim_t>{mflds.grid()};
+    auto deposit = Deposit1stCc<real_t, dim_t>{mflds.grid()};
     deposit.process(mprts, [&](const Particle& prt) {
-      Real vxi[3];
+      real_t vxi[3];
       _particle_calc_vxi(prt, vxi);
 
       int mm = prt.kind() * 3;
@@ -128,6 +129,7 @@ struct Moment_p_1st
 {
   using Mfields = MF;
   using dim_t = D;
+  using real_t = typename Mfields::real_t;
 
   constexpr static char const* name = "p_1st";
 
@@ -143,7 +145,7 @@ struct Moment_p_1st
   {
     using Particle = typename Mparticles::ConstAccessor::Particle;
 
-    auto deposit = Deposit1stCc<Mfields, dim_t>{mflds.grid()};
+    auto deposit = Deposit1stCc<real_t, dim_t>{mflds.grid()};
     deposit.process(mprts, [&](const Particle& prt) {
       int mm = prt.kind() * 3;
       auto pxi = prt.u();
@@ -177,13 +179,13 @@ struct Moment_T_1st
   static void run(Mfields& mflds, Mparticles& mprts)
   {
     using Particle = typename Mparticles::ConstAccessor::Particle;
-    using Real = typename Particle::real_t;
+    using real_t = typename Particle::real_t;
 
-    auto deposit = Deposit1stCc<Mfields, dim_t>{mflds.grid()};
+    auto deposit = Deposit1stCc<real_t, dim_t>{mflds.grid()};
     deposit.process(mprts, [&](const Particle& prt) {
       int mm = prt.kind() * 6;
 
-      Real vxi[3];
+      real_t vxi[3];
       _particle_calc_vxi(prt, vxi);
       auto pxi = prt.u();
       deposit(mflds, prt, mm + 0, prt.m() * pxi[0] * vxi[0]);
@@ -233,12 +235,12 @@ public:
   explicit Moments_1st(const Mparticles& mprts) : Base{mprts.grid()}
   {
     using Particle = typename Mparticles::ConstAccessor::Particle;
-    using Real = typename Particle::real_t;
+    using real_t = typename Particle::real_t;
 
-    auto deposit = Deposit1stCc<Mfields, dim_t>{Base::grid()};
+    auto deposit = Deposit1stCc<real_t, dim_t>{Base::grid()};
     deposit.process(mprts, [&](const Particle& prt) {
       int mm = prt.kind() * n_moments;
-      Real vxi[3];
+      real_t vxi[3];
       _particle_calc_vxi(prt, vxi);
       deposit(Base::mres_, prt, mm + 0, prt.q());
       deposit(Base::mres_, prt, mm + 1, prt.q() * vxi[0]);

@@ -12,12 +12,12 @@
 // we don't have to find the IP coefficients again Obviously, the rest of the IP
 // macro should be converted, too
 
-template <typename Mfields, typename D>
+template <typename T, typename D>
 class Deposit1stCc
 {
 public:
   using dim_t = D;
-  using real_t = typename Mfields::real_t;
+  using real_t = T;
 
   Deposit1stCc(const Grid_t& grid)
     : deposit_({grid.domain.dx[0], grid.domain.dx[1], grid.domain.dx[2]},
@@ -25,8 +25,8 @@ public:
 
   {}
 
-  template <typename PRT>
-  void operator()(Mfields& mflds, const PRT& prt, int m, real_t val)
+  template <typename MF, typename PRT>
+  void operator()(MF& mflds, const PRT& prt, int m, real_t val)
   {
     auto ib = mflds.ib();
     deposit_(prt, mflds.storage().view(_all, _all, _all, m, p_), ib, val);
