@@ -63,34 +63,63 @@ public:
 };
 
 // ----------------------------------------------------------------------------
-// deposit directly, assuming grid spacing == 1
+// deposit directly, assuming grid spacing == 1, pass in patch-relative position
+// x
+
+template <typename T, typename D>
+class Deposit1stNc
+{
+public:
+  template <typename F>
+  void operator()(F& flds, const gt::sarray<int, 3>& ib,
+                  const gt::sarray<T, 3>& x, T val)
+
+  {
+    gt::sarray<int, 3> l;
+    gt::sarray<T, 3> h;
+    for (int d = 0; d < 3; d++) {
+      l[d] = fint(x[d]);
+      h[d] = x[d] - l[d];
+      l[d] -= ib[d];
+    }
+    DepositNorm1st<T, D> deposit;
+    deposit(flds, l, h, val);
+  }
+};
+
+template <typename T, typename D>
+class Deposit1stCc
+{
+public:
+  template <typename F>
+  void operator()(F& flds, const gt::sarray<int, 3>& ib,
+                  const gt::sarray<T, 3>& x, T val)
+
+  {
+    gt::sarray<int, 3> l;
+    gt::sarray<T, 3> h;
+    for (int d = 0; d < 3; d++) {
+      l[d] = fint(x[d] - .5f);
+      h[d] = x[d] - .5f - l[d];
+      l[d] -= ib[d];
+    }
+    DepositNorm1st<T, D> deposit;
+    deposit(flds, l, h, val);
+  }
+};
 
 template <typename D, typename F, typename T>
 void nc(F& flds, const gt::sarray<int, 3>& ib, const gt::sarray<T, 3>& x, T val)
 {
-  gt::sarray<int, 3> l;
-  gt::sarray<T, 3> h;
-  for (int d = 0; d < 3; d++) {
-    l[d] = fint(x[d]);
-    h[d] = x[d] - l[d];
-    l[d] -= ib[d];
-  }
-  DepositNorm1st<T, D> deposit;
-  deposit(flds, l, h, val);
+  Deposit1stNc<T, D> deposit;
+  deposit(flds, ib, x, val);
 }
 
 template <typename D, typename F, typename T>
 void cc(F& flds, const gt::sarray<int, 3>& ib, const gt::sarray<T, 3>& x, T val)
 {
-  gt::sarray<int, 3> l;
-  gt::sarray<T, 3> h;
-  for (int d = 0; d < 3; d++) {
-    l[d] = fint(x[d] - .5f);
-    h[d] = x[d] - .5f - l[d];
-    l[d] -= ib[d];
-  }
-  DepositNorm1st<T, D> deposit;
-  deposit(flds, l, h, val);
+  Deposit1stCc<T, D> deposit;
+  deposit(flds, ib, x, val);
 }
 
 namespace code // deposition in code units
