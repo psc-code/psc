@@ -112,6 +112,29 @@ TYPED_TEST(DepositTest, ChargeCenterWithBnd)
                                                       << rho_ref;
 }
 
+TYPED_TEST(DepositTest, ChargeCenterWithBndCc)
+{
+  using self_type = DepositTest<TypeParam>;
+  using real_t = typename self_type::real_t;
+  using real3_t = typename self_type::real3_t;
+  using dim_t = typename self_type::dim_t;
+
+  real3_t x = {.5, .5, .5};
+  real_t val = 1.;
+  auto ibn = gt::shape(1, 1, 1);
+  auto rho_ref = gt::zeros<real_t>(this->ldims_ + 2 * ibn);
+  if (std::is_same<dim_t, dim_xyz>::value) {
+    rho_ref(1, 1, 1) = val;
+  } else if (std::is_same<dim_t, dim_yz>::value) {
+    rho_ref(0, 1, 1) = val;
+  }
+
+  auto flds = gt::zeros_like(rho_ref);
+  psc::deposit::cc<dim_t>(flds, -ibn, x, val);
+  EXPECT_LT(gt::norm_linf(flds - rho_ref), this->eps) << flds << "\nref\n"
+                                                      << rho_ref;
+}
+
 int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);

@@ -73,6 +73,20 @@ void nc(F& flds, const gt::sarray<int, 3>& ib, const gt::sarray<T, 3>& x, T val)
   deposit(flds, l, h, val);
 }
 
+template <typename D, typename F, typename T>
+void cc(F& flds, const gt::sarray<int, 3>& ib, const gt::sarray<T, 3>& x, T val)
+{
+  gt::sarray<int, 3> l;
+  gt::sarray<T, 3> h;
+  for (int d = 0; d < 3; d++) {
+    l[d] = fint(x[d] - .5f);
+    h[d] = x[d] - .5f - l[d];
+    l[d] -= ib[d];
+  }
+  Deposit1st<T, D> deposit;
+  deposit(flds, l, h, val);
+}
+
 } // namespace deposit
 
 } // namespace psc
