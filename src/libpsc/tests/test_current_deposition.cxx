@@ -108,8 +108,8 @@ struct CurrentDepositionTest : ::testing::Test
     auto ib = gt::shape(0, 0, 0);
     auto rho_m = gt::zeros<real_t>(ldims_);
     auto rho_p = gt::zeros<real_t>(ldims_);
-    psc::deposit::nc<dim_t>(rho_m, ib, xm, 1.);
-    psc::deposit::nc<dim_t>(rho_p, ib, xp, 1.);
+    psc::deposit::norm::nc<dim_t>(rho_m, ib, xm, 1.);
+    psc::deposit::norm::nc<dim_t>(rho_p, ib, xp, 1.);
     gt::gtensor<real_t, 3> d_rho;
     if (std::is_same<dim_t, dim_yz>::value) {
       d_rho = (rho_p - rho_m).view(_all, _s(1, _), _s(1, _));

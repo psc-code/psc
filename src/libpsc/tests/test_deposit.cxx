@@ -61,7 +61,7 @@ TYPED_TEST(DepositTest, ChargeCenter)
   }
 
   auto flds = gt::zeros_like(rho_ref);
-  psc::deposit::nc<dim_t>(flds, -ibn, x, val);
+  psc::deposit::norm::nc<dim_t>(flds, -ibn, x, val);
   EXPECT_LT(gt::norm_linf(flds - rho_ref), this->eps) << flds << "\nref\n"
                                                       << rho_ref;
 }
@@ -84,7 +84,7 @@ TYPED_TEST(DepositTest, ChargeLowerLeft)
   }
 
   auto flds = gt::zeros_like(rho_ref);
-  psc::deposit::nc<dim_t>(flds, -ibn, x, val);
+  psc::deposit::norm::nc<dim_t>(flds, -ibn, x, val);
   EXPECT_LT(gt::norm_linf(flds - rho_ref), this->eps) << flds << "\nref\n"
                                                       << rho_ref;
 }
@@ -107,7 +107,7 @@ TYPED_TEST(DepositTest, ChargeCenterWithBnd)
   }
 
   auto flds = gt::zeros_like(rho_ref);
-  psc::deposit::nc<dim_t>(flds, -ibn, x, val);
+  psc::deposit::norm::nc<dim_t>(flds, -ibn, x, val);
   EXPECT_LT(gt::norm_linf(flds - rho_ref), this->eps) << flds << "\nref\n"
                                                       << rho_ref;
 }
@@ -130,7 +130,7 @@ TYPED_TEST(DepositTest, ChargeCenterWithBndCc)
   }
 
   auto flds = gt::zeros_like(rho_ref);
-  psc::deposit::cc<dim_t>(flds, -ibn, x, val);
+  psc::deposit::norm::cc<dim_t>(flds, -ibn, x, val);
   EXPECT_LT(gt::norm_linf(flds - rho_ref), this->eps) << flds << "\nref\n"
                                                       << rho_ref;
 }

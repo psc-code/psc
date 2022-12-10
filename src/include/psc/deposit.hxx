@@ -8,8 +8,9 @@
 
 namespace psc
 {
-
 namespace deposit
+{
+namespace norm
 {
 
 // ---------------------------------------------------------------------------
@@ -19,7 +20,7 @@ namespace deposit
 // in-cell position h in [0,1[
 
 template <typename R, typename D>
-class DepositNorm1st
+class Deposit1st
 {
 public:
   using real_t = R;
@@ -82,7 +83,7 @@ public:
       h[d] = x[d] - l[d];
       l[d] -= ib[d];
     }
-    DepositNorm1st<T, D> deposit;
+    Deposit1st<T, D> deposit;
     deposit(flds, l, h, val);
   }
 };
@@ -103,7 +104,7 @@ public:
       h[d] = x[d] - .5f - l[d];
       l[d] -= ib[d];
     }
-    DepositNorm1st<T, D> deposit;
+    Deposit1st<T, D> deposit;
     deposit(flds, l, h, val);
   }
 };
@@ -121,6 +122,8 @@ void cc(F& flds, const gt::sarray<int, 3>& ib, const gt::sarray<T, 3>& x, T val)
   Deposit1stCc<T, D> deposit;
   deposit(flds, ib, x, val);
 }
+
+} // namespace norm
 
 namespace code // deposition in code units
 {
@@ -163,7 +166,7 @@ public:
 // Deposition to NC grid in code units
 
 template <typename R, typename D>
-using Deposit1stNc = Deposit1st<R, D, psc::deposit::Deposit1stNc>;
+using Deposit1stNc = Deposit1st<R, D, psc::deposit::norm::Deposit1stNc>;
 
 // ----------------------------------------------------------------------------
 // Deposit1stCc
@@ -171,7 +174,7 @@ using Deposit1stNc = Deposit1st<R, D, psc::deposit::Deposit1stNc>;
 // Deposition to CC grid in code units
 
 template <typename R, typename D>
-using Deposit1stCc = Deposit1st<R, D, psc::deposit::Deposit1stCc>;
+using Deposit1stCc = Deposit1st<R, D, psc::deposit::norm::Deposit1stCc>;
 
 } // namespace code
 } // namespace deposit
