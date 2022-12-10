@@ -126,19 +126,19 @@ namespace code // deposition in code units
 {
 
 // ----------------------------------------------------------------------------
-// Deposit1stNc
+// Deposit1st
 //
-// Deposition to NC grid in code units
+// Wrapper around Deposit to n.c. / c.c. grid that translates from code units
 
-template <typename R, typename D>
-class Deposit1stNc
+template <typename R, typename D, template <typename, typename> class Deposit>
+class Deposit1st
 {
 public:
   using real_t = R;
   using dim_t = D;
   using real3_t = gt::sarray<real_t, 3>;
 
-  Deposit1stNc(const real3_t& dx, real_t fnqs)
+  Deposit1st(const real3_t& dx, real_t fnqs)
     : dxi_{real_t(1.) / dx}, fnqs_{fnqs}
   {}
 
@@ -149,7 +149,8 @@ public:
     real3_t x = prt.x() * dxi_;
     real_t value = fnqs_ * val;
 
-    psc::deposit::nc<dim_t>(flds, ib, x, value);
+    Deposit<real_t, dim_t> deposit;
+    deposit(flds, ib, x, value);
   }
 
   real3_t dxi_;
@@ -157,35 +158,20 @@ public:
 };
 
 // ----------------------------------------------------------------------------
+// Deposit1stNc
+//
+// Deposition to NC grid in code units
+
+template <typename R, typename D>
+using Deposit1stNc = Deposit1st<R, D, psc::deposit::Deposit1stNc>;
+
+// ----------------------------------------------------------------------------
 // Deposit1stCc
 //
 // Deposition to CC grid in code units
 
 template <typename R, typename D>
-class Deposit1stCc
-{
-public:
-  using real_t = R;
-  using dim_t = D;
-  using real3_t = gt::sarray<real_t, 3>;
-
-  Deposit1stCc(const real3_t& dx, real_t fnqs)
-    : dxi_{real_t(1.) / dx}, fnqs_{fnqs}
-  {}
-
-  template <typename P, typename F>
-  void operator()(const P& prt, const F& flds, const gt::shape_type<3>& ib,
-                  real_t val)
-  {
-    real3_t x = prt.x() * dxi_;
-    real_t value = fnqs_ * val;
-
-    psc::deposit::cc<dim_t>(flds, ib, x, value);
-  }
-
-  real3_t dxi_;
-  real_t fnqs_;
-};
+using Deposit1stCc = Deposit1st<R, D, psc::deposit::Deposit1stCc>;
 
 } // namespace code
 } // namespace deposit
