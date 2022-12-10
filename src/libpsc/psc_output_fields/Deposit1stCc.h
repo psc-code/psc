@@ -29,7 +29,7 @@ public:
   void operator()(MF& mflds, const PRT& prt, int m, real_t val)
   {
     auto ib = mflds.ib();
-    deposit_(prt, mflds.storage().view(_all, _all, _all, m, p_), ib, val);
+    deposit_(mflds.storage().view(_all, _all, _all, m, p_), ib, prt.x(), val);
   }
 
   template <typename Mparticles, typename F>

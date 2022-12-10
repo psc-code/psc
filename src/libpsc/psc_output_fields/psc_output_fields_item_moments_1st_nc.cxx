@@ -35,7 +35,7 @@ struct Moment_n_1st_nc
       auto flds = mflds.gt().view(_all, _all, _all, _all, p);
       for (auto prt : accessor[p]) {
         auto fld = flds.view(_all, _all, _all, prt.kind());
-        deposit(prt, fld, ib, prt.w());
+        deposit(fld, ib, prt.x(), prt.w());
       }
     }
   }
@@ -73,7 +73,7 @@ struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MP, MF, D>, MF>
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto fld = Base::mres_.gt().view(_all, _all, _all, 0, p);
       for (auto prt : accessor[p]) {
-        deposit(prt, fld, ib, prt.q());
+        deposit(fld, ib, prt.x(), prt.q());
       }
     }
     Base::bnd_.add_ghosts(Base::mres_);

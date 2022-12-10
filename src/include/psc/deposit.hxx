@@ -145,11 +145,11 @@ public:
     : dxi_{real_t(1.) / dx}, fnqs_{fnqs}
   {}
 
-  template <typename P, typename F>
-  void operator()(const P& prt, const F& flds, const gt::shape_type<3>& ib,
+  template <typename F>
+  void operator()(const F& flds, const gt::shape_type<3>& ib, const real3_t& xi,
                   real_t val)
   {
-    real3_t x = prt.x() * dxi_;
+    real3_t x = xi * dxi_;
     real_t value = fnqs_ * val;
 
     Deposit<real_t, dim_t> deposit;
