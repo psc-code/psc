@@ -35,7 +35,7 @@ struct checks_order_2nd
 };
 
 template <typename _Mparticles, typename _MfieldsState, typename _Mfields,
-          typename ORDER>
+          typename ORDER, typename D>
 struct Checks_
   : ChecksParams
   , ChecksBase
@@ -43,6 +43,7 @@ struct Checks_
   using Mparticles = _Mparticles;
   using MfieldsState = _MfieldsState;
   using Mfields = _Mfields;
+  using dim_t = D;
   using real_t = typename Mfields::real_t;
   using Moment_t = typename ORDER::template Moment_rho_nc<Mparticles, Mfields>;
 
