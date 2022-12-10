@@ -19,19 +19,17 @@ public:
   using dim_t = D;
   using real_t = typename Mfields::real_t;
 
-  Deposit1stCc(Mfields& mflds)
-    : mflds_{mflds},
-      deposit_({mflds.grid().domain.dx[0], mflds.grid().domain.dx[1],
-                mflds.grid().domain.dx[2]},
-               mflds.grid().norm.fnqs)
+  Deposit1stCc(const Grid_t& grid)
+    : deposit_({grid.domain.dx[0], grid.domain.dx[1], grid.domain.dx[2]},
+               grid.norm.fnqs)
 
   {}
 
   template <typename PRT>
-  void operator()(const PRT& prt, int m, real_t val)
+  void operator()(Mfields& mflds, const PRT& prt, int m, real_t val)
   {
-    auto ib = mflds_.ib();
-    deposit_(prt, mflds_.storage().view(_all, _all, _all, m, p_), ib, val);
+    auto ib = mflds.ib();
+    deposit_(prt, mflds.storage().view(_all, _all, _all, m, p_), ib, val);
   }
 
   template <typename Mparticles, typename F>
@@ -47,7 +45,6 @@ public:
   }
 
 private:
-  Mfields& mflds_;
   int p_;
   psc::deposit::Deposit1stCc<real_t, dim_t> deposit_;
 };
