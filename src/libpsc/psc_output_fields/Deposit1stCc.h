@@ -18,7 +18,6 @@ class Deposit1stCc
 public:
   using dim_t = D;
   using FE = typename Mfields::fields_view_t;
-  using R = typename Mfields::real_t;
   using real_t = typename Mfields::real_t;
 
   Deposit1stCc(Mfields& mflds)
@@ -31,7 +30,7 @@ public:
   {}
 
   template <typename PRT>
-  void operator()(const PRT& prt, int m, R val)
+  void operator()(const PRT& prt, int m, real_t val)
   {
     auto ib = flds_.ib();
     deposit_(prt, flds_.storage().view(_all, _all, _all, m), ib, val);
