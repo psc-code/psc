@@ -16,7 +16,7 @@ template <typename T>
 struct DepositTest : ::testing::Test
 {
   using real_t = typename T::real_t;
-  using real3_t = Vec3<real_t>;
+  using real3_t = gt::sarray<real_t, 3>;
   using dim_t = typename T::dim_t;
 
   DepositTest() : ldims_{4, 4, 4}
@@ -26,21 +26,8 @@ struct DepositTest : ::testing::Test
     }
   }
 
-  template <typename F>
-  void test_deposit(real3_t x, real_t val, const F& rho_ref)
-  {
-    const real_t eps = std::numeric_limits<real_t>::epsilon();
-
-    auto flds = gt::zeros_like(rho_ref);
-    auto ibn = (flds.shape() - ldims_) / 2;
-    psc::DepositNc<real_t, dim_t> deposit;
-    deposit(flds, -ibn, x, val);
-
-    EXPECT_LT(gt::norm_linf(flds - rho_ref), eps) << flds << "\nref\n"
-                                                  << rho_ref;
-  }
-
   gt::shape_type<3> ldims_;
+  const real_t eps = std::numeric_limits<real_t>::epsilon();
 };
 
 template <typename R, typename D>
@@ -65,13 +52,18 @@ TYPED_TEST(DepositTest, ChargeCenter)
 
   real3_t x = {1.5, 1.5, 1.5};
   real_t val = .1;
-  auto rho_ref = gt::zeros<real_t>(this->ldims_);
+  auto ibn = gt::shape(0, 0, 0);
+  auto rho_ref = gt::zeros<real_t>(this->ldims_ + 2 * ibn);
   if (std::is_same<dim_t, dim_xyz>::value) {
     rho_ref.view(_s(1, 3), _s(1, 3), _s(1, 3)) = val / 8.f;
   } else if (std::is_same<dim_t, dim_yz>::value) {
     rho_ref.view(0, _s(1, 3), _s(1, 3)) = val / 4.f;
   }
-  this->test_deposit(x, val, rho_ref);
+
+  auto flds = gt::zeros_like(rho_ref);
+  psc::deposit::nc<dim_t>(flds, -ibn, x, val);
+  EXPECT_LT(gt::norm_linf(flds - rho_ref), this->eps) << flds << "\nref\n"
+                                                      << rho_ref;
 }
 
 TYPED_TEST(DepositTest, ChargeLowerLeft)
@@ -83,13 +75,18 @@ TYPED_TEST(DepositTest, ChargeLowerLeft)
 
   real3_t x = {1., 1., 1.};
   real_t val = .1;
-  auto rho_ref = gt::zeros<real_t>(this->ldims_);
+  auto ibn = gt::shape(0, 0, 0);
+  auto rho_ref = gt::zeros<real_t>(this->ldims_ + 2 * ibn);
   if (std::is_same<dim_t, dim_xyz>::value) {
     rho_ref(1, 1, 1) = val;
   } else if (std::is_same<dim_t, dim_yz>::value) {
     rho_ref(0, 1, 1) = val;
   }
-  this->test_deposit(x, val, rho_ref);
+
+  auto flds = gt::zeros_like(rho_ref);
+  psc::deposit::nc<dim_t>(flds, -ibn, x, val);
+  EXPECT_LT(gt::norm_linf(flds - rho_ref), this->eps) << flds << "\nref\n"
+                                                      << rho_ref;
 }
 
 TYPED_TEST(DepositTest, ChargeCenterWithBnd)
@@ -108,7 +105,11 @@ TYPED_TEST(DepositTest, ChargeCenterWithBnd)
   } else if (std::is_same<dim_t, dim_yz>::value) {
     rho_ref.view(0, _s(1, 3), _s(1, 3)) = val / 4.f;
   }
-  this->test_deposit(x, val, rho_ref);
+
+  auto flds = gt::zeros_like(rho_ref);
+  psc::deposit::nc<dim_t>(flds, -ibn, x, val);
+  EXPECT_LT(gt::norm_linf(flds - rho_ref), this->eps) << flds << "\nref\n"
+                                                      << rho_ref;
 }
 
 int main(int argc, char** argv)

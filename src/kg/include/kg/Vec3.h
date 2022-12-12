@@ -8,6 +8,7 @@
 
 #include "cuda_compat.h"
 #include <kg/Macros.h>
+#include <psc/gtensor.h>
 
 namespace kg
 {
@@ -16,25 +17,13 @@ namespace kg
 // Vec
 
 template <typename T, std::size_t N>
-struct Vec
+struct Vec : gt::sarray<T, N>
 {
+  using base_type = gt::sarray<T, N>;
   using value_type = T;
   using size_t = std::size_t;
 
-  T arr[N];
-
-  KG_INLINE T operator[](size_t i) const { return arr[i]; }
-
-  KG_INLINE T& operator[](size_t i) { return arr[i]; }
-
-  KG_INLINE T* begin() { return arr; }
-  KG_INLINE T* end() { return arr + N; }
-  KG_INLINE const T* begin() const { return arr; }
-  KG_INLINE const T* end() const { return arr + N; }
-
-  KG_INLINE const T* data() const { return arr; }
-
-  KG_INLINE T* data() { return arr; }
+  using base_type::base_type;
 
   // ----------------------------------------------------------------------
   // construct from pointer to values
@@ -115,9 +104,9 @@ struct Vec
 
   // conversion to pointer
 
-  KG_INLINE operator const T*() const { return data(); }
+  KG_INLINE operator const T*() const { return this->data(); }
 
-  KG_INLINE operator T*() { return data(); }
+  KG_INLINE operator T*() { return this->data(); }
 };
 
 template <typename T, std::size_t N>
