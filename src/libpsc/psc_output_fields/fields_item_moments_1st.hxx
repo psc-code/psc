@@ -68,7 +68,7 @@ public:
     using Particle = typename Mparticles::ConstAccessor::Particle;
 
     Base::mres_.storage().view() = 0.f;
-    auto deposit = Deposit1stCc<real_t, dim_t>{Base::grid()};
+    auto deposit = Deposit1stCc<Mfields, dim_t>{Base::grid()};
     deposit(mprts, [&](auto& deposit_one, const Particle& prt) {
       int m = prt.kind();
       deposit_one(Base::mres_, m, 1.f);
@@ -237,7 +237,7 @@ public:
     using Particle = typename Mparticles::ConstAccessor::Particle;
     using real_t = typename Particle::real_t;
 
-    auto deposit = Deposit1stCc<real_t, dim_t>{Base::grid()};
+    auto deposit = Deposit1stCc<Mfields, dim_t>{Base::grid()};
     deposit(mprts, [&](auto& deposit_one, const Particle& prt) {
       int mm = prt.kind() * n_moments;
       real_t vxi[3];

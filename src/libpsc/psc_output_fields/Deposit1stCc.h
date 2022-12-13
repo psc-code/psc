@@ -12,35 +12,36 @@
 // we don't have to find the IP coefficients again Obviously, the rest of the IP
 // macro should be converted, too
 
-template <typename T, typename D>
+template <typename MF, typename D>
 struct DepositContext
 {
-  using real_t = T;
+  using Mfields = MF;
   using dim_t = D;
+  using real_t = typename Mfields::real_t;
   using real3_t = gt::sarray<real_t, 3>;
 
   DepositContext(const real3_t& dx, real_t fnqs) : deposit(dx, fnqs) {}
 
-  template <typename MF>
   void operator()(MF& mflds, int m, real_t val)
   {
     auto ib = mflds.ib();
     deposit(mflds.storage().view(_all, _all, _all, m, p), ib, x, val);
   }
 
+  psc::deposit::code::Deposit1stCc<real_t, dim_t> deposit;
   int p;
   real3_t x;
-  psc::deposit::code::Deposit1stCc<real_t, dim_t> deposit;
 };
 
-template <typename T, typename D>
+template <typename MF, typename D>
 class Deposit1stCc
 {
 public:
+  using Mfields = MF;
   using dim_t = D;
-  using real_t = T;
+  using real_t = typename Mfields::real_t;
   using real3_t = gt::sarray<real_t, 3>;
-  using DepositCtx = DepositContext<real_t, dim_t>;
+  using DepositCtx = DepositContext<Mfields, dim_t>;
 
   Deposit1stCc(const Grid_t& grid)
     : dx_{grid.domain.dx[0], grid.domain.dx[1], grid.domain.dx[2]},
