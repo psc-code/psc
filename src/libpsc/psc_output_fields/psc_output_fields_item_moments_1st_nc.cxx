@@ -25,20 +25,11 @@ struct Moment_n_1st_nc
 
   static void run(Mfields& mflds, Mparticles& mprts)
   {
-    const Grid_t& grid = mprts.grid();
-    psc::deposit::code::Deposit1stNc<real_t, dim_t> deposit(
-      {grid.domain.dx[0], grid.domain.dx[1], grid.domain.dx[2]},
-      grid.norm.fnqs);
-
-    auto ib = mflds.ib();
-    auto accessor = mprts.accessor();
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      auto flds = mflds.gt().view(_all, _all, _all, _all, p);
-      for (auto prt : accessor[p]) {
-        auto fld = flds.view(_all, _all, _all, prt.kind());
-        deposit(fld, ib, prt.x(), prt.w());
-      }
-    }
+    psc::moment::deposit_1st_nc<dim_t>(mflds, mprts,
+                                       [&](auto& deposit_one, const auto& prt) {
+                                         int m = prt.kind();
+                                         deposit_one(m, prt.w());
+                                       });
   }
 };
 
