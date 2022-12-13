@@ -14,13 +14,11 @@ using PushParticlesTestTypes =
 // FIXME, obviously this name is bad...
 TYPED_TEST_SUITE(PushParticlesTest, PushParticlesTestTypes);
 
-TYPED_TEST(PushParticlesTest, Moment1)
+TYPED_TEST(PushParticlesTest, Moment_n_1)
 {
   using Mparticles = typename TypeParam::Mparticles;
   using Mfields = typename TypeParam::Mfields;
   using Moment_n = typename TypeParam::Moment_n;
-  using Bnd = typename TypeParam::Bnd;
-  using Particle = typename Mparticles::Particle;
   using real_t = typename Mfields::real_t;
 
   const real_t eps = 1e-6;
@@ -44,9 +42,6 @@ TYPED_TEST(PushParticlesTest, Moment1)
       } else {
         EXPECT_NEAR(val, 0., eps) << "ijk " << i << " " << j << " " << k;
       }
-      // if (val) {
-      //   printf("ijk %d %d %d val %g\n", i, j, k, val);
-      // }
     });
   }
 }
@@ -101,13 +96,11 @@ TYPED_TEST(PushParticlesTest, Moments_1st)
   }
 }
 
-TYPED_TEST(PushParticlesTest, Moment2) // FIXME, mostly copied
+TYPED_TEST(PushParticlesTest, Moment_n_2) // FIXME, mostly copied
 {
   using Mparticles = typename TypeParam::Mparticles;
   using Mfields = typename TypeParam::Mfields;
   using Moment_n = typename TypeParam::Moment_n;
-  using Bnd = typename TypeParam::Bnd;
-  using Particle = typename Mparticles::Particle;
   using real_t = typename Mfields::real_t;
 
   const real_t eps = 1e-6;
@@ -188,9 +181,6 @@ TYPED_TEST(PushParticlesTest, Moment_rho_1st_nc_cc)
           EXPECT_NEAR(val, 0., eps) << "ijk " << i << " " << j << " " << k;
         }
       }
-      // if (val) {
-      //   printf("ijk %d %d %d val %g\n", i, j, k, val);
-      // }
     });
   }
 }
@@ -236,9 +226,6 @@ TYPED_TEST(PushParticlesTest, Moment_rho_1st_nc_nc)
           EXPECT_NEAR(val, 0., eps) << "ijk " << i << " " << j << " " << k;
         }
       }
-      // if (val) {
-      //   printf("ijk %d %d %d val %g\n", i, j, k, val);
-      // }
     });
   }
 }
