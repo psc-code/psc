@@ -12,24 +12,25 @@
 // we don't have to find the IP coefficients again Obviously, the rest of the IP
 // macro should be converted, too
 
-template <typename MF, typename D>
+template <typename S, typename D>
 struct DepositContext
 {
-  using Mfields = MF;
+  using storage_type = S;
   using dim_t = D;
-  using real_t = typename Mfields::real_t;
+  using real_t = typename storage_type::value_type;
   using real3_t = gt::sarray<real_t, 3>;
 
-  DepositContext(Mfields& mflds, const real3_t& dx, real_t fnqs)
-    : mflds{mflds}, ib{mflds.ib()}, deposit{dx, fnqs}
+  DepositContext(storage_type& mflds_gt, const Int3& ib, const real3_t& dx,
+                 real_t fnqs)
+    : mflds_gt{mflds_gt}, ib{ib}, deposit{dx, fnqs}
   {}
 
   void operator()(int m, real_t val)
   {
-    deposit(mflds.storage().view(_all, _all, _all, m, p), ib, x, val);
+    deposit(mflds_gt.view(_all, _all, _all, m, p), ib, x, val);
   }
 
-  Mfields& mflds;
+  storage_type& mflds_gt;
   Int3 ib;
   psc::deposit::code::Deposit1stCc<real_t, dim_t> deposit;
   int p;
@@ -44,7 +45,7 @@ public:
   using dim_t = D;
   using real_t = typename Mfields::real_t;
   using real3_t = gt::sarray<real_t, 3>;
-  using DepositCtx = DepositContext<Mfields, dim_t>;
+  using DepositCtx = DepositContext<typename Mfields::Storage, dim_t>;
 
   template <typename Mparticles, typename F>
   void operator()(const real3_t& dx, real_t fnqs, Mfields& mflds,
@@ -52,7 +53,7 @@ public:
   {
     auto accessor = mprts.accessor();
 
-    DepositCtx ctx{mflds, dx, fnqs};
+    DepositCtx ctx{mflds.storage(), mflds.ib(), dx, fnqs};
     for (ctx.p = 0; ctx.p < mprts.n_patches(); ctx.p++) {
       for (auto prt : accessor[ctx.p]) {
         ctx.x = prt.x();
