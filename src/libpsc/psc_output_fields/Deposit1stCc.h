@@ -11,16 +11,18 @@ namespace psc
 namespace moment
 {
 
-template <typename S, typename D>
-struct DepositContext
+template <typename S, typename D,
+          template <typename, typename> class DepositCode>
+struct DepositParticlesContext
 {
   using storage_type = S;
   using dim_t = D;
   using real_t = typename storage_type::value_type;
   using real3_t = gt::sarray<real_t, 3>;
+  using Deposit = DepositCode<real_t, dim_t>;
 
-  DepositContext(storage_type& mflds_gt, const Int3& ib, const real3_t& dx,
-                 real_t fnqs)
+  DepositParticlesContext(storage_type& mflds_gt, const Int3& ib,
+                          const real3_t& dx, real_t fnqs)
     : mflds_gt{mflds_gt}, ib{ib}, deposit{dx, fnqs}
   {}
 
@@ -31,20 +33,21 @@ struct DepositContext
 
   storage_type& mflds_gt;
   Int3 ib;
-  psc::deposit::code::Deposit1stCc<real_t, dim_t> deposit;
+  Deposit deposit;
   int p;
   real3_t x;
 };
 
-template <typename S, typename D>
-class Deposit1stCc
+template <typename S, typename D,
+          template <typename, typename> class DepositCode>
+class DepositParticles
 {
 public:
   using storage_type = S;
   using dim_t = D;
   using real_t = typename storage_type::value_type;
   using real3_t = gt::sarray<real_t, 3>;
-  using DepositCtx = DepositContext<storage_type, dim_t>;
+  using DepositCtx = DepositParticlesContext<storage_type, dim_t, DepositCode>;
 
   template <typename Mparticles, typename F>
   void operator()(const real3_t& dx, real_t fnqs, storage_type& mflds_gt,
@@ -71,7 +74,8 @@ void deposit_1st_cc(MF& mflds, const MP& mprts, F&& func)
   const auto& domain = mflds.grid().domain;
   real3_t dx = {domain.dx[0], domain.dx[1], domain.dx[2]};
   real_t fnqs = mflds.grid().norm.fnqs;
-  Deposit1stCc<typename MF::Storage, D> deposit;
+  DepositParticles<typename MF::Storage, D, psc::deposit::code::Deposit1stCc>
+    deposit;
   deposit(dx, fnqs, mflds.storage(), mflds.ib(), mprts, std::forward<F>(func));
 }
 
