@@ -36,8 +36,8 @@ public:
 
   {}
 
-  template <typename MF, typename PRT>
-  void operator()(DepositCtx& ctx, MF& mflds, const PRT& prt, int m, real_t val)
+  template <typename MF>
+  void operator()(DepositCtx& ctx, MF& mflds, int m, real_t val)
   {
     auto ib = mflds.ib();
     deposit_(mflds.storage().view(_all, _all, _all, m, ctx.p), ib, ctx.x, val);
