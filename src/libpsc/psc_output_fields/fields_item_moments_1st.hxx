@@ -69,9 +69,9 @@ public:
 
     Base::mres_.storage().view() = 0.f;
     auto deposit = Deposit1stCc<real_t, dim_t>{Base::grid()};
-    deposit(mprts, [&](auto& ctx, const Particle& prt) {
+    deposit(mprts, [&](auto& deposit_one, const Particle& prt) {
       int m = prt.kind();
-      ctx(Base::mres_, m, 1.f);
+      deposit_one(Base::mres_, m, 1.f);
     });
     Base::bnd_.add_ghosts(Base::mres_);
   }
@@ -238,23 +238,23 @@ public:
     using real_t = typename Particle::real_t;
 
     auto deposit = Deposit1stCc<real_t, dim_t>{Base::grid()};
-    deposit(mprts, [&](auto& ctx, const Particle& prt) {
+    deposit(mprts, [&](auto& deposit_one, const Particle& prt) {
       int mm = prt.kind() * n_moments;
       real_t vxi[3];
       _particle_calc_vxi(prt, vxi);
-      ctx(Base::mres_, mm + 0, prt.q());
-      ctx(Base::mres_, mm + 1, prt.q() * vxi[0]);
-      ctx(Base::mres_, mm + 2, prt.q() * vxi[1]);
-      ctx(Base::mres_, mm + 3, prt.q() * vxi[2]);
-      ctx(Base::mres_, mm + 4, prt.m() * prt.u()[0]);
-      ctx(Base::mres_, mm + 5, prt.m() * prt.u()[1]);
-      ctx(Base::mres_, mm + 6, prt.m() * prt.u()[2]);
-      ctx(Base::mres_, mm + 7, prt.m() * prt.u()[0] * vxi[0]);
-      ctx(Base::mres_, mm + 8, prt.m() * prt.u()[1] * vxi[1]);
-      ctx(Base::mres_, mm + 9, prt.m() * prt.u()[2] * vxi[2]);
-      ctx(Base::mres_, mm + 10, prt.m() * prt.u()[0] * vxi[1]);
-      ctx(Base::mres_, mm + 11, prt.m() * prt.u()[1] * vxi[2]);
-      ctx(Base::mres_, mm + 12, prt.m() * prt.u()[2] * vxi[0]);
+      deposit_one(Base::mres_, mm + 0, prt.q());
+      deposit_one(Base::mres_, mm + 1, prt.q() * vxi[0]);
+      deposit_one(Base::mres_, mm + 2, prt.q() * vxi[1]);
+      deposit_one(Base::mres_, mm + 3, prt.q() * vxi[2]);
+      deposit_one(Base::mres_, mm + 4, prt.m() * prt.u()[0]);
+      deposit_one(Base::mres_, mm + 5, prt.m() * prt.u()[1]);
+      deposit_one(Base::mres_, mm + 6, prt.m() * prt.u()[2]);
+      deposit_one(Base::mres_, mm + 7, prt.m() * prt.u()[0] * vxi[0]);
+      deposit_one(Base::mres_, mm + 8, prt.m() * prt.u()[1] * vxi[1]);
+      deposit_one(Base::mres_, mm + 9, prt.m() * prt.u()[2] * vxi[2]);
+      deposit_one(Base::mres_, mm + 10, prt.m() * prt.u()[0] * vxi[1]);
+      deposit_one(Base::mres_, mm + 11, prt.m() * prt.u()[1] * vxi[2]);
+      deposit_one(Base::mres_, mm + 12, prt.m() * prt.u()[2] * vxi[0]);
     });
     Base::bnd_.add_ghosts(Base::mres_);
   }
