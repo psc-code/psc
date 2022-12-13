@@ -79,5 +79,19 @@ void deposit_1st_cc(MF& mflds, const MP& mprts, F&& func)
   deposit(dx, fnqs, mflds.storage(), mflds.ib(), mprts, std::forward<F>(func));
 }
 
+template <typename D, typename MF, typename MP, typename F>
+void deposit_1st_nc(MF& mflds, const MP& mprts, F&& func)
+{
+  using real_t = typename MF::real_t;
+  using real3_t = gt::sarray<real_t, 3>;
+
+  const auto& domain = mflds.grid().domain;
+  real3_t dx = {domain.dx[0], domain.dx[1], domain.dx[2]};
+  real_t fnqs = mflds.grid().norm.fnqs;
+  DepositParticles<typename MF::Storage, D, psc::deposit::code::Deposit1stNc>
+    deposit;
+  deposit(dx, fnqs, mflds.storage(), mflds.ib(), mprts, std::forward<F>(func));
+}
+
 } // namespace moment
 } // namespace psc
