@@ -21,6 +21,13 @@ struct DepositContext
 
   DepositContext(const real3_t& dx, real_t fnqs) : deposit(dx, fnqs) {}
 
+  template <typename MF>
+  void operator()(MF& mflds, int m, real_t val)
+  {
+    auto ib = mflds.ib();
+    deposit(mflds.storage().view(_all, _all, _all, m, p), ib, x, val);
+  }
+
   int p;
   real3_t x;
   psc::deposit::code::Deposit1stCc<real_t, dim_t> deposit;
@@ -39,14 +46,6 @@ public:
     : dx_{grid.domain.dx[0], grid.domain.dx[1], grid.domain.dx[2]},
       fnqs_(grid.norm.fnqs)
   {}
-
-  template <typename MF>
-  void operator()(DepositCtx& ctx, MF& mflds, int m, real_t val)
-  {
-    auto ib = mflds.ib();
-    ctx.deposit(mflds.storage().view(_all, _all, _all, m, ctx.p), ib, ctx.x,
-                val);
-  }
 
   template <typename Mparticles, typename F>
   void process(const Mparticles& mprts, F&& func)
