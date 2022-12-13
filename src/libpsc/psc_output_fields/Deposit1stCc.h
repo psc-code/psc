@@ -69,3 +69,10 @@ private:
   real3_t dx_;
   real_t fnqs_;
 };
+
+template <typename D, typename MF, typename MP, typename F>
+void deposit1stCc(MF& mflds, const MP& mprts, F&& func)
+{
+  auto deposit = Deposit1stCc<MF, D>{mflds.grid()};
+  deposit(mflds, mprts, std::forward<F>(func));
+}
