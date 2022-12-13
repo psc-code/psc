@@ -46,17 +46,13 @@ public:
   using real3_t = gt::sarray<real_t, 3>;
   using DepositCtx = DepositContext<Mfields, dim_t>;
 
-  Deposit1stCc(const Grid_t& grid)
-    : dx_{grid.domain.dx[0], grid.domain.dx[1], grid.domain.dx[2]},
-      fnqs_(grid.norm.fnqs)
-  {}
-
   template <typename Mparticles, typename F>
-  void operator()(Mfields& mflds, const Mparticles& mprts, F&& func)
+  void operator()(const real3_t& dx, real_t fnqs, Mfields& mflds,
+                  const Mparticles& mprts, F&& func)
   {
     auto accessor = mprts.accessor();
 
-    DepositCtx ctx{mflds, dx_, fnqs_};
+    DepositCtx ctx{mflds, dx, fnqs};
     for (ctx.p = 0; ctx.p < mprts.n_patches(); ctx.p++) {
       for (auto prt : accessor[ctx.p]) {
         ctx.x = prt.x();
@@ -64,15 +60,17 @@ public:
       }
     }
   }
-
-private:
-  real3_t dx_;
-  real_t fnqs_;
 };
 
 template <typename D, typename MF, typename MP, typename F>
 void deposit1stCc(MF& mflds, const MP& mprts, F&& func)
 {
-  auto deposit = Deposit1stCc<MF, D>{mflds.grid()};
-  deposit(mflds, mprts, std::forward<F>(func));
+  using real_t = typename MF::real_t;
+  using real3_t = gt::sarray<real_t, 3>;
+
+  const auto& domain = mflds.grid().domain;
+  real3_t dx = {domain.dx[0], domain.dx[1], domain.dx[2]};
+  real_t fnqs = mflds.grid().norm.fnqs;
+  Deposit1stCc<MF, D> deposit;
+  deposit(dx, fnqs, mflds, mprts, std::forward<F>(func));
 }
