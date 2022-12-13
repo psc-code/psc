@@ -37,23 +37,23 @@ struct DepositContext
   real3_t x;
 };
 
-template <typename MF, typename D>
+template <typename S, typename D>
 class Deposit1stCc
 {
 public:
-  using Mfields = MF;
+  using storage_type = S;
   using dim_t = D;
-  using real_t = typename Mfields::real_t;
+  using real_t = typename storage_type::value_type;
   using real3_t = gt::sarray<real_t, 3>;
-  using DepositCtx = DepositContext<typename Mfields::Storage, dim_t>;
+  using DepositCtx = DepositContext<storage_type, dim_t>;
 
   template <typename Mparticles, typename F>
-  void operator()(const real3_t& dx, real_t fnqs, Mfields& mflds,
-                  const Mparticles& mprts, F&& func)
+  void operator()(const real3_t& dx, real_t fnqs, storage_type& mflds_gt,
+                  const Int3& ib, const Mparticles& mprts, F&& func)
   {
     auto accessor = mprts.accessor();
 
-    DepositCtx ctx{mflds.storage(), mflds.ib(), dx, fnqs};
+    DepositCtx ctx{mflds_gt, ib, dx, fnqs};
     for (ctx.p = 0; ctx.p < mprts.n_patches(); ctx.p++) {
       for (auto prt : accessor[ctx.p]) {
         ctx.x = prt.x();
@@ -72,6 +72,6 @@ void deposit1stCc(MF& mflds, const MP& mprts, F&& func)
   const auto& domain = mflds.grid().domain;
   real3_t dx = {domain.dx[0], domain.dx[1], domain.dx[2]};
   real_t fnqs = mflds.grid().norm.fnqs;
-  Deposit1stCc<MF, D> deposit;
-  deposit(dx, fnqs, mflds, mprts, std::forward<F>(func));
+  Deposit1stCc<typename MF::Storage, D> deposit;
+  deposit(dx, fnqs, mflds.storage(), mflds.ib(), mprts, std::forward<F>(func));
 }
