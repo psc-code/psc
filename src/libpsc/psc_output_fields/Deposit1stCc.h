@@ -20,14 +20,17 @@ struct DepositContext
   using real_t = typename Mfields::real_t;
   using real3_t = gt::sarray<real_t, 3>;
 
-  DepositContext(const real3_t& dx, real_t fnqs) : deposit(dx, fnqs) {}
+  DepositContext(Mfields& mflds, const real3_t& dx, real_t fnqs)
+    : mflds{mflds}, ib{mflds.ib()}, deposit{dx, fnqs}
+  {}
 
-  void operator()(MF& mflds, int m, real_t val)
+  void operator()(int m, real_t val)
   {
-    auto ib = mflds.ib();
     deposit(mflds.storage().view(_all, _all, _all, m, p), ib, x, val);
   }
 
+  Mfields& mflds;
+  Int3 ib;
   psc::deposit::code::Deposit1stCc<real_t, dim_t> deposit;
   int p;
   real3_t x;
@@ -49,11 +52,11 @@ public:
   {}
 
   template <typename Mparticles, typename F>
-  void operator()(const Mparticles& mprts, F&& func)
+  void operator()(Mfields& mflds, const Mparticles& mprts, F&& func)
   {
     auto accessor = mprts.accessor();
 
-    DepositCtx ctx{dx_, fnqs_};
+    DepositCtx ctx{mflds, dx_, fnqs_};
     for (ctx.p = 0; ctx.p < mprts.n_patches(); ctx.p++) {
       for (auto prt : accessor[ctx.p]) {
         ctx.x = prt.x();
