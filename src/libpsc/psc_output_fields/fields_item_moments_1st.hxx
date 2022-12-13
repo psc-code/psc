@@ -69,7 +69,7 @@ public:
 
     Base::mres_.storage().view() = 0.f;
     auto deposit = Deposit1stCc<real_t, dim_t>{Base::grid()};
-    deposit.process(mprts, [&](auto& ctx, const Particle& prt) {
+    deposit(mprts, [&](auto& ctx, const Particle& prt) {
       int m = prt.kind();
       ctx(Base::mres_, m, 1.f);
     });
@@ -238,7 +238,7 @@ public:
     using real_t = typename Particle::real_t;
 
     auto deposit = Deposit1stCc<real_t, dim_t>{Base::grid()};
-    deposit.process(mprts, [&](auto& ctx, const Particle& prt) {
+    deposit(mprts, [&](auto& ctx, const Particle& prt) {
       int mm = prt.kind() * n_moments;
       real_t vxi[3];
       _particle_calc_vxi(prt, vxi);

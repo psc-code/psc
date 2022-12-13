@@ -48,7 +48,7 @@ public:
   {}
 
   template <typename Mparticles, typename F>
-  void process(const Mparticles& mprts, F&& func)
+  void operator()(const Mparticles& mprts, F&& func)
   {
     auto accessor = mprts.accessor();
 
