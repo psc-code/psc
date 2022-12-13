@@ -12,6 +12,11 @@
 // we don't have to find the IP coefficients again Obviously, the rest of the IP
 // macro should be converted, too
 
+struct DepositContext
+{
+  int p;
+};
+
 template <typename T, typename D>
 class Deposit1stCc
 {
@@ -26,10 +31,12 @@ public:
   {}
 
   template <typename MF, typename PRT>
-  void operator()(MF& mflds, const PRT& prt, int m, real_t val)
+  void operator()(DepositContext& ctx, MF& mflds, const PRT& prt, int m,
+                  real_t val)
   {
     auto ib = mflds.ib();
-    deposit_(mflds.storage().view(_all, _all, _all, m, p_), ib, prt.x(), val);
+    deposit_(mflds.storage().view(_all, _all, _all, m, ctx.p), ib, prt.x(),
+             val);
   }
 
   template <typename Mparticles, typename F>
@@ -37,14 +44,14 @@ public:
   {
     auto accessor = mprts.accessor();
 
-    for (p_ = 0; p_ < mprts.n_patches(); p_++) {
-      for (auto prt : accessor[p_]) {
-        func(prt);
+    DepositContext ctx;
+    for (ctx.p = 0; ctx.p < mprts.n_patches(); ctx.p++) {
+      for (auto prt : accessor[ctx.p]) {
+        func(ctx, prt);
       }
     }
   }
 
 private:
-  int p_;
   psc::deposit::code::Deposit1stCc<real_t, dim_t> deposit_;
 };
