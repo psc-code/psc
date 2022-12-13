@@ -6,11 +6,10 @@
 
 #include <kg/Vec3.h>
 
-// FIXME, this is still too intermingled, both doing the actual deposit as well
-// as the particle / patch processing OTOH, there is still opportunity for
-// optimization, in particular when operator() gets called back multiple times,
-// we don't have to find the IP coefficients again Obviously, the rest of the IP
-// macro should be converted, too
+namespace psc
+{
+namespace moment
+{
 
 template <typename S, typename D>
 struct DepositContext
@@ -64,7 +63,7 @@ public:
 };
 
 template <typename D, typename MF, typename MP, typename F>
-void deposit1stCc(MF& mflds, const MP& mprts, F&& func)
+void deposit_1st_cc(MF& mflds, const MP& mprts, F&& func)
 {
   using real_t = typename MF::real_t;
   using real3_t = gt::sarray<real_t, 3>;
@@ -75,3 +74,6 @@ void deposit1stCc(MF& mflds, const MP& mprts, F&& func)
   Deposit1stCc<typename MF::Storage, D> deposit;
   deposit(dx, fnqs, mflds.storage(), mflds.ib(), mprts, std::forward<F>(func));
 }
+
+} // namespace moment
+} // namespace psc
