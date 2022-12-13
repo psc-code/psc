@@ -12,9 +12,14 @@
 // we don't have to find the IP coefficients again Obviously, the rest of the IP
 // macro should be converted, too
 
+template <typename R>
 struct DepositContext
 {
+  using real_t = R;
+  using real3_t = gt::sarray<real_t, 3>;
+
   int p;
+  real3_t x;
 };
 
 template <typename T, typename D>
@@ -23,6 +28,7 @@ class Deposit1stCc
 public:
   using dim_t = D;
   using real_t = T;
+  using DepositCtx = DepositContext<real_t>;
 
   Deposit1stCc(const Grid_t& grid)
     : deposit_({grid.domain.dx[0], grid.domain.dx[1], grid.domain.dx[2]},
@@ -31,12 +37,10 @@ public:
   {}
 
   template <typename MF, typename PRT>
-  void operator()(DepositContext& ctx, MF& mflds, const PRT& prt, int m,
-                  real_t val)
+  void operator()(DepositCtx& ctx, MF& mflds, const PRT& prt, int m, real_t val)
   {
     auto ib = mflds.ib();
-    deposit_(mflds.storage().view(_all, _all, _all, m, ctx.p), ib, prt.x(),
-             val);
+    deposit_(mflds.storage().view(_all, _all, _all, m, ctx.p), ib, ctx.x, val);
   }
 
   template <typename Mparticles, typename F>
@@ -44,9 +48,10 @@ public:
   {
     auto accessor = mprts.accessor();
 
-    DepositContext ctx;
+    DepositCtx ctx;
     for (ctx.p = 0; ctx.p < mprts.n_patches(); ctx.p++) {
       for (auto prt : accessor[ctx.p]) {
+        ctx.x = prt.x();
         func(ctx, prt);
       }
     }
