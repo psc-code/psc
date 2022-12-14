@@ -65,8 +65,9 @@ public:
   }
 };
 
-template <typename D, typename MF, typename MP, typename F>
-void deposit_1st_cc(MF& mflds_gt, const Int3& ib, const MP& mprts, F&& func)
+template <template <typename, typename> class DepositCode, typename D,
+          typename MF, typename MP, typename F>
+void deposit(MF& mflds_gt, const Int3& ib, const MP& mprts, F&& func)
 {
   using real_t = typename MF::value_type;
   using real3_t = gt::sarray<real_t, 3>;
@@ -74,21 +75,22 @@ void deposit_1st_cc(MF& mflds_gt, const Int3& ib, const MP& mprts, F&& func)
   const auto& domain = mprts.grid().domain;
   real3_t dx = {domain.dx[0], domain.dx[1], domain.dx[2]};
   real_t fnqs = mprts.grid().norm.fnqs;
-  DepositParticles<MF, D, psc::deposit::code::Deposit1stCc> deposit;
+  DepositParticles<MF, D, DepositCode> deposit;
   deposit(dx, fnqs, mflds_gt, ib, mprts, std::forward<F>(func));
+}
+
+template <typename D, typename MF, typename MP, typename F>
+void deposit_1st_cc(MF& mflds_gt, const Int3& ib, const MP& mprts, F&& func)
+{
+  deposit<psc::deposit::code::Deposit1stCc, D>(mflds_gt, ib, mprts,
+                                               std::forward<F>(func));
 }
 
 template <typename D, typename MF, typename MP, typename F>
 void deposit_1st_nc(MF& mflds_gt, const Int3& ib, const MP& mprts, F&& func)
 {
-  using real_t = typename MF::value_type;
-  using real3_t = gt::sarray<real_t, 3>;
-
-  const auto& domain = mprts.grid().domain;
-  real3_t dx = {domain.dx[0], domain.dx[1], domain.dx[2]};
-  real_t fnqs = mprts.grid().norm.fnqs;
-  DepositParticles<MF, D, psc::deposit::code::Deposit1stNc> deposit;
-  deposit(dx, fnqs, mflds_gt, ib, mprts, std::forward<F>(func));
+  deposit<psc::deposit::code::Deposit1stNc, D>(mflds_gt, ib, mprts,
+                                               std::forward<F>(func));
 }
 
 } // namespace moment
