@@ -25,7 +25,7 @@ struct Moment_n_1st_nc
 
   static void run(Mfields& mflds, Mparticles& mprts)
   {
-    psc::moment::deposit_1st_nc<dim_t>(mflds, mprts,
+    psc::moment::deposit_1st_nc<dim_t>(mflds.storage(), mflds.ib(), mprts,
                                        [&](auto& deposit_one, const auto& prt) {
                                          int m = prt.kind();
                                          deposit_one(m, prt.w());
@@ -57,7 +57,7 @@ struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MP, MF, D>, MF>
   {
     Base::mres_.gt().view() = 0.f;
     psc::moment::deposit_1st_nc<dim_t>(
-      Base::mres_, mprts,
+      Base::mres_.storage(), Base::mres_.ib(), mprts,
       [&](auto& deposit_one, const auto& prt) { deposit_one(0, prt.q()); });
     Base::bnd_.add_ghosts(Base::mres_);
   }

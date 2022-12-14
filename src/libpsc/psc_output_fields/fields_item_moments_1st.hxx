@@ -66,7 +66,8 @@ public:
   void update(const Mparticles& mprts)
   {
     Base::mres_.storage().view() = 0.f;
-    psc::moment::deposit_1st_cc<dim_t>(Base::mres_, mprts,
+    psc::moment::deposit_1st_cc<dim_t>(Base::mres_.storage(), Base::mres_.ib(),
+                                       mprts,
                                        [&](auto& deposit_one, const auto& prt) {
                                          int m = prt.kind();
                                          deposit_one(m, 1.f);
@@ -108,7 +109,8 @@ public:
   {
     Base::mres_.storage().view() = 0.f;
     psc::moment::deposit_1st_cc<dim_t>(
-      Base::mres_, mprts, [&](auto& deposit_one, const auto& prt) {
+      Base::mres_.storage(), Base::mres_.ib(), mprts,
+      [&](auto& deposit_one, const auto& prt) {
         real_t vxi[3];
         _particle_calc_vxi(prt, vxi);
         for (int m = 0; m < 3; m++) {
@@ -152,7 +154,8 @@ public:
   {
     Base::mres_.storage().view() = 0.f;
     psc::moment::deposit_1st_cc<dim_t>(
-      Base::mres_, mprts, [&](auto& deposit_one, const auto& prt) {
+      Base::mres_.storage(), Base::mres_.ib(), mprts,
+      [&](auto& deposit_one, const auto& prt) {
         for (int m = 0; m < 3; m++) {
           deposit_one(m + 3 * prt.kind(), prt.m() * prt.u()[m]);
         }
@@ -247,7 +250,8 @@ public:
     using real_t = typename Mparticles::real_t;
 
     psc::moment::deposit_1st_cc<dim_t>(
-      Base::mres_, mprts, [&](auto& deposit_one, const auto& prt) {
+      Base::mres_.storage(), Base::mres_.ib(), mprts,
+      [&](auto& deposit_one, const auto& prt) {
         int mm = prt.kind() * n_moments;
         real_t vxi[3];
         _particle_calc_vxi(prt, vxi);
@@ -337,7 +341,8 @@ public:
     using real_t = R;
 
     psc::moment::deposit_1st_cc<dim_t>(
-      Base::mres_, h_mprts, [&](auto& deposit_one, const auto& prt) {
+      Base::mres_.storage(), Base::mres_.ib(), h_mprts,
+      [&](auto& deposit_one, const auto& prt) {
         int mm = prt.kind() * n_moments;
         real_t vxi[3];
         _particle_calc_vxi(prt, vxi);
