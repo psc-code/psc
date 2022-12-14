@@ -44,11 +44,11 @@ using RngPool = PscRngPool<Rng>;
 template <
   typename DIM, typename _Mfields, typename PUSHP, typename ORDER,
   typename CHECKS = Checks_<typename PUSHP::Mparticles,
-                            typename PUSHP::MfieldsState, _Mfields, ORDER>,
+                            typename PUSHP::MfieldsState, _Mfields, ORDER, DIM>,
   typename BNDP = BndParticles_<typename PUSHP::Mparticles>,
   typename PUSHF = PushFields<typename PUSHP::MfieldsState>,
   typename BND = Bnd_<typename PUSHP::MfieldsState>,
-  typename MOMENT_N = Moment_n_1st<typename PUSHP::Mparticles, _Mfields>>
+  typename MOMENT_N = Moment_n_1st<typename PUSHP::Mparticles, _Mfields, DIM>>
 struct TestConfig
 {
   using dim = DIM;
@@ -105,7 +105,7 @@ using TestConfigVpic = TestConfig<
   dim_xyz,
   MfieldsSingle, // FIXME, this is not real nice, but might work...
   _PushParticlesVpic, checks_order_1st,
-  Checks_<_MparticlesVpic, _MfieldsStateVpic, void, checks_order_1st>,
+  Checks_<_MparticlesVpic, _MfieldsStateVpic, void, checks_order_1st, dim_xyz>,
   BndParticlesVpic<_MparticlesVpic>>;
 
 #ifdef USE_CUDA

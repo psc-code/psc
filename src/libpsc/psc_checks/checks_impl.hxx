@@ -24,18 +24,18 @@ using WriterDefault = WriterMRC;
 
 struct checks_order_1st
 {
-  template <typename Mparticles, typename Mfields>
-  using Moment_rho_nc = Moment_rho_1st_nc<Mparticles, Mfields>;
+  template <typename Mparticles, typename Mfields, typename D>
+  using Moment_rho_nc = Moment_rho_1st_nc<Mparticles, Mfields, D>;
 };
 
 struct checks_order_2nd
 {
-  template <typename Mparticles, typename Mfields>
+  template <typename Mparticles, typename Mfields, typename D>
   using Moment_rho_nc = Moment_rho_2nd_nc<Mparticles, Mfields>;
 };
 
 template <typename _Mparticles, typename _MfieldsState, typename _Mfields,
-          typename ORDER>
+          typename ORDER, typename D>
 struct Checks_
   : ChecksParams
   , ChecksBase
@@ -43,8 +43,10 @@ struct Checks_
   using Mparticles = _Mparticles;
   using MfieldsState = _MfieldsState;
   using Mfields = _Mfields;
+  using dim_t = D;
   using real_t = typename Mfields::real_t;
-  using Moment_t = typename ORDER::template Moment_rho_nc<Mparticles, Mfields>;
+  using Moment_t =
+    typename ORDER::template Moment_rho_nc<Mparticles, Mfields, dim_t>;
 
   // ----------------------------------------------------------------------
   // ctor

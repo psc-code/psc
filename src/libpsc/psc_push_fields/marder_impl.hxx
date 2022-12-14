@@ -111,15 +111,17 @@ inline void correct(MfieldsState& mflds, Mfields& mf,
 } // namespace marder
 } // namespace psc
 
-template <typename _Mparticles, typename _MfieldsState, typename _Mfields>
+template <typename _Mparticles, typename _MfieldsState, typename _Mfields,
+          typename D>
 struct Marder_ : MarderBase
 {
   using Mparticles = _Mparticles;
   using MfieldsState = _MfieldsState;
   using Mfields = _Mfields;
+  using dim_t = D;
   using real_t = typename Mfields::real_t;
   using fields_view_t = typename Mfields::fields_view_t;
-  using Moment_t = Moment_rho_1st_nc<Mparticles, Mfields>;
+  using Moment_t = Moment_rho_1st_nc<Mparticles, Mfields, dim_t>;
 
   Marder_(const Grid_t& grid, real_t diffusion, int loop, bool dump)
     : grid_{grid},

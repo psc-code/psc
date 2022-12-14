@@ -5,97 +5,15 @@
 
 #include "common_moments.cxx"
 
-template <typename R, typename D>
-class Deposit1stNc
-{
-public:
-  using real_t = R;
-  using dim_t = D;
-  using real3_t = gt::sarray<real_t, 3>;
-
-  Deposit1stNc(const real3_t& dx, real_t fnqs)
-    : dxi_{real_t(1.) / dx}, fnqs_{fnqs}
-  {}
-
-  template <typename P, typename F>
-  void operator()(const P& prt, const F& flds, const gt::shape_type<3>& ib,
-                  real_t val)
-  {
-    real3_t x = prt.x() * dxi_;
-    real_t value = fnqs_ * val;
-
-    psc::deposit::nc<dim_t>(flds, ib, x, value);
-  }
-
-  real3_t dxi_;
-  real_t fnqs_;
-};
-
-template <typename R, typename D>
-class Moments_n
-{
-public:
-  using real_t = R;
-  using dim_t = D;
-
-  Moments_n(const Grid_t& grid)
-    : deposit_({grid.domain.dx[0], grid.domain.dx[1], grid.domain.dx[2]},
-               grid.norm.fnqs)
-  {}
-
-  template <typename MF, typename MP>
-  void operator()(MF& mflds, MP& mprts)
-  {
-    auto ib = mflds.ib();
-    auto accessor = mprts.accessor();
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      auto flds = mflds.gt().view(_all, _all, _all, _all, p);
-      for (auto prt : accessor[p]) {
-        auto fld = flds.view(_all, _all, _all, prt.kind());
-        deposit_(prt, fld, ib, prt.w());
-      }
-    }
-  }
-
-  Deposit1stNc<real_t, dim_t> deposit_;
-};
-
-template <typename R, typename D>
-class Moments_rho
-{
-public:
-  using real_t = R;
-  using dim_t = D;
-
-  Moments_rho(const Grid_t& grid)
-    : deposit_({grid.domain.dx[0], grid.domain.dx[1], grid.domain.dx[2]},
-               grid.norm.fnqs)
-  {}
-
-  template <typename MF, typename MP>
-  void operator()(MF& mflds, MP& mprts)
-  {
-    auto ib = mflds.ib();
-    auto accessor = mprts.accessor();
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      auto fld = mflds.gt().view(_all, _all, _all, 0, p);
-      for (auto prt : accessor[p]) {
-        deposit_(prt, fld, ib, prt.q());
-      }
-    }
-  }
-
-  Deposit1stNc<real_t, dim_t> deposit_;
-};
-
 // ======================================================================
 // n
 
-template <typename MP, typename MF>
+template <typename MP, typename MF, typename D>
 struct Moment_n_1st_nc
 {
   using Mparticles = MP;
   using Mfields = MF;
+  using dim_t = D;
   using real_t = typename Mparticles::real_t;
   using particles_t = typename Mparticles::Patch;
 
@@ -107,14 +25,18 @@ struct Moment_n_1st_nc
   static void run(Mfields& mflds, Mparticles& mprts)
   {
     const Grid_t& grid = mprts.grid();
-    if (!grid.isInvar(0) && !grid.isInvar(1) && !grid.isInvar(2)) {
-      Moments_n<real_t, dim_xyz> moments{grid};
-      moments(mflds, mprts);
-    } else if (grid.isInvar(0) && !grid.isInvar(1) && !grid.isInvar(2)) {
-      Moments_n<real_t, dim_yz> moments{grid};
-      moments(mflds, mprts);
-    } else {
-      assert(0);
+    psc::deposit::code::Deposit1stNc<real_t, dim_t> deposit(
+      {grid.domain.dx[0], grid.domain.dx[1], grid.domain.dx[2]},
+      grid.norm.fnqs);
+
+    auto ib = mflds.ib();
+    auto accessor = mprts.accessor();
+    for (int p = 0; p < mprts.n_patches(); p++) {
+      auto flds = mflds.gt().view(_all, _all, _all, _all, p);
+      for (auto prt : accessor[p]) {
+        auto fld = flds.view(_all, _all, _all, prt.kind());
+        deposit(fld, ib, prt.x(), prt.w());
+      }
     }
   }
 };
@@ -122,12 +44,13 @@ struct Moment_n_1st_nc
 // ======================================================================
 // rho
 
-template <typename MP, typename MF>
-struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MP, MF>, MF>
+template <typename MP, typename MF, typename D>
+struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MP, MF, D>, MF>
 {
-  using Base = ItemMomentCRTP<Moment_rho_1st_nc<MP, MF>, MF>;
+  using Base = ItemMomentCRTP<Moment_rho_1st_nc<MP, MF, D>, MF>;
   using Mparticles = MP;
   using Mfields = MF;
+  using dim_t = D;
   using real_t = typename Mparticles::real_t;
   using particles_t = typename Mparticles::Patch;
 
@@ -141,14 +64,17 @@ struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MP, MF>, MF>
   explicit Moment_rho_1st_nc(const Mparticles& mprts) : Base{mprts.grid()}
   {
     const Grid_t& grid = mprts.grid();
-    if (!grid.isInvar(0) && !grid.isInvar(1) && !grid.isInvar(2)) {
-      Moments_rho<real_t, dim_xyz> moments{grid};
-      moments(Base::mres_, mprts);
-    } else if (grid.isInvar(0) && !grid.isInvar(1) && !grid.isInvar(2)) {
-      Moments_rho<real_t, dim_yz> moments{grid};
-      moments(Base::mres_, mprts);
-    } else {
-      assert(0);
+    psc::deposit::code::Deposit1stNc<real_t, dim_t> deposit(
+      {grid.domain.dx[0], grid.domain.dx[1], grid.domain.dx[2]},
+      grid.norm.fnqs);
+
+    auto ib = Base::mres_.ib();
+    auto accessor = mprts.accessor();
+    for (int p = 0; p < mprts.n_patches(); p++) {
+      auto fld = Base::mres_.gt().view(_all, _all, _all, 0, p);
+      for (auto prt : accessor[p]) {
+        deposit(fld, ib, prt.x(), prt.q());
+      }
     }
     Base::bnd_.add_ghosts(Base::mres_);
   }

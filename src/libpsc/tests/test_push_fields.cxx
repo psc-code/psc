@@ -115,7 +115,7 @@ template <typename Mparticles, typename MfieldsState, typename Mfields,
           typename Dim>
 struct marder_selector
 {
-  using type = Marder_<Mparticles, MfieldsState, Mfields>;
+  using type = Marder_<Mparticles, MfieldsState, Mfields, Dim>;
 };
 
 #ifdef USE_CUDA
