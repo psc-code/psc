@@ -97,14 +97,15 @@ struct Bnd_ : BndBase
                           void* _buf, void* ctx)
   {
     auto& mf = *static_cast<MfieldsHost*>(ctx);
-    auto F = make_Fields3d<dim_xyz>(mf[p]);
+    const Int3& ib = mf.ib();
     real_t* buf = static_cast<real_t*>(_buf);
 
     for (int m = mb; m < me; m++) {
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
         for (int iy = ilo[1]; iy < ihi[1]; iy++) {
           for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-            MRC_DDC_BUF3(buf, m - mb, ix, iy, iz) = F(m, ix, iy, iz);
+            MRC_DDC_BUF3(buf, m - mb, ix, iy, iz) =
+              mf.storage()(ix - ib[0], iy - ib[1], iz - ib[2], m, p);
           }
         }
       }
@@ -115,14 +116,15 @@ struct Bnd_ : BndBase
                            void* _buf, void* ctx)
   {
     auto& mf = *static_cast<MfieldsHost*>(ctx);
-    auto F = make_Fields3d<dim_xyz>(mf[p]);
+    const Int3& ib = mf.ib();
     real_t* buf = static_cast<real_t*>(_buf);
 
     for (int m = mb; m < me; m++) {
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
         for (int iy = ilo[1]; iy < ihi[1]; iy++) {
           for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-            F(m, ix, iy, iz) += MRC_DDC_BUF3(buf, m - mb, ix, iy, iz);
+            mf.storage()(ix - ib[0], iy - ib[1], iz - ib[2], m, p) +=
+              MRC_DDC_BUF3(buf, m - mb, ix, iy, iz);
           }
         }
       }
@@ -133,14 +135,15 @@ struct Bnd_ : BndBase
                             void* _buf, void* ctx)
   {
     auto& mf = *static_cast<MfieldsHost*>(ctx);
-    auto F = make_Fields3d<dim_xyz>(mf[p]);
+    const Int3& ib = mf.ib();
     real_t* buf = static_cast<real_t*>(_buf);
 
     for (int m = mb; m < me; m++) {
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
         for (int iy = ilo[1]; iy < ihi[1]; iy++) {
           for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-            F(m, ix, iy, iz) = MRC_DDC_BUF3(buf, m - mb, ix, iy, iz);
+            mf.storage()(ix - ib[0], iy - ib[1], iz - ib[2], m, p) =
+              MRC_DDC_BUF3(buf, m - mb, ix, iy, iz);
           }
         }
       }
