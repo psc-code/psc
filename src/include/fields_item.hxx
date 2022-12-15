@@ -171,12 +171,6 @@ public:
   using Mfields = MF;
   using Real = typename Mfields::real_t;
 
-  const Real& operator()(int m, Int3 ijk, int p) const
-  {
-    auto& mres = const_cast<Mfields&>(mres_);
-    return make_Fields3d<dim_xyz>(mres[p])(m, ijk[0], ijk[1], ijk[2]);
-  }
-
   const Grid_t& grid() const { return mres_.grid(); }
 
   auto gt()
