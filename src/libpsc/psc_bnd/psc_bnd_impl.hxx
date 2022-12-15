@@ -9,12 +9,23 @@
 #include <mrc_profile.h>
 #include <mrc_ddc.h>
 
+template <typename S>
+struct BndContext
+{
+  using storage_type = S;
+
+  storage_type& mflds_gt;
+  const Int3& ib;
+};
+
 template <typename MF>
 struct Bnd_ : BndBase
 {
   using Mfields = MF;
   using MfieldsHost = hostMirror_t<Mfields>;
   using real_t = typename Mfields::real_t;
+  using storage_type = typename MfieldsHost::Storage;
+  using BndCtx = BndContext<storage_type>;
 
   // ----------------------------------------------------------------------
   // ctor
@@ -65,7 +76,8 @@ struct Bnd_ : BndBase
       auto&& h_mflds = hostMirror(mflds);
       copy(mflds, h_mflds);
 
-      mrc_ddc_add_ghosts(ddc_, mb, me, &h_mflds);
+      BndCtx ctx{h_mflds.storage(), h_mflds.ib()};
+      mrc_ddc_add_ghosts(ddc_, mb, me, &ctx);
       copy(h_mflds, mflds);
     }
   }
@@ -85,7 +97,8 @@ struct Bnd_ : BndBase
     {
       auto&& h_mflds = hostMirror(mflds);
       copy(mflds, h_mflds);
-      mrc_ddc_fill_ghosts(ddc_, mb, me, &h_mflds);
+      BndCtx ctx{h_mflds.storage(), h_mflds.ib()};
+      mrc_ddc_fill_ghosts(ddc_, mb, me, &ctx);
       copy(h_mflds, mflds);
     }
   }
@@ -94,18 +107,18 @@ struct Bnd_ : BndBase
   // copy_to_buf
 
   static void copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3],
-                          void* _buf, void* ctx)
+                          void* _buf, void* _ctx)
   {
-    auto& mf = *static_cast<MfieldsHost*>(ctx);
-    const Int3& ib = mf.ib();
+    BndCtx* ctx = static_cast<BndCtx*>(_ctx);
     real_t* buf = static_cast<real_t*>(_buf);
+    const Int3& ib = ctx->ib;
 
     for (int m = mb; m < me; m++) {
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
         for (int iy = ilo[1]; iy < ihi[1]; iy++) {
           for (int ix = ilo[0]; ix < ihi[0]; ix++) {
             MRC_DDC_BUF3(buf, m - mb, ix, iy, iz) =
-              mf.storage()(ix - ib[0], iy - ib[1], iz - ib[2], m, p);
+              ctx->mflds_gt(ix - ib[0], iy - ib[1], iz - ib[2], m, p);
           }
         }
       }
@@ -113,17 +126,17 @@ struct Bnd_ : BndBase
   }
 
   static void add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
-                           void* _buf, void* ctx)
+                           void* _buf, void* _ctx)
   {
-    auto& mf = *static_cast<MfieldsHost*>(ctx);
-    const Int3& ib = mf.ib();
+    BndCtx* ctx = static_cast<BndCtx*>(_ctx);
     real_t* buf = static_cast<real_t*>(_buf);
+    const Int3& ib = ctx->ib;
 
     for (int m = mb; m < me; m++) {
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
         for (int iy = ilo[1]; iy < ihi[1]; iy++) {
           for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-            mf.storage()(ix - ib[0], iy - ib[1], iz - ib[2], m, p) +=
+            ctx->mflds_gt(ix - ib[0], iy - ib[1], iz - ib[2], m, p) +=
               MRC_DDC_BUF3(buf, m - mb, ix, iy, iz);
           }
         }
@@ -132,17 +145,17 @@ struct Bnd_ : BndBase
   }
 
   static void copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
-                            void* _buf, void* ctx)
+                            void* _buf, void* _ctx)
   {
-    auto& mf = *static_cast<MfieldsHost*>(ctx);
-    const Int3& ib = mf.ib();
+    BndCtx* ctx = static_cast<BndCtx*>(_ctx);
     real_t* buf = static_cast<real_t*>(_buf);
+    const Int3& ib = ctx->ib;
 
     for (int m = mb; m < me; m++) {
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
         for (int iy = ilo[1]; iy < ihi[1]; iy++) {
           for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-            mf.storage()(ix - ib[0], iy - ib[1], iz - ib[2], m, p) =
+            ctx->mflds_gt(ix - ib[0], iy - ib[1], iz - ib[2], m, p) =
               MRC_DDC_BUF3(buf, m - mb, ix, iy, iz);
           }
         }
