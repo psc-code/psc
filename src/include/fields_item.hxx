@@ -46,8 +46,7 @@ public:
   void add_ghosts(Mfields& mres)
   {
     for (int p = 0; p < mres.n_patches(); p++) {
-      auto res = make_Fields3d<dim_xyz>(mres[p]);
-      add_ghosts_boundary(mres.grid(), res, p, 0, mres.n_comps());
+      add_ghosts_boundary(mres.grid(), mres, p, 0, mres.n_comps());
     }
 
     bnd_.add_ghosts(mres, 0, mres.n_comps());
@@ -58,10 +57,11 @@ private:
   // boundary stuff FIXME, should go elsewhere...
 
   template <typename FE>
-  void add_ghosts_reflecting_lo(const Grid_t& grid, FE f, int p, int d, int mb,
-                                int me)
+  void add_ghosts_reflecting_lo(const Int3& ldims, FE& mres, int p, int d,
+                                int mb, int me)
   {
-    auto ldims = grid.ldims;
+    auto& mres_gt = mres.storage();
+    const Int3& ib = mres.ib();
 
     int bx = ldims[0] == 1 ? 0 : 1;
     if (d == 1) {
@@ -70,7 +70,8 @@ private:
           int iy = 0;
           {
             for (int m = mb; m < me; m++) {
-              f(m, ix, iy, iz) += f(m, ix, iy - 1, iz);
+              mres_gt(ix + ib[0], iy + ib[1], iz + ib[2], m, p) +=
+                mres_gt(ix + ib[0], iy - 1 + ib[1], iz + ib[2], m, p);
             }
           }
         }
@@ -81,7 +82,8 @@ private:
           int iz = 0;
           {
             for (int m = mb; m < me; m++) {
-              f(m, ix, iy, iz) += f(m, ix, iy, iz - 1);
+              mres_gt(ix + ib[0], iy + ib[1], iz + ib[2], m, p) +=
+                mres_gt(ix + ib[0], iy + ib[1], iz - 1 + ib[2], m, p);
             }
           }
         }
@@ -92,10 +94,11 @@ private:
   }
 
   template <typename FE>
-  void add_ghosts_reflecting_hi(const Grid_t& grid, FE f, int p, int d, int mb,
-                                int me)
+  void add_ghosts_reflecting_hi(const Int3& ldims, FE& mres, int p, int d,
+                                int mb, int me)
   {
-    auto ldims = grid.ldims;
+    auto& mres_gt = mres.storage();
+    const Int3& ib = mres.ib();
 
     int bx = ldims[0] == 1 ? 0 : 1;
     if (d == 1) {
@@ -104,7 +107,8 @@ private:
           int iy = ldims[1] - 1;
           {
             for (int m = mb; m < me; m++) {
-              f(m, ix, iy, iz) += f(m, ix, iy + 1, iz);
+              mres_gt(ix + ib[0], iy + ib[1], iz + ib[2], m, p) +=
+                mres_gt(ix + ib[0], iy + 1 + ib[1], iz + ib[2], m, p);
             }
           }
         }
@@ -115,7 +119,8 @@ private:
           int iz = ldims[2] - 1;
           {
             for (int m = mb; m < me; m++) {
-              f(m, ix, iy, iz) += f(m, ix, iy, iz + 1);
+              mres_gt(ix + ib[0], iy + ib[1], iz + ib[2], m, p) +=
+                mres_gt(ix + ib[0], iy + ib[1], iz + 1 + ib[2], m, p);
             }
           }
         }
@@ -126,14 +131,14 @@ private:
   }
 
   template <typename FE>
-  void add_ghosts_boundary(const Grid_t& grid, FE res, int p, int mb, int me)
+  void add_ghosts_boundary(const Grid_t& grid, FE& mres, int p, int mb, int me)
   {
     // lo
     for (int d = 0; d < 3; d++) {
       if (grid.atBoundaryLo(p, d)) {
         if (grid.bc.prt_lo[d] == BND_PRT_REFLECTING ||
             grid.bc.prt_lo[d] == BND_PRT_OPEN) {
-          add_ghosts_reflecting_lo(grid, res, p, d, mb, me);
+          add_ghosts_reflecting_lo(grid.ldims, mres, p, d, mb, me);
         }
       }
     }
@@ -142,7 +147,7 @@ private:
       if (grid.atBoundaryHi(p, d)) {
         if (grid.bc.prt_hi[d] == BND_PRT_REFLECTING ||
             grid.bc.prt_hi[d] == BND_PRT_OPEN) {
-          add_ghosts_reflecting_hi(grid, res, p, d, mb, me);
+          add_ghosts_reflecting_hi(grid.ldims, mres, p, d, mb, me);
         }
       }
     }
