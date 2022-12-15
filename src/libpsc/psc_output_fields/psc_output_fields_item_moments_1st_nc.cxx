@@ -42,8 +42,6 @@ struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MF, D>, MF>
   using dim_t = D;
   using real_t = typename Mfields::real_t;
 
-  using Base::n_comps;
-
   constexpr static char const* name = "rho_1st_nc";
   static int n_comps(const Grid_t& grid) { return 1; }
   static std::vector<std::string> fld_names() { return {"rho"}; }

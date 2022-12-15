@@ -178,9 +178,6 @@ public:
   }
 
   const Grid_t& grid() const { return mres_.grid(); }
-  int n_comps() const { return mres_.n_comps(); }
-  int n_patches() const { return mres_.n_patches(); }
-  Int3 ibn() const { return mres_.ibn(); }
 
   auto gt()
   {

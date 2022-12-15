@@ -41,8 +41,6 @@ public:
   using real_t = typename Mfields::real_t;
   using dim_t = D;
 
-  using Base::n_comps;
-
   constexpr static char const* name = "n_1st";
 
   static int n_comps(const Grid_t& grid) { return 1 * grid.kinds.size(); }
@@ -52,7 +50,6 @@ public:
     return addKindSuffix({"n"}, grid.kinds);
   }
 
-  int n_comps() const { return Base::mres_.n_comps(); }
   Int3 ibn() const { return {}; }
 
   explicit Moment_n_1st(const Grid_t& grid) : Base{grid} {}
@@ -206,8 +203,6 @@ public:
   using value_type = typename Mfields::real_t;
   using space = typename Mfields::space;
 
-  using Base::n_comps;
-
   constexpr static int n_moments = 13;
   static char const* name() { return "all_1st"; }
 
@@ -273,8 +268,6 @@ public:
   using dim_t = D;
   using Mparticles = MparticlesCuda<BS>;
   using Mfields = MfieldsSingle;
-
-  using Base::n_comps;
 
   using Sub = Moments_1st<MparticlesSingle, Mfields, D>;
 

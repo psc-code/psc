@@ -16,8 +16,6 @@ public:
   using dim_t = D;
   using real_t = typename Mfields::real_t;
 
-  using Base::n_comps;
-
   constexpr static char const* name = "n_2nd_nc";
 
   static int n_comps(const Grid_t& grid) { return 1 * grid.kinds.size(); }
