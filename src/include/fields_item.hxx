@@ -46,7 +46,8 @@ public:
   void add_ghosts(Mfields& mres)
   {
     for (int p = 0; p < mres.n_patches(); p++) {
-      add_ghosts_boundary(mres.grid(), mres, p, 0, mres.n_comps());
+      add_ghosts_boundary(mres.grid(), mres.storage(), mres.ib(), p, 0,
+                          mres.n_comps());
     }
 
     bnd_.add_ghosts(mres, 0, mres.n_comps());
@@ -57,12 +58,9 @@ private:
   // boundary stuff FIXME, should go elsewhere...
 
   template <typename FE>
-  void add_ghosts_reflecting_lo(const Int3& ldims, FE& mres, int p, int d,
-                                int mb, int me)
+  void add_ghosts_reflecting_lo(const Int3& ldims, FE& mres_gt, const Int3& ib,
+                                int p, int d, int mb, int me)
   {
-    auto& mres_gt = mres.storage();
-    const Int3& ib = mres.ib();
-
     int bx = ldims[0] == 1 ? 0 : 1;
     if (d == 1) {
       for (int iz = -1; iz < ldims[2] + 1; iz++) {
@@ -94,12 +92,9 @@ private:
   }
 
   template <typename FE>
-  void add_ghosts_reflecting_hi(const Int3& ldims, FE& mres, int p, int d,
-                                int mb, int me)
+  void add_ghosts_reflecting_hi(const Int3& ldims, FE& mres_gt, const Int3& ib,
+                                int p, int d, int mb, int me)
   {
-    auto& mres_gt = mres.storage();
-    const Int3& ib = mres.ib();
-
     int bx = ldims[0] == 1 ? 0 : 1;
     if (d == 1) {
       for (int iz = -1; iz < ldims[2] + 1; iz++) {
@@ -131,14 +126,15 @@ private:
   }
 
   template <typename FE>
-  void add_ghosts_boundary(const Grid_t& grid, FE& mres, int p, int mb, int me)
+  void add_ghosts_boundary(const Grid_t& grid, FE& mres_gt, const Int3& ib,
+                           int p, int mb, int me)
   {
     // lo
     for (int d = 0; d < 3; d++) {
       if (grid.atBoundaryLo(p, d)) {
         if (grid.bc.prt_lo[d] == BND_PRT_REFLECTING ||
             grid.bc.prt_lo[d] == BND_PRT_OPEN) {
-          add_ghosts_reflecting_lo(grid.ldims, mres, p, d, mb, me);
+          add_ghosts_reflecting_lo(grid.ldims, mres_gt, ib, p, d, mb, me);
         }
       }
     }
@@ -147,7 +143,7 @@ private:
       if (grid.atBoundaryHi(p, d)) {
         if (grid.bc.prt_hi[d] == BND_PRT_REFLECTING ||
             grid.bc.prt_hi[d] == BND_PRT_OPEN) {
-          add_ghosts_reflecting_hi(grid.ldims, mres, p, d, mb, me);
+          add_ghosts_reflecting_hi(grid.ldims, mres_gt, ib, p, d, mb, me);
         }
       }
     }
