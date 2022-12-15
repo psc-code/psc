@@ -74,13 +74,6 @@ public:
                                        });
     Base::bnd_.add_ghosts(Base::mres_);
   }
-
-  auto gt()
-  {
-    Int3 bnd = Base::mres_.ibn();
-    return Base::mres_.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                                 _s(bnd[2], -bnd[2]));
-  }
 };
 
 // ======================================================================
@@ -119,13 +112,6 @@ public:
       });
     Base::bnd_.add_ghosts(Base::mres_);
   }
-
-  auto gt()
-  {
-    Int3 bnd = Base::mres_.ibn();
-    return Base::mres_.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                                 _s(bnd[2], -bnd[2]));
-  }
 };
 
 // ======================================================================
@@ -161,13 +147,6 @@ public:
         }
       });
     Base::bnd_.add_ghosts(Base::mres_);
-  }
-
-  auto gt()
-  {
-    Int3 bnd = Base::mres_.ibn();
-    return Base::mres_.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                                 _s(bnd[2], -bnd[2]));
   }
 };
 
@@ -271,13 +250,6 @@ public:
       });
     Base::bnd_.add_ghosts(Base::mres_);
   }
-
-  auto gt()
-  {
-    auto bnd = -Base::mres_.ib();
-    return Base::mres_.storage().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                                      _s(bnd[2], -bnd[2]));
-  }
 };
 
 #ifdef USE_CUDA
@@ -369,13 +341,6 @@ public:
 
     mprts.put_as(h_mprts, MP_DONT_COPY);
     prof_stop(pr);
-  }
-
-  auto gt()
-  {
-    auto bnd = -Base::mres_.ib();
-    return Base::mres_.storage().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                                      _s(bnd[2], -bnd[2]));
   }
 };
 
