@@ -25,7 +25,7 @@ using WriterDefault = WriterMRC;
 struct checks_order_1st
 {
   template <typename Mparticles, typename Mfields, typename D>
-  using Moment_rho_nc = Moment_rho_1st_nc<Mparticles, Mfields, D>;
+  using Moment_rho_nc = Moment_rho_1st_nc<Mfields, D>;
 };
 
 struct checks_order_2nd

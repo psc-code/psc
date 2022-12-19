@@ -80,7 +80,7 @@ struct MarderCuda : MarderBase
   using Mfields = MfieldsCuda;
   using Mparticles = MparticlesCuda<BS>;
   using real_t = MfieldsState::real_t;
-  using Moment_t = Moment_rho_1st_nc<MparticlesSingle, MfieldsSingle, dim>;
+  using Moment_t = Moment_rho_1st_nc<MfieldsSingle, dim>;
 
   MarderCuda(const Grid_t& grid, real_t diffusion, int loop, bool dump)
     : grid_{grid},

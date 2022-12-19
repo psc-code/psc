@@ -8,20 +8,19 @@
 // ======================================================================
 // n
 
-template <typename MP, typename MF, typename D>
+template <typename MF, typename D>
 struct Moment_n_1st_nc
 {
-  using Mparticles = MP;
   using Mfields = MF;
   using dim_t = D;
-  using real_t = typename Mparticles::real_t;
-  using particles_t = typename Mparticles::Patch;
+  using real_t = typename Mfields::real_t;
 
   constexpr static char const* name = "n_1st_nc";
   constexpr static int n_comps = 1;
   static std::vector<std::string> fld_names() { return {"n"}; }
   constexpr static int flags = POFI_BY_KIND;
 
+  template <typename Mparticles>
   static void run(Mfields& mflds, Mparticles& mprts)
   {
     psc::moment::deposit_1st_nc<dim_t>(mflds.storage(), mflds.ib(), mprts,
@@ -35,15 +34,13 @@ struct Moment_n_1st_nc
 // ======================================================================
 // rho
 
-template <typename MP, typename MF, typename D>
-struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MP, MF, D>, MF>
+template <typename MF, typename D>
+struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MF, D>, MF>
 {
-  using Base = ItemMomentCRTP<Moment_rho_1st_nc<MP, MF, D>, MF>;
-  using Mparticles = MP;
+  using Base = ItemMomentCRTP<Moment_rho_1st_nc<MF, D>, MF>;
   using Mfields = MF;
   using dim_t = D;
-  using real_t = typename Mparticles::real_t;
-  using particles_t = typename Mparticles::Patch;
+  using real_t = typename Mfields::real_t;
 
   using Base::n_comps;
 
@@ -52,6 +49,7 @@ struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MP, MF, D>, MF>
   static std::vector<std::string> fld_names() { return {"rho"}; }
   constexpr static int flags = 0;
 
+  template <typename Mparticles>
   explicit Moment_rho_1st_nc(const Mparticles& mprts) : Base{mprts.grid()}
   {
     Base::mres_.gt().view() = 0.f;
