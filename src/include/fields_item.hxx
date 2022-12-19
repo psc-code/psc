@@ -172,9 +172,9 @@ public:
 
   auto gt()
   {
-    auto bnd = -mres_.ib();
-    return mres_.storage().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                                _s(bnd[2], -bnd[2]));
+    auto bnd = -mres_ib_;
+    return mres_gt_.view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
+                         _s(bnd[2], -bnd[2]));
   }
 
 protected:
