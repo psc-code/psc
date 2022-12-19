@@ -4,8 +4,6 @@
 #include "psc_bits.h"
 #include <psc/deposit.hxx>
 
-#include <kg/Vec3.h>
-
 namespace psc
 {
 namespace moment

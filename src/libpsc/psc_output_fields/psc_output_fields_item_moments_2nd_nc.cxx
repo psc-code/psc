@@ -1,5 +1,6 @@
 
 #include "fields.hxx"
+#include <psc/moment.hxx>
 
 #include <math.h>
 

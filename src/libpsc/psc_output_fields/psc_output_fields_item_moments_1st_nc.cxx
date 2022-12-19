@@ -3,7 +3,7 @@
 
 #include <math.h>
 
-#include "Deposit1stCc.h"
+#include <psc/moment.hxx>
 
 // ======================================================================
 // n
