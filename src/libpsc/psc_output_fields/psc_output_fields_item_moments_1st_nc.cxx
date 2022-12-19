@@ -3,7 +3,6 @@
 
 #include <math.h>
 
-#include "common_moments.cxx"
 #include "Deposit1stCc.h"
 
 // ======================================================================
