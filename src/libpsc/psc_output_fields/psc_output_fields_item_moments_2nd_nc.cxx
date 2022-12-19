@@ -8,13 +8,14 @@
 // ======================================================================
 // n
 
-template <typename MP, typename MF = Mfields<typename MP::real_t>>
-class Moment_n_2nd_nc : public ItemMomentCRTP<Moment_n_2nd_nc<MP, MF>, MF>
+template <typename MP, typename D, typename MF = Mfields<typename MP::real_t>>
+class Moment_n_2nd_nc : public ItemMomentCRTP<Moment_n_2nd_nc<MP, D, MF>, MF>
 {
 public:
-  using Base = ItemMomentCRTP<Moment_n_2nd_nc<MP, MF>, MF>;
+  using Base = ItemMomentCRTP<Moment_n_2nd_nc<MP, D, MF>, MF>;
   using Mparticles = MP;
   using Mfields = MF;
+  using dim_t = D;
   using real_t = typename Mparticles::real_t;
 
   using Base::n_comps;
@@ -50,13 +51,15 @@ public:
 // ======================================================================
 // rho
 
-template <typename MP, typename MF = Mfields<typename MP::real_t>>
-class Moment_rho_2nd_nc : public ItemMomentCRTP<Moment_rho_2nd_nc<MP, MF>, MF>
+template <typename MP, typename D, typename MF = Mfields<typename MP::real_t>>
+class Moment_rho_2nd_nc
+  : public ItemMomentCRTP<Moment_rho_2nd_nc<MP, D, MF>, MF>
 {
 public:
-  using Base = ItemMomentCRTP<Moment_rho_2nd_nc<MP, MF>, MF>;
+  using Base = ItemMomentCRTP<Moment_rho_2nd_nc<MP, D, MF>, MF>;
   using Mparticles = MP;
   using Mfields = MF;
+  using dim_t = D;
   using real_t = typename Mparticles::real_t;
 
   static char const* name() { return "rho_2nd_nc"; }
