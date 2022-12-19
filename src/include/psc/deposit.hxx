@@ -14,7 +14,7 @@ namespace norm
 {
 
 // ---------------------------------------------------------------------------
-// DepositNorm1st
+// Deposit1st
 //
 // 1st order deposition given cell index l and normalized
 // in-cell position h in [0,1[
@@ -51,6 +51,99 @@ private:
     flds(l[0] + 1, l[1] + 0, l[2] + 1) += val *        h[0]  * (1.f - h[1]) *        h[2];
     flds(l[0] + 0, l[1] + 1, l[2] + 1) += val * (1.f - h[0]) *        h[1]  *        h[2];
     flds(l[0] + 1, l[1] + 1, l[2] + 1) += val *        h[0]  *        h[1]  *        h[2];
+    // clang-format on
+  }
+
+public:
+  template <typename F>
+  void operator()(F& flds, const gt::sarray<int, 3>& l, const real3_t& h,
+                  real_t val)
+  {
+    (*this)(flds, l, h, val, dim_t{});
+  }
+};
+
+// ---------------------------------------------------------------------------
+// Deposit2nd
+//
+// 2nd order deposition given cell index l and normalized
+// negated in-cell position h in [-1/2,1/2]
+
+template <typename R, typename D>
+class Deposit2nd
+{
+public:
+  using real_t = R;
+  using real3_t = gt::sarray<R, 3>;
+  using dim_t = D;
+
+private:
+  template <typename F>
+  void operator()(F& flds, const gt::sarray<int, 3>& l, const real3_t& h,
+                  real_t val, dim_yz tag)
+  {
+    real_t gmy = .5f * (.5f + h[1]) * (.5f + h[1]);
+    real_t gmz = .5f * (.5f + h[2]) * (.5f + h[2]);
+    real_t g0y = .75f - h[1] * h[1];
+    real_t g0z = .75f - h[2] * h[2];
+    real_t g1y = .5f * (.5f - h[1]) * (.5f - h[1]);
+    real_t g1z = .5f * (.5f - h[2]) * (.5f - h[2]);
+
+    // clang-format off
+    flds(0, l[1] - 1, l[2] - 1) += gmy * gmz * val;
+    flds(0, l[1]    , l[2] - 1) += g0y * gmz * val;
+    flds(0, l[1] + 1, l[2] - 1) += g1y * gmz * val;
+    flds(0, l[1] - 1, l[2]    ) += gmy * g0z * val;
+    flds(0, l[1]    , l[2]    ) += g0y * g0z * val;
+    flds(0, l[1] + 1, l[2]    ) += g1y * g0z * val;
+    flds(0, l[1] - 1, l[2] + 1) += gmy * g1z * val;
+    flds(0, l[1]    , l[2] + 1) += g0y * g1z * val;
+    flds(0, l[1] + 1, l[2] + 1) += g1y * g1z * val;
+    // clang-format on
+  }
+
+  template <typename F>
+  void operator()(F& flds, const gt::sarray<int, 3>& l, const real3_t& h,
+                  real_t val, dim_xyz tag)
+  {
+    real_t gmx = .5f * (.5f + h[0]) * (.5f + h[0]);
+    real_t gmy = .5f * (.5f + h[1]) * (.5f + h[1]);
+    real_t gmz = .5f * (.5f + h[2]) * (.5f + h[2]);
+    real_t g0x = .75f - h[0] * h[0];
+    real_t g0y = .75f - h[1] * h[1];
+    real_t g0z = .75f - h[2] * h[2];
+    real_t g1x = .5f * (.5f - h[0]) * (.5f - h[0]);
+    real_t g1y = .5f * (.5f - h[1]) * (.5f - h[1]);
+    real_t g1z = .5f * (.5f - h[2]) * (.5f - h[2]);
+
+    // clang-format off
+    flds(l[0] - 1, l[1] - 1, l[2] - 1) += gmx * gmy * gmz * val;
+    flds(l[0]    , l[1] - 1, l[2] - 1) += g0x * gmy * gmz * val;
+    flds(l[0] + 1, l[1] - 1, l[2] - 1) += g1x * gmy * gmz * val;
+    flds(l[0] - 1, l[1]    , l[2] - 1) += gmx * g0y * gmz * val;
+    flds(l[0]    , l[1]    , l[2] - 1) += g0x * g0y * gmz * val;
+    flds(l[0] + 1, l[1]    , l[2] - 1) += g1x * g0y * gmz * val;
+    flds(l[0] - 1, l[1] + 1, l[2] - 1) += gmx * g1y * gmz * val;
+    flds(l[0]    , l[1] + 1, l[2] - 1) += g0x * g1y * gmz * val;
+    flds(l[0] + 1, l[1] + 1, l[2] - 1) += g1x * g1y * gmz * val;
+    flds(l[0] - 1, l[1] - 1, l[2]    ) += gmx * gmy * g0z * val;
+    flds(l[0]    , l[1] - 1, l[2]    ) += g0x * gmy * g0z * val;
+    flds(l[0] + 1, l[1] - 1, l[2]    ) += g1x * gmy * g0z * val;
+    flds(l[0] - 1, l[1]    , l[2]    ) += gmx * g0y * g0z * val;
+    flds(l[0]    , l[1]    , l[2]    ) += g0x * g0y * g0z * val;
+    flds(l[0] + 1, l[1]    , l[2]    ) += g1x * g0y * g0z * val;
+    flds(l[0] - 1, l[1] + 1, l[2]    ) += gmx * g1y * g0z * val;
+    flds(l[0]    , l[1] + 1, l[2]    ) += g0x * g1y * g0z * val;
+    flds(l[0] + 1, l[1] + 1, l[2]    ) += g1x * g1y * g0z * val;
+    flds(l[0] - 1, l[1] - 1, l[2] + 1) += gmx * gmy * g1z * val;
+    flds(l[0]    , l[1] - 1, l[2] + 1) += g0x * gmy * g1z * val;
+    flds(l[0] + 1, l[1] - 1, l[2] + 1) += g1x * gmy * g1z * val;
+    flds(l[0] - 1, l[1]    , l[2] + 1) += gmx * g0y * g1z * val;
+    flds(l[0]    , l[1]    , l[2] + 1) += g0x * g0y * g1z * val;
+    flds(l[0] + 1, l[1]    , l[2] + 1) += g1x * g0y * g1z * val;
+    flds(l[0] - 1, l[1] + 1, l[2] + 1) += gmx * g1y * g1z * val;
+    flds(l[0]    , l[1] + 1, l[2] + 1) += g0x * g1y * g1z * val;
+    flds(l[0] + 1, l[1] + 1, l[2] + 1) += g1x * g1y * g1z * val;
     // clang-format on
   }
 
