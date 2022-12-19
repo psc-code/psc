@@ -294,6 +294,14 @@ using Deposit1stNc = Deposit1st<R, D, psc::deposit::norm::Deposit1stNc>;
 template <typename R, typename D>
 using Deposit1stCc = Deposit1st<R, D, psc::deposit::norm::Deposit1stCc>;
 
+// ----------------------------------------------------------------------------
+// Deposit2ndNc
+//
+// Deposition to NC grid in code units
+
+template <typename R, typename D>
+using Deposit2ndNc = Deposit1st<R, D, psc::deposit::norm::Deposit2ndNc>;
+
 } // namespace code
 } // namespace deposit
 } // namespace psc
