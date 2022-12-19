@@ -247,20 +247,21 @@ namespace code // deposition in code units
 {
 
 // ----------------------------------------------------------------------------
-// Deposit1st
+// Deposit
 //
-// Wrapper around Deposit to n.c. / c.c. grid that translates from code units
+// Wrapper around DepositNorm to n.c. / c.c. grid that translates from code
+// units
 
-template <typename R, typename D, template <typename, typename> class Deposit>
-class Deposit1st
+template <typename R, typename D,
+          template <typename, typename> class DepositNorm>
+class Deposit
 {
 public:
   using real_t = R;
   using dim_t = D;
   using real3_t = gt::sarray<real_t, 3>;
 
-  Deposit1st(const real3_t& dx, real_t fnqs)
-    : dxi_{real_t(1.) / dx}, fnqs_{fnqs}
+  Deposit(const real3_t& dx, real_t fnqs) : dxi_{real_t(1.) / dx}, fnqs_{fnqs}
   {}
 
   template <typename F>
@@ -270,7 +271,7 @@ public:
     real3_t x = xi * dxi_;
     real_t value = fnqs_ * val;
 
-    Deposit<real_t, dim_t> deposit;
+    DepositNorm<real_t, dim_t> deposit;
     deposit(flds, ib, x, value);
   }
 
@@ -284,7 +285,7 @@ public:
 // Deposition to NC grid in code units
 
 template <typename R, typename D>
-using Deposit1stNc = Deposit1st<R, D, psc::deposit::norm::Deposit1stNc>;
+using Deposit1stNc = Deposit<R, D, psc::deposit::norm::Deposit1stNc>;
 
 // ----------------------------------------------------------------------------
 // Deposit1stCc
@@ -292,7 +293,7 @@ using Deposit1stNc = Deposit1st<R, D, psc::deposit::norm::Deposit1stNc>;
 // Deposition to CC grid in code units
 
 template <typename R, typename D>
-using Deposit1stCc = Deposit1st<R, D, psc::deposit::norm::Deposit1stCc>;
+using Deposit1stCc = Deposit<R, D, psc::deposit::norm::Deposit1stCc>;
 
 // ----------------------------------------------------------------------------
 // Deposit2ndNc
@@ -300,7 +301,7 @@ using Deposit1stCc = Deposit1st<R, D, psc::deposit::norm::Deposit1stCc>;
 // Deposition to NC grid in code units
 
 template <typename R, typename D>
-using Deposit2ndNc = Deposit1st<R, D, psc::deposit::norm::Deposit2ndNc>;
+using Deposit2ndNc = Deposit<R, D, psc::deposit::norm::Deposit2ndNc>;
 
 } // namespace code
 } // namespace deposit
