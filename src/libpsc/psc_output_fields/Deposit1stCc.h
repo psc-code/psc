@@ -93,5 +93,12 @@ void deposit_1st_nc(MF& mflds_gt, const Int3& ib, const MP& mprts, F&& func)
                                                std::forward<F>(func));
 }
 
+template <typename D, typename MF, typename MP, typename F>
+void deposit_2nd_nc(MF& mflds_gt, const Int3& ib, const MP& mprts, F&& func)
+{
+  deposit<psc::deposit::code::Deposit2ndNc, D>(mflds_gt, ib, mprts,
+                                               std::forward<F>(func));
+}
+
 } // namespace moment
 } // namespace psc

@@ -3,8 +3,6 @@
 
 #include <math.h>
 
-#include "common_moments.cxx"
-
 // ======================================================================
 // n
 
@@ -31,19 +29,13 @@ public:
 
   explicit Moment_n_2nd_nc(const Mparticles& mprts) : Base{mprts.grid()}
   {
-    const auto& grid = mprts.grid();
-    real_t fnqs = grid.norm.fnqs;
-    real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1],
-           dzi = 1.f / grid.domain.dx[2];
-
-    auto accessor = mprts.accessor();
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      auto flds = Base::mres_[p];
-      for (auto prt : accessor[p]) {
-        int m = prt.kind();
-        DEPOSIT_TO_GRID_2ND_NC(prt, flds, m, 1.f);
-      }
-    }
+    Base::mres_.storage().view() = 0.f;
+    psc::moment::deposit_2nd_nc<dim_t>(Base::mres_.storage(), Base::mres_.ib(),
+                                       mprts,
+                                       [&](auto& deposit_one, const auto& prt) {
+                                         int m = prt.kind();
+                                         deposit_one(m, 1.f);
+                                       });
     Base::bnd_.add_ghosts(Base::mres_);
   }
 };
@@ -73,19 +65,10 @@ public:
 
   explicit Moment_rho_2nd_nc(const Mparticles& mprts) : Base{mprts.grid()}
   {
-    const auto& grid = mprts.grid();
-    real_t fnqs = grid.norm.fnqs;
-    real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1],
-           dzi = 1.f / grid.domain.dx[2];
-
-    auto accessor = mprts.accessor();
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      auto flds = Base::mres_[p];
-      for (auto prt : accessor[p]) {
-        int m = prt.kind();
-        DEPOSIT_TO_GRID_2ND_NC(prt, flds, 0, prt.q());
-      }
-    }
+    Base::mres_.storage().view() = 0.f;
+    psc::moment::deposit_2nd_nc<dim_t>(
+      Base::mres_.storage(), Base::mres_.ib(), mprts,
+      [&](auto& deposit_one, const auto& prt) { deposit_one(0, prt.q()); });
     Base::bnd_.add_ghosts(Base::mres_);
   }
 
