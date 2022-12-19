@@ -34,7 +34,7 @@ public:
                                          int m = prt.kind();
                                          deposit_one(m, prt.w());
                                        });
-    Base::bnd_.add_ghosts(Base::mres_);
+    Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
   }
 };
 
@@ -67,13 +67,6 @@ public:
                                        [&](auto& deposit_one, const auto& prt) {
                                          deposit_one(0, prt.w() * prt.q());
                                        });
-    Base::bnd_.add_ghosts(Base::mres_);
-  }
-
-  auto gt()
-  {
-    auto bnd = -Base::mres_.ib();
-    return Base::mres_.storage().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                                      _s(bnd[2], -bnd[2]));
+    Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
   }
 };

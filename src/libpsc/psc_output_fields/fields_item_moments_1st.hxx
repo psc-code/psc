@@ -67,7 +67,7 @@ public:
                                          int m = prt.kind();
                                          deposit_one(m, 1.f);
                                        });
-    Base::bnd_.add_ghosts(Base::mres_);
+    Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
   }
 };
 
@@ -105,7 +105,7 @@ public:
                                                        vxi[m]);
                                          }
                                        });
-    Base::bnd_.add_ghosts(Base::mres_);
+    Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
   }
 };
 
@@ -141,7 +141,7 @@ public:
                                                        prt.m() * prt.u()[m]);
                                          }
                                        });
-    Base::bnd_.add_ghosts(Base::mres_);
+    Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
   }
 };
 
@@ -241,7 +241,7 @@ public:
         deposit_one(mm + 11, prt.m() * prt.u()[1] * vxi[2]);
         deposit_one(mm + 12, prt.m() * prt.u()[2] * vxi[0]);
       });
-    Base::bnd_.add_ghosts(Base::mres_);
+    Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
   }
 };
 
@@ -327,7 +327,7 @@ public:
     prof_stop(pr_B);
 
     prof_start(pr_C);
-    Base::bnd_.add_ghosts(Base::mres_);
+    Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
     prof_stop(pr_C);
 
     mprts.put_as(h_mprts, MP_DONT_COPY);

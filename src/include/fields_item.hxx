@@ -54,11 +54,6 @@ public:
     bnd_.add_ghosts(grid, mres_gt, ib, 0, mres_gt.shape(3));
   }
 
-  void add_ghosts(Mfields& mres)
-  {
-    add_ghosts(mres.grid(), mres.storage(), mres.ib());
-  }
-
 private:
   // ----------------------------------------------------------------------
   // boundary stuff FIXME, should go elsewhere...

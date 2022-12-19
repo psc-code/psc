@@ -54,6 +54,6 @@ struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MF, D>, MF>
     psc::moment::deposit_1st_nc<dim_t>(
       Base::mres_gt_, Base::mres_ib_, mprts,
       [&](auto& deposit_one, const auto& prt) { deposit_one(0, prt.q()); });
-    Base::bnd_.add_ghosts(Base::mres_);
+    Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
   }
 };
