@@ -61,9 +61,8 @@ public:
 
   void update(const Mparticles& mprts)
   {
-    Base::mres_.storage().view() = 0.f;
-    psc::moment::deposit_1st_cc<dim_t>(Base::mres_.storage(), Base::mres_.ib(),
-                                       mprts,
+    Base::mres_gt_.view() = 0.f;
+    psc::moment::deposit_1st_cc<dim_t>(Base::mres_gt_, Base::mres_ib_, mprts,
                                        [&](auto& deposit_one, const auto& prt) {
                                          int m = prt.kind();
                                          deposit_one(m, 1.f);
@@ -96,16 +95,16 @@ public:
   template <typename Mparticles>
   explicit Moment_v_1st(const Mparticles& mprts) : Base{mprts.grid()}
   {
-    Base::mres_.storage().view() = 0.f;
-    psc::moment::deposit_1st_cc<dim_t>(
-      Base::mres_.storage(), Base::mres_.ib(), mprts,
-      [&](auto& deposit_one, const auto& prt) {
-        real_t vxi[3];
-        _particle_calc_vxi(prt, vxi);
-        for (int m = 0; m < 3; m++) {
-          deposit_one(m + 3 * prt.kind(), vxi[m]);
-        }
-      });
+    Base::mres_gt_.view() = 0.f;
+    psc::moment::deposit_1st_cc<dim_t>(Base::mres_gt_, Base::mres_ib_, mprts,
+                                       [&](auto& deposit_one, const auto& prt) {
+                                         real_t vxi[3];
+                                         _particle_calc_vxi(prt, vxi);
+                                         for (int m = 0; m < 3; m++) {
+                                           deposit_one(m + 3 * prt.kind(),
+                                                       vxi[m]);
+                                         }
+                                       });
     Base::bnd_.add_ghosts(Base::mres_);
   }
 };
@@ -134,14 +133,14 @@ public:
   template <typename Mparticles>
   explicit Moment_p_1st(const Mparticles& mprts) : Base{mprts.grid()}
   {
-    Base::mres_.storage().view() = 0.f;
-    psc::moment::deposit_1st_cc<dim_t>(
-      Base::mres_.storage(), Base::mres_.ib(), mprts,
-      [&](auto& deposit_one, const auto& prt) {
-        for (int m = 0; m < 3; m++) {
-          deposit_one(m + 3 * prt.kind(), prt.m() * prt.u()[m]);
-        }
-      });
+    Base::mres_gt_.view() = 0.f;
+    psc::moment::deposit_1st_cc<dim_t>(Base::mres_gt_, Base::mres_ib_, mprts,
+                                       [&](auto& deposit_one, const auto& prt) {
+                                         for (int m = 0; m < 3; m++) {
+                                           deposit_one(m + 3 * prt.kind(),
+                                                       prt.m() * prt.u()[m]);
+                                         }
+                                       });
     Base::bnd_.add_ghosts(Base::mres_);
   }
 };
@@ -223,7 +222,7 @@ public:
     using real_t = typename Mparticles::real_t;
 
     psc::moment::deposit_1st_cc<dim_t>(
-      Base::mres_.storage(), Base::mres_.ib(), mprts,
+      Base::mres_gt_, Base::mres_ib_, mprts,
       [&](auto& deposit_one, const auto& prt) {
         int mm = prt.kind() * n_moments;
         real_t vxi[3];
@@ -305,7 +304,7 @@ public:
     using real_t = R;
 
     psc::moment::deposit_1st_cc<dim_t>(
-      Base::mres_.storage(), Base::mres_.ib(), h_mprts,
+      Base::mres_gt_, Base::mres_ib_, h_mprts,
       [&](auto& deposit_one, const auto& prt) {
         int mm = prt.kind() * n_moments;
         real_t vxi[3];

@@ -170,6 +170,7 @@ class ItemMomentCRTP : public MFexpression<Derived>
 public:
   using Mfields = MF;
   using Real = typename Mfields::real_t;
+  using storage_type = typename Mfields::Storage;
 
   const Grid_t& grid() const { return mres_.grid(); }
 
@@ -182,10 +183,15 @@ public:
 
 protected:
   ItemMomentCRTP(const Grid_t& grid)
-    : mres_{grid, Derived::n_comps(grid), grid.ibn}, bnd_{grid}
+    : mres_{grid, Derived::n_comps(grid), grid.ibn},
+      mres_gt_(mres_.storage()), // FIXME, nvcc chokes on braces???
+      mres_ib_{-grid.ibn},
+      bnd_{grid}
   {}
 
 protected:
   Mfields mres_;
+  storage_type& mres_gt_;
+  Int3 mres_ib_;
   ItemMomentBnd<Mfields, Bnd> bnd_;
 };

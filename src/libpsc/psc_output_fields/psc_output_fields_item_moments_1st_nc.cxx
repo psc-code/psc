@@ -50,9 +50,9 @@ struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MF, D>, MF>
   template <typename Mparticles>
   explicit Moment_rho_1st_nc(const Mparticles& mprts) : Base{mprts.grid()}
   {
-    Base::mres_.gt().view() = 0.f;
+    Base::mres_gt_.view() = 0.f;
     psc::moment::deposit_1st_nc<dim_t>(
-      Base::mres_.storage(), Base::mres_.ib(), mprts,
+      Base::mres_gt_, Base::mres_ib_, mprts,
       [&](auto& deposit_one, const auto& prt) { deposit_one(0, prt.q()); });
     Base::bnd_.add_ghosts(Base::mres_);
   }
