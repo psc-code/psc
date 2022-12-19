@@ -302,7 +302,7 @@ TYPED_TEST(PushParticlesTest, Moment_n_2nd_nc)
 {
   using Mparticles = typename TypeParam::Mparticles;
   using Mfields = typename TypeParam::Mfields;
-  using Moment = Moment_n_2nd_nc<Mparticles, typename TypeParam::dim>;
+  using Moment = Moment_n_2nd_nc<Mfields, typename TypeParam::dim>;
   using real_t = typename Mfields::real_t;
 
   const real_t eps = 1e-6;
@@ -346,7 +346,7 @@ TYPED_TEST(PushParticlesTest, Moment_rho_2nd_nc)
 {
   using Mparticles = typename TypeParam::Mparticles;
   using Mfields = typename TypeParam::Mfields;
-  using Moment = Moment_rho_2nd_nc<Mparticles, typename TypeParam::dim>;
+  using Moment = Moment_rho_2nd_nc<Mfields, typename TypeParam::dim>;
   using real_t = typename Mfields::real_t;
 
   const real_t eps = 1e-6;

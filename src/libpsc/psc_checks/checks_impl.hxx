@@ -31,7 +31,7 @@ struct checks_order_1st
 struct checks_order_2nd
 {
   template <typename Mparticles, typename Mfields, typename D>
-  using Moment_rho_nc = Moment_rho_2nd_nc<Mparticles, Mfields>;
+  using Moment_rho_nc = Moment_rho_2nd_nc<Mfields, D>;
 };
 
 template <typename _Mparticles, typename _MfieldsState, typename _Mfields,
