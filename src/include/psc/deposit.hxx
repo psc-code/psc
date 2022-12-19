@@ -202,6 +202,31 @@ public:
   }
 };
 
+// ----------------------------------------------------------------------------
+// deposit directly, assuming grid spacing == 1, pass in patch-relative position
+// x
+
+template <typename T, typename D>
+class Deposit2ndNc
+{
+public:
+  template <typename F>
+  void operator()(F& flds, const gt::sarray<int, 3>& ib,
+                  const gt::sarray<T, 3>& x, T val)
+
+  {
+    gt::sarray<int, 3> l;
+    gt::sarray<T, 3> h;
+    for (int d = 0; d < 3; d++) {
+      l[d] = nint(x[d]);
+      h[d] = l[d] - x[d]; // negated!
+      l[d] -= ib[d];
+    }
+    Deposit2nd<T, D> deposit;
+    deposit(flds, l, h, val);
+  }
+};
+
 template <typename D, typename F, typename T>
 void nc(F& flds, const gt::sarray<int, 3>& ib, const gt::sarray<T, 3>& x, T val)
 {
