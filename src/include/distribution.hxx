@@ -64,21 +64,81 @@ private:
 // InvertedCdf
 
 template <typename Real>
+void findPdfSupport(std::function<Real(Real)>& cdf, Real& xmin, Real& xmax,
+                    Real tolerance, int max_n_iter)
+{
+  Real xmin_ub = 0, xmax_lb = 0;
+  Real sf;
+  int n_iter;
+
+  // find where cfd > tolerance
+  n_iter = 0;
+  sf = 1;
+  while (n_iter < max_n_iter && cdf(xmin_ub) < tolerance) {
+    xmin_ub += (sf *= 1.5);
+    n_iter++;
+  }
+
+  // find where cfd < 1-tolerance
+  n_iter = 0;
+  sf = 1;
+  while (n_iter < max_n_iter && cdf(xmax_lb) > 1 - tolerance) {
+    xmax_lb -= (sf *= 1.5);
+    n_iter++;
+  }
+
+  Real xmin_lb = xmin_ub, xmax_ub = xmax_lb;
+
+  // find where cdf < tolerance
+  n_iter = 0;
+  sf = 1;
+  while (n_iter < max_n_iter && cdf(xmin_lb) > tolerance) {
+    xmin_lb -= (sf *= 1.5);
+    n_iter++;
+  }
+
+  // find where cdf > 1-tolerance
+  n_iter = 0;
+  sf = 1;
+  while (n_iter < max_n_iter && cdf(xmax_ub) < 1 - tolerance) {
+    xmax_ub += (sf *= 1.5);
+    n_iter++;
+  }
+
+  // bisect search for where cdf = tolerance
+  n_iter = 0;
+  xmin = (xmin_lb + xmin_ub) / 2.;
+  xmax = (xmax_lb + xmax_ub) / 2.;
+  // logDiff measures the precision of the range relative to that of each bound
+  Real logDiff =
+    std::log2((xmax - xmin) / std::max(xmax_ub - xmax_lb, xmin_ub - xmin_lb));
+  // if logDiff were recalculated, it would go up by ~1 with each iteration, so
+  // logDiff(t) ~= n_iter(t) + logDiff(0)
+  while (n_iter < max_n_iter && n_iter + logDiff < 10) {
+    if (cdf(xmin) < tolerance) {
+      xmin_lb = xmin;
+    } else {
+      xmin_ub = xmin;
+    }
+    if (cdf(xmax) > 1 - tolerance) {
+      xmax_ub = xmax;
+    } else {
+      xmax_lb = xmax;
+    }
+    xmin = (xmin_lb + xmin_ub) / 2.;
+    xmax = (xmax_lb + xmax_ub) / 2.;
+    n_iter++;
+  }
+}
+
+template <typename Real>
 struct InvertedCdf : public Distribution<Real>
 {
   InvertedCdf(std::function<Real(Real)> cdf, int n_points = 100,
-              Real eps = .0001, int max_n_iter = 50)
+              Real tolerance = .0001, int max_n_iter = 50)
   {
-    Real xmin = -1, xmax = 1;
-
-    for (int n_iter = 0; cdf(xmin) < eps && n_iter < max_n_iter; ++n_iter)
-      xmin += .5;
-    for (int n_iter = 0; cdf(xmin) > eps && n_iter < max_n_iter; ++n_iter)
-      xmin -= 1 / 16.;
-    for (int n_iter = 0; cdf(xmax) > 1 - eps && n_iter < max_n_iter; ++n_iter)
-      xmax -= .5;
-    for (int n_iter = 0; cdf(xmax) < 1 - eps && n_iter < max_n_iter; ++n_iter)
-      xmax += 1 / 16.;
+    Real xmin, xmax;
+    findPdfSupport(cdf, xmin, xmax, tolerance, max_n_iter);
 
     x.push_back(xmin);
     this->cdf.push_back(0);
