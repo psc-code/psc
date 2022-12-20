@@ -51,7 +51,7 @@ public:
       add_ghosts_boundary(grid, mres_gt, ib, p, 0, mres_gt.shape(3));
     }
 
-    bnd_.add_ghosts(mres_gt, ib, 0, mres_gt.shape(3));
+    bnd_.add_ghosts(grid, mres_gt, ib, 0, mres_gt.shape(3));
   }
 
   void add_ghosts(Mfields& mres)
