@@ -86,10 +86,13 @@ public:
 // v_1st
 
 template <typename MF, typename D>
-struct Moment_v_1st
+class Moment_v_1st : public ItemMomentCRTP<Moment_v_1st<MF, D>, MF>
 {
+public:
+  using Base = ItemMomentCRTP<Moment_v_1st<MF, D>, MF>;
   using Mfields = MF;
   using dim_t = D;
+  using real_t = typename Mfields::real_t;
 
   constexpr static char const* name = "v_1st";
 
@@ -101,19 +104,25 @@ struct Moment_v_1st
   }
 
   template <typename Mparticles>
-  static void run(Mfields& mflds, Mparticles& mprts)
+  explicit Moment_v_1st(const Mparticles& mprts) : Base{mprts.grid()}
   {
-    using real_t = typename Mparticles::real_t;
+    Base::mres_.storage().view() = 0.f;
+    psc::moment::deposit_1st_cc<dim_t>(
+      Base::mres_, mprts, [&](auto& deposit_one, const auto& prt) {
+        real_t vxi[3];
+        _particle_calc_vxi(prt, vxi);
+        for (int m = 0; m < 3; m++) {
+          deposit_one(m + 3 * prt.kind(), vxi[m]);
+        }
+      });
+    Base::bnd_.add_ghosts(Base::mres_);
+  }
 
-    psc::moment::deposit_1st_cc<dim_t>(mflds, mprts, [&](const auto& prt) {
-      real_t vxi[3];
-      _particle_calc_vxi(prt, vxi);
-
-      int mm = prt.kind() * 3;
-      for (int m = 0; m < 3; m++) {
-        deposit(mflds, prt, mm + m, vxi[m]);
-      }
-    });
+  auto gt()
+  {
+    Int3 bnd = Base::mres_.ibn();
+    return Base::mres_.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
+                                 _s(bnd[2], -bnd[2]));
   }
 };
 
