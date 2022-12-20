@@ -9,12 +9,24 @@
 #include <mrc_profile.h>
 #include <mrc_ddc.h>
 
+template <typename S>
+struct BndContext
+{
+  using storage_type = S;
+
+  storage_type& mflds_gt;
+  const Int3& ib;
+};
+
 template <typename MF>
 struct Bnd_ : BndBase
 {
   using Mfields = MF;
   using MfieldsHost = hostMirror_t<Mfields>;
   using real_t = typename Mfields::real_t;
+  using storage_type = typename Mfields::Storage;
+  using storage_host_type = typename MfieldsHost::Storage;
+  using BndCtx = BndContext<storage_host_type>;
 
   // ----------------------------------------------------------------------
   // ctor
@@ -55,23 +67,41 @@ struct Bnd_ : BndBase
   // ----------------------------------------------------------------------
   // add_ghosts
 
+  void add_ghosts(storage_type& mflds_gt, const Int3& ib, int mb, int me)
+  {
+    // FIXME
+    // I don't think we need as many points, and only stencil star
+    // rather then box
+    auto&& h_mflds_gt = gt::host_mirror(mflds_gt);
+    gt::copy(mflds_gt, h_mflds_gt);
+    BndCtx ctx{h_mflds_gt, ib};
+    mrc_ddc_add_ghosts(ddc_, mb, me, &ctx);
+    gt::copy(h_mflds_gt, mflds_gt);
+  }
+
   void add_ghosts(Mfields& mflds, int mb, int me)
   {
     if (psc_balance_generation_cnt != balance_generation_cnt_) {
       balance_generation_cnt_ = psc_balance_generation_cnt;
       reset(mflds.grid());
     }
-    {
-      auto&& h_mflds = hostMirror(mflds);
-      copy(mflds, h_mflds);
-
-      mrc_ddc_add_ghosts(ddc_, mb, me, &h_mflds);
-      copy(h_mflds, mflds);
-    }
+    add_ghosts(mflds.storage(), mflds.ib(), mb, me);
   }
 
   // ----------------------------------------------------------------------
   // fill_ghosts
+
+  void fill_ghosts(storage_type& mflds_gt, const Int3& ib, int mb, int me)
+  {
+    // FIXME
+    // I don't think we need as many points, and only stencil star
+    // rather then box
+    auto&& h_mflds_gt = gt::host_mirror(mflds_gt);
+    gt::copy(mflds_gt, h_mflds_gt);
+    BndCtx ctx{h_mflds_gt, ib};
+    mrc_ddc_fill_ghosts(ddc_, mb, me, &ctx);
+    gt::copy(h_mflds_gt, mflds_gt);
+  }
 
   void fill_ghosts(Mfields& mflds, int mb, int me)
   {
@@ -79,32 +109,25 @@ struct Bnd_ : BndBase
       balance_generation_cnt_ = psc_balance_generation_cnt;
       reset(mflds.grid());
     }
-    // FIXME
-    // I don't think we need as many points, and only stencil star
-    // rather then box
-    {
-      auto&& h_mflds = hostMirror(mflds);
-      copy(mflds, h_mflds);
-      mrc_ddc_fill_ghosts(ddc_, mb, me, &h_mflds);
-      copy(h_mflds, mflds);
-    }
+    fill_ghosts(mflds.storage(), mflds.ib(), mb, me);
   }
 
   // ----------------------------------------------------------------------
   // copy_to_buf
 
   static void copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3],
-                          void* _buf, void* ctx)
+                          void* _buf, void* _ctx)
   {
-    auto& mf = *static_cast<MfieldsHost*>(ctx);
-    auto F = make_Fields3d<dim_xyz>(mf[p]);
+    BndCtx* ctx = static_cast<BndCtx*>(_ctx);
     real_t* buf = static_cast<real_t*>(_buf);
+    const Int3& ib = ctx->ib;
 
     for (int m = mb; m < me; m++) {
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
         for (int iy = ilo[1]; iy < ihi[1]; iy++) {
           for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-            MRC_DDC_BUF3(buf, m - mb, ix, iy, iz) = F(m, ix, iy, iz);
+            MRC_DDC_BUF3(buf, m - mb, ix, iy, iz) =
+              ctx->mflds_gt(ix - ib[0], iy - ib[1], iz - ib[2], m, p);
           }
         }
       }
@@ -112,17 +135,18 @@ struct Bnd_ : BndBase
   }
 
   static void add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
-                           void* _buf, void* ctx)
+                           void* _buf, void* _ctx)
   {
-    auto& mf = *static_cast<MfieldsHost*>(ctx);
-    auto F = make_Fields3d<dim_xyz>(mf[p]);
+    BndCtx* ctx = static_cast<BndCtx*>(_ctx);
     real_t* buf = static_cast<real_t*>(_buf);
+    const Int3& ib = ctx->ib;
 
     for (int m = mb; m < me; m++) {
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
         for (int iy = ilo[1]; iy < ihi[1]; iy++) {
           for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-            F(m, ix, iy, iz) += MRC_DDC_BUF3(buf, m - mb, ix, iy, iz);
+            ctx->mflds_gt(ix - ib[0], iy - ib[1], iz - ib[2], m, p) +=
+              MRC_DDC_BUF3(buf, m - mb, ix, iy, iz);
           }
         }
       }
@@ -130,17 +154,18 @@ struct Bnd_ : BndBase
   }
 
   static void copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
-                            void* _buf, void* ctx)
+                            void* _buf, void* _ctx)
   {
-    auto& mf = *static_cast<MfieldsHost*>(ctx);
-    auto F = make_Fields3d<dim_xyz>(mf[p]);
+    BndCtx* ctx = static_cast<BndCtx*>(_ctx);
     real_t* buf = static_cast<real_t*>(_buf);
+    const Int3& ib = ctx->ib;
 
     for (int m = mb; m < me; m++) {
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
         for (int iy = ilo[1]; iy < ihi[1]; iy++) {
           for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-            F(m, ix, iy, iz) = MRC_DDC_BUF3(buf, m - mb, ix, iy, iz);
+            ctx->mflds_gt(ix - ib[0], iy - ib[1], iz - ib[2], m, p) =
+              MRC_DDC_BUF3(buf, m - mb, ix, iy, iz);
           }
         }
       }

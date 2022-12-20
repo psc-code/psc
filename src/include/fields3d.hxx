@@ -426,6 +426,7 @@ struct MfieldsStateFromMfields : MfieldsStateBase
   using fields_view_t = typename Mfields::fields_view_t;
   using real_t = typename Mfields::real_t;
   using Real = typename Mfields::Real;
+  using Storage = typename Mfields::Storage;
   using space = gt::space::host;
 
   MfieldsStateFromMfields(const Grid_t& grid)

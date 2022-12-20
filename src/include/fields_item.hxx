@@ -41,28 +41,29 @@ template <typename Mfields, typename Bnd = Bnd_<Mfields>>
 class ItemMomentBnd
 {
 public:
-  ItemMomentBnd(const Grid_t& grid) : bnd_{grid, grid.ibn} {}
+  using storage_type = typename Mfields::Storage;
 
-  void add_ghosts(Mfields& mres)
+  ItemMomentBnd(const Grid_t& grid) : grid_{grid}, bnd_{grid, grid.ibn} {}
+
+  void add_ghosts(storage_type& mres_gt, const Int3& ib)
   {
-    for (int p = 0; p < mres.n_patches(); p++) {
-      auto res = make_Fields3d<dim_xyz>(mres[p]);
-      add_ghosts_boundary(mres.grid(), res, p, 0, mres.n_comps());
+    for (int p = 0; p < mres_gt.shape(4); p++) {
+      add_ghosts_boundary(grid_, mres_gt, ib, p, 0, mres_gt.shape(3));
     }
 
-    bnd_.add_ghosts(mres, 0, mres.n_comps());
+    bnd_.add_ghosts(mres_gt, ib, 0, mres_gt.shape(3));
   }
+
+  void add_ghosts(Mfields& mres) { add_ghosts(mres.storage(), mres.ib()); }
 
 private:
   // ----------------------------------------------------------------------
   // boundary stuff FIXME, should go elsewhere...
 
   template <typename FE>
-  void add_ghosts_reflecting_lo(const Grid_t& grid, FE f, int p, int d, int mb,
-                                int me)
+  void add_ghosts_reflecting_lo(const Int3& ldims, FE& mres_gt, const Int3& ib,
+                                int p, int d, int mb, int me)
   {
-    auto ldims = grid.ldims;
-
     int bx = ldims[0] == 1 ? 0 : 1;
     if (d == 1) {
       for (int iz = -1; iz < ldims[2] + 1; iz++) {
@@ -70,7 +71,8 @@ private:
           int iy = 0;
           {
             for (int m = mb; m < me; m++) {
-              f(m, ix, iy, iz) += f(m, ix, iy - 1, iz);
+              mres_gt(ix + ib[0], iy + ib[1], iz + ib[2], m, p) +=
+                mres_gt(ix + ib[0], iy - 1 + ib[1], iz + ib[2], m, p);
             }
           }
         }
@@ -81,7 +83,8 @@ private:
           int iz = 0;
           {
             for (int m = mb; m < me; m++) {
-              f(m, ix, iy, iz) += f(m, ix, iy, iz - 1);
+              mres_gt(ix + ib[0], iy + ib[1], iz + ib[2], m, p) +=
+                mres_gt(ix + ib[0], iy + ib[1], iz - 1 + ib[2], m, p);
             }
           }
         }
@@ -92,11 +95,9 @@ private:
   }
 
   template <typename FE>
-  void add_ghosts_reflecting_hi(const Grid_t& grid, FE f, int p, int d, int mb,
-                                int me)
+  void add_ghosts_reflecting_hi(const Int3& ldims, FE& mres_gt, const Int3& ib,
+                                int p, int d, int mb, int me)
   {
-    auto ldims = grid.ldims;
-
     int bx = ldims[0] == 1 ? 0 : 1;
     if (d == 1) {
       for (int iz = -1; iz < ldims[2] + 1; iz++) {
@@ -104,7 +105,8 @@ private:
           int iy = ldims[1] - 1;
           {
             for (int m = mb; m < me; m++) {
-              f(m, ix, iy, iz) += f(m, ix, iy + 1, iz);
+              mres_gt(ix + ib[0], iy + ib[1], iz + ib[2], m, p) +=
+                mres_gt(ix + ib[0], iy + 1 + ib[1], iz + ib[2], m, p);
             }
           }
         }
@@ -115,7 +117,8 @@ private:
           int iz = ldims[2] - 1;
           {
             for (int m = mb; m < me; m++) {
-              f(m, ix, iy, iz) += f(m, ix, iy, iz + 1);
+              mres_gt(ix + ib[0], iy + ib[1], iz + ib[2], m, p) +=
+                mres_gt(ix + ib[0], iy + ib[1], iz + 1 + ib[2], m, p);
             }
           }
         }
@@ -126,14 +129,15 @@ private:
   }
 
   template <typename FE>
-  void add_ghosts_boundary(const Grid_t& grid, FE res, int p, int mb, int me)
+  void add_ghosts_boundary(const Grid_t& grid, FE& mres_gt, const Int3& ib,
+                           int p, int mb, int me)
   {
     // lo
     for (int d = 0; d < 3; d++) {
       if (grid.atBoundaryLo(p, d)) {
         if (grid.bc.prt_lo[d] == BND_PRT_REFLECTING ||
             grid.bc.prt_lo[d] == BND_PRT_OPEN) {
-          add_ghosts_reflecting_lo(grid, res, p, d, mb, me);
+          add_ghosts_reflecting_lo(grid.ldims, mres_gt, ib, p, d, mb, me);
         }
       }
     }
@@ -142,13 +146,14 @@ private:
       if (grid.atBoundaryHi(p, d)) {
         if (grid.bc.prt_hi[d] == BND_PRT_REFLECTING ||
             grid.bc.prt_hi[d] == BND_PRT_OPEN) {
-          add_ghosts_reflecting_hi(grid, res, p, d, mb, me);
+          add_ghosts_reflecting_hi(grid.ldims, mres_gt, ib, p, d, mb, me);
         }
       }
     }
   }
 
 private:
+  const Grid_t& grid_;
   Bnd bnd_;
 };
 
