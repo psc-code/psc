@@ -35,7 +35,7 @@ public:
                                        mprts,
                                        [&](auto& deposit_one, const auto& prt) {
                                          int m = prt.kind();
-                                         deposit_one(m, 1.f);
+                                         deposit_one(m, prt.w());
                                        });
     Base::bnd_.add_ghosts(Base::mres_);
   }
@@ -66,9 +66,11 @@ public:
   explicit Moment_rho_2nd_nc(const Mparticles& mprts) : Base{mprts.grid()}
   {
     Base::mres_.storage().view() = 0.f;
-    psc::moment::deposit_2nd_nc<dim_t>(
-      Base::mres_.storage(), Base::mres_.ib(), mprts,
-      [&](auto& deposit_one, const auto& prt) { deposit_one(0, prt.q()); });
+    psc::moment::deposit_2nd_nc<dim_t>(Base::mres_.storage(), Base::mres_.ib(),
+                                       mprts,
+                                       [&](auto& deposit_one, const auto& prt) {
+                                         deposit_one(0, prt.w() * prt.q());
+                                       });
     Base::bnd_.add_ghosts(Base::mres_);
   }
 

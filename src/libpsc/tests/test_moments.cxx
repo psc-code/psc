@@ -309,12 +309,15 @@ TYPED_TEST(PushParticlesTest, Moment_n_2nd_nc)
   auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
   this->make_psc(kinds);
   const auto& grid = this->grid();
+  const real_t w = .5f;
+  const int nicell = 200; // FIXME, comes from testing.hxx
+  const real_t cori = 1.f / nicell;
 
   // init particles
   Mparticles mprts{grid};
   {
     auto injector = mprts.injector();
-    injector[0]({{5., 5., 5.}, {0., 0., 1.}, 1., 0});
+    injector[0]({{5., 5., 5.}, {0., 0., 1.}, w, 0});
   }
   Moment moment{mprts};
   auto gt = moment.gt();
@@ -324,7 +327,7 @@ TYPED_TEST(PushParticlesTest, Moment_n_2nd_nc)
       if (std::is_same<typename PushParticlesTest<TypeParam>::dim,
                        dim_xyz>::value) {
         if ((i == 0 || i == 1) && (j == 0 || j == 1) && (k == 0 || k == 1)) {
-          EXPECT_NEAR(val, .005 / 8., eps)
+          EXPECT_NEAR(val, w * cori / 8., eps)
             << "ijk " << i << " " << j << " " << k;
         } else {
           EXPECT_NEAR(val, 0., eps) << "ijk " << i << " " << j << " " << k;
@@ -332,7 +335,7 @@ TYPED_TEST(PushParticlesTest, Moment_n_2nd_nc)
       } else if (std::is_same<typename PushParticlesTest<TypeParam>::dim,
                               dim_yz>::value) {
         if ((j == 0 || j == 1) && (k == 0 || k == 1)) {
-          EXPECT_NEAR(val, .005 / 4., eps)
+          EXPECT_NEAR(val, w * cori / 4., eps)
             << "ijk " << i << " " << j << " " << k;
         } else {
           EXPECT_NEAR(val, 0., eps) << "ijk " << i << " " << j << " " << k;
@@ -353,12 +356,15 @@ TYPED_TEST(PushParticlesTest, Moment_rho_2nd_nc)
   auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
   this->make_psc(kinds);
   const auto& grid = this->grid();
+  const real_t w = .5f;
+  const int nicell = 200; // FIXME, comes from testing.hxx
+  const real_t cori = 1.f / nicell;
 
   // init particles
   Mparticles mprts{grid};
   {
     auto injector = mprts.injector();
-    injector[0]({{5., 5., 5.}, {0., 0., 1.}, 1., 0});
+    injector[0]({{5., 5., 5.}, {0., 0., 1.}, w, 0});
   }
   Moment moment{mprts};
   auto gt = moment.gt();
@@ -368,7 +374,7 @@ TYPED_TEST(PushParticlesTest, Moment_rho_2nd_nc)
       if (std::is_same<typename PushParticlesTest<TypeParam>::dim,
                        dim_xyz>::value) {
         if ((i == 0 || i == 1) && (j == 0 || j == 1) && (k == 0 || k == 1)) {
-          EXPECT_NEAR(val, .005 / 8., eps)
+          EXPECT_NEAR(val, w * cori / 8., eps)
             << "ijk " << i << " " << j << " " << k;
         } else {
           EXPECT_NEAR(val, 0., eps) << "ijk " << i << " " << j << " " << k;
@@ -376,7 +382,7 @@ TYPED_TEST(PushParticlesTest, Moment_rho_2nd_nc)
       } else if (std::is_same<typename PushParticlesTest<TypeParam>::dim,
                               dim_yz>::value) {
         if ((j == 0 || j == 1) && (k == 0 || k == 1)) {
-          EXPECT_NEAR(val, .005 / 4., eps)
+          EXPECT_NEAR(val, w * cori / 4., eps)
             << "ijk " << i << " " << j << " " << k;
         } else {
           EXPECT_NEAR(val, 0., eps) << "ijk " << i << " " << j << " " << k;
