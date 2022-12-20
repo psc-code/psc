@@ -4,6 +4,7 @@
 #include <math.h>
 
 #include "common_moments.cxx"
+#include "Deposit1stCc.h"
 
 // ======================================================================
 // n
@@ -24,20 +25,11 @@ struct Moment_n_1st_nc
 
   static void run(Mfields& mflds, Mparticles& mprts)
   {
-    const Grid_t& grid = mprts.grid();
-    psc::deposit::code::Deposit1stNc<real_t, dim_t> deposit(
-      {grid.domain.dx[0], grid.domain.dx[1], grid.domain.dx[2]},
-      grid.norm.fnqs);
-
-    auto ib = mflds.ib();
-    auto accessor = mprts.accessor();
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      auto flds = mflds.gt().view(_all, _all, _all, _all, p);
-      for (auto prt : accessor[p]) {
-        auto fld = flds.view(_all, _all, _all, prt.kind());
-        deposit(fld, ib, prt.x(), prt.w());
-      }
-    }
+    psc::moment::deposit_1st_nc<dim_t>(mflds.storage(), mflds.ib(), mprts,
+                                       [&](auto& deposit_one, const auto& prt) {
+                                         int m = prt.kind();
+                                         deposit_one(m, prt.w());
+                                       });
   }
 };
 
@@ -63,19 +55,10 @@ struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MP, MF, D>, MF>
 
   explicit Moment_rho_1st_nc(const Mparticles& mprts) : Base{mprts.grid()}
   {
-    const Grid_t& grid = mprts.grid();
-    psc::deposit::code::Deposit1stNc<real_t, dim_t> deposit(
-      {grid.domain.dx[0], grid.domain.dx[1], grid.domain.dx[2]},
-      grid.norm.fnqs);
-
-    auto ib = Base::mres_.ib();
-    auto accessor = mprts.accessor();
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      auto fld = Base::mres_.gt().view(_all, _all, _all, 0, p);
-      for (auto prt : accessor[p]) {
-        deposit(fld, ib, prt.x(), prt.q());
-      }
-    }
+    Base::mres_.gt().view() = 0.f;
+    psc::moment::deposit_1st_nc<dim_t>(
+      Base::mres_.storage(), Base::mres_.ib(), mprts,
+      [&](auto& deposit_one, const auto& prt) { deposit_one(0, prt.q()); });
     Base::bnd_.add_ghosts(Base::mres_);
   }
 

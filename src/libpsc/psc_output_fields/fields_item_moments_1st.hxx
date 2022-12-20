@@ -65,14 +65,13 @@ public:
 
   void update(const Mparticles& mprts)
   {
-    using Particle = typename Mparticles::ConstAccessor::Particle;
-
     Base::mres_.storage().view() = 0.f;
-    auto deposit = Deposit1stCc<real_t, dim_t>{Base::grid()};
-    deposit.process(mprts, [&](const Particle& prt) {
-      int m = prt.kind();
-      deposit(Base::mres_, prt, m, 1.f);
-    });
+    psc::moment::deposit_1st_cc<dim_t>(Base::mres_.storage(), Base::mres_.ib(),
+                                       mprts,
+                                       [&](auto& deposit_one, const auto& prt) {
+                                         int m = prt.kind();
+                                         deposit_one(m, 1.f);
+                                       });
     Base::bnd_.add_ghosts(Base::mres_);
   }
 
@@ -88,10 +87,13 @@ public:
 // v_1st
 
 template <typename MF, typename D>
-struct Moment_v_1st
+class Moment_v_1st : public ItemMomentCRTP<Moment_v_1st<MF, D>, MF>
 {
+public:
+  using Base = ItemMomentCRTP<Moment_v_1st<MF, D>, MF>;
   using Mfields = MF;
   using dim_t = D;
+  using real_t = typename Mfields::real_t;
 
   constexpr static char const* name = "v_1st";
 
@@ -103,21 +105,26 @@ struct Moment_v_1st
   }
 
   template <typename Mparticles>
-  static void run(Mfields& mflds, Mparticles& mprts)
+  explicit Moment_v_1st(const Mparticles& mprts) : Base{mprts.grid()}
   {
-    using Particle = typename Mparticles::ConstAccessor::Particle;
-    using real_t = typename Particle::real_t;
+    Base::mres_.storage().view() = 0.f;
+    psc::moment::deposit_1st_cc<dim_t>(
+      Base::mres_.storage(), Base::mres_.ib(), mprts,
+      [&](auto& deposit_one, const auto& prt) {
+        real_t vxi[3];
+        _particle_calc_vxi(prt, vxi);
+        for (int m = 0; m < 3; m++) {
+          deposit_one(m + 3 * prt.kind(), vxi[m]);
+        }
+      });
+    Base::bnd_.add_ghosts(Base::mres_);
+  }
 
-    auto deposit = Deposit1stCc<real_t, dim_t>{mflds.grid()};
-    deposit.process(mprts, [&](const Particle& prt) {
-      real_t vxi[3];
-      _particle_calc_vxi(prt, vxi);
-
-      int mm = prt.kind() * 3;
-      for (int m = 0; m < 3; m++) {
-        deposit(mflds, prt, mm + m, vxi[m]);
-      }
-    });
+  auto gt()
+  {
+    Int3 bnd = Base::mres_.ibn();
+    return Base::mres_.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
+                                 _s(bnd[2], -bnd[2]));
   }
 };
 
@@ -125,8 +132,10 @@ struct Moment_v_1st
 // p_1st
 
 template <typename MF, typename D>
-struct Moment_p_1st
+class Moment_p_1st : public ItemMomentCRTP<Moment_p_1st<MF, D>, MF>
 {
+public:
+  using Base = ItemMomentCRTP<Moment_p_1st<MF, D>, MF>;
   using Mfields = MF;
   using dim_t = D;
   using real_t = typename Mfields::real_t;
@@ -141,18 +150,24 @@ struct Moment_p_1st
   }
 
   template <typename Mparticles>
-  static void run(Mfields& mflds, Mparticles& mprts)
+  explicit Moment_p_1st(const Mparticles& mprts) : Base{mprts.grid()}
   {
-    using Particle = typename Mparticles::ConstAccessor::Particle;
+    Base::mres_.storage().view() = 0.f;
+    psc::moment::deposit_1st_cc<dim_t>(
+      Base::mres_.storage(), Base::mres_.ib(), mprts,
+      [&](auto& deposit_one, const auto& prt) {
+        for (int m = 0; m < 3; m++) {
+          deposit_one(m + 3 * prt.kind(), prt.m() * prt.u()[m]);
+        }
+      });
+    Base::bnd_.add_ghosts(Base::mres_);
+  }
 
-    auto deposit = Deposit1stCc<real_t, dim_t>{mflds.grid()};
-    deposit.process(mprts, [&](const Particle& prt) {
-      int mm = prt.kind() * 3;
-      auto pxi = prt.u();
-      for (int m = 0; m < 3; m++) {
-        deposit(mflds, prt, mm + m, prt.m() * pxi[m]);
-      }
-    });
+  auto gt()
+  {
+    Int3 bnd = Base::mres_.ibn();
+    return Base::mres_.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
+                                 _s(bnd[2], -bnd[2]));
   }
 };
 
@@ -178,11 +193,9 @@ struct Moment_T_1st
   template <typename Mparticles>
   static void run(Mfields& mflds, Mparticles& mprts)
   {
-    using Particle = typename Mparticles::ConstAccessor::Particle;
-    using real_t = typename Particle::real_t;
+    using real_t = typename Mparticles::real_t;
 
-    auto deposit = Deposit1stCc<real_t, dim_t>{mflds.grid()};
-    deposit.process(mprts, [&](const Particle& prt) {
+    psc::moment::deposit_1st_cc<dim_t>(mflds, mprts, [&](const auto& prt) {
       int mm = prt.kind() * 6;
 
       real_t vxi[3];
@@ -234,28 +247,28 @@ public:
 
   explicit Moments_1st(const Mparticles& mprts) : Base{mprts.grid()}
   {
-    using Particle = typename Mparticles::ConstAccessor::Particle;
-    using real_t = typename Particle::real_t;
+    using real_t = typename Mparticles::real_t;
 
-    auto deposit = Deposit1stCc<real_t, dim_t>{Base::grid()};
-    deposit.process(mprts, [&](const Particle& prt) {
-      int mm = prt.kind() * n_moments;
-      real_t vxi[3];
-      _particle_calc_vxi(prt, vxi);
-      deposit(Base::mres_, prt, mm + 0, prt.q());
-      deposit(Base::mres_, prt, mm + 1, prt.q() * vxi[0]);
-      deposit(Base::mres_, prt, mm + 2, prt.q() * vxi[1]);
-      deposit(Base::mres_, prt, mm + 3, prt.q() * vxi[2]);
-      deposit(Base::mres_, prt, mm + 4, prt.m() * prt.u()[0]);
-      deposit(Base::mres_, prt, mm + 5, prt.m() * prt.u()[1]);
-      deposit(Base::mres_, prt, mm + 6, prt.m() * prt.u()[2]);
-      deposit(Base::mres_, prt, mm + 7, prt.m() * prt.u()[0] * vxi[0]);
-      deposit(Base::mres_, prt, mm + 8, prt.m() * prt.u()[1] * vxi[1]);
-      deposit(Base::mres_, prt, mm + 9, prt.m() * prt.u()[2] * vxi[2]);
-      deposit(Base::mres_, prt, mm + 10, prt.m() * prt.u()[0] * vxi[1]);
-      deposit(Base::mres_, prt, mm + 11, prt.m() * prt.u()[1] * vxi[2]);
-      deposit(Base::mres_, prt, mm + 12, prt.m() * prt.u()[2] * vxi[0]);
-    });
+    psc::moment::deposit_1st_cc<dim_t>(
+      Base::mres_.storage(), Base::mres_.ib(), mprts,
+      [&](auto& deposit_one, const auto& prt) {
+        int mm = prt.kind() * n_moments;
+        real_t vxi[3];
+        _particle_calc_vxi(prt, vxi);
+        deposit_one(mm + 0, prt.q());
+        deposit_one(mm + 1, prt.q() * vxi[0]);
+        deposit_one(mm + 2, prt.q() * vxi[1]);
+        deposit_one(mm + 3, prt.q() * vxi[2]);
+        deposit_one(mm + 4, prt.m() * prt.u()[0]);
+        deposit_one(mm + 5, prt.m() * prt.u()[1]);
+        deposit_one(mm + 6, prt.m() * prt.u()[2]);
+        deposit_one(mm + 7, prt.m() * prt.u()[0] * vxi[0]);
+        deposit_one(mm + 8, prt.m() * prt.u()[1] * vxi[1]);
+        deposit_one(mm + 9, prt.m() * prt.u()[2] * vxi[2]);
+        deposit_one(mm + 10, prt.m() * prt.u()[0] * vxi[1]);
+        deposit_one(mm + 11, prt.m() * prt.u()[1] * vxi[2]);
+        deposit_one(mm + 12, prt.m() * prt.u()[2] * vxi[0]);
+      });
     Base::bnd_.add_ghosts(Base::mres_);
   }
 
@@ -325,87 +338,29 @@ public:
     using Particle = typename MparticlesSingle::ConstAccessor::Particle;
     using Real = typename Particle::real_t;
     using R = Real;
+    using real_t = R;
 
-    auto deposit = Deposit1stCc<Mfields, dim_t>{h_mprts, Base::mres_};
+    psc::moment::deposit_1st_cc<dim_t>(
+      Base::mres_.storage(), Base::mres_.ib(), h_mprts,
+      [&](auto& deposit_one, const auto& prt) {
+        int mm = prt.kind() * n_moments;
+        real_t vxi[3];
+        _particle_calc_vxi(prt, vxi);
+        deposit_one(mm + 0, prt.q());
+        deposit_one(mm + 1, prt.q() * vxi[0]);
+        deposit_one(mm + 2, prt.q() * vxi[1]);
+        deposit_one(mm + 3, prt.q() * vxi[2]);
+        deposit_one(mm + 4, prt.m() * prt.u()[0]);
+        deposit_one(mm + 5, prt.m() * prt.u()[1]);
+        deposit_one(mm + 6, prt.m() * prt.u()[2]);
+        deposit_one(mm + 7, prt.m() * prt.u()[0] * vxi[0]);
+        deposit_one(mm + 8, prt.m() * prt.u()[1] * vxi[1]);
+        deposit_one(mm + 9, prt.m() * prt.u()[2] * vxi[2]);
+        deposit_one(mm + 10, prt.m() * prt.u()[0] * vxi[1]);
+        deposit_one(mm + 11, prt.m() * prt.u()[1] * vxi[2]);
+        deposit_one(mm + 12, prt.m() * prt.u()[2] * vxi[0]);
+      });
 
-    prof_start(pr_B);
-    printf("np %d\n", h_mprts.size());
-    for (int p = 0; p < h_mprts.n_patches(); p++) {
-      deposit.flds_ = deposit.mflds_[p];
-      auto flds = make_Fields3d<dim_xyz>(deposit.mflds_[p]);
-      auto prts = h_mprts[p];
-      for (const auto& prt : prts) {
-        int mm = prt.kind * n_moments;
-        Real vxi[3];
-        __particle_calc_vxi(prt, vxi);
-
-        auto xi = prt.x; /* don't shift back in time */
-        R u = xi[0] * deposit.dxi_[0] - .5f;
-        R v = xi[1] * deposit.dxi_[1] - .5f;
-        R w = xi[2] * deposit.dxi_[2] - .5f;
-
-        int jx = fint(u);
-        int jy = fint(v);
-        int jz = fint(w);
-        R h1 = u - jx;
-        R h2 = v - jy;
-        R h3 = w - jz;
-
-        R g[2][3] = {{1.f - h1, 1.f - h2, 1.f - h3}, {h1, h2, h3}};
-
-        int jxd = 1, jyd = 1, jzd = 1;
-        if (deposit.is_invar_[0]) {
-          jx = 0;
-          g[0][0] = 1.;
-          g[1][0] = 0.;
-          jxd = 0;
-        }
-        if (deposit.is_invar_[1]) {
-          jy = 0;
-          g[0][1] = 1.;
-          g[1][1] = 0.;
-          jyd = 0;
-        }
-        if (deposit.is_invar_[2]) {
-          jz = 0;
-          g[0][2] = 1.;
-          g[1][2] = 0.;
-          jzd = 0;
-        }
-
-        assert(jx >= -1 && jx < deposit.ldims_[0]);
-        assert(jy >= -1 && jy < deposit.ldims_[1]);
-        assert(jz >= -1 && jz < deposit.ldims_[2]);
-
-        R fnq = h_mprts.prt_w(prt) * deposit.fnqs_;
-        R q = h_mprts.prt_q(prt);
-        R m = h_mprts.prt_m(prt);
-
-        int stride = &flds(mm + 1, 0, 0, 0) - &flds(mm, 0, 0, 0);
-        int d[3];
-        for (d[2] = 0; d[2] <= jzd; d[2]++) {
-          for (d[1] = 0; d[1] <= jyd; d[1]++) {
-            for (d[0] = 0; d[0] <= jxd; d[0]++) {
-              R fac = fnq * g[d[0]][0] * g[d[1]][1] * g[d[2]][2];
-              R* pp = &flds(mm, jx + d[0], jy + d[1], jz + d[2]);
-              pp[0 * stride] += fac * q;
-              pp[1 * stride] += fac * q * vxi[0];
-              pp[2 * stride] += fac * q * vxi[1];
-              pp[3 * stride] += fac * q * vxi[2];
-              pp[4 * stride] += fac * m * prt.u[0];
-              pp[5 * stride] += fac * m * prt.u[1];
-              pp[6 * stride] += fac * m * prt.u[2];
-              pp[7 * stride] += fac * m * prt.u[0] * vxi[0];
-              pp[8 * stride] += fac * m * prt.u[1] * vxi[1];
-              pp[9 * stride] += fac * m * prt.u[2] * vxi[2];
-              pp[10 * stride] += fac * m * prt.u[0] * vxi[1];
-              pp[11 * stride] += fac * m * prt.u[1] * vxi[2];
-              pp[12 * stride] += fac * m * prt.u[2] * vxi[0];
-            }
-          }
-        }
-      }
-    }
     prof_stop(pr_B);
 
     prof_start(pr_C);
