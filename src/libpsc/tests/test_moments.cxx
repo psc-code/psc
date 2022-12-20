@@ -167,6 +167,40 @@ TYPED_TEST(PushParticlesTest, Moment_v_1st)
   }
 }
 
+TYPED_TEST(PushParticlesTest, Moment_p_1st)
+{
+  using Mparticles = typename TypeParam::Mparticles;
+  using Mfields = typename TypeParam::Mfields;
+  using dim_t = typename TypeParam::dim;
+  using Moments = Moment_p_1st<Mfields, dim_t>;
+  using real_t = typename Mfields::real_t;
+
+  const real_t eps = 1e-6;
+  auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
+  this->make_psc(kinds);
+  const auto& grid = this->grid();
+
+  // init particles
+  Mparticles mprts{grid};
+  {
+    auto injector = mprts.injector();
+    injector[0]({{5., 5., 5.}, {.001, .002, .003}, 1., 0});
+  }
+  Moments moments{mprts};
+  auto gt = moments.gt();
+  for (int p = 0; p < grid.n_patches(); p++) {
+    grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
+      real_t val = gt(i, j, k, 0, p);
+      if (i == 0 && j == 0 && k == 0) {
+        EXPECT_NEAR(val, .005 * .001, eps)
+          << "ijk " << i << " " << j << " " << k;
+      } else {
+        EXPECT_NEAR(val, 0., eps) << "ijk " << i << " " << j << " " << k;
+      }
+    });
+  }
+}
+
 TYPED_TEST(PushParticlesTest, Moment_rho_1st_nc_cc)
 {
   using Mparticles = typename TypeParam::Mparticles;
