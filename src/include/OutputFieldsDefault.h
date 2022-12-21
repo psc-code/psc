@@ -69,7 +69,7 @@ class OutputFieldsItem : public OutputFieldsItemParams
 {
 public:
   OutputFieldsItem(const Grid_t& grid, const OutputFieldsItemParams& prm,
-                   int n_comps, std::string sfx)
+                   std::string sfx)
     : OutputFieldsItemParams{prm},
       pfield_next_{prm.pfield_first},
       tfield_next_{prm.tfield_first}
@@ -78,7 +78,6 @@ public:
       io_pfd_.open("pfd" + sfx, prm.data_dir);
     }
     if (tfield_interval > 0) {
-      tfd_.reset(new Mfields{grid, n_comps, {}});
       io_tfd_.open("tfd" + sfx, prm.data_dir);
     }
   }
@@ -127,6 +126,10 @@ public:
       }
 
       if (doaccum_tfield) {
+        if (!tfd_) {
+          tfd_.reset(new Mfields{grid, item.n_comps(), {}});
+        }
+
         prof_start(pr_accum);
         // tfd += pfd
         tfd_->gt() = tfd_->gt() + pfd;
@@ -189,9 +192,7 @@ public:
   // ctor
 
   OutputFields(const Grid_t& grid, const OutputFieldsParams& prm)
-    : fields{grid, prm.fields, Item_jeh<MfieldsState>::n_comps(), ""},
-      moments{grid, prm.moments,
-              Item_Moments<Mparticles, Dim>::n_comps_impl(grid), "_moments"}
+    : fields{grid, prm.fields, ""}, moments{grid, prm.moments, "_moments"}
   {}
 
   // ----------------------------------------------------------------------
