@@ -120,7 +120,7 @@ public:
       if (do_pfield) {
         prof_start(pr_pfd);
         mpi_printf(grid.comm(), "***** Writing PFD output for '%s'\n",
-                   item.name());
+                   item.name().c_str());
         pfield_next_ += pfield_interval;
         io_pfd_.write_step(grid, rn, rx, pfd, item.name(), item.comp_names());
         prof_stop(pr_pfd);
@@ -137,7 +137,7 @@ public:
       if (do_tfield) {
         prof_start(pr_tfd);
         mpi_printf(grid.comm(), "***** Writing TFD output for '%s'\n",
-                   item.name());
+                   item.name().c_str());
         tfield_next_ += tfield_interval;
 
         // convert accumulated values to correct temporal mean

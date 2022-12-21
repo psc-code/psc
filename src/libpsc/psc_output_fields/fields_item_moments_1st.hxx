@@ -31,8 +31,7 @@ public:
   using moment_type =
     psc::moment::moment_n<psc::deposit::code::Deposit1stCc, dim_t>;
 
-  constexpr static char const* name = "n_1st";
-
+  static std::string name_impl() { return "n_1st"; }
   static int n_comps_impl(const Grid_t& grid) { return 1 * grid.kinds.size(); }
 
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
@@ -73,7 +72,7 @@ public:
   using moment_type =
     psc::moment::moment_v<psc::deposit::code::Deposit1stCc, dim_t>;
 
-  constexpr static char const* name = "v_1st";
+  static std::string name_impl() { return "v_1st"; }
 
   static int n_comps_impl(const Grid_t& grid) { return 3 * grid.kinds.size(); }
 
@@ -105,7 +104,7 @@ public:
   using moment_type =
     psc::moment::moment_p<psc::deposit::code::Deposit1stCc, dim_t>;
 
-  constexpr static char const* name = "p_1st";
+  static std::string name_impl() { return "p_1st"; }
 
   static int n_comps_impl(const Grid_t& grid) { return 3 * grid.kinds.size(); }
 
@@ -171,7 +170,7 @@ public:
     psc::moment::moment_all<psc::deposit::code::Deposit1stCc, dim_t>;
 
   constexpr static int n_moments = 13;
-  static char const* name() { return "all_1st"; }
+  static std::string name_impl() { return "all_1st"; }
 
   static int n_comps_impl(const Grid_t& grid)
   {
@@ -218,8 +217,7 @@ public:
   using Sub = Moments_1st<MparticlesSingle, Mfields, D>;
 
   constexpr static int n_moments = Sub::n_moments;
-  static char const* name() { return Sub::name(); }
-
+  static std::string name_impl() { return "all_1st"; }
   static int n_comps_impl(const Grid_t& grid) { return 13 * grid.kinds.size(); }
 
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
