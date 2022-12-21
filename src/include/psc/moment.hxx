@@ -110,7 +110,7 @@ public:
     deposit<DepositCode, dim_t>(mflds_gt, ib, mprts,
                                 [&](auto& deposit_one, const auto& prt) {
                                   int m = prt.kind();
-                                  deposit_one(m, 1.f);
+                                  deposit_one(m, prt.w());
                                 });
   }
 };
