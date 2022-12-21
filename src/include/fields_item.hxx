@@ -167,8 +167,6 @@ public:
   using Real = typename Mfields::real_t;
   using storage_type = typename Mfields::Storage;
 
-  const Grid_t& grid() const { return mres_.grid(); }
-
   auto gt()
   {
     auto bnd = -mres_.ib();
@@ -183,6 +181,8 @@ protected:
       mres_ib_{-grid.ibn},
       bnd_{grid}
   {}
+
+  const Grid_t& grid() const { return mres_.grid(); }
 
 protected:
   Mfields mres_;
