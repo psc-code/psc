@@ -14,6 +14,8 @@ struct Moment_n_1st_nc
   using Mfields = MF;
   using dim_t = D;
   using real_t = typename Mfields::real_t;
+  using moment_type =
+    psc::moment::moment_n<psc::deposit::code::Deposit1stNc, dim_t>;
 
   constexpr static char const* name = "n_1st_nc";
   static int n_comps_impl(const Grid_t& grid) { return grid.kinds.size(); }
@@ -26,11 +28,7 @@ struct Moment_n_1st_nc
   template <typename Mparticles>
   static void run(Mfields& mflds, Mparticles& mprts)
   {
-    psc::moment::deposit_1st_nc<dim_t>(mflds.storage(), mflds.ib(), mprts,
-                                       [&](auto& deposit_one, const auto& prt) {
-                                         int m = prt.kind();
-                                         deposit_one(m, prt.w());
-                                       });
+    moment_type{}(mflds.storage(), mflds.ib(), mprts);
   }
 };
 
