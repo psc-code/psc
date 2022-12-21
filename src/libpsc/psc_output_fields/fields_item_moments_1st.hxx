@@ -130,6 +130,8 @@ struct Moment_T_1st
 {
   using Mfields = MF;
   using dim_t = D;
+  using moment_type =
+    psc::moment::moment_T<psc::deposit::code::Deposit1stCc, dim_t>;
 
   constexpr static char const* name = "T_1st";
 
@@ -144,21 +146,7 @@ struct Moment_T_1st
   template <typename Mparticles>
   static void run(Mfields& mflds, Mparticles& mprts)
   {
-    using real_t = typename Mparticles::real_t;
-
-    psc::moment::deposit_1st_cc<dim_t>(mflds, mprts, [&](const auto& prt) {
-      int mm = prt.kind() * 6;
-
-      real_t vxi[3];
-      _particle_calc_vxi(prt, vxi);
-      auto pxi = prt.u();
-      deposit(mflds, prt, mm + 0, prt.m() * pxi[0] * vxi[0]);
-      deposit(mflds, prt, mm + 1, prt.m() * pxi[1] * vxi[1]);
-      deposit(mflds, prt, mm + 2, prt.m() * pxi[2] * vxi[2]);
-      deposit(mflds, prt, mm + 3, prt.m() * pxi[0] * vxi[1]);
-      deposit(mflds, prt, mm + 4, prt.m() * pxi[0] * vxi[2]);
-      deposit(mflds, prt, mm + 5, prt.m() * pxi[1] * vxi[2]);
-    });
+    moment_type{}(mflds.storage(), mflds.ib(), mprts);
   }
 };
 

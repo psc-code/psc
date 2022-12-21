@@ -197,6 +197,33 @@ public:
 };
 
 // ===========================================================================
+// moment_T
+
+template <template <typename, typename> class DepositCode, typename D>
+class moment_T
+{
+public:
+  using dim_t = D;
+
+  template <typename MFLDS_GT, typename MP>
+  void operator()(MFLDS_GT& mflds_gt, const Int3& ib, const MP& mprts)
+  {
+    using real_t = typename MP::real_t;
+    deposit<DepositCode, dim_t>(mflds_gt, ib, mprts, [&](const auto& prt) {
+      int mm = prt.kind() * 6;
+      real_t vxi[3];
+      _particle_calc_vxi(prt, vxi);
+      deposit_one(mm + 0, prt.m() * prt.u()[0] * vxi[0]);
+      deposit_one(mm + 1, prt.m() * prt.u()[1] * vxi[1]);
+      deposit_one(mm + 2, prt.m() * prt.u()[2] * vxi[2]);
+      deposit_one(mm + 3, prt.m() * prt.u()[0] * vxi[1]);
+      deposit_one(mm + 4, prt.m() * prt.u()[0] * vxi[2]);
+      deposit_one(mm + 5, prt.m() * prt.u()[1] * vxi[2]);
+    });
+  }
+}; // namespace moment
+
+// ===========================================================================
 // moment_all
 
 template <template <typename, typename> class DepositCode, typename D>
