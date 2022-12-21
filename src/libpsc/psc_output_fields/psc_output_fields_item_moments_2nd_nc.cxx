@@ -53,8 +53,6 @@ public:
     return {"rho"};
   }
 
-  int n_comps() const { return Base::mres_.n_comps(); }
-
   template <typename Mparticles>
   explicit Moment_rho_2nd_nc(const Mparticles& mprts) : Base{mprts.grid()}
   {
