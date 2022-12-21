@@ -2,11 +2,13 @@
 #ifndef GRID_HXX
 #define GRID_HXX
 
+#include <balance.hxx>
 #include "kg/Vec3.h"
 #include "psc_bits.h"
 #include "mrc_domain.hxx"
 #include "grid/BC.h"
 #include "grid/Domain.h"
+#include <mrc_ddc.h>
 
 #include <vector>
 #include <string>
@@ -98,6 +100,8 @@ struct Grid_
         this->bc.prt_hi[d] = BND_PRT_PERIODIC;
       }
     }
+
+    reset_ddc();
   }
 
   void view() const
@@ -149,8 +153,19 @@ struct Grid_
   Int3 ibn; // FIXME
   int timestep_ = 0;
   MrcDomain mrc_domain_;
+  mutable mrc_ddc* ddc_ = {};
+  mutable int balance_generation_cnt_;
 
   const MrcDomain& mrc_domain() const { return mrc_domain_; }
+
+  mrc_ddc* ddc() const
+  {
+    if (balance_generation_cnt_ != psc_balance_generation_cnt) {
+      reset_ddc();
+    }
+    assert(ddc_);
+    return ddc_;
+  }
 
   MPI_Comm comm() const { return MPI_COMM_WORLD; }
   int nGlobalPatches() const { return mrc_domain().nGlobalPatches(); }
@@ -167,6 +182,21 @@ struct Grid_
     return mrc_domain().localPatchInfo(p);
   }
   mrc_ddc* create_ddc() const { return mrc_domain().create_ddc(); }
+
+private:
+  void reset_ddc() const
+  {
+    if (ddc_) {
+      mrc_ddc_destroy(ddc_);
+    }
+    if (ibn[0] > 0 || ibn[1] > 0 || ibn[2] > 0) {
+      ddc_ = create_ddc();
+      mrc_ddc_set_param_int3(ddc_, "ibn", ibn);
+      mrc_ddc_set_param_int(ddc_, "max_n_fields", 24);
+      mrc_ddc_setup(ddc_);
+    }
+    balance_generation_cnt_ = psc_balance_generation_cnt;
+  }
 };
 
 // ======================================================================
