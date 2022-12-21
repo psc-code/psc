@@ -4,7 +4,6 @@
 #include "psc.h"
 #include "fields.hxx"
 #include "bnd.hxx"
-#include "balance.hxx"
 
 #include <mrc_profile.h>
 #include <mrc_ddc.h>
@@ -31,20 +30,7 @@ struct Bnd_ : BndBase
   // ----------------------------------------------------------------------
   // ctor
 
-  Bnd_(const Grid_t& grid, const int ibn[3])
-  {
-    balance_generation_cnt_ = psc_balance_generation_cnt;
-  }
-
-  // ----------------------------------------------------------------------
-  // reset
-
-  void reset(const Grid_t& grid)
-  {
-    // FIXME, not really a pretty way of doing this
-    this->~Bnd_();
-    new (this) Bnd_(grid, grid.ibn);
-  }
+  Bnd_(const Grid_t& grid, const int ibn[3]) {}
 
   // ----------------------------------------------------------------------
   // add_ghosts
@@ -52,11 +38,6 @@ struct Bnd_ : BndBase
   void add_ghosts(const Grid_t& grid, storage_type& mflds_gt, const Int3& ib,
                   int mb, int me)
   {
-    if (psc_balance_generation_cnt != balance_generation_cnt_) {
-      balance_generation_cnt_ = psc_balance_generation_cnt;
-      reset(grid);
-    }
-
     // FIXME
     // I don't think we need as many points, and only stencil star
     // rather then box
@@ -83,10 +64,6 @@ struct Bnd_ : BndBase
   void fill_ghosts(const Grid_t& grid, storage_type& mflds_gt, const Int3& ib,
                    int mb, int me)
   {
-    if (psc_balance_generation_cnt != balance_generation_cnt_) {
-      balance_generation_cnt_ = psc_balance_generation_cnt;
-      reset(grid);
-    }
     // FIXME
     // I don't think we need as many points, and only stencil star
     // rather then box
@@ -172,9 +149,6 @@ struct Bnd_ : BndBase
     .copy_from_buf = copy_from_buf,
     .add_from_buf = add_from_buf,
   };
-
-private:
-  int balance_generation_cnt_;
 };
 
 template <typename MF>
