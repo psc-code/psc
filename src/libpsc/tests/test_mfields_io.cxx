@@ -35,7 +35,7 @@ static Grid_t make_grid()
   auto kinds = Grid_t::Kinds({Grid_t::Kind(1., 1., "test_species")});
   auto norm = Grid_t::Normalization{};
   double dt = .1;
-  return Grid_t{domain, bc, kinds, norm, dt};
+  return Grid_t{domain, bc, kinds, norm, dt, -1, {2, 2, 2}};
 }
 
 template <typename T>
@@ -153,7 +153,6 @@ TYPED_TEST(MfieldsTest, OutputFieldsMRC)
   using Mparticles = MparticlesSimple<ParticleSimple<real_t>>;
 
   auto grid = make_grid();
-  grid.ibn = {2, 2, 2};
   auto mflds = Mfields{grid, NR_FIELDS, {2, 2, 2}};
   auto mprts = Mparticles{grid};
 
@@ -182,7 +181,6 @@ TYPED_TEST(MfieldsTest, OutputFieldsADIOS2)
   using Mparticles = MparticlesSimple<ParticleSimple<real_t>>;
 
   auto grid = make_grid();
-  grid.ibn = {2, 2, 2};
   auto mflds = Mfields{grid, NR_FIELDS, {2, 2, 2}};
   auto mprts = Mparticles{grid};
 

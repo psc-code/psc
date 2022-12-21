@@ -33,20 +33,8 @@ struct Bnd_ : BndBase
 
   Bnd_(const Grid_t& grid, const int ibn[3])
   {
-    ddc_ = grid.create_ddc();
-    mrc_ddc_set_funcs(ddc_, const_cast<mrc_ddc_funcs*>(&ddc_funcs));
-    mrc_ddc_set_param_int3(ddc_, "ibn", ibn);
-    mrc_ddc_set_param_int(ddc_, "max_n_fields", 24);
-    mrc_ddc_set_param_int(ddc_, "size_of_type", sizeof(real_t));
-    assert(ibn[0] > 0 || ibn[1] > 0 || ibn[2] > 0);
-    mrc_ddc_setup(ddc_);
     balance_generation_cnt_ = psc_balance_generation_cnt;
   }
-
-  // ----------------------------------------------------------------------
-  // dtor
-
-  ~Bnd_() { mrc_ddc_destroy(ddc_); }
 
   // ----------------------------------------------------------------------
   // reset
@@ -72,10 +60,15 @@ struct Bnd_ : BndBase
     // FIXME
     // I don't think we need as many points, and only stencil star
     // rather then box
+    assert(Int3(mflds_gt.shape(0), mflds_gt.shape(1), mflds_gt.shape(2)) ==
+           grid.ldims + 2 * grid.ibn);
+
     auto&& h_mflds_gt = gt::host_mirror(mflds_gt);
     gt::copy(mflds_gt, h_mflds_gt);
     BndCtx ctx{h_mflds_gt, ib};
-    mrc_ddc_add_ghosts(ddc_, mb, me, &ctx);
+    mrc_ddc_set_param_int(grid.ddc(), "size_of_type", sizeof(real_t));
+    mrc_ddc_set_funcs(grid.ddc(), const_cast<mrc_ddc_funcs*>(&ddc_funcs));
+    mrc_ddc_add_ghosts(grid.ddc(), mb, me, &ctx);
     gt::copy(h_mflds_gt, mflds_gt);
   }
 
@@ -97,10 +90,15 @@ struct Bnd_ : BndBase
     // FIXME
     // I don't think we need as many points, and only stencil star
     // rather then box
+    assert(Int3(mflds_gt.shape(0), mflds_gt.shape(1), mflds_gt.shape(2)) ==
+           grid.ldims + 2 * grid.ibn);
+
     auto&& h_mflds_gt = gt::host_mirror(mflds_gt);
     gt::copy(mflds_gt, h_mflds_gt);
     BndCtx ctx{h_mflds_gt, ib};
-    mrc_ddc_fill_ghosts(ddc_, mb, me, &ctx);
+    mrc_ddc_set_param_int(grid.ddc(), "size_of_type", sizeof(real_t));
+    mrc_ddc_set_funcs(grid.ddc(), const_cast<mrc_ddc_funcs*>(&ddc_funcs));
+    mrc_ddc_fill_ghosts(grid.ddc(), mb, me, &ctx);
     gt::copy(h_mflds_gt, mflds_gt);
   }
 
@@ -176,7 +174,6 @@ struct Bnd_ : BndBase
   };
 
 private:
-  mrc_ddc* ddc_;
   int balance_generation_cnt_;
 };
 
