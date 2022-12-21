@@ -41,14 +41,14 @@ using RngPool = PscRngPool<Rng>;
 // ======================================================================
 // TestConfig
 
-template <
-  typename DIM, typename _Mfields, typename PUSHP, typename ORDER,
-  typename CHECKS = Checks_<typename PUSHP::Mparticles,
-                            typename PUSHP::MfieldsState, _Mfields, ORDER, DIM>,
-  typename BNDP = BndParticles_<typename PUSHP::Mparticles>,
-  typename PUSHF = PushFields<typename PUSHP::MfieldsState>,
-  typename BND = Bnd_<typename PUSHP::MfieldsState>,
-  typename MOMENT_N = Moment_n_1st<typename PUSHP::Mparticles, _Mfields, DIM>>
+template <typename DIM, typename _Mfields, typename PUSHP, typename ORDER,
+          typename CHECKS =
+            Checks_<typename PUSHP::Mparticles, typename PUSHP::MfieldsState,
+                    _Mfields, ORDER, DIM>,
+          typename BNDP = BndParticles_<typename PUSHP::Mparticles>,
+          typename PUSHF = PushFields<typename PUSHP::MfieldsState>,
+          typename BND = Bnd_<typename PUSHP::MfieldsState>,
+          typename MOMENT_N = Moment_n_1st<_Mfields, DIM>>
 struct TestConfig
 {
   using dim = DIM;

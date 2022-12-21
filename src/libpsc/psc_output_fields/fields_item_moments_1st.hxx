@@ -20,12 +20,11 @@ static inline void __particle_calc_vxi(const Particle& prt,
 // ======================================================================
 // n_1st
 
-template <typename MP, typename MF, typename D>
-class Moment_n_1st : public ItemMomentCRTP<Moment_n_1st<MP, MF, D>, MF>
+template <typename MF, typename D>
+class Moment_n_1st : public ItemMomentCRTP<Moment_n_1st<MF, D>, MF>
 {
 public:
-  using Base = ItemMomentCRTP<Moment_n_1st<MP, MF, D>, MF>;
-  using Mparticles = MP;
+  using Base = ItemMomentCRTP<Moment_n_1st<MF, D>, MF>;
   using Mfields = MF;
   using real_t = typename Mfields::real_t;
   using dim_t = D;
@@ -45,12 +44,14 @@ public:
 
   explicit Moment_n_1st(const Grid_t& grid) : Base{grid} {}
 
-  explicit Moment_n_1st(const Mparticles& mprts) : Base{mprts.grid()}
+  template <typename MP>
+  explicit Moment_n_1st(const MP& mprts) : Base{mprts.grid()}
   {
     update(mprts);
   }
 
-  void update(const Mparticles& mprts)
+  template <typename MP>
+  void update(const MP& mprts)
   {
     Base::mres_gt_.view() = 0.f;
     moment_type{}(Base::mres_gt_, Base::mres_ib_, mprts);
