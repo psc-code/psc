@@ -62,14 +62,7 @@ public:
     return addKindSuffix({"n"}, grid.kinds);
   }
 
-  explicit Moment_n_1st_cuda(const Grid_t& grid) : Base{grid} {}
-
   explicit Moment_n_1st_cuda(const Mparticles& mprts) : Base{mprts.grid()}
-  {
-    update(mprts);
-  }
-
-  void update(const Mparticles& mprts)
   {
     static int pr, pr_1, pr_2;
     if (!pr) {

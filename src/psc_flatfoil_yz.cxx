@@ -608,8 +608,6 @@ void run()
   double inject_fac = (g.inject_interval * grid.dt / inject_tau) /
                       (1. + g.inject_interval * grid.dt / inject_tau);
 
-  Moment_n moment_n(grid);
-
   auto lf_inject_heat = [&](const Grid_t& grid, Mparticles& mprts) {
     static int pr_inject, pr_heating;
     if (!pr_inject) {
@@ -625,7 +623,7 @@ void run()
     if (g.inject_interval > 0 && timestep % g.inject_interval == 0) {
       mpi_printf(comm, "***** Performing injection...\n");
       prof_start(pr_inject);
-      moment_n.update(mprts);
+      Moment_n moment_n(mprts);
       auto d_n = moment_n.gt();
       auto h_n = gt::host_mirror(d_n);
       gt::copy(gt::eval(d_n), h_n); // FIXME shouldn't need eval (?)
