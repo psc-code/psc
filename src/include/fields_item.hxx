@@ -43,18 +43,21 @@ class ItemMomentBnd
 public:
   using storage_type = typename Mfields::Storage;
 
-  ItemMomentBnd(const Grid_t& grid) : grid_{grid}, bnd_{grid, grid.ibn} {}
+  ItemMomentBnd(const Grid_t& grid) : bnd_{grid, grid.ibn} {}
 
-  void add_ghosts(storage_type& mres_gt, const Int3& ib)
+  void add_ghosts(const Grid_t& grid, storage_type& mres_gt, const Int3& ib)
   {
     for (int p = 0; p < mres_gt.shape(4); p++) {
-      add_ghosts_boundary(grid_, mres_gt, ib, p, 0, mres_gt.shape(3));
+      add_ghosts_boundary(grid, mres_gt, ib, p, 0, mres_gt.shape(3));
     }
 
-    bnd_.add_ghosts(mres_gt, ib, 0, mres_gt.shape(3));
+    bnd_.add_ghosts(grid, mres_gt, ib, 0, mres_gt.shape(3));
   }
 
-  void add_ghosts(Mfields& mres) { add_ghosts(mres.storage(), mres.ib()); }
+  void add_ghosts(Mfields& mres)
+  {
+    add_ghosts(mres.grid(), mres.storage(), mres.ib());
+  }
 
 private:
   // ----------------------------------------------------------------------
@@ -153,7 +156,6 @@ private:
   }
 
 private:
-  const Grid_t& grid_;
   Bnd bnd_;
 };
 
