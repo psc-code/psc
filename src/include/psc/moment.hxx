@@ -98,5 +98,22 @@ void deposit_2nd_nc(MF& mflds_gt, const Int3& ib, const MP& mprts, F&& func)
                                                std::forward<F>(func));
 }
 
+template <template <typename, typename> class DepositCode, typename D>
+class moment_n
+{
+public:
+  using dim_t = D;
+
+  template <typename MFLDS_GT, typename MP>
+  void operator()(MFLDS_GT& mflds_gt, const Int3& ib, const MP& mprts)
+  {
+    deposit<DepositCode, dim_t>(mflds_gt, ib, mprts,
+                                [&](auto& deposit_one, const auto& prt) {
+                                  int m = prt.kind();
+                                  deposit_one(m, 1.f);
+                                });
+  }
+};
+
 } // namespace moment
 } // namespace psc

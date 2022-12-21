@@ -40,6 +40,8 @@ public:
   using Mfields = MF;
   using real_t = typename Mfields::real_t;
   using dim_t = D;
+  using moment_type =
+    psc::moment::moment_n<psc::deposit::code::Deposit1stCc, dim_t>;
 
   constexpr static char const* name = "n_1st";
 
@@ -62,11 +64,7 @@ public:
   void update(const Mparticles& mprts)
   {
     Base::mres_gt_.view() = 0.f;
-    psc::moment::deposit_1st_cc<dim_t>(Base::mres_gt_, Base::mres_ib_, mprts,
-                                       [&](auto& deposit_one, const auto& prt) {
-                                         int m = prt.kind();
-                                         deposit_one(m, 1.f);
-                                       });
+    moment_type{}(Base::mres_gt_, Base::mres_ib_, mprts);
     Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
   }
 };
