@@ -182,6 +182,13 @@ public:
   int n_patches() const { return mres_.n_patches(); }
   Int3 ibn() const { return mres_.ibn(); }
 
+  auto gt()
+  {
+    auto bnd = -mres_.ib();
+    return mres_.storage().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
+                                _s(bnd[2], -bnd[2]));
+  }
+
 protected:
   ItemMomentCRTP(const Grid_t& grid)
     : mres_{grid, Derived::n_comps(grid), grid.ibn}, bnd_{grid}

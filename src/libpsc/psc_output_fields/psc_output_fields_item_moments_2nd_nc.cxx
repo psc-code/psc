@@ -1,21 +1,20 @@
 
 #include "fields.hxx"
+#include <psc/moment.hxx>
 
 #include <math.h>
-
-#include "common_moments.cxx"
 
 // ======================================================================
 // n
 
-template <typename MP, typename MF = Mfields<typename MP::real_t>>
-class Moment_n_2nd_nc : public ItemMomentCRTP<Moment_n_2nd_nc<MP, MF>, MF>
+template <typename MF, typename D>
+class Moment_n_2nd_nc : public ItemMomentCRTP<Moment_n_2nd_nc<MF, D>, MF>
 {
 public:
-  using Base = ItemMomentCRTP<Moment_n_2nd_nc<MP, MF>, MF>;
-  using Mparticles = MP;
+  using Base = ItemMomentCRTP<Moment_n_2nd_nc<MF, D>, MF>;
   using Mfields = MF;
-  using real_t = typename Mparticles::real_t;
+  using dim_t = D;
+  using real_t = typename Mfields::real_t;
 
   using Base::n_comps;
 
@@ -28,21 +27,16 @@ public:
     return addKindSuffix({"n"}, grid.kinds);
   }
 
+  template <typename Mparticles>
   explicit Moment_n_2nd_nc(const Mparticles& mprts) : Base{mprts.grid()}
   {
-    const auto& grid = mprts.grid();
-    real_t fnqs = grid.norm.fnqs;
-    real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1],
-           dzi = 1.f / grid.domain.dx[2];
-
-    auto accessor = mprts.accessor();
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      auto flds = Base::mres_[p];
-      for (auto prt : accessor[p]) {
-        int m = prt.kind();
-        DEPOSIT_TO_GRID_2ND_NC(prt, flds, m, 1.f);
-      }
-    }
+    Base::mres_.storage().view() = 0.f;
+    psc::moment::deposit_2nd_nc<dim_t>(Base::mres_.storage(), Base::mres_.ib(),
+                                       mprts,
+                                       [&](auto& deposit_one, const auto& prt) {
+                                         int m = prt.kind();
+                                         deposit_one(m, prt.w());
+                                       });
     Base::bnd_.add_ghosts(Base::mres_);
   }
 };
@@ -50,14 +44,14 @@ public:
 // ======================================================================
 // rho
 
-template <typename MP, typename MF = Mfields<typename MP::real_t>>
-class Moment_rho_2nd_nc : public ItemMomentCRTP<Moment_rho_2nd_nc<MP, MF>, MF>
+template <typename MF, typename D>
+class Moment_rho_2nd_nc : public ItemMomentCRTP<Moment_rho_2nd_nc<MF, D>, MF>
 {
 public:
-  using Base = ItemMomentCRTP<Moment_rho_2nd_nc<MP, MF>, MF>;
-  using Mparticles = MP;
+  using Base = ItemMomentCRTP<Moment_rho_2nd_nc<MF, D>, MF>;
   using Mfields = MF;
-  using real_t = typename Mparticles::real_t;
+  using dim_t = D;
+  using real_t = typename Mfields::real_t;
 
   static char const* name() { return "rho_2nd_nc"; }
   static int n_comps(const Grid_t& grid) { return 1; }
@@ -68,21 +62,15 @@ public:
 
   int n_comps() const { return Base::mres_.n_comps(); }
 
+  template <typename Mparticles>
   explicit Moment_rho_2nd_nc(const Mparticles& mprts) : Base{mprts.grid()}
   {
-    const auto& grid = mprts.grid();
-    real_t fnqs = grid.norm.fnqs;
-    real_t dxi = 1.f / grid.domain.dx[0], dyi = 1.f / grid.domain.dx[1],
-           dzi = 1.f / grid.domain.dx[2];
-
-    auto accessor = mprts.accessor();
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      auto flds = Base::mres_[p];
-      for (auto prt : accessor[p]) {
-        int m = prt.kind();
-        DEPOSIT_TO_GRID_2ND_NC(prt, flds, 0, prt.q());
-      }
-    }
+    Base::mres_.storage().view() = 0.f;
+    psc::moment::deposit_2nd_nc<dim_t>(Base::mres_.storage(), Base::mres_.ib(),
+                                       mprts,
+                                       [&](auto& deposit_one, const auto& prt) {
+                                         deposit_one(0, prt.w() * prt.q());
+                                       });
     Base::bnd_.add_ghosts(Base::mres_);
   }
 
