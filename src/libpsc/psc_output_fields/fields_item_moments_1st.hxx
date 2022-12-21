@@ -43,9 +43,9 @@ public:
 
   constexpr static char const* name = "n_1st";
 
-  static int n_comps(const Grid_t& grid) { return 1 * grid.kinds.size(); }
+  static int n_comps_impl(const Grid_t& grid) { return 1 * grid.kinds.size(); }
 
-  static std::vector<std::string> comp_names(const Grid_t& grid)
+  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return addKindSuffix({"n"}, grid.kinds);
   }
@@ -85,9 +85,9 @@ public:
 
   constexpr static char const* name = "v_1st";
 
-  static int n_comps(const Grid_t& grid) { return 3 * grid.kinds.size(); }
+  static int n_comps_impl(const Grid_t& grid) { return 3 * grid.kinds.size(); }
 
-  static std::vector<std::string> comp_names(const Grid_t& grid)
+  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return addKindSuffix({"vx", "vy", "vz"}, grid.kinds);
   }
@@ -123,9 +123,9 @@ public:
 
   constexpr static char const* name = "p_1st";
 
-  static int n_comps(const Grid_t& grid) { return 3 * grid.kinds.size(); }
+  static int n_comps_impl(const Grid_t& grid) { return 3 * grid.kinds.size(); }
 
-  static std::vector<std::string> comp_names(const Grid_t& grid)
+  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return addKindSuffix({"px", "py", "pz"}, grid.kinds);
   }
@@ -205,16 +205,16 @@ public:
   constexpr static int n_moments = 13;
   static char const* name() { return "all_1st"; }
 
-  static int n_comps(const Grid_t& grid)
+  static int n_comps_impl(const Grid_t& grid)
   {
     return n_moments * grid.kinds.size();
   }
 
-  std::vector<std::string> comp_names()
+  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return addKindSuffix({"rho", "jx", "jy", "jz", "px", "py", "pz", "txx",
                           "tyy", "tzz", "txy", "tyz", "tzx"},
-                         Base::grid().kinds);
+                         grid.kinds);
   }
 
   explicit Moments_1st(const Mparticles& mprts) : Base{mprts.grid()}
@@ -273,13 +273,13 @@ public:
   constexpr static int n_moments = Sub::n_moments;
   static char const* name() { return Sub::name(); }
 
-  static int n_comps(const Grid_t& grid) { return Sub::n_comps(grid); }
+  static int n_comps_impl(const Grid_t& grid) { return 13 * grid.kinds.size(); }
 
-  std::vector<std::string> comp_names()
+  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return addKindSuffix({"rho", "jx", "jy", "jz", "px", "py", "pz", "txx",
                           "tyy", "tzz", "txy", "tyz", "tzx"},
-                         Base::grid().kinds);
+                         grid.kinds);
   }
 
   explicit Moments_1st(const Mparticles& _mprts) : Base{_mprts.grid()}

@@ -167,6 +167,9 @@ public:
   using Real = typename Mfields::real_t;
   using storage_type = typename Mfields::Storage;
 
+  int n_comps() { return comp_names_.size(); }
+  const std::vector<std::string>& comp_names() { return comp_names_; }
+
   auto gt()
   {
     auto bnd = -mres_.ib();
@@ -176,17 +179,19 @@ public:
 
 protected:
   ItemMomentCRTP(const Grid_t& grid)
-    : mres_{grid, Derived::n_comps(grid), grid.ibn},
+    : mres_{grid, Derived::n_comps_impl(grid), grid.ibn},
       mres_gt_(mres_.storage()), // FIXME, nvcc chokes on braces???
       mres_ib_{-grid.ibn},
-      bnd_{grid}
-  {}
-
-  const Grid_t& grid() const { return mres_.grid(); }
+      bnd_{grid},
+      comp_names_{Derived::comp_names_impl(grid)}
+  {
+    assert(Derived::n_comps_impl(grid) == comp_names_.size());
+  }
 
 protected:
   Mfields mres_;
   storage_type& mres_gt_;
   Int3 mres_ib_;
   ItemMomentBnd<Mfields, Bnd> bnd_;
+  std::vector<std::string> comp_names_;
 };

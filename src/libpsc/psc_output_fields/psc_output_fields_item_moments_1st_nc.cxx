@@ -16,8 +16,11 @@ struct Moment_n_1st_nc
   using real_t = typename Mfields::real_t;
 
   constexpr static char const* name = "n_1st_nc";
-  constexpr static int n_comps = 1;
-  static std::vector<std::string> fld_names() { return {"n"}; }
+  static int n_comps_impl(const Grid_t& grid) { return grid.kinds.size(); }
+  static std::vector<std::string> comp_names(const Grid_t& grid)
+  {
+    return addKindSuffix({"n"}, grid.kinds);
+  }
   constexpr static int flags = POFI_BY_KIND;
 
   template <typename Mparticles>
@@ -43,8 +46,11 @@ struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MF, D>, MF>
   using real_t = typename Mfields::real_t;
 
   constexpr static char const* name = "rho_1st_nc";
-  static int n_comps(const Grid_t& grid) { return 1; }
-  static std::vector<std::string> fld_names() { return {"rho"}; }
+  static int n_comps_impl(const Grid_t& grid) { return 1; }
+  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
+  {
+    return {"rho"};
+  }
   constexpr static int flags = 0;
 
   template <typename Mparticles>

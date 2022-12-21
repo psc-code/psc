@@ -190,8 +190,8 @@ public:
 
   OutputFields(const Grid_t& grid, const OutputFieldsParams& prm)
     : fields{grid, prm.fields, Item_jeh<MfieldsState>::n_comps(), ""},
-      moments{grid, prm.moments, Item_Moments<Mparticles, Dim>::n_comps(grid),
-              "_moments"}
+      moments{grid, prm.moments,
+              Item_Moments<Mparticles, Dim>::n_comps_impl(grid), "_moments"}
   {}
 
   // ----------------------------------------------------------------------

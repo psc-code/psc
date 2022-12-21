@@ -18,9 +18,9 @@ public:
 
   constexpr static char const* name = "n_2nd_nc";
 
-  static int n_comps(const Grid_t& grid) { return 1 * grid.kinds.size(); }
+  static int n_comps_impl(const Grid_t& grid) { return 1 * grid.kinds.size(); }
 
-  std::vector<std::string> comp_names(const Grid_t& grid)
+  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return addKindSuffix({"n"}, grid.kinds);
   }
@@ -51,8 +51,8 @@ public:
   using real_t = typename Mfields::real_t;
 
   static char const* name() { return "rho_2nd_nc"; }
-  static int n_comps(const Grid_t& grid) { return 1; }
-  static std::vector<std::string> comp_names(const Grid_t& grid)
+  static int n_comps_impl(const Grid_t& grid) { return 1; }
+  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return {"rho"};
   }
