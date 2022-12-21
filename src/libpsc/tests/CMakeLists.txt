@@ -46,7 +46,4 @@ if (USE_CUDA AND NOT USE_VPIC)
 endif()
 add_psc_test(test_balance)
 add_psc_test(TestUniqueIdGenerator)
-
-if (PSC_HAVE_ADIOS2)
-  add_psc_test(test_mfields_io)
-endif()
+add_psc_test(test_mfields_io)
