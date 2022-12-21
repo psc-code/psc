@@ -196,5 +196,40 @@ public:
   }
 };
 
+// ===========================================================================
+// moment_all
+
+template <template <typename, typename> class DepositCode, typename D>
+class moment_all
+{
+public:
+  using dim_t = D;
+
+  template <typename MFLDS_GT, typename MP>
+  void operator()(MFLDS_GT& mflds_gt, const Int3& ib, const MP& mprts)
+  {
+    using real_t = typename MP::real_t;
+    deposit<DepositCode, dim_t>(
+      mflds_gt, ib, mprts, [&](auto& deposit_one, const auto& prt) {
+        int mm = prt.kind() * 13;
+        real_t vxi[3];
+        _particle_calc_vxi(prt, vxi);
+        deposit_one(mm + 0, prt.q());
+        deposit_one(mm + 1, prt.q() * vxi[0]);
+        deposit_one(mm + 2, prt.q() * vxi[1]);
+        deposit_one(mm + 3, prt.q() * vxi[2]);
+        deposit_one(mm + 4, prt.m() * prt.u()[0]);
+        deposit_one(mm + 5, prt.m() * prt.u()[1]);
+        deposit_one(mm + 6, prt.m() * prt.u()[2]);
+        deposit_one(mm + 7, prt.m() * prt.u()[0] * vxi[0]);
+        deposit_one(mm + 8, prt.m() * prt.u()[1] * vxi[1]);
+        deposit_one(mm + 9, prt.m() * prt.u()[2] * vxi[2]);
+        deposit_one(mm + 10, prt.m() * prt.u()[0] * vxi[1]);
+        deposit_one(mm + 11, prt.m() * prt.u()[1] * vxi[2]);
+        deposit_one(mm + 12, prt.m() * prt.u()[2] * vxi[0]);
+      });
+  }
+};
+
 } // namespace moment
 } // namespace psc

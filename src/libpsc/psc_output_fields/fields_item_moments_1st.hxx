@@ -178,6 +178,8 @@ public:
   using dim_t = D;
   using value_type = typename Mfields::real_t;
   using space = typename Mfields::space;
+  using moment_type =
+    psc::moment::moment_all<psc::deposit::code::Deposit1stCc, dim_t>;
 
   constexpr static int n_moments = 13;
   static char const* name() { return "all_1st"; }
@@ -196,28 +198,7 @@ public:
 
   explicit Moments_1st(const Mparticles& mprts) : Base{mprts.grid()}
   {
-    using real_t = typename Mparticles::real_t;
-
-    psc::moment::deposit_1st_cc<dim_t>(
-      Base::mres_gt_, Base::mres_ib_, mprts,
-      [&](auto& deposit_one, const auto& prt) {
-        int mm = prt.kind() * n_moments;
-        real_t vxi[3];
-        psc::moment::_particle_calc_vxi(prt, vxi);
-        deposit_one(mm + 0, prt.q());
-        deposit_one(mm + 1, prt.q() * vxi[0]);
-        deposit_one(mm + 2, prt.q() * vxi[1]);
-        deposit_one(mm + 3, prt.q() * vxi[2]);
-        deposit_one(mm + 4, prt.m() * prt.u()[0]);
-        deposit_one(mm + 5, prt.m() * prt.u()[1]);
-        deposit_one(mm + 6, prt.m() * prt.u()[2]);
-        deposit_one(mm + 7, prt.m() * prt.u()[0] * vxi[0]);
-        deposit_one(mm + 8, prt.m() * prt.u()[1] * vxi[1]);
-        deposit_one(mm + 9, prt.m() * prt.u()[2] * vxi[2]);
-        deposit_one(mm + 10, prt.m() * prt.u()[0] * vxi[1]);
-        deposit_one(mm + 11, prt.m() * prt.u()[1] * vxi[2]);
-        deposit_one(mm + 12, prt.m() * prt.u()[2] * vxi[0]);
-      });
+    moment_type{}(Base::mres_gt_, Base::mres_ib_, mprts);
     Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
   }
 };
