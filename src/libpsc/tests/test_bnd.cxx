@@ -11,6 +11,8 @@
 #include "psc_fields_single.h"
 #include "psc_fields_c.h"
 
+const int B = 2;
+
 static Grid_t make_grid(Int3 gdims, Vec3<double> length)
 {
   auto domain = Grid_t::Domain{gdims, length, {}, {1, 2, 1}};
@@ -20,7 +22,7 @@ static Grid_t make_grid(Int3 gdims, Vec3<double> length)
   double dt = .1;
   int n_patches = -1;
 
-  return Grid_t{domain, bc, kinds, norm, dt, n_patches};
+  return Grid_t{domain, bc, kinds, norm, dt, n_patches, {B, B, B}};
 }
 
 template <typename DIM>
@@ -94,8 +96,6 @@ using BndTestTypes =
                    TestConfigBnd<Bnd_<MfieldsSingle>, dim_xyz>>;
 
 TYPED_TEST_SUITE(BndTest, BndTestTypes);
-
-const int B = 2;
 
 TYPED_TEST(BndTest, FillGhosts)
 {
