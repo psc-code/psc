@@ -33,14 +33,8 @@ struct Bnd_ : BndBase
 
   Bnd_(const Grid_t& grid, const int ibn[3])
   {
-    static struct mrc_ddc_funcs ddc_funcs = {
-      .copy_to_buf = copy_to_buf,
-      .copy_from_buf = copy_from_buf,
-      .add_from_buf = add_from_buf,
-    };
-
     ddc_ = grid.create_ddc();
-    mrc_ddc_set_funcs(ddc_, &ddc_funcs);
+    mrc_ddc_set_funcs(ddc_, const_cast<mrc_ddc_funcs*>(&ddc_funcs));
     mrc_ddc_set_param_int3(ddc_, "ibn", ibn);
     mrc_ddc_set_param_int(ddc_, "max_n_fields", 24);
     mrc_ddc_set_param_int(ddc_, "size_of_type", sizeof(real_t));
@@ -175,7 +169,16 @@ struct Bnd_ : BndBase
     }
   }
 
+  constexpr static mrc_ddc_funcs ddc_funcs = {
+    .copy_to_buf = copy_to_buf,
+    .copy_from_buf = copy_from_buf,
+    .add_from_buf = add_from_buf,
+  };
+
 private:
   mrc_ddc* ddc_;
   int balance_generation_cnt_;
 };
+
+template <typename MF>
+constexpr mrc_ddc_funcs Bnd_<MF>::ddc_funcs;
