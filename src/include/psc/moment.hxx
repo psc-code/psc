@@ -115,5 +115,21 @@ public:
   }
 };
 
+template <template <typename, typename> class DepositCode, typename D>
+class moment_rho
+{
+public:
+  using dim_t = D;
+
+  template <typename MFLDS_GT, typename MP>
+  void operator()(MFLDS_GT& mflds_gt, const Int3& ib, const MP& mprts)
+  {
+    deposit<DepositCode, dim_t>(mflds_gt, ib, mprts,
+                                [&](auto& deposit_one, const auto& prt) {
+                                  deposit_one(0, prt.w() * prt.q());
+                                });
+  }
+};
+
 } // namespace moment
 } // namespace psc

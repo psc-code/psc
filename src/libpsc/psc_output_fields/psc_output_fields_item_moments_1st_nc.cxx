@@ -42,6 +42,8 @@ struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MF, D>, MF>
   using Mfields = MF;
   using dim_t = D;
   using real_t = typename Mfields::real_t;
+  using moment_type =
+    psc::moment::moment_rho<psc::deposit::code::Deposit1stNc, dim_t>;
 
   constexpr static char const* name = "rho_1st_nc";
   static int n_comps_impl(const Grid_t& grid) { return 1; }
@@ -55,9 +57,7 @@ struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MF, D>, MF>
   explicit Moment_rho_1st_nc(const Mparticles& mprts) : Base{mprts.grid()}
   {
     Base::mres_gt_.view() = 0.f;
-    psc::moment::deposit_1st_nc<dim_t>(
-      Base::mres_gt_, Base::mres_ib_, mprts,
-      [&](auto& deposit_one, const auto& prt) { deposit_one(0, prt.q()); });
+    moment_type{}(Base::mres_gt_, Base::mres_ib_, mprts);
     Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
   }
 };
