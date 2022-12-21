@@ -65,12 +65,6 @@ public:
 
   constexpr static int n_moments = 1;
   static std::string name_impl() { return "n_1st_cuda"; }
-
-  static int n_comps_impl(const Grid_t& grid)
-  {
-    return n_moments * grid.kinds.size();
-  }
-
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return addKindSuffix({"n"}, grid.kinds);
@@ -145,20 +139,12 @@ public:
 
   constexpr static int n_moments = 13;
   static std::string name_impl() { return "all_1st"; }
-  static int n_comps_impl(const Grid_t& grid)
-  {
-    return n_moments * grid.kinds.size();
-  }
-
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return addKindSuffix({"rho", "jx", "jy", "jz", "px", "py", "pz", "txx",
                           "tyy", "tzz", "txy", "tyz", "tzx"},
                          grid.kinds);
   }
-
-  int n_comps() const { return Base::mres_.n_comps(); }
-  Int3 ibn() const { return Base::mres_.ibn(); }
 
   explicit Moment_1st_cuda(const Grid_t& grid)
     : Base{grid}, bnd_{grid, grid.ibn}
