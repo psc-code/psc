@@ -192,8 +192,10 @@ protected:
 protected:
   std::string name_;
   std::vector<std::string> comp_names_;
-  Mfields mres_;
   storage_type& mres_gt_;
   Int3 mres_ib_;
   ItemMomentBnd<Mfields, Bnd> bnd_;
+
+  // private:
+  Mfields mres_;
 };
