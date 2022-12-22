@@ -93,8 +93,13 @@ struct Bnd_ : BndBase
   // ----------------------------------------------------------------------
   // fill_ghosts
 
-  void fill_ghosts(storage_type& mflds_gt, const Int3& ib, int mb, int me)
+  void fill_ghosts(const Grid_t& grid, storage_type& mflds_gt, const Int3& ib,
+                   int mb, int me)
   {
+    if (psc_balance_generation_cnt != balance_generation_cnt_) {
+      balance_generation_cnt_ = psc_balance_generation_cnt;
+      reset(grid);
+    }
     // FIXME
     // I don't think we need as many points, and only stencil star
     // rather then box
@@ -107,11 +112,7 @@ struct Bnd_ : BndBase
 
   void fill_ghosts(Mfields& mflds, int mb, int me)
   {
-    if (psc_balance_generation_cnt != balance_generation_cnt_) {
-      balance_generation_cnt_ = psc_balance_generation_cnt;
-      reset(mflds.grid());
-    }
-    fill_ghosts(mflds.storage(), mflds.ib(), mb, me);
+    fill_ghosts(mflds.grid(), mflds.storage(), mflds.ib(), mb, me);
   }
 
   // ----------------------------------------------------------------------
