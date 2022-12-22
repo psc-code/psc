@@ -114,10 +114,7 @@ struct CudaBnd
     }
 
     prof_start(pr);
-    static struct mrc_ddc_funcs ddc_funcs;
-
     ddc_ = grid.mrc_domain().create_ddc();
-    mrc_ddc_set_funcs(ddc_, &ddc_funcs);
     mrc_ddc_set_param_int3(ddc_, "ibn", ibn);
     mrc_ddc_set_param_int(ddc_, "max_n_fields", 24);
     mrc_ddc_set_param_int(ddc_, "size_of_type", sizeof(real_t));
