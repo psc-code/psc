@@ -141,11 +141,12 @@ struct CudaBnd
   struct Maps
   {
     Maps(mrc_ddc* ddc, mrc_ddc_pattern2* patt2, int mb, int me,
-         MfieldsCuda& mflds)
+         storage_type& mflds_gt, const Int3& mflds_ib)
       : patt{patt2}, mb{mb}, me{me}
     {
-      setup_remote_maps(send, recv, ddc, patt2, mb, me, mflds);
-      setup_local_maps(local_send, local_recv, ddc, patt2, mb, me, mflds);
+      setup_remote_maps(send, recv, ddc, patt2, mb, me, mflds_gt, mflds_ib);
+      setup_local_maps(local_send, local_recv, ddc, patt2, mb, me, mflds_gt,
+                       mflds_ib);
       send_buf.resize(send.size());
       recv_buf.resize(recv.size());
 
@@ -186,8 +187,9 @@ struct CudaBnd
   // run
 
   template <typename T>
-  void run(MfieldsCuda& mflds, int mb, int me, mrc_ddc_pattern2* patt2,
-           std::unordered_map<int, Maps>& maps, T scatter)
+  void run(storage_type& mflds_gt, const Int3& mflds_ib, int mb, int me,
+           mrc_ddc_pattern2* patt2, std::unordered_map<int, Maps>& maps,
+           T scatter)
   {
     // static int pr_ddc_run, pr_ddc_sync1, pr_ddc_sync2;
     // if (!pr_ddc_run) {
@@ -205,13 +207,13 @@ struct CudaBnd
     int key = mb + 100 * me;
     auto map = maps.find(key);
     if (map == maps.cend()) {
-      auto pair =
-        maps.emplace(std::make_pair(key, Maps{ddc_, patt2, mb, me, mflds}));
+      auto pair = maps.emplace(
+        std::make_pair(key, Maps{ddc_, patt2, mb, me, mflds_gt, mflds_ib}));
       map = pair.first;
     }
 
     // prof_start(pr_ddc_run);
-    ddc_run(map->second, patt2, mb, me, mflds, scatter);
+    ddc_run(map->second, patt2, mb, me, mflds_gt, mflds_ib, scatter);
     // prof_stop(pr_ddc_run);
 
 #if 0
@@ -228,7 +230,8 @@ struct CudaBnd
   {
     mrc_ddc_multi* sub = mrc_ddc_multi(ddc_);
 
-    run(mflds, mb, me, &sub->add_ghosts2, maps_add_, ScatterAdd{});
+    run(mflds.storage(), mflds.ib(), mb, me, &sub->add_ghosts2, maps_add_,
+        ScatterAdd{});
   }
 
   // ----------------------------------------------------------------------
@@ -241,7 +244,8 @@ struct CudaBnd
     // rather then box
     mrc_ddc_multi* sub = mrc_ddc_multi(ddc_);
 
-    run(mflds, mb, me, &sub->fill_ghosts2, maps_fill_, Scatter{});
+    run(mflds.storage(), mflds.ib(), mb, me, &sub->fill_ghosts2, maps_fill_,
+        Scatter{});
   }
 
   // ----------------------------------------------------------------------
@@ -249,7 +253,7 @@ struct CudaBnd
 
   template <typename S>
   void ddc_run(Maps& maps, mrc_ddc_pattern2* patt2, int mb, int me,
-               MfieldsCuda& mflds, S scatter)
+               storage_type& mflds_gt, const Int3& mflds_ib, S scatter)
   {
     // static int pr_ddc0, pr_ddc1, pr_ddc2, pr_ddc3, pr_ddc4, pr_ddc5;
     // static int pr_ddc6, pr_ddc7, pr_ddc8, pr_ddc9, pr_ddc10;
@@ -285,7 +289,7 @@ struct CudaBnd
     scatter(maps.local_recv, maps.local_buf, h_flds);
     thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
 #else
-    auto d_flds = mflds.gt().data();
+    auto d_flds = mflds_gt.data();
     prof_barrier("ddc_run");
 
     // prof_start(pr_ddc1);
@@ -396,7 +400,8 @@ struct CudaBnd
   static void setup_remote_maps(thrust::host_vector<uint>& map_send,
                                 thrust::host_vector<uint>& map_recv,
                                 mrc_ddc* ddc, struct mrc_ddc_pattern2* patt2,
-                                int mb, int me, MfieldsCuda& mflds)
+                                int mb, int me, storage_type& mflds_gt,
+                                const Int3& mflds_ib)
   {
     struct mrc_ddc_multi* sub = mrc_ddc_multi(ddc);
     struct mrc_ddc_rank_info* ri = patt2->ri;
@@ -413,13 +418,13 @@ struct CudaBnd
       for (int i = 0; i < ri[r].n_send_entries; i++) {
         struct mrc_ddc_sendrecv_entry* se = &ri[r].send_entry[i];
         map_setup(map_send, off_send, mb, me, se->patch, se->ilo, se->ihi,
-                  mflds.storage(), mflds.ib());
+                  mflds_gt, mflds_ib);
         off_send += se->len * (me - mb);
       }
       for (int i = 0; i < ri[r].n_recv_entries; i++) {
         struct mrc_ddc_sendrecv_entry* re = &ri[r].recv_entry[i];
         map_setup(map_recv, off_recv, mb, me, re->patch, re->ilo, re->ihi,
-                  mflds.storage(), mflds.ib());
+                  mflds_gt, mflds_ib);
         off_recv += re->len * (me - mb);
       }
     }
@@ -431,7 +436,8 @@ struct CudaBnd
   static void setup_local_maps(thrust::host_vector<uint>& map_send,
                                thrust::host_vector<uint>& map_recv,
                                mrc_ddc* ddc, struct mrc_ddc_pattern2* patt2,
-                               int mb, int me, MfieldsCuda& mflds)
+                               int mb, int me, storage_type& mflds_gt,
+                               const Int3& mflds_ib)
   {
     struct mrc_ddc_multi* sub = mrc_ddc_multi(ddc);
     struct mrc_ddc_rank_info* ri = patt2->ri;
@@ -458,10 +464,10 @@ struct CudaBnd
         continue;
       }
       uint size = se->len * (me - mb);
-      map_setup(map_send, off, mb, me, se->patch, se->ilo, se->ihi,
-                mflds.storage(), mflds.ib());
-      map_setup(map_recv, off, mb, me, re->patch, re->ilo, re->ihi,
-                mflds.storage(), mflds.ib());
+      map_setup(map_send, off, mb, me, se->patch, se->ilo, se->ihi, mflds_gt,
+                mflds_ib);
+      map_setup(map_recv, off, mb, me, re->patch, re->ilo, re->ihi, mflds_gt,
+                mflds_ib);
       off += size;
     }
   }
