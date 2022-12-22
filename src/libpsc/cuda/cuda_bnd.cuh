@@ -222,7 +222,8 @@ struct CudaBnd
   // ----------------------------------------------------------------------
   // add_ghosts
 
-  void add_ghosts(storage_type& mflds_gt, const Int3& mflds_ib, int mb, int me)
+  void add_ghosts(const Grid_t& grid, storage_type& mflds_gt,
+                  const Int3& mflds_ib, int mb, int me)
   {
     mrc_ddc_multi* sub = mrc_ddc_multi(ddc_);
 
@@ -232,7 +233,8 @@ struct CudaBnd
   // ----------------------------------------------------------------------
   // fill_ghosts
 
-  void fill_ghosts(storage_type& mflds_gt, const Int3& mflds_ib, int mb, int me)
+  void fill_ghosts(const Grid_t& grid, storage_type& mflds_gt,
+                   const Int3& mflds_ib, int mb, int me)
   {
     // FIXME
     // I don't think we need as many points, and only stencil star
