@@ -14,13 +14,13 @@ struct cuda_mparticles;
 
 template <typename _Mparticles, typename dim>
 struct Moment_rho_1st_nc_cuda
-  : ItemMomentCRTP<Moment_rho_1st_nc_cuda<_Mparticles, dim>, MfieldsCuda>
+  : ItemMomentCRTP<Moment_rho_1st_nc_cuda<_Mparticles, dim>, MfieldsCuda,
+                   BndCuda3<MfieldsCuda>>
 {
-  using Base =
-    ItemMomentCRTP<Moment_rho_1st_nc_cuda<_Mparticles, dim>, MfieldsCuda>;
+  using Base = ItemMomentCRTP<Moment_rho_1st_nc_cuda<_Mparticles, dim>,
+                              MfieldsCuda, BndCuda3<MfieldsCuda>>;
   using Mparticles = _Mparticles;
   using Mfields = MfieldsCuda;
-  using Bnd = BndCuda3<Mfields>;
 
   static std::string name_impl() { return "rho_1st_nc"; }
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
@@ -28,8 +28,7 @@ struct Moment_rho_1st_nc_cuda
     return {"rho"};
   }
 
-  Moment_rho_1st_nc_cuda(const Grid_t& grid) : Base{grid}, bnd_{grid, grid.ibn}
-  {}
+  Moment_rho_1st_nc_cuda(const Grid_t& grid) : Base{grid} {}
 
   void operator()(Mparticles& mprts)
   {
@@ -38,12 +37,8 @@ struct Moment_rho_1st_nc_cuda
     Base::mres_gt_.view() = 0.;
     CudaMoments1stNcRho<cuda_mparticles<typename Mparticles::BS>, dim> cmoments;
     cmoments(cmprts, Base::mres_gt_, Base::mres_ib_);
-    bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_, 0,
-                    Base::mres_gt_.shape(3));
+    Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
   }
-
-private:
-  Bnd bnd_;
 };
 
 // ======================================================================
@@ -51,13 +46,14 @@ private:
 
 template <typename _Mparticles, typename dim>
 class Moment_n_1st_cuda
-  : public ItemMomentCRTP<Moment_n_1st_cuda<_Mparticles, dim>, MfieldsCuda>
+  : public ItemMomentCRTP<Moment_n_1st_cuda<_Mparticles, dim>, MfieldsCuda,
+                          BndCuda3<MfieldsCuda>>
 {
 public:
-  using Base = ItemMomentCRTP<Moment_n_1st_cuda<_Mparticles, dim>, MfieldsCuda>;
+  using Base = ItemMomentCRTP<Moment_n_1st_cuda<_Mparticles, dim>, MfieldsCuda,
+                              BndCuda3<MfieldsCuda>>;
   using Mparticles = _Mparticles;
   using Mfields = MfieldsCuda;
-  using Bnd = BndCuda3<Mfields>;
 
   constexpr static int n_moments = 1;
   static std::string name_impl() { return "n_1st_cuda"; }
@@ -66,12 +62,9 @@ public:
     return addKindSuffix({"n"}, grid.kinds);
   }
 
-  explicit Moment_n_1st_cuda(const Grid_t& grid)
-    : Base{grid}, bnd_{grid, grid.ibn}
-  {}
+  explicit Moment_n_1st_cuda(const Grid_t& grid) : Base{grid} {}
 
-  explicit Moment_n_1st_cuda(const Mparticles& mprts)
-    : Base{mprts.grid()}, bnd_{mprts.grid(), mprts.grid().ibn}
+  explicit Moment_n_1st_cuda(const Mparticles& mprts) : Base{mprts.grid()}
   {
     update(mprts);
   }
@@ -97,15 +90,11 @@ public:
     cmoments(cmprts, Base::mres_gt_, Base::mres_ib_);
 
     prof_start(pr_2);
-    bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_, 0,
-                    Base::mres_gt_.shape(3));
+    Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
     prof_stop(pr_2);
 
     prof_stop(pr);
   }
-
-private:
-  Bnd bnd_;
 };
 
 // ======================================================================
@@ -113,13 +102,14 @@ private:
 
 template <typename _Mparticles, typename dim>
 class Moment_1st_cuda
-  : public ItemMomentCRTP<Moment_1st_cuda<_Mparticles, dim>, MfieldsCuda>
+  : public ItemMomentCRTP<Moment_1st_cuda<_Mparticles, dim>, MfieldsCuda,
+                          BndCuda3<MfieldsCuda>>
 {
 public:
-  using Base = ItemMomentCRTP<Moment_1st_cuda<_Mparticles, dim>, MfieldsCuda>;
+  using Base = ItemMomentCRTP<Moment_1st_cuda<_Mparticles, dim>, MfieldsCuda,
+                              BndCuda3<MfieldsCuda>>;
   using Mparticles = _Mparticles;
   using Mfields = MfieldsCuda;
-  using Bnd = BndCuda3<Mfields>;
   using value_type = typename Mfields::real_t;
   using space = gt::space::device;
 
@@ -132,12 +122,9 @@ public:
                          grid.kinds);
   }
 
-  explicit Moment_1st_cuda(const Grid_t& grid)
-    : Base{grid}, bnd_{grid, grid.ibn}
-  {}
+  explicit Moment_1st_cuda(const Grid_t& grid) : Base{grid} {}
 
-  explicit Moment_1st_cuda(const Mparticles& mprts)
-    : Base{mprts.grid()}, bnd_{mprts.grid(), mprts.grid().ibn}
+  explicit Moment_1st_cuda(const Mparticles& mprts) : Base{mprts.grid()}
   {
     update(mprts);
   }
@@ -166,13 +153,9 @@ public:
     prof_stop(pr_2);
 
     prof_start(pr_3);
-    bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_, 0,
-                    Base::mres_gt_.shape(3));
+    Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
     prof_stop(pr_3);
 
     prof_stop(pr);
   }
-
-private:
-  Bnd bnd_;
 };
