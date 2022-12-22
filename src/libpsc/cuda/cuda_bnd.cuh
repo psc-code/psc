@@ -106,30 +106,10 @@ struct CudaBnd
   // ----------------------------------------------------------------------
   // ctor
 
-  CudaBnd(const Grid_t& grid, Int3 ibn)
-  {
-    static int pr;
-    if (!pr) {
-      pr = prof_register("CudaBnd_ctor", 1, 0, 0);
-    }
-
-    prof_start(pr);
-    ddc_ = grid.mrc_domain().create_ddc();
-    mrc_ddc_set_param_int3(ddc_, "ibn", ibn);
-    mrc_ddc_set_param_int(ddc_, "max_n_fields", 24);
-    mrc_ddc_set_param_int(ddc_, "size_of_type", sizeof(real_t));
-    mrc_ddc_setup(ddc_);
-    prof_stop(pr);
-  }
+  CudaBnd(const Grid_t& grid, Int3 ibn) {}
 
   CudaBnd(const CudaBnd& bnd) = delete;
-
   CudaBnd& operator=(const CudaBnd& bnd) = delete;
-
-  // ----------------------------------------------------------------------
-  // dtor
-
-  ~CudaBnd() { mrc_ddc_destroy(ddc_); }
 
   // ======================================================================
   // Maps
@@ -183,9 +163,9 @@ struct CudaBnd
   // run
 
   template <typename T>
-  void run(storage_type& mflds_gt, const Int3& mflds_ib, int mb, int me,
-           mrc_ddc_pattern2* patt2, std::unordered_map<int, Maps>& maps,
-           T scatter)
+  void run(const Grid_t& grid, storage_type& mflds_gt, const Int3& mflds_ib,
+           int mb, int me, mrc_ddc_pattern2* patt2,
+           std::unordered_map<int, Maps>& maps, T scatter)
   {
     // static int pr_ddc_run, pr_ddc_sync1, pr_ddc_sync2;
     // if (!pr_ddc_run) {
@@ -203,13 +183,13 @@ struct CudaBnd
     int key = mb + 100 * me;
     auto map = maps.find(key);
     if (map == maps.cend()) {
-      auto pair = maps.emplace(
-        std::make_pair(key, Maps{ddc_, patt2, mb, me, mflds_gt, mflds_ib}));
+      auto pair = maps.emplace(std::make_pair(
+        key, Maps{grid.ddc(), patt2, mb, me, mflds_gt, mflds_ib}));
       map = pair.first;
     }
 
     // prof_start(pr_ddc_run);
-    ddc_run(map->second, patt2, mb, me, mflds_gt, mflds_ib, scatter);
+    ddc_run(grid, map->second, patt2, mb, me, mflds_gt, mflds_ib, scatter);
     // prof_stop(pr_ddc_run);
 
 #if 0
@@ -225,9 +205,10 @@ struct CudaBnd
   void add_ghosts(const Grid_t& grid, storage_type& mflds_gt,
                   const Int3& mflds_ib, int mb, int me)
   {
-    mrc_ddc_multi* sub = mrc_ddc_multi(ddc_);
+    mrc_ddc_multi* sub = mrc_ddc_multi(grid.ddc());
 
-    run(mflds_gt, mflds_ib, mb, me, &sub->add_ghosts2, maps_add_, ScatterAdd{});
+    run(grid, mflds_gt, mflds_ib, mb, me, &sub->add_ghosts2, maps_add_,
+        ScatterAdd{});
   }
 
   // ----------------------------------------------------------------------
@@ -239,17 +220,18 @@ struct CudaBnd
     // FIXME
     // I don't think we need as many points, and only stencil star
     // rather then box
-    mrc_ddc_multi* sub = mrc_ddc_multi(ddc_);
+    mrc_ddc_multi* sub = mrc_ddc_multi(grid.ddc());
 
-    run(mflds_gt, mflds_ib, mb, me, &sub->fill_ghosts2, maps_fill_, Scatter{});
+    run(grid, mflds_gt, mflds_ib, mb, me, &sub->fill_ghosts2, maps_fill_,
+        Scatter{});
   }
 
   // ----------------------------------------------------------------------
   // ddc_run
 
   template <typename S>
-  void ddc_run(Maps& maps, mrc_ddc_pattern2* patt2, int mb, int me,
-               storage_type& mflds_gt, const Int3& mflds_ib, S scatter)
+  void ddc_run(const Grid_t& grid, Maps& maps, mrc_ddc_pattern2* patt2, int mb,
+               int me, storage_type& mflds_gt, const Int3& mflds_ib, S scatter)
   {
     // static int pr_ddc0, pr_ddc1, pr_ddc2, pr_ddc3, pr_ddc4, pr_ddc5;
     // static int pr_ddc6, pr_ddc7, pr_ddc8, pr_ddc9, pr_ddc10;
@@ -289,7 +271,7 @@ struct CudaBnd
     prof_barrier("ddc_run");
 
     // prof_start(pr_ddc1);
-    postReceives(maps);
+    postReceives(grid, maps);
     // prof_stop(pr_ddc1);
 
     {
@@ -305,7 +287,7 @@ struct CudaBnd
     }
 
     // prof_start(pr_ddc4);
-    postSends(maps);
+    postSends(grid, maps);
     // prof_stop(pr_ddc4);
 
     // local part
@@ -347,9 +329,9 @@ struct CudaBnd
   // ----------------------------------------------------------------------
   // postReceives
 
-  void postReceives(Maps& maps)
+  void postReceives(const Grid_t& grid, Maps& maps)
   {
-    struct mrc_ddc_multi* sub = mrc_ddc_multi(ddc_);
+    struct mrc_ddc_multi* sub = mrc_ddc_multi(grid.ddc());
     struct mrc_ddc_rank_info* ri = maps.patt->ri;
     MPI_Datatype mpi_dtype =
       MPI_FLOAT; // FIXME Mfields_traits<Mfields>::mpi_dtype();
@@ -359,7 +341,8 @@ struct CudaBnd
     auto p_recv = maps.recv_buf.begin();
     for (int r = 0; r < sub->mpi_size; r++) {
       if (r != sub->mpi_rank && ri[r].n_recv_entries) {
-        MPI_Irecv(&*p_recv, ri[r].n_recv * mm, mpi_dtype, r, 0, ddc_->obj.comm,
+        MPI_Irecv(&*p_recv, ri[r].n_recv * mm, mpi_dtype, r, 0,
+                  grid.ddc()->obj.comm,
                   &maps.patt->recv_req[maps.patt->recv_cnt++]);
         p_recv += ri[r].n_recv * mm;
       }
@@ -370,9 +353,9 @@ struct CudaBnd
   // ----------------------------------------------------------------------
   // postSends
 
-  void postSends(Maps& maps)
+  void postSends(const Grid_t& grid, Maps& maps)
   {
-    struct mrc_ddc_multi* sub = mrc_ddc_multi(ddc_);
+    struct mrc_ddc_multi* sub = mrc_ddc_multi(grid.ddc());
     struct mrc_ddc_rank_info* ri = maps.patt->ri;
     MPI_Datatype mpi_dtype =
       MPI_FLOAT; // FIXME Mfields_traits<Mfields>::mpi_dtype();
@@ -382,7 +365,8 @@ struct CudaBnd
     auto p_send = maps.send_buf.begin();
     for (int r = 0; r < sub->mpi_size; r++) {
       if (r != sub->mpi_rank && ri[r].n_send_entries) {
-        MPI_Isend(&*p_send, ri[r].n_send * mm, mpi_dtype, r, 0, ddc_->obj.comm,
+        MPI_Isend(&*p_send, ri[r].n_send * mm, mpi_dtype, r, 0,
+                  grid.ddc()->obj.comm,
                   &maps.patt->send_req[maps.patt->send_cnt++]);
         p_send += ri[r].n_send * mm;
       }
@@ -492,7 +476,6 @@ struct CudaBnd
   }
 
 private:
-  mrc_ddc* ddc_;
   std::unordered_map<int, Maps> maps_add_;
   std::unordered_map<int, Maps> maps_fill_;
 };
