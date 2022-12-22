@@ -129,6 +129,7 @@ struct MfieldsStateCuda : MfieldsStateBase
 
   int n_patches() const { return mflds_.n_patches(); }
   int n_comps() const { return mflds_.n_comps(); }
+  const Int3& ib() const { return mflds_.ib(); }
 
   const Grid_t& grid() const { return *grid_; }
 
