@@ -44,6 +44,7 @@ struct CudaBnd
 {
   using Mfields = MfieldsCuda;
   using real_t = typename Mfields::real_t;
+  using storage_type = typename Mfields::Storage;
 
   // ======================================================================
   // Scatter
@@ -412,13 +413,13 @@ struct CudaBnd
       for (int i = 0; i < ri[r].n_send_entries; i++) {
         struct mrc_ddc_sendrecv_entry* se = &ri[r].send_entry[i];
         map_setup(map_send, off_send, mb, me, se->patch, se->ilo, se->ihi,
-                  mflds);
+                  mflds.storage(), mflds.ib());
         off_send += se->len * (me - mb);
       }
       for (int i = 0; i < ri[r].n_recv_entries; i++) {
         struct mrc_ddc_sendrecv_entry* re = &ri[r].recv_entry[i];
         map_setup(map_recv, off_recv, mb, me, re->patch, re->ilo, re->ihi,
-                  mflds);
+                  mflds.storage(), mflds.ib());
         off_recv += re->len * (me - mb);
       }
     }
@@ -457,24 +458,25 @@ struct CudaBnd
         continue;
       }
       uint size = se->len * (me - mb);
-      map_setup(map_send, off, mb, me, se->patch, se->ilo, se->ihi, mflds);
-      map_setup(map_recv, off, mb, me, re->patch, re->ilo, re->ihi, mflds);
+      map_setup(map_send, off, mb, me, se->patch, se->ilo, se->ihi,
+                mflds.storage(), mflds.ib());
+      map_setup(map_recv, off, mb, me, re->patch, re->ilo, re->ihi,
+                mflds.storage(), mflds.ib());
       off += size;
     }
   }
 
   static void map_setup(thrust::host_vector<uint>& map, uint off, int mb,
                         int me, int p, int ilo[3], int ihi[3],
-                        MfieldsCuda& mflds)
+                        storage_type& mflds_gt, const Int3& ib)
   {
     auto cur = &map[off];
-    Int3 ib = -mflds.ibn();
     for (int m = mb; m < me; m++) {
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
         for (int iy = ilo[1]; iy < ihi[1]; iy++) {
           for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-            *cur++ = &mflds.gt()(ix - ib[0], iy - ib[1], iz - ib[2], m, p) -
-                     mflds.gt().data();
+            *cur++ = &mflds_gt(ix - ib[0], iy - ib[1], iz - ib[2], m, p) -
+                     mflds_gt.data();
           }
         }
       }
