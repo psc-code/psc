@@ -42,9 +42,8 @@ __global__ static void k_scatter_add(const real_t* buf, const uint* map,
 
 struct CudaBnd
 {
-  using Mfields = MfieldsCuda;
-  using real_t = typename Mfields::real_t;
-  using storage_type = typename Mfields::Storage;
+  using storage_type = MfieldsCuda::Storage;
+  using real_t = storage_type::value_type;
 
   // ======================================================================
   // Scatter
@@ -226,26 +225,24 @@ struct CudaBnd
   // ----------------------------------------------------------------------
   // add_ghosts
 
-  void add_ghosts(MfieldsCuda& mflds, int mb, int me)
+  void add_ghosts(storage_type& mflds_gt, const Int3& mflds_ib, int mb, int me)
   {
     mrc_ddc_multi* sub = mrc_ddc_multi(ddc_);
 
-    run(mflds.storage(), mflds.ib(), mb, me, &sub->add_ghosts2, maps_add_,
-        ScatterAdd{});
+    run(mflds_gt, mflds_ib, mb, me, &sub->add_ghosts2, maps_add_, ScatterAdd{});
   }
 
   // ----------------------------------------------------------------------
   // fill_ghosts
 
-  void fill_ghosts(MfieldsCuda& mflds, int mb, int me)
+  void fill_ghosts(storage_type& mflds_gt, const Int3& mflds_ib, int mb, int me)
   {
     // FIXME
     // I don't think we need as many points, and only stencil star
     // rather then box
     mrc_ddc_multi* sub = mrc_ddc_multi(ddc_);
 
-    run(mflds.storage(), mflds.ib(), mb, me, &sub->fill_ghosts2, maps_fill_,
-        Scatter{});
+    run(mflds_gt, mflds_ib, mb, me, &sub->fill_ghosts2, maps_fill_, Scatter{});
   }
 
   // ----------------------------------------------------------------------
