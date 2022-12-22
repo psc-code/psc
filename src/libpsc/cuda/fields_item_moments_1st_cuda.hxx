@@ -38,7 +38,8 @@ struct Moment_rho_1st_nc_cuda
     Base::mres_gt_.view() = 0.;
     CudaMoments1stNcRho<cuda_mparticles<typename Mparticles::BS>, dim> cmoments;
     cmoments(cmprts, Base::mres_gt_, Base::mres_ib_);
-    bnd_.add_ghosts(Base::mres_, 0, Base::mres_gt_.shape(3));
+    bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_, 0,
+                    Base::mres_gt_.shape(3));
   }
 
 private:
@@ -96,7 +97,8 @@ public:
     cmoments(cmprts, Base::mres_gt_, Base::mres_ib_);
 
     prof_start(pr_2);
-    bnd_.add_ghosts(Base::mres_, 0, Base::mres_.n_comps());
+    bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_, 0,
+                    Base::mres_gt_.shape(3));
     prof_stop(pr_2);
 
     prof_stop(pr);
@@ -164,7 +166,8 @@ public:
     prof_stop(pr_2);
 
     prof_start(pr_3);
-    bnd_.add_ghosts(Base::mres_, 0, Base::mres_.n_comps());
+    bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_, 0,
+                    Base::mres_gt_.shape(3));
     prof_stop(pr_3);
 
     prof_stop(pr);
