@@ -215,8 +215,8 @@ void CudaMoments1stNcRho<CudaMparticles, dim>::operator()(
 // CudaMoments1stN::operator()
 
 template <typename CudaMparticles, typename dim>
-void CudaMoments1stN<CudaMparticles, dim>::operator()(CudaMparticles& cmprts,
-                                                      MfieldsCuda& mres)
+void CudaMoments1stN<CudaMparticles, dim>::operator()(
+  CudaMparticles& cmprts, MfieldsCuda::Storage& mres_gt, const Int3& mres_ib)
 {
   static int pr, pr_1;
   if (!pr) {
@@ -237,8 +237,9 @@ void CudaMoments1stN<CudaMparticles, dim>::operator()(CudaMparticles& cmprts,
     dim3 dimGrid =
       BlockSimple<typename CudaMparticles::BS, dim>::dimGrid(cmprts);
 
+    auto k_mres_gt = mres_gt.to_kernel();
     n_1st_cuda_run<typename CudaMparticles::BS, dim, false>
-      <<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, mres.gt(), -mres.ibn());
+      <<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, k_mres_gt, mres_ib);
     cuda_sync_if_enabled();
   } else {
     assert(0);

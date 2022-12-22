@@ -12,7 +12,8 @@ struct CudaMoments1stNcRho
 template <typename CudaMparticles, typename dim>
 struct CudaMoments1stN
 {
-  void operator()(CudaMparticles& cmprts, MfieldsCuda& mres);
+  void operator()(CudaMparticles& cmprts, MfieldsCuda::Storage& mres_gt,
+                  const Int3& ib);
 };
 
 template <typename CudaMparticles, typename dim>

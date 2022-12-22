@@ -70,8 +70,6 @@ public:
     return addKindSuffix({"n"}, grid.kinds);
   }
 
-  Int3 ibn() const { return {}; }
-
   explicit Moment_n_1st_cuda(const Grid_t& grid)
     : Base{grid}, bnd_{grid, grid.ibn}
   {}
@@ -96,26 +94,17 @@ public:
     auto& cmprts = *_mprts.cmprts();
 
     prof_start(pr_1);
-    Base::mres_.gt().view() = 0.;
+    Base::mres_gt_.view() = 0.;
     prof_stop(pr_1);
 
     CudaMoments1stN<cuda_mparticles<typename Mparticles::BS>, dim> cmoments;
-    cmoments(cmprts, Base::mres_);
+    cmoments(cmprts, Base::mres_gt_, Base::mres_ib_);
 
     prof_start(pr_2);
     bnd_.add_ghosts(Base::mres_, 0, Base::mres_.n_comps());
     prof_stop(pr_2);
 
     prof_stop(pr);
-  }
-
-  const Mfields& result() const { return Base::mres_; }
-
-  auto gt()
-  {
-    Int3 bnd = Base::mres_.ibn();
-    return std::move(Base::mres_.gt())
-      .view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]), _s(bnd[2], -bnd[2]));
   }
 
 private:
