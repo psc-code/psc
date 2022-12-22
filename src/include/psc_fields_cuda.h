@@ -120,6 +120,7 @@ inline void copy(const MfieldsSingle& hmflds, MfieldsCuda& mflds)
 struct MfieldsStateCuda : MfieldsStateBase
 {
   using real_t = MfieldsCuda::real_t;
+  using Storage = MfieldsCuda::Storage;
   using space = gt::space::device;
 
   MfieldsStateCuda(const Grid_t& grid)

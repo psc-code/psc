@@ -178,6 +178,62 @@ TYPED_TEST(BndTest, FillGhosts)
   bnd.fill_ghosts(mflds, 0, 1);
 }
 
+// almost same as "FillGhosts" but uses gt-based interface bnd
+TYPED_TEST(BndTest, FillGhostsGt)
+{
+  using Base = BndTest<TypeParam>;
+  using Bnd = typename Base::Bnd;
+  using dim = typename Base::dim;
+  using Mfields = typename Bnd::Mfields;
+
+  auto grid = make_grid<dim>();
+  auto ibn = Int3{B, B, B};
+  if (dim::InvarX::value)
+    ibn[0] = 0;
+  auto mflds = Mfields{grid, 1, ibn};
+
+  EXPECT_EQ(mflds.n_patches(), grid.n_patches());
+
+  {
+    auto&& h_mflds = gt::host_mirror(mflds.gt());
+    h_mflds.view() = 0.;
+    for (int p = 0; p < mflds.n_patches(); p++) {
+      int i0 = grid.patches[p].off[0];
+      int j0 = grid.patches[p].off[1];
+      int k0 = grid.patches[p].off[2];
+      auto flds =
+        make_Fields3d<dim_xyz>(h_mflds.view(_all, _all, _all, _all, p), -ibn);
+      grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
+        int ii = i + i0, jj = j + j0, kk = k + k0;
+        flds(0, i, j, k) = 100 * ii + 10 * jj + kk;
+      });
+    }
+    gt::copy(h_mflds, mflds.storage());
+  }
+
+  Bnd bnd{grid, ibn};
+  bnd.fill_ghosts(mflds.grid(), mflds.storage(), mflds.ib(), 0, 1);
+
+  {
+    auto&& h_mflds = gt::host_mirror(mflds.gt());
+    gt::copy(mflds.storage(), h_mflds);
+    for (int p = 0; p < mflds.n_patches(); p++) {
+      auto flds =
+        make_Fields3d<dim_xyz>(h_mflds.view(_all, _all, _all, _all, p), -ibn);
+      int i0 = grid.patches[p].off[0];
+      int j0 = grid.patches[p].off[1];
+      int k0 = grid.patches[p].off[2];
+      grid.Foreach_3d(B, B, [&](int i, int j, int k) {
+        int ii = i + i0, jj = j + j0, kk = k + k0;
+        ii = (ii + grid.domain.gdims[0]) % grid.domain.gdims[0];
+        jj = (jj + grid.domain.gdims[1]) % grid.domain.gdims[1];
+        kk = (kk + grid.domain.gdims[2]) % grid.domain.gdims[2];
+        EXPECT_EQ(flds(0, i, j, k), 100 * ii + 10 * jj + kk);
+      });
+    }
+  }
+}
+
 TYPED_TEST(BndTest, AddGhosts)
 {
   using Base = BndTest<TypeParam>;
