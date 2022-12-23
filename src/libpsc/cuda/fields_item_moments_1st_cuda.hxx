@@ -61,11 +61,16 @@ public:
   using Base = ItemMomentCRTP<Moment_n_1st_cuda<dim_t>, MfieldsCuda,
                               BndCuda3<MfieldsCuda>>;
   using Mfields = MfieldsCuda;
+  using storage_type = typename Base::storage_type;
+  using real_t = typename Base::real_t;
+  using space_type = typename Base::space_type;
   using moment_type =
     psc::moment::moment_n<psc::deposit::code::Deposit1stCc, dim_t>;
 
+  explicit Moment_n_1st_cuda(const Grid_t& grid) : Base{grid} {}
+
   template <typename Mparticles>
-  explicit Moment_n_1st_cuda(const Mparticles& mprts) : Base{mprts.grid()}
+  auto operator()(const Mparticles& mprts)
   {
     static int pr, pr_1, pr_2;
     if (!pr) {
@@ -79,17 +84,20 @@ public:
     auto& cmprts = *_mprts.cmprts();
 
     prof_start(pr_1);
-    Base::mres_gt_.view() = 0.;
+    Int3 ib = -mprts.grid().ibn;
+    storage_type mres =
+      psc::mflds::zeros<real_t, space_type>(mprts.grid(), 1, ib);
     prof_stop(pr_1);
 
     CudaMoments1stN<cuda_mparticles<typename Mparticles::BS>, dim_t> cmoments;
-    cmoments(cmprts, Base::mres_gt_, Base::mres_ib_);
+    cmoments(cmprts, mres, ib);
 
     prof_start(pr_2);
-    Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
+    Base::bnd_.add_ghosts(mprts.grid(), mres, ib);
     prof_stop(pr_2);
 
     prof_stop(pr);
+    return mres;
   }
 };
 
