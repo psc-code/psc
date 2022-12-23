@@ -22,7 +22,7 @@ struct MomentTest : ::testing::Test
 
   Int3 ibn = {2, 2, 2};
 
-  void make_psc()
+  const Grid_t& make_grid()
   {
     Int3 gdims = {16, 16, 16};
     if (dim_t::InvarX::value) {
@@ -52,6 +52,20 @@ struct MomentTest : ::testing::Test
     auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
 
     grid_.reset(new Grid_t{grid_domain, grid_bc, kinds, coeff, 1., -1, ibn});
+
+    return *grid_;
+  }
+
+  Mparticles& make_mprts(const psc::particle::Inject& prt)
+  {
+    const auto& grid = make_grid();
+
+    mprts_.reset(new Mparticles{grid});
+    {
+      auto injector = mprts_->injector();
+      injector[0](prt);
+    }
+    return *mprts_;
   }
 
   const Grid_t& grid()
@@ -61,6 +75,7 @@ struct MomentTest : ::testing::Test
   }
 
   std::unique_ptr<Grid_t> grid_;
+  std::unique_ptr<Mparticles> mprts_;
 };
 
 template <typename MF, typename MP, typename D>
@@ -90,18 +105,11 @@ TYPED_TEST(MomentTest, Moment_n_1)
   using Mfields = typename base_type::Mfields;
   using Mparticles = typename base_type::Mparticles;
   using real_t = typename base_type::real_t;
-
   using Moment = Moment_n_1st<Mfields, dim_t>;
 
-  this->make_psc();
+  auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 1.}, 1., 0});
   const auto& grid = this->grid();
 
-  // init particles
-  Mparticles mprts{grid};
-  {
-    auto injector = mprts.injector();
-    injector[0]({{5., 5., 5.}, {0., 0., 1.}, 1., 0});
-  }
   Moment moment{mprts};
   auto gt = moment.gt();
   for (int p = 0; p < grid.n_patches(); p++) {
@@ -123,18 +131,12 @@ TYPED_TEST(MomentTest, Moments_1st)
   using Mfields = typename TypeParam::Mfields;
   using dim_t = typename TypeParam::dim;
   using MfieldsHost = hostMirror_t<Mfields>;
-  using Moments = Moments_1st<Mparticles, MfieldsHost, dim_t>;
   using real_t = typename Mfields::real_t;
+  using Moments = Moments_1st<Mparticles, MfieldsHost, dim_t>;
 
-  this->make_psc();
+  auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 1.}, 1., 0});
   const auto& grid = this->grid();
 
-  // init particles
-  Mparticles mprts{grid};
-  {
-    auto injector = mprts.injector();
-    injector[0]({{5., 5., 5.}, {0., 0., 1.}, 1., 0});
-  }
   Moments moments{mprts};
   auto gt = moments.gt();
   for (int p = 0; p < grid.n_patches(); p++) {
@@ -157,19 +159,10 @@ TYPED_TEST(MomentTest, Moment_n_2) // FIXME, mostly copied
   using Mfields = typename base_type::Mfields;
   using Mparticles = typename base_type::Mparticles;
   using real_t = typename base_type::real_t;
-
   using Moment = Moment_n_1st<Mfields, dim_t>;
 
-  this->make_psc();
+  auto& mprts = this->make_mprts({{25., 5., 5.}, {0., 0., 1.}, 1., 0});
   const auto& grid = this->grid();
-
-  // init particles
-  Mparticles mprts{grid};
-  {
-    auto injector = mprts.injector();
-    injector[0]({{25., 5., 5.}, {0., 0., 1.}, 1., 0});
-  }
-
   int i0 = 2;
   if (dim_t::InvarX::value)
     i0 = 0;
@@ -197,15 +190,9 @@ TYPED_TEST(MomentTest, Moment_v_1st)
   using Moments = Moment_v_1st<Mfields, dim_t>;
   using real_t = typename Mfields::real_t;
 
-  this->make_psc();
+  auto& mprts = this->make_mprts({{5., 5., 5.}, {.001, .002, .003}, 1., 0});
   const auto& grid = this->grid();
 
-  // init particles
-  Mparticles mprts{grid};
-  {
-    auto injector = mprts.injector();
-    injector[0]({{5., 5., 5.}, {.001, .002, .003}, 1., 0});
-  }
   Moments moments{mprts};
   auto gt = moments.gt();
   for (int p = 0; p < grid.n_patches(); p++) {
@@ -229,15 +216,9 @@ TYPED_TEST(MomentTest, Moment_p_1st)
   using Moments = Moment_p_1st<Mfields, dim_t>;
   using real_t = typename Mfields::real_t;
 
-  this->make_psc();
+  auto& mprts = this->make_mprts({{5., 5., 5.}, {.001, .002, .003}, 1., 0});
   const auto& grid = this->grid();
 
-  // init particles
-  Mparticles mprts{grid};
-  {
-    auto injector = mprts.injector();
-    injector[0]({{5., 5., 5.}, {.001, .002, .003}, 1., 0});
-  }
   Moments moments{mprts};
   auto gt = moments.gt();
   for (int p = 0; p < grid.n_patches(); p++) {
@@ -262,15 +243,9 @@ TYPED_TEST(MomentTest, Moment_rho_1st_nc_cc)
   using real_t = typename Mfields::real_t;
   using Moment_t = Moment_rho_1st_nc<Mfields, dim_t>;
 
-  this->make_psc();
+  auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 0.}, 1., 0});
   const auto& grid = this->grid();
 
-  // init particles
-  Mparticles mprts{grid};
-  {
-    auto injector = mprts.injector();
-    injector[0]({{5., 5., 5.}, {0., 0., 0.}, 1., 0});
-  }
   Moment_t moment{mprts};
   auto gt = moment.gt();
   for (int p = 0; p < grid.n_patches(); p++) {
@@ -311,15 +286,9 @@ TYPED_TEST(MomentTest, Moment_rho_1st_nc_nc)
   using real_t = typename Mfields::real_t;
   using Moment_t = Moment_rho_1st_nc<Mfields, dim_t>;
 
-  this->make_psc();
+  auto& mprts = this->make_mprts({{10., 10., 10.}, {0., 0., 0.}, 1., 0});
   const auto& grid = this->grid();
 
-  // init particles
-  Mparticles mprts{grid};
-  {
-    auto injector = mprts.injector();
-    injector[0]({{10., 10., 10.}, {0., 0., 0.}, 1., 0});
-  }
   Moment_t moment{mprts};
   auto gt = moment.gt();
   for (int p = 0; p < grid.n_patches(); p++) {
@@ -354,18 +323,12 @@ TYPED_TEST(MomentTest, Moment_n_2nd_nc)
   using Moment = Moment_n_2nd_nc<Mfields, dim_t>;
   using real_t = typename Mfields::real_t;
 
-  this->make_psc();
-  const auto& grid = this->grid();
   const real_t w = .5f;
   const int nicell = 200; // FIXME, comes from testing.hxx
   const real_t cori = 1.f / nicell;
+  auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 1.}, w, 0});
+  const auto& grid = this->grid();
 
-  // init particles
-  Mparticles mprts{grid};
-  {
-    auto injector = mprts.injector();
-    injector[0]({{5., 5., 5.}, {0., 0., 1.}, w, 0});
-  }
   Moment moment{mprts};
   auto gt = moment.gt();
   for (int p = 0; p < grid.n_patches(); p++) {
@@ -400,18 +363,12 @@ TYPED_TEST(MomentTest, Moment_rho_2nd_nc)
   using Moment = Moment_rho_2nd_nc<Mfields, dim_t>;
   using real_t = typename Mfields::real_t;
 
-  this->make_psc();
-  const auto& grid = this->grid();
   const real_t w = .5f;
   const int nicell = 200; // FIXME, comes from testing.hxx
   const real_t cori = 1.f / nicell;
+  auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 1.}, w, 0});
+  const auto& grid = this->grid();
 
-  // init particles
-  Mparticles mprts{grid};
-  {
-    auto injector = mprts.injector();
-    injector[0]({{5., 5., 5.}, {0., 0., 1.}, w, 0});
-  }
   Moment moment{mprts};
   auto gt = moment.gt();
   for (int p = 0; p < grid.n_patches(); p++) {
