@@ -171,13 +171,6 @@ public:
   int n_comps() { return comp_names_.size(); }
   const std::vector<std::string>& comp_names() { return comp_names_; }
 
-  auto gt()
-  {
-    auto bnd = -mres_ib_;
-    return mres_gt_.view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                         _s(bnd[2], -bnd[2]));
-  }
-
   auto storage() { return mres_gt_; }
   const Int3& ib() { return mres_ib_; }
 

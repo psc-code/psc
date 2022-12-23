@@ -113,7 +113,7 @@ public:
     if (do_pfield || doaccum_tfield) {
       prof_start(pr_eval);
       auto&& item = get_item();
-      auto&& pfd = item.gt();
+      auto&& pfd = psc::interior(item.storage(), item.ib());
       prof_stop(pr_eval);
 
       if (do_pfield) {

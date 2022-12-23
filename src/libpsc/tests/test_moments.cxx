@@ -115,7 +115,7 @@ TYPED_TEST(MomentTest, Moment_n_1)
 
   Moment moment{mprts};
   EXPECT_EQ(moment.comp_names(), std::vector<std::string>{"n_test_species"});
-  auto gt = moment.gt();
+  auto gt = psc::interior(moment.storage(), moment.ib());
   for (int p = 0; p < grid.n_patches(); p++) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);
@@ -143,7 +143,7 @@ TYPED_TEST(MomentTest, Moments_1st)
   const auto& grid = this->grid();
 
   Moment moment{mprts};
-  auto gt = moment.gt();
+  auto gt = psc::interior(moment.storage(), moment.ib());
   for (int p = 0; p < grid.n_patches(); p++) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);
@@ -173,7 +173,7 @@ TYPED_TEST(MomentTest, Moment_n_2) // FIXME, mostly copied
     i0 = 0;
 
   Moment moment{mprts};
-  auto gt = moment.gt();
+  auto gt = psc::interior(moment.storage(), moment.ib());
   for (int p = 0; p < grid.n_patches(); p++) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);
@@ -201,7 +201,7 @@ TYPED_TEST(MomentTest, Moment_v_1st)
   const auto& grid = this->grid();
 
   Moment moment{mprts};
-  auto gt = moment.gt();
+  auto gt = psc::interior(moment.storage(), moment.ib());
   for (int p = 0; p < grid.n_patches(); p++) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);
@@ -229,7 +229,7 @@ TYPED_TEST(MomentTest, Moment_p_1st)
   const auto& grid = this->grid();
 
   Moment moment{mprts};
-  auto gt = moment.gt();
+  auto gt = psc::interior(moment.storage(), moment.ib());
   for (int p = 0; p < grid.n_patches(); p++) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);
@@ -257,7 +257,7 @@ TYPED_TEST(MomentTest, Moment_rho_1st_nc_cc)
   const auto& grid = this->grid();
 
   Moment moment{mprts};
-  auto gt = moment.gt();
+  auto gt = psc::interior(moment.storage(), moment.ib());
   for (int p = 0; p < grid.n_patches(); p++) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);
@@ -301,7 +301,7 @@ TYPED_TEST(MomentTest, Moment_rho_1st_nc_nc)
   const auto& grid = this->grid();
 
   Moment moment{mprts};
-  auto gt = moment.gt();
+  auto gt = psc::interior(moment.storage(), moment.ib());
   for (int p = 0; p < grid.n_patches(); p++) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);
@@ -339,7 +339,7 @@ TYPED_TEST(MomentTest, Moment_n_2nd_nc)
   const auto& grid = this->grid();
 
   Moment moment{mprts};
-  auto gt = moment.gt();
+  auto gt = psc::interior(moment.storage(), moment.ib());
   for (int p = 0; p < grid.n_patches(); p++) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);
@@ -377,7 +377,7 @@ TYPED_TEST(MomentTest, Moment_rho_2nd_nc)
   const auto& grid = this->grid();
 
   Moment moment{mprts};
-  auto gt = moment.gt();
+  auto gt = psc::interior(moment.storage(), moment.ib());
   for (int p = 0; p < grid.n_patches(); p++) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);

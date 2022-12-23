@@ -152,7 +152,7 @@ struct MarderCuda : MarderBase
     bnd_.fill_ghosts(mflds, EX, EX + 3);
 
     item_rho_(mprts);
-    auto&& rho = item_rho_.gt();
+    auto&& rho = psc::interior(item_rho_.storage(), item_rho_.ib());
 
     for (int i = 0; i < loop_; i++) {
       calc_aid_fields(mflds, rho);
