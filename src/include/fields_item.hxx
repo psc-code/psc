@@ -174,14 +174,24 @@ public:
   auto storage() { return mres_gt_; }
   const Int3& ib() { return mres_ib_; }
 
-protected:
-  ItemMomentCRTP(const Grid_t& grid)
+  explicit ItemMomentCRTP(const Grid_t& grid)
     : comp_names_{Derived::moment_type::comp_names(grid.kinds)},
       mres_gt_(psc::mflds::empty<real_t, space_type>(
         grid, int(comp_names_.size()), -grid.ibn)),
       mres_ib_{-grid.ibn},
       bnd_{grid}
   {}
+
+  template <typename Mparticles>
+  auto operator()(const Mparticles& mprts)
+  {
+    Int3 ib = -mprts.grid().ibn;
+    storage_type mres =
+      psc::mflds::zeros<real_t, space_type>(mprts.grid(), n_comps(), ib);
+    typename Derived::moment_type{}(mres, ib, mprts);
+    bnd_.add_ghosts(mprts.grid(), mres, ib);
+    return mres;
+  }
 
 protected:
   std::vector<std::string> comp_names_;

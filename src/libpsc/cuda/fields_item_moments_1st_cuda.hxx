@@ -19,14 +19,13 @@ struct Moment_rho_1st_nc_cuda
 {
   using Base = ItemMomentCRTP<Moment_rho_1st_nc_cuda<dim_t>, MfieldsCuda,
                               BndCuda3<MfieldsCuda>>;
-  using Mfields = MfieldsCuda;
   using storage_type = typename Base::storage_type;
   using real_t = typename Base::real_t;
   using space_type = typename Base::space_type;
   using moment_type =
     psc::moment::moment_rho<psc::deposit::code::Deposit1stNc, dim_t>;
 
-  explicit Moment_rho_1st_nc_cuda(const Grid_t& grid) : Base{grid} {}
+  using Base::Base;
 
   template <typename Mparticles>
   auto operator()(Mparticles& mprts)
@@ -67,7 +66,7 @@ public:
   using moment_type =
     psc::moment::moment_n<psc::deposit::code::Deposit1stCc, dim_t>;
 
-  explicit Moment_n_1st_cuda(const Grid_t& grid) : Base{grid} {}
+  using Base::Base;
 
   template <typename Mparticles>
   auto operator()(const Mparticles& mprts)
