@@ -44,4 +44,8 @@ struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MF, D>, MF>
     moment_type{}(Base::mres_gt_, Base::mres_ib_, mprts);
     Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
   }
+
+  auto& operator()() { return Base::mres_gt_; }
+
+  auto storage() = delete;
 };

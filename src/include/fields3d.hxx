@@ -577,6 +577,14 @@ GT_INLINE auto gtensor(const Grid_t& grid, int n_comps, Int3 ibn = {})
      grid.ldims[2] + 2 * ibn[2], n_comps, grid.n_patches()});
 }
 
+template <typename E>
+GT_INLINE auto interior(const Grid_t& grid, E&& e)
+{
+  auto ibn = (Int3{e.shape(0), e.shape(1), e.shape(2)} - grid.ldims) / 2;
+  return std::forward<E>(e).view(_s(ibn[0], -ibn[0]), _s(ibn[1], -ibn[1]),
+                                 _s(ibn[2], -ibn[2]));
+}
+
 } // namespace mflds
 
 } // namespace psc

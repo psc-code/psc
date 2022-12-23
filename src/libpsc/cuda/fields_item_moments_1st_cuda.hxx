@@ -34,6 +34,10 @@ struct Moment_rho_1st_nc_cuda
     cmoments(cmprts, Base::mres_gt_, Base::mres_ib_);
     Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
   }
+
+  auto& operator()() { return Base::mres_gt_; }
+
+  auto storage() = delete;
 };
 
 // ======================================================================
