@@ -566,6 +566,19 @@ GT_INLINE auto interior(E&& e, const Int3& ib)
                                  _s(-ib[2], ib[2]));
 }
 
+namespace mflds
+{
+
+template <typename R, typename S = gt::space::host>
+GT_INLINE auto gtensor(const Grid_t& grid, int n_comps, Int3 ibn = {})
+{
+  return gt::empty<R, S>(
+    {grid.ldims[0] + 2 * ibn[0], grid.ldims[1] + 2 * ibn[1],
+     grid.ldims[2] + 2 * ibn[2], n_comps, grid.n_patches()});
+}
+
+} // namespace mflds
+
 } // namespace psc
 
 #endif

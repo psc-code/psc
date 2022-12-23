@@ -163,9 +163,9 @@ template <typename Derived, typename MF, typename Bnd = Bnd_<MF>>
 class ItemMomentCRTP : public MFexpression<Derived>
 {
 public:
-  using Mfields = MF;
-  using Real = typename Mfields::real_t;
-  using storage_type = typename Mfields::Storage;
+  using storage_type = typename MF::Storage;
+  using real_t = typename storage_type::value_type;
+  using space_type = typename storage_type::space_type;
 
   static std::string name() { return Derived::moment_type::name(); }
   int n_comps() { return comp_names_.size(); }
@@ -177,18 +177,15 @@ public:
 protected:
   ItemMomentCRTP(const Grid_t& grid)
     : comp_names_{Derived::moment_type::comp_names(grid.kinds)},
-      mres_{grid, int(comp_names_.size()), grid.ibn},
-      mres_gt_(mres_.storage()), // FIXME, nvcc chokes on braces???
+      mres_gt_(psc::mflds::gtensor<real_t, space_type>(
+        grid, int(comp_names_.size()), grid.ibn)),
       mres_ib_{-grid.ibn},
       bnd_{grid}
   {}
 
 protected:
   std::vector<std::string> comp_names_;
-  storage_type& mres_gt_;
+  storage_type mres_gt_;
   Int3 mres_ib_;
-  ItemMomentBnd<Mfields, Bnd> bnd_;
-
-private:
-  Mfields mres_;
+  ItemMomentBnd<MF, Bnd> bnd_;
 };
