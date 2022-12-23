@@ -20,7 +20,7 @@ public:
   using moment_type =
     psc::moment::moment_n<psc::deposit::code::Deposit1stCc, dim_t>;
 
-  static std::string name_impl() { return "n_1st"; }
+  static std::string name_impl() { return moment_type::name(); }
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return addKindSuffix({"n"}, grid.kinds);
@@ -49,7 +49,7 @@ public:
   using moment_type =
     psc::moment::moment_v<psc::deposit::code::Deposit1stCc, dim_t>;
 
-  static std::string name_impl() { return "v_1st"; }
+  static std::string name_impl() { return moment_type::name(); }
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return addKindSuffix({"vx", "vy", "vz"}, grid.kinds);
@@ -78,7 +78,7 @@ public:
   using moment_type =
     psc::moment::moment_p<psc::deposit::code::Deposit1stCc, dim_t>;
 
-  static std::string name_impl() { return "p_1st"; }
+  static std::string name_impl() { return moment_type::name(); }
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return addKindSuffix({"px", "py", "pz"}, grid.kinds);
@@ -104,10 +104,7 @@ struct Moment_T_1st
   using moment_type =
     psc::moment::moment_T<psc::deposit::code::Deposit1stCc, dim_t>;
 
-  constexpr static char const* name = "T_1st";
-
-  static int n_comps(const Grid_t& grid) { return 3 * grid.kinds.size(); }
-
+  static std::string name_impl() { return moment_type::name(); }
   static std::vector<std::string> comp_names(const Grid_t& grid)
   {
     return addKindSuffix({"Txx", "Tyy", "Tzz", "Txy", "Txz", "Tyz"},
@@ -140,7 +137,7 @@ public:
   using moment_type =
     psc::moment::moment_all<psc::deposit::code::Deposit1stCc, dim_t>;
 
-  static std::string name_impl() { return "all_1st"; }
+  static std::string name_impl() { return moment_type::name(); }
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return addKindSuffix({"rho", "jx", "jy", "jz", "px", "py", "pz", "txx",
@@ -182,7 +179,6 @@ public:
   using Sub = Moments_1st<MparticlesSingle, Mfields, D>;
 
   static std::string name_impl() { return Sub::name_impl(); }
-
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return Sub::comp_names_impl(grid);

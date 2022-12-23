@@ -18,7 +18,7 @@ public:
   using moment_type =
     psc::moment::moment_n<psc::deposit::code::Deposit2ndNc, dim_t>;
 
-  static std::string name_impl() { return "n_2nd_nc"; }
+  static std::string name_impl() { return moment_type::name(); }
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return addKindSuffix({"n"}, grid.kinds);
@@ -47,7 +47,7 @@ public:
   using moment_type =
     psc::moment::moment_rho<psc::deposit::code::Deposit2ndNc, dim_t>;
 
-  static std::string name_impl() { return "rho_2nd_nc"; }
+  static std::string name_impl() { return moment_type::name(); }
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return {"rho"};

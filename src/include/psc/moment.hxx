@@ -121,6 +121,8 @@ class moment_n
 public:
   using dim_t = D;
 
+  static std::string name() { return "n" + DepositCode<float, D>::suffix(); }
+
   template <typename MFLDS_GT, typename MP>
   void operator()(MFLDS_GT& mflds_gt, const Int3& ib, const MP& mprts)
   {
@@ -141,6 +143,8 @@ class moment_rho
 public:
   using dim_t = D;
 
+  static std::string name() { return "rho" + DepositCode<float, D>::suffix(); }
+
   template <typename MFLDS_GT, typename MP>
   void operator()(MFLDS_GT& mflds_gt, const Int3& ib, const MP& mprts)
   {
@@ -159,6 +163,8 @@ class moment_v
 {
 public:
   using dim_t = D;
+
+  static std::string name() { return "v" + DepositCode<float, D>::suffix(); }
 
   template <typename MFLDS_GT, typename MP>
   void operator()(MFLDS_GT& mflds_gt, const Int3& ib, const MP& mprts)
@@ -184,6 +190,8 @@ class moment_p
 public:
   using dim_t = D;
 
+  static std::string name() { return "p" + DepositCode<float, D>::suffix(); }
+
   template <typename MFLDS_GT, typename MP>
   void operator()(MFLDS_GT& mflds_gt, const Int3& ib, const MP& mprts)
   {
@@ -204,6 +212,8 @@ class moment_T
 {
 public:
   using dim_t = D;
+
+  static std::string name() { return "T" + DepositCode<float, D>::suffix(); }
 
   template <typename MFLDS_GT, typename MP>
   void operator()(MFLDS_GT& mflds_gt, const Int3& ib, const MP& mprts)
@@ -231,6 +241,8 @@ class moment_all
 {
 public:
   using dim_t = D;
+
+  static std::string name() { return "all" + DepositCode<float, D>::suffix(); }
 
   template <typename MFLDS_GT, typename MP>
   void operator()(MFLDS_GT& mflds_gt, const Int3& ib, const MP& mprts)
