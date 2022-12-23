@@ -178,7 +178,7 @@ protected:
   ItemMomentCRTP(const Grid_t& grid)
     : comp_names_{Derived::moment_type::comp_names(grid.kinds)},
       mres_gt_(psc::mflds::empty<real_t, space_type>(
-        grid, int(comp_names_.size()), grid.ibn)),
+        grid, int(comp_names_.size()), -grid.ibn)),
       mres_ib_{-grid.ibn},
       bnd_{grid}
   {}

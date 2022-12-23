@@ -570,19 +570,19 @@ namespace mflds
 {
 
 template <typename R, typename S = gt::space::host>
-GT_INLINE auto empty(const Grid_t& grid, int n_comps, Int3 ibn = {})
+GT_INLINE auto empty(const Grid_t& grid, int n_comps, Int3 ib = {})
 {
-  return gt::empty<R, S>(
-    {grid.ldims[0] + 2 * ibn[0], grid.ldims[1] + 2 * ibn[1],
-     grid.ldims[2] + 2 * ibn[2], n_comps, grid.n_patches()});
+  return gt::empty<R, S>({grid.ldims[0] - 2 * ib[0], grid.ldims[1] - 2 * ib[1],
+                          grid.ldims[2] - 2 * ib[2], n_comps,
+                          grid.n_patches()});
 }
 
 template <typename R, typename S = gt::space::host>
-GT_INLINE auto zeros(const Grid_t& grid, int n_comps, Int3 ibn = {})
+GT_INLINE auto zeros(const Grid_t& grid, int n_comps, Int3 ib = {})
 {
-  return gt::zeros<R, S>(
-    {grid.ldims[0] + 2 * ibn[0], grid.ldims[1] + 2 * ibn[1],
-     grid.ldims[2] + 2 * ibn[2], n_comps, grid.n_patches()});
+  return gt::zeros<R, S>({grid.ldims[0] - 2 * ib[0], grid.ldims[1] - 2 * ib[1],
+                          grid.ldims[2] - 2 * ib[2], n_comps,
+                          grid.n_patches()});
 }
 
 template <typename E>

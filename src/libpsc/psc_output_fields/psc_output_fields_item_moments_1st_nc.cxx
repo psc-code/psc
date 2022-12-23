@@ -46,7 +46,7 @@ struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MF, D>, MF>
   {
     Int3 ib = -mprts.grid().ibn;
     storage_type mres =
-      psc::mflds::zeros<real_t, space_type>(mprts.grid(), 1, -ib);
+      psc::mflds::zeros<real_t, space_type>(mprts.grid(), 1, ib);
     moment_type{}(mres, ib, mprts);
     Base::bnd_.add_ghosts(mprts.grid(), mres, ib);
     return mres;
