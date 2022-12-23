@@ -20,11 +20,13 @@ struct Moment_rho_1st_nc_cuda
   using Base = ItemMomentCRTP<Moment_rho_1st_nc_cuda<dim_t>, MfieldsCuda,
                               BndCuda3<MfieldsCuda>>;
   using Mfields = MfieldsCuda;
+  using moment_type =
+    psc::moment::moment_rho<psc::deposit::code::Deposit1stNc, dim_t>;
 
-  static std::string name_impl() { return "rho_1st_nc"; }
+  static std::string name_impl() { return moment_type::name(); }
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
-    return {"rho"};
+    return moment_type::comp_names(grid.kinds);
   }
 
   Moment_rho_1st_nc_cuda(const Grid_t& grid) : Base{grid} {}
@@ -54,11 +56,13 @@ public:
   using Base = ItemMomentCRTP<Moment_n_1st_cuda<dim_t>, MfieldsCuda,
                               BndCuda3<MfieldsCuda>>;
   using Mfields = MfieldsCuda;
+  using moment_type =
+    psc::moment::moment_n<psc::deposit::code::Deposit1stCc, dim_t>;
 
-  static std::string name_impl() { return "n_1st_cuda"; }
+  static std::string name_impl() { return moment_type::name(); }
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
-    return addKindSuffix({"n"}, grid.kinds);
+    return moment_type::comp_names(grid.kinds);
   }
 
   template <typename Mparticles>
@@ -104,13 +108,13 @@ public:
   using Mfields = MfieldsCuda;
   using value_type = typename Mfields::real_t;
   using space = gt::space::device;
+  using moment_type =
+    psc::moment::moment_all<psc::deposit::code::Deposit1stCc, dim_t>;
 
-  static std::string name_impl() { return "all_1st"; }
+  static std::string name_impl() { return moment_type::name(); }
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
-    return addKindSuffix({"rho", "jx", "jy", "jz", "px", "py", "pz", "txx",
-                          "tyy", "tzz", "txy", "tyz", "tzx"},
-                         grid.kinds);
+    return moment_type::comp_names(grid.kinds);
   }
 
   template <typename Mparticles>

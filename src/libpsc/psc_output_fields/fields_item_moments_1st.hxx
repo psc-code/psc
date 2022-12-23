@@ -177,13 +177,13 @@ public:
   using Mparticles = MparticlesCuda<BS>;
   using Mfields = MfieldsSingle;
   using real_t = Mfields::real_t;
+  using moment_type =
+    psc::moment::moment_all<psc::deposit::code::Deposit1stCc, dim_t>;
 
-  using Sub = Moments_1st<MparticlesSingle, Mfields, D>;
-
-  static std::string name_impl() { return Sub::name_impl(); }
+  static std::string name_impl() { return moment_type::name(); }
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
-    return Sub::comp_names_impl(grid);
+    return moment_type::comp_names(grid.kinds);
   }
 
   explicit Moments_1st(const Mparticles& _mprts) : Base{_mprts.grid()}
@@ -203,7 +203,7 @@ public:
     prof_stop(pr_A);
 
     prof_start(pr_B);
-    typename Sub::moment_type()(Base::mres_gt_, Base::mres_ib_, h_mprts);
+    moment_type()(Base::mres_gt_, Base::mres_ib_, h_mprts);
     prof_stop(pr_B);
 
     prof_start(pr_C);
