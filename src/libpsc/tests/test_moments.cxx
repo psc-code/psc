@@ -115,28 +115,12 @@ TYPED_TEST(MomentTest, Moment_n_1)
   }
 }
 
-template <typename Mfields>
-struct MfieldsToHost
-{
-  using type = Mfields;
-};
-
-#ifdef USE_CUDA
-
-template <>
-struct MfieldsToHost<MfieldsCuda>
-{
-  using type = MfieldsSingle;
-};
-
-#endif
-
 TYPED_TEST(MomentTest, Moments_1st)
 {
   using Mparticles = typename TypeParam::Mparticles;
   using Mfields = typename TypeParam::Mfields;
   using dim_t = typename TypeParam::dim;
-  using MfieldsHost = typename MfieldsToHost<Mfields>::type;
+  using MfieldsHost = hostMirror_t<Mfields>;
   using Moments = Moments_1st<Mparticles, MfieldsHost, dim_t>;
   using real_t = typename Mfields::real_t;
 
