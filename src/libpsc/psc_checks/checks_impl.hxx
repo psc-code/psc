@@ -51,7 +51,7 @@ struct Checks_
   // ctor
 
   Checks_(const Grid_t& grid, MPI_Comm comm, const ChecksParams& params)
-    : ChecksParams(params), comm_{comm}, rho_{grid, 1, {}}
+    : ChecksParams(params), comm_{comm}
   {}
 
   // ======================================================================
@@ -137,15 +137,14 @@ struct Checks_
       return;
     }
 
-    rho_.storage() = Moment_t{mprts}.gt();
+    auto item_rho = Moment_t{mprts};
     auto dive = Item_dive<MfieldsState>(mflds);
+    auto rho_gt = item_rho.gt();
     auto&& dive_gt = view_interior(dive.gt(), dive.ibn());
 
     double eps = gauss_threshold;
     double max_err = 0.;
     for (int p = 0; p < dive.n_patches(); p++) {
-      auto Rho = make_Fields3d<dim_xyz>(rho_[p]);
-
       int l[3] = {0, 0, 0}, r[3] = {0, 0, 0};
       for (int d = 0; d < 3; d++) {
         if (grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL &&
@@ -154,20 +153,18 @@ struct Checks_
         }
       }
 
-      grid.Foreach_3d(0, 0, [&](int jx, int jy, int jz) {
-        if (jy < l[1] || jz < l[2] || jy >= grid.ldims[1] - r[1] ||
-            jz >= grid.ldims[2] - r[2]) {
-          // nothing
+      grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
+        if (j < l[1] || k < l[2] || j >= grid.ldims[1] - r[1] ||
+            k >= grid.ldims[2] - r[2]) {
+          // do nothing
         } else {
-          double v_rho = Rho(0, jx, jy, jz);
-          double v_dive = dive_gt(jx, jy, jz, 0, p);
-          max_err = fmax(max_err, fabs(v_dive - v_rho));
-#if 1
-          if (fabs(v_dive - v_rho) > eps) {
-            printf("(%d,%d,%d): %g -- %g diff %g\n", jx, jy, jz, v_dive, v_rho,
+          double v_rho = rho_gt(i, j, k, 0, p);
+          double v_dive = dive_gt(i, j, k, 0, p);
+          max_err = std::max(max_err, std::abs(v_dive - v_rho));
+          if (std::abs(v_dive - v_rho) > eps) {
+            printf("(%d,%d,%d): %g -- %g diff %g\n", i, j, k, v_dive, v_rho,
                    v_dive - v_rho);
           }
-#endif
         }
       });
     }
@@ -185,9 +182,8 @@ struct Checks_
         writer_gauss_.open("gauss");
       }
       writer_gauss_.begin_step(grid.timestep(), grid.timestep() * grid.dt);
-      writer_gauss_.write(rho_.gt(), grid, "rho", {"rho"});
-      writer_gauss_.write(dive.gt(), dive.grid(), dive.name(),
-                          dive.comp_names());
+      writer_gauss_.write(rho_gt, grid, "rho", {"rho"});
+      writer_gauss_.write(dive_gt, grid, dive.name(), dive.comp_names());
       writer_gauss_.end_step();
     }
 
@@ -196,7 +192,6 @@ struct Checks_
 
   // state
   MPI_Comm comm_;
-  Mfields rho_;
   gt::gtensor<real_t, 5> rho_m_gt_;
   WriterDefault writer_continuity_;
   WriterDefault writer_gauss_;
