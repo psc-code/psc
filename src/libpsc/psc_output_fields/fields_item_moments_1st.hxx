@@ -114,6 +114,7 @@ public:
 
   explicit Moments_1st(const Mparticles& mprts) : Base{mprts.grid()}
   {
+    Base::mres_gt_.view() = 0.f;
     moment_type{}(Base::mres_gt_, Base::mres_ib_, mprts);
     Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
   }
