@@ -114,6 +114,7 @@ TYPED_TEST(MomentTest, Moment_n_1)
   const auto& grid = this->grid();
 
   Moment moment{mprts};
+  EXPECT_EQ(moment.comp_names(), std::vector<std::string>{"n_test_species"});
   auto gt = moment.gt();
   for (int p = 0; p < grid.n_patches(); p++) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {

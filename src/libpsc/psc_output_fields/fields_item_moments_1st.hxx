@@ -23,7 +23,7 @@ public:
   static std::string name_impl() { return moment_type::name(); }
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
-    return addKindSuffix({"n"}, grid.kinds);
+    return moment_type::comp_names(grid.kinds);
   }
 
   template <typename MP>
@@ -52,7 +52,7 @@ public:
   static std::string name_impl() { return moment_type::name(); }
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
-    return addKindSuffix({"vx", "vy", "vz"}, grid.kinds);
+    return moment_type::comp_names(grid.kinds);
   }
 
   template <typename Mparticles>
@@ -81,7 +81,7 @@ public:
   static std::string name_impl() { return moment_type::name(); }
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
-    return addKindSuffix({"px", "py", "pz"}, grid.kinds);
+    return moment_type::comp_names(grid.kinds);
   }
 
   template <typename Mparticles>
@@ -105,11 +105,15 @@ struct Moment_T_1st
     psc::moment::moment_T<psc::deposit::code::Deposit1stCc, dim_t>;
 
   static std::string name_impl() { return moment_type::name(); }
-  static std::vector<std::string> comp_names(const Grid_t& grid)
+  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
-    return addKindSuffix({"Txx", "Tyy", "Tzz", "Txy", "Txz", "Tyz"},
-                         grid.kinds);
+    return moment_type::comp_names(grid.kinds);
   }
+  // static std::vector<std::string> comp_names(const Grid_t& grid)
+  // {
+  //   return addKindSuffix({"Txx", "Tyy", "Tzz", "Txy", "Txz", "Tyz"},
+  //                        grid.kinds);
+  // }
 
   template <typename Mparticles>
   static void run(Mfields& mflds, Mparticles& mprts)
@@ -140,9 +144,7 @@ public:
   static std::string name_impl() { return moment_type::name(); }
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
-    return addKindSuffix({"rho", "jx", "jy", "jz", "px", "py", "pz", "txx",
-                          "tyy", "tzz", "txy", "tyz", "tzx"},
-                         grid.kinds);
+    return moment_type::comp_names(grid.kinds);
   }
 
   explicit Moments_1st(const Mparticles& mprts) : Base{mprts.grid()}

@@ -122,6 +122,10 @@ public:
   using dim_t = D;
 
   static std::string name() { return "n" + DepositCode<float, D>::suffix(); }
+  static std::vector<std::string> comp_names(const Grid_t::Kinds& kinds)
+  {
+    return addKindSuffix({"n"}, kinds);
+  }
 
   template <typename MFLDS_GT, typename MP>
   void operator()(MFLDS_GT& mflds_gt, const Int3& ib, const MP& mprts)
@@ -144,6 +148,10 @@ public:
   using dim_t = D;
 
   static std::string name() { return "rho" + DepositCode<float, D>::suffix(); }
+  static std::vector<std::string> comp_names(const Grid_t::Kinds& kinds)
+  {
+    return {"rho"};
+  }
 
   template <typename MFLDS_GT, typename MP>
   void operator()(MFLDS_GT& mflds_gt, const Int3& ib, const MP& mprts)
@@ -165,6 +173,10 @@ public:
   using dim_t = D;
 
   static std::string name() { return "v" + DepositCode<float, D>::suffix(); }
+  static std::vector<std::string> comp_names(const Grid_t::Kinds& kinds)
+  {
+    return addKindSuffix({"vx", "vy", "vz"}, kinds);
+  }
 
   template <typename MFLDS_GT, typename MP>
   void operator()(MFLDS_GT& mflds_gt, const Int3& ib, const MP& mprts)
@@ -191,6 +203,10 @@ public:
   using dim_t = D;
 
   static std::string name() { return "p" + DepositCode<float, D>::suffix(); }
+  static std::vector<std::string> comp_names(const Grid_t::Kinds& kinds)
+  {
+    return addKindSuffix({"px", "py", "pz"}, kinds);
+  }
 
   template <typename MFLDS_GT, typename MP>
   void operator()(MFLDS_GT& mflds_gt, const Int3& ib, const MP& mprts)
@@ -214,6 +230,10 @@ public:
   using dim_t = D;
 
   static std::string name() { return "T" + DepositCode<float, D>::suffix(); }
+  static std::vector<std::string> comp_names(const Grid_t::Kinds& kinds)
+  {
+    return addKindSuffix({"Txx", "Tyy", "Tzz", "Txy", "Txz", "Tyz"}, kinds);
+  }
 
   template <typename MFLDS_GT, typename MP>
   void operator()(MFLDS_GT& mflds_gt, const Int3& ib, const MP& mprts)
@@ -243,6 +263,12 @@ public:
   using dim_t = D;
 
   static std::string name() { return "all" + DepositCode<float, D>::suffix(); }
+  static std::vector<std::string> comp_names(const Grid_t::Kinds& kinds)
+  {
+    return addKindSuffix({"rho", "jx", "jy", "jz", "px", "py", "pz", "txx",
+                          "tyy", "tzz", "txy", "tyz", "tzx"},
+                         kinds);
+  }
 
   template <typename MFLDS_GT, typename MP>
   void operator()(MFLDS_GT& mflds_gt, const Int3& ib, const MP& mprts)
