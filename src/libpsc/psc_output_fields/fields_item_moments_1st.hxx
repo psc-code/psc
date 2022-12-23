@@ -37,8 +37,6 @@ public:
     return addKindSuffix({"n"}, grid.kinds);
   }
 
-  Int3 ibn() const { return {}; }
-
   template <typename MP>
   explicit Moment_n_1st(const MP& mprts) : Base{mprts.grid()}
   {
@@ -153,7 +151,6 @@ public:
   using moment_type =
     psc::moment::moment_all<psc::deposit::code::Deposit1stCc, dim_t>;
 
-  constexpr static int n_moments = 13;
   static std::string name_impl() { return "all_1st"; }
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
@@ -194,7 +191,6 @@ public:
 
   using Sub = Moments_1st<MparticlesSingle, Mfields, D>;
 
-  constexpr static int n_moments = Sub::n_moments;
   static std::string name_impl() { return "all_1st"; }
 
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
@@ -228,7 +224,7 @@ public:
     psc::moment::deposit_1st_cc<dim_t>(
       Base::mres_gt_, Base::mres_ib_, h_mprts,
       [&](auto& deposit_one, const auto& prt) {
-        int mm = prt.kind() * n_moments;
+        int mm = prt.kind() * 13;
         real_t vxi[3];
         psc::moment::_particle_calc_vxi(prt, vxi);
         deposit_one(mm + 0, prt.q());

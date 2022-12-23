@@ -55,7 +55,6 @@ public:
   using Mparticles = _Mparticles;
   using Mfields = MfieldsCuda;
 
-  constexpr static int n_moments = 1;
   static std::string name_impl() { return "n_1st_cuda"; }
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
@@ -106,7 +105,6 @@ public:
   using value_type = typename Mfields::real_t;
   using space = gt::space::device;
 
-  constexpr static int n_moments = 13;
   static std::string name_impl() { return "all_1st"; }
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
@@ -115,14 +113,7 @@ public:
                          grid.kinds);
   }
 
-  explicit Moment_1st_cuda(const Grid_t& grid) : Base{grid} {}
-
   explicit Moment_1st_cuda(const Mparticles& mprts) : Base{mprts.grid()}
-  {
-    update(mprts);
-  }
-
-  void update(const Mparticles& mprts)
   {
     static int pr, pr_1, pr_2, pr_3;
     if (!pr) {
