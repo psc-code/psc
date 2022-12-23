@@ -46,10 +46,7 @@ struct ChecksCuda
   using Moment_t = Moment_rho_1st_nc_cuda<Dim>;
 
   ChecksCuda(const Grid_t& grid, MPI_Comm comm, const ChecksParams& params)
-    : ChecksParams(params),
-      item_rho_{grid},
-      item_rho_m_{grid},
-      item_rho_p_{grid}
+    : ChecksParams(params), item_rho_{grid}, item_rho_m_{grid},
   {}
 
   void continuity_before_particle_push(Mparticles& mprts)
@@ -72,14 +69,15 @@ struct ChecksCuda
       return;
     }
 
-    item_rho_p_(mprts);
+    Moment_t item_rho_p{grid};
+    item_rho_p(mprts);
 
     auto item_divj = Item_divj<MfieldsStateCuda>(mflds);
 
-    auto&& rho_p = gt::host_mirror(item_rho_p_.gt());
+    auto&& rho_p = gt::host_mirror(item_rho_p.gt());
     auto&& rho_m = gt::host_mirror(item_rho_m_.gt());
     auto&& h_divj = gt::host_mirror(item_divj.gt());
-    gt::copy(gt::eval(item_rho_p_.gt()), rho_p);
+    gt::copy(gt::eval(item_rho_p.gt()), rho_p);
     gt::copy(gt::eval(item_rho_m_.gt()), rho_m);
     gt::copy(gt::eval(item_divj.gt()), h_divj);
 
@@ -198,7 +196,6 @@ struct ChecksCuda
   }
 
 private:
-  Moment_t item_rho_p_;
   Moment_t item_rho_m_;
   Moment_t item_rho_;
 };
