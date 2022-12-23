@@ -106,7 +106,9 @@ struct CudaBnd
   // ----------------------------------------------------------------------
   // ctor
 
-  CudaBnd(const Grid_t& grid, Int3 ibn) {}
+  CudaBnd(const Grid_t& grid, Int3 ibn)
+    : balance_generation_cnt_{psc_balance_generation_cnt}
+  {}
 
   CudaBnd(const CudaBnd& bnd) = delete;
   CudaBnd& operator=(const CudaBnd& bnd) = delete;
@@ -205,6 +207,11 @@ struct CudaBnd
   void add_ghosts(const Grid_t& grid, storage_type& mflds_gt,
                   const Int3& mflds_ib, int mb, int me)
   {
+    if (psc_balance_generation_cnt != balance_generation_cnt_) {
+      clear();
+      balance_generation_cnt_ = psc_balance_generation_cnt;
+    }
+
     mrc_ddc_multi* sub = mrc_ddc_multi(grid.ddc());
 
     run(grid, mflds_gt, mflds_ib, mb, me, &sub->add_ghosts2, maps_add_,
@@ -217,6 +224,11 @@ struct CudaBnd
   void fill_ghosts(const Grid_t& grid, storage_type& mflds_gt,
                    const Int3& mflds_ib, int mb, int me)
   {
+    if (psc_balance_generation_cnt != balance_generation_cnt_) {
+      clear();
+      balance_generation_cnt_ = psc_balance_generation_cnt;
+    }
+
     // FIXME
     // I don't think we need as many points, and only stencil star
     // rather then box
@@ -478,4 +490,5 @@ struct CudaBnd
 private:
   std::unordered_map<int, Maps> maps_add_;
   std::unordered_map<int, Maps> maps_fill_;
+  int balance_generation_cnt_;
 };
