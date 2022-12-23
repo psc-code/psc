@@ -345,44 +345,6 @@ TYPED_TEST(MomentTest, Moment_rho_1st_nc_nc)
   }
 }
 
-TYPED_TEST(MomentTest, Moment_n_2nd_nc)
-{
-  using Mparticles = typename TypeParam::Mparticles;
-  using Mfields = typename TypeParam::Mfields;
-  using dim_t = typename TypeParam::dim;
-  using Moment = Moment_n_2nd_nc<Mfields, dim_t>;
-  using real_t = typename Mfields::real_t;
-
-  EXPECT_EQ(Moment::name(), "n_2nd_nc");
-  auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 1.}, this->w, 0});
-  const auto& grid = this->grid();
-
-  Moment moment{mprts};
-  auto gt = psc::interior(moment.storage(), moment.ib());
-  for (int p = 0; p < grid.n_patches(); p++) {
-    grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-      real_t val = gt(i, j, k, 0, p);
-      if (std::is_same<dim_t, dim_xyz>::value) {
-        if ((i == 0 || i == 1) && (j == 0 || j == 1) && (k == 0 || k == 1)) {
-          EXPECT_NEAR(val, this->w / this->nicell / 8., this->eps)
-            << "ijk " << i << " " << j << " " << k;
-        } else {
-          EXPECT_NEAR(val, 0., this->eps)
-            << "ijk " << i << " " << j << " " << k;
-        }
-      } else if (std::is_same<dim_t, dim_yz>::value) {
-        if ((j == 0 || j == 1) && (k == 0 || k == 1)) {
-          EXPECT_NEAR(val, this->w / this->nicell / 4., this->eps)
-            << "ijk " << i << " " << j << " " << k;
-        } else {
-          EXPECT_NEAR(val, 0., this->eps)
-            << "ijk " << i << " " << j << " " << k;
-        }
-      }
-    });
-  }
-}
-
 TYPED_TEST(MomentTest, Moment_rho_2nd_nc)
 {
   using Mparticles = typename TypeParam::Mparticles;
