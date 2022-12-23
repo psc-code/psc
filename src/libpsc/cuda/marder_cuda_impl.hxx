@@ -175,5 +175,5 @@ struct MarderCuda : MarderBase
   Mfields rho_;
   Mfields res_;
 
-  Moment_rho_1st_nc_cuda<Mparticles, dim> item_rho_;
+  Moment_rho_1st_nc_cuda<dim> item_rho_;
 };

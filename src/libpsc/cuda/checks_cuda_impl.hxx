@@ -43,7 +43,7 @@ struct ChecksCuda
   using Mfields = MfieldsSingle;
   using BS = typename Mparticles::BS;
   using Dim = typename BS_to_Dim<BS>::Dim;
-  using Moment_t = Moment_rho_1st_nc_cuda<Mparticles, Dim>;
+  using Moment_t = Moment_rho_1st_nc_cuda<Dim>;
 
   ChecksCuda(const Grid_t& grid, MPI_Comm comm, const ChecksParams& params)
     : ChecksParams(params),
