@@ -20,22 +20,30 @@ struct Moment_rho_1st_nc_cuda
   using Base = ItemMomentCRTP<Moment_rho_1st_nc_cuda<dim_t>, MfieldsCuda,
                               BndCuda3<MfieldsCuda>>;
   using Mfields = MfieldsCuda;
+  using storage_type = typename Base::storage_type;
+  using real_t = typename Base::real_t;
+  using space_type = typename Base::space_type;
   using moment_type =
     psc::moment::moment_rho<psc::deposit::code::Deposit1stNc, dim_t>;
 
   explicit Moment_rho_1st_nc_cuda(const Grid_t& grid) : Base{grid} {}
 
   template <typename Mparticles>
-  auto& operator()(Mparticles& mprts)
+  auto operator()(Mparticles& mprts)
   {
     auto& cmprts = *mprts.cmprts();
 
-    Base::mres_gt_.view() = 0.;
+    Int3 ib = -mprts.grid().ibn;
+    // FIXME, gt::gtensor and psc::gtensor are slightly different, and ideally
+    // zeros() shouldn't actually allocate, but probably it does, so this wastes
+    // memory and a copy
+    storage_type mres =
+      psc::mflds::zeros<real_t, space_type>(mprts.grid(), 1, -ib);
     CudaMoments1stNcRho<cuda_mparticles<typename Mparticles::BS>, dim_t>
       cmoments;
-    cmoments(cmprts, Base::mres_gt_, Base::mres_ib_);
-    Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
-    return Base::mres_gt_;
+    cmoments(cmprts, mres, ib);
+    Base::bnd_.add_ghosts(mprts.grid(), mres, ib);
+    return mres;
   }
 
   auto storage() = delete;

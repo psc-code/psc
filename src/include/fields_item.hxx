@@ -37,11 +37,11 @@ inline std::vector<std::string> addKindSuffix(
 // ======================================================================
 // ItemMomentBnd
 
-template <typename Mfields, typename Bnd = Bnd_<Mfields>>
+template <typename S, typename Bnd>
 class ItemMomentBnd
 {
 public:
-  using storage_type = typename Mfields::Storage;
+  using storage_type = S;
 
   ItemMomentBnd(const Grid_t& grid) : bnd_{grid, grid.ibn} {}
 
@@ -187,5 +187,5 @@ protected:
   std::vector<std::string> comp_names_;
   storage_type mres_gt_;
   Int3 mres_ib_;
-  ItemMomentBnd<MF, Bnd> bnd_;
+  ItemMomentBnd<storage_type, Bnd> bnd_;
 };
