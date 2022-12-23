@@ -167,7 +167,7 @@ public:
   using Real = typename Mfields::real_t;
   using storage_type = typename Mfields::Storage;
 
-  static std::string name() { return Derived::name_impl(); }
+  static std::string name() { return Derived::moment_type::name(); }
 
   int n_comps() { return comp_names_.size(); }
   const std::vector<std::string>& comp_names() { return comp_names_; }

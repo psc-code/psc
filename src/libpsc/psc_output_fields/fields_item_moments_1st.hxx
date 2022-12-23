@@ -20,7 +20,6 @@ public:
   using moment_type =
     psc::moment::moment_n<psc::deposit::code::Deposit1stCc, dim_t>;
 
-  static std::string name_impl() { return moment_type::name(); }
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return moment_type::comp_names(grid.kinds);
@@ -49,7 +48,6 @@ public:
   using moment_type =
     psc::moment::moment_v<psc::deposit::code::Deposit1stCc, dim_t>;
 
-  static std::string name_impl() { return moment_type::name(); }
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return moment_type::comp_names(grid.kinds);
@@ -78,7 +76,6 @@ public:
   using moment_type =
     psc::moment::moment_p<psc::deposit::code::Deposit1stCc, dim_t>;
 
-  static std::string name_impl() { return moment_type::name(); }
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return moment_type::comp_names(grid.kinds);
@@ -104,7 +101,6 @@ struct Moment_T_1st
   using moment_type =
     psc::moment::moment_T<psc::deposit::code::Deposit1stCc, dim_t>;
 
-  static std::string name_impl() { return moment_type::name(); }
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return moment_type::comp_names(grid.kinds);
@@ -141,7 +137,6 @@ public:
   using moment_type =
     psc::moment::moment_all<psc::deposit::code::Deposit1stCc, dim_t>;
 
-  static std::string name_impl() { return moment_type::name(); }
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return moment_type::comp_names(grid.kinds);
@@ -180,7 +175,6 @@ public:
   using moment_type =
     psc::moment::moment_all<psc::deposit::code::Deposit1stCc, dim_t>;
 
-  static std::string name_impl() { return moment_type::name(); }
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return moment_type::comp_names(grid.kinds);
