@@ -140,7 +140,7 @@ struct Checks_
     auto item_rho = Moment_t{mprts};
     auto dive = Item_dive<MfieldsState>(mflds);
     auto rho_gt = item_rho.gt();
-    auto&& dive_gt = view_interior(dive.gt(), dive.ibn());
+    auto&& dive_gt = psc::interior(dive.gt(), dive.ib());
 
     double eps = gauss_threshold;
     double max_err = 0.;

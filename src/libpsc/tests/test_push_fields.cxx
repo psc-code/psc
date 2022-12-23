@@ -186,8 +186,8 @@ TYPED_TEST(PushFieldsTest, MarderCorrect)
   psc::marder::correct(mflds, mphi, diffusion);
 
   // check result
-  EXPECT_LT(gt::norm_linf(view_interior(mflds.gt(), mflds.ibn()) -
-                          view_interior(mflds_ref.gt(), mflds_ref.ibn())),
+  EXPECT_LT(gt::norm_linf(psc::interior(mflds.gt(), mflds.ib()) -
+                          psc::interior(mflds_ref.gt(), mflds_ref.ib())),
             1e-3);
 }
 

@@ -210,6 +210,7 @@ public:
 
   const Grid_t& grid() const { return mflds_.grid(); }
   Int3 ibn() const { return {}; }
+  Int3 ib() const { return {}; }
   int n_patches() const { return grid().n_patches(); }
 
   auto gt() const

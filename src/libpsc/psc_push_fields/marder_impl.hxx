@@ -164,7 +164,7 @@ struct Marder_ : MarderBase
     }
 
     // res_.assign(dive);
-    auto&& dive_gt = view_interior(dive.gt(), dive.ibn());
+    auto&& dive_gt = psc::interior(dive.gt(), dive.ib());
     for (int p = 0; p < res_.n_patches(); p++) {
       for (int m = 0; m < res_.n_comps(); m++) {
         kg::Box3 box = res_.box();

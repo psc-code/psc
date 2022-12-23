@@ -178,6 +178,9 @@ public:
                          _s(bnd[2], -bnd[2]));
   }
 
+  auto storage() { return mres_gt_; }
+  const Int3& ib() { return mres_ib_; }
+
 protected:
   ItemMomentCRTP(const Grid_t& grid)
     : comp_names_{Derived::moment_type::comp_names(grid.kinds)},

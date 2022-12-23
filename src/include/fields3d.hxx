@@ -555,13 +555,17 @@ using Mfields_from_gt_t =
                                            typename E::space>::type;
 
 // ======================================================================
-// view_interior
+// psc::interior
 
-template <typename E>
-inline auto view_interior(E&& e, const Int3& bnd)
+namespace psc
 {
-  return std::forward<E>(e).view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                                 _s(bnd[2], -bnd[2]));
+template <typename E>
+GT_INLINE auto interior(E&& e, const Int3& ib)
+{
+  return std::forward<E>(e).view(_s(-ib[0], ib[0]), _s(-ib[1], ib[1]),
+                                 _s(-ib[2], ib[2]));
 }
+
+} // namespace psc
 
 #endif

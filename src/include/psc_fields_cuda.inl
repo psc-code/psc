@@ -68,7 +68,7 @@ public:
     }
     reader.performGets();
 
-    view_interior(mflds, mflds_cuda.ibn()) = h_mflds;
+    psc::interior(mflds, mflds_cuda.ib()) = h_mflds;
     gt::copy(mflds, mflds_cuda.storage());
   }
 };

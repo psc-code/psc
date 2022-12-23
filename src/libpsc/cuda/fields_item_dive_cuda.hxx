@@ -28,7 +28,7 @@ struct Item_dive<MfieldsStateCuda>
     }
   }
 
-  auto gt() { return view_interior(mres_.gt(), mres_.ibn()); }
+  auto gt() { return psc::interior(mres_.gt(), mres_.ib()); }
 
 private:
   Mfields mres_;
