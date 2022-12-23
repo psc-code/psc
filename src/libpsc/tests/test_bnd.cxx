@@ -92,6 +92,7 @@ using BndTestTypes =
                    TestConfigBnd<Bnd_<MfieldsC>, dim_yz>,
 #ifdef USE_CUDA
                    TestConfigBnd<BndCuda3<MfieldsCuda>, dim_xyz>,
+                   TestConfigBnd<Bnd_<MfieldsCuda>, dim_xyz>,
 #endif
                    TestConfigBnd<Bnd_<MfieldsSingle>, dim_xyz>>;
 
