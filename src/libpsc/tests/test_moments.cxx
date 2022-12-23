@@ -15,13 +15,14 @@ struct MomentTest : ::testing::Test
   using real_t = typename Mparticles::real_t;
 
   const double L = 160;
+  const real_t eps = 1e-6;
 
   const real_t fnqx = .05, fnqy = .05, fnqz = .05;
   const real_t dx = 10., dy = 10., dz = 10.;
 
   Int3 ibn = {2, 2, 2};
 
-  void make_psc(const Grid_t::Kinds& kinds)
+  void make_psc()
   {
     Int3 gdims = {16, 16, 16};
     if (dim_t::InvarX::value) {
@@ -47,6 +48,8 @@ struct MomentTest : ::testing::Test
     auto norm_params = Grid_t::NormalizationParams::dimensionless();
     norm_params.nicell = 200;
     auto coeff = Grid_t::Normalization{norm_params};
+
+    auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
 
     grid_.reset(new Grid_t{grid_domain, grid_bc, kinds, coeff, 1., -1, ibn});
   }
@@ -90,9 +93,7 @@ TYPED_TEST(MomentTest, Moment_n_1)
 
   using Moment = Moment_n_1st<Mfields, dim_t>;
 
-  const real_t eps = 1e-6;
-  auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
-  this->make_psc(kinds);
+  this->make_psc();
   const auto& grid = this->grid();
 
   // init particles
@@ -107,9 +108,10 @@ TYPED_TEST(MomentTest, Moment_n_1)
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);
       if (i == 0 && j == 0 && k == 0) {
-        EXPECT_NEAR(val, .005, eps) << "ijk " << i << " " << j << " " << k;
+        EXPECT_NEAR(val, .005, this->eps)
+          << "ijk " << i << " " << j << " " << k;
       } else {
-        EXPECT_NEAR(val, 0., eps) << "ijk " << i << " " << j << " " << k;
+        EXPECT_NEAR(val, 0., this->eps) << "ijk " << i << " " << j << " " << k;
       }
     });
   }
@@ -124,9 +126,7 @@ TYPED_TEST(MomentTest, Moments_1st)
   using Moments = Moments_1st<Mparticles, MfieldsHost, dim_t>;
   using real_t = typename Mfields::real_t;
 
-  const real_t eps = 1e-6;
-  auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
-  this->make_psc(kinds);
+  this->make_psc();
   const auto& grid = this->grid();
 
   // init particles
@@ -141,9 +141,10 @@ TYPED_TEST(MomentTest, Moments_1st)
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);
       if (i == 0 && j == 0 && k == 0) {
-        EXPECT_NEAR(val, .005, eps) << "ijk " << i << " " << j << " " << k;
+        EXPECT_NEAR(val, .005, this->eps)
+          << "ijk " << i << " " << j << " " << k;
       } else {
-        EXPECT_NEAR(val, 0., eps) << "ijk " << i << " " << j << " " << k;
+        EXPECT_NEAR(val, 0., this->eps) << "ijk " << i << " " << j << " " << k;
       }
     });
   }
@@ -159,9 +160,7 @@ TYPED_TEST(MomentTest, Moment_n_2) // FIXME, mostly copied
 
   using Moment = Moment_n_1st<Mfields, dim_t>;
 
-  const real_t eps = 1e-6;
-  auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
-  this->make_psc(kinds);
+  this->make_psc();
   const auto& grid = this->grid();
 
   // init particles
@@ -181,9 +180,10 @@ TYPED_TEST(MomentTest, Moment_n_2) // FIXME, mostly copied
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);
       if (i == i0 && j == 0 && k == 0) {
-        EXPECT_NEAR(val, .005, eps) << "ijk " << i << " " << j << " " << k;
+        EXPECT_NEAR(val, .005, this->eps)
+          << "ijk " << i << " " << j << " " << k;
       } else {
-        EXPECT_NEAR(val, 0., eps) << "ijk " << i << " " << j << " " << k;
+        EXPECT_NEAR(val, 0., this->eps) << "ijk " << i << " " << j << " " << k;
       }
     });
   }
@@ -197,9 +197,7 @@ TYPED_TEST(MomentTest, Moment_v_1st)
   using Moments = Moment_v_1st<Mfields, dim_t>;
   using real_t = typename Mfields::real_t;
 
-  const real_t eps = 1e-6;
-  auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
-  this->make_psc(kinds);
+  this->make_psc();
   const auto& grid = this->grid();
 
   // init particles
@@ -214,10 +212,10 @@ TYPED_TEST(MomentTest, Moment_v_1st)
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);
       if (i == 0 && j == 0 && k == 0) {
-        EXPECT_NEAR(val, .005 * .001, eps)
+        EXPECT_NEAR(val, .005 * .001, this->eps)
           << "ijk " << i << " " << j << " " << k;
       } else {
-        EXPECT_NEAR(val, 0., eps) << "ijk " << i << " " << j << " " << k;
+        EXPECT_NEAR(val, 0., this->eps) << "ijk " << i << " " << j << " " << k;
       }
     });
   }
@@ -231,9 +229,7 @@ TYPED_TEST(MomentTest, Moment_p_1st)
   using Moments = Moment_p_1st<Mfields, dim_t>;
   using real_t = typename Mfields::real_t;
 
-  const real_t eps = 1e-6;
-  auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
-  this->make_psc(kinds);
+  this->make_psc();
   const auto& grid = this->grid();
 
   // init particles
@@ -248,10 +244,10 @@ TYPED_TEST(MomentTest, Moment_p_1st)
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);
       if (i == 0 && j == 0 && k == 0) {
-        EXPECT_NEAR(val, .005 * .001, eps)
+        EXPECT_NEAR(val, .005 * .001, this->eps)
           << "ijk " << i << " " << j << " " << k;
       } else {
-        EXPECT_NEAR(val, 0., eps) << "ijk " << i << " " << j << " " << k;
+        EXPECT_NEAR(val, 0., this->eps) << "ijk " << i << " " << j << " " << k;
       }
     });
   }
@@ -266,9 +262,7 @@ TYPED_TEST(MomentTest, Moment_rho_1st_nc_cc)
   using real_t = typename Mfields::real_t;
   using Moment_t = Moment_rho_1st_nc<Mfields, dim_t>;
 
-  const real_t eps = 1e-6;
-  auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
-  this->make_psc(kinds);
+  this->make_psc();
   const auto& grid = this->grid();
 
   // init particles
@@ -287,19 +281,21 @@ TYPED_TEST(MomentTest, Moment_rho_1st_nc_cc)
             (i == 0 && j == 1 && k == 0) || (i == 1 && j == 1 && k == 0) ||
             (i == 0 && j == 0 && k == 1) || (i == 1 && j == 0 && k == 1) ||
             (i == 0 && j == 1 && k == 1) || (i == 1 && j == 1 && k == 1)) {
-          EXPECT_NEAR(val, .005 / 8., eps)
+          EXPECT_NEAR(val, .005 / 8., this->eps)
             << "ijk " << i << " " << j << " " << k;
         } else {
-          EXPECT_NEAR(val, 0., eps) << "ijk " << i << " " << j << " " << k;
+          EXPECT_NEAR(val, 0., this->eps)
+            << "ijk " << i << " " << j << " " << k;
         }
       } else if (std::is_same<dim_t, dim_yz>::value) {
         if ((i == 0 && j == 0 && k == 0) || (i == 0 && j == 1 && k == 0) ||
             (i == 0 && j == 0 && k == 1) || (i == 0 && j == 1 && k == 1)) {
-          EXPECT_NEAR(val, .005 / 4., eps)
+          EXPECT_NEAR(val, .005 / 4., this->eps)
             << "ijk " << i << " " << j << " " << k;
 
         } else {
-          EXPECT_NEAR(val, 0., eps) << "ijk " << i << " " << j << " " << k;
+          EXPECT_NEAR(val, 0., this->eps)
+            << "ijk " << i << " " << j << " " << k;
         }
       }
     });
@@ -315,9 +311,7 @@ TYPED_TEST(MomentTest, Moment_rho_1st_nc_nc)
   using real_t = typename Mfields::real_t;
   using Moment_t = Moment_rho_1st_nc<Mfields, dim_t>;
 
-  const real_t eps = 1e-4;
-  auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
-  this->make_psc(kinds);
+  this->make_psc();
   const auto& grid = this->grid();
 
   // init particles
@@ -333,15 +327,19 @@ TYPED_TEST(MomentTest, Moment_rho_1st_nc_nc)
       real_t val = gt(i, j, k, 0, p);
       if (std::is_same<dim_t, dim_xyz>::value) {
         if (i == 1 && j == 1 && k == 1) {
-          EXPECT_NEAR(val, .005, eps) << "ijk " << i << " " << j << " " << k;
+          EXPECT_NEAR(val, .005, this->eps)
+            << "ijk " << i << " " << j << " " << k;
         } else {
-          EXPECT_NEAR(val, 0., eps) << "ijk " << i << " " << j << " " << k;
+          EXPECT_NEAR(val, 0., this->eps)
+            << "ijk " << i << " " << j << " " << k;
         }
       } else if (std::is_same<dim_t, dim_yz>::value) {
         if (j == 1 && k == 1) {
-          EXPECT_NEAR(val, .005, eps) << "ijk " << i << " " << j << " " << k;
+          EXPECT_NEAR(val, .005, this->eps)
+            << "ijk " << i << " " << j << " " << k;
         } else {
-          EXPECT_NEAR(val, 0., eps) << "ijk " << i << " " << j << " " << k;
+          EXPECT_NEAR(val, 0., this->eps)
+            << "ijk " << i << " " << j << " " << k;
         }
       }
     });
@@ -356,9 +354,7 @@ TYPED_TEST(MomentTest, Moment_n_2nd_nc)
   using Moment = Moment_n_2nd_nc<Mfields, dim_t>;
   using real_t = typename Mfields::real_t;
 
-  const real_t eps = 1e-6;
-  auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
-  this->make_psc(kinds);
+  this->make_psc();
   const auto& grid = this->grid();
   const real_t w = .5f;
   const int nicell = 200; // FIXME, comes from testing.hxx
@@ -377,17 +373,19 @@ TYPED_TEST(MomentTest, Moment_n_2nd_nc)
       real_t val = gt(i, j, k, 0, p);
       if (std::is_same<dim_t, dim_xyz>::value) {
         if ((i == 0 || i == 1) && (j == 0 || j == 1) && (k == 0 || k == 1)) {
-          EXPECT_NEAR(val, w * cori / 8., eps)
+          EXPECT_NEAR(val, w * cori / 8., this->eps)
             << "ijk " << i << " " << j << " " << k;
         } else {
-          EXPECT_NEAR(val, 0., eps) << "ijk " << i << " " << j << " " << k;
+          EXPECT_NEAR(val, 0., this->eps)
+            << "ijk " << i << " " << j << " " << k;
         }
       } else if (std::is_same<dim_t, dim_yz>::value) {
         if ((j == 0 || j == 1) && (k == 0 || k == 1)) {
-          EXPECT_NEAR(val, w * cori / 4., eps)
+          EXPECT_NEAR(val, w * cori / 4., this->eps)
             << "ijk " << i << " " << j << " " << k;
         } else {
-          EXPECT_NEAR(val, 0., eps) << "ijk " << i << " " << j << " " << k;
+          EXPECT_NEAR(val, 0., this->eps)
+            << "ijk " << i << " " << j << " " << k;
         }
       }
     });
@@ -402,9 +400,7 @@ TYPED_TEST(MomentTest, Moment_rho_2nd_nc)
   using Moment = Moment_rho_2nd_nc<Mfields, dim_t>;
   using real_t = typename Mfields::real_t;
 
-  const real_t eps = 1e-6;
-  auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
-  this->make_psc(kinds);
+  this->make_psc();
   const auto& grid = this->grid();
   const real_t w = .5f;
   const int nicell = 200; // FIXME, comes from testing.hxx
@@ -423,17 +419,19 @@ TYPED_TEST(MomentTest, Moment_rho_2nd_nc)
       real_t val = gt(i, j, k, 0, p);
       if (std::is_same<dim_t, dim_xyz>::value) {
         if ((i == 0 || i == 1) && (j == 0 || j == 1) && (k == 0 || k == 1)) {
-          EXPECT_NEAR(val, w * cori / 8., eps)
+          EXPECT_NEAR(val, w * cori / 8., this->eps)
             << "ijk " << i << " " << j << " " << k;
         } else {
-          EXPECT_NEAR(val, 0., eps) << "ijk " << i << " " << j << " " << k;
+          EXPECT_NEAR(val, 0., this->eps)
+            << "ijk " << i << " " << j << " " << k;
         }
       } else if (std::is_same<dim_t, dim_yz>::value) {
         if ((j == 0 || j == 1) && (k == 0 || k == 1)) {
-          EXPECT_NEAR(val, w * cori / 4., eps)
+          EXPECT_NEAR(val, w * cori / 4., this->eps)
             << "ijk " << i << " " << j << " " << k;
         } else {
-          EXPECT_NEAR(val, 0., eps) << "ijk " << i << " " << j << " " << k;
+          EXPECT_NEAR(val, 0., this->eps)
+            << "ijk " << i << " " << j << " " << k;
         }
       }
     });
