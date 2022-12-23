@@ -247,8 +247,8 @@ TYPED_TEST(MomentTest, Moment_p_1st)
     this->make_mprts({{5., 5., 5.}, {.001, .002, .003}, this->w, 0});
   const auto& grid = this->grid();
 
-  Moment moment{mprts};
-  auto gt = psc::interior(moment.storage(), moment.ib());
+  Moment moment{grid};
+  auto gt = psc::mflds::interior(grid, moment(mprts));
   for (int p = 0; p < grid.n_patches(); p++) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);

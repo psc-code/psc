@@ -42,37 +42,23 @@ class Moment_p_1st : public ItemMomentCRTP<Moment_p_1st<MF, D>, MF>
 {
 public:
   using Base = ItemMomentCRTP<Moment_p_1st<MF, D>, MF>;
-  using Mfields = MF;
-  using dim_t = D;
-  using real_t = typename Mfields::real_t;
   using moment_type =
-    psc::moment::moment_p<psc::deposit::code::Deposit1stCc, dim_t>;
+    psc::moment::moment_p<psc::deposit::code::Deposit1stCc, D>;
 
-  template <typename Mparticles>
-  explicit Moment_p_1st(const Mparticles& mprts) : Base{mprts.grid()}
-  {
-    Base::mres_gt_.view() = 0.f;
-    moment_type{}(Base::mres_gt_, Base::mres_ib_, mprts);
-    Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
-  }
+  using Base::Base;
 };
 
 // ======================================================================
 // T_1st
 
 template <typename MF, typename D>
-struct Moment_T_1st
+struct Moment_T_1st : public ItemMomentCRTP<Moment_T_1st<MF, D>, MF>
 {
-  using Mfields = MF;
-  using dim_t = D;
+  using Base = ItemMomentCRTP<Moment_T_1st<MF, D>, MF>;
   using moment_type =
-    psc::moment::moment_T<psc::deposit::code::Deposit1stCc, dim_t>;
+    psc::moment::moment_T<psc::deposit::code::Deposit1stCc, D>;
 
-  template <typename Mparticles>
-  static void run(Mfields& mflds, Mparticles& mprts)
-  {
-    moment_type{}(mflds.storage(), mflds.ib(), mprts);
-  }
+  using Base::Base;
 };
 
 // ======================================================================
