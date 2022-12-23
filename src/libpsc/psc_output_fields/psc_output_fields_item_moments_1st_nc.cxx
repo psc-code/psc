@@ -6,25 +6,6 @@
 #include <psc/moment.hxx>
 
 // ======================================================================
-// n
-
-template <typename MF, typename D>
-struct Moment_n_1st_nc
-{
-  using Mfields = MF;
-  using dim_t = D;
-  using real_t = typename Mfields::real_t;
-  using moment_type =
-    psc::moment::moment_n<psc::deposit::code::Deposit1stNc, dim_t>;
-
-  template <typename Mparticles>
-  static void run(Mfields& mflds, Mparticles& mprts)
-  {
-    moment_type{}(mflds.storage(), mflds.ib(), mprts);
-  }
-};
-
-// ======================================================================
 // rho
 
 template <typename MF, typename D>
