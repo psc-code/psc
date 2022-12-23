@@ -47,7 +47,7 @@ struct ChecksCuda
   using real_t = typename Mfields::real_t;
 
   ChecksCuda(const Grid_t& grid, MPI_Comm comm, const ChecksParams& params)
-    : ChecksParams(params), item_rho_{grid}
+    : ChecksParams(params)
   {}
 
   void continuity_before_particle_push(Mparticles& mprts)
@@ -138,12 +138,13 @@ struct ChecksCuda
       return;
     }
 
+    auto item_rho = Moment_t{grid};
+    item_rho(mprts);
     auto item_dive = Item_dive<MfieldsStateCuda>(mflds);
 
-    item_rho_(mprts);
-    auto&& rho = gt::host_mirror(item_rho_.gt());
+    auto&& rho = gt::host_mirror(item_rho.gt());
     auto&& dive = gt::host_mirror(item_dive.gt());
-    gt::copy(gt::eval(item_rho_.gt()), rho);
+    gt::copy(gt::eval(item_rho.gt()), rho);
     gt::copy(gt::eval(item_dive.gt()), dive);
 
     double eps = gauss_threshold;
@@ -200,5 +201,4 @@ struct ChecksCuda
 
 private:
   gt::gtensor<real_t, 5, gt::space::device> rho_m_gt_;
-  Moment_t item_rho_;
 };
