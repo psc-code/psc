@@ -122,7 +122,6 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
 
     int kind = prt.kind;
     float fnq = dmprts.prt_w(prt) * dmprts.fnqs();
-    float q = dmprts.prt_q(prt);
 
     int lf[3];
     float of[3];

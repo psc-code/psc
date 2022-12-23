@@ -20,6 +20,7 @@ struct MomentTest : ::testing::Test
   const real_t fnqx = .05, fnqy = .05, fnqz = .05;
   const real_t dx = 10., dy = 10., dz = 10.;
   const int nicell = 200;
+  const real_t w = .4; // test particle weight
 
   Int3 ibn = {2, 2, 2};
 
@@ -108,7 +109,7 @@ TYPED_TEST(MomentTest, Moment_n_1)
   using real_t = typename base_type::real_t;
   using Moment = Moment_n_1st<Mfields, dim_t>;
 
-  auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 1.}, 1., 0});
+  auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 1.}, this->w, 0});
   const auto& grid = this->grid();
 
   Moment moment{mprts};
@@ -117,7 +118,7 @@ TYPED_TEST(MomentTest, Moment_n_1)
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);
       if (i == 0 && j == 0 && k == 0) {
-        EXPECT_NEAR(val, 1.f / this->nicell, this->eps)
+        EXPECT_NEAR(val, this->w / this->nicell, this->eps)
           << "ijk " << i << " " << j << " " << k;
       } else {
         EXPECT_NEAR(val, 0., this->eps) << "ijk " << i << " " << j << " " << k;
@@ -135,7 +136,7 @@ TYPED_TEST(MomentTest, Moments_1st)
   using real_t = typename Mfields::real_t;
   using Moments = Moments_1st<Mparticles, MfieldsHost, dim_t>;
 
-  auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 1.}, 1., 0});
+  auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 1.}, this->w, 0});
   const auto& grid = this->grid();
 
   Moments moments{mprts};
@@ -144,7 +145,7 @@ TYPED_TEST(MomentTest, Moments_1st)
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);
       if (i == 0 && j == 0 && k == 0) {
-        EXPECT_NEAR(val, 1.f / this->nicell, this->eps)
+        EXPECT_NEAR(val, this->w / this->nicell, this->eps)
           << "ijk " << i << " " << j << " " << k;
       } else {
         EXPECT_NEAR(val, 0., this->eps) << "ijk " << i << " " << j << " " << k;
@@ -162,7 +163,7 @@ TYPED_TEST(MomentTest, Moment_n_2) // FIXME, mostly copied
   using real_t = typename base_type::real_t;
   using Moment = Moment_n_1st<Mfields, dim_t>;
 
-  auto& mprts = this->make_mprts({{25., 5., 5.}, {0., 0., 1.}, 1., 0});
+  auto& mprts = this->make_mprts({{25., 5., 5.}, {0., 0., 1.}, this->w, 0});
   const auto& grid = this->grid();
   int i0 = 2;
   if (dim_t::InvarX::value)
@@ -174,7 +175,7 @@ TYPED_TEST(MomentTest, Moment_n_2) // FIXME, mostly copied
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);
       if (i == i0 && j == 0 && k == 0) {
-        EXPECT_NEAR(val, 1.f / this->nicell, this->eps)
+        EXPECT_NEAR(val, this->w / this->nicell, this->eps)
           << "ijk " << i << " " << j << " " << k;
       } else {
         EXPECT_NEAR(val, 0., this->eps) << "ijk " << i << " " << j << " " << k;
@@ -191,7 +192,8 @@ TYPED_TEST(MomentTest, Moment_v_1st)
   using Moments = Moment_v_1st<Mfields, dim_t>;
   using real_t = typename Mfields::real_t;
 
-  auto& mprts = this->make_mprts({{5., 5., 5.}, {.001, .002, .003}, 1., 0});
+  auto& mprts =
+    this->make_mprts({{5., 5., 5.}, {.001, .002, .003}, this->w, 0});
   const auto& grid = this->grid();
 
   Moments moments{mprts};
@@ -200,7 +202,7 @@ TYPED_TEST(MomentTest, Moment_v_1st)
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);
       if (i == 0 && j == 0 && k == 0) {
-        EXPECT_NEAR(val, 1.f / this->nicell * .001, this->eps)
+        EXPECT_NEAR(val, this->w / this->nicell * .001, this->eps)
           << "ijk " << i << " " << j << " " << k;
       } else {
         EXPECT_NEAR(val, 0., this->eps) << "ijk " << i << " " << j << " " << k;
@@ -217,7 +219,8 @@ TYPED_TEST(MomentTest, Moment_p_1st)
   using Moments = Moment_p_1st<Mfields, dim_t>;
   using real_t = typename Mfields::real_t;
 
-  auto& mprts = this->make_mprts({{5., 5., 5.}, {.001, .002, .003}, 1., 0});
+  auto& mprts =
+    this->make_mprts({{5., 5., 5.}, {.001, .002, .003}, this->w, 0});
   const auto& grid = this->grid();
 
   Moments moments{mprts};
@@ -226,7 +229,7 @@ TYPED_TEST(MomentTest, Moment_p_1st)
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);
       if (i == 0 && j == 0 && k == 0) {
-        EXPECT_NEAR(val, 1.f / this->nicell * .001, this->eps)
+        EXPECT_NEAR(val, this->w / this->nicell * .001, this->eps)
           << "ijk " << i << " " << j << " " << k;
       } else {
         EXPECT_NEAR(val, 0., this->eps) << "ijk " << i << " " << j << " " << k;
@@ -244,7 +247,7 @@ TYPED_TEST(MomentTest, Moment_rho_1st_nc_cc)
   using real_t = typename Mfields::real_t;
   using Moment_t = Moment_rho_1st_nc<Mfields, dim_t>;
 
-  auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 0.}, 1., 0});
+  auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 0.}, this->w, 0});
   const auto& grid = this->grid();
 
   Moment_t moment{mprts};
@@ -257,7 +260,7 @@ TYPED_TEST(MomentTest, Moment_rho_1st_nc_cc)
             (i == 0 && j == 1 && k == 0) || (i == 1 && j == 1 && k == 0) ||
             (i == 0 && j == 0 && k == 1) || (i == 1 && j == 0 && k == 1) ||
             (i == 0 && j == 1 && k == 1) || (i == 1 && j == 1 && k == 1)) {
-          EXPECT_NEAR(val, 1.f / this->nicell / 8., this->eps)
+          EXPECT_NEAR(val, this->w / this->nicell / 8., this->eps)
             << "ijk " << i << " " << j << " " << k;
         } else {
           EXPECT_NEAR(val, 0., this->eps)
@@ -266,7 +269,7 @@ TYPED_TEST(MomentTest, Moment_rho_1st_nc_cc)
       } else if (std::is_same<dim_t, dim_yz>::value) {
         if ((i == 0 && j == 0 && k == 0) || (i == 0 && j == 1 && k == 0) ||
             (i == 0 && j == 0 && k == 1) || (i == 0 && j == 1 && k == 1)) {
-          EXPECT_NEAR(val, 1.f / this->nicell / 4., this->eps)
+          EXPECT_NEAR(val, this->w / this->nicell / 4., this->eps)
             << "ijk " << i << " " << j << " " << k;
 
         } else {
@@ -287,7 +290,7 @@ TYPED_TEST(MomentTest, Moment_rho_1st_nc_nc)
   using real_t = typename Mfields::real_t;
   using Moment_t = Moment_rho_1st_nc<Mfields, dim_t>;
 
-  auto& mprts = this->make_mprts({{10., 10., 10.}, {0., 0., 0.}, 1., 0});
+  auto& mprts = this->make_mprts({{10., 10., 10.}, {0., 0., 0.}, this->w, 0});
   const auto& grid = this->grid();
 
   Moment_t moment{mprts};
@@ -297,7 +300,7 @@ TYPED_TEST(MomentTest, Moment_rho_1st_nc_nc)
       real_t val = gt(i, j, k, 0, p);
       if (std::is_same<dim_t, dim_xyz>::value) {
         if (i == 1 && j == 1 && k == 1) {
-          EXPECT_NEAR(val, 1.f / this->nicell, this->eps)
+          EXPECT_NEAR(val, this->w / this->nicell, this->eps)
             << "ijk " << i << " " << j << " " << k;
         } else {
           EXPECT_NEAR(val, 0., this->eps)
@@ -305,7 +308,7 @@ TYPED_TEST(MomentTest, Moment_rho_1st_nc_nc)
         }
       } else if (std::is_same<dim_t, dim_yz>::value) {
         if (j == 1 && k == 1) {
-          EXPECT_NEAR(val, 1.f / this->nicell, this->eps)
+          EXPECT_NEAR(val, this->w / this->nicell, this->eps)
             << "ijk " << i << " " << j << " " << k;
         } else {
           EXPECT_NEAR(val, 0., this->eps)
@@ -324,8 +327,7 @@ TYPED_TEST(MomentTest, Moment_n_2nd_nc)
   using Moment = Moment_n_2nd_nc<Mfields, dim_t>;
   using real_t = typename Mfields::real_t;
 
-  const real_t w = .5f;
-  auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 1.}, w, 0});
+  auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 1.}, this->w, 0});
   const auto& grid = this->grid();
 
   Moment moment{mprts};
@@ -335,7 +337,7 @@ TYPED_TEST(MomentTest, Moment_n_2nd_nc)
       real_t val = gt(i, j, k, 0, p);
       if (std::is_same<dim_t, dim_xyz>::value) {
         if ((i == 0 || i == 1) && (j == 0 || j == 1) && (k == 0 || k == 1)) {
-          EXPECT_NEAR(val, w / this->nicell / 8., this->eps)
+          EXPECT_NEAR(val, this->w / this->nicell / 8., this->eps)
             << "ijk " << i << " " << j << " " << k;
         } else {
           EXPECT_NEAR(val, 0., this->eps)
@@ -343,7 +345,7 @@ TYPED_TEST(MomentTest, Moment_n_2nd_nc)
         }
       } else if (std::is_same<dim_t, dim_yz>::value) {
         if ((j == 0 || j == 1) && (k == 0 || k == 1)) {
-          EXPECT_NEAR(val, w / this->nicell / 4., this->eps)
+          EXPECT_NEAR(val, this->w / this->nicell / 4., this->eps)
             << "ijk " << i << " " << j << " " << k;
         } else {
           EXPECT_NEAR(val, 0., this->eps)
@@ -362,8 +364,7 @@ TYPED_TEST(MomentTest, Moment_rho_2nd_nc)
   using Moment = Moment_rho_2nd_nc<Mfields, dim_t>;
   using real_t = typename Mfields::real_t;
 
-  const real_t w = .5f;
-  auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 1.}, w, 0});
+  auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 1.}, this->w, 0});
   const auto& grid = this->grid();
 
   Moment moment{mprts};
@@ -373,7 +374,7 @@ TYPED_TEST(MomentTest, Moment_rho_2nd_nc)
       real_t val = gt(i, j, k, 0, p);
       if (std::is_same<dim_t, dim_xyz>::value) {
         if ((i == 0 || i == 1) && (j == 0 || j == 1) && (k == 0 || k == 1)) {
-          EXPECT_NEAR(val, w / this->nicell / 8., this->eps)
+          EXPECT_NEAR(val, this->w / this->nicell / 8., this->eps)
             << "ijk " << i << " " << j << " " << k;
         } else {
           EXPECT_NEAR(val, 0., this->eps)
@@ -381,7 +382,7 @@ TYPED_TEST(MomentTest, Moment_rho_2nd_nc)
         }
       } else if (std::is_same<dim_t, dim_yz>::value) {
         if ((j == 0 || j == 1) && (k == 0 || k == 1)) {
-          EXPECT_NEAR(val, w / this->nicell / 4., this->eps)
+          EXPECT_NEAR(val, this->w / this->nicell / 4., this->eps)
             << "ijk " << i << " " << j << " " << k;
         } else {
           EXPECT_NEAR(val, 0., this->eps)
