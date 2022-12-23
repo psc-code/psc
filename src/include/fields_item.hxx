@@ -168,7 +168,6 @@ public:
   using storage_type = typename Mfields::Storage;
 
   static std::string name() { return Derived::moment_type::name(); }
-
   int n_comps() { return comp_names_.size(); }
   const std::vector<std::string>& comp_names() { return comp_names_; }
 
@@ -181,7 +180,7 @@ public:
 
 protected:
   ItemMomentCRTP(const Grid_t& grid)
-    : comp_names_{Derived::comp_names_impl(grid)},
+    : comp_names_{Derived::moment_type::comp_names(grid.kinds)},
       mres_{grid, int(comp_names_.size()), grid.ibn},
       mres_gt_(mres_.storage()), // FIXME, nvcc chokes on braces???
       mres_ib_{-grid.ibn},

@@ -18,11 +18,6 @@ public:
   using moment_type =
     psc::moment::moment_n<psc::deposit::code::Deposit2ndNc, dim_t>;
 
-  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
-  {
-    return moment_type::comp_names(grid.kinds);
-  }
-
   template <typename Mparticles>
   explicit Moment_n_2nd_nc(const Mparticles& mprts) : Base{mprts.grid()}
   {
@@ -45,11 +40,6 @@ public:
   using real_t = typename Mfields::real_t;
   using moment_type =
     psc::moment::moment_rho<psc::deposit::code::Deposit2ndNc, dim_t>;
-
-  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
-  {
-    return moment_type::comp_names(grid.kinds);
-  }
 
   template <typename Mparticles>
   explicit Moment_rho_2nd_nc(const Mparticles& mprts) : Base{mprts.grid()}

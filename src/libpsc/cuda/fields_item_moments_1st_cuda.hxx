@@ -23,11 +23,6 @@ struct Moment_rho_1st_nc_cuda
   using moment_type =
     psc::moment::moment_rho<psc::deposit::code::Deposit1stNc, dim_t>;
 
-  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
-  {
-    return moment_type::comp_names(grid.kinds);
-  }
-
   Moment_rho_1st_nc_cuda(const Grid_t& grid) : Base{grid} {}
 
   template <typename Mparticles>
@@ -57,11 +52,6 @@ public:
   using Mfields = MfieldsCuda;
   using moment_type =
     psc::moment::moment_n<psc::deposit::code::Deposit1stCc, dim_t>;
-
-  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
-  {
-    return moment_type::comp_names(grid.kinds);
-  }
 
   template <typename Mparticles>
   explicit Moment_n_1st_cuda(const Mparticles& mprts) : Base{mprts.grid()}
@@ -108,11 +98,6 @@ public:
   using space = gt::space::device;
   using moment_type =
     psc::moment::moment_all<psc::deposit::code::Deposit1stCc, dim_t>;
-
-  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
-  {
-    return moment_type::comp_names(grid.kinds);
-  }
 
   template <typename Mparticles>
   explicit Moment_1st_cuda(const Mparticles& mprts) : Base{mprts.grid()}

@@ -20,11 +20,6 @@ public:
   using moment_type =
     psc::moment::moment_n<psc::deposit::code::Deposit1stCc, dim_t>;
 
-  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
-  {
-    return moment_type::comp_names(grid.kinds);
-  }
-
   template <typename MP>
   explicit Moment_n_1st(const MP& mprts) : Base{mprts.grid()}
   {
@@ -47,11 +42,6 @@ public:
   using real_t = typename Mfields::real_t;
   using moment_type =
     psc::moment::moment_v<psc::deposit::code::Deposit1stCc, dim_t>;
-
-  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
-  {
-    return moment_type::comp_names(grid.kinds);
-  }
 
   template <typename Mparticles>
   explicit Moment_v_1st(const Mparticles& mprts) : Base{mprts.grid()}
@@ -76,11 +66,6 @@ public:
   using moment_type =
     psc::moment::moment_p<psc::deposit::code::Deposit1stCc, dim_t>;
 
-  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
-  {
-    return moment_type::comp_names(grid.kinds);
-  }
-
   template <typename Mparticles>
   explicit Moment_p_1st(const Mparticles& mprts) : Base{mprts.grid()}
   {
@@ -100,16 +85,6 @@ struct Moment_T_1st
   using dim_t = D;
   using moment_type =
     psc::moment::moment_T<psc::deposit::code::Deposit1stCc, dim_t>;
-
-  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
-  {
-    return moment_type::comp_names(grid.kinds);
-  }
-  // static std::vector<std::string> comp_names(const Grid_t& grid)
-  // {
-  //   return addKindSuffix({"Txx", "Tyy", "Tzz", "Txy", "Txz", "Tyz"},
-  //                        grid.kinds);
-  // }
 
   template <typename Mparticles>
   static void run(Mfields& mflds, Mparticles& mprts)
@@ -136,11 +111,6 @@ public:
   using space = typename Mfields::space;
   using moment_type =
     psc::moment::moment_all<psc::deposit::code::Deposit1stCc, dim_t>;
-
-  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
-  {
-    return moment_type::comp_names(grid.kinds);
-  }
 
   explicit Moments_1st(const Mparticles& mprts) : Base{mprts.grid()}
   {
@@ -174,11 +144,6 @@ public:
   using real_t = Mfields::real_t;
   using moment_type =
     psc::moment::moment_all<psc::deposit::code::Deposit1stCc, dim_t>;
-
-  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
-  {
-    return moment_type::comp_names(grid.kinds);
-  }
 
   explicit Moments_1st(const Mparticles& _mprts) : Base{_mprts.grid()}
   {

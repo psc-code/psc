@@ -17,11 +17,6 @@ struct Moment_n_1st_nc
   using moment_type =
     psc::moment::moment_n<psc::deposit::code::Deposit1stNc, dim_t>;
 
-  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
-  {
-    return moment_type::comp_names(grid.kinds);
-  }
-
   template <typename Mparticles>
   static void run(Mfields& mflds, Mparticles& mprts)
   {
@@ -41,11 +36,6 @@ struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MF, D>, MF>
   using real_t = typename Mfields::real_t;
   using moment_type =
     psc::moment::moment_rho<psc::deposit::code::Deposit1stNc, dim_t>;
-
-  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
-  {
-    return moment_type::comp_names(grid.kinds);
-  }
 
   template <typename Mparticles>
   explicit Moment_rho_1st_nc(const Mparticles& mprts) : Base{mprts.grid()}
