@@ -570,9 +570,17 @@ namespace mflds
 {
 
 template <typename R, typename S = gt::space::host>
-GT_INLINE auto gtensor(const Grid_t& grid, int n_comps, Int3 ibn = {})
+GT_INLINE auto empty(const Grid_t& grid, int n_comps, Int3 ibn = {})
 {
   return gt::empty<R, S>(
+    {grid.ldims[0] + 2 * ibn[0], grid.ldims[1] + 2 * ibn[1],
+     grid.ldims[2] + 2 * ibn[2], n_comps, grid.n_patches()});
+}
+
+template <typename R, typename S = gt::space::host>
+GT_INLINE auto zeros(const Grid_t& grid, int n_comps, Int3 ibn = {})
+{
+  return gt::zeros<R, S>(
     {grid.ldims[0] + 2 * ibn[0], grid.ldims[1] + 2 * ibn[1],
      grid.ldims[2] + 2 * ibn[2], n_comps, grid.n_patches()});
 }
