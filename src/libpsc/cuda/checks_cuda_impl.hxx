@@ -44,9 +44,10 @@ struct ChecksCuda
   using BS = typename Mparticles::BS;
   using Dim = typename BS_to_Dim<BS>::Dim;
   using Moment_t = Moment_rho_1st_nc_cuda<Dim>;
+  using real_t = typename Mfields::real_t;
 
   ChecksCuda(const Grid_t& grid, MPI_Comm comm, const ChecksParams& params)
-    : ChecksParams(params), item_rho_{grid}, item_rho_m_{grid},
+    : ChecksParams(params), item_rho_{grid}
   {}
 
   void continuity_before_particle_push(Mparticles& mprts)
@@ -57,7 +58,9 @@ struct ChecksCuda
       return;
     }
 
-    item_rho_m_(mprts);
+    Moment_t item_rho{grid};
+    item_rho(mprts);
+    rho_m_gt_ = item_rho.gt();
   }
 
   void continuity_after_particle_push(Mparticles& mprts,
@@ -69,16 +72,16 @@ struct ChecksCuda
       return;
     }
 
-    Moment_t item_rho_p{grid};
-    item_rho_p(mprts);
+    Moment_t item_rho{grid};
+    item_rho(mprts);
 
     auto item_divj = Item_divj<MfieldsStateCuda>(mflds);
 
-    auto&& rho_p = gt::host_mirror(item_rho_p.gt());
-    auto&& rho_m = gt::host_mirror(item_rho_m_.gt());
+    auto&& rho_p = gt::host_mirror(item_rho.gt());
+    auto&& rho_m = gt::host_mirror(rho_m_gt_);
     auto&& h_divj = gt::host_mirror(item_divj.gt());
-    gt::copy(gt::eval(item_rho_p.gt()), rho_p);
-    gt::copy(gt::eval(item_rho_m_.gt()), rho_m);
+    gt::copy(gt::eval(item_rho.gt()), rho_p);
+    gt::copy(gt::eval(rho_m_gt_), rho_m);
     gt::copy(gt::eval(item_divj.gt()), h_divj);
 
     auto&& d_rho = rho_p - rho_m;
@@ -196,6 +199,6 @@ struct ChecksCuda
   }
 
 private:
-  Moment_t item_rho_m_;
+  gt::gtensor<real_t, 5, gt::space::device> rho_m_gt_;
   Moment_t item_rho_;
 };
