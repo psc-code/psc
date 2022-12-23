@@ -623,8 +623,8 @@ void run()
     if (g.inject_interval > 0 && timestep % g.inject_interval == 0) {
       mpi_printf(comm, "***** Performing injection...\n");
       prof_start(pr_inject);
-      Moment_n moment_n(mprts);
-      auto d_n = psc::interior(moment_n.storage(), moment_n.ib());
+      Moment_n moment_n{grid};
+      auto d_n = psc::mflds::interior(grid, moment_n(mprts));
       auto&& h_n = gt::host_mirror(d_n);
       gt::copy(d_n, h_n);
 
