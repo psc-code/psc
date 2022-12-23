@@ -188,16 +188,15 @@ public:
   using dim_t = D;
   using Mparticles = MparticlesCuda<BS>;
   using Mfields = MfieldsSingle;
+  using real_t = Mfields::real_t;
 
   using Sub = Moments_1st<MparticlesSingle, Mfields, D>;
 
-  static std::string name_impl() { return "all_1st"; }
+  static std::string name_impl() { return Sub::name_impl(); }
 
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
-    return addKindSuffix({"rho", "jx", "jy", "jz", "px", "py", "pz", "txx",
-                          "tyy", "tzz", "txy", "tyz", "tzx"},
-                         grid.kinds);
+    return Sub::comp_names_impl(grid);
   }
 
   explicit Moments_1st(const Mparticles& _mprts) : Base{_mprts.grid()}
@@ -216,32 +215,8 @@ public:
     auto&& h_mprts = mprts.template get_as<MparticlesSingle>();
     prof_stop(pr_A);
 
-    using Particle = typename MparticlesSingle::ConstAccessor::Particle;
-    using Real = typename Particle::real_t;
-    using R = Real;
-    using real_t = R;
-
-    psc::moment::deposit_1st_cc<dim_t>(
-      Base::mres_gt_, Base::mres_ib_, h_mprts,
-      [&](auto& deposit_one, const auto& prt) {
-        int mm = prt.kind() * 13;
-        real_t vxi[3];
-        psc::moment::_particle_calc_vxi(prt, vxi);
-        deposit_one(mm + 0, prt.w() * prt.q());
-        deposit_one(mm + 1, prt.w() * prt.q() * vxi[0]);
-        deposit_one(mm + 2, prt.w() * prt.q() * vxi[1]);
-        deposit_one(mm + 3, prt.w() * prt.q() * vxi[2]);
-        deposit_one(mm + 4, prt.w() * prt.m() * prt.u()[0]);
-        deposit_one(mm + 5, prt.w() * prt.m() * prt.u()[1]);
-        deposit_one(mm + 6, prt.w() * prt.m() * prt.u()[2]);
-        deposit_one(mm + 7, prt.w() * prt.m() * prt.u()[0] * vxi[0]);
-        deposit_one(mm + 8, prt.w() * prt.m() * prt.u()[1] * vxi[1]);
-        deposit_one(mm + 9, prt.w() * prt.m() * prt.u()[2] * vxi[2]);
-        deposit_one(mm + 10, prt.w() * prt.m() * prt.u()[0] * vxi[1]);
-        deposit_one(mm + 11, prt.w() * prt.m() * prt.u()[1] * vxi[2]);
-        deposit_one(mm + 12, prt.w() * prt.m() * prt.u()[2] * vxi[0]);
-      });
-
+    prof_start(pr_B);
+    typename Sub::moment_type()(Base::mres_gt_, Base::mres_ib_, h_mprts);
     prof_stop(pr_B);
 
     prof_start(pr_C);
