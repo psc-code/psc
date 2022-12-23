@@ -3,7 +3,66 @@
 
 #include "testing.hxx"
 
-using PushParticlesTestTypes =
+// ======================================================================
+// MomentTest
+
+template <typename T>
+struct MomentTest : ::testing::Test
+{
+  using dim = typename T::dim;
+  using Mparticles = typename T::Mparticles;
+  using MfieldsState = typename T::MfieldsState;
+  using PushParticles = typename T::PushParticles;
+  using real_t = typename Mparticles::real_t;
+
+  const real_t eps = 1e-5;
+  const double L = 160;
+
+  const real_t fnqx = .05, fnqy = .05, fnqz = .05;
+  const real_t dx = 10., dy = 10., dz = 10.;
+
+  Int3 ibn = {2, 2, 2};
+
+  void make_psc(const Grid_t::Kinds& kinds)
+  {
+    Int3 gdims = {16, 16, 16};
+    if (dim::InvarX::value) {
+      gdims[0] = 1;
+      ibn[0] = 0;
+    }
+    if (dim::InvarY::value) {
+      gdims[1] = 1;
+      ibn[1] = 0;
+    }
+    if (dim::InvarZ::value) {
+      gdims[2] = 1;
+      ibn[2] = 0;
+    }
+
+    auto grid_domain = Grid_t::Domain{gdims, {L, L, L}};
+    auto grid_bc =
+      psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
+                    {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
+                    {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC},
+                    {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC}};
+
+    auto norm_params = Grid_t::NormalizationParams::dimensionless();
+    norm_params.nicell = 200;
+    auto coeff = Grid_t::Normalization{norm_params};
+
+    grid_.reset(new Grid_t{grid_domain, grid_bc, kinds, coeff, 1., -1, ibn});
+  }
+
+  const Grid_t& grid()
+  {
+    assert(grid_);
+    return *grid_;
+  }
+
+  std::unique_ptr<Grid_t> grid_;
+};
+
+using MomentTestTypes =
   ::testing::Types<TestConfig1vbec3dSingleYZ, TestConfig1vbec3dSingle
 #ifdef USE_CUDA
                    ,
@@ -11,10 +70,9 @@ using PushParticlesTestTypes =
 #endif
                    >;
 
-// FIXME, obviously this name is bad...
-TYPED_TEST_SUITE(PushParticlesTest, PushParticlesTestTypes);
+TYPED_TEST_SUITE(MomentTest, MomentTestTypes);
 
-TYPED_TEST(PushParticlesTest, Moment_n_1)
+TYPED_TEST(MomentTest, Moment_n_1)
 {
   using Mparticles = typename TypeParam::Mparticles;
   using Mfields = typename TypeParam::Mfields;
@@ -62,7 +120,7 @@ struct MfieldsToHost<MfieldsCuda>
 
 #endif
 
-TYPED_TEST(PushParticlesTest, Moments_1st)
+TYPED_TEST(MomentTest, Moments_1st)
 {
   using Mparticles = typename TypeParam::Mparticles;
   using Mfields = typename TypeParam::Mfields;
@@ -96,7 +154,7 @@ TYPED_TEST(PushParticlesTest, Moments_1st)
   }
 }
 
-TYPED_TEST(PushParticlesTest, Moment_n_2) // FIXME, mostly copied
+TYPED_TEST(MomentTest, Moment_n_2) // FIXME, mostly copied
 {
   using Mparticles = typename TypeParam::Mparticles;
   using Mfields = typename TypeParam::Mfields;
@@ -133,7 +191,7 @@ TYPED_TEST(PushParticlesTest, Moment_n_2) // FIXME, mostly copied
   }
 }
 
-TYPED_TEST(PushParticlesTest, Moment_v_1st)
+TYPED_TEST(MomentTest, Moment_v_1st)
 {
   using Mparticles = typename TypeParam::Mparticles;
   using Mfields = typename TypeParam::Mfields;
@@ -167,7 +225,7 @@ TYPED_TEST(PushParticlesTest, Moment_v_1st)
   }
 }
 
-TYPED_TEST(PushParticlesTest, Moment_p_1st)
+TYPED_TEST(MomentTest, Moment_p_1st)
 {
   using Mparticles = typename TypeParam::Mparticles;
   using Mfields = typename TypeParam::Mfields;
@@ -201,7 +259,7 @@ TYPED_TEST(PushParticlesTest, Moment_p_1st)
   }
 }
 
-TYPED_TEST(PushParticlesTest, Moment_rho_1st_nc_cc)
+TYPED_TEST(MomentTest, Moment_rho_1st_nc_cc)
 {
   using Mparticles = typename TypeParam::Mparticles;
   using Mfields = typename TypeParam::Mfields;
@@ -253,7 +311,7 @@ TYPED_TEST(PushParticlesTest, Moment_rho_1st_nc_cc)
   }
 }
 
-TYPED_TEST(PushParticlesTest, Moment_rho_1st_nc_nc)
+TYPED_TEST(MomentTest, Moment_rho_1st_nc_nc)
 {
   using Mparticles = typename TypeParam::Mparticles;
   using Mfields = typename TypeParam::Mfields;
@@ -298,7 +356,7 @@ TYPED_TEST(PushParticlesTest, Moment_rho_1st_nc_nc)
   }
 }
 
-TYPED_TEST(PushParticlesTest, Moment_n_2nd_nc)
+TYPED_TEST(MomentTest, Moment_n_2nd_nc)
 {
   using Mparticles = typename TypeParam::Mparticles;
   using Mfields = typename TypeParam::Mfields;
@@ -345,7 +403,7 @@ TYPED_TEST(PushParticlesTest, Moment_n_2nd_nc)
   }
 }
 
-TYPED_TEST(PushParticlesTest, Moment_rho_2nd_nc)
+TYPED_TEST(MomentTest, Moment_rho_2nd_nc)
 {
   using Mparticles = typename TypeParam::Mparticles;
   using Mfields = typename TypeParam::Mfields;
