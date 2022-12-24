@@ -230,7 +230,7 @@ TYPED_TEST(ItemTest, ItemDivE)
   });
   auto dx = grid.domain.dx;
 
-  auto item_dive = Item(mflds);
+  auto item_dive = Item{};
   auto&& rho = gt::eval(item_dive(mflds));
 
   auto rho_ref = gt::empty_like(rho);
