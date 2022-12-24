@@ -28,13 +28,7 @@ public:
             "ez_ec", "hx_fc", "hy_fc", "hz_fc"};
   }
 
-  Item_jeh(MfieldsState& mflds) : mflds_{mflds} {}
-
-  const Grid_t& grid() const { return mflds_.grid(); }
-  const auto& storage() const { return mflds_.storage(); }
-
-private:
-  MfieldsState& mflds_;
+  auto operator()(MfieldsState& mflds) const { return mflds.storage().view(); };
 };
 
 // ======================================================================
