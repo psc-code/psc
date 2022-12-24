@@ -161,24 +161,15 @@ template <typename MfieldsState>
 class Item_dive
 {
 public:
-  using Real = typename MfieldsState::real_t;
-
   static char const* name() { return "dive"; }
   static int n_comps() { return 1; }
   static std::vector<std::string> comp_names() { return {"dive"}; }
-
-  Item_dive(MfieldsState& mflds) : mflds_{mflds} {}
-
-  const Grid_t& grid() const { return mflds_.grid(); }
 
   auto operator()(MfieldsState& mflds) const
   {
     return psc::item::div_nc(mflds.gt().view(_all, _all, _all, _s(EX, EX + 3)),
                              mflds.grid());
   }
-
-private:
-  MfieldsState& mflds_;
 };
 
 // ======================================================================
