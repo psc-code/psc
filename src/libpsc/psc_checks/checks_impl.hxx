@@ -145,7 +145,7 @@ struct Checks_
 
     double eps = gauss_threshold;
     double max_err = 0.;
-    for (int p = 0; p < dive.n_patches(); p++) {
+    for (int p = 0; p < grid.n_patches(); p++) {
       int l[3] = {0, 0, 0}, r[3] = {0, 0, 0};
       for (int d = 0; d < 3; d++) {
         if (grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL &&

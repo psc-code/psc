@@ -30,20 +30,8 @@ public:
 
   Item_jeh(MfieldsState& mflds) : mflds_{mflds} {}
 
-  auto gt() const
-  {
-    auto bnd = mflds_.ibn();
-    return mflds_.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                            _s(bnd[2], -bnd[2]));
-  }
-
   const Grid_t& grid() const { return mflds_.grid(); }
-  Int3 ibn() const { return {}; }
-  Int3 ib() const { return mflds_.ib(); }
   const auto& storage() const { return mflds_.storage(); }
-  int n_patches() const { return grid().n_patches(); }
-
-  MfieldsState& result() const { return mflds_; }
 
 private:
   MfieldsState& mflds_;
@@ -182,9 +170,6 @@ public:
   Item_dive(MfieldsState& mflds) : mflds_{mflds} {}
 
   const Grid_t& grid() const { return mflds_.grid(); }
-  Int3 ibn() const { return {}; }
-  Int3 ib() const { return {}; }
-  int n_patches() const { return grid().n_patches(); }
   auto storage() const { return gt(); }
 
   auto gt() const
@@ -215,8 +200,6 @@ public:
   Item_divj(MfieldsState& mflds) : mflds_{mflds} {}
 
   const Grid_t& grid() const { return mflds_.grid(); }
-  Int3 ibn() const { return {}; }
-  int n_patches() const { return grid().n_patches(); }
 
   auto gt() const
   {
@@ -247,8 +230,6 @@ public:
   Item_grad(Mfields& mflds) : mflds_{mflds} {}
 
   const Grid_t& grid() const { return mflds_.grid(); }
-  Int3 ibn() const { return {}; }
-  int n_patches() const { return grid().n_patches(); }
 
   auto gt() const { return psc::item::grad_ec(mflds_.gt(), mflds_.grid()); }
 
