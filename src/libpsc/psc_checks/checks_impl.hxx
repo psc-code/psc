@@ -84,7 +84,7 @@ struct Checks_
     }
 
     auto item_rho_p = Moment_t{grid};
-    auto item_divj = Item_divj<MfieldsState>(mflds);
+    auto item_divj = Item_divj<MfieldsState>{};
 
     auto d_rho_gt = psc::mflds::interior(grid, item_rho_p(mprts)) - rho_m_gt_;
     auto dt_divj_gt = grid.dt * item_divj(mflds);

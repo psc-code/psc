@@ -181,22 +181,15 @@ template <typename MfieldsState>
 class Item_divj
 {
 public:
-  using Real = typename MfieldsState::real_t;
-
   static char const* name() { return "divj"; }
   static int n_comps() { return 1; }
   static std::vector<std::string> comp_names() { return {"divj"}; }
-
-  Item_divj(MfieldsState& mflds) : mflds_{mflds} {}
 
   auto operator()(MfieldsState& mflds) const
   {
     return psc::item::div_nc(
       mflds.gt().view(_all, _all, _all, _s(JXI, JXI + 3)), mflds.grid());
   }
-
-private:
-  MfieldsState& mflds_;
 };
 
 // ======================================================================

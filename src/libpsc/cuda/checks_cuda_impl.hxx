@@ -72,7 +72,7 @@ struct ChecksCuda
     }
 
     Moment_t item_rho{grid};
-    auto item_divj = Item_divj<MfieldsStateCuda>(mflds);
+    auto item_divj = Item_divj<MfieldsStateCuda>{};
 
     auto d_rho_p = psc::mflds::interior(grid, item_rho(mprts));
     auto d_divj = psc::mflds::interior(grid, item_divj(mflds));
