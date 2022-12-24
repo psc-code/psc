@@ -141,7 +141,7 @@ struct ChecksCuda
     auto item_dive = Item_dive<MfieldsStateCuda>(mflds);
 
     auto d_rho = psc::mflds::interior(grid, item_rho(mprts));
-    auto d_dive = item_dive.gt();
+    auto d_dive = item_dive(mflds);
     auto&& rho = gt::host_mirror(d_rho);
     auto&& dive = gt::host_mirror(d_dive);
     gt::copy(d_rho, rho);
