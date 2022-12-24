@@ -234,8 +234,8 @@ struct Marder_ : MarderBase
   void operator()(MfieldsState& mflds, Mparticles& mprts)
   {
     const auto& grid = mflds.grid();
-    auto rho = Moment_t{mprts};
-    rho_.storage() = psc::mflds::interior(grid, rho());
+    auto rho = Moment_t{grid};
+    rho_.storage() = psc::mflds::interior(grid, rho(mprts));
 
     // need to fill ghost cells first (should be unnecessary with only variant
     // 1) FIXME

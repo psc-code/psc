@@ -68,8 +68,8 @@ struct Checks_
       return;
     }
 
-    auto rho = Moment_t{mprts};
-    rho_m_gt_ = psc::mflds::interior(grid, rho());
+    auto rho = Moment_t{grid};
+    rho_m_gt_ = psc::mflds::interior(grid, rho(mprts));
   }
 
   // ----------------------------------------------------------------------
@@ -83,10 +83,10 @@ struct Checks_
       return;
     }
 
-    auto item_rho_p = Moment_t{mprts};
+    auto item_rho_p = Moment_t{grid};
     auto item_divj = Item_divj<MfieldsState>(mflds);
 
-    auto d_rho_gt = psc::mflds::interior(grid, item_rho_p()) - rho_m_gt_;
+    auto d_rho_gt = psc::mflds::interior(grid, item_rho_p(mprts)) - rho_m_gt_;
     auto dt_divj_gt = grid.dt * item_divj.gt();
 
     double eps = continuity_threshold;
@@ -138,9 +138,9 @@ struct Checks_
       return;
     }
 
-    auto item_rho = Moment_t{mprts};
+    auto item_rho = Moment_t{grid};
     auto dive = Item_dive<MfieldsState>(mflds);
-    auto rho_gt = psc::mflds::interior(grid, item_rho());
+    auto rho_gt = psc::mflds::interior(grid, item_rho(mprts));
     auto dive_gt = psc::interior(dive.storage(), dive.ib());
 
     double eps = gauss_threshold;

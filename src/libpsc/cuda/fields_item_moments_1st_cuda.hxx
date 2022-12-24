@@ -23,8 +23,10 @@ struct Moment_rho_1st_nc_cuda
   using moment_type =
     psc::moment::moment_rho<psc::deposit::code::Deposit1stNc, dim_t>;
 
+  explicit Moment_rho_1st_nc_cuda(const Grid_t& grid) : Base{grid} {}
+
   template <typename Mparticles>
-  explicit Moment_rho_1st_nc_cuda(Mparticles& mprts) : Base{mprts.grid()}
+  auto& operator()(Mparticles& mprts)
   {
     auto& cmprts = *mprts.cmprts();
 
@@ -33,9 +35,8 @@ struct Moment_rho_1st_nc_cuda
       cmoments;
     cmoments(cmprts, Base::mres_gt_, Base::mres_ib_);
     Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
+    return Base::mres_gt_;
   }
-
-  auto& operator()() { return Base::mres_gt_; }
 
   auto storage() = delete;
 };

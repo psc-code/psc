@@ -140,8 +140,7 @@ struct MarderCuda : MarderBase
 
   void operator()(MfieldsStateCuda& mflds, MparticlesCuda<BS>& mprts)
   {
-    const Grid_t& grid = mprts.grid();
-
+    const auto& grid = mprts.grid();
     static int pr;
     if (!pr) {
       pr = prof_register("marder", 1., 0, 0);
@@ -152,8 +151,8 @@ struct MarderCuda : MarderBase
     // 1) FIXME
     bnd_.fill_ghosts(mflds, EX, EX + 3);
 
-    Moment_rho_1st_nc_cuda<dim> item_rho{mprts};
-    auto rho = psc::mflds::interior(grid, item_rho());
+    Moment_rho_1st_nc_cuda<dim> item_rho{grid};
+    auto&& rho = psc::mflds::interior(grid, item_rho(mprts));
 
     for (int i = 0; i < loop_; i++) {
       calc_aid_fields(mflds, rho);
