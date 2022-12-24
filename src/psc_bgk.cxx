@@ -178,7 +178,8 @@ template <typename MF>
 void writeMF(MF&& mfld, const std::string& name,
              const std::vector<std::string>& compNames)
 {
-  writeGT(psc::interior(mfld.gt(), mfld.ib()), mfld.grid(), name, compNames);
+  writeGT(psc::mflds::interior(mfld.grid(), mfld.gt()), mfld.grid(), name,
+          compNames);
 }
 
 // ======================================================================
@@ -217,7 +218,7 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
   SetupParticles<Mparticles> setup_particles(*grid_ptr);
   setup_particles.centerer = Centering::Centerer(Centering::NC);
 
-  auto&& qDensity = -psc::interior(divGradPhi.gt(), divGradPhi.ib());
+  auto&& qDensity = -psc::mflds::interior(divGradPhi.grid(), divGradPhi.gt());
 
   auto npt_init = [&](int kind, double crd[3], int p, Int3 idx,
                       psc_particle_npt& npt) {
@@ -291,7 +292,7 @@ void initializePhi(BgkMfields& phi)
 void initializeGradPhi(BgkMfields& phi, BgkMfields& gradPhi)
 {
   auto&& grad = psc::item::grad_ec(phi.gt(), phi.grid());
-  psc::interior(gradPhi.storage(), phi.ib()) = grad;
+  psc::mflds::interior(gradPhi.grid(), gradPhi.storage()) = grad;
 
   fillGhosts(gradPhi, 0, 3);
 
@@ -304,7 +305,7 @@ void initializeGradPhi(BgkMfields& phi, BgkMfields& gradPhi)
 void initializeDivGradPhi(BgkMfields& gradPhi, BgkMfields& divGradPhi)
 {
   auto&& divGrad = psc::item::div_nc(gradPhi.gt(), gradPhi.grid());
-  psc::interior(divGradPhi.storage(), gradPhi.ib()) = divGrad;
+  psc::mflds::interior(divGradPhi.grid(), divGradPhi.storage()) = divGrad;
 
   fillGhosts(divGradPhi, 0, 1);
 
