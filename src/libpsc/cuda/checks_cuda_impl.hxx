@@ -141,9 +141,10 @@ struct ChecksCuda
 
     auto d_rho = psc::mflds::interior(grid, item_rho(mprts));
     auto&& rho = gt::host_mirror(d_rho);
-    auto&& dive = gt::host_mirror(item_dive.gt());
+    auto d_dive = item_dive(mflds);
+    auto&& dive = gt::host_mirror(d_dive);
     gt::copy(gt::eval(d_rho), rho);
-    gt::copy(gt::eval(item_dive.gt()), dive);
+    gt::copy(gt::eval(d_dive), dive);
 
     double eps = gauss_threshold;
     double max_err = 0.;
