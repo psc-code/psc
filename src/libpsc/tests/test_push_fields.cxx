@@ -271,7 +271,7 @@ TYPED_TEST(ItemTest, ItemDivJ)
   });
   auto dx = grid.domain.dx;
 
-  auto item_divj = Item(mflds);
+  auto item_divj = Item();
   auto&& rho = gt::eval(item_divj(mflds));
 
   auto rho_ref = gt::empty_like(rho);
