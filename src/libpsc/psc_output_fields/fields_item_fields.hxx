@@ -170,12 +170,11 @@ public:
   Item_dive(MfieldsState& mflds) : mflds_{mflds} {}
 
   const Grid_t& grid() const { return mflds_.grid(); }
-  auto storage() const { return gt(); }
 
-  auto gt() const
+  auto operator()(MfieldsState& mflds) const
   {
-    return psc::item::div_nc(mflds_.gt().view(_all, _all, _all, _s(EX, EX + 3)),
-                             mflds_.grid());
+    return psc::item::div_nc(mflds.gt().view(_all, _all, _all, _s(EX, EX + 3)),
+                             mflds.grid());
   }
 
 private:
