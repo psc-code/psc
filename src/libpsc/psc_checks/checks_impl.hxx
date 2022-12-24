@@ -139,9 +139,9 @@ struct Checks_
     }
 
     auto item_rho = Moment_t{grid};
-    auto dive = Item_dive<MfieldsState>(mflds);
+    auto item_dive = Item_dive<MfieldsState>{};
     auto rho_gt = psc::mflds::interior(grid, item_rho(mprts));
-    auto dive_gt = psc::mflds::interior(grid, dive(mflds));
+    auto dive_gt = psc::mflds::interior(grid, item_dive(mflds));
 
     double eps = gauss_threshold;
     double max_err = 0.;
@@ -184,7 +184,8 @@ struct Checks_
       }
       writer_gauss_.begin_step(grid.timestep(), grid.timestep() * grid.dt);
       writer_gauss_.write(rho_gt, grid, "rho", {"rho"});
-      writer_gauss_.write(dive_gt, grid, dive.name(), dive.comp_names());
+      writer_gauss_.write(dive_gt, grid, item_dive.name(),
+                          item_dive.comp_names());
       writer_gauss_.end_step();
     }
 

@@ -138,7 +138,7 @@ struct ChecksCuda
     }
 
     auto item_rho = Moment_t{grid};
-    auto item_dive = Item_dive<MfieldsStateCuda>(mflds);
+    auto item_dive = Item_dive<MfieldsStateCuda>{};
 
     auto d_rho = psc::mflds::interior(grid, item_rho(mprts));
     auto d_dive = item_dive(mflds);
