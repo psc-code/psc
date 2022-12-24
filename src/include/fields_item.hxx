@@ -160,7 +160,7 @@ private:
 // deriving from this class adds the result field mres_
 
 template <typename Derived, typename MF, typename Bnd = Bnd_<MF>>
-class ItemMomentCRTP : public MFexpression<Derived>
+class ItemMomentCRTP
 {
 public:
   using storage_type = typename MF::Storage;

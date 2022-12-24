@@ -13,7 +13,7 @@
 // Main fields in their natural staggering
 
 template <typename MfieldsState>
-class Item_jeh : public MFexpression<Item_jeh<MfieldsState>>
+class Item_jeh
 {
 public:
   using Real = typename MfieldsState::real_t;
@@ -170,7 +170,7 @@ static auto grad_ec(const E& fld, const Grid_t& grid)
 // Item_dive
 
 template <typename MfieldsState>
-class Item_dive : public MFexpression<Item_dive<MfieldsState>>
+class Item_dive
 {
 public:
   using Real = typename MfieldsState::real_t;
@@ -203,7 +203,7 @@ private:
 // FIXME, almost same as dive
 
 template <typename MfieldsState>
-class Item_divj : public MFexpression<Item_divj<MfieldsState>>
+class Item_divj
 {
 public:
   using Real = typename MfieldsState::real_t;
@@ -232,7 +232,7 @@ private:
 // Item_grad
 
 template <typename Mfields>
-class Item_grad : public MFexpression<Item_grad<Mfields>>
+class Item_grad
 {
 public:
   using Real = typename Mfields::real_t;
