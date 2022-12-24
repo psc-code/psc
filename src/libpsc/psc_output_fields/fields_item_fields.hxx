@@ -8,18 +8,6 @@
 #endif
 
 // ======================================================================
-
-using MfieldsState_t = MfieldsStateDouble;
-using Mfields_t = MfieldsC;
-
-// ======================================================================
-
-#define define_dxdydz(dx, dy, dz)                                              \
-  int dx _mrc_unused = (grid.isInvar(0)) ? 0 : 1;                              \
-  int dy _mrc_unused = (grid.isInvar(1)) ? 0 : 1;                              \
-  int dz _mrc_unused = (grid.isInvar(2)) ? 0 : 1
-
-// ======================================================================
 // Item_jeh
 //
 // Main fields in their natural staggering
@@ -267,5 +255,3 @@ public:
 private:
   Mfields& mflds_;
 };
-
-#undef define_dxdydz
