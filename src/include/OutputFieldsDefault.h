@@ -235,8 +235,8 @@ public:
 
     prof_start(pr_moments);
     moments(grid, [&]() {
-      auto item = Item_Moments<Mparticles, Dim>(mprts);
-      return make_mfields_gt(item.storage(), item.name(), item.comp_names());
+      auto item = Item_Moments<Mparticles, Dim>(grid);
+      return make_mfields_gt(item(mprts), item.name(), item.comp_names());
     });
     prof_stop(pr_moments);
 
