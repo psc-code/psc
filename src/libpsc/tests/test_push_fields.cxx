@@ -252,7 +252,6 @@ TYPED_TEST(ItemTest, ItemDivJ)
 {
   using MfieldsState = typename TypeParam::MfieldsState;
   using Mfields = typename TypeParam::Mfields;
-  using Item = Item_divj<MfieldsState>;
 
   this->make_psc({});
   const auto& grid = this->grid();
@@ -271,7 +270,7 @@ TYPED_TEST(ItemTest, ItemDivJ)
   });
   auto dx = grid.domain.dx;
 
-  auto item_divj = Item();
+  auto item_divj = Item_divj{};
   auto&& rho = gt::eval(item_divj(mflds));
 
   auto rho_ref = gt::empty_like(rho);
