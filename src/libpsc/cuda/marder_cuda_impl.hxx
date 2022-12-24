@@ -113,7 +113,7 @@ struct MarderCuda : MarderBase
       io_.end_step();
     }
 
-    psc::interior(res_.gt(), res_.ib()) = dive - rho;
+    psc::mflds::interior(grid, res_.gt()) = dive - rho;
     bnd_mf_.fill_ghosts(res_, 0, 1);
   }
 
