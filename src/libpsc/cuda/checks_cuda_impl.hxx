@@ -75,7 +75,7 @@ struct ChecksCuda
     auto item_divj = Item_divj<MfieldsStateCuda>(mflds);
 
     auto d_rho_p = psc::mflds::interior(grid, item_rho(mprts));
-    auto&& d_divj = item_divj.gt();
+    auto d_divj = psc::mflds::interior(grid, item_divj(mflds));
     auto&& rho_p = gt::host_mirror(d_rho_p);
     auto&& rho_m = gt::host_mirror(rho_m_gt_);
     auto&& h_divj = gt::host_mirror(d_divj);
