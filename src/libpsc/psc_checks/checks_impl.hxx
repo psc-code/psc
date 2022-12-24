@@ -87,7 +87,7 @@ struct Checks_
     auto item_divj = Item_divj<MfieldsState>(mflds);
 
     auto d_rho_gt = psc::mflds::interior(grid, item_rho_p(mprts)) - rho_m_gt_;
-    auto dt_divj_gt = grid.dt * item_divj.gt();
+    auto dt_divj_gt = grid.dt * item_divj(mflds);
 
     double eps = continuity_threshold;
     double max_err = 0.;
