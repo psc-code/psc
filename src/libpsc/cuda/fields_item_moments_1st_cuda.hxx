@@ -23,10 +23,8 @@ struct Moment_rho_1st_nc_cuda
   using moment_type =
     psc::moment::moment_rho<psc::deposit::code::Deposit1stNc, dim_t>;
 
-  Moment_rho_1st_nc_cuda(const Grid_t& grid) : Base{grid} {}
-
   template <typename Mparticles>
-  void operator()(Mparticles& mprts)
+  explicit Moment_rho_1st_nc_cuda(Mparticles& mprts) : Base{mprts.grid()}
   {
     auto& cmprts = *mprts.cmprts();
 

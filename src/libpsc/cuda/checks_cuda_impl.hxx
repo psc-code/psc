@@ -58,8 +58,7 @@ struct ChecksCuda
       return;
     }
 
-    Moment_t item_rho{grid};
-    item_rho(mprts);
+    Moment_t item_rho{mprts};
     rho_m_gt_ = psc::interior(item_rho.storage(), item_rho.ib());
   }
 
@@ -72,9 +71,7 @@ struct ChecksCuda
       return;
     }
 
-    Moment_t item_rho{grid};
-    item_rho(mprts);
-
+    Moment_t item_rho{mprts};
     auto item_divj = Item_divj<MfieldsStateCuda>(mflds);
 
     auto d_rho_p = psc::interior(item_rho.storage(), item_rho.ib());
@@ -139,8 +136,7 @@ struct ChecksCuda
       return;
     }
 
-    auto item_rho = Moment_t{grid};
-    item_rho(mprts);
+    auto item_rho = Moment_t{mprts};
     auto item_dive = Item_dive<MfieldsStateCuda>(mflds);
 
     auto d_rho = psc::interior(item_rho.storage(), item_rho.ib());

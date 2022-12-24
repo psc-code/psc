@@ -87,7 +87,6 @@ struct MarderCuda : MarderBase
       diffusion_{diffusion},
       loop_{loop},
       dump_{dump},
-      item_rho_{grid},
       bnd_{grid, grid.ibn},
       bnd_mf_{grid, grid.ibn},
       rho_{grid, 1, grid.ibn},
@@ -151,8 +150,8 @@ struct MarderCuda : MarderBase
     // 1) FIXME
     bnd_.fill_ghosts(mflds, EX, EX + 3);
 
-    item_rho_(mprts);
-    auto&& rho = psc::interior(item_rho_.storage(), item_rho_.ib());
+    Moment_rho_1st_nc_cuda<dim> item_rho{mprts};
+    auto&& rho = psc::interior(item_rho.storage(), item_rho.ib());
 
     for (int i = 0; i < loop_; i++) {
       calc_aid_fields(mflds, rho);
@@ -174,6 +173,4 @@ struct MarderCuda : MarderBase
   BndCuda3<Mfields> bnd_mf_;
   Mfields rho_;
   Mfields res_;
-
-  Moment_rho_1st_nc_cuda<dim> item_rho_;
 };
