@@ -4,6 +4,25 @@
 #include "testing.hxx"
 
 // ======================================================================
+// Moment_rho_1st_nc_selector
+//
+// FIXME, should go away eventually
+
+template <typename MF, typename D>
+struct Moment_rho_1st_nc_selector
+{
+  using type = Moment_rho_1st_nc<MF, D>;
+};
+
+#ifdef USE_CUDA
+template <typename D>
+struct Moment_rho_1st_nc_selector<MfieldsCuda, D>
+{
+  using type = Moment_rho_1st_nc_cuda<D>;
+};
+#endif
+
+// ======================================================================
 // MomentTest
 
 template <typename T>
@@ -250,7 +269,7 @@ TYPED_TEST(MomentTest, Moment_rho_1st_nc_cc)
   using dim_t = typename TypeParam::dim;
   using Particle = typename Mparticles::Particle;
   using real_t = typename Mfields::real_t;
-  using Moment = Moment_rho_1st_nc<Mfields, dim_t>;
+  using Moment = typename Moment_rho_1st_nc_selector<Mfields, dim_t>::type;
 
   EXPECT_EQ(Moment::name(), "rho_1st_nc");
   auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 0.}, this->w, 0});
@@ -294,7 +313,7 @@ TYPED_TEST(MomentTest, Moment_rho_1st_nc_nc)
   using dim_t = typename TypeParam::dim;
   using Particle = typename Mparticles::Particle;
   using real_t = typename Mfields::real_t;
-  using Moment = Moment_rho_1st_nc<Mfields, dim_t>;
+  using Moment = typename Moment_rho_1st_nc_selector<Mfields, dim_t>::type;
 
   EXPECT_EQ(Moment::name(), "rho_1st_nc");
   auto& mprts = this->make_mprts({{10., 10., 10.}, {0., 0., 0.}, this->w, 0});
