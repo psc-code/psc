@@ -45,6 +45,21 @@ struct moment_selector<
 template <typename Mparticles, typename Dim>
 using Item_Moments = typename detail::moment_selector<Mparticles, Dim>::type;
 
+template <typename E>
+struct mfields_gt
+{
+  E gt;
+  std::string name;
+  std::vector<std::string> comp_names;
+};
+
+template <typename E>
+auto make_mfields_gt(E&& gt, const std::string& name,
+                     const std::vector<std::string>& comp_names)
+{
+  return mfields_gt<E>{std::forward<E>(gt), name, comp_names};
+}
+
 // ======================================================================
 // OutputFieldsItemParams
 
@@ -113,21 +128,21 @@ public:
     if (do_pfield || doaccum_tfield) {
       prof_start(pr_eval);
       auto&& item = get_item();
-      auto&& pfd = psc::interior(item.storage(), item.ib());
+      auto&& pfd = psc::mflds::interior(grid, item.gt);
       prof_stop(pr_eval);
 
       if (do_pfield) {
         prof_start(pr_pfd);
         mpi_printf(grid.comm(), "***** Writing PFD output for '%s'\n",
-                   item.name().c_str());
+                   item.name.c_str());
         pfield_next_ += pfield_interval;
-        io_pfd_.write_step(grid, rn, rx, pfd, item.name(), item.comp_names());
+        io_pfd_.write_step(grid, rn, rx, pfd, item.name, item.comp_names);
         prof_stop(pr_pfd);
       }
 
       if (doaccum_tfield) {
         if (!tfd_) {
-          tfd_.reset(new Mfields{grid, item.n_comps(), {}});
+          tfd_.reset(new Mfields{grid, item.gt.shape(3), {}});
         }
 
         prof_start(pr_accum);
@@ -140,7 +155,7 @@ public:
       if (do_tfield) {
         prof_start(pr_tfd);
         mpi_printf(grid.comm(), "***** Writing TFD output for '%s'\n",
-                   item.name().c_str());
+                   item.name.c_str());
         tfield_next_ += tfield_interval;
 
         // convert accumulated values to correct temporal mean
@@ -150,8 +165,8 @@ public:
         // io_tfd_.set_subset(grid, rn, rx);
         // io_tfd_.write(tfd_->gt(), grid, item.name(),
         // item.comp_names()); io_tfd_.end_step();
-        io_tfd_.write_step(grid, rn, rx, tfd_->gt(), item.name(),
-                           item.comp_names());
+        io_tfd_.write_step(grid, rn, rx, tfd_->gt(), item.name,
+                           item.comp_names);
         naccum_ = 0;
 
         tfd_->gt().view() = 0;
@@ -212,11 +227,17 @@ public:
     prof_start(pr);
 
     prof_start(pr_fields);
-    fields(grid, [&]() { return Item_jeh<MfieldsState>(mflds); });
+    fields(grid, [&]() {
+      auto item = Item_jeh<MfieldsState>(mflds);
+      return make_mfields_gt(item.storage(), item.name(), item.comp_names());
+    });
     prof_stop(pr_fields);
 
     prof_start(pr_moments);
-    moments(grid, [&]() { return Item_Moments<Mparticles, Dim>(mprts); });
+    moments(grid, [&]() {
+      auto item = Item_Moments<Mparticles, Dim>(mprts);
+      return make_mfields_gt(item.storage(), item.name(), item.comp_names());
+    });
     prof_stop(pr_moments);
 
     prof_stop(pr);
