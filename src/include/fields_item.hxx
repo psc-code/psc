@@ -166,6 +166,8 @@ public:
   using storage_type = typename MF::Storage;
   using real_t = typename storage_type::value_type;
   using space_type = typename storage_type::space_type;
+  using value_type = typename storage_type::value_type;
+  using space = typename storage_type::space_type;
 
   static std::string name() { return Derived::moment_type::name(); }
   int n_comps() { return comp_names_.size(); }

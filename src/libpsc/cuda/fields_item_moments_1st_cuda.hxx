@@ -37,7 +37,7 @@ struct Moment_rho_1st_nc_cuda
     // zeros() shouldn't actually allocate, but probably it does, so this wastes
     // memory and a copy
     storage_type mres =
-      psc::mflds::zeros<real_t, space_type>(mprts.grid(), 1, ib);
+      psc::mflds::zeros<real_t, space_type>(mprts.grid(), Base::n_comps(), ib);
     CudaMoments1stNcRho<cuda_mparticles<typename Mparticles::BS>, dim_t>
       cmoments;
     cmoments(cmprts, mres, ib);
@@ -85,7 +85,7 @@ public:
     prof_start(pr_1);
     Int3 ib = -mprts.grid().ibn;
     storage_type mres =
-      psc::mflds::zeros<real_t, space_type>(mprts.grid(), 1, ib);
+      psc::mflds::zeros<real_t, space_type>(mprts.grid(), Base::n_comps(), ib);
     prof_stop(pr_1);
 
     CudaMoments1stN<cuda_mparticles<typename Mparticles::BS>, dim_t> cmoments;
@@ -112,13 +112,16 @@ public:
   using Base =
     ItemMomentCRTP<Moment_1st_cuda<dim_t>, MfieldsCuda, BndCuda3<MfieldsCuda>>;
   using Mfields = MfieldsCuda;
-  using value_type = typename Mfields::real_t;
-  using space = gt::space::device;
+  using storage_type = typename Base::storage_type;
+  using real_t = typename Base::real_t;
+  using space_type = typename Base::space_type;
   using moment_type =
     psc::moment::moment_all<psc::deposit::code::Deposit1stCc, dim_t>;
 
+  using Base::Base;
+
   template <typename Mparticles>
-  explicit Moment_1st_cuda(const Mparticles& mprts) : Base{mprts.grid()}
+  auto operator()(const Mparticles& mprts)
   {
     static int pr, pr_1, pr_2, pr_3;
     if (!pr) {
@@ -133,18 +136,21 @@ public:
     auto& cmprts = *_mprts.cmprts();
 
     prof_start(pr_1);
-    Base::mres_gt_.view() = 0.;
+    Int3 ib = -mprts.grid().ibn;
+    storage_type mres =
+      psc::mflds::zeros<real_t, space_type>(mprts.grid(), Base::n_comps(), ib);
     prof_stop(pr_1);
 
     prof_start(pr_2);
     CudaMoments1stAll<cuda_mparticles<typename Mparticles::BS>, dim_t> cmoments;
-    cmoments(cmprts, Base::mres_gt_, Base::mres_ib_);
+    cmoments(cmprts, mres, ib);
     prof_stop(pr_2);
 
     prof_start(pr_3);
-    Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
+    Base::bnd_.add_ghosts(mprts.grid(), mres, ib);
     prof_stop(pr_3);
 
     prof_stop(pr);
+    return mres;
   }
 };

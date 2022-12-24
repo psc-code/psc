@@ -72,20 +72,10 @@ class Moments_1st : public ItemMomentCRTP<Moments_1st<MP, MF, D>, MF>
 {
 public:
   using Base = ItemMomentCRTP<Moments_1st<MP, MF, D>, MF>;
-  using Mparticles = MP;
-  using Mfields = MF;
-  using dim_t = D;
-  using value_type = typename Mfields::real_t;
-  using space = typename Mfields::space;
   using moment_type =
-    psc::moment::moment_all<psc::deposit::code::Deposit1stCc, dim_t>;
+    psc::moment::moment_all<psc::deposit::code::Deposit1stCc, D>;
 
-  explicit Moments_1st(const Mparticles& mprts) : Base{mprts.grid()}
-  {
-    Base::mres_gt_.view() = 0.f;
-    moment_type{}(Base::mres_gt_, Base::mres_ib_, mprts);
-    Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
-  }
+  using Base::Base;
 };
 
 #ifdef USE_CUDA
