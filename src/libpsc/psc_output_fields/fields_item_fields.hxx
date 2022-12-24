@@ -7,23 +7,6 @@
 #include "psc_fields_cuda.h"
 #endif
 
-template <typename E>
-inline auto to_gt(const E& e)
-{
-  auto& grid = e.grid();
-  assert(e.ibn() == Int3{});
-  auto res = gt::empty<typename E::Real>(
-    {grid.ldims[0], grid.ldims[1], grid.ldims[2], e.n_comps(), e.n_patches()});
-  auto k_res = res.to_kernel();
-
-  gt::launch<5, gt::space::host>(res.shape(),
-                                 [=](int i, int j, int k, int m, int p) {
-                                   k_res(i, j, k, m, p) = e(m, {i, j, k}, p);
-                                 });
-
-  return res;
-}
-
 // ======================================================================
 
 using MfieldsState_t = MfieldsStateDouble;
