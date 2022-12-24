@@ -228,8 +228,8 @@ public:
 
     prof_start(pr_fields);
     fields(grid, [&]() {
-      auto item = Item_jeh<MfieldsState>(mflds);
-      return make_mfields_gt(item.storage(), item.name(), item.comp_names());
+      auto item = Item_jeh<MfieldsState>{};
+      return make_mfields_gt(item(mflds), item.name(), item.comp_names());
     });
     prof_stop(pr_fields);
 
