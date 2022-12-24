@@ -211,7 +211,6 @@ TYPED_TEST(ItemTest, ItemDivE)
 {
   using MfieldsState = typename TypeParam::MfieldsState;
   using Mfields = typename TypeParam::Mfields;
-  using Item = Item_dive<MfieldsState>;
 
   this->make_psc({});
   const auto& grid = this->grid();
@@ -230,7 +229,7 @@ TYPED_TEST(ItemTest, ItemDivE)
   });
   auto dx = grid.domain.dx;
 
-  auto item_dive = Item{};
+  auto item_dive = Item_dive{};
   auto&& rho = gt::eval(item_dive(mflds));
 
   auto rho_ref = gt::empty_like(rho);
