@@ -148,7 +148,7 @@ struct Marder_ : MarderBase
   void calc_aid_fields(MfieldsState& mflds)
   {
     const auto& grid = mflds.grid();
-    auto item_dive = Item_dive<MfieldsState>{};
+    auto item_dive = Item_dive{};
     auto dive_gt = psc::mflds::interior(grid, item_dive(mflds));
 
     if (dump_) {
