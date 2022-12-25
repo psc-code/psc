@@ -177,6 +177,7 @@ public:
 
 // FIXME, almost same as dive
 
+template <typename MfieldsState>
 class Item_divj
 {
 public:
@@ -184,7 +185,6 @@ public:
   static int n_comps() { return 1; }
   static std::vector<std::string> comp_names() { return {"divj"}; }
 
-  template <typename MfieldsState>
   auto operator()(MfieldsState& mflds) const
   {
     return psc::item::div_nc(
