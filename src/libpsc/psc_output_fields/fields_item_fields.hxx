@@ -157,6 +157,7 @@ static auto grad_ec(const E& fld, const Grid_t& grid)
 // ======================================================================
 // Item_dive
 
+template <typename MfieldsState>
 class Item_dive
 {
 public:
@@ -164,7 +165,6 @@ public:
   static int n_comps() { return 1; }
   static std::vector<std::string> comp_names() { return {"dive"}; }
 
-  template <typename MfieldsState>
   auto operator()(MfieldsState& mflds) const
   {
     return psc::item::div_nc(mflds.gt().view(_all, _all, _all, _s(EX, EX + 3)),

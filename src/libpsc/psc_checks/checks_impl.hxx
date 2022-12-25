@@ -139,7 +139,7 @@ struct Checks_
     }
 
     auto item_rho = Moment_t{grid};
-    auto item_dive = Item_dive{};
+    auto item_dive = Item_dive<MfieldsState>{};
     auto rho_gt = psc::mflds::interior(grid, item_rho(mprts));
     auto dive_gt = psc::mflds::interior(grid, item_dive(mflds));
 
