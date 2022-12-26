@@ -12,10 +12,79 @@ template <typename S>
 struct BndContext
 {
   using storage_type = S;
+  using real_t = typename storage_type::value_type;
 
   storage_type& mflds_gt;
   const Int3& ib;
+
+private:
+  static void copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3],
+                          void* _buf, void* _ctx)
+  {
+    BndContext* ctx = static_cast<BndContext*>(_ctx);
+    real_t* buf = static_cast<real_t*>(_buf);
+    const Int3& ib = ctx->ib;
+
+    for (int m = mb; m < me; m++) {
+      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+        for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+          for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+            MRC_DDC_BUF3(buf, m - mb, ix, iy, iz) =
+              ctx->mflds_gt(ix - ib[0], iy - ib[1], iz - ib[2], m, p);
+          }
+        }
+      }
+    }
+  }
+
+  static void add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
+                           void* _buf, void* _ctx)
+  {
+    BndContext* ctx = static_cast<BndContext*>(_ctx);
+    real_t* buf = static_cast<real_t*>(_buf);
+    const Int3& ib = ctx->ib;
+
+    for (int m = mb; m < me; m++) {
+      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+        for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+          for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+            ctx->mflds_gt(ix - ib[0], iy - ib[1], iz - ib[2], m, p) +=
+              MRC_DDC_BUF3(buf, m - mb, ix, iy, iz);
+          }
+        }
+      }
+    }
+  }
+
+  static void copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
+                            void* _buf, void* _ctx)
+  {
+    BndContext* ctx = static_cast<BndContext*>(_ctx);
+    real_t* buf = static_cast<real_t*>(_buf);
+    const Int3& ib = ctx->ib;
+
+    for (int m = mb; m < me; m++) {
+      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+        for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+          for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+            ctx->mflds_gt(ix - ib[0], iy - ib[1], iz - ib[2], m, p) =
+              MRC_DDC_BUF3(buf, m - mb, ix, iy, iz);
+          }
+        }
+      }
+    }
+  }
+
+public:
+  constexpr static mrc_ddc_funcs ddc_funcs = {
+    .copy_to_buf = copy_to_buf,
+    .copy_from_buf = copy_from_buf,
+    .add_from_buf = add_from_buf,
+  };
 };
+
+template <typename S>
+constexpr mrc_ddc_funcs BndContext<S>::ddc_funcs;
 
 template <typename MF>
 struct Bnd_ : BndBase
@@ -48,7 +117,8 @@ struct Bnd_ : BndBase
     gt::copy(mflds_gt, h_mflds_gt);
     BndCtx ctx{h_mflds_gt, ib};
     mrc_ddc_set_param_int(grid.ddc(), "size_of_type", sizeof(real_t));
-    mrc_ddc_set_funcs(grid.ddc(), const_cast<mrc_ddc_funcs*>(&ddc_funcs));
+    mrc_ddc_set_funcs(grid.ddc(),
+                      const_cast<mrc_ddc_funcs*>(&BndCtx::ddc_funcs));
     mrc_ddc_add_ghosts(grid.ddc(), mb, me, &ctx);
     gt::copy(h_mflds_gt, mflds_gt);
   }
@@ -74,7 +144,8 @@ struct Bnd_ : BndBase
     gt::copy(mflds_gt, h_mflds_gt);
     BndCtx ctx{h_mflds_gt, ib};
     mrc_ddc_set_param_int(grid.ddc(), "size_of_type", sizeof(real_t));
-    mrc_ddc_set_funcs(grid.ddc(), const_cast<mrc_ddc_funcs*>(&ddc_funcs));
+    mrc_ddc_set_funcs(grid.ddc(),
+                      const_cast<mrc_ddc_funcs*>(&BndCtx::ddc_funcs));
     mrc_ddc_fill_ghosts(grid.ddc(), mb, me, &ctx);
     gt::copy(h_mflds_gt, mflds_gt);
   }
@@ -83,73 +154,4 @@ struct Bnd_ : BndBase
   {
     fill_ghosts(mflds.grid(), mflds.storage(), mflds.ib(), mb, me);
   }
-
-  // ----------------------------------------------------------------------
-  // copy_to_buf
-
-  static void copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3],
-                          void* _buf, void* _ctx)
-  {
-    BndCtx* ctx = static_cast<BndCtx*>(_ctx);
-    real_t* buf = static_cast<real_t*>(_buf);
-    const Int3& ib = ctx->ib;
-
-    for (int m = mb; m < me; m++) {
-      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-        for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-          for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-            MRC_DDC_BUF3(buf, m - mb, ix, iy, iz) =
-              ctx->mflds_gt(ix - ib[0], iy - ib[1], iz - ib[2], m, p);
-          }
-        }
-      }
-    }
-  }
-
-  static void add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
-                           void* _buf, void* _ctx)
-  {
-    BndCtx* ctx = static_cast<BndCtx*>(_ctx);
-    real_t* buf = static_cast<real_t*>(_buf);
-    const Int3& ib = ctx->ib;
-
-    for (int m = mb; m < me; m++) {
-      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-        for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-          for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-            ctx->mflds_gt(ix - ib[0], iy - ib[1], iz - ib[2], m, p) +=
-              MRC_DDC_BUF3(buf, m - mb, ix, iy, iz);
-          }
-        }
-      }
-    }
-  }
-
-  static void copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
-                            void* _buf, void* _ctx)
-  {
-    BndCtx* ctx = static_cast<BndCtx*>(_ctx);
-    real_t* buf = static_cast<real_t*>(_buf);
-    const Int3& ib = ctx->ib;
-
-    for (int m = mb; m < me; m++) {
-      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-        for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-          for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-            ctx->mflds_gt(ix - ib[0], iy - ib[1], iz - ib[2], m, p) =
-              MRC_DDC_BUF3(buf, m - mb, ix, iy, iz);
-          }
-        }
-      }
-    }
-  }
-
-  constexpr static mrc_ddc_funcs ddc_funcs = {
-    .copy_to_buf = copy_to_buf,
-    .copy_from_buf = copy_from_buf,
-    .add_from_buf = add_from_buf,
-  };
 };
-
-template <typename MF>
-constexpr mrc_ddc_funcs Bnd_<MF>::ddc_funcs;
