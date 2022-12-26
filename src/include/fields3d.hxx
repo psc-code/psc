@@ -532,7 +532,7 @@ struct Mfields_from_type_space
 template <typename E>
 using Mfields_from_gt_t =
   typename detail::Mfields_from_type_space<typename E::value_type,
-                                           typename E::space>::type;
+                                           typename E::space_type>::type;
 
 // ======================================================================
 // psc::interior
