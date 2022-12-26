@@ -20,7 +20,7 @@ struct Moment_rho_1st_nc_cuda
   using Base = ItemMomentCRTP<Moment_rho_1st_nc_cuda<dim_t>,
                               MfieldsCuda::Storage, BndCuda3>;
   using storage_type = typename Base::storage_type;
-  using real_t = typename Base::real_t;
+  using value_type = typename Base::value_type;
   using space_type = typename Base::space_type;
   using moment_type =
     psc::moment::moment_rho<psc::deposit::code::Deposit1stNc, dim_t>;
@@ -36,8 +36,8 @@ struct Moment_rho_1st_nc_cuda
     // FIXME, gt::gtensor and psc::gtensor are slightly different, and ideally
     // zeros() shouldn't actually allocate, but probably it does, so this wastes
     // memory and a copy
-    storage_type mres =
-      psc::mflds::zeros<real_t, space_type>(mprts.grid(), Base::n_comps(), ib);
+    storage_type mres = psc::mflds::zeros<value_type, space_type>(
+      mprts.grid(), Base::n_comps(), ib);
     CudaMoments1stNcRho<cuda_mparticles<typename Mparticles::BS>, dim_t>
       cmoments;
     cmoments(cmprts, mres, ib);
@@ -61,7 +61,7 @@ public:
     ItemMomentCRTP<Moment_n_1st_cuda<dim_t>, MfieldsCuda::Storage, BndCuda3>;
   using Mfields = MfieldsCuda;
   using storage_type = typename Base::storage_type;
-  using real_t = typename Base::real_t;
+  using value_type = typename Base::value_type;
   using space_type = typename Base::space_type;
   using moment_type =
     psc::moment::moment_n<psc::deposit::code::Deposit1stCc, dim_t>;
@@ -84,8 +84,8 @@ public:
 
     prof_start(pr_1);
     Int3 ib = -mprts.grid().ibn;
-    storage_type mres =
-      psc::mflds::zeros<real_t, space_type>(mprts.grid(), Base::n_comps(), ib);
+    storage_type mres = psc::mflds::zeros<value_type, space_type>(
+      mprts.grid(), Base::n_comps(), ib);
     prof_stop(pr_1);
 
     CudaMoments1stN<cuda_mparticles<typename Mparticles::BS>, dim_t> cmoments;
@@ -113,7 +113,7 @@ public:
     ItemMomentCRTP<Moments_1st_cuda<dim_t>, MfieldsCuda::Storage, BndCuda3>;
   using Mfields = MfieldsCuda;
   using storage_type = typename Base::storage_type;
-  using real_t = typename Base::real_t;
+  using value_type = typename Base::value_type;
   using space_type = typename Base::space_type;
   using moment_type =
     psc::moment::moment_all<psc::deposit::code::Deposit1stCc, dim_t>;
@@ -137,8 +137,8 @@ public:
 
     prof_start(pr_1);
     Int3 ib = -mprts.grid().ibn;
-    storage_type mres =
-      psc::mflds::zeros<real_t, space_type>(mprts.grid(), Base::n_comps(), ib);
+    storage_type mres = psc::mflds::zeros<value_type, space_type>(
+      mprts.grid(), Base::n_comps(), ib);
     prof_stop(pr_1);
 
     prof_start(pr_2);

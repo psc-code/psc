@@ -157,10 +157,8 @@ class ItemMomentCRTP
 {
 public:
   using storage_type = S;
-  using real_t = typename storage_type::value_type;
   using space_type = typename storage_type::space_type;
   using value_type = typename storage_type::value_type;
-  using space = typename storage_type::space_type;
 
   static std::string name() { return Derived::moment_type::name(); }
   int n_comps() { return comp_names_.size(); }
@@ -175,7 +173,7 @@ public:
   {
     Int3 ib = -mprts.grid().ibn;
     storage_type mres =
-      psc::mflds::zeros<real_t, space_type>(mprts.grid(), n_comps(), ib);
+      psc::mflds::zeros<value_type, space_type>(mprts.grid(), n_comps(), ib);
     typename Derived::moment_type{}(mres, ib, mprts);
     bnd_.add_ghosts(mprts.grid(), mres, ib);
     return mres;
