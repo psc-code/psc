@@ -156,8 +156,6 @@ private:
 
 // ======================================================================
 // ItemMomentCRTP
-//
-// deriving from this class adds the result field mres_
 
 template <typename Derived, typename MF, typename Bnd = Bnd_<MF>>
 class ItemMomentCRTP
@@ -173,15 +171,8 @@ public:
   int n_comps() { return comp_names_.size(); }
   const std::vector<std::string>& comp_names() { return comp_names_; }
 
-  auto storage() { return mres_gt_; }
-  const Int3& ib() { return mres_ib_; }
-
   explicit ItemMomentCRTP(const Grid_t& grid)
-    : comp_names_{Derived::moment_type::comp_names(grid.kinds)},
-      mres_gt_(psc::mflds::empty<real_t, space_type>(
-        grid, int(comp_names_.size()), -grid.ibn)),
-      mres_ib_{-grid.ibn},
-      bnd_{grid}
+    : comp_names_{Derived::moment_type::comp_names(grid.kinds)}, bnd_{grid}
   {}
 
   template <typename Mparticles>
@@ -196,8 +187,8 @@ public:
   }
 
 protected:
-  std::vector<std::string> comp_names_;
-  storage_type mres_gt_;
-  Int3 mres_ib_;
   ItemMomentBnd<storage_type, Bnd> bnd_;
+
+private:
+  std::vector<std::string> comp_names_;
 };
