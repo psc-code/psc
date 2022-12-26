@@ -121,7 +121,7 @@ struct Marder_ : MarderBase
   using dim_t = D;
   using real_t = typename Mfields::real_t;
   using fields_view_t = typename Mfields::fields_view_t;
-  using Moment_t = Moment_rho_1st_nc<Mfields, dim_t>;
+  using Moment_t = Moment_rho_1st_nc<typename Mfields::Storage, dim_t>;
 
   Marder_(const Grid_t& grid, real_t diffusion, int loop, bool dump)
     : grid_{grid},
