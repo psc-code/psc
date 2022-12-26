@@ -157,11 +157,11 @@ private:
 // ======================================================================
 // ItemMomentCRTP
 
-template <typename Derived, typename MF, typename Bnd = Bnd_>
+template <typename Derived, typename S, typename Bnd = Bnd_>
 class ItemMomentCRTP
 {
 public:
-  using storage_type = typename MF::Storage;
+  using storage_type = S;
   using real_t = typename storage_type::value_type;
   using space_type = typename storage_type::space_type;
   using value_type = typename storage_type::value_type;
