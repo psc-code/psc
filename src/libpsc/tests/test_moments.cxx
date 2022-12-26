@@ -375,7 +375,7 @@ TYPED_TEST(MomentTest, Moment_rho_2nd_nc)
   using Mparticles = typename TypeParam::Mparticles;
   using Mfields = typename TypeParam::Mfields;
   using dim_t = typename TypeParam::dim;
-  using Moment = Moment_rho_2nd_nc<Mfields, dim_t>;
+  using Moment = Moment_rho_2nd_nc<typename Mfields::Storage, dim_t>;
   using real_t = typename Mfields::real_t;
 
   EXPECT_EQ(Moment::name(), "rho_2nd_nc");
