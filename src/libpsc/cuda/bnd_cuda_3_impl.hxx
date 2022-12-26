@@ -14,8 +14,6 @@ struct CudaBnd;
 template <typename MF>
 struct BndCuda3 : BndBase
 {
-  using Mfields = MF;
-
   BndCuda3(const Grid_t& grid, const int ibn[3]);
   ~BndCuda3();
 
