@@ -16,9 +16,8 @@ template <typename MfieldsState>
 class Item_jeh
 {
 public:
-  using Real = typename MfieldsState::real_t;
-  using value_type = Real;
-  using space = typename MfieldsState::space;
+  using value_type = typename MfieldsState::real_t;
+  using space_type = typename MfieldsState::space;
 
   static std::string name() { return "jeh"; }
   static int n_comps() { return 9; }
@@ -193,7 +192,7 @@ template <typename Mfields>
 class Item_grad
 {
 public:
-  using Real = typename Mfields::real_t;
+  using value_type = typename Mfields::real_t;
 
   static char const* name() { return "grad"; }
   static int n_comps() { return 3; }
