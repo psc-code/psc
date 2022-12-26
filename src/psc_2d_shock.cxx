@@ -191,7 +191,7 @@ using Writer = WriterMRC; // can choose WriterMrc, WriterAdios2
 template <typename Mparticles, typename Dim, typename Enable = void>
 struct Moment_n_Selector
 {
-  using type = Moment_n_1st<MfieldsSingle, Dim>;
+  using type = Moment_n_1st<MfieldsSingle::Storage, Dim>;
 };
 
 #ifdef USE_CUDA

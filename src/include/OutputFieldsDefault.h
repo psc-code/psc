@@ -29,7 +29,8 @@ template <typename Mparticles, typename Dim, typename Enable = void>
 struct moment_selector
 {
   using type =
-    Moments_1st<Mparticles, Mfields<typename Mparticles::real_t>, Dim>;
+    Moments_1st<Mparticles,
+                typename Mfields<typename Mparticles::real_t>::Storage, Dim>;
 };
 
 #ifdef USE_CUDA
