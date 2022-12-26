@@ -58,7 +58,9 @@ void BndCuda3<MF>::fill_ghosts(Mfields& mflds, int mb, int me)
 template <typename MF>
 void BndCuda3<MF>::clear()
 {
-  cbnd_->clear();
+  if (cbnd_) {
+    cbnd_->clear();
+  }
 }
 
 template <typename MF>

@@ -64,6 +64,12 @@ struct MomentTest : ::testing::Test
 
   const Grid_t& make_grid()
   {
+#ifdef USE_CUDA
+    // if we're switching dim_yz <-> dim_xyz, cached maps become invalid
+    BndCuda3<MfieldsCuda>::clear();
+    BndCuda3<MfieldsStateCuda>::clear();
+#endif
+
     Int3 gdims = {16, 16, 16};
     if (dim_t::InvarX::value) {
       gdims[0] = 1;
