@@ -86,15 +86,18 @@ public:
 template <typename S>
 constexpr mrc_ddc_funcs BndContext<S>::ddc_funcs;
 
+template <typename E>
+auto make_BndContext(E& mflds_gt, const Int3& ib)
+{
+  return BndContext<E>{mflds_gt, ib};
+}
+
 template <typename MF>
 struct Bnd_ : BndBase
 {
   using Mfields = MF;
-  using MfieldsHost = hostMirror_t<Mfields>;
-  using real_t = typename Mfields::real_t;
   using storage_type = typename Mfields::Storage;
-  using storage_host_type = typename MfieldsHost::Storage;
-  using BndCtx = BndContext<storage_host_type>;
+  using value_type = typename storage_type::value_type;
 
   // ----------------------------------------------------------------------
   // ctor
@@ -115,10 +118,9 @@ struct Bnd_ : BndBase
 
     auto&& h_mflds_gt = gt::host_mirror(mflds_gt);
     gt::copy(mflds_gt, h_mflds_gt);
-    BndCtx ctx{h_mflds_gt, ib};
-    mrc_ddc_set_param_int(grid.ddc(), "size_of_type", sizeof(real_t));
-    mrc_ddc_set_funcs(grid.ddc(),
-                      const_cast<mrc_ddc_funcs*>(&BndCtx::ddc_funcs));
+    auto ctx = make_BndContext(h_mflds_gt, ib);
+    mrc_ddc_set_param_int(grid.ddc(), "size_of_type", sizeof(value_type));
+    mrc_ddc_set_funcs(grid.ddc(), const_cast<mrc_ddc_funcs*>(&ctx.ddc_funcs));
     mrc_ddc_add_ghosts(grid.ddc(), mb, me, &ctx);
     gt::copy(h_mflds_gt, mflds_gt);
   }
@@ -142,10 +144,9 @@ struct Bnd_ : BndBase
 
     auto&& h_mflds_gt = gt::host_mirror(mflds_gt);
     gt::copy(mflds_gt, h_mflds_gt);
-    BndCtx ctx{h_mflds_gt, ib};
-    mrc_ddc_set_param_int(grid.ddc(), "size_of_type", sizeof(real_t));
-    mrc_ddc_set_funcs(grid.ddc(),
-                      const_cast<mrc_ddc_funcs*>(&BndCtx::ddc_funcs));
+    auto ctx = make_BndContext(h_mflds_gt, ib);
+    mrc_ddc_set_param_int(grid.ddc(), "size_of_type", sizeof(value_type));
+    mrc_ddc_set_funcs(grid.ddc(), const_cast<mrc_ddc_funcs*>(&ctx.ddc_funcs));
     mrc_ddc_fill_ghosts(grid.ddc(), mb, me, &ctx);
     gt::copy(h_mflds_gt, mflds_gt);
   }
