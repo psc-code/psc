@@ -950,8 +950,7 @@ private:
       mf_cuda.~MfieldsCuda();
     }
     MEM_STATS();
-    BndCuda3<MfieldsCuda>::clear();
-    BndCuda3<MfieldsStateCuda>::clear();
+    BndCuda3::clear();
 #endif
     MEM_STATS();
 
