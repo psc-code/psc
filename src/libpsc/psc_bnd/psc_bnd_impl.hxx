@@ -95,8 +95,6 @@ auto make_BndContext(E& mflds_gt, const Int3& ib)
 template <typename MF>
 struct Bnd_ : BndBase
 {
-  using Mfields = MF;
-
   // ----------------------------------------------------------------------
   // ctor
 
