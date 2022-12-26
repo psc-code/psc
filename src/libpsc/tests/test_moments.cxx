@@ -23,6 +23,25 @@ struct Moment_rho_1st_nc_selector<MfieldsCuda, D>
 #endif
 
 // ======================================================================
+// Moments_1st_selector
+//
+// FIXME, should go away eventually
+
+template <typename MP, typename MF, typename D>
+struct Moments_1st_selector
+{
+  using type = Moments_1st<MP, MF, D>;
+};
+
+#ifdef USE_CUDA
+template <typename D>
+struct Moments_1st_selector<MparticlesCuda<BS444>, MfieldsCuda, D>
+{
+  using type = Moments_1st_cuda<D>;
+};
+#endif
+
+// ======================================================================
 // MomentTest
 
 template <typename T>
@@ -155,7 +174,8 @@ TYPED_TEST(MomentTest, Moments_1st)
   using dim_t = typename TypeParam::dim;
   using MfieldsHost = hostMirror_t<Mfields>;
   using real_t = typename Mfields::real_t;
-  using Moment = Moments_1st<Mparticles, MfieldsHost, dim_t>;
+  using Moment =
+    typename Moments_1st_selector<Mparticles, Mfields, dim_t>::type;
 
   EXPECT_EQ(Moment::name(), "all_1st_cc");
   auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 1.}, this->w, 0});
