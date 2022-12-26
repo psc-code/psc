@@ -11,7 +11,7 @@
 template <typename MF, typename D>
 struct Moment_rho_1st_nc_selector
 {
-  using type = Moment_rho_1st_nc<MF, D>;
+  using type = Moment_rho_1st_nc<typename MF::Storage, D>;
 };
 
 #ifdef USE_CUDA
