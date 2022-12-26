@@ -104,7 +104,9 @@ public:
   using moment_type =
     psc::moment::moment_all<psc::deposit::code::Deposit1stCc, dim_t>;
 
-  explicit Moments_1st(const Mparticles& _mprts) : Base{_mprts.grid()}
+  explicit Moments_1st(const Grid_t& grid) : Base{grid} {}
+
+  auto operator()(const Mparticles& _mprts)
   {
     static int pr, pr_A, pr_B, pr_C;
     if (!pr) {
@@ -130,6 +132,7 @@ public:
 
     mprts.put_as(h_mprts, MP_DONT_COPY);
     prof_stop(pr);
+    return Base::mres_gt_;
   }
 };
 

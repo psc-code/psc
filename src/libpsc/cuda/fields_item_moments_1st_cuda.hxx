@@ -101,16 +101,16 @@ public:
 };
 
 // ======================================================================
-// Moment_1st_cuda
+// Moments_1st_cuda
 
 template <typename dim_t>
-class Moment_1st_cuda
-  : public ItemMomentCRTP<Moment_1st_cuda<dim_t>, MfieldsCuda,
+class Moments_1st_cuda
+  : public ItemMomentCRTP<Moments_1st_cuda<dim_t>, MfieldsCuda,
                           BndCuda3<MfieldsCuda>>
 {
 public:
   using Base =
-    ItemMomentCRTP<Moment_1st_cuda<dim_t>, MfieldsCuda, BndCuda3<MfieldsCuda>>;
+    ItemMomentCRTP<Moments_1st_cuda<dim_t>, MfieldsCuda, BndCuda3<MfieldsCuda>>;
   using Mfields = MfieldsCuda;
   using storage_type = typename Base::storage_type;
   using real_t = typename Base::real_t;
