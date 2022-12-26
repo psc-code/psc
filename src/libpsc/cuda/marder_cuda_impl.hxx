@@ -88,7 +88,6 @@ struct MarderCuda : MarderBase
       loop_{loop},
       dump_{dump},
       bnd_{grid, grid.ibn},
-      bnd_mf_{grid, grid.ibn},
       rho_{grid, 1, grid.ibn},
       res_{grid, 1, grid.ibn}
   {
@@ -114,7 +113,7 @@ struct MarderCuda : MarderBase
     }
 
     psc::mflds::interior(grid, res_.gt()) = dive - rho;
-    bnd_mf_.fill_ghosts(res_, 0, 1);
+    bnd_.fill_ghosts(res_, 0, 1);
   }
 
   // ----------------------------------------------------------------------
@@ -170,8 +169,7 @@ struct MarderCuda : MarderBase
 
   WriterMRC io_; //< for debug dumping
 
-  BndCuda3<MfieldsState> bnd_;
-  BndCuda3<Mfields> bnd_mf_;
+  BndCuda3 bnd_;
   Mfields rho_;
   Mfields res_;
 };

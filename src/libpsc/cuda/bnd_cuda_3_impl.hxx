@@ -11,7 +11,6 @@
 
 struct CudaBnd;
 
-template <typename MF>
 struct BndCuda3 : BndBase
 {
   BndCuda3(const Grid_t& grid, const int ibn[3]);
@@ -19,10 +18,10 @@ struct BndCuda3 : BndBase
 
   static void clear();
 
-  template <typename MF2>
-  void add_ghosts(MF2& mflds, int mb, int me);
-  template <typename MF2>
-  void fill_ghosts(MF2& mflds, int mb, int me);
+  template <typename MF>
+  void add_ghosts(MF& mflds, int mb, int me);
+  template <typename MF>
+  void fill_ghosts(MF& mflds, int mb, int me);
   template <typename S>
   void add_ghosts(const Grid_t& grid, S& mflds_gt, const Int3& mflds_ib, int mb,
                   int me);
