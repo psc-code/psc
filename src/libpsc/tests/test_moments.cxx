@@ -66,8 +66,7 @@ struct MomentTest : ::testing::Test
   {
 #ifdef USE_CUDA
     // if we're switching dim_yz <-> dim_xyz, cached maps become invalid
-    BndCuda3<MfieldsCuda>::clear();
-    BndCuda3<MfieldsStateCuda>::clear();
+    BndCuda3::clear();
 #endif
 
     Int3 gdims = {16, 16, 16};
