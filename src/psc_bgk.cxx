@@ -268,7 +268,7 @@ void fillGhosts(MF& mfld, int compBegin, int compEnd)
 {
   auto ibn = mfld.ibn();
   int ibn_arr[3] = {ibn[0], ibn[1], ibn[2]};
-  Bnd_<MF> bnd{mfld.grid(), ibn_arr};
+  Bnd_ bnd{mfld.grid(), ibn_arr};
   bnd.fill_ghosts(mfld, compBegin, compEnd);
 }
 
