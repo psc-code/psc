@@ -86,13 +86,13 @@ struct BndTest : public ::testing::Test
 {};
 
 using BndTestTypes =
-  ::testing::Types<TestConfigBnd<MfieldsSingle, Bnd_<MfieldsSingle>, dim_yz>,
-                   TestConfigBnd<MfieldsC, Bnd_<MfieldsC>, dim_yz>,
+  ::testing::Types<TestConfigBnd<MfieldsSingle, Bnd_, dim_yz>,
+                   TestConfigBnd<MfieldsC, Bnd_, dim_yz>,
 #ifdef USE_CUDA
                    TestConfigBnd<MfieldsCuda, BndCuda3, dim_xyz>,
-                   TestConfigBnd<MfieldsCuda, Bnd_<MfieldsCuda>, dim_xyz>,
+                   TestConfigBnd<MfieldsCuda, Bnd_, dim_xyz>,
 #endif
-                   TestConfigBnd<MfieldsSingle, Bnd_<MfieldsSingle>, dim_xyz>>;
+                   TestConfigBnd<MfieldsSingle, Bnd_, dim_xyz>>;
 
 TYPED_TEST_SUITE(BndTest, BndTestTypes);
 

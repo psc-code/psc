@@ -89,7 +89,7 @@ struct PscConfig_
   using Collision = Collision_<Mparticles, MfieldsState, Mfields>;
   using PushFields = ::PushFields<MfieldsState>;
   using BndParticles = BndParticles_<Mparticles>;
-  using Bnd = Bnd_<MfieldsState>;
+  using Bnd = Bnd_;
   using BndFields = BndFields_<MfieldsState, Dim>;
   using Balance = Balance_<Mparticles, MfieldsState, Mfields>;
   using Checks = Checks_<Mparticles, MfieldsState, Mfields, checks_order, Dim>;

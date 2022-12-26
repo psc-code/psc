@@ -92,7 +92,6 @@ auto make_BndContext(E& mflds_gt, const Int3& ib)
   return BndContext<E>{mflds_gt, ib};
 }
 
-template <typename MF>
 struct Bnd_ : BndBase
 {
   // ----------------------------------------------------------------------
