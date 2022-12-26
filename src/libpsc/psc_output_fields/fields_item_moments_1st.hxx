@@ -9,12 +9,11 @@
 // ======================================================================
 // n_1st
 
-template <typename MF, typename D>
-class Moment_n_1st
-  : public ItemMomentCRTP<Moment_n_1st<MF, D>, typename MF::Storage>
+template <typename S, typename D>
+class Moment_n_1st : public ItemMomentCRTP<Moment_n_1st<S, D>, S>
 {
 public:
-  using Base = ItemMomentCRTP<Moment_n_1st<MF, D>, typename MF::Storage>;
+  using Base = ItemMomentCRTP<Moment_n_1st<S, D>, S>;
   using moment_type =
     psc::moment::moment_n<psc::deposit::code::Deposit1stCc, D>;
 
@@ -24,12 +23,11 @@ public:
 // ======================================================================
 // v_1st
 
-template <typename MF, typename D>
-class Moment_v_1st
-  : public ItemMomentCRTP<Moment_v_1st<MF, D>, typename MF::Storage>
+template <typename S, typename D>
+class Moment_v_1st : public ItemMomentCRTP<Moment_v_1st<S, D>, S>
 {
 public:
-  using Base = ItemMomentCRTP<Moment_v_1st<MF, D>, typename MF::Storage>;
+  using Base = ItemMomentCRTP<Moment_v_1st<S, D>, S>;
   using moment_type =
     psc::moment::moment_v<psc::deposit::code::Deposit1stCc, D>;
 
@@ -39,12 +37,11 @@ public:
 // ======================================================================
 // p_1st
 
-template <typename MF, typename D>
-class Moment_p_1st
-  : public ItemMomentCRTP<Moment_p_1st<MF, D>, typename MF::Storage>
+template <typename S, typename D>
+class Moment_p_1st : public ItemMomentCRTP<Moment_p_1st<S, D>, S>
 {
 public:
-  using Base = ItemMomentCRTP<Moment_p_1st<MF, D>, typename MF::Storage>;
+  using Base = ItemMomentCRTP<Moment_p_1st<S, D>, S>;
   using moment_type =
     psc::moment::moment_p<psc::deposit::code::Deposit1stCc, D>;
 
@@ -54,11 +51,10 @@ public:
 // ======================================================================
 // T_1st
 
-template <typename MF, typename D>
-struct Moment_T_1st
-  : public ItemMomentCRTP<Moment_T_1st<MF, D>, typename MF::Storage>
+template <typename S, typename D>
+struct Moment_T_1st : public ItemMomentCRTP<Moment_T_1st<S, D>, S>
 {
-  using Base = ItemMomentCRTP<Moment_T_1st<MF, D>, typename MF::Storage>;
+  using Base = ItemMomentCRTP<Moment_T_1st<S, D>, S>;
   using moment_type =
     psc::moment::moment_T<psc::deposit::code::Deposit1stCc, D>;
 
@@ -71,12 +67,11 @@ struct Moment_T_1st
 // all moments calculated at once
 // FIXME: add KE
 
-template <typename MP, typename MF, typename D>
-class Moments_1st
-  : public ItemMomentCRTP<Moments_1st<MP, MF, D>, typename MF::Storage>
+template <typename MP, typename S, typename D>
+class Moments_1st : public ItemMomentCRTP<Moments_1st<MP, S, D>, S>
 {
 public:
-  using Base = ItemMomentCRTP<Moments_1st<MP, MF, D>, typename MF::Storage>;
+  using Base = ItemMomentCRTP<Moments_1st<MP, S, D>, S>;
   using moment_type =
     psc::moment::moment_all<psc::deposit::code::Deposit1stCc, D>;
 
@@ -95,13 +90,15 @@ public:
 // FIXME: add KE
 
 template <typename BS, typename D>
-class Moments_1st<MparticlesCuda<BS>, MfieldsSingle, D>
-  : public ItemMomentCRTP<Moments_1st<MparticlesCuda<BS>, MfieldsSingle, D>,
-                          MfieldsSingle::Storage>
+class Moments_1st<MparticlesCuda<BS>, MfieldsSingle::Storage, D>
+  : public ItemMomentCRTP<
+      Moments_1st<MparticlesCuda<BS>, MfieldsSingle::Storage, D>,
+      MfieldsSingle::Storage>
 {
 public:
-  using Base = ItemMomentCRTP<Moments_1st<MparticlesCuda<BS>, MfieldsSingle, D>,
-                              MfieldsSingle::Storage>;
+  using Base =
+    ItemMomentCRTP<Moments_1st<MparticlesCuda<BS>, MfieldsSingle::Storage, D>,
+                   MfieldsSingle::Storage>;
   using dim_t = D;
   using Mparticles = MparticlesCuda<BS>;
   using Mfields = MfieldsSingle;
