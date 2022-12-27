@@ -35,9 +35,8 @@ struct checks_order_2nd
 
 template <typename _Mparticles, typename _MfieldsState, typename _Mfields,
           typename ORDER, typename D>
-struct Checks_
-  : ChecksParams
-  , ChecksBase
+struct Checks_ : ChecksParams
+
 {
   using Mparticles = _Mparticles;
   using MfieldsState = _MfieldsState;
