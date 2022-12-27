@@ -52,55 +52,49 @@ public:
 
 template <typename BS, typename D>
 class Moments_1st<MparticlesCuda<BS>, MfieldsSingle::Storage, D>
-  : public ItemMomentCRTP<
-      Moments_1st<MparticlesCuda<BS>, MfieldsSingle::Storage, D>,
-      MfieldsSingle::Storage>
 {
 public:
-  using Base =
-    ItemMomentCRTP<Moments_1st<MparticlesCuda<BS>, MfieldsSingle::Storage, D>,
-                   MfieldsSingle::Storage>;
+  using Sub = Moments_1st<MparticlesSingle, MfieldsSingle::Storage, D>;
   using dim_t = D;
   using Mparticles = MparticlesCuda<BS>;
-  using storage_type = typename Base::storage_type;
-  using value_type = typename Base::value_type;
-  using space_type = typename Base::space_type;
+  using storage_type = MfieldsSingle::Storage;
+  using value_type = storage_type::value_type;
+  using space_type = storage_type::space_type;
   using moment_type =
     psc::moment::moment_all<psc::deposit::code::Deposit1stCc, dim_t>;
 
-  explicit Moments_1st(const Grid_t& grid) : Base{grid} {}
+  static std::string name() { return Sub::name(); }
+  int n_comps() { return sub_.n_comps(); }
+  const std::vector<std::string>& comp_names() { return sub_.comp_names(); }
+
+  explicit Moments_1st(const Grid_t& grid) : sub_{grid} {}
 
   auto operator()(const Mparticles& _mprts)
   {
-    static int pr, pr_A, pr_B, pr_C;
+    static int pr, pr_A, pr_B;
     if (!pr) {
       pr = prof_register("Moments_1st cuda", 1., 0, 0);
       pr_A = prof_register("Moments_1st get", 1., 0, 0);
       pr_B = prof_register("Moments_1st process", 1., 0, 0);
-      pr_C = prof_register("Moments_1st addg", 1., 0, 0);
     }
 
     prof_start(pr);
     prof_start(pr_A);
-    auto& mprts = const_cast<Mparticles&>(_mprts);
-    auto&& h_mprts = mprts.template get_as<MparticlesSingle>();
+    auto& d_mprts = const_cast<Mparticles&>(_mprts);
+    auto&& h_mprts = d_mprts.template get_as<MparticlesSingle>();
     prof_stop(pr_A);
 
     prof_start(pr_B);
-    Int3 ib = -h_mprts.grid().ibn;
-    storage_type mres = psc::mflds::zeros<value_type, space_type>(
-      mprts.grid(), Base::n_comps(), ib);
-    moment_type()(mres, ib, h_mprts);
+    auto mres = sub_(h_mprts);
     prof_stop(pr_B);
 
-    prof_start(pr_C);
-    Base::bnd_.add_ghosts(h_mprts.grid(), mres, ib);
-    prof_stop(pr_C);
-
-    mprts.put_as(h_mprts, MP_DONT_COPY);
+    d_mprts.put_as(h_mprts, MP_DONT_COPY);
     prof_stop(pr);
     return mres;
   }
+
+private:
+  Sub sub_;
 };
 
 #endif
