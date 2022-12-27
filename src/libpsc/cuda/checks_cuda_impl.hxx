@@ -40,7 +40,7 @@ struct ChecksCuda : ChecksParams
       return;
     }
 
-    Moment_t item_rho{grid};
+    auto item_rho = Moment_t{grid};
     rho_m_gt_ = psc::mflds::interior(grid, item_rho(mprts));
   }
 
@@ -53,7 +53,7 @@ struct ChecksCuda : ChecksParams
       return;
     }
 
-    Moment_t item_rho{grid};
+    auto item_rho = Moment_t{grid};
     auto item_divj = Item_divj<MfieldsStateCuda>{};
 
     auto d_rho_p = psc::mflds::interior(grid, item_rho(mprts));
