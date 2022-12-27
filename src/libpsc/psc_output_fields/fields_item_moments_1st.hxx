@@ -6,60 +6,21 @@
 
 #include <cmath>
 
-// ======================================================================
-// n_1st
+template <typename S, typename D>
+using Moment_n_1st =
+  ItemMoment<psc::moment::moment_n<psc::deposit::code::Deposit1stCc, D>, S>;
 
 template <typename S, typename D>
-class Moment_n_1st : public ItemMomentCRTP<Moment_n_1st<S, D>, S>
-{
-public:
-  using Base = ItemMomentCRTP<Moment_n_1st<S, D>, S>;
-  using moment_type =
-    psc::moment::moment_n<psc::deposit::code::Deposit1stCc, D>;
-
-  using Base::Base;
-};
-
-// ======================================================================
-// v_1st
+using Moment_v_1st =
+  ItemMoment<psc::moment::moment_v<psc::deposit::code::Deposit1stCc, D>, S>;
 
 template <typename S, typename D>
-class Moment_v_1st : public ItemMomentCRTP<Moment_v_1st<S, D>, S>
-{
-public:
-  using Base = ItemMomentCRTP<Moment_v_1st<S, D>, S>;
-  using moment_type =
-    psc::moment::moment_v<psc::deposit::code::Deposit1stCc, D>;
-
-  using Base::Base;
-};
-
-// ======================================================================
-// p_1st
+using Moment_p_1st =
+  ItemMoment<psc::moment::moment_p<psc::deposit::code::Deposit1stCc, D>, S>;
 
 template <typename S, typename D>
-class Moment_p_1st : public ItemMomentCRTP<Moment_p_1st<S, D>, S>
-{
-public:
-  using Base = ItemMomentCRTP<Moment_p_1st<S, D>, S>;
-  using moment_type =
-    psc::moment::moment_p<psc::deposit::code::Deposit1stCc, D>;
-
-  using Base::Base;
-};
-
-// ======================================================================
-// T_1st
-
-template <typename S, typename D>
-struct Moment_T_1st : public ItemMomentCRTP<Moment_T_1st<S, D>, S>
-{
-  using Base = ItemMomentCRTP<Moment_T_1st<S, D>, S>;
-  using moment_type =
-    psc::moment::moment_T<psc::deposit::code::Deposit1stCc, D>;
-
-  using Base::Base;
-};
+using Moment_T_1st =
+  ItemMoment<psc::moment::moment_T<psc::deposit::code::Deposit1stCc, D>, S>;
 
 // ======================================================================
 // Moments_1st

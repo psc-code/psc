@@ -188,3 +188,39 @@ protected:
 private:
   std::vector<std::string> comp_names_;
 };
+
+template <typename MT, typename S, typename Bnd = Bnd_>
+class ItemMoment
+{
+public:
+  using moment_type = MT;
+  using storage_type = S;
+  using space_type = typename storage_type::space_type;
+  using value_type = typename storage_type::value_type;
+
+  static std::string name() { return moment_type::name(); }
+  int n_comps() { return comp_names_.size(); }
+  const std::vector<std::string>& comp_names() { return comp_names_; }
+
+  explicit ItemMoment(const Grid_t& grid)
+    : comp_names_{moment_type::comp_names(grid.kinds)}, bnd_{grid}
+  {}
+
+  template <typename Mparticles>
+  auto operator()(const Mparticles& mprts)
+  {
+    Int3 ib = -mprts.grid().ibn;
+    // FIXME, gt::gtensor and psc::gtensor are slightly different, and ideally
+    // zeros() shouldn't actually allocate, but probably it does, so this wastes
+    // memory and a copy
+    storage_type mres =
+      psc::mflds::zeros<value_type, space_type>(mprts.grid(), n_comps(), ib);
+    moment_type{}(mres, ib, mprts);
+    bnd_.add_ghosts(mprts.grid(), mres, ib);
+    return mres;
+  }
+
+private:
+  ItemMomentBnd<storage_type, Bnd> bnd_;
+  std::vector<std::string> comp_names_;
+};
