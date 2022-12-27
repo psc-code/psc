@@ -8,6 +8,7 @@
 #include "../libpsc/psc_output_fields/fields_item_moments_1st.hxx"
 
 #include <mrc_io.h>
+#include <gtensor/reductions.h>
 
 #ifdef PSC_HAVE_ADIOS2
 
@@ -111,30 +112,32 @@ struct Checks_ : ChecksParams
       psc::mflds::interior(grid, item_rho(mprts)) - continuity_.rho_m_;
     auto dt_divj_gt = grid.dt * item_divj(mflds);
 
-    double eps = continuity_threshold;
+#if 0
     double max_err = 0.;
     for (int p = 0; p < grid.n_patches(); p++) {
       grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
         double val_d_rho = d_rho_gt(i, j, k, 0, p);
         double val_dt_divj = dt_divj_gt(i, j, k, 0, p);
         max_err = std::max(max_err, std::abs(val_d_rho + val_dt_divj));
-        if (std::abs(val_d_rho + val_dt_divj) > eps) {
+        if (std::abs(val_d_rho + val_dt_divj) > continuity_threshold) {
           mprintf("p%d (%d,%d,%d): %g -- %g diff %g\n", p, i, j, k, val_d_rho,
                   -val_dt_divj, val_d_rho + val_dt_divj);
         }
       });
     }
+#endif
 
+    double max_err = gt::norm_linf(d_rho_gt + dt_divj_gt);
     // find global max
     double tmp = max_err;
     MPI_Allreduce(&tmp, &max_err, 1, MPI_DOUBLE, MPI_MAX, grid.comm());
 
-    if (continuity_verbose || max_err >= eps) {
+    if (continuity_verbose || max_err >= continuity_threshold) {
       mpi_printf(grid.comm(), "continuity: max_err = %g (thres %g)\n", max_err,
-                 eps);
+                 continuity_threshold);
     }
 
-    if (continuity_dump_always || max_err >= eps) {
+    if (continuity_dump_always || max_err >= continuity_threshold) {
       if (!writer_continuity_) {
         writer_continuity_.open("continuity");
       }
