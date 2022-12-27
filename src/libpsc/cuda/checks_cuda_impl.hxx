@@ -17,33 +17,15 @@ using WriterDefault = WriterMRC;
 
 #endif
 
-// FIXME!!! need to get Dim from Mparticles directly!
-
-template <typename BS>
-struct BS_to_Dim;
-
-template <>
-struct BS_to_Dim<BS144>
+template <typename MP, typename D>
+struct ChecksCuda : ChecksParams
 {
-  using Dim = dim_yz;
-};
-
-template <>
-struct BS_to_Dim<BS444>
-{
-  using Dim = dim_xyz;
-};
-
-template <typename Mparticles>
-struct ChecksCuda
-  : ChecksBase
-  , ChecksParams
-{
+  using Mparticles = MP;
+  using dim_t = D;
   using MfieldsState = MfieldsStateSingle;
   using Mfields = MfieldsSingle;
   using BS = typename Mparticles::BS;
-  using Dim = typename BS_to_Dim<BS>::Dim;
-  using Moment_t = Moment_rho_1st_nc_cuda<Dim>;
+  using Moment_t = Moment_rho_1st_nc_cuda<D>;
   using real_t = typename Mfields::real_t;
 
   ChecksCuda(const Grid_t& grid, MPI_Comm comm, const ChecksParams& params)
