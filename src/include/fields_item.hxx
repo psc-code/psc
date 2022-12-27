@@ -172,6 +172,9 @@ public:
   auto operator()(const Mparticles& mprts)
   {
     Int3 ib = -mprts.grid().ibn;
+    // FIXME, gt::gtensor and psc::gtensor are slightly different, and ideally
+    // zeros() shouldn't actually allocate, but probably it does, so this wastes
+    // memory and a copy
     storage_type mres =
       psc::mflds::zeros<value_type, space_type>(mprts.grid(), n_comps(), ib);
     typename Derived::moment_type{}(mres, ib, mprts);
