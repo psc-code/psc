@@ -201,6 +201,34 @@ TYPED_TEST(MomentTest, Moments_1st)
   }
 }
 
+TYPED_TEST(MomentTest, Moments_1st_to_host)
+{
+  using Mparticles = typename TypeParam::Mparticles;
+  using Mfields = typename TypeParam::Mfields;
+  using dim_t = typename TypeParam::dim;
+  using MfieldsHost = hostMirror_t<Mfields>;
+  using real_t = typename Mfields::real_t;
+  using Moment = Moments_1st<Mparticles, typename MfieldsHost::Storage, dim_t>;
+
+  EXPECT_EQ(Moment::name(), "all_1st_cc");
+  auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 1.}, this->w, 0});
+  const auto& grid = this->grid();
+
+  Moment moment{grid};
+  auto gt = psc::mflds::interior(grid, moment(mprts));
+  for (int p = 0; p < grid.n_patches(); p++) {
+    grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
+      real_t val = gt(i, j, k, 0, p);
+      if (i == 0 && j == 0 && k == 0) {
+        EXPECT_NEAR(val, this->w / this->nicell, this->eps)
+          << "ijk " << i << " " << j << " " << k;
+      } else {
+        EXPECT_NEAR(val, 0., this->eps) << "ijk " << i << " " << j << " " << k;
+      }
+    });
+  }
+}
+
 TYPED_TEST(MomentTest, Moment_n_2) // FIXME, mostly copied
 {
   using base_type = MomentTest<TypeParam>;
