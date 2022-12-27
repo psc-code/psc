@@ -22,22 +22,9 @@ template <typename S, typename D>
 using Moment_T_1st =
   ItemMoment<psc::moment::moment_T<psc::deposit::code::Deposit1stCc, D>, S>;
 
-// ======================================================================
-// Moments_1st
-//
-// all moments calculated at once
-// FIXME: add KE
-
-template <typename MP, typename S, typename D>
-class Moments_1st : public ItemMomentCRTP<Moments_1st<MP, S, D>, S>
-{
-public:
-  using Base = ItemMomentCRTP<Moments_1st<MP, S, D>, S>;
-  using moment_type =
-    psc::moment::moment_all<psc::deposit::code::Deposit1stCc, D>;
-
-  using Base::Base;
-};
+template <typename S, typename D>
+using Moments_1st =
+  ItemMoment<psc::moment::moment_all<psc::deposit::code::Deposit1stCc, D>, S>;
 
 #ifdef USE_CUDA
 
@@ -55,7 +42,7 @@ public:
   using storage_type = MfieldsSingle::Storage;
   using value_type = storage_type::value_type;
   using space_type = storage_type::space_type;
-  using Sub = Moments_1st<MparticlesSingle, storage_type, D>;
+  using Sub = Moments_1st<storage_type, D>;
 
   static std::string name() { return Sub::name(); }
   int n_comps() { return sub_.n_comps(); }
