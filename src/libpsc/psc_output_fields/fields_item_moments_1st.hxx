@@ -4,7 +4,8 @@
 #include <psc/moment.hxx>
 #include "fields_item.hxx"
 
-#include <cmath>
+// ======================================================================
+// 1st cc
 
 template <typename S, typename D>
 using Moment_n_1st =
@@ -25,6 +26,20 @@ using Moment_T_1st =
 template <typename S, typename D>
 using Moments_1st =
   ItemMoment<psc::moment::moment_all<psc::deposit::code::Deposit1stCc, D>, S>;
+
+// ======================================================================
+// 1st nc
+
+template <typename S, typename D>
+using Moment_rho_1st_nc =
+  ItemMoment<psc::moment::moment_rho<psc::deposit::code::Deposit1stNc, D>, S>;
+
+// ======================================================================
+// 2nd nc
+
+template <typename S, typename D>
+using Moment_rho_2nd_nc =
+  ItemMoment<psc::moment::moment_rho<psc::deposit::code::Deposit2ndNc, D>, S>;
 
 #ifdef USE_CUDA
 
