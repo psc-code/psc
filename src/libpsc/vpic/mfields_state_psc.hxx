@@ -166,6 +166,7 @@ struct MfieldsStatePsc
   using Real = real_t;
   using Element = MfieldsStatePscElement;
   using space = gt::space::host;
+  using Storage = gt::gtensor<real_t, 5>;
 
   // FIXME, have to settle on BX or CBX...
   enum

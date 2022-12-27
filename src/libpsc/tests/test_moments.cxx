@@ -25,17 +25,20 @@ struct Moment_rho_1st_nc_selector<MfieldsCuda, D>
 // ======================================================================
 // Moments_1st_selector
 //
-// FIXME, should go away eventually
+// FIXME, should go away eventually; duplicated from OutputFieldsDefault.h
 
-template <typename MP, typename MF, typename D>
+template <typename S, typename D, typename Enable = void>
 struct Moments_1st_selector
 {
-  using type = Moments_1st<MP, typename MF::Storage, D>;
+  using type = Moments_1st<S, D>;
 };
 
 #ifdef USE_CUDA
-template <typename D>
-struct Moments_1st_selector<MparticlesCuda<BS444>, MfieldsCuda, D>
+template <typename S, typename D>
+struct Moments_1st_selector<
+  S, D,
+  std::enable_if_t<
+    std::is_same<typename S::storage_type, gt::space::device>::value>>
 {
   using type = Moments_1st_cuda<D>;
 };
@@ -180,7 +183,7 @@ TYPED_TEST(MomentTest, Moments_1st)
   using MfieldsHost = hostMirror_t<Mfields>;
   using real_t = typename Mfields::real_t;
   using Moment =
-    typename Moments_1st_selector<Mparticles, Mfields, dim_t>::type;
+    typename Moments_1st_selector<typename Mfields::Storage, dim_t>::type;
 
   EXPECT_EQ(Moment::name(), "all_1st_cc");
   auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 1.}, this->w, 0});
