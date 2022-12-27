@@ -62,8 +62,9 @@ public:
                    MfieldsSingle::Storage>;
   using dim_t = D;
   using Mparticles = MparticlesCuda<BS>;
-  using Mfields = MfieldsSingle;
-  using real_t = Mfields::real_t;
+  using storage_type = typename Base::storage_type;
+  using value_type = typename Base::value_type;
+  using space_type = typename Base::space_type;
   using moment_type =
     psc::moment::moment_all<psc::deposit::code::Deposit1stCc, dim_t>;
 
@@ -86,16 +87,19 @@ public:
     prof_stop(pr_A);
 
     prof_start(pr_B);
-    moment_type()(Base::mres_gt_, Base::mres_ib_, h_mprts);
+    Int3 ib = -h_mprts.grid().ibn;
+    storage_type mres = psc::mflds::zeros<value_type, space_type>(
+      mprts.grid(), Base::n_comps(), ib);
+    moment_type()(mres, ib, h_mprts);
     prof_stop(pr_B);
 
     prof_start(pr_C);
-    Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
+    Base::bnd_.add_ghosts(h_mprts.grid(), mres, ib);
     prof_stop(pr_C);
 
     mprts.put_as(h_mprts, MP_DONT_COPY);
     prof_stop(pr);
-    return Base::mres_gt_;
+    return mres;
   }
 };
 
