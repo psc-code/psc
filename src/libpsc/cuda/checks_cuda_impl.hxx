@@ -22,11 +22,8 @@ struct ChecksCuda : ChecksParams
 {
   using Mparticles = MP;
   using dim_t = D;
-  using MfieldsState = MfieldsStateSingle;
-  using Mfields = MfieldsSingle;
-  using BS = typename Mparticles::BS;
+  using storage_type = MfieldsCuda::Storage;
   using Moment_t = Moment_rho_1st_nc_cuda<D>;
-  using real_t = typename Mfields::real_t;
 
   ChecksCuda(const Grid_t& grid, MPI_Comm comm, const ChecksParams& params)
     : ChecksParams(params)
@@ -44,8 +41,8 @@ struct ChecksCuda : ChecksParams
     rho_m_gt_ = psc::mflds::interior(grid, item_rho(mprts));
   }
 
-  void continuity_after_particle_push(Mparticles& mprts,
-                                      MfieldsStateCuda& mflds)
+  template <typename MfieldsState>
+  void continuity_after_particle_push(Mparticles& mprts, MfieldsState& mflds)
   {
     const auto& grid = mprts.grid();
     if (continuity_every_step <= 0 ||
@@ -112,7 +109,8 @@ struct ChecksCuda : ChecksParams
   // ----------------------------------------------------------------------
   // gauss
 
-  void gauss(Mparticles& mprts, MfieldsStateCuda& mflds)
+  template <typename MfieldsState>
+  void gauss(Mparticles& mprts, MfieldsState& mflds)
   {
     const auto& grid = mprts.grid();
     if (gauss_every_step <= 0 || grid.timestep() % gauss_every_step != 0) {
@@ -182,5 +180,5 @@ struct ChecksCuda : ChecksParams
   }
 
 private:
-  gt::gtensor<real_t, 5, gt::space::device> rho_m_gt_;
+  storage_type rho_m_gt_;
 };
