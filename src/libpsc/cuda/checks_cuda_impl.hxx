@@ -47,7 +47,7 @@ struct ChecksCuda : ChecksParams
     }
 
     auto item_rho = Moment_t{grid};
-    rho_m_gt_ = psc::mflds::interior(grid, item_rho(mprts));
+    continuity_.rho_m_ = psc::mflds::interior(grid, item_rho(mprts));
   }
 
   // ----------------------------------------------------------------------
@@ -65,13 +65,14 @@ struct ChecksCuda : ChecksParams
     auto item_rho = Moment_t{grid};
     auto item_divj = Item_divj<MfieldsState>{};
 
+    auto d_rho_m = continuity_.rho_m_;
     auto d_rho_p = psc::mflds::interior(grid, item_rho(mprts));
     auto d_divj = psc::mflds::interior(grid, item_divj(mflds));
+    auto&& rho_m = gt::host_mirror(d_rho_m);
     auto&& rho_p = gt::host_mirror(d_rho_p);
-    auto&& rho_m = gt::host_mirror(rho_m_gt_);
     auto&& h_divj = gt::host_mirror(d_divj);
+    gt::copy(d_rho_m, rho_m);
     gt::copy(d_rho_p, rho_p);
-    gt::copy(rho_m_gt_, rho_m);
     gt::copy(d_divj, h_divj);
 
     auto&& d_rho = rho_p - rho_m;
@@ -192,5 +193,5 @@ struct ChecksCuda : ChecksParams
   }
 
 private:
-  storage_type rho_m_gt_;
+  psc::checks::continuity<storage_type> continuity_;
 };
