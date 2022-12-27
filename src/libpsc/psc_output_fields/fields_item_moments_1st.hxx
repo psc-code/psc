@@ -45,30 +45,25 @@ public:
 #include "psc_particles_single.h"
 
 // ======================================================================
-// Moments_1st
-//
-// all moments calculated at once
-// FIXME: add KE
+// Moments_1st_to_host
 
-template <typename BS, typename D>
-class Moments_1st<MparticlesCuda<BS>, MfieldsSingle::Storage, D>
+template <typename D>
+class Moments_1st_to_host
 {
 public:
-  using Sub = Moments_1st<MparticlesSingle, MfieldsSingle::Storage, D>;
   using dim_t = D;
-  using Mparticles = MparticlesCuda<BS>;
   using storage_type = MfieldsSingle::Storage;
   using value_type = storage_type::value_type;
   using space_type = storage_type::space_type;
-  using moment_type =
-    psc::moment::moment_all<psc::deposit::code::Deposit1stCc, dim_t>;
+  using Sub = Moments_1st<MparticlesSingle, storage_type, D>;
 
   static std::string name() { return Sub::name(); }
   int n_comps() { return sub_.n_comps(); }
   const std::vector<std::string>& comp_names() { return sub_.comp_names(); }
 
-  explicit Moments_1st(const Grid_t& grid) : sub_{grid} {}
+  explicit Moments_1st_to_host(const Grid_t& grid) : sub_{grid} {}
 
+  template <typename Mparticles>
   auto operator()(const Mparticles& _mprts)
   {
     static int pr, pr_A, pr_B;
