@@ -92,7 +92,7 @@ struct PscConfig_
   using Bnd = Bnd_;
   using BndFields = BndFields_<MfieldsState, Dim>;
   using Balance = Balance_<Mparticles, MfieldsState, Mfields>;
-  using Checks = Checks_<Mparticles, MfieldsState, Mfields, checks_order, Dim>;
+  using Checks = Checks_<Mparticles, Mfields, checks_order, Dim>;
   using Marder = Marder_<Mparticles, MfieldsState, Mfields, Dim>;
   using Simulation = _Simulation;
   using OutputParticles = OutputParticlesDefault;

@@ -33,18 +33,15 @@ struct checks_order_2nd
   using Moment_rho_nc = Moment_rho_2nd_nc<S, D>;
 };
 
-template <typename _Mparticles, typename _MfieldsState, typename _Mfields,
-          typename ORDER, typename D>
+template <typename _Mparticles, typename MF, typename ORDER, typename D>
 struct Checks_ : ChecksParams
 
 {
   using Mparticles = _Mparticles;
-  using MfieldsState = _MfieldsState;
-  using Mfields = _Mfields;
   using dim_t = D;
-  using real_t = typename Mfields::real_t;
-  using Moment_t =
-    typename ORDER::template Moment_rho_nc<typename Mfields::Storage, dim_t>;
+  using storage_type = typename MF::Storage;
+  using value_type = typename storage_type::value_type;
+  using Moment_t = typename ORDER::template Moment_rho_nc<storage_type, dim_t>;
 
   // ----------------------------------------------------------------------
   // ctor
@@ -67,13 +64,14 @@ struct Checks_ : ChecksParams
       return;
     }
 
-    auto rho = Moment_t{grid};
-    rho_m_gt_ = psc::mflds::interior(grid, rho(mprts));
+    auto item_rho = Moment_t{grid};
+    rho_m_gt_ = psc::mflds::interior(grid, item_rho(mprts));
   }
 
   // ----------------------------------------------------------------------
   // continuity_after_particle_push
 
+  template <typename MfieldsState>
   void continuity_after_particle_push(Mparticles& mprts, MfieldsState& mflds)
   {
     const auto& grid = mprts.grid();
@@ -82,10 +80,10 @@ struct Checks_ : ChecksParams
       return;
     }
 
-    auto item_rho_p = Moment_t{grid};
+    auto item_rho = Moment_t{grid};
     auto item_divj = Item_divj<MfieldsState>{};
 
-    auto d_rho_gt = psc::mflds::interior(grid, item_rho_p(mprts)) - rho_m_gt_;
+    auto d_rho_gt = psc::mflds::interior(grid, item_rho(mprts)) - rho_m_gt_;
     auto dt_divj_gt = grid.dt * item_divj(mflds);
 
     double eps = continuity_threshold;
@@ -130,6 +128,7 @@ struct Checks_ : ChecksParams
   // ----------------------------------------------------------------------
   // gauss
 
+  template <typename MfieldsState>
   void gauss(Mparticles& mprts, MfieldsState& mflds)
   {
     const auto& grid = mprts.grid();
@@ -193,7 +192,7 @@ struct Checks_ : ChecksParams
 
   // state
   MPI_Comm comm_;
-  gt::gtensor<real_t, 5> rho_m_gt_;
+  storage_type rho_m_gt_;
   WriterDefault writer_continuity_;
   WriterDefault writer_gauss_;
 };
