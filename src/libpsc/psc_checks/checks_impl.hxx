@@ -21,6 +21,24 @@ using WriterDefault = WriterMRC;
 
 #endif
 
+namespace psc
+{
+namespace checks
+{
+
+template <typename S>
+class continuity
+{
+public:
+  using storage_type = S;
+
+  // private:
+  storage_type rho_m_;
+};
+
+} // namespace checks
+} // namespace psc
+
 struct checks_order_1st
 {
   template <typename S, typename D>
@@ -64,7 +82,7 @@ struct Checks_ : ChecksParams
     }
 
     auto item_rho = Moment_t{grid};
-    rho_m_gt_ = psc::mflds::interior(grid, item_rho(mprts));
+    continuity_.rho_m_ = psc::mflds::interior(grid, item_rho(mprts));
   }
 
   // ----------------------------------------------------------------------
@@ -82,7 +100,8 @@ struct Checks_ : ChecksParams
     auto item_rho = Moment_t{grid};
     auto item_divj = Item_divj<MfieldsState>{};
 
-    auto d_rho_gt = psc::mflds::interior(grid, item_rho(mprts)) - rho_m_gt_;
+    auto d_rho_gt =
+      psc::mflds::interior(grid, item_rho(mprts)) - continuity_.rho_m_;
     auto dt_divj_gt = grid.dt * item_divj(mflds);
 
     double eps = continuity_threshold;
@@ -191,7 +210,7 @@ struct Checks_ : ChecksParams
   }
 
 private:
-  storage_type rho_m_gt_;
+  psc::checks::continuity<storage_type> continuity_;
   WriterDefault writer_continuity_;
   WriterDefault writer_gauss_;
 };
