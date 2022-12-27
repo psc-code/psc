@@ -206,9 +206,8 @@ TYPED_TEST(MomentTest, Moments_1st_to_host)
   using Mparticles = typename TypeParam::Mparticles;
   using Mfields = typename TypeParam::Mfields;
   using dim_t = typename TypeParam::dim;
-  using MfieldsHost = hostMirror_t<Mfields>;
   using real_t = typename Mfields::real_t;
-  using Moment = Moments_1st<Mparticles, typename MfieldsHost::Storage, dim_t>;
+  using Moment = Moments_1st_to_host<dim_t>;
 
   EXPECT_EQ(Moment::name(), "all_1st_cc");
   auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 1.}, this->w, 0});
