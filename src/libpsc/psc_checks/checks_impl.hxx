@@ -40,14 +40,13 @@ struct Checks_ : ChecksParams
   using Mparticles = _Mparticles;
   using dim_t = D;
   using storage_type = typename MF::Storage;
-  using value_type = typename storage_type::value_type;
   using Moment_t = typename ORDER::template Moment_rho_nc<storage_type, dim_t>;
 
   // ----------------------------------------------------------------------
   // ctor
 
   Checks_(const Grid_t& grid, MPI_Comm comm, const ChecksParams& params)
-    : ChecksParams(params), comm_{comm}
+    : ChecksParams(params)
   {}
 
   // ======================================================================
@@ -102,10 +101,11 @@ struct Checks_ : ChecksParams
 
     // find global max
     double tmp = max_err;
-    MPI_Allreduce(&tmp, &max_err, 1, MPI_DOUBLE, MPI_MAX, comm_);
+    MPI_Allreduce(&tmp, &max_err, 1, MPI_DOUBLE, MPI_MAX, grid.comm());
 
     if (continuity_verbose || max_err >= eps) {
-      mpi_printf(comm_, "continuity: max_err = %g (thres %g)\n", max_err, eps);
+      mpi_printf(grid.comm(), "continuity: max_err = %g (thres %g)\n", max_err,
+                 eps);
     }
 
     if (continuity_dump_always || max_err >= eps) {
@@ -170,10 +170,10 @@ struct Checks_ : ChecksParams
 
     // find global max
     double tmp = max_err;
-    MPI_Allreduce(&tmp, &max_err, 1, MPI_DOUBLE, MPI_MAX, comm_);
+    MPI_Allreduce(&tmp, &max_err, 1, MPI_DOUBLE, MPI_MAX, grid.comm());
 
     if (gauss_verbose || max_err >= eps) {
-      mpi_printf(comm_, "gauss: max_err = %g (thres %g)\n", max_err, eps);
+      mpi_printf(grid.comm(), "gauss: max_err = %g (thres %g)\n", max_err, eps);
     }
 
     if (gauss_dump_always || max_err >= eps) {
@@ -190,8 +190,7 @@ struct Checks_ : ChecksParams
     assert(max_err < eps);
   }
 
-  // state
-  MPI_Comm comm_;
+private:
   storage_type rho_m_gt_;
   WriterDefault writer_continuity_;
   WriterDefault writer_gauss_;
