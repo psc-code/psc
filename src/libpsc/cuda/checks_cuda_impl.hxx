@@ -76,30 +76,32 @@ struct ChecksCuda : ChecksParams
     auto&& d_rho = rho_p - rho_m;
     auto&& dt_divj = grid.dt * h_divj;
 
-    double eps = continuity_threshold;
+#if 0
     double max_err = 0.;
     for (int p = 0; p < grid.n_patches(); p++) {
       grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
         double _d_rho = d_rho(i, j, k, 0, p);
         double _dt_divj = dt_divj(i, j, k, 0, p);
         max_err = std::max(max_err, std::abs(_d_rho + _dt_divj));
-        if (std::abs(_d_rho + _dt_divj) > eps) {
+        if (std::abs(_d_rho + _dt_divj) > continuity_threshold) {
           mprintf("p%d (%d,%d,%d): %g -- %g diff %g\n", p, i, j, k, _d_rho,
                   -_dt_divj, _d_rho + _dt_divj);
         }
       });
     }
+#endif
 
+    double max_err = gt::norm_linf(d_rho + dt_divj);
     // find global max
     double tmp = max_err;
     MPI_Allreduce(&tmp, &max_err, 1, MPI_DOUBLE, MPI_MAX, grid.comm());
 
-    if (continuity_verbose || max_err >= eps) {
+    if (continuity_verbose || max_err >= continuity_threshold) {
       mpi_printf(grid.comm(), "continuity: max_err = %g (thres %g)\n", max_err,
-                 eps);
+                 continuity_threshold);
     }
 
-    if (continuity_dump_always || max_err >= eps) {
+    if (continuity_dump_always || max_err >= continuity_threshold) {
       static WriterDefault writer;
       if (!writer) {
         writer.open("continuity");
