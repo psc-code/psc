@@ -26,11 +26,20 @@ namespace psc
 namespace checks
 {
 
-template <typename S>
+template <typename S, typename Item_rho_>
 class continuity
 {
 public:
   using storage_type = S;
+  using Item_rho = Item_rho_;
+
+  template <typename Mparticles>
+  void before_particle_push(const Mparticles& mprts)
+  {
+    const Grid_t& grid = mprts.grid();
+    auto item_rho = Item_rho{grid};
+    rho_m_ = psc::mflds::interior(grid, item_rho(mprts));
+  }
 
   // private:
   storage_type rho_m_;
@@ -80,9 +89,7 @@ struct Checks_ : ChecksParams
         grid.timestep() % continuity_every_step != 0) {
       return;
     }
-
-    auto item_rho = Moment_t{grid};
-    continuity_.rho_m_ = psc::mflds::interior(grid, item_rho(mprts));
+    continuity_.before_particle_push(mprts);
   }
 
   // ----------------------------------------------------------------------
@@ -210,7 +217,7 @@ struct Checks_ : ChecksParams
   }
 
 private:
-  psc::checks::continuity<storage_type> continuity_;
+  psc::checks::continuity<storage_type, Moment_t> continuity_;
   WriterDefault writer_continuity_;
   WriterDefault writer_gauss_;
 };

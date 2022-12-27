@@ -45,9 +45,7 @@ struct ChecksCuda : ChecksParams
         grid.timestep() % continuity_every_step != 0) {
       return;
     }
-
-    auto item_rho = Moment_t{grid};
-    continuity_.rho_m_ = psc::mflds::interior(grid, item_rho(mprts));
+    continuity_.before_particle_push(mprts);
   }
 
   // ----------------------------------------------------------------------
@@ -193,5 +191,5 @@ struct ChecksCuda : ChecksParams
   }
 
 private:
-  psc::checks::continuity<storage_type> continuity_;
+  psc::checks::continuity<storage_type, Moment_t> continuity_;
 };
