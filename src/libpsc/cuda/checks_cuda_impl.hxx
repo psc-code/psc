@@ -63,24 +63,28 @@ struct ChecksCuda : ChecksParams
     auto item_rho = Moment_t{grid};
     auto item_divj = Item_divj<MfieldsState>{};
 
-    auto d_rho_p = psc::mflds::interior(grid, item_rho(mprts));
-    auto d_divj = psc::mflds::interior(grid, item_divj(mflds));
-    auto&& rho_p = gt::host_mirror(d_rho_p);
-    auto&& rho_m = gt::host_mirror(continuity_.rho_m_);
-    auto&& h_divj = gt::host_mirror(d_divj);
-    gt::copy(gt::eval(d_rho_p), rho_p);
-    gt::copy(gt::eval(continuity_.rho_m_), rho_m);
-    gt::copy(gt::eval(d_divj), h_divj);
+    auto rho_p = psc::mflds::interior(grid, item_rho(mprts));
+    auto d_rho =
+      psc::mflds::interior(grid, item_rho(mprts)) - continuity_.rho_m_;
+    auto divj = psc::mflds::interior(grid, item_divj(mflds));
+    // auto&& h_rho_p = gt::host_mirror(rho_p);
+    // auto&& h_rho_m = gt::host_mirror(continuity_.rho_m_);
+    // auto&& h_divj = gt::host_mirror(divj);
+    // gt::copy(gt::eval(d_rho_p), h_rho_p);
+    // gt::copy(gt::eval(continuity_.rho_m_), h_rho_m);
+    // gt::copy(gt::eval(d_divj), h_divj);
 
-    auto&& d_rho = rho_p - rho_m;
-    auto&& dt_divj = grid.dt * h_divj;
+    // auto&& h_d_rho = h_rho_p - h_rho_m;
+    // auto&& h_dt_divj = grid.dt * h_divj;
+    //    auto&& d_rho = d_rho_p - continuity_.rho_m_;
+    auto&& dt_divj = grid.dt * divj;
 
 #if 0
     double max_err = 0.;
     for (int p = 0; p < grid.n_patches(); p++) {
       grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-        double _d_rho = d_rho(i, j, k, 0, p);
-        double _dt_divj = dt_divj(i, j, k, 0, p);
+        double _d_rho = h_d_rho(i, j, k, 0, p);
+        double _dt_divj = h_dt_divj(i, j, k, 0, p);
         max_err = std::max(max_err, std::abs(_d_rho + _dt_divj));
         if (std::abs(_d_rho + _dt_divj) > continuity_threshold) {
           mprintf("p%d (%d,%d,%d): %g -- %g diff %g\n", p, i, j, k, _d_rho,
@@ -106,8 +110,8 @@ struct ChecksCuda : ChecksParams
         writer.open("continuity");
       }
       writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
-      writer.write(dt_divj, grid, "div_j", {"div_j"});
       writer.write(d_rho, grid, "d_rho", {"d_rho"});
+      writer.write(dt_divj, grid, "div_j", {"div_j"});
       writer.end_step();
     }
     MPI_Barrier(grid.comm());
