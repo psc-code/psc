@@ -34,18 +34,6 @@ public:
   }
 };
 
-template <typename dim_t>
-struct Moment_rho_1st_nc_cuda
-  : ItemMomentCRTP<Moment_rho_1st_nc_cuda<dim_t>, MfieldsCuda::Storage,
-                   BndCuda3>
-{
-  using Base = ItemMomentCRTP<Moment_rho_1st_nc_cuda<dim_t>,
-                              MfieldsCuda::Storage, BndCuda3>;
-  using moment_type = moment_rho_1st_nc_cuda<dim_t>;
-
-  using Base::Base;
-};
-
 // ======================================================================
 // Moment_n_1st_cuda
 
@@ -69,19 +57,6 @@ public:
     CudaMoments1stN<cuda_mparticles<typename MP::BS>, dim_t> cmoments;
     cmoments(cmprts, mflds_gt, ib);
   }
-};
-
-template <typename dim_t>
-class Moment_n_1st_cuda
-  : public ItemMomentCRTP<Moment_n_1st_cuda<dim_t>, MfieldsCuda::Storage,
-                          BndCuda3>
-{
-public:
-  using Base =
-    ItemMomentCRTP<Moment_n_1st_cuda<dim_t>, MfieldsCuda::Storage, BndCuda3>;
-  using moment_type = moment_n_1st_cc_cuda<dim_t>;
-
-  using Base::Base;
 };
 
 // ======================================================================
@@ -112,14 +87,13 @@ public:
 };
 
 template <typename dim_t>
-class Moments_1st_cuda
-  : public ItemMomentCRTP<Moments_1st_cuda<dim_t>, MfieldsCuda::Storage,
-                          BndCuda3>
-{
-public:
-  using Base =
-    ItemMomentCRTP<Moments_1st_cuda<dim_t>, MfieldsCuda::Storage, BndCuda3>;
-  using moment_type = moments_1st_cc_cuda<dim_t>;
+using Moment_rho_1st_nc_cuda =
+  ItemMoment<moment_rho_1st_nc_cuda<dim_t>, MfieldsCuda::Storage, BndCuda3>;
 
-  using Base::Base;
-};
+template <typename dim_t>
+using Moment_n_1st_cuda =
+  ItemMoment<moment_n_1st_cc_cuda<dim_t>, MfieldsCuda::Storage, BndCuda3>;
+
+template <typename dim_t>
+using Moments_1st_cuda =
+  ItemMoment<moments_1st_cc_cuda<dim_t>, MfieldsCuda::Storage, BndCuda3>;
