@@ -25,9 +25,18 @@ struct ChecksCuda : ChecksParams
   using storage_type = MfieldsCuda::Storage;
   using Moment_t = Moment_rho_1st_nc_cuda<D>;
 
+  // ----------------------------------------------------------------------
+  // ctor
+
   ChecksCuda(const Grid_t& grid, MPI_Comm comm, const ChecksParams& params)
     : ChecksParams(params)
   {}
+
+  // ======================================================================
+  // psc_checks: Charge Continuity
+
+  // ----------------------------------------------------------------------
+  // continuity_before_particle_push
 
   void continuity_before_particle_push(Mparticles& mprts)
   {
@@ -41,6 +50,9 @@ struct ChecksCuda : ChecksParams
     rho_m_gt_ = psc::mflds::interior(grid, item_rho(mprts));
   }
 
+  // ----------------------------------------------------------------------
+  // continuity_after_particle_push
+
   template <typename MfieldsState>
   void continuity_after_particle_push(Mparticles& mprts, MfieldsState& mflds)
   {
@@ -51,7 +63,7 @@ struct ChecksCuda : ChecksParams
     }
 
     auto item_rho = Moment_t{grid};
-    auto item_divj = Item_divj<MfieldsStateCuda>{};
+    auto item_divj = Item_divj<MfieldsState>{};
 
     auto d_rho_p = psc::mflds::interior(grid, item_rho(mprts));
     auto d_divj = psc::mflds::interior(grid, item_divj(mflds));
@@ -118,7 +130,7 @@ struct ChecksCuda : ChecksParams
     }
 
     auto item_rho = Moment_t{grid};
-    auto item_dive = Item_dive<MfieldsStateCuda>{};
+    auto item_dive = Item_dive<MfieldsState>{};
 
     auto d_rho = psc::mflds::interior(grid, item_rho(mprts));
     auto&& rho = gt::host_mirror(d_rho);
