@@ -104,7 +104,7 @@ using TestConfigVpic =
   TestConfig<dim_xyz,
              MfieldsSingle, // FIXME, this is not real nice, but might work...
              _PushParticlesVpic, checks_order_1st,
-             Checks_<_MparticlesVpic, void, checks_order_1st, dim_xyz>,
+             Checks_<_MparticlesVpic, MfieldsSingle, checks_order_1st, dim_xyz>,
              BndParticlesVpic<_MparticlesVpic>>;
 
 #ifdef USE_CUDA
