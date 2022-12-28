@@ -29,7 +29,7 @@ struct ChecksCuda : ChecksParams
   // ctor
 
   ChecksCuda(const Grid_t& grid, MPI_Comm comm, const ChecksParams& params)
-    : ChecksParams(params)
+    : ChecksParams(params), continuity_{params}
   {}
 
   // ======================================================================
@@ -59,54 +59,7 @@ struct ChecksCuda : ChecksParams
         grid.timestep() % continuity_every_step != 0) {
       return;
     }
-
-    auto item_rho = Moment_t{grid};
-    auto item_divj = Item_divj<MfieldsState>{};
-
-    auto rho_p = psc::mflds::interior(grid, item_rho(mprts));
-    auto divj = psc::mflds::interior(grid, item_divj(mflds));
-    auto d_rho = rho_p - continuity_.rho_m_;
-    auto dt_divj = grid.dt * divj;
-
-    double local_err = gt::norm_linf(d_rho + dt_divj);
-    // find global max
-    double max_err;
-    MPI_Allreduce(&local_err, &max_err, 1, MPI_DOUBLE, MPI_MAX, grid.comm());
-
-    if (max_err >= continuity_threshold) {
-      auto&& h_d_rho = gt::host_mirror(d_rho);
-      auto&& h_dt_divj = gt::host_mirror(dt_divj);
-      gt::copy(gt::eval(d_rho), h_d_rho);
-      gt::copy(gt::eval(dt_divj), h_dt_divj);
-      for (int p = 0; p < grid.n_patches(); p++) {
-        grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-          double val_d_rho = h_d_rho(i, j, k, 0, p);
-          double val_dt_divj = h_dt_divj(i, j, k, 0, p);
-          if (std::abs(val_d_rho + val_dt_divj) > continuity_threshold) {
-            mprintf("p%d (%d,%d,%d): %g -- %g diff %g\n", p, i, j, k, val_d_rho,
-                    -val_dt_divj, val_d_rho + val_dt_divj);
-          }
-        });
-      }
-    }
-
-    if (continuity_verbose || max_err >= continuity_threshold) {
-      mpi_printf(grid.comm(), "continuity: max_err = %g (thres %g)\n", max_err,
-                 continuity_threshold);
-    }
-
-    if (continuity_dump_always || max_err >= continuity_threshold) {
-      if (!writer_continuity_) {
-        writer_continuity_.open("continuity");
-      }
-      writer_continuity_.begin_step(grid.timestep(), grid.timestep() * grid.dt);
-      writer_continuity_.write(d_rho, grid, "d_rho", {"d_rho"});
-      writer_continuity_.write(dt_divj, grid, "div_j", {"div_j"});
-      writer_continuity_.end_step();
-    }
-    MPI_Barrier(grid.comm());
-
-    assert(max_err < eps);
+    continuity_.after_particle_push(mprts, mflds);
   }
 
   // ======================================================================
@@ -186,6 +139,5 @@ struct ChecksCuda : ChecksParams
 
 private:
   psc::checks::continuity<storage_type, Moment_t> continuity_;
-  WriterDefault writer_continuity_;
   WriterDefault writer_gauss_;
 };
