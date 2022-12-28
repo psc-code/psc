@@ -56,9 +56,8 @@ struct ChecksCuda : ChecksParams
 
     auto item_rho = Moment_t{grid};
     auto item_dive = Item_dive<MfieldsState>{};
-
     auto rho = psc::mflds::interior(grid, item_rho(mprts));
-    auto dive = item_dive(mflds);
+    auto dive = psc::mflds::interior(grid, item_dive(mflds));
     auto&& h_rho = gt::host_mirror(rho);
     auto&& h_dive = gt::host_mirror(dive);
     gt::copy(rho, h_rho);
@@ -109,7 +108,6 @@ struct ChecksCuda : ChecksParams
       writer_gauss_.end_step();
     }
 
-    MPI_Barrier(grid.comm());
     assert(max_err < gauss_threshold);
   }
 
