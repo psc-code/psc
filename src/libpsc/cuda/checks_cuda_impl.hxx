@@ -96,14 +96,13 @@ struct ChecksCuda : ChecksParams
     }
 
     if (continuity_dump_always || max_err >= continuity_threshold) {
-      static WriterDefault writer;
-      if (!writer) {
-        writer.open("continuity");
+      if (!writer_continuity_) {
+        writer_continuity_.open("continuity");
       }
-      writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
-      writer.write(d_rho, grid, "d_rho", {"d_rho"});
-      writer.write(dt_divj, grid, "div_j", {"div_j"});
-      writer.end_step();
+      writer_continuity_.begin_step(grid.timestep(), grid.timestep() * grid.dt);
+      writer_continuity_.write(d_rho, grid, "d_rho", {"d_rho"});
+      writer_continuity_.write(dt_divj, grid, "div_j", {"div_j"});
+      writer_continuity_.end_step();
     }
     MPI_Barrier(grid.comm());
 
@@ -172,14 +171,13 @@ struct ChecksCuda : ChecksParams
     }
 
     if (gauss_dump_always || max_err >= eps) {
-      static WriterDefault writer;
-      if (!writer) {
-        writer.open("gauss");
+      if (!writer_gauss_) {
+        writer_gauss_.open("gauss");
       }
-      writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
-      writer.write(rho, grid, "rho", {"rho"});
-      writer.write(dive, grid, "dive", {"dive"});
-      writer.end_step();
+      writer_gauss_.begin_step(grid.timestep(), grid.timestep() * grid.dt);
+      writer_gauss_.write(rho, grid, "rho", {"rho"});
+      writer_gauss_.write(dive, grid, "dive", {"dive"});
+      writer_gauss_.end_step();
     }
 
     MPI_Barrier(grid.comm());
@@ -188,4 +186,6 @@ struct ChecksCuda : ChecksParams
 
 private:
   psc::checks::continuity<storage_type, Moment_t> continuity_;
+  WriterDefault writer_continuity_;
+  WriterDefault writer_gauss_;
 };
