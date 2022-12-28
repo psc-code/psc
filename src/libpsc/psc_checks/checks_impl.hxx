@@ -70,12 +70,12 @@ namespace checks
 // ======================================================================
 // psc::checks::continuity: Charge Continuity
 
-template <typename S, typename Item_rho_>
+template <typename S, typename ITEM_RHO>
 class continuity : ChecksParams
 {
 public:
   using storage_type = S;
-  using Item_rho = Item_rho_;
+  using Item_rho = ITEM_RHO;
 
   continuity(const ChecksParams& params) : ChecksParams(params) {}
 
@@ -151,12 +151,12 @@ private:
 // ======================================================================
 // psc::checks::gauss: Gauss's Law div E = rho
 
-template <typename S, typename Item_rho_>
+template <typename S, typename ITEM_RHO>
 class gauss : ChecksParams
 {
 public:
   using storage_type = S;
-  using Item_rho = Item_rho_;
+  using Item_rho = ITEM_RHO;
 
   gauss(const ChecksParams& params) : ChecksParams(params) {}
 
@@ -240,17 +240,16 @@ struct checks_order_2nd
   using Moment_rho_nc = Moment_rho_2nd_nc<S, D>;
 };
 
-template <typename _Mparticles, typename MF, typename ORDER, typename D>
-struct Checks_ : ChecksParams
-
+template <typename MP, typename S, typename ITEM_RHO>
+class ChecksCommon : public ChecksParams
 {
-  using Mparticles = _Mparticles;
-  using dim_t = D;
-  using storage_type = typename MF::Storage;
-  using Moment_t = typename ORDER::template Moment_rho_nc<storage_type, dim_t>;
+public:
+  using Mparticles = MP;
+  using storage_type = S;
+  using item_rho_type = ITEM_RHO;
 
-  Checks_(const Grid_t& grid, MPI_Comm comm, const ChecksParams& params)
-    : ChecksParams(params), continuity_{params}, gauss_{params}
+  ChecksCommon(const Grid_t& grid, MPI_Comm comm, const ChecksParams& params)
+    : ChecksParams{params}, continuity_{params}, gauss_{params}
   {}
 
   void continuity_before_particle_push(Mparticles& mprts)
@@ -271,6 +270,11 @@ struct Checks_ : ChecksParams
   }
 
 private:
-  psc::checks::continuity<storage_type, Moment_t> continuity_;
-  psc::checks::gauss<storage_type, Moment_t> gauss_;
+  psc::checks::continuity<storage_type, item_rho_type> continuity_;
+  psc::checks::gauss<storage_type, item_rho_type> gauss_;
 };
+
+template <typename MP, typename MF, typename ORDER, typename D>
+using Checks_ =
+  ChecksCommon<MP, typename MF::Storage,
+               typename ORDER::template Moment_rho_nc<typename MF::Storage, D>>;
