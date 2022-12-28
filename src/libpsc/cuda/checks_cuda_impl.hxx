@@ -25,40 +25,18 @@ struct ChecksCuda : ChecksParams
   using storage_type = MfieldsCuda::Storage;
   using Moment_t = Moment_rho_1st_nc_cuda<D>;
 
-  // ----------------------------------------------------------------------
-  // ctor
-
   ChecksCuda(const Grid_t& grid, MPI_Comm comm, const ChecksParams& params)
     : ChecksParams(params), continuity_{params}
   {}
 
-  // ======================================================================
-  // psc_checks: Charge Continuity
-
-  // ----------------------------------------------------------------------
-  // continuity_before_particle_push
-
   void continuity_before_particle_push(Mparticles& mprts)
   {
-    const auto& grid = mprts.grid();
-    if (continuity_every_step <= 0 ||
-        grid.timestep() % continuity_every_step != 0) {
-      return;
-    }
     continuity_.before_particle_push(mprts);
   }
-
-  // ----------------------------------------------------------------------
-  // continuity_after_particle_push
 
   template <typename MfieldsState>
   void continuity_after_particle_push(Mparticles& mprts, MfieldsState& mflds)
   {
-    const auto& grid = mprts.grid();
-    if (continuity_every_step <= 0 ||
-        grid.timestep() % continuity_every_step != 0) {
-      return;
-    }
     continuity_.after_particle_push(mprts, mflds);
   }
 

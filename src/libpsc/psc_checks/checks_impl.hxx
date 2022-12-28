@@ -27,6 +27,9 @@ namespace psc
 namespace checks
 {
 
+// ======================================================================
+// psc::checks::continuity: Charge Continuity
+
 template <typename S, typename Item_rho_>
 class continuity : ChecksParams
 {
@@ -36,18 +39,34 @@ public:
 
   continuity(const ChecksParams& params) : ChecksParams(params) {}
 
+  // ----------------------------------------------------------------------
+  // before_particle_push
+
   template <typename Mparticles>
   void before_particle_push(const Mparticles& mprts)
   {
-    const Grid_t& grid = mprts.grid();
+    const auto& grid = mprts.grid();
+    if (continuity_every_step <= 0 ||
+        grid.timestep() % continuity_every_step != 0) {
+      return;
+    }
+
     auto item_rho = Item_rho{grid};
     rho_m_ = psc::mflds::interior(grid, item_rho(mprts));
   }
+
+  // ----------------------------------------------------------------------
+  // after_particle_push
 
   template <typename Mparticles, typename MfieldsState>
   void after_particle_push(const Mparticles& mprts, MfieldsState& mflds)
   {
     const Grid_t& grid = mprts.grid();
+    if (continuity_every_step <= 0 ||
+        grid.timestep() % continuity_every_step != 0) {
+      return;
+    }
+
     auto item_rho = Item_rho{grid};
     auto item_divj = Item_divj<MfieldsState>{};
 
@@ -126,40 +145,18 @@ struct Checks_ : ChecksParams
   using storage_type = typename MF::Storage;
   using Moment_t = typename ORDER::template Moment_rho_nc<storage_type, dim_t>;
 
-  // ----------------------------------------------------------------------
-  // ctor
-
   Checks_(const Grid_t& grid, MPI_Comm comm, const ChecksParams& params)
     : ChecksParams(params), continuity_{params}
   {}
 
-  // ======================================================================
-  // psc_checks: Charge Continuity
-
-  // ----------------------------------------------------------------------
-  // continuity_before_particle_push
-
   void continuity_before_particle_push(Mparticles& mprts)
   {
-    const auto& grid = mprts.grid();
-    if (continuity_every_step <= 0 ||
-        grid.timestep() % continuity_every_step != 0) {
-      return;
-    }
     continuity_.before_particle_push(mprts);
   }
-
-  // ----------------------------------------------------------------------
-  // continuity_after_particle_push
 
   template <typename MfieldsState>
   void continuity_after_particle_push(Mparticles& mprts, MfieldsState& mflds)
   {
-    const auto& grid = mprts.grid();
-    if (continuity_every_step <= 0 ||
-        grid.timestep() % continuity_every_step != 0) {
-      return;
-    }
     continuity_.after_particle_push(mprts, mflds);
   }
 
