@@ -37,7 +37,7 @@ struct Moment_rho_1st_nc_cuda
     // zeros() shouldn't actually allocate, but probably it does, so this wastes
     // memory and a copy
     storage_type mres =
-      psc::mflds::zeros<real_t, space_type>(mprts.grid(), 1, ib);
+      psc::mflds::zeros<real_t, space_type>(mprts.grid(), Base::n_comps(), ib);
     CudaMoments1stNcRho<cuda_mparticles<typename Mparticles::BS>, dim_t>
       cmoments;
     cmoments(cmprts, mres, ib);
@@ -85,7 +85,7 @@ public:
     prof_start(pr_1);
     Int3 ib = -mprts.grid().ibn;
     storage_type mres =
-      psc::mflds::zeros<real_t, space_type>(mprts.grid(), 1, ib);
+      psc::mflds::zeros<real_t, space_type>(mprts.grid(), Base::n_comps(), ib);
     prof_stop(pr_1);
 
     CudaMoments1stN<cuda_mparticles<typename Mparticles::BS>, dim_t> cmoments;
@@ -138,7 +138,7 @@ public:
     prof_start(pr_1);
     Int3 ib = -mprts.grid().ibn;
     storage_type mres =
-      psc::mflds::zeros<real_t, space_type>(mprts.grid(), 1, ib);
+      psc::mflds::zeros<real_t, space_type>(mprts.grid(), Base::n_comps(), ib);
     prof_stop(pr_1);
 
     prof_start(pr_2);
