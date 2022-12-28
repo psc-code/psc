@@ -182,7 +182,7 @@ struct CudaBnd
     prof_stop(pr_ddc_sync1);
 #endif
 
-    int key = mb + 100 * me;
+    int key = mb + 100 * me + 10000 * mflds_gt.shape(3);
     auto map = maps.find(key);
     if (map == maps.cend()) {
       auto pair = maps.emplace(std::make_pair(
