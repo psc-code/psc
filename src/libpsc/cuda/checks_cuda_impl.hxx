@@ -73,20 +73,22 @@ struct ChecksCuda : ChecksParams
         }
       }
 
-      grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-        if (j < l[1] || k < l[2] || j >= grid.ldims[1] - r[1] ||
-            k >= grid.ldims[2] - r[2]) {
-          // do nothing
-        } else {
-          double val_rho = h_rho(i, j, k, 0, p);
-          double val_dive = h_dive(i, j, k, 0, p);
-          max_err = std::max(max_err, std::abs(val_dive - val_rho));
-          if (std::abs(val_dive - val_rho) > gauss_threshold) {
-            printf("(%d,%d,%d): %g -- %g diff %g\n", i, j, k, val_dive, val_rho,
-                   val_dive - val_rho);
+      gt::launch_host<3>(
+        {grid.ldims[0], grid.ldims[1], grid.ldims[2]},
+        [&](int i, int j, int k) {
+          if (j < l[1] || k < l[2] || j >= grid.ldims[1] - r[1] ||
+              k >= grid.ldims[2] - r[2]) {
+            // do nothing
+          } else {
+            double val_rho = h_rho(i, j, k, 0, p);
+            double val_dive = h_dive(i, j, k, 0, p);
+            max_err = std::max(max_err, std::abs(val_dive - val_rho));
+            if (std::abs(val_dive - val_rho) > gauss_threshold) {
+              printf("(%d,%d,%d): %g -- %g diff %g\n", i, j, k, val_dive,
+                     val_rho, val_dive - val_rho);
+            }
           }
-        }
-      });
+        });
     }
 
     // find global max
