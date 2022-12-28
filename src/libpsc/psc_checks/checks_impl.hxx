@@ -28,11 +28,13 @@ namespace checks
 {
 
 template <typename S, typename Item_rho_>
-class continuity
+class continuity : ChecksParams
 {
 public:
   using storage_type = S;
   using Item_rho = Item_rho_;
+
+  continuity(const ChecksParams& params) : ChecksParams(params) {}
 
   template <typename Mparticles>
   void before_particle_push(const Mparticles& mprts)
@@ -42,75 +44,16 @@ public:
     rho_m_ = psc::mflds::interior(grid, item_rho(mprts));
   }
 
-  // private:
-  storage_type rho_m_;
-};
-
-} // namespace checks
-} // namespace psc
-
-struct checks_order_1st
-{
-  template <typename S, typename D>
-  using Moment_rho_nc = Moment_rho_1st_nc<S, D>;
-};
-
-struct checks_order_2nd
-{
-  template <typename S, typename D>
-  using Moment_rho_nc = Moment_rho_2nd_nc<S, D>;
-};
-
-template <typename _Mparticles, typename MF, typename ORDER, typename D>
-struct Checks_ : ChecksParams
-
-{
-  using Mparticles = _Mparticles;
-  using dim_t = D;
-  using storage_type = typename MF::Storage;
-  using Moment_t = typename ORDER::template Moment_rho_nc<storage_type, dim_t>;
-
-  // ----------------------------------------------------------------------
-  // ctor
-
-  Checks_(const Grid_t& grid, MPI_Comm comm, const ChecksParams& params)
-    : ChecksParams(params)
-  {}
-
-  // ======================================================================
-  // psc_checks: Charge Continuity
-
-  // ----------------------------------------------------------------------
-  // continuity_before_particle_push
-
-  void continuity_before_particle_push(Mparticles& mprts)
+  template <typename Mparticles, typename MfieldsState>
+  void after_particle_push(const Mparticles& mprts, MfieldsState& mflds)
   {
-    const auto& grid = mprts.grid();
-    if (continuity_every_step <= 0 ||
-        grid.timestep() % continuity_every_step != 0) {
-      return;
-    }
-    continuity_.before_particle_push(mprts);
-  }
-
-  // ----------------------------------------------------------------------
-  // continuity_after_particle_push
-
-  template <typename MfieldsState>
-  void continuity_after_particle_push(Mparticles& mprts, MfieldsState& mflds)
-  {
-    const auto& grid = mprts.grid();
-    if (continuity_every_step <= 0 ||
-        grid.timestep() % continuity_every_step != 0) {
-      return;
-    }
-
-    auto item_rho = Moment_t{grid};
+    const Grid_t& grid = mprts.grid();
+    auto item_rho = Item_rho{grid};
     auto item_divj = Item_divj<MfieldsState>{};
 
     auto rho_p = psc::mflds::interior(grid, item_rho(mprts));
     auto divj = psc::mflds::interior(grid, item_divj(mflds));
-    auto d_rho = rho_p - continuity_.rho_m_;
+    auto d_rho = rho_p - rho_m_;
     auto dt_divj = grid.dt * divj;
 
     double local_err = gt::norm_linf(d_rho + dt_divj);
@@ -144,17 +87,83 @@ struct Checks_ : ChecksParams
     }
 
     if (continuity_dump_always || max_err >= continuity_threshold) {
-      if (!writer_continuity_) {
-        writer_continuity_.open("continuity");
+      if (!writer_) {
+        writer_.open("continuity");
       }
-      writer_continuity_.begin_step(grid.timestep(), grid.timestep() * grid.dt);
-      writer_continuity_.write(dt_divj, grid, "dt_divj", {"dt_divj"});
-      writer_continuity_.write(d_rho, grid, "d_rho", {"d_rho"});
-      writer_continuity_.end_step();
+      writer_.begin_step(grid.timestep(), grid.timestep() * grid.dt);
+      writer_.write(dt_divj, grid, "dt_divj", {"dt_divj"});
+      writer_.write(d_rho, grid, "d_rho", {"d_rho"});
+      writer_.end_step();
       MPI_Barrier(grid.comm());
     }
 
     assert(max_err < continuity_threshold);
+  }
+
+private:
+  storage_type rho_m_;
+  WriterDefault writer_;
+};
+
+} // namespace checks
+} // namespace psc
+
+struct checks_order_1st
+{
+  template <typename S, typename D>
+  using Moment_rho_nc = Moment_rho_1st_nc<S, D>;
+};
+
+struct checks_order_2nd
+{
+  template <typename S, typename D>
+  using Moment_rho_nc = Moment_rho_2nd_nc<S, D>;
+};
+
+template <typename _Mparticles, typename MF, typename ORDER, typename D>
+struct Checks_ : ChecksParams
+
+{
+  using Mparticles = _Mparticles;
+  using dim_t = D;
+  using storage_type = typename MF::Storage;
+  using Moment_t = typename ORDER::template Moment_rho_nc<storage_type, dim_t>;
+
+  // ----------------------------------------------------------------------
+  // ctor
+
+  Checks_(const Grid_t& grid, MPI_Comm comm, const ChecksParams& params)
+    : ChecksParams(params), continuity_{params}
+  {}
+
+  // ======================================================================
+  // psc_checks: Charge Continuity
+
+  // ----------------------------------------------------------------------
+  // continuity_before_particle_push
+
+  void continuity_before_particle_push(Mparticles& mprts)
+  {
+    const auto& grid = mprts.grid();
+    if (continuity_every_step <= 0 ||
+        grid.timestep() % continuity_every_step != 0) {
+      return;
+    }
+    continuity_.before_particle_push(mprts);
+  }
+
+  // ----------------------------------------------------------------------
+  // continuity_after_particle_push
+
+  template <typename MfieldsState>
+  void continuity_after_particle_push(Mparticles& mprts, MfieldsState& mflds)
+  {
+    const auto& grid = mprts.grid();
+    if (continuity_every_step <= 0 ||
+        grid.timestep() % continuity_every_step != 0) {
+      return;
+    }
+    continuity_.after_particle_push(mprts, mflds);
   }
 
   // ======================================================================
@@ -227,6 +236,5 @@ struct Checks_ : ChecksParams
 
 private:
   psc::checks::continuity<storage_type, Moment_t> continuity_;
-  WriterDefault writer_continuity_;
   WriterDefault writer_gauss_;
 };
