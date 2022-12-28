@@ -24,6 +24,32 @@ using WriterDefault = WriterMRC;
 
 namespace psc
 {
+
+namespace helper
+{
+
+template <typename E1, typename E2>
+void print_diff(const E1& e1, const E2& e2, double eps)
+{
+  // FIXME, eval to work around gt host_mirror limitation
+  auto&& d_e1 = gt::eval(e1);
+  auto&& d_e2 = gt::eval(e2);
+  auto&& h_e1 = gt::host_mirror(d_e1);
+  auto&& h_e2 = gt::host_mirror(d_e2);
+  gt::copy(d_e1, h_e1);
+  gt::copy(d_e2, h_e2);
+  gt::launch_host<5>(h_e1.shape(), [=](int i, int j, int k, int m, int p) {
+    auto val_e1 = h_e1(i, j, k, m, p);
+    auto val_e2 = h_e2(i, j, k, m, p);
+    if (std::abs(val_e1 + val_e2) > eps) {
+      mprintf("p%d (%d,%d,%d): %g -- %g diff %g\n", p, i, j, k, val_e1, val_e2,
+              val_e1 - val_e2);
+    }
+  });
+}
+
+} // namespace helper
+
 namespace checks
 {
 
@@ -81,23 +107,7 @@ public:
     MPI_Allreduce(&local_err, &max_err, 1, MPI_DOUBLE, MPI_MAX, grid.comm());
 
     if (max_err >= continuity_threshold) {
-      auto&& d_d_rho = gt::eval(d_rho); // FIXME, working around host_mirror
-                                        // not supporting this nicely
-      auto&& d_dt_divj = gt::eval(dt_divj);
-      auto&& h_d_rho = gt::host_mirror(d_d_rho);
-      auto&& h_dt_divj = gt::host_mirror(d_dt_divj);
-      gt::copy(d_d_rho, h_d_rho);
-      gt::copy(d_dt_divj, h_dt_divj);
-      for (int p = 0; p < grid.n_patches(); p++) {
-        grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-          double val_d_rho = h_d_rho(i, j, k, 0, p);
-          double val_dt_divj = h_dt_divj(i, j, k, 0, p);
-          if (std::abs(val_d_rho + val_dt_divj) > continuity_threshold) {
-            mprintf("p%d (%d,%d,%d): %g -- %g diff %g\n", p, i, j, k, val_d_rho,
-                    -val_dt_divj, val_d_rho + val_dt_divj);
-          }
-        });
-      }
+      psc::helper::print_diff(d_rho, -dt_divj, continuity_threshold);
     }
 
     if (continuity_verbose || max_err >= continuity_threshold) {
