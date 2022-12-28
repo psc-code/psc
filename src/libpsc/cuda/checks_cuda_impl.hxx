@@ -57,14 +57,13 @@ struct ChecksCuda : ChecksParams
     auto item_rho = Moment_t{grid};
     auto item_dive = Item_dive<MfieldsState>{};
 
-    auto d_rho = psc::mflds::interior(grid, item_rho(mprts));
-    auto&& rho = gt::host_mirror(d_rho);
-    auto d_dive = item_dive(mflds);
-    auto&& dive = gt::host_mirror(d_dive);
-    gt::copy(gt::eval(d_rho), rho);
-    gt::copy(gt::eval(d_dive), dive);
+    auto rho = psc::mflds::interior(grid, item_rho(mprts));
+    auto dive = item_dive(mflds);
+    auto&& h_rho = gt::host_mirror(rho);
+    auto&& h_dive = gt::host_mirror(dive);
+    gt::copy(gt::eval(rho), h_rho);
+    gt::copy(gt::eval(dive), h_dive);
 
-    double eps = gauss_threshold;
     double max_err = 0.;
     for (int p = 0; p < grid.n_patches(); p++) {
       int l[3] = {0, 0, 0}, r[3] = {0, 0, 0};
@@ -75,20 +74,18 @@ struct ChecksCuda : ChecksParams
         }
       }
 
-      grid.Foreach_3d(0, 0, [&](int jx, int jy, int jz) {
-        if (jy < l[1] || jz < l[2] || jy >= grid.ldims[1] - r[1] ||
-            jz >= grid.ldims[2] - r[2]) {
-          // nothing
+      grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
+        if (j < l[1] || k < l[2] || j >= grid.ldims[1] - r[1] ||
+            k >= grid.ldims[2] - r[2]) {
+          // do nothing
         } else {
-          double v_rho = rho(jx, jy, jz, 0, p);
-          double v_dive = dive(jx, jy, jz, 0, p);
-          max_err = fmax(max_err, fabs(v_dive - v_rho));
-#if 1
-          if (fabs(v_dive - v_rho) > eps) {
-            printf("(%d,%d,%d): %g -- %g diff %g\n", jx, jy, jz, v_dive, v_rho,
-                   v_dive - v_rho);
+          double val_rho = h_rho(i, j, k, 0, p);
+          double val_dive = h_dive(i, j, k, 0, p);
+          max_err = std::max(max_err, std::abs(val_dive - val_rho));
+          if (std::abs(val_dive - val_rho) > gauss_threshold) {
+            printf("(%d,%d,%d): %g -- %g diff %g\n", i, j, k, val_dive, val_rho,
+                   val_dive - val_rho);
           }
-#endif
         }
       });
     }
@@ -97,22 +94,23 @@ struct ChecksCuda : ChecksParams
     double tmp = max_err;
     MPI_Allreduce(&tmp, &max_err, 1, MPI_DOUBLE, MPI_MAX, grid.comm());
 
-    if (gauss_verbose || max_err >= eps) {
-      mpi_printf(grid.comm(), "gauss: max_err = %g (thres %g)\n", max_err, eps);
+    if (gauss_verbose || max_err >= gauss_threshold) {
+      mpi_printf(grid.comm(), "gauss: max_err = %g (thres %g)\n", max_err,
+                 gauss_threshold);
     }
 
-    if (gauss_dump_always || max_err >= eps) {
+    if (gauss_dump_always || max_err >= gauss_threshold) {
       if (!writer_gauss_) {
         writer_gauss_.open("gauss");
       }
       writer_gauss_.begin_step(grid.timestep(), grid.timestep() * grid.dt);
-      writer_gauss_.write(rho, grid, "rho", {"rho"});
-      writer_gauss_.write(dive, grid, "dive", {"dive"});
+      writer_gauss_.write(h_rho, grid, "rho", {"rho"});
+      writer_gauss_.write(h_dive, grid, "dive", {"dive"});
       writer_gauss_.end_step();
     }
 
     MPI_Barrier(grid.comm());
-    assert(max_err < eps);
+    assert(max_err < gauss_threshold);
   }
 
 private:

@@ -176,10 +176,9 @@ struct Checks_ : ChecksParams
 
     auto item_rho = Moment_t{grid};
     auto item_dive = Item_dive<MfieldsState>{};
-    auto rho_gt = psc::mflds::interior(grid, item_rho(mprts));
-    auto dive_gt = psc::mflds::interior(grid, item_dive(mflds));
+    auto rho = psc::mflds::interior(grid, item_rho(mprts));
+    auto dive = psc::mflds::interior(grid, item_dive(mflds));
 
-    double eps = gauss_threshold;
     double max_err = 0.;
     for (int p = 0; p < grid.n_patches(); p++) {
       int l[3] = {0, 0, 0}, r[3] = {0, 0, 0};
@@ -195,12 +194,12 @@ struct Checks_ : ChecksParams
             k >= grid.ldims[2] - r[2]) {
           // do nothing
         } else {
-          double v_rho = rho_gt(i, j, k, 0, p);
-          double v_dive = dive_gt(i, j, k, 0, p);
-          max_err = std::max(max_err, std::abs(v_dive - v_rho));
-          if (std::abs(v_dive - v_rho) > eps) {
-            printf("(%d,%d,%d): %g -- %g diff %g\n", i, j, k, v_dive, v_rho,
-                   v_dive - v_rho);
+          double val_rho = rho(i, j, k, 0, p);
+          double val_dive = dive(i, j, k, 0, p);
+          max_err = std::max(max_err, std::abs(val_dive - val_rho));
+          if (std::abs(val_dive - val_rho) > gauss_threshold) {
+            printf("(%d,%d,%d): %g -- %g diff %g\n", i, j, k, val_dive, val_rho,
+                   val_dive - val_rho);
           }
         }
       });
@@ -210,22 +209,22 @@ struct Checks_ : ChecksParams
     double tmp = max_err;
     MPI_Allreduce(&tmp, &max_err, 1, MPI_DOUBLE, MPI_MAX, grid.comm());
 
-    if (gauss_verbose || max_err >= eps) {
-      mpi_printf(grid.comm(), "gauss: max_err = %g (thres %g)\n", max_err, eps);
+    if (gauss_verbose || max_err >= gauss_threshold) {
+      mpi_printf(grid.comm(), "gauss: max_err = %g (thres %g)\n", max_err,
+                 gauss_threshold);
     }
 
-    if (gauss_dump_always || max_err >= eps) {
+    if (gauss_dump_always || max_err >= gauss_threshold) {
       if (!writer_gauss_) {
         writer_gauss_.open("gauss");
       }
       writer_gauss_.begin_step(grid.timestep(), grid.timestep() * grid.dt);
-      writer_gauss_.write(rho_gt, grid, "rho", {"rho"});
-      writer_gauss_.write(dive_gt, grid, item_dive.name(),
-                          item_dive.comp_names());
+      writer_gauss_.write(rho, grid, "rho", {"rho"});
+      writer_gauss_.write(dive, grid, "dive", {"dive"});
       writer_gauss_.end_step();
     }
 
-    assert(max_err < eps);
+    assert(max_err < gauss_threshold);
   }
 
 private:
