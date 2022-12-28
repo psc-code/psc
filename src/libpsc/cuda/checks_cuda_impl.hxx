@@ -65,20 +65,18 @@ struct ChecksCuda : ChecksParams
 
     auto d_rho =
       psc::mflds::interior(grid, item_rho(mprts)) - continuity_.rho_m_;
-    auto divj = psc::mflds::interior(grid, item_divj(mflds));
-
-    auto&& dt_divj = grid.dt * divj;
+    auto dt_divj = grid.dt * divj;
 
 #if 0
     double max_err = 0.;
     for (int p = 0; p < grid.n_patches(); p++) {
       grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-        double _d_rho = h_d_rho(i, j, k, 0, p);
-        double _dt_divj = h_dt_divj(i, j, k, 0, p);
-        max_err = std::max(max_err, std::abs(_d_rho + _dt_divj));
-        if (std::abs(_d_rho + _dt_divj) > continuity_threshold) {
-          mprintf("p%d (%d,%d,%d): %g -- %g diff %g\n", p, i, j, k, _d_rho,
-                  -_dt_divj, _d_rho + _dt_divj);
+        double val_d_rho = h_d_rho(i, j, k, 0, p);
+        double val_dt_divj = h_dt_divj(i, j, k, 0, p);
+        max_err = std::max(max_err, std::abs(val_d_rho + val_dt_divj));
+        if (std::abs(val_d_rho + val_dt_divj) > continuity_threshold) {
+          mprintf("p%d (%d,%d,%d): %g -- %g diff %g\n", p, i, j, k, val_d_rho,
+                  -val_dt_divj, val_d_rho + val_dt_divj);
         }
       });
     }
