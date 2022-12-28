@@ -58,10 +58,6 @@ struct ChecksCuda : ChecksParams
     auto item_dive = Item_dive<MfieldsState>{};
     auto rho = psc::mflds::interior(grid, item_rho(mprts));
     auto dive = psc::mflds::interior(grid, item_dive(mflds));
-    auto&& h_rho = gt::host_mirror(rho);
-    auto&& h_dive = gt::host_mirror(dive);
-    gt::copy(rho, h_rho);
-    gt::copy(dive, h_dive);
 
     double max_err = 0.;
     for (int p = 0; p < grid.n_patches(); p++) {
@@ -73,22 +69,17 @@ struct ChecksCuda : ChecksParams
         }
       }
 
-      gt::launch_host<3>(
-        {grid.ldims[0], grid.ldims[1], grid.ldims[2]},
-        [&](int i, int j, int k) {
-          if (j < l[1] || k < l[2] || j >= grid.ldims[1] - r[1] ||
-              k >= grid.ldims[2] - r[2]) {
-            // do nothing
-          } else {
-            double val_rho = h_rho(i, j, k, 0, p);
-            double val_dive = h_dive(i, j, k, 0, p);
-            max_err = std::max(max_err, std::abs(val_dive - val_rho));
-            if (std::abs(val_dive - val_rho) > gauss_threshold) {
-              printf("(%d,%d,%d): %g -- %g diff %g\n", i, j, k, val_dive,
-                     val_rho, val_dive - val_rho);
-            }
-          }
-        });
+      auto patch_rho =
+        rho.view(_s(l[0], -r[0]), _s(l[1], -r[1]), _s(l[2], -r[2]), 0, p);
+      auto patch_dive =
+        dive.view(_s(l[0], -r[0]), _s(l[1], -r[1]), _s(l[2], -r[2]), 0, p);
+
+      auto patch_err = gt::norm_linf(patch_dive - patch_rho);
+      max_err = std::max(max_err, patch_err);
+
+      if (patch_err > gauss_threshold) {
+        psc::helper::print_diff_3d(patch_rho, patch_dive, gauss_threshold);
+      }
     }
 
     // find global max
@@ -105,8 +96,8 @@ struct ChecksCuda : ChecksParams
         writer_gauss_.open("gauss");
       }
       writer_gauss_.begin_step(grid.timestep(), grid.timestep() * grid.dt);
-      writer_gauss_.write(h_rho, grid, "rho", {"rho"});
-      writer_gauss_.write(h_dive, grid, "dive", {"dive"});
+      writer_gauss_.write(rho, grid, "rho", {"rho"});
+      writer_gauss_.write(dive, grid, "dive", {"dive"});
       writer_gauss_.end_step();
     }
 
