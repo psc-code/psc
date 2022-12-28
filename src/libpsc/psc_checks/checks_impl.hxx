@@ -156,7 +156,7 @@ public:
       max_err = std::max(max_err, patch_err);
 
       if (patch_err > gauss_threshold) {
-        psc::helper::print_diff_3d(patch_rho, patch_dive, gauss_threshold);
+        psc::helper::print_diff(patch_rho, patch_dive, gauss_threshold);
       }
     }
 
