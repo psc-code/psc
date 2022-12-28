@@ -108,16 +108,17 @@ struct Checks_ : ChecksParams
     auto item_rho = Moment_t{grid};
     auto item_divj = Item_divj<MfieldsState>{};
 
-    auto d_rho_gt =
-      psc::mflds::interior(grid, item_rho(mprts)) - continuity_.rho_m_;
-    auto dt_divj_gt = grid.dt * item_divj(mflds);
+    auto rho_p = psc::mflds::interior(grid, item_rho(mprts));
+    auto divj = psc::mflds::interior(grid, item_divj(mflds));
+    auto d_rho = rho_p - continuity_.rho_m_;
+    auto dt_divj = grid.dt * divj;
 
 #if 0
     double max_err = 0.;
     for (int p = 0; p < grid.n_patches(); p++) {
       grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-        double val_d_rho = d_rho_gt(i, j, k, 0, p);
-        double val_dt_divj = dt_divj_gt(i, j, k, 0, p);
+        double val_d_rho = d_rho(i, j, k, 0, p);
+        double val_dt_divj = dt_divj(i, j, k, 0, p);
         max_err = std::max(max_err, std::abs(val_d_rho + val_dt_divj));
         if (std::abs(val_d_rho + val_dt_divj) > continuity_threshold) {
           mprintf("p%d (%d,%d,%d): %g -- %g diff %g\n", p, i, j, k, val_d_rho,
@@ -127,7 +128,7 @@ struct Checks_ : ChecksParams
     }
 #endif
 
-    double max_err = gt::norm_linf(d_rho_gt + dt_divj_gt);
+    double max_err = gt::norm_linf(d_rho + dt_divj);
     // find global max
     double tmp = max_err;
     MPI_Allreduce(&tmp, &max_err, 1, MPI_DOUBLE, MPI_MAX, grid.comm());
@@ -142,8 +143,8 @@ struct Checks_ : ChecksParams
         writer_continuity_.open("continuity");
       }
       writer_continuity_.begin_step(grid.timestep(), grid.timestep() * grid.dt);
-      writer_continuity_.write(dt_divj_gt, grid, "dt_divj", {"dt_divj"});
-      writer_continuity_.write(d_rho_gt, grid, "d_rho", {"d_rho"});
+      writer_continuity_.write(dt_divj, grid, "dt_divj", {"dt_divj"});
+      writer_continuity_.write(d_rho, grid, "d_rho", {"d_rho"});
       writer_continuity_.end_step();
       MPI_Barrier(grid.comm());
     }
