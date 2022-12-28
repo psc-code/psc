@@ -153,6 +153,83 @@ private:
   WriterDefault writer_;
 };
 
+// ======================================================================
+// psc::checks::gauss: Gauss's Law div E = rho
+
+template <typename S, typename Item_rho_>
+class gauss : ChecksParams
+{
+public:
+  using storage_type = S;
+  using Item_rho = Item_rho_;
+
+  gauss(const ChecksParams& params) : ChecksParams(params) {}
+
+  // ----------------------------------------------------------------------
+  // operator()
+
+  template <typename Mparticles, typename MfieldsState>
+  void operator()(Mparticles& mprts, MfieldsState& mflds)
+  {
+    const auto& grid = mprts.grid();
+    if (gauss_every_step <= 0 || grid.timestep() % gauss_every_step != 0) {
+      return;
+    }
+
+    auto item_rho = Item_rho{grid};
+    auto item_dive = Item_dive<MfieldsState>{};
+    auto rho = psc::mflds::interior(grid, item_rho(mprts));
+    auto dive = psc::mflds::interior(grid, item_dive(mflds));
+
+    double max_err = 0.;
+    for (int p = 0; p < grid.n_patches(); p++) {
+      int l[3] = {0, 0, 0}, r[3] = {0, 0, 0};
+      for (int d = 0; d < 3; d++) {
+        if (grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL &&
+            grid.atBoundaryLo(p, d)) {
+          l[d] = 1;
+        }
+      }
+
+      auto patch_rho =
+        rho.view(_s(l[0], -r[0]), _s(l[1], -r[1]), _s(l[2], -r[2]), 0, p);
+      auto patch_dive =
+        dive.view(_s(l[0], -r[0]), _s(l[1], -r[1]), _s(l[2], -r[2]), 0, p);
+
+      auto patch_err = gt::norm_linf(patch_dive - patch_rho);
+      max_err = std::max(max_err, patch_err);
+
+      if (patch_err > gauss_threshold) {
+        psc::helper::print_diff_3d(patch_rho, patch_dive, gauss_threshold);
+      }
+    }
+
+    // find global max
+    double tmp = max_err;
+    MPI_Allreduce(&tmp, &max_err, 1, MPI_DOUBLE, MPI_MAX, grid.comm());
+
+    if (gauss_verbose || max_err >= gauss_threshold) {
+      mpi_printf(grid.comm(), "gauss: max_err = %g (thres %g)\n", max_err,
+                 gauss_threshold);
+    }
+
+    if (gauss_dump_always || max_err >= gauss_threshold) {
+      if (!writer_) {
+        writer_.open("gauss");
+      }
+      writer_.begin_step(grid.timestep(), grid.timestep() * grid.dt);
+      writer_.write(rho, grid, "rho", {"rho"});
+      writer_.write(dive, grid, "dive", {"dive"});
+      writer_.end_step();
+    }
+
+    assert(max_err < gauss_threshold);
+  }
+
+private:
+  WriterDefault writer_;
+};
+
 } // namespace checks
 } // namespace psc
 
