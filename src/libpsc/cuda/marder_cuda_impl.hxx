@@ -8,6 +8,8 @@
 #include "fields_item_moments_1st_cuda.hxx"
 #include "cuda_bits.h"
 
+#include <gtensor/reductions.h>
+
 #include <mrc_io.h>
 
 void cuda_marder_correct_yz(MfieldsStateCuda& mflds, MfieldsCuda& mf, int p,
@@ -117,6 +119,18 @@ struct MarderCuda : MarderBase
   }
 
   // ----------------------------------------------------------------------
+  // max
+
+  static void print_max(Mfields& mf)
+  {
+    real_t max_err = gt::norm_linf(mf.storage());
+    MPI_Allreduce(MPI_IN_PLACE, &max_err, 1,
+                  Mfields_traits<Mfields>::mpi_dtype(), MPI_MAX,
+                  mf.grid().comm());
+    mpi_printf(mf.grid().comm(), "marder: err %g\n", max_err);
+  }
+
+  // ----------------------------------------------------------------------
   // correct
   //
   // Do the modified marder correction (See eq.(5, 7, 9, 10) in Mardahl and
@@ -155,6 +169,7 @@ struct MarderCuda : MarderBase
 
     for (int i = 0; i < loop_; i++) {
       calc_aid_fields(mflds, rho);
+      print_max(res_);
       correct(mflds);
       bnd_.fill_ghosts(mflds, EX, EX + 3);
     }
