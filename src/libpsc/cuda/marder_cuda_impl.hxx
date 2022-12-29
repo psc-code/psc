@@ -93,13 +93,7 @@ struct MarderCuda
   using Base::res_;
   using Base::rho_;
 
-  MarderCuda(const Grid_t& grid, real_t diffusion, int loop, bool dump)
-    : Base{grid, diffusion, loop, dump}
-  {}
-
-  // FIXME: checkpointing won't properly restore state
-  // FIXME: if the subclass creates objects, it'd be cleaner to have them
-  // be part of the subclass
+  using Base::Base;
 
   // ----------------------------------------------------------------------
   // calc_aid_fields
@@ -122,18 +116,6 @@ struct MarderCuda
 
     psc::mflds::interior(grid, res_.gt()) = dive - rho;
     bnd_.fill_ghosts(res_, 0, 1);
-  }
-
-  // ----------------------------------------------------------------------
-  // max
-
-  static void print_max(Mfields& mf)
-  {
-    real_t max_err = gt::norm_linf(mf.storage());
-    MPI_Allreduce(MPI_IN_PLACE, &max_err, 1,
-                  Mfields_traits<Mfields>::mpi_dtype(), MPI_MAX,
-                  mf.grid().comm());
-    mpi_printf(mf.grid().comm(), "marder: err %g\n", max_err);
   }
 
   // ----------------------------------------------------------------------
@@ -179,7 +161,7 @@ struct MarderCuda
 
     for (int i = 0; i < loop_; i++) {
       calc_aid_fields(mflds, rho);
-      print_max(res_);
+      Base::print_max(res_);
       correct(mflds);
       bnd_.fill_ghosts(mflds, EX, EX + 3);
     }
