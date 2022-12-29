@@ -72,14 +72,18 @@ inline void correct(MfieldsStateCuda& mflds, MfieldsCuda& mf, float diffusion)
 } // namespace psc
 
 template <typename BS, typename D>
-struct MarderCuda : MarderBase
+struct MarderCuda
+  : public MarderCommon<MparticlesCuda<BS>, MfieldsStateCuda, MfieldsCuda, D,
+                        Moment_rho_1st_nc_cuda<D>>
 {
-  using Mparticles = MparticlesCuda<BS>;
-  using MfieldsState = MfieldsStateCuda;
-  using Mfields = MfieldsCuda;
-  using dim_t = D;
+  using Base = MarderCommon<MparticlesCuda<BS>, MfieldsStateCuda, MfieldsCuda,
+                            D, Moment_rho_1st_nc_cuda<D>>;
+  using Mparticles = typename Base::Mparticles;
+  using MfieldsState = typename Base::MfieldsState;
+  using Mfields = typename Base::Mfields;
+  using dim_t = typename Base::dim_t;
   using real_t = typename Mfields::real_t;
-  using Moment_t = Moment_rho_1st_nc_cuda<D>;
+  using Moment_t = typename Base::Item_rho_t;
 
   MarderCuda(const Grid_t& grid, real_t diffusion, int loop, bool dump)
     : grid_{grid},
