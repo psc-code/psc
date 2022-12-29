@@ -112,16 +112,32 @@ inline void correct(MfieldsState& mflds, Mfields& mf,
 } // namespace marder
 } // namespace psc
 
+template <typename MP, typename MFS, typename MF, typename D, typename ITEM_RHO>
+class MarderCommon
+{
+public:
+  using Mparticles = MP;
+  using MfieldsState = MFS;
+  using Mfields = MF;
+  using dim_t = D;
+  using Item_rho_t = ITEM_RHO;
+  using real_t = typename Mfields::real_t;
+};
+
 template <typename _Mparticles, typename _MfieldsState, typename _Mfields,
           typename D>
-struct Marder_ : MarderBase
+struct Marder_
+  : public MarderCommon<_Mparticles, _MfieldsState, _Mfields, D,
+                        Moment_rho_1st_nc<typename _Mfields::Storage, D>>
 {
-  using Mparticles = _Mparticles;
-  using MfieldsState = _MfieldsState;
-  using Mfields = _Mfields;
-  using dim_t = D;
+  using Base = MarderCommon<_Mparticles, _MfieldsState, _Mfields, D,
+                            Moment_rho_1st_nc<typename _Mfields::Storage, D>>;
+  using Mparticles = typename Base::Mparticles;
+  using MfieldsState = typename Base::MfieldsState;
+  using Mfields = typename Base::Mfields;
+  using dim_t = typename Base::dim_t;
   using real_t = typename Mfields::real_t;
-  using Moment_t = Moment_rho_1st_nc<typename Mfields::Storage, dim_t>;
+  using Moment_t = typename Base::Item_rho_t;
 
   Marder_(const Grid_t& grid, real_t diffusion, int loop, bool dump)
     : grid_{grid},
