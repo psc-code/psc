@@ -74,10 +74,10 @@ inline void correct(MfieldsStateCuda& mflds, MfieldsCuda& mf, float diffusion)
 template <typename BS, typename D>
 struct MarderCuda
   : public MarderCommon<MparticlesCuda<BS>, MfieldsStateCuda, MfieldsCuda, D,
-                        Moment_rho_1st_nc_cuda<D>>
+                        Moment_rho_1st_nc_cuda<D>, BndCuda3>
 {
   using Base = MarderCommon<MparticlesCuda<BS>, MfieldsStateCuda, MfieldsCuda,
-                            D, Moment_rho_1st_nc_cuda<D>>;
+                            D, Moment_rho_1st_nc_cuda<D>, BndCuda3>;
   using Mparticles = typename Base::Mparticles;
   using MfieldsState = typename Base::MfieldsState;
   using Mfields = typename Base::Mfields;
@@ -194,7 +194,7 @@ struct MarderCuda
   int loop_;         //< execute this many relaxation steps in a loop
   bool dump_;        //< dump div_E, rho
 
-  BndCuda3 bnd_;
+  Bnd bnd_;
   Mfields rho_;
   Mfields res_;
   WriterMRC io_; //< for debug dumping

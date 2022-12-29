@@ -112,7 +112,8 @@ inline void correct(MfieldsState& mflds, Mfields& mf,
 } // namespace marder
 } // namespace psc
 
-template <typename MP, typename MFS, typename MF, typename D, typename ITEM_RHO>
+template <typename MP, typename MFS, typename MF, typename D, typename ITEM_RHO,
+          typename BND>
 class MarderCommon
 {
 public:
@@ -121,6 +122,7 @@ public:
   using Mfields = MF;
   using dim_t = D;
   using Item_rho_t = ITEM_RHO;
+  using Bnd = BND;
   using real_t = typename Mfields::real_t;
 };
 
@@ -128,14 +130,16 @@ template <typename _Mparticles, typename _MfieldsState, typename _Mfields,
           typename D>
 struct Marder_
   : public MarderCommon<_Mparticles, _MfieldsState, _Mfields, D,
-                        Moment_rho_1st_nc<typename _Mfields::Storage, D>>
+                        Moment_rho_1st_nc<typename _Mfields::Storage, D>, Bnd_>
 {
-  using Base = MarderCommon<_Mparticles, _MfieldsState, _Mfields, D,
-                            Moment_rho_1st_nc<typename _Mfields::Storage, D>>;
+  using Base =
+    MarderCommon<_Mparticles, _MfieldsState, _Mfields, D,
+                 Moment_rho_1st_nc<typename _Mfields::Storage, D>, Bnd_>;
   using Mparticles = typename Base::Mparticles;
   using MfieldsState = typename Base::MfieldsState;
   using Mfields = typename Base::Mfields;
   using dim_t = typename Base::dim_t;
+  using Bnd = typename Base::Bnd;
   using real_t = typename Mfields::real_t;
   using Moment_t = typename Base::Item_rho_t;
 
@@ -262,7 +266,7 @@ struct Marder_
   bool dump_;        //< dump div_E, rho
 
   const Grid_t& grid_;
-  Bnd_ bnd_;
+  Bnd bnd_;
   Mfields rho_;
   Mfields res_;
   WriterMRC io_; //< for debug dumping
