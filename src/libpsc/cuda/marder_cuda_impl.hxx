@@ -96,29 +96,6 @@ struct MarderCuda
   using Base::Base;
 
   // ----------------------------------------------------------------------
-  // calc_aid_fields
-
-  template <typename E>
-  void calc_aid_fields(MfieldsState& mflds, const E& rho)
-  {
-    const auto& grid = mflds.grid();
-    auto item_dive = Item_dive<MfieldsState>{};
-    auto dive = psc::mflds::interior(grid, item_dive(mflds));
-
-    if (dump_) {
-      static int cnt;
-      io_.begin_step(cnt, cnt); // ppsc->timestep, ppsc->timestep * ppsc->dt);
-      cnt++;
-      io_.write(rho, grid, "rho", {"rho"});
-      io_.write(dive, grid, "dive", {"dive"});
-      io_.end_step();
-    }
-
-    psc::mflds::interior(grid, res_.gt()) = dive - rho;
-    bnd_.fill_ghosts(res_, 0, 1);
-  }
-
-  // ----------------------------------------------------------------------
   // correct
   //
   // Do the modified marder correction (See eq.(5, 7, 9, 10) in Mardahl and
@@ -160,7 +137,7 @@ struct MarderCuda
     auto&& rho = psc::mflds::interior(grid, item_rho(mprts));
 
     for (int i = 0; i < loop_; i++) {
-      calc_aid_fields(mflds, rho);
+      Base::calc_aid_fields(mflds, rho);
       Base::print_max(res_);
       correct(mflds);
       bnd_.fill_ghosts(mflds, EX, EX + 3);
