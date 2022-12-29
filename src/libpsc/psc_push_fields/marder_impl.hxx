@@ -211,28 +211,9 @@ struct Marder_
       io_.end_step();
     }
 
-    // res_.assign(dive);
-    for (int p = 0; p < res_.n_patches(); p++) {
-      for (int m = 0; m < res_.n_comps(); m++) {
-        kg::Box3 box = res_.box();
-        Int3 ijk;
-        for (ijk[2] = 0; ijk[2] < 2 * box.ib(2) + box.im(2); ijk[2]++) {
-          for (ijk[1] = 0; ijk[1] < 2 * box.ib(1) + box.im(1); ijk[1]++) {
-            for (ijk[0] = 0; ijk[0] < 2 * box.ib(0) + box.im(0); ijk[0]++) {
-              res_(m, ijk[0], ijk[1], ijk[2], p) =
-                dive(ijk[0], ijk[1], ijk[2], m, p);
-            }
-          }
-        }
-      }
-    }
+    auto& res = res_.storage();
 
-    Int3 bnd = res_.ibn();
-    res_.storage().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                        _s(bnd[2], -bnd[2])) =
-      res_.storage().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                          _s(bnd[2], -bnd[2])) -
-      rho.view(_all, _all, _all);
+    psc::mflds::interior(grid, res) = dive - rho;
     // FIXME, why is this necessary?
     bnd_.fill_ghosts(res_, 0, 1);
   }
