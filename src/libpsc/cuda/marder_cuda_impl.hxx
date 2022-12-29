@@ -71,18 +71,15 @@ inline void correct(MfieldsStateCuda& mflds, MfieldsCuda& mf, float diffusion)
 } // namespace marder
 } // namespace psc
 
-// FIXME: checkpointing won't properly restore state
-// FIXME: if the subclass creates objects, it'd be cleaner to have them
-// be part of the subclass
-
-template <typename BS, typename dim>
+template <typename BS, typename D>
 struct MarderCuda : MarderBase
 {
+  using Mparticles = MparticlesCuda<BS>;
   using MfieldsState = MfieldsStateCuda;
   using Mfields = MfieldsCuda;
-  using Mparticles = MparticlesCuda<BS>;
-  using real_t = MfieldsState::real_t;
-  using Moment_t = Moment_rho_1st_nc<MfieldsSingle::Storage, dim>;
+  using dim_t = D;
+  using real_t = typename Mfields::real_t;
+  using Moment_t = Moment_rho_1st_nc_cuda<D>;
 
   MarderCuda(const Grid_t& grid, real_t diffusion, int loop, bool dump)
     : grid_{grid},
@@ -97,6 +94,13 @@ struct MarderCuda : MarderBase
       io_.open("marder");
     }
   }
+
+  // FIXME: checkpointing won't properly restore state
+  // FIXME: if the subclass creates objects, it'd be cleaner to have them
+  // be part of the subclass
+
+  // ----------------------------------------------------------------------
+  // calc_aid_fields
 
   template <typename E>
   void calc_aid_fields(MfieldsState& mflds, const E& rho)
@@ -140,16 +144,20 @@ struct MarderCuda : MarderBase
   {
     const Grid_t& grid = mflds._grid();
     // FIXME: how to choose diffusion parameter properly?
-    float inv_sum = 0.;
+
+    double inv_sum = 0.;
     for (int d = 0; d < 3; d++) {
       if (!grid.isInvar(d)) {
         inv_sum += 1. / sqr(grid.domain.dx[d]);
       }
     }
-    float diffusion_max = 1. / 2. / (.5 * grid.dt) / inv_sum;
-    float diffusion = diffusion_max * diffusion_;
+    double diffusion_max = 1. / 2. / (.5 * grid.dt) / inv_sum;
+    double diffusion = diffusion_max * diffusion_;
     psc::marder::correct(mflds, res_, diffusion);
   }
+
+  // ----------------------------------------------------------------------
+  // operator()
 
   void operator()(MfieldsStateCuda& mflds, MparticlesCuda<BS>& mprts)
   {
@@ -164,7 +172,7 @@ struct MarderCuda : MarderBase
     // 1) FIXME
     bnd_.fill_ghosts(mflds, EX, EX + 3);
 
-    Moment_rho_1st_nc_cuda<dim> item_rho{grid};
+    Moment_t item_rho{grid};
     auto&& rho = psc::mflds::interior(grid, item_rho(mprts));
 
     for (int i = 0; i < loop_; i++) {
@@ -182,9 +190,8 @@ struct MarderCuda : MarderBase
   int loop_;         //< execute this many relaxation steps in a loop
   bool dump_;        //< dump div_E, rho
 
-  WriterMRC io_; //< for debug dumping
-
   BndCuda3 bnd_;
   Mfields rho_;
   Mfields res_;
+  WriterMRC io_; //< for debug dumping
 };
