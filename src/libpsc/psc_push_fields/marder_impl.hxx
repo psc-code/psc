@@ -8,6 +8,7 @@
 #include "../libpsc/psc_output_fields/fields_item_moments_1st.hxx"
 #include "../libpsc/psc_bnd/psc_bnd_impl.hxx"
 
+#include <gtensor/reductions.h>
 #include <mrc_io.h>
 
 namespace psc
@@ -120,7 +121,6 @@ struct Marder_ : MarderBase
   using Mfields = _Mfields;
   using dim_t = D;
   using real_t = typename Mfields::real_t;
-  using fields_view_t = typename Mfields::fields_view_t;
   using Moment_t = Moment_rho_1st_nc<typename Mfields::Storage, dim_t>;
 
   Marder_(const Grid_t& grid, real_t diffusion, int loop, bool dump)
@@ -148,16 +148,14 @@ struct Marder_ : MarderBase
   {
     const auto& grid = mflds.grid();
     auto item_dive = Item_dive<MfieldsState>{};
-    auto dive_gt = psc::mflds::interior(grid, item_dive(mflds));
+    auto dive = psc::mflds::interior(grid, item_dive(mflds));
 
     if (dump_) {
       static int cnt;
       io_.begin_step(cnt, cnt); // ppsc->timestep, ppsc->timestep * ppsc->dt);
       cnt++;
-      io_.write(rho_.gt(), rho_.grid(), "rho", {"rho"});
-      {
-        io_.write(dive_gt, grid, "dive", {"dive"});
-      }
+      io_.write(rho_.gt(), grid, "rho", {"rho"});
+      io_.write(dive, grid, "dive", {"dive"});
       io_.end_step();
     }
 
@@ -170,7 +168,7 @@ struct Marder_ : MarderBase
           for (ijk[1] = 0; ijk[1] < 2 * box.ib(1) + box.im(1); ijk[1]++) {
             for (ijk[0] = 0; ijk[0] < 2 * box.ib(0) + box.im(0); ijk[0]++) {
               res_(m, ijk[0], ijk[1], ijk[2], p) =
-                dive_gt(ijk[0], ijk[1], ijk[2], m, p);
+                dive(ijk[0], ijk[1], ijk[2], m, p);
             }
           }
         }
@@ -192,13 +190,7 @@ struct Marder_ : MarderBase
 
   static void print_max(Mfields& mf)
   {
-    real_t max_err = 0.;
-    for (int p = 0; p < mf.n_patches(); p++) {
-      auto f_ = make_Fields3d<dim_xyz>(mf[p]);
-      mf.Foreach_3d(0, 0, [&](int i, int j, int k) {
-        max_err = std::max(max_err, std::abs(f_(0, i, j, k)));
-      });
-    }
+    real_t max_err = gt::norm_linf(mf.storage());
     MPI_Allreduce(MPI_IN_PLACE, &max_err, 1,
                   Mfields_traits<Mfields>::mpi_dtype(), MPI_MAX,
                   mf.grid().comm());
@@ -207,13 +199,16 @@ struct Marder_ : MarderBase
 
   // ----------------------------------------------------------------------
   // correct
+  //
+  // Do the modified marder correction (See eq.(5, 7, 9, 10) in Mardahl and
+  // Verboncoeur, CPC, 1997)
 
   void correct(MfieldsState& mflds)
   {
     auto& grid = mflds.grid();
+    // FIXME: how to choose diffusion parameter properly?
 
     double inv_sum = 0.;
-    int nr_levels;
     for (int d = 0; d < 3; d++) {
       if (!grid.isInvar(d)) {
         inv_sum += 1. / sqr(grid.domain.dx[d]);
@@ -221,7 +216,6 @@ struct Marder_ : MarderBase
     }
     double diffusion_max = 1. / 2. / (.5 * grid.dt) / inv_sum;
     double diffusion = diffusion_max * diffusion_;
-
     psc::marder::correct(mflds, res_, diffusion);
   }
 
