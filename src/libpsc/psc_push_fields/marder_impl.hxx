@@ -126,14 +126,28 @@ public:
   using real_t = typename Mfields::real_t;
 
   MarderCommon(const Grid_t& grid, real_t diffusion, int loop, bool dump)
-    : grid_{grid}, diffusion_{diffusion}, loop_{loop}, dump_{dump}
-  {}
+    : grid_{grid},
+      diffusion_{diffusion},
+      loop_{loop},
+      dump_{dump},
+      bnd_{grid, grid.ibn},
+      rho_{grid, 1, grid.ibn},
+      res_{grid, 1, grid.ibn}
+  {
+    if (dump_) {
+      io_.open("marder");
+    }
+  }
 
   // private:
   const Grid_t& grid_;
   real_t diffusion_; //< diffusion coefficient for Marder correction
   int loop_;         //< execute this many relaxation steps in a loop
   bool dump_;        //< dump div_E, rho
+  Bnd bnd_;
+  Mfields rho_;
+  Mfields res_;
+  WriterMRC io_; //< for debug dumping
 };
 
 template <typename _Mparticles, typename _MfieldsState, typename _Mfields,
@@ -152,20 +166,17 @@ struct Marder_
   using Bnd = typename Base::Bnd;
   using real_t = typename Mfields::real_t;
   using Moment_t = typename Base::Item_rho_t;
+  using Base::bnd_;
   using Base::diffusion_;
   using Base::dump_;
+  using Base::io_;
   using Base::loop_;
+  using Base::res_;
+  using Base::rho_;
 
   Marder_(const Grid_t& grid, real_t diffusion, int loop, bool dump)
-    : Base{grid, diffusion, loop, dump},
-      bnd_{grid, grid.ibn},
-      rho_{grid, 1, grid.ibn},
-      res_{grid, 1, grid.ibn}
-  {
-    if (dump_) {
-      io_.open("marder");
-    }
-  }
+    : Base{grid, diffusion, loop, dump}
+  {}
 
   // FIXME: checkpointing won't properly restore state
   // FIXME: if the subclass creates objects, it'd be cleaner to have them
@@ -269,12 +280,6 @@ struct Marder_
       bnd_.fill_ghosts(mflds, EX, EX + 3);
     }
   }
-
-  // private:
-  Bnd bnd_;
-  Mfields rho_;
-  Mfields res_;
-  WriterMRC io_; //< for debug dumping
 };
 
 #undef define_dxdydz
