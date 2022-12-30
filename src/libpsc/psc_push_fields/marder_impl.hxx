@@ -116,6 +116,7 @@ inline void correct(MfieldsState& mflds, Mfields& mf,
 
 #undef psc_foreach_3d_more
 #undef psc_foreach_3d_more_end
+#undef define_dxdydz
 
 #ifdef USE_CUDA
 
@@ -259,6 +260,34 @@ public:
     psc::marder::correct(mflds, res_, diffusion);
   }
 
+  // ----------------------------------------------------------------------
+  // operator()
+
+  void operator()(MfieldsState& mflds, Mparticles& mprts)
+  {
+    static int pr;
+    if (!pr) {
+      pr = prof_register("marder", 1., 0, 0);
+    }
+
+    prof_start(pr);
+    const auto& grid = mprts.grid();
+    auto item_rho = Item_rho_t{grid};
+    auto&& rho = psc::mflds::interior(grid, item_rho(mprts));
+
+    // need to fill ghost cells first (should be unnecessary with only variant
+    // 1) FIXME
+    bnd_.fill_ghosts(mflds, EX, EX + 3);
+
+    for (int i = 0; i < loop_; i++) {
+      calc_aid_fields(mflds, rho);
+      print_max(res_);
+      correct(mflds);
+      bnd_.fill_ghosts(mflds, EX, EX + 3);
+    }
+    prof_stop(pr);
+  }
+
   // private:
   const Grid_t& grid_;
   real_t diffusion_; //< diffusion coefficient for Marder correction
@@ -270,52 +299,6 @@ public:
   WriterMRC io_; //< for debug dumping
 };
 
-template <typename _Mparticles, typename _MfieldsState, typename _Mfields,
-          typename D>
-struct Marder_
-  : public MarderCommon<_Mparticles, _MfieldsState, _Mfields, D,
-                        Moment_rho_1st_nc<typename _Mfields::Storage, D>, Bnd_>
-{
-  using Base =
-    MarderCommon<_Mparticles, _MfieldsState, _Mfields, D,
-                 Moment_rho_1st_nc<typename _Mfields::Storage, D>, Bnd_>;
-  using Mparticles = typename Base::Mparticles;
-  using MfieldsState = typename Base::MfieldsState;
-  using Mfields = typename Base::Mfields;
-  using dim_t = typename Base::dim_t;
-  using Bnd = typename Base::Bnd;
-  using real_t = typename Mfields::real_t;
-  using Moment_t = typename Base::Item_rho_t;
-  using Base::bnd_;
-  using Base::diffusion_;
-  using Base::dump_;
-  using Base::io_;
-  using Base::loop_;
-  using Base::res_;
-  using Base::rho_;
-
-  using Base::Base;
-
-  // ----------------------------------------------------------------------
-  // operator()
-
-  void operator()(MfieldsState& mflds, Mparticles& mprts)
-  {
-    const auto& grid = mflds.grid();
-    auto rho = Moment_t{grid};
-    rho_.storage() = psc::mflds::interior(grid, rho(mprts));
-
-    // need to fill ghost cells first (should be unnecessary with only variant
-    // 1) FIXME
-    bnd_.fill_ghosts(mflds, EX, EX + 3);
-
-    for (int i = 0; i < loop_; i++) {
-      Base::calc_aid_fields(mflds, rho_.storage());
-      Base::print_max(res_);
-      Base::correct(mflds);
-      bnd_.fill_ghosts(mflds, EX, EX + 3);
-    }
-  }
-};
-
-#undef define_dxdydz
+template <typename MP, typename MFS, typename MF, typename D>
+using Marder_ = MarderCommon<MP, MFS, MF, D,
+                             Moment_rho_1st_nc<typename MF::Storage, D>, Bnd_>;
