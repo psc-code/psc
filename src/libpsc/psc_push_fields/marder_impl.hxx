@@ -181,6 +181,28 @@ public:
     bnd_.fill_ghosts(res_, 0, 1);
   }
 
+  // ----------------------------------------------------------------------
+  // correct
+  //
+  // Do the modified marder correction (See eq.(5, 7, 9, 10) in Mardahl and
+  // Verboncoeur, CPC, 1997)
+
+  void correct(MfieldsState& mflds)
+  {
+    auto& grid = mflds.grid();
+    // FIXME: how to choose diffusion parameter properly?
+
+    double inv_sum = 0.;
+    for (int d = 0; d < 3; d++) {
+      if (!grid.isInvar(d)) {
+        inv_sum += 1. / sqr(grid.domain.dx[d]);
+      }
+    }
+    double diffusion_max = 1. / 2. / (.5 * grid.dt) / inv_sum;
+    double diffusion = diffusion_max * diffusion_;
+    psc::marder::correct(mflds, res_, diffusion);
+  }
+
   // private:
   const Grid_t& grid_;
   real_t diffusion_; //< diffusion coefficient for Marder correction
@@ -219,28 +241,6 @@ struct Marder_
   using Base::Base;
 
   // ----------------------------------------------------------------------
-  // correct
-  //
-  // Do the modified marder correction (See eq.(5, 7, 9, 10) in Mardahl and
-  // Verboncoeur, CPC, 1997)
-
-  void correct(MfieldsState& mflds)
-  {
-    auto& grid = mflds.grid();
-    // FIXME: how to choose diffusion parameter properly?
-
-    double inv_sum = 0.;
-    for (int d = 0; d < 3; d++) {
-      if (!grid.isInvar(d)) {
-        inv_sum += 1. / sqr(grid.domain.dx[d]);
-      }
-    }
-    double diffusion_max = 1. / 2. / (.5 * grid.dt) / inv_sum;
-    double diffusion = diffusion_max * diffusion_;
-    psc::marder::correct(mflds, res_, diffusion);
-  }
-
-  // ----------------------------------------------------------------------
   // operator()
 
   void operator()(MfieldsState& mflds, Mparticles& mprts)
@@ -256,7 +256,7 @@ struct Marder_
     for (int i = 0; i < loop_; i++) {
       Base::calc_aid_fields(mflds, rho_.storage());
       Base::print_max(res_);
-      correct(mflds);
+      Base::correct(mflds);
       bnd_.fill_ghosts(mflds, EX, EX + 3);
     }
   }
