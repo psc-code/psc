@@ -35,32 +35,4 @@ struct MarderCuda
   using Base::rho_;
 
   using Base::Base;
-
-  // ----------------------------------------------------------------------
-  // operator()
-
-  void operator()(MfieldsStateCuda& mflds, MparticlesCuda<BS>& mprts)
-  {
-    const auto& grid = mprts.grid();
-    static int pr;
-    if (!pr) {
-      pr = prof_register("marder", 1., 0, 0);
-    }
-
-    prof_start(pr);
-    // need to fill ghost cells first (should be unnecessary with only variant
-    // 1) FIXME
-    bnd_.fill_ghosts(mflds, EX, EX + 3);
-
-    Moment_t item_rho{grid};
-    auto&& rho = psc::mflds::interior(grid, item_rho(mprts));
-
-    for (int i = 0; i < loop_; i++) {
-      Base::calc_aid_fields(mflds, rho);
-      Base::print_max(res_);
-      Base::correct(mflds);
-      bnd_.fill_ghosts(mflds, EX, EX + 3);
-    }
-    prof_stop(pr);
-  }
 };
