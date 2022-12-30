@@ -210,14 +210,27 @@ inline double getIonDensity(double rho)
 }
 
 // ======================================================================
+// get_beta
+// Return the conversion factor from paper units to psc units.
+
+double get_beta()
+{
+  // PSC is normalized as c=1, but the paper has electron thermal velocity
+  // v_e=1. Beta is v_e/c = sqrt(Te_paper) / sqrt(Te_psc)
+  const double PAPER_ELECTRON_TEMPERATURE = 1.;
+  const double pscElectronTemperature = parsedData->get_interpolated(COL_TE, 0);
+  return std::sqrt(pscElectronTemperature / PAPER_ELECTRON_TEMPERATURE);
+}
+
+// ======================================================================
 // v_phi_cdf
 // Cumulative distribution function for azimuthal electron velocity
 
 double v_phi_cdf(double v_phi, double rho)
 {
-  // convert units
-  v_phi *= 1000;
-  rho *= 1000;
+  // convert units from psc to paper
+  v_phi /= get_beta();
+  rho /= get_beta();
 
   double k = .1;
   double h0 = .9;
@@ -245,9 +258,11 @@ double v_phi_cdf(double v_phi, double rho)
 struct pdist
 {
   pdist(double y, double z, double rho)
-    : y{y}, z{z}, rho{rho}, v_phi_dist{[=](double v_phi) {
-        return v_phi_cdf(v_phi, rho);
-      }}
+    : y{y},
+      z{z},
+      rho{rho},
+      v_phi_dist{[=](double v_phi) { return v_phi_cdf(v_phi, rho); }},
+      v_rho_dist{0, get_beta()}
   {}
 
   Double3 operator()()
@@ -266,8 +281,7 @@ struct pdist
 private:
   double y, z, rho;
   rng::InvertedCdf<double> v_phi_dist;
-  rng::Normal<double> v_rho_dist{
-    0, 1. / 1000.}; // FIXME magic number 1000 here and elsewhere
+  rng::Normal<double> v_rho_dist;
 };
 
 // ======================================================================
