@@ -232,15 +232,18 @@ public:
   }
 
   // ----------------------------------------------------------------------
-  // correct
+  // operator()
   //
   // Do the modified marder correction (See eq.(5, 7, 9, 10) in Mardahl and
   // Verboncoeur, CPC, 1997)
 
-  template <typename E>
-  void correct(const Grid_t& grid, E& efield, const Int3& efield_ib,
-               storage_type& mres, const Int3& mres_ib)
+  template <typename Mparticles>
+  void operator()(const Grid_t& grid, storage_type& mflds, const Int3& mflds_ib,
+                  Mparticles& mprts)
   {
+    auto efield = mflds.view(_all, _all, _all, _s(EX, EX + 3), _all);
+    auto efield_ib = mflds_ib;
+
     double inv_sum = 0.;
     for (int d = 0; d < 3; d++) {
       if (!grid.isInvar(d)) {
@@ -249,18 +252,6 @@ public:
     }
     double diffusion_max = 1. / 2. / (.5 * grid.dt) / inv_sum;
     double diffusion = diffusion_max * diffusion_;
-    psc::marder::correct(grid, efield, efield_ib, mres, mres_ib, diffusion);
-  }
-
-  // ----------------------------------------------------------------------
-  // operator()
-
-  template <typename Mparticles>
-  void operator()(const Grid_t& grid, storage_type& mflds, const Int3& mflds_ib,
-                  Mparticles& mprts)
-  {
-    auto efield = mflds.view(_all, _all, _all, _s(EX, EX + 3), _all);
-    auto efield_ib = mflds_ib;
 
     auto item_rho = Item_rho_t{grid};
     auto rho = psc::mflds::interior(grid, item_rho(mprts));
@@ -287,7 +278,7 @@ public:
       bnd_.fill_ghosts(grid, res, res_ib, 0, 1);
 
       print_max(grid, res);
-      correct(grid, efield, efield_ib, res, res_ib);
+      psc::marder::correct(grid, efield, efield_ib, res, res_ib, diffusion);
       bnd_.fill_ghosts(grid, mflds, mflds_ib, EX, EX + 3);
     }
   }
