@@ -183,7 +183,8 @@ TYPED_TEST(PushFieldsTest, MarderCorrect)
   auto mphi = Mfields{grid, 1, grid.ibn};
   init_phi(mphi.gt(), mphi.ibn(), grid, kz);
 
-  psc::marder::correct(mflds, mphi, diffusion);
+  psc::marder::correct(grid, mflds.storage(), mflds.ib(), mphi.storage(),
+                       mphi.ib(), diffusion);
 
   // check result
   EXPECT_LT(gt::norm_linf(psc::mflds::interior(grid, mflds.gt()) -
