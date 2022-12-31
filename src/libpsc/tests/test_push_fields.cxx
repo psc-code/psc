@@ -112,14 +112,14 @@ template <typename Mparticles, typename MfieldsState, typename Mfields,
           typename Dim>
 struct marder_selector
 {
-  using type = Marder_<Mparticles, MfieldsState, Mfields, Dim>;
+  using type = Marder_<typename Mfields::Storage, Dim>;
 };
 
 #ifdef USE_CUDA
 template <typename Mparticles, typename Dim>
 struct marder_selector<Mparticles, MfieldsStateCuda, MfieldsCuda, Dim>
 {
-  using type = MarderCuda<typename Mparticles::BS, Dim>;
+  using type = MarderCuda<Dim>;
 };
 #endif
 } // namespace detail

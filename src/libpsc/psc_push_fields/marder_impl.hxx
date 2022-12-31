@@ -322,9 +322,8 @@ public:
   WriterMRC io_; //< for debug dumping
 };
 
-template <typename MP, typename MFS, typename MF, typename D>
-using Marder_ = MarderCommon<typename MFS::Storage, D,
-                             Moment_rho_1st_nc<typename MF::Storage, D>, Bnd_>;
+template <typename S, typename D>
+using Marder_ = MarderCommon<S, D, Moment_rho_1st_nc<S, D>, Bnd_>;
 
 #ifdef USE_CUDA
 
@@ -332,7 +331,7 @@ using Marder_ = MarderCommon<typename MFS::Storage, D,
 #include "mparticles_cuda.hxx"
 #include "fields_item_moments_1st_cuda.hxx"
 
-template <typename BS, typename D>
+template <typename D>
 using MarderCuda = MarderCommon<MfieldsStateCuda::Storage, D,
                                 Moment_rho_1st_nc_cuda<D>, BndCuda3>;
 #endif
