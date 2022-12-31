@@ -3,12 +3,12 @@
 
 #define BND 2
 
-void cuda_marder_correct_yz(MfieldsStateCuda& mflds, MfieldsCuda& mf, int p,
-                            Float3 fac, Int3 ly, Int3 ry, Int3 lz, Int3 rz)
+void cuda_marder_correct_yz(MfieldsStateCuda::Storage& gt_mflds,
+                            MfieldsCuda::Storage& gt_mf, int p, Float3 fac,
+                            Int3 ly, Int3 ry, Int3 lz, Int3 rz)
 {
-  auto gt_flds = mflds.gt().view(_all, _all, _all, _all, p).to_kernel();
-  auto gt_f = mf.gt().view(_all, _all, _all, 0, p).to_kernel();
-
+  auto gt_flds = gt_mflds.view(_all, _all, _all, _all, p).to_kernel();
+  auto gt_f = gt_mf.view(_all, _all, _all, 0, p).to_kernel();
   gt::launch<2>(
     {gt_flds.shape(1), gt_flds.shape(2)}, GT_LAMBDA(int iy, int iz) {
       if (iy - BND >= -ly[1] && iy - BND < ry[1] && iz - BND >= -ly[2] &&
@@ -28,17 +28,13 @@ void cuda_marder_correct_yz(MfieldsStateCuda& mflds, MfieldsCuda& mf, int p,
   cuda_sync_if_enabled();
 }
 
-void cuda_marder_correct_xyz(MfieldsStateCuda& mflds, MfieldsCuda& mf, int p,
-                             Float3 fac, Int3 lx, Int3 rx, Int3 ly, Int3 ry,
-                             Int3 lz, Int3 rz)
+void cuda_marder_correct_xyz(MfieldsStateCuda::Storage& gt_mflds,
+                             MfieldsCuda::Storage& gt_mf, int p, Float3 fac,
+                             Int3 lx, Int3 rx, Int3 ly, Int3 ry, Int3 lz,
+                             Int3 rz)
 {
-  if (mflds.n_patches() == 0) {
-    return;
-  }
-
-  auto gt_flds = mflds.gt().view(_all, _all, _all, _all, p).to_kernel();
-  auto gt_f = mf.gt().view(_all, _all, _all, 0, p).to_kernel();
-
+  auto gt_flds = gt_mflds.view(_all, _all, _all, _all, p).to_kernel();
+  auto gt_f = gt_mf.view(_all, _all, _all, 0, p).to_kernel();
   gt::launch<3>(
     {gt_flds.shape(0), gt_flds.shape(1), gt_flds.shape(2)},
     GT_LAMBDA(int ix, int iy, int iz) {

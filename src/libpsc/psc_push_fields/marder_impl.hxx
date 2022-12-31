@@ -12,11 +12,13 @@
 #include <mrc_io.h>
 
 #ifdef USE_CUDA
-void cuda_marder_correct_yz(MfieldsStateCuda& mflds, MfieldsCuda& mf, int p,
-                            Float3 fac, Int3 ly, Int3 ry, Int3 lz, Int3 rz);
-void cuda_marder_correct_xyz(MfieldsStateCuda& mflds, MfieldsCuda& mf, int p,
-                             Float3 fac, Int3 lx, Int3 rx, Int3 ly, Int3 ry,
-                             Int3 lz, Int3 rz);
+void cuda_marder_correct_yz(MfieldsStateCuda::Storage& gt_mflds,
+                            MfieldsCuda::Storage& gt_mf, int p, Float3 fac,
+                            Int3 ly, Int3 ry, Int3 lz, Int3 rz);
+void cuda_marder_correct_xyz(MfieldsStateCuda::Storage& gt_mflds,
+                             MfieldsCuda::Storage& gt_mf, int p, Float3 fac,
+                             Int3 lx, Int3 rx, Int3 ly, Int3 ry, Int3 lz,
+                             Int3 rz);
 #endif
 
 namespace psc
@@ -134,9 +136,11 @@ inline void correct(MfieldsStateCuda& mflds, MfieldsCuda& mf, float diffusion)
     detail::find_limits(grid, p, lx, rx, ly, ry, lz, rz);
 
     if (grid.isInvar(0)) {
-      cuda_marder_correct_yz(mflds, mf, p, fac, ly, ry, lz, rz);
+      cuda_marder_correct_yz(mflds.storage(), mf.storage(), p, fac, ly, ry, lz,
+                             rz);
     } else {
-      cuda_marder_correct_xyz(mflds, mf, p, fac, lx, rx, ly, ry, lz, rz);
+      cuda_marder_correct_xyz(mflds.storage(), mf.storage(), p, fac, lx, rx, ly,
+                              ry, lz, rz);
     }
   }
 }
