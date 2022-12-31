@@ -103,33 +103,6 @@ TYPED_TEST(PushFieldsTest, Pushf2)
     });
 }
 
-// ======================================================================
-// MarderCorrect
-
-namespace detail
-{
-template <typename Mparticles, typename MfieldsState, typename Mfields,
-          typename Dim>
-struct marder_selector
-{
-  using type = Marder_<typename Mfields::Storage, Dim>;
-};
-
-#ifdef USE_CUDA
-template <typename Mparticles, typename Dim>
-struct marder_selector<Mparticles, MfieldsStateCuda, MfieldsCuda, Dim>
-{
-  using type = MarderCuda<Dim>;
-};
-#endif
-} // namespace detail
-
-template <typename Mparticles, typename MfieldsState, typename Mfields,
-          typename Dim>
-using marder_selector_t =
-  typename detail::marder_selector<Mparticles, MfieldsState, Mfields,
-                                   Dim>::type;
-
 // need separate init_phi to work around device lambda limitations
 
 template <typename E>
@@ -143,6 +116,9 @@ inline void init_phi(E&& mphi, Int3 bnd, const Grid_t& grid, double kz)
       k_mphi(i, j, k, 0, p) = sin(kz * z);
     });
 }
+
+// ======================================================================
+// MarderCorrect
 
 TYPED_TEST(PushFieldsTest, MarderCorrect)
 {
