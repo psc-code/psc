@@ -160,7 +160,8 @@ public:
   using dim_t = D;
   using Item_rho_t = ITEM_RHO;
   using Bnd = BND;
-  using real_t = typename Mfields::real_t;
+  using storage_type = typename MfieldsState::Storage;
+  using real_t = typename storage_type::value_type;
 
   // FIXME: checkpointing won't properly restore state
   // FIXME: if the subclass creates objects, it'd be cleaner to have them
@@ -224,11 +225,8 @@ public:
   // Do the modified marder correction (See eq.(5, 7, 9, 10) in Mardahl and
   // Verboncoeur, CPC, 1997)
 
-  void correct(MfieldsState& mflds)
+  void correct(const Grid_t& grid, storage_type& mflds, const Int3& mflds_ib)
   {
-    auto& grid = mflds.grid();
-    // FIXME: how to choose diffusion parameter properly?
-
     double inv_sum = 0.;
     for (int d = 0; d < 3; d++) {
       if (!grid.isInvar(d)) {
@@ -237,8 +235,8 @@ public:
     }
     double diffusion_max = 1. / 2. / (.5 * grid.dt) / inv_sum;
     double diffusion = diffusion_max * diffusion_;
-    psc::marder::correct(grid, mflds.storage(), mflds.ib(), res_.storage(),
-                         res_.ib(), diffusion);
+    psc::marder::correct(grid, mflds, mflds_ib, res_.storage(), res_.ib(),
+                         diffusion);
   }
 
   // ----------------------------------------------------------------------
@@ -263,8 +261,8 @@ public:
     for (int i = 0; i < loop_; i++) {
       calc_aid_fields(mflds, rho);
       print_max(res_);
-      correct(mflds);
-      bnd_.fill_ghosts(mflds, EX, EX + 3);
+      correct(grid, mflds.storage(), mflds.ib());
+      bnd_.fill_ghosts(grid, mflds.storage(), mflds.ib(), EX, EX + 3);
     }
     prof_stop(pr);
   }
