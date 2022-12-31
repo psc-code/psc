@@ -197,8 +197,8 @@ public:
   auto calc_aid_fields(MfieldsState& mflds, const E& rho)
   {
     const auto& grid = mflds.grid();
-    auto item_dive = Item_dive<MfieldsState>{};
-    auto dive = psc::mflds::interior(grid, item_dive(mflds));
+    auto efield = mflds.storage().view(_all, _all, _all, _s(EX, EX + 3), _all);
+    auto dive = psc::mflds::interior(grid, psc::item::div_nc(grid, efield));
 
     if (dump_) {
       static int cnt;
