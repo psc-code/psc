@@ -74,7 +74,7 @@ inline void correct(MfieldsState& mflds, Mfields& mf,
 
     if (!grid.isInvar(0)) {
       Int3 l = -Int3{l_cc[0], l_nc[1], l_nc[2]} - ib;
-      Int3 r = -Int3{r_cc[0], r_nc[1], r_nc[2]} + ib;
+      Int3 r = -Int3{r_cc[0], r_nc[1], r_nc[2]} + grid.ldims - ib;
       auto ex = mflds.storage().view(_all, _all, _all, EX, p);
       auto res = mf.storage().view(_all, _all, _all, 0, p);
       ex.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) =
@@ -86,7 +86,7 @@ inline void correct(MfieldsState& mflds, Mfields& mf,
 
     {
       Int3 l = -Int3{l_nc[0], l_cc[1], l_nc[2]} - ib;
-      Int3 r = -Int3{r_nc[0], r_cc[1], r_nc[2]} + ib;
+      Int3 r = -Int3{r_nc[0], r_cc[1], r_nc[2]} + grid.ldims - ib;
       auto ey = mflds.storage().view(_all, _all, _all, EY, p);
       auto res = mf.storage().view(_all, _all, _all, 0, p);
       ey.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) =
@@ -98,7 +98,7 @@ inline void correct(MfieldsState& mflds, Mfields& mf,
 
     {
       Int3 l = -Int3{l_nc[0], l_nc[1], l_cc[2]} - ib;
-      Int3 r = -Int3{r_nc[0], r_nc[1], r_cc[2]} + ib;
+      Int3 r = -Int3{r_nc[0], r_nc[1], r_cc[2]} + grid.ldims - ib;
       auto ez = mflds.storage().view(_all, _all, _all, EZ, p);
       auto res = mf.storage().view(_all, _all, _all, 0, p);
       ez.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) =
@@ -126,16 +126,14 @@ inline void correct(MfieldsStateCuda& mflds, MfieldsCuda& mf, float diffusion)
     Int3 l_cc, r_cc, l_nc, r_nc;
     detail::find_limits(grid, p, l_cc, r_cc, l_nc, r_nc);
 
-    Int3 ldims = grid.ldims;
+    auto lx = Int3{l_cc[0], l_nc[1], l_nc[2]};
+    auto rx = Int3{r_cc[0], r_nc[1], r_nc[2]} + grid.ldims;
 
-    Int3 lx = {l_cc[0], l_nc[1], l_nc[2]};
-    Int3 rx = {r_cc[0] + ldims[0], r_nc[1] + ldims[1], r_nc[2] + ldims[2]};
+    auto ly = Int3{l_nc[0], l_cc[1], l_nc[2]};
+    auto ry = Int3{r_nc[0], r_cc[1], r_nc[2]} + grid.ldims;
 
-    Int3 ly = {l_nc[0], l_cc[1], l_nc[2]};
-    Int3 ry = {r_nc[0] + ldims[0], r_cc[1] + ldims[1], r_nc[2] + ldims[2]};
-
-    Int3 lz = {l_nc[0], l_nc[1], l_cc[2]};
-    Int3 rz = {r_nc[0] + ldims[0], r_nc[1] + ldims[1], r_cc[2] + ldims[2]};
+    auto lz = Int3{l_nc[0], l_nc[1], l_cc[2]};
+    auto rz = Int3{r_nc[0], r_nc[1], r_cc[2]} + grid.ldims;
 
     if (grid.isInvar(0)) {
       cuda_marder_correct_yz(mflds, mf, p, fac, ly, ry, lz, rz);
