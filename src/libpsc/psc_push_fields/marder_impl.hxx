@@ -219,16 +219,26 @@ public:
   }
 
   // ----------------------------------------------------------------------
-  // print_max
+  // print_progress
 
-  template <typename E>
-  static void print_max(const Grid_t& grid, const E& gt)
+  template <typename E1, typename E2, typename E3>
+  void print_progress(const Grid_t& grid, const E1& rho, const E2& dive,
+                      const E3& res)
   {
-    real_t max_err = gt::norm_linf(gt);
+    real_t max_err = gt::norm_linf(res);
     MPI_Allreduce(MPI_IN_PLACE, &max_err, 1,
-                  MpiDtypeTraits<gt::expr_value_type<E>>::value(), MPI_MAX,
+                  MpiDtypeTraits<gt::expr_value_type<E3>>::value(), MPI_MAX,
                   grid.comm());
     mpi_printf(grid.comm(), "marder: err %g\n", max_err);
+
+    if (dump_) {
+      static int cnt;
+      io_.begin_step(cnt, cnt);
+      cnt++;
+      io_.write(rho, grid, "rho", {"rho"});
+      io_.write(dive, grid, "dive", {"dive"});
+      io_.end_step();
+    }
   }
 
   // ----------------------------------------------------------------------
@@ -256,31 +266,23 @@ public:
     auto item_rho = Item_rho_t{grid};
     auto rho = psc::mflds::interior(grid, item_rho(mprts));
 
-    // need to fill ghost cells first (should be unnecessary with only variant
-    // 1) FIXME
-    bnd_.fill_ghosts(grid, mflds, mflds_ib, EX, EX + 3);
+    // FIXME: it's not well defined whether E ghost points are filled at entry,
+    // and expected to be filled when done, so we're playing it safe for the
+    // time being.
     for (int i = 0; i < loop_; i++) {
+      bnd_.fill_ghosts(grid, mflds, mflds_ib, EX, EX + 3);
       auto dive = psc::mflds::interior(grid, psc::item::div_nc(grid, efield));
 
       Int3 res_ib = -grid.ibn;
       auto res = storage_type{psc::mflds::make_shape(grid, 1, res_ib)};
       psc::mflds::interior(grid, res) = dive - rho;
-      // FIXME, why is this necessary?
       bnd_.fill_ghosts(grid, res, res_ib, 0, 1);
 
-      print_max(grid, res);
-      if (dump_) {
-        static int cnt;
-        io_.begin_step(cnt, cnt);
-        cnt++;
-        io_.write(rho, grid, "rho", {"rho"});
-        io_.write(dive, grid, "dive", {"dive"});
-        io_.end_step();
-      }
+      print_progress(grid, rho, dive, res);
 
       psc::marder::correct(grid, efield, efield_ib, res, res_ib, diffusion);
-      bnd_.fill_ghosts(grid, mflds, mflds_ib, EX, EX + 3);
     }
+    bnd_.fill_ghosts(grid, mflds, mflds_ib, EX, EX + 3);
   }
 
   template <typename MfieldsState, typename Mparticles>
