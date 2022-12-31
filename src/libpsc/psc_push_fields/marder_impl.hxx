@@ -298,7 +298,7 @@ public:
 
     // need to fill ghost cells first (should be unnecessary with only variant
     // 1) FIXME
-    bnd_.fill_ghosts(mflds, EX, EX + 3);
+    bnd_.fill_ghosts(grid, mflds.storage(), mflds.ib(), EX, EX + 3);
     auto efield = mflds.storage().view(_all, _all, _all, _s(EX, EX + 3), _all);
     auto efield_ib = mflds.ib();
 
