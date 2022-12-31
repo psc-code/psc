@@ -65,28 +65,28 @@ inline void find_limits(const Grid_t& grid, int p, Int3& lx, Int3& rx, Int3& ly,
 // Do the modified marder correction (See eq.(5, 7, 9, 10) in Mardahl and
 // Verboncoeur, CPC, 1997)
 
-template <typename MfieldsState, typename Mfields>
-inline void correct(MfieldsState& mflds, Mfields& mf,
-                    typename MfieldsState::real_t diffusion)
+template <typename S>
+inline void correct(const Grid_t& grid, S& mflds, const Int3& mflds_ib, S& mf,
+                    const Int3& mf_ib, typename S::value_type diffusion)
 {
-  using real_t = typename MfieldsState::real_t;
+  using real_t = typename S::value_type;
   using real3_t = gt::sarray<real_t, 3>;
-  const auto& grid = mflds.grid();
+
+  assert(mflds_ib == -grid.ibn());
+  assert(mf_ib == -grid.ibn());
 
   real3_t fac = {.5f * grid.dt * diffusion / grid.domain.dx[0],
                  .5f * grid.dt * diffusion / grid.domain.dx[1],
                  .5f * grid.dt * diffusion / grid.domain.dx[2]};
 
-  for (int p = 0; p < mf.n_patches(); p++) {
-    assert(mflds.ib() == -grid.ibn());
-    assert(mf.ib() == -grid.ibn());
+  for (int p = 0; p < grid.n_patches(); p++) {
     Int3 lx, rx, ly, ry, lz, rz;
     detail::find_limits(grid, p, lx, rx, ly, ry, lz, rz);
 
     if (!grid.isInvar(0)) {
       Int3 l = lx, r = rx;
-      auto ex = mflds.storage().view(_all, _all, _all, EX, p);
-      auto res = mf.storage().view(_all, _all, _all, 0, p);
+      auto ex = mflds.view(_all, _all, _all, EX, p);
+      auto res = mf.view(_all, _all, _all, 0, p);
       ex.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) =
         ex.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) +
         (res.view(_s(l[0] + 1, r[0] + 1), _s(l[1], r[1]), _s(l[2], r[2])) -
@@ -96,8 +96,8 @@ inline void correct(MfieldsState& mflds, Mfields& mf,
 
     {
       Int3 l = ly, r = ry;
-      auto ey = mflds.storage().view(_all, _all, _all, EY, p);
-      auto res = mf.storage().view(_all, _all, _all, 0, p);
+      auto ey = mflds.view(_all, _all, _all, EY, p);
+      auto res = mf.view(_all, _all, _all, 0, p);
       ey.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) =
         ey.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) +
         (res.view(_s(l[0], r[0]), _s(l[1] + 1, r[1] + 1), _s(l[2], r[2])) -
@@ -107,8 +107,8 @@ inline void correct(MfieldsState& mflds, Mfields& mf,
 
     {
       Int3 l = lz, r = rz;
-      auto ez = mflds.storage().view(_all, _all, _all, EZ, p);
-      auto res = mf.storage().view(_all, _all, _all, 0, p);
+      auto ez = mflds.view(_all, _all, _all, EZ, p);
+      auto res = mf.view(_all, _all, _all, 0, p);
       ez.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) =
         ez.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) +
         (res.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2] + 1, r[2] + 1)) -
@@ -120,28 +120,27 @@ inline void correct(MfieldsState& mflds, Mfields& mf,
 
 #ifdef USE_CUDA
 
-inline void correct(MfieldsStateCuda& mflds, MfieldsCuda& mf, float diffusion)
+inline void correct(const Grid_t& grid, MfieldsCuda::Storage& mflds,
+                    const Int3& mflds_ib, MfieldsCuda::Storage& mf,
+                    const Int3& mf_ib,
+                    typename MfieldsCuda::Storage::value_type diffusion)
 {
-  const auto& grid = mflds.grid();
-
   Float3 fac;
   fac[0] = .5 * grid.dt * diffusion / grid.domain.dx[0];
   fac[1] = .5 * grid.dt * diffusion / grid.domain.dx[1];
   fac[2] = .5 * grid.dt * diffusion / grid.domain.dx[2];
 
   // OPT, do all patches in one kernel
-  for (int p = 0; p < mflds.n_patches(); p++) {
+  for (int p = 0; p < grid.n_patches(); p++) {
     assert(mflds.ib() == -grid.ibn());
     assert(mf.ib() == -grid.ibn());
     Int3 lx, rx, ly, ry, lz, rz;
     detail::find_limits(grid, p, lx, rx, ly, ry, lz, rz);
 
     if (grid.isInvar(0)) {
-      cuda_marder_correct_yz(mflds.storage(), mf.storage(), p, fac, ly, ry, lz,
-                             rz);
+      cuda_marder_correct_yz(mflds, mf, p, fac, ly, ry, lz, rz);
     } else {
-      cuda_marder_correct_xyz(mflds.storage(), mf.storage(), p, fac, lx, rx, ly,
-                              ry, lz, rz);
+      cuda_marder_correct_xyz(mflds, mf, p, fac, lx, rx, ly, ry, lz, rz);
     }
   }
 }
@@ -238,7 +237,8 @@ public:
     }
     double diffusion_max = 1. / 2. / (.5 * grid.dt) / inv_sum;
     double diffusion = diffusion_max * diffusion_;
-    psc::marder::correct(mflds, res_, diffusion);
+    psc::marder::correct(grid, mflds.storage(), mflds.ib(), res_.storage(),
+                         res_.ib(), diffusion);
   }
 
   // ----------------------------------------------------------------------
