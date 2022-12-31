@@ -56,11 +56,12 @@ inline void find_limits(const Grid_t& grid, int p, Int3& lx, Int3& rx, Int3& ly,
 // Do the modified marder correction (See eq.(5, 7, 9, 10) in Mardahl and
 // Verboncoeur, CPC, 1997)
 
-template <typename S>
-inline void correct(const Grid_t& grid, S& mflds, const Int3& mflds_ib, S& mf,
-                    const Int3& mf_ib, typename S::value_type diffusion)
+template <typename E1, typename E2>
+inline void correct(const Grid_t& grid, E1& efield, const Int3& efield_ib,
+                    const E2& mf, const Int3& mf_ib,
+                    typename E1::value_type diffusion)
 {
-  using real_t = typename S::value_type;
+  using real_t = gt::expr_value_type<E1>;
   using real3_t = gt::sarray<real_t, 3>;
 
   assert(mflds_ib == -grid.ibn());
@@ -76,7 +77,7 @@ inline void correct(const Grid_t& grid, S& mflds, const Int3& mflds_ib, S& mf,
 
     if (!grid.isInvar(0)) {
       Int3 l = lx, r = rx;
-      auto ex = mflds.view(_all, _all, _all, EX, p);
+      auto ex = efield.view(_all, _all, _all, 0, p);
       auto res = mf.view(_all, _all, _all, 0, p);
       ex.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) =
         ex.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) +
@@ -87,7 +88,7 @@ inline void correct(const Grid_t& grid, S& mflds, const Int3& mflds_ib, S& mf,
 
     {
       Int3 l = ly, r = ry;
-      auto ey = mflds.view(_all, _all, _all, EY, p);
+      auto ey = efield.view(_all, _all, _all, 1, p);
       auto res = mf.view(_all, _all, _all, 0, p);
       ey.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) =
         ey.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) +
@@ -98,7 +99,7 @@ inline void correct(const Grid_t& grid, S& mflds, const Int3& mflds_ib, S& mf,
 
     {
       Int3 l = lz, r = rz;
-      auto ez = mflds.view(_all, _all, _all, EZ, p);
+      auto ez = efield.view(_all, _all, _all, 2, p);
       auto res = mf.view(_all, _all, _all, 0, p);
       ez.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) =
         ez.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) +
@@ -111,67 +112,67 @@ inline void correct(const Grid_t& grid, S& mflds, const Int3& mflds_ib, S& mf,
 
 #ifdef USE_CUDA
 
-inline void cuda_marder_correct_yz(MfieldsStateCuda::Storage& gt_mflds,
-                                   MfieldsCuda::Storage& gt_mf, int p,
-                                   Float3 fac, Int3 ly, Int3 ry, Int3 lz,
+template <typename E1>
+inline void cuda_marder_correct_yz(E1& efield, MfieldsCuda::Storage& gt_mf,
+                                   int p, Float3 fac, Int3 ly, Int3 ry, Int3 lz,
                                    Int3 rz)
 {
-  auto gt_flds = gt_mflds.view(_all, _all, _all, _all, p).to_kernel();
+  auto k_efield = efield.view(_all, _all, _all, _all, p).to_kernel();
   auto gt_f = gt_mf.view(_all, _all, _all, 0, p).to_kernel();
   gt::launch<2>(
-    {gt_flds.shape(1), gt_flds.shape(2)}, GT_LAMBDA(int iy, int iz) {
+    {k_efield.shape(1), k_efield.shape(2)}, GT_LAMBDA(int iy, int iz) {
       if ((iy >= ly[1] && iy < ry[1]) && (iz >= ly[2] && iz < ry[2])) {
-        gt_flds(0, iy, iz, EY) =
-          gt_flds(0, iy, iz, EY) +
+        k_efield(0, iy, iz, 1) =
+          k_efield(0, iy, iz, 1) +
           fac[1] * (gt_f(0, iy + 1, iz) - gt_f(0, iy, iz));
       }
 
       if ((iy >= lz[1] && iy < rz[1]) && (iz >= lz[2] && iz < rz[2])) {
-        gt_flds(0, iy, iz, EZ) =
-          gt_flds(0, iy, iz, EZ) +
+        k_efield(0, iy, iz, 2) =
+          k_efield(0, iy, iz, 2) +
           fac[2] * (gt_f(0, iy, iz + 1) - gt_f(0, iy, iz));
       }
     });
   cuda_sync_if_enabled();
 }
 
-inline void cuda_marder_correct_xyz(MfieldsStateCuda::Storage& gt_mflds,
-                                    MfieldsCuda::Storage& gt_mf, int p,
-                                    Float3 fac, Int3 lx, Int3 rx, Int3 ly,
-                                    Int3 ry, Int3 lz, Int3 rz)
+template <typename E1>
+inline void cuda_marder_correct_xyz(E1& efield, MfieldsCuda::Storage& gt_mf,
+                                    int p, Float3 fac, Int3 lx, Int3 rx,
+                                    Int3 ly, Int3 ry, Int3 lz, Int3 rz)
 {
-  auto gt_flds = gt_mflds.view(_all, _all, _all, _all, p).to_kernel();
+  auto k_efield = efield.view(_all, _all, _all, _all, p).to_kernel();
   auto gt_f = gt_mf.view(_all, _all, _all, 0, p).to_kernel();
   gt::launch<3>(
-    {gt_flds.shape(0), gt_flds.shape(1), gt_flds.shape(2)},
+    {k_efield.shape(0), k_efield.shape(1), k_efield.shape(2)},
     GT_LAMBDA(int ix, int iy, int iz) {
       if ((ix >= lx[0] && ix < rx[0]) && (iy >= lx[1] && iy < rx[1]) &&
           (iz >= lx[2] && iz < rx[2])) {
-        gt_flds(ix, iy, iz, EX) =
-          gt_flds(ix, iy, iz, EX) +
+        k_efield(ix, iy, iz, 0) =
+          k_efield(ix, iy, iz, 0) +
           fac[0] * (gt_f(ix, iy + 1, iz) - gt_f(ix, iy, iz));
       }
 
       if ((ix >= ly[0] && ix < ry[0]) && (iy >= ly[1] && iy < ry[1]) &&
           (iz >= ly[2] && iz < ry[2])) {
-        gt_flds(ix, iy, iz, EY) =
-          gt_flds(ix, iy, iz, EY) +
+        k_efield(ix, iy, iz, 1) =
+          k_efield(ix, iy, iz, 1) +
           fac[1] * (gt_f(ix, iy + 1, iz) - gt_f(ix, iy, iz));
       }
 
       if ((ix >= lz[0] && ix < rz[0]) && (iy >= lz[1] && iy < rz[1]) &&
           (iz >= lz[2] && iz < rz[2])) {
-        gt_flds(ix, iy, iz, EZ) =
-          gt_flds(ix, iy, iz, EZ) +
+        k_efield(ix, iy, iz, 2) =
+          k_efield(ix, iy, iz, 2) +
           fac[2] * (gt_f(ix, iy, iz + 1) - gt_f(ix, iy, iz));
       }
     });
   cuda_sync_if_enabled();
 }
 
-inline void correct(const Grid_t& grid, MfieldsCuda::Storage& mflds,
-                    const Int3& mflds_ib, MfieldsCuda::Storage& mf,
-                    const Int3& mf_ib,
+template <typename E1>
+inline void correct(const Grid_t& grid, E1& efield, const Int3& efield_ib,
+                    MfieldsCuda::Storage& mf, const Int3& mf_ib,
                     typename MfieldsCuda::Storage::value_type diffusion)
 {
   Float3 fac;
@@ -179,17 +180,17 @@ inline void correct(const Grid_t& grid, MfieldsCuda::Storage& mflds,
   fac[1] = .5 * grid.dt * diffusion / grid.domain.dx[1];
   fac[2] = .5 * grid.dt * diffusion / grid.domain.dx[2];
 
+  assert(efield_ib == -grid.ibn());
+  assert(mf_ib == -grid.ibn());
   // OPT, do all patches in one kernel
   for (int p = 0; p < grid.n_patches(); p++) {
-    assert(mflds.ib() == -grid.ibn());
-    assert(mf.ib() == -grid.ibn());
     Int3 lx, rx, ly, ry, lz, rz;
     detail::find_limits(grid, p, lx, rx, ly, ry, lz, rz);
 
     if (grid.isInvar(0)) {
-      cuda_marder_correct_yz(mflds, mf, p, fac, ly, ry, lz, rz);
+      cuda_marder_correct_yz(efield, mf, p, fac, ly, ry, lz, rz);
     } else {
-      cuda_marder_correct_xyz(mflds, mf, p, fac, lx, rx, ly, ry, lz, rz);
+      cuda_marder_correct_xyz(efield, mf, p, fac, lx, rx, ly, ry, lz, rz);
     }
   }
 }
@@ -241,11 +242,9 @@ public:
   // ----------------------------------------------------------------------
   // calc_aid_fields
 
-  template <typename E>
-  auto calc_aid_fields(MfieldsState& mflds, const E& rho)
+  template <typename E1, typename E2>
+  auto calc_aid_fields(const Grid_t& grid, const E1& efield, const E2& rho)
   {
-    const auto& grid = mflds.grid();
-    auto efield = mflds.storage().view(_all, _all, _all, _s(EX, EX + 3), _all);
     auto dive = psc::mflds::interior(grid, psc::item::div_nc(grid, efield));
 
     if (dump_) {
@@ -271,7 +270,8 @@ public:
   // Do the modified marder correction (See eq.(5, 7, 9, 10) in Mardahl and
   // Verboncoeur, CPC, 1997)
 
-  void correct(const Grid_t& grid, storage_type& mflds, const Int3& mflds_ib,
+  template <typename E>
+  void correct(const Grid_t& grid, E& efield, const Int3& efield_ib,
                storage_type& mres, const Int3& mres_ib)
   {
     double inv_sum = 0.;
@@ -282,7 +282,7 @@ public:
     }
     double diffusion_max = 1. / 2. / (.5 * grid.dt) / inv_sum;
     double diffusion = diffusion_max * diffusion_;
-    psc::marder::correct(grid, mflds, mflds_ib, mres, mres_ib, diffusion);
+    psc::marder::correct(grid, efield, efield_ib, mres, mres_ib, diffusion);
   }
 
   // ----------------------------------------------------------------------
@@ -303,11 +303,13 @@ public:
     // need to fill ghost cells first (should be unnecessary with only variant
     // 1) FIXME
     bnd_.fill_ghosts(mflds, EX, EX + 3);
+    auto efield = mflds.storage().view(_all, _all, _all, _s(EX, EX + 3), _all);
+    auto efield_ib = mflds.ib();
 
     for (int i = 0; i < loop_; i++) {
-      auto res = calc_aid_fields(mflds, rho);
+      auto res = calc_aid_fields(grid, efield, rho);
       print_max(grid, res);
-      correct(grid, mflds.storage(), mflds.ib(), res, -grid.ibn);
+      correct(grid, efield, efield_ib, res, -grid.ibn);
       bnd_.fill_ghosts(grid, mflds.storage(), mflds.ib(), EX, EX + 3);
     }
     prof_stop(pr);
