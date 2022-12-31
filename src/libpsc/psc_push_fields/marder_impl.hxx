@@ -283,6 +283,26 @@ public:
   // ----------------------------------------------------------------------
   // operator()
 
+  void operator()(const Grid_t& grid, storage_type& mflds, const Int3& mflds_ib,
+                  Mparticles& mprts)
+  {
+    auto efield = mflds.view(_all, _all, _all, _s(EX, EX + 3), _all);
+    auto efield_ib = mflds_ib;
+
+    auto item_rho = Item_rho_t{grid};
+    auto rho = psc::mflds::interior(grid, item_rho(mprts));
+
+    // need to fill ghost cells first (should be unnecessary with only variant
+    // 1) FIXME
+    bnd_.fill_ghosts(grid, mflds, mflds_ib, EX, EX + 3);
+    for (int i = 0; i < loop_; i++) {
+      auto res = calc_aid_fields(grid, efield, rho);
+      print_max(grid, res);
+      correct(grid, efield, efield_ib, res, -grid.ibn);
+      bnd_.fill_ghosts(grid, mflds, mflds_ib, EX, EX + 3);
+    }
+  }
+
   void operator()(MfieldsState& mflds, Mparticles& mprts)
   {
     static int pr;
@@ -291,22 +311,7 @@ public:
     }
 
     prof_start(pr);
-    const auto& grid = mprts.grid();
-    auto item_rho = Item_rho_t{grid};
-    auto&& rho = psc::mflds::interior(grid, item_rho(mprts));
-
-    // need to fill ghost cells first (should be unnecessary with only variant
-    // 1) FIXME
-    bnd_.fill_ghosts(grid, mflds.storage(), mflds.ib(), EX, EX + 3);
-    auto efield = mflds.storage().view(_all, _all, _all, _s(EX, EX + 3), _all);
-    auto efield_ib = mflds.ib();
-
-    for (int i = 0; i < loop_; i++) {
-      auto res = calc_aid_fields(grid, efield, rho);
-      print_max(grid, res);
-      correct(grid, efield, efield_ib, res, -grid.ibn);
-      bnd_.fill_ghosts(grid, mflds.storage(), mflds.ib(), EX, EX + 3);
-    }
+    (*this)(mprts.grid(), mflds.storage(), mflds.ib(), mprts);
     prof_stop(pr);
   }
 
