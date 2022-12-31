@@ -4,9 +4,6 @@
 #include "testing.hxx"
 
 #include "../libpsc/psc_push_fields/marder_impl.hxx"
-#ifdef USE_CUDA
-#include "../libpsc/cuda/marder_cuda_impl.hxx"
-#endif
 
 #include <gtensor/reductions.h>
 

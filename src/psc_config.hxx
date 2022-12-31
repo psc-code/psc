@@ -24,7 +24,6 @@
 #include "../libpsc/cuda/bnd_particles_cuda_impl.hxx"
 #include "../libpsc/cuda/checks_cuda_impl.hxx"
 #include "../libpsc/cuda/collision_cuda_impl.hxx"
-#include "../libpsc/cuda/marder_cuda_impl.hxx"
 #include "../libpsc/cuda/push_fields_cuda_impl.hxx"
 #include "../libpsc/cuda/push_particles_cuda_impl.hxx"
 #include "../libpsc/cuda/sort_cuda_impl.hxx"
