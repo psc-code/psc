@@ -47,13 +47,13 @@ inline void find_limits(const Grid_t& grid, int p, Int3& lx, Int3& rx, Int3& ly,
     }
   }
   // FIXME, for conducting wall the signs here need checking...
-  lx = Int3{l_cc[0], l_nc[1], l_nc[2]};
+  lx = -Int3{l_cc[0], l_nc[1], l_nc[2]};
   rx = Int3{r_cc[0], r_nc[1], r_nc[2]} + grid.ldims;
 
-  ly = Int3{l_nc[0], l_cc[1], l_nc[2]};
+  ly = -Int3{l_nc[0], l_cc[1], l_nc[2]};
   ry = Int3{r_nc[0], r_cc[1], r_nc[2]} + grid.ldims;
 
-  lz = Int3{l_nc[0], l_nc[1], l_cc[2]};
+  lz = -Int3{l_nc[0], l_nc[1], l_cc[2]};
   rz = Int3{r_nc[0], r_nc[1], r_cc[2]} + grid.ldims;
 }
 
