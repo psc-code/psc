@@ -198,17 +198,15 @@ inline void correct(const Grid_t& grid, E1& efield, const Int3& efield_ib,
 } // namespace marder
 } // namespace psc
 
-template <typename MP, typename MFS, typename D, typename ITEM_RHO,
-          typename BND>
+template <typename MP, typename S, typename D, typename ITEM_RHO, typename BND>
 class MarderCommon
 {
 public:
   using Mparticles = MP;
-  using MfieldsState = MFS;
+  using storage_type = S;
   using dim_t = D;
   using Item_rho_t = ITEM_RHO;
   using Bnd = BND;
-  using storage_type = typename MfieldsState::Storage;
   using real_t = typename storage_type::value_type;
 
   // FIXME: checkpointing won't properly restore state
@@ -303,6 +301,7 @@ public:
     }
   }
 
+  template <typename MfieldsState>
   void operator()(MfieldsState& mflds, Mparticles& mprts)
   {
     static int pr;
@@ -324,8 +323,8 @@ public:
 };
 
 template <typename MP, typename MFS, typename MF, typename D>
-using Marder_ =
-  MarderCommon<MP, MFS, D, Moment_rho_1st_nc<typename MF::Storage, D>, Bnd_>;
+using Marder_ = MarderCommon<MP, typename MFS::Storage, D,
+                             Moment_rho_1st_nc<typename MF::Storage, D>, Bnd_>;
 
 #ifdef USE_CUDA
 
@@ -334,6 +333,6 @@ using Marder_ =
 #include "fields_item_moments_1st_cuda.hxx"
 
 template <typename BS, typename D>
-using MarderCuda = MarderCommon<MparticlesCuda<BS>, MfieldsStateCuda, D,
-                                Moment_rho_1st_nc_cuda<D>, BndCuda3>;
+using MarderCuda = MarderCommon<MparticlesCuda<BS>, MfieldsStateCuda::Storage,
+                                D, Moment_rho_1st_nc_cuda<D>, BndCuda3>;
 #endif
