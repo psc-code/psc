@@ -27,13 +27,11 @@ namespace marder
 namespace detail
 {
 
-inline void find_limits(const Grid_t& grid, int p, Int3& l_cc, Int3& r_cc,
-                        Int3& l_nc, Int3& r_nc)
+inline void find_limits(const Grid_t& grid, int p, Int3& lx, Int3& rx, Int3& ly,
+                        Int3& ry, Int3& lz, Int3& rz)
 {
-  l_cc = {0, 0, 0};
-  r_cc = {0, 0, 0};
-  l_nc = {0, 0, 0};
-  r_nc = {0, 0, 0};
+  Int3 l_cc = {0, 0, 0}, r_cc = {0, 0, 0};
+  Int3 l_nc = {0, 0, 0}, r_nc = {0, 0, 0};
   for (int d = 0; d < 3; d++) {
     if (grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL &&
         grid.atBoundaryLo(p, d)) {
@@ -46,6 +44,15 @@ inline void find_limits(const Grid_t& grid, int p, Int3& l_cc, Int3& r_cc,
       r_nc[d] = 0;
     }
   }
+  // FIXME, for conducting wall the signs here need checking...
+  lx = Int3{l_cc[0], l_nc[1], l_nc[2]};
+  rx = Int3{r_cc[0], r_nc[1], r_nc[2]} + grid.ldims;
+
+  ly = Int3{l_nc[0], l_cc[1], l_nc[2]};
+  ry = Int3{r_nc[0], r_cc[1], r_nc[2]} + grid.ldims;
+
+  lz = Int3{l_nc[0], l_nc[1], l_cc[2]};
+  rz = Int3{r_nc[0], r_nc[1], r_cc[2]} + grid.ldims;
 }
 
 } // namespace detail
@@ -69,12 +76,12 @@ inline void correct(MfieldsState& mflds, Mfields& mf,
   Int3 ib = mflds.ib();
 
   for (int p = 0; p < mf.n_patches(); p++) {
-    Int3 l_cc, r_cc, l_nc, r_nc;
-    detail::find_limits(grid, p, l_cc, r_cc, l_nc, r_nc);
+    Int3 lx, rx, ly, ry, lz, rz;
+    detail::find_limits(grid, p, lx, rx, ly, ry, lz, rz);
 
     if (!grid.isInvar(0)) {
-      Int3 l = -Int3{l_cc[0], l_nc[1], l_nc[2]} - ib;
-      Int3 r = -Int3{r_cc[0], r_nc[1], r_nc[2]} + grid.ldims - ib;
+      Int3 l = lx - ib;
+      Int3 r = rx - ib;
       auto ex = mflds.storage().view(_all, _all, _all, EX, p);
       auto res = mf.storage().view(_all, _all, _all, 0, p);
       ex.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) =
@@ -85,8 +92,8 @@ inline void correct(MfieldsState& mflds, Mfields& mf,
     }
 
     {
-      Int3 l = -Int3{l_nc[0], l_cc[1], l_nc[2]} - ib;
-      Int3 r = -Int3{r_nc[0], r_cc[1], r_nc[2]} + grid.ldims - ib;
+      Int3 l = ly - ib;
+      Int3 r = ry - ib;
       auto ey = mflds.storage().view(_all, _all, _all, EY, p);
       auto res = mf.storage().view(_all, _all, _all, 0, p);
       ey.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) =
@@ -97,8 +104,8 @@ inline void correct(MfieldsState& mflds, Mfields& mf,
     }
 
     {
-      Int3 l = -Int3{l_nc[0], l_nc[1], l_cc[2]} - ib;
-      Int3 r = -Int3{r_nc[0], r_nc[1], r_cc[2]} + grid.ldims - ib;
+      Int3 l = lz - ib;
+      Int3 r = rz - ib;
       auto ez = mflds.storage().view(_all, _all, _all, EZ, p);
       auto res = mf.storage().view(_all, _all, _all, 0, p);
       ez.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) =
@@ -123,17 +130,8 @@ inline void correct(MfieldsStateCuda& mflds, MfieldsCuda& mf, float diffusion)
 
   // OPT, do all patches in one kernel
   for (int p = 0; p < mflds.n_patches(); p++) {
-    Int3 l_cc, r_cc, l_nc, r_nc;
-    detail::find_limits(grid, p, l_cc, r_cc, l_nc, r_nc);
-
-    auto lx = Int3{l_cc[0], l_nc[1], l_nc[2]};
-    auto rx = Int3{r_cc[0], r_nc[1], r_nc[2]} + grid.ldims;
-
-    auto ly = Int3{l_nc[0], l_cc[1], l_nc[2]};
-    auto ry = Int3{r_nc[0], r_cc[1], r_nc[2]} + grid.ldims;
-
-    auto lz = Int3{l_nc[0], l_nc[1], l_cc[2]};
-    auto rz = Int3{r_nc[0], r_nc[1], r_cc[2]} + grid.ldims;
+    Int3 lx, rx, ly, ry, lz, rz;
+    detail::find_limits(grid, p, lx, rx, ly, ry, lz, rz);
 
     if (grid.isInvar(0)) {
       cuda_marder_correct_yz(mflds, mf, p, fac, ly, ry, lz, rz);
