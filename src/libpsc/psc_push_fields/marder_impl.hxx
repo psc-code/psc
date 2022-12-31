@@ -199,7 +199,7 @@ public:
   // calc_aid_fields
 
   template <typename E>
-  void calc_aid_fields(MfieldsState& mflds, const E& rho)
+  auto calc_aid_fields(MfieldsState& mflds, const E& rho)
   {
     const auto& grid = mflds.grid();
     auto item_dive = Item_dive<MfieldsState>{};
@@ -214,11 +214,12 @@ public:
       io_.end_step();
     }
 
-    auto& res = res_.storage();
-
+    const Int3& ib = -grid.ibn;
+    auto res = storage_type{psc::mflds::make_shape(grid, 1, ib)};
     psc::mflds::interior(grid, res) = dive - rho;
     // FIXME, why is this necessary?
-    bnd_.fill_ghosts(res_, 0, 1);
+    bnd_.fill_ghosts(grid, res, ib, 0, 1);
+    return res;
   }
 
   // ----------------------------------------------------------------------
@@ -261,9 +262,9 @@ public:
     bnd_.fill_ghosts(mflds, EX, EX + 3);
 
     for (int i = 0; i < loop_; i++) {
-      calc_aid_fields(mflds, rho);
-      print_max(grid, res_.storage());
-      correct(grid, mflds.storage(), mflds.ib(), res_.storage(), res_.ib());
+      auto res = calc_aid_fields(mflds, rho);
+      print_max(grid, res);
+      correct(grid, mflds.storage(), mflds.ib(), res, -grid.ibn);
       bnd_.fill_ghosts(grid, mflds.storage(), mflds.ib(), EX, EX + 3);
     }
     prof_stop(pr);
