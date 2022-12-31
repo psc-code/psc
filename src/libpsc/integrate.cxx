@@ -7,7 +7,6 @@
 #include "collision.hxx"
 #include "bnd_particles.hxx"
 #include "checks.hxx"
-#include "marder.hxx"
 
 #include <mrc_common.h>
 #include <mrc_profile.h>
