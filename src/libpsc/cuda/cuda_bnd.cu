@@ -7,6 +7,102 @@
 #include "psc_fields_cuda.h"
 #include "fields.hxx"
 
+#include "cuda_bnd.cuh"
+
+template <typename real_t>
+__global__ static void k_scatter_add(const real_t* buf, const uint* map,
+                                     real_t* flds, unsigned int size)
+{
+  int i = threadIdx.x + blockIdx.x * blockDim.x;
+  if (i < size) {
+    atomicAdd(&flds[map[i]], buf[i]);
+  }
+}
+
+template <typename real_t>
+void ScatterAdd::operator()(const thrust::host_vector<uint>& map,
+                            const thrust::host_vector<real_t>& buf,
+                            thrust::host_vector<real_t>& h_flds)
+{
+  auto p = buf.begin();
+  for (auto cur : map) {
+    h_flds[cur] += *p++;
+  }
+}
+
+template <typename real_t>
+void ScatterAdd::operator()(const psc::device_vector<uint>& map,
+                            const psc::device_vector<real_t>& buf,
+                            thrust::device_ptr<real_t> d_flds)
+{
+  if (buf.empty())
+    return;
+
+  const int THREADS_PER_BLOCK = 256;
+  dim3 dimGrid((buf.size() + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
+  k_scatter_add<<<dimGrid, THREADS_PER_BLOCK>>>(
+    buf.data().get(), map.data().get(), d_flds.get(), buf.size());
+  cuda_sync_if_enabled();
+}
+
+// ======================================================================
+// Scatter
+
+template <typename real_t>
+__global__ static void k_scatter(const real_t* buf, const uint* map,
+                                 real_t* flds, unsigned int size)
+{
+  int i = threadIdx.x + blockIdx.x * blockDim.x;
+  if (i < size) {
+    flds[map[i]] = buf[i];
+  }
+}
+
+template <typename real_t>
+void Scatter::operator()(const thrust::host_vector<uint>& map,
+                         const thrust::host_vector<real_t>& buf,
+                         thrust::host_vector<real_t>& h_flds)
+{
+  thrust::scatter(buf.begin(), buf.end(), map.begin(), h_flds.begin());
+}
+
+template <typename real_t>
+void Scatter::operator()(const psc::device_vector<uint>& map,
+                         const psc::device_vector<real_t>& buf,
+                         thrust::device_ptr<real_t> d_flds)
+{
+#if 1
+  thrust::scatter(buf.begin(), buf.end(), map.begin(), d_flds);
+#else
+  if (buf.empty())
+    return;
+
+  const int THREADS_PER_BLOCK = 256;
+  dim3 dimGrid((buf.size() + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
+  k_scatter<<<dimGrid, THREADS_PER_BLOCK>>>(buf.data().get(), map.data().get(),
+                                            d_flds.get(), buf.size());
+  cuda_sync_if_enabled();
+#endif
+}
+
+// ======================================================================
+
+template void ScatterAdd::operator()(const thrust::host_vector<uint>& map,
+                                     const thrust::host_vector<float>& buf,
+                                     thrust::host_vector<float>& h_flds);
+template void ScatterAdd::operator()(const psc::device_vector<uint>& map,
+                                     const psc::device_vector<float>& buf,
+                                     thrust::device_ptr<float> d_flds);
+
+template void Scatter::operator()(const thrust::host_vector<uint>& map,
+                                  const thrust::host_vector<float>& buf,
+                                  thrust::host_vector<float>& h_flds);
+template void Scatter::operator()(const psc::device_vector<uint>& map,
+                                  const psc::device_vector<float>& buf,
+                                  thrust::device_ptr<float> d_flds);
+
+// ======================================================================
+
 #define BLOCKSIZE_X 1
 #define BLOCKSIZE_Y 4
 #define BLOCKSIZE_Z 4
