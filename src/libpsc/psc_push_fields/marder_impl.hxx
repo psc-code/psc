@@ -69,12 +69,13 @@ template <typename MfieldsState, typename Mfields>
 inline void correct(MfieldsState& mflds, Mfields& mf,
                     typename MfieldsState::real_t diffusion)
 {
+  using real_t = typename MfieldsState::real_t;
+  using real3_t = gt::sarray<real_t, 3>;
   const auto& grid = mflds.grid();
 
-  // FIXME: how to choose diffusion parameter properly?
-  double deltax = grid.domain.dx[0]; // FIXME double/float
-  double deltay = grid.domain.dx[1];
-  double deltaz = grid.domain.dx[2];
+  real3_t fac = {.5f * grid.dt * diffusion / grid.domain.dx[0],
+                 .5f * grid.dt * diffusion / grid.domain.dx[1],
+                 .5f * grid.dt * diffusion / grid.domain.dx[2]};
 
   for (int p = 0; p < mf.n_patches(); p++) {
     assert(mflds.ib() == -grid.ibn());
@@ -83,39 +84,36 @@ inline void correct(MfieldsState& mflds, Mfields& mf,
     detail::find_limits(grid, p, lx, rx, ly, ry, lz, rz);
 
     if (!grid.isInvar(0)) {
-      Int3 l = lx;
-      Int3 r = rx;
+      Int3 l = lx, r = rx;
       auto ex = mflds.storage().view(_all, _all, _all, EX, p);
       auto res = mf.storage().view(_all, _all, _all, 0, p);
       ex.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) =
         ex.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) +
         (res.view(_s(l[0] + 1, r[0] + 1), _s(l[1], r[1]), _s(l[2], r[2])) -
          res.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2]))) *
-          .5 * grid.dt * diffusion / deltax;
+          fac[0];
     }
 
     {
-      Int3 l = ly;
-      Int3 r = ry;
+      Int3 l = ly, r = ry;
       auto ey = mflds.storage().view(_all, _all, _all, EY, p);
       auto res = mf.storage().view(_all, _all, _all, 0, p);
       ey.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) =
         ey.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) +
         (res.view(_s(l[0], r[0]), _s(l[1] + 1, r[1] + 1), _s(l[2], r[2])) -
          res.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2]))) *
-          .5 * grid.dt * diffusion / deltay;
+          fac[1];
     }
 
     {
-      Int3 l = lz;
-      Int3 r = rz;
+      Int3 l = lz, r = rz;
       auto ez = mflds.storage().view(_all, _all, _all, EZ, p);
       auto res = mf.storage().view(_all, _all, _all, 0, p);
       ez.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) =
         ez.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) +
         (res.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2] + 1, r[2] + 1)) -
          res.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2]))) *
-          .5 * grid.dt * diffusion / deltaz;
+          fac[2];
     }
   }
 }
