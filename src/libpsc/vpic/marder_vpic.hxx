@@ -1,8 +1,6 @@
 
 #pragma once
 
-#include "marder.hxx"
-
 #ifdef USE_VPIC
 
 // ======================================================================
@@ -754,9 +752,7 @@ struct MarderVpicOps
 // MarderVpic_
 
 template <typename Ops>
-struct MarderVpic_
-  : MarderBase
-  , Ops
+struct MarderVpic_ : Ops
 {
   using Mparticles = typename Ops::Mparticles;
   using MfieldsState = typename Ops::MfieldsState;
