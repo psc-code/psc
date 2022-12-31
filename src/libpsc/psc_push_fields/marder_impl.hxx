@@ -112,37 +112,35 @@ inline void correct(const Grid_t& grid, E1& efield, const Int3& efield_ib,
 
 #ifdef USE_CUDA
 
-template <typename E1>
-inline void cuda_marder_correct_yz(E1& efield, MfieldsCuda::Storage& gt_mf,
-                                   int p, Float3 fac, Int3 ly, Int3 ry, Int3 lz,
-                                   Int3 rz)
+template <typename E1, typename E2>
+inline void cuda_marder_correct_yz(E1& efield, E2& res, Float3 fac, Int3 ly,
+                                   Int3 ry, Int3 lz, Int3 rz)
 {
-  auto k_efield = efield.view(_all, _all, _all, _all, p).to_kernel();
-  auto gt_f = gt_mf.view(_all, _all, _all, 0, p).to_kernel();
+  auto k_efield = efield.to_kernel();
+  auto k_res = res.to_kernel();
   gt::launch<2>(
     {k_efield.shape(1), k_efield.shape(2)}, GT_LAMBDA(int iy, int iz) {
       if ((iy >= ly[1] && iy < ry[1]) && (iz >= ly[2] && iz < ry[2])) {
         k_efield(0, iy, iz, 1) =
           k_efield(0, iy, iz, 1) +
-          fac[1] * (gt_f(0, iy + 1, iz) - gt_f(0, iy, iz));
+          fac[1] * (k_res(0, iy + 1, iz) - k_res(0, iy, iz));
       }
 
       if ((iy >= lz[1] && iy < rz[1]) && (iz >= lz[2] && iz < rz[2])) {
         k_efield(0, iy, iz, 2) =
           k_efield(0, iy, iz, 2) +
-          fac[2] * (gt_f(0, iy, iz + 1) - gt_f(0, iy, iz));
+          fac[2] * (k_res(0, iy, iz + 1) - k_res(0, iy, iz));
       }
     });
   cuda_sync_if_enabled();
 }
 
-template <typename E1>
-inline void cuda_marder_correct_xyz(E1& efield, MfieldsCuda::Storage& gt_mf,
-                                    int p, Float3 fac, Int3 lx, Int3 rx,
-                                    Int3 ly, Int3 ry, Int3 lz, Int3 rz)
+template <typename E1, typename E2>
+inline void cuda_marder_correct_xyz(E1& efield, E2& res, Float3 fac, Int3 lx,
+                                    Int3 rx, Int3 ly, Int3 ry, Int3 lz, Int3 rz)
 {
-  auto k_efield = efield.view(_all, _all, _all, _all, p).to_kernel();
-  auto gt_f = gt_mf.view(_all, _all, _all, 0, p).to_kernel();
+  auto k_efield = efield.to_kernel();
+  auto k_res = res.to_kernel();
   gt::launch<3>(
     {k_efield.shape(0), k_efield.shape(1), k_efield.shape(2)},
     GT_LAMBDA(int ix, int iy, int iz) {
@@ -150,21 +148,21 @@ inline void cuda_marder_correct_xyz(E1& efield, MfieldsCuda::Storage& gt_mf,
           (iz >= lx[2] && iz < rx[2])) {
         k_efield(ix, iy, iz, 0) =
           k_efield(ix, iy, iz, 0) +
-          fac[0] * (gt_f(ix, iy + 1, iz) - gt_f(ix, iy, iz));
+          fac[0] * (k_res(ix, iy + 1, iz) - k_res(ix, iy, iz));
       }
 
       if ((ix >= ly[0] && ix < ry[0]) && (iy >= ly[1] && iy < ry[1]) &&
           (iz >= ly[2] && iz < ry[2])) {
         k_efield(ix, iy, iz, 1) =
           k_efield(ix, iy, iz, 1) +
-          fac[1] * (gt_f(ix, iy + 1, iz) - gt_f(ix, iy, iz));
+          fac[1] * (k_res(ix, iy + 1, iz) - k_res(ix, iy, iz));
       }
 
       if ((ix >= lz[0] && ix < rz[0]) && (iy >= lz[1] && iy < rz[1]) &&
           (iz >= lz[2] && iz < rz[2])) {
         k_efield(ix, iy, iz, 2) =
           k_efield(ix, iy, iz, 2) +
-          fac[2] * (gt_f(ix, iy, iz + 1) - gt_f(ix, iy, iz));
+          fac[2] * (k_res(ix, iy, iz + 1) - k_res(ix, iy, iz));
       }
     });
   cuda_sync_if_enabled();
@@ -187,10 +185,12 @@ inline void correct(const Grid_t& grid, E1& efield, const Int3& efield_ib,
     Int3 lx, rx, ly, ry, lz, rz;
     detail::find_limits(grid, p, lx, rx, ly, ry, lz, rz);
 
+    auto p_efield = efield.view(_all, _all, _all, _all, p);
+    auto p_res = mf.view(_all, _all, _all, 0, p);
     if (grid.isInvar(0)) {
-      cuda_marder_correct_yz(efield, mf, p, fac, ly, ry, lz, rz);
+      cuda_marder_correct_yz(p_efield, p_res, fac, ly, ry, lz, rz);
     } else {
-      cuda_marder_correct_xyz(efield, mf, p, fac, lx, rx, ly, ry, lz, rz);
+      cuda_marder_correct_xyz(p_efield, p_res, fac, lx, rx, ly, ry, lz, rz);
     }
   }
 }
