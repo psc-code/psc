@@ -262,6 +262,13 @@ public:
     for (int i = 0; i < loop_; i++) {
       auto dive = psc::mflds::interior(grid, psc::item::div_nc(grid, efield));
 
+      Int3 res_ib = -grid.ibn;
+      auto res = storage_type{psc::mflds::make_shape(grid, 1, res_ib)};
+      psc::mflds::interior(grid, res) = dive - rho;
+      // FIXME, why is this necessary?
+      bnd_.fill_ghosts(grid, res, res_ib, 0, 1);
+
+      print_max(grid, res);
       if (dump_) {
         static int cnt;
         io_.begin_step(cnt, cnt);
@@ -271,13 +278,6 @@ public:
         io_.end_step();
       }
 
-      Int3 res_ib = -grid.ibn;
-      auto res = storage_type{psc::mflds::make_shape(grid, 1, res_ib)};
-      psc::mflds::interior(grid, res) = dive - rho;
-      // FIXME, why is this necessary?
-      bnd_.fill_ghosts(grid, res, res_ib, 0, 1);
-
-      print_max(grid, res);
       psc::marder::correct(grid, efield, efield_ib, res, res_ib, diffusion);
       bnd_.fill_ghosts(grid, mflds, mflds_ib, EX, EX + 3);
     }
