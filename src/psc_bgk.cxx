@@ -304,7 +304,7 @@ void initializeGradPhi(BgkMfields& phi, BgkMfields& gradPhi)
 
 void initializeDivGradPhi(BgkMfields& gradPhi, BgkMfields& divGradPhi)
 {
-  auto&& divGrad = psc::item::div_nc(gradPhi.gt(), gradPhi.grid());
+  auto&& divGrad = psc::item::div_nc(gradPhi.grid(), gradPhi.gt());
   psc::mflds::interior(divGradPhi.grid(), divGradPhi.storage()) = divGrad;
 
   fillGhosts(divGradPhi, 0, 1);
