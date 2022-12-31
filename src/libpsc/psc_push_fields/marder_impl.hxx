@@ -215,11 +215,7 @@ public:
   // FIXME: checkpointing won't properly restore state
 
   MarderCommon(const Grid_t& grid, real_t diffusion, int loop, bool dump)
-    : grid_{grid},
-      diffusion_{diffusion},
-      loop_{loop},
-      dump_{dump},
-      bnd_{grid, grid.ibn}
+    : diffusion_{diffusion}, loop_{loop}, dump_{dump}, bnd_{grid, grid.ibn}
   {
     if (dump_) {
       io_.open("marder");
@@ -316,7 +312,6 @@ public:
   }
 
   // private:
-  const Grid_t& grid_;
   real_t diffusion_; //< diffusion coefficient for Marder correction
   int loop_;         //< execute this many relaxation steps in a loop
   bool dump_;        //< dump div_E, rho
