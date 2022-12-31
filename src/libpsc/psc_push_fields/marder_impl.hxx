@@ -150,14 +150,13 @@ inline void correct(const Grid_t& grid, MfieldsCuda::Storage& mflds,
 } // namespace marder
 } // namespace psc
 
-template <typename MP, typename MFS, typename MF, typename D, typename ITEM_RHO,
+template <typename MP, typename MFS, typename D, typename ITEM_RHO,
           typename BND>
 class MarderCommon
 {
 public:
   using Mparticles = MP;
   using MfieldsState = MFS;
-  using Mfields = MF;
   using dim_t = D;
   using Item_rho_t = ITEM_RHO;
   using Bnd = BND;
@@ -276,5 +275,5 @@ public:
 };
 
 template <typename MP, typename MFS, typename MF, typename D>
-using Marder_ = MarderCommon<MP, MFS, MF, D,
-                             Moment_rho_1st_nc<typename MF::Storage, D>, Bnd_>;
+using Marder_ =
+  MarderCommon<MP, MFS, D, Moment_rho_1st_nc<typename MF::Storage, D>, Bnd_>;
