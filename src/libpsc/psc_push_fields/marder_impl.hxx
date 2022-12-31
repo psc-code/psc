@@ -24,6 +24,32 @@ namespace psc
 namespace marder
 {
 
+namespace detail
+{
+
+inline void find_limits(const Grid_t& grid, int p, Int3& l_cc, Int3& r_cc,
+                        Int3& l_nc, Int3& r_nc)
+{
+  l_cc = {0, 0, 0};
+  r_cc = {0, 0, 0};
+  l_nc = {0, 0, 0};
+  r_nc = {0, 0, 0};
+  for (int d = 0; d < 3; d++) {
+    if (grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL &&
+        grid.atBoundaryLo(p, d)) {
+      l_cc[d] = -1;
+      l_nc[d] = -1;
+    }
+    if (grid.bc.fld_hi[d] == BND_FLD_CONDUCTING_WALL &&
+        grid.atBoundaryHi(p, d)) {
+      r_cc[d] = -1;
+      r_nc[d] = 0;
+    }
+  }
+}
+
+} // namespace detail
+
 // ----------------------------------------------------------------------
 // correct
 //
@@ -43,23 +69,9 @@ inline void correct(MfieldsState& mflds, Mfields& mf,
   Int3 ib = mflds.ib();
 
   for (int p = 0; p < mf.n_patches(); p++) {
-    Int3 l_cc = {0, 0, 0}, r_cc = {0, 0, 0};
-    Int3 l_nc = {0, 0, 0}, r_nc = {0, 0, 0};
-    for (int d = 0; d < 3; d++) {
-      if (grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL &&
-          grid.atBoundaryLo(p, d)) {
-        l_cc[d] = -1;
-        l_nc[d] = -1;
-      }
-      if (grid.bc.fld_hi[d] == BND_FLD_CONDUCTING_WALL &&
-          grid.atBoundaryHi(p, d)) {
-        r_cc[d] = -1;
-        r_nc[d] = 0;
-      }
-    }
+    Int3 l_cc, r_cc, l_nc, r_nc;
+    detail::find_limits(grid, p, l_cc, r_cc, l_nc, r_nc);
 
-    auto flds_ = make_Fields3d<dim_xyz>(mflds[p]);
-    auto f_ = make_Fields3d<dim_xyz>(mf[p]);
     if (!grid.isInvar(0)) {
       Int3 l = -Int3{l_cc[0], l_nc[1], l_nc[2]} - ib;
       Int3 r = -Int3{r_cc[0], r_nc[1], r_nc[2]} + ib;
@@ -111,20 +123,8 @@ inline void correct(MfieldsStateCuda& mflds, MfieldsCuda& mf, float diffusion)
 
   // OPT, do all patches in one kernel
   for (int p = 0; p < mflds.n_patches(); p++) {
-    int l_cc[3] = {0, 0, 0}, r_cc[3] = {0, 0, 0};
-    int l_nc[3] = {0, 0, 0}, r_nc[3] = {0, 0, 0};
-    for (int d = 0; d < 3; d++) {
-      if (grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL &&
-          grid.atBoundaryLo(p, d)) {
-        l_cc[d] = -1;
-        l_nc[d] = -1;
-      }
-      if (grid.bc.fld_hi[d] == BND_FLD_CONDUCTING_WALL &&
-          grid.atBoundaryHi(p, d)) {
-        r_cc[d] = -1;
-        r_nc[d] = 0;
-      }
-    }
+    Int3 l_cc, r_cc, l_nc, r_nc;
+    detail::find_limits(grid, p, l_cc, r_cc, l_nc, r_nc);
 
     Int3 ldims = grid.ldims;
 
