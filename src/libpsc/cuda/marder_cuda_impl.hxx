@@ -8,6 +8,5 @@
 #include "fields_item_moments_1st_cuda.hxx"
 
 template <typename BS, typename D>
-using MarderCuda =
-  MarderCommon<MparticlesCuda<BS>, MfieldsStateCuda, MfieldsCuda, D,
-               Moment_rho_1st_nc_cuda<D>, BndCuda3>;
+using MarderCuda = MarderCommon<MparticlesCuda<BS>, MfieldsStateCuda, D,
+                                Moment_rho_1st_nc_cuda<D>, BndCuda3>;
