@@ -225,7 +225,8 @@ public:
   // Do the modified marder correction (See eq.(5, 7, 9, 10) in Mardahl and
   // Verboncoeur, CPC, 1997)
 
-  void correct(const Grid_t& grid, storage_type& mflds, const Int3& mflds_ib)
+  void correct(const Grid_t& grid, storage_type& mflds, const Int3& mflds_ib,
+               storage_type& mres, const Int3& mres_ib)
   {
     double inv_sum = 0.;
     for (int d = 0; d < 3; d++) {
@@ -235,8 +236,7 @@ public:
     }
     double diffusion_max = 1. / 2. / (.5 * grid.dt) / inv_sum;
     double diffusion = diffusion_max * diffusion_;
-    psc::marder::correct(grid, mflds, mflds_ib, res_.storage(), res_.ib(),
-                         diffusion);
+    psc::marder::correct(grid, mflds, mflds_ib, mres, mres_ib, diffusion);
   }
 
   // ----------------------------------------------------------------------
@@ -261,7 +261,7 @@ public:
     for (int i = 0; i < loop_; i++) {
       calc_aid_fields(mflds, rho);
       print_max(res_);
-      correct(grid, mflds.storage(), mflds.ib());
+      correct(grid, mflds.storage(), mflds.ib(), res_.storage(), res_.ib());
       bnd_.fill_ghosts(grid, mflds.storage(), mflds.ib(), EX, EX + 3);
     }
     prof_stop(pr);
