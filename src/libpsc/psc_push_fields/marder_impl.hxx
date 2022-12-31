@@ -232,31 +232,6 @@ public:
   }
 
   // ----------------------------------------------------------------------
-  // calc_aid_fields
-
-  template <typename E1, typename E2>
-  auto calc_aid_fields(const Grid_t& grid, const E1& efield, const E2& rho)
-  {
-    auto dive = psc::mflds::interior(grid, psc::item::div_nc(grid, efield));
-
-    if (dump_) {
-      static int cnt;
-      io_.begin_step(cnt, cnt); // ppsc->timestep, ppsc->timestep * ppsc->dt);
-      cnt++;
-      io_.write(rho, grid, "rho", {"rho"});
-      io_.write(dive, grid, "dive", {"dive"});
-      io_.end_step();
-    }
-
-    const Int3& ib = -grid.ibn;
-    auto res = storage_type{psc::mflds::make_shape(grid, 1, ib)};
-    psc::mflds::interior(grid, res) = dive - rho;
-    // FIXME, why is this necessary?
-    bnd_.fill_ghosts(grid, res, ib, 0, 1);
-    return res;
-  }
-
-  // ----------------------------------------------------------------------
   // correct
   //
   // Do the modified marder correction (See eq.(5, 7, 9, 10) in Mardahl and
@@ -294,9 +269,25 @@ public:
     // 1) FIXME
     bnd_.fill_ghosts(grid, mflds, mflds_ib, EX, EX + 3);
     for (int i = 0; i < loop_; i++) {
-      auto res = calc_aid_fields(grid, efield, rho);
+      auto dive = psc::mflds::interior(grid, psc::item::div_nc(grid, efield));
+
+      if (dump_) {
+        static int cnt;
+        io_.begin_step(cnt, cnt);
+        cnt++;
+        io_.write(rho, grid, "rho", {"rho"});
+        io_.write(dive, grid, "dive", {"dive"});
+        io_.end_step();
+      }
+
+      Int3 res_ib = -grid.ibn;
+      auto res = storage_type{psc::mflds::make_shape(grid, 1, res_ib)};
+      psc::mflds::interior(grid, res) = dive - rho;
+      // FIXME, why is this necessary?
+      bnd_.fill_ghosts(grid, res, res_ib, 0, 1);
+
       print_max(grid, res);
-      correct(grid, efield, efield_ib, res, -grid.ibn);
+      correct(grid, efield, efield_ib, res, res_ib);
       bnd_.fill_ghosts(grid, mflds, mflds_ib, EX, EX + 3);
     }
   }
