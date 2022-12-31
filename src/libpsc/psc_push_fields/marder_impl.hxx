@@ -4,6 +4,7 @@
 #include "marder.hxx"
 #include "fields.hxx"
 #include "writer_mrc.hxx"
+#include "mpi_dtype_traits.hxx"
 #include "../libpsc/psc_output_fields/fields_item_fields.hxx"
 #include "../libpsc/psc_output_fields/fields_item_moments_1st.hxx"
 #include "../libpsc/psc_bnd/psc_bnd_impl.hxx"
@@ -184,13 +185,14 @@ public:
   // ----------------------------------------------------------------------
   // print_max
 
-  static void print_max(Mfields& mf)
+  template <typename E>
+  static void print_max(const Grid_t& grid, const E& gt)
   {
-    real_t max_err = gt::norm_linf(mf.storage());
+    real_t max_err = gt::norm_linf(gt);
     MPI_Allreduce(MPI_IN_PLACE, &max_err, 1,
-                  Mfields_traits<Mfields>::mpi_dtype(), MPI_MAX,
-                  mf.grid().comm());
-    mpi_printf(mf.grid().comm(), "marder: err %g\n", max_err);
+                  MpiDtypeTraits<gt::expr_value_type<E>>::value(), MPI_MAX,
+                  grid.comm());
+    mpi_printf(grid.comm(), "marder: err %g\n", max_err);
   }
 
   // ----------------------------------------------------------------------
@@ -260,7 +262,7 @@ public:
 
     for (int i = 0; i < loop_; i++) {
       calc_aid_fields(mflds, rho);
-      print_max(res_);
+      print_max(grid, res_.storage());
       correct(grid, mflds.storage(), mflds.ib(), res_.storage(), res_.ib());
       bnd_.fill_ghosts(grid, mflds.storage(), mflds.ib(), EX, EX + 3);
     }
