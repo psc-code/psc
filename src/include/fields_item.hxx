@@ -38,7 +38,7 @@ class ItemMomentBnd
 public:
   using storage_type = S;
 
-  ItemMomentBnd(const Grid_t& grid) : bnd_{grid, grid.ibn} {}
+  ItemMomentBnd(const Grid_t& grid) {}
 
   void add_ghosts(const Grid_t& grid, storage_type& mres_gt, const Int3& ib)
   {

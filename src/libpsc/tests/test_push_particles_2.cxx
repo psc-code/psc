@@ -69,7 +69,7 @@ TYPED_TEST(PushParticlesTest, Accel)
   // run test
   PushParticles pushp_;
   BndParticles bndp_{grid};
-  Bnd bnd_{grid, this->ibn};
+  Bnd bnd_{};
   ChecksParams checks_params{};
   checks_params.continuity_every_step = 1;
   checks_params.continuity_threshold = 1e-7;
@@ -147,7 +147,7 @@ TYPED_TEST(PushParticlesTest, Cyclo)
   // run test
   PushParticles pushp_;
   BndParticles bndp_{grid};
-  Bnd bnd_{grid, this->ibn};
+  Bnd bnd_{};
   ChecksParams checks_params{};
   checks_params.continuity_every_step = 1;
   checks_params.continuity_threshold = 1e-7;

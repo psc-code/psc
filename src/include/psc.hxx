@@ -167,7 +167,6 @@ struct Psc
       collision_{collision},
       checks_{checks},
       marder_{marder},
-      bnd_{grid, grid.ibn},
       bndp_{grid},
       diagnostics_{diagnostics},
       inject_particles_{inject_particles},
