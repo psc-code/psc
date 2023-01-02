@@ -209,7 +209,7 @@ TYPED_TEST(PushParticlesTest, Moment_rho_1st_nc_cc)
   using dim_t = typename TypeParam::dim;
   using Particle = typename Mparticles::Particle;
   using real_t = typename Mfields::real_t;
-  using Moment_t = Moment_rho_1st_nc<Mparticles, Mfields, dim_t>;
+  using Moment_t = Moment_rho_1st_nc<Mfields, dim_t>;
 
   const real_t eps = 1e-6;
   auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};
@@ -261,7 +261,7 @@ TYPED_TEST(PushParticlesTest, Moment_rho_1st_nc_nc)
   using dim_t = typename TypeParam::dim;
   using Particle = typename Mparticles::Particle;
   using real_t = typename Mfields::real_t;
-  using Moment_t = Moment_rho_1st_nc<Mparticles, Mfields, dim_t>;
+  using Moment_t = Moment_rho_1st_nc<Mfields, dim_t>;
 
   const real_t eps = 1e-4;
   auto kinds = Grid_t::Kinds{Grid_t::Kind(1., 1., "test_species")};

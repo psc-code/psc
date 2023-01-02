@@ -84,7 +84,7 @@ public:
   }
 
   template <typename F>
-  void operator()(int timestep, F&& get_item)
+  void operator()(const Grid_t& grid, F&& get_item)
   {
     static int pr_eval, pr_accum, pr_pfd, pr_tfd;
     if (!pr_eval) {
@@ -94,6 +94,7 @@ public:
       pr_tfd = prof_register("outf tfd", 1., 0, 0);
     }
 
+    int timestep = grid.timestep();
     if (first_time_) {
       first_time_ = false;
       if (timestep != 0) {
@@ -118,11 +119,10 @@ public:
 
       if (do_pfield) {
         prof_start(pr_pfd);
-        mpi_printf(item.grid().comm(), "***** Writing PFD output for '%s'\n",
+        mpi_printf(grid.comm(), "***** Writing PFD output for '%s'\n",
                    item.name());
         pfield_next_ += pfield_interval;
-        io_pfd_.write_step(item.grid(), rn, rx, pfd, item.name(),
-                           item.comp_names());
+        io_pfd_.write_step(grid, rn, rx, pfd, item.name(), item.comp_names());
         prof_stop(pr_pfd);
       }
 
@@ -136,18 +136,18 @@ public:
 
       if (do_tfield) {
         prof_start(pr_tfd);
-        mpi_printf(item.grid().comm(), "***** Writing TFD output for '%s'\n",
+        mpi_printf(grid.comm(), "***** Writing TFD output for '%s'\n",
                    item.name());
         tfield_next_ += tfield_interval;
 
         // convert accumulated values to correct temporal mean
         tfd_->gt() = (1. / naccum_) * tfd_->gt();
 
-        // io_tfd_.begin_step(item.grid());
-        // io_tfd_.set_subset(item.grid(), rn, rx);
-        // io_tfd_.write(tfd_->gt(), item.grid(), item.name(),
+        // io_tfd_.begin_step(grid);
+        // io_tfd_.set_subset(grid, rn, rx);
+        // io_tfd_.write(tfd_->gt(), grid, item.name(),
         // item.comp_names()); io_tfd_.end_step();
-        io_tfd_.write_step(item.grid(), rn, rx, tfd_->gt(), item.name(),
+        io_tfd_.write_step(grid, rn, rx, tfd_->gt(), item.name(),
                            item.comp_names());
         naccum_ = 0;
 
@@ -190,8 +190,8 @@ public:
 
   OutputFields(const Grid_t& grid, const OutputFieldsParams& prm)
     : fields{grid, prm.fields, Item_jeh<MfieldsState>::n_comps(), ""},
-      moments{grid, prm.moments, Item_Moments<Mparticles, Dim>::n_comps(grid),
-              "_moments"}
+      moments{grid, prm.moments,
+              Item_Moments<Mparticles, Dim>::n_comps_impl(grid), "_moments"}
   {}
 
   // ----------------------------------------------------------------------
@@ -208,15 +208,14 @@ public:
       pr_moments = prof_register("outf_moments", 1., 0, 0);
     }
 
-    auto timestep = grid.timestep();
     prof_start(pr);
 
     prof_start(pr_fields);
-    fields(timestep, [&]() { return Item_jeh<MfieldsState>(mflds); });
+    fields(grid, [&]() { return Item_jeh<MfieldsState>(mflds); });
     prof_stop(pr_fields);
 
     prof_start(pr_moments);
-    moments(timestep, [&]() { return Item_Moments<Mparticles, Dim>(mprts); });
+    moments(grid, [&]() { return Item_Moments<Mparticles, Dim>(mprts); });
     prof_stop(pr_moments);
 
     prof_stop(pr);

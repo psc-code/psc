@@ -54,11 +54,6 @@ public:
     bnd_.add_ghosts(grid, mres_gt, ib, 0, mres_gt.shape(3));
   }
 
-  void add_ghosts(Mfields& mres)
-  {
-    add_ghosts(mres.grid(), mres.storage(), mres.ib());
-  }
-
 private:
   // ----------------------------------------------------------------------
   // boundary stuff FIXME, should go elsewhere...
@@ -170,31 +165,33 @@ class ItemMomentCRTP : public MFexpression<Derived>
 public:
   using Mfields = MF;
   using Real = typename Mfields::real_t;
+  using storage_type = typename Mfields::Storage;
 
-  const Real& operator()(int m, Int3 ijk, int p) const
-  {
-    auto& mres = const_cast<Mfields&>(mres_);
-    return make_Fields3d<dim_xyz>(mres[p])(m, ijk[0], ijk[1], ijk[2]);
-  }
-
-  const Grid_t& grid() const { return mres_.grid(); }
-  int n_comps() const { return mres_.n_comps(); }
-  int n_patches() const { return mres_.n_patches(); }
-  Int3 ibn() const { return mres_.ibn(); }
+  int n_comps() { return comp_names_.size(); }
+  const std::vector<std::string>& comp_names() { return comp_names_; }
 
   auto gt()
   {
-    auto bnd = -mres_.ib();
-    return mres_.storage().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                                _s(bnd[2], -bnd[2]));
+    auto bnd = -mres_ib_;
+    return mres_gt_.view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
+                         _s(bnd[2], -bnd[2]));
   }
 
 protected:
   ItemMomentCRTP(const Grid_t& grid)
-    : mres_{grid, Derived::n_comps(grid), grid.ibn}, bnd_{grid}
-  {}
+    : mres_{grid, Derived::n_comps_impl(grid), grid.ibn},
+      mres_gt_(mres_.storage()), // FIXME, nvcc chokes on braces???
+      mres_ib_{-grid.ibn},
+      bnd_{grid},
+      comp_names_{Derived::comp_names_impl(grid)}
+  {
+    assert(Derived::n_comps_impl(grid) == comp_names_.size());
+  }
 
 protected:
   Mfields mres_;
+  storage_type& mres_gt_;
+  Int3 mres_ib_;
   ItemMomentBnd<Mfields, Bnd> bnd_;
+  std::vector<std::string> comp_names_;
 };

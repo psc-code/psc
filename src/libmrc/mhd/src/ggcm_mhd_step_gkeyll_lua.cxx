@@ -1,7 +1,8 @@
 
 #include <mpi.h>
 
-extern "C" {
+extern "C"
+{
 
 #include "ggcm_mhd_step_gkeyll_lua.h"
 
@@ -11,7 +12,6 @@ extern "C" {
 #include <mrc_crds_gen.h>
 #include <ggcm_mhd_gkeyll.h>
 #include <string.h>
-
 }
 
 #include <LcLogStream.h>
@@ -25,61 +25,70 @@ extern "C" {
 #include <string>
 #include <iostream>
 
-static int ggcm_mhd_reduce_double_min_lua(lua_State *L) {
+static int ggcm_mhd_reduce_double_min_lua(lua_State* L)
+{
   double var = lua_tonumber(L, -1);
-  struct ggcm_mhd *mhd = (struct ggcm_mhd *) lua_touserdata(L, -2);
+  struct ggcm_mhd* mhd = (struct ggcm_mhd*)lua_touserdata(L, -2);
   double temp_var = var;
-  MPI_Allreduce(&temp_var, &var, 1, MPI_DOUBLE, MPI_MIN, mrc_domain_comm(mhd->domain));
+  MPI_Allreduce(&temp_var, &var, 1, MPI_DOUBLE, MPI_MIN,
+                mrc_domain_comm(mhd->domain));
   lua_pushnumber(L, var);
-  return 1; 
+  return 1;
 }
 
-static int ggcm_mhd_reduce_boolean_lua(lua_State *L) {
+static int ggcm_mhd_reduce_boolean_lua(lua_State* L)
+{
   bool val_wanted = lua_toboolean(L, -1);
   bool var = lua_toboolean(L, -2);
-  struct ggcm_mhd *mhd = (struct ggcm_mhd *) lua_touserdata(L, -3);
+  struct ggcm_mhd* mhd = (struct ggcm_mhd*)lua_touserdata(L, -3);
   bool temp_var = var;
- if (val_wanted)
-  MPI_Allreduce(&temp_var, &var, 1, MPI_C_BOOL, MPI_LAND, mrc_domain_comm(mhd->domain));
- else
-  MPI_Allreduce(&temp_var, &var, 1, MPI_C_BOOL, MPI_LOR, mrc_domain_comm(mhd->domain));
+  if (val_wanted)
+    MPI_Allreduce(&temp_var, &var, 1, MPI_C_BOOL, MPI_LAND,
+                  mrc_domain_comm(mhd->domain));
+  else
+    MPI_Allreduce(&temp_var, &var, 1, MPI_C_BOOL, MPI_LOR,
+                  mrc_domain_comm(mhd->domain));
   lua_pushboolean(L, var);
-  return 1; 
+  return 1;
 }
 
-static int ggcm_mhd_get_3d_fld_lua(lua_State *L) {
+static int ggcm_mhd_get_3d_fld_lua(lua_State* L)
+{
   int nr_comps = lua_tointeger(L, -1);
-  struct ggcm_mhd *mhd = (struct ggcm_mhd *) lua_touserdata(L, -2);
-  struct mrc_fld *fld = ggcm_mhd_get_3d_fld(mhd, nr_comps);
+  struct ggcm_mhd* mhd = (struct ggcm_mhd*)lua_touserdata(L, -2);
+  struct mrc_fld* fld = ggcm_mhd_get_3d_fld(mhd, nr_comps);
   mrc_fld_dict_add_int(fld, "mhd_type", MT_GKEYLL);
   lua_pushlightuserdata(L, fld);
   return 1;
 }
 
-static int ggcm_mhd_put_3d_fld_lua(lua_State *L) {
-  struct mrc_fld *fld = (struct mrc_fld *) lua_touserdata(L, -1);
-  struct ggcm_mhd *mhd = (struct ggcm_mhd *) lua_touserdata(L, -2);
+static int ggcm_mhd_put_3d_fld_lua(lua_State* L)
+{
+  struct mrc_fld* fld = (struct mrc_fld*)lua_touserdata(L, -1);
+  struct ggcm_mhd* mhd = (struct ggcm_mhd*)lua_touserdata(L, -2);
   ggcm_mhd_put_3d_fld(mhd, fld);
   return 0;
 }
 
-static int mrc_fld_get_arr_lua(lua_State *L) {
-  struct mrc_fld *fld = (struct mrc_fld *) lua_touserdata(L, -1);
+static int mrc_fld_get_arr_lua(lua_State* L)
+{
+  struct mrc_fld* fld = (struct mrc_fld*)lua_touserdata(L, -1);
   lua_pushlightuserdata(L, fld->_nd->arr);
   return 1;
 }
 
-static int ggcm_mhd_fill_ghosts_lua (lua_State *L) {
+static int ggcm_mhd_fill_ghosts_lua(lua_State* L)
+{
   double bntim = lua_tonumber(L, -1);
-  struct mrc_fld *fld = (struct mrc_fld *) lua_touserdata(L, -2);
-  struct ggcm_mhd *mhd = (struct ggcm_mhd *) lua_touserdata(L, -3);
+  struct mrc_fld* fld = (struct mrc_fld*)lua_touserdata(L, -2);
+  struct ggcm_mhd* mhd = (struct ggcm_mhd*)lua_touserdata(L, -3);
   ggcm_mhd_fill_ghosts(mhd, fld, bntim);
   return 0;
 }
 
 // fill arr[] with lua array named arr_name
-static void
-lua_getarray(lua_State *L_temp, const char *arr_name, int nr_fluids, float arr[])
+static void lua_getarray(lua_State* L_temp, const char* arr_name, int nr_fluids,
+                         float arr[])
 {
   lua_getglobal(L_temp, arr_name);
   for (int s = 0; s < nr_fluids; s++) {
@@ -92,18 +101,17 @@ lua_getarray(lua_State *L_temp, const char *arr_name, int nr_fluids, float arr[]
 }
 
 // interface for lua function getCArray to get content an C array
-static int
-lua_pusharray(lua_State *L) {
-  int nr_vals = (int) lua_tonumber(L, -1);
-  float *arr = (float *) lua_touserdata(L, -2);
+static int lua_pusharray(lua_State* L)
+{
+  int nr_vals = (int)lua_tonumber(L, -1);
+  float* arr = (float*)lua_touserdata(L, -2);
   for (int n = 0; n < nr_vals; n++) {
     lua_pushnumber(L, arr[n]);
   }
   return nr_vals;
 }
 
-void
-ggcm_mhd_step_gkeyll_setup_flds_lua(struct ggcm_mhd *mhd)
+void ggcm_mhd_step_gkeyll_setup_flds_lua(struct ggcm_mhd* mhd)
 {
   int nr_fluids = mhd->par.gk_nr_fluids;
   int nr_moments = mhd->par.gk_nr_moments;
@@ -112,12 +120,12 @@ ggcm_mhd_step_gkeyll_setup_flds_lua(struct ggcm_mhd *mhd)
   mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
 }
 
-void
-ggcm_mhd_step_gkeyll_lua_setup(void **lua_state_ptr, const char *script,
-    struct ggcm_mhd *mhd, struct mrc_fld *qFlds[])
+void ggcm_mhd_step_gkeyll_lua_setup(void** lua_state_ptr, const char* script,
+                                    struct ggcm_mhd* mhd,
+                                    struct mrc_fld* qFlds[])
 {
-  *lua_state_ptr = (void *) new Lucee::LuaState;
-  Lucee::LuaState L = *((Lucee::LuaState *)(*lua_state_ptr));
+  *lua_state_ptr = (void*)new Lucee::LuaState;
+  Lucee::LuaState L = *((Lucee::LuaState*)(*lua_state_ptr));
 
   // determine input file
   std::string inpFile = script;
@@ -137,7 +145,7 @@ ggcm_mhd_step_gkeyll_lua_setup(void **lua_state_ptr, const char *script,
   Lucee::registerModules(L);
 
   // add command line options to the top-level module
-  static const luaL_Reg topFuncs[] = { {NULL, NULL} };
+  static const luaL_Reg topFuncs[] = {{NULL, NULL}};
   luaL_register(L, "Lucee", topFuncs);
 
   lua_pop(L, 1); // done adding command line stuff
@@ -180,9 +188,9 @@ ggcm_mhd_step_gkeyll_lua_setup(void **lua_state_ptr, const char *script,
   int gdims[3];
   mrc_domain_get_global_dims(mhd->domain, gdims);
   int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(mhd->domain, &nr_patches);
+  struct mrc_patch* patches = mrc_domain_get_patches(mhd->domain, &nr_patches);
   assert(nr_patches > 0);
-  const int *ldims = patches[0].ldims;
+  const int* ldims = patches[0].ldims;
   lua_pushinteger(L, ldims[0]);
   lua_setglobal(L, "mx");
   lua_pushinteger(L, ldims[1]);
@@ -190,7 +198,7 @@ ggcm_mhd_step_gkeyll_lua_setup(void **lua_state_ptr, const char *script,
   lua_pushinteger(L, ldims[2]);
   lua_setglobal(L, "mz");
 
-  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
+  struct mrc_crds* crds = mrc_domain_get_crds(mhd->domain);
 
   bool nonuniform = strcmp(mrc_crds_type(crds), "uniform");
   lua_pushboolean(L, nonuniform);
@@ -212,9 +220,9 @@ ggcm_mhd_step_gkeyll_lua_setup(void **lua_state_ptr, const char *script,
     ll[0] = MRC_DMCRDX(crds, 0, 0) - .5 * dx[0];
     ll[1] = MRC_DMCRDY(crds, 0, 0) - .5 * dx[1];
     ll[2] = MRC_DMCRDZ(crds, 0, 0) - .5 * dx[2];
-    lh[0] = MRC_DMCRDX(crds, ldims[0]-1, 0) + .5 * dx[0];
-    lh[1] = MRC_DMCRDY(crds, ldims[1]-1, 0) + .5 * dx[1];
-    lh[2] = MRC_DMCRDZ(crds, ldims[2]-1, 0) + .5 * dx[2];
+    lh[0] = MRC_DMCRDX(crds, ldims[0] - 1, 0) + .5 * dx[0];
+    lh[1] = MRC_DMCRDY(crds, ldims[1] - 1, 0) + .5 * dx[1];
+    lh[2] = MRC_DMCRDZ(crds, ldims[2] - 1, 0) + .5 * dx[2];
   }
   lua_pushnumber(L, ll[0]);
   lua_setglobal(L, "lx");
@@ -287,7 +295,7 @@ ggcm_mhd_step_gkeyll_lua_setup(void **lua_state_ptr, const char *script,
     std::cerr << err << std::endl;
     exit(1);
   }
-  
+
   int nargs = 0;
   int nrets = 0;
 
@@ -300,12 +308,12 @@ ggcm_mhd_step_gkeyll_lua_setup(void **lua_state_ptr, const char *script,
   }
 }
 
-void
-ggcm_mhd_step_gkeyll_lua_run(void *lua_state,
-    struct ggcm_mhd *mhd, struct mrc_fld *fld)
+void ggcm_mhd_step_gkeyll_lua_run(void* lua_state, struct ggcm_mhd* mhd,
+                                  struct mrc_fld* fld)
 {
-  if (!lua_state) return;
-  Lucee::LuaState L = *((Lucee::LuaState *)lua_state);
+  if (!lua_state)
+    return;
+  Lucee::LuaState L = *((Lucee::LuaState*)lua_state);
   lua_getglobal(L, "runTimeStep");
   lua_pushnumber(L, mhd->dt_code);
   lua_pushnumber(L, mhd->time_code);
@@ -319,19 +327,20 @@ ggcm_mhd_step_gkeyll_lua_run(void *lua_state,
     std::cerr << err << std::endl;
     exit(1);
   }
-  mhd->dt_code = lua_tonumber(L,-1);
+  mhd->dt_code = lua_tonumber(L, -1);
 
   float myDt = mhd->dt_code;
-  MPI_Allreduce(&myDt, &mhd->dt_code, 1, MPI_FLOAT, MPI_MIN, mrc_domain_comm(mhd->domain));
+  MPI_Allreduce(&myDt, &mhd->dt_code, 1, MPI_FLOAT, MPI_MIN,
+                mrc_domain_comm(mhd->domain));
 
-  lua_pop(L,1);
+  lua_pop(L, 1);
 }
 
-void
-ggcm_mhd_step_gkeyll_lua_destroy(void *lua_state, struct ggcm_mhd *mhd)
+void ggcm_mhd_step_gkeyll_lua_destroy(void* lua_state, struct ggcm_mhd* mhd)
 {
-  if (!lua_state) return;
-  Lucee::LuaState L = *((Lucee::LuaState *)lua_state);
+  if (!lua_state)
+    return;
+  Lucee::LuaState L = *((Lucee::LuaState*)lua_state);
   lua_getglobal(L, "finalize");
   if (lua_pcall(L, 0, 0, 0)) {
     std::cerr << "LUA Error:" << std::endl;
@@ -341,4 +350,3 @@ ggcm_mhd_step_gkeyll_lua_destroy(void *lua_state, struct ggcm_mhd *mhd)
     exit(1);
   }
 }
-

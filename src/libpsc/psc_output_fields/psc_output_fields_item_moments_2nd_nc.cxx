@@ -16,13 +16,11 @@ public:
   using dim_t = D;
   using real_t = typename Mfields::real_t;
 
-  using Base::n_comps;
-
   constexpr static char const* name = "n_2nd_nc";
 
-  static int n_comps(const Grid_t& grid) { return 1 * grid.kinds.size(); }
+  static int n_comps_impl(const Grid_t& grid) { return 1 * grid.kinds.size(); }
 
-  std::vector<std::string> comp_names(const Grid_t& grid)
+  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return addKindSuffix({"n"}, grid.kinds);
   }
@@ -30,14 +28,13 @@ public:
   template <typename Mparticles>
   explicit Moment_n_2nd_nc(const Mparticles& mprts) : Base{mprts.grid()}
   {
-    Base::mres_.storage().view() = 0.f;
-    psc::moment::deposit_2nd_nc<dim_t>(Base::mres_.storage(), Base::mres_.ib(),
-                                       mprts,
+    Base::mres_gt_.view() = 0.f;
+    psc::moment::deposit_2nd_nc<dim_t>(Base::mres_gt_, Base::mres_ib_, mprts,
                                        [&](auto& deposit_one, const auto& prt) {
                                          int m = prt.kind();
                                          deposit_one(m, prt.w());
                                        });
-    Base::bnd_.add_ghosts(Base::mres_);
+    Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
   }
 };
 
@@ -54,8 +51,8 @@ public:
   using real_t = typename Mfields::real_t;
 
   static char const* name() { return "rho_2nd_nc"; }
-  static int n_comps(const Grid_t& grid) { return 1; }
-  static std::vector<std::string> comp_names(const Grid_t& grid)
+  static int n_comps_impl(const Grid_t& grid) { return 1; }
+  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return {"rho"};
   }
@@ -65,19 +62,11 @@ public:
   template <typename Mparticles>
   explicit Moment_rho_2nd_nc(const Mparticles& mprts) : Base{mprts.grid()}
   {
-    Base::mres_.storage().view() = 0.f;
-    psc::moment::deposit_2nd_nc<dim_t>(Base::mres_.storage(), Base::mres_.ib(),
-                                       mprts,
+    Base::mres_gt_.view() = 0.f;
+    psc::moment::deposit_2nd_nc<dim_t>(Base::mres_gt_, Base::mres_ib_, mprts,
                                        [&](auto& deposit_one, const auto& prt) {
                                          deposit_one(0, prt.w() * prt.q());
                                        });
-    Base::bnd_.add_ghosts(Base::mres_);
-  }
-
-  auto gt()
-  {
-    auto bnd = -Base::mres_.ib();
-    return Base::mres_.storage().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                                      _s(bnd[2], -bnd[2]));
+    Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
   }
 };

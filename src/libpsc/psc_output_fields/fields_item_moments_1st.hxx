@@ -41,18 +41,15 @@ public:
   using real_t = typename Mfields::real_t;
   using dim_t = D;
 
-  using Base::n_comps;
-
   constexpr static char const* name = "n_1st";
 
-  static int n_comps(const Grid_t& grid) { return 1 * grid.kinds.size(); }
+  static int n_comps_impl(const Grid_t& grid) { return 1 * grid.kinds.size(); }
 
-  static std::vector<std::string> comp_names(const Grid_t& grid)
+  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return addKindSuffix({"n"}, grid.kinds);
   }
 
-  int n_comps() const { return Base::mres_.n_comps(); }
   Int3 ibn() const { return {}; }
 
   explicit Moment_n_1st(const Grid_t& grid) : Base{grid} {}
@@ -64,14 +61,13 @@ public:
 
   void update(const Mparticles& mprts)
   {
-    Base::mres_.storage().view() = 0.f;
-    psc::moment::deposit_1st_cc<dim_t>(Base::mres_.storage(), Base::mres_.ib(),
-                                       mprts,
+    Base::mres_gt_.view() = 0.f;
+    psc::moment::deposit_1st_cc<dim_t>(Base::mres_gt_, Base::mres_ib_, mprts,
                                        [&](auto& deposit_one, const auto& prt) {
                                          int m = prt.kind();
                                          deposit_one(m, 1.f);
                                        });
-    Base::bnd_.add_ghosts(Base::mres_);
+    Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
   }
 };
 
@@ -89,9 +85,9 @@ public:
 
   constexpr static char const* name = "v_1st";
 
-  static int n_comps(const Grid_t& grid) { return 3 * grid.kinds.size(); }
+  static int n_comps_impl(const Grid_t& grid) { return 3 * grid.kinds.size(); }
 
-  static std::vector<std::string> comp_names(const Grid_t& grid)
+  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return addKindSuffix({"vx", "vy", "vz"}, grid.kinds);
   }
@@ -99,17 +95,17 @@ public:
   template <typename Mparticles>
   explicit Moment_v_1st(const Mparticles& mprts) : Base{mprts.grid()}
   {
-    Base::mres_.storage().view() = 0.f;
-    psc::moment::deposit_1st_cc<dim_t>(
-      Base::mres_.storage(), Base::mres_.ib(), mprts,
-      [&](auto& deposit_one, const auto& prt) {
-        real_t vxi[3];
-        _particle_calc_vxi(prt, vxi);
-        for (int m = 0; m < 3; m++) {
-          deposit_one(m + 3 * prt.kind(), vxi[m]);
-        }
-      });
-    Base::bnd_.add_ghosts(Base::mres_);
+    Base::mres_gt_.view() = 0.f;
+    psc::moment::deposit_1st_cc<dim_t>(Base::mres_gt_, Base::mres_ib_, mprts,
+                                       [&](auto& deposit_one, const auto& prt) {
+                                         real_t vxi[3];
+                                         _particle_calc_vxi(prt, vxi);
+                                         for (int m = 0; m < 3; m++) {
+                                           deposit_one(m + 3 * prt.kind(),
+                                                       vxi[m]);
+                                         }
+                                       });
+    Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
   }
 };
 
@@ -127,9 +123,9 @@ public:
 
   constexpr static char const* name = "p_1st";
 
-  static int n_comps(const Grid_t& grid) { return 3 * grid.kinds.size(); }
+  static int n_comps_impl(const Grid_t& grid) { return 3 * grid.kinds.size(); }
 
-  static std::vector<std::string> comp_names(const Grid_t& grid)
+  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return addKindSuffix({"px", "py", "pz"}, grid.kinds);
   }
@@ -137,15 +133,15 @@ public:
   template <typename Mparticles>
   explicit Moment_p_1st(const Mparticles& mprts) : Base{mprts.grid()}
   {
-    Base::mres_.storage().view() = 0.f;
-    psc::moment::deposit_1st_cc<dim_t>(
-      Base::mres_.storage(), Base::mres_.ib(), mprts,
-      [&](auto& deposit_one, const auto& prt) {
-        for (int m = 0; m < 3; m++) {
-          deposit_one(m + 3 * prt.kind(), prt.m() * prt.u()[m]);
-        }
-      });
-    Base::bnd_.add_ghosts(Base::mres_);
+    Base::mres_gt_.view() = 0.f;
+    psc::moment::deposit_1st_cc<dim_t>(Base::mres_gt_, Base::mres_ib_, mprts,
+                                       [&](auto& deposit_one, const auto& prt) {
+                                         for (int m = 0; m < 3; m++) {
+                                           deposit_one(m + 3 * prt.kind(),
+                                                       prt.m() * prt.u()[m]);
+                                         }
+                                       });
+    Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
   }
 };
 
@@ -206,21 +202,19 @@ public:
   using value_type = typename Mfields::real_t;
   using space = typename Mfields::space;
 
-  using Base::n_comps;
-
   constexpr static int n_moments = 13;
   static char const* name() { return "all_1st"; }
 
-  static int n_comps(const Grid_t& grid)
+  static int n_comps_impl(const Grid_t& grid)
   {
     return n_moments * grid.kinds.size();
   }
 
-  std::vector<std::string> comp_names()
+  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return addKindSuffix({"rho", "jx", "jy", "jz", "px", "py", "pz", "txx",
                           "tyy", "tzz", "txy", "tyz", "tzx"},
-                         Base::grid().kinds);
+                         grid.kinds);
   }
 
   explicit Moments_1st(const Mparticles& mprts) : Base{mprts.grid()}
@@ -228,7 +222,7 @@ public:
     using real_t = typename Mparticles::real_t;
 
     psc::moment::deposit_1st_cc<dim_t>(
-      Base::mres_.storage(), Base::mres_.ib(), mprts,
+      Base::mres_gt_, Base::mres_ib_, mprts,
       [&](auto& deposit_one, const auto& prt) {
         int mm = prt.kind() * n_moments;
         real_t vxi[3];
@@ -247,7 +241,7 @@ public:
         deposit_one(mm + 11, prt.m() * prt.u()[1] * vxi[2]);
         deposit_one(mm + 12, prt.m() * prt.u()[2] * vxi[0]);
       });
-    Base::bnd_.add_ghosts(Base::mres_);
+    Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
   }
 };
 
@@ -274,20 +268,18 @@ public:
   using Mparticles = MparticlesCuda<BS>;
   using Mfields = MfieldsSingle;
 
-  using Base::n_comps;
-
   using Sub = Moments_1st<MparticlesSingle, Mfields, D>;
 
   constexpr static int n_moments = Sub::n_moments;
   static char const* name() { return Sub::name(); }
 
-  static int n_comps(const Grid_t& grid) { return Sub::n_comps(grid); }
+  static int n_comps_impl(const Grid_t& grid) { return 13 * grid.kinds.size(); }
 
-  std::vector<std::string> comp_names()
+  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return addKindSuffix({"rho", "jx", "jy", "jz", "px", "py", "pz", "txx",
                           "tyy", "tzz", "txy", "tyz", "tzx"},
-                         Base::grid().kinds);
+                         grid.kinds);
   }
 
   explicit Moments_1st(const Mparticles& _mprts) : Base{_mprts.grid()}
@@ -312,7 +304,7 @@ public:
     using real_t = R;
 
     psc::moment::deposit_1st_cc<dim_t>(
-      Base::mres_.storage(), Base::mres_.ib(), h_mprts,
+      Base::mres_gt_, Base::mres_ib_, h_mprts,
       [&](auto& deposit_one, const auto& prt) {
         int mm = prt.kind() * n_moments;
         real_t vxi[3];
@@ -335,7 +327,7 @@ public:
     prof_stop(pr_B);
 
     prof_start(pr_C);
-    Base::bnd_.add_ghosts(Base::mres_);
+    Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
     prof_stop(pr_C);
 
     mprts.put_as(h_mprts, MP_DONT_COPY);
