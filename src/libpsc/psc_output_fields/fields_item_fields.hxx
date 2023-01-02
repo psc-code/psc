@@ -49,7 +49,7 @@ public:
   using value_type = Real;
   using space = typename MfieldsState::space;
 
-  static char const* name() { return "jeh"; }
+  static std::string name() { return "jeh"; }
   static int n_comps() { return 9; }
   static std::vector<std::string> comp_names()
   {

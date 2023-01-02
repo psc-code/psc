@@ -19,7 +19,7 @@ struct Moment_rho_1st_nc_cuda
   using Mfields = MfieldsCuda;
   using Bnd = BndCuda3<Mfields>;
 
-  constexpr static const char* name = "rho_1st_nc";
+  static std::string name_impl() { return "rho_1st_nc"; }
   static int n_comps(const Grid_t&) { return 1; }
   static std::vector<std::string> comp_names_impl()
   {
@@ -64,13 +64,7 @@ public:
   using Bnd = BndCuda3<Mfields>;
 
   constexpr static int n_moments = 1;
-  static char const* name() { return "n_1st_cuda"; }
-
-  static int n_comps_impl(const Grid_t& grid)
-  {
-    return n_moments * grid.kinds.size();
-  }
-
+  static std::string name_impl() { return "n_1st_cuda"; }
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return addKindSuffix({"n"}, grid.kinds);
@@ -144,21 +138,13 @@ public:
   using space = gt::space::device;
 
   constexpr static int n_moments = 13;
-  static std::string name() { return "all_1st"; }
-  static int n_comps_impl(const Grid_t& grid)
-  {
-    return n_moments * grid.kinds.size();
-  }
-
+  static std::string name_impl() { return "all_1st"; }
   static std::vector<std::string> comp_names_impl(const Grid_t& grid)
   {
     return addKindSuffix({"rho", "jx", "jy", "jz", "px", "py", "pz", "txx",
                           "tyy", "tzz", "txy", "tyz", "tzx"},
                          grid.kinds);
   }
-
-  int n_comps() const { return Base::mres_.n_comps(); }
-  Int3 ibn() const { return Base::mres_.ibn(); }
 
   explicit Moment_1st_cuda(const Grid_t& grid)
     : Base{grid}, bnd_{grid, grid.ibn}

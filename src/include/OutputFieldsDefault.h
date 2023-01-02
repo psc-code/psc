@@ -69,7 +69,7 @@ class OutputFieldsItem : public OutputFieldsItemParams
 {
 public:
   OutputFieldsItem(const Grid_t& grid, const OutputFieldsItemParams& prm,
-                   int n_comps, std::string sfx)
+                   std::string sfx)
     : OutputFieldsItemParams{prm},
       pfield_next_{prm.pfield_first},
       tfield_next_{prm.tfield_first}
@@ -78,7 +78,6 @@ public:
       io_pfd_.open("pfd" + sfx, prm.data_dir);
     }
     if (tfield_interval > 0) {
-      tfd_.reset(new Mfields{grid, n_comps, {}});
       io_tfd_.open("tfd" + sfx, prm.data_dir);
     }
   }
@@ -120,13 +119,17 @@ public:
       if (do_pfield) {
         prof_start(pr_pfd);
         mpi_printf(grid.comm(), "***** Writing PFD output for '%s'\n",
-                   item.name());
+                   item.name().c_str());
         pfield_next_ += pfield_interval;
         io_pfd_.write_step(grid, rn, rx, pfd, item.name(), item.comp_names());
         prof_stop(pr_pfd);
       }
 
       if (doaccum_tfield) {
+        if (!tfd_) {
+          tfd_.reset(new Mfields{grid, item.n_comps(), {}});
+        }
+
         prof_start(pr_accum);
         // tfd += pfd
         tfd_->gt() = tfd_->gt() + pfd;
@@ -137,7 +140,7 @@ public:
       if (do_tfield) {
         prof_start(pr_tfd);
         mpi_printf(grid.comm(), "***** Writing TFD output for '%s'\n",
-                   item.name());
+                   item.name().c_str());
         tfield_next_ += tfield_interval;
 
         // convert accumulated values to correct temporal mean
@@ -189,9 +192,7 @@ public:
   // ctor
 
   OutputFields(const Grid_t& grid, const OutputFieldsParams& prm)
-    : fields{grid, prm.fields, Item_jeh<MfieldsState>::n_comps(), ""},
-      moments{grid, prm.moments,
-              Item_Moments<Mparticles, Dim>::n_comps_impl(grid), "_moments"}
+    : fields{grid, prm.fields, ""}, moments{grid, prm.moments, "_moments"}
   {}
 
   // ----------------------------------------------------------------------

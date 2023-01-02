@@ -98,5 +98,165 @@ void deposit_2nd_nc(MF& mflds_gt, const Int3& ib, const MP& mprts, F&& func)
                                                std::forward<F>(func));
 }
 
+// ===========================================================================
+// FIXME _particle_calc_vxi
+
+template <typename Particle>
+static inline void _particle_calc_vxi(const Particle& prt,
+                                      typename Particle::real_t vxi[3])
+{
+  typename Particle::real_t root =
+    1.f / std::sqrt(1.f + sqr(prt.u()[0]) + sqr(prt.u()[1]) + sqr(prt.u()[2]));
+  vxi[0] = prt.u()[0] * root;
+  vxi[1] = prt.u()[1] * root;
+  vxi[2] = prt.u()[2] * root;
+}
+
+// ===========================================================================
+// moment_n
+
+template <template <typename, typename> class DepositCode, typename D>
+class moment_n
+{
+public:
+  using dim_t = D;
+
+  template <typename MFLDS_GT, typename MP>
+  void operator()(MFLDS_GT& mflds_gt, const Int3& ib, const MP& mprts)
+  {
+    deposit<DepositCode, dim_t>(mflds_gt, ib, mprts,
+                                [&](auto& deposit_one, const auto& prt) {
+                                  int m = prt.kind();
+                                  deposit_one(m, prt.w());
+                                });
+  }
+};
+
+// ===========================================================================
+// moment_rho
+
+template <template <typename, typename> class DepositCode, typename D>
+class moment_rho
+{
+public:
+  using dim_t = D;
+
+  template <typename MFLDS_GT, typename MP>
+  void operator()(MFLDS_GT& mflds_gt, const Int3& ib, const MP& mprts)
+  {
+    deposit<DepositCode, dim_t>(mflds_gt, ib, mprts,
+                                [&](auto& deposit_one, const auto& prt) {
+                                  deposit_one(0, prt.w() * prt.q());
+                                });
+  }
+};
+
+// ===========================================================================
+// moment_v
+
+template <template <typename, typename> class DepositCode, typename D>
+class moment_v
+{
+public:
+  using dim_t = D;
+
+  template <typename MFLDS_GT, typename MP>
+  void operator()(MFLDS_GT& mflds_gt, const Int3& ib, const MP& mprts)
+  {
+    using real_t = typename MP::real_t;
+    deposit<DepositCode, dim_t>(mflds_gt, ib, mprts,
+                                [&](auto& deposit_one, const auto& prt) {
+                                  real_t vxi[3];
+                                  _particle_calc_vxi(prt, vxi);
+                                  for (int m = 0; m < 3; m++) {
+                                    deposit_one(m + 3 * prt.kind(), vxi[m]);
+                                  }
+                                });
+  }
+};
+
+// ===========================================================================
+// moment_p
+
+template <template <typename, typename> class DepositCode, typename D>
+class moment_p
+{
+public:
+  using dim_t = D;
+
+  template <typename MFLDS_GT, typename MP>
+  void operator()(MFLDS_GT& mflds_gt, const Int3& ib, const MP& mprts)
+  {
+    deposit<DepositCode, dim_t>(
+      mflds_gt, ib, mprts, [&](auto& deposit_one, const auto& prt) {
+        for (int m = 0; m < 3; m++) {
+          deposit_one(m + 3 * prt.kind(), prt.m() * prt.u()[m]);
+        }
+      });
+  }
+};
+
+// ===========================================================================
+// moment_T
+
+template <template <typename, typename> class DepositCode, typename D>
+class moment_T
+{
+public:
+  using dim_t = D;
+
+  template <typename MFLDS_GT, typename MP>
+  void operator()(MFLDS_GT& mflds_gt, const Int3& ib, const MP& mprts)
+  {
+    using real_t = typename MP::real_t;
+    deposit<DepositCode, dim_t>(mflds_gt, ib, mprts, [&](const auto& prt) {
+      int mm = prt.kind() * 6;
+      real_t vxi[3];
+      _particle_calc_vxi(prt, vxi);
+      deposit_one(mm + 0, prt.m() * prt.u()[0] * vxi[0]);
+      deposit_one(mm + 1, prt.m() * prt.u()[1] * vxi[1]);
+      deposit_one(mm + 2, prt.m() * prt.u()[2] * vxi[2]);
+      deposit_one(mm + 3, prt.m() * prt.u()[0] * vxi[1]);
+      deposit_one(mm + 4, prt.m() * prt.u()[0] * vxi[2]);
+      deposit_one(mm + 5, prt.m() * prt.u()[1] * vxi[2]);
+    });
+  }
+}; // namespace moment
+
+// ===========================================================================
+// moment_all
+
+template <template <typename, typename> class DepositCode, typename D>
+class moment_all
+{
+public:
+  using dim_t = D;
+
+  template <typename MFLDS_GT, typename MP>
+  void operator()(MFLDS_GT& mflds_gt, const Int3& ib, const MP& mprts)
+  {
+    using real_t = typename MP::real_t;
+    deposit<DepositCode, dim_t>(
+      mflds_gt, ib, mprts, [&](auto& deposit_one, const auto& prt) {
+        int mm = prt.kind() * 13;
+        real_t vxi[3];
+        _particle_calc_vxi(prt, vxi);
+        deposit_one(mm + 0, prt.q());
+        deposit_one(mm + 1, prt.q() * vxi[0]);
+        deposit_one(mm + 2, prt.q() * vxi[1]);
+        deposit_one(mm + 3, prt.q() * vxi[2]);
+        deposit_one(mm + 4, prt.m() * prt.u()[0]);
+        deposit_one(mm + 5, prt.m() * prt.u()[1]);
+        deposit_one(mm + 6, prt.m() * prt.u()[2]);
+        deposit_one(mm + 7, prt.m() * prt.u()[0] * vxi[0]);
+        deposit_one(mm + 8, prt.m() * prt.u()[1] * vxi[1]);
+        deposit_one(mm + 9, prt.m() * prt.u()[2] * vxi[2]);
+        deposit_one(mm + 10, prt.m() * prt.u()[0] * vxi[1]);
+        deposit_one(mm + 11, prt.m() * prt.u()[1] * vxi[2]);
+        deposit_one(mm + 12, prt.m() * prt.u()[2] * vxi[0]);
+      });
+  }
+};
+
 } // namespace moment
 } // namespace psc

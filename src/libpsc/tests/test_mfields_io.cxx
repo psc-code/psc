@@ -50,6 +50,8 @@ using MfieldsTestTypes = ::testing::Types<MfieldsSingle, MfieldsC>;
 
 TYPED_TEST_SUITE(MfieldsTest, MfieldsTestTypes);
 
+#ifdef PSC_HAVE_ADIOS2
+
 TYPED_TEST(MfieldsTest, WriteRead)
 {
   using Mfields = TypeParam;
@@ -141,6 +143,8 @@ TYPED_TEST(MfieldsTest, WriteReadWithGhosts)
                           view_interior(mflds2.gt(), mflds2.ibn())),
             0);
 }
+
+#endif
 
 TYPED_TEST(MfieldsTest, OutputFieldsMRC)
 {
