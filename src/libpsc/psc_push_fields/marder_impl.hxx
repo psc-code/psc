@@ -211,7 +211,7 @@ public:
   // FIXME: checkpointing won't properly restore state
 
   MarderCommon(const Grid_t& grid, real_t diffusion, int loop, bool dump)
-    : diffusion_{diffusion}, loop_{loop}, dump_{dump}, bnd_{grid, grid.ibn}
+    : diffusion_{diffusion}, loop_{loop}, dump_{dump}
   {
     if (dump_) {
       io_.open("marder");

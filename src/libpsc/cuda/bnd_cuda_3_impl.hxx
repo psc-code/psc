@@ -13,7 +13,7 @@ struct CudaBnd;
 
 struct BndCuda3 : BndBase
 {
-  BndCuda3(const Grid_t& grid, const int ibn[3]);
+  BndCuda3();
   ~BndCuda3();
 
   static void clear();

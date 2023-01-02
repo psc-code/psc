@@ -149,7 +149,7 @@ TYPED_TEST(BndTest, FillGhosts)
     }
   }
 
-  Bnd bnd{grid, ibn};
+  Bnd bnd;
   bnd.fill_ghosts(mflds, 0, 1);
 
   // Mfields_dump(mflds, B);
@@ -208,7 +208,7 @@ TYPED_TEST(BndTest, FillGhostsGt)
     gt::copy(h_mflds, mflds.storage());
   }
 
-  Bnd bnd{grid, ibn};
+  Bnd bnd{};
   bnd.fill_ghosts(mflds.grid(), mflds.storage(), mflds.ib(), 0, 1);
 
   {
@@ -261,7 +261,7 @@ TYPED_TEST(BndTest, AddGhosts)
 
   // Mfields_dump(mflds, B);
 
-  Bnd bnd{grid, ibn};
+  Bnd bnd{};
   bnd.add_ghosts(mflds, 0, 1);
 
   // Mfields_dump(mflds, 0*B);
