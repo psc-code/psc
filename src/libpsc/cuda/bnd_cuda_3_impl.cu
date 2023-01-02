@@ -6,10 +6,10 @@
 // ----------------------------------------------------------------------
 // ctor
 
-BndCuda3::BndCuda3(const Grid_t& grid, const int ibn[3])
+BndCuda3::BndCuda3()
 {
   if (!cbnd_) {
-    cbnd_ = new CudaBnd{grid, Int3::fromPointer(ibn)};
+    cbnd_ = new CudaBnd{};
   }
 }
 

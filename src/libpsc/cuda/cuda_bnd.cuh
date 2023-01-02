@@ -209,9 +209,7 @@ struct CudaBnd
   // ----------------------------------------------------------------------
   // ctor
 
-  CudaBnd(const Grid_t& grid, Int3 ibn)
-    : balance_generation_cnt_{psc_balance_generation_cnt}
-  {}
+  CudaBnd() : balance_generation_cnt_{psc_balance_generation_cnt} {}
 
   CudaBnd(const CudaBnd& bnd) = delete;
   CudaBnd& operator=(const CudaBnd& bnd) = delete;
