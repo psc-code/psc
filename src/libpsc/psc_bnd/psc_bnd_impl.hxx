@@ -4,7 +4,6 @@
 #include "psc.h"
 #include "fields.hxx"
 #include "bnd.hxx"
-#include "balance.hxx"
 
 #include <mrc_profile.h>
 #include <mrc_ddc.h>
@@ -31,38 +30,7 @@ struct Bnd_ : BndBase
   // ----------------------------------------------------------------------
   // ctor
 
-  Bnd_(const Grid_t& grid, const int ibn[3])
-  {
-    static struct mrc_ddc_funcs ddc_funcs = {
-      .copy_to_buf = copy_to_buf,
-      .copy_from_buf = copy_from_buf,
-      .add_from_buf = add_from_buf,
-    };
-
-    ddc_ = grid.create_ddc();
-    mrc_ddc_set_funcs(ddc_, &ddc_funcs);
-    mrc_ddc_set_param_int3(ddc_, "ibn", ibn);
-    mrc_ddc_set_param_int(ddc_, "max_n_fields", 24);
-    mrc_ddc_set_param_int(ddc_, "size_of_type", sizeof(real_t));
-    assert(ibn[0] > 0 || ibn[1] > 0 || ibn[2] > 0);
-    mrc_ddc_setup(ddc_);
-    balance_generation_cnt_ = psc_balance_generation_cnt;
-  }
-
-  // ----------------------------------------------------------------------
-  // dtor
-
-  ~Bnd_() { mrc_ddc_destroy(ddc_); }
-
-  // ----------------------------------------------------------------------
-  // reset
-
-  void reset(const Grid_t& grid)
-  {
-    // FIXME, not really a pretty way of doing this
-    this->~Bnd_();
-    new (this) Bnd_(grid, grid.ibn);
-  }
+  Bnd_(const Grid_t& grid, const int ibn[3]) {}
 
   // ----------------------------------------------------------------------
   // add_ghosts
@@ -70,18 +38,18 @@ struct Bnd_ : BndBase
   void add_ghosts(const Grid_t& grid, storage_type& mflds_gt, const Int3& ib,
                   int mb, int me)
   {
-    if (psc_balance_generation_cnt != balance_generation_cnt_) {
-      balance_generation_cnt_ = psc_balance_generation_cnt;
-      reset(grid);
-    }
-
     // FIXME
     // I don't think we need as many points, and only stencil star
     // rather then box
+    assert(Int3(mflds_gt.shape(0), mflds_gt.shape(1), mflds_gt.shape(2)) ==
+           grid.ldims + 2 * grid.ibn);
+
     auto&& h_mflds_gt = gt::host_mirror(mflds_gt);
     gt::copy(mflds_gt, h_mflds_gt);
     BndCtx ctx{h_mflds_gt, ib};
-    mrc_ddc_add_ghosts(ddc_, mb, me, &ctx);
+    mrc_ddc_set_param_int(grid.ddc(), "size_of_type", sizeof(real_t));
+    mrc_ddc_set_funcs(grid.ddc(), const_cast<mrc_ddc_funcs*>(&ddc_funcs));
+    mrc_ddc_add_ghosts(grid.ddc(), mb, me, &ctx);
     gt::copy(h_mflds_gt, mflds_gt);
   }
 
@@ -93,25 +61,27 @@ struct Bnd_ : BndBase
   // ----------------------------------------------------------------------
   // fill_ghosts
 
-  void fill_ghosts(storage_type& mflds_gt, const Int3& ib, int mb, int me)
+  void fill_ghosts(const Grid_t& grid, storage_type& mflds_gt, const Int3& ib,
+                   int mb, int me)
   {
     // FIXME
     // I don't think we need as many points, and only stencil star
     // rather then box
+    assert(Int3(mflds_gt.shape(0), mflds_gt.shape(1), mflds_gt.shape(2)) ==
+           grid.ldims + 2 * grid.ibn);
+
     auto&& h_mflds_gt = gt::host_mirror(mflds_gt);
     gt::copy(mflds_gt, h_mflds_gt);
     BndCtx ctx{h_mflds_gt, ib};
-    mrc_ddc_fill_ghosts(ddc_, mb, me, &ctx);
+    mrc_ddc_set_param_int(grid.ddc(), "size_of_type", sizeof(real_t));
+    mrc_ddc_set_funcs(grid.ddc(), const_cast<mrc_ddc_funcs*>(&ddc_funcs));
+    mrc_ddc_fill_ghosts(grid.ddc(), mb, me, &ctx);
     gt::copy(h_mflds_gt, mflds_gt);
   }
 
   void fill_ghosts(Mfields& mflds, int mb, int me)
   {
-    if (psc_balance_generation_cnt != balance_generation_cnt_) {
-      balance_generation_cnt_ = psc_balance_generation_cnt;
-      reset(mflds.grid());
-    }
-    fill_ghosts(mflds.storage(), mflds.ib(), mb, me);
+    fill_ghosts(mflds.grid(), mflds.storage(), mflds.ib(), mb, me);
   }
 
   // ----------------------------------------------------------------------
@@ -174,7 +144,12 @@ struct Bnd_ : BndBase
     }
   }
 
-private:
-  mrc_ddc* ddc_;
-  int balance_generation_cnt_;
+  constexpr static mrc_ddc_funcs ddc_funcs = {
+    .copy_to_buf = copy_to_buf,
+    .copy_from_buf = copy_from_buf,
+    .add_from_buf = add_from_buf,
+  };
 };
+
+template <typename MF>
+constexpr mrc_ddc_funcs Bnd_<MF>::ddc_funcs;

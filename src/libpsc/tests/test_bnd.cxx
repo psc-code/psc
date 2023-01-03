@@ -11,6 +11,8 @@
 #include "psc_fields_single.h"
 #include "psc_fields_c.h"
 
+const int B = 2;
+
 static Grid_t make_grid(Int3 gdims, Vec3<double> length)
 {
   auto domain = Grid_t::Domain{gdims, length, {}, {1, 2, 1}};
@@ -20,7 +22,7 @@ static Grid_t make_grid(Int3 gdims, Vec3<double> length)
   double dt = .1;
   int n_patches = -1;
 
-  return Grid_t{domain, bc, kinds, norm, dt, n_patches};
+  return Grid_t{domain, bc, kinds, norm, dt, n_patches, {B, B, B}};
 }
 
 template <typename DIM>
@@ -90,12 +92,11 @@ using BndTestTypes =
                    TestConfigBnd<Bnd_<MfieldsC>, dim_yz>,
 #ifdef USE_CUDA
                    TestConfigBnd<BndCuda3<MfieldsCuda>, dim_xyz>,
+                   TestConfigBnd<Bnd_<MfieldsCuda>, dim_xyz>,
 #endif
                    TestConfigBnd<Bnd_<MfieldsSingle>, dim_xyz>>;
 
 TYPED_TEST_SUITE(BndTest, BndTestTypes);
-
-const int B = 2;
 
 TYPED_TEST(BndTest, FillGhosts)
 {
@@ -176,6 +177,62 @@ TYPED_TEST(BndTest, FillGhosts)
 
   // let's do it again to test CudaBnd caching
   bnd.fill_ghosts(mflds, 0, 1);
+}
+
+// almost same as "FillGhosts" but uses gt-based interface bnd
+TYPED_TEST(BndTest, FillGhostsGt)
+{
+  using Base = BndTest<TypeParam>;
+  using Bnd = typename Base::Bnd;
+  using dim = typename Base::dim;
+  using Mfields = typename Bnd::Mfields;
+
+  auto grid = make_grid<dim>();
+  auto ibn = Int3{B, B, B};
+  if (dim::InvarX::value)
+    ibn[0] = 0;
+  auto mflds = Mfields{grid, 1, ibn};
+
+  EXPECT_EQ(mflds.n_patches(), grid.n_patches());
+
+  {
+    auto&& h_mflds = gt::host_mirror(mflds.gt());
+    h_mflds.view() = 0.;
+    for (int p = 0; p < mflds.n_patches(); p++) {
+      int i0 = grid.patches[p].off[0];
+      int j0 = grid.patches[p].off[1];
+      int k0 = grid.patches[p].off[2];
+      auto flds =
+        make_Fields3d<dim_xyz>(h_mflds.view(_all, _all, _all, _all, p), -ibn);
+      grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
+        int ii = i + i0, jj = j + j0, kk = k + k0;
+        flds(0, i, j, k) = 100 * ii + 10 * jj + kk;
+      });
+    }
+    gt::copy(h_mflds, mflds.storage());
+  }
+
+  Bnd bnd{grid, ibn};
+  bnd.fill_ghosts(mflds.grid(), mflds.storage(), mflds.ib(), 0, 1);
+
+  {
+    auto&& h_mflds = gt::host_mirror(mflds.gt());
+    gt::copy(mflds.storage(), h_mflds);
+    for (int p = 0; p < mflds.n_patches(); p++) {
+      auto flds =
+        make_Fields3d<dim_xyz>(h_mflds.view(_all, _all, _all, _all, p), -ibn);
+      int i0 = grid.patches[p].off[0];
+      int j0 = grid.patches[p].off[1];
+      int k0 = grid.patches[p].off[2];
+      grid.Foreach_3d(B, B, [&](int i, int j, int k) {
+        int ii = i + i0, jj = j + j0, kk = k + k0;
+        ii = (ii + grid.domain.gdims[0]) % grid.domain.gdims[0];
+        jj = (jj + grid.domain.gdims[1]) % grid.domain.gdims[1];
+        kk = (kk + grid.domain.gdims[2]) % grid.domain.gdims[2];
+        EXPECT_EQ(flds(0, i, j, k), 100 * ii + 10 * jj + kk);
+      });
+    }
+  }
 }
 
 TYPED_TEST(BndTest, AddGhosts)

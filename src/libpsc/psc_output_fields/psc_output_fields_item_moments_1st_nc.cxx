@@ -22,7 +22,6 @@ struct Moment_n_1st_nc
   {
     return addKindSuffix({"n"}, grid.kinds);
   }
-  constexpr static int flags = POFI_BY_KIND;
 
   template <typename Mparticles>
   static void run(Mfields& mflds, Mparticles& mprts)
@@ -49,7 +48,6 @@ struct Moment_rho_1st_nc : ItemMomentCRTP<Moment_rho_1st_nc<MF, D>, MF>
   {
     return {"rho"};
   }
-  constexpr static int flags = 0;
 
   template <typename Mparticles>
   explicit Moment_rho_1st_nc(const Mparticles& mprts) : Base{mprts.grid()}
