@@ -213,7 +213,7 @@ template <typename Mparticles, typename Dim>
 struct Moment_n_Selector<
   Mparticles, Dim, typename std::enable_if<Mparticles::is_cuda::value>::type>
 {
-  using type = Moment_n_1st_cuda<Mparticles, Dim>;
+  using type = Moment_n_1st_cuda<Dim>;
 };
 
 #endif

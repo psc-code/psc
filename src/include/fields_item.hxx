@@ -183,7 +183,7 @@ protected:
   ItemMomentCRTP(const Grid_t& grid)
     : name_{Derived::name_impl()},
       comp_names_{Derived::comp_names_impl(grid)},
-      mres_{grid, comp_names_.size(), grid.ibn},
+      mres_{grid, int(comp_names_.size()), grid.ibn},
       mres_gt_(mres_.storage()), // FIXME, nvcc chokes on braces???
       mres_ib_{-grid.ibn},
       bnd_{grid}
