@@ -29,8 +29,8 @@ public:
 
 private:
   template <typename F>
-  void operator()(F& flds, const gt::sarray<int, 3>& l, const real3_t& h,
-                  real_t val, dim_yz tag)
+  GT_INLINE void operator()(F& flds, const gt::sarray<int, 3>& l,
+                            const real3_t& h, real_t val, dim_yz tag)
   {
     flds(0, l[1] + 0, l[2] + 0) += val * (1.f - h[1]) * (1.f - h[2]);
     flds(0, l[1] + 1, l[2] + 0) += val * h[1] * (1.f - h[2]);
@@ -39,8 +39,8 @@ private:
   }
 
   template <typename F>
-  void operator()(F& flds, const gt::sarray<int, 3>& l, const real3_t& h,
-                  real_t val, dim_xyz tag)
+  GT_INLINE void operator()(F& flds, const gt::sarray<int, 3>& l,
+                            const real3_t& h, real_t val, dim_xyz tag)
   {
     // clang-format off
     flds(l[0] + 0, l[1] + 0, l[2] + 0) += val * (1.f - h[0]) * (1.f - h[1]) * (1.f - h[2]);
@@ -56,8 +56,8 @@ private:
 
 public:
   template <typename F>
-  void operator()(F& flds, const gt::sarray<int, 3>& l, const real3_t& h,
-                  real_t val)
+  GT_INLINE void operator()(F& flds, const gt::sarray<int, 3>& l,
+                            const real3_t& h, real_t val)
   {
     (*this)(flds, l, h, val, dim_t{});
   }
