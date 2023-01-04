@@ -4,6 +4,7 @@
 #include "bs.hxx"
 #include "pushp.hxx"
 #include "fields.hxx"
+#include <psc/atomic.hxx>
 #include <psc/deposit.hxx>
 
 #define THREADS_PER_BLOCK (512)
@@ -75,7 +76,7 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
 
   //  auto gt = view_patch(mflds_gt, current_block.p);
   auto gt = gt::adapt_device<3>(
-    (&mflds_gt(0, 0, 0, 0, current_block.p)).get(),
+    gt::raw_pointer_cast(&mflds_gt(0, 0, 0, 0, current_block.p)),
     {mflds_gt.shape(0), mflds_gt.shape(1), mflds_gt.shape(2)});
   // auto flds = make_Fields3d<dim>(gt, ib);
   psc::deposit::norm::Deposit1st<real_t, dim> deposit;
@@ -202,6 +203,8 @@ template <typename CudaMparticles, typename dim>
 void CudaMoments1stNcRho<CudaMparticles, dim>::operator()(
   CudaMparticles& cmprts, MfieldsCuda::Storage& mres_gt, const Int3& mres_ib)
 {
+  using real_t = float;
+
   if (cmprts.n_prts == 0) {
     return;
   }
@@ -211,7 +214,13 @@ void CudaMoments1stNcRho<CudaMparticles, dim>::operator()(
     dim3 dimGrid =
       BlockSimple<typename CudaMparticles::BS, dim>::dimGrid(cmprts);
 
-    auto k_mres_gt = mres_gt.to_kernel();
+    //      auto k_mres_gt = mres_gt.to_kernel();
+    // FIXME, ugly and assumes contiguous fortran order
+    auto k_mres_gt =
+      gt::adapt_device<5>(reinterpret_cast<psc::atomic<real_t>*>(
+                            gt::raw_pointer_cast(&mres_gt(0, 0, 0, 0, 0))),
+                          mres_gt.shape())
+        .to_kernel();
     rho_1st_nc_cuda_run<typename CudaMparticles::DMparticles, dim, false>
       <<<dimGrid, THREADS_PER_BLOCK>>>(cmprts, k_mres_gt, mres_ib);
     cuda_sync_if_enabled();
