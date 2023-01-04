@@ -4,6 +4,7 @@
 #include "bs.hxx"
 #include "pushp.hxx"
 #include "fields.hxx"
+#include <psc/deposit.hxx>
 
 #define THREADS_PER_BLOCK (512)
 
@@ -64,14 +65,20 @@ template <typename DMparticles, typename dim, bool REORDER, typename E>
 __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
   rho_1st_nc_cuda_run(DMparticles dmprts, E mflds_gt, Int3 ib)
 {
+  using real_t = float;
+  using real3_t = gt::sarray<real_t, 3>;
+
   BlockSimple<typename DMparticles::BS, dim> current_block;
   if (!current_block.init(dmprts)) {
     return;
   }
 
-  auto gt = view_patch(mflds_gt, current_block.p);
-  auto flds = make_Fields3d<dim>(gt, ib);
-  Deposit<dim> deposit;
+  //  auto gt = view_patch(mflds_gt, current_block.p);
+  auto gt = gt::adapt_device<3>(
+    (&mflds_gt(0, 0, 0, 0, current_block.p)).get(),
+    {mflds_gt.shape(0), mflds_gt.shape(1), mflds_gt.shape(2)});
+  // auto flds = make_Fields3d<dim>(gt, ib);
+  psc::deposit::norm::Deposit1st<real_t, dim> deposit;
   __syncthreads();
 
   int block_begin = dmprts.off_[current_block.bid];
@@ -86,11 +93,13 @@ __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
     float fnq = dmprts.prt_w(prt) * dmprts.fnqs();
     float q = dmprts.prt_q(prt);
 
-    int lf[3];
-    float of[3];
-    dmprts.find_idx_off_1st(prt.x, lf, of, float(0.));
-
-    deposit(flds, 0, lf, of, q * fnq);
+    gt::sarray<int, 3> lf;
+    real3_t of;
+    dmprts.find_idx_off_1st(prt.x, lf.data(), of.data(), float(0.));
+    lf[0] -= ib[0];
+    lf[1] -= ib[1];
+    lf[2] -= ib[2];
+    deposit(gt, lf, of, q * fnq);
   }
 }
 
