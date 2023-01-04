@@ -555,13 +555,46 @@ using Mfields_from_gt_t =
                                            typename E::space>::type;
 
 // ======================================================================
-// view_interior
+// psc::interior
+
+namespace psc
+{
+template <typename E>
+GT_INLINE auto interior(E&& e, const Int3& ib)
+{
+  return std::forward<E>(e).view(_s(-ib[0], ib[0]), _s(-ib[1], ib[1]),
+                                 _s(-ib[2], ib[2]));
+}
+
+namespace mflds
+{
+
+template <typename R, typename S = gt::space::host>
+GT_INLINE auto empty(const Grid_t& grid, int n_comps, Int3 ib = {})
+{
+  return gt::empty<R, S>({grid.ldims[0] - 2 * ib[0], grid.ldims[1] - 2 * ib[1],
+                          grid.ldims[2] - 2 * ib[2], n_comps,
+                          grid.n_patches()});
+}
+
+template <typename R, typename S = gt::space::host>
+GT_INLINE auto zeros(const Grid_t& grid, int n_comps, Int3 ib = {})
+{
+  return gt::zeros<R, S>({grid.ldims[0] - 2 * ib[0], grid.ldims[1] - 2 * ib[1],
+                          grid.ldims[2] - 2 * ib[2], n_comps,
+                          grid.n_patches()});
+}
 
 template <typename E>
-inline auto view_interior(E&& e, const Int3& bnd)
+GT_INLINE auto interior(const Grid_t& grid, E&& e)
 {
-  return std::forward<E>(e).view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                                 _s(bnd[2], -bnd[2]));
+  auto ibn = (Int3{e.shape(0), e.shape(1), e.shape(2)} - grid.ldims) / 2;
+  return std::forward<E>(e).view(_s(ibn[0], -ibn[0]), _s(ibn[1], -ibn[1]),
+                                 _s(ibn[2], -ibn[2]));
 }
+
+} // namespace mflds
+
+} // namespace psc
 
 #endif

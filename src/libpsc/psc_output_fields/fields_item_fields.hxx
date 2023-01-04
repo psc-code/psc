@@ -68,6 +68,8 @@ public:
 
   const Grid_t& grid() const { return mflds_.grid(); }
   Int3 ibn() const { return {}; }
+  Int3 ib() const { return mflds_.ib(); }
+  const auto& storage() const { return mflds_.storage(); }
   int n_patches() const { return grid().n_patches(); }
 
   MfieldsState& result() const { return mflds_; }
@@ -210,7 +212,9 @@ public:
 
   const Grid_t& grid() const { return mflds_.grid(); }
   Int3 ibn() const { return {}; }
+  Int3 ib() const { return {}; }
   int n_patches() const { return grid().n_patches(); }
+  auto storage() const { return gt(); }
 
   auto gt() const
   {

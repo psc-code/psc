@@ -51,12 +51,7 @@ struct Checks_
   // ctor
 
   Checks_(const Grid_t& grid, MPI_Comm comm, const ChecksParams& params)
-    : ChecksParams(params),
-      comm_{comm},
-      rho_{grid, 1, {}},
-      rho_m_{grid, 1, {}},
-      rho_p_{grid, 1, {}},
-      divj_{grid, 1, {}}
+    : ChecksParams(params), comm_{comm}
   {}
 
   // ======================================================================
@@ -73,7 +68,8 @@ struct Checks_
       return;
     }
 
-    rho_m_.storage() = Moment_t{mprts}.gt();
+    auto rho = Moment_t{grid};
+    rho_m_gt_ = psc::mflds::interior(grid, rho(mprts));
   }
 
   // ----------------------------------------------------------------------
@@ -87,27 +83,22 @@ struct Checks_
       return;
     }
 
-    rho_p_.storage() = Moment_t{mprts}.gt();
+    auto item_rho_p = Moment_t{grid};
     auto item_divj = Item_divj<MfieldsState>(mflds);
 
-    auto& d_rho = rho_p_;
-    d_rho.storage() = d_rho.storage() - rho_m_.storage();
-
-    divj_.storage() = item_divj.gt();
-    divj_.storage() = grid.dt * divj_.storage();
+    auto d_rho_gt = psc::mflds::interior(grid, item_rho_p(mprts)) - rho_m_gt_;
+    auto dt_divj_gt = grid.dt * item_divj.gt();
 
     double eps = continuity_threshold;
     double max_err = 0.;
-    for (int p = 0; p < divj_.n_patches(); p++) {
-      auto D_rho = make_Fields3d<dim_xyz>(d_rho[p]);
-      auto Div_J = make_Fields3d<dim_xyz>(divj_[p]);
-      grid.Foreach_3d(0, 0, [&](int jx, int jy, int jz) {
-        double d_rho = D_rho(0, jx, jy, jz);
-        double div_j = Div_J(0, jx, jy, jz);
-        max_err = fmax(max_err, fabs(d_rho + div_j));
-        if (fabs(d_rho + div_j) > eps) {
-          mprintf("p%d (%d,%d,%d): %g -- %g diff %g\n", p, jx, jy, jz, d_rho,
-                  -div_j, d_rho + div_j);
+    for (int p = 0; p < grid.n_patches(); p++) {
+      grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
+        double val_d_rho = d_rho_gt(i, j, k, 0, p);
+        double val_dt_divj = dt_divj_gt(i, j, k, 0, p);
+        max_err = std::max(max_err, std::abs(val_d_rho + val_dt_divj));
+        if (std::abs(val_d_rho + val_dt_divj) > eps) {
+          mprintf("p%d (%d,%d,%d): %g -- %g diff %g\n", p, i, j, k, val_d_rho,
+                  -val_dt_divj, val_d_rho + val_dt_divj);
         }
       });
     }
@@ -125,8 +116,8 @@ struct Checks_
         writer_continuity_.open("continuity");
       }
       writer_continuity_.begin_step(grid.timestep(), grid.timestep() * grid.dt);
-      writer_continuity_.write(divj_.gt(), grid, "div_j", {"div_j"});
-      writer_continuity_.write(d_rho.gt(), grid, "d_rho", {"d_rho"});
+      writer_continuity_.write(dt_divj_gt, grid, "dt_divj", {"dt_divj"});
+      writer_continuity_.write(d_rho_gt, grid, "d_rho", {"d_rho"});
       writer_continuity_.end_step();
       MPI_Barrier(grid.comm());
     }
@@ -147,15 +138,14 @@ struct Checks_
       return;
     }
 
-    rho_.storage() = Moment_t{mprts}.gt();
+    auto item_rho = Moment_t{grid};
     auto dive = Item_dive<MfieldsState>(mflds);
-    auto&& dive_gt = view_interior(dive.gt(), dive.ibn());
+    auto rho_gt = psc::mflds::interior(grid, item_rho(mprts));
+    auto dive_gt = psc::interior(dive.storage(), dive.ib());
 
     double eps = gauss_threshold;
     double max_err = 0.;
     for (int p = 0; p < dive.n_patches(); p++) {
-      auto Rho = make_Fields3d<dim_xyz>(rho_[p]);
-
       int l[3] = {0, 0, 0}, r[3] = {0, 0, 0};
       for (int d = 0; d < 3; d++) {
         if (grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL &&
@@ -164,20 +154,18 @@ struct Checks_
         }
       }
 
-      grid.Foreach_3d(0, 0, [&](int jx, int jy, int jz) {
-        if (jy < l[1] || jz < l[2] || jy >= grid.ldims[1] - r[1] ||
-            jz >= grid.ldims[2] - r[2]) {
-          // nothing
+      grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
+        if (j < l[1] || k < l[2] || j >= grid.ldims[1] - r[1] ||
+            k >= grid.ldims[2] - r[2]) {
+          // do nothing
         } else {
-          double v_rho = Rho(0, jx, jy, jz);
-          double v_dive = dive_gt(jx, jy, jz, 0, p);
-          max_err = fmax(max_err, fabs(v_dive - v_rho));
-#if 1
-          if (fabs(v_dive - v_rho) > eps) {
-            printf("(%d,%d,%d): %g -- %g diff %g\n", jx, jy, jz, v_dive, v_rho,
+          double v_rho = rho_gt(i, j, k, 0, p);
+          double v_dive = dive_gt(i, j, k, 0, p);
+          max_err = std::max(max_err, std::abs(v_dive - v_rho));
+          if (std::abs(v_dive - v_rho) > eps) {
+            printf("(%d,%d,%d): %g -- %g diff %g\n", i, j, k, v_dive, v_rho,
                    v_dive - v_rho);
           }
-#endif
         }
       });
     }
@@ -195,9 +183,8 @@ struct Checks_
         writer_gauss_.open("gauss");
       }
       writer_gauss_.begin_step(grid.timestep(), grid.timestep() * grid.dt);
-      writer_gauss_.write(rho_.gt(), grid, "rho", {"rho"});
-      writer_gauss_.write(dive.gt(), dive.grid(), dive.name(),
-                          dive.comp_names());
+      writer_gauss_.write(rho_gt, grid, "rho", {"rho"});
+      writer_gauss_.write(dive_gt, grid, dive.name(), dive.comp_names());
       writer_gauss_.end_step();
     }
 
@@ -206,10 +193,7 @@ struct Checks_
 
   // state
   MPI_Comm comm_;
-  Mfields rho_p_;
-  Mfields rho_m_;
-  Mfields rho_;
-  Mfields divj_;
+  gt::gtensor<real_t, 5> rho_m_gt_;
   WriterDefault writer_continuity_;
   WriterDefault writer_gauss_;
 };

@@ -37,11 +37,11 @@ inline std::vector<std::string> addKindSuffix(
 // ======================================================================
 // ItemMomentBnd
 
-template <typename Mfields, typename Bnd = Bnd_<Mfields>>
+template <typename S, typename Bnd>
 class ItemMomentBnd
 {
 public:
-  using storage_type = typename Mfields::Storage;
+  using storage_type = S;
 
   ItemMomentBnd(const Grid_t& grid) : bnd_{grid, grid.ibn} {}
 
@@ -163,39 +163,29 @@ template <typename Derived, typename MF, typename Bnd = Bnd_<MF>>
 class ItemMomentCRTP : public MFexpression<Derived>
 {
 public:
-  using Mfields = MF;
-  using Real = typename Mfields::real_t;
-  using storage_type = typename Mfields::Storage;
+  using storage_type = typename MF::Storage;
+  using real_t = typename storage_type::value_type;
+  using space_type = typename storage_type::space_type;
 
-  const std::string& name() { return name_; }
-
+  static std::string name() { return Derived::moment_type::name(); }
   int n_comps() { return comp_names_.size(); }
   const std::vector<std::string>& comp_names() { return comp_names_; }
 
-  auto gt()
-  {
-    auto bnd = -mres_ib_;
-    return mres_gt_.view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                         _s(bnd[2], -bnd[2]));
-  }
+  auto storage() { return mres_gt_; }
+  const Int3& ib() { return mres_ib_; }
 
 protected:
   ItemMomentCRTP(const Grid_t& grid)
-    : name_{Derived::name_impl()},
-      comp_names_{Derived::comp_names_impl(grid)},
-      mres_{grid, int(comp_names_.size()), grid.ibn},
-      mres_gt_(mres_.storage()), // FIXME, nvcc chokes on braces???
+    : comp_names_{Derived::moment_type::comp_names(grid.kinds)},
+      mres_gt_(psc::mflds::empty<real_t, space_type>(
+        grid, int(comp_names_.size()), -grid.ibn)),
       mres_ib_{-grid.ibn},
       bnd_{grid}
   {}
 
 protected:
-  std::string name_;
   std::vector<std::string> comp_names_;
-  storage_type& mres_gt_;
+  storage_type mres_gt_;
   Int3 mres_ib_;
-  ItemMomentBnd<Mfields, Bnd> bnd_;
-
-  // private:
-  Mfields mres_;
+  ItemMomentBnd<storage_type, Bnd> bnd_;
 };

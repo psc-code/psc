@@ -4,6 +4,25 @@
 #include "testing.hxx"
 
 // ======================================================================
+// Moment_rho_1st_nc_selector
+//
+// FIXME, should go away eventually
+
+template <typename MF, typename D>
+struct Moment_rho_1st_nc_selector
+{
+  using type = Moment_rho_1st_nc<MF, D>;
+};
+
+#ifdef USE_CUDA
+template <typename D>
+struct Moment_rho_1st_nc_selector<MfieldsCuda, D>
+{
+  using type = Moment_rho_1st_nc_cuda<D>;
+};
+#endif
+
+// ======================================================================
 // MomentTest
 
 template <typename T>
@@ -109,11 +128,13 @@ TYPED_TEST(MomentTest, Moment_n_1)
   using real_t = typename base_type::real_t;
   using Moment = Moment_n_1st<Mfields, dim_t>;
 
+  EXPECT_EQ(Moment::name(), "n_1st_cc");
   auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 1.}, this->w, 0});
   const auto& grid = this->grid();
 
   Moment moment{mprts};
-  auto gt = moment.gt();
+  EXPECT_EQ(moment.comp_names(), std::vector<std::string>{"n_test_species"});
+  auto gt = psc::interior(moment.storage(), moment.ib());
   for (int p = 0; p < grid.n_patches(); p++) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);
@@ -134,13 +155,14 @@ TYPED_TEST(MomentTest, Moments_1st)
   using dim_t = typename TypeParam::dim;
   using MfieldsHost = hostMirror_t<Mfields>;
   using real_t = typename Mfields::real_t;
-  using Moments = Moments_1st<Mparticles, MfieldsHost, dim_t>;
+  using Moment = Moments_1st<Mparticles, MfieldsHost, dim_t>;
 
+  EXPECT_EQ(Moment::name(), "all_1st_cc");
   auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 1.}, this->w, 0});
   const auto& grid = this->grid();
 
-  Moments moments{mprts};
-  auto gt = moments.gt();
+  Moment moment{mprts};
+  auto gt = psc::interior(moment.storage(), moment.ib());
   for (int p = 0; p < grid.n_patches(); p++) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);
@@ -170,7 +192,7 @@ TYPED_TEST(MomentTest, Moment_n_2) // FIXME, mostly copied
     i0 = 0;
 
   Moment moment{mprts};
-  auto gt = moment.gt();
+  auto gt = psc::interior(moment.storage(), moment.ib());
   for (int p = 0; p < grid.n_patches(); p++) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);
@@ -189,15 +211,16 @@ TYPED_TEST(MomentTest, Moment_v_1st)
   using Mparticles = typename TypeParam::Mparticles;
   using Mfields = typename TypeParam::Mfields;
   using dim_t = typename TypeParam::dim;
-  using Moments = Moment_v_1st<Mfields, dim_t>;
+  using Moment = Moment_v_1st<Mfields, dim_t>;
   using real_t = typename Mfields::real_t;
 
+  EXPECT_EQ(Moment::name(), "v_1st_cc");
   auto& mprts =
     this->make_mprts({{5., 5., 5.}, {.001, .002, .003}, this->w, 0});
   const auto& grid = this->grid();
 
-  Moments moments{mprts};
-  auto gt = moments.gt();
+  Moment moment{mprts};
+  auto gt = psc::interior(moment.storage(), moment.ib());
   for (int p = 0; p < grid.n_patches(); p++) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);
@@ -216,15 +239,16 @@ TYPED_TEST(MomentTest, Moment_p_1st)
   using Mparticles = typename TypeParam::Mparticles;
   using Mfields = typename TypeParam::Mfields;
   using dim_t = typename TypeParam::dim;
-  using Moments = Moment_p_1st<Mfields, dim_t>;
+  using Moment = Moment_p_1st<Mfields, dim_t>;
   using real_t = typename Mfields::real_t;
 
+  EXPECT_EQ(Moment::name(), "p_1st_cc");
   auto& mprts =
     this->make_mprts({{5., 5., 5.}, {.001, .002, .003}, this->w, 0});
   const auto& grid = this->grid();
 
-  Moments moments{mprts};
-  auto gt = moments.gt();
+  Moment moment{mprts};
+  auto gt = psc::interior(moment.storage(), moment.ib());
   for (int p = 0; p < grid.n_patches(); p++) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);
@@ -245,13 +269,14 @@ TYPED_TEST(MomentTest, Moment_rho_1st_nc_cc)
   using dim_t = typename TypeParam::dim;
   using Particle = typename Mparticles::Particle;
   using real_t = typename Mfields::real_t;
-  using Moment_t = Moment_rho_1st_nc<Mfields, dim_t>;
+  using Moment = typename Moment_rho_1st_nc_selector<Mfields, dim_t>::type;
 
+  EXPECT_EQ(Moment::name(), "rho_1st_nc");
   auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 0.}, this->w, 0});
   const auto& grid = this->grid();
 
-  Moment_t moment{mprts};
-  auto gt = moment.gt();
+  Moment moment{grid};
+  auto gt = psc::mflds::interior(grid, moment(mprts));
   for (int p = 0; p < grid.n_patches(); p++) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);
@@ -288,13 +313,14 @@ TYPED_TEST(MomentTest, Moment_rho_1st_nc_nc)
   using dim_t = typename TypeParam::dim;
   using Particle = typename Mparticles::Particle;
   using real_t = typename Mfields::real_t;
-  using Moment_t = Moment_rho_1st_nc<Mfields, dim_t>;
+  using Moment = typename Moment_rho_1st_nc_selector<Mfields, dim_t>::type;
 
+  EXPECT_EQ(Moment::name(), "rho_1st_nc");
   auto& mprts = this->make_mprts({{10., 10., 10.}, {0., 0., 0.}, this->w, 0});
   const auto& grid = this->grid();
 
-  Moment_t moment{mprts};
-  auto gt = moment.gt();
+  Moment moment{grid};
+  auto gt = psc::mflds::interior(grid, moment(mprts));
   for (int p = 0; p < grid.n_patches(); p++) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);
@@ -319,43 +345,6 @@ TYPED_TEST(MomentTest, Moment_rho_1st_nc_nc)
   }
 }
 
-TYPED_TEST(MomentTest, Moment_n_2nd_nc)
-{
-  using Mparticles = typename TypeParam::Mparticles;
-  using Mfields = typename TypeParam::Mfields;
-  using dim_t = typename TypeParam::dim;
-  using Moment = Moment_n_2nd_nc<Mfields, dim_t>;
-  using real_t = typename Mfields::real_t;
-
-  auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 1.}, this->w, 0});
-  const auto& grid = this->grid();
-
-  Moment moment{mprts};
-  auto gt = moment.gt();
-  for (int p = 0; p < grid.n_patches(); p++) {
-    grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
-      real_t val = gt(i, j, k, 0, p);
-      if (std::is_same<dim_t, dim_xyz>::value) {
-        if ((i == 0 || i == 1) && (j == 0 || j == 1) && (k == 0 || k == 1)) {
-          EXPECT_NEAR(val, this->w / this->nicell / 8., this->eps)
-            << "ijk " << i << " " << j << " " << k;
-        } else {
-          EXPECT_NEAR(val, 0., this->eps)
-            << "ijk " << i << " " << j << " " << k;
-        }
-      } else if (std::is_same<dim_t, dim_yz>::value) {
-        if ((j == 0 || j == 1) && (k == 0 || k == 1)) {
-          EXPECT_NEAR(val, this->w / this->nicell / 4., this->eps)
-            << "ijk " << i << " " << j << " " << k;
-        } else {
-          EXPECT_NEAR(val, 0., this->eps)
-            << "ijk " << i << " " << j << " " << k;
-        }
-      }
-    });
-  }
-}
-
 TYPED_TEST(MomentTest, Moment_rho_2nd_nc)
 {
   using Mparticles = typename TypeParam::Mparticles;
@@ -364,11 +353,12 @@ TYPED_TEST(MomentTest, Moment_rho_2nd_nc)
   using Moment = Moment_rho_2nd_nc<Mfields, dim_t>;
   using real_t = typename Mfields::real_t;
 
+  EXPECT_EQ(Moment::name(), "rho_2nd_nc");
   auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 1.}, this->w, 0});
   const auto& grid = this->grid();
 
-  Moment moment{mprts};
-  auto gt = moment.gt();
+  Moment moment{grid};
+  auto gt = psc::mflds::interior(grid, moment(mprts));
   for (int p = 0; p < grid.n_patches(); p++) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);

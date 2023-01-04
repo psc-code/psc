@@ -20,26 +20,33 @@ struct Moment_rho_1st_nc_cuda
   using Base = ItemMomentCRTP<Moment_rho_1st_nc_cuda<dim_t>, MfieldsCuda,
                               BndCuda3<MfieldsCuda>>;
   using Mfields = MfieldsCuda;
+  using storage_type = typename Base::storage_type;
+  using real_t = typename Base::real_t;
+  using space_type = typename Base::space_type;
+  using moment_type =
+    psc::moment::moment_rho<psc::deposit::code::Deposit1stNc, dim_t>;
 
-  static std::string name_impl() { return "rho_1st_nc"; }
-  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
-  {
-    return {"rho"};
-  }
-
-  Moment_rho_1st_nc_cuda(const Grid_t& grid) : Base{grid} {}
+  explicit Moment_rho_1st_nc_cuda(const Grid_t& grid) : Base{grid} {}
 
   template <typename Mparticles>
-  void operator()(Mparticles& mprts)
+  auto operator()(Mparticles& mprts)
   {
     auto& cmprts = *mprts.cmprts();
 
-    Base::mres_gt_.view() = 0.;
+    Int3 ib = -mprts.grid().ibn;
+    // FIXME, gt::gtensor and psc::gtensor are slightly different, and ideally
+    // zeros() shouldn't actually allocate, but probably it does, so this wastes
+    // memory and a copy
+    storage_type mres =
+      psc::mflds::zeros<real_t, space_type>(mprts.grid(), 1, ib);
     CudaMoments1stNcRho<cuda_mparticles<typename Mparticles::BS>, dim_t>
       cmoments;
-    cmoments(cmprts, Base::mres_gt_, Base::mres_ib_);
-    Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
+    cmoments(cmprts, mres, ib);
+    Base::bnd_.add_ghosts(mprts.grid(), mres, ib);
+    return mres;
   }
+
+  auto storage() = delete;
 };
 
 // ======================================================================
@@ -54,12 +61,8 @@ public:
   using Base = ItemMomentCRTP<Moment_n_1st_cuda<dim_t>, MfieldsCuda,
                               BndCuda3<MfieldsCuda>>;
   using Mfields = MfieldsCuda;
-
-  static std::string name_impl() { return "n_1st_cuda"; }
-  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
-  {
-    return addKindSuffix({"n"}, grid.kinds);
-  }
+  using moment_type =
+    psc::moment::moment_n<psc::deposit::code::Deposit1stCc, dim_t>;
 
   template <typename Mparticles>
   explicit Moment_n_1st_cuda(const Mparticles& mprts) : Base{mprts.grid()}
@@ -104,14 +107,8 @@ public:
   using Mfields = MfieldsCuda;
   using value_type = typename Mfields::real_t;
   using space = gt::space::device;
-
-  static std::string name_impl() { return "all_1st"; }
-  static std::vector<std::string> comp_names_impl(const Grid_t& grid)
-  {
-    return addKindSuffix({"rho", "jx", "jy", "jz", "px", "py", "pz", "txx",
-                          "tyy", "tzz", "txy", "tyz", "tzx"},
-                         grid.kinds);
-  }
+  using moment_type =
+    psc::moment::moment_all<psc::deposit::code::Deposit1stCc, dim_t>;
 
   template <typename Mparticles>
   explicit Moment_1st_cuda(const Mparticles& mprts) : Base{mprts.grid()}

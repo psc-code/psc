@@ -164,6 +164,8 @@ template <typename T, typename D>
 class Deposit1stNc
 {
 public:
+  static std::string suffix() { return "_1st_nc"; }
+
   template <typename F>
   void operator()(F& flds, const gt::sarray<int, 3>& ib,
                   const gt::sarray<T, 3>& x, T val)
@@ -185,6 +187,8 @@ template <typename T, typename D>
 class Deposit1stCc
 {
 public:
+  static std::string suffix() { return "_1st_cc"; }
+
   template <typename F>
   void operator()(F& flds, const gt::sarray<int, 3>& ib,
                   const gt::sarray<T, 3>& x, T val)
@@ -210,6 +214,8 @@ template <typename T, typename D>
 class Deposit2ndNc
 {
 public:
+  static std::string suffix() { return "_2nd_nc"; }
+
   template <typename F>
   void operator()(F& flds, const gt::sarray<int, 3>& ib,
                   const gt::sarray<T, 3>& x, T val)
@@ -260,6 +266,8 @@ public:
   using real_t = R;
   using dim_t = D;
   using real3_t = gt::sarray<real_t, 3>;
+
+  static std::string suffix() { return DepositNorm<real_t, dim_t>::suffix(); }
 
   Deposit(const real3_t& dx, real_t fnqs) : dxi_{real_t(1.) / dx}, fnqs_{fnqs}
   {}

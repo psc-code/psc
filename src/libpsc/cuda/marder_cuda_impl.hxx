@@ -87,7 +87,6 @@ struct MarderCuda : MarderBase
       diffusion_{diffusion},
       loop_{loop},
       dump_{dump},
-      item_rho_{grid},
       bnd_{grid, grid.ibn},
       bnd_mf_{grid, grid.ibn},
       rho_{grid, 1, grid.ibn},
@@ -114,7 +113,7 @@ struct MarderCuda : MarderBase
       io_.end_step();
     }
 
-    view_interior(res_.gt(), res_.ibn()) = dive - rho;
+    psc::interior(res_.gt(), res_.ib()) = dive - rho;
     bnd_mf_.fill_ghosts(res_, 0, 1);
   }
 
@@ -141,6 +140,7 @@ struct MarderCuda : MarderBase
 
   void operator()(MfieldsStateCuda& mflds, MparticlesCuda<BS>& mprts)
   {
+    const auto& grid = mprts.grid();
     static int pr;
     if (!pr) {
       pr = prof_register("marder", 1., 0, 0);
@@ -151,8 +151,8 @@ struct MarderCuda : MarderBase
     // 1) FIXME
     bnd_.fill_ghosts(mflds, EX, EX + 3);
 
-    item_rho_(mprts);
-    auto&& rho = item_rho_.gt();
+    Moment_rho_1st_nc_cuda<dim> item_rho{grid};
+    auto&& rho = psc::mflds::interior(grid, item_rho(mprts));
 
     for (int i = 0; i < loop_; i++) {
       calc_aid_fields(mflds, rho);
@@ -174,6 +174,4 @@ struct MarderCuda : MarderBase
   BndCuda3<Mfields> bnd_mf_;
   Mfields rho_;
   Mfields res_;
-
-  Moment_rho_1st_nc_cuda<dim> item_rho_;
 };

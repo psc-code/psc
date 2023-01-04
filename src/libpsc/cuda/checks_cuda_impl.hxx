@@ -44,12 +44,10 @@ struct ChecksCuda
   using BS = typename Mparticles::BS;
   using Dim = typename BS_to_Dim<BS>::Dim;
   using Moment_t = Moment_rho_1st_nc_cuda<Dim>;
+  using real_t = typename Mfields::real_t;
 
   ChecksCuda(const Grid_t& grid, MPI_Comm comm, const ChecksParams& params)
-    : ChecksParams(params),
-      item_rho_{grid},
-      item_rho_m_{grid},
-      item_rho_p_{grid}
+    : ChecksParams(params)
   {}
 
   void continuity_before_particle_push(Mparticles& mprts)
@@ -60,7 +58,8 @@ struct ChecksCuda
       return;
     }
 
-    item_rho_m_(mprts);
+    Moment_t item_rho{grid};
+    rho_m_gt_ = psc::mflds::interior(grid, item_rho(mprts));
   }
 
   void continuity_after_particle_push(Mparticles& mprts,
@@ -72,15 +71,15 @@ struct ChecksCuda
       return;
     }
 
-    item_rho_p_(mprts);
-
+    Moment_t item_rho{grid};
     auto item_divj = Item_divj<MfieldsStateCuda>(mflds);
 
-    auto&& rho_p = gt::host_mirror(item_rho_p_.gt());
-    auto&& rho_m = gt::host_mirror(item_rho_m_.gt());
+    auto d_rho_p = psc::mflds::interior(grid, item_rho(mprts));
+    auto&& rho_p = gt::host_mirror(d_rho_p);
+    auto&& rho_m = gt::host_mirror(rho_m_gt_);
     auto&& h_divj = gt::host_mirror(item_divj.gt());
-    gt::copy(gt::eval(item_rho_p_.gt()), rho_p);
-    gt::copy(gt::eval(item_rho_m_.gt()), rho_m);
+    gt::copy(gt::eval(d_rho_p), rho_p);
+    gt::copy(gt::eval(rho_m_gt_), rho_m);
     gt::copy(gt::eval(item_divj.gt()), h_divj);
 
     auto&& d_rho = rho_p - rho_m;
@@ -137,12 +136,13 @@ struct ChecksCuda
       return;
     }
 
+    auto item_rho = Moment_t{grid};
     auto item_dive = Item_dive<MfieldsStateCuda>(mflds);
 
-    item_rho_(mprts);
-    auto&& rho = gt::host_mirror(item_rho_.gt());
+    auto d_rho = psc::mflds::interior(grid, item_rho(mprts));
+    auto&& rho = gt::host_mirror(d_rho);
     auto&& dive = gt::host_mirror(item_dive.gt());
-    gt::copy(gt::eval(item_rho_.gt()), rho);
+    gt::copy(gt::eval(d_rho), rho);
     gt::copy(gt::eval(item_dive.gt()), dive);
 
     double eps = gauss_threshold;
@@ -198,7 +198,5 @@ struct ChecksCuda
   }
 
 private:
-  Moment_t item_rho_p_;
-  Moment_t item_rho_m_;
-  Moment_t item_rho_;
+  gt::gtensor<real_t, 5, gt::space::device> rho_m_gt_;
 };

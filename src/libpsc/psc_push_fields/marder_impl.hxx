@@ -164,7 +164,7 @@ struct Marder_ : MarderBase
     }
 
     // res_.assign(dive);
-    auto&& dive_gt = view_interior(dive.gt(), dive.ibn());
+    auto&& dive_gt = psc::interior(dive.gt(), dive.ib());
     for (int p = 0; p < res_.n_patches(); p++) {
       for (int m = 0; m < res_.n_comps(); m++) {
         kg::Box3 box = res_.box();
@@ -233,7 +233,9 @@ struct Marder_ : MarderBase
 
   void operator()(MfieldsState& mflds, Mparticles& mprts)
   {
-    rho_.storage() = Moment_t{mprts}.gt();
+    const auto& grid = mflds.grid();
+    auto rho = Moment_t{grid};
+    rho_.storage() = psc::mflds::interior(grid, rho(mprts));
 
     // need to fill ghost cells first (should be unnecessary with only variant
     // 1) FIXME
