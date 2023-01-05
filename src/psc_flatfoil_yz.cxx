@@ -625,7 +625,7 @@ void run()
       prof_start(pr_inject);
       Moment_n moment_n{grid};
       auto d_n = psc::mflds::interior(grid, moment_n(mprts));
-      auto h_n = gt::host_mirror(d_n);
+      auto&& h_n = gt::host_mirror(d_n);
       gt::copy(gt::eval(d_n), h_n); // FIXME shouldn't need eval (?)
 
       setup_particles.setupParticles(
