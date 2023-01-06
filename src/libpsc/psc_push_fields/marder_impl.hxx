@@ -177,8 +177,8 @@ inline void correct(const Grid_t& grid, E1& efield, const Int3& efield_ib,
   fac[1] = .5 * grid.dt * diffusion / grid.domain.dx[1];
   fac[2] = .5 * grid.dt * diffusion / grid.domain.dx[2];
 
-  assert(efield_ib == -grid.ibn());
-  assert(mf_ib == -grid.ibn());
+  assert(efield_ib == -grid.ibn);
+  assert(mf_ib == -grid.ibn);
   // OPT, do all patches in one kernel
   for (int p = 0; p < grid.n_patches(); p++) {
     Int3 lx, rx, ly, ry, lz, rz;
