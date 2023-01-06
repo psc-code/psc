@@ -6,6 +6,7 @@
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
 #include <thrust/scan.h>
+#include <thrust/sequence.h>
 
 #include "psc_bits.h"
 
