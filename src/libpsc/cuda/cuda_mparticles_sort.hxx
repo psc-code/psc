@@ -1,3 +1,4 @@
+#include "gpu/gpu_runtime.h"
 
 #pragma once
 
@@ -11,7 +12,7 @@
 #include <thrust/random.h>
 #include <thrust/sort.h>
 
-#include <curand_kernel.h>
+#include <gpu/gpurand_kernel.h>
 
 extern std::size_t mem_randomize_sort;
 extern std::size_t mem_sort_by_block;

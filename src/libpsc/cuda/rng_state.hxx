@@ -1,7 +1,7 @@
-
 #pragma once
 
-#include <curand_kernel.h>
+#include "gpu/gpu_runtime.h"
+#include "gpu/gpurand_kernel.h"
 
 #define DEVICE __device__
 #include "binary_collision.hxx" // for Rng, FIXME
@@ -58,11 +58,11 @@ public:
     //
     // returns random number in ]0:1]
 
-    __device__ float uniform() { return curand_uniform(&curand_state); }
-    __device__ float normal() { return curand_normal(&curand_state); }
-    __device__ float2 normal2() { return curand_normal2(&curand_state); }
+    __device__ float uniform() { return hiprand_uniform(&curand_state); }
+    __device__ float normal() { return hiprand_normal(&curand_state); }
+    __device__ float2 normal2() { return hiprand_normal2(&curand_state); }
 
-    curandState curand_state;
+    hiprandState curand_state;
   };
 
   using value_type = Rng;
@@ -109,7 +109,7 @@ __global__ static void k_curand_setup(RngStateCuda::Device rng_state, int size)
   int id = threadIdx.x + blockIdx.x * blockDim.x;
 
   if (id < size) {
-    curand_init(0, id, 0, &rng_state[id].curand_state);
+    hiprand_init(0, id, 0, &rng_state[id].curand_state);
   }
 }
 

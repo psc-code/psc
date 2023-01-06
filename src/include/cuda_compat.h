@@ -7,7 +7,7 @@
 // ----------------------------------------------------------------------
 // cuda compatibility stuff
 
-#ifndef __CUDACC__
+#if !defined(__CUDACC__) && !defined(__HIPCC__)
 
 #define __host__
 #define __device__

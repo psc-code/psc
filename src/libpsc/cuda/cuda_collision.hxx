@@ -1,3 +1,4 @@
+#include "gpu/gpu_runtime.h"
 
 #pragma once
 
@@ -7,7 +8,7 @@
 #include "rng_state.hxx"
 #include "binary_collision.hxx"
 
-#include <curand_kernel.h>
+#include <gpu/gpurand_kernel.h>
 
 #define THREADS_PER_BLOCK 128
 

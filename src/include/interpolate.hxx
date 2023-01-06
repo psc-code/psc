@@ -16,7 +16,7 @@ struct opt_ip_2nd;
 template <typename R>
 void __host__ __device__ get_fint_remainder(int* lg, R* h, R u)
 {
-#ifdef __CUDA_ARCH__
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
   int l = __float2int_rd(u);
 #else
   int l = fint(u);

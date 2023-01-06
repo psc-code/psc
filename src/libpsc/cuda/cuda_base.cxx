@@ -60,7 +60,7 @@ void cuda_base_init(void)
 #endif
 
   int deviceCount;
-  cudaGetDeviceCount(&deviceCount);
+  hipGetDeviceCount(&deviceCount);
 
   // This function call returns 0 if there are no CUDA capable devices.
   if (deviceCount == 0) {
@@ -77,8 +77,8 @@ void cuda_base_init(void)
   }
 
   for (int dev = 0; dev < deviceCount; ++dev) {
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, dev);
+    hipDeviceProp_t deviceProp;
+    hipGetDeviceProperties(&deviceProp, dev);
 
     if (dev == 0) {
       // This function call returns 9999 for both major & minor fields, if no
@@ -138,11 +138,11 @@ void cuda_base_init(void)
            deviceProp.canMapHostMemory ? "Yes" : "No");
     printf(
       "  Compute mode:                                  %s\n",
-      deviceProp.computeMode == cudaComputeModeDefault
+      deviceProp.computeMode == hipComputeModeDefault
         ? "Default (multiple host threads can use this device simultaneously)"
-        : deviceProp.computeMode == cudaComputeModeExclusive
+        : deviceProp.computeMode == hipComputeModeExclusive
             ? "Exclusive (only one host thread at a time can use this device)"
-            : deviceProp.computeMode == cudaComputeModeProhibited
+            : deviceProp.computeMode == hipComputeModeProhibited
                 ? "Prohibited (no host thread can use this device)"
                 : "Unknown");
 #endif
