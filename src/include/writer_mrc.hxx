@@ -71,7 +71,8 @@ public:
   void write(const E& expr, const Grid_t& grid, const std::string& name,
              const std::vector<std::string>& comp_names)
   {
-    auto&& evaluated = gt::eval(expr);
+    // FIXME, constness hack
+    auto&& evaluated = gt::eval(const_cast<E&>(expr));
     auto&& e = gt::host_mirror(evaluated);
     gt::copy(evaluated, e);
 

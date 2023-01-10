@@ -100,7 +100,8 @@ public:
     }
 
     prof_start(pr_eval);
-    auto&& evaluated = gt::eval(expr);
+    // FIXME, constness hack
+    auto&& evaluated = gt::eval(const_cast<E&>(expr));
     auto&& h_expr = gt::host_mirror(evaluated);
     gt::copy(evaluated, h_expr);
     Mfields<gt::expr_value_type<E>> h_mflds(grid, h_expr.shape(3), {});
@@ -134,7 +135,8 @@ public:
 
     // FIXME? rn, rx ignored
     prof_start(pr_copy);
-    auto&& evaluated = gt::eval(expr);
+    // FIXME, constness hack
+    auto&& evaluated = gt::eval(const_cast<E&>(expr));
     auto&& h_expr = gt::host_mirror(evaluated);
     gt::copy(evaluated, h_expr);
     prof_stop(pr_copy);
