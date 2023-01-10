@@ -100,8 +100,9 @@ public:
     }
 
     prof_start(pr_eval);
-    auto h_expr = gt::host_mirror(expr);
-    gt::copy(gt::eval(expr), h_expr);
+    auto&& evaluated = gt::eval(expr);
+    auto&& h_expr = gt::host_mirror(evaluated);
+    gt::copy(evaluated, h_expr);
     Mfields<gt::expr_value_type<E>> h_mflds(grid, h_expr.shape(3), {});
     h_mflds.gt() = h_expr;
     prof_stop(pr_eval);
@@ -133,8 +134,9 @@ public:
 
     // FIXME? rn, rx ignored
     prof_start(pr_copy);
-    auto h_expr = gt::host_mirror(expr);
-    gt::copy(gt::eval(expr), h_expr);
+    auto&& evaluated = gt::eval(expr);
+    auto&& h_expr = gt::host_mirror(evaluated);
+    gt::copy(evaluated, h_expr);
     prof_stop(pr_copy);
 
 #ifdef PSC_USE_IO_THREADS

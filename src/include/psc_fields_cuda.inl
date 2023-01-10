@@ -27,7 +27,7 @@ public:
 
     writer.put("ibn", mflds_cuda.ibn(), launch);
 
-    auto h_mflds = gt::host_mirror(mflds_cuda.storage());
+    auto&& h_mflds = gt::host_mirror(mflds_cuda.storage());
     gt::copy(mflds_cuda.storage(), h_mflds);
 
     auto shape = makeDims(n_comps, grid.domain.gdims);
@@ -52,7 +52,7 @@ public:
     const auto& grid = mflds_cuda.grid();
     auto n_comps = mflds_cuda.n_comps();
     auto n_patches = mflds_cuda.n_patches();
-    auto mflds = gt::host_mirror(mflds_cuda.gt());
+    auto&& mflds = gt::host_mirror(mflds_cuda.storage());
     auto h_mflds = gt::empty<typename Mfields::real_t>(gt::shape(
       grid.ldims[0], grid.ldims[1], grid.ldims[2], n_comps, n_patches));
     // FIXME, should just check for consistency? (# ghosts might differ, too)

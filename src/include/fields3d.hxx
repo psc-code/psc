@@ -508,18 +508,6 @@ auto adapt(const Mfields& _mflds)
 
 // ======================================================================
 
-namespace gt
-{
-
-template <typename E>
-auto host_mirror(const E& e)
-{
-  // FIXME, empty_like with space would be helpful
-  return gt::empty<typename E::value_type>(e.shape());
-}
-
-} // namespace gt
-
 template <typename MF>
 using hostMirror_t =
   std::decay_t<decltype(hostMirror(std::declval<const MF>()))>;

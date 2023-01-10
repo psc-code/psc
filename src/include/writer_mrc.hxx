@@ -71,8 +71,9 @@ public:
   void write(const E& expr, const Grid_t& grid, const std::string& name,
              const std::vector<std::string>& comp_names)
   {
-    auto e = gt::host_mirror(expr);
-    gt::copy(gt::eval(expr), e);
+    auto&& evaluated = gt::eval(expr);
+    auto&& e = gt::host_mirror(evaluated);
+    gt::copy(evaluated, e);
 
     int n_comps = comp_names.size();
     // FIXME, should generally equal the # of component in mflds,

@@ -17,7 +17,7 @@ template <typename FUNC>
 void detail::SetupFields<MfieldsCuda>::run(Mfields& mf, FUNC&& func)
 {
   auto bnd = mf.ibn();
-  auto h_mf = gt::host_mirror(mf.gt());
+  auto&& h_mf = gt::host_mirror(mf.storage());
   gt::copy(mf.storage(), h_mf);
 
   for (int p = 0; p < mf.n_patches(); ++p) {
