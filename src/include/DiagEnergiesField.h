@@ -21,8 +21,8 @@ public:
     std::vector<double> EH2(6);
 
     const Grid_t& grid = mprts.grid();
-    auto&& h_gt_mflds = gt::host_mirror(mflds.gt());
-    gt::copy(mflds.gt(), h_gt_mflds);
+    auto&& h_gt_mflds = gt::host_mirror(mflds.storage());
+    gt::copy(mflds.storage(), h_gt_mflds);
 
     double fac = grid.domain.dx[0] * grid.domain.dx[1] * grid.domain.dx[2];
     for (int p = 0; p < grid.n_patches(); p++) {

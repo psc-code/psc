@@ -75,12 +75,13 @@ struct ChecksCuda
     auto item_divj = Item_divj<MfieldsStateCuda>(mflds);
 
     auto d_rho_p = psc::mflds::interior(grid, item_rho(mprts));
+    auto&& d_divj = item_divj.gt();
     auto&& rho_p = gt::host_mirror(d_rho_p);
     auto&& rho_m = gt::host_mirror(rho_m_gt_);
-    auto&& h_divj = gt::host_mirror(item_divj.gt());
-    gt::copy(gt::eval(d_rho_p), rho_p);
-    gt::copy(gt::eval(rho_m_gt_), rho_m);
-    gt::copy(gt::eval(item_divj.gt()), h_divj);
+    auto&& h_divj = gt::host_mirror(d_divj);
+    gt::copy(d_rho_p, rho_p);
+    gt::copy(rho_m_gt_, rho_m);
+    gt::copy(d_divj, h_divj);
 
     auto&& d_rho = rho_p - rho_m;
     auto&& dt_divj = grid.dt * h_divj;
@@ -140,10 +141,11 @@ struct ChecksCuda
     auto item_dive = Item_dive<MfieldsStateCuda>(mflds);
 
     auto d_rho = psc::mflds::interior(grid, item_rho(mprts));
+    auto d_dive = item_dive.gt();
     auto&& rho = gt::host_mirror(d_rho);
-    auto&& dive = gt::host_mirror(item_dive.gt());
-    gt::copy(gt::eval(d_rho), rho);
-    gt::copy(gt::eval(item_dive.gt()), dive);
+    auto&& dive = gt::host_mirror(d_dive);
+    gt::copy(d_rho, rho);
+    gt::copy(d_dive, dive);
 
     double eps = gauss_threshold;
     double max_err = 0.;

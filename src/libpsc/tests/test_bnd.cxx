@@ -114,7 +114,7 @@ TYPED_TEST(BndTest, FillGhosts)
   EXPECT_EQ(mflds.n_patches(), grid.n_patches());
 
   {
-    auto&& h_mflds = gt::host_mirror(mflds.gt());
+    auto&& h_mflds = gt::host_mirror(mflds.storage());
     h_mflds.view() = 0.;
     for (int p = 0; p < mflds.n_patches(); p++) {
       int i0 = grid.patches[p].off[0];
@@ -132,7 +132,7 @@ TYPED_TEST(BndTest, FillGhosts)
 
   // Mfields_dump(mflds, B);
   {
-    auto&& h_mflds = gt::host_mirror(mflds.gt());
+    auto&& h_mflds = gt::host_mirror(mflds.storage());
     gt::copy(mflds.storage(), h_mflds);
     for (int p = 0; p < mflds.n_patches(); p++) {
       auto flds =
@@ -157,7 +157,7 @@ TYPED_TEST(BndTest, FillGhosts)
 
   // Mfields_dump(mflds, B);
   {
-    auto&& h_mflds = gt::host_mirror(mflds.gt());
+    auto&& h_mflds = gt::host_mirror(mflds.storage());
     gt::copy(mflds.storage(), h_mflds);
     for (int p = 0; p < mflds.n_patches(); p++) {
       auto flds =
@@ -196,7 +196,7 @@ TYPED_TEST(BndTest, FillGhostsGt)
   EXPECT_EQ(mflds.n_patches(), grid.n_patches());
 
   {
-    auto&& h_mflds = gt::host_mirror(mflds.gt());
+    auto&& h_mflds = gt::host_mirror(mflds.storage());
     h_mflds.view() = 0.;
     for (int p = 0; p < mflds.n_patches(); p++) {
       int i0 = grid.patches[p].off[0];
@@ -216,7 +216,7 @@ TYPED_TEST(BndTest, FillGhostsGt)
   bnd.fill_ghosts(mflds.grid(), mflds.storage(), mflds.ib(), 0, 1);
 
   {
-    auto&& h_mflds = gt::host_mirror(mflds.gt());
+    auto&& h_mflds = gt::host_mirror(mflds.storage());
     gt::copy(mflds.storage(), h_mflds);
     for (int p = 0; p < mflds.n_patches(); p++) {
       auto flds =
@@ -251,7 +251,7 @@ TYPED_TEST(BndTest, AddGhosts)
   EXPECT_EQ(mflds.n_patches(), grid.n_patches());
 
   {
-    auto&& h_mflds = gt::host_mirror(mflds.gt());
+    auto&& h_mflds = gt::host_mirror(mflds.storage());
     gt::copy(mflds.storage(), h_mflds);
     for (int p = 0; p < mflds.n_patches(); p++) {
       auto flds =
@@ -271,7 +271,7 @@ TYPED_TEST(BndTest, AddGhosts)
 
   // Mfields_dump(mflds, 0*B);
   {
-    auto&& h_mflds = gt::host_mirror(mflds.gt());
+    auto&& h_mflds = gt::host_mirror(mflds.storage());
     gt::copy(mflds.storage(), h_mflds);
     for (int p = 0; p < mflds.n_patches(); p++) {
       auto flds =

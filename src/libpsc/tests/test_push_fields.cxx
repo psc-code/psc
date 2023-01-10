@@ -54,8 +54,8 @@ TYPED_TEST(PushFieldsTest, Pushf1)
   pushf_.push_H(mflds, 1., dim{});
 
   // check result
-  auto&& h_gt = gt::host_mirror(mflds.gt());
-  gt::copy(mflds.gt(), h_gt);
+  auto&& h_gt = gt::host_mirror(mflds.storage());
+  gt::copy(mflds.storage(), h_gt);
   auto bnd = mflds.ibn();
   auto&& i_gt =
     h_gt.view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]), _s(bnd[2], -bnd[2]));
@@ -94,8 +94,8 @@ TYPED_TEST(PushFieldsTest, Pushf2)
   pushf_.push_E(mflds, 1., dim{});
 
   // check result
-  auto&& h_gt = gt::host_mirror(mflds.gt());
-  gt::copy(mflds.gt(), h_gt);
+  auto&& h_gt = gt::host_mirror(mflds.storage());
+  gt::copy(mflds.storage(), h_gt);
   auto bnd = mflds.ibn();
   auto&& i_gt =
     h_gt.view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]), _s(bnd[2], -bnd[2]));
@@ -231,7 +231,7 @@ TYPED_TEST(ItemTest, ItemDivE)
   auto dx = grid.domain.dx;
 
   auto item_dive = Item(mflds);
-  auto&& rho = gt::eval(item_dive.gt());
+  auto&& rho = item_dive.gt();
 
   auto rho_ref = gt::empty_like(rho);
   auto k_rho_ref = rho_ref.to_kernel();
@@ -272,7 +272,7 @@ TYPED_TEST(ItemTest, ItemDivJ)
   auto dx = grid.domain.dx;
 
   auto item_divj = Item(mflds);
-  auto&& rho = gt::eval(item_divj.gt());
+  auto&& rho = item_divj.gt();
 
   auto rho_ref = gt::empty_like(rho);
   auto k_rho_ref = rho_ref.to_kernel();

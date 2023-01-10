@@ -258,8 +258,8 @@ struct PushParticlesTest : ::testing::Test
 
   void checkCurrent(std::vector<CurrentReference>& curr_ref)
   {
-    auto&& h_mflds = gt::host_mirror(mflds->gt());
-    gt::copy(mflds->gt(), h_mflds);
+    auto&& h_mflds = gt::host_mirror(mflds->storage());
+    gt::copy(mflds->storage(), h_mflds);
     auto h_mflds_ref = gt::zeros_like(h_mflds);
 
     auto bnd = mflds->ibn();
