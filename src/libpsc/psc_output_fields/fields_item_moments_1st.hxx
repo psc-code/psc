@@ -14,19 +14,10 @@ class Moment_n_1st : public ItemMomentCRTP<Moment_n_1st<MF, D>, MF>
 {
 public:
   using Base = ItemMomentCRTP<Moment_n_1st<MF, D>, MF>;
-  using Mfields = MF;
-  using real_t = typename Mfields::real_t;
-  using dim_t = D;
   using moment_type =
-    psc::moment::moment_n<psc::deposit::code::Deposit1stCc, dim_t>;
+    psc::moment::moment_n<psc::deposit::code::Deposit1stCc, D>;
 
-  template <typename MP>
-  explicit Moment_n_1st(const MP& mprts) : Base{mprts.grid()}
-  {
-    Base::mres_gt_.view() = 0.f;
-    moment_type{}(Base::mres_gt_, Base::mres_ib_, mprts);
-    Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
-  }
+  using Base::Base;
 };
 
 // ======================================================================
@@ -37,19 +28,10 @@ class Moment_v_1st : public ItemMomentCRTP<Moment_v_1st<MF, D>, MF>
 {
 public:
   using Base = ItemMomentCRTP<Moment_v_1st<MF, D>, MF>;
-  using Mfields = MF;
-  using dim_t = D;
-  using real_t = typename Mfields::real_t;
   using moment_type =
-    psc::moment::moment_v<psc::deposit::code::Deposit1stCc, dim_t>;
+    psc::moment::moment_v<psc::deposit::code::Deposit1stCc, D>;
 
-  template <typename Mparticles>
-  explicit Moment_v_1st(const Mparticles& mprts) : Base{mprts.grid()}
-  {
-    Base::mres_gt_.view() = 0.f;
-    moment_type{}(Base::mres_gt_, Base::mres_ib_, mprts);
-    Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
-  }
+  using Base::Base;
 };
 
 // ======================================================================
@@ -60,37 +42,23 @@ class Moment_p_1st : public ItemMomentCRTP<Moment_p_1st<MF, D>, MF>
 {
 public:
   using Base = ItemMomentCRTP<Moment_p_1st<MF, D>, MF>;
-  using Mfields = MF;
-  using dim_t = D;
-  using real_t = typename Mfields::real_t;
   using moment_type =
-    psc::moment::moment_p<psc::deposit::code::Deposit1stCc, dim_t>;
+    psc::moment::moment_p<psc::deposit::code::Deposit1stCc, D>;
 
-  template <typename Mparticles>
-  explicit Moment_p_1st(const Mparticles& mprts) : Base{mprts.grid()}
-  {
-    Base::mres_gt_.view() = 0.f;
-    moment_type{}(Base::mres_gt_, Base::mres_ib_, mprts);
-    Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
-  }
+  using Base::Base;
 };
 
 // ======================================================================
 // T_1st
 
 template <typename MF, typename D>
-struct Moment_T_1st
+struct Moment_T_1st : public ItemMomentCRTP<Moment_T_1st<MF, D>, MF>
 {
-  using Mfields = MF;
-  using dim_t = D;
+  using Base = ItemMomentCRTP<Moment_T_1st<MF, D>, MF>;
   using moment_type =
-    psc::moment::moment_T<psc::deposit::code::Deposit1stCc, dim_t>;
+    psc::moment::moment_T<psc::deposit::code::Deposit1stCc, D>;
 
-  template <typename Mparticles>
-  static void run(Mfields& mflds, Mparticles& mprts)
-  {
-    moment_type{}(mflds.storage(), mflds.ib(), mprts);
-  }
+  using Base::Base;
 };
 
 // ======================================================================
@@ -104,20 +72,10 @@ class Moments_1st : public ItemMomentCRTP<Moments_1st<MP, MF, D>, MF>
 {
 public:
   using Base = ItemMomentCRTP<Moments_1st<MP, MF, D>, MF>;
-  using Mparticles = MP;
-  using Mfields = MF;
-  using dim_t = D;
-  using value_type = typename Mfields::real_t;
-  using space = typename Mfields::space;
   using moment_type =
-    psc::moment::moment_all<psc::deposit::code::Deposit1stCc, dim_t>;
+    psc::moment::moment_all<psc::deposit::code::Deposit1stCc, D>;
 
-  explicit Moments_1st(const Mparticles& mprts) : Base{mprts.grid()}
-  {
-    Base::mres_gt_.view() = 0.f;
-    moment_type{}(Base::mres_gt_, Base::mres_ib_, mprts);
-    Base::bnd_.add_ghosts(mprts.grid(), Base::mres_gt_, Base::mres_ib_);
-  }
+  using Base::Base;
 };
 
 #ifdef USE_CUDA
@@ -146,7 +104,9 @@ public:
   using moment_type =
     psc::moment::moment_all<psc::deposit::code::Deposit1stCc, dim_t>;
 
-  explicit Moments_1st(const Mparticles& _mprts) : Base{_mprts.grid()}
+  explicit Moments_1st(const Grid_t& grid) : Base{grid} {}
+
+  auto operator()(const Mparticles& _mprts)
   {
     static int pr, pr_A, pr_B, pr_C;
     if (!pr) {
@@ -172,6 +132,7 @@ public:
 
     mprts.put_as(h_mprts, MP_DONT_COPY);
     prof_stop(pr);
+    return Base::mres_gt_;
   }
 };
 

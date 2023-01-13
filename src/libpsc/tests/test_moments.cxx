@@ -23,6 +23,25 @@ struct Moment_rho_1st_nc_selector<MfieldsCuda, D>
 #endif
 
 // ======================================================================
+// Moments_1st_selector
+//
+// FIXME, should go away eventually
+
+template <typename MP, typename MF, typename D>
+struct Moments_1st_selector
+{
+  using type = Moments_1st<MP, MF, D>;
+};
+
+#ifdef USE_CUDA
+template <typename D>
+struct Moments_1st_selector<MparticlesCuda<BS444>, MfieldsCuda, D>
+{
+  using type = Moments_1st_cuda<D>;
+};
+#endif
+
+// ======================================================================
 // MomentTest
 
 template <typename T>
@@ -45,6 +64,12 @@ struct MomentTest : ::testing::Test
 
   const Grid_t& make_grid()
   {
+#ifdef USE_CUDA
+    // if we're switching dim_yz <-> dim_xyz, cached maps become invalid
+    BndCuda3<MfieldsCuda>::clear();
+    BndCuda3<MfieldsStateCuda>::clear();
+#endif
+
     Int3 gdims = {16, 16, 16};
     if (dim_t::InvarX::value) {
       gdims[0] = 1;
@@ -132,9 +157,9 @@ TYPED_TEST(MomentTest, Moment_n_1)
   auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 1.}, this->w, 0});
   const auto& grid = this->grid();
 
-  Moment moment{mprts};
+  Moment moment{grid};
   EXPECT_EQ(moment.comp_names(), std::vector<std::string>{"n_test_species"});
-  auto gt = psc::interior(moment.storage(), moment.ib());
+  auto gt = psc::mflds::interior(grid, moment(mprts));
   for (int p = 0; p < grid.n_patches(); p++) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);
@@ -155,14 +180,15 @@ TYPED_TEST(MomentTest, Moments_1st)
   using dim_t = typename TypeParam::dim;
   using MfieldsHost = hostMirror_t<Mfields>;
   using real_t = typename Mfields::real_t;
-  using Moment = Moments_1st<Mparticles, MfieldsHost, dim_t>;
+  using Moment =
+    typename Moments_1st_selector<Mparticles, Mfields, dim_t>::type;
 
   EXPECT_EQ(Moment::name(), "all_1st_cc");
   auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 1.}, this->w, 0});
   const auto& grid = this->grid();
 
-  Moment moment{mprts};
-  auto gt = psc::interior(moment.storage(), moment.ib());
+  Moment moment{grid};
+  auto gt = psc::mflds::interior(grid, moment(mprts));
   for (int p = 0; p < grid.n_patches(); p++) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);
@@ -191,8 +217,8 @@ TYPED_TEST(MomentTest, Moment_n_2) // FIXME, mostly copied
   if (dim_t::InvarX::value)
     i0 = 0;
 
-  Moment moment{mprts};
-  auto gt = psc::interior(moment.storage(), moment.ib());
+  Moment moment{grid};
+  auto gt = psc::mflds::interior(grid, moment(mprts));
   for (int p = 0; p < grid.n_patches(); p++) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);
@@ -219,8 +245,8 @@ TYPED_TEST(MomentTest, Moment_v_1st)
     this->make_mprts({{5., 5., 5.}, {.001, .002, .003}, this->w, 0});
   const auto& grid = this->grid();
 
-  Moment moment{mprts};
-  auto gt = psc::interior(moment.storage(), moment.ib());
+  Moment moment{grid};
+  auto gt = psc::mflds::interior(grid, moment(mprts));
   for (int p = 0; p < grid.n_patches(); p++) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);
@@ -247,8 +273,8 @@ TYPED_TEST(MomentTest, Moment_p_1st)
     this->make_mprts({{5., 5., 5.}, {.001, .002, .003}, this->w, 0});
   const auto& grid = this->grid();
 
-  Moment moment{mprts};
-  auto gt = psc::interior(moment.storage(), moment.ib());
+  Moment moment{grid};
+  auto gt = psc::mflds::interior(grid, moment(mprts));
   for (int p = 0; p < grid.n_patches(); p++) {
     grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
       real_t val = gt(i, j, k, 0, p);

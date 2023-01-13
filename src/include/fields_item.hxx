@@ -156,8 +156,6 @@ private:
 
 // ======================================================================
 // ItemMomentCRTP
-//
-// deriving from this class adds the result field mres_
 
 template <typename Derived, typename MF, typename Bnd = Bnd_<MF>>
 class ItemMomentCRTP : public MFexpression<Derived>
@@ -166,26 +164,31 @@ public:
   using storage_type = typename MF::Storage;
   using real_t = typename storage_type::value_type;
   using space_type = typename storage_type::space_type;
+  using value_type = typename storage_type::value_type;
+  using space = typename storage_type::space_type;
 
   static std::string name() { return Derived::moment_type::name(); }
   int n_comps() { return comp_names_.size(); }
   const std::vector<std::string>& comp_names() { return comp_names_; }
 
-  auto storage() { return mres_gt_; }
-  const Int3& ib() { return mres_ib_; }
-
-protected:
-  ItemMomentCRTP(const Grid_t& grid)
-    : comp_names_{Derived::moment_type::comp_names(grid.kinds)},
-      mres_gt_(psc::mflds::empty<real_t, space_type>(
-        grid, int(comp_names_.size()), -grid.ibn)),
-      mres_ib_{-grid.ibn},
-      bnd_{grid}
+  explicit ItemMomentCRTP(const Grid_t& grid)
+    : comp_names_{Derived::moment_type::comp_names(grid.kinds)}, bnd_{grid}
   {}
 
+  template <typename Mparticles>
+  auto operator()(const Mparticles& mprts)
+  {
+    Int3 ib = -mprts.grid().ibn;
+    storage_type mres =
+      psc::mflds::zeros<real_t, space_type>(mprts.grid(), n_comps(), ib);
+    typename Derived::moment_type{}(mres, ib, mprts);
+    bnd_.add_ghosts(mprts.grid(), mres, ib);
+    return mres;
+  }
+
 protected:
-  std::vector<std::string> comp_names_;
-  storage_type mres_gt_;
-  Int3 mres_ib_;
   ItemMomentBnd<storage_type, Bnd> bnd_;
+
+private:
+  std::vector<std::string> comp_names_;
 };

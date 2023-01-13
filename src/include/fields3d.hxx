@@ -547,12 +547,6 @@ using Mfields_from_gt_t =
 
 namespace psc
 {
-template <typename E>
-GT_INLINE auto interior(E&& e, const Int3& ib)
-{
-  return std::forward<E>(e).view(_s(-ib[0], ib[0]), _s(-ib[1], ib[1]),
-                                 _s(-ib[2], ib[2]));
-}
 
 namespace mflds
 {

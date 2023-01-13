@@ -77,8 +77,8 @@ TYPED_TEST(MfieldsTest, WriteRead)
     reader.close();
   }
 
-  EXPECT_EQ(gt::norm_linf(psc::interior(mflds.gt(), mflds.ib()) -
-                          psc::interior(mflds2.gt(), mflds2.ib())),
+  EXPECT_EQ(gt::norm_linf(psc::mflds::interior(grid, mflds.gt()) -
+                          psc::mflds::interior(grid, mflds2.gt())),
             0);
 }
 
@@ -108,8 +108,8 @@ TYPED_TEST(MfieldsTest, WriteWithGhostsRead)
     reader.close();
   }
 
-  EXPECT_EQ(gt::norm_linf(psc::interior(mflds.gt(), mflds.ib()) -
-                          psc::interior(mflds2.gt(), mflds2.ib())),
+  EXPECT_EQ(gt::norm_linf(psc::mflds::interior(grid, mflds.gt()) -
+                          psc::mflds::interior(grid, mflds2.gt())),
             0);
 }
 
@@ -139,8 +139,8 @@ TYPED_TEST(MfieldsTest, WriteReadWithGhosts)
     reader.close();
   }
 
-  EXPECT_EQ(gt::norm_linf(psc::interior(mflds.gt(), mflds.ib()) -
-                          psc::interior(mflds2.gt(), mflds2.ib())),
+  EXPECT_EQ(gt::norm_linf(psc::mflds::interior(grid, mflds.gt()) -
+                          psc::mflds::interior(grid, mflds2.gt())),
             0);
 }
 
