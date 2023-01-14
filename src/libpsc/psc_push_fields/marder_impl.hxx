@@ -147,7 +147,9 @@ struct Marder_ : MarderBase
 
   void calc_aid_fields(MfieldsState& mflds)
   {
-    auto dive = Item_dive<MfieldsState>(mflds);
+    const auto& grid = mflds.grid();
+    auto item_dive = Item_dive<MfieldsState>{};
+    auto dive_gt = psc::mflds::interior(grid, item_dive(mflds));
 
     if (dump_) {
       static int cnt;
@@ -155,16 +157,12 @@ struct Marder_ : MarderBase
       cnt++;
       io_.write(rho_.gt(), rho_.grid(), "rho", {"rho"});
       {
-        Int3 bnd = dive.ibn();
-        io_.write(dive.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                                 _s(bnd[2], -bnd[2])),
-                  dive.grid(), "dive", {"dive"});
+        io_.write(dive_gt, grid, "dive", {"dive"});
       }
       io_.end_step();
     }
 
     // res_.assign(dive);
-    auto&& dive_gt = psc::mflds::interior(dive.grid(), dive.gt());
     for (int p = 0; p < res_.n_patches(); p++) {
       for (int m = 0; m < res_.n_comps(); m++) {
         kg::Box3 box = res_.box();

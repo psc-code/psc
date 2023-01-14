@@ -84,10 +84,10 @@ struct Checks_
     }
 
     auto item_rho_p = Moment_t{grid};
-    auto item_divj = Item_divj<MfieldsState>(mflds);
+    auto item_divj = Item_divj<MfieldsState>{};
 
     auto d_rho_gt = psc::mflds::interior(grid, item_rho_p(mprts)) - rho_m_gt_;
-    auto dt_divj_gt = grid.dt * item_divj.gt();
+    auto dt_divj_gt = grid.dt * item_divj(mflds);
 
     double eps = continuity_threshold;
     double max_err = 0.;
@@ -139,13 +139,13 @@ struct Checks_
     }
 
     auto item_rho = Moment_t{grid};
-    auto dive = Item_dive<MfieldsState>(mflds);
+    auto item_dive = Item_dive<MfieldsState>{};
     auto rho_gt = psc::mflds::interior(grid, item_rho(mprts));
-    auto dive_gt = psc::mflds::interior(grid, dive.storage());
+    auto dive_gt = psc::mflds::interior(grid, item_dive(mflds));
 
     double eps = gauss_threshold;
     double max_err = 0.;
-    for (int p = 0; p < dive.n_patches(); p++) {
+    for (int p = 0; p < grid.n_patches(); p++) {
       int l[3] = {0, 0, 0}, r[3] = {0, 0, 0};
       for (int d = 0; d < 3; d++) {
         if (grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL &&
@@ -184,7 +184,8 @@ struct Checks_
       }
       writer_gauss_.begin_step(grid.timestep(), grid.timestep() * grid.dt);
       writer_gauss_.write(rho_gt, grid, "rho", {"rho"});
-      writer_gauss_.write(dive_gt, grid, dive.name(), dive.comp_names());
+      writer_gauss_.write(dive_gt, grid, item_dive.name(),
+                          item_dive.comp_names());
       writer_gauss_.end_step();
     }
 

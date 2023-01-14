@@ -72,10 +72,10 @@ struct ChecksCuda
     }
 
     Moment_t item_rho{grid};
-    auto item_divj = Item_divj<MfieldsStateCuda>(mflds);
+    auto item_divj = Item_divj<MfieldsStateCuda>{};
 
     auto d_rho_p = psc::mflds::interior(grid, item_rho(mprts));
-    auto&& d_divj = item_divj.gt();
+    auto d_divj = psc::mflds::interior(grid, item_divj(mflds));
     auto&& rho_p = gt::host_mirror(d_rho_p);
     auto&& rho_m = gt::host_mirror(rho_m_gt_);
     auto&& h_divj = gt::host_mirror(d_divj);
@@ -138,10 +138,10 @@ struct ChecksCuda
     }
 
     auto item_rho = Moment_t{grid};
-    auto item_dive = Item_dive<MfieldsStateCuda>(mflds);
+    auto item_dive = Item_dive<MfieldsStateCuda>{};
 
     auto d_rho = psc::mflds::interior(grid, item_rho(mprts));
-    auto d_dive = item_dive.gt();
+    auto d_dive = item_dive(mflds);
     auto&& rho = gt::host_mirror(d_rho);
     auto&& dive = gt::host_mirror(d_dive);
     gt::copy(d_rho, rho);

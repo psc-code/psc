@@ -101,8 +101,8 @@ struct MarderCuda : MarderBase
   void calc_aid_fields(MfieldsState& mflds, const E& rho)
   {
     const auto& grid = mflds.grid();
-    Item_dive<MfieldsStateCuda> item_dive(mflds);
-    auto&& dive = item_dive.gt();
+    auto item_dive = Item_dive<MfieldsState>{};
+    auto dive = psc::mflds::interior(grid, item_dive(mflds));
 
     if (dump_) {
       static int cnt;

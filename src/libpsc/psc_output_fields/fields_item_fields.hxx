@@ -7,42 +7,13 @@
 #include "psc_fields_cuda.h"
 #endif
 
-template <typename E>
-inline auto to_gt(const E& e)
-{
-  auto& grid = e.grid();
-  assert(e.ibn() == Int3{});
-  auto res = gt::empty<typename E::Real>(
-    {grid.ldims[0], grid.ldims[1], grid.ldims[2], e.n_comps(), e.n_patches()});
-  auto k_res = res.to_kernel();
-
-  gt::launch<5, gt::space::host>(res.shape(),
-                                 [=](int i, int j, int k, int m, int p) {
-                                   k_res(i, j, k, m, p) = e(m, {i, j, k}, p);
-                                 });
-
-  return res;
-}
-
-// ======================================================================
-
-using MfieldsState_t = MfieldsStateDouble;
-using Mfields_t = MfieldsC;
-
-// ======================================================================
-
-#define define_dxdydz(dx, dy, dz)                                              \
-  int dx _mrc_unused = (grid.isInvar(0)) ? 0 : 1;                              \
-  int dy _mrc_unused = (grid.isInvar(1)) ? 0 : 1;                              \
-  int dz _mrc_unused = (grid.isInvar(2)) ? 0 : 1
-
 // ======================================================================
 // Item_jeh
 //
 // Main fields in their natural staggering
 
 template <typename MfieldsState>
-class Item_jeh : public MFexpression<Item_jeh<MfieldsState>>
+class Item_jeh
 {
 public:
   using Real = typename MfieldsState::real_t;
@@ -57,25 +28,7 @@ public:
             "ez_ec", "hx_fc", "hy_fc", "hz_fc"};
   }
 
-  Item_jeh(MfieldsState& mflds) : mflds_{mflds} {}
-
-  auto gt() const
-  {
-    auto bnd = mflds_.ibn();
-    return mflds_.gt().view(_s(bnd[0], -bnd[0]), _s(bnd[1], -bnd[1]),
-                            _s(bnd[2], -bnd[2]));
-  }
-
-  const Grid_t& grid() const { return mflds_.grid(); }
-  Int3 ibn() const { return {}; }
-  Int3 ib() const { return mflds_.ib(); }
-  const auto& storage() const { return mflds_.storage(); }
-  int n_patches() const { return grid().n_patches(); }
-
-  MfieldsState& result() const { return mflds_; }
-
-private:
-  MfieldsState& mflds_;
+  auto operator()(MfieldsState& mflds) const { return mflds.storage().view(); };
 };
 
 // ======================================================================
@@ -199,31 +152,18 @@ static auto grad_ec(const E& fld, const Grid_t& grid)
 // Item_dive
 
 template <typename MfieldsState>
-class Item_dive : public MFexpression<Item_dive<MfieldsState>>
+class Item_dive
 {
 public:
-  using Real = typename MfieldsState::real_t;
-
   static char const* name() { return "dive"; }
   static int n_comps() { return 1; }
   static std::vector<std::string> comp_names() { return {"dive"}; }
 
-  Item_dive(MfieldsState& mflds) : mflds_{mflds} {}
-
-  const Grid_t& grid() const { return mflds_.grid(); }
-  Int3 ibn() const { return {}; }
-  Int3 ib() const { return {}; }
-  int n_patches() const { return grid().n_patches(); }
-  auto storage() const { return gt(); }
-
-  auto gt() const
+  auto operator()(MfieldsState& mflds) const
   {
-    return psc::item::div_nc(mflds_.gt().view(_all, _all, _all, _s(EX, EX + 3)),
-                             mflds_.grid());
+    return psc::item::div_nc(mflds.gt().view(_all, _all, _all, _s(EX, EX + 3)),
+                             mflds.grid());
   }
-
-private:
-  MfieldsState& mflds_;
 };
 
 // ======================================================================
@@ -232,36 +172,25 @@ private:
 // FIXME, almost same as dive
 
 template <typename MfieldsState>
-class Item_divj : public MFexpression<Item_divj<MfieldsState>>
+class Item_divj
 {
 public:
-  using Real = typename MfieldsState::real_t;
-
   static char const* name() { return "divj"; }
   static int n_comps() { return 1; }
   static std::vector<std::string> comp_names() { return {"divj"}; }
 
-  Item_divj(MfieldsState& mflds) : mflds_{mflds} {}
-
-  const Grid_t& grid() const { return mflds_.grid(); }
-  Int3 ibn() const { return {}; }
-  int n_patches() const { return grid().n_patches(); }
-
-  auto gt() const
+  auto operator()(MfieldsState& mflds) const
   {
     return psc::item::div_nc(
-      mflds_.gt().view(_all, _all, _all, _s(JXI, JXI + 3)), mflds_.grid());
+      mflds.gt().view(_all, _all, _all, _s(JXI, JXI + 3)), mflds.grid());
   }
-
-private:
-  MfieldsState& mflds_;
 };
 
 // ======================================================================
 // Item_grad
 
 template <typename Mfields>
-class Item_grad : public MFexpression<Item_grad<Mfields>>
+class Item_grad
 {
 public:
   using Real = typename Mfields::real_t;
@@ -276,13 +205,9 @@ public:
   Item_grad(Mfields& mflds) : mflds_{mflds} {}
 
   const Grid_t& grid() const { return mflds_.grid(); }
-  Int3 ibn() const { return {}; }
-  int n_patches() const { return grid().n_patches(); }
 
   auto gt() const { return psc::item::grad_ec(mflds_.gt(), mflds_.grid()); }
 
 private:
   Mfields& mflds_;
 };
-
-#undef define_dxdydz

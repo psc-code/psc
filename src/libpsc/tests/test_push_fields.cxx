@@ -230,8 +230,8 @@ TYPED_TEST(ItemTest, ItemDivE)
   });
   auto dx = grid.domain.dx;
 
-  auto item_dive = Item(mflds);
-  auto&& rho = item_dive.gt();
+  auto item_dive = Item();
+  auto&& rho = item_dive(mflds);
 
   auto rho_ref = gt::empty_like(rho);
   auto k_rho_ref = rho_ref.to_kernel();
@@ -271,8 +271,8 @@ TYPED_TEST(ItemTest, ItemDivJ)
   });
   auto dx = grid.domain.dx;
 
-  auto item_divj = Item(mflds);
-  auto&& rho = item_divj.gt();
+  auto item_divj = Item{};
+  auto&& rho = item_divj(mflds);
 
   auto rho_ref = gt::empty_like(rho);
   auto k_rho_ref = rho_ref.to_kernel();
