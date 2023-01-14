@@ -63,7 +63,7 @@ Int3 getBnd(const E& flds, const Grid_t& grid)
 // div_nc
 
 template <typename E>
-static auto div_nc(const E& flds, const Grid_t& grid)
+static auto div_nc(const Grid_t& grid, const E& flds)
 {
   Int3 bnd = getBnd(flds, grid);
   auto dxyz = grid.domain.dx;
@@ -160,15 +160,13 @@ public:
 
   auto operator()(MfieldsState& mflds) const
   {
-    return psc::item::div_nc(mflds.gt().view(_all, _all, _all, _s(EX, EX + 3)),
-                             mflds.grid());
+    return psc::item::div_nc(
+      mflds.grid(), mflds.storage().view(_all, _all, _all, _s(EX, EX + 3)));
   }
 };
 
 // ======================================================================
 // Item_divj
-
-// FIXME, almost same as dive
 
 template <typename MfieldsState>
 class Item_divj
@@ -181,7 +179,7 @@ public:
   auto operator()(MfieldsState& mflds) const
   {
     return psc::item::div_nc(
-      mflds.gt().view(_all, _all, _all, _s(JXI, JXI + 3)), mflds.grid());
+      mflds.grid(), mflds.storage().view(_all, _all, _all, _s(JXI, JXI + 3)));
   }
 };
 

@@ -4,9 +4,6 @@
 #include "testing.hxx"
 
 #include "../libpsc/psc_push_fields/marder_impl.hxx"
-#ifdef USE_CUDA
-#include "../libpsc/cuda/marder_cuda_impl.hxx"
-#endif
 
 #include <gtensor/reductions.h>
 
@@ -106,33 +103,6 @@ TYPED_TEST(PushFieldsTest, Pushf2)
     });
 }
 
-// ======================================================================
-// MarderCorrect
-
-namespace detail
-{
-template <typename Mparticles, typename MfieldsState, typename Mfields,
-          typename Dim>
-struct marder_selector
-{
-  using type = Marder_<Mparticles, MfieldsState, Mfields, Dim>;
-};
-
-#ifdef USE_CUDA
-template <typename Mparticles, typename Dim>
-struct marder_selector<Mparticles, MfieldsStateCuda, MfieldsCuda, Dim>
-{
-  using type = MarderCuda<typename Mparticles::BS, Dim>;
-};
-#endif
-} // namespace detail
-
-template <typename Mparticles, typename MfieldsState, typename Mfields,
-          typename Dim>
-using marder_selector_t =
-  typename detail::marder_selector<Mparticles, MfieldsState, Mfields,
-                                   Dim>::type;
-
 // need separate init_phi to work around device lambda limitations
 
 template <typename E>
@@ -146,6 +116,9 @@ inline void init_phi(E&& mphi, Int3 bnd, const Grid_t& grid, double kz)
       k_mphi(i, j, k, 0, p) = sin(kz * z);
     });
 }
+
+// ======================================================================
+// MarderCorrect
 
 TYPED_TEST(PushFieldsTest, MarderCorrect)
 {
@@ -183,7 +156,10 @@ TYPED_TEST(PushFieldsTest, MarderCorrect)
   auto mphi = Mfields{grid, 1, grid.ibn};
   init_phi(mphi.gt(), mphi.ibn(), grid, kz);
 
-  psc::marder::correct(mflds, mphi, diffusion);
+  auto efield = mflds.storage().view(_all, _all, _all, _s(EX, EX + 3), _all);
+  auto efield_ib = mflds.ib();
+  psc::marder::correct(grid, efield, efield_ib, mphi.storage(), mphi.ib(),
+                       diffusion);
 
   // check result
   EXPECT_LT(gt::norm_linf(psc::mflds::interior(grid, mflds.gt()) -

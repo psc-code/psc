@@ -24,7 +24,6 @@
 #include "../libpsc/cuda/bnd_particles_cuda_impl.hxx"
 #include "../libpsc/cuda/checks_cuda_impl.hxx"
 #include "../libpsc/cuda/collision_cuda_impl.hxx"
-#include "../libpsc/cuda/marder_cuda_impl.hxx"
 #include "../libpsc/cuda/push_fields_cuda_impl.hxx"
 #include "../libpsc/cuda/push_particles_cuda_impl.hxx"
 #include "../libpsc/cuda/sort_cuda_impl.hxx"
@@ -93,7 +92,7 @@ struct PscConfig_
   using BndFields = BndFields_<MfieldsState, Dim>;
   using Balance = Balance_<Mparticles, MfieldsState, Mfields>;
   using Checks = Checks_<Mparticles, Mfields, checks_order, Dim>;
-  using Marder = Marder_<Mparticles, MfieldsState, Mfields, Dim>;
+  using Marder = Marder_<typename Mfields::Storage, Dim>;
   using Simulation = _Simulation;
   using OutputParticles = OutputParticlesDefault;
 };
@@ -119,7 +118,7 @@ struct PscConfig_<_Dim, _Mparticles, _MfieldsState, _Mfields,
   using BndFields = BndFieldsNone<MfieldsState>;
   using Balance = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Checks = ChecksCuda<Mparticles, Dim>;
-  using Marder = MarderCuda<BS, _Dim>;
+  using Marder = MarderCuda<Dim>;
   using OutputParticles = OutputParticlesDefault;
 };
 
@@ -143,7 +142,7 @@ struct PscConfig_<dim_xyz, _Mparticles, _MfieldsState, _Mfields,
   using BndFields_t = BndFieldsNone<MfieldsState>;
   using Balance = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Checks = ChecksCuda<Mparticles, Dim>;
-  using Marder = MarderCuda<BS, dim_xyz>;
+  using Marder = MarderCuda<Dim>;
   using OutputParticles = OutputParticlesDefault;
 };
 
