@@ -532,7 +532,7 @@ struct Mfields_from_type_space
 template <typename E>
 using Mfields_from_gt_t =
   typename detail::Mfields_from_type_space<typename E::value_type,
-                                           typename E::space>::type;
+                                           typename E::space_type>::type;
 
 // ======================================================================
 // psc::interior
@@ -543,20 +543,22 @@ namespace psc
 namespace mflds
 {
 
+GT_INLINE auto make_shape(const Grid_t& grid, int n_comps, const Int3& ib = {})
+{
+  return gt::shape(grid.ldims[0] - 2 * ib[0], grid.ldims[1] - 2 * ib[1],
+                   grid.ldims[2] - 2 * ib[2], n_comps, grid.n_patches());
+}
+
 template <typename R, typename S = gt::space::host>
 GT_INLINE auto empty(const Grid_t& grid, int n_comps, Int3 ib = {})
 {
-  return gt::empty<R, S>({grid.ldims[0] - 2 * ib[0], grid.ldims[1] - 2 * ib[1],
-                          grid.ldims[2] - 2 * ib[2], n_comps,
-                          grid.n_patches()});
+  return gt::empty<R, S>(make_shape(grid, n_comps, ib));
 }
 
 template <typename R, typename S = gt::space::host>
 GT_INLINE auto zeros(const Grid_t& grid, int n_comps, Int3 ib = {})
 {
-  return gt::zeros<R, S>({grid.ldims[0] - 2 * ib[0], grid.ldims[1] - 2 * ib[1],
-                          grid.ldims[2] - 2 * ib[2], n_comps,
-                          grid.n_patches()});
+  return gt::zeros<R, S>(make_shape(grid, n_comps, ib));
 }
 
 template <typename E>

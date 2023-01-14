@@ -25,25 +25,25 @@ using WriterDefault = WriterMRC;
 
 namespace detail
 {
-template <typename Mparticles, typename Dim, typename Enable = void>
+template <typename S, typename D, typename Enable = void>
 struct moment_selector
 {
-  using type =
-    Moments_1st<Mparticles, Mfields<typename Mparticles::real_t>, Dim>;
+  using type = Moments_1st<S, D>;
 };
 
 #ifdef USE_CUDA
-template <typename Mparticles, typename Dim>
-struct moment_selector<
-  Mparticles, Dim, typename std::enable_if<Mparticles::is_cuda::value>::type>
+template <typename S, typename D>
+struct moment_selector<S, D,
+                       std::enable_if_t<std::is_same<typename S::space_type,
+                                                     gt::space::device>::value>>
 {
-  using type = Moments_1st_cuda<Dim>;
+  using type = Moments_1st_cuda<D>;
 };
 #endif
 } // namespace detail
 
-template <typename Mparticles, typename Dim>
-using Item_Moments = typename detail::moment_selector<Mparticles, Dim>::type;
+template <typename S, typename D>
+using Item_Moments = typename detail::moment_selector<S, D>::type;
 
 template <typename E>
 struct mfields_gt
@@ -235,7 +235,7 @@ public:
 
     prof_start(pr_moments);
     moments(grid, [&]() {
-      auto item = Item_Moments<Mparticles, Dim>(grid);
+      auto item = Item_Moments<typename MfieldsState::Storage, Dim>(grid);
       return make_mfields_gt(item(mprts), item.name(), item.comp_names());
     });
     prof_stop(pr_moments);
@@ -245,6 +245,8 @@ public:
 
 public:
   OutputFieldsItem<Mfields_from_gt_t<Item_jeh<MfieldsState>>, Writer> fields;
-  OutputFieldsItem<Mfields_from_gt_t<Item_Moments<Mparticles, Dim>>, Writer>
+  OutputFieldsItem<
+    Mfields_from_gt_t<Item_Moments<typename MfieldsState::Storage, Dim>>,
+    Writer>
     moments;
 };

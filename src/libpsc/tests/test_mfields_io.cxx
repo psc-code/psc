@@ -4,6 +4,8 @@
 #include "fields3d.hxx"
 #include "psc_fields_c.h"
 #include "psc_fields_single.h"
+#include "psc_particles_double.h"
+#include "psc_particles_single.h"
 #ifdef USE_CUDA
 #include "psc_fields_cuda.h"
 #include "psc_fields_cuda.inl"
@@ -146,11 +148,30 @@ TYPED_TEST(MfieldsTest, WriteReadWithGhosts)
 
 #endif
 
-TYPED_TEST(MfieldsTest, OutputFieldsMRC)
+template <typename MF, typename MP>
+struct OutputFieldsTestConfig
 {
-  using Mfields = TypeParam;
-  using real_t = typename Mfields::real_t;
-  using Mparticles = MparticlesSimple<ParticleSimple<real_t>>;
+  using Mfields = MF;
+  using Mparticles = MP;
+};
+
+template <typename T>
+class OutputFieldsTest : public ::testing::Test
+{};
+
+using OutputFieldsTestTypes = ::testing::Types<
+#ifdef USE_CUDA
+  OutputFieldsTestConfig<MfieldsCuda, MparticlesCuda<BS444>>,
+#endif
+  OutputFieldsTestConfig<MfieldsSingle, MparticlesSingle>,
+  OutputFieldsTestConfig<MfieldsC, MparticlesDouble>>;
+
+TYPED_TEST_SUITE(OutputFieldsTest, OutputFieldsTestTypes);
+
+TYPED_TEST(OutputFieldsTest, OutputFieldsMRC)
+{
+  using Mfields = typename TypeParam::Mfields;
+  using Mparticles = typename TypeParam::Mparticles;
 
   auto grid = make_grid();
   auto mflds = Mfields{grid, NR_FIELDS, {2, 2, 2}};
@@ -174,11 +195,10 @@ TYPED_TEST(MfieldsTest, OutputFieldsMRC)
 
 #ifdef PSC_HAVE_ADIOS2
 
-TYPED_TEST(MfieldsTest, OutputFieldsADIOS2)
+TYPED_TEST(OutputFieldsTest, OutputFieldsADIOS2)
 {
-  using Mfields = TypeParam;
-  using real_t = typename Mfields::real_t;
-  using Mparticles = MparticlesSimple<ParticleSimple<real_t>>;
+  using Mfields = typename TypeParam::Mfields;
+  using Mparticles = typename TypeParam::Mparticles;
 
   auto grid = make_grid();
   auto mflds = Mfields{grid, NR_FIELDS, {2, 2, 2}};

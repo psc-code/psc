@@ -11,7 +11,7 @@
 template <typename MF, typename D>
 struct Moment_rho_1st_nc_selector
 {
-  using type = Moment_rho_1st_nc<MF, D>;
+  using type = Moment_rho_1st_nc<typename MF::Storage, D>;
 };
 
 #ifdef USE_CUDA
@@ -25,17 +25,20 @@ struct Moment_rho_1st_nc_selector<MfieldsCuda, D>
 // ======================================================================
 // Moments_1st_selector
 //
-// FIXME, should go away eventually
+// FIXME, should go away eventually; duplicated from OutputFieldsDefault.h
 
-template <typename MP, typename MF, typename D>
+template <typename S, typename D, typename Enable = void>
 struct Moments_1st_selector
 {
-  using type = Moments_1st<MP, MF, D>;
+  using type = Moments_1st<S, D>;
 };
 
 #ifdef USE_CUDA
-template <typename D>
-struct Moments_1st_selector<MparticlesCuda<BS444>, MfieldsCuda, D>
+template <typename S, typename D>
+struct Moments_1st_selector<
+  S, D,
+  std::enable_if_t<
+    std::is_same<typename S::storage_type, gt::space::device>::value>>
 {
   using type = Moments_1st_cuda<D>;
 };
@@ -150,7 +153,7 @@ TYPED_TEST(MomentTest, Moment_n_1)
   using Mfields = typename base_type::Mfields;
   using Mparticles = typename base_type::Mparticles;
   using real_t = typename base_type::real_t;
-  using Moment = Moment_n_1st<Mfields, dim_t>;
+  using Moment = Moment_n_1st<typename Mfields::Storage, dim_t>;
 
   EXPECT_EQ(Moment::name(), "n_1st_cc");
   auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 1.}, this->w, 0});
@@ -180,7 +183,7 @@ TYPED_TEST(MomentTest, Moments_1st)
   using MfieldsHost = hostMirror_t<Mfields>;
   using real_t = typename Mfields::real_t;
   using Moment =
-    typename Moments_1st_selector<Mparticles, Mfields, dim_t>::type;
+    typename Moments_1st_selector<typename Mfields::Storage, dim_t>::type;
 
   EXPECT_EQ(Moment::name(), "all_1st_cc");
   auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 1.}, this->w, 0});
@@ -201,6 +204,35 @@ TYPED_TEST(MomentTest, Moments_1st)
   }
 }
 
+#ifdef USE_CUDA
+TYPED_TEST(MomentTest, Moments_1st_to_host)
+{
+  using Mparticles = typename TypeParam::Mparticles;
+  using Mfields = typename TypeParam::Mfields;
+  using dim_t = typename TypeParam::dim;
+  using real_t = typename Mfields::real_t;
+  using Moment = Moments_1st_to_host<dim_t>;
+
+  EXPECT_EQ(Moment::name(), "all_1st_cc");
+  auto& mprts = this->make_mprts({{5., 5., 5.}, {0., 0., 1.}, this->w, 0});
+  const auto& grid = this->grid();
+
+  Moment moment{grid};
+  auto gt = psc::mflds::interior(grid, moment(mprts));
+  for (int p = 0; p < grid.n_patches(); p++) {
+    grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
+      real_t val = gt(i, j, k, 0, p);
+      if (i == 0 && j == 0 && k == 0) {
+        EXPECT_NEAR(val, this->w / this->nicell, this->eps)
+          << "ijk " << i << " " << j << " " << k;
+      } else {
+        EXPECT_NEAR(val, 0., this->eps) << "ijk " << i << " " << j << " " << k;
+      }
+    });
+  }
+}
+#endif
+
 TYPED_TEST(MomentTest, Moment_n_2) // FIXME, mostly copied
 {
   using base_type = MomentTest<TypeParam>;
@@ -208,7 +240,7 @@ TYPED_TEST(MomentTest, Moment_n_2) // FIXME, mostly copied
   using Mfields = typename base_type::Mfields;
   using Mparticles = typename base_type::Mparticles;
   using real_t = typename base_type::real_t;
-  using Moment = Moment_n_1st<Mfields, dim_t>;
+  using Moment = Moment_n_1st<typename Mfields::Storage, dim_t>;
 
   auto& mprts = this->make_mprts({{25., 5., 5.}, {0., 0., 1.}, this->w, 0});
   const auto& grid = this->grid();
@@ -236,7 +268,7 @@ TYPED_TEST(MomentTest, Moment_v_1st)
   using Mparticles = typename TypeParam::Mparticles;
   using Mfields = typename TypeParam::Mfields;
   using dim_t = typename TypeParam::dim;
-  using Moment = Moment_v_1st<Mfields, dim_t>;
+  using Moment = Moment_v_1st<typename Mfields::Storage, dim_t>;
   using real_t = typename Mfields::real_t;
 
   EXPECT_EQ(Moment::name(), "v_1st_cc");
@@ -264,7 +296,7 @@ TYPED_TEST(MomentTest, Moment_p_1st)
   using Mparticles = typename TypeParam::Mparticles;
   using Mfields = typename TypeParam::Mfields;
   using dim_t = typename TypeParam::dim;
-  using Moment = Moment_p_1st<Mfields, dim_t>;
+  using Moment = Moment_p_1st<typename Mfields::Storage, dim_t>;
   using real_t = typename Mfields::real_t;
 
   EXPECT_EQ(Moment::name(), "p_1st_cc");
@@ -375,7 +407,7 @@ TYPED_TEST(MomentTest, Moment_rho_2nd_nc)
   using Mparticles = typename TypeParam::Mparticles;
   using Mfields = typename TypeParam::Mfields;
   using dim_t = typename TypeParam::dim;
-  using Moment = Moment_rho_2nd_nc<Mfields, dim_t>;
+  using Moment = Moment_rho_2nd_nc<typename Mfields::Storage, dim_t>;
   using real_t = typename Mfields::real_t;
 
   EXPECT_EQ(Moment::name(), "rho_2nd_nc");

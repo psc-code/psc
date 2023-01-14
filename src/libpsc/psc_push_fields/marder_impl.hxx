@@ -5,7 +5,7 @@
 #include "fields.hxx"
 #include "writer_mrc.hxx"
 #include "../libpsc/psc_output_fields/fields_item_fields.hxx"
-#include "../libpsc/psc_output_fields/psc_output_fields_item_moments_1st_nc.cxx"
+#include "../libpsc/psc_output_fields/fields_item_moments_1st.hxx"
 #include "../libpsc/psc_bnd/psc_bnd_impl.hxx"
 
 #include <mrc_io.h>
@@ -121,7 +121,7 @@ struct Marder_ : MarderBase
   using dim_t = D;
   using real_t = typename Mfields::real_t;
   using fields_view_t = typename Mfields::fields_view_t;
-  using Moment_t = Moment_rho_1st_nc<Mfields, dim_t>;
+  using Moment_t = Moment_rho_1st_nc<typename Mfields::Storage, dim_t>;
 
   Marder_(const Grid_t& grid, real_t diffusion, int loop, bool dump)
     : grid_{grid},

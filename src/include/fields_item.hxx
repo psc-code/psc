@@ -14,11 +14,6 @@
 #include <map>
 #include <string>
 
-enum
-{
-  POFI_BY_KIND = 2, // this item needs to be replicated by kind
-};
-
 // ======================================================================
 // addKindSuffix
 
@@ -155,40 +150,45 @@ private:
 };
 
 // ======================================================================
-// ItemMomentCRTP
+// ItemMoment
+//
+// This build upon psc::mmoment::moment_* and
+// * stores comp_names, provides n_comps()
+// * allocates the result of the moment calculation
+// * performs add_ghosts
 
-template <typename Derived, typename MF, typename Bnd = Bnd_>
-class ItemMomentCRTP
+template <typename MT, typename S, typename Bnd = Bnd_>
+class ItemMoment
 {
 public:
-  using storage_type = typename MF::Storage;
-  using real_t = typename storage_type::value_type;
+  using moment_type = MT;
+  using storage_type = S;
   using space_type = typename storage_type::space_type;
   using value_type = typename storage_type::value_type;
-  using space = typename storage_type::space_type;
 
-  static std::string name() { return Derived::moment_type::name(); }
+  static std::string name() { return moment_type::name(); }
   int n_comps() { return comp_names_.size(); }
   const std::vector<std::string>& comp_names() { return comp_names_; }
 
-  explicit ItemMomentCRTP(const Grid_t& grid)
-    : comp_names_{Derived::moment_type::comp_names(grid.kinds)}, bnd_{grid}
+  explicit ItemMoment(const Grid_t& grid)
+    : comp_names_{moment_type::comp_names(grid.kinds)}, bnd_{grid}
   {}
 
   template <typename Mparticles>
   auto operator()(const Mparticles& mprts)
   {
     Int3 ib = -mprts.grid().ibn;
+    // FIXME, gt::gtensor and psc::gtensor are slightly different, and ideally
+    // zeros() shouldn't actually allocate, but probably it does, so this wastes
+    // memory and a copy
     storage_type mres =
-      psc::mflds::zeros<real_t, space_type>(mprts.grid(), n_comps(), ib);
-    typename Derived::moment_type{}(mres, ib, mprts);
+      psc::mflds::zeros<value_type, space_type>(mprts.grid(), n_comps(), ib);
+    moment_type{}(mres, ib, mprts);
     bnd_.add_ghosts(mprts.grid(), mres, ib);
     return mres;
   }
 
-protected:
-  ItemMomentBnd<storage_type, Bnd> bnd_;
-
 private:
+  ItemMomentBnd<storage_type, Bnd> bnd_;
   std::vector<std::string> comp_names_;
 };
