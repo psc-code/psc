@@ -89,7 +89,7 @@ struct PscConfig_
   using Collision = Collision_<Mparticles, MfieldsState, Mfields>;
   using PushFields = ::PushFields<MfieldsState>;
   using BndParticles = BndParticles_<Mparticles>;
-  using Bnd = Bnd_<MfieldsState>;
+  using Bnd = Bnd_;
   using BndFields = BndFields_<MfieldsState, Dim>;
   using Balance = Balance_<Mparticles, MfieldsState, Mfields>;
   using Checks = Checks_<Mparticles, MfieldsState, Mfields, checks_order, Dim>;
@@ -115,7 +115,7 @@ struct PscConfig_<_Dim, _Mparticles, _MfieldsState, _Mfields,
   using Collision = CollisionCuda<Mparticles>;
   using PushFields = PushFieldsCuda;
   using BndParticles = BndParticlesCuda<Mparticles, Dim>;
-  using Bnd = BndCuda3<MfieldsState>;
+  using Bnd = BndCuda3;
   using BndFields = BndFieldsNone<MfieldsState>;
   using Balance = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Checks = ChecksCuda<Mparticles>;
@@ -137,8 +137,8 @@ struct PscConfig_<dim_xyz, _Mparticles, _MfieldsState, _Mfields,
   using Collision = CollisionCuda<Mparticles>;
   using PushFields = PushFieldsCuda;
   using BndParticles = BndParticlesCuda<Mparticles, Dim>;
-  using Bnd_t = BndCuda3<MfieldsState>;
-  using Bnd = BndCuda3<MfieldsState>;
+  using Bnd_t = BndCuda3;
+  using Bnd = BndCuda3;
   using BndFields = BndFieldsNone<MfieldsState>;
   using BndFields_t = BndFieldsNone<MfieldsState>;
   using Balance = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;

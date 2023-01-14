@@ -73,37 +73,34 @@ TEST(Bnd, MakeGrid)
   }
 }
 
-template <typename BND, typename DIM>
+template <typename MF, typename BND, typename DIM>
 struct TestConfigBnd
 {
+  using Mfields = MF;
   using Bnd = BND;
   using dim = DIM;
 };
 
 template <typename T>
 struct BndTest : public ::testing::Test
-{
-  using Bnd = typename T::Bnd;
-  using dim = typename T::dim;
-};
+{};
 
 using BndTestTypes =
-  ::testing::Types<TestConfigBnd<Bnd_<MfieldsSingle>, dim_yz>,
-                   TestConfigBnd<Bnd_<MfieldsC>, dim_yz>,
+  ::testing::Types<TestConfigBnd<MfieldsSingle, Bnd_, dim_yz>,
+                   TestConfigBnd<MfieldsC, Bnd_, dim_yz>,
 #ifdef USE_CUDA
-                   TestConfigBnd<BndCuda3<MfieldsCuda>, dim_xyz>,
-                   TestConfigBnd<Bnd_<MfieldsCuda>, dim_xyz>,
+                   TestConfigBnd<MfieldsCuda, BndCuda3, dim_xyz>,
+                   TestConfigBnd<MfieldsCuda, Bnd_, dim_xyz>,
 #endif
-                   TestConfigBnd<Bnd_<MfieldsSingle>, dim_xyz>>;
+                   TestConfigBnd<MfieldsSingle, Bnd_, dim_xyz>>;
 
 TYPED_TEST_SUITE(BndTest, BndTestTypes);
 
 TYPED_TEST(BndTest, FillGhosts)
 {
-  using Base = BndTest<TypeParam>;
-  using Bnd = typename Base::Bnd;
-  using dim = typename Base::dim;
-  using Mfields = typename Bnd::Mfields;
+  using Mfields = typename TypeParam::Mfields;
+  using Bnd = typename TypeParam::Bnd;
+  using dim = typename TypeParam::dim;
 
   auto grid = make_grid<dim>();
   auto ibn = Int3{B, B, B};
@@ -182,10 +179,9 @@ TYPED_TEST(BndTest, FillGhosts)
 // almost same as "FillGhosts" but uses gt-based interface bnd
 TYPED_TEST(BndTest, FillGhostsGt)
 {
-  using Base = BndTest<TypeParam>;
-  using Bnd = typename Base::Bnd;
-  using dim = typename Base::dim;
-  using Mfields = typename Bnd::Mfields;
+  using Mfields = typename TypeParam::Mfields;
+  using Bnd = typename TypeParam::Bnd;
+  using dim = typename TypeParam::dim;
 
   auto grid = make_grid<dim>();
   auto ibn = Int3{B, B, B};
@@ -237,10 +233,9 @@ TYPED_TEST(BndTest, FillGhostsGt)
 
 TYPED_TEST(BndTest, AddGhosts)
 {
-  using Base = BndTest<TypeParam>;
-  using Bnd = typename Base::Bnd;
-  using dim = typename Base::dim;
-  using Mfields = typename Bnd::Mfields;
+  using Mfields = typename TypeParam::Mfields;
+  using Bnd = typename TypeParam::Bnd;
+  using dim = typename TypeParam::dim;
 
   auto grid = make_grid<dim>();
   auto ibn = Int3{B, B, B};

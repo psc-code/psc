@@ -12,85 +12,16 @@ template <typename S>
 struct BndContext
 {
   using storage_type = S;
+  using real_t = typename storage_type::value_type;
 
   storage_type& mflds_gt;
   const Int3& ib;
-};
 
-template <typename MF>
-struct Bnd_ : BndBase
-{
-  using Mfields = MF;
-  using MfieldsHost = hostMirror_t<Mfields>;
-  using real_t = typename Mfields::real_t;
-  using storage_type = typename Mfields::Storage;
-  using storage_host_type = typename MfieldsHost::Storage;
-  using BndCtx = BndContext<storage_host_type>;
-
-  // ----------------------------------------------------------------------
-  // ctor
-
-  Bnd_(const Grid_t& grid, const int ibn[3]) {}
-
-  // ----------------------------------------------------------------------
-  // add_ghosts
-
-  void add_ghosts(const Grid_t& grid, storage_type& mflds_gt, const Int3& ib,
-                  int mb, int me)
-  {
-    // FIXME
-    // I don't think we need as many points, and only stencil star
-    // rather then box
-    assert(Int3(mflds_gt.shape(0), mflds_gt.shape(1), mflds_gt.shape(2)) ==
-           grid.ldims + 2 * grid.ibn);
-
-    auto&& h_mflds_gt = gt::host_mirror(mflds_gt);
-    gt::copy(mflds_gt, h_mflds_gt);
-    BndCtx ctx{h_mflds_gt, ib};
-    mrc_ddc_set_param_int(grid.ddc(), "size_of_type", sizeof(real_t));
-    mrc_ddc_set_funcs(grid.ddc(), const_cast<mrc_ddc_funcs*>(&ddc_funcs));
-    mrc_ddc_add_ghosts(grid.ddc(), mb, me, &ctx);
-    gt::copy(h_mflds_gt, mflds_gt);
-  }
-
-  void add_ghosts(Mfields& mflds, int mb, int me)
-  {
-    add_ghosts(mflds.grid(), mflds.storage(), mflds.ib(), mb, me);
-  }
-
-  // ----------------------------------------------------------------------
-  // fill_ghosts
-
-  void fill_ghosts(const Grid_t& grid, storage_type& mflds_gt, const Int3& ib,
-                   int mb, int me)
-  {
-    // FIXME
-    // I don't think we need as many points, and only stencil star
-    // rather then box
-    assert(Int3(mflds_gt.shape(0), mflds_gt.shape(1), mflds_gt.shape(2)) ==
-           grid.ldims + 2 * grid.ibn);
-
-    auto&& h_mflds_gt = gt::host_mirror(mflds_gt);
-    gt::copy(mflds_gt, h_mflds_gt);
-    BndCtx ctx{h_mflds_gt, ib};
-    mrc_ddc_set_param_int(grid.ddc(), "size_of_type", sizeof(real_t));
-    mrc_ddc_set_funcs(grid.ddc(), const_cast<mrc_ddc_funcs*>(&ddc_funcs));
-    mrc_ddc_fill_ghosts(grid.ddc(), mb, me, &ctx);
-    gt::copy(h_mflds_gt, mflds_gt);
-  }
-
-  void fill_ghosts(Mfields& mflds, int mb, int me)
-  {
-    fill_ghosts(mflds.grid(), mflds.storage(), mflds.ib(), mb, me);
-  }
-
-  // ----------------------------------------------------------------------
-  // copy_to_buf
-
+private:
   static void copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3],
                           void* _buf, void* _ctx)
   {
-    BndCtx* ctx = static_cast<BndCtx*>(_ctx);
+    BndContext* ctx = static_cast<BndContext*>(_ctx);
     real_t* buf = static_cast<real_t*>(_buf);
     const Int3& ib = ctx->ib;
 
@@ -109,7 +40,7 @@ struct Bnd_ : BndBase
   static void add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
                            void* _buf, void* _ctx)
   {
-    BndCtx* ctx = static_cast<BndCtx*>(_ctx);
+    BndContext* ctx = static_cast<BndContext*>(_ctx);
     real_t* buf = static_cast<real_t*>(_buf);
     const Int3& ib = ctx->ib;
 
@@ -128,7 +59,7 @@ struct Bnd_ : BndBase
   static void copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
                             void* _buf, void* _ctx)
   {
-    BndCtx* ctx = static_cast<BndCtx*>(_ctx);
+    BndContext* ctx = static_cast<BndContext*>(_ctx);
     real_t* buf = static_cast<real_t*>(_buf);
     const Int3& ib = ctx->ib;
 
@@ -144,6 +75,7 @@ struct Bnd_ : BndBase
     }
   }
 
+public:
   constexpr static mrc_ddc_funcs ddc_funcs = {
     .copy_to_buf = copy_to_buf,
     .copy_from_buf = copy_from_buf,
@@ -151,5 +83,77 @@ struct Bnd_ : BndBase
   };
 };
 
-template <typename MF>
-constexpr mrc_ddc_funcs Bnd_<MF>::ddc_funcs;
+template <typename S>
+constexpr mrc_ddc_funcs BndContext<S>::ddc_funcs;
+
+template <typename E>
+auto make_BndContext(E& mflds_gt, const Int3& ib)
+{
+  return BndContext<E>{mflds_gt, ib};
+}
+
+struct Bnd_ : BndBase
+{
+  // ----------------------------------------------------------------------
+  // ctor
+
+  Bnd_(const Grid_t& grid, const int ibn[3]) {}
+
+  // ----------------------------------------------------------------------
+  // add_ghosts
+
+  template <typename S>
+  void add_ghosts(const Grid_t& grid, S& mflds_gt, const Int3& ib, int mb,
+                  int me)
+  {
+    // FIXME
+    // I don't think we need as many points, and only stencil star
+    // rather then box
+    assert(Int3(mflds_gt.shape(0), mflds_gt.shape(1), mflds_gt.shape(2)) ==
+           grid.ldims + 2 * grid.ibn);
+
+    auto&& h_mflds_gt = gt::host_mirror(mflds_gt);
+    gt::copy(mflds_gt, h_mflds_gt);
+    auto ctx = make_BndContext(h_mflds_gt, ib);
+    mrc_ddc_set_param_int(grid.ddc(), "size_of_type",
+                          sizeof(typename S::value_type));
+    mrc_ddc_set_funcs(grid.ddc(), const_cast<mrc_ddc_funcs*>(&ctx.ddc_funcs));
+    mrc_ddc_add_ghosts(grid.ddc(), mb, me, &ctx);
+    gt::copy(h_mflds_gt, mflds_gt);
+  }
+
+  template <typename Mfields>
+  void add_ghosts(Mfields& mflds, int mb, int me)
+  {
+    add_ghosts(mflds.grid(), mflds.storage(), mflds.ib(), mb, me);
+  }
+
+  // ----------------------------------------------------------------------
+  // fill_ghosts
+
+  template <typename S>
+  void fill_ghosts(const Grid_t& grid, S& mflds_gt, const Int3& ib, int mb,
+                   int me)
+  {
+    // FIXME
+    // I don't think we need as many points, and only stencil star
+    // rather then box
+    assert(Int3(mflds_gt.shape(0), mflds_gt.shape(1), mflds_gt.shape(2)) ==
+           grid.ldims + 2 * grid.ibn);
+
+    auto&& h_mflds_gt = gt::host_mirror(mflds_gt);
+    gt::copy(mflds_gt, h_mflds_gt);
+    auto ctx = make_BndContext(h_mflds_gt, ib);
+    mrc_ddc_set_param_int(grid.ddc(), "size_of_type",
+                          sizeof(typename S::value_type));
+    mrc_ddc_set_funcs(grid.ddc(), const_cast<mrc_ddc_funcs*>(&ctx.ddc_funcs));
+    mrc_ddc_fill_ghosts(grid.ddc(), mb, me, &ctx);
+    gt::copy(h_mflds_gt, mflds_gt);
+  }
+
+  template <typename Mfields>
+  void fill_ghosts(Mfields& mflds, int mb, int me)
+  {
+    fill_ghosts(mflds.grid(), mflds.storage(), mflds.ib(), mb, me);
+  }
+};

@@ -47,8 +47,7 @@ template <typename DIM, typename _Mfields, typename PUSHP, typename ORDER,
                     _Mfields, ORDER, DIM>,
           typename BNDP = BndParticles_<typename PUSHP::Mparticles>,
           typename PUSHF = PushFields<typename PUSHP::MfieldsState>,
-          typename BND = Bnd_<typename PUSHP::MfieldsState>,
-          typename MOMENT_N = Moment_n_1st<_Mfields, DIM>>
+          typename BND = Bnd_, typename MOMENT_N = Moment_n_1st<_Mfields, DIM>>
 struct TestConfig
 {
   using dim = DIM;
@@ -114,19 +113,19 @@ using TestConfig1vbec3dCuda =
              PushParticlesCuda<CudaConfig1vbec3dGmem<dim_xyz, BS144>>,
              checks_order_1st, ChecksCuda<MparticlesCuda<BS144>>,
              BndParticlesCuda<MparticlesCuda<BS144>, dim_xyz>, PushFieldsCuda,
-             BndCuda3<MfieldsStateCuda>>;
+             BndCuda3>;
 using TestConfig1vbec3dCuda444 =
   TestConfig<dim_xyz, MfieldsCuda,
              PushParticlesCuda<CudaConfig1vbec3dGmem<dim_xyz, BS444>>,
              checks_order_1st, ChecksCuda<MparticlesCuda<BS444>>,
              BndParticlesCuda<MparticlesCuda<BS444>, dim_xyz>, PushFieldsCuda,
-             BndCuda3<MfieldsStateCuda>, Moment_n_1st_cuda<dim_xyz>>;
+             BndCuda3, Moment_n_1st_cuda<dim_xyz>>;
 using TestConfig1vbec3dCudaYZ =
   TestConfig<dim_yz, MfieldsCuda,
              PushParticlesCuda<CudaConfig1vbec3d<dim_yz, BS144>>,
              checks_order_1st, ChecksCuda<MparticlesCuda<BS144>>,
              BndParticlesCuda<MparticlesCuda<BS144>, dim_yz>, PushFieldsCuda,
-             BndCuda3<MfieldsStateCuda>, Moment_n_1st_cuda<dim_yz>>;
+             BndCuda3, Moment_n_1st_cuda<dim_yz>>;
 #endif
 
 // ======================================================================

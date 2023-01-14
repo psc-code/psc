@@ -129,7 +129,6 @@ struct Marder_ : MarderBase
       loop_{loop},
       dump_{dump},
       bnd_{grid, grid.ibn},
-      bnd_mf_{grid, grid.ibn},
       rho_{grid, 1, grid.ibn},
       res_{grid, 1, grid.ibn}
   {
@@ -185,7 +184,7 @@ struct Marder_ : MarderBase
                           _s(bnd[2], -bnd[2])) -
       rho_.storage().view(_all, _all, _all);
     // FIXME, why is this necessary?
-    bnd_mf_.fill_ghosts(res_, 0, 1);
+    bnd_.fill_ghosts(res_, 0, 1);
   }
 
   // ----------------------------------------------------------------------
@@ -253,8 +252,7 @@ struct Marder_ : MarderBase
   bool dump_;        //< dump div_E, rho
 
   const Grid_t& grid_;
-  Bnd_<MfieldsState> bnd_;
-  Bnd_<Mfields> bnd_mf_;
+  Bnd_ bnd_;
   Mfields rho_;
   Mfields res_;
   WriterMRC io_; //< for debug dumping

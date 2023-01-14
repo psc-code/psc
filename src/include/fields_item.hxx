@@ -157,7 +157,7 @@ private:
 // ======================================================================
 // ItemMomentCRTP
 
-template <typename Derived, typename MF, typename Bnd = Bnd_<MF>>
+template <typename Derived, typename MF, typename Bnd = Bnd_>
 class ItemMomentCRTP
 {
 public:

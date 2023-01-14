@@ -14,11 +14,10 @@ struct cuda_mparticles;
 
 template <typename dim_t>
 struct Moment_rho_1st_nc_cuda
-  : ItemMomentCRTP<Moment_rho_1st_nc_cuda<dim_t>, MfieldsCuda,
-                   BndCuda3<MfieldsCuda>>
+  : ItemMomentCRTP<Moment_rho_1st_nc_cuda<dim_t>, MfieldsCuda, BndCuda3>
 {
-  using Base = ItemMomentCRTP<Moment_rho_1st_nc_cuda<dim_t>, MfieldsCuda,
-                              BndCuda3<MfieldsCuda>>;
+  using Base =
+    ItemMomentCRTP<Moment_rho_1st_nc_cuda<dim_t>, MfieldsCuda, BndCuda3>;
   using storage_type = typename Base::storage_type;
   using real_t = typename Base::real_t;
   using space_type = typename Base::space_type;
@@ -53,12 +52,10 @@ struct Moment_rho_1st_nc_cuda
 
 template <typename dim_t>
 class Moment_n_1st_cuda
-  : public ItemMomentCRTP<Moment_n_1st_cuda<dim_t>, MfieldsCuda,
-                          BndCuda3<MfieldsCuda>>
+  : public ItemMomentCRTP<Moment_n_1st_cuda<dim_t>, MfieldsCuda, BndCuda3>
 {
 public:
-  using Base = ItemMomentCRTP<Moment_n_1st_cuda<dim_t>, MfieldsCuda,
-                              BndCuda3<MfieldsCuda>>;
+  using Base = ItemMomentCRTP<Moment_n_1st_cuda<dim_t>, MfieldsCuda, BndCuda3>;
   using Mfields = MfieldsCuda;
   using storage_type = typename Base::storage_type;
   using real_t = typename Base::real_t;
@@ -105,12 +102,10 @@ public:
 
 template <typename dim_t>
 class Moments_1st_cuda
-  : public ItemMomentCRTP<Moments_1st_cuda<dim_t>, MfieldsCuda,
-                          BndCuda3<MfieldsCuda>>
+  : public ItemMomentCRTP<Moments_1st_cuda<dim_t>, MfieldsCuda, BndCuda3>
 {
 public:
-  using Base =
-    ItemMomentCRTP<Moments_1st_cuda<dim_t>, MfieldsCuda, BndCuda3<MfieldsCuda>>;
+  using Base = ItemMomentCRTP<Moments_1st_cuda<dim_t>, MfieldsCuda, BndCuda3>;
   using Mfields = MfieldsCuda;
   using storage_type = typename Base::storage_type;
   using real_t = typename Base::real_t;
