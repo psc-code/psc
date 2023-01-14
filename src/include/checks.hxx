@@ -17,9 +17,3 @@ struct ChecksParams
     true; // always print Gauss's Law error, even if acceptable
   bool gauss_dump_always = false; // always dump E, div_rho, even if acceptable
 };
-
-// ======================================================================
-// class ChecksBase
-
-class ChecksBase
-{};

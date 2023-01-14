@@ -43,8 +43,7 @@ using RngPool = PscRngPool<Rng>;
 
 template <typename DIM, typename _Mfields, typename PUSHP, typename ORDER,
           typename CHECKS =
-            Checks_<typename PUSHP::Mparticles, typename PUSHP::MfieldsState,
-                    _Mfields, ORDER, DIM>,
+            Checks_<typename PUSHP::Mparticles, _Mfields, ORDER, DIM>,
           typename BNDP = BndParticles_<typename PUSHP::Mparticles>,
           typename PUSHF = PushFields<typename PUSHP::MfieldsState>,
           typename BND = Bnd_,
@@ -101,30 +100,30 @@ using _PushParticlesVpic = PushParticlesVpic<
   typename VpicConfig::AccumulatorOps, typename VpicConfig::AccumulateOps,
   typename VpicConfig::InterpolatorOps>;
 
-using TestConfigVpic = TestConfig<
-  dim_xyz,
-  MfieldsSingle, // FIXME, this is not real nice, but might work...
-  _PushParticlesVpic, checks_order_1st,
-  Checks_<_MparticlesVpic, _MfieldsStateVpic, void, checks_order_1st, dim_xyz>,
-  BndParticlesVpic<_MparticlesVpic>>;
+using TestConfigVpic =
+  TestConfig<dim_xyz,
+             MfieldsSingle, // FIXME, this is not real nice, but might work...
+             _PushParticlesVpic, checks_order_1st,
+             Checks_<_MparticlesVpic, MfieldsSingle, checks_order_1st, dim_xyz>,
+             BndParticlesVpic<_MparticlesVpic>>;
 
 #ifdef USE_CUDA
 using TestConfig1vbec3dCuda =
   TestConfig<dim_xyz, MfieldsCuda,
              PushParticlesCuda<CudaConfig1vbec3dGmem<dim_xyz, BS144>>,
-             checks_order_1st, ChecksCuda<MparticlesCuda<BS144>>,
+             checks_order_1st, ChecksCuda<MparticlesCuda<BS144>, dim_xyz>,
              BndParticlesCuda<MparticlesCuda<BS144>, dim_xyz>, PushFieldsCuda,
              BndCuda3>;
 using TestConfig1vbec3dCuda444 =
   TestConfig<dim_xyz, MfieldsCuda,
              PushParticlesCuda<CudaConfig1vbec3dGmem<dim_xyz, BS444>>,
-             checks_order_1st, ChecksCuda<MparticlesCuda<BS444>>,
+             checks_order_1st, ChecksCuda<MparticlesCuda<BS444>, dim_xyz>,
              BndParticlesCuda<MparticlesCuda<BS444>, dim_xyz>, PushFieldsCuda,
              BndCuda3, Moment_n_1st_cuda<dim_xyz>>;
 using TestConfig1vbec3dCudaYZ =
   TestConfig<dim_yz, MfieldsCuda,
              PushParticlesCuda<CudaConfig1vbec3d<dim_yz, BS144>>,
-             checks_order_1st, ChecksCuda<MparticlesCuda<BS144>>,
+             checks_order_1st, ChecksCuda<MparticlesCuda<BS144>, dim_yz>,
              BndParticlesCuda<MparticlesCuda<BS144>, dim_yz>, PushFieldsCuda,
              BndCuda3, Moment_n_1st_cuda<dim_yz>>;
 #endif

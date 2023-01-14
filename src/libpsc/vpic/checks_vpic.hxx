@@ -2,9 +2,7 @@
 #pragma once
 
 template <typename Mparticles, typename MfieldsState>
-struct ChecksVpic
-  : ChecksParams
-  , ChecksBase
+struct ChecksVpic : ChecksParams
 {
   ChecksVpic(const Grid_t& grid, MPI_Comm comm, const ChecksParams& params)
     : ChecksParams(params)
