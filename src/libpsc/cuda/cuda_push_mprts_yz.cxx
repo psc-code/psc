@@ -1,7 +1,7 @@
 
 #include "cuda_iface.h"
-#include "cuda_mparticles.cuh"
-#include "cuda_push_particles.cuh"
+#include "cuda_mparticles.hxx"
+#include "cuda_push_particles.hxx"
 #include "push_particles_cuda_impl.hxx"
 #include "range.hxx"
 
@@ -19,8 +19,8 @@
 
 #define THREADS_PER_BLOCK (512)
 
-#include "cuda_fld_cache.cuh"
-#include "cuda_currmem.cuh"
+#include "cuda_fld_cache.hxx"
+#include "cuda_currmem.hxx"
 
 // FIXME
 #define CUDA_BND_S_OOB (10)

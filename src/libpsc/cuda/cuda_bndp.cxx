@@ -1,7 +1,7 @@
 
 #include "cuda_bits.h"
 #include "cuda_bndp.h"
-#include "cuda_mparticles.cuh"
+#include "cuda_mparticles.hxx"
 
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
@@ -15,7 +15,7 @@
 
 // clang-format off
 // layout of the spine
-//     lt             self             rb        # from left-top .. self .. right-bottom 
+//     lt             self             rb        # from left-top .. self .. right-bottom
 //     0   1   2   3   4   5   6   7   8   NEW
 // b0 |   |   |   |   |   |   |   |   |   |   |
 // b1 |   |   |   |   |   |   |   |   |   |   |

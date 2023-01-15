@@ -12,7 +12,7 @@
 #ifdef USE_CUDA
 #include "../libpsc/cuda/mparticles_cuda.hxx"
 #include "psc_fields_cuda.h"
-#include "cuda_base.cuh"
+#include "cuda_base.hxx"
 #endif
 
 template <typename _Mparticles, typename _MfieldsState, typename _Mfields,

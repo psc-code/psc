@@ -1,5 +1,5 @@
 
-#include "cuda_mparticles.cuh"
+#include "cuda_mparticles.hxx"
 #include "cuda_bits.h"
 
 #include "psc_bits.h"
@@ -9,7 +9,7 @@
 #include <thrust/device_vector.h>
 #include <thrust/sort.h>
 
-#include "cuda_base.cuh"
+#include "cuda_base.hxx"
 
 #include <cstdio>
 #include <cassert>
@@ -435,8 +435,8 @@ cuda_mparticles<BS>::get_particles()
   return prts;
 }
 
-#include "cuda_mparticles_gold.cu"
-#include "cuda_mparticles_checks.cu"
+#include "cuda_mparticles_gold.cxx"
+#include "cuda_mparticles_checks.cxx"
 
 template struct cuda_mparticles<BS144>;
 template struct cuda_mparticles<BS444>;

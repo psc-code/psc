@@ -1,11 +1,11 @@
 
 #include "gtest/gtest.h"
 
-#include "../libpsc/cuda/cuda_mparticles.cuh"
-#include "../libpsc/cuda/cuda_mparticles_sort.cuh"
+#include "../libpsc/cuda/cuda_mparticles.hxx"
+#include "../libpsc/cuda/cuda_mparticles_sort.hxx"
 
 #include "../libpsc/cuda/collision_cuda_impl.hxx"
-#include "../libpsc/cuda/cuda_collision.cuh"
+#include "../libpsc/cuda/cuda_collision.hxx"
 #include "psc_fields_single.h"
 #include "psc_particles_single.h"
 #include "testing.hxx"

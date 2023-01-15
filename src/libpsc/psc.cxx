@@ -4,7 +4,7 @@
 #include "fields.hxx"
 #include "setup_fields.hxx"
 #ifdef USE_CUDA
-#include "cuda_base.cuh"
+#include "cuda_base.hxx"
 #endif
 
 #include <mrc_common.h>
@@ -62,7 +62,7 @@ _psc_read(struct psc *psc, struct mrc_io *io)
     mrc_io_read_double(io, psc, s, &psc->kinds_[k].m);
     mrc_io_read_string(io, psc, s, &psc->kinds_[k].name);
   }
-  
+
   psc->mrc_domain_ = mrc_io_read_ref(io, psc, "mrc_domain", mrc_domain);
   //psc_setup_domain(psc, psc->domain_, psc->bc_, psc->kinds_);
 #ifdef USE_FORTRAN

@@ -3,7 +3,7 @@
 #define CUDA_BNDP_H
 
 #include "cuda_bits.h"
-#include "cuda_mparticles.cuh"
+#include "cuda_mparticles.hxx"
 #include "cuda_mparticles_indexer.h"
 #include "ddc_particles.hxx"
 #include "mparticles_cuda.hxx"

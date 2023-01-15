@@ -1,7 +1,7 @@
 
-#include "cuda_mparticles.cuh"
-#include "cuda_mparticles_sort.cuh"
-#include "cuda_collision.cuh"
+#include "cuda_mparticles.hxx"
+#include "cuda_mparticles_sort.hxx"
+#include "cuda_collision.hxx"
 #include "cuda_test.hxx"
 #include "bs.hxx"
 

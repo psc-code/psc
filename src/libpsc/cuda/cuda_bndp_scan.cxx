@@ -3,7 +3,7 @@
 
 #include "cuda_bits.h"
 #include "cuda_bndp.h"
-#include "cuda_mparticles.cuh"
+#include "cuda_mparticles.hxx"
 
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>

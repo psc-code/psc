@@ -2,9 +2,9 @@
 #pragma once
 
 #include "cuda_bits.h"
-#include "rng_state.cuh"
+#include "rng_state.hxx"
 #include "bs.hxx"
-#include "cuda_base.cuh"
+#include "cuda_base.hxx"
 
 #include <thrust/binary_search.h>
 #include <thrust/device_vector.h>

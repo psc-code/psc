@@ -1,5 +1,5 @@
 
-#include "cuda_base.cuh"
+#include "cuda_base.hxx"
 
 #include "gtest/gtest.h"
 

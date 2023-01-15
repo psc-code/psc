@@ -32,34 +32,34 @@ target_compile_features(psc PUBLIC cxx_std_11)
 
 if (USE_CUDA)
   target_gtensor_sources(psc PRIVATE
-    cuda/cuda_base.cu
+    cuda/cuda_base.cxx
 
     cuda/psc_particles_cuda.cxx
-    cuda/cuda_mparticles_base.cu
-    cuda/cuda_mparticles.cu
+    cuda/cuda_mparticles_base.cxx
+    cuda/cuda_mparticles.cxx
 
     cuda/psc_fields_cuda.cxx
 
-    cuda/cuda_push_mprts_yz.cu
+    cuda/cuda_push_mprts_yz.cxx
 
     cuda/push_fields_cuda_impl.cxx
-    cuda/cuda_push_fields_yz.cu
+    cuda/cuda_push_fields_yz.cxx
 
-    cuda/bnd_particles_cuda_impl.cu
-    cuda/cuda_bndp.cu
-    cuda/cuda_bndp_scan.cu
-    cuda/cuda_bndp_spine.cu
+    cuda/bnd_particles_cuda_impl.cxx
+    cuda/cuda_bndp.cxx
+    cuda/cuda_bndp_scan.cxx
+    cuda/cuda_bndp_spine.cxx
 
-    cuda/cuda_bnd.cu
-    cuda/bnd_cuda_3_impl.cu
+    cuda/cuda_bnd.cxx
+    cuda/bnd_cuda_3_impl.cxx
 
     cuda/psc_bnd_fields_cuda.cxx
 
-    cuda/cuda_moments_1st_nc.cu
+    cuda/cuda_moments_1st_nc.cxx
 
-    cuda/collision_cuda_impl.cu
+    cuda/collision_cuda_impl.cxx
 
-    cuda/cuda_heating.cu
+    cuda/cuda_heating.cxx
 
     cuda/mem.cxx
     )

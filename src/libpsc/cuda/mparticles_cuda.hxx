@@ -9,7 +9,7 @@
 #include "bs.hxx"
 #include "UniqueIdGenerator.h"
 
-#include "cuda_mparticles.cuh"
+#include "cuda_mparticles.hxx"
 
 // ======================================================================
 // MparticlesCuda

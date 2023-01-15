@@ -1,10 +1,10 @@
 
 #pragma once
 
-#include "cuda_base.cuh"
-#include "cuda_mparticles.cuh"
-#include "cuda_mparticles_sort.cuh"
-#include "rng_state.cuh"
+#include "cuda_base.hxx"
+#include "cuda_mparticles.hxx"
+#include "cuda_mparticles_sort.hxx"
+#include "rng_state.hxx"
 #include "binary_collision.hxx"
 
 #include <curand_kernel.h>
