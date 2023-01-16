@@ -21,7 +21,7 @@ struct type_traits
   using const_reference = const typename F::value_type&;
 
 #ifdef USE_CUDA
-  static reference get(thrust::device_reference<value_type> ref)
+  static GT_INLINE reference get(thrust::device_reference<value_type> ref)
   {
     return *((&ref).get());
   }
