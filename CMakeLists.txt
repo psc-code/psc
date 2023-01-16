@@ -25,7 +25,8 @@ function(psc_option name description default)
   )
 endfunction()
 
-option(USE_CUDA "Build CUDA components" OFF)
+set(PSC_GPU "host" CACHE STRING "Build with GPU supoort (host/cuda/hip)")
+set_property(CACHE PSC_GPU PROPERTY STRINGS "host;cuda;hip")
 option(USE_VPIC "Interface with VPIC" OFF)
 option(USE_GTEST_DISCOVER_TESTS "Run tests to discover contained googletest cases" OFF)
 psc_option(ADIOS2 "Build with adios2 support" AUTO)
@@ -34,21 +35,35 @@ option(PSC_USE_RMM "Build with RMM memory manager support" OFF)
 option(PSC_BOUNDS_CHECK "Turn on bounds-checking" OFF)
 option(PSC_USE_PERFETTO "Turn on perfetto-based tracing" OFF)
 
-# CUDA
-if(USE_CUDA)
+option(USE_CUDA "Build CUDA components" OFF)
+
+if (USE_CUDA)
+  set(PSC_GPU "cuda" CACHE STRING  "Build with GPU supoort (none/cuda/hip)")
+endif()
+
+if(PSC_GPU STREQUAL "cuda")
   # This is needed on Summit when not using modules (in a spack build) to
   # make sure that nvcc uses the same host compiler that was otherwise
   # specified
   set(CMAKE_CUDA_HOST_COMPILER "${CMAKE_CXX_COMPILER}")
-
   enable_language(CUDA)
 
   find_package(Thrust 1.10.0 REQUIRED)
   thrust_create_target(Thrust)
-  set(GTENSOR_DEVICE "cuda" CACHE STRING "")
+  set(USE_CUDA ON)
+elseif(PSC_GPU STREQUAL "hip")
+  set(USE_CUDA ON)
 else()
-  set(GTENSOR_DEVICE "host" CACHE STRING "")
+  set(USE_CUDA OFF)
 endif()
+set(GTENSOR_DEVICE "${PSC_GPU}" CACHE STRING "")
+
+CPMAddPackage(
+  NAME gtensor
+  GITHUB_REPOSITORY wdmapp/gtensor
+  GIT_TAG main
+  VERSION 0.0.0
+)
 
 if (BUILD_TESTING)
   CPMAddPackage(
@@ -67,13 +82,6 @@ if (BUILD_TESTING)
   endif()
   include(GoogleTest)
 endif()
-
-CPMAddPackage(
-  NAME gtensor
-  GITHUB_REPOSITORY wdmapp/gtensor
-  GIT_TAG main
-  VERSION 0.0.0
-)
 
 set(MPI_CXX_SKIP_MPICXX ON)
 find_package(MPI REQUIRED)
