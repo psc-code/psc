@@ -41,12 +41,7 @@ if(USE_CUDA)
   # specified
   set(CMAKE_CUDA_HOST_COMPILER "${CMAKE_CXX_COMPILER}")
 
-  set(_save_CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS}")
-  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -std c++14")
-
   enable_language(CUDA)
-
-  set(CMAKE_CUDA_FLAGS "${_save_CMAKE_CUDA_FLAGS}")
 
   find_package(Thrust 1.10.0 REQUIRED)
   thrust_create_target(Thrust)
