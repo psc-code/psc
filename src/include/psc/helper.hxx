@@ -60,7 +60,7 @@ struct print_diff<E1, E2,
       auto val_e1 = h_e1(i, j, k);
       auto val_e2 = h_e2(i, j, k);
       if (std::abs(val_e1 + val_e2) > eps) {
-        mprintf("p%d (%d,%d,%d): %g -- %g diff %g\n", i, j, k, val_e1, val_e2,
+        mprintf("(%d,%d,%d): %g -- %g diff %g\n", i, j, k, val_e1, val_e2,
                 val_e1 - val_e2);
       }
     });
