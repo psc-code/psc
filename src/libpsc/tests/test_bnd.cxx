@@ -13,6 +13,7 @@
 
 const int B = 2;
 
+template <typename D>
 static Grid_t make_grid(Int3 gdims, Vec3<double> length)
 {
   auto domain = Grid_t::Domain{gdims, length, {}, {1, 2, 1}};
@@ -22,19 +23,23 @@ static Grid_t make_grid(Int3 gdims, Vec3<double> length)
   double dt = .1;
   int n_patches = -1;
 
-  return Grid_t{domain, bc, kinds, norm, dt, n_patches, {B, B, B}};
+  auto ibn = Int3{B, B, B};
+  if (D::InvarX::value) {
+    ibn[0] = 0;
+  }
+  return Grid_t{domain, bc, kinds, norm, dt, n_patches, ibn};
 }
 
-template <typename DIM>
+template <typename D>
 static Grid_t make_grid()
 {
-  return make_grid({1, 8, 4}, {10., 80., 40.});
+  return make_grid<D>({1, 8, 4}, {10., 80., 40.});
 }
 
 template <>
 Grid_t make_grid<dim_xyz>()
 {
-  return make_grid({2, 8, 4}, {20., 80., 40.});
+  return make_grid<dim_xyz>({2, 8, 4}, {20., 80., 40.});
 }
 
 template <typename Mfields>
@@ -103,10 +108,7 @@ TYPED_TEST(BndTest, FillGhosts)
   using dim = typename TypeParam::dim;
 
   auto grid = make_grid<dim>();
-  auto ibn = Int3{B, B, B};
-  if (dim::InvarX::value)
-    ibn[0] = 0;
-  auto mflds = Mfields{grid, 1, ibn};
+  auto mflds = Mfields{grid, 1, grid.ibn};
 
   EXPECT_EQ(mflds.n_patches(), grid.n_patches());
 
@@ -117,8 +119,8 @@ TYPED_TEST(BndTest, FillGhosts)
       int i0 = grid.patches[p].off[0];
       int j0 = grid.patches[p].off[1];
       int k0 = grid.patches[p].off[2];
-      auto flds =
-        make_Fields3d<dim_xyz>(h_mflds.view(_all, _all, _all, _all, p), -ibn);
+      auto flds = make_Fields3d<dim_xyz>(
+        h_mflds.view(_all, _all, _all, _all, p), -grid.ibn);
       grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
         int ii = i + i0, jj = j + j0, kk = k + k0;
         flds(0, i, j, k) = 100 * ii + 10 * jj + kk;
@@ -132,8 +134,8 @@ TYPED_TEST(BndTest, FillGhosts)
     auto&& h_mflds = gt::host_mirror(mflds.storage());
     gt::copy(mflds.storage(), h_mflds);
     for (int p = 0; p < mflds.n_patches(); p++) {
-      auto flds =
-        make_Fields3d<dim_xyz>(h_mflds.view(_all, _all, _all, _all, p), -ibn);
+      auto flds = make_Fields3d<dim_xyz>(
+        h_mflds.view(_all, _all, _all, _all, p), -grid.ibn);
       int i0 = grid.patches[p].off[0];
       int j0 = grid.patches[p].off[1];
       int k0 = grid.patches[p].off[2];
@@ -157,8 +159,8 @@ TYPED_TEST(BndTest, FillGhosts)
     auto&& h_mflds = gt::host_mirror(mflds.storage());
     gt::copy(mflds.storage(), h_mflds);
     for (int p = 0; p < mflds.n_patches(); p++) {
-      auto flds =
-        make_Fields3d<dim_xyz>(h_mflds.view(_all, _all, _all, _all, p), -ibn);
+      auto flds = make_Fields3d<dim_xyz>(
+        h_mflds.view(_all, _all, _all, _all, p), -grid.ibn);
       int i0 = grid.patches[p].off[0];
       int j0 = grid.patches[p].off[1];
       int k0 = grid.patches[p].off[2];
@@ -184,10 +186,7 @@ TYPED_TEST(BndTest, FillGhostsGt)
   using dim = typename TypeParam::dim;
 
   auto grid = make_grid<dim>();
-  auto ibn = Int3{B, B, B};
-  if (dim::InvarX::value)
-    ibn[0] = 0;
-  auto mflds = Mfields{grid, 1, ibn};
+  auto mflds = Mfields{grid, 1, grid.ibn};
 
   EXPECT_EQ(mflds.n_patches(), grid.n_patches());
 
@@ -198,8 +197,8 @@ TYPED_TEST(BndTest, FillGhostsGt)
       int i0 = grid.patches[p].off[0];
       int j0 = grid.patches[p].off[1];
       int k0 = grid.patches[p].off[2];
-      auto flds =
-        make_Fields3d<dim_xyz>(h_mflds.view(_all, _all, _all, _all, p), -ibn);
+      auto flds = make_Fields3d<dim_xyz>(
+        h_mflds.view(_all, _all, _all, _all, p), -grid.ibn);
       grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
         int ii = i + i0, jj = j + j0, kk = k + k0;
         flds(0, i, j, k) = 100 * ii + 10 * jj + kk;
@@ -215,8 +214,8 @@ TYPED_TEST(BndTest, FillGhostsGt)
     auto&& h_mflds = gt::host_mirror(mflds.storage());
     gt::copy(mflds.storage(), h_mflds);
     for (int p = 0; p < mflds.n_patches(); p++) {
-      auto flds =
-        make_Fields3d<dim_xyz>(h_mflds.view(_all, _all, _all, _all, p), -ibn);
+      auto flds = make_Fields3d<dim_xyz>(
+        h_mflds.view(_all, _all, _all, _all, p), -grid.ibn);
       int i0 = grid.patches[p].off[0];
       int j0 = grid.patches[p].off[1];
       int k0 = grid.patches[p].off[2];
@@ -238,10 +237,7 @@ TYPED_TEST(BndTest, AddGhosts)
   using dim = typename TypeParam::dim;
 
   auto grid = make_grid<dim>();
-  auto ibn = Int3{B, B, B};
-  if (dim::InvarX::value)
-    ibn[0] = 0;
-  auto mflds = Mfields{grid, 1, ibn};
+  auto mflds = Mfields{grid, 1, grid.ibn};
 
   EXPECT_EQ(mflds.n_patches(), grid.n_patches());
 
@@ -249,8 +245,8 @@ TYPED_TEST(BndTest, AddGhosts)
     auto&& h_mflds = gt::host_mirror(mflds.storage());
     gt::copy(mflds.storage(), h_mflds);
     for (int p = 0; p < mflds.n_patches(); p++) {
-      auto flds =
-        make_Fields3d<dim_xyz>(h_mflds.view(_all, _all, _all, _all, p), -ibn);
+      auto flds = make_Fields3d<dim_xyz>(
+        h_mflds.view(_all, _all, _all, _all, p), -grid.ibn);
       int i0 = grid.patches[p].off[0];
       int j0 = grid.patches[p].off[1];
       int k0 = grid.patches[p].off[2];
@@ -269,8 +265,8 @@ TYPED_TEST(BndTest, AddGhosts)
     auto&& h_mflds = gt::host_mirror(mflds.storage());
     gt::copy(mflds.storage(), h_mflds);
     for (int p = 0; p < mflds.n_patches(); p++) {
-      auto flds =
-        make_Fields3d<dim_xyz>(h_mflds.view(_all, _all, _all, _all, p), -ibn);
+      auto flds = make_Fields3d<dim_xyz>(
+        h_mflds.view(_all, _all, _all, _all, p), -grid.ibn);
       int j0 = grid.patches[p].off[1];
       int k0 = grid.patches[p].off[2];
       auto& ldims = grid.ldims;
