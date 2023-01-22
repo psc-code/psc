@@ -19,7 +19,7 @@ namespace kg
 namespace detail
 {
 template <typename L>
-gt::shape_type<4> strides(const Box3& box, int n_comps);
+GT_INLINE gt::shape_type<4> strides(const Box3& box, int n_comps);
 
 template <>
 GT_INLINE gt::shape_type<4> strides<LayoutSOA>(const Box3& box, int n_comps)

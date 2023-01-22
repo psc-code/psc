@@ -4,7 +4,7 @@
 #include "fields_item.hxx"
 #include "bnd_cuda_3_impl.hxx"
 #include "psc_fields_cuda.h"
-#include "cuda_moments.cuh"
+#include "cuda_moments.hxx"
 
 template <typename BS>
 struct cuda_mparticles;

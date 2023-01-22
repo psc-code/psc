@@ -1,6 +1,6 @@
 
-#include "cuda_mparticles.cuh"
-#include "cuda_moments.cuh"
+#include "cuda_mparticles.hxx"
+#include "cuda_moments.hxx"
 #include "bs.hxx"
 #include "pushp.hxx"
 #include "fields.hxx"

@@ -1,7 +1,7 @@
 
 #include "cuda_iface.h"
-#include "cuda_mparticles.cuh"
-#include "cuda_push_particles.cuh"
+#include "cuda_mparticles.hxx"
+#include "cuda_push_particles.hxx"
 #include "push_particles_cuda_impl.hxx"
 #include "range.hxx"
 
@@ -19,8 +19,8 @@
 
 #define THREADS_PER_BLOCK (512)
 
-#include "cuda_fld_cache.cuh"
-#include "cuda_currmem.cuh"
+#include "cuda_fld_cache.hxx"
+#include "cuda_currmem.hxx"
 
 // FIXME
 #define CUDA_BND_S_OOB (10)
@@ -41,8 +41,8 @@ struct CudaPushParticles
   using dim = typename Config::dim;
   using BS = typename Config::Bs;
   using Currmem = typename Config::Currmem;
-  using Block = typename Currmem::Block<BS, dim>;
-  using Curr = typename Currmem::Curr<BS, dim>;
+  using Block = typename Currmem::template Block<BS, dim>;
+  using Curr = typename Currmem::template Curr<BS, dim>;
   using DMparticles = DMparticlesCuda<BS>;
   using real_t = typename DMparticles::real_t;
   using Real3 = Vec3<real_t>;
@@ -522,7 +522,7 @@ void CudaPushParticles_<Config>::push_mprts_ab(CudaMparticles* cmprts,
 {
   using Currmem = typename Config::Currmem;
   using Block =
-    typename Currmem::Block<typename Config::Bs, typename Config::dim>;
+    typename Currmem::template Block<typename Config::Bs, typename Config::dim>;
 
   zero_currents(mflds);
 

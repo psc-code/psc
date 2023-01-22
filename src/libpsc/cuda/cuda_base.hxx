@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "rng_state.cuh"
+#include "rng_state.hxx"
 
 // ----------------------------------------------------------------------
 // cuda_base

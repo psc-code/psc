@@ -4,7 +4,7 @@
 #include "psc_particles_single.h"
 #include "psc_particles_double.h"
 
-#include "cuda_mparticles.cuh"
+#include "cuda_mparticles.hxx"
 
 #include <mrc_io.h>
 
@@ -102,7 +102,7 @@ psc_mparticles_cuda_write(struct psc_mparticles *_mprts, struct mrc_io *io)
 {
   PscMparticlesCuda mprts(_mprts);
   int ierr;
-  
+
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
 
@@ -120,14 +120,14 @@ psc_mparticles_cuda_write(struct psc_mparticles *_mprts, struct mrc_io *io)
     if (n_prts > 0) {
       float4 *xi4  = (float4 *) calloc(n_prts, sizeof(*xi4));
       float4 *pxi4 = (float4 *) calloc(n_prts, sizeof(*pxi4));
-      
+
       mprts->from_device(xi4, pxi4, n_prts, off);
-      
+
       hsize_t hdims[2];
       hdims[0] = n_prts; hdims[1] = 4;
       ierr = H5LTmake_dataset_float(pgroup, "xi4", 2, hdims, (float *) xi4); CE;
       ierr = H5LTmake_dataset_float(pgroup, "pxi4", 2, hdims, (float *) pxi4); CE;
-      
+
       free(xi4);
       free(pxi4);
     }
@@ -176,13 +176,13 @@ psc_mparticles_cuda_read(struct psc_mparticles *_mprts, struct mrc_io *io)
     if (n_prts > 0) {
       float4 *xi4  = (float4*) calloc(n_prts, sizeof(float4));
       float4 *pxi4 = (float4*) calloc(n_prts, sizeof(float4));
-      
+
       ierr = H5LTread_dataset_float(pgroup, "xi4", (float *) xi4); CE;
       ierr = H5LTread_dataset_float(pgroup, "pxi4", (float *) pxi4); CE;
-      
+
       PscMparticlesCuda mprts = PscMparticlesCuda(_mprts);
       mprts->to_device(xi4, pxi4, n_prts, off);
-      
+
       free(xi4);
       free(pxi4);
     }

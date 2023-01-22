@@ -1,13 +1,13 @@
 
 #include "cuda_iface.h"
-#include "cuda_mparticles.cuh"
+#include "cuda_mparticles.hxx"
 #include "cuda_bits.h"
-#include "cuda_base.cuh"
+#include "cuda_base.hxx"
 #include "psc_bits.h"
 #include "heating_spot_foil.hxx"
 #include "heating_cuda_impl.hxx"
 #include "balance.hxx"
-#include "rng_state.cuh"
+#include "rng_state.hxx"
 
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>

@@ -2,7 +2,7 @@
 #include "fields3d.hxx"
 #include "psc_fields_cuda.h"
 
-#include "cuda_base.cuh"
+#include "cuda_base.hxx"
 
 #include <fstream>
 

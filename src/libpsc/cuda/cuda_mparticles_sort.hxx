@@ -1,17 +1,18 @@
+#include "gpu/gpu_runtime.h"
 
 #pragma once
 
 #include "cuda_bits.h"
-#include "rng_state.cuh"
+#include "rng_state.hxx"
 #include "bs.hxx"
-#include "cuda_base.cuh"
+#include "cuda_base.hxx"
 
 #include <thrust/binary_search.h>
 #include <thrust/device_vector.h>
 #include <thrust/random.h>
 #include <thrust/sort.h>
 
-#include <curand_kernel.h>
+#include <gpu/gpurand_kernel.h>
 
 extern std::size_t mem_randomize_sort;
 extern std::size_t mem_sort_by_block;

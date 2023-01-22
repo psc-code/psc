@@ -1,6 +1,6 @@
 *.i
 *.ii
-*.cu.cpp
+*.cxx.cpp
 *.cudafe1.c
 *.cudafe1.cpp
 *.cudafe1.stub.c

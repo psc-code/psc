@@ -268,7 +268,7 @@ struct BlockBase
 template <typename BS, typename DIM>
 struct BlockSimple : BlockBase
 {
-  static Range<int> block_starts() { return range(1); }
+  static Range<uint> block_starts() { return range(1u); }
 
   template <typename CudaMparticles>
   static dim3 dimGrid(CudaMparticles& cmprts)
@@ -302,7 +302,7 @@ struct BlockSimple : BlockBase
 template <typename BS, typename DIM>
 struct BlockSimple2 : BlockBase
 {
-  static Range<int> block_starts() { return range(1); }
+  static Range<uint> block_starts() { return range(1u); }
 
   static constexpr int MAX_N_BLOCKS = 1024;
 
@@ -344,7 +344,7 @@ constexpr int BlockSimple2<BS, DIM>::MAX_N_BLOCKS;
 template <typename BS>
 struct BlockSimple2<BS, dim_yz> : BlockBase
 {
-  static Range<int> block_starts() { return range(1); }
+  static Range<uint> block_starts() { return range(1u); }
 
   static constexpr int MAX_N_BLOCKS = 1024;
 
@@ -384,7 +384,7 @@ constexpr int BlockSimple2<BS, dim_yz>::MAX_N_BLOCKS;
 template <typename BS>
 struct BlockSimple<BS, dim_yz> : BlockBase
 {
-  static Range<int> block_starts() { return range(1); }
+  static Range<uint> block_starts() { return range(1u); }
 
   template <typename CudaMparticles>
   static dim3 dimGrid(CudaMparticles& cmprts)
@@ -413,7 +413,7 @@ struct BlockSimple<BS, dim_yz> : BlockBase
 template <typename BS, typename DIM>
 struct BlockQ : BlockBase
 {
-  static Range<int> block_starts() { return range(8); }
+  static Range<uint> block_starts() { return range(8u); }
 
   template <typename CudaMparticles>
   static dim3 dimGrid(CudaMparticles& cmprts)
@@ -460,7 +460,7 @@ struct BlockQ : BlockBase
 template <typename BS>
 struct BlockQ<BS, dim_yz> : BlockBase
 {
-  static Range<int> block_starts() { return range(4); }
+  static Range<uint> block_starts() { return range(4u); }
 
   template <typename CudaMparticles>
   static dim3 dimGrid(CudaMparticles& cmprts)
@@ -496,7 +496,8 @@ struct BlockQ<BS, dim_yz> : BlockBase
 __device__ inline RangeStrided<uint> in_block_loop(uint block_begin,
                                                    uint block_end)
 {
-  return range((block_begin & ~31) + threadIdx.x, block_end, blockDim.x);
+  return range((block_begin & ~31) + uint(threadIdx.x), block_end,
+               uint(blockDim.x));
 }
 
 #endif

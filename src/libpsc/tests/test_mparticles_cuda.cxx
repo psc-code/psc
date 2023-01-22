@@ -8,7 +8,7 @@
 #include "test_common.hxx"
 #include "PscConfig.h"
 #include "../libpsc/cuda/mparticles_cuda.hxx"
-#include "cuda_base.cuh"
+#include "cuda_base.hxx"
 
 // FIXME, the general tests should be moved -> test_mparticles,
 // and the real cuda ones to test_cuda_mparticle?

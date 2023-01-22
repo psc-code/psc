@@ -2,7 +2,7 @@
 #pragma once
 
 #include "cuda_mparticles_indexer.h"
-#include "cuda_mparticles_sort.cuh"
+#include "cuda_mparticles_sort.hxx"
 #include "injector_buffered.hxx"
 #include "mparticles_patch_cuda.hxx"
 

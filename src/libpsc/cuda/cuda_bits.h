@@ -4,6 +4,8 @@
 
 #include "PscConfig.h"
 
+#include "gpu/gpu_runtime.h"
+
 #include <iostream>
 #include <fstream>
 
@@ -29,11 +31,11 @@ using device_vector = thrust::device_vector<T>;
 
 #define cudaCheck(ierr)                                                        \
   do {                                                                         \
-    if (ierr != cudaSuccess) {                                                 \
-      fprintf(stderr, "IERR = %d (%s) %s:%d\n", ierr, cudaGetErrorName(ierr),  \
+    if (ierr != hipSuccess) {                                                  \
+      fprintf(stderr, "IERR = %d (%s) %s:%d\n", ierr, hipGetErrorName(ierr),   \
               __FILE__, __LINE__);                                             \
     }                                                                          \
-    if (ierr != cudaSuccess)                                                   \
+    if (ierr != hipSuccess)                                                    \
       abort();                                                                 \
   } while (0)
 
@@ -41,10 +43,10 @@ static bool CUDA_SYNC = true;
 
 #define cuda_sync_if_enabled()                                                 \
   do {                                                                         \
-    cudaError ierr = cudaGetLastError();                                       \
+    hipError_t ierr = hipGetLastError();                                       \
     cudaCheck(ierr);                                                           \
     if (CUDA_SYNC) {                                                           \
-      cudaError_t ierr = cudaDeviceSynchronize();                              \
+      hipError_t ierr = hipDeviceSynchronize();                                \
       cudaCheck(ierr);                                                         \
     }                                                                          \
   } while (0)
