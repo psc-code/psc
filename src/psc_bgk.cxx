@@ -308,12 +308,12 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
         np.n = (qDensity(idx[0], idx[1], idx[2], 0, p) -
                 getIonDensity(rho) * g.q_i) /
                g.q_e;
-        if (rho != 0) {
-          np.p = pdist(y, z, rho);
-        } else {
-          double Te = parsedData->get_interpolated(COL_TE, 0);
+        if (rho == 0) {
+          double Te = parsedData->get_interpolated(COL_TE, rho);
           np.p = setup_particles.createMaxwellian(
             {np.kind, np.n, {0, 0, 0}, {Te, Te, Te}, np.tag});
+        } else {
+          np.p = pdist(y, z, rho);
         }
         break;
 
