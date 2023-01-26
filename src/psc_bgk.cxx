@@ -312,6 +312,16 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
           double Te = parsedData->get_interpolated(COL_TE, rho);
           np.p = setup_particles.createMaxwellian(
             {np.kind, np.n, {0, 0, 0}, {Te, Te, Te}, np.tag});
+        } else if (g.maxwellian) {
+          double Te = parsedData->get_interpolated(COL_TE, rho);
+          double vphi = parsedData->get_interpolated(COL_V_PHI, rho);
+          double coef = g.v_e_coef * (g.reverse_v ? -1 : 1) *
+                        (g.reverse_v_half && y < 0 ? -1 : 1);
+
+          double pz = coef * g.m_e * vphi * y / rho;
+          double py = coef * g.m_e * -vphi * z / rho;
+          np.p = setup_particles.createMaxwellian(
+            {np.kind, np.n, {0, py, pz}, {Te, Te, Te}, np.tag});
         } else {
           np.p = pdist(y, z, rho);
         }
