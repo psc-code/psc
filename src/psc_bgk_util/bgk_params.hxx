@@ -32,6 +32,7 @@ struct PscBgkParams
   double T_e_coef;     // multiplier for electron temperature
   bool reverse_v;      // whether or not to reverse electron velocity
   bool reverse_v_half; // whether or not to reverse electron velocity for y<0
+  bool maxwellian;     // whether or not to use Maxwellian instead of exact sol
 
   // For 3D cases
   int n_grid_3;      // number of grid points in 3rd dimension
@@ -66,6 +67,8 @@ struct PscBgkParams
 
     v_e_coef = parsedParams.getOrDefault<double>("v_e_coef", 1);
     T_e_coef = parsedParams.getOrDefault<double>("T_e_coef", 1);
+
+    maxwellian = parsedParams.getOrDefault<bool>("maxwellian", false);
 
     n_grid_3 = parsedParams.getOrDefault<int>("n_grid_3", 1);
     box_size_3 = parsedParams.getOrDefault<double>("box_size_3", 1);
