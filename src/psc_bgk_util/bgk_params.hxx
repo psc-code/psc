@@ -1,13 +1,47 @@
 #pragma once
 
+#include <cmath>
 #include "params_parser.hxx"
+
+// ======================================================================
+// getCalculatedBoxSize
+//
+// Calculate the radius where the spike in the exact distribution function ends,
+// according to the equation (in paper units):
+//    v_phi = max_v = 4*k*B*r^3 / (1 + 8*k*r^2)
+// The exact solution can be decomposed into the difference of two Gaussians.
+// The positive Gaussian has a mean of 0 and stdev of 1, independently of
+// all parameters. "max_v" represents an upper limit for v_phi according
+// to this term.
+// The negative Gaussian has a mean given by the RHS of the equation. It drifts
+// up, approaching a line with slope B/2. The negative Gaussian is the source
+// of the spike.
+
+double getCalculatedBoxSize(double B, double k)
+{
+  double max_v = 3.;
+  // solve cubic with linear coefficient = 0
+  double a = 4. * k * B;
+  double b = -8. * max_v * k;
+  double d = -max_v;
+
+  double p = -b / (3. * a);
+  double t = -d / (2. * a);
+  double q = p * p * p + t;
+  double s = sqrt(t * (2. * q - t));
+
+  double beta = .001; // FIXME don't hardcode this (see psc_bgk.cxx get_beta())
+  double extra_multiplier = 1.5;
+  double r = (std::cbrt(q + s) + std::cbrt(q - s) + p) * beta;
+  return extra_multiplier * 2 * r;
+}
 
 // ======================================================================
 // PscBgkParams
 
 struct PscBgkParams
 {
-  double box_size; // physical length of region along y and z
+  double box_size; // physical length of region along y and z; -1 -> auto
   double Hx;       // strength of transverse magnetic field
   double q_i;      // ion charge
   double n_i;      // ion number density
@@ -82,5 +116,8 @@ struct PscBgkParams
       if (n_patches_3 <= 0)
         n_patches_3 = n_grid_3 / parsedParams.get<int>("n_cells_per_patch");
     }
+
+    if (box_size <= 0)
+      box_size = getCalculatedBoxSize(Hx, k);
   }
 };
