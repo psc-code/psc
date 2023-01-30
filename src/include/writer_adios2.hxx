@@ -154,9 +154,11 @@ public:
     for (int p = 0; p < n_patches; p++) {
       patch_off[p] = grid.patches[p].off;
     }
+    Double3 length = grid.domain.length;
+    Double3 corner = grid.domain.corner;
 
     auto write_func = [this, step, time, h_expr = move(h_expr), name,
-                       comp_names, ldims, gdims,
+                       comp_names, ldims, gdims, length, corner,
                        patch_off = move(patch_off)]() {
       // std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
@@ -183,6 +185,8 @@ public:
         file.beginStep(kg::io::StepMode::Append);
         file.put("step", step);
         file.put("time", time);
+        file.put("length", length);
+        file.put("corner", corner);
 
         prof_start(pr_adios2);
         file.put("ib", ib, launch);
