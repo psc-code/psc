@@ -16,9 +16,12 @@ class RunInfo:
         var = next(iter(file.variables))
         self.gdims = np.asarray(file[var].shape)[0:3]
 
-        if length is not None:
+        maybe_length_attr = file._io.InquireAttribute("length")
+        if maybe_length_attr:
+            self.length = maybe_length_attr.Data()
+            self.corner = file._io.InquireAttribute("corner").Data()
+        elif length is not None:
             self.length = np.asarray(length)
-            # FIXME, corner should also be passed (or rather read)
             if corner is not None:
                 self.corner = np.asarray(corner)
             else:
