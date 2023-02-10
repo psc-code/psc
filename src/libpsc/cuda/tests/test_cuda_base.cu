@@ -6,7 +6,4 @@
 // ======================================================================
 // test cuda_base_init
 
-TEST(CudaBase, Init)
-{
-  cuda_base_init();
-}
+TEST(CudaBase, Init) { cuda_base_init(); }

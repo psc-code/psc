@@ -45,10 +45,7 @@ static inline v4si v4si_insert(v4si v, int s, int m)
   return rv;
 }
 
-static inline int v4si_extract(v4si v, int m)
-{
-  return v.v[m];
-}
+static inline int v4si_extract(v4si v, int m) { return v.v[m]; }
 
 static inline v4si v4s_fint(v4s v)
 {
@@ -277,10 +274,7 @@ static inline v4si v4s_fint(v4s v)
                              (__m128i)v4si_splat(10));
 }
 
-static inline v4s v4si_to_v4s(v4si v)
-{
-  return _mm_cvtepi32_ps((__m128i)v);
-}
+static inline v4s v4si_to_v4s(v4si v) { return _mm_cvtepi32_ps((__m128i)v); }
 
 static inline v4si v4s_cmpge(v4s a, v4s b)
 {
@@ -342,10 +336,7 @@ static inline v4si v4si_mul(v4si a, v4si b)
   return (v4si)_mm_mullo_epi32((__m128i)a, (__m128i)b);
 }
 
-static inline v4si v4si_abs(v4si a)
-{
-  return (v4si)_mm_abs_epi32((__m128i)a);
-}
+static inline v4si v4si_abs(v4si a) { return (v4si)_mm_abs_epi32((__m128i)a); }
 
 static inline v4si v4si_sll(v4si a, int count)
 {
@@ -371,15 +362,9 @@ static inline v4s v4s_gather(real* __restrict pp, v4si _off)
   return (v4s)res;
 }
 
-static inline v4s v4s_cast(v4si a)
-{
-  return (v4s)(__m128)(__m128i)a;
-}
+static inline v4s v4s_cast(v4si a) { return (v4s)(__m128)(__m128i)a; }
 
-static inline v4si v4si_cast(v4s a)
-{
-  return (v4si)(__m128i)(__m128)a;
-}
+static inline v4si v4si_cast(v4s a) { return (v4si)(__m128i)(__m128)a; }
 
 #endif
 
@@ -396,25 +381,16 @@ static inline v4s v4s_splat(float x)
   return rv;
 }
 
-static inline v4s v4s_load(float* p)
-{
-  return (v4s)_mm_load_ps(p);
-}
+static inline v4s v4s_load(float* p) { return (v4s)_mm_load_ps(p); }
 
 static inline void v4s_prefetch(float* p)
 {
   _mm_prefetch((const char*)p, _MM_HINT_T0);
 }
 
-static inline void v4s_store(float* p, v4s v)
-{
-  _mm_store_ps(p, (__m128)v);
-}
+static inline void v4s_store(float* p, v4s v) { _mm_store_ps(p, (__m128)v); }
 
-static inline void v4s_stream(float* p, v4s v)
-{
-  _mm_stream_ps(p, (__m128)v);
-}
+static inline void v4s_stream(float* p, v4s v) { _mm_stream_ps(p, (__m128)v); }
 
 static inline v4s v4s_insert(v4s v, float s, int m)
 {
@@ -434,10 +410,7 @@ static inline float v4s_extract(v4s v, int m)
   return rv;
 }
 
-static inline v4s v4s_sqrt(v4s v)
-{
-  return _mm_sqrt_ps(v);
-}
+static inline v4s v4s_sqrt(v4s v) { return _mm_sqrt_ps(v); }
 
 static inline v4s v4s_rsqrt(v4s v)
 {
@@ -460,10 +433,7 @@ static inline v4s v4s_recip(v4s v)
 #endif
 }
 
-static inline v4s v4s_floor(v4s a)
-{
-  return (v4s)_mm_floor_ps((__m128)a);
-}
+static inline v4s v4s_floor(v4s a) { return (v4s)_mm_floor_ps((__m128)a); }
 
 static inline v4s v4s_abs(v4s x)
 {

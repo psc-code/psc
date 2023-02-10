@@ -13,10 +13,7 @@ void fields_sse2_alloc(fields_sse2_t* pf)
   pf->flds = calloc(NR_FIELDS * psc.fld_size, sizeof(*pf->flds));
 }
 
-void fields_sse2_free(fields_sse2_t* pf)
-{
-  free(pf->flds);
-}
+void fields_sse2_free(fields_sse2_t* pf) { free(pf->flds); }
 
 void psc_mfields_sse2_get_from(fields_sse2_t* pf, int mb, int me)
 {

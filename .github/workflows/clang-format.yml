@@ -9,9 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: germasch/clang-format-lint-action@master
+      - uses: DoozyX/clang-format-lint-action@master
         with:
           source: 'src'
           extensions: 'h,c,hxx,cxx,hpp,cpp,cuh,cu'
-          clangFormatVersion: 9
+          clangFormatVersion: 14
           inplace: False

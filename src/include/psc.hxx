@@ -69,8 +69,9 @@ struct mem_fraction
 };
 
 template <typename Mparticles>
-struct mem_fraction<Mparticles, gt::meta::void_t<decltype(
-                                  std::declval<Mparticles>().mem_fraction())>>
+struct mem_fraction<
+  Mparticles,
+  gt::meta::void_t<decltype(std::declval<Mparticles>().mem_fraction())>>
 {
   static double get(const Mparticles& mprts)
   {
