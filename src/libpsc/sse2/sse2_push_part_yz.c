@@ -284,7 +284,7 @@ static void do_push_part_yz(particles_sse2_t* pp, fields_sse2_t* pf)
   //---------------------------------------------
   // An implementation of Will's 'squished' currents
   // that excludes the x direction all together
-  sse2_real *restrict s_jxi, *restrict s_jyi, *restrict s_jzi;
+  sse2_real* restrict s_jxi, * restrict s_jyi, * restrict s_jzi;
   int jsz =
     ((patch->ldims[1] + 2 * psc.ibn[1]) * (patch->ldims[2] + 2 * psc.ibn[2]));
   s_jxi = calloc(jsz, sizeof(sse2_real));

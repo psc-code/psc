@@ -24,10 +24,7 @@ static void fields_ip_alloc(fields_ip_t* pf, int ib[3], int ie[3], int nr_comp,
   pf->flds = calloc(nr_comp * size, sizeof(*pf->flds));
 }
 
-static void fields_ip_free(fields_ip_t* pf)
-{
-  free(pf->flds);
-}
+static void fields_ip_free(fields_ip_t* pf) { free(pf->flds); }
 
 #if SIMD_BITS == 0
 

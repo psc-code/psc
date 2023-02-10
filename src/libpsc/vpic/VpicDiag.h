@@ -623,15 +623,17 @@ struct VpicDiagMixin
 
       for (size_t v(0); v < numvars; v++) {
         for (size_t k(0); k < nzout + 2; k++) {
-          const size_t koff =
-            (k == 0) ? 0 : (k == nzout + 1) ? grid->nz + 1 : k * kstride - 1;
+          const size_t koff = (k == 0)           ? 0
+                              : (k == nzout + 1) ? grid->nz + 1
+                                                 : k * kstride - 1;
           for (size_t j(0); j < nyout + 2; j++) {
-            const size_t joff =
-              (j == 0) ? 0 : (j == nyout + 1) ? grid->ny + 1 : j * jstride - 1;
+            const size_t joff = (j == 0)           ? 0
+                                : (j == nyout + 1) ? grid->ny + 1
+                                                   : j * jstride - 1;
             for (size_t i(0); i < nxout + 2; i++) {
-              const size_t ioff =
-                (i == 0) ? 0
-                         : (i == nxout + 1) ? grid->nx + 1 : i * istride - 1;
+              const size_t ioff = (i == 0)           ? 0
+                                  : (i == nxout + 1) ? grid->nx + 1
+                                                     : i * istride - 1;
               const uint32_t* fref =
                 reinterpret_cast<uint32_t*>(&F(ioff, joff, koff));
               fileIO.write(&fref[varlist[v]], 1);
@@ -743,15 +745,17 @@ struct VpicDiagMixin
 
       for (size_t v(0); v < numvars; v++)
         for (size_t k(0); k < nzout + 2; k++) {
-          const size_t koff =
-            (k == 0) ? 0 : (k == nzout + 1) ? grid->nz + 1 : k * kstride - 1;
+          const size_t koff = (k == 0)           ? 0
+                              : (k == nzout + 1) ? grid->nz + 1
+                                                 : k * kstride - 1;
           for (size_t j(0); j < nyout + 2; j++) {
-            const size_t joff =
-              (j == 0) ? 0 : (j == nyout + 1) ? grid->ny + 1 : j * jstride - 1;
+            const size_t joff = (j == 0)           ? 0
+                                : (j == nyout + 1) ? grid->ny + 1
+                                                   : j * jstride - 1;
             for (size_t i(0); i < nxout + 2; i++) {
-              const size_t ioff =
-                (i == 0) ? 0
-                         : (i == nxout + 1) ? grid->nx + 1 : i * istride - 1;
+              const size_t ioff = (i == 0)           ? 0
+                                  : (i == nxout + 1) ? grid->nx + 1
+                                                     : i * istride - 1;
               const uint32_t* href =
                 reinterpret_cast<uint32_t*>(&H(ioff, joff, koff));
               fileIO.write(&href[varlist[v]], 1);

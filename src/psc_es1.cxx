@@ -159,10 +159,7 @@ static double psc_es1_init_field(struct psc* psc, double x[3], int m)
 //
 // return random number between 0 and 1
 
-static double ranf()
-{
-  return (double)random() / RAND_MAX;
-}
+static double ranf() { return (double)random() / RAND_MAX; }
 
 // ----------------------------------------------------------------------
 // psc_es1_init_species
@@ -364,7 +361,4 @@ struct psc_ops psc_es1_ops = {
 // ======================================================================
 // main
 
-int main(int argc, char** argv)
-{
-  return psc_main(&argc, &argv, &psc_es1_ops);
-}
+int main(int argc, char** argv) { return psc_main(&argc, &argv, &psc_es1_ops); }

@@ -16,12 +16,12 @@ struct PscParticle
 {
   float dx, dy, dz; // Particle position in cell coordinates (on [-1,1])
   int32_t i;        // Voxel containing the particle.  Note that
-  /**/                // particled awaiting processing by boundary_p
-  /**/                // have actually set this to 8*voxel + face where
-  /**/                // face is the index of the face they interacted
-  /**/                // with (on 0:5).  This limits the local number of
-  /**/                // voxels to 2^28 but emitter handling already
-  /**/                // has a stricter limit on this (2^26).
+  /**/              // particled awaiting processing by boundary_p
+  /**/              // have actually set this to 8*voxel + face where
+  /**/              // face is the index of the face they interacted
+  /**/              // with (on 0:5).  This limits the local number of
+  /**/              // voxels to 2^28 but emitter handling already
+  /**/              // has a stricter limit on this (2^26).
   float ux, uy, uz; // Particle normalized momentum
   float w;          // Particle weight (number of physical particles)
 };
@@ -115,26 +115,26 @@ struct PscSpecies
   int sort_interval;           // How often to sort the species
   int sort_out_of_place;       // Sort method
   int* ALIGNED(128) partition; // Static array indexed 0:
-  /**/                           // (nx+2)*(ny+2)*(nz+2).  Each value
-  /**/                           // corresponds to the associated particle
-  /**/                           // array index of the first particle in
-  /**/                           // the cell.  Array is allocated and
-  /**/                           // values computed in sort_p.  Purpose is
-  /**/                           // for implementing collision models
-  /**/                           // This is given in terms of the
-  /**/                           // underlying's grids space filling
-  /**/                           // curve indexing.  Thus, immediately
-  /**/                           // after a sort:
-  /**/                           //   sp->p[sp->partition[g->sfc[i]  ]:
-  /**/                           //         sp->partition[g->sfc[i]+1]-1]
-  /**/                           // are all the particles in voxel
-  /**/                           // with local index i, while:
-  /**/                           //   sp->p[ sp->partition[ j   ]:
-  /**/                           //          sp->partition[ j+1 ] ]
-  /**/                           // are all the particles in voxel
-  /**/                           // with space filling curve index j.
-  /**/                           // Note: SFC NOT IN USE RIGHT NOW THUS
-  /**/                           // g->sfc[i]=i ABOVE.
+  /**/                         // (nx+2)*(ny+2)*(nz+2).  Each value
+  /**/                         // corresponds to the associated particle
+  /**/                         // array index of the first particle in
+  /**/                         // the cell.  Array is allocated and
+  /**/                         // values computed in sort_p.  Purpose is
+  /**/                         // for implementing collision models
+  /**/                         // This is given in terms of the
+  /**/                         // underlying's grids space filling
+  /**/                         // curve indexing.  Thus, immediately
+  /**/                         // after a sort:
+  /**/                         //   sp->p[sp->partition[g->sfc[i]  ]:
+  /**/                         //         sp->partition[g->sfc[i]+1]-1]
+  /**/                         // are all the particles in voxel
+  /**/                         // with local index i, while:
+  /**/                         //   sp->p[ sp->partition[ j   ]:
+  /**/                         //          sp->partition[ j+1 ] ]
+  /**/                         // are all the particles in voxel
+  /**/                         // with space filling curve index j.
+  /**/                         // Note: SFC NOT IN USE RIGHT NOW THUS
+  /**/                         // g->sfc[i]=i ABOVE.
 private:
   Grid* grid_; // Underlying grid
 

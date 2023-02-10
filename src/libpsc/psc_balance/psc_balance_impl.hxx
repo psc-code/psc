@@ -21,10 +21,7 @@
 
 extern double* psc_balance_comp_time_by_patch;
 
-static double capability_default(int p)
-{
-  return 1.;
-}
+static double capability_default(int p) { return 1.; }
 
 // ======================================================================
 

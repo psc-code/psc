@@ -125,10 +125,7 @@ private:
 // -----------------------------------------------------------------------
 // Constructor
 
-TYPED_TEST(MparticlesTest, Constructor)
-{
-  auto mprts = this->mk_mprts();
-}
+TYPED_TEST(MparticlesTest, Constructor) { auto mprts = this->mk_mprts(); }
 
 // ----------------------------------------------------------------------
 // Inject

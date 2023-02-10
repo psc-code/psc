@@ -18,10 +18,7 @@ psc_cell_block_t psc_block;
 
 // Error handler. Want these passed out the
 // PPE to handle.
-static void spu_error(void)
-{
-  spu_write_out_mbox(SPU_ERROR);
-}
+static void spu_error(void) { spu_write_out_mbox(SPU_ERROR); }
 
 static int spu_run_job(unsigned long long ea)
 {

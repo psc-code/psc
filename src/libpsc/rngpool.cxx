@@ -11,25 +11,13 @@ using RngPool = PscRngPool<Rng>;
 // ----------------------------------------------------------------------
 // RngPool
 
-RngPool* RngPool_create()
-{
-  return new RngPool;
-}
+RngPool* RngPool_create() { return new RngPool; }
 
-void RngPool_delete(RngPool* rngpool)
-{
-  delete rngpool;
-}
+void RngPool_delete(RngPool* rngpool) { delete rngpool; }
 
-void RngPool_seed(RngPool* rngpool, int base)
-{
-  rngpool->seed(base, 0);
-}
+void RngPool_seed(RngPool* rngpool, int base) { rngpool->seed(base, 0); }
 
-Rng* RngPool_get(RngPool* rngpool, int n)
-{
-  return (*rngpool)[n];
-}
+Rng* RngPool_get(RngPool* rngpool, int n) { return (*rngpool)[n]; }
 
 // ----------------------------------------------------------------------
 // Rng

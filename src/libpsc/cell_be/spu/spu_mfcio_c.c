@@ -12,10 +12,7 @@
 static int tagmask;
 static int __mask;
 
-void mfc_write_tag_mask(unsigned int mask)
-{
-  __mask = mask;
-}
+void mfc_write_tag_mask(unsigned int mask) { __mask = mask; }
 
 unsigned int mfc_read_tag_status_any()
 {

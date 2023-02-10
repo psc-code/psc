@@ -140,11 +140,11 @@ void cuda_base_init(void)
       "  Compute mode:                                  %s\n",
       deviceProp.computeMode == hipComputeModeDefault
         ? "Default (multiple host threads can use this device simultaneously)"
-        : deviceProp.computeMode == hipComputeModeExclusive
-            ? "Exclusive (only one host thread at a time can use this device)"
-            : deviceProp.computeMode == hipComputeModeProhibited
-                ? "Prohibited (no host thread can use this device)"
-                : "Unknown");
+      : deviceProp.computeMode == hipComputeModeExclusive
+        ? "Exclusive (only one host thread at a time can use this device)"
+      : deviceProp.computeMode == hipComputeModeProhibited
+        ? "Prohibited (no host thread can use this device)"
+        : "Unknown");
 #endif
   }
 }

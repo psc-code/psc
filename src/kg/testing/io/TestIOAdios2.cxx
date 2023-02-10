@@ -3,10 +3,7 @@
 
 #include <gtest/gtest.h>
 
-TEST(IOAdios2, CtorDtor)
-{
-  auto io = kg::io::IOAdios2{};
-}
+TEST(IOAdios2, CtorDtor) { auto io = kg::io::IOAdios2{}; }
 
 TEST(IOAdios2, OpenWrite)
 {

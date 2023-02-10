@@ -265,7 +265,4 @@ struct psc_ops psc_kh_ops = {
 // ======================================================================
 // main
 
-int main(int argc, char** argv)
-{
-  return psc_main(&argc, &argv, &psc_kh_ops);
-}
+int main(int argc, char** argv) { return psc_main(&argc, &argv, &psc_kh_ops); }

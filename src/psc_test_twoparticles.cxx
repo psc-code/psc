@@ -195,7 +195,4 @@ struct psc_ops psc_es1_ops = {
 // ======================================================================
 // main
 
-int main(int argc, char** argv)
-{
-  return psc_main(&argc, &argv, &psc_es1_ops);
-}
+int main(int argc, char** argv) { return psc_main(&argc, &argv, &psc_es1_ops); }

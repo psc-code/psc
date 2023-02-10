@@ -8,10 +8,7 @@ static const int debug_every_step = 10;
 static inline bool at_lo_boundary(int p, int d);
 static inline bool at_hi_boundary(int p, int d);
 
-static inline double random1()
-{
-  return random() / (double)RAND_MAX;
-}
+static inline double random1() { return random() / (double)RAND_MAX; }
 
 static void copy_to_mrc_fld(struct mrc_fld* m3, struct psc_mfields* mflds)
 {

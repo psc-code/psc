@@ -185,7 +185,7 @@ struct PscParticlesOps
 
       v4 = q * sdr; // v4  = q ux,        q uy,        q uz,        D/C
       v1 = v4 * shuffle<1, 2, 0, 3>(v5);
-      /**/            // v1  = q ux dy,     q uy dz,     q uz dx,     D/C
+      /**/          // v1  = q ux dy,     q uy dz,     q uz dx,     D/C
       v0 = v4 - v1; // v0  = q ux(1-dy),  q uy(1-dz),  q uz(1-dx),  D/C
       v1 += v4;     // v1  = q ux(1+dy),  q uy(1+dz),  q uz(1+dx),  D/C
 
@@ -200,7 +200,7 @@ struct PscParticlesOps
       // v4  = ((q3*splat(sdr,0))*splat(sdr,1))*splat(sdr,2);
       v4 = ((q3 * splat<0>(sdr)) * splat<1>(sdr)) * splat<2>(sdr);
       // FIXME: splat ambiguity in v4 prevents flattening
-      /**/        // v4  = q ux uy uz/3,q ux uy uz/3,q ux uy uz/3,D/C
+      /**/      // v4  = q ux uy uz/3,q ux uy uz/3,q ux uy uz/3,D/C
       v0 += v4; // v0  = q ux[(1-dy)(1-dz)+uy uz/3], ...,       D/C
       v1 -= v4; // v1  = q ux[(1+dy)(1-dz)-uy uz/3], ...,       D/C
       v2 -= v4; // v2  = q ux[(1-dy)(1+dz)-uy uz/3], ...,       D/C
@@ -407,7 +407,7 @@ struct PscParticlesOps
       // particle coordinate system and keep moving the particle.
 
       p->i = neighbor - g.rangel; // Compute local index of neighbor
-      /**/                          // Note: neighbor - g.rangel < 2^31 / 6
+      /**/                        // Note: neighbor - g.rangel < 2^31 / 6
       (&(p->dx))[axis] = -v0;     // Convert coordinate system
     }
 

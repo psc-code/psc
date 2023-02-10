@@ -193,10 +193,7 @@ void end_wait_particles_stored(void)
   put_tagid(tag_preload);
 }
 
-void wait_for_preload(void)
-{
-  wait_tagid(tag_preload);
-}
+void wait_for_preload(void) { wait_tagid(tag_preload); }
 
 // I'm not quite sure how to integrate these functions,
 // of if they even need to be seperate functions.
