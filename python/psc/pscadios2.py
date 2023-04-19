@@ -134,4 +134,9 @@ class PscAdios2BackendEntrypoint(BackendEntrypoint):
         return ext in {".bp"}
 
 
-BACKEND_ENTRYPOINTS["pscadios2"] = PscAdios2BackendEntrypoint
+if xarray.__version__ == "2023.4.1":
+    # FIXME determine exactly when the API changed
+    BACKEND_ENTRYPOINTS["pscadios2"] = ("psc", PscAdios2BackendEntrypoint)
+else:
+    # API of version 0.19.0
+    BACKEND_ENTRYPOINTS["pscadios2"] = PscAdios2BackendEntrypoint
