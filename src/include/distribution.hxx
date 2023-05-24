@@ -11,20 +11,10 @@ namespace distribution
 {
 
 // ======================================================================
-// Distribution
-// Base class for distributions
-
-template <typename Real>
-struct Distribution
-{
-  virtual Real get() = 0;
-};
-
-// ======================================================================
 // Uniform
 
 template <typename Real>
-struct Uniform : public Distribution<Real>
+struct Uniform
 {
   Uniform(Real min, Real max)
     : dist(min, max),
@@ -33,7 +23,7 @@ struct Uniform : public Distribution<Real>
 
   Uniform() : Uniform(0, 1) {}
 
-  Real get() override { return dist(gen); }
+  Real get() { return dist(gen); }
 
 private:
   std::default_random_engine gen;
@@ -44,7 +34,7 @@ private:
 // Normal
 
 template <typename Real>
-struct Normal : public Distribution<Real>
+struct Normal
 {
   Normal(Real mean, Real stdev)
     : dist(mean, stdev),
@@ -52,7 +42,7 @@ struct Normal : public Distribution<Real>
   {}
   Normal() : Normal(0, 1) {}
 
-  Real get() override { return dist(gen); }
+  Real get() { return dist(gen); }
   // FIXME remove me, or make standalone func
   Real get(Real mean, Real stdev)
   {
@@ -137,7 +127,7 @@ void findPdfSupport(std::function<Real(Real)>& cdf, Real& xmin, Real& xmax,
 }
 
 template <typename Real>
-struct InvertedCdf : public Distribution<Real>
+struct InvertedCdf
 {
   InvertedCdf(std::function<Real(Real)> cdf, int n_points = 100,
               Real tolerance = .0001, int max_n_iter = 50)
