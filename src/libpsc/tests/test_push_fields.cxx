@@ -106,7 +106,7 @@ TYPED_TEST(PushFieldsTest, Pushf2)
 // need separate init_phi to work around device lambda limitations
 
 template <typename E>
-inline void init_phi(E&& mphi, Int3 bnd, const Grid_t& grid, double kz)
+inline void init_phi(E&& mphi, const Int3 bnd, const Grid_t& grid, double kz)
 {
   auto&& k_mphi = mphi.to_kernel();
   double dz = grid.domain.dx[2];
