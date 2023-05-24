@@ -1,5 +1,5 @@
 
-#include "distribution.hxx"
+#include "rng.hxx"
 #include "fields.hxx"
 
 using real_t = mparticles_t::real_t;
@@ -471,7 +471,7 @@ static inline double inject_particles(int p, struct psc_mparticles* mprts,
       do {
         nnm++;
         // FIXME, shouldn't have to loop here
-        distribution::Uniform<double> uniform_distr;
+        rng::Uniform<double> uniform_distr;
         do {
           double sr = uniform_distr.get();
 

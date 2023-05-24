@@ -1,6 +1,6 @@
 
 #include "heating.hxx"
-#include "distribution.hxx"
+#include "rng.hxx"
 
 #include <functional>
 #include <stdlib.h>
@@ -29,7 +29,7 @@ struct Heating__ : HeatingBase
 
   void kick_particle(Particle& prt, real_t H)
   {
-    distribution::Normal<real_t> standard_normal_distr;
+    rng::Normal<real_t> standard_normal_distr;
 
     real_t Dpxi = sqrtf(H * heating_dt_);
     real_t Dpyi = sqrtf(H * heating_dt_);

@@ -8,7 +8,7 @@
 #include "heating_cuda_impl.hxx"
 #include "balance.hxx"
 #include "rng_state.hxx"
-#include "distribution.hxx"
+#include "rng.hxx"
 
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
@@ -160,7 +160,7 @@ struct cuda_heating_foil
 
 __host__ void particle_kick(DParticleCuda& prt, float H, float heating_dt)
 {
-  distribution::Normal<float> standard_normal_distr;
+  rng::Normal<float> standard_normal_distr;
 
   float Dp = sqrtf(H * heating_dt);
 

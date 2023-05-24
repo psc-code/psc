@@ -4,7 +4,7 @@
 #include <functional>
 #include <type_traits>
 #include "centering.hxx"
-#include "distribution.hxx"
+#include "rng.hxx"
 
 struct psc_particle_npt
 {
@@ -115,7 +115,7 @@ struct SetupParticles
 
   int get_n_in_cell(const psc_particle_np& np)
   {
-    static distribution::Uniform<float> dist{0, 1};
+    static rng::Uniform<float> dist{0, 1};
     if (np.n == 0) {
       return 0;
     }
@@ -194,7 +194,7 @@ struct SetupParticles
     double m = kinds_[npt.kind].m;
 
     return [=]() {
-      static distribution::Normal<double> dist;
+      static rng::Normal<double> dist;
 
       Double3 p;
       for (int i = 0; i < 3; i++)
