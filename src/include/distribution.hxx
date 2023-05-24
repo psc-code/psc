@@ -28,6 +28,8 @@ struct Uniform : public Distribution<Real>
       gen(std::chrono::system_clock::now().time_since_epoch().count())
   {}
 
+  Uniform() : Uniform(0, 1) {}
+
   Real get() override { return dist(gen); }
 
 private:
