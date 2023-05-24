@@ -2,6 +2,7 @@
 #pragma once
 
 #include "cuda_compat.h"
+#include "distribution.hxx"
 
 #include <cmath>
 
@@ -14,17 +15,9 @@ struct RngC
   // ----------------------------------------------------------------------
   // uniform
   //
-  // returns random number in ]0:1]
+  // returns random number in [0:1[
 
-  real_t uniform()
-  {
-    real_t ran;
-    do {
-      ran = real_t(random()) / RAND_MAX;
-    } while (ran == real_t(0.f));
-
-    return ran;
-  }
+  real_t uniform() { return distribution::Uniform<real_t>{}.get(); }
 };
 
 // ======================================================================
