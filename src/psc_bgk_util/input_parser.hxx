@@ -4,6 +4,9 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+#include <iterator>
+#include <algorithm>
+#include <cassert>
 
 // ======================================================================
 // parsing util
