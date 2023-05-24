@@ -1,8 +1,11 @@
+#pragma once
+
 #include <vector>
 #include <cmath>
 #include "stdlib.h"
 #include <random>
 #include <chrono>
+#include <functional>
 
 namespace distribution
 {
