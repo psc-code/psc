@@ -7,7 +7,7 @@
 #include <chrono>
 #include <functional>
 
-namespace distribution
+namespace rng
 {
 
 // ======================================================================
@@ -176,4 +176,4 @@ private:
   Uniform<Real> uniform{0, 1};
 };
 
-} // namespace distribution
+} // namespace rng
