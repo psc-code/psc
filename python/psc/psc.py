@@ -51,11 +51,14 @@ def FieldToComponent(species):
     map['d_rho'] = {'d_rho': 0}
     map['div_j'] = {'div_j': 0}
 
+    # keeping 'all_1st' for backwards compatibility
     map['all_1st'] = {}
+    map['all_1st_cc'] = {}
     moments = ['rho', 'jx', 'jy', 'jz', 'px', 'py',
                'pz', 'txx', 'tyy', 'tzz', 'txy', 'tyz', 'tzx']
     for i_sp, sp in enumerate(species):
         for i_mom, mom in enumerate(moments):
             map['all_1st'][f"{mom}_{sp}"] = i_mom + 13 * i_sp
+            map['all_1st_cc'][f"{mom}_{sp}"] = i_mom + 13 * i_sp
 
     return map
