@@ -91,7 +91,7 @@ struct PscBgkParams
     q_e = parsedParams.get<double>("q_e");
     m_e = parsedParams.get<double>("m_e");
     n_grid = parsedParams.get<int>("n_grid");
-    n_patches = parsedParams.get<int>("n_patches");
+    n_patches = parsedParams.getAndWarnOrDefault<int>("n_patches", -1);
     if (n_patches <= 0)
       n_patches = n_grid / parsedParams.get<int>("n_cells_per_patch");
     nicell = parsedParams.getOrDefault<int>("nicell", 100);
@@ -118,7 +118,7 @@ struct PscBgkParams
     if (n_grid_3 < parsedParams.get<int>("n_cells_per_patch")) {
       n_patches_3 = 1;
     } else {
-      n_patches_3 = parsedParams.getOrDefault<int>("n_patches_3", 1);
+      n_patches_3 = parsedParams.getAndWarnOrDefault<int>("n_patches_3", -1);
       if (n_patches_3 <= 0)
         n_patches_3 = n_grid_3 / parsedParams.get<int>("n_cells_per_patch");
     }
