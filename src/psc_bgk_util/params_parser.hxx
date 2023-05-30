@@ -45,6 +45,9 @@ public:
   template <typename T>
   T getOrDefault(const std::string paramName, T deflt);
 
+  template <typename T>
+  T getAndWarnOrDefault(const std::string paramName, T deflt);
+
   // return true and display warning iff paramName is present
   bool warnIfPresent(const std::string paramName, const std::string advice);
 };
@@ -58,6 +61,19 @@ T ParsedParams::getOrDefault(const std::string paramName, T deflt)
     return get<T>(paramName);
   std::cout << "Warning: using default value for parameter '" << paramName
             << "': " << deflt << "\n";
+  return deflt;
+}
+
+template <typename T>
+T ParsedParams::getAndWarnOrDefault(const std::string paramName, T deflt)
+{
+  if (params.count(paramName) == 1) {
+    T val = get<T>(paramName);
+    std::cout << "Warning: using non-default value for parameter '" << paramName
+              << "': " << val << "\nDefault value of '" << deflt
+              << "' is recommended.\n";
+    return val;
+  }
   return deflt;
 }
 
