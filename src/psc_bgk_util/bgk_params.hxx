@@ -41,16 +41,18 @@ double getCalculatedBoxSize(double B, double k)
 
 struct PscBgkParams
 {
-  double box_size; // physical length of region along y and z; -1 -> auto
-  double Hx;       // strength of transverse magnetic field
-  double q_i;      // ion charge
-  double n_i;      // ion number density
-  double m_i;      // ion mass
-  double q_e;      // electron charge
-  double m_e;      // electron mass
-  int n_grid;      // number of grid cells
-  int n_patches;   // number of patches
-  int nicell;      // number of particles per gripdoint when density=1
+  double box_size;     // physical length of region along y and z
+                       // (overrides rel_box_size unless set to -1)
+  double rel_box_size; // length of y and z dims in calculated units
+  double Hx;           // strength of transverse magnetic field
+  double q_i;          // ion charge
+  double n_i;          // ion number density
+  double m_i;          // ion mass
+  double q_e;          // electron charge
+  double m_e;          // electron mass
+  int n_grid;          // number of grid cells
+  int n_patches;       // number of patches
+  int nicell;          // number of particles per gripdoint when density=1
 
   double k = .1;  // a parameter for BGK solutions
   double h0 = .9; // a parameter for BGK solutions
@@ -72,13 +74,16 @@ struct PscBgkParams
   bool maxwellian;     // whether or not to use Maxwellian instead of exact sol
 
   // For 3D cases
-  int n_grid_3;      // number of grid points in 3rd dimension
-  double box_size_3; // physical length of 3rd dimension
-  int n_patches_3;   // number of patches in 3rd dimension
+  int n_grid_3;          // number of grid points in 3rd dimension
+  double box_size_3;     // physical length of 3rd dimension
+                         // (overrides rel_box_size_3 unless set to -1)
+  double rel_box_size_3; // length of 3rd dimension in calculated units
+  int n_patches_3;       // number of patches in 3rd dimension
 
   void loadParams(ParsedParams parsedParams)
   {
-    box_size = parsedParams.get<double>("box_size");
+    box_size = parsedParams.getAndWarnOrDefault<double>("box_size", -1);
+    rel_box_size = parsedParams.getOrDefault<double>("rel_box_size", 1);
     Hx = parsedParams.get<double>("H_x");
     q_i = parsedParams.get<double>("q_i");
     n_i = parsedParams.get<double>("n_i");
@@ -108,7 +113,8 @@ struct PscBgkParams
     maxwellian = parsedParams.getOrDefault<bool>("maxwellian", false);
 
     n_grid_3 = parsedParams.getOrDefault<int>("n_grid_3", 1);
-    box_size_3 = parsedParams.getOrDefault<double>("box_size_3", 1);
+    box_size_3 = parsedParams.getAndWarnOrDefault<double>("box_size_3", -1);
+    rel_box_size_3 = parsedParams.getOrDefault<double>("rel_box_size_3", 1);
     if (n_grid_3 < parsedParams.get<int>("n_cells_per_patch")) {
       n_patches_3 = 1;
     } else {
@@ -118,6 +124,8 @@ struct PscBgkParams
     }
 
     if (box_size <= 0)
-      box_size = getCalculatedBoxSize(Hx, k);
+      box_size = rel_box_size * getCalculatedBoxSize(Hx, k);
+    if (box_size_3 <= 0)
+      box_size_3 = rel_box_size_3 * getCalculatedBoxSize(Hx, k);
   }
 };
