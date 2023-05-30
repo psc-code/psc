@@ -34,7 +34,7 @@ public:
 
       ifs.close();
     } else {
-      std::cout << "Failed to open params file: " << file_path << std::endl;
+      std::cout << "Failed to open params file: " << file_path << "\n";
       exit(EXIT_FAILURE);
     }
   }
@@ -57,7 +57,7 @@ T ParsedParams::getOrDefault(const std::string paramName, T deflt)
   if (params.count(paramName) == 1)
     return get<T>(paramName);
   std::cout << "Warning: using default value for parameter '" << paramName
-            << "': " << deflt << std::endl;
+            << "': " << deflt << "\n";
   return deflt;
 }
 
@@ -66,9 +66,8 @@ bool ParsedParams::warnIfPresent(const std::string paramName,
 {
   if (params.count(paramName) == 1) {
 
-    std::cout << "Warning: parameter " << paramName << " is deprecated."
-              << std::endl;
-    std::cout << advice << std::endl;
+    std::cout << "Warning: parameter " << paramName << " is deprecated.\n"
+              << advice << "\n";
     return true;
   }
   return false;
