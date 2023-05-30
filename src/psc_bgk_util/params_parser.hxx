@@ -9,7 +9,7 @@
 // ======================================================================
 // ParsedParams
 // A simple parser intended for reading run parameters from a file, rather than
-// hard-coding them. See psc_bgk_params.txt for an example.
+// hard-coding them. See psc_bgk_util/sample_bgk_params.txt for an example.
 
 class ParsedParams
 {
