@@ -6,7 +6,6 @@
 #include <sstream>
 #include <iterator>
 #include <algorithm>
-#include <cassert>
 
 // ======================================================================
 // parsing util
@@ -168,8 +167,16 @@ public:
 
   double get_interpolated(int col, double indep_var_val)
   {
-    assert(indep_var_val >= (*this)[0][indep_col]);
-    assert(indep_var_val <= (*this)[nrows - 1][indep_col]);
+    if (indep_var_val < (*this)[0][indep_col]) {
+      mpi_printf(MPI_COMM_WORLD, "Out of bounds (too low): %f (< %f)\n",
+                 indep_var_val, (*this)[0][indep_col]);
+      std::exit(1);
+    }
+    if (indep_var_val > (*this)[nrows - 1][indep_col]) {
+      mpi_printf(MPI_COMM_WORLD, "Out of bounds (too high): %f (> %f)\n",
+                 indep_var_val, (*this)[nrows - 1][indep_col]);
+      std::exit(1);
+    }
 
     int row = get_row(indep_var_val);
 
