@@ -5,9 +5,9 @@
 
 // ======================================================================
 // getCalculatedBoxSize
-//
-// Calculate the radius where the spike in the exact distribution function ends,
-// according to the equation (in paper units):
+
+// Calculates the radial distance where the spike in the exact distribution
+// function ends, according to the equation (in paper units):
 //    v_phi = max_v = 4*k*B*r^3 / (1 + 8*k*r^2)
 // The exact solution can be decomposed into the difference of two Gaussians.
 // The positive Gaussian has a mean of 0 and stdev of 1, independently of
@@ -16,8 +16,7 @@
 // The negative Gaussian has a mean given by the RHS of the equation. It drifts
 // up, approaching a line with slope B/2. The negative Gaussian is the source
 // of the spike.
-
-double getCalculatedBoxSize(double B, double k)
+double getSpikeSize(double B, double k)
 {
   double max_v = 3.;
   // solve cubic with linear coefficient = 0
@@ -31,9 +30,16 @@ double getCalculatedBoxSize(double B, double k)
   double s = sqrt(t * (2. * q - t));
 
   double beta = .001; // FIXME don't hardcode this (see psc_bgk.cxx get_beta())
-  double extra_multiplier = 1.5;
   double r = (std::cbrt(q + s) + std::cbrt(q - s) + p) * beta;
-  return extra_multiplier * 2 * r;
+  return r;
+}
+
+// Calculates a box size big enough to resolve the spike.
+double getCalculatedBoxSize(double B, double k)
+{
+  double extra_multiplier = 1.5;
+  double spike_size = getSpikeSize(B, k);
+  return extra_multiplier * 2 * spike_size;
 }
 
 // ======================================================================
