@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include "params_parser.hxx"
+#include "input_parser.hxx"
 
 // ======================================================================
 // getCalculatedBoxSize
@@ -18,7 +19,7 @@
 // of the spike.
 double getSpikeSize(double B, double k)
 {
-  double max_v = 3.;
+  double max_v = 4.5;
   // solve cubic with linear coefficient = 0
   double a = 4. * k * B;
   double b = -8. * max_v * k;
@@ -34,12 +35,27 @@ double getSpikeSize(double B, double k)
   return r;
 }
 
-// Calculates a box size big enough to resolve the spike.
-double getCalculatedBoxSize(double B, double k)
+// The hole size is determined empirically from the input data. This function
+// finds where the electron density <= 1 + epsilon, where epsilon is small.
+double getHoleSize(ParsedData& data)
 {
-  double extra_multiplier = 1.5;
+  double epsilon = 1e-4;
+  const int COL_RHO = 0;
+  const int COL_NE = 1;
+  for (int row = data.get_nrows() - 1; row >= 0; row--) {
+    if (data[row][COL_NE] > 1 + epsilon)
+      return data[row][COL_RHO];
+  }
+  throw "Unable to determine hole size.";
+}
+
+// Calculates a box size big enough to resolve the spike and the hole.
+double getCalculatedBoxSize(double B, double k, ParsedData& data)
+{
   double spike_size = getSpikeSize(B, k);
-  return extra_multiplier * 2 * spike_size;
+  double hole_size = getHoleSize(data);
+  LOG_INFO("spike radius: %f\thole radius: %f\n", spike_size, hole_size);
+  return 2 * std::max(spike_size, hole_size);
 }
 
 // ======================================================================
@@ -86,7 +102,7 @@ struct PscBgkParams
   double rel_box_size_3; // length of 3rd dimension in calculated units
   int n_patches_3;       // number of patches in 3rd dimension
 
-  void loadParams(ParsedParams parsedParams)
+  void loadParams(ParsedParams parsedParams, ParsedData& data)
   {
     box_size = parsedParams.getAndWarnOrDefault<double>("box_size", -1);
     rel_box_size = parsedParams.getOrDefault<double>("rel_box_size", 1);
@@ -130,8 +146,8 @@ struct PscBgkParams
     }
 
     if (box_size <= 0)
-      box_size = rel_box_size * getCalculatedBoxSize(Hx, k);
+      box_size = rel_box_size * getCalculatedBoxSize(Hx, k, data);
     if (box_size_3 <= 0)
-      box_size_3 = rel_box_size_3 * getCalculatedBoxSize(Hx, k);
+      box_size_3 = rel_box_size_3 * getCalculatedBoxSize(Hx, k, data);
   }
 };
