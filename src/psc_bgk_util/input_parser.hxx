@@ -184,4 +184,6 @@ public:
   }
 
   double* operator[](const int row) { return data.data() + row * ncols; }
+
+  int get_nrows() const { return nrows; }
 };
