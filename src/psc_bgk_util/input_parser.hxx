@@ -84,9 +84,9 @@ private:
   {
     // initial guess; is precise when indep_var is linearly spaced
     int row = std::min((int)(indep_var_val / indep_var_step), nrows - 1);
-    while (row < nrows && indep_var_val > (*this)[row][indep_col])
+    while (row < nrows - 1 && indep_var_val > (*this)[row][indep_col])
       row++;
-    while (row >= 0 && indep_var_val < (*this)[row][indep_col])
+    while (row > 0 && indep_var_val < (*this)[row][indep_col])
       row--;
     return row;
   }
