@@ -133,7 +133,7 @@ Grid_t* setupGrid()
   kinds[KIND_ION] = {g.q_i, g.m_i, "i"};
 
   mpi_printf(MPI_COMM_WORLD, "lambda_D = %g\n",
-             sqrt(parsedData->get_interpolated(COL_TE, g.box_size / sqrt(2))));
+             sqrt(parsedData->get_interpolated(COL_TE, 0)));
 
   // --- generic setup
   auto norm_params = Grid_t::NormalizationParams::dimensionless();
