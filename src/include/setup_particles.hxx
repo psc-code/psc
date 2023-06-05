@@ -1,7 +1,10 @@
 
 #pragma once
 
+#include <functional>
+#include <type_traits>
 #include "centering.hxx"
+#include "rng.hxx"
 
 struct psc_particle_npt
 {
@@ -12,6 +15,14 @@ struct psc_particle_npt
   psc::particle::Tag tag;
 };
 
+struct psc_particle_np
+{
+  int kind;                   ///< particle kind
+  double n;                   ///< density
+  std::function<Double3()> p; ///< returns a random momentum
+  psc::particle::Tag tag;
+};
+
 // ======================================================================
 // SetupParticles
 
@@ -19,6 +30,66 @@ namespace
 {
 const Centering::Centerer defaultCenterer(Centering::CC);
 }
+
+struct InitNptFunc
+{
+  // Initialize particles according to a Maxwellian.
+  // (int kind, Double3 pos, psc_particle_npt& npt) -> void
+  template <
+    typename INIT_NPT,
+    std::enable_if_t<
+      std::is_convertible<
+        INIT_NPT, std::function<void(int, Double3, psc_particle_npt&)>>::value,
+      bool> = true>
+  InitNptFunc(INIT_NPT init_npt_simple)
+    : func{[&](int kind, Double3 pos, int p, Int3 idx, psc_particle_npt& npt) {
+        init_npt_simple(kind, pos, npt);
+      }}
+  {}
+
+  // Initialize particles according to a Maxwellian.
+  // (int kind, Double3 pos, int patch, Int3 idx, psc_particle_npt& npt) -> void
+  template <
+    typename INIT_NPT,
+    std::enable_if_t<std::is_convertible<
+                       INIT_NPT, std::function<void(int, Double3, int, Int3,
+                                                    psc_particle_npt&)>>::value,
+                     bool> = true>
+  InitNptFunc(INIT_NPT init_npt) : func{init_npt}
+  {}
+
+  void operator()(int kind, Double3 pos, int patch, Int3 index,
+                  psc_particle_npt& npt)
+  {
+    func(kind, pos, patch, index, npt);
+  }
+
+private:
+  std::function<void(int, Double3, int, Int3, psc_particle_npt&)> func;
+};
+
+struct InitNpFunc
+{
+  // Initialize particles according to an arbitrary momentum disribution.
+  // (int kind, Double3 pos, int patch, Int3 idx, psc_particle_np& np) -> void
+  template <
+    typename INIT_NP,
+    std::enable_if_t<std::is_convertible<
+                       INIT_NP, std::function<void(int, Double3, int, Int3,
+                                                   psc_particle_np&)>>::value,
+                     bool> = true>
+  InitNpFunc(INIT_NP init_np) : func{init_np}
+  {}
+
+  void operator()(int kind, Double3 pos, int patch, Int3 index,
+                  psc_particle_np& np)
+  {
+    func(kind, pos, patch, index, np);
+  }
+
+private:
+  std::function<void(int, Double3, int, Int3, psc_particle_np&)> func;
+};
 
 template <typename MP>
 struct SetupParticles
@@ -42,31 +113,25 @@ struct SetupParticles
   //
   // helper function for partition / particle setup
 
-  int get_n_in_cell(const psc_particle_npt& npt)
+  int get_n_in_cell(const psc_particle_np& np)
   {
-    if (npt.n == 0) {
+    static rng::Uniform<float> dist{0, 1};
+    if (np.n == 0) {
       return 0;
     }
     if (fractional_n_particles_per_cell) {
-      int n_prts = npt.n / norm_.cori;
-      float rmndr = npt.n / norm_.cori - n_prts;
-      float ran = random() / ((float)RAND_MAX + 1);
-      if (ran < rmndr) {
-        n_prts++;
-      }
-      return n_prts;
+      return np.n / norm_.cori + dist.get();
     }
-    return npt.n / norm_.cori + .5;
+    return np.n / norm_.cori + .5;
   }
 
   // ----------------------------------------------------------------------
   // op_cellwise
   // Performs a given operation in each cell.
-  // init_npt signature: (int kind, Double3 pos, int p, Int3 index, npt) -> void
-  // op signature: (int n_in_cell, npt, Double3 pos) -> void
+  // op signature: (int n_in_cell, np, Double3 pos) -> void
 
-  template <typename InitFunc, typename OpFunc>
-  void op_cellwise(const Grid_t& grid, int patch, InitFunc&& init_npt,
+  template <typename OpFunc>
+  void op_cellwise(const Grid_t& grid, int patch, InitNpFunc init_np,
                    OpFunc&& op)
   {
     Int3 ilo = Int3{}, ihi = grid.ldims;
@@ -87,23 +152,23 @@ struct SetupParticles
 
           int n_q_in_cell = 0;
           for (int pop = 0; pop < n_populations_; pop++) {
-            psc_particle_npt npt{};
+            psc_particle_np np{};
             if (pop < kinds_.size()) {
-              npt.kind = pop;
+              np.kind = pop;
             }
-            init_npt(pop, pos, patch, index, npt);
+            init_np(pop, pos, patch, index, np);
 
             int n_in_cell;
             if (pop != neutralizing_population) {
-              n_in_cell = get_n_in_cell(npt);
-              n_q_in_cell += kinds_[npt.kind].q * n_in_cell;
+              n_in_cell = get_n_in_cell(np);
+              n_q_in_cell += kinds_[np.kind].q * n_in_cell;
             } else {
               // FIXME, should handle the case where not the last population
               // is neutralizing
               assert(neutralizing_population == n_populations_ - 1);
-              n_in_cell = -n_q_in_cell / kinds_[npt.kind].q;
+              n_in_cell = -n_q_in_cell / kinds_[np.kind].q;
             }
-            op(n_in_cell, npt, pos);
+            op(n_in_cell, np, pos);
           }
         }
       }
@@ -113,66 +178,77 @@ struct SetupParticles
   // ----------------------------------------------------------------------
   // setupParticle
 
-  psc::particle::Inject setupParticle(const psc_particle_npt& npt, Double3 pos,
+  psc::particle::Inject setupParticle(const psc_particle_np& np, Double3 pos,
                                       double wni)
   {
-    double beta = norm_.beta;
+    return psc::particle::Inject{pos, np.p(), wni, np.kind, np.tag};
+  }
 
+  // ----------------------------------------------------------------------
+  // createMaxwellian
+
+  std::function<Double3()> createMaxwellian(const psc_particle_npt& npt)
+  {
     assert(npt.kind >= 0 && npt.kind < kinds_.size());
+    double beta = norm_.beta;
     double m = kinds_[npt.kind].m;
 
-    float ran1, ran2, ran3, ran4, ran5, ran6;
-    do {
-      ran1 = random() / ((float)RAND_MAX + 1);
-      ran2 = random() / ((float)RAND_MAX + 1);
-      ran3 = random() / ((float)RAND_MAX + 1);
-      ran4 = random() / ((float)RAND_MAX + 1);
-      ran5 = random() / ((float)RAND_MAX + 1);
-      ran6 = random() / ((float)RAND_MAX + 1);
-    } while (ran1 >= 1.f || ran2 >= 1.f || ran3 >= 1.f || ran4 >= 1.f ||
-             ran5 >= 1.f || ran6 >= 1.f);
+    return [=]() {
+      static rng::Normal<double> dist;
 
-    double pxi =
-      npt.p[0] + sqrtf(-2.f * npt.T[0] / m * sqr(beta) * logf(1.0 - ran1)) *
-                   cosf(2.f * M_PI * ran2);
-    double pyi =
-      npt.p[1] + sqrtf(-2.f * npt.T[1] / m * sqr(beta) * logf(1.0 - ran3)) *
-                   cosf(2.f * M_PI * ran4);
-    double pzi =
-      npt.p[2] + sqrtf(-2.f * npt.T[2] / m * sqr(beta) * logf(1.0 - ran5)) *
-                   cosf(2.f * M_PI * ran6);
+      Double3 p;
+      for (int i = 0; i < 3; i++)
+        p[i] = dist.get(npt.p[i], beta * std::sqrt(npt.T[i] / m));
 
-    if (initial_momentum_gamma_correction) {
-      double gam;
-      if (sqr(pxi) + sqr(pyi) + sqr(pzi) < 1.) {
-        gam = 1. / sqrt(1. - sqr(pxi) - sqr(pyi) - sqr(pzi));
-        pxi *= gam;
-        pyi *= gam;
-        pzi *= gam;
+      if (initial_momentum_gamma_correction) {
+        double p_squared = sqr(p[0]) + sqr(p[1]) + sqr(p[2]);
+        if (p_squared < 1.) {
+          double gamma = 1. / sqrt(1. - p_squared);
+          p *= gamma;
+        }
       }
-    }
-
-    return psc::particle::Inject{pos, {pxi, pyi, pzi}, wni, npt.kind, npt.tag};
+      return p;
+    };
   }
 
   // ----------------------------------------------------------------------
   // setup_particles
-  // init_npt signature: (int kind, Double3 pos, npt) -> void
 
-  template <typename FUNC>
-  void operator()(Mparticles& mprts, FUNC&& init_npt)
+  void operator()(Mparticles& mprts, InitNpFunc init_np)
   {
-    setupParticles(mprts,
-                   [&](int kind, Double3 pos, int p, Int3 idx,
-                       psc_particle_npt& npt) { init_npt(kind, pos, npt); });
+    setupParticles(mprts, init_np);
+  }
+
+  void operator()(Mparticles& mprts, InitNptFunc init_npt)
+  {
+    setupParticles(mprts, init_npt);
+  }
+
+  // ----------------------------------------------------------------------
+  // initNpt_to_initNp
+
+  InitNpFunc initNpt_to_initNp(InitNptFunc& init_npt)
+  {
+    return InitNpFunc(
+      [&](int kind, Double3 pos, int patch, Int3 idx, psc_particle_np& np) {
+        psc_particle_npt npt{};
+        npt.kind = np.kind;
+        init_npt(kind, pos, patch, idx, npt);
+        np.n = npt.n;
+        np.p = createMaxwellian(npt);
+        np.tag = npt.tag;
+      });
   }
 
   // ----------------------------------------------------------------------
   // setupParticles
-  // init_npt signature: (int kind, Double3 pos, int p, Int3 index, npt) -> void
 
-  template <typename FUNC>
-  void setupParticles(Mparticles& mprts, FUNC&& init_npt)
+  void setupParticles(Mparticles& mprts, InitNptFunc init_npt)
+  {
+    setupParticles(mprts, initNpt_to_initNp(init_npt));
+  }
+
+  void setupParticles(Mparticles& mprts, InitNpFunc init_np)
   {
     static int pr;
     if (!pr) {
@@ -189,16 +265,16 @@ struct SetupParticles
     for (int p = 0; p < mprts.n_patches(); ++p) {
       auto injector = inj[p];
 
-      op_cellwise(grid, p, std::forward<FUNC>(init_npt),
-                  [&](int n_in_cell, psc_particle_npt& npt, Double3& pos) {
+      op_cellwise(grid, p, init_np,
+                  [&](int n_in_cell, psc_particle_np& np, Double3& pos) {
                     for (int cnt = 0; cnt < n_in_cell; cnt++) {
                       real_t wni;
                       if (fractional_n_particles_per_cell) {
                         wni = 1.;
                       } else {
-                        wni = npt.n / (n_in_cell * norm_.cori);
+                        wni = np.n / (n_in_cell * norm_.cori);
                       }
-                      auto prt = setupParticle(npt, pos, wni);
+                      auto prt = setupParticle(np, pos, wni);
                       injector(prt);
                     }
                   });
@@ -209,29 +285,19 @@ struct SetupParticles
 
   // ----------------------------------------------------------------------
   // partition
-  // init_npt signature: (int kind, Double3 pos, npt) -> void
 
-  template <typename FUNC>
-  std::vector<uint> partition(const Grid_t& grid, FUNC&& init_npt)
+  std::vector<uint> partition(const Grid_t& grid, InitNptFunc init_npt)
   {
-    return partition_general_init(
-      grid, [&](int kind, Double3 pos, int, Int3, psc_particle_npt& npt) {
-        init_npt(kind, pos, npt);
-      });
+    return partition(grid, initNpt_to_initNp(init_npt));
   }
 
-  // ----------------------------------------------------------------------
-  // partition_general_init
-  // init_npt signature: (int kind, Double3 pos, int p, Int3 index, npt) -> void
-
-  template <typename FUNC>
-  std::vector<uint> partition_general_init(const Grid_t& grid, FUNC&& init_npt)
+  std::vector<uint> partition(const Grid_t& grid, InitNpFunc init_np)
   {
     std::vector<uint> n_prts_by_patch(grid.n_patches());
 
     for (int p = 0; p < grid.n_patches(); ++p) {
-      op_cellwise(grid, p, std::forward<FUNC>(init_npt),
-                  [&](int n_in_cell, psc_particle_npt&, Double3&) {
+      op_cellwise(grid, p, init_np,
+                  [&](int n_in_cell, psc_particle_np&, Double3&) {
                     n_prts_by_patch[p] += n_in_cell;
                   });
     }
