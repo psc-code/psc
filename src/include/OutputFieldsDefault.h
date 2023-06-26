@@ -70,7 +70,6 @@ struct OutputFieldsItemParams
   int pfield_first = 0;
   int tfield_interval = 0;
   int tfield_first = 0;
-  int tfield_average_length = 1000000;
   int tfield_average_every = 1;
   Int3 rn = {};
   Int3 rx = {10000000, 10000000, 10000000};
@@ -121,7 +120,7 @@ public:
     bool do_tfield = tfield_interval > 0 && timestep >= tfield_next_;
     bool doaccum_tfield =
       tfield_interval > 0 &&
-      (((timestep >= (tfield_next_ - tfield_average_length + 1)) &&
+      (((timestep >= (tfield_next_ - tfield_interval + 1)) &&
         timestep % tfield_average_every == 0) ||
        timestep == 0);
 
