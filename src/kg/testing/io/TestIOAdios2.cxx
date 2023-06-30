@@ -22,7 +22,7 @@ TEST(IOAdios2, OpenWriteThenRead)
 {
   auto io = kg::io::IOAdios2{};
   {
-    auto file = io.openFile("test2", kg::io::Mode::Write);
+    auto file = io.openFile("test2.bp", kg::io::Mode::Write);
   }
   {
     auto file = io.openFile("test2.bp", kg::io::Mode::Read);
@@ -33,7 +33,7 @@ TEST(IOAdios2, FilePutGetVariable)
 {
   auto io = kg::io::IOAdios2{};
   {
-    auto file = io.openFile("test3", kg::io::Mode::Write);
+    auto file = io.openFile("test3.bp", kg::io::Mode::Write);
     auto dbl = std::vector<double>{1., 2., 3., 4., 5.};
     file.putVariable("dbl", dbl.data(), kg::io::Mode::NonBlocking, {5},
                      {{0}, {5}}, {});
@@ -68,7 +68,7 @@ TEST(IOAdios2, FilePutGetAttribute)
 {
   auto io = kg::io::IOAdios2{};
   {
-    auto file = io.openFile("test4", kg::io::Mode::Write);
+    auto file = io.openFile("test4.bp", kg::io::Mode::Write);
     auto dbl = std::vector<double>{1., 2., 3., 4., 5.};
     file.putAttribute("attr_dbl", dbl.data(), dbl.size());
   }
