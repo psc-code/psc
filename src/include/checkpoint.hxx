@@ -7,7 +7,6 @@
 #include "particles_simple.inl"
 #include <kg/io.h>
 
-
 // ----------------------------------------------------------------------
 // read_checkpoint
 //
@@ -119,7 +118,6 @@ public:
 #endif
     prof_stop(pr);
   }
-
 
 private:
   int interval_; // write checkpoint every so many steps
