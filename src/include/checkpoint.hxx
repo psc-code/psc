@@ -122,6 +122,8 @@ public:
 private:
   int interval_; // write checkpoint every so many steps
   bool first_time_ = true;
+#ifdef PSC_HAVE_ADIOS2
   kg::io::IOAdios2 io;
   kg::io::Engine writer;
+#endif
 };
