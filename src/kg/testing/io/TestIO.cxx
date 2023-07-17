@@ -9,14 +9,18 @@ TEST(IO, WriteRead)
 
   {
     auto writer = io.open("test.bp", kg::io::Mode::Write);
+    writer.beginStep(kg::io::StepMode::Append);
     writer.putLocal("var_double", 99.);
+    writer.endStep();
     writer.close();
   }
 
   {
     auto reader = io.open("test.bp", kg::io::Mode::Read);
+    reader.beginStep(kg::io::StepMode::Read);
     double dbl;
     reader.getLocal("var_double", dbl);
+    reader.endStep();
     reader.close();
     EXPECT_EQ(dbl, 99.);
   }
@@ -28,14 +32,18 @@ TEST(IO, WriteReadAttr)
 
   {
     auto writer = io.open("test.bp", kg::io::Mode::Write);
+    writer.beginStep(kg::io::StepMode::Append);
     writer.put("attr_double", 99.);
+    writer.endStep();
     writer.close();
   }
 
   {
     auto reader = io.open("test.bp", kg::io::Mode::Read);
+    reader.beginStep(kg::io::StepMode::Read);
     double dbl;
     reader.get("attr_double", dbl);
+    reader.endStep();
     reader.close();
     EXPECT_EQ(dbl, 99.);
   }
@@ -72,15 +80,19 @@ TEST(IO, WriteReadCustom)
 
   {
     auto writer = io.open("test.bp", kg::io::Mode::Write);
+    writer.beginStep(kg::io::StepMode::Append);
     auto c = Custom{3, 99.};
     writer.put("var_custom", c);
+    writer.endStep();
     writer.close();
   }
 
   {
     auto reader = io.open("test.bp", kg::io::Mode::Read);
+    reader.beginStep(kg::io::StepMode::Read);
     auto c = Custom{};
     reader.get("var_custom", c);
+    reader.endStep();
     reader.close();
     EXPECT_EQ(c.i, 3);
     EXPECT_EQ(c.d, 99.);
