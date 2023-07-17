@@ -110,4 +110,9 @@ class PscHdf5BackendEntrypoint(BackendEntrypoint):
         return ext in {".h5"}
 
 
-BACKEND_ENTRYPOINTS["pschdf5"] = PscHdf5BackendEntrypoint
+if xarray.__version__ == "2023.4.1":
+    # FIXME determine exactly when the API changed
+    BACKEND_ENTRYPOINTS["pschdf5"] = ("psc", PscHdf5BackendEntrypoint)
+else:
+    # API of version 0.19.0
+    BACKEND_ENTRYPOINTS["pschdf5"] = PscHdf5BackendEntrypoint
