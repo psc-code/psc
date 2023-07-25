@@ -64,8 +64,8 @@ private:
           int iy = 0;
           {
             for (int m = mb; m < me; m++) {
-              mres_gt(ix + ib[0], iy + ib[1], iz + ib[2], m, p) +=
-                mres_gt(ix + ib[0], iy - 1 + ib[1], iz + ib[2], m, p);
+              mres_gt(ix - ib[0], iy - ib[1], iz - ib[2], m, p) +=
+                mres_gt(ix - ib[0], iy - 1 - ib[1], iz - ib[2], m, p);
             }
           }
         }
@@ -76,8 +76,8 @@ private:
           int iz = 0;
           {
             for (int m = mb; m < me; m++) {
-              mres_gt(ix + ib[0], iy + ib[1], iz + ib[2], m, p) +=
-                mres_gt(ix + ib[0], iy + ib[1], iz - 1 + ib[2], m, p);
+              mres_gt(ix - ib[0], iy - ib[1], iz - ib[2], m, p) +=
+                mres_gt(ix - ib[0], iy - ib[1], iz - 1 - ib[2], m, p);
             }
           }
         }
@@ -98,8 +98,8 @@ private:
           int iy = ldims[1] - 1;
           {
             for (int m = mb; m < me; m++) {
-              mres_gt(ix + ib[0], iy + ib[1], iz + ib[2], m, p) +=
-                mres_gt(ix + ib[0], iy + 1 + ib[1], iz + ib[2], m, p);
+              mres_gt(ix - ib[0], iy - ib[1], iz - ib[2], m, p) +=
+                mres_gt(ix - ib[0], iy - 1 + ib[1], iz - ib[2], m, p);
             }
           }
         }
@@ -110,8 +110,8 @@ private:
           int iz = ldims[2] - 1;
           {
             for (int m = mb; m < me; m++) {
-              mres_gt(ix + ib[0], iy + ib[1], iz + ib[2], m, p) +=
-                mres_gt(ix + ib[0], iy + ib[1], iz + 1 + ib[2], m, p);
+              mres_gt(ix - ib[0], iy - ib[1], iz - ib[2], m, p) +=
+                mres_gt(ix - ib[0], iy - ib[1], iz + 1 - ib[2], m, p);
             }
           }
         }
