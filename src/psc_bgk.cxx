@@ -210,6 +210,82 @@ inline double getIonDensity(double rho)
 }
 
 // ======================================================================
+// get_beta
+// Return the conversion factor from paper units to psc units.
+
+double get_beta()
+{
+  // PSC is normalized as c=1, but the paper has electron thermal velocity
+  // v_e=1. Beta is v_e/c = sqrt(Te_paper) / sqrt(Te_psc)
+  const double PAPER_ELECTRON_TEMPERATURE = 1.;
+  const double pscElectronTemperature = parsedData->get_interpolated(COL_TE, 0);
+  return std::sqrt(pscElectronTemperature / PAPER_ELECTRON_TEMPERATURE);
+}
+
+// ======================================================================
+// v_phi_cdf
+// Cumulative distribution function for azimuthal electron velocity
+
+double v_phi_cdf(double v_phi, double rho)
+{
+  // convert units from psc to paper
+  v_phi /= get_beta();
+  rho /= get_beta();
+
+  double B = g.Hx;
+  double sqrt2 = std::sqrt(2);
+
+  double rho_sqr = sqr(rho);
+
+  double gamma = 1 + 8 * g.k * rho_sqr;
+  double alpha = 1 - g.h0 / std::sqrt(gamma) *
+                       std::exp(-g.k * sqr(B) * sqr(rho_sqr) / gamma);
+
+  double mean0 = 0;
+  double stdev0 = 1;
+
+  double mean1 = 4 * g.k * B * rho_sqr * rho / gamma;
+  double stdev1 = 1 / std::sqrt(gamma);
+
+  double m0 = (1 + std::erf((v_phi - mean0) / (stdev0 * sqrt2))) / 2;
+  double m1 = (1 + std::erf((v_phi - mean1) / (stdev1 * sqrt2))) / 2;
+
+  return m0 / alpha + m1 * (1 - 1 / alpha);
+}
+
+struct pdist
+{
+  pdist(double y, double z, double rho)
+    : y{y},
+      z{z},
+      rho{rho},
+      v_phi_dist{[=](double v_phi) { return v_phi_cdf(v_phi, rho); }},
+      v_rho_dist{0, get_beta()},
+      v_x_dist{0, get_beta()}
+  {}
+
+  Double3 operator()()
+  {
+    double v_phi = v_phi_dist.get();
+    double v_rho = v_rho_dist.get();
+    double v_x = v_x_dist.get();
+
+    double coef = g.v_e_coef * (g.reverse_v ? -1 : 1) *
+                  (g.reverse_v_half && y < 0 ? -1 : 1);
+    double p_x = coef * g.m_e * v_x;
+    double p_y = coef * g.m_e * (v_phi * -z + v_rho * y) / rho;
+    double p_z = coef * g.m_e * (v_phi * y + v_rho * z) / rho;
+    return Double3{p_x, p_y, p_z};
+  }
+
+private:
+  double y, z, rho;
+  rng::InvertedCdf<double> v_phi_dist;
+  rng::Normal<double> v_rho_dist;
+  rng::Normal<double> v_x_dist;
+};
+
+// ======================================================================
 // initializeParticles
 
 void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
@@ -220,35 +296,42 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
 
   auto&& qDensity = -psc::mflds::interior(divGradPhi.grid(), divGradPhi.gt());
 
-  auto npt_init = [&](int kind, Double3 crd, int p, Int3 idx,
-                      psc_particle_npt& npt) {
+  auto init_np = [&](int kind, Double3 crd, int p, Int3 idx,
+                     psc_particle_np& np) {
     double y = getCoord(crd[1]);
     double z = getCoord(crd[2]);
     double rho = sqrt(sqr(y) + sqr(z));
 
+    double Ti = g.T_i;
     switch (kind) {
 
       case KIND_ELECTRON:
-        npt.n = (qDensity(idx[0], idx[1], idx[2], 0, p) -
-                 getIonDensity(rho) * g.q_i) /
-                g.q_e;
-        if (rho != 0) {
-          double v_phi = parsedData->get_interpolated(COL_V_PHI, rho);
+        np.n = (qDensity(idx[0], idx[1], idx[2], 0, p) -
+                getIonDensity(rho) * g.q_i) /
+               g.q_e;
+        if (rho == 0) {
+          double Te = parsedData->get_interpolated(COL_TE, rho);
+          np.p = setup_particles.createMaxwellian(
+            {np.kind, np.n, {0, 0, 0}, {Te, Te, Te}, np.tag});
+        } else if (g.maxwellian) {
+          double Te = parsedData->get_interpolated(COL_TE, rho);
+          double vphi = parsedData->get_interpolated(COL_V_PHI, rho);
           double coef = g.v_e_coef * (g.reverse_v ? -1 : 1) *
                         (g.reverse_v_half && y < 0 ? -1 : 1);
-          npt.p[0] = 0;
-          npt.p[1] = coef * g.m_e * v_phi * -z / rho;
-          npt.p[2] = coef * g.m_e * v_phi * y / rho;
+
+          double pz = coef * g.m_e * vphi * y / rho;
+          double py = coef * g.m_e * -vphi * z / rho;
+          np.p = setup_particles.createMaxwellian(
+            {np.kind, np.n, {0, py, pz}, {Te, Te, Te}, np.tag});
         } else {
-          setAll(npt.p, 0);
+          np.p = pdist(y, z, rho);
         }
-        setAll(npt.T, g.T_e_coef * parsedData->get_interpolated(COL_TE, rho));
         break;
 
       case KIND_ION:
-        npt.n = getIonDensity(rho);
-        setAll(npt.p, 0);
-        setAll(npt.T, g.T_i);
+        np.n = getIonDensity(rho);
+        np.p = setup_particles.createMaxwellian(
+          {np.kind, np.n, {0, 0, 0}, {Ti, Ti, Ti}, np.tag});
         break;
 
       default: assert(false);
@@ -256,7 +339,7 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
   };
 
   partitionAndSetupParticles(setup_particles, balance, grid_ptr, mprts,
-                             npt_init);
+                             init_np);
 }
 
 // ======================================================================
