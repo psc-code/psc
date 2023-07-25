@@ -70,7 +70,6 @@ struct OutputFieldsItemParams
   int pfield_first = 0;
   int tfield_interval = 0;
   int tfield_first = 0;
-  int tfield_average_length = 1000000;
   int tfield_average_every = 1;
   Int3 rn = {};
   Int3 rx = {10000000, 10000000, 10000000};
@@ -114,16 +113,18 @@ public:
       if (timestep != 0) {
         pfield_next_ = timestep + pfield_interval;
         tfield_next_ = timestep + tfield_interval;
+
+        tfield_next_ = timestep / tfield_interval * tfield_interval;
+        if (timestep % tfield_interval > 0)
+          tfield_next_ += tfield_interval;
       }
     }
 
     bool do_pfield = pfield_interval > 0 && timestep >= pfield_next_;
     bool do_tfield = tfield_interval > 0 && timestep >= tfield_next_;
-    bool doaccum_tfield =
-      tfield_interval > 0 &&
-      (((timestep >= (tfield_next_ - tfield_average_length + 1)) &&
-        timestep % tfield_average_every == 0) ||
-       timestep == 0);
+    bool doaccum_tfield = timestep >= (tfield_next_ - tfield_average_every + 1);
+    doaccum_tfield = doaccum_tfield && (tfield_interval > 0);
+    doaccum_tfield = doaccum_tfield || (timestep == 0);
 
     if (do_pfield || doaccum_tfield) {
       prof_start(pr_eval);

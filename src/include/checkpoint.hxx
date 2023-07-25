@@ -59,6 +59,7 @@ inline void read_checkpoint(const std::string& filename, Grid_t& grid,
 #ifdef PSC_HAVE_ADIOS2
   auto io = kg::io::IOAdios2{};
   auto reader = io.open(filename, kg::io::Mode::Read);
+  reader.beginStep(kg::io::StepMode::Read);
   reader.get("grid", grid);
   mprts.~Mparticles();
   mflds.~MfieldsState();
@@ -66,6 +67,7 @@ inline void read_checkpoint(const std::string& filename, Grid_t& grid,
   new (&mflds) MfieldsState(grid);
   reader.get("mprts", mprts);
   reader.get("mflds", mflds);
+  reader.endStep();
   reader.close();
 
   // FIXME, when we read back a rebalanced grid, other existing fields will
