@@ -183,7 +183,6 @@ struct Grid_
   }
   mrc_ddc* create_ddc() const { return mrc_domain().create_ddc(); }
 
-private:
   void reset_ddc() const
   {
     if (ddc_) {

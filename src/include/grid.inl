@@ -234,5 +234,7 @@ public:
     reader.get("kinds", grid.kinds, launch);
     reader.get("ibn", grid.ibn);
     reader.get("timestep", grid.timestep_);
+
+    grid.reset_ddc();
   }
 };
