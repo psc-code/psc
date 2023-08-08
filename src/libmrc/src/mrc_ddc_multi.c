@@ -11,6 +11,8 @@
 #include <assert.h>
 #include <string.h>
 
+#define TAG (0x1234) // MPI tag used for send/recvs
+
 // ======================================================================
 // mrc_ddc_multi
 
@@ -467,8 +469,8 @@ static void ddc_run_begin(struct mrc_ddc* ddc, struct mrc_ddc_pattern2* patt2,
   void* p = patt2->recv_buf;
   for (int r = 0; r < sub->mpi_size; r++) {
     if (r != sub->mpi_rank && ri[r].n_recv_entries) {
-      MPI_Irecv(p, ri[r].n_recv * (me - mb), ddc->mpi_type, r, 0, ddc->obj.comm,
-                &patt2->recv_req[patt2->recv_cnt++]);
+      MPI_Irecv(p, ri[r].n_recv * (me - mb), ddc->mpi_type, r, TAG,
+                ddc->obj.comm, &patt2->recv_req[patt2->recv_cnt++]);
       p += ri[r].n_recv * (me - mb) * ddc->size_of_type;
     }
   }
@@ -485,7 +487,7 @@ static void ddc_run_begin(struct mrc_ddc* ddc, struct mrc_ddc_pattern2* patt2,
         to_buf(mb, me, se->patch, se->ilo, se->ihi, p, ctx);
         p += se->len * (me - mb) * ddc->size_of_type;
       }
-      MPI_Isend(p0, ri[r].n_send * (me - mb), ddc->mpi_type, r, 0,
+      MPI_Isend(p0, ri[r].n_send * (me - mb), ddc->mpi_type, r, TAG,
                 ddc->obj.comm, &patt2->send_req[patt2->send_cnt++]);
     }
   }
