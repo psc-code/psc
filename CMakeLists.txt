@@ -48,7 +48,7 @@ if(PSC_GPU STREQUAL "cuda")
   set(CMAKE_CUDA_HOST_COMPILER "${CMAKE_CXX_COMPILER}")
   enable_language(CUDA)
 
-  find_package(Thrust 1.10.0 REQUIRED)
+  find_package(Thrust REQUIRED)
   thrust_create_target(Thrust)
   set(USE_CUDA ON)
 elseif(PSC_GPU STREQUAL "hip")
