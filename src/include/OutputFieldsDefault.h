@@ -114,9 +114,11 @@ public:
         pfield_next_ = timestep + pfield_interval;
         tfield_next_ = timestep + tfield_interval;
 
-        tfield_next_ = timestep / tfield_interval * tfield_interval;
-        if (timestep % tfield_interval > 0)
-          tfield_next_ += tfield_interval;
+        if (tfield_interval > 0) {
+          tfield_next_ = timestep / tfield_interval * tfield_interval;
+          if (timestep % tfield_interval > 0)
+            tfield_next_ += tfield_interval;
+        }
       }
     }
 
