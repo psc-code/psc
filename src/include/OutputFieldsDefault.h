@@ -80,6 +80,8 @@ struct OutputFieldsItemParams
   int tfield_average_every = 1;
   Int3 rn = {};
   Int3 rx = {10000000, 10000000, 10000000};
+
+  bool tfield_enabled() { return tfield_interval > 0; }
 };
 
 // ======================================================================
@@ -98,9 +100,8 @@ public:
     if (pfield_interval > 0) {
       io_pfd_.open("pfd" + sfx, prm.data_dir);
     }
-    if (tfield_interval > 0) {
+    if (tfield_enabled())
       io_tfd_.open("tfd" + sfx, prm.data_dir);
-    }
   }
 
   template <typename F>
@@ -119,7 +120,7 @@ public:
     if (restarting_from_checkpoint) {
       pfield_next_ = timestep + pfield_interval;
 
-      if (tfield_interval > 0) {
+      if (tfield_enabled()) {
         // not counting initial tfd when timestep == tfield_first
         int n_tfds_already_written =
           (timestep - tfield_first) / tfield_interval;
@@ -131,16 +132,15 @@ public:
 
     bool do_pfield = pfield_interval > 0 && timestep >= pfield_next_;
 
-    bool tfield_enabled = tfield_interval > 0;
     bool on_tfield_out_step = timestep >= tfield_next_;
-    bool do_tfield = tfield_enabled && on_tfield_out_step;
+    bool do_tfield = tfield_enabled() && on_tfield_out_step;
 
     bool in_tfield_averaging_range =
       tfield_next_ - timestep < tfield_average_length;
     bool on_tfield_averaging_step =
       (tfield_next_ - timestep) % tfield_average_every == 0;
     bool doaccum_tfield =
-      tfield_enabled && in_tfield_averaging_range && on_tfield_averaging_step;
+      tfield_enabled() && in_tfield_averaging_range && on_tfield_averaging_step;
 
     if (do_pfield || doaccum_tfield) {
       prof_start(pr_eval);
