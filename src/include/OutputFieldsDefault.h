@@ -87,6 +87,15 @@ struct OutputFieldsItemParams
     bool on_tfield_out_step = timestep >= tfield_next;
     return tfield_enabled() && on_tfield_out_step;
   }
+  bool do_tfield_accum(int timestep, int tfield_next)
+  {
+    bool in_tfield_averaging_range =
+      tfield_next - timestep < tfield_average_length;
+    bool on_tfield_averaging_step =
+      (tfield_next - timestep) % tfield_average_every == 0;
+    return tfield_enabled() && in_tfield_averaging_range &&
+           on_tfield_averaging_step;
+  }
 };
 
 // ======================================================================
@@ -137,15 +146,9 @@ public:
 
     bool do_pfield = pfield_interval > 0 && timestep >= pfield_next_;
     bool do_tfield = this->do_tfield(timestep, tfield_next_);
+    bool do_tfield_accum = this->do_tfield_accum(timestep, tfield_next_);
 
-    bool in_tfield_averaging_range =
-      tfield_next_ - timestep < tfield_average_length;
-    bool on_tfield_averaging_step =
-      (tfield_next_ - timestep) % tfield_average_every == 0;
-    bool doaccum_tfield =
-      tfield_enabled() && in_tfield_averaging_range && on_tfield_averaging_step;
-
-    if (do_pfield || doaccum_tfield) {
+    if (do_pfield || do_tfield_accum) {
       prof_start(pr_eval);
       auto&& item = get_item();
       auto&& pfd = psc::mflds::interior(grid, item.gt);
@@ -160,7 +163,7 @@ public:
         prof_stop(pr_pfd);
       }
 
-      if (doaccum_tfield) {
+      if (do_tfield_accum) {
         if (!tfd_) {
           tfd_.reset(new Mfields{grid, item.gt.shape(3), {}});
         }
