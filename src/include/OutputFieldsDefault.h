@@ -120,11 +120,11 @@ public:
       pfield_next_ = timestep + pfield_interval;
 
       if (tfield_interval > 0) {
+        // not counting initial tfd when timestep == tfield_first
+        int n_tfds_already_written =
+          (timestep - tfield_first) / tfield_interval;
         tfield_next_ =
-          (timestep - tfield_first) / tfield_interval * tfield_interval +
-          tfield_first;
-        if ((timestep - tfield_first) % tfield_interval > 0)
-          tfield_next_ += tfield_interval;
+          tfield_first + tfield_interval * (n_tfds_already_written + 1);
       }
     }
     first_time_ = false;
