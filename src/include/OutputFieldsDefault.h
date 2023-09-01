@@ -135,7 +135,6 @@ public:
     doaccum_tfield = doaccum_tfield && (tfield_interval > 0);
     doaccum_tfield =
       doaccum_tfield && (tfield_next_ - timestep) % tfield_average_every == 0;
-    doaccum_tfield = doaccum_tfield || (timestep == 0);
 
     if (do_pfield || doaccum_tfield) {
       prof_start(pr_eval);
