@@ -115,20 +115,19 @@ public:
     }
 
     int timestep = grid.timestep();
-    if (first_time_) {
-      first_time_ = false;
-      if (timestep != 0) {
-        pfield_next_ = timestep + pfield_interval;
+    bool restarting_from_checkpoint = first_time_ && timestep != 0;
+    if (restarting_from_checkpoint) {
+      pfield_next_ = timestep + pfield_interval;
 
-        if (tfield_interval > 0) {
-          tfield_next_ =
-            (timestep - tfield_first) / tfield_interval * tfield_interval +
-            tfield_first;
-          if ((timestep - tfield_first) % tfield_interval > 0)
-            tfield_next_ += tfield_interval;
-        }
+      if (tfield_interval > 0) {
+        tfield_next_ =
+          (timestep - tfield_first) / tfield_interval * tfield_interval +
+          tfield_first;
+        if ((timestep - tfield_first) % tfield_interval > 0)
+          tfield_next_ += tfield_interval;
       }
     }
+    first_time_ = false;
 
     bool do_pfield = pfield_interval > 0 && timestep >= pfield_next_;
     bool do_tfield = tfield_interval > 0 && timestep >= tfield_next_;
