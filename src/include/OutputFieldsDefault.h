@@ -66,9 +66,13 @@ auto make_mfields_gt(E&& gt, const std::string& name,
 struct OutputFieldsItemParams
 {
   std::string data_dir = ".";
+  // distance between timesteps at which pfields are output (0 = disable)
   int pfield_interval = 0;
+  // first timestep at which pfields are output
   int pfield_first = 0;
+  // distance between timesteps at which tfields are output (0 = disable)
   int tfield_interval = 0;
+  // first timestep at which tfields are output
   int tfield_first = 0;
   // max range of timesteps over which to average (capped at `tfield_interval`)
   int tfield_average_length = 1000000;
