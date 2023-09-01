@@ -130,11 +130,17 @@ public:
     first_time_ = false;
 
     bool do_pfield = pfield_interval > 0 && timestep >= pfield_next_;
-    bool do_tfield = tfield_interval > 0 && timestep >= tfield_next_;
-    bool doaccum_tfield = tfield_next_ - timestep < tfield_average_length;
-    doaccum_tfield = doaccum_tfield && (tfield_interval > 0);
-    doaccum_tfield =
-      doaccum_tfield && (tfield_next_ - timestep) % tfield_average_every == 0;
+
+    bool tfield_enabled = tfield_interval > 0;
+    bool on_tfield_out_step = timestep >= tfield_next_;
+    bool do_tfield = tfield_enabled && on_tfield_out_step;
+
+    bool in_tfield_averaging_range =
+      tfield_next_ - timestep < tfield_average_length;
+    bool on_tfield_averaging_step =
+      (tfield_next_ - timestep) % tfield_average_every == 0;
+    bool doaccum_tfield =
+      tfield_enabled && in_tfield_averaging_range && on_tfield_averaging_step;
 
     if (do_pfield || doaccum_tfield) {
       prof_start(pr_eval);
