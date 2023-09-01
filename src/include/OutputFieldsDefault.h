@@ -119,7 +119,6 @@ public:
       first_time_ = false;
       if (timestep != 0) {
         pfield_next_ = timestep + pfield_interval;
-        tfield_next_ = timestep + tfield_interval;
 
         if (tfield_interval > 0) {
           tfield_next_ = timestep / tfield_interval * tfield_interval;
