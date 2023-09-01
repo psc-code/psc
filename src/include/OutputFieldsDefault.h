@@ -82,6 +82,11 @@ struct OutputFieldsItemParams
   Int3 rx = {10000000, 10000000, 10000000};
 
   bool pfield_enabled() { return pfield_interval > 0; }
+  bool do_pfield(int timestep, int pfield_next)
+  {
+    bool on_pfield_out_step = timestep >= pfield_next;
+    return pfield_enabled() && on_pfield_out_step;
+  }
 
   bool tfield_enabled() { return tfield_interval > 0; }
   bool do_tfield(int timestep, int tfield_next)
@@ -145,7 +150,7 @@ public:
     }
     first_time_ = false;
 
-    bool do_pfield = pfield_enabled() && timestep >= pfield_next_;
+    bool do_pfield = this->do_pfield(timestep, pfield_next_);
     bool do_tfield = this->do_tfield(timestep, tfield_next_);
     bool do_tfield_accum = this->do_tfield_accum(timestep, tfield_next_);
 
