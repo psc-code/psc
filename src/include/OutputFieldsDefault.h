@@ -103,10 +103,11 @@ struct OutputFieldsItemParams
     return tfield_enabled() && in_tfield_averaging_range &&
            on_tfield_averaging_step;
   }
-  int get_tfield_next(int timestep)
+
+  int get_xfield_next(int timestep, int xfield_first, int xfield_interval)
   {
-    int n_intervals_elapsed = (timestep - tfield_first) / tfield_interval;
-    return tfield_first + tfield_interval * (n_intervals_elapsed + 1);
+    int n_intervals_elapsed = (timestep - xfield_first) / xfield_interval;
+    return xfield_first + xfield_interval * (n_intervals_elapsed + 1);
   }
 };
 
@@ -143,10 +144,10 @@ public:
     int timestep = grid.timestep();
     bool restarting_from_checkpoint = first_time_ && timestep != 0;
     if (restarting_from_checkpoint) {
-      pfield_next_ = timestep + pfield_interval;
-
+      if (pfield_enabled())
+        pfield_next_ = get_xfield_next(timestep, pfield_first, pfield_interval);
       if (tfield_enabled())
-        tfield_next_ = get_tfield_next(timestep);
+        tfield_next_ = get_xfield_next(timestep, tfield_first, tfield_interval);
     }
     first_time_ = false;
 
