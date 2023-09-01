@@ -115,49 +115,10 @@ struct OutputTfieldItemParams : BaseOutputFieldItemParams
 struct OutputFieldsItemParams
 {
   std::string data_dir = ".";
-  // distance between timesteps at which pfields are output (0 = disable)
-  int pfield_interval = 0;
-  // first timestep at which pfields are output
-  int pfield_first = 0;
-  // distance between timesteps at which tfields are output (0 = disable)
-  int tfield_interval = 0;
-  // first timestep at which tfields are output
-  int tfield_first = 0;
-  // max range of timesteps over which to average (capped at `tfield_interval`)
-  int tfield_average_length = 1000000;
-  // difference between timesteps used for average
-  int tfield_average_every = 1;
+  OutputPfieldItemParams pfield;
+  OutputTfieldItemParams tfield;
   Int3 rn = {};
   Int3 rx = {10000000, 10000000, 10000000};
-
-  bool pfield_enabled() { return pfield_interval > 0; }
-  bool do_pfield(int timestep, int pfield_next)
-  {
-    bool on_pfield_out_step = timestep >= pfield_next;
-    return pfield_enabled() && on_pfield_out_step;
-  }
-
-  bool tfield_enabled() { return tfield_interval > 0; }
-  bool do_tfield(int timestep, int tfield_next)
-  {
-    bool on_tfield_out_step = timestep >= tfield_next;
-    return tfield_enabled() && on_tfield_out_step;
-  }
-  bool do_tfield_accum(int timestep, int tfield_next)
-  {
-    bool in_tfield_averaging_range =
-      tfield_next - timestep < tfield_average_length;
-    bool on_tfield_averaging_step =
-      (tfield_next - timestep) % tfield_average_every == 0;
-    return tfield_enabled() && in_tfield_averaging_range &&
-           on_tfield_averaging_step;
-  }
-
-  int get_xfield_next(int timestep, int xfield_first, int xfield_interval)
-  {
-    int n_intervals_elapsed = (timestep - xfield_first) / xfield_interval;
-    return xfield_first + xfield_interval * (n_intervals_elapsed + 1);
-  }
 };
 
 // ======================================================================
@@ -170,12 +131,12 @@ public:
   OutputFieldsItem(const Grid_t& grid, const OutputFieldsItemParams& prm,
                    std::string sfx)
     : OutputFieldsItemParams{prm},
-      pfield_next_{prm.pfield_first},
-      tfield_next_{prm.tfield_first}
+      pfield_next_{prm.pfield.out_first},
+      tfield_next_{prm.tfield.out_first}
   {
-    if (pfield_enabled())
+    if (pfield.enabled())
       io_pfd_.open("pfd" + sfx, prm.data_dir);
-    if (tfield_enabled())
+    if (tfield.enabled())
       io_tfd_.open("tfd" + sfx, prm.data_dir);
   }
 
@@ -193,16 +154,16 @@ public:
     int timestep = grid.timestep();
     bool restarting_from_checkpoint = first_time_ && timestep != 0;
     if (restarting_from_checkpoint) {
-      if (pfield_enabled())
-        pfield_next_ = get_xfield_next(timestep, pfield_first, pfield_interval);
-      if (tfield_enabled())
-        tfield_next_ = get_xfield_next(timestep, tfield_first, tfield_interval);
+      if (pfield.enabled())
+        pfield_next_ = pfield.next_out(timestep);
+      if (tfield.enabled())
+        tfield_next_ = tfield.next_out(timestep);
     }
     first_time_ = false;
 
-    bool do_pfield = this->do_pfield(timestep, pfield_next_);
-    bool do_tfield = this->do_tfield(timestep, tfield_next_);
-    bool do_tfield_accum = this->do_tfield_accum(timestep, tfield_next_);
+    bool do_pfield = pfield.do_out(timestep, pfield_next_);
+    bool do_tfield = tfield.do_out(timestep, tfield_next_);
+    bool do_tfield_accum = tfield.do_accum(timestep, tfield_next_);
 
     if (do_pfield || do_tfield_accum) {
       prof_start(pr_eval);
@@ -214,7 +175,7 @@ public:
         prof_start(pr_pfd);
         mpi_printf(grid.comm(), "***** Writing PFD output for '%s'\n",
                    item.name.c_str());
-        pfield_next_ += pfield_interval;
+        pfield_next_ += pfield.out_interval;
         io_pfd_.write_step(grid, rn, rx, pfd, item.name, item.comp_names);
         prof_stop(pr_pfd);
       }
@@ -235,7 +196,7 @@ public:
         prof_start(pr_tfd);
         mpi_printf(grid.comm(), "***** Writing TFD output for '%s'\n",
                    item.name.c_str());
-        tfield_next_ += tfield_interval;
+        tfield_next_ += tfield.out_interval;
 
         // convert accumulated values to correct temporal mean
         tfd_->gt() = (1. / naccum_) * tfd_->gt();
