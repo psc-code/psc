@@ -72,6 +72,7 @@ struct OutputFieldsItemParams
   int tfield_first = 0;
   // max range of timesteps over which to average (capped at `tfield_interval`)
   int tfield_average_length = 1000000;
+  // difference between timesteps used for average
   int tfield_average_every = 1;
   Int3 rn = {};
   Int3 rx = {10000000, 10000000, 10000000};
@@ -129,6 +130,8 @@ public:
     bool doaccum_tfield =
       timestep >= (tfield_next_ - tfield_average_length + 1);
     doaccum_tfield = doaccum_tfield && (tfield_interval > 0);
+    doaccum_tfield =
+      doaccum_tfield && (tfield_next_ - timestep) % tfield_average_every == 0;
     doaccum_tfield = doaccum_tfield || (timestep == 0);
 
     if (do_pfield || doaccum_tfield) {
