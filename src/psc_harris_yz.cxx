@@ -412,9 +412,9 @@ void run()
   // -- output fields
   OutputFieldsItemParams outf_item_params{};
   OutputFieldsParams outf_params{};
-  outf_item_params.pfield_interval = 100;
-  outf_item_params.tfield_interval = -4;
-  outf_item_params.tfield_average_every = 50;
+  outf_item_params.pfield.out_interval = 100;
+  outf_item_params.tfield.out_interval = -4;
+  outf_item_params.tfield.average_every = 50;
 
   outf_params.fields = outf_item_params;
   outf_params.moments = outf_item_params;

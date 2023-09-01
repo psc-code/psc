@@ -516,19 +516,19 @@ void run()
   OutputFieldsItemParams outf_item_params{};
   OutputFieldsParams outf_params{};
 #if CASE == CASE_1D
-  outf_item_params.pfield_interval = 100;
-  outf_item_params.tfield_interval = -100;
+  outf_item_params.pfield.out_interval = 100;
+  outf_item_params.tfield.out_interval = -100;
 #elif CASE == CASE_2D_SMALL
-  outf_item_params.pfield_interval = 4;
-  outf_item_params.tfield_interval = 4;
+  outf_item_params.pfield.out_interval = 4;
+  outf_item_params.tfield.out_interval = 4;
 #else
-  outf_item_params.pfield_interval = 500;
-  outf_item_params.tfield_interval = 500;
+  outf_item_params.pfield.out_interval = 500;
+  outf_item_params.tfield.out_interval = 500;
 #endif
 #if CASE == CASE_2D_SMALL
-  outf_item_params.tfield_average_every = 2;
+  outf_item_params.tfield.average_every = 2;
 #else
-  outf_item_params.tfield_average_every = 50;
+  outf_item_params.tfield.average_every = 50;
 #endif
 
   outf_params.fields = outf_item_params;

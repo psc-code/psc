@@ -332,7 +332,7 @@ static void run()
 
   // -- output fields
   OutputFieldsParams outf_params{};
-  outf_params.fields.pfield_interval = 200;
+  outf_params.fields.pfield.out_interval = 200;
   OutputFields<MfieldsState, Mparticles, Dim> outf{grid, outf_params};
 
   // -- output particles
