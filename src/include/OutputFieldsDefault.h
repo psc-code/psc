@@ -61,6 +61,55 @@ auto make_mfields_gt(E&& gt, const std::string& name,
 }
 
 // ======================================================================
+// BaseOutputFieldItemParams
+
+struct BaseOutputFieldItemParams
+{
+  int out_interval = 0; // difference between output timesteps (0 = disable)
+  int out_first = 0;    // first output timestep
+
+  bool enabled() { return out_interval > 0; }
+
+  // Returns whether to write out on this timestep, given the next timestep to
+  // write on. Ignores `out_interval` and `do_first` except to check
+  // `enabled()`. In most cases, the given `next_out` equals `next_out() -
+  // out_interval`, but not when resuming from a checkpoint.
+  bool do_out(int timestep, int next_out)
+  {
+    bool on_out_step = timestep >= next_out;
+    return enabled() && on_out_step;
+  }
+
+  // Returns the next output timestep after the given timestep.
+  int next_out(int timestep)
+  {
+    int n_intervals_elapsed = (timestep - out_first) / out_interval;
+    return out_first + out_interval * (n_intervals_elapsed + 1);
+  }
+};
+
+struct OutputPfieldItemParams : BaseOutputFieldItemParams
+{};
+
+struct OutputTfieldItemParams : BaseOutputFieldItemParams
+{
+  // max range of timesteps over which to average (capped at `out_interval`)
+  int average_length = 1000000;
+  // difference between timesteps used for average
+  int average_every = 1;
+
+  // Returns whether to accumulate on this timestep, given the next timestep to
+  // write on. Like `do_out()`, ignores `out_interval` and `out_first` and
+  // trusts that `next_out` is correct.
+  bool do_accum(int timestep, int next_out)
+  {
+    bool in_averaging_range = next_out - timestep < average_length;
+    bool on_averaging_step = (next_out - timestep) % average_every == 0;
+    return enabled() && in_averaging_range && on_averaging_step;
+  }
+};
+
+// ======================================================================
 // OutputFieldsItemParams
 
 struct OutputFieldsItemParams
