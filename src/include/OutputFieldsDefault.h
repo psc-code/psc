@@ -96,6 +96,11 @@ struct OutputFieldsItemParams
     return tfield_enabled() && in_tfield_averaging_range &&
            on_tfield_averaging_step;
   }
+  int get_tfield_next(int timestep)
+  {
+    int n_intervals_elapsed = (timestep - tfield_first) / tfield_interval;
+    return tfield_first + tfield_interval * (n_intervals_elapsed + 1);
+  }
 };
 
 // ======================================================================
@@ -134,13 +139,8 @@ public:
     if (restarting_from_checkpoint) {
       pfield_next_ = timestep + pfield_interval;
 
-      if (tfield_enabled()) {
-        // not counting initial tfd when timestep == tfield_first
-        int n_tfds_already_written =
-          (timestep - tfield_first) / tfield_interval;
-        tfield_next_ =
-          tfield_first + tfield_interval * (n_tfds_already_written + 1);
-      }
+      if (tfield_enabled())
+        tfield_next_ = get_tfield_next(timestep);
     }
     first_time_ = false;
 
