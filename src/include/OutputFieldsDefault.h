@@ -83,6 +83,8 @@ struct BaseOutputFieldItemParams
   // Returns the next output timestep after the given timestep.
   int next_out(int timestep)
   {
+    if (timestep < out_first)
+      return out_first;
     int n_intervals_elapsed = (timestep - out_first) / out_interval;
     return out_first + out_interval * (n_intervals_elapsed + 1);
   }
