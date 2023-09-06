@@ -224,6 +224,17 @@ TYPED_TEST(OutputFieldsTest, OutputFieldsADIOS2)
 #endif
 
 // ======================================================================
+// OutputFieldsParamsTest test suite
+
+TEST(OutputFieldsParamsTest, Enabled)
+{
+  BaseOutputFieldItemParams prm;
+  EXPECT_FALSE(prm.enabled());
+  prm.out_interval = 1;
+  EXPECT_TRUE(prm.enabled());
+}
+
+// ======================================================================
 // main
 
 int main(int argc, char** argv)
