@@ -516,8 +516,8 @@ public:
     MPI_Comm comm = grid.comm();
 
     int timestep = grid.timestep();
-    if (outf_.fields.pfield_interval > 0 &&
-        timestep % outf_.fields.pfield_interval == 0) {
+    if (outf_.fields.pfield.out_interval > 0 &&
+        timestep % outf_.fields.pfield.out_interval == 0) {
       mpi_printf(comm, "***** Writing PFD output\n");
       io_pfd_.begin_step(grid);
 
@@ -536,7 +536,7 @@ public:
       io_pfd_.end_step();
     }
 
-    if (outf_.fields.tfield_interval > 0) {
+    if (outf_.fields.tfield.out_interval > 0) {
       auto result_state = outf_state_(mflds);
 
       for (int p = 0; p < mflds_acc_state_.n_patches(); p++) {
@@ -562,7 +562,7 @@ public:
 
       n_accum_++;
 
-      if (timestep % outf_.fields.tfield_interval == 0) {
+      if (timestep % outf_.fields.tfield.out_interval == 0) {
         mpi_printf(comm, "***** Writing TFD output\n");
         io_tfd_.begin_step(grid);
         mflds_acc_state_.storage() =
@@ -874,9 +874,9 @@ void run()
   // -- output fields
   OutputFieldsParams outf_params;
   double output_field_interval = .1;
-  outf_params.fields.pfield_interval = 100;
+  outf_params.fields.pfield.out_interval = 100;
   //    int((output_field_interval / (phys.wci * grid.dt)));
-  outf_params.fields.tfield_interval = -1;
+  outf_params.fields.tfield.out_interval = -1;
   //    int((output_field_interval / (phys.wci * grid.dt)));
   OutputFields<MfieldsState, Mparticles, dim_xz> outf{grid, outf_params};
 

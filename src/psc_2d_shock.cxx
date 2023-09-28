@@ -465,16 +465,16 @@ void run()
   OutputFieldsItemParams outf_item_params{};
   OutputFieldsParams outf_params{};
 #if CASE == CASE_1D
-  outf_item_params.pfield_interval = 5000;
-  outf_item_params.tfield_interval = 5000;
+  outf_item_params.pfield.out_interval = 5000;
+  outf_item_params.tfield.out_interval = 5000;
 #elif CASE == CASE_2D_SMALL
-  outf_item_params.pfield_interval = 10000;
-  outf_item_params.tfield_interval = 10000;
+  outf_item_params.pfield.out_interval = 10000;
+  outf_item_params.tfield.out_interval = 10000;
 #else
-  outf_item_params.pfield_interval = 1500;
-  outf_item_params.tfield_interval = 1500;
+  outf_item_params.pfield.out_interval = 1500;
+  outf_item_params.tfield.out_interval = 1500;
 #endif
-  outf_item_params.tfield_average_every = 50;
+  outf_item_params.tfield.average_every = 50;
 
   outf_params.fields = outf_item_params;
   outf_params.moments = outf_item_params;
