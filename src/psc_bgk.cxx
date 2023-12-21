@@ -78,10 +78,9 @@ void setupParameters(int argc, char** argv)
   }
   std::string path_to_params(argv[1]);
   ParsedParams parsedParams(path_to_params);
-  g.loadParams(parsedParams);
-
   parsedData = new ParsedData(parsedParams.get<std::string>("path_to_data"),
                               n_cols, COL_RHO, 1);
+  g.loadParams(parsedParams, *parsedData);
 
   psc_params.nmax = parsedParams.get<int>("nmax");
   psc_params.stats_every = parsedParams.get<int>("stats_every");
@@ -133,7 +132,7 @@ Grid_t* setupGrid()
   kinds[KIND_ION] = {g.q_i, g.m_i, "i"};
 
   mpi_printf(MPI_COMM_WORLD, "lambda_D = %g\n",
-             sqrt(parsedData->get_interpolated(COL_TE, g.box_size / sqrt(2))));
+             sqrt(parsedData->get_interpolated(COL_TE, 0)));
 
   // --- generic setup
   auto norm_params = Grid_t::NormalizationParams::dimensionless();

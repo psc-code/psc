@@ -4,8 +4,10 @@
 // For example, "//" will be parsed as a parameter and will have value "For".
 
 # Case-specific parameters
-box_size .03
-box_size_3 1 
+box_size -1 length of y, z dims in psc units; negative => use rel size instead (recommended)
+rel_box_size 1 length of y, z dims in terms of autocalculated ~optimal size; overridden by box_size
+box_size_3 -1 length of x dim in psc units
+rel_box_size_3 1 length of x dim in terms of same autocalculated size as for y and z
 
 m_i 1e9
 q_i 1

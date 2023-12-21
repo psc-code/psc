@@ -9,7 +9,7 @@
 // ======================================================================
 // ParsedParams
 // A simple parser intended for reading run parameters from a file, rather than
-// hard-coding them. See psc_bgk_params.txt for an example.
+// hard-coding them. See psc_bgk_util/sample_bgk_params.txt for an example.
 
 class ParsedParams
 {
@@ -34,7 +34,7 @@ public:
 
       ifs.close();
     } else {
-      std::cout << "Failed to open params file: " << file_path << std::endl;
+      std::cout << "Failed to open params file: " << file_path << "\n";
       exit(EXIT_FAILURE);
     }
   }
@@ -44,6 +44,9 @@ public:
 
   template <typename T>
   T getOrDefault(const std::string paramName, T deflt);
+
+  template <typename T>
+  T getAndWarnOrDefault(const std::string paramName, T deflt);
 
   // return true and display warning iff paramName is present
   bool warnIfPresent(const std::string paramName, const std::string advice);
@@ -57,7 +60,20 @@ T ParsedParams::getOrDefault(const std::string paramName, T deflt)
   if (params.count(paramName) == 1)
     return get<T>(paramName);
   std::cout << "Warning: using default value for parameter '" << paramName
-            << "': " << deflt << std::endl;
+            << "': " << deflt << "\n";
+  return deflt;
+}
+
+template <typename T>
+T ParsedParams::getAndWarnOrDefault(const std::string paramName, T deflt)
+{
+  if (params.count(paramName) == 1) {
+    T val = get<T>(paramName);
+    std::cout << "Warning: using non-default value for parameter '" << paramName
+              << "': " << val << "\nDefault value of '" << deflt
+              << "' is recommended.\n";
+    return val;
+  }
   return deflt;
 }
 
@@ -66,9 +82,8 @@ bool ParsedParams::warnIfPresent(const std::string paramName,
 {
   if (params.count(paramName) == 1) {
 
-    std::cout << "Warning: parameter " << paramName << " is deprecated."
-              << std::endl;
-    std::cout << advice << std::endl;
+    std::cout << "Warning: parameter " << paramName << " is deprecated.\n"
+              << advice << "\n";
     return true;
   }
   return false;
