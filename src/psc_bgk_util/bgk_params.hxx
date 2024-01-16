@@ -76,8 +76,8 @@ struct PscBgkParams
   int n_patches;       // number of patches
   int nicell;          // number of particles per gripdoint when density=1
 
-  double k = .1;  // a parameter for BGK solutions
-  double h0 = .9; // a parameter for BGK solutions
+  double k;  // a parameter for BGK solutions
+  double h0; // a parameter for BGK solutions
 
   int fields_every;    // interval for pfd output
   int moments_every;   // interval for pfd_moments output
@@ -133,6 +133,8 @@ struct PscBgkParams
     T_e_coef = parsedParams.getOrDefault<double>("T_e_coef", 1);
 
     maxwellian = parsedParams.getOrDefault<bool>("maxwellian", false);
+    k = parsedParams.getOrDefault<double>("k", .1);
+    h0 = parsedParams.getOrDefault<double>("h0", .9);
 
     n_grid_3 = parsedParams.getOrDefault<int>("n_grid_3", 1);
     box_size_3 = parsedParams.getAndWarnOrDefault<double>("box_size_3", -1);
