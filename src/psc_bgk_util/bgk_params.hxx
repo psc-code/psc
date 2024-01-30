@@ -31,7 +31,7 @@ double get_beta(ParsedData& data)
 // The negative Gaussian has a mean given by the RHS of the equation. It drifts
 // up, approaching a line with slope B/2. The negative Gaussian is the source
 // of the spike.
-double getSpikeSize(double B, double k)
+double getSpikeSize(double B, double k, double beta)
 {
   double max_v = 4.5;
   // solve cubic with linear coefficient = 0
@@ -44,7 +44,6 @@ double getSpikeSize(double B, double k)
   double q = p * p * p + t;
   double s = sqrt(t * (2. * q - t));
 
-  double beta = .001; // FIXME don't hardcode this (see psc_bgk.cxx get_beta())
   double r = (std::cbrt(q + s) + std::cbrt(q - s) + p) * beta;
   return r;
 }
@@ -66,7 +65,7 @@ double getHoleSize(ParsedData& data)
 // Calculates a box size big enough to resolve the spike and the hole.
 double getCalculatedBoxSize(double B, double k, ParsedData& data)
 {
-  double spike_size = getSpikeSize(B, k);
+  double spike_size = getSpikeSize(B, k, get_beta(data));
   double hole_size = getHoleSize(data);
   LOG_INFO("spike radius: %f\thole radius: %f\n", spike_size, hole_size);
   return 2 * std::max(spike_size, hole_size);
