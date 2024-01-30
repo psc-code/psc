@@ -5,6 +5,20 @@
 #include "input_parser.hxx"
 
 // ======================================================================
+// get_beta
+// Return the conversion factor from paper units to psc units.
+
+double get_beta(ParsedData& data)
+{
+  // PSC is normalized as c=1, but the paper has electron thermal velocity
+  // v_e=1. Beta is v_e/c = sqrt(Te_paper) / sqrt(Te_psc)
+  const double PAPER_ELECTRON_TEMPERATURE = 1.;
+  const int COL_TE = 3;
+  const double pscElectronTemperature = data.get_interpolated(COL_TE, 0);
+  return std::sqrt(pscElectronTemperature / PAPER_ELECTRON_TEMPERATURE);
+}
+
+// ======================================================================
 // getCalculatedBoxSize
 
 // Calculates the radial distance where the spike in the exact distribution
