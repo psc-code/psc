@@ -132,10 +132,21 @@ PscParams psc_params;
 
 using Dim = dim_yz;
 
+#if 0
+
 #ifdef USE_CUDA
 using PscConfig = PscConfig1vbecCuda<Dim>;
 #else
 using PscConfig = PscConfig1vbecSingle<Dim>;
+#endif
+
+#else
+
+#include "particle_with_id.h"
+
+using PscConfig =
+  PscConfig_<Dim, MparticlesSimple<ParticleWithId<float>>, MfieldsStateSingle,
+             MfieldsSingle, PscConfigPushParticles1vbec>;
 #endif
 
 using Writer = WriterMRC; // can choose WriterMrc, WriterAdios2
@@ -317,6 +328,7 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
                   (1 + b * b / (c * c));
       double nz = a * a / 4 * sin(b * y) * sin(b * y) * cos(2 * c * z) *
                   (1 + b * b / (c * c));
+      npt.tag = psc::particle::Tag{kind * 10};
       switch (kind) {
         case 0: // electron
           npt.p[0] = 0.;
