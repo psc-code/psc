@@ -369,7 +369,7 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
 
           npt.kind = MY_ELECTRON_B;
 
-          // break;
+          break;
         // case 3: // ion bg
         //   npt.n = g.ni_n0;
         //   npt.p[0] = 0.;
@@ -507,9 +507,9 @@ void run()
   // ----------------------------------------------------------------------
   // Set up objects specific to the Harris case
 
-  SetupParticles<Mparticles> setup_particles(grid, 4);
+  SetupParticles<Mparticles> setup_particles(grid);
   setup_particles.fractional_n_particles_per_cell = true;
-  setup_particles.neutralizing_population = 4 - 1;
+  setup_particles.neutralizing_population = 4 - 1; // FIXME?!
 
   // ----------------------------------------------------------------------
   // setup initial conditions
