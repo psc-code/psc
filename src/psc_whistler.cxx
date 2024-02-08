@@ -93,7 +93,7 @@ struct PscHarrisParams
 
   double wpe, wpi, wce, wci;
   double Lx, Ly, Lz; // size of box
-  double nx, ny, nz; //number of boxes
+  double nx, ny, nz; // number of boxes
   double Lpert;      // wavelength of perturbation
   double dby;        // Perturbation in Bz relative to Bo (Only change here)
   double dbz;        // Set Bx perturbation so that div(B) = 0
@@ -158,7 +158,7 @@ void setupParameters()
   // -- set some generic PSC parameters
   psc_params.nmax = 200001; // 5001;
   psc_params.cfl = 0.05;
-  psc_params.write_checkpoint_every_step =-100;
+  psc_params.write_checkpoint_every_step = -100;
   psc_params.stats_every = 1;
 
   // -- start from checkpoint:
@@ -174,12 +174,11 @@ void setupParameters()
   // -- Set some parameters specific to this case
 
   // PIC units, only used in this scope
-  g.me = 1; // Mass normalization
-  g.ec = 1; // Charge normalization
-  g.c = 1; // Speed of light
+  g.me = 1;   // Mass normalization
+  g.ec = 1;   // Charge normalization
+  g.c = 1;    // Speed of light
   g.eps0 = 1; // Permittivity of space
-  g.de = 1; // Length normalization (electron inertial length)
-
+  g.de = 1;   // Length normalization (electron inertial length)
 
   g.Lx_di = 1.;
   g.Ly_di = 5.;
@@ -198,27 +197,24 @@ void setupParameters()
   g.Ti_perp_over_Ti_par = 1.;
   g.Te_perp_over_Te_par = 1.;
 
-
-  g.vap_c = 0.01 ;
+  g.vap_c = 0.01;
   g.vae_c = sqrt(g.mass_ratio) * g.vap_c;
   // g.v_scale = 0.1;
-
 
   g.nb_n0 = 0.05;
   g.ni_n0 = 0.05;
   g.theta = 0;
 
-  g.B0 =sqrt(g.mass_ratio) * g.vap_c;
+  g.B0 = sqrt(g.mass_ratio) * g.vap_c;
 
   g.wpe_wce = 2.;
   g.Te_par = g.beta_e_par * sqr(g.B0) / 2.;
   g.Te_perp = g.Te_perp_over_Te_par * g.Te_par;
   g.Ti_par = g.beta_i_par * sqr(g.B0) / 2.;
   g.Ti_perp = g.Ti_perp_over_Ti_par * g.Ti_par;
-  g.Te_par = 0.5*g.beta_e_par*g.vap_c*g.vap_c*g.mass_ratio;
+  g.Te_par = 0.5 * g.beta_e_par * g.vap_c * g.vap_c * g.mass_ratio;
   // g.Te_par = 10.;
-  g.Ti_par = 0.5*g.mass_ratio*g.beta_e_par*g.vap_c*g.vap_c;
-
+  g.Ti_par = 0.5 * g.mass_ratio * g.beta_e_par * g.vap_c * g.vap_c;
 
   g.wci = 1. / (g.mass_ratio * g.wpe_wce); // Ion cyclotron frequency
   g.wce = g.wci * g.mass_ratio;            // Electron cyclotron freqeuncy
@@ -230,10 +226,9 @@ void setupParameters()
   g.Lx = g.Lx_di * g.d_i; // size of box in x dimension
   g.Ly = g.Ly_di * g.d_i; // size of box in y dimension
   g.Lz = g.Lz_di * g.d_i; // size of box in z dimension
-  g.nx = 1.; // number of box in x dimension
-  g.ny = 640.; // number of box in y dimension
-  g.nz = 960.; // number of box in z dimension
-
+  g.nx = 1.;              // number of box in x dimension
+  g.ny = 640.;            // number of box in y dimension
+  g.nz = 960.;            // number of box in z dimension
 }
 
 // ======================================================================
@@ -248,7 +243,7 @@ Grid_t* setupGrid()
 {
   // -- setup particle kinds
   Grid_t::Kinds kinds(N_MY_KINDS);
-  kinds[MY_ION] = {g.Zi, g.mass_ratio , "i"};
+  kinds[MY_ION] = {g.Zi, g.mass_ratio, "i"};
   kinds[MY_ELECTRON] = {-1., 1., "e"};
   kinds[MY_ELECTRON_B] = {-1., 1., "eb"};
   // kinds[MY_ION_BG] = {g.Zi, g.mass_ratio * g.Zi, "i_bg"};
@@ -256,13 +251,11 @@ Grid_t* setupGrid()
 
   mpi_printf(MPI_COMM_WORLD, "d_e = %g, d_i = %g\n", 1., g.d_i);
 
-
   Grid_t::Real3 LL = {1., 5., 10.};
   Int3 gdims = {1, 640, 960};
   Int3 np = {1, 40, 60};
 
-  auto domain = Grid_t::Domain{gdims, LL, -.5*LL, np};
-
+  auto domain = Grid_t::Domain{gdims, LL, -.5 * LL, np};
 
   auto bc =
     psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
@@ -273,16 +266,16 @@ Grid_t* setupGrid()
   auto norm_params = Grid_t::NormalizationParams::dimensionless();
   norm_params.nicell = 100;
 
-  //mprintf("dx %g %g %g\n", domain.dx[0], domain.dx[1], domain.dx[2]);
-  //mprintf("1/dx^2 %g\n", 1./(sqr(domain.dx[0])+sqr(domain.dx[1])+sqr(domain.dx[2])));
+  // mprintf("dx %g %g %g\n", domain.dx[0], domain.dx[1], domain.dx[2]);
+  // mprintf("1/dx^2
+  // %g\n", 1./(sqr(domain.dx[0])+sqr(domain.dx[1])+sqr(domain.dx[2])));
   double dt = psc_params.cfl * courant_length(domain);
-  //mprintf("dt %g cfl %g\n", dt, psc_params.cfl);
-  //mprintf("courant_length %g\n", courant_length(domain));
-
+  // mprintf("dt %g cfl %g\n", dt, psc_params.cfl);
+  // mprintf("courant_length %g\n", courant_length(domain));
 
   Grid_t::Normalization norm{norm_params};
 
-  //mpi_printf(MPI_COMM_WORLD, "dt = %g\n", dt);
+  // mpi_printf(MPI_COMM_WORLD, "dt = %g\n", dt);
 
   Int3 ibn = {2, 2, 2};
   if (Dim::InvarX::value) {
@@ -306,84 +299,88 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
 {
 
   // -- set particle initial condition
-  partitionAndSetupParticles(setup_particles, balance, grid_ptr, mprts,
-                             [&](int kind, Double3 crd, psc_particle_npt& npt) {
-                              double x = crd[0], y = crd[1], z = crd[2];
-                              double a = g.B0/3, b =(2*M_PI/grid_ptr->domain.length[1]), c = 2*(2*M_PI/grid_ptr->domain.length[2]);
-                              double constant = 0.1;
-                              double B0_y = a * sin(b*y)*cos(c*z);
-                              double B0_z =  a * b  * cos(b*y)*sin(c*z)/c + g.B0;
-                              double B_mag = sqrt(B0_y * B0_y + B0_z * B0_z);
-                              double u = 0.05;
-                              double uby = u * B0_y/B_mag;
-                              double ubz = u * B0_z/B_mag;
-                              double nx = 0.0001;
-                              double ny = -a*a/4*cos(c*z)*cos(c*z)*cos(2*b*y)*(1+b*b/(c*c));
-                              double nz = a*a/4*sin(b*y)*sin(b*y)*cos(2*c*z)*(1+b*b/(c*c));
-                               switch (kind) {
-                                 case 0: // electron
-                                   npt.p[0] = 0. ;
-                                   npt.p[1] = -uby/9. ;
-                                   npt.p[2] = -ubz/9. ;
-                                   npt.T[0] = g.Te_par;
-                                   npt.T[1] = g.Te_par;
-                                   npt.T[2] = g.Te_par;
-                                   npt.kind = MY_ELECTRON;
-                                   //mprintf("b %g\n", b);
-                                   //mprintf("c %g\n", c);
-                                   //mprintf("ly %g\n", grid_ptr->domain.length[1]);
-                                   //mprintf("lz %g\n", grid_ptr->domain.length[2]);
-                                   // mprintf("ne %g\n", npt.n);
-                                   // mprintf("ne ny %g\n", ny);
-                                   // mprintf("By %g\n", B0_y);
-                                   // mprintf("B general %g\n", (B0_y * B0_y + B0_z * B0_z + g.B0*g.B0));
-                                   // mprintf("T[0]e %g\n", npt.T[0]);
-                                   // mprintf("T[1]e %g\n", npt.T[1]);
-                                   // mprintf("T[2]e %g\n", npt.T[2]);
-                                   // mprintf("T general p %g\n", npt.T);
+  partitionAndSetupParticles(
+    setup_particles, balance, grid_ptr, mprts,
+    [&](int kind, Double3 crd, psc_particle_npt& npt) {
+      double x = crd[0], y = crd[1], z = crd[2];
+      double a = g.B0 / 3, b = (2 * M_PI / grid_ptr->domain.length[1]),
+             c = 2 * (2 * M_PI / grid_ptr->domain.length[2]);
+      double constant = 0.1;
+      double B0_y = a * sin(b * y) * cos(c * z);
+      double B0_z = a * b * cos(b * y) * sin(c * z) / c + g.B0;
+      double B_mag = sqrt(B0_y * B0_y + B0_z * B0_z);
+      double u = 0.05;
+      double uby = u * B0_y / B_mag;
+      double ubz = u * B0_z / B_mag;
+      double nx = 0.0001;
+      double ny = -a * a / 4 * cos(c * z) * cos(c * z) * cos(2 * b * y) *
+                  (1 + b * b / (c * c));
+      double nz = a * a / 4 * sin(b * y) * sin(b * y) * cos(2 * c * z) *
+                  (1 + b * b / (c * c));
+      switch (kind) {
+        case 0: // electron
+          npt.p[0] = 0.;
+          npt.p[1] = -uby / 9.;
+          npt.p[2] = -ubz / 9.;
+          npt.T[0] = g.Te_par;
+          npt.T[1] = g.Te_par;
+          npt.T[2] = g.Te_par;
+          npt.kind = MY_ELECTRON;
+          // mprintf("b %g\n", b);
+          // mprintf("c %g\n", c);
+          // mprintf("ly %g\n", grid_ptr->domain.length[1]);
+          // mprintf("lz %g\n", grid_ptr->domain.length[2]);
+          // mprintf("ne %g\n", npt.n);
+          // mprintf("ne ny %g\n", ny);
+          // mprintf("By %g\n", B0_y);
+          // mprintf("B general %g\n", (B0_y * B0_y + B0_z * B0_z + g.B0*g.B0));
+          // mprintf("T[0]e %g\n", npt.T[0]);
+          // mprintf("T[1]e %g\n", npt.T[1]);
+          // mprintf("T[2]e %g\n", npt.T[2]);
+          // mprintf("T general p %g\n", npt.T);
 
-                                   break;
-                                 case 1: // ion
-                                   npt.n = 1.;
-                                   npt.T[0] = g.Te_par;
-                                   npt.T[1] = g.Te_par;
-                                   npt.T[2] = g.Te_par;
-                                   npt.p[0] = 0. ;
-                                   npt.p[1] = 0. ;
-                                   npt.p[2] = 0. ;
-                                   npt.kind = MY_ION;
-                                   // mprintf("np %g\n", npt.n);
-                                   // mprintf("np ny %g\n", ny);
-                                   // mprintf("B general %g\n", (B0_y * B0_y + B0_z * B0_z + g.B0*g.B0));
-                                   // mprintf("T[0]p %g\n", npt.T[0]);
-                                   // mprintf("T[1]p %g\n", npt.T[1]);
-                                   // mprintf("T[1]p %g\n", npt.T[2]);
-                                   // mprintf("T general e %g\n", npt.T);
-                                   break;
-                                 case 2: // electron beam
-                                   npt.n = 0.1;
+          break;
+        case 1: // ion
+          npt.n = 1.;
+          npt.T[0] = g.Te_par;
+          npt.T[1] = g.Te_par;
+          npt.T[2] = g.Te_par;
+          npt.p[0] = 0.;
+          npt.p[1] = 0.;
+          npt.p[2] = 0.;
+          npt.kind = MY_ION;
+          // mprintf("np %g\n", npt.n);
+          // mprintf("np ny %g\n", ny);
+          // mprintf("B general %g\n", (B0_y * B0_y + B0_z * B0_z + g.B0*g.B0));
+          // mprintf("T[0]p %g\n", npt.T[0]);
+          // mprintf("T[1]p %g\n", npt.T[1]);
+          // mprintf("T[1]p %g\n", npt.T[2]);
+          // mprintf("T general e %g\n", npt.T);
+          break;
+        case 2: // electron beam
+          npt.n = 0.1;
 
-                                   npt.p[0] = 0. ;
-                                   npt.p[1] = uby ;
-                                   npt.p[2] = ubz ;
-                                   npt.T[0] = g.Te_par;
-                                   npt.T[1] = g.Te_par;
-                                   npt.T[2] = g.Te_par;
+          npt.p[0] = 0.;
+          npt.p[1] = uby;
+          npt.p[2] = ubz;
+          npt.T[0] = g.Te_par;
+          npt.T[1] = g.Te_par;
+          npt.T[2] = g.Te_par;
 
-                                   npt.kind = MY_ELECTRON_B;
+          npt.kind = MY_ELECTRON_B;
 
-                                   // break;
-                                 // case 3: // ion bg
-                                 //   npt.n = g.ni_n0;
-                                 //   npt.p[0] = 0.;
-                                 //   npt.T[0] = g.Tib_Ti * g.Ti_perp;
-                                 //   npt.T[1] = g.Tib_Ti * g.Ti_perp;
-                                 //   npt.T[2] = g.Tib_Ti * g.Ti_par;
-                                 //   npt.kind = MY_ION;
-                                 //   break;
-                                 default: assert(0);
-                               }
-                             });
+          // break;
+        // case 3: // ion bg
+        //   npt.n = g.ni_n0;
+        //   npt.p[0] = 0.;
+        //   npt.T[0] = g.Tib_Ti * g.Ti_perp;
+        //   npt.T[1] = g.Tib_Ti * g.Ti_perp;
+        //   npt.T[2] = g.Tib_Ti * g.Ti_par;
+        //   npt.kind = MY_ION;
+        //   break;
+        default: assert(0);
+      }
+    });
 }
 
 // ======================================================================
@@ -396,30 +393,29 @@ void initializeFields(MfieldsState& mflds)
   // mprintf("L %g\n", L);
   setupFields(mflds, [&](int m, double crd[3]) {
     double x = crd[0], y = crd[1], z = crd[2];
-    double a = g.B0/3, b = (2*M_PI/g.Ly_di), c = 2*(2*M_PI/g.Lz_di);
+    double a = g.B0 / 3, b = (2 * M_PI / g.Ly_di), c = 2 * (2 * M_PI / g.Lz_di);
     // double a = 3., b = 1.5., c = 3.;
-    double B0_y = a * sin(b*y)*cos(c*z) ;
-    double B0_z = a * b  * cos(b*y)*sin(c*z)/c + g.B0;
+    double B0_y = a * sin(b * y) * cos(c * z);
+    double B0_z = a * b * cos(b * y) * sin(c * z) / c + g.B0;
 
     switch (m) {
-      // case HX: return 0.;
+        // case HX: return 0.;
 
-      // case HY: return 0.;
+        // case HY: return 0.;
 
       case HX: return 0.;
 
       case HY: return B0_y;
 
-      case HZ: return B0_z;
+      case HZ:
+        return B0_z;
 
-
-      // case JXI: return 0.; // FIXME
+        // case JXI: return 0.; // FIXME
 
       default: return 0.;
     }
   });
 }
-
 
 void run()
 {
@@ -486,7 +482,7 @@ void run()
   // -- output fields
   OutputFieldsItemParams outf_item_params{};
   OutputFieldsParams outf_params{};
-  outf_item_params.pfield.out_interval = 500;   //produce steps
+  outf_item_params.pfield.out_interval = 500; // produce steps
   outf_item_params.tfield.out_interval = -4;
   outf_item_params.tfield.average_every = 50;
 
@@ -500,8 +496,8 @@ void run()
   outp_params.data_dir = ".";
   outp_params.basename = "prt";
   OutputParticles outp{grid, outp_params};
-  outp_params.lo = { 1, 336, 256};
-  outp_params.hi = { 1, 432, 384};
+  outp_params.lo = {1, 336, 256};
+  outp_params.hi = {1, 432, 384};
 
   int oute_interval = -10;
   DiagEnergies oute{grid.comm(), oute_interval};
