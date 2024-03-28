@@ -192,9 +192,9 @@ inline void copy(const MfieldsSingle& hmflds, MfieldsStateCuda& mflds)
 template <typename E>
 GT_INLINE auto view_patch(E&& gt, int p)
 {
-  return gt::adapt_device<4>(
-    (&gt(0, 0, 0, 0, p)).get(),
-    {gt.shape(0), gt.shape(1), gt.shape(2), gt.shape(3)});
+  auto view_shape =
+    gt::shape(gt.shape(0), gt.shape(1), gt.shape(2), gt.shape(3));
+  return gt::adapt_device<4>((&gt(0, 0, 0, 0, p)).get(), view_shape);
 }
 
 #endif
