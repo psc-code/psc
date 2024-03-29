@@ -93,6 +93,8 @@ struct PscBgkParams
   double h0; // a parameter for BGK solutions
   double xi; // a parameter for BGK solutions
 
+  double A_x0; // vector potential, used when xi != 0
+
   int fields_every;    // interval for pfd output
   int moments_every;   // interval for pfd_moments output
   int gauss_every;     // interval for gauss output/checking
@@ -150,6 +152,13 @@ struct PscBgkParams
     k = parsedParams.getOrDefault<double>("k", .1);
     h0 = parsedParams.getOrDefault<double>("h0", .9);
     xi = parsedParams.getOrDefault<double>("xi", 0.0);
+
+    if (xi == 0.0) {
+      parsedParams.warnIfPresent("A_x0",
+                                 "A_x0 is only used in cases when xi != 0");
+    } else {
+      A_x0 = parsedParams.get<double>("A_x0");
+    }
 
     n_grid_3 = parsedParams.getOrDefault<int>("n_grid_3", 1);
     box_size_3 = parsedParams.getAndWarnOrDefault<double>("box_size_3", -1);
