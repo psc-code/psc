@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <functional>
 #include <type_traits>
 #include "centering.hxx"
@@ -122,7 +123,7 @@ struct SetupParticles
     if (fractional_n_particles_per_cell) {
       return np.n / norm_.cori + dist.get();
     }
-    return np.n / norm_.cori + .5;
+    return std::max(1, int(np.n / norm_.cori + .5));
   }
 
   // ----------------------------------------------------------------------
