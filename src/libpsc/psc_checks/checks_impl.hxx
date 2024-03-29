@@ -94,7 +94,7 @@ public:
       if (!writer_) {
         writer_.open("continuity");
       }
-      writer_.begin_step(grid.timestep(), grid.timestep() * grid.dt);
+      writer_.begin_step(grid);
       writer_.write(dt_divj, grid, "dt_divj", {"dt_divj"});
       writer_.write(d_rho, grid, "d_rho", {"d_rho"});
       writer_.end_step();
@@ -173,7 +173,7 @@ public:
       if (!writer_) {
         writer_.open("gauss");
       }
-      writer_.begin_step(grid.timestep(), grid.timestep() * grid.dt);
+      writer_.begin_step(grid);
       writer_.write(rho, grid, "rho", {"rho"});
       writer_.write(dive, grid, "dive", {"dive"});
       writer_.end_step();
