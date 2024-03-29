@@ -80,6 +80,8 @@ public:
     file_.beginStep(kg::io::StepMode::Append);
     file_.put("step", step);
     file_.put("time", time);
+    file_.put("length", grid.domain.length);
+    file_.put("corner", grid.domain.corner);
     file_.performPuts();
   }
 
