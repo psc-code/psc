@@ -2,12 +2,13 @@
 
 #include <cmath>
 #include "params_parser.hxx"
+#include "input_parser.hxx"
 
 // ======================================================================
 // getCalculatedBoxSize
-//
-// Calculate the radius where the spike in the exact distribution function ends,
-// according to the equation (in paper units):
+
+// Calculates the radial distance where the spike in the exact distribution
+// function ends, according to the equation (in paper units):
 //    v_phi = max_v = 4*k*B*r^3 / (1 + 8*k*r^2)
 // The exact solution can be decomposed into the difference of two Gaussians.
 // The positive Gaussian has a mean of 0 and stdev of 1, independently of
@@ -16,10 +17,9 @@
 // The negative Gaussian has a mean given by the RHS of the equation. It drifts
 // up, approaching a line with slope B/2. The negative Gaussian is the source
 // of the spike.
-
-double getCalculatedBoxSize(double B, double k)
+double getSpikeSize(double B, double k)
 {
-  double max_v = 3.;
+  double max_v = 4.5;
   // solve cubic with linear coefficient = 0
   double a = 4. * k * B;
   double b = -8. * max_v * k;
@@ -31,9 +31,31 @@ double getCalculatedBoxSize(double B, double k)
   double s = sqrt(t * (2. * q - t));
 
   double beta = .001; // FIXME don't hardcode this (see psc_bgk.cxx get_beta())
-  double extra_multiplier = 1.5;
   double r = (std::cbrt(q + s) + std::cbrt(q - s) + p) * beta;
-  return extra_multiplier * 2 * r;
+  return r;
+}
+
+// The hole size is determined empirically from the input data. This function
+// finds where the electron density <= 1 + epsilon, where epsilon is small.
+double getHoleSize(ParsedData& data)
+{
+  double epsilon = 1e-4;
+  const int COL_RHO = 0;
+  const int COL_NE = 1;
+  for (int row = data.get_nrows() - 1; row >= 0; row--) {
+    if (data[row][COL_NE] > 1 + epsilon)
+      return data[row][COL_RHO];
+  }
+  throw "Unable to determine hole size.";
+}
+
+// Calculates a box size big enough to resolve the spike and the hole.
+double getCalculatedBoxSize(double B, double k, ParsedData& data)
+{
+  double spike_size = getSpikeSize(B, k);
+  double hole_size = getHoleSize(data);
+  LOG_INFO("spike radius: %f\thole radius: %f\n", spike_size, hole_size);
+  return 2 * std::max(spike_size, hole_size);
 }
 
 // ======================================================================
@@ -41,16 +63,18 @@ double getCalculatedBoxSize(double B, double k)
 
 struct PscBgkParams
 {
-  double box_size; // physical length of region along y and z; -1 -> auto
-  double Hx;       // strength of transverse magnetic field
-  double q_i;      // ion charge
-  double n_i;      // ion number density
-  double m_i;      // ion mass
-  double q_e;      // electron charge
-  double m_e;      // electron mass
-  int n_grid;      // number of grid cells
-  int n_patches;   // number of patches
-  int nicell;      // number of particles per gripdoint when density=1
+  double box_size;     // physical length of region along y and z
+                       // (overrides rel_box_size unless set to -1)
+  double rel_box_size; // length of y and z dims in calculated units
+  double Hx;           // strength of transverse magnetic field
+  double q_i;          // ion charge
+  double n_i;          // ion number density
+  double m_i;          // ion mass
+  double q_e;          // electron charge
+  double m_e;          // electron mass
+  int n_grid;          // number of grid cells
+  int n_patches;       // number of patches
+  int nicell;          // number of particles per gripdoint when density=1
 
   double k = .1;  // a parameter for BGK solutions
   double h0 = .9; // a parameter for BGK solutions
@@ -72,13 +96,16 @@ struct PscBgkParams
   bool maxwellian;     // whether or not to use Maxwellian instead of exact sol
 
   // For 3D cases
-  int n_grid_3;      // number of grid points in 3rd dimension
-  double box_size_3; // physical length of 3rd dimension
-  int n_patches_3;   // number of patches in 3rd dimension
+  int n_grid_3;          // number of grid points in 3rd dimension
+  double box_size_3;     // physical length of 3rd dimension
+                         // (overrides rel_box_size_3 unless set to -1)
+  double rel_box_size_3; // length of 3rd dimension in calculated units
+  int n_patches_3;       // number of patches in 3rd dimension
 
-  void loadParams(ParsedParams parsedParams)
+  void loadParams(ParsedParams parsedParams, ParsedData& data)
   {
-    box_size = parsedParams.get<double>("box_size");
+    box_size = parsedParams.getAndWarnOrDefault<double>("box_size", -1);
+    rel_box_size = parsedParams.getOrDefault<double>("rel_box_size", 1);
     Hx = parsedParams.get<double>("H_x");
     q_i = parsedParams.get<double>("q_i");
     n_i = parsedParams.get<double>("n_i");
@@ -86,7 +113,7 @@ struct PscBgkParams
     q_e = parsedParams.get<double>("q_e");
     m_e = parsedParams.get<double>("m_e");
     n_grid = parsedParams.get<int>("n_grid");
-    n_patches = parsedParams.get<int>("n_patches");
+    n_patches = parsedParams.getAndWarnOrDefault<int>("n_patches", -1);
     if (n_patches <= 0)
       n_patches = n_grid / parsedParams.get<int>("n_cells_per_patch");
     nicell = parsedParams.getOrDefault<int>("nicell", 100);
@@ -108,16 +135,19 @@ struct PscBgkParams
     maxwellian = parsedParams.getOrDefault<bool>("maxwellian", false);
 
     n_grid_3 = parsedParams.getOrDefault<int>("n_grid_3", 1);
-    box_size_3 = parsedParams.getOrDefault<double>("box_size_3", 1);
+    box_size_3 = parsedParams.getAndWarnOrDefault<double>("box_size_3", -1);
+    rel_box_size_3 = parsedParams.getOrDefault<double>("rel_box_size_3", 1);
     if (n_grid_3 < parsedParams.get<int>("n_cells_per_patch")) {
       n_patches_3 = 1;
     } else {
-      n_patches_3 = parsedParams.getOrDefault<int>("n_patches_3", 1);
+      n_patches_3 = parsedParams.getAndWarnOrDefault<int>("n_patches_3", -1);
       if (n_patches_3 <= 0)
         n_patches_3 = n_grid_3 / parsedParams.get<int>("n_cells_per_patch");
     }
 
     if (box_size <= 0)
-      box_size = getCalculatedBoxSize(Hx, k);
+      box_size = rel_box_size * getCalculatedBoxSize(Hx, k, data);
+    if (box_size_3 <= 0)
+      box_size_3 = rel_box_size_3 * getCalculatedBoxSize(Hx, k, data);
   }
 };

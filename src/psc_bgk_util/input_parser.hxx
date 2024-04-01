@@ -6,7 +6,6 @@
 #include <sstream>
 #include <iterator>
 #include <algorithm>
-#include <cassert>
 
 // ======================================================================
 // parsing util
@@ -84,9 +83,12 @@ private:
   {
     // initial guess; is precise when indep_var is linearly spaced
     int row = std::min((int)(indep_var_val / indep_var_step), nrows - 1);
-    while (row < nrows && indep_var_val > (*this)[row][indep_col])
+    while (row < nrows - 1 && indep_var_val > (*this)[row][indep_col])
       row++;
-    while (row >= 0 && indep_var_val < (*this)[row][indep_col])
+    if (indep_var_val > (*this)[row][indep_col]) {
+      return nrows; // tried to get a value beyond what's in input
+    }
+    while (row > 0 && indep_var_val < (*this)[row][indep_col])
       row--;
     return row;
   }
@@ -164,14 +166,22 @@ public:
   // ----------------------------------------------------------------------
   // get_interpolated
   // Calculates and returns a linearly interpolated value (specified by col) at
-  // given value of independent variable
+  // given value of independent variable. If indep_var_val is too high, returns
+  // the last value available.
 
   double get_interpolated(int col, double indep_var_val)
   {
-    assert(indep_var_val >= (*this)[0][indep_col]);
-    assert(indep_var_val <= (*this)[nrows - 1][indep_col]);
+    if (indep_var_val < (*this)[0][indep_col]) {
+      mpi_printf(MPI_COMM_WORLD, "Out of bounds (too low): %f (< %f)\n",
+                 indep_var_val, (*this)[0][indep_col]);
+      std::exit(1);
+    }
 
     int row = get_row(indep_var_val);
+
+    if (row == nrows) {
+      return (*this)[nrows - 1][indep_col];
+    }
 
     if ((*this)[row][indep_col] == indep_var_val)
       return (*this)[row][col];
@@ -184,4 +194,6 @@ public:
   }
 
   double* operator[](const int row) { return data.data() + row * ncols; }
+
+  int get_nrows() const { return nrows; }
 };
