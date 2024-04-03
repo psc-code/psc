@@ -209,27 +209,14 @@ inline double getIonDensity(double rho)
 }
 
 // ======================================================================
-// get_beta
-// Return the conversion factor from paper units to psc units.
-
-double get_beta()
-{
-  // PSC is normalized as c=1, but the paper has electron thermal velocity
-  // v_e=1. Beta is v_e/c = sqrt(Te_paper) / sqrt(Te_psc)
-  const double PAPER_ELECTRON_TEMPERATURE = 1.;
-  const double pscElectronTemperature = parsedData->get_interpolated(COL_TE, 0);
-  return std::sqrt(pscElectronTemperature / PAPER_ELECTRON_TEMPERATURE);
-}
-
-// ======================================================================
 // v_phi_cdf
 // Cumulative distribution function for azimuthal electron velocity
 
 double v_phi_cdf(double v_phi, double rho)
 {
   // convert units from psc to paper
-  v_phi /= get_beta();
-  rho /= get_beta();
+  v_phi /= get_beta(*parsedData);
+  rho /= get_beta(*parsedData);
 
   double B = g.Hx;
   double sqrt2 = std::sqrt(2);
@@ -259,8 +246,8 @@ struct pdist
       z{z},
       rho{rho},
       v_phi_dist{[=](double v_phi) { return v_phi_cdf(v_phi, rho); }},
-      v_rho_dist{0, get_beta()},
-      v_x_dist{0, get_beta()}
+      v_rho_dist{0, get_beta(*parsedData)},
+      v_x_dist{0, get_beta(*parsedData)}
   {}
 
   Double3 operator()()

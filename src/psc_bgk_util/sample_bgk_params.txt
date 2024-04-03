@@ -22,6 +22,8 @@ T_i 0 normally 0, or 1e-6 for boltzmann
 # Run-specific parameters
 path_to_data /CHANGE/ME
 H_x 1
+h0 .9
+k .1
 
 n_grid 16
 n_grid_3 1 number of gridpoints on x axis; 1 for 2D, 2+ for 3D

@@ -5,6 +5,20 @@
 #include "input_parser.hxx"
 
 // ======================================================================
+// get_beta
+// Return the conversion factor from paper units to psc units.
+
+double get_beta(ParsedData& data)
+{
+  // PSC is normalized as c=1, but the paper has electron thermal velocity
+  // v_e=1. Beta is v_e/c = sqrt(Te_paper) / sqrt(Te_psc)
+  const double PAPER_ELECTRON_TEMPERATURE = 1.;
+  const int COL_TE = 3;
+  const double pscElectronTemperature = data.get_interpolated(COL_TE, 0);
+  return std::sqrt(pscElectronTemperature / PAPER_ELECTRON_TEMPERATURE);
+}
+
+// ======================================================================
 // getCalculatedBoxSize
 
 // Calculates the radial distance where the spike in the exact distribution
@@ -17,7 +31,7 @@
 // The negative Gaussian has a mean given by the RHS of the equation. It drifts
 // up, approaching a line with slope B/2. The negative Gaussian is the source
 // of the spike.
-double getSpikeSize(double B, double k)
+double getSpikeSize(double B, double k, double beta)
 {
   double max_v = 4.5;
   // solve cubic with linear coefficient = 0
@@ -30,7 +44,6 @@ double getSpikeSize(double B, double k)
   double q = p * p * p + t;
   double s = sqrt(t * (2. * q - t));
 
-  double beta = .001; // FIXME don't hardcode this (see psc_bgk.cxx get_beta())
   double r = (std::cbrt(q + s) + std::cbrt(q - s) + p) * beta;
   return r;
 }
@@ -52,7 +65,7 @@ double getHoleSize(ParsedData& data)
 // Calculates a box size big enough to resolve the spike and the hole.
 double getCalculatedBoxSize(double B, double k, ParsedData& data)
 {
-  double spike_size = getSpikeSize(B, k);
+  double spike_size = getSpikeSize(B, k, get_beta(data));
   double hole_size = getHoleSize(data);
   LOG_INFO("spike radius: %f\thole radius: %f\n", spike_size, hole_size);
   return 2 * std::max(spike_size, hole_size);
@@ -76,8 +89,8 @@ struct PscBgkParams
   int n_patches;       // number of patches
   int nicell;          // number of particles per gripdoint when density=1
 
-  double k = .1;  // a parameter for BGK solutions
-  double h0 = .9; // a parameter for BGK solutions
+  double k;  // a parameter for BGK solutions
+  double h0; // a parameter for BGK solutions
 
   int fields_every;    // interval for pfd output
   int moments_every;   // interval for pfd_moments output
@@ -133,6 +146,8 @@ struct PscBgkParams
     T_e_coef = parsedParams.getOrDefault<double>("T_e_coef", 1);
 
     maxwellian = parsedParams.getOrDefault<bool>("maxwellian", false);
+    k = parsedParams.getOrDefault<double>("k", .1);
+    h0 = parsedParams.getOrDefault<double>("h0", .9);
 
     n_grid_3 = parsedParams.getOrDefault<int>("n_grid_3", 1);
     box_size_3 = parsedParams.getAndWarnOrDefault<double>("box_size_3", -1);
