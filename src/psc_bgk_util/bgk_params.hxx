@@ -93,6 +93,8 @@ struct PscBgkParams
   double h0; // a parameter for BGK solutions
   double xi; // a parameter for BGK solutions
 
+  double beta; // electron thermal velocity / c
+
   double A_x0; // vector potential, used when xi != 0
 
   int fields_every;    // interval for pfd output
@@ -147,6 +149,8 @@ struct PscBgkParams
 
     v_e_coef = parsedParams.getOrDefault<double>("v_e_coef", 1);
     T_e_coef = parsedParams.getOrDefault<double>("T_e_coef", 1);
+
+    beta = parsedParams.getOrDefault<double>("beta", 1e-3);
 
     maxwellian = parsedParams.getOrDefault<bool>("maxwellian", false);
     k = parsedParams.getOrDefault<double>("k", .1);
