@@ -131,8 +131,8 @@ Grid_t* setupGrid()
   kinds[KIND_ELECTRON] = {g.q_e, g.m_e, "e"};
   kinds[KIND_ION] = {g.q_i, g.m_i, "i"};
 
-  mpi_printf(MPI_COMM_WORLD, "lambda_D = %g\n",
-             sqrt(parsedData->get_interpolated(COL_TE, 0)));
+  // lambda_D = v_e / omega_pe = v_e = beta
+  mpi_printf(MPI_COMM_WORLD, "lambda_D = %g\n", g.beta);
 
   // --- generic setup
   auto norm_params = Grid_t::NormalizationParams::dimensionless();
@@ -215,8 +215,8 @@ inline double getIonDensity(double rho)
 double v_phi_cdf(double v_phi, double rho)
 {
   // convert units from psc to paper
-  v_phi /= get_beta(*parsedData);
-  rho /= get_beta(*parsedData);
+  v_phi /= g.beta;
+  rho /= g.beta;
 
   double B = g.Hx;
   double sqrt2 = std::sqrt(2);
@@ -246,8 +246,8 @@ struct pdist
       z{z},
       rho{rho},
       v_phi_dist{[=](double v_phi) { return v_phi_cdf(v_phi, rho); }},
-      v_rho_dist{0, get_beta(*parsedData)},
-      v_x_dist{0, get_beta(*parsedData)}
+      v_rho_dist{0, g.beta},
+      v_x_dist{0, g.beta}
   {}
 
   Double3 operator()()
@@ -280,11 +280,11 @@ struct pdist_case4
       rho{rho},
       v_phi_dist{8.0 * g.k * sqr(rho) * (0.5 * g.Hx * rho) /
                    (1.0 + 8.0 * g.k * sqr(rho)),
-                 get_beta(*parsedData) / sqrt(1.0 + 8.0 * g.k * sqr(rho))},
-      v_rho_dist{0, get_beta(*parsedData)},
+                 g.beta / sqrt(1.0 + 8.0 * g.k * sqr(rho))},
+      v_rho_dist{0, g.beta},
       v_x_dist{2.0 * g.xi * g.A_x0 / (1.0 + 2.0 * g.xi),
-               get_beta(*parsedData) / sqrt(1.0 + 2.0 * g.xi)},
-      simple_dist{0.0, get_beta(*parsedData)},
+               g.beta / sqrt(1.0 + 2.0 * g.xi)},
+      simple_dist{0.0, g.beta},
       uniform{0.0, 1.0}
   {}
 
@@ -358,8 +358,8 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
           // case 4: sum of two maxwellians, where one has easy moments and the
           // other's moments are given in input file
 
-          double psi_cs = parsedData->get_interpolated(COL_PHI, rho) /
-                          sqr(get_beta(*parsedData));
+          double psi_cs =
+            parsedData->get_interpolated(COL_PHI, rho) / sqr(g.beta);
           double n_background = exp(psi_cs);
           double p_background = n_background / np.n;
           np.p = pdist_case4(p_background, y, z, rho);

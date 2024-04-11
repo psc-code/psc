@@ -5,20 +5,6 @@
 #include "input_parser.hxx"
 
 // ======================================================================
-// get_beta
-// Return the conversion factor from paper units to psc units.
-
-double get_beta(ParsedData& data)
-{
-  // PSC is normalized as c=1, but the paper has electron thermal velocity
-  // v_e=1. Beta is v_e/c = sqrt(Te_paper) / sqrt(Te_psc)
-  const double PAPER_ELECTRON_TEMPERATURE = 1.;
-  const int COL_TE = 3;
-  const double pscElectronTemperature = data.get_interpolated(COL_TE, 0);
-  return std::sqrt(pscElectronTemperature / PAPER_ELECTRON_TEMPERATURE);
-}
-
-// ======================================================================
 // getCalculatedBoxSize
 
 // Calculates the radial distance where the spike in the exact distribution
@@ -63,9 +49,9 @@ double getHoleSize(ParsedData& data)
 }
 
 // Calculates a box size big enough to resolve the spike and the hole.
-double getCalculatedBoxSize(double B, double k, ParsedData& data)
+double getCalculatedBoxSize(double B, double k, double beta, ParsedData& data)
 {
-  double spike_size = getSpikeSize(B, k, get_beta(data));
+  double spike_size = getSpikeSize(B, k, beta);
   double hole_size = getHoleSize(data);
   LOG_INFO("spike radius: %f\thole radius: %f\n", spike_size, hole_size);
   return 2 * std::max(spike_size, hole_size);
@@ -176,8 +162,8 @@ struct PscBgkParams
     }
 
     if (box_size <= 0)
-      box_size = rel_box_size * getCalculatedBoxSize(Hx, k, data);
+      box_size = rel_box_size * getCalculatedBoxSize(Hx, k, beta, data);
     if (box_size_3 <= 0)
-      box_size_3 = rel_box_size_3 * getCalculatedBoxSize(Hx, k, data);
+      box_size_3 = rel_box_size_3 * getCalculatedBoxSize(Hx, k, beta, data);
   }
 };
