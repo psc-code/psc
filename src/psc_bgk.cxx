@@ -273,8 +273,8 @@ private:
 
 struct pdist_case4
 {
-  pdist_case4(double p_simple, double y, double z, double rho)
-    : p_simple{p_simple},
+  pdist_case4(double p_background, double y, double z, double rho)
+    : p_background{p_background},
       y{y},
       z{z},
       rho{rho},
@@ -294,8 +294,9 @@ struct pdist_case4
                   (g.reverse_v_half && y < 0 ? -1 : 1);
     if (rho == 0) {
       //  p_y and p_z reduce to same case at rho=0, but not p_x
-      double p_x = coef * g.m_e *
-                   (uniform.get() < p_simple ? simple_dist : v_x_dist).get();
+      double p_x =
+        coef * g.m_e *
+        (uniform.get() < p_background ? simple_dist : v_x_dist).get();
       double p_y = coef * g.m_e * simple_dist.get();
       double p_z = coef * g.m_e * simple_dist.get();
       return Double3{p_x, p_y, p_z};
@@ -303,7 +304,7 @@ struct pdist_case4
 
     double v_phi, v_rho, v_x;
 
-    if (uniform.get() < p_simple) {
+    if (uniform.get() < p_background) {
       v_phi = simple_dist.get();
       v_rho = simple_dist.get();
       v_x = simple_dist.get();
@@ -320,7 +321,7 @@ struct pdist_case4
   }
 
 private:
-  double p_simple, y, z, rho;
+  double p_background, y, z, rho;
   rng::Normal<double> v_phi_dist;
   rng::Normal<double> v_rho_dist;
   rng::Normal<double> v_x_dist;
@@ -359,9 +360,9 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
 
           double psi_cs = parsedData->get_interpolated(COL_PHI, rho) /
                           sqr(get_beta(*parsedData));
-          double n_simple = exp(psi_cs);
-          double p_simple = n_simple / np.n;
-          np.p = pdist_case4(p_simple, y, z, rho);
+          double n_background = exp(psi_cs);
+          double p_background = n_background / np.n;
+          np.p = pdist_case4(p_background, y, z, rho);
 
           break;
         }
