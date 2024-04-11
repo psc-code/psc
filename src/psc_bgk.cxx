@@ -278,11 +278,12 @@ struct pdist_case4
       y{y},
       z{z},
       rho{rho},
-      v_phi_dist{8.0 * g.k * sqr(rho) * (0.5 * g.Hx * rho) /
-                   (1.0 + 8.0 * g.k * sqr(rho)),
-                 g.beta / sqrt(1.0 + 8.0 * g.k * sqr(rho))},
+      v_phi_dist{g.beta * 8.0 * g.k * sqr(rho / g.beta) *
+                   (0.5 * g.Hx * rho / g.beta) /
+                   (1.0 + 8.0 * g.k * sqr(rho / g.beta)),
+                 g.beta / sqrt(1.0 + 8.0 * g.k * sqr(rho / g.beta))},
       v_rho_dist{0, g.beta},
-      v_x_dist{2.0 * g.xi * g.A_x0 / (1.0 + 2.0 * g.xi),
+      v_x_dist{g.beta * 2.0 * g.xi * g.A_x0 / (1.0 + 2.0 * g.xi),
                g.beta / sqrt(1.0 + 2.0 * g.xi)},
       simple_dist{0.0, g.beta},
       uniform{0.0, 1.0}
