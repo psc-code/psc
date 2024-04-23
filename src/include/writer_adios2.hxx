@@ -71,17 +71,17 @@ public:
 
   void begin_step(const Grid_t& grid)
   {
-    begin_step(grid.timestep(), grid.timestep() * grid.dt);
-  }
+    int step = grid.timestep();
+    double time = grid.timestep() * grid.dt;
 
-  void begin_step(int step, double time)
-  {
     char filename[dir_.size() + pfx_.size() + 20];
     sprintf(filename, "%s/%s.%09d.bp", dir_.c_str(), pfx_.c_str(), step);
     file_ = io_.open(filename, kg::io::Mode::Write, comm_, pfx_);
     file_.beginStep(kg::io::StepMode::Append);
     file_.put("step", step);
     file_.put("time", time);
+    file_.put("length", grid.domain.length);
+    file_.put("corner", grid.domain.corner);
     file_.performPuts();
   }
 
