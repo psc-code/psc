@@ -162,7 +162,7 @@ struct OutputParticlesHdf5
       }
       // prefix sum to get offsets
       int o = 0;
-      int* off2 = (int*)malloc((nr_indices + 1) * sizeof(*off2));
+      std::vector<int> off2(nr_indices + 1);
       for (int si = 0; si <= nr_indices; si++) {
         int cnt = off[p][si];
         off[p][si] = o; // this will be saved for later
@@ -177,7 +177,6 @@ struct OutputParticlesHdf5
         int si = get_sort_index(prts, prt);
         map[p][off2[si]++] = n++;
       }
-      free(off2);
     }
   }
 
