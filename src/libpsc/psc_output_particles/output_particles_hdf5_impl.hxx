@@ -143,7 +143,8 @@ struct OutputParticlesHdf5
   // ----------------------------------------------------------------------
   // count_sort
 
-  static void count_sort(Mparticles& mprts, int** off, int** map)
+  static void count_sort(Mparticles& mprts, std::vector<int*>& off,
+                         std::vector<int*>& map)
   {
     int nr_kinds = mprts.grid().kinds.size();
 
@@ -199,9 +200,12 @@ struct OutputParticlesHdf5
   // ----------------------------------------------------------------------
   // make_local_particle_array
 
-  hdf5_prt* make_local_particle_array(Mparticles& mprts, int** off, int** map,
-                                      size_t** idx, size_t* p_n_write,
-                                      size_t* p_n_off, size_t* p_n_total)
+  hdf5_prt* make_local_particle_array(Mparticles& mprts,
+                                      const std::vector<int*>& off,
+                                      const std::vector<int*>& map,
+                                      std::vector<size_t*>& idx,
+                                      size_t* p_n_write, size_t* p_n_off,
+                                      size_t* p_n_total)
   {
     const auto& grid = mprts.grid();
     int nr_kinds = grid.kinds.size();
@@ -241,7 +245,7 @@ struct OutputParticlesHdf5
         const auto& patch = grid.patches[p];
         int ilo[3], ihi[3], ld[3];
         int sz = find_patch_bounds(grid.ldims, patch.off, ilo, ihi, ld);
-        idx[p] = (size_t*)malloc(2 * sz * sizeof(*idx));
+        idx[p] = (size_t*)malloc(2 * sz * sizeof(size_t));
 
         for (int jz = ilo[2]; jz < ihi[2]; jz++) {
           for (int jy = ilo[1]; jy < ihi[1]; jy++) {
@@ -389,7 +393,7 @@ struct OutputParticlesHdf5
     std::vector<int*> map(mprts.n_patches());
     std::vector<size_t*> idx(mprts.n_patches());
 
-    count_sort(mprts, map.data(), off.data());
+    count_sort(mprts, map, off);
 
     size_t *gidx_begin = NULL, *gidx_end = NULL;
     if (rank == 0) {
@@ -414,8 +418,8 @@ struct OutputParticlesHdf5
 
     // find local particle and idx arrays
     size_t n_write, n_off, n_total;
-    hdf5_prt* arr = make_local_particle_array(
-      mprts, map.data(), off.data(), idx.data(), &n_write, &n_off, &n_total);
+    hdf5_prt* arr = make_local_particle_array(mprts, map, off, idx, &n_write,
+                                              &n_off, &n_total);
     prof_stop(pr_A);
 
     prof_start(pr_B);
