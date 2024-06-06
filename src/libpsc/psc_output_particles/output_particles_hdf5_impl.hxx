@@ -227,8 +227,8 @@ struct OutputParticlesHdf5
 
     assert(sizeof(size_t) == sizeof(unsigned long));
     size_t n_total, n_off = 0;
-    MPI_Allreduce(&n_write, &n_total, 1, MPI_LONG, MPI_SUM, comm_);
-    MPI_Exscan(&n_write, &n_off, 1, MPI_LONG, MPI_SUM, comm_);
+    MPI_Allreduce(&n_write, &n_total, 1, MPI_UNSIGNED_LONG, MPI_SUM, comm_);
+    MPI_Exscan(&n_write, &n_off, 1, MPI_UNSIGNED_LONG, MPI_SUM, comm_);
 
     struct hdf5_prt* arr = (struct hdf5_prt*)malloc(n_write * sizeof(*arr));
 
@@ -470,8 +470,8 @@ struct OutputParticlesHdf5
         }
         recv_buf[r] = (size_t*)malloc(2 * remote_sz[r] * sizeof(*recv_buf[r]));
         recv_buf_p[r] = recv_buf[r];
-        MPI_Irecv(recv_buf[r], 2 * remote_sz[r], MPI_LONG, r, 0x4000, comm_,
-                  &recv_req[r]);
+        MPI_Irecv(recv_buf[r], 2 * remote_sz[r], MPI_UNSIGNED_LONG, r, 0x4000,
+                  comm_, &recv_req[r]);
       }
       MPI_Waitall(size, recv_req, MPI_STATUSES_IGNORE);
       free(recv_req);
@@ -530,7 +530,7 @@ struct OutputParticlesHdf5
         l_idx_p += 2 * sz;
       }
 
-      MPI_Send(l_idx, 2 * local_sz, MPI_LONG, 0, 0x4000, comm_);
+      MPI_Send(l_idx, 2 * local_sz, MPI_UNSIGNED_LONG, 0, 0x4000, comm_);
 
       free(l_idx);
     }
