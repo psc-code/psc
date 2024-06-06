@@ -97,10 +97,10 @@ struct OutputParticlesHdf5
   using Particles = typename Mparticles::Patch;
 
   OutputParticlesHdf5(const Grid_t& grid, const Int3& lo, const Int3& hi,
-                      const Int3& wdims, hid_t prt_type)
+                      hid_t prt_type)
     : lo_{lo},
       hi_{hi},
-      wdims_{wdims},
+      wdims_{hi - lo},
       kinds_{grid.kinds},
       comm_{grid.comm()},
       prt_type_{prt_type}
@@ -641,7 +641,6 @@ public:
       assert(lo_[d] >= 0);
       assert(hi_[d] <= grid.domain.gdims[d]);
     }
-    wdims_ = hi_ - lo_;
   }
 
   template <typename Mparticles>
@@ -658,8 +657,7 @@ public:
     snprintf(filename, slen, "%s/%s.%06d_p%06d.h5", prm_.data_dir,
              prm_.basename, grid.timestep(), 0);
 
-    detail::OutputParticlesHdf5<Mparticles> impl{grid, lo_, hi_, wdims_,
-                                                 prt_type_};
+    detail::OutputParticlesHdf5<Mparticles> impl{grid, lo_, hi_, prt_type_};
     impl(mprts, filename, prm_);
   }
 
@@ -700,5 +698,4 @@ private:
   detail::Hdf5ParticleType prt_type_;
   Int3 lo_; // dimensions of the subdomain we're actually writing
   Int3 hi_;
-  Int3 wdims_;
 };
