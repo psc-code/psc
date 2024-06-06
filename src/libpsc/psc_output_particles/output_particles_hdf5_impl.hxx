@@ -385,12 +385,11 @@ struct OutputParticlesHdf5
     struct mrc_patch_info info;
     int nr_kinds = mprts.grid().kinds.size();
 
-    int** off = (int**)malloc(mprts.n_patches() * sizeof(*off));
-    int** map = (int**)malloc(mprts.n_patches() * sizeof(*off));
+    std::vector<int*> off(mprts.n_patches());
+    std::vector<int*> map(mprts.n_patches());
+    std::vector<size_t*> idx(mprts.n_patches());
 
-    count_sort(mprts, map, off);
-
-    size_t** idx = (size_t**)malloc(mprts.n_patches() * sizeof(*idx));
+    count_sort(mprts, map.data(), off.data());
 
     size_t *gidx_begin = NULL, *gidx_end = NULL;
     if (rank == 0) {
@@ -415,8 +414,8 @@ struct OutputParticlesHdf5
 
     // find local particle and idx arrays
     size_t n_write, n_off, n_total;
-    hdf5_prt* arr = make_local_particle_array(mprts, map, off, idx, &n_write,
-                                              &n_off, &n_total);
+    hdf5_prt* arr = make_local_particle_array(
+      mprts, map.data(), off.data(), idx.data(), &n_write, &n_off, &n_total);
     prof_stop(pr_A);
 
     prof_start(pr_B);
@@ -611,9 +610,6 @@ struct OutputParticlesHdf5
       free(map[p]);
       free(idx[p]);
     }
-    free(off);
-    free(map);
-    free(idx);
   }
 
 private:
