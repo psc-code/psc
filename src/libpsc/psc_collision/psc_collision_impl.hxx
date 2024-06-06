@@ -8,6 +8,7 @@
 
 #include <cmath>
 #include <numeric>
+#include <random>
 
 extern void* global_collision; // FIXME
 
@@ -164,11 +165,11 @@ struct CollisionHost
   // ----------------------------------------------------------------------
   // randomize_in_cell
 
-  static std::vector<int> randomize_in_cell(int n_start, int n_end)
+  std::vector<int> randomize_in_cell(int n_start, int n_end)
   {
     std::vector<int> permute(n_end - n_start);
     std::iota(permute.begin(), permute.end(), n_start);
-    std::random_shuffle(permute.begin(), permute.end());
+    std::shuffle(permute.begin(), permute.end(), rng_);
     return permute;
   }
 
@@ -264,6 +265,8 @@ private:
   // parameters
   double nu_;
   int interval_;
+
+  std::mt19937 rng_;
 
 public: // FIXME
   // for output
