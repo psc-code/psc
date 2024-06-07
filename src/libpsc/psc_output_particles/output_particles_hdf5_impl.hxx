@@ -313,7 +313,8 @@ struct OutputParticlesHdf5
     CE;
   }
 
-  void write_idx(size_t* gidx_begin, size_t* gidx_end, hid_t group, hid_t dxpl)
+  void write_idx(const std::vector<size_t>& gidx_begin,
+                 const std::vector<size_t>& gidx_end, hid_t group, hid_t dxpl)
   {
     herr_t ierr;
 
@@ -341,8 +342,8 @@ struct OutputParticlesHdf5
     hid_t dset = H5Dcreate(group, "idx_begin", H5T_NATIVE_HSIZE, filespace,
                            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     H5_CHK(dset);
-    ierr =
-      H5Dwrite(dset, H5T_NATIVE_HSIZE, memspace, filespace, dxpl, gidx_begin);
+    ierr = H5Dwrite(dset, H5T_NATIVE_HSIZE, memspace, filespace, dxpl,
+                    gidx_begin.data());
     CE;
     ierr = H5Dclose(dset);
     CE;
@@ -350,8 +351,8 @@ struct OutputParticlesHdf5
     dset = H5Dcreate(group, "idx_end", H5T_NATIVE_HSIZE, filespace, H5P_DEFAULT,
                      H5P_DEFAULT, H5P_DEFAULT);
     H5_CHK(dset);
-    ierr =
-      H5Dwrite(dset, H5T_NATIVE_HSIZE, memspace, filespace, dxpl, gidx_end);
+    ierr = H5Dwrite(dset, H5T_NATIVE_HSIZE, memspace, filespace, dxpl,
+                    gidx_end.data());
     CE;
     ierr = H5Dclose(dset);
     CE;
@@ -394,13 +395,11 @@ struct OutputParticlesHdf5
 
     count_sort(mprts, off, map);
 
-    size_t *gidx_begin = NULL, *gidx_end = NULL;
+    std::vector<size_t> gidx_begin, gidx_end;
     if (rank == 0) {
       // alloc global idx array
-      gidx_begin = (size_t*)malloc(nr_kinds * wdims_[0] * wdims_[1] *
-                                   wdims_[2] * sizeof(*gidx_begin));
-      gidx_end = (size_t*)malloc(nr_kinds * wdims_[0] * wdims_[1] * wdims_[2] *
-                                 sizeof(*gidx_end));
+      gidx_begin.resize(nr_kinds * wdims_[0] * wdims_[1] * wdims_[2]);
+      gidx_end.resize(nr_kinds * wdims_[0] * wdims_[1] * wdims_[2]);
       for (int jz = 0; jz < wdims_[2]; jz++) {
         for (int jy = 0; jy < wdims_[1]; jy++) {
           for (int jx = 0; jx < wdims_[0]; jx++) {
@@ -605,8 +604,6 @@ struct OutputParticlesHdf5
     prof_stop(pr_E);
 
     free(arr);
-    free(gidx_begin);
-    free(gidx_end);
 
     for (int p = 0; p < mprts.n_patches(); p++) {
       free(idx[p]);
