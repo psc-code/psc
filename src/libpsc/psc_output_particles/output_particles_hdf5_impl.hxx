@@ -143,15 +143,15 @@ struct OutputParticlesHdf5
   // ----------------------------------------------------------------------
   // count_sort
 
-  static void count_sort(Mparticles& mprts, std::vector<int*>& off,
-                         std::vector<int*>& map)
+  static void count_sort(Mparticles& mprts, std::vector<std::vector<int>>& off,
+                         std::vector<std::vector<int>>& map)
   {
     int nr_kinds = mprts.grid().kinds.size();
 
     for (int p = 0; p < mprts.n_patches(); p++) {
       const int* ldims = mprts.grid().ldims;
       int nr_indices = ldims[0] * ldims[1] * ldims[2] * nr_kinds;
-      off[p] = (int*)calloc(nr_indices + 1, sizeof(*off[p]));
+      off[p].resize(nr_indices + 1);
       auto&& prts = mprts[p];
       unsigned int n_prts = prts.size();
 
@@ -171,7 +171,7 @@ struct OutputParticlesHdf5
       }
 
       // sort a map only, not the actual particles
-      map[p] = (int*)malloc(n_prts * sizeof(*map[p]));
+      map[p].resize(n_prts);
       int n = 0;
       for (const auto& prt : prts) {
         int si = get_sort_index(prts, prt);
@@ -200,8 +200,8 @@ struct OutputParticlesHdf5
   // make_local_particle_array
 
   hdf5_prt* make_local_particle_array(Mparticles& mprts,
-                                      const std::vector<int*>& off,
-                                      const std::vector<int*>& map,
+                                      const std::vector<std::vector<int>>& off,
+                                      const std::vector<std::vector<int>>& map,
                                       std::vector<size_t*>& idx,
                                       size_t* p_n_write, size_t* p_n_off,
                                       size_t* p_n_total)
@@ -388,8 +388,8 @@ struct OutputParticlesHdf5
     struct mrc_patch_info info;
     int nr_kinds = mprts.grid().kinds.size();
 
-    std::vector<int*> off(mprts.n_patches());
-    std::vector<int*> map(mprts.n_patches());
+    std::vector<std::vector<int>> off(mprts.n_patches());
+    std::vector<std::vector<int>> map(mprts.n_patches());
     std::vector<size_t*> idx(mprts.n_patches());
 
     count_sort(mprts, off, map);
@@ -609,8 +609,6 @@ struct OutputParticlesHdf5
     free(gidx_end);
 
     for (int p = 0; p < mprts.n_patches(); p++) {
-      free(off[p]);
-      free(map[p]);
       free(idx[p]);
     }
   }
