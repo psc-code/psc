@@ -398,20 +398,9 @@ struct OutputParticlesHdf5
     std::vector<size_t> gidx_begin, gidx_end;
     if (rank == 0) {
       // alloc global idx array
-      gidx_begin.resize(nr_kinds * wdims_[0] * wdims_[1] * wdims_[2]);
-      gidx_end.resize(nr_kinds * wdims_[0] * wdims_[1] * wdims_[2]);
-      for (int jz = 0; jz < wdims_[2]; jz++) {
-        for (int jy = 0; jy < wdims_[1]; jy++) {
-          for (int jx = 0; jx < wdims_[0]; jx++) {
-            for (int kind = 0; kind < nr_kinds; kind++) {
-              int ii =
-                ((kind * wdims_[2] + jz) * wdims_[1] + jy) * wdims_[0] + jx;
-              gidx_begin[ii] = size_t(-1);
-              gidx_end[ii] = size_t(-1);
-            }
-          }
-        }
-      }
+      gidx_begin.resize(nr_kinds * wdims_[0] * wdims_[1] * wdims_[2],
+                        size_t(-1));
+      gidx_end.resize(nr_kinds * wdims_[0] * wdims_[1] * wdims_[2], size_t(-1));
     }
 
     // find local particle and idx arrays
