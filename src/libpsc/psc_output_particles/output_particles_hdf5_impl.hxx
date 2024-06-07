@@ -392,7 +392,7 @@ struct OutputParticlesHdf5
     std::vector<int*> map(mprts.n_patches());
     std::vector<size_t*> idx(mprts.n_patches());
 
-    count_sort(mprts, map, off);
+    count_sort(mprts, off, map);
 
     size_t *gidx_begin = NULL, *gidx_end = NULL;
     if (rank == 0) {
@@ -417,7 +417,7 @@ struct OutputParticlesHdf5
 
     // find local particle and idx arrays
     size_t n_write, n_off, n_total;
-    hdf5_prt* arr = make_local_particle_array(mprts, map, off, idx, &n_write,
+    hdf5_prt* arr = make_local_particle_array(mprts, off, map, idx, &n_write,
                                               &n_off, &n_total);
     prof_stop(pr_A);
 
