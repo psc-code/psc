@@ -202,7 +202,7 @@ struct OutputParticlesHdf5
   hdf5_prt* make_local_particle_array(Mparticles& mprts,
                                       const std::vector<std::vector<int>>& off,
                                       const std::vector<std::vector<int>>& map,
-                                      std::vector<size_t*>& idx,
+                                      std::vector<std::vector<size_t>>& idx,
                                       size_t* p_n_write, size_t* p_n_off,
                                       size_t* p_n_total)
   {
@@ -244,7 +244,7 @@ struct OutputParticlesHdf5
         const auto& patch = grid.patches[p];
         int ilo[3], ihi[3], ld[3];
         int sz = find_patch_bounds(grid.ldims, patch.off, ilo, ihi, ld);
-        idx[p] = (size_t*)malloc(2 * sz * sizeof(size_t));
+        idx[p].resize(2 * sz);
 
         for (int jz = ilo[2]; jz < ihi[2]; jz++) {
           for (int jy = ilo[1]; jy < ihi[1]; jy++) {
@@ -391,7 +391,7 @@ struct OutputParticlesHdf5
 
     std::vector<std::vector<int>> off(mprts.n_patches());
     std::vector<std::vector<int>> map(mprts.n_patches());
-    std::vector<size_t*> idx(mprts.n_patches());
+    std::vector<std::vector<size_t>> idx(mprts.n_patches());
 
     count_sort(mprts, off, map);
 
@@ -516,7 +516,7 @@ struct OutputParticlesHdf5
         const auto& patch = grid.patches[p];
         int ilo[3], ihi[3], ld[3];
         int sz = find_patch_bounds(grid.ldims, patch.off, ilo, ihi, ld);
-        memcpy(l_idx_p, idx[p], 2 * sz * sizeof(*l_idx_p));
+        memcpy(l_idx_p, idx[p].data(), 2 * sz * sizeof(*l_idx_p));
         l_idx_p += 2 * sz;
       }
 
@@ -593,10 +593,6 @@ struct OutputParticlesHdf5
     prof_stop(pr_E);
 
     free(arr);
-
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      free(idx[p]);
-    }
   }
 
 private:
