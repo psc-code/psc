@@ -395,16 +395,13 @@ struct OutputParticlesHdf5
 
     count_sort(mprts, off, map);
 
-    std::vector<size_t> gidx_begin, gidx_end;
+    gt::gtensor<size_t, 4> gidx_begin, gidx_end;
     if (rank == 0) {
       // alloc global idx array
-      gidx_begin.resize(nr_kinds * wdims_[0] * wdims_[1] * wdims_[2],
-                        size_t(-1));
-      gidx_end.resize(nr_kinds * wdims_[0] * wdims_[1] * wdims_[2], size_t(-1));
+      gidx_begin =
+        gt::empty<size_t>({wdims_[0], wdims_[1], wdims_[2], nr_kinds});
+      gidx_end = gt::empty<size_t>({wdims_[0], wdims_[1], wdims_[2], nr_kinds});
     }
-    auto gidx_shape = gt::shape(wdims_[0], wdims_[1], wdims_[2], nr_kinds);
-    auto _gidx_begin = gt::adapt(gidx_begin.data(), gidx_shape);
-    auto _gidx_end = gt::adapt(gidx_end.data(), gidx_shape);
 
     // find local particle and idx arrays
     size_t n_write, n_off, n_total;
@@ -443,10 +440,8 @@ struct OutputParticlesHdf5
                 int jj =
                   ((kind * ld[2] + jz - ilo[2]) * ld[1] + jy - ilo[1]) * ld[0] +
                   jx - ilo[0];
-                int ii =
-                  ((kind * wdims_[2] + iz) * wdims_[1] + iy) * wdims_[0] + ix;
-                gidx_begin[ii] = idx[p][jj];
-                gidx_end[ii] = idx[p][jj + sz];
+                gidx_begin(ix, iy, iz, kind) = idx[p][jj];
+                gidx_end(ix, iy, iz, kind) = idx[p][jj + sz];
               }
             }
           }
@@ -487,10 +482,8 @@ struct OutputParticlesHdf5
                 int jj =
                   ((kind * ld[2] + jz - ilo[2]) * ld[1] + jy - ilo[1]) * ld[0] +
                   jx - ilo[0];
-                int ii =
-                  ((kind * wdims_[2] + iz) * wdims_[1] + iy) * wdims_[0] + ix;
-                gidx_begin[ii] = recv_buf_p[info.rank][jj];
-                gidx_end[ii] = recv_buf_p[info.rank][jj + sz];
+                gidx_begin(ix, iy, iz, kind) = recv_buf_p[info.rank][jj];
+                gidx_end(ix, iy, iz, kind) = recv_buf_p[info.rank][jj + sz];
               }
             }
           }
