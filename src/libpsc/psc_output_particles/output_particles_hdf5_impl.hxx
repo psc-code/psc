@@ -313,8 +313,8 @@ struct OutputParticlesHdf5
     CE;
   }
 
-  void write_idx(const std::vector<size_t>& gidx_begin,
-                 const std::vector<size_t>& gidx_end, hid_t group, hid_t dxpl)
+  void write_idx(const size_t* gidx_begin, const size_t* gidx_end, hid_t group,
+                 hid_t dxpl)
   {
     herr_t ierr;
 
@@ -342,8 +342,8 @@ struct OutputParticlesHdf5
     hid_t dset = H5Dcreate(group, "idx_begin", H5T_NATIVE_HSIZE, filespace,
                            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     H5_CHK(dset);
-    ierr = H5Dwrite(dset, H5T_NATIVE_HSIZE, memspace, filespace, dxpl,
-                    gidx_begin.data());
+    ierr =
+      H5Dwrite(dset, H5T_NATIVE_HSIZE, memspace, filespace, dxpl, gidx_begin);
     CE;
     ierr = H5Dclose(dset);
     CE;
@@ -351,8 +351,8 @@ struct OutputParticlesHdf5
     dset = H5Dcreate(group, "idx_end", H5T_NATIVE_HSIZE, filespace, H5P_DEFAULT,
                      H5P_DEFAULT, H5P_DEFAULT);
     H5_CHK(dset);
-    ierr = H5Dwrite(dset, H5T_NATIVE_HSIZE, memspace, filespace, dxpl,
-                    gidx_end.data());
+    ierr =
+      H5Dwrite(dset, H5T_NATIVE_HSIZE, memspace, filespace, dxpl, gidx_end);
     CE;
     ierr = H5Dclose(dset);
     CE;
@@ -581,7 +581,7 @@ struct OutputParticlesHdf5
     prof_stop(pr_C);
 
     prof_start(pr_D);
-    write_idx(gidx_begin, gidx_end, groupp, dxpl);
+    write_idx(gidx_begin.data(), gidx_end.data(), groupp, dxpl);
     prof_stop(pr_D);
 
     prof_start(pr_E);
