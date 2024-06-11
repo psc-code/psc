@@ -93,7 +93,7 @@ TYPED_TEST(OutputParticlesTest, Test1)
   {
     auto injector = mprts.injector();
     injector[0]({{1., 0., 0.}, {}, 1., 0});
-    injector[0]({{2., 0., 0.}, {}, 1., 1});
+    injector[0]({{40., 0., 0.}, {}, 1., 1});
   }
 
   auto params = OutputParticlesParams{};
