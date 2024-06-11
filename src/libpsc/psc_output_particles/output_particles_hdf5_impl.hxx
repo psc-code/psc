@@ -107,13 +107,15 @@ struct OutputParticlesHdf5
   {}
 
   // ----------------------------------------------------------------------
-  // get_cell_index
+  // get_sort_index
   // FIXME, lots of stuff here is pretty much duplicated from countsort2
 
-  static inline int cell_index_3_to_1(const int* ldims, int j0, int j1, int j2)
+  static inline int sort_index(const int* ldims, int nr_kinds, Int3 idx3,
+                               int kind)
   {
-    return ((j2)*ldims[1] + j1) * ldims[0] + j0;
-  }
+    return ((idx3[2] * ldims[1] + idx3[1]) * ldims[0] + idx3[0]) * nr_kinds +
+           kind;
+  };
 
   template <typename Particle>
   static inline int get_sort_index(Particles& prts, const Particle& prt)
@@ -137,7 +139,7 @@ struct OutputParticlesHdf5
     assert(j2 >= 0 && j2 < ldims[2]);
     assert(prt.kind < grid.kinds.size());
 
-    return cell_index_3_to_1(ldims, j0, j1, j2) * grid.kinds.size() + prt.kind;
+    return sort_index(ldims, grid.kinds.size(), {j0, j1, j2}, prt.kind);
   }
 
   // ----------------------------------------------------------------------
@@ -219,8 +221,7 @@ struct OutputParticlesHdf5
         for (int jy = ilo[1]; jy < ihi[1]; jy++) {
           for (int jx = ilo[0]; jx < ihi[0]; jx++) {
             for (int kind = 0; kind < nr_kinds; kind++) {
-              int si =
-                cell_index_3_to_1(grid.ldims, jx, jy, jz) * nr_kinds + kind;
+              int si = sort_index(grid.ldims, nr_kinds, {jx, jy, jz}, kind);
               n_write += off[p][si + 1] - off[p][si];
             }
           }
@@ -250,8 +251,7 @@ struct OutputParticlesHdf5
           for (int jy = ilo[1]; jy < ihi[1]; jy++) {
             for (int jx = ilo[0]; jx < ihi[0]; jx++) {
               for (int kind = 0; kind < nr_kinds; kind++) {
-                int si =
-                  cell_index_3_to_1(grid.ldims, jx, jy, jz) * nr_kinds + kind;
+                int si = sort_index(grid.ldims, nr_kinds, {jx, jy, jz}, kind);
                 int jj =
                   ((kind * ld[2] + jz - ilo[2]) * ld[1] + jy - ilo[1]) * ld[0] +
                   jx - ilo[0];
@@ -402,6 +402,9 @@ struct OutputParticlesHdf5
                         size_t(-1));
       gidx_end.resize(nr_kinds * wdims_[0] * wdims_[1] * wdims_[2], size_t(-1));
     }
+    auto gidx_shape = gt::shape(wdims_[0], wdims_[1], wdims_[2], nr_kinds);
+    auto _gidx_begin = gt::adapt(gidx_begin.data(), gidx_shape);
+    auto _gidx_end = gt::adapt(gidx_end.data(), gidx_shape);
 
     // find local particle and idx arrays
     size_t n_write, n_off, n_total;
