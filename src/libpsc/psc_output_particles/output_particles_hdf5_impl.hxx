@@ -444,10 +444,9 @@ struct OutputParticlesHdf5
         }
       }
 
-      size_t** recv_buf = (size_t**)calloc(size, sizeof(*recv_buf));
-      size_t** recv_buf_p = (size_t**)calloc(size, sizeof(*recv_buf_p));
-      MPI_Request* recv_req = (MPI_Request*)calloc(size, sizeof(*recv_req));
-      recv_req[rank] = MPI_REQUEST_NULL;
+      std::vector<size_t*> recv_buf(size);
+      std::vector<size_t*> recv_buf_p(size);
+      std::vector<MPI_Request> recv_req(size, MPI_REQUEST_NULL);
       for (int r = 0; r < size; r++) {
         if (r == rank) { // skip this proc
           continue;
@@ -457,8 +456,7 @@ struct OutputParticlesHdf5
         MPI_Irecv(recv_buf[r], 2 * remote_sz[r], MPI_UNSIGNED_LONG, r, 0x4000,
                   comm_, &recv_req[r]);
       }
-      MPI_Waitall(size, recv_req, MPI_STATUSES_IGNORE);
-      free(recv_req);
+      MPI_Waitall(size, recv_req.data(), MPI_STATUSES_IGNORE);
 
       // build global idx array, remote part
       for (int p = 0; p < nr_global_patches; p++) {
@@ -490,8 +488,6 @@ struct OutputParticlesHdf5
       for (int r = 0; r < size; r++) {
         free(recv_buf[r]);
       }
-      free(recv_buf);
-      free(recv_buf_p);
       free(remote_sz);
     } else { // rank != 0: send to rank 0
       // FIXME, alloc idx[] as one array in the first place
