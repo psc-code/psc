@@ -444,17 +444,17 @@ struct OutputParticlesHdf5
         }
       }
 
-      std::vector<size_t*> recv_buf(size);
+      std::vector<std::vector<size_t>> recv_buf(size);
       std::vector<size_t*> recv_buf_p(size);
       std::vector<MPI_Request> recv_req(size, MPI_REQUEST_NULL);
       for (int r = 0; r < size; r++) {
         if (r == rank) { // skip this proc
           continue;
         }
-        recv_buf[r] = (size_t*)malloc(2 * remote_sz[r] * sizeof(*recv_buf[r]));
-        recv_buf_p[r] = recv_buf[r];
-        MPI_Irecv(recv_buf[r], 2 * remote_sz[r], MPI_UNSIGNED_LONG, r, 0x4000,
-                  comm_, &recv_req[r]);
+        recv_buf[r].resize(2 * remote_sz[r]);
+        recv_buf_p[r] = recv_buf[r].data();
+        MPI_Irecv(recv_buf[r].data(), 2 * remote_sz[r], MPI_UNSIGNED_LONG, r,
+                  0x4000, comm_, &recv_req[r]);
       }
       MPI_Waitall(size, recv_req.data(), MPI_STATUSES_IGNORE);
 
@@ -485,9 +485,6 @@ struct OutputParticlesHdf5
         recv_buf_p[info.rank] += 2 * sz;
       }
 
-      for (int r = 0; r < size; r++) {
-        free(recv_buf[r]);
-      }
       free(remote_sz);
     } else { // rank != 0: send to rank 0
       // FIXME, alloc idx[] as one array in the first place
