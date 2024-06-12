@@ -196,12 +196,11 @@ struct OutputParticlesHdf5
   // ----------------------------------------------------------------------
   // make_local_particle_array
 
-  hdf5_prt* make_local_particle_array(Mparticles& mprts,
-                                      const std::vector<std::vector<int>>& off,
-                                      const std::vector<std::vector<int>>& map,
-                                      std::vector<gt::gtensor<size_t, 5>>& idx,
-                                      size_t* p_n_write, size_t* p_n_off,
-                                      size_t* p_n_total)
+  std::vector<hdf5_prt> make_local_particle_array(
+    Mparticles& mprts, const std::vector<std::vector<int>>& off,
+    const std::vector<std::vector<int>>& map,
+    std::vector<gt::gtensor<size_t, 5>>& idx, size_t* p_n_write,
+    size_t* p_n_off, size_t* p_n_total)
   {
     const auto& grid = mprts.grid();
     int nr_kinds = grid.kinds.size();
@@ -229,7 +228,7 @@ struct OutputParticlesHdf5
     MPI_Allreduce(&n_write, &n_total, 1, MPI_UNSIGNED_LONG, MPI_SUM, comm_);
     MPI_Exscan(&n_write, &n_off, 1, MPI_UNSIGNED_LONG, MPI_SUM, comm_);
 
-    struct hdf5_prt* arr = (struct hdf5_prt*)malloc(n_write * sizeof(*arr));
+    std::vector<hdf5_prt> arr(n_write);
 
     // copy particles to be written into temp array
     int nn = 0;
@@ -278,7 +277,8 @@ struct OutputParticlesHdf5
   }
 
   void write_particles(size_t n_write, size_t n_off, size_t n_total,
-                       hdf5_prt* arr, hid_t group, hid_t dxpl)
+                       const std::vector<hdf5_prt>& arr, hid_t group,
+                       hid_t dxpl)
   {
     herr_t ierr;
 
@@ -296,7 +296,7 @@ struct OutputParticlesHdf5
     hid_t dset = H5Dcreate(group, "1d", prt_type_, filespace, H5P_DEFAULT,
                            H5P_DEFAULT, H5P_DEFAULT);
     H5_CHK(dset);
-    ierr = H5Dwrite(dset, prt_type_, memspace, filespace, dxpl, arr);
+    ierr = H5Dwrite(dset, prt_type_, memspace, filespace, dxpl, arr.data());
     CE;
 
     ierr = H5Dclose(dset);
@@ -399,8 +399,8 @@ struct OutputParticlesHdf5
 
     // find local particle and idx arrays
     size_t n_write, n_off, n_total;
-    hdf5_prt* arr = make_local_particle_array(mprts, off, map, idx, &n_write,
-                                              &n_off, &n_total);
+    auto arr = make_local_particle_array(mprts, off, map, idx, &n_write, &n_off,
+                                         &n_total);
     prof_stop(pr_A);
 
     prof_start(pr_B);
@@ -567,8 +567,6 @@ struct OutputParticlesHdf5
     H5Gclose(group);
     H5Fclose(file);
     prof_stop(pr_E);
-
-    free(arr);
   }
 
 private:
