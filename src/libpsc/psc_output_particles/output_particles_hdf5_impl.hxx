@@ -246,17 +246,18 @@ struct OutputParticlesHdf5
         int ilo[3], ihi[3], ld[3];
         int sz = find_patch_bounds(grid.ldims, patch.off, ilo, ihi, ld);
         idx[p].resize(2 * sz);
+        auto _idx = gt::adapt<5>(idx[p].data(),
+                                 gt::shape(ld[0], ld[1], ld[2], nr_kinds, 2));
 
         for (int jz = ilo[2]; jz < ihi[2]; jz++) {
           for (int jy = ilo[1]; jy < ihi[1]; jy++) {
             for (int jx = ilo[0]; jx < ihi[0]; jx++) {
               for (int kind = 0; kind < nr_kinds; kind++) {
                 int si = sort_index(grid.ldims, nr_kinds, {jx, jy, jz}, kind);
-                int jj =
-                  ((kind * ld[2] + jz - ilo[2]) * ld[1] + jy - ilo[1]) * ld[0] +
-                  jx - ilo[0];
-                idx[p][jj] = nn + n_off;
-                idx[p][jj + sz] = nn + n_off + off[p][si + 1] - off[p][si];
+                _idx(jx - ilo[0], jy - ilo[1], jz - ilo[2], kind, 0) =
+                  nn + n_off;
+                _idx(jx - ilo[0], jy - ilo[1], jz - ilo[2], kind, 1) =
+                  nn + n_off + off[p][si + 1] - off[p][si];
                 for (int n = off[p][si]; n < off[p][si + 1]; n++, nn++) {
                   auto prt = prts[map[p][n]];
                   arr[nn].x = prt.x()[0] + patch.xb[0];
@@ -430,6 +431,9 @@ struct OutputParticlesHdf5
         int ilo[3], ihi[3], ld[3];
         int sz = find_patch_bounds(info.ldims, info.off, ilo, ihi, ld);
 
+        auto _idx = gt::adapt<5>(idx[p].data(),
+                                 gt::shape(ld[0], ld[1], ld[2], nr_kinds, 2));
+
         for (int jz = ilo[2]; jz < ihi[2]; jz++) {
           for (int jy = ilo[1]; jy < ihi[1]; jy++) {
             for (int jx = ilo[0]; jx < ihi[0]; jx++) {
@@ -437,11 +441,8 @@ struct OutputParticlesHdf5
                 int ix = jx + info.off[0] - lo_[0];
                 int iy = jy + info.off[1] - lo_[1];
                 int iz = jz + info.off[2] - lo_[2];
-                int jj =
-                  ((kind * ld[2] + jz - ilo[2]) * ld[1] + jy - ilo[1]) * ld[0] +
-                  jx - ilo[0];
-                gidx_begin(ix, iy, iz, kind) = idx[p][jj];
-                gidx_end(ix, iy, iz, kind) = idx[p][jj + sz];
+                gidx_begin(ix, iy, iz, kind) = _idx(jx, jy, jz, kind, 0);
+                gidx_end(ix, iy, iz, kind) = _idx(jx, jy, jz, kind, 1);
               }
             }
           }
