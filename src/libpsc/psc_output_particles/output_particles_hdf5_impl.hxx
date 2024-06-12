@@ -123,23 +123,18 @@ struct OutputParticlesHdf5
     const Grid_t& grid = prts.grid();
     const int* ldims = grid.ldims;
 
-    int j0 = prts.cellPosition(prt.x[0], 0);
-    int j1 = prts.cellPosition(prt.x[1], 1);
-    int j2 = prts.cellPosition(prt.x[2], 2);
-    // FIXME, this is hoping that reason is that we were just on the right
-    // bnd...
-    if (j0 == ldims[0])
-      j0--;
-    if (j1 == ldims[1])
-      j1--;
-    if (j2 == ldims[2])
-      j2--;
-    assert(j0 >= 0 && j0 < ldims[0]);
-    assert(j1 >= 0 && j1 < ldims[1]);
-    assert(j2 >= 0 && j2 < ldims[2]);
+    Int3 pos;
+    for (int d = 0; d < 3; d++) {
+      pos[d] = prts.cellPosition(prt.x[d], d);
+      // FIXME, this is hoping that reason is that we were just on the right
+      // bnd...
+      if (pos[d] == ldims[d])
+        pos[d]--;
+      assert(pos[d] >= 0 && pos[d] < ldims[d]);
+    }
     assert(prt.kind < grid.kinds.size());
 
-    return sort_index(ldims, grid.kinds.size(), {j0, j1, j2}, prt.kind);
+    return sort_index(ldims, grid.kinds.size(), pos, prt.kind);
   }
 
   // ----------------------------------------------------------------------
