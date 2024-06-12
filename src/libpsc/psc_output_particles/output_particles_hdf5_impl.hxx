@@ -493,8 +493,8 @@ struct OutputParticlesHdf5
         int sz = find_patch_bounds(grid.ldims, patch.off, ilo, ihi, ld);
         local_sz += sz;
       }
-      size_t* l_idx = (size_t*)malloc(2 * local_sz * sizeof(*l_idx));
-      size_t* l_idx_p = (size_t*)l_idx;
+      std::vector<size_t> l_idx(2 * local_sz);
+      size_t* l_idx_p = l_idx.data();
       for (int p = 0; p < mprts.n_patches(); p++) {
         const auto& patch = grid.patches[p];
         int ilo[3], ihi[3], ld[3];
@@ -503,9 +503,7 @@ struct OutputParticlesHdf5
         l_idx_p += 2 * sz;
       }
 
-      MPI_Send(l_idx, 2 * local_sz, MPI_UNSIGNED_LONG, 0, 0x4000, comm_);
-
-      free(l_idx);
+      MPI_Send(l_idx.data(), l_idx.size(), MPI_UNSIGNED_LONG, 0, 0x4000, comm_);
     }
     prof_stop(pr_B);
 
