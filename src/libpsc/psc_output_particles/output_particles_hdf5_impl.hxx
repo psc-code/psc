@@ -204,7 +204,7 @@ struct OutputParticlesHdf5
   hdf5_prt* make_local_particle_array(Mparticles& mprts,
                                       const std::vector<std::vector<int>>& off,
                                       const std::vector<std::vector<int>>& map,
-                                      std::vector<std::vector<size_t>>& idx,
+                                      std::vector<gt::gtensor<size_t, 5>>& idx,
                                       size_t* p_n_write, size_t* p_n_off,
                                       size_t* p_n_total)
   {
@@ -245,18 +245,16 @@ struct OutputParticlesHdf5
         const auto& patch = grid.patches[p];
         int ilo[3], ihi[3], ld[3];
         int sz = find_patch_bounds(grid.ldims, patch.off, ilo, ihi, ld);
-        idx[p].resize(2 * sz);
-        auto _idx = gt::adapt<5>(idx[p].data(),
-                                 gt::shape(ld[0], ld[1], ld[2], nr_kinds, 2));
+        idx[p] = gt::empty<size_t>({ld[0], ld[1], ld[2], nr_kinds, 2});
 
         for (int jz = ilo[2]; jz < ihi[2]; jz++) {
           for (int jy = ilo[1]; jy < ihi[1]; jy++) {
             for (int jx = ilo[0]; jx < ihi[0]; jx++) {
               for (int kind = 0; kind < nr_kinds; kind++) {
                 int si = sort_index(grid.ldims, nr_kinds, {jx, jy, jz}, kind);
-                _idx(jx - ilo[0], jy - ilo[1], jz - ilo[2], kind, 0) =
+                idx[p](jx - ilo[0], jy - ilo[1], jz - ilo[2], kind, 0) =
                   nn + n_off;
-                _idx(jx - ilo[0], jy - ilo[1], jz - ilo[2], kind, 1) =
+                idx[p](jx - ilo[0], jy - ilo[1], jz - ilo[2], kind, 1) =
                   nn + n_off + off[p][si + 1] - off[p][si];
                 for (int n = off[p][si]; n < off[p][si + 1]; n++, nn++) {
                   auto prt = prts[map[p][n]];
@@ -392,7 +390,7 @@ struct OutputParticlesHdf5
 
     std::vector<std::vector<int>> off(mprts.n_patches());
     std::vector<std::vector<int>> map(mprts.n_patches());
-    std::vector<std::vector<size_t>> idx(mprts.n_patches());
+    std::vector<gt::gtensor<size_t, 5>> idx(mprts.n_patches());
 
     count_sort(mprts, off, map);
 
@@ -431,9 +429,6 @@ struct OutputParticlesHdf5
         int ilo[3], ihi[3], ld[3];
         int sz = find_patch_bounds(info.ldims, info.off, ilo, ihi, ld);
 
-        auto _idx = gt::adapt<5>(idx[p].data(),
-                                 gt::shape(ld[0], ld[1], ld[2], nr_kinds, 2));
-
         for (int jz = ilo[2]; jz < ihi[2]; jz++) {
           for (int jy = ilo[1]; jy < ihi[1]; jy++) {
             for (int jx = ilo[0]; jx < ihi[0]; jx++) {
@@ -441,8 +436,8 @@ struct OutputParticlesHdf5
                 int ix = jx + info.off[0] - lo_[0];
                 int iy = jy + info.off[1] - lo_[1];
                 int iz = jz + info.off[2] - lo_[2];
-                gidx_begin(ix, iy, iz, kind) = _idx(jx, jy, jz, kind, 0);
-                gidx_end(ix, iy, iz, kind) = _idx(jx, jy, jz, kind, 1);
+                gidx_begin(ix, iy, iz, kind) = idx[p](jx, jy, jz, kind, 0);
+                gidx_end(ix, iy, iz, kind) = idx[p](jx, jy, jz, kind, 1);
               }
             }
           }
