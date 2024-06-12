@@ -412,7 +412,7 @@ struct OutputParticlesHdf5
     if (rank == 0) {
       int nr_global_patches = grid.nGlobalPatches();
 
-      int* remote_sz = (int*)calloc(size, sizeof(*remote_sz));
+      std::vector<int> remote_sz(size);
       for (int p = 0; p < nr_global_patches; p++) {
         info = grid.globalPatchInfo(p);
         if (info.rank == rank) { // skip local patches
@@ -453,7 +453,7 @@ struct OutputParticlesHdf5
         }
         recv_buf[r].resize(2 * remote_sz[r]);
         recv_buf_p[r] = recv_buf[r].data();
-        MPI_Irecv(recv_buf[r].data(), 2 * remote_sz[r], MPI_UNSIGNED_LONG, r,
+        MPI_Irecv(recv_buf[r].data(), recv_buf[r].size(), MPI_UNSIGNED_LONG, r,
                   0x4000, comm_, &recv_req[r]);
       }
       MPI_Waitall(size, recv_req.data(), MPI_STATUSES_IGNORE);
@@ -484,8 +484,6 @@ struct OutputParticlesHdf5
         }
         recv_buf_p[info.rank] += 2 * sz;
       }
-
-      free(remote_sz);
     } else { // rank != 0: send to rank 0
       // FIXME, alloc idx[] as one array in the first place
       int local_sz = 0;
