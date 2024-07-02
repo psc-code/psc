@@ -20,27 +20,39 @@ void assert_file_open(const std::ifstream& file, const std::string file_path)
   }
 }
 
-// from
-// https://stackoverflow.com/questions/6089231/getting-std-ifstream-to-handle-lf-cr-and-crlf
-std::istream& safe_getline(std::istream& is, std::string& t)
+// An implementation of `getline` that correctly handles any of the following
+// line endings: "\\n", "\\r\\n", "\\r", eof.
+//
+// This is necessary because `std::istream.getline()` only handles the
+// platform's line endings, and thus fails for files that were from a different
+// platform. See
+// https://stackoverflow.com/questions/6089231/getting-std-ifstream-to-handle-lf-cr-and-crlf.
+std::istream& safe_getline(std::istream& stream, std::string& out_string)
 {
-  t.clear();
+  out_string.clear();
 
-  std::istream::sentry se(is, true); // this does stuff, apparently
-  std::streambuf* sb = is.rdbuf();
+  // The characters in the stream are read one-by-one using a std::streambuf.
+  // That is faster than reading them one-by-one using the std::istream.
+  // Code that uses streambuf this way must be guarded by a sentry object.
+  // The sentry object performs various tasks,
+  // such as thread synchronization and updating the stream state.
 
-  for (;;) {
-    int c = sb->sbumpc();
+  std::istream::sentry sentry(stream, true);
+
+  std::streambuf* buffer = stream.rdbuf();
+
+  while (true) {
+    int c = buffer->sbumpc();
     switch (c) {
       case '\r':
-        if (sb->sgetc() == '\n')
-          sb->sbumpc();
-      case '\n': return is;
+        if (buffer->sgetc() == '\n')
+          buffer->sbumpc();
+      case '\n': return stream;
       case std::streambuf::traits_type::eof():
-        if (t.empty())
-          is.setstate(std::ios::eofbit);
-        return is;
-      default: t += (char)c;
+        if (out_string.empty())
+          stream.setstate(std::ios::eofbit);
+        return stream;
+      default: out_string += (char)c;
     }
   }
 }
