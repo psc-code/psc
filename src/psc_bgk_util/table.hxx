@@ -12,7 +12,7 @@
 
 namespace parsing
 {
-void assertFileOpen(const std::ifstream& file, const std::string file_path)
+void assert_file_open(const std::ifstream& file, const std::string file_path)
 {
   if (!file.is_open()) {
     std::cout << "Failed to open input file: " << file_path << std::endl;
@@ -22,7 +22,7 @@ void assertFileOpen(const std::ifstream& file, const std::string file_path)
 
 // from
 // https://stackoverflow.com/questions/6089231/getting-std-ifstream-to-handle-lf-cr-and-crlf
-std::istream& safeGetline(std::istream& is, std::string& t)
+std::istream& safe_getline(std::istream& is, std::string& t)
 {
   t.clear();
 
@@ -47,10 +47,10 @@ std::istream& safeGetline(std::istream& is, std::string& t)
 
 // from
 // https://stackoverflow.com/questions/3482064/counting-the-number-of-lines-in-a-text-file
-int countLines(const std::string file_path)
+int count_lines(const std::string file_path)
 {
   std::ifstream file(file_path);
-  assertFileOpen(file, file_path);
+  assert_file_open(file, file_path);
 
   file.unsetf(std::ios_base::skipws);
   unsigned newline_count = std::count(std::istream_iterator<char>(file),
@@ -99,22 +99,22 @@ public:
 
   ParsedData(const std::string file_path, int ncols, int indep_col,
              int lines_to_skip)
-    : nrows(parsing::countLines(file_path) - lines_to_skip),
+    : nrows(parsing::count_lines(file_path) - lines_to_skip),
       ncols(ncols),
       data(nrows * ncols),
       indep_col(indep_col)
   {
-    loadData(file_path, lines_to_skip);
+    load_data(file_path, lines_to_skip);
   }
 
   // ----------------------------------------------------------------------
-  // loadData
+  // load_data
   // Parses all the data
 
-  void loadData(const std::string file_path, int lines_to_skip)
+  void load_data(const std::string file_path, int lines_to_skip)
   {
     std::ifstream file(file_path);
-    parsing::assertFileOpen(file, file_path);
+    parsing::assert_file_open(file, file_path);
 
     for (int i = 0; i < lines_to_skip; i++)
       file.ignore(512, '\n');
@@ -122,7 +122,7 @@ public:
     // iterate over each line
     int row = 0;
 
-    for (std::string line; !parsing::safeGetline(file, line).eof();) {
+    for (std::string line; !parsing::safe_getline(file, line).eof();) {
       if (row >= nrows) {
         std ::cout << "Error: too many rows. Expected " << nrows
                    << ", got at least " << row + 1 << std::endl;
