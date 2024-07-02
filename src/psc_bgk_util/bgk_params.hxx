@@ -2,7 +2,7 @@
 
 #include <cmath>
 #include "params_parser.hxx"
-#include "input_parser.hxx"
+#include "table.hxx"
 
 // ======================================================================
 // getCalculatedBoxSize

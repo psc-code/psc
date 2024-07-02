@@ -8,7 +8,7 @@
 #include "psc_config.hxx"
 
 #include "psc_bgk_util/bgk_params.hxx"
-#include "psc_bgk_util/input_parser.hxx"
+#include "psc_bgk_util/table.hxx"
 #include "psc_bgk_util/params_parser.hxx"
 
 // ======================================================================
