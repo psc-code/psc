@@ -49,14 +49,14 @@ double getSpikeSize(double B, double k, double beta)
 }
 
 // The hole size is determined empirically from the input data. This function
-// finds where the electron density <= 1 + epsilon, where epsilon is small.
+// finds where |electron density - 1| <= epsilon, where epsilon is small.
 double getHoleSize(ParsedData& data)
 {
   double epsilon = 1e-4;
   const int COL_RHO = 0;
   const int COL_NE = 1;
   for (int row = data.get_nrows() - 1; row >= 0; row--) {
-    if (data[row][COL_NE] > 1 + epsilon)
+    if (std::abs(data[row][COL_NE] - 1) > epsilon)
       return data[row][COL_RHO];
   }
   throw "Unable to determine hole size.";
