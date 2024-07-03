@@ -101,7 +101,8 @@ class Table
   static std::vector<double> parse_data_row(std::istringstream& word_stream,
                                             int expected_n_cols)
   {
-    std::vector<double> data_row(expected_n_cols);
+    std::vector<double> data_row;
+    data_row.reserve(expected_n_cols);
     for (std::string word; word_stream >> word;) {
       data_row.push_back(std::stod(word));
     }
