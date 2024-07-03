@@ -207,6 +207,9 @@ double v_phi_cdf(double v_phi, double rho)
   rho /= g.beta;
 
   double B = g.Hx;
+  if (ic_table->has_column("B_x")) {
+    B = ic_table->get_interpolated("B_x", "rho", rho);
+  }
   double sqrt2 = std::sqrt(2);
 
   double rho_sqr = sqr(rho);
@@ -444,12 +447,24 @@ void initializeDivGradPhi(BgkMfields& gradPhi, BgkMfields& divGradPhi)
 
 void initializeFields(MfieldsState& mflds, BgkMfields& gradPhi)
 {
-  setupFields(mflds, [&](int m, double crd[3]) {
-    switch (m) {
-      case HX: return g.Hx;
-      default: return 0.;
-    }
-  });
+  if (ic_table->has_column("B_x")) {
+    setupFields(mflds, [&](int m, double crd[3]) {
+      double y = getCoord(crd[1]);
+      double z = getCoord(crd[2]);
+      double rho = sqrt(sqr(y) + sqr(z));
+      switch (m) {
+        case HX: return ic_table->get_interpolated("B_x", "rho", rho);
+        default: return 0.;
+      }
+    });
+  } else {
+    setupFields(mflds, [&](int m, double crd[3]) {
+      switch (m) {
+        case HX: return g.Hx;
+        default: return 0.;
+      }
+    });
+  }
 
   // initialize E separately
   mflds.storage().view(_all, _all, _all, _s(EX, EX + 3)) = -gradPhi.gt();
