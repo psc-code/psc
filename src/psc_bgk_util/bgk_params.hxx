@@ -36,23 +36,23 @@ double getSpikeSize(double B, double k, double beta)
 
 // The hole size is determined empirically from the input data. This function
 // finds where |electron density - 1| <= epsilon, where epsilon is small.
-double getHoleSize(ParsedData& data)
+double getHoleSize(Table& ic_table)
 {
   double epsilon = 1e-4;
   const int COL_RHO = 0;
   const int COL_NE = 1;
-  for (int row = data.get_nrows() - 1; row >= 0; row--) {
-    if (std::abs(data[row][COL_NE] - 1) > epsilon)
-      return data[row][COL_RHO];
+  for (int row = ic_table.n_rows() - 1; row >= 0; row--) {
+    if (std::abs(ic_table.get("ne", row) - 1) > epsilon)
+      return ic_table.get("rho", row);
   }
   throw "Unable to determine hole size.";
 }
 
 // Calculates a box size big enough to resolve the spike and the hole.
-double getCalculatedBoxSize(double B, double k, double beta, ParsedData& data)
+double getCalculatedBoxSize(double B, double k, double beta, Table& ic_table)
 {
   double spike_size = getSpikeSize(B, k, beta);
-  double hole_size = getHoleSize(data);
+  double hole_size = getHoleSize(ic_table);
   LOG_INFO("spike radius: %f\thole radius: %f\n", spike_size, hole_size);
   return 2 * std::max(spike_size, hole_size);
 }
@@ -106,7 +106,7 @@ struct PscBgkParams
   double rel_box_size_3; // length of 3rd dimension in calculated units
   int n_patches_3;       // number of patches in 3rd dimension
 
-  void loadParams(ParsedParams parsedParams, ParsedData& data)
+  void loadParams(ParsedParams parsedParams, Table& ic_table)
   {
     box_size = parsedParams.getAndWarnOrDefault<double>("box_size", -1);
     rel_box_size = parsedParams.getOrDefault<double>("rel_box_size", 1);
@@ -162,8 +162,8 @@ struct PscBgkParams
     }
 
     if (box_size <= 0)
-      box_size = rel_box_size * getCalculatedBoxSize(Hx, k, beta, data);
+      box_size = rel_box_size * getCalculatedBoxSize(Hx, k, beta, ic_table);
     if (box_size_3 <= 0)
-      box_size_3 = rel_box_size_3 * getCalculatedBoxSize(Hx, k, beta, data);
+      box_size_3 = rel_box_size_3 * getCalculatedBoxSize(Hx, k, beta, ic_table);
   }
 };
