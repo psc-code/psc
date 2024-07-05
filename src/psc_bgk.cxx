@@ -270,7 +270,10 @@ struct pdist_case4
       z{z},
       rho{rho},
       v_phi_dist{g.beta * 8.0 * g.k * sqr(rho / g.beta) *
-                   (0.5 * g.Hx * rho / g.beta) /
+                   ((ic_table->has_column("A_phi")
+                       ? ic_table->get_interpolated("A_phi", "rho", rho)
+                       : 0.5 * g.Hx * rho) /
+                    g.beta) /
                    (1.0 + 8.0 * g.k * sqr(rho / g.beta)),
                  g.beta / sqrt(1.0 + 8.0 * g.k * sqr(rho / g.beta))},
       v_rho_dist{0, g.beta},
