@@ -211,22 +211,18 @@ double v_phi_cdf(double v_phi, double rho)
   rho /= g.beta;
   A_phi /= g.beta;
 
-  double sqrt2 = std::sqrt(2);
-
-  double rho_sqr = sqr(rho);
-
-  double gamma = 1 + 8 * g.k * rho_sqr;
+  double gamma = 1 + 8 * g.k * sqr(rho);
   double alpha =
     1 - g.h0 / std::sqrt(gamma) * std::exp(-4 * g.k * sqr(A_phi * rho) / gamma);
 
   double mean0 = 0;
   double stdev0 = 1;
 
-  double mean1 = 8 * g.k * A_phi * rho_sqr / gamma;
+  double mean1 = 8 * g.k * A_phi * sqr(rho) / gamma;
   double stdev1 = 1 / std::sqrt(gamma);
 
-  double m0 = (1 + std::erf((v_phi - mean0) / (stdev0 * sqrt2))) / 2;
-  double m1 = (1 + std::erf((v_phi - mean1) / (stdev1 * sqrt2))) / 2;
+  double m0 = (1 + std::erf((v_phi - mean0) / (stdev0 * std::sqrt(2)))) / 2;
+  double m1 = (1 + std::erf((v_phi - mean1) / (stdev1 * std::sqrt(2)))) / 2;
 
   return m0 / alpha + m1 * (1 - 1 / alpha);
 }
