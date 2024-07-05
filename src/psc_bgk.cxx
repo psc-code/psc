@@ -202,26 +202,27 @@ inline double getIonDensity(double rho)
 
 double v_phi_cdf(double v_phi, double rho)
 {
+  double A_phi = ic_table->has_column("A_phi")
+                   ? ic_table->get_interpolated("A_phi", "rho", rho)
+                   : .5 * g.Hx * rho;
+
   // convert units from psc to paper
   v_phi /= g.beta;
   rho /= g.beta;
+  A_phi /= g.beta;
 
-  double B = g.Hx;
-  if (ic_table->has_column("B_x")) {
-    B = ic_table->get_interpolated("B_x", "rho", rho);
-  }
   double sqrt2 = std::sqrt(2);
 
   double rho_sqr = sqr(rho);
 
   double gamma = 1 + 8 * g.k * rho_sqr;
-  double alpha = 1 - g.h0 / std::sqrt(gamma) *
-                       std::exp(-g.k * sqr(B) * sqr(rho_sqr) / gamma);
+  double alpha =
+    1 - g.h0 / std::sqrt(gamma) * std::exp(-4 * g.k * sqr(A_phi * rho) / gamma);
 
   double mean0 = 0;
   double stdev0 = 1;
 
-  double mean1 = 4 * g.k * B * rho_sqr * rho / gamma;
+  double mean1 = 8 * g.k * A_phi * rho_sqr / gamma;
   double stdev1 = 1 / std::sqrt(gamma);
 
   double m0 = (1 + std::erf((v_phi - mean0) / (stdev0 * sqrt2))) / 2;
