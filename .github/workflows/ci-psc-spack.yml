@@ -29,13 +29,13 @@ jobs:
         . /opt/spack/share/spack/setup-env.sh
         spack dev-build psc@local +tests +cuda
 
-  spack-psc-cuda-rmm:
-    runs-on: ubuntu-latest
-    container: ghcr.io/psc-code/psc-spack-cuda-ubuntu-20.04
+  # spack-psc-cuda-rmm:
+  #   runs-on: ubuntu-latest
+  #   container: ghcr.io/psc-code/psc-spack-cuda-ubuntu-20.04
 
-    steps:
-    - uses: actions/checkout@v2
-    - name: dev-build psc +tests +cuda +rmm
-      run: |
-        . /opt/spack/share/spack/setup-env.sh
-        spack dev-build psc@local +tests +cuda +rmm
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: dev-build psc +tests +cuda +rmm
+  #     run: |
+  #       . /opt/spack/share/spack/setup-env.sh
+  #       spack dev-build psc@local +tests +cuda +rmm
