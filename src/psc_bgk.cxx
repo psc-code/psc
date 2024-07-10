@@ -37,18 +37,6 @@ using Checks = PscConfig::Checks;
 using Marder = PscConfig::Marder;
 using OutputParticles = PscConfig::OutputParticles;
 
-// for parser
-enum DATA_COL
-{
-  COL_RHO,
-  COL_NE,
-  COL_V_PHI,
-  COL_TE,
-  COL_E_RHO,
-  COL_PHI,
-  n_cols
-};
-
 // ======================================================================
 // Global parameters
 
