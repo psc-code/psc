@@ -5,20 +5,6 @@
 #include "input_parser.hxx"
 
 // ======================================================================
-// get_beta
-// Return the conversion factor from paper units to psc units.
-
-double get_beta(ParsedData& data)
-{
-  // PSC is normalized as c=1, but the paper has electron thermal velocity
-  // v_e=1. Beta is v_e/c = sqrt(Te_paper) / sqrt(Te_psc)
-  const double PAPER_ELECTRON_TEMPERATURE = 1.;
-  const int COL_TE = 3;
-  const double pscElectronTemperature = data.get_interpolated(COL_TE, 0);
-  return std::sqrt(pscElectronTemperature / PAPER_ELECTRON_TEMPERATURE);
-}
-
-// ======================================================================
 // getCalculatedBoxSize
 
 // Calculates the radial distance where the spike in the exact distribution
@@ -49,23 +35,23 @@ double getSpikeSize(double B, double k, double beta)
 }
 
 // The hole size is determined empirically from the input data. This function
-// finds where the electron density <= 1 + epsilon, where epsilon is small.
+// finds where |electron density - 1| <= epsilon, where epsilon is small.
 double getHoleSize(ParsedData& data)
 {
   double epsilon = 1e-4;
   const int COL_RHO = 0;
   const int COL_NE = 1;
   for (int row = data.get_nrows() - 1; row >= 0; row--) {
-    if (data[row][COL_NE] > 1 + epsilon)
+    if (std::abs(data[row][COL_NE] - 1) > epsilon)
       return data[row][COL_RHO];
   }
   throw "Unable to determine hole size.";
 }
 
 // Calculates a box size big enough to resolve the spike and the hole.
-double getCalculatedBoxSize(double B, double k, ParsedData& data)
+double getCalculatedBoxSize(double B, double k, double beta, ParsedData& data)
 {
-  double spike_size = getSpikeSize(B, k, get_beta(data));
+  double spike_size = getSpikeSize(B, k, beta);
   double hole_size = getHoleSize(data);
   LOG_INFO("spike radius: %f\thole radius: %f\n", spike_size, hole_size);
   return 2 * std::max(spike_size, hole_size);
@@ -91,6 +77,11 @@ struct PscBgkParams
 
   double k;  // a parameter for BGK solutions
   double h0; // a parameter for BGK solutions
+  double xi; // a parameter for BGK solutions
+
+  double beta; // electron thermal velocity / c
+
+  double A_x0; // vector potential, used when xi != 0
 
   int fields_every;    // interval for pfd output
   int moments_every;   // interval for pfd_moments output
@@ -145,9 +136,19 @@ struct PscBgkParams
     v_e_coef = parsedParams.getOrDefault<double>("v_e_coef", 1);
     T_e_coef = parsedParams.getOrDefault<double>("T_e_coef", 1);
 
+    beta = parsedParams.getOrDefault<double>("beta", 1e-3);
+
     maxwellian = parsedParams.getOrDefault<bool>("maxwellian", false);
     k = parsedParams.getOrDefault<double>("k", .1);
     h0 = parsedParams.getOrDefault<double>("h0", .9);
+    xi = parsedParams.getOrDefault<double>("xi", 0.0);
+
+    if (xi == 0.0) {
+      parsedParams.warnIfPresent("A_x0",
+                                 "A_x0 is only used in cases when xi != 0");
+    } else {
+      A_x0 = parsedParams.get<double>("A_x0");
+    }
 
     n_grid_3 = parsedParams.getOrDefault<int>("n_grid_3", 1);
     box_size_3 = parsedParams.getAndWarnOrDefault<double>("box_size_3", -1);
@@ -161,8 +162,8 @@ struct PscBgkParams
     }
 
     if (box_size <= 0)
-      box_size = rel_box_size * getCalculatedBoxSize(Hx, k, data);
+      box_size = rel_box_size * getCalculatedBoxSize(Hx, k, beta, data);
     if (box_size_3 <= 0)
-      box_size_3 = rel_box_size_3 * getCalculatedBoxSize(Hx, k, data);
+      box_size_3 = rel_box_size_3 * getCalculatedBoxSize(Hx, k, beta, data);
   }
 };

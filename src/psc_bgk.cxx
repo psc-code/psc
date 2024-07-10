@@ -131,8 +131,8 @@ Grid_t* setupGrid()
   kinds[KIND_ELECTRON] = {g.q_e, g.m_e, "e"};
   kinds[KIND_ION] = {g.q_i, g.m_i, "i"};
 
-  mpi_printf(MPI_COMM_WORLD, "lambda_D = %g\n",
-             sqrt(parsedData->get_interpolated(COL_TE, 0)));
+  // lambda_D = v_e / omega_pe = v_e = beta
+  mpi_printf(MPI_COMM_WORLD, "lambda_D = %g\n", g.beta);
 
   // --- generic setup
   auto norm_params = Grid_t::NormalizationParams::dimensionless();
@@ -215,8 +215,8 @@ inline double getIonDensity(double rho)
 double v_phi_cdf(double v_phi, double rho)
 {
   // convert units from psc to paper
-  v_phi /= get_beta(*parsedData);
-  rho /= get_beta(*parsedData);
+  v_phi /= g.beta;
+  rho /= g.beta;
 
   double B = g.Hx;
   double sqrt2 = std::sqrt(2);
@@ -246,8 +246,8 @@ struct pdist
       z{z},
       rho{rho},
       v_phi_dist{[=](double v_phi) { return v_phi_cdf(v_phi, rho); }},
-      v_rho_dist{0, get_beta(*parsedData)},
-      v_x_dist{0, get_beta(*parsedData)}
+      v_rho_dist{0, g.beta},
+      v_x_dist{0, g.beta}
   {}
 
   Double3 operator()()
@@ -269,6 +269,65 @@ private:
   rng::InvertedCdf<double> v_phi_dist;
   rng::Normal<double> v_rho_dist;
   rng::Normal<double> v_x_dist;
+};
+
+struct pdist_case4
+{
+  pdist_case4(double p_background, double y, double z, double rho)
+    : p_background{p_background},
+      y{y},
+      z{z},
+      rho{rho},
+      v_phi_dist{g.beta * 8.0 * g.k * sqr(rho / g.beta) *
+                   (0.5 * g.Hx * rho / g.beta) /
+                   (1.0 + 8.0 * g.k * sqr(rho / g.beta)),
+                 g.beta / sqrt(1.0 + 8.0 * g.k * sqr(rho / g.beta))},
+      v_rho_dist{0, g.beta},
+      v_x_dist{g.beta * 2.0 * g.xi * g.A_x0 / (1.0 + 2.0 * g.xi),
+               g.beta / sqrt(1.0 + 2.0 * g.xi)},
+      simple_dist{0.0, g.beta},
+      uniform{0.0, 1.0}
+  {}
+
+  Double3 operator()()
+  {
+    double coef = g.v_e_coef * (g.reverse_v ? -1 : 1) *
+                  (g.reverse_v_half && y < 0 ? -1 : 1);
+    if (rho == 0) {
+      //  p_y and p_z reduce to same case at rho=0, but not p_x
+      double p_x =
+        coef * g.m_e *
+        (uniform.get() < p_background ? simple_dist : v_x_dist).get();
+      double p_y = coef * g.m_e * simple_dist.get();
+      double p_z = coef * g.m_e * simple_dist.get();
+      return Double3{p_x, p_y, p_z};
+    }
+
+    double v_phi, v_rho, v_x;
+
+    if (uniform.get() < p_background) {
+      v_phi = simple_dist.get();
+      v_rho = simple_dist.get();
+      v_x = simple_dist.get();
+    } else {
+      v_phi = v_phi_dist.get();
+      v_rho = v_rho_dist.get();
+      v_x = v_x_dist.get();
+    }
+
+    double p_x = coef * g.m_e * v_x;
+    double p_y = coef * g.m_e * (v_phi * -z + v_rho * y) / rho;
+    double p_z = coef * g.m_e * (v_phi * y + v_rho * z) / rho;
+    return Double3{p_x, p_y, p_z};
+  }
+
+private:
+  double p_background, y, z, rho;
+  rng::Normal<double> v_phi_dist;
+  rng::Normal<double> v_rho_dist;
+  rng::Normal<double> v_x_dist;
+  rng::Normal<double> simple_dist;
+  rng::Uniform<double> uniform;
 };
 
 // ======================================================================
@@ -295,6 +354,20 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
         np.n = (qDensity(idx[0], idx[1], idx[2], 0, p) -
                 getIonDensity(rho) * g.q_i) /
                g.q_e;
+
+        if (g.xi != 0) {
+          // case 4: sum of two maxwellians, where one has easy moments and the
+          // other's moments are given in input file
+
+          double psi_cs =
+            parsedData->get_interpolated(COL_PHI, rho) / sqr(g.beta);
+          double n_background = exp(psi_cs);
+          double p_background = n_background / np.n;
+          np.p = pdist_case4(p_background, y, z, rho);
+
+          break;
+        }
+
         if (rho == 0) {
           double Te = parsedData->get_interpolated(COL_TE, rho);
           np.p = setup_particles.createMaxwellian(
