@@ -69,9 +69,7 @@ if (BUILD_TESTING)
   CPMAddPackage(
     NAME GTest
     GITHUB_REPOSITORY google/googletest
-    # post 1.10.0 with cmake_minimum_required updated
-    GIT_TAG 32f4f52d95dc99c35f51deed552a6ba700567f94
-    VERSION 1.10.0
+    VERSION 1.14.0
     OPTIONS
         "INSTALL_GTEST OFF"
         "gtest_force_shared_crt ON"
