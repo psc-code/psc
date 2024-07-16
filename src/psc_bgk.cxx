@@ -8,7 +8,7 @@
 #include "psc_config.hxx"
 
 #include "psc_bgk_util/bgk_params.hxx"
-#include "psc_bgk_util/input_parser.hxx"
+#include "psc_bgk_util/table.hxx"
 #include "psc_bgk_util/params_parser.hxx"
 
 // ======================================================================
@@ -37,24 +37,13 @@ using Checks = PscConfig::Checks;
 using Marder = PscConfig::Marder;
 using OutputParticles = PscConfig::OutputParticles;
 
-// for parser
-enum DATA_COL
-{
-  COL_RHO,
-  COL_NE,
-  COL_V_PHI,
-  COL_TE,
-  COL_E_RHO,
-  COL_PHI,
-  n_cols
-};
-
 // ======================================================================
 // Global parameters
 
 namespace
 {
-ParsedData* parsedData;
+// table of initial conditions
+Table* ic_table;
 
 std::string read_checkpoint_filename;
 
@@ -78,9 +67,8 @@ void setupParameters(int argc, char** argv)
   }
   std::string path_to_params(argv[1]);
   ParsedParams parsedParams(path_to_params);
-  parsedData = new ParsedData(parsedParams.get<std::string>("path_to_data"),
-                              n_cols, COL_RHO, 1);
-  g.loadParams(parsedParams, *parsedData);
+  ic_table = new Table(parsedParams.get<std::string>("path_to_data"));
+  g.loadParams(parsedParams, *ic_table);
 
   psc_params.nmax = parsedParams.get<int>("nmax");
   psc_params.stats_every = parsedParams.get<int>("stats_every");
@@ -204,7 +192,7 @@ inline double getIonDensity(double rho)
 {
   if (!g.do_ion)
     return g.n_i;
-  double potential = parsedData->get_interpolated(COL_PHI, rho);
+  double potential = ic_table->get_interpolated("Psi", "rho", rho);
   return std::exp(-potential / g.T_i);
 }
 
@@ -360,7 +348,7 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
           // other's moments are given in input file
 
           double psi_cs =
-            parsedData->get_interpolated(COL_PHI, rho) / sqr(g.beta);
+            ic_table->get_interpolated("Psi", "rho", rho) / sqr(g.beta);
           double n_background = exp(psi_cs);
           double p_background = n_background / np.n;
           np.p = pdist_case4(p_background, y, z, rho);
@@ -369,12 +357,12 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
         }
 
         if (rho == 0) {
-          double Te = parsedData->get_interpolated(COL_TE, rho);
+          double Te = ic_table->get_interpolated("Te", "rho", rho);
           np.p = setup_particles.createMaxwellian(
             {np.kind, np.n, {0, 0, 0}, {Te, Te, Te}, np.tag});
         } else if (g.maxwellian) {
-          double Te = parsedData->get_interpolated(COL_TE, rho);
-          double vphi = parsedData->get_interpolated(COL_V_PHI, rho);
+          double Te = ic_table->get_interpolated("Te", "rho", rho);
+          double vphi = ic_table->get_interpolated("v_phi", "rho", rho);
           double coef = g.v_e_coef * (g.reverse_v ? -1 : 1) *
                         (g.reverse_v_half && y < 0 ? -1 : 1);
 
@@ -419,7 +407,7 @@ void initializePhi(BgkMfields& phi)
   setupScalarField(
     phi, Centering::Centerer(Centering::NC), [&](int m, double crd[3]) {
       double rho = sqrt(sqr(getCoord(crd[1])) + sqr(getCoord(crd[2])));
-      return parsedData->get_interpolated(COL_PHI, rho);
+      return ic_table->get_interpolated("Psi", "rho", rho);
     });
 
   writeMF(phi, "phi", {"phi"});
@@ -556,7 +544,7 @@ static void run(int argc, char** argv)
     read_checkpoint(read_checkpoint_filename, *grid_ptr, mprts, mflds);
   }
 
-  delete parsedData;
+  delete ic_table;
 
   // ----------------------------------------------------------------------
   // Hand off to PscIntegrator to run the simulation
