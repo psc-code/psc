@@ -148,6 +148,11 @@ public:
   int n_rows() { return data.size(); }
   int n_cols() { return header.size(); }
 
+  bool has_column(std::string column_name)
+  {
+    return header.count(column_name) != 0;
+  }
+
   double get(std::string column_name, int row)
   {
     int col = header[column_name];

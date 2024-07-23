@@ -202,27 +202,27 @@ inline double getIonDensity(double rho)
 
 double v_phi_cdf(double v_phi, double rho)
 {
+  double A_phi = ic_table->has_column("A_phi")
+                   ? ic_table->get_interpolated("A_phi", "rho", rho)
+                   : .5 * g.Hx * rho;
+
   // convert units from psc to paper
   v_phi /= g.beta;
   rho /= g.beta;
+  A_phi /= g.beta;
 
-  double B = g.Hx;
-  double sqrt2 = std::sqrt(2);
-
-  double rho_sqr = sqr(rho);
-
-  double gamma = 1 + 8 * g.k * rho_sqr;
-  double alpha = 1 - g.h0 / std::sqrt(gamma) *
-                       std::exp(-g.k * sqr(B) * sqr(rho_sqr) / gamma);
+  double gamma = 1 + 8 * g.k * sqr(rho);
+  double alpha =
+    1 - g.h0 / std::sqrt(gamma) * std::exp(-4 * g.k * sqr(A_phi * rho) / gamma);
 
   double mean0 = 0;
   double stdev0 = 1;
 
-  double mean1 = 4 * g.k * B * rho_sqr * rho / gamma;
+  double mean1 = 8 * g.k * A_phi * sqr(rho) / gamma;
   double stdev1 = 1 / std::sqrt(gamma);
 
-  double m0 = (1 + std::erf((v_phi - mean0) / (stdev0 * sqrt2))) / 2;
-  double m1 = (1 + std::erf((v_phi - mean1) / (stdev1 * sqrt2))) / 2;
+  double m0 = (1 + std::erf((v_phi - mean0) / (stdev0 * std::sqrt(2)))) / 2;
+  double m1 = (1 + std::erf((v_phi - mean1) / (stdev1 * std::sqrt(2)))) / 2;
 
   return m0 / alpha + m1 * (1 - 1 / alpha);
 }
@@ -267,7 +267,10 @@ struct pdist_case4
       z{z},
       rho{rho},
       v_phi_dist{g.beta * 8.0 * g.k * sqr(rho / g.beta) *
-                   (0.5 * g.Hx * rho / g.beta) /
+                   ((ic_table->has_column("A_phi")
+                       ? ic_table->get_interpolated("A_phi", "rho", rho)
+                       : 0.5 * g.Hx * rho) /
+                    g.beta) /
                    (1.0 + 8.0 * g.k * sqr(rho / g.beta)),
                  g.beta / sqrt(1.0 + 8.0 * g.k * sqr(rho / g.beta))},
       v_rho_dist{0, g.beta},
@@ -444,12 +447,24 @@ void initializeDivGradPhi(BgkMfields& gradPhi, BgkMfields& divGradPhi)
 
 void initializeFields(MfieldsState& mflds, BgkMfields& gradPhi)
 {
-  setupFields(mflds, [&](int m, double crd[3]) {
-    switch (m) {
-      case HX: return g.Hx;
-      default: return 0.;
-    }
-  });
+  if (ic_table->has_column("B_x")) {
+    setupFields(mflds, [&](int m, double crd[3]) {
+      double y = getCoord(crd[1]);
+      double z = getCoord(crd[2]);
+      double rho = sqrt(sqr(y) + sqr(z));
+      switch (m) {
+        case HX: return ic_table->get_interpolated("B_x", "rho", rho);
+        default: return 0.;
+      }
+    });
+  } else {
+    setupFields(mflds, [&](int m, double crd[3]) {
+      switch (m) {
+        case HX: return g.Hx;
+        default: return 0.;
+      }
+    });
+  }
 
   // initialize E separately
   mflds.storage().view(_all, _all, _all, _s(EX, EX + 3)) = -gradPhi.gt();
