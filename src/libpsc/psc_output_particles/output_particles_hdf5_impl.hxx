@@ -33,11 +33,103 @@ struct hdf5_prt
 class OutputParticlesWriterHDF5
 {
 public:
-  explicit OutputParticlesWriterHDF5(const Int3& wdims,
-                                     const Grid_t::Kinds& kinds, MPI_Comm comm)
-    : wdims_{wdims}, kinds_{kinds}, comm_{comm}
+  explicit OutputParticlesWriterHDF5(const Int3& wdims, const Int3& lo,
+                                     const Int3& hi, const Grid_t::Kinds& kinds,
+                                     MPI_Comm comm, hid_t prt_type)
+    : wdims_{wdims},
+      lo_{lo},
+      hi_{hi},
+      kinds_{kinds},
+      comm_{comm},
+      prt_type_{prt_type}
   {}
 
+  void operator()(const gt::gtensor<size_t, 4>& gidx_begin,
+                  const gt::gtensor<size_t, 4>& gidx_end, size_t n_write,
+                  size_t n_off, size_t n_total,
+                  const std::vector<hdf5_prt>& arr, const std::string& filename,
+                  const OutputParticlesParams& params)
+  {
+    int ierr;
+
+    static int pr_C, pr_D, pr_E;
+    if (!pr_C) {
+      pr_C = prof_register("outp: write prep", 1., 0, 0);
+      pr_D = prof_register("outp: write idx", 1., 0, 0);
+      pr_E = prof_register("outp: write prts", 1., 0, 0);
+    }
+
+    prof_start(pr_C);
+
+    hid_t plist = H5Pcreate(H5P_FILE_ACCESS);
+
+    MPI_Info mpi_info;
+    MPI_Info_create(&mpi_info);
+
+#ifdef H5_HAVE_PARALLEL
+    if (params.romio_cb_write) {
+      MPI_Info_set(mpi_info, (char*)"romio_cb_write",
+                   (char*)params.romio_cb_write);
+    }
+    if (params.romio_ds_write) {
+      MPI_Info_set(mpi_info, (char*)"romio_ds_write",
+                   (char*)params.romio_ds_write);
+    }
+    H5Pset_fapl_mpio(plist, comm_, mpi_info);
+#else
+    mprintf("ERROR: particle output requires parallel hdf5\n");
+    abort();
+#endif
+
+    hid_t file = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, plist);
+    H5_CHK(file);
+    H5Pclose(plist);
+    MPI_Info_free(&mpi_info);
+
+    hid_t group =
+      H5Gcreate(file, "particles", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    H5_CHK(group);
+    hid_t groupp =
+      H5Gcreate(group, "p0", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    H5_CHK(groupp);
+
+    ierr = H5LTset_attribute_int(group, ".", "lo", lo_, 3);
+    CE;
+    ierr = H5LTset_attribute_int(group, ".", "hi", hi_, 3);
+    CE;
+
+    hid_t dxpl = H5Pcreate(H5P_DATASET_XFER);
+    H5_CHK(dxpl);
+#ifdef H5_HAVE_PARALLEL
+    if (params.use_independent_io) {
+      ierr = H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT);
+      CE;
+    } else {
+      ierr = H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE);
+      CE;
+    }
+#endif
+    prof_stop(pr_C);
+
+    prof_start(pr_D);
+    write_idx(gidx_begin, gidx_end, group, dxpl);
+    prof_stop(pr_D);
+
+    prof_start(pr_E);
+    write_particles(n_write, n_off, n_total, arr, groupp, dxpl);
+    prof_stop(pr_E);
+
+    ierr = H5Pclose(dxpl);
+    CE;
+    ierr = H5Gclose(groupp);
+    CE;
+    ierr = H5Gclose(group);
+    CE;
+    ierr = H5Fclose(file);
+    CE;
+  }
+
+private:
   void write_idx(const gt::gtensor<size_t, 4>& gidx_begin,
                  const gt::gtensor<size_t, 4>& gidx_end, hid_t group,
                  hid_t dxpl)
@@ -89,10 +181,42 @@ public:
     CE;
   }
 
+  void write_particles(size_t n_write, size_t n_off, size_t n_total,
+                       const std::vector<hdf5_prt>& arr, hid_t group,
+                       hid_t dxpl)
+  {
+    herr_t ierr;
+
+    hsize_t mdims[1] = {n_write};
+    hsize_t fdims[1] = {n_total};
+    hsize_t foff[1] = {n_off};
+    hid_t memspace = H5Screate_simple(1, mdims, NULL);
+    H5_CHK(memspace);
+    hid_t filespace = H5Screate_simple(1, fdims, NULL);
+    H5_CHK(filespace);
+    ierr =
+      H5Sselect_hyperslab(filespace, H5S_SELECT_SET, foff, NULL, mdims, NULL);
+    CE;
+
+    hid_t dset = H5Dcreate(group, "1d", prt_type_, filespace, H5P_DEFAULT,
+                           H5P_DEFAULT, H5P_DEFAULT);
+    H5_CHK(dset);
+    ierr = H5Dwrite(dset, prt_type_, memspace, filespace, dxpl, arr.data());
+    CE;
+
+    ierr = H5Dclose(dset);
+    CE;
+    ierr = H5Sclose(filespace);
+    CE;
+    ierr = H5Sclose(memspace);
+    CE;
+  }
+
 private:
-  Int3 wdims_;
+  Int3 wdims_, lo_, hi_;
   Grid_t::Kinds kinds_;
   MPI_Comm comm_;
+  hid_t prt_type_;
 };
 
 // ----------------------------------------------------------------------
@@ -341,124 +465,6 @@ struct OutputParticlesHdf5
     return arr;
   }
 
-  void write_particles(size_t n_write, size_t n_off, size_t n_total,
-                       const std::vector<hdf5_prt>& arr, hid_t group,
-                       hid_t dxpl)
-  {
-    herr_t ierr;
-
-    hsize_t mdims[1] = {n_write};
-    hsize_t fdims[1] = {n_total};
-    hsize_t foff[1] = {n_off};
-    hid_t memspace = H5Screate_simple(1, mdims, NULL);
-    H5_CHK(memspace);
-    hid_t filespace = H5Screate_simple(1, fdims, NULL);
-    H5_CHK(filespace);
-    ierr =
-      H5Sselect_hyperslab(filespace, H5S_SELECT_SET, foff, NULL, mdims, NULL);
-    CE;
-
-    hid_t dset = H5Dcreate(group, "1d", prt_type_, filespace, H5P_DEFAULT,
-                           H5P_DEFAULT, H5P_DEFAULT);
-    H5_CHK(dset);
-    ierr = H5Dwrite(dset, prt_type_, memspace, filespace, dxpl, arr.data());
-    CE;
-
-    ierr = H5Dclose(dset);
-    CE;
-    ierr = H5Sclose(filespace);
-    CE;
-    ierr = H5Sclose(memspace);
-    CE;
-  }
-
-  void write_hdf5(const gt::gtensor<size_t, 4>& gidx_begin,
-                  const gt::gtensor<size_t, 4>& gidx_end, size_t n_write,
-                  size_t n_off, size_t n_total,
-                  const std::vector<hdf5_prt>& arr, const std::string& filename,
-                  const OutputParticlesParams& params)
-  {
-    int ierr;
-
-    static int pr_C, pr_D, pr_E;
-    if (!pr_C) {
-      pr_C = prof_register("outp: write prep", 1., 0, 0);
-      pr_D = prof_register("outp: write idx", 1., 0, 0);
-      pr_E = prof_register("outp: write prts", 1., 0, 0);
-    }
-
-    prof_start(pr_C);
-
-    hid_t plist = H5Pcreate(H5P_FILE_ACCESS);
-
-    MPI_Info mpi_info;
-    MPI_Info_create(&mpi_info);
-
-#ifdef H5_HAVE_PARALLEL
-    if (params.romio_cb_write) {
-      MPI_Info_set(mpi_info, (char*)"romio_cb_write",
-                   (char*)params.romio_cb_write);
-    }
-    if (params.romio_ds_write) {
-      MPI_Info_set(mpi_info, (char*)"romio_ds_write",
-                   (char*)params.romio_ds_write);
-    }
-    H5Pset_fapl_mpio(plist, comm_, mpi_info);
-#else
-    mprintf("ERROR: particle output requires parallel hdf5\n");
-    abort();
-#endif
-
-    hid_t file = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, plist);
-    H5_CHK(file);
-    H5Pclose(plist);
-    MPI_Info_free(&mpi_info);
-
-    hid_t group =
-      H5Gcreate(file, "particles", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    H5_CHK(group);
-    hid_t groupp =
-      H5Gcreate(group, "p0", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    H5_CHK(groupp);
-
-    ierr = H5LTset_attribute_int(group, ".", "lo", lo_, 3);
-    CE;
-    ierr = H5LTset_attribute_int(group, ".", "hi", hi_, 3);
-    CE;
-
-    hid_t dxpl = H5Pcreate(H5P_DATASET_XFER);
-    H5_CHK(dxpl);
-#ifdef H5_HAVE_PARALLEL
-    if (params.use_independent_io) {
-      ierr = H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT);
-      CE;
-    } else {
-      ierr = H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE);
-      CE;
-    }
-#endif
-    prof_stop(pr_C);
-
-    OutputParticlesWriterHDF5 writer(wdims_, kinds_, comm_);
-
-    prof_start(pr_D);
-    writer.write_idx(gidx_begin, gidx_end, group, dxpl);
-    prof_stop(pr_D);
-
-    prof_start(pr_E);
-    write_particles(n_write, n_off, n_total, arr, groupp, dxpl);
-    prof_stop(pr_E);
-
-    ierr = H5Pclose(dxpl);
-    CE;
-    ierr = H5Gclose(groupp);
-    CE;
-    ierr = H5Gclose(group);
-    CE;
-    ierr = H5Fclose(file);
-    CE;
-  }
-
   // ----------------------------------------------------------------------
   // operator()
 
@@ -602,8 +608,10 @@ struct OutputParticlesHdf5
     }
     prof_stop(pr_B);
 
-    write_hdf5(gidx_begin, gidx_end, n_write, n_off, n_total, arr, filename,
-               params);
+    OutputParticlesWriterHDF5 writer(wdims_, lo_, hi_, kinds_, comm_,
+                                     prt_type_);
+    writer(gidx_begin, gidx_end, n_write, n_off, n_total, arr, filename,
+           params);
   }
 
 private:
