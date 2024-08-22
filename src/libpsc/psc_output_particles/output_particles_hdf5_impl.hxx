@@ -293,7 +293,8 @@ struct OutputParticlesHdf5
       wdims_{hi - lo},
       kinds_{grid.kinds},
       comm_{grid.comm()},
-      prt_type_{prt_type}
+      prt_type_{prt_type},
+      writer_{wdims_, lo_, hi_, kinds_, comm_, prt_type_}
   {}
 
   // ----------------------------------------------------------------------
@@ -609,10 +610,8 @@ struct OutputParticlesHdf5
     }
     prof_stop(pr_B);
 
-    OutputParticlesWriterHDF5 writer(wdims_, lo_, hi_, kinds_, comm_,
-                                     prt_type_);
-    writer(gidx_begin, gidx_end, n_write, n_off, n_total, arr, filename,
-           params);
+    writer_(gidx_begin, gidx_end, n_write, n_off, n_total, arr, filename,
+            params);
   }
 
 private:
@@ -622,6 +621,7 @@ private:
   hid_t prt_type_;
   Grid_t::Kinds kinds_;
   MPI_Comm comm_;
+  OutputParticlesWriterHDF5 writer_;
 };
 
 } // namespace detail
