@@ -94,6 +94,9 @@ private:
 class OutputParticlesWriterHDF5
 {
 public:
+  using particle_type = hdf5_prt;
+  using particles_type = std::vector<particle_type>;
+
   explicit OutputParticlesWriterHDF5(const Int3& lo, const Int3& hi,
                                      const Grid_t::Kinds& kinds, MPI_Comm comm)
     : lo_{lo}, hi_{hi}, wdims_{hi - lo}, kinds_{kinds}, comm_{comm}
@@ -101,8 +104,8 @@ public:
 
   void operator()(const gt::gtensor<size_t, 4>& gidx_begin,
                   const gt::gtensor<size_t, 4>& gidx_end, size_t n_write,
-                  size_t n_off, size_t n_total,
-                  const std::vector<hdf5_prt>& arr, const std::string& filename,
+                  size_t n_off, size_t n_total, const particles_type& arr,
+                  const std::string& filename,
                   const OutputParticlesParams& params)
   {
     int ierr;
@@ -237,8 +240,7 @@ private:
   }
 
   void write_particles(size_t n_write, size_t n_off, size_t n_total,
-                       const std::vector<hdf5_prt>& arr, hid_t group,
-                       hid_t dxpl)
+                       const particles_type& arr, hid_t group, hid_t dxpl)
   {
     herr_t ierr;
 
@@ -283,6 +285,8 @@ namespace detail
 template <typename Mparticles>
 struct OutputParticlesHdf5
 {
+  using writer_type = OutputParticlesWriterHDF5;
+  using writer_particles_type = writer_type::particles_type;
   using Particles = typename Mparticles::Patch;
 
   OutputParticlesHdf5(const Grid_t& grid, const Int3& lo, const Int3& hi)
@@ -379,7 +383,7 @@ struct OutputParticlesHdf5
   // ----------------------------------------------------------------------
   // make_local_particle_array
 
-  std::vector<hdf5_prt> make_local_particle_array(
+  writer_particles_type make_local_particle_array(
     Mparticles& mprts, const std::vector<std::vector<int>>& off,
     const std::vector<std::vector<int>>& map,
     std::vector<gt::gtensor<size_t, 5>>& idx, size_t* p_n_write,
@@ -411,7 +415,7 @@ struct OutputParticlesHdf5
     MPI_Allreduce(&n_write, &n_total, 1, MPI_UNSIGNED_LONG, MPI_SUM, comm_);
     MPI_Exscan(&n_write, &n_off, 1, MPI_UNSIGNED_LONG, MPI_SUM, comm_);
 
-    std::vector<hdf5_prt> arr(n_write);
+    writer_particles_type arr(n_write);
 
     // copy particles to be written into temp array
     int nn = 0;
