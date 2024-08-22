@@ -30,29 +30,34 @@ struct hdf5_prt
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
+namespace hdf5
+{
+
 // ----------------------------------------------------------------------
 // ToHdf5Type helper class
 
 template <typename T>
-struct ToHdf5Type;
+struct H5Type;
 
 template <>
-struct ToHdf5Type<int>
+struct H5Type<int>
 {
-  static hid_t H5Type() { return H5T_NATIVE_INT; }
+  static hid_t value() { return H5T_NATIVE_INT; }
 };
 
 template <>
-struct ToHdf5Type<unsigned long>
+struct H5Type<unsigned long>
 {
-  static hid_t H5Type() { return H5T_NATIVE_ULONG; }
+  static hid_t value() { return H5T_NATIVE_ULONG; }
 };
 
 template <>
-struct ToHdf5Type<unsigned long long>
+struct H5Type<unsigned long long>
 {
-  static hid_t H5Type() { return H5T_NATIVE_ULLONG; }
+  static hid_t value() { return H5T_NATIVE_ULLONG; }
 };
+
+} // namespace hdf5
 
 // ======================================================================
 // Hdf5ParticleType
@@ -73,9 +78,9 @@ public:
     H5Tinsert(id_, "m", HOFFSET(struct hdf5_prt, m), H5T_NATIVE_FLOAT);
     H5Tinsert(id_, "w", HOFFSET(struct hdf5_prt, w), H5T_NATIVE_FLOAT);
     H5Tinsert(id_, "id", HOFFSET(struct hdf5_prt, id),
-              ToHdf5Type<psc::particle::Id>::H5Type());
+              hdf5::H5Type<psc::particle::Id>::value());
     H5Tinsert(id_, "tag", HOFFSET(struct hdf5_prt, tag),
-              ToHdf5Type<psc::particle::Tag>::H5Type());
+              hdf5::H5Type<psc::particle::Tag>::value());
   }
 
   ~Hdf5ParticleType() { H5Tclose(id_); }
