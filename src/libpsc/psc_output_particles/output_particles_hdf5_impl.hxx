@@ -30,6 +30,62 @@ struct hdf5_prt
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
+// ----------------------------------------------------------------------
+// ToHdf5Type helper class
+
+template <typename T>
+struct ToHdf5Type;
+
+template <>
+struct ToHdf5Type<int>
+{
+  static hid_t H5Type() { return H5T_NATIVE_INT; }
+};
+
+template <>
+struct ToHdf5Type<unsigned long>
+{
+  static hid_t H5Type() { return H5T_NATIVE_ULONG; }
+};
+
+template <>
+struct ToHdf5Type<unsigned long long>
+{
+  static hid_t H5Type() { return H5T_NATIVE_ULLONG; }
+};
+
+// ======================================================================
+// Hdf5ParticleType
+
+class Hdf5ParticleType
+{
+public:
+  Hdf5ParticleType()
+  {
+    id_ = H5Tcreate(H5T_COMPOUND, sizeof(struct hdf5_prt));
+    H5Tinsert(id_, "x", HOFFSET(struct hdf5_prt, x), H5T_NATIVE_FLOAT);
+    H5Tinsert(id_, "y", HOFFSET(struct hdf5_prt, y), H5T_NATIVE_FLOAT);
+    H5Tinsert(id_, "z", HOFFSET(struct hdf5_prt, z), H5T_NATIVE_FLOAT);
+    H5Tinsert(id_, "px", HOFFSET(struct hdf5_prt, px), H5T_NATIVE_FLOAT);
+    H5Tinsert(id_, "py", HOFFSET(struct hdf5_prt, py), H5T_NATIVE_FLOAT);
+    H5Tinsert(id_, "pz", HOFFSET(struct hdf5_prt, pz), H5T_NATIVE_FLOAT);
+    H5Tinsert(id_, "q", HOFFSET(struct hdf5_prt, q), H5T_NATIVE_FLOAT);
+    H5Tinsert(id_, "m", HOFFSET(struct hdf5_prt, m), H5T_NATIVE_FLOAT);
+    H5Tinsert(id_, "w", HOFFSET(struct hdf5_prt, w), H5T_NATIVE_FLOAT);
+    H5Tinsert(id_, "id", HOFFSET(struct hdf5_prt, id),
+              ToHdf5Type<psc::particle::Id>::H5Type());
+    H5Tinsert(id_, "tag", HOFFSET(struct hdf5_prt, tag),
+              ToHdf5Type<psc::particle::Tag>::H5Type());
+  }
+
+  ~Hdf5ParticleType() { H5Tclose(id_); }
+
+  operator hid_t() const { return id_; }
+
+private:
+  hid_t id_;
+};
+
 class OutputParticlesWriterHDF5
 {
 public:
@@ -219,63 +275,8 @@ private:
   hid_t prt_type_;
 };
 
-// ----------------------------------------------------------------------
-
-template <typename T>
-struct ToHdf5Type;
-
-template <>
-struct ToHdf5Type<int>
-{
-  static hid_t H5Type() { return H5T_NATIVE_INT; }
-};
-
-template <>
-struct ToHdf5Type<unsigned long>
-{
-  static hid_t H5Type() { return H5T_NATIVE_ULONG; }
-};
-
-template <>
-struct ToHdf5Type<unsigned long long>
-{
-  static hid_t H5Type() { return H5T_NATIVE_ULLONG; }
-};
-
 namespace detail
 {
-
-// ======================================================================
-// Hdf5ParticleType
-
-class Hdf5ParticleType
-{
-public:
-  Hdf5ParticleType()
-  {
-    id_ = H5Tcreate(H5T_COMPOUND, sizeof(struct hdf5_prt));
-    H5Tinsert(id_, "x", HOFFSET(struct hdf5_prt, x), H5T_NATIVE_FLOAT);
-    H5Tinsert(id_, "y", HOFFSET(struct hdf5_prt, y), H5T_NATIVE_FLOAT);
-    H5Tinsert(id_, "z", HOFFSET(struct hdf5_prt, z), H5T_NATIVE_FLOAT);
-    H5Tinsert(id_, "px", HOFFSET(struct hdf5_prt, px), H5T_NATIVE_FLOAT);
-    H5Tinsert(id_, "py", HOFFSET(struct hdf5_prt, py), H5T_NATIVE_FLOAT);
-    H5Tinsert(id_, "pz", HOFFSET(struct hdf5_prt, pz), H5T_NATIVE_FLOAT);
-    H5Tinsert(id_, "q", HOFFSET(struct hdf5_prt, q), H5T_NATIVE_FLOAT);
-    H5Tinsert(id_, "m", HOFFSET(struct hdf5_prt, m), H5T_NATIVE_FLOAT);
-    H5Tinsert(id_, "w", HOFFSET(struct hdf5_prt, w), H5T_NATIVE_FLOAT);
-    H5Tinsert(id_, "id", HOFFSET(struct hdf5_prt, id),
-              ToHdf5Type<psc::particle::Id>::H5Type());
-    H5Tinsert(id_, "tag", HOFFSET(struct hdf5_prt, tag),
-              ToHdf5Type<psc::particle::Tag>::H5Type());
-  }
-
-  ~Hdf5ParticleType() { H5Tclose(id_); }
-
-  operator hid_t() const { return id_; }
-
-private:
-  hid_t id_;
-};
 
 // ======================================================================
 // OutputParticlesHdf5
@@ -693,7 +694,7 @@ public:
 
 private:
   const OutputParticlesParams prm_;
-  detail::Hdf5ParticleType prt_type_;
+  Hdf5ParticleType prt_type_;
   Int3 lo_; // dimensions of the subdomain we're actually writing
   Int3 hi_;
 };
