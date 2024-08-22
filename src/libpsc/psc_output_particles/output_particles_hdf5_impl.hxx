@@ -110,10 +110,9 @@ public:
   using particle_type = hdf5_prt;
   using particles_type = std::vector<particle_type>;
 
-  explicit OutputParticlesWriterHDF5(const OutputParticlesParams& prm, Int3& lo,
-                                     const Int3& hi, const Grid_t::Kinds& kinds,
-                                     MPI_Comm comm)
-    : prm_{prm}, lo_{lo}, hi_{hi}, wdims_{hi - lo}, kinds_{kinds}, comm_{comm}
+  explicit OutputParticlesWriterHDF5(const OutputParticlesParams& prm,
+                                     const Grid_t::Kinds& kinds, MPI_Comm comm)
+    : prm_{prm}, wdims_{prm.hi - prm.lo}, kinds_{kinds}, comm_{comm}
   {}
 
   void operator()(const gt::gtensor<size_t, 4>& gidx_begin,
@@ -169,9 +168,9 @@ public:
       H5Gcreate(group, "p0", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     H5_CHK(groupp);
 
-    ierr = H5LTset_attribute_int(group, ".", "lo", lo_, 3);
+    ierr = H5LTset_attribute_int(group, ".", "lo", prm_.lo, 3);
     CE;
-    ierr = H5LTset_attribute_int(group, ".", "hi", hi_, 3);
+    ierr = H5LTset_attribute_int(group, ".", "hi", prm_.hi, 3);
     CE;
 
     hid_t dxpl = H5Pcreate(H5P_DATASET_XFER);
@@ -289,7 +288,7 @@ private:
 
 private:
   OutputParticlesParams prm_;
-  Int3 wdims_, lo_, hi_;
+  Int3 wdims_;
   Grid_t::Kinds kinds_;
   MPI_Comm comm_;
   Hdf5ParticleType prt_type_;
@@ -308,9 +307,12 @@ struct OutputParticlesHdf5
   using writer_particles_type = writer_type::particles_type;
   using Particles = typename Mparticles::Patch;
 
-  OutputParticlesHdf5(const Grid_t& grid, const OutputParticlesParams& prm,
-                      Int3& lo, const Int3& hi)
-    : lo_{lo}, hi_{hi}, wdims_{hi - lo}, kinds_{grid.kinds}, comm_{grid.comm()}
+  OutputParticlesHdf5(const Grid_t& grid, const OutputParticlesParams& prm)
+    : lo_{prm.lo},
+      hi_{prm.hi},
+      wdims_{prm.hi - prm.lo},
+      kinds_{grid.kinds},
+      comm_{grid.comm()}
   {}
 
   // ----------------------------------------------------------------------
@@ -627,23 +629,23 @@ private:
 
 class OutputParticlesHdf5 : OutputParticlesBase
 {
-  static Int3 adjust_hi(const Grid_t& grid, Int3 hi)
+  static OutputParticlesParams adjust_params(
+    const OutputParticlesParams& params_in, const Grid_t& grid)
   {
+    OutputParticlesParams params = params_in;
     for (int d = 0; d < 3; d++) {
-      if (hi[d] == 0) {
-        hi[d] = grid.domain.gdims[d];
+      if (params.hi[d] == 0) {
+        params.hi[d] = grid.domain.gdims[d];
       }
-      assert(hi[d] <= grid.domain.gdims[d]);
+      assert(params.lo[d] >= 0);
+      assert(params.hi[d] <= grid.domain.gdims[d]);
     }
-    return hi;
+    return params;
   }
 
 public:
   OutputParticlesHdf5(const Grid_t& grid, const OutputParticlesParams& params)
-    : prm_{params},
-      lo_{params.lo},
-      hi_{adjust_hi(grid, params.hi)},
-      writer_{params, lo_, hi_, grid.kinds, grid.comm()}
+    : prm_{adjust_params(params, grid)}, writer_{prm_, grid.kinds, grid.comm()}
   {}
 
   template <typename Mparticles>
@@ -655,7 +657,7 @@ public:
       return;
     }
 
-    detail::OutputParticlesHdf5<Mparticles> impl{grid, prm_, lo_, hi_};
+    detail::OutputParticlesHdf5<Mparticles> impl{grid, prm_};
     impl(mprts, writer_);
   }
 
@@ -693,7 +695,5 @@ public:
 
 private:
   const OutputParticlesParams prm_;
-  Int3 lo_; // dimensions of the subdomain we're actually writing
-  Int3 hi_;
   OutputParticlesWriterHDF5 writer_;
 };
