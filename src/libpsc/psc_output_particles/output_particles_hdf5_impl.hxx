@@ -90,14 +90,8 @@ class OutputParticlesWriterHDF5
 {
 public:
   explicit OutputParticlesWriterHDF5(const Int3& lo, const Int3& hi,
-                                     const Grid_t::Kinds& kinds, MPI_Comm comm,
-                                     hid_t prt_type)
-    : lo_{lo},
-      hi_{hi},
-      wdims_{hi - lo},
-      kinds_{kinds},
-      comm_{comm},
-      prt_type_{prt_type}
+                                     const Grid_t::Kinds& kinds, MPI_Comm comm)
+    : lo_{lo}, hi_{hi}, wdims_{hi - lo}, kinds_{kinds}, comm_{comm}
   {}
 
   void operator()(const gt::gtensor<size_t, 4>& gidx_begin,
@@ -272,7 +266,7 @@ private:
   Int3 wdims_, lo_, hi_;
   Grid_t::Kinds kinds_;
   MPI_Comm comm_;
-  hid_t prt_type_;
+  Hdf5ParticleType prt_type_;
 };
 
 namespace detail
@@ -286,8 +280,7 @@ struct OutputParticlesHdf5
 {
   using Particles = typename Mparticles::Patch;
 
-  OutputParticlesHdf5(const Grid_t& grid, const Int3& lo, const Int3& hi,
-                      hid_t prt_type)
+  OutputParticlesHdf5(const Grid_t& grid, const Int3& lo, const Int3& hi)
     : lo_{lo}, hi_{hi}, wdims_{hi - lo}, kinds_{grid.kinds}, comm_{grid.comm()}
   {}
 
@@ -637,7 +630,7 @@ public:
     : prm_{params},
       lo_{params.lo},
       hi_{adjust_hi(grid, params.hi)},
-      writer_{lo_, hi_, grid.kinds, grid.comm(), prt_type_}
+      writer_{lo_, hi_, grid.kinds, grid.comm()}
   {}
 
   template <typename Mparticles>
@@ -654,7 +647,7 @@ public:
     snprintf(filename, slen, "%s/%s.%06d_p%06d.h5", prm_.data_dir,
              prm_.basename, grid.timestep(), 0);
 
-    detail::OutputParticlesHdf5<Mparticles> impl{grid, lo_, hi_, prt_type_};
+    detail::OutputParticlesHdf5<Mparticles> impl{grid, lo_, hi_};
     impl(mprts, filename, prm_, writer_);
   }
 
@@ -692,7 +685,6 @@ public:
 
 private:
   const OutputParticlesParams prm_;
-  Hdf5ParticleType prt_type_;
   Int3 lo_; // dimensions of the subdomain we're actually writing
   Int3 hi_;
   OutputParticlesWriterHDF5 writer_;
