@@ -361,14 +361,69 @@ struct OutputParticlesHdf5
   void write_hdf5(const gt::gtensor<size_t, 4>& gidx_begin,
                   const gt::gtensor<size_t, 4>& gidx_end, size_t n_write,
                   size_t n_off, size_t n_total,
-                  const std::vector<hdf5_prt>& arr, hid_t groupp, hid_t group,
-                  hid_t dxpl)
+                  const std::vector<hdf5_prt>& arr, const std::string& filename,
+                  const OutputParticlesParams& params)
   {
-    static int pr_D, pr_E;
-    if (!pr_D) {
+    int ierr;
+
+    static int pr_C, pr_D, pr_E;
+    if (!pr_C) {
+      pr_C = prof_register("outp: write prep", 1., 0, 0);
       pr_D = prof_register("outp: write idx", 1., 0, 0);
       pr_E = prof_register("outp: write prts", 1., 0, 0);
     }
+
+    prof_start(pr_C);
+
+    hid_t plist = H5Pcreate(H5P_FILE_ACCESS);
+
+    MPI_Info mpi_info;
+    MPI_Info_create(&mpi_info);
+
+#ifdef H5_HAVE_PARALLEL
+    if (params.romio_cb_write) {
+      MPI_Info_set(mpi_info, (char*)"romio_cb_write",
+                   (char*)params.romio_cb_write);
+    }
+    if (params.romio_ds_write) {
+      MPI_Info_set(mpi_info, (char*)"romio_ds_write",
+                   (char*)params.romio_ds_write);
+    }
+    H5Pset_fapl_mpio(plist, comm_, mpi_info);
+#else
+    mprintf("ERROR: particle output requires parallel hdf5\n");
+    abort();
+#endif
+
+    hid_t file = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, plist);
+    H5_CHK(file);
+    H5Pclose(plist);
+    MPI_Info_free(&mpi_info);
+
+    hid_t group =
+      H5Gcreate(file, "particles", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    H5_CHK(group);
+    hid_t groupp =
+      H5Gcreate(group, "p0", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    H5_CHK(groupp);
+
+    ierr = H5LTset_attribute_int(group, ".", "lo", lo_, 3);
+    CE;
+    ierr = H5LTset_attribute_int(group, ".", "hi", hi_, 3);
+    CE;
+
+    hid_t dxpl = H5Pcreate(H5P_DATASET_XFER);
+    H5_CHK(dxpl);
+#ifdef H5_HAVE_PARALLEL
+    if (params.use_independent_io) {
+      ierr = H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT);
+      CE;
+    } else {
+      ierr = H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE);
+      CE;
+    }
+#endif
+    prof_stop(pr_C);
 
     prof_start(pr_D);
     write_idx(gidx_begin, gidx_end, group, dxpl);
@@ -377,6 +432,15 @@ struct OutputParticlesHdf5
     prof_start(pr_E);
     write_particles(n_write, n_off, n_total, arr, groupp, dxpl);
     prof_stop(pr_E);
+
+    ierr = H5Pclose(dxpl);
+    CE;
+    ierr = H5Gclose(groupp);
+    CE;
+    ierr = H5Gclose(group);
+    CE;
+    ierr = H5Fclose(file);
+    CE;
   }
 
   // ----------------------------------------------------------------------
@@ -522,66 +586,8 @@ struct OutputParticlesHdf5
     }
     prof_stop(pr_B);
 
-    prof_start(pr_C);
-
-    hid_t plist = H5Pcreate(H5P_FILE_ACCESS);
-
-    MPI_Info mpi_info;
-    MPI_Info_create(&mpi_info);
-#ifdef H5_HAVE_PARALLEL
-    if (params.romio_cb_write) {
-      MPI_Info_set(mpi_info, (char*)"romio_cb_write",
-                   (char*)params.romio_cb_write);
-    }
-    if (params.romio_ds_write) {
-      MPI_Info_set(mpi_info, (char*)"romio_ds_write",
-                   (char*)params.romio_ds_write);
-    }
-    H5Pset_fapl_mpio(plist, comm_, mpi_info);
-#else
-    mprintf("ERROR: particle output requires parallel hdf5\n");
-    abort();
-#endif
-
-    hid_t file = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, plist);
-    H5_CHK(file);
-    H5Pclose(plist);
-    MPI_Info_free(&mpi_info);
-
-    hid_t group =
-      H5Gcreate(file, "particles", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    H5_CHK(group);
-    hid_t groupp =
-      H5Gcreate(group, "p0", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    H5_CHK(groupp);
-
-    ierr = H5LTset_attribute_int(group, ".", "lo", lo_, 3);
-    CE;
-    ierr = H5LTset_attribute_int(group, ".", "hi", hi_, 3);
-    CE;
-
-    hid_t dxpl = H5Pcreate(H5P_DATASET_XFER);
-    H5_CHK(dxpl);
-#ifdef H5_HAVE_PARALLEL
-    if (params.use_independent_io) {
-      ierr = H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT);
-      CE;
-    } else {
-      ierr = H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE);
-      CE;
-    }
-#endif
-    prof_stop(pr_C);
-
-    write_hdf5(gidx_begin, gidx_end, n_write, n_off, n_total, arr, groupp,
-               group, dxpl);
-
-    ierr = H5Pclose(dxpl);
-    CE;
-
-    H5Gclose(groupp);
-    H5Gclose(group);
-    H5Fclose(file);
+    write_hdf5(gidx_begin, gidx_end, n_write, n_off, n_total, arr, filename,
+               params);
   }
 
 private:
