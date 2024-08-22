@@ -43,9 +43,6 @@ struct hdf5_prt
 #define H5_CHK(ierr) assert(ierr >= 0)
 #define CE assert(ierr == 0)
 
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
-
 namespace hdf5
 {
 
@@ -387,10 +384,10 @@ struct OutputParticlesHdf5
                         int ihi[3], int ld[3])
   {
     for (int d = 0; d < 3; d++) {
-      ilo[d] = MAX(lo_[d], off[d]) - off[d];
-      ihi[d] = MIN(hi_[d], off[d] + ldims[d]) - off[d];
-      ilo[d] = MIN(ldims[d], ilo[d]);
-      ihi[d] = MAX(0, ihi[d]);
+      ilo[d] = std::max(lo_[d], off[d]) - off[d];
+      ihi[d] = std::min(hi_[d], off[d] + ldims[d]) - off[d];
+      ilo[d] = std::min(ldims[d], ilo[d]);
+      ihi[d] = std::max(0, ihi[d]);
       ld[d] = ihi[d] - ilo[d];
     }
     return kinds_.size() * ld[0] * ld[1] * ld[2];
