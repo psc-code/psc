@@ -110,9 +110,9 @@ public:
   using particle_type = hdf5_prt;
   using particles_type = std::vector<particle_type>;
 
-  explicit OutputParticlesWriterHDF5(const OutputParticlesParams& prm,
+  explicit OutputParticlesWriterHDF5(const OutputParticlesParams& params,
                                      const Grid_t::Kinds& kinds, MPI_Comm comm)
-    : prm_{prm}, wdims_{prm.hi - prm.lo}, kinds_{kinds}, comm_{comm}
+    : params_{params}, wdims_{params.hi - params.lo}, kinds_{kinds}, comm_{comm}
   {}
 
   void operator()(const gt::gtensor<size_t, 4>& gidx_begin,
@@ -137,13 +137,13 @@ public:
     MPI_Info_create(&mpi_info);
 
 #ifdef H5_HAVE_PARALLEL
-    if (prm_.romio_cb_write) {
+    if (params_.romio_cb_write) {
       MPI_Info_set(mpi_info, (char*)"romio_cb_write",
-                   (char*)prm_.romio_cb_write);
+                   (char*)params_.romio_cb_write);
     }
-    if (prm_.romio_ds_write) {
+    if (params_.romio_ds_write) {
       MPI_Info_set(mpi_info, (char*)"romio_ds_write",
-                   (char*)prm_.romio_ds_write);
+                   (char*)params_.romio_ds_write);
     }
     H5Pset_fapl_mpio(plist, comm_, mpi_info);
 #else
@@ -151,10 +151,10 @@ public:
     abort();
 #endif
 
-    int slen = strlen(prm_.data_dir) + strlen(prm_.basename) + 20;
+    int slen = strlen(params_.data_dir) + strlen(params_.basename) + 20;
     char filename[slen];
-    snprintf(filename, slen, "%s/%s.%06d_p%06d.h5", prm_.data_dir,
-             prm_.basename, timestep, 0);
+    snprintf(filename, slen, "%s/%s.%06d_p%06d.h5", params_.data_dir,
+             params_.basename, timestep, 0);
 
     hid_t file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, plist);
     H5_CHK(file);
@@ -168,15 +168,15 @@ public:
       H5Gcreate(group, "p0", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     H5_CHK(groupp);
 
-    ierr = H5LTset_attribute_int(group, ".", "lo", prm_.lo, 3);
+    ierr = H5LTset_attribute_int(group, ".", "lo", params_.lo, 3);
     CE;
-    ierr = H5LTset_attribute_int(group, ".", "hi", prm_.hi, 3);
+    ierr = H5LTset_attribute_int(group, ".", "hi", params_.hi, 3);
     CE;
 
     hid_t dxpl = H5Pcreate(H5P_DATASET_XFER);
     H5_CHK(dxpl);
 #ifdef H5_HAVE_PARALLEL
-    if (prm_.use_independent_io) {
+    if (params_.use_independent_io) {
       ierr = H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT);
       CE;
     } else {
@@ -287,7 +287,7 @@ private:
   }
 
 private:
-  OutputParticlesParams prm_;
+  OutputParticlesParams params_;
   Int3 wdims_;
   Grid_t::Kinds kinds_;
   MPI_Comm comm_;
@@ -307,10 +307,10 @@ struct OutputParticlesHdf5
   using writer_particles_type = writer_type::particles_type;
   using Particles = typename Mparticles::Patch;
 
-  OutputParticlesHdf5(const Grid_t& grid, const OutputParticlesParams& prm)
-    : lo_{prm.lo},
-      hi_{prm.hi},
-      wdims_{prm.hi - prm.lo},
+  OutputParticlesHdf5(const Grid_t& grid, const OutputParticlesParams& params)
+    : lo_{params.lo},
+      hi_{params.hi},
+      wdims_{params.hi - params.lo},
       kinds_{grid.kinds},
       comm_{grid.comm()}
   {}
@@ -645,7 +645,8 @@ class OutputParticlesHdf5 : OutputParticlesBase
 
 public:
   OutputParticlesHdf5(const Grid_t& grid, const OutputParticlesParams& params)
-    : prm_{adjust_params(params, grid)}, writer_{prm_, grid.kinds, grid.comm()}
+    : params_{adjust_params(params, grid)},
+      writer_{params_, grid.kinds, grid.comm()}
   {}
 
   template <typename Mparticles>
@@ -653,11 +654,11 @@ public:
   {
     const auto& grid = mprts.grid();
 
-    if (prm_.every_step <= 0 || grid.timestep() % prm_.every_step != 0) {
+    if (params_.every_step <= 0 || grid.timestep() % params_.every_step != 0) {
       return;
     }
 
-    detail::OutputParticlesHdf5<Mparticles> impl{grid, prm_};
+    detail::OutputParticlesHdf5<Mparticles> impl{grid, params_};
     impl(mprts, writer_);
   }
 
@@ -667,7 +668,7 @@ public:
   {
     const auto& grid = mprts.grid();
 
-    if (prm_.every_step <= 0 || grid.timestep() % prm_.every_step != 0) {
+    if (params_.every_step <= 0 || grid.timestep() % params_.every_step != 0) {
       return;
     }
 
@@ -683,7 +684,7 @@ public:
   {
     const auto& grid = mprts.grid();
 
-    if (prm_.every_step <= 0 || grid.timestep() % prm_.every_step != 0) {
+    if (params_.every_step <= 0 || grid.timestep() % params_.every_step != 0) {
       return;
     }
 
@@ -694,6 +695,6 @@ public:
 #endif
 
 private:
-  const OutputParticlesParams prm_;
+  const OutputParticlesParams params_;
   OutputParticlesWriterHDF5 writer_;
 };
