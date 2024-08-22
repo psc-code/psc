@@ -119,7 +119,7 @@ public:
   void operator()(const gt::gtensor<size_t, 4>& gidx_begin,
                   const gt::gtensor<size_t, 4>& gidx_end, size_t n_write,
                   size_t n_off, size_t n_total, const particles_type& arr,
-                  const std::string& filename)
+                  int timestep)
   {
     int ierr;
 
@@ -152,7 +152,12 @@ public:
     abort();
 #endif
 
-    hid_t file = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, plist);
+    int slen = strlen(prm_.data_dir) + strlen(prm_.basename) + 20;
+    char filename[slen];
+    snprintf(filename, slen, "%s/%s.%06d_p%06d.h5", prm_.data_dir,
+             prm_.basename, timestep, 0);
+
+    hid_t file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, plist);
     H5_CHK(file);
     H5Pclose(plist);
     MPI_Info_free(&mpi_info);
@@ -470,8 +475,7 @@ struct OutputParticlesHdf5
   // ----------------------------------------------------------------------
   // operator()
 
-  void operator()(Mparticles& mprts, const std::string& filename,
-                  OutputParticlesWriterHDF5& writer)
+  void operator()(Mparticles& mprts, OutputParticlesWriterHDF5& writer)
   {
     const auto& grid = mprts.grid();
     herr_t ierr;
@@ -610,7 +614,7 @@ struct OutputParticlesHdf5
     }
     prof_stop(pr_B);
 
-    writer(gidx_begin, gidx_end, n_write, n_off, n_total, arr, filename);
+    writer(gidx_begin, gidx_end, n_write, n_off, n_total, arr, grid.timestep());
   }
 
 private:
@@ -651,13 +655,8 @@ public:
       return;
     }
 
-    int slen = strlen(prm_.data_dir) + strlen(prm_.basename) + 20;
-    char filename[slen];
-    snprintf(filename, slen, "%s/%s.%06d_p%06d.h5", prm_.data_dir,
-             prm_.basename, grid.timestep(), 0);
-
     detail::OutputParticlesHdf5<Mparticles> impl{grid, prm_, lo_, hi_};
-    impl(mprts, filename, writer_);
+    impl(mprts, writer_);
   }
 
   // FIXME, handles MparticlesVpic by conversion for now
