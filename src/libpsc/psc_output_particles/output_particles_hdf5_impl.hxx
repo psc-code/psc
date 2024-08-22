@@ -89,12 +89,12 @@ private:
 class OutputParticlesWriterHDF5
 {
 public:
-  explicit OutputParticlesWriterHDF5(const Int3& wdims, const Int3& lo,
-                                     const Int3& hi, const Grid_t::Kinds& kinds,
-                                     MPI_Comm comm, hid_t prt_type)
-    : wdims_{wdims},
-      lo_{lo},
+  explicit OutputParticlesWriterHDF5(const Int3& lo, const Int3& hi,
+                                     const Grid_t::Kinds& kinds, MPI_Comm comm,
+                                     hid_t prt_type)
+    : lo_{lo},
       hi_{hi},
+      wdims_{hi - lo},
       kinds_{kinds},
       comm_{comm},
       prt_type_{prt_type}
@@ -293,8 +293,7 @@ struct OutputParticlesHdf5
       wdims_{hi - lo},
       kinds_{grid.kinds},
       comm_{grid.comm()},
-      prt_type_{prt_type},
-      writer_{wdims_, lo_, hi_, kinds_, comm_, prt_type_}
+      writer_{lo_, hi_, kinds_, comm_, prt_type}
   {}
 
   // ----------------------------------------------------------------------
@@ -618,7 +617,6 @@ private:
   Int3 lo_;
   Int3 hi_;
   Int3 wdims_;
-  hid_t prt_type_;
   Grid_t::Kinds kinds_;
   MPI_Comm comm_;
   OutputParticlesWriterHDF5 writer_;
