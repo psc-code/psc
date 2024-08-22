@@ -288,12 +288,7 @@ struct OutputParticlesHdf5
 
   OutputParticlesHdf5(const Grid_t& grid, const Int3& lo, const Int3& hi,
                       hid_t prt_type)
-    : lo_{lo},
-      hi_{hi},
-      wdims_{hi - lo},
-      kinds_{grid.kinds},
-      comm_{grid.comm()},
-      writer_{lo_, hi_, kinds_, comm_, prt_type}
+    : lo_{lo}, hi_{hi}, wdims_{hi - lo}, kinds_{grid.kinds}, comm_{grid.comm()}
   {}
 
   // ----------------------------------------------------------------------
@@ -470,7 +465,8 @@ struct OutputParticlesHdf5
   // operator()
 
   void operator()(Mparticles& mprts, const std::string& filename,
-                  const OutputParticlesParams& params)
+                  const OutputParticlesParams& params,
+                  OutputParticlesWriterHDF5& writer)
   {
     const auto& grid = mprts.grid();
     herr_t ierr;
@@ -609,8 +605,8 @@ struct OutputParticlesHdf5
     }
     prof_stop(pr_B);
 
-    writer_(gidx_begin, gidx_end, n_write, n_off, n_total, arr, filename,
-            params);
+    writer(gidx_begin, gidx_end, n_write, n_off, n_total, arr, filename,
+           params);
   }
 
 private:
@@ -619,26 +615,30 @@ private:
   Int3 wdims_;
   Grid_t::Kinds kinds_;
   MPI_Comm comm_;
-  OutputParticlesWriterHDF5 writer_;
 };
 
 } // namespace detail
 
 class OutputParticlesHdf5 : OutputParticlesBase
 {
+  static Int3 adjust_hi(const Grid_t& grid, Int3 hi)
+  {
+    for (int d = 0; d < 3; d++) {
+      if (hi[d] == 0) {
+        hi[d] = grid.domain.gdims[d];
+      }
+      assert(hi[d] <= grid.domain.gdims[d]);
+    }
+    return hi;
+  }
+
 public:
   OutputParticlesHdf5(const Grid_t& grid, const OutputParticlesParams& params)
-    : prm_{params}
-  {
-    // set hi to gdims by default (if not set differently before)
-    // and calculate wdims (global dims of region we're writing)
-    lo_ = prm_.lo;
-    for (int d = 0; d < 3; d++) {
-      hi_[d] = prm_.hi[d] != 0 ? prm_.hi[d] : grid.domain.gdims[d];
-      assert(lo_[d] >= 0);
-      assert(hi_[d] <= grid.domain.gdims[d]);
-    }
-  }
+    : prm_{params},
+      lo_{params.lo},
+      hi_{adjust_hi(grid, params.hi)},
+      writer_{lo_, hi_, grid.kinds, grid.comm(), prt_type_}
+  {}
 
   template <typename Mparticles>
   void operator()(Mparticles& mprts)
@@ -655,7 +655,7 @@ public:
              prm_.basename, grid.timestep(), 0);
 
     detail::OutputParticlesHdf5<Mparticles> impl{grid, lo_, hi_, prt_type_};
-    impl(mprts, filename, prm_);
+    impl(mprts, filename, prm_, writer_);
   }
 
   // FIXME, handles MparticlesVpic by conversion for now
@@ -695,4 +695,5 @@ private:
   Hdf5ParticleType prt_type_;
   Int3 lo_; // dimensions of the subdomain we're actually writing
   Int3 hi_;
+  OutputParticlesWriterHDF5 writer_;
 };
