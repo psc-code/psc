@@ -30,6 +30,71 @@ struct hdf5_prt
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
+class OutputParticlesWriterHDF5
+{
+public:
+  explicit OutputParticlesWriterHDF5(const Int3& wdims,
+                                     const Grid_t::Kinds& kinds, MPI_Comm comm)
+    : wdims_{wdims}, kinds_{kinds}, comm_{comm}
+  {}
+
+  void write_idx(const gt::gtensor<size_t, 4>& gidx_begin,
+                 const gt::gtensor<size_t, 4>& gidx_end, hid_t group,
+                 hid_t dxpl)
+  {
+    herr_t ierr;
+
+    hsize_t fdims[4];
+    fdims[0] = kinds_.size();
+    fdims[1] = wdims_[2];
+    fdims[2] = wdims_[1];
+    fdims[3] = wdims_[0];
+    hid_t filespace = H5Screate_simple(4, fdims, NULL);
+    H5_CHK(filespace);
+    hid_t memspace;
+
+    assert(sizeof(size_t) == sizeof(hsize_t));
+    int rank;
+    MPI_Comm_rank(comm_, &rank);
+    if (rank == 0) {
+      memspace = H5Screate_simple(4, fdims, NULL);
+      H5_CHK(memspace);
+    } else {
+      memspace = H5Screate(H5S_NULL);
+      H5Sselect_none(memspace);
+      H5Sselect_none(filespace);
+    }
+
+    hid_t dset = H5Dcreate(group, "idx_begin", H5T_NATIVE_HSIZE, filespace,
+                           H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    H5_CHK(dset);
+    ierr = H5Dwrite(dset, H5T_NATIVE_HSIZE, memspace, filespace, dxpl,
+                    gidx_begin.data());
+    CE;
+    ierr = H5Dclose(dset);
+    CE;
+
+    dset = H5Dcreate(group, "idx_end", H5T_NATIVE_HSIZE, filespace, H5P_DEFAULT,
+                     H5P_DEFAULT, H5P_DEFAULT);
+    H5_CHK(dset);
+    ierr = H5Dwrite(dset, H5T_NATIVE_HSIZE, memspace, filespace, dxpl,
+                    gidx_end.data());
+    CE;
+    ierr = H5Dclose(dset);
+    CE;
+
+    ierr = H5Sclose(filespace);
+    CE;
+    ierr = H5Sclose(memspace);
+    CE;
+  }
+
+private:
+  Int3 wdims_;
+  Grid_t::Kinds kinds_;
+  MPI_Comm comm_;
+};
+
 // ----------------------------------------------------------------------
 
 template <typename T>
@@ -307,57 +372,6 @@ struct OutputParticlesHdf5
     CE;
   }
 
-  void write_idx(const gt::gtensor<size_t, 4>& gidx_begin,
-                 const gt::gtensor<size_t, 4>& gidx_end, hid_t group,
-                 hid_t dxpl)
-  {
-    herr_t ierr;
-
-    hsize_t fdims[4];
-    fdims[0] = kinds_.size();
-    fdims[1] = wdims_[2];
-    fdims[2] = wdims_[1];
-    fdims[3] = wdims_[0];
-    hid_t filespace = H5Screate_simple(4, fdims, NULL);
-    H5_CHK(filespace);
-    hid_t memspace;
-
-    assert(sizeof(size_t) == sizeof(hsize_t));
-    int rank;
-    MPI_Comm_rank(comm_, &rank);
-    if (rank == 0) {
-      memspace = H5Screate_simple(4, fdims, NULL);
-      H5_CHK(memspace);
-    } else {
-      memspace = H5Screate(H5S_NULL);
-      H5Sselect_none(memspace);
-      H5Sselect_none(filespace);
-    }
-
-    hid_t dset = H5Dcreate(group, "idx_begin", H5T_NATIVE_HSIZE, filespace,
-                           H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    H5_CHK(dset);
-    ierr = H5Dwrite(dset, H5T_NATIVE_HSIZE, memspace, filespace, dxpl,
-                    gidx_begin.data());
-    CE;
-    ierr = H5Dclose(dset);
-    CE;
-
-    dset = H5Dcreate(group, "idx_end", H5T_NATIVE_HSIZE, filespace, H5P_DEFAULT,
-                     H5P_DEFAULT, H5P_DEFAULT);
-    H5_CHK(dset);
-    ierr = H5Dwrite(dset, H5T_NATIVE_HSIZE, memspace, filespace, dxpl,
-                    gidx_end.data());
-    CE;
-    ierr = H5Dclose(dset);
-    CE;
-
-    ierr = H5Sclose(filespace);
-    CE;
-    ierr = H5Sclose(memspace);
-    CE;
-  }
-
   void write_hdf5(const gt::gtensor<size_t, 4>& gidx_begin,
                   const gt::gtensor<size_t, 4>& gidx_end, size_t n_write,
                   size_t n_off, size_t n_total,
@@ -425,8 +439,10 @@ struct OutputParticlesHdf5
 #endif
     prof_stop(pr_C);
 
+    OutputParticlesWriterHDF5 writer(wdims_, kinds_, comm_);
+
     prof_start(pr_D);
-    write_idx(gidx_begin, gidx_end, group, dxpl);
+    writer.write_idx(gidx_begin, gidx_end, group, dxpl);
     prof_stop(pr_D);
 
     prof_start(pr_E);
