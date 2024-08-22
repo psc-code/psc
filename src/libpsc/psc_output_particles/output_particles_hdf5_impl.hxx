@@ -13,10 +13,26 @@
 #include "mparticles_cuda.hxx"
 #endif
 
-// needs to be changed accordingly
-
 struct hdf5_prt
 {
+  hdf5_prt() = default;
+
+  template <typename Particle, typename Patch>
+  hdf5_prt(const Particle& prt, const Patch& patch)
+  {
+    x = prt.x()[0] + patch.xb[0];
+    y = prt.x()[1] + patch.xb[1];
+    z = prt.x()[2] + patch.xb[2];
+    px = prt.u()[0];
+    py = prt.u()[1];
+    pz = prt.u()[2];
+    q = prt.q();
+    m = prt.m();
+    w = prt.w();
+    id = prt.id();
+    tag = prt.tag();
+  }
+
   float x, y, z;
   float px, py, pz;
   float q, m, w;
@@ -438,18 +454,7 @@ struct OutputParticlesHdf5
                 idx[p](jx - ilo[0], jy - ilo[1], jz - ilo[2], kind, 1) =
                   nn + n_off + off[p][si + 1] - off[p][si];
                 for (int n = off[p][si]; n < off[p][si + 1]; n++, nn++) {
-                  auto prt = prts[map[p][n]];
-                  arr[nn].x = prt.x()[0] + patch.xb[0];
-                  arr[nn].y = prt.x()[1] + patch.xb[1];
-                  arr[nn].z = prt.x()[2] + patch.xb[2];
-                  arr[nn].px = prt.u()[0];
-                  arr[nn].py = prt.u()[1];
-                  arr[nn].pz = prt.u()[2];
-                  arr[nn].q = prt.q();
-                  arr[nn].m = prt.m();
-                  arr[nn].w = prt.w();
-                  arr[nn].id = prt.id();
-                  arr[nn].tag = prt.tag();
+                  arr[nn] = writer_type::particle_type(prts[map[p][n]], patch);
                 }
               }
             }
