@@ -221,9 +221,9 @@ private:
     hid_t memspace;
 
     assert(sizeof(size_t) == sizeof(hsize_t));
-    int rank;
-    MPI_Comm_rank(comm_, &rank);
-    if (rank == 0) {
+    int mpi_rank;
+    MPI_Comm_rank(comm_, &mpi_rank);
+    if (mpi_rank == 0) {
       memspace = H5Screate_simple(4, fdims, NULL);
       H5_CHK(memspace);
     } else {
@@ -490,9 +490,9 @@ struct OutputParticlesHdf5
     }
 
     prof_start(pr_A);
-    int rank, size;
-    MPI_Comm_rank(comm_, &rank);
-    MPI_Comm_size(comm_, &size);
+    int mpi_rank, mpi_size;
+    MPI_Comm_rank(comm_, &mpi_rank);
+    MPI_Comm_size(comm_, &mpi_size);
 
     struct mrc_patch_info info;
     int nr_kinds = mprts.grid().kinds.size();
@@ -504,7 +504,7 @@ struct OutputParticlesHdf5
     count_sort(mprts, off, map);
 
     gt::gtensor<size_t, 4> gidx_begin, gidx_end;
-    if (rank == 0) {
+    if (mpi_rank == 0) {
       // alloc global idx array
       gidx_begin =
         gt::empty<size_t>({wdims_[0], wdims_[1], wdims_[2], nr_kinds});
@@ -518,13 +518,13 @@ struct OutputParticlesHdf5
     prof_stop(pr_A);
 
     prof_start(pr_B);
-    if (rank == 0) {
+    if (mpi_rank == 0) {
       int nr_global_patches = grid.nGlobalPatches();
 
-      std::vector<int> remote_sz(size);
+      std::vector<int> remote_sz(mpi_size);
       for (int p = 0; p < nr_global_patches; p++) {
         info = grid.globalPatchInfo(p);
-        if (info.rank == rank) { // skip local patches
+        if (info.rank == mpi_rank) { // skip local patches
           continue;
         }
         int ilo[3], ihi[3], ld[3];
@@ -553,11 +553,11 @@ struct OutputParticlesHdf5
         }
       }
 
-      std::vector<std::vector<size_t>> recv_buf(size);
-      std::vector<size_t*> recv_buf_p(size);
-      std::vector<MPI_Request> recv_req(size, MPI_REQUEST_NULL);
-      for (int r = 0; r < size; r++) {
-        if (r == rank) { // skip this proc
+      std::vector<std::vector<size_t>> recv_buf(mpi_size);
+      std::vector<size_t*> recv_buf_p(mpi_size);
+      std::vector<MPI_Request> recv_req(mpi_size, MPI_REQUEST_NULL);
+      for (int r = 0; r < mpi_size; r++) {
+        if (r == mpi_rank) { // skip this proc
           continue;
         }
         recv_buf[r].resize(2 * remote_sz[r]);
@@ -565,12 +565,12 @@ struct OutputParticlesHdf5
         MPI_Irecv(recv_buf[r].data(), recv_buf[r].size(), MPI_UNSIGNED_LONG, r,
                   0x4000, comm_, &recv_req[r]);
       }
-      MPI_Waitall(size, recv_req.data(), MPI_STATUSES_IGNORE);
+      MPI_Waitall(mpi_size, recv_req.data(), MPI_STATUSES_IGNORE);
 
       // build global idx array, remote part
       for (int p = 0; p < nr_global_patches; p++) {
         info = grid.globalPatchInfo(p);
-        if (info.rank == rank) { // skip local patches
+        if (info.rank == mpi_rank) { // skip local patches
           continue;
         }
         int ilo[3], ihi[3], ld[3];
@@ -593,7 +593,7 @@ struct OutputParticlesHdf5
         }
         recv_buf_p[info.rank] += 2 * sz;
       }
-    } else { // rank != 0: send to rank 0
+    } else { // mpi_rank != 0: send to mpi_rank 0
       // FIXME, alloc idx[] as one array in the first place
       int local_sz = 0;
       for (int p = 0; p < mprts.n_patches(); p++) {
