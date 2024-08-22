@@ -358,6 +358,27 @@ struct OutputParticlesHdf5
     CE;
   }
 
+  void write_hdf5(const gt::gtensor<size_t, 4>& gidx_begin,
+                  const gt::gtensor<size_t, 4>& gidx_end, size_t n_write,
+                  size_t n_off, size_t n_total,
+                  const std::vector<hdf5_prt>& arr, hid_t groupp, hid_t group,
+                  hid_t dxpl)
+  {
+    static int pr_D, pr_E;
+    if (!pr_D) {
+      pr_D = prof_register("outp: write idx", 1., 0, 0);
+      pr_E = prof_register("outp: write prts", 1., 0, 0);
+    }
+
+    prof_start(pr_D);
+    write_idx(gidx_begin, gidx_end, group, dxpl);
+    prof_stop(pr_D);
+
+    prof_start(pr_E);
+    write_particles(n_write, n_off, n_total, arr, groupp, dxpl);
+    prof_stop(pr_E);
+  }
+
   // ----------------------------------------------------------------------
   // operator()
 
@@ -367,13 +388,11 @@ struct OutputParticlesHdf5
     const auto& grid = mprts.grid();
     herr_t ierr;
 
-    static int pr_A, pr_B, pr_C, pr_D, pr_E;
+    static int pr_A, pr_B, pr_C;
     if (!pr_A) {
       pr_A = prof_register("outp: local", 1., 0, 0);
       pr_B = prof_register("outp: comm", 1., 0, 0);
       pr_C = prof_register("outp: write prep", 1., 0, 0);
-      pr_D = prof_register("outp: write idx", 1., 0, 0);
-      pr_E = prof_register("outp: write prts", 1., 0, 0);
     }
 
     prof_start(pr_A);
@@ -554,12 +573,8 @@ struct OutputParticlesHdf5
 #endif
     prof_stop(pr_C);
 
-    prof_start(pr_D);
-    write_idx(gidx_begin, gidx_end, groupp, dxpl);
-    prof_stop(pr_D);
-
-    prof_start(pr_E);
-    write_particles(n_write, n_off, n_total, arr, groupp, dxpl);
+    write_hdf5(gidx_begin, gidx_end, n_write, n_off, n_total, arr, groupp,
+               group, dxpl);
 
     ierr = H5Pclose(dxpl);
     CE;
@@ -567,7 +582,6 @@ struct OutputParticlesHdf5
     H5Gclose(groupp);
     H5Gclose(group);
     H5Fclose(file);
-    prof_stop(pr_E);
   }
 
 private:
