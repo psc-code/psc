@@ -110,16 +110,16 @@ public:
   using particle_type = hdf5_prt;
   using particles_type = std::vector<particle_type>;
 
-  explicit OutputParticlesWriterHDF5(const Int3& lo, const Int3& hi,
-                                     const Grid_t::Kinds& kinds, MPI_Comm comm)
-    : lo_{lo}, hi_{hi}, wdims_{hi - lo}, kinds_{kinds}, comm_{comm}
+  explicit OutputParticlesWriterHDF5(const OutputParticlesParams& prm, Int3& lo,
+                                     const Int3& hi, const Grid_t::Kinds& kinds,
+                                     MPI_Comm comm)
+    : prm_{prm}, lo_{lo}, hi_{hi}, wdims_{hi - lo}, kinds_{kinds}, comm_{comm}
   {}
 
   void operator()(const gt::gtensor<size_t, 4>& gidx_begin,
                   const gt::gtensor<size_t, 4>& gidx_end, size_t n_write,
                   size_t n_off, size_t n_total, const particles_type& arr,
-                  const std::string& filename,
-                  const OutputParticlesParams& params)
+                  const std::string& filename)
   {
     int ierr;
 
@@ -138,13 +138,13 @@ public:
     MPI_Info_create(&mpi_info);
 
 #ifdef H5_HAVE_PARALLEL
-    if (params.romio_cb_write) {
+    if (prm_.romio_cb_write) {
       MPI_Info_set(mpi_info, (char*)"romio_cb_write",
-                   (char*)params.romio_cb_write);
+                   (char*)prm_.romio_cb_write);
     }
-    if (params.romio_ds_write) {
+    if (prm_.romio_ds_write) {
       MPI_Info_set(mpi_info, (char*)"romio_ds_write",
-                   (char*)params.romio_ds_write);
+                   (char*)prm_.romio_ds_write);
     }
     H5Pset_fapl_mpio(plist, comm_, mpi_info);
 #else
@@ -172,7 +172,7 @@ public:
     hid_t dxpl = H5Pcreate(H5P_DATASET_XFER);
     H5_CHK(dxpl);
 #ifdef H5_HAVE_PARALLEL
-    if (params.use_independent_io) {
+    if (prm_.use_independent_io) {
       ierr = H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT);
       CE;
     } else {
@@ -283,6 +283,7 @@ private:
   }
 
 private:
+  OutputParticlesParams prm_;
   Int3 wdims_, lo_, hi_;
   Grid_t::Kinds kinds_;
   MPI_Comm comm_;
@@ -302,7 +303,8 @@ struct OutputParticlesHdf5
   using writer_particles_type = writer_type::particles_type;
   using Particles = typename Mparticles::Patch;
 
-  OutputParticlesHdf5(const Grid_t& grid, const Int3& lo, const Int3& hi)
+  OutputParticlesHdf5(const Grid_t& grid, const OutputParticlesParams& prm,
+                      Int3& lo, const Int3& hi)
     : lo_{lo}, hi_{hi}, wdims_{hi - lo}, kinds_{grid.kinds}, comm_{grid.comm()}
   {}
 
@@ -469,7 +471,6 @@ struct OutputParticlesHdf5
   // operator()
 
   void operator()(Mparticles& mprts, const std::string& filename,
-                  const OutputParticlesParams& params,
                   OutputParticlesWriterHDF5& writer)
   {
     const auto& grid = mprts.grid();
@@ -609,14 +610,11 @@ struct OutputParticlesHdf5
     }
     prof_stop(pr_B);
 
-    writer(gidx_begin, gidx_end, n_write, n_off, n_total, arr, filename,
-           params);
+    writer(gidx_begin, gidx_end, n_write, n_off, n_total, arr, filename);
   }
 
 private:
-  Int3 lo_;
-  Int3 hi_;
-  Int3 wdims_;
+  Int3 lo_, hi_, wdims_;
   Grid_t::Kinds kinds_;
   MPI_Comm comm_;
 };
@@ -641,7 +639,7 @@ public:
     : prm_{params},
       lo_{params.lo},
       hi_{adjust_hi(grid, params.hi)},
-      writer_{lo_, hi_, grid.kinds, grid.comm()}
+      writer_{params, lo_, hi_, grid.kinds, grid.comm()}
   {}
 
   template <typename Mparticles>
@@ -658,8 +656,8 @@ public:
     snprintf(filename, slen, "%s/%s.%06d_p%06d.h5", prm_.data_dir,
              prm_.basename, grid.timestep(), 0);
 
-    detail::OutputParticlesHdf5<Mparticles> impl{grid, lo_, hi_};
-    impl(mprts, filename, prm_, writer_);
+    detail::OutputParticlesHdf5<Mparticles> impl{grid, prm_, lo_, hi_};
+    impl(mprts, filename, writer_);
   }
 
   // FIXME, handles MparticlesVpic by conversion for now
