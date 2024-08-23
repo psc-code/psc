@@ -537,9 +537,14 @@ void run()
 
   // -- output particles
   OutputParticlesParams outp_params{};
+#if CASE == CASE_2D_SMALL
+  outp_params.every_step = 4;
+#else
   outp_params.every_step = -400;
+#endif
   outp_params.data_dir = ".";
   outp_params.basename = "prt";
+  outp_params.lo = {0, 0, grid.domain.gdims[2] / 2};
   OutputParticles outp{grid, outp_params};
 
   int oute_interval = -100;
