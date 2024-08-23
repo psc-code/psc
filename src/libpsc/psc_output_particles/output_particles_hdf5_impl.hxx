@@ -116,9 +116,8 @@ public:
   {}
 
   void operator()(const gt::gtensor<size_t, 4>& gidx_begin,
-                  const gt::gtensor<size_t, 4>& gidx_end, size_t n_write,
-                  size_t n_off, size_t n_total, const particles_type& arr,
-                  int timestep)
+                  const gt::gtensor<size_t, 4>& gidx_end, size_t n_off,
+                  size_t n_total, const particles_type& arr, int timestep)
   {
     int ierr;
 
@@ -191,7 +190,7 @@ public:
     prof_stop(pr_D);
 
     prof_start(pr_E);
-    write_particles(n_write, n_off, n_total, arr, groupp, dxpl);
+    write_particles(n_off, n_total, arr, groupp, dxpl);
     prof_stop(pr_E);
 
     ierr = H5Pclose(dxpl);
@@ -256,12 +255,12 @@ private:
     CE;
   }
 
-  void write_particles(size_t n_write, size_t n_off, size_t n_total,
-                       const particles_type& arr, hid_t group, hid_t dxpl)
+  void write_particles(size_t n_off, size_t n_total, const particles_type& arr,
+                       hid_t group, hid_t dxpl)
   {
     herr_t ierr;
 
-    hsize_t mdims[1] = {n_write};
+    hsize_t mdims[1] = {arr.size()};
     hsize_t fdims[1] = {n_total};
     hsize_t foff[1] = {n_off};
     hid_t memspace = H5Screate_simple(1, mdims, NULL);
@@ -408,8 +407,8 @@ struct OutputParticlesHdf5
   writer_particles_type make_local_particle_array(
     Mparticles& mprts, const std::vector<std::vector<int>>& off,
     const std::vector<std::vector<int>>& map,
-    std::vector<gt::gtensor<size_t, 5>>& idx, size_t* p_n_write,
-    size_t* p_n_off, size_t* p_n_total)
+    std::vector<gt::gtensor<size_t, 5>>& idx, size_t* p_n_off,
+    size_t* p_n_total)
   {
     const auto& grid = mprts.grid();
     int nr_kinds = grid.kinds.size();
@@ -453,7 +452,6 @@ struct OutputParticlesHdf5
         }
       }
     }
-    *p_n_write = n_write;
     *p_n_off = n_off;
     *p_n_total = n_total;
     return arr;
@@ -497,9 +495,9 @@ struct OutputParticlesHdf5
     }
 
     // find local particle and idx arrays
-    size_t n_write, n_off, n_total;
-    auto arr = make_local_particle_array(mprts, off, map, idx, &n_write, &n_off,
-                                         &n_total);
+    size_t n_off, n_total;
+    auto arr =
+      make_local_particle_array(mprts, off, map, idx, &n_off, &n_total);
     prof_stop(pr_A);
 
     prof_start(pr_B);
@@ -601,7 +599,7 @@ struct OutputParticlesHdf5
     }
     prof_stop(pr_B);
 
-    writer(gidx_begin, gidx_end, n_write, n_off, n_total, arr, grid.timestep());
+    writer(gidx_begin, gidx_end, n_off, n_total, arr, grid.timestep());
   }
 
 private:
