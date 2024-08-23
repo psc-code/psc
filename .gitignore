@@ -101,3 +101,4 @@ spack-build-out.txt
 spack-configure-args.txt
 .vscode/
 **/psc*params.txt
+.venv/
