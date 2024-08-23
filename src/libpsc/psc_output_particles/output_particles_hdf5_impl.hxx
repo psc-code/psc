@@ -415,22 +415,7 @@ struct OutputParticlesHdf5
     int nr_kinds = grid.kinds.size();
 
     // count all particles to be written locally
-    size_t n_write = 0;
-    for (int p = 0; p < mprts.n_patches(); p++) {
-      auto& patch = grid.patches[p];
-      int ilo[3], ihi[3], ld[3];
-      int sz = find_patch_bounds(grid.ldims, patch.off, ilo, ihi, ld);
-      for (int jz = ilo[2]; jz < ihi[2]; jz++) {
-        for (int jy = ilo[1]; jy < ihi[1]; jy++) {
-          for (int jx = ilo[0]; jx < ihi[0]; jx++) {
-            for (int kind = 0; kind < nr_kinds; kind++) {
-              int si = sort_index(grid.ldims, nr_kinds, {jx, jy, jz}, kind);
-              n_write += off[p][si + 1] - off[p][si];
-            }
-          }
-        }
-      }
-    }
+    size_t n_write = mprts.size();
 
     assert(sizeof(size_t) == sizeof(unsigned long));
     size_t n_total, n_off = 0;
