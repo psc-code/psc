@@ -293,13 +293,38 @@ private:
   Hdf5ParticleType prt_type_;
 };
 
+template <int EVERY>
+class ParticleSelectorEveryNth
+{
+public:
+  template <typename Particle>
+  bool operator()(const Particle& prt)
+  {
+    // return true for every `every_`th particle
+    return (cnt_++ % EVERY) == 0;
+  }
+
+private:
+  int cnt_ = 0;
+};
+
+class ParticleSelectorAll
+{
+public:
+  template <typename Particle>
+  bool operator()(const Particle& prt)
+  {
+    return true;
+  }
+};
+
 namespace detail
 {
 
 // ======================================================================
 // OutputParticlesHdf5
 
-template <typename Mparticles>
+template <typename Mparticles, typename ParticleSelector>
 struct OutputParticlesHdf5
 {
   using writer_type = OutputParticlesWriterHDF5;
@@ -353,17 +378,24 @@ struct OutputParticlesHdf5
   {
     int nr_kinds = mprts.grid().kinds.size();
 
+    ParticleSelector selector;
+
     for (int p = 0; p < mprts.n_patches(); p++) {
       const int* ldims = mprts.grid().ldims;
       int nr_indices = ldims[0] * ldims[1] * ldims[2] * nr_kinds;
       off[p].resize(nr_indices + 1);
       auto&& prts = mprts[p];
       unsigned int n_prts = prts.size();
+      std::vector<int> particle_indices;
+      particle_indices.reserve(n_prts);
 
       // counting sort to get map
       for (int n = 0; n < n_prts; n++) {
-        int si = get_sort_index(prts, n);
-        off[p][si]++;
+        if (selector(prts[n])) {
+          particle_indices.push_back(n);
+          int si = get_sort_index(prts, n);
+          off[p][si]++;
+        }
       }
       // prefix sum to get offsets
       int o = 0;
@@ -377,7 +409,7 @@ struct OutputParticlesHdf5
 
       // sort a map only, not the actual particles
       map[p].resize(n_prts);
-      for (int n = 0; n < n_prts; n++) {
+      for (auto n : particle_indices) {
         int si = get_sort_index(prts, n);
         map[p][off2[si]++] = n;
       }
@@ -609,6 +641,7 @@ private:
 
 } // namespace detail
 
+template <typename ParticleSelector = ParticleSelectorAll>
 class OutputParticlesHdf5 : OutputParticlesBase
 {
   static OutputParticlesParams adjust_params(
@@ -640,7 +673,8 @@ public:
       return;
     }
 
-    detail::OutputParticlesHdf5<Mparticles> impl{grid, params_};
+    detail::OutputParticlesHdf5<Mparticles, ParticleSelector> impl{grid,
+                                                                   params_};
     impl(mprts, writer_);
   }
 

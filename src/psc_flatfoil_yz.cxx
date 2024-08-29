@@ -226,7 +226,11 @@ using Balance = PscConfig::Balance;
 using Collision = PscConfig::Collision;
 using Checks = PscConfig::Checks;
 using Marder = PscConfig::Marder;
+#if CASE == CASE_2D_SMALL
+using OutputParticles = OutputParticlesHdf5<ParticleSelectorEveryNth<10>>;
+#else
 using OutputParticles = PscConfig::OutputParticles;
+#endif
 using Moment_n = typename Moment_n_Selector<Mparticles, Dim>::type;
 using Heating = typename HeatingSelector<Mparticles>::Heating;
 

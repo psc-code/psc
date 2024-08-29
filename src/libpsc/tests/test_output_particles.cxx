@@ -64,14 +64,14 @@ private:
   Int3 ibn = {2, 2, 2};
 };
 
-using OutputParticlesTestTypes =
-  ::testing::Types<Config<dim_xyz, MparticlesSingle, OutputParticlesAscii>
+using OutputParticlesTestTypes = ::testing::Types<
+  Config<dim_xyz, MparticlesSingle, OutputParticlesAscii>
 #ifdef H5_HAVE_PARALLEL
-                   ,
-                   Config<dim_xyz, MparticlesSingle, OutputParticlesHdf5>,
-                   Config<dim_xyz, MparticlesDouble, OutputParticlesHdf5>
+  ,
+  Config<dim_xyz, MparticlesSingle, OutputParticlesHdf5<ParticleSelectorAll>>,
+  Config<dim_xyz, MparticlesDouble, OutputParticlesHdf5<ParticleSelectorAll>>
 #endif
-                   >;
+  >;
 
 TYPED_TEST_SUITE(OutputParticlesTest, OutputParticlesTestTypes);
 
