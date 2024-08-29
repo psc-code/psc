@@ -20,7 +20,7 @@ struct RngC
   {
     real_t ran;
     do {
-      ran = real_t(random()) / RAND_MAX;
+      ran = real_t(random()) / real_t(RAND_MAX);
     } while (ran == real_t(0.f));
 
     return ran;

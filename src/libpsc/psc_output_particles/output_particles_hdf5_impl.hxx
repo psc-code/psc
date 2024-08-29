@@ -653,9 +653,10 @@ public:
       return;
     }
 
-    char filename[strlen(prm_.data_dir) + strlen(prm_.basename) + 20];
-    sprintf(filename, "%s/%s.%06d_p%06d.h5", prm_.data_dir, prm_.basename,
-            grid.timestep(), 0);
+    int slen = strlen(prm_.data_dir) + strlen(prm_.basename) + 20;
+    char filename[slen];
+    snprintf(filename, slen, "%s/%s.%06d_p%06d.h5", prm_.data_dir,
+             prm_.basename, grid.timestep(), 0);
 
     detail::OutputParticlesHdf5<Mparticles> impl{grid, lo_, hi_, wdims_,
                                                  prt_type_};
