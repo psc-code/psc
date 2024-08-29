@@ -325,11 +325,11 @@ struct OutputParticlesHdf5
            kind;
   };
 
-  template <typename Particle>
-  static inline int get_sort_index(Particles& prts, const Particle& prt)
+  static inline int get_sort_index(Particles& prts, int n)
   {
     const Grid_t& grid = prts.grid();
     const int* ldims = grid.ldims;
+    const auto& prt = prts[n];
 
     Int3 pos;
     for (int d = 0; d < 3; d++) {
@@ -361,8 +361,8 @@ struct OutputParticlesHdf5
       unsigned int n_prts = prts.size();
 
       // counting sort to get map
-      for (const auto& prt : prts) {
-        int si = get_sort_index(prts, prt);
+      for (int n = 0; n < n_prts; n++) {
+        int si = get_sort_index(prts, n);
         off[p][si]++;
       }
       // prefix sum to get offsets
@@ -377,10 +377,9 @@ struct OutputParticlesHdf5
 
       // sort a map only, not the actual particles
       map[p].resize(n_prts);
-      int n = 0;
-      for (const auto& prt : prts) {
-        int si = get_sort_index(prts, prt);
-        map[p][off2[si]++] = n++;
+      for (int n = 0; n < n_prts; n++) {
+        int si = get_sort_index(prts, n);
+        map[p][off2[si]++] = n;
       }
     }
   }
