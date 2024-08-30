@@ -74,8 +74,9 @@ public:
     int step = grid.timestep();
     double time = grid.timestep() * grid.dt;
 
-    char filename[dir_.size() + pfx_.size() + 20];
-    sprintf(filename, "%s/%s.%09d.bp", dir_.c_str(), pfx_.c_str(), step);
+    int len = dir_.size() + pfx_.size() + 20;
+    char filename[len];
+    snprintf(filename, len, "%s/%s.%09d.bp", dir_.c_str(), pfx_.c_str(), step);
     file_ = io_.open(filename, kg::io::Mode::Write, comm_, pfx_);
     file_.beginStep(kg::io::StepMode::Append);
     file_.put("step", step);
@@ -157,9 +158,9 @@ public:
     Double3 length = grid.domain.length;
     Double3 corner = grid.domain.corner;
 
-    auto write_func = [this, step, time, h_expr = move(h_expr), name,
+    auto write_func = [this, step, time, h_expr = std::move(h_expr), name,
                        comp_names, ldims, gdims, length, corner,
-                       patch_off = move(patch_off)]() {
+                       patch_off = std::move(patch_off)]() {
       // std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
       prof_start(pr_thread);
@@ -170,8 +171,10 @@ public:
       Int3 ib = {-(im[0] - ldims[0]) / 2, -(im[1] - ldims[1]) / 2,
                  -(im[2] - ldims[2]) / 2};
 
-      char filename[dir_.size() + pfx_.size() + 20];
-      sprintf(filename, "%s/%s.%09d.bp", dir_.c_str(), pfx_.c_str(), step);
+      int len = dir_.size() + pfx_.size() + 20;
+      char filename[len];
+      snprintf(filename, len, "%s/%s.%09d.bp", dir_.c_str(), pfx_.c_str(),
+               step);
       {
         auto launch = kg::io::Mode::Blocking;
 

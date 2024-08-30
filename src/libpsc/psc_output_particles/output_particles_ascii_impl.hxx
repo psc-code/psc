@@ -22,9 +22,10 @@ struct OutputParticlesAscii
 
     int rank;
     MPI_Comm_rank(comm_, &rank);
-    char filename[strlen(data_dir) + strlen(basename) + 21];
-    sprintf(filename, "%s/%s.%06d_p%06d.asc", data_dir, basename,
-            grid.timestep(), rank);
+    int slen = strlen(data_dir) + strlen(basename) + 21;
+    char filename[slen];
+    snprintf(filename, slen, "%s/%s.%06d_p%06d.asc", data_dir, basename,
+             grid.timestep(), rank);
 
     FILE* file = fopen(filename, "w");
     auto accessor = mprts.accessor();

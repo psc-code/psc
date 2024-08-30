@@ -31,7 +31,7 @@
 
 #include "../libpsc/vpic/fields_item_vpic.hxx"
 
-using OutputParticlesDefault = OutputParticlesHdf5;
+using OutputParticlesDefault = OutputParticlesHdf5<ParticleSelectorAll>;
 
 struct SimulationNone
 {
@@ -252,7 +252,7 @@ struct PscConfigVpicPsc
   using BndParticles = BndParticlesVpic<Mparticles>;
   using Checks = ChecksVpic<Mparticles, MfieldsState>;
   using Marder = MarderVpic<Mparticles, MfieldsState>;
-  using OutputParticles = OutputParticlesHdf5;
+  using OutputParticles = OutputParticlesHdf5<ParticleSelectorAll>;
   using OutputHydro = OutputHydroQ<Mparticles, MfieldsHydro,
                                    typename VpicConfig::MfieldsInterpolator>;
   using Dim = dim_xz;

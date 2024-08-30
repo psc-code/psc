@@ -226,7 +226,11 @@ using Balance = PscConfig::Balance;
 using Collision = PscConfig::Collision;
 using Checks = PscConfig::Checks;
 using Marder = PscConfig::Marder;
+#if CASE == CASE_2D_SMALL
+using OutputParticles = OutputParticlesHdf5<ParticleSelectorEveryNth<10>>;
+#else
 using OutputParticles = PscConfig::OutputParticles;
+#endif
 using Moment_n = typename Moment_n_Selector<Mparticles, Dim>::type;
 using Heating = typename HeatingSelector<Mparticles>::Heating;
 
@@ -537,9 +541,14 @@ void run()
 
   // -- output particles
   OutputParticlesParams outp_params{};
+#if CASE == CASE_2D_SMALL
+  outp_params.every_step = 4;
+#else
   outp_params.every_step = -400;
+#endif
   outp_params.data_dir = ".";
   outp_params.basename = "prt";
+  outp_params.lo = {0, 0, grid.domain.gdims[2] / 2};
   OutputParticles outp{grid, outp_params};
 
   int oute_interval = -100;
