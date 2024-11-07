@@ -16,6 +16,9 @@ struct PscFlatfoilParams
   double k = 2 * 2. * M_PI / 10.;
   double amplitude_s = 1.;
   double amplitude_p = 0.;
+
+  double omega = 1.;
+  double d = .1;
 };
 
 // ======================================================================
@@ -84,9 +87,9 @@ using Moment_n = typename Moment_n_Selector<Mparticles, Dim>::type;
 void setupParameters()
 {
   // -- set some generic PSC parameters
-  psc_params.nmax = 10000001; // 5001;
+  psc_params.nmax = 1001; // 5001;
   psc_params.cfl = 0.75;
-  psc_params.write_checkpoint_every_step = 1000;
+  // psc_params.write_checkpoint_every_step = 1000;
   psc_params.stats_every = 1;
 
   // -- start from checkpoint:
@@ -102,7 +105,7 @@ void setupParameters()
   // -- Set some parameters specific to this case
   g.theta = 0;
   g.k = 2 * 2. * M_PI / 10.;
-  g.amplitude_s = 1.;
+  g.amplitude_s = 0.;
   g.amplitude_p = 0.;
 }
 
@@ -117,9 +120,16 @@ void setupParameters()
 Grid_t* setupGrid()
 {
   // --- setup domain
-  Grid_t::Real3 LL = {10, 10., 10.}; // domain size (in d_e)
-  Int3 gdims = {50, 50, 50};         // global number of grid points
-  Int3 np = {5, 5, 5};               // division into patches
+  // far field
+  // Grid_t::Real3 LL = {80., 80., 80.}; // domain size (in d_e)
+  // Int3 gdims = {400, 400, 400};       // global number of grid points
+  // near field
+  // Grid_t::Real3 LL = {5., 5., 5.}; // domain size (in d_e)
+  // Int3 gdims = {200, 200, 200};    // global number of grid points
+  // quadrupole far field
+  Grid_t::Real3 LL = {100., 100., 100.}; // domain size (in d_e)
+  Int3 gdims = {400, 400, 400};          // global number of grid points
+  Int3 np = {2, 2, 2};                   // division into patches
 
   Grid_t::Domain domain{gdims, LL, -.5 * LL, np};
 
@@ -232,6 +242,43 @@ void run()
   psc_params.marder_interval = -1;
   Marder marder(grid, marder_diffusion, marder_loop, marder_dump);
 
+  auto lf_ext_current = [&](const Grid_t& grid, MfieldsState& mflds) {
+    double time = grid.timestep() * grid.dt;
+    auto& gdims = grid.domain.gdims;
+    for (int p = 0; p < mflds.n_patches(); ++p) {
+      auto& patch = grid.patches[p];
+      auto F = make_Fields3d<Dim>(mflds[p]);
+      grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
+        Int3 index{i, j, k};
+        auto crd_ec_z = Centering::getPos(patch, index, Centering::EC, 2);
+#if 0
+        double r =
+          std::sqrt(sqr(crd_ec_z[0]) + sqr(crd_ec_z[1]) + sqr(crd_ec_z[2]));
+        if (r < g.d) {
+          F(JZI, i, j, k) += cos(g.omega * time);
+        }
+#else
+        Int3 ii = Int3{i, j, k} + patch.off;
+        if (0) { // dipole
+          if (ii[0] == gdims[0] / 2 && ii[1] == gdims[1] / 2 &&
+              ii[2] == gdims[2] / 2 - 1) {
+            F(JZI, i, j, k) += cos(g.omega * time);
+          }
+        } else { // quadrupole
+          if (ii[0] == gdims[0] / 2 && ii[1] == gdims[1] / 2 &&
+              ii[2] == gdims[2] / 2 - 1) {
+            F(JZI, i, j, k) += cos(g.omega * time);
+          }
+          if (ii[0] == gdims[0] / 2 && ii[1] == gdims[1] / 2 &&
+              ii[2] == gdims[2] / 2) {
+            F(JZI, i, j, k) -= cos(g.omega * time);
+          }
+        }
+#endif
+      });
+    }
+  };
+
   // ----------------------------------------------------------------------
   // Set up output
   //
@@ -240,7 +287,7 @@ void run()
   // -- output fields
   OutputFieldsItemParams outf_item_params{};
   OutputFieldsParams outf_params{};
-  outf_item_params.pfield.out_interval = 1;
+  outf_item_params.pfield.out_interval = 20;
 
   outf_params.fields = outf_item_params;
   OutputFields<MfieldsState, Mparticles, Dim, Writer> outf{grid, outf_params};
@@ -259,14 +306,15 @@ void run()
 
   if (read_checkpoint_filename.empty()) {
     initializeFields(mflds);
+    lf_ext_current(*grid_ptr, mflds);
   }
 
   // ----------------------------------------------------------------------
   // hand off to PscIntegrator to run the simulation
 
-  auto psc =
-    makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts, balance,
-                                 collision, checks, marder, diagnostics);
+  auto psc = makePscIntegrator<PscConfig>(
+    psc_params, *grid_ptr, mflds, mprts, balance, collision, checks, marder,
+    diagnostics, injectParticlesNone, lf_ext_current);
 
   MEM_STATS();
   psc.integrate();
