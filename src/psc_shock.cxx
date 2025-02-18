@@ -44,7 +44,7 @@ namespace
 // General PSC parameters
 PscParams psc_params;
 
-double v_thermal = 1.0;
+double v_thermal = 1e-3;
 double box_size = 1.0;
 } // namespace
 
