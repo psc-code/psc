@@ -53,8 +53,8 @@ double box_size = 1.0;
 
 void setupParameters(int argc, char** argv)
 {
-  psc_params.nmax = 100;
-  psc_params.stats_every = 10;
+  psc_params.nmax = 10000;
+  psc_params.stats_every = 100;
   psc_params.cfl = .75;
 
   psc_params.write_checkpoint_every_step = 0;
@@ -182,7 +182,7 @@ static void run(int argc, char** argv)
   Balance balance{.1};
 
   // -- Sort
-  psc_params.sort_interval = 10;
+  psc_params.sort_interval = 100;
 
   // -- Collision
   int collision_interval = 0;
@@ -201,7 +201,7 @@ static void run(int argc, char** argv)
   double marder_diffusion = 0.9;
   int marder_loop = 3;
   bool marder_dump = false;
-  psc_params.marder_interval = 5;
+  psc_params.marder_interval = 50;
   Marder marder(grid, marder_diffusion, marder_loop, marder_dump);
 
   // ----------------------------------------------------------------------
@@ -209,13 +209,13 @@ static void run(int argc, char** argv)
 
   // -- output fields
   OutputFieldsParams outf_params{};
-  outf_params.fields.pfield.out_interval = 1;
-  outf_params.moments.pfield.out_interval = 1;
+  outf_params.fields.pfield.out_interval = 100;
+  outf_params.moments.pfield.out_interval = 100;
   OutputFields<MfieldsState, Mparticles, Dim> outf{grid, outf_params};
 
   // -- output particles
   OutputParticlesParams outp_params{};
-  outp_params.every_step = 1;
+  outp_params.every_step = 100;
   outp_params.data_dir = ".";
   outp_params.basename = "prt";
   OutputParticles outp{grid, outp_params};
