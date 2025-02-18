@@ -124,7 +124,7 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
     np.p =
       setup_particles.createMaxwellian({np.kind,
                                         np.n,
-                                        {0, 0, 0},
+                                        {0, 10 * v_thermal, 0},
                                         {temperature, temperature, temperature},
                                         np.tag});
   };
