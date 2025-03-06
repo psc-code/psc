@@ -148,7 +148,12 @@ void fillGhosts(MF& mfld, int compBegin, int compEnd)
 
 void initializeFields(MfieldsState& mflds)
 {
-  setupFields(mflds, [&](int component, double coords[3]) { return 0.0; });
+  setupFields(mflds, [&](int component, double coords[3]) {
+    if (component == HZ) {
+      return 0.01;
+    }
+    return 0.0;
+  });
 }
 
 // ======================================================================
