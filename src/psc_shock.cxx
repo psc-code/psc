@@ -44,8 +44,12 @@ namespace
 // General PSC parameters
 PscParams psc_params;
 
-double v_thermal = 1e-3;
-double box_size = 1.0;
+double v_thermal = 8.85E-03;
+double v_flow = 2.67E-03;
+double b_background = 6.9713E-02;
+double len_x = 1.0;
+double len_y = 500.0;
+double len_z = 20.0;
 } // namespace
 
 // ======================================================================
@@ -53,7 +57,7 @@ double box_size = 1.0;
 
 void setupParameters(int argc, char** argv)
 {
-  psc_params.nmax = 10000;
+  psc_params.nmax = 34000;
   psc_params.stats_every = 100;
   psc_params.cfl = .75;
 
@@ -71,11 +75,10 @@ void setupParameters(int argc, char** argv)
 Grid_t* setupGrid()
 {
   // FIXME add a check to catch mismatch between Dim and n grid points early
-  auto domain = Grid_t::Domain{
-    {1, 16, 16},                                         // n grid points
-    {box_size, box_size, box_size},                      // physical lengths
-    {-box_size / 2.0, -box_size / 2.0, -box_size / 2.0}, // origin offset
-    {1, 1, 1}};                                          // n patches
+  auto domain = Grid_t::Domain{{1, 1000, 40},         // n grid points
+                               {len_x, len_y, len_z}, // physical lengths
+                               {-len_x / 2.0, 0, 0},  // origin offset
+                               {1, 1, 1}};            // n patches
 
   auto bc =
     psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL, BND_FLD_PERIODIC},
@@ -85,11 +88,12 @@ Grid_t* setupGrid()
 
   auto kinds = Grid_t::Kinds(NR_KINDS);
   kinds[KIND_ELECTRON] = {-1.0, 1.0, "e"};
-  kinds[KIND_ION] = {1.0, 1.0, "i"};
+  kinds[KIND_ION] = {1.0, 100.0, "i"};
 
   // --- generic setup
-  auto norm_params = Grid_t::NormalizationParams::dimensionless();
+  auto norm_params = Grid_t::NormalizationParams();
   norm_params.nicell = 100;
+  norm_params.n0 = 5.00E+08;
 
   double dt = psc_params.cfl * courant_length(domain);
   Grid_t::Normalization norm{norm_params};
@@ -124,7 +128,7 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
     np.p =
       setup_particles.createMaxwellian({np.kind,
                                         np.n,
-                                        {0, 10 * v_thermal, 0},
+                                        {0, v_flow, 0},
                                         {temperature, temperature, temperature},
                                         np.tag});
   };
@@ -149,8 +153,8 @@ void fillGhosts(MF& mfld, int compBegin, int compEnd)
 void initializeFields(MfieldsState& mflds)
 {
   setupFields(mflds, [&](int component, double coords[3]) {
-    if (component == HZ) {
-      return 0.01;
+    if (component == HX) {
+      return b_background;
     }
     return 0.0;
   });
