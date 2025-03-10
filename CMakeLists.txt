@@ -69,7 +69,7 @@ if (BUILD_TESTING)
   CPMAddPackage(
     NAME GTest
     GITHUB_REPOSITORY google/googletest
-    VERSION 1.14.0
+    VERSION 1.15.2
     OPTIONS
         "INSTALL_GTEST OFF"
         "gtest_force_shared_crt ON"
