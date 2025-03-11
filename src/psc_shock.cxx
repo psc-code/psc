@@ -218,13 +218,13 @@ static void run(int argc, char** argv)
 
   // -- output fields
   OutputFieldsParams outf_params{};
-  outf_params.fields.pfield.out_interval = 100;
-  outf_params.moments.pfield.out_interval = 100;
+  outf_params.fields.pfield.out_interval = 500;
+  outf_params.moments.pfield.out_interval = 500;
   OutputFields<MfieldsState, Mparticles, Dim> outf{grid, outf_params};
 
   // -- output particles
   OutputParticlesParams outp_params{};
-  outp_params.every_step = 100;
+  outp_params.every_step = 1000;
   outp_params.data_dir = ".";
   outp_params.basename = "prt";
   OutputParticles outp{grid, outp_params};
