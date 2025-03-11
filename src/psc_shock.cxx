@@ -91,9 +91,8 @@ Grid_t* setupGrid()
   kinds[KIND_ION] = {1.0, 100.0, "i"};
 
   // --- generic setup
-  auto norm_params = Grid_t::NormalizationParams();
+  auto norm_params = Grid_t::NormalizationParams::dimensionless();
   norm_params.nicell = 100;
-  norm_params.n0 = 5.00E+08;
 
   double dt = psc_params.cfl * courant_length(domain);
   Grid_t::Normalization norm{norm_params};
