@@ -77,8 +77,8 @@ Grid_t* setupGrid()
   // FIXME add a check to catch mismatch between Dim and n grid points early
   auto domain = Grid_t::Domain{{1, 1000, 40},         // n grid points
                                {len_x, len_y, len_z}, // physical lengths
-                               {-len_x / 2.0, 0, 0},  // origin offset
-                               {1, 1, 1}};            // n patches
+                               {0, 0, 0},  // location of lower corner
+                               {1, 1, 1}}; // n patches
 
   auto bc =
     psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL, BND_FLD_PERIODIC},
