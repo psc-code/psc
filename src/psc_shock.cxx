@@ -44,7 +44,7 @@ namespace
 // General PSC parameters
 PscParams psc_params;
 
-double v_thermal = 8.85E-03;
+double temperature = 7.8278E-05;
 double v_flow = 2.67E-03;
 double b_background = 6.9713E-02;
 double len_x = 1.0;
@@ -122,8 +122,6 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
 
   auto init_np = [&](int kind, Double3 crd, int p, Int3 idx,
                      psc_particle_np& np) {
-    double temperature = sqr(v_thermal);
-
     np.n = 1.0;
     np.p =
       setup_particles.createMaxwellian({np.kind,
