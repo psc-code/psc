@@ -44,12 +44,28 @@ namespace
 // General PSC parameters
 PscParams psc_params;
 
-double temperature = 7.8278E-05;
-double v_flow = 2.67E-03;
-double b_background = 6.9713E-02;
-double len_x = 1.0;
-double len_y = 500.0;
-double len_z = 20.0;
+double electron_temperature = 2.0833E-02;
+double ion_temperature = 1.0417E-01;
+double ion_mass = 400.0;
+double v_flow = 6.2460E-02;
+double b_background = 5.0002E-01;
+
+int nx = 1;
+int ny = 40960;        // Egedal 2012 uses 40960
+int nz = 2;            // Egedal 2012 uses 3840
+int nt = 3700100 / 30; // need 3700100 to match Egedal 2012
+
+double dx = 1.0;
+double dy = 1.5625E-01;
+double dz = dy;
+
+double len_x = nx * dx;
+double len_y = ny * dy;
+double len_z = nz * dz;
+
+int n_writes = 100;
+int out_interval = nt / n_writes;
+
 } // namespace
 
 // ======================================================================
@@ -57,8 +73,8 @@ double len_z = 20.0;
 
 void setupParameters(int argc, char** argv)
 {
-  psc_params.nmax = 34000;
-  psc_params.stats_every = 100;
+  psc_params.nmax = nt;
+  psc_params.stats_every = out_interval;
   psc_params.cfl = .75;
 
   psc_params.write_checkpoint_every_step = 0;
@@ -75,7 +91,7 @@ void setupParameters(int argc, char** argv)
 Grid_t* setupGrid()
 {
   // FIXME add a check to catch mismatch between Dim and n grid points early
-  auto domain = Grid_t::Domain{{1, 1000, 40},         // n grid points
+  auto domain = Grid_t::Domain{{nx, ny, nz},          // n grid points
                                {len_x, len_y, len_z}, // physical lengths
                                {0, 0, 0},  // location of lower corner
                                {1, 1, 1}}; // n patches
@@ -88,7 +104,7 @@ Grid_t* setupGrid()
 
   auto kinds = Grid_t::Kinds(NR_KINDS);
   kinds[KIND_ELECTRON] = {-1.0, 1.0, "e"};
-  kinds[KIND_ION] = {1.0, 100.0, "i"};
+  kinds[KIND_ION] = {1.0, ion_mass, "i"};
 
   // --- generic setup
   auto norm_params = Grid_t::NormalizationParams::dimensionless();
@@ -121,6 +137,8 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
 
   auto init_np = [&](int kind, Double3 crd, int p, Int3 idx,
                      psc_particle_np& np) {
+    double temperature =
+      np.kind == KIND_ION ? ion_temperature : electron_temperature;
     np.n = 1.0;
     np.p =
       setup_particles.createMaxwellian({np.kind,
@@ -197,7 +215,7 @@ static void run(int argc, char** argv)
 
   // -- Checks
   ChecksParams checks_params{};
-  checks_params.gauss_every_step = 50;
+  checks_params.gauss_every_step = out_interval;
   // checks_params.gauss_dump_always = true;
   checks_params.gauss_threshold = 1e-5;
 
@@ -215,13 +233,13 @@ static void run(int argc, char** argv)
 
   // -- output fields
   OutputFieldsParams outf_params{};
-  outf_params.fields.pfield.out_interval = 500;
-  outf_params.moments.pfield.out_interval = 500;
+  outf_params.fields.pfield.out_interval = out_interval;
+  outf_params.moments.pfield.out_interval = out_interval;
   OutputFields<MfieldsState, Mparticles, Dim> outf{grid, outf_params};
 
   // -- output particles
   OutputParticlesParams outp_params{};
-  outp_params.every_step = 1000;
+  outp_params.every_step = out_interval;
   outp_params.data_dir = ".";
   outp_params.basename = "prt";
   OutputParticles outp{grid, outp_params};
