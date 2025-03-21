@@ -54,7 +54,7 @@ double b_x = 0;
 double b_y = 2.4000E-02;
 
 int nx = 1;
-int ny = 12800;
+int ny = 128 * 128;
 int nz = 2;
 int nt = 5505294;
 
