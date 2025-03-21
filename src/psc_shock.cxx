@@ -44,20 +44,23 @@ namespace
 // General PSC parameters
 PscParams psc_params;
 
-double electron_temperature = 2.0833E-02;
-double ion_temperature = 1.0417E-01;
-double ion_mass = 400.0;
-double v_flow = 6.2460E-02;
-double b_background = 5.0002E-01;
+// matching: heliospheric .1 AU 3, shock tiny 2, real c and M, parallel B
+
+double electron_temperature = 7.8278E-05;
+double ion_temperature = 7.8278E-05;
+double ion_mass = 1.8360E+03;
+double v_flow = 2.6685E-03;
+double b_x = 0;
+double b_y = 2.4000E-02;
 
 int nx = 1;
-int ny = 40960;        // Egedal 2012 uses 40960
-int nz = 2;            // Egedal 2012 uses 3840
-int nt = 3700100 / 30; // need 3700100 to match Egedal 2012
+int ny = 12800;
+int nz = 2;
+int nt = 5505294;
 
-double dx = 1.0;
-double dy = 1.5625E-01;
-double dz = dy;
+double dx = 4.2849E+01;
+double dy = 3.3475E-01;
+double dz = 3.3475E-01;
 
 double len_x = nx * dx;
 double len_y = ny * dy;
@@ -168,10 +171,11 @@ void fillGhosts(MF& mfld, int compBegin, int compEnd)
 void initializeFields(MfieldsState& mflds)
 {
   setupFields(mflds, [&](int component, double coords[3]) {
-    if (component == HX) {
-      return b_background;
+    switch (component) {
+      case HX: return b_x;
+      case HY: return b_y;
+      default: return 0.0;
     }
-    return 0.0;
   });
 }
 
