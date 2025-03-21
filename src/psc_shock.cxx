@@ -58,6 +58,10 @@ int ny = 12800;
 int nz = 2;
 int nt = 5505294;
 
+int n_patches_x = 1;
+int n_patches_y = 128;
+int n_patches_z = 1;
+
 double dx = 4.2849E+01;
 double dy = 3.3475E-01;
 double dz = 3.3475E-01;
@@ -94,10 +98,11 @@ void setupParameters(int argc, char** argv)
 Grid_t* setupGrid()
 {
   // FIXME add a check to catch mismatch between Dim and n grid points early
-  auto domain = Grid_t::Domain{{nx, ny, nz},          // n grid points
-                               {len_x, len_y, len_z}, // physical lengths
-                               {0, 0, 0},  // location of lower corner
-                               {1, 1, 1}}; // n patches
+  auto domain =
+    Grid_t::Domain{{nx, ny, nz},          // n grid points
+                   {len_x, len_y, len_z}, // physical lengths
+                   {0, 0, 0},             // location of lower corner
+                   {n_patches_x, n_patches_y, n_patches_z}}; // n patches
 
   auto bc =
     psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL, BND_FLD_PERIODIC},
