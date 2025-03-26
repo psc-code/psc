@@ -276,11 +276,14 @@ public:
   }
 
   // TODO: make this signature inject_into(injector, cell, np)
-  void inject_into(Injector& injector, Int3 cell_idx)
+  void inject_into(Injector& injector, Int3 cell_idx,
+                   std::function<double()> offset_in_cell_dist)
   {
     cell_idx[1] = -1;
-    auto pos = (Double3(cell_idx) + Double3(.5, .5, .5)) * grid_.domain.dx +
-               grid_.domain.corner;
+    Double3 offset = {offset_in_cell_dist(), offset_in_cell_dist(),
+                      offset_in_cell_dist()};
+    auto pos =
+      (Double3(cell_idx) + offset) * grid_.domain.dx + grid_.domain.corner;
     auto prt = get_advanced_prt(pos);
 
     injector(prt);
@@ -346,7 +349,7 @@ TEST(TestSetupParticlesInflow, InjectInto)
   Inflow<Mparticles, TestInjector> inflow(grid, npt);
 
   TestInjector injector;
-  inflow.inject_into(injector, {0, 0, 0});
+  inflow.inject_into(injector, {0, 0, 0}, []() { return .5; });
   auto prt = injector.prts[0];
 
   // TODO write actual tests
