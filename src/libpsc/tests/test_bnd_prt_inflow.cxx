@@ -7,6 +7,8 @@
 #include "psc_particles_single.h"
 #include "particle_with_id.h"
 #include "setup_particles.hxx"
+#include "pushp.hxx"
+#include "dim.hxx"
 #ifdef USE_CUDA
 #include "../libpsc/cuda/mparticles_cuda.hxx"
 #include "../libpsc/cuda/mparticles_cuda.inl"
@@ -245,6 +247,41 @@ TEST(TestSetupParticlesInflow, Maxwellian)
   EXPECT_EQ(prt.w, wni);
   EXPECT_EQ(prt.kind, 0);
   EXPECT_EQ(prt.tag, tag);
+}
+
+TEST(TestSetupParticlesInflow, Advance)
+{
+  using Mparticles = MparticlesDouble;
+
+  auto domain = Grid_t::Domain{{1, 2, 2}, {10., 20., 20.}, {}, {1, 1, 1}};
+  double dt = 10.;
+  auto kinds = Grid_t::Kinds{{1., 100., "i"}};
+  auto prm = Grid_t::NormalizationParams::dimensionless();
+  prm.nicell = 2;
+  Grid_t grid{domain, {}, kinds, {prm}, dt};
+  Mparticles mprts{grid};
+
+  SetupParticles<Mparticles> setup_particles(grid);
+
+  Double3 pos = {5., -2., 5.};
+  Double3 u = {0.0, 0.5, 0.0};
+  Double3 T = {0.0, 0.0, 0.0};
+  int tag = 0;
+
+  psc_particle_npt npt = {0, 1.0, u, T, tag};
+  auto p = setup_particles.createMaxwellian(npt);
+  psc_particle_np np = {0, 1.0, p, tag};
+  double wni = 1.0;
+  auto prt = setup_particles.setupParticle(np, pos, wni);
+
+  auto advance = AdvanceParticle<Mparticles::real_t, dim_y>(dt);
+
+  auto v = advance.calc_v(prt.u);
+  advance.push_x(prt.x, v, 1.0);
+
+  EXPECT_NEAR(prt.x[0], 5., 1e-5);
+  EXPECT_NEAR(prt.x[1], 2.47214, 1e-5);
+  EXPECT_NEAR(prt.x[2], 5., 1e-5);
 }
 
 int main(int argc, char** argv)
