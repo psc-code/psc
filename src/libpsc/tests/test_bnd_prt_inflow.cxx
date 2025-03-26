@@ -257,27 +257,27 @@ public:
   using real_t = typename Mparticles::real_t;
 
   Inflow(const Grid_t& grid, psc_particle_npt npt)
-    : grid_(grid), setup_particles_(grid), npt_(npt)
+    : grid_(grid),
+      setup_particles_(grid),
+      advance_(grid.dt),
+      np_{npt.kind, npt.n, setup_particles_.createMaxwellian(npt)}
   {}
 
   auto get_advanced_prt(Double3 pos)
   {
-    auto p = setup_particles_.createMaxwellian(npt_);
-    psc_particle_np np = {npt_.kind, npt_.n, p};
     double wni = 1.0;
-    auto prt = setup_particles_.setupParticle(np, pos, wni);
+    auto prt = setup_particles_.setupParticle(np_, pos, wni);
 
-    auto advance = AdvanceParticle<real_t, dim_y>(grid_.dt);
-
-    auto v = advance.calc_v(prt.u);
-    advance.push_x(prt.x, v, 1.0);
+    auto v = advance_.calc_v(prt.u);
+    advance_.push_x(prt.x, v, 1.0);
 
     return prt;
   }
 
   const Grid_t& grid_;
+  AdvanceParticle<real_t, dim_y> advance_;
   SetupParticles<Mparticles> setup_particles_;
-  psc_particle_npt npt_;
+  psc_particle_np np_;
 };
 
 TEST(TestSetupParticlesInflow, Advance)
