@@ -348,8 +348,7 @@ TEST(TestSetupParticlesInflow, InjectInto)
   Grid_t grid{domain, {}, kinds, {prm}, dt};
   Mparticles mprts{grid};
 
-  Double3 pos = {5., -2., 5.};
-  Double3 u = {0.0, 0.5, 0.0};
+  Double3 u = {0.0, 0.8, 0.0};
   Double3 T = {0.0, 0.0, 0.0};
   psc_particle_npt npt = {0, 1.0, u, T};
 
@@ -364,7 +363,7 @@ TEST(TestSetupParticlesInflow, InjectInto)
     auto prt = injector.prts[i];
 
     EXPECT_NEAR(prt.x[0], 5., 1e-5);
-    EXPECT_NEAR(prt.x[1], -0.5278640, 1e-5);
+    EXPECT_NEAR(prt.x[1], 1.246950, 1e-5);
     EXPECT_NEAR(prt.x[2], 5., 1e-5);
   }
 }
