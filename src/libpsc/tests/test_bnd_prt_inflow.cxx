@@ -249,12 +249,11 @@ TEST(TestSetupParticlesInflow, Maxwellian)
   EXPECT_EQ(prt.tag, tag);
 }
 
-template <typename MP, typename INJ>
+template <typename MP>
 class Inflow
 {
 public:
   using Mparticles = MP;
-  using Injector = INJ;
   using real_t = typename Mparticles::real_t;
 
   Inflow(const Grid_t& grid, psc_particle_npt npt)
@@ -275,8 +274,9 @@ public:
   }
 
   // TODO: make this signature inject_into(injector, cell, np)
-  void inject_into(Injector& injector, Int3 cell_idx,
-                   std::function<double()> offset_in_cell_dist)
+  template <typename Injector>
+  void inject_into_cell(Injector& injector, Int3 cell_idx,
+                        std::function<double()> offset_in_cell_dist)
   {
     // TODO don't hardcode this
     cell_idx[1] = -1;
@@ -298,6 +298,19 @@ public:
       }
 
       injector(prt);
+    }
+  }
+
+  template <typename Injector>
+  void inject_into_patch(Injector& injector,
+                         std::function<double()> offset_in_cell_dist)
+  {
+    Int3 cell_idx = {0, 0, 0};
+    for (cell_idx[0] = 0; cell_idx[0] < grid_.domain.ldims[0]; cell_idx[0]++) {
+      for (cell_idx[2] = 0; cell_idx[2] < grid_.domain.ldims[2];
+           cell_idx[2]++) {
+        inject_into_cell(injector, cell_idx, []() { return .5; });
+      }
     }
   }
 
@@ -332,7 +345,7 @@ TEST(TestSetupParticlesInflow, Advance)
   Double3 T = {0.0, 0.0, 0.0};
   psc_particle_npt npt = {0, 1.0, u, T};
 
-  Inflow<Mparticles, TestInjector> inflow(grid, npt);
+  Inflow<Mparticles> inflow(grid, npt);
 
   auto prt = inflow.get_advanced_prt(pos, 1.0);
 
@@ -341,7 +354,7 @@ TEST(TestSetupParticlesInflow, Advance)
   EXPECT_NEAR(prt.x[2], 5., 1e-5);
 }
 
-TEST(TestSetupParticlesInflow, InjectInto)
+TEST(TestSetupParticlesInflow, InjectIntoCell)
 {
   using Mparticles = MparticlesDouble;
 
@@ -357,23 +370,21 @@ TEST(TestSetupParticlesInflow, InjectInto)
   Double3 T = {0.0, 0.0, 0.0};
   psc_particle_npt npt = {0, 1.0, u, T};
 
-  Inflow<Mparticles, TestInjector> inflow(grid, npt);
+  Inflow<Mparticles> inflow(grid, npt);
 
   TestInjector injector;
-  inflow.inject_into(injector, {0, 0, 0}, []() { return .5; });
+  inflow.inject_into_cell(injector, {0, 0, 0}, []() { return .5; });
 
   EXPECT_EQ(injector.prts.size(), prm.nicell);
 
-  for (int i = 0; i < prm.nicell; i++) {
-    auto prt = injector.prts[i];
-
+  for (auto prt : injector.prts) {
     EXPECT_NEAR(prt.x[0], 5., 1e-5);
     EXPECT_NEAR(prt.x[1], 1.246950, 1e-5);
     EXPECT_NEAR(prt.x[2], 5., 1e-5);
   }
 }
 
-TEST(TestSetupParticlesInflow, InjectIntoFilter)
+TEST(TestSetupParticlesInflow, InjectIntoCellFilter)
 {
   using Mparticles = MparticlesDouble;
 
@@ -390,12 +401,50 @@ TEST(TestSetupParticlesInflow, InjectIntoFilter)
   Double3 T = {0.0, 0.0, 0.0};
   psc_particle_npt npt = {0, 1.0, u, T};
 
-  Inflow<Mparticles, TestInjector> inflow(grid, npt);
+  Inflow<Mparticles> inflow(grid, npt);
 
   TestInjector injector;
-  inflow.inject_into(injector, {0, 0, 0}, []() { return .5; });
+  inflow.inject_into_cell(injector, {0, 0, 0}, []() { return .5; });
 
   EXPECT_EQ(injector.prts.size(), 0);
+}
+
+TEST(TestSetupParticlesInflow, InjectIntoPatch)
+{
+  using Mparticles = MparticlesDouble;
+
+  auto domain = Grid_t::Domain{{1, 2, 2}, {10., 20., 20.}, {}, {1, 1, 1}};
+  double dt = 10.;
+  auto kinds = Grid_t::Kinds{{1., 100., "i"}};
+  auto prm = Grid_t::NormalizationParams::dimensionless();
+  prm.nicell = 2;
+  Grid_t grid{domain, {}, kinds, {prm}, dt};
+  Mparticles mprts{grid};
+
+  Double3 u = {0.0, 0.8, 0.0};
+  Double3 T = {0.0, 0.0, 0.0};
+  psc_particle_npt npt = {0, 1.0, u, T};
+
+  Inflow<Mparticles> inflow(grid, npt);
+
+  TestInjector injector;
+  inflow.inject_into_patch(injector, []() { return .5; });
+
+  EXPECT_EQ(injector.prts.size(),
+            domain.ldims[0] * domain.ldims[2] * prm.nicell);
+
+  for (int i = 0; i < injector.prts.size(); i++) {
+    auto prt = injector.prts[i];
+
+    EXPECT_NEAR(prt.x[0], 5., 1e-5);
+    EXPECT_NEAR(prt.x[1], 1.246950, 1e-5);
+
+    if (i < prm.nicell) {
+      EXPECT_NEAR(prt.x[2], 5., 1e-5);
+    } else {
+      EXPECT_NEAR(prt.x[2], 15., 1e-5);
+    }
+  }
 }
 
 int main(int argc, char** argv)
