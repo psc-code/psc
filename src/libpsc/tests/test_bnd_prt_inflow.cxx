@@ -3,11 +3,6 @@
 
 #include "test_common.hxx"
 
-#include "../libpsc/vpic/PscGridBase.h"
-#include "../libpsc/vpic/PscParticleBc.h"
-#include "../libpsc/vpic/PscParticlesBase.h"
-#include "../libpsc/vpic/mparticles_vpic.hxx"
-#include "../libpsc/vpic/vpic_config.h"
 #include "psc_particles_double.h"
 #include "psc_particles_single.h"
 #include "particle_with_id.h"
@@ -19,15 +14,6 @@
 #include "particles_simple.inl"
 #include <kg/io.h>
 
-#ifdef DO_VPIC
-using VpicConfig = VpicConfigWrap;
-#else
-using VpicConfig = VpicConfigPsc;
-#endif
-
-using Grid = VpicConfig::Grid;
-using MparticlesVpic = VpicConfig::Mparticles;
-
 template <typename _Mparticles, typename _MakeGrid = MakeTestGrid1>
 struct Config
 {
@@ -35,15 +21,15 @@ struct Config
   using MakeGrid = _MakeGrid;
 };
 
-using MparticlesInflowTestTypes = ::testing::Types<
-  Config<MparticlesSingle>, Config<MparticlesSingle, MakeTestGridYZ>,
-  Config<MparticlesDouble>, Config<MparticlesVpic, MakeTestGridYZ1>
+using MparticlesInflowTestTypes =
+  ::testing::Types<Config<MparticlesSingle>,
+                   Config<MparticlesSingle, MakeTestGridYZ>
 #ifdef USE_CUDA
-  ,
-  Config<MparticlesCuda<BS144>, MakeTestGridYZ1>,
-  Config<MparticlesCuda<BS144>, MakeTestGridYZ>
+                   ,
+                   Config<MparticlesCuda<BS144>, MakeTestGridYZ1>,
+                   Config<MparticlesCuda<BS144>, MakeTestGridYZ>
 #endif
-  >;
+                   >;
 
 TYPED_TEST_SUITE(MparticlesInflowTest, MparticlesInflowTestTypes);
 
@@ -66,28 +52,6 @@ struct MparticlesInflowTest : ::testing::Test
   Mparticles mk_mprts(tag dummy)
   {
     Mparticles mprts(grid_);
-    mprts.define_species("test_species", 1., 1., 100, 10, 10, 0);
-    return mprts;
-  }
-
-  Mparticles mk_mprts(MparticlesVpic* dummy)
-  {
-    // FIXME, vgrid_ is bad, and this kinda belongs to where grid_ is set up
-
-    // Setup basic grid parameters
-    auto& domain = grid_.domain;
-    double dx[3], xl[3], xh[3];
-    for (int d = 0; d < 3; d++) {
-      dx[d] = domain.length[d] / domain.gdims[d];
-      xl[d] = domain.corner[d];
-      xh[d] = xl[d] + domain.length[d];
-    }
-    vgrid_.setup(dx, grid_.dt, 1., 1.);
-
-    // Define the grid
-    vgrid_.partition_periodic_box(xl, xh, domain.gdims, domain.np);
-
-    Mparticles mprts(grid_, &vgrid_);
     mprts.define_species("test_species", 1., 1., 100, 10, 10, 0);
     return mprts;
   }
@@ -119,7 +83,6 @@ struct MparticlesInflowTest : ::testing::Test
 
 private:
   Grid_t grid_;
-  Grid vgrid_; // FIXME
 };
 
 // ----------------------------------------------------------------------
@@ -229,11 +192,6 @@ TYPED_TEST(MparticlesInflowTest, Injector)
 int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
-  // #ifdef USE_VPIC FIXME
-  MPI_Comm_dup(MPI_COMM_WORLD, &psc_comm_world);
-  MPI_Comm_rank(psc_comm_world, &psc_world_rank);
-  MPI_Comm_size(psc_comm_world, &psc_world_size);
-  // #endif
 
   ::testing::InitGoogleTest(&argc, argv);
   int rc = RUN_ALL_TESTS();
