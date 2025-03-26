@@ -249,11 +249,12 @@ TEST(TestSetupParticlesInflow, Maxwellian)
   EXPECT_EQ(prt.tag, tag);
 }
 
-template <typename MP>
+template <typename MP, typename INJ>
 class Inflow
 {
 public:
   using Mparticles = MP;
+  using Injector = INJ;
   using real_t = typename Mparticles::real_t;
 
   Inflow(const Grid_t& grid, psc_particle_npt npt)
@@ -275,17 +276,25 @@ public:
   }
 
   // TODO: make this signature inject_into(injector, cell, np)
-  auto inject_into(Double3 pos)
+  void inject_into(Injector& injector, Double3 pos)
   {
     auto prt = get_advanced_prt(pos);
 
-    return prt;
+    injector(prt);
   }
 
   const Grid_t& grid_;
   AdvanceParticle<real_t, dim_y> advance_;
   SetupParticles<Mparticles> setup_particles_;
   psc_particle_np np_;
+};
+
+class TestInjector
+{
+public:
+  void operator()(psc::particle::Inject prt) { prts.push_back(prt); }
+
+  std::vector<psc::particle::Inject> prts;
 };
 
 TEST(TestSetupParticlesInflow, Advance)
@@ -305,7 +314,7 @@ TEST(TestSetupParticlesInflow, Advance)
   Double3 T = {0.0, 0.0, 0.0};
   psc_particle_npt npt = {0, 1.0, u, T};
 
-  Inflow<Mparticles> inflow(grid, npt);
+  Inflow<Mparticles, TestInjector> inflow(grid, npt);
 
   auto prt = inflow.get_advanced_prt(pos);
 
@@ -331,9 +340,11 @@ TEST(TestSetupParticlesInflow, InjectInto)
   Double3 T = {0.0, 0.0, 0.0};
   psc_particle_npt npt = {0, 1.0, u, T};
 
-  Inflow<Mparticles> inflow(grid, npt);
+  Inflow<Mparticles, TestInjector> inflow(grid, npt);
 
-  auto prt = inflow.inject_into(pos);
+  TestInjector injector;
+  inflow.inject_into(injector, pos);
+  auto prt = injector.prts[0];
 
   // TODO write actual tests
   EXPECT_NEAR(prt.x[0], 5., 1e-5);
