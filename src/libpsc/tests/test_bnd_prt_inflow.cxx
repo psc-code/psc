@@ -201,12 +201,19 @@ TEST(TestSetupParticlesInflow, Simple)
   Mparticles mprts{grid};
 
   SetupParticles<Mparticles> setup_particles(grid);
-  setup_particles(
-    mprts, [&](int kind, Double3 crd, psc_particle_npt& npt) { npt.n = 1; });
 
-  auto n_cells =
-    grid.domain.gdims[0] * grid.domain.gdims[1] * grid.domain.gdims[2];
-  EXPECT_EQ(mprts.size(), n_cells * kinds.size() * prm.nicell);
+  Double3 pos = {5., 5., 5.};
+  Double3 u = Double3{0.0, 0.0, 0.0};
+  int tag = 0;
+  psc_particle_np np = {0, 1.0, [u]() { return u; }, tag};
+  double wni = 1.0;
+  auto prt = setup_particles.setupParticle(np, pos, wni);
+
+  EXPECT_EQ(prt.x, pos);
+  EXPECT_EQ(prt.u, u);
+  EXPECT_EQ(prt.w, wni);
+  EXPECT_EQ(prt.kind, 0);
+  EXPECT_EQ(prt.tag, tag);
 }
 
 int main(int argc, char** argv)
