@@ -292,6 +292,11 @@ public:
         (Double3(cell_idx) + offset) * grid_.domain.dx + grid_.domain.corner;
       auto prt = get_advanced_prt(pos, wni);
 
+      // TODO make this work for other boundaries and dimensions
+      if (prt.x[1] < grid_.domain.corner[1]) {
+        continue;
+      }
+
       injector(prt);
     }
   }
@@ -366,6 +371,31 @@ TEST(TestSetupParticlesInflow, InjectInto)
     EXPECT_NEAR(prt.x[1], 1.246950, 1e-5);
     EXPECT_NEAR(prt.x[2], 5., 1e-5);
   }
+}
+
+TEST(TestSetupParticlesInflow, InjectIntoFilter)
+{
+  using Mparticles = MparticlesDouble;
+
+  auto domain = Grid_t::Domain{{1, 2, 2}, {10., 20., 20.}, {}, {1, 1, 1}};
+  double dt = 10.;
+  auto kinds = Grid_t::Kinds{{1., 100., "i"}};
+  auto prm = Grid_t::NormalizationParams::dimensionless();
+  prm.nicell = 2;
+  Grid_t grid{domain, {}, kinds, {prm}, dt};
+  Mparticles mprts{grid};
+
+  // too slow to enter domain
+  Double3 u = {0.0, 0.5, 0.0};
+  Double3 T = {0.0, 0.0, 0.0};
+  psc_particle_npt npt = {0, 1.0, u, T};
+
+  Inflow<Mparticles, TestInjector> inflow(grid, npt);
+
+  TestInjector injector;
+  inflow.inject_into(injector, {0, 0, 0}, []() { return .5; });
+
+  EXPECT_EQ(injector.prts.size(), 0);
 }
 
 int main(int argc, char** argv)
