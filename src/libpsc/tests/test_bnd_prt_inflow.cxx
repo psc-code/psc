@@ -274,6 +274,14 @@ public:
     return prt;
   }
 
+  // TODO: make this signature inject_into(injector, cell, np)
+  auto inject_into(Double3 pos)
+  {
+    auto prt = get_advanced_prt(pos);
+
+    return prt;
+  }
+
   const Grid_t& grid_;
   AdvanceParticle<real_t, dim_y> advance_;
   SetupParticles<Mparticles> setup_particles_;
@@ -301,6 +309,33 @@ TEST(TestSetupParticlesInflow, Advance)
 
   auto prt = inflow.get_advanced_prt(pos);
 
+  EXPECT_NEAR(prt.x[0], 5., 1e-5);
+  EXPECT_NEAR(prt.x[1], 2.47214, 1e-5);
+  EXPECT_NEAR(prt.x[2], 5., 1e-5);
+}
+
+TEST(TestSetupParticlesInflow, InjectInto)
+{
+  using Mparticles = MparticlesDouble;
+
+  auto domain = Grid_t::Domain{{1, 2, 2}, {10., 20., 20.}, {}, {1, 1, 1}};
+  double dt = 10.;
+  auto kinds = Grid_t::Kinds{{1., 100., "i"}};
+  auto prm = Grid_t::NormalizationParams::dimensionless();
+  prm.nicell = 2;
+  Grid_t grid{domain, {}, kinds, {prm}, dt};
+  Mparticles mprts{grid};
+
+  Double3 pos = {5., -2., 5.};
+  Double3 u = {0.0, 0.5, 0.0};
+  Double3 T = {0.0, 0.0, 0.0};
+  psc_particle_npt npt = {0, 1.0, u, T};
+
+  Inflow<Mparticles> inflow(grid, npt);
+
+  auto prt = inflow.inject_into(pos);
+
+  // TODO write actual tests
   EXPECT_NEAR(prt.x[0], 5., 1e-5);
   EXPECT_NEAR(prt.x[1], 2.47214, 1e-5);
   EXPECT_NEAR(prt.x[2], 5., 1e-5);
