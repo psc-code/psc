@@ -249,6 +249,37 @@ TEST(TestSetupParticlesInflow, Maxwellian)
   EXPECT_EQ(prt.tag, tag);
 }
 
+template <typename MP>
+class Inflow
+{
+public:
+  using Mparticles = MP;
+  using real_t = typename Mparticles::real_t;
+
+  Inflow(const Grid_t& grid, psc_particle_npt npt)
+    : grid_(grid), setup_particles_(grid), npt_(npt)
+  {}
+
+  auto get_advanced_prt(Double3 pos)
+  {
+    auto p = setup_particles_.createMaxwellian(npt_);
+    psc_particle_np np = {npt_.kind, npt_.n, p};
+    double wni = 1.0;
+    auto prt = setup_particles_.setupParticle(np, pos, wni);
+
+    auto advance = AdvanceParticle<real_t, dim_y>(grid_.dt);
+
+    auto v = advance.calc_v(prt.u);
+    advance.push_x(prt.x, v, 1.0);
+
+    return prt;
+  }
+
+  const Grid_t& grid_;
+  SetupParticles<Mparticles> setup_particles_;
+  psc_particle_npt npt_;
+};
+
 TEST(TestSetupParticlesInflow, Advance)
 {
   using Mparticles = MparticlesDouble;
@@ -261,23 +292,14 @@ TEST(TestSetupParticlesInflow, Advance)
   Grid_t grid{domain, {}, kinds, {prm}, dt};
   Mparticles mprts{grid};
 
-  SetupParticles<Mparticles> setup_particles(grid);
-
   Double3 pos = {5., -2., 5.};
   Double3 u = {0.0, 0.5, 0.0};
   Double3 T = {0.0, 0.0, 0.0};
-  int tag = 0;
+  psc_particle_npt npt = {0, 1.0, u, T};
 
-  psc_particle_npt npt = {0, 1.0, u, T, tag};
-  auto p = setup_particles.createMaxwellian(npt);
-  psc_particle_np np = {0, 1.0, p, tag};
-  double wni = 1.0;
-  auto prt = setup_particles.setupParticle(np, pos, wni);
+  Inflow<Mparticles> inflow(grid, npt);
 
-  auto advance = AdvanceParticle<Mparticles::real_t, dim_y>(dt);
-
-  auto v = advance.calc_v(prt.u);
-  advance.push_x(prt.x, v, 1.0);
+  auto prt = inflow.get_advanced_prt(pos);
 
   EXPECT_NEAR(prt.x[0], 5., 1e-5);
   EXPECT_NEAR(prt.x[1], 2.47214, 1e-5);
