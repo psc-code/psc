@@ -276,8 +276,11 @@ public:
   }
 
   // TODO: make this signature inject_into(injector, cell, np)
-  void inject_into(Injector& injector, Double3 pos)
+  void inject_into(Injector& injector, Int3 cell_idx)
   {
+    cell_idx[1] = -1;
+    auto pos = (Double3(cell_idx) + Double3(.5, .5, .5)) * grid_.domain.dx +
+               grid_.domain.corner;
     auto prt = get_advanced_prt(pos);
 
     injector(prt);
@@ -343,12 +346,12 @@ TEST(TestSetupParticlesInflow, InjectInto)
   Inflow<Mparticles, TestInjector> inflow(grid, npt);
 
   TestInjector injector;
-  inflow.inject_into(injector, pos);
+  inflow.inject_into(injector, {0, 0, 0});
   auto prt = injector.prts[0];
 
   // TODO write actual tests
   EXPECT_NEAR(prt.x[0], 5., 1e-5);
-  EXPECT_NEAR(prt.x[1], 2.47214, 1e-5);
+  EXPECT_NEAR(prt.x[1], -0.5278640, 1e-5);
   EXPECT_NEAR(prt.x[2], 5., 1e-5);
 }
 
