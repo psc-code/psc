@@ -216,6 +216,37 @@ TEST(TestSetupParticlesInflow, Simple)
   EXPECT_EQ(prt.tag, tag);
 }
 
+TEST(TestSetupParticlesInflow, Maxwellian)
+{
+  using Mparticles = MparticlesDouble;
+
+  auto domain = Grid_t::Domain{{1, 2, 2}, {10., 20., 20.}, {}, {1, 1, 1}};
+  auto kinds = Grid_t::Kinds{{1., 100., "i"}};
+  auto prm = Grid_t::NormalizationParams::dimensionless();
+  prm.nicell = 2;
+  Grid_t grid{domain, {}, kinds, {prm}, .1};
+  Mparticles mprts{grid};
+
+  SetupParticles<Mparticles> setup_particles(grid);
+
+  Double3 pos = {5., 5., 5.};
+  Double3 u = {0.0, 0.5, 0.0};
+  Double3 T = {0.0, 0.0, 0.0};
+  int tag = 0;
+
+  psc_particle_npt npt = {0, 1.0, u, T, tag};
+  auto p = setup_particles.createMaxwellian(npt);
+  psc_particle_np np = {0, 1.0, p, tag};
+  double wni = 1.0;
+  auto prt = setup_particles.setupParticle(np, pos, wni);
+
+  EXPECT_EQ(prt.x, pos);
+  EXPECT_EQ(prt.u, u);
+  EXPECT_EQ(prt.w, wni);
+  EXPECT_EQ(prt.kind, 0);
+  EXPECT_EQ(prt.tag, tag);
+}
+
 int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
