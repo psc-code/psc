@@ -9,10 +9,10 @@
 
 struct psc_particle_npt
 {
-  int kind;    ///< particle kind
-  double n;    ///< density
-  double p[3]; ///< momentum
-  double T[3]; ///< temperature
+  int kind;  ///< particle kind
+  double n;  ///< density
+  Double3 p; ///< momentum
+  Double3 T; ///< temperature
   psc::particle::Tag tag;
 };
 
