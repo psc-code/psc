@@ -264,9 +264,8 @@ public:
       np_{npt.kind, npt.n, setup_particles_.createMaxwellian(npt)}
   {}
 
-  auto get_advanced_prt(Double3 pos)
+  auto get_advanced_prt(Double3 pos, real_t wni)
   {
-    double wni = 1.0;
     auto prt = setup_particles_.setupParticle(np_, pos, wni);
 
     auto v = advance_.calc_v(prt.u);
@@ -279,14 +278,22 @@ public:
   void inject_into(Injector& injector, Int3 cell_idx,
                    std::function<double()> offset_in_cell_dist)
   {
+    // TODO don't hardcode this
     cell_idx[1] = -1;
-    Double3 offset = {offset_in_cell_dist(), offset_in_cell_dist(),
-                      offset_in_cell_dist()};
-    auto pos =
-      (Double3(cell_idx) + offset) * grid_.domain.dx + grid_.domain.corner;
-    auto prt = get_advanced_prt(pos);
 
-    injector(prt);
+    int n_in_cell = setup_particles_.get_n_in_cell(np_);
+
+    for (int cnt = 0; cnt < n_in_cell; cnt++) {
+      double wni = setup_particles_.getWeight(np_, n_in_cell);
+
+      Double3 offset = {offset_in_cell_dist(), offset_in_cell_dist(),
+                        offset_in_cell_dist()};
+      auto pos =
+        (Double3(cell_idx) + offset) * grid_.domain.dx + grid_.domain.corner;
+      auto prt = get_advanced_prt(pos, wni);
+
+      injector(prt);
+    }
   }
 
   const Grid_t& grid_;
@@ -322,7 +329,7 @@ TEST(TestSetupParticlesInflow, Advance)
 
   Inflow<Mparticles, TestInjector> inflow(grid, npt);
 
-  auto prt = inflow.get_advanced_prt(pos);
+  auto prt = inflow.get_advanced_prt(pos, 1.0);
 
   EXPECT_NEAR(prt.x[0], 5., 1e-5);
   EXPECT_NEAR(prt.x[1], 2.47214, 1e-5);
@@ -350,12 +357,16 @@ TEST(TestSetupParticlesInflow, InjectInto)
 
   TestInjector injector;
   inflow.inject_into(injector, {0, 0, 0}, []() { return .5; });
-  auto prt = injector.prts[0];
 
-  // TODO write actual tests
-  EXPECT_NEAR(prt.x[0], 5., 1e-5);
-  EXPECT_NEAR(prt.x[1], -0.5278640, 1e-5);
-  EXPECT_NEAR(prt.x[2], 5., 1e-5);
+  EXPECT_EQ(injector.prts.size(), prm.nicell);
+
+  for (int i = 0; i < prm.nicell; i++) {
+    auto prt = injector.prts[i];
+
+    EXPECT_NEAR(prt.x[0], 5., 1e-5);
+    EXPECT_NEAR(prt.x[1], -0.5278640, 1e-5);
+    EXPECT_NEAR(prt.x[2], 5., 1e-5);
+  }
 }
 
 int main(int argc, char** argv)
