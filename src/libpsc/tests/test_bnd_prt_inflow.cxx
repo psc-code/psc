@@ -285,10 +285,9 @@ public:
     cell_idx[1] = -1;
 
     int n_in_cell = setup_particles_.get_n_in_cell(np_);
+    double wni = setup_particles_.getWeight(np_, n_in_cell);
 
     for (int cnt = 0; cnt < n_in_cell; cnt++) {
-      double wni = setup_particles_.getWeight(np_, n_in_cell);
-
       Double3 offset = {offset_in_cell_dist_(), offset_in_cell_dist_(),
                         offset_in_cell_dist_()};
       auto pos =
