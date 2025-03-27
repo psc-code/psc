@@ -249,16 +249,17 @@ TEST(TestSetupParticlesInflow, Maxwellian)
   EXPECT_EQ(prt.tag, tag);
 }
 
-template <typename MP>
+template <typename MP, typename DIM>
 class Inflow
 {
 public:
   using Mparticles = MP;
   using real_t = typename Mparticles::real_t;
+  using Dim = DIM;
 
   // offset_in_cell: () -> double
   Inflow(const Grid_t& grid, psc_particle_npt npt,
-         double (*offset_in_cell_dist)(), int inj_dim_idx)
+         double (*offset_in_cell_dist)())
     : grid_(grid),
       setup_particles_(grid),
       advance_(grid.dt),
@@ -266,8 +267,13 @@ public:
       // lambda
       np_{npt.kind, npt.n, setup_particles_.createMaxwellian(npt)},
       offset_in_cell_dist_(offset_in_cell_dist),
-      inj_dim_idx_(inj_dim_idx)
-  {}
+      inj_dim_idx_(!Dim::InvarX::value   ? 0
+                   : !Dim::InvarY::value ? 1
+                   : !Dim::InvarZ::value ? 2
+                                         : -1)
+  {
+    assert(inj_dim_idx_ >= 0);
+  }
 
   auto get_advanced_prt(Double3 pos, real_t wni)
   {
@@ -341,7 +347,7 @@ public:
   }
 
   const Grid_t& grid_;
-  AdvanceParticle<real_t, dim_y> advance_;
+  AdvanceParticle<real_t, Dim> advance_;
   SetupParticles<Mparticles> setup_particles_;
   psc_particle_np np_;
   double (*offset_in_cell_dist_)();
@@ -375,7 +381,7 @@ TEST(TestSetupParticlesInflow, Advance)
   Double3 T = {0.0, 0.0, 0.0};
   psc_particle_npt npt = {0, 1.0, u, T};
 
-  Inflow<Mparticles> inflow(grid, npt, *half, 1);
+  Inflow<Mparticles, dim_y> inflow(grid, npt, *half);
 
   auto prt = inflow.get_advanced_prt(pos, 1.0);
 
@@ -400,7 +406,7 @@ TEST(TestSetupParticlesInflow, InjectIntoCell)
   Double3 T = {0.0, 0.0, 0.0};
   psc_particle_npt npt = {0, 1.0, u, T};
 
-  Inflow<Mparticles> inflow(grid, npt, *half, 1);
+  Inflow<Mparticles, dim_y> inflow(grid, npt, *half);
 
   TestInjector injector;
   inflow.inject_into_boundary_cell(injector, {0, 0, 0});
@@ -431,7 +437,7 @@ TEST(TestSetupParticlesInflow, InjectIntoCellFilter)
   Double3 T = {0.0, 0.0, 0.0};
   psc_particle_npt npt = {0, 1.0, u, T};
 
-  Inflow<Mparticles> inflow(grid, npt, *half, 1);
+  Inflow<Mparticles, dim_y> inflow(grid, npt, *half);
 
   TestInjector injector;
   inflow.inject_into_boundary_cell(injector, {0, 0, 0});
@@ -455,7 +461,7 @@ TEST(TestSetupParticlesInflow, InjectIntoPatch)
   Double3 T = {0.0, 0.0, 0.0};
   psc_particle_npt npt = {0, 1.0, u, T};
 
-  Inflow<Mparticles> inflow(grid, npt, *half, 1);
+  Inflow<Mparticles, dim_y> inflow(grid, npt, *half);
 
   TestInjector injector;
   inflow.inject_into_boundary_patch(injector, grid.patches[0]);
@@ -493,7 +499,7 @@ TEST(TestSetupParticlesInflow, InjectIntoBoundaryY)
   Double3 T = {0.0, 0.0, 0.0};
   psc_particle_npt npt = {0, 1.0, u, T};
 
-  Inflow<Mparticles> inflow(grid, npt, *half, 1);
+  Inflow<Mparticles, dim_y> inflow(grid, npt, *half);
 
   std::vector<TestInjector> injectors = {TestInjector(), TestInjector(),
                                          TestInjector(), TestInjector()};
@@ -536,7 +542,7 @@ TEST(TestSetupParticlesInflow, InjectIntoBoundaryZ)
   Double3 T = {0.0, 0.0, 0.0};
   psc_particle_npt npt = {0, 1.0, u, T};
 
-  Inflow<Mparticles> inflow(grid, npt, *half, 2);
+  Inflow<Mparticles, dim_z> inflow(grid, npt, *half);
 
   std::vector<TestInjector> injectors = {TestInjector(), TestInjector(),
                                          TestInjector(), TestInjector()};
