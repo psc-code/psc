@@ -476,7 +476,8 @@ TEST(TestSetupParticlesInflow, InjectIntoPatch)
     }
   }
 }
-TEST(TestSetupParticlesInflow, InjectIntoBoundary)
+
+TEST(TestSetupParticlesInflow, InjectIntoBoundaryY)
 {
   using Mparticles = MparticlesDouble;
 
@@ -515,6 +516,49 @@ TEST(TestSetupParticlesInflow, InjectIntoBoundary)
     EXPECT_NEAR(prt.x[1], 1.246950, 1e-5);
     EXPECT_NEAR(prt.x[2], 15., 1e-5);
   }
+
+  EXPECT_EQ(injectors[3].prts.size(), 0);
+}
+
+TEST(TestSetupParticlesInflow, InjectIntoBoundaryZ)
+{
+  using Mparticles = MparticlesDouble;
+
+  auto domain = Grid_t::Domain{{1, 2, 2}, {10., 20., 20.}, {}, {1, 2, 2}};
+  double dt = 10.;
+  auto kinds = Grid_t::Kinds{{1., 100., "i"}};
+  auto prm = Grid_t::NormalizationParams::dimensionless();
+  prm.nicell = 2;
+  Grid_t grid{domain, {}, kinds, {prm}, dt};
+  Mparticles mprts{grid};
+
+  Double3 u = {0.0, 0.0, 0.8};
+  Double3 T = {0.0, 0.0, 0.0};
+  psc_particle_npt npt = {0, 1.0, u, T};
+
+  Inflow<Mparticles> inflow(grid, npt, *half, 2);
+
+  std::vector<TestInjector> injectors = {TestInjector(), TestInjector(),
+                                         TestInjector(), TestInjector()};
+  inflow.inject_into_boundary(injectors);
+
+  EXPECT_EQ(injectors[0].prts.size(),
+            domain.ldims[0] * domain.ldims[1] * prm.nicell);
+  for (auto prt : injectors[0].prts) {
+    EXPECT_NEAR(prt.x[0], 5., 1e-5);
+    EXPECT_NEAR(prt.x[1], 5., 1e-5);
+    EXPECT_NEAR(prt.x[2], 1.246950, 1e-5);
+  }
+
+  EXPECT_EQ(injectors[1].prts.size(),
+            domain.ldims[0] * domain.ldims[1] * prm.nicell);
+  for (auto prt : injectors[1].prts) {
+    EXPECT_NEAR(prt.x[0], 5., 1e-5);
+    EXPECT_NEAR(prt.x[1], 15., 1e-5);
+    EXPECT_NEAR(prt.x[2], 1.246950, 1e-5);
+  }
+
+  EXPECT_EQ(injectors[2].prts.size(), 0);
 
   EXPECT_EQ(injectors[3].prts.size(), 0);
 }
