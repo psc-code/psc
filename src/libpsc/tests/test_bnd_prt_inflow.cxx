@@ -110,11 +110,7 @@ public:
       // FIXME np.p is a std::function and is called many times; better to use a
       // lambda
       np_{npt.kind, npt.n, setup_particles_.createMaxwellian(npt)},
-      offset_in_cell_dist_(offset_in_cell_dist),
-      inj_dim_idx_(!Dim::InvarX::value   ? 0
-                   : !Dim::InvarY::value ? 1
-                   : !Dim::InvarZ::value ? 2
-                                         : -1)
+      offset_in_cell_dist_(offset_in_cell_dist)
   {
     assert(inj_dim_idx_ >= 0);
   }
@@ -195,7 +191,10 @@ public:
   SetupParticles<Mparticles> setup_particles_;
   psc_particle_np np_;
   double (*offset_in_cell_dist_)();
-  int inj_dim_idx_;
+  const static int inj_dim_idx_ = (!Dim::InvarX::value   ? 0
+                                   : !Dim::InvarY::value ? 1
+                                   : !Dim::InvarZ::value ? 2
+                                                         : -1);
 };
 
 class TestInjector
