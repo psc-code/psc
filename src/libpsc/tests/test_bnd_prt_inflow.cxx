@@ -112,7 +112,7 @@ public:
       np_{npt.kind, npt.n, setup_particles_.createMaxwellian(npt)},
       offset_in_cell_dist_(offset_in_cell_dist)
   {
-    assert(inj_dim_idx_ >= 0);
+    assert(INJECT_DIM_IDX_ >= 0);
   }
 
   auto get_advanced_prt(Double3 pos, real_t wni)
@@ -129,8 +129,8 @@ public:
   void inject_into_boundary_cell(Injector& injector,
                                  Int3 boundary_cell_global_idx)
   {
-    assert(boundary_cell_global_idx[inj_dim_idx_] == 0);
-    boundary_cell_global_idx[inj_dim_idx_] = -1;
+    assert(boundary_cell_global_idx[INJECT_DIM_IDX_] == 0);
+    boundary_cell_global_idx[INJECT_DIM_IDX_] = -1;
 
     int n_in_cell = setup_particles_.get_n_in_cell(np_);
     double wni = setup_particles_.getWeight(np_, n_in_cell);
@@ -143,7 +143,7 @@ public:
         grid_.domain.corner;
       auto prt = get_advanced_prt(pos, wni);
 
-      if (prt.x[inj_dim_idx_] < grid_.domain.corner[inj_dim_idx_]) {
+      if (prt.x[INJECT_DIM_IDX_] < grid_.domain.corner[INJECT_DIM_IDX_]) {
         continue;
       }
 
@@ -158,10 +158,10 @@ public:
     Int3 ilo = boundary_patch.off;
     Int3 ihi = ilo + grid_.ldims;
 
-    assert(ilo[inj_dim_idx_] == 0);
+    assert(ilo[INJECT_DIM_IDX_] == 0);
 
-    int dim1 = std::min((inj_dim_idx_ + 1) % 3, (inj_dim_idx_ + 2) % 3);
-    int dim2 = std::max((inj_dim_idx_ + 1) % 3, (inj_dim_idx_ + 2) % 3);
+    int dim1 = std::min((INJECT_DIM_IDX_ + 1) % 3, (INJECT_DIM_IDX_ + 2) % 3);
+    int dim2 = std::max((INJECT_DIM_IDX_ + 1) % 3, (INJECT_DIM_IDX_ + 2) % 3);
 
     for (Int3 cell_idx = ilo; cell_idx[dim1] < ihi[dim1]; cell_idx[dim1]++) {
       for (cell_idx[dim2] = ilo[dim2]; cell_idx[dim2] < ihi[dim2];
@@ -177,7 +177,7 @@ public:
     for (int patch_idx = 0; patch_idx < grid_.n_patches(); patch_idx++) {
       const auto& patch = grid_.patches[patch_idx];
 
-      if (patch.off[inj_dim_idx_] != 0) {
+      if (patch.off[INJECT_DIM_IDX_] != 0) {
         continue;
       }
 
@@ -191,10 +191,10 @@ public:
   SetupParticles<Mparticles> setup_particles_;
   psc_particle_np np_;
   double (*offset_in_cell_dist_)();
-  const static int inj_dim_idx_ = (!Dim::InvarX::value   ? 0
-                                   : !Dim::InvarY::value ? 1
-                                   : !Dim::InvarZ::value ? 2
-                                                         : -1);
+  const static int INJECT_DIM_IDX_ = (!Dim::InvarX::value   ? 0
+                                      : !Dim::InvarY::value ? 1
+                                      : !Dim::InvarZ::value ? 2
+                                                            : -1);
 };
 
 class TestInjector
