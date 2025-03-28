@@ -205,7 +205,7 @@ public:
   std::vector<psc::particle::Inject> prts;
 };
 
-double half() { return 0.5; }
+static double half() { return 0.5; }
 
 TEST(TestSetupParticlesInflow, Advance)
 {
