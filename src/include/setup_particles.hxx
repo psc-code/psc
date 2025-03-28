@@ -9,10 +9,10 @@
 
 struct psc_particle_npt
 {
-  int kind;    ///< particle kind
-  double n;    ///< density
-  double p[3]; ///< momentum
-  double T[3]; ///< temperature
+  int kind;  ///< particle kind
+  double n;  ///< density
+  Double3 p; ///< momentum
+  Double3 T; ///< temperature
   psc::particle::Tag tag;
 };
 
@@ -242,6 +242,18 @@ struct SetupParticles
   }
 
   // ----------------------------------------------------------------------
+  // getWeight
+
+  real_t getWeight(const psc_particle_np& np, int n_in_cell)
+  {
+    if (fractional_n_particles_per_cell) {
+      return 1.;
+    } else {
+      return np.n / (n_in_cell * norm_.cori);
+    }
+  }
+
+  // ----------------------------------------------------------------------
   // setupParticles
 
   void setupParticles(Mparticles& mprts, InitNptFunc init_npt)
@@ -269,12 +281,7 @@ struct SetupParticles
       op_cellwise(grid, p, init_np,
                   [&](int n_in_cell, psc_particle_np& np, Double3& pos) {
                     for (int cnt = 0; cnt < n_in_cell; cnt++) {
-                      real_t wni;
-                      if (fractional_n_particles_per_cell) {
-                        wni = 1.;
-                      } else {
-                        wni = np.n / (n_in_cell * norm_.cori);
-                      }
+                      real_t wni = getWeight(np, n_in_cell);
                       auto prt = setupParticle(np, pos, wni);
                       injector(prt);
                     }
