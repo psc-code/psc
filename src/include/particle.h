@@ -37,3 +37,11 @@ struct Inject
 
 } // namespace particle
 } // namespace psc
+
+inline std::ostream& operator<<(std::ostream& os,
+                                const psc::particle::Inject& inj)
+{
+  os << "Inject{x=" << inj.x << ", u=" << inj.u << ", w=" << inj.w
+     << ", kind=" << inj.kind << ", tag=" << inj.tag << "}";
+  return os;
+}
