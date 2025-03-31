@@ -246,7 +246,7 @@ inline ddc_particles<MP>::ddc_particles(const Grid_t& grid)
   n_recv_ranks = 0;
   for (int r = 0; r < size; r++) {
     if (info[r].n_recv_entries) {
-      MPI_Irecv(info[r].recv_entry.data(),
+      MPI_Irecv((int*)info[r].recv_entry.data(),
                 sizeof(drecv_entry) / sizeof(int) * info[r].n_recv_entries,
                 MPI_INT, r, 111, comm, &recv_reqs_[n_recv_ranks++]);
     }
@@ -255,7 +255,7 @@ inline ddc_particles<MP>::ddc_particles(const Grid_t& grid)
   n_send_ranks = 0;
   for (int r = 0; r < size; r++) {
     if (info[r].n_send_entries) {
-      MPI_Isend(info[r].send_entry.data(),
+      MPI_Isend((int*)info[r].send_entry.data(),
                 sizeof(dsend_entry) / sizeof(int) * info[r].n_send_entries,
                 MPI_INT, r, 111, comm, &send_reqs_[n_send_ranks++]);
     }

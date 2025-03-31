@@ -38,7 +38,8 @@ struct OutputParticlesTest : ::testing::Test
       ibn[2] = 0;
     }
 
-    auto grid_domain = Grid_t::Domain{gdims, {L, L, L}};
+    auto grid_domain =
+      Grid_t::Domain{gdims, {L, L, L}, {0., 0., 0.}, {2, 1, 1}};
     auto grid_bc =
       psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
                     {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
@@ -63,14 +64,14 @@ private:
   Int3 ibn = {2, 2, 2};
 };
 
-using OutputParticlesTestTypes =
-  ::testing::Types<Config<dim_xyz, MparticlesSingle, OutputParticlesAscii>
+using OutputParticlesTestTypes = ::testing::Types<
+  Config<dim_xyz, MparticlesSingle, OutputParticlesAscii>
 #ifdef H5_HAVE_PARALLEL
-                   ,
-                   Config<dim_xyz, MparticlesSingle, OutputParticlesHdf5>,
-                   Config<dim_xyz, MparticlesDouble, OutputParticlesHdf5>
+  ,
+  Config<dim_xyz, MparticlesSingle, OutputParticlesHdf5<ParticleSelectorAll>>,
+  Config<dim_xyz, MparticlesDouble, OutputParticlesHdf5<ParticleSelectorAll>>
 #endif
-                   >;
+  >;
 
 TYPED_TEST_SUITE(OutputParticlesTest, OutputParticlesTestTypes);
 
@@ -92,8 +93,15 @@ TYPED_TEST(OutputParticlesTest, Test1)
   Mparticles mprts{grid};
   {
     auto injector = mprts.injector();
-    injector[0]({{1., 0., 0.}, {}, 1., 0});
-    injector[0]({{2., 0., 0.}, {}, 1., 1});
+    for (int p = 0; p < grid.n_patches(); p++) {
+      auto info = grid.mrc_domain().localPatchInfo(p);
+      if (info.global_patch == 0) {
+        injector[p]({{1., 0., 0.}, {}, 1., 0});
+      }
+      if (info.global_patch == 1) {
+        injector[p]({{121., 0., 0.}, {}, 1., 1});
+      }
+    }
   }
 
   auto params = OutputParticlesParams{};

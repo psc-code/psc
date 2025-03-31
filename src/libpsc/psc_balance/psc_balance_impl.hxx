@@ -204,7 +204,7 @@ inline void write_loads(const input& input,
                         int timestep)
 {
   char s[20];
-  sprintf(s, "loads2-%06d.asc", timestep);
+  snprintf(s, 20, "loads2-%06d.asc", timestep);
   FILE* f = fopen(s, "w");
 
   int gp = 0;
