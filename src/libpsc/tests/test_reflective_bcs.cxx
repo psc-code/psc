@@ -33,7 +33,7 @@ PscParams psc_params;
 int nx = 1;
 int ny = 4;
 int nz = 2;
-int nt = 1;
+int nt = 10;
 
 int n_patches_x = 1;
 int n_patches_y = 1;
@@ -47,7 +47,7 @@ double len_x = nx * dx;
 double len_y = ny * dy;
 double len_z = nz * dz;
 
-int n_writes = 1;
+int n_writes = nt;
 int out_interval = nt / n_writes;
 
 } // namespace
@@ -118,7 +118,7 @@ Grid_t* setupGrid()
 void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
 {
   auto injector = mprts.injector();
-  injector[0]({{0.0, 5.0, 5.0}, {0.0, 0.0, 0.0}, 1.0, 0});
+  injector[0]({{0.0, 36.0, 5.0}, {0.0, 3.0, 0.0}, 1.0, 0});
 }
 
 // ======================================================================
