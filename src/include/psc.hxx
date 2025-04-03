@@ -489,8 +489,7 @@ struct Psc
     inject_particles();
     prof_stop(pr_inject_prts);
 
-    if (checks_.params.continuity.every_step > 0 &&
-        timestep % checks_.params.continuity.every_step == 0) {
+    if (checks_.params.continuity.do_check(timestep)) {
       mpi_printf(comm, "***** Checking continuity...\n");
       prof_start(pr_checks);
       checks_.continuity_before_particle_push(mprts_);
@@ -558,8 +557,7 @@ struct Psc
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 #endif
 
-    if (checks_.params.continuity.every_step > 0 &&
-        timestep % checks_.params.continuity.every_step == 0) {
+    if (checks_.params.continuity.do_check(timestep)) {
       prof_restart(pr_checks);
       checks_.continuity_after_particle_push(mprts_, mflds_);
       prof_stop(pr_checks);
@@ -575,8 +573,7 @@ struct Psc
       prof_stop(pr_marder);
     }
 
-    if (checks_.params.gauss.every_step > 0 &&
-        timestep % checks_.params.gauss.every_step == 0) {
+    if (checks_.params.gauss.do_check(timestep)) {
       prof_restart(pr_checks);
       checks_.gauss(mprts_, mflds_);
       prof_stop(pr_checks);

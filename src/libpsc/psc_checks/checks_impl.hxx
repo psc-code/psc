@@ -47,7 +47,7 @@ public:
   void before_particle_push(const Mparticles& mprts)
   {
     const auto& grid = mprts.grid();
-    if (params_.every_step <= 0 || grid.timestep() % params_.every_step != 0) {
+    if (!params_.do_check(grid.timestep())) {
       return;
     }
 
@@ -62,7 +62,7 @@ public:
   void after_particle_push(const Mparticles& mprts, MfieldsState& mflds)
   {
     const Grid_t& grid = mprts.grid();
-    if (params_.every_step <= 0 || grid.timestep() % params_.every_step != 0) {
+    if (!params_.do_check(grid.timestep())) {
       return;
     }
 
@@ -127,7 +127,7 @@ public:
   void operator()(Mparticles& mprts, MfieldsState& mflds)
   {
     const auto& grid = mprts.grid();
-    if (params_.every_step <= 0 || grid.timestep() % params_.every_step != 0) {
+    if (!params_.do_check(grid.timestep())) {
       return;
     }
 
