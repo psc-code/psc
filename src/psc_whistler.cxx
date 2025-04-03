@@ -294,7 +294,7 @@ void run()
   ChecksParams checks_params{};
   checks_params.continuity.check_interval = 50;
   checks_params.continuity.threshold = 1e-5;
-  checks_params.continuity.verbose = false;
+  checks_params.continuity.print_max_always = false;
   Checks checks{grid, MPI_COMM_WORLD, checks_params};
 
   // -- Marder correction
