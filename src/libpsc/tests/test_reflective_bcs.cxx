@@ -17,11 +17,7 @@
 // EDIT to change order / floating point type / cuda / 2d/3d
 
 using Dim = dim_yz;
-#ifdef USE_CUDA
-using PscConfig = PscConfig1vbecCuda<Dim>;
-#else
 using PscConfig = PscConfig1vbecDouble<Dim>;
-#endif
 
 // ----------------------------------------------------------------------
 
@@ -39,10 +35,7 @@ using OutputParticles = PscConfig::OutputParticles;
 
 namespace
 {
-// General PSC parameters
 PscParams psc_params;
-
-// matching: heliospheric .1 AU 3, shock tiny 2, real c and M, parallel B
 
 double electron_temperature = 7.8278E-05;
 double ion_temperature = 7.8278E-05;
@@ -87,15 +80,9 @@ void setupParameters(int argc, char** argv)
 
 // ======================================================================
 // setupGrid
-//
-// This helper function is responsible for setting up the "Grid",
-// which is really more than just the domain and its decomposition, it
-// also encompasses PC normalization parameters, information about the
-// particle kinds, etc.
 
 Grid_t* setupGrid()
 {
-  // FIXME add a check to catch mismatch between Dim and n grid points early
   auto domain =
     Grid_t::Domain{{nx, ny, nz},          // n grid points
                    {len_x, len_y, len_z}, // physical lengths
@@ -159,16 +146,6 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
 }
 
 // ======================================================================
-// fillGhosts
-
-template <typename MF>
-void fillGhosts(MF& mfld, int compBegin, int compEnd)
-{
-  Bnd_ bnd{};
-  bnd.fill_ghosts(mfld, compBegin, compEnd);
-}
-
-// ======================================================================
 // initializeFields
 
 void initializeFields(MfieldsState& mflds)
@@ -201,9 +178,6 @@ static void run(int argc, char** argv)
   auto& grid = *grid_ptr;
   MfieldsState mflds{grid};
   Mparticles mprts{grid};
-  BgkMfields phi{grid, 1, mflds.ibn()};
-  BgkMfields gradPhi{grid, 3, mflds.ibn()};
-  BgkMfields divGradPhi{grid, 1, mflds.ibn()};
 
   // ----------------------------------------------------------------------
   // Set up various objects needed to run this case
@@ -276,15 +250,10 @@ static void run(int argc, char** argv)
 }
 
 // ======================================================================
-// main
-
-// ======================================================================
 // Test1
 
 TEST(ReflectiveBcsTest, Test1)
 {
-  // psc_init(argc, argv);
-  // FIXME restore whatever previous functionality there was with options
   int argc = 1;
   char** argv = nullptr;
   psc_init(argc, argv);
@@ -294,11 +263,12 @@ TEST(ReflectiveBcsTest, Test1)
   psc_finalize();
 }
 
+// ======================================================================
+// main
+
 int main(int argc, char** argv)
 {
-  //   MPI_Init(&argc, &argv);
   ::testing::InitGoogleTest(&argc, argv);
   int rc = RUN_ALL_TESTS();
-  //   MPI_Finalize();
   return rc;
 }
