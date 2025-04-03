@@ -118,7 +118,7 @@ Grid_t* setupGrid()
 void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
 {
   auto injector = mprts.injector();
-  injector[0]({{0.0, 36.0, 5.0}, {0.0, 3.0, 0.0}, 1.0, 0});
+  injector[0]({{0.0, 36.0, 5.0}, {0.0, 3.0, 1.0}, 1.0, 0});
 }
 
 // ======================================================================
