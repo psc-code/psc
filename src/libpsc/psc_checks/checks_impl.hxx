@@ -102,7 +102,11 @@ public:
     }
 
     assert(max_err < err_threshold);
+    last_max_err = max_err;
   }
+
+public:
+  double last_max_err;
 
 private:
   storage_type rho_m_;
@@ -180,7 +184,11 @@ public:
     }
 
     assert(max_err < err_threshold);
+    last_max_err = max_err;
   }
+
+public:
+  double last_max_err;
 
 private:
   WriterDefault writer_;
