@@ -7,6 +7,13 @@ struct CheckParams
   double threshold = 1e-13; // maximum acceptable error
   bool verbose = true;      // always print error, even if acceptable
   bool dump_always = false; // always dump compared fields, even if acceptable
+
+  bool enabled() { return every_step > 0; }
+
+  bool do_check(int timestep)
+  {
+    return enabled() && timestep % every_step == 0;
+  }
 };
 
 struct ContinuityCheckParams : CheckParams
