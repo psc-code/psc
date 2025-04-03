@@ -8,8 +8,20 @@
 #include "OutputFieldsDefault.h"
 #include "../psc_config.hxx"
 
+// ======================================================================
+// PSC configuration
+//
+// This sets up compile-time configuration for the code, in particular
+// what data structures and algorithms to use
+//
+// EDIT to change order / floating point type / cuda / 2d/3d
+
 using Dim = dim_yz;
+#ifdef USE_CUDA
+using PscConfig = PscConfig1vbecCuda<Dim>;
+#else
 using PscConfig = PscConfig1vbecDouble<Dim>;
+#endif
 
 // ----------------------------------------------------------------------
 
@@ -30,24 +42,33 @@ namespace
 // General PSC parameters
 PscParams psc_params;
 
+// matching: heliospheric .1 AU 3, shock tiny 2, real c and M, parallel B
+
+double electron_temperature = 7.8278E-05;
+double ion_temperature = 7.8278E-05;
+double ion_mass = 1.8360E+03;
+double v_flow = 2.6685E-03;
+double b_x = 0;
+double b_y = 2.4000E-02;
+
 int nx = 1;
-int ny = 4;
+int ny = 128;
 int nz = 2;
-int nt = 10;
+int nt = 100;
 
 int n_patches_x = 1;
 int n_patches_y = 1;
 int n_patches_z = 1;
 
-double dx = 10;
-double dy = 10;
-double dz = 10;
+double dx = 4.2849E+01;
+double dy = 3.3475E-01;
+double dz = 3.3475E-01;
 
 double len_x = nx * dx;
 double len_y = ny * dy;
 double len_z = nz * dz;
 
-int n_writes = nt;
+int n_writes = 10;
 int out_interval = nt / n_writes;
 
 } // namespace
@@ -89,7 +110,7 @@ Grid_t* setupGrid()
 
   auto kinds = Grid_t::Kinds(NR_KINDS);
   kinds[KIND_ELECTRON] = {-1.0, 1.0, "e"};
-  kinds[KIND_ION] = {1.0, 1.0, "i"};
+  kinds[KIND_ION] = {1.0, ion_mass, "i"};
 
   // --- generic setup
   auto norm_params = Grid_t::NormalizationParams::dimensionless();
@@ -117,8 +138,48 @@ Grid_t* setupGrid()
 
 void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
 {
-  auto injector = mprts.injector();
-  injector[0]({{0.0, 36.0, 5.0}, {0.0, 3.0, 1.0}, 1.0, 0});
+  SetupParticles<Mparticles> setup_particles(*grid_ptr);
+  setup_particles.centerer = Centering::Centerer(Centering::CC);
+
+  auto init_np = [&](int kind, Double3 crd, int p, Int3 idx,
+                     psc_particle_np& np) {
+    double temperature =
+      np.kind == KIND_ION ? ion_temperature : electron_temperature;
+    np.n = 1.0;
+    np.p =
+      setup_particles.createMaxwellian({np.kind,
+                                        np.n,
+                                        {0, v_flow, 0},
+                                        {temperature, temperature, temperature},
+                                        np.tag});
+  };
+
+  partitionAndSetupParticles(setup_particles, balance, grid_ptr, mprts,
+                             init_np);
+}
+
+// ======================================================================
+// fillGhosts
+
+template <typename MF>
+void fillGhosts(MF& mfld, int compBegin, int compEnd)
+{
+  Bnd_ bnd{};
+  bnd.fill_ghosts(mfld, compBegin, compEnd);
+}
+
+// ======================================================================
+// initializeFields
+
+void initializeFields(MfieldsState& mflds)
+{
+  setupFields(mflds, [&](int component, double coords[3]) {
+    switch (component) {
+      case HX: return b_x;
+      case HY: return b_y;
+      default: return 0.0;
+    }
+  });
 }
 
 // ======================================================================
@@ -198,6 +259,7 @@ static void run(int argc, char** argv)
   // set up initial conditions
 
   initializeParticles(balance, grid_ptr, mprts);
+  initializeFields(mflds);
 
   // ----------------------------------------------------------------------
   // run the simulation
