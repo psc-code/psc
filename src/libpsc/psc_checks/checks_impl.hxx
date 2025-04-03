@@ -47,7 +47,7 @@ public:
   void before_particle_push(const Mparticles& mprts)
   {
     const auto& grid = mprts.grid();
-    if (!params_.do_check(grid.timestep())) {
+    if (!params_.should_do_check(grid.timestep())) {
       return;
     }
 
@@ -62,7 +62,7 @@ public:
   void after_particle_push(const Mparticles& mprts, MfieldsState& mflds)
   {
     const Grid_t& grid = mprts.grid();
-    if (!params_.do_check(grid.timestep())) {
+    if (!params_.should_do_check(grid.timestep())) {
       return;
     }
 
@@ -79,16 +79,16 @@ public:
     double max_err;
     MPI_Allreduce(&local_err, &max_err, 1, MPI_DOUBLE, MPI_MAX, grid.comm());
 
-    if (params_.do_print_diffs(max_err)) {
+    if (params_.should_print_diffs(max_err)) {
       psc::helper::print_diff(d_rho, -dt_divj, params_.threshold);
     }
 
-    if (params_.do_print_max(max_err)) {
+    if (params_.should_print_max(max_err)) {
       mpi_printf(grid.comm(), "continuity: max_err = %g (thres %g)\n", max_err,
                  params_.threshold);
     }
 
-    if (params_.do_dump(max_err)) {
+    if (params_.should_dump(max_err)) {
       if (!writer_) {
         writer_.open("continuity");
       }
@@ -127,7 +127,7 @@ public:
   void operator()(Mparticles& mprts, MfieldsState& mflds)
   {
     const auto& grid = mprts.grid();
-    if (!params_.do_check(grid.timestep())) {
+    if (!params_.should_do_check(grid.timestep())) {
       return;
     }
 
@@ -154,7 +154,7 @@ public:
       double patch_err = gt::norm_linf(patch_dive - patch_rho);
       max_err = std::max(max_err, patch_err);
 
-      if (params_.do_print_diffs(patch_err)) {
+      if (params_.should_print_diffs(patch_err)) {
         psc::helper::print_diff(patch_rho, patch_dive, params_.threshold);
       }
     }
@@ -163,12 +163,12 @@ public:
     double tmp = max_err;
     MPI_Allreduce(&tmp, &max_err, 1, MPI_DOUBLE, MPI_MAX, grid.comm());
 
-    if (params_.do_print_max(max_err)) {
+    if (params_.should_print_max(max_err)) {
       mpi_printf(grid.comm(), "gauss: max_err = %g (thres %g)\n", max_err,
                  params_.threshold);
     }
 
-    if (params_.do_dump(max_err)) {
+    if (params_.should_dump(max_err)) {
       if (!writer_) {
         writer_.open("gauss");
       }
