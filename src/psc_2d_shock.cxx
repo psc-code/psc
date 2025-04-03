@@ -441,11 +441,11 @@ void run()
   ChecksParams checks_params{};
   checks_params.continuity.check_interval = 100;
   checks_params.continuity.err_threshold = 1e-4;
-  checks_params.continuity.print_max_always = true;
+  checks_params.continuity.print_max_err_always = true;
   checks_params.continuity.dump_always = false;
   checks_params.gauss.check_interval = 100;
   checks_params.gauss.err_threshold = 1e-4;
-  checks_params.gauss.print_max_always = true;
+  checks_params.gauss.print_max_err_always = true;
   checks_params.gauss.dump_always = false;
   Checks checks{grid, MPI_COMM_WORLD, checks_params};
 

@@ -73,7 +73,7 @@ TYPED_TEST(PushParticlesTest, Accel)
   ChecksParams checks_params{};
   checks_params.continuity.check_interval = 1;
   checks_params.continuity.err_threshold = 1e-7;
-  checks_params.continuity.print_max_always = false;
+  checks_params.continuity.print_max_err_always = false;
   Checks checks_{grid, MPI_COMM_WORLD, checks_params};
   for (int n = 0; n < n_steps; n++) {
     checks_.continuity_before_particle_push(mprts);
@@ -151,7 +151,7 @@ TYPED_TEST(PushParticlesTest, Cyclo)
   ChecksParams checks_params{};
   checks_params.continuity.check_interval = 1;
   checks_params.continuity.err_threshold = 1e-7;
-  checks_params.continuity.print_max_always = false;
+  checks_params.continuity.print_max_err_always = false;
   Checks checks_{grid, MPI_COMM_WORLD, checks_params};
   for (int n = 0; n < n_steps; n++) {
     checks_.continuity_before_particle_push(mprts);

@@ -83,7 +83,7 @@ public:
       psc::helper::print_diff(d_rho, -dt_divj, params_.err_threshold);
     }
 
-    if (params_.should_print_max(max_err)) {
+    if (params_.should_print_max_err(max_err)) {
       mpi_printf(grid.comm(), "continuity: max_err = %g (thres %g)\n", max_err,
                  params_.err_threshold);
     }
@@ -163,7 +163,7 @@ public:
     double tmp = max_err;
     MPI_Allreduce(&tmp, &max_err, 1, MPI_DOUBLE, MPI_MAX, grid.comm());
 
-    if (params_.should_print_max(max_err)) {
+    if (params_.should_print_max_err(max_err)) {
       mpi_printf(grid.comm(), "gauss: max_err = %g (thres %g)\n", max_err,
                  params_.err_threshold);
     }

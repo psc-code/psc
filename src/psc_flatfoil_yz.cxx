@@ -485,7 +485,7 @@ void run()
   checks_params.continuity.dump_always = false;
 #endif
   checks_params.continuity.err_threshold = 1e-4;
-  checks_params.continuity.print_max_always = true;
+  checks_params.continuity.print_max_err_always = true;
 
 #if CASE == CASE_2D_SMALL
   checks_params.gauss.check_interval = 1;
@@ -495,7 +495,7 @@ void run()
   checks_params.gauss.dump_always = false;
 #endif
   checks_params.gauss.err_threshold = 1e-4;
-  checks_params.gauss.print_max_always = true;
+  checks_params.gauss.print_max_err_always = true;
 
   Checks checks{grid, MPI_COMM_WORLD, checks_params};
 
