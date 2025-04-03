@@ -214,32 +214,12 @@ public:
   using item_rho_type = ITEM_RHO;
 
   ChecksCommon(const Grid_t& grid, MPI_Comm comm, const ChecksParams& params)
-    : params(params), continuity_{params.continuity}, gauss_{params.gauss}
+    : continuity{params.continuity}, gauss{params.gauss}
   {}
 
-  void continuity_before_particle_push(Mparticles& mprts)
-  {
-    continuity_.before_particle_push(mprts);
-  }
-
-  template <typename MfieldsState>
-  void continuity_after_particle_push(Mparticles& mprts, MfieldsState& mflds)
-  {
-    continuity_.after_particle_push(mprts, mflds);
-  }
-
-  template <typename MfieldsState>
-  void gauss(Mparticles& mprts, MfieldsState& mflds)
-  {
-    gauss_(mprts, mflds);
-  }
-
 public:
-  ChecksParams params;
-
-private:
-  psc::checks::continuity<storage_type, item_rho_type> continuity_;
-  psc::checks::gauss<storage_type, item_rho_type> gauss_;
+  psc::checks::continuity<storage_type, item_rho_type> continuity;
+  psc::checks::gauss<storage_type, item_rho_type> gauss;
 };
 
 template <typename MP, typename MF, typename ORDER, typename D>
