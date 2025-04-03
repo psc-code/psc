@@ -278,9 +278,9 @@ static void run(int argc, char** argv)
 
   // -- Checks
   ChecksParams checks_params{};
-  checks_params.gauss_every_step = out_interval;
-  // checks_params.gauss_dump_always = true;
-  checks_params.gauss_threshold = 1e-5;
+  checks_params.gauss.every_step = out_interval;
+  // checks_params.gauss.dump_always = true;
+  checks_params.gauss.threshold = 1e-5;
 
   Checks checks{grid, MPI_COMM_WORLD, checks_params};
 

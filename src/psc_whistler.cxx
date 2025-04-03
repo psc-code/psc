@@ -292,9 +292,9 @@ void run()
 
   // -- Checks
   ChecksParams checks_params{};
-  checks_params.continuity_every_step = 50;
-  checks_params.continuity_threshold = 1e-5;
-  checks_params.continuity_verbose = false;
+  checks_params.continuity.every_step = 50;
+  checks_params.continuity.threshold = 1e-5;
+  checks_params.continuity.verbose = false;
   Checks checks{grid, MPI_COMM_WORLD, checks_params};
 
   // -- Marder correction

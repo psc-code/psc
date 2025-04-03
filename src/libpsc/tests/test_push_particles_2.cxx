@@ -71,9 +71,9 @@ TYPED_TEST(PushParticlesTest, Accel)
   BndParticles bndp_{grid};
   Bnd bnd_{};
   ChecksParams checks_params{};
-  checks_params.continuity_every_step = 1;
-  checks_params.continuity_threshold = 1e-7;
-  checks_params.continuity_verbose = false;
+  checks_params.continuity.every_step = 1;
+  checks_params.continuity.threshold = 1e-7;
+  checks_params.continuity.verbose = false;
   Checks checks_{grid, MPI_COMM_WORLD, checks_params};
   for (int n = 0; n < n_steps; n++) {
     checks_.continuity_before_particle_push(mprts);
@@ -149,9 +149,9 @@ TYPED_TEST(PushParticlesTest, Cyclo)
   BndParticles bndp_{grid};
   Bnd bnd_{};
   ChecksParams checks_params{};
-  checks_params.continuity_every_step = 1;
-  checks_params.continuity_threshold = 1e-7;
-  checks_params.continuity_verbose = false;
+  checks_params.continuity.every_step = 1;
+  checks_params.continuity.threshold = 1e-7;
+  checks_params.continuity.verbose = false;
   Checks checks_{grid, MPI_COMM_WORLD, checks_params};
   for (int n = 0; n < n_steps; n++) {
     checks_.continuity_before_particle_push(mprts);

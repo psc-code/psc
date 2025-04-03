@@ -47,8 +47,8 @@ public:
   void before_particle_push(const Mparticles& mprts)
   {
     const auto& grid = mprts.grid();
-    if (continuity_every_step <= 0 ||
-        grid.timestep() % continuity_every_step != 0) {
+    if (continuity.every_step <= 0 ||
+        grid.timestep() % continuity.every_step != 0) {
       return;
     }
 
@@ -63,8 +63,8 @@ public:
   void after_particle_push(const Mparticles& mprts, MfieldsState& mflds)
   {
     const Grid_t& grid = mprts.grid();
-    if (continuity_every_step <= 0 ||
-        grid.timestep() % continuity_every_step != 0) {
+    if (continuity.every_step <= 0 ||
+        grid.timestep() % continuity.every_step != 0) {
       return;
     }
 
@@ -81,16 +81,16 @@ public:
     double max_err;
     MPI_Allreduce(&local_err, &max_err, 1, MPI_DOUBLE, MPI_MAX, grid.comm());
 
-    if (max_err >= continuity_threshold) {
-      psc::helper::print_diff(d_rho, -dt_divj, continuity_threshold);
+    if (max_err >= continuity.threshold) {
+      psc::helper::print_diff(d_rho, -dt_divj, continuity.threshold);
     }
 
-    if (continuity_verbose || max_err >= continuity_threshold) {
+    if (continuity.verbose || max_err >= continuity.threshold) {
       mpi_printf(grid.comm(), "continuity: max_err = %g (thres %g)\n", max_err,
-                 continuity_threshold);
+                 continuity.threshold);
     }
 
-    if (continuity_dump_always || max_err >= continuity_threshold) {
+    if (continuity.dump_always || max_err >= continuity.threshold) {
       if (!writer_) {
         writer_.open("continuity");
       }
@@ -101,7 +101,7 @@ public:
       MPI_Barrier(grid.comm());
     }
 
-    assert(max_err < continuity_threshold);
+    assert(max_err < continuity.threshold);
   }
 
 private:
@@ -128,7 +128,7 @@ public:
   void operator()(Mparticles& mprts, MfieldsState& mflds)
   {
     const auto& grid = mprts.grid();
-    if (gauss_every_step <= 0 || grid.timestep() % gauss_every_step != 0) {
+    if (gauss.every_step <= 0 || grid.timestep() % gauss.every_step != 0) {
       return;
     }
 
@@ -155,8 +155,8 @@ public:
       double patch_err = gt::norm_linf(patch_dive - patch_rho);
       max_err = std::max(max_err, patch_err);
 
-      if (patch_err > gauss_threshold) {
-        psc::helper::print_diff(patch_rho, patch_dive, gauss_threshold);
+      if (patch_err > gauss.threshold) {
+        psc::helper::print_diff(patch_rho, patch_dive, gauss.threshold);
       }
     }
 
@@ -164,12 +164,12 @@ public:
     double tmp = max_err;
     MPI_Allreduce(&tmp, &max_err, 1, MPI_DOUBLE, MPI_MAX, grid.comm());
 
-    if (gauss_verbose || max_err >= gauss_threshold) {
+    if (gauss.verbose || max_err >= gauss.threshold) {
       mpi_printf(grid.comm(), "gauss: max_err = %g (thres %g)\n", max_err,
-                 gauss_threshold);
+                 gauss.threshold);
     }
 
-    if (gauss_dump_always || max_err >= gauss_threshold) {
+    if (gauss.dump_always || max_err >= gauss.threshold) {
       if (!writer_) {
         writer_.open("gauss");
       }
@@ -179,7 +179,7 @@ public:
       writer_.end_step();
     }
 
-    assert(max_err < gauss_threshold);
+    assert(max_err < gauss.threshold);
   }
 
 private:
