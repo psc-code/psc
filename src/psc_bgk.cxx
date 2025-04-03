@@ -510,7 +510,7 @@ static void run(int argc, char** argv)
 
   // -- Checks
   ChecksParams checks_params{};
-  checks_params.gauss.every_step = g.gauss_every;
+  checks_params.gauss.check_interval = g.gauss_every;
   // checks_params.gauss.dump_always = true;
   checks_params.gauss.threshold = 1e-5;
 

@@ -278,7 +278,7 @@ static void run(int argc, char** argv)
 
   // -- Checks
   ChecksParams checks_params{};
-  checks_params.gauss.every_step = out_interval;
+  checks_params.gauss.check_interval = out_interval;
   // checks_params.gauss.dump_always = true;
   checks_params.gauss.threshold = 1e-5;
 

@@ -439,11 +439,11 @@ void run()
 
   // -- Checks
   ChecksParams checks_params{};
-  checks_params.continuity.every_step = 100;
+  checks_params.continuity.check_interval = 100;
   checks_params.continuity.threshold = 1e-4;
   checks_params.continuity.verbose = true;
   checks_params.continuity.dump_always = false;
-  checks_params.gauss.every_step = 100;
+  checks_params.gauss.check_interval = 100;
   checks_params.gauss.threshold = 1e-4;
   checks_params.gauss.verbose = true;
   checks_params.gauss.dump_always = false;

@@ -478,20 +478,20 @@ void run()
   // -- Checks
   ChecksParams checks_params{};
 #if CASE == CASE_2D_SMALL
-  checks_params.continuity.every_step = 1;
+  checks_params.continuity.check_interval = 1;
   checks_params.continuity.dump_always = true;
 #else
-  checks_params.continuity.every_step = 0;
+  checks_params.continuity.check_interval = 0;
   checks_params.continuity.dump_always = false;
 #endif
   checks_params.continuity.threshold = 1e-4;
   checks_params.continuity.verbose = true;
 
 #if CASE == CASE_2D_SMALL
-  checks_params.gauss.every_step = 1;
+  checks_params.gauss.check_interval = 1;
   checks_params.gauss.dump_always = true;
 #else
-  checks_params.gauss.every_step = 100;
+  checks_params.gauss.check_interval = 100;
   checks_params.gauss.dump_always = false;
 #endif
   checks_params.gauss.threshold = 1e-4;

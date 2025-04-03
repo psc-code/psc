@@ -3,16 +3,16 @@
 
 struct CheckParams
 {
-  int every_step = 0;       // number of steps per check
+  int check_interval = 0;   // number of steps per check
   double threshold = 1e-13; // maximum acceptable error
   bool verbose = true;      // always print error, even if acceptable
   bool dump_always = false; // always dump compared fields, even if acceptable
 
-  bool enabled() { return every_step > 0; }
+  bool enabled() { return check_interval > 0; }
 
   bool should_do_check(int timestep)
   {
-    return enabled() && timestep % every_step == 0;
+    return enabled() && timestep % check_interval == 0;
   }
 
   bool should_print_diffs(double err) { return err > threshold; }
