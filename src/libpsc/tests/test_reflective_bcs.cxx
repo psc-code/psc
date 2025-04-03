@@ -268,7 +268,11 @@ static void run(int argc, char** argv)
     makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts, balance,
                                  collision, checks, marder, diagnostics);
 
-  psc.integrate();
+  for (; grid.timestep_ < nt; grid.timestep_++) {
+    psc.step();
+    ASSERT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
+    ASSERT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
+  }
 }
 
 // ======================================================================
