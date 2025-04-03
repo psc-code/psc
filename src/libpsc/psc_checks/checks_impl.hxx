@@ -32,13 +32,15 @@ namespace checks
 // psc::checks::continuity: Charge Continuity
 
 template <typename S, typename ITEM_RHO>
-class continuity
+class continuity : public ContinuityCheckParams
 {
 public:
   using storage_type = S;
   using Item_rho = ITEM_RHO;
 
-  continuity(const ContinuityCheckParams& params) : params(params) {}
+  continuity(const ContinuityCheckParams& params)
+    : ContinuityCheckParams(params)
+  {}
 
   // ----------------------------------------------------------------------
   // before_particle_push
@@ -47,7 +49,7 @@ public:
   void before_particle_push(const Mparticles& mprts)
   {
     const auto& grid = mprts.grid();
-    if (!params.should_do_check(grid.timestep())) {
+    if (!should_do_check(grid.timestep())) {
       return;
     }
 
@@ -62,7 +64,7 @@ public:
   void after_particle_push(const Mparticles& mprts, MfieldsState& mflds)
   {
     const Grid_t& grid = mprts.grid();
-    if (!params.should_do_check(grid.timestep())) {
+    if (!should_do_check(grid.timestep())) {
       return;
     }
 
@@ -79,16 +81,16 @@ public:
     double max_err;
     MPI_Allreduce(&local_err, &max_err, 1, MPI_DOUBLE, MPI_MAX, grid.comm());
 
-    if (params.should_print_diffs(max_err)) {
-      psc::helper::print_diff(d_rho, -dt_divj, params.err_threshold);
+    if (should_print_diffs(max_err)) {
+      psc::helper::print_diff(d_rho, -dt_divj, err_threshold);
     }
 
-    if (params.should_print_max_err(max_err)) {
+    if (should_print_max_err(max_err)) {
       mpi_printf(grid.comm(), "continuity: max_err = %g (thres %g)\n", max_err,
-                 params.err_threshold);
+                 err_threshold);
     }
 
-    if (params.should_dump(max_err)) {
+    if (should_dump(max_err)) {
       if (!writer_) {
         writer_.open("continuity");
       }
@@ -99,11 +101,8 @@ public:
       MPI_Barrier(grid.comm());
     }
 
-    assert(max_err < params.err_threshold);
+    assert(max_err < err_threshold);
   }
-
-public:
-  ContinuityCheckParams params;
 
 private:
   storage_type rho_m_;
@@ -114,13 +113,13 @@ private:
 // psc::checks::gauss: Gauss's Law div E = rho
 
 template <typename S, typename ITEM_RHO>
-class gauss
+class gauss : public GaussCheckParams
 {
 public:
   using storage_type = S;
   using Item_rho = ITEM_RHO;
 
-  gauss(const GaussCheckParams params) : params(params) {}
+  gauss(const GaussCheckParams params) : GaussCheckParams(params) {}
 
   // ----------------------------------------------------------------------
   // operator()
@@ -129,7 +128,7 @@ public:
   void operator()(Mparticles& mprts, MfieldsState& mflds)
   {
     const auto& grid = mprts.grid();
-    if (!params.should_do_check(grid.timestep())) {
+    if (!should_do_check(grid.timestep())) {
       return;
     }
 
@@ -156,8 +155,8 @@ public:
       double patch_err = gt::norm_linf(patch_dive - patch_rho);
       max_err = std::max(max_err, patch_err);
 
-      if (params.should_print_diffs(patch_err)) {
-        psc::helper::print_diff(patch_rho, patch_dive, params.err_threshold);
+      if (should_print_diffs(patch_err)) {
+        psc::helper::print_diff(patch_rho, patch_dive, err_threshold);
       }
     }
 
@@ -165,12 +164,12 @@ public:
     double tmp = max_err;
     MPI_Allreduce(&tmp, &max_err, 1, MPI_DOUBLE, MPI_MAX, grid.comm());
 
-    if (params.should_print_max_err(max_err)) {
+    if (should_print_max_err(max_err)) {
       mpi_printf(grid.comm(), "gauss: max_err = %g (thres %g)\n", max_err,
-                 params.err_threshold);
+                 err_threshold);
     }
 
-    if (params.should_dump(max_err)) {
+    if (should_dump(max_err)) {
       if (!writer_) {
         writer_.open("gauss");
       }
@@ -180,11 +179,8 @@ public:
       writer_.end_step();
     }
 
-    assert(max_err < params.err_threshold);
+    assert(max_err < err_threshold);
   }
-
-public:
-  GaussCheckParams params;
 
 private:
   WriterDefault writer_;
