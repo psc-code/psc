@@ -79,16 +79,16 @@ public:
     double max_err;
     MPI_Allreduce(&local_err, &max_err, 1, MPI_DOUBLE, MPI_MAX, grid.comm());
 
-    if (max_err >= params_.threshold) {
+    if (params_.do_print_diffs(max_err)) {
       psc::helper::print_diff(d_rho, -dt_divj, params_.threshold);
     }
 
-    if (params_.verbose || max_err >= params_.threshold) {
+    if (params_.do_print_max(max_err)) {
       mpi_printf(grid.comm(), "continuity: max_err = %g (thres %g)\n", max_err,
                  params_.threshold);
     }
 
-    if (params_.dump_always || max_err >= params_.threshold) {
+    if (params_.do_dump(max_err)) {
       if (!writer_) {
         writer_.open("continuity");
       }
@@ -154,7 +154,7 @@ public:
       double patch_err = gt::norm_linf(patch_dive - patch_rho);
       max_err = std::max(max_err, patch_err);
 
-      if (patch_err > params_.threshold) {
+      if (params_.do_print_diffs(patch_err)) {
         psc::helper::print_diff(patch_rho, patch_dive, params_.threshold);
       }
     }
@@ -163,12 +163,12 @@ public:
     double tmp = max_err;
     MPI_Allreduce(&tmp, &max_err, 1, MPI_DOUBLE, MPI_MAX, grid.comm());
 
-    if (params_.verbose || max_err >= params_.threshold) {
+    if (params_.do_print_max(max_err)) {
       mpi_printf(grid.comm(), "gauss: max_err = %g (thres %g)\n", max_err,
                  params_.threshold);
     }
 
-    if (params_.dump_always || max_err >= params_.threshold) {
+    if (params_.do_dump(max_err)) {
       if (!writer_) {
         writer_.open("gauss");
       }

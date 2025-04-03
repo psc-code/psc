@@ -14,6 +14,12 @@ struct CheckParams
   {
     return enabled() && timestep % every_step == 0;
   }
+
+  bool do_print_diffs(double err) { return err > threshold; }
+
+  bool do_print_max(double max_err) { return verbose || max_err > threshold; }
+
+  bool do_dump(double max_err) { return dump_always || max_err > threshold; }
 };
 
 struct ContinuityCheckParams : CheckParams
