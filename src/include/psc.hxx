@@ -8,7 +8,7 @@
 #include <setup_particles.hxx>
 
 #include "../libpsc/vpic/fields_item_vpic.hxx"
-#include <checks.hxx>
+#include <checks_params.hxx>
 #include <output_particles.hxx>
 #include <push_particles.hxx>
 

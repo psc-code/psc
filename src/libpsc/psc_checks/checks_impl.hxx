@@ -3,7 +3,7 @@
 
 #include "fields.hxx"
 #include "fields_item.hxx"
-#include "checks.hxx"
+#include "checks_params.hxx"
 #include "../libpsc/psc_output_fields/fields_item_fields.hxx"
 #include "../libpsc/psc_output_fields/fields_item_moments_1st.hxx"
 #include <psc/helper.hxx>
