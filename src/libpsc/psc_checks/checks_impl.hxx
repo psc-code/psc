@@ -80,12 +80,12 @@ public:
     MPI_Allreduce(&local_err, &max_err, 1, MPI_DOUBLE, MPI_MAX, grid.comm());
 
     if (params_.should_print_diffs(max_err)) {
-      psc::helper::print_diff(d_rho, -dt_divj, params_.threshold);
+      psc::helper::print_diff(d_rho, -dt_divj, params_.err_threshold);
     }
 
     if (params_.should_print_max(max_err)) {
       mpi_printf(grid.comm(), "continuity: max_err = %g (thres %g)\n", max_err,
-                 params_.threshold);
+                 params_.err_threshold);
     }
 
     if (params_.should_dump(max_err)) {
@@ -99,7 +99,7 @@ public:
       MPI_Barrier(grid.comm());
     }
 
-    assert(max_err < params_.threshold);
+    assert(max_err < params_.err_threshold);
   }
 
 private:
@@ -155,7 +155,7 @@ public:
       max_err = std::max(max_err, patch_err);
 
       if (params_.should_print_diffs(patch_err)) {
-        psc::helper::print_diff(patch_rho, patch_dive, params_.threshold);
+        psc::helper::print_diff(patch_rho, patch_dive, params_.err_threshold);
       }
     }
 
@@ -165,7 +165,7 @@ public:
 
     if (params_.should_print_max(max_err)) {
       mpi_printf(grid.comm(), "gauss: max_err = %g (thres %g)\n", max_err,
-                 params_.threshold);
+                 params_.err_threshold);
     }
 
     if (params_.should_dump(max_err)) {
@@ -178,7 +178,7 @@ public:
       writer_.end_step();
     }
 
-    assert(max_err < params_.threshold);
+    assert(max_err < params_.err_threshold);
   }
 
 private:

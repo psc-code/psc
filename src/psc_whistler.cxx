@@ -293,7 +293,7 @@ void run()
   // -- Checks
   ChecksParams checks_params{};
   checks_params.continuity.check_interval = 50;
-  checks_params.continuity.threshold = 1e-5;
+  checks_params.continuity.err_threshold = 1e-5;
   checks_params.continuity.print_max_always = false;
   Checks checks{grid, MPI_COMM_WORLD, checks_params};
 
