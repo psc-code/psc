@@ -37,15 +37,8 @@ namespace
 {
 PscParams psc_params;
 
-double electron_temperature = 7.8278E-05;
-double ion_temperature = 7.8278E-05;
-double ion_mass = 1.8360E+03;
-double v_flow = 2.6685E-03;
-double b_x = 0;
-double b_y = 2.4000E-02;
-
 int nx = 1;
-int ny = 128;
+int ny = 8; // test success if this goes to 4
 int nz = 2;
 int nt = 100;
 
@@ -97,11 +90,11 @@ Grid_t* setupGrid()
 
   auto kinds = Grid_t::Kinds(NR_KINDS);
   kinds[KIND_ELECTRON] = {-1.0, 1.0, "e"};
-  kinds[KIND_ION] = {1.0, ion_mass, "i"};
+  kinds[KIND_ION] = {1.0, 1.0, "i"};
 
   // --- generic setup
   auto norm_params = Grid_t::NormalizationParams::dimensionless();
-  norm_params.nicell = 100;
+  norm_params.nicell = 1;
 
   double dt = psc_params.cfl * courant_length(domain);
   Grid_t::Normalization norm{norm_params};
@@ -130,33 +123,15 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
 
   auto init_np = [&](int kind, Double3 crd, int p, Int3 idx,
                      psc_particle_np& np) {
-    double temperature =
-      np.kind == KIND_ION ? ion_temperature : electron_temperature;
     np.n = 1.0;
-    np.p =
-      setup_particles.createMaxwellian({np.kind,
-                                        np.n,
-                                        {0, v_flow, 0},
-                                        {temperature, temperature, temperature},
-                                        np.tag});
+
+    // how can i make this fail without setting some t=0?
+    np.p = setup_particles.createMaxwellian(
+      {np.kind, np.n, {0, 0, 0}, {0, 0, 0.0000006}, np.tag});
   };
 
   partitionAndSetupParticles(setup_particles, balance, grid_ptr, mprts,
                              init_np);
-}
-
-// ======================================================================
-// initializeFields
-
-void initializeFields(MfieldsState& mflds)
-{
-  setupFields(mflds, [&](int component, double coords[3]) {
-    switch (component) {
-      case HX: return b_x;
-      case HY: return b_y;
-      default: return 0.0;
-    }
-  });
 }
 
 // ======================================================================
@@ -233,7 +208,6 @@ static void run(int argc, char** argv)
   // set up initial conditions
 
   initializeParticles(balance, grid_ptr, mprts);
-  initializeFields(mflds);
 
   // ----------------------------------------------------------------------
   // run the simulation
