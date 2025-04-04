@@ -49,9 +49,21 @@ PscParams psc_params;
 double electron_temperature = 7.8278E-05;
 double ion_temperature = 7.8278E-05;
 double ion_mass = 1.8360E+03;
-double v_flow = 2.6685E-03;
-double b_x = 0;
-double b_y = 2.4000E-02;
+
+double v_upstream_x = 0.0;
+double v_upstream_y = 2.6685E-03;
+double v_upstream_z = 0.0;
+
+double b_angle_y_to_x_deg = 15;
+double b_angle_y_to_x = b_angle_y_to_x_deg * M_PI / 180;
+double b_mag = 2.4000E-02;
+double b_x = b_mag * sin(b_angle_y_to_x);
+double b_y = b_mag * cos(b_angle_y_to_x);
+double b_z = 0.0;
+
+double e_x = -(v_upstream_y * b_z - v_upstream_z * b_y);
+double e_y = -(v_upstream_z * b_x - v_upstream_x * b_z);
+double e_z = -(v_upstream_x * b_y - v_upstream_y * b_x);
 
 int nx = 1;
 int ny = 128 * 128;
@@ -148,12 +160,12 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
     double temperature =
       np.kind == KIND_ION ? ion_temperature : electron_temperature;
     np.n = 1.0;
-    np.p =
-      setup_particles.createMaxwellian({np.kind,
-                                        np.n,
-                                        {0, v_flow, 0},
-                                        {temperature, temperature, temperature},
-                                        np.tag});
+    np.p = setup_particles.createMaxwellian(
+      {np.kind,
+       np.n,
+       {v_upstream_x, v_upstream_y, v_upstream_z},
+       {temperature, temperature, temperature},
+       np.tag});
   };
 
   partitionAndSetupParticles(setup_particles, balance, grid_ptr, mprts,
@@ -177,8 +189,12 @@ void initializeFields(MfieldsState& mflds)
 {
   setupFields(mflds, [&](int component, double coords[3]) {
     switch (component) {
+      case EX: return e_x;
+      case EY: return e_y;
+      case EZ: return e_z;
       case HX: return b_x;
       case HY: return b_y;
+      case HZ: return b_z;
       default: return 0.0;
     }
   });
