@@ -44,11 +44,9 @@ namespace
 // General PSC parameters
 PscParams psc_params;
 
-// matching: heliospheric .1 AU 3, shock tiny 2, real c and M, parallel B
-
 double electron_temperature = 7.8278E-05;
 double ion_temperature = 7.8278E-05;
-double ion_mass = 1.8360E+03;
+double ion_mass = 1.0000E+02;
 
 double v_upstream_x = 0.0;
 double v_upstream_y = 2.6685E-03;
@@ -74,7 +72,7 @@ int n_patches_x = 1;
 int n_patches_y = 128;
 int n_patches_z = 1;
 
-double dx = 4.2849E+01;
+double dx = 3.3475E-01;
 double dy = 3.3475E-01;
 double dz = 3.3475E-01;
 
