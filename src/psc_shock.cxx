@@ -250,7 +250,7 @@ static void run(int argc, char** argv)
   double marder_diffusion = 0.9;
   int marder_loop = 3;
   bool marder_dump = false;
-  psc_params.marder_interval = 50;
+  psc_params.marder_interval = -1;
   Marder marder(grid, marder_diffusion, marder_loop, marder_dump);
 
   // ----------------------------------------------------------------------
