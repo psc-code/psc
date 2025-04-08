@@ -6,8 +6,6 @@
 #include "OutputFieldsDefault.h"
 #include "psc_config.hxx"
 
-#include "psc_bgk_util/bgk_params.hxx"
-#include "psc_bgk_util/table.hxx"
 #include "psc_bgk_util/params_parser.hxx"
 
 // ======================================================================
@@ -44,44 +42,36 @@ namespace
 // General PSC parameters
 PscParams psc_params;
 
-double electron_temperature = 7.8278E-05;
-double ion_temperature = 7.8278E-05;
-double ion_mass = 1.0000E+02;
+double electron_temperature;
+double ion_temperature;
+double electron_mass;
+double ion_mass;
 
-double v_upstream_x = 0.0;
-double v_upstream_y = 2.6685E-03;
-double v_upstream_z = 0.0;
+double v_upstream_x;
+double v_upstream_y;
+double v_upstream_z;
 
-double b_angle_y_to_x_deg = 15;
-double b_angle_y_to_x = b_angle_y_to_x_deg * M_PI / 180;
-double b_mag = 2.4000E-02;
-double b_x = b_mag * sin(b_angle_y_to_x);
-double b_y = b_mag * cos(b_angle_y_to_x);
-double b_z = 0.0;
+double b_x;
+double b_y;
+double b_z;
 
-double e_x = -(v_upstream_y * b_z - v_upstream_z * b_y);
-double e_y = -(v_upstream_z * b_x - v_upstream_x * b_z);
-double e_z = -(v_upstream_x * b_y - v_upstream_y * b_x);
+double e_x;
+double e_y;
+double e_z;
 
-int nx = 1;
-int ny = 128 * 128;
-int nz = 2;
-int nt = 5505294;
+int nx;
+int ny;
+int nz;
 
-int n_patches_x = 1;
-int n_patches_y = 128;
-int n_patches_z = 1;
+int n_patches_x;
+int n_patches_y;
+int n_patches_z;
 
-double dx = 3.3475E-01;
-double dy = 3.3475E-01;
-double dz = 3.3475E-01;
+double len_x;
+double len_y;
+double len_z;
 
-double len_x = nx * dx;
-double len_y = ny * dy;
-double len_z = nz * dz;
-
-int n_writes = 100;
-int out_interval = nt / n_writes;
+int out_interval;
 
 } // namespace
 
@@ -90,11 +80,61 @@ int out_interval = nt / n_writes;
 
 void setupParameters(int argc, char** argv)
 {
-  psc_params.nmax = nt;
-  psc_params.stats_every = out_interval;
-  psc_params.cfl = .75;
+  if (argc != 2) {
+    std::cout << "Usage: " << argv[0] << " path/to/params\nExiting."
+              << std::endl;
+    exit(1);
+  }
+  std::string path_to_params(argv[1]);
+  ParsedParams parsedParams(path_to_params);
 
+  psc_params.stats_every = 1000;
+  psc_params.cfl = parsedParams.getOrDefault<double>("cfl", .75);
   psc_params.write_checkpoint_every_step = 0;
+
+  electron_temperature = parsedParams.get<double>("electron_temperature");
+  ion_temperature = parsedParams.get<double>("ion_temperature");
+  electron_mass = parsedParams.get<double>("electron_mass");
+  ion_mass = parsedParams.get<double>("ion_mass");
+
+  v_upstream_x = parsedParams.get<double>("v_upstream_x");
+  v_upstream_y = parsedParams.get<double>("v_upstream_y");
+  v_upstream_z = parsedParams.get<double>("v_upstream_z");
+
+  double b_angle_y_to_x_deg = parsedParams.get<double>("b_angle_y_to_x_deg");
+  double b_angle_y_to_x = b_angle_y_to_x_deg * M_PI / 180;
+  double b_mag = parsedParams.get<double>("b_mag");
+  b_x = b_mag * sin(b_angle_y_to_x);
+  b_y = b_mag * cos(b_angle_y_to_x);
+  b_z = 0.0;
+
+  e_x = -(v_upstream_y * b_z - v_upstream_z * b_y);
+  e_y = -(v_upstream_z * b_x - v_upstream_x * b_z);
+  e_z = -(v_upstream_x * b_y - v_upstream_y * b_x);
+
+  nx = parsedParams.get<int>("nx");
+  ny = parsedParams.get<int>("ny");
+  nz = parsedParams.get<int>("nz");
+  psc_params.nmax = parsedParams.get<int>("nt");
+
+  n_patches_x = parsedParams.get<int>("n_patches_x");
+  n_patches_y = parsedParams.get<int>("n_patches_y");
+  n_patches_z = parsedParams.get<int>("n_patches_z");
+
+  double dx = parsedParams.get<double>("dx");
+  double dy = parsedParams.get<double>("dy");
+  double dz = parsedParams.get<double>("dz");
+
+  len_x = nx * dx;
+  len_y = ny * dy;
+  len_z = nz * dz;
+
+  int n_writes = parsedParams.getOrDefault<int>("n_writes", 100);
+  out_interval = psc_params.nmax / n_writes;
+
+  std::ifstream src(path_to_params, std::ios::binary);
+  std::ofstream dst("params_record.txt", std::ios::binary);
+  dst << src.rdbuf();
 }
 
 // ======================================================================
@@ -121,7 +161,7 @@ Grid_t* setupGrid()
                   {BND_PRT_PERIODIC, BND_PRT_REFLECTING, BND_PRT_PERIODIC}};
 
   auto kinds = Grid_t::Kinds(NR_KINDS);
-  kinds[KIND_ELECTRON] = {-1.0, 1.0, "e"};
+  kinds[KIND_ELECTRON] = {-1.0, electron_mass, "e"};
   kinds[KIND_ION] = {1.0, ion_mass, "i"};
 
   // --- generic setup
