@@ -101,11 +101,10 @@ void setupParameters(int argc, char** argv)
   v_upstream_y = parsedParams.get<double>("v_upstream_y");
   v_upstream_z = parsedParams.get<double>("v_upstream_z");
 
-  double b_angle_y_to_x_deg = parsedParams.get<double>("b_angle_y_to_x_deg");
-  double b_angle_y_to_x = b_angle_y_to_x_deg * M_PI / 180;
+  double b_angle_y_to_x_rad = parsedParams.get<double>("b_angle_y_to_x_rad");
   double b_mag = parsedParams.get<double>("b_mag");
-  b_x = b_mag * sin(b_angle_y_to_x);
-  b_y = b_mag * cos(b_angle_y_to_x);
+  b_x = b_mag * sin(b_angle_y_to_x_rad);
+  b_y = b_mag * cos(b_angle_y_to_x_rad);
   b_z = 0.0;
 
   e_x = -(v_upstream_y * b_z - v_upstream_z * b_y);
