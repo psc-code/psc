@@ -264,30 +264,34 @@ TYPED_TEST(BndTest, AddGhosts)
   {
     auto&& h_mflds = gt::host_mirror(mflds.storage());
     gt::copy(mflds.storage(), h_mflds);
+
     for (int p = 0; p < mflds.n_patches(); p++) {
       auto flds = make_Fields3d<dim_xyz>(
         h_mflds.view(_all, _all, _all, _all, p), -grid.ibn);
       int j0 = grid.patches[p].off[1];
       int k0 = grid.patches[p].off[2];
       auto& ldims = grid.ldims;
+
       grid.Foreach_3d(B, B, [&](int i, int j, int k) {
-        int n_nei = 0;
+        int n_neighbors = 0;
         if (i >= 0 && i < ldims[0] && j >= 0 && j < ldims[1] && k >= 0 &&
             k < ldims[2]) {
           if (!dim::InvarX::value) {
             if (i < B || i >= ldims[0] - B)
-              n_nei++;
+              n_neighbors++;
           }
           if (j < B || j >= ldims[1] - B)
-            n_nei++;
+            n_neighbors++;
           if (k < B || k >= ldims[2] - B)
-            n_nei++;
-          if (n_nei == 2)
-            n_nei = 3; // edge -> diagonal contribution, too
-          else if (n_nei == 3)
-            n_nei = 11; // corner -> why? FIXME why not 7?
+            n_neighbors++;
+
+          if (n_neighbors == 2)
+            n_neighbors = 3; // edge -> diagonal contribution, too
+          else if (n_neighbors == 3)
+            n_neighbors = 11; // corner -> why? FIXME why not 7?
         }
-        EXPECT_EQ(flds(0, i, j, k), 1 + n_nei)
+
+        EXPECT_EQ(flds(0, i, j, k), 1 + n_neighbors)
           << "ijk " << i << " " << j << " " << k;
       });
     }
