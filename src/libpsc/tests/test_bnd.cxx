@@ -247,9 +247,7 @@ TYPED_TEST(BndTest, AddGhosts)
     for (int p = 0; p < mflds.n_patches(); p++) {
       auto flds = make_Fields3d<dim_xyz>(
         h_mflds.view(_all, _all, _all, _all, p), -grid.ibn);
-      int i0 = grid.patches[p].off[0];
-      int j0 = grid.patches[p].off[1];
-      int k0 = grid.patches[p].off[2];
+
       grid.Foreach_3d(B, B, [&](int i, int j, int k) { flds(0, i, j, k) = 1; });
     }
     gt::copy(h_mflds, mflds.storage());
