@@ -271,23 +271,26 @@ TYPED_TEST(BndTest, AddGhosts)
       auto& ldims = grid.ldims;
 
       grid.Foreach_3d(B, B, [&](int i, int j, int k) {
-        int n_neighbors = 0;
+        int n_neighbors_x = 0;
+        int n_neighbors_y = 0;
+        int n_neighbors_z = 0;
+
         if (i >= 0 && i < ldims[0] && j >= 0 && j < ldims[1] && k >= 0 &&
             k < ldims[2]) {
           if (!dim::InvarX::value) {
-            if (i < B || i >= ldims[0] - B)
-              n_neighbors++;
+            n_neighbors_x += i < B;
+            n_neighbors_x += i >= ldims[0] - B;
           }
-          if (j < B || j >= ldims[1] - B)
-            n_neighbors++;
-          if (k < B || k >= ldims[2] - B)
-            n_neighbors++;
 
-          if (n_neighbors == 2)
-            n_neighbors = 3; // edge -> diagonal contribution, too
-          else if (n_neighbors == 3)
-            n_neighbors = 11; // corner -> why? FIXME why not 7?
+          n_neighbors_y += j < B;
+          n_neighbors_y += j >= ldims[1] - B;
+
+          n_neighbors_z += k < B;
+          n_neighbors_z += k >= ldims[2] - B;
         }
+
+        int n_neighbors =
+          (n_neighbors_x + 1) * (n_neighbors_y + 1) * (n_neighbors_z + 1) - 1;
 
         EXPECT_EQ(flds(0, i, j, k), 1 + n_neighbors)
           << "ijk " << i << " " << j << " " << k;
