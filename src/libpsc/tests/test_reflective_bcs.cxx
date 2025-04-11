@@ -46,9 +46,9 @@ int n_patches_x = 1;
 int n_patches_y = 1;
 int n_patches_z = 1;
 
-double dx = 4.2849E+01;
-double dy = 3.3475E-01;
-double dz = 3.3475E-01;
+double dx = 10;
+double dy = 10;
+double dz = 10;
 
 double len_x = nx * dx;
 double len_y = ny * dy;
@@ -111,27 +111,6 @@ Grid_t* setupGrid()
   }
 
   return new Grid_t{domain, bc, kinds, norm, dt, -1, ibn};
-}
-
-// ======================================================================
-// initializeParticles
-
-void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
-{
-  SetupParticles<Mparticles> setup_particles(*grid_ptr);
-  setup_particles.centerer = Centering::Centerer(Centering::CC);
-
-  auto init_np = [&](int kind, Double3 crd, int p, Int3 idx,
-                     psc_particle_np& np) {
-    np.n = 1.0;
-
-    // how can i make this fail without setting some t=0?
-    np.p = setup_particles.createMaxwellian(
-      {np.kind, np.n, {0, 0, 0}, {0, 0, 0.0000006}, np.tag});
-  };
-
-  partitionAndSetupParticles(setup_particles, balance, grid_ptr, mprts,
-                             init_np);
 }
 
 // ======================================================================
@@ -207,7 +186,11 @@ static void run(int argc, char** argv)
   // ----------------------------------------------------------------------
   // set up initial conditions
 
-  initializeParticles(balance, grid_ptr, mprts);
+  {
+    auto injector = mprts.injector();
+    auto inj = injector[0];
+    inj({{0, 15, 5}, {0, -.001, 0}, 1, 0});
+  }
 
   // ----------------------------------------------------------------------
   // run the simulation
