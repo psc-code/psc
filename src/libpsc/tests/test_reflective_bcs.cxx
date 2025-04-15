@@ -54,9 +54,6 @@ double len_x = nx * dx;
 double len_y = ny * dy;
 double len_z = nz * dz;
 
-int n_writes = 10;
-int out_interval = nt / n_writes;
-
 } // namespace
 
 // ======================================================================
@@ -65,7 +62,7 @@ int out_interval = nt / n_writes;
 void setupParameters(int argc, char** argv)
 {
   psc_params.nmax = nt;
-  psc_params.stats_every = out_interval;
+  psc_params.stats_every = 1;
   psc_params.cfl = .75;
 
   psc_params.write_checkpoint_every_step = 0;
@@ -167,15 +164,13 @@ static void run(int argc, char** argv)
 
   // -- output fields
   OutputFieldsParams outf_params{};
-  outf_params.fields.pfield.out_interval = out_interval;
-  outf_params.moments.pfield.out_interval = out_interval;
+  outf_params.fields.pfield.out_interval = -1;
+  outf_params.moments.pfield.out_interval = -1;
   OutputFields<MfieldsState, Mparticles, Dim> outf{grid, outf_params};
 
   // -- output particles
   OutputParticlesParams outp_params{};
-  outp_params.every_step = out_interval;
-  outp_params.data_dir = ".";
-  outp_params.basename = "prt";
+  outp_params.every_step = -1;
   OutputParticles outp{grid, outp_params};
 
   int oute_interval = -100;
