@@ -209,11 +209,10 @@ struct checks_order_2nd
   using Moment_rho_nc = Moment_rho_2nd_nc<S, D>;
 };
 
-template <typename MP, typename S, typename ITEM_RHO>
+template <typename S, typename ITEM_RHO>
 class ChecksCommon
 {
 public:
-  using Mparticles = MP;
   using storage_type = S;
   using item_rho_type = ITEM_RHO;
 
@@ -228,5 +227,5 @@ public:
 
 template <typename MP, typename MF, typename ORDER, typename D>
 using Checks_ =
-  ChecksCommon<MP, typename MF::Storage,
+  ChecksCommon<typename MF::Storage,
                typename ORDER::template Moment_rho_nc<typename MF::Storage, D>>;
