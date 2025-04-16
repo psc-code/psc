@@ -8,7 +8,7 @@
 #include <setup_particles.hxx>
 
 #include "../libpsc/vpic/fields_item_vpic.hxx"
-#include <checks.hxx>
+#include <checks_params.hxx>
 #include <output_particles.hxx>
 #include <push_particles.hxx>
 
@@ -489,11 +489,10 @@ struct Psc
     inject_particles();
     prof_stop(pr_inject_prts);
 
-    if (checks_.continuity_every_step > 0 &&
-        timestep % checks_.continuity_every_step == 0) {
+    if (checks_.continuity.should_do_check(timestep)) {
       mpi_printf(comm, "***** Checking continuity...\n");
       prof_start(pr_checks);
-      checks_.continuity_before_particle_push(mprts_);
+      checks_.continuity.before_particle_push(mprts_);
       prof_stop(pr_checks);
     }
 
@@ -558,10 +557,9 @@ struct Psc
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 #endif
 
-    if (checks_.continuity_every_step > 0 &&
-        timestep % checks_.continuity_every_step == 0) {
+    if (checks_.continuity.should_do_check(timestep)) {
       prof_restart(pr_checks);
-      checks_.continuity_after_particle_push(mprts_, mflds_);
+      checks_.continuity.after_particle_push(mprts_, mflds_);
       prof_stop(pr_checks);
     }
 
@@ -575,8 +573,7 @@ struct Psc
       prof_stop(pr_marder);
     }
 
-    if (checks_.gauss_every_step > 0 &&
-        timestep % checks_.gauss_every_step == 0) {
+    if (checks_.gauss.should_do_check(timestep)) {
       prof_restart(pr_checks);
       checks_.gauss(mprts_, mflds_);
       prof_stop(pr_checks);
