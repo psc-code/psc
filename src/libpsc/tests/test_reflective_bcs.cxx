@@ -186,10 +186,54 @@ TEST(ReflectiveBcsTest, Integration)
 // ======================================================================
 // Unit tests
 
+int ravel_idx(Int3 idx, Int3 shape)
+{
+  return idx[0] + shape[0] * (idx[1] + shape[1] * (idx[2]));
+}
+
 TEST(ReflectiveBcsTest, AddGhostsReflectingHighY)
 {
-  // TODO
-  EXPECT_TRUE(false);
+  Grid_t* grid_ptr = setupGrid();
+  auto& grid = *grid_ptr;
+
+  Int3 ldims = grid.ldims;
+  Int3 shape = ldims + 2 * grid.ibn;
+  Int3 ib = -grid.ibn;
+
+  auto mres = psc::mflds::zeros<double, gt::space::host_only>(grid, 1, ib);
+
+  EXPECT_EQ(grid.n_patches(), 1);
+  int p = 0;
+
+  for (int i = 0; i < shape[0]; i++) {
+    for (int j = 0; j < shape[1]; j++) {
+      for (int k = 0; k < shape[2]; k++) {
+        int cell_id = ravel_idx({i, j, k}, shape);
+        mres(i, j, k, 0, p) = cell_id;
+      }
+    }
+  }
+
+  int dim = 1;
+  add_ghosts_reflecting_hi(ldims, mres, ib, p, dim, 0, 1);
+
+  int bx = -ib[0];
+  int by = -ib[1];
+  int bz = -ib[2];
+  for (int x = -bx; x < ldims[0] + bx; x++) {
+    for (int y = ldims[1] - by; y < ldims[1]; y++) {
+      for (int z = -bz; z < ldims[2] + bz; z++) {
+        int cell_id = ravel_idx({bx + x, by + y, bz + z}, shape);
+
+        int reflected_y = 2 * ldims[1] - y - 1;
+        int reflected_cell_id =
+          ravel_idx({bx + x, by + reflected_y, bz + z}, shape);
+        EXPECT_EQ(mres(bx + x, by + y, bz + z, 0, p),
+                  cell_id + reflected_cell_id)
+          << "xyz " << x << " " << y << " " << z;
+      }
+    }
+  }
 }
 
 TEST(ReflectiveBcsTest, AddGhostsReflectingLowY)
