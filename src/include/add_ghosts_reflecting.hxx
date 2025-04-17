@@ -49,7 +49,7 @@ void add_ghosts_reflecting_hi(const Int3& ldims, FE& mres_gt, const Int3& ib,
         {
           for (int m = mb; m < me; m++) {
             mres_gt(ix - ib[0], iy - ib[1], iz - ib[2], m, p) +=
-              mres_gt(ix - ib[0], iy - 1 + ib[1], iz - ib[2], m, p);
+              mres_gt(ix - ib[0], iy + 1 - ib[1], iz - ib[2], m, p);
           }
         }
       }
