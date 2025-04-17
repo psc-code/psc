@@ -42,11 +42,12 @@ void add_ghosts_reflecting_hi(const Int3& ldims, FE& mres_gt, const Int3& ib,
                               int p, int d, int mb, int me)
 {
   // FIXME only need to scan 1 cell into the ghost region for 1st-order moments
+
   if (d == 1) {
-    for (int iz = ib[2]; iz < ldims[2] - ib[2]; iz++) {
-      for (int ix = ib[0]; ix < ldims[0] - ib[0]; ix++) {
+    for (int m = mb; m < me; m++) {
+      for (int iz = ib[2]; iz < ldims[2] - ib[2]; iz++) {
         for (int iy = ldims[1] + ib[1]; iy < ldims[1]; iy++) {
-          for (int m = mb; m < me; m++) {
+          for (int ix = ib[0]; ix < ldims[0] - ib[0]; ix++) {
             int iy_reflected = 2 * ldims[1] - iy - 1;
             mres_gt(ix - ib[0], iy - ib[1], iz - ib[2], m, p) +=
               mres_gt(ix - ib[0], iy_reflected - ib[1], iz - ib[2], m, p);
@@ -55,10 +56,10 @@ void add_ghosts_reflecting_hi(const Int3& ldims, FE& mres_gt, const Int3& ib,
       }
     }
   } else if (d == 2) {
-    for (int iz = ldims[2] + ib[2]; iz < ldims[2]; iz++) {
-      for (int ix = ib[0]; ix < ldims[0] - ib[0]; ix++) {
+    for (int m = mb; m < me; m++) {
+      for (int iz = ldims[2] + ib[2]; iz < ldims[2]; iz++) {
         for (int iy = ib[1]; iy < ldims[1] - ib[1]; iy++) {
-          for (int m = mb; m < me; m++) {
+          for (int ix = ib[0]; ix < ldims[0] - ib[0]; ix++) {
             int iz_reflected = 2 * ldims[2] - iz - 1;
             mres_gt(ix - ib[0], iy - ib[1], iz - ib[2], m, p) +=
               mres_gt(ix - ib[0], iy - ib[1], iz_reflected - ib[2], m, p);
