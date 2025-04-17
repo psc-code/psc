@@ -39,18 +39,6 @@ PscParams psc_params;
 } // namespace
 
 // ======================================================================
-// setupParameters
-
-void setupParameters(int argc, char** argv)
-{
-  psc_params.nmax = 100;
-  psc_params.stats_every = 1;
-  psc_params.cfl = .75;
-
-  psc_params.write_checkpoint_every_step = 0;
-}
-
-// ======================================================================
 // setupGrid
 
 Grid_t* setupGrid()
@@ -101,7 +89,9 @@ static void run(int argc, char** argv)
   // ----------------------------------------------------------------------
   // setup various parameters first
 
-  setupParameters(argc, argv);
+  psc_params.nmax = 100;
+  psc_params.stats_every = 1;
+  psc_params.cfl = .75;
 
   // ----------------------------------------------------------------------
   // Set up grid, state fields, particles
