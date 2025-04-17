@@ -216,6 +216,33 @@ TEST(ReflectiveBcsTest, Integration)
 }
 
 // ======================================================================
+// Unit tests
+
+TEST(ReflectiveBcsTest, AddGhostsReflectingHighY)
+{
+  // TODO
+  EXPECT_TRUE(false);
+}
+
+TEST(ReflectiveBcsTest, AddGhostsReflectingLowY)
+{
+  // TODO
+  EXPECT_TRUE(false);
+}
+
+TEST(ReflectiveBcsTest, AddGhostsReflectingHighZ)
+{
+  // TODO
+  EXPECT_TRUE(false);
+}
+
+TEST(ReflectiveBcsTest, AddGhostsReflectingLowZ)
+{
+  // TODO
+  EXPECT_TRUE(false);
+}
+
+// ======================================================================
 // main
 
 int main(int argc, char** argv)
