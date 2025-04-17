@@ -202,9 +202,9 @@ static void run(int argc, char** argv)
 }
 
 // ======================================================================
-// Test1
+// Integration test (pun not intended)
 
-TEST(ReflectiveBcsTest, Test1)
+TEST(ReflectiveBcsTest, Integration)
 {
   int argc = 1;
   char** argv = nullptr;
