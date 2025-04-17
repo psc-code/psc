@@ -179,11 +179,8 @@ TEST(ReflectiveBcsTest, Integration)
 {
   int argc = 1;
   char** argv = nullptr;
-  psc_init(argc, argv);
 
   run(argc, argv);
-
-  psc_finalize();
 }
 
 // ======================================================================
@@ -218,7 +215,9 @@ TEST(ReflectiveBcsTest, AddGhostsReflectingLowZ)
 
 int main(int argc, char** argv)
 {
+  MPI_Init(&argc, &argv);
   ::testing::InitGoogleTest(&argc, argv);
   int rc = RUN_ALL_TESTS();
+  MPI_Finalize();
   return rc;
 }
