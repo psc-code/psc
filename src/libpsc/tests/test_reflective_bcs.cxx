@@ -36,24 +36,6 @@ using OutputParticles = PscConfig::OutputParticles;
 namespace
 {
 PscParams psc_params;
-
-int nx = 1;
-int ny = 8; // test success if this goes to 4
-int nz = 2;
-int nt = 100;
-
-int n_patches_x = 1;
-int n_patches_y = 1;
-int n_patches_z = 1;
-
-double dx = 10;
-double dy = 10;
-double dz = 10;
-
-double len_x = nx * dx;
-double len_y = ny * dy;
-double len_z = nz * dz;
-
 } // namespace
 
 // ======================================================================
@@ -61,7 +43,7 @@ double len_z = nz * dz;
 
 void setupParameters(int argc, char** argv)
 {
-  psc_params.nmax = nt;
+  psc_params.nmax = 100;
   psc_params.stats_every = 1;
   psc_params.cfl = .75;
 
@@ -73,11 +55,10 @@ void setupParameters(int argc, char** argv)
 
 Grid_t* setupGrid()
 {
-  auto domain =
-    Grid_t::Domain{{nx, ny, nz},          // n grid points
-                   {len_x, len_y, len_z}, // physical lengths
-                   {0, 0, 0},             // location of lower corner
-                   {n_patches_x, n_patches_y, n_patches_z}}; // n patches
+  auto domain = Grid_t::Domain{{1, 8, 2},          // n grid points
+                               {10.0, 80.0, 20.0}, // physical lengths
+                               {0, 0, 0},          // location of lower corner
+                               {1, 1, 1}};         // n patches
 
   auto bc =
     psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL, BND_FLD_PERIODIC},
@@ -194,7 +175,7 @@ static void run(int argc, char** argv)
     makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts, balance,
                                  collision, checks, marder, diagnostics);
 
-  for (; grid.timestep_ < nt; grid.timestep_++) {
+  for (; grid.timestep_ < psc_params.nmax; grid.timestep_++) {
     psc.step();
     ASSERT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
     ASSERT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
