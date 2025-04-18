@@ -85,76 +85,41 @@ Grid_t* setupGrid()
 
 TEST(ReflectiveBcsTest, Integration)
 {
-  mpi_printf(MPI_COMM_WORLD, "*** Setting up...\n");
-
   // ----------------------------------------------------------------------
-  // setup various parameters first
+  // setup
 
   psc_params.nmax = 100;
   psc_params.stats_every = 1;
   psc_params.cfl = .75;
-
-  // ----------------------------------------------------------------------
-  // Set up grid, state fields, particles
 
   auto grid_ptr = setupGrid();
   auto& grid = *grid_ptr;
   MfieldsState mflds{grid};
   Mparticles mprts{grid};
 
-  // ----------------------------------------------------------------------
-  // Set up various objects needed to run this case
-
-  // -- Balance
-  psc_params.balance_interval = 0;
-  Balance balance{.1};
-
-  // -- Sort
-  psc_params.sort_interval = 100;
-
-  // -- Collision
-  int collision_interval = 0;
-  double collision_nu = .1;
-  Collision collision{grid, collision_interval, collision_nu};
-
-  // -- Checks
   ChecksParams checks_params{};
-  checks_params.gauss.check_interval = 1;
   checks_params.continuity.check_interval = 1;
-
+  checks_params.gauss.check_interval = 1;
   Checks checks{grid, MPI_COMM_WORLD, checks_params};
 
-  // -- Marder correction
-  double marder_diffusion = 0.9;
-  int marder_loop = 3;
-  bool marder_dump = false;
-  psc_params.marder_interval = -1;
-  Marder marder(grid, marder_diffusion, marder_loop, marder_dump);
+  Balance balance{.1};
+  Collision collision{grid, 0, 0.1};
+  Marder marder(grid, 0.9, 3, false);
 
-  // ----------------------------------------------------------------------
-  // Set up output
-
-  // -- output fields
-  OutputFieldsParams outf_params{};
-  outf_params.fields.pfield.out_interval = -1;
-  outf_params.moments.pfield.out_interval = -1;
-  OutputFields<MfieldsState, Mparticles, Dim> outf{grid, outf_params};
-
-  // -- output particles
-  OutputParticlesParams outp_params{};
-  outp_params.every_step = -1;
-  OutputParticles outp{grid, outp_params};
-
-  int oute_interval = -100;
-  DiagEnergies oute{grid.comm(), oute_interval};
-
+  OutputFields<MfieldsState, Mparticles, Dim> outf{grid, {}};
+  OutputParticles outp{grid, {}};
+  DiagEnergies oute{grid.comm(), 0};
   auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
 
-  EXPECT_EQ(grid.n_patches(), 1);
-  int p = 0;
+  auto psc =
+    makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts, balance,
+                                 collision, checks, marder, diagnostics);
 
   // ----------------------------------------------------------------------
   // set up initial conditions
+
+  EXPECT_EQ(grid.n_patches(), 1);
+  int p = 0;
 
   {
     auto injector = mprts.injector();
@@ -164,10 +129,6 @@ TEST(ReflectiveBcsTest, Integration)
 
   // ----------------------------------------------------------------------
   // run the simulation
-
-  auto psc =
-    makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts, balance,
-                                 collision, checks, marder, diagnostics);
 
   auto prts = mprts.accessor()[p];
 
