@@ -245,8 +245,40 @@ TEST(ReflectiveBcsTest, AddGhostsReflectingHighY)
 
 TEST(ReflectiveBcsTest, AddGhostsReflectingLowY)
 {
-  // TODO
-  EXPECT_TRUE(false);
+  Grid_t* grid_ptr = setupGrid();
+  auto& grid = *grid_ptr;
+
+  Int3 ldims = grid.ldims;
+  Int3 shape = ldims + 2 * grid.ibn;
+  Int3 ib = -grid.ibn;
+
+  auto mres = psc::mflds::zeros<double, gt::space::host_only>(grid, 1, ib);
+
+  EXPECT_EQ(grid.n_patches(), 1);
+  int p = 0;
+
+  init_mres(mres, shape, p);
+
+  int dim = 1;
+  add_ghosts_reflecting_lo(ldims, mres, ib, p, dim, 0, 1);
+
+  int bx = -ib[0];
+  int by = -ib[1];
+  int bz = -ib[2];
+  for (int x = -bx; x < ldims[0] + bx; x++) {
+    for (int y = 0; y < by; y++) {
+      for (int z = -bz; z < ldims[2] + bz; z++) {
+        int cell_id = ravel_idx({bx + x, by + y, bz + z}, shape);
+
+        int reflected_y = -y - 1;
+        int reflected_cell_id =
+          ravel_idx({bx + x, by + reflected_y, bz + z}, shape);
+        EXPECT_EQ(mres(bx + x, by + y, bz + z, 0, p),
+                  cell_id + reflected_cell_id)
+          << "xyz " << x << " " << y << " " << z;
+      }
+    }
+  }
 }
 
 TEST(ReflectiveBcsTest, AddGhostsReflectingHighZ)
@@ -289,8 +321,40 @@ TEST(ReflectiveBcsTest, AddGhostsReflectingHighZ)
 
 TEST(ReflectiveBcsTest, AddGhostsReflectingLowZ)
 {
-  // TODO
-  EXPECT_TRUE(false);
+  Grid_t* grid_ptr = setupGrid();
+  auto& grid = *grid_ptr;
+
+  Int3 ldims = grid.ldims;
+  Int3 shape = ldims + 2 * grid.ibn;
+  Int3 ib = -grid.ibn;
+
+  auto mres = psc::mflds::zeros<double, gt::space::host_only>(grid, 1, ib);
+
+  EXPECT_EQ(grid.n_patches(), 1);
+  int p = 0;
+
+  init_mres(mres, shape, p);
+
+  int dim = 2;
+  add_ghosts_reflecting_lo(ldims, mres, ib, p, dim, 0, 1);
+
+  int bx = -ib[0];
+  int by = -ib[1];
+  int bz = -ib[2];
+  for (int x = -bx; x < ldims[0] + bx; x++) {
+    for (int y = -by; y < ldims[1] + by; y++) {
+      for (int z = 0; z < bz; z++) {
+        int cell_id = ravel_idx({bx + x, by + y, bz + z}, shape);
+
+        int reflected_z = -z - 1;
+        int reflected_cell_id =
+          ravel_idx({bx + x, by + y, bz + reflected_z}, shape);
+        EXPECT_EQ(mres(bx + x, by + y, bz + z, 0, p),
+                  cell_id + reflected_cell_id)
+          << "xyz " << x << " " << y << " " << z;
+      }
+    }
+  }
 }
 
 // ======================================================================
