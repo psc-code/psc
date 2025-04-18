@@ -150,12 +150,15 @@ static void run(int argc, char** argv)
 
   auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
 
+  EXPECT_EQ(grid.n_patches(), 1);
+  int p = 0;
+
   // ----------------------------------------------------------------------
   // set up initial conditions
 
   {
     auto injector = mprts.injector();
-    auto inj = injector[0];
+    auto inj = injector[p];
     inj({{0, 15, 5}, {0, -.001, 0}, 1, 0});
   }
 
@@ -166,11 +169,19 @@ static void run(int argc, char** argv)
     makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts, balance,
                                  collision, checks, marder, diagnostics);
 
+  auto prts = mprts.accessor()[p];
+
+  EXPECT_EQ(prts.size(), 1);
+  EXPECT_LT(prts[0].u()[1], 0.0);
+
   for (; grid.timestep_ < psc_params.nmax; grid.timestep_++) {
     psc.step();
     ASSERT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
     ASSERT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
   }
+
+  EXPECT_EQ(prts.size(), 1);
+  EXPECT_GT(prts[0].u()[1], 0.0);
 }
 
 // ======================================================================
