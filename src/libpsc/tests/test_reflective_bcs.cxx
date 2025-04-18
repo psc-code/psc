@@ -81,9 +81,9 @@ Grid_t* setupGrid()
 }
 
 // ======================================================================
-// run
+// Integration test (pun not intended)
 
-static void run(int argc, char** argv)
+TEST(ReflectiveBcsTest, Integration)
 {
   mpi_printf(MPI_COMM_WORLD, "*** Setting up...\n");
 
@@ -182,17 +182,6 @@ static void run(int argc, char** argv)
 
   EXPECT_EQ(prts.size(), 1);
   EXPECT_GT(prts[0].u()[1], 0.0);
-}
-
-// ======================================================================
-// Integration test (pun not intended)
-
-TEST(ReflectiveBcsTest, Integration)
-{
-  int argc = 1;
-  char** argv = nullptr;
-
-  run(argc, argv);
 }
 
 // ======================================================================
