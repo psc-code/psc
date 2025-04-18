@@ -192,6 +192,19 @@ int ravel_idx(Int3 idx, Int3 shape)
   return idx[0] + shape[0] * (idx[1] + shape[1] * (idx[2]));
 }
 
+template <typename FE>
+void init_mres(FE& mres_gt, Int3 shape, int p)
+{
+  for (int i = 0; i < shape[0]; i++) {
+    for (int j = 0; j < shape[1]; j++) {
+      for (int k = 0; k < shape[2]; k++) {
+        int cell_id = ravel_idx({i, j, k}, shape);
+        mres_gt(i, j, k, 0, p) = cell_id;
+      }
+    }
+  }
+}
+
 TEST(ReflectiveBcsTest, AddGhostsReflectingHighY)
 {
   Grid_t* grid_ptr = setupGrid();
@@ -206,14 +219,7 @@ TEST(ReflectiveBcsTest, AddGhostsReflectingHighY)
   EXPECT_EQ(grid.n_patches(), 1);
   int p = 0;
 
-  for (int i = 0; i < shape[0]; i++) {
-    for (int j = 0; j < shape[1]; j++) {
-      for (int k = 0; k < shape[2]; k++) {
-        int cell_id = ravel_idx({i, j, k}, shape);
-        mres(i, j, k, 0, p) = cell_id;
-      }
-    }
-  }
+  init_mres(mres, shape, p);
 
   int dim = 1;
   add_ghosts_reflecting_hi(ldims, mres, ib, p, dim, 0, 1);
@@ -257,14 +263,7 @@ TEST(ReflectiveBcsTest, AddGhostsReflectingHighZ)
   EXPECT_EQ(grid.n_patches(), 1);
   int p = 0;
 
-  for (int i = 0; i < shape[0]; i++) {
-    for (int j = 0; j < shape[1]; j++) {
-      for (int k = 0; k < shape[2]; k++) {
-        int cell_id = ravel_idx({i, j, k}, shape);
-        mres(i, j, k, 0, p) = cell_id;
-      }
-    }
-  }
+  init_mres(mres, shape, p);
 
   int dim = 2;
   add_ghosts_reflecting_hi(ldims, mres, ib, p, dim, 0, 1);
