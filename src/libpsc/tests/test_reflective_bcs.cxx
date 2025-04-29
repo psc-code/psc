@@ -136,19 +136,19 @@ TEST(ReflectiveBcsTest, Integration)
 
   auto prts = mprts.accessor()[p];
 
-  EXPECT_EQ(prts.size(), 2);
-  EXPECT_LT(prts[0].u()[1], 0.0);
-  EXPECT_GT(prts[1].u()[1], 0.0);
+  ASSERT_EQ(prts.size(), 2);
+  ASSERT_LT(prts[0].u()[1], 0.0);
+  ASSERT_GT(prts[1].u()[1], 0.0);
 
   for (; grid.timestep_ < psc_params.nmax; grid.timestep_++) {
     psc.step();
-    ASSERT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
-    ASSERT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
+    EXPECT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
+    EXPECT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
   }
 
-  EXPECT_EQ(prts.size(), 2);
-  EXPECT_GT(prts[0].u()[1], 0.0);
-  EXPECT_LT(prts[1].u()[1], 0.0);
+  ASSERT_EQ(prts.size(), 2);
+  ASSERT_GT(prts[0].u()[1], 0.0);
+  ASSERT_LT(prts[1].u()[1], 0.0);
 }
 
 // ======================================================================
