@@ -124,7 +124,11 @@ TEST(ReflectiveBcsTest, Integration)
   {
     auto injector = mprts.injector();
     auto inj = injector[p];
-    inj({{0, 15, 5}, {0, -.001, 0}, 1, 0});
+    double vy = .1;
+    double y_center = grid.domain.length[1] / 2.0;
+    // inject 2 particles at same location to satisfy Gauss' law at t=0
+    inj({{0, y_center, 5}, {0, -vy, 0}, 0, 0}); // electron
+    inj({{0, y_center, 5}, {0, vy, 0}, 1, 0});  // positron
   }
 
   // ----------------------------------------------------------------------
@@ -132,8 +136,9 @@ TEST(ReflectiveBcsTest, Integration)
 
   auto prts = mprts.accessor()[p];
 
-  EXPECT_EQ(prts.size(), 1);
+  EXPECT_EQ(prts.size(), 2);
   EXPECT_LT(prts[0].u()[1], 0.0);
+  EXPECT_GT(prts[1].u()[1], 0.0);
 
   for (; grid.timestep_ < psc_params.nmax; grid.timestep_++) {
     psc.step();
@@ -141,8 +146,9 @@ TEST(ReflectiveBcsTest, Integration)
     ASSERT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
   }
 
-  EXPECT_EQ(prts.size(), 1);
+  EXPECT_EQ(prts.size(), 2);
   EXPECT_GT(prts[0].u()[1], 0.0);
+  EXPECT_LT(prts[1].u()[1], 0.0);
 }
 
 // ======================================================================
