@@ -140,6 +140,12 @@ TEST(ReflectiveBcsTest, Integration)
   ASSERT_LT(prts[0].u()[1], 0.0);
   ASSERT_GT(prts[1].u()[1], 0.0);
 
+  ASSERT_EQ(prts[0].m(), 1.0);
+  ASSERT_EQ(prts[1].m(), 1.0);
+
+  ASSERT_EQ(prts[0].q(), -1.0);
+  ASSERT_EQ(prts[1].q(), 1.0);
+
   for (; grid.timestep_ < psc_params.nmax; grid.timestep_++) {
     psc.step();
     EXPECT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
