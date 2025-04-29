@@ -124,7 +124,7 @@ TEST(ReflectiveBcsTest, Integration)
   {
     auto injector = mprts.injector();
     auto inj = injector[p];
-    double vy = .1;
+    double vy = 100; // fast enough to escape electric attraction
     double y_center = grid.domain.length[1] / 2.0;
     // inject 2 particles at same location to satisfy Gauss' law at t=0
     inj({{0, y_center, 5}, {0, -vy, 0}, 1, 0}); // electron
