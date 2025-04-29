@@ -127,8 +127,8 @@ TEST(ReflectiveBcsTest, Integration)
     double vy = .1;
     double y_center = grid.domain.length[1] / 2.0;
     // inject 2 particles at same location to satisfy Gauss' law at t=0
-    inj({{0, y_center, 5}, {0, -vy, 0}, 0, 0}); // electron
-    inj({{0, y_center, 5}, {0, vy, 0}, 1, 0});  // positron
+    inj({{0, y_center, 5}, {0, -vy, 0}, 1, 0}); // electron
+    inj({{0, y_center, 5}, {0, vy, 0}, 1, 1});  // positron
   }
 
   // ----------------------------------------------------------------------
