@@ -68,3 +68,13 @@ void add_ghosts_reflecting_hi_cc(const Int3& ldims, FE& mres_gt, const Int3& ib,
     }
   }
 }
+
+template <typename FE>
+void add_ghosts_reflecting_lo_nc(const Int3& ldims, FE& mres_gt, const Int3& ib,
+                                 int p, int d, int mb, int me)
+{}
+
+template <typename FE>
+void add_ghosts_reflecting_hi_nc(const Int3& ldims, FE& mres_gt, const Int3& ib,
+                                 int p, int d, int mb, int me)
+{}
