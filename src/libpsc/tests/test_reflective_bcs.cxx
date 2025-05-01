@@ -178,7 +178,7 @@ void init_mres(FE& mres_gt, Int3 shape, int p)
   }
 }
 
-TEST(ReflectiveBcsTest, AddGhostsReflectingHighY)
+TEST(ReflectiveBcsTest, AddGhostsReflectingHighCcY)
 {
   Grid_t* grid_ptr = setupGrid();
   auto& grid = *grid_ptr;
@@ -195,7 +195,7 @@ TEST(ReflectiveBcsTest, AddGhostsReflectingHighY)
   init_mres(mres, shape, p);
 
   int dim = 1;
-  add_ghosts_reflecting_hi(ldims, mres, ib, p, dim, 0, 1);
+  add_ghosts_reflecting_hi_cc(ldims, mres, ib, p, dim, 0, 1);
 
   int bx = -ib[0];
   int by = -ib[1];
@@ -216,7 +216,7 @@ TEST(ReflectiveBcsTest, AddGhostsReflectingHighY)
   }
 }
 
-TEST(ReflectiveBcsTest, AddGhostsReflectingLowY)
+TEST(ReflectiveBcsTest, AddGhostsReflectingLowCcY)
 {
   Grid_t* grid_ptr = setupGrid();
   auto& grid = *grid_ptr;
@@ -233,7 +233,7 @@ TEST(ReflectiveBcsTest, AddGhostsReflectingLowY)
   init_mres(mres, shape, p);
 
   int dim = 1;
-  add_ghosts_reflecting_lo(ldims, mres, ib, p, dim, 0, 1);
+  add_ghosts_reflecting_lo_cc(ldims, mres, ib, p, dim, 0, 1);
 
   int bx = -ib[0];
   int by = -ib[1];
@@ -254,7 +254,7 @@ TEST(ReflectiveBcsTest, AddGhostsReflectingLowY)
   }
 }
 
-TEST(ReflectiveBcsTest, AddGhostsReflectingHighZ)
+TEST(ReflectiveBcsTest, AddGhostsReflectingHighCcZ)
 {
   Grid_t* grid_ptr = setupGrid();
   auto& grid = *grid_ptr;
@@ -271,7 +271,7 @@ TEST(ReflectiveBcsTest, AddGhostsReflectingHighZ)
   init_mres(mres, shape, p);
 
   int dim = 2;
-  add_ghosts_reflecting_hi(ldims, mres, ib, p, dim, 0, 1);
+  add_ghosts_reflecting_hi_cc(ldims, mres, ib, p, dim, 0, 1);
 
   int bx = -ib[0];
   int by = -ib[1];
@@ -292,7 +292,7 @@ TEST(ReflectiveBcsTest, AddGhostsReflectingHighZ)
   }
 }
 
-TEST(ReflectiveBcsTest, AddGhostsReflectingLowZ)
+TEST(ReflectiveBcsTest, AddGhostsReflectingLowCcZ)
 {
   Grid_t* grid_ptr = setupGrid();
   auto& grid = *grid_ptr;
@@ -309,7 +309,7 @@ TEST(ReflectiveBcsTest, AddGhostsReflectingLowZ)
   init_mres(mres, shape, p);
 
   int dim = 2;
-  add_ghosts_reflecting_lo(ldims, mres, ib, p, dim, 0, 1);
+  add_ghosts_reflecting_lo_cc(ldims, mres, ib, p, dim, 0, 1);
 
   int bx = -ib[0];
   int by = -ib[1];

@@ -4,8 +4,8 @@
 #include "grid.hxx"
 
 template <typename FE>
-void add_ghosts_reflecting_lo(const Int3& ldims, FE& mres_gt, const Int3& ib,
-                              int p, int d, int mb, int me)
+void add_ghosts_reflecting_lo_cc(const Int3& ldims, FE& mres_gt, const Int3& ib,
+                                 int p, int d, int mb, int me)
 {
   // FIXME only need to scan 1 cell into the ghost region for 1st-order moments
 
@@ -37,8 +37,8 @@ void add_ghosts_reflecting_lo(const Int3& ldims, FE& mres_gt, const Int3& ib,
 }
 
 template <typename FE>
-void add_ghosts_reflecting_hi(const Int3& ldims, FE& mres_gt, const Int3& ib,
-                              int p, int d, int mb, int me)
+void add_ghosts_reflecting_hi_cc(const Int3& ldims, FE& mres_gt, const Int3& ib,
+                                 int p, int d, int mb, int me)
 {
   // FIXME only need to scan 1 cell into the ghost region for 1st-order moments
 

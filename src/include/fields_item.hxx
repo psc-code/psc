@@ -63,7 +63,7 @@ private:
       if (grid.atBoundaryLo(p, d)) {
         if (grid.bc.prt_lo[d] == BND_PRT_REFLECTING ||
             grid.bc.prt_lo[d] == BND_PRT_OPEN) {
-          add_ghosts_reflecting_lo(grid.ldims, mres_gt, ib, p, d, mb, me);
+          add_ghosts_reflecting_lo_cc(grid.ldims, mres_gt, ib, p, d, mb, me);
         }
       }
     }
@@ -72,7 +72,7 @@ private:
       if (grid.atBoundaryHi(p, d)) {
         if (grid.bc.prt_hi[d] == BND_PRT_REFLECTING ||
             grid.bc.prt_hi[d] == BND_PRT_OPEN) {
-          add_ghosts_reflecting_hi(grid.ldims, mres_gt, ib, p, d, mb, me);
+          add_ghosts_reflecting_hi_cc(grid.ldims, mres_gt, ib, p, d, mb, me);
         }
       }
     }
