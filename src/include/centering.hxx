@@ -3,7 +3,7 @@
 
 #include "kg/Vec3.h"
 
-namespace Centering
+namespace centering
 {
 
 enum CenterStyle
@@ -53,8 +53,8 @@ struct Centerer
   template <typename PATCH>
   inline Double3 getPos(PATCH patch, Int3 index, int comp = X) const
   {
-    return Centering::getPos(patch, index, style, comp);
+    return centering::getPos(patch, index, style, comp);
   }
 };
 
-} // namespace Centering
+} // namespace centering

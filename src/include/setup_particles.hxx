@@ -29,7 +29,7 @@ struct psc_particle_np
 
 namespace
 {
-const Centering::Centerer defaultCenterer(Centering::CC);
+const centering::Centerer defaultCenterer(centering::CC);
 }
 
 struct InitNptFunc
@@ -319,7 +319,7 @@ struct SetupParticles
   bool fractional_n_particles_per_cell = {false};
   bool initial_momentum_gamma_correction = {false};
 
-  Centering::Centerer centerer;
+  centering::Centerer centerer;
 
 private:
   const Grid_t::Kinds kinds_;

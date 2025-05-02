@@ -328,7 +328,7 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
                          BgkMfields& divGradPhi)
 {
   SetupParticles<Mparticles> setup_particles(*grid_ptr);
-  setup_particles.centerer = Centering::Centerer(Centering::NC);
+  setup_particles.centerer = centering::Centerer(centering::NC);
 
   auto&& qDensity = -psc::mflds::interior(divGradPhi.grid(), divGradPhi.gt());
 
@@ -408,7 +408,7 @@ void fillGhosts(MF& mfld, int compBegin, int compEnd)
 void initializePhi(BgkMfields& phi)
 {
   setupScalarField(
-    phi, Centering::Centerer(Centering::NC), [&](int m, double crd[3]) {
+    phi, centering::Centerer(centering::NC), [&](int m, double crd[3]) {
       double rho = sqrt(sqr(getCoord(crd[1])) + sqr(getCoord(crd[2])));
       return ic_table->get_interpolated("Psi", "rho", rho);
     });

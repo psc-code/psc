@@ -35,11 +35,11 @@ struct SetupFields
 
         for (int c = 0; c < 3; c++) {
           F(HX + c, jx, jy, jz) +=
-            func(HX + c, Centering::getPos(patch, index, Centering::FC, c));
+            func(HX + c, centering::getPos(patch, index, centering::FC, c));
           F(EX + c, jx, jy, jz) +=
-            func(EX + c, Centering::getPos(patch, index, Centering::EC, c));
+            func(EX + c, centering::getPos(patch, index, centering::EC, c));
           F(JXI + c, jx, jy, jz) +=
-            func(JXI + c, Centering::getPos(patch, index, Centering::EC, c));
+            func(JXI + c, centering::getPos(patch, index, centering::EC, c));
         }
       });
     }
@@ -47,7 +47,7 @@ struct SetupFields
 
   template <typename FUNC>
   static void runScalar(Mfields& mf, FUNC&& func,
-                        const Centering::Centerer& centerer)
+                        const centering::Centerer& centerer)
   {
     const auto& grid = mf.grid();
     mpi_printf(grid.comm(), "**** Setting up scalar field...\n");
@@ -77,7 +77,7 @@ void setupFields(MF& mflds, FUNC&& func)
 
 // func signature: (int component, Double3 position) -> double fieldValue
 template <typename MF, typename FUNC>
-void setupScalarField(MF& fld, const Centering::Centerer& centerer, FUNC&& func)
+void setupScalarField(MF& fld, const centering::Centerer& centerer, FUNC&& func)
 {
   detail::SetupFields<MF>::runScalar(fld, std::forward<FUNC>(func), centerer);
 }
