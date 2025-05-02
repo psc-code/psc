@@ -100,7 +100,7 @@ public:
 // ======================================================================
 // ItemMomentBnd
 
-template <typename S, typename Bnd>
+template <typename S, typename Bnd, centering::Centering C>
 class ItemMomentBnd
 {
 public:
@@ -111,8 +111,8 @@ public:
   void add_ghosts(const Grid_t& grid, storage_type& mres_gt, const Int3& ib)
   {
     for (int p = 0; p < mres_gt.shape(4); p++) {
-      DomainBoundary<centering::CC>::add_ghosts_boundary(grid, mres_gt, ib, p,
-                                                         0, mres_gt.shape(3));
+      DomainBoundary<C>::add_ghosts_boundary(grid, mres_gt, ib, p, 0,
+                                             mres_gt.shape(3));
     }
 
     bnd_.add_ghosts(grid, mres_gt, ib, 0, mres_gt.shape(3));
@@ -162,6 +162,6 @@ public:
   }
 
 private:
-  ItemMomentBnd<storage_type, Bnd> bnd_;
+  ItemMomentBnd<storage_type, Bnd, centering::CC> bnd_;
   std::vector<std::string> comp_names_;
 };
