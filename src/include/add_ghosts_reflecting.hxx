@@ -9,8 +9,8 @@ void add_ghosts_reflecting_lo_cc(const Int3& ldims, FE& mres_gt, const Int3& ib,
 {
   // FIXME only need to scan 1 cell into the ghost region for 1st-order moments
 
-  Int3 idx_end = ldims - ib;
   Int3 idx_begin = ib;
+  Int3 idx_end = ldims - ib;
 
   idx_begin[d] = 0;
   idx_end[d] = -ib[d];
@@ -42,8 +42,8 @@ void add_ghosts_reflecting_hi_cc(const Int3& ldims, FE& mres_gt, const Int3& ib,
 {
   // FIXME only need to scan 1 cell into the ghost region for 1st-order moments
 
-  Int3 idx_end = ldims - ib;
   Int3 idx_begin = ib;
+  Int3 idx_end = ldims - ib;
 
   idx_begin[d] = ldims[d] + ib[d];
   idx_end[d] = ldims[d];
