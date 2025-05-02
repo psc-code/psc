@@ -24,7 +24,7 @@ CC  |   ccc ccc ccc
 */
 
 template <typename PATCH>
-Double3 get_pos(PATCH patch, Int3 index, int style, int component = -1)
+Double3 get_pos(PATCH patch, Int3 index, CenterStyle style, int component = -1)
 {
   if (component == -1) {
     assert(style == NC || style == CC);
