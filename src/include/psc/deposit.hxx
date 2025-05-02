@@ -270,7 +270,7 @@ namespace code // deposition in code units
 // units
 
 template <typename R, typename D,
-          template <typename, typename> class DepositNorm>
+          template <typename, typename> class DEPOSIT_NORM>
 class Deposit
 {
 public:
@@ -278,6 +278,7 @@ public:
   using dim_t = D;
   using real3_t = gt::sarray<real_t, 3>;
   using DepositNorm = DEPOSIT_NORM<real_t, dim_t>;
+  static const centering::Centering CENTERING = DepositNorm::CENTERING;
 
   static std::string suffix() { return DepositNorm::suffix(); }
 
