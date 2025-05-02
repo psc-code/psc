@@ -146,11 +146,24 @@ TEST(ReflectiveBcsTest, Integration)
   ASSERT_EQ(prts[0].q(), -1.0);
   ASSERT_EQ(prts[1].q(), 1.0);
 
+  bool about_to_reflect = false;
+  bool reflected = false;
+
   for (; grid.timestep_ < psc_params.nmax; grid.timestep_++) {
     psc.step();
     EXPECT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
     EXPECT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
+
+    if (prts[0].u()[1] > 0.0) {
+      reflected = about_to_reflect;
+      break;
+    }
+
+    about_to_reflect =
+      prts[0].x()[1] < grid.domain.dx[1] / 2.0 && prts[0].u()[1] < 0.0;
   }
+
+  ASSERT_TRUE(reflected) << "timestep " << grid.timestep_;
 
   ASSERT_EQ(prts.size(), 2);
   ASSERT_GT(prts[0].u()[1], 0.0);
