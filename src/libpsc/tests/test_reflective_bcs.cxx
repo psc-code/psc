@@ -412,6 +412,88 @@ TEST(ReflectiveBcsTest, AddGhostsReflectingLowNcY)
   }
 }
 
+TEST(ReflectiveBcsTest, AddGhostsReflectingHighNcZ)
+{
+  Grid_t* grid_ptr = setupGrid();
+  auto& grid = *grid_ptr;
+
+  Int3 ldims = grid.ldims;
+  Int3 shape = ldims + 2 * grid.ibn;
+  Int3 ib = -grid.ibn;
+
+  auto mres = psc::mflds::zeros<double, gt::space::host_only>(grid, 1, ib);
+
+  EXPECT_EQ(grid.n_patches(), 1);
+  int p = 0;
+
+  init_mres(mres, shape, p);
+
+  int dim = 2;
+  add_ghosts_reflecting_hi_nc(ldims, mres, ib, p, dim, 0, 1);
+
+  int bx_cc = -ib[0] - !grid.isInvar(0);
+  int by_cc = -ib[1] - !grid.isInvar(1);
+  int bz_cc = -ib[2] - !grid.isInvar(2);
+  Int3 ldims_cc =
+    ldims + Int3{!grid.isInvar(0), !grid.isInvar(1), !grid.isInvar(2)};
+
+  for (int x = -bx_cc; x < ldims_cc[0] + bx_cc; x++) {
+    for (int y = -by_cc; y < ldims_cc[2] + by_cc; y++) {
+      for (int z = ldims_cc[2] - bz_cc - 1; z < ldims_cc[2] - 1; z++) {
+        int cell_id = ravel_idx({x - ib[0], y - ib[1], z - ib[2]}, shape);
+
+        int reflected_z = 2 * (ldims_cc[2] - 1) - z;
+        int reflected_cell_id =
+          ravel_idx({x - ib[0], y - ib[1], reflected_z - ib[2]}, shape);
+        EXPECT_EQ(mres(x - ib[0], y - ib[1], z - ib[2], 0, p),
+                  cell_id + reflected_cell_id)
+          << "xyz " << x << " " << y << " " << z;
+      }
+    }
+  }
+}
+
+TEST(ReflectiveBcsTest, AddGhostsReflectingLowNcZ)
+{
+  Grid_t* grid_ptr = setupGrid();
+  auto& grid = *grid_ptr;
+
+  Int3 ldims = grid.ldims;
+  Int3 shape = ldims + 2 * grid.ibn;
+  Int3 ib = -grid.ibn;
+
+  auto mres = psc::mflds::zeros<double, gt::space::host_only>(grid, 1, ib);
+
+  EXPECT_EQ(grid.n_patches(), 1);
+  int p = 0;
+
+  init_mres(mres, shape, p);
+
+  int dim = 2;
+  add_ghosts_reflecting_lo_nc(ldims, mres, ib, p, dim, 0, 1);
+
+  int bx_cc = -ib[0] - !grid.isInvar(0);
+  int by_cc = -ib[1] - !grid.isInvar(1);
+  int bz_cc = -ib[2] - !grid.isInvar(2);
+  Int3 ldims_cc =
+    ldims + Int3{!grid.isInvar(0), !grid.isInvar(1), !grid.isInvar(2)};
+
+  for (int x = -bx_cc; x < ldims_cc[0] + bx_cc; x++) {
+    for (int y = -by_cc; y < ldims_cc[1] + by_cc; y++) {
+      for (int z = 1; z < 1 + bz_cc; z++) {
+        int cell_id = ravel_idx({x - ib[0], y - ib[1], z - ib[2]}, shape);
+
+        int reflected_z = -z;
+        int reflected_cell_id =
+          ravel_idx({x - ib[0], y - ib[1], reflected_z - ib[2]}, shape);
+        EXPECT_EQ(mres(x - ib[0], y - ib[1], z - ib[2], 0, p),
+                  cell_id + reflected_cell_id)
+          << "xyz " << x << " " << y << " " << z;
+      }
+    }
+  }
+}
+
 // ======================================================================
 // main
 
