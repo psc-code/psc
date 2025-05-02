@@ -70,6 +70,33 @@ public:
   }
 };
 
+template <>
+class DomainBoundary<centering::NC>
+{
+public:
+  template <typename FE>
+  static void add_ghosts_boundary(const Grid_t& grid, FE& mres_gt,
+                                  const Int3& ib, int p, int mb, int me)
+  {
+    // lo
+    for (int d = 0; d < 3; d++) {
+      // FIXME why reflect for open BCs?
+      if (grid.atBoundaryLo(p, d) && (grid.bc.prt_lo[d] == BND_PRT_REFLECTING ||
+                                      grid.bc.prt_lo[d] == BND_PRT_OPEN)) {
+        add_ghosts_reflecting_lo_nc(grid.ldims, mres_gt, ib, p, d, mb, me);
+      }
+    }
+    // hi
+    for (int d = 0; d < 3; d++) {
+      // FIXME why reflect for open BCs?
+      if (grid.atBoundaryHi(p, d) && (grid.bc.prt_hi[d] == BND_PRT_REFLECTING ||
+                                      grid.bc.prt_hi[d] == BND_PRT_OPEN)) {
+        add_ghosts_reflecting_hi_nc(grid.ldims, mres_gt, ib, p, d, mb, me);
+      }
+    }
+  }
+};
+
 // ======================================================================
 // ItemMomentBnd
 
