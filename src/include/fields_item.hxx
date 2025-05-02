@@ -162,6 +162,6 @@ public:
   }
 
 private:
-  ItemMomentBnd<storage_type, Bnd, centering::CC> bnd_;
+  ItemMomentBnd<storage_type, Bnd, moment_type::CENTERING> bnd_;
   std::vector<std::string> comp_names_;
 };
