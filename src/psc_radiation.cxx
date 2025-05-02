@@ -250,7 +250,7 @@ void run()
       auto F = make_Fields3d<Dim>(mflds[p]);
       grid.Foreach_3d(0, 0, [&](int i, int j, int k) {
         Int3 index{i, j, k};
-        auto crd_ec_z = centering::getPos(patch, index, centering::EC, 2);
+        auto crd_ec_z = centering::get_pos(patch, index, centering::EC, 2);
 #if 0
         double r =
           std::sqrt(sqr(crd_ec_z[0]) + sqr(crd_ec_z[1]) + sqr(crd_ec_z[2]));

@@ -31,7 +31,7 @@ CC  |   ccc ccc ccc
 */
 
 template <typename PATCH>
-Double3 getPos(PATCH patch, Int3 index, int style, int comp = X)
+Double3 get_pos(PATCH patch, Int3 index, int style, int comp = X)
 {
   Double3 pos;
   for (int a = 0; a < 3; a++) {
@@ -51,9 +51,9 @@ struct Centerer
   Centerer(CenterStyle style) : style(style) {}
 
   template <typename PATCH>
-  inline Double3 getPos(PATCH patch, Int3 index, int comp = X) const
+  inline Double3 get_pos(PATCH patch, Int3 index, int comp = X) const
   {
-    return centering::getPos(patch, index, style, comp);
+    return centering::get_pos(patch, index, style, comp);
   }
 };
 

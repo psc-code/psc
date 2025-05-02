@@ -35,11 +35,11 @@ struct SetupFields
 
         for (int c = 0; c < 3; c++) {
           F(HX + c, jx, jy, jz) +=
-            func(HX + c, centering::getPos(patch, index, centering::FC, c));
+            func(HX + c, centering::get_pos(patch, index, centering::FC, c));
           F(EX + c, jx, jy, jz) +=
-            func(EX + c, centering::getPos(patch, index, centering::EC, c));
+            func(EX + c, centering::get_pos(patch, index, centering::EC, c));
           F(JXI + c, jx, jy, jz) +=
-            func(JXI + c, centering::getPos(patch, index, centering::EC, c));
+            func(JXI + c, centering::get_pos(patch, index, centering::EC, c));
         }
       });
     }
@@ -60,7 +60,7 @@ struct SetupFields
         std::max({mf.ibn()[0], mf.ibn()[1], mf.ibn()[2]}); // FIXME, not pretty
       // FIXME, do we need the ghost points?
       grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
-        F(0, jx, jy, jz) += func(0, centerer.getPos(patch, {jx, jy, jz}));
+        F(0, jx, jy, jz) += func(0, centerer.get_pos(patch, {jx, jy, jz}));
       });
     }
   }
