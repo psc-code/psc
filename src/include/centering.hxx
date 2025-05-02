@@ -14,13 +14,6 @@ enum CenterStyle
   CC, // cell-centered
 };
 
-enum Component
-{
-  X,
-  Y,
-  Z
-};
-
 /*  Centering Guide
          X   Y   Z
        -------------
@@ -31,15 +24,19 @@ CC  |   ccc ccc ccc
 */
 
 template <typename PATCH>
-Double3 get_pos(PATCH patch, Int3 index, int style, int comp = X)
+Double3 get_pos(PATCH patch, Int3 index, int style, int component = -1)
 {
+  if (component == -1) {
+    assert(style == NC || style == CC);
+  }
+
   Double3 pos;
-  for (int a = 0; a < 3; a++) {
-    if (style == CC || (style == FC && a != comp) ||
-        (style == EC && a == comp)) {
-      pos[a] = patch.get_cc(index[a], a);
+  for (int d = 0; d < 3; d++) {
+    if (style == CC || (style == FC && d != component) ||
+        (style == EC && d == component)) {
+      pos[d] = patch.get_cc(index[d], d);
     } else {
-      pos[a] = patch.get_nc(index[a], a);
+      pos[d] = patch.get_nc(index[d], d);
     }
   }
   return pos;
@@ -51,9 +48,9 @@ struct Centerer
   Centerer(CenterStyle style) : style(style) {}
 
   template <typename PATCH>
-  inline Double3 get_pos(PATCH patch, Int3 index, int comp = X) const
+  inline Double3 get_pos(PATCH patch, Int3 index, int component = -1) const
   {
-    return centering::get_pos(patch, index, style, comp);
+    return centering::get_pos(patch, index, style, component);
   }
 };
 
