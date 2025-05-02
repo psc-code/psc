@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "centering.hxx"
+
 #include <kg/Vec3.h>
 #include <dim.hxx>
 #include <psc_bits.h>
@@ -157,11 +159,20 @@ public:
 };
 
 // ----------------------------------------------------------------------------
+
+template <centering::Centering C>
+class DepositCentering
+{
+public:
+  static const centering::Centering CENTERING = C;
+};
+
+// ----------------------------------------------------------------------------
 // deposit directly, assuming grid spacing == 1, pass in patch-relative position
 // x
 
 template <typename T, typename D>
-class Deposit1stNc
+class Deposit1stNc : public DepositCentering<centering::NC>
 {
 public:
   static std::string suffix() { return "_1st_nc"; }
@@ -184,7 +195,7 @@ public:
 };
 
 template <typename T, typename D>
-class Deposit1stCc
+class Deposit1stCc : public DepositCentering<centering::CC>
 {
 public:
   static std::string suffix() { return "_1st_cc"; }
@@ -211,7 +222,7 @@ public:
 // x
 
 template <typename T, typename D>
-class Deposit2ndNc
+class Deposit2ndNc : public DepositCentering<centering::NC>
 {
 public:
   static std::string suffix() { return "_2nd_nc"; }
