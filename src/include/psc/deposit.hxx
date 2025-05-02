@@ -277,8 +277,9 @@ public:
   using real_t = R;
   using dim_t = D;
   using real3_t = gt::sarray<real_t, 3>;
+  using DepositNorm = DEPOSIT_NORM<real_t, dim_t>;
 
-  static std::string suffix() { return DepositNorm<real_t, dim_t>::suffix(); }
+  static std::string suffix() { return DepositNorm::suffix(); }
 
   Deposit(const real3_t& dx, real_t fnqs) : dxi_{real_t(1.) / dx}, fnqs_{fnqs}
   {}
@@ -290,7 +291,7 @@ public:
     real3_t x = xi * dxi_;
     real_t value = fnqs_ * val;
 
-    DepositNorm<real_t, dim_t> deposit;
+    DepositNorm deposit;
     deposit(flds, ib, x, value);
   }
 
