@@ -6,7 +6,7 @@
 namespace centering
 {
 
-enum CenterStyle
+enum Centering
 {
   NC, // node-centered
   EC, // edge-centered
@@ -24,16 +24,15 @@ CC  |   ccc ccc ccc
 */
 
 template <typename PATCH>
-Double3 get_pos(PATCH patch, Int3 index, CenterStyle style, int component = -1)
+Double3 get_pos(PATCH patch, Int3 index, Centering c, int component = -1)
 {
   if (component == -1) {
-    assert(style == NC || style == CC);
+    assert(c == NC || c == CC);
   }
 
   Double3 pos;
   for (int d = 0; d < 3; d++) {
-    if (style == CC || (style == FC && d != component) ||
-        (style == EC && d == component)) {
+    if (c == CC || (c == FC && d != component) || (c == EC && d == component)) {
       pos[d] = patch.get_cc(index[d], d);
     } else {
       pos[d] = patch.get_nc(index[d], d);
@@ -44,13 +43,13 @@ Double3 get_pos(PATCH patch, Int3 index, CenterStyle style, int component = -1)
 
 struct Centerer
 {
-  CenterStyle style;
-  Centerer(CenterStyle style) : style(style) {}
+  Centering c;
+  Centerer(Centering c) : c(c) {}
 
   template <typename PATCH>
   inline Double3 get_pos(PATCH patch, Int3 index, int component = -1) const
   {
-    return centering::get_pos(patch, index, style, component);
+    return centering::get_pos(patch, index, c, component);
   }
 };
 
