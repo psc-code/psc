@@ -27,7 +27,7 @@ struct ConstAccessorCuda
       off_{mprts.get_offsets()}
   {}
 
-  Patch operator[](int p) const { return {*this, p}; }
+  Patch operator[](int p) const { return {mprts_, p}; }
   Mparticles& mprts() const { return mprts_; }
   const _Particle* data(int p) const { return &data_[off_[p]]; }
   uint size(int p) const { return off_[p + 1] - off_[p]; }
