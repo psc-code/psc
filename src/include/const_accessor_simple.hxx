@@ -1,4 +1,3 @@
-
 #pragma once
 
 // ======================================================================
@@ -181,20 +180,20 @@ struct ConstAccessorPatchSimple
     uint n_;
   };
 
-  ConstAccessorPatchSimple(const ConstAccessorSimple& accessor, int p)
-    : accessor_{accessor}, p_{p}
+  ConstAccessorPatchSimple(const Mparticles& mprts, int p)
+    : mprts_{mprts}, p_{p}
   {}
 
   const_iterator begin() const { return {*this, 0}; }
   const_iterator end() const { return {*this, size()}; }
   ConstParticleProxy operator[](int n) const
   {
-    return {accessor_.data(p_)[n], accessor_.mprts(), p_};
+    return {mprts_[p_].begin()[n], mprts_, p_};
   }
-  uint size() const { return accessor_.size(p_); }
+  uint size() const { return mprts_[p_].size(); }
 
 private:
-  const ConstAccessorSimple& accessor_;
+  const Mparticles& mprts_;
   const int p_;
 };
 
@@ -210,7 +209,7 @@ struct ConstAccessorSimple
 
   ConstAccessorSimple(Mparticles& mprts) : mprts_{mprts} {}
 
-  Patch operator[](int p) const { return {*this, p}; }
+  Patch operator[](int p) const { return {mprts_, p}; }
   const Mparticles& mprts() const { return mprts_; }
   uint size(int p) const { return mprts_[p].size(); }
   typename Mparticles::Patch::iterator data(int p) const
