@@ -134,7 +134,8 @@ TEST(ReflectiveBcsTest, Integration)
   // ----------------------------------------------------------------------
   // run the simulation
 
-  auto prts = mprts.accessor()[p];
+  auto accessor = mprts.accessor();
+  auto prts = accessor[p];
 
   ASSERT_EQ(prts.size(), 2);
   ASSERT_LT(prts[0].u()[1], 0.0);
