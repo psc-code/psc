@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "centering.hxx"
+
 #include "psc_bits.h"
 #include <psc/deposit.hxx>
 
@@ -120,6 +122,8 @@ class moment_n
 {
 public:
   using dim_t = D;
+  static const centering::Centering CENTERING =
+    DepositCode<float, D>::CENTERING;
 
   static std::string name() { return "n" + DepositCode<float, D>::suffix(); }
   static std::vector<std::string> comp_names(const Grid_t::Kinds& kinds)
@@ -146,6 +150,8 @@ class moment_rho
 {
 public:
   using dim_t = D;
+  static const centering::Centering CENTERING =
+    DepositCode<float, D>::CENTERING;
 
   static std::string name() { return "rho" + DepositCode<float, D>::suffix(); }
   static std::vector<std::string> comp_names(const Grid_t::Kinds& kinds)
@@ -171,6 +177,8 @@ class moment_v
 {
 public:
   using dim_t = D;
+  static const centering::Centering CENTERING =
+    DepositCode<float, D>::CENTERING;
 
   static std::string name() { return "v" + DepositCode<float, D>::suffix(); }
   static std::vector<std::string> comp_names(const Grid_t::Kinds& kinds)
@@ -201,6 +209,8 @@ class moment_p
 {
 public:
   using dim_t = D;
+  static const centering::Centering CENTERING =
+    DepositCode<float, D>::CENTERING;
 
   static std::string name() { return "p" + DepositCode<float, D>::suffix(); }
   static std::vector<std::string> comp_names(const Grid_t::Kinds& kinds)
@@ -228,6 +238,8 @@ class moment_T
 {
 public:
   using dim_t = D;
+  static const centering::Centering CENTERING =
+    DepositCode<float, D>::CENTERING;
 
   static std::string name() { return "T" + DepositCode<float, D>::suffix(); }
   static std::vector<std::string> comp_names(const Grid_t::Kinds& kinds)
@@ -261,6 +273,8 @@ class moment_all
 {
 public:
   using dim_t = D;
+  static const centering::Centering CENTERING =
+    DepositCode<float, D>::CENTERING;
 
   static std::string name() { return "all" + DepositCode<float, D>::suffix(); }
   static std::vector<std::string> comp_names(const Grid_t::Kinds& kinds)

@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "centering.hxx"
+
 #include <kg/Vec3.h>
 #include <dim.hxx>
 #include <psc_bits.h>
@@ -157,11 +159,20 @@ public:
 };
 
 // ----------------------------------------------------------------------------
+
+template <centering::Centering C>
+class DepositCentering
+{
+public:
+  static const centering::Centering CENTERING = C;
+};
+
+// ----------------------------------------------------------------------------
 // deposit directly, assuming grid spacing == 1, pass in patch-relative position
 // x
 
 template <typename T, typename D>
-class Deposit1stNc
+class Deposit1stNc : public DepositCentering<centering::NC>
 {
 public:
   static std::string suffix() { return "_1st_nc"; }
@@ -184,7 +195,7 @@ public:
 };
 
 template <typename T, typename D>
-class Deposit1stCc
+class Deposit1stCc : public DepositCentering<centering::CC>
 {
 public:
   static std::string suffix() { return "_1st_cc"; }
@@ -211,7 +222,7 @@ public:
 // x
 
 template <typename T, typename D>
-class Deposit2ndNc
+class Deposit2ndNc : public DepositCentering<centering::NC>
 {
 public:
   static std::string suffix() { return "_2nd_nc"; }
@@ -259,15 +270,17 @@ namespace code // deposition in code units
 // units
 
 template <typename R, typename D,
-          template <typename, typename> class DepositNorm>
+          template <typename, typename> class DEPOSIT_NORM>
 class Deposit
 {
 public:
   using real_t = R;
   using dim_t = D;
   using real3_t = gt::sarray<real_t, 3>;
+  using DepositNorm = DEPOSIT_NORM<real_t, dim_t>;
+  static const centering::Centering CENTERING = DepositNorm::CENTERING;
 
-  static std::string suffix() { return DepositNorm<real_t, dim_t>::suffix(); }
+  static std::string suffix() { return DepositNorm::suffix(); }
 
   Deposit(const real3_t& dx, real_t fnqs) : dxi_{real_t(1.) / dx}, fnqs_{fnqs}
   {}
@@ -279,7 +292,7 @@ public:
     real3_t x = xi * dxi_;
     real_t value = fnqs_ * val;
 
-    DepositNorm<real_t, dim_t> deposit;
+    DepositNorm deposit;
     deposit(flds, ib, x, value);
   }
 
