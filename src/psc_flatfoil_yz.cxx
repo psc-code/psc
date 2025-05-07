@@ -617,7 +617,9 @@ void run()
   double inject_fac = (g.inject_interval * grid.dt / inject_tau) /
                       (1. + g.inject_interval * grid.dt / inject_tau);
 
-  auto lf_inject_heat = [&](const Grid_t& grid, Mparticles& mprts) {
+  auto lf_inject_heat = [&](Mparticles& mprts, MfieldsState& mflds) {
+    const Grid_t& grid = mprts.grid();
+
     static int pr_inject, pr_heating;
     if (!pr_inject) {
       pr_inject = prof_register("inject", 1., 0, 0);
