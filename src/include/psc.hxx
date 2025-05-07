@@ -748,8 +748,8 @@ protected:
 class InjectParticlesNone
 {
 public:
-  template <typename Mparticles>
-  void operator()(const Grid_t& grid, Mparticles& mprts)
+  template <typename Mparticles, typename MfieldsState>
+  void operator()(Mparticles& mprts, MfieldsState& mflds)
   {}
 };
 
