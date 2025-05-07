@@ -486,7 +486,7 @@ struct Psc
 
     // === particle injection
     prof_start(pr_inject_prts);
-    inject_particles();
+    inject_particles_(grid(), mprts_);
     prof_stop(pr_inject_prts);
 
     if (checks_.continuity.should_do_check(timestep)) {
@@ -590,11 +590,6 @@ struct Psc
     step_psc();
 #endif
   }
-
-  // ----------------------------------------------------------------------
-  // inject_particles
-
-  void inject_particles() { return this->inject_particles_(grid(), mprts_); }
 
 private:
   // ----------------------------------------------------------------------
