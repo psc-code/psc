@@ -500,7 +500,7 @@ struct Psc
 
     // === particle injection
     prof_start(pr_inject_prts);
-    inject_particles_(grid(), mprts_);
+    inject_particles_(mprts_, mflds_);
     prof_stop(pr_inject_prts);
 
     // === field propagation B^{n+1/2} -> B^{n+1}
