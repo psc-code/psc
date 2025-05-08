@@ -94,6 +94,17 @@ public:
     }
   }
 
+  template <typename MfieldsState>
+  void operator()(Mparticles& mprts, MfieldsState& mflds)
+  {
+    const Grid_t& grid = mprts.grid();
+    auto injectors_by_patch = mprts.injector();
+
+    inject_into_boundary(grid, injectors_by_patch);
+
+    // TODO update j
+  }
+
   AdvanceParticle<real_t, Dim> advance_;
   SetupParticles<Mparticles> setup_particles_;
   psc_particle_np np_;
