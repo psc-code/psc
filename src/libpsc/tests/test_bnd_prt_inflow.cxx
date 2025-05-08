@@ -104,8 +104,7 @@ public:
   // offset_in_cell: () -> double
   Inflow(const Grid_t& grid, psc_particle_npt npt,
          double (*offset_in_cell_dist)())
-    : grid_(grid),
-      setup_particles_(grid),
+    : setup_particles_(grid),
       advance_(grid.dt),
       // FIXME np.p is a std::function and is called many times; better to use a
       // lambda
@@ -126,7 +125,7 @@ public:
   }
 
   template <typename Injector>
-  void inject_into_boundary_cell(Injector& injector,
+  void inject_into_boundary_cell(const Grid_t& grid, Injector& injector,
                                  Int3 boundary_cell_global_idx)
   {
     assert(boundary_cell_global_idx[INJECT_DIM_IDX_] == 0);
@@ -138,12 +137,11 @@ public:
     for (int cnt = 0; cnt < n_in_cell; cnt++) {
       Double3 offset = {offset_in_cell_dist_(), offset_in_cell_dist_(),
                         offset_in_cell_dist_()};
-      auto pos =
-        (Double3(boundary_cell_global_idx) + offset) * grid_.domain.dx +
-        grid_.domain.corner;
+      auto pos = (Double3(boundary_cell_global_idx) + offset) * grid.domain.dx +
+                 grid.domain.corner;
       auto prt = get_advanced_prt(pos, wni);
 
-      if (prt.x[INJECT_DIM_IDX_] < grid_.domain.corner[INJECT_DIM_IDX_]) {
+      if (prt.x[INJECT_DIM_IDX_] < grid.domain.corner[INJECT_DIM_IDX_]) {
         continue;
       }
 
@@ -152,11 +150,11 @@ public:
   }
 
   template <typename Injector>
-  void inject_into_boundary_patch(Injector& injector,
+  void inject_into_boundary_patch(const Grid_t& grid, Injector& injector,
                                   const Grid_t::Patch& boundary_patch)
   {
     Int3 ilo = boundary_patch.off;
-    Int3 ihi = ilo + grid_.ldims;
+    Int3 ihi = ilo + grid.ldims;
 
     assert(ilo[INJECT_DIM_IDX_] == 0);
 
@@ -166,27 +164,27 @@ public:
     for (Int3 cell_idx = ilo; cell_idx[dim1] < ihi[dim1]; cell_idx[dim1]++) {
       for (cell_idx[dim2] = ilo[dim2]; cell_idx[dim2] < ihi[dim2];
            cell_idx[dim2]++) {
-        inject_into_boundary_cell(injector, cell_idx);
+        inject_into_boundary_cell(grid, injector, cell_idx);
       }
     }
   }
 
   template <typename Injectors>
-  void inject_into_boundary(Injectors& injectors_by_patch)
+  void inject_into_boundary(const Grid_t& grid, Injectors& injectors_by_patch)
   {
-    for (int patch_idx = 0; patch_idx < grid_.n_patches(); patch_idx++) {
-      const auto& patch = grid_.patches[patch_idx];
+    // grid doesn't persist; pass it as arg instead
+    for (int patch_idx = 0; patch_idx < grid.n_patches(); patch_idx++) {
+      const auto& patch = grid.patches[patch_idx];
 
       if (patch.off[INJECT_DIM_IDX_] != 0) {
         continue;
       }
 
       auto& injector = injectors_by_patch[patch_idx];
-      inject_into_boundary_patch(injector, patch);
+      inject_into_boundary_patch(grid, injector, patch);
     }
   }
 
-  const Grid_t& grid_;
   AdvanceParticle<real_t, Dim> advance_;
   SetupParticles<Mparticles> setup_particles_;
   psc_particle_np np_;
@@ -252,7 +250,7 @@ TEST(TestSetupParticlesInflow, InjectIntoCell)
   Inflow<Mparticles, dim_y> inflow(grid, npt, *half);
 
   TestInjector injector;
-  inflow.inject_into_boundary_cell(injector, {0, 0, 0});
+  inflow.inject_into_boundary_cell(grid, injector, {0, 0, 0});
 
   EXPECT_EQ(injector.prts.size(), prm.nicell);
 
@@ -283,7 +281,7 @@ TEST(TestSetupParticlesInflow, InjectIntoCellFilter)
   Inflow<Mparticles, dim_y> inflow(grid, npt, *half);
 
   TestInjector injector;
-  inflow.inject_into_boundary_cell(injector, {0, 0, 0});
+  inflow.inject_into_boundary_cell(grid, injector, {0, 0, 0});
 
   EXPECT_EQ(injector.prts.size(), 0);
 }
@@ -307,7 +305,7 @@ TEST(TestSetupParticlesInflow, InjectIntoPatch)
   Inflow<Mparticles, dim_y> inflow(grid, npt, *half);
 
   TestInjector injector;
-  inflow.inject_into_boundary_patch(injector, grid.patches[0]);
+  inflow.inject_into_boundary_patch(grid, injector, grid.patches[0]);
 
   EXPECT_EQ(injector.prts.size(),
             domain.ldims[0] * domain.ldims[2] * prm.nicell);
@@ -346,7 +344,7 @@ TEST(TestSetupParticlesInflow, InjectIntoBoundaryY)
 
   std::vector<TestInjector> injectors = {TestInjector(), TestInjector(),
                                          TestInjector(), TestInjector()};
-  inflow.inject_into_boundary(injectors);
+  inflow.inject_into_boundary(grid, injectors);
 
   EXPECT_EQ(injectors[0].prts.size(),
             domain.ldims[0] * domain.ldims[2] * prm.nicell);
@@ -389,7 +387,7 @@ TEST(TestSetupParticlesInflow, InjectIntoBoundaryZ)
 
   std::vector<TestInjector> injectors = {TestInjector(), TestInjector(),
                                          TestInjector(), TestInjector()};
-  inflow.inject_into_boundary(injectors);
+  inflow.inject_into_boundary(grid, injectors);
 
   EXPECT_EQ(injectors[0].prts.size(),
             domain.ldims[0] * domain.ldims[1] * prm.nicell);
