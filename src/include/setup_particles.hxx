@@ -4,7 +4,11 @@
 #include <algorithm>
 #include <functional>
 #include <type_traits>
+
+#include <mrc_profile.h>
+
 #include "centering.hxx"
+#include "particle.h"
 #include "rng.hxx"
 
 struct psc_particle_npt
