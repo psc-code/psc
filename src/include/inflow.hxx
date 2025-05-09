@@ -89,7 +89,7 @@ public:
         continue;
       }
 
-      auto& injector = injectors_by_patch[patch_idx];
+      auto&& injector = injectors_by_patch[patch_idx];
       inject_into_boundary_patch(grid, injector, patch);
     }
   }
