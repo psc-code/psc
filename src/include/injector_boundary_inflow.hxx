@@ -1,5 +1,30 @@
 #pragma once
 
+#include "particle.h"
+
+class ParticleGeneratorMaxwellian
+{
+  using Real = psc::particle::Inject::Real;
+  using Real3 = psc::particle::Inject::Real3;
+
+public:
+  psc::particle::Inject get()
+  {
+
+    // TODO:
+    // 1. sample x, u
+    // 2. get w, kind, tag
+
+    Real3 x{0.0, 0.0, 0.0};
+    Real3 u{0.0, 0.0, 0.0};
+    Real w{0.0};
+    int kind = 0;
+    psc::particle::Tag tag = 0;
+
+    return {x, u, w, kind, tag};
+  }
+};
+
 class InjectorBoundaryInflow
 {
 public:
