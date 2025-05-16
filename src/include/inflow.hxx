@@ -41,7 +41,7 @@ public:
     assert(boundary_cell_global_idx[INJECT_DIM_IDX_] == 0);
     boundary_cell_global_idx[INJECT_DIM_IDX_] = -1;
 
-    int n_in_cell = setup_particles_.get_n_in_cell(np_);
+    int n_in_cell = setup_particles_.get_n_in_cell(np_.n);
     double wni = setup_particles_.getWeight(np_, n_in_cell);
 
     for (int cnt = 0; cnt < n_in_cell; cnt++) {

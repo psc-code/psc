@@ -118,16 +118,16 @@ struct SetupParticles
   //
   // helper function for partition / particle setup
 
-  int get_n_in_cell(const psc_particle_np& np)
+  int get_n_in_cell(real_t density)
   {
     static rng::Uniform<float> dist{0, 1};
-    if (np.n == 0) {
+    if (density == 0.0) {
       return 0;
     }
     if (fractional_n_particles_per_cell) {
-      return np.n / norm_.cori + dist.get();
+      return density / norm_.cori + dist.get();
     }
-    return std::max(1, int(np.n / norm_.cori + .5));
+    return std::max(1, int(density / norm_.cori + .5));
   }
 
   // ----------------------------------------------------------------------
@@ -165,7 +165,7 @@ struct SetupParticles
 
             int n_in_cell;
             if (pop != neutralizing_population) {
-              n_in_cell = get_n_in_cell(np);
+              n_in_cell = get_n_in_cell(np.n);
               n_q_in_cell += kinds_[np.kind].q * n_in_cell;
             } else {
               // FIXME, should handle the case where not the last population
