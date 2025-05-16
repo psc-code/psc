@@ -137,7 +137,7 @@ struct SetupParticles
 
   int get_n_in_cell(real_t density)
   {
-    return ::get_n_in_cell(density, norm_.prts_per_unit_density,
+    return ::get_n_in_cell(density, real_t(norm_.prts_per_unit_density),
                            fractional_n_particles_per_cell);
   }
 
