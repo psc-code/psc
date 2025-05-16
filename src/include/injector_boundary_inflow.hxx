@@ -44,9 +44,16 @@ private:
   rng::Uniform<Real> uniform_dist{0.0, 1.0};
 };
 
+template <typename PRTGEN>
 class InjectorBoundaryInflow
 {
 public:
+  using ParticleGenerator = PRTGEN;
+
+  InjectorBoundaryInflow(ParticleGenerator particle_generator)
+    : partice_generator{particle_generator}
+  {}
+
   template <typename Mparticles, typename MfieldsState>
   void operator()(Mparticles& mprts, MfieldsState& mflds)
   {
@@ -56,4 +63,7 @@ public:
     // 3. cull injected particles that don't enter the domain
     // 4. update current
   }
+
+private:
+  ParticleGenerator partice_generator;
 };
