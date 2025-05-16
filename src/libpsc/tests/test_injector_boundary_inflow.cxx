@@ -129,7 +129,8 @@ TEST(InjectorBoundaryInflowTest, Integration)
   DiagEnergies oute{grid.comm(), 0};
   auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
 
-  auto inject_particles = InjectorBoundaryInflow<ParticleGeneratorTest>{{}};
+  auto inject_particles =
+    InjectorBoundaryInflow<ParticleGeneratorTest, PscConfig::PushParticles>{{}};
 
   auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
                                           balance, collision, checks, marder,
