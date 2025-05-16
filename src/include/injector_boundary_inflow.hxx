@@ -12,7 +12,13 @@ public:
   // FIXME would be nice to just pass 1 thing for kind-related info
   ParticleGeneratorMaxwellian(int kind_idx, Grid_t::Kind kind, Real3 mean_u,
                               Real3 temperature)
-  {}
+    : kind_idx{kind_idx}
+  {
+    for (int d = 0; d < 3; d++) {
+      Real stdev_u = sqrt(temperature[d] / kind.m);
+      vdfs[d] = VelocityDistributionFunction{mean_u[d], stdev_u};
+    }
+  }
 
   psc::particle::Inject get()
   {
@@ -29,6 +35,11 @@ public:
 
     return {x, u, w, kind, tag};
   }
+
+private:
+  using VelocityDistributionFunction = rng::Normal<Real>;
+  Vec3<VelocityDistributionFunction> vdfs;
+  int kind_idx;
 };
 
 class InjectorBoundaryInflow
