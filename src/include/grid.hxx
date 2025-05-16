@@ -286,6 +286,7 @@ struct Grid_<T>::Normalization
     double vt = sqrt(prm.tt / prm.mm);
     double wp = sqrt(sqr(prm.qq) * prm.n0 / prm.eps0 / prm.mm);
 
+    prts_per_unit_density = prm.nicell;
     cori = 1. / prm.nicell;
     double alpha_ = wp / wl;
     beta = vt / cc;
@@ -299,6 +300,7 @@ struct Grid_<T>::Normalization
   real_t eta = {1.};
   real_t beta = {1.};
   real_t cori = {1.};
+  real_t prts_per_unit_density;
 
   real_t e0;
   real_t b0;
