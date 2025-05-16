@@ -28,9 +28,6 @@ struct psc_particle_np
   psc::particle::Tag tag;
 };
 
-// ======================================================================
-// SetupParticles
-
 namespace
 {
 const centering::Centerer defaultCenterer(centering::CC);
@@ -96,6 +93,28 @@ private:
   std::function<void(int, Double3, int, Int3, psc_particle_np&)> func;
 };
 
+// ======================================================================
+// get_n_in_cell
+//
+// helper function for partition / particle setup
+
+template <typename real_t>
+int get_n_in_cell(real_t density, real_t prts_per_unit_density,
+                  bool fractional_n_particles_per_cell)
+{
+  static rng::Uniform<float> dist{0, 1};
+  if (density == 0.0) {
+    return 0;
+  }
+  if (fractional_n_particles_per_cell) {
+    return density * prts_per_unit_density + dist.get();
+  }
+  return std::max(1, int(density * prts_per_unit_density + .5));
+}
+
+// ======================================================================
+// SetupParticles
+
 template <typename MP>
 struct SetupParticles
 {
@@ -115,19 +134,11 @@ struct SetupParticles
 
   // ----------------------------------------------------------------------
   // get_n_in_cell
-  //
-  // helper function for partition / particle setup
 
   int get_n_in_cell(real_t density)
   {
-    static rng::Uniform<float> dist{0, 1};
-    if (density == 0.0) {
-      return 0;
-    }
-    if (fractional_n_particles_per_cell) {
-      return density / norm_.cori + dist.get();
-    }
-    return std::max(1, int(density / norm_.cori + .5));
+    return ::get_n_in_cell(density, 1 / norm_.cori,
+                           fractional_n_particles_per_cell);
   }
 
   // ----------------------------------------------------------------------
