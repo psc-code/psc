@@ -5,8 +5,10 @@
 #include "grid.hxx"
 #include "rng.hxx"
 #include "particle.h"
+#include <psc.hxx>
 #include "pushp.hxx"
 #include "dim.hxx"
+#include "../libpsc/psc_push_particles/inc_push.cxx"
 
 class ParticleGeneratorMaxwellian
 {
@@ -50,6 +52,7 @@ template <typename PARTICLE_GENERATOR, typename PUSH_PARTICLES>
 class InjectorBoundaryInflow
 {
   static const int INJECT_DIM_IDX_ = 1;
+  static const int MAX_NR_KINDS = PUSH_PARTICLES::MAX_NR_KINDS;
 
 public:
   using ParticleGenerator = PARTICLE_GENERATOR;
@@ -76,6 +79,17 @@ public:
     const Grid_t& grid = mprts.grid();
     auto injectors_by_patch = mprts.injector();
 
+    Real3 dxi = Real3{1., 1., 1.} / Real3(grid.domain.dx);
+    real_t dq_kind[MAX_NR_KINDS];
+    auto& kinds = grid.kinds;
+    assert(kinds.size() <= MAX_NR_KINDS);
+    for (int k = 0; k < kinds.size(); k++) {
+      dq_kind[k] = .5f * grid.norm.eta * grid.dt * kinds[k].q / kinds[k].m;
+    }
+    InterpolateEM_t ip;
+    Current current(grid);
+    auto accessor = mprts.accessor_();
+
     for (int patch_idx = 0; patch_idx < grid.n_patches(); patch_idx++) {
       const auto& patch = grid.patches[patch_idx];
 
@@ -84,6 +98,12 @@ public:
       }
 
       auto&& injector = injectors_by_patch[patch_idx];
+      auto flds = mflds[patch_idx];
+      auto prts = accessor[patch_idx];
+      typename InterpolateEM_t::fields_t EM(flds.storage(), flds.ib());
+      typename Current::fields_t J(flds);
+
+      flds.storage().view(_all, _all, _all, _s(JXI, JXI + 3)) = real_t(0);
 
       Int3 ilo = patch.off;
       Int3 ihi = ilo + grid.ldims;
@@ -104,6 +124,7 @@ public:
               partice_generator.get(min_pos, grid.domain.dx);
 
             Real3 v = advance.calc_v(prt.u);
+            Real3 initial_x = prt.x;
             advance.push_x(prt.x, v, 1.0);
 
             if (prt.x[INJECT_DIM_IDX_] < grid.domain.corner[INJECT_DIM_IDX_]) {
@@ -111,13 +132,40 @@ public:
             }
 
             injector(prt);
+
+            // Update currents
+            // Taken from push_particles_1vb.hxx PushParticlesVb::push_mprts()
+
+            Real3 initial_normalized_pos = initial_x * dxi;
+            ip.set_coeffs(initial_normalized_pos);
+
+            // FIELD INTERPOLATION
+            Real3 E = {ip.ex(EM), ip.ey(EM), ip.ez(EM)};
+            Real3 H = {ip.hx(EM), ip.hy(EM), ip.hz(EM)};
+
+            Int3 final_idx;
+            Real3 final_normalized_pos;
+            find_idx_pos_1st_rel(prt.x, dxi, final_idx, final_normalized_pos,
+                                 real_t(0.));
+
+            // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
+            int lg[3];
+            if (!Dim::InvarX::value) {
+              lg[0] = ip.cx.g.l;
+            }
+            if (!Dim::InvarY::value) {
+              lg[1] = ip.cy.g.l;
+            }
+            if (!Dim::InvarZ::value) {
+              lg[2] = ip.cz.g.l;
+            }
+            real_t qni_wni = grid.kinds[prt.kind].q * prt.w;
+            current.calc_j(J, initial_normalized_pos, final_normalized_pos,
+                           final_idx, lg, qni_wni, v);
           }
         }
       }
     }
-
-    // TODO:
-    // 4. update current
   }
 
 private:
