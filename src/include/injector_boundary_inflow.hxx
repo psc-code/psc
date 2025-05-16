@@ -1,5 +1,6 @@
 #pragma once
 
+#include "grid.hxx"
 #include "particle.h"
 
 class ParticleGeneratorMaxwellian
@@ -8,6 +9,11 @@ class ParticleGeneratorMaxwellian
   using Real3 = psc::particle::Inject::Real3;
 
 public:
+  // FIXME would be nice to just pass 1 thing for kind-related info
+  ParticleGeneratorMaxwellian(int kind_idx, Grid_t::Kind kind, Real3 mean_u,
+                              Real3 temperature)
+  {}
+
   psc::particle::Inject get()
   {
 
