@@ -4,6 +4,11 @@
 
 #include "injector_boundary_inflow.hxx"
 
+#include "psc.hxx"
+#include "DiagnosticsDefault.h"
+#include "OutputFieldsDefault.h"
+#include "../psc_config.hxx"
+
 TEST(InjectorBoundaryInflowTest, ParticleGeneratorMaxwellianTest)
 {
   int kind_idx = 15;
@@ -22,6 +27,117 @@ TEST(InjectorBoundaryInflowTest, ParticleGeneratorMaxwellianTest)
   ASSERT_EQ(prt.tag, 0);
   ASSERT_EQ(prt.u, mean_u); // zero temperature => exact velocity
   ASSERT_EQ(prt.x, pos);
+}
+
+// ======================================================================
+
+using Dim = dim_yz;
+using PscConfig = PscConfig1vbecDouble<Dim>;
+
+using MfieldsState = PscConfig::MfieldsState;
+using Mparticles = PscConfig::Mparticles;
+using Balance = PscConfig::Balance;
+using Collision = PscConfig::Collision;
+using Checks = PscConfig::Checks;
+using Marder = PscConfig::Marder;
+using OutputParticles = PscConfig::OutputParticles;
+
+Grid_t* setupGrid()
+{
+  auto domain = Grid_t::Domain{{1, 8, 2},          // n grid points
+                               {10.0, 80.0, 20.0}, // physical lengths
+                               {0, 0, 0},          // location of lower corner
+                               {1, 1, 1}};         // n patches
+
+  auto bc =
+    // FIXME wrong BCs
+    psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL, BND_FLD_PERIODIC},
+                  {BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL, BND_FLD_PERIODIC},
+                  {BND_PRT_PERIODIC, BND_PRT_REFLECTING, BND_PRT_PERIODIC},
+                  {BND_PRT_PERIODIC, BND_PRT_REFLECTING, BND_PRT_PERIODIC}};
+
+  auto kinds = Grid_t::Kinds(NR_KINDS);
+  kinds[KIND_ELECTRON] = {-1.0, 1.0, "e"};
+  kinds[KIND_ION] = {1.0, 1.0, "i"};
+
+  // --- generic setup
+  auto norm_params = Grid_t::NormalizationParams::dimensionless();
+  norm_params.nicell = 1;
+
+  double dt = .1;
+  Grid_t::Normalization norm{norm_params};
+
+  Int3 ibn = {2, 2, 2};
+  if (Dim::InvarX::value) {
+    ibn[0] = 0;
+  }
+  if (Dim::InvarY::value) {
+    ibn[1] = 0;
+  }
+  if (Dim::InvarZ::value) {
+    ibn[2] = 0;
+  }
+
+  return new Grid_t{domain, bc, kinds, norm, dt, -1, ibn};
+}
+
+TEST(InjectorBoundaryInflowTest, Integration)
+{
+  // ----------------------------------------------------------------------
+  // setup
+
+  PscParams psc_params;
+
+  psc_params.nmax = 100;
+  psc_params.stats_every = 1;
+  psc_params.cfl = .75;
+
+  auto grid_ptr = setupGrid();
+  auto& grid = *grid_ptr;
+
+  MfieldsState mflds{grid};
+  Mparticles mprts{grid};
+
+  ChecksParams checks_params{};
+  checks_params.continuity.check_interval = 1;
+  checks_params.gauss.check_interval = 1;
+  Checks checks{grid, MPI_COMM_WORLD, checks_params};
+
+  Balance balance{.1};
+  Collision collision{grid, 0, 0.1};
+  Marder marder(grid, 0.9, 3, false);
+
+  OutputFields<MfieldsState, Mparticles, Dim> outf{grid, {}};
+  OutputParticles outp{grid, {}};
+  DiagEnergies oute{grid.comm(), 0};
+  auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
+
+  auto psc =
+    makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts, balance,
+                                 collision, checks, marder, diagnostics);
+
+  // ----------------------------------------------------------------------
+  // set up initial conditions
+
+  EXPECT_EQ(grid.n_patches(), 1);
+  int p = 0;
+
+  // ----------------------------------------------------------------------
+  // run the simulation
+
+  auto accessor = mprts.accessor();
+  auto prts = accessor[p];
+
+  ASSERT_EQ(prts.size(), 0);
+
+  for (; grid.timestep_ < psc_params.nmax; grid.timestep_++) {
+    psc.step();
+
+    EXPECT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
+    EXPECT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
+  }
+
+  ASSERT_GT(prts.size(), 0);
 }
 
 // ======================================================================
