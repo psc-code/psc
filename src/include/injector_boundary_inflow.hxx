@@ -44,17 +44,27 @@ private:
   rng::Uniform<Real> uniform_dist{0.0, 1.0};
 };
 
-template <typename PRTGEN>
+template <typename PARTICLE_GENERATOR, typename PUSH_PARTICLES>
 class InjectorBoundaryInflow
 {
 public:
-  using ParticleGenerator = PRTGEN;
+  using ParticleGenerator = PARTICLE_GENERATOR;
+  using PushParticles = PUSH_PARTICLES;
+
+  using Mparticles = typename PushParticles::Mparticles;
+  using MfieldsState = typename PushParticles::MfieldsState;
+  using AdvanceParticle_t = typename PushParticles::AdvanceParticle_t;
+  using InterpolateEM_t = typename PushParticles::InterpolateEM_t;
+  using Current = typename PushParticles::Current;
+  using Dim = typename PushParticles::Dim;
+  using Real = typename PushParticles::real_t;
+  using Real3 = typename PushParticles::Real3;
+  using checks_order = typename PushParticles::checks_order;
 
   InjectorBoundaryInflow(ParticleGenerator particle_generator)
     : partice_generator{particle_generator}
   {}
 
-  template <typename Mparticles, typename MfieldsState>
   void operator()(Mparticles& mprts, MfieldsState& mflds)
   {
     // TODO:
