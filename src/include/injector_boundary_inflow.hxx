@@ -23,11 +23,13 @@ public:
     }
   }
 
-  psc::particle::Inject get()
+  psc::particle::Inject get(Real3 min_pos, Real3 pos_range)
   {
-    // TODO: set x later, since we don't have any grid info here
+    Real3 x;
+    for (int d = 0; d < 3; d++) {
+      x[d] = min_pos[d] + uniform_dist.get() * pos_range[d];
+    }
 
-    Real3 x{0.0, 0.0, 0.0};
     Real3 u{vdfs[0].get(), vdfs[1].get(), vdfs[2].get()};
     psc::particle::Tag tag = 0;
 
@@ -39,6 +41,7 @@ private:
   Vec3<VelocityDistributionFunction> vdfs;
   Real w;
   int kind_idx;
+  rng::Uniform<Real> uniform_dist{0.0, 1.0};
 };
 
 class InjectorBoundaryInflow
