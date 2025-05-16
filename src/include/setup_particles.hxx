@@ -137,7 +137,7 @@ struct SetupParticles
 
   int get_n_in_cell(real_t density)
   {
-    return ::get_n_in_cell(density, 1 / norm_.cori,
+    return ::get_n_in_cell(density, real_t(norm_.prts_per_unit_density),
                            fractional_n_particles_per_cell);
   }
 
@@ -264,7 +264,7 @@ struct SetupParticles
     if (fractional_n_particles_per_cell) {
       return 1.;
     } else {
-      return np.n / (n_in_cell * norm_.cori);
+      return np.n * norm_.prts_per_unit_density / n_in_cell;
     }
   }
 
