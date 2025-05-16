@@ -50,6 +50,7 @@ Grid_t* setupGrid()
                                {1, 1, 1}};         // n patches
 
   auto bc =
+    // FIXME wrong BCs
     psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL, BND_FLD_PERIODIC},
                   {BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL, BND_FLD_PERIODIC},
                   {BND_PRT_PERIODIC, BND_PRT_REFLECTING, BND_PRT_PERIODIC},
