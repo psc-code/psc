@@ -81,6 +81,23 @@ Grid_t* setupGrid()
   return new Grid_t{domain, bc, kinds, norm, dt, -1, ibn};
 }
 
+struct ParticleGeneratorTest
+{
+  using Real = psc::particle::Inject::Real;
+  using Real3 = psc::particle::Inject::Real3;
+
+  psc::particle::Inject get(Real3 min_pos, Real3 pos_range)
+  {
+    Real3 x = min_pos + pos_range;
+    Real3 u{0.0, 2.0, 0.0};
+    Real w = 1.0;
+    int kind_idx = 1;
+    psc::particle::Tag tag = 0;
+
+    return {x, u, w, kind_idx, tag};
+  }
+};
+
 TEST(InjectorBoundaryInflowTest, Integration)
 {
   // ----------------------------------------------------------------------
@@ -112,9 +129,11 @@ TEST(InjectorBoundaryInflowTest, Integration)
   DiagEnergies oute{grid.comm(), 0};
   auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
 
-  auto psc =
-    makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts, balance,
-                                 collision, checks, marder, diagnostics);
+  auto inject_particles = InjectorBoundaryInflow<ParticleGeneratorTest>{{}};
+
+  auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
+                                          balance, collision, checks, marder,
+                                          diagnostics, inject_particles);
 
   // ----------------------------------------------------------------------
   // set up initial conditions
