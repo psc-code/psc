@@ -19,7 +19,7 @@ public:
   {
     for (int d = 0; d < 3; d++) {
       Real stdev_u = sqrt(temperature[d] / kind.m);
-      vdfs[d] = VDF{mean_u[d], stdev_u};
+      vdfs[d] = VelocityDistributionFunction{mean_u[d], stdev_u};
     }
   }
 
@@ -35,8 +35,8 @@ public:
   }
 
 private:
-  using VDF = rng::Normal<Real>;
-  Vec3<VDF> vdfs;
+  using VelocityDistributionFunction = rng::Normal<Real>;
+  Vec3<VelocityDistributionFunction> vdfs;
   Real w;
   int kind_idx;
 };
