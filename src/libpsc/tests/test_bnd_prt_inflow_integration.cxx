@@ -18,7 +18,6 @@ using PscConfig = PscConfig1vbecDouble<Dim>;
 
 // ----------------------------------------------------------------------
 
-using BgkMfields = PscConfig::Mfields;
 using MfieldsState = PscConfig::MfieldsState;
 using Mparticles = PscConfig::Mparticles;
 using Balance = PscConfig::Balance;

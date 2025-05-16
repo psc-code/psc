@@ -25,7 +25,6 @@ using PscConfig = PscConfig1vbecDouble<Dim>;
 
 // ----------------------------------------------------------------------
 
-using BgkMfields = PscConfig::Mfields;
 using MfieldsState = PscConfig::MfieldsState;
 using Mparticles = PscConfig::Mparticles;
 using Balance = PscConfig::Balance;
@@ -257,9 +256,6 @@ static void run(int argc, char** argv)
   auto& grid = *grid_ptr;
   MfieldsState mflds{grid};
   Mparticles mprts{grid};
-  BgkMfields phi{grid, 1, mflds.ibn()};
-  BgkMfields gradPhi{grid, 3, mflds.ibn()};
-  BgkMfields divGradPhi{grid, 1, mflds.ibn()};
 
   // ----------------------------------------------------------------------
   // Set up various objects needed to run this case
