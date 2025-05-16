@@ -5,10 +5,10 @@
 
 class ParticleGeneratorMaxwellian
 {
+public:
   using Real = psc::particle::Inject::Real;
   using Real3 = psc::particle::Inject::Real3;
 
-public:
   // FIXME would be nice to just pass 1 thing for kind-related info
   ParticleGeneratorMaxwellian(int kind_idx, Grid_t::Kind kind, Real3 mean_u,
                               Real3 temperature)
