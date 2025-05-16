@@ -1,6 +1,9 @@
 #pragma once
 
+#include <math.h>
+
 #include "grid.hxx"
+#include "rng.hxx"
 #include "particle.h"
 
 class ParticleGeneratorMaxwellian
@@ -22,18 +25,13 @@ public:
 
   psc::particle::Inject get()
   {
-
-    // TODO:
-    // 1. sample x, u
-    // 2. get w, kind, tag
+    // TODO: set x later, since we don't have any grid info here
 
     Real3 x{0.0, 0.0, 0.0};
-    Real3 u{0.0, 0.0, 0.0};
-    Real w{0.0};
-    int kind = 0;
+    Real3 u{vdfs[0].get(), vdfs[1].get(), vdfs[2].get()};
     psc::particle::Tag tag = 0;
 
-    return {x, u, w, kind, tag};
+    return {x, u, w, kind_idx, tag};
   }
 
 private:
