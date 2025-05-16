@@ -6,7 +6,7 @@
 
 TEST(InjectorBoundaryInflowTest, ParticleGeneratorMaxwellianTest)
 {
-  int kind_idx = 0;
+  int kind_idx = 15;
   Grid_t::Kind kind{1.0, 1836.0, "ion"};
   ParticleGeneratorMaxwellian::Real w = 2.0;
   ParticleGeneratorMaxwellian::Real3 mean_u{0.0, 5.0, 15.0};
