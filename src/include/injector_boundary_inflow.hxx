@@ -164,7 +164,7 @@ public:
             if (!Dim::InvarZ::value) {
               lg[2] = ip.cz.g.l;
             }
-            Real3 qni_wni = grid.kinds[prt.kind].q * prt.w;
+            real_t qni_wni = grid.kinds[prt.kind].q * prt.w;
             current.calc_j(J, initial_normalized_pos, final_normalized_pos,
                            final_idx, lg, qni_wni, v);
           }
