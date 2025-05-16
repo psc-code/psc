@@ -10,9 +10,9 @@ public:
   using Real3 = psc::particle::Inject::Real3;
 
   // FIXME would be nice to just pass 1 thing for kind-related info
-  ParticleGeneratorMaxwellian(int kind_idx, Grid_t::Kind kind, Real3 mean_u,
-                              Real3 temperature)
-    : kind_idx{kind_idx}
+  ParticleGeneratorMaxwellian(int kind_idx, Grid_t::Kind kind, Real w,
+                              Real3 mean_u, Real3 temperature)
+    : kind_idx{kind_idx}, w{w}
   {
     for (int d = 0; d < 3; d++) {
       Real stdev_u = sqrt(temperature[d] / kind.m);
@@ -39,6 +39,7 @@ public:
 private:
   using VelocityDistributionFunction = rng::Normal<Real>;
   Vec3<VelocityDistributionFunction> vdfs;
+  Real w;
   int kind_idx;
 };
 
