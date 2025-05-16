@@ -1,26 +1,38 @@
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
-#include <psc.hxx>
-#include <setup_fields.hxx>
-#include <setup_particles.hxx>
+#include "test_common.hxx"
 
+#include "injector_boundary_inflow.hxx"
+
+#include "psc.hxx"
 #include "DiagnosticsDefault.h"
 #include "OutputFieldsDefault.h"
-#include "add_ghosts_reflecting.hxx"
 #include "../psc_config.hxx"
 
+TEST(InjectorBoundaryInflowTest, ParticleGeneratorMaxwellianTest)
+{
+  int kind_idx = 15;
+  Grid_t::Kind kind{1.0, 1836.0, "ion"};
+  ParticleGeneratorMaxwellian::Real w = 2.0;
+  ParticleGeneratorMaxwellian::Real3 mean_u{0.0, 5.0, 15.0};
+  ParticleGeneratorMaxwellian::Real3 temperature{0.0, 0.0, 0.0};
+  ParticleGeneratorMaxwellian::Real3 pos{1.0, 2.0, 5.0};
+
+  ParticleGeneratorMaxwellian gen{kind_idx, kind, w, mean_u, temperature};
+
+  auto prt = gen.get(pos, {0.0, 0.0, 0.0});
+
+  ASSERT_EQ(prt.kind, kind_idx);
+  ASSERT_EQ(prt.w, w);
+  ASSERT_EQ(prt.tag, 0);
+  ASSERT_EQ(prt.u, mean_u); // zero temperature => exact velocity
+  ASSERT_EQ(prt.x, pos);
+}
+
 // ======================================================================
-// PSC configuration
-//
-// This sets up compile-time configuration for the code, in particular
-// what data structures and algorithms to use
-//
-// EDIT to change order / floating point type / cuda / 2d/3d
 
 using Dim = dim_yz;
 using PscConfig = PscConfig1vbecDouble<Dim>;
-
-// ----------------------------------------------------------------------
 
 using MfieldsState = PscConfig::MfieldsState;
 using Mparticles = PscConfig::Mparticles;
@@ -30,17 +42,6 @@ using Checks = PscConfig::Checks;
 using Marder = PscConfig::Marder;
 using OutputParticles = PscConfig::OutputParticles;
 
-// ======================================================================
-// Global parameters
-
-namespace
-{
-PscParams psc_params;
-} // namespace
-
-// ======================================================================
-// setupGrid
-
 Grid_t* setupGrid()
 {
   auto domain = Grid_t::Domain{{1, 8, 2},          // n grid points
@@ -49,6 +50,7 @@ Grid_t* setupGrid()
                                {1, 1, 1}};         // n patches
 
   auto bc =
+    // FIXME wrong BCs
     psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL, BND_FLD_PERIODIC},
                   {BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL, BND_FLD_PERIODIC},
                   {BND_PRT_PERIODIC, BND_PRT_REFLECTING, BND_PRT_PERIODIC},
@@ -62,7 +64,7 @@ Grid_t* setupGrid()
   auto norm_params = Grid_t::NormalizationParams::dimensionless();
   norm_params.nicell = 1;
 
-  double dt = psc_params.cfl * courant_length(domain);
+  double dt = .1;
   Grid_t::Normalization norm{norm_params};
 
   Int3 ibn = {2, 2, 2};
@@ -79,13 +81,29 @@ Grid_t* setupGrid()
   return new Grid_t{domain, bc, kinds, norm, dt, -1, ibn};
 }
 
-// ======================================================================
-// Integration test (pun not intended)
+struct ParticleGeneratorTest
+{
+  using Real = psc::particle::Inject::Real;
+  using Real3 = psc::particle::Inject::Real3;
 
-TEST(ReflectiveBcsTest, Integration)
+  psc::particle::Inject get(Real3 min_pos, Real3 pos_range)
+  {
+    Real3 x = min_pos + pos_range;
+    Real3 u{0.0, 2.0, 0.0};
+    Real w = 1.0;
+    int kind_idx = 1;
+    psc::particle::Tag tag = 0;
+
+    return {x, u, w, kind_idx, tag};
+  }
+};
+
+TEST(InjectorBoundaryInflowTest, Integration)
 {
   // ----------------------------------------------------------------------
   // setup
+
+  PscParams psc_params;
 
   psc_params.nmax = 100;
   psc_params.stats_every = 1;
@@ -93,6 +111,7 @@ TEST(ReflectiveBcsTest, Integration)
 
   auto grid_ptr = setupGrid();
   auto& grid = *grid_ptr;
+
   MfieldsState mflds{grid};
   Mparticles mprts{grid};
 
@@ -110,9 +129,13 @@ TEST(ReflectiveBcsTest, Integration)
   DiagEnergies oute{grid.comm(), 0};
   auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
 
-  auto psc =
-    makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts, balance,
-                                 collision, checks, marder, diagnostics);
+  auto inject_particles =
+    InjectorBoundaryInflow<ParticleGeneratorTest, PscConfig::PushParticles>{
+      {}, grid};
+
+  auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
+                                          balance, collision, checks, marder,
+                                          diagnostics, inject_particles);
 
   // ----------------------------------------------------------------------
   // set up initial conditions
@@ -120,54 +143,22 @@ TEST(ReflectiveBcsTest, Integration)
   EXPECT_EQ(grid.n_patches(), 1);
   int p = 0;
 
-  {
-    auto injector = mprts.injector();
-    auto inj = injector[p];
-    double vy = 100; // fast enough to escape electric attraction
-    double y_center = grid.domain.length[1] / 2.0;
-    // inject 2 particles at same location to satisfy Gauss' law at t=0
-    inj({{0, y_center, 5}, {0, -vy, 0}, 1, 0}); // electron
-    inj({{0, y_center, 5}, {0, vy, 0}, 1, 1});  // positron
-  }
-
   // ----------------------------------------------------------------------
   // run the simulation
 
   auto accessor = mprts.accessor();
   auto prts = accessor[p];
 
-  ASSERT_EQ(prts.size(), 2);
-  ASSERT_LT(prts[0].u()[1], 0.0);
-  ASSERT_GT(prts[1].u()[1], 0.0);
-
-  ASSERT_EQ(prts[0].m(), 1.0);
-  ASSERT_EQ(prts[1].m(), 1.0);
-
-  ASSERT_EQ(prts[0].q(), -1.0);
-  ASSERT_EQ(prts[1].q(), 1.0);
-
-  bool about_to_reflect = false;
-  bool reflected = false;
+  ASSERT_EQ(prts.size(), 0);
 
   for (; grid.timestep_ < psc_params.nmax; grid.timestep_++) {
     psc.step();
+
     EXPECT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
     EXPECT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
-
-    if (prts[0].u()[1] > 0.0) {
-      reflected = about_to_reflect;
-      break;
-    }
-
-    about_to_reflect =
-      prts[0].x()[1] < grid.domain.dx[1] / 2.0 && prts[0].u()[1] < 0.0;
   }
 
-  ASSERT_TRUE(reflected) << "timestep " << grid.timestep_;
-
-  ASSERT_EQ(prts.size(), 2);
-  ASSERT_GT(prts[0].u()[1], 0.0);
-  ASSERT_LT(prts[1].u()[1], 0.0);
+  ASSERT_GT(prts.size(), 0);
 }
 
 // ======================================================================
@@ -175,9 +166,9 @@ TEST(ReflectiveBcsTest, Integration)
 
 int main(int argc, char** argv)
 {
-  psc_init(argc, argv);
+  MPI_Init(&argc, &argv);
   ::testing::InitGoogleTest(&argc, argv);
   int rc = RUN_ALL_TESTS();
-  psc_finalize();
+  MPI_Finalize();
   return rc;
 }

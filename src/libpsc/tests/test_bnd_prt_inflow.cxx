@@ -3,6 +3,7 @@
 
 #include "test_common.hxx"
 
+#include "inflow.hxx"
 #include "psc_particles_double.h"
 #include "psc_particles_single.h"
 #include "particle_with_id.h"
@@ -93,110 +94,6 @@ TEST(TestSetupParticlesInflow, SetupMaxwellian)
   EXPECT_EQ(prt.tag, tag);
 }
 
-template <typename MP, typename DIM>
-class Inflow
-{
-public:
-  using Mparticles = MP;
-  using real_t = typename Mparticles::real_t;
-  using Dim = DIM;
-
-  // offset_in_cell: () -> double
-  Inflow(const Grid_t& grid, psc_particle_npt npt,
-         double (*offset_in_cell_dist)())
-    : grid_(grid),
-      setup_particles_(grid),
-      advance_(grid.dt),
-      // FIXME np.p is a std::function and is called many times; better to use a
-      // lambda
-      np_{npt.kind, npt.n, setup_particles_.createMaxwellian(npt)},
-      offset_in_cell_dist_(offset_in_cell_dist)
-  {
-    assert(INJECT_DIM_IDX_ >= 0);
-  }
-
-  auto get_advanced_prt(Double3 pos, real_t wni)
-  {
-    auto prt = setup_particles_.setupParticle(np_, pos, wni);
-
-    auto v = advance_.calc_v(prt.u);
-    advance_.push_x(prt.x, v, 1.0);
-
-    return prt;
-  }
-
-  template <typename Injector>
-  void inject_into_boundary_cell(Injector& injector,
-                                 Int3 boundary_cell_global_idx)
-  {
-    assert(boundary_cell_global_idx[INJECT_DIM_IDX_] == 0);
-    boundary_cell_global_idx[INJECT_DIM_IDX_] = -1;
-
-    int n_in_cell = setup_particles_.get_n_in_cell(np_);
-    double wni = setup_particles_.getWeight(np_, n_in_cell);
-
-    for (int cnt = 0; cnt < n_in_cell; cnt++) {
-      Double3 offset = {offset_in_cell_dist_(), offset_in_cell_dist_(),
-                        offset_in_cell_dist_()};
-      auto pos =
-        (Double3(boundary_cell_global_idx) + offset) * grid_.domain.dx +
-        grid_.domain.corner;
-      auto prt = get_advanced_prt(pos, wni);
-
-      if (prt.x[INJECT_DIM_IDX_] < grid_.domain.corner[INJECT_DIM_IDX_]) {
-        continue;
-      }
-
-      injector(prt);
-    }
-  }
-
-  template <typename Injector>
-  void inject_into_boundary_patch(Injector& injector,
-                                  const Grid_t::Patch& boundary_patch)
-  {
-    Int3 ilo = boundary_patch.off;
-    Int3 ihi = ilo + grid_.ldims;
-
-    assert(ilo[INJECT_DIM_IDX_] == 0);
-
-    int dim1 = std::min((INJECT_DIM_IDX_ + 1) % 3, (INJECT_DIM_IDX_ + 2) % 3);
-    int dim2 = std::max((INJECT_DIM_IDX_ + 1) % 3, (INJECT_DIM_IDX_ + 2) % 3);
-
-    for (Int3 cell_idx = ilo; cell_idx[dim1] < ihi[dim1]; cell_idx[dim1]++) {
-      for (cell_idx[dim2] = ilo[dim2]; cell_idx[dim2] < ihi[dim2];
-           cell_idx[dim2]++) {
-        inject_into_boundary_cell(injector, cell_idx);
-      }
-    }
-  }
-
-  template <typename Injectors>
-  void inject_into_boundary(Injectors& injectors_by_patch)
-  {
-    for (int patch_idx = 0; patch_idx < grid_.n_patches(); patch_idx++) {
-      const auto& patch = grid_.patches[patch_idx];
-
-      if (patch.off[INJECT_DIM_IDX_] != 0) {
-        continue;
-      }
-
-      auto& injector = injectors_by_patch[patch_idx];
-      inject_into_boundary_patch(injector, patch);
-    }
-  }
-
-  const Grid_t& grid_;
-  AdvanceParticle<real_t, Dim> advance_;
-  SetupParticles<Mparticles> setup_particles_;
-  psc_particle_np np_;
-  double (*offset_in_cell_dist_)();
-  const static int INJECT_DIM_IDX_ = (!Dim::InvarX::value   ? 0
-                                      : !Dim::InvarY::value ? 1
-                                      : !Dim::InvarZ::value ? 2
-                                                            : -1);
-};
-
 class TestInjector
 {
 public:
@@ -252,7 +149,7 @@ TEST(TestSetupParticlesInflow, InjectIntoCell)
   Inflow<Mparticles, dim_y> inflow(grid, npt, *half);
 
   TestInjector injector;
-  inflow.inject_into_boundary_cell(injector, {0, 0, 0});
+  inflow.inject_into_boundary_cell(grid, injector, {0, 0, 0});
 
   EXPECT_EQ(injector.prts.size(), prm.nicell);
 
@@ -283,7 +180,7 @@ TEST(TestSetupParticlesInflow, InjectIntoCellFilter)
   Inflow<Mparticles, dim_y> inflow(grid, npt, *half);
 
   TestInjector injector;
-  inflow.inject_into_boundary_cell(injector, {0, 0, 0});
+  inflow.inject_into_boundary_cell(grid, injector, {0, 0, 0});
 
   EXPECT_EQ(injector.prts.size(), 0);
 }
@@ -307,7 +204,7 @@ TEST(TestSetupParticlesInflow, InjectIntoPatch)
   Inflow<Mparticles, dim_y> inflow(grid, npt, *half);
 
   TestInjector injector;
-  inflow.inject_into_boundary_patch(injector, grid.patches[0]);
+  inflow.inject_into_boundary_patch(grid, injector, grid.patches[0]);
 
   EXPECT_EQ(injector.prts.size(),
             domain.ldims[0] * domain.ldims[2] * prm.nicell);
@@ -346,7 +243,7 @@ TEST(TestSetupParticlesInflow, InjectIntoBoundaryY)
 
   std::vector<TestInjector> injectors = {TestInjector(), TestInjector(),
                                          TestInjector(), TestInjector()};
-  inflow.inject_into_boundary(injectors);
+  inflow.inject_into_boundary(grid, injectors);
 
   EXPECT_EQ(injectors[0].prts.size(),
             domain.ldims[0] * domain.ldims[2] * prm.nicell);
@@ -389,7 +286,7 @@ TEST(TestSetupParticlesInflow, InjectIntoBoundaryZ)
 
   std::vector<TestInjector> injectors = {TestInjector(), TestInjector(),
                                          TestInjector(), TestInjector()};
-  inflow.inject_into_boundary(injectors);
+  inflow.inject_into_boundary(grid, injectors);
 
   EXPECT_EQ(injectors[0].prts.size(),
             domain.ldims[0] * domain.ldims[1] * prm.nicell);

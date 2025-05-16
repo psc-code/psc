@@ -7,15 +7,11 @@
 #include "DiagnosticsDefault.h"
 #include "OutputFieldsDefault.h"
 #include "add_ghosts_reflecting.hxx"
+#include "inflow.hxx"
 #include "../psc_config.hxx"
 
 // ======================================================================
 // PSC configuration
-//
-// This sets up compile-time configuration for the code, in particular
-// what data structures and algorithms to use
-//
-// EDIT to change order / floating point type / cuda / 2d/3d
 
 using Dim = dim_yz;
 using PscConfig = PscConfig1vbecDouble<Dim>;
@@ -60,7 +56,7 @@ Grid_t* setupGrid()
 
   // --- generic setup
   auto norm_params = Grid_t::NormalizationParams::dimensionless();
-  norm_params.nicell = 1;
+  norm_params.nicell = 10;
 
   double dt = psc_params.cfl * courant_length(domain);
   Grid_t::Normalization norm{norm_params};
@@ -79,10 +75,12 @@ Grid_t* setupGrid()
   return new Grid_t{domain, bc, kinds, norm, dt, -1, ibn};
 }
 
-// ======================================================================
-// Integration test (pun not intended)
+static double half() { return 0.5; }
 
-TEST(ReflectiveBcsTest, Integration)
+// ======================================================================
+// Integration test
+
+TEST(TestSetupParticlesInflow, Integration)
 {
   // ----------------------------------------------------------------------
   // setup
@@ -110,64 +108,36 @@ TEST(ReflectiveBcsTest, Integration)
   DiagEnergies oute{grid.comm(), 0};
   auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
 
-  auto psc =
-    makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts, balance,
-                                 collision, checks, marder, diagnostics);
+  Double3 u = {0, 10.0, 0};
+  Double3 T = {0, 0, 0};
+  psc_particle_npt electron_npt = {0, 1.0, u, T};
+  Inflow<Mparticles, dim_y> electron_inflow = {grid, electron_npt, *half};
 
-  // ----------------------------------------------------------------------
-  // set up initial conditions
-
-  EXPECT_EQ(grid.n_patches(), 1);
-  int p = 0;
-
-  {
-    auto injector = mprts.injector();
-    auto inj = injector[p];
-    double vy = 100; // fast enough to escape electric attraction
-    double y_center = grid.domain.length[1] / 2.0;
-    // inject 2 particles at same location to satisfy Gauss' law at t=0
-    inj({{0, y_center, 5}, {0, -vy, 0}, 1, 0}); // electron
-    inj({{0, y_center, 5}, {0, vy, 0}, 1, 1});  // positron
-  }
-
-  // ----------------------------------------------------------------------
-  // run the simulation
+  auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
+                                          balance, collision, checks, marder,
+                                          diagnostics, electron_inflow);
 
   auto accessor = mprts.accessor();
-  auto prts = accessor[p];
+  auto prts = accessor[0];
 
-  ASSERT_EQ(prts.size(), 2);
-  ASSERT_LT(prts[0].u()[1], 0.0);
-  ASSERT_GT(prts[1].u()[1], 0.0);
+  // ----------------------------------------------------------------------
+  // step 1
 
-  ASSERT_EQ(prts[0].m(), 1.0);
-  ASSERT_EQ(prts[1].m(), 1.0);
+  psc.step();
 
-  ASSERT_EQ(prts[0].q(), -1.0);
-  ASSERT_EQ(prts[1].q(), 1.0);
+  ASSERT_EQ(prts.size(), 20); // 20 = nicell * nz
 
-  bool about_to_reflect = false;
-  bool reflected = false;
+  EXPECT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
+  EXPECT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
 
-  for (; grid.timestep_ < psc_params.nmax; grid.timestep_++) {
-    psc.step();
-    EXPECT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
-    EXPECT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
+  // step 2
 
-    if (prts[0].u()[1] > 0.0) {
-      reflected = about_to_reflect;
-      break;
-    }
+  psc.step();
 
-    about_to_reflect =
-      prts[0].x()[1] < grid.domain.dx[1] / 2.0 && prts[0].u()[1] < 0.0;
-  }
+  ASSERT_EQ(prts.size(), 40);
 
-  ASSERT_TRUE(reflected) << "timestep " << grid.timestep_;
-
-  ASSERT_EQ(prts.size(), 2);
-  ASSERT_GT(prts[0].u()[1], 0.0);
-  ASSERT_LT(prts[1].u()[1], 0.0);
+  EXPECT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
+  EXPECT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
 }
 
 // ======================================================================
