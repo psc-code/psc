@@ -62,7 +62,7 @@ Grid_t* setupGrid()
 
   // --- generic setup
   auto norm_params = Grid_t::NormalizationParams::dimensionless();
-  norm_params.nicell = 1;
+  norm_params.nicell = 2;
 
   double dt = .1;
   Grid_t::Normalization norm{norm_params};
