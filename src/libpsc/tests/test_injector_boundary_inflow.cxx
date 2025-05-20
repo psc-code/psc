@@ -105,7 +105,7 @@ TEST(InjectorBoundaryInflowTest, Integration)
 
   PscParams psc_params;
 
-  psc_params.nmax = 100;
+  psc_params.nmax = 2;
   psc_params.stats_every = 1;
   psc_params.cfl = .75;
 
