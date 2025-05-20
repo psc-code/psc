@@ -103,8 +103,6 @@ public:
       typename InterpolateEM_t::fields_t EM(flds.storage(), flds.ib());
       typename Current::fields_t J(flds);
 
-      flds.storage().view(_all, _all, _all, _s(JXI, JXI + 3)) = real_t(0);
-
       Int3 ilo = patch.off;
       Int3 ihi = ilo + grid.ldims;
 
