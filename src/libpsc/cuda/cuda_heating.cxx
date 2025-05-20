@@ -8,6 +8,7 @@
 #include "heating_cuda_impl.hxx"
 #include "balance.hxx"
 #include "rng_state.hxx"
+#include "rng.hxx"
 
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
@@ -19,23 +20,6 @@
 extern std::size_t mem_heating;
 
 using Float3 = Vec3<float>;
-
-// ----------------------------------------------------------------------
-// bm_normal2
-
-static inline float2 bm_normal2(void)
-{
-  float u1, u2;
-  do {
-    u1 = random() * (1.f / RAND_MAX);
-    u2 = random() * (1.f / RAND_MAX);
-  } while (u1 <= 0.f);
-
-  float2 rv;
-  rv.x = sqrtf(-2.f * logf(u1)) * cosf(2.f * M_PI * u2);
-  rv.y = sqrtf(-2.f * logf(u1)) * sinf(2.f * M_PI * u2);
-  return rv;
-}
 
 // ----------------------------------------------------------------------
 // d_particle_kick
@@ -176,14 +160,13 @@ struct cuda_heating_foil
 
 __host__ void particle_kick(DParticleCuda& prt, float H, float heating_dt)
 {
-  float2 r01 = bm_normal2();
-  float2 r23 = bm_normal2();
+  rng::Normal<float> standard_normal_distr;
 
   float Dp = sqrtf(H * heating_dt);
 
-  prt.x[0] += Dp * r01.x;
-  prt.x[1] += Dp * r01.y;
-  prt.x[2] += Dp * r23.x;
+  prt.x[0] += Dp * standard_normal_distr.get();
+  prt.x[1] += Dp * standard_normal_distr.get();
+  prt.x[2] += Dp * standard_normal_distr.get();
 }
 
 // ----------------------------------------------------------------------
