@@ -88,7 +88,7 @@ struct ParticleGeneratorTest
 
   psc::particle::Inject get(Real3 min_pos, Real3 pos_range)
   {
-    Real3 x = min_pos + pos_range;
+    Real3 x = min_pos + pos_range * Real3{.999, .999, .999};
     Real3 u{0.0, 2.0, 0.0};
     Real w = 1.0;
     int kind_idx = 1;
