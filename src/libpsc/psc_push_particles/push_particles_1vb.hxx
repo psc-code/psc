@@ -48,10 +48,7 @@ struct PushParticlesVb
       for (auto prt : prts) {
         Real3& x = prt.x();
 
-        Real3 initial_pos_normalized;
-        for (int d = 0; d < 3; d++) {
-          initial_pos_normalized[d] = x[d] * dxi[d];
-        }
+        Real3 initial_pos_normalized = x * dxi;
         ip.set_coeffs(initial_pos_normalized);
 
         // FIELD INTERPOLATION
