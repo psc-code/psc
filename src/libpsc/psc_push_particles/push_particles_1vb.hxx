@@ -48,7 +48,7 @@ struct PushParticlesVb
       for (auto prt : prts) {
         Real3& x = prt.x();
 
-        real_t initial_pos_normalized[3];
+        Real3 initial_pos_normalized;
         for (int d = 0; d < 3; d++) {
           initial_pos_normalized[d] = x[d] * dxi[d];
         }
@@ -66,8 +66,8 @@ struct PushParticlesVb
         auto v = advance.calc_v(prt.u());
         advance.push_x(x, v);
 
-        int final_index[3];
-        real_t final_offset[3], final_pos_normalized[3];
+        Int3 final_index;
+        Real3 final_offset, final_pos_normalized;
         pi.find_idx_off_pos_1st_rel(x, final_index, final_offset,
                                     final_pos_normalized, real_t(0.));
 
