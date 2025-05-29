@@ -24,7 +24,6 @@ struct PushParticlesVb
   static void push_mprts(Mparticles& mprts, MfieldsState& mflds)
   {
     const auto& grid = mprts.grid();
-    PI<real_t> pi(grid);
     Real3 dxi = Real3{1., 1., 1.} / Real3(grid.domain.dx);
     real_t dq_kind[MAX_NR_KINDS];
     auto& kinds = grid.kinds;
@@ -65,8 +64,8 @@ struct PushParticlesVb
 
         Int3 final_index;
         Real3 final_offset, final_pos_normalized;
-        pi.find_idx_off_pos_1st_rel(x, dxi, final_index, final_offset,
-                                    final_pos_normalized, real_t(0.));
+        find_idx_off_pos_1st_rel(x, dxi, final_index, final_offset,
+                                 final_pos_normalized, real_t(0.));
 
         // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
         int lg[3];
