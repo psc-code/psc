@@ -48,11 +48,11 @@ struct PushParticlesVb
       for (auto prt : prts) {
         Real3& x = prt.x();
 
-        real_t xm[3];
+        real_t initial_pos_normalized[3];
         for (int d = 0; d < 3; d++) {
-          xm[d] = x[d] * dxi[d];
+          initial_pos_normalized[d] = x[d] * dxi[d];
         }
-        ip.set_coeffs(xm);
+        ip.set_coeffs(initial_pos_normalized);
 
         // FIELD INTERPOLATION
         Real3 E = {ip.ex(EM), ip.ey(EM), ip.ez(EM)};
@@ -66,9 +66,10 @@ struct PushParticlesVb
         auto v = advance.calc_v(prt.u());
         advance.push_x(x, v);
 
-        int lf[3];
-        real_t of[3], xp[3];
-        pi.find_idx_off_pos_1st_rel(x, lf, of, xp, real_t(0.));
+        int final_index[3];
+        real_t final_offset[3], final_pos_normalized[3];
+        pi.find_idx_off_pos_1st_rel(x, final_index, final_offset,
+                                    final_pos_normalized, real_t(0.));
 
         // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
         int lg[3];
@@ -81,7 +82,8 @@ struct PushParticlesVb
         if (!Dim::InvarZ::value) {
           lg[2] = ip.cz.g.l;
         }
-        current.calc_j(J, xm, xp, lf, lg, prt.qni_wni(), v);
+        current.calc_j(J, initial_pos_normalized, final_pos_normalized,
+                       final_index, lg, prt.qni_wni(), v);
       }
     }
   }
@@ -112,14 +114,14 @@ struct PushParticlesVb
         // field interpolation
         real_t* x = prt.x;
 
-        real_t xm[3];
+        real_t initial_pos_normalized[3];
         for (int d = 0; d < 3; d++) {
-          xm[d] = x[d] * dxi[d];
+          initial_pos_normalized[d] = x[d] * dxi[d];
         }
 
         // FIELD INTERPOLATION
 
-        ip.set_coeffs(xm);
+        ip.set_coeffs(initial_pos_normalized);
         // FIXME, we're not using EM instead flds_em
         real_t E[3] = {ip.ex(EM), ip.ey(EM), ip.ez(EM)};
         real_t H[3] = {ip.hx(EM), ip.hy(EM), ip.hz(EM)};

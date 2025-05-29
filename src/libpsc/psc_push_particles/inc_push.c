@@ -28,13 +28,14 @@ public:
   // ----------------------------------------------------------------------
   // find_idx_off_pos_1st_rel
 
-  void find_idx_off_pos_1st_rel(real_t xi[3], int lg[3], real_t og[3],
-                                real_t pos[3], real_t shift)
+  void find_idx_off_pos_1st_rel(real_t final_pos[3], int final_index[3],
+                                real_t final_offset[3],
+                                real_t final_pos_normalized[3], real_t shift)
   {
     for (int d = 0; d < 3; d++) {
-      pos[d] = xi[d] * dxi_[d] + shift;
-      lg[d] = fint(pos[d]);
-      og[d] = pos[d] - lg[d];
+      final_pos_normalized[d] = final_pos[d] * dxi_[d] + shift;
+      final_index[d] = fint(final_pos_normalized[d]);
+      final_offset[d] = final_pos_normalized[d] - final_index[d];
     }
   }
 
