@@ -16,12 +16,12 @@ public:
   // ----------------------------------------------------------------------
   // find_idx_off_pos_1st_rel
 
-  void find_idx_off_pos_1st_rel(Real3 final_pos, Int3 final_index,
+  void find_idx_off_pos_1st_rel(Real3 final_pos, Real3 dxi, Int3 final_index,
                                 Real3 final_offset, Real3 final_pos_normalized,
                                 real_t shift)
   {
     for (int d = 0; d < 3; d++) {
-      final_pos_normalized[d] = final_pos[d] * dxi_[d] + shift;
+      final_pos_normalized[d] = final_pos[d] * dxi[d] + shift;
       final_index[d] = fint(final_pos_normalized[d]);
       final_offset[d] = final_pos_normalized[d] - final_index[d];
     }
