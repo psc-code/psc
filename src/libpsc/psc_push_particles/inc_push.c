@@ -14,18 +14,6 @@ public:
   PI(const Grid_t& grid) : dxi_{Real3{1., 1., 1.} / Real3(grid.domain.dx)} {}
 
   // ----------------------------------------------------------------------
-  // find_idx_off_1st_rel
-
-  void find_idx_off_1st_rel(real_t xi[3], int lg[3], real_t og[3], real_t shift)
-  {
-    for (int d = 0; d < 3; d++) {
-      real_t pos = xi[d] * dxi_[d] + shift;
-      lg[d] = fint(pos);
-      og[d] = pos - lg[d];
-    }
-  }
-
-  // ----------------------------------------------------------------------
   // find_idx_off_pos_1st_rel
 
   void find_idx_off_pos_1st_rel(real_t final_pos[3], int final_index[3],
