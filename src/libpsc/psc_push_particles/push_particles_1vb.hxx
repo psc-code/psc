@@ -61,9 +61,9 @@ struct PushParticlesVb
         advance.push_x(prt.x(), v);
 
         Int3 final_index;
-        Real3 final_offset, final_pos_normalized;
-        find_idx_off_pos_1st_rel(prt.x(), dxi, final_index, final_offset,
-                                 final_pos_normalized, real_t(0.));
+        Real3 final_pos_normalized;
+        find_idx_pos_1st_rel(prt.x(), dxi, final_index, final_pos_normalized,
+                             real_t(0.));
 
         // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
         int lg[3];
