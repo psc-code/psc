@@ -45,9 +45,7 @@ struct PushParticlesVb
       flds.storage().view(_all, _all, _all, _s(JXI, JXI + 3)) = real_t(0);
 
       for (auto prt : prts) {
-        Real3& x = prt.x();
-
-        Real3 initial_pos_normalized = x * dxi;
+        Real3 initial_pos_normalized = prt.x() * dxi;
         ip.set_coeffs(initial_pos_normalized);
 
         // FIELD INTERPOLATION
@@ -60,11 +58,11 @@ struct PushParticlesVb
 
         // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0)
         auto v = advance.calc_v(prt.u());
-        advance.push_x(x, v);
+        advance.push_x(prt.x(), v);
 
         Int3 final_index;
         Real3 final_offset, final_pos_normalized;
-        find_idx_off_pos_1st_rel(x, dxi, final_index, final_offset,
+        find_idx_off_pos_1st_rel(prt.x(), dxi, final_index, final_offset,
                                  final_pos_normalized, real_t(0.));
 
         // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
