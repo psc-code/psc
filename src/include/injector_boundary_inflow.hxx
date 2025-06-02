@@ -94,7 +94,6 @@ public:
       auto&& injector = injectors_by_patch[patch_idx];
       auto flds = mflds[patch_idx];
       auto prts = accessor[patch_idx];
-      typename InterpolateEM_t::fields_t EM(flds.storage(), flds.ib());
       typename Current::fields_t J(flds);
 
       Int3 ilo = patch.off;
@@ -132,10 +131,6 @@ public:
 
             Real3 initial_normalized_pos = initial_x * dxi;
             ip.set_coeffs(initial_normalized_pos);
-
-            // FIELD INTERPOLATION
-            Real3 E = {ip.ex(EM), ip.ey(EM), ip.ez(EM)};
-            Real3 H = {ip.hx(EM), ip.hy(EM), ip.hz(EM)};
 
             Int3 final_idx;
             Real3 final_normalized_pos;
