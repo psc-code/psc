@@ -8,6 +8,7 @@
 #include <psc.hxx>
 #include "pushp.hxx"
 #include "dim.hxx"
+#include "setup_particles.hxx"
 #include "../libpsc/psc_push_particles/inc_push.cxx"
 
 class ParticleGeneratorMaxwellian
@@ -107,8 +108,9 @@ public:
           assert(cell_idx[INJECT_DIM_IDX_] == 0);
           cell_idx[INJECT_DIM_IDX_] = -1;
 
-          for (int prt_count = 0; prt_count < prts_per_unit_density;
-               prt_count++) {
+          int n_prts_to_inject =
+            get_n_in_cell(1.0, prts_per_unit_density, true);
+          for (int prt_count = 0; prt_count < n_prts_to_inject; prt_count++) {
             Real3 min_pos =
               grid.domain.corner + Double3(cell_idx) * grid.domain.dx;
 
