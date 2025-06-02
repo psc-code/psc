@@ -70,7 +70,7 @@ public:
   InjectorBoundaryInflow(ParticleGenerator particle_generator, Grid_t& grid)
     : partice_generator{particle_generator},
       advance{grid.dt},
-      prts_per_cell{grid.norm.prts_per_unit_density}
+      prts_per_unit_density{grid.norm.prts_per_unit_density}
   {}
 
   void operator()(Mparticles& mprts, MfieldsState& mflds)
@@ -107,7 +107,8 @@ public:
           assert(cell_idx[INJECT_DIM_IDX_] == 0);
           cell_idx[INJECT_DIM_IDX_] = -1;
 
-          for (int prt_count = 0; prt_count < prts_per_cell; prt_count++) {
+          for (int prt_count = 0; prt_count < prts_per_unit_density;
+               prt_count++) {
             Real3 min_pos =
               grid.domain.corner + Double3(cell_idx) * grid.domain.dx;
 
@@ -162,5 +163,5 @@ public:
 private:
   ParticleGenerator partice_generator;
   AdvanceParticle<real_t, dim_y> advance;
-  real_t prts_per_cell;
+  real_t prts_per_unit_density;
 };
