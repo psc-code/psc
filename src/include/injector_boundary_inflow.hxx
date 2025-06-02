@@ -80,7 +80,6 @@ public:
 
     Real3 dxi = Real3{1., 1., 1.} / Real3(grid.domain.dx);
     Current current(grid);
-    auto accessor = mprts.accessor_();
 
     for (int patch_idx = 0; patch_idx < grid.n_patches(); patch_idx++) {
       const auto& patch = grid.patches[patch_idx];
@@ -91,7 +90,6 @@ public:
 
       auto&& injector = injectors_by_patch[patch_idx];
       auto flds = mflds[patch_idx];
-      auto prts = accessor[patch_idx];
       typename Current::fields_t J(flds);
 
       Int3 ilo = patch.off;
