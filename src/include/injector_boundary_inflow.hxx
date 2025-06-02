@@ -103,14 +103,14 @@ public:
           assert(cell_idx[INJECT_DIM_IDX_] == 0);
           cell_idx[INJECT_DIM_IDX_] = -1;
 
+          Real3 cell_corner =
+            grid.domain.corner + Double3(cell_idx) * grid.domain.dx;
           int n_prts_to_inject =
             get_n_in_cell(1.0, prts_per_unit_density, true);
-          for (int prt_count = 0; prt_count < n_prts_to_inject; prt_count++) {
-            Real3 min_pos =
-              grid.domain.corner + Double3(cell_idx) * grid.domain.dx;
 
+          for (int prt_count = 0; prt_count < n_prts_to_inject; prt_count++) {
             psc::particle::Inject prt =
-              partice_generator.get(min_pos, grid.domain.dx);
+              partice_generator.get(cell_corner, grid.domain.dx);
 
             Real3 v = advance.calc_v(prt.u);
             Real3 initial_x = prt.x;
