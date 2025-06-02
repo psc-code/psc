@@ -75,6 +75,9 @@ public:
 
   void operator()(Mparticles& mprts, MfieldsState& mflds)
   {
+    static_assert(INJECT_DIM_IDX_ == 1,
+                  "only injection at lower bound of y is supported");
+
     const Grid_t& grid = mprts.grid();
     auto injectors_by_patch = mprts.injector();
 
@@ -82,25 +85,20 @@ public:
     Current current(grid);
 
     for (int patch_idx = 0; patch_idx < grid.n_patches(); patch_idx++) {
-      const auto& patch = grid.patches[patch_idx];
+      Int3 ilo = grid.patches[patch_idx].off;
 
-      if (patch.off[INJECT_DIM_IDX_] != 0) {
+      if (ilo[INJECT_DIM_IDX_] != 0) {
         continue;
       }
+
+      Int3 ihi = ilo + grid.ldims;
 
       auto&& injector = injectors_by_patch[patch_idx];
       auto flds = mflds[patch_idx];
       typename Current::fields_t J(flds);
 
-      Int3 ilo = patch.off;
-      Int3 ihi = ilo + grid.ldims;
-
-      assert(INJECT_DIM_IDX_ == 1);
-      assert(ilo[INJECT_DIM_IDX_] == 0);
-
       for (Int3 cell_idx = ilo; cell_idx[0] < ihi[0]; cell_idx[0]++) {
         for (cell_idx[2] = ilo[2]; cell_idx[2] < ihi[2]; cell_idx[2]++) {
-          assert(cell_idx[INJECT_DIM_IDX_] == 0);
           cell_idx[INJECT_DIM_IDX_] = -1;
 
           Real3 cell_corner =
