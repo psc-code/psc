@@ -138,19 +138,9 @@ public:
                                  real_t(0.));
 
             // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
-            int initial_idx[3];
-            if (!Dim::InvarX::value) {
-              initial_idx[0] = ip.cx.g.l;
-            }
-            if (!Dim::InvarY::value) {
-              initial_idx[1] = ip.cy.g.l;
-            }
-            if (!Dim::InvarZ::value) {
-              initial_idx[2] = ip.cz.g.l;
-            }
             real_t qni_wni = grid.kinds[prt.kind].q * prt.w;
             current.calc_j(J, initial_normalized_pos, final_normalized_pos,
-                           final_idx, initial_idx, qni_wni, v);
+                           final_idx, cell_idx, qni_wni, v);
           }
         }
       }
