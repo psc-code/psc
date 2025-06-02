@@ -61,7 +61,6 @@ public:
   using Mparticles = typename PushParticles::Mparticles;
   using MfieldsState = typename PushParticles::MfieldsState;
   using AdvanceParticle_t = typename PushParticles::AdvanceParticle_t;
-  using InterpolateEM_t = typename PushParticles::InterpolateEM_t;
   using Current = typename PushParticles::Current;
   using Dim = typename PushParticles::Dim;
   using real_t = typename PushParticles::real_t;
@@ -80,7 +79,6 @@ public:
     auto injectors_by_patch = mprts.injector();
 
     Real3 dxi = Real3{1., 1., 1.} / Real3(grid.domain.dx);
-    InterpolateEM_t ip;
     Current current(grid);
     auto accessor = mprts.accessor_();
 
@@ -130,7 +128,6 @@ public:
             // Taken from push_particles_1vb.hxx PushParticlesVb::push_mprts()
 
             Real3 initial_normalized_pos = initial_x * dxi;
-            ip.set_coeffs(initial_normalized_pos);
 
             Int3 final_idx;
             Real3 final_normalized_pos;
