@@ -52,7 +52,6 @@ template <typename PARTICLE_GENERATOR, typename PUSH_PARTICLES>
 class InjectorBoundaryInflow
 {
   static const int INJECT_DIM_IDX_ = 1;
-  static const int MAX_NR_KINDS = PUSH_PARTICLES::MAX_NR_KINDS;
 
 public:
   using ParticleGenerator = PARTICLE_GENERATOR;
@@ -80,12 +79,6 @@ public:
     auto injectors_by_patch = mprts.injector();
 
     Real3 dxi = Real3{1., 1., 1.} / Real3(grid.domain.dx);
-    real_t dq_kind[MAX_NR_KINDS];
-    auto& kinds = grid.kinds;
-    assert(kinds.size() <= MAX_NR_KINDS);
-    for (int k = 0; k < kinds.size(); k++) {
-      dq_kind[k] = .5f * grid.norm.eta * grid.dt * kinds[k].q / kinds[k].m;
-    }
     InterpolateEM_t ip;
     Current current(grid);
     auto accessor = mprts.accessor_();
