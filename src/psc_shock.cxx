@@ -276,8 +276,7 @@ static void run(int argc, char** argv)
   // -- Checks
   ChecksParams checks_params{};
   checks_params.gauss.check_interval = out_interval;
-  // checks_params.gauss.dump_always = true;
-  checks_params.gauss.err_threshold = 1e-5;
+  checks_params.continuity.check_interval = out_interval;
 
   Checks checks{grid, MPI_COMM_WORLD, checks_params};
 
