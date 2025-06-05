@@ -148,16 +148,16 @@ Grid_t* setupGrid()
 {
   // FIXME add a check to catch mismatch between Dim and n grid points early
   auto domain =
-    Grid_t::Domain{{nx, ny, nz},          // n grid points
-                   {len_x, len_y, len_z}, // physical lengths
-                   {0, 0, 0},             // location of lower corner
-                   {n_patches_x, n_patches_y, n_patches_z}}; // n patches
+    Grid_t::Domain{{nx, 2 * ny, nz},          // n grid points
+                   {len_x, 2 * len_y, len_z}, // physical lengths
+                   {0, 0, 0},                 // location of lower corner
+                   {n_patches_x, 2 * n_patches_y, n_patches_z}}; // n patches
 
   auto bc =
-    psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL, BND_FLD_PERIODIC},
-                  {BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL, BND_FLD_PERIODIC},
-                  {BND_PRT_PERIODIC, BND_PRT_REFLECTING, BND_PRT_PERIODIC},
-                  {BND_PRT_PERIODIC, BND_PRT_REFLECTING, BND_PRT_PERIODIC}};
+    psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
+                  {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
+                  {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC},
+                  {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC}};
 
   auto kinds = Grid_t::Kinds(NR_KINDS);
   kinds[KIND_ELECTRON] = {-1.0, electron_mass, "e"};
@@ -198,12 +198,13 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
     double temperature =
       np.kind == KIND_ION ? ion_temperature : electron_temperature;
     np.n = 1.0;
-    np.p = setup_particles.createMaxwellian(
-      {np.kind,
-       np.n,
-       {v_upstream_x, v_upstream_y, v_upstream_z},
-       {temperature, temperature, temperature},
-       np.tag});
+    double vy = (crd[1] > len_y ? -1 : 1) * v_upstream_y;
+    np.p =
+      setup_particles.createMaxwellian({np.kind,
+                                        np.n,
+                                        {v_upstream_x, vy, v_upstream_z},
+                                        {temperature, temperature, temperature},
+                                        np.tag});
   };
 
   partitionAndSetupParticles(setup_particles, balance, grid_ptr, mprts,
@@ -229,7 +230,7 @@ void initializeFields(MfieldsState& mflds)
     switch (component) {
       case EX: return e_x;
       case EY: return e_y;
-      case EZ: return e_z;
+      case EZ: return (coords[1] > ny ? -1 : coords[1] == ny ? 0 : 1) * e_z;
       case HX: return b_x;
       case HY: return b_y;
       case HZ: return b_z;
