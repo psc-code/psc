@@ -24,7 +24,6 @@ struct PushParticlesVb
   static void push_mprts(Mparticles& mprts, MfieldsState& mflds)
   {
     const auto& grid = mprts.grid();
-    PI<real_t> pi(grid);
     Real3 dxi = Real3{1., 1., 1.} / Real3(grid.domain.dx);
     real_t dq_kind[MAX_NR_KINDS];
     auto& kinds = grid.kinds;
@@ -46,13 +45,8 @@ struct PushParticlesVb
       flds.storage().view(_all, _all, _all, _s(JXI, JXI + 3)) = real_t(0);
 
       for (auto prt : prts) {
-        Real3& x = prt.x();
-
-        real_t xm[3];
-        for (int d = 0; d < 3; d++) {
-          xm[d] = x[d] * dxi[d];
-        }
-        ip.set_coeffs(xm);
+        Real3 initial_pos_normalized = prt.x() * dxi;
+        ip.set_coeffs(initial_pos_normalized);
 
         // FIELD INTERPOLATION
         Real3 E = {ip.ex(EM), ip.ey(EM), ip.ez(EM)};
@@ -64,11 +58,12 @@ struct PushParticlesVb
 
         // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0)
         auto v = advance.calc_v(prt.u());
-        advance.push_x(x, v);
+        advance.push_x(prt.x(), v);
 
-        int lf[3];
-        real_t of[3], xp[3];
-        pi.find_idx_off_pos_1st_rel(x, lf, of, xp, real_t(0.));
+        Int3 final_index;
+        Real3 final_pos_normalized;
+        find_idx_pos_1st_rel(prt.x(), dxi, final_index, final_pos_normalized,
+                             real_t(0.));
 
         // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
         int lg[3];
@@ -81,7 +76,8 @@ struct PushParticlesVb
         if (!Dim::InvarZ::value) {
           lg[2] = ip.cz.g.l;
         }
-        current.calc_j(J, xm, xp, lf, lg, prt.qni_wni(), v);
+        current.calc_j(J, initial_pos_normalized, final_pos_normalized,
+                       final_index, lg, prt.qni_wni(), v);
       }
     }
   }
@@ -112,14 +108,14 @@ struct PushParticlesVb
         // field interpolation
         real_t* x = prt.x;
 
-        real_t xm[3];
+        real_t initial_pos_normalized[3];
         for (int d = 0; d < 3; d++) {
-          xm[d] = x[d] * dxi[d];
+          initial_pos_normalized[d] = x[d] * dxi[d];
         }
 
         // FIELD INTERPOLATION
 
-        ip.set_coeffs(xm);
+        ip.set_coeffs(initial_pos_normalized);
         // FIXME, we're not using EM instead flds_em
         real_t E[3] = {ip.ex(EM), ip.ey(EM), ip.ez(EM)};
         real_t H[3] = {ip.hx(EM), ip.hy(EM), ip.hz(EM)};
