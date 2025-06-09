@@ -1,6 +1,6 @@
 
-Installing on Marvin
-********************
+Building and Running on Marvin/Plasma (at UNH)
+**********************************************
 
 There are two main approaches using Spack. The first option is using Spack to directly install psc (i.e., ``spack install psc``) after a few preparatory steps, and then later manually loading PSC's immediate dependencies to actually compile (e.g., ``spack load cmake``). The second approach is outlined below and results in a Spack environment in which PSC can be compiled.
 
