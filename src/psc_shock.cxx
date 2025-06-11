@@ -150,17 +150,19 @@ void setupParameters(int argc, char** argv)
 Grid_t* setupGrid()
 {
   // FIXME add a check to catch mismatch between Dim and n grid points early
-  auto domain =
-    Grid_t::Domain{{nx, 2 * ny, nz},          // n grid points
-                   {len_x, 2 * len_y, len_z}, // physical lengths
-                   {0, 0, 0},                 // location of lower corner
-                   {n_patches_x, 2 * n_patches_y, n_patches_z}}; // n patches
+  int y_mult = mirrored_domain ? 2 : 1;
+  auto domain = Grid_t::Domain{
+    {nx, y_mult * ny, nz},          // n grid points
+    {len_x, y_mult * len_y, len_z}, // physical lengths
+    {0, 0, 0},                      // location of lower corner
+    {n_patches_x, y_mult * n_patches_y, n_patches_z}}; // n patches
 
-  auto bc =
-    psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
-                  {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
-                  {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC},
-                  {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC}};
+  auto BND_FLD_Y = mirrored_domain ? BND_FLD_PERIODIC : BND_FLD_CONDUCTING_WALL;
+  auto BND_PRT_Y = mirrored_domain ? BND_PRT_PERIODIC : BND_PRT_REFLECTING;
+  auto bc = psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_Y, BND_FLD_PERIODIC},
+                          {BND_FLD_PERIODIC, BND_FLD_Y, BND_FLD_PERIODIC},
+                          {BND_PRT_PERIODIC, BND_PRT_Y, BND_PRT_PERIODIC},
+                          {BND_PRT_PERIODIC, BND_PRT_Y, BND_PRT_PERIODIC}};
 
   auto kinds = Grid_t::Kinds(NR_KINDS);
   kinds[KIND_ELECTRON] = {-1.0, electron_mass, "e"};
@@ -201,13 +203,13 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
     double temperature =
       np.kind == KIND_ION ? ion_temperature : electron_temperature;
     np.n = 1.0;
-    double vy = (crd[1] > len_y ? -1 : 1) * v_upstream_y;
-    np.p =
-      setup_particles.createMaxwellian({np.kind,
-                                        np.n,
-                                        {v_upstream_x, vy, v_upstream_z},
-                                        {temperature, temperature, temperature},
-                                        np.tag});
+    double vy_coef = mirrored_domain && crd[1] > len_y ? -1 : 1;
+    np.p = setup_particles.createMaxwellian(
+      {np.kind,
+       np.n,
+       {v_upstream_x, vy_coef * v_upstream_y, v_upstream_z},
+       {temperature, temperature, temperature},
+       np.tag});
   };
 
   partitionAndSetupParticles(setup_particles, balance, grid_ptr, mprts,
@@ -230,10 +232,11 @@ void fillGhosts(MF& mfld, int compBegin, int compEnd)
 void initializeFields(MfieldsState& mflds)
 {
   setupFields(mflds, [&](int component, double coords[3]) {
+    double e_coef = mirrored_domain && coords[1] > len_y ? -1 : 1;
     switch (component) {
-      case EX: return e_x;
-      case EY: return e_y;
-      case EZ: return (coords[1] > len_y ? -1 : 1) * e_z;
+      case EX: return e_coef * e_x;
+      case EY: return e_coef * e_y;
+      case EZ: return e_coef * e_z;
       case HX: return b_x;
       case HY: return b_y;
       case HZ: return b_z;
