@@ -72,7 +72,7 @@ double len_z;
 
 int out_interval;
 
-bool mirrored_domain;
+bool mirror_domain;
 
 } // namespace
 
@@ -132,7 +132,7 @@ void setupParameters(int argc, char** argv)
   int n_writes = parsedParams.getOrDefault<int>("n_writes", 100);
   out_interval = psc_params.nmax / n_writes;
 
-  mirrored_domain = parsedParams.getOrDefault<bool>("mirrored_domain", false);
+  mirror_domain = parsedParams.getOrDefault<bool>("mirror_domain", false);
 
   std::ifstream src(path_to_params, std::ios::binary);
   std::ofstream dst("params_record.txt", std::ios::binary);
@@ -150,15 +150,15 @@ void setupParameters(int argc, char** argv)
 Grid_t* setupGrid()
 {
   // FIXME add a check to catch mismatch between Dim and n grid points early
-  int y_mult = mirrored_domain ? 2 : 1;
+  int y_mult = mirror_domain ? 2 : 1;
   auto domain = Grid_t::Domain{
     {nx, y_mult * ny, nz},          // n grid points
     {len_x, y_mult * len_y, len_z}, // physical lengths
     {0, 0, 0},                      // location of lower corner
     {n_patches_x, y_mult * n_patches_y, n_patches_z}}; // n patches
 
-  auto BND_FLD_Y = mirrored_domain ? BND_FLD_PERIODIC : BND_FLD_CONDUCTING_WALL;
-  auto BND_PRT_Y = mirrored_domain ? BND_PRT_PERIODIC : BND_PRT_REFLECTING;
+  auto BND_FLD_Y = mirror_domain ? BND_FLD_PERIODIC : BND_FLD_CONDUCTING_WALL;
+  auto BND_PRT_Y = mirror_domain ? BND_PRT_PERIODIC : BND_PRT_REFLECTING;
   auto bc = psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_Y, BND_FLD_PERIODIC},
                           {BND_FLD_PERIODIC, BND_FLD_Y, BND_FLD_PERIODIC},
                           {BND_PRT_PERIODIC, BND_PRT_Y, BND_PRT_PERIODIC},
@@ -203,7 +203,7 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
     double temperature =
       np.kind == KIND_ION ? ion_temperature : electron_temperature;
     np.n = 1.0;
-    double vy_coef = mirrored_domain && crd[1] > len_y ? -1 : 1;
+    double vy_coef = mirror_domain && crd[1] > len_y ? -1 : 1;
     np.p = setup_particles.createMaxwellian(
       {np.kind,
        np.n,
@@ -232,7 +232,7 @@ void fillGhosts(MF& mfld, int compBegin, int compEnd)
 void initializeFields(MfieldsState& mflds)
 {
   setupFields(mflds, [&](int component, double coords[3]) {
-    double e_coef = mirrored_domain && coords[1] > len_y ? -1 : 1;
+    double e_coef = mirror_domain && coords[1] > len_y ? -1 : 1;
     switch (component) {
       case EX: return e_coef * e_x;
       case EY: return e_coef * e_y;
