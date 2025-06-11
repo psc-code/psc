@@ -72,6 +72,8 @@ double len_z;
 
 int out_interval;
 
+bool mirrored_domain;
+
 } // namespace
 
 // ======================================================================
@@ -129,6 +131,8 @@ void setupParameters(int argc, char** argv)
 
   int n_writes = parsedParams.getOrDefault<int>("n_writes", 100);
   out_interval = psc_params.nmax / n_writes;
+
+  mirrored_domain = parsedParams.getOrDefault<bool>("mirrored_domain", false);
 
   std::ifstream src(path_to_params, std::ios::binary);
   std::ofstream dst("params_record.txt", std::ios::binary);
