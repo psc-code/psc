@@ -503,6 +503,12 @@ struct Psc
     inject_particles_(mprts_, mflds_);
     prof_stop(pr_inject_prts);
 
+    if (checks_.continuity.should_do_check(timestep)) {
+      prof_restart(pr_checks);
+      checks_.continuity.after_particle_push(mprts_, mflds_);
+      prof_stop(pr_checks);
+    }
+
     // === field propagation B^{n+1/2} -> B^{n+1}
     mpi_printf(comm, "***** Pushing B...\n");
     prof_start(pr_push_flds);
@@ -556,12 +562,6 @@ struct Psc
     prof_stop(pr_bndf);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 #endif
-
-    if (checks_.continuity.should_do_check(timestep)) {
-      prof_restart(pr_checks);
-      checks_.continuity.after_particle_push(mprts_, mflds_);
-      prof_stop(pr_checks);
-    }
 
     // E at t^{n+3/2}, particles at t^{n+3/2}
     // B at t^{n+3/2} (Note: that is not its natural time,

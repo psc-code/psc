@@ -110,6 +110,7 @@ struct Current1vbVar1
   void calc_j(fields_t curr_cache, real_t* xm, real_t* xp, int* lf, int* lg,
               real_t qni_wni, real_t* vxi, dim_yz tag_dim)
   {
+    MHERE;
     // deposit xm -> xp
     int idiff[3] = {0, lf[1] - lg[1], lf[2] - lg[2]};
     int i[3] = {0, lg[1], lg[2]};

@@ -25,10 +25,10 @@ GT_INLINE void deposit(Curr& curr, const int _i[3], const real_t fnqs[3],
   deposition(curr, i, qni_wni, dx, xa, dim_xyz{});
 }
 
-#include "inc_curr_1vb_split.c"
-#include "inc_curr_1vb_var1.c"
-#include "inc_curr_1vb_2d.c"
-#include "inc_curr_zigzag.c"
+#include "inc_curr_1vb_split.cxx"
+#include "inc_curr_1vb_var1.cxx"
+#include "inc_curr_1vb_2d.cxx"
+#include "inc_curr_zigzag.cxx"
 
 template <typename _Order, typename _Dim, typename _fields_t>
 struct Current1vb;
