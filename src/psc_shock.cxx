@@ -229,7 +229,7 @@ void initializeFields(MfieldsState& mflds)
     switch (component) {
       case EX: return e_x;
       case EY: return e_y;
-      case EZ: return (coords[1] > ny ? -1 : coords[1] == ny ? 0 : 1) * e_z;
+      case EZ: return (coords[1] > len_y ? -1 : 1) * e_z;
       case HX: return b_x;
       case HY: return b_y;
       case HZ: return b_z;
