@@ -195,9 +195,9 @@ struct SetupParticles
   // setupParticle
 
   psc::particle::Inject setupParticle(const psc_particle_np& np, Double3 pos,
-                                      double wni)
+                                      double weight)
   {
-    return psc::particle::Inject{pos, np.p(), wni, np.kind, np.tag};
+    return psc::particle::Inject{pos, np.p(), weight, np.kind, np.tag};
   }
 
   // ----------------------------------------------------------------------
@@ -296,8 +296,8 @@ struct SetupParticles
       op_cellwise(grid, p, init_np,
                   [&](int n_in_cell, psc_particle_np& np, Double3& pos) {
                     for (int cnt = 0; cnt < n_in_cell; cnt++) {
-                      real_t wni = getWeight(np.n, n_in_cell);
-                      auto prt = setupParticle(np, pos, wni);
+                      real_t weight = getWeight(np.n, n_in_cell);
+                      auto prt = setupParticle(np, pos, weight);
                       injector(prt);
                     }
                   });
