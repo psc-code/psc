@@ -259,12 +259,12 @@ struct SetupParticles
   // ----------------------------------------------------------------------
   // getWeight
 
-  real_t getWeight(const psc_particle_np& np, int n_in_cell)
+  real_t getWeight(real_t density, int n_in_cell)
   {
     if (fractional_n_particles_per_cell) {
       return 1.;
     } else {
-      return np.n * norm_.prts_per_unit_density / n_in_cell;
+      return density * norm_.prts_per_unit_density / n_in_cell;
     }
   }
 
@@ -296,7 +296,7 @@ struct SetupParticles
       op_cellwise(grid, p, init_np,
                   [&](int n_in_cell, psc_particle_np& np, Double3& pos) {
                     for (int cnt = 0; cnt < n_in_cell; cnt++) {
-                      real_t wni = getWeight(np, n_in_cell);
+                      real_t wni = getWeight(np.n, n_in_cell);
                       auto prt = setupParticle(np, pos, wni);
                       injector(prt);
                     }
