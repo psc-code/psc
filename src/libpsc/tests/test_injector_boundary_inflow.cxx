@@ -51,10 +51,10 @@ Grid_t* setupGrid()
 
   auto bc =
     // FIXME wrong BCs
-    psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
-                  {BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC},
-                  {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC},
-                  {BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC}};
+    psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_OPEN, BND_FLD_PERIODIC},
+                  {BND_FLD_PERIODIC, BND_FLD_OPEN, BND_FLD_PERIODIC},
+                  {BND_PRT_PERIODIC, BND_PRT_OPEN, BND_PRT_PERIODIC},
+                  {BND_PRT_PERIODIC, BND_PRT_OPEN, BND_PRT_PERIODIC}};
 
   auto kinds = Grid_t::Kinds(NR_KINDS);
   kinds[KIND_ELECTRON] = {-1.0, 1.0, "e"};
