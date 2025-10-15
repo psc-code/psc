@@ -143,7 +143,7 @@ TEST(InjectorBoundaryInflowTest, Integration)
   // ----------------------------------------------------------------------
   // set up initial conditions
 
-  EXPECT_EQ(grid.n_patches(), 1);
+  ASSERT_EQ(grid.n_patches(), 1);
   int p = 0;
 
   // ----------------------------------------------------------------------
