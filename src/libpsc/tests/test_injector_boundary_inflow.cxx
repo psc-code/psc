@@ -81,14 +81,21 @@ Grid_t* setupGrid()
   return new Grid_t{domain, bc, kinds, norm, dt, -1, ibn};
 }
 
-struct ParticleGeneratorJustOne
+template <int PRT_COUNT>
+struct ParticleGenerator
 {
   using Real = psc::particle::Inject::Real;
   using Real3 = psc::particle::Inject::Real3;
 
   psc::particle::Inject get(Real3 min_pos, Real3 pos_range)
   {
-    Real uy = n_injected++ > 0 ? 0. : 2.;
+    Real uy = 2.0;
+    if (PRT_COUNT > 0 && n_injected++ >= PRT_COUNT) {
+      // Setting uy=0 means the particle won't enter the domain, and thus won't
+      // be injected
+      uy = 0.0;
+    }
+
     Real3 x = min_pos + pos_range * Real3{0, .999, 0.};
     Real3 u{0.0, uy, 0.0};
     Real w = 1.0;
@@ -133,7 +140,7 @@ TEST(InjectorBoundaryInflowTest, Integration1Particle)
   auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
 
   auto inject_particles =
-    InjectorBoundaryInflow<ParticleGeneratorJustOne, PscConfig::PushParticles>{
+    InjectorBoundaryInflow<ParticleGenerator<1>, PscConfig::PushParticles>{
       {}, grid};
 
   auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
