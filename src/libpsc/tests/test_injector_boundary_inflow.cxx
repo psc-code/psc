@@ -81,21 +81,24 @@ Grid_t* setupGrid()
   return new Grid_t{domain, bc, kinds, norm, dt, -1, ibn};
 }
 
-struct ParticleGeneratorTest
+struct ParticleGeneratorJustOne
 {
   using Real = psc::particle::Inject::Real;
   using Real3 = psc::particle::Inject::Real3;
 
   psc::particle::Inject get(Real3 min_pos, Real3 pos_range)
   {
-    Real3 x = min_pos + pos_range * Real3{.999, .999, .999};
-    Real3 u{0.0, 2.0, 0.0};
+    Real uy = n_injected++ > 0 ? 0. : 2.;
+    Real3 x = min_pos + pos_range * Real3{0, .999, 0.};
+    Real3 u{0.0, uy, 0.0};
     Real w = 1.0;
     int kind_idx = 1;
     psc::particle::Tag tag = 0;
 
     return {x, u, w, kind_idx, tag};
   }
+
+  int n_injected = 0;
 };
 
 TEST(InjectorBoundaryInflowTest, Integration)
@@ -105,7 +108,7 @@ TEST(InjectorBoundaryInflowTest, Integration)
 
   PscParams psc_params;
 
-  psc_params.nmax = 2;
+  psc_params.nmax = 1;
   psc_params.stats_every = 1;
   psc_params.cfl = .75;
 
@@ -130,7 +133,7 @@ TEST(InjectorBoundaryInflowTest, Integration)
   auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
 
   auto inject_particles =
-    InjectorBoundaryInflow<ParticleGeneratorTest, PscConfig::PushParticles>{
+    InjectorBoundaryInflow<ParticleGeneratorJustOne, PscConfig::PushParticles>{
       {}, grid};
 
   auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
@@ -158,7 +161,7 @@ TEST(InjectorBoundaryInflowTest, Integration)
     EXPECT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
   }
 
-  ASSERT_GT(prts.size(), 0);
+  ASSERT_EQ(prts.size(), 1);
 }
 
 // ======================================================================
