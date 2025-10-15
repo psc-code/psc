@@ -171,6 +171,69 @@ TEST(InjectorBoundaryInflowTest, Integration1Particle)
   ASSERT_EQ(prts.size(), 1);
 }
 
+TEST(InjectorBoundaryInflowTest, IntegrationManyParticles)
+{
+  // ----------------------------------------------------------------------
+  // setup
+
+  PscParams psc_params;
+
+  psc_params.nmax = 1;
+  psc_params.stats_every = 1;
+  psc_params.cfl = .75;
+
+  auto grid_ptr = setupGrid();
+  auto& grid = *grid_ptr;
+
+  MfieldsState mflds{grid};
+  Mparticles mprts{grid};
+
+  ChecksParams checks_params{};
+  checks_params.continuity.check_interval = 1;
+  checks_params.gauss.check_interval = 1;
+  Checks checks{grid, MPI_COMM_WORLD, checks_params};
+
+  Balance balance{.1};
+  Collision collision{grid, 0, 0.1};
+  Marder marder(grid, 0.9, 3, false);
+
+  OutputFields<MfieldsState, Mparticles, Dim> outf{grid, {}};
+  OutputParticles outp{grid, {}};
+  DiagEnergies oute{grid.comm(), 0};
+  auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
+
+  auto inject_particles =
+    InjectorBoundaryInflow<ParticleGenerator<-1>, PscConfig::PushParticles>{
+      {}, grid};
+
+  auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
+                                          balance, collision, checks, marder,
+                                          diagnostics, inject_particles);
+
+  // ----------------------------------------------------------------------
+  // set up initial conditions
+
+  ASSERT_EQ(grid.n_patches(), 1);
+  int p = 0;
+
+  // ----------------------------------------------------------------------
+  // run the simulation
+
+  auto accessor = mprts.accessor();
+  auto prts = accessor[p];
+
+  ASSERT_EQ(prts.size(), 0);
+
+  for (; grid.timestep_ < psc_params.nmax; grid.timestep_++) {
+    psc.step();
+
+    EXPECT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
+    EXPECT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
+  }
+
+  ASSERT_GT(prts.size(), 1);
+}
+
 // ======================================================================
 // main
 
