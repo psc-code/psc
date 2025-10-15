@@ -101,7 +101,7 @@ struct ParticleGeneratorJustOne
   int n_injected = 0;
 };
 
-TEST(InjectorBoundaryInflowTest, Integration)
+TEST(InjectorBoundaryInflowTest, Integration1Particle)
 {
   // ----------------------------------------------------------------------
   // setup
