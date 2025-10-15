@@ -103,10 +103,12 @@ public:
 
           Real3 cell_corner =
             grid.domain.corner + Double3(cell_idx) * grid.domain.dx;
-          int n_prts_to_inject =
+          int n_prts_to_try_inject =
             get_n_in_cell(1.0, prts_per_unit_density, true);
+          real_t charge_injected = 0;
 
-          for (int prt_count = 0; prt_count < n_prts_to_inject; prt_count++) {
+          for (int prt_count = 0; prt_count < n_prts_to_try_inject;
+               prt_count++) {
             psc::particle::Inject prt =
               partice_generator.get(cell_corner, grid.domain.dx);
 
@@ -115,6 +117,7 @@ public:
             advance.push_x(prt.x, v, 1.0);
 
             if (prt.x[INJECT_DIM_IDX_] < grid.domain.corner[INJECT_DIM_IDX_]) {
+              // don't inject a particle that fails to enter the domain
               continue;
             }
 
@@ -134,7 +137,15 @@ public:
             real_t qni_wni = grid.kinds[prt.kind].q * prt.w;
             current.calc_j(J, initial_normalized_pos, final_normalized_pos,
                            final_idx, cell_idx, qni_wni, v);
+
+            charge_injected += qni_wni;
           }
+
+          // set current in boundary to account for injected charge
+          flds.storage()(cell_idx[0] + grid.ibn[0], -1 + grid.ibn[1],
+                         cell_idx[2] + grid.ibn[2], JXI + 1) =
+            charge_injected * grid.domain.dx[1] / grid.dt /
+            prts_per_unit_density;
         }
       }
     }
