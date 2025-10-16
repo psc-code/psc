@@ -140,8 +140,7 @@ TEST(InjectorBoundaryInflowTest, Integration1Particle)
   auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
 
   auto inject_particles =
-    InjectorBoundaryInflow<ParticleGenerator<1>, PscConfig::PushParticles>{
-      {}, grid};
+    BoundaryInjector<ParticleGenerator<1>, PscConfig::PushParticles>{{}, grid};
 
   auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
                                           balance, collision, checks, marder,
@@ -203,8 +202,7 @@ TEST(InjectorBoundaryInflowTest, IntegrationManyParticles)
   auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
 
   auto inject_particles =
-    InjectorBoundaryInflow<ParticleGenerator<-1>, PscConfig::PushParticles>{
-      {}, grid};
+    BoundaryInjector<ParticleGenerator<-1>, PscConfig::PushParticles>{{}, grid};
 
   auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
                                           balance, collision, checks, marder,

@@ -50,7 +50,7 @@ private:
 };
 
 template <typename PARTICLE_GENERATOR, typename PUSH_PARTICLES>
-class InjectorBoundaryInflow
+class BoundaryInjector
 {
   static const int INJECT_DIM_IDX_ = 1;
 
@@ -67,7 +67,7 @@ public:
   using Real3 = typename PushParticles::Real3;
   using checks_order = typename PushParticles::checks_order;
 
-  InjectorBoundaryInflow(ParticleGenerator particle_generator, Grid_t& grid)
+  BoundaryInjector(ParticleGenerator particle_generator, Grid_t& grid)
     : partice_generator{particle_generator},
       advance{grid.dt},
       prts_per_unit_density{grid.norm.prts_per_unit_density}
