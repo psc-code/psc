@@ -9,7 +9,7 @@
 #include "OutputFieldsDefault.h"
 #include "../psc_config.hxx"
 
-TEST(InjectorBoundaryInflowTest, ParticleGeneratorMaxwellianTest)
+TEST(BoundaryInjectorTest, ParticleGeneratorMaxwellianTest)
 {
   int kind_idx = 15;
   Grid_t::Kind kind{1.0, 1836.0, "ion"};
@@ -108,7 +108,7 @@ struct ParticleGenerator
   int n_injected = 0;
 };
 
-TEST(InjectorBoundaryInflowTest, Integration1Particle)
+TEST(BoundaryInjectorTest, Integration1Particle)
 {
   // ----------------------------------------------------------------------
   // setup
@@ -170,7 +170,7 @@ TEST(InjectorBoundaryInflowTest, Integration1Particle)
   ASSERT_EQ(prts.size(), 1);
 }
 
-TEST(InjectorBoundaryInflowTest, IntegrationManyParticles)
+TEST(BoundaryInjectorTest, IntegrationManyParticles)
 {
   // ----------------------------------------------------------------------
   // setup
