@@ -125,10 +125,10 @@ TEST(ReflectiveBcsTest, IntegrationY)
     auto injector = mprts.injector();
     auto inj = injector[p];
     double vy = 100; // fast enough to escape electric attraction
-    double y_center = grid.domain.length[1] / 2.0;
+    double y_quarter = grid.domain.length[1] / 4.0;
     // inject 2 particles at same location to satisfy Gauss' law at t=0
-    inj({{0, y_center, 5}, {0, -vy, 0}, 1, 0}); // electron
-    inj({{0, y_center, 5}, {0, vy, 0}, 1, 1});  // positron
+    inj({{0, y_quarter, 5}, {0, -vy, 0}, 1, 0}); // electron
+    inj({{0, y_quarter, 5}, {0, vy, 0}, 1, 1});  // positron
   }
 
   // ----------------------------------------------------------------------
@@ -213,10 +213,10 @@ TEST(ReflectiveBcsTest, IntegrationZ)
     auto injector = mprts.injector();
     auto inj = injector[p];
     double vz = 100; // fast enough to escape electric attraction
-    double z_center = grid.domain.length[2] / 2.0;
+    double z_quarter = grid.domain.length[2] / 4.0;
     // inject 2 particles at same location to satisfy Gauss' law at t=0
-    inj({{0, 5, z_center}, {0, 0, -vz}, 1, 0}); // electron
-    inj({{0, 5, z_center}, {0, 0, vz}, 1, 1});  // positron
+    inj({{0, 5, z_quarter}, {0, 0, -vz}, 1, 0}); // electron
+    inj({{0, 5, z_quarter}, {0, 0, vz}, 1, 1});  // positron
   }
 
   // ----------------------------------------------------------------------
