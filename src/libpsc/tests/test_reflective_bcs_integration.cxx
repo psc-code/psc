@@ -83,7 +83,7 @@ Grid_t* setupGrid()
 // ======================================================================
 // Integration test (pun not intended)
 
-TEST(ReflectiveBcsTest, Integration)
+TEST(ReflectiveBcsTest, IntegrationY)
 {
   // ----------------------------------------------------------------------
   // setup
