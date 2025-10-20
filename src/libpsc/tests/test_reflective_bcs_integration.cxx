@@ -151,6 +151,9 @@ TEST(ReflectiveBcsTest, IntegrationY)
   bool reflected = false;
 
   for (; grid.timestep_ < psc_params.nmax; grid.timestep_++) {
+    about_to_reflect =
+      prts[0].x()[1] < grid.domain.dx[1] && prts[0].u()[1] < 0.0;
+
     psc.step();
     ASSERT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
     ASSERT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
@@ -159,9 +162,6 @@ TEST(ReflectiveBcsTest, IntegrationY)
       reflected = about_to_reflect;
       break;
     }
-
-    about_to_reflect =
-      prts[0].x()[1] < grid.domain.dx[1] / 2.0 && prts[0].u()[1] < 0.0;
   }
 
   ASSERT_TRUE(reflected) << "timestep " << grid.timestep_;
@@ -238,6 +238,9 @@ TEST(ReflectiveBcsTest, IntegrationZ)
   bool reflected = false;
 
   for (; grid.timestep_ < psc_params.nmax; grid.timestep_++) {
+    about_to_reflect =
+      prts[0].x()[2] < grid.domain.dx[2] && prts[0].u()[2] < 0.0;
+
     psc.step();
     ASSERT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
     ASSERT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
@@ -246,9 +249,6 @@ TEST(ReflectiveBcsTest, IntegrationZ)
       reflected = about_to_reflect;
       break;
     }
-
-    about_to_reflect =
-      prts[0].x()[2] < grid.domain.dx[2] / 2.0 && prts[0].u()[2] < 0.0;
   }
 
   ASSERT_TRUE(reflected) << "timestep " << grid.timestep_;
