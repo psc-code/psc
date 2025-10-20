@@ -163,14 +163,10 @@ struct BndFields_ : BndFieldsBase
           F(EX, ix, 0, iz) = 0.;
           F(EX, ix, -1, iz) = F(EX, ix, 1, iz);
           F(EX, ix, -2, iz) = F(EX, ix, 2, iz);
+
           F(EY, ix, -1, iz) = -F(EY, ix, 0, iz);
           F(EY, ix, -2, iz) = -F(EY, ix, 1, iz);
-        }
-      }
 
-      for (int iz = -2; iz < ldims[2] + 2; iz++) {
-        for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
-             ix++) {
           F(EZ, ix, 0, iz) = 0.;
           F(EZ, ix, -1, iz) = F(EZ, ix, 1, iz);
           F(EZ, ix, -2, iz) = F(EZ, ix, 2, iz);
@@ -194,16 +190,12 @@ struct BndFields_ : BndFieldsBase
              ix++) {
           F(EX, ix, iy, 0) = 0.;
           F(EX, ix, iy, -1) = F(EX, ix, iy, 1);
-          F(EZ, ix, iy, -1) = -F(EZ, ix, iy, 0);
-          F(EZ, ix, iy, -2) = -F(EZ, ix, iy, 1);
-        }
-      }
 
-      for (int iy = -2; iy < ldims[1] + 2; iy++) {
-        for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
-             ix++) {
           F(EY, ix, iy, 0) = 0.;
           F(EY, ix, iy, -1) = F(EY, ix, iy, 1);
+
+          F(EZ, ix, iy, -1) = -F(EZ, ix, iy, 0);
+          F(EZ, ix, iy, -2) = -F(EZ, ix, iy, 1);
         }
       }
     } else {
@@ -237,13 +229,9 @@ struct BndFields_ : BndFieldsBase
              ix++) {
           F(EX, ix, my, iz) = 0.;
           F(EX, ix, my + 1, iz) = F(EX, ix, my - 1, iz);
-          F(EY, ix, my, iz) = -F(EY, ix, my - 1, iz);
-        }
-      }
 
-      for (int iz = -2; iz < ldims[2] + 2; iz++) {
-        for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
-             ix++) {
+          F(EY, ix, my, iz) = -F(EY, ix, my - 1, iz);
+
           F(EZ, ix, my, iz) = 0.;
           F(EZ, ix, my + 1, iz) = F(EZ, ix, my - 1, iz);
         }
@@ -267,16 +255,12 @@ struct BndFields_ : BndFieldsBase
              ix++) {
           F(EX, ix, iy, mz) = 0.;
           F(EX, ix, iy, mz + 1) = F(EX, ix, iy, mz - 1);
-          F(EZ, ix, iy, mz) = -F(EZ, ix, iy, mz - 1);
-          F(EZ, ix, iy, mz + 1) = -F(EZ, ix, iy, mz - 2);
-        }
-      }
 
-      for (int iy = -2; iy < ldims[1] + 2; iy++) {
-        for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
-             ix++) {
           F(EY, ix, iy, mz) = 0.;
           F(EY, ix, iy, mz + 1) = F(EY, ix, iy, mz - 1);
+
+          F(EZ, ix, iy, mz) = -F(EZ, ix, iy, mz - 1);
+          F(EZ, ix, iy, mz + 1) = -F(EZ, ix, iy, mz - 2);
         }
       }
     } else {
@@ -307,13 +291,10 @@ struct BndFields_ : BndFieldsBase
       for (int iz = -1; iz < ldims[2] + 2; iz++) {
         for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
              ix++) {
-          F(HY, ix, -1, iz) = F(HY, ix, 1, iz);
           F(HX, ix, -1, iz) = -F(HX, ix, 0, iz);
-        }
-      }
-      for (int iz = -1; iz < ldims[2] + 2; iz++) {
-        for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
-             ix++) {
+
+          F(HY, ix, -1, iz) = F(HY, ix, 1, iz);
+
           F(HZ, ix, -1, iz) = -F(HZ, ix, 0, iz);
         }
       }
@@ -333,16 +314,13 @@ struct BndFields_ : BndFieldsBase
       for (int iy = -2; iy < ldims[1] + 2; iy++) {
         for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
              ix++) {
-          F(HZ, ix, iy, -1) = F(HZ, ix, iy, 1);
           F(HX, ix, iy, -1) = -F(HX, ix, iy, 0);
           F(HX, ix, iy, -2) = -F(HX, ix, iy, 1);
-        }
-      }
-      for (int iy = -2; iy < ldims[1] + 2; iy++) {
-        for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
-             ix++) {
+
           F(HY, ix, iy, -1) = -F(HY, ix, iy, 0);
           F(HY, ix, iy, -2) = -F(HY, ix, iy, 1);
+
+          F(HZ, ix, iy, -1) = F(HZ, ix, iy, 1);
         }
       }
     } else {
@@ -374,14 +352,11 @@ struct BndFields_ : BndFieldsBase
       for (int iz = -2; iz < ldims[2] + 2; iz++) {
         for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
              ix++) {
-          F(HY, ix, my + 1, iz) = F(HY, ix, my - 1, iz);
           F(HX, ix, my, iz) = -F(HX, ix, my - 1, iz);
           F(HX, ix, my + 1, iz) = -F(HX, ix, my - 2, iz);
-        }
-      }
-      for (int iz = -2; iz < ldims[2] + 2; iz++) {
-        for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
-             ix++) {
+
+          F(HY, ix, my + 1, iz) = F(HY, ix, my - 1, iz);
+
           F(HZ, ix, my, iz) = -F(HZ, ix, my - 1, iz);
           F(HZ, ix, my + 1, iz) = -F(HZ, ix, my - 2, iz);
         }
@@ -402,16 +377,13 @@ struct BndFields_ : BndFieldsBase
       for (int iy = -2; iy < ldims[1] + 2; iy++) {
         for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
              ix++) {
-          F(HZ, ix, iy, mz + 1) = F(HZ, ix, iy, mz - 1);
           F(HX, ix, iy, mz) = -F(HX, ix, iy, mz - 1);
           F(HX, ix, iy, mz + 1) = -F(HX, ix, iy, mz - 2);
-        }
-      }
-      for (int iy = -2; iy < ldims[1] + 2; iy++) {
-        for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
-             ix++) {
+
           F(HY, ix, iy, mz) = -F(HY, ix, iy, mz - 1);
           F(HY, ix, iy, mz + 1) = -F(HY, ix, iy, mz - 2);
+
+          F(HZ, ix, iy, mz + 1) = F(HZ, ix, iy, mz - 1);
         }
       }
     } else {
@@ -429,12 +401,14 @@ struct BndFields_ : BndFieldsBase
       for (int iz = -2; iz < ldims[2] + 2; iz++) {
         for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
              ix++) {
+          F(JXI, ix, 1, iz) += F(JXI, ix, -1, iz);
+          F(JXI, ix, -1, iz) = 0.;
+
           F(JYI, ix, 1, iz) -= F(JYI, ix, -2, iz);
           F(JYI, ix, 0, iz) -= F(JYI, ix, -1, iz);
           F(JYI, ix, -1, iz) = 0.;
           F(JYI, ix, -2, iz) = 0.;
-          F(JXI, ix, 1, iz) += F(JXI, ix, -1, iz);
-          F(JXI, ix, -1, iz) = 0.;
+
           F(JZI, ix, 1, iz) += F(JZI, ix, -1, iz);
           F(JZI, ix, -1, iz) = 0.;
         }
@@ -443,13 +417,15 @@ struct BndFields_ : BndFieldsBase
       for (int iy = -2; iy < ldims[1] + 2; iy++) {
         for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
              ix++) {
+          F(JXI, ix, iy, 1) += F(JXI, ix, iy, -1);
+          F(JXI, ix, iy, -1) = 0.;
+
+          F(JYI, ix, iy, 1) += F(JYI, ix, iy, -1);
+          F(JYI, ix, iy, -1) = 0.;
+
           F(JZI, ix, iy, 1) -= F(JZI, ix, iy, -2);
           F(JZI, ix, iy, 0) -= F(JZI, ix, iy, -1);
           F(JZI, ix, iy, -1) = 0.;
-          F(JXI, ix, iy, 1) += F(JXI, ix, iy, -1);
-          F(JXI, ix, iy, -1) = 0.;
-          F(JYI, ix, iy, 1) += F(JYI, ix, iy, -1);
-          F(JYI, ix, iy, -1) = 0.;
         }
       }
     } else {
@@ -468,12 +444,14 @@ struct BndFields_ : BndFieldsBase
       for (int iz = -2; iz < ldims[2] + 2; iz++) {
         for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
              ix++) {
+          F(JXI, ix, my - 1, iz) += F(JXI, ix, my + 1, iz);
+          F(JXI, ix, my + 1, iz) = 0.;
+
           F(JYI, ix, my - 2, iz) -= F(JYI, ix, my + 1, iz);
           F(JYI, ix, my - 1, iz) -= F(JYI, ix, my, iz);
           F(JYI, ix, my, iz) = 0.;
           F(JYI, ix, my + 1, iz) = 0.;
-          F(JXI, ix, my - 1, iz) += F(JXI, ix, my + 1, iz);
-          F(JXI, ix, my + 1, iz) = 0.;
+
           F(JZI, ix, my - 1, iz) += F(JZI, ix, my + 1, iz);
           F(JZI, ix, my + 1, iz) = 0.;
         }
@@ -483,12 +461,14 @@ struct BndFields_ : BndFieldsBase
       for (int iy = -2; iy < ldims[1] + 2; iy++) {
         for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
              ix++) {
-          F(JZI, ix, iy, mz - 1) -= F(JZI, ix, iy, mz);
-          F(JZI, ix, iy, mz) = 0.;
           F(JXI, ix, iy, mz - 1) += F(JXI, ix, iy, mz + 1);
           F(JXI, ix, iy, mz + 1) = 0.;
+
           F(JYI, ix, iy, mz - 1) += F(JYI, ix, iy, mz + 1);
           F(JYI, ix, iy, mz + 1) = 0.;
+
+          F(JZI, ix, iy, mz - 1) -= F(JZI, ix, iy, mz);
+          F(JZI, ix, iy, mz) = 0.;
         }
       }
     } else {
