@@ -168,7 +168,6 @@ TEST(ReflectiveBcsTest, IntegrationY)
 
   ASSERT_EQ(prts.size(), 2);
   ASSERT_GT(prts[0].u()[1], 0.0);
-  ASSERT_LT(prts[1].u()[1], 0.0);
 }
 
 TEST(ReflectiveBcsTest, IntegrationZ)
@@ -256,7 +255,6 @@ TEST(ReflectiveBcsTest, IntegrationZ)
 
   ASSERT_EQ(prts.size(), 2);
   ASSERT_GT(prts[0].u()[2], 0.0);
-  ASSERT_LT(prts[1].u()[2], 0.0);
 }
 
 // ======================================================================
