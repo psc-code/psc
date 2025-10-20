@@ -152,8 +152,8 @@ TEST(ReflectiveBcsTest, IntegrationY)
 
   for (; grid.timestep_ < psc_params.nmax; grid.timestep_++) {
     psc.step();
-    EXPECT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
-    EXPECT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
+    ASSERT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
+    ASSERT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
 
     if (prts[0].x()[1] < grid.domain.dx[1] && prts[0].u()[1] > 0.0) {
       reflected = about_to_reflect;
@@ -240,8 +240,8 @@ TEST(ReflectiveBcsTest, IntegrationZ)
 
   for (; grid.timestep_ < psc_params.nmax; grid.timestep_++) {
     psc.step();
-    EXPECT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
-    EXPECT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
+    ASSERT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
+    ASSERT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
 
     if (prts[0].x()[2] < grid.domain.dx[2] && prts[0].u()[2] > 0.0) {
       reflected = about_to_reflect;
