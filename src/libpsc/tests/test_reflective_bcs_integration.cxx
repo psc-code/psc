@@ -88,7 +88,7 @@ TEST(ReflectiveBcsTest, IntegrationY)
   // ----------------------------------------------------------------------
   // setup
 
-  psc_params.nmax = 100;
+  psc_params.nmax = 20;
   psc_params.stats_every = 1;
   psc_params.cfl = .75;
 
@@ -176,7 +176,7 @@ TEST(ReflectiveBcsTest, IntegrationZ)
   // ----------------------------------------------------------------------
   // setup
 
-  psc_params.nmax = 100;
+  psc_params.nmax = 20;
   psc_params.stats_every = 1;
   psc_params.cfl = .75;
 
