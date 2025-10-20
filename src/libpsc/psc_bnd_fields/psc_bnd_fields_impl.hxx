@@ -443,7 +443,7 @@ struct BndFields_ : BndFieldsBase
       for (int iy = -2; iy < ldims[1] + 2; iy++) {
         for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
              ix++) {
-          F(JZI, ix, iy, 0) -= F(JZI, ix, iy, -1);
+          F(JZI, ix, iy, 1) -= F(JZI, ix, iy, -2);
           F(JZI, ix, iy, 0) -= F(JZI, ix, iy, -1);
           F(JZI, ix, iy, -1) = 0.;
           F(JXI, ix, iy, 1) += F(JXI, ix, iy, -1);
