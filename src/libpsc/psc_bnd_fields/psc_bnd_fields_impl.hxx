@@ -304,7 +304,7 @@ struct BndFields_ : BndFieldsBase
         }
       }
 #endif
-      for (int iz = -1; iz < ldims[2] + 1; iz++) {
+      for (int iz = -1; iz < ldims[2] + 2; iz++) {
         for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
              ix++) {
           F(HY, ix, -1, iz) = F(HY, ix, 1, iz);
