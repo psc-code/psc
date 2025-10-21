@@ -59,6 +59,12 @@ struct Uniform
 
   Real get() { return dist(*gen); }
 
+  Real get(Real min_override, Real max_override)
+  {
+    return std::uniform_real_distribution<Real>(min_override,
+                                                max_override)(*gen);
+  }
+
 private:
   detail::GeneratorPtr gen;
   std::uniform_real_distribution<Real> dist;
