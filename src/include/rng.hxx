@@ -81,11 +81,11 @@ struct Normal
   Normal() : Normal(0, 1) {}
 
   Real get() { return dist(*gen); }
-  // FIXME remove me, or make standalone func
-  Real get(Real mean, Real stdev)
+
+  Real get(Real mean_override, Real stdev_override)
   {
     // should be possible to pass params to existing dist
-    return std::normal_distribution<Real>(mean, stdev)(*gen);
+    return std::normal_distribution<Real>(mean_override, stdev_override)(*gen);
   }
 
 private:
