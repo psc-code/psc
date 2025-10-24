@@ -105,6 +105,10 @@ public:
 
       for (Int3 cell_idx = ilo; cell_idx[0] < ihi[0]; cell_idx[0]++) {
         for (cell_idx[2] = ilo[2]; cell_idx[2] < ihi[2]; cell_idx[2]++) {
+          auto boundary_current_before =
+            flds.storage()(cell_idx[0] + grid.ibn[0], -1 + grid.ibn[1],
+                           cell_idx[2] + grid.ibn[2], JXI + 1);
+
           cell_idx[INJECT_DIM_IDX_] = -1;
 
           Real3 cell_corner =
@@ -147,11 +151,13 @@ public:
             charge_injected += qni_wni;
           }
 
-          // set current in boundary to account for injected charge
+          // override whatever current was deposited in the boundary to be
+          // consistent with the charge having started completely out of the
+          // domain
           flds.storage()(cell_idx[0] + grid.ibn[0], -1 + grid.ibn[1],
                          cell_idx[2] + grid.ibn[2], JXI + 1) =
-            charge_injected * grid.domain.dx[1] / grid.dt /
-            prts_per_unit_density;
+            boundary_current_before + charge_injected * grid.domain.dx[1] /
+                                        grid.dt / prts_per_unit_density;
         }
       }
     }
