@@ -6,8 +6,8 @@
 
 #include "inc_defs.h"
 #include "interpolate.hxx"
-#include "inc_curr.c"
-#include "inc_push.c"
+#include "inc_curr.cxx"
+#include "inc_push.cxx"
 #include "push_particles.hxx"
 #include "push_particles_esirkepov.hxx"
 #include "push_particles_1vb.hxx"
