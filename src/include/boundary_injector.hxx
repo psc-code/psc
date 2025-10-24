@@ -11,6 +11,8 @@
 #include "setup_particles.hxx"
 #include "../libpsc/psc_push_particles/inc_push.cxx"
 
+/// @brief A particle generator for use with @ref BoundaryInjector. Samples
+/// particles from a (possibly shifted) Maxwellian distribution.
 class ParticleGeneratorMaxwellian
 {
 public:
@@ -49,6 +51,14 @@ private:
   rng::Uniform<Real> uniform_dist{0.0, 1.0};
 };
 
+/// @brief Injects particles on a given boundary, sampling from a given particle
+/// generator. For precise control over multiple particle species, use one
+/// BoundaryInjector per species, combined with @ref CompositeInjector.
+/// @tparam PARTICLE_GENERATOR a type that defines `get(min_pos, pos_range)` and
+/// returns an injectable particle within that range of positions (usually a
+/// grid cell); see @ref ParticleGeneratorMaxwellian
+/// @tparam PUSH_PARTICLES type that provides the types `Mparticles`,
+/// `MfieldsState`, `Current`, `real_t`, etc.
 template <typename PARTICLE_GENERATOR, typename PUSH_PARTICLES>
 class BoundaryInjector
 {
