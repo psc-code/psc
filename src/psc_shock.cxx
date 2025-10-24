@@ -68,6 +68,14 @@ double len_x;
 double len_y;
 double len_z;
 
+double kmin;
+double kmax;
+int nk;
+
+double turb_gamma;
+double turb_energy_density;
+double turb_correlation_length;
+
 int out_interval;
 
 bool mirror_domain;
@@ -126,6 +134,14 @@ void setupParameters(int argc, char** argv)
   len_x = nx * dx;
   len_y = ny * dy;
   len_z = nz * dz;
+
+  kmin = parsedParams.get<double>("kmin");
+  kmax = parsedParams.get<double>("kmax");
+  nk = parsedParams.get<int>("nk");
+
+  turb_gamma = parsedParams.get<double>("turb_gamma");
+  turb_energy_density = parsedParams.get<double>("turb_energy_density");
+  turb_correlation_length = parsedParams.get<double>("turb_correlation_length");
 
   int n_writes = parsedParams.getOrDefault<int>("n_writes", 100);
   out_interval = psc_params.nmax / n_writes;
@@ -209,17 +225,123 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
 // ======================================================================
 // initializeFields
 
+double round_to_periodic_k(double len, double k)
+{
+  // want: k = 2*pi*n/len for an integer n
+  double n = round(k * len / (2 * M_PI));
+  return 2 * M_PI * n / len;
+}
+
 void initializeFields(MfieldsState& mflds)
 {
+  // turbulence: superposition of Alfven waves, each with a random direction,
+  // phase, and polarity. Only one wave of each k-shell is chosen, and that wave
+  // is given the entire shell's power.
+  auto ks = std::vector<double>(nk);
+  auto kxs = std::vector<double>(nk);
+  auto kys = std::vector<double>(nk);
+  auto kzs = std::vector<double>(nk);
+
+  double dk_over_k = pow(kmax / kmin, 1.0 / double(nk - 1)) - 1.0;
+
+  auto powers = std::vector<double>(nk);
+
+  auto cos_thetas = std::vector<double>(nk);
+  auto sin_thetas = std::vector<double>(nk);
+
+  auto phis = std::vector<double>(nk);
+  auto phases = std::vector<double>(nk);
+  auto alfven_polarities = std::vector<double>(nk);
+
+  auto rng = rng::Uniform<double>();
+
+  double total_power = 0.0;
+
+  for (int i = 0; i < nk; i++) {
+    cos_thetas[i] = rng.get(-1.0, 1.0);
+    sin_thetas[i] = sin(acos(cos_thetas[i]));
+
+    phis[i] = rng.get(0.0, 2.0 * M_PI);
+    phases[i] = rng.get(0.0, 2.0 * M_PI);
+    alfven_polarities[i] = rng.get(0.0, 2.0 * M_PI);
+
+    ks[i] = kmin * pow(kmax / kmin, i / double(nk - 1));
+    kxs[i] = ks[i] * cos(phis[i]) * sin_thetas[i];
+    kys[i] = ks[i] * sin(phis[i]) * sin_thetas[i];
+    kzs[i] = ks[i] * cos_thetas[i];
+
+    // force periodicity by "snapping" to it
+    kxs[i] = round_to_periodic_k(len_x, kxs[i]);
+    kys[i] = round_to_periodic_k(len_y, kys[i]);
+    kzs[i] = round_to_periodic_k(len_z, kzs[i]);
+    ks[i] = sqrt(sqr(kxs[i]) + sqr(kys[i]) + sqr(kzs[i]));
+    LOG_INFO("k[%d] = %f\n", i, ks[i]);
+
+    powers[i] = 1.0 / (1.0 + pow(ks[i] * turb_correlation_length, turb_gamma));
+    total_power += powers[i] * pow(ks[i], 3.0) * dk_over_k;
+  }
+
+  double db1 = sqrt(turb_energy_density / total_power);
+  auto dbs = std::vector<double>(nk);
+
+  auto aaxs = std::vector<double>(nk);
+  auto aays = std::vector<double>(nk);
+  auto aazs = std::vector<double>(nk);
+
+  auto bbxs = std::vector<double>(nk);
+  auto bbys = std::vector<double>(nk);
+
+  for (int i = 0; i < nk; i++) {
+    dbs[i] = sqrt(powers[i] * pow(ks[i], 3.0) * dk_over_k);
+
+    aaxs[i] = dbs[i] * cos(alfven_polarities[i]) * cos_thetas[i] * cos(phis[i]);
+    aays[i] = dbs[i] * cos(alfven_polarities[i]) * cos_thetas[i] * sin(phis[i]);
+    aazs[i] = -dbs[i] * cos(alfven_polarities[i]) * sin_thetas[i];
+
+    bbxs[i] = dbs[i] * sin(alfven_polarities[i]) * sin(phis[i]);
+    bbys[i] = -dbs[i] * sin(alfven_polarities[i]) * cos(phis[i]);
+  }
+
   setupFields(mflds, [&](int component, double coords[3]) {
     double e_coef = mirror_domain && coords[1] > len_y ? -1 : 1;
     switch (component) {
       case EX: return e_coef * e_x;
       case EY: return e_coef * e_y;
       case EZ: return e_coef * e_z;
-      case HX: return b_x;
-      case HY: return b_y;
-      case HZ: return b_z;
+
+      case HX: {
+        double dbx = 0.0;
+        for (int i = 0; i < nk; i++) {
+          double arg = kxs[i] * coords[0] + kys[i] * coords[1] +
+                       kzs[i] * coords[2] + phases[i];
+
+          dbx += aaxs[i] * cos(arg) + bbxs[i] * sin(arg);
+        }
+
+        return b_x + dbx;
+      }
+      case HY: {
+        double dby = 0.0;
+        for (int i = 0; i < nk; i++) {
+          double arg = kxs[i] * coords[0] + kys[i] * coords[1] +
+                       kzs[i] * coords[2] + phases[i];
+
+          dby += aays[i] * cos(arg) + bbys[i] * sin(arg);
+        }
+
+        return b_y + dby;
+      }
+      case HZ: {
+        double dbz = 0.0;
+        for (int i = 0; i < nk; i++) {
+          double arg = kxs[i] * coords[0] + kys[i] * coords[1] +
+                       kzs[i] * coords[2] + phases[i];
+
+          dbz += aazs[i] * cos(arg);
+        }
+
+        return b_z + dbz;
+      }
       default: return 0.0;
     }
   });
