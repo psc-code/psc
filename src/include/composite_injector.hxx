@@ -1,7 +1,8 @@
 #pragma once
 
 /// @brief An injector comprising two other injectors. Enables multiple
-/// injectors in a single psc case.
+/// injectors in a single psc case. Useful for injecting multiple species with
+/// @ref BoundaryInjector.
 /// @tparam INJECTOR_1 first type of injector
 /// @tparam INJECTOR_2 second type of injector
 template <typename INJECTOR_1, typename INJECTOR_2>
