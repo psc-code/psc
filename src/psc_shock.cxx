@@ -207,16 +207,6 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
 }
 
 // ======================================================================
-// fillGhosts
-
-template <typename MF>
-void fillGhosts(MF& mfld, int compBegin, int compEnd)
-{
-  Bnd_ bnd{};
-  bnd.fill_ghosts(mfld, compBegin, compEnd);
-}
-
-// ======================================================================
 // initializeFields
 
 void initializeFields(MfieldsState& mflds)
