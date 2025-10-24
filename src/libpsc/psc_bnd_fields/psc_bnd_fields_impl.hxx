@@ -143,6 +143,19 @@ struct BndFields_ : BndFieldsBase
     Int3 ib = mflds.ib(), im = mflds.im();
 
     if (d == 1) {
+#ifdef DEBUG
+      for (int iz = -2; iz < ldims[2] + 2; iz++) {
+        for (int ix = MAX(-2, F.ib_[0]);
+             ix < MIN(ldims[0] + 2, F.ib_[0] + F.im_[0]); ix++) {
+          fields_t_set_nan(&F(EX, ix, -1, iz));
+          fields_t_set_nan(&F(EX, ix, -2, iz));
+          fields_t_set_nan(&F(EY, ix, -1, iz));
+          fields_t_set_nan(&F(EY, ix, -2, iz));
+          fields_t_set_nan(&F(EZ, ix, -1, iz));
+          fields_t_set_nan(&F(EZ, ix, -2, iz));
+        }
+      }
+#endif
       for (int iz = -2; iz < ldims[2] + 2; iz++) {
         // FIXME, needs to be for other dir, too, and it's ugly
         for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
@@ -157,6 +170,18 @@ struct BndFields_ : BndFieldsBase
         }
       }
     } else if (d == 2) {
+#ifdef DEBUG
+      for (int iy = -2; iy < ldims[1] + 2; iy++) {
+        for (int ix = -2; ix < ldims[0] + 2; ix++) {
+          fields_t_set_nan(&F(EX, ix, iy, -1));
+          fields_t_set_nan(&F(EX, ix, iy, -2));
+          fields_t_set_nan(&F(EY, ix, iy, -1));
+          fields_t_set_nan(&F(EY, ix, iy, -2));
+          fields_t_set_nan(&F(EZ, ix, iy, -1));
+          fields_t_set_nan(&F(EZ, ix, iy, -2));
+        }
+      }
+#endif
       for (int iy = -2; iy < ldims[1] + 2; iy++) {
         for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
              ix++) {
@@ -182,6 +207,19 @@ struct BndFields_ : BndFieldsBase
 
     if (d == 1) {
       int my _mrc_unused = ldims[1];
+#ifdef DEBUG
+      for (int iz = -2; iz < ldims[2] + 2; iz++) {
+        for (int ix = MAX(-2, F.ib_[0]);
+             ix < MIN(ldims[0] + 2, F.ib_[0] + F.im_[0]); ix++) {
+          fields_t_set_nan(&F(EX, ix, my, iz));
+          fields_t_set_nan(&F(EX, ix, my + 1, iz));
+          fields_t_set_nan(&F(EY, ix, my, iz));
+          fields_t_set_nan(&F(EY, ix, my + 1, iz));
+          fields_t_set_nan(&F(EZ, ix, my, iz));
+          fields_t_set_nan(&F(EZ, ix, my + 1, iz));
+        }
+      }
+#endif
       for (int iz = -2; iz < ldims[2] + 2; iz++) {
         for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
              ix++) {
@@ -196,6 +234,18 @@ struct BndFields_ : BndFieldsBase
       }
     } else if (d == 2) {
       int mz = ldims[2];
+#ifdef DEBUG
+      for (int iy = -2; iy < ldims[1] + 2; iy++) {
+        for (int ix = -2; ix < ldims[0] + 2; ix++) {
+          fields_t_set_nan(&F(EX, ix, iy, mz));
+          fields_t_set_nan(&F(EX, ix, iy, mz + 1));
+          fields_t_set_nan(&F(EY, ix, iy, mz));
+          fields_t_set_nan(&F(EY, ix, iy, mz + 1));
+          fields_t_set_nan(&F(EZ, ix, iy, mz));
+          fields_t_set_nan(&F(EZ, ix, iy, mz + 1));
+        }
+      }
+#endif
       for (int iy = -2; iy < ldims[1] + 2; iy++) {
         for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
              ix++) {
@@ -220,6 +270,19 @@ struct BndFields_ : BndFieldsBase
     Int3 ib = mflds.ib(), im = mflds.im();
 
     if (d == 1) {
+#ifdef DEBUG
+      for (int iz = -2; iz < ldims[2] + 2; iz++) {
+        for (int ix = MAX(-2, F.ib_[0]);
+             ix < MIN(ldims[0] + 2, F.ib_[0] + F.im_[0]); ix++) {
+          fields_t_set_nan(&F(HX, ix, -1, iz));
+          fields_t_set_nan(&F(HX, ix, -2, iz));
+          fields_t_set_nan(&F(HY, ix, -1, iz));
+          fields_t_set_nan(&F(HY, ix, -2, iz));
+          fields_t_set_nan(&F(HZ, ix, -1, iz));
+          fields_t_set_nan(&F(HZ, ix, -2, iz));
+        }
+      }
+#endif
       for (int iz = -1; iz < ldims[2] + 2; iz++) {
         for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
              ix++) {
@@ -231,6 +294,18 @@ struct BndFields_ : BndFieldsBase
         }
       }
     } else if (d == 2) {
+#ifdef DEBUG
+      for (int iy = -2; iy < ldims[1] + 2; iy++) {
+        for (int ix = -2; ix < ldims[0] + 2; ix++) {
+          fields_t_set_nan(&F(HX, ix, iy, -1));
+          fields_t_set_nan(&F(HX, ix, iy, -2));
+          fields_t_set_nan(&F(HY, ix, iy, -1));
+          fields_t_set_nan(&F(HY, ix, iy, -2));
+          fields_t_set_nan(&F(HZ, ix, iy, -1));
+          fields_t_set_nan(&F(HZ, ix, iy, -2));
+        }
+      }
+#endif
       for (int iy = -2; iy < ldims[1] + 2; iy++) {
         for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
              ix++) {
@@ -255,6 +330,18 @@ struct BndFields_ : BndFieldsBase
 
     if (d == 1) {
       int my _mrc_unused = ldims[1];
+#ifdef DEBUG
+      for (int iz = -2; iz < ldims[2] + 2; iz++) {
+        for (int ix = MAX(-2, F.ib_[0]);
+             ix < MIN(ldims[0] + 2, F.ib_[0] + F.im_[0]); ix++) {
+          fields_t_set_nan(&F(HX, ix, my, iz));
+          fields_t_set_nan(&F(HX, ix, my + 1, iz));
+          fields_t_set_nan(&F(HY, ix, my + 1, iz));
+          fields_t_set_nan(&F(HZ, ix, my, iz));
+          fields_t_set_nan(&F(HZ, ix, my + 1, iz));
+        }
+      }
+#endif
       for (int iz = -2; iz < ldims[2] + 2; iz++) {
         for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
              ix++) {
@@ -267,6 +354,17 @@ struct BndFields_ : BndFieldsBase
       }
     } else if (d == 2) {
       int mz = ldims[2];
+#ifdef DEBUG
+      for (int iy = -2; iy < ldims[1] + 2; iy++) {
+        for (int ix = -2; ix < ldims[0] + 2; ix++) {
+          fields_t_set_nan(&F(HX, ix, iy, mz));
+          fields_t_set_nan(&F(HX, ix, iy, mz + 1));
+          fields_t_set_nan(&F(HY, ix, iy, mz));
+          fields_t_set_nan(&F(HY, ix, iy, mz + 1));
+          fields_t_set_nan(&F(HZ, ix, iy, mz + 1));
+        }
+      }
+#endif
       for (int iy = -2; iy < ldims[1] + 2; iy++) {
         for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
              ix++) {
