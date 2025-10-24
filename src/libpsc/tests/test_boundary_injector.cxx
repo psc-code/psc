@@ -82,17 +82,19 @@ Grid_t* setupGrid()
   return new Grid_t{domain, bc, kinds, norm, dt, -1, ibn};
 }
 
-// TODO this template is dumb, just make a proper ctor
-template <int PRT_COUNT, int KIND_IDX>
 struct ParticleGenerator
 {
   using Real = psc::particle::Inject::Real;
   using Real3 = psc::particle::Inject::Real3;
 
+  ParticleGenerator(int max_n_injected, int kind_idx)
+    : max_n_injected(max_n_injected), kind_idx(kind_idx)
+  {}
+
   psc::particle::Inject get(Real3 min_pos, Real3 pos_range)
   {
     Real uy = 2.0;
-    if (PRT_COUNT > 0 && n_injected++ >= PRT_COUNT) {
+    if (max_n_injected > 0 && n_injected++ >= max_n_injected) {
       // Setting uy=0 means the particle won't enter the domain, and thus won't
       // be injected
       uy = 0.0;
@@ -103,10 +105,12 @@ struct ParticleGenerator
     Real w = 1.0;
     psc::particle::Tag tag = 0;
 
-    return {x, u, w, KIND_IDX, tag};
+    return {x, u, w, kind_idx, tag};
   }
 
   int n_injected = 0;
+  int max_n_injected;
+  int kind_idx;
 };
 
 TEST(BoundaryInjectorTest, Integration1Particle)
@@ -141,8 +145,8 @@ TEST(BoundaryInjectorTest, Integration1Particle)
   auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
 
   auto inject_particles =
-    BoundaryInjector<ParticleGenerator<1, 1>, PscConfig::PushParticles>{{},
-                                                                        grid};
+    BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>{
+      ParticleGenerator(1, 1), grid};
 
   auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
                                           balance, collision, checks, marder,
@@ -204,8 +208,8 @@ TEST(BoundaryInjectorTest, IntegrationManyParticles)
   auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
 
   auto inject_particles =
-    BoundaryInjector<ParticleGenerator<-1, 1>, PscConfig::PushParticles>{{},
-                                                                         grid};
+    BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>{
+      ParticleGenerator(-1, 1), grid};
 
   auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
                                           balance, collision, checks, marder,
@@ -267,11 +271,11 @@ TEST(BoundaryInjectorTest, IntegrationManySpecies)
   auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
 
   auto inject_electrons =
-    BoundaryInjector<ParticleGenerator<-1, 0>, PscConfig::PushParticles>{{},
-                                                                         grid};
+    BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>{
+      ParticleGenerator(-1, 0), grid};
   auto inject_ions =
-    BoundaryInjector<ParticleGenerator<-1, 1>, PscConfig::PushParticles>{{},
-                                                                         grid};
+    BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>{
+      ParticleGenerator(-1, 1), grid};
 
   auto inject = make_composite(inject_electrons, inject_ions);
 
