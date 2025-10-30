@@ -9,6 +9,7 @@
 #include "cuda_compat.h"
 #include <kg/Macros.h>
 #include <psc/gtensor.h>
+#include "psc_bits.h"
 
 namespace kg
 {
@@ -100,6 +101,64 @@ struct Vec : gt::sarray<T, N>
       (*this)[i] /= w[i];
     }
     return *this;
+  }
+
+  KG_INLINE T sum() const
+  {
+    T sum{0};
+    for (size_t i = 0; i < N; i++) {
+      sum += (*this)[i];
+    }
+    return sum;
+  }
+
+  KG_INLINE T prod() const
+  {
+    T prod{1};
+    for (size_t i = 0; i < N; i++) {
+      prod *= (*this)[i];
+    }
+    return prod;
+  }
+
+  KG_INLINE T dot(const Vec& w) const
+  {
+    T sum{0};
+    for (size_t i = 0; i < N; i++) {
+      sum += (*this)[i] * w[i];
+    }
+    return sum;
+  }
+
+  KG_INLINE Vec cross(const Vec& w) const
+  {
+    return {(*this)[1] * w[2] - (*this)[2] * w[1],
+            (*this)[2] * w[0] - (*this)[0] * w[2],
+            (*this)[0] * w[1] - (*this)[1] * w[0]};
+  }
+
+  KG_INLINE T mag2() const { return this->dot(this); }
+
+  KG_INLINE T mag() const { return sqrt(this->mag2()); }
+
+  KG_INLINE T max() const
+  {
+    auto max = (*this)[0];
+    for (size_t i = 1; i < N; i++) {
+      max = std::max(max, (*this)[i]);
+    }
+    return max;
+  }
+
+  KG_INLINE Vec inv() const { return T(1) / *this; }
+
+  KG_INLINE Vec<int, N> fint() const
+  {
+    Vec<int, N> res;
+    for (size_t i = 0; i < N; i++) {
+      res[i] = ::fint((*this)[i]);
+    }
+    return res;
   }
 
   // conversion to pointer
