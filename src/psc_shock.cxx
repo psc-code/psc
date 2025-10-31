@@ -234,117 +234,164 @@ double round_to_periodic_k(double len, double k)
 
 void initializeFields(MfieldsState& mflds)
 {
-  // turbulence: superposition of Alfven waves, each with a random direction,
-  // phase, and polarity. Only one wave of each k-shell is chosen, and that wave
-  // is given the entire shell's power.
-  auto ks = std::vector<double>(nk);
-  auto kxs = std::vector<double>(nk);
-  auto kys = std::vector<double>(nk);
-  auto kzs = std::vector<double>(nk);
+  auto power_func = [&](double k) {
+    return 1.0 / (1.0 + pow(k * turb_correlation_length, turb_gamma));
+  };
 
-  double dk_over_k = pow(kmax / kmin, 1.0 / double(nk - 1)) - 1.0;
-
-  auto powers = std::vector<double>(nk);
-
-  auto cos_thetas = std::vector<double>(nk);
-  auto sin_thetas = std::vector<double>(nk);
-
-  auto phis = std::vector<double>(nk);
-  auto phases = std::vector<double>(nk);
-  auto alfven_polarities = std::vector<double>(nk);
-
-  auto rng = rng::Uniform<double>();
-
-  double total_power = 0.0;
-
-  for (int i = 0; i < nk; i++) {
-    cos_thetas[i] = rng.get(-1.0, 1.0);
-    sin_thetas[i] = sin(acos(cos_thetas[i]));
-
-    phis[i] = rng.get(0.0, 2.0 * M_PI);
-    phases[i] = rng.get(0.0, 2.0 * M_PI);
-    alfven_polarities[i] = rng.get(0.0, 2.0 * M_PI);
-
-    ks[i] = kmin * pow(kmax / kmin, i / double(nk - 1));
-    kxs[i] = ks[i] * cos(phis[i]) * sin_thetas[i];
-    kys[i] = ks[i] * sin(phis[i]) * sin_thetas[i];
-    kzs[i] = ks[i] * cos_thetas[i];
-
-    // force periodicity by "snapping" to it
-    kxs[i] = round_to_periodic_k(len_x, kxs[i]);
-    kys[i] = round_to_periodic_k(len_y, kys[i]);
-    kzs[i] = round_to_periodic_k(len_z, kzs[i]);
-    ks[i] = sqrt(sqr(kxs[i]) + sqr(kys[i]) + sqr(kzs[i]));
-    LOG_INFO("k[%d] = %f\n", i, ks[i]);
-
-    powers[i] = 1.0 / (1.0 + pow(ks[i] * turb_correlation_length, turb_gamma));
-    total_power += powers[i] * pow(ks[i], 3.0) * dk_over_k;
-  }
-
-  double db1 = sqrt(turb_energy_density / total_power);
-  auto dbs = std::vector<double>(nk);
-
-  auto aaxs = std::vector<double>(nk);
-  auto aays = std::vector<double>(nk);
-  auto aazs = std::vector<double>(nk);
-
-  auto bbxs = std::vector<double>(nk);
-  auto bbys = std::vector<double>(nk);
-
-  for (int i = 0; i < nk; i++) {
-    dbs[i] = sqrt(powers[i] * pow(ks[i], 3.0) * dk_over_k);
-
-    aaxs[i] = dbs[i] * cos(alfven_polarities[i]) * cos_thetas[i] * cos(phis[i]);
-    aays[i] = dbs[i] * cos(alfven_polarities[i]) * cos_thetas[i] * sin(phis[i]);
-    aazs[i] = -dbs[i] * cos(alfven_polarities[i]) * sin_thetas[i];
-
-    bbxs[i] = dbs[i] * sin(alfven_polarities[i]) * sin(phis[i]);
-    bbys[i] = -dbs[i] * sin(alfven_polarities[i]) * cos(phis[i]);
-  }
+  // 0. constant (k=0) part
 
   setupFields(mflds, [&](int component, double coords[3]) {
-    double e_coef = mirror_domain && coords[1] > len_y ? -1 : 1;
     switch (component) {
-      case EX: return e_coef * e_x;
-      case EY: return e_coef * e_y;
-      case EZ: return e_coef * e_z;
-
-      case HX: {
-        double dbx = 0.0;
-        for (int i = 0; i < nk; i++) {
-          double arg = kxs[i] * coords[0] + kys[i] * coords[1] +
-                       kzs[i] * coords[2] + phases[i];
-
-          dbx += aaxs[i] * cos(arg) + bbxs[i] * sin(arg);
-        }
-
-        return b_x + dbx;
-      }
-      case HY: {
-        double dby = 0.0;
-        for (int i = 0; i < nk; i++) {
-          double arg = kxs[i] * coords[0] + kys[i] * coords[1] +
-                       kzs[i] * coords[2] + phases[i];
-
-          dby += aays[i] * cos(arg) + bbys[i] * sin(arg);
-        }
-
-        return b_y + dby;
-      }
-      case HZ: {
-        double dbz = 0.0;
-        for (int i = 0; i < nk; i++) {
-          double arg = kxs[i] * coords[0] + kys[i] * coords[1] +
-                       kzs[i] * coords[2] + phases[i];
-
-          dbz += aazs[i] * cos(arg);
-        }
-
-        return b_z + dbz;
-      }
+      case HX: return b_x;
+      case HY: return b_y;
+      case HZ: return b_z;
       default: return 0.0;
     }
   });
+
+  // 1. compute values of |k|
+
+  double dkx = 2.0 * M_PI / len_x;
+  double dky = 2.0 * M_PI / len_y;
+  double dkz = 2.0 * M_PI / len_z;
+
+  double dk = std::min({dkx, dky, dkz});
+  double kmax = sqrt(sqr(dkx * nx) + sqr(dky * ny) + sqr(dkz * nz)) / 2.0;
+  int nk = kmax / dk;
+
+  LOG_INFO("nk = %d, from k=%f to %f\n", nk, dk, kmax);
+
+  auto ks = std::vector<double>(nk);
+  for (int i = 0; i < nk; i++) {
+    ks[i] = dk * i;
+  }
+
+  // 2. compute number of degeneracies of each k-shell
+
+  int ix_min = 0;
+  int iy_min = 0;
+  int iz_min = 0;
+
+  int ix_max = nx / 2 + 1;
+  int iy_max = ny / 2 + 1;
+  int iz_max = nz / 2 + 1;
+
+  auto shell_powers = std::vector<double>(nk);
+
+  for (int ix = ix_min; ix < ix_max; ix++) {
+    for (int iy = iy_min; iy < iy_max; iy++) {
+      for (int iz = iz_min; iz < iz_max; iz++) {
+        double kx = ix * dkx;
+        double ky = iy * dky;
+        double kz = iz * dkz;
+        double k = sqrt(sqr(kx) + sqr(ky) + sqr(kz));
+
+        int idx = k / dk;
+        shell_powers[idx] += power_func(k);
+      }
+    }
+  }
+
+  // 3. compute powers for each shell, P(k)
+
+  auto normalized_shell_powers = std::vector<double>(nk);
+
+  double integral_power;
+  for (int i = 0; i < nk; i++) {
+    normalized_shell_powers[i] = power_func(ks[i] + 0.5 * dk);
+    integral_power += normalized_shell_powers[i];
+  }
+
+  // 4. compute scaling factor, db1
+
+  // TODO derive constant of proportionality needed to actually achieve
+  // turb_energy_density
+  double db1 = sqrt(turb_energy_density / integral_power);
+
+  // 5. apply each mode at a random phase and polarization
+
+  auto rng = rng::Uniform<double>();
+  const auto& grid = mflds.grid();
+
+  LOG_INFO("integral_power=%f\n", integral_power);
+  LOG_INFO("db1=%f\n", db1);
+
+  for (int ix = ix_min; ix < ix_max; ix++) {
+    for (int iy = iy_min; iy < iy_max; iy++) {
+      for (int iz = iz_min; iz < iz_max; iz++) {
+        double kx = ix * dkx;
+        double ky = iy * dky;
+        double kz = iz * dkz;
+
+        LOG_INFO("k[%d, %d, %d] = [%f, %f, %f]\n", ix, iy, iz, kx, ky, kz);
+
+        double kxy = sqrt(sqr(kx) + sqr(ky));
+        double k = sqrt(sqr(kx) + sqr(ky) + sqr(kz));
+
+        if (k == 0.0) {
+          // no power for the constant mode, and avoid division-by-0
+          continue;
+        }
+
+        int idx = k / dk;
+
+        double phase = rng.get(0.0, 2.0 * M_PI);
+        double polarization = rng.get(0.0, 2.0 * M_PI);
+
+        double power = power_func(k);
+        double db =
+          db1 * sqrt(normalized_shell_powers[idx] * power / shell_powers[idx]);
+
+        double cos_theta = kz / k;
+        double sin_theta = kxy / k;
+
+        double cos_phi = kx / kxy;
+        double sin_phi = ky / kxy;
+
+        if (kxy == 0.0) {
+          // shouldn't matter given random phase and polarization, just want to
+          // avoid nans
+          cos_phi = 1.0;
+          sin_phi = 0.0;
+        }
+
+        double aax = db * cos(polarization) * cos_theta * cos_phi;
+        double aay = db * cos(polarization) * cos_theta * sin_phi;
+        double aaz = -db * cos(polarization) * sin_theta;
+
+        double bbx = db * sin(polarization) * sin_phi;
+        double bby = -db * sin(polarization) * cos_phi;
+        double bbz = 0.0;
+
+        Double3 k_vec = {kx, ky, kz};
+
+        for (int p = 0; p < mflds.n_patches(); ++p) {
+          auto& patch = grid.patches[p];
+          auto field_patch = make_Fields3d<dim_xyz>(mflds[p]);
+
+          int n_ghosts = mflds.ibn().max();
+          grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
+            Int3 index{jx, jy, jz};
+
+            Double3 pos_fc_x =
+              centering::get_pos(patch, index, centering::FC, 0);
+            Double3 pos_fc_y =
+              centering::get_pos(patch, index, centering::FC, 1);
+            Double3 pos_fc_z =
+              centering::get_pos(patch, index, centering::FC, 2);
+
+            double arg_x = k_vec.dot(pos_fc_x) + phase;
+            double arg_y = k_vec.dot(pos_fc_y) + phase;
+            double arg_z = k_vec.dot(pos_fc_z) + phase;
+
+            field_patch(HX, jx, jy, jz) += aax * cos(arg_x) + bbx * sin(arg_x);
+            field_patch(HY, jx, jy, jz) += aay * cos(arg_y) + bby * sin(arg_y);
+            field_patch(HZ, jx, jy, jz) += aaz * cos(arg_z) + bbz * sin(arg_z);
+          });
+        }
+      }
+    }
+  }
 }
 
 // ======================================================================
