@@ -15,8 +15,8 @@ namespace rng
 namespace detail
 {
 using Generator = std::default_random_engine;
-using ProcessGeneratorPtr = std::shared_ptr<Generator>;
-ProcessGeneratorPtr process_generator;
+using GeneratorPtr = std::shared_ptr<Generator>;
+GeneratorPtr process_generator;
 
 int get_process_seed()
 {
@@ -25,7 +25,7 @@ int get_process_seed()
   return 10000 * (rank + 1);
 }
 
-ProcessGeneratorPtr get_process_generator()
+GeneratorPtr get_process_generator()
 {
   if (!process_generator) {
     process_generator = std::make_shared<Generator>(get_process_seed());
@@ -50,7 +50,7 @@ struct Uniform
   Real get() { return dist(*gen); }
 
 private:
-  detail::ProcessGeneratorPtr gen;
+  detail::GeneratorPtr gen;
   std::uniform_real_distribution<Real> dist;
 };
 
@@ -74,7 +74,7 @@ struct Normal
   }
 
 private:
-  detail::ProcessGeneratorPtr gen;
+  detail::GeneratorPtr gen;
   std::normal_distribution<Real> dist;
 };
 
