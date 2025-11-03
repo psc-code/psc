@@ -68,10 +68,6 @@ double len_x;
 double len_y;
 double len_z;
 
-double kmin;
-double kmax;
-int nk;
-
 double turb_gamma;
 double turb_energy_density;
 double turb_correlation_length;
@@ -134,10 +130,6 @@ void setupParameters(int argc, char** argv)
   len_x = nx * dx;
   len_y = ny * dy;
   len_z = nz * dz;
-
-  kmin = parsedParams.get<double>("kmin");
-  kmax = parsedParams.get<double>("kmax");
-  nk = parsedParams.get<int>("nk");
 
   turb_gamma = parsedParams.get<double>("turb_gamma");
   turb_energy_density = parsedParams.get<double>("turb_energy_density");
