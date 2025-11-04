@@ -4,6 +4,7 @@
 
 #include "OutputFieldsDefault.h"
 #include "psc_config.hxx"
+#include "include/boundary_injector.hxx"
 #include "input_params.hxx"
 #include "kg/include/kg/VecRange.hxx"
 
@@ -728,6 +729,21 @@ static void run(int argc, char** argv)
   int oute_interval = -100;
   DiagEnergies<Mparticles, MfieldsState> oute{grid.comm(), oute_interval};
 
+  auto ion_injector =
+    BoundaryInjector<ParticleGeneratorMaxwellian, PscConfig::PushParticles>(
+      ParticleGeneratorMaxwellian(
+        KIND_ION, grid.kinds[KIND_ION],
+        {v_upstream_x, v_upstream_y, v_upstream_z},
+        {ion_temperature, ion_temperature, ion_temperature}),
+      grid);
+  auto electron_injector =
+    BoundaryInjector<ParticleGeneratorMaxwellian, PscConfig::PushParticles>(
+      ParticleGeneratorMaxwellian(
+        KIND_ELECTRON, grid.kinds[KIND_ELECTRON],
+        {v_upstream_x, v_upstream_y, v_upstream_z},
+        {electron_temperature, electron_temperature, electron_temperature}),
+      grid);
+
   // ----------------------------------------------------------------------
   // set up initial conditions
 
@@ -750,6 +766,9 @@ static void run(int argc, char** argv)
   psc.add_diagnostic(&outf);
   psc.add_diagnostic(&outp);
   psc.add_diagnostic(&oute);
+
+  psc.add_injector(&ion_injector);
+  psc.add_injector(&electron_injector);
 
   psc.integrate();
 }
