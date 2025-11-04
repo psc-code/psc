@@ -169,12 +169,13 @@ Grid_t* setupGrid()
     {0, 0, 0},                      // location of lower corner
     {n_patches_x, y_mult * n_patches_y, n_patches_z}}; // n patches
 
-  auto BND_FLD_Y = mirror_domain ? BND_FLD_PERIODIC : BND_FLD_CONDUCTING_WALL;
-  auto BND_PRT_Y = mirror_domain ? BND_PRT_PERIODIC : BND_PRT_REFLECTING;
-  auto bc = psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_Y, BND_FLD_PERIODIC},
-                          {BND_FLD_PERIODIC, BND_FLD_Y, BND_FLD_PERIODIC},
-                          {BND_PRT_PERIODIC, BND_PRT_Y, BND_PRT_PERIODIC},
-                          {BND_PRT_PERIODIC, BND_PRT_Y, BND_PRT_PERIODIC}};
+  auto BND_FLD_Y_UPPER = mirror_domain ? BND_FLD_OPEN : BND_FLD_CONDUCTING_WALL;
+  auto BND_PRT_Y_UPPER = mirror_domain ? BND_PRT_OPEN : BND_PRT_REFLECTING;
+  auto bc =
+    psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_OPEN, BND_FLD_PERIODIC},
+                  {BND_FLD_PERIODIC, BND_FLD_Y_UPPER, BND_FLD_PERIODIC},
+                  {BND_PRT_PERIODIC, BND_PRT_OPEN, BND_PRT_PERIODIC},
+                  {BND_PRT_PERIODIC, BND_PRT_Y_UPPER, BND_PRT_PERIODIC}};
 
   auto kinds = Grid_t::Kinds(NR_KINDS);
   kinds[KIND_ELECTRON] = {-1.0, electron_mass, "e"};
