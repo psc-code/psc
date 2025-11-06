@@ -153,6 +153,7 @@ void BndParticlesCommon<MP>::process_patch(const Grid_t& grid,
               pxi[d] = -pxi[d];
               dir[d] = 0;
               break;
+            case BND_PRT_OPEN:
             case BND_PRT_ABSORBING: drop = true; break;
             default: assert(0);
           }
@@ -177,6 +178,7 @@ void BndParticlesCommon<MP>::process_patch(const Grid_t& grid,
               }
               break;
             }
+            case BND_PRT_OPEN:
             case BND_PRT_ABSORBING: drop = true; break;
             default: assert(0);
           }
