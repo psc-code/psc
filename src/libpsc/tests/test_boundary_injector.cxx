@@ -3,6 +3,7 @@
 #include "test_common.hxx"
 
 #include "boundary_injector.hxx"
+#include "composite_injector.hxx"
 
 #include "psc.hxx"
 #include "DiagnosticsDefault.h"
@@ -81,16 +82,19 @@ Grid_t* setupGrid()
   return new Grid_t{domain, bc, kinds, norm, dt, -1, ibn};
 }
 
-template <int PRT_COUNT>
 struct ParticleGenerator
 {
   using Real = psc::particle::Inject::Real;
   using Real3 = psc::particle::Inject::Real3;
 
+  ParticleGenerator(int max_n_injected, int kind_idx)
+    : max_n_injected(max_n_injected), kind_idx(kind_idx)
+  {}
+
   psc::particle::Inject get(Real3 min_pos, Real3 pos_range)
   {
     Real uy = 2.0;
-    if (PRT_COUNT > 0 && n_injected++ >= PRT_COUNT) {
+    if (max_n_injected > 0 && n_injected++ >= max_n_injected) {
       // Setting uy=0 means the particle won't enter the domain, and thus won't
       // be injected
       uy = 0.0;
@@ -99,13 +103,14 @@ struct ParticleGenerator
     Real3 x = min_pos + pos_range * Real3{0, .999, 0.};
     Real3 u{0.0, uy, 0.0};
     Real w = 1.0;
-    int kind_idx = 1;
     psc::particle::Tag tag = 0;
 
     return {x, u, w, kind_idx, tag};
   }
 
   int n_injected = 0;
+  int max_n_injected;
+  int kind_idx;
 };
 
 TEST(BoundaryInjectorTest, Integration1Particle)
@@ -140,7 +145,8 @@ TEST(BoundaryInjectorTest, Integration1Particle)
   auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
 
   auto inject_particles =
-    BoundaryInjector<ParticleGenerator<1>, PscConfig::PushParticles>{{}, grid};
+    BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>{
+      ParticleGenerator(1, 1), grid};
 
   auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
                                           balance, collision, checks, marder,
@@ -202,7 +208,8 @@ TEST(BoundaryInjectorTest, IntegrationManyParticles)
   auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
 
   auto inject_particles =
-    BoundaryInjector<ParticleGenerator<-1>, PscConfig::PushParticles>{{}, grid};
+    BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>{
+      ParticleGenerator(-1, 1), grid};
 
   auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
                                           balance, collision, checks, marder,
@@ -230,6 +237,82 @@ TEST(BoundaryInjectorTest, IntegrationManyParticles)
   }
 
   ASSERT_GT(prts.size(), 1);
+}
+
+TEST(BoundaryInjectorTest, IntegrationManySpecies)
+{
+  // ----------------------------------------------------------------------
+  // setup
+
+  PscParams psc_params;
+
+  psc_params.nmax = 1;
+  psc_params.stats_every = 1;
+  psc_params.cfl = .75;
+
+  auto grid_ptr = setupGrid();
+  auto& grid = *grid_ptr;
+
+  MfieldsState mflds{grid};
+  Mparticles mprts{grid};
+
+  ChecksParams checks_params{};
+  checks_params.continuity.check_interval = 1;
+  checks_params.gauss.check_interval = 1;
+  Checks checks{grid, MPI_COMM_WORLD, checks_params};
+
+  Balance balance{.1};
+  Collision collision{grid, 0, 0.1};
+  Marder marder(grid, 0.9, 3, false);
+
+  OutputFields<MfieldsState, Mparticles, Dim> outf{grid, {}};
+  OutputParticles outp{grid, {}};
+  DiagEnergies oute{grid.comm(), 0};
+  auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
+
+  auto inject_electrons =
+    BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>{
+      ParticleGenerator(-1, 0), grid};
+  auto inject_ions =
+    BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>{
+      ParticleGenerator(-1, 1), grid};
+
+  auto inject = make_composite(inject_electrons, inject_ions);
+
+  auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
+                                          balance, collision, checks, marder,
+                                          diagnostics, inject);
+
+  // ----------------------------------------------------------------------
+  // set up initial conditions
+
+  ASSERT_EQ(grid.n_patches(), 1);
+  int p = 0;
+
+  // ----------------------------------------------------------------------
+  // run the simulation
+
+  auto accessor = mprts.accessor();
+  auto prts = accessor[p];
+
+  ASSERT_EQ(prts.size(), 0);
+
+  for (; grid.timestep_ < psc_params.nmax; grid.timestep_++) {
+    psc.step();
+
+    EXPECT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
+    EXPECT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
+  }
+
+  bool found_electrons = false;
+  bool found_ions = false;
+  for (auto prt : prts) {
+    found_electrons |= prt.kind() == 0;
+    found_ions |= prt.kind() == 1;
+  }
+
+  ASSERT_TRUE(found_electrons);
+  ASSERT_TRUE(found_ions);
 }
 
 // ======================================================================
