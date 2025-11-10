@@ -251,7 +251,7 @@ void initializeFields(MfieldsState& mflds)
   double kmax = sqrt(sqr(dkx * nx) + sqr(dky * ny) + sqr(dkz * nz)) / 2.0;
   int nk = kmax / dk;
 
-  LOG_INFO("nk = %d, from k=%f to %f\n", nk, dk, kmax);
+  // LOG_INFO("nk = %d, from k=%f to %f\n", nk, dk, kmax);
 
   auto ks = std::vector<double>(nk);
   for (int i = 0; i < nk; i++) {
@@ -306,8 +306,8 @@ void initializeFields(MfieldsState& mflds)
   auto rng = rng::Uniform<double>(0.0, 1.0, seed);
   const auto& grid = mflds.grid();
 
-  LOG_INFO("integral_power=%f\n", integral_power);
-  LOG_INFO("db1=%f\n", db1);
+  // LOG_INFO("integral_power=%f\n", integral_power);
+  // LOG_INFO("db1=%f\n", db1);
 
   for (int ix = ix_min; ix < ix_max; ix++) {
     for (int iy = iy_min; iy < iy_max; iy++) {
@@ -316,7 +316,7 @@ void initializeFields(MfieldsState& mflds)
         double ky = iy * dky;
         double kz = iz * dkz;
 
-        LOG_INFO("k[%d, %d, %d] = [%f, %f, %f]\n", ix, iy, iz, kx, ky, kz);
+        // LOG_INFO("k[%d, %d, %d] = [%f, %f, %f]\n", ix, iy, iz, kx, ky, kz);
 
         double kxy = sqrt(sqr(kx) + sqr(ky));
         double k = sqrt(sqr(kx) + sqr(ky) + sqr(kz));
