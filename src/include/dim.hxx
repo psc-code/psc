@@ -3,12 +3,24 @@
 
 #include <type_traits>
 
+#include "kg/Vec3.h"
+
 template <bool IX = false, bool IY = false, bool IZ = false>
 struct Invar
 {
   using InvarX = std::integral_constant<bool, IX>;
   using InvarY = std::integral_constant<bool, IY>;
   using InvarZ = std::integral_constant<bool, IZ>;
+
+  /// @brief Gets a mask of noninvariant dimensions (i.e., 0 for invariant
+  /// dimensions, 1 for noninvariant dimensions). This is useful for multiplying
+  /// by a constant to, say, get the number of ghost cells in each dimension
+  /// (where invariant dimensions have no ghosts).
+  /// @return the mask
+  static Int3 get_noninvariant_mask()
+  {
+    return {!InvarX::value, !InvarY::value, !InvarZ::value};
+  }
 };
 
 using dim_xyz = Invar<false, false, false>;
