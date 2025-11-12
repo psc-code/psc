@@ -320,16 +320,8 @@ Grid_t* setupGrid()
   double dt = psc_params.cfl * courant_length(domain);
   Grid_t::Normalization norm{norm_params};
 
-  Int3 ibn = {2, 2, 2};
-  if (Dim::InvarX::value) {
-    ibn[0] = 0;
-  }
-  if (Dim::InvarY::value) {
-    ibn[1] = 0;
-  }
-  if (Dim::InvarZ::value) {
-    ibn[2] = 0;
-  }
+  int n_ghosts = 2;
+  Int3 ibn = n_ghosts * Dim::get_noninvariant_mask();
 
   return new Grid_t{domain, bc, kinds, norm, dt, -1, ibn};
 }
