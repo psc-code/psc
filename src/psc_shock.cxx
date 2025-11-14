@@ -260,9 +260,18 @@ void initializeFields(MfieldsState& mflds)
 
   // 2. compute number of degeneracies of each k-shell
 
-  int ix_min = 0;
-  int iy_min = 0;
-  int iz_min = 0;
+  int ix_min = -nx / 2;
+  int iy_min = -ny / 2;
+  int iz_min = -nz / 2;
+
+  // inject in only half of k-space, since +k and -k modes are indistinguishable
+  if (nx != 1) {
+    ix_min = 0;
+  } else if (ny != 1) {
+    iy_min = 0;
+  } else {
+    iz_min = 0;
+  }
 
   int ix_max = nx / 2 + 1;
   int iy_max = ny / 2 + 1;
