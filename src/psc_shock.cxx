@@ -340,9 +340,6 @@ void initializeFields(MfieldsState& mflds)
 
         int idx = k / dk;
 
-        double phase = rng.get(0.0, 2.0 * M_PI);
-        double polarization = rng.get(0.0, 2.0 * M_PI);
-
         double proportion_of_shell_energy_density_in_cell =
           1.0 / n_cells_per_shell[idx];
         double shell_energy_density = shell_energy_densities[idx];
@@ -364,6 +361,9 @@ void initializeFields(MfieldsState& mflds)
           cos_phi = 1.0;
           sin_phi = 0.0;
         }
+
+        double phase = rng.get(0.0, 2.0 * M_PI);
+        double polarization = rng.get(0.0, 2.0 * M_PI);
 
         double aax = db * cos(polarization) * cos_theta * cos_phi;
         double aay = db * cos(polarization) * cos_theta * sin_phi;
