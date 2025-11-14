@@ -278,6 +278,10 @@ void initializeFields(MfieldsState& mflds)
         double kz = iz * dkz;
         double k = sqrt(sqr(kx) + sqr(ky) + sqr(kz));
 
+        if (k == 0) {
+          continue;
+        }
+
         int idx = k / dk;
         shell_powers[idx] += power_func(k);
       }
