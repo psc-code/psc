@@ -247,7 +247,7 @@ void initializeFields(MfieldsState& mflds)
   double dky = 2.0 * M_PI / len_y;
   double dkz = 2.0 * M_PI / len_z;
 
-  double dk = std::min({dkx, dky, dkz});
+  double dk = pow(dkx * dky * dkz, 1.0 / 3.0);
   double kmax = sqrt(sqr(dkx * nx) + sqr(dky * ny) + sqr(dkz * nz)) / 2.0;
   int nk = kmax / dk;
 
