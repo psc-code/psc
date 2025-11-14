@@ -68,7 +68,6 @@ double len_x;
 double len_y;
 double len_z;
 
-double turb_gamma;
 double turb_db2;
 double turb_correlation_length;
 
@@ -131,7 +130,6 @@ void setupParameters(int argc, char** argv)
   len_y = ny * dy;
   len_z = nz * dz;
 
-  turb_gamma = parsedParams.get<double>("turb_gamma");
   turb_db2 = parsedParams.get<double>("turb_dB^2");
   turb_correlation_length = parsedParams.get<double>("turb_correlation_length");
 
@@ -226,8 +224,12 @@ double round_to_periodic_k(double len, double k)
 
 void initializeFields(MfieldsState& mflds)
 {
+  // literally the power of each shell, such that
+  // <dB^2> = int_{k=0}^\infty shellpower(k) dk.
+  // Note that regardless of dimensionality, shellpower(k) ~ k^{-5/3},
+  // i.e., shellpower(k) includes the Jacobian.
   auto shell_power = [&](double k) {
-    return 1.0 / (1.0 + pow(k * turb_correlation_length, turb_gamma));
+    return 1.0 / (1.0 + pow(k * turb_correlation_length, 5.0 / 3.0));
   };
 
   // 0. constant (k=0) part
