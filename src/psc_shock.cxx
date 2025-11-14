@@ -69,7 +69,7 @@ double len_y;
 double len_z;
 
 double turb_gamma;
-double turb_energy_density;
+double turb_db2;
 double turb_correlation_length;
 
 int out_interval;
@@ -132,7 +132,7 @@ void setupParameters(int argc, char** argv)
   len_z = nz * dz;
 
   turb_gamma = parsedParams.get<double>("turb_gamma");
-  turb_energy_density = parsedParams.get<double>("turb_energy_density");
+  turb_db2 = parsedParams.get<double>("turb_dB^2");
   turb_correlation_length = parsedParams.get<double>("turb_correlation_length");
 
   int n_writes = parsedParams.getOrDefault<int>("n_writes", 100);
@@ -226,7 +226,7 @@ double round_to_periodic_k(double len, double k)
 
 void initializeFields(MfieldsState& mflds)
 {
-  auto power_func = [&](double k) {
+  auto shell_power = [&](double k) {
     return 1.0 / (1.0 + pow(k * turb_correlation_length, turb_gamma));
   };
 
@@ -251,9 +251,9 @@ void initializeFields(MfieldsState& mflds)
   double kmax = sqrt(sqr(dkx * nx) + sqr(dky * ny) + sqr(dkz * nz)) / 2.0;
   int nk = kmax / dk + 1;
 
-  auto ks = std::vector<double>(nk);
+  auto k_mins = std::vector<double>(nk);
   for (int i = 0; i < nk; i++) {
-    ks[i] = dk * i;
+    k_mins[i] = dk * i;
   }
 
   // 2. compute number of degeneracies of each k-shell
@@ -266,7 +266,7 @@ void initializeFields(MfieldsState& mflds)
   int iy_max = ny / 2 + 1;
   int iz_max = nz / 2 + 1;
 
-  auto shell_powers = std::vector<double>(nk);
+  auto n_cells_per_shell = std::vector<int>(nk);
 
   for (int ix = ix_min; ix < ix_max; ix++) {
     for (int iy = iy_min; iy < iy_max; iy++) {
@@ -281,28 +281,31 @@ void initializeFields(MfieldsState& mflds)
         }
 
         int idx = k / dk;
-        shell_powers[idx] += power_func(k);
+        n_cells_per_shell[idx] += 1;
       }
     }
   }
 
-  // 3. compute powers for each shell, P(k)
+  // 3. compute powers for each shell
 
-  auto normalized_shell_powers = std::vector<double>(nk);
+  auto shell_energy_densities = std::vector<double>(nk);
+  double initial_total_energy_density = 0.0;
 
-  double integral_power;
   for (int i = 0; i < nk; i++) {
-    normalized_shell_powers[i] = power_func(ks[i] + 0.5 * dk);
-    integral_power += normalized_shell_powers[i];
+    double k_shell = k_mins[i] + 0.5 * dky;
+    shell_energy_densities[i] = shell_power(k_shell) * dky;
+    initial_total_energy_density += shell_energy_densities[i];
   }
 
-  // 4. compute scaling factor, db1
+  // scale shell powers to match desired energy density
 
-  // TODO derive constant of proportionality needed to actually achieve
-  // turb_energy_density
-  double db1 = sqrt(turb_energy_density / integral_power);
+  double target_total_energy_density = 0.5 * turb_db2;
+  for (int i = 0; i < nk; i++) {
+    shell_energy_densities[i] *=
+      target_total_energy_density / initial_total_energy_density;
+  }
 
-  // 5. apply each mode at a random phase and polarization
+  // 4. inject each mode at a random phase and polarization
 
   // TODO randomize the seed based on e.g. time
   int seed = 5; // all processes must use same seed to ensure B is continuous
@@ -329,9 +332,14 @@ void initializeFields(MfieldsState& mflds)
         double phase = rng.get(0.0, 2.0 * M_PI);
         double polarization = rng.get(0.0, 2.0 * M_PI);
 
-        double power = power_func(k);
-        double db =
-          db1 * sqrt(normalized_shell_powers[idx] * power / shell_powers[idx]);
+        double proportion_of_shell_energy_density_in_cell =
+          1.0 / n_cells_per_shell[idx];
+        double shell_energy_density = shell_energy_densities[idx];
+        double lambda = 1; // TODO figure this out
+        double cell_energy_density =
+          lambda * proportion_of_shell_energy_density_in_cell *
+          shell_energy_density;
+        double db = sqrt(2.0 * cell_energy_density);
 
         double cos_theta = kz / k;
         double sin_theta = kxy / k;
