@@ -225,7 +225,7 @@ double round_to_periodic_k(double len, double k)
 void initializeFields(MfieldsState& mflds)
 {
   // literally the power of each shell, such that
-  // <dB^2> = int_{k=0}^\infty shellpower(k) dk.
+  // 1/2 <dB^2> = int_{k=0}^\infty shellpower(k) dk.
   // Note that regardless of dimensionality, shellpower(k) ~ k^{-5/3},
   // i.e., shellpower(k) includes the Jacobian.
   auto shell_power = [&](double k) {
@@ -337,11 +337,11 @@ void initializeFields(MfieldsState& mflds)
         double proportion_of_shell_energy_density_in_cell =
           1.0 / n_cells_per_shell[idx];
         double shell_energy_density = shell_energy_densities[idx];
-        double lambda = 1; // TODO figure this out
+        double lambda = 4; // experimentally obtained
         double cell_energy_density =
           lambda * proportion_of_shell_energy_density_in_cell *
           shell_energy_density;
-        double db = sqrt(2.0 * cell_energy_density);
+        double db = sqrt(cell_energy_density);
 
         double cos_theta = kz / k;
         double sin_theta = kxy / k;
