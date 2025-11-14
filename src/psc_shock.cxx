@@ -249,7 +249,7 @@ void initializeFields(MfieldsState& mflds)
 
   double dk = pow(dkx * dky * dkz, 1.0 / 3.0);
   double kmax = sqrt(sqr(dkx * nx) + sqr(dky * ny) + sqr(dkz * nz)) / 2.0;
-  int nk = kmax / dk;
+  int nk = kmax / dk + 1;
 
   // LOG_INFO("nk = %d, from k=%f to %f\n", nk, dk, kmax);
 
