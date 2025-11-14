@@ -302,6 +302,7 @@ void initializeFields(MfieldsState& mflds)
 
   // 5. apply each mode at a random phase and polarization
 
+  // TODO randomize the seed based on e.g. time
   int seed = 5; // all processes must use same seed to ensure B is continuous
   auto rng = rng::Uniform<double>(0.0, 1.0, seed);
   const auto& grid = mflds.grid();
