@@ -249,17 +249,6 @@ void initializeFields(MfieldsState& mflds)
   double dky = 2.0 * M_PI / len_y;
   double dkz = 2.0 * M_PI / len_z;
 
-  double dk = pow(dkx * dky * dkz, 1.0 / 3.0);
-  double kmax = sqrt(sqr(dkx * nx) + sqr(dky * ny) + sqr(dkz * nz)) / 2.0;
-  int nk = kmax / dk + 1;
-
-  auto k_mins = std::vector<double>(nk);
-  for (int i = 0; i < nk; i++) {
-    k_mins[i] = dk * i;
-  }
-
-  // 2. compute number of degeneracies of each k-shell
-
   int ix_min = -nx / 2;
   int iy_min = -ny / 2;
   int iz_min = -nz / 2;
@@ -277,6 +266,21 @@ void initializeFields(MfieldsState& mflds)
   int iy_max = ny / 2 + 1;
   int iz_max = nz / 2 + 1;
 
+  double dk = std::min({dkx, dky, dkz});
+  double kmax = sqrt(sqr(dkx * std::max(-ix_min, ix_max - 1)) +
+                     sqr(dky * std::max(-iy_min, iy_max - 1)) +
+                     sqr(dkz * std::max(-iz_min, iz_max - 1)));
+  int nk = kmax / dk + 1;
+
+  LOG_INFO("nk = %d, kmax = %f\n", nk, kmax);
+
+  auto k_mins = std::vector<double>(nk);
+  for (int i = 0; i < nk; i++) {
+    k_mins[i] = dk * i;
+  }
+
+  // 2. compute number of degeneracies of each k-shell
+
   auto n_cells_per_shell = std::vector<int>(nk);
 
   for (int ix = ix_min; ix < ix_max; ix++) {
@@ -292,6 +296,9 @@ void initializeFields(MfieldsState& mflds)
         }
 
         int idx = k / dk;
+        if (idx >= nk) {
+          LOG_ERROR("k=%f > kmax at idx=(%d, %d, %d)\n", k, ix, iy, iz);
+        }
         n_cells_per_shell[idx] += 1;
       }
     }
