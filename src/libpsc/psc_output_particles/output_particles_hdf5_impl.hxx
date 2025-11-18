@@ -197,8 +197,7 @@ public:
 #endif
     prof_stop(pr_C);
 
-    double time = 1.2; // FIXME, obviously
-    write_time(time, file, dxpl);
+    write_time(grid.time(), file, dxpl);
 
     prof_start(pr_D);
     write_idx(gidx_begin, gidx_end, group, dxpl);
