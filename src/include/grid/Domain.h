@@ -1,6 +1,4 @@
-
-#ifndef GRID_DOMAIN_H
-#define GRID_DOMAIN_H
+#pragma once
 
 #include <mrc_common.h>
 #include <iostream>
@@ -78,5 +76,3 @@ inline std::ostream& operator<<(std::ostream& os, const Domain<R>& domain)
 
 } // namespace grid
 } // namespace psc
-
-#endif
