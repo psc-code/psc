@@ -4,6 +4,7 @@
 
 #include <mrc_common.h>
 #include <iostream>
+#include "../libpsc/vpic/psc_vpic_bits.h"
 
 namespace psc
 {
@@ -26,7 +27,11 @@ struct Domain
     : gdims(gdims), length(length), corner(corner), np(np)
   {
     for (int d = 0; d < 3; d++) {
-      assert(gdims[d] % np[d] == 0);
+      if (gdims[d] % np[d] != 0) {
+        LOG_ERROR("in dimension %d, number of patches (%d) doesn't divide "
+                  "number of cells (%d)\n",
+                  d, np[d], gdims[d]);
+      }
       ldims[d] = gdims[d] / np[d];
     }
     dx = length / Real3(gdims);
