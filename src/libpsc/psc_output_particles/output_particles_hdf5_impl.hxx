@@ -196,6 +196,9 @@ public:
 #endif
     prof_stop(pr_C);
 
+    double time = 1.2; // FIXME, obviously
+    write_time(time, file, dxpl);
+
     prof_start(pr_D);
     write_idx(gidx_begin, gidx_end, group, dxpl);
     prof_stop(pr_D);
@@ -215,6 +218,39 @@ public:
   }
 
 private:
+  void write_time(double time, hid_t group, hid_t dxpl)
+  {
+    herr_t ierr;
+
+    hid_t filespace = H5Screate(H5S_SCALAR);
+    H5_CHK(filespace);
+    hid_t memspace;
+
+    int mpi_rank;
+    MPI_Comm_rank(comm_, &mpi_rank);
+    if (mpi_rank == 0) {
+      memspace = H5Screate(H5S_SCALAR);
+      H5_CHK(memspace);
+    } else {
+      memspace = H5Screate(H5S_NULL);
+      H5Sselect_none(memspace);
+      H5Sselect_none(filespace);
+    }
+
+    hid_t dset = H5Dcreate(group, "time", H5T_NATIVE_DOUBLE, filespace,
+                           H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    H5_CHK(dset);
+    ierr = H5Dwrite(dset, H5T_NATIVE_DOUBLE, memspace, filespace, dxpl, &time);
+    CE;
+    ierr = H5Dclose(dset);
+    CE;
+
+    ierr = H5Sclose(filespace);
+    CE;
+    ierr = H5Sclose(memspace);
+    CE;
+  }
+
   void write_idx(const gt::gtensor<size_t, 4>& gidx_begin,
                  const gt::gtensor<size_t, 4>& gidx_end, hid_t group,
                  hid_t dxpl)
