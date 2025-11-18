@@ -83,8 +83,15 @@ struct Grid_
 
     for (int d = 0; d < 3; d++) {
       if (ibn[d] > 0 && domain.isInvar(d)) {
-        LOG_ERROR("dimension %d is invariant, but has %d ghost cells\n", d,
-                  ibn[d]);
+        LOG_ERROR("dimension %d is assumed to be invariant (gdims[%d]=1), but "
+                  "has %d ghost cells\n",
+                  d, d, ibn[d]);
+      }
+
+      if (ibn[d] == 0 && !domain.isInvar(d)) {
+        LOG_ERROR("dimension %d is assumed to be non-invariant (gdims[%d]=%d), "
+                  "but has no ghost cells\n",
+                  d, d, domain.gdims[d]);
       }
     }
 
