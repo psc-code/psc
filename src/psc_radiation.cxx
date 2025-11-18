@@ -235,7 +235,7 @@ void run()
   Marder marder(grid, marder_diffusion, marder_loop, marder_dump);
 
   auto lf_ext_current = [&](const Grid_t& grid, MfieldsState& mflds) {
-    double time = grid.timestep() * grid.dt;
+    double time = grid.time();
     auto& gdims = grid.domain.gdims;
     for (int p = 0; p < mflds.n_patches(); ++p) {
       auto& patch = grid.patches[p];

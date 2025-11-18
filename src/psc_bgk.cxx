@@ -144,7 +144,7 @@ void writeGT(const GT& gt, const Grid_t& grid, const std::string& name,
 {
   WriterMRC writer;
   writer.open(name);
-  writer.begin_step(grid.timestep(), grid.timestep() * grid.dt);
+  writer.begin_step(grid.timestep(), grid.time());
   writer.write(gt, grid, name, compNames);
   writer.end_step();
   writer.close();
