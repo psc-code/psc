@@ -53,11 +53,17 @@ struct Domain
 
   bool isInvar(int d) const { return gdims[d] == 1; }
 
-  Int3 gdims;   ///< Number of grid-points in each dimension
-  Real3 length; ///< The physical size of the simulation-box
+  /// @brief Total number of grid cells in each dimension.
+  Int3 gdims;
+  /// @brief Side lengths of the domain, in physical units.
+  Real3 length;
+  /// @brief Location of lower-right corner of the domain, in physical units.
   Real3 corner;
-  Int3 np; ///< Number of patches in each dimension
+  /// @brief Number of patches in each dimension.
+  Int3 np;
+  /// @brief Number of grid cells per patch in each dimension.
   Int3 ldims;
+  /// @brief Side lengths of each grid cell, in physical units.
   Real3 dx;
 };
 
