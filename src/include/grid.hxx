@@ -81,6 +81,13 @@ struct Grid_
     mpi_printf(MPI_COMM_WORLD, "::: dx      = %g %g %g\n", domain.dx[0], domain.dx[1], domain.dx[2]);
 #endif
 
+    for (int d = 0; d < 3; d++) {
+      if (ibn[d] > 0 && domain.isInvar(d)) {
+        LOG_ERROR("dimension %d is invariant, but has %d ghost cells\n", d,
+                  ibn[d]);
+      }
+    }
+
     for (auto off : mrc_domain_.offs()) {
       patches.push_back(Patch(
         off, Vec3<double>(off) * domain.dx + domain.corner,
