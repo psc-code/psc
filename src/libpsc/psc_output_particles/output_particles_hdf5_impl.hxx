@@ -199,6 +199,7 @@ public:
     prof_stop(pr_C);
 
     write_time(grid.time(), file, dxpl);
+    write_domain(grid.domain, file, dxpl);
 
     prof_start(pr_D);
     write_idx(gidx_begin, gidx_end, group, dxpl);
@@ -242,6 +243,61 @@ private:
                            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     H5_CHK(dset);
     ierr = H5Dwrite(dset, H5T_NATIVE_DOUBLE, memspace, filespace, dxpl, &time);
+    CE;
+    ierr = H5Dclose(dset);
+    CE;
+
+    ierr = H5Sclose(filespace);
+    CE;
+    ierr = H5Sclose(memspace);
+    CE;
+  }
+
+private:
+  void write_domain(const Grid_t::Domain& domain, hid_t group, hid_t dxpl)
+  {
+    herr_t ierr;
+
+    hsize_t data_len = 3; // 3 spatial dimensions
+    hid_t filespace = H5Screate_simple(1, &data_len, NULL);
+    H5_CHK(filespace);
+    hid_t memspace;
+
+    assert(sizeof(size_t) == sizeof(hsize_t));
+    int mpi_rank;
+    MPI_Comm_rank(comm_, &mpi_rank);
+    if (mpi_rank == 0) {
+      memspace = H5Screate_simple(1, &data_len, NULL);
+      H5_CHK(memspace);
+    } else {
+      memspace = H5Screate(H5S_NULL);
+      H5Sselect_none(memspace);
+      H5Sselect_none(filespace);
+    }
+
+    hid_t dset = H5Dcreate(group, "gdims", H5T_NATIVE_INT32, filespace,
+                           H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    H5_CHK(dset);
+    ierr =
+      H5Dwrite(dset, H5T_NATIVE_INT32, memspace, filespace, dxpl, domain.gdims);
+    CE;
+    ierr = H5Dclose(dset);
+    CE;
+
+    dset = H5Dcreate(group, "corner", H5T_NATIVE_DOUBLE, filespace, H5P_DEFAULT,
+                     H5P_DEFAULT, H5P_DEFAULT);
+    H5_CHK(dset);
+    ierr = H5Dwrite(dset, H5T_NATIVE_DOUBLE, memspace, filespace, dxpl,
+                    domain.corner);
+    CE;
+    ierr = H5Dclose(dset);
+    CE;
+
+    dset = H5Dcreate(group, "length", H5T_NATIVE_DOUBLE, filespace, H5P_DEFAULT,
+                     H5P_DEFAULT, H5P_DEFAULT);
+    H5_CHK(dset);
+    ierr = H5Dwrite(dset, H5T_NATIVE_DOUBLE, memspace, filespace, dxpl,
+                    domain.length);
     CE;
     ierr = H5Dclose(dset);
     CE;
