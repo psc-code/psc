@@ -119,6 +119,8 @@ struct Grid_
 
   int timestep() const { return timestep_; }
 
+  real_t time() const { return timestep_ * dt; }
+
   template <typename FUNC>
   void Foreach_3d(int l, int r, FUNC F) const
   {
