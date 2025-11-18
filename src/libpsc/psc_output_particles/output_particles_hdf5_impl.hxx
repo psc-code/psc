@@ -4,6 +4,7 @@
 
 #include <hdf5.h>
 #include <hdf5_hl.h>
+// FIXME it would be much nicer to use <h5Cpp.h>
 
 #include "grid.hxx"
 #include "output_particles.hxx"
