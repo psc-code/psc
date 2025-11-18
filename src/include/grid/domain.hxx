@@ -25,6 +25,11 @@ struct Domain
     : gdims(gdims), length(length), corner(corner), np(np)
   {
     for (int d = 0; d < 3; d++) {
+      if (gdims[d] <= 0) {
+        LOG_ERROR("dimension %d has non-positive number of cells (%d)\n", d,
+                  gdims[d]);
+      }
+
       if (gdims[d] % np[d] != 0) {
         LOG_ERROR("in dimension %d, number of patches (%d) doesn't divide "
                   "number of cells (%d)\n",
@@ -33,11 +38,6 @@ struct Domain
 
       if (length[d] <= 0.0) {
         LOG_ERROR("dimension %d has non-positive length (%f)\n", d, length[d]);
-      }
-
-      if (gdims[d] <= 0) {
-        LOG_ERROR("dimension %d has non-positive number of cells (%d)\n", d,
-                  gdims[d]);
       }
     }
 
