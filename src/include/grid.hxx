@@ -7,7 +7,7 @@
 #include "psc_bits.h"
 #include "mrc_domain.hxx"
 #include "grid/BC.h"
-#include "grid/Domain.h"
+#include "grid/domain.hxx"
 #include <mrc_ddc.h>
 
 #include <vector>

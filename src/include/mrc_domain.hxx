@@ -2,7 +2,7 @@
 #pragma once
 
 #include "grid/BC.h"
-#include "grid/Domain.h"
+#include "grid/domain.hxx"
 
 #include <mrc_domain_private.h>
 
