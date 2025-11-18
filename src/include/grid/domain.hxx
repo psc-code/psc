@@ -39,9 +39,9 @@ struct Domain
         LOG_ERROR("dimension %d has non-positive number of cells (%d)\n", d,
                   gdims[d]);
       }
-
-      ldims[d] = gdims[d] / np[d];
     }
+
+    ldims = gdims / np;
     dx = length / Real3(gdims);
   }
 
