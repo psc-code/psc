@@ -254,9 +254,9 @@ void initializeFields(MfieldsState& mflds)
   int iz_min = -nz / 2;
 
   // inject in only half of k-space, since +k and -k modes are indistinguishable
-  if (nx != 1) {
+  if (nx > 2) {
     ix_min = 0;
-  } else if (ny != 1) {
+  } else if (ny > 2) {
     iy_min = 0;
   } else {
     iz_min = 0;
