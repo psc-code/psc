@@ -306,21 +306,21 @@ void initializeFields(MfieldsState& mflds)
 
   // 3. compute powers for each shell
 
-  auto shell_energy_densities = std::vector<double>(nk);
-  double initial_total_energy_density = 0.0;
+  auto shell_db2s = std::vector<double>(nk);
+  double initial_turb_db2 = 0.0;
 
   for (int i = 0; i < nk; i++) {
-    double k_shell = k_mins[i] + 0.5 * dky;
-    shell_energy_densities[i] = shell_power(k_shell) * dky;
-    initial_total_energy_density += shell_energy_densities[i];
+    if (n_cells_per_shell[i] > 0) {
+      double k_shell = k_mins[i] + 0.5 * dky;
+      shell_db2s[i] = shell_power(k_shell) * dky;
+      initial_turb_db2 += shell_db2s[i];
+    }
   }
 
   // scale shell powers to match desired energy density
 
-  double target_total_energy_density = 0.5 * turb_db2;
   for (int i = 0; i < nk; i++) {
-    shell_energy_densities[i] *=
-      target_total_energy_density / initial_total_energy_density;
+    shell_db2s[i] *= turb_db2 / initial_turb_db2;
   }
 
   // 4. inject each mode at a random phase and polarization
@@ -347,14 +347,10 @@ void initializeFields(MfieldsState& mflds)
 
         int idx = k / dk;
 
-        double proportion_of_shell_energy_density_in_cell =
-          1.0 / n_cells_per_shell[idx];
-        double shell_energy_density = shell_energy_densities[idx];
-        double lambda = 4; // experimentally obtained
-        double cell_energy_density =
-          lambda * proportion_of_shell_energy_density_in_cell *
-          shell_energy_density;
-        double db = sqrt(cell_energy_density);
+        double proportion_of_shell_db2_in_cell = 1.0 / n_cells_per_shell[idx];
+        double shell_db2 = shell_db2s[idx];
+        double cell_db2 = proportion_of_shell_db2_in_cell * shell_db2;
+        double db = sqrt(cell_db2);
 
         double cos_theta = kz / k;
         double sin_theta = kxy / k;
