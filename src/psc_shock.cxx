@@ -232,13 +232,13 @@ void initializeFields(MfieldsState& mflds)
     return 1.0 / (1.0 + pow(k * turb_correlation_length, 5.0 / 3.0));
   };
 
-  // 0. constant (k=0) part
+  // 0. electric fields
 
   setupFields(mflds, [&](int component, double coords[3]) {
     switch (component) {
-      case HX: return b_x;
-      case HY: return b_y;
-      case HZ: return b_z;
+      case EX: return e_x;
+      case EY: return e_y;
+      case EZ: return e_z;
       default: return 0.0;
     }
   });
