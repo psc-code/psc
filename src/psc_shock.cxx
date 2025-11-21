@@ -398,6 +398,46 @@ void initializeFields(MfieldsState& mflds)
     }
   }
 
+  // step 5: normalize db2
+
+  double sum_db2_local = 0.0;
+
+  for (int p = 0; p < mflds.n_patches(); ++p) {
+    auto& patch = grid.patches[p];
+    auto field_patch = make_Fields3d<dim_xyz>(mflds[p]);
+
+    grid.Foreach_3d(0, 0, [&](int jx, int jy, int jz) {
+      // magnetic energy density is cell-centered (H^2)
+      // note: this is not the most efficient calculation method
+      sum_db2_local += 0.5 * (sqr(field_patch(HX, jx, jy, jz)) +
+                              sqr(field_patch(HX, jx + 1, jy, jz)) +
+                              sqr(field_patch(HY, jx, jy, jz)) +
+                              sqr(field_patch(HY, jx, jy + 1, jz)) +
+                              sqr(field_patch(HZ, jx, jy, jz)) +
+                              sqr(field_patch(HZ, jx, jy, jz + 1)));
+      ;
+    });
+  }
+
+  double sum_db2 = 0.0;
+  MPI_Allreduce(&sum_db2_local, &sum_db2, 1, MPI_DOUBLE, MPI_SUM,
+                MPI_COMM_WORLD);
+
+  double target_sum_db2 = nx * ny * nz * turb_db2;
+  double scale_db_factor = sqrt(target_sum_db2 / sum_db2);
+
+  for (int p = 0; p < mflds.n_patches(); ++p) {
+    auto& patch = grid.patches[p];
+    auto field_patch = make_Fields3d<dim_xyz>(mflds[p]);
+
+    int n_ghosts = mflds.ibn().max();
+    grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
+      field_patch(HX, jx, jy, jz) *= scale_db_factor;
+      field_patch(HY, jx, jy, jz) *= scale_db_factor;
+      field_patch(HZ, jx, jy, jz) *= scale_db_factor;
+    });
+  }
+
   // step 6: add background field
 
   for (int p = 0; p < mflds.n_patches(); ++p) {
