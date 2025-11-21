@@ -397,6 +397,20 @@ void initializeFields(MfieldsState& mflds)
       }
     }
   }
+
+  // step 6: add background field
+
+  for (int p = 0; p < mflds.n_patches(); ++p) {
+    auto& patch = grid.patches[p];
+    auto field_patch = make_Fields3d<dim_xyz>(mflds[p]);
+
+    int n_ghosts = mflds.ibn().max();
+    grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
+      field_patch(HX, jx, jy, jz) += b_x;
+      field_patch(HY, jx, jy, jz) += b_y;
+      field_patch(HZ, jx, jy, jz) += b_z;
+    });
+  }
 }
 
 // ======================================================================
