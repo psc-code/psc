@@ -307,20 +307,12 @@ void initializeFields(MfieldsState& mflds)
   // 3. compute powers for each shell
 
   auto shell_db2s = std::vector<double>(nk);
-  double initial_turb_db2 = 0.0;
 
   for (int i = 0; i < nk; i++) {
     if (n_cells_per_shell[i] > 0) {
       double k_shell = k_mins[i] + 0.5 * dky;
       shell_db2s[i] = shell_power(k_shell) * dky;
-      initial_turb_db2 += shell_db2s[i];
     }
-  }
-
-  // scale shell powers to match desired energy density
-
-  for (int i = 0; i < nk; i++) {
-    shell_db2s[i] *= turb_db2 / initial_turb_db2;
   }
 
   // 4. inject each mode at a random phase and polarization
