@@ -4,7 +4,9 @@
 
 #include <hdf5.h>
 #include <hdf5_hl.h>
+// FIXME it would be much nicer to use <h5Cpp.h>
 
+#include "grid.hxx"
 #include "output_particles.hxx"
 
 #include "psc_particles_single.h"
@@ -117,7 +119,7 @@ public:
 
   void operator()(const gt::gtensor<size_t, 4>& gidx_begin,
                   const gt::gtensor<size_t, 4>& gidx_end, size_t n_off,
-                  size_t n_total, const particles_type& arr, int timestep)
+                  size_t n_total, const particles_type& arr, const Grid_t& grid)
   {
     int ierr;
 
@@ -158,13 +160,13 @@ public:
     // This is probably a problem with other outputs, too
     int slen = strlen(params_.data_dir) + strlen(params_.basename) + 15;
     char filename[slen];
-    if (timestep > 999999999) {
+    if (grid.timestep() > 999999999) {
       LOG_WARN("%s step index exceeds digit limit in file name. Data still "
                "written, but file name is truncated.\n",
                params_.basename);
     }
     snprintf(filename, slen, "%s/%s.%09d.h5", params_.data_dir,
-             params_.basename, timestep);
+             params_.basename, grid.timestep());
 
     hid_t file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, plist);
     H5_CHK(file);
@@ -196,6 +198,9 @@ public:
 #endif
     prof_stop(pr_C);
 
+    write_time(grid.time(), file, dxpl);
+    write_domain(grid.domain, file, dxpl);
+
     prof_start(pr_D);
     write_idx(gidx_begin, gidx_end, group, dxpl);
     prof_stop(pr_D);
@@ -215,6 +220,94 @@ public:
   }
 
 private:
+  void write_time(double time, hid_t group, hid_t dxpl)
+  {
+    herr_t ierr;
+
+    hid_t filespace = H5Screate(H5S_SCALAR);
+    H5_CHK(filespace);
+    hid_t memspace;
+
+    int mpi_rank;
+    MPI_Comm_rank(comm_, &mpi_rank);
+    if (mpi_rank == 0) {
+      memspace = H5Screate(H5S_SCALAR);
+      H5_CHK(memspace);
+    } else {
+      memspace = H5Screate(H5S_NULL);
+      H5Sselect_none(memspace);
+      H5Sselect_none(filespace);
+    }
+
+    hid_t dset = H5Dcreate(group, "time", H5T_NATIVE_DOUBLE, filespace,
+                           H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    H5_CHK(dset);
+    ierr = H5Dwrite(dset, H5T_NATIVE_DOUBLE, memspace, filespace, dxpl, &time);
+    CE;
+    ierr = H5Dclose(dset);
+    CE;
+
+    ierr = H5Sclose(filespace);
+    CE;
+    ierr = H5Sclose(memspace);
+    CE;
+  }
+
+private:
+  void write_domain(const Grid_t::Domain& domain, hid_t group, hid_t dxpl)
+  {
+    herr_t ierr;
+
+    hsize_t data_len = 3; // 3 spatial dimensions
+    hid_t filespace = H5Screate_simple(1, &data_len, NULL);
+    H5_CHK(filespace);
+    hid_t memspace;
+
+    assert(sizeof(size_t) == sizeof(hsize_t));
+    int mpi_rank;
+    MPI_Comm_rank(comm_, &mpi_rank);
+    if (mpi_rank == 0) {
+      memspace = H5Screate_simple(1, &data_len, NULL);
+      H5_CHK(memspace);
+    } else {
+      memspace = H5Screate(H5S_NULL);
+      H5Sselect_none(memspace);
+      H5Sselect_none(filespace);
+    }
+
+    hid_t dset = H5Dcreate(group, "gdims", H5T_NATIVE_INT32, filespace,
+                           H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    H5_CHK(dset);
+    ierr =
+      H5Dwrite(dset, H5T_NATIVE_INT32, memspace, filespace, dxpl, domain.gdims);
+    CE;
+    ierr = H5Dclose(dset);
+    CE;
+
+    dset = H5Dcreate(group, "corner", H5T_NATIVE_DOUBLE, filespace, H5P_DEFAULT,
+                     H5P_DEFAULT, H5P_DEFAULT);
+    H5_CHK(dset);
+    ierr = H5Dwrite(dset, H5T_NATIVE_DOUBLE, memspace, filespace, dxpl,
+                    domain.corner);
+    CE;
+    ierr = H5Dclose(dset);
+    CE;
+
+    dset = H5Dcreate(group, "length", H5T_NATIVE_DOUBLE, filespace, H5P_DEFAULT,
+                     H5P_DEFAULT, H5P_DEFAULT);
+    H5_CHK(dset);
+    ierr = H5Dwrite(dset, H5T_NATIVE_DOUBLE, memspace, filespace, dxpl,
+                    domain.length);
+    CE;
+    ierr = H5Dclose(dset);
+    CE;
+
+    ierr = H5Sclose(filespace);
+    CE;
+    ierr = H5Sclose(memspace);
+    CE;
+  }
+
   void write_idx(const gt::gtensor<size_t, 4>& gidx_begin,
                  const gt::gtensor<size_t, 4>& gidx_end, hid_t group,
                  hid_t dxpl)
@@ -519,7 +612,7 @@ struct OutputParticlesHdf5
 
   void operator()(Mparticles& mprts, OutputParticlesWriterHDF5& writer)
   {
-    const auto& grid = mprts.grid();
+    const Grid_t& grid = mprts.grid();
     herr_t ierr;
 
     static int pr_A, pr_B, pr_C;
@@ -656,7 +749,7 @@ struct OutputParticlesHdf5
     }
     prof_stop(pr_B);
 
-    writer(gidx_begin, gidx_end, n_off, n_total, arr, grid.timestep());
+    writer(gidx_begin, gidx_end, n_off, n_total, arr, grid);
   }
 
 private:

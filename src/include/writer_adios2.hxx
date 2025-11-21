@@ -72,7 +72,7 @@ public:
   void begin_step(const Grid_t& grid)
   {
     int step = grid.timestep();
-    double time = grid.timestep() * grid.dt;
+    double time = grid.time();
 
     int len = dir_.size() + pfx_.size() + 20;
     char filename[len];
