@@ -232,6 +232,8 @@ void initializeFields(MfieldsState& mflds)
     return 1.0 / (1.0 + pow(k * turb_correlation_length, 5.0 / 3.0));
   };
 
+  auto inject_at_n = [&](Int3 n) { return n != Int3{0, 0, 0}; };
+
   // 0. electric fields
 
   setupFields(mflds, [&](int component, double coords[3]) {
@@ -286,14 +288,14 @@ void initializeFields(MfieldsState& mflds)
   for (int ix = ix_min; ix < ix_max; ix++) {
     for (int iy = iy_min; iy < iy_max; iy++) {
       for (int iz = iz_min; iz < iz_max; iz++) {
+        if (!inject_at_n({ix, iy, iz})) {
+          continue;
+        }
+
         double kx = ix * dkx;
         double ky = iy * dky;
         double kz = iz * dkz;
         double k = sqrt(sqr(kx) + sqr(ky) + sqr(kz));
-
-        if (k == 0) {
-          continue;
-        }
 
         int idx = k / dk;
         if (idx >= nk) {
@@ -325,17 +327,16 @@ void initializeFields(MfieldsState& mflds)
   for (int ix = ix_min; ix < ix_max; ix++) {
     for (int iy = iy_min; iy < iy_max; iy++) {
       for (int iz = iz_min; iz < iz_max; iz++) {
+        if (!inject_at_n({ix, iy, iz})) {
+          continue;
+        }
+
         double kx = ix * dkx;
         double ky = iy * dky;
         double kz = iz * dkz;
 
         double kxy = sqrt(sqr(kx) + sqr(ky));
         double k = sqrt(sqr(kx) + sqr(ky) + sqr(kz));
-
-        if (k == 0.0) {
-          // no power for the constant mode, and avoid division-by-0
-          continue;
-        }
 
         int idx = k / dk;
 
