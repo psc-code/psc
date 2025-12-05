@@ -234,17 +234,6 @@ void initializeFields(MfieldsState& mflds)
 
   auto inject_at_n = [&](Int3 n) { return n != Int3{0, 0, 0}; };
 
-  // 0. electric fields
-
-  setupFields(mflds, [&](int component, double coords[3]) {
-    switch (component) {
-      case EX: return e_x;
-      case EY: return e_y;
-      case EZ: return e_z;
-      default: return 0.0;
-    }
-  });
-
   // 1. compute values of |k|
 
   double dkx = 2.0 * M_PI / len_x;
@@ -439,7 +428,7 @@ void initializeFields(MfieldsState& mflds)
     });
   }
 
-  // step 6: add background field
+  // step 6: add background fields
 
   for (int p = 0; p < mflds.n_patches(); ++p) {
     auto& patch = grid.patches[p];
@@ -450,6 +439,10 @@ void initializeFields(MfieldsState& mflds)
       field_patch(HX, jx, jy, jz) += b_x;
       field_patch(HY, jx, jy, jz) += b_y;
       field_patch(HZ, jx, jy, jz) += b_z;
+
+      field_patch(EX, jx, jy, jz) = e_x;
+      field_patch(EY, jx, jy, jz) = e_y;
+      field_patch(EZ, jx, jy, jz) = e_z;
     });
   }
 }
