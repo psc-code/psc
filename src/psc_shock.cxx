@@ -232,6 +232,9 @@ void initializeFields(MfieldsState& mflds)
     return 1.0 / (1.0 + pow(k * turb_correlation_length, 5.0 / 3.0));
   };
 
+  PscConfig::Mfields vector_potential{mflds._grid(), 3, mflds.ibn()};
+  int AX = 0, AY = 1, AZ = 2;
+
   auto inject_at_n = [&](Int3 n) { return n != Int3{0, 0, 0}; };
 
   // 1. compute values of |k|
@@ -350,46 +353,70 @@ void initializeFields(MfieldsState& mflds)
         double phase = rng.get(0.0, 2.0 * M_PI);
         double polarization = rng.get(0.0, 2.0 * M_PI);
 
+        Double3 k_vec = {kx, ky, kz};
+
         Double3 xp_hat{cos_theta * cos_phi, cos_theta * sin_phi, -sin_theta};
         Double3 yp_hat{sin_phi, -cos_phi, 0};
 
-        Double3 a_vec = db * cos(polarization) * xp_hat;
-        Double3 b_vec = db * sin(polarization) * yp_hat;
+        Double3 a_vec = db * cos(polarization) / sqr(k) * xp_hat.cross(k_vec);
+        Double3 b_vec = db * sin(polarization) / sqr(k) * yp_hat.cross(k_vec);
 
-        Double3 k_vec = {kx, ky, kz};
-
-        for (int p = 0; p < mflds.n_patches(); ++p) {
+        for (int p = 0; p < vector_potential.n_patches(); ++p) {
           auto& patch = grid.patches[p];
-          auto field_patch = make_Fields3d<dim_xyz>(mflds[p]);
+          auto vector_potential_patch =
+            make_Fields3d<dim_xyz>(vector_potential[p]);
 
-          int n_ghosts = mflds.ibn().max();
+          int n_ghosts = vector_potential.ibn().max();
           grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
             Int3 index{jx, jy, jz};
 
-            Double3 pos_fc_x =
-              centering::get_pos(patch, index, centering::FC, 0);
-            Double3 pos_fc_y =
-              centering::get_pos(patch, index, centering::FC, 1);
-            Double3 pos_fc_z =
-              centering::get_pos(patch, index, centering::FC, 2);
+            Double3 pos_ec_x =
+              centering::get_pos(patch, index, centering::EC, 0);
+            Double3 pos_ec_y =
+              centering::get_pos(patch, index, centering::EC, 1);
+            Double3 pos_ec_z =
+              centering::get_pos(patch, index, centering::EC, 2);
 
-            double arg_x = k_vec.dot(pos_fc_x) + phase;
-            double arg_y = k_vec.dot(pos_fc_y) + phase;
-            double arg_z = k_vec.dot(pos_fc_z) + phase;
+            double arg_x = k_vec.dot(pos_ec_x) + phase;
+            double arg_y = k_vec.dot(pos_ec_y) + phase;
+            double arg_z = k_vec.dot(pos_ec_z) + phase;
 
-            field_patch(HX, jx, jy, jz) +=
-              a_vec[0] * cos(arg_x) + b_vec[0] * sin(arg_x);
-            field_patch(HY, jx, jy, jz) +=
-              a_vec[1] * cos(arg_y) + b_vec[1] * sin(arg_y);
-            field_patch(HZ, jx, jy, jz) +=
-              a_vec[2] * cos(arg_z) + b_vec[2] * sin(arg_z);
+            vector_potential_patch(AX, jx, jy, jz) +=
+              a_vec[0] * sin(arg_x) - b_vec[0] * cos(arg_x);
+            vector_potential_patch(AY, jx, jy, jz) +=
+              a_vec[1] * sin(arg_y) - b_vec[1] * cos(arg_y);
+            vector_potential_patch(AZ, jx, jy, jz) +=
+              a_vec[2] * sin(arg_z) - b_vec[2] * cos(arg_z);
           });
         }
       }
     }
   }
 
-  // step 5: normalize db2
+  // step 5: take curl (or something proportional to it)
+
+  for (int p = 0; p < mflds.n_patches(); ++p) {
+    auto& patch = grid.patches[p];
+    auto field_patch = make_Fields3d<dim_xyz>(mflds[p]);
+    auto vector_potential_patch = make_Fields3d<dim_xyz>(vector_potential[p]);
+
+    grid.Foreach_3d(0, 1, [&](int jx, int jy, int jz) {
+      field_patch(HX, jx, jy, jz) = vector_potential_patch(AZ, jx, jy + 1, jz) -
+                                    vector_potential_patch(AZ, jx, jy, jz) -
+                                    vector_potential_patch(AY, jx, jy, jz + 1) +
+                                    vector_potential_patch(AY, jx, jy, jz);
+      field_patch(HY, jx, jy, jz) = vector_potential_patch(AX, jx, jy, jz + 1) -
+                                    vector_potential_patch(AX, jx, jy, jz) -
+                                    vector_potential_patch(AZ, jx + 1, jy, jz) +
+                                    vector_potential_patch(AZ, jx, jy, jz);
+      field_patch(HZ, jx, jy, jz) = vector_potential_patch(AY, jx + 1, jy, jz) -
+                                    vector_potential_patch(AY, jx, jy, jz) -
+                                    vector_potential_patch(AX, jx, jy + 1, jz) +
+                                    vector_potential_patch(AX, jx, jy, jz);
+    });
+  }
+
+  // step 6: normalize db2
 
   double sum_db2_local = 0.0;
 
@@ -429,7 +456,7 @@ void initializeFields(MfieldsState& mflds)
     });
   }
 
-  // step 6: add background fields
+  // step 7: add background fields
 
   for (int p = 0; p < mflds.n_patches(); ++p) {
     auto& patch = grid.patches[p];
