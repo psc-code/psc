@@ -350,13 +350,11 @@ void initializeFields(MfieldsState& mflds)
         double phase = rng.get(0.0, 2.0 * M_PI);
         double polarization = rng.get(0.0, 2.0 * M_PI);
 
-        double aax = db * cos(polarization) * cos_theta * cos_phi;
-        double aay = db * cos(polarization) * cos_theta * sin_phi;
-        double aaz = -db * cos(polarization) * sin_theta;
+        Double3 xp_hat{cos_theta * cos_phi, cos_theta * sin_phi, -sin_theta};
+        Double3 yp_hat{sin_phi, -cos_phi, 0};
 
-        double bbx = db * sin(polarization) * sin_phi;
-        double bby = -db * sin(polarization) * cos_phi;
-        double bbz = 0.0;
+        Double3 a_vec = db * cos(polarization) * xp_hat;
+        Double3 b_vec = db * sin(polarization) * yp_hat;
 
         Double3 k_vec = {kx, ky, kz};
 
@@ -379,9 +377,12 @@ void initializeFields(MfieldsState& mflds)
             double arg_y = k_vec.dot(pos_fc_y) + phase;
             double arg_z = k_vec.dot(pos_fc_z) + phase;
 
-            field_patch(HX, jx, jy, jz) += aax * cos(arg_x) + bbx * sin(arg_x);
-            field_patch(HY, jx, jy, jz) += aay * cos(arg_y) + bby * sin(arg_y);
-            field_patch(HZ, jx, jy, jz) += aaz * cos(arg_z) + bbz * sin(arg_z);
+            field_patch(HX, jx, jy, jz) +=
+              a_vec[0] * cos(arg_x) + b_vec[0] * sin(arg_x);
+            field_patch(HY, jx, jy, jz) +=
+              a_vec[1] * cos(arg_y) + b_vec[1] * sin(arg_y);
+            field_patch(HZ, jx, jy, jz) +=
+              a_vec[2] * cos(arg_z) + b_vec[2] * sin(arg_z);
           });
         }
       }
