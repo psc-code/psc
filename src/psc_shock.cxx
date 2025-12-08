@@ -243,9 +243,9 @@ void initializeFields(MfieldsState& mflds)
   double dky = 2.0 * M_PI / len_y;
   double dkz = 2.0 * M_PI / len_z;
 
-  int ix_min = -nx / 2;
-  int iy_min = -ny / 2;
-  int iz_min = -nz / 2;
+  int ix_min = nx == 1 ? 0 : -nx / 2 + 1;
+  int iy_min = ny == 1 ? 0 : -ny / 2 + 1;
+  int iz_min = nz == 1 ? 0 : -nz / 2 + 1;
 
   // inject in only half of k-space, since +k and -k modes are indistinguishable
   if (nx > 2) {
