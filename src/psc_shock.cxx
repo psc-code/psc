@@ -256,14 +256,14 @@ void initializeFields(MfieldsState& mflds)
     iz_min = 0;
   }
 
-  int ix_max = nx / 2 + 1;
-  int iy_max = ny / 2 + 1;
-  int iz_max = nz / 2 + 1;
+  int ix_max = nx / 2;
+  int iy_max = ny / 2;
+  int iz_max = nz / 2;
 
   double dk = std::min({dkx, dky, dkz});
-  double kmax = sqrt(sqr(dkx * std::max(-ix_min, ix_max - 1)) +
-                     sqr(dky * std::max(-iy_min, iy_max - 1)) +
-                     sqr(dkz * std::max(-iz_min, iz_max - 1)));
+  double kmax = sqrt(sqr(dkx * std::max(-ix_min, ix_max)) +
+                     sqr(dky * std::max(-iy_min, iy_max)) +
+                     sqr(dkz * std::max(-iz_min, iz_max)));
   int nk = kmax / dk + 1;
 
   LOG_INFO("nk = %d, kmax = %f\n", nk, kmax);
@@ -277,9 +277,9 @@ void initializeFields(MfieldsState& mflds)
 
   auto n_cells_per_shell = std::vector<int>(nk);
 
-  for (int ix = ix_min; ix < ix_max; ix++) {
-    for (int iy = iy_min; iy < iy_max; iy++) {
-      for (int iz = iz_min; iz < iz_max; iz++) {
+  for (int ix = ix_min; ix <= ix_max; ix++) {
+    for (int iy = iy_min; iy <= iy_max; iy++) {
+      for (int iz = iz_min; iz <= iz_max; iz++) {
         if (!inject_at_n({ix, iy, iz})) {
           continue;
         }
@@ -316,9 +316,9 @@ void initializeFields(MfieldsState& mflds)
   auto rng = rng::Uniform<double>(0.0, 1.0, seed);
   const auto& grid = mflds.grid();
 
-  for (int ix = ix_min; ix < ix_max; ix++) {
-    for (int iy = iy_min; iy < iy_max; iy++) {
-      for (int iz = iz_min; iz < iz_max; iz++) {
+  for (int ix = ix_min; ix <= ix_max; ix++) {
+    for (int iy = iy_min; iy <= iy_max; iy++) {
+      for (int iz = iz_min; iz <= iz_max; iz++) {
         if (!inject_at_n({ix, iy, iz})) {
           continue;
         }
