@@ -35,8 +35,8 @@ inline std::vector<std::string> addKindSuffix(
 // ItemMomentBnd
 
 template <typename FE>
-void add_ghosts_boundary(const Grid_t& grid, FE& mres_gt, const Int3& ib, int p,
-                         int mb, int me, centering::Centering c)
+void maybe_add_ghosts_boundary(const Grid_t& grid, FE& mres_gt, const Int3& ib,
+                               int p, int mb, int me, centering::Centering c)
 {
   if (c == centering::CC) {
     // lo
@@ -81,7 +81,7 @@ public:
   void add_ghosts(const Grid_t& grid, storage_type& mres_gt, const Int3& ib)
   {
     for (int p = 0; p < mres_gt.shape(4); p++) {
-      add_ghosts_boundary(grid, mres_gt, ib, p, 0, mres_gt.shape(3), C);
+      maybe_add_ghosts_boundary(grid, mres_gt, ib, p, 0, mres_gt.shape(3), C);
     }
 
     bnd_.add_ghosts(grid, mres_gt, ib, 0, mres_gt.shape(3));
