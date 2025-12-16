@@ -145,8 +145,8 @@ struct BndFields_ : BndFieldsBase
     if (d == 1) {
 #ifdef DEBUG
       for (int iz = -2; iz < ldims[2] + 2; iz++) {
-        for (int ix = MAX(-2, F.ib_[0]);
-             ix < MIN(ldims[0] + 2, F.ib_[0] + F.im_[0]); ix++) {
+        for (int ix = std::max(-2, F.ib_[0]);
+             ix < std::min(ldims[0] + 2, F.ib_[0] + F.im_[0]); ix++) {
           fields_t_set_nan(&F(EX, ix, -1, iz));
           fields_t_set_nan(&F(EX, ix, -2, iz));
           fields_t_set_nan(&F(EY, ix, -1, iz));
@@ -158,8 +158,8 @@ struct BndFields_ : BndFieldsBase
 #endif
       for (int iz = -2; iz < ldims[2] + 2; iz++) {
         // FIXME, needs to be for other dir, too, and it's ugly
-        for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
-             ix++) {
+        for (int ix = std::max(-2, ib[0]);
+             ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
           F(EX, ix, 0, iz) = 0.;
           F(EX, ix, -1, iz) = F(EX, ix, 1, iz);
 
@@ -183,8 +183,8 @@ struct BndFields_ : BndFieldsBase
       }
 #endif
       for (int iy = -2; iy < ldims[1] + 2; iy++) {
-        for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
-             ix++) {
+        for (int ix = std::max(-2, ib[0]);
+             ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
           F(EX, ix, iy, 0) = 0.;
           F(EX, ix, iy, -1) = F(EX, ix, iy, 1);
 
@@ -209,8 +209,8 @@ struct BndFields_ : BndFieldsBase
       int my _mrc_unused = ldims[1];
 #ifdef DEBUG
       for (int iz = -2; iz < ldims[2] + 2; iz++) {
-        for (int ix = MAX(-2, F.ib_[0]);
-             ix < MIN(ldims[0] + 2, F.ib_[0] + F.im_[0]); ix++) {
+        for (int ix = std::max(-2, F.ib_[0]);
+             ix < std::min(ldims[0] + 2, F.ib_[0] + F.im_[0]); ix++) {
           fields_t_set_nan(&F(EX, ix, my, iz));
           fields_t_set_nan(&F(EX, ix, my + 1, iz));
           fields_t_set_nan(&F(EY, ix, my, iz));
@@ -221,8 +221,8 @@ struct BndFields_ : BndFieldsBase
       }
 #endif
       for (int iz = -2; iz < ldims[2] + 2; iz++) {
-        for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
-             ix++) {
+        for (int ix = std::max(-2, ib[0]);
+             ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
           F(EX, ix, my, iz) = 0.;
           F(EX, ix, my + 1, iz) = F(EX, ix, my - 1, iz);
 
@@ -247,8 +247,8 @@ struct BndFields_ : BndFieldsBase
       }
 #endif
       for (int iy = -2; iy < ldims[1] + 2; iy++) {
-        for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
-             ix++) {
+        for (int ix = std::max(-2, ib[0]);
+             ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
           F(EX, ix, iy, mz) = 0.;
           F(EX, ix, iy, mz + 1) = F(EX, ix, iy, mz - 1);
 
@@ -272,8 +272,8 @@ struct BndFields_ : BndFieldsBase
     if (d == 1) {
 #ifdef DEBUG
       for (int iz = -2; iz < ldims[2] + 2; iz++) {
-        for (int ix = MAX(-2, F.ib_[0]);
-             ix < MIN(ldims[0] + 2, F.ib_[0] + F.im_[0]); ix++) {
+        for (int ix = std::max(-2, F.ib_[0]);
+             ix < std::min(ldims[0] + 2, F.ib_[0] + F.im_[0]); ix++) {
           fields_t_set_nan(&F(HX, ix, -1, iz));
           fields_t_set_nan(&F(HX, ix, -2, iz));
           fields_t_set_nan(&F(HY, ix, -1, iz));
@@ -284,8 +284,8 @@ struct BndFields_ : BndFieldsBase
       }
 #endif
       for (int iz = -1; iz < ldims[2] + 2; iz++) {
-        for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
-             ix++) {
+        for (int ix = std::max(-2, ib[0]);
+             ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
           F(HX, ix, -1, iz) = -F(HX, ix, 0, iz);
 
           F(HY, ix, -1, iz) = F(HY, ix, 1, iz);
@@ -307,8 +307,8 @@ struct BndFields_ : BndFieldsBase
       }
 #endif
       for (int iy = -2; iy < ldims[1] + 2; iy++) {
-        for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
-             ix++) {
+        for (int ix = std::max(-2, ib[0]);
+             ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
           F(HX, ix, iy, -1) = -F(HX, ix, iy, 0);
 
           F(HY, ix, iy, -1) = -F(HY, ix, iy, 0);
@@ -332,8 +332,8 @@ struct BndFields_ : BndFieldsBase
       int my _mrc_unused = ldims[1];
 #ifdef DEBUG
       for (int iz = -2; iz < ldims[2] + 2; iz++) {
-        for (int ix = MAX(-2, F.ib_[0]);
-             ix < MIN(ldims[0] + 2, F.ib_[0] + F.im_[0]); ix++) {
+        for (int ix = std::max(-2, F.ib_[0]);
+             ix < std::min(ldims[0] + 2, F.ib_[0] + F.im_[0]); ix++) {
           fields_t_set_nan(&F(HX, ix, my, iz));
           fields_t_set_nan(&F(HX, ix, my + 1, iz));
           fields_t_set_nan(&F(HY, ix, my + 1, iz));
@@ -343,8 +343,8 @@ struct BndFields_ : BndFieldsBase
       }
 #endif
       for (int iz = -2; iz < ldims[2] + 2; iz++) {
-        for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
-             ix++) {
+        for (int ix = std::max(-2, ib[0]);
+             ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
           F(HX, ix, my, iz) = -F(HX, ix, my - 1, iz);
 
           F(HY, ix, my + 1, iz) = F(HY, ix, my - 1, iz);
@@ -366,8 +366,8 @@ struct BndFields_ : BndFieldsBase
       }
 #endif
       for (int iy = -2; iy < ldims[1] + 2; iy++) {
-        for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
-             ix++) {
+        for (int ix = std::max(-2, ib[0]);
+             ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
           F(HX, ix, iy, mz) = -F(HX, ix, iy, mz - 1);
 
           F(HY, ix, iy, mz) = -F(HY, ix, iy, mz - 1);
@@ -388,8 +388,8 @@ struct BndFields_ : BndFieldsBase
 
     if (d == 1) {
       for (int iz = -2; iz < ldims[2] + 2; iz++) {
-        for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
-             ix++) {
+        for (int ix = std::max(-2, ib[0]);
+             ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
           F(JXI, ix, 1, iz) += F(JXI, ix, -1, iz);
           F(JXI, ix, -1, iz) = 0.;
 
@@ -402,8 +402,8 @@ struct BndFields_ : BndFieldsBase
       }
     } else if (d == 2) {
       for (int iy = -2; iy < ldims[1] + 2; iy++) {
-        for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
-             ix++) {
+        for (int ix = std::max(-2, ib[0]);
+             ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
           F(JXI, ix, iy, 1) += F(JXI, ix, iy, -1);
           F(JXI, ix, iy, -1) = 0.;
 
@@ -428,8 +428,8 @@ struct BndFields_ : BndFieldsBase
     if (d == 1) {
       int my _mrc_unused = ldims[1];
       for (int iz = -2; iz < ldims[2] + 2; iz++) {
-        for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
-             ix++) {
+        for (int ix = std::max(-2, ib[0]);
+             ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
           F(JXI, ix, my - 1, iz) += F(JXI, ix, my + 1, iz);
           F(JXI, ix, my + 1, iz) = 0.;
 
@@ -443,8 +443,8 @@ struct BndFields_ : BndFieldsBase
     } else if (d == 2) {
       int mz = ldims[2];
       for (int iy = -2; iy < ldims[1] + 2; iy++) {
-        for (int ix = MAX(-2, ib[0]); ix < MIN(ldims[0] + 2, ib[0] + im[0]);
-             ix++) {
+        for (int ix = std::max(-2, ib[0]);
+             ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
           F(JXI, ix, iy, mz - 1) += F(JXI, ix, iy, mz + 1);
           F(JXI, ix, iy, mz + 1) = 0.;
 
@@ -479,8 +479,8 @@ struct BndFields_ : BndFieldsBase
     if (d == 1) {
 #ifdef DEBUG
       for (int iz = -2; iz < ldims[2] + 2; iz++) {
-        for (int ix = MAX(-2, F.ib_[0]);
-             ix < MIN(ldims[0] + 2, F.ib_[0] + F.im_[0]); ix++) {
+        for (int ix = std::max(-2, F.ib_[0]);
+             ix < std::min(ldims[0] + 2, F.ib_[0] + F.im_[0]); ix++) {
           fields_t_set_nan(&F(HX, ix, -1, iz));
           fields_t_set_nan(&F(HX, ix, -2, iz));
           fields_t_set_nan(&F(HY, ix, -1, iz));
@@ -493,8 +493,8 @@ struct BndFields_ : BndFieldsBase
       real_t dt = F.grid().dt, dy = F.grid().domain.dx[1],
              dz = F.grid().domain.dx[2];
       for (int iz = -2; iz < ldims[2] + 2; iz++) {
-        for (int ix = MAX(-2, F.ib_[0]);
-             ix < MIN(ldims[0] + 2, F.ib_[0] + F.im_[0]); ix++) {
+        for (int ix = std::max(-2, F.ib_[0]);
+             ix < std::min(ldims[0] + 2, F.ib_[0] + F.im_[0]); ix++) {
           F(HX, ix, -1, iz) =
             (/* + 4.f * C_s_pulse_y1(x,y,z+0.5*dz,t) */
              -2.f * F(EZ, ix, 0, iz)
@@ -512,8 +512,8 @@ struct BndFields_ : BndFieldsBase
     } else if (d == 2) {
 #ifdef DEBUG
       for (int iy = -2; iy < ldims[1] + 2; iy++) {
-        for (int ix = MAX(-2, F.ib_[0]);
-             ix < MIN(ldims[0] + 2, F.ib_[0] + F.im_[0]); ix++) {
+        for (int ix = std::max(-2, F.ib_[0]);
+             ix < std::min(ldims[0] + 2, F.ib_[0] + F.im_[0]); ix++) {
           fields_t_set_nan(&F(HX, ix, iy, -1));
           fields_t_set_nan(&F(HX, ix, iy, -2));
           fields_t_set_nan(&F(HY, ix, iy, -1));
@@ -526,8 +526,8 @@ struct BndFields_ : BndFieldsBase
       real_t dt = F.grid().dt, dy = F.grid().domain.dx[1],
              dz = F.grid().domain.dx[2];
       for (int iy = -2; iy < ldims[1] + 2; iy++) {
-        for (int ix = MAX(-2, F.ib_[0]);
-             ix < MIN(ldims[0] + 2, F.ib_[0] + F.im_[0]); ix++) {
+        for (int ix = std::max(-2, F.ib_[0]);
+             ix < std::min(ldims[0] + 2, F.ib_[0] + F.im_[0]); ix++) {
           F(HY, ix, iy, -1) =
             (/* + 4.f * C_s_pulse_z1(x+0.5*dx,y,z,t) */
              -2.f * F(EX, ix, iy, 0) -
@@ -562,8 +562,8 @@ struct BndFields_ : BndFieldsBase
       int my _mrc_unused = ldims[1];
 #ifdef DEBUG
       for (int iz = -2; iz < ldims[2] + 2; iz++) {
-        for (int ix = MAX(-2, F.ib_[0]);
-             ix < MIN(ldims[0] + 2, F.ib_[0] + F.im_[0]); ix++) {
+        for (int ix = std::max(-2, F.ib_[0]);
+             ix < std::min(ldims[0] + 2, F.ib_[0] + F.im_[0]); ix++) {
           fields_t_set_nan(&F(HX, ix, my, iz));
           fields_t_set_nan(&F(HX, ix, my + 1, iz));
           fields_t_set_nan(&F(HY, ix, my, iz));
@@ -575,8 +575,8 @@ struct BndFields_ : BndFieldsBase
       real_t dt = F.grid().dt, dy = F.grid().domain.dx[1],
              dz = F.grid().domain.dx[2];
       for (int iz = -2; iz < ldims[2] + 2; iz++) {
-        for (int ix = MAX(-2, F.ib_[0]);
-             ix < MIN(ldims[0] + 2, F.ib_[0] + F.im_[0]); ix++) {
+        for (int ix = std::max(-2, F.ib_[0]);
+             ix < std::min(ldims[0] + 2, F.ib_[0] + F.im_[0]); ix++) {
           F(HX, ix, my, iz) =
             (/* + 4.f * C_s_pulse_y2(x,y,z+0.5*dz,t) */
              +2.f * F(EZ, ix, my, iz)
@@ -609,8 +609,8 @@ struct BndFields_ : BndFieldsBase
       real_t dt = F.grid().dt, dy = F.grid().domain.dx[1],
              dz = F.grid().domain.dx[2];
       for (int iy = -2; iy < ldims[1] + 2; iy++) {
-        for (int ix = MAX(-2, F.ib_[0]);
-             ix < MIN(ldims[0] + 2, F.ib_[0] + F.im_[0]); ix++) {
+        for (int ix = std::max(-2, F.ib_[0]);
+             ix < std::min(ldims[0] + 2, F.ib_[0] + F.im_[0]); ix++) {
           F(HY, ix, iy, mz) =
             (/* - 4.f * C_s_pulse_z2(x+0.5*dx,y,z,t) */
              +2.f * F(EX, ix, iy, mz) +
@@ -644,7 +644,7 @@ struct BndFieldsNone : BndFieldsBase
 {
   using Mfields = MF;
 
-  void fill_ghosts_E(Mfields& mflds){};
-  void fill_ghosts_H(Mfields& mflds){};
-  void add_ghosts_J(Mfields& mflds){};
+  void fill_ghosts_E(Mfields& mflds) {};
+  void fill_ghosts_H(Mfields& mflds) {};
+  void add_ghosts_J(Mfields& mflds) {};
 };
