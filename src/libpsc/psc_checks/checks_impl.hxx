@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include "fields.hxx"
@@ -102,7 +101,10 @@ public:
       MPI_Barrier(grid.comm());
     }
 
-    assert(max_err < err_threshold);
+    if (exit_on_failure && max_err >= err_threshold) {
+      LOG_ERROR("exiting due to failed continuity check\n");
+    }
+
     last_max_err = max_err;
   }
 
@@ -185,7 +187,10 @@ public:
       writer_.end_step();
     }
 
-    assert(max_err < err_threshold);
+    if (exit_on_failure && max_err >= err_threshold) {
+      LOG_ERROR("exiting due to failed gauss check\n");
+    }
+
     last_max_err = max_err;
   }
 
