@@ -85,11 +85,6 @@ public:
       psc::helper::print_diff(d_rho, -dt_divj, err_threshold);
     }
 
-    if (should_print_max_err(max_err)) {
-      mpi_printf(grid.comm(), "continuity: max_err = %g (thres %g)\n", max_err,
-                 err_threshold);
-    }
-
     if (should_dump(max_err)) {
       if (!writer_) {
         writer_.open("continuity");
@@ -99,6 +94,11 @@ public:
       writer_.write(d_rho, grid, "d_rho", {"d_rho"});
       writer_.end_step();
       MPI_Barrier(grid.comm());
+    }
+
+    if (should_print_max_err(max_err)) {
+      mpi_printf(grid.comm(), "continuity: max_err = %g (thres %g)\n", max_err,
+                 err_threshold);
     }
 
     if (exit_on_failure && max_err >= err_threshold) {
@@ -168,11 +168,6 @@ public:
       psc::helper::print_diff(rho, dive, err_threshold);
     }
 
-    if (should_print_max_err(max_err)) {
-      mpi_printf(grid.comm(), "gauss: max_err = %g (thres %g)\n", max_err,
-                 err_threshold);
-    }
-
     if (should_dump(max_err)) {
       if (!writer_) {
         writer_.open("gauss");
@@ -181,6 +176,12 @@ public:
       writer_.write(rho, grid, "rho", {"rho"});
       writer_.write(dive, grid, "dive", {"dive"});
       writer_.end_step();
+      MPI_Barrier(grid.comm());
+    }
+
+    if (should_print_max_err(max_err)) {
+      mpi_printf(grid.comm(), "gauss: max_err = %g (thres %g)\n", max_err,
+                 err_threshold);
     }
 
     if (exit_on_failure && max_err >= err_threshold) {
