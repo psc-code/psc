@@ -41,34 +41,26 @@ void add_ghosts_boundary(const Grid_t& grid, FE& mres_gt, const Int3& ib, int p,
   if (c == centering::CC) {
     // lo
     for (int d = 0; d < 3; d++) {
-      // FIXME why reflect for open BCs?
-      if (grid.atBoundaryLo(p, d) && (grid.bc.prt_lo[d] == BND_PRT_REFLECTING ||
-                                      grid.bc.prt_lo[d] == BND_PRT_OPEN)) {
+      if (grid.atBoundaryLo(p, d) && grid.bc.prt_lo[d] == BND_PRT_REFLECTING) {
         add_ghosts_reflecting_lo_cc(grid.ldims, mres_gt, ib, p, d, mb, me);
       }
     }
     // hi
     for (int d = 0; d < 3; d++) {
-      // FIXME why reflect for open BCs?
-      if (grid.atBoundaryHi(p, d) && (grid.bc.prt_hi[d] == BND_PRT_REFLECTING ||
-                                      grid.bc.prt_hi[d] == BND_PRT_OPEN)) {
+      if (grid.atBoundaryHi(p, d) && grid.bc.prt_hi[d] == BND_PRT_REFLECTING) {
         add_ghosts_reflecting_hi_cc(grid.ldims, mres_gt, ib, p, d, mb, me);
       }
     }
   } else if (c == centering::NC) {
     // lo
     for (int d = 0; d < 3; d++) {
-      // FIXME why reflect for open BCs?
-      if (grid.atBoundaryLo(p, d) && (grid.bc.prt_lo[d] == BND_PRT_REFLECTING ||
-                                      grid.bc.prt_lo[d] == BND_PRT_OPEN)) {
+      if (grid.atBoundaryLo(p, d) && grid.bc.prt_lo[d] == BND_PRT_REFLECTING) {
         add_ghosts_reflecting_lo_nc(grid.ldims, mres_gt, ib, p, d, mb, me);
       }
     }
     // hi
     for (int d = 0; d < 3; d++) {
-      // FIXME why reflect for open BCs?
-      if (grid.atBoundaryHi(p, d) && (grid.bc.prt_hi[d] == BND_PRT_REFLECTING ||
-                                      grid.bc.prt_hi[d] == BND_PRT_OPEN)) {
+      if (grid.atBoundaryHi(p, d) && grid.bc.prt_hi[d] == BND_PRT_REFLECTING) {
         add_ghosts_reflecting_hi_nc(grid.ldims, mres_gt, ib, p, d, mb, me);
       }
     }
