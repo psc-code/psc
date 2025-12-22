@@ -506,6 +506,21 @@ struct Psc
     inject_particles_(mprts_, mflds_);
     prof_stop(pr_inject_prts);
 
+    mpi_printf(comm, "***** Bnd particles...\n");
+    prof_start(pr_bndp);
+    bndp_(mprts_);
+    prof_stop(pr_bndp);
+
+    mpi_printf(comm, "***** Bnd fields J...\n");
+    prof_start(pr_bndf);
+    // === external current
+    this->ext_current_(grid(), mflds_);
+
+    bndf_.add_ghosts_J(mflds_);
+    bnd_.add_ghosts(mflds_, JXI, JXI + 3);
+    bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
+    prof_stop(pr_bndf);
+
     // === field propagation B^{n+1/2} -> B^{n+1}
     mpi_printf(comm, "***** Push fields B (1 of 2)...\n");
     prof_start(pr_push_flds);
@@ -513,23 +528,11 @@ struct Psc
     prof_stop(pr_push_flds);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
-    mpi_printf(comm, "***** Bnd particles...\n");
-    prof_start(pr_bndp);
-    bndp_(mprts_);
-    prof_stop(pr_bndp);
-
     // === field propagation E^{n+1/2} -> E^{n+3/2}
-    mpi_printf(comm, "***** Bnd fields B (1 of 2), J...\n");
+    mpi_printf(comm, "***** Bnd fields B (1 of 2)...\n");
     prof_start(pr_bndf);
     bndf_.fill_ghosts_H(mflds_);
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
-
-    // === external current
-    this->ext_current_(grid(), mflds_);
-
-    bndf_.add_ghosts_J(mflds_);
-    bnd_.add_ghosts(mflds_, JXI, JXI + 3);
-    bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
     prof_stop(pr_bndf);
 
     mpi_printf(comm, "***** Push fields E...\n");
