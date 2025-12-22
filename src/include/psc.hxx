@@ -488,14 +488,14 @@ struct Psc
     }
 
     if (checks_.continuity.should_do_check(timestep)) {
-      mpi_printf(comm, "***** Checking continuity...\n");
+      mpi_printf(comm, "***** Checking continuity (1 of 2)...\n");
       prof_start(pr_checks);
       checks_.continuity.before_particle_push(mprts_);
       prof_stop(pr_checks);
     }
 
     // === particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
-    mpi_printf(comm, "***** Pushing particles...\n");
+    mpi_printf(comm, "***** Push particles...\n");
     prof_start(pr_push_prts);
     pushp_.push_mprts(mprts_, mflds_);
     prof_stop(pr_push_prts);
@@ -507,7 +507,7 @@ struct Psc
     prof_stop(pr_inject_prts);
 
     // === field propagation B^{n+1/2} -> B^{n+1}
-    mpi_printf(comm, "***** Pushing B...\n");
+    mpi_printf(comm, "***** Push fields B (1 of 2)...\n");
     prof_start(pr_push_flds);
     pushf_.push_H(mflds_, .5, Dim{});
     prof_stop(pr_push_flds);
@@ -519,7 +519,7 @@ struct Psc
     prof_stop(pr_bndp);
 
     // === field propagation E^{n+1/2} -> E^{n+3/2}
-    mpi_printf(comm, "***** Push fields E\n");
+    mpi_printf(comm, "***** Bnd fields B (1 of 2), J...\n");
     prof_start(pr_bndf);
     bndf_.fill_ghosts_H(mflds_);
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
@@ -532,10 +532,12 @@ struct Psc
     bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
     prof_stop(pr_bndf);
 
+    mpi_printf(comm, "***** Push fields E...\n");
     prof_restart(pr_push_flds);
     pushf_.push_E(mflds_, 1., Dim{});
     prof_stop(pr_push_flds);
 
+    mpi_printf(comm, "***** Bnd fields E...\n");
     prof_restart(pr_bndf);
     bndf_.fill_ghosts_E(mflds_);
     bnd_.fill_ghosts(mflds_, EX, EX + 3);
@@ -543,11 +545,12 @@ struct Psc
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
 
     // === field propagation B^{n+1} -> B^{n+3/2}
-    mpi_printf(comm, "***** Push fields B\n");
+    mpi_printf(comm, "***** Push fields B (2 of 2)...\n");
     prof_restart(pr_push_flds);
     pushf_.push_H(mflds_, .5, Dim{});
     prof_stop(pr_push_flds);
 
+    mpi_printf(comm, "***** Bnd fields B (2 of 2)...\n");
     prof_start(pr_bndf);
     bndf_.fill_ghosts_H(mflds_);
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
@@ -555,6 +558,7 @@ struct Psc
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 
     if (checks_.continuity.should_do_check(timestep)) {
+      mpi_printf(comm, "***** Checking continuity (2 of 2)...\n");
       prof_restart(pr_checks);
       checks_.continuity.after_particle_push(mprts_, mflds_);
       prof_stop(pr_checks);
@@ -571,6 +575,7 @@ struct Psc
     }
 
     if (checks_.gauss.should_do_check(timestep)) {
+      mpi_printf(comm, "***** Checking gauss...\n");
       prof_restart(pr_checks);
       checks_.gauss(mprts_, mflds_);
       prof_stop(pr_checks);
