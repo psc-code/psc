@@ -644,7 +644,7 @@ struct BndFieldsNone : BndFieldsBase
 {
   using Mfields = MF;
 
-  void fill_ghosts_E(Mfields& mflds) {};
-  void fill_ghosts_H(Mfields& mflds) {};
-  void add_ghosts_J(Mfields& mflds) {};
+  void fill_ghosts_E(Mfields& mflds){};
+  void fill_ghosts_H(Mfields& mflds){};
+  void add_ghosts_J(Mfields& mflds){};
 };
