@@ -194,7 +194,10 @@ struct Psc
     // p^{n+1/2} -> p^{n+1}
     // pushp_.stagger(mprts, mflds);
 
-    // checks_.gauss(mprts_, mflds_);
+    if (checks_.gauss.should_do_check(0)) {
+      mpi_printf(grid().comm(), "Checking gauss.\n");
+      checks_.gauss(mprts_, mflds_);
+    }
 
     // initial output / stats
     mpi_printf(grid().comm(), "Performing initial diagnostics.\n");
