@@ -521,10 +521,8 @@ struct Psc
     // === field propagation E^{n+1/2} -> E^{n+3/2}
     mpi_printf(comm, "***** Push fields E\n");
     prof_start(pr_bndf);
-#if 1
     bndf_.fill_ghosts_H(mflds_);
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
-#endif
 
     // === external current
     this->ext_current_(grid(), mflds_);
@@ -538,12 +536,10 @@ struct Psc
     pushf_.push_E(mflds_, 1., Dim{});
     prof_stop(pr_push_flds);
 
-#if 1
     prof_restart(pr_bndf);
     bndf_.fill_ghosts_E(mflds_);
     bnd_.fill_ghosts(mflds_, EX, EX + 3);
     prof_stop(pr_bndf);
-#endif
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
 
     // === field propagation B^{n+1} -> B^{n+3/2}
@@ -552,13 +548,11 @@ struct Psc
     pushf_.push_H(mflds_, .5, Dim{});
     prof_stop(pr_push_flds);
 
-#if 1
     prof_start(pr_bndf);
     bndf_.fill_ghosts_H(mflds_);
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
     prof_stop(pr_bndf);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
-#endif
 
     if (checks_.continuity.should_do_check(timestep)) {
       prof_restart(pr_checks);
