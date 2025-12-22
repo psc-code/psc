@@ -371,7 +371,7 @@ struct Psc
     prof_stop(pr_push_flds);
 
     mpi_printf(comm, "***** Bnd fields B (1 of 2)...\n");
-    prof_start(pr_bndf);
+    prof_restart(pr_bndf);
     bndf_.fill_ghosts_H(mflds_);
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
     prof_stop(pr_bndf);
@@ -397,7 +397,7 @@ struct Psc
     prof_stop(pr_push_flds);
 
     mpi_printf(comm, "***** Bnd fields B (2 of 2)...\n");
-    prof_start(pr_bndf);
+    prof_restart(pr_bndf);
     bndf_.fill_ghosts_H(mflds_);
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
     prof_stop(pr_bndf);
