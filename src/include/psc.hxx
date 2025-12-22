@@ -270,9 +270,9 @@ struct Psc
   }
 
   // ----------------------------------------------------------------------
-  // step_psc
+  // step
 
-  void step_psc()
+  void step()
   {
     using Dim = typename PscConfig::Dim;
 
@@ -420,8 +420,6 @@ struct Psc
 
     // psc_push_particles_prep(psc->push_particles, psc->particles, psc->flds);
   }
-
-  void step() { step_psc(); }
 
 private:
   // ----------------------------------------------------------------------
