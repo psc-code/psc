@@ -239,7 +239,6 @@ struct Psc
       //   pr_time_step_no_comm); // actual measurements are done w/ restart
 
       step();
-      grid_->timestep_++; // FIXME, too hacky
 
       diagnostics();
 
@@ -301,6 +300,8 @@ struct Psc
 
     // state is at: x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
     MPI_Comm comm = grid().comm();
+    // === time propagation t^{n+1/2} -> t^{n+3/2}
+    grid_->timestep_++;
     int timestep = grid().timestep();
 
 #ifdef USE_CUDA

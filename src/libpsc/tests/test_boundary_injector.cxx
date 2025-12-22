@@ -158,7 +158,7 @@ TEST(BoundaryInjectorTest, Integration1Particle)
 
   ASSERT_EQ(prts.size(), 0);
 
-  for (; grid.timestep_ < psc_params.nmax; grid.timestep_++) {
+  for (; grid.timestep_ < psc_params.nmax;) {
     psc.step();
 
     EXPECT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
@@ -221,7 +221,7 @@ TEST(BoundaryInjectorTest, IntegrationManyParticles)
 
   ASSERT_EQ(prts.size(), 0);
 
-  for (; grid.timestep_ < psc_params.nmax; grid.timestep_++) {
+  for (; grid.timestep_ < psc_params.nmax;) {
     psc.step();
 
     EXPECT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
@@ -289,7 +289,7 @@ TEST(BoundaryInjectorTest, IntegrationManySpecies)
 
   ASSERT_EQ(prts.size(), 0);
 
-  for (; grid.timestep_ < psc_params.nmax; grid.timestep_++) {
+  for (; grid.timestep_ < psc_params.nmax;) {
     psc.step();
 
     EXPECT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
