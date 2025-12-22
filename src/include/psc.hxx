@@ -446,12 +446,13 @@ struct Psc
     using Dim = typename PscConfig::Dim;
 
     static int pr_sort, pr_collision, pr_checks, pr_push_prts, pr_push_flds,
-      pr_bndp, pr_bndf, pr_marder, pr_inject_prts;
+      pr_bndp, pr_bndf, pr_marder, pr_inject_prts, pr_external_current;
     if (!pr_sort) {
       pr_sort = prof_register("step_sort", 1., 0, 0);
       pr_collision = prof_register("step_collision", 1., 0, 0);
       pr_push_prts = prof_register("step_push_prts", 1., 0, 0);
       pr_inject_prts = prof_register("step_inject_prts", 1., 0, 0);
+      pr_external_current = prof_register("step_external_current", 1., 0, 0);
       pr_push_flds = prof_register("step_push_flds", 1., 0, 0);
       pr_bndp = prof_register("step_bnd_prts", 1., 0, 0);
       pr_bndf = prof_register("step_bnd_flds", 1., 0, 0);
@@ -505,6 +506,11 @@ struct Psc
     inject_particles_(mprts_, mflds_);
     prof_stop(pr_inject_prts);
 
+    // === external current
+    prof_start(pr_external_current);
+    this->ext_current_(grid(), mflds_);
+    prof_stop(pr_external_current);
+
     mpi_printf(comm, "***** Bnd particles...\n");
     prof_start(pr_bndp);
     bndp_(mprts_);
@@ -512,9 +518,6 @@ struct Psc
 
     mpi_printf(comm, "***** Bnd fields J...\n");
     prof_start(pr_bndf);
-    // === external current
-    this->ext_current_(grid(), mflds_);
-
     bndf_.add_ghosts_J(mflds_);
     bnd_.add_ghosts(mflds_, JXI, JXI + 3);
     bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
