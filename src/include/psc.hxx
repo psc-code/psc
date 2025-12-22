@@ -182,7 +182,6 @@ struct Psc
 
   void initialize()
   {
-    initialize_default();
     bndf_.fill_ghosts_H(mflds_);
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
 
@@ -190,6 +189,12 @@ struct Psc
 
     bndf_.fill_ghosts_E(mflds_);
     bnd_.fill_ghosts(mflds_, EX, EX + 3);
+
+    // FIXME: do a half-step on p to bring it to its natural time,
+    // p^{n+1/2} -> p^{n+1}
+    // pushp_.stagger(mprts, mflds);
+
+    // checks_.gauss(mprts_, mflds_);
 
     // initial output / stats
     mpi_printf(grid().comm(), "Performing initial diagnostics.\n");
@@ -442,16 +447,6 @@ private:
         MPI_Barrier(MPI_COMM_WORLD);
       }
     }
-  }
-
-  // ----------------------------------------------------------------------
-  // initialize_default
-
-  void initialize_default()
-  {
-    // pushp_.stagger(mprts, mflds); FIXME, vpic does it
-
-    // checks_.gauss(mprts_, mflds_);
   }
 
   // ----------------------------------------------------------------------
