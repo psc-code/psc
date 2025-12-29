@@ -6,11 +6,22 @@
 #include <fstream>
 #include <sstream>
 
-// ======================================================================
-// ParsedParams
-// A simple parser intended for reading run parameters from a file, rather than
-// hard-coding them. See psc_bgk_util/sample_bgk_params.txt for an example.
-
+/// @brief A parser that reads a dict-like map of parameter names to
+/// parameter values from a single input file. The input file syntax is
+/// extremely simple:
+/// ```txt
+/// param1 val1
+/// param2 val2 thiswordisignored andsoisthis
+/// ```
+/// The first (space-separated) word in each line is interpreted as a parameter
+/// name, and the second word is interpreted as a value. Words after the first
+/// two are silently ignored, allowing for comments. If a parameter is
+/// duplicated, all values but the last are silently ignored.
+///
+/// This class has no knowledge about what parameters should or shouldn't be
+/// present, nor does it know what types its values should have. A value isn't
+/// parsed to a specific type (e.g. `double`) until it is actually accessed as
+/// that type by a user.
 class ParsedParams
 {
 private:
@@ -39,11 +50,24 @@ public:
     }
   }
 
+  /// @brief Check if the parameter is present.
+  /// @param paramName name of parameter
+  /// @return whether or not the parameter is present
   bool has(const std::string paramName) { return params.count(paramName) == 1; }
 
+  /// @brief Get a parameter, parsing it to the given type.
+  /// @tparam T type of parameter
+  /// @param paramName name of parameter
+  /// @return the parameter
   template <typename T>
   T get(const std::string paramName);
 
+  /// @brief Get a parameter if it's there, otherwise
+  /// return the given default value.
+  /// @tparam T type of parameter
+  /// @param paramName name of parameter
+  /// @param deflt default value of parameter
+  /// @return the parameter
   template <typename T>
   T getOrDefault(const std::string paramName, T deflt)
   {
@@ -56,6 +80,12 @@ public:
     return deflt;
   }
 
+  /// @brief Get a parameter and display a warning if it's there, otherwise
+  /// return the given default value.
+  /// @tparam T type of parameter
+  /// @param paramName name of parameter
+  /// @param deflt default value of parameter
+  /// @return the parameter
   template <typename T>
   T getAndWarnOrDefault(const std::string paramName, T deflt)
   {
@@ -70,7 +100,10 @@ public:
     return val;
   }
 
-  // return true and display warning iff paramName is present
+  /// @brief Display a warning if a parameter is present.
+  /// @param paramName name of parameter
+  /// @param advice user-friendly instructions on what to do instead
+  /// @return whether or not the parameter was present
   bool warnIfPresent(const std::string paramName, const std::string advice)
   {
     if (!has(paramName)) {
