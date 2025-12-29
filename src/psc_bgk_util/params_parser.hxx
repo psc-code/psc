@@ -83,13 +83,9 @@ public:
   }
 
 private:
-  /// @brief Wrapper for retrieving an unparsed value with an enhanced error
-  /// message.
-  /// @param paramName the name of the parameter to fetch
-  /// @throws std::out_of_range (with an error message that specifies
-  /// `paramName`) if the parameter is not present
-  /// @return the unparsed parameter value (i.e., as a string)
-  std::string _get_inner(const std::string paramName)
+  /// Retrieves an unparsed value, throwing a helpful error if the parameter is
+  /// missing.
+  std::string _getUnparsed(const std::string paramName)
   {
     if (has(paramName)) {
       return params.at(paramName);
@@ -105,30 +101,30 @@ template <>
 bool ParsedParams::get<bool>(const std::string paramName)
 {
   bool b;
-  std::istringstream(_get_inner(paramName)) >> std::boolalpha >> b;
+  std::istringstream(_getUnparsed(paramName)) >> std::boolalpha >> b;
   return b;
 }
 
 template <>
 double ParsedParams::get<double>(const std::string paramName)
 {
-  return std::stod(_get_inner(paramName));
+  return std::stod(_getUnparsed(paramName));
 }
 
 template <>
 int ParsedParams::get<int>(const std::string paramName)
 {
-  return std::stoi(_get_inner(paramName));
+  return std::stoi(_getUnparsed(paramName));
 }
 
 template <>
 float ParsedParams::get<float>(const std::string paramName)
 {
-  return std::stof(_get_inner(paramName));
+  return std::stof(_getUnparsed(paramName));
 }
 
 template <>
 std::string ParsedParams::get<std::string>(const std::string paramName)
 {
-  return _get_inner(paramName);
+  return _getUnparsed(paramName);
 }
