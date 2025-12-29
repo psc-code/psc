@@ -29,11 +29,6 @@
 // ======================================================================
 // Rng hackiness
 
-#include "../vpic/PscRng.h"
-
-using Rng = PscRng;
-using RngPool = PscRngPool<Rng>;
-
 // ======================================================================
 // TestConfig
 

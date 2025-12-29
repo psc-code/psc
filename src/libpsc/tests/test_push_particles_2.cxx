@@ -2,6 +2,7 @@
 #include "gtest/gtest.h"
 
 #include "testing.hxx"
+#include "rng.hxx"
 
 using PushParticlesTestTypes =
   ::testing::Types<TestConfig2ndDoubleYZ, TestConfig1vbec3dSingle
@@ -48,8 +49,8 @@ TYPED_TEST(PushParticlesTest, Accel)
   });
 
   // init particles
-  RngPool rngpool;
-  Rng* rng = rngpool[0];
+
+  rng::Uniform dist{0.0, this->L};
 
   Mparticles mprts{grid};
   {
@@ -57,11 +58,7 @@ TYPED_TEST(PushParticlesTest, Accel)
     for (int p = 0; p < grid.n_patches(); p++) {
       auto injector = inj[p];
       for (int n = 0; n < n_prts; n++) {
-        injector({{rng->uniform(0, this->L), rng->uniform(0, this->L),
-                   rng->uniform(0, this->L)},
-                  {},
-                  1.,
-                  0});
+        injector({{dist.get(), dist.get(), dist.get()}, {}, 1., 0});
       }
     }
   }
@@ -126,8 +123,8 @@ TYPED_TEST(PushParticlesTest, Cyclo)
   });
 
   // init particles
-  RngPool rngpool;
-  Rng* rng = rngpool[0];
+  rng::Uniform dist{0.0, this->L};
+  rng::Uniform dist2{0.0, 1.0};
 
   Mparticles mprts{grid};
   {
@@ -135,11 +132,8 @@ TYPED_TEST(PushParticlesTest, Cyclo)
     for (int p = 0; p < grid.n_patches(); p++) {
       auto injector = inj[p];
       for (int n = 0; n < n_prts; n++) {
-        injector({{rng->uniform(0, this->L), rng->uniform(0, this->L),
-                   rng->uniform(0, this->L)},
-                  {1., 1., 1.},
-                  rng->uniform(0., 1.),
-                  0});
+        injector(
+          {{dist.get(), dist.get(), dist.get()}, {1., 1., 1.}, dist2.get(), 0});
       }
     }
   }
