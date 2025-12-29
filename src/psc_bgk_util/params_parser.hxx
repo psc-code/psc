@@ -133,9 +133,17 @@ private:
 template <>
 bool ParsedParams::get<bool>(const std::string paramName)
 {
-  bool b;
-  std::istringstream(_getUnparsed(paramName)) >> std::boolalpha >> b;
-  return b;
+  auto lowercase = _getUnparsed(paramName);
+  std::transform(lowercase.begin(), lowercase.end(), lowercase.begin(),
+                 [](unsigned char c) { return std::tolower(c); });
+
+  if (lowercase == "true") {
+    return true;
+  } else if (lowercase == "false") {
+    return false;
+  } else {
+    throw std::invalid_argument(_getUnparsed(paramName));
+  }
 }
 
 template <>
