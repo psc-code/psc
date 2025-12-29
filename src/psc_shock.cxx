@@ -75,6 +75,8 @@ int out_interval;
 
 bool mirror_domain;
 
+int nicell;
+
 } // namespace
 
 // ======================================================================
@@ -142,6 +144,8 @@ void setupParameters(int argc, char** argv)
 
   mirror_domain = parsedParams.getOrDefault<bool>("mirror_domain", false);
 
+  nicell = parsedParams.getOrDefault<int>("nicell", 100);
+
   std::ifstream src(path_to_params, std::ios::binary);
   std::ofstream dst("params_record.txt", std::ios::binary);
   dst << src.rdbuf();
@@ -178,7 +182,7 @@ Grid_t* setupGrid()
 
   // --- generic setup
   auto norm_params = Grid_t::NormalizationParams::dimensionless();
-  norm_params.nicell = 100;
+  norm_params.nicell = nicell;
 
   double dt = psc_params.cfl * courant_length(domain);
   Grid_t::Normalization norm{norm_params};
