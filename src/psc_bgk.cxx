@@ -66,7 +66,7 @@ void setupParameters(int argc, char** argv)
     exit(1);
   }
   std::string path_to_params(argv[1]);
-  ParsedParams parsedParams(path_to_params);
+  InputParams parsedParams(path_to_params);
   ic_table = new Table(parsedParams.get<std::string>("path_to_data"));
   g.loadParams(parsedParams, *ic_table);
 

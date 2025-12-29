@@ -87,7 +87,7 @@ void setupParameters(int argc, char** argv)
     exit(1);
   }
   std::string path_to_params(argv[1]);
-  ParsedParams parsedParams(path_to_params);
+  InputParams parsedParams(path_to_params);
 
   psc_params.stats_every = 1000;
   psc_params.cfl = parsedParams.getOrDefault<double>("cfl", .75);

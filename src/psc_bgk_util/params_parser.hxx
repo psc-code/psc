@@ -25,13 +25,13 @@
 /// present, nor does it know what types its values should have. A value isn't
 /// parsed to a specific type (e.g. `double`) until it is actually accessed as
 /// that type by a user.
-class ParsedParams
+class InputParams
 {
 private:
   std::unordered_map<std::string, std::string> params;
 
 public:
-  ParsedParams(const std::string file_path)
+  InputParams(const std::string file_path)
   {
     // iterate over each line
     std::ifstream ifs(file_path);
@@ -150,7 +150,7 @@ private:
 // get implementations
 
 template <>
-bool ParsedParams::_getParsed<bool>(const std::string paramName)
+bool InputParams::_getParsed<bool>(const std::string paramName)
 {
   auto lowercase = _getUnparsed(paramName);
   std::transform(lowercase.begin(), lowercase.end(), lowercase.begin(),
@@ -166,25 +166,25 @@ bool ParsedParams::_getParsed<bool>(const std::string paramName)
 }
 
 template <>
-double ParsedParams::_getParsed<double>(const std::string paramName)
+double InputParams::_getParsed<double>(const std::string paramName)
 {
   return std::stod(_getUnparsed(paramName));
 }
 
 template <>
-int ParsedParams::_getParsed<int>(const std::string paramName)
+int InputParams::_getParsed<int>(const std::string paramName)
 {
   return std::stoi(_getUnparsed(paramName));
 }
 
 template <>
-float ParsedParams::_getParsed<float>(const std::string paramName)
+float InputParams::_getParsed<float>(const std::string paramName)
 {
   return std::stof(_getUnparsed(paramName));
 }
 
 template <>
-std::string ParsedParams::_getParsed<std::string>(const std::string paramName)
+std::string InputParams::_getParsed<std::string>(const std::string paramName)
 {
   return _getUnparsed(paramName);
 }
