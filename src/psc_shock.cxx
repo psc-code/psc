@@ -130,7 +130,11 @@ void setupParameters(int argc, char** argv)
   len_y = ny * dy;
   len_z = nz * dz;
 
-  turb_db2 = parsedParams.get<double>("turb_dB^2");
+  if (parsedParams.warnIfPresent("turb_dB^2", "set turb_dB instead")) {
+    turb_db2 = parsedParams.get<double>("turb_dB^2");
+  } else {
+    turb_db2 = sqr(parsedParams.get<double>("turb_dB"));
+  }
   turb_correlation_length = parsedParams.get<double>("turb_correlation_length");
 
   int n_writes = parsedParams.getOrDefault<int>("n_writes", 100);
