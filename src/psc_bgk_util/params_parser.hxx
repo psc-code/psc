@@ -63,7 +63,19 @@ public:
   /// @param paramName name of parameter
   /// @return the parameter
   template <typename T>
-  T get(const std::string paramName);
+  T get(const std::string paramName)
+  {
+    try {
+      return _getParsed<T>(paramName);
+    } catch (const std::invalid_argument& e) {
+      std::string unparsed = _getUnparsed(paramName);
+      // TODO ensure human-readable type name
+      std::cerr << "ERROR Unable to parse parameter '" << paramName
+                << "', which has value '" << unparsed << "', to type "
+                << typeid(T).name() << "\n";
+      abort();
+    }
+  }
 
   /// @brief Get a parameter if it's there, otherwise
   /// return the given default value.
@@ -119,8 +131,8 @@ public:
   }
 
 private:
-  /// Retrieves an unparsed value, throwing a helpful error if the parameter is
-  /// missing.
+  /// Retrieves an unparsed value, throwing a helpful error if the parameter
+  /// is missing.
   std::string _getUnparsed(const std::string paramName)
   {
     if (has(paramName)) {
@@ -129,12 +141,16 @@ private:
 
     throw std::out_of_range("missing required input parameter: " + paramName);
   }
+
+  /// Retrieve and parse a value, possibly throwing std::invalid_argument
+  template <typename T>
+  T _getParsed(const std::string paramName);
 };
 
 // get implementations
 
 template <>
-bool ParsedParams::get<bool>(const std::string paramName)
+bool ParsedParams::_getParsed<bool>(const std::string paramName)
 {
   auto lowercase = _getUnparsed(paramName);
   std::transform(lowercase.begin(), lowercase.end(), lowercase.begin(),
@@ -150,25 +166,25 @@ bool ParsedParams::get<bool>(const std::string paramName)
 }
 
 template <>
-double ParsedParams::get<double>(const std::string paramName)
+double ParsedParams::_getParsed<double>(const std::string paramName)
 {
   return std::stod(_getUnparsed(paramName));
 }
 
 template <>
-int ParsedParams::get<int>(const std::string paramName)
+int ParsedParams::_getParsed<int>(const std::string paramName)
 {
   return std::stoi(_getUnparsed(paramName));
 }
 
 template <>
-float ParsedParams::get<float>(const std::string paramName)
+float ParsedParams::_getParsed<float>(const std::string paramName)
 {
   return std::stof(_getUnparsed(paramName));
 }
 
 template <>
-std::string ParsedParams::get<std::string>(const std::string paramName)
+std::string ParsedParams::_getParsed<std::string>(const std::string paramName)
 {
   return _getUnparsed(paramName);
 }
