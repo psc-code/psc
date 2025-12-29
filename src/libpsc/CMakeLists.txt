@@ -16,7 +16,6 @@ target_gtensor_sources(psc PRIVATE
 
   psc_balance/psc_balance.cxx
 
-  vpic/psc_particles_vpic.cxx
   vpic/psc_fields_vpic.cxx
   vpic/psc_vpic_bits.cxx
   vpic/vpic_base.cxx
