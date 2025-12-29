@@ -10,6 +10,8 @@ The goal is to have PSC cases to be self-contained, ie., everything related to p
 
 * One cannot just change a parameter in the case and run it -- the code needs to be recompiled first.
 
+Alternatively, use an InputParams object to load parameters from an input file at runtime. See ``src/include/input_params.hxx``.
+
 Changing / adding a case
 ========================
 
