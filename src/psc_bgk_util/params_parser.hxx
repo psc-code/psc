@@ -45,13 +45,42 @@ public:
   T get(const std::string paramName);
 
   template <typename T>
-  T getOrDefault(const std::string paramName, T deflt);
+  T getOrDefault(const std::string paramName, T deflt)
+  {
+    if (has(paramName)) {
+      return get<T>(paramName);
+    }
+
+    std::cout << "Warning: using default value for parameter '" << paramName
+              << "': " << deflt << "\n";
+    return deflt;
+  }
 
   template <typename T>
-  T getAndWarnOrDefault(const std::string paramName, T deflt);
+  T getAndWarnOrDefault(const std::string paramName, T deflt)
+  {
+    if (!has(paramName)) {
+      return deflt;
+    }
+
+    T val = get<T>(paramName);
+    std::cout << "Warning: using non-default value for parameter '" << paramName
+              << "': " << val << "\nDefault value of '" << deflt
+              << "' is recommended.\n";
+    return val;
+  }
 
   // return true and display warning iff paramName is present
-  bool warnIfPresent(const std::string paramName, const std::string advice);
+  bool warnIfPresent(const std::string paramName, const std::string advice)
+  {
+    if (!has(paramName)) {
+      return false;
+    }
+
+    std::cout << "Warning: parameter " << paramName << " is deprecated.\n"
+              << advice << "\n";
+    return true;
+  }
 
 private:
   /// @brief Wrapper for retrieving an unparsed value with an enhanced error
@@ -60,45 +89,17 @@ private:
   /// @throws std::out_of_range (with an error message that specifies
   /// `paramName`) if the parameter is not present
   /// @return the unparsed parameter value (i.e., as a string)
-  std::string _get_inner(const std::string paramName);
+  std::string _get_inner(const std::string paramName)
+  {
+    if (has(paramName)) {
+      return params.at(paramName);
+    }
+
+    throw std::out_of_range("missing required input parameter: " + paramName);
+  }
 };
 
-// implementations
-
-template <typename T>
-T ParsedParams::getOrDefault(const std::string paramName, T deflt)
-{
-  if (params.count(paramName) == 1)
-    return get<T>(paramName);
-  std::cout << "Warning: using default value for parameter '" << paramName
-            << "': " << deflt << "\n";
-  return deflt;
-}
-
-template <typename T>
-T ParsedParams::getAndWarnOrDefault(const std::string paramName, T deflt)
-{
-  if (params.count(paramName) == 1) {
-    T val = get<T>(paramName);
-    std::cout << "Warning: using non-default value for parameter '" << paramName
-              << "': " << val << "\nDefault value of '" << deflt
-              << "' is recommended.\n";
-    return val;
-  }
-  return deflt;
-}
-
-bool ParsedParams::warnIfPresent(const std::string paramName,
-                                 const std::string advice)
-{
-  if (params.count(paramName) == 1) {
-
-    std::cout << "Warning: parameter " << paramName << " is deprecated.\n"
-              << advice << "\n";
-    return true;
-  }
-  return false;
-}
+// get implementations
 
 template <>
 bool ParsedParams::get<bool>(const std::string paramName)
@@ -130,12 +131,4 @@ template <>
 std::string ParsedParams::get<std::string>(const std::string paramName)
 {
   return _get_inner(paramName);
-}
-
-std::string ParsedParams::_get_inner(const std::string paramName)
-{
-  if (params.count(paramName) == 0) {
-    throw std::out_of_range("missing required input parameter: " + paramName);
-  }
-  return params.at(paramName);
 }
