@@ -1,7 +1,9 @@
 #pragma once
 
 #include <cmath>
-#include "params_parser.hxx"
+
+#include "../include/input_params.hxx"
+
 #include "table.hxx"
 
 // ======================================================================

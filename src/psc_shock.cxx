@@ -5,8 +5,7 @@
 #include "DiagnosticsDefault.h"
 #include "OutputFieldsDefault.h"
 #include "psc_config.hxx"
-
-#include "psc_bgk_util/params_parser.hxx"
+#include "input_params.hxx"
 
 // ======================================================================
 // PSC configuration
