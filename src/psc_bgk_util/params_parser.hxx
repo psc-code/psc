@@ -6,6 +6,9 @@
 #include <fstream>
 #include <sstream>
 
+// TODO in c++20, use std::format
+// TODO use LOG_WARNING and LOG_ERROR, but ideally only on 1 proc
+
 /// @brief A parser that reads a dict-like map of parameter names to
 /// parameter values from a single input file. The input file syntax is
 /// extremely simple:
