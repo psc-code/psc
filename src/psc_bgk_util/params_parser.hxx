@@ -39,6 +39,8 @@ public:
     }
   }
 
+  bool has(const std::string paramName) { return params.count(paramName) == 1; }
+
   template <typename T>
   T get(const std::string paramName);
 
