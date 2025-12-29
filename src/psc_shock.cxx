@@ -90,23 +90,23 @@ void setupParameters(int argc, char** argv)
     exit(1);
   }
   std::string path_to_params(argv[1]);
-  InputParams parsedParams(path_to_params);
+  InputParams inputParams(path_to_params);
 
   psc_params.stats_every = 1000;
-  psc_params.cfl = parsedParams.getOrDefault<double>("cfl", .75);
+  psc_params.cfl = inputParams.getOrDefault<double>("cfl", .75);
   psc_params.write_checkpoint_every_step = 0;
 
-  electron_temperature = parsedParams.get<double>("electron_temperature");
-  ion_temperature = parsedParams.get<double>("ion_temperature");
-  electron_mass = parsedParams.get<double>("electron_mass");
-  ion_mass = parsedParams.get<double>("ion_mass");
+  electron_temperature = inputParams.get<double>("electron_temperature");
+  ion_temperature = inputParams.get<double>("ion_temperature");
+  electron_mass = inputParams.get<double>("electron_mass");
+  ion_mass = inputParams.get<double>("ion_mass");
 
-  v_upstream_x = parsedParams.get<double>("v_upstream_x");
-  v_upstream_y = parsedParams.get<double>("v_upstream_y");
-  v_upstream_z = parsedParams.get<double>("v_upstream_z");
+  v_upstream_x = inputParams.get<double>("v_upstream_x");
+  v_upstream_y = inputParams.get<double>("v_upstream_y");
+  v_upstream_z = inputParams.get<double>("v_upstream_z");
 
-  double b_angle_y_to_x_rad = parsedParams.get<double>("b_angle_y_to_x_rad");
-  double b_mag = parsedParams.get<double>("b_mag");
+  double b_angle_y_to_x_rad = inputParams.get<double>("b_angle_y_to_x_rad");
+  double b_mag = inputParams.get<double>("b_mag");
   b_x = b_mag * sin(b_angle_y_to_x_rad);
   b_y = b_mag * cos(b_angle_y_to_x_rad);
   b_z = 0.0;
@@ -115,36 +115,36 @@ void setupParameters(int argc, char** argv)
   e_y = -(v_upstream_z * b_x - v_upstream_x * b_z);
   e_z = -(v_upstream_x * b_y - v_upstream_y * b_x);
 
-  nx = parsedParams.get<int>("nx");
-  ny = parsedParams.get<int>("ny");
-  nz = parsedParams.get<int>("nz");
-  psc_params.nmax = parsedParams.get<int>("nt");
+  nx = inputParams.get<int>("nx");
+  ny = inputParams.get<int>("ny");
+  nz = inputParams.get<int>("nz");
+  psc_params.nmax = inputParams.get<int>("nt");
 
-  n_patches_x = parsedParams.get<int>("n_patches_x");
-  n_patches_y = parsedParams.get<int>("n_patches_y");
-  n_patches_z = parsedParams.get<int>("n_patches_z");
+  n_patches_x = inputParams.get<int>("n_patches_x");
+  n_patches_y = inputParams.get<int>("n_patches_y");
+  n_patches_z = inputParams.get<int>("n_patches_z");
 
-  double dx = parsedParams.get<double>("dx");
-  double dy = parsedParams.get<double>("dy");
-  double dz = parsedParams.get<double>("dz");
+  double dx = inputParams.get<double>("dx");
+  double dy = inputParams.get<double>("dy");
+  double dz = inputParams.get<double>("dz");
 
   len_x = nx * dx;
   len_y = ny * dy;
   len_z = nz * dz;
 
-  if (parsedParams.warnIfPresent("turb_dB^2", "set turb_dB instead")) {
-    turb_db2 = parsedParams.get<double>("turb_dB^2");
+  if (inputParams.warnIfPresent("turb_dB^2", "set turb_dB instead")) {
+    turb_db2 = inputParams.get<double>("turb_dB^2");
   } else {
-    turb_db2 = sqr(parsedParams.get<double>("turb_dB"));
+    turb_db2 = sqr(inputParams.get<double>("turb_dB"));
   }
-  turb_correlation_length = parsedParams.get<double>("turb_correlation_length");
+  turb_correlation_length = inputParams.get<double>("turb_correlation_length");
 
-  int n_writes = parsedParams.getOrDefault<int>("n_writes", 100);
+  int n_writes = inputParams.getOrDefault<int>("n_writes", 100);
   out_interval = psc_params.nmax / n_writes;
 
-  mirror_domain = parsedParams.getOrDefault<bool>("mirror_domain", false);
+  mirror_domain = inputParams.getOrDefault<bool>("mirror_domain", false);
 
-  nicell = parsedParams.getOrDefault<int>("nicell", 100);
+  nicell = inputParams.getOrDefault<int>("nicell", 100);
 
   std::ifstream src(path_to_params, std::ios::binary);
   std::ofstream dst("params_record.txt", std::ios::binary);
