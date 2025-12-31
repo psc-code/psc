@@ -63,7 +63,8 @@ struct Current1vbSplit
   {
     const int dim = 0;
     int im = fint(xm[dim]);
-    if (!Dim::InvarX::value && (fint(xp[dim]) != im)) {
+    int ip = fint(xp[dim]);
+    if (!Dim::InvarX::value && ip != im) {
       real_t x1[3];
       calc_j2_split_along_dim(dim, im, x1, xm, xp);
       calc_j2_one_cell(curr_cache, qni_wni, xm, x1);
@@ -78,7 +79,8 @@ struct Current1vbSplit
   {
     const int dim = 1;
     int im = fint(xm[dim]);
-    if (!Dim::InvarY::value && (fint(xp[dim]) != im)) {
+    int ip = fint(xp[dim]);
+    if (!Dim::InvarY::value && ip != im) {
       real_t x1[3];
       calc_j2_split_along_dim(dim, im, x1, xm, xp);
       calc_j2_split_dim_x(curr_cache, qni_wni, xm, x1);
@@ -93,7 +95,8 @@ struct Current1vbSplit
   {
     const int dim = 2;
     int im = fint(xm[dim]);
-    if (!Dim::InvarZ::value && (fint(xp[dim]) != im)) {
+    int ip = fint(xp[dim]);
+    if (!Dim::InvarZ::value && ip != im) {
       real_t x1[3];
       calc_j2_split_along_dim(dim, im, x1, xm, xp);
       calc_j2_split_dim_y(curr_cache, qni_wni, xm, x1);
