@@ -38,14 +38,9 @@ struct Current1vbSplit
   static void calc_j2_split_along_dim(int dim, int im, int ip, real_t x1[3],
                                       const real_t xm[3], const real_t xp[3])
   {
-    real_t bnd = 0.f;   // quell warning
-    if (ip == im + 1) { // crossed boundary to right
-      bnd = ip;
-    } else if (ip == im - 1) { // crosses boundary to left
-      bnd = im;
-    } else {
-      assert(0);
-    }
+    // boundary is at the lower edge of the cell with the higher index
+    real_t bnd = std::max(im, ip);
+
     real_t frac = (bnd - xm[dim]) / (xp[dim] - xm[dim]);
     // FIXME, set d == dim value to exact boundary?
     for (int d = 0; d < 3; d++) {
