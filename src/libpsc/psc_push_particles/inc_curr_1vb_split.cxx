@@ -34,13 +34,14 @@ struct Current1vbSplit
     deposition_(curr_cache, i, qni_wni, dx, xa, Dim{});
   }
 
-  static void calc_j2_split_along_dim(int dim, int im, int ip, Real3& x1,
-                                      const Real3& xm, const Real3& xp)
+  static Real3 calc_split_x1(int dim, int im, int ip, const Real3& xm,
+                             const Real3& xp)
   {
     // boundary is at the lower edge of the cell with the higher index
     real_t bnd = std::max(im, ip);
-
     real_t frac = (bnd - xm[dim]) / (xp[dim] - xm[dim]);
+
+    Real3 x1; // = xm + frac * (xp - xm), but want exact x1[d]
     for (int d = 0; d < 3; d++) {
       if (d == dim) {
         x1[d] = bnd;
@@ -48,6 +49,7 @@ struct Current1vbSplit
         x1[d] = xm[d] + frac * (xp[d] - xm[d]);
       }
     }
+    return x1;
   }
 
   // TODO c++17 combine these calc_j2_split_dim_* with if constexpr
@@ -61,8 +63,7 @@ struct Current1vbSplit
     if (Dim::is_invar(dim) || ip == im) {
       calc_j2_one_cell(curr_cache, qni_wni, xm, xp);
     } else {
-      Real3 x1;
-      calc_j2_split_along_dim(dim, im, ip, x1, xm, xp);
+      Real3 x1 = calc_split_x1(dim, im, ip, xm, xp);
       calc_j2_one_cell(curr_cache, qni_wni, xm, x1);
       calc_j2_one_cell(curr_cache, qni_wni, x1, xp);
     }
@@ -77,8 +78,7 @@ struct Current1vbSplit
     if (Dim::is_invar(dim) || ip == im) {
       calc_j2_split_dim_x(curr_cache, qni_wni, xm, xp);
     } else {
-      Real3 x1;
-      calc_j2_split_along_dim(dim, im, ip, x1, xm, xp);
+      Real3 x1 = calc_split_x1(dim, im, ip, xm, xp);
       calc_j2_split_dim_x(curr_cache, qni_wni, xm, x1);
       calc_j2_split_dim_x(curr_cache, qni_wni, x1, xp);
     }
@@ -93,8 +93,7 @@ struct Current1vbSplit
     if (Dim::is_invar(dim) || ip == im) {
       calc_j2_split_dim_y(curr_cache, qni_wni, xm, xp);
     } else {
-      Real3 x1;
-      calc_j2_split_along_dim(dim, im, ip, x1, xm, xp);
+      Real3 x1 = calc_split_x1(dim, im, ip, xm, xp);
       calc_j2_split_dim_y(curr_cache, qni_wni, xm, x1);
       calc_j2_split_dim_y(curr_cache, qni_wni, x1, xp);
     }
