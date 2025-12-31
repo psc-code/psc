@@ -19,14 +19,13 @@ struct Current1vbSplit
       deposition_(real_t(grid.norm.fnqs / grid.dt) * Real3(grid.domain.dx))
   {}
 
-  void calc_j2_one_cell(fields_t curr_cache, real_t qni_wni, const real_t xm[3],
-                        const real_t xp[3])
+  void calc_j2_one_cell(fields_t curr_cache, real_t qni_wni, const Real3& xm,
+                        const Real3& xp)
   {
-    real_t dx[3] = {xp[0] - xm[0], xp[1] - xm[1], xp[2] - xm[2]};
-    real_t xa[3] = {.5f * (xm[0] + xp[0]), .5f * (xm[1] + xp[1]),
-                    .5f * (xm[2] + xp[2])};
+    Real3 dx = xp - xm;
+    Real3 xa = real_t(0.5) * (xp + xm);
 
-    int i[3];
+    Int3 i;
     for (int d = 0; d < 3; d++) {
       i[d] = fint(xa[d]);
       xa[d] -= i[d];
@@ -35,8 +34,8 @@ struct Current1vbSplit
     deposition_(curr_cache, i, qni_wni, dx, xa, Dim{});
   }
 
-  static void calc_j2_split_along_dim(int dim, int im, int ip, real_t x1[3],
-                                      const real_t xm[3], const real_t xp[3])
+  static void calc_j2_split_along_dim(int dim, int im, int ip, Real3& x1,
+                                      const Real3& xm, const Real3& xp)
   {
     // boundary is at the lower edge of the cell with the higher index
     real_t bnd = std::max(im, ip);
@@ -53,8 +52,8 @@ struct Current1vbSplit
 
   // TODO c++17 combine these calc_j2_split_dim_* with if constexpr
 
-  void calc_j2_split_dim_x(fields_t curr_cache, real_t qni_wni,
-                           const real_t* xm, const real_t* xp)
+  void calc_j2_split_dim_x(fields_t curr_cache, real_t qni_wni, const Real3& xm,
+                           const Real3& xp)
   {
     constexpr int dim = 0;
     int im = fint(xm[dim]);
@@ -62,15 +61,15 @@ struct Current1vbSplit
     if (Dim::is_invar(dim) || ip == im) {
       calc_j2_one_cell(curr_cache, qni_wni, xm, xp);
     } else {
-      real_t x1[3];
+      Real3 x1;
       calc_j2_split_along_dim(dim, im, ip, x1, xm, xp);
       calc_j2_one_cell(curr_cache, qni_wni, xm, x1);
       calc_j2_one_cell(curr_cache, qni_wni, x1, xp);
     }
   }
 
-  void calc_j2_split_dim_y(fields_t curr_cache, real_t qni_wni,
-                           const real_t* xm, const real_t* xp)
+  void calc_j2_split_dim_y(fields_t curr_cache, real_t qni_wni, const Real3& xm,
+                           const Real3& xp)
   {
     constexpr int dim = 1;
     int im = fint(xm[dim]);
@@ -78,15 +77,15 @@ struct Current1vbSplit
     if (Dim::is_invar(dim) || ip == im) {
       calc_j2_split_dim_x(curr_cache, qni_wni, xm, xp);
     } else {
-      real_t x1[3];
+      Real3 x1;
       calc_j2_split_along_dim(dim, im, ip, x1, xm, xp);
       calc_j2_split_dim_x(curr_cache, qni_wni, xm, x1);
       calc_j2_split_dim_x(curr_cache, qni_wni, x1, xp);
     }
   }
 
-  void calc_j2_split_dim_z(fields_t curr_cache, real_t qni_wni,
-                           const real_t* xm, const real_t* xp)
+  void calc_j2_split_dim_z(fields_t curr_cache, real_t qni_wni, const Real3& xm,
+                           const Real3& xp)
   {
     constexpr int dim = 2;
     int im = fint(xm[dim]);
@@ -94,7 +93,7 @@ struct Current1vbSplit
     if (Dim::is_invar(dim) || ip == im) {
       calc_j2_split_dim_y(curr_cache, qni_wni, xm, xp);
     } else {
-      real_t x1[3];
+      Real3 x1;
       calc_j2_split_along_dim(dim, im, ip, x1, xm, xp);
       calc_j2_split_dim_y(curr_cache, qni_wni, xm, x1);
       calc_j2_split_dim_y(curr_cache, qni_wni, x1, xp);
@@ -104,8 +103,8 @@ struct Current1vbSplit
   // ----------------------------------------------------------------------
   // calc_j
 
-  void calc_j(fields_t curr_cache, real_t* xm, real_t* xp, int* lf, int* lg,
-              real_t qni_wni, real_t* vxi)
+  void calc_j(fields_t curr_cache, Real3& xm, Real3& xp, const Int3& lf,
+              const Int3& lg, real_t qni_wni, Real3& vxi)
   {
     // this way, we guarantee that the average position in invar directions
     // will remain in the 0th cell
