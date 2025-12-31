@@ -24,7 +24,7 @@ struct PushParticlesVb
   static void push_mprts(Mparticles& mprts, MfieldsState& mflds)
   {
     const auto& grid = mprts.grid();
-    Real3 dxi = Real3{1., 1., 1.} / Real3(grid.domain.dx);
+    Real3 dxi = grid.domain.dx.inv();
     real_t dq_kind[MAX_NR_KINDS];
     auto& kinds = grid.kinds;
     assert(kinds.size() <= MAX_NR_KINDS);
