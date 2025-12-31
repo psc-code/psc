@@ -24,13 +24,8 @@ struct Current1vbSplit
   {
     Real3 dx = xp - xm;
     Real3 xa = real_t(0.5) * (xp + xm);
-
-    Int3 i;
-    for (int d = 0; d < 3; d++) {
-      i[d] = fint(xa[d]);
-      xa[d] -= i[d];
-    }
-
+    Int3 i = xa.fint();
+    xa -= Real3(i);
     deposition_(curr_cache, i, qni_wni, dx, xa, Dim{});
   }
 
