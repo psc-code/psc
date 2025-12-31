@@ -58,6 +58,8 @@ struct Current1vbSplit
     }
   }
 
+  // TODO c++17 combine these calc_j2_split_dim_* with if constexpr
+
   void calc_j2_split_dim_x(fields_t curr_cache, real_t qni_wni,
                            const real_t* xm, const real_t* xp)
   {
