@@ -16,7 +16,7 @@ template <typename T>
 struct DepositTest : ::testing::Test
 {
   using real_t = typename T::real_t;
-  using real3_t = gt::sarray<real_t, 3>;
+  using Real3 = Vec3<real_t>;
   using dim_t = typename T::dim_t;
 
   DepositTest() : ldims_{4, 4, 4}
@@ -26,7 +26,7 @@ struct DepositTest : ::testing::Test
     }
   }
 
-  gt::shape_type<3> ldims_;
+  Int3 ldims_;
   const real_t eps = std::numeric_limits<real_t>::epsilon();
 };
 
@@ -47,12 +47,12 @@ TYPED_TEST(DepositTest, ChargeCenter)
 {
   using self_type = DepositTest<TypeParam>;
   using real_t = typename self_type::real_t;
-  using real3_t = typename self_type::real3_t;
+  using Real3 = typename self_type::Real3;
   using dim_t = typename self_type::dim_t;
 
-  real3_t x = {1.5, 1.5, 1.5};
+  Real3 x = {1.5, 1.5, 1.5};
   real_t val = .1;
-  auto ibn = gt::shape(0, 0, 0);
+  Int3 ibn = {0, 0, 0};
   auto rho_ref = gt::zeros<real_t>(this->ldims_ + 2 * ibn);
   if (std::is_same<dim_t, dim_xyz>::value) {
     rho_ref.view(_s(1, 3), _s(1, 3), _s(1, 3)) = val / 8.f;
@@ -70,12 +70,12 @@ TYPED_TEST(DepositTest, ChargeLowerLeft)
 {
   using self_type = DepositTest<TypeParam>;
   using real_t = typename self_type::real_t;
-  using real3_t = typename self_type::real3_t;
+  using Real3 = typename self_type::Real3;
   using dim_t = typename self_type::dim_t;
 
-  real3_t x = {1., 1., 1.};
+  Real3 x = {1., 1., 1.};
   real_t val = .1;
-  auto ibn = gt::shape(0, 0, 0);
+  Int3 ibn = {0, 0, 0};
   auto rho_ref = gt::zeros<real_t>(this->ldims_ + 2 * ibn);
   if (std::is_same<dim_t, dim_xyz>::value) {
     rho_ref(1, 1, 1) = val;
@@ -93,12 +93,12 @@ TYPED_TEST(DepositTest, ChargeCenterWithBnd)
 {
   using self_type = DepositTest<TypeParam>;
   using real_t = typename self_type::real_t;
-  using real3_t = typename self_type::real3_t;
+  using Real3 = typename self_type::Real3;
   using dim_t = typename self_type::dim_t;
 
-  real3_t x = {.5, .5, .5};
+  Real3 x = {.5, .5, .5};
   real_t val = 1.;
-  auto ibn = gt::shape(1, 1, 1);
+  Int3 ibn = {1, 1, 1};
   auto rho_ref = gt::zeros<real_t>(this->ldims_ + 2 * ibn);
   if (std::is_same<dim_t, dim_xyz>::value) {
     rho_ref.view(_s(1, 3), _s(1, 3), _s(1, 3)) = val / 8.f;
@@ -116,12 +116,12 @@ TYPED_TEST(DepositTest, ChargeCenterWithBndCc)
 {
   using self_type = DepositTest<TypeParam>;
   using real_t = typename self_type::real_t;
-  using real3_t = typename self_type::real3_t;
+  using Real3 = typename self_type::Real3;
   using dim_t = typename self_type::dim_t;
 
-  real3_t x = {.5, .5, .5};
+  Real3 x = {.5, .5, .5};
   real_t val = 1.;
-  auto ibn = gt::shape(1, 1, 1);
+  Int3 ibn = {1, 1, 1};
   auto rho_ref = gt::zeros<real_t>(this->ldims_ + 2 * ibn);
   if (std::is_same<dim_t, dim_xyz>::value) {
     rho_ref(1, 1, 1) = val;
