@@ -42,7 +42,6 @@ struct Current1vbSplit
     real_t bnd = std::max(im, ip);
 
     real_t frac = (bnd - xm[dim]) / (xp[dim] - xm[dim]);
-    // FIXME, set d == dim value to exact boundary?
     for (int d = 0; d < 3; d++) {
       if (d == dim) {
         x1[d] = bnd;
