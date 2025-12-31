@@ -35,11 +35,10 @@ struct Current1vbSplit
     deposition_(curr_cache, i, qni_wni, dx, xa, Dim{});
   }
 
-  static void calc_j2_split_along_dim(int dim, int im, real_t x1[3],
+  static void calc_j2_split_along_dim(int dim, int im, int ip, real_t x1[3],
                                       const real_t xm[3], const real_t xp[3])
   {
-    real_t bnd = 0.f; // quell warning
-    int ip = fint(xp[dim]);
+    real_t bnd = 0.f;   // quell warning
     if (ip == im + 1) { // crossed boundary to right
       bnd = ip;
     } else if (ip == im - 1) { // crosses boundary to left
@@ -68,7 +67,7 @@ struct Current1vbSplit
     int ip = fint(xp[dim]);
     if (!Dim::is_invar(dim) && ip != im) {
       real_t x1[3];
-      calc_j2_split_along_dim(dim, im, x1, xm, xp);
+      calc_j2_split_along_dim(dim, im, ip, x1, xm, xp);
       calc_j2_one_cell(curr_cache, qni_wni, xm, x1);
       calc_j2_one_cell(curr_cache, qni_wni, x1, xp);
     } else {
@@ -84,7 +83,7 @@ struct Current1vbSplit
     int ip = fint(xp[dim]);
     if (!Dim::is_invar(dim) && ip != im) {
       real_t x1[3];
-      calc_j2_split_along_dim(dim, im, x1, xm, xp);
+      calc_j2_split_along_dim(dim, im, ip, x1, xm, xp);
       calc_j2_split_dim_x(curr_cache, qni_wni, xm, x1);
       calc_j2_split_dim_x(curr_cache, qni_wni, x1, xp);
     } else {
@@ -100,7 +99,7 @@ struct Current1vbSplit
     int ip = fint(xp[dim]);
     if (!Dim::is_invar(dim) && ip != im) {
       real_t x1[3];
-      calc_j2_split_along_dim(dim, im, x1, xm, xp);
+      calc_j2_split_along_dim(dim, im, ip, x1, xm, xp);
       calc_j2_split_dim_y(curr_cache, qni_wni, xm, x1);
       calc_j2_split_dim_y(curr_cache, qni_wni, x1, xp);
     } else {
