@@ -61,10 +61,10 @@ struct Current1vbSplit
   void calc_j2_split_dim_x(fields_t curr_cache, real_t qni_wni,
                            const real_t* xm, const real_t* xp)
   {
-    const int dim = 0;
+    constexpr int dim = 0;
     int im = fint(xm[dim]);
     int ip = fint(xp[dim]);
-    if (!Dim::InvarX::value && ip != im) {
+    if (!Dim::is_invar(dim) && ip != im) {
       real_t x1[3];
       calc_j2_split_along_dim(dim, im, x1, xm, xp);
       calc_j2_one_cell(curr_cache, qni_wni, xm, x1);
@@ -77,10 +77,10 @@ struct Current1vbSplit
   void calc_j2_split_dim_y(fields_t curr_cache, real_t qni_wni,
                            const real_t* xm, const real_t* xp)
   {
-    const int dim = 1;
+    constexpr int dim = 1;
     int im = fint(xm[dim]);
     int ip = fint(xp[dim]);
-    if (!Dim::InvarY::value && ip != im) {
+    if (!Dim::is_invar(dim) && ip != im) {
       real_t x1[3];
       calc_j2_split_along_dim(dim, im, x1, xm, xp);
       calc_j2_split_dim_x(curr_cache, qni_wni, xm, x1);
@@ -93,10 +93,10 @@ struct Current1vbSplit
   void calc_j2_split_dim_z(fields_t curr_cache, real_t qni_wni,
                            const real_t* xm, const real_t* xp)
   {
-    const int dim = 2;
+    constexpr int dim = 2;
     int im = fint(xm[dim]);
     int ip = fint(xp[dim]);
-    if (!Dim::InvarZ::value && ip != im) {
+    if (!Dim::is_invar(dim) && ip != im) {
       real_t x1[3];
       calc_j2_split_along_dim(dim, im, x1, xm, xp);
       calc_j2_split_dim_y(curr_cache, qni_wni, xm, x1);
