@@ -1,6 +1,10 @@
 
 #pragma once
 
+// T. Umeda, Y. Omura, T. Tominaga, and H. Matsumoto, "A new charge conservation
+// method in electromagnetic particle-in-cell simulations", Computer Physics
+// Communications 156 (2003) 73
+
 // ======================================================================
 
 template <typename Order, typename Dim, typename _fields_t>
