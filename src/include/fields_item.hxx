@@ -34,68 +34,38 @@ inline std::vector<std::string> addKindSuffix(
 // ======================================================================
 // ItemMomentBnd
 
-template <centering::Centering C>
-class DomainBoundary
+template <typename FE>
+void maybe_add_ghosts_boundary(const Grid_t& grid, FE& mres_gt, const Int3& ib,
+                               int p, int mb, int me, centering::Centering c)
 {
-public:
-  template <typename FE>
-  static void add_ghosts_boundary(const Grid_t& grid, FE& mres_gt,
-                                  const Int3& ib, int p, int mb, int me);
-};
-
-template <>
-class DomainBoundary<centering::CC>
-{
-public:
-  template <typename FE>
-  static void add_ghosts_boundary(const Grid_t& grid, FE& mres_gt,
-                                  const Int3& ib, int p, int mb, int me)
-  {
+  if (c == centering::CC) {
     // lo
     for (int d = 0; d < 3; d++) {
-      // FIXME why reflect for open BCs?
-      if (grid.atBoundaryLo(p, d) && (grid.bc.prt_lo[d] == BND_PRT_REFLECTING ||
-                                      grid.bc.prt_lo[d] == BND_PRT_OPEN)) {
+      if (grid.atBoundaryLo(p, d) && grid.bc.prt_lo[d] == BND_PRT_REFLECTING) {
         add_ghosts_reflecting_lo_cc(grid.ldims, mres_gt, ib, p, d, mb, me);
       }
     }
     // hi
     for (int d = 0; d < 3; d++) {
-      // FIXME why reflect for open BCs?
-      if (grid.atBoundaryHi(p, d) && (grid.bc.prt_hi[d] == BND_PRT_REFLECTING ||
-                                      grid.bc.prt_hi[d] == BND_PRT_OPEN)) {
+      if (grid.atBoundaryHi(p, d) && grid.bc.prt_hi[d] == BND_PRT_REFLECTING) {
         add_ghosts_reflecting_hi_cc(grid.ldims, mres_gt, ib, p, d, mb, me);
       }
     }
-  }
-};
-
-template <>
-class DomainBoundary<centering::NC>
-{
-public:
-  template <typename FE>
-  static void add_ghosts_boundary(const Grid_t& grid, FE& mres_gt,
-                                  const Int3& ib, int p, int mb, int me)
-  {
+  } else if (c == centering::NC) {
     // lo
     for (int d = 0; d < 3; d++) {
-      // FIXME why reflect for open BCs?
-      if (grid.atBoundaryLo(p, d) && (grid.bc.prt_lo[d] == BND_PRT_REFLECTING ||
-                                      grid.bc.prt_lo[d] == BND_PRT_OPEN)) {
+      if (grid.atBoundaryLo(p, d) && grid.bc.prt_lo[d] == BND_PRT_REFLECTING) {
         add_ghosts_reflecting_lo_nc(grid.ldims, mres_gt, ib, p, d, mb, me);
       }
     }
     // hi
     for (int d = 0; d < 3; d++) {
-      // FIXME why reflect for open BCs?
-      if (grid.atBoundaryHi(p, d) && (grid.bc.prt_hi[d] == BND_PRT_REFLECTING ||
-                                      grid.bc.prt_hi[d] == BND_PRT_OPEN)) {
+      if (grid.atBoundaryHi(p, d) && grid.bc.prt_hi[d] == BND_PRT_REFLECTING) {
         add_ghosts_reflecting_hi_nc(grid.ldims, mres_gt, ib, p, d, mb, me);
       }
     }
   }
-};
+}
 
 // ======================================================================
 // ItemMomentBnd
@@ -111,8 +81,7 @@ public:
   void add_ghosts(const Grid_t& grid, storage_type& mres_gt, const Int3& ib)
   {
     for (int p = 0; p < mres_gt.shape(4); p++) {
-      DomainBoundary<C>::add_ghosts_boundary(grid, mres_gt, ib, p, 0,
-                                             mres_gt.shape(3));
+      maybe_add_ghosts_boundary(grid, mres_gt, ib, p, 0, mres_gt.shape(3), C);
     }
 
     bnd_.add_ghosts(grid, mres_gt, ib, 0, mres_gt.shape(3));
@@ -152,8 +121,8 @@ public:
   {
     Int3 ib = -mprts.grid().ibn;
     // FIXME, gt::gtensor and psc::gtensor are slightly different, and ideally
-    // zeros() shouldn't actually allocate, but probably it does, so this wastes
-    // memory and a copy
+    // zeros() shouldn't actually allocate, but probably it does, so this
+    // wastes memory and a copy
     storage_type mres =
       psc::mflds::zeros<value_type, space_type>(mprts.grid(), n_comps(), ib);
     moment_type{}(mres, ib, mprts);

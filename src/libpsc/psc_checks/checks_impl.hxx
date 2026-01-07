@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include "fields.hxx"
@@ -86,11 +85,6 @@ public:
       psc::helper::print_diff(d_rho, -dt_divj, err_threshold);
     }
 
-    if (should_print_max_err(max_err)) {
-      mpi_printf(grid.comm(), "continuity: max_err = %g (thres %g)\n", max_err,
-                 err_threshold);
-    }
-
     if (should_dump(max_err)) {
       if (!writer_) {
         writer_.open("continuity");
@@ -102,7 +96,15 @@ public:
       MPI_Barrier(grid.comm());
     }
 
-    assert(max_err < err_threshold);
+    if (should_print_max_err(max_err)) {
+      mpi_printf(grid.comm(), "continuity: max_err = %g (thres %g)\n", max_err,
+                 err_threshold);
+    }
+
+    if (exit_on_failure && max_err >= err_threshold) {
+      LOG_ERROR("exiting due to failed continuity check\n");
+    }
+
     last_max_err = max_err;
   }
 
@@ -142,37 +144,28 @@ public:
     auto rho = psc::mflds::interior(grid, item_rho(mprts));
     auto dive = psc::mflds::interior(grid, item_dive(mflds));
 
-    double max_err = 0.;
     for (int p = 0; p < grid.n_patches(); p++) {
-      int l[3] = {0, 0, 0}, r[3] = {0, 0, 0};
       for (int d = 0; d < 3; d++) {
+        Int3 r = grid.ldims;
+        r[d] = 1;
+
+        // account for implicit surface charges
         if (grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL &&
             grid.atBoundaryLo(p, d)) {
-          l[d] = 1;
+          rho.view(_s(0, r[0]), _s(0, r[1]), _s(0, r[2]), 0, p) =
+            dive.view(_s(0, r[0]), _s(0, r[1]), _s(0, r[2]), 0, p);
         }
-      }
-
-      auto patch_rho =
-        rho.view(_s(l[0], -r[0]), _s(l[1], -r[1]), _s(l[2], -r[2]), 0, p);
-      auto patch_dive =
-        dive.view(_s(l[0], -r[0]), _s(l[1], -r[1]), _s(l[2], -r[2]), 0, p);
-
-      double patch_err = gt::norm_linf(patch_dive - patch_rho);
-      max_err = std::max(max_err, patch_err);
-
-      if (should_print_diffs(patch_err)) {
-        mpi_printf(grid.comm(), "gauss: rho -- div E\n");
-        psc::helper::print_diff(patch_rho, patch_dive, err_threshold);
       }
     }
 
-    // find global max
-    double tmp = max_err;
-    MPI_Allreduce(&tmp, &max_err, 1, MPI_DOUBLE, MPI_MAX, grid.comm());
+    double local_err = gt::norm_linf(dive - rho);
 
-    if (should_print_max_err(max_err)) {
-      mpi_printf(grid.comm(), "gauss: max_err = %g (thres %g)\n", max_err,
-                 err_threshold);
+    double max_err;
+    MPI_Allreduce(&local_err, &max_err, 1, MPI_DOUBLE, MPI_MAX, grid.comm());
+
+    if (should_print_diffs(max_err)) {
+      mpi_printf(grid.comm(), "gauss: rho -- div E\n");
+      psc::helper::print_diff(rho, dive, err_threshold);
     }
 
     if (should_dump(max_err)) {
@@ -183,9 +176,18 @@ public:
       writer_.write(rho, grid, "rho", {"rho"});
       writer_.write(dive, grid, "dive", {"dive"});
       writer_.end_step();
+      MPI_Barrier(grid.comm());
     }
 
-    assert(max_err < err_threshold);
+    if (should_print_max_err(max_err)) {
+      mpi_printf(grid.comm(), "gauss: max_err = %g (thres %g)\n", max_err,
+                 err_threshold);
+    }
+
+    if (exit_on_failure && max_err >= err_threshold) {
+      LOG_ERROR("exiting due to failed gauss check\n");
+    }
+
     last_max_err = max_err;
   }
 
