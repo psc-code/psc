@@ -139,8 +139,6 @@ struct MparticlesSimple : MparticlesBase
     iterator end() { return mprts_.storage_[p_].end(); }
     unsigned int size() const { return mprts_.storage_[p_].size(); }
 
-    const MparticlesSimple& mprts() const { return mprts_; }
-
   private:
     MparticlesSimple& mprts_;
     int p_;
