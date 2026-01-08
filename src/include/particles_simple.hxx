@@ -148,13 +148,6 @@ struct MparticlesSimple : MparticlesBase
       mprts_.storage_.push_back(p_, prt);
     }
 
-    void check() const
-    {
-      for (auto& prt : mprts_.storage_[p_]) {
-        mprts_.pi_.validCellIndex(prt.x());
-      }
-    }
-
     // ParticleIndexer functionality
     int cellPosition(real_t xi, int d) const
     {
@@ -227,13 +220,6 @@ struct MparticlesSimple : MparticlesBase
   Accessor accessor_() { return {*this}; }
 
   BndBuffers& bndBuffers() { return storage_.bndBuffers(); }
-
-  void check() const
-  {
-    for (int p = 0; p < n_patches(); p++) {
-      (*this)[p].check();
-    }
-  }
 
   void dump(const std::string& filename)
   {
