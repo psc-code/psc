@@ -72,15 +72,15 @@ struct CollisionHost
       grid.Foreach_3d(0, 0, [&](int ix, int iy, int iz) {
         int c = (iz * ldims[1] + iy) * ldims[0] + ix;
 
-        update_rei_before(prts, offsets[c], offsets[c + 1], p, ix, iy, iz);
+        update_rei_before(mprts, p, offsets[c], offsets[c + 1], ix, iy, iz);
 
         struct psc_collision_stats stats = {};
         // mprintf("p %d ijk %d:%d:%d # %d\n", p, ix, iy, iz, offsets[c+1] -
         // offsets[c]);
         auto permute = randomize_in_cell(offsets[c], offsets[c + 1]);
-        collide_in_cell(prts, permute, &stats);
+        collide_in_cell(mprts, p, permute, &stats);
 
-        update_rei_after(prts, offsets[c], offsets[c + 1], p, ix, iy, iz);
+        update_rei_after(mprts, p, offsets[c], offsets[c + 1], ix, iy, iz);
 
         for (int s = 0; s < NR_STATS; s++) {
           F(s, ix, iy, iz) = stats.s[s];
@@ -176,17 +176,16 @@ struct CollisionHost
   // ----------------------------------------------------------------------
   // update_rei_before
 
-  void update_rei_before(const Particles& prts, int n_start, int n_end, int p,
+  void update_rei_before(const Mparticles& mprts, int p, int n_start, int n_end,
                          int i, int j, int k)
   {
-    real_t fnqs = prts.grid().norm.fnqs;
+    real_t fnqs = mprts.grid().norm.fnqs;
     auto F = make_Fields3d<dim_xyz>(mflds_rei_[p]);
     F(0, i, j, k) = 0.;
     F(1, i, j, k) = 0.;
     F(2, i, j, k) = 0.;
-    auto& mprts = prts.mprts();
     for (int n = n_start; n < n_end; n++) {
-      const auto& prt = prts[n];
+      const auto& prt = mprts[p][n];
       auto fac = mprts.prt_m(prt) * mprts.prt_w(prt) * fnqs;
       F(0, i, j, k) -= prt.u[0] * fac;
       F(1, i, j, k) -= prt.u[1] * fac;
@@ -197,14 +196,14 @@ struct CollisionHost
   // ----------------------------------------------------------------------
   // update_rei_after
 
-  void update_rei_after(const Particles& prts, int n_start, int n_end, int p,
+  void update_rei_after(const Mparticles& mprts, int p, int n_start, int n_end,
                         int i, int j, int k)
   {
-    real_t fnqs = prts.grid().norm.fnqs, dt = prts.grid().dt;
+    real_t fnqs = mprts.grid().norm.fnqs;
+    real_t dt = mprts.grid().dt;
     auto F = make_Fields3d<dim_xyz>(mflds_rei_[p]);
-    auto& mprts = prts.mprts();
     for (int n = n_start; n < n_end; n++) {
-      const auto& prt = prts[n];
+      const auto& prt = mprts[p][n];
       auto fac = mprts.prt_m(prt) * mprts.prt_w(prt) * fnqs;
       F(0, i, j, k) += prt.u[0] * fac;
       F(1, i, j, k) += prt.u[1] * fac;
@@ -218,19 +217,19 @@ struct CollisionHost
   // ----------------------------------------------------------------------
   // collide_in_cell
 
-  void collide_in_cell(Particles& prts, const std::vector<int>& permute,
+  void collide_in_cell(Mparticles& mprts, int p,
+                       const std::vector<int>& permute,
                        struct psc_collision_stats* stats)
   {
-    const auto& grid = prts.grid();
+    const auto& grid = mprts.grid();
     int nn = permute.size();
 
     if (nn < 2) { // can't collide only one (or zero) particles
       return;
     }
 
-    const auto& mprts = prts.mprts();
     // all particles need to have same weight!
-    real_t wni = mprts.prt_w(prts[permute[0]]);
+    real_t wni = mprts.prt_w(mprts[p][permute[0]]);
     real_t nudt1 = wni * grid.norm.cori * nn * this->interval_ * grid.dt * nu_;
 
     real_t* nudts = (real_t*)malloc((nn / 2 + 2) * sizeof(*nudts));
@@ -238,25 +237,24 @@ struct CollisionHost
 
     int n = 0;
     if (nn % 2 == 1) { // odd # of particles: do 3-collision
-      nudts[cnt++] = do_bc(prts, permute[0], permute[1], .5 * nudt1);
-      nudts[cnt++] = do_bc(prts, permute[0], permute[2], .5 * nudt1);
-      nudts[cnt++] = do_bc(prts, permute[1], permute[2], .5 * nudt1);
+      nudts[cnt++] = do_bc(mprts, p, permute[0], permute[1], .5 * nudt1);
+      nudts[cnt++] = do_bc(mprts, p, permute[0], permute[2], .5 * nudt1);
+      nudts[cnt++] = do_bc(mprts, p, permute[1], permute[2], .5 * nudt1);
       n = 3;
     }
     for (; n < nn; n += 2) { // do remaining particles as pair
-      nudts[cnt++] = do_bc(prts, permute[n], permute[n + 1], nudt1);
+      nudts[cnt++] = do_bc(mprts, p, permute[n], permute[n + 1], nudt1);
     }
 
     calc_stats(stats, nudts, cnt);
     free(nudts);
   }
 
-  real_t do_bc(Particles& prts, int n1, int n2, real_t nudt1)
+  real_t do_bc(Mparticles& mprts, int p, int n1, int n2, real_t nudt1)
   {
     Rng rng;
-    const auto& mprts = prts.mprts();
     BinaryCollision<Mparticles, Particle> bc(mprts);
-    return bc(prts[n1], prts[n2], nudt1, rng);
+    return bc(mprts[p][n1], mprts[p][n2], nudt1, rng);
   }
 
   int interval() const { return interval_; }
