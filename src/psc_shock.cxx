@@ -404,7 +404,6 @@ void initializeFields(MfieldsState& mflds)
   // step 5: take curl (or something proportional to it)
 
   for (int p = 0; p < mflds.n_patches(); ++p) {
-    auto& patch = grid.patches[p];
     auto field_patch = make_Fields3d<dim_xyz>(mflds[p]);
     auto vector_potential_patch = make_Fields3d<dim_xyz>(vector_potential[p]);
 
@@ -429,7 +428,6 @@ void initializeFields(MfieldsState& mflds)
   double sum_db2_local = 0.0;
 
   for (int p = 0; p < mflds.n_patches(); ++p) {
-    auto& patch = grid.patches[p];
     auto field_patch = make_Fields3d<dim_xyz>(mflds[p]);
 
     grid.Foreach_3d(0, 0, [&](int jx, int jy, int jz) {
