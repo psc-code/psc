@@ -72,7 +72,7 @@ struct SortCountsort2
   {
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto&& prts = mprts[p];
-      unsigned int n_prts = prts.size();
+      unsigned int n_prts = mprts.size(p);
 
       unsigned int n_cells = mprts.pi_.n_cells_;
       unsigned int* cnis = new unsigned int[n_prts];

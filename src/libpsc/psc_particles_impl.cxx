@@ -32,7 +32,7 @@ void psc_mparticles_copy(MP_FROM& mp_from, MP_TO& mp_to)
   for (int p = 0; p < mp_to.n_patches(); p++) {
     auto&& prts_from = mp_from[p];
     auto&& prts_to = mp_to[p];
-    int n_prts = prts_from.size();
+    int n_prts = mp_from.size(p);
     for (int n = 0; n < n_prts; n++) {
       mp_to.push_back(p, convert(prts_from[n], mp_from.grid()));
     }

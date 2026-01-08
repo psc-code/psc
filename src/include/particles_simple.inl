@@ -58,7 +58,7 @@ public:
     auto it = vec.begin();
     for (int p = 0; p < mprts_.n_patches(); p++) {
       auto prts = mprts_[p];
-      for (int n = 0; n < prts.size(); n++) {
+      for (int n = 0; n < mprts_.size(p); n++) {
         *it++ = *func(prts[n]);
       }
     }
@@ -90,7 +90,7 @@ public:
     auto it = vec.begin();
     for (int p = 0; p < mprts_.n_patches(); p++) {
       auto prts = mprts_[p];
-      for (int n = 0; n < prts.size(); n++) {
+      for (int n = 0; n < mprts_.size(p); n++) {
         *func(prts[n]) = *it++;
       }
     }

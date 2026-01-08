@@ -212,7 +212,7 @@ struct ConstAccessorSimple
 
   Patch operator[](int p) const { return {*this, p}; }
   const Mparticles& mprts() const { return mprts_; }
-  uint size(int p) const { return mprts_[p].size(); }
+  uint size(int p) const { return mprts_.size(p); }
   typename Mparticles::Patch::iterator data(int p) const
   {
     return mprts_[p].begin();
@@ -237,7 +237,7 @@ struct AccessorSimple
   Patch operator[](int p) { return {*this, p}; }
   const Mparticles& mprts() const { return mprts_; }
   Mparticles& mprts() { return mprts_; }
-  uint size(int p) const { return mprts_[p].size(); }
+  uint size(int p) const { return mprts_.size(p); }
   typename Mparticles::Patch::iterator data(int p) { return mprts_[p].begin(); }
   const Grid_t& grid() const { return mprts_.grid(); }
 

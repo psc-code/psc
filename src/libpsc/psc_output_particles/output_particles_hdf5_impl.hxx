@@ -489,7 +489,7 @@ struct OutputParticlesHdf5
       int nr_indices = ldims[0] * ldims[1] * ldims[2] * nr_kinds;
       off[p].resize(nr_indices + 1);
       auto&& prts = mprts[p];
-      unsigned int n_prts = prts.size();
+      unsigned int n_prts = mprts.size(p);
       std::vector<int> particle_indices;
       particle_indices.reserve(n_prts);
 

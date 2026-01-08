@@ -437,7 +437,7 @@ void run()
       auto& mp = mprts.template get_as<MparticlesSingle>();
       for (int p = 0; p < mp.n_patches(); p++) {
         auto prts = mp[p];
-        for (int n = 0; n < prts.size(); n++) {
+        for (int n = 0; n < mprts.size(p); n++) {
           if (prts[n].kind == 0) {
             prts[n].kind = MY_ION;
           } else if (prts[n].kind == 1) {

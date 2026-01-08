@@ -43,6 +43,7 @@ struct MparticlesStorage
   using PatchBuffer = std::vector<Particle>;
   using Buffers = std::vector<PatchBuffer>;
   using Range = Span<Particle>;
+  using ConstRange = Span<const Particle>;
   using iterator = typename Range::iterator;
   using const_iterator = typename Range::const_iterator;
 
@@ -91,6 +92,12 @@ struct MparticlesStorage
   }
 
   Range operator[](int p) { return {bufs_[p].data(), bufs_[p].size()}; }
+
+  ConstRange operator[](int p) const
+  {
+    return {bufs_[p].data(), bufs_[p].size()};
+  }
+
   Particle& at(int p, int n)
   {
     return bufs_[p][n];
@@ -137,7 +144,6 @@ struct MparticlesSimple : MparticlesBase
 
     iterator begin() { return mprts_.storage_[p_].begin(); }
     iterator end() { return mprts_.storage_[p_].end(); }
-    unsigned int size() const { return mprts_.storage_[p_].size(); }
 
   private:
     MparticlesSimple& mprts_;
@@ -227,6 +233,8 @@ struct MparticlesSimple : MparticlesBase
     }
     fclose(file);
   }
+
+  unsigned int size(int p) const { return storage_[p].size(); }
 
   real_t prt_q(const Particle& prt) const { return grid().kinds[prt.kind].q; }
 
