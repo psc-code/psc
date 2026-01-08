@@ -151,7 +151,7 @@ struct CollisionHost
     offsets[last] = 0;
     int n_prts = mprts[p].size();
     for (int n = 0; n < n_prts; n++) {
-      int cell_index = mprts.validCellIndex(mprts[p][n]);
+      int cell_index = mprts.validCellIndex(mprts[p][n].x);
       assert(cell_index >= last);
       while (last < cell_index) {
         offsets[++last] = n;

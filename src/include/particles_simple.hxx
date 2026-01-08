@@ -144,7 +144,7 @@ struct MparticlesSimple : MparticlesBase
       // need to copy because we modify it
       auto prt = new_prt;
       checkInPatchMod(prt);
-      mprts_.validCellIndex(prt);
+      mprts_.validCellIndex(prt.x);
       mprts_.storage_.push_back(p_, prt);
     }
 
@@ -209,10 +209,7 @@ struct MparticlesSimple : MparticlesBase
     return pi_.cellPosition((*this)[p][n].x[d], d);
   }
 
-  int validCellIndex(const Particle& prt) const
-  {
-    return pi_.validCellIndex(prt.x);
-  }
+  int validCellIndex(const Real3& x) const { return pi_.validCellIndex(x); }
 
   InjectorSimple<MparticlesSimple> injector() { return {*this}; }
   ConstAccessor accessor() const
