@@ -6,10 +6,10 @@
 #include "DiagnosticsDefault.h"
 #include "OutputFieldsDefault.h"
 #include "psc_config.hxx"
+#include "input_params.hxx"
 
 #include "psc_bgk_util/bgk_params.hxx"
 #include "psc_bgk_util/table.hxx"
-#include "psc_bgk_util/params_parser.hxx"
 
 // ======================================================================
 // PSC configuration
@@ -66,7 +66,7 @@ void setupParameters(int argc, char** argv)
     exit(1);
   }
   std::string path_to_params(argv[1]);
-  ParsedParams parsedParams(path_to_params);
+  InputParams parsedParams(path_to_params);
   ic_table = new Table(parsedParams.get<std::string>("path_to_data"));
   g.loadParams(parsedParams, *ic_table);
 
