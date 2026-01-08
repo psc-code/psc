@@ -149,10 +149,6 @@ struct MparticlesSimple : MparticlesBase
     }
 
     // ParticleIndexer functionality
-    int cellPosition(real_t xi, int d) const
-    {
-      return mprts_.pi_.cellPosition(xi, d);
-    }
     int validCellIndex(const Particle& prt) const
     {
       return mprts_.pi_.validCellIndex(prt.x);
@@ -211,6 +207,8 @@ struct MparticlesSimple : MparticlesBase
   int size() const override { return storage_.size(); }
 
   const ParticleIndexer<real_t>& particleIndexer() const { return pi_; }
+
+  int cellPosition(real_t xi, int d) const { return pi_.cellPosition(xi, d); }
 
   InjectorSimple<MparticlesSimple> injector() { return {*this}; }
   ConstAccessor accessor() const

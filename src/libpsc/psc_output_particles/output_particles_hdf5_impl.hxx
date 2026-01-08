@@ -454,15 +454,15 @@ struct OutputParticlesHdf5
            kind;
   };
 
-  static inline int get_sort_index(Particles& prts, int n)
+  static inline int get_sort_index(Mparticles& mprts, int p, int n)
   {
-    const Grid_t& grid = prts.grid();
+    const Grid_t& grid = mprts.grid();
     const int* ldims = grid.ldims;
-    const auto& prt = prts[n];
+    const auto& prt = mprts[p][n];
 
     Int3 pos;
     for (int d = 0; d < 3; d++) {
-      pos[d] = prts.cellPosition(prt.x[d], d);
+      pos[d] = mprts.cellPosition(prt.x[d], d);
       // FIXME, this is hoping that reason is that we were just on the right
       // bnd...
       if (pos[d] == ldims[d])
@@ -497,7 +497,7 @@ struct OutputParticlesHdf5
       for (int n = 0; n < n_prts; n++) {
         if (selector(prts[n])) {
           particle_indices.push_back(n);
-          int si = get_sort_index(prts, n);
+          int si = get_sort_index(mprts, p, n);
           off[p][si]++;
         }
       }
@@ -514,7 +514,7 @@ struct OutputParticlesHdf5
       // sort a map only, not the actual particles
       map[p].resize(n_prts);
       for (auto n : particle_indices) {
-        int si = get_sort_index(prts, n);
+        int si = get_sort_index(mprts, p, n);
         map[p][off2[si]++] = n;
       }
     }
