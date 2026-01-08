@@ -126,9 +126,10 @@ struct MparticlesSimple : MparticlesBase
   using BndBuffer = typename Storage::PatchBuffer;
   using BndBuffers = typename Storage::Buffers;
 
+  using iterator = typename Storage::iterator;
+
   struct Patch
   {
-    using iterator = typename Storage::iterator;
     using const_iterator = typename Storage::const_iterator;
 
     Patch(MparticlesSimple& mprts, int p) : mprts_(mprts), p_(p) {}
@@ -141,9 +142,6 @@ struct MparticlesSimple : MparticlesBase
     {
       return mprts_.storage_.at(p_, n);
     }
-
-    iterator begin() { return mprts_.storage_[p_].begin(); }
-    iterator end() { return mprts_.storage_[p_].end(); }
 
   private:
     MparticlesSimple& mprts_;
@@ -233,6 +231,10 @@ struct MparticlesSimple : MparticlesBase
     }
     fclose(file);
   }
+
+  iterator begin(int p) { return storage_[p].begin(); }
+
+  iterator end(int p) { return storage_[p].end(); }
 
   unsigned int size(int p) const { return storage_[p].size(); }
 

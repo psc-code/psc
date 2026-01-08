@@ -57,16 +57,16 @@ struct Heating__ : HeatingBase
     for (int p = 0; p < mprts.n_patches(); p++) {
       auto&& prts = mprts[p];
       auto& patch = mprts.grid().patches[p];
-      for (auto& prt : prts) {
-
+      for (auto prt_iter = mprts.begin(p); prt_iter != mprts.end(p);
+           prt_iter++) {
         double xx[3] = {
-          prt.x[0] + patch.xb[0],
-          prt.x[1] + patch.xb[1],
-          prt.x[2] + patch.xb[2],
+          prt_iter->x[0] + patch.xb[0],
+          prt_iter->x[1] + patch.xb[1],
+          prt_iter->x[2] + patch.xb[2],
         };
-        double H = get_H_(xx, prt.kind);
+        double H = get_H_(xx, prt_iter->kind);
         if (H > 0.f) {
-          kick_particle(prt, H);
+          kick_particle(*prt_iter, H);
         }
       }
     }

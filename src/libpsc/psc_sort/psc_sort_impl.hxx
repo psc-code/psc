@@ -78,7 +78,7 @@ struct SortCountsort2
       unsigned int* cnis = new unsigned int[n_prts];
       // FIXME, might as well merge counting here, too
       int i = 0;
-      for (auto prt_iter = prts.begin(); prt_iter != prts.end();
+      for (auto prt_iter = mprts.begin(p); prt_iter != mprts.end(p);
            ++prt_iter, ++i) {
         cnis[i] = mprts.validCellIndex(prt_iter->x);
       }
@@ -114,7 +114,7 @@ struct SortCountsort2
       }
 
       // back to in-place
-      memcpy(&*prts.begin(), particles2, n_prts * sizeof(*particles2));
+      memcpy(&*mprts.begin(p), particles2, n_prts * sizeof(*particles2));
 
       delete[] particles2;
       delete[] cnis;
