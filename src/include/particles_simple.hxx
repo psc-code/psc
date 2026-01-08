@@ -139,15 +139,6 @@ struct MparticlesSimple : MparticlesBase
     iterator end() { return mprts_.storage_[p_].end(); }
     unsigned int size() const { return mprts_.storage_[p_].size(); }
 
-    void push_back(const Particle& new_prt)
-    {
-      // need to copy because we modify it
-      auto prt = new_prt;
-      mprts_.checkInPatchMod(prt);
-      mprts_.validCellIndex(prt.x);
-      mprts_.storage_.push_back(p_, prt);
-    }
-
     const Grid_t& grid() const { return mprts_.grid(); }
     const MparticlesSimple& mprts() const { return mprts_; }
     int p() const { return p_; }
@@ -207,6 +198,15 @@ struct MparticlesSimple : MparticlesBase
   void checkInPatchMod(Particle& prt) const
   {
     return pi_.checkInPatchMod(prt.x);
+  }
+
+  void push_back(int p, const Particle& new_prt)
+  {
+    // need to copy because we modify it
+    auto prt = new_prt;
+    checkInPatchMod(prt);
+    validCellIndex(prt.x);
+    storage_.push_back(p, prt);
   }
 
   InjectorSimple<MparticlesSimple> injector() { return {*this}; }

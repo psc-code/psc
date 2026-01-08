@@ -32,7 +32,7 @@ struct InjectorSimple
         new_prt.kind,
         mprts_.uid_gen(),
         new_prt.tag};
-      mprts_[p_].push_back(prt);
+      mprts_.push_back(p_, prt);
     }
 
     void reweight(const psc::particle::Inject& new_prt)
