@@ -644,12 +644,10 @@ public:
         continue;
       }
 
-      auto&& prts_old = mp_old[recv_info_[p].patch];
-      auto&& prts_new = mp_new[p];
       assert(mp_old.size(recv_info_[p].patch) == mp_new.size(p));
 #if 1
       for (int n = 0; n < mp_new.size(p); n++) {
-        prts_new[n] = prts_old[n];
+        mp_new.at(p, n) = mp_old.at(recv_info_[p].patch, n);
       }
 #else
       // FIXME, this needs at least a proper interface -- if not separately

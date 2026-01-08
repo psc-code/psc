@@ -102,6 +102,12 @@ struct MparticlesStorage
   {
     return bufs_[p][n];
   } // FIXME, ugly and not great for effciency
+
+  const Particle& at(int p, int n) const
+  {
+    return bufs_[p][n];
+  } // FIXME, ugly and not great for effciency
+
   void push_back(int p, const Particle& prt) { bufs_[p].push_back(prt); }
 
   Buffers& bndBuffers() { return bufs_; }
@@ -136,12 +142,6 @@ struct MparticlesSimple : MparticlesBase
 
     Patch(const Patch&) = delete;
     Patch(Patch&&) = default;
-
-    Particle& operator[](int n) { return mprts_.storage_.at(p_, n); }
-    const Particle& operator[](int n) const
-    {
-      return mprts_.storage_.at(p_, n);
-    }
 
   private:
     MparticlesSimple& mprts_;
@@ -190,7 +190,7 @@ struct MparticlesSimple : MparticlesBase
 
   int cellPosition(int p, int n, int d) const
   {
-    return pi_.cellPosition((*this)[p][n].x[d], d);
+    return pi_.cellPosition(this->at(p, n).x[d], d);
   }
 
   int validCellIndex(const Real3& x) const { return pi_.validCellIndex(x); }
@@ -231,6 +231,10 @@ struct MparticlesSimple : MparticlesBase
     }
     fclose(file);
   }
+
+  Particle& at(int p, int n) { return storage_.at(p, n); }
+
+  const Particle& at(int p, int n) const { return storage_.at(p, n); }
 
   iterator begin(int p) { return storage_[p].begin(); }
 

@@ -53,13 +53,13 @@ public:
   template <typename FUNC>
   void operator()(const std::string& name, FUNC&& func)
   {
-    using Ret = typename std::remove_pointer<decltype(func(mprts_[0][0]))>::type;
+    using Ret = typename std::remove_const_t<
+      typename std::remove_pointer_t<decltype(func(mprts_.at(0, 0)))>>;
     std::vector<Ret> vec(mprts_.size());
     auto it = vec.begin();
     for (int p = 0; p < mprts_.n_patches(); p++) {
-      auto prts = mprts_[p];
       for (int n = 0; n < mprts_.size(p); n++) {
-        *it++ = *func(prts[n]);
+        *it++ = *func(mprts_.at(p, n));
       }
     }
 
@@ -83,15 +83,15 @@ public:
   template <typename FUNC>
   void operator()(const std::string& name, FUNC&& func)
   {
-    using Ret = typename std::remove_pointer<decltype(func(mprts_[0][0]))>::type;
+    using Ret =
+      typename std::remove_pointer<decltype(func(mprts_.at(0, 0)))>::type;
     std::vector<Ret> vec(mprts_.size());
     reader_.get<VariableByParticle>(name, vec, mprts_.grid(),
                                     kg::io::Mode::Blocking);
     auto it = vec.begin();
     for (int p = 0; p < mprts_.n_patches(); p++) {
-      auto prts = mprts_[p];
       for (int n = 0; n < mprts_.size(p); n++) {
-        *func(prts[n]) = *it++;
+        *func(mprts_.at(p, n)) = *it++;
       }
     }
   }

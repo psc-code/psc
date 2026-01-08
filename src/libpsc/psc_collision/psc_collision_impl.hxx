@@ -151,7 +151,7 @@ struct CollisionHost
     offsets[last] = 0;
     int n_prts = mprts.size(p);
     for (int n = 0; n < n_prts; n++) {
-      int cell_index = mprts.validCellIndex(mprts[p][n].x);
+      int cell_index = mprts.validCellIndex(mprts.at(p, n).x);
       assert(cell_index >= last);
       while (last < cell_index) {
         offsets[++last] = n;
@@ -185,7 +185,7 @@ struct CollisionHost
     F(1, i, j, k) = 0.;
     F(2, i, j, k) = 0.;
     for (int n = n_start; n < n_end; n++) {
-      const auto& prt = mprts[p][n];
+      const auto& prt = mprts.at(p, n);
       auto fac = mprts.prt_m(prt) * mprts.prt_w(prt) * fnqs;
       F(0, i, j, k) -= prt.u[0] * fac;
       F(1, i, j, k) -= prt.u[1] * fac;
@@ -203,7 +203,7 @@ struct CollisionHost
     real_t dt = mprts.grid().dt;
     auto F = make_Fields3d<dim_xyz>(mflds_rei_[p]);
     for (int n = n_start; n < n_end; n++) {
-      const auto& prt = mprts[p][n];
+      const auto& prt = mprts.at(p, n);
       auto fac = mprts.prt_m(prt) * mprts.prt_w(prt) * fnqs;
       F(0, i, j, k) += prt.u[0] * fac;
       F(1, i, j, k) += prt.u[1] * fac;
@@ -229,7 +229,7 @@ struct CollisionHost
     }
 
     // all particles need to have same weight!
-    real_t wni = mprts.prt_w(mprts[p][permute[0]]);
+    real_t wni = mprts.prt_w(mprts.at(p, permute[0]));
     real_t nudt1 = wni * grid.norm.cori * nn * this->interval_ * grid.dt * nu_;
 
     real_t* nudts = (real_t*)malloc((nn / 2 + 2) * sizeof(*nudts));
@@ -254,7 +254,7 @@ struct CollisionHost
   {
     Rng rng;
     BinaryCollision<Mparticles, Particle> bc(mprts);
-    return bc(mprts[p][n1], mprts[p][n2], nudt1, rng);
+    return bc(mprts.at(p, n1), mprts.at(p, n2), nudt1, rng);
   }
 
   int interval() const { return interval_; }

@@ -71,7 +71,6 @@ struct SortCountsort2
   void operator()(Mparticles& mprts)
   {
     for (int p = 0; p < mprts.n_patches(); p++) {
-      auto&& prts = mprts[p];
       unsigned int n_prts = mprts.size(p);
 
       unsigned int n_cells = mprts.pi_.n_cells_;
@@ -108,7 +107,8 @@ struct SortCountsort2
         while (i + n < n_prts && cnis[i + n] == cni) {
           n++;
         }
-        memcpy(&particles2[cnts[cni]], &prts[i], n * sizeof(*particles2));
+        memcpy(&particles2[cnts[cni]], &mprts.at(p, i),
+               n * sizeof(*particles2));
         cnts[cni] += n;
         i += n - 1;
       }

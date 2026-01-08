@@ -458,7 +458,7 @@ struct OutputParticlesHdf5
   {
     const Grid_t& grid = mprts.grid();
     const int* ldims = grid.ldims;
-    const auto& prt = mprts[p][n];
+    const auto& prt = mprts.at(p, n);
 
     Int3 pos;
     for (int d = 0; d < 3; d++) {
@@ -488,14 +488,13 @@ struct OutputParticlesHdf5
       const int* ldims = mprts.grid().ldims;
       int nr_indices = ldims[0] * ldims[1] * ldims[2] * nr_kinds;
       off[p].resize(nr_indices + 1);
-      auto&& prts = mprts[p];
       unsigned int n_prts = mprts.size(p);
       std::vector<int> particle_indices;
       particle_indices.reserve(n_prts);
 
       // counting sort to get map
       for (int n = 0; n < n_prts; n++) {
-        if (selector(prts[n])) {
+        if (selector(mprts.at(p, n))) {
           particle_indices.push_back(n);
           int si = get_sort_index(mprts, p, n);
           off[p][si]++;
