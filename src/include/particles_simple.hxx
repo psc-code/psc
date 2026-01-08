@@ -134,20 +134,6 @@ struct MparticlesSimple : MparticlesBase
 
   using iterator = typename Storage::iterator;
 
-  struct Patch
-  {
-    using const_iterator = typename Storage::const_iterator;
-
-    Patch(MparticlesSimple& mprts, int p) : mprts_(mprts), p_(p) {}
-
-    Patch(const Patch&) = delete;
-    Patch(Patch&&) = default;
-
-  private:
-    MparticlesSimple& mprts_;
-    int p_;
-  };
-
   explicit MparticlesSimple(const Grid_t& grid)
     : MparticlesBase(grid),
       storage_(grid.n_patches()),
@@ -165,11 +151,6 @@ struct MparticlesSimple : MparticlesBase
     MparticlesBase::reset(grid);
     storage_.reset(grid);
   }
-
-  Patch operator[](int p) const
-  {
-    return {const_cast<MparticlesSimple&>(*this), p};
-  } // FIXME, isn't actually const
 
   void reserve_all(const std::vector<uint>& n_prts_by_patch)
   {

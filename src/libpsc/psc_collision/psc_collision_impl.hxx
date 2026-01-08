@@ -23,7 +23,6 @@ struct CollisionHost
   using real_t = typename Mparticles::real_t;
   using MfieldsState = _MfieldsState;
   using Mfields = _Mfields;
-  using Particles = typename Mparticles::Patch;
   using Particle = typename Mparticles::Particle;
 
   enum
@@ -59,8 +58,6 @@ struct CollisionHost
     auto& grid = mprts.grid();
 
     for (int p = 0; p < mprts.n_patches(); p++) {
-      auto prts = mprts[p];
-
       const int* ldims = grid.ldims;
       int nr_cells = ldims[0] * ldims[1] * ldims[2];
       int* offsets = (int*)calloc(nr_cells + 1, sizeof(*offsets));

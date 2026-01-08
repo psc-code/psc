@@ -9,7 +9,6 @@ struct ParticleProxySimple
 {
   using Particle = typename Mparticles::Particle;
   using real_t = typename Mparticles::real_t;
-  using Patch = typename Mparticles::Patch;
   using Real3 = Vec3<real_t>;
 
   ParticleProxySimple(Particle& prt, const Mparticles& mprts)

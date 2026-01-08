@@ -433,7 +433,6 @@ struct OutputParticlesHdf5
 {
   using writer_type = OutputParticlesWriterHDF5;
   using writer_particles_type = writer_type::particles_type;
-  using Particles = typename Mparticles::Patch;
 
   OutputParticlesHdf5(const Grid_t& grid, const OutputParticlesParams& params)
     : lo_{params.lo},

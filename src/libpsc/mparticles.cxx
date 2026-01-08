@@ -49,7 +49,6 @@ void psc_mparticles_check(MparticlesBase& mprts_base)
 
   for (int p = 0; p < grid.n_patches(); p++) {
     auto& patch = grid.patches[p];
-    auto&& prts = mprts[p];
 
     double xb[3], xe[3];
 
