@@ -462,7 +462,7 @@ struct OutputParticlesHdf5
 
     Int3 pos;
     for (int d = 0; d < 3; d++) {
-      pos[d] = mprts.cellPosition(prt.x[d], d);
+      pos[d] = mprts.cellPosition(p, n, d);
       // FIXME, this is hoping that reason is that we were just on the right
       // bnd...
       if (pos[d] == ldims[d])

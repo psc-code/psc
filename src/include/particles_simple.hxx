@@ -208,7 +208,10 @@ struct MparticlesSimple : MparticlesBase
 
   const ParticleIndexer<real_t>& particleIndexer() const { return pi_; }
 
-  int cellPosition(real_t xi, int d) const { return pi_.cellPosition(xi, d); }
+  int cellPosition(int p, int n, int d) const
+  {
+    return pi_.cellPosition((*this)[p][n].x[d], d);
+  }
 
   InjectorSimple<MparticlesSimple> injector() { return {*this}; }
   ConstAccessor accessor() const
