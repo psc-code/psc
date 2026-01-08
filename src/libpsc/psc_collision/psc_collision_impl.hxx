@@ -66,7 +66,7 @@ struct CollisionHost
       int* offsets = (int*)calloc(nr_cells + 1, sizeof(*offsets));
       struct psc_collision_stats stats_total = {};
 
-      find_cell_offsets(prts, offsets);
+      find_cell_offsets(mprts, p, offsets);
 
       auto F = make_Fields3d<dim_xyz>(mflds_stats_[p]);
       grid.Foreach_3d(0, 0, [&](int ix, int iy, int iz) {
@@ -144,14 +144,14 @@ struct CollisionHost
   // ----------------------------------------------------------------------
   // find_cell_offsets
 
-  static void find_cell_offsets(const Particles& prts, int offsets[])
+  static void find_cell_offsets(const Mparticles& mprts, int p, int offsets[])
   {
-    const int* ldims = prts.grid().ldims;
+    const int* ldims = mprts.grid().ldims;
     int last = 0;
     offsets[last] = 0;
-    int n_prts = prts.size();
+    int n_prts = mprts[p].size();
     for (int n = 0; n < n_prts; n++) {
-      int cell_index = prts.validCellIndex(prts[n]);
+      int cell_index = mprts.validCellIndex(mprts[p][n]);
       assert(cell_index >= last);
       while (last < cell_index) {
         offsets[++last] = n;

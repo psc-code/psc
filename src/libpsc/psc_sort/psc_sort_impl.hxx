@@ -80,7 +80,7 @@ struct SortCountsort2
       int i = 0;
       for (auto prt_iter = prts.begin(); prt_iter != prts.end();
            ++prt_iter, ++i) {
-        cnis[i] = prts.validCellIndex(*prt_iter);
+        cnis[i] = mprts.validCellIndex(*prt_iter);
       }
 
       unsigned int* cnts = new unsigned int[n_cells]{};
