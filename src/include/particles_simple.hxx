@@ -195,16 +195,11 @@ struct MparticlesSimple : MparticlesBase
 
   int validCellIndex(const Real3& x) const { return pi_.validCellIndex(x); }
 
-  void checkInPatchMod(Particle& prt) const
-  {
-    return pi_.checkInPatchMod(prt.x);
-  }
-
   void push_back(int p, const Particle& new_prt)
   {
     // need to copy because we modify it
     auto prt = new_prt;
-    checkInPatchMod(prt);
+    pi_.checkInPatchMod(prt.x);
     validCellIndex(prt.x);
     storage_.push_back(p, prt);
   }
