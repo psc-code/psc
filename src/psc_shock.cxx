@@ -456,8 +456,8 @@ void initializeFields(MfieldsState& mflds)
 
   for (int i = 0; i < nk; i++) {
     if (n_cells_per_shell[i] > 0) {
-      double k_shell = k_mins[i] + 0.5 * dky;
-      shell_db2s[i] = shell_power(k_shell) * dky;
+      double k_shell = k_mins[i] + 0.5 * dk;
+      shell_db2s[i] = shell_power(k_shell) * dk;
     }
   }
 
