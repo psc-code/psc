@@ -230,6 +230,27 @@ double round_to_periodic_k(double len, double k)
   return 2 * M_PI * n / len;
 }
 
+void add_background_fields(MfieldsState& mflds)
+{
+  const auto& grid = mflds.grid();
+
+  for (int p = 0; p < mflds.n_patches(); ++p) {
+    auto& patch = grid.patches[p];
+    auto field_patch = make_Fields3d<dim_xyz>(mflds[p]);
+
+    int n_ghosts = mflds.ibn().max();
+    grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
+      field_patch(HX, jx, jy, jz) += b_x;
+      field_patch(HY, jx, jy, jz) += b_y;
+      field_patch(HZ, jx, jy, jz) += b_z;
+
+      field_patch(EX, jx, jy, jz) = e_x;
+      field_patch(EY, jx, jy, jz) = e_y;
+      field_patch(EZ, jx, jy, jz) = e_z;
+    });
+  }
+}
+
 void initializeFields(MfieldsState& mflds)
 {
   // literally the power of each shell, such that
@@ -463,22 +484,7 @@ void initializeFields(MfieldsState& mflds)
   }
 
   // step 7: add background fields
-
-  for (int p = 0; p < mflds.n_patches(); ++p) {
-    auto& patch = grid.patches[p];
-    auto field_patch = make_Fields3d<dim_xyz>(mflds[p]);
-
-    int n_ghosts = mflds.ibn().max();
-    grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
-      field_patch(HX, jx, jy, jz) += b_x;
-      field_patch(HY, jx, jy, jz) += b_y;
-      field_patch(HZ, jx, jy, jz) += b_z;
-
-      field_patch(EX, jx, jy, jz) = e_x;
-      field_patch(EY, jx, jy, jz) = e_y;
-      field_patch(EZ, jx, jy, jz) = e_z;
-    });
-  }
+  add_background_fields(mflds);
 }
 
 // ======================================================================
