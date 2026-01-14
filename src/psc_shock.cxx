@@ -376,8 +376,9 @@ void inject_plane_alfven_wave(PscConfig::Mfields& vector_potential, double db,
   }
 }
 
-void initializeFields(MfieldsState& mflds)
+void inject_turbulence_dense(MfieldsState& mflds)
 {
+
   // literally the power of each shell, such that
   // 1/2 <dB^2> = int_{k=0}^\infty shellpower(k) dk.
   // Note that regardless of dimensionality, shellpower(k) ~ k^{-5/3},
@@ -481,8 +482,12 @@ void initializeFields(MfieldsState& mflds)
 
   // step 6: normalize db2
   scale_b(mflds);
+}
 
-  // step 7: add background fields
+void initializeFields(MfieldsState& mflds)
+{
+  inject_turbulence_dense(mflds);
+
   add_background_fields(mflds);
 }
 
