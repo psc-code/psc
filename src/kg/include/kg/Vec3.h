@@ -151,11 +151,12 @@ struct Vec : gt::sarray<T, N>
 
   KG_INLINE T max() const
   {
-    auto max = (*this)[0];
-    for (size_t i = 1; i < N; i++) {
-      max = std::max(max, (*this)[i]);
-    }
-    return max;
+    return *std::max_element(this->begin(), this->end());
+  }
+
+  KG_INLINE T min() const
+  {
+    return *std::min_element(this->begin(), this->end());
   }
 
   KG_INLINE Vec inv() const { return T(1) / *this; }
