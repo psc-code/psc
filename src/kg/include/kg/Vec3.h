@@ -145,7 +145,7 @@ struct Vec : gt::sarray<T, N>
             (*this)[0] * w[1] - (*this)[1] * w[0]};
   }
 
-  KG_INLINE T mag2() const { return this->dot(this); }
+  KG_INLINE T mag2() const { return this->dot(*this); }
 
   KG_INLINE T mag() const { return sqrt(this->mag2()); }
 
