@@ -293,6 +293,34 @@ void scale_b(MfieldsState& mflds)
   }
 }
 
+int AX = 0, AY = 1, AZ = 2;
+
+void inject_b_from_potential(MfieldsState& mflds,
+                             PscConfig::Mfields& vector_potential)
+{
+  const auto& grid = mflds.grid();
+
+  for (int p = 0; p < mflds.n_patches(); ++p) {
+    auto field_patch = make_Fields3d<dim_xyz>(mflds[p]);
+    auto vector_potential_patch = make_Fields3d<dim_xyz>(vector_potential[p]);
+
+    grid.Foreach_3d(0, 1, [&](int jx, int jy, int jz) {
+      field_patch(HX, jx, jy, jz) = vector_potential_patch(AZ, jx, jy + 1, jz) -
+                                    vector_potential_patch(AZ, jx, jy, jz) -
+                                    vector_potential_patch(AY, jx, jy, jz + 1) +
+                                    vector_potential_patch(AY, jx, jy, jz);
+      field_patch(HY, jx, jy, jz) = vector_potential_patch(AX, jx, jy, jz + 1) -
+                                    vector_potential_patch(AX, jx, jy, jz) -
+                                    vector_potential_patch(AZ, jx + 1, jy, jz) +
+                                    vector_potential_patch(AZ, jx, jy, jz);
+      field_patch(HZ, jx, jy, jz) = vector_potential_patch(AY, jx + 1, jy, jz) -
+                                    vector_potential_patch(AY, jx, jy, jz) -
+                                    vector_potential_patch(AX, jx, jy + 1, jz) +
+                                    vector_potential_patch(AX, jx, jy, jz);
+    });
+  }
+}
+
 void initializeFields(MfieldsState& mflds)
 {
   // literally the power of each shell, such that
@@ -304,7 +332,6 @@ void initializeFields(MfieldsState& mflds)
   };
 
   PscConfig::Mfields vector_potential{mflds._grid(), 3, mflds.ibn()};
-  int AX = 0, AY = 1, AZ = 2;
 
   auto inject_at_n = [&](Int3 n) { return n != Int3{0, 0, 0}; };
 
@@ -465,26 +492,7 @@ void initializeFields(MfieldsState& mflds)
   }
 
   // step 5: take curl (or something proportional to it)
-
-  for (int p = 0; p < mflds.n_patches(); ++p) {
-    auto field_patch = make_Fields3d<dim_xyz>(mflds[p]);
-    auto vector_potential_patch = make_Fields3d<dim_xyz>(vector_potential[p]);
-
-    grid.Foreach_3d(0, 1, [&](int jx, int jy, int jz) {
-      field_patch(HX, jx, jy, jz) = vector_potential_patch(AZ, jx, jy + 1, jz) -
-                                    vector_potential_patch(AZ, jx, jy, jz) -
-                                    vector_potential_patch(AY, jx, jy, jz + 1) +
-                                    vector_potential_patch(AY, jx, jy, jz);
-      field_patch(HY, jx, jy, jz) = vector_potential_patch(AX, jx, jy, jz + 1) -
-                                    vector_potential_patch(AX, jx, jy, jz) -
-                                    vector_potential_patch(AZ, jx + 1, jy, jz) +
-                                    vector_potential_patch(AZ, jx, jy, jz);
-      field_patch(HZ, jx, jy, jz) = vector_potential_patch(AY, jx + 1, jy, jz) -
-                                    vector_potential_patch(AY, jx, jy, jz) -
-                                    vector_potential_patch(AX, jx, jy + 1, jz) +
-                                    vector_potential_patch(AX, jx, jy, jz);
-    });
-  }
+  inject_b_from_potential(mflds, vector_potential);
 
   // step 6: normalize db2
   scale_b(mflds);
