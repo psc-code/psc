@@ -5,6 +5,7 @@
 #include "OutputFieldsDefault.h"
 #include "psc_config.hxx"
 #include "input_params.hxx"
+#include "kg/include/kg/VecRange.hxx"
 
 // ======================================================================
 // PSC configuration
@@ -391,31 +392,24 @@ void initializeFields(MfieldsState& mflds)
 
   // 1. compute values of |k|
 
-  double dkx = 2.0 * M_PI / len_x;
-  double dky = 2.0 * M_PI / len_y;
-  double dkz = 2.0 * M_PI / len_z;
+  Double3 len_vec{len_x, len_y, len_z};
+  Int3 n_vec{nx, ny, nz};
 
-  int ix_min = nx == 1 ? 0 : -nx / 2 + 1;
-  int iy_min = ny == 1 ? 0 : -ny / 2 + 1;
-  int iz_min = nz == 1 ? 0 : -nz / 2 + 1;
+  Double3 dk_vec = 2.0 * M_PI / len_vec;
+
+  Int3 i3_min = (1 - n_vec) / 2;
+  Int3 i3_max = n_vec / 2;
 
   // inject in only half of k-space, since +k and -k modes are indistinguishable
-  if (nx > 2) {
-    ix_min = 0;
-  } else if (ny > 2) {
-    iy_min = 0;
-  } else {
-    iz_min = 0;
+  for (int d = 0; d < 3; d++) {
+    if (n_vec[d] > 2) {
+      i3_min[d] = 0;
+      break;
+    }
   }
 
-  int ix_max = nx / 2;
-  int iy_max = ny / 2;
-  int iz_max = nz / 2;
-
-  double dk = std::min({dkx, dky, dkz});
-  double kmax = sqrt(sqr(dkx * std::max(-ix_min, ix_max)) +
-                     sqr(dky * std::max(-iy_min, iy_max)) +
-                     sqr(dkz * std::max(-iz_min, iz_max)));
+  double dk = dk_vec.min();
+  double kmax = ((Double3)Int3::max(-i3_min, i3_max) * dk_vec).mag();
   int nk = kmax / dk + 1;
 
   LOG_INFO("nk = %d, kmax = %f\n", nk, kmax);
@@ -429,25 +423,20 @@ void initializeFields(MfieldsState& mflds)
 
   auto n_cells_per_shell = std::vector<int>(nk);
 
-  for (int ix = ix_min; ix <= ix_max; ix++) {
-    for (int iy = iy_min; iy <= iy_max; iy++) {
-      for (int iz = iz_min; iz <= iz_max; iz++) {
-        if (!inject_at_n({ix, iy, iz})) {
-          continue;
-        }
-
-        double kx = ix * dkx;
-        double ky = iy * dky;
-        double kz = iz * dkz;
-        double k = sqrt(sqr(kx) + sqr(ky) + sqr(kz));
-
-        int idx = k / dk;
-        if (idx >= nk) {
-          LOG_ERROR("k=%f > kmax at idx=(%d, %d, %d)\n", k, ix, iy, iz);
-        }
-        n_cells_per_shell[idx] += 1;
-      }
+  for (Int3 i3 : VecRange(i3_min, i3_max)) {
+    if (!inject_at_n(i3)) {
+      continue;
     }
+
+    Double3 k_vec = Double3(i3) * dk_vec;
+    double k = k_vec.mag();
+    int idx = k / dk;
+
+    if (idx >= nk) {
+      LOG_ERROR("k=%f > kmax at idx=(%d, %d, %d)\n", k, i3[0], i3[1], i3[2]);
+    }
+
+    n_cells_per_shell[idx] += 1;
   }
 
   // 3. compute powers for each shell
@@ -468,28 +457,23 @@ void initializeFields(MfieldsState& mflds)
   auto rng = rng::Uniform<double>(0.0, 1.0, seed);
   const auto& grid = mflds.grid();
 
-  for (int ix = ix_min; ix <= ix_max; ix++) {
-    for (int iy = iy_min; iy <= iy_max; iy++) {
-      for (int iz = iz_min; iz <= iz_max; iz++) {
-        if (!inject_at_n({ix, iy, iz})) {
-          continue;
-        }
-
-        Double3 k_vec{ix * dkx, iy * dky, iz * dkz};
-        int idx = k_vec.mag() / dk;
-
-        double proportion_of_shell_db2_in_cell = 1.0 / n_cells_per_shell[idx];
-        double shell_db2 = shell_db2s[idx];
-        double cell_db2 = proportion_of_shell_db2_in_cell * shell_db2;
-        double db = sqrt(cell_db2);
-
-        double phase = rng.get(0.0, 2.0 * M_PI);
-        double polarization = rng.get(0.0, 2.0 * M_PI);
-
-        inject_plane_alfven_wave(vector_potential, db, k_vec, polarization,
-                                 phase);
-      }
+  for (Int3 i3 : VecRange(i3_min, i3_max)) {
+    if (!inject_at_n(i3)) {
+      continue;
     }
+
+    Double3 k_vec = Double3(i3) * dk_vec;
+    int idx = k_vec.mag() / dk;
+
+    double proportion_of_shell_db2_in_cell = 1.0 / n_cells_per_shell[idx];
+    double shell_db2 = shell_db2s[idx];
+    double cell_db2 = proportion_of_shell_db2_in_cell * shell_db2;
+    double db = sqrt(cell_db2);
+
+    double phase = rng.get(0.0, 2.0 * M_PI);
+    double polarization = rng.get(0.0, 2.0 * M_PI);
+
+    inject_plane_alfven_wave(vector_potential, db, k_vec, polarization, phase);
   }
 
   // step 5: take curl (or something proportional to it)
