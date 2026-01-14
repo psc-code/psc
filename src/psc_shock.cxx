@@ -75,6 +75,7 @@ double turb_correlation_length;
 int out_interval;
 
 bool mirror_domain;
+std::string turb_method;
 
 int nicell;
 
@@ -144,6 +145,8 @@ void setupParameters(int argc, char** argv)
   out_interval = psc_params.nmax / n_writes;
 
   mirror_domain = inputParams.getOrDefault<bool>("mirror_domain", false);
+  turb_method =
+    inputParams.getOrDefault<std::string>("turb_method", "alfven_dense");
 
   nicell = inputParams.getOrDefault<int>("nicell", 100);
 
@@ -484,7 +487,11 @@ void inject_turbulence_dense(MfieldsState& mflds)
 
 void initializeFields(MfieldsState& mflds)
 {
-  inject_turbulence_dense(mflds);
+  if (turb_method == "alfven_dense") {
+    inject_turbulence_dense(mflds);
+  } else {
+    LOG_ERROR("Unrecognized turbulence method: %s\n", turb_method.c_str());
+  }
 
   add_background_fields(mflds);
 }
