@@ -71,10 +71,26 @@ struct Vec : gt::sarray<T, N>
     return *this;
   }
 
+  KG_INLINE Vec& operator+=(T s)
+  {
+    for (size_t i = 0; i < N; i++) {
+      (*this)[i] += s;
+    }
+    return *this;
+  }
+
   KG_INLINE Vec& operator-=(const Vec& w)
   {
     for (size_t i = 0; i < N; i++) {
       (*this)[i] -= w[i];
+    }
+    return *this;
+  }
+
+  KG_INLINE Vec& operator-=(T s)
+  {
+    for (size_t i = 0; i < N; i++) {
+      (*this)[i] -= s;
     }
     return *this;
   }
@@ -216,10 +232,35 @@ KG_INLINE Vec<T, N> operator+(const Vec<T, N>& v, const Vec<T, N>& w)
 }
 
 template <typename T, std::size_t N>
+KG_INLINE Vec<T, N> operator+(T s, const Vec<T, N>& v)
+{
+  Vec<T, N> res = v;
+  res += s;
+  return res;
+}
+
+template <typename T, std::size_t N>
 KG_INLINE Vec<T, N> operator-(const Vec<T, N>& v, const Vec<T, N>& w)
 {
   Vec<T, N> res = v;
   res -= w;
+  return res;
+}
+
+template <typename T, std::size_t N>
+KG_INLINE Vec<T, N> operator-(T s, const Vec<T, N>& v)
+{
+  Vec<T, N> res;
+  for (size_t i = 0; i < N; i++) {
+    res[i] = s - v[i];
+  }
+  return res;
+}
+template <typename T, std::size_t N>
+KG_INLINE Vec<T, N> operator-(const Vec<T, N>& v, T s)
+{
+  Vec<T, N> res = v;
+  res -= s;
   return res;
 }
 
