@@ -159,6 +159,24 @@ struct Vec : gt::sarray<T, N>
     return *std::min_element(this->begin(), this->end());
   }
 
+  static KG_INLINE Vec max(const Vec& v, const Vec& w)
+  {
+    Vec res;
+    for (int i = 0; i < N; i++) {
+      res[i] = std::max(v[i], w[i]);
+    }
+    return res;
+  }
+
+  static KG_INLINE Vec min(const Vec& v, const Vec& w)
+  {
+    Vec res;
+    for (int i = 0; i < N; i++) {
+      res[i] = std::min(v[i], w[i]);
+    }
+    return res;
+  }
+
   KG_INLINE Vec inv() const { return T(1) / *this; }
 
   KG_INLINE Vec<int, N> fint() const
