@@ -321,6 +321,60 @@ void inject_b_from_potential(MfieldsState& mflds,
   }
 }
 
+void inject_plane_alfven_wave(PscConfig::Mfields& vector_potential, double db,
+                              Double3& k_vec, double polarization, double phase)
+{
+  const auto& grid = vector_potential.grid();
+
+  double k2 = k_vec.mag2();
+  double k = std::sqrt(k2);
+  double kxy = std::sqrt(sqr(k_vec[0]) + sqr(k_vec[1]));
+
+  double cos_theta = k_vec[2] / k;
+  double sin_theta = kxy / k;
+
+  double cos_phi = k_vec[0] / kxy;
+  double sin_phi = k_vec[1] / kxy;
+
+  if (kxy == 0.0) {
+    // shouldn't matter given random phase and polarization, just want to
+    // avoid nans
+    cos_phi = 1.0;
+    sin_phi = 0.0;
+  }
+
+  Double3 xp_hat{cos_theta * cos_phi, cos_theta * sin_phi, -sin_theta};
+  Double3 yp_hat{sin_phi, -cos_phi, 0};
+
+  Double3 a_vec = db * cos(polarization) / k2 * xp_hat.cross(k_vec);
+  Double3 b_vec = db * sin(polarization) / k2 * yp_hat.cross(k_vec);
+
+  for (int p = 0; p < vector_potential.n_patches(); ++p) {
+    auto& patch = grid.patches[p];
+    auto vector_potential_patch = make_Fields3d<dim_xyz>(vector_potential[p]);
+
+    int n_ghosts = vector_potential.ibn().max();
+    grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
+      Int3 index{jx, jy, jz};
+
+      Double3 pos_ec_x = centering::get_pos(patch, index, centering::EC, 0);
+      Double3 pos_ec_y = centering::get_pos(patch, index, centering::EC, 1);
+      Double3 pos_ec_z = centering::get_pos(patch, index, centering::EC, 2);
+
+      double arg_x = k_vec.dot(pos_ec_x) + phase;
+      double arg_y = k_vec.dot(pos_ec_y) + phase;
+      double arg_z = k_vec.dot(pos_ec_z) + phase;
+
+      vector_potential_patch(AX, jx, jy, jz) +=
+        a_vec[0] * sin(arg_x) - b_vec[0] * cos(arg_x);
+      vector_potential_patch(AY, jx, jy, jz) +=
+        a_vec[1] * sin(arg_y) - b_vec[1] * cos(arg_y);
+      vector_potential_patch(AZ, jx, jy, jz) +=
+        a_vec[2] * sin(arg_z) - b_vec[2] * cos(arg_z);
+    });
+  }
+}
+
 void initializeFields(MfieldsState& mflds)
 {
   // literally the power of each shell, such that
@@ -421,72 +475,19 @@ void initializeFields(MfieldsState& mflds)
           continue;
         }
 
-        double kx = ix * dkx;
-        double ky = iy * dky;
-        double kz = iz * dkz;
-
-        double kxy = sqrt(sqr(kx) + sqr(ky));
-        double k = sqrt(sqr(kx) + sqr(ky) + sqr(kz));
-
-        int idx = k / dk;
+        Double3 k_vec{ix * dkx, iy * dky, iz * dkz};
+        int idx = k_vec.mag() / dk;
 
         double proportion_of_shell_db2_in_cell = 1.0 / n_cells_per_shell[idx];
         double shell_db2 = shell_db2s[idx];
         double cell_db2 = proportion_of_shell_db2_in_cell * shell_db2;
         double db = sqrt(cell_db2);
 
-        double cos_theta = kz / k;
-        double sin_theta = kxy / k;
-
-        double cos_phi = kx / kxy;
-        double sin_phi = ky / kxy;
-
-        if (kxy == 0.0) {
-          // shouldn't matter given random phase and polarization, just want to
-          // avoid nans
-          cos_phi = 1.0;
-          sin_phi = 0.0;
-        }
-
         double phase = rng.get(0.0, 2.0 * M_PI);
         double polarization = rng.get(0.0, 2.0 * M_PI);
 
-        Double3 k_vec = {kx, ky, kz};
-
-        Double3 xp_hat{cos_theta * cos_phi, cos_theta * sin_phi, -sin_theta};
-        Double3 yp_hat{sin_phi, -cos_phi, 0};
-
-        Double3 a_vec = db * cos(polarization) / sqr(k) * xp_hat.cross(k_vec);
-        Double3 b_vec = db * sin(polarization) / sqr(k) * yp_hat.cross(k_vec);
-
-        for (int p = 0; p < vector_potential.n_patches(); ++p) {
-          auto& patch = grid.patches[p];
-          auto vector_potential_patch =
-            make_Fields3d<dim_xyz>(vector_potential[p]);
-
-          int n_ghosts = vector_potential.ibn().max();
-          grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
-            Int3 index{jx, jy, jz};
-
-            Double3 pos_ec_x =
-              centering::get_pos(patch, index, centering::EC, 0);
-            Double3 pos_ec_y =
-              centering::get_pos(patch, index, centering::EC, 1);
-            Double3 pos_ec_z =
-              centering::get_pos(patch, index, centering::EC, 2);
-
-            double arg_x = k_vec.dot(pos_ec_x) + phase;
-            double arg_y = k_vec.dot(pos_ec_y) + phase;
-            double arg_z = k_vec.dot(pos_ec_z) + phase;
-
-            vector_potential_patch(AX, jx, jy, jz) +=
-              a_vec[0] * sin(arg_x) - b_vec[0] * cos(arg_x);
-            vector_potential_patch(AY, jx, jy, jz) +=
-              a_vec[1] * sin(arg_y) - b_vec[1] * cos(arg_y);
-            vector_potential_patch(AZ, jx, jy, jz) +=
-              a_vec[2] * sin(arg_z) - b_vec[2] * cos(arg_z);
-          });
-        }
+        inject_plane_alfven_wave(vector_potential, db, k_vec, polarization,
+                                 phase);
       }
     }
   }
