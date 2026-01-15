@@ -440,3 +440,29 @@ using Int3 = Vec3<int>;
 using UInt3 = Vec3<unsigned int>;
 using Float3 = Vec3<float>;
 using Double3 = Vec3<double>;
+
+/**
+ * @brief Flattens a vec of indices into a single, row-major index.
+ *
+ * For example,
+ * ```c++
+ * Int3 idx{0, 1, 1};
+ * Int3 dims{1, 8, 2};
+ * int flat_idx = flatten_index(idx, dims);
+ * assert(flat_idx == 3);
+ * ```
+ * @tparam T scalar type (likely `int`)
+ * @tparam N number of elements
+ * @param idx indices along each dimension
+ * @param dims lengths of each dimension
+ * @return the flat index
+ */
+template <typename T, std::size_t N>
+KG_INLINE T flatten_index(const kg::Vec<T, N>& idx, const kg::Vec<T, N>& dims)
+{
+  T flat = idx[0];
+  for (int i = 1; i < N; i++) {
+    flat = flat * dims[i] + idx[i];
+  }
+  return flat;
+}
