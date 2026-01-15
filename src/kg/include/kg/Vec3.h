@@ -297,6 +297,12 @@ KG_INLINE Vec<T, N> operator+(T s, const Vec<T, N>& v)
 }
 
 template <typename T, std::size_t N>
+KG_INLINE Vec<T, N> operator+(const Vec<T, N>& v, T s)
+{
+  return s + v;
+}
+
+template <typename T, std::size_t N>
 KG_INLINE Vec<T, N> operator-(const Vec<T, N>& v, const Vec<T, N>& w)
 {
   Vec<T, N> res = v;
@@ -335,6 +341,12 @@ KG_INLINE Vec<T, N> operator*(T s, const Vec<T, N>& v)
   Vec<T, N> res = v;
   res *= s;
   return res;
+}
+
+template <typename T, std::size_t N>
+KG_INLINE Vec<T, N> operator*(const Vec<T, N>& v, T s)
+{
+  return s * v;
 }
 
 template <typename T, std::size_t N>
