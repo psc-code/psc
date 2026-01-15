@@ -59,6 +59,12 @@ struct Uniform
 
   Real get() { return dist(*gen); }
 
+  Real get(Real min_override, Real max_override)
+  {
+    return std::uniform_real_distribution<Real>(min_override,
+                                                max_override)(*gen);
+  }
+
 private:
   detail::GeneratorPtr gen;
   std::uniform_real_distribution<Real> dist;
@@ -81,11 +87,11 @@ struct Normal
   Normal() : Normal(0, 1) {}
 
   Real get() { return dist(*gen); }
-  // FIXME remove me, or make standalone func
-  Real get(Real mean, Real stdev)
+
+  Real get(Real mean_override, Real stdev_override)
   {
     // should be possible to pass params to existing dist
-    return std::normal_distribution<Real>(mean, stdev)(*gen);
+    return std::normal_distribution<Real>(mean_override, stdev_override)(*gen);
   }
 
 private:

@@ -22,7 +22,8 @@ struct Invar
     return {!InvarX::value, !InvarY::value, !InvarZ::value};
   }
 
-  static bool is_invar(int dim)
+  // TODO c++20 make consteval?
+  static constexpr bool is_invar(int dim)
   {
     switch (dim) {
       case 0: return InvarX::value;
