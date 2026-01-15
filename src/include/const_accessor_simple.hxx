@@ -9,7 +9,6 @@ struct ParticleProxySimple
 {
   using Particle = typename Mparticles::Particle;
   using real_t = typename Mparticles::real_t;
-  using Patch = typename Mparticles::Patch;
   using Real3 = Vec3<real_t>;
 
   ParticleProxySimple(Particle& prt, const Mparticles& mprts)
@@ -212,11 +211,8 @@ struct ConstAccessorSimple
 
   Patch operator[](int p) const { return {*this, p}; }
   const Mparticles& mprts() const { return mprts_; }
-  uint size(int p) const { return mprts_[p].size(); }
-  typename Mparticles::Patch::iterator data(int p) const
-  {
-    return mprts_[p].begin();
-  }
+  uint size(int p) const { return mprts_.size(p); }
+  typename Mparticles::iterator data(int p) const { return mprts_.begin(p); }
   const Grid_t& grid() const { return mprts_.grid(); }
 
 private:
@@ -237,8 +233,8 @@ struct AccessorSimple
   Patch operator[](int p) { return {*this, p}; }
   const Mparticles& mprts() const { return mprts_; }
   Mparticles& mprts() { return mprts_; }
-  uint size(int p) const { return mprts_[p].size(); }
-  typename Mparticles::Patch::iterator data(int p) { return mprts_[p].begin(); }
+  uint size(int p) const { return mprts_.size(p); }
+  typename Mparticles::iterator data(int p) { return mprts_.begin(p); }
   const Grid_t& grid() const { return mprts_.grid(); }
 
 private:

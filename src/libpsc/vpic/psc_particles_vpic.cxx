@@ -52,8 +52,8 @@ void copy_to(MparticlesBase& mprts_from_base, MparticlesBase& mprts_to_base)
         auto kind = sp->id;
         auto qni_wni =
           float(vprt.w * dVi) * float(mprts_to.grid().kinds[kind].q);
-        mprts_to[p].push_back(
-          {x, u, qni_wni, kind, psc::particle::Id{}, psc::particle::Tag{}});
+        mprts_to.push_back(
+          p, {x, u, qni_wni, kind, psc::particle::Id{}, psc::particle::Tag{}});
       }
     }
   }

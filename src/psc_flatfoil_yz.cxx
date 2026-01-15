@@ -436,12 +436,11 @@ void run()
       // fix up renumbered particle kind
       auto& mp = mprts.template get_as<MparticlesSingle>();
       for (int p = 0; p < mp.n_patches(); p++) {
-        auto prts = mp[p];
-        for (int n = 0; n < prts.size(); n++) {
-          if (prts[n].kind == 0) {
-            prts[n].kind = MY_ION;
-          } else if (prts[n].kind == 1) {
-            prts[n].kind = MY_ELECTRON;
+        for (int n = 0; n < mprts.size(p); n++) {
+          if (mprts.at(p, n).kind == 0) {
+            mprts.at(p, n).kind = MY_ION;
+          } else if (mprts.at(p, n).kind == 1) {
+            mprts.at(p, n).kind = MY_ELECTRON;
           } else {
             assert(0);
           }

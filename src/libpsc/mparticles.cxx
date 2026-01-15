@@ -49,7 +49,6 @@ void psc_mparticles_check(MparticlesBase& mprts_base)
 
   for (int p = 0; p < grid.n_patches(); p++) {
     auto& patch = grid.patches[p];
-    auto&& prts = mprts[p];
 
     double xb[3], xe[3];
 
@@ -61,12 +60,13 @@ void psc_mparticles_check(MparticlesBase& mprts_base)
       xe[d] = patch.xb[d] + grid.ldims[d] * grid.domain.dx[d];
     }
 
-    for (auto prt : prts) {
-      if (prt.x[0] < 0.f || prt.x[0] >= xe[0] - xb[0] || // FIXME xz only!
-          prt.x[2] < 0.f || prt.x[2] >= xe[2] - xb[2]) {
+    for (auto prt_iter = mprts.begin(p); prt_iter != mprts.end(p); prt_iter++) {
+      if (prt_iter->x[0] < 0.f ||
+          prt_iter->x[0] >= xe[0] - xb[0] || // FIXME xz only!
+          prt_iter->x[2] < 0.f || prt_iter->x[2] >= xe[2] - xb[2]) {
         if (fail_cnt++ < 10) {
-          mprintf("FAIL: xi %g [%g:%g]\n", prt.x[0], 0., xe[0] - xb[0]);
-          mprintf("      zi %g [%g:%g]\n", prt.x[2], 0., xe[2] - xb[2]);
+          mprintf("FAIL: xi %g [%g:%g]\n", prt_iter->x[0], 0., xe[0] - xb[0]);
+          mprintf("      zi %g [%g:%g]\n", prt_iter->x[2], 0., xe[2] - xb[2]);
         }
       }
     }

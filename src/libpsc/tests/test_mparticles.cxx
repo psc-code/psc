@@ -503,9 +503,10 @@ TEST(TestSetupParticles, Id)
   EXPECT_EQ(mprts.size(), n_cells * kinds.size() * prm.nicell);
 
   psc::particle::Id cnt = 0;
+
   for (int p = 0; p < mprts.n_patches(); p++) {
-    for (auto& prt : mprts[p]) {
-      EXPECT_EQ(prt.id(), cnt++);
+    for (auto prt_iter = mprts.begin(p); prt_iter != mprts.end(p); prt_iter++) {
+      EXPECT_EQ(prt_iter->id(), cnt++);
     }
   }
 }
@@ -532,8 +533,8 @@ TEST(TestSetupParticles, Tag)
   EXPECT_EQ(mprts.size(), n_cells * kinds.size() * prm.nicell);
 
   for (int p = 0; p < mprts.n_patches(); p++) {
-    for (auto& prt : mprts[p]) {
-      EXPECT_EQ(prt.tag(), prt.kind * 10);
+    for (auto prt_iter = mprts.begin(p); prt_iter != mprts.end(p); prt_iter++) {
+      EXPECT_EQ(prt_iter->tag(), prt_iter->kind * 10);
     }
   }
 }
