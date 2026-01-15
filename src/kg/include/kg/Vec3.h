@@ -127,6 +127,10 @@ struct Vec : gt::sarray<T, N>
     return *this;
   }
 
+  /**
+   * @brief Calculates the sum of this vec's elements.
+   * @return the sum
+   */
   KG_INLINE T sum() const
   {
     T sum{0};
@@ -136,6 +140,10 @@ struct Vec : gt::sarray<T, N>
     return sum;
   }
 
+  /**
+   * @brief Calculates the product of this vec's elements.
+   * @return the product
+   */
   KG_INLINE T prod() const
   {
     T prod{1};
@@ -145,6 +153,11 @@ struct Vec : gt::sarray<T, N>
     return prod;
   }
 
+  /**
+   * @brief Calculates the dot product of this and another vec.
+   * @param w the other vec
+   * @return the dot product
+   */
   KG_INLINE T dot(const Vec& w) const
   {
     T sum{0};
@@ -154,6 +167,12 @@ struct Vec : gt::sarray<T, N>
     return sum;
   }
 
+  /**
+   * @brief Calculates the cross product of this and another vec. This method
+   * assumes `N` is 3.
+   * @param w the right-hand-side vec
+   * @return the cross product
+   */
   KG_INLINE Vec cross(const Vec& w) const
   {
     return {(*this)[1] * w[2] - (*this)[2] * w[1],
@@ -161,20 +180,43 @@ struct Vec : gt::sarray<T, N>
             (*this)[0] * w[1] - (*this)[1] * w[0]};
   }
 
+  /**
+   * @brief Calculates the square of the magnitude of this vec.
+   * @return the squared magnitude
+   */
   KG_INLINE T mag2() const { return this->dot(*this); }
 
+  /**
+   * @brief Calculates the magnitude of this vec by taking the square root of
+   * the squared magnitude.
+   * @return the magnitude
+   */
   KG_INLINE T mag() const { return sqrt(this->mag2()); }
 
+  /**
+   * @brief Determines the maximal value of any of this vec's elements.
+   * @return the maximal value
+   */
   KG_INLINE T max() const
   {
     return *std::max_element(this->begin(), this->end());
   }
 
+  /**
+   * @brief Determines the minimal value of any of this vec's elements.
+   * @return the minimal value
+   */
   KG_INLINE T min() const
   {
     return *std::min_element(this->begin(), this->end());
   }
 
+  /**
+   * @brief Calculates the elementwise maximum between two vecs.
+   * @param v the first vec
+   * @param w the second vec
+   * @return a vec containing the maximal values
+   */
   static KG_INLINE Vec max(const Vec& v, const Vec& w)
   {
     Vec res;
@@ -184,6 +226,12 @@ struct Vec : gt::sarray<T, N>
     return res;
   }
 
+  /**
+   * @brief Calculates the elementwise minimum between two vecs.
+   * @param v the first vec
+   * @param w the second vec
+   * @return a vec containing the minimal values
+   */
   static KG_INLINE Vec min(const Vec& v, const Vec& w)
   {
     Vec res;
@@ -193,8 +241,17 @@ struct Vec : gt::sarray<T, N>
     return res;
   }
 
+  /**
+   * @brief Calculates the (multiplicative) inverse of each of this vec's
+   * elements.
+   * @return a vec of the inverses
+   */
   KG_INLINE Vec inv() const { return T(1) / *this; }
 
+  /**
+   * @brief Calculates the floor of each of this vec's elements.
+   * @return an integer vec of the floors
+   */
   KG_INLINE Vec<int, N> fint() const
   {
     Vec<int, N> res;
