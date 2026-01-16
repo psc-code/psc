@@ -257,6 +257,46 @@ void add_background_fields(MfieldsState& mflds)
   }
 }
 
+void boost_fields(MfieldsState& mflds, double vy)
+{
+  // general:
+
+  // E_y' = E_y
+  // B_y' = B_y
+  // E_perp' = gamma * (E_perp + v x B)
+  // B_perp' = gamma * (B_perp - v x E)
+
+  // assume E = 0 initially:
+  // E_perp' = gamma * v x B
+  // B_perp' = gamma * B_perp
+
+  const auto& grid = mflds.grid();
+  double gamma = 1.0 / std::sqrt(1.0 - vy * vy);
+  Double3 gamma_v{0.0, gamma * vy, 0.0};
+
+  for (int p = 0; p < mflds.n_patches(); ++p) {
+    auto& patch = grid.patches[p];
+    auto mf_patch = make_Fields3d<dim_xyz>(mflds[p]);
+
+    int n_ghosts = mflds.ibn().max();
+
+    grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
+      // FIXME interpolate across ec vs. fc?
+      Double3 b{mf_patch(HX, jx, jy, jz), mf_patch(HY, jx, jy, jz),
+                mf_patch(HZ, jx, jy, jz)};
+      Double3 e_prime = gamma_v.cross(b);
+
+      mf_patch(EX, jx, jy, jz) = e_prime[0];
+      mf_patch(EZ, jx, jy, jz) = e_prime[2];
+    });
+
+    grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
+      mf_patch(HX, jx, jy, jz) *= gamma;
+      mf_patch(HZ, jx, jy, jz) *= gamma;
+    });
+  }
+}
+
 void set_mean_b2(MfieldsState& mflds, double mean_b2)
 {
   const auto& grid = mflds.grid();
