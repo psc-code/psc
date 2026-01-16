@@ -53,10 +53,6 @@ double b_x;
 double b_y;
 double b_z;
 
-double e_x;
-double e_y;
-double e_z;
-
 int nx;
 int ny;
 int nz;
@@ -113,10 +109,6 @@ void setupParameters(int argc, char** argv)
   b_x = b_mag * sin(b_angle_y_to_x_rad);
   b_y = b_mag * cos(b_angle_y_to_x_rad);
   b_z = 0.0;
-
-  e_x = -(v_upstream_y * b_z - v_upstream_z * b_y);
-  e_y = -(v_upstream_z * b_x - v_upstream_x * b_z);
-  e_z = -(v_upstream_x * b_y - v_upstream_y * b_x);
 
   nx = inputParams.get<int>("nx");
   ny = inputParams.get<int>("ny");
@@ -249,10 +241,6 @@ void add_background_fields(MfieldsState& mflds)
       field_patch(HX, jx, jy, jz) += b_x;
       field_patch(HY, jx, jy, jz) += b_y;
       field_patch(HZ, jx, jy, jz) += b_z;
-
-      field_patch(EX, jx, jy, jz) = e_x;
-      field_patch(EY, jx, jy, jz) = e_y;
-      field_patch(EZ, jx, jy, jz) = e_z;
     });
   }
 }
@@ -661,6 +649,7 @@ void initializeFields(MfieldsState& mflds)
   }
 
   add_background_fields(mflds);
+  boost_fields(mflds, -v_upstream_y);
 }
 
 // ======================================================================
