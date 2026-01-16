@@ -78,6 +78,7 @@ bool mirror_domain;
 std::string turb_method;
 
 int nicell;
+int seed;
 
 } // namespace
 
@@ -149,6 +150,7 @@ void setupParameters(int argc, char** argv)
     inputParams.getOrDefault<std::string>("turb_method", "alfven_dense");
 
   nicell = inputParams.getOrDefault<int>("nicell", 100);
+  seed = inputParams.getOrDefault<int>("seed", 5);
 
   std::ifstream src(path_to_params, std::ios::binary);
   std::ofstream dst("params_record.txt", std::ios::binary);
@@ -454,8 +456,7 @@ void inject_turbulence_dense(MfieldsState& mflds)
 
   // 4. inject each mode at a random phase and polarization
 
-  // TODO randomize the seed based on e.g. time
-  int seed = 5; // all processes must use same seed to ensure B is continuous
+  // all processes must use same seed to ensure B is continuous
   auto rng = rng::Uniform<double>(0.0, 1.0, seed);
   const auto& grid = mflds.grid();
 
