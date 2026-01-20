@@ -98,10 +98,25 @@ struct ParticleIndexer
     return cellIndex(cpos);
   }
 
+  bool isValidCellPosition(const Int3& cpos) const
+  {
+    for (int d = 0; d < 3; d++) {
+      // optimization trick: if cpos[d]<0, it becomes larger than any positive
+      // int after casting both to uint
+      // TODO (cursed?) store ldims as uints, so this happens implicitly
+      if (uint(cpos[d]) >= ldims_[d]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   int validCellIndex(const real_t* pos) const
   {
     Int3 cpos = cellPosition(pos);
     for (int d = 0; d < 3; d++) {
+      // optimization trick: if cpos[d]<0, it becomes larger than any positive
+      // int after casting both to uint
       if (uint(cpos[d]) >= ldims_[d]) {
         printf("validCellIndex: cpos[%d] = %d ldims_[%d] = %d // pos[%d] = %g "
                "pos[%d]*dxi_[%d] = %g\n",
