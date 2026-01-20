@@ -7,7 +7,7 @@
 
 #include "balance.hxx"
 #include "ddc_particles.hxx"
-#include "bnd_particles.hxx"
+#include "particles.hxx"
 #include "particles_simple.hxx"
 
 extern int pr_time_step_no_comm;
@@ -17,7 +17,7 @@ extern double* psc_balance_comp_time_by_patch;
 // BndParticlesCommon
 
 template <typename MP>
-struct BndParticlesCommon : BndParticlesBase
+struct BndParticlesCommon
 {
   using Mparticles = MP;
   using real_t = typename Mparticles::real_t;
