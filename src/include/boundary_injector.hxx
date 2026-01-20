@@ -97,7 +97,7 @@ public:
     const Grid_t& grid = mprts.grid();
     auto injectors_by_patch = mprts.injector();
 
-    Real3 dxi = Real3{1., 1., 1.} / Real3(grid.domain.dx);
+    Real3 dxi = grid.domain.dx_inv;
     Current current(grid);
 
     for (int patch_idx = 0; patch_idx < grid.n_patches(); patch_idx++) {

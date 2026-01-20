@@ -66,7 +66,7 @@ struct ParticleIndexer
   using Real3 = Vec3<real_t>;
 
   ParticleIndexer(const Grid_t& grid)
-    : dxi_(Real3{1., 1., 1.} / Real3(grid.domain.dx)), ldims_(grid.ldims)
+    : dxi_(grid.domain.dx_inv), ldims_(grid.ldims)
   {
     n_cells_ = ldims_[0] * ldims_[1] * ldims_[2];
   }

@@ -19,7 +19,7 @@ struct CurrentZigzag
 
   CurrentZigzag(const Grid_t& grid)
     : dt_(grid.dt),
-      dxi_{Real3{1., 1., 1.} / Real3(grid.domain.dx)},
+      dxi_{grid.domain.dx_inv},
       deposition_(real_t(grid.norm.fnqs / grid.dt) * Real3(grid.domain.dx))
   {}
 
