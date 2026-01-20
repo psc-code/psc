@@ -21,6 +21,7 @@ struct BndParticlesCommon
 {
   using Mparticles = MP;
   using real_t = typename Mparticles::real_t;
+  using Real3 = Vec3<real_t>;
   using ddcp_t = ddc_particles<Mparticles>;
   using BndBuffers = typename Mparticles::BndBuffers;
 
@@ -98,10 +99,7 @@ void BndParticlesCommon<MP>::process_patch(const Grid_t& grid,
 
   const auto& gpatch = grid.patches[p];
   const Int3& ldims = pi.ldims();
-  real_t xm[3];
-  for (int d = 0; d < 3; d++) {
-    xm[d] = gpatch.xe[d] - gpatch.xb[d];
-  }
+  Real3 patch_size = Real3(gpatch.xe - gpatch.xb);
 
   auto* dpatch = &ddcp->patches_[p];
   for (int dir1 = 0; dir1 < N_DIR; dir1++) {
@@ -139,7 +137,7 @@ void BndParticlesCommon<MP>::process_patch(const Grid_t& grid,
     for (int d = 0; d < 3; d++) {
       if (pos[d] < 0) {
         if (!grid.atBoundaryLo(p, d) || grid.bc.prt_lo[d] == BND_PRT_PERIODIC) {
-          xi[d] += xm[d];
+          xi[d] += patch_size[d];
           dir[d] = -1;
           int ci = pi.cellPosition(xi[d], d);
           if (ci >= ldims[d]) {
@@ -167,7 +165,7 @@ void BndParticlesCommon<MP>::process_patch(const Grid_t& grid,
         }
       } else if (pos[d] >= ldims[d]) {
         if (!grid.atBoundaryHi(p, d) || grid.bc.prt_hi[d] == BND_PRT_PERIODIC) {
-          xi[d] -= xm[d];
+          xi[d] -= patch_size[d];
           dir[d] = +1;
           int ci = pi.cellPosition(xi[d], d);
           if (ci < 0) {
@@ -176,7 +174,7 @@ void BndParticlesCommon<MP>::process_patch(const Grid_t& grid,
         } else {
           switch (grid.bc.prt_hi[d]) {
             case BND_PRT_REFLECTING: {
-              xi[d] = 2.f * xm[d] - xi[d];
+              xi[d] = 2.f * patch_size[d] - xi[d];
               pxi[d] = -pxi[d];
               dir[d] = 0;
               int ci = pi.cellPosition(xi[d], d);
@@ -206,7 +204,7 @@ void BndParticlesCommon<MP>::process_patch(const Grid_t& grid,
           xi[d] = 0.f;
         }
         assert(xi[d] >= 0.f);
-        assert(xi[d] <= xm[d]);
+        assert(xi[d] <= patch_size[d]);
       }
     }
     if (!drop) {
