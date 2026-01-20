@@ -97,8 +97,8 @@ void BndParticlesCommon<MP>::process_patch(const Grid_t& grid,
   // New-style boundary requirements.
   // These will need revisiting when it comes to non-periodic domains.
 
+  const Int3& ldims = grid.ldims;
   const auto& gpatch = grid.patches[p];
-  const Int3& ldims = pi.ldims();
   Real3 patch_size = Real3(gpatch.xe - gpatch.xb);
 
   auto* dpatch = &ddcp->patches_[p];
