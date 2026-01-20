@@ -148,13 +148,20 @@ void BndParticlesCommon<MP>::process_patch(const Grid_t& grid,
           }
         } else {
           switch (grid.bc.prt_lo[d]) {
-            case BND_PRT_REFLECTING:
+            case BND_PRT_REFLECTING: {
               xi[d] = -xi[d];
               pxi[d] = -pxi[d];
               dir[d] = 0;
               break;
-            case BND_PRT_OPEN:
-            case BND_PRT_ABSORBING: drop = true; break;
+            }
+            case BND_PRT_OPEN: {
+              drop = true;
+              break;
+            }
+            case BND_PRT_ABSORBING: {
+              drop = true;
+              break;
+            }
             default: assert(0);
           }
         }
@@ -178,8 +185,14 @@ void BndParticlesCommon<MP>::process_patch(const Grid_t& grid,
               }
               break;
             }
-            case BND_PRT_OPEN:
-            case BND_PRT_ABSORBING: drop = true; break;
+            case BND_PRT_OPEN: {
+              drop = true;
+              break;
+            }
+            case BND_PRT_ABSORBING: {
+              drop = true;
+              break;
+            }
             default: assert(0);
           }
         }
