@@ -119,12 +119,9 @@ void BndParticlesCommon<MP>::process_patch(const Grid_t& grid,
 
     Int3 pos = pi.cellPosition(xi);
 
-    if (pos[0] >= 0 &&
-        pos[0] < ldims[0] && // OPT, could be optimized with casts to unsigned
-        pos[1] >= 0 && pos[1] < ldims[1] && pos[2] >= 0 && pos[2] < ldims[2]) {
+    if (pi.isValidCellPosition(pos)) {
       // fast path
       // particle is still inside patch: move into right position
-      pi.validCellIndex(xi);
       buf[head++] = *prt;
       continue;
     }
