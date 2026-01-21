@@ -113,16 +113,17 @@ public:
       auto flds = mflds[patch_idx];
       typename Current::fields_t J(flds);
 
-      for (Int3 cell_idx = ilo; cell_idx[0] < ihi[0]; cell_idx[0]++) {
-        for (cell_idx[2] = ilo[2]; cell_idx[2] < ihi[2]; cell_idx[2]++) {
+      for (Int3 initial_idx = ilo; initial_idx[0] < ihi[0]; initial_idx[0]++) {
+        for (initial_idx[2] = ilo[2]; initial_idx[2] < ihi[2];
+             initial_idx[2]++) {
           auto boundary_current_before =
-            flds.storage()(cell_idx[0] + grid.ibn[0], -1 + grid.ibn[1],
-                           cell_idx[2] + grid.ibn[2], JXI + 1);
+            flds.storage()(initial_idx[0] + grid.ibn[0], -1 + grid.ibn[1],
+                           initial_idx[2] + grid.ibn[2], JXI + 1);
 
-          cell_idx[INJECT_DIM_IDX_] = -1;
+          initial_idx[INJECT_DIM_IDX_] = -1;
 
           Real3 cell_corner =
-            grid.domain.corner + Double3(cell_idx) * grid.domain.dx;
+            grid.domain.corner + Double3(initial_idx) * grid.domain.dx;
           int n_prts_to_try_inject =
             get_n_in_cell(1.0, prts_per_unit_density, true);
           real_t charge_injected = 0;
@@ -156,7 +157,7 @@ public:
             // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
             real_t qni_wni = grid.kinds[prt.kind].q * prt.w;
             current.calc_j(J, initial_normalized_pos, final_normalized_pos,
-                           final_idx, cell_idx, qni_wni, v);
+                           final_idx, initial_idx, qni_wni, v);
 
             charge_injected += qni_wni;
           }
@@ -164,8 +165,8 @@ public:
           // override whatever current was deposited in the boundary to be
           // consistent with the charge having started completely out of the
           // domain
-          flds.storage()(cell_idx[0] + grid.ibn[0], -1 + grid.ibn[1],
-                         cell_idx[2] + grid.ibn[2], JXI + 1) =
+          flds.storage()(initial_idx[0] + grid.ibn[0], -1 + grid.ibn[1],
+                         initial_idx[2] + grid.ibn[2], JXI + 1) =
             boundary_current_before + charge_injected * grid.domain.dx[1] /
                                         grid.dt / prts_per_unit_density;
         }
