@@ -1,6 +1,10 @@
 
 #pragma once
 
+// T. Zh. Esirkepov, "Exact charge conservation scheme for particle-in-cell
+// simulation with an arbitrary form-factor", Computer Physics Communications
+// 135 (2001) 144
+
 #include "pushp_current_esirkepov.hxx"
 #include "../libpsc/psc_checks/checks_impl.hxx"
 

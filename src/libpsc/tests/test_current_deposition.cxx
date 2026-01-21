@@ -51,7 +51,7 @@ template <typename T>
 struct CurrentDepositionTest : ::testing::Test
 {
   using real_t = typename T::real_t;
-  using real3_t = Vec3<real_t>;
+  using Real3 = Vec3<real_t>;
   using dim_t = typename T::dim_t;
   using Current = typename T::Current;
 
@@ -74,12 +74,12 @@ struct CurrentDepositionTest : ::testing::Test
     grid_.reset(
       new Grid_t{grid_domain, grid_bc, kinds, grid_norm, dt, 1, this->ibn});
 
-    ldims_ = gt::shape_type<3>(grid().ldims);
+    ldims_ = Int3(grid().ldims);
   }
 
   const Grid_t& grid() const { return *grid_; }
 
-  auto calc_current(real3_t xm, real3_t xp, real3_t vxi)
+  auto calc_current(Real3 xm, Real3 xp, Real3 vxi)
   {
     using fields_view_t = typename T::fields_view_t;
     using fields_t = typename T::fields_t;
@@ -101,11 +101,11 @@ struct CurrentDepositionTest : ::testing::Test
   }
 
   template <typename F>
-  void check_continuity(real3_t xm, real3_t xp, const F& flds)
+  void check_continuity(Real3 xm, Real3 xp, const F& flds)
   {
     const real_t eps = 2. * std::numeric_limits<real_t>::epsilon();
 
-    auto ib = gt::shape(0, 0, 0);
+    Int3 ib{0, 0, 0};
     auto rho_m = gt::zeros<real_t>(ldims_);
     auto rho_p = gt::zeros<real_t>(ldims_);
     psc::deposit::norm::nc<dim_t>(rho_m, ib, xm, 1.);
@@ -125,7 +125,7 @@ struct CurrentDepositionTest : ::testing::Test
   }
 
   template <typename F>
-  void test_current(real3_t xm, real3_t xp, real3_t vxi, const F& jxi_ref,
+  void test_current(Real3 xm, Real3 xp, Real3 vxi, const F& jxi_ref,
                     const F& jyi_ref, const F& jzi_ref)
   {
     if (!std::is_same<dim_t, dim_yz>::value) {
@@ -143,7 +143,7 @@ struct CurrentDepositionTest : ::testing::Test
       << flds.view(0, _all, _all, JZI);
   }
 
-  void test_current(real3_t xm, real3_t xp, real3_t vxi)
+  void test_current(Real3 xm, Real3 xp, Real3 vxi)
   {
     auto flds = calc_current(xm, xp, vxi);
     check_continuity(xm, xp, flds);
@@ -151,7 +151,7 @@ struct CurrentDepositionTest : ::testing::Test
 
   Int3 ibn = {0, 0, 0};
   std::unique_ptr<Grid_t> grid_;
-  gt::shape_type<3> ldims_;
+  Int3 ldims_;
 };
 
 template <typename R, typename D,
@@ -180,10 +180,10 @@ TYPED_TEST(CurrentDepositionTest, CurrentNotMoving)
 {
   using self_type = CurrentDepositionTest<TypeParam>;
   using real_t = typename self_type::real_t;
-  using real3_t = typename self_type::real3_t;
+  using Real3 = typename self_type::Real3;
 
-  real3_t xm = {.5, 1., 1.}, xp = {.5, 1., 1.};
-  real3_t vxi = {0., 0., 0.};
+  Real3 xm = {.5, 1., 1.}, xp = {.5, 1., 1.};
+  Real3 vxi = {0., 0., 0.};
   // clang-format off
   gt::gtensor<real_t, 2> jxi_ref = {{0., 0., 0., 0.},
                                     {0., 0., 0., 0.},
@@ -205,10 +205,10 @@ TYPED_TEST(CurrentDepositionTest, CurrentY)
 {
   using self_type = CurrentDepositionTest<TypeParam>;
   using real_t = typename self_type::real_t;
-  using real3_t = typename self_type::real3_t;
+  using Real3 = typename self_type::Real3;
 
-  real3_t xm = {.5, 1., 1.}, xp = {.5, 1.2, 1.};
-  real3_t vxi = {0., .2, 0.};
+  Real3 xm = {.5, 1., 1.}, xp = {.5, 1.2, 1.};
+  Real3 vxi = {0., .2, 0.};
   // clang-format off
   gt::gtensor<real_t, 2> jxi_ref = {{0., 0., 0., 0.},
                                     {0., 0., 0., 0.},
@@ -230,10 +230,10 @@ TYPED_TEST(CurrentDepositionTest, CurrentYShift)
 {
   using self_type = CurrentDepositionTest<TypeParam>;
   using real_t = typename self_type::real_t;
-  using real3_t = typename self_type::real3_t;
+  using Real3 = typename self_type::Real3;
 
-  real3_t xm = {.5, 1., 1.7}, xp = {.5, 1.2, 1.7};
-  real3_t vxi = {0., .2, 0.};
+  Real3 xm = {.5, 1., 1.7}, xp = {.5, 1.2, 1.7};
+  Real3 vxi = {0., .2, 0.};
   // clang-format off
   gt::gtensor<real_t, 2> jxi_ref = {{0., 0., 0., 0.},
                                     {0., 0., 0., 0.},
@@ -255,10 +255,10 @@ TYPED_TEST(CurrentDepositionTest, CurrentZ)
 {
   using self_type = CurrentDepositionTest<TypeParam>;
   using real_t = typename self_type::real_t;
-  using real3_t = typename self_type::real3_t;
+  using Real3 = typename self_type::Real3;
 
-  real3_t xm = {.5, 1., 1.3}, xp = {.5, 1., 1.6};
-  real3_t vxi = {0., 0., 3.};
+  Real3 xm = {.5, 1., 1.3}, xp = {.5, 1., 1.6};
+  Real3 vxi = {0., 0., 3.};
   // clang-format off
   gt::gtensor<real_t, 2> jxi_ref = {{0., 0., 0., 0.},
                                     {0., 0., 0., 0.},
@@ -280,11 +280,11 @@ TYPED_TEST(CurrentDepositionTest, CurrentYCross)
 {
   using self_type = CurrentDepositionTest<TypeParam>;
   using real_t = typename self_type::real_t;
-  using real3_t = typename self_type::real3_t;
+  using Real3 = typename self_type::Real3;
 
-  real3_t xm = {.5, 1.9, 1.}, xp = {.5, 2.1, 1.};
+  Real3 xm = {.5, 1.9, 1.}, xp = {.5, 2.1, 1.};
   Int3 lf = {0, 1, 1}, lg = {0, 1, 1};
-  real3_t vxi = {0., .2, 0.};
+  Real3 vxi = {0., .2, 0.};
   // clang-format off
   gt::gtensor<real_t, 2> jxi_ref = {{0., 0., 0., 0.},
                                     {0., 0., 0., 0.},
@@ -306,11 +306,11 @@ TYPED_TEST(CurrentDepositionTest, CurrentYCrossShift)
 {
   using self_type = CurrentDepositionTest<TypeParam>;
   using real_t = typename self_type::real_t;
-  using real3_t = typename self_type::real3_t;
+  using Real3 = typename self_type::Real3;
 
-  real3_t xm = {.5, 1.9, 1.3}, xp = {.5, 2.1, 1.3};
+  Real3 xm = {.5, 1.9, 1.3}, xp = {.5, 2.1, 1.3};
   Int3 lf = {0, 1, 1}, lg = {0, 1, 1};
-  real3_t vxi = {0., .2, 0.};
+  Real3 vxi = {0., .2, 0.};
   // clang-format off
   gt::gtensor<real_t, 2> jxi_ref = {{0., 0., 0., 0.},
                                     {0., 0., 0., 0.},
@@ -332,11 +332,11 @@ TYPED_TEST(CurrentDepositionTest, CurrentYZ)
 {
   using self_type = CurrentDepositionTest<TypeParam>;
   using real_t = typename self_type::real_t;
-  using real3_t = typename self_type::real3_t;
+  using Real3 = typename self_type::Real3;
 
-  real3_t xm = {.5, 1.2, 1.1}, xp = {.5, 1.4, 1.4};
+  Real3 xm = {.5, 1.2, 1.1}, xp = {.5, 1.4, 1.4};
   Int3 lf = {0, 1, 1}, lg = {0, 1, 1};
-  real3_t vxi = {0., .2, .3};
+  Real3 vxi = {0., .2, .3};
   // clang-format off
   gt::gtensor<real_t, 2> jxi_ref = {{0., 0., 0., 0.},
                                     {0., 0., 0., 0.},
@@ -358,11 +358,11 @@ TYPED_TEST(CurrentDepositionTest, CurrentYZCrossShift)
 {
   using self_type = CurrentDepositionTest<TypeParam>;
   using real_t = typename self_type::real_t;
-  using real3_t = typename self_type::real3_t;
+  using Real3 = typename self_type::Real3;
 
-  real3_t xm = {.5, 1.9, 1.3}, xp = {.5, 2.1, 1.4};
+  Real3 xm = {.5, 1.9, 1.3}, xp = {.5, 2.1, 1.4};
   Int3 lf = {0, 1, 1}, lg = {0, 1, 1};
-  real3_t vxi = {0., .2, 0.};
+  Real3 vxi = {0., .2, 0.};
   // clang-format off
   gt::gtensor<real_t, 2> jxi_ref = {{0., 0., 0., 0.},
                                     {0., 0., 0., 0.},
@@ -384,10 +384,10 @@ TYPED_TEST(CurrentDepositionTest, CurrentYZCrossYZ)
 {
   using self_type = CurrentDepositionTest<TypeParam>;
   using real_t = typename self_type::real_t;
-  using real3_t = typename self_type::real3_t;
+  using Real3 = typename self_type::Real3;
 
-  real3_t xm = {.5, 1.9, 1.6}, xp = {.5, 2.1, 2.2};
-  real3_t vxi = {0., .2, 0.};
+  Real3 xm = {.5, 1.9, 1.6}, xp = {.5, 2.1, 2.2};
+  Real3 vxi = {0., .2, 0.};
   if (std::is_same<typename TypeParam::Current,
                    Current1vbSplit<opt_order_1st, dim_yz,
                                    typename TypeParam::fields_t>>::value) {
@@ -415,10 +415,10 @@ TYPED_TEST(CurrentDepositionTest, CurrentX)
 {
   using self_type = CurrentDepositionTest<TypeParam>;
   using real_t = typename self_type::real_t;
-  using real3_t = typename self_type::real3_t;
+  using Real3 = typename self_type::Real3;
 
-  real3_t xm = {1.3, 1., 1.}, xp = {1.6, 1., 1.};
-  real3_t vxi = {.3, 0., 0.};
+  Real3 xm = {1.3, 1., 1.}, xp = {1.6, 1., 1.};
+  Real3 vxi = {.3, 0., 0.};
   this->test_current(xm, xp, vxi);
 }
 
@@ -426,10 +426,10 @@ TYPED_TEST(CurrentDepositionTest, CurrentXY)
 {
   using self_type = CurrentDepositionTest<TypeParam>;
   using real_t = typename self_type::real_t;
-  using real3_t = typename self_type::real3_t;
+  using Real3 = typename self_type::Real3;
 
-  real3_t xm = {1.1, 1.2, 1.3}, xp = {1.4, 1.8, 1.3};
-  real3_t vxi = {.3, .6, 0.};
+  Real3 xm = {1.1, 1.2, 1.3}, xp = {1.4, 1.8, 1.3};
+  Real3 vxi = {.3, .6, 0.};
   this->test_current(xm, xp, vxi);
 }
 
@@ -437,10 +437,10 @@ TYPED_TEST(CurrentDepositionTest, CurrentXYZ)
 {
   using self_type = CurrentDepositionTest<TypeParam>;
   using real_t = typename self_type::real_t;
-  using real3_t = typename self_type::real3_t;
+  using Real3 = typename self_type::Real3;
 
-  real3_t xm = {1.1, 1.2, 1.3}, xp = {1.4, 1.6, 1.8};
-  real3_t vxi = {.3, .4, .5};
+  Real3 xm = {1.1, 1.2, 1.3}, xp = {1.4, 1.6, 1.8};
+  Real3 vxi = {.3, .4, .5};
   this->test_current(xm, xp, vxi);
 }
 
@@ -448,10 +448,10 @@ TYPED_TEST(CurrentDepositionTest, CurrentXYZCrossXYZ)
 {
   using self_type = CurrentDepositionTest<TypeParam>;
   using real_t = typename self_type::real_t;
-  using real3_t = typename self_type::real3_t;
+  using Real3 = typename self_type::Real3;
 
-  real3_t xm = {1.9, 1.8, 1.7}, xp = {2.2, 2.4, 2.6};
-  real3_t vxi = {.3, .6, .9};
+  Real3 xm = {1.9, 1.8, 1.7}, xp = {2.2, 2.4, 2.6};
+  Real3 vxi = {.3, .6, .9};
   this->test_current(xm, xp, vxi);
 }
 

@@ -1,4 +1,7 @@
 
+// J. Villasenor and O. Buneman, "Rigorous charge conservation for local
+// electromagnetic field solvers", Computer Physics Communications 69 (1992) 306
+
 // ======================================================================
 // PushParticlesVb
 
