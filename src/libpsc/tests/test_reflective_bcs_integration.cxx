@@ -141,7 +141,7 @@ TEST(ReflectiveBcsTest, IntegrationY)
   bool about_to_reflect = false;
   bool reflected = false;
 
-  for (; grid.timestep_ < psc_params.nmax; grid.timestep_++) {
+  for (; grid.timestep_ < psc_params.nmax;) {
     about_to_reflect =
       prts[0].x()[1] < grid.domain.dx[1] && prts[0].u()[1] < 0.0;
 
@@ -228,7 +228,7 @@ TEST(ReflectiveBcsTest, IntegrationZ)
   bool about_to_reflect = false;
   bool reflected = false;
 
-  for (; grid.timestep_ < psc_params.nmax; grid.timestep_++) {
+  for (; grid.timestep_ < psc_params.nmax;) {
     about_to_reflect =
       prts[0].x()[2] < grid.domain.dx[2] && prts[0].u()[2] < 0.0;
 
