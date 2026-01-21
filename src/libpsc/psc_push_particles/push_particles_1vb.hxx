@@ -67,18 +67,18 @@ struct PushParticlesVb
         Int3 final_index = final_pos_normalized.fint();
 
         // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
-        int lg[3];
+        Int3 initial_index;
         if (!Dim::InvarX::value) {
-          lg[0] = ip.cx.g.l;
+          initial_index[0] = ip.cx.g.l;
         }
         if (!Dim::InvarY::value) {
-          lg[1] = ip.cy.g.l;
+          initial_index[1] = ip.cy.g.l;
         }
         if (!Dim::InvarZ::value) {
-          lg[2] = ip.cz.g.l;
+          initial_index[2] = ip.cz.g.l;
         }
         current.calc_j(J, initial_pos_normalized, final_pos_normalized,
-                       final_index, lg, prt.qni_wni(), v);
+                       final_index, initial_index, prt.qni_wni(), v);
       }
     }
   }
