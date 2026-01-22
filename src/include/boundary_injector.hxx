@@ -125,7 +125,7 @@ public:
 
           Real3 v = advance.calc_v(prt.u);
           Real3 initial_x = prt.x;
-          advance.push_x(prt.x, v, 1.0);
+          advance.push_x(prt.x, v);
 
           if (prt.x[INJECT_DIM_IDX_] < 0.0) {
             // don't inject a particle that fails to enter the patch
