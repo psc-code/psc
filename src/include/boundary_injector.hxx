@@ -144,10 +144,8 @@ public:
             // pretend it came from the edge to inject proper current
             initial_normalized_pos[INJECT_DIM_IDX_] = -1.0;
 
-            Int3 final_idx;
-            Real3 final_normalized_pos;
-            find_idx_pos_1st_rel(prt.x, dxi, final_idx, final_normalized_pos,
-                                 real_t(0.));
+            Real3 final_normalized_pos = prt.x * dxi;
+            Int3 final_idx = final_normalized_pos.fint();
 
             // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
             real_t qni_wni = grid.kinds[prt.kind].q * prt.w;
