@@ -45,10 +45,10 @@ using OutputParticles = PscConfig::OutputParticles;
 
 Grid_t* setupGrid()
 {
-  auto domain = Grid_t::Domain{{1, 8, 2},          // n grid points
-                               {10.0, 80.0, 20.0}, // physical lengths
-                               {0, 0, 0},          // location of lower corner
-                               {1, 1, 1}};         // n patches
+  auto domain = Grid_t::Domain{{1, 8, 2},  // n grid points
+                               {1, 8, 2},  // physical lengths
+                               {0, 0, 0},  // location of lower corner
+                               {1, 1, 1}}; // n patches
 
   auto bc =
     // FIXME wrong BCs
@@ -63,9 +63,9 @@ Grid_t* setupGrid()
 
   // --- generic setup
   auto norm_params = Grid_t::NormalizationParams::dimensionless();
-  norm_params.nicell = 2;
+  norm_params.nicell = 1;
 
-  double dt = .1;
+  double dt = 1;
   Grid_t::Normalization norm{norm_params};
 
   int n_ghosts = 2;
