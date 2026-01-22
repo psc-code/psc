@@ -640,14 +640,16 @@ struct BndFields_ : BndFieldsBase
 // ======================================================================
 // BndFieldsNone
 
-// FIXME, this is mostly useful at most for testing and maybe should go away
+// used by CUDA
 
 template <class MF>
 struct BndFieldsNone : BndFieldsBase
 {
   using Mfields = MF;
 
+  // clang-format off
   void fill_ghosts_E(Mfields& mflds) {};
   void fill_ghosts_H(Mfields& mflds) {};
   void add_ghosts_J(Mfields& mflds) {};
+  // clang-format on
 };
