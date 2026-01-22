@@ -115,8 +115,7 @@ public:
       typename Current::fields_t J(flds);
 
       for (Int3 initial_idx : VecRange(ilo, ihi)) {
-        Real3 cell_corner =
-          grid.domain.corner + Double3(initial_idx) * grid.domain.dx;
+        Real3 cell_corner = Double3(initial_idx) * grid.domain.dx;
         int n_prts_to_try_inject =
           get_n_in_cell(1.0, prts_per_unit_density, true);
 
@@ -128,8 +127,8 @@ public:
           Real3 initial_x = prt.x;
           advance.push_x(prt.x, v, 1.0);
 
-          if (prt.x[INJECT_DIM_IDX_] < grid.domain.corner[INJECT_DIM_IDX_]) {
-            // don't inject a particle that fails to enter the domain
+          if (prt.x[INJECT_DIM_IDX_] < 0.0) {
+            // don't inject a particle that fails to enter the patch
             continue;
           }
 
