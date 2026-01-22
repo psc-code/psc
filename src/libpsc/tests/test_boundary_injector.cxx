@@ -161,8 +161,8 @@ TEST(BoundaryInjectorTest, Integration1Particle)
   for (; grid.timestep_ < psc_params.nmax;) {
     psc.step();
 
-    EXPECT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
-    EXPECT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
+    ASSERT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
+    ASSERT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
   }
 
   ASSERT_EQ(prts.size(), 1);
@@ -224,8 +224,8 @@ TEST(BoundaryInjectorTest, IntegrationManyParticles)
   for (; grid.timestep_ < psc_params.nmax;) {
     psc.step();
 
-    EXPECT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
-    EXPECT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
+    ASSERT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
+    ASSERT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
   }
 
   ASSERT_GT(prts.size(), 1);
@@ -292,8 +292,8 @@ TEST(BoundaryInjectorTest, IntegrationManySpecies)
   for (; grid.timestep_ < psc_params.nmax;) {
     psc.step();
 
-    EXPECT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
-    EXPECT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
+    ASSERT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
+    ASSERT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
   }
 
   bool found_electrons = false;
