@@ -25,6 +25,11 @@ template <typename Real>
 void exit_to_edge(Vec3<Real>& final_x_normed, const Int3& final_i3,
                   const Grid_<Real>& grid, int p)
 {
+  // FIXME #948112531345 (also see the other FIXMEs with this id)
+  // Current deposited in ghost corners isn't sent to other patches, and
+  // thus leads to false-positive gauss errors.
+  // This is a general problem with non-periodic boundaries that have currents
+  // in ghost cells (i.e., just open BCs as of now), not just this function.
   for (int d = 0; d < 3; d++) {
     if (grid.bc.prt_lo[d] == BND_PRT_OPEN && grid.atBoundaryLo(p, d)) {
       if (final_i3[d] < 0) {

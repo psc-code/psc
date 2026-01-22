@@ -92,6 +92,12 @@ struct ParticleGenerator
       uy = 0.0;
     }
 
+    // FIXME #948112531345 (also see the other FIXMEs with this id)
+    // If x[2] != 0, the injected particle deposits some
+    // current in the cells above its path. If one of those cells is in a ghost
+    // corner, the current deposited in that cell IS NOT sent across patches.
+    // That current is necessary to compute div E correctly. The run itself
+    // should be fine; it only throws off the gauss check.
     Real3 x = min_pos + pos_range * Real3{0, .999, 0.};
     Real3 u{0.0, uy, 0.0};
     Real w = 1.0;

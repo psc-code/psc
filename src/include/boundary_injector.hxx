@@ -120,6 +120,12 @@ public:
           get_n_in_cell(1.0, prts_per_unit_density, true);
 
         for (int prt_count = 0; prt_count < n_prts_to_try_inject; prt_count++) {
+          // FIXME #948112531345 (also see the other FIXMEs with this id)
+          // Depositing current in ghost corners leads to false-positive gauss
+          // errors. This could be avoided here by artificially constraining the
+          // trajectories of injected particles. However, assuming the particle
+          // boundary condition is "open", outflowing particles cause the same
+          // problem, and there's nothing to be done about that.
           psc::particle::Inject prt =
             particle_generator.get(cell_corner, grid.domain.dx);
 
