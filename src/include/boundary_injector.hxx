@@ -74,7 +74,7 @@ public:
   using Current = typename PushParticles::Current;
   using Dim = typename PushParticles::Dim;
   using real_t = typename PushParticles::real_t;
-  using Real3 = typename PushParticles::Real3;
+  using Real3 = Vec3<real_t>;
   using checks_order = typename PushParticles::checks_order;
 
   BoundaryInjector(ParticleGenerator particle_generator, Grid_t& grid)
