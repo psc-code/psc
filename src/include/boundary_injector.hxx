@@ -77,7 +77,7 @@ public:
   using Real3 = Vec3<real_t>;
 
   BoundaryInjector(ParticleGenerator particle_generator, Grid_t& grid)
-    : partice_generator{particle_generator},
+    : particle_generator{particle_generator},
       advance{grid.dt},
       prts_per_unit_density{grid.norm.prts_per_unit_density}
   {}
@@ -121,7 +121,7 @@ public:
 
         for (int prt_count = 0; prt_count < n_prts_to_try_inject; prt_count++) {
           psc::particle::Inject prt =
-            partice_generator.get(cell_corner, grid.domain.dx);
+            particle_generator.get(cell_corner, grid.domain.dx);
 
           Real3 v = advance.calc_v(prt.u);
           Real3 initial_x = prt.x;
@@ -154,7 +154,7 @@ public:
   }
 
 private:
-  ParticleGenerator partice_generator;
+  ParticleGenerator particle_generator;
   AdvanceParticle_t advance;
   real_t prts_per_unit_density;
 };
