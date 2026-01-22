@@ -116,17 +116,12 @@ public:
       for (Int3 initial_idx = ilo; initial_idx[0] < ihi[0]; initial_idx[0]++) {
         for (initial_idx[2] = ilo[2]; initial_idx[2] < ihi[2];
              initial_idx[2]++) {
-          auto boundary_current_before =
-            flds.storage()(initial_idx[0] + grid.ibn[0], -1 + grid.ibn[1],
-                           initial_idx[2] + grid.ibn[2], JXI + 1);
-
           initial_idx[INJECT_DIM_IDX_] = -1;
 
           Real3 cell_corner =
             grid.domain.corner + Double3(initial_idx) * grid.domain.dx;
           int n_prts_to_try_inject =
             get_n_in_cell(1.0, prts_per_unit_density, true);
-          real_t charge_injected = 0;
 
           for (int prt_count = 0; prt_count < n_prts_to_try_inject;
                prt_count++) {
@@ -148,6 +143,8 @@ public:
             // Taken from push_particles_1vb.hxx PushParticlesVb::push_mprts()
 
             Real3 initial_normalized_pos = initial_x * dxi;
+            // pretend it came from the edge to inject proper current
+            initial_normalized_pos[INJECT_DIM_IDX_] = -1.0;
 
             Int3 final_idx;
             Real3 final_normalized_pos;
@@ -158,17 +155,7 @@ public:
             real_t qni_wni = grid.kinds[prt.kind].q * prt.w;
             current.calc_j(J, initial_normalized_pos, final_normalized_pos,
                            final_idx, initial_idx, qni_wni, v);
-
-            charge_injected += qni_wni;
           }
-
-          // override whatever current was deposited in the boundary to be
-          // consistent with the charge having started completely out of the
-          // domain
-          flds.storage()(initial_idx[0] + grid.ibn[0], -1 + grid.ibn[1],
-                         initial_idx[2] + grid.ibn[2], JXI + 1) =
-            boundary_current_before + charge_injected * grid.domain.dx[1] /
-                                        grid.dt / prts_per_unit_density;
         }
       }
     }
