@@ -72,10 +72,8 @@ public:
   using MfieldsState = typename PushParticles::MfieldsState;
   using AdvanceParticle_t = typename PushParticles::AdvanceParticle_t;
   using Current = typename PushParticles::Current;
-  using Dim = typename PushParticles::Dim;
   using real_t = typename PushParticles::real_t;
   using Real3 = Vec3<real_t>;
-  using checks_order = typename PushParticles::checks_order;
 
   BoundaryInjector(ParticleGenerator particle_generator, Grid_t& grid)
     : partice_generator{particle_generator},
@@ -163,6 +161,6 @@ public:
 
 private:
   ParticleGenerator partice_generator;
-  AdvanceParticle<real_t, dim_y> advance;
+  AdvanceParticle_t advance;
   real_t prts_per_unit_density;
 };
