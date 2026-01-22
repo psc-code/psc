@@ -112,7 +112,7 @@ TEST(BoundaryInjectorTest, Integration1Particle)
 
   PscParams psc_params;
 
-  psc_params.nmax = 1;
+  psc_params.nmax = 2;
   psc_params.stats_every = 1;
   psc_params.cfl = .75;
 
@@ -175,7 +175,7 @@ TEST(BoundaryInjectorTest, IntegrationManyParticles)
 
   PscParams psc_params;
 
-  psc_params.nmax = 1;
+  psc_params.nmax = 2;
   psc_params.stats_every = 1;
   psc_params.cfl = .75;
 
@@ -238,7 +238,7 @@ TEST(BoundaryInjectorTest, IntegrationManySpecies)
 
   PscParams psc_params;
 
-  psc_params.nmax = 1;
+  psc_params.nmax = 2;
   psc_params.stats_every = 1;
   psc_params.cfl = .75;
 
