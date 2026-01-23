@@ -511,23 +511,6 @@ protected:
 };
 
 // ======================================================================
-// ExtCurrentNone
-
-class ExtCurrentNone
-{
-public:
-  template <typename MfieldsState>
-  void operator()(const Grid_t& grid, MfieldsState& mflds)
-  {}
-};
-
-namespace
-{
-
-ExtCurrentNone extCurrentNone;
-
-} // namespace
-// ======================================================================
 // makePscIntegrator
 
 template <typename PscConfig, typename MfieldsState, typename Mparticles,
