@@ -612,7 +612,7 @@ void run()
     makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts, balance,
                                  collision, checks, marder, diagnostics);
 
-  psc.injectors.push_back(
+  psc.add_injector(
     new InjectFromLambda<Mparticles, MfieldsState>(lf_inject_heat));
 
   psc.integrate();

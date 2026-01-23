@@ -309,7 +309,7 @@ void run()
     makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts, balance,
                                  collision, checks, marder, diagnostics);
 
-  psc.external_currents.push_back(
+  psc.add_external_current(
     new ExternalCurrentFromLambda<MfieldsState>(lf_ext_current));
 
   MEM_STATS();

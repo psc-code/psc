@@ -117,6 +117,8 @@ struct Psc
   using BndFields = typename PscConfig::BndFields;
   using BndParticles = typename PscConfig::BndParticles;
   using Dim = typename PscConfig::Dim;
+  using InjectorBaseT = InjectorBase<Mparticles, MfieldsState>;
+  using ExternalCurrentBaseT = ExternalCurrentBase<MfieldsState>;
 
   // ----------------------------------------------------------------------
   // ctor
@@ -155,6 +157,23 @@ struct Psc
 
     initialize_stats();
     initialize();
+  }
+
+  // ----------------------------------------------------------------------
+  // API for modifying various internal components
+
+  void add_injector(InjectorBaseT* injector)
+  {
+    if (injector) {
+      injectors_.push_back(injector);
+    }
+  }
+
+  void add_external_current(ExternalCurrentBaseT* external_current)
+  {
+    if (external_current) {
+      external_currents_.push_back(external_current);
+    }
   }
 
   // ----------------------------------------------------------------------
@@ -341,14 +360,14 @@ struct Psc
 
     // === particle injection
     prof_start(pr_inject_prts);
-    for (auto injector : injectors) {
+    for (auto injector : injectors_) {
       injector->inject(mprts_, mflds_);
     }
     prof_stop(pr_inject_prts);
 
     // === external current
     prof_start(pr_external_current);
-    for (auto external_current : external_currents) {
+    for (auto external_current : external_currents_) {
       external_current->inject_current(mflds_);
     }
     prof_stop(pr_external_current);
@@ -472,9 +491,6 @@ private:
 public:
   const Grid_t& grid() { return *grid_; }
 
-  std::vector<InjectorBase<Mparticles, MfieldsState>*> injectors;
-  std::vector<ExternalCurrentBase<MfieldsState>*> external_currents;
-
 private:
   double time_start_;
   PscParams p_;
@@ -490,6 +506,8 @@ protected:
   Checks& checks_;
   Marder& marder_;
   Diagnostics& diagnostics_;
+  std::vector<InjectorBaseT*> injectors_;
+  std::vector<ExternalCurrentBaseT*> external_currents_;
 
   Sort sort_;
   PushParticles pushp_;

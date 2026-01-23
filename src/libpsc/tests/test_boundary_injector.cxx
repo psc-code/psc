@@ -145,7 +145,7 @@ TEST(BoundaryInjectorTest, Integration1Particle)
     makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts, balance,
                                  collision, checks, marder, diagnostics);
 
-  psc.injectors.push_back(
+  psc.add_injector(
     new BoundaryInjector<ParticleGenerator, typename PscConfig::PushParticles>(
       ParticleGenerator(1, 1), grid));
 
@@ -208,7 +208,7 @@ TEST(BoundaryInjectorTest, IntegrationManyParticles)
     makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts, balance,
                                  collision, checks, marder, diagnostics);
 
-  psc.injectors.push_back(
+  psc.add_injector(
     new BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>(
       ParticleGenerator(-1, 1), grid));
 
@@ -278,8 +278,8 @@ TEST(BoundaryInjectorTest, IntegrationManySpecies)
     makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts, balance,
                                  collision, checks, marder, diagnostics);
 
-  psc.injectors.push_back(&inject_ions);
-  psc.injectors.push_back(&inject_electrons);
+  psc.add_injector(&inject_ions);
+  psc.add_injector(&inject_electrons);
 
   // ----------------------------------------------------------------------
   // set up initial conditions
