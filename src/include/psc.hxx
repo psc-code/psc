@@ -509,24 +509,6 @@ protected:
 };
 
 // ======================================================================
-// InjectParticlesNone
-
-class InjectParticlesNone
-{
-public:
-  template <typename Mparticles, typename MfieldsState>
-  void operator()(Mparticles& mprts, MfieldsState& mflds)
-  {}
-};
-
-namespace
-{
-
-InjectParticlesNone injectParticlesNone;
-
-} // namespace
-
-// ======================================================================
 // ExtCurrentNone
 
 class ExtCurrentNone
