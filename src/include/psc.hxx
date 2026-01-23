@@ -100,8 +100,7 @@ inline double courant_length(const Grid_t::Domain& domain)
 // ======================================================================
 // Psc
 
-template <typename PscConfig, typename Diagnostics, typename InjectParticles,
-          typename ExtCurrent>
+template <typename PscConfig, typename Diagnostics, typename ExtCurrent>
 struct Psc
 {
   using Mparticles = typename PscConfig::Mparticles;
@@ -123,8 +122,7 @@ struct Psc
 
   Psc(const PscParams& params, Grid_t& grid, MfieldsState& mflds,
       Mparticles& mprts, Balance& balance, Collision& collision, Checks& checks,
-      Marder& marder, Diagnostics& diagnostics,
-      InjectParticles& inject_particles, ExtCurrent& ext_current)
+      Marder& marder, Diagnostics& diagnostics, ExtCurrent& ext_current)
     : p_{params},
       grid_{&grid},
       mflds_{mflds},
@@ -135,7 +133,6 @@ struct Psc
       marder_{marder},
       bndp_{grid},
       diagnostics_{diagnostics},
-      inject_particles_{inject_particles},
       ext_current_{ext_current},
       checkpointing_{params.write_checkpoint_every_step}
   {
@@ -490,7 +487,6 @@ protected:
   Checks& checks_;
   Marder& marder_;
   Diagnostics& diagnostics_;
-  InjectParticles& inject_particles_;
   ExtCurrent& ext_current_;
 
   Sort sort_;
@@ -553,18 +549,14 @@ ExtCurrentNone extCurrentNone;
 template <typename PscConfig, typename MfieldsState, typename Mparticles,
           typename Balance, typename Collision, typename Checks,
           typename Marder, typename Diagnostics,
-          typename InjectParticles = InjectParticlesNone,
           typename ExtCurrent = ExtCurrentNone>
-Psc<PscConfig, Diagnostics, InjectParticles, ExtCurrent> makePscIntegrator(
+Psc<PscConfig, Diagnostics, ExtCurrent> makePscIntegrator(
   const PscParams& params, Grid_t& grid, MfieldsState& mflds, Mparticles& mprts,
   Balance& balance, Collision& collision, Checks& checks, Marder& marder,
-  Diagnostics& diagnostics,
-  InjectParticles& inject_particles = injectParticlesNone,
-  ExtCurrent& ext_current = extCurrentNone)
+  Diagnostics& diagnostics, ExtCurrent& ext_current = extCurrentNone)
 {
-  return {params,     grid,   mflds,  mprts,       balance,
-          collision,  checks, marder, diagnostics, inject_particles,
-          ext_current};
+  return {params,    grid,   mflds,  mprts,       balance,
+          collision, checks, marder, diagnostics, ext_current};
 }
 
 // ======================================================================
