@@ -9,6 +9,7 @@
 
 #include "../libpsc/vpic/fields_item_vpic.hxx"
 #include "injector_base.hxx"
+#include "external_current_base.hxx"
 #include <checks_params.hxx>
 #include <output_particles.hxx>
 #include <push_particles.hxx>
@@ -100,7 +101,7 @@ inline double courant_length(const Grid_t::Domain& domain)
 // ======================================================================
 // Psc
 
-template <typename PscConfig, typename Diagnostics, typename ExtCurrent>
+template <typename PscConfig, typename Diagnostics>
 struct Psc
 {
   using Mparticles = typename PscConfig::Mparticles;
@@ -122,7 +123,7 @@ struct Psc
 
   Psc(const PscParams& params, Grid_t& grid, MfieldsState& mflds,
       Mparticles& mprts, Balance& balance, Collision& collision, Checks& checks,
-      Marder& marder, Diagnostics& diagnostics, ExtCurrent& ext_current)
+      Marder& marder, Diagnostics& diagnostics)
     : p_{params},
       grid_{&grid},
       mflds_{mflds},
@@ -133,7 +134,6 @@ struct Psc
       marder_{marder},
       bndp_{grid},
       diagnostics_{diagnostics},
-      ext_current_{ext_current},
       checkpointing_{params.write_checkpoint_every_step}
   {
     time_start_ = MPI_Wtime();
@@ -348,7 +348,9 @@ struct Psc
 
     // === external current
     prof_start(pr_external_current);
-    this->ext_current_(grid(), mflds_);
+    for (auto external_current : external_currents) {
+      external_current->inject_current(mflds_);
+    }
     prof_stop(pr_external_current);
 
     mpi_printf(comm, "***** Bnd particles...\n");
@@ -471,6 +473,7 @@ public:
   const Grid_t& grid() { return *grid_; }
 
   std::vector<InjectorBase<Mparticles, MfieldsState>*> injectors;
+  std::vector<ExternalCurrentBase<MfieldsState>*> external_currents;
 
 private:
   double time_start_;
@@ -487,7 +490,6 @@ protected:
   Checks& checks_;
   Marder& marder_;
   Diagnostics& diagnostics_;
-  ExtCurrent& ext_current_;
 
   Sort sort_;
   PushParticles pushp_;
@@ -530,15 +532,14 @@ ExtCurrentNone extCurrentNone;
 
 template <typename PscConfig, typename MfieldsState, typename Mparticles,
           typename Balance, typename Collision, typename Checks,
-          typename Marder, typename Diagnostics,
-          typename ExtCurrent = ExtCurrentNone>
-Psc<PscConfig, Diagnostics, ExtCurrent> makePscIntegrator(
+          typename Marder, typename Diagnostics>
+Psc<PscConfig, Diagnostics> makePscIntegrator(
   const PscParams& params, Grid_t& grid, MfieldsState& mflds, Mparticles& mprts,
   Balance& balance, Collision& collision, Checks& checks, Marder& marder,
-  Diagnostics& diagnostics, ExtCurrent& ext_current = extCurrentNone)
+  Diagnostics& diagnostics)
 {
-  return {params,    grid,   mflds,  mprts,       balance,
-          collision, checks, marder, diagnostics, ext_current};
+  return {params,    grid,   mflds,  mprts,      balance,
+          collision, checks, marder, diagnostics};
 }
 
 // ======================================================================

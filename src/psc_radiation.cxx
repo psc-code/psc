@@ -234,7 +234,8 @@ void run()
   psc_params.marder_interval = -1;
   Marder marder(grid, marder_diffusion, marder_loop, marder_dump);
 
-  auto lf_ext_current = [&](const Grid_t& grid, MfieldsState& mflds) {
+  auto lf_ext_current = [&](MfieldsState& mflds) {
+    const Grid_t& grid = mflds.grid();
     double time = grid.time();
     auto& gdims = grid.domain.gdims;
     for (int p = 0; p < mflds.n_patches(); ++p) {
@@ -298,15 +299,18 @@ void run()
 
   if (read_checkpoint_filename.empty()) {
     initializeFields(mflds);
-    lf_ext_current(*grid_ptr, mflds);
+    lf_ext_current(mflds);
   }
 
   // ----------------------------------------------------------------------
   // hand off to PscIntegrator to run the simulation
 
-  auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
-                                          balance, collision, checks, marder,
-                                          diagnostics, lf_ext_current);
+  auto psc =
+    makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts, balance,
+                                 collision, checks, marder, diagnostics);
+
+  psc.external_currents.push_back(
+    new ExternalCurrentFromLambda<MfieldsState>(lf_ext_current));
 
   MEM_STATS();
   psc.integrate();
