@@ -55,7 +55,7 @@ private:
 
 /// @brief Injects particles on a given boundary, sampling from a given particle
 /// generator. For precise control over multiple particle species, use one
-/// BoundaryInjector per species, combined with @ref CompositeInjector.
+/// BoundaryInjector per species.
 /// @tparam PARTICLE_GENERATOR a type that defines `get(min_pos, pos_range)` and
 /// returns an injectable particle within that range of positions (usually a
 /// grid cell); see @ref ParticleGeneratorMaxwellian

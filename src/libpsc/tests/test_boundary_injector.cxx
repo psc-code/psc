@@ -3,7 +3,6 @@
 #include "test_common.hxx"
 
 #include "boundary_injector.hxx"
-#include "composite_injector.hxx"
 
 #include "psc.hxx"
 #include "DiagnosticsDefault.h"
