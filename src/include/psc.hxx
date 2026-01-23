@@ -156,7 +156,6 @@ struct Psc
 #endif
 
     initialize_stats();
-    initialize();
   }
 
   // ----------------------------------------------------------------------
@@ -195,9 +194,9 @@ struct Psc
   }
 
   // ----------------------------------------------------------------------
-  // initialize
+  // pre_first_step
 
-  void initialize()
+  void pre_first_step()
   {
     bndf_.fill_ghosts_H(mflds_);
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
@@ -215,16 +214,6 @@ struct Psc
       mpi_printf(grid().comm(), "Checking gauss.\n");
       checks_.gauss(mprts_, mflds_);
     }
-
-    // initial output / stats
-    mpi_printf(grid().comm(), "Performing initial diagnostics.\n");
-    diagnostics();
-
-    psc_stats_val[st_nr_particles] = mprts_.size();
-
-    print_status();
-
-    mpi_printf(grid().comm(), "Initialization complete.\n");
   }
 
   // ----------------------------------------------------------------------
@@ -236,6 +225,18 @@ struct Psc
     if (!pr) {
       pr = prof_register("psc_step", 1., 0, 0);
     }
+
+    pre_first_step();
+
+    // initial output / stats
+    mpi_printf(grid().comm(), "Performing initial diagnostics.\n");
+    diagnostics();
+
+    psc_stats_val[st_nr_particles] = mprts_.size();
+
+    print_status();
+
+    mpi_printf(grid().comm(), "Initialization complete.\n");
 
     mpi_printf(grid().comm(), "*** Advancing\n");
     double elapsed = MPI_Wtime();

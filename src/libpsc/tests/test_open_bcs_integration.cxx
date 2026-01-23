@@ -148,6 +148,7 @@ TEST(OpenBcsTest, IntegrationY)
   ASSERT_EQ(prts[0].q(), -1.0);
   ASSERT_EQ(prts[1].q(), 1.0);
 
+  psc.pre_first_step();
   for (; grid.timestep_ < psc_params.nmax;) {
     psc.step();
     ASSERT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
