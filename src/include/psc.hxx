@@ -8,6 +8,7 @@
 #include <setup_particles.hxx>
 
 #include "../libpsc/vpic/fields_item_vpic.hxx"
+#include "injector_base.hxx"
 #include <checks_params.hxx>
 #include <output_particles.hxx>
 #include <push_particles.hxx>
@@ -343,7 +344,9 @@ struct Psc
 
     // === particle injection
     prof_start(pr_inject_prts);
-    inject_particles_(mprts_, mflds_);
+    for (auto injector : injectors) {
+      injector->inject(mprts_, mflds_);
+    }
     prof_stop(pr_inject_prts);
 
     // === external current
@@ -469,6 +472,8 @@ private:
 
 public:
   const Grid_t& grid() { return *grid_; }
+
+  std::vector<InjectorBase<Mparticles, MfieldsState>*> injectors;
 
 private:
   double time_start_;
