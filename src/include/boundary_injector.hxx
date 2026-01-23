@@ -85,18 +85,13 @@ public:
       prts_per_unit_density_{grid.norm.prts_per_unit_density}
   {}
 
-  void inject(Mparticles& mprts, MfieldsState& mflds) override
-  {
-    (*this)(mprts, mflds);
-  }
-
   /// Injects particles at the lower y-bound as if there were a population of
   /// particles just beyond the edge. The imaginary particle population has unit
   /// density, and individual particles from that population are sampled using
   /// the given ParticleGenerator.
   ///
   /// Some of these limitations may be removed in the future.
-  void operator()(Mparticles& mprts, MfieldsState& mflds)
+  void inject(Mparticles& mprts, MfieldsState& mflds) override
   {
     static_assert(INJECT_DIM_IDX_ == 1,
                   "only injection at lower bound of y is supported");
