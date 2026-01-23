@@ -11,6 +11,7 @@
 #include "setup_particles.hxx"
 #include "kg/VecRange.hxx"
 #include "../libpsc/psc_push_particles/inc_push.cxx"
+#include "injector_base.hxx"
 
 /// @brief A particle generator for use with @ref BoundaryInjector. Samples
 /// particles from a (possibly shifted) Maxwellian distribution.
@@ -62,6 +63,8 @@ private:
 /// `MfieldsState`, `Current`, `real_t`, etc.
 template <typename PARTICLE_GENERATOR, typename PUSH_PARTICLES>
 class BoundaryInjector
+  : public InjectorBase<typename PUSH_PARTICLES::Mparticles,
+                        typename PUSH_PARTICLES::MfieldsState>
 {
   static const int INJECT_DIM_IDX_ = 1;
 
@@ -81,6 +84,11 @@ public:
       advance_{grid.dt},
       prts_per_unit_density_{grid.norm.prts_per_unit_density}
   {}
+
+  void inject(Mparticles& mprts, MfieldsState& mflds) override
+  {
+    (*this)(mprts, mflds);
+  }
 
   /// Injects particles at the lower y-bound as if there were a population of
   /// particles just beyond the edge. The imaginary particle population has unit
