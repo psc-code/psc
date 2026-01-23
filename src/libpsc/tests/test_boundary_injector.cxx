@@ -142,13 +142,13 @@ TEST(BoundaryInjectorTest, Integration1Particle)
   DiagEnergies oute{grid.comm(), 0};
   auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
 
-  auto inject_particles =
-    BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>{
-      ParticleGenerator(1, 1), grid};
+  auto psc =
+    makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts, balance,
+                                 collision, checks, marder, diagnostics);
 
-  auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
-                                          balance, collision, checks, marder,
-                                          diagnostics, inject_particles);
+  psc.injectors.push_back(
+    new BoundaryInjector<ParticleGenerator, typename PscConfig::PushParticles>(
+      ParticleGenerator(1, 1), grid));
 
   // ----------------------------------------------------------------------
   // set up initial conditions
@@ -205,13 +205,13 @@ TEST(BoundaryInjectorTest, IntegrationManyParticles)
   DiagEnergies oute{grid.comm(), 0};
   auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
 
-  auto inject_particles =
-    BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>{
-      ParticleGenerator(-1, 1), grid};
+  auto psc =
+    makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts, balance,
+                                 collision, checks, marder, diagnostics);
 
-  auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
-                                          balance, collision, checks, marder,
-                                          diagnostics, inject_particles);
+  psc.injectors.push_back(
+    new BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>(
+      ParticleGenerator(-1, 1), grid));
 
   // ----------------------------------------------------------------------
   // set up initial conditions
@@ -275,11 +275,12 @@ TEST(BoundaryInjectorTest, IntegrationManySpecies)
     BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>{
       ParticleGenerator(-1, 1), grid};
 
-  auto inject = make_composite(inject_electrons, inject_ions);
+  auto psc =
+    makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts, balance,
+                                 collision, checks, marder, diagnostics);
 
-  auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
-                                          balance, collision, checks, marder,
-                                          diagnostics, inject);
+  psc.injectors.push_back(&inject_ions);
+  psc.injectors.push_back(&inject_electrons);
 
   // ----------------------------------------------------------------------
   // set up initial conditions

@@ -679,9 +679,12 @@ void run()
   // ----------------------------------------------------------------------
   // hand off to PscIntegrator to run the simulation
 
-  auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
-                                          balance, collision, checks, marder,
-                                          diagnostics, lf_inject_heat);
+  auto psc =
+    makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts, balance,
+                                 collision, checks, marder, diagnostics);
+
+  psc.injectors.push_back(
+    new InjectFromLambda<Mparticles, MfieldsState>(lf_inject_heat));
 
   MEM_STATS();
   psc.integrate();
