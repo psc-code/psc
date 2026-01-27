@@ -3,7 +3,6 @@
 #include <setup_fields.hxx>
 #include <setup_particles.hxx>
 
-#include "DiagnosticsDefault.h"
 #include "OutputFieldsDefault.h"
 #include "psc_config.hxx"
 #include "input_params.hxx"

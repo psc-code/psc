@@ -5,7 +5,6 @@
 #include "boundary_injector.hxx"
 
 #include "psc.hxx"
-#include "DiagnosticsDefault.h"
 #include "OutputFieldsDefault.h"
 #include "../psc_config.hxx"
 
