@@ -499,9 +499,11 @@ private:
 
   void perform_diagnostics()
   {
+    psc_stats_start(st_time_output);
     for (auto diagnostic : diagnostics_) {
       diagnostic->perform_diagnostic(mprts_, mflds_);
     }
+    psc_stats_stop(st_time_output);
   }
 
   // ----------------------------------------------------------------------
