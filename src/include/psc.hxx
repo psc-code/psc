@@ -8,6 +8,7 @@
 #include <setup_particles.hxx>
 
 #include "../libpsc/vpic/fields_item_vpic.hxx"
+#include "diagnostic_base.hxx"
 #include "injector_base.hxx"
 #include "external_current_base.hxx"
 #include <checks_params.hxx>
@@ -101,7 +102,7 @@ inline double courant_length(const Grid_t::Domain& domain)
 // ======================================================================
 // Psc
 
-template <typename PscConfig, typename Diagnostics>
+template <typename PscConfig>
 struct Psc
 {
   using Mparticles = typename PscConfig::Mparticles;
@@ -117,6 +118,8 @@ struct Psc
   using BndFields = typename PscConfig::BndFields;
   using BndParticles = typename PscConfig::BndParticles;
   using Dim = typename PscConfig::Dim;
+  using DiagnosticBaseT = DiagnosticBase<Mparticles, MfieldsState>;
+  using ParticleDiagnosticBaseT = ParticleDiagnosticBase<Mparticles>;
   using InjectorBaseT = InjectorBase<Mparticles, MfieldsState>;
   using ExternalCurrentBaseT = ExternalCurrentBase<MfieldsState>;
 
@@ -125,7 +128,7 @@ struct Psc
 
   Psc(const PscParams& params, Grid_t& grid, MfieldsState& mflds,
       Mparticles& mprts, Balance& balance, Collision& collision, Checks& checks,
-      Marder& marder, Diagnostics& diagnostics)
+      Marder& marder)
     : p_{params},
       grid_{&grid},
       mflds_{mflds},
@@ -135,7 +138,6 @@ struct Psc
       checks_{checks},
       marder_{marder},
       bndp_{grid},
-      diagnostics_{diagnostics},
       checkpointing_{params.write_checkpoint_every_step}
   {
     time_start_ = MPI_Wtime();
@@ -172,6 +174,23 @@ struct Psc
   {
     if (external_current) {
       external_currents_.push_back(external_current);
+    }
+  }
+
+  void add_diagnostic(DiagnosticBaseT* diagnostic)
+  {
+    if (diagnostic) {
+      diagnostics_.push_back(diagnostic);
+    }
+  }
+
+  void add_diagnostic(ParticleDiagnosticBaseT* diagnostic)
+  {
+    if (diagnostic) {
+      diagnostics_.push_back(new DiagnosticFromLambda<Mparticles, MfieldsState>(
+        [&](Mparticles& mprts, MfieldsState& mflds) {
+          return diagnostic->perform_diagnostic(mprts);
+        }));
     }
   }
 
@@ -230,7 +249,7 @@ struct Psc
 
     // initial output / stats
     mpi_printf(grid().comm(), "Performing initial diagnostics.\n");
-    diagnostics();
+    perform_diagnostics();
 
     psc_stats_val[st_nr_particles] = mprts_.size();
 
@@ -258,7 +277,7 @@ struct Psc
 
       step();
 
-      diagnostics();
+      perform_diagnostics();
 
       psc_stats_stop(st_time_step);
       prof_stop(pr);
@@ -476,9 +495,14 @@ private:
   }
 
   // ----------------------------------------------------------------------
-  // diagnostics
+  // perform_diagnostics
 
-  void diagnostics() { diagnostics_(mprts_, mflds_); }
+  void perform_diagnostics()
+  {
+    for (auto diagnostic : diagnostics_) {
+      diagnostic->perform_diagnostic(mprts_, mflds_);
+    }
+  }
 
   // ----------------------------------------------------------------------
   // print_status
@@ -506,7 +530,7 @@ protected:
   Collision& collision_;
   Checks& checks_;
   Marder& marder_;
-  Diagnostics& diagnostics_;
+  std::vector<DiagnosticBaseT*> diagnostics_;
   std::vector<InjectorBaseT*> injectors_;
   std::vector<ExternalCurrentBaseT*> external_currents_;
 
@@ -534,14 +558,13 @@ protected:
 
 template <typename PscConfig, typename MfieldsState, typename Mparticles,
           typename Balance, typename Collision, typename Checks,
-          typename Marder, typename Diagnostics>
-Psc<PscConfig, Diagnostics> makePscIntegrator(
-  const PscParams& params, Grid_t& grid, MfieldsState& mflds, Mparticles& mprts,
-  Balance& balance, Collision& collision, Checks& checks, Marder& marder,
-  Diagnostics& diagnostics)
+          typename Marder>
+Psc<PscConfig> makePscIntegrator(const PscParams& params, Grid_t& grid,
+                                 MfieldsState& mflds, Mparticles& mprts,
+                                 Balance& balance, Collision& collision,
+                                 Checks& checks, Marder& marder)
 {
-  return {params,    grid,   mflds,  mprts,      balance,
-          collision, checks, marder, diagnostics};
+  return {params, grid, mflds, mprts, balance, collision, checks, marder};
 }
 
 // ======================================================================
@@ -637,4 +660,4 @@ void vpic_create_diagnostics(int interval) {}
 // ----------------------------------------------------------------------
 // vpic_setup_diagnostics
 
-void vpic_setup_diagnostics() {}
+void vpic_setup_perform_diagnostics() {}

@@ -100,11 +100,13 @@ TEST(ReflectiveBcsTest, IntegrationY)
   OutputFields<MfieldsState, Mparticles, Dim> outf{grid, {}};
   OutputParticles outp{grid, {}};
   DiagEnergies<Mparticles, MfieldsState> oute{grid.comm(), 0};
-  auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
 
-  auto psc =
-    makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts, balance,
-                                 collision, checks, marder, diagnostics);
+  auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
+                                          balance, collision, checks, marder);
+
+  psc.add_diagnostic(&outf);
+  psc.add_diagnostic(&outp);
+  psc.add_diagnostic(&oute);
 
   // ----------------------------------------------------------------------
   // set up initial conditions
@@ -188,11 +190,13 @@ TEST(ReflectiveBcsTest, IntegrationZ)
   OutputFields<MfieldsState, Mparticles, Dim> outf{grid, {}};
   OutputParticles outp{grid, {}};
   DiagEnergies<Mparticles, MfieldsState> oute{grid.comm(), 0};
-  auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
 
-  auto psc =
-    makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts, balance,
-                                 collision, checks, marder, diagnostics);
+  auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
+                                          balance, collision, checks, marder);
+
+  psc.add_diagnostic(&outf);
+  psc.add_diagnostic(&outp);
+  psc.add_diagnostic(&oute);
 
   // ----------------------------------------------------------------------
   // set up initial conditions

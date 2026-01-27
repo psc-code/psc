@@ -139,11 +139,13 @@ TEST(BoundaryInjectorTest, Integration1Particle)
   OutputFields<MfieldsState, Mparticles, Dim> outf{grid, {}};
   OutputParticles outp{grid, {}};
   DiagEnergies<Mparticles, MfieldsState> oute{grid.comm(), 0};
-  auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
 
-  auto psc =
-    makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts, balance,
-                                 collision, checks, marder, diagnostics);
+  auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
+                                          balance, collision, checks, marder);
+
+  psc.add_diagnostic(&outf);
+  psc.add_diagnostic(&outp);
+  psc.add_diagnostic(&oute);
 
   psc.add_injector(
     new BoundaryInjector<ParticleGenerator, typename PscConfig::PushParticles>(
@@ -203,11 +205,13 @@ TEST(BoundaryInjectorTest, IntegrationManyParticles)
   OutputFields<MfieldsState, Mparticles, Dim> outf{grid, {}};
   OutputParticles outp{grid, {}};
   DiagEnergies<Mparticles, MfieldsState> oute{grid.comm(), 0};
-  auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
 
-  auto psc =
-    makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts, balance,
-                                 collision, checks, marder, diagnostics);
+  auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
+                                          balance, collision, checks, marder);
+
+  psc.add_diagnostic(&outf);
+  psc.add_diagnostic(&outp);
+  psc.add_diagnostic(&oute);
 
   psc.add_injector(
     new BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>(
@@ -267,7 +271,6 @@ TEST(BoundaryInjectorTest, IntegrationManySpecies)
   OutputFields<MfieldsState, Mparticles, Dim> outf{grid, {}};
   OutputParticles outp{grid, {}};
   DiagEnergies<Mparticles, MfieldsState> oute{grid.comm(), 0};
-  auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
 
   auto inject_electrons =
     BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>{
@@ -276,9 +279,12 @@ TEST(BoundaryInjectorTest, IntegrationManySpecies)
     BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>{
       ParticleGenerator(-1, 1), grid};
 
-  auto psc =
-    makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts, balance,
-                                 collision, checks, marder, diagnostics);
+  auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
+                                          balance, collision, checks, marder);
+
+  psc.add_diagnostic(&outf);
+  psc.add_diagnostic(&outp);
+  psc.add_diagnostic(&oute);
 
   psc.add_injector(&inject_ions);
   psc.add_injector(&inject_electrons);
