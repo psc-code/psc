@@ -734,14 +734,15 @@ static void run(int argc, char** argv)
       ParticleGeneratorMaxwellian(
         KIND_ION, grid.kinds[KIND_ION],
         {v_upstream_x, v_upstream_y, v_upstream_z},
-        {ion_temperature, ion_temperature, ion_temperature}),
+        {ion_temperature, ion_temperature, ion_temperature}, true),
       grid);
   auto electron_injector =
     BoundaryInjector<ParticleGeneratorMaxwellian, PscConfig::PushParticles>(
       ParticleGeneratorMaxwellian(
         KIND_ELECTRON, grid.kinds[KIND_ELECTRON],
         {v_upstream_x, v_upstream_y, v_upstream_z},
-        {electron_temperature, electron_temperature, electron_temperature}),
+        {electron_temperature, electron_temperature, electron_temperature},
+        true),
       grid);
 
   // ----------------------------------------------------------------------
