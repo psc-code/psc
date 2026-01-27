@@ -65,11 +65,13 @@ private:
 };
 
 using OutputParticlesTestTypes = ::testing::Types<
-  Config<dim_xyz, MparticlesSingle, OutputParticlesAscii>
+  Config<dim_xyz, MparticlesSingle, OutputParticlesAscii<MparticlesSingle>>
 #ifdef H5_HAVE_PARALLEL
   ,
-  Config<dim_xyz, MparticlesSingle, OutputParticlesHdf5<ParticleSelectorAll>>,
-  Config<dim_xyz, MparticlesDouble, OutputParticlesHdf5<ParticleSelectorAll>>
+  Config<dim_xyz, MparticlesSingle,
+         OutputParticlesHdf5<MparticlesSingle, ParticleSelectorAll>>,
+  Config<dim_xyz, MparticlesDouble,
+         OutputParticlesHdf5<MparticlesDouble, ParticleSelectorAll>>
 #endif
   >;
 
