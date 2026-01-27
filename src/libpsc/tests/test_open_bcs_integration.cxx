@@ -109,7 +109,7 @@ TEST(OpenBcsTest, IntegrationY)
 
   OutputFields<MfieldsState, Mparticles, Dim> outf{grid, {}};
   OutputParticles outp{grid, {}};
-  DiagEnergies oute{grid.comm(), 0};
+  DiagEnergies<Mparticles, MfieldsState> oute{grid.comm(), 0};
   auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
 
   auto psc =

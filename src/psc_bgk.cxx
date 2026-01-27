@@ -534,7 +534,7 @@ static void run(int argc, char** argv)
   OutputParticles outp{grid, outp_params};
 
   int oute_interval = -100;
-  DiagEnergies oute{grid.comm(), oute_interval};
+  DiagEnergies<Mparticles, MfieldsState> oute{grid.comm(), oute_interval};
 
   auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
 

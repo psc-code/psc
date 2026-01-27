@@ -138,7 +138,7 @@ TEST(BoundaryInjectorTest, Integration1Particle)
 
   OutputFields<MfieldsState, Mparticles, Dim> outf{grid, {}};
   OutputParticles outp{grid, {}};
-  DiagEnergies oute{grid.comm(), 0};
+  DiagEnergies<Mparticles, MfieldsState> oute{grid.comm(), 0};
   auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
 
   auto psc =
@@ -202,7 +202,7 @@ TEST(BoundaryInjectorTest, IntegrationManyParticles)
 
   OutputFields<MfieldsState, Mparticles, Dim> outf{grid, {}};
   OutputParticles outp{grid, {}};
-  DiagEnergies oute{grid.comm(), 0};
+  DiagEnergies<Mparticles, MfieldsState> oute{grid.comm(), 0};
   auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
 
   auto psc =
@@ -266,7 +266,7 @@ TEST(BoundaryInjectorTest, IntegrationManySpecies)
 
   OutputFields<MfieldsState, Mparticles, Dim> outf{grid, {}};
   OutputParticles outp{grid, {}};
-  DiagEnergies oute{grid.comm(), 0};
+  DiagEnergies<Mparticles, MfieldsState> oute{grid.comm(), 0};
   auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
 
   auto inject_electrons =

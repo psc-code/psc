@@ -2,19 +2,21 @@
 namespace
 {
 
-void fclose_helper(FILE* fp)
-{
-  ::fclose(fp);
-}
+void fclose_helper(FILE* fp) { ::fclose(fp); }
 
 } // namespace
 
 // ----------------------------------------------------------------------
 // DiagEnergies ctors
 
-inline DiagEnergies::DiagEnergies() : file_{nullptr, fclose_helper} {}
+template <typename Mparticles, typename MfieldsState>
+inline DiagEnergies<Mparticles, MfieldsState>::DiagEnergies()
+  : file_{nullptr, fclose_helper}
+{}
 
-inline DiagEnergies::DiagEnergies(MPI_Comm comm, int interval)
+template <typename Mparticles, typename MfieldsState>
+inline DiagEnergies<Mparticles, MfieldsState>::DiagEnergies(MPI_Comm comm,
+                                                            int interval)
   : comm_{comm}, interval_{interval}, file_{nullptr, fclose_helper}
 {
   MPI_Comm_rank(comm_, &rank_);
@@ -32,7 +34,8 @@ inline DiagEnergies::DiagEnergies(MPI_Comm comm, int interval)
 // DiagEnergies::operator()
 
 template <typename Mparticles, typename MfieldsState>
-inline void DiagEnergies::operator()(Mparticles& mprts, MfieldsState& mflds)
+inline void DiagEnergies<Mparticles, MfieldsState>::operator()(
+  Mparticles& mprts, MfieldsState& mflds)
 {
   const auto& grid = mprts.grid();
 
@@ -56,8 +59,10 @@ inline void DiagEnergies::operator()(Mparticles& mprts, MfieldsState& mflds)
 // ----------------------------------------------------------------------
 // legend
 
+template <typename Mparticles, typename MfieldsState>
 template <typename Item>
-inline std::string DiagEnergies::legend(const Item& item)
+inline std::string DiagEnergies<Mparticles, MfieldsState>::legend(
+  const Item& item)
 {
   std::string s;
   for (auto& name : item.names()) {
@@ -69,9 +74,10 @@ inline std::string DiagEnergies::legend(const Item& item)
 // ----------------------------------------------------------------------
 // write_one
 
-template <typename Item, typename Mparticles, typename MfieldsState>
-inline void DiagEnergies::write_one(const Item& item, Mparticles& mprts,
-                                    MfieldsState& mflds)
+template <typename Mparticles, typename MfieldsState>
+template <typename Item>
+inline void DiagEnergies<Mparticles, MfieldsState>::write_one(
+  const Item& item, Mparticles& mprts, MfieldsState& mflds)
 {
   auto vals = item(mprts, mflds);
 
