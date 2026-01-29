@@ -198,12 +198,11 @@ inline void correct(const Grid_t& grid, E1& efield, const Int3& efield_ib,
 } // namespace marder
 } // namespace psc
 
-template <typename S, typename D, typename ITEM_RHO, typename BND>
+template <typename S, typename ITEM_RHO, typename BND>
 class MarderCommon
 {
 public:
   using storage_type = S;
-  using dim_t = D;
   using Item_rho_t = ITEM_RHO;
   using Bnd = BND;
   using real_t = typename storage_type::value_type;
@@ -307,7 +306,7 @@ public:
 };
 
 template <typename S, typename D>
-using Marder_ = MarderCommon<S, D, Moment_rho_1st_nc<S, D>, Bnd_>;
+using Marder_ = MarderCommon<S, Moment_rho_1st_nc<S, D>, Bnd_>;
 
 #ifdef USE_CUDA
 
@@ -316,6 +315,6 @@ using Marder_ = MarderCommon<S, D, Moment_rho_1st_nc<S, D>, Bnd_>;
 #include "fields_item_moments_1st_cuda.hxx"
 
 template <typename D>
-using MarderCuda = MarderCommon<MfieldsStateCuda::Storage, D,
-                                Moment_rho_1st_nc_cuda<D>, BndCuda3>;
+using MarderCuda =
+  MarderCommon<MfieldsStateCuda::Storage, Moment_rho_1st_nc_cuda<D>, BndCuda3>;
 #endif
