@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "gauss_corrector_base.hxx"
 #include "fields.hxx"
 #include "writer_mrc.hxx"
 #include "mpi_dtype_traits.hxx"
@@ -200,7 +201,7 @@ inline void correct(const Grid_t& grid, E1& efield, const Int3& efield_ib,
 
 template <typename MFIELDS_STATE, typename MPARTICLES, typename ITEM_RHO,
           typename BND>
-class MarderCommon
+class MarderCommon : public GaussCorrectorBase<MFIELDS_STATE, MPARTICLES>
 {
 public:
   using MfieldsState = MFIELDS_STATE;
@@ -242,6 +243,11 @@ public:
       io_.end_step();
     }
   }
+
+  void correct_gauss(MfieldsState& mflds, Mparticles& mprts) override
+  {
+    return (*this)(mflds, mprts);
+  };
 
   // ----------------------------------------------------------------------
   // operator()
