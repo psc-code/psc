@@ -255,9 +255,9 @@ public:
   // Do the modified marder correction (See eq.(5, 7, 9, 10) in Mardahl and
   // Verboncoeur, CPC, 1997)
 
-  void operator()(const Grid_t& grid, MfieldsState& mflds, const Int3& mflds_ib,
-                  Mparticles& mprts)
+  void operator()(MfieldsState& mflds, const Int3& mflds_ib, Mparticles& mprts)
   {
+    const Grid_t& grid = mflds.grid();
     auto efield = mflds.storage().view(_all, _all, _all, _s(EX, EX + 3), _all);
     auto efield_ib = mflds_ib;
 
@@ -294,7 +294,7 @@ public:
 
   void operator()(MfieldsState& mflds, Mparticles& mprts)
   {
-    (*this)(mprts.grid(), mflds, mflds.ib(), mprts);
+    (*this)(mflds, mflds.ib(), mprts);
   }
 
   // private:
