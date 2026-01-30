@@ -294,14 +294,7 @@ public:
 
   void operator()(MfieldsState& mflds, Mparticles& mprts)
   {
-    static int pr;
-    if (!pr) {
-      pr = prof_register("marder", 1., 0, 0);
-    }
-
-    prof_start(pr);
     (*this)(mprts.grid(), mflds.storage(), mflds.ib(), mprts);
-    prof_stop(pr);
   }
 
   // private:
