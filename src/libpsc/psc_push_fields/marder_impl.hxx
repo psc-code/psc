@@ -255,10 +255,10 @@ public:
   // Do the modified marder correction (See eq.(5, 7, 9, 10) in Mardahl and
   // Verboncoeur, CPC, 1997)
 
-  void operator()(const Grid_t& grid, storage_type& mflds, const Int3& mflds_ib,
+  void operator()(const Grid_t& grid, MfieldsState& mflds, const Int3& mflds_ib,
                   Mparticles& mprts)
   {
-    auto efield = mflds.view(_all, _all, _all, _s(EX, EX + 3), _all);
+    auto efield = mflds.storage().view(_all, _all, _all, _s(EX, EX + 3), _all);
     auto efield_ib = mflds_ib;
 
     double inv_sum = 0.;
@@ -277,7 +277,7 @@ public:
     // and expected to be filled when done, so we're playing it safe for the
     // time being.
     for (int i = 0; i < loop_; i++) {
-      bnd_.fill_ghosts(grid, mflds, mflds_ib, EX, EX + 3);
+      bnd_.fill_ghosts(mflds, EX, EX + 3);
       auto dive = psc::mflds::interior(grid, psc::item::div_nc(grid, efield));
 
       Int3 res_ib = -grid.ibn;
@@ -289,12 +289,12 @@ public:
 
       psc::marder::correct(grid, efield, efield_ib, res, res_ib, diffusion);
     }
-    bnd_.fill_ghosts(grid, mflds, mflds_ib, EX, EX + 3);
+    bnd_.fill_ghosts(mflds, EX, EX + 3);
   }
 
   void operator()(MfieldsState& mflds, Mparticles& mprts)
   {
-    (*this)(mprts.grid(), mflds.storage(), mflds.ib(), mprts);
+    (*this)(mprts.grid(), mflds, mflds.ib(), mprts);
   }
 
   // private:
