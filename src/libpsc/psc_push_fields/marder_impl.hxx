@@ -73,37 +73,29 @@ inline void correct(const Grid_t& grid, E1& efield, const Int3& efield_ib,
     Int3 lx, rx, ly, ry, lz, rz;
     detail::find_limits(grid, p, lx, rx, ly, ry, lz, rz);
 
-    if (!grid.isInvar(0)) {
-      Int3 l = lx, r = rx;
-      auto ex = efield.view(_all, _all, _all, 0, p);
-      auto res = mf.view(_all, _all, _all, 0, p);
-      ex.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) =
-        ex.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) +
-        (res.view(_s(l[0] + 1, r[0] + 1), _s(l[1], r[1]), _s(l[2], r[2])) -
-         res.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2]))) *
-          fac[0];
-    }
+    Int3 ls[3] = {lx, ly, lz};
+    Int3 rs[3] = {rx, ry, rz};
 
-    {
-      Int3 l = ly, r = ry;
-      auto ey = efield.view(_all, _all, _all, 1, p);
-      auto res = mf.view(_all, _all, _all, 0, p);
-      ey.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) =
-        ey.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) +
-        (res.view(_s(l[0], r[0]), _s(l[1] + 1, r[1] + 1), _s(l[2], r[2])) -
-         res.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2]))) *
-          fac[1];
-    }
+    auto res = mf.view(_all, _all, _all, 0, p);
+    for (int d = 0; d < 3; d++) {
+      if (grid.isInvar(d)) {
+        continue;
+      }
 
-    {
-      Int3 l = lz, r = rz;
-      auto ez = efield.view(_all, _all, _all, 2, p);
-      auto res = mf.view(_all, _all, _all, 0, p);
-      ez.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) =
-        ez.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) +
-        (res.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2] + 1, r[2] + 1)) -
-         res.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2]))) *
-          fac[2];
+      Int3 l = ls[d];
+      Int3 r = rs[d];
+      auto e_comp = efield.view(_all, _all, _all, d, p);
+
+      gt::gslice s1x = _s(l[0], r[0]);
+      gt::gslice s1y = _s(l[1], r[1]);
+      gt::gslice s1z = _s(l[2], r[2]);
+
+      gt::gslice s2[3] = {_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])};
+      s2[d] = _s(l[d] + 1, r[d] + 1);
+
+      e_comp.view(s1x, s1y, s1z) =
+        e_comp.view(s1x, s1y, s1z) +
+        (res.view(s2[0], s2[1], s2[2]) - res.view(s1x, s1y, s1z)) * fac[d];
     }
   }
 }
