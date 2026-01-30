@@ -255,9 +255,10 @@ public:
   // Do the modified marder correction (See eq.(5, 7, 9, 10) in Mardahl and
   // Verboncoeur, CPC, 1997)
 
-  void operator()(MfieldsState& mflds, const Int3& mflds_ib, Mparticles& mprts)
+  void operator()(MfieldsState& mflds, Mparticles& mprts)
   {
     const Grid_t& grid = mflds.grid();
+    const Int3& mflds_ib = mflds.ib();
     auto efield = mflds.storage().view(_all, _all, _all, _s(EX, EX + 3), _all);
     auto efield_ib = mflds_ib;
 
@@ -290,11 +291,6 @@ public:
       psc::marder::correct(grid, efield, efield_ib, res, res_ib, diffusion);
     }
     bnd_.fill_ghosts(mflds, EX, EX + 3);
-  }
-
-  void operator()(MfieldsState& mflds, Mparticles& mprts)
-  {
-    (*this)(mflds, mflds.ib(), mprts);
   }
 
   // private:
