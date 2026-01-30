@@ -67,9 +67,7 @@ inline void correct(const Grid_t& grid, E1& efield, const Int3& efield_ib,
   assert(efield_ib == -grid.ibn);
   assert(mf_ib == -grid.ibn);
 
-  Real3 fac = {.5f * grid.dt * diffusion / grid.domain.dx[0],
-               .5f * grid.dt * diffusion / grid.domain.dx[1],
-               .5f * grid.dt * diffusion / grid.domain.dx[2]};
+  Real3 fac = .5f * grid.dt * diffusion * grid.domain.dx_inv;
 
   for (int p = 0; p < grid.n_patches(); p++) {
     Int3 lx, rx, ly, ry, lz, rz;
