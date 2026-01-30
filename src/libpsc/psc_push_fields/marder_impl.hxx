@@ -264,7 +264,7 @@ public:
     double inv_sum = 0.;
     for (int d = 0; d < 3; d++) {
       if (!grid.isInvar(d)) {
-        inv_sum += 1. / sqr(grid.domain.dx[d]);
+        inv_sum += sqr(grid.domain.dx_inv[d]);
       }
     }
     double diffusion_max = 1. / 2. / (.5 * grid.dt) / inv_sum;
