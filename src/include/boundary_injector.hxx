@@ -77,9 +77,9 @@ public:
   using Real3 = Vec3<real_t>;
 
   BoundaryInjector(ParticleGenerator particle_generator, Grid_t& grid)
-    : particle_generator{particle_generator},
-      advance{grid.dt},
-      prts_per_unit_density{grid.norm.prts_per_unit_density}
+    : particle_generator_{particle_generator},
+      advance_{grid.dt},
+      prts_per_unit_density_{grid.norm.prts_per_unit_density}
   {}
 
   /// Injects particles at the lower y-bound as if there were a population of
@@ -117,7 +117,7 @@ public:
       for (Int3 initial_idx : VecRange(ilo, ihi)) {
         Real3 cell_corner = Double3(initial_idx) * grid.domain.dx;
         int n_prts_to_try_inject =
-          get_n_in_cell(1.0, prts_per_unit_density, true);
+          get_n_in_cell(1.0, prts_per_unit_density_, true);
 
         for (int prt_count = 0; prt_count < n_prts_to_try_inject; prt_count++) {
           // FIXME #948112531345 (also see the other FIXMEs with this id)
@@ -127,11 +127,11 @@ public:
           // boundary condition is "open", outflowing particles cause the same
           // problem, and there's nothing to be done about that.
           psc::particle::Inject prt =
-            particle_generator.get(cell_corner, grid.domain.dx);
+            particle_generator_.get(cell_corner, grid.domain.dx);
 
-          Real3 v = advance.calc_v(prt.u);
+          Real3 v = advance_.calc_v(prt.u);
           Real3 initial_x = prt.x;
-          advance.push_x(prt.x, v);
+          advance_.push_x(prt.x, v);
 
           if (prt.x[INJECT_DIM_IDX_] < 0.0) {
             // don't inject a particle that fails to enter the patch
@@ -160,7 +160,7 @@ public:
   }
 
 private:
-  ParticleGenerator particle_generator;
-  AdvanceParticle_t advance;
-  real_t prts_per_unit_density;
+  ParticleGenerator particle_generator_;
+  AdvanceParticle_t advance_;
+  real_t prts_per_unit_density_;
 };
