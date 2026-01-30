@@ -26,7 +26,6 @@ using Mparticles = PscConfig::Mparticles;
 using Balance = PscConfig::Balance;
 using Collision = PscConfig::Collision;
 using Checks = PscConfig::Checks;
-using Marder = PscConfig::Marder;
 using OutputParticles = PscConfig::OutputParticles;
 
 // ======================================================================
@@ -104,12 +103,9 @@ TEST(OpenBcsTest, IntegrationY)
 
   Balance balance{.1};
   Collision collision{grid, 0, 0.1};
-  Marder marder(grid, 0.9, 3, false);
 
   auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
                                           balance, collision, checks);
-
-  psc.add_gauss_corrector(&marder);
 
   // ----------------------------------------------------------------------
   // set up initial conditions
