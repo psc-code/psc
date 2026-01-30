@@ -435,6 +435,15 @@ struct Psc
     bndf.fill_ghosts_E(mflds_);
     bnd_.fill_ghosts(mflds_, EX, EX + 3);
     prof_stop(pr_bndf);
+
+    if (p_.marder_interval > 0 && timestep % p_.marder_interval == 0) {
+      mpi_printf(comm, "***** Performing Marder correction...\n");
+      prof_start(pr_marder);
+      for (auto corrector : gauss_correctors_) {
+        corrector->correct_gauss(mflds_, mprts_);
+      }
+      prof_stop(pr_marder);
+    }
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
 
     // === field propagation B^{n+1} -> B^{n+3/2}
@@ -455,18 +464,6 @@ struct Psc
       prof_restart(pr_checks);
       checks_.continuity.after_particle_push(mprts_, mflds_);
       prof_stop(pr_checks);
-    }
-
-    // E at t^{n+3/2}, particles at t^{n+3/2}
-    // B at t^{n+3/2} (Note: that is not its natural time,
-    // but div B should be == 0 at any time...)
-    if (p_.marder_interval > 0 && timestep % p_.marder_interval == 0) {
-      mpi_printf(comm, "***** Performing Marder correction...\n");
-      prof_start(pr_marder);
-      for (auto corrector : gauss_correctors_) {
-        corrector->correct_gauss(mflds_, mprts_);
-      }
-      prof_stop(pr_marder);
     }
 
     if (checks_.gauss.should_do_check(timestep)) {
