@@ -8,6 +8,7 @@
 #include <setup_particles.hxx>
 
 #include "../libpsc/vpic/fields_item_vpic.hxx"
+#include "gauss_corrector_base.hxx"
 #include "diagnostic_base.hxx"
 #include "injector_base.hxx"
 #include "external_current_base.hxx"
@@ -111,13 +112,13 @@ struct Psc
   using Sort = typename PscConfig::Sort;
   using Collision = typename PscConfig::Collision;
   using Checks = typename PscConfig::Checks;
-  using Marder = typename PscConfig::Marder;
   using PushParticles = typename PscConfig::PushParticles;
   using PushFields = typename PscConfig::PushFields;
   using Bnd = typename PscConfig::Bnd;
   using BndFields = typename PscConfig::BndFields;
   using BndParticles = typename PscConfig::BndParticles;
   using Dim = typename PscConfig::Dim;
+  using GaussCorrectorBaseT = GaussCorrectorBase<MfieldsState, Mparticles>;
   using DiagnosticBaseT = DiagnosticBase<Mparticles, MfieldsState>;
   using ParticleDiagnosticBaseT = ParticleDiagnosticBase<Mparticles>;
   using InjectorBaseT = InjectorBase<Mparticles, MfieldsState>;
@@ -127,8 +128,7 @@ struct Psc
   // ctor
 
   Psc(const PscParams& params, Grid_t& grid, MfieldsState& mflds,
-      Mparticles& mprts, Balance& balance, Collision& collision, Checks& checks,
-      Marder& marder)
+      Mparticles& mprts, Balance& balance, Collision& collision, Checks& checks)
     : p_{params},
       grid_{&grid},
       mflds_{mflds},
@@ -136,7 +136,6 @@ struct Psc
       balance_{balance},
       collision_{collision},
       checks_{checks},
-      marder_{marder},
       bndp_{grid},
       checkpointing_{params.write_checkpoint_every_step}
   {
@@ -164,6 +163,13 @@ struct Psc
   // API for modifying various internal components
   // TODO: improve ownership model: we should own these objects (i.e., use
   // unique_ptr), but don't want to burden the user with C++ boilerplate.
+
+  void add_gauss_corrector(GaussCorrectorBaseT* corrector)
+  {
+    if (corrector) {
+      gauss_correctors_.push_back(corrector);
+    }
+  }
 
   void add_injector(InjectorBaseT* injector)
   {
@@ -457,7 +463,9 @@ struct Psc
     if (p_.marder_interval > 0 && timestep % p_.marder_interval == 0) {
       mpi_printf(comm, "***** Performing Marder correction...\n");
       prof_start(pr_marder);
-      marder_(mflds_, mprts_);
+      for (auto corrector : gauss_correctors_) {
+        corrector->correct_gauss(mflds_, mprts_);
+      }
       prof_stop(pr_marder);
     }
 
@@ -532,7 +540,7 @@ protected:
   Balance& balance_;
   Collision& collision_;
   Checks& checks_;
-  Marder& marder_;
+  std::vector<GaussCorrectorBaseT*> gauss_correctors_;
   std::vector<DiagnosticBaseT*> diagnostics_;
   std::vector<InjectorBaseT*> injectors_;
   std::vector<ExternalCurrentBaseT*> external_currents_;
@@ -559,14 +567,13 @@ protected:
 // makePscIntegrator
 
 template <typename PscConfig, typename MfieldsState, typename Mparticles,
-          typename Balance, typename Collision, typename Checks,
-          typename Marder>
+          typename Balance, typename Collision, typename Checks>
 Psc<PscConfig> makePscIntegrator(const PscParams& params, Grid_t& grid,
                                  MfieldsState& mflds, Mparticles& mprts,
                                  Balance& balance, Collision& collision,
-                                 Checks& checks, Marder& marder)
+                                 Checks& checks)
 {
-  return {params, grid, mflds, mprts, balance, collision, checks, marder};
+  return {params, grid, mflds, mprts, balance, collision, checks};
 }
 
 // ======================================================================

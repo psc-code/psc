@@ -107,7 +107,9 @@ TEST(OpenBcsTest, IntegrationY)
   Marder marder(grid, 0.9, 3, false);
 
   auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
-                                          balance, collision, checks, marder);
+                                          balance, collision, checks);
+
+  psc.add_gauss_corrector(&marder);
 
   // ----------------------------------------------------------------------
   // set up initial conditions

@@ -136,7 +136,9 @@ TEST(BoundaryInjectorTest, Integration1Particle)
   Marder marder(grid, 0.9, 3, false);
 
   auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
-                                          balance, collision, checks, marder);
+                                          balance, collision, checks);
+
+  psc.add_gauss_corrector(&marder);
 
   psc.add_injector(
     new BoundaryInjector<ParticleGenerator, typename PscConfig::PushParticles>(
@@ -194,7 +196,9 @@ TEST(BoundaryInjectorTest, IntegrationManyParticles)
   Marder marder(grid, 0.9, 3, false);
 
   auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
-                                          balance, collision, checks, marder);
+                                          balance, collision, checks);
+
+  psc.add_gauss_corrector(&marder);
 
   psc.add_injector(
     new BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>(
@@ -259,7 +263,9 @@ TEST(BoundaryInjectorTest, IntegrationManySpecies)
       ParticleGenerator(-1, 1), grid};
 
   auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
-                                          balance, collision, checks, marder);
+                                          balance, collision, checks);
+
+  psc.add_gauss_corrector(&marder);
 
   psc.add_injector(&inject_ions);
   psc.add_injector(&inject_electrons);

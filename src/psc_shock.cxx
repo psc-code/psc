@@ -729,7 +729,9 @@ static void run(int argc, char** argv)
   // run the simulation
 
   auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
-                                          balance, collision, checks, marder);
+                                          balance, collision, checks);
+
+  psc.add_gauss_corrector(&marder);
 
   psc.add_diagnostic(&outf);
   psc.add_diagnostic(&outp);
