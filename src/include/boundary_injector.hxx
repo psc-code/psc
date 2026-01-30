@@ -9,6 +9,7 @@
 #include "pushp.hxx"
 #include "dim.hxx"
 #include "setup_particles.hxx"
+#include "kg/VecRange.hxx"
 #include "../libpsc/psc_push_particles/inc_push.cxx"
 
 /// @brief A particle generator for use with @ref BoundaryInjector. Samples
@@ -72,15 +73,13 @@ public:
   using MfieldsState = typename PushParticles::MfieldsState;
   using AdvanceParticle_t = typename PushParticles::AdvanceParticle_t;
   using Current = typename PushParticles::Current;
-  using Dim = typename PushParticles::Dim;
   using real_t = typename PushParticles::real_t;
-  using Real3 = typename PushParticles::Real3;
-  using checks_order = typename PushParticles::checks_order;
+  using Real3 = Vec3<real_t>;
 
   BoundaryInjector(ParticleGenerator particle_generator, Grid_t& grid)
-    : partice_generator{particle_generator},
-      advance{grid.dt},
-      prts_per_unit_density{grid.norm.prts_per_unit_density}
+    : particle_generator_{particle_generator},
+      advance_{grid.dt},
+      prts_per_unit_density_{grid.norm.prts_per_unit_density}
   {}
 
   /// Injects particles at the lower y-bound as if there were a population of
@@ -97,84 +96,71 @@ public:
     const Grid_t& grid = mprts.grid();
     auto injectors_by_patch = mprts.injector();
 
-    Real3 dxi = Real3{1., 1., 1.} / Real3(grid.domain.dx);
+    Real3 dxi = grid.domain.dx_inv;
     Current current(grid);
 
     for (int patch_idx = 0; patch_idx < grid.n_patches(); patch_idx++) {
-      Int3 ilo = grid.patches[patch_idx].off;
-
-      if (ilo[INJECT_DIM_IDX_] != 0) {
+      if (!grid.atBoundaryLo(patch_idx, INJECT_DIM_IDX_)) {
         continue;
       }
 
-      Int3 ihi = ilo + grid.ldims;
+      Int3 ilo = {0, 0, 0};
+      Int3 ihi = grid.ldims;
+
+      ilo[INJECT_DIM_IDX_] = -1;
+      ihi[INJECT_DIM_IDX_] = 0;
 
       auto&& injector = injectors_by_patch[patch_idx];
       auto flds = mflds[patch_idx];
       typename Current::fields_t J(flds);
 
-      for (Int3 cell_idx = ilo; cell_idx[0] < ihi[0]; cell_idx[0]++) {
-        for (cell_idx[2] = ilo[2]; cell_idx[2] < ihi[2]; cell_idx[2]++) {
-          auto boundary_current_before =
-            flds.storage()(cell_idx[0] + grid.ibn[0], -1 + grid.ibn[1],
-                           cell_idx[2] + grid.ibn[2], JXI + 1);
+      for (Int3 initial_idx : VecRange(ilo, ihi)) {
+        Real3 cell_corner = Double3(initial_idx) * grid.domain.dx;
+        int n_prts_to_try_inject =
+          get_n_in_cell(1.0, prts_per_unit_density_, true);
 
-          cell_idx[INJECT_DIM_IDX_] = -1;
+        for (int prt_count = 0; prt_count < n_prts_to_try_inject; prt_count++) {
+          // FIXME #948112531345 (also see the other FIXMEs with this id)
+          // Depositing current in ghost corners leads to false-positive gauss
+          // errors. This could be avoided here by artificially constraining the
+          // trajectories of injected particles. However, assuming the particle
+          // boundary condition is "open", outflowing particles cause the same
+          // problem, and there's nothing to be done about that.
+          psc::particle::Inject prt =
+            particle_generator_.get(cell_corner, grid.domain.dx);
 
-          Real3 cell_corner =
-            grid.domain.corner + Double3(cell_idx) * grid.domain.dx;
-          int n_prts_to_try_inject =
-            get_n_in_cell(1.0, prts_per_unit_density, true);
-          real_t charge_injected = 0;
+          Real3 v = advance_.calc_v(prt.u);
+          Real3 initial_x = prt.x;
+          advance_.push_x(prt.x, v);
 
-          for (int prt_count = 0; prt_count < n_prts_to_try_inject;
-               prt_count++) {
-            psc::particle::Inject prt =
-              partice_generator.get(cell_corner, grid.domain.dx);
-
-            Real3 v = advance.calc_v(prt.u);
-            Real3 initial_x = prt.x;
-            advance.push_x(prt.x, v, 1.0);
-
-            if (prt.x[INJECT_DIM_IDX_] < grid.domain.corner[INJECT_DIM_IDX_]) {
-              // don't inject a particle that fails to enter the domain
-              continue;
-            }
-
-            injector(prt);
-
-            // Update currents
-            // Taken from push_particles_1vb.hxx PushParticlesVb::push_mprts()
-
-            Real3 initial_normalized_pos = initial_x * dxi;
-
-            Int3 final_idx;
-            Real3 final_normalized_pos;
-            find_idx_pos_1st_rel(prt.x, dxi, final_idx, final_normalized_pos,
-                                 real_t(0.));
-
-            // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
-            real_t qni_wni = grid.kinds[prt.kind].q * prt.w;
-            current.calc_j(J, initial_normalized_pos, final_normalized_pos,
-                           final_idx, cell_idx, qni_wni, v);
-
-            charge_injected += qni_wni;
+          if (prt.x[INJECT_DIM_IDX_] < 0.0) {
+            // don't inject a particle that fails to enter the patch
+            continue;
           }
 
-          // override whatever current was deposited in the boundary to be
-          // consistent with the charge having started completely out of the
-          // domain
-          flds.storage()(cell_idx[0] + grid.ibn[0], -1 + grid.ibn[1],
-                         cell_idx[2] + grid.ibn[2], JXI + 1) =
-            boundary_current_before + charge_injected * grid.domain.dx[1] /
-                                        grid.dt / prts_per_unit_density;
+          injector(prt);
+
+          // Update currents
+          // Taken from push_particles_1vb.hxx PushParticlesVb::push_mprts()
+
+          Real3 initial_normalized_pos = initial_x * dxi;
+          // pretend it came from the edge to inject proper current
+          initial_normalized_pos[INJECT_DIM_IDX_] = -1.0;
+
+          Real3 final_normalized_pos = prt.x * dxi;
+          Int3 final_idx = final_normalized_pos.fint();
+
+          // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
+          real_t qni_wni = grid.kinds[prt.kind].q * prt.w;
+          current.calc_j(J, initial_normalized_pos, final_normalized_pos,
+                         final_idx, initial_idx, qni_wni, v);
         }
       }
     }
   }
 
 private:
-  ParticleGenerator partice_generator;
-  AdvanceParticle<real_t, dim_y> advance;
-  real_t prts_per_unit_density;
+  ParticleGenerator particle_generator_;
+  AdvanceParticle_t advance_;
+  real_t prts_per_unit_density_;
 };

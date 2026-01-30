@@ -5,7 +5,6 @@
 #include "push_particles.hxx"
 #include "sort.hxx"
 #include "collision.hxx"
-#include "bnd_particles.hxx"
 #include "checks_params.hxx"
 
 #include <mrc_common.h>
