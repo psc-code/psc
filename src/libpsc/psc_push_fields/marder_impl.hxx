@@ -258,9 +258,8 @@ public:
   void operator()(MfieldsState& mflds, Mparticles& mprts)
   {
     const Grid_t& grid = mflds.grid();
-    const Int3& mflds_ib = mflds.ib();
     auto efield = mflds.storage().view(_all, _all, _all, _s(EX, EX + 3), _all);
-    auto efield_ib = mflds_ib;
+    Int3 efield_ib = mflds.ib();
 
     double inv_sum = 0.;
     for (int d = 0; d < 3; d++) {
