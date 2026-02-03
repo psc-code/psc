@@ -30,12 +30,19 @@ struct BndFields_ : BndFieldsBase
       for (int d = 0; d < 3; d++) {
         if (grid.atBoundaryLo(p, d)) {
           switch (grid.bc.fld_lo[d]) {
-            case BND_FLD_PERIODIC: break;
-            case BND_FLD_CONDUCTING_WALL:
+            case BND_FLD_PERIODIC: {
+              break;
+            }
+            case BND_FLD_CONDUCTING_WALL: {
               conducting_wall_E_lo(mflds, p, d);
               break;
-            case BND_FLD_OPEN: break;
-            default: assert(0);
+            }
+            case BND_FLD_OPEN: {
+              break;
+            }
+            default: {
+              assert(0);
+            }
           }
         }
       }
@@ -44,12 +51,19 @@ struct BndFields_ : BndFieldsBase
       for (int d = 0; d < 3; d++) {
         if (grid.atBoundaryHi(p, d)) {
           switch (grid.bc.fld_hi[d]) {
-            case BND_FLD_PERIODIC: break;
-            case BND_FLD_CONDUCTING_WALL:
+            case BND_FLD_PERIODIC: {
+              break;
+            }
+            case BND_FLD_CONDUCTING_WALL: {
               conducting_wall_E_hi(mflds, p, d);
               break;
-            case BND_FLD_OPEN: break;
-            default: assert(0);
+            }
+            case BND_FLD_OPEN: {
+              break;
+            }
+            default: {
+              assert(0);
+            }
           }
         }
       }
@@ -68,12 +82,20 @@ struct BndFields_ : BndFieldsBase
       for (int d = 0; d < 3; d++) {
         if (grid.atBoundaryLo(p, d)) {
           switch (grid.bc.fld_lo[d]) {
-            case BND_FLD_PERIODIC: break;
-            case BND_FLD_CONDUCTING_WALL:
+            case BND_FLD_PERIODIC: {
+              break;
+            }
+            case BND_FLD_CONDUCTING_WALL: {
               conducting_wall_H_lo(mflds, p, d);
               break;
-            case BND_FLD_OPEN: radiative_H_lo(mflds, p, d); break;
-            default: assert(0);
+            }
+            case BND_FLD_OPEN: {
+              radiative_H_lo(mflds, p, d);
+              break;
+            }
+            default: {
+              assert(0);
+            }
           }
         }
       }
@@ -81,12 +103,20 @@ struct BndFields_ : BndFieldsBase
       for (int d = 0; d < 3; d++) {
         if (grid.atBoundaryHi(p, d)) {
           switch (grid.bc.fld_hi[d]) {
-            case BND_FLD_PERIODIC: break;
-            case BND_FLD_CONDUCTING_WALL:
+            case BND_FLD_PERIODIC: {
+              break;
+            }
+            case BND_FLD_CONDUCTING_WALL: {
               conducting_wall_H_hi(mflds, p, d);
               break;
-            case BND_FLD_OPEN: radiative_H_hi(mflds, p, d); break;
-            default: assert(0);
+            }
+            case BND_FLD_OPEN: {
+              radiative_H_hi(mflds, p, d);
+              break;
+            }
+            default: {
+              assert(0);
+            }
           }
         }
       }
@@ -105,12 +135,19 @@ struct BndFields_ : BndFieldsBase
       for (int d = 0; d < 3; d++) {
         if (grid.atBoundaryLo(p, d)) {
           switch (grid.bc.fld_lo[d]) {
-            case BND_FLD_PERIODIC:
-            case BND_FLD_OPEN: break;
-            case BND_FLD_CONDUCTING_WALL:
+            case BND_FLD_PERIODIC: {
+              break;
+            }
+            case BND_FLD_CONDUCTING_WALL: {
               conducting_wall_J_lo(mflds, p, d);
               break;
-            default: assert(0);
+            }
+            case BND_FLD_OPEN: {
+              break;
+            }
+            default: {
+              assert(0);
+            }
           }
         }
       }
@@ -118,12 +155,19 @@ struct BndFields_ : BndFieldsBase
       for (int d = 0; d < 3; d++) {
         if (grid.atBoundaryHi(p, d)) {
           switch (grid.bc.fld_hi[d]) {
-            case BND_FLD_PERIODIC:
-            case BND_FLD_OPEN: break;
-            case BND_FLD_CONDUCTING_WALL:
+            case BND_FLD_PERIODIC: {
+              break;
+            }
+            case BND_FLD_CONDUCTING_WALL: {
               conducting_wall_J_hi(mflds, p, d);
               break;
-            default: assert(0);
+            }
+            case BND_FLD_OPEN: {
+              break;
+            }
+            default: {
+              assert(0);
+            }
           }
         }
       }
