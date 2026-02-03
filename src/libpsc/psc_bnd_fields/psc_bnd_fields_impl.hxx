@@ -9,19 +9,19 @@
 
 // #define DEBUG
 
-template <typename MF, typename Dim>
+template <typename MFIELDS_STATE, typename Dim>
 struct BndFields_ : BndFieldsBase
 {
-  using Self = BndFields_<MF, Dim>;
-  using Mfields = MF;
-  using real_t = typename Mfields::real_t;
-  using fields_view_t = typename Mfields::fields_view_t;
+  using Self = BndFields_<MFIELDS_STATE, Dim>;
+  using MfieldsState = MFIELDS_STATE;
+  using real_t = typename MfieldsState::real_t;
+  using fields_view_t = typename MfieldsState::fields_view_t;
   using dim_t = Dim;
 
   // ----------------------------------------------------------------------
   // fill_ghosts_E
 
-  void fill_ghosts_E(Mfields& mflds)
+  void fill_ghosts_E(MfieldsState& mflds)
   {
     const auto& grid = mflds.grid();
 
@@ -59,7 +59,7 @@ struct BndFields_ : BndFieldsBase
   // ----------------------------------------------------------------------
   // fill_ghosts_H
 
-  void fill_ghosts_H(Mfields& mflds)
+  void fill_ghosts_H(MfieldsState& mflds)
   {
     const auto& grid = mflds.grid();
 
@@ -96,7 +96,7 @@ struct BndFields_ : BndFieldsBase
   // ----------------------------------------------------------------------
   // add_ghosts_J
 
-  void add_ghosts_J(Mfields& mflds)
+  void add_ghosts_J(MfieldsState& mflds)
   {
     const auto& grid = mflds.grid();
 
@@ -135,7 +135,7 @@ struct BndFields_ : BndFieldsBase
     *f = std::numeric_limits<real_t>::quiet_NaN();
   }
 
-  void conducting_wall_E_lo(Mfields& mflds, int p, int d)
+  void conducting_wall_E_lo(MfieldsState& mflds, int p, int d)
   {
     auto F = make_Fields3d<dim_t>(mflds[p]);
     const int* ldims = mflds.grid().ldims;
@@ -198,7 +198,7 @@ struct BndFields_ : BndFieldsBase
     }
   }
 
-  void conducting_wall_E_hi(Mfields& mflds, int p, int d)
+  void conducting_wall_E_hi(MfieldsState& mflds, int p, int d)
   {
     auto F = make_Fields3d<dim_t>(mflds[p]);
     const int* ldims = mflds.grid().ldims;
@@ -262,7 +262,7 @@ struct BndFields_ : BndFieldsBase
     }
   }
 
-  void conducting_wall_H_lo(Mfields& mflds, int p, int d)
+  void conducting_wall_H_lo(MfieldsState& mflds, int p, int d)
   {
     auto F = make_Fields3d<dim_t>(mflds[p]);
     const int* ldims = mflds.grid().ldims;
@@ -320,7 +320,7 @@ struct BndFields_ : BndFieldsBase
     }
   }
 
-  void conducting_wall_H_hi(Mfields& mflds, int p, int d)
+  void conducting_wall_H_hi(MfieldsState& mflds, int p, int d)
   {
     auto F = make_Fields3d<dim_t>(mflds[p]);
 
@@ -379,7 +379,7 @@ struct BndFields_ : BndFieldsBase
     }
   }
 
-  void conducting_wall_J_lo(Mfields& mflds, int p, int d)
+  void conducting_wall_J_lo(MfieldsState& mflds, int p, int d)
   {
     auto F = make_Fields3d<dim_t>(mflds[p]);
     const int* ldims = mflds.grid().ldims;
@@ -418,7 +418,7 @@ struct BndFields_ : BndFieldsBase
     }
   }
 
-  void conducting_wall_J_hi(Mfields& mflds, int p, int d)
+  void conducting_wall_J_hi(MfieldsState& mflds, int p, int d)
   {
     auto F = make_Fields3d<dim_t>(mflds[p]);
     const int* ldims = mflds.grid().ldims;
@@ -465,7 +465,7 @@ struct BndFields_ : BndFieldsBase
   // ----------------------------------------------------------------------
   // open_H_lo
 
-  void open_H_lo(Mfields& mflds, int p, int d)
+  void open_H_lo(MfieldsState& mflds, int p, int d)
   {
     auto F = make_Fields3d<dim_t>(mflds[p]);
     const Grid_t& grid = mflds.grid();
@@ -549,7 +549,7 @@ struct BndFields_ : BndFieldsBase
 #endif
   }
 
-  void open_H_hi(Mfields& mflds, int p, int d)
+  void open_H_hi(MfieldsState& mflds, int p, int d)
   {
     auto F = make_Fields3d<dim_t>(mflds[p]);
     const Grid_t& grid = mflds.grid();
@@ -641,14 +641,14 @@ struct BndFields_ : BndFieldsBase
 
 // used by CUDA
 
-template <class MF>
+template <class MFIELDS_STATE>
 struct BndFieldsNone : BndFieldsBase
 {
-  using Mfields = MF;
+  using MfieldsState = MFIELDS_STATE;
 
   // clang-format off
-  void fill_ghosts_E(Mfields& mflds) {};
-  void fill_ghosts_H(Mfields& mflds) {};
-  void add_ghosts_J(Mfields& mflds) {};
+  void fill_ghosts_E(MfieldsState& mflds) {};
+  void fill_ghosts_H(MfieldsState& mflds) {};
+  void add_ghosts_J(MfieldsState& mflds) {};
   // clang-format on
 };
