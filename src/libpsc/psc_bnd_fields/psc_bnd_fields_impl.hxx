@@ -72,7 +72,7 @@ struct BndFields_ : BndFieldsBase
             case BND_FLD_CONDUCTING_WALL:
               conducting_wall_H_lo(mflds, p, d);
               break;
-            case BND_FLD_OPEN: open_H_lo(mflds, p, d); break;
+            case BND_FLD_OPEN: radiative_H_lo(mflds, p, d); break;
             default: assert(0);
           }
         }
@@ -85,7 +85,7 @@ struct BndFields_ : BndFieldsBase
             case BND_FLD_CONDUCTING_WALL:
               conducting_wall_H_hi(mflds, p, d);
               break;
-            case BND_FLD_OPEN: open_H_hi(mflds, p, d); break;
+            case BND_FLD_OPEN: radiative_H_hi(mflds, p, d); break;
             default: assert(0);
           }
         }
@@ -459,13 +459,7 @@ struct BndFields_ : BndFieldsBase
     }
   }
 
-  // ======================================================================
-  // open
-
-  // ----------------------------------------------------------------------
-  // open_H_lo
-
-  void open_H_lo(MfieldsState& mflds, int p, int d)
+  void radiative_H_lo(MfieldsState& mflds, int p, int d)
   {
     auto F = make_Fields3d<dim_t>(mflds[p]);
     const Grid_t& grid = mflds.grid();
@@ -549,7 +543,7 @@ struct BndFields_ : BndFieldsBase
 #endif
   }
 
-  void open_H_hi(MfieldsState& mflds, int p, int d)
+  void radiative_H_hi(MfieldsState& mflds, int p, int d)
   {
     auto F = make_Fields3d<dim_t>(mflds[p]);
     const Grid_t& grid = mflds.grid();
