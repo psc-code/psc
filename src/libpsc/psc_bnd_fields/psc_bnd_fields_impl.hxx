@@ -7,7 +7,6 @@
 
 #include <limits>
 
-// FIXME, needs public access to Fields::ib, im
 // #define DEBUG
 
 template <typename MF, typename Dim>
