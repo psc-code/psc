@@ -18,7 +18,7 @@ struct Current1vbSplit
 
   Current1vbSplit(const Grid_t& grid)
     : dt_(grid.dt),
-      dxi_{grid.domain.dx.inv()},
+      dxi_{grid.domain.dx_inv},
       deposition_(real_t(grid.norm.fnqs / grid.dt) * Real3(grid.domain.dx))
   {}
 

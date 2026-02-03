@@ -4,7 +4,6 @@
 #include "fields.hxx"
 #include "fields_traits.hxx"
 #include "balance.hxx"
-#include "bnd_particles.hxx"
 #include "bnd.hxx"
 #include "mpi_dtype_traits.hxx"
 

@@ -2,6 +2,50 @@
 // J. Villasenor and O. Buneman, "Rigorous charge conservation for local
 // electromagnetic field solvers", Computer Physics Communications 69 (1992) 306
 
+namespace
+{
+/**
+ * @brief "Pushes" an exiting particle to the outer edge of the first layer of
+ * ghost cells. This should happen before current deposition, so the full
+ * exiting current is deposited. Note that higher order particles would need to
+ * be pushed deeper into the ghost region.
+ *
+ * Actually, this function works with the grid-normalized particle position, not
+ * the particle itself (or even its actual position). The grid-normalized
+ * position is what's actually used to deposit current, and the particle is
+ * dropped later, so its position doesn't need to be updated.
+ * @tparam Real `float` or `double`
+ * @param final_x_normed the particle's grid-normalized position, which is
+ * possibly mutated
+ * @param final_i3 the particle's 3d cell index
+ * @param grid the grid
+ * @param p the patch index
+ */
+template <typename Real>
+void exit_to_edge(Vec3<Real>& final_x_normed, const Int3& final_i3,
+                  const Grid_t& grid, int p)
+{
+  // FIXME #948112531345 (also see the other FIXMEs with this id)
+  // Current deposited in ghost corners isn't sent to other patches, and
+  // thus leads to false-positive gauss errors.
+  // This is a general problem with non-periodic boundaries that have currents
+  // in ghost cells (i.e., just open BCs as of now), not just this function.
+  for (int d = 0; d < 3; d++) {
+    if (grid.bc.prt_lo[d] == BND_PRT_OPEN && grid.atBoundaryLo(p, d)) {
+      if (final_i3[d] < 0) {
+        final_x_normed[d] = -1.0;
+      }
+    }
+
+    if (grid.bc.prt_hi[d] == BND_PRT_OPEN && grid.atBoundaryHi(p, d)) {
+      if (final_i3[d] >= grid.ldims[d]) {
+        final_x_normed[d] = grid.ldims[d] + 1.0;
+      }
+    }
+  }
+}
+} // namespace
+
 // ======================================================================
 // PushParticlesVb
 
@@ -66,19 +110,21 @@ struct PushParticlesVb
         Real3 final_pos_normalized = prt.x() * dxi;
         Int3 final_index = final_pos_normalized.fint();
 
+        exit_to_edge(final_pos_normalized, final_index, grid, p);
+
         // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
-        int lg[3];
+        Int3 initial_index;
         if (!Dim::InvarX::value) {
-          lg[0] = ip.cx.g.l;
+          initial_index[0] = ip.cx.g.l;
         }
         if (!Dim::InvarY::value) {
-          lg[1] = ip.cy.g.l;
+          initial_index[1] = ip.cy.g.l;
         }
         if (!Dim::InvarZ::value) {
-          lg[2] = ip.cz.g.l;
+          initial_index[2] = ip.cz.g.l;
         }
         current.calc_j(J, initial_pos_normalized, final_pos_normalized,
-                       final_index, lg, prt.qni_wni(), v);
+                       final_index, initial_index, prt.qni_wni(), v);
       }
     }
   }
@@ -89,7 +135,7 @@ struct PushParticlesVb
   static void stagger_mprts_patch(Mparticles& mprts, MfieldsState& mflds)
   {
     const auto& grid = mprts.grid();
-    Real3 dxi = Real3{1., 1., 1.} / Real3(grid.domain.dx);
+    Real3 dxi = grid.domain.dx_inv;
     real_t dq_kind[MAX_NR_KINDS];
     auto& kinds = grid.kinds;
     assert(kinds.size() <= MAX_NR_KINDS);
