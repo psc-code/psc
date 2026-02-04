@@ -268,14 +268,13 @@ void boost_fields(MfieldsState& mflds, double vy)
 
     int n_ghosts = mflds.ibn().max();
 
-    grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
-      // FIXME interpolate across ec vs. fc?
-      Double3 b{mf_patch(HX, jx, jy, jz), mf_patch(HY, jx, jy, jz),
-                mf_patch(HZ, jx, jy, jz)};
-      Double3 e_prime = gamma_v.cross(b);
-
-      mf_patch(EX, jx, jy, jz) = e_prime[0];
-      mf_patch(EZ, jx, jy, jz) = e_prime[2];
+    grid.Foreach_3d(n_ghosts - 1, n_ghosts, [&](int jx, int jy, int jz) {
+      mf_patch(EX, jx, jy, jz) =
+        gamma * vy * 0.5 *
+        (mf_patch(HZ, jx, jy - 1, jz) + mf_patch(HZ, jx, jy, jz));
+      mf_patch(EZ, jx, jy, jz) =
+        -gamma * vy * 0.5 *
+        (mf_patch(HX, jx, jy - 1, jz) + mf_patch(HX, jx, jy, jz));
     });
 
     grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
