@@ -335,7 +335,7 @@ void inject_b_from_potential(MfieldsState& mflds,
     auto field_patch = make_Fields3d<dim_xyz>(mflds[p]);
     auto vector_potential_patch = make_Fields3d<dim_xyz>(vector_potential[p]);
 
-    grid.Foreach_3d(0, 1, [&](int jx, int jy, int jz) {
+    grid.Foreach_3d(2, 1, [&](int jx, int jy, int jz) {
       field_patch(HX, jx, jy, jz) = vector_potential_patch(AZ, jx, jy + 1, jz) -
                                     vector_potential_patch(AZ, jx, jy, jz) -
                                     vector_potential_patch(AY, jx, jy, jz + 1) +
