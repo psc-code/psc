@@ -188,7 +188,7 @@ struct Psc
   {
     if (diagnostic) {
       diagnostics_.push_back(new DiagnosticFromLambda<Mparticles, MfieldsState>(
-        [&](Mparticles& mprts, MfieldsState& mflds) {
+        [=](Mparticles& mprts, MfieldsState& mflds) {
           return diagnostic->perform_diagnostic(mprts);
         }));
     }
