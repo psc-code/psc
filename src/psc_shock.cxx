@@ -742,6 +742,11 @@ static void run(int argc, char** argv)
 
   psc.add_gauss_corrector(&marder);
 
+  double gamma = 1 / sqrt(1 - sqr(v_upstream_y));
+  psc.bndf.background_e =
+    -gamma * Double3{0, v_upstream_y, 0}.cross({b_x, b_y, b_z});
+  psc.bndf.background_h = {b_x * gamma, b_y, b_z * gamma};
+
   psc.add_diagnostic(&outf);
   psc.add_diagnostic(&outp);
   psc.add_diagnostic(&oute);
