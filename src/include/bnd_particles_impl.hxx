@@ -114,8 +114,8 @@ void BndParticlesCommon<MP>::process_patch(const Grid_t& grid,
 
   for (int n = n_begin; n < n_end; n++) {
     auto* prt = &buf[n];
-    real_t* xi = prt->x;
-    real_t* pxi = prt->u;
+    Real3& xi = prt->x;
+    Real3& pxi = prt->u;
 
     Int3 pos = pi.cellPosition(xi);
 
@@ -130,7 +130,7 @@ void BndParticlesCommon<MP>::process_patch(const Grid_t& grid,
     // handle particles which (seemingly) left the patch
     // (may end up in the same patch, anyway, though)
     bool drop = false;
-    int dir[3];
+    Int3 dir;
     for (int d = 0; d < 3; d++) {
       if (pos[d] < 0) {
         if (!grid.atBoundaryLo(p, d) || grid.bc.prt_lo[d] == BND_PRT_PERIODIC) {
