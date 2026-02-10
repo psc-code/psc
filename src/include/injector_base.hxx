@@ -16,14 +16,14 @@ struct InjectFromLambda : InjectorBase<MPARTICLES, MFIELDS_STATE>
   using MfieldsState = MFIELDS_STATE;
 
   InjectFromLambda(std::function<void(Mparticles&, MfieldsState&)> lambda)
-    : lambda{lambda}
+    : lambda_{lambda}
   {}
 
   void inject(Mparticles& mprts, MfieldsState& mflds) override
   {
-    return lambda(mprts, mflds);
+    return lambda_(mprts, mflds);
   }
 
 private:
-  std::function<void(Mparticles&, MfieldsState&)> lambda;
+  std::function<void(Mparticles&, MfieldsState&)> lambda_;
 };
