@@ -16,14 +16,14 @@ template <typename Mparticles, typename MfieldsState>
 struct DiagnosticFromLambda : public DiagnosticBase<Mparticles, MfieldsState>
 {
   DiagnosticFromLambda(std::function<void(Mparticles&, MfieldsState&)> lambda)
-    : lambda{lambda}
+    : lambda_{lambda}
   {}
 
   void perform_diagnostic(Mparticles& mprts, MfieldsState& mflds) override
   {
-    return lambda(mprts, mflds);
+    return lambda_(mprts, mflds);
   }
 
 private:
-  std::function<void(Mparticles&, MfieldsState&)> lambda;
+  std::function<void(Mparticles&, MfieldsState&)> lambda_;
 };

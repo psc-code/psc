@@ -14,11 +14,11 @@ struct ExternalCurrentFromLambda : ExternalCurrentBase<MFIELDS_STATE>
   using MfieldsState = MFIELDS_STATE;
 
   ExternalCurrentFromLambda(std::function<void(MfieldsState&)> lambda)
-    : lambda{lambda}
+    : lambda_{lambda}
   {}
 
-  void inject_current(MfieldsState& mflds) override { return lambda(mflds); }
+  void inject_current(MfieldsState& mflds) override { return lambda_(mflds); }
 
 private:
-  std::function<void(MfieldsState&)> lambda;
+  std::function<void(MfieldsState&)> lambda_;
 };
