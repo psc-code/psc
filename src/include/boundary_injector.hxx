@@ -74,7 +74,6 @@ public:
 
   using Mparticles = typename PushParticles::Mparticles;
   using MfieldsState = typename PushParticles::MfieldsState;
-  using AdvanceParticle_t = typename PushParticles::AdvanceParticle_t;
   using Current = typename PushParticles::Current;
   using real_t = typename PushParticles::real_t;
   using Real3 = Vec3<real_t>;
@@ -164,6 +163,7 @@ public:
 
 private:
   ParticleGenerator particle_generator_;
-  AdvanceParticle_t advance_;
+  // can't move along x or z, or else might leave patch
+  AdvanceParticle<real_t, dim_y> advance_;
   real_t prts_per_unit_density_;
 };
