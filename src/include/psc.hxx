@@ -379,6 +379,7 @@ struct Psc
     // === particle injection
     prof_start(pr_inject_prts);
     for (auto injector : injectors_) {
+      mpi_printf(comm, "***** Inject particles...\n");
       injector->inject(mprts_, mflds_);
     }
     prof_stop(pr_inject_prts);
@@ -386,6 +387,7 @@ struct Psc
     // === external current
     prof_start(pr_external_current);
     for (auto external_current : external_currents_) {
+      mpi_printf(comm, "***** External current...\n");
       external_current->inject_current(mflds_);
     }
     prof_stop(pr_external_current);
