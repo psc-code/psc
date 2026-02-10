@@ -165,33 +165,29 @@ struct Psc
 
   void add_injector(InjectorBaseT* injector)
   {
-    if (injector) {
-      injectors_.push_back(injector);
-    }
+    assert(injector);
+    injectors_.push_back(injector);
   }
 
   void add_external_current(ExternalCurrentBaseT* external_current)
   {
-    if (external_current) {
-      external_currents_.push_back(external_current);
-    }
+    assert(external_current);
+    external_currents_.push_back(external_current);
   }
 
   void add_diagnostic(DiagnosticBaseT* diagnostic)
   {
-    if (diagnostic) {
-      diagnostics_.push_back(diagnostic);
-    }
+    assert(diagnostic);
+    diagnostics_.push_back(diagnostic);
   }
 
   void add_diagnostic(ParticleDiagnosticBaseT* diagnostic)
   {
-    if (diagnostic) {
-      diagnostics_.push_back(new DiagnosticFromLambda<Mparticles, MfieldsState>(
-        [=](Mparticles& mprts, MfieldsState& mflds) {
-          return diagnostic->perform_diagnostic(mprts);
-        }));
-    }
+    assert(diagnostic);
+    diagnostics_.push_back(new DiagnosticFromLambda<Mparticles, MfieldsState>(
+      [=](Mparticles& mprts, MfieldsState& mflds) {
+        return diagnostic->perform_diagnostic(mprts);
+      }));
   }
 
   // ----------------------------------------------------------------------
