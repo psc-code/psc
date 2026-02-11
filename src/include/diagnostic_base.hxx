@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 template <typename Mparticles, typename MfieldsState>
 struct DiagnosticBase
 {

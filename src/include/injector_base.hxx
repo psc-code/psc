@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 template <typename MPARTICLES, typename MFIELDS_STATE>
 struct InjectorBase
 {
