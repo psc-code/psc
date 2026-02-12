@@ -160,9 +160,9 @@ struct SetupParticles
           Double3 pos = centerer.get_pos(grid.patches[patch], index);
           // FIXME, the issue really is that (2nd order) particle pushers
           // don't handle the invariant dim right
-          for (int a = 0; a < 3; ++a) {
-            if (grid.isInvar(a) == 1) {
-              pos[a] = grid.patches[patch].get_nc(index[a], a);
+          for (int d = 0; d < 3; ++d) {
+            if (grid.isInvar(d)) {
+              pos[d] = grid.patches[patch].get_nc(index[d], d);
             }
           }
 
