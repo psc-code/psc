@@ -117,7 +117,8 @@ public:
       typename Current::fields_t J(flds);
 
       for (Int3 initial_idx : VecRange(ilo, ihi)) {
-        Real3 cell_corner = Double3(initial_idx) * grid.domain.dx;
+        Real3 cell_corner =
+          Double3(initial_idx) * grid.domain.dx + grid.patches[patch_idx].xb;
         int n_prts_to_try_inject =
           get_n_in_cell(1.0, prts_per_unit_density_, true);
 
