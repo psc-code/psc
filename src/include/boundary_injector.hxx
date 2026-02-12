@@ -101,8 +101,8 @@ public:
     Real3 dxi = grid.domain.dx_inv;
     Current current(grid);
 
-    for (int patch_idx = 0; patch_idx < grid.n_patches(); patch_idx++) {
-      if (!grid.atBoundaryLo(patch_idx, INJECT_DIM_IDX_)) {
+    for (int p = 0; p < grid.n_patches(); p++) {
+      if (!grid.atBoundaryLo(p, INJECT_DIM_IDX_)) {
         continue;
       }
 
@@ -112,13 +112,13 @@ public:
       ilo[INJECT_DIM_IDX_] = -1;
       ihi[INJECT_DIM_IDX_] = 0;
 
-      auto&& injector = injectors_by_patch[patch_idx];
-      auto flds = mflds[patch_idx];
+      auto&& injector = injectors_by_patch[p];
+      auto flds = mflds[p];
       typename Current::fields_t J(flds);
 
       for (Int3 initial_idx : VecRange(ilo, ihi)) {
         Real3 cell_corner =
-          Double3(initial_idx) * grid.domain.dx + grid.patches[patch_idx].xb;
+          Double3(initial_idx) * grid.domain.dx + grid.patches[p].xb;
         int n_prts_to_try_inject =
           get_n_in_cell(1.0, prts_per_unit_density_, true);
 
