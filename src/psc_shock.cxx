@@ -32,6 +32,8 @@ using Collision = PscConfig::Collision;
 using Checks = PscConfig::Checks;
 using Marder = PscConfig::Marder;
 using OutputParticles = PscConfig::OutputParticles;
+using real_t = PscConfig::Mfields::real_t;
+using Real3 = Vec3<real_t>;
 
 // ======================================================================
 // Global parameters
@@ -662,6 +664,145 @@ void initializeFields(MfieldsState& mflds)
   boost_fields(mflds, -v_upstream_y);
 }
 
+struct AdvectedPeriodicFields : RadiatingBoundary<real_t>
+{
+  static const int DIM_Y = 1;
+
+  AdvectedPeriodicFields(MfieldsState& mflds, real_t v_advect,
+                         Real3 background_e, Real3 background_h)
+    : v_advect(v_advect), grid(mflds.grid())
+  {
+    // FIXME would be better to exclude J, but the interpolator uses EX, etc.
+    auto&& e_b_fields = mflds.storage().view(_all, _all, _all, _all, _all);
+    // FIXME this probably isn't the best way to copy a gtensor array
+    cycled_fields = gt::zeros_like(e_b_fields);
+    cycled_fields.view(_all, _all, _all, _all, _all) = e_b_fields;
+
+    for (int d = 0; d < 3; d++) {
+      cycled_fields.view(_all, _all, _all, EX + d, _all) =
+        cycled_fields.view(_all, _all, _all, EX + d, _all) - background_e[d];
+      cycled_fields.view(_all, _all, _all, HX + d, _all) =
+        cycled_fields.view(_all, _all, _all, HX + d, _all) - background_h[d];
+    }
+  }
+
+  Real3 advect_x3(Real3 x3, double t)
+  {
+    return x3 - Real3::unit(DIM_Y) * real_t(t * v_advect);
+  }
+
+  int shift_to_patch_local(Real3& x3_advected)
+  {
+    real_t patch_size = grid.domain.length[DIM_Y] / grid.domain.np[DIM_Y];
+    int n_patches_to_the_left = 0;
+    while (x3_advected[DIM_Y] < grid.domain.corner[DIM_Y]) {
+      x3_advected[DIM_Y] += patch_size;
+      n_patches_to_the_left += 1;
+    }
+    return n_patches_to_the_left;
+  }
+
+  void calc_e_h(double t, int p, Real3 x3, int d_e, real_t& e, int d_h,
+                real_t& h)
+  {
+    Real3 x3_advected = advect_x3(x3, t);
+    int n_patches_to_the_left = shift_to_patch_local(x3_advected);
+    assert(n_patches_to_the_left == n_patch_cycles);
+
+    ip.set_coeffs(x3_advected * grid.domain.dx_inv);
+    auto em = decltype(ip)::fields_t(
+      cycled_fields.view(_all, _all, _all, _all, p), -grid.ibn);
+
+    switch (d_e) {
+      case 0: e = ip.ex(em); break;
+      case 1: e = ip.ey(em); break;
+      case 2: e = ip.ez(em); break;
+    }
+    switch (d_h) {
+      case 0: h = ip.hx(em); break;
+      case 1: h = ip.hy(em); break;
+      case 2: h = ip.hz(em); break;
+    }
+  }
+
+  real_t pulse_s_lower(double t, int d, int p, Real3 x3) override
+  {
+    int d1 = (d + 1) % 3;
+    int d2 = (d + 2) % 3;
+
+    real_t e, h;
+    calc_e_h(t, p, x3, d1, e, d2, h);
+
+    return (e + h) / 2.0;
+  }
+
+  real_t pulse_p_lower(double t, int d, int p, Real3 x3) override
+  {
+    int d1 = (d + 1) % 3;
+    int d2 = (d + 2) % 3;
+
+    real_t e, h;
+    calc_e_h(t, p, x3, d2, e, d1, h);
+
+    return (e - h) / 2.0;
+  }
+
+  real_t pulse_s_upper(double t, int d, int p, Real3 x3) override
+  {
+    return 0.0;
+  }
+
+  real_t pulse_p_upper(double t, int d, int p, Real3 x3) override
+  {
+    return 0.0;
+  }
+
+  void update_cache_lower(double t, int d) override
+  {
+    if (d != DIM_Y) {
+      return;
+    }
+
+    // TODO make this work with >1 patch per process?
+    assert(grid.n_patches() == 1);
+
+    Real3 x3_advected = advect_x3({0.0, 0.0, 0.0}, t);
+    int n_patches_to_the_left = shift_to_patch_local(x3_advected);
+
+    if (n_patches_to_the_left == n_patch_cycles) {
+      // "cache hit"; no need to cycle
+      return;
+    }
+
+    LOG_INFO("cycling turbulence...\n");
+
+    // hack: guess the rank based on how mrc does it for simple domains
+    // (can't use mrc, because it wouldn't apply periodicity)
+    Int3 np = grid.domain.np;
+    Int3 proc = grid.localPatchInfo(0).idx3;
+    Int3 dest_proc = (proc + Int3::unit(DIM_Y)) % np;
+    int dest_rank = flatten_index(dest_proc.reverse(), np.reverse());
+    Int3 source_proc = (proc - Int3::unit(DIM_Y) + np) % np;
+    int source_rank = flatten_index(source_proc.reverse(), np.reverse());
+
+    MPI_Status status;
+    int err = MPI_Sendrecv_replace(cycled_fields.data(), cycled_fields.size(),
+                                   MpiDtypeTraits<real_t>::value(), dest_rank,
+                                   0, source_rank, 0, grid.comm(), &status);
+
+    n_patch_cycles += 1;
+  }
+
+  const Grid_t& grid;
+  gt::gtensor<real_t, 5> cycled_fields;
+  int n_patch_cycles = 0;
+  real_t v_advect;
+  InterpolateEM<
+    Fields3d<decltype(cycled_fields.view(_all, _all, _all, _all, 0)), Dim>,
+    opt_ip_1st_ec, Dim>
+    ip;
+};
+
 // ======================================================================
 // run
 
@@ -761,9 +902,13 @@ static void run(int argc, char** argv)
   psc.add_gauss_corrector(&marder);
 
   double gamma = 1 / sqrt(1 - sqr(v_upstream_y));
-  psc.bndf.background_e =
-    -gamma * Double3{0, v_upstream_y, 0}.cross({b_x, b_y, b_z});
-  psc.bndf.background_h = {b_x * gamma, b_y, b_z * gamma};
+  Real3 background_e =
+    -gamma * Real3{0, v_upstream_y, 0}.cross({b_x, b_y, b_z});
+  Real3 background_h = {b_x * gamma, b_y, b_z * gamma};
+  psc.bndf.background_e = background_e;
+  psc.bndf.background_h = background_h;
+  psc.bndf.radiation =
+    new AdvectedPeriodicFields{mflds, v_upstream_y, background_e, background_h};
 
   psc.add_diagnostic(&outf);
   psc.add_diagnostic(&outp);
