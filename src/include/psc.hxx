@@ -162,6 +162,8 @@ struct Psc
 
   // ----------------------------------------------------------------------
   // API for modifying various internal components
+  // TODO: improve ownership model: we should own these objects (i.e., use
+  // unique_ptr), but don't want to burden the user with C++ boilerplate.
 
   void add_injector(InjectorBaseT* injector)
   {
