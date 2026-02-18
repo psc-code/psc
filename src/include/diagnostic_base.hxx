@@ -5,12 +5,16 @@
 template <typename Mparticles, typename MfieldsState>
 struct DiagnosticBase
 {
+  virtual ~DiagnosticBase() {}
+
   virtual void perform_diagnostic(Mparticles& mprts, MfieldsState& mflds) = 0;
 };
 
 template <typename Mparticles>
 struct ParticleDiagnosticBase
 {
+  virtual ~ParticleDiagnosticBase() {}
+
   virtual void perform_diagnostic(Mparticles& mprts) = 0;
 };
 

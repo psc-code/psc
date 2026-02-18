@@ -7,6 +7,8 @@ struct ExternalCurrentBase
 {
   using MfieldsState = MFIELDS_STATE;
 
+  virtual ~ExternalCurrentBase() {}
+
   virtual void inject_current(MfieldsState& mflds) = 0;
 };
 

@@ -8,6 +8,8 @@ struct InjectorBase
   using Mparticles = MPARTICLES;
   using MfieldsState = MFIELDS_STATE;
 
+  virtual ~InjectorBase() {}
+
   virtual void inject(Mparticles& mprts, MfieldsState& mflds) = 0;
 };
 
