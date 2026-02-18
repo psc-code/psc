@@ -2,23 +2,17 @@
 
 #include <functional>
 
-template <typename MPARTICLES, typename MFIELDS_STATE>
+template <typename Mparticles, typename MfieldsState>
 struct InjectorBase
 {
-  using Mparticles = MPARTICLES;
-  using MfieldsState = MFIELDS_STATE;
-
   virtual ~InjectorBase() {}
 
   virtual void inject(Mparticles& mprts, MfieldsState& mflds) = 0;
 };
 
-template <typename MPARTICLES, typename MFIELDS_STATE>
-struct InjectFromLambda : InjectorBase<MPARTICLES, MFIELDS_STATE>
+template <typename Mparticles, typename MfieldsState>
+struct InjectFromLambda : InjectorBase<Mparticles, MfieldsState>
 {
-  using Mparticles = MPARTICLES;
-  using MfieldsState = MFIELDS_STATE;
-
   InjectFromLambda(std::function<void(Mparticles&, MfieldsState&)> lambda)
     : lambda_{lambda}
   {}

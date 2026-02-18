@@ -2,21 +2,17 @@
 
 #include <functional>
 
-template <typename MFIELDS_STATE>
+template <typename MfieldsState>
 struct ExternalCurrentBase
 {
-  using MfieldsState = MFIELDS_STATE;
-
   virtual ~ExternalCurrentBase() {}
 
   virtual void inject_current(MfieldsState& mflds) = 0;
 };
 
-template <typename MFIELDS_STATE>
-struct ExternalCurrentFromLambda : ExternalCurrentBase<MFIELDS_STATE>
+template <typename MfieldsState>
+struct ExternalCurrentFromLambda : ExternalCurrentBase<MfieldsState>
 {
-  using MfieldsState = MFIELDS_STATE;
-
   ExternalCurrentFromLambda(std::function<void(MfieldsState&)> lambda)
     : lambda_{lambda}
   {}
