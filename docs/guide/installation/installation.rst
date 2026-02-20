@@ -97,6 +97,7 @@ Legacy Build Instructions
    generic
    summit
    trillian
+   marvin
    viscid
 
 
