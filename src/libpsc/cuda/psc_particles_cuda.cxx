@@ -53,7 +53,7 @@ static void copy_to(MparticlesBase& mprts_base,
     for (auto prt : accessor[p]) {
       using real_t = typename MP::real_t;
       using Real3 = typename MP::Real3;
-      mprts_other[p].push_back({Real3(prt.x()), Real3(prt.u()),
+      mprts_other.push_back(p, {Real3(prt.x()), Real3(prt.u()),
                                 real_t(prt.qni_wni()), prt.kind(), prt.id(),
                                 prt.tag()});
     }
