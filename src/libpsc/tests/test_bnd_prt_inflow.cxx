@@ -206,7 +206,7 @@ public:
   std::vector<psc::particle::Inject> prts;
 };
 
-static double half() { return 0.5; }
+static double one_half() { return 0.5; }
 
 TEST(TestSetupParticlesInflow, Advance)
 {
@@ -225,7 +225,7 @@ TEST(TestSetupParticlesInflow, Advance)
   Double3 T = {0.0, 0.0, 0.0};
   psc_particle_npt npt = {0, 1.0, u, T};
 
-  Inflow<Mparticles, dim_y> inflow(grid, npt, *half);
+  Inflow<Mparticles, dim_y> inflow(grid, npt, *one_half);
 
   auto prt = inflow.get_advanced_prt(pos, 1.0);
 
@@ -250,7 +250,7 @@ TEST(TestSetupParticlesInflow, InjectIntoCell)
   Double3 T = {0.0, 0.0, 0.0};
   psc_particle_npt npt = {0, 1.0, u, T};
 
-  Inflow<Mparticles, dim_y> inflow(grid, npt, *half);
+  Inflow<Mparticles, dim_y> inflow(grid, npt, *one_half);
 
   TestInjector injector;
   inflow.inject_into_boundary_cell(injector, {0, 0, 0});
@@ -281,7 +281,7 @@ TEST(TestSetupParticlesInflow, InjectIntoCellFilter)
   Double3 T = {0.0, 0.0, 0.0};
   psc_particle_npt npt = {0, 1.0, u, T};
 
-  Inflow<Mparticles, dim_y> inflow(grid, npt, *half);
+  Inflow<Mparticles, dim_y> inflow(grid, npt, *one_half);
 
   TestInjector injector;
   inflow.inject_into_boundary_cell(injector, {0, 0, 0});
@@ -305,7 +305,7 @@ TEST(TestSetupParticlesInflow, InjectIntoPatch)
   Double3 T = {0.0, 0.0, 0.0};
   psc_particle_npt npt = {0, 1.0, u, T};
 
-  Inflow<Mparticles, dim_y> inflow(grid, npt, *half);
+  Inflow<Mparticles, dim_y> inflow(grid, npt, *one_half);
 
   TestInjector injector;
   inflow.inject_into_boundary_patch(injector, grid.patches[0]);
@@ -343,7 +343,7 @@ TEST(TestSetupParticlesInflow, InjectIntoBoundaryY)
   Double3 T = {0.0, 0.0, 0.0};
   psc_particle_npt npt = {0, 1.0, u, T};
 
-  Inflow<Mparticles, dim_y> inflow(grid, npt, *half);
+  Inflow<Mparticles, dim_y> inflow(grid, npt, *one_half);
 
   std::vector<TestInjector> injectors = {TestInjector(), TestInjector(),
                                          TestInjector(), TestInjector()};
@@ -386,7 +386,7 @@ TEST(TestSetupParticlesInflow, InjectIntoBoundaryZ)
   Double3 T = {0.0, 0.0, 0.0};
   psc_particle_npt npt = {0, 1.0, u, T};
 
-  Inflow<Mparticles, dim_z> inflow(grid, npt, *half);
+  Inflow<Mparticles, dim_z> inflow(grid, npt, *one_half);
 
   std::vector<TestInjector> injectors = {TestInjector(), TestInjector(),
                                          TestInjector(), TestInjector()};
