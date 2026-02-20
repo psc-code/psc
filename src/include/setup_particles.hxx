@@ -29,7 +29,7 @@ struct psc_particle_np
 
 namespace
 {
-const Centering::Centerer defaultCenterer(Centering::CC);
+const centering::Centerer defaultCenterer(centering::CC);
 }
 
 struct InitNptFunc
@@ -142,7 +142,7 @@ struct SetupParticles
         for (int jx = ilo[0]; jx < ihi[0]; jx++) {
           Int3 index{jx, jy, jz};
 
-          Double3 pos = centerer.getPos(grid.patches[patch], index);
+          Double3 pos = centerer.get_pos(grid.patches[patch], index);
           // FIXME, the issue really is that (2nd order) particle pushers
           // don't handle the invariant dim right
           for (int a = 0; a < 3; ++a) {
@@ -319,7 +319,7 @@ struct SetupParticles
   bool fractional_n_particles_per_cell = {false};
   bool initial_momentum_gamma_correction = {false};
 
-  Centering::Centerer centerer;
+  centering::Centerer centerer;
 
 private:
   const Grid_t::Kinds kinds_;

@@ -20,6 +20,16 @@
             <parameter key="SubStreams" value="16"/>
         </engine>
     </io>
+    <io name="gauss">
+        <engine type="BP4">
+            <parameter key="SubStreams" value="16"/>
+        </engine>
+    </io>
+    <io name="continuity">
+        <engine type="BP4">
+            <parameter key="SubStreams" value="16"/>
+        </engine>
+    </io>
     <io name="checkpoint">
         <engine type="BP4">
             <parameter key="SubStreams" value="16"/>

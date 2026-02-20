@@ -478,24 +478,24 @@ void run()
   // -- Checks
   ChecksParams checks_params{};
 #if CASE == CASE_2D_SMALL
-  checks_params.continuity_every_step = 1;
-  checks_params.continuity_dump_always = true;
+  checks_params.continuity.check_interval = 1;
+  checks_params.continuity.dump_always = true;
 #else
-  checks_params.continuity_every_step = 0;
-  checks_params.continuity_dump_always = false;
+  checks_params.continuity.check_interval = 0;
+  checks_params.continuity.dump_always = false;
 #endif
-  checks_params.continuity_threshold = 1e-4;
-  checks_params.continuity_verbose = true;
+  checks_params.continuity.err_threshold = 1e-4;
+  checks_params.continuity.print_max_err_always = true;
 
 #if CASE == CASE_2D_SMALL
-  checks_params.gauss_every_step = 1;
-  checks_params.gauss_dump_always = true;
+  checks_params.gauss.check_interval = 1;
+  checks_params.gauss.dump_always = true;
 #else
-  checks_params.gauss_every_step = 100;
-  checks_params.gauss_dump_always = false;
+  checks_params.gauss.check_interval = 100;
+  checks_params.gauss.dump_always = false;
 #endif
-  checks_params.gauss_threshold = 1e-4;
-  checks_params.gauss_verbose = true;
+  checks_params.gauss.err_threshold = 1e-4;
+  checks_params.gauss.print_max_err_always = true;
 
   Checks checks{grid, MPI_COMM_WORLD, checks_params};
 

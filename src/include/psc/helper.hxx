@@ -35,7 +35,7 @@ struct print_diff<E1, E2,
     gt::launch_host<5>(h_e1.shape(), [=](int i, int j, int k, int m, int p) {
       auto val_e1 = h_e1(i, j, k, m, p);
       auto val_e2 = h_e2(i, j, k, m, p);
-      if (std::abs(val_e1 + val_e2) > eps) {
+      if (std::abs(val_e1 - val_e2) > eps) {
         mprintf("p%d (%d,%d,%d): %g -- %g diff %g\n", p, i, j, k, val_e1,
                 val_e2, val_e1 - val_e2);
       }
@@ -59,7 +59,7 @@ struct print_diff<E1, E2,
     gt::launch_host<3>(h_e1.shape(), [=](int i, int j, int k) {
       auto val_e1 = h_e1(i, j, k);
       auto val_e2 = h_e2(i, j, k);
-      if (std::abs(val_e1 + val_e2) > eps) {
+      if (std::abs(val_e1 - val_e2) > eps) {
         mprintf("(%d,%d,%d): %g -- %g diff %g\n", i, j, k, val_e1, val_e2,
                 val_e1 - val_e2);
       }

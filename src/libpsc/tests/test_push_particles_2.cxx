@@ -71,17 +71,17 @@ TYPED_TEST(PushParticlesTest, Accel)
   BndParticles bndp_{grid};
   Bnd bnd_{};
   ChecksParams checks_params{};
-  checks_params.continuity_every_step = 1;
-  checks_params.continuity_threshold = 1e-7;
-  checks_params.continuity_verbose = false;
+  checks_params.continuity.check_interval = 1;
+  checks_params.continuity.err_threshold = 1e-7;
+  checks_params.continuity.print_max_err_always = false;
   Checks checks_{grid, MPI_COMM_WORLD, checks_params};
   for (int n = 0; n < n_steps; n++) {
-    checks_.continuity_before_particle_push(mprts);
+    checks_.continuity.before_particle_push(mprts);
     pushp_.push_mprts(mprts, mflds);
     bndp_(mprts);
     bnd_.add_ghosts(mflds, JXI, JXI + 3);
     bnd_.fill_ghosts(mflds, JXI, JXI + 3);
-    checks_.continuity_after_particle_push(mprts, mflds);
+    checks_.continuity.after_particle_push(mprts, mflds);
 
     auto accessor = mprts.accessor();
     for (auto prt : accessor[0]) {
@@ -149,17 +149,17 @@ TYPED_TEST(PushParticlesTest, Cyclo)
   BndParticles bndp_{grid};
   Bnd bnd_{};
   ChecksParams checks_params{};
-  checks_params.continuity_every_step = 1;
-  checks_params.continuity_threshold = 1e-7;
-  checks_params.continuity_verbose = false;
+  checks_params.continuity.check_interval = 1;
+  checks_params.continuity.err_threshold = 1e-7;
+  checks_params.continuity.print_max_err_always = false;
   Checks checks_{grid, MPI_COMM_WORLD, checks_params};
   for (int n = 0; n < n_steps; n++) {
-    checks_.continuity_before_particle_push(mprts);
+    checks_.continuity.before_particle_push(mprts);
     pushp_.push_mprts(mprts, mflds);
     bndp_(mprts);
     bnd_.add_ghosts(mflds, JXI, JXI + 3);
     bnd_.fill_ghosts(mflds, JXI, JXI + 3);
-    checks_.continuity_after_particle_push(mprts, mflds);
+    checks_.continuity.after_particle_push(mprts, mflds);
 
     double ux = (cos(2 * M_PI * (0.125 * n_steps - (n + 1)) / (double)n_steps) /
                  cos(2 * M_PI * (0.125 * n_steps) / (double)n_steps));

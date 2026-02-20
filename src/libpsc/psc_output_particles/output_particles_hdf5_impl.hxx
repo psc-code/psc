@@ -150,10 +150,21 @@ public:
     abort();
 #endif
 
-    int slen = strlen(params_.data_dir) + strlen(params_.basename) + 20;
+    // FIXME there must be a safer way to do this.
+
+    // Currently, if timestep has too many digits, the filename string gets
+    // truncated to e.g. prt.1234567890.h (with .h instead of .h5)
+
+    // This is probably a problem with other outputs, too
+    int slen = strlen(params_.data_dir) + strlen(params_.basename) + 15;
     char filename[slen];
-    snprintf(filename, slen, "%s/%s.%06d_p%06d.h5", params_.data_dir,
-             params_.basename, timestep, 0);
+    if (timestep > 999999999) {
+      LOG_WARN("%s step index exceeds digit limit in file name. Data still "
+               "written, but file name is truncated.\n",
+               params_.basename);
+    }
+    snprintf(filename, slen, "%s/%s.%09d.h5", params_.data_dir,
+             params_.basename, timestep);
 
     hid_t file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, plist);
     H5_CHK(file);

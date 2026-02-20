@@ -328,7 +328,7 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts,
                          BgkMfields& divGradPhi)
 {
   SetupParticles<Mparticles> setup_particles(*grid_ptr);
-  setup_particles.centerer = Centering::Centerer(Centering::NC);
+  setup_particles.centerer = centering::Centerer(centering::NC);
 
   auto&& qDensity = -psc::mflds::interior(divGradPhi.grid(), divGradPhi.gt());
 
@@ -408,7 +408,7 @@ void fillGhosts(MF& mfld, int compBegin, int compEnd)
 void initializePhi(BgkMfields& phi)
 {
   setupScalarField(
-    phi, Centering::Centerer(Centering::NC), [&](int m, double crd[3]) {
+    phi, centering::Centerer(centering::NC), [&](int m, double crd[3]) {
       double rho = sqrt(sqr(getCoord(crd[1])) + sqr(getCoord(crd[2])));
       return ic_table->get_interpolated("Psi", "rho", rho);
     });
@@ -510,9 +510,9 @@ static void run(int argc, char** argv)
 
   // -- Checks
   ChecksParams checks_params{};
-  checks_params.gauss_every_step = g.gauss_every;
-  // checks_params.gauss_dump_always = true;
-  checks_params.gauss_threshold = 1e-5;
+  checks_params.gauss.check_interval = g.gauss_every;
+  // checks_params.gauss.dump_always = true;
+  checks_params.gauss.err_threshold = 1e-5;
 
   Checks checks{grid, MPI_COMM_WORLD, checks_params};
 

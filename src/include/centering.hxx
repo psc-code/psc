@@ -3,22 +3,15 @@
 
 #include "kg/Vec3.h"
 
-namespace Centering
+namespace centering
 {
 
-enum CenterStyle
+enum Centering
 {
   NC, // node-centered
   EC, // edge-centered
   FC, // face-centered
   CC, // cell-centered
-};
-
-enum Component
-{
-  X,
-  Y,
-  Z
 };
 
 /*  Centering Guide
@@ -31,15 +24,18 @@ CC  |   ccc ccc ccc
 */
 
 template <typename PATCH>
-Double3 getPos(PATCH patch, Int3 index, int style, int comp = X)
+Double3 get_pos(PATCH patch, Int3 index, Centering c, int component = -1)
 {
+  if (component == -1) {
+    assert(c == NC || c == CC);
+  }
+
   Double3 pos;
-  for (int a = 0; a < 3; a++) {
-    if (style == CC || (style == FC && a != comp) ||
-        (style == EC && a == comp)) {
-      pos[a] = patch.get_cc(index[a], a);
+  for (int d = 0; d < 3; d++) {
+    if (c == CC || (c == FC && d != component) || (c == EC && d == component)) {
+      pos[d] = patch.get_cc(index[d], d);
     } else {
-      pos[a] = patch.get_nc(index[a], a);
+      pos[d] = patch.get_nc(index[d], d);
     }
   }
   return pos;
@@ -47,14 +43,14 @@ Double3 getPos(PATCH patch, Int3 index, int style, int comp = X)
 
 struct Centerer
 {
-  CenterStyle style;
-  Centerer(CenterStyle style) : style(style) {}
+  Centering c;
+  Centerer(Centering c) : c(c) {}
 
   template <typename PATCH>
-  inline Double3 getPos(PATCH patch, Int3 index, int comp = X) const
+  inline Double3 get_pos(PATCH patch, Int3 index, int component = -1) const
   {
-    return Centering::getPos(patch, index, style, comp);
+    return centering::get_pos(patch, index, c, component);
   }
 };
 
-} // namespace Centering
+} // namespace centering
