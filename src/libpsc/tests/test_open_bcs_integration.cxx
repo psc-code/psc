@@ -4,7 +4,6 @@
 #include <setup_fields.hxx>
 #include <setup_particles.hxx>
 
-#include "DiagnosticsDefault.h"
 #include "OutputFieldsDefault.h"
 #include "add_ghosts_reflecting.hxx"
 #include "../psc_config.hxx"
@@ -107,14 +106,8 @@ TEST(OpenBcsTest, IntegrationY)
   Collision collision{grid, 0, 0.1};
   Marder marder(grid, 0.9, 3, false);
 
-  OutputFields<MfieldsState, Mparticles, Dim> outf{grid, {}};
-  OutputParticles outp{grid, {}};
-  DiagEnergies oute{grid.comm(), 0};
-  auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
-
-  auto psc =
-    makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts, balance,
-                                 collision, checks, marder, diagnostics);
+  auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
+                                          balance, collision, checks, marder);
 
   // ----------------------------------------------------------------------
   // set up initial conditions
@@ -148,6 +141,7 @@ TEST(OpenBcsTest, IntegrationY)
   ASSERT_EQ(prts[0].q(), -1.0);
   ASSERT_EQ(prts[1].q(), 1.0);
 
+  psc.pre_first_step();
   for (; grid.timestep_ < psc_params.nmax;) {
     psc.step();
     ASSERT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);

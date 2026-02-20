@@ -3,10 +3,8 @@
 #include "test_common.hxx"
 
 #include "boundary_injector.hxx"
-#include "composite_injector.hxx"
 
 #include "psc.hxx"
-#include "DiagnosticsDefault.h"
 #include "OutputFieldsDefault.h"
 #include "../psc_config.hxx"
 
@@ -137,18 +135,12 @@ TEST(BoundaryInjectorTest, Integration1Particle)
   Collision collision{grid, 0, 0.1};
   Marder marder(grid, 0.9, 3, false);
 
-  OutputFields<MfieldsState, Mparticles, Dim> outf{grid, {}};
-  OutputParticles outp{grid, {}};
-  DiagEnergies oute{grid.comm(), 0};
-  auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
-
-  auto inject_particles =
-    BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>{
-      ParticleGenerator(1, 1), grid};
-
   auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
-                                          balance, collision, checks, marder,
-                                          diagnostics, inject_particles);
+                                          balance, collision, checks, marder);
+
+  psc.add_injector(
+    new BoundaryInjector<ParticleGenerator, typename PscConfig::PushParticles>(
+      ParticleGenerator(1, 1), grid));
 
   // ----------------------------------------------------------------------
   // set up initial conditions
@@ -164,6 +156,7 @@ TEST(BoundaryInjectorTest, Integration1Particle)
 
   ASSERT_EQ(prts.size(), 0);
 
+  psc.pre_first_step();
   for (; grid.timestep_ < psc_params.nmax;) {
     psc.step();
 
@@ -200,18 +193,12 @@ TEST(BoundaryInjectorTest, IntegrationManyParticles)
   Collision collision{grid, 0, 0.1};
   Marder marder(grid, 0.9, 3, false);
 
-  OutputFields<MfieldsState, Mparticles, Dim> outf{grid, {}};
-  OutputParticles outp{grid, {}};
-  DiagEnergies oute{grid.comm(), 0};
-  auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
-
-  auto inject_particles =
-    BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>{
-      ParticleGenerator(-1, 1), grid};
-
   auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
-                                          balance, collision, checks, marder,
-                                          diagnostics, inject_particles);
+                                          balance, collision, checks, marder);
+
+  psc.add_injector(
+    new BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>(
+      ParticleGenerator(-1, 1), grid));
 
   // ----------------------------------------------------------------------
   // set up initial conditions
@@ -227,6 +214,7 @@ TEST(BoundaryInjectorTest, IntegrationManyParticles)
 
   ASSERT_EQ(prts.size(), 0);
 
+  psc.pre_first_step();
   for (; grid.timestep_ < psc_params.nmax;) {
     psc.step();
 
@@ -263,11 +251,6 @@ TEST(BoundaryInjectorTest, IntegrationManySpecies)
   Collision collision{grid, 0, 0.1};
   Marder marder(grid, 0.9, 3, false);
 
-  OutputFields<MfieldsState, Mparticles, Dim> outf{grid, {}};
-  OutputParticles outp{grid, {}};
-  DiagEnergies oute{grid.comm(), 0};
-  auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
-
   auto inject_electrons =
     BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>{
       ParticleGenerator(-1, 0), grid};
@@ -275,11 +258,11 @@ TEST(BoundaryInjectorTest, IntegrationManySpecies)
     BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>{
       ParticleGenerator(-1, 1), grid};
 
-  auto inject = make_composite(inject_electrons, inject_ions);
-
   auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
-                                          balance, collision, checks, marder,
-                                          diagnostics, inject);
+                                          balance, collision, checks, marder);
+
+  psc.add_injector(&inject_ions);
+  psc.add_injector(&inject_electrons);
 
   // ----------------------------------------------------------------------
   // set up initial conditions
@@ -295,6 +278,7 @@ TEST(BoundaryInjectorTest, IntegrationManySpecies)
 
   ASSERT_EQ(prts.size(), 0);
 
+  psc.pre_first_step();
   for (; grid.timestep_ < psc_params.nmax;) {
     psc.step();
 

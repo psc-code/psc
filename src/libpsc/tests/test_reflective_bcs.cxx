@@ -4,7 +4,6 @@
 #include <setup_fields.hxx>
 #include <setup_particles.hxx>
 
-#include "DiagnosticsDefault.h"
 #include "OutputFieldsDefault.h"
 #include "add_ghosts_reflecting.hxx"
 #include "../psc_config.hxx"

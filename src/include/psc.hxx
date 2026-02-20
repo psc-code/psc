@@ -8,6 +8,9 @@
 #include <setup_particles.hxx>
 
 #include "../libpsc/vpic/fields_item_vpic.hxx"
+#include "diagnostic_base.hxx"
+#include "injector_base.hxx"
+#include "external_current_base.hxx"
 #include <checks_params.hxx>
 #include <output_particles.hxx>
 #include <push_particles.hxx>
@@ -99,8 +102,7 @@ inline double courant_length(const Grid_t::Domain& domain)
 // ======================================================================
 // Psc
 
-template <typename PscConfig, typename Diagnostics, typename InjectParticles,
-          typename ExtCurrent>
+template <typename PscConfig>
 struct Psc
 {
   using Mparticles = typename PscConfig::Mparticles;
@@ -116,14 +118,17 @@ struct Psc
   using BndFields = typename PscConfig::BndFields;
   using BndParticles = typename PscConfig::BndParticles;
   using Dim = typename PscConfig::Dim;
+  using DiagnosticBaseT = DiagnosticBase<Mparticles, MfieldsState>;
+  using ParticleDiagnosticBaseT = ParticleDiagnosticBase<Mparticles>;
+  using InjectorBaseT = InjectorBase<Mparticles, MfieldsState>;
+  using ExternalCurrentBaseT = ExternalCurrentBase<MfieldsState>;
 
   // ----------------------------------------------------------------------
   // ctor
 
   Psc(const PscParams& params, Grid_t& grid, MfieldsState& mflds,
       Mparticles& mprts, Balance& balance, Collision& collision, Checks& checks,
-      Marder& marder, Diagnostics& diagnostics,
-      InjectParticles& inject_particles, ExtCurrent& ext_current)
+      Marder& marder)
     : p_{params},
       grid_{&grid},
       mflds_{mflds},
@@ -133,9 +138,6 @@ struct Psc
       checks_{checks},
       marder_{marder},
       bndp_{grid},
-      diagnostics_{diagnostics},
-      inject_particles_{inject_particles},
-      ext_current_{ext_current},
       checkpointing_{params.write_checkpoint_every_step}
   {
     time_start_ = MPI_Wtime();
@@ -156,7 +158,38 @@ struct Psc
 #endif
 
     initialize_stats();
-    initialize();
+  }
+
+  // ----------------------------------------------------------------------
+  // API for modifying various internal components
+  // TODO: improve ownership model: we should own these objects (i.e., use
+  // unique_ptr), but don't want to burden the user with C++ boilerplate.
+
+  void add_injector(InjectorBaseT* injector)
+  {
+    assert(injector);
+    injectors_.push_back(injector);
+  }
+
+  void add_external_current(ExternalCurrentBaseT* external_current)
+  {
+    assert(external_current);
+    external_currents_.push_back(external_current);
+  }
+
+  void add_diagnostic(DiagnosticBaseT* diagnostic)
+  {
+    assert(diagnostic);
+    diagnostics_.push_back(diagnostic);
+  }
+
+  void add_diagnostic(ParticleDiagnosticBaseT* diagnostic)
+  {
+    assert(diagnostic);
+    diagnostics_.push_back(new DiagnosticFromLambda<Mparticles, MfieldsState>(
+      [=](Mparticles& mprts, MfieldsState& mflds) {
+        return diagnostic->perform_diagnostic(mprts);
+      }));
   }
 
   // ----------------------------------------------------------------------
@@ -178,9 +211,9 @@ struct Psc
   }
 
   // ----------------------------------------------------------------------
-  // initialize
+  // pre_first_step
 
-  void initialize()
+  void pre_first_step()
   {
     bndf_.fill_ghosts_H(mflds_);
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
@@ -198,16 +231,6 @@ struct Psc
       mpi_printf(grid().comm(), "Checking gauss.\n");
       checks_.gauss(mprts_, mflds_);
     }
-
-    // initial output / stats
-    mpi_printf(grid().comm(), "Performing initial diagnostics.\n");
-    diagnostics();
-
-    psc_stats_val[st_nr_particles] = mprts_.size();
-
-    print_status();
-
-    mpi_printf(grid().comm(), "Initialization complete.\n");
   }
 
   // ----------------------------------------------------------------------
@@ -219,6 +242,18 @@ struct Psc
     if (!pr) {
       pr = prof_register("psc_step", 1., 0, 0);
     }
+
+    pre_first_step();
+
+    // initial output / stats
+    mpi_printf(grid().comm(), "Performing initial diagnostics.\n");
+    perform_diagnostics();
+
+    psc_stats_val[st_nr_particles] = mprts_.size();
+
+    print_status();
+
+    mpi_printf(grid().comm(), "Initialization complete.\n");
 
     mpi_printf(grid().comm(), "*** Advancing\n");
     double elapsed = MPI_Wtime();
@@ -240,7 +275,7 @@ struct Psc
 
       step();
 
-      diagnostics();
+      perform_diagnostics();
 
       psc_stats_stop(st_time_step);
       prof_stop(pr);
@@ -343,12 +378,16 @@ struct Psc
 
     // === particle injection
     prof_start(pr_inject_prts);
-    inject_particles_(mprts_, mflds_);
+    for (auto injector : injectors_) {
+      injector->inject(mprts_, mflds_);
+    }
     prof_stop(pr_inject_prts);
 
     // === external current
     prof_start(pr_external_current);
-    this->ext_current_(grid(), mflds_);
+    for (auto external_current : external_currents_) {
+      external_current->inject_current(mflds_);
+    }
     prof_stop(pr_external_current);
 
     mpi_printf(comm, "***** Bnd particles...\n");
@@ -454,9 +493,16 @@ private:
   }
 
   // ----------------------------------------------------------------------
-  // diagnostics
+  // perform_diagnostics
 
-  void diagnostics() { diagnostics_(mprts_, mflds_); }
+  void perform_diagnostics()
+  {
+    psc_stats_start(st_time_output);
+    for (auto diagnostic : diagnostics_) {
+      diagnostic->perform_diagnostic(mprts_, mflds_);
+    }
+    psc_stats_stop(st_time_output);
+  }
 
   // ----------------------------------------------------------------------
   // print_status
@@ -484,9 +530,9 @@ protected:
   Collision& collision_;
   Checks& checks_;
   Marder& marder_;
-  Diagnostics& diagnostics_;
-  InjectParticles& inject_particles_;
-  ExtCurrent& ext_current_;
+  std::vector<DiagnosticBaseT*> diagnostics_;
+  std::vector<InjectorBaseT*> injectors_;
+  std::vector<ExternalCurrentBaseT*> external_currents_;
 
   Sort sort_;
   PushParticles pushp_;
@@ -508,58 +554,17 @@ protected:
 };
 
 // ======================================================================
-// InjectParticlesNone
-
-class InjectParticlesNone
-{
-public:
-  template <typename Mparticles, typename MfieldsState>
-  void operator()(Mparticles& mprts, MfieldsState& mflds)
-  {}
-};
-
-namespace
-{
-
-InjectParticlesNone injectParticlesNone;
-
-} // namespace
-
-// ======================================================================
-// ExtCurrentNone
-
-class ExtCurrentNone
-{
-public:
-  template <typename MfieldsState>
-  void operator()(const Grid_t& grid, MfieldsState& mflds)
-  {}
-};
-
-namespace
-{
-
-ExtCurrentNone extCurrentNone;
-
-} // namespace
-// ======================================================================
 // makePscIntegrator
 
 template <typename PscConfig, typename MfieldsState, typename Mparticles,
           typename Balance, typename Collision, typename Checks,
-          typename Marder, typename Diagnostics,
-          typename InjectParticles = InjectParticlesNone,
-          typename ExtCurrent = ExtCurrentNone>
-Psc<PscConfig, Diagnostics, InjectParticles, ExtCurrent> makePscIntegrator(
-  const PscParams& params, Grid_t& grid, MfieldsState& mflds, Mparticles& mprts,
-  Balance& balance, Collision& collision, Checks& checks, Marder& marder,
-  Diagnostics& diagnostics,
-  InjectParticles& inject_particles = injectParticlesNone,
-  ExtCurrent& ext_current = extCurrentNone)
+          typename Marder>
+Psc<PscConfig> makePscIntegrator(const PscParams& params, Grid_t& grid,
+                                 MfieldsState& mflds, Mparticles& mprts,
+                                 Balance& balance, Collision& collision,
+                                 Checks& checks, Marder& marder)
 {
-  return {params,     grid,   mflds,  mprts,       balance,
-          collision,  checks, marder, diagnostics, inject_particles,
-          ext_current};
+  return {params, grid, mflds, mprts, balance, collision, checks, marder};
 }
 
 // ======================================================================
@@ -655,4 +660,4 @@ void vpic_create_diagnostics(int interval) {}
 // ----------------------------------------------------------------------
 // vpic_setup_diagnostics
 
-void vpic_setup_diagnostics() {}
+void vpic_setup_perform_diagnostics() {}

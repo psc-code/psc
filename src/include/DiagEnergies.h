@@ -3,23 +3,29 @@
 
 #include "DiagEnergiesField.h"
 #include "DiagEnergiesParticle.h"
+#include "diagnostic_base.hxx"
 
 #include "psc.h"
 
-class DiagEnergies
+template <typename Mparticles, typename MfieldsState>
+class DiagEnergies : public DiagnosticBase<Mparticles, MfieldsState>
 {
 public:
   DiagEnergies();
   DiagEnergies(MPI_Comm comm, int interval);
 
-  template <typename Mparticles, typename MfieldsState>
+  void perform_diagnostic(Mparticles& mprts, MfieldsState& mflds)
+  {
+    (*this)(mprts, mflds);
+  }
+
   void operator()(Mparticles& mprts, MfieldsState& mflds);
 
 private:
   template <typename Item>
   static std::string legend(const Item& item);
 
-  template <typename Item, typename Mparticles, typename MfieldsState>
+  template <typename Item>
   void write_one(const Item& item, Mparticles& mprts, MfieldsState& mflds);
 
 private:

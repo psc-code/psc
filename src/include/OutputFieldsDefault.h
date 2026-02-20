@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "diagnostic_base.hxx"
 #include "../libpsc/psc_output_fields/fields_item_fields.hxx"
 #include "../libpsc/psc_output_fields/fields_item_moments_1st.hxx"
 #ifdef USE_CUDA
@@ -242,7 +243,7 @@ struct OutputFieldsParams
 
 template <typename MfieldsState, typename Mparticles, typename Dim,
           typename Writer = WriterDefault>
-class OutputFields
+class OutputFields : public DiagnosticBase<Mparticles, MfieldsState>
 {
 public:
   // ----------------------------------------------------------------------
@@ -251,6 +252,11 @@ public:
   OutputFields(const Grid_t& grid, const OutputFieldsParams& prm)
     : fields{grid, prm.fields, ""}, moments{grid, prm.moments, "_moments"}
   {}
+
+  void perform_diagnostic(Mparticles& mprts, MfieldsState& mflds) override
+  {
+    (*this)(mflds, mprts);
+  }
 
   // ----------------------------------------------------------------------
   // operator()

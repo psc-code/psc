@@ -4,7 +4,6 @@
 #include <setup_fields.hxx>
 #include <setup_particles.hxx>
 
-#include "DiagnosticsDefault.h"
 #include "OutputFieldsDefault.h"
 #include "add_ghosts_reflecting.hxx"
 #include "../psc_config.hxx"
@@ -97,14 +96,8 @@ TEST(ReflectiveBcsTest, IntegrationY)
   Collision collision{grid, 0, 0.1};
   Marder marder(grid, 0.9, 3, false);
 
-  OutputFields<MfieldsState, Mparticles, Dim> outf{grid, {}};
-  OutputParticles outp{grid, {}};
-  DiagEnergies oute{grid.comm(), 0};
-  auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
-
-  auto psc =
-    makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts, balance,
-                                 collision, checks, marder, diagnostics);
+  auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
+                                          balance, collision, checks, marder);
 
   // ----------------------------------------------------------------------
   // set up initial conditions
@@ -141,6 +134,7 @@ TEST(ReflectiveBcsTest, IntegrationY)
   bool about_to_reflect = false;
   bool reflected = false;
 
+  psc.pre_first_step();
   for (; grid.timestep_ < psc_params.nmax;) {
     about_to_reflect =
       prts[0].x()[1] < grid.domain.dx[1] && prts[0].u()[1] < 0.0;
@@ -184,14 +178,8 @@ TEST(ReflectiveBcsTest, IntegrationZ)
   Collision collision{grid, 0, 0.1};
   Marder marder(grid, 0.9, 3, false);
 
-  OutputFields<MfieldsState, Mparticles, Dim> outf{grid, {}};
-  OutputParticles outp{grid, {}};
-  DiagEnergies oute{grid.comm(), 0};
-  auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
-
-  auto psc =
-    makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts, balance,
-                                 collision, checks, marder, diagnostics);
+  auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
+                                          balance, collision, checks, marder);
 
   // ----------------------------------------------------------------------
   // set up initial conditions
@@ -228,6 +216,7 @@ TEST(ReflectiveBcsTest, IntegrationZ)
   bool about_to_reflect = false;
   bool reflected = false;
 
+  psc.pre_first_step();
   for (; grid.timestep_ < psc_params.nmax;) {
     about_to_reflect =
       prts[0].x()[2] < grid.domain.dx[2] && prts[0].u()[2] < 0.0;

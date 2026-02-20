@@ -11,6 +11,7 @@
 #include "setup_particles.hxx"
 #include "kg/VecRange.hxx"
 #include "../libpsc/psc_push_particles/inc_push.cxx"
+#include "injector_base.hxx"
 
 /// @brief A particle generator for use with @ref BoundaryInjector. Samples
 /// particles from a (possibly shifted) Maxwellian distribution.
@@ -54,7 +55,7 @@ private:
 
 /// @brief Injects particles on a given boundary, sampling from a given particle
 /// generator. For precise control over multiple particle species, use one
-/// BoundaryInjector per species, combined with @ref CompositeInjector.
+/// BoundaryInjector per species.
 /// @tparam PARTICLE_GENERATOR a type that defines `get(min_pos, pos_range)` and
 /// returns an injectable particle within that range of positions (usually a
 /// grid cell); see @ref ParticleGeneratorMaxwellian
@@ -62,6 +63,8 @@ private:
 /// `MfieldsState`, `Current`, `real_t`, etc.
 template <typename PARTICLE_GENERATOR, typename PUSH_PARTICLES>
 class BoundaryInjector
+  : public InjectorBase<typename PUSH_PARTICLES::Mparticles,
+                        typename PUSH_PARTICLES::MfieldsState>
 {
   static const int INJECT_DIM_IDX_ = 1;
 
@@ -88,7 +91,7 @@ public:
   /// the given ParticleGenerator.
   ///
   /// Some of these limitations may be removed in the future.
-  void operator()(Mparticles& mprts, MfieldsState& mflds)
+  void inject(Mparticles& mprts, MfieldsState& mflds) override
   {
     static_assert(INJECT_DIM_IDX_ == 1,
                   "only injection at lower bound of y is supported");

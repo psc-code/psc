@@ -31,7 +31,9 @@
 
 #include "../libpsc/vpic/fields_item_vpic.hxx"
 
-using OutputParticlesDefault = OutputParticlesHdf5<ParticleSelectorAll>;
+template <typename Mparticles>
+using OutputParticlesDefault =
+  OutputParticlesHdf5<Mparticles, ParticleSelectorAll>;
 
 struct SimulationNone
 {
@@ -94,7 +96,7 @@ struct PscConfig_
   using Checks = Checks_<Mparticles, Mfields, checks_order, Dim>;
   using Marder = Marder_<typename Mfields::Storage, Dim>;
   using Simulation = _Simulation;
-  using OutputParticles = OutputParticlesDefault;
+  using OutputParticles = OutputParticlesDefault<Mparticles>;
 };
 
 #ifdef USE_CUDA
@@ -119,7 +121,7 @@ struct PscConfig_<_Dim, _Mparticles, _MfieldsState, _Mfields,
   using Balance = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Checks = ChecksCuda<Mparticles, Dim>;
   using Marder = MarderCuda<Dim>;
-  using OutputParticles = OutputParticlesDefault;
+  using OutputParticles = OutputParticlesDefault<Mparticles>;
 };
 
 template <typename _Mparticles, typename _MfieldsState, typename _Mfields>
@@ -143,7 +145,7 @@ struct PscConfig_<dim_xyz, _Mparticles, _MfieldsState, _Mfields,
   using Balance = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Checks = ChecksCuda<Mparticles, Dim>;
   using Marder = MarderCuda<Dim>;
-  using OutputParticles = OutputParticlesDefault;
+  using OutputParticles = OutputParticlesDefault<Mparticles>;
 };
 
 #endif

@@ -4,7 +4,6 @@
 #include <setup_fields.hxx>
 #include <setup_particles.hxx>
 
-#include "DiagnosticsDefault.h"
 #include "OutputFieldsDefault.h"
 #include "psc_config.hxx"
 
@@ -420,9 +419,7 @@ void run()
   OutputParticles outp{grid, outp_params};
 
   int oute_interval = -100;
-  DiagEnergies oute{grid.comm(), oute_interval};
-
-  auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
+  DiagEnergies<Mparticles, MfieldsState> oute{grid.comm(), oute_interval};
 
   // ----------------------------------------------------------------------
   // Set up objects specific to the Harris case
@@ -442,9 +439,12 @@ void run()
   // ----------------------------------------------------------------------
   // hand off to PscIntegrator to run the simulation
 
-  auto psc =
-    makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts, balance,
-                                 collision, checks, marder, diagnostics);
+  auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
+                                          balance, collision, checks, marder);
+
+  psc.add_diagnostic(&outf);
+  psc.add_diagnostic(&outp);
+  psc.add_diagnostic(&oute);
 
   MEM_STATS();
   psc.integrate();
