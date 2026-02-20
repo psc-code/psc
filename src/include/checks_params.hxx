@@ -7,6 +7,7 @@ struct CheckParams
   double err_threshold = 1e-13;     // maximum acceptable error
   bool print_max_err_always = true; // always print error, even if acceptable
   bool dump_always = false; // always dump compared fields, even if acceptable
+  bool exit_on_failure = false; // exit the program if check fails
 
   bool enabled() { return check_interval > 0; }
 

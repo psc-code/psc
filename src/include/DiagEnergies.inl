@@ -41,7 +41,7 @@ inline void DiagEnergies::operator()(Mparticles& mprts, MfieldsState& mflds)
 
   if (rank_ == 0) {
     assert(file_);
-    fprintf(file_.get(), "%g", grid.timestep() * grid.dt);
+    fprintf(file_.get(), "%g", grid.time());
   }
 
   write_one(ef_, mprts, mflds);

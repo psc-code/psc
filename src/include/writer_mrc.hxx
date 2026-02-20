@@ -29,13 +29,13 @@ public:
 
   void begin_step(const Grid_t& grid)
   {
-    mrc_io_open(io_.get(), "w", grid.timestep(), grid.timestep() * grid.dt);
+    mrc_io_open(io_.get(), "w", grid.timestep(), grid.time());
 
     // save some basic info about the run in the output file
     struct mrc_obj* obj = mrc_obj_create(mrc_io_comm(io_.get()));
     mrc_obj_set_name(obj, "psc");
     mrc_obj_dict_add_int(obj, "timestep", grid.timestep());
-    mrc_obj_dict_add_float(obj, "time", grid.timestep() * grid.dt);
+    mrc_obj_dict_add_float(obj, "time", grid.time());
     mrc_obj_dict_add_float(obj, "cc", grid.norm.cc);
     mrc_obj_dict_add_float(obj, "dt", grid.dt);
     mrc_obj_write(obj, io_.get());

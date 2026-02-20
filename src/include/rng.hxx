@@ -15,8 +15,8 @@ namespace rng
 namespace detail
 {
 using Generator = std::default_random_engine;
-using ProcessGeneratorPtr = std::shared_ptr<Generator>;
-ProcessGeneratorPtr process_generator;
+using GeneratorPtr = std::shared_ptr<Generator>;
+GeneratorPtr process_generator;
 
 int get_process_seed()
 {
@@ -25,12 +25,18 @@ int get_process_seed()
   return 10000 * (rank + 1);
 }
 
-ProcessGeneratorPtr get_process_generator()
+GeneratorPtr get_process_generator()
 {
   if (!process_generator) {
     process_generator = std::make_shared<Generator>(get_process_seed());
   }
   return process_generator;
+}
+
+GeneratorPtr get_constant_generator(int seed)
+{
+  // FIXME this doesn't need to be a shared pointer
+  return std::make_shared<Generator>(seed);
 }
 
 } // namespace detail
@@ -41,6 +47,10 @@ ProcessGeneratorPtr get_process_generator()
 template <typename Real>
 struct Uniform
 {
+  Uniform(Real min, Real max, int seed)
+    : dist(min, max), gen(detail::get_constant_generator(seed))
+  {}
+
   Uniform(Real min, Real max)
     : dist(min, max), gen(detail::get_process_generator())
   {}
@@ -50,7 +60,7 @@ struct Uniform
   Real get() { return dist(*gen); }
 
 private:
-  detail::ProcessGeneratorPtr gen;
+  detail::GeneratorPtr gen;
   std::uniform_real_distribution<Real> dist;
 };
 
@@ -60,9 +70,14 @@ private:
 template <typename Real>
 struct Normal
 {
+  Normal(Real mean, Real stdev, int seed)
+    : dist(mean, stdev), gen(detail::get_constant_generator(seed))
+  {}
+
   Normal(Real mean, Real stdev)
     : dist(mean, stdev), gen(detail::get_process_generator())
   {}
+
   Normal() : Normal(0, 1) {}
 
   Real get() { return dist(*gen); }
@@ -74,7 +89,7 @@ struct Normal
   }
 
 private:
-  detail::ProcessGeneratorPtr gen;
+  detail::GeneratorPtr gen;
   std::normal_distribution<Real> dist;
 };
 

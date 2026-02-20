@@ -1,9 +1,8 @@
-
-#ifndef GRID_DOMAIN_H
-#define GRID_DOMAIN_H
+#pragma once
 
 #include <mrc_common.h>
 #include <iostream>
+#include "../libpsc/vpic/psc_vpic_bits.h"
 
 namespace psc
 {
@@ -26,9 +25,23 @@ struct Domain
     : gdims(gdims), length(length), corner(corner), np(np)
   {
     for (int d = 0; d < 3; d++) {
-      assert(gdims[d] % np[d] == 0);
-      ldims[d] = gdims[d] / np[d];
+      if (gdims[d] <= 0) {
+        LOG_ERROR("dimension %d has non-positive number of cells (%d)\n", d,
+                  gdims[d]);
+      }
+
+      if (gdims[d] % np[d] != 0) {
+        LOG_ERROR("in dimension %d, number of patches (%d) doesn't divide "
+                  "number of cells (%d)\n",
+                  d, np[d], gdims[d]);
+      }
+
+      if (length[d] <= 0.0) {
+        LOG_ERROR("dimension %d has non-positive length (%f)\n", d, length[d]);
+      }
     }
+
+    ldims = gdims / np;
     dx = length / Real3(gdims);
   }
 
@@ -40,11 +53,17 @@ struct Domain
 
   bool isInvar(int d) const { return gdims[d] == 1; }
 
-  Int3 gdims;   ///< Number of grid-points in each dimension
-  Real3 length; ///< The physical size of the simulation-box
+  /// @brief Total number of grid cells in each dimension.
+  Int3 gdims;
+  /// @brief Side lengths of the domain, in physical units.
+  Real3 length;
+  /// @brief Location of lower-right corner of the domain, in physical units.
   Real3 corner;
-  Int3 np; ///< Number of patches in each dimension
+  /// @brief Number of patches in each dimension.
+  Int3 np;
+  /// @brief Number of grid cells per patch in each dimension.
   Int3 ldims;
+  /// @brief Side lengths of each grid cell, in physical units.
   Real3 dx;
 };
 
@@ -63,5 +82,3 @@ inline std::ostream& operator<<(std::ostream& os, const Domain<R>& domain)
 
 } // namespace grid
 } // namespace psc
-
-#endif

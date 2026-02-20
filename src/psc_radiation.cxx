@@ -150,16 +150,8 @@ Grid_t* setupGrid()
 
   mpi_printf(MPI_COMM_WORLD, "dt = %g\n", dt);
 
-  Int3 ibn = {2, 2, 2};
-  if (Dim::InvarX::value) {
-    ibn[0] = 0;
-  }
-  if (Dim::InvarY::value) {
-    ibn[1] = 0;
-  }
-  if (Dim::InvarZ::value) {
-    ibn[2] = 0;
-  }
+  int n_ghosts = 2;
+  Int3 ibn = n_ghosts * Dim::get_noninvariant_mask();
 
   return new Grid_t{domain, bc, kinds, norm, dt, -1, ibn};
 }
@@ -243,7 +235,7 @@ void run()
   Marder marder(grid, marder_diffusion, marder_loop, marder_dump);
 
   auto lf_ext_current = [&](const Grid_t& grid, MfieldsState& mflds) {
-    double time = grid.timestep() * grid.dt;
+    double time = grid.time();
     auto& gdims = grid.domain.gdims;
     for (int p = 0; p < mflds.n_patches(); ++p) {
       auto& patch = grid.patches[p];

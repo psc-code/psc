@@ -368,16 +368,8 @@ Grid_t* setupGrid()
 #ifdef VPIC
   Int3 ibn = {1, 1, 1};
 #else
-  Int3 ibn = {2, 2, 2};
-  if (Dim::InvarX::value) {
-    ibn[0] = 0;
-  }
-  if (Dim::InvarY::value) {
-    ibn[1] = 0;
-  }
-  if (Dim::InvarZ::value) {
-    ibn[2] = 0;
-  }
+  int n_ghosts = 2;
+  Int3 ibn = n_ghosts * Dim::get_noninvariant_mask();
 #endif
 
   auto grid_ptr = new Grid_t{domain, bc, kinds, norm, dt, -1, ibn};

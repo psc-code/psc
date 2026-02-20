@@ -50,13 +50,13 @@ public:
   template <typename FUNC>
   static void run(FUNC&& func)
   {
-    func("x", [](Particle& prt) { return &prt.x[0]; });
-    func("y", [](Particle& prt) { return &prt.x[1]; });
-    func("z", [](Particle& prt) { return &prt.x[2]; });
-    func("ux", [](Particle& prt) { return &prt.u[0]; });
-    func("uy", [](Particle& prt) { return &prt.u[1]; });
-    func("uz", [](Particle& prt) { return &prt.u[2]; });
-    func("kind", [](Particle& prt) { return &prt.kind; });
-    func("qni_wni", [](Particle& prt) { return &prt.qni_wni; });
+    func("x", [](auto& prt) { return &prt.x[0]; });
+    func("y", [](auto& prt) { return &prt.x[1]; });
+    func("z", [](auto& prt) { return &prt.x[2]; });
+    func("ux", [](auto& prt) { return &prt.u[0]; });
+    func("uy", [](auto& prt) { return &prt.u[1]; });
+    func("uz", [](auto& prt) { return &prt.u[2]; });
+    func("kind", [](auto& prt) { return &prt.kind; });
+    func("qni_wni", [](auto& prt) { return &prt.qni_wni; });
   }
 };

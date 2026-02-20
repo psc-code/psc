@@ -1,7 +1,9 @@
 #pragma once
 
 #include <cmath>
-#include "params_parser.hxx"
+
+#include "../include/input_params.hxx"
+
 #include "table.hxx"
 
 // ======================================================================
@@ -106,7 +108,7 @@ struct PscBgkParams
   double rel_box_size_3; // length of 3rd dimension in calculated units
   int n_patches_3;       // number of patches in 3rd dimension
 
-  void loadParams(ParsedParams parsedParams, Table& ic_table)
+  void loadParams(InputParams parsedParams, Table& ic_table)
   {
     box_size = parsedParams.getAndWarnOrDefault<double>("box_size", -1);
     rel_box_size = parsedParams.getOrDefault<double>("rel_box_size", 1);

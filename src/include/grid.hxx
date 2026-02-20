@@ -7,7 +7,7 @@
 #include "psc_bits.h"
 #include "mrc_domain.hxx"
 #include "grid/BC.h"
-#include "grid/Domain.h"
+#include "grid/domain.hxx"
 #include <mrc_ddc.h>
 
 #include <vector>
@@ -81,10 +81,6 @@ struct Grid_
     mpi_printf(MPI_COMM_WORLD, "::: dx      = %g %g %g\n", domain.dx[0], domain.dx[1], domain.dx[2]);
 #endif
 
-    assert(domain.dx[0] > 0.);
-    assert(domain.dx[1] > 0.);
-    assert(domain.dx[2] > 0.);
-
     for (auto off : mrc_domain_.offs()) {
       patches.push_back(Patch(
         off, Vec3<double>(off) * domain.dx + domain.corner,
@@ -122,6 +118,8 @@ struct Grid_
   }
 
   int timestep() const { return timestep_; }
+
+  real_t time() const { return timestep_ * dt; }
 
   template <typename FUNC>
   void Foreach_3d(int l, int r, FUNC F) const

@@ -5,8 +5,7 @@
 #include "DiagnosticsDefault.h"
 #include "OutputFieldsDefault.h"
 #include "psc_config.hxx"
-
-#include "psc_bgk_util/params_parser.hxx"
+#include "input_params.hxx"
 
 // ======================================================================
 // PSC configuration
@@ -87,7 +86,7 @@ void setupParameters(int argc, char** argv)
     exit(1);
   }
   std::string path_to_params(argv[1]);
-  ParsedParams parsedParams(path_to_params);
+  InputParams parsedParams(path_to_params);
 
   psc_params.stats_every = 1000;
   psc_params.cfl = parsedParams.getOrDefault<double>("cfl", .75);
@@ -175,16 +174,8 @@ Grid_t* setupGrid()
   double dt = psc_params.cfl * courant_length(domain);
   Grid_t::Normalization norm{norm_params};
 
-  Int3 ibn = {2, 2, 2};
-  if (Dim::InvarX::value) {
-    ibn[0] = 0;
-  }
-  if (Dim::InvarY::value) {
-    ibn[1] = 0;
-  }
-  if (Dim::InvarZ::value) {
-    ibn[2] = 0;
-  }
+  int n_ghosts = 2;
+  Int3 ibn = n_ghosts * Dim::get_noninvariant_mask();
 
   return new Grid_t{domain, bc, kinds, norm, dt, -1, ibn};
 }

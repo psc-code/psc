@@ -177,9 +177,12 @@ struct Psc
   {
     time_start_ = MPI_Wtime();
 
-    assert(grid.isInvar(0) == Dim::InvarX::value);
-    assert(grid.isInvar(1) == Dim::InvarY::value);
-    assert(grid.isInvar(2) == Dim::InvarZ::value);
+    for (int d = 0; d < 3; d++) {
+      if (grid.isInvar(d) != Dim::is_invar(d)) {
+        LOG_ERROR("dimension %d is%s invariant, but gdims[%d]=%d\n", d,
+                  Dim::is_invar(d) ? "" : " not", d, grid.domain.gdims[d]);
+      }
+    }
 
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
