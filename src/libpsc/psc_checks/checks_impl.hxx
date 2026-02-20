@@ -82,6 +82,7 @@ public:
     MPI_Allreduce(&local_err, &max_err, 1, MPI_DOUBLE, MPI_MAX, grid.comm());
 
     if (should_print_diffs(max_err)) {
+      mpi_printf(grid.comm(), "continuity: drho -- -dt*div j\n");
       psc::helper::print_diff(d_rho, -dt_divj, err_threshold);
     }
 
@@ -160,6 +161,7 @@ public:
       max_err = std::max(max_err, patch_err);
 
       if (should_print_diffs(patch_err)) {
+        mpi_printf(grid.comm(), "gauss: rho -- div E\n");
         psc::helper::print_diff(patch_rho, patch_dive, err_threshold);
       }
     }

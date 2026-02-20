@@ -4,7 +4,11 @@
 #include <algorithm>
 #include <functional>
 #include <type_traits>
+
+#include <mrc_profile.h>
+
 #include "centering.hxx"
+#include "particle.h"
 #include "rng.hxx"
 
 struct psc_particle_npt
@@ -23,9 +27,6 @@ struct psc_particle_np
   std::function<Double3()> p; ///< returns a random momentum
   psc::particle::Tag tag;
 };
-
-// ======================================================================
-// SetupParticles
 
 namespace
 {
@@ -92,6 +93,28 @@ private:
   std::function<void(int, Double3, int, Int3, psc_particle_np&)> func;
 };
 
+// ======================================================================
+// get_n_in_cell
+//
+// helper function for partition / particle setup
+
+template <typename real_t>
+int get_n_in_cell(real_t density, real_t prts_per_unit_density,
+                  bool fractional_n_particles_per_cell)
+{
+  static rng::Uniform<float> dist{0, 1};
+  if (density == 0.0) {
+    return 0;
+  }
+  if (fractional_n_particles_per_cell) {
+    return density * prts_per_unit_density + dist.get();
+  }
+  return std::max(1, int(density * prts_per_unit_density + .5));
+}
+
+// ======================================================================
+// SetupParticles
+
 template <typename MP>
 struct SetupParticles
 {
@@ -111,19 +134,11 @@ struct SetupParticles
 
   // ----------------------------------------------------------------------
   // get_n_in_cell
-  //
-  // helper function for partition / particle setup
 
-  int get_n_in_cell(const psc_particle_np& np)
+  int get_n_in_cell(real_t density)
   {
-    static rng::Uniform<float> dist{0, 1};
-    if (np.n == 0) {
-      return 0;
-    }
-    if (fractional_n_particles_per_cell) {
-      return np.n / norm_.cori + dist.get();
-    }
-    return std::max(1, int(np.n / norm_.cori + .5));
+    return ::get_n_in_cell(density, real_t(norm_.prts_per_unit_density),
+                           fractional_n_particles_per_cell);
   }
 
   // ----------------------------------------------------------------------
@@ -161,7 +176,7 @@ struct SetupParticles
 
             int n_in_cell;
             if (pop != neutralizing_population) {
-              n_in_cell = get_n_in_cell(np);
+              n_in_cell = get_n_in_cell(np.n);
               n_q_in_cell += kinds_[np.kind].q * n_in_cell;
             } else {
               // FIXME, should handle the case where not the last population
@@ -180,9 +195,9 @@ struct SetupParticles
   // setupParticle
 
   psc::particle::Inject setupParticle(const psc_particle_np& np, Double3 pos,
-                                      double wni)
+                                      double weight)
   {
-    return psc::particle::Inject{pos, np.p(), wni, np.kind, np.tag};
+    return psc::particle::Inject{pos, np.p(), weight, np.kind, np.tag};
   }
 
   // ----------------------------------------------------------------------
@@ -244,12 +259,12 @@ struct SetupParticles
   // ----------------------------------------------------------------------
   // getWeight
 
-  real_t getWeight(const psc_particle_np& np, int n_in_cell)
+  real_t getWeight(real_t density, int n_in_cell)
   {
     if (fractional_n_particles_per_cell) {
       return 1.;
     } else {
-      return np.n / (n_in_cell * norm_.cori);
+      return density * norm_.prts_per_unit_density / n_in_cell;
     }
   }
 
@@ -281,8 +296,8 @@ struct SetupParticles
       op_cellwise(grid, p, init_np,
                   [&](int n_in_cell, psc_particle_np& np, Double3& pos) {
                     for (int cnt = 0; cnt < n_in_cell; cnt++) {
-                      real_t wni = getWeight(np, n_in_cell);
-                      auto prt = setupParticle(np, pos, wni);
+                      real_t weight = getWeight(np.n, n_in_cell);
+                      auto prt = setupParticle(np, pos, weight);
                       injector(prt);
                     }
                   });

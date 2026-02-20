@@ -472,7 +472,8 @@ struct BndFields_ : BndFieldsBase
     const int* ldims = mflds.grid().ldims;
     Int3 ib = mflds.ib(), im = mflds.im();
 
-    assert(0);
+    // TODO
+    // assert(0);
 #if 0
 
     if (d == 1) {
@@ -554,7 +555,8 @@ struct BndFields_ : BndFieldsBase
     const int* ldims = mflds.grid().ldims;
     Int3 ib = mflds.ib(), im = mflds.im();
 
-    assert(0);
+    // TODO
+    // assert(0);
 #if 0
     if (d == 1) {
       int my _mrc_unused = ldims[1];
