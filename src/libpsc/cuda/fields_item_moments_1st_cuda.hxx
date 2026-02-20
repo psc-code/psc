@@ -17,6 +17,7 @@ class moment_rho_1st_nc_cuda
 {
 public:
   using dim_t = D;
+  static const centering::Centering CENTERING = centering::NC;
 
   static std::string name() { return "rho_1st_nc"; }
   static std::vector<std::string> comp_names(const Grid_t::Kinds& kinds)
@@ -42,6 +43,7 @@ class moment_n_1st_cc_cuda
 {
 public:
   using dim_t = D;
+  static const centering::Centering CENTERING = centering::CC;
 
   static std::string name() { return "n_1st_cc"; }
   static std::vector<std::string> comp_names(const Grid_t::Kinds& kinds)
@@ -67,6 +69,7 @@ class moments_1st_cc_cuda
 {
 public:
   using dim_t = D;
+  static const centering::Centering CENTERING = centering::CC;
 
   static std::string name() { return "all_1st_cc"; }
   static std::vector<std::string> comp_names(const Grid_t::Kinds& kinds)
