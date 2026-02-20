@@ -3,6 +3,7 @@
 
 #include "test_common.hxx"
 
+#include "psc.h"
 #include "psc_particles_double.h"
 #include "psc_particles_single.h"
 #include "particle_with_id.h"
