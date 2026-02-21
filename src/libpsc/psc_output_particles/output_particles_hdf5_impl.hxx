@@ -612,7 +612,6 @@ struct OutputParticlesHdf5
   void operator()(Mparticles& mprts, OutputParticlesWriterHDF5& writer)
   {
     const Grid_t& grid = mprts.grid();
-    herr_t ierr;
 
     static int pr_A, pr_B, pr_C;
     if (!pr_A) {
