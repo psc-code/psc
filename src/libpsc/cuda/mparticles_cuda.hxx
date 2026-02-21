@@ -46,6 +46,7 @@ struct MparticlesCuda : MparticlesBase
   }
 
   int size() const override { return cmprts_->size(); }
+  int size(int p) const { return cmprts_->sizeByPatch()[p]; }
 
   std::vector<uint> sizeByPatch() const override
   {
