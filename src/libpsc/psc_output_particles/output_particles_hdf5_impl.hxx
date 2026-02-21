@@ -786,7 +786,8 @@ public:
 
   void perform_diagnostic(Mparticles& mprts) override { (*this)(mprts); }
 
-  void operator()(Mparticles& mprts)
+  template <typename _Mparticles>
+  void operator()(_Mparticles& mprts)
   {
     const auto& grid = mprts.grid();
 
@@ -794,8 +795,8 @@ public:
       return;
     }
 
-    detail::OutputParticlesHdf5<Mparticles, ParticleSelector> impl{grid,
-                                                                   params_};
+    detail::OutputParticlesHdf5<_Mparticles, ParticleSelector> impl{grid,
+                                                                    params_};
     impl(mprts, writer_);
   }
 
