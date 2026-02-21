@@ -3,10 +3,8 @@
 #include "test_common.hxx"
 
 #include "boundary_injector.hxx"
-#include "composite_injector.hxx"
 
 #include "psc.hxx"
-#include "DiagnosticsDefault.h"
 #include "OutputFieldsDefault.h"
 #include "../psc_config.hxx"
 
@@ -45,10 +43,10 @@ using OutputParticles = PscConfig::OutputParticles;
 
 Grid_t* setupGrid()
 {
-  auto domain = Grid_t::Domain{{1, 8, 2},          // n grid points
-                               {10.0, 80.0, 20.0}, // physical lengths
-                               {0, 0, 0},          // location of lower corner
-                               {1, 1, 1}};         // n patches
+  auto domain = Grid_t::Domain{{1, 8, 2},  // n grid points
+                               {1, 8, 2},  // physical lengths
+                               {0, 0, 0},  // location of lower corner
+                               {1, 1, 1}}; // n patches
 
   auto bc =
     // FIXME wrong BCs
@@ -63,9 +61,9 @@ Grid_t* setupGrid()
 
   // --- generic setup
   auto norm_params = Grid_t::NormalizationParams::dimensionless();
-  norm_params.nicell = 2;
+  norm_params.nicell = 1;
 
-  double dt = .1;
+  double dt = 1;
   Grid_t::Normalization norm{norm_params};
 
   int n_ghosts = 2;
@@ -92,6 +90,12 @@ struct ParticleGenerator
       uy = 0.0;
     }
 
+    // FIXME #948112531345 (also see the other FIXMEs with this id)
+    // If x[2] != 0, the injected particle deposits some
+    // current in the cells above its path. If one of those cells is in a ghost
+    // corner, the current deposited in that cell IS NOT sent across patches.
+    // That current is necessary to compute div E correctly. The run itself
+    // should be fine; it only throws off the gauss check.
     Real3 x = min_pos + pos_range * Real3{0, .999, 0.};
     Real3 u{0.0, uy, 0.0};
     Real w = 1.0;
@@ -112,7 +116,7 @@ TEST(BoundaryInjectorTest, Integration1Particle)
 
   PscParams psc_params;
 
-  psc_params.nmax = 1;
+  psc_params.nmax = 2;
   psc_params.stats_every = 1;
   psc_params.cfl = .75;
 
@@ -131,18 +135,12 @@ TEST(BoundaryInjectorTest, Integration1Particle)
   Collision collision{grid, 0, 0.1};
   Marder marder(grid, 0.9, 3, false);
 
-  OutputFields<MfieldsState, Mparticles, Dim> outf{grid, {}};
-  OutputParticles outp{grid, {}};
-  DiagEnergies oute{grid.comm(), 0};
-  auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
-
-  auto inject_particles =
-    BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>{
-      ParticleGenerator(1, 1), grid};
-
   auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
-                                          balance, collision, checks, marder,
-                                          diagnostics, inject_particles);
+                                          balance, collision, checks, marder);
+
+  psc.add_injector(
+    new BoundaryInjector<ParticleGenerator, typename PscConfig::PushParticles>(
+      ParticleGenerator(1, 1), grid));
 
   // ----------------------------------------------------------------------
   // set up initial conditions
@@ -158,11 +156,12 @@ TEST(BoundaryInjectorTest, Integration1Particle)
 
   ASSERT_EQ(prts.size(), 0);
 
-  for (; grid.timestep_ < psc_params.nmax; grid.timestep_++) {
+  psc.pre_first_step();
+  for (; grid.timestep_ < psc_params.nmax;) {
     psc.step();
 
-    EXPECT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
-    EXPECT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
+    ASSERT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
+    ASSERT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
   }
 
   ASSERT_EQ(prts.size(), 1);
@@ -175,7 +174,7 @@ TEST(BoundaryInjectorTest, IntegrationManyParticles)
 
   PscParams psc_params;
 
-  psc_params.nmax = 1;
+  psc_params.nmax = 2;
   psc_params.stats_every = 1;
   psc_params.cfl = .75;
 
@@ -194,18 +193,12 @@ TEST(BoundaryInjectorTest, IntegrationManyParticles)
   Collision collision{grid, 0, 0.1};
   Marder marder(grid, 0.9, 3, false);
 
-  OutputFields<MfieldsState, Mparticles, Dim> outf{grid, {}};
-  OutputParticles outp{grid, {}};
-  DiagEnergies oute{grid.comm(), 0};
-  auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
-
-  auto inject_particles =
-    BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>{
-      ParticleGenerator(-1, 1), grid};
-
   auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
-                                          balance, collision, checks, marder,
-                                          diagnostics, inject_particles);
+                                          balance, collision, checks, marder);
+
+  psc.add_injector(
+    new BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>(
+      ParticleGenerator(-1, 1), grid));
 
   // ----------------------------------------------------------------------
   // set up initial conditions
@@ -221,11 +214,12 @@ TEST(BoundaryInjectorTest, IntegrationManyParticles)
 
   ASSERT_EQ(prts.size(), 0);
 
-  for (; grid.timestep_ < psc_params.nmax; grid.timestep_++) {
+  psc.pre_first_step();
+  for (; grid.timestep_ < psc_params.nmax;) {
     psc.step();
 
-    EXPECT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
-    EXPECT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
+    ASSERT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
+    ASSERT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
   }
 
   ASSERT_GT(prts.size(), 1);
@@ -238,7 +232,7 @@ TEST(BoundaryInjectorTest, IntegrationManySpecies)
 
   PscParams psc_params;
 
-  psc_params.nmax = 1;
+  psc_params.nmax = 2;
   psc_params.stats_every = 1;
   psc_params.cfl = .75;
 
@@ -257,11 +251,6 @@ TEST(BoundaryInjectorTest, IntegrationManySpecies)
   Collision collision{grid, 0, 0.1};
   Marder marder(grid, 0.9, 3, false);
 
-  OutputFields<MfieldsState, Mparticles, Dim> outf{grid, {}};
-  OutputParticles outp{grid, {}};
-  DiagEnergies oute{grid.comm(), 0};
-  auto diagnostics = makeDiagnosticsDefault(outf, outp, oute);
-
   auto inject_electrons =
     BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>{
       ParticleGenerator(-1, 0), grid};
@@ -269,11 +258,11 @@ TEST(BoundaryInjectorTest, IntegrationManySpecies)
     BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>{
       ParticleGenerator(-1, 1), grid};
 
-  auto inject = make_composite(inject_electrons, inject_ions);
-
   auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
-                                          balance, collision, checks, marder,
-                                          diagnostics, inject);
+                                          balance, collision, checks, marder);
+
+  psc.add_injector(&inject_ions);
+  psc.add_injector(&inject_electrons);
 
   // ----------------------------------------------------------------------
   // set up initial conditions
@@ -289,11 +278,12 @@ TEST(BoundaryInjectorTest, IntegrationManySpecies)
 
   ASSERT_EQ(prts.size(), 0);
 
-  for (; grid.timestep_ < psc_params.nmax; grid.timestep_++) {
+  psc.pre_first_step();
+  for (; grid.timestep_ < psc_params.nmax;) {
     psc.step();
 
-    EXPECT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
-    EXPECT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
+    ASSERT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
+    ASSERT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
   }
 
   bool found_electrons = false;

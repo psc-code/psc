@@ -1,18 +1,21 @@
-
+#include "diagnostic_base.hxx"
 #include "output_particles.hxx"
 
+template <typename Mparticles>
 struct OutputParticlesAscii
   : OutputParticlesParams
   , OutputParticlesBase
+  , public ParticleDiagnosticBase<Mparticles>
 {
   OutputParticlesAscii(const Grid_t& grid, const OutputParticlesParams& params)
     : OutputParticlesParams(params), comm_{grid.comm()}
   {}
 
+  void perform_diagnostic(Mparticles& mprts) override { (*this)(mprts); }
+
   // ----------------------------------------------------------------------
   // operator()
 
-  template <typename Mparticles>
   void operator()(Mparticles& mprts)
   {
     const auto& grid = mprts.grid();

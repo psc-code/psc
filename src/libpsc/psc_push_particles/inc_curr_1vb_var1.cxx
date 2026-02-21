@@ -19,8 +19,7 @@ struct Current1vbVar1
   using real_t = typename fields_t::real_t;
   using Real3 = Vec3<real_t>;
 
-  Current1vbVar1(const Grid_t& grid)
-    : dt_(grid.dt), dxi_{Real3{1., 1., 1.} / Real3(grid.domain.dx)}
+  Current1vbVar1(const Grid_t& grid) : dt_(grid.dt), dxi_{grid.domain.dx_inv}
   {
     fnqxs_ = grid.domain.dx[0] * grid.norm.fnqs / grid.dt;
     fnqys_ = grid.domain.dx[1] * grid.norm.fnqs / grid.dt;

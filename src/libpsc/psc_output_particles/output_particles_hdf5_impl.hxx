@@ -8,6 +8,7 @@
 
 #include "grid.hxx"
 #include "output_particles.hxx"
+#include "diagnostic_base.hxx"
 
 #include "psc_particles_single.h"
 #include "../libpsc/vpic/mparticles_vpic.hxx"
@@ -758,8 +759,10 @@ private:
 
 } // namespace detail
 
-template <typename ParticleSelector = ParticleSelectorAll>
-class OutputParticlesHdf5 : OutputParticlesBase
+template <typename Mparticles, typename ParticleSelector = ParticleSelectorAll>
+class OutputParticlesHdf5
+  : OutputParticlesBase
+  , public ParticleDiagnosticBase<Mparticles>
 {
   static OutputParticlesParams adjust_params(
     const OutputParticlesParams& params_in, const Grid_t& grid)
@@ -781,7 +784,8 @@ public:
       writer_{params_, grid.kinds, grid.comm()}
   {}
 
-  template <typename Mparticles>
+  void perform_diagnostic(Mparticles& mprts) override { (*this)(mprts); }
+
   void operator()(Mparticles& mprts)
   {
     const auto& grid = mprts.grid();

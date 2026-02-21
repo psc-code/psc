@@ -61,14 +61,14 @@ inline void correct(const Grid_t& grid, E1& efield, const Int3& efield_ib,
                     typename E1::value_type diffusion)
 {
   using real_t = gt::expr_value_type<E1>;
-  using real3_t = gt::sarray<real_t, 3>;
+  using Real3 = Vec3<real_t>;
 
   assert(efield_ib == -grid.ibn);
   assert(mf_ib == -grid.ibn);
 
-  real3_t fac = {.5f * grid.dt * diffusion / grid.domain.dx[0],
-                 .5f * grid.dt * diffusion / grid.domain.dx[1],
-                 .5f * grid.dt * diffusion / grid.domain.dx[2]};
+  Real3 fac = {.5f * grid.dt * diffusion / grid.domain.dx[0],
+               .5f * grid.dt * diffusion / grid.domain.dx[1],
+               .5f * grid.dt * diffusion / grid.domain.dx[2]};
 
   for (int p = 0; p < grid.n_patches(); p++) {
     Int3 lx, rx, ly, ry, lz, rz;

@@ -1,6 +1,10 @@
 
 #pragma once
 
+// T. Umeda, Y. Omura, T. Tominaga, and H. Matsumoto, "A new charge conservation
+// method in electromagnetic particle-in-cell simulations", Computer Physics
+// Communications 156 (2003) 73
+
 // ======================================================================
 
 template <typename Order, typename Dim, typename _fields_t>
@@ -15,7 +19,7 @@ struct CurrentZigzag
 
   CurrentZigzag(const Grid_t& grid)
     : dt_(grid.dt),
-      dxi_{Real3{1., 1., 1.} / Real3(grid.domain.dx)},
+      dxi_{grid.domain.dx_inv},
       deposition_(real_t(grid.norm.fnqs / grid.dt) * Real3(grid.domain.dx))
   {}
 

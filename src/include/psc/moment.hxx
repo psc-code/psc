@@ -18,11 +18,11 @@ struct DepositParticlesContext
   using storage_type = S;
   using dim_t = D;
   using real_t = typename storage_type::value_type;
-  using real3_t = gt::sarray<real_t, 3>;
+  using Real3 = Vec3<real_t>;
   using Deposit = DepositCode<real_t, dim_t>;
 
   DepositParticlesContext(storage_type& mflds_gt, const Int3& ib,
-                          const real3_t& dx, real_t fnqs)
+                          const Real3& dx, real_t fnqs)
     : mflds_gt{mflds_gt}, ib{ib}, deposit{dx, fnqs}
   {}
 
@@ -35,7 +35,7 @@ struct DepositParticlesContext
   Int3 ib;
   Deposit deposit;
   int p;
-  real3_t x;
+  Real3 x;
 };
 
 template <typename S, typename D,
@@ -46,11 +46,11 @@ public:
   using storage_type = S;
   using dim_t = D;
   using real_t = typename storage_type::value_type;
-  using real3_t = gt::sarray<real_t, 3>;
+  using Real3 = Vec3<real_t>;
   using DepositCtx = DepositParticlesContext<storage_type, dim_t, DepositCode>;
 
   template <typename Mparticles, typename F>
-  void operator()(const real3_t& dx, real_t fnqs, storage_type& mflds_gt,
+  void operator()(const Real3& dx, real_t fnqs, storage_type& mflds_gt,
                   const Int3& ib, const Mparticles& mprts, F&& func)
   {
     auto accessor = mprts.accessor();
@@ -70,10 +70,10 @@ template <template <typename, typename> class DepositCode, typename D,
 void deposit(MF& mflds_gt, const Int3& ib, const MP& mprts, F&& func)
 {
   using real_t = typename MF::value_type;
-  using real3_t = gt::sarray<real_t, 3>;
+  using Real3 = Vec3<real_t>;
 
   const auto& domain = mprts.grid().domain;
-  real3_t dx = {domain.dx[0], domain.dx[1], domain.dx[2]};
+  Real3 dx = {domain.dx[0], domain.dx[1], domain.dx[2]};
   real_t fnqs = mprts.grid().norm.fnqs;
   DepositParticles<MF, D, DepositCode> deposit;
   deposit(dx, fnqs, mflds_gt, ib, mprts, std::forward<F>(func));

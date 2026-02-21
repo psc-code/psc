@@ -26,13 +26,13 @@ class Deposit1st
 {
 public:
   using real_t = R;
-  using real3_t = gt::sarray<R, 3>;
+  using Real3 = Vec3<real_t>;
   using dim_t = D;
 
 private:
   template <typename F>
-  void operator()(F& flds, const gt::sarray<int, 3>& l, const real3_t& h,
-                  real_t val, dim_yz tag)
+  void operator()(F& flds, const Int3& l, const Real3& h, real_t val,
+                  dim_yz tag)
   {
     flds(0, l[1] + 0, l[2] + 0) += val * (1.f - h[1]) * (1.f - h[2]);
     flds(0, l[1] + 1, l[2] + 0) += val * h[1] * (1.f - h[2]);
@@ -41,8 +41,8 @@ private:
   }
 
   template <typename F>
-  void operator()(F& flds, const gt::sarray<int, 3>& l, const real3_t& h,
-                  real_t val, dim_xyz tag)
+  void operator()(F& flds, const Int3& l, const Real3& h, real_t val,
+                  dim_xyz tag)
   {
     // clang-format off
     flds(l[0] + 0, l[1] + 0, l[2] + 0) += val * (1.f - h[0]) * (1.f - h[1]) * (1.f - h[2]);
@@ -58,8 +58,7 @@ private:
 
 public:
   template <typename F>
-  void operator()(F& flds, const gt::sarray<int, 3>& l, const real3_t& h,
-                  real_t val)
+  void operator()(F& flds, const Int3& l, const Real3& h, real_t val)
   {
     (*this)(flds, l, h, val, dim_t{});
   }
@@ -76,13 +75,13 @@ class Deposit2nd
 {
 public:
   using real_t = R;
-  using real3_t = gt::sarray<R, 3>;
+  using Real3 = Vec3<R>;
   using dim_t = D;
 
 private:
   template <typename F>
-  void operator()(F& flds, const gt::sarray<int, 3>& l, const real3_t& h,
-                  real_t val, dim_yz tag)
+  void operator()(F& flds, const Int3& l, const Real3& h, real_t val,
+                  dim_yz tag)
   {
     real_t gmy = .5f * (.5f + h[1]) * (.5f + h[1]);
     real_t gmz = .5f * (.5f + h[2]) * (.5f + h[2]);
@@ -105,8 +104,8 @@ private:
   }
 
   template <typename F>
-  void operator()(F& flds, const gt::sarray<int, 3>& l, const real3_t& h,
-                  real_t val, dim_xyz tag)
+  void operator()(F& flds, const Int3& l, const Real3& h, real_t val,
+                  dim_xyz tag)
   {
     real_t gmx = .5f * (.5f + h[0]) * (.5f + h[0]);
     real_t gmy = .5f * (.5f + h[1]) * (.5f + h[1]);
@@ -151,8 +150,7 @@ private:
 
 public:
   template <typename F>
-  void operator()(F& flds, const gt::sarray<int, 3>& l, const real3_t& h,
-                  real_t val)
+  void operator()(F& flds, const Int3& l, const Real3& h, real_t val)
   {
     (*this)(flds, l, h, val, dim_t{});
   }
@@ -178,12 +176,10 @@ public:
   static std::string suffix() { return "_1st_nc"; }
 
   template <typename F>
-  void operator()(F& flds, const gt::sarray<int, 3>& ib,
-                  const gt::sarray<T, 3>& x, T val)
-
+  void operator()(F& flds, const Int3& ib, const Vec3<T>& x, T val)
   {
-    gt::sarray<int, 3> l;
-    gt::sarray<T, 3> h;
+    Int3 l;
+    Vec3<T> h;
     for (int d = 0; d < 3; d++) {
       l[d] = fint(x[d]);
       h[d] = x[d] - l[d];
@@ -201,12 +197,10 @@ public:
   static std::string suffix() { return "_1st_cc"; }
 
   template <typename F>
-  void operator()(F& flds, const gt::sarray<int, 3>& ib,
-                  const gt::sarray<T, 3>& x, T val)
-
+  void operator()(F& flds, const Int3& ib, const Vec3<T>& x, T val)
   {
-    gt::sarray<int, 3> l;
-    gt::sarray<T, 3> h;
+    Int3 l;
+    Vec3<T> h;
     for (int d = 0; d < 3; d++) {
       l[d] = fint(x[d] - .5f);
       h[d] = x[d] - .5f - l[d];
@@ -228,12 +222,10 @@ public:
   static std::string suffix() { return "_2nd_nc"; }
 
   template <typename F>
-  void operator()(F& flds, const gt::sarray<int, 3>& ib,
-                  const gt::sarray<T, 3>& x, T val)
-
+  void operator()(F& flds, const Int3& ib, const Vec3<T>& x, T val)
   {
-    gt::sarray<int, 3> l;
-    gt::sarray<T, 3> h;
+    Int3 l;
+    Vec3<T> h;
     for (int d = 0; d < 3; d++) {
       l[d] = nint(x[d]);
       h[d] = l[d] - x[d]; // negated!
@@ -245,14 +237,14 @@ public:
 };
 
 template <typename D, typename F, typename T>
-void nc(F& flds, const gt::sarray<int, 3>& ib, const gt::sarray<T, 3>& x, T val)
+void nc(F& flds, const Int3& ib, const Vec3<T>& x, T val)
 {
   Deposit1stNc<T, D> deposit;
   deposit(flds, ib, x, val);
 }
 
 template <typename D, typename F, typename T>
-void cc(F& flds, const gt::sarray<int, 3>& ib, const gt::sarray<T, 3>& x, T val)
+void cc(F& flds, const Int3& ib, const Vec3<T>& x, T val)
 {
   Deposit1stCc<T, D> deposit;
   deposit(flds, ib, x, val);
@@ -276,27 +268,25 @@ class Deposit
 public:
   using real_t = R;
   using dim_t = D;
-  using real3_t = gt::sarray<real_t, 3>;
+  using Real3 = Vec3<real_t>;
   using DepositNorm = DEPOSIT_NORM<real_t, dim_t>;
   static const centering::Centering CENTERING = DepositNorm::CENTERING;
 
   static std::string suffix() { return DepositNorm::suffix(); }
 
-  Deposit(const real3_t& dx, real_t fnqs) : dxi_{real_t(1.) / dx}, fnqs_{fnqs}
-  {}
+  Deposit(const Real3& dx, real_t fnqs) : dxi_{real_t(1.) / dx}, fnqs_{fnqs} {}
 
   template <typename F>
-  void operator()(const F& flds, const gt::shape_type<3>& ib, const real3_t& xi,
-                  real_t val)
+  void operator()(const F& flds, const Int3& ib, const Real3& xi, real_t val)
   {
-    real3_t x = xi * dxi_;
+    Real3 x = xi * dxi_;
     real_t value = fnqs_ * val;
 
     DepositNorm deposit;
     deposit(flds, ib, x, value);
   }
 
-  real3_t dxi_;
+  Real3 dxi_;
   real_t fnqs_;
 };
 

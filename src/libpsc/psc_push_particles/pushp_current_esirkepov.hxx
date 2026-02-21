@@ -1,6 +1,10 @@
 
 #pragma once
 
+// T. Zh. Esirkepov, "Exact charge conservation scheme for particle-in-cell
+// simulation with an arbitrary form-factor", Computer Physics Communications
+// 135 (2001) 144
+
 #include "inc_defs.h"
 #include "interpolate.hxx"
 
@@ -173,7 +177,7 @@ struct CurrentEsirkepov
   using fields_t = Fields;
 
   CurrentEsirkepov(const Grid_t& grid)
-    : dxi_{Real3{1., 1., 1.} / Real3(grid.domain.dx)}, fnqs_(grid.norm.fnqs)
+    : dxi_{grid.domain.dx_inv}, fnqs_(grid.norm.fnqs)
   {
     fnqxs_ = grid.domain.dx[0] * fnqs_ / grid.dt;
     fnqys_ = grid.domain.dx[1] * fnqs_ / grid.dt;

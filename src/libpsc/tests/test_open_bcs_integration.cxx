@@ -47,11 +47,10 @@ Grid_t* setupGrid()
                                {0, 0, 0},          // location of lower corner
                                {1, 1, 1}};         // n patches
 
-  auto bc = psc::grid::BC{
-    {BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL, BND_FLD_CONDUCTING_WALL},
-    {BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL, BND_FLD_CONDUCTING_WALL},
-    {BND_PRT_PERIODIC, BND_PRT_REFLECTING, BND_PRT_REFLECTING},
-    {BND_PRT_PERIODIC, BND_PRT_REFLECTING, BND_PRT_REFLECTING}};
+  auto bc = psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_OPEN, BND_FLD_OPEN},
+                          {BND_FLD_PERIODIC, BND_FLD_OPEN, BND_FLD_OPEN},
+                          {BND_PRT_PERIODIC, BND_PRT_OPEN, BND_PRT_OPEN},
+                          {BND_PRT_PERIODIC, BND_PRT_OPEN, BND_PRT_OPEN}};
 
   auto kinds = Grid_t::Kinds(NR_KINDS);
   kinds[KIND_ELECTRON] = {-1.0, 1.0, "e"};
@@ -64,16 +63,27 @@ Grid_t* setupGrid()
   double dt = psc_params.cfl * courant_length(domain);
   Grid_t::Normalization norm{norm_params};
 
-  int n_ghosts = 2;
-  Int3 ibn = n_ghosts * Dim::get_noninvariant_mask();
+  Int3 ibn = {2, 2, 2};
+  if (Dim::InvarX::value) {
+    ibn[0] = 0;
+  }
+  if (Dim::InvarY::value) {
+    ibn[1] = 0;
+  }
+  if (Dim::InvarZ::value) {
+    ibn[2] = 0;
+  }
 
   return new Grid_t{domain, bc, kinds, norm, dt, -1, ibn};
 }
 
 // ======================================================================
-// Integration test (pun not intended)
+// Start with 2 particles, send them flying off towards the boundary, and demand
+// that:
+// a) they get dropped
+// b) there are no continuity or gauss errors in the fields
 
-TEST(ReflectiveBcsTest, IntegrationY)
+TEST(OpenBcsTest, IntegrationY)
 {
   // ----------------------------------------------------------------------
   // setup
@@ -131,110 +141,14 @@ TEST(ReflectiveBcsTest, IntegrationY)
   ASSERT_EQ(prts[0].q(), -1.0);
   ASSERT_EQ(prts[1].q(), 1.0);
 
-  bool about_to_reflect = false;
-  bool reflected = false;
-
   psc.pre_first_step();
   for (; grid.timestep_ < psc_params.nmax;) {
-    about_to_reflect =
-      prts[0].x()[1] < grid.domain.dx[1] && prts[0].u()[1] < 0.0;
-
     psc.step();
     ASSERT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
     ASSERT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
-
-    if (prts[0].x()[1] < grid.domain.dx[1] && prts[0].u()[1] > 0.0) {
-      reflected = about_to_reflect;
-      break;
-    }
   }
 
-  ASSERT_TRUE(reflected) << "timestep " << grid.timestep_;
-
-  ASSERT_EQ(prts.size(), 2);
-  ASSERT_GT(prts[0].u()[1], 0.0);
-}
-
-TEST(ReflectiveBcsTest, IntegrationZ)
-{
-  // ----------------------------------------------------------------------
-  // setup
-
-  psc_params.nmax = 20;
-  psc_params.stats_every = 1;
-  psc_params.cfl = .75;
-
-  auto grid_ptr = setupGrid();
-  auto& grid = *grid_ptr;
-  MfieldsState mflds{grid};
-  Mparticles mprts{grid};
-
-  ChecksParams checks_params{};
-  checks_params.continuity.check_interval = 1;
-  checks_params.gauss.check_interval = 1;
-  Checks checks{grid, MPI_COMM_WORLD, checks_params};
-
-  Balance balance{.1};
-  Collision collision{grid, 0, 0.1};
-  Marder marder(grid, 0.9, 3, false);
-
-  auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
-                                          balance, collision, checks, marder);
-
-  // ----------------------------------------------------------------------
-  // set up initial conditions
-
-  EXPECT_EQ(grid.n_patches(), 1);
-  int p = 0;
-
-  {
-    auto injector = mprts.injector();
-    auto inj = injector[p];
-    double vz = 100; // fast enough to escape electric attraction
-    double z_quarter = grid.domain.length[2] / 4.0;
-    // inject 2 particles at same location to satisfy Gauss' law at t=0
-    inj({{0, 5, z_quarter}, {0, 0, -vz}, 1, 0}); // electron
-    inj({{0, 5, z_quarter}, {0, 0, vz}, 1, 1});  // positron
-  }
-
-  // ----------------------------------------------------------------------
-  // run the simulation
-
-  auto accessor = mprts.accessor();
-  auto prts = accessor[p];
-
-  ASSERT_EQ(prts.size(), 2);
-  ASSERT_LT(prts[0].u()[2], 0.0);
-  ASSERT_GT(prts[1].u()[2], 0.0);
-
-  ASSERT_EQ(prts[0].m(), 1.0);
-  ASSERT_EQ(prts[1].m(), 1.0);
-
-  ASSERT_EQ(prts[0].q(), -1.0);
-  ASSERT_EQ(prts[1].q(), 1.0);
-
-  bool about_to_reflect = false;
-  bool reflected = false;
-
-  psc.pre_first_step();
-  for (; grid.timestep_ < psc_params.nmax;) {
-    about_to_reflect =
-      prts[0].x()[2] < grid.domain.dx[2] && prts[0].u()[2] < 0.0;
-
-    psc.step();
-    ASSERT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
-    ASSERT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
-
-    if (prts[0].x()[2] < grid.domain.dx[2] && prts[0].u()[2] > 0.0) {
-      reflected = about_to_reflect;
-      break;
-    }
-  }
-
-  ASSERT_TRUE(reflected) << "timestep " << grid.timestep_;
-
-  ASSERT_EQ(prts.size(), 2);
-  ASSERT_GT(prts[0].u()[2], 0.0);
+  ASSERT_TRUE(prts.size() < 2);
 }
 
 // ======================================================================

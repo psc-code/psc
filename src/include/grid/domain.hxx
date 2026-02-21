@@ -43,6 +43,7 @@ struct Domain
 
     ldims = gdims / np;
     dx = length / Real3(gdims);
+    dx_inv = Real3(gdims) / length;
   }
 
   void view() const
@@ -65,6 +66,8 @@ struct Domain
   Int3 ldims;
   /// @brief Side lengths of each grid cell, in physical units.
   Real3 dx;
+  /// @brief Inverses of side lengths of each grid cell, in physical units.
+  Real3 dx_inv;
 };
 
 template <typename R>
