@@ -18,7 +18,7 @@ GT_INLINE void deposit(Curr& curr, const int _i[3], const real_t fnqs[3],
 {
   psc::CurrentDeposition1vb<Curr> deposition{{fnqs[0], fnqs[1], fnqs[2]}};
 
-  int i[3];
+  Int3 i;
   for (int d = 0; d < 3; d++) {
     i[d] = _i[d] + off[d];
   }
