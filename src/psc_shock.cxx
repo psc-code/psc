@@ -69,6 +69,7 @@ double turb_db2;
 double turb_correlation_length;
 
 int out_interval;
+int marder_interval;
 
 bool mirror_domain;
 std::string turb_method;
@@ -136,6 +137,7 @@ void setupParameters(int argc, char** argv)
 
   int n_writes = inputParams.getOrDefault<int>("n_writes", 100);
   out_interval = psc_params.nmax / n_writes;
+  marder_interval = inputParams.getOrDefault<int>("marder_interval", -1);
 
   mirror_domain = inputParams.getOrDefault<bool>("mirror_domain", false);
   turb_method =
@@ -703,7 +705,7 @@ static void run(int argc, char** argv)
   double marder_diffusion = 0.9;
   int marder_loop = 3;
   bool marder_dump = false;
-  psc_params.marder_interval = -1;
+  psc_params.marder_interval = marder_interval;
   Marder marder(grid, marder_diffusion, marder_loop, marder_dump);
 
   // ----------------------------------------------------------------------
