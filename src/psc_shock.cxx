@@ -379,6 +379,129 @@ void inject_plane_alfven_wave(PscConfig::Mfields& vector_potential, double db,
   }
 }
 
+struct GaborKernel
+{
+  void randomize(rng::Uniform<double>& uni)
+  {
+    double theta = std::acos(uni.get(-1.0, 1.0));
+    double phi = uni.get(0.0, 2.0 * M_PI);
+    wave_dir = Double3{std::cos(phi) * std::sin(theta),
+                       std::sin(phi) * std::sin(theta), std::cos(theta)};
+
+    double wave_phase = uni.get(0.0, 2.0 * M_PI);
+  }
+
+  double sample(Double3 x)
+  {
+    return std::exp(-M_PI * x.mag2()) *
+           std::cos(2.0 * M_PI * x.dot(wave_dir) + wave_phase);
+  }
+
+  Double3 wave_dir;
+  double wave_phase;
+};
+
+using Int2 = kg::Vec<int, 2>;
+using Int5 = kg::Vec<int, 5>;
+
+int get_cell_seed(Int5 cell_hyperidx, Int5 hyperdims)
+{
+  while (cell_hyperidx.min() < 0) {
+    cell_hyperidx += hyperdims;
+  }
+  int cell_seed = flatten_index(cell_hyperidx % hyperdims, hyperdims) + seed;
+  if (cell_seed == 0) {
+    cell_seed = 1;
+  }
+  return cell_seed;
+}
+
+template <typename KERNEL>
+double sample_noise_cell(Int5 cell_hyperidx, Int5 hyperdims,
+                         Double3 pos_in_cell, KERNEL& kernel)
+{
+  rng::Uniform uniform{0.0, 1.0, get_cell_seed(cell_hyperidx, hyperdims)};
+
+  // TODO randomize number of impulses
+  int n_impulses = 10;
+
+  double sum = 0.0;
+  for (int i = 0; i < n_impulses; i++) {
+    Double3 kernel_pos_in_cell{uniform.get(0.0, 1.0), uniform.get(0.0, 1.0),
+                               uniform.get(0.0, 1.0)};
+    kernel.randomize(uniform);
+    sum += kernel.sample(pos_in_cell - kernel_pos_in_cell);
+    // double weight = uniform.get(-1.0, 1.0);
+    // sum += weight * kernel.sample(pos_in_cell - kernel_pos_in_cell);
+  }
+  return sum;
+}
+
+template <typename KERNEL>
+double sample_noise(Int2 d_igrid, Double3 pos, Int5 hyperdims, KERNEL& kernel)
+{
+  Int3 i3 = pos.fint();
+  double sum = 0.0;
+  for (Int3 cell_idx : VecRange(i3 - 1, i3 + 2)) {
+    Int5 hyperindex{d_igrid[0], d_igrid[1], cell_idx[0], cell_idx[1],
+                    cell_idx[2]};
+    sum +=
+      sample_noise_cell(hyperindex, hyperdims, pos - Double3(cell_idx), kernel);
+  }
+  return sum;
+}
+
+template <typename KERNEL>
+void inject_turbulence_noise(MfieldsState& mflds, KERNEL& kernel)
+{
+  const auto& grid = mflds.grid();
+  Int3 ibn = mflds.ibn();
+  Int3 gdims(grid.domain.gdims);
+
+  PscConfig::Mfields vector_potential{grid, 3, ibn};
+
+  int n_grids = gdims.max() / 2;
+  int n_dims = 3;
+
+  for (int i_grid = 0; i_grid < n_grids; i_grid++) {
+    int grid_size = i_grid + 1;
+    Int3 grid_dims = Int3::min({grid_size, grid_size, grid_size}, gdims);
+    Double3 pos_scale = Double3(grid_dims) / grid.domain.length;
+
+    double shell_power =
+      1.0 / (1.0 + pow(turb_correlation_length * pos_scale.max() * 2.0 * M_PI,
+                       5.0 / 3.0));
+
+    for (int p = 0; p < grid.n_patches(); ++p) {
+      auto vp_patch = make_Fields3d<dim_xyz>(vector_potential[p]);
+      auto& patch = grid.patches[p];
+
+      for (Int3 i3 : VecRange(-ibn, grid.ldims + ibn)) {
+        Double3 pos_ec_x = centering::get_pos(patch, i3, centering::EC, 0);
+        Double3 pos_ec_y = centering::get_pos(patch, i3, centering::EC, 1);
+        Double3 pos_ec_z = centering::get_pos(patch, i3, centering::EC, 2);
+
+        Int5 hyperdims{n_dims, n_grids, grid_dims[0], grid_dims[1],
+                       grid_dims[2]};
+
+        vp_patch(AX, i3[0], i3[1], i3[2]) +=
+          shell_power *
+          sample_noise({AX, i_grid}, pos_ec_x * pos_scale, hyperdims, kernel);
+        vp_patch(AY, i3[0], i3[1], i3[2]) +=
+          shell_power *
+          sample_noise({AY, i_grid}, pos_ec_y * pos_scale, hyperdims, kernel);
+        vp_patch(AZ, i3[0], i3[1], i3[2]) +=
+          shell_power *
+          sample_noise({AZ, i_grid}, pos_ec_z * pos_scale, hyperdims, kernel);
+      }
+    }
+  }
+
+  inject_b_from_potential(mflds, vector_potential);
+
+  set_mean_b2(mflds, turb_db2);
+}
+
 void inject_turbulence_dense(MfieldsState& mflds)
 {
 
@@ -490,6 +613,9 @@ void initializeFields(MfieldsState& mflds)
 {
   if (turb_method == "alfven_dense") {
     inject_turbulence_dense(mflds);
+  } else if (turb_method == "noise_gabor") {
+    GaborKernel kernel;
+    inject_turbulence_noise(mflds, kernel);
   } else {
     LOG_ERROR("Unrecognized turbulence method: %s\n", turb_method.c_str());
   }
