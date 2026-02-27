@@ -251,24 +251,23 @@ TEST(OutputFieldsParamsTest, NextOut)
 
 TEST(OutputFieldsParamsTest, Tfield_DoAccum)
 {
-  OutputTfieldItemParams prm;       // default: use every step between outs
-  EXPECT_FALSE(prm.do_accum(0, 0)); // should be disabled
-  prm.out_interval = 100;           // now enabled
-  EXPECT_TRUE(prm.do_accum(0, 0));  // accum on out step itself
+  OutputTfieldItemParams prm;    // default: use every step between outs
+  EXPECT_FALSE(prm.do_accum(0)); // should be disabled
+  prm.out_interval = 100;        // now enabled
+  EXPECT_TRUE(prm.do_accum(0));  // accum on out step itself
 
-  EXPECT_TRUE(prm.do_accum(0, 100));
   prm.average_length = 50;
-  EXPECT_FALSE(prm.do_accum(0, 100));
-  EXPECT_FALSE(prm.do_accum(50, 100));
-  EXPECT_TRUE(prm.do_accum(51, 100));
-  EXPECT_TRUE(prm.do_accum(52, 100));
-  EXPECT_TRUE(prm.do_accum(53, 100));
+  EXPECT_FALSE(prm.do_accum(0));
+  EXPECT_FALSE(prm.do_accum(50));
+  EXPECT_TRUE(prm.do_accum(51));
+  EXPECT_TRUE(prm.do_accum(52));
+  EXPECT_TRUE(prm.do_accum(53));
 
   prm.average_every = 2;
-  EXPECT_FALSE(prm.do_accum(51, 100));
-  EXPECT_TRUE(prm.do_accum(52, 100));
-  EXPECT_FALSE(prm.do_accum(53, 100));
-  EXPECT_TRUE(prm.do_accum(100, 100));
+  EXPECT_FALSE(prm.do_accum(51));
+  EXPECT_TRUE(prm.do_accum(52));
+  EXPECT_FALSE(prm.do_accum(53));
+  EXPECT_TRUE(prm.do_accum(100));
 }
 
 // ======================================================================

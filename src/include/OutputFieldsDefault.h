@@ -93,13 +93,12 @@ struct OutputTfieldItemParams : BaseOutputFieldItemParams
   // difference between timesteps used for average
   int average_every = 1;
 
-  // Returns whether to accumulate on this timestep, given the next timestep to
-  // write on. Like `do_out()`, ignores `out_interval` and
-  // trusts that `next_out` is correct.
-  bool do_accum(int timestep, int next_out)
+  // Returns whether to accumulate on this timestep.
+  bool do_accum(int timestep)
   {
-    bool in_averaging_range = next_out - timestep < average_length;
-    bool on_averaging_step = (next_out - timestep) % average_every == 0;
+    bool in_averaging_range = next_out(timestep) - timestep < average_length;
+    bool on_averaging_step =
+      (next_out(timestep) - timestep) % average_every == 0;
     return enabled() && in_averaging_range && on_averaging_step;
   }
 };
@@ -148,7 +147,7 @@ public:
 
     bool do_pfield = pfield.do_out(timestep);
     bool do_tfield = tfield.do_out(timestep);
-    bool do_tfield_accum = tfield.do_accum(timestep, tfield_next_);
+    bool do_tfield_accum = tfield.do_accum(timestep);
 
     if (do_pfield || do_tfield_accum) {
       prof_start(pr_eval);
