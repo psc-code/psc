@@ -67,7 +67,6 @@ auto make_mfields_gt(E&& gt, const std::string& name,
 struct BaseOutputFieldItemParams
 {
   int out_interval = 0; // difference between output timesteps (0 = disable)
-  int out_first = 0;    // first output timestep
 
   bool enabled() { return out_interval > 0; }
 
@@ -84,10 +83,8 @@ struct BaseOutputFieldItemParams
   // Returns the next output timestep after the given timestep.
   int next_out(int timestep)
   {
-    if (timestep < out_first)
-      return out_first;
-    int n_intervals_elapsed = (timestep - out_first) / out_interval;
-    return out_first + out_interval * (n_intervals_elapsed + 1);
+    int n_intervals_elapsed = timestep / out_interval;
+    return out_interval * (n_intervals_elapsed + 1);
   }
 };
 
@@ -102,7 +99,7 @@ struct OutputTfieldItemParams : BaseOutputFieldItemParams
   int average_every = 1;
 
   // Returns whether to accumulate on this timestep, given the next timestep to
-  // write on. Like `do_out()`, ignores `out_interval` and `out_first` and
+  // write on. Like `do_out()`, ignores `out_interval` and
   // trusts that `next_out` is correct.
   bool do_accum(int timestep, int next_out)
   {
@@ -133,9 +130,7 @@ class OutputFieldsItem : public OutputFieldsItemParams
 public:
   OutputFieldsItem(const Grid_t& grid, const OutputFieldsItemParams& prm,
                    std::string sfx)
-    : OutputFieldsItemParams{prm},
-      pfield_next_{prm.pfield.out_first},
-      tfield_next_{prm.tfield.out_first}
+    : OutputFieldsItemParams{prm}, pfield_next_{0}, tfield_next_{0}
   {
     if (pfield.enabled())
       io_pfd_.open("pfd" + sfx, prm.data_dir);

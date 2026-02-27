@@ -240,10 +240,6 @@ TEST(OutputFieldsParamsTest, DoOut)
   EXPECT_FALSE(prm.do_out(0, 0)); // should be disabled
   prm.out_interval = 10;          // now enabled
   EXPECT_TRUE(prm.do_out(0, 0));
-
-  prm.out_first = 100;
-  EXPECT_FALSE(prm.do_out(0, 1));
-  EXPECT_TRUE(prm.do_out(1, 1));
 }
 
 TEST(OutputFieldsParamsTest, NextOut)
@@ -251,12 +247,6 @@ TEST(OutputFieldsParamsTest, NextOut)
   BaseOutputFieldItemParams prm;
   prm.out_interval = 100;
   EXPECT_EQ(prm.next_out(0), 100);
-  prm.out_first = 1;
-  EXPECT_EQ(prm.next_out(0), 1);
-  EXPECT_EQ(prm.next_out(1), 101);
-  EXPECT_EQ(prm.next_out(50), 101);
-  EXPECT_EQ(prm.next_out(100), 101);
-  EXPECT_EQ(prm.next_out(101), 201);
 }
 
 TEST(OutputFieldsParamsTest, Tfield_DoAccum)
