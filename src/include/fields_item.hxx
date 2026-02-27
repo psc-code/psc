@@ -76,8 +76,6 @@ class ItemMomentBnd
 public:
   using storage_type = S;
 
-  ItemMomentBnd(const Grid_t& grid) {}
-
   void add_ghosts(const Grid_t& grid, storage_type& mres_gt, const Int3& ib)
   {
     for (int p = 0; p < mres_gt.shape(4); p++) {
@@ -113,7 +111,7 @@ public:
   const std::vector<std::string>& comp_names() { return comp_names_; }
 
   explicit ItemMoment(const Grid_t& grid)
-    : comp_names_{moment_type::comp_names(grid.kinds)}, bnd_{grid}
+    : comp_names_{moment_type::comp_names(grid.kinds)}
   {}
 
   template <typename Mparticles>
