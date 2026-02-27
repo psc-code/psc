@@ -124,7 +124,7 @@ class OutputFieldsItem : public OutputFieldsItemParams
 public:
   OutputFieldsItem(const Grid_t& grid, const OutputFieldsItemParams& prm,
                    std::string sfx)
-    : OutputFieldsItemParams{prm}, pfield_next_{0}, tfield_next_{0}
+    : OutputFieldsItemParams{prm}
   {
     if (pfield.enabled())
       io_pfd_.open("pfd" + sfx, prm.data_dir);
@@ -159,7 +159,6 @@ public:
         prof_start(pr_pfd);
         mpi_printf(grid.comm(), "***** Writing PFD output for '%s'\n",
                    item.name.c_str());
-        pfield_next_ += pfield.out_interval;
         io_pfd_.write_step(grid, rn, rx, pfd, item.name, item.comp_names);
         prof_stop(pr_pfd);
       }
@@ -180,7 +179,6 @@ public:
         prof_start(pr_tfd);
         mpi_printf(grid.comm(), "***** Writing TFD output for '%s'\n",
                    item.name.c_str());
-        tfield_next_ += tfield.out_interval;
 
         // convert accumulated values to correct temporal mean
         tfd_->gt() = (1. / naccum_) * tfd_->gt();
@@ -200,8 +198,6 @@ public:
   }
 
 private:
-  int pfield_next_;
-  int tfield_next_;
   Writer io_pfd_;
   Writer io_tfd_;
   std::unique_ptr<Mfields> tfd_;
