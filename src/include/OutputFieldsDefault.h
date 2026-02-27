@@ -107,6 +107,30 @@ struct OutputTfieldItemParams : BaseOutputFieldItemParams
 };
 
 // ======================================================================
+// GetItem*
+
+struct GetItemJeh
+{
+  template <typename Mparticles, typename MfieldsState>
+  static auto get_item(Mparticles& mprts, MfieldsState& mflds)
+  {
+    auto item = Item_jeh<MfieldsState>{};
+    return make_mfields_gt(item(mflds), item.name(), item.comp_names());
+  }
+};
+
+template <typename Dim>
+struct GetItemMoments
+{
+  template <typename Mparticles, typename MfieldsState>
+  static auto get_item(Mparticles& mprts, MfieldsState& mflds)
+  {
+    auto item = Item_Moments<typename MfieldsState::Storage, Dim>(mprts.grid());
+    return make_mfields_gt(item(mprts), item.name(), item.comp_names());
+  }
+};
+
+// ======================================================================
 // OutputFieldsItemParams
 
 struct OutputFieldsItemParams
@@ -118,7 +142,7 @@ struct OutputFieldsItemParams
 // ======================================================================
 // OutputFieldsItem
 
-template <typename Mfields, typename Writer>
+template <typename Mfields, typename Writer, typename GetItem>
 class OutputFieldsItem : public OutputFieldsItemParams
 {
 public:
@@ -132,9 +156,11 @@ public:
       io_tfd_.open("tfd" + sfx, tfield.data_dir);
   }
 
-  template <typename F>
-  void operator()(const Grid_t& grid, F&& get_item)
+  template <typename Mparticles, typename MfieldsState>
+  void operator()(const Mparticles& mprts, const MfieldsState& mflds)
   {
+    const Grid_t& grid = mflds.grid();
+
     static int pr_eval, pr_accum, pr_pfd, pr_tfd;
     if (!pr_eval) {
       pr_eval = prof_register("outf eval", 1., 0, 0);
@@ -151,7 +177,7 @@ public:
 
     if (do_pfield || do_tfield_accum) {
       prof_start(pr_eval);
-      auto&& item = get_item();
+      auto&& item = GetItem::get_item(mprts, mflds);
       auto&& pfd = psc::mflds::interior(grid, item.gt);
       prof_stop(pr_eval);
 
@@ -231,8 +257,6 @@ public:
 
   void perform_diagnostic(Mparticles& mprts, MfieldsState& mflds) override
   {
-    const auto& grid = mflds._grid();
-
     static int pr, pr_fields, pr_moments;
     if (!pr) {
       pr = prof_register("outf", 1., 0, 0);
@@ -243,26 +267,22 @@ public:
     prof_start(pr);
 
     prof_start(pr_fields);
-    fields(grid, [&]() {
-      auto item = Item_jeh<MfieldsState>{};
-      return make_mfields_gt(item(mflds), item.name(), item.comp_names());
-    });
+    fields(mprts, mflds);
     prof_stop(pr_fields);
 
     prof_start(pr_moments);
-    moments(grid, [&]() {
-      auto item = Item_Moments<typename MfieldsState::Storage, Dim>(grid);
-      return make_mfields_gt(item(mprts), item.name(), item.comp_names());
-    });
+    moments(mprts, mflds);
     prof_stop(pr_moments);
 
     prof_stop(pr);
   };
 
 public:
-  OutputFieldsItem<Mfields_from_gt_t<Item_jeh<MfieldsState>>, Writer> fields;
+  OutputFieldsItem<Mfields_from_gt_t<Item_jeh<MfieldsState>>, Writer,
+                   GetItemJeh>
+    fields;
   OutputFieldsItem<
     Mfields_from_gt_t<Item_Moments<typename MfieldsState::Storage, Dim>>,
-    Writer>
+    Writer, GetItemMoments<Dim>>
     moments;
 };
