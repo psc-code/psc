@@ -70,14 +70,9 @@ struct BaseOutputFieldItemParams
 
   bool enabled() { return out_interval > 0; }
 
-  // Returns whether to write out on this timestep, given the next timestep to
-  // write on. Ignores `out_interval` and `do_first` except to check
-  // `enabled()`. In most cases, the given `next_out` equals `next_out() -
-  // out_interval`, but not when resuming from a checkpoint.
-  bool do_out(int timestep, int next_out)
+  bool do_out(int timestep)
   {
-    bool on_out_step = timestep >= next_out;
-    return enabled() && on_out_step;
+    return enabled() && timestep % out_interval == 0;
   }
 
   // Returns the next output timestep after the given timestep.
@@ -151,8 +146,8 @@ public:
 
     int timestep = grid.timestep();
 
-    bool do_pfield = pfield.do_out(timestep, pfield_next_);
-    bool do_tfield = tfield.do_out(timestep, tfield_next_);
+    bool do_pfield = pfield.do_out(timestep);
+    bool do_tfield = tfield.do_out(timestep);
     bool do_tfield_accum = tfield.do_accum(timestep, tfield_next_);
 
     if (do_pfield || do_tfield_accum) {

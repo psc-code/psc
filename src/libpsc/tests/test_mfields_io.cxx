@@ -237,9 +237,9 @@ TEST(OutputFieldsParamsTest, Enabled)
 TEST(OutputFieldsParamsTest, DoOut)
 {
   BaseOutputFieldItemParams prm;
-  EXPECT_FALSE(prm.do_out(0, 0)); // should be disabled
-  prm.out_interval = 10;          // now enabled
-  EXPECT_TRUE(prm.do_out(0, 0));
+  EXPECT_FALSE(prm.do_out(0)); // should be disabled
+  prm.out_interval = 10;       // now enabled
+  EXPECT_TRUE(prm.do_out(0));
 }
 
 TEST(OutputFieldsParamsTest, NextOut)
