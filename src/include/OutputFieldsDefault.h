@@ -67,6 +67,9 @@ auto make_mfields_gt(E&& gt, const std::string& name,
 struct BaseOutputFieldItemParams
 {
   int out_interval = 0; // difference between output timesteps (0 = disable)
+  std::string data_dir = ".";
+  Int3 rn = {};
+  Int3 rx = {10000000, 10000000, 10000000};
 
   bool enabled() { return out_interval > 0; }
 
@@ -108,11 +111,8 @@ struct OutputTfieldItemParams : BaseOutputFieldItemParams
 
 struct OutputFieldsItemParams
 {
-  std::string data_dir = ".";
   OutputPfieldItemParams pfield;
   OutputTfieldItemParams tfield;
-  Int3 rn = {};
-  Int3 rx = {10000000, 10000000, 10000000};
 };
 
 // ======================================================================
@@ -127,9 +127,9 @@ public:
     : OutputFieldsItemParams{prm}
   {
     if (pfield.enabled())
-      io_pfd_.open("pfd" + sfx, prm.data_dir);
+      io_pfd_.open("pfd" + sfx, pfield.data_dir);
     if (tfield.enabled())
-      io_tfd_.open("tfd" + sfx, prm.data_dir);
+      io_tfd_.open("tfd" + sfx, tfield.data_dir);
   }
 
   template <typename F>
@@ -159,7 +159,8 @@ public:
         prof_start(pr_pfd);
         mpi_printf(grid.comm(), "***** Writing PFD output for '%s'\n",
                    item.name.c_str());
-        io_pfd_.write_step(grid, rn, rx, pfd, item.name, item.comp_names);
+        io_pfd_.write_step(grid, pfield.rn, pfield.rx, pfd, item.name,
+                           item.comp_names);
         prof_stop(pr_pfd);
       }
 
@@ -187,7 +188,7 @@ public:
         // io_tfd_.set_subset(grid, rn, rx);
         // io_tfd_.write(tfd_->gt(), grid, item.name(),
         // item.comp_names()); io_tfd_.end_step();
-        io_tfd_.write_step(grid, rn, rx, tfd_->gt(), item.name,
+        io_tfd_.write_step(grid, tfield.rn, tfield.rx, tfd_->gt(), item.name,
                            item.comp_names);
         naccum_ = 0;
 
