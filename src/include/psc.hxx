@@ -120,7 +120,6 @@ struct Psc
   using Dim = typename PscConfig::Dim;
   using GaussCorrectorBaseT = GaussCorrectorBase<MfieldsState, Mparticles>;
   using DiagnosticBaseT = DiagnosticBase<Mparticles, MfieldsState>;
-  using ParticleDiagnosticBaseT = ParticleDiagnosticBase<Mparticles>;
   using InjectorBaseT = InjectorBase<Mparticles, MfieldsState>;
   using ExternalCurrentBaseT = ExternalCurrentBase<MfieldsState>;
 
@@ -189,7 +188,7 @@ struct Psc
     diagnostics_.push_back(diagnostic);
   }
 
-  void add_diagnostic(ParticleDiagnosticBaseT* diagnostic)
+  void add_diagnostic(ParticleDiagnosticBase<Mparticles>* diagnostic)
   {
     assert(diagnostic);
     diagnostics_.push_back(new DiagnosticFromLambda<Mparticles, MfieldsState>(
