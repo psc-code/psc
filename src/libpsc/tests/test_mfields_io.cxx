@@ -190,7 +190,7 @@ TYPED_TEST(OutputFieldsTest, OutputFieldsMRC)
   outf_params.moments = outf_item_params;
   OutputFields<Mfields, Mparticles, dim_xyz, WriterMRC> outf{grid, outf_params};
 
-  outf(mflds, mprts);
+  outf.perform_diagnostic(mprts, mflds);
 }
 
 #ifdef PSC_HAVE_ADIOS2
@@ -218,7 +218,7 @@ TYPED_TEST(OutputFieldsTest, OutputFieldsADIOS2)
   OutputFields<Mfields, Mparticles, dim_xyz, WriterADIOS2> outf{grid,
                                                                 outf_params};
 
-  outf(mflds, mprts);
+  outf.perform_diagnostic(mprts, mflds);
 }
 
 #endif
