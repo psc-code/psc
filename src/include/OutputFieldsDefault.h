@@ -150,14 +150,6 @@ public:
     }
 
     int timestep = grid.timestep();
-    bool restarting_from_checkpoint = first_time_ && timestep != 0;
-    if (restarting_from_checkpoint) {
-      if (pfield.enabled())
-        pfield_next_ = pfield.next_out(timestep);
-      if (tfield.enabled())
-        tfield_next_ = tfield.next_out(timestep);
-    }
-    first_time_ = false;
 
     bool do_pfield = pfield.do_out(timestep, pfield_next_);
     bool do_tfield = tfield.do_out(timestep, tfield_next_);
@@ -220,8 +212,6 @@ private:
   Writer io_tfd_;
   std::unique_ptr<Mfields> tfd_;
   int naccum_ = 0;
-  bool first_time_ =
-    true; // to keep track so we can skip first output on restart
 };
 
 // ======================================================================
