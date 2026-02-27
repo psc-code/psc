@@ -442,14 +442,15 @@ using Float3 = Vec3<float>;
 using Double3 = Vec3<double>;
 
 /**
- * @brief Flattens a vec of indices into a single, row-major index.
+ * @brief Calculates flattened index given a multi-dimensional index and
+ * dimensions.
  *
  * For example,
  * ```c++
- * Int3 idx{0, 1, 1};
- * Int3 dims{1, 8, 2};
+ * Int3 idx{2, 1};
+ * Int3 dims{4, 3};
  * int flat_idx = flatten_index(idx, dims);
- * assert(flat_idx == 3);
+ * assert(flat_idx == 2 * 3 + 1);
  * ```
  * @tparam T scalar type (likely `int`)
  * @tparam N number of elements
