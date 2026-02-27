@@ -2,6 +2,7 @@
 #pragma once
 
 #include "particles.hxx"
+#include "kg/Vec3.h"
 
 // ======================================================================
 // InjectorSimple
@@ -11,6 +12,7 @@ struct InjectorSimple
 {
   using Particle = typename Mparticles::Particle;
   using real_t = typename Particle::real_t;
+  using Real3 = Vec3<real_t>;
 
   struct Patch
   {
@@ -24,22 +26,20 @@ struct InjectorSimple
         assert(new_prt.x[d] <= patch.xe[d]);
       }
 
-      auto prt = Particle{
-        {real_t(new_prt.x[0] - patch.xb[0]), real_t(new_prt.x[1] - patch.xb[1]),
-         real_t(new_prt.x[2] - patch.xb[2])},
-        {real_t(new_prt.u[0]), real_t(new_prt.u[1]), real_t(new_prt.u[2])},
-        real_t(new_prt.w * mprts_.grid().kinds[new_prt.kind].q),
-        new_prt.kind,
-        mprts_.uid_gen(),
-        new_prt.tag};
+      auto prt =
+        Particle{Real3(new_prt.x) - Real3(patch.xb),
+                 Real3(new_prt.u),
+                 real_t(new_prt.w * mprts_.grid().kinds[new_prt.kind].q),
+                 new_prt.kind,
+                 mprts_.uid_gen(),
+                 new_prt.tag};
       mprts_.push_back(p_, prt);
     }
 
     void reweight(const psc::particle::Inject& new_prt)
     {
       auto& grid = mprts_.grid();
-      real_t dVi =
-        1.f / (grid.domain.dx[0] * grid.domain.dx[1] * grid.domain.dx[2]);
+      real_t dVi = 1.f / grid.domain.dx.prod();
       auto prt = new_prt;
       assert(0); // FIXME, have to actually do reweighting
       (*this)(prt);
