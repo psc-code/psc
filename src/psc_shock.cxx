@@ -5,6 +5,7 @@
 #include "OutputFieldsDefault.h"
 #include "psc_config.hxx"
 #include "input_params.hxx"
+#include "kg/include/kg/VecRange.hxx"
 
 // ======================================================================
 // PSC configuration
@@ -74,8 +75,10 @@ double turb_correlation_length;
 int out_interval;
 
 bool mirror_domain;
+std::string turb_method;
 
 int nicell;
+int seed;
 
 } // namespace
 
@@ -143,8 +146,11 @@ void setupParameters(int argc, char** argv)
   out_interval = psc_params.nmax / n_writes;
 
   mirror_domain = inputParams.getOrDefault<bool>("mirror_domain", false);
+  turb_method =
+    inputParams.getOrDefault<std::string>("turb_method", "alfven_dense");
 
   nicell = inputParams.getOrDefault<int>("nicell", 100);
+  seed = inputParams.getOrDefault<int>("seed", 5);
 
   std::ifstream src(path_to_params, std::ios::binary);
   std::ofstream dst("params_record.txt", std::ios::binary);
@@ -230,178 +236,73 @@ double round_to_periodic_k(double len, double k)
   return 2 * M_PI * n / len;
 }
 
-void initializeFields(MfieldsState& mflds)
+void add_background_fields(MfieldsState& mflds)
 {
-  // literally the power of each shell, such that
-  // 1/2 <dB^2> = int_{k=0}^\infty shellpower(k) dk.
-  // Note that regardless of dimensionality, shellpower(k) ~ k^{-5/3},
-  // i.e., shellpower(k) includes the Jacobian.
-  auto shell_power = [&](double k) {
-    return 1.0 / (1.0 + pow(k * turb_correlation_length, 5.0 / 3.0));
-  };
-
-  PscConfig::Mfields vector_potential{mflds._grid(), 3, mflds.ibn()};
-  int AX = 0, AY = 1, AZ = 2;
-
-  auto inject_at_n = [&](Int3 n) { return n != Int3{0, 0, 0}; };
-
-  // 1. compute values of |k|
-
-  double dkx = 2.0 * M_PI / len_x;
-  double dky = 2.0 * M_PI / len_y;
-  double dkz = 2.0 * M_PI / len_z;
-
-  int ix_min = nx == 1 ? 0 : -nx / 2 + 1;
-  int iy_min = ny == 1 ? 0 : -ny / 2 + 1;
-  int iz_min = nz == 1 ? 0 : -nz / 2 + 1;
-
-  // inject in only half of k-space, since +k and -k modes are indistinguishable
-  if (nx > 2) {
-    ix_min = 0;
-  } else if (ny > 2) {
-    iy_min = 0;
-  } else {
-    iz_min = 0;
-  }
-
-  int ix_max = nx / 2;
-  int iy_max = ny / 2;
-  int iz_max = nz / 2;
-
-  double dk = std::min({dkx, dky, dkz});
-  double kmax = sqrt(sqr(dkx * std::max(-ix_min, ix_max)) +
-                     sqr(dky * std::max(-iy_min, iy_max)) +
-                     sqr(dkz * std::max(-iz_min, iz_max)));
-  int nk = kmax / dk + 1;
-
-  LOG_INFO("nk = %d, kmax = %f\n", nk, kmax);
-
-  auto k_mins = std::vector<double>(nk);
-  for (int i = 0; i < nk; i++) {
-    k_mins[i] = dk * i;
-  }
-
-  // 2. compute number of degeneracies of each k-shell
-
-  auto n_cells_per_shell = std::vector<int>(nk);
-
-  for (int ix = ix_min; ix <= ix_max; ix++) {
-    for (int iy = iy_min; iy <= iy_max; iy++) {
-      for (int iz = iz_min; iz <= iz_max; iz++) {
-        if (!inject_at_n({ix, iy, iz})) {
-          continue;
-        }
-
-        double kx = ix * dkx;
-        double ky = iy * dky;
-        double kz = iz * dkz;
-        double k = sqrt(sqr(kx) + sqr(ky) + sqr(kz));
-
-        int idx = k / dk;
-        if (idx >= nk) {
-          LOG_ERROR("k=%f > kmax at idx=(%d, %d, %d)\n", k, ix, iy, iz);
-        }
-        n_cells_per_shell[idx] += 1;
-      }
-    }
-  }
-
-  // 3. compute powers for each shell
-
-  auto shell_db2s = std::vector<double>(nk);
-
-  for (int i = 0; i < nk; i++) {
-    if (n_cells_per_shell[i] > 0) {
-      double k_shell = k_mins[i] + 0.5 * dky;
-      shell_db2s[i] = shell_power(k_shell) * dky;
-    }
-  }
-
-  // 4. inject each mode at a random phase and polarization
-
-  // TODO randomize the seed based on e.g. time
-  int seed = 5; // all processes must use same seed to ensure B is continuous
-  auto rng = rng::Uniform<double>(0.0, 1.0, seed);
   const auto& grid = mflds.grid();
 
-  for (int ix = ix_min; ix <= ix_max; ix++) {
-    for (int iy = iy_min; iy <= iy_max; iy++) {
-      for (int iz = iz_min; iz <= iz_max; iz++) {
-        if (!inject_at_n({ix, iy, iz})) {
-          continue;
-        }
+  for (int p = 0; p < mflds.n_patches(); ++p) {
+    auto& patch = grid.patches[p];
+    auto field_patch = make_Fields3d<dim_xyz>(mflds[p]);
 
-        double kx = ix * dkx;
-        double ky = iy * dky;
-        double kz = iz * dkz;
+    int n_ghosts = mflds.ibn().max();
+    grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
+      field_patch(HX, jx, jy, jz) += b_x;
+      field_patch(HY, jx, jy, jz) += b_y;
+      field_patch(HZ, jx, jy, jz) += b_z;
 
-        double kxy = sqrt(sqr(kx) + sqr(ky));
-        double k = sqrt(sqr(kx) + sqr(ky) + sqr(kz));
+      field_patch(EX, jx, jy, jz) = e_x;
+      field_patch(EY, jx, jy, jz) = e_y;
+      field_patch(EZ, jx, jy, jz) = e_z;
+    });
+  }
+}
 
-        int idx = k / dk;
+void set_mean_b2(MfieldsState& mflds, double mean_b2)
+{
+  const auto& grid = mflds.grid();
 
-        double proportion_of_shell_db2_in_cell = 1.0 / n_cells_per_shell[idx];
-        double shell_db2 = shell_db2s[idx];
-        double cell_db2 = proportion_of_shell_db2_in_cell * shell_db2;
-        double db = sqrt(cell_db2);
+  double sum_b2_local = 0.0;
 
-        double cos_theta = kz / k;
-        double sin_theta = kxy / k;
+  for (int p = 0; p < mflds.n_patches(); ++p) {
+    auto field_patch = make_Fields3d<dim_xyz>(mflds[p]);
 
-        double cos_phi = kx / kxy;
-        double sin_phi = ky / kxy;
-
-        if (kxy == 0.0) {
-          // shouldn't matter given random phase and polarization, just want to
-          // avoid nans
-          cos_phi = 1.0;
-          sin_phi = 0.0;
-        }
-
-        double phase = rng.get(0.0, 2.0 * M_PI);
-        double polarization = rng.get(0.0, 2.0 * M_PI);
-
-        Double3 k_vec = {kx, ky, kz};
-
-        Double3 xp_hat{cos_theta * cos_phi, cos_theta * sin_phi, -sin_theta};
-        Double3 yp_hat{sin_phi, -cos_phi, 0};
-
-        Double3 a_vec = db * cos(polarization) / sqr(k) * xp_hat.cross(k_vec);
-        Double3 b_vec = db * sin(polarization) / sqr(k) * yp_hat.cross(k_vec);
-
-        for (int p = 0; p < vector_potential.n_patches(); ++p) {
-          auto& patch = grid.patches[p];
-          auto vector_potential_patch =
-            make_Fields3d<dim_xyz>(vector_potential[p]);
-
-          int n_ghosts = vector_potential.ibn().max();
-          grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
-            Int3 index{jx, jy, jz};
-
-            Double3 pos_ec_x =
-              centering::get_pos(patch, index, centering::EC, 0);
-            Double3 pos_ec_y =
-              centering::get_pos(patch, index, centering::EC, 1);
-            Double3 pos_ec_z =
-              centering::get_pos(patch, index, centering::EC, 2);
-
-            double arg_x = k_vec.dot(pos_ec_x) + phase;
-            double arg_y = k_vec.dot(pos_ec_y) + phase;
-            double arg_z = k_vec.dot(pos_ec_z) + phase;
-
-            vector_potential_patch(AX, jx, jy, jz) +=
-              a_vec[0] * sin(arg_x) - b_vec[0] * cos(arg_x);
-            vector_potential_patch(AY, jx, jy, jz) +=
-              a_vec[1] * sin(arg_y) - b_vec[1] * cos(arg_y);
-            vector_potential_patch(AZ, jx, jy, jz) +=
-              a_vec[2] * sin(arg_z) - b_vec[2] * cos(arg_z);
-          });
-        }
-      }
-    }
+    grid.Foreach_3d(0, 0, [&](int jx, int jy, int jz) {
+      // magnetic energy density is cell-centered (H^2)
+      // note: this is not the most efficient calculation method
+      sum_b2_local += 0.5 * (sqr(field_patch(HX, jx, jy, jz)) +
+                             sqr(field_patch(HX, jx + 1, jy, jz)) +
+                             sqr(field_patch(HY, jx, jy, jz)) +
+                             sqr(field_patch(HY, jx, jy + 1, jz)) +
+                             sqr(field_patch(HZ, jx, jy, jz)) +
+                             sqr(field_patch(HZ, jx, jy, jz + 1)));
+      ;
+    });
   }
 
-  // step 5: take curl (or something proportional to it)
+  double sum_b2 = 0.0;
+  MPI_Allreduce(&sum_b2_local, &sum_b2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
+  double target_sum_b2 = nx * ny * nz * mean_b2;
+  double scale_factor = sqrt(target_sum_b2 / sum_b2);
+
+  for (int p = 0; p < mflds.n_patches(); ++p) {
+    auto field_patch = make_Fields3d<dim_xyz>(mflds[p]);
+
+    int n_ghosts = mflds.ibn().max();
+    grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
+      field_patch(HX, jx, jy, jz) *= scale_factor;
+      field_patch(HY, jx, jy, jz) *= scale_factor;
+      field_patch(HZ, jx, jy, jz) *= scale_factor;
+    });
+  }
+}
+
+int AX = 0, AY = 1, AZ = 2;
+
+void inject_b_from_potential(MfieldsState& mflds,
+                             PscConfig::Mfields& vector_potential)
+{
+  const auto& grid = mflds.grid();
 
   for (int p = 0; p < mflds.n_patches(); ++p) {
     auto field_patch = make_Fields3d<dim_xyz>(mflds[p]);
@@ -422,63 +323,304 @@ void initializeFields(MfieldsState& mflds)
                                     vector_potential_patch(AX, jx, jy, jz);
     });
   }
+}
+
+void inject_plane_alfven_wave(PscConfig::Mfields& vector_potential, double db,
+                              Double3& k_vec, double polarization, double phase)
+{
+  const auto& grid = vector_potential.grid();
+
+  double k2 = k_vec.mag2();
+  double k = std::sqrt(k2);
+  double kxy = std::sqrt(sqr(k_vec[0]) + sqr(k_vec[1]));
+
+  double cos_theta = k_vec[2] / k;
+  double sin_theta = kxy / k;
+
+  double cos_phi = k_vec[0] / kxy;
+  double sin_phi = k_vec[1] / kxy;
+
+  if (kxy == 0.0) {
+    // shouldn't matter given random phase and polarization, just want to
+    // avoid nans
+    cos_phi = 1.0;
+    sin_phi = 0.0;
+  }
+
+  Double3 xp_hat{cos_theta * cos_phi, cos_theta * sin_phi, -sin_theta};
+  Double3 yp_hat{sin_phi, -cos_phi, 0};
+
+  Double3 a_vec = db * cos(polarization) / k2 * xp_hat.cross(k_vec);
+  Double3 b_vec = db * sin(polarization) / k2 * yp_hat.cross(k_vec);
+
+  for (int p = 0; p < vector_potential.n_patches(); ++p) {
+    auto& patch = grid.patches[p];
+    auto vector_potential_patch = make_Fields3d<dim_xyz>(vector_potential[p]);
+
+    int n_ghosts = vector_potential.ibn().max();
+    grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
+      Int3 index{jx, jy, jz};
+
+      Double3 pos_ec_x = centering::get_pos(patch, index, centering::EC, 0);
+      Double3 pos_ec_y = centering::get_pos(patch, index, centering::EC, 1);
+      Double3 pos_ec_z = centering::get_pos(patch, index, centering::EC, 2);
+
+      double arg_x = k_vec.dot(pos_ec_x) + phase;
+      double arg_y = k_vec.dot(pos_ec_y) + phase;
+      double arg_z = k_vec.dot(pos_ec_z) + phase;
+
+      vector_potential_patch(AX, jx, jy, jz) +=
+        a_vec[0] * sin(arg_x) - b_vec[0] * cos(arg_x);
+      vector_potential_patch(AY, jx, jy, jz) +=
+        a_vec[1] * sin(arg_y) - b_vec[1] * cos(arg_y);
+      vector_potential_patch(AZ, jx, jy, jz) +=
+        a_vec[2] * sin(arg_z) - b_vec[2] * cos(arg_z);
+    });
+  }
+}
+
+struct GaborKernel
+{
+  void randomize(rng::Uniform<double>& uni)
+  {
+    double theta = std::acos(uni.get(-1.0, 1.0));
+    double phi = uni.get(0.0, 2.0 * M_PI);
+    wave_dir = Double3{std::cos(phi) * std::sin(theta),
+                       std::sin(phi) * std::sin(theta), std::cos(theta)};
+
+    double wave_phase = uni.get(0.0, 2.0 * M_PI);
+  }
+
+  double sample(Double3 x)
+  {
+    return std::exp(-M_PI * x.mag2()) *
+           std::cos(2.0 * M_PI * x.dot(wave_dir) + wave_phase);
+  }
+
+  Double3 wave_dir;
+  double wave_phase;
+};
+
+using Int2 = kg::Vec<int, 2>;
+using Int5 = kg::Vec<int, 5>;
+
+int get_cell_seed(Int5 cell_hyperidx, Int5 hyperdims)
+{
+  while (cell_hyperidx.min() < 0) {
+    cell_hyperidx += hyperdims;
+  }
+  int cell_seed = flatten_index(cell_hyperidx % hyperdims, hyperdims) + seed;
+  if (cell_seed == 0) {
+    cell_seed = 1;
+  }
+  return cell_seed;
+}
+
+template <typename KERNEL>
+double sample_noise_cell(Int5 cell_hyperidx, Int5 hyperdims,
+                         Double3 pos_in_cell, KERNEL& kernel)
+{
+  rng::Uniform uniform{0.0, 1.0, get_cell_seed(cell_hyperidx, hyperdims)};
+
+  // TODO randomize number of impulses
+  int n_impulses = 10;
+
+  double sum = 0.0;
+  for (int i = 0; i < n_impulses; i++) {
+    Double3 kernel_pos_in_cell{uniform.get(0.0, 1.0), uniform.get(0.0, 1.0),
+                               uniform.get(0.0, 1.0)};
+    kernel.randomize(uniform);
+    sum += kernel.sample(pos_in_cell - kernel_pos_in_cell);
+    // double weight = uniform.get(-1.0, 1.0);
+    // sum += weight * kernel.sample(pos_in_cell - kernel_pos_in_cell);
+  }
+  return sum;
+}
+
+template <typename KERNEL>
+double sample_noise(Int2 d_igrid, Double3 pos, Int5 hyperdims, KERNEL& kernel)
+{
+  Int3 i3 = pos.fint();
+  double sum = 0.0;
+  for (Int3 cell_idx : VecRange(i3 - 1, i3 + 2)) {
+    Int5 hyperindex{d_igrid[0], d_igrid[1], cell_idx[0], cell_idx[1],
+                    cell_idx[2]};
+    sum +=
+      sample_noise_cell(hyperindex, hyperdims, pos - Double3(cell_idx), kernel);
+  }
+  return sum;
+}
+
+template <typename KERNEL>
+void inject_turbulence_noise(MfieldsState& mflds, KERNEL& kernel)
+{
+  const auto& grid = mflds.grid();
+  Int3 ibn = mflds.ibn();
+  Int3 gdims(grid.domain.gdims);
+
+  PscConfig::Mfields vector_potential{grid, 3, ibn};
+
+  int n_grids = gdims.max() / 2;
+  int n_dims = 3;
+
+  for (int i_grid = 0; i_grid < n_grids; i_grid++) {
+    int grid_size = i_grid + 1;
+    Int3 grid_dims = Int3::min({grid_size, grid_size, grid_size}, gdims);
+    Double3 pos_scale = Double3(grid_dims) / grid.domain.length;
+
+    double shell_power =
+      1.0 / (1.0 + pow(turb_correlation_length * pos_scale.max() * 2.0 * M_PI,
+                       5.0 / 3.0));
+
+    for (int p = 0; p < grid.n_patches(); ++p) {
+      auto vp_patch = make_Fields3d<dim_xyz>(vector_potential[p]);
+      auto& patch = grid.patches[p];
+
+      for (Int3 i3 : VecRange(-ibn, grid.ldims + ibn)) {
+        Double3 pos_ec_x = centering::get_pos(patch, i3, centering::EC, 0);
+        Double3 pos_ec_y = centering::get_pos(patch, i3, centering::EC, 1);
+        Double3 pos_ec_z = centering::get_pos(patch, i3, centering::EC, 2);
+
+        Int5 hyperdims{n_dims, n_grids, grid_dims[0], grid_dims[1],
+                       grid_dims[2]};
+
+        vp_patch(AX, i3[0], i3[1], i3[2]) +=
+          shell_power *
+          sample_noise({AX, i_grid}, pos_ec_x * pos_scale, hyperdims, kernel);
+        vp_patch(AY, i3[0], i3[1], i3[2]) +=
+          shell_power *
+          sample_noise({AY, i_grid}, pos_ec_y * pos_scale, hyperdims, kernel);
+        vp_patch(AZ, i3[0], i3[1], i3[2]) +=
+          shell_power *
+          sample_noise({AZ, i_grid}, pos_ec_z * pos_scale, hyperdims, kernel);
+      }
+    }
+  }
+
+  inject_b_from_potential(mflds, vector_potential);
+
+  set_mean_b2(mflds, turb_db2);
+}
+
+void inject_turbulence_dense(MfieldsState& mflds)
+{
+
+  // literally the power of each shell, such that
+  // 1/2 <dB^2> = int_{k=0}^\infty shellpower(k) dk.
+  // Note that regardless of dimensionality, shellpower(k) ~ k^{-5/3},
+  // i.e., shellpower(k) includes the Jacobian.
+  auto shell_power = [&](double k) {
+    return 1.0 / (1.0 + pow(k * turb_correlation_length, 5.0 / 3.0));
+  };
+
+  PscConfig::Mfields vector_potential{mflds._grid(), 3, mflds.ibn()};
+
+  auto inject_at_n = [&](Int3 n) { return n != Int3{0, 0, 0}; };
+
+  // 1. compute values of |k|
+
+  Double3 len_vec{len_x, len_y, len_z};
+  Int3 n_vec{nx, ny, nz};
+
+  Double3 dk_vec = 2.0 * M_PI / len_vec;
+
+  Int3 i3_min = (1 - n_vec) / 2;
+  Int3 i3_max = n_vec / 2;
+
+  // inject in only half of k-space, since +k and -k modes are indistinguishable
+  for (int d = 0; d < 3; d++) {
+    if (n_vec[d] > 2) {
+      i3_min[d] = 0;
+      break;
+    }
+  }
+
+  double dk = dk_vec.min();
+  double kmax = ((Double3)Int3::max(-i3_min, i3_max) * dk_vec).mag();
+  int nk = kmax / dk + 1;
+
+  LOG_INFO("nk = %d, kmax = %f\n", nk, kmax);
+
+  auto k_mins = std::vector<double>(nk);
+  for (int i = 0; i < nk; i++) {
+    k_mins[i] = dk * i;
+  }
+
+  // 2. compute number of degeneracies of each k-shell
+
+  auto n_cells_per_shell = std::vector<int>(nk);
+
+  for (Int3 i3 : VecRange(i3_min, i3_max)) {
+    if (!inject_at_n(i3)) {
+      continue;
+    }
+
+    Double3 k_vec = Double3(i3) * dk_vec;
+    double k = k_vec.mag();
+    int idx = k / dk;
+
+    if (idx >= nk) {
+      LOG_ERROR("k=%f > kmax at idx=(%d, %d, %d)\n", k, i3[0], i3[1], i3[2]);
+    }
+
+    n_cells_per_shell[idx] += 1;
+  }
+
+  // 3. compute powers for each shell
+
+  auto shell_db2s = std::vector<double>(nk);
+
+  for (int i = 0; i < nk; i++) {
+    if (n_cells_per_shell[i] > 0) {
+      double k_shell = k_mins[i] + 0.5 * dk;
+      shell_db2s[i] = shell_power(k_shell) * dk;
+    }
+  }
+
+  // 4. inject each mode at a random phase and polarization
+
+  // all processes must use same seed to ensure B is continuous
+  auto rng = rng::Uniform<double>(0.0, 1.0, seed);
+  const auto& grid = mflds.grid();
+
+  for (Int3 i3 : VecRange(i3_min, i3_max)) {
+    if (!inject_at_n(i3)) {
+      continue;
+    }
+
+    Double3 k_vec = Double3(i3) * dk_vec;
+    int idx = k_vec.mag() / dk;
+
+    double proportion_of_shell_db2_in_cell = 1.0 / n_cells_per_shell[idx];
+    double shell_db2 = shell_db2s[idx];
+    double cell_db2 = proportion_of_shell_db2_in_cell * shell_db2;
+    double db = sqrt(cell_db2);
+
+    double phase = rng.get(0.0, 2.0 * M_PI);
+    double polarization = rng.get(0.0, 2.0 * M_PI);
+
+    inject_plane_alfven_wave(vector_potential, db, k_vec, polarization, phase);
+  }
+
+  // step 5: take curl (or something proportional to it)
+  inject_b_from_potential(mflds, vector_potential);
 
   // step 6: normalize db2
+  set_mean_b2(mflds, turb_db2);
+}
 
-  double sum_db2_local = 0.0;
-
-  for (int p = 0; p < mflds.n_patches(); ++p) {
-    auto field_patch = make_Fields3d<dim_xyz>(mflds[p]);
-
-    grid.Foreach_3d(0, 0, [&](int jx, int jy, int jz) {
-      // magnetic energy density is cell-centered (H^2)
-      // note: this is not the most efficient calculation method
-      sum_db2_local += 0.5 * (sqr(field_patch(HX, jx, jy, jz)) +
-                              sqr(field_patch(HX, jx + 1, jy, jz)) +
-                              sqr(field_patch(HY, jx, jy, jz)) +
-                              sqr(field_patch(HY, jx, jy + 1, jz)) +
-                              sqr(field_patch(HZ, jx, jy, jz)) +
-                              sqr(field_patch(HZ, jx, jy, jz + 1)));
-      ;
-    });
+void initializeFields(MfieldsState& mflds)
+{
+  if (turb_method == "alfven_dense") {
+    inject_turbulence_dense(mflds);
+  } else if (turb_method == "noise_gabor") {
+    GaborKernel kernel;
+    inject_turbulence_noise(mflds, kernel);
+  } else {
+    LOG_ERROR("Unrecognized turbulence method: %s\n", turb_method.c_str());
   }
 
-  double sum_db2 = 0.0;
-  MPI_Allreduce(&sum_db2_local, &sum_db2, 1, MPI_DOUBLE, MPI_SUM,
-                MPI_COMM_WORLD);
-
-  double target_sum_db2 = nx * ny * nz * turb_db2;
-  double scale_db_factor = sqrt(target_sum_db2 / sum_db2);
-
-  for (int p = 0; p < mflds.n_patches(); ++p) {
-    auto& patch = grid.patches[p];
-    auto field_patch = make_Fields3d<dim_xyz>(mflds[p]);
-
-    int n_ghosts = mflds.ibn().max();
-    grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
-      field_patch(HX, jx, jy, jz) *= scale_db_factor;
-      field_patch(HY, jx, jy, jz) *= scale_db_factor;
-      field_patch(HZ, jx, jy, jz) *= scale_db_factor;
-    });
-  }
-
-  // step 7: add background fields
-
-  for (int p = 0; p < mflds.n_patches(); ++p) {
-    auto& patch = grid.patches[p];
-    auto field_patch = make_Fields3d<dim_xyz>(mflds[p]);
-
-    int n_ghosts = mflds.ibn().max();
-    grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
-      field_patch(HX, jx, jy, jz) += b_x;
-      field_patch(HY, jx, jy, jz) += b_y;
-      field_patch(HZ, jx, jy, jz) += b_z;
-
-      field_patch(EX, jx, jy, jz) = e_x;
-      field_patch(EY, jx, jy, jz) = e_y;
-      field_patch(EZ, jx, jy, jz) = e_z;
-    });
-  }
+  add_background_fields(mflds);
 }
 
 // ======================================================================
