@@ -53,10 +53,6 @@ double b_x;
 double b_y;
 double b_z;
 
-double e_x;
-double e_y;
-double e_z;
-
 int nx;
 int ny;
 int nz;
@@ -113,10 +109,6 @@ void setupParameters(int argc, char** argv)
   b_x = b_mag * sin(b_angle_y_to_x_rad);
   b_y = b_mag * cos(b_angle_y_to_x_rad);
   b_z = 0.0;
-
-  e_x = -(v_upstream_y * b_z - v_upstream_z * b_y);
-  e_y = -(v_upstream_z * b_x - v_upstream_x * b_z);
-  e_z = -(v_upstream_x * b_y - v_upstream_y * b_x);
 
   nx = inputParams.get<int>("nx");
   ny = inputParams.get<int>("ny");
@@ -249,10 +241,45 @@ void add_background_fields(MfieldsState& mflds)
       field_patch(HX, jx, jy, jz) += b_x;
       field_patch(HY, jx, jy, jz) += b_y;
       field_patch(HZ, jx, jy, jz) += b_z;
+    });
+  }
+}
 
-      field_patch(EX, jx, jy, jz) = e_x;
-      field_patch(EY, jx, jy, jz) = e_y;
-      field_patch(EZ, jx, jy, jz) = e_z;
+void boost_fields(MfieldsState& mflds, double vy)
+{
+  // general:
+
+  // E_y' = E_y
+  // B_y' = B_y
+  // E_perp' = gamma * (E_perp + v x B)
+  // B_perp' = gamma * (B_perp - v x E)
+
+  // assume E = 0 initially:
+  // E_perp' = gamma * v x B
+  // B_perp' = gamma * B_perp
+
+  const auto& grid = mflds.grid();
+  double gamma = 1.0 / std::sqrt(1.0 - vy * vy);
+  Double3 gamma_v{0.0, gamma * vy, 0.0};
+
+  for (int p = 0; p < mflds.n_patches(); ++p) {
+    auto& patch = grid.patches[p];
+    auto mf_patch = make_Fields3d<dim_xyz>(mflds[p]);
+
+    int n_ghosts = mflds.ibn().max();
+
+    grid.Foreach_3d(n_ghosts - 1, n_ghosts, [&](int jx, int jy, int jz) {
+      mf_patch(EX, jx, jy, jz) =
+        gamma * vy * 0.5 *
+        (mf_patch(HZ, jx, jy - 1, jz) + mf_patch(HZ, jx, jy, jz));
+      mf_patch(EZ, jx, jy, jz) =
+        -gamma * vy * 0.5 *
+        (mf_patch(HX, jx, jy - 1, jz) + mf_patch(HX, jx, jy, jz));
+    });
+
+    grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
+      mf_patch(HX, jx, jy, jz) *= gamma;
+      mf_patch(HZ, jx, jy, jz) *= gamma;
     });
   }
 }
@@ -621,6 +648,7 @@ void initializeFields(MfieldsState& mflds)
   }
 
   add_background_fields(mflds);
+  boost_fields(mflds, -v_upstream_y);
 }
 
 // ======================================================================
