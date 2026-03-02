@@ -523,7 +523,7 @@ static void run(int argc, char** argv)
   OutputFieldsParams outf_params{};
   outf_params.fields.pfield.out_interval = g.fields_every;
   outf_params.moments.pfield.out_interval = g.moments_every;
-  OutputFields<MfieldsState, Mparticles, Dim> outf{grid, outf_params};
+  OutputFields<MfieldsState, Mparticles, Dim> outf{outf_params};
 
   // -- output particles
   OutputParticlesParams outp_params{};

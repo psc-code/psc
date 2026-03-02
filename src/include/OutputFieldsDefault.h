@@ -146,8 +146,7 @@ template <typename Mfields, typename Writer, typename GetItem>
 class OutputFieldsItem : public OutputFieldsItemParams
 {
 public:
-  OutputFieldsItem(const Grid_t& grid, const OutputFieldsItemParams& prm,
-                   std::string sfx)
+  OutputFieldsItem(const OutputFieldsItemParams& prm, std::string sfx)
     : OutputFieldsItemParams{prm}
   {
     if (pfield.enabled())
@@ -251,8 +250,8 @@ public:
   // ----------------------------------------------------------------------
   // ctor
 
-  OutputFields(const Grid_t& grid, const OutputFieldsParams& prm)
-    : fields{grid, prm.fields, ""}, moments{grid, prm.moments, "_moments"}
+  OutputFields(const OutputFieldsParams& prm)
+    : fields{prm.fields, ""}, moments{prm.moments, "_moments"}
   {}
 
   void perform_diagnostic(Mparticles& mprts, MfieldsState& mflds) override

@@ -188,7 +188,7 @@ TYPED_TEST(OutputFieldsTest, OutputFieldsMRC)
   outf_item_params.tfield.average_every = 40;
   outf_params.fields = outf_item_params;
   outf_params.moments = outf_item_params;
-  OutputFields<Mfields, Mparticles, dim_xyz, WriterMRC> outf{grid, outf_params};
+  OutputFields<Mfields, Mparticles, dim_xyz, WriterMRC> outf{outf_params};
 
   outf.perform_diagnostic(mprts, mflds);
 }
@@ -215,8 +215,7 @@ TYPED_TEST(OutputFieldsTest, OutputFieldsADIOS2)
   outf_item_params.tfield.average_every = 40;
   outf_params.fields = outf_item_params;
   outf_params.moments = outf_item_params;
-  OutputFields<Mfields, Mparticles, dim_xyz, WriterADIOS2> outf{grid,
-                                                                outf_params};
+  OutputFields<Mfields, Mparticles, dim_xyz, WriterADIOS2> outf{outf_params};
 
   outf.perform_diagnostic(mprts, mflds);
 }
