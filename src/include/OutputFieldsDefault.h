@@ -111,6 +111,8 @@ struct OutputTfieldItemParams : BaseOutputFieldItemParams
 
 struct GetItemJeh
 {
+  static std::string suffix() { return ""; }
+
   template <typename Mparticles, typename MfieldsState>
   static auto get_item(Mparticles& mprts, MfieldsState& mflds)
   {
@@ -122,6 +124,8 @@ struct GetItemJeh
 template <typename Dim>
 struct GetItemMoments
 {
+  static std::string suffix() { return "_moments"; }
+
   template <typename Mparticles, typename MfieldsState>
   static auto get_item(Mparticles& mprts, MfieldsState& mflds)
   {
@@ -146,13 +150,13 @@ template <typename Mfields, typename Writer, typename GetItem>
 class OutputFieldsItem : public OutputFieldsItemParams
 {
 public:
-  OutputFieldsItem(const OutputFieldsItemParams& prm, std::string sfx)
+  OutputFieldsItem(const OutputFieldsItemParams& prm)
     : OutputFieldsItemParams{prm}
   {
     if (pfield.enabled())
-      io_pfd_.open("pfd" + sfx, pfield.data_dir);
+      io_pfd_.open("pfd" + GetItem::suffix(), pfield.data_dir);
     if (tfield.enabled())
-      io_tfd_.open("tfd" + sfx, tfield.data_dir);
+      io_tfd_.open("tfd" + GetItem::suffix(), tfield.data_dir);
   }
 
   template <typename Mparticles, typename MfieldsState>
@@ -251,7 +255,7 @@ public:
   // ctor
 
   OutputFields(const OutputFieldsParams& prm)
-    : fields{prm.fields, ""}, moments{prm.moments, "_moments"}
+    : fields{prm.fields}, moments{prm.moments}
   {}
 
   void perform_diagnostic(Mparticles& mprts, MfieldsState& mflds) override
