@@ -127,6 +127,22 @@ struct Vec : gt::sarray<T, N>
     return *this;
   }
 
+  KG_INLINE Vec& operator%=(const Vec& w)
+  {
+    for (size_t i = 0; i < N; i++) {
+      (*this)[i] %= w[i];
+    }
+    return *this;
+  }
+
+  KG_INLINE Vec& operator%=(T s)
+  {
+    for (size_t i = 0; i < N; i++) {
+      (*this)[i] %= s;
+    }
+    return *this;
+  }
+
   /**
    * @brief Calculates the sum of this vec's elements.
    * @return the sum
@@ -297,6 +313,12 @@ KG_INLINE Vec<T, N> operator+(T s, const Vec<T, N>& v)
 }
 
 template <typename T, std::size_t N>
+KG_INLINE Vec<T, N> operator+(const Vec<T, N>& v, T s)
+{
+  return s + v;
+}
+
+template <typename T, std::size_t N>
 KG_INLINE Vec<T, N> operator-(const Vec<T, N>& v, const Vec<T, N>& w)
 {
   Vec<T, N> res = v;
@@ -338,6 +360,12 @@ KG_INLINE Vec<T, N> operator*(T s, const Vec<T, N>& v)
 }
 
 template <typename T, std::size_t N>
+KG_INLINE Vec<T, N> operator*(const Vec<T, N>& v, T s)
+{
+  return s * v;
+}
+
+template <typename T, std::size_t N>
 KG_INLINE Vec<T, N> operator/(T s, const Vec<T, N>& v)
 {
   Vec<T, N> res;
@@ -364,6 +392,32 @@ KG_INLINE Vec<T, N> operator/(const Vec<T, N>& v, const Vec<T, N>& w)
 }
 
 template <typename T, std::size_t N>
+KG_INLINE Vec<T, N> operator%(T s, const Vec<T, N>& v)
+{
+  Vec<T, N> res;
+  for (size_t i = 0; i < N; i++) {
+    res[i] = s % v[i];
+  }
+  return res;
+}
+
+template <typename T, std::size_t N>
+KG_INLINE Vec<T, N> operator%(const Vec<T, N>& v, T s)
+{
+  Vec<T, N> res = v;
+  res %= s;
+  return res;
+}
+
+template <typename T, std::size_t N>
+KG_INLINE Vec<T, N> operator%(const Vec<T, N>& v, const Vec<T, N>& w)
+{
+  Vec<T, N> res = v;
+  res %= w;
+  return res;
+}
+
+template <typename T, std::size_t N>
 KG_INLINE std::ostream& operator<<(std::ostream& os, const Vec<T, N>& v)
 {
   os << "Vec<T," << N << ">{";
@@ -386,3 +440,30 @@ using Int3 = Vec3<int>;
 using UInt3 = Vec3<unsigned int>;
 using Float3 = Vec3<float>;
 using Double3 = Vec3<double>;
+
+/**
+ * @brief Calculates flattened index given a multi-dimensional index and
+ * dimensions.
+ *
+ * For example,
+ * ```c++
+ * Int3 idx{2, 1};
+ * Int3 dims{4, 3};
+ * int flat_idx = flatten_index(idx, dims);
+ * assert(flat_idx == 2 * 3 + 1);
+ * ```
+ * @tparam T scalar type (likely `int`)
+ * @tparam N number of elements
+ * @param idx indices along each dimension
+ * @param dims lengths of each dimension
+ * @return the flat index
+ */
+template <typename T, std::size_t N>
+KG_INLINE T flatten_index(const kg::Vec<T, N>& idx, const kg::Vec<T, N>& dims)
+{
+  T flat = idx[0];
+  for (int i = 1; i < N; i++) {
+    flat = flat * dims[i] + idx[i];
+  }
+  return flat;
+}
