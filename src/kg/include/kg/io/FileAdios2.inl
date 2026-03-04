@@ -257,6 +257,7 @@ inline size_t FileAdios2::sizeAttribute(const std::string& name) const
 {
   auto& io = const_cast<adios2::IO&>(io_); // FIXME
   auto type = io.AttributeType(name);
+  assert(!type.empty());
 
   if (0) {
   }
