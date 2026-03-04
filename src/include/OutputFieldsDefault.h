@@ -148,7 +148,7 @@ struct OutputFieldsItemParams
 
 // TODO infer Mfields from MfieldsState and/or GetItem
 template <typename Mfields, typename MfieldsState, typename Mparticles,
-          typename Writer, typename GetItem>
+          typename GetItem, typename Writer = WriterDefault>
 class OutputFieldsItem
   : public OutputFieldsItemParams
   , public DiagnosticBase<Mparticles, MfieldsState>
@@ -279,10 +279,10 @@ public:
 
 public:
   OutputFieldsItem<Mfields_from_gt_t<Item_jeh<MfieldsState>>, MfieldsState,
-                   Mparticles, Writer, GetItemJeh>
+                   Mparticles, GetItemJeh, Writer>
     fields;
   OutputFieldsItem<
     Mfields_from_gt_t<Item_Moments<typename MfieldsState::Storage, Dim>>,
-    MfieldsState, Mparticles, Writer, GetItemMoments<Dim>>
+    MfieldsState, Mparticles, GetItemMoments<Dim>, Writer>
     moments;
 };
