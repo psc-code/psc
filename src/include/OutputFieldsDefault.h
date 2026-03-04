@@ -164,13 +164,16 @@ public:
   {
     const Grid_t& grid = mflds.grid();
 
-    static int pr_eval, pr_accum, pr_pfd, pr_tfd;
-    if (!pr_eval) {
+    static int pr_outf, pr_eval, pr_accum, pr_pfd, pr_tfd;
+    if (!pr_outf) {
+      pr_outf = prof_register(("outf" + GetItem::suffix()).c_str(), 1., 0, 0);
       pr_eval = prof_register("outf eval", 1., 0, 0);
       pr_accum = prof_register("outf accum", 1., 0, 0);
       pr_pfd = prof_register("outf pfd", 1., 0, 0);
       pr_tfd = prof_register("outf tfd", 1., 0, 0);
     }
+
+    prof_start(pr_outf);
 
     int timestep = grid.timestep();
 
@@ -225,6 +228,8 @@ public:
         prof_stop(pr_tfd);
       }
     }
+
+    prof_stop(pr_outf);
   }
 
 private:
@@ -260,24 +265,8 @@ public:
 
   void perform_diagnostic(Mparticles& mprts, MfieldsState& mflds) override
   {
-    static int pr, pr_fields, pr_moments;
-    if (!pr) {
-      pr = prof_register("outf", 1., 0, 0);
-      pr_fields = prof_register("outf_fields", 1., 0, 0);
-      pr_moments = prof_register("outf_moments", 1., 0, 0);
-    }
-
-    prof_start(pr);
-
-    prof_start(pr_fields);
     fields(mprts, mflds);
-    prof_stop(pr_fields);
-
-    prof_start(pr_moments);
     moments(mprts, mflds);
-    prof_stop(pr_moments);
-
-    prof_stop(pr);
   };
 
 public:
