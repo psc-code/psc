@@ -146,7 +146,9 @@ struct OutputFieldsItemParams
 // ======================================================================
 // OutputFieldsItem
 
-template <typename Mfields, typename Writer, typename GetItem>
+// TODO infer Mfields from MfieldsState and/or GetItem
+template <typename Mfields, typename MfieldsState, typename Mparticles,
+          typename Writer, typename GetItem>
 class OutputFieldsItem : public OutputFieldsItemParams
 {
 public:
@@ -159,7 +161,6 @@ public:
       io_tfd_.open("tfd" + GetItem::suffix(), tfield.data_dir);
   }
 
-  template <typename Mparticles, typename MfieldsState>
   void operator()(const Mparticles& mprts, const MfieldsState& mflds)
   {
     const Grid_t& grid = mflds.grid();
@@ -270,11 +271,11 @@ public:
   };
 
 public:
-  OutputFieldsItem<Mfields_from_gt_t<Item_jeh<MfieldsState>>, Writer,
-                   GetItemJeh>
+  OutputFieldsItem<Mfields_from_gt_t<Item_jeh<MfieldsState>>, MfieldsState,
+                   Mparticles, Writer, GetItemJeh>
     fields;
   OutputFieldsItem<
     Mfields_from_gt_t<Item_Moments<typename MfieldsState::Storage, Dim>>,
-    Writer, GetItemMoments<Dim>>
+    MfieldsState, Mparticles, Writer, GetItemMoments<Dim>>
     moments;
 };
