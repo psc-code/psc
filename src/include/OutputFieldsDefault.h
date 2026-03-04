@@ -149,7 +149,9 @@ struct OutputFieldsItemParams
 // TODO infer Mfields from MfieldsState and/or GetItem
 template <typename Mfields, typename MfieldsState, typename Mparticles,
           typename Writer, typename GetItem>
-class OutputFieldsItem : public OutputFieldsItemParams
+class OutputFieldsItem
+  : public OutputFieldsItemParams
+  , public DiagnosticBase<Mparticles, MfieldsState>
 {
 public:
   OutputFieldsItem(const OutputFieldsItemParams& prm)
@@ -160,6 +162,11 @@ public:
     if (tfield.enabled())
       io_tfd_.open("tfd" + GetItem::suffix(), tfield.data_dir);
   }
+
+  void perform_diagnostic(Mparticles& mprts, MfieldsState& mflds) override
+  {
+    (*this)(mprts, mflds);
+  };
 
   void operator()(const Mparticles& mprts, const MfieldsState& mflds)
   {
