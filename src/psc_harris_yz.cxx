@@ -402,14 +402,13 @@ void run()
 
   // -- output fields
   OutputFieldsItemParams outf_item_params{};
-  OutputFieldsParams outf_params{};
   outf_item_params.pfield.out_interval = 100;
   outf_item_params.tfield.out_interval = -4;
   outf_item_params.tfield.average_every = 50;
 
-  outf_params.fields = outf_item_params;
-  outf_params.moments = outf_item_params;
-  OutputFields<MfieldsState, Mparticles, Dim, Writer> outf{outf_params};
+  OutputFields<MfieldsState, Mparticles, Writer> out_fields{outf_item_params};
+  OutputMoments<MfieldsState, Mparticles, Dim, Writer> out_moments{
+    outf_item_params};
 
   // -- output particles
   OutputParticlesParams outp_params{};
@@ -444,7 +443,8 @@ void run()
 
   psc.add_gauss_corrector(&marder);
 
-  psc.add_diagnostic(&outf);
+  psc.add_diagnostic(&out_fields);
+  psc.add_diagnostic(&out_moments);
   psc.add_diagnostic(&outp);
   psc.add_diagnostic(&oute);
 

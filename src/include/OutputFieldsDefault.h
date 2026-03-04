@@ -247,42 +247,14 @@ private:
   int naccum_ = 0;
 };
 
-// ======================================================================
-// OutputFieldsParams
-
-struct OutputFieldsParams
-{
-  OutputFieldsItemParams fields;
-  OutputFieldsItemParams moments;
-};
-
-// ======================================================================
-// OutputFields
+template <typename MfieldsState, typename Mparticles,
+          typename Writer = WriterDefault>
+using OutputFields =
+  OutputFieldsItem<Mfields_from_gt_t<Item_jeh<MfieldsState>>, MfieldsState,
+                   Mparticles, GetItemJeh, Writer>;
 
 template <typename MfieldsState, typename Mparticles, typename Dim,
           typename Writer = WriterDefault>
-class OutputFields : public DiagnosticBase<Mparticles, MfieldsState>
-{
-public:
-  // ----------------------------------------------------------------------
-  // ctor
-
-  OutputFields(const OutputFieldsParams& prm)
-    : fields{prm.fields}, moments{prm.moments}
-  {}
-
-  void perform_diagnostic(Mparticles& mprts, MfieldsState& mflds) override
-  {
-    fields(mprts, mflds);
-    moments(mprts, mflds);
-  };
-
-public:
-  OutputFieldsItem<Mfields_from_gt_t<Item_jeh<MfieldsState>>, MfieldsState,
-                   Mparticles, GetItemJeh, Writer>
-    fields;
-  OutputFieldsItem<
-    Mfields_from_gt_t<Item_Moments<typename MfieldsState::Storage, Dim>>,
-    MfieldsState, Mparticles, GetItemMoments<Dim>, Writer>
-    moments;
-};
+using OutputMoments = OutputFieldsItem<
+  Mfields_from_gt_t<Item_Moments<typename MfieldsState::Storage, Dim>>,
+  MfieldsState, Mparticles, GetItemMoments<Dim>, Writer>;

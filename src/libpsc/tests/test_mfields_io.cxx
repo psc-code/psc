@@ -181,16 +181,16 @@ TYPED_TEST(OutputFieldsTest, OutputFieldsMRC)
     return m + crd[0] + 100 * crd[1] + 10000 * crd[2];
   });
 
-  OutputFieldsParams outf_params{};
   OutputFieldsItemParams outf_item_params{};
   outf_item_params.pfield.out_interval = 1;
   outf_item_params.tfield.out_interval = 0;
   outf_item_params.tfield.average_every = 40;
-  outf_params.fields = outf_item_params;
-  outf_params.moments = outf_item_params;
-  OutputFields<Mfields, Mparticles, dim_xyz, WriterMRC> outf{outf_params};
+  OutputFields<Mfields, Mparticles, WriterMRC> out_fields{outf_item_params};
+  OutputMoments<Mfields, Mparticles, dim_xyz, WriterMRC> out_moments{
+    outf_item_params};
 
-  outf.perform_diagnostic(mprts, mflds);
+  out_fields.perform_diagnostic(mprts, mflds);
+  out_moments.perform_diagnostic(mprts, mflds);
 }
 
 #ifdef PSC_HAVE_ADIOS2
@@ -208,16 +208,16 @@ TYPED_TEST(OutputFieldsTest, OutputFieldsADIOS2)
     return m + crd[0] + 100 * crd[1] + 10000 * crd[2];
   });
 
-  OutputFieldsParams outf_params{};
   OutputFieldsItemParams outf_item_params{};
   outf_item_params.pfield.out_interval = 1;
   outf_item_params.tfield.out_interval = 0;
   outf_item_params.tfield.average_every = 40;
-  outf_params.fields = outf_item_params;
-  outf_params.moments = outf_item_params;
-  OutputFields<Mfields, Mparticles, dim_xyz, WriterADIOS2> outf{outf_params};
+  OutputFields<Mfields, Mparticles, WriterADIOS2> out_fields{outf_item_params};
+  OutputMoments<Mfields, Mparticles, dim_xyz, WriterADIOS2> out_moments{
+    outf_item_params};
 
-  outf.perform_diagnostic(mprts, mflds);
+  out_fields.perform_diagnostic(mprts, mflds);
+  out_moments.perform_diagnostic(mprts, mflds);
 }
 
 #endif

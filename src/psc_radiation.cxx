@@ -277,12 +277,9 @@ void run()
   // FIXME, this really is too complicated and not very flexible
 
   // -- output fields
-  OutputFieldsItemParams outf_item_params{};
-  OutputFieldsParams outf_params{};
-  outf_item_params.pfield.out_interval = 20;
-
-  outf_params.fields = outf_item_params;
-  OutputFields<MfieldsState, Mparticles, Dim, Writer> outf{outf_params};
+  OutputFieldsItemParams out_fields_params{};
+  out_fields_params.pfield.out_interval = 20;
+  OutputFields<MfieldsState, Mparticles, Writer> out_fields{out_fields_params};
 
   // -- output particles
   OutputParticlesParams outp_params{};
@@ -307,7 +304,7 @@ void run()
 
   psc.add_gauss_corrector(&marder);
 
-  psc.add_diagnostic(&outf);
+  psc.add_diagnostic(&out_fields);
   psc.add_diagnostic(&outp);
   psc.add_diagnostic(&oute);
 

@@ -791,10 +791,13 @@ static void run(int argc, char** argv)
   // Set up output
 
   // -- output fields
-  OutputFieldsParams outf_params{};
-  outf_params.fields.pfield.out_interval = out_interval;
-  outf_params.moments.pfield.out_interval = out_interval;
-  OutputFields<MfieldsState, Mparticles, Dim> outf{outf_params};
+  OutputFieldsItemParams out_fields_params{};
+  out_fields_params.pfield.out_interval = out_interval;
+  OutputFields<MfieldsState, Mparticles> out_fields{out_fields_params};
+
+  OutputFieldsItemParams out_moments_params{};
+  out_moments_params.pfield.out_interval = out_interval;
+  OutputMoments<MfieldsState, Mparticles, Dim> out_moments{out_moments_params};
 
   // -- output particles
   OutputParticlesParams outp_params{};
@@ -839,7 +842,8 @@ static void run(int argc, char** argv)
   psc.bndf.radiation = new AdvectedPeriodicFields{mflds, v_upstream[1],
                                                   background_e, background_h};
 
-  psc.add_diagnostic(&outf);
+  psc.add_diagnostic(&out_fields);
+  psc.add_diagnostic(&out_moments);
   psc.add_diagnostic(&outp);
   psc.add_diagnostic(&oute);
 
