@@ -503,11 +503,20 @@ private:
 
   void perform_diagnostics()
   {
+    static int pr_diagnostics;
+    if (!pr_diagnostics) {
+      pr_diagnostics = prof_register("diagnostics", 1., 0, 0);
+    }
+
+    prof_start(pr_diagnostics);
     psc_stats_start(st_time_output);
+
     for (auto diagnostic : diagnostics_) {
       diagnostic->perform_diagnostic(mprts_, mflds_);
     }
+
     psc_stats_stop(st_time_output);
+    prof_stop(pr_diagnostics);
   }
 
   // ----------------------------------------------------------------------
