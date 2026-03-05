@@ -207,7 +207,6 @@ public:
         }
 
         prof_start(pr_accum);
-        // tfd += pfd
         tfd_->gt() = tfd_->gt() + pfd;
         naccum_++;
         prof_stop(pr_accum);
@@ -226,10 +225,6 @@ public:
         // convert accumulated values to correct temporal mean
         tfd_->gt() = (1. / naccum_) * tfd_->gt();
 
-        // io_tfd_.begin_step(grid);
-        // io_tfd_.set_subset(grid, rn, rx);
-        // io_tfd_.write(tfd_->gt(), grid, item.name(),
-        // item.comp_names()); io_tfd_.end_step();
         io_tfd_.write_step(grid, tfield.rn, tfield.rx, tfd_->gt(), item.name,
                            item.comp_names);
         naccum_ = 0;
