@@ -12,7 +12,6 @@
 #include "../libpsc/psc_output_fields/fields_item_fields.hxx"
 #include "../libpsc/psc_output_fields/fields_item_moments_1st.hxx"
 #include "../libpsc/psc_output_particles/output_particles_hdf5_impl.hxx"
-#include "../libpsc/psc_output_particles/output_particles_none_impl.hxx"
 #include "../libpsc/psc_push_fields/marder_impl.hxx"
 #include "../libpsc/psc_push_particles/1vb/psc_push_particles_1vb.h"
 #include "../libpsc/psc_sort/psc_sort_impl.hxx"
