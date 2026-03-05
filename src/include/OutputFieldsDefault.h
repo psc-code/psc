@@ -165,11 +165,6 @@ public:
 
   void perform_diagnostic(Mparticles& mprts, MfieldsState& mflds) override
   {
-    (*this)(mprts, mflds);
-  };
-
-  void operator()(const Mparticles& mprts, const MfieldsState& mflds)
-  {
     const Grid_t& grid = mflds.grid();
 
     static int pr_outf, pr_eval, pr_accum, pr_pfd, pr_tfd;
