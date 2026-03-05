@@ -464,7 +464,7 @@ void run()
   out_fields.pfield.out_interval = 1500;
   out_fields.tfield.out_interval = 1500;
 #endif
-  out_fields.tfield.average_every = 50;
+  out_fields.tfield.sample_interval = 50;
 
   // copy params from out_fields
   OutputMoments<MfieldsState, Mparticles, Dim, Writer> out_moments{out_fields};

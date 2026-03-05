@@ -258,7 +258,7 @@ TEST(OutputFieldsParamsTest, Tfield_DoAccum)
   EXPECT_TRUE(prm.do_accum(52));
   EXPECT_TRUE(prm.do_accum(53));
 
-  prm.average_every = 2;
+  prm.sample_interval = 2;
   EXPECT_FALSE(prm.do_accum(51));
   EXPECT_TRUE(prm.do_accum(52));
   EXPECT_FALSE(prm.do_accum(53));

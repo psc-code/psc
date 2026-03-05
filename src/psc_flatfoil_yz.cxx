@@ -514,11 +514,11 @@ void run()
 #elif CASE == CASE_2D_SMALL
   out_fields.pfield.out_interval = 4;
   out_fields.tfield.out_interval = 4;
-  out_fields.tfield.average_every = 2;
+  out_fields.tfield.sample_interval = 2;
 #else
   out_fields.pfield.out_interval = 500;
   out_fields.tfield.out_interval = 500;
-  out_fields.tfield.average_every = 50;
+  out_fields.tfield.sample_interval = 50;
 #endif
 
   // copy params from out_fields

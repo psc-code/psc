@@ -94,14 +94,14 @@ struct OutputTfieldItemParams : BaseOutputFieldItemParams
   // max range of timesteps over which to average (capped at `out_interval`)
   int average_length = 1000000;
   // difference between timesteps used for average
-  int average_every = 1;
+  int sample_interval = 1;
 
   // Returns whether to accumulate on this timestep.
   bool do_accum(int timestep)
   {
     bool in_averaging_range = next_out(timestep) - timestep < average_length;
     bool on_averaging_step =
-      (next_out(timestep) - timestep) % average_every == 0;
+      (next_out(timestep) - timestep) % sample_interval == 0;
     return enabled() && in_averaging_range && on_averaging_step;
   }
 };
