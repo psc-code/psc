@@ -277,9 +277,8 @@ void run()
   // FIXME, this really is too complicated and not very flexible
 
   // -- output fields
-  OutputFieldsItemParams out_fields_params{};
-  out_fields_params.pfield.out_interval = 20;
-  OutputFields<MfieldsState, Mparticles, Writer> out_fields{out_fields_params};
+  OutputFields<MfieldsState, Mparticles, Writer> out_fields;
+  out_fields.pfield.out_interval = 20;
 
   // -- output particles
   OutputParticlesParams outp_params{};

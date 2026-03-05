@@ -181,13 +181,11 @@ TYPED_TEST(OutputFieldsTest, OutputFieldsMRC)
     return m + crd[0] + 100 * crd[1] + 10000 * crd[2];
   });
 
-  OutputFieldsItemParams outf_item_params{};
-  outf_item_params.pfield.out_interval = 1;
-  outf_item_params.tfield.out_interval = 0;
-  outf_item_params.tfield.average_every = 40;
-  OutputFields<Mfields, Mparticles, WriterMRC> out_fields{outf_item_params};
-  OutputMoments<Mfields, Mparticles, dim_xyz, WriterMRC> out_moments{
-    outf_item_params};
+  OutputFields<Mfields, Mparticles, WriterMRC> out_fields;
+  out_fields.pfield.out_interval = 1;
+
+  OutputMoments<Mfields, Mparticles, dim_xyz, WriterMRC> out_moments;
+  out_moments.pfield.out_interval = 1;
 
   out_fields.perform_diagnostic(mprts, mflds);
   out_moments.perform_diagnostic(mprts, mflds);
@@ -208,13 +206,11 @@ TYPED_TEST(OutputFieldsTest, OutputFieldsADIOS2)
     return m + crd[0] + 100 * crd[1] + 10000 * crd[2];
   });
 
-  OutputFieldsItemParams outf_item_params{};
-  outf_item_params.pfield.out_interval = 1;
-  outf_item_params.tfield.out_interval = 0;
-  outf_item_params.tfield.average_every = 40;
-  OutputFields<Mfields, Mparticles, WriterADIOS2> out_fields{outf_item_params};
-  OutputMoments<Mfields, Mparticles, dim_xyz, WriterADIOS2> out_moments{
-    outf_item_params};
+  OutputFields<Mfields, Mparticles, WriterADIOS2> out_fields;
+  out_fields.pfield.out_interval = 1;
+
+  OutputMoments<Mfields, Mparticles, dim_xyz, WriterADIOS2> out_moments;
+  out_moments.pfield.out_interval = 1;
 
   out_fields.perform_diagnostic(mprts, mflds);
   out_moments.perform_diagnostic(mprts, mflds);

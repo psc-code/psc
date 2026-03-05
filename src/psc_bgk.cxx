@@ -520,13 +520,11 @@ static void run(int argc, char** argv)
   // FIXME, this really is too complicated and not very flexible
 
   // -- output fields
-  OutputFieldsItemParams out_fields_params{};
-  out_fields_params.pfield.out_interval = g.fields_every;
-  OutputFields<MfieldsState, Mparticles> out_fields{out_fields_params};
+  OutputFields<MfieldsState, Mparticles> out_fields;
+  out_fields.pfield.out_interval = g.fields_every;
 
-  OutputFieldsItemParams out_moments_params{};
-  out_moments_params.pfield.out_interval = g.moments_every;
-  OutputMoments<MfieldsState, Mparticles, Dim> out_moments{out_moments_params};
+  OutputMoments<MfieldsState, Mparticles, Dim> out_moments;
+  out_moments.pfield.out_interval = g.moments_every;
 
   // -- output particles
   OutputParticlesParams outp_params{};

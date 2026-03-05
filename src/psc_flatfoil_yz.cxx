@@ -508,26 +508,21 @@ void run()
   // FIXME, this really is too complicated and not very flexible
 
   // -- output fields
-  OutputFieldsItemParams outf_item_params{};
+  OutputFields<MfieldsState, Mparticles, Writer> out_fields;
 #if CASE == CASE_1D
-  outf_item_params.pfield.out_interval = 100;
-  outf_item_params.tfield.out_interval = -100;
+  out_fields.pfield.out_interval = 100;
 #elif CASE == CASE_2D_SMALL
-  outf_item_params.pfield.out_interval = 4;
-  outf_item_params.tfield.out_interval = 4;
+  out_fields.pfield.out_interval = 4;
+  out_fields.tfield.out_interval = 4;
+  out_fields.tfield.average_every = 2;
 #else
-  outf_item_params.pfield.out_interval = 500;
-  outf_item_params.tfield.out_interval = 500;
-#endif
-#if CASE == CASE_2D_SMALL
-  outf_item_params.tfield.average_every = 2;
-#else
-  outf_item_params.tfield.average_every = 50;
+  out_fields.pfield.out_interval = 500;
+  out_fields.tfield.out_interval = 500;
+  out_fields.tfield.average_every = 50;
 #endif
 
-  OutputFields<MfieldsState, Mparticles, Writer> out_fields{outf_item_params};
-  OutputMoments<MfieldsState, Mparticles, Dim, Writer> out_moments{
-    outf_item_params};
+  // copy params from out_fields
+  OutputMoments<MfieldsState, Mparticles, Dim, Writer> out_moments{out_fields};
 
   // -- output particles
   OutputParticlesParams outp_params{};

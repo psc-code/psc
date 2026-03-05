@@ -401,14 +401,11 @@ void run()
   // FIXME, this really is too complicated and not very flexible
 
   // -- output fields
-  OutputFieldsItemParams outf_item_params{};
-  outf_item_params.pfield.out_interval = 100;
-  outf_item_params.tfield.out_interval = -4;
-  outf_item_params.tfield.average_every = 50;
+  OutputFields<MfieldsState, Mparticles, Writer> out_fields;
+  out_fields.pfield.out_interval = 100;
 
-  OutputFields<MfieldsState, Mparticles, Writer> out_fields{outf_item_params};
-  OutputMoments<MfieldsState, Mparticles, Dim, Writer> out_moments{
-    outf_item_params};
+  OutputMoments<MfieldsState, Mparticles, Dim, Writer> out_moments;
+  out_moments.pfield.out_interval = 100;
 
   // -- output particles
   OutputParticlesParams outp_params{};
