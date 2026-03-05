@@ -77,13 +77,6 @@ struct BaseOutputFieldItemParams
   {
     return enabled() && timestep % out_interval == 0;
   }
-
-  // Returns the next output timestep after the given timestep.
-  int next_out(int timestep)
-  {
-    int n_intervals_elapsed = timestep / out_interval;
-    return out_interval * (n_intervals_elapsed + 1);
-  }
 };
 
 struct OutputPfieldItemParams : BaseOutputFieldItemParams
@@ -99,9 +92,11 @@ struct OutputTfieldItemParams : BaseOutputFieldItemParams
   // Returns whether to accumulate on this timestep.
   bool do_accum(int timestep)
   {
-    bool in_averaging_range = next_out(timestep) - timestep < average_length;
-    bool on_averaging_step =
-      (next_out(timestep) - timestep) % sample_interval == 0;
+    int n_intervals_elapsed = timestep / out_interval;
+    int next_out = out_interval * (n_intervals_elapsed + 1);
+
+    bool in_averaging_range = next_out - timestep < average_length;
+    bool on_averaging_step = (next_out - timestep) % sample_interval == 0;
     return enabled() && in_averaging_range && on_averaging_step;
   }
 };

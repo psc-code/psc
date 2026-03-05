@@ -237,13 +237,6 @@ TEST(OutputFieldsParamsTest, DoOut)
   EXPECT_TRUE(prm.do_out(0));
 }
 
-TEST(OutputFieldsParamsTest, NextOut)
-{
-  BaseOutputFieldItemParams prm;
-  prm.out_interval = 100;
-  EXPECT_EQ(prm.next_out(0), 100);
-}
-
 TEST(OutputFieldsParamsTest, Tfield_DoAccum)
 {
   OutputTfieldItemParams prm;    // default: use every step between outs
