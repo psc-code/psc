@@ -293,7 +293,7 @@ struct SetupParticles
     }
 
     prof_start(pr);
-    const auto& grid = mprts.grid();
+    const Grid_t& grid = mprts.grid();
 
     // mprts.reserve_all(n_prts_by_patch); FIXME
 
