@@ -154,6 +154,8 @@ class OutputFieldsItem
   , public DiagnosticBase<Mparticles, MfieldsState>
 {
 public:
+  OutputFieldsItem() = default;
+
   OutputFieldsItem(const OutputFieldsItemParams& prm)
     : OutputFieldsItemParams{prm}
   {}
