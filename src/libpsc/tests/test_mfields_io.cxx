@@ -16,7 +16,7 @@
 #include "../libpsc/cuda/setup_fields_cuda.hxx"
 #endif
 
-#include "OutputFieldsDefault.h"
+#include "output_fields.hxx"
 #include "writer_mrc.hxx"
 #ifdef PSC_HAVE_ADIOS2
 #include "writer_adios2.hxx"

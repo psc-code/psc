@@ -3,7 +3,7 @@
 #include <setup_fields.hxx>
 #include <setup_particles.hxx>
 
-#include "OutputFieldsDefault.h"
+#include "output_fields.hxx"
 #include "psc_config.hxx"
 #include "input_params.hxx"
 

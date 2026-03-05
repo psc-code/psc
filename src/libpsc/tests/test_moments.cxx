@@ -25,7 +25,7 @@ struct Moment_rho_1st_nc_selector<MfieldsCuda, D>
 // ======================================================================
 // Moments_1st_selector
 //
-// FIXME, should go away eventually; duplicated from OutputFieldsDefault.h
+// FIXME, should go away eventually; duplicated from output_fields.hxx
 
 template <typename S, typename D, typename Enable = void>
 struct Moments_1st_selector
