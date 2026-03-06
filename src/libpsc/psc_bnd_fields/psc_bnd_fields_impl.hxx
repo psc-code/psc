@@ -185,27 +185,32 @@ struct BndFields_ : BndFieldsBase
     *f = std::numeric_limits<real_t>::quiet_NaN();
   }
 
-  void nan_lower(MfieldsState& mflds, int p, int d, int mb, int me)
+  void nan_lower(MfieldsState& mflds, int p, int d, int mb)
   {
 #ifndef DEBUG
     return;
 #endif
+    real_t nan = std::numeric_limits<real_t>::quiet_NaN();
+    set_lower(mflds, p, d, mb, {nan, nan, nan});
+  }
 
+  void set_lower(MfieldsState& mflds, int p, int d, int mb, Real3 val)
+  {
     auto F = make_Fields3d<dim_t>(mflds[p]);
     Int3 start = mflds.ib();
     Int3 stop = mflds.im();
     stop[d] = 0;
 
-    for (int m = mb; m < me; m++) {
+    for (int m = mb; m < mb + 3; m++) {
       for (Int3 i3 : VecRange(start, stop)) {
-        fields_t_set_nan(&F(m, i3));
+        F(m, i3) = val[m - mb];
       }
     }
   }
 
   void conducting_wall_E_lo(MfieldsState& mflds, int p, int d)
   {
-    nan_lower(mflds, p, d, EX, EX + 3);
+    nan_lower(mflds, p, d, EX);
 
     auto F = make_Fields3d<dim_t>(mflds[p]);
     const int* ldims = mflds.grid().ldims;
@@ -309,7 +314,7 @@ struct BndFields_ : BndFieldsBase
 
   void conducting_wall_H_lo(MfieldsState& mflds, int p, int d)
   {
-    nan_lower(mflds, p, d, HX, HX + 3);
+    nan_lower(mflds, p, d, HX);
 
     auto F = make_Fields3d<dim_t>(mflds[p]);
     const int* ldims = mflds.grid().ldims;
@@ -483,7 +488,7 @@ struct BndFields_ : BndFieldsBase
 
   void radiative_H_lo(MfieldsState& mflds, int p, int d)
   {
-    nan_lower(mflds, p, d, HX, HX + 3);
+    nan_lower(mflds, p, d, HX);
 
     auto F = make_Fields3d<dim_t>(mflds[p]);
     const Grid_t& grid = mflds.grid();
