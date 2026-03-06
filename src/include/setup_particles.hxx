@@ -280,12 +280,14 @@ struct SetupParticles
   // ----------------------------------------------------------------------
   // setupParticles
 
-  void setupParticles(Mparticles& mprts, InitNptFunc init_npt)
+  void setupParticles(Mparticles& mprts, InitNptFunc init_npt,
+                      bool random_offsets = false)
   {
-    setupParticles(mprts, initNpt_to_initNp(init_npt));
+    setupParticles(mprts, initNpt_to_initNp(init_npt), random_offsets);
   }
 
-  void setupParticles(Mparticles& mprts, InitNpFunc init_np)
+  void setupParticles(Mparticles& mprts, InitNpFunc init_np,
+                      bool random_offsets = false)
   {
     static int pr;
     if (!pr) {
@@ -299,17 +301,48 @@ struct SetupParticles
 
     auto inj = mprts.injector();
 
+    std::vector<rng::Uniform<real_t>> offset_rngs;
+    if (random_offsets) {
+      LOG_WARN(
+        "SetupParticles: enabled random offsets. Initial particle positions "
+        "will be randomized in each cell, instead of all at cell centers. Each "
+        "species uses the same rng seed, so if there are the same number of "
+        "particles of each species in each cell, each species will have the "
+        "exact same initial position distribution. This results in a charge "
+        "density of 0 if there are two species with opposite charges, but the "
+        "resulting charge density is nonzero in general. In the latter, case, "
+        "take special care to ensure Gauss' law isn't violated.");
+
+      int seed = rng::detail::get_process_seed();
+      for (int species_count = 0; species_count < grid.kinds.size();
+           species_count++) {
+        offset_rngs.push_back({-0.5, 0.5, seed});
+      }
+    }
+
     for (int p = 0; p < mprts.n_patches(); ++p) {
       auto injector = inj[p];
 
-      op_cellwise(grid, p, init_np,
-                  [&](int n_in_cell, psc_particle_np& np, Double3& pos) {
-                    for (int cnt = 0; cnt < n_in_cell; cnt++) {
-                      real_t weight = getWeight(np.n, n_in_cell);
-                      auto prt = setupParticle(np, pos, weight);
-                      injector(prt);
-                    }
-                  });
+      op_cellwise(
+        grid, p, init_np,
+        [&](int n_in_cell, psc_particle_np& np, Double3& cell_pos_cc) {
+          for (int cnt = 0; cnt < n_in_cell; cnt++) {
+            real_t weight = getWeight(np.n, n_in_cell);
+
+            Double3 prt_pos = cell_pos_cc;
+            if (random_offsets) {
+              auto rng = offset_rngs[np.kind];
+              for (int d = 0; d < 3; d++) {
+                if (!grid.isInvar(d)) {
+                  prt_pos[d] += rng.get() * grid.domain.dx[d];
+                }
+              }
+            }
+
+            auto prt = setupParticle(np, prt_pos, weight);
+            injector(prt);
+          }
+        });
     }
 
     prof_stop(pr);
