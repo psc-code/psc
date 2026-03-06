@@ -184,26 +184,33 @@ struct BndFields_ : BndFieldsBase
     *f = std::numeric_limits<real_t>::quiet_NaN();
   }
 
+  void nan_lower(MfieldsState& mflds, int p, int d, int mb, int me)
+  {
+#ifndef DEBUG
+    return;
+#endif
+
+    auto F = make_Fields3d<dim_t>(mflds[p]);
+    Int3 start = mflds.ib();
+    Int3 stop = mflds.im();
+    stop[d] = 0;
+
+    for (int m = mb; m < me; m++) {
+      for (Int3 i3 : VecRange(start, stop)) {
+        fields_t_set_nan(&F(m, i3));
+      }
+    }
+  }
+
   void conducting_wall_E_lo(MfieldsState& mflds, int p, int d)
   {
+    nan_lower(mflds, p, d, EX, EX + 3);
+
     auto F = make_Fields3d<dim_t>(mflds[p]);
     const int* ldims = mflds.grid().ldims;
     Int3 ib = mflds.ib(), im = mflds.im();
 
     if (d == 1) {
-#ifdef DEBUG
-      for (int iz = -2; iz < ldims[2] + 2; iz++) {
-        for (int ix = std::max(-2, F.ib_[0]);
-             ix < std::min(ldims[0] + 2, F.ib_[0] + F.im_[0]); ix++) {
-          fields_t_set_nan(&F(EX, ix, -1, iz));
-          fields_t_set_nan(&F(EX, ix, -2, iz));
-          fields_t_set_nan(&F(EY, ix, -1, iz));
-          fields_t_set_nan(&F(EY, ix, -2, iz));
-          fields_t_set_nan(&F(EZ, ix, -1, iz));
-          fields_t_set_nan(&F(EZ, ix, -2, iz));
-        }
-      }
-#endif
       for (int iz = -2; iz < ldims[2] + 2; iz++) {
         // FIXME, needs to be for other dir, too, and it's ugly
         for (int ix = std::max(-2, ib[0]);
@@ -218,18 +225,6 @@ struct BndFields_ : BndFieldsBase
         }
       }
     } else if (d == 2) {
-#ifdef DEBUG
-      for (int iy = -2; iy < ldims[1] + 2; iy++) {
-        for (int ix = -2; ix < ldims[0] + 2; ix++) {
-          fields_t_set_nan(&F(EX, ix, iy, -1));
-          fields_t_set_nan(&F(EX, ix, iy, -2));
-          fields_t_set_nan(&F(EY, ix, iy, -1));
-          fields_t_set_nan(&F(EY, ix, iy, -2));
-          fields_t_set_nan(&F(EZ, ix, iy, -1));
-          fields_t_set_nan(&F(EZ, ix, iy, -2));
-        }
-      }
-#endif
       for (int iy = -2; iy < ldims[1] + 2; iy++) {
         for (int ix = std::max(-2, ib[0]);
              ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
@@ -313,24 +308,13 @@ struct BndFields_ : BndFieldsBase
 
   void conducting_wall_H_lo(MfieldsState& mflds, int p, int d)
   {
+    nan_lower(mflds, p, d, HX, HX + 3);
+
     auto F = make_Fields3d<dim_t>(mflds[p]);
     const int* ldims = mflds.grid().ldims;
     Int3 ib = mflds.ib(), im = mflds.im();
 
     if (d == 1) {
-#ifdef DEBUG
-      for (int iz = -2; iz < ldims[2] + 2; iz++) {
-        for (int ix = std::max(-2, F.ib_[0]);
-             ix < std::min(ldims[0] + 2, F.ib_[0] + F.im_[0]); ix++) {
-          fields_t_set_nan(&F(HX, ix, -1, iz));
-          fields_t_set_nan(&F(HX, ix, -2, iz));
-          fields_t_set_nan(&F(HY, ix, -1, iz));
-          fields_t_set_nan(&F(HY, ix, -2, iz));
-          fields_t_set_nan(&F(HZ, ix, -1, iz));
-          fields_t_set_nan(&F(HZ, ix, -2, iz));
-        }
-      }
-#endif
       for (int iz = -1; iz < ldims[2] + 2; iz++) {
         for (int ix = std::max(-2, ib[0]);
              ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
@@ -342,18 +326,6 @@ struct BndFields_ : BndFieldsBase
         }
       }
     } else if (d == 2) {
-#ifdef DEBUG
-      for (int iy = -2; iy < ldims[1] + 2; iy++) {
-        for (int ix = -2; ix < ldims[0] + 2; ix++) {
-          fields_t_set_nan(&F(HX, ix, iy, -1));
-          fields_t_set_nan(&F(HX, ix, iy, -2));
-          fields_t_set_nan(&F(HY, ix, iy, -1));
-          fields_t_set_nan(&F(HY, ix, iy, -2));
-          fields_t_set_nan(&F(HZ, ix, iy, -1));
-          fields_t_set_nan(&F(HZ, ix, iy, -2));
-        }
-      }
-#endif
       for (int iy = -2; iy < ldims[1] + 2; iy++) {
         for (int ix = std::max(-2, ib[0]);
              ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
@@ -510,6 +482,8 @@ struct BndFields_ : BndFieldsBase
 
   void radiative_H_lo(MfieldsState& mflds, int p, int d)
   {
+    nan_lower(mflds, p, d, HX, HX + 3);
+
     auto F = make_Fields3d<dim_t>(mflds[p]);
     const Grid_t& grid = mflds.grid();
     Int3 ldims = grid.ldims;
@@ -519,19 +493,6 @@ struct BndFields_ : BndFieldsBase
     auto dxi = grid.domain.dx_inv;
 
     if (d == 1) {
-#ifdef DEBUG
-      for (int iz = -2; iz < ldims[2] + 2; iz++) {
-        for (int ix = std::max(-2, ib[0]);
-             ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
-          fields_t_set_nan(&F(HX, ix, -1, iz));
-          fields_t_set_nan(&F(HX, ix, -2, iz));
-          fields_t_set_nan(&F(HY, ix, -1, iz));
-          fields_t_set_nan(&F(HY, ix, -2, iz));
-          fields_t_set_nan(&F(HZ, ix, -1, iz));
-          fields_t_set_nan(&F(HZ, ix, -2, iz));
-        }
-      }
-#endif
       int d0 = (d + 0) % 3;
       int d1 = (d + 1) % 3;
       int d2 = (d + 2) % 3;
