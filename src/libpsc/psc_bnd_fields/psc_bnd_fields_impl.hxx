@@ -492,52 +492,44 @@ struct BndFields_ : BndFieldsBase
 
     auto F = make_Fields3d<dim_t>(mflds[p]);
     const Grid_t& grid = mflds.grid();
-    Int3 ldims = grid.ldims;
-    Int3 ib = mflds.ib();
-    Int3 im = mflds.im();
     real_t dt = grid.dt;
     auto dxi = grid.domain.dx_inv;
 
-    if (d == 1) {
-      int d0 = (d + 0) % 3;
-      int d1 = (d + 1) % 3;
-      int d2 = (d + 2) % 3;
+    int d0 = (d + 0) % 3;
+    int d1 = (d + 1) % 3;
+    int d2 = (d + 2) % 3;
 
-      Int3 start = mflds.ib();
-      Int3 stop = mflds.im();
-      start[d0] = -1;
-      stop[d0] = 0;
+    Int3 start = mflds.ib();
+    Int3 stop = mflds.im();
+    start[d0] = -1;
+    stop[d0] = 0;
 
-      for (Int3 i3 : VecRange(start, stop)) {
-        Int3 edge_idx = i3;
-        edge_idx[d0] = 0;
+    for (Int3 i3 : VecRange(start, stop)) {
+      Int3 edge_idx = i3;
+      edge_idx[d0] = 0;
 
-        Int3 neg1_d1{0, 0, 0};
-        neg1_d1[d1] = -1;
+      Int3 neg1_d1{0, 0, 0};
+      neg1_d1[d1] = -1;
 
-        Int3 neg1_d2{0, 0, 0};
-        neg1_d2[d2] = -1;
+      Int3 neg1_d2{0, 0, 0};
+      neg1_d2[d2] = -1;
 
-        F(HX + d2, i3) =
-          (/* + 4.f * C_s_pulse_y1(x,y,z+0.5*dz,t) */
-           -2.f * F(EX + d1, edge_idx) -
-           dt * dxi[d2] *
-             (F(HX + d0, edge_idx) - F(HX + d0, edge_idx + neg1_d2)) -
-           (1.f - dt * dxi[d0]) * F(HX + d2, edge_idx) +
-           dt * F(JXI + d1, edge_idx)) /
-          (1.f + dt * dxi[d0]);
-        F(HX + d1, i3) =
-          (/* + 4.f * C_p_pulse_y1(x+.5*dx,y,z,t) */
-           +2.f * F(EX + d2, edge_idx) -
-           dt * dxi[d1] *
-             (F(HX + d0, edge_idx) - F(HX + d0, edge_idx + neg1_d1)) -
-           (1.f - dt * dxi[d0]) * F(HX + d1, edge_idx) +
-           dt * F(JXI + d2, edge_idx)) /
-          (1.f + dt * dxi[d0]);
-      }
-
-    } else {
-      assert(0);
+      F(HX + d2, i3) =
+        (/* + 4.f * C_s_pulse_y1(x,y,z+0.5*dz,t), where d0=y */
+         -2.f * F(EX + d1, edge_idx) -
+         dt * dxi[d2] *
+           (F(HX + d0, edge_idx) - F(HX + d0, edge_idx + neg1_d2)) -
+         (1.f - dt * dxi[d0]) * F(HX + d2, edge_idx) +
+         dt * F(JXI + d1, edge_idx)) /
+        (1.f + dt * dxi[d0]);
+      F(HX + d1, i3) =
+        (/* + 4.f * C_p_pulse_y1(x+.5*dx,y,z,t), where d0=y */
+         +2.f * F(EX + d2, edge_idx) -
+         dt * dxi[d1] *
+           (F(HX + d0, edge_idx) - F(HX + d0, edge_idx + neg1_d1)) -
+         (1.f - dt * dxi[d0]) * F(HX + d1, edge_idx) +
+         dt * F(JXI + d2, edge_idx)) /
+        (1.f + dt * dxi[d0]);
     }
   }
 
