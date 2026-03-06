@@ -555,9 +555,9 @@ struct BndFields_ : BndFieldsBase
 
         F(HX, i3) =
           (/* + 4.f * C_s_pulse_y1(x,y,z+0.5*dz,t) */
-           -2.f * F(EZ, edge_idx)
-           /*- dt/dx * (F(HY, edge_idx) - F(HY, edge_idx + neg1_d2)) */
-           - (1.f - dt / dy) * F(HX, edge_idx) + dt * F(JZI, edge_idx)) /
+           -2.f * F(EZ, edge_idx) -
+           dt / dx * (F(HY, edge_idx) - F(HY, edge_idx + neg1_d2)) -
+           (1.f - dt / dy) * F(HX, edge_idx) + dt * F(JZI, edge_idx)) /
           (1.f + dt / dy);
         F(HZ, i3) =
           (/* + 4.f * C_p_pulse_y1(x+.5*dx,y,z,t) */
