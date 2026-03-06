@@ -16,6 +16,7 @@ struct BndFields_ : BndFieldsBase
   using Self = BndFields_<MFIELDS_STATE, Dim>;
   using MfieldsState = MFIELDS_STATE;
   using real_t = typename MfieldsState::real_t;
+  using Real3 = Vec3<real_t>;
   using fields_view_t = typename MfieldsState::fields_view_t;
   using dim_t = Dim;
 
