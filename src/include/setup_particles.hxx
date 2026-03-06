@@ -29,11 +29,6 @@ struct psc_particle_np
   psc::particle::Tag tag;
 };
 
-namespace
-{
-const centering::Centerer defaultCenterer(centering::CC);
-}
-
 /**
  * @brief Calculates gamma * v for the given velocity v.
  * @tparam Real real type
@@ -139,7 +134,7 @@ struct SetupParticles
     : kinds_{grid.kinds},
       norm_{grid.norm},
       n_populations_{n_populations},
-      centerer(defaultCenterer)
+      centerer(centering::CC)
   {
     if (n_populations_ == 0) {
       n_populations_ = kinds_.size();
