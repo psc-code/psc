@@ -554,38 +554,6 @@ struct BndFields_ : BndFieldsBase
             (1.f + dt / dy);
         }
       }
-    } else if (d == 2) {
-#ifdef DEBUG
-      for (int iy = -2; iy < ldims[1] + 2; iy++) {
-        for (int ix = std::max(-2, ib[0]);
-             ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
-          fields_t_set_nan(&F(HX, ix, iy, -1));
-          fields_t_set_nan(&F(HX, ix, iy, -2));
-          fields_t_set_nan(&F(HY, ix, iy, -1));
-          fields_t_set_nan(&F(HY, ix, iy, -2));
-          fields_t_set_nan(&F(HZ, ix, iy, -1));
-          fields_t_set_nan(&F(HZ, ix, iy, -2));
-        }
-      }
-#endif
-      for (int iy = -2; iy < ldims[1] + 2; iy++) {
-        for (int ix = std::max(-2, ib[0]);
-             ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
-          F(HY, ix, iy, -1) =
-            (/* + 4.f * C_s_pulse_z1(x+0.5*dx,y,z,t) */
-             -2.f * F(EX, ix, iy, 0) -
-             dt / dy * (F(HZ, ix, iy, 0) - F(HZ, ix, iy - 1, 0)) -
-             (1.f - dt / dz) * F(HY, ix, iy, 0) + dt * F(JXI, ix, iy, 0)) /
-            (1.f + dt / dz);
-          F(HX, ix, iy, -1) =
-            (/* - 4.f * C_p_pulse_z1(x+0.5*dx,y,z,t) */
-             +2.f * F(EY, ix, iy, 0)
-             /*- dt/dx * (F(HZ, ix,iy,0) - F(HZ, ix-1,iy,0)) FIXME not in yz 2d
-              */
-             - (1.f - dt / dz) * F(HY, ix, iy, 0) - dt * F(JYI, ix, iy, 0)) /
-            (1.f + dt / dz);
-        }
-      }
     } else {
       assert(0);
     }
@@ -638,38 +606,6 @@ struct BndFields_ : BndFieldsBase
              (1.f - dt / dy) * F(HZ, ix, my - 1, iz) -
              dt * F(JXI, ix, my, iz)) /
             (1.f + dt / dy);
-        }
-      }
-    } else if (d == 2) {
-      int mz = ldims[2];
-#ifdef DEBUG
-      for (int iy = -2; iy < ldims[1] + 2; iy++) {
-        for (int ix = -2; ix < ldims[0] + 2; ix++) {
-          fields_t_set_nan(&F(HX, ix, iy, mz));
-          fields_t_set_nan(&F(HX, ix, iy, mz + 1));
-          fields_t_set_nan(&F(HY, ix, iy, mz));
-          fields_t_set_nan(&F(HY, ix, iy, mz + 1));
-          fields_t_set_nan(&F(HZ, ix, iy, mz + 1));
-        }
-      }
-#endif
-      for (int iy = -2; iy < ldims[1] + 2; iy++) {
-        for (int ix = std::max(-2, ib[0]);
-             ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
-          F(HY, ix, iy, mz) =
-            (/* - 4.f * C_s_pulse_z2(x+0.5*dx,y,z,t) */
-             +2.f * F(EX, ix, iy, mz) +
-             dt / dy * (F(HZ, ix, iy, mz) - F(HZ, ix, iy - 1, mz)) -
-             (1.f - dt / dz) * F(HY, ix, iy, mz - 1) -
-             dt * F(JXI, ix, iy, mz)) /
-            (1.f + dt / dz);
-          F(HX, ix, iy, mz) = (/* + 4.f * C_p_pulse_z2(x+0.5*dx,y,z,t) */
-                               -2.f * F(EY, ix, iy, mz)
-                               /*+ dt/dx * (F(HZ, ix,iy,mz) - F(HZ, ix-1,iy,mz))
-                                  FIXME not in yz 2d*/
-                               - (1.f - dt / dz) * F(HX, ix, iy, mz - 1) +
-                               dt * F(JYI, ix, iy, mz)) /
-                              (1.f + dt / dz);
         }
       }
     } else {
