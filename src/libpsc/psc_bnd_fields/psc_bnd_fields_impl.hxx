@@ -520,8 +520,6 @@ struct BndFields_ : BndFieldsBase
     real_t dy = grid.domain.dx[1];
     real_t dz = grid.domain.dx[2];
 
-#if 1
-
     if (d == 1) {
 #ifdef DEBUG
       for (int iz = -2; iz < ldims[2] + 2; iz++) {
@@ -536,7 +534,6 @@ struct BndFields_ : BndFieldsBase
         }
       }
 #endif
-
       for (int iz = -2; iz < ldims[2] + 2; iz++) {
         for (int ix = std::max(-2, ib[0]);
              ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
@@ -557,7 +554,6 @@ struct BndFields_ : BndFieldsBase
     } else {
       assert(0);
     }
-#endif
   }
 
   void radiative_H_hi(MfieldsState& mflds, int p, int d)
@@ -572,9 +568,6 @@ struct BndFields_ : BndFieldsBase
     real_t dy = grid.domain.dx[1];
     real_t dz = grid.domain.dx[2];
 
-    // TODO
-    // assert(0);
-#if 1
     if (d == 1) {
       int my _mrc_unused = ldims[1];
 #ifdef DEBUG
@@ -611,7 +604,6 @@ struct BndFields_ : BndFieldsBase
     } else {
       assert(0);
     }
-#endif
   }
 
   void set_background_E_lo(MfieldsState& mflds, int p, int d)
