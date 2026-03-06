@@ -230,19 +230,6 @@ struct SetupParticles
   }
 
   // ----------------------------------------------------------------------
-  // setup_particles
-
-  void operator()(Mparticles& mprts, InitNpFunc init_np)
-  {
-    setupParticles(mprts, init_np);
-  }
-
-  void operator()(Mparticles& mprts, InitNptFunc init_npt)
-  {
-    setupParticles(mprts, init_npt);
-  }
-
-  // ----------------------------------------------------------------------
   // initNpt_to_initNp
 
   InitNpFunc initNpt_to_initNp(InitNptFunc& init_npt)
