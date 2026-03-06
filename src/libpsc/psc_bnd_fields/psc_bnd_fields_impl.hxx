@@ -534,23 +534,39 @@ struct BndFields_ : BndFieldsBase
         }
       }
 #endif
-      for (int iz = -2; iz < ldims[2] + 2; iz++) {
-        for (int ix = std::max(-2, ib[0]);
-             ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
-          F(HX, ix, -1, iz) =
-            (/* + 4.f * C_s_pulse_y1(x,y,z+0.5*dz,t) */
-             -2.f * F(EZ, ix, 0, iz)
-             /*- dt/dx * (F(HY, ix,0,iz) - F(HY, ix-1,0,iz)) */
-             - (1.f - dt / dy) * F(HX, ix, 0, iz) + dt * F(JZI, ix, 0, iz)) /
-            (1.f + dt / dy);
-          F(HZ, ix, -1, iz) =
-            (/* + 4.f * C_p_pulse_y1(x+.5*dx,y,z,t) */
-             +2.f * F(EX, ix, 0, iz) -
-             dt / dz * (F(HY, ix, 0, iz) - F(HY, ix, 0, iz - 1)) -
-             (1.f - dt / dy) * F(HZ, ix, 0, iz) + dt * F(JXI, ix, 0, iz)) /
-            (1.f + dt / dy);
-        }
+      int d0 = (d + 0) % 3;
+      int d1 = (d + 1) % 3;
+      int d2 = (d + 2) % 3;
+
+      Int3 start = mflds.ib();
+      Int3 stop = mflds.im();
+      start[d0] = -1;
+      stop[d0] = 0;
+
+      for (Int3 i3 : VecRange(start, stop)) {
+        Int3 edge_idx = i3;
+        edge_idx[d0] = 0;
+
+        Int3 neg1_d1{0, 0, 0};
+        neg1_d1[d1] = -1;
+
+        Int3 neg1_d2{0, 0, 0};
+        neg1_d2[d2] = -1;
+
+        F(HX, i3) =
+          (/* + 4.f * C_s_pulse_y1(x,y,z+0.5*dz,t) */
+           -2.f * F(EZ, edge_idx)
+           /*- dt/dx * (F(HY, edge_idx) - F(HY, edge_idx + neg1_d2)) */
+           - (1.f - dt / dy) * F(HX, edge_idx) + dt * F(JZI, edge_idx)) /
+          (1.f + dt / dy);
+        F(HZ, i3) =
+          (/* + 4.f * C_p_pulse_y1(x+.5*dx,y,z,t) */
+           +2.f * F(EX, edge_idx) -
+           dt / dz * (F(HY, edge_idx) - F(HY, edge_idx + neg1_d1)) -
+           (1.f - dt / dy) * F(HZ, edge_idx) + dt * F(JXI, edge_idx)) /
+          (1.f + dt / dy);
       }
+
     } else {
       assert(0);
     }
