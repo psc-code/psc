@@ -7,6 +7,7 @@
 
 #include <mrc_profile.h>
 
+#include "kg/VecRange.hxx"
 #include "centering.hxx"
 #include "particle.h"
 #include "rng.hxx"
@@ -163,43 +164,35 @@ struct SetupParticles
   void op_cellwise(const Grid_t& grid, int patch, InitNpFunc init_np,
                    OpFunc&& op)
   {
-    Int3 ilo = Int3{}, ihi = grid.ldims;
-
-    for (int jz = ilo[2]; jz < ihi[2]; jz++) {
-      for (int jy = ilo[1]; jy < ihi[1]; jy++) {
-        for (int jx = ilo[0]; jx < ihi[0]; jx++) {
-          Int3 index{jx, jy, jz};
-
-          Double3 pos = centerer.get_pos(grid.patches[patch], index);
-          // FIXME, the issue really is that (2nd order) particle pushers
-          // don't handle the invariant dim right
-          for (int d = 0; d < 3; ++d) {
-            if (grid.isInvar(d)) {
-              pos[d] = grid.patches[patch].get_nc(index[d], d);
-            }
-          }
-
-          int n_q_in_cell = 0;
-          for (int pop = 0; pop < n_populations_; pop++) {
-            psc_particle_np np{};
-            if (pop < kinds_.size()) {
-              np.kind = pop;
-            }
-            init_np(pop, pos, patch, index, np);
-
-            int n_in_cell;
-            if (pop != neutralizing_population) {
-              n_in_cell = get_n_in_cell(np.n);
-              n_q_in_cell += kinds_[np.kind].q * n_in_cell;
-            } else {
-              // FIXME, should handle the case where not the last population
-              // is neutralizing
-              assert(neutralizing_population == n_populations_ - 1);
-              n_in_cell = -n_q_in_cell / kinds_[np.kind].q;
-            }
-            op(n_in_cell, np, pos);
-          }
+    for (Int3 index : VecRange(Int3{}, grid.ldims)) {
+      Double3 pos = centerer.get_pos(grid.patches[patch], index);
+      // FIXME, the issue really is that (2nd order) particle pushers
+      // don't handle the invariant dim right
+      for (int d = 0; d < 3; ++d) {
+        if (grid.isInvar(d)) {
+          pos[d] = grid.patches[patch].get_nc(index[d], d);
         }
+      }
+
+      int n_q_in_cell = 0;
+      for (int pop = 0; pop < n_populations_; pop++) {
+        psc_particle_np np{};
+        if (pop < kinds_.size()) {
+          np.kind = pop;
+        }
+        init_np(pop, pos, patch, index, np);
+
+        int n_in_cell;
+        if (pop != neutralizing_population) {
+          n_in_cell = get_n_in_cell(np.n);
+          n_q_in_cell += kinds_[np.kind].q * n_in_cell;
+        } else {
+          // FIXME, should handle the case where not the last population
+          // is neutralizing
+          assert(neutralizing_population == n_populations_ - 1);
+          n_in_cell = -n_q_in_cell / kinds_[np.kind].q;
+        }
+        op(n_in_cell, np, pos);
       }
     }
   }
