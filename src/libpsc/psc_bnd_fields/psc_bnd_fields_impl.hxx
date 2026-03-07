@@ -584,33 +584,42 @@ struct BndFields_ : BndFieldsBase
     auto F = make_Fields3d<dim_t>(mflds[p]);
     const Grid_t& grid = mflds.grid();
     Int3 ldims = grid.ldims;
-    Int3 ib = mflds.ib();
-    Int3 im = mflds.im();
     real_t dt = grid.dt;
     real_t dx = grid.domain.dx[0];
     real_t dy = grid.domain.dx[1];
     real_t dz = grid.domain.dx[2];
 
+    int d0 = (d + 0) % 3;
+    int d1 = (d + 1) % 3;
+    int d2 = (d + 2) % 3;
+
+    Int3 start = mflds.ib();
+    Int3 stop = mflds.im();
+    start[d0] = grid.ldims[d0];
+    stop[d0] = grid.ldims[d0] + 1;
+
     if (d == 1) {
       int my _mrc_unused = ldims[1];
-      for (int iz = -2; iz < ldims[2] + 2; iz++) {
-        for (int ix = std::max(-2, ib[0]);
-             ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
-          F(HX, ix, my, iz) =
-            (/* + 4.f * C_s_pulse_y2(x,y,z+0.5*dz,t) */
-             +2.f * F(EZ, ix, my, iz)
-             /*+ dt/dx * (F(HY, ix,my,iz) - F(HY, ix-1,my,iz)) */
-             - (1.f - dt / dy) * F(HX, ix, my - 1, iz) -
-             dt * F(JZI, ix, my, iz)) /
-            (1.f + dt / dy);
-          F(HZ, ix, my, iz) =
-            (/* + 4.f * C_p_pulse_y2(x+.5*dx,y,z,t) */
-             -2.f * F(EX, ix, my, iz) +
-             dt / dz * (F(HY, ix, my, iz) - F(HY, ix, my, iz - 1)) -
-             (1.f - dt / dy) * F(HZ, ix, my - 1, iz) -
-             dt * F(JXI, ix, my, iz)) /
-            (1.f + dt / dy);
-        }
+      for (Int3 i3 : VecRange(start, stop)) {
+        Int3 edge_idx = i3;
+        edge_idx[d0] -= 1;
+
+        Int3 neg1_d1{0, 0, 0};
+        neg1_d1[d1] = -1;
+
+        Int3 neg1_d2{0, 0, 0};
+        neg1_d2[d2] = -1;
+
+        F(HX, i3) =
+          (/* + 4.f * C_s_pulse_y2(x,y,z+0.5*dz,t) */
+           +2.f * F(EZ, i3) + dt / dx * (F(HY, i3) - F(HY, i3 + neg1_d2)) -
+           (1.f - dt / dy) * F(HX, edge_idx) - dt * F(JZI, i3)) /
+          (1.f + dt / dy);
+        F(HZ, i3) =
+          (/* + 4.f * C_p_pulse_y2(x+.5*dx,y,z,t) */
+           -2.f * F(EX, i3) + dt / dz * (F(HY, i3) - F(HY, i3 + neg1_d1)) -
+           (1.f - dt / dy) * F(HZ, edge_idx) - dt * F(JXI, i3)) /
+          (1.f + dt / dy);
       }
     } else {
       assert(0);
