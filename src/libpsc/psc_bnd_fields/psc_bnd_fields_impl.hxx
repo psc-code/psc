@@ -596,33 +596,28 @@ struct BndFields_ : BndFieldsBase
     start[d0] = grid.ldims[d0];
     stop[d0] = grid.ldims[d0] + 1;
 
-    if (d == 1) {
-      int my _mrc_unused = ldims[1];
-      for (Int3 i3 : VecRange(start, stop)) {
-        Int3 edge_idx = i3;
-        edge_idx[d0] -= 1;
+    for (Int3 i3 : VecRange(start, stop)) {
+      Int3 edge_idx = i3;
+      edge_idx[d0] -= 1;
 
-        Int3 neg1_d1{0, 0, 0};
-        neg1_d1[d1] = -1;
+      Int3 neg1_d1{0, 0, 0};
+      neg1_d1[d1] = -1;
 
-        Int3 neg1_d2{0, 0, 0};
-        neg1_d2[d2] = -1;
+      Int3 neg1_d2{0, 0, 0};
+      neg1_d2[d2] = -1;
 
-        F(HX + d2, i3) =
-          (/* + 4.f * C_s_pulse_y2(x,y,z+0.5*dz,t), where d0=y */
-           +2.f * F(EX + d1, i3) +
-           dt * dxi[d2] * (F(HX + d0, i3) - F(HX + d0, i3 + neg1_d2)) -
-           (1.f - dt * dxi[d0]) * F(HX + d2, edge_idx) - dt * F(JXI + d1, i3)) /
-          (1.f + dt * dxi[d0]);
-        F(HX + d1, i3) =
-          (/* + 4.f * C_p_pulse_y2(x+.5*dx,y,z,t), where d0=y */
-           -2.f * F(EX + d2, i3) +
-           dt * dxi[d1] * (F(HX + d0, i3) - F(HX + d0, i3 + neg1_d1)) -
-           (1.f - dt * dxi[d0]) * F(HX + d1, edge_idx) - dt * F(JXI + d2, i3)) /
-          (1.f + dt * dxi[d0]);
-      }
-    } else {
-      assert(0);
+      F(HX + d2, i3) =
+        (/* + 4.f * C_s_pulse_y2(x,y,z+0.5*dz,t), where d0=y */
+         +2.f * F(EX + d1, i3) +
+         dt * dxi[d2] * (F(HX + d0, i3) - F(HX + d0, i3 + neg1_d2)) -
+         (1.f - dt * dxi[d0]) * F(HX + d2, edge_idx) - dt * F(JXI + d1, i3)) /
+        (1.f + dt * dxi[d0]);
+      F(HX + d1, i3) =
+        (/* + 4.f * C_p_pulse_y2(x+.5*dx,y,z,t), where d0=y */
+         -2.f * F(EX + d2, i3) +
+         dt * dxi[d1] * (F(HX + d0, i3) - F(HX + d0, i3 + neg1_d1)) -
+         (1.f - dt * dxi[d0]) * F(HX + d1, edge_idx) - dt * F(JXI + d2, i3)) /
+        (1.f + dt * dxi[d0]);
     }
   }
 
