@@ -215,12 +215,12 @@ struct Psc
 
   void pre_first_step()
   {
-    bndf_.fill_ghosts_H(mflds_);
+    bndf.fill_ghosts_H(mflds_);
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
 
     bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
 
-    bndf_.fill_ghosts_E(mflds_);
+    bndf.fill_ghosts_E(mflds_);
     bnd_.fill_ghosts(mflds_, EX, EX + 3);
 
     // FIXME: do a half-step on p to bring it to its natural time,
@@ -399,7 +399,7 @@ struct Psc
 
     mpi_printf(comm, "***** Bnd fields J...\n");
     prof_start(pr_bndf);
-    bndf_.add_ghosts_J(mflds_);
+    bndf.add_ghosts_J(mflds_);
     bnd_.add_ghosts(mflds_, JXI, JXI + 3);
     bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
     prof_stop(pr_bndf);
@@ -413,7 +413,7 @@ struct Psc
 
     mpi_printf(comm, "***** Bnd fields B (1 of 2)...\n");
     prof_restart(pr_bndf);
-    bndf_.fill_ghosts_H(mflds_);
+    bndf.fill_ghosts_H(mflds_);
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
     prof_stop(pr_bndf);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
@@ -426,7 +426,7 @@ struct Psc
 
     mpi_printf(comm, "***** Bnd fields E...\n");
     prof_restart(pr_bndf);
-    bndf_.fill_ghosts_E(mflds_);
+    bndf.fill_ghosts_E(mflds_);
     bnd_.fill_ghosts(mflds_, EX, EX + 3);
     prof_stop(pr_bndf);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
@@ -439,7 +439,7 @@ struct Psc
 
     mpi_printf(comm, "***** Bnd fields B (2 of 2)...\n");
     prof_restart(pr_bndf);
-    bndf_.fill_ghosts_H(mflds_);
+    bndf.fill_ghosts_H(mflds_);
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
     prof_stop(pr_bndf);
     // state is now: x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
@@ -517,6 +517,7 @@ private:
 
 public:
   const Grid_t& grid() { return *grid_; }
+  BndFields bndf;
 
 private:
   double time_start_;
@@ -540,7 +541,6 @@ protected:
   PushParticles pushp_;
   PushFields pushf_;
   Bnd bnd_;
-  BndFields bndf_;
   BndParticles bndp_;
 
   Checkpointing checkpointing_;
