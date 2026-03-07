@@ -610,15 +610,17 @@ struct BndFields_ : BndFieldsBase
         Int3 neg1_d2{0, 0, 0};
         neg1_d2[d2] = -1;
 
-        F(HX, i3) =
-          (/* + 4.f * C_s_pulse_y2(x,y,z+0.5*dz,t) */
-           +2.f * F(EZ, i3) + dt / dx * (F(HY, i3) - F(HY, i3 + neg1_d2)) -
-           (1.f - dt / dy) * F(HX, edge_idx) - dt * F(JZI, i3)) /
+        F(HX + d2, i3) =
+          (/* + 4.f * C_s_pulse_y2(x,y,z+0.5*dz,t), where d0=y */
+           +2.f * F(EX + d1, i3) +
+           dt / dx * (F(HX + d0, i3) - F(HX + d0, i3 + neg1_d2)) -
+           (1.f - dt / dy) * F(HX + d2, edge_idx) - dt * F(JXI + d1, i3)) /
           (1.f + dt / dy);
-        F(HZ, i3) =
-          (/* + 4.f * C_p_pulse_y2(x+.5*dx,y,z,t) */
-           -2.f * F(EX, i3) + dt / dz * (F(HY, i3) - F(HY, i3 + neg1_d1)) -
-           (1.f - dt / dy) * F(HZ, edge_idx) - dt * F(JXI, i3)) /
+        F(HX + d1, i3) =
+          (/* + 4.f * C_p_pulse_y2(x+.5*dx,y,z,t), where d0=y */
+           -2.f * F(EX + d2, i3) +
+           dt / dz * (F(HX + d0, i3) - F(HX + d0, i3 + neg1_d1)) -
+           (1.f - dt / dy) * F(HX + d1, edge_idx) - dt * F(JXI + d2, i3)) /
           (1.f + dt / dy);
       }
     } else {
