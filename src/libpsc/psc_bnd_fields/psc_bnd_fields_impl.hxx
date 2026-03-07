@@ -178,8 +178,8 @@ struct BndFields_ : BndFieldsBase
     }
   }
 
-  void set_lower_ghosts_to_nan(MfieldsState& mflds, int p, int d, int mb,
-                               bool include_edge)
+  static void set_lower_ghosts_to_nan(MfieldsState& mflds, int p, int d, int mb,
+                                      bool include_edge)
   {
 #ifndef DEBUG
     return;
@@ -188,8 +188,8 @@ struct BndFields_ : BndFieldsBase
     set_lower_ghosts(mflds, p, d, mb, {nan, nan, nan}, include_edge);
   }
 
-  void set_upper_ghosts_to_nan(MfieldsState& mflds, int p, int d, int mb,
-                               bool include_edge)
+  static void set_upper_ghosts_to_nan(MfieldsState& mflds, int p, int d, int mb,
+                                      bool include_edge)
   {
 #ifndef DEBUG
     return;
@@ -209,8 +209,8 @@ struct BndFields_ : BndFieldsBase
    * @param include_edge whether or not values located on exact domain edges
    * should be considered "ghosts"
    */
-  void set_lower_ghosts(MfieldsState& mflds, int p, int d, int mb, Real3 val,
-                        bool include_edge)
+  static void set_lower_ghosts(MfieldsState& mflds, int p, int d, int mb,
+                               Real3 val, bool include_edge)
   {
     auto F = make_Fields3d<dim_t>(mflds[p]);
     Int3 start = mflds.ib();
@@ -257,8 +257,8 @@ struct BndFields_ : BndFieldsBase
    * @param include_edge whether or not values located on exact domain edges
    * should be considered "ghosts"
    */
-  void set_upper_ghosts(MfieldsState& mflds, int p, int d, int mb, Real3 val,
-                        bool include_edge)
+  static void set_upper_ghosts(MfieldsState& mflds, int p, int d, int mb,
+                               Real3 val, bool include_edge)
   {
     auto F = make_Fields3d<dim_t>(mflds[p]);
     Int3 start = mflds.ib();
