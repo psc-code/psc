@@ -95,7 +95,6 @@ struct BndFields_ : BndFieldsBase
             }
             case BND_FLD_OPEN: {
               radiative_H_lo(mflds, p, d);
-              add_background_H_lo(mflds, p, d);
               break;
             }
             default: {
@@ -117,7 +116,6 @@ struct BndFields_ : BndFieldsBase
             }
             case BND_FLD_OPEN: {
               radiative_H_hi(mflds, p, d);
-              add_background_H_hi(mflds, p, d);
               break;
             }
             default: {
@@ -612,42 +610,6 @@ struct BndFields_ : BndFieldsBase
          -2.f * F(E2, i3) + dtdx[d1] * (F(H0, i3) - F(H0, i3 + neg1_d1)) -
          (1.f - dtdx[d0]) * F(H1, edge_idx) - dt * F(J2, i3)) /
         (1.f + dtdx[d0]);
-    }
-  }
-
-  void add_background_H_lo(MfieldsState& mflds, int p, int d)
-  {
-    auto F = make_Fields3d<dim_t>(mflds[p]);
-    Int3 start = mflds.ib();
-    Int3 stop = mflds.im();
-    stop[d] = 0;
-    for (Int3 i3 : VecRange(start, stop)) {
-      F(HX, i3) += background_h[0];
-      F(HY, i3) += background_h[1];
-      F(HZ, i3) += background_h[2];
-    }
-  }
-
-  void add_background_H_hi(MfieldsState& mflds, int p, int d)
-  {
-    auto F = make_Fields3d<dim_t>(mflds[p]);
-    Int3 start = mflds.ib();
-    Int3 stop = mflds.im();
-    start[d] = mflds.grid().ldims[d] + 1;
-
-    Int3 neg1 = {0, 0, 0};
-    neg1[d] = -1;
-
-    for (Int3 i3 : VecRange(start, stop)) {
-      F(HX, i3) += background_h[0];
-      F(HY, i3) += background_h[1];
-      F(HZ, i3) += background_h[2];
-
-      // the third component of h is in the domain at this index
-      int d1 = (d + 1) % 3;
-      int d2 = (d + 2) % 3;
-      F(HX + d1, i3 + neg1) += background_h[d1];
-      F(HX + d2, i3 + neg1) += background_h[d2];
     }
   }
 
