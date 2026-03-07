@@ -178,11 +178,6 @@ struct BndFields_ : BndFieldsBase
     }
   }
 
-  static void fields_t_set_nan(real_t* f)
-  {
-    *f = std::numeric_limits<real_t>::quiet_NaN();
-  }
-
   void set_lower_ghosts_to_nan(MfieldsState& mflds, int p, int d, int mb,
                                bool include_edge)
   {
