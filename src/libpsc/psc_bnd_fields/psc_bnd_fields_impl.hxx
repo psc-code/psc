@@ -585,9 +585,7 @@ struct BndFields_ : BndFieldsBase
     const Grid_t& grid = mflds.grid();
     Int3 ldims = grid.ldims;
     real_t dt = grid.dt;
-    real_t dx = grid.domain.dx[0];
-    real_t dy = grid.domain.dx[1];
-    real_t dz = grid.domain.dx[2];
+    auto dxi = grid.domain.dx_inv;
 
     int d0 = (d + 0) % 3;
     int d1 = (d + 1) % 3;
@@ -613,15 +611,15 @@ struct BndFields_ : BndFieldsBase
         F(HX + d2, i3) =
           (/* + 4.f * C_s_pulse_y2(x,y,z+0.5*dz,t), where d0=y */
            +2.f * F(EX + d1, i3) +
-           dt / dx * (F(HX + d0, i3) - F(HX + d0, i3 + neg1_d2)) -
-           (1.f - dt / dy) * F(HX + d2, edge_idx) - dt * F(JXI + d1, i3)) /
-          (1.f + dt / dy);
+           dt * dxi[d2] * (F(HX + d0, i3) - F(HX + d0, i3 + neg1_d2)) -
+           (1.f - dt * dxi[d0]) * F(HX + d2, edge_idx) - dt * F(JXI + d1, i3)) /
+          (1.f + dt * dxi[d0]);
         F(HX + d1, i3) =
           (/* + 4.f * C_p_pulse_y2(x+.5*dx,y,z,t), where d0=y */
            -2.f * F(EX + d2, i3) +
-           dt / dz * (F(HX + d0, i3) - F(HX + d0, i3 + neg1_d1)) -
-           (1.f - dt / dy) * F(HX + d1, edge_idx) - dt * F(JXI + d2, i3)) /
-          (1.f + dt / dy);
+           dt * dxi[d1] * (F(HX + d0, i3) - F(HX + d0, i3 + neg1_d1)) -
+           (1.f - dt * dxi[d0]) * F(HX + d1, edge_idx) - dt * F(JXI + d2, i3)) /
+          (1.f + dt * dxi[d0]);
       }
     } else {
       assert(0);
