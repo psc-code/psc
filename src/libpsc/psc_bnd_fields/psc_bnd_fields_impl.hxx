@@ -40,7 +40,7 @@ struct BndFields_ : BndFieldsBase
               break;
             }
             case BND_FLD_OPEN: {
-              set_lower(mflds, p, d, EX, background_e, false);
+              set_lower_ghosts(mflds, p, d, EX, background_e, false);
               break;
             }
             default: {
@@ -62,7 +62,7 @@ struct BndFields_ : BndFieldsBase
               break;
             }
             case BND_FLD_OPEN: {
-              set_upper(mflds, p, d, EX, background_e, false);
+              set_upper_ghosts(mflds, p, d, EX, background_e, false);
               break;
             }
             default: {
@@ -185,22 +185,24 @@ struct BndFields_ : BndFieldsBase
     *f = std::numeric_limits<real_t>::quiet_NaN();
   }
 
-  void nan_lower(MfieldsState& mflds, int p, int d, int mb, bool include_edge)
+  void set_lower_ghosts_to_nan(MfieldsState& mflds, int p, int d, int mb,
+                               bool include_edge)
   {
 #ifndef DEBUG
     return;
 #endif
     real_t nan = std::numeric_limits<real_t>::quiet_NaN();
-    set_lower(mflds, p, d, mb, {nan, nan, nan}, include_edge);
+    set_lower_ghosts(mflds, p, d, mb, {nan, nan, nan}, include_edge);
   }
 
-  void nan_upper(MfieldsState& mflds, int p, int d, int mb, bool include_edge)
+  void set_upper_ghosts_to_nan(MfieldsState& mflds, int p, int d, int mb,
+                               bool include_edge)
   {
 #ifndef DEBUG
     return;
 #endif
     real_t nan = std::numeric_limits<real_t>::quiet_NaN();
-    set_upper(mflds, p, d, mb, {nan, nan, nan}, include_edge);
+    set_upper_ghosts(mflds, p, d, mb, {nan, nan, nan}, include_edge);
   }
 
   /**
@@ -214,8 +216,8 @@ struct BndFields_ : BndFieldsBase
    * @param include_edge whether or not values located on exact domain edges
    * should be considered "ghosts"
    */
-  void set_lower(MfieldsState& mflds, int p, int d, int mb, Real3 val,
-                 bool include_edge)
+  void set_lower_ghosts(MfieldsState& mflds, int p, int d, int mb, Real3 val,
+                        bool include_edge)
   {
     auto F = make_Fields3d<dim_t>(mflds[p]);
     Int3 start = mflds.ib();
@@ -262,8 +264,8 @@ struct BndFields_ : BndFieldsBase
    * @param include_edge whether or not values located on exact domain edges
    * should be considered "ghosts"
    */
-  void set_upper(MfieldsState& mflds, int p, int d, int mb, Real3 val,
-                 bool include_edge)
+  void set_upper_ghosts(MfieldsState& mflds, int p, int d, int mb, Real3 val,
+                        bool include_edge)
   {
     auto F = make_Fields3d<dim_t>(mflds[p]);
     Int3 start = mflds.ib();
@@ -296,7 +298,7 @@ struct BndFields_ : BndFieldsBase
 
   void conducting_wall_E_lo(MfieldsState& mflds, int p, int d)
   {
-    nan_lower(mflds, p, d, EX, true);
+    set_lower_ghosts_to_nan(mflds, p, d, EX, true);
 
     auto F = make_Fields3d<dim_t>(mflds[p]);
     const int* ldims = mflds.grid().ldims;
@@ -336,7 +338,7 @@ struct BndFields_ : BndFieldsBase
 
   void conducting_wall_E_hi(MfieldsState& mflds, int p, int d)
   {
-    nan_upper(mflds, p, d, EX, true);
+    set_upper_ghosts_to_nan(mflds, p, d, EX, true);
 
     auto F = make_Fields3d<dim_t>(mflds[p]);
     const int* ldims = mflds.grid().ldims;
@@ -377,7 +379,7 @@ struct BndFields_ : BndFieldsBase
 
   void conducting_wall_H_lo(MfieldsState& mflds, int p, int d)
   {
-    nan_lower(mflds, p, d, HX, false);
+    set_lower_ghosts_to_nan(mflds, p, d, HX, false);
 
     auto F = make_Fields3d<dim_t>(mflds[p]);
     const int* ldims = mflds.grid().ldims;
@@ -412,7 +414,7 @@ struct BndFields_ : BndFieldsBase
 
   void conducting_wall_H_hi(MfieldsState& mflds, int p, int d)
   {
-    nan_upper(mflds, p, d, HX, false);
+    set_upper_ghosts_to_nan(mflds, p, d, HX, false);
 
     auto F = make_Fields3d<dim_t>(mflds[p]);
 
@@ -530,7 +532,7 @@ struct BndFields_ : BndFieldsBase
 
   void radiative_H_lo(MfieldsState& mflds, int p, int d)
   {
-    nan_lower(mflds, p, d, HX, false);
+    set_lower_ghosts_to_nan(mflds, p, d, HX, false);
 
     auto F = make_Fields3d<dim_t>(mflds[p]);
     const Grid_t& grid = mflds.grid();
@@ -577,7 +579,7 @@ struct BndFields_ : BndFieldsBase
 
   void radiative_H_hi(MfieldsState& mflds, int p, int d)
   {
-    nan_upper(mflds, p, d, HX, false);
+    set_upper_ghosts_to_nan(mflds, p, d, HX, false);
 
     auto F = make_Fields3d<dim_t>(mflds[p]);
     const Grid_t& grid = mflds.grid();
