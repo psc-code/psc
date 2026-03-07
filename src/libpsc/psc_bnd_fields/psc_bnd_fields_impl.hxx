@@ -62,7 +62,7 @@ struct BndFields_ : BndFieldsBase
               break;
             }
             case BND_FLD_OPEN: {
-              set_background_E_hi(mflds, p, d);
+              set_upper(mflds, p, d, EX, background_e, false);
               break;
             }
             default: {
@@ -608,26 +608,6 @@ struct BndFields_ : BndFieldsBase
       }
     } else {
       assert(0);
-    }
-  }
-
-  void set_background_E_hi(MfieldsState& mflds, int p, int d)
-  {
-    auto F = make_Fields3d<dim_t>(mflds[p]);
-    Int3 start = mflds.ib();
-    Int3 stop = mflds.im();
-    start[d] = mflds.grid().ldims[d] + 1;
-
-    Int3 neg1 = {0, 0, 0};
-    neg1[d] = -1;
-
-    for (Int3 i3 : VecRange(start, stop)) {
-      F(EX, i3) = background_e[0];
-      F(EY, i3) = background_e[1];
-      F(EZ, i3) = background_e[2];
-
-      // the other two components of e are in the domain at this index
-      F(EX + d, i3 + neg1) = background_e[d];
     }
   }
 
