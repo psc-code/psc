@@ -558,15 +558,19 @@ struct BndFields_ : BndFieldsBase
       neg1_d2[d2] = -1;
 
       F(H2, i3) = (/* + 4.f * C_s_pulse_y1(x,y,z+0.5*dz,t), where d0=y */
-                   -2.f * F(E1, edge_idx) -
+                   -2.f * (F(E1, edge_idx) - background_e[d1]) -
                    dtdx[d2] * (F(H0, edge_idx) - F(H0, edge_idx + neg1_d2)) -
-                   (1.f - dtdx[d0]) * F(H2, edge_idx) + dt * F(J1, edge_idx)) /
-                  (1.f + dtdx[d0]);
+                   (1.f - dtdx[d0]) * (F(H2, edge_idx) - background_h[d2]) +
+                   dt * F(J1, edge_idx)) /
+                    (1.f + dtdx[d0]) +
+                  background_h[d2];
       F(H1, i3) = (/* + 4.f * C_p_pulse_y1(x+.5*dx,y,z,t), where d0=y */
-                   +2.f * F(E2, edge_idx) -
+                   +2.f * (F(E2, edge_idx) - background_e[d2]) -
                    dtdx[d1] * (F(H0, edge_idx) - F(H0, edge_idx + neg1_d1)) -
-                   (1.f - dtdx[d0]) * F(H1, edge_idx) + dt * F(J2, edge_idx)) /
-                  (1.f + dtdx[d0]);
+                   (1.f - dtdx[d0]) * (F(H1, edge_idx) - background_h[d1]) +
+                   dt * F(J2, edge_idx)) /
+                    (1.f + dtdx[d0]) +
+                  background_h[d1];
     }
   }
 
@@ -600,16 +604,20 @@ struct BndFields_ : BndFieldsBase
       Int3 neg1_d2{0, 0, 0};
       neg1_d2[d2] = -1;
 
-      F(H2, i3) =
-        (/* + 4.f * C_s_pulse_y2(x,y,z+0.5*dz,t), where d0=y */
-         +2.f * F(E1, i3) + dtdx[d2] * (F(H0, i3) - F(H0, i3 + neg1_d2)) -
-         (1.f - dtdx[d0]) * F(H2, edge_idx) - dt * F(J1, i3)) /
-        (1.f + dtdx[d0]);
-      F(H1, i3) =
-        (/* + 4.f * C_p_pulse_y2(x+.5*dx,y,z,t), where d0=y */
-         -2.f * F(E2, i3) + dtdx[d1] * (F(H0, i3) - F(H0, i3 + neg1_d1)) -
-         (1.f - dtdx[d0]) * F(H1, edge_idx) - dt * F(J2, i3)) /
-        (1.f + dtdx[d0]);
+      F(H2, i3) = (/* + 4.f * C_s_pulse_y2(x,y,z+0.5*dz,t), where d0=y */
+                   +2.f * (F(E1, i3) - background_e[d1]) +
+                   dtdx[d2] * (F(H0, i3) - F(H0, i3 + neg1_d2)) -
+                   (1.f - dtdx[d0]) * (F(H2, edge_idx) - background_h[d2]) -
+                   dt * F(J1, i3)) /
+                    (1.f + dtdx[d0]) +
+                  background_h[d2];
+      F(H1, i3) = (/* + 4.f * C_p_pulse_y2(x+.5*dx,y,z,t), where d0=y */
+                   -2.f * (F(E2, i3) - background_e[d2]) +
+                   dtdx[d1] * (F(H0, i3) - F(H0, i3 + neg1_d1)) -
+                   (1.f - dtdx[d0]) * (F(H1, edge_idx) - background_h[d1]) -
+                   dt * F(J2, i3)) /
+                    (1.f + dtdx[d0]) +
+                  background_h[d1];
     }
   }
 
