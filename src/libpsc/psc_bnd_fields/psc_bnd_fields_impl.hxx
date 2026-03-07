@@ -222,6 +222,8 @@ struct BndFields_ : BndFieldsBase
     Int3 stop = mflds.im();
     stop[d] = 0;
 
+    // TODO use gtensor views instead of VecRange
+
     for (int m = mb; m < mb + 3; m++) {
       for (Int3 i3 : VecRange(start, stop)) {
         F(m, i3) = val[m - mb];
@@ -267,6 +269,8 @@ struct BndFields_ : BndFieldsBase
     Int3 start = mflds.ib();
     Int3 stop = mflds.im();
     start[d] = mflds.grid().ldims[d] + 1;
+
+    // TODO use gtensor views instead of VecRange
 
     for (int m = mb; m < mb + 3; m++) {
       for (Int3 i3 : VecRange(start, stop)) {
