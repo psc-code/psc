@@ -40,7 +40,7 @@ struct BndFields_ : BndFieldsBase
               break;
             }
             case BND_FLD_OPEN: {
-              set_lower(mflds, p, d, EX, background_e);
+              set_lower(mflds, p, d, EX, background_e, false);
               break;
             }
             default: {
@@ -185,13 +185,13 @@ struct BndFields_ : BndFieldsBase
     *f = std::numeric_limits<real_t>::quiet_NaN();
   }
 
-  void nan_lower(MfieldsState& mflds, int p, int d, int mb)
+  void nan_lower(MfieldsState& mflds, int p, int d, int mb, bool include_edge)
   {
 #ifndef DEBUG
     return;
 #endif
     real_t nan = std::numeric_limits<real_t>::quiet_NaN();
-    set_lower(mflds, p, d, mb, {nan, nan, nan});
+    set_lower(mflds, p, d, mb, {nan, nan, nan}, include_edge);
   }
 
   void nan_upper(MfieldsState& mflds, int p, int d, int mb, bool include_edge)
@@ -203,7 +203,19 @@ struct BndFields_ : BndFieldsBase
     set_upper(mflds, p, d, mb, {nan, nan, nan}, include_edge);
   }
 
-  void set_lower(MfieldsState& mflds, int p, int d, int mb, Real3 val)
+  /**
+   * @brief Set E or B lower ghosts to the given constants (each component has
+   * its own constant).
+   * @param mflds mflds
+   * @param p patch index
+   * @param d which dimension to set the ghosts of
+   * @param mb `EX` or `HX`; note that `mb+1` and `mb+2` are also set
+   * @param val the constants
+   * @param include_edge whether or not values located on exact domain edges
+   * should be considered "ghosts"
+   */
+  void set_lower(MfieldsState& mflds, int p, int d, int mb, Real3 val,
+                 bool include_edge)
   {
     auto F = make_Fields3d<dim_t>(mflds[p]);
     Int3 start = mflds.ib();
@@ -213,6 +225,26 @@ struct BndFields_ : BndFieldsBase
     for (int m = mb; m < mb + 3; m++) {
       for (Int3 i3 : VecRange(start, stop)) {
         F(m, i3) = val[m - mb];
+      }
+    }
+
+    if (!include_edge) {
+      return;
+    }
+
+    Int3 edge_start = mflds.ib();
+    Int3 edge_stop = mflds.im();
+    edge_start[d] = 0;
+    edge_stop[d] = 1;
+
+    for (int m = mb; m < mb + 3; m++) {
+      bool edge_ec = mb == EX && m - mb != d;
+      bool edge_fc = mb == HX && m - mb == d;
+
+      if (edge_ec || edge_fc) {
+        for (Int3 i3 : VecRange(edge_start, edge_stop)) {
+          F(m, i3) = val[m - mb];
+        }
       }
     }
   }
@@ -260,7 +292,7 @@ struct BndFields_ : BndFieldsBase
 
   void conducting_wall_E_lo(MfieldsState& mflds, int p, int d)
   {
-    nan_lower(mflds, p, d, EX);
+    nan_lower(mflds, p, d, EX, true);
 
     auto F = make_Fields3d<dim_t>(mflds[p]);
     const int* ldims = mflds.grid().ldims;
@@ -341,7 +373,7 @@ struct BndFields_ : BndFieldsBase
 
   void conducting_wall_H_lo(MfieldsState& mflds, int p, int d)
   {
-    nan_lower(mflds, p, d, HX);
+    nan_lower(mflds, p, d, HX, false);
 
     auto F = make_Fields3d<dim_t>(mflds[p]);
     const int* ldims = mflds.grid().ldims;
@@ -494,7 +526,7 @@ struct BndFields_ : BndFieldsBase
 
   void radiative_H_lo(MfieldsState& mflds, int p, int d)
   {
-    nan_lower(mflds, p, d, HX);
+    nan_lower(mflds, p, d, HX, false);
 
     auto F = make_Fields3d<dim_t>(mflds[p]);
     const Grid_t& grid = mflds.grid();
