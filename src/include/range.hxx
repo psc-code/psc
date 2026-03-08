@@ -6,8 +6,14 @@
 template <typename T>
 struct Range
 {
-  struct iterator : std::iterator<std::input_iterator_tag, T>
+  struct iterator
   {
+    using iterator_category = std::input_iterator_tag;
+    using value_type = T;
+    using difference_type = std::ptrdiff_t;
+    using pointer = T*;
+    using reference = T&;
+
     __device__ __host__ explicit iterator(T val) : val_(val) {}
 
     __device__ __host__ T operator*() const { return val_; }
@@ -51,8 +57,14 @@ private:
 template <typename T>
 struct RangeStrided
 {
-  struct iterator : std::iterator<std::input_iterator_tag, T>
+  struct iterator
   {
+    using iterator_category = std::input_iterator_tag;
+    using value_type = T;
+    using difference_type = std::ptrdiff_t;
+    using pointer = T*;
+    using reference = T&;
+
     __device__ __host__ explicit iterator(T val, T stride)
       : val_(val), stride_(stride)
     {}
