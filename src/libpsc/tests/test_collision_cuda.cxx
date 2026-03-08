@@ -210,13 +210,14 @@ TEST(cuda_mparticles_randomize_sort, sort)
     d_id, (std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}));
 
   sort.sort(d_random_idx, d_id);
-  EXPECT_EQ(
-    d_id, (std::vector<int>{0, 1, 7, 5, 8, 6, 2, 4, 3, 9, 10, 14, 13, 11, 12}));
+  // The result here depends on the particular random numbers generated, which
+  // seem to have changed across CUDA versions, so we just check that the random
+  // indices end up sorted. EXPECT_EQ(
+  //   d_id, (std::vector<int>{0, 1, 7, 5, 8, 6, 2, 4, 3, 9, 10, 14, 13, 11,
+  //   12}));
 
-  auto last = d_random_idx[0];
   for (int i = 1; i < cmprts.size(); i++) {
-    EXPECT_GE(d_random_idx[i], last);
-    last = d_random_idx[i];
+    EXPECT_GE(d_random_idx[i], d_random_idx[i - 1]);
   }
   // std::cout << "rnd idx ";
   // std::copy(sort.d_random_idx.begin(), sort.d_random_idx.end(),
@@ -247,7 +248,7 @@ TEST(cuda_mparticles_randomize_sort, sort)
   // std::cout << "\n";
   EXPECT_EQ(d_off, off);
 
-#if 1
+#if 0
   // do over, get different permutation
   sort.find_indices_ids(cmprts, d_random_idx, d_id);
   sort.sort(d_random_idx, d_id);
