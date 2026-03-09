@@ -363,6 +363,15 @@ struct Psc
       prof_stop(pr_collision);
     }
 
+  #ifdef USE_CUDA
+    // === particle injection
+    prof_start(pr_inject_prts);
+    for (auto injector : injectors_) {
+      injector->inject(mprts_, mflds_);
+    }
+    prof_stop(pr_inject_prts);
+#endif
+
     if (checks_.continuity.should_do_check(timestep)) {
       mpi_printf(comm, "***** Checking continuity (1 of 2)...\n");
       prof_start(pr_checks);
@@ -376,12 +385,14 @@ struct Psc
     pushp_.push_mprts(mprts_, mflds_);
     prof_stop(pr_push_prts);
 
+#ifndef USE_CUDA
     // === particle injection
     prof_start(pr_inject_prts);
     for (auto injector : injectors_) {
       injector->inject(mprts_, mflds_);
     }
     prof_stop(pr_inject_prts);
+#endif
 
     // === external current
     prof_start(pr_external_current);
