@@ -354,7 +354,6 @@ void cuda_mparticles<BS>::inject(const std::vector<Particle>& buf,
       auto bidx = this->blockIndex(prt, p);
       assert(bidx >= 0 && bidx < this->n_blocks);
       h_bidx[off + n] = bidx;
-      ;
       // h_id[off + n] = this->n_prts + off + n;
     }
     off += buf_n_by_patch[p];
