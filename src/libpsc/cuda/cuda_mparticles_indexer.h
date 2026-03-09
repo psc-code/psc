@@ -62,12 +62,7 @@ struct cuda_mparticles_indexer
   int blockIndex(const DParticleCuda& prt, int p) const
   {
     Int3 bpos = blockPosition(prt.x);
-    int bidx = blockIndex(bpos, p);
-    if (bidx < 0) {
-      printf("blockIndex: prt.x %g %g %g bpos %d %d %d p %d bidx %d\n",
-             prt.x[0], prt.x[1], prt.x[2], bpos[0], bpos[1], bpos[2], p, bidx);
-    }
-    return bidx;
+    return blockIndex(bpos, p);
   }
 
   void checkInPatchMod(real_t xi[3]) const { pi_.checkInPatchMod(xi); }
@@ -78,8 +73,6 @@ protected:
   {
     if (uint(bpos[0]) >= b_mx_[0] || uint(bpos[1]) >= b_mx_[1] ||
         uint(bpos[2]) >= b_mx_[2]) {
-          printf("blockIndex: bpos %d %d %d b_mx %d %d %d\n", bpos[0], bpos[1], bpos[2],
-                 b_mx_[0], b_mx_[1], b_mx_[2]);
       return -1;
     }
 

@@ -14,11 +14,8 @@ bool cuda_mparticles<BS>::check_in_patch_unordered_slow()
   for (int p = 0; p < this->n_patches(); p++) {
     for (int n = 0; n < n_prts_by_patch[p]; n++) {
       int bidx = this->blockIndex(this->storage[off + n], p);
-      if (!(bidx >= 0 && bidx <= this->n_blocks)) {
-        std::cerr << "check_in_patch_unordered_slow: p " << p << " n+off " << n + off
-                  << " bidx " << bidx << std::endl;
+      if (!(bidx >= 0 && bidx <= this->n_blocks))
         return false;
-      }
     }
     off += n_prts_by_patch[p];
   }
