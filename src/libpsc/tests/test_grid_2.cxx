@@ -118,7 +118,9 @@ TEST(Grid2, adios2_write)
     Grid_t grid;
 
     auto reader = io.open("test.bp", kg::io::Mode::Read);
+    reader.beginStep(kg::io::StepMode::Read);
     reader.get("grid", grid);
+    reader.endStep();
     reader.close();
 
     EXPECT_EQ(grid.dt, .1);
