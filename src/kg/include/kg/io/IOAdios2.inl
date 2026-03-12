@@ -4,7 +4,7 @@ namespace kg
 namespace io
 {
 
-inline IOAdios2::IOAdios2() : ad_{"adios2cfg.xml", MPI_COMM_WORLD} {}
+inline IOAdios2::IOAdios2() : ad_{MPI_COMM_WORLD} {}
 
 inline File IOAdios2::openFile(const std::string& name, const Mode mode,
                                MPI_Comm comm, const std::string& io_name)

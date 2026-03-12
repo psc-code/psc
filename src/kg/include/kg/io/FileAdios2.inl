@@ -30,6 +30,9 @@ inline FileAdios2::FileAdios2(adios2::ADIOS& ad, const std::string& name,
     std::abort();
   }
   engine_ = io_.Open(name, adios2_mode);
+
+  // TODO allow this (and any future params) to be set from main psc executables
+  io_.SetParameter("SubStreams", "16");
 }
 
 inline FileAdios2::~FileAdios2()
@@ -49,20 +52,11 @@ inline void FileAdios2::beginStep(StepMode mode)
   engine_.BeginStep(adios2_mode);
 }
 
-inline void FileAdios2::endStep()
-{
-  engine_.EndStep();
-}
+inline void FileAdios2::endStep() { engine_.EndStep(); }
 
-inline void FileAdios2::performPuts()
-{
-  engine_.PerformPuts();
-}
+inline void FileAdios2::performPuts() { engine_.PerformPuts(); }
 
-inline void FileAdios2::performGets()
-{
-  engine_.PerformGets();
-}
+inline void FileAdios2::performGets() { engine_.PerformGets(); }
 
 template <typename T>
 inline void FileAdios2::putVariable(const std::string& name, const T* data,
