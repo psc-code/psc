@@ -418,7 +418,9 @@ TYPED_TEST(MparticlesIOTest, WriteRead)
   auto mprts2 = this->mk_mprts();
   {
     auto reader = io.open("test.bp", kg::io::Mode::Read);
+    reader.beginStep(kg::io::StepMode::Read);
     reader.get("mprts", mprts2);
+    reader.endStep();
     reader.close();
   }
 
