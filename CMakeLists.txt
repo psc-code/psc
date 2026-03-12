@@ -1,5 +1,5 @@
 
-cmake_minimum_required (VERSION 3.17)
+cmake_minimum_required (VERSION 3.21)
 
 foreach(policy
     CMP0074 # CMake 3.12
@@ -74,10 +74,6 @@ if (BUILD_TESTING)
         "INSTALL_GTEST OFF"
         "gtest_force_shared_crt ON"
   )
-  if (GTest_ADDED)
-     add_library(GTest::gtest ALIAS gtest)
-     add_library(GTest::gtest_main ALIAS gtest_main)
-  endif()
   include(GoogleTest)
 endif()
 

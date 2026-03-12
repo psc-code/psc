@@ -8,6 +8,5 @@ set -e
 cd build
 make $1
 mkdir -p runs
-cp ../bits/adios2cfg.xml runs/
 cd runs
 mpirun -np 1 ../src/libpsc/tests/$1 "${@:2}"
