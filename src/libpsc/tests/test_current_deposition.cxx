@@ -21,21 +21,21 @@ public:
   template <typename F>
   auto operator()(const F& flds, dim_yz tag)
   {
-    return (flds.view(_all, _s(1, _), _s(1, _), 1) -
-            flds.view(_all, _s(0, -1), _s(1, _), 1)) +
-           (flds.view(_all, _s(1, _), _s(1, _), 2) -
-            flds.view(_all, _s(1, _), _s(0, -1), 2));
+    return gt::eval((flds.view(_all, _s(1, _), _s(1, _), 1) -
+                     flds.view(_all, _s(0, -1), _s(1, _), 1)) +
+                    (flds.view(_all, _s(1, _), _s(1, _), 2) -
+                     flds.view(_all, _s(1, _), _s(0, -1), 2)));
   }
 
   template <typename F>
   auto operator()(const F& flds, dim_xyz tag)
   {
-    return (flds.view(_s(1, _), _s(1, _), _s(1, _), 0) -
-            flds.view(_s(0, -1), _s(1, _), _s(1, _), 0)) +
-           (flds.view(_s(1, _), _s(1, _), _s(1, _), 1) -
-            flds.view(_s(1, _), _s(0, -1), _s(1, _), 1)) +
-           (flds.view(_s(1, _), _s(1, _), _s(1, _), 2) -
-            flds.view(_s(1, _), _s(1, _), _s(0, -1), 2));
+    return gt::eval((flds.view(_s(1, _), _s(1, _), _s(1, _), 0) -
+                     flds.view(_s(0, -1), _s(1, _), _s(1, _), 0)) +
+                    (flds.view(_s(1, _), _s(1, _), _s(1, _), 1) -
+                     flds.view(_s(1, _), _s(0, -1), _s(1, _), 1)) +
+                    (flds.view(_s(1, _), _s(1, _), _s(1, _), 2) -
+                     flds.view(_s(1, _), _s(1, _), _s(0, -1), 2)));
   }
 
   template <typename F>
