@@ -146,12 +146,15 @@ public:
 
     for (int p = 0; p < grid.n_patches(); p++) {
       for (int d = 0; d < 3; d++) {
-        Int3 r = grid.ldims;
-        r[d] = 1;
+        if (grid.atBoundaryLo(p, d) &&
+            (grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL ||
+             grid.bc.fld_lo[d] == BND_FLD_OPEN)) {
 
-        // account for implicit surface charges
-        if (grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL &&
-            grid.atBoundaryLo(p, d)) {
+          // account for implicit surface charges
+
+          Int3 r = grid.ldims;
+          r[d] = 1;
+
           rho.view(_s(0, r[0]), _s(0, r[1]), _s(0, r[2]), 0, p) =
             dive.view(_s(0, r[0]), _s(0, r[1]), _s(0, r[2]), 0, p);
         }
