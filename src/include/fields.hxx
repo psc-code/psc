@@ -65,6 +65,16 @@ public:
     return type_traits<F>::get(e_(i, j, k, m));
   }
 
+  GT_INLINE const_reference operator()(int m, const Int3& i3) const
+  {
+    return (*this)(m, i3[0], i3[1], i3[2]);
+  }
+
+  GT_INLINE reference operator()(int m, const Int3& i3)
+  {
+    return (*this)(m, i3[0], i3[1], i3[2]);
+  }
+
 private:
   fields_t e_;
   Int3 ib_;
