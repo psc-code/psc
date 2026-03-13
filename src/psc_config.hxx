@@ -94,7 +94,7 @@ struct PscConfig_
   using BndFields = BndFields_<MfieldsState, Dim>;
   using Balance = Balance_<Mparticles, MfieldsState, Mfields>;
   using Checks = Checks_<Mparticles, Mfields, checks_order, Dim>;
-  using Marder = Marder_<typename Mfields::Storage, Dim>;
+  using Marder = Marder_<MfieldsState, Mparticles, Dim>;
   using Simulation = _Simulation;
   using OutputParticles = OutputParticlesDefault<Mparticles>;
 };
@@ -120,7 +120,7 @@ struct PscConfig_<_Dim, _Mparticles, _MfieldsState, _Mfields,
   using BndFields = BndFieldsNone<MfieldsState>;
   using Balance = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Checks = ChecksCuda<Mparticles, Dim>;
-  using Marder = MarderCuda<Dim>;
+  using Marder = MarderCuda<Mparticles, Dim>;
   using OutputParticles = OutputParticlesDefault<Mparticles>;
 };
 
@@ -144,7 +144,7 @@ struct PscConfig_<dim_xyz, _Mparticles, _MfieldsState, _Mfields,
   using BndFields_t = BndFieldsNone<MfieldsState>;
   using Balance = Balance_<MparticlesSingle, MfieldsStateSingle, MfieldsSingle>;
   using Checks = ChecksCuda<Mparticles, Dim>;
-  using Marder = MarderCuda<Dim>;
+  using Marder = MarderCuda<Mparticles, Dim>;
   using OutputParticles = OutputParticlesDefault<Mparticles>;
 };
 

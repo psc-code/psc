@@ -26,7 +26,6 @@ using Mparticles = PscConfig::Mparticles;
 using Balance = PscConfig::Balance;
 using Collision = PscConfig::Collision;
 using Checks = PscConfig::Checks;
-using Marder = PscConfig::Marder;
 using OutputParticles = PscConfig::OutputParticles;
 
 // ======================================================================
@@ -94,10 +93,9 @@ TEST(ReflectiveBcsTest, IntegrationY)
 
   Balance balance{.1};
   Collision collision{grid, 0, 0.1};
-  Marder marder(grid, 0.9, 3, false);
 
   auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
-                                          balance, collision, checks, marder);
+                                          balance, collision, checks);
 
   // ----------------------------------------------------------------------
   // set up initial conditions
@@ -176,10 +174,9 @@ TEST(ReflectiveBcsTest, IntegrationZ)
 
   Balance balance{.1};
   Collision collision{grid, 0, 0.1};
-  Marder marder(grid, 0.9, 3, false);
 
   auto psc = makePscIntegrator<PscConfig>(psc_params, *grid_ptr, mflds, mprts,
-                                          balance, collision, checks, marder);
+                                          balance, collision, checks);
 
   // ----------------------------------------------------------------------
   // set up initial conditions
