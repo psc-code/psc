@@ -214,7 +214,7 @@ struct BndFields_ : BndFieldsBase
   {
     auto F = make_Fields3d<dim_t>(mflds[p]);
     Int3 start = mflds.ib();
-    Int3 stop = mflds.im();
+    Int3 stop = mflds.ib() + mflds.im();
     stop[d] = 0;
 
     // TODO use gtensor views instead of VecRange
@@ -262,7 +262,7 @@ struct BndFields_ : BndFieldsBase
   {
     auto F = make_Fields3d<dim_t>(mflds[p]);
     Int3 start = mflds.ib();
-    Int3 stop = mflds.im();
+    Int3 stop = mflds.ib() + mflds.im();
     start[d] = mflds.grid().ldims[d] + 1;
 
     // TODO use gtensor views instead of VecRange
@@ -538,7 +538,7 @@ struct BndFields_ : BndFieldsBase
     int J1 = JXI + d1, J2 = JXI + d2;
 
     Int3 start = mflds.ib();
-    Int3 stop = mflds.im();
+    Int3 stop = mflds.ib() + mflds.im();
     start[d0] = -1;
     stop[d0] = 0;
 
@@ -585,7 +585,7 @@ struct BndFields_ : BndFieldsBase
     int J1 = JXI + d1, J2 = JXI + d2;
 
     Int3 start = mflds.ib();
-    Int3 stop = mflds.im();
+    Int3 stop = mflds.ib() + mflds.im();
     start[d0] = grid.ldims[d0];
     stop[d0] = grid.ldims[d0] + 1;
 
