@@ -230,7 +230,7 @@ struct BndFields_ : BndFieldsBase
     }
 
     Int3 edge_start = mflds.ib();
-    Int3 edge_stop = mflds.im();
+    Int3 edge_stop = mflds.ib() + mflds.im();
     edge_start[d] = 0;
     edge_stop[d] = 1;
 
@@ -274,7 +274,7 @@ struct BndFields_ : BndFieldsBase
     }
 
     Int3 edge_start = mflds.ib();
-    Int3 edge_stop = mflds.im();
+    Int3 edge_stop = mflds.ib() + mflds.im();
     edge_start[d] = mflds.grid().ldims[d];
     edge_stop[d] = mflds.grid().ldims[d] + 1;
 
