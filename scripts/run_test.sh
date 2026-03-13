@@ -6,7 +6,7 @@
 
 set -e
 cd build
-make $1
+make -j $1
 mkdir -p runs
 cd runs
 mpirun -np 1 ../src/libpsc/tests/$1 "${@:2}"
