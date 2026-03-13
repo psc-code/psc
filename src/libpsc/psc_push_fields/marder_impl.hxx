@@ -26,12 +26,14 @@ inline void find_limits(const Grid_t& grid, int p, Int3& lx, Int3& rx, Int3& ly,
   Int3 l_cc = {0, 0, 0}, r_cc = {0, 0, 0};
   Int3 l_nc = {0, 0, 0}, r_nc = {0, 0, 0};
   for (int d = 0; d < 3; d++) {
-    if (grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL &&
+    if ((grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL ||
+         grid.bc.fld_lo[d] == BND_FLD_OPEN) &&
         grid.atBoundaryLo(p, d)) {
       l_cc[d] = -1;
       l_nc[d] = -1;
     }
-    if (grid.bc.fld_hi[d] == BND_FLD_CONDUCTING_WALL &&
+    if ((grid.bc.fld_hi[d] == BND_FLD_CONDUCTING_WALL ||
+         grid.bc.fld_hi[d] == BND_FLD_OPEN) &&
         grid.atBoundaryHi(p, d)) {
       r_cc[d] = -1;
       r_nc[d] = 0;
