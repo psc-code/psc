@@ -17,22 +17,6 @@ namespace psc
 namespace marder
 {
 
-namespace detail
-{
-
-inline void find_limits(const Grid_t& grid, int p, Int3 ls[3], Int3 rs[3])
-{
-  ls[0] = grid.ibn;
-  ls[1] = grid.ibn;
-  ls[2] = grid.ibn;
-
-  rs[0] = grid.ldims + grid.ibn;
-  rs[1] = grid.ldims + grid.ibn;
-  rs[2] = grid.ldims + grid.ibn;
-}
-
-} // namespace detail
-
 // ----------------------------------------------------------------------
 // correct
 //
@@ -53,18 +37,14 @@ inline void correct(const Grid_t& grid, E1& efield, const Int3& efield_ib,
   Real3 fac = .5f * real_t(grid.dt) * diffusion * Real3(grid.domain.dx_inv);
 
   for (int p = 0; p < grid.n_patches(); p++) {
-    Int3 ls[3];
-    Int3 rs[3];
-    detail::find_limits(grid, p, ls, rs);
-
     auto res = mf.view(_all, _all, _all, 0, p);
     for (int d = 0; d < 3; d++) {
       if (grid.isInvar(d)) {
         continue;
       }
 
-      Int3 l = ls[d];
-      Int3 r = rs[d];
+      Int3 l = grid.ibn;
+      Int3 r = grid.ldims + grid.ibn;
       auto e_comp = efield.view(_all, _all, _all, d, p);
 
       gt::gslice s1x = _s(l[0], r[0]);
