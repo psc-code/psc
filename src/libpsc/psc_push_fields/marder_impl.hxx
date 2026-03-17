@@ -43,20 +43,19 @@ inline void correct(const Grid_t& grid, E1& efield, const Int3& efield_ib,
         continue;
       }
 
-      Int3 l = grid.ibn;
-      Int3 r = grid.ldims + grid.ibn;
       auto e_comp = efield.view(_all, _all, _all, d, p);
 
-      gt::gslice s1x = _s(l[0], r[0]);
-      gt::gslice s1y = _s(l[1], r[1]);
-      gt::gslice s1z = _s(l[2], r[2]);
-
+      Int3 l = grid.ibn;
+      Int3 r = grid.ldims + grid.ibn;
+      gt::gslice s1[3] = {_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])};
       gt::gslice s2[3] = {_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])};
-      s2[d] = _s(l[d] + 1, r[d] + 1);
+      s2[d].start += 1;
+      s2[d].stop += 1;
 
-      e_comp.view(s1x, s1y, s1z) =
-        e_comp.view(s1x, s1y, s1z) +
-        (res.view(s2[0], s2[1], s2[2]) - res.view(s1x, s1y, s1z)) * fac[d];
+      e_comp.view(s1[0], s1[1], s1[2]) =
+        e_comp.view(s1[0], s1[1], s1[2]) +
+        (res.view(s2[0], s2[1], s2[2]) - res.view(s1[0], s1[1], s1[2])) *
+          fac[d];
     }
   }
 }
