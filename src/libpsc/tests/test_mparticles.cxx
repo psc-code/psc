@@ -1,5 +1,6 @@
 
 #include <gtest/gtest.h>
+#include <gtensor/reductions.h>
 
 #include "test_common.hxx"
 
@@ -8,6 +9,7 @@
 #include "../libpsc/vpic/PscParticlesBase.h"
 #include "../libpsc/vpic/mparticles_vpic.hxx"
 #include "../libpsc/vpic/vpic_config.h"
+#include "../libpsc/psc_output_fields/fields_item_moments_1st.hxx"
 #include "psc_particles_double.h"
 #include "psc_particles_single.h"
 #include "particle_with_id.h"
@@ -541,6 +543,35 @@ TEST(TestSetupParticles, Tag)
       EXPECT_EQ(prt_iter->tag(), prt_iter->kind * 10);
     }
   }
+}
+
+TEST(TestSetupParticles, RandomOffsets)
+{
+  using Mparticles = MparticlesDouble;
+  using a = Mfields<double>;
+  using MomentRho =
+    psc::moment::moment_rho<psc::deposit::code::Deposit1stNc, dim_yz>;
+
+  auto domain = Grid_t::Domain{{1, 2, 2}, {10., 20., 20.}, {}, {1, 1, 1}};
+  auto kinds = Grid_t::Kinds{{1., 100., "i"}, {-1., 1., "e"}};
+  auto prm = Grid_t::NormalizationParams::dimensionless();
+  prm.nicell = 10;
+  Grid_t grid{domain, {}, kinds, {prm}, .1};
+  Mparticles mprts{grid};
+
+  SetupParticles<Mparticles> setup_particles(grid);
+  setup_particles.random_offsets = true;
+  setup_particles.setupParticles(
+    mprts, [&](int kind, Double3 crd, psc_particle_npt& npt) { npt.n = 1; });
+
+  auto n_cells =
+    grid.domain.gdims[0] * grid.domain.gdims[1] * grid.domain.gdims[2];
+  EXPECT_EQ(mprts.size(), n_cells * kinds.size() * prm.nicell);
+
+  auto rho =
+    psc::mflds::zeros<double, gt::space::host>(mprts.grid(), 1, -grid.ibn);
+  MomentRho{}(rho, -grid.ibn, mprts);
+  ASSERT_LT(gt::norm_linf(rho), 1e-16);
 }
 
 int main(int argc, char** argv)
