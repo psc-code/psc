@@ -158,6 +158,11 @@ TYPED_TEST(PushFieldsTest, MarderCorrect)
 
   auto efield = mflds.storage().view(_all, _all, _all, _s(EX, EX + 3), _all);
   auto efield_ib = mflds.ib();
+
+  ASSERT_GT(gt::norm_linf(psc::mflds::interior(grid, mflds.gt()) -
+                          psc::mflds::interior(grid, mflds_ref.gt())),
+            1e-3);
+
   psc::marder::correct(grid, efield, efield_ib, mphi.storage(), mphi.ib(),
                        diffusion);
 
