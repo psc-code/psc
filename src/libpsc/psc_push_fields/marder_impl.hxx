@@ -22,30 +22,13 @@ namespace detail
 
 inline void find_limits(const Grid_t& grid, int p, Int3 ls[3], Int3 rs[3])
 {
-  Int3 l_cc = {0, 0, 0}, r_cc = {0, 0, 0};
-  Int3 l_nc = {0, 0, 0}, r_nc = {0, 0, 0};
-  for (int d = 0; d < 3; d++) {
-    if ((grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL ||
-         grid.bc.fld_lo[d] == BND_FLD_OPEN) &&
-        grid.atBoundaryLo(p, d)) {
-      l_cc[d] = -1;
-      l_nc[d] = -1;
-    }
-    if ((grid.bc.fld_hi[d] == BND_FLD_CONDUCTING_WALL ||
-         grid.bc.fld_hi[d] == BND_FLD_OPEN) &&
-        grid.atBoundaryHi(p, d)) {
-      r_cc[d] = -1;
-      r_nc[d] = 0;
-    }
-  }
-  // FIXME, for conducting wall the signs here need checking...
-  ls[0] = -Int3{l_cc[0], l_nc[1], l_nc[2]} + grid.ibn;
-  ls[1] = -Int3{l_nc[0], l_cc[1], l_nc[2]} + grid.ibn;
-  ls[2] = -Int3{l_nc[0], l_nc[1], l_cc[2]} + grid.ibn;
+  ls[0] = grid.ibn;
+  ls[1] = grid.ibn;
+  ls[2] = grid.ibn;
 
-  rs[0] = Int3{r_cc[0], r_nc[1], r_nc[2]} + grid.ldims + grid.ibn;
-  rs[1] = Int3{r_nc[0], r_cc[1], r_nc[2]} + grid.ldims + grid.ibn;
-  rs[2] = Int3{r_nc[0], r_nc[1], r_cc[2]} + grid.ldims + grid.ibn;
+  rs[0] = grid.ldims + grid.ibn;
+  rs[1] = grid.ldims + grid.ibn;
+  rs[2] = grid.ldims + grid.ibn;
 }
 
 } // namespace detail
@@ -260,6 +243,38 @@ public:
       Int3 res_ib = -grid.ibn;
       auto res = storage_type{psc::mflds::make_shape(grid, 1, res_ib)};
       psc::mflds::interior(grid, res) = dive - rho;
+
+      // Gauss' law is ostensibly violated at some boundaries, where virtual
+      // charges (i.e., charges that aren't associated with actual particles)
+      // implicitly shape the electric field. To account for virtual charges,
+      // simply set the error at those boundaries to 0.
+      for (int p = 0; p < grid.n_patches(); p++) {
+        for (int d = 0; d < 3; d++) {
+          if ((grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL ||
+               grid.bc.fld_lo[d] == BND_FLD_OPEN) &&
+              grid.atBoundaryLo(p, d)) {
+
+            gt::gslice slices[3] = {_s(grid.ibn[0], -grid.ibn[0]),
+                                    _s(grid.ibn[1], -grid.ibn[1]),
+                                    _s(grid.ibn[2], -grid.ibn[2])};
+            slices[d].stop = slices[d].start + 1;
+            res.view(slices[0], slices[1], slices[2], 0, p) = 0.0;
+          }
+
+          if ((grid.bc.fld_hi[d] == BND_FLD_CONDUCTING_WALL ||
+               grid.bc.fld_hi[d] == BND_FLD_OPEN) &&
+              grid.atBoundaryHi(p, d)) {
+            gt::gslice slices[3] = {_s(grid.ibn[0], -grid.ibn[0]),
+                                    _s(grid.ibn[1], -grid.ibn[1]),
+                                    _s(grid.ibn[2], -grid.ibn[2])};
+            // Note that upper edges are in the ghost region.
+            slices[d].start = slices[d].stop;
+            slices[d].stop += 1;
+            res.view(slices[0], slices[1], slices[2], 0, p) = 0.0;
+          }
+        }
+      }
+
       bnd_.fill_ghosts(grid, res, res_ib, 0, 1);
 
       print_progress(grid, rho, dive, res);
