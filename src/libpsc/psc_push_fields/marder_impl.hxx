@@ -63,20 +63,20 @@ inline void correct(const Grid_t& grid, E1& efield, const Int3& efield_ib,
 #ifdef USE_CUDA
 
 template <typename E1, typename E2>
-inline void cuda_marder_correct_yz(E1& efield, E2& res, Float3 fac, Int3 ly,
-                                   Int3 ry, Int3 lz, Int3 rz)
+inline void cuda_marder_correct_yz(E1& efield, E2& res, Float3 fac, Int3 l,
+                                   Int3 r, Int3 l, Int3 r)
 {
   auto k_efield = efield.to_kernel();
   auto k_res = res.to_kernel();
   gt::launch<2>(
     {k_efield.shape(1), k_efield.shape(2)}, GT_LAMBDA(int iy, int iz) {
-      if ((iy >= ly[1] && iy < ry[1]) && (iz >= ly[2] && iz < ry[2])) {
+      if ((iy >= l[1] && iy < r[1]) && (iz >= l[2] && iz < r[2])) {
         k_efield(0, iy, iz, 1) =
           k_efield(0, iy, iz, 1) +
           fac[1] * (k_res(0, iy + 1, iz) - k_res(0, iy, iz));
       }
 
-      if ((iy >= lz[1] && iy < rz[1]) && (iz >= lz[2] && iz < rz[2])) {
+      if ((iy >= l[1] && iy < r[1]) && (iz >= l[2] && iz < r[2])) {
         k_efield(0, iy, iz, 2) =
           k_efield(0, iy, iz, 2) +
           fac[2] * (k_res(0, iy, iz + 1) - k_res(0, iy, iz));
@@ -86,30 +86,30 @@ inline void cuda_marder_correct_yz(E1& efield, E2& res, Float3 fac, Int3 ly,
 }
 
 template <typename E1, typename E2>
-inline void cuda_marder_correct_xyz(E1& efield, E2& res, Float3 fac, Int3 lx,
-                                    Int3 rx, Int3 ly, Int3 ry, Int3 lz, Int3 rz)
+inline void cuda_marder_correct_xyz(E1& efield, E2& res, Float3 fac, Int3 l,
+                                    Int3 r)
 {
   auto k_efield = efield.to_kernel();
   auto k_res = res.to_kernel();
   gt::launch<3>(
     {k_efield.shape(0), k_efield.shape(1), k_efield.shape(2)},
     GT_LAMBDA(int ix, int iy, int iz) {
-      if ((ix >= lx[0] && ix < rx[0]) && (iy >= lx[1] && iy < rx[1]) &&
-          (iz >= lx[2] && iz < rx[2])) {
+      if ((ix >= l[0] && ix < r[0]) && (iy >= l[1] && iy < r[1]) &&
+          (iz >= l[2] && iz < r[2])) {
         k_efield(ix, iy, iz, 0) =
           k_efield(ix, iy, iz, 0) +
           fac[0] * (k_res(ix, iy + 1, iz) - k_res(ix, iy, iz));
       }
 
-      if ((ix >= ly[0] && ix < ry[0]) && (iy >= ly[1] && iy < ry[1]) &&
-          (iz >= ly[2] && iz < ry[2])) {
+      if ((ix >= l[0] && ix < r[0]) && (iy >= l[1] && iy < r[1]) &&
+          (iz >= l[2] && iz < r[2])) {
         k_efield(ix, iy, iz, 1) =
           k_efield(ix, iy, iz, 1) +
           fac[1] * (k_res(ix, iy + 1, iz) - k_res(ix, iy, iz));
       }
 
-      if ((ix >= lz[0] && ix < rz[0]) && (iy >= lz[1] && iy < rz[1]) &&
-          (iz >= lz[2] && iz < rz[2])) {
+      if ((ix >= l[0] && ix < r[0]) && (iy >= l[1] && iy < r[1]) &&
+          (iz >= l[2] && iz < r[2])) {
         k_efield(ix, iy, iz, 2) =
           k_efield(ix, iy, iz, 2) +
           fac[2] * (k_res(ix, iy, iz + 1) - k_res(ix, iy, iz));
@@ -132,15 +132,15 @@ inline void correct(const Grid_t& grid, E1& efield, const Int3& efield_ib,
   assert(mf_ib == -grid.ibn);
   // OPT, do all patches in one kernel
   for (int p = 0; p < grid.n_patches(); p++) {
-    Int3 lx, rx, ly, ry, lz, rz;
-    detail::find_limits(grid, p, lx, rx, ly, ry, lz, rz);
+    Int3 l = grid.ibn;
+    Int3 r = grid.ibn + grid.ldims;
 
     auto p_efield = efield.view(_all, _all, _all, _all, p);
     auto p_res = mf.view(_all, _all, _all, 0, p);
     if (grid.isInvar(0)) {
-      cuda_marder_correct_yz(p_efield, p_res, fac, ly, ry, lz, rz);
+      cuda_marder_correct_yz(p_efield, p_res, fac, l, r);
     } else {
-      cuda_marder_correct_xyz(p_efield, p_res, fac, lx, rx, ly, ry, lz, rz);
+      cuda_marder_correct_xyz(p_efield, p_res, fac, l, r);
     }
   }
 }
@@ -161,7 +161,7 @@ public:
   using Bnd = BND;
   using real_t = typename storage_type::value_type;
 
-  // FIXME: checkpointing won't properly restore state
+  // FIXME: checkpointing won't properl restore state
 
   MarderCommon(const Grid_t& grid, real_t diffusion, int loop, bool dump)
     : diffusion_{diffusion}, loop_{loop}, dump_{dump}
