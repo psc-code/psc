@@ -20,8 +20,7 @@ namespace marder
 namespace detail
 {
 
-inline void find_limits(const Grid_t& grid, int p, Int3& lx, Int3& rx, Int3& ly,
-                        Int3& ry, Int3& lz, Int3& rz)
+inline void find_limits(const Grid_t& grid, int p, Int3 ls[3], Int3 rs[3])
 {
   Int3 l_cc = {0, 0, 0}, r_cc = {0, 0, 0};
   Int3 l_nc = {0, 0, 0}, r_nc = {0, 0, 0};
@@ -40,13 +39,13 @@ inline void find_limits(const Grid_t& grid, int p, Int3& lx, Int3& rx, Int3& ly,
     }
   }
   // FIXME, for conducting wall the signs here need checking...
-  lx = -Int3{l_cc[0], l_nc[1], l_nc[2]} + grid.ibn;
-  ly = -Int3{l_nc[0], l_cc[1], l_nc[2]} + grid.ibn;
-  lz = -Int3{l_nc[0], l_nc[1], l_cc[2]} + grid.ibn;
+  ls[0] = -Int3{l_cc[0], l_nc[1], l_nc[2]} + grid.ibn;
+  ls[1] = -Int3{l_nc[0], l_cc[1], l_nc[2]} + grid.ibn;
+  ls[2] = -Int3{l_nc[0], l_nc[1], l_cc[2]} + grid.ibn;
 
-  rx = Int3{r_cc[0], r_nc[1], r_nc[2]} + grid.ldims + grid.ibn;
-  ry = Int3{r_nc[0], r_cc[1], r_nc[2]} + grid.ldims + grid.ibn;
-  rz = Int3{r_nc[0], r_nc[1], r_cc[2]} + grid.ldims + grid.ibn;
+  rs[0] = Int3{r_cc[0], r_nc[1], r_nc[2]} + grid.ldims + grid.ibn;
+  rs[1] = Int3{r_nc[0], r_cc[1], r_nc[2]} + grid.ldims + grid.ibn;
+  rs[2] = Int3{r_nc[0], r_nc[1], r_cc[2]} + grid.ldims + grid.ibn;
 }
 
 } // namespace detail
@@ -71,11 +70,9 @@ inline void correct(const Grid_t& grid, E1& efield, const Int3& efield_ib,
   Real3 fac = .5f * real_t(grid.dt) * diffusion * Real3(grid.domain.dx_inv);
 
   for (int p = 0; p < grid.n_patches(); p++) {
-    Int3 lx, rx, ly, ry, lz, rz;
-    detail::find_limits(grid, p, lx, rx, ly, ry, lz, rz);
-
-    Int3 ls[3] = {lx, ly, lz};
-    Int3 rs[3] = {rx, ry, rz};
+    Int3 ls[3];
+    Int3 rs[3];
+    detail::find_limits(grid, p, ls, rs);
 
     auto res = mf.view(_all, _all, _all, 0, p);
     for (int d = 0; d < 3; d++) {
