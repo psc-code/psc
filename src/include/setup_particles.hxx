@@ -255,14 +255,12 @@ struct SetupParticles
   // ----------------------------------------------------------------------
   // setupParticles
 
-  void setupParticles(Mparticles& mprts, InitNptFunc init_npt,
-                      bool random_offsets = false)
+  void setupParticles(Mparticles& mprts, InitNptFunc init_npt)
   {
-    setupParticles(mprts, initNpt_to_initNp(init_npt), random_offsets);
+    setupParticles(mprts, initNpt_to_initNp(init_npt));
   }
 
-  void setupParticles(Mparticles& mprts, InitNpFunc init_np,
-                      bool random_offsets = false)
+  void setupParticles(Mparticles& mprts, InitNpFunc init_np)
   {
     static int pr;
     if (!pr) {
@@ -350,6 +348,7 @@ struct SetupParticles
   int neutralizing_population = {-1};
   bool fractional_n_particles_per_cell = {false};
   bool initial_momentum_gamma_correction = {false};
+  bool random_offsets = false;
 
   centering::Centerer centerer;
 
