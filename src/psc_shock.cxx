@@ -202,6 +202,7 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
 {
   SetupParticles<Mparticles> setup_particles(*grid_ptr);
   setup_particles.centerer = centering::Centerer(centering::CC);
+  setup_particles.random_offsets = true;
   setup_particles.initial_momentum_gamma_correction = true;
 
   auto init_np = [&](int kind, Double3 crd, int p, Int3 idx,
