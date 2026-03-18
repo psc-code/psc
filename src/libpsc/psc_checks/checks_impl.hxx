@@ -71,8 +71,23 @@ public:
     auto item_divj = Item_divj<MfieldsState>{};
 
     auto rho_p = psc::mflds::interior(grid, item_rho(mprts));
-    auto divj = psc::mflds::interior(grid, item_divj(mflds));
     auto d_rho = rho_p - rho_m_;
+
+    auto divj = psc::mflds::interior(grid, item_divj(mflds));
+
+    // account for insertion/deletion of incoming/outgoing particles
+    for (int p = 0; p < grid.n_patches(); p++) {
+      for (int d = 0; d < 3; d++) {
+        if (grid.atBoundaryLo(p, d) && grid.bc.fld_lo[d] == BND_FLD_OPEN) {
+          Int3 r = grid.ldims;
+          r[d] = 1;
+
+          divj.view(_s(0, r[0]), _s(0, r[1]), _s(0, r[2]), 0, p) =
+            -d_rho.view(_s(0, r[0]), _s(0, r[1]), _s(0, r[2]), 0, p) / grid.dt;
+        }
+      }
+    }
+
     auto dt_divj = grid.dt * divj;
 
     double local_err = gt::norm_linf(d_rho + dt_divj);
@@ -144,14 +159,12 @@ public:
     auto rho = psc::mflds::interior(grid, item_rho(mprts));
     auto dive = psc::mflds::interior(grid, item_dive(mflds));
 
+    // account for virtual charges implied by BCs
     for (int p = 0; p < grid.n_patches(); p++) {
       for (int d = 0; d < 3; d++) {
         if (grid.atBoundaryLo(p, d) &&
             (grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL ||
              grid.bc.fld_lo[d] == BND_FLD_OPEN)) {
-
-          // account for implicit surface charges
-
           Int3 r = grid.ldims;
           r[d] = 1;
 
