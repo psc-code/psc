@@ -289,7 +289,11 @@ struct SetupParticles
       int seed = rng::detail::get_process_seed();
       for (int species_count = 0; species_count < grid.kinds.size();
            species_count++) {
-        offset_rngs.push_back({-0.5, 0.5, seed});
+        if (centerer.c == centering::Centering::CC) {
+          offset_rngs.push_back({-0.5, 0.5, seed});
+        } else {
+          offset_rngs.push_back({0.0, 1.0, seed});
+        }
       }
     }
 
