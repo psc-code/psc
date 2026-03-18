@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "gauss_corrector_base.hxx"
 #include "fields.hxx"
 #include "writer_mrc.hxx"
 #include "mpi_dtype_traits.hxx"
@@ -66,45 +67,35 @@ inline void correct(const Grid_t& grid, E1& efield, const Int3& efield_ib,
   assert(efield_ib == -grid.ibn);
   assert(mf_ib == -grid.ibn);
 
-  Real3 fac = {.5f * grid.dt * diffusion / grid.domain.dx[0],
-               .5f * grid.dt * diffusion / grid.domain.dx[1],
-               .5f * grid.dt * diffusion / grid.domain.dx[2]};
+  Real3 fac = .5f * real_t(grid.dt) * diffusion * Real3(grid.domain.dx_inv);
 
   for (int p = 0; p < grid.n_patches(); p++) {
     Int3 lx, rx, ly, ry, lz, rz;
     detail::find_limits(grid, p, lx, rx, ly, ry, lz, rz);
 
-    if (!grid.isInvar(0)) {
-      Int3 l = lx, r = rx;
-      auto ex = efield.view(_all, _all, _all, 0, p);
-      auto res = mf.view(_all, _all, _all, 0, p);
-      ex.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) =
-        ex.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) +
-        (res.view(_s(l[0] + 1, r[0] + 1), _s(l[1], r[1]), _s(l[2], r[2])) -
-         res.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2]))) *
-          fac[0];
-    }
+    Int3 ls[3] = {lx, ly, lz};
+    Int3 rs[3] = {rx, ry, rz};
 
-    {
-      Int3 l = ly, r = ry;
-      auto ey = efield.view(_all, _all, _all, 1, p);
-      auto res = mf.view(_all, _all, _all, 0, p);
-      ey.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) =
-        ey.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) +
-        (res.view(_s(l[0], r[0]), _s(l[1] + 1, r[1] + 1), _s(l[2], r[2])) -
-         res.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2]))) *
-          fac[1];
-    }
+    auto res = mf.view(_all, _all, _all, 0, p);
+    for (int d = 0; d < 3; d++) {
+      if (grid.isInvar(d)) {
+        continue;
+      }
 
-    {
-      Int3 l = lz, r = rz;
-      auto ez = efield.view(_all, _all, _all, 2, p);
-      auto res = mf.view(_all, _all, _all, 0, p);
-      ez.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) =
-        ez.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])) +
-        (res.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2] + 1, r[2] + 1)) -
-         res.view(_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2]))) *
-          fac[2];
+      Int3 l = ls[d];
+      Int3 r = rs[d];
+      auto e_comp = efield.view(_all, _all, _all, d, p);
+
+      gt::gslice s1x = _s(l[0], r[0]);
+      gt::gslice s1y = _s(l[1], r[1]);
+      gt::gslice s1z = _s(l[2], r[2]);
+
+      gt::gslice s2[3] = {_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])};
+      s2[d] = _s(l[d] + 1, r[d] + 1);
+
+      e_comp.view(s1x, s1y, s1z) =
+        e_comp.view(s1x, s1y, s1z) +
+        (res.view(s2[0], s2[1], s2[2]) - res.view(s1x, s1y, s1z)) * fac[d];
     }
   }
 }
@@ -198,12 +189,14 @@ inline void correct(const Grid_t& grid, E1& efield, const Int3& efield_ib,
 } // namespace marder
 } // namespace psc
 
-template <typename S, typename D, typename ITEM_RHO, typename BND>
-class MarderCommon
+template <typename MFIELDS_STATE, typename MPARTICLES, typename ITEM_RHO,
+          typename BND>
+class MarderCommon : public GaussCorrectorBase<MFIELDS_STATE, MPARTICLES>
 {
 public:
-  using storage_type = S;
-  using dim_t = D;
+  using MfieldsState = MFIELDS_STATE;
+  using Mparticles = MPARTICLES;
+  using storage_type = typename MfieldsState::Storage;
   using Item_rho_t = ITEM_RHO;
   using Bnd = BND;
   using real_t = typename storage_type::value_type;
@@ -241,23 +234,16 @@ public:
     }
   }
 
-  // ----------------------------------------------------------------------
-  // operator()
-  //
-  // Do the modified marder correction (See eq.(5, 7, 9, 10) in Mardahl and
-  // Verboncoeur, CPC, 1997)
-
-  template <typename Mparticles>
-  void operator()(const Grid_t& grid, storage_type& mflds, const Int3& mflds_ib,
-                  Mparticles& mprts)
+  void correct_gauss(MfieldsState& mflds, Mparticles& mprts) override
   {
-    auto efield = mflds.view(_all, _all, _all, _s(EX, EX + 3), _all);
-    auto efield_ib = mflds_ib;
+    const Grid_t& grid = mflds.grid();
+    auto efield = mflds.storage().view(_all, _all, _all, _s(EX, EX + 3), _all);
+    Int3 efield_ib = mflds.ib();
 
     double inv_sum = 0.;
     for (int d = 0; d < 3; d++) {
       if (!grid.isInvar(d)) {
-        inv_sum += 1. / sqr(grid.domain.dx[d]);
+        inv_sum += sqr(grid.domain.dx_inv[d]);
       }
     }
     double diffusion_max = 1. / 2. / (.5 * grid.dt) / inv_sum;
@@ -270,7 +256,7 @@ public:
     // and expected to be filled when done, so we're playing it safe for the
     // time being.
     for (int i = 0; i < loop_; i++) {
-      bnd_.fill_ghosts(grid, mflds, mflds_ib, EX, EX + 3);
+      bnd_.fill_ghosts(mflds, EX, EX + 3);
       auto dive = psc::mflds::interior(grid, psc::item::div_nc(grid, efield));
 
       Int3 res_ib = -grid.ibn;
@@ -282,21 +268,8 @@ public:
 
       psc::marder::correct(grid, efield, efield_ib, res, res_ib, diffusion);
     }
-    bnd_.fill_ghosts(grid, mflds, mflds_ib, EX, EX + 3);
-  }
-
-  template <typename MfieldsState, typename Mparticles>
-  void operator()(MfieldsState& mflds, Mparticles& mprts)
-  {
-    static int pr;
-    if (!pr) {
-      pr = prof_register("marder", 1., 0, 0);
-    }
-
-    prof_start(pr);
-    (*this)(mprts.grid(), mflds.storage(), mflds.ib(), mprts);
-    prof_stop(pr);
-  }
+    bnd_.fill_ghosts(mflds, EX, EX + 3);
+  };
 
   // private:
   real_t diffusion_; //< diffusion coefficient for Marder correction
@@ -306,8 +279,10 @@ public:
   WriterMRC io_; //< for debug dumping
 };
 
-template <typename S, typename D>
-using Marder_ = MarderCommon<S, D, Moment_rho_1st_nc<S, D>, Bnd_>;
+template <typename MFIELDS_STATE, typename MPARTICLES, typename D>
+using Marder_ =
+  MarderCommon<MFIELDS_STATE, MPARTICLES,
+               Moment_rho_1st_nc<typename MFIELDS_STATE::Storage, D>, Bnd_>;
 
 #ifdef USE_CUDA
 
@@ -315,7 +290,7 @@ using Marder_ = MarderCommon<S, D, Moment_rho_1st_nc<S, D>, Bnd_>;
 #include "mparticles_cuda.hxx"
 #include "fields_item_moments_1st_cuda.hxx"
 
-template <typename D>
-using MarderCuda = MarderCommon<MfieldsStateCuda::Storage, D,
+template <typename Mparticles, typename D>
+using MarderCuda = MarderCommon<MfieldsStateCuda, Mparticles,
                                 Moment_rho_1st_nc_cuda<D>, BndCuda3>;
 #endif

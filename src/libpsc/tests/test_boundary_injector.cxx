@@ -38,7 +38,6 @@ using Mparticles = PscConfig::Mparticles;
 using Balance = PscConfig::Balance;
 using Collision = PscConfig::Collision;
 using Checks = PscConfig::Checks;
-using Marder = PscConfig::Marder;
 using OutputParticles = PscConfig::OutputParticles;
 
 Grid_t* setupGrid()
@@ -133,10 +132,9 @@ TEST(BoundaryInjectorTest, Integration1Particle)
 
   Balance balance{.1};
   Collision collision{grid, 0, 0.1};
-  Marder marder(grid, 0.9, 3, false);
 
   auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
-                                          balance, collision, checks, marder);
+                                          balance, collision, checks);
 
   psc.add_injector(
     new BoundaryInjector<ParticleGenerator, typename PscConfig::PushParticles>(
@@ -191,10 +189,9 @@ TEST(BoundaryInjectorTest, IntegrationManyParticles)
 
   Balance balance{.1};
   Collision collision{grid, 0, 0.1};
-  Marder marder(grid, 0.9, 3, false);
 
   auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
-                                          balance, collision, checks, marder);
+                                          balance, collision, checks);
 
   psc.add_injector(
     new BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>(
@@ -249,7 +246,6 @@ TEST(BoundaryInjectorTest, IntegrationManySpecies)
 
   Balance balance{.1};
   Collision collision{grid, 0, 0.1};
-  Marder marder(grid, 0.9, 3, false);
 
   auto inject_electrons =
     BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>{
@@ -259,7 +255,7 @@ TEST(BoundaryInjectorTest, IntegrationManySpecies)
       ParticleGenerator(-1, 1), grid};
 
   auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
-                                          balance, collision, checks, marder);
+                                          balance, collision, checks);
 
   psc.add_injector(&inject_ions);
   psc.add_injector(&inject_electrons);

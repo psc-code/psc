@@ -26,7 +26,6 @@ using Mparticles = PscConfig::Mparticles;
 using Balance = PscConfig::Balance;
 using Collision = PscConfig::Collision;
 using Checks = PscConfig::Checks;
-using Marder = PscConfig::Marder;
 using OutputParticles = PscConfig::OutputParticles;
 
 // ======================================================================
