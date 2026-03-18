@@ -638,13 +638,15 @@ void inject_turbulence_dense(MfieldsState& mflds)
 
 void initializeFields(MfieldsState& mflds)
 {
-  if (turb_method == "alfven_dense") {
-    inject_turbulence_dense(mflds);
-  } else if (turb_method == "noise_gabor") {
-    GaborKernel kernel;
-    inject_turbulence_noise(mflds, kernel);
-  } else {
-    LOG_ERROR("Unrecognized turbulence method: %s\n", turb_method.c_str());
+  if (turb_db2 > 0.0) {
+    if (turb_method == "alfven_dense") {
+      inject_turbulence_dense(mflds);
+    } else if (turb_method == "noise_gabor") {
+      GaborKernel kernel;
+      inject_turbulence_noise(mflds, kernel);
+    } else {
+      LOG_ERROR("Unrecognized turbulence method: %s\n", turb_method.c_str());
+    }
   }
 
   add_background_fields(mflds);
