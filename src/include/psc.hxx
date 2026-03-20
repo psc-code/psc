@@ -270,10 +270,10 @@ struct Psc
 
       checkpointing_(grid(), mprts_, mflds_);
 
-      mpi_printf(grid().comm(),
-                 "**** Step %d / %d, Code Time %g, Wall Time %g\n",
-                 grid().timestep() + 1, p_.nmax, grid().timestep() * grid().dt,
-                 MPI_Wtime() - time_start_);
+      mpi_printf(
+        grid().comm(), "**** Step %d / %d, Code Time %g, Wall Time %g\n",
+        grid().timestep() + 1, p_.nmax, (grid().timestep() + 1) * grid().dt,
+        MPI_Wtime() - time_start_);
 
       // prof_start(pr_time_step_no_comm);
       // prof_stop(
