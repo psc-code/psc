@@ -121,8 +121,7 @@ public:
       typename Current::fields_t J(flds);
 
       for (Int3 initial_idx : VecRange(ilo, ihi)) {
-        Real3 cell_corner =
-          Double3(initial_idx) * grid.domain.dx + grid.patches[p].xb;
+        Real3 cell_corner = Double3(initial_idx) * grid.domain.dx;
         int n_prts_to_try_inject =
           get_n_in_cell(1.0, prts_per_unit_density_, true);
 
@@ -139,7 +138,11 @@ public:
             continue;
           }
 
-          injector(prt);
+          // GOTCHA: currently, injectors expect particle positions to be
+          // global, but current deposition expects patch-local
+          psc::particle::Inject prt_with_global_x = prt;
+          prt_with_global_x.x += grid.patches[p].xb;
+          injector(prt_with_global_x);
 
           // Update currents
           // Taken from push_particles_1vb.hxx PushParticlesVb::push_mprts()
