@@ -7,6 +7,7 @@
 
 #include <mrc_profile.h>
 
+#include "kg/VecRange.hxx"
 #include "centering.hxx"
 #include "particle.h"
 #include "rng.hxx"
@@ -28,9 +29,17 @@ struct psc_particle_np
   psc::particle::Tag tag;
 };
 
-namespace
+/**
+ * @brief Calculates gamma * v for the given velocity v.
+ * @tparam Real real type
+ * @param v the actual velocity
+ * @return the spatial components of the corresponding 4-velocity
+ */
+template <typename Real>
+Vec3<Real> vel_to_4vel(Vec3<Real> v)
 {
-const centering::Centerer defaultCenterer(centering::CC);
+  Real gamma = 1.0 / sqrt(1.0 - v.mag2());
+  return v * gamma;
 }
 
 struct InitNptFunc
@@ -125,7 +134,7 @@ struct SetupParticles
     : kinds_{grid.kinds},
       norm_{grid.norm},
       n_populations_{n_populations},
-      centerer(defaultCenterer)
+      centerer(centering::CC)
   {
     if (n_populations_ == 0) {
       n_populations_ = kinds_.size();
@@ -150,43 +159,35 @@ struct SetupParticles
   void op_cellwise(const Grid_t& grid, int patch, InitNpFunc init_np,
                    OpFunc&& op)
   {
-    Int3 ilo = Int3{}, ihi = grid.ldims;
-
-    for (int jz = ilo[2]; jz < ihi[2]; jz++) {
-      for (int jy = ilo[1]; jy < ihi[1]; jy++) {
-        for (int jx = ilo[0]; jx < ihi[0]; jx++) {
-          Int3 index{jx, jy, jz};
-
-          Double3 pos = centerer.get_pos(grid.patches[patch], index);
-          // FIXME, the issue really is that (2nd order) particle pushers
-          // don't handle the invariant dim right
-          for (int d = 0; d < 3; ++d) {
-            if (grid.isInvar(d)) {
-              pos[d] = grid.patches[patch].get_nc(index[d], d);
-            }
-          }
-
-          int n_q_in_cell = 0;
-          for (int pop = 0; pop < n_populations_; pop++) {
-            psc_particle_np np{};
-            if (pop < kinds_.size()) {
-              np.kind = pop;
-            }
-            init_np(pop, pos, patch, index, np);
-
-            int n_in_cell;
-            if (pop != neutralizing_population) {
-              n_in_cell = get_n_in_cell(np.n);
-              n_q_in_cell += kinds_[np.kind].q * n_in_cell;
-            } else {
-              // FIXME, should handle the case where not the last population
-              // is neutralizing
-              assert(neutralizing_population == n_populations_ - 1);
-              n_in_cell = -n_q_in_cell / kinds_[np.kind].q;
-            }
-            op(n_in_cell, np, pos);
-          }
+    for (Int3 index : VecRange(Int3{}, grid.ldims)) {
+      Double3 pos = centerer.get_pos(grid.patches[patch], index);
+      // FIXME, the issue really is that (2nd order) particle pushers
+      // don't handle the invariant dim right
+      for (int d = 0; d < 3; ++d) {
+        if (grid.isInvar(d)) {
+          pos[d] = grid.patches[patch].get_nc(index[d], d);
         }
+      }
+
+      int n_q_in_cell = 0;
+      for (int pop = 0; pop < n_populations_; pop++) {
+        psc_particle_np np{};
+        if (pop < kinds_.size()) {
+          np.kind = pop;
+        }
+        init_np(pop, pos, patch, index, np);
+
+        int n_in_cell;
+        if (pop != neutralizing_population) {
+          n_in_cell = get_n_in_cell(np.n);
+          n_q_in_cell += kinds_[np.kind].q * n_in_cell;
+        } else {
+          // FIXME, should handle the case where not the last population
+          // is neutralizing
+          assert(neutralizing_population == n_populations_ - 1);
+          n_in_cell = -n_q_in_cell / kinds_[np.kind].q;
+        }
+        op(n_in_cell, np, pos);
       }
     }
   }
@@ -217,27 +218,10 @@ struct SetupParticles
         p[i] = dist.get(npt.p[i], beta * std::sqrt(npt.T[i] / m));
 
       if (initial_momentum_gamma_correction) {
-        double p_squared = sqr(p[0]) + sqr(p[1]) + sqr(p[2]);
-        if (p_squared < 1.) {
-          double gamma = 1. / sqrt(1. - p_squared);
-          p *= gamma;
-        }
+        p = vel_to_4vel(p);
       }
       return p;
     };
-  }
-
-  // ----------------------------------------------------------------------
-  // setup_particles
-
-  void operator()(Mparticles& mprts, InitNpFunc init_np)
-  {
-    setupParticles(mprts, init_np);
-  }
-
-  void operator()(Mparticles& mprts, InitNptFunc init_npt)
-  {
-    setupParticles(mprts, init_npt);
   }
 
   // ----------------------------------------------------------------------
@@ -284,23 +268,58 @@ struct SetupParticles
     }
 
     prof_start(pr);
-    const auto& grid = mprts.grid();
+    const Grid_t& grid = mprts.grid();
 
     // mprts.reserve_all(n_prts_by_patch); FIXME
 
     auto inj = mprts.injector();
 
+    std::vector<rng::Uniform<real_t>> offset_rngs;
+    if (random_offsets) {
+      LOG_WARN(
+        "SetupParticles: enabled random offsets. Initial particle positions "
+        "will be randomized in each cell, instead of all at cell centers. Each "
+        "species uses the same rng seed, so if there are the same number of "
+        "particles of each species in each cell, each species will have the "
+        "exact same initial position distribution. This results in a charge "
+        "density of 0 if there are two species with opposite charges, but the "
+        "resulting charge density is nonzero in general. In the latter, case, "
+        "take special care to ensure Gauss' law isn't violated.");
+
+      int seed = rng::detail::get_process_seed();
+      for (int species_count = 0; species_count < grid.kinds.size();
+           species_count++) {
+        if (centerer.c == centering::Centering::CC) {
+          offset_rngs.push_back({-0.5, 0.5, seed});
+        } else {
+          offset_rngs.push_back({0.0, 1.0, seed});
+        }
+      }
+    }
+
     for (int p = 0; p < mprts.n_patches(); ++p) {
       auto injector = inj[p];
 
-      op_cellwise(grid, p, init_np,
-                  [&](int n_in_cell, psc_particle_np& np, Double3& pos) {
-                    for (int cnt = 0; cnt < n_in_cell; cnt++) {
-                      real_t weight = getWeight(np.n, n_in_cell);
-                      auto prt = setupParticle(np, pos, weight);
-                      injector(prt);
-                    }
-                  });
+      op_cellwise(
+        grid, p, init_np,
+        [&](int n_in_cell, psc_particle_np& np, Double3& cell_pos_cc) {
+          for (int cnt = 0; cnt < n_in_cell; cnt++) {
+            real_t weight = getWeight(np.n, n_in_cell);
+
+            Double3 prt_pos = cell_pos_cc;
+            if (random_offsets) {
+              auto rng = offset_rngs[np.kind];
+              for (int d = 0; d < 3; d++) {
+                if (!grid.isInvar(d)) {
+                  prt_pos[d] += rng.get() * grid.domain.dx[d];
+                }
+              }
+            }
+
+            auto prt = setupParticle(np, prt_pos, weight);
+            injector(prt);
+          }
+        });
     }
 
     prof_stop(pr);
@@ -333,6 +352,7 @@ struct SetupParticles
   int neutralizing_population = {-1};
   bool fractional_n_particles_per_cell = {false};
   bool initial_momentum_gamma_correction = {false};
+  bool random_offsets = false;
 
   centering::Centerer centerer;
 

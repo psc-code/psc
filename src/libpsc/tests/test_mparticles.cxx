@@ -1,5 +1,6 @@
 
 #include <gtest/gtest.h>
+#include <gtensor/reductions.h>
 
 #include "test_common.hxx"
 
@@ -8,6 +9,7 @@
 #include "../libpsc/vpic/PscParticlesBase.h"
 #include "../libpsc/vpic/mparticles_vpic.hxx"
 #include "../libpsc/vpic/vpic_config.h"
+#include "../libpsc/psc_output_fields/fields_item_moments_1st.hxx"
 #include "psc_particles_double.h"
 #include "psc_particles_single.h"
 #include "particle_with_id.h"
@@ -453,7 +455,7 @@ TEST(TestSetupParticles, Simple)
   Mparticles mprts{grid};
 
   SetupParticles<Mparticles> setup_particles(grid);
-  setup_particles(
+  setup_particles.setupParticles(
     mprts, [&](int kind, Double3 crd, psc_particle_npt& npt) { npt.n = 1; });
 
   auto n_cells =
@@ -474,11 +476,12 @@ TEST(TestSetupParticles, NPopulations)
 
   int n_populations = 2;
   SetupParticles<Mparticles> setup_particles(grid, n_populations);
-  setup_particles(mprts, [&](int pop, Double3 crd, psc_particle_npt& npt) {
-    npt.n = 1;
-    npt.kind = 0;
-    npt.p[0] = double(pop); // save pop in u[0] for testing
-  });
+  setup_particles.setupParticles(
+    mprts, [&](int pop, Double3 crd, psc_particle_npt& npt) {
+      npt.n = 1;
+      npt.kind = 0;
+      npt.p[0] = double(pop); // save pop in u[0] for testing
+    });
 
   auto n_cells =
     grid.domain.gdims[0] * grid.domain.gdims[1] * grid.domain.gdims[2];
@@ -497,7 +500,7 @@ TEST(TestSetupParticles, Id)
   Mparticles mprts{grid};
 
   SetupParticles<Mparticles> setup_particles(grid);
-  setup_particles(
+  setup_particles.setupParticles(
     mprts, [&](int kind, Double3 crd, psc_particle_npt& npt) { npt.n = 1; });
 
   auto n_cells =
@@ -525,10 +528,11 @@ TEST(TestSetupParticles, Tag)
   Mparticles mprts{grid};
 
   SetupParticles<Mparticles> setup_particles(grid);
-  setup_particles(mprts, [&](int kind, Double3 crd, psc_particle_npt& npt) {
-    npt.n = 1;
-    npt.tag = psc::particle::Tag{kind * 10};
-  });
+  setup_particles.setupParticles(
+    mprts, [&](int kind, Double3 crd, psc_particle_npt& npt) {
+      npt.n = 1;
+      npt.tag = psc::particle::Tag{kind * 10};
+    });
 
   auto n_cells =
     grid.domain.gdims[0] * grid.domain.gdims[1] * grid.domain.gdims[2];
@@ -541,14 +545,43 @@ TEST(TestSetupParticles, Tag)
   }
 }
 
+TEST(TestSetupParticles, RandomOffsets)
+{
+  using Mparticles = MparticlesDouble;
+  using a = Mfields<double>;
+  using MomentRho =
+    psc::moment::moment_rho<psc::deposit::code::Deposit1stNc, dim_yz>;
+
+  auto domain = Grid_t::Domain{{1, 2, 2}, {10., 20., 20.}, {}, {1, 1, 1}};
+  auto kinds = Grid_t::Kinds{{1., 100., "i"}, {-1., 1., "e"}};
+  auto prm = Grid_t::NormalizationParams::dimensionless();
+  prm.nicell = 10;
+  Grid_t grid{domain, {}, kinds, {prm}, .1};
+  Mparticles mprts{grid};
+
+  SetupParticles<Mparticles> setup_particles(grid);
+  setup_particles.random_offsets = true;
+  setup_particles.setupParticles(
+    mprts, [&](int kind, Double3 crd, psc_particle_npt& npt) { npt.n = 1; });
+
+  auto n_cells =
+    grid.domain.gdims[0] * grid.domain.gdims[1] * grid.domain.gdims[2];
+  EXPECT_EQ(mprts.size(), n_cells * kinds.size() * prm.nicell);
+
+  auto rho =
+    psc::mflds::zeros<double, gt::space::host>(mprts.grid(), 1, -grid.ibn);
+  MomentRho{}(rho, -grid.ibn, mprts);
+  ASSERT_LT(gt::norm_linf(rho), 1e-16);
+}
+
 int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
-  //#ifdef USE_VPIC FIXME
+  // #ifdef USE_VPIC FIXME
   MPI_Comm_dup(MPI_COMM_WORLD, &psc_comm_world);
   MPI_Comm_rank(psc_comm_world, &psc_world_rank);
   MPI_Comm_size(psc_comm_world, &psc_world_size);
-  //#endif
+  // #endif
 
   ::testing::InitGoogleTest(&argc, argv);
   int rc = RUN_ALL_TESTS();

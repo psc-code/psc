@@ -5,6 +5,7 @@
 
 #include "psc_bits.h"
 #include <psc/deposit.hxx>
+#include "fields_item.hxx"
 
 namespace psc
 {
