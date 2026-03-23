@@ -39,6 +39,15 @@ struct Vec : gt::sarray<T, N>
   }
 
   // ----------------------------------------------------------------------
+  // unit vector ctors
+  KG_INLINE static Vec unit(int d)
+  {
+    Vec res;
+    res[d] = value_type(1);
+    return res;
+  }
+
+  // ----------------------------------------------------------------------
   // converting to Vec of different type (e.g., float -> double)
 
   template <typename U>
