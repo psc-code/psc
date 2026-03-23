@@ -85,6 +85,10 @@ struct BndFields_ : BndFieldsBase
     for (int p = 0; p < mflds.n_patches(); p++) {
       // lo
       for (int d = 0; d < 3; d++) {
+        if (grid.bc.fld_lo[d] == BND_FLD_OPEN && radiation) {
+          radiation->update_cache_lower(grid.time(), d);
+        }
+
         if (grid.atBoundaryLo(p, d)) {
           switch (grid.bc.fld_lo[d]) {
             case BND_FLD_PERIODIC: {
@@ -106,6 +110,10 @@ struct BndFields_ : BndFieldsBase
       }
       // hi
       for (int d = 0; d < 3; d++) {
+        if (grid.bc.fld_hi[d] == BND_FLD_OPEN && radiation) {
+          radiation->update_cache_upper(grid.time(), d);
+        }
+
         if (grid.atBoundaryHi(p, d)) {
           switch (grid.bc.fld_hi[d]) {
             case BND_FLD_PERIODIC: {
