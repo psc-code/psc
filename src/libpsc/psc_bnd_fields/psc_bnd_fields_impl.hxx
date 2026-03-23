@@ -556,8 +556,8 @@ struct BndFields_ : BndFieldsBase
       real_t s = 0.0;
       real_t p = 0.0;
       if (radiation) {
-        s = radiation->pulse_s_lower(d0, p, i3);
-        p = radiation->pulse_p_lower(d0, p, i3);
+        s = radiation->pulse_s_lower(grid.time(), d0, p, i3);
+        p = radiation->pulse_p_lower(grid.time(), d0, p, i3);
       }
 
       F(H2, i3) = (4.f * s - 2.f * (F(E1, edge_idx) - background_e[d1]) -
@@ -608,8 +608,8 @@ struct BndFields_ : BndFieldsBase
       real_t s = 0.0;
       real_t p = 0.0;
       if (radiation) {
-        s = radiation->pulse_s_upper(d0, p, i3);
-        p = radiation->pulse_p_upper(d0, p, i3);
+        s = radiation->pulse_s_upper(grid.time(), d0, p, i3);
+        p = radiation->pulse_p_upper(grid.time(), d0, p, i3);
       }
 
       F(H2, i3) = (-4.f * s + 2.f * (F(E1, i3) - background_e[d1]) +
