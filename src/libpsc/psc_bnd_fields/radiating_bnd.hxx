@@ -1,7 +1,7 @@
 #include "kg/Vec3.h"
 
 template <typename real_t>
-class RadiatingBoundary
+struct RadiatingBoundary
 {
   using Real3 = Vec3<real_t>;
 
