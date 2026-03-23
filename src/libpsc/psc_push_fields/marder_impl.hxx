@@ -17,39 +17,6 @@ namespace psc
 namespace marder
 {
 
-namespace detail
-{
-
-inline void find_limits(const Grid_t& grid, int p, Int3& lx, Int3& rx, Int3& ly,
-                        Int3& ry, Int3& lz, Int3& rz)
-{
-  Int3 l_cc = {0, 0, 0}, r_cc = {0, 0, 0};
-  Int3 l_nc = {0, 0, 0}, r_nc = {0, 0, 0};
-  for (int d = 0; d < 3; d++) {
-    if (grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL &&
-        grid.atBoundaryLo(p, d)) {
-      l_cc[d] = -1;
-      l_nc[d] = -1;
-    }
-    if (grid.bc.fld_hi[d] == BND_FLD_CONDUCTING_WALL &&
-        grid.atBoundaryHi(p, d)) {
-      r_cc[d] = -1;
-      r_nc[d] = 0;
-    }
-  }
-  // FIXME, for conducting wall the signs here need checking...
-  lx = -Int3{l_cc[0], l_nc[1], l_nc[2]} + grid.ibn;
-  rx = Int3{r_cc[0], r_nc[1], r_nc[2]} + grid.ldims + grid.ibn;
-
-  ly = -Int3{l_nc[0], l_cc[1], l_nc[2]} + grid.ibn;
-  ry = Int3{r_nc[0], r_cc[1], r_nc[2]} + grid.ldims + grid.ibn;
-
-  lz = -Int3{l_nc[0], l_nc[1], l_cc[2]} + grid.ibn;
-  rz = Int3{r_nc[0], r_nc[1], r_cc[2]} + grid.ldims + grid.ibn;
-}
-
-} // namespace detail
-
 // ----------------------------------------------------------------------
 // correct
 //
@@ -70,32 +37,25 @@ inline void correct(const Grid_t& grid, E1& efield, const Int3& efield_ib,
   Real3 fac = .5f * real_t(grid.dt) * diffusion * Real3(grid.domain.dx_inv);
 
   for (int p = 0; p < grid.n_patches(); p++) {
-    Int3 lx, rx, ly, ry, lz, rz;
-    detail::find_limits(grid, p, lx, rx, ly, ry, lz, rz);
-
-    Int3 ls[3] = {lx, ly, lz};
-    Int3 rs[3] = {rx, ry, rz};
-
     auto res = mf.view(_all, _all, _all, 0, p);
     for (int d = 0; d < 3; d++) {
       if (grid.isInvar(d)) {
         continue;
       }
 
-      Int3 l = ls[d];
-      Int3 r = rs[d];
       auto e_comp = efield.view(_all, _all, _all, d, p);
 
-      gt::gslice s1x = _s(l[0], r[0]);
-      gt::gslice s1y = _s(l[1], r[1]);
-      gt::gslice s1z = _s(l[2], r[2]);
-
+      Int3 l = grid.ibn;
+      Int3 r = grid.ldims + grid.ibn;
+      gt::gslice s1[3] = {_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])};
       gt::gslice s2[3] = {_s(l[0], r[0]), _s(l[1], r[1]), _s(l[2], r[2])};
-      s2[d] = _s(l[d] + 1, r[d] + 1);
+      s2[d].start += 1;
+      s2[d].stop += 1;
 
-      e_comp.view(s1x, s1y, s1z) =
-        e_comp.view(s1x, s1y, s1z) +
-        (res.view(s2[0], s2[1], s2[2]) - res.view(s1x, s1y, s1z)) * fac[d];
+      e_comp.view(s1[0], s1[1], s1[2]) =
+        e_comp.view(s1[0], s1[1], s1[2]) +
+        (res.view(s2[0], s2[1], s2[2]) - res.view(s1[0], s1[1], s1[2])) *
+          fac[d];
     }
   }
 }
@@ -103,20 +63,20 @@ inline void correct(const Grid_t& grid, E1& efield, const Int3& efield_ib,
 #ifdef USE_CUDA
 
 template <typename E1, typename E2>
-inline void cuda_marder_correct_yz(E1& efield, E2& res, Float3 fac, Int3 ly,
-                                   Int3 ry, Int3 lz, Int3 rz)
+inline void cuda_marder_correct_yz(E1& efield, E2& res, Float3 fac, Int3 l,
+                                   Int3 r, Int3 l, Int3 r)
 {
   auto k_efield = efield.to_kernel();
   auto k_res = res.to_kernel();
   gt::launch<2>(
     {k_efield.shape(1), k_efield.shape(2)}, GT_LAMBDA(int iy, int iz) {
-      if ((iy >= ly[1] && iy < ry[1]) && (iz >= ly[2] && iz < ry[2])) {
+      if ((iy >= l[1] && iy < r[1]) && (iz >= l[2] && iz < r[2])) {
         k_efield(0, iy, iz, 1) =
           k_efield(0, iy, iz, 1) +
           fac[1] * (k_res(0, iy + 1, iz) - k_res(0, iy, iz));
       }
 
-      if ((iy >= lz[1] && iy < rz[1]) && (iz >= lz[2] && iz < rz[2])) {
+      if ((iy >= l[1] && iy < r[1]) && (iz >= l[2] && iz < r[2])) {
         k_efield(0, iy, iz, 2) =
           k_efield(0, iy, iz, 2) +
           fac[2] * (k_res(0, iy, iz + 1) - k_res(0, iy, iz));
@@ -126,30 +86,30 @@ inline void cuda_marder_correct_yz(E1& efield, E2& res, Float3 fac, Int3 ly,
 }
 
 template <typename E1, typename E2>
-inline void cuda_marder_correct_xyz(E1& efield, E2& res, Float3 fac, Int3 lx,
-                                    Int3 rx, Int3 ly, Int3 ry, Int3 lz, Int3 rz)
+inline void cuda_marder_correct_xyz(E1& efield, E2& res, Float3 fac, Int3 l,
+                                    Int3 r)
 {
   auto k_efield = efield.to_kernel();
   auto k_res = res.to_kernel();
   gt::launch<3>(
     {k_efield.shape(0), k_efield.shape(1), k_efield.shape(2)},
     GT_LAMBDA(int ix, int iy, int iz) {
-      if ((ix >= lx[0] && ix < rx[0]) && (iy >= lx[1] && iy < rx[1]) &&
-          (iz >= lx[2] && iz < rx[2])) {
+      if ((ix >= l[0] && ix < r[0]) && (iy >= l[1] && iy < r[1]) &&
+          (iz >= l[2] && iz < r[2])) {
         k_efield(ix, iy, iz, 0) =
           k_efield(ix, iy, iz, 0) +
           fac[0] * (k_res(ix, iy + 1, iz) - k_res(ix, iy, iz));
       }
 
-      if ((ix >= ly[0] && ix < ry[0]) && (iy >= ly[1] && iy < ry[1]) &&
-          (iz >= ly[2] && iz < ry[2])) {
+      if ((ix >= l[0] && ix < r[0]) && (iy >= l[1] && iy < r[1]) &&
+          (iz >= l[2] && iz < r[2])) {
         k_efield(ix, iy, iz, 1) =
           k_efield(ix, iy, iz, 1) +
           fac[1] * (k_res(ix, iy + 1, iz) - k_res(ix, iy, iz));
       }
 
-      if ((ix >= lz[0] && ix < rz[0]) && (iy >= lz[1] && iy < rz[1]) &&
-          (iz >= lz[2] && iz < rz[2])) {
+      if ((ix >= l[0] && ix < r[0]) && (iy >= l[1] && iy < r[1]) &&
+          (iz >= l[2] && iz < r[2])) {
         k_efield(ix, iy, iz, 2) =
           k_efield(ix, iy, iz, 2) +
           fac[2] * (k_res(ix, iy, iz + 1) - k_res(ix, iy, iz));
@@ -172,15 +132,15 @@ inline void correct(const Grid_t& grid, E1& efield, const Int3& efield_ib,
   assert(mf_ib == -grid.ibn);
   // OPT, do all patches in one kernel
   for (int p = 0; p < grid.n_patches(); p++) {
-    Int3 lx, rx, ly, ry, lz, rz;
-    detail::find_limits(grid, p, lx, rx, ly, ry, lz, rz);
+    Int3 l = grid.ibn;
+    Int3 r = grid.ibn + grid.ldims;
 
     auto p_efield = efield.view(_all, _all, _all, _all, p);
     auto p_res = mf.view(_all, _all, _all, 0, p);
     if (grid.isInvar(0)) {
-      cuda_marder_correct_yz(p_efield, p_res, fac, ly, ry, lz, rz);
+      cuda_marder_correct_yz(p_efield, p_res, fac, l, r);
     } else {
-      cuda_marder_correct_xyz(p_efield, p_res, fac, lx, rx, ly, ry, lz, rz);
+      cuda_marder_correct_xyz(p_efield, p_res, fac, l, r);
     }
   }
 }
@@ -201,7 +161,7 @@ public:
   using Bnd = BND;
   using real_t = typename storage_type::value_type;
 
-  // FIXME: checkpointing won't properly restore state
+  // FIXME: checkpointing won't properl restore state
 
   MarderCommon(const Grid_t& grid, real_t diffusion, int loop, bool dump)
     : diffusion_{diffusion}, loop_{loop}, dump_{dump}
@@ -262,6 +222,38 @@ public:
       Int3 res_ib = -grid.ibn;
       auto res = storage_type{psc::mflds::make_shape(grid, 1, res_ib)};
       psc::mflds::interior(grid, res) = dive - rho;
+
+      // Gauss' law is ostensibly violated at some boundaries, where virtual
+      // charges (i.e., charges that aren't associated with actual particles)
+      // implicitly shape the electric field. To account for virtual charges,
+      // simply set the error at those boundaries to 0.
+      for (int p = 0; p < grid.n_patches(); p++) {
+        for (int d = 0; d < 3; d++) {
+          if ((grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL ||
+               grid.bc.fld_lo[d] == BND_FLD_OPEN) &&
+              grid.atBoundaryLo(p, d)) {
+
+            gt::gslice slices[3] = {_s(grid.ibn[0], -grid.ibn[0]),
+                                    _s(grid.ibn[1], -grid.ibn[1]),
+                                    _s(grid.ibn[2], -grid.ibn[2])};
+            slices[d].stop = slices[d].start + 1;
+            res.view(slices[0], slices[1], slices[2], 0, p) = 0.0;
+          }
+
+          if ((grid.bc.fld_hi[d] == BND_FLD_CONDUCTING_WALL ||
+               grid.bc.fld_hi[d] == BND_FLD_OPEN) &&
+              grid.atBoundaryHi(p, d)) {
+            gt::gslice slices[3] = {_s(grid.ibn[0], -grid.ibn[0]),
+                                    _s(grid.ibn[1], -grid.ibn[1]),
+                                    _s(grid.ibn[2], -grid.ibn[2])};
+            // Note that upper edges are in the ghost region.
+            slices[d].start = slices[d].stop;
+            slices[d].stop += 1;
+            res.view(slices[0], slices[1], slices[2], 0, p) = 0.0;
+          }
+        }
+      }
+
       bnd_.fill_ghosts(grid, res, res_ib, 0, 1);
 
       print_progress(grid, rho, dive, res);
