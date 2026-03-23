@@ -286,6 +286,15 @@ struct Vec : gt::sarray<T, N>
     return res;
   }
 
+  KG_INLINE Vec reverse() const
+  {
+    Vec res;
+    for (int i = 0; i < N; i++) {
+      res[i] = (*this)[N - 1 - i];
+    }
+    return res;
+  }
+
   // conversion to pointer
 
   KG_INLINE operator const T*() const { return this->data(); }
