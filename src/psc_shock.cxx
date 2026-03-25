@@ -566,7 +566,11 @@ void inject_turbulence_dense(MfieldsState& mflds)
   double kmax = ((Double3)Int3::max(-i3_min, i3_max) * dk_vec).mag();
   int nk = kmax / dk + 1;
 
-  LOG_INFO("nk = %d, kmax = %f\n", nk, kmax);
+  int rank;
+  MPI_Comm_rank(mflds.grid().comm(), &rank);
+  if (rank == 0) {
+    LOG_INFO("nk = %d, kmax = %f\n", nk, kmax);
+  }
 
   auto k_mins = std::vector<double>(nk);
   for (int i = 0; i < nk; i++) {
