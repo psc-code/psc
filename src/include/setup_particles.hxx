@@ -276,15 +276,20 @@ struct SetupParticles
 
     std::vector<rng::Uniform<real_t>> offset_rngs;
     if (random_offsets) {
-      LOG_WARN(
-        "SetupParticles: enabled random offsets. Initial particle positions "
-        "will be randomized in each cell, instead of all at cell centers. Each "
-        "species uses the same rng seed, so if there are the same number of "
-        "particles of each species in each cell, each species will have the "
-        "exact same initial position distribution. This results in a charge "
-        "density of 0 if there are two species with opposite charges, but the "
-        "resulting charge density is nonzero in general. In the latter, case, "
-        "take special care to ensure Gauss' law isn't violated.");
+      int rank;
+      MPI_Comm_rank(grid.comm(), &rank);
+      if (rank == 0) {
+        LOG_WARN(
+          "SetupParticles: enabled random offsets. Initial particle positions "
+          "will be randomized in each cell, instead of all at cell centers. "
+          "Each species uses the same rng seed, so if there are the same "
+          "number of particles of each species in each cell, each species will "
+          "have the exact same initial position distribution. This results in "
+          "a charge density of 0 if there are two species with opposite "
+          "charges, but the resulting charge density is nonzero in general. In "
+          "the latter, case, take special care to ensure Gauss' law isn't "
+          "violated.");
+      }
 
       int seed = rng::detail::get_process_seed();
       for (int species_count = 0; species_count < grid.kinds.size();
