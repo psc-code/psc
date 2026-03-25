@@ -56,6 +56,9 @@ double b_x;
 double b_y;
 double b_z;
 
+Real3 background_e;
+Real3 background_h;
+
 int nx;
 int ny;
 int nz;
@@ -113,6 +116,12 @@ void setupParameters(int argc, char** argv)
   b_x = b_mag * sin(b_angle_y_to_x_rad);
   b_y = b_mag * cos(b_angle_y_to_x_rad);
   b_z = 0.0;
+
+  Real3 v_upstream = {v_upstream_x, v_upstream_y, v_upstream_z};
+  double gamma = 1 / sqrt(1 - v_upstream.mag2());
+  background_e = -gamma * v_upstream.cross({b_x, b_y, b_z});
+  // note: this only holds for vx=vz=0
+  background_h = {b_x * gamma, b_y, b_z * gamma};
 
   nx = inputParams.get<int>("nx");
   ny = inputParams.get<int>("ny");
@@ -901,10 +910,6 @@ static void run(int argc, char** argv)
 
   psc.add_gauss_corrector(&marder);
 
-  double gamma = 1 / sqrt(1 - sqr(v_upstream_y));
-  Real3 background_e =
-    -gamma * Real3{0, v_upstream_y, 0}.cross({b_x, b_y, b_z});
-  Real3 background_h = {b_x * gamma, b_y, b_z * gamma};
   psc.bndf.background_e = background_e;
   psc.bndf.background_h = background_h;
   psc.bndf.radiation =
