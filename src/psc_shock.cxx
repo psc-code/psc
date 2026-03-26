@@ -69,6 +69,7 @@ double turb_db2;
 double turb_correlation_length;
 
 int out_interval;
+int marder_interval;
 
 bool mirror_domain;
 std::string turb_method;
@@ -136,6 +137,7 @@ void setupParameters(int argc, char** argv)
 
   int n_writes = inputParams.getOrDefault<int>("n_writes", 100);
   out_interval = psc_params.nmax / n_writes;
+  marder_interval = inputParams.getOrDefault<int>("marder_interval", -1);
 
   mirror_domain = inputParams.getOrDefault<bool>("mirror_domain", false);
   turb_method =
@@ -335,7 +337,7 @@ void inject_b_from_potential(MfieldsState& mflds,
     auto field_patch = make_Fields3d<dim_xyz>(mflds[p]);
     auto vector_potential_patch = make_Fields3d<dim_xyz>(vector_potential[p]);
 
-    grid.Foreach_3d(0, 1, [&](int jx, int jy, int jz) {
+    grid.Foreach_3d(2, 1, [&](int jx, int jy, int jz) {
       field_patch(HX, jx, jy, jz) = vector_potential_patch(AZ, jx, jy + 1, jz) -
                                     vector_potential_patch(AZ, jx, jy, jz) -
                                     vector_potential_patch(AY, jx, jy, jz + 1) +
@@ -566,7 +568,11 @@ void inject_turbulence_dense(MfieldsState& mflds)
   double kmax = ((Double3)Int3::max(-i3_min, i3_max) * dk_vec).mag();
   int nk = kmax / dk + 1;
 
-  LOG_INFO("nk = %d, kmax = %f\n", nk, kmax);
+  int rank;
+  MPI_Comm_rank(mflds.grid().comm(), &rank);
+  if (rank == 0) {
+    LOG_INFO("nk = %d, kmax = %f\n", nk, kmax);
+  }
 
   auto k_mins = std::vector<double>(nk);
   for (int i = 0; i < nk; i++) {
@@ -638,13 +644,15 @@ void inject_turbulence_dense(MfieldsState& mflds)
 
 void initializeFields(MfieldsState& mflds)
 {
-  if (turb_method == "alfven_dense") {
-    inject_turbulence_dense(mflds);
-  } else if (turb_method == "noise_gabor") {
-    GaborKernel kernel;
-    inject_turbulence_noise(mflds, kernel);
-  } else {
-    LOG_ERROR("Unrecognized turbulence method: %s\n", turb_method.c_str());
+  if (turb_db2 > 0.0) {
+    if (turb_method == "alfven_dense") {
+      inject_turbulence_dense(mflds);
+    } else if (turb_method == "noise_gabor") {
+      GaborKernel kernel;
+      inject_turbulence_noise(mflds, kernel);
+    } else {
+      LOG_ERROR("Unrecognized turbulence method: %s\n", turb_method.c_str());
+    }
   }
 
   add_background_fields(mflds);
@@ -697,7 +705,7 @@ static void run(int argc, char** argv)
   double marder_diffusion = 0.9;
   int marder_loop = 3;
   bool marder_dump = false;
-  psc_params.marder_interval = -1;
+  psc_params.marder_interval = marder_interval;
   Marder marder(grid, marder_diffusion, marder_loop, marder_dump);
 
   // ----------------------------------------------------------------------
