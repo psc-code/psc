@@ -4,6 +4,7 @@
 
 #include "OutputFieldsDefault.h"
 #include "psc_config.hxx"
+#include "include/boundary_injector.hxx"
 #include "input_params.hxx"
 #include "kg/include/kg/VecRange.hxx"
 
@@ -169,12 +170,13 @@ Grid_t* setupGrid()
     {0, 0, 0},                      // location of lower corner
     {n_patches_x, y_mult * n_patches_y, n_patches_z}}; // n patches
 
-  auto BND_FLD_Y = mirror_domain ? BND_FLD_PERIODIC : BND_FLD_CONDUCTING_WALL;
-  auto BND_PRT_Y = mirror_domain ? BND_PRT_PERIODIC : BND_PRT_REFLECTING;
-  auto bc = psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_Y, BND_FLD_PERIODIC},
-                          {BND_FLD_PERIODIC, BND_FLD_Y, BND_FLD_PERIODIC},
-                          {BND_PRT_PERIODIC, BND_PRT_Y, BND_PRT_PERIODIC},
-                          {BND_PRT_PERIODIC, BND_PRT_Y, BND_PRT_PERIODIC}};
+  auto BND_FLD_Y_UPPER = mirror_domain ? BND_FLD_OPEN : BND_FLD_CONDUCTING_WALL;
+  auto BND_PRT_Y_UPPER = mirror_domain ? BND_PRT_OPEN : BND_PRT_REFLECTING;
+  auto bc =
+    psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_OPEN, BND_FLD_PERIODIC},
+                  {BND_FLD_PERIODIC, BND_FLD_Y_UPPER, BND_FLD_PERIODIC},
+                  {BND_PRT_PERIODIC, BND_PRT_OPEN, BND_PRT_PERIODIC},
+                  {BND_PRT_PERIODIC, BND_PRT_Y_UPPER, BND_PRT_PERIODIC}};
 
   auto kinds = Grid_t::Kinds(NR_KINDS);
   kinds[KIND_ELECTRON] = {-1.0, electron_mass, "e"};
@@ -200,6 +202,7 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
 {
   SetupParticles<Mparticles> setup_particles(*grid_ptr);
   setup_particles.centerer = centering::Centerer(centering::CC);
+  setup_particles.random_offsets = true;
   setup_particles.initial_momentum_gamma_correction = true;
 
   auto init_np = [&](int kind, Double3 crd, int p, Int3 idx,
@@ -727,6 +730,22 @@ static void run(int argc, char** argv)
   int oute_interval = -100;
   DiagEnergies<Mparticles, MfieldsState> oute{grid.comm(), oute_interval};
 
+  auto ion_injector =
+    BoundaryInjector<ParticleGeneratorMaxwellian, PscConfig::PushParticles>(
+      ParticleGeneratorMaxwellian(
+        KIND_ION, grid.kinds[KIND_ION],
+        {v_upstream_x, v_upstream_y, v_upstream_z},
+        {ion_temperature, ion_temperature, ion_temperature}, true),
+      grid);
+  auto electron_injector =
+    BoundaryInjector<ParticleGeneratorMaxwellian, PscConfig::PushParticles>(
+      ParticleGeneratorMaxwellian(
+        KIND_ELECTRON, grid.kinds[KIND_ELECTRON],
+        {v_upstream_x, v_upstream_y, v_upstream_z},
+        {electron_temperature, electron_temperature, electron_temperature},
+        true),
+      grid);
+
   // ----------------------------------------------------------------------
   // set up initial conditions
 
@@ -741,9 +760,17 @@ static void run(int argc, char** argv)
 
   psc.add_gauss_corrector(&marder);
 
+  double gamma = 1 / sqrt(1 - sqr(v_upstream_y));
+  psc.bndf.background_e =
+    -gamma * Double3{0, v_upstream_y, 0}.cross({b_x, b_y, b_z});
+  psc.bndf.background_h = {b_x * gamma, b_y, b_z * gamma};
+
   psc.add_diagnostic(&outf);
   psc.add_diagnostic(&outp);
   psc.add_diagnostic(&oute);
+
+  psc.add_injector(&ion_injector);
+  psc.add_injector(&electron_injector);
 
   psc.integrate();
 }
