@@ -716,7 +716,10 @@ struct AdvectedPeriodicFields : RadiatingBoundary<real_t>
   {
     Real3 x3_advected = advect_x3(x3, t);
     int n_patches_to_the_left = shift_to_patch_local(x3_advected);
-    assert(n_patches_to_the_left == n_patch_cycles);
+    if (n_patches_to_the_left != n_patch_cycles) {
+      LOG_ERROR("%d patches to the left after %d cycles\n",
+                n_patches_to_the_left, n_patch_cycles);
+    }
 
     ip.set_coeffs(x3_advected * grid.domain.dx_inv);
     auto em = decltype(ip)::fields_t(
