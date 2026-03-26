@@ -634,7 +634,7 @@ struct BndFields_ : BndFieldsBase
   Vec3<real_t> background_e = {0.0, 0.0, 0.0};
   Vec3<real_t> background_h = {0.0, 0.0, 0.0};
 
-  RadiatingBoundary<real_t>* radiation;
+  RadiatingBoundary<real_t>* radiation = nullptr;
 };
 
 // ======================================================================
