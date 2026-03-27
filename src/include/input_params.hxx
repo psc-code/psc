@@ -6,6 +6,8 @@
 #include <fstream>
 #include <sstream>
 
+#include <mpi.h>
+
 #include "../libpsc/vpic/psc_vpic_bits.h"
 
 namespace
@@ -16,6 +18,13 @@ std::string to_str(const T& val)
   std::stringstream ss;
   ss << val;
   return ss.str();
+}
+
+int rank()
+{
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  return rank;
 }
 } // namespace
 
@@ -106,8 +115,10 @@ public:
       return get<T>(paramName);
     }
 
-    LOG_WARN("Using default value for parameter '%s': %s\n", paramName.c_str(),
-             to_str(deflt).c_str());
+    if (rank() == 0) {
+      LOG_WARN("Using default value for parameter '%s': %s\n",
+               paramName.c_str(), to_str(deflt).c_str());
+    }
 
     return deflt;
   }
@@ -129,9 +140,12 @@ public:
 
     T val = get<T>(paramName);
 
-    LOG_WARN("Using non-default value for parameter '%s': %s (default value of "
-             "%s is recommended)\n",
-             paramName.c_str(), t_c_str(val), to_str(deflt).c_str());
+    if (rank() == 0) {
+      LOG_WARN(
+        "Using non-default value for parameter '%s': %s (default value of "
+        "%s is recommended)\n",
+        paramName.c_str(), t_c_str(val), to_str(deflt).c_str());
+    }
 
     return val;
   }
@@ -148,8 +162,10 @@ public:
       return false;
     }
 
-    LOG_WARN("Parameter '%s' is deprecated; %s\n", paramName.c_str(),
-             advice.c_str());
+    if (rank() == 0) {
+      LOG_WARN("Parameter '%s' is deprecated; %s\n", paramName.c_str(),
+               advice.c_str());
+    }
 
     return true;
   }
