@@ -56,12 +56,8 @@ Real3 background_e;
 Real3 background_h;
 
 Int3 gdims;
-
-int n_patches_x;
-int n_patches_y;
-int n_patches_z;
-
 Double3 lengths;
+Int3 n_patches;
 
 double turb_db2;
 double turb_correlation_length;
@@ -117,9 +113,9 @@ void setupParameters(int argc, char** argv)
   gdims[2] = inputParams.get<int>("nz");
   psc_params.nmax = inputParams.get<int>("nt");
 
-  n_patches_x = inputParams.get<int>("n_patches_x");
-  n_patches_y = inputParams.get<int>("n_patches_y");
-  n_patches_z = inputParams.get<int>("n_patches_z");
+  n_patches[0] = inputParams.get<int>("n_patches_x");
+  n_patches[1] = inputParams.get<int>("n_patches_y");
+  n_patches[2] = inputParams.get<int>("n_patches_z");
 
   double dx = inputParams.get<double>("dx");
   double dy = inputParams.get<double>("dy");
@@ -165,11 +161,8 @@ void setupParameters(int argc, char** argv)
 Grid_t* setupGrid()
 {
   // FIXME add a check to catch mismatch between Dim and n grid points early
-  auto domain =
-    Grid_t::Domain{gdims,     // n grid points
-                   lengths,   // physical lengths
-                   {0, 0, 0}, // location of lower corner
-                   {n_patches_x, n_patches_y, n_patches_z}}; // n patches
+  Double3 corner = {0.0, 0.0, 0.0};
+  auto domain = Grid_t::Domain{gdims, lengths, corner, n_patches};
 
   auto bc =
     psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_OPEN, BND_FLD_PERIODIC},
