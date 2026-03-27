@@ -213,6 +213,29 @@ public:
     }
   }
 
+  /**
+   * @brief Abort if a parameter is present.
+   * @param paramName name of parameter
+   * @param advice user-friendly instructions on what to do instead
+   */
+  template <typename T>
+  void errIfPresentAndNotEqual(const std::string paramName, T allowedVal,
+                               const std::string advice)
+  {
+    if (!has(paramName)) {
+      return;
+    }
+
+    T val = get<T>(paramName);
+
+    if (val != allowedVal) {
+      LOG_ERROR(
+        "Parameter value '%s'=%s is forbidden, only %s is allowed; %s\n",
+        paramName.c_str(), to_str(val).c_str(), to_str(allowedVal).c_str(),
+        advice.c_str());
+    }
+  }
+
 private:
   /**
    * @brief Retrieves an unparsed value, throwing a helpful error if the
