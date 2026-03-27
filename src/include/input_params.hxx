@@ -179,6 +179,21 @@ public:
     return true;
   }
 
+  /**
+   * @brief Abort if a parameter is present.
+   * @param paramName name of parameter
+   * @param advice user-friendly instructions on what to do instead
+   */
+  void errIfPresent(const std::string paramName, const std::string advice)
+  {
+    if (!has(paramName)) {
+      return;
+    }
+
+    LOG_ERROR("Parameter '%s' is forbidden; %s\n", paramName.c_str(),
+              advice.c_str());
+  }
+
 private:
   /**
    * @brief Retrieves an unparsed value, throwing a helpful error if the
