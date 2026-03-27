@@ -48,9 +48,7 @@ double ion_temperature;
 double electron_mass;
 double ion_mass;
 
-double v_upstream_x;
-double v_upstream_y;
-double v_upstream_z;
+Double3 v_upstream;
 
 double b_x;
 double b_y;
@@ -106,9 +104,9 @@ void setupParameters(int argc, char** argv)
   electron_mass = inputParams.get<double>("electron_mass");
   ion_mass = inputParams.get<double>("ion_mass");
 
-  v_upstream_x = inputParams.get<double>("v_upstream_x");
-  v_upstream_y = inputParams.get<double>("v_upstream_y");
-  v_upstream_z = inputParams.get<double>("v_upstream_z");
+  inputParams.errIfPresentAndNotEqual("v_upstream_x", 0.0, "");
+  v_upstream = {0.0, inputParams.get<double>("v_upstream_y"), 0.0};
+  inputParams.errIfPresentAndNotEqual("v_upstream_z", 0.0, "");
 
   double b_angle_y_to_x_rad = inputParams.get<double>("b_angle_y_to_x_rad");
   double b_mag = inputParams.get<double>("b_mag");
@@ -116,7 +114,6 @@ void setupParameters(int argc, char** argv)
   b_y = b_mag * cos(b_angle_y_to_x_rad);
   b_z = 0.0;
 
-  Real3 v_upstream = {v_upstream_x, v_upstream_y, v_upstream_z};
   double gamma = 1 / sqrt(1 - v_upstream.mag2());
   background_e = -gamma * v_upstream.cross({b_x, b_y, b_z});
   // note: this only holds for vx=vz=0
@@ -219,12 +216,12 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
     double temperature =
       np.kind == KIND_ION ? ion_temperature : electron_temperature;
     np.n = 1.0;
-    np.p = setup_particles.createMaxwellian(
-      {np.kind,
-       np.n,
-       {v_upstream_x, v_upstream_y, v_upstream_z},
-       {temperature, temperature, temperature},
-       np.tag});
+    np.p =
+      setup_particles.createMaxwellian({np.kind,
+                                        np.n,
+                                        v_upstream,
+                                        {temperature, temperature, temperature},
+                                        np.tag});
   };
 
   partitionAndSetupParticles(setup_particles, balance, grid_ptr, mprts,
@@ -667,7 +664,7 @@ void initializeFields(MfieldsState& mflds)
   }
 
   add_background_fields(mflds);
-  boost_fields(mflds, -v_upstream_y);
+  boost_fields(mflds, -v_upstream[1]);
 }
 
 struct AdvectedPeriodicFields : RadiatingBoundary<real_t>
@@ -883,15 +880,13 @@ static void run(int argc, char** argv)
   auto ion_injector =
     BoundaryInjector<ParticleGeneratorMaxwellian, PscConfig::PushParticles>(
       ParticleGeneratorMaxwellian(
-        KIND_ION, grid.kinds[KIND_ION],
-        {v_upstream_x, v_upstream_y, v_upstream_z},
+        KIND_ION, grid.kinds[KIND_ION], v_upstream,
         {ion_temperature, ion_temperature, ion_temperature}, true),
       grid);
   auto electron_injector =
     BoundaryInjector<ParticleGeneratorMaxwellian, PscConfig::PushParticles>(
       ParticleGeneratorMaxwellian(
-        KIND_ELECTRON, grid.kinds[KIND_ELECTRON],
-        {v_upstream_x, v_upstream_y, v_upstream_z},
+        KIND_ELECTRON, grid.kinds[KIND_ELECTRON], v_upstream,
         {electron_temperature, electron_temperature, electron_temperature},
         true),
       grid);
@@ -912,8 +907,8 @@ static void run(int argc, char** argv)
 
   psc.bndf.background_e = background_e;
   psc.bndf.background_h = background_h;
-  psc.bndf.radiation =
-    new AdvectedPeriodicFields{mflds, v_upstream_y, background_e, background_h};
+  psc.bndf.radiation = new AdvectedPeriodicFields{mflds, v_upstream[1],
+                                                  background_e, background_h};
 
   psc.add_diagnostic(&outf);
   psc.add_diagnostic(&outp);
