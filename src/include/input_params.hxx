@@ -6,8 +6,19 @@
 #include <fstream>
 #include <sstream>
 
-// TODO in c++20, use std::format
-// TODO use LOG_WARNING and LOG_ERROR, but ideally only on 1 proc
+#include "../libpsc/vpic/psc_vpic_bits.h"
+
+namespace
+{
+template <typename T>
+std::string to_str(const T& val)
+{
+  std::stringstream ss;
+  ss << val;
+  return ss.str();
+}
+} // namespace
+
 /**
  * @brief A parser that reads a dict-like map of parameter names to
  * parameter values from a single input file. The input file syntax is
@@ -49,8 +60,7 @@ public:
 
       ifs.close();
     } else {
-      std::cout << "Failed to open params file: " << file_path << "\n";
-      exit(EXIT_FAILURE);
+      LOG_ERROR("Failed to open parameter file: %s\n", file_path.c_str());
     }
   }
 
@@ -75,10 +85,9 @@ public:
     } catch (const std::invalid_argument& e) {
       std::string unparsed = _getUnparsed(paramName);
       // TODO ensure human-readable type name
-      std::cerr << "ERROR Unable to parse parameter '" << paramName
-                << "', which has value '" << unparsed << "', to type "
-                << typeid(T).name() << "\n";
-      abort();
+      LOG_ERROR(
+        "Unable to parse parameter '%s', which has value '%s', to type %s\n",
+        paramName.c_str(), unparsed.c_str(), typeid(T).name());
     }
   }
 
@@ -97,8 +106,9 @@ public:
       return get<T>(paramName);
     }
 
-    std::cout << "Warning: using default value for parameter '" << paramName
-              << "': " << deflt << "\n";
+    LOG_WARN("Using default value for parameter '%s': %s\n", paramName.c_str(),
+             to_str(deflt).c_str());
+
     return deflt;
   }
 
@@ -118,9 +128,11 @@ public:
     }
 
     T val = get<T>(paramName);
-    std::cout << "Warning: using non-default value for parameter '" << paramName
-              << "': " << val << "\nDefault value of '" << deflt
-              << "' is recommended.\n";
+
+    LOG_WARN("Using non-default value for parameter '%s': %s (default value of "
+             "%s is recommended)\n",
+             paramName.c_str(), t_c_str(val), to_str(deflt).c_str());
+
     return val;
   }
 
@@ -136,8 +148,9 @@ public:
       return false;
     }
 
-    std::cout << "Warning: parameter " << paramName << " is deprecated.\n"
-              << advice << "\n";
+    LOG_WARN("Parameter '%s' is deprecated; %s\n", paramName.c_str(),
+             advice.c_str());
+
     return true;
   }
 
@@ -154,7 +167,7 @@ private:
       return params.at(paramName);
     }
 
-    throw std::out_of_range("missing required input parameter: " + paramName);
+    LOG_ERROR("Required parameter '%s' is absent\n", paramName.c_str());
   }
 
   /**
