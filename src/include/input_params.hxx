@@ -210,6 +210,9 @@ public:
     if (get<T>(paramName) == forbiddenVal) {
       LOG_ERROR("Parameter value '%s'=%s is forbidden; %s\n", paramName.c_str(),
                 to_str(forbiddenVal).c_str(), advice.c_str());
+    } else if (rank() == 0) {
+      LOG_WARN("Parameter '%s' is deprecated; %s\n", paramName.c_str(),
+               advice.c_str());
     }
   }
 
@@ -233,6 +236,9 @@ public:
         "Parameter value '%s'=%s is forbidden, only %s is allowed; %s\n",
         paramName.c_str(), to_str(val).c_str(), to_str(allowedVal).c_str(),
         advice.c_str());
+    } else if (rank() == 0) {
+      LOG_WARN("Parameter '%s' is deprecated; %s\n", paramName.c_str(),
+               advice.c_str());
     }
   }
 
