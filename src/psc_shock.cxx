@@ -117,13 +117,10 @@ void setupParameters(int argc, char** argv)
   n_patches[1] = inputParams.get<int>("n_patches_y");
   n_patches[2] = inputParams.get<int>("n_patches_z");
 
-  double dx = inputParams.get<double>("dx");
-  double dy = inputParams.get<double>("dy");
-  double dz = inputParams.get<double>("dz");
+  Double3 dx = {inputParams.get<double>("dx"), inputParams.get<double>("dy"),
+                inputParams.get<double>("dz")};
 
-  lengths[0] = gdims[0] * dx;
-  lengths[1] = gdims[1] * dy;
-  lengths[2] = gdims[2] * dz;
+  lengths = Double3(gdims) * dx;
 
   if (inputParams.warnIfPresent("turb_dB^2", "set turb_dB instead")) {
     turb_db2 = inputParams.get<double>("turb_dB^2");
