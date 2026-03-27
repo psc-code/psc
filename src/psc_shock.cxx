@@ -73,9 +73,7 @@ int seed;
 void setupParameters(int argc, char** argv)
 {
   if (argc != 2) {
-    std::cout << "Usage: " << argv[0] << " path/to/params\nExiting."
-              << std::endl;
-    exit(1);
+    LOG_ERROR("Usage: %s path/to/params.txt\n", argv[0]);
   }
   std::string path_to_params(argv[1]);
   InputParams inputParams(path_to_params);
