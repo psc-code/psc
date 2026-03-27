@@ -55,9 +55,7 @@ Real3 background_h_upstream;
 Real3 background_e;
 Real3 background_h;
 
-int nx;
-int ny;
-int nz;
+Int3 gdims;
 
 int n_patches_x;
 int n_patches_y;
@@ -116,9 +114,9 @@ void setupParameters(int argc, char** argv)
   // note: this only holds for vx=vz=0
   background_h = background_h_upstream * Real3{gamma, 0.0, gamma};
 
-  nx = inputParams.get<int>("nx");
-  ny = inputParams.get<int>("ny");
-  nz = inputParams.get<int>("nz");
+  gdims[0] = inputParams.get<int>("nx");
+  gdims[1] = inputParams.get<int>("ny");
+  gdims[2] = inputParams.get<int>("nz");
   psc_params.nmax = inputParams.get<int>("nt");
 
   n_patches_x = inputParams.get<int>("n_patches_x");
@@ -129,9 +127,9 @@ void setupParameters(int argc, char** argv)
   double dy = inputParams.get<double>("dy");
   double dz = inputParams.get<double>("dz");
 
-  len_x = nx * dx;
-  len_y = ny * dy;
-  len_z = nz * dz;
+  len_x = gdims[0] * dx;
+  len_y = gdims[1] * dy;
+  len_z = gdims[2] * dz;
 
   if (inputParams.warnIfPresent("turb_dB^2", "set turb_dB instead")) {
     turb_db2 = inputParams.get<double>("turb_dB^2");
@@ -170,7 +168,7 @@ Grid_t* setupGrid()
 {
   // FIXME add a check to catch mismatch between Dim and n grid points early
   auto domain =
-    Grid_t::Domain{{nx, ny, nz},          // n grid points
+    Grid_t::Domain{gdims,                 // n grid points
                    {len_x, len_y, len_z}, // physical lengths
                    {0, 0, 0},             // location of lower corner
                    {n_patches_x, n_patches_y, n_patches_z}}; // n patches
@@ -316,7 +314,7 @@ void set_mean_b2(MfieldsState& mflds, double mean_b2)
   double sum_b2 = 0.0;
   MPI_Allreduce(&sum_b2_local, &sum_b2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
-  double target_sum_b2 = nx * ny * nz * mean_b2;
+  double target_sum_b2 = gdims.prod() * mean_b2;
   double scale_factor = sqrt(target_sum_b2 / sum_b2);
 
   for (int p = 0; p < mflds.n_patches(); ++p) {
@@ -554,16 +552,15 @@ void inject_turbulence_dense(MfieldsState& mflds)
   // 1. compute values of |k|
 
   Double3 len_vec{len_x, len_y, len_z};
-  Int3 n_vec{nx, ny, nz};
 
   Double3 dk_vec = 2.0 * M_PI / len_vec;
 
-  Int3 i3_min = (1 - n_vec) / 2;
-  Int3 i3_max = n_vec / 2;
+  Int3 i3_min = (1 - gdims) / 2;
+  Int3 i3_max = gdims / 2;
 
   // inject in only half of k-space, since +k and -k modes are indistinguishable
   for (int d = 0; d < 3; d++) {
-    if (n_vec[d] > 2) {
+    if (gdims[d] > 2) {
       i3_min[d] = 0;
       break;
     }
