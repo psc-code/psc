@@ -38,9 +38,6 @@ using Real3 = Vec3<real_t>;
 // ======================================================================
 // Global parameters
 
-namespace
-{
-// General PSC parameters
 PscParams psc_params;
 
 double electron_temperature;
@@ -69,8 +66,6 @@ std::string turb_method;
 
 int nicell;
 int seed;
-
-} // namespace
 
 // ======================================================================
 // setupParameters
