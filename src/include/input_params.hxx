@@ -8,23 +8,24 @@
 
 // TODO in c++20, use std::format
 // TODO use LOG_WARNING and LOG_ERROR, but ideally only on 1 proc
-
-/// @brief A parser that reads a dict-like map of parameter names to
-/// parameter values from a single input file. The input file syntax is
-/// extremely simple:
-/// ```txt
-/// param1 val1
-/// param2 val2 thiswordisignored andsoisthis
-/// ```
-/// The first (space-separated) word in each line is interpreted as a parameter
-/// name, and the second word is interpreted as a value. Words after the first
-/// two are silently ignored, allowing for comments. If a parameter is
-/// duplicated, all values but the last are silently ignored.
-///
-/// This class has no knowledge about what parameters should or shouldn't be
-/// present, nor does it know what types its values should have. A value isn't
-/// parsed to a specific type (e.g. `double`) until it is actually accessed as
-/// that type by a user.
+/**
+ * @brief A parser that reads a dict-like map of parameter names to
+ * parameter values from a single input file. The input file syntax is
+ * extremely simple:
+ * ```txt
+ * param1 val1
+ * param2 val2 thiswordisignored andsoisthis
+ * ```
+ * The first (space-separated) word in each line is interpreted as a parameter
+ * name, and the second word is interpreted as a value. Words after the first
+ * two are silently ignored, allowing for comments. If a parameter is
+ * duplicated, all values but the last are silently ignored.
+ *
+ * This class has no knowledge about what parameters should or shouldn't be
+ * present, nor does it know what types its values should have. A value isn't
+ * parsed to a specific type (e.g. `double`) until it is actually accessed as
+ * that type by a user.
+ */
 class InputParams
 {
 private:
@@ -53,15 +54,19 @@ public:
     }
   }
 
-  /// @brief Check if the parameter is present.
-  /// @param paramName name of parameter
-  /// @return whether or not the parameter is present
+  /**
+   * @brief Check if the parameter is present.
+   * @param paramName paramName name of parameter
+   * @return whether or not the parameter is present
+   */
   bool has(const std::string paramName) { return params.count(paramName) == 1; }
 
-  /// @brief Get a parameter, parsing it to the given type.
-  /// @tparam T type of parameter
-  /// @param paramName name of parameter
-  /// @return the parameter
+  /**
+   * @brief Get a parameter, parsing it to the given type.
+   * @tparam T type of parameter
+   * @param paramName name of parameter
+   * @return the parameter
+   */
   template <typename T>
   T get(const std::string paramName)
   {
@@ -77,12 +82,14 @@ public:
     }
   }
 
-  /// @brief Get a parameter if it's there, otherwise
-  /// return the given default value.
-  /// @tparam T type of parameter
-  /// @param paramName name of parameter
-  /// @param deflt default value of parameter
-  /// @return the parameter
+  /**
+   * @brief Get a parameter if it's there, otherwise return the given default
+   * value.
+   * @tparam T type of parameter
+   * @param paramName name of parameter
+   * @param deflt default value of parameter
+   * @return the parameter
+   */
   template <typename T>
   T getOrDefault(const std::string paramName, T deflt)
   {
@@ -95,12 +102,14 @@ public:
     return deflt;
   }
 
-  /// @brief Get a parameter and display a warning if it's there, otherwise
-  /// return the given default value.
-  /// @tparam T type of parameter
-  /// @param paramName name of parameter
-  /// @param deflt default value of parameter
-  /// @return the parameter
+  /**
+   * @brief Get a parameter and display a warning if it's there, otherwise
+   * return the given default value.
+   * @tparam T type of parameter
+   * @param paramName name of parameter
+   * @param deflt default value of parameter
+   * @return the parameter
+   */
   template <typename T>
   T getAndWarnOrDefault(const std::string paramName, T deflt)
   {
@@ -115,10 +124,12 @@ public:
     return val;
   }
 
-  /// @brief Display a warning if a parameter is present.
-  /// @param paramName name of parameter
-  /// @param advice user-friendly instructions on what to do instead
-  /// @return whether or not the parameter was present
+  /**
+   * @brief Display a warning if a parameter is present.
+   * @param paramName name of parameter
+   * @param advice user-friendly instructions on what to do instead
+   * @return whether or not the parameter was present
+   */
   bool warnIfPresent(const std::string paramName, const std::string advice)
   {
     if (!has(paramName)) {
@@ -131,8 +142,12 @@ public:
   }
 
 private:
-  /// Retrieves an unparsed value, throwing a helpful error if the parameter
-  /// is missing.
+  /**
+   * @brief Retrieves an unparsed value, throwing a helpful error if the
+   * parameter is not present.
+   * @param paramName name of parameter
+   * @return the unparsed value (as a string)
+   */
   std::string _getUnparsed(const std::string paramName)
   {
     if (has(paramName)) {
@@ -142,7 +157,13 @@ private:
     throw std::out_of_range("missing required input parameter: " + paramName);
   }
 
-  /// Retrieve and parse a value, possibly throwing std::invalid_argument
+  /**
+   * @brief Retrieve and parse a value, possibly throwing
+   * `std::invalid_argument`.
+   * @tparam T the type of the parameter value
+   * @param paramName name of parameter
+   * @return the parsed value
+   */
   template <typename T>
   T _getParsed(const std::string paramName);
 };
