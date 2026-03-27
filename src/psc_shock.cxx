@@ -61,9 +61,7 @@ int n_patches_x;
 int n_patches_y;
 int n_patches_z;
 
-double len_x;
-double len_y;
-double len_z;
+Double3 lengths;
 
 double turb_db2;
 double turb_correlation_length;
@@ -127,9 +125,9 @@ void setupParameters(int argc, char** argv)
   double dy = inputParams.get<double>("dy");
   double dz = inputParams.get<double>("dz");
 
-  len_x = gdims[0] * dx;
-  len_y = gdims[1] * dy;
-  len_z = gdims[2] * dz;
+  lengths[0] = gdims[0] * dx;
+  lengths[1] = gdims[1] * dy;
+  lengths[2] = gdims[2] * dz;
 
   if (inputParams.warnIfPresent("turb_dB^2", "set turb_dB instead")) {
     turb_db2 = inputParams.get<double>("turb_dB^2");
@@ -168,9 +166,9 @@ Grid_t* setupGrid()
 {
   // FIXME add a check to catch mismatch between Dim and n grid points early
   auto domain =
-    Grid_t::Domain{gdims,                 // n grid points
-                   {len_x, len_y, len_z}, // physical lengths
-                   {0, 0, 0},             // location of lower corner
+    Grid_t::Domain{gdims,     // n grid points
+                   lengths,   // physical lengths
+                   {0, 0, 0}, // location of lower corner
                    {n_patches_x, n_patches_y, n_patches_z}}; // n patches
 
   auto bc =
@@ -551,9 +549,7 @@ void inject_turbulence_dense(MfieldsState& mflds)
 
   // 1. compute values of |k|
 
-  Double3 len_vec{len_x, len_y, len_z};
-
-  Double3 dk_vec = 2.0 * M_PI / len_vec;
+  Double3 dk_vec = 2.0 * M_PI / lengths;
 
   Int3 i3_min = (1 - gdims) / 2;
   Int3 i3_max = gdims / 2;
