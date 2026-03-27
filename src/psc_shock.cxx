@@ -50,9 +50,7 @@ double ion_mass;
 
 Double3 v_upstream;
 
-double b_x;
-double b_y;
-double b_z;
+Real3 background_h_upstream;
 
 Real3 background_e;
 Real3 background_h;
@@ -110,14 +108,13 @@ void setupParameters(int argc, char** argv)
 
   double b_angle_y_to_x_rad = inputParams.get<double>("b_angle_y_to_x_rad");
   double b_mag = inputParams.get<double>("b_mag");
-  b_x = b_mag * sin(b_angle_y_to_x_rad);
-  b_y = b_mag * cos(b_angle_y_to_x_rad);
-  b_z = 0.0;
+  background_h_upstream =
+    b_mag * Real3{sin(b_angle_y_to_x_rad), cos(b_angle_y_to_x_rad), 0.0};
 
   double gamma = 1 / sqrt(1 - v_upstream.mag2());
-  background_e = -gamma * v_upstream.cross({b_x, b_y, b_z});
+  background_e = -gamma * v_upstream.cross(background_h_upstream);
   // note: this only holds for vx=vz=0
-  background_h = {b_x * gamma, b_y, b_z * gamma};
+  background_h = background_h_upstream * Real3{gamma, 0.0, gamma};
 
   nx = inputParams.get<int>("nx");
   ny = inputParams.get<int>("ny");
@@ -248,9 +245,9 @@ void add_background_fields(MfieldsState& mflds)
 
     int n_ghosts = mflds.ibn().max();
     grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
-      field_patch(HX, jx, jy, jz) += b_x;
-      field_patch(HY, jx, jy, jz) += b_y;
-      field_patch(HZ, jx, jy, jz) += b_z;
+      field_patch(HX, jx, jy, jz) += background_h_upstream[0];
+      field_patch(HY, jx, jy, jz) += background_h_upstream[1];
+      field_patch(HZ, jx, jy, jz) += background_h_upstream[2];
     });
   }
 }
