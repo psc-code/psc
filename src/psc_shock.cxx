@@ -77,7 +77,6 @@ double turb_correlation_length;
 int out_interval;
 int marder_interval;
 
-bool mirror_domain;
 std::string turb_method;
 
 int nicell;
@@ -151,7 +150,9 @@ void setupParameters(int argc, char** argv)
   out_interval = psc_params.nmax / n_writes;
   marder_interval = inputParams.getOrDefault<int>("marder_interval", -1);
 
-  mirror_domain = inputParams.getOrDefault<bool>("mirror_domain", false);
+  inputParams.errIfPresentAndEqual("mirror_domain", true,
+                                   "only 'false' is permitted");
+
   turb_method =
     inputParams.getOrDefault<std::string>("turb_method", "alfven_dense");
 
@@ -174,20 +175,17 @@ void setupParameters(int argc, char** argv)
 Grid_t* setupGrid()
 {
   // FIXME add a check to catch mismatch between Dim and n grid points early
-  int y_mult = mirror_domain ? 2 : 1;
-  auto domain = Grid_t::Domain{
-    {nx, y_mult * ny, nz},          // n grid points
-    {len_x, y_mult * len_y, len_z}, // physical lengths
-    {0, 0, 0},                      // location of lower corner
-    {n_patches_x, y_mult * n_patches_y, n_patches_z}}; // n patches
+  auto domain =
+    Grid_t::Domain{{nx, ny, nz},          // n grid points
+                   {len_x, len_y, len_z}, // physical lengths
+                   {0, 0, 0},             // location of lower corner
+                   {n_patches_x, n_patches_y, n_patches_z}}; // n patches
 
-  auto BND_FLD_Y_UPPER = mirror_domain ? BND_FLD_OPEN : BND_FLD_CONDUCTING_WALL;
-  auto BND_PRT_Y_UPPER = mirror_domain ? BND_PRT_OPEN : BND_PRT_REFLECTING;
   auto bc =
     psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_OPEN, BND_FLD_PERIODIC},
-                  {BND_FLD_PERIODIC, BND_FLD_Y_UPPER, BND_FLD_PERIODIC},
+                  {BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL, BND_FLD_PERIODIC},
                   {BND_PRT_PERIODIC, BND_PRT_OPEN, BND_PRT_PERIODIC},
-                  {BND_PRT_PERIODIC, BND_PRT_Y_UPPER, BND_PRT_PERIODIC}};
+                  {BND_PRT_PERIODIC, BND_PRT_REFLECTING, BND_PRT_PERIODIC}};
 
   auto kinds = Grid_t::Kinds(NR_KINDS);
   kinds[KIND_ELECTRON] = {-1.0, electron_mass, "e"};
@@ -221,11 +219,10 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
     double temperature =
       np.kind == KIND_ION ? ion_temperature : electron_temperature;
     np.n = 1.0;
-    double vy_coef = mirror_domain && crd[1] > len_y ? -1 : 1;
     np.p = setup_particles.createMaxwellian(
       {np.kind,
        np.n,
-       {v_upstream_x, vy_coef * v_upstream_y, v_upstream_z},
+       {v_upstream_x, v_upstream_y, v_upstream_z},
        {temperature, temperature, temperature},
        np.tag});
   };
