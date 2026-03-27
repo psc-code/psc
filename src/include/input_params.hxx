@@ -29,6 +29,15 @@ int rank()
 } // namespace
 
 /**
+ * @brief Parse a value.
+ * @tparam T the type of the value
+ * @return the parsed value
+ * @throws `std::invalid_argument` – if parsing fails
+ */
+template <typename T>
+T parse(std::string val);
+
+/**
  * @brief A parser that reads a dict-like map of parameter names to
  * parameter values from a single input file. The input file syntax is
  * extremely simple:
@@ -89,10 +98,10 @@ public:
   template <typename T>
   T get(const std::string paramName)
   {
+    std::string unparsed = _getUnparsed(paramName);
     try {
-      return _getParsed<T>(paramName);
+      return parse<T>(unparsed);
     } catch (const std::invalid_argument& e) {
-      std::string unparsed = _getUnparsed(paramName);
       // TODO ensure human-readable type name
       LOG_ERROR(
         "Unable to parse parameter '%s', which has value '%s', to type %s\n",
@@ -185,56 +194,46 @@ private:
 
     LOG_ERROR("Required parameter '%s' is absent\n", paramName.c_str());
   }
-
-  /**
-   * @brief Retrieve and parse a value, possibly throwing
-   * `std::invalid_argument`.
-   * @tparam T the type of the parameter value
-   * @param paramName name of parameter
-   * @return the parsed value
-   */
-  template <typename T>
-  T _getParsed(const std::string paramName);
 };
 
-// get implementations
+// ======================================================================
+// parse implementations
 
 template <>
-bool InputParams::_getParsed<bool>(const std::string paramName)
+bool parse(std::string val)
 {
-  auto lowercase = _getUnparsed(paramName);
-  std::transform(lowercase.begin(), lowercase.end(), lowercase.begin(),
+  std::transform(val.begin(), val.end(), val.begin(),
                  [](unsigned char c) { return std::tolower(c); });
 
-  if (lowercase == "true") {
+  if (val == "true") {
     return true;
-  } else if (lowercase == "false") {
+  } else if (val == "false") {
     return false;
   } else {
-    throw std::invalid_argument(_getUnparsed(paramName));
+    throw std::invalid_argument(val);
   }
 }
 
 template <>
-double InputParams::_getParsed<double>(const std::string paramName)
+double parse(std::string val)
 {
-  return std::stod(_getUnparsed(paramName));
+  return std::stod(val);
 }
 
 template <>
-int InputParams::_getParsed<int>(const std::string paramName)
+int parse(std::string val)
 {
-  return std::stoi(_getUnparsed(paramName));
+  return std::stoi(val);
 }
 
 template <>
-float InputParams::_getParsed<float>(const std::string paramName)
+float parse(std::string val)
 {
-  return std::stof(_getUnparsed(paramName));
+  return std::stof(val);
 }
 
 template <>
-std::string InputParams::_getParsed<std::string>(const std::string paramName)
+std::string parse(std::string val)
 {
-  return _getUnparsed(paramName);
+  return val;
 }
