@@ -217,48 +217,13 @@ void add_background_fields(MfieldsState& mflds)
 
     int n_ghosts = mflds.ibn().max();
     grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
-      field_patch(HX, jx, jy, jz) += background_h_upstream[0];
-      field_patch(HY, jx, jy, jz) += background_h_upstream[1];
-      field_patch(HZ, jx, jy, jz) += background_h_upstream[2];
-    });
-  }
-}
+      field_patch(HX, jx, jy, jz) += background_h[0];
+      field_patch(HY, jx, jy, jz) += background_h[1];
+      field_patch(HZ, jx, jy, jz) += background_h[2];
 
-void boost_fields(MfieldsState& mflds, double vy)
-{
-  // general:
-
-  // E_y' = E_y
-  // B_y' = B_y
-  // E_perp' = gamma * (E_perp + v x B)
-  // B_perp' = gamma * (B_perp - v x E)
-
-  // assume E = 0 initially:
-  // E_perp' = gamma * v x B
-  // B_perp' = gamma * B_perp
-
-  const auto& grid = mflds.grid();
-  double gamma = 1.0 / std::sqrt(1.0 - vy * vy);
-  Double3 gamma_v{0.0, gamma * vy, 0.0};
-
-  for (int p = 0; p < mflds.n_patches(); ++p) {
-    auto& patch = grid.patches[p];
-    auto mf_patch = make_Fields3d<dim_xyz>(mflds[p]);
-
-    int n_ghosts = mflds.ibn().max();
-
-    grid.Foreach_3d(n_ghosts - 1, n_ghosts, [&](int jx, int jy, int jz) {
-      mf_patch(EX, jx, jy, jz) =
-        gamma * vy * 0.5 *
-        (mf_patch(HZ, jx, jy - 1, jz) + mf_patch(HZ, jx, jy, jz));
-      mf_patch(EZ, jx, jy, jz) =
-        -gamma * vy * 0.5 *
-        (mf_patch(HX, jx, jy - 1, jz) + mf_patch(HX, jx, jy, jz));
-    });
-
-    grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
-      mf_patch(HX, jx, jy, jz) *= gamma;
-      mf_patch(HZ, jx, jy, jz) *= gamma;
+      field_patch(EX, jx, jy, jz) += background_e[0];
+      field_patch(EY, jx, jy, jz) += background_e[1];
+      field_patch(EZ, jx, jy, jz) += background_e[2];
     });
   }
 }
@@ -510,7 +475,6 @@ void inject_turbulence_noise(MfieldsState& mflds, KERNEL& kernel)
 
 void inject_turbulence_dense(MfieldsState& mflds)
 {
-
   // literally the power of each shell, such that
   // 1/2 <dB^2> = int_{k=0}^\infty shellpower(k) dk.
   // Note that regardless of dimensionality, shellpower(k) ~ k^{-5/3},
@@ -630,7 +594,6 @@ void initializeFields(MfieldsState& mflds)
   }
 
   add_background_fields(mflds);
-  boost_fields(mflds, -v_upstream[1]);
 }
 
 struct AdvectedPeriodicFields : RadiatingBoundary<real_t>
