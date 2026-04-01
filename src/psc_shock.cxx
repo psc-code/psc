@@ -207,13 +207,6 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
 // ======================================================================
 // initializeFields
 
-double round_to_periodic_k(double len, double k)
-{
-  // want: k = 2*pi*n/len for an integer n
-  double n = round(k * len / (2 * M_PI));
-  return 2 * M_PI * n / len;
-}
-
 void add_background_fields(MfieldsState& mflds)
 {
   const auto& grid = mflds.grid();
