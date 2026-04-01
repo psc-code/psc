@@ -916,7 +916,7 @@ static void run(int argc, char** argv)
   psc.bndf.background_e = background_e;
   psc.bndf.background_h = background_h;
   psc.bndf.radiation =
-    new AdvectedPeriodicFields{mflds, 1.0, background_e, background_h};
+    new AdvectedPeriodicFields{mflds, v_upstream_y, background_e, background_h};
 
   psc.add_diagnostic(&outf);
   psc.add_diagnostic(&outp);
