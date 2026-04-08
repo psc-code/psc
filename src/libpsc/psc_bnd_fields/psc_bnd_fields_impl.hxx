@@ -3,6 +3,7 @@
 #include "kg/VecRange.hxx"
 #include "fields.hxx"
 #include "bnd_fields.hxx"
+#include "radiating_bnd.hxx"
 
 #include <mrc_bits.h>
 
@@ -84,6 +85,10 @@ struct BndFields_ : BndFieldsBase
     for (int p = 0; p < mflds.n_patches(); p++) {
       // lo
       for (int d = 0; d < 3; d++) {
+        if (grid.bc.fld_lo[d] == BND_FLD_OPEN && radiation) {
+          radiation->update_cache_lower(grid.time(), d);
+        }
+
         if (grid.atBoundaryLo(p, d)) {
           switch (grid.bc.fld_lo[d]) {
             case BND_FLD_PERIODIC: {
@@ -105,6 +110,10 @@ struct BndFields_ : BndFieldsBase
       }
       // hi
       for (int d = 0; d < 3; d++) {
+        if (grid.bc.fld_hi[d] == BND_FLD_OPEN && radiation) {
+          radiation->update_cache_upper(grid.time(), d);
+        }
+
         if (grid.atBoundaryHi(p, d)) {
           switch (grid.bc.fld_hi[d]) {
             case BND_FLD_PERIODIC: {
@@ -543,29 +552,33 @@ struct BndFields_ : BndFieldsBase
     stop[d0] = 0;
 
     for (Int3 i3 : VecRange(start, stop)) {
-      Int3 edge_idx = i3;
-      edge_idx[d0] = 0;
+      Int3 edge_idx = i3 + Int3::unit(d0);
 
-      Int3 neg1_d1{0, 0, 0};
-      neg1_d1[d1] = -1;
+      real_t s = 0.0;
+      real_t p = 0.0;
+      if (radiation) {
+        Real3 x3_s = (Real3(edge_idx) + Real3::unit(d1) * real_t(0.5)) *
+                     Real3(grid.domain.dx);
+        Real3 x3_p = (Real3(edge_idx) + Real3::unit(d2) * real_t(0.5)) *
+                     Real3(grid.domain.dx);
+        s = radiation->pulse_s_lower(grid.time(), d0, p, x3_s);
+        p = radiation->pulse_p_lower(grid.time(), d0, p, x3_p);
+      }
 
-      Int3 neg1_d2{0, 0, 0};
-      neg1_d2[d2] = -1;
-
-      F(H2, i3) = (/* + 4.f * C_s_pulse_y1(x,y,z+0.5*dz,t), where d0=y */
-                   -2.f * (F(E1, edge_idx) - background_e[d1]) -
-                   dtdx[d2] * (F(H0, edge_idx) - F(H0, edge_idx + neg1_d2)) -
-                   (1.f - dtdx[d0]) * (F(H2, edge_idx) - background_h[d2]) +
-                   dt * F(J1, edge_idx)) /
-                    (1.f + dtdx[d0]) +
-                  background_h[d2];
-      F(H1, i3) = (/* + 4.f * C_p_pulse_y1(x+.5*dx,y,z,t), where d0=y */
-                   +2.f * (F(E2, edge_idx) - background_e[d2]) -
-                   dtdx[d1] * (F(H0, edge_idx) - F(H0, edge_idx + neg1_d1)) -
-                   (1.f - dtdx[d0]) * (F(H1, edge_idx) - background_h[d1]) +
-                   dt * F(J2, edge_idx)) /
-                    (1.f + dtdx[d0]) +
-                  background_h[d1];
+      F(H2, i3) =
+        (4.f * s - 2.f * (F(E1, edge_idx) - background_e[d1]) -
+         dtdx[d2] * (F(H0, edge_idx) - F(H0, edge_idx - Int3::unit(d2))) -
+         (1.f - dtdx[d0]) * (F(H2, edge_idx) - background_h[d2]) +
+         dt * F(J1, edge_idx)) /
+          (1.f + dtdx[d0]) +
+        background_h[d2];
+      F(H1, i3) =
+        (-4.f * p + 2.f * (F(E2, edge_idx) - background_e[d2]) -
+         dtdx[d1] * (F(H0, edge_idx) - F(H0, edge_idx - Int3::unit(d1))) -
+         (1.f - dtdx[d0]) * (F(H1, edge_idx) - background_h[d1]) +
+         dt * F(J2, edge_idx)) /
+          (1.f + dtdx[d0]) +
+        background_h[d1];
     }
   }
 
@@ -590,25 +603,27 @@ struct BndFields_ : BndFieldsBase
     stop[d0] = grid.ldims[d0] + 1;
 
     for (Int3 i3 : VecRange(start, stop)) {
-      Int3 edge_idx = i3;
-      edge_idx[d0] -= 1;
+      Int3 edge_idx = i3 - Int3::unit(d0);
 
-      Int3 neg1_d1{0, 0, 0};
-      neg1_d1[d1] = -1;
+      real_t s = 0.0;
+      real_t p = 0.0;
+      if (radiation) {
+        Real3 x3_s = (Real3(edge_idx) + Real3::unit(d1) * real_t(0.5)) *
+                     Real3(grid.domain.dx);
+        Real3 x3_p = (Real3(edge_idx) + Real3::unit(d2) * real_t(0.5)) *
+                     Real3(grid.domain.dx);
+        s = radiation->pulse_s_upper(grid.time(), d0, p, x3_s);
+        p = radiation->pulse_p_upper(grid.time(), d0, p, x3_p);
+      }
 
-      Int3 neg1_d2{0, 0, 0};
-      neg1_d2[d2] = -1;
-
-      F(H2, i3) = (/* + 4.f * C_s_pulse_y2(x,y,z+0.5*dz,t), where d0=y */
-                   +2.f * (F(E1, i3) - background_e[d1]) +
-                   dtdx[d2] * (F(H0, i3) - F(H0, i3 + neg1_d2)) -
+      F(H2, i3) = (-4.f * s + 2.f * (F(E1, i3) - background_e[d1]) +
+                   dtdx[d2] * (F(H0, i3) - F(H0, i3 - Int3::unit(d2))) -
                    (1.f - dtdx[d0]) * (F(H2, edge_idx) - background_h[d2]) -
                    dt * F(J1, i3)) /
                     (1.f + dtdx[d0]) +
                   background_h[d2];
-      F(H1, i3) = (/* + 4.f * C_p_pulse_y2(x+.5*dx,y,z,t), where d0=y */
-                   -2.f * (F(E2, i3) - background_e[d2]) +
-                   dtdx[d1] * (F(H0, i3) - F(H0, i3 + neg1_d1)) -
+      F(H1, i3) = (4.f * p - 2.f * (F(E2, i3) - background_e[d2]) +
+                   dtdx[d1] * (F(H0, i3) - F(H0, i3 - Int3::unit(d1))) -
                    (1.f - dtdx[d0]) * (F(H1, edge_idx) - background_h[d1]) -
                    dt * F(J2, i3)) /
                     (1.f + dtdx[d0]) +
@@ -618,6 +633,8 @@ struct BndFields_ : BndFieldsBase
 
   Vec3<real_t> background_e = {0.0, 0.0, 0.0};
   Vec3<real_t> background_h = {0.0, 0.0, 0.0};
+
+  RadiatingBoundary<real_t>* radiation = nullptr;
 };
 
 // ======================================================================

@@ -39,6 +39,15 @@ struct Vec : gt::sarray<T, N>
   }
 
   // ----------------------------------------------------------------------
+  // unit vector ctors
+  KG_INLINE static Vec unit(int d)
+  {
+    Vec res;
+    res[d] = value_type(1);
+    return res;
+  }
+
+  // ----------------------------------------------------------------------
   // converting to Vec of different type (e.g., float -> double)
 
   template <typename U>
@@ -273,6 +282,15 @@ struct Vec : gt::sarray<T, N>
     Vec<int, N> res;
     for (size_t i = 0; i < N; i++) {
       res[i] = ::fint((*this)[i]);
+    }
+    return res;
+  }
+
+  KG_INLINE Vec reverse() const
+  {
+    Vec res;
+    for (int i = 0; i < N; i++) {
+      res[i] = (*this)[N - 1 - i];
     }
     return res;
   }
