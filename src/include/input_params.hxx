@@ -6,25 +6,55 @@
 #include <fstream>
 #include <sstream>
 
-// TODO in c++20, use std::format
-// TODO use LOG_WARNING and LOG_ERROR, but ideally only on 1 proc
+#include <mpi.h>
 
-/// @brief A parser that reads a dict-like map of parameter names to
-/// parameter values from a single input file. The input file syntax is
-/// extremely simple:
-/// ```txt
-/// param1 val1
-/// param2 val2 thiswordisignored andsoisthis
-/// ```
-/// The first (space-separated) word in each line is interpreted as a parameter
-/// name, and the second word is interpreted as a value. Words after the first
-/// two are silently ignored, allowing for comments. If a parameter is
-/// duplicated, all values but the last are silently ignored.
-///
-/// This class has no knowledge about what parameters should or shouldn't be
-/// present, nor does it know what types its values should have. A value isn't
-/// parsed to a specific type (e.g. `double`) until it is actually accessed as
-/// that type by a user.
+#include "../libpsc/vpic/psc_vpic_bits.h"
+
+namespace
+{
+template <typename T>
+std::string to_str(const T& val)
+{
+  std::stringstream ss;
+  ss << val;
+  return ss.str();
+}
+
+int rank()
+{
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  return rank;
+}
+} // namespace
+
+/**
+ * @brief Parse a value.
+ * @tparam T the type of the value
+ * @return the parsed value
+ * @throws `std::invalid_argument` – if parsing fails
+ */
+template <typename T>
+T parse(std::string val);
+
+/**
+ * @brief A parser that reads a dict-like map of parameter names to
+ * parameter values from a single input file. The input file syntax is
+ * extremely simple:
+ * ```txt
+ * param1 val1
+ * param2 val2 thiswordisignored andsoisthis
+ * ```
+ * The first (space-separated) word in each line is interpreted as a parameter
+ * name, and the second word is interpreted as a value. Words after the first
+ * two are silently ignored, allowing for comments. If a parameter is
+ * duplicated, all values but the last are silently ignored.
+ *
+ * This class has no knowledge about what parameters should or shouldn't be
+ * present, nor does it know what types its values should have. A value isn't
+ * parsed to a specific type (e.g. `double`) until it is actually accessed as
+ * that type by a user.
+ */
 class InputParams
 {
 private:
@@ -48,41 +78,45 @@ public:
 
       ifs.close();
     } else {
-      std::cout << "Failed to open params file: " << file_path << "\n";
-      exit(EXIT_FAILURE);
+      LOG_ERROR("Failed to open parameter file: %s\n", file_path.c_str());
     }
   }
 
-  /// @brief Check if the parameter is present.
-  /// @param paramName name of parameter
-  /// @return whether or not the parameter is present
+  /**
+   * @brief Check if the parameter is present.
+   * @param paramName paramName name of parameter
+   * @return whether or not the parameter is present
+   */
   bool has(const std::string paramName) { return params.count(paramName) == 1; }
 
-  /// @brief Get a parameter, parsing it to the given type.
-  /// @tparam T type of parameter
-  /// @param paramName name of parameter
-  /// @return the parameter
+  /**
+   * @brief Get a parameter, parsing it to the given type.
+   * @tparam T type of parameter
+   * @param paramName name of parameter
+   * @return the parameter
+   */
   template <typename T>
   T get(const std::string paramName)
   {
+    std::string unparsed = _getUnparsed(paramName);
     try {
-      return _getParsed<T>(paramName);
+      return parse<T>(unparsed);
     } catch (const std::invalid_argument& e) {
-      std::string unparsed = _getUnparsed(paramName);
       // TODO ensure human-readable type name
-      std::cerr << "ERROR Unable to parse parameter '" << paramName
-                << "', which has value '" << unparsed << "', to type "
-                << typeid(T).name() << "\n";
-      abort();
+      LOG_ERROR(
+        "Unable to parse parameter '%s', which has value '%s', to type %s\n",
+        paramName.c_str(), unparsed.c_str(), typeid(T).name());
     }
   }
 
-  /// @brief Get a parameter if it's there, otherwise
-  /// return the given default value.
-  /// @tparam T type of parameter
-  /// @param paramName name of parameter
-  /// @param deflt default value of parameter
-  /// @return the parameter
+  /**
+   * @brief Get a parameter if it's there, otherwise return the given default
+   * value.
+   * @tparam T type of parameter
+   * @param paramName name of parameter
+   * @param deflt default value of parameter
+   * @return the parameter
+   */
   template <typename T>
   T getOrDefault(const std::string paramName, T deflt)
   {
@@ -90,17 +124,22 @@ public:
       return get<T>(paramName);
     }
 
-    std::cout << "Warning: using default value for parameter '" << paramName
-              << "': " << deflt << "\n";
+    if (rank() == 0) {
+      LOG_WARN("Using default value for parameter '%s': %s\n",
+               paramName.c_str(), to_str(deflt).c_str());
+    }
+
     return deflt;
   }
 
-  /// @brief Get a parameter and display a warning if it's there, otherwise
-  /// return the given default value.
-  /// @tparam T type of parameter
-  /// @param paramName name of parameter
-  /// @param deflt default value of parameter
-  /// @return the parameter
+  /**
+   * @brief Get a parameter and display a warning if it's there, otherwise
+   * return the given default value.
+   * @tparam T type of parameter
+   * @param paramName name of parameter
+   * @param deflt default value of parameter
+   * @return the parameter
+   */
   template <typename T>
   T getAndWarnOrDefault(const std::string paramName, T deflt)
   {
@@ -109,82 +148,155 @@ public:
     }
 
     T val = get<T>(paramName);
-    std::cout << "Warning: using non-default value for parameter '" << paramName
-              << "': " << val << "\nDefault value of '" << deflt
-              << "' is recommended.\n";
+
+    if (rank() == 0) {
+      LOG_WARN(
+        "Using non-default value for parameter '%s': %s (default value of "
+        "%s is recommended)\n",
+        paramName.c_str(), to_str(val).c_str(), to_str(deflt).c_str());
+    }
+
     return val;
   }
 
-  /// @brief Display a warning if a parameter is present.
-  /// @param paramName name of parameter
-  /// @param advice user-friendly instructions on what to do instead
-  /// @return whether or not the parameter was present
+  /**
+   * @brief Display a warning if a parameter is present.
+   * @param paramName name of parameter
+   * @param advice user-friendly instructions on what to do instead
+   * @return whether or not the parameter was present
+   */
   bool warnIfPresent(const std::string paramName, const std::string advice)
   {
     if (!has(paramName)) {
       return false;
     }
 
-    std::cout << "Warning: parameter " << paramName << " is deprecated.\n"
-              << advice << "\n";
+    if (rank() == 0) {
+      LOG_WARN("Parameter '%s' is deprecated; %s\n", paramName.c_str(),
+               advice.c_str());
+    }
+
     return true;
   }
 
+  /**
+   * @brief Abort if a parameter is present.
+   * @param paramName name of parameter
+   * @param advice user-friendly instructions on what to do instead
+   */
+  void errIfPresent(const std::string paramName, const std::string advice)
+  {
+    if (!has(paramName)) {
+      return;
+    }
+
+    LOG_ERROR("Parameter '%s' is forbidden; %s\n", paramName.c_str(),
+              advice.c_str());
+  }
+
+  /**
+   * @brief Abort if a parameter is present.
+   * @param paramName name of parameter
+   * @param advice user-friendly instructions on what to do instead
+   */
+  template <typename T>
+  void errIfPresentAndEqual(const std::string paramName, T forbiddenVal,
+                            const std::string advice)
+  {
+    if (!has(paramName)) {
+      return;
+    }
+
+    if (get<T>(paramName) == forbiddenVal) {
+      LOG_ERROR("Parameter value '%s'=%s is forbidden; %s\n", paramName.c_str(),
+                to_str(forbiddenVal).c_str(), advice.c_str());
+    } else if (rank() == 0) {
+      LOG_WARN("Parameter '%s' is deprecated; %s\n", paramName.c_str(),
+               advice.c_str());
+    }
+  }
+
+  /**
+   * @brief Abort if a parameter is present.
+   * @param paramName name of parameter
+   * @param advice user-friendly instructions on what to do instead
+   */
+  template <typename T>
+  void errIfPresentAndNotEqual(const std::string paramName, T allowedVal,
+                               const std::string advice)
+  {
+    if (!has(paramName)) {
+      return;
+    }
+
+    T val = get<T>(paramName);
+
+    if (val != allowedVal) {
+      LOG_ERROR(
+        "Parameter value '%s'=%s is forbidden, only %s is allowed; %s\n",
+        paramName.c_str(), to_str(val).c_str(), to_str(allowedVal).c_str(),
+        advice.c_str());
+    } else if (rank() == 0) {
+      LOG_WARN("Parameter '%s' is deprecated; %s\n", paramName.c_str(),
+               advice.c_str());
+    }
+  }
+
 private:
-  /// Retrieves an unparsed value, throwing a helpful error if the parameter
-  /// is missing.
+  /**
+   * @brief Retrieves an unparsed value, throwing a helpful error if the
+   * parameter is not present.
+   * @param paramName name of parameter
+   * @return the unparsed value (as a string)
+   */
   std::string _getUnparsed(const std::string paramName)
   {
     if (has(paramName)) {
       return params.at(paramName);
     }
 
-    throw std::out_of_range("missing required input parameter: " + paramName);
+    LOG_ERROR("Required parameter '%s' is absent\n", paramName.c_str());
   }
-
-  /// Retrieve and parse a value, possibly throwing std::invalid_argument
-  template <typename T>
-  T _getParsed(const std::string paramName);
 };
 
-// get implementations
+// ======================================================================
+// parse implementations
 
 template <>
-bool InputParams::_getParsed<bool>(const std::string paramName)
+bool parse(std::string val)
 {
-  auto lowercase = _getUnparsed(paramName);
-  std::transform(lowercase.begin(), lowercase.end(), lowercase.begin(),
+  std::transform(val.begin(), val.end(), val.begin(),
                  [](unsigned char c) { return std::tolower(c); });
 
-  if (lowercase == "true") {
+  if (val == "true") {
     return true;
-  } else if (lowercase == "false") {
+  } else if (val == "false") {
     return false;
   } else {
-    throw std::invalid_argument(_getUnparsed(paramName));
+    throw std::invalid_argument(val);
   }
 }
 
 template <>
-double InputParams::_getParsed<double>(const std::string paramName)
+double parse(std::string val)
 {
-  return std::stod(_getUnparsed(paramName));
+  return std::stod(val);
 }
 
 template <>
-int InputParams::_getParsed<int>(const std::string paramName)
+int parse(std::string val)
 {
-  return std::stoi(_getUnparsed(paramName));
+  return std::stoi(val);
 }
 
 template <>
-float InputParams::_getParsed<float>(const std::string paramName)
+float parse(std::string val)
 {
-  return std::stof(_getUnparsed(paramName));
+  return std::stof(val);
 }
 
 template <>
-std::string InputParams::_getParsed<std::string>(const std::string paramName)
+std::string parse(std::string val)
 {
-  return _getUnparsed(paramName);
+  return val;
 }
