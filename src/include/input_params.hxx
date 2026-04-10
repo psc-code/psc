@@ -153,7 +153,7 @@ public:
       LOG_WARN(
         "Using non-default value for parameter '%s': %s (default value of "
         "%s is recommended)\n",
-        paramName.c_str(), t_c_str(val), to_str(deflt).c_str());
+        paramName.c_str(), to_str(val).c_str(), to_str(deflt).c_str());
     }
 
     return val;
