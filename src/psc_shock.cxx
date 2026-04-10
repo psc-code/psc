@@ -100,7 +100,7 @@ void setupParameters(int argc, char** argv)
   double gamma = 1 / sqrt(1 - v_upstream.mag2());
   background_e = -gamma * v_upstream.cross(background_h_upstream);
   // note: this only holds for vx=vz=0
-  background_h = background_h_upstream * Real3{gamma, 0.0, gamma};
+  background_h = background_h_upstream * Real3{gamma, 1.0, gamma};
 
   gdims[0] = inputParams.get<int>("nx");
   gdims[1] = inputParams.get<int>("ny");
