@@ -38,9 +38,6 @@ using Real3 = Vec3<real_t>;
 // ======================================================================
 // Global parameters
 
-namespace
-{
-// General PSC parameters
 PscParams psc_params;
 
 double electron_temperature;
@@ -48,28 +45,16 @@ double ion_temperature;
 double electron_mass;
 double ion_mass;
 
-double v_upstream_x;
-double v_upstream_y;
-double v_upstream_z;
+Double3 v_upstream;
 
-double b_x;
-double b_y;
-double b_z;
+Real3 background_h_upstream;
 
 Real3 background_e;
 Real3 background_h;
 
-int nx;
-int ny;
-int nz;
-
-int n_patches_x;
-int n_patches_y;
-int n_patches_z;
-
-double len_x;
-double len_y;
-double len_z;
+Int3 gdims;
+Double3 lengths;
+Int3 n_patches;
 
 double turb_db2;
 double turb_correlation_length;
@@ -77,13 +62,10 @@ double turb_correlation_length;
 int out_interval;
 int marder_interval;
 
-bool mirror_domain;
 std::string turb_method;
 
 int nicell;
 int seed;
-
-} // namespace
 
 // ======================================================================
 // setupParameters
@@ -91,9 +73,7 @@ int seed;
 void setupParameters(int argc, char** argv)
 {
   if (argc != 2) {
-    std::cout << "Usage: " << argv[0] << " path/to/params\nExiting."
-              << std::endl;
-    exit(1);
+    LOG_ERROR("Usage: %s path/to/params.txt\n", argv[0]);
   }
   std::string path_to_params(argv[1]);
   InputParams inputParams(path_to_params);
@@ -107,38 +87,33 @@ void setupParameters(int argc, char** argv)
   electron_mass = inputParams.get<double>("electron_mass");
   ion_mass = inputParams.get<double>("ion_mass");
 
-  v_upstream_x = inputParams.get<double>("v_upstream_x");
-  v_upstream_y = inputParams.get<double>("v_upstream_y");
-  v_upstream_z = inputParams.get<double>("v_upstream_z");
+  inputParams.errIfPresentAndNotEqual("v_upstream_x", 0.0, "");
+  v_upstream = {0.0, inputParams.get<double>("v_upstream_y"), 0.0};
+  inputParams.errIfPresentAndNotEqual("v_upstream_z", 0.0, "");
 
   double b_angle_y_to_x_rad = inputParams.get<double>("b_angle_y_to_x_rad");
   double b_mag = inputParams.get<double>("b_mag");
-  b_x = b_mag * sin(b_angle_y_to_x_rad);
-  b_y = b_mag * cos(b_angle_y_to_x_rad);
-  b_z = 0.0;
+  background_h_upstream =
+    b_mag * Real3{sin(b_angle_y_to_x_rad), cos(b_angle_y_to_x_rad), 0.0};
 
-  Real3 v_upstream = {v_upstream_x, v_upstream_y, v_upstream_z};
   double gamma = 1 / sqrt(1 - v_upstream.mag2());
-  background_e = -gamma * v_upstream.cross({b_x, b_y, b_z});
+  background_e = -gamma * v_upstream.cross(background_h_upstream);
   // note: this only holds for vx=vz=0
-  background_h = {b_x * gamma, b_y, b_z * gamma};
+  background_h = background_h_upstream * Real3{gamma, 0.0, gamma};
 
-  nx = inputParams.get<int>("nx");
-  ny = inputParams.get<int>("ny");
-  nz = inputParams.get<int>("nz");
+  gdims[0] = inputParams.get<int>("nx");
+  gdims[1] = inputParams.get<int>("ny");
+  gdims[2] = inputParams.get<int>("nz");
   psc_params.nmax = inputParams.get<int>("nt");
 
-  n_patches_x = inputParams.get<int>("n_patches_x");
-  n_patches_y = inputParams.get<int>("n_patches_y");
-  n_patches_z = inputParams.get<int>("n_patches_z");
+  n_patches[0] = inputParams.get<int>("n_patches_x");
+  n_patches[1] = inputParams.get<int>("n_patches_y");
+  n_patches[2] = inputParams.get<int>("n_patches_z");
 
-  double dx = inputParams.get<double>("dx");
-  double dy = inputParams.get<double>("dy");
-  double dz = inputParams.get<double>("dz");
+  Double3 dx = {inputParams.get<double>("dx"), inputParams.get<double>("dy"),
+                inputParams.get<double>("dz")};
 
-  len_x = nx * dx;
-  len_y = ny * dy;
-  len_z = nz * dz;
+  lengths = Double3(gdims) * dx;
 
   if (inputParams.warnIfPresent("turb_dB^2", "set turb_dB instead")) {
     turb_db2 = inputParams.get<double>("turb_dB^2");
@@ -151,7 +126,9 @@ void setupParameters(int argc, char** argv)
   out_interval = psc_params.nmax / n_writes;
   marder_interval = inputParams.getOrDefault<int>("marder_interval", -1);
 
-  mirror_domain = inputParams.getOrDefault<bool>("mirror_domain", false);
+  inputParams.errIfPresentAndEqual("mirror_domain", true,
+                                   "only 'false' is permitted");
+
   turb_method =
     inputParams.getOrDefault<std::string>("turb_method", "alfven_dense");
 
@@ -174,20 +151,14 @@ void setupParameters(int argc, char** argv)
 Grid_t* setupGrid()
 {
   // FIXME add a check to catch mismatch between Dim and n grid points early
-  int y_mult = mirror_domain ? 2 : 1;
-  auto domain = Grid_t::Domain{
-    {nx, y_mult * ny, nz},          // n grid points
-    {len_x, y_mult * len_y, len_z}, // physical lengths
-    {0, 0, 0},                      // location of lower corner
-    {n_patches_x, y_mult * n_patches_y, n_patches_z}}; // n patches
+  Double3 corner = {0.0, 0.0, 0.0};
+  auto domain = Grid_t::Domain{gdims, lengths, corner, n_patches};
 
-  auto BND_FLD_Y_UPPER = mirror_domain ? BND_FLD_OPEN : BND_FLD_CONDUCTING_WALL;
-  auto BND_PRT_Y_UPPER = mirror_domain ? BND_PRT_OPEN : BND_PRT_REFLECTING;
   auto bc =
     psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_OPEN, BND_FLD_PERIODIC},
-                  {BND_FLD_PERIODIC, BND_FLD_Y_UPPER, BND_FLD_PERIODIC},
+                  {BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL, BND_FLD_PERIODIC},
                   {BND_PRT_PERIODIC, BND_PRT_OPEN, BND_PRT_PERIODIC},
-                  {BND_PRT_PERIODIC, BND_PRT_Y_UPPER, BND_PRT_PERIODIC}};
+                  {BND_PRT_PERIODIC, BND_PRT_REFLECTING, BND_PRT_PERIODIC}};
 
   auto kinds = Grid_t::Kinds(NR_KINDS);
   kinds[KIND_ELECTRON] = {-1.0, electron_mass, "e"};
@@ -221,13 +192,12 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
     double temperature =
       np.kind == KIND_ION ? ion_temperature : electron_temperature;
     np.n = 1.0;
-    double vy_coef = mirror_domain && crd[1] > len_y ? -1 : 1;
-    np.p = setup_particles.createMaxwellian(
-      {np.kind,
-       np.n,
-       {v_upstream_x, vy_coef * v_upstream_y, v_upstream_z},
-       {temperature, temperature, temperature},
-       np.tag});
+    np.p =
+      setup_particles.createMaxwellian({np.kind,
+                                        np.n,
+                                        v_upstream,
+                                        {temperature, temperature, temperature},
+                                        np.tag});
   };
 
   partitionAndSetupParticles(setup_particles, balance, grid_ptr, mprts,
@@ -236,13 +206,6 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
 
 // ======================================================================
 // initializeFields
-
-double round_to_periodic_k(double len, double k)
-{
-  // want: k = 2*pi*n/len for an integer n
-  double n = round(k * len / (2 * M_PI));
-  return 2 * M_PI * n / len;
-}
 
 void add_background_fields(MfieldsState& mflds)
 {
@@ -254,48 +217,13 @@ void add_background_fields(MfieldsState& mflds)
 
     int n_ghosts = mflds.ibn().max();
     grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
-      field_patch(HX, jx, jy, jz) += b_x;
-      field_patch(HY, jx, jy, jz) += b_y;
-      field_patch(HZ, jx, jy, jz) += b_z;
-    });
-  }
-}
+      field_patch(HX, jx, jy, jz) += background_h[0];
+      field_patch(HY, jx, jy, jz) += background_h[1];
+      field_patch(HZ, jx, jy, jz) += background_h[2];
 
-void boost_fields(MfieldsState& mflds, double vy)
-{
-  // general:
-
-  // E_y' = E_y
-  // B_y' = B_y
-  // E_perp' = gamma * (E_perp + v x B)
-  // B_perp' = gamma * (B_perp - v x E)
-
-  // assume E = 0 initially:
-  // E_perp' = gamma * v x B
-  // B_perp' = gamma * B_perp
-
-  const auto& grid = mflds.grid();
-  double gamma = 1.0 / std::sqrt(1.0 - vy * vy);
-  Double3 gamma_v{0.0, gamma * vy, 0.0};
-
-  for (int p = 0; p < mflds.n_patches(); ++p) {
-    auto& patch = grid.patches[p];
-    auto mf_patch = make_Fields3d<dim_xyz>(mflds[p]);
-
-    int n_ghosts = mflds.ibn().max();
-
-    grid.Foreach_3d(n_ghosts - 1, n_ghosts, [&](int jx, int jy, int jz) {
-      mf_patch(EX, jx, jy, jz) =
-        gamma * vy * 0.5 *
-        (mf_patch(HZ, jx, jy - 1, jz) + mf_patch(HZ, jx, jy, jz));
-      mf_patch(EZ, jx, jy, jz) =
-        -gamma * vy * 0.5 *
-        (mf_patch(HX, jx, jy - 1, jz) + mf_patch(HX, jx, jy, jz));
-    });
-
-    grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
-      mf_patch(HX, jx, jy, jz) *= gamma;
-      mf_patch(HZ, jx, jy, jz) *= gamma;
+      field_patch(EX, jx, jy, jz) += background_e[0];
+      field_patch(EY, jx, jy, jz) += background_e[1];
+      field_patch(EZ, jx, jy, jz) += background_e[2];
     });
   }
 }
@@ -325,7 +253,7 @@ void set_mean_b2(MfieldsState& mflds, double mean_b2)
   double sum_b2 = 0.0;
   MPI_Allreduce(&sum_b2_local, &sum_b2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
-  double target_sum_b2 = nx * ny * nz * mean_b2;
+  double target_sum_b2 = gdims.prod() * mean_b2;
   double scale_factor = sqrt(target_sum_b2 / sum_b2);
 
   for (int p = 0; p < mflds.n_patches(); ++p) {
@@ -547,7 +475,6 @@ void inject_turbulence_noise(MfieldsState& mflds, KERNEL& kernel)
 
 void inject_turbulence_dense(MfieldsState& mflds)
 {
-
   // literally the power of each shell, such that
   // 1/2 <dB^2> = int_{k=0}^\infty shellpower(k) dk.
   // Note that regardless of dimensionality, shellpower(k) ~ k^{-5/3},
@@ -562,17 +489,14 @@ void inject_turbulence_dense(MfieldsState& mflds)
 
   // 1. compute values of |k|
 
-  Double3 len_vec{len_x, len_y, len_z};
-  Int3 n_vec{nx, ny, nz};
+  Double3 dk_vec = 2.0 * M_PI / lengths;
 
-  Double3 dk_vec = 2.0 * M_PI / len_vec;
-
-  Int3 i3_min = (1 - n_vec) / 2;
-  Int3 i3_max = n_vec / 2;
+  Int3 i3_min = (1 - gdims) / 2;
+  Int3 i3_max = gdims / 2;
 
   // inject in only half of k-space, since +k and -k modes are indistinguishable
   for (int d = 0; d < 3; d++) {
-    if (n_vec[d] > 2) {
+    if (gdims[d] > 2) {
       i3_min[d] = 0;
       break;
     }
@@ -670,7 +594,6 @@ void initializeFields(MfieldsState& mflds)
   }
 
   add_background_fields(mflds);
-  boost_fields(mflds, -v_upstream_y);
 }
 
 struct AdvectedPeriodicFields : RadiatingBoundary<real_t>
@@ -886,15 +809,13 @@ static void run(int argc, char** argv)
   auto ion_injector =
     BoundaryInjector<ParticleGeneratorMaxwellian, PscConfig::PushParticles>(
       ParticleGeneratorMaxwellian(
-        KIND_ION, grid.kinds[KIND_ION],
-        {v_upstream_x, v_upstream_y, v_upstream_z},
+        KIND_ION, grid.kinds[KIND_ION], v_upstream,
         {ion_temperature, ion_temperature, ion_temperature}, true),
       grid);
   auto electron_injector =
     BoundaryInjector<ParticleGeneratorMaxwellian, PscConfig::PushParticles>(
       ParticleGeneratorMaxwellian(
-        KIND_ELECTRON, grid.kinds[KIND_ELECTRON],
-        {v_upstream_x, v_upstream_y, v_upstream_z},
+        KIND_ELECTRON, grid.kinds[KIND_ELECTRON], v_upstream,
         {electron_temperature, electron_temperature, electron_temperature},
         true),
       grid);
@@ -915,8 +836,8 @@ static void run(int argc, char** argv)
 
   psc.bndf.background_e = background_e;
   psc.bndf.background_h = background_h;
-  psc.bndf.radiation =
-    new AdvectedPeriodicFields{mflds, v_upstream_y, background_e, background_h};
+  psc.bndf.radiation = new AdvectedPeriodicFields{mflds, v_upstream[1],
+                                                  background_e, background_h};
 
   psc.add_diagnostic(&outf);
   psc.add_diagnostic(&outp);
