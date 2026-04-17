@@ -29,7 +29,7 @@ public:
 
   void perform_diagnostic(Mparticles& mprts) override
   {
-    if (!opened_) {
+    if (!io_) {
       io_.open(params_.basename, params_.data_dir);
     }
     // TODO
@@ -40,5 +40,4 @@ public:
 private:
   const OutputParticlesParams params_;
   WriterADIOS2 io_;
-  bool opened_ = false;
 };
