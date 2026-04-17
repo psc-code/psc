@@ -92,7 +92,8 @@ struct OutputTfieldItemParams : BaseOutputFieldItemParams
   // Returns whether to accumulate on this timestep.
   bool do_accum(int timestep)
   {
-    int n_intervals_elapsed = timestep / out_interval;
+    // next_out could be this timestep
+    int n_intervals_elapsed = (timestep - 1) / out_interval;
     int next_out = out_interval * (n_intervals_elapsed + 1);
 
     bool in_averaging_range = next_out - timestep < average_length;
