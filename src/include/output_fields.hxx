@@ -184,9 +184,8 @@ public:
       prof_stop(pr_eval);
 
       if (do_pfield) {
-        if (!opened_io_pfd_) {
+        if (!io_pfd_) {
           io_pfd_.open("pfd" + GetItem::suffix(), pfield.data_dir);
-          opened_io_pfd_ = true;
         }
 
         prof_start(pr_pfd);
@@ -209,9 +208,8 @@ public:
       }
 
       if (do_tfield) {
-        if (!opened_io_tfd_) {
+        if (!io_tfd_) {
           io_tfd_.open("tfd" + GetItem::suffix(), tfield.data_dir);
-          opened_io_tfd_ = true;
         }
 
         prof_start(pr_tfd);
@@ -236,8 +234,6 @@ public:
 private:
   Writer io_pfd_;
   Writer io_tfd_;
-  bool opened_io_pfd_ = false;
-  bool opened_io_tfd_ = false;
   std::unique_ptr<Mfields> tfd_;
   int naccum_ = 0;
 };
