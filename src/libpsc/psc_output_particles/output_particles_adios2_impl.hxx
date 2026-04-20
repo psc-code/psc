@@ -18,6 +18,8 @@ struct OutputParticlesAdios2Params : OutputParticlesParams
   bool write_id = false;
   bool write_tag = false;
 
+  OutputParticlesAdios2Params() {}
+
   OutputParticlesAdios2Params(OutputParticlesParams params)
     : OutputParticlesParams{params}
   {}
