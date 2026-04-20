@@ -59,6 +59,16 @@ public:
     : params_{adjust_params(params, grid)}
   {}
 
+  void init(const Grid_t& grid)
+  {
+    io_ = adios_.DeclareIO("PrtWriter");
+
+    unsigned long local_n_of_kind = 0;
+    io_.DefineVariable<real_t>("x", {adios2::JoinedDim}, {}, {local_n_of_kind});
+
+    init_ = true;
+  }
+
   void perform_diagnostic(Mparticles& mprts) override
   {
     if (!io_) {
@@ -71,5 +81,7 @@ public:
 
 private:
   const OutputParticlesAdios2Params params_;
-  WriterADIOS2 io_;
+  adios2::ADIOS adios_{MPI_COMM_WORLD};
+  adios2::IO io_;
+  bool init_ = false;
 };
