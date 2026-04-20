@@ -64,8 +64,10 @@ public:
   {
     io_ = adios_.DeclareIO("PrtWriter");
 
-    unsigned long local_n_of_kind = 0;
-    io_.DefineVariable<real_t>("x", {adios2::JoinedDim}, {}, {local_n_of_kind});
+    unsigned long local_n = 0; // gets set later
+
+    if (params_.write_x)
+      io_.DefineVariable<real_t>("x", {adios2::JoinedDim}, {}, {local_n});
 
     init_ = true;
   }
