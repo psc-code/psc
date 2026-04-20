@@ -22,6 +22,16 @@ struct OutputParticlesAdios2Params : OutputParticlesParams
   {}
 };
 
+std::string get_file_name(std::string basename, std::string kind_name, int step)
+{
+  int min_step_digits = 9;
+  std::string padded_step = std::to_string(step);
+  if (padded_step.length() < min_step_digits) {
+    padded_step.insert(0, min_step_digits - padded_step.length(), '0');
+  }
+  return basename + "." + kind_name + "." + padded_step + ".bp";
+}
+
 template <typename Mparticles>
 class OutputParticlesAdios2
   : OutputParticlesBase
