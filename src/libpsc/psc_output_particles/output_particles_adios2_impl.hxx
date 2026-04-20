@@ -37,6 +37,8 @@ class OutputParticlesAdios2
   : OutputParticlesBase
   , public ParticleDiagnosticBase<Mparticles>
 {
+  using real_t = typename Mparticles::real_t;
+
   static OutputParticlesAdios2Params adjust_params(
     const OutputParticlesAdios2Params& params_in, const Grid_t& grid)
   {
