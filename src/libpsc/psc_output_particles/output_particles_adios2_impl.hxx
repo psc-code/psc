@@ -68,6 +68,26 @@ public:
 
     if (params_.write_x)
       io_.DefineVariable<real_t>("x", {adios2::JoinedDim}, {}, {local_n});
+    if (params_.write_y)
+      io_.DefineVariable<real_t>("y", {adios2::JoinedDim}, {}, {local_n});
+    if (params_.write_z)
+      io_.DefineVariable<real_t>("z", {adios2::JoinedDim}, {}, {local_n});
+    if (params_.write_px)
+      io_.DefineVariable<real_t>("px", {adios2::JoinedDim}, {}, {local_n});
+    if (params_.write_py)
+      io_.DefineVariable<real_t>("py", {adios2::JoinedDim}, {}, {local_n});
+    if (params_.write_pz)
+      io_.DefineVariable<real_t>("pz", {adios2::JoinedDim}, {}, {local_n});
+    if (params_.write_q)
+      io_.DefineVariable<real_t>("q", {adios2::JoinedDim}, {}, {local_n});
+    if (params_.write_m)
+      io_.DefineVariable<real_t>("m", {adios2::JoinedDim}, {}, {local_n});
+    if (params_.write_w)
+      io_.DefineVariable<real_t>("w", {adios2::JoinedDim}, {}, {local_n});
+    if (params_.write_id)
+      io_.DefineVariable<real_t>("id", {adios2::JoinedDim}, {}, {local_n});
+    if (params_.write_tag)
+      io_.DefineVariable<real_t>("tag", {adios2::JoinedDim}, {}, {local_n});
 
     init_ = true;
   }
@@ -105,12 +125,42 @@ public:
       // data must live until EndStep(), so must be scoped accordingly
 
       std::vector<real_t> xs;
+      std::vector<real_t> ys;
+      std::vector<real_t> zs;
+      std::vector<real_t> pxs;
+      std::vector<real_t> pys;
+      std::vector<real_t> pzs;
+      std::vector<float> qs;
+      std::vector<float> ms;
+      std::vector<float> ws;
+      std::vector<psc::particle::Id> ids;
+      std::vector<psc::particle::Tag> tags;
 
       //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
       // reserve as needed
 
       if (params_.write_x)
         xs.reserve(local_n_of_kind);
+      if (params_.write_y)
+        ys.reserve(local_n_of_kind);
+      if (params_.write_z)
+        zs.reserve(local_n_of_kind);
+      if (params_.write_px)
+        pxs.reserve(local_n_of_kind);
+      if (params_.write_py)
+        pys.reserve(local_n_of_kind);
+      if (params_.write_pz)
+        pzs.reserve(local_n_of_kind);
+      if (params_.write_q)
+        qs.reserve(local_n_of_kind);
+      if (params_.write_m)
+        ms.reserve(local_n_of_kind);
+      if (params_.write_w)
+        ws.reserve(local_n_of_kind);
+      if (params_.write_id)
+        ids.reserve(local_n_of_kind);
+      if (params_.write_tag)
+        tags.reserve(local_n_of_kind);
 
       //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
       // populate data
@@ -123,6 +173,26 @@ public:
 
           if (params_.write_x)
             xs.push_back(prt->x[0] + patch.xb[0]);
+          if (params_.write_y)
+            ys.push_back(prt->x[1] + patch.xb[1]);
+          if (params_.write_z)
+            zs.push_back(prt->x[2] + patch.xb[2]);
+          if (params_.write_px)
+            pxs.push_back(prt->u[0]);
+          if (params_.write_py)
+            pys.push_back(prt->u[1]);
+          if (params_.write_pz)
+            pzs.push_back(prt->u[2]);
+          if (params_.write_q)
+            qs.push_back(kind.q);
+          if (params_.write_m)
+            ms.push_back(kind.m);
+          if (params_.write_w)
+            ws.push_back(prt->qni_wni / kind.q);
+          if (params_.write_id)
+            ids.push_back(prt->id());
+          if (params_.write_tag)
+            tags.push_back(prt->tag());
         }
       }
 
@@ -133,6 +203,58 @@ public:
         adios2::Variable<real_t> var = io_.InquireVariable<real_t>("x");
         var.SetSelection({{}, {local_n_of_kind}});
         engine.Put(var, xs.data(), adios2::Mode::Deferred);
+      }
+      if (params_.write_y) {
+        adios2::Variable<real_t> var = io_.InquireVariable<real_t>("y");
+        var.SetSelection({{}, {local_n_of_kind}});
+        engine.Put(var, ys.data(), adios2::Mode::Deferred);
+      }
+      if (params_.write_z) {
+        adios2::Variable<real_t> var = io_.InquireVariable<real_t>("z");
+        var.SetSelection({{}, {local_n_of_kind}});
+        engine.Put(var, zs.data(), adios2::Mode::Deferred);
+      }
+      if (params_.write_px) {
+        adios2::Variable<real_t> var = io_.InquireVariable<real_t>("px");
+        var.SetSelection({{}, {local_n_of_kind}});
+        engine.Put(var, pxs.data(), adios2::Mode::Deferred);
+      }
+      if (params_.write_py) {
+        adios2::Variable<real_t> var = io_.InquireVariable<real_t>("py");
+        var.SetSelection({{}, {local_n_of_kind}});
+        engine.Put(var, pys.data(), adios2::Mode::Deferred);
+      }
+      if (params_.write_pz) {
+        adios2::Variable<real_t> var = io_.InquireVariable<real_t>("pz");
+        var.SetSelection({{}, {local_n_of_kind}});
+        engine.Put(var, pzs.data(), adios2::Mode::Deferred);
+      }
+      if (params_.write_q) {
+        adios2::Variable<float> var = io_.InquireVariable<float>("q");
+        var.SetSelection({{}, {local_n_of_kind}});
+        engine.Put(var, qs.data(), adios2::Mode::Deferred);
+      }
+      if (params_.write_m) {
+        adios2::Variable<float> var = io_.InquireVariable<float>("m");
+        var.SetSelection({{}, {local_n_of_kind}});
+        engine.Put(var, ms.data(), adios2::Mode::Deferred);
+      }
+      if (params_.write_w) {
+        adios2::Variable<float> var = io_.InquireVariable<float>("w");
+        var.SetSelection({{}, {local_n_of_kind}});
+        engine.Put(var, ws.data(), adios2::Mode::Deferred);
+      }
+      if (params_.write_id) {
+        adios2::Variable<psc::particle::Id> var =
+          io_.InquireVariable<psc::particle::Id>("id");
+        var.SetSelection({{}, {local_n_of_kind}});
+        engine.Put(var, ids.data(), adios2::Mode::Deferred);
+      }
+      if (params_.write_tag) {
+        adios2::Variable<psc::particle::Tag> var =
+          io_.InquireVariable<psc::particle::Tag>("tag");
+        var.SetSelection({{}, {local_n_of_kind}});
+        engine.Put(var, tags.data(), adios2::Mode::Deferred);
       }
 
       //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
