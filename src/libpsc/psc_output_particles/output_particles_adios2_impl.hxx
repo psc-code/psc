@@ -171,6 +171,9 @@ public:
           if (prt->kind != kind_idx)
             continue;
 
+          // FIXME OPT: this is 11 ifs in a hot loop. Kinda just hoping that
+          // branch prediction and/or cache hits make this ok.
+
           if (params_.write_x)
             xs.push_back(prt->x[0] + patch.xb[0]);
           if (params_.write_y)
