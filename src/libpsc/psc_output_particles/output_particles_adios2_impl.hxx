@@ -98,6 +98,10 @@ public:
   {
     const Grid_t& grid = mprts.grid();
 
+    if (params_.every_step <= 0 || grid.timestep() % params_.every_step != 0) {
+      return;
+    }
+
     if (!init_) {
       init(grid);
     }
