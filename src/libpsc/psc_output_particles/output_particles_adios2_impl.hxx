@@ -118,6 +118,9 @@ public:
       Grid_t::Kind kind = grid.kinds[kind_idx];
       unsigned long local_n_of_kind = local_n_prts_per_kind[kind_idx];
 
+      mpi_printf(grid.comm(), "***** Writing PRT output for '%s'\n",
+                 kind.name.c_str());
+
       std::string file_name =
         get_file_name(params_.basename, kind.name, grid.timestep());
       auto engine = io_.Open(file_name, adios2::Mode::Write);
