@@ -82,16 +82,17 @@ public:
   using real_t = typename PushParticles::real_t;
   using Real3 = Vec3<real_t>;
 
-  BoundaryInjector(ParticleGenerator particle_generator, Grid_t& grid)
+  BoundaryInjector(ParticleGenerator particle_generator, Grid_t& grid,
+                   real_t density = 1.0)
     : particle_generator_{particle_generator},
       advance_{grid.dt},
-      prts_per_unit_density_{grid.norm.prts_per_unit_density}
+      prts_per_unit_density_{grid.norm.prts_per_unit_density},
+      density_{density}
   {}
 
   /// Injects particles at the lower y-bound as if there were a population of
-  /// particles just beyond the edge. The imaginary particle population has unit
-  /// density, and individual particles from that population are sampled using
-  /// the given ParticleGenerator.
+  /// particles just beyond the edge. The imaginary particle population is
+  /// sampled using the given ParticleGenerator.
   ///
   /// Some of these limitations may be removed in the future.
   void inject(Mparticles& mprts, MfieldsState& mflds) override
@@ -123,7 +124,7 @@ public:
       for (Int3 initial_idx : VecRange(ilo, ihi)) {
         Real3 cell_corner = Double3(initial_idx) * grid.domain.dx;
         int n_prts_to_try_inject =
-          get_n_in_cell(1.0, prts_per_unit_density_, true);
+          get_n_in_cell(density_, prts_per_unit_density_, true);
 
         for (int prt_count = 0; prt_count < n_prts_to_try_inject; prt_count++) {
           psc::particle::Inject prt =
@@ -165,4 +166,5 @@ private:
   // can't move along x or z, or else might leave patch
   AdvanceParticle<real_t, dim_y> advance_;
   real_t prts_per_unit_density_;
+  real_t density_;
 };
