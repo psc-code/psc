@@ -35,12 +35,13 @@ std::string get_file_name(std::string basename, std::string kind_name, int step)
   return basename + "." + kind_name + "." + padded_step + ".bp";
 }
 
-template <typename Mparticles>
+template <typename Mparticles,
+          typename RealOverride = typename Mparticles::real_t>
 class OutputParticlesAdios2
   : OutputParticlesBase
   , public ParticleDiagnosticBase<Mparticles>
 {
-  using real_t = typename Mparticles::real_t;
+  using real_t = RealOverride;
 
   static OutputParticlesAdios2Params adjust_params(
     const OutputParticlesAdios2Params& params_in, const Grid_t& grid)
