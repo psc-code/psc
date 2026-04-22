@@ -66,6 +66,9 @@ public:
   void init(const Grid_t& grid)
   {
     io_ = adios_.DeclareIO("PrtWriter");
+    // TODO set IO parameters, configured by params_
+    // (the default options are generally better at large scales, but doesn't
+    // take advantage of relatively higher file bandwidth at smaller scales)
 
     unsigned long local_n = 0; // gets set later
 
