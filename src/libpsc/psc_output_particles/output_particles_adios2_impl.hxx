@@ -81,15 +81,17 @@ public:
     if (params_.write_pz)
       io_.DefineVariable<real_t>("pz", {adios2::JoinedDim}, {}, {local_n});
     if (params_.write_q)
-      io_.DefineVariable<real_t>("q", {adios2::JoinedDim}, {}, {local_n});
+      io_.DefineVariable<float>("q", {adios2::JoinedDim}, {}, {local_n});
     if (params_.write_m)
-      io_.DefineVariable<real_t>("m", {adios2::JoinedDim}, {}, {local_n});
+      io_.DefineVariable<float>("m", {adios2::JoinedDim}, {}, {local_n});
     if (params_.write_w)
-      io_.DefineVariable<real_t>("w", {adios2::JoinedDim}, {}, {local_n});
+      io_.DefineVariable<float>("w", {adios2::JoinedDim}, {}, {local_n});
     if (params_.write_id)
-      io_.DefineVariable<real_t>("id", {adios2::JoinedDim}, {}, {local_n});
+      io_.DefineVariable<psc::particle::Id>("id", {adios2::JoinedDim}, {},
+                                            {local_n});
     if (params_.write_tag)
-      io_.DefineVariable<real_t>("tag", {adios2::JoinedDim}, {}, {local_n});
+      io_.DefineVariable<psc::particle::Tag>("tag", {adios2::JoinedDim}, {},
+                                             {local_n});
 
     init_ = true;
   }
