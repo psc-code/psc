@@ -182,6 +182,9 @@ public:
       else
         prof_restart(pr_fill);
 
+      // TODO OPT maybe just keep these temps around instead of reallocating
+      // on every write
+
       if (params_.write_x)
         xs.reserve(local_n_of_kind);
       if (params_.write_y)
