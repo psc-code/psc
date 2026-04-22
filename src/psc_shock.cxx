@@ -7,6 +7,7 @@
 #include "include/boundary_injector.hxx"
 #include "input_params.hxx"
 #include "kg/include/kg/VecRange.hxx"
+#include "libpsc/psc_output_particles/output_particles_adios2_impl.hxx"
 
 // ======================================================================
 // PSC configuration
@@ -798,11 +799,11 @@ static void run(int argc, char** argv)
   out_moments.pfield.out_interval = out_interval;
 
   // -- output particles
-  OutputParticlesParams outp_params{};
+  OutputParticlesAdios2Params outp_params{};
   outp_params.every_step = out_interval;
   outp_params.data_dir = ".";
   outp_params.basename = "prt";
-  OutputParticles outp{grid, outp_params};
+  OutputParticlesAdios2<Mparticles> outp{grid, outp_params};
 
   int oute_interval = -100;
   DiagEnergies<Mparticles, MfieldsState> oute{grid.comm(), oute_interval};
