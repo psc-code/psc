@@ -97,6 +97,7 @@ public:
       io_.DefineVariable<psc::particle::Tag>("tag", {adios2::JoinedDim}, {},
                                              {local_n});
 
+    // run-level attributes
     io_.DefineAttribute("gdims", grid.domain.gdims.data(),
                         grid.domain.gdims.size());
     io_.DefineAttribute("corner", grid.domain.corner.data(),
@@ -104,10 +105,18 @@ public:
     io_.DefineAttribute("length", grid.domain.length.data(),
                         grid.domain.length.size());
 
+    // step-level attributes
     bool allow_modification{true};
     io_.DefineAttribute("step", grid.timestep(), "", "/", allow_modification);
     io_.DefineAttribute("time", grid.timestep() * grid.dt, "", "/",
                         allow_modification);
+
+    // species-level attributes
+    io_.DefineAttribute<std::string>("name", "", "", "/", allow_modification);
+    if (!params_.write_q)
+      io_.DefineAttribute<float>("q", 0.0, "", "/", allow_modification);
+    if (!params_.write_m)
+      io_.DefineAttribute<float>("m", 0.0, "", "/", allow_modification);
 
     init_ = true;
   }
@@ -134,6 +143,9 @@ public:
     if (!init_) {
       init(grid);
     }
+
+    io_.DefineAttribute("step", grid.timestep());
+    io_.DefineAttribute("time", grid.timestep() * grid.dt);
 
     //\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\.
     // count number of particles of each kind
@@ -318,8 +330,11 @@ public:
       //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
       // update io-level attributes
 
-      io_.DefineAttribute("step", grid.timestep());
-      io_.DefineAttribute("time", grid.timestep() * grid.dt);
+      io_.DefineAttribute<std::string>("name", kind.name);
+      if (!params_.write_q)
+        io_.DefineAttribute<float>("q", kind.q);
+      if (!params_.write_m)
+        io_.DefineAttribute<float>("m", kind.m);
 
       //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
       // performs puts - data must live until this point
