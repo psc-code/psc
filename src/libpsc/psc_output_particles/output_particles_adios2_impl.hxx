@@ -93,6 +93,18 @@ public:
       io_.DefineVariable<psc::particle::Tag>("tag", {adios2::JoinedDim}, {},
                                              {local_n});
 
+    io_.DefineAttribute("gdims", grid.domain.gdims.data(),
+                        grid.domain.gdims.size());
+    io_.DefineAttribute("corner", grid.domain.corner.data(),
+                        grid.domain.corner.size());
+    io_.DefineAttribute("length", grid.domain.length.data(),
+                        grid.domain.length.size());
+
+    bool allow_modification{true};
+    io_.DefineAttribute("step", grid.timestep(), "", "/", allow_modification);
+    io_.DefineAttribute("time", grid.timestep() * grid.dt, "", "/",
+                        allow_modification);
+
     init_ = true;
   }
 
@@ -270,6 +282,12 @@ public:
         var.SetSelection({{}, {local_n_of_kind}});
         engine.Put(var, tags.data(), adios2::Mode::Deferred);
       }
+
+      //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+      // update io-level attributes
+
+      io_.DefineAttribute("step", grid.timestep());
+      io_.DefineAttribute("time", grid.timestep() * grid.dt);
 
       //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
       // performs puts - data must live until this point
