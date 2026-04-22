@@ -803,7 +803,7 @@ static void run(int argc, char** argv)
   outp_params.every_step = out_interval;
   outp_params.data_dir = ".";
   outp_params.basename = "prt";
-  OutputParticlesAdios2<Mparticles> outp{grid, outp_params};
+  OutputParticlesAdios2<Mparticles, float> outp{grid, outp_params};
 
   int oute_interval = -100;
   DiagEnergies<Mparticles, MfieldsState> oute{grid.comm(), oute_interval};
