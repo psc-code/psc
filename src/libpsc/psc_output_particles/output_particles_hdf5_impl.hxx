@@ -788,15 +788,24 @@ public:
   template <typename _Mparticles>
   void operator()(_Mparticles& mprts)
   {
+    static int pr_all;
+    if (!pr_all) {
+      pr_all = prof_register("outp", 1.0, 0, 0);
+    }
+
     const auto& grid = mprts.grid();
 
     if (params_.every_step <= 0 || grid.timestep() % params_.every_step != 0) {
       return;
     }
 
+    prof_start(pr_all);
+
     detail::OutputParticlesHdf5<_Mparticles, ParticleSelector> impl{grid,
                                                                     params_};
     impl(mprts, writer_);
+
+    prof_stop(pr_all);
   }
 
   // FIXME, handles MparticlesVpic by conversion for now
