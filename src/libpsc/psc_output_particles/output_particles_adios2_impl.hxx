@@ -111,11 +111,22 @@ public:
 
   void perform_diagnostic(Mparticles& mprts) override
   {
+    static int pr_all, pr_count, pr_fill, pr_schedule, pr_write;
+    if (!pr_all) {
+      pr_all = prof_register("outp_adios2", 1., 0, 0);
+      pr_count = prof_register("outp_adios2: count", 1., 0, 0);
+      pr_fill = prof_register("outp_adios2: fill", 1., 0, 0);
+      pr_schedule = prof_register("outp_adios2: schedule", 1., 0, 0);
+      pr_write = prof_register("outp_adios2: write", 1., 0, 0);
+    }
+
     const Grid_t& grid = mprts.grid();
 
     if (params_.every_step <= 0 || grid.timestep() % params_.every_step != 0) {
       return;
     }
+
+    prof_start(pr_all);
 
     if (!init_) {
       init(grid);
@@ -123,6 +134,8 @@ public:
 
     //\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\.
     // count number of particles of each kind
+    prof_start(pr_count);
+
     int n_kinds = grid.kinds.size();
     std::vector<unsigned long> local_n_prts_per_kind(n_kinds);
 
@@ -131,6 +144,8 @@ public:
         local_n_prts_per_kind[prt->kind]++;
       }
     }
+
+    prof_stop(pr_count);
     ///////////////////////////////////////////////
 
     for (int kind_idx = 0; kind_idx < n_kinds; kind_idx++) {
@@ -162,6 +177,10 @@ public:
 
       //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
       // reserve as needed
+      if (kind_idx == 0)
+        prof_start(pr_fill);
+      else
+        prof_restart(pr_fill);
 
       if (params_.write_x)
         xs.reserve(local_n_of_kind);
@@ -223,8 +242,13 @@ public:
         }
       }
 
+      prof_stop(pr_fill);
       //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
       // schedule puts
+      if (kind_idx == 0)
+        prof_start(pr_schedule);
+      else
+        prof_restart(pr_schedule);
 
       if (params_.write_x) {
         adios2::Variable<real_t> var = io_.InquireVariable<real_t>("x");
@@ -284,6 +308,7 @@ public:
         engine.Put(var, tags.data(), adios2::Mode::Deferred);
       }
 
+      prof_stop(pr_schedule);
       //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
       // update io-level attributes
 
@@ -292,12 +317,19 @@ public:
 
       //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
       // performs puts - data must live until this point
+      if (kind_idx == 0)
+        prof_start(pr_write);
+      else
+        prof_restart(pr_write);
 
       engine.EndStep();
       engine.Close();
 
+      prof_stop(pr_write);
       //////////////////////////////////////////////////////////////////////
     }
+
+    prof_stop(pr_all);
   }
 
   void operator()(Mparticles& mprts) { this->perform_diagnostic(mprts); }
