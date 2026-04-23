@@ -84,9 +84,7 @@ public:
 
   BoundaryInjector(ParticleGenerator particle_generator, Grid_t& grid,
                    real_t density = 1.0)
-    : particle_generator_{particle_generator},
-      advance_{grid.dt},
-      density_{density}
+    : particle_generator_{particle_generator}, density_{density}
   {}
 
   /// Injects particles at the lower y-bound as if there were a population of
@@ -127,9 +125,10 @@ public:
             psc::particle::Inject prt =
               particle_generator_.get(cell_corner, grid.domain.dx);
 
-            Real3 v = advance_.calc_v(prt.u);
+            AdvanceParticle<real_t, dim_y> advance{grid.dt};
+            Real3 v = advance.calc_v(prt.u);
             Real3 initial_x = prt.x;
-            advance_.push_x(prt.x, v);
+            advance.push_x(prt.x, v);
 
             if (prt.x[INJECT_DIM_IDX_] < 0.0) {
               // don't inject a particle that fails to enter the patch
@@ -161,8 +160,6 @@ public:
 
 private:
   ParticleGenerator particle_generator_;
-  // can't move along x or z, or else might leave patch
-  AdvanceParticle<real_t, dim_y> advance_;
   real_t density_;
   bool inject_lo = true;
 };
