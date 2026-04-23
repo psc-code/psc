@@ -83,7 +83,7 @@ public:
   using Real3 = Vec3<real_t>;
 
   BoundaryInjector(ParticleGenerator particle_generator, real_t density = 1.0)
-    : particle_generator_{particle_generator}, density_{density}
+    : particle_generator_{particle_generator}, density{density}
   {}
 
   /// Injects particles at the lower y-bound as if there were a population of
@@ -117,7 +117,7 @@ public:
         for (Int3 initial_idx : VecRange(ilo, ihi)) {
           Real3 cell_corner = Double3(initial_idx) * grid.domain.dx;
           int n_prts_to_try_inject =
-            get_n_in_cell(density_, grid.norm.prts_per_unit_density, true);
+            get_n_in_cell(density, grid.norm.prts_per_unit_density, true);
 
           for (int prt_count = 0; prt_count < n_prts_to_try_inject;
                prt_count++) {
@@ -157,8 +157,10 @@ public:
     }
   }
 
+public:
+  real_t density;
+  bool inject_lo = true;
+
 private:
   ParticleGenerator particle_generator_;
-  real_t density_;
-  bool inject_lo = true;
 };
