@@ -86,11 +86,11 @@ public:
     : particle_generator_{particle_generator}
   {}
 
-  /// Injects particles at the lower y-bound as if there were a population of
+  /// Injects particles at specified y-bounds as if there were a population of
   /// particles just beyond the edge. The imaginary particle population is
   /// sampled using the given ParticleGenerator.
   ///
-  /// Some of these limitations may be removed in the future.
+  /// The dimensional limitations may be removed in the future.
   void inject(Mparticles& mprts, MfieldsState& mflds) override
   {
     static_assert(INJECT_DIM_IDX_ == 1,
@@ -103,6 +103,7 @@ public:
     Current current(grid);
 
     for (int p = 0; p < grid.n_patches(); p++) {
+      // TODO: combine paths as much as possible
       if (inject_lo && grid.atBoundaryLo(p, INJECT_DIM_IDX_)) {
         Int3 ilo = {0, 0, 0};
         Int3 ihi = grid.ldims;
@@ -154,12 +155,66 @@ public:
           }
         }
       }
+
+      if (inject_hi && grid.atBoundaryHi(p, INJECT_DIM_IDX_)) {
+        Int3 ilo = {0, 0, 0};
+        Int3 ihi = grid.ldims;
+
+        ilo[INJECT_DIM_IDX_] = grid.ldims[INJECT_DIM_IDX_];
+        ihi[INJECT_DIM_IDX_] = grid.ldims[INJECT_DIM_IDX_] + 1;
+
+        auto&& injector = injectors_by_patch[p];
+        auto flds = mflds[p];
+        typename Current::fields_t J(flds);
+
+        for (Int3 initial_idx : VecRange(ilo, ihi)) {
+          Real3 cell_corner = Double3(initial_idx) * grid.domain.dx;
+          int n_prts_to_try_inject =
+            get_n_in_cell(density, grid.norm.prts_per_unit_density, true);
+
+          for (int prt_count = 0; prt_count < n_prts_to_try_inject;
+               prt_count++) {
+            psc::particle::Inject prt =
+              particle_generator_.get(cell_corner, grid.domain.dx);
+
+            AdvanceParticle<real_t, dim_y> advance{grid.dt};
+            Real3 v = advance.calc_v(prt.u);
+            Real3 initial_x = prt.x;
+            advance.push_x(prt.x, v);
+
+            if (prt.x[INJECT_DIM_IDX_] >
+                grid.domain.dx[INJECT_DIM_IDX_] * grid.ldims[INJECT_DIM_IDX_]) {
+              // don't inject a particle that fails to enter the patch
+              continue;
+            }
+
+            // GOTCHA: currently, injectors expect particle positions to be
+            // global, but current deposition expects patch-local
+            psc::particle::Inject prt_with_global_x = prt;
+            prt_with_global_x.x += grid.patches[p].xb;
+            injector(prt_with_global_x);
+
+            // Update currents
+            // Taken from push_particles_1vb.hxx PushParticlesVb::push_mprts()
+
+            Real3 initial_normalized_pos = initial_x * dxi;
+            Real3 final_normalized_pos = prt.x * dxi;
+            Int3 final_idx = final_normalized_pos.fint();
+
+            // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
+            real_t qni_wni = grid.kinds[prt.kind].q * prt.w;
+            current.calc_j(J, initial_normalized_pos, final_normalized_pos,
+                           final_idx, initial_idx, qni_wni, v);
+          }
+        }
+      }
     }
   }
 
 public:
   real_t density;
   bool inject_lo = true;
+  bool inject_hi = false;
 
 private:
   ParticleGenerator particle_generator_;
