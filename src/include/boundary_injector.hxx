@@ -86,7 +86,6 @@ public:
                    real_t density = 1.0)
     : particle_generator_{particle_generator},
       advance_{grid.dt},
-      prts_per_unit_density_{grid.norm.prts_per_unit_density},
       density_{density}
   {}
 
@@ -121,7 +120,7 @@ public:
         for (Int3 initial_idx : VecRange(ilo, ihi)) {
           Real3 cell_corner = Double3(initial_idx) * grid.domain.dx;
           int n_prts_to_try_inject =
-            get_n_in_cell(density_, prts_per_unit_density_, true);
+            get_n_in_cell(density_, grid.norm.prts_per_unit_density, true);
 
           for (int prt_count = 0; prt_count < n_prts_to_try_inject;
                prt_count++) {
@@ -164,7 +163,6 @@ private:
   ParticleGenerator particle_generator_;
   // can't move along x or z, or else might leave patch
   AdvanceParticle<real_t, dim_y> advance_;
-  real_t prts_per_unit_density_;
   real_t density_;
   bool inject_lo = true;
 };
