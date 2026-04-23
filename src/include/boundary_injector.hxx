@@ -107,55 +107,54 @@ public:
     Current current(grid);
 
     for (int p = 0; p < grid.n_patches(); p++) {
-      if (!grid.atBoundaryLo(p, INJECT_DIM_IDX_)) {
-        continue;
-      }
+      if (inject_lo && grid.atBoundaryLo(p, INJECT_DIM_IDX_)) {
+        Int3 ilo = {0, 0, 0};
+        Int3 ihi = grid.ldims;
 
-      Int3 ilo = {0, 0, 0};
-      Int3 ihi = grid.ldims;
+        ilo[INJECT_DIM_IDX_] = -1;
+        ihi[INJECT_DIM_IDX_] = 0;
 
-      ilo[INJECT_DIM_IDX_] = -1;
-      ihi[INJECT_DIM_IDX_] = 0;
+        auto&& injector = injectors_by_patch[p];
+        auto flds = mflds[p];
+        typename Current::fields_t J(flds);
 
-      auto&& injector = injectors_by_patch[p];
-      auto flds = mflds[p];
-      typename Current::fields_t J(flds);
+        for (Int3 initial_idx : VecRange(ilo, ihi)) {
+          Real3 cell_corner = Double3(initial_idx) * grid.domain.dx;
+          int n_prts_to_try_inject =
+            get_n_in_cell(density_, prts_per_unit_density_, true);
 
-      for (Int3 initial_idx : VecRange(ilo, ihi)) {
-        Real3 cell_corner = Double3(initial_idx) * grid.domain.dx;
-        int n_prts_to_try_inject =
-          get_n_in_cell(density_, prts_per_unit_density_, true);
+          for (int prt_count = 0; prt_count < n_prts_to_try_inject;
+               prt_count++) {
+            psc::particle::Inject prt =
+              particle_generator_.get(cell_corner, grid.domain.dx);
 
-        for (int prt_count = 0; prt_count < n_prts_to_try_inject; prt_count++) {
-          psc::particle::Inject prt =
-            particle_generator_.get(cell_corner, grid.domain.dx);
+            Real3 v = advance_.calc_v(prt.u);
+            Real3 initial_x = prt.x;
+            advance_.push_x(prt.x, v);
 
-          Real3 v = advance_.calc_v(prt.u);
-          Real3 initial_x = prt.x;
-          advance_.push_x(prt.x, v);
+            if (prt.x[INJECT_DIM_IDX_] < 0.0) {
+              // don't inject a particle that fails to enter the patch
+              continue;
+            }
 
-          if (prt.x[INJECT_DIM_IDX_] < 0.0) {
-            // don't inject a particle that fails to enter the patch
-            continue;
+            // GOTCHA: currently, injectors expect particle positions to be
+            // global, but current deposition expects patch-local
+            psc::particle::Inject prt_with_global_x = prt;
+            prt_with_global_x.x += grid.patches[p].xb;
+            injector(prt_with_global_x);
+
+            // Update currents
+            // Taken from push_particles_1vb.hxx PushParticlesVb::push_mprts()
+
+            Real3 initial_normalized_pos = initial_x * dxi;
+            Real3 final_normalized_pos = prt.x * dxi;
+            Int3 final_idx = final_normalized_pos.fint();
+
+            // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
+            real_t qni_wni = grid.kinds[prt.kind].q * prt.w;
+            current.calc_j(J, initial_normalized_pos, final_normalized_pos,
+                           final_idx, initial_idx, qni_wni, v);
           }
-
-          // GOTCHA: currently, injectors expect particle positions to be
-          // global, but current deposition expects patch-local
-          psc::particle::Inject prt_with_global_x = prt;
-          prt_with_global_x.x += grid.patches[p].xb;
-          injector(prt_with_global_x);
-
-          // Update currents
-          // Taken from push_particles_1vb.hxx PushParticlesVb::push_mprts()
-
-          Real3 initial_normalized_pos = initial_x * dxi;
-          Real3 final_normalized_pos = prt.x * dxi;
-          Int3 final_idx = final_normalized_pos.fint();
-
-          // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
-          real_t qni_wni = grid.kinds[prt.kind].q * prt.w;
-          current.calc_j(J, initial_normalized_pos, final_normalized_pos,
-                         final_idx, initial_idx, qni_wni, v);
         }
       }
     }
@@ -167,4 +166,5 @@ private:
   AdvanceParticle<real_t, dim_y> advance_;
   real_t prts_per_unit_density_;
   real_t density_;
+  bool inject_lo = true;
 };
