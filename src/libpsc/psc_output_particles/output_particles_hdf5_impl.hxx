@@ -199,7 +199,7 @@ public:
 #endif
     prof_stop(pr_C);
 
-    write_time(grid.time(), file, dxpl);
+    write_scalars(grid, file, dxpl);
     write_domain(grid.domain, file, dxpl);
 
     prof_start(pr_D);
@@ -221,7 +221,7 @@ public:
   }
 
 private:
-  void write_time(double time, hid_t group, hid_t dxpl)
+  void write_scalars(const Grid_t& grid, hid_t group, hid_t dxpl)
   {
     herr_t ierr;
 
@@ -243,6 +243,7 @@ private:
     hid_t dset = H5Dcreate(group, "time", H5T_NATIVE_DOUBLE, filespace,
                            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     H5_CHK(dset);
+    double time = grid.time();
     ierr = H5Dwrite(dset, H5T_NATIVE_DOUBLE, memspace, filespace, dxpl, &time);
     CE;
     ierr = H5Dclose(dset);
