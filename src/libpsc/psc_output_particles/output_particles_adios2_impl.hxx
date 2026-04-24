@@ -18,6 +18,15 @@ struct OutputParticlesAdios2Params : OutputParticlesParams
   bool write_id = false;
   bool write_tag = false;
 
+  /**
+   * An `adios2::IO` parameter. Sets the number of procs that aggregate data
+   * before writing to disk. Default of 0 means do something smart for larger
+   * runs. For smaller runs not limited by file io, can improve write
+   * performance by a decent bit by maxing this out (so every proc is an
+   * aggregator).
+   */
+  int NumAggregators = 0;
+
   OutputParticlesAdios2Params() {}
 
   OutputParticlesAdios2Params(OutputParticlesParams params)
@@ -66,7 +75,8 @@ public:
   void init(const Grid_t& grid)
   {
     io_ = adios_.DeclareIO("PrtWriter");
-    // TODO set IO parameters, configured by params_
+    io_.SetParameter("NumAggregators", std::to_string(params_.NumAggregators));
+    // TODO set more IO parameters, configured by params_
     // (the default options are generally better at large scales, but doesn't
     // take advantage of relatively higher file bandwidth at smaller scales)
 
