@@ -801,6 +801,7 @@ public:
     }
 
     prof_start(pr_all);
+    mpi_printf(grid.comm(), "***** Writing PRT output\n");
 
     detail::OutputParticlesHdf5<_Mparticles, ParticleSelector> impl{grid,
                                                                     params_};
