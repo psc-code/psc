@@ -249,6 +249,16 @@ private:
     ierr = H5Dclose(dset);
     CE;
 
+    dset = H5Dcreate(group, "prts_per_unit_density", H5T_NATIVE_DOUBLE,
+                     filespace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    H5_CHK(dset);
+    double prts_per_unit_density = grid.norm.prts_per_unit_density;
+    ierr = H5Dwrite(dset, H5T_NATIVE_DOUBLE, memspace, filespace, dxpl,
+                    &prts_per_unit_density);
+    CE;
+    ierr = H5Dclose(dset);
+    CE;
+
     ierr = H5Sclose(filespace);
     CE;
     ierr = H5Sclose(memspace);
