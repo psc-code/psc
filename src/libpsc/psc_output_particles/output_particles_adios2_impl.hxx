@@ -114,6 +114,8 @@ public:
                         grid.domain.corner.size());
     io_.DefineAttribute("length", grid.domain.length.data(),
                         grid.domain.length.size());
+    io_.DefineAttribute("prts_per_unit_density",
+                        grid.norm.prts_per_unit_density);
 
     // step-level attributes
     bool allow_modification{true};
