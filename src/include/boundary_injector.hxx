@@ -135,7 +135,7 @@ public:
 
             AdvanceParticle<real_t, dim_y> advance{grid.dt};
             Real3 v = advance.calc_v(prt.u);
-            Real3 initial_x = prt.x;
+            Real3 initial_normalized_pos = prt.x * dxi;
             advance.push_x(prt.x, v);
 
             if (prt.x[INJECT_DIM_IDX_] < 0.0) {
@@ -143,20 +143,11 @@ public:
               continue;
             }
 
-            // GOTCHA: currently, injectors expect particle positions to be
-            // global, but current deposition expects patch-local
-            psc::particle::Inject prt_with_global_x = prt;
-            prt_with_global_x.x += grid.patches[p].xb;
-            injector(prt_with_global_x);
-
-            // Update currents
-            // Taken from push_particles_1vb.hxx PushParticlesVb::push_mprts()
-
-            Real3 initial_normalized_pos = initial_x * dxi;
             Real3 final_normalized_pos = prt.x * dxi;
             Int3 final_idx = final_normalized_pos.fint();
 
-            // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
+            injector.inject_local(prt);
+
             real_t qni_wni = grid.kinds[prt.kind].q * prt.w;
             current.calc_j(J, initial_normalized_pos, final_normalized_pos,
                            final_idx, initial_idx, qni_wni, v);
@@ -187,29 +178,18 @@ public:
 
             AdvanceParticle<real_t, dim_y> advance{grid.dt};
             Real3 v = advance.calc_v(prt.u);
-            Real3 initial_x = prt.x;
+            Real3 initial_normalized_pos = prt.x * dxi;
             advance.push_x(prt.x, v);
+            Real3 final_normalized_pos = prt.x * dxi;
+            Int3 final_idx = final_normalized_pos.fint();
 
-            if (prt.x[INJECT_DIM_IDX_] >
-                grid.domain.dx[INJECT_DIM_IDX_] * grid.ldims[INJECT_DIM_IDX_]) {
+            if (final_idx[INJECT_DIM_IDX_] >= initial_idx[INJECT_DIM_IDX_]) {
               // don't inject a particle that fails to enter the patch
               continue;
             }
 
-            // GOTCHA: currently, injectors expect particle positions to be
-            // global, but current deposition expects patch-local
-            psc::particle::Inject prt_with_global_x = prt;
-            prt_with_global_x.x += grid.patches[p].xb;
-            injector(prt_with_global_x);
+            injector.inject_local(prt);
 
-            // Update currents
-            // Taken from push_particles_1vb.hxx PushParticlesVb::push_mprts()
-
-            Real3 initial_normalized_pos = initial_x * dxi;
-            Real3 final_normalized_pos = prt.x * dxi;
-            Int3 final_idx = final_normalized_pos.fint();
-
-            // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
             real_t qni_wni = grid.kinds[prt.kind].q * prt.w;
             current.calc_j(J, initial_normalized_pos, final_normalized_pos,
                            final_idx, initial_idx, qni_wni, v);
