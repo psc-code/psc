@@ -212,7 +212,7 @@ public:
   }
 
 public:
-  real_t density;
+  real_t density = 1.0;
   bool inject_lo = true;
   bool inject_hi = false;
 
