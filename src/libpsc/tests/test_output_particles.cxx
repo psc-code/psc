@@ -110,8 +110,6 @@ TYPED_TEST(OutputParticlesTest, Test1)
 
   auto params = OutputParticlesParams{};
   params.every_step = 1;
-  params.data_dir = ".";
-  params.basename = "prt";
 
   auto outp = OutputParticles{grid, params};
   outp(mprts);
