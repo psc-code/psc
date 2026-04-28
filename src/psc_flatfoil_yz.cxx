@@ -3,7 +3,7 @@
 #include <setup_fields.hxx>
 #include <setup_particles.hxx>
 
-#include "OutputFieldsDefault.h"
+#include "output_fields.hxx"
 #include "psc_config.hxx"
 
 #include "../libpsc/psc_heating/psc_heating_impl.hxx"
@@ -508,27 +508,21 @@ void run()
   // FIXME, this really is too complicated and not very flexible
 
   // -- output fields
-  OutputFieldsItemParams outf_item_params{};
-  OutputFieldsParams outf_params{};
+  OutputFields<MfieldsState, Mparticles, Writer> out_fields;
 #if CASE == CASE_1D
-  outf_item_params.pfield.out_interval = 100;
-  outf_item_params.tfield.out_interval = -100;
+  out_fields.pfield.out_interval = 100;
 #elif CASE == CASE_2D_SMALL
-  outf_item_params.pfield.out_interval = 4;
-  outf_item_params.tfield.out_interval = 4;
+  out_fields.pfield.out_interval = 4;
+  out_fields.tfield.out_interval = 4;
+  out_fields.tfield.sample_interval = 2;
 #else
-  outf_item_params.pfield.out_interval = 500;
-  outf_item_params.tfield.out_interval = 500;
-#endif
-#if CASE == CASE_2D_SMALL
-  outf_item_params.tfield.average_every = 2;
-#else
-  outf_item_params.tfield.average_every = 50;
+  out_fields.pfield.out_interval = 500;
+  out_fields.tfield.out_interval = 500;
+  out_fields.tfield.sample_interval = 50;
 #endif
 
-  outf_params.fields = outf_item_params;
-  outf_params.moments = outf_item_params;
-  OutputFields<MfieldsState, Mparticles, Dim, Writer> outf{grid, outf_params};
+  // copy params from out_fields
+  OutputMoments<MfieldsState, Mparticles, Dim, Writer> out_moments{out_fields};
 
   // -- output particles
   OutputParticlesParams outp_params{};
@@ -682,7 +676,8 @@ void run()
 
   psc.add_gauss_corrector(&marder);
 
-  psc.add_diagnostic(&outf);
+  psc.add_diagnostic(&out_fields);
+  psc.add_diagnostic(&out_moments);
   psc.add_diagnostic(&outp);
   psc.add_diagnostic(&oute);
 

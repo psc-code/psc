@@ -3,7 +3,7 @@
 #include <setup_fields.hxx>
 #include <setup_particles.hxx>
 
-#include "OutputFieldsDefault.h"
+#include "output_fields.hxx"
 #include "psc_config.hxx"
 
 // ======================================================================
@@ -277,12 +277,8 @@ void run()
   // FIXME, this really is too complicated and not very flexible
 
   // -- output fields
-  OutputFieldsItemParams outf_item_params{};
-  OutputFieldsParams outf_params{};
-  outf_item_params.pfield.out_interval = 20;
-
-  outf_params.fields = outf_item_params;
-  OutputFields<MfieldsState, Mparticles, Dim, Writer> outf{grid, outf_params};
+  OutputFields<MfieldsState, Mparticles, Writer> out_fields;
+  out_fields.pfield.out_interval = 20;
 
   // -- output particles
   OutputParticlesParams outp_params{};
@@ -307,7 +303,7 @@ void run()
 
   psc.add_gauss_corrector(&marder);
 
-  psc.add_diagnostic(&outf);
+  psc.add_diagnostic(&out_fields);
   psc.add_diagnostic(&outp);
   psc.add_diagnostic(&oute);
 

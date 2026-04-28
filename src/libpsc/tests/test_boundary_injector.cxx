@@ -5,7 +5,7 @@
 #include "boundary_injector.hxx"
 
 #include "psc.hxx"
-#include "OutputFieldsDefault.h"
+#include "output_fields.hxx"
 #include "../psc_config.hxx"
 
 TEST(BoundaryInjectorTest, ParticleGeneratorMaxwellianTest)

@@ -4,7 +4,7 @@
 #include <setup_fields.hxx>
 #include <setup_particles.hxx>
 
-#include "OutputFieldsDefault.h"
+#include "output_fields.hxx"
 #include "psc_config.hxx"
 
 #ifdef USE_CUDA
@@ -401,15 +401,11 @@ void run()
   // FIXME, this really is too complicated and not very flexible
 
   // -- output fields
-  OutputFieldsItemParams outf_item_params{};
-  OutputFieldsParams outf_params{};
-  outf_item_params.pfield.out_interval = 100;
-  outf_item_params.tfield.out_interval = -4;
-  outf_item_params.tfield.average_every = 50;
+  OutputFields<MfieldsState, Mparticles, Writer> out_fields;
+  out_fields.pfield.out_interval = 100;
 
-  outf_params.fields = outf_item_params;
-  outf_params.moments = outf_item_params;
-  OutputFields<MfieldsState, Mparticles, Dim, Writer> outf{grid, outf_params};
+  OutputMoments<MfieldsState, Mparticles, Dim, Writer> out_moments;
+  out_moments.pfield.out_interval = 100;
 
   // -- output particles
   OutputParticlesParams outp_params{};
@@ -444,7 +440,8 @@ void run()
 
   psc.add_gauss_corrector(&marder);
 
-  psc.add_diagnostic(&outf);
+  psc.add_diagnostic(&out_fields);
+  psc.add_diagnostic(&out_moments);
   psc.add_diagnostic(&outp);
   psc.add_diagnostic(&oute);
 
