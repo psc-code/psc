@@ -5,8 +5,8 @@
 
 struct OutputParticlesParams
 {
-  const char* data_dir;
-  const char* basename;
+  const char* data_dir = ".";
+  const char* basename = "prt";
   int every_step;
   Int3 lo;
   Int3 hi;
