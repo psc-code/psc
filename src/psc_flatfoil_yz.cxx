@@ -531,8 +531,6 @@ void run()
 #else
   outp_params.every_step = -400;
 #endif
-  outp_params.data_dir = ".";
-  outp_params.basename = "prt";
   outp_params.lo = {0, 0, grid.domain.gdims[2] / 2};
   OutputParticles outp{grid, outp_params};
 
