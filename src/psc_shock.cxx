@@ -710,15 +710,20 @@ struct AdvectedPeriodicFields : RadiatingBoundary<real_t>
       return;
     }
 
+    cycle_turbulence(n_patches_to_the_left - n_patch_cycles);
+  }
+
+  void cycle_turbulence(int n_patches)
+  {
     LOG_INFO("cycling turbulence...\n");
 
     // hack: guess the rank based on how mrc does it for simple domains
     // (can't use mrc, because it wouldn't apply periodicity)
     Int3 np = grid.domain.np;
     Int3 proc = grid.localPatchInfo(0).idx3;
-    Int3 dest_proc = (proc + Int3::unit(DIM_Y)) % np;
+    Int3 dest_proc = (proc + Int3::unit(DIM_Y) * n_patches) % np;
     int dest_rank = flatten_index(dest_proc.reverse(), np.reverse());
-    Int3 source_proc = (proc - Int3::unit(DIM_Y) + np) % np;
+    Int3 source_proc = ((proc - Int3::unit(DIM_Y) * n_patches) % np + np) % np;
     int source_rank = flatten_index(source_proc.reverse(), np.reverse());
 
     MPI_Status status;
@@ -726,7 +731,7 @@ struct AdvectedPeriodicFields : RadiatingBoundary<real_t>
                                    MpiDtypeTraits<real_t>::value(), dest_rank,
                                    0, source_rank, 0, grid.comm(), &status);
 
-    n_patch_cycles += 1;
+    n_patch_cycles += n_patches;
   }
 
   const Grid_t& grid;
