@@ -68,6 +68,8 @@ std::string turb_method;
 int nicell;
 int seed;
 
+std::string checkpoint_filename;
+
 // ======================================================================
 // setupParameters
 
@@ -81,7 +83,10 @@ void setupParameters(int argc, char** argv)
 
   psc_params.stats_every = 1000;
   psc_params.cfl = inputParams.getOrDefault<double>("cfl", .75);
-  psc_params.write_checkpoint_every_step = 0;
+  checkpoint_filename =
+    inputParams.getOrDefault<std::string>("checkpoint_filename", "");
+  psc_params.write_checkpoint_every_step =
+    inputParams.getOrDefault<int>("checkpoint_interval", 0);
 
   electron_temperature = inputParams.get<double>("electron_temperature");
   ion_temperature = inputParams.get<double>("ion_temperature");
@@ -814,8 +819,16 @@ static void run(int argc, char** argv)
   // ----------------------------------------------------------------------
   // set up initial conditions
 
-  initializeParticles(balance, grid_ptr, mprts);
-  initialize_turbulence(mflds);
+  if (checkpoint_filename.empty()) {
+    initializeParticles(balance, grid_ptr, mprts);
+    initialize_turbulence(mflds);
+  } else {
+    if (turb_db2 > 0.0) {
+      LOG_ERROR("resuming from checkpoint for nonzero turbulence not yet "
+                "supported (need to regenerate the advected turbulence)");
+    }
+    read_checkpoint(checkpoint_filename, *grid_ptr, mprts, mflds);
+  }
 
   // ----------------------------------------------------------------------
   // run the simulation
@@ -832,9 +845,11 @@ static void run(int argc, char** argv)
                                                     background_e, background_h};
   }
 
-  // add background after initializing radiation inflow, which only wants the
-  // perturbations to B
-  add_background_fields(mflds);
+  if (checkpoint_filename.empty()) {
+    // add background after initializing radiation inflow, which only wants the
+    // perturbations to B
+    add_background_fields(mflds);
+  }
 
   psc.add_diagnostic(&out_fields);
   psc.add_diagnostic(&out_moments);
