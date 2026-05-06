@@ -81,7 +81,8 @@ void setupParameters(int argc, char** argv)
   std::string path_to_params(argv[1]);
   InputParams inputParams(path_to_params);
 
-  psc_params.stats_every = 1000;
+  psc_params.stats_every =
+    inputParams.getOrDefault<int>("stats_interval", 1000);
   psc_params.cfl = inputParams.getOrDefault<double>("cfl", .75);
   checkpoint_filename =
     inputParams.getOrDefault<std::string>("checkpoint_filename", "");
