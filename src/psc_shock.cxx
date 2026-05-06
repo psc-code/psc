@@ -829,10 +829,6 @@ static void run(int argc, char** argv)
     initializeParticles(balance, grid_ptr, mprts);
     initialize_turbulence(mflds);
   } else {
-    if (turb_db2 > 0.0) {
-      LOG_ERROR("resuming from checkpoint for nonzero turbulence not yet "
-                "supported (need to regenerate the advected turbulence)");
-    }
     read_checkpoint(checkpoint_filename, *grid_ptr, mprts, mflds);
   }
 
@@ -847,8 +843,17 @@ static void run(int argc, char** argv)
   psc.bndf.background_e_lo = background_e;
   psc.bndf.background_h_lo = background_h;
   if (turb_db2 > 0.0) {
-    psc.bndf.radiation = new AdvectedPeriodicFields{mflds, v_upstream[1],
-                                                    background_e, background_h};
+    if (checkpoint_filename.empty()) {
+      // mflds is currently just the pure, initial turbulence
+      psc.bndf.radiation = new AdvectedPeriodicFields{
+        mflds, v_upstream[1], background_e, background_h};
+    } else {
+      // mflds is completely unrelated; need to re-initialize turbulence
+      MfieldsState mflds2{grid};
+      initialize_turbulence(mflds2);
+      psc.bndf.radiation = new AdvectedPeriodicFields{
+        mflds2, v_upstream[1], background_e, background_h};
+    }
   }
 
   if (checkpoint_filename.empty()) {
