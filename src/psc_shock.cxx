@@ -41,17 +41,27 @@ using Real3 = Vec3<real_t>;
 
 PscParams psc_params;
 
-double electron_temperature;
-double ion_temperature;
 double electron_mass;
 double ion_mass;
 
+double n_upstream;
 Double3 v_upstream;
+double te_upstream;
+double ti_upstream;
+Real3 h0_upstream;
+Real3 e0; // e0 is constant
 
-Real3 background_h_upstream;
+// ----------------------------
+// standing shock params
+double n_downstream;
+Double3 v_downstream;
+double te_downstream;
+double ti_downstream;
+Real3 h0_downstream;
 
-Real3 background_e;
-Real3 background_h;
+double transition_half_width = 1.0;
+double transition_steepness = 2.0; // at least sqrt(3)~1.74
+// ----------------------------
 
 Int3 gdims;
 Double3 lengths;
@@ -64,6 +74,7 @@ int out_interval;
 int marder_interval;
 
 std::string turb_method;
+std::string shock_method;
 
 int nicell;
 int seed;
@@ -81,6 +92,8 @@ void setupParameters(int argc, char** argv)
   std::string path_to_params(argv[1]);
   InputParams inputParams(path_to_params);
 
+  shock_method = inputParams.getOrDefault<std::string>("shock_method", "wall");
+
   psc_params.stats_every =
     inputParams.getOrDefault<int>("stats_interval", 1000);
   psc_params.cfl = inputParams.getOrDefault<double>("cfl", .75);
@@ -89,24 +102,63 @@ void setupParameters(int argc, char** argv)
   psc_params.write_checkpoint_every_step =
     inputParams.getOrDefault<int>("checkpoint_interval", 0);
 
-  electron_temperature = inputParams.get<double>("electron_temperature");
-  ion_temperature = inputParams.get<double>("ion_temperature");
   electron_mass = inputParams.get<double>("electron_mass");
   ion_mass = inputParams.get<double>("ion_mass");
+
+  n_upstream = 1.0;
+  v_upstream = {0.0, inputParams.get<double>("v_upstream_y"), 0.0};
+  te_upstream = inputParams.get<double>("electron_temperature");
+  ti_upstream = inputParams.get<double>("ion_temperature");
 
   inputParams.errIfPresentAndNotEqual("v_upstream_x", 0.0, "");
   v_upstream = {0.0, inputParams.get<double>("v_upstream_y"), 0.0};
   inputParams.errIfPresentAndNotEqual("v_upstream_z", 0.0, "");
 
-  double b_angle_y_to_x_rad = inputParams.get<double>("b_angle_y_to_x_rad");
-  double b_mag = inputParams.get<double>("b_mag");
-  background_h_upstream =
-    b_mag * Real3{sin(b_angle_y_to_x_rad), cos(b_angle_y_to_x_rad), 0.0};
+  if (shock_method == "wall") {
+    double b_angle_y_to_x_rad = inputParams.get<double>("b_angle_y_to_x_rad");
+    h0_upstream = Real3{sin(b_angle_y_to_x_rad), cos(b_angle_y_to_x_rad), 0.0} *
+                  inputParams.get<double>("b_mag");
+    e0 = -v_upstream.cross(h0_upstream);
 
-  double gamma = 1 / sqrt(1 - v_upstream.mag2());
-  background_e = -gamma * v_upstream.cross(background_h_upstream);
-  // note: this only holds for vx=vz=0
-  background_h = background_h_upstream * Real3{gamma, 1.0, gamma};
+    // relativistic correction
+    double gamma = 1 / sqrt(1 - v_upstream.mag2());
+    e0 *= gamma;
+    h0_upstream *= Real3{gamma, 1.0, gamma};
+  }
+
+  if (shock_method == "standing") {
+    inputParams.errIfPresent("b_angle_y_to_x_rad",
+                             "only perpendicular shocks are supported");
+    h0_upstream = {inputParams.get<double>("b_mag"), 0.0, 0.0};
+    e0 = -v_upstream.cross(h0_upstream);
+
+    // no relativistic correction, since these aren't relativistic RH conditions
+
+    // for perpendicular shock (2013 Balogh eq.3.36 and normalization in
+    // sec.3.3.1)
+    double b_norm = sqrt(ion_mass * n_upstream * v_upstream.mag2());
+    double t_norm = 0.5 * ion_mass * v_upstream.mag2();
+    double beta1 =
+      2.0 * n_upstream * (te_upstream + ti_upstream) / h0_upstream.mag2();
+    Double3 B1 = h0_upstream / b_norm;
+    double T1 = (te_upstream + ti_upstream) / t_norm;
+
+    double MA_sq =
+      v_upstream.mag2() * ion_mass * n_upstream / h0_upstream.mag2();
+
+    double tmp = 1.0 + (1.0 + 2.5 * beta1) * B1.mag2();
+    double r = 8.0 / (tmp + sqrt(sqr(tmp) + 2 * B1.mag2()));
+
+    double heating_factor =
+      1.0 +
+      4.0 / (5.0 * T1) * ((sqr(r) - 1.0) / (2.0 * sqr(r)) + (1.0 - r) / MA_sq);
+
+    n_downstream = n_upstream * r;
+    v_downstream = v_upstream / r;
+    te_downstream = te_upstream * heating_factor;
+    ti_downstream = ti_upstream * heating_factor;
+    h0_downstream = h0_upstream * r;
+  }
 
   gdims[0] = inputParams.get<int>("nx");
   gdims[1] = inputParams.get<int>("ny");
@@ -147,6 +199,23 @@ void setupParameters(int argc, char** argv)
   dst << src.rdbuf();
 }
 
+template <typename T>
+T interpolate_across_shock(T upstream, T downstream, double y)
+{
+  if (transition_half_width == 0.0) {
+    return y > 0.0 ? downstream : upstream;
+  } else {
+    // smooth transition function
+    y /= transition_half_width;
+    double sigmoid_val = abs(y) >= 1.0
+                           ? (y > 0.0 ? 1.0 : -1.0)
+                           : tanh(transition_steepness * y / (1.0 - y * y));
+    double weight_downstream = (sigmoid_val + 1.0) / 2.0;
+    double weight_upstream = 1.0 - weight_downstream;
+    return upstream * weight_upstream + downstream * weight_downstream;
+  }
+}
+
 // ======================================================================
 // setupGrid
 //
@@ -158,14 +227,27 @@ void setupParameters(int argc, char** argv)
 Grid_t* setupGrid()
 {
   // FIXME add a check to catch mismatch between Dim and n grid points early
-  Double3 corner = {0.0, 0.0, 0.0};
+
+  Double3 corner;
+  int bnd_prt_upper;
+  int bnd_fld_upper;
+
+  if (shock_method == "wall") {
+    corner = {0.0, 0.0, 0.0};
+    bnd_fld_upper = BND_FLD_CONDUCTING_WALL;
+    bnd_prt_upper = BND_PRT_REFLECTING;
+  } else if (shock_method == "standing") {
+    corner = {0.0, -lengths[1] / 2.0, 0.0};
+    bnd_fld_upper = BND_FLD_OPEN;
+    bnd_prt_upper = BND_PRT_OPEN;
+  }
+
   auto domain = Grid_t::Domain{gdims, lengths, corner, n_patches};
 
-  auto bc =
-    psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_OPEN, BND_FLD_PERIODIC},
-                  {BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL, BND_FLD_PERIODIC},
-                  {BND_PRT_PERIODIC, BND_PRT_OPEN, BND_PRT_PERIODIC},
-                  {BND_PRT_PERIODIC, BND_PRT_REFLECTING, BND_PRT_PERIODIC}};
+  auto bc = psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_OPEN, BND_FLD_PERIODIC},
+                          {BND_FLD_PERIODIC, bnd_fld_upper, BND_FLD_PERIODIC},
+                          {BND_PRT_PERIODIC, BND_PRT_OPEN, BND_PRT_PERIODIC},
+                          {BND_PRT_PERIODIC, bnd_prt_upper, BND_PRT_PERIODIC}};
 
   auto kinds = Grid_t::Kinds(NR_KINDS);
   kinds[KIND_ELECTRON] = {-1.0, electron_mass, "e"};
@@ -194,21 +276,32 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
   setup_particles.random_offsets = true;
   setup_particles.initial_momentum_gamma_correction = true;
 
-  auto init_np = [&](int kind, Double3 crd, int p, Int3 idx,
-                     psc_particle_np& np) {
-    double temperature =
-      np.kind == KIND_ION ? ion_temperature : electron_temperature;
-    np.n = 1.0;
-    np.p =
-      setup_particles.createMaxwellian({np.kind,
-                                        np.n,
-                                        v_upstream,
-                                        {temperature, temperature, temperature},
-                                        np.tag});
-  };
+  if (shock_method == "wall") {
+    auto init_np = [&](int kind, Double3 pos, int p, Int3 idx,
+                       psc_particle_np& np) {
+      double t = np.kind == KIND_ION ? ti_upstream : te_upstream;
+      np.n = 1.0;
+      np.p = setup_particles.createMaxwellian(
+        {np.kind, np.n, v_upstream, {t, t, t}, np.tag});
+    };
 
-  partitionAndSetupParticles(setup_particles, balance, grid_ptr, mprts,
-                             init_np);
+    partitionAndSetupParticles(setup_particles, balance, grid_ptr, mprts,
+                               init_np);
+  } else if (shock_method == "standing") {
+    auto init_np = [&](int kind, Double3 pos, int p, Int3 idx,
+                       psc_particle_np& np) {
+      np.n = interpolate_across_shock(n_upstream, n_downstream, pos[1]);
+      double t = interpolate_across_shock(
+        np.kind == KIND_ION ? ti_upstream : te_upstream,
+        np.kind == KIND_ION ? ti_downstream : te_downstream, pos[1]);
+      Double3 v = interpolate_across_shock(v_upstream, v_downstream, pos[1]);
+      np.p =
+        setup_particles.createMaxwellian({np.kind, np.n, v, {t, t, t}, np.tag});
+    };
+
+    partitionAndSetupParticles(setup_particles, balance, grid_ptr, mprts,
+                               init_np);
+  }
 }
 
 // ======================================================================
@@ -224,13 +317,21 @@ void add_background_fields(MfieldsState& mflds)
 
     int n_ghosts = mflds.ibn().max();
     grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
-      field_patch(HX, jx, jy, jz) += background_h[0];
-      field_patch(HY, jx, jy, jz) += background_h[1];
-      field_patch(HZ, jx, jy, jz) += background_h[2];
+      Real3 h0;
+      if (shock_method == "wall") {
+        h0 = h0_upstream;
+      } else if (shock_method == "standing") {
+        Double3 pos = centering::get_pos(patch, {jx, jy, jz}, centering::NC, 0);
+        h0 = interpolate_across_shock(h0_upstream, h0_downstream, pos[1]);
+      }
 
-      field_patch(EX, jx, jy, jz) += background_e[0];
-      field_patch(EY, jx, jy, jz) += background_e[1];
-      field_patch(EZ, jx, jy, jz) += background_e[2];
+      field_patch(HX, jx, jy, jz) += h0[0];
+      field_patch(HY, jx, jy, jz) += h0[1];
+      field_patch(HZ, jx, jy, jz) += h0[2];
+
+      field_patch(EX, jx, jy, jz) += e0[0];
+      field_patch(EY, jx, jy, jz) += e0[1];
+      field_patch(EZ, jx, jy, jz) += e0[2];
     });
   }
 }
@@ -811,16 +912,34 @@ static void run(int argc, char** argv)
   int oute_interval = -100;
   DiagEnergies<Mparticles, MfieldsState> oute{grid.comm(), oute_interval};
 
-  auto ion_injector =
+  auto ion_injector_lo =
+    BoundaryInjector<ParticleGeneratorMaxwellian, PscConfig::PushParticles>(
+      ParticleGeneratorMaxwellian(KIND_ION, grid.kinds[KIND_ION], v_upstream,
+                                  {ti_upstream, ti_upstream, ti_upstream}));
+  ion_injector_lo.density = n_upstream;
+  auto electron_injector_lo =
+    BoundaryInjector<ParticleGeneratorMaxwellian, PscConfig::PushParticles>(
+      ParticleGeneratorMaxwellian(KIND_ELECTRON, grid.kinds[KIND_ELECTRON],
+                                  v_upstream,
+                                  {te_upstream, te_upstream, te_upstream}));
+  electron_injector_lo.density = n_upstream;
+
+  auto ion_injector_hi =
     BoundaryInjector<ParticleGeneratorMaxwellian, PscConfig::PushParticles>(
       ParticleGeneratorMaxwellian(
-        KIND_ION, grid.kinds[KIND_ION], v_upstream,
-        {ion_temperature, ion_temperature, ion_temperature}));
-  auto electron_injector =
+        KIND_ION, grid.kinds[KIND_ION], v_downstream,
+        {ti_downstream, ti_downstream, ti_downstream}));
+  ion_injector_hi.density = n_downstream;
+  ion_injector_hi.inject_lo = false;
+  ion_injector_hi.inject_hi = true;
+  auto electron_injector_hi =
     BoundaryInjector<ParticleGeneratorMaxwellian, PscConfig::PushParticles>(
       ParticleGeneratorMaxwellian(
-        KIND_ELECTRON, grid.kinds[KIND_ELECTRON], v_upstream,
-        {electron_temperature, electron_temperature, electron_temperature}));
+        KIND_ELECTRON, grid.kinds[KIND_ELECTRON], v_downstream,
+        {te_downstream, te_downstream, te_downstream}));
+  electron_injector_hi.density = n_downstream;
+  electron_injector_hi.inject_lo = false;
+  electron_injector_hi.inject_hi = true;
 
   // ----------------------------------------------------------------------
   // set up initial conditions
@@ -840,19 +959,22 @@ static void run(int argc, char** argv)
 
   psc.add_gauss_corrector(&marder);
 
-  psc.bndf.background_e_lo = background_e;
-  psc.bndf.background_h_lo = background_h;
+  psc.bndf.background_e_lo = e0;
+  psc.bndf.background_h_lo = h0_upstream;
+  psc.bndf.background_e_hi = e0;
+  psc.bndf.background_h_hi = h0_downstream;
+
   if (turb_db2 > 0.0) {
     if (checkpoint_filename.empty()) {
       // mflds is currently just the pure, initial turbulence
-      psc.bndf.radiation = new AdvectedPeriodicFields{
-        mflds, v_upstream[1], background_e, background_h};
+      psc.bndf.radiation =
+        new AdvectedPeriodicFields{mflds, v_upstream[1], e0, h0_upstream};
     } else {
       // mflds is completely unrelated; need to re-initialize turbulence
       MfieldsState mflds2{grid};
       initialize_turbulence(mflds2);
-      psc.bndf.radiation = new AdvectedPeriodicFields{
-        mflds2, v_upstream[1], background_e, background_h};
+      psc.bndf.radiation =
+        new AdvectedPeriodicFields{mflds2, v_upstream[1], e0, h0_upstream};
     }
   }
 
@@ -867,8 +989,13 @@ static void run(int argc, char** argv)
   psc.add_diagnostic(&outp);
   psc.add_diagnostic(&oute);
 
-  psc.add_injector(&ion_injector);
-  psc.add_injector(&electron_injector);
+  psc.add_injector(&ion_injector_lo);
+  psc.add_injector(&electron_injector_lo);
+
+  if (shock_method == "standing") {
+    psc.add_injector(&ion_injector_hi);
+    psc.add_injector(&electron_injector_hi);
+  }
 
   psc.integrate();
 }
