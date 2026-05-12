@@ -89,11 +89,11 @@ public:
     if (params_.write_z)
       io_.DefineVariable<real_t>("z", {adios2::JoinedDim}, {}, {local_n});
     if (params_.write_px)
-      io_.DefineVariable<real_t>("px", {adios2::JoinedDim}, {}, {local_n});
+      io_.DefineVariable<real_t>("ux", {adios2::JoinedDim}, {}, {local_n});
     if (params_.write_py)
-      io_.DefineVariable<real_t>("py", {adios2::JoinedDim}, {}, {local_n});
+      io_.DefineVariable<real_t>("uy", {adios2::JoinedDim}, {}, {local_n});
     if (params_.write_pz)
-      io_.DefineVariable<real_t>("pz", {adios2::JoinedDim}, {}, {local_n});
+      io_.DefineVariable<real_t>("uz", {adios2::JoinedDim}, {}, {local_n});
     if (params_.write_q)
       io_.DefineVariable<float>("q", {adios2::JoinedDim}, {}, {local_n});
     if (params_.write_m)
@@ -296,17 +296,17 @@ public:
         engine.Put(var, zs.data(), adios2::Mode::Deferred);
       }
       if (params_.write_px) {
-        adios2::Variable<real_t> var = io_.InquireVariable<real_t>("px");
+        adios2::Variable<real_t> var = io_.InquireVariable<real_t>("ux");
         var.SetSelection({{}, {local_n_of_kind}});
         engine.Put(var, pxs.data(), adios2::Mode::Deferred);
       }
       if (params_.write_py) {
-        adios2::Variable<real_t> var = io_.InquireVariable<real_t>("py");
+        adios2::Variable<real_t> var = io_.InquireVariable<real_t>("uy");
         var.SetSelection({{}, {local_n_of_kind}});
         engine.Put(var, pys.data(), adios2::Mode::Deferred);
       }
       if (params_.write_pz) {
-        adios2::Variable<real_t> var = io_.InquireVariable<real_t>("pz");
+        adios2::Variable<real_t> var = io_.InquireVariable<real_t>("uz");
         var.SetSelection({{}, {local_n_of_kind}});
         engine.Put(var, pzs.data(), adios2::Mode::Deferred);
       }
