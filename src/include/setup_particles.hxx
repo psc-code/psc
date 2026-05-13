@@ -287,8 +287,8 @@ struct SetupParticles
           "have the exact same initial position distribution. This results in "
           "a charge density of 0 if there are two species with opposite "
           "charges, but the resulting charge density is nonzero in general. In "
-          "the latter, case, take special care to ensure Gauss' law isn't "
-          "violated.");
+          "the latter case, take special care to ensure Gauss' law isn't "
+          "violated.\n");
       }
 
       int seed = rng::detail::get_process_seed();
