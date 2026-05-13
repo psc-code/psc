@@ -286,7 +286,7 @@ struct Psc
 
       psc_stats_val[st_nr_particles] = mprts_.size();
 
-      if (grid().timestep() % p_.stats_every == 0) {
+      if (p_.stats_every > 0 && grid().timestep() % p_.stats_every == 0) {
         print_status();
       }
 
