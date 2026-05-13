@@ -3,6 +3,7 @@
 
 #include "io_common.h"
 #include "kg/io.h"
+#include "fields3d.hxx"
 
 // ======================================================================
 // Variable<Mfields>

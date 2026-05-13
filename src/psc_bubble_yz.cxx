@@ -328,8 +328,6 @@ static void run()
   // -- output particles
   OutputParticlesParams outp_params{};
   outp_params.every_step = 0;
-  outp_params.data_dir = ".";
-  outp_params.basename = "prt";
   OutputParticles outp{grid, outp_params};
 
   int oute_interval = 100;

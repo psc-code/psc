@@ -6,6 +6,7 @@
 #include <psc_particles_double.h>
 #include "../libpsc/psc_output_particles/output_particles_ascii_impl.hxx"
 #include "../libpsc/psc_output_particles/output_particles_hdf5_impl.hxx"
+#include "../libpsc/psc_output_particles/output_particles_adios2_impl.hxx"
 
 template <typename _Dim, typename _Mparticles, typename _OutputParticles>
 struct Config
@@ -73,7 +74,8 @@ using OutputParticlesTestTypes = ::testing::Types<
   Config<dim_xyz, MparticlesDouble,
          OutputParticlesHdf5<MparticlesDouble, ParticleSelectorAll>>
 #endif
-  >;
+  ,
+  Config<dim_xyz, MparticlesSingle, OutputParticlesAdios2<MparticlesSingle>>>;
 
 TYPED_TEST_SUITE(OutputParticlesTest, OutputParticlesTestTypes);
 
@@ -108,8 +110,6 @@ TYPED_TEST(OutputParticlesTest, Test1)
 
   auto params = OutputParticlesParams{};
   params.every_step = 1;
-  params.data_dir = ".";
-  params.basename = "prt";
 
   auto outp = OutputParticles{grid, params};
   outp(mprts);
