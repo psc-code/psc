@@ -99,8 +99,6 @@ void setupParameters(int argc, char** argv)
   psc_params.cfl = inputParams.getOrDefault<double>("cfl", .75);
   checkpoint_filename =
     inputParams.getOrDefault<std::string>("checkpoint_filename", "");
-  psc_params.write_checkpoint_every_step =
-    inputParams.getOrDefault<int>("checkpoint_interval", 0);
 
   electron_mass = inputParams.get<double>("electron_mass");
   ion_mass = inputParams.get<double>("ion_mass");
@@ -180,6 +178,19 @@ void setupParameters(int argc, char** argv)
     turb_db2 = sqr(inputParams.get<double>("turb_dB"));
   }
   turb_correlation_length = inputParams.get<double>("turb_correlation_length");
+
+  if (inputParams.has("checkpoint_interval")) {
+    psc_params.write_checkpoint_every_step =
+      inputParams.get<int>("checkpoint_interval");
+    inputParams.errIfPresent(
+      "n_checkpoints",
+      "n_checkpoints is mutually exclusive with checkpoint_interval");
+  } else if (inputParams.has("n_checkpoints")) {
+    int n_checkpoints = inputParams.get<int>("n_checkpoints");
+    if (n_checkpoints > 0) {
+      psc_params.write_checkpoint_every_step = psc_params.nmax / n_checkpoints;
+    }
+  }
 
   int n_writes = inputParams.getOrDefault<int>("n_writes", 100);
   out_interval = psc_params.nmax / n_writes;
