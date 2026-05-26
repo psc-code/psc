@@ -1,10 +1,10 @@
 
-cmake_minimum_required (VERSION 3.21)
+cmake_minimum_required(VERSION 3.21)
 
 foreach(policy
-    CMP0074 # CMake 3.12
-    CMP0104 # CMAKE_CUDA_ARCHITECTURES
-    )
+  CMP0074 # CMake 3.12
+  CMP0104 # CMAKE_CUDA_ARCHITECTURES
+)
   if(POLICY ${policy})
     cmake_policy(SET ${policy} NEW)
   endif()
@@ -27,7 +27,6 @@ endfunction()
 
 set(PSC_GPU "host" CACHE STRING "Build with GPU supoort (host/cuda/hip)")
 set_property(CACHE PSC_GPU PROPERTY STRINGS "host;cuda;hip")
-option(USE_VPIC "Interface with VPIC" OFF)
 option(USE_GTEST_DISCOVER_TESTS "Run tests to discover contained googletest cases" OFF)
 psc_option(ADIOS2 "Build with adios2 support" AUTO)
 option(PSC_USE_NVTX "Build with NVTX support" OFF)
@@ -37,8 +36,8 @@ option(PSC_USE_PERFETTO "Turn on perfetto-based tracing" OFF)
 
 option(USE_CUDA "Build CUDA components" OFF)
 
-if (USE_CUDA)
-  set(PSC_GPU "cuda" CACHE STRING  "Build with GPU supoort (none/cuda/hip)")
+if(USE_CUDA)
+  set(PSC_GPU "cuda" CACHE STRING "Build with GPU supoort (none/cuda/hip)")
 endif()
 
 if(PSC_GPU STREQUAL "cuda")
@@ -56,6 +55,7 @@ elseif(PSC_GPU STREQUAL "hip")
 else()
   set(USE_CUDA OFF)
 endif()
+
 set(GTENSOR_DEVICE "${PSC_GPU}" CACHE STRING "")
 
 CPMAddPackage(
@@ -65,14 +65,14 @@ CPMAddPackage(
   VERSION 0.0.0
 )
 
-if (BUILD_TESTING)
+if(BUILD_TESTING)
   CPMAddPackage(
     NAME GTest
     GITHUB_REPOSITORY google/googletest
     VERSION 1.14.0
     OPTIONS
-        "INSTALL_GTEST OFF"
-        "gtest_force_shared_crt ON"
+    "INSTALL_GTEST OFF"
+    "gtest_force_shared_crt ON"
   )
   include(GoogleTest)
 endif()
@@ -86,23 +86,24 @@ if(PSC_USE_ADIOS2 STREQUAL AUTO)
 elseif(PSC_USE_ADIOS2)
   find_package(ADIOS2 CONFIG REQUIRED)
 endif()
+
 if(ADIOS2_FOUND)
   set(PSC_HAVE_ADIOS2 1)
 endif()
 
 # NVTX
-if (PSC_USE_NVTX)
+if(PSC_USE_NVTX)
   find_package(CUDAToolkit REQUIRED)
   set(PSC_HAVE_NVTX 1)
 endif()
 
 # RMM
-if (PSC_USE_RMM)
+if(PSC_USE_RMM)
   find_package(rmm 0.18.0 CONFIG REQUIRED)
   set(PSC_HAVE_RMM 1)
 endif()
 
-if (PSC_USE_PERFETTO)
+if(PSC_USE_PERFETTO)
   CPMAddPackage("gh:google/perfetto@24.2")
   find_package(Threads REQUIRED)
   add_library(perfetto STATIC ${perfetto_SOURCE_DIR}/sdk/perfetto.cc)
@@ -113,6 +114,7 @@ endif()
 
 function(GenerateHeaderConfig)
   set(PSC_CONFIG_DEFINES)
+
   foreach(OPT IN LISTS ARGN)
     string(APPEND PSC_CONFIG_DEFINES "
 /* CMake Option: PSC_USE_${OPT}=${PSC_USE_${OPT}} */
@@ -130,11 +132,12 @@ function(GenerateHeaderConfig)
   )
 endfunction()
 
-# FIXME, unify USE_CUDA, USE_VPIC options / autodetect
+# FIXME, unify USE_CUDA options / autodetect
 # FIXME, mv helpers into separate file
 GenerateHeaderConfig(ADIOS2 NVTX RMM)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/src/include)
+
 # FIXME, this seems too ugly to find mrc_config.h
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/src/libmrc/include)
 

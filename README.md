@@ -28,7 +28,6 @@ $ cat > cmake.sh <<EOF
 cmake \
     -DCMAKE_BUILD_TYPE=Release \
     -DUSE_CUDA=OFF \
-    -DUSE_VPIC=OFF \
     ..
 EOF
 $ . cmake.sh # run cmake (hope for the best)

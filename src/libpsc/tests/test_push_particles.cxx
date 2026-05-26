@@ -13,7 +13,6 @@
 
 using PushParticlesTestTypes = ::testing::Types<
   TestConfig2ndDoubleYZ, TestConfig1vbec3dSingleYZ, TestConfig1vbec3dSingleXZ,
-// TestConfigVpic,
 #ifdef USE_CUDA
   TestConfig1vbec3dCudaYZ, TestConfig1vbec3dCuda, TestConfig1vbec3dCuda444,
 #endif

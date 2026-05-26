@@ -21,7 +21,6 @@
  */
 
 #cmakedefine USE_CUDA
-#cmakedefine USE_VPIC
 
 /* Everything past this line is programatically generated */
 

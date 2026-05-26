@@ -72,16 +72,6 @@ if(PSC_BOUNDS_CHECK)
   target_compile_definitions(psc PUBLIC BOUNDS_CHECK)
 endif()
 
-if(USE_VPIC)
-  add_library(VPIC::VPIC INTERFACE IMPORTED)
-  set_target_properties(VPIC::VPIC PROPERTIES
-    INTERFACE_INCLUDE_DIRECTORIES "/Users/kai/build/vpic/src"
-    INTERFACE_LINK_LIBRARIES "/Users/kai/build/vpic/build/libvpic.a"
-  )
-
-  target_link_libraries(psc PUBLIC VPIC::VPIC)
-endif()
-
 if(BUILD_TESTING)
   add_subdirectory(tests)
 endif()

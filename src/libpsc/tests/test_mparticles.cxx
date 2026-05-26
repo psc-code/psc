@@ -529,11 +529,9 @@ TEST(TestSetupParticles, RandomOffsets)
 int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
-  // #ifdef USE_VPIC FIXME
   MPI_Comm_dup(MPI_COMM_WORLD, &psc_comm_world);
   MPI_Comm_rank(psc_comm_world, &psc_world_rank);
   MPI_Comm_size(psc_comm_world, &psc_world_size);
-  // #endif
 
   ::testing::InitGoogleTest(&argc, argv);
   int rc = RUN_ALL_TESTS();
