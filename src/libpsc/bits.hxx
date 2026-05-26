@@ -1,6 +1,4 @@
-
-#ifndef BITS_H
-#define BITS_H
+#pragma once
 
 #include <mpi.h>
 
@@ -99,5 +97,3 @@ typedef int32_t SpeciesId; // Must be 32-bit wide for particle_injector_t
     mprintf("INFO at %s:%d (%s): ", __FILE__, __LINE__, __func__);             \
     printf(fmt);                                                               \
   } while (0)
-
-#endif
