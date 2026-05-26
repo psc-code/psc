@@ -10,7 +10,6 @@ target_gtensor_sources(psc PRIVATE
   psc_fields_single.cxx
   psc_particles_impl.cxx
   psc_stats.cxx
-  rngpool.cxx
 
   psc_collision/psc_collision_impl.cxx
 
