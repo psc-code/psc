@@ -19,7 +19,6 @@
 #include "PscGridBase.h"
 #include "PscMaterial.h"
 
-#include "mfields_state_psc.hxx"
 #include "PscFieldArrayLocalOps.h"
 #include "PscFieldArrayRemoteOps.h"
 #include "PscFieldArray.h"
