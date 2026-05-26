@@ -30,7 +30,7 @@
 				"clang-format",
 				"ninja-build",
 				"findent",
-				"pandoc",
+				"pandoc"
 			]
 		},
 		"ghcr.io/unh-hpc/features/adios2:0.0.2": {}
@@ -38,7 +38,7 @@
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "pip install uv && sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 10 && echo 'export OPENGGCMDIR=/workspaces/openggcm' >> /home/vscode/.bashrc && echo 'shopt -u progcomp' >> /home/vscode/.bashrc && echo 'alias ll=\"ls -lrt\"' >> /home/vscode/.bashrc",
+	"postCreateCommand": "pip install uv && curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg && curl -fsSL https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list > /dev/null && sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit nvidia-cuda-toolkit && sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 10 && echo 'export OPENGGCMDIR=/workspaces/openggcm' >> /home/vscode/.bashrc && echo 'shopt -u progcomp' >> /home/vscode/.bashrc && echo 'alias ll=\"ls -lrt\"' >> /home/vscode/.bashrc",
 	//	"echo export OPENGGCMDIR=/workspaces/openggcm >> ~/.zshrc; echo PATH=$HOME/bin:$PATH >> ~/.zshrc",
 	"customizations": {
 		"vscode": {
@@ -53,7 +53,7 @@
 				"charliermarsh.ruff"
 			]
 		}
-	},
+	}
 	// Configure tool-specific properties.
 	// "customizations": {},
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
