@@ -1,59 +1,48 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/ubuntu
 {
-	"name": "Ubuntu",
+	"name": "psc-ubuntu",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/base:jammy",
-	// Features to add to the dev container. More info: https://containers.dev/features.
-	"features": {
-		// "ghcr.io/devcontainers/features/anaconda:1": {
-		// 	"version": "latest"
-		// },
-		"ghcr.io/itsmechlark/features/act:1": {
-			"version": "latest"
-		},
-		"ghcr.io/rocker-org/devcontainer-features/apt-packages:1": {
-			"packages": [
-				"csh",
-				"gawk",
-				"gfortran",
-				"libopenmpi-dev",
-				"autoconf",
-				"automake",
-				"libtool",
-				"cmake",
-				"libhdf5-dev",
-				"hdf5-tools",
-				"less",
-				"python3-pip",
-				"libpython3-dev",
-				"clang-format",
-				"ninja-build",
-				"findent",
-				"pandoc"
-			]
-		},
-		"ghcr.io/unh-hpc/features/adios2:0.0.2": {}
+	"build": {
+		"dockerfile": "Dockerfile",
+		"context": "."
 	},
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	"features": {
+        "ghcr.io/devcontainers/features/common-utils:2": {
+            "installZsh": "true",
+            "username": "vscode",
+			"userUid": "1000",
+			"userGid": "1000",
+            "upgradePackages": "true"
+        },
+		// "ghcr.io/rocker-org/devcontainer-features/apt-packages:1": {
+		// 	"packages": [
+		// 	]
+		// },
+
+        // "ghcr.io/devcontainers/features/git:1": {
+        //     "version": "latest",
+        //     "ppa": "false"
+        // }
+    },
+	// Feat``ures to add to the dev container. More info: https://containers.dev/features.
+`	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "pip install uv && curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg && curl -fsSL https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list > /dev/null && sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit nvidia-cuda-toolkit && sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 10 && echo 'export OPENGGCMDIR=/workspaces/openggcm' >> /home/vscode/.bashrc && echo 'shopt -u progcomp' >> /home/vscode/.bashrc && echo 'alias ll=\"ls -lrt\"' >> /home/vscode/.bashrc",
+	//	"postCreateCommand": "curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg && curl -fsSL https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list > /dev/null && sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit nvidia-cuda-toolkit && echo 'shopt -u progcomp' >> /home/vscode/.bashrc && echo 'alias ll=\"ls -lrt\"' >> /home/vscode/.bashrc",
+	"postCreateCommand": "echo export CMAKE_PREFIX_PATH=/usr/local/cuda/lib64/cmake >> ~/.bashrc",
 	//	"echo export OPENGGCMDIR=/workspaces/openggcm >> ~/.zshrc; echo PATH=$HOME/bin:$PATH >> ~/.zshrc",
 	"customizations": {
 		"vscode": {
 			"extensions": [
 				"ms-vscode.cmake-tools",
 				"ms-vscode.cpptools-extension-pack",
-				"fortran-lang.linter-gfortran",
 				"ms-toolsai.jupyter",
-				"ms-python.python",
-				"Github.vscode-pull-request-github",
-				"tamasfe.even-better-toml",
-				"charliermarsh.ruff"
+				"ms-python.python"
 			]
 		}
 	}
+	
 	// Configure tool-specific properties.
 	// "customizations": {},
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
