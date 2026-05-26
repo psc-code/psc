@@ -686,7 +686,6 @@ static void mrc_io_init()
 #endif
 #endif
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_ascii_ops);
-  mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_vpic_ops);
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_combined_ops);
   // ========================================
   // Deprecated / eternally broken io types (FIXME)
