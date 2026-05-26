@@ -17,7 +17,6 @@ target_gtensor_sources(psc PRIVATE
   psc_balance/psc_balance.cxx
 
   vpic/psc_vpic_bits.cxx
-  vpic/vpic_base.cxx
   )
 target_include_directories(psc PUBLIC ../include)
 target_link_libraries(psc PUBLIC kg mrc)
