@@ -1,5 +1,0 @@
-#! /bin/bash
-
-IOTYPE="hdf5_parallel"
-
-source templates/mrc_fld_io_checks
