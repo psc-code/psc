@@ -64,7 +64,7 @@ inline void correct(const Grid_t& grid, E1& efield, const Int3& efield_ib,
 
 template <typename E1, typename E2>
 inline void cuda_marder_correct_yz(E1& efield, E2& res, Float3 fac, Int3 l,
-                                   Int3 r, Int3 l, Int3 r)
+                                   Int3 r)
 {
   auto k_efield = efield.to_kernel();
   auto k_res = res.to_kernel();
