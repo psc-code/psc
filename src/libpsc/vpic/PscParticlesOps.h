@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "psc_vpic_bits.h"
+#include "bits.hxx"
 
 #ifdef USE_VPIC
 #define HAS_V4_PIPELINE
@@ -553,8 +553,8 @@ struct PscParticlesOps
             pm[nm++] = local_pm[0];
           } else {
             n_ignored++; // Unlikely
-          }              // if
-        }                // if
+          } // if
+        } // if
       }
     }
 

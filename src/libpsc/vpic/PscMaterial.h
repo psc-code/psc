@@ -2,7 +2,7 @@
 #ifndef PSC_MATERIAL_H
 #define PSC_MATERIAL_H
 
-#include "psc_vpic_bits.h"
+#include "bits.hxx"
 #include "VpicListBase.h"
 
 #include <mrc_common.h>

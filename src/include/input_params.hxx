@@ -8,7 +8,7 @@
 
 #include <mpi.h>
 
-#include "../libpsc/vpic/psc_vpic_bits.h"
+#include "../libpsc/bits.hxx"
 
 namespace
 {

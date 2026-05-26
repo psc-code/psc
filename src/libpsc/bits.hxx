@@ -1,6 +1,6 @@
 
-#ifndef PSC_VPIC_BITS_H
-#define PSC_VPIC_BITS_H
+#ifndef BITS_H
+#define BITS_H
 
 #include <mpi.h>
 
@@ -47,7 +47,7 @@ typedef int32_t SpeciesId; // Must be 32-bit wide for particle_injector_t
   type name[(count)] __attribute__((aligned(align)))
 
 // FIXME
-#define POW2_CEIL(u, a) (((u) + (a)-1) & (~((a)-1)))
+#define POW2_CEIL(u, a) (((u) + (a) - 1) & (~((a) - 1)))
 
 // FIXME
 #ifndef LIKELY

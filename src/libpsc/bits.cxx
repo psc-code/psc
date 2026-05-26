@@ -1,5 +1,5 @@
 
-#include "psc_vpic_bits.h"
+#include "bits.hxx"
 
 MPI_Comm psc_comm_world;
 int psc_world_rank;

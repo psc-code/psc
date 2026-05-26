@@ -1,7 +1,7 @@
 
 #include "testing.h"
 
-#include "psc_vpic_bits.h"
+#include "bits.hxx"
 
 #include "src/vpic/vpic.h"
 

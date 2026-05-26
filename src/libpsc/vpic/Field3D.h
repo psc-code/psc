@@ -2,7 +2,7 @@
 #ifndef FIELD3D_H
 #define FIELD3D_H
 
-#include "psc_vpic_bits.h"
+#include "../bits.hxx"
 
 // ======================================================================
 // Field3D

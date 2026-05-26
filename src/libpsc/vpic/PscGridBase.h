@@ -2,7 +2,7 @@
 #ifndef PSC_GRID_BASE_H
 #define PSC_GRID_BASE_H
 
-#include "psc_vpic_bits.h"
+#include "bits.hxx"
 #include "kg/Vec3.h"
 
 #include <array>

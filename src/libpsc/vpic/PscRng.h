@@ -5,7 +5,7 @@
 #include <random>
 #include <cassert>
 #include "mrc_common.h"
-#include "psc_vpic_bits.h"
+#include "../bits.hxx"
 
 // ======================================================================
 // PscRng

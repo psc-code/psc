@@ -16,18 +16,20 @@ target_gtensor_sources(psc PRIVATE
 
   psc_balance/psc_balance.cxx
 
-  vpic/psc_vpic_bits.cxx
-  )
+  bits.cxx
+)
 target_include_directories(psc PUBLIC ../include)
 target_link_libraries(psc PUBLIC kg mrc)
 target_link_libraries(psc PUBLIC MPI::MPI_CXX)
 target_link_libraries(psc PUBLIC gtensor::gtensor)
+
 if(USE_CUDA)
   target_compile_definitions(psc PUBLIC GTENSOR_USE_THRUST)
 endif()
+
 target_compile_features(psc PUBLIC cxx_std_11)
 
-if (USE_CUDA)
+if(USE_CUDA)
   target_gtensor_sources(psc PRIVATE
     cuda/cuda_base.cxx
 
@@ -59,19 +61,19 @@ if (USE_CUDA)
     cuda/cuda_heating.cxx
 
     cuda/mem.cxx
-    )
+  )
   target_include_directories(psc PUBLIC cuda)
 endif()
 
-if (PSC_HAVE_RMM)
+if(PSC_HAVE_RMM)
   target_link_libraries(psc PUBLIC rmm::rmm)
 endif()
 
-if (PSC_BOUNDS_CHECK)
+if(PSC_BOUNDS_CHECK)
   target_compile_definitions(psc PUBLIC BOUNDS_CHECK)
 endif()
 
-if (USE_VPIC)
+if(USE_VPIC)
   add_library(VPIC::VPIC INTERFACE IMPORTED)
   set_target_properties(VPIC::VPIC PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "/Users/kai/build/vpic/src"
@@ -81,6 +83,6 @@ if (USE_VPIC)
   target_link_libraries(psc PUBLIC VPIC::VPIC)
 endif()
 
-if (BUILD_TESTING)
+if(BUILD_TESTING)
   add_subdirectory(tests)
 endif()

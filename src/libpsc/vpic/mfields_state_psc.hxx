@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "psc_vpic_bits.h"
+#include "bits.hxx"
 #include "PscFieldBase.h"
 #include "Field3D.h"
 #include "fields3d.hxx"

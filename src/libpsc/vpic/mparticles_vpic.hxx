@@ -2,7 +2,7 @@
 #pragma once
 
 #include "particles.hxx"
-#include "psc_vpic_bits.h"
+#include "../bits.hxx"
 
 // ======================================================================
 // InjectorVpic
