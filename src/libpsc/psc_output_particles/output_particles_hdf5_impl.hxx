@@ -11,7 +11,6 @@
 #include "diagnostic_base.hxx"
 
 #include "psc_particles_single.h"
-#include "../libpsc/vpic/mparticles_vpic.hxx"
 #ifdef USE_CUDA
 #include "mparticles_cuda.hxx"
 #endif
@@ -818,21 +817,6 @@ public:
     impl(mprts, writer_);
 
     prof_stop(pr_all);
-  }
-
-  // FIXME, handles MparticlesVpic by conversion for now
-  template <typename Particles>
-  void operator()(MparticlesVpic_<Particles>& mprts)
-  {
-    const auto& grid = mprts.grid();
-
-    if (params_.every_step <= 0 || grid.timestep() % params_.every_step != 0) {
-      return;
-    }
-
-    auto& mprts_single = mprts.template get_as<MparticlesSingle>();
-    (*this)(mprts_single);
-    mprts.put_as(mprts_single, MP_DONT_COPY);
   }
 
 #ifdef USE_CUDA

@@ -7,7 +7,6 @@
 #include <particles.hxx>
 #include <setup_particles.hxx>
 
-#include "../libpsc/vpic/fields_item_vpic.hxx"
 #include "gauss_corrector_base.hxx"
 #include "diagnostic_base.hxx"
 #include "injector_base.hxx"
