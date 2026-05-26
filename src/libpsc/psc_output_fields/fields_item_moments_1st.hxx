@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <psc_fields_single.h>
 #include <psc/moment.hxx>
 #include "fields_item.hxx"
 
