@@ -4,11 +4,6 @@
 
 #include "test_common.hxx"
 
-#include "../libpsc/vpic/PscGridBase.h"
-#include "../libpsc/vpic/PscParticleBc.h"
-#include "../libpsc/vpic/PscParticlesBase.h"
-#include "../libpsc/vpic/mparticles_vpic.hxx"
-#include "../libpsc/vpic/vpic_config.h"
 #include "../libpsc/psc_output_fields/fields_item_moments_1st.hxx"
 #include "psc_particles_double.h"
 #include "psc_particles_single.h"
@@ -21,15 +16,6 @@
 #include "particles_simple.inl"
 #include <kg/io.h>
 
-#ifdef DO_VPIC
-using VpicConfig = VpicConfigWrap;
-#else
-using VpicConfig = VpicConfigPsc;
-#endif
-
-using Grid = VpicConfig::Grid;
-using MparticlesVpic = VpicConfig::Mparticles;
-
 template <typename _Mparticles, typename _MakeGrid = MakeTestGrid1>
 struct Config
 {
@@ -37,15 +23,16 @@ struct Config
   using MakeGrid = _MakeGrid;
 };
 
-using MparticlesTestTypes = ::testing::Types<
-  Config<MparticlesSingle>, Config<MparticlesSingle, MakeTestGridYZ>,
-  Config<MparticlesDouble>, Config<MparticlesVpic, MakeTestGridYZ1>
+using MparticlesTestTypes =
+  ::testing::Types<Config<MparticlesSingle>,
+                   Config<MparticlesSingle, MakeTestGridYZ>,
+                   Config<MparticlesDouble>
 #ifdef USE_CUDA
-  ,
-  Config<MparticlesCuda<BS144>, MakeTestGridYZ1>,
-  Config<MparticlesCuda<BS144>, MakeTestGridYZ>
+                   ,
+                   Config<MparticlesCuda<BS144>, MakeTestGridYZ1>,
+                   Config<MparticlesCuda<BS144>, MakeTestGridYZ>
 #endif
-  >;
+                   >;
 
 TYPED_TEST_SUITE(MparticlesTest, MparticlesTestTypes);
 
@@ -64,37 +51,12 @@ struct MparticlesTest : ::testing::Test
     grid_.kinds.emplace_back(Grid_t::Kind(1., 1., "test_species"));
   }
 
-  template <typename tag>
-  Mparticles mk_mprts(tag dummy)
+  Mparticles mk_mprts()
   {
     Mparticles mprts(grid_);
     mprts.define_species("test_species", 1., 1., 100, 10, 10, 0);
     return mprts;
   }
-
-  Mparticles mk_mprts(MparticlesVpic* dummy)
-  {
-    // FIXME, vgrid_ is bad, and this kinda belongs to where grid_ is set up
-
-    // Setup basic grid parameters
-    auto& domain = grid_.domain;
-    double dx[3], xl[3], xh[3];
-    for (int d = 0; d < 3; d++) {
-      dx[d] = domain.length[d] / domain.gdims[d];
-      xl[d] = domain.corner[d];
-      xh[d] = xl[d] + domain.length[d];
-    }
-    vgrid_.setup(dx, grid_.dt, 1., 1.);
-
-    // Define the grid
-    vgrid_.partition_periodic_box(xl, xh, domain.gdims, domain.np);
-
-    Mparticles mprts(grid_, &vgrid_);
-    mprts.define_species("test_species", 1., 1., 100, 10, 10, 0);
-    return mprts;
-  }
-
-  Mparticles mk_mprts() { return mk_mprts(static_cast<Mparticles*>(nullptr)); }
 
   template <typename _Mparticles>
   void inject_test_particles(_Mparticles& mprts, int n_prts)
@@ -121,7 +83,6 @@ struct MparticlesTest : ::testing::Test
 
 private:
   Grid_t grid_;
-  Grid vgrid_; // FIXME
 };
 
 // -----------------------------------------------------------------------
@@ -349,15 +310,6 @@ struct TestConversionFromMparticlesSingle<Mparticles, MakeTestGridYZ1>
   }
 };
 
-// FIXME, MparticlesVpic can't be converted the usual way...
-template <>
-struct TestConversionFromMparticlesSingle<MparticlesVpic, MakeTestGridYZ1>
-{
-  using Double3 = Vec3<double>;
-
-  void operator()(MparticlesSingle& mprts_single) {}
-};
-
 TYPED_TEST(MparticlesTest, ConversionFromMparticlesSingle)
 {
   MparticlesSingle mprts(this->grid());
@@ -577,11 +529,9 @@ TEST(TestSetupParticles, RandomOffsets)
 int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
-  // #ifdef USE_VPIC FIXME
   MPI_Comm_dup(MPI_COMM_WORLD, &psc_comm_world);
   MPI_Comm_rank(psc_comm_world, &psc_world_rank);
   MPI_Comm_size(psc_comm_world, &psc_world_size);
-  // #endif
 
   ::testing::InitGoogleTest(&argc, argv);
   int rc = RUN_ALL_TESTS();

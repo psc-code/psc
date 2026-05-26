@@ -7,7 +7,6 @@
 #include <particles.hxx>
 #include <setup_particles.hxx>
 
-#include "../libpsc/vpic/fields_item_vpic.hxx"
 #include "gauss_corrector_base.hxx"
 #include "diagnostic_base.hxx"
 #include "injector_base.hxx"
@@ -636,53 +635,3 @@ void setupParticles(SetupParticles& setup_particles, Mparticles& mprts,
   mpi_printf(MPI_COMM_WORLD, "**** Setting up particles...\n");
   setup_particles.setupParticles(mprts, init_np);
 }
-
-// ======================================================================
-// VPIC-like stuff
-
-// ----------------------------------------------------------------------
-// define_periodic_grid
-
-void define_periodic_grid(const double xl[3], const double xh[3],
-                          const int gdims[3], const int np[3])
-{}
-
-// ----------------------------------------------------------------------
-// set_domain_field_bc
-
-void set_domain_field_bc(Int3 bnd, int bc) {}
-
-// ----------------------------------------------------------------------
-// set_domain_particle_bc
-
-void set_domain_particle_bc(Int3 bnd, int bc) {}
-
-void grid_setup_communication() {}
-
-// ----------------------------------------------------------------------
-// vpic_define_grid
-
-void vpic_define_grid(const Grid_t& grid) {}
-
-// ----------------------------------------------------------------------
-// vpic_define_material
-
-static void vpic_define_material(MaterialList& material_list, const char* name,
-                                 double eps, double mu = 1., double sigma = 0.,
-                                 double zeta = 0.)
-{}
-
-// ----------------------------------------------------------------------
-// vpic_define_fields
-
-void vpic_define_fields(const Grid_t& grid) {}
-
-// ----------------------------------------------------------------------
-// vpic_create_diagnotics
-
-void vpic_create_diagnostics(int interval) {}
-
-// ----------------------------------------------------------------------
-// vpic_setup_diagnostics
-
-void vpic_setup_perform_diagnostics() {}

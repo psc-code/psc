@@ -77,16 +77,18 @@ _psc_read(struct psc *psc, struct mrc_io *io)
 
 #endif
 
-// FIXME
-void vpic_base_init(int* pargc, char*** pargv);
-
 void psc_init(int& argc, char**& argv)
 {
-#if 1
-  vpic_base_init(&argc, &argv);
-#else
-  MPI_Init(&argc, &argv);
-#endif
+  // Start up the checkpointing service.  This should be first.
+  int provided;
+  MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
+
+  MPI_Comm_dup(MPI_COMM_WORLD, &psc_comm_world);
+  MPI_Comm_rank(psc_comm_world, &psc_world_rank);
+  MPI_Comm_size(psc_comm_world, &psc_world_size);
+
+  MPI_Barrier(psc_comm_world);
+
   libmrc_params_init(argc, argv);
   mrc_set_flags(MRC_FLAG_SUPPRESS_UNPREFIXED_OPTION_WARNING);
 #ifdef USE_CUDA

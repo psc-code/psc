@@ -2,7 +2,7 @@
 
 #include <mrc_common.h>
 #include <iostream>
-#include "../libpsc/vpic/psc_vpic_bits.h"
+#include "../libpsc/bits.hxx"
 
 namespace psc
 {

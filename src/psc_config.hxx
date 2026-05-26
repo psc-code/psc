@@ -28,8 +28,6 @@
 #include "../libpsc/cuda/sort_cuda_impl.hxx"
 #endif
 
-#include "../libpsc/vpic/fields_item_vpic.hxx"
-
 template <typename Mparticles>
 using OutputParticlesDefault =
   OutputParticlesHdf5<Mparticles, ParticleSelectorAll>;

@@ -23,7 +23,7 @@ void write_checkpoint(const Grid_t& grid, Mparticles& mprts,
 
   prof_start(pr);
   mpi_printf(grid.comm(), "**** Writing checkpoint...\n");
-#if defined(PSC_HAVE_ADIOS2) && !defined(VPIC)
+#if defined(PSC_HAVE_ADIOS2)
   prof_start(pr_A);
   MPI_Barrier(grid.comm()); // not really necessary
   prof_stop(pr_A);

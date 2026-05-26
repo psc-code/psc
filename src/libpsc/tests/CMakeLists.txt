@@ -19,7 +19,6 @@ endmacro()
 
 add_psc_test(test_grid)
 add_psc_test(test_grid_2)
-add_psc_test(test_rng)
 add_psc_test(test_mparticles_cuda)
 add_psc_test(test_mparticles)
 add_psc_test(test_output_particles)
@@ -38,7 +37,7 @@ add_psc_test(test_push_fields)
 add_psc_test(test_moments)
 add_psc_test(test_collision)
 
-if(USE_CUDA AND NOT USE_VPIC)
+if(USE_CUDA)
   add_psc_test(test_collision_cuda)
 endif()
 
