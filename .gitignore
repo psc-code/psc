@@ -35,7 +35,6 @@ src/psc_test_emission
 src/psc_test_singlepart
 src/psc_test_microsphere
 src/psc_test_twoparticles
-src/psc_test_fdtd
 src/psc_test_open
 Makefile.in
 Makefile
