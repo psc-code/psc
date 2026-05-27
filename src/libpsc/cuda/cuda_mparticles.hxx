@@ -138,12 +138,12 @@ public:
 
   __host__ __device__ iterator begin()
   {
-    return iterator({xi4.begin(), pxi4.begin()});
+    return iterator(thrust::make_tuple(xi4.begin(), pxi4.begin()));
   }
 
   __host__ __device__ iterator end()
   {
-    return iterator({xi4.end(), pxi4.end()});
+    return iterator(thrust::make_tuple(xi4.end(), pxi4.end()));
   }
 
   __host__ void resize(size_t n)

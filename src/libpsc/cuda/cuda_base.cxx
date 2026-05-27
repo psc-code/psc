@@ -33,6 +33,49 @@ static track_mr_type* track_mr;
 static pool_mr_type* pool_mr;
 #endif
 
+namespace
+{
+struct DevicePropsCompat
+{
+  int clock_rate;
+  int concurrent_kernels;
+  int kernel_exec_timeout;
+  int integrated;
+  int can_map_host_memory;
+  int compute_mode;
+};
+
+int cuda_device_attr(int dev, cudaDeviceAttr attr)
+{
+  int value = 0;
+  cudaError_t ierr = cudaDeviceGetAttribute(&value, attr, dev);
+  if (ierr != cudaSuccess) {
+    return 0;
+  }
+  return value;
+}
+
+DevicePropsCompat get_device_props_compat(const hipDeviceProp_t& deviceProp,
+                                          int dev)
+{
+#if CUDART_VERSION >= 13000
+  return {cuda_device_attr(dev, cudaDevAttrClockRate),
+          cuda_device_attr(dev, cudaDevAttrConcurrentKernels),
+          cuda_device_attr(dev, cudaDevAttrKernelExecTimeout),
+          cuda_device_attr(dev, cudaDevAttrIntegrated),
+          cuda_device_attr(dev, cudaDevAttrCanMapHostMemory),
+          cuda_device_attr(dev, cudaDevAttrComputeMode)};
+#else
+  return {deviceProp.clockRate,
+          deviceProp.deviceOverlap,
+          deviceProp.kernelExecTimeoutEnabled,
+          deviceProp.integrated,
+          deviceProp.canMapHostMemory,
+          deviceProp.computeMode};
+#endif
+}
+} // namespace
+
 void cuda_base_init(void)
 {
   static bool first_time = true;
@@ -79,6 +122,7 @@ void cuda_base_init(void)
   for (int dev = 0; dev < deviceCount; ++dev) {
     hipDeviceProp_t deviceProp;
     hipGetDeviceProperties(&deviceProp, dev);
+    auto compat = get_device_props_compat(deviceProp, dev);
 
     if (dev == 0) {
       // This function call returns 9999 for both major & minor fields, if no
@@ -124,25 +168,25 @@ void cuda_base_init(void)
     printf("  Texture alignment:                             %lu bytes\n",
            deviceProp.textureAlignment);
     printf("  Clock rate:                                    %.2f GHz\n",
-           deviceProp.clockRate * 1e-6f);
+           compat.clock_rate * 1e-6f);
 #if CUDART_VERSION >= 2000
     printf("  Concurrent copy and execution:                 %s\n",
-           deviceProp.deviceOverlap ? "Yes" : "No");
+           compat.concurrent_kernels ? "Yes" : "No");
 #endif
 #if CUDART_VERSION >= 2020
     printf("  Run time limit on kernels:                     %s\n",
-           deviceProp.kernelExecTimeoutEnabled ? "Yes" : "No");
+           compat.kernel_exec_timeout ? "Yes" : "No");
     printf("  Integrated:                                    %s\n",
-           deviceProp.integrated ? "Yes" : "No");
+           compat.integrated ? "Yes" : "No");
     printf("  Support host page-locked memory mapping:       %s\n",
-           deviceProp.canMapHostMemory ? "Yes" : "No");
+           compat.can_map_host_memory ? "Yes" : "No");
     printf(
       "  Compute mode:                                  %s\n",
-      deviceProp.computeMode == hipComputeModeDefault
+      compat.compute_mode == hipComputeModeDefault
         ? "Default (multiple host threads can use this device simultaneously)"
-      : deviceProp.computeMode == hipComputeModeExclusive
+      : compat.compute_mode == hipComputeModeExclusive
         ? "Exclusive (only one host thread at a time can use this device)"
-      : deviceProp.computeMode == hipComputeModeProhibited
+      : compat.compute_mode == hipComputeModeProhibited
         ? "Prohibited (no host thread can use this device)"
         : "Unknown");
 #endif
