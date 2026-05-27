@@ -69,20 +69,26 @@ public:
     dir_.clear();
   }
 
+  static void _begin_step(kg::io::Engine& file, int step, double time,
+                          const Double3& length, const Double3& corner)
+  {
+    file.beginStep(kg::io::StepMode::Append);
+    file.put("step", step);
+    file.put("time", time);
+    file.put("length", length);
+    file.put("corner", corner);
+  }
+
   void begin_step(const Grid_t& grid)
   {
     int step = grid.timestep();
-    double time = grid.time();
 
     int len = dir_.size() + pfx_.size() + 20;
     char filename[len];
     snprintf(filename, len, "%s/%s.%09d.bp", dir_.c_str(), pfx_.c_str(), step);
     file_ = io_.open(filename, kg::io::Mode::Write, comm_, pfx_);
-    file_.beginStep(kg::io::StepMode::Append);
-    file_.put("step", step);
-    file_.put("time", time);
-    file_.put("length", grid.domain.length);
-    file_.put("corner", grid.domain.corner);
+    _begin_step(file_, step, grid.time(), grid.domain.length,
+                grid.domain.corner);
     file_.performPuts();
   }
 
@@ -185,11 +191,7 @@ public:
         prof_stop(pr_lock);
         auto file = io_.open(filename, kg::io::Mode::Write, comm_, pfx_);
 
-        file.beginStep(kg::io::StepMode::Append);
-        file.put("step", step);
-        file.put("time", time);
-        file.put("length", length);
-        file.put("corner", corner);
+        _begin_step(file, step, time, length, corner);
 
         prof_start(pr_adios2);
         file.put("ib", ib, launch);
