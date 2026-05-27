@@ -31,7 +31,7 @@ jobs:
           configFile: .devcontainer/devcontainer.json
           imageName: ghcr.io/psc-code/psc-devcontainer
           cacheFrom: ghcr.io/psc-code/psc-devcontainer
-          push: always
+          push: never
           runCmd: |
             cmake -S . -B build-cuda-ci -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPSC_GPU=cuda -DGTENSOR_DEVICE=cuda -G Ninja
             cmake --build build-cuda-ci
