@@ -273,8 +273,7 @@ struct xdmf_spatial* xdmf_spatial_create_m3(list_t* xdmf_spatial_list,
   struct mrc_crds* crds = mrc_domain_get_crds(domain);
   double xl[3];
   double dx[3];
-  if (strcmp(mrc_crds_type(crds), "amr_uniform") == 0 ||
-      strcmp(mrc_crds_type(crds), "uniform") == 0) {
+  if (strcmp(mrc_crds_type(crds), "uniform") == 0) {
     xs->uniform = true;
     mrc_crds_get_param_double3(crds, "l", xl);
     mrc_crds_get_dx_base(crds, dx);
@@ -322,8 +321,7 @@ struct xdmf_spatial* xdmf_spatial_create_m3_parallel(
   }
 
   struct mrc_crds* crds = mrc_domain_get_crds(domain);
-  if (strcmp(mrc_crds_type(crds), "amr_uniform") == 0 ||
-      strcmp(mrc_crds_type(crds), "uniform") == 0) {
+  if (strcmp(mrc_crds_type(crds), "uniform") == 0) {
     xs->uniform = true;
     const double* xl = mrc_crds_lo(crds);
     double dx[3];

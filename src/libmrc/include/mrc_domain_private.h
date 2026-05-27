@@ -114,37 +114,6 @@ struct mrc_domain_multi {
 extern struct mrc_domain_ops mrc_domain_multi_ops;
 
 // ======================================================================
-// mrc_domain_amr
-
-struct mrc_amr_patch {
-  int l;
-  int idx3[3];
-  list_t entry;
-};
-
-struct mrc_domain_amr {
-  int nr_global_patches;	//< Number of global patches
-  int nr_levels;                //< Number of AMR levels
-  int gdims[3];                 //< Patch dimensions == global dims on level 0
-  int nr_patches;
-  int gpatch_off; //< global patch # on this proc is gpatch_off..gpatch_off+nr_patches
-  struct mrc_patch *patches;
-  int *gpatch_off_all;
-  struct mrc_sfc sfc;
-
-  list_t global_patch_list;     //< List of patches added, only before setup()
-
-  // map
-  struct mrc_amr_level_sfc_idx {
-    int l, sfc_idx;
-  } *map_gpatch_to_sfc;	//Maps [0..nr_gpatches] -> l, sfc_idx
-};
-
-#define mrc_domain_amr(domain) mrc_to_subobj(domain, struct mrc_domain_amr)
-
-extern struct mrc_domain_ops mrc_domain_amr_ops;
-
-// ======================================================================
 // mrc_domain_mb (multi-block)
 
 enum {
