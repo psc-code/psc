@@ -674,7 +674,6 @@ void __mrc_io_write_ref(struct mrc_io* io, struct mrc_obj* obj_parent,
 static void mrc_io_init()
 {
 #ifdef HAVE_HDF5
-  mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf_collective_ops);
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf2_ops);
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf_ops);
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf_serial_ops);
