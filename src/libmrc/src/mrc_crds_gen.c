@@ -31,8 +31,6 @@ static void
 mrc_crds_gen_init()
 {
   mrc_class_register_subclass(&mrc_class_mrc_crds_gen, &mrc_crds_gen_uniform_ops);
-  mrc_class_register_subclass(&mrc_class_mrc_crds_gen, &mrc_crds_gen_gaussian_ops);
-  mrc_class_register_subclass(&mrc_class_mrc_crds_gen, &mrc_crds_gen_two_gaussian_ops);
 }
 
 // ----------------------------------------------------------------------
