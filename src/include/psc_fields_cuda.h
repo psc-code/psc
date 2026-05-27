@@ -9,8 +9,6 @@
 
 #include "psc_fields_single.h"
 
-#include "mrc_json.h"
-
 // ======================================================================
 // MfieldsCuda
 

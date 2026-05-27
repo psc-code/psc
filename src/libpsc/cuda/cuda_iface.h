@@ -2,7 +2,6 @@
 #ifndef CUDA_IFACE_H
 #define CUDA_IFACE_H
 
-#include "mrc_json.h"
 #include "psc_fields_single.h"
 
 #include <grid.hxx>
