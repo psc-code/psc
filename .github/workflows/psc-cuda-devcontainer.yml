@@ -11,12 +11,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout (github)
+        uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2 
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}        
 
       - name: Build CUDA configuration in devcontainer
         uses: devcontainers/ci@v0.3
         with:
           configFile: .devcontainer/devcontainer.json
+          imageName: ghcr.io/psc-code/psc-devcontainer
+          cacheFrom: ghcr.io/psc-code/psc-devcontainer
+          push: always
           runCmd: |
             cmake -S . -B build-cuda-ci -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPSC_GPU=cuda -DGTENSOR_DEVICE=cuda -G Ninja
             cmake --build build-cuda-ci
