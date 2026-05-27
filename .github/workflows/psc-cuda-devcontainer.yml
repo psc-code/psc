@@ -1,0 +1,22 @@
+name: PSC CI CUDA (devcontainer)
+
+on:
+  push:
+    branches: [ main, 'pr/*' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-cuda-devcontainer:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build CUDA configuration in devcontainer
+        uses: devcontainers/ci@v0.3
+        with:
+          configFile: .devcontainer/devcontainer.json
+          runCmd: |
+            cmake -S . -B build-cuda-ci -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPSC_GPU=cuda -DGTENSOR_DEVICE=cuda -G Ninja
+            cmake --build build-cuda-ci
