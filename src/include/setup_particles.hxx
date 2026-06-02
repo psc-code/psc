@@ -247,13 +247,23 @@ struct SetupParticles
     return [=]() {
       static rng::Normal<double> dist;
 
+      if (initial_momentum_gamma_correction) {
+        static VelocityBooster booster{-npt.p};
+
+        Double3 prt_v;
+        for (int d = 0; d < 3; d++) {
+          // sample velocity in plasma frame
+          prt_v[d] = dist.get(0.0, std::sqrt(npt.T[d] / m));
+        }
+
+        // boost to lab frame
+        return booster.boost_and_make_proper(prt_v);
+      }
+
       Double3 p;
       for (int i = 0; i < 3; i++)
         p[i] = dist.get(npt.p[i], beta * std::sqrt(npt.T[i] / m));
 
-      if (initial_momentum_gamma_correction) {
-        p = vel_to_4vel(p);
-      }
       return p;
     };
   }
