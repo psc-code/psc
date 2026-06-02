@@ -24,16 +24,10 @@ public:
   // FIXME would be nice to just pass 1 thing for kind-related info
   ParticleGeneratorMaxwellian(int kind_idx, Grid_t::Kind kind, Real3 mean_v,
                               Real3 temperature)
-    : kind_idx{kind_idx},
-      gamma{1.0 / sqrt(1.0 - mean_v.mag2())},
-      mean_u{mean_v * gamma},
-      mean_u_hat{mean_u / mean_u.mag()}
+    : kind_idx{kind_idx}, prt_booster{-mean_v}
   {
     for (int d = 0; d < 3; d++) {
-      // temperature is interpreted as velocity temperature in bulk frame
-      Real stdev_v = sqrt(temperature[d] / kind.m);
-      // multiply by gamma to get proper velocity in bulk frame
-      vdfs[d] = VelocityDistributionFunction{0.0, stdev_v * gamma};
+      vdfs[d] = VDF{0.0, sqrt(temperature[d] / kind.m)};
     }
   }
 
@@ -44,10 +38,8 @@ public:
       x[d] = min_pos[d] + uniform_dist.get() * pos_range[d];
     }
 
-    // generate proper velocity in bulk frame
-    Real3 u{vdfs[0].get(), vdfs[1].get(), vdfs[2].get()};
-    // Lorentz boost
-    u += (gamma - 1.0) * u.dot(mean_u_hat) * mean_u_hat + mean_u;
+    Real3 v{vdfs[0].get(), vdfs[1].get(), vdfs[2].get()};
+    Real3 u = prt_booster.boost_and_make_proper(v);
 
     Real w = 1.0;
     psc::particle::Tag tag = 0;
@@ -56,12 +48,10 @@ public:
   }
 
 private:
-  using VelocityDistributionFunction = rng::Normal<Real>;
-  Vec3<VelocityDistributionFunction> vdfs;
+  using VDF = rng::Normal<Real>;
+  Vec3<VDF> vdfs;
+  VelocityBooster prt_booster;
   int kind_idx;
-  Real gamma;
-  Real3 mean_u;
-  Real3 mean_u_hat;
   rng::Uniform<Real> uniform_dist{0.0, 1.0};
 };
 
