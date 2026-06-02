@@ -121,6 +121,40 @@ int get_n_in_cell(real_t density, real_t prts_per_unit_density,
   return std::max(1, int(density * prts_per_unit_density + .5));
 }
 
+/**
+ * @brief Boosts velocities using cached intermediate values for a particular
+ * Lorentz frame.
+ */
+struct VelocityBooster
+{
+  VelocityBooster(Double3 frame_v)
+    : frame_gamma(1.0 / std::sqrt(1.0 - frame_v.mag2())),
+      frame_u(frame_v * frame_gamma),
+      frame_dir(frame_v / frame_v.mag())
+  {
+    // FIXME kind of hacky
+    if (frame_v.mag2() == 0.0) {
+      frame_dir = {1, 0, 0};
+    }
+  }
+
+  /**
+   * @param prt_v a particle's "unprimed" non-proper velocity
+   * @return its "primed" proper velocity
+   */
+  Double3 boost_and_make_proper(Double3 prt_v)
+  {
+    double prt_gamma = 1.0 / std::sqrt(1.0 - prt_v.mag2());
+    Double3 prt_u = prt_v * prt_gamma;
+    return prt_u + (frame_gamma - 1.0) * prt_u.dot(frame_dir) * frame_dir -
+           frame_u * prt_gamma;
+  }
+
+  double frame_gamma;
+  Double3 frame_u;
+  Double3 frame_dir;
+};
+
 // ======================================================================
 // SetupParticles
 
