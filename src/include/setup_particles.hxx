@@ -139,6 +139,17 @@ struct VelocityBooster
   }
 
   /**
+   * @param prt_v a particle's "unprimed" proper velocity
+   * @return its "primed" proper velocity
+   */
+  Double3 boost(Double3 prt_u)
+  {
+    double prt_gamma = std::sqrt(1.0 + prt_u.mag2());
+    return prt_u + (frame_gamma - 1.0) * prt_u.dot(frame_dir) * frame_dir -
+           frame_u * prt_gamma;
+  }
+
+  /**
    * @param prt_v a particle's "unprimed" non-proper velocity
    * @return its "primed" proper velocity
    */
