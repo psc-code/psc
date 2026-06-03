@@ -69,16 +69,6 @@ public:
     dir_.clear();
   }
 
-  static void _begin_step(kg::io::Engine& file, int step, double time,
-                          const Double3& length, const Double3& corner)
-  {
-    file.beginStep(kg::io::StepMode::Append);
-    file.put("step", step);
-    file.put("time", time);
-    file.put("length", length);
-    file.put("corner", corner);
-  }
-
   void begin_step(const Grid_t& grid)
   {
     int step = grid.timestep();
@@ -241,6 +231,16 @@ public:
   }
 
 private:
+  static void _begin_step(kg::io::Engine& file, int step, double time,
+                          const Double3& length, const Double3& corner)
+  {
+    file.beginStep(kg::io::StepMode::Append);
+    file.put("step", step);
+    file.put("time", time);
+    file.put("length", length);
+    file.put("corner", corner);
+  }
+
 #ifdef PSC_USE_IO_THREADS
   void thread_func()
   {
