@@ -259,7 +259,8 @@ struct SetupParticles
       static rng::Normal<double> dist;
 
       if (initial_momentum_gamma_correction) {
-        static VelocityBooster booster{-npt.p};
+        // FIXME cache this (static doesn't work)
+        VelocityBooster booster{-npt.p};
 
         Double3 prt_v;
         for (int d = 0; d < 3; d++) {
