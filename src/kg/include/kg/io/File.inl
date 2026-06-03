@@ -6,25 +6,13 @@ namespace io
 
 inline File::File(FileBase* impl) : impl_{impl} {}
 
-inline File::~File()
-{
-  close();
-}
+inline File::~File() { close(); }
 
-inline void File::close()
-{
-  impl_.reset();
-}
+inline void File::close() { impl_.reset(); }
 
-inline void File::beginStep(StepMode mode)
-{
-  impl_->beginStep(mode);
-}
+inline void File::beginStep(StepMode mode) { impl_->beginStep(mode); }
 
-inline void File::endStep()
-{
-  impl_->endStep();
-}
+inline void File::endStep() { impl_->endStep(); }
 
 inline void File::performPuts()
 {
@@ -71,6 +59,14 @@ inline void File::getAttribute(const std::string& name, T* data)
   assert(impl_);
   FileBase::TypePointer dataVar = data;
   impl_->getAttribute(name, dataVar);
+}
+
+template <typename T>
+inline void File::putAttribute(const std::string& name, const T& datum)
+{
+  assert(impl_);
+  FileBase::Type datumVar = datum;
+  impl_->putAttribute(name, datumVar);
 }
 
 template <typename T>

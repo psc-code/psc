@@ -42,6 +42,9 @@ public:
   void getAttribute(const std::string& name, T* data);
 
   template <typename T>
+  void putAttribute(const std::string& name, const T& datum);
+
+  template <typename T>
   void putAttribute(const std::string& name, const T* data, size_t size);
 
   size_t sizeAttribute(const std::string& name) const;

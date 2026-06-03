@@ -35,6 +35,7 @@ public:
   Dims shapeVariable(const std::string& name) const override;
 
   void getAttribute(const std::string& name, TypePointer data) override;
+  void putAttribute(const std::string& name, const Type& datum) override;
   void putAttribute(const std::string& name, TypeConstPointer data,
                     size_t size) override;
   size_t sizeAttribute(const std::string& name) const override;
@@ -44,6 +45,7 @@ private:
   struct GetVariable;
   struct GetAttribute;
   struct PutAttribute;
+  struct PutAttributeScalar;
 
   template <typename T>
   void putVariable(const std::string& name, const T* data, Mode launch,
@@ -56,6 +58,9 @@ private:
 
   template <typename T>
   void getAttribute(const std::string& name, T* data);
+
+  template <typename T>
+  void putAttribute(const std::string& name, const T& datum);
 
   template <typename T>
   void putAttribute(const std::string& name, const T* data, size_t size);

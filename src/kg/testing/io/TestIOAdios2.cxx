@@ -8,7 +8,7 @@ TEST(IOAdios2, CtorDtor) { auto io = kg::io::IOAdios2{}; }
 TEST(IOAdios2, OpenWrite)
 {
   auto io = kg::io::IOAdios2{};
-  auto file = io.openFile("test1", kg::io::Mode::Write);
+  auto file = io.openFile("test1.bp", kg::io::Mode::Write);
 }
 
 TEST(IOAdios2, OpenReadMissingFile)
@@ -76,6 +76,8 @@ TEST(IOAdios2, FilePutGetAttribute)
     file.beginStep(kg::io::StepMode::Append);
     auto dbl = std::vector<double>{1., 2., 3., 4., 5.};
     file.putAttribute("attr_dbl", dbl.data(), dbl.size());
+    double val = 99.;
+    file.putAttribute("attr_dbl_scalar", val);
     file.endStep();
   }
   {
@@ -84,7 +86,10 @@ TEST(IOAdios2, FilePutGetAttribute)
     auto size = file.sizeAttribute("attr_dbl");
     auto dbl = std::vector<double>(size);
     file.getAttribute("attr_dbl", dbl.data());
+    double val;
+    file.getAttribute("attr_dbl_scalar", &val);
     EXPECT_EQ(dbl, (std::vector<double>{1., 2., 3., 4., 5.}));
+    EXPECT_EQ(val, 99.);
     file.endStep();
   }
 }
