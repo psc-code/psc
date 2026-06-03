@@ -174,7 +174,7 @@ public:
 #ifdef PSC_USE_IO_THREADS
     prof_start(pr_write);
     int step = grid.timestep();
-    double time = step * grid.dt;
+    double time = grid.time();
 
     assert(grid.n_patches() == h_expr.shape(4));
     Int3 ldims = grid.ldims;
