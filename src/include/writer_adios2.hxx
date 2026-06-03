@@ -122,6 +122,41 @@ public:
   }
 
   template <typename E>
+  static void write_combined(kg::io::Engine& file, int step, double time,
+                             const Double3& length, const Double3& corner,
+                             const Int3& ldims, const Int3& gdims,
+                             const std::vector<Int3>& patch_off,
+                             const E& h_expr, const std::string& name,
+                             const std::vector<std::string>& comp_names)
+  {
+    auto launch = kg::io::Mode::Blocking;
+
+    int n_comps = h_expr.shape(3);
+    int n_patches = h_expr.shape(4);
+    Int3 im = {h_expr.shape(0), h_expr.shape(1), h_expr.shape(2)};
+    Int3 ib = {-(im[0] - ldims[0]) / 2, -(im[1] - ldims[1]) / 2,
+               -(im[2] - ldims[2]) / 2};
+
+    _begin_step(file, step, time, length, corner);
+    file.prefixes_.push_back(name);
+    file.put("ib", ib, launch);
+    file.put("im", im, launch);
+
+    auto shape = makeDims(n_comps, gdims);
+    for (int p = 0; p < n_patches; p++) {
+      auto start = makeDims(0, patch_off[p]);
+      auto count = makeDims(n_comps, ldims);
+      auto _ib = makeDims(0, -ib);
+      auto _im = makeDims(n_comps, im);
+      file.putVariable(&h_expr(ib[0], ib[1], ib[2], 0, p), launch, shape,
+                       {start, count}, {_ib, _im});
+    }
+    file.prefixes_.pop_back();
+    file.performPuts();
+    file.endStep();
+  }
+
+  template <typename E>
   void write_step(const Grid_t& grid, const Int3& rn, const Int3& rx,
                   const E& expr, const std::string& name,
                   const std::vector<std::string>& comp_names)
@@ -171,45 +206,21 @@ public:
 
       prof_start(pr_thread);
 
-      int n_comps = h_expr.shape(3);
-      int n_patches = h_expr.shape(4);
-      Int3 im = {h_expr.shape(0), h_expr.shape(1), h_expr.shape(2)};
-      Int3 ib = {-(im[0] - ldims[0]) / 2, -(im[1] - ldims[1]) / 2,
-                 -(im[2] - ldims[2]) / 2};
-
       int len = dir_.size() + pfx_.size() + 20;
       char filename[len];
       snprintf(filename, len, "%s/%s.%09d.bp", dir_.c_str(), pfx_.c_str(),
                step);
       {
-        auto launch = kg::io::Mode::Blocking;
-
         // FIXME not sure how necessary this lock really is, it certainly could
         // spin for a long time if another thread is writing another file
         prof_start(pr_lock);
         // std::lock_guard<std::mutex> guard(writer_mutex);
         prof_stop(pr_lock);
-        auto file = io_.open(filename, kg::io::Mode::Write, comm_, pfx_);
-
-        _begin_step(file, step, time, length, corner);
 
         prof_start(pr_adios2);
-        file.prefixes_.push_back(name);
-        file.put("ib", ib, launch);
-        file.put("im", im, launch);
-
-        auto shape = makeDims(n_comps, gdims);
-        for (int p = 0; p < n_patches; p++) {
-          auto start = makeDims(0, patch_off[p]);
-          auto count = makeDims(n_comps, ldims);
-          auto _ib = makeDims(0, -ib);
-          auto _im = makeDims(n_comps, im);
-          file.putVariable(&h_expr(ib[0], ib[1], ib[2], 0, p), launch, shape,
-                           {start, count}, {_ib, _im}); // FIXME cast
-        }
-        file.prefixes_.pop_back();
-        file.performPuts();
-        file.endStep();
+        auto file = io_.open(filename, kg::io::Mode::Write, comm_, pfx_);
+        write_combined(file, step, time, length, corner, ldims, gdims,
+                       patch_off, h_expr, name, comp_names);
         file.close();
         prof_stop(pr_adios2);
       }
