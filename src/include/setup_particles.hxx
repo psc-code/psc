@@ -29,19 +29,6 @@ struct psc_particle_np
   psc::particle::Tag tag;
 };
 
-/**
- * @brief Calculates gamma * v for the given velocity v.
- * @tparam Real real type
- * @param v the actual velocity
- * @return the spatial components of the corresponding 4-velocity
- */
-template <typename Real>
-Vec3<Real> vel_to_4vel(Vec3<Real> v)
-{
-  Real gamma = 1.0 / sqrt(1.0 - v.mag2());
-  return v * gamma;
-}
-
 struct InitNptFunc
 {
   // Initialize particles according to a Maxwellian.
