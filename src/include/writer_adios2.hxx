@@ -281,6 +281,9 @@ private:
                        {start, count}, {_ib, _im});
     }
     file.prefixes_.pop_back();
+    // FIXME, it'd be better to write within the prefix, but xarray-adios2
+    // expects a "/" separator instead of "::"
+    file.put(std::string(name) + "/dimensions", std::string("x y z"));
     file.performPuts();
   }
 
