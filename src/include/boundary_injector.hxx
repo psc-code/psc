@@ -39,7 +39,10 @@ public:
     }
 
     Real3 v{vdfs[0].get(), vdfs[1].get(), vdfs[2].get()};
-    Real3 u = prt_booster.boost_and_make_proper(v);
+    // FIXME should really sample from Maxwell-Juttner
+    // this hack interprests v as u to handle rare case when v>1
+    // v<<1 => v~= u anyways
+    Real3 u = prt_booster.boost(v);
 
     Real w = 1.0;
     psc::particle::Tag tag = 0;

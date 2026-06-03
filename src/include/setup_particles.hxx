@@ -256,7 +256,10 @@ struct SetupParticles
         }
 
         // boost to lab frame
-        return booster.boost_and_make_proper(prt_v);
+        // FIXME should really sample from Maxwell-Juttner
+        // this hack interprests v as u to handle rare case when v>1
+        // v<<1 => v~= u anyways
+        return booster.boost(prt_v);
       }
 
       Double3 p;
