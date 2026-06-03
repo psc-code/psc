@@ -194,10 +194,10 @@ public:
         _begin_step(file, step, time, length, corner);
 
         prof_start(pr_adios2);
+        file.prefixes_.push_back(name);
         file.put("ib", ib, launch);
         file.put("im", im, launch);
 
-        file.prefixes_.push_back(name);
         auto shape = makeDims(n_comps, gdims);
         for (int p = 0; p < n_patches; p++) {
           auto start = makeDims(0, patch_off[p]);
