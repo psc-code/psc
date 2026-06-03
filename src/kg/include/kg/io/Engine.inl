@@ -15,15 +15,9 @@ inline Engine::Engine(File&& file, MPI_Comm comm) : file_{std::move(file)}
   MPI_Comm_size(comm, &mpi_size_);
 }
 
-inline void Engine::beginStep(StepMode mode)
-{
-  file_.beginStep(mode);
-}
+inline void Engine::beginStep(StepMode mode) { file_.beginStep(mode); }
 
-inline void Engine::endStep()
-{
-  file_.endStep();
-}
+inline void Engine::endStep() { file_.endStep(); }
 
 // ----------------------------------------------------------------------
 // put
@@ -78,18 +72,12 @@ inline void Engine::get(const std::string& pfx, T& datum, Args&&... args)
 // ----------------------------------------------------------------------
 // performPuts
 
-inline void Engine::performPuts()
-{
-  file_.performPuts();
-}
+inline void Engine::performPuts() { file_.performPuts(); }
 
 // ----------------------------------------------------------------------
 // performGets
 
-inline void Engine::performGets()
-{
-  file_.performGets();
-}
+inline void Engine::performGets() { file_.performGets(); }
 
 // ----------------------------------------------------------------------
 // internal
@@ -150,20 +138,11 @@ inline Dims Engine::variableShape()
 // ----------------------------------------------------------------------
 // close
 
-inline void Engine::close()
-{
-  file_.close();
-}
+inline void Engine::close() { file_.close(); }
 
-inline int Engine::mpiRank() const
-{
-  return mpi_rank_;
-}
+inline int Engine::mpiRank() const { return mpi_rank_; }
 
-inline int Engine::mpiSize() const
-{
-  return mpi_size_;
-}
+inline int Engine::mpiSize() const { return mpi_size_; }
 
 } // namespace io
 } // namespace kg

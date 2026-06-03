@@ -6,25 +6,13 @@ namespace io
 
 inline File::File(FileBase* impl) : impl_{impl} {}
 
-inline File::~File()
-{
-  close();
-}
+inline File::~File() { close(); }
 
-inline void File::close()
-{
-  impl_.reset();
-}
+inline void File::close() { impl_.reset(); }
 
-inline void File::beginStep(StepMode mode)
-{
-  impl_->beginStep(mode);
-}
+inline void File::beginStep(StepMode mode) { impl_->beginStep(mode); }
 
-inline void File::endStep()
-{
-  impl_->endStep();
-}
+inline void File::endStep() { impl_->endStep(); }
 
 inline void File::performPuts()
 {
