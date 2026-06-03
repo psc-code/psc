@@ -1,7 +1,0 @@
-
-for a in @abs_srcdir@/../reference_results/$TEST/*.xdmf; do 
-  if [ -r  $a ]; then
-       b=`basename $a`
-       sed 's/uid-0x[0-9a-f]*/uid/g' $b | diff -b -u $a -
-  fi
-done
