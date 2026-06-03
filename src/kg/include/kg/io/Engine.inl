@@ -93,7 +93,7 @@ inline void Engine::putVariable(const T* data, const Mode launch,
 template <typename T>
 inline void Engine::putAttribute(const T& datum)
 {
-  file_.putAttribute(prefix(), &datum, 1);
+  file_.putAttribute(prefix(), datum);
 }
 
 template <typename T>

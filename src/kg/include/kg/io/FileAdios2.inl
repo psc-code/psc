@@ -21,6 +21,7 @@ inline FileAdios2::FileAdios2(adios2::ADIOS& ad, const std::string& name,
     io_name_ = io_name;
   }
   io_ = ad.DeclareIO(io_name_);
+  // io_.SetEngine("BP4");
   adios2::Mode adios2_mode;
   if (mode == Mode::Read) {
     adios2_mode = adios2::Mode::Read;
@@ -180,6 +181,21 @@ inline Dims FileAdios2::shapeVariable(const std::string& name) const
 }
 
 template <typename T>
+inline void FileAdios2::putAttribute(const std::string& name, const T& datum)
+{
+  // if (mpiRank() != 0) { // FIXME, should we do this?
+  //   return;
+  // }
+  auto attr = io_.InquireAttribute<T>(name);
+  if (attr) {
+    mprintf("attr '%s' already exists -- ignoring it!\n", name.c_str());
+  } else {
+    // FIXME? we're never using "single value", just an array of size 1
+    io_.DefineAttribute<T>(name, datum);
+  }
+}
+
+template <typename T>
 inline void FileAdios2::putAttribute(const std::string& name, const T* data,
                                      size_t size)
 {
@@ -222,6 +238,27 @@ struct FileAdios2::GetAttribute
 inline void FileAdios2::getAttribute(const std::string& name, TypePointer data)
 {
   mpark::visit(GetAttribute{*this, name}, data);
+}
+
+struct FileAdios2::PutAttributeScalar
+{
+  PutAttributeScalar(FileAdios2& self, const std::string& name)
+    : self{self}, name{name}
+  {}
+
+  template <typename T>
+  void operator()(const T& datum)
+  {
+    self.putAttribute(name, datum);
+  }
+
+  FileAdios2& self;
+  const std::string& name;
+};
+
+inline void FileAdios2::putAttribute(const std::string& name, const Type& datum)
+{
+  mpark::visit(PutAttributeScalar{*this, name}, datum);
 }
 
 struct FileAdios2::PutAttribute

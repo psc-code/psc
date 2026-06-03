@@ -14,6 +14,8 @@ namespace io
 class FileBase
 {
 public:
+  using Type = mpark::variant<int, unsigned int, unsigned long,
+                              unsigned long long, float, double, std::string>;
   using TypePointer =
     mpark::variant<int*, unsigned int*, unsigned long*, unsigned long long*,
                    float*, double*, std::string*>;
@@ -41,6 +43,7 @@ public:
   virtual Dims shapeVariable(const std::string& name) const = 0;
 
   virtual void getAttribute(const std::string& name, TypePointer data) = 0;
+  virtual void putAttribute(const std::string& name, const Type& datum) = 0;
   virtual void putAttribute(const std::string& name, TypeConstPointer data,
                             size_t size) = 0;
   virtual size_t sizeAttribute(const std::string& name) const = 0;

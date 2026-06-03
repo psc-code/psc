@@ -62,6 +62,14 @@ inline void File::getAttribute(const std::string& name, T* data)
 }
 
 template <typename T>
+inline void File::putAttribute(const std::string& name, const T& datum)
+{
+  assert(impl_);
+  FileBase::Type datumVar = datum;
+  impl_->putAttribute(name, datumVar);
+}
+
+template <typename T>
 inline void File::putAttribute(const std::string& name, const T* data,
                                size_t size)
 {
