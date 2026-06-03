@@ -8,7 +8,7 @@ TEST(IOAdios2, CtorDtor) { auto io = kg::io::IOAdios2{}; }
 TEST(IOAdios2, OpenWrite)
 {
   auto io = kg::io::IOAdios2{};
-  auto file = io.openFile("test1", kg::io::Mode::Write);
+  auto file = io.openFile("test1.bp", kg::io::Mode::Write);
 }
 
 TEST(IOAdios2, OpenReadMissingFile)
