@@ -94,8 +94,6 @@ public:
 
   void end_step() { file_.close(); }
 
-  void set_subset(const Grid_t& grid, Int3 rn, Int3 rx) {}
-
   template <typename E>
   void write(const E& expr, const Grid_t& grid, const std::string& name,
              const std::vector<std::string>& comp_names)
@@ -235,7 +233,6 @@ public:
 #else
     prof_start(pr_write);
     begin_step(grid);
-    set_subset(grid, rn, rx);
     write(expr, grid, name, comp_names);
     end_step();
     prof_stop(pr_write);
