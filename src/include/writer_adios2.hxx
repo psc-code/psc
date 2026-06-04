@@ -104,9 +104,8 @@ public:
   }
 
   template <typename E>
-  static void write_combined(kg::io::Engine& file, int step, double time,
-                             const Double3& length, const Double3& corner,
-                             const Int3& ldims, const Int3& gdims,
+  static void write_combined(kg::io::Engine& file, const Int3& ldims,
+                             const Int3& gdims,
                              const std::vector<Int3>& patch_off,
                              const E& h_expr, const std::string& name,
                              const std::vector<std::string>& comp_names)
@@ -196,8 +195,7 @@ public:
         prof_start(pr_adios2);
         kg::io::Engine file;
         _begin_step(file, step, time, length, corner);
-        write_combined(file, step, time, length, corner, ldims, gdims,
-                       patch_off, h_expr, name, comp_names);
+        write_combined(file, ldims, gdims, patch_off, h_expr, name, comp_names);
         _end_step(file);
         prof_stop(pr_adios2);
       }
