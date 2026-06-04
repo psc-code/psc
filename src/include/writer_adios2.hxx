@@ -125,7 +125,6 @@ public:
     Int3 ib = {-(im[0] - ldims[0]) / 2, -(im[1] - ldims[1]) / 2,
                -(im[2] - ldims[2]) / 2};
 
-    _begin_step(file, step, time, length, corner);
     file.prefixes_.push_back(name);
     file.put("ib", ib, launch);
     file.put("im", im, launch);
@@ -141,7 +140,6 @@ public:
     }
     file.prefixes_.pop_back();
     file.performPuts();
-    file.endStep();
   }
 
   template <typename E>
@@ -207,8 +205,10 @@ public:
 
         prof_start(pr_adios2);
         auto file = io_.open(filename, kg::io::Mode::Write, comm_, pfx_);
+        _begin_step(file, step, time, length, corner);
         write_combined(file, step, time, length, corner, ldims, gdims,
                        patch_off, h_expr, name, comp_names);
+        file.endStep();
         file.close();
         prof_stop(pr_adios2);
       }
