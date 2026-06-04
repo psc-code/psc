@@ -93,13 +93,15 @@ public:
     auto&& evaluated = gt::eval(const_cast<E&>(expr));
     auto&& h_expr = gt::host_mirror(evaluated);
     gt::copy(evaluated, h_expr);
-    Mfields<gt::expr_value_type<E>> h_mflds(grid, h_expr.shape(3), {});
-    h_mflds.gt() = h_expr;
     prof_stop(pr_eval);
 
     prof_start(pr_write);
-    file_.put(name, h_mflds);
-    file_.performPuts();
+    std::vector<Int3> patch_off(grid.n_patches());
+    for (int p = 0; p < grid.n_patches(); p++) {
+      patch_off[p] = grid.patches[p].off;
+    }
+    write_combined(file_, grid.ldims, grid.domain.gdims, patch_off, h_expr,
+                   name, comp_names);
     prof_stop(pr_write);
   }
 
