@@ -111,29 +111,7 @@ public:
                     const std::string& name,
                     const std::vector<std::string>& comp_names)
   {
-    auto launch = kg::io::Mode::Blocking;
-
-    int n_comps = h_expr.shape(3);
-    int n_patches = h_expr.shape(4);
-    Int3 im = {h_expr.shape(0), h_expr.shape(1), h_expr.shape(2)};
-    Int3 ib = {-(im[0] - ldims[0]) / 2, -(im[1] - ldims[1]) / 2,
-               -(im[2] - ldims[2]) / 2};
-
-    file.prefixes_.push_back(name);
-    file.put("ib", ib, launch);
-    file.put("im", im, launch);
-
-    auto shape = makeDims(n_comps, gdims);
-    for (int p = 0; p < n_patches; p++) {
-      auto start = makeDims(0, patch_off[p]);
-      auto count = makeDims(n_comps, ldims);
-      auto _ib = makeDims(0, -ib);
-      auto _im = makeDims(n_comps, im);
-      file.putVariable(&h_expr(ib[0], ib[1], ib[2], 0, p), launch, shape,
-                       {start, count}, {_ib, _im});
-    }
-    file.prefixes_.pop_back();
-    file.performPuts();
+    _write_4d(file, ldims, gdims, patch_off, h_expr, name, comp_names);
   }
 
   template <typename E>
@@ -238,6 +216,37 @@ private:
   {
     file.endStep();
     file.close();
+  }
+
+  template <typename E>
+  static void _write_4d(kg::io::Engine& file, const Int3& ldims,
+                        const Int3& gdims, const std::vector<Int3>& patch_off,
+                        const E& h_expr, const std::string& name,
+                        const std::vector<std::string>& comp_names)
+  {
+    auto launch = kg::io::Mode::Blocking;
+
+    int n_comps = h_expr.shape(3);
+    int n_patches = h_expr.shape(4);
+    Int3 im = {h_expr.shape(0), h_expr.shape(1), h_expr.shape(2)};
+    Int3 ib = {-(im[0] - ldims[0]) / 2, -(im[1] - ldims[1]) / 2,
+               -(im[2] - ldims[2]) / 2};
+
+    file.prefixes_.push_back(name);
+    file.put("ib", ib, launch);
+    file.put("im", im, launch);
+
+    auto shape = makeDims(n_comps, gdims);
+    for (int p = 0; p < n_patches; p++) {
+      auto start = makeDims(0, patch_off[p]);
+      auto count = makeDims(n_comps, ldims);
+      auto _ib = makeDims(0, -ib);
+      auto _im = makeDims(n_comps, im);
+      file.putVariable(&h_expr(ib[0], ib[1], ib[2], 0, p), launch, shape,
+                       {start, count}, {_ib, _im});
+    }
+    file.prefixes_.pop_back();
+    file.performPuts();
   }
 
 #ifdef PSC_USE_IO_THREADS
