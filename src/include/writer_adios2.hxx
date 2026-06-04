@@ -100,17 +100,16 @@ public:
     for (int p = 0; p < grid.n_patches(); p++) {
       patch_off[p] = grid.patches[p].off;
     }
-    write_combined(file_, grid.ldims, grid.domain.gdims, patch_off, h_expr,
-                   name, comp_names);
+    write(file_, grid.ldims, grid.domain.gdims, patch_off, h_expr, name,
+          comp_names);
     prof_stop(pr_write);
   }
 
   template <typename E>
-  static void write_combined(kg::io::Engine& file, const Int3& ldims,
-                             const Int3& gdims,
-                             const std::vector<Int3>& patch_off,
-                             const E& h_expr, const std::string& name,
-                             const std::vector<std::string>& comp_names)
+  static void write(kg::io::Engine& file, const Int3& ldims, const Int3& gdims,
+                    const std::vector<Int3>& patch_off, const E& h_expr,
+                    const std::string& name,
+                    const std::vector<std::string>& comp_names)
   {
     auto launch = kg::io::Mode::Blocking;
 
@@ -197,7 +196,7 @@ public:
         prof_start(pr_adios2);
         kg::io::Engine file;
         _begin_step(file, step, time, length, corner);
-        write_combined(file, ldims, gdims, patch_off, h_expr, name, comp_names);
+        write(file, ldims, gdims, patch_off, h_expr, name, comp_names);
         _end_step(file);
         prof_stop(pr_adios2);
       }
