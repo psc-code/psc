@@ -82,11 +82,7 @@ public:
     file_.performPuts();
   }
 
-  void end_step()
-  {
-    file_.endStep();
-    file_.close();
-  }
+  void end_step() { _end_step(file_); }
 
   template <typename E>
   void write(const E& expr, const Grid_t& grid, const std::string& name,
@@ -212,8 +208,7 @@ public:
         _begin_step(file, step, time, length, corner);
         write_combined(file, step, time, length, corner, ldims, gdims,
                        patch_off, h_expr, name, comp_names);
-        file.endStep();
-        file.close();
+        _end_step(file);
         prof_stop(pr_adios2);
       }
 
@@ -243,6 +238,12 @@ private:
     file.put("time", time);
     file.put("length", length);
     file.put("corner", corner);
+  }
+
+  static void _end_step(kg::io::Engine& file)
+  {
+    file.endStep();
+    file.close();
   }
 
 #ifdef PSC_USE_IO_THREADS
