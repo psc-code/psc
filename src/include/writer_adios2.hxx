@@ -71,13 +71,7 @@ public:
 
   void begin_step(const Grid_t& grid)
   {
-    int step = grid.timestep();
-
-    int len = dir_.size() + pfx_.size() + 20;
-    char filename[len];
-    snprintf(filename, len, "%s/%s.%09d.bp", dir_.c_str(), pfx_.c_str(), step);
-    file_ = io_.open(filename, kg::io::Mode::Write, comm_, pfx_);
-    _begin_step(file_, step, grid.time(), grid.domain.length,
+    _begin_step(file_, grid.timestep(), grid.time(), grid.domain.length,
                 grid.domain.corner);
     file_.performPuts();
   }
@@ -192,10 +186,6 @@ public:
 
       prof_start(pr_thread);
 
-      int len = dir_.size() + pfx_.size() + 20;
-      char filename[len];
-      snprintf(filename, len, "%s/%s.%09d.bp", dir_.c_str(), pfx_.c_str(),
-               step);
       {
         // FIXME not sure how necessary this lock really is, it certainly could
         // spin for a long time if another thread is writing another file
@@ -204,7 +194,7 @@ public:
         prof_stop(pr_lock);
 
         prof_start(pr_adios2);
-        auto file = io_.open(filename, kg::io::Mode::Write, comm_, pfx_);
+        kg::io::Engine file;
         _begin_step(file, step, time, length, corner);
         write_combined(file, step, time, length, corner, ldims, gdims,
                        patch_off, h_expr, name, comp_names);
@@ -230,9 +220,14 @@ public:
   }
 
 private:
-  static void _begin_step(kg::io::Engine& file, int step, double time,
-                          const Double3& length, const Double3& corner)
+  void _begin_step(kg::io::Engine& file, int step, double time,
+                   const Double3& length, const Double3& corner)
   {
+    int len = dir_.size() + pfx_.size() + 20;
+    char filename[len];
+    snprintf(filename, len, "%s/%s.%09d.bp", dir_.c_str(), pfx_.c_str(), step);
+    file = io_.open(filename, kg::io::Mode::Write, comm_, pfx_);
+
     file.beginStep(kg::io::StepMode::Append);
     file.put("step", step);
     file.put("time", time);
