@@ -218,6 +218,7 @@ private:
     file.put("time", time);
     file.put("length", length);
     file.put("corner", corner);
+    file.put("step_dimension", std::string("time"));
   }
 
   static void _end_step(kg::io::Engine& file)
