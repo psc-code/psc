@@ -82,7 +82,11 @@ public:
     file_.performPuts();
   }
 
-  void end_step() { file_.close(); }
+  void end_step()
+  {
+    file_.endStep();
+    file_.close();
+  }
 
   template <typename E>
   void write(const E& expr, const Grid_t& grid, const std::string& name,
