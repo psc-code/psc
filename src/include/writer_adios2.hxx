@@ -130,15 +130,13 @@ public:
                   const std::vector<std::string>& comp_names)
   {
 
-    static int pr, pr_copy, pr_wait, pr_write, pr_thread, pr_lock, pr_adios2;
+    static int pr, pr_copy, pr_write, pr_thread, pr_lock;
     if (!pr) {
       pr = prof_register("write_step", 1., 0, 0);
       pr_copy = prof_register("ws copy", 1., 0, 0);
-      pr_wait = prof_register("ws wait", 1., 0, 0);
       pr_write = prof_register("ws write", 1., 0, 0);
       pr_thread = prof_register("ws thread", 1., 0, 0);
       pr_lock = prof_register("ws lock", 1., 0, 0);
-      pr_adios2 = prof_register("ws adios2", 1., 0, 0);
     }
 
     prof_start(pr);
@@ -181,12 +179,12 @@ public:
         // std::lock_guard<std::mutex> guard(writer_mutex);
         prof_stop(pr_lock);
 
-        prof_start(pr_adios2);
+        prof_start(pr_write);
         kg::io::Engine file;
         _begin_step(file, step, time, length, corner);
         write(file, ldims, gdims, patch_off, h_expr, name, comp_names);
         _end_step(file);
-        prof_stop(pr_adios2);
+        prof_stop(pr_write);
       }
 
       prof_stop(pr_thread);
