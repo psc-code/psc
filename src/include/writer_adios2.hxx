@@ -237,8 +237,7 @@ private:
     int n_comps = h_expr.shape(3);
     int n_patches = h_expr.shape(4);
     Int3 im = {h_expr.shape(0), h_expr.shape(1), h_expr.shape(2)};
-    Int3 ib = {-(im[0] - ldims[0]) / 2, -(im[1] - ldims[1]) / 2,
-               -(im[2] - ldims[2]) / 2};
+    Int3 ib = -(im - ldims) / 2;
 
     file.prefixes_.push_back(name);
     file.put("ib", ib, launch);
@@ -266,8 +265,7 @@ private:
 
     int n_patches = h_expr.shape(3);
     Int3 im = {h_expr.shape(0), h_expr.shape(1), h_expr.shape(2)};
-    Int3 ib = {-(im[0] - ldims[0]) / 2, -(im[1] - ldims[1]) / 2,
-               -(im[2] - ldims[2]) / 2};
+    Int3 ib = -(im - ldims) / 2;
 
     file.prefixes_.push_back(name);
     file.put("ib", ib, launch);
