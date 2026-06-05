@@ -68,6 +68,19 @@ TEST(IOAdios2, FilePutGetVariable)
   }
 }
 
+TEST(IOAdios2, FilePutGetVariableScalar)
+{
+  auto io = kg::io::IOAdios2{};
+  {
+    auto file = io.openFile("test3.bp", kg::io::Mode::Write);
+    file.beginStep(kg::io::StepMode::Append);
+    double dbl = 99.;
+    file.putVariable("dbl_scalar", dbl);
+    file.performPuts();
+    file.endStep();
+  }
+}
+
 TEST(IOAdios2, FilePutGetAttribute)
 {
   auto io = kg::io::IOAdios2{};

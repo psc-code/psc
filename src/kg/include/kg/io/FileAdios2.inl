@@ -71,6 +71,10 @@ inline void FileAdios2::putVariable(const std::string& name, const T* data,
   }
   if (!selection.start.empty()) {
     v.SetSelection({selection.start, selection.count});
+  } else {
+    if (!shape.empty()) {
+      v.SetSelection({kg::io::Dims({0}), shape});
+    }
   }
   if (!memory_selection.start.empty()) {
     v.SetMemorySelection({memory_selection.start, memory_selection.count});

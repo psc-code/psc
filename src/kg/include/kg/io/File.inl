@@ -38,6 +38,14 @@ inline void File::putVariable(const std::string& name, const T* data,
 }
 
 template <typename T>
+inline void File::putVariable(const std::string& name, const T& datum)
+{
+  assert(impl_);
+  FileBase::TypeConstPointer datumVar = &datum;
+  impl_->putVariable(name, datumVar, kg::io::Mode::Blocking, {}, {}, {});
+}
+
+template <typename T>
 inline void File::getVariable(const std::string& name, T* data, Mode launch,
                               const Extents& selection,
                               const Extents& memory_selection)
