@@ -104,7 +104,6 @@ void setupParameters(int argc, char** argv)
   ion_mass = inputParams.get<double>("ion_mass");
 
   n_upstream = 1.0;
-  v_upstream = {0.0, inputParams.get<double>("v_upstream_y"), 0.0};
   te_upstream = inputParams.get<double>("electron_temperature");
   ti_upstream = inputParams.get<double>("ion_temperature");
 
@@ -122,11 +121,10 @@ void setupParameters(int argc, char** argv)
     double gamma = 1 / sqrt(1 - v_upstream.mag2());
     e0 *= gamma;
     h0_upstream *= Real3{gamma, 1.0, gamma};
-  }
-
-  if (shock_method == "standing") {
-    inputParams.errIfPresent("b_angle_y_to_x_rad",
-                             "only perpendicular shocks are supported");
+  } else if (shock_method == "standing") {
+    inputParams.warnIfPresent(
+      "b_angle_y_to_x_rad",
+      "only perpendicular shocks are supported for wall case; angle ignored");
     h0_upstream = {inputParams.get<double>("b_mag"), 0.0, 0.0};
     e0 = -v_upstream.cross(h0_upstream);
 
@@ -286,6 +284,8 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
   setup_particles.centerer = centering::Centerer(centering::CC);
   setup_particles.random_offsets = true;
   setup_particles.initial_momentum_gamma_correction = true;
+
+  // std::cout << v_upstream << "=vupstream\n";
 
   if (shock_method == "wall") {
     auto init_np = [&](int kind, Double3 pos, int p, Int3 idx,
