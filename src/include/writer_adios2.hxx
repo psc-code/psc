@@ -216,6 +216,9 @@ private:
     file.beginStep(kg::io::StepMode::Append);
     file.put("step", step);
     file.put("time", time);
+    // additionally, write time as a variable (above writes it as an attribute)
+    // so that xarray-adios2 can use it as a dimension coordinate
+    file.file_.putVariable("time", time);
     file.put("length", length);
     file.put("corner", corner);
     file.put("step_dimension", std::string("time"));
