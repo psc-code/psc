@@ -7,6 +7,7 @@
 #include <particles.hxx>
 #include <setup_particles.hxx>
 
+#include "../libpsc/psc_bnd_fields/field_bc_base.hxx"
 #include "gauss_corrector_base.hxx"
 #include "diagnostic_base.hxx"
 #include "injector_base.hxx"
@@ -117,6 +118,7 @@ struct Psc
   using BndFields = typename PscConfig::BndFields;
   using BndParticles = typename PscConfig::BndParticles;
   using Dim = typename PscConfig::Dim;
+  using FieldBcBaseT = FieldBcBase<MfieldsState>;
   using GaussCorrectorBaseT = GaussCorrectorBase<MfieldsState, Mparticles>;
   using DiagnosticBaseT = DiagnosticBase<Mparticles, MfieldsState>;
   using InjectorBaseT = InjectorBase<Mparticles, MfieldsState>;
@@ -161,6 +163,13 @@ struct Psc
   // API for modifying various internal components
   // TODO: improve ownership model: we should own these objects (i.e., use
   // unique_ptr), but don't want to burden the user with C++ boilerplate.
+
+  void add_field_bc(FieldBcBaseT* field_bc)
+  {
+    if (field_bc) {
+      field_bcs_.push_back(field_bc);
+    }
+  }
 
   void add_gauss_corrector(GaussCorrectorBaseT* corrector)
   {
@@ -555,6 +564,7 @@ protected:
   Balance& balance_;
   Collision& collision_;
   Checks& checks_;
+  std::vector<FieldBcBaseT*> field_bcs_;
   std::vector<GaussCorrectorBaseT*> gauss_correctors_;
   std::vector<DiagnosticBaseT*> diagnostics_;
   std::vector<InjectorBaseT*> injectors_;
