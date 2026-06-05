@@ -79,6 +79,19 @@ TEST(IOAdios2, FilePutGetVariableScalar)
     file.performPuts();
     file.endStep();
   }
+  {
+    auto file = io.openFile("test3.bp", kg::io::Mode::Read);
+    file.beginStep(kg::io::StepMode::Read);
+
+    auto shape = file.shapeVariable("dbl_scalar");
+    EXPECT_EQ(shape.size(), 0);
+    double dbl;
+    file.getVariable("dbl_scalar", dbl);
+    file.performGets();
+    file.endStep();
+
+    EXPECT_EQ(dbl, 99.);
+  }
 }
 
 TEST(IOAdios2, FilePutGetAttribute)
