@@ -73,7 +73,6 @@ public:
   {
     _begin_step(file_, grid.timestep(), grid.time(), grid.domain.length,
                 grid.domain.corner);
-    file_.performPuts();
   }
 
   void end_step() { _end_step(file_); }
@@ -219,6 +218,7 @@ private:
     file.put("length", length);
     file.put("corner", corner);
     file.put("step_dimension", std::string("time"));
+    file_.performPuts();
   }
 
   static void _end_step(kg::io::Engine& file)
