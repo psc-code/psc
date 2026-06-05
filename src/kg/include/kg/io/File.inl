@@ -55,6 +55,16 @@ inline void File::getVariable(const std::string& name, T* data, Mode launch,
   impl_->getVariable(name, dataVar, launch, selection, memory_selection);
 }
 
+template <typename T>
+inline void File::getVariable(const std::string& name, T& datum)
+{
+  assert(impl_);
+  auto shape = impl_->shapeVariable(name);
+  assert(shape.size() == 0);
+  FileBase::TypePointer dataVar = &datum;
+  impl_->getVariable(name, dataVar, Mode::Blocking, {}, {});
+}
+
 inline Dims File::shapeVariable(const std::string& name) const
 {
   assert(impl_);

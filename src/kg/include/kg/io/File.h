@@ -38,6 +38,9 @@ public:
   void getVariable(const std::string& name, T* data, Mode launch,
                    const Extents& selection, const Extents& memory_selection);
 
+  template <typename T>
+  void getVariable(const std::string& name, T& datum);
+
   Dims shapeVariable(const std::string& name) const;
 
   template <typename T>
