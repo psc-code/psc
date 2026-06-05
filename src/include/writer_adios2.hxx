@@ -72,7 +72,7 @@ public:
   void begin_step(const Grid_t& grid)
   {
     _begin_step(file_, grid.timestep(), grid.time(), grid.domain.length,
-                grid.domain.corner);
+                grid.domain.corner, grid.domain.gdims);
   }
 
   void end_step() { _end_step(file_); }
@@ -180,7 +180,7 @@ public:
 
         prof_start(pr_write);
         kg::io::Engine file;
-        _begin_step(file, step, time, length, corner);
+        _begin_step(file, step, time, length, corner, gdims);
         write(file, ldims, gdims, patch_off, h_expr, name, comp_names);
         _end_step(file);
         prof_stop(pr_write);
@@ -205,7 +205,8 @@ public:
 
 private:
   void _begin_step(kg::io::Engine& file, int step, double time,
-                   const Double3& length, const Double3& corner)
+                   const Double3& length, const Double3& corner,
+                   const Int3& gdims)
   {
     int len = dir_.size() + pfx_.size() + 20;
     char filename[len];
@@ -218,6 +219,23 @@ private:
     file.put("length", length);
     file.put("corner", corner);
     file.put("step_dimension", std::string("time"));
+
+    if (file.mpi_rank_ == 0) {
+      Double3 dx = length / Double3(gdims);
+      for (int d = 0; d < 3; d++) {
+        auto crd = gt::zeros<double>({gdims[d]});
+        for (int i = 0; i < gdims[d]; i++) {
+          crd(i) = corner[d] + (i + .5) * dx[d];
+        }
+        std::string name = d == 0 ? "x" : d == 1 ? "y" : "z";
+        file.prefixes_.push_back(name);
+        file.putVariable(crd.data(), kg::io::Mode::Blocking,
+                         kg::io::Dims({gdims[d]}), {}, {});
+        file.prefixes_.pop_back();
+        file.put(std::string(name) + "/dimensions", name);
+      }
+    }
+
     file_.performPuts();
   }
 
@@ -284,7 +302,7 @@ private:
     file.prefixes_.pop_back();
     // FIXME, it'd be better to write within the prefix, but xarray-adios2
     // expects a "/" separator instead of "::"
-    file.put(std::string(name) + "/dimensions", std::string("x y z"));
+    file.put(std::string(name) + "/dimensions", std::string("z y x"));
     file.performPuts();
   }
 
