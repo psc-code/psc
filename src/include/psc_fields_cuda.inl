@@ -23,27 +23,17 @@ public:
            const kg::io::Mode launch = kg::io::Mode::NonBlocking)
   {
     const auto& grid = mflds_cuda.grid();
-    auto n_comps = mflds_cuda.n_comps();
 
     writer.put("ibn", mflds_cuda.ibn(), launch);
 
     auto&& h_mflds = gt::host_mirror(mflds_cuda.storage());
     gt::copy(mflds_cuda.storage(), h_mflds);
 
-    auto shape = makeDims(n_comps, grid.domain.gdims);
+    std::vector<Int3> patchOffsets;
     for (int p = 0; p < mflds_cuda.n_patches(); p++) {
-      auto start = makeDims(0, grid.patches[p].off);
-      auto count = makeDims(n_comps, grid.ldims);
-      auto ib = makeDims(0, mflds_cuda.ibn());
-      auto shp = mflds_cuda.storage().shape();
-      auto im = makeDims(n_comps, {shp[0], shp[1], shp[2]});
-      writer.putVariable(&h_mflds(0, 0, 0, 0, p), launch, shape, {start, count},
-                         {ib, im});
+      patchOffsets.push_back(grid.patches[p].off);
     }
-
-    // host mirror will go away as this function returns, so need
-    // to write
-    writer.performPuts();
+    write_4d(writer, grid.ldims, grid.domain.gdims, patchOffsets, h_mflds);
   }
 
   void get(kg::io::Engine& reader, Mfields& mflds_cuda,
