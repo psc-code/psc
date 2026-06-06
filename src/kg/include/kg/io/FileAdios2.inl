@@ -72,7 +72,7 @@ inline void FileAdios2::putVariable(const std::string& name, const T* data,
   if (!selection.start.empty()) {
     v.SetSelection({selection.start, selection.count});
   } else {
-    if (!shape.empty()) {
+    if (!shape.empty() && shape[0] != LocalValueDim) {
       v.SetSelection({kg::io::Dims({0}), shape});
     }
   }
