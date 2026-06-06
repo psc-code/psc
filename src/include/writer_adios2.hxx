@@ -111,7 +111,7 @@ public:
                     const std::vector<std::string>& comp_names)
   {
 #if 0
-    write_4d(file, ldims, gdims, patch_off, h_expr, name, comp_names);
+    write_4d(file, ldims, gdims, patch_off, h_expr, name);
 #else
     int n_comps = h_expr.shape(3);
     assert(n_comps == comp_names.size());
