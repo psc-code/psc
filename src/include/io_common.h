@@ -22,8 +22,7 @@ inline kg::io::Dims makeDims(const Int3& dims)
 
 template <typename E>
 inline void write_4d(kg::io::Engine& file, const Int3& ldims, const Int3& gdims,
-                     const std::vector<Int3>& patch_off, const E& h_expr,
-                     const std::string& name)
+                     const std::vector<Int3>& patch_off, const E& h_expr)
 {
   auto launch = kg::io::Mode::Blocking;
 
@@ -32,7 +31,6 @@ inline void write_4d(kg::io::Engine& file, const Int3& ldims, const Int3& gdims,
   Int3 im = {h_expr.shape(0), h_expr.shape(1), h_expr.shape(2)};
   Int3 ib = -(im - ldims) / 2;
 
-  file.prefixes_.push_back(name);
   file.put("ib", ib, launch);
   file.put("im", im, launch);
 
@@ -45,7 +43,6 @@ inline void write_4d(kg::io::Engine& file, const Int3& ldims, const Int3& gdims,
     file.putVariable(&h_expr(ib[0], ib[1], ib[2], 0, p), launch, shape,
                      {start, count}, {_ib, _im});
   }
-  file.prefixes_.pop_back();
   file.performPuts();
 }
 
@@ -54,6 +51,8 @@ inline void write_3d(kg::io::Engine& file, const Int3& ldims, const Int3& gdims,
                      const std::vector<Int3>& patch_off, const E& h_expr,
                      const std::string& name)
 {
+  // FIXME, should not pass name, but have prefixes set first, but gotta resolve
+  // separator inconsistency first
   auto launch = kg::io::Mode::Blocking;
 
   int n_patches = h_expr.shape(3);
