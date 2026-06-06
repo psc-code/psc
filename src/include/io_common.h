@@ -21,10 +21,9 @@ inline kg::io::Dims makeDims(const Int3& dims)
 }
 
 template <typename E>
-inline void write_4d(kg::io::Engine& file, const Int3& ldims,
-                      const Int3& gdims, const std::vector<Int3>& patch_off,
-                      const E& h_expr, const std::string& name,
-                      const std::vector<std::string>& comp_names)
+inline void write_4d(kg::io::Engine& file, const Int3& ldims, const Int3& gdims,
+                     const std::vector<Int3>& patch_off, const E& h_expr,
+                     const std::string& name)
 {
   auto launch = kg::io::Mode::Blocking;
 
@@ -51,9 +50,9 @@ inline void write_4d(kg::io::Engine& file, const Int3& ldims,
 }
 
 template <typename E>
-inline void write_3d(kg::io::Engine& file, const Int3& ldims,
-                      const Int3& gdims, const std::vector<Int3>& patch_off,
-                      const E& h_expr, const std::string& name)
+inline void write_3d(kg::io::Engine& file, const Int3& ldims, const Int3& gdims,
+                     const std::vector<Int3>& patch_off, const E& h_expr,
+                     const std::string& name)
 {
   auto launch = kg::io::Mode::Blocking;
 
