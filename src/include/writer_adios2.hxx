@@ -233,7 +233,7 @@ private:
         std::string name = d == 0 ? "x" : d == 1 ? "y" : "z";
         file.prefixes_.push_back(name);
         file.putVariable(crd.data(), kg::io::Mode::Blocking,
-                         kg::io::Dims({gdims[d]}), {}, {});
+                         kg::io::Dims({size_t(gdims[d])}), {}, {});
         file.prefixes_.pop_back();
         file.put(std::string(name) + "/dimensions", name);
       }
