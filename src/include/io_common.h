@@ -30,7 +30,8 @@ inline void write_4d(kg::io::Engine& file, const Int3& ldims, const Int3& gdims,
   int n_patches = h_expr.shape(4);
   Int3 im = {h_expr.shape(0), h_expr.shape(1), h_expr.shape(2)};
   Int3 ib = -(im - ldims) / 2;
-
+  std::cout << "ib " << ib[0] << " " << ib[1] << " " << ib[2] << "\n";
+  std::cout << "im " << im[0] << " " << im[1] << " " << im[2] << "\n";
   file.put("ib", ib, launch);
   file.put("im", im, launch);
 
@@ -40,8 +41,8 @@ inline void write_4d(kg::io::Engine& file, const Int3& ldims, const Int3& gdims,
     auto count = makeDims(n_comps, ldims);
     auto _ib = makeDims(0, -ib);
     auto _im = makeDims(n_comps, im);
-    file.putVariable(&h_expr(ib[0], ib[1], ib[2], 0, p), launch, shape,
-                     {start, count}, {_ib, _im});
+    file.putVariable(&h_expr(0, 0, 0, 0, p), launch, shape, {start, count},
+                     {_ib, _im});
   }
   file.performPuts();
 }
@@ -69,8 +70,8 @@ inline void write_3d(kg::io::Engine& file, const Int3& ldims, const Int3& gdims,
     auto count = makeDims(ldims);
     auto _ib = makeDims(-ib);
     auto _im = makeDims(im);
-    file.putVariable(&h_expr(ib[0], ib[1], ib[2], p), launch, shape,
-                     {start, count}, {_ib, _im});
+    file.putVariable(&h_expr(0, 0, 0, p), launch, shape, {start, count},
+                     {_ib, _im});
   }
   file.prefixes_.pop_back();
   // FIXME, it'd be better to write within the prefix, but xarray-adios2
