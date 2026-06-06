@@ -111,14 +111,14 @@ public:
                     const std::vector<std::string>& comp_names)
   {
 #if 0
-    _write_4d(file, ldims, gdims, patch_off, h_expr, name, comp_names);
+    write_4d(file, ldims, gdims, patch_off, h_expr, name, comp_names);
 #else
     int n_comps = h_expr.shape(3);
     assert(n_comps == comp_names.size());
 
     for (int m = 0; m < n_comps; m++) {
-      _write_3d(file, ldims, gdims, patch_off,
-                h_expr.view(_all, _all, _all, m, _all), comp_names[m]);
+      write_3d(file, ldims, gdims, patch_off,
+               h_expr.view(_all, _all, _all, m, _all), comp_names[m]);
     }
 #endif
   }
@@ -246,67 +246,6 @@ private:
   {
     file.endStep();
     file.close();
-  }
-
-  template <typename E>
-  static void _write_4d(kg::io::Engine& file, const Int3& ldims,
-                        const Int3& gdims, const std::vector<Int3>& patch_off,
-                        const E& h_expr, const std::string& name,
-                        const std::vector<std::string>& comp_names)
-  {
-    auto launch = kg::io::Mode::Blocking;
-
-    int n_comps = h_expr.shape(3);
-    int n_patches = h_expr.shape(4);
-    Int3 im = {h_expr.shape(0), h_expr.shape(1), h_expr.shape(2)};
-    Int3 ib = -(im - ldims) / 2;
-
-    file.prefixes_.push_back(name);
-    file.put("ib", ib, launch);
-    file.put("im", im, launch);
-
-    auto shape = makeDims(n_comps, gdims);
-    for (int p = 0; p < n_patches; p++) {
-      auto start = makeDims(0, patch_off[p]);
-      auto count = makeDims(n_comps, ldims);
-      auto _ib = makeDims(0, -ib);
-      auto _im = makeDims(n_comps, im);
-      file.putVariable(&h_expr(ib[0], ib[1], ib[2], 0, p), launch, shape,
-                       {start, count}, {_ib, _im});
-    }
-    file.prefixes_.pop_back();
-    file.performPuts();
-  }
-
-  template <typename E>
-  static void _write_3d(kg::io::Engine& file, const Int3& ldims,
-                        const Int3& gdims, const std::vector<Int3>& patch_off,
-                        const E& h_expr, const std::string& name)
-  {
-    auto launch = kg::io::Mode::Blocking;
-
-    int n_patches = h_expr.shape(3);
-    Int3 im = {h_expr.shape(0), h_expr.shape(1), h_expr.shape(2)};
-    Int3 ib = -(im - ldims) / 2;
-
-    file.prefixes_.push_back(name);
-    file.put("ib", ib, launch);
-    file.put("im", im, launch);
-
-    auto shape = makeDims(gdims);
-    for (int p = 0; p < n_patches; p++) {
-      auto start = makeDims(patch_off[p]);
-      auto count = makeDims(ldims);
-      auto _ib = makeDims(-ib);
-      auto _im = makeDims(im);
-      file.putVariable(&h_expr(ib[0], ib[1], ib[2], p), launch, shape,
-                       {start, count}, {_ib, _im});
-    }
-    file.prefixes_.pop_back();
-    // FIXME, it'd be better to write within the prefix, but xarray-adios2
-    // expects a "/" separator instead of "::"
-    file.put(std::string(name) + "/dimensions", std::string("z y x"));
-    file.performPuts();
   }
 
 #ifdef PSC_USE_IO_THREADS
