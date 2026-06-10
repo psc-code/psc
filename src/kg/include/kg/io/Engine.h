@@ -111,7 +111,7 @@ public:
     bool first = true;
     for (auto& pfx : prefixes_) {
       if (!first) {
-        s += "::";
+        s += "/";
       }
       s += pfx;
       first = false;

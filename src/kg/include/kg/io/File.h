@@ -31,10 +31,15 @@ public:
   void putVariable(const std::string& name, const T* data, Mode launch,
                    const Dims& shape, const Extents& selection,
                    const Extents& memory_selection);
+  template <typename T>
+  void putVariable(const std::string& name, const T& datum);
 
   template <typename T>
   void getVariable(const std::string& name, T* data, Mode launch,
                    const Extents& selection, const Extents& memory_selection);
+
+  template <typename T>
+  void getVariable(const std::string& name, T& datum);
 
   Dims shapeVariable(const std::string& name) const;
 

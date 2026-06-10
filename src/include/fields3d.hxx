@@ -353,6 +353,7 @@ struct Mfields
   const Grid_t& grid() const { return *grid_; }
 
   auto gt() { return Base::storage().view(); }
+  auto gt() const { return Base::storage().view(); }
 
   template <typename FUNC>
   void Foreach_3d(int l, int r, FUNC&& F) const
