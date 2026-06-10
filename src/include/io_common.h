@@ -73,10 +73,8 @@ inline void write_3d(kg::io::Engine& file, const Int3& ldims, const Int3& gdims,
     file.putVariable(&h_expr(0, 0, 0, p), launch, shape, {start, count},
                      {_ib, _im});
   }
+  file.put("dimensions", std::string("z y x"));
   file.prefixes_.pop_back();
-  // FIXME, it'd be better to write within the prefix, but xarray-adios2
-  // expects a "/" separator instead of "::"
-  file.put(std::string(name) + "/dimensions", std::string("z y x"));
   file.performPuts();
 }
 
