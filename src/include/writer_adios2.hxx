@@ -216,6 +216,7 @@ private:
     file = io_.open(filename, kg::io::Mode::Write, comm_, pfx_);
 
     file.beginStep(kg::io::StepMode::Append);
+    file.put("psc_output_version", std::string("1.0.0"));
     file.put("step", step);
     file.put("time", time);
     // additionally, write time as a variable (above writes it as an attribute)
