@@ -100,38 +100,44 @@ void setupParameters(int argc, char** argv)
   checkpoint_filename =
     inputParams.getOrDefault<std::string>("checkpoint_filename", "");
 
-  electron_mass = inputParams.get<double>("electron_mass");
-  ion_mass = inputParams.get<double>("ion_mass");
+  electron_mass = inputParams.get<double>("m_e");
+  ion_mass = inputParams.get<double>("m_i");
 
   n_upstream = 1.0;
-  te_upstream = inputParams.get<double>("electron_temperature");
-  ti_upstream = inputParams.get<double>("ion_temperature");
+  te_upstream = inputParams.get<double>("T_e");
+  ti_upstream = inputParams.get<double>("T_i");
 
-  inputParams.errIfPresentAndNotEqual("v_upstream_x", 0.0, "");
-  v_upstream = {0.0, inputParams.get<double>("v_upstream_y"), 0.0};
-  inputParams.errIfPresentAndNotEqual("v_upstream_z", 0.0, "");
+  double v_shock = inputParams.get<double>("v_shock");
+  double theta_bn_deg = inputParams.get<double>("θ_Bn_deg");
+  double b0 = inputParams.get<double>("B_0");
+
+  double theta_bn = theta_bn_deg * M_PI / 180.0;
+  double theta_xz = inputParams.get<double>("θ_xz_deg") * M_PI / 180.0;
+  h0_upstream = Real3{sin(theta_bn) * cos(theta_xz), cos(theta_bn),
+                      sin(theta_bn) * sin(theta_xz)} *
+                b0;
 
   if (shock_method == "wall") {
-    double b_angle_y_to_x_rad = inputParams.get<double>("b_angle_y_to_x_rad");
-    h0_upstream = Real3{sin(b_angle_y_to_x_rad), cos(b_angle_y_to_x_rad), 0.0} *
-                  inputParams.get<double>("b_mag");
+    v_upstream = {0.0, v_shock / 1.5, 0.0}; // factor is empirical
     e0 = -v_upstream.cross(h0_upstream);
 
     // relativistic correction
     double gamma = 1 / sqrt(1 - v_upstream.mag2());
     e0 *= gamma;
     h0_upstream *= Real3{gamma, 1.0, gamma};
-  } else if (shock_method == "standing") {
-    inputParams.warnIfPresent(
-      "b_angle_y_to_x_rad",
-      "only perpendicular shocks are supported for wall case; angle ignored");
-    h0_upstream = {inputParams.get<double>("b_mag"), 0.0, 0.0};
-    e0 = -v_upstream.cross(h0_upstream);
-
-    // no relativistic correction, since these aren't relativistic RH conditions
+  } else if (shock_method == "relaxation") {
+    v_upstream = {0.0, v_shock, 0.0};
+    e0 = -v_upstream.cross(h0_upstream); // upstream and downstream are the same
 
     // for perpendicular shock (2013 Balogh eq.3.36 and normalization in
     // sec.3.3.1)
+    if (theta_bn_deg != 90.0) {
+      LOG_ERROR("θ_Bn must be 90° for relaxation method; got %f°\n",
+                theta_bn_deg);
+    }
+
+    // no relativistic correction, since these aren't relativistic RH conditions
+
     double b_norm = sqrt(ion_mass * n_upstream * v_upstream.mag2());
     double t_norm = 0.5 * ion_mass * v_upstream.mag2();
     double beta1 =
@@ -161,21 +167,15 @@ void setupParameters(int argc, char** argv)
   gdims[2] = inputParams.get<int>("nz");
   psc_params.nmax = inputParams.get<int>("nt");
 
-  n_patches[0] = inputParams.get<int>("n_patches_x");
-  n_patches[1] = inputParams.get<int>("n_patches_y");
-  n_patches[2] = inputParams.get<int>("n_patches_z");
+  n_patches[0] = inputParams.get<int>("npx");
+  n_patches[1] = inputParams.get<int>("npy");
+  n_patches[2] = inputParams.get<int>("npz");
 
-  Double3 dx = {inputParams.get<double>("dx"), inputParams.get<double>("dy"),
-                inputParams.get<double>("dz")};
+  lengths = {inputParams.get<double>("lx"), inputParams.get<double>("ly"),
+             inputParams.get<double>("lz")};
 
-  lengths = Double3(gdims) * dx;
-
-  if (inputParams.warnIfPresent("turb_dB^2", "set turb_dB instead")) {
-    turb_db2 = inputParams.get<double>("turb_dB^2");
-  } else {
-    turb_db2 = sqr(inputParams.get<double>("turb_dB"));
-  }
-  turb_correlation_length = inputParams.get<double>("turb_correlation_length");
+  turb_db2 = sqr(inputParams.get<double>("dB"));
+  turb_correlation_length = inputParams.get<double>("L_c");
 
   if (inputParams.has("checkpoint_interval")) {
     psc_params.write_checkpoint_every_step =
@@ -193,9 +193,6 @@ void setupParameters(int argc, char** argv)
   int n_writes = inputParams.getOrDefault<int>("n_writes", 100);
   out_interval = psc_params.nmax / n_writes;
   marder_interval = inputParams.getOrDefault<int>("marder_interval", -1);
-
-  inputParams.errIfPresentAndEqual("mirror_domain", true,
-                                   "only 'false' is permitted");
 
   turb_method =
     inputParams.getOrDefault<std::string>("turb_method", "alfven_dense");
@@ -245,7 +242,7 @@ Grid_t* setupGrid()
     corner = {0.0, 0.0, 0.0};
     bnd_fld_upper = BND_FLD_CONDUCTING_WALL;
     bnd_prt_upper = BND_PRT_REFLECTING;
-  } else if (shock_method == "standing") {
+  } else if (shock_method == "relaxation") {
     corner = {0.0, -lengths[1] / 2.0, 0.0};
     bnd_fld_upper = BND_FLD_OPEN;
     bnd_prt_upper = BND_PRT_OPEN;
@@ -285,8 +282,6 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
   setup_particles.random_offsets = true;
   setup_particles.initial_momentum_gamma_correction = true;
 
-  // std::cout << v_upstream << "=vupstream\n";
-
   if (shock_method == "wall") {
     auto init_np = [&](int kind, Double3 pos, int p, Int3 idx,
                        psc_particle_np& np) {
@@ -298,7 +293,7 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
 
     partitionAndSetupParticles(setup_particles, balance, grid_ptr, mprts,
                                init_np);
-  } else if (shock_method == "standing") {
+  } else if (shock_method == "relaxation") {
     auto init_np = [&](int kind, Double3 pos, int p, Int3 idx,
                        psc_particle_np& np) {
       np.n = interpolate_across_shock(n_upstream, n_downstream, pos[1]);
@@ -331,7 +326,7 @@ void add_background_fields(MfieldsState& mflds)
       Real3 h0;
       if (shock_method == "wall") {
         h0 = h0_upstream;
-      } else if (shock_method == "standing") {
+      } else if (shock_method == "relaxation") {
         Double3 pos = centering::get_pos(patch, {jx, jy, jz}, centering::NC, 0);
         h0 = interpolate_across_shock(h0_upstream, h0_downstream, pos[1]);
       }
@@ -1003,7 +998,7 @@ static void run(int argc, char** argv)
   psc.add_injector(&ion_injector_lo);
   psc.add_injector(&electron_injector_lo);
 
-  if (shock_method == "standing") {
+  if (shock_method == "relaxation") {
     psc.add_injector(&ion_injector_hi);
     psc.add_injector(&electron_injector_hi);
   }
