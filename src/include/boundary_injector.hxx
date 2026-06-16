@@ -121,10 +121,19 @@ public:
           int n_prts_to_try_inject =
             get_n_in_cell(density, grid.norm.prts_per_unit_density, true);
 
+          Int3 inner_idx = initial_idx + Int3::unit(INJECT_DIM_IDX_);
+          real_t inner_e = mflds(EX + INJECT_DIM_IDX_, inner_idx[0],
+                                 inner_idx[1], inner_idx[2], p);
+
           for (int prt_count = 0; prt_count < n_prts_to_try_inject;
                prt_count++) {
             psc::particle::Inject prt =
               particle_generator_.get(cell_corner, grid.domain.dx);
+
+            // FIXME no factor of dt - why does this work? can it be better?
+            real_t du_from_e =
+              inner_e * grid.kinds[prt.kind].q / grid.kinds[prt.kind].m;
+            prt.u[INJECT_DIM_IDX_] += du_from_e;
 
             AdvanceParticle<real_t, dim_y> advance{grid.dt};
             Real3 v = advance.calc_v(prt.u);
@@ -164,10 +173,19 @@ public:
           int n_prts_to_try_inject =
             get_n_in_cell(density, grid.norm.prts_per_unit_density, true);
 
+          Int3 inner_idx = initial_idx - Int3::unit(INJECT_DIM_IDX_);
+          real_t inner_e = mflds(EX + INJECT_DIM_IDX_, inner_idx[0],
+                                 inner_idx[1], inner_idx[2], p);
+
           for (int prt_count = 0; prt_count < n_prts_to_try_inject;
                prt_count++) {
             psc::particle::Inject prt =
               particle_generator_.get(cell_corner, grid.domain.dx);
+
+            // FIXME no factor of dt - why does this work? can it be better?
+            real_t du_from_e =
+              inner_e * grid.kinds[prt.kind].q / grid.kinds[prt.kind].m;
+            prt.u[INJECT_DIM_IDX_] += du_from_e;
 
             AdvanceParticle<real_t, dim_y> advance{grid.dt};
             Real3 v = advance.calc_v(prt.u);
