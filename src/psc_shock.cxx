@@ -117,7 +117,7 @@ void setupParameters(int argc, char** argv)
                       sin(theta_bn) * sin(theta_xz)} *
                 b0;
 
-  if (shock_method == "wall") {
+  if (shock_method == "wall" || shock_method == "none") {
     v_upstream = {0.0, v_shock / 1.5, 0.0}; // factor is empirical
     e0 = -v_upstream.cross(h0_upstream);
 
@@ -239,24 +239,36 @@ Grid_t* setupGrid()
   // FIXME add a check to catch mismatch between Dim and n grid points early
 
   Double3 corner;
-  int bnd_prt_upper;
+  int bnd_fld_lower;
   int bnd_fld_upper;
+  int bnd_prt_lower;
+  int bnd_prt_upper;
 
   if (shock_method == "wall") {
     corner = {0.0, 0.0, 0.0};
+    bnd_fld_lower = BND_FLD_OPEN;
     bnd_fld_upper = BND_FLD_CONDUCTING_WALL;
+    bnd_prt_lower = BND_PRT_OPEN;
     bnd_prt_upper = BND_PRT_REFLECTING;
+  } else if (shock_method == "none") {
+    corner = {0.0, 0.0, 0.0};
+    bnd_fld_lower = BND_FLD_PERIODIC;
+    bnd_fld_upper = BND_FLD_PERIODIC;
+    bnd_prt_lower = BND_PRT_PERIODIC;
+    bnd_prt_upper = BND_PRT_PERIODIC;
   } else if (shock_method == "relaxation") {
     corner = {0.0, -lengths[1] / 2.0, 0.0};
+    bnd_fld_lower = BND_FLD_OPEN;
     bnd_fld_upper = BND_FLD_OPEN;
+    bnd_prt_lower = BND_PRT_OPEN;
     bnd_prt_upper = BND_PRT_OPEN;
   }
 
   auto domain = Grid_t::Domain{gdims, lengths, corner, n_patches};
 
-  auto bc = psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_OPEN, BND_FLD_PERIODIC},
+  auto bc = psc::grid::BC{{BND_FLD_PERIODIC, bnd_fld_lower, BND_FLD_PERIODIC},
                           {BND_FLD_PERIODIC, bnd_fld_upper, BND_FLD_PERIODIC},
-                          {BND_PRT_PERIODIC, BND_PRT_OPEN, BND_PRT_PERIODIC},
+                          {BND_PRT_PERIODIC, bnd_prt_lower, BND_PRT_PERIODIC},
                           {BND_PRT_PERIODIC, bnd_prt_upper, BND_PRT_PERIODIC}};
 
   auto kinds = Grid_t::Kinds(NR_KINDS);
@@ -286,7 +298,7 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
   setup_particles.random_offsets = true;
   setup_particles.initial_momentum_gamma_correction = true;
 
-  if (shock_method == "wall") {
+  if (shock_method == "wall" || shock_method == "none") {
     auto init_np = [&](int kind, Double3 pos, int p, Int3 idx,
                        psc_particle_np& np) {
       double t = np.kind == KIND_ION ? ti_upstream : te_upstream;
@@ -328,7 +340,7 @@ void add_background_fields(MfieldsState& mflds)
     int n_ghosts = mflds.ibn().max();
     grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
       Real3 h0;
-      if (shock_method == "wall") {
+      if (shock_method == "wall" || shock_method == "none") {
         h0 = h0_upstream;
       } else if (shock_method == "relaxation") {
         Double3 pos = centering::get_pos(patch, {jx, jy, jz}, centering::NC, 0);
@@ -612,7 +624,8 @@ void inject_turbulence_dense(MfieldsState& mflds)
   Int3 i3_min = (1 - gdims) / 2;
   Int3 i3_max = gdims / 2;
 
-  // inject in only half of k-space, since +k and -k modes are indistinguishable
+  // inject in only half of k-space, since +k and -k modes are
+  // indistinguishable
   for (int d = 0; d < 3; d++) {
     if (gdims[d] > 2) {
       i3_min[d] = 0;
@@ -974,7 +987,7 @@ static void run(int argc, char** argv)
   psc.bndf.background_e_hi = e0;
   psc.bndf.background_h_hi = h0_downstream;
 
-  if (turb_db2 > 0.0) {
+  if (turb_db2 > 0.0 && v_upstream[1] > 0.0) {
     if (checkpoint_filename.empty()) {
       // mflds is currently just the pure, initial turbulence
       psc.bndf.radiation =
@@ -989,8 +1002,8 @@ static void run(int argc, char** argv)
   }
 
   if (checkpoint_filename.empty()) {
-    // add background after initializing radiation inflow, which only wants the
-    // perturbations to B
+    // add background after initializing radiation inflow, which only wants
+    // the perturbations to B
     add_background_fields(mflds);
   }
 
@@ -999,8 +1012,10 @@ static void run(int argc, char** argv)
   psc.add_diagnostic(&outp);
   psc.add_diagnostic(&oute);
 
-  psc.add_injector(&ion_injector_lo);
-  psc.add_injector(&electron_injector_lo);
+  if (shock_method != "none") {
+    psc.add_injector(&ion_injector_lo);
+    psc.add_injector(&electron_injector_lo);
+  }
 
   if (shock_method == "relaxation") {
     psc.add_injector(&ion_injector_hi);
