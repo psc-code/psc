@@ -12,18 +12,19 @@ TEST(BoundaryInjectorTest, ParticleGeneratorMaxwellianTest)
   int kind_idx = 15;
   Grid_t::Kind kind{1.0, 1836.0, "ion"};
   ParticleGeneratorMaxwellian::Real w = 1.0;
-  ParticleGeneratorMaxwellian::Real3 mean_u{0.0, 5.0, 15.0};
+  ParticleGeneratorMaxwellian::Real3 mean_v{0.0, .05, .15};
   ParticleGeneratorMaxwellian::Real3 temperature{0.0, 0.0, 0.0};
   ParticleGeneratorMaxwellian::Real3 pos{1.0, 2.0, 5.0};
 
-  ParticleGeneratorMaxwellian gen{kind_idx, kind, mean_u, temperature};
+  ParticleGeneratorMaxwellian gen{kind_idx, kind, mean_v, temperature};
 
   auto prt = gen.get(pos, {0.0, 0.0, 0.0});
 
   ASSERT_EQ(prt.kind, kind_idx);
   ASSERT_EQ(prt.w, w);
   ASSERT_EQ(prt.tag, 0);
-  ASSERT_EQ(prt.u, mean_u); // zero temperature => exact velocity
+  ASSERT_EQ(prt.u / sqrt(1 + prt.u.mag2()),
+            mean_v); // zero temperature => exact velocity
   ASSERT_EQ(prt.x, pos);
 }
 
