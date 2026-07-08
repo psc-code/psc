@@ -1,9 +1,11 @@
+#pragma once
 
 #include "psc.h"
 #include "kg/VecRange.hxx"
 #include "fields.hxx"
 #include "bnd_fields.hxx"
 #include "radiating_bnd.hxx"
+#include "field_bc_util.hxx"
 
 #include <mrc_bits.h>
 
@@ -41,7 +43,8 @@ struct BndFields_ : BndFieldsBase
               break;
             }
             case BND_FLD_OPEN: {
-              set_lower_ghosts(mflds, p, d, EX, background_e_lo, false);
+              psc::bnd::field::detail::set_lower_ghosts<dim_t>(
+                mflds, p, d, EX, background_e_lo, false);
               break;
             }
             default: {
@@ -63,7 +66,8 @@ struct BndFields_ : BndFieldsBase
               break;
             }
             case BND_FLD_OPEN: {
-              set_upper_ghosts(mflds, p, d, EX, background_e_hi, false);
+              psc::bnd::field::detail::set_upper_ghosts<dim_t>(
+                mflds, p, d, EX, background_e_hi, false);
               break;
             }
             default: {
@@ -187,120 +191,10 @@ struct BndFields_ : BndFieldsBase
     }
   }
 
-  static void set_lower_ghosts_to_nan(MfieldsState& mflds, int p, int d, int mb,
-                                      bool include_edge)
-  {
-#ifndef DEBUG
-    return;
-#endif
-    real_t nan = std::numeric_limits<real_t>::quiet_NaN();
-    set_lower_ghosts(mflds, p, d, mb, {nan, nan, nan}, include_edge);
-  }
-
-  static void set_upper_ghosts_to_nan(MfieldsState& mflds, int p, int d, int mb,
-                                      bool include_edge)
-  {
-#ifndef DEBUG
-    return;
-#endif
-    real_t nan = std::numeric_limits<real_t>::quiet_NaN();
-    set_upper_ghosts(mflds, p, d, mb, {nan, nan, nan}, include_edge);
-  }
-
-  /**
-   * @brief Set E or B lower ghosts to the given constants (each component has
-   * its own constant).
-   * @param mflds mflds
-   * @param p patch index
-   * @param d which dimension to set the ghosts of
-   * @param mb `EX` or `HX`; note that `mb+1` and `mb+2` are also set
-   * @param val the constants
-   * @param include_edge whether or not values located on exact domain edges
-   * should be considered "ghosts"
-   */
-  static void set_lower_ghosts(MfieldsState& mflds, int p, int d, int mb,
-                               Real3 val, bool include_edge)
-  {
-    auto F = make_Fields3d<dim_t>(mflds[p]);
-    Int3 start = mflds.ib();
-    Int3 stop = mflds.ib() + mflds.im();
-    stop[d] = 0;
-
-    // TODO use gtensor views instead of VecRange
-
-    for (int m = mb; m < mb + 3; m++) {
-      for (Int3 i3 : VecRange(start, stop)) {
-        F(m, i3) = val[m - mb];
-      }
-    }
-
-    if (!include_edge) {
-      return;
-    }
-
-    Int3 edge_start = mflds.ib();
-    Int3 edge_stop = mflds.ib() + mflds.im();
-    edge_start[d] = 0;
-    edge_stop[d] = 1;
-
-    for (int m = mb; m < mb + 3; m++) {
-      bool edge_ec = mb == EX && m - mb != d;
-      bool edge_fc = mb == HX && m - mb == d;
-
-      if (edge_ec || edge_fc) {
-        for (Int3 i3 : VecRange(edge_start, edge_stop)) {
-          F(m, i3) = val[m - mb];
-        }
-      }
-    }
-  }
-
-  /**
-   * @brief Set E or B upper ghosts to the given constants (each component has
-   * its own constant).
-   * @param mflds mflds
-   * @param p patch index
-   * @param d which dimension to set the ghosts of
-   * @param mb `EX` or `HX`; note that `mb+1` and `mb+2` are also set
-   * @param val the constants
-   * @param include_edge whether or not values located on exact domain edges
-   * should be considered "ghosts"
-   */
-  static void set_upper_ghosts(MfieldsState& mflds, int p, int d, int mb,
-                               Real3 val, bool include_edge)
-  {
-    auto F = make_Fields3d<dim_t>(mflds[p]);
-    Int3 start = mflds.ib();
-    Int3 stop = mflds.ib() + mflds.im();
-    start[d] = mflds.grid().ldims[d] + 1;
-
-    // TODO use gtensor views instead of VecRange
-
-    for (int m = mb; m < mb + 3; m++) {
-      for (Int3 i3 : VecRange(start, stop)) {
-        F(m, i3) = val[m - mb];
-      }
-    }
-
-    Int3 edge_start = mflds.ib();
-    Int3 edge_stop = mflds.ib() + mflds.im();
-    edge_start[d] = mflds.grid().ldims[d];
-    edge_stop[d] = mflds.grid().ldims[d] + 1;
-
-    for (int m = mb; m < mb + 3; m++) {
-      bool not_edge_ec = mb == EX && m - mb == d;
-      bool not_edge_fc = mb == HX && m - mb != d;
-
-      if (not_edge_ec || not_edge_fc || include_edge)
-        for (Int3 i3 : VecRange(edge_start, edge_stop)) {
-          F(m, i3) = val[m - mb];
-        }
-    }
-  }
-
   void conducting_wall_E_lo(MfieldsState& mflds, int p, int d)
   {
-    set_lower_ghosts_to_nan(mflds, p, d, EX, true);
+    psc::bnd::field::detail::set_lower_ghosts_to_nan<dim_t>(mflds, p, d, EX,
+                                                            true);
 
     auto F = make_Fields3d<dim_t>(mflds[p]);
     const int* ldims = mflds.grid().ldims;
@@ -340,7 +234,8 @@ struct BndFields_ : BndFieldsBase
 
   void conducting_wall_E_hi(MfieldsState& mflds, int p, int d)
   {
-    set_upper_ghosts_to_nan(mflds, p, d, EX, true);
+    psc::bnd::field::detail::set_upper_ghosts_to_nan<dim_t>(mflds, p, d, EX,
+                                                            true);
 
     auto F = make_Fields3d<dim_t>(mflds[p]);
     const int* ldims = mflds.grid().ldims;
@@ -381,7 +276,8 @@ struct BndFields_ : BndFieldsBase
 
   void conducting_wall_H_lo(MfieldsState& mflds, int p, int d)
   {
-    set_lower_ghosts_to_nan(mflds, p, d, HX, false);
+    psc::bnd::field::detail::set_lower_ghosts_to_nan<dim_t>(mflds, p, d, HX,
+                                                            false);
 
     auto F = make_Fields3d<dim_t>(mflds[p]);
     const int* ldims = mflds.grid().ldims;
@@ -416,7 +312,8 @@ struct BndFields_ : BndFieldsBase
 
   void conducting_wall_H_hi(MfieldsState& mflds, int p, int d)
   {
-    set_upper_ghosts_to_nan(mflds, p, d, HX, false);
+    psc::bnd::field::detail::set_upper_ghosts_to_nan<dim_t>(mflds, p, d, HX,
+                                                            false);
 
     auto F = make_Fields3d<dim_t>(mflds[p]);
 
@@ -534,7 +431,8 @@ struct BndFields_ : BndFieldsBase
 
   void radiative_H_lo(MfieldsState& mflds, int p, int d)
   {
-    set_lower_ghosts_to_nan(mflds, p, d, HX, false);
+    psc::bnd::field::detail::set_lower_ghosts_to_nan<dim_t>(mflds, p, d, HX,
+                                                            false);
 
     auto F = make_Fields3d<dim_t>(mflds[p]);
     const Grid_t& grid = mflds.grid();
@@ -584,7 +482,8 @@ struct BndFields_ : BndFieldsBase
 
   void radiative_H_hi(MfieldsState& mflds, int p, int d)
   {
-    set_upper_ghosts_to_nan(mflds, p, d, HX, false);
+    psc::bnd::field::detail::set_upper_ghosts_to_nan<dim_t>(mflds, p, d, HX,
+                                                            false);
 
     auto F = make_Fields3d<dim_t>(mflds[p]);
     const Grid_t& grid = mflds.grid();
