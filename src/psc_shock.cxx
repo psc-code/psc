@@ -465,7 +465,7 @@ void inject_plane_alfven_wave(PscConfig::Mfields& vector_potential, double db,
   }
 
   Double3 xp_hat{cos_theta * cos_phi, cos_theta * sin_phi, -sin_theta};
-  Double3 yp_hat{sin_phi, -cos_phi, 0};
+  Double3 yp_hat{-sin_phi, cos_phi, 0};
 
   Double3 a_vec = db * cos(polarization) / k2 * xp_hat.cross(k_vec);
   Double3 b_vec = db * sin(polarization) / k2 * yp_hat.cross(k_vec);
