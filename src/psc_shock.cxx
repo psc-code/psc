@@ -412,25 +412,31 @@ void inject_b_from_potential(MfieldsState& mflds,
 
     grid.Foreach_3d(2, 1, [&](int jx, int jy, int jz) {
       field_patch(HX, jx, jy, jz) =
-        (vector_potential_patch(AZ, jx, jy + 1, jz) -
-         vector_potential_patch(AZ, jx, jy, jz)) /
+        (Dim::is_invar(1) ? 0
+                          : vector_potential_patch(AZ, jx, jy + 1, jz) -
+                              vector_potential_patch(AZ, jx, jy, jz)) /
           dx[1] -
-        (vector_potential_patch(AY, jx, jy, jz + 1) -
-         vector_potential_patch(AY, jx, jy, jz)) /
+        (Dim::is_invar(2) ? 0
+                          : vector_potential_patch(AY, jx, jy, jz + 1) -
+                              vector_potential_patch(AY, jx, jy, jz)) /
           dx[2];
       field_patch(HY, jx, jy, jz) =
-        (vector_potential_patch(AX, jx, jy, jz + 1) -
-         vector_potential_patch(AX, jx, jy, jz)) /
+        (Dim::is_invar(2) ? 0
+                          : vector_potential_patch(AX, jx, jy, jz + 1) -
+                              vector_potential_patch(AX, jx, jy, jz)) /
           dx[2] -
-        (vector_potential_patch(AZ, jx + 1, jy, jz) -
-         vector_potential_patch(AZ, jx, jy, jz)) /
+        (Dim::is_invar(0) ? 0
+                          : vector_potential_patch(AZ, jx + 1, jy, jz) -
+                              vector_potential_patch(AZ, jx, jy, jz)) /
           dx[0];
       field_patch(HZ, jx, jy, jz) =
-        (vector_potential_patch(AY, jx + 1, jy, jz) -
-         vector_potential_patch(AY, jx, jy, jz)) /
+        (Dim::is_invar(0) ? 0
+                          : vector_potential_patch(AY, jx + 1, jy, jz) -
+                              vector_potential_patch(AY, jx, jy, jz)) /
           dx[0] -
-        (vector_potential_patch(AX, jx, jy + 1, jz) -
-         vector_potential_patch(AX, jx, jy, jz)) /
+        (Dim::is_invar(1) ? 0
+                          : vector_potential_patch(AX, jx, jy + 1, jz) -
+                              vector_potential_patch(AX, jx, jy, jz)) /
           dx[1];
     });
   }
