@@ -175,8 +175,21 @@ void setupParameters(int argc, char** argv)
   n_patches[1] = inputParams.get<int>("npy");
   n_patches[2] = inputParams.get<int>("npz");
 
-  lengths = {inputParams.get<double>("lx"), inputParams.get<double>("ly"),
-             inputParams.get<double>("lz")};
+  if (inputParams.has("lx")) {
+    lengths[0] = inputParams.get<double>("lx");
+  } else {
+    lengths[0] = inputParams.get<double>("dx") * gdims[0];
+  }
+  if (inputParams.has("ly")) {
+    lengths[1] = inputParams.get<double>("ly");
+  } else {
+    lengths[1] = inputParams.get<double>("dy") * gdims[1];
+  }
+  if (inputParams.has("lz")) {
+    lengths[2] = inputParams.get<double>("lz");
+  } else {
+    lengths[2] = inputParams.get<double>("dz") * gdims[2];
+  }
 
   turb_db2 = sqr(inputParams.get<double>("dB"));
   turb_correlation_length = inputParams.get<double>("L_c");
