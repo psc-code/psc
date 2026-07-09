@@ -26,6 +26,18 @@ struct Axis
     return temp;
   }
 
+  Axis next()
+  {
+    int next = (axis + 1) % 3;
+    return next;
+  }
+
+  Axis prev()
+  {
+    int next = (axis + 2) % 3;
+    return next;
+  }
+
   int axis;
 };
 
