@@ -3,6 +3,7 @@
 #include "psc.h"
 #include "../axis.hxx"
 #include "kg/Vec3.h"
+#include "kg/VecRange.hxx"
 #include "field_bc_base.hxx"
 #include "field_bc_util.hxx"
 #include "../psc_bnd/psc_bnd_util.hxx"
@@ -35,38 +36,29 @@ struct ConductingWall : FieldBcBase<MfieldsState>
         detail::set_lower_ghosts_to_nan<dim_t>(mflds, p, d, EX, true);
 
         auto F = make_Fields3d<Dim>(mflds[p]);
-        const int* ldims = mflds.grid().ldims;
-        Int3 ib = mflds.ib(), im = mflds.im();
 
-        if (d == Axis::Y) {
-          for (int iz = -2; iz < ldims[2] + 2; iz++) {
-            // FIXME, needs to be for other dir, too, and it's ugly
-            for (int ix = std::max(-2, ib[0]);
-                 ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
-              F(EX, ix, 0, iz) = 0.;
-              F(EX, ix, -1, iz) = F(EX, ix, 1, iz);
+        Int3 start = mflds.ib();
+        Int3 stop = mflds.ib() + mflds.im();
+        start[d] = 0;
+        stop[d] = start[d] + 1;
 
-              F(EY, ix, -1, iz) = -F(EY, ix, 0, iz);
+        int E0 = EX + d;
+        int E1 = EX + d.next();
+        int E2 = EX + d.prev();
 
-              F(EZ, ix, 0, iz) = 0.;
-              F(EZ, ix, -1, iz) = F(EZ, ix, 1, iz);
-            }
+        for (Int3 i3 : VecRange(start, stop)) {
+          // 1. transverse components: wall is at relative index 0
+          F(E1, i3) = 0.0;
+          F(E2, i3) = 0.0;
+          for (Int3 j3 = Int3::unit(d); j3[d] <= mflds.ibn()[d]; j3[d]++) {
+            F(E1, i3 - j3) = F(E1, i3 + j3);
+            F(E2, i3 - j3) = F(E2, i3 + j3);
           }
-        } else if (d == Axis::Z) {
-          for (int iy = -2; iy < ldims[1] + 2; iy++) {
-            for (int ix = std::max(-2, ib[0]);
-                 ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
-              F(EX, ix, iy, 0) = 0.;
-              F(EX, ix, iy, -1) = F(EX, ix, iy, 1);
 
-              F(EY, ix, iy, 0) = 0.;
-              F(EY, ix, iy, -1) = F(EY, ix, iy, 1);
-
-              F(EZ, ix, iy, -1) = -F(EZ, ix, iy, 0);
-            }
+          // 2. normal component: wall is at relative index -1/2
+          for (Int3 j3 = Int3::unit(d); j3[d] <= mflds.ibn()[d]; j3[d]++) {
+            F(E0, i3 - j3) = -F(E0, i3 + j3 - Int3::unit(d));
           }
-        } else {
-          assert(0);
         }
       }
 
@@ -74,39 +66,30 @@ struct ConductingWall : FieldBcBase<MfieldsState>
         detail::set_upper_ghosts_to_nan<dim_t>(mflds, p, d, EX, true);
 
         auto F = make_Fields3d<Dim>(mflds[p]);
-        const int* ldims = mflds.grid().ldims;
-        Int3 ib = mflds.ib(), im = mflds.im();
+        Int3 ldims = mflds.grid().ldims;
 
-        if (d == Axis::Y) {
-          int my _mrc_unused = ldims[1];
-          for (int iz = -2; iz < ldims[2] + 2; iz++) {
-            for (int ix = std::max(-2, ib[0]);
-                 ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
-              F(EX, ix, my, iz) = 0.;
-              F(EX, ix, my + 1, iz) = F(EX, ix, my - 1, iz);
+        Int3 start = mflds.ib();
+        Int3 stop = mflds.ib() + mflds.im();
+        start[d] = ldims[d];
+        stop[d] = start[d] + 1;
 
-              F(EY, ix, my, iz) = -F(EY, ix, my - 1, iz);
+        int E0 = EX + d;
+        int E1 = EX + d.next();
+        int E2 = EX + d.prev();
 
-              F(EZ, ix, my, iz) = 0.;
-              F(EZ, ix, my + 1, iz) = F(EZ, ix, my - 1, iz);
-            }
+        for (Int3 i3 : VecRange(start, stop)) {
+          // 1. transverse components: wall is at relative index n=ldims[d]
+          F(E1, i3) = 0.0;
+          F(E2, i3) = 0.0;
+          for (Int3 j3 = Int3::unit(d); j3[d] <= mflds.ibn()[d]; j3[d]++) {
+            F(E1, i3 + j3) = F(E1, i3 - j3);
+            F(E2, i3 + j3) = F(E2, i3 - j3);
           }
-        } else if (d == Axis::Z) {
-          int mz = ldims[2];
-          for (int iy = -2; iy < ldims[1] + 2; iy++) {
-            for (int ix = std::max(-2, ib[0]);
-                 ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
-              F(EX, ix, iy, mz) = 0.;
-              F(EX, ix, iy, mz + 1) = F(EX, ix, iy, mz - 1);
 
-              F(EY, ix, iy, mz) = 0.;
-              F(EY, ix, iy, mz + 1) = F(EY, ix, iy, mz - 1);
-
-              F(EZ, ix, iy, mz) = -F(EZ, ix, iy, mz - 1);
-            }
+          // 2. normal component: wall is at relative index n-1/2
+          for (Int3 j3 = Int3::unit(d); j3[d] <= mflds.ibn()[d]; j3[d]++) {
+            F(E0, i3 + j3) = -F(E0, i3 - j3 + Int3::unit(d));
           }
-        } else {
-          assert(0);
         }
       }
     }
