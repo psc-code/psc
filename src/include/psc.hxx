@@ -8,6 +8,7 @@
 #include <setup_particles.hxx>
 
 #include "../libpsc/psc_bnd_fields/field_bc_base.hxx"
+#include "../libpsc/psc_bnd_fields/conducting_wall.hxx"
 #include "gauss_corrector_base.hxx"
 #include "diagnostic_base.hxx"
 #include "injector_base.hxx"
@@ -145,6 +146,18 @@ struct Psc
       if (grid.isInvar(d) != Dim::is_invar(d)) {
         LOG_ERROR("dimension %d is%s invariant, but gdims[%d]=%d\n", d,
                   Dim::is_invar(d) ? "" : " not", d, grid.domain.gdims[d]);
+      }
+    }
+
+    for (int d = 0; d < 3; d++) {
+      using psc::bnd::LoHi;
+      using psc::bnd::field::ConductingWall;
+
+      if (grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL) {
+        add_field_bc(new ConductingWall<Dim, MfieldsState>{d, LoHi::Lo});
+      }
+      if (grid.bc.fld_hi[d] == BND_FLD_CONDUCTING_WALL) {
+        add_field_bc(new ConductingWall<Dim, MfieldsState>{d, LoHi::Hi});
       }
     }
 
