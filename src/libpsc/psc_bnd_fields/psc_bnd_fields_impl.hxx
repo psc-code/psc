@@ -97,7 +97,6 @@ struct BndFields_ : BndFieldsBase
               break;
             }
             case BND_FLD_CONDUCTING_WALL: {
-              conducting_wall_H_lo(mflds, p, d);
               break;
             }
             case BND_FLD_OPEN: {
@@ -122,7 +121,6 @@ struct BndFields_ : BndFieldsBase
               break;
             }
             case BND_FLD_CONDUCTING_WALL: {
-              conducting_wall_H_hi(mflds, p, d);
               break;
             }
             case BND_FLD_OPEN: {
@@ -186,81 +184,6 @@ struct BndFields_ : BndFieldsBase
           }
         }
       }
-    }
-  }
-
-  void conducting_wall_H_lo(MfieldsState& mflds, int p, int d)
-  {
-    psc::bnd::field::detail::set_lower_ghosts_to_nan<dim_t>(mflds, p, d, HX,
-                                                            false);
-
-    auto F = make_Fields3d<dim_t>(mflds[p]);
-    const int* ldims = mflds.grid().ldims;
-    Int3 ib = mflds.ib(), im = mflds.im();
-
-    if (d == 1) {
-      for (int iz = -1; iz < ldims[2] + 2; iz++) {
-        for (int ix = std::max(-2, ib[0]);
-             ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
-          F(HX, ix, -1, iz) = -F(HX, ix, 0, iz);
-
-          F(HY, ix, -1, iz) = F(HY, ix, 1, iz);
-
-          F(HZ, ix, -1, iz) = -F(HZ, ix, 0, iz);
-        }
-      }
-    } else if (d == 2) {
-      for (int iy = -2; iy < ldims[1] + 2; iy++) {
-        for (int ix = std::max(-2, ib[0]);
-             ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
-          F(HX, ix, iy, -1) = -F(HX, ix, iy, 0);
-
-          F(HY, ix, iy, -1) = -F(HY, ix, iy, 0);
-
-          F(HZ, ix, iy, -1) = F(HZ, ix, iy, 1);
-        }
-      }
-    } else {
-      assert(0);
-    }
-  }
-
-  void conducting_wall_H_hi(MfieldsState& mflds, int p, int d)
-  {
-    psc::bnd::field::detail::set_upper_ghosts_to_nan<dim_t>(mflds, p, d, HX,
-                                                            false);
-
-    auto F = make_Fields3d<dim_t>(mflds[p]);
-
-    const int* ldims = mflds.grid().ldims;
-    Int3 ib = mflds.ib(), im = mflds.im();
-
-    if (d == 1) {
-      int my _mrc_unused = ldims[1];
-      for (int iz = -2; iz < ldims[2] + 2; iz++) {
-        for (int ix = std::max(-2, ib[0]);
-             ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
-          F(HX, ix, my, iz) = -F(HX, ix, my - 1, iz);
-
-          F(HY, ix, my + 1, iz) = F(HY, ix, my - 1, iz);
-
-          F(HZ, ix, my, iz) = -F(HZ, ix, my - 1, iz);
-        }
-      }
-    } else if (d == 2) {
-      int mz = ldims[2];
-      for (int iy = -2; iy < ldims[1] + 2; iy++) {
-        for (int ix = std::max(-2, ib[0]);
-             ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
-          F(HX, ix, iy, mz) = -F(HX, ix, iy, mz - 1);
-
-          F(HY, ix, iy, mz) = -F(HY, ix, iy, mz - 1);
-
-          F(HZ, ix, iy, mz + 1) = F(HZ, ix, iy, mz - 1);
-        }
-      }
-    } else {
-      assert(0);
     }
   }
 
