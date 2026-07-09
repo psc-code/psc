@@ -48,7 +48,7 @@ struct ConductingWall : FieldBcBase<MfieldsState>
    */
   void apply_e_bcs(MfieldsState& mflds) override
   {
-    const auto& grid = mflds.grid();
+    const Grid_t& grid = mflds.grid();
 
     for (int p = 0; p < mflds.n_patches(); p++) {
       if (lohi == Lo && grid.atBoundaryLo(p, d)) {
@@ -85,11 +85,10 @@ struct ConductingWall : FieldBcBase<MfieldsState>
         detail::set_upper_ghosts_to_nan<dim_t>(mflds, p, d, EX, true);
 
         auto F = make_Fields3d<Dim>(mflds[p]);
-        Int3 ldims = mflds.grid().ldims;
 
         Int3 start = mflds.ib();
         Int3 stop = mflds.ib() + mflds.im();
-        start[d] = ldims[d];
+        start[d] = grid.ldims[d];
         stop[d] = start[d] + 1;
 
         int E0 = EX + d;
