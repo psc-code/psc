@@ -113,6 +113,16 @@ struct ConductingWall : FieldBcBase<MfieldsState>
     }
   }
 
+  /**
+   * @brief Normal H at the wall's surface is a no-op, but set interior H such
+   * that reflecting particles feel the "right" magnetic force.
+   *
+   * Transverse H is flipped to ensure that a particle at the wall's surface
+   * with nominally-nonzero normal velocity—and thus, actually zero average
+   * normal velocity, since half of the cloud is reflected—experiences no
+   * magnetic force.
+   * @param mflds fields
+   */
   void apply_h_bcs(MfieldsState& mflds) override
   {
     const Grid_t& grid = mflds.grid();
