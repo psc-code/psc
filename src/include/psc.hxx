@@ -228,11 +228,17 @@ struct Psc
 
   void pre_first_step()
   {
+    for (auto field_bc : field_bcs_) {
+      field_bc->apply_h_bcs(mflds_);
+    }
     bndf.fill_ghosts_H(mflds_);
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
 
     bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
 
+    for (auto field_bc : field_bcs_) {
+      field_bc->apply_e_bcs(mflds_);
+    }
     bndf.fill_ghosts_E(mflds_);
     bnd_.fill_ghosts(mflds_, EX, EX + 3);
 
@@ -423,6 +429,9 @@ struct Psc
 
     mpi_printf(comm, "***** Bnd fields J...\n");
     prof_start(pr_bndf);
+    for (auto field_bc : field_bcs_) {
+      field_bc->apply_j_bcs(mflds_);
+    }
     bndf.add_ghosts_J(mflds_);
     bnd_.add_ghosts(mflds_, JXI, JXI + 3);
     bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
@@ -437,6 +446,9 @@ struct Psc
 
     mpi_printf(comm, "***** Bnd fields B (1 of 2)...\n");
     prof_restart(pr_bndf);
+    for (auto field_bc : field_bcs_) {
+      field_bc->apply_h_bcs(mflds_);
+    }
     bndf.fill_ghosts_H(mflds_);
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
     prof_stop(pr_bndf);
@@ -450,6 +462,9 @@ struct Psc
 
     mpi_printf(comm, "***** Bnd fields E...\n");
     prof_restart(pr_bndf);
+    for (auto field_bc : field_bcs_) {
+      field_bc->apply_e_bcs(mflds_);
+    }
     bndf.fill_ghosts_E(mflds_);
     bnd_.fill_ghosts(mflds_, EX, EX + 3);
     prof_stop(pr_bndf);
@@ -472,6 +487,9 @@ struct Psc
 
     mpi_printf(comm, "***** Bnd fields B (2 of 2)...\n");
     prof_restart(pr_bndf);
+    for (auto field_bc : field_bcs_) {
+      field_bc->apply_h_bcs(mflds_);
+    }
     bndf.fill_ghosts_H(mflds_);
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
     prof_stop(pr_bndf);
