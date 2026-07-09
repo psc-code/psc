@@ -15,6 +15,12 @@ namespace bnd
 namespace field
 {
 
+/**
+ * @brief A perfect electrical conductor. This implementation assumes particles
+ * are specularly reflected.
+ * @tparam Dim dimension type
+ * @tparam MfieldsState fields type
+ */
 template <typename Dim, typename MfieldsState>
 struct ConductingWall : FieldBcBase<MfieldsState>
 {
@@ -27,6 +33,19 @@ struct ConductingWall : FieldBcBase<MfieldsState>
     // todo
   }
 
+  /**
+   * @brief Set transverse E at the wall's surface to 0. Nominally, E would be 0
+   * at interior points too, but instead we mirror E so that reflecting
+   * particles feel the "right" electric force.
+   *
+   * Note that the normal force is reflected in the interior. To see why this is
+   * necessary, consider a particle with v=0 at the surface. If the normal E
+   * force on it is nonzero and towards the wall, the particle will
+   * spontaneously bounce away from the wall. It will then return to the
+   * wall—with more kinetic energy than before—and bounce again. Flipping normal
+   * E avoids this runaway effect.
+   * @param mflds fields
+   */
   void apply_e_bcs(MfieldsState& mflds) override
   {
     const auto& grid = mflds.grid();
