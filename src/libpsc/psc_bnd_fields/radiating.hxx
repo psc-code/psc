@@ -59,18 +59,15 @@ struct Radiating : FieldBcBase<MfieldsState>
         stop[d0] = start[d0] + 1;
 
         for (Int3 i3 : VecRange(start, stop)) {
-          real_t s = 0.0;
-          real_t p = 0.0;
-
           Real3 x3_s =
             (Real3(i3) + Real3(d1hat) * real_t(0.5)) * Real3(grid.domain.dx);
           Real3 x3_p =
             (Real3(i3) + Real3(d2hat) * real_t(0.5)) * Real3(grid.domain.dx);
 
-          s = pulse.sample_exterior_field_lo(E1, grid.time(), p, x3_s) +
-              pulse.sample_exterior_field_lo(H2, grid.time(), p, x3_s);
-          p = pulse.sample_exterior_field_lo(E2, grid.time(), p, x3_p) -
-              pulse.sample_exterior_field_lo(H1, grid.time(), p, x3_p);
+          real_t s = pulse.sample_exterior_field_lo(E1, grid.time(), p, x3_s) +
+                     pulse.sample_exterior_field_lo(H2, grid.time(), p, x3_s);
+          real_t p = pulse.sample_exterior_field_lo(E2, grid.time(), p, x3_p) -
+                     pulse.sample_exterior_field_lo(H1, grid.time(), p, x3_p);
 
           F(H2, i3 - d0hat) = (2.f * s - 2.f * F(E1, i3) -
                                dtdx[d2] * (F(H0, i3) - F(H0, i3 - d2hat)) -
@@ -95,18 +92,15 @@ struct Radiating : FieldBcBase<MfieldsState>
         stop[d0] = start[d0] + 1;
 
         for (Int3 i3 : VecRange(start, stop)) {
-          real_t s = 0.0;
-          real_t p = 0.0;
-
           Real3 x3_s =
             (Real3(i3) + Real3(d1hat) * real_t(0.5)) * Real3(grid.domain.dx);
           Real3 x3_p =
             (Real3(i3) + Real3(d2hat) * real_t(0.5)) * Real3(grid.domain.dx);
 
-          s = pulse.sample_exterior_field_hi(E1, grid.time(), p, x3_s) -
-              pulse.sample_exterior_field_hi(H2, grid.time(), p, x3_s);
-          p = pulse.sample_exterior_field_hi(E2, grid.time(), p, x3_p) +
-              pulse.sample_exterior_field_hi(H1, grid.time(), p, x3_p);
+          real_t s = pulse.sample_exterior_field_hi(E1, grid.time(), p, x3_s) -
+                     pulse.sample_exterior_field_hi(H2, grid.time(), p, x3_s);
+          real_t p = pulse.sample_exterior_field_hi(E2, grid.time(), p, x3_p) +
+                     pulse.sample_exterior_field_hi(H1, grid.time(), p, x3_p);
 
           F(H2, i3) = (-2.f * s + 2.f * F(E1, i3) +
                        dtdx[d2] * (F(H0, i3) - F(H0, i3 - d2hat)) -
