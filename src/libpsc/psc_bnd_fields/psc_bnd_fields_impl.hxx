@@ -42,8 +42,6 @@ struct BndFields_ : BndFieldsBase
               break;
             }
             case BND_FLD_OPEN: {
-              psc::bnd::field::detail::set_lower_ghosts<dim_t>(
-                mflds, p, d, EX, background_e_lo, false);
               break;
             }
             default: {
@@ -64,8 +62,6 @@ struct BndFields_ : BndFieldsBase
               break;
             }
             case BND_FLD_OPEN: {
-              psc::bnd::field::detail::set_upper_ghosts<dim_t>(
-                mflds, p, d, EX, background_e_hi, false);
               break;
             }
             default: {
