@@ -164,23 +164,19 @@ struct BndFields_ : BndFieldsBase
         Real3 x3_p = (Real3(edge_idx) + Real3::unit(d2) * real_t(0.5)) *
                      Real3(grid.domain.dx);
 
-        s =
-          0.5 *
-          (radiation->sample_exterior_field_lo(EX + d1, grid.time(), p, x3_s) +
-           radiation->sample_exterior_field_lo(HX + d2, grid.time(), p, x3_s));
-        p =
-          0.5 *
-          (radiation->sample_exterior_field_lo(EX + d2, grid.time(), p, x3_p) -
-           radiation->sample_exterior_field_lo(HX + d1, grid.time(), p, x3_p));
+        s = radiation->sample_exterior_field_lo(EX + d1, grid.time(), p, x3_s) +
+            radiation->sample_exterior_field_lo(HX + d2, grid.time(), p, x3_s);
+        p = radiation->sample_exterior_field_lo(EX + d2, grid.time(), p, x3_p) -
+            radiation->sample_exterior_field_lo(HX + d1, grid.time(), p, x3_p);
       }
 
       F(H2, i3) =
-        (4.f * s - 2.f * F(E1, edge_idx) -
+        (2.f * s - 2.f * F(E1, edge_idx) -
          dtdx[d2] * (F(H0, edge_idx) - F(H0, edge_idx - Int3::unit(d2))) -
          (1.f - dtdx[d0]) * F(H2, edge_idx) + dt * F(J1, edge_idx)) /
         (1.f + dtdx[d0]);
       F(H1, i3) =
-        (-4.f * p + 2.f * F(E2, edge_idx) -
+        (-2.f * p + 2.f * F(E2, edge_idx) -
          dtdx[d1] * (F(H0, edge_idx) - F(H0, edge_idx - Int3::unit(d1))) -
          (1.f - dtdx[d0]) * F(H1, edge_idx) + dt * F(J2, edge_idx)) /
         (1.f + dtdx[d0]);
@@ -219,21 +215,17 @@ struct BndFields_ : BndFieldsBase
         Real3 x3_p = (Real3(edge_idx) + Real3::unit(d2) * real_t(0.5)) *
                      Real3(grid.domain.dx);
 
-        s =
-          0.5 *
-          (radiation->sample_exterior_field_hi(EX + d1, grid.time(), p, x3_s) -
-           radiation->sample_exterior_field_hi(HX + d2, grid.time(), p, x3_s));
-        p =
-          0.5 *
-          (radiation->sample_exterior_field_hi(EX + d2, grid.time(), p, x3_p) +
-           radiation->sample_exterior_field_hi(HX + d1, grid.time(), p, x3_p));
+        s = radiation->sample_exterior_field_hi(EX + d1, grid.time(), p, x3_s) -
+            radiation->sample_exterior_field_hi(HX + d2, grid.time(), p, x3_s);
+        p = radiation->sample_exterior_field_hi(EX + d2, grid.time(), p, x3_p) +
+            radiation->sample_exterior_field_hi(HX + d1, grid.time(), p, x3_p);
       }
 
-      F(H2, i3) = (-4.f * s + 2.f * F(E1, i3) +
+      F(H2, i3) = (-2.f * s + 2.f * F(E1, i3) +
                    dtdx[d2] * (F(H0, i3) - F(H0, i3 - Int3::unit(d2))) -
                    (1.f - dtdx[d0]) * F(H2, edge_idx) - dt * F(J1, i3)) /
                   (1.f + dtdx[d0]);
-      F(H1, i3) = (4.f * p - 2.f * F(E2, i3) +
+      F(H1, i3) = (2.f * p - 2.f * F(E2, i3) +
                    dtdx[d1] * (F(H0, i3) - F(H0, i3 - Int3::unit(d1))) -
                    (1.f - dtdx[d0]) * F(H1, edge_idx) - dt * F(J2, i3)) /
                   (1.f + dtdx[d0]);
