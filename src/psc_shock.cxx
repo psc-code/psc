@@ -59,7 +59,7 @@ double te_downstream;
 double ti_downstream;
 Real3 h0_downstream;
 
-double transition_half_width = 1.0;
+double transition_half_width;
 double transition_steepness = 2.0; // at least sqrt(3)~1.74
 // ----------------------------
 
@@ -190,6 +190,8 @@ void setupParameters(int argc, char** argv)
   } else {
     lengths[2] = inputParams.get<double>("dz") * gdims[2];
   }
+
+  transition_half_width = lengths[1] / 8.0;
 
   turb_db2 = sqr(inputParams.get<double>("dB"));
   turb_correlation_length = inputParams.get<double>("L_c");
