@@ -806,19 +806,27 @@ struct AdvectedPeriodicFields : RadiatingBoundary<real_t>
       cycled_fields.view(_all, _all, _all, _all, p), -grid.ibn);
 
     switch (m) {
-      case EX: return ip.ex(em);
-      case EY: return ip.ey(em);
-      case EZ: return ip.ez(em);
-      case HX: return ip.hx(em);
-      case HY: return ip.hy(em);
-      case HZ: return ip.hz(em);
+      case EX: return ip.ex(em) + e0[0];
+      case EY: return ip.ey(em) + e0[1];
+      case EZ: return ip.ez(em) + e0[2];
+      case HX: return ip.hx(em) + h0_upstream[0];
+      case HY: return ip.hy(em) + h0_upstream[1];
+      case HZ: return ip.hz(em) + h0_upstream[2];
       default: return 0.0;
     }
   }
 
   real_t sample_exterior_field_hi(int m, double t, int p, Real3 x3) override
   {
-    return 0.0;
+    switch (m) {
+      case EX: return e0[0];
+      case EY: return e0[1];
+      case EZ: return e0[2];
+      case HX: return h0_downstream[0];
+      case HY: return h0_downstream[1];
+      case HZ: return h0_downstream[2];
+      default: return 0.0;
+    }
   }
 
   void tick(double t) override
