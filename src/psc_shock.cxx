@@ -360,6 +360,7 @@ void add_background_fields(MfieldsState& mflds)
       } else if (shock_method == "relaxation") {
         Double3 pos = centering::get_pos(patch, {jx, jy, jz}, centering::NC, 0);
         h0 = interpolate_across_shock(h0_upstream, h0_downstream, pos[1]);
+        h0[1] = h0_upstream[1]; // parallel B isn't compressed
       }
 
       field_patch(HX, jx, jy, jz) += h0[0];
