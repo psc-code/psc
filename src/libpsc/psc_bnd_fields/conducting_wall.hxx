@@ -37,6 +37,12 @@ struct ConductingWall : FieldBcBase<MfieldsState>
   {
     const Grid_t& grid = mflds.grid();
 
+    const Int3 dhat = Int3::unit(d);
+
+    const int J0 = JXI + d;
+    const int J1 = JXI + d.next();
+    const int J2 = JXI + d.prev();
+
     for (int p = 0; p < mflds.n_patches(); p++) {
       if (lohi == Lo && grid.atBoundaryLo(p, d)) {
         auto F = make_Fields3d<dim_t>(mflds[p]);
@@ -46,22 +52,18 @@ struct ConductingWall : FieldBcBase<MfieldsState>
         start[d] = 0;
         stop[d] = start[d] + 1;
 
-        int J0 = JXI + d;
-        int J1 = JXI + d.next();
-        int J2 = JXI + d.prev();
-
         for (Int3 i3 : VecRange(start, stop)) {
-          // 1. transverse components: wall is at relative index 0
-          for (Int3 j3 = Int3::unit(d); j3[d] <= mflds.ibn()[d]; j3[d]++) {
+          // 1. transverse components: wall is at i3
+          for (Int3 j3 = dhat; j3[d] <= mflds.ibn()[d]; j3[d]++) {
             F(J1, i3 + j3) += F(J1, i3 - j3);
             F(J1, i3 - j3) = 0.0;
             F(J2, i3 + j3) += F(J2, i3 - j3);
             F(J2, i3 - j3) = 0.0;
           }
 
-          // 2. normal component: wall is at relative index -1/2
-          for (Int3 j3 = Int3::unit(d); j3[d] <= mflds.ibn()[d]; j3[d]++) {
-            F(J0, i3 + j3 - Int3::unit(d)) -= F(J0, i3 - j3);
+          // 2. normal component: wall is at i3-dhat/2
+          for (Int3 j3 = dhat; j3[d] <= mflds.ibn()[d]; j3[d]++) {
+            F(J0, i3 + j3 - dhat) -= F(J0, i3 - j3);
             F(J0, i3 - j3) = 0.0;
           }
         }
@@ -75,24 +77,19 @@ struct ConductingWall : FieldBcBase<MfieldsState>
         start[d] = grid.ldims[d];
         stop[d] = start[d] + 1;
 
-        int J0 = JXI + d;
-        int J1 = JXI + d.next();
-        int J2 = JXI + d.prev();
-
         for (Int3 i3 : VecRange(start, stop)) {
-          // 1. transverse components: wall is at relative index n=ldims[d],
-          // and there's one less ghost
-          for (Int3 j3 = Int3::unit(d); j3[d] <= mflds.ibn()[d] - 1; j3[d]++) {
+          // 1. transverse components: wall is at i3, and there's one less ghost
+          for (Int3 j3 = dhat; j3[d] <= mflds.ibn()[d] - 1; j3[d]++) {
             F(J1, i3 - j3) += F(J1, i3 + j3);
             F(J1, i3 + j3) = 0.0;
             F(J2, i3 - j3) += F(J2, i3 + j3);
             F(J2, i3 + j3) = 0.0;
           }
 
-          // 2. normal component: wall is at relative index n-1/2
-          for (Int3 j3 = Int3::unit(d); j3[d] <= mflds.ibn()[d]; j3[d]++) {
-            F(J0, i3 - j3) -= F(J0, i3 + j3 - Int3::unit(d));
-            F(J0, i3 + j3 - Int3::unit(d)) = 0.0;
+          // 2. normal component: wall is at i3-dhat/2
+          for (Int3 j3 = dhat; j3[d] <= mflds.ibn()[d]; j3[d]++) {
+            F(J0, i3 - j3) -= F(J0, i3 + j3 - dhat);
+            F(J0, i3 + j3 - dhat) = 0.0;
           }
         }
       }
@@ -116,6 +113,12 @@ struct ConductingWall : FieldBcBase<MfieldsState>
   {
     const Grid_t& grid = mflds.grid();
 
+    const Int3 dhat = Int3::unit(d);
+
+    const int E0 = EX + d;
+    const int E1 = EX + d.next();
+    const int E2 = EX + d.prev();
+
     for (int p = 0; p < mflds.n_patches(); p++) {
       if (lohi == Lo && grid.atBoundaryLo(p, d)) {
         detail::set_lower_ghosts_to_nan<dim_t>(mflds, p, d, EX, true);
@@ -127,22 +130,18 @@ struct ConductingWall : FieldBcBase<MfieldsState>
         start[d] = 0;
         stop[d] = start[d] + 1;
 
-        int E0 = EX + d;
-        int E1 = EX + d.next();
-        int E2 = EX + d.prev();
-
         for (Int3 i3 : VecRange(start, stop)) {
-          // 1. transverse components: wall is at relative index 0
+          // 1. transverse components: wall is at i3
           F(E1, i3) = 0.0;
           F(E2, i3) = 0.0;
-          for (Int3 j3 = Int3::unit(d); j3[d] <= mflds.ibn()[d]; j3[d]++) {
+          for (Int3 j3 = dhat; j3[d] <= mflds.ibn()[d]; j3[d]++) {
             F(E1, i3 - j3) = F(E1, i3 + j3);
             F(E2, i3 - j3) = F(E2, i3 + j3);
           }
 
-          // 2. normal component: wall is at relative index -1/2
-          for (Int3 j3 = Int3::unit(d); j3[d] <= mflds.ibn()[d]; j3[d]++) {
-            F(E0, i3 - j3) = -F(E0, i3 + j3 - Int3::unit(d));
+          // 2. normal component: wall is at i3-dhat/2
+          for (Int3 j3 = dhat; j3[d] <= mflds.ibn()[d]; j3[d]++) {
+            F(E0, i3 - j3) = -F(E0, i3 + j3 - dhat);
           }
         }
       }
@@ -157,23 +156,18 @@ struct ConductingWall : FieldBcBase<MfieldsState>
         start[d] = grid.ldims[d];
         stop[d] = start[d] + 1;
 
-        int E0 = EX + d;
-        int E1 = EX + d.next();
-        int E2 = EX + d.prev();
-
         for (Int3 i3 : VecRange(start, stop)) {
-          // 1. transverse components: wall is at relative index n=ldims[d],
-          // and there's one less ghost
+          // 1. transverse components: wall is at i3, and there's one less ghost
           F(E1, i3) = 0.0;
           F(E2, i3) = 0.0;
-          for (Int3 j3 = Int3::unit(d); j3[d] <= mflds.ibn()[d] - 1; j3[d]++) {
+          for (Int3 j3 = dhat; j3[d] <= mflds.ibn()[d] - 1; j3[d]++) {
             F(E1, i3 + j3) = F(E1, i3 - j3);
             F(E2, i3 + j3) = F(E2, i3 - j3);
           }
 
-          // 2. normal component: wall is at relative index n-1/2
-          for (Int3 j3 = Int3::unit(d); j3[d] <= mflds.ibn()[d]; j3[d]++) {
-            F(E0, i3 + j3) = -F(E0, i3 - j3 + Int3::unit(d));
+          // 2. normal component: wall is at i3-dhat/2
+          for (Int3 j3 = dhat; j3[d] <= mflds.ibn()[d]; j3[d]++) {
+            F(E0, i3 + j3) = -F(E0, i3 - j3 + dhat);
           }
         }
       }
@@ -194,6 +188,12 @@ struct ConductingWall : FieldBcBase<MfieldsState>
   {
     const Grid_t& grid = mflds.grid();
 
+    const Int3 dhat = Int3::unit(d);
+
+    const int H0 = HX + d;
+    const int H1 = HX + d.next();
+    const int H2 = HX + d.prev();
+
     for (int p = 0; p < mflds.n_patches(); p++) {
       if (lohi == Lo && grid.atBoundaryLo(p, d)) {
         detail::set_lower_ghosts_to_nan<dim_t>(mflds, p, d, HX, false);
@@ -205,19 +205,15 @@ struct ConductingWall : FieldBcBase<MfieldsState>
         start[d] = 0;
         stop[d] = start[d] + 1;
 
-        int H0 = HX + d;
-        int H1 = HX + d.next();
-        int H2 = HX + d.prev();
-
         for (Int3 i3 : VecRange(start, stop)) {
-          // 1. transverse components: wall is at relative index -1/2
-          for (Int3 j3 = Int3::unit(d); j3[d] <= mflds.ibn()[d]; j3[d]++) {
-            F(H1, i3 - j3) = -F(H1, i3 + j3 - Int3::unit(d));
-            F(H2, i3 - j3) = -F(H2, i3 + j3 - Int3::unit(d));
+          // 1. transverse components: wall is at i3-dhat/2
+          for (Int3 j3 = dhat; j3[d] <= mflds.ibn()[d]; j3[d]++) {
+            F(H1, i3 - j3) = -F(H1, i3 + j3 - dhat);
+            F(H2, i3 - j3) = -F(H2, i3 + j3 - dhat);
           }
 
-          // 2. normal component: wall is at relative index 0
-          for (Int3 j3 = Int3::unit(d); j3[d] <= mflds.ibn()[d]; j3[d]++) {
+          // 2. normal component: wall is at i3
+          for (Int3 j3 = dhat; j3[d] <= mflds.ibn()[d]; j3[d]++) {
             F(H0, i3 - j3) = F(H0, i3 + j3);
           }
         }
@@ -233,20 +229,15 @@ struct ConductingWall : FieldBcBase<MfieldsState>
         start[d] = grid.ldims[d];
         stop[d] = start[d] + 1;
 
-        int H0 = HX + d;
-        int H1 = HX + d.next();
-        int H2 = HX + d.prev();
-
         for (Int3 i3 : VecRange(start, stop)) {
-          // 1. transverse components: wall is at relative index n-1/2
-          for (Int3 j3 = Int3::unit(d); j3[d] <= mflds.ibn()[d]; j3[d]++) {
-            F(H1, i3 + j3) = -F(H1, i3 - j3 + Int3::unit(d));
-            F(H2, i3 + j3) = -F(H2, i3 - j3 + Int3::unit(d));
+          // 1. transverse components: wall is at i3-dhat/2
+          for (Int3 j3 = dhat; j3[d] <= mflds.ibn()[d]; j3[d]++) {
+            F(H1, i3 + j3) = -F(H1, i3 - j3 + dhat);
+            F(H2, i3 + j3) = -F(H2, i3 - j3 + dhat);
           }
 
-          // 2. normal component: wall is at relative index n=ldims[d],
-          // and there's one less ghost
-          for (Int3 j3 = Int3::unit(d); j3[d] <= mflds.ibn()[d] - 1; j3[d]++) {
+          // 2. normal component: wall is at i3, and there's one less ghost
+          for (Int3 j3 = dhat; j3[d] <= mflds.ibn()[d] - 1; j3[d]++) {
             F(H0, i3 + j3) = F(H0, i3 - j3);
           }
         }
