@@ -42,6 +42,10 @@ struct Radiating : FieldBcBase<MfieldsState>
     int E1 = EX + d1, E2 = EX + d2;
     int J1 = JXI + d1, J2 = JXI + d2;
 
+    Int3 d0hat = Int3::unit(d0);
+    Int3 d1hat = Int3::unit(d1);
+    Int3 d2hat = Int3::unit(d2);
+
     for (int p = 0; p < mflds.n_patches(); p++) {
       if (lohi == Lo && grid.atBoundaryLo(p, d)) {
         psc::bnd::field::detail::set_lower_ghosts_to_nan<dim_t>(mflds, p, d, HX,
@@ -51,35 +55,31 @@ struct Radiating : FieldBcBase<MfieldsState>
 
         Int3 start = mflds.ib();
         Int3 stop = mflds.ib() + mflds.im();
-        start[d0] = -1;
-        stop[d0] = 0;
+        start[d0] = 0;
+        stop[d0] = start[d0] + 1;
 
         for (Int3 i3 : VecRange(start, stop)) {
-          Int3 edge_idx = i3 + Int3::unit(d0);
-
           real_t s = 0.0;
           real_t p = 0.0;
 
-          Real3 x3_s = (Real3(edge_idx) + Real3::unit(d1) * real_t(0.5)) *
-                       Real3(grid.domain.dx);
-          Real3 x3_p = (Real3(edge_idx) + Real3::unit(d2) * real_t(0.5)) *
-                       Real3(grid.domain.dx);
+          Real3 x3_s =
+            (Real3(i3) + Real3(d1hat) * real_t(0.5)) * Real3(grid.domain.dx);
+          Real3 x3_p =
+            (Real3(i3) + Real3(d2hat) * real_t(0.5)) * Real3(grid.domain.dx);
 
           s = pulse.sample_exterior_field_lo(E1, grid.time(), p, x3_s) +
               pulse.sample_exterior_field_lo(H2, grid.time(), p, x3_s);
           p = pulse.sample_exterior_field_lo(E2, grid.time(), p, x3_p) -
               pulse.sample_exterior_field_lo(H1, grid.time(), p, x3_p);
 
-          F(H2, i3) =
-            (2.f * s - 2.f * F(E1, edge_idx) -
-             dtdx[d2] * (F(H0, edge_idx) - F(H0, edge_idx - Int3::unit(d2))) -
-             (1.f - dtdx[d0]) * F(H2, edge_idx) + dt * F(J1, edge_idx)) /
-            (1.f + dtdx[d0]);
-          F(H1, i3) =
-            (-2.f * p + 2.f * F(E2, edge_idx) -
-             dtdx[d1] * (F(H0, edge_idx) - F(H0, edge_idx - Int3::unit(d1))) -
-             (1.f - dtdx[d0]) * F(H1, edge_idx) - dt * F(J2, edge_idx)) /
-            (1.f + dtdx[d0]);
+          F(H2, i3 - d0hat) = (2.f * s - 2.f * F(E1, i3) -
+                               dtdx[d2] * (F(H0, i3) - F(H0, i3 - d2hat)) -
+                               (1.f - dtdx[d0]) * F(H2, i3) + dt * F(J1, i3)) /
+                              (1.f + dtdx[d0]);
+          F(H1, i3 - d0hat) = (-2.f * p + 2.f * F(E2, i3) -
+                               dtdx[d1] * (F(H0, i3) - F(H0, i3 - d1hat)) -
+                               (1.f - dtdx[d0]) * F(H1, i3) - dt * F(J2, i3)) /
+                              (1.f + dtdx[d0]);
         }
       }
 
@@ -92,18 +92,16 @@ struct Radiating : FieldBcBase<MfieldsState>
         Int3 start = mflds.ib();
         Int3 stop = mflds.ib() + mflds.im();
         start[d0] = grid.ldims[d0];
-        stop[d0] = grid.ldims[d0] + 1;
+        stop[d0] = start[d0] + 1;
 
         for (Int3 i3 : VecRange(start, stop)) {
-          Int3 edge_idx = i3 - Int3::unit(d0);
-
           real_t s = 0.0;
           real_t p = 0.0;
 
-          Real3 x3_s = (Real3(edge_idx) + Real3::unit(d1) * real_t(0.5)) *
-                       Real3(grid.domain.dx);
-          Real3 x3_p = (Real3(edge_idx) + Real3::unit(d2) * real_t(0.5)) *
-                       Real3(grid.domain.dx);
+          Real3 x3_s =
+            (Real3(i3) + Real3(d1hat) * real_t(0.5)) * Real3(grid.domain.dx);
+          Real3 x3_p =
+            (Real3(i3) + Real3(d2hat) * real_t(0.5)) * Real3(grid.domain.dx);
 
           s = pulse.sample_exterior_field_hi(E1, grid.time(), p, x3_s) -
               pulse.sample_exterior_field_hi(H2, grid.time(), p, x3_s);
@@ -111,12 +109,12 @@ struct Radiating : FieldBcBase<MfieldsState>
               pulse.sample_exterior_field_hi(H1, grid.time(), p, x3_p);
 
           F(H2, i3) = (-2.f * s + 2.f * F(E1, i3) +
-                       dtdx[d2] * (F(H0, i3) - F(H0, i3 - Int3::unit(d2))) -
-                       (1.f - dtdx[d0]) * F(H2, edge_idx) - dt * F(J1, i3)) /
+                       dtdx[d2] * (F(H0, i3) - F(H0, i3 - d2hat)) -
+                       (1.f - dtdx[d0]) * F(H2, i3 - d0hat) - dt * F(J1, i3)) /
                       (1.f + dtdx[d0]);
           F(H1, i3) = (2.f * p - 2.f * F(E2, i3) +
-                       dtdx[d1] * (F(H0, i3) - F(H0, i3 - Int3::unit(d1))) -
-                       (1.f - dtdx[d0]) * F(H1, edge_idx) + dt * F(J2, i3)) /
+                       dtdx[d1] * (F(H0, i3) - F(H0, i3 - d1hat)) -
+                       (1.f - dtdx[d0]) * F(H1, i3 - d0hat) + dt * F(J2, i3)) /
                       (1.f + dtdx[d0]);
         }
       }
