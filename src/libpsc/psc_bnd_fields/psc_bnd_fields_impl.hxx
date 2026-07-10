@@ -4,7 +4,6 @@
 #include "kg/VecRange.hxx"
 #include "fields.hxx"
 #include "bnd_fields.hxx"
-#include "radiating_bnd.hxx"
 #include "field_bc_util.hxx"
 
 #include <mrc_bits.h>

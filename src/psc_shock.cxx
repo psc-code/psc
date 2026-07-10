@@ -760,7 +760,7 @@ void initialize_turbulence(MfieldsState& mflds)
   }
 }
 
-struct AdvectedPeriodicFields : RadiatingBoundary<real_t>
+struct AdvectedPeriodicFields : psc::bnd::field::PulseBase<real_t>
 {
   static const int DIM_Y = 1;
 
@@ -865,7 +865,7 @@ struct AdvectedPeriodicFields : RadiatingBoundary<real_t>
     ip;
 };
 
-struct ConstantFields : RadiatingBoundary<real_t>
+struct ConstantFields : psc::bnd::field::PulseBase<real_t>
 {
   ConstantFields(Real3 e, Real3 h) : e{e}, h{h} {}
 
