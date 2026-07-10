@@ -821,28 +821,6 @@ struct AdvectedPeriodicFields : RadiatingBoundary<real_t>
     return 0.0;
   }
 
-  real_t pulse_s_lower(double t, int d, int p, Real3 x3) override
-  {
-    int E1 = EX + (d + 1) % 3;
-    int H2 = HX + (d + 2) % 3;
-
-    real_t e = sample_exterior_field_lo(E1, t, p, x3);
-    real_t h = sample_exterior_field_lo(H2, t, p, x3);
-
-    return (e + h) / 2.0;
-  }
-
-  real_t pulse_p_lower(double t, int d, int p, Real3 x3) override
-  {
-    int E2 = EX + (d + 2) % 3;
-    int H1 = HX + (d + 1) % 3;
-
-    real_t e = sample_exterior_field_lo(E2, t, p, x3);
-    real_t h = sample_exterior_field_lo(H1, t, p, x3);
-
-    return (e - h) / 2.0;
-  }
-
   real_t pulse_s_upper(double t, int d, int p, Real3 x3) override
   {
     return 0.0;

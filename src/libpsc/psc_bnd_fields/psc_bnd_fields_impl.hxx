@@ -167,8 +167,15 @@ struct BndFields_ : BndFieldsBase
                      Real3(grid.domain.dx);
         Real3 x3_p = (Real3(edge_idx) + Real3::unit(d2) * real_t(0.5)) *
                      Real3(grid.domain.dx);
-        s = radiation->pulse_s_lower(grid.time(), d0, p, x3_s);
-        p = radiation->pulse_p_lower(grid.time(), d0, p, x3_p);
+
+        s =
+          0.5 *
+          (radiation->sample_exterior_field_lo(EX + d1, grid.time(), p, x3_s) +
+           radiation->sample_exterior_field_lo(HX + d2, grid.time(), p, x3_s));
+        p =
+          0.5 *
+          (radiation->sample_exterior_field_lo(EX + d2, grid.time(), p, x3_p) -
+           radiation->sample_exterior_field_lo(HX + d1, grid.time(), p, x3_p));
       }
 
       F(H2, i3) =
