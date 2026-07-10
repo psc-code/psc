@@ -240,12 +240,6 @@ struct BndFields_ : BndFieldsBase
     }
   }
 
-  Vec3<real_t> background_e_lo = {0.0, 0.0, 0.0};
-  Vec3<real_t> background_e_hi = {0.0, 0.0, 0.0};
-
-  Vec3<real_t> background_h_lo = {0.0, 0.0, 0.0};
-  Vec3<real_t> background_h_hi = {0.0, 0.0, 0.0};
-
   RadiatingBoundary<real_t>* radiation = nullptr;
 };
 

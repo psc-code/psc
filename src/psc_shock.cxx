@@ -990,11 +990,6 @@ static void run(int argc, char** argv)
 
   psc.add_gauss_corrector(&marder);
 
-  psc.bndf.background_e_lo = e0;
-  psc.bndf.background_h_lo = h0_upstream;
-  psc.bndf.background_e_hi = e0;
-  psc.bndf.background_h_hi = h0_downstream;
-
   if (turb_db2 > 0.0 && v_upstream[1] > 0.0) {
     if (checkpoint_filename.empty()) {
       // mflds is currently just the pure, initial turbulence
