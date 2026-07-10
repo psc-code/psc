@@ -328,9 +328,10 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
     auto init_np = [&](int kind, Double3 pos, int p, Int3 idx,
                        psc_particle_np& np) {
       np.n = interpolate_across_shock(n_upstream, n_downstream, pos[1]);
-      double t = interpolate_across_shock(
-        np.kind == KIND_ION ? ti_upstream : te_upstream,
-        np.kind == KIND_ION ? ti_downstream : te_downstream, pos[1]);
+      // interpolate v_thermal, not T itself
+      double t = sqr(interpolate_across_shock(
+        sqrt(np.kind == KIND_ION ? ti_upstream : te_upstream),
+        sqrt(np.kind == KIND_ION ? ti_downstream : te_downstream), pos[1]));
       Double3 v = interpolate_across_shock(v_upstream, v_downstream, pos[1]);
       np.p =
         setup_particles.createMaxwellian({np.kind, np.n, v, {t, t, t}, np.tag});
