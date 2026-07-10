@@ -8,8 +8,5 @@ struct RadiatingBoundary
   virtual real_t sample_exterior_field_lo(int m, double t, int p, Real3 x3) = 0;
   virtual real_t sample_exterior_field_hi(int m, double t, int p, Real3 x3) = 0;
 
-  virtual real_t pulse_s_upper(double t, int d, int p, Real3 x3) = 0;
-  virtual real_t pulse_p_upper(double t, int d, int p, Real3 x3) = 0;
-
   virtual void tick(double t) {}
 };

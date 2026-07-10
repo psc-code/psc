@@ -821,16 +821,6 @@ struct AdvectedPeriodicFields : RadiatingBoundary<real_t>
     return 0.0;
   }
 
-  real_t pulse_s_upper(double t, int d, int p, Real3 x3) override
-  {
-    return 0.0;
-  }
-
-  real_t pulse_p_upper(double t, int d, int p, Real3 x3) override
-  {
-    return 0.0;
-  }
-
   void tick(double t) override
   {
     // TODO make this work with >1 patch per process?
