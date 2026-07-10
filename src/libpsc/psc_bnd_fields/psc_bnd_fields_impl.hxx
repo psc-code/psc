@@ -178,7 +178,7 @@ struct BndFields_ : BndFieldsBase
       F(H1, i3) =
         (-2.f * p + 2.f * F(E2, edge_idx) -
          dtdx[d1] * (F(H0, edge_idx) - F(H0, edge_idx - Int3::unit(d1))) -
-         (1.f - dtdx[d0]) * F(H1, edge_idx) + dt * F(J2, edge_idx)) /
+         (1.f - dtdx[d0]) * F(H1, edge_idx) - dt * F(J2, edge_idx)) /
         (1.f + dtdx[d0]);
     }
   }
@@ -227,7 +227,7 @@ struct BndFields_ : BndFieldsBase
                   (1.f + dtdx[d0]);
       F(H1, i3) = (2.f * p - 2.f * F(E2, i3) +
                    dtdx[d1] * (F(H0, i3) - F(H0, i3 - Int3::unit(d1))) -
-                   (1.f - dtdx[d0]) * F(H1, edge_idx) - dt * F(J2, i3)) /
+                   (1.f - dtdx[d0]) * F(H1, edge_idx) + dt * F(J2, i3)) /
                   (1.f + dtdx[d0]);
     }
   }
