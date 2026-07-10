@@ -792,8 +792,7 @@ struct AdvectedPeriodicFields : RadiatingBoundary<real_t>
     return n_patches_to_the_left;
   }
 
-  void calc_e_h(double t, int p, Real3 x3, int d_e, real_t& e, int d_h,
-                real_t& h)
+  real_t sample_exterior_field_lo(int m, double t, int p, Real3 x3) override
   {
     Real3 x3_advected = advect_x3(x3, t);
     int n_patches_to_the_left = shift_to_patch_local(x3_advected);
@@ -806,36 +805,40 @@ struct AdvectedPeriodicFields : RadiatingBoundary<real_t>
     auto em = decltype(ip)::fields_t(
       cycled_fields.view(_all, _all, _all, _all, p), -grid.ibn);
 
-    switch (d_e) {
-      case 0: e = ip.ex(em); break;
-      case 1: e = ip.ey(em); break;
-      case 2: e = ip.ez(em); break;
+    switch (m) {
+      case EX: return ip.ex(em);
+      case EY: return ip.ey(em);
+      case EZ: return ip.ez(em);
+      case HX: return ip.hx(em);
+      case HY: return ip.hy(em);
+      case HZ: return ip.hz(em);
+      default: return 0.0;
     }
-    switch (d_h) {
-      case 0: h = ip.hx(em); break;
-      case 1: h = ip.hy(em); break;
-      case 2: h = ip.hz(em); break;
-    }
+  }
+
+  real_t sample_exterior_field_hi(int m, double t, int p, Real3 x3) override
+  {
+    return 0.0;
   }
 
   real_t pulse_s_lower(double t, int d, int p, Real3 x3) override
   {
-    int d1 = (d + 1) % 3;
-    int d2 = (d + 2) % 3;
+    int E1 = EX + (d + 1) % 3;
+    int H2 = HX + (d + 2) % 3;
 
-    real_t e, h;
-    calc_e_h(t, p, x3, d1, e, d2, h);
+    real_t e = sample_exterior_field_lo(E1, t, p, x3);
+    real_t h = sample_exterior_field_lo(H2, t, p, x3);
 
     return (e + h) / 2.0;
   }
 
   real_t pulse_p_lower(double t, int d, int p, Real3 x3) override
   {
-    int d1 = (d + 1) % 3;
-    int d2 = (d + 2) % 3;
+    int E2 = EX + (d + 2) % 3;
+    int H1 = HX + (d + 1) % 3;
 
-    real_t e, h;
-    calc_e_h(t, p, x3, d2, e, d1, h);
+    real_t e = sample_exterior_field_lo(E2, t, p, x3);
+    real_t h = sample_exterior_field_lo(H1, t, p, x3);
 
     return (e - h) / 2.0;
   }
