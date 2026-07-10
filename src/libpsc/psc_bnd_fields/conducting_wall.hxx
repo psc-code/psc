@@ -28,6 +28,11 @@ struct ConductingWall : FieldBcBase<MfieldsState>
 
   ConductingWall(Axis d, LoHi lohi) : d{d}, lohi{lohi} {}
 
+  /**
+   * @brief Move currents deposited within the wall onto the domain. The normal
+   * component is flipped in accordance with specular reflection.
+   * @param mflds fields
+   */
   void apply_j_bcs(MfieldsState& mflds) override
   {
     const Grid_t& grid = mflds.grid();
