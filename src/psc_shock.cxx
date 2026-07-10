@@ -850,12 +850,8 @@ struct AdvectedPeriodicFields : RadiatingBoundary<real_t>
     return 0.0;
   }
 
-  void update_cache_lower(double t, int d) override
+  void tick(double t) override
   {
-    if (d != DIM_Y) {
-      return;
-    }
-
     // TODO make this work with >1 patch per process?
     assert(grid.n_patches() == 1);
 
