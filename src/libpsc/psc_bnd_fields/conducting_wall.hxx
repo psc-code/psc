@@ -80,8 +80,9 @@ struct ConductingWall : FieldBcBase<MfieldsState>
         int J2 = JXI + d.prev();
 
         for (Int3 i3 : VecRange(start, stop)) {
-          // 1. transverse components: wall is at relative index n=ldims[d]
-          for (Int3 j3 = Int3::unit(d); j3[d] <= mflds.ibn()[d]; j3[d]++) {
+          // 1. transverse components: wall is at relative index n=ldims[d],
+          // and there's one less ghost
+          for (Int3 j3 = Int3::unit(d); j3[d] <= mflds.ibn()[d] - 1; j3[d]++) {
             F(J1, i3 - j3) += F(J1, i3 + j3);
             F(J1, i3 + j3) = 0.0;
             F(J2, i3 - j3) += F(J2, i3 + j3);
@@ -161,10 +162,11 @@ struct ConductingWall : FieldBcBase<MfieldsState>
         int E2 = EX + d.prev();
 
         for (Int3 i3 : VecRange(start, stop)) {
-          // 1. transverse components: wall is at relative index n=ldims[d]
+          // 1. transverse components: wall is at relative index n=ldims[d],
+          // and there's one less ghost
           F(E1, i3) = 0.0;
           F(E2, i3) = 0.0;
-          for (Int3 j3 = Int3::unit(d); j3[d] <= mflds.ibn()[d]; j3[d]++) {
+          for (Int3 j3 = Int3::unit(d); j3[d] <= mflds.ibn()[d] - 1; j3[d]++) {
             F(E1, i3 + j3) = F(E1, i3 - j3);
             F(E2, i3 + j3) = F(E2, i3 - j3);
           }
@@ -242,8 +244,9 @@ struct ConductingWall : FieldBcBase<MfieldsState>
             F(H2, i3 + j3) = -F(H2, i3 - j3 + Int3::unit(d));
           }
 
-          // 2. normal component: wall is at relative index n=ldims[d]
-          for (Int3 j3 = Int3::unit(d); j3[d] <= mflds.ibn()[d]; j3[d]++) {
+          // 2. normal component: wall is at relative index n=ldims[d],
+          // and there's one less ghost
+          for (Int3 j3 = Int3::unit(d); j3[d] <= mflds.ibn()[d] - 1; j3[d]++) {
             F(H0, i3 + j3) = F(H0, i3 - j3);
           }
         }
