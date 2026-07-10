@@ -794,7 +794,7 @@ struct AdvectedPeriodicFields : RadiatingBoundary<real_t>
     return n_patches_to_the_left;
   }
 
-  real_t sample_exterior_field_lo(int m, double t, int p, Real3 x3) override
+  real_t sample_exterior_field(int m, double t, int p, Real3 x3) override
   {
     Real3 x3_advected = advect_x3(x3, t);
     int n_patches_to_the_left = shift_to_patch_local(x3_advected);
@@ -814,19 +814,6 @@ struct AdvectedPeriodicFields : RadiatingBoundary<real_t>
       case HX: return ip.hx(em) + h0_upstream[0];
       case HY: return ip.hy(em) + h0_upstream[1];
       case HZ: return ip.hz(em) + h0_upstream[2];
-      default: return 0.0;
-    }
-  }
-
-  real_t sample_exterior_field_hi(int m, double t, int p, Real3 x3) override
-  {
-    switch (m) {
-      case EX: return e0[0];
-      case EY: return e0[1];
-      case EZ: return e0[2];
-      case HX: return h0_downstream[0];
-      case HY: return h0_downstream[1];
-      case HZ: return h0_downstream[2];
       default: return 0.0;
     }
   }
@@ -882,7 +869,7 @@ struct ConstantFields : RadiatingBoundary<real_t>
 {
   ConstantFields(Real3 e, Real3 h) : e{e}, h{h} {}
 
-  real_t sample_exterior_field_lo(int m, double t, int p, Real3 x3) override
+  real_t sample_exterior_field(int m, double t, int p, Real3 x3) override
   {
     switch (m) {
       case EX: return e[0];
@@ -893,11 +880,6 @@ struct ConstantFields : RadiatingBoundary<real_t>
       case HZ: return h[2];
       default: return 0.0;
     }
-  }
-
-  real_t sample_exterior_field_hi(int m, double t, int p, Real3 x3) override
-  {
-    return sample_exterior_field_lo(m, t, p, x3);
   }
 
   Real3 e;

@@ -64,10 +64,10 @@ struct Radiating : FieldBcBase<MfieldsState>
           Real3 x3_p =
             (Real3(i3) + Real3(d2hat) * real_t(0.5)) * Real3(grid.domain.dx);
 
-          real_t s = pulse.sample_exterior_field_lo(E1, grid.time(), p, x3_s) +
-                     pulse.sample_exterior_field_lo(H2, grid.time(), p, x3_s);
-          real_t p = pulse.sample_exterior_field_lo(E2, grid.time(), p, x3_p) -
-                     pulse.sample_exterior_field_lo(H1, grid.time(), p, x3_p);
+          real_t s = pulse.sample_exterior_field(E1, grid.time(), p, x3_s) +
+                     pulse.sample_exterior_field(H2, grid.time(), p, x3_s);
+          real_t p = pulse.sample_exterior_field(E2, grid.time(), p, x3_p) -
+                     pulse.sample_exterior_field(H1, grid.time(), p, x3_p);
 
           F(H2, i3 - d0hat) = (2.f * s - 2.f * F(E1, i3) -
                                dtdx[d2] * (F(H0, i3) - F(H0, i3 - d2hat)) -
@@ -97,10 +97,10 @@ struct Radiating : FieldBcBase<MfieldsState>
           Real3 x3_p =
             (Real3(i3) + Real3(d2hat) * real_t(0.5)) * Real3(grid.domain.dx);
 
-          real_t s = pulse.sample_exterior_field_hi(E1, grid.time(), p, x3_s) -
-                     pulse.sample_exterior_field_hi(H2, grid.time(), p, x3_s);
-          real_t p = pulse.sample_exterior_field_hi(E2, grid.time(), p, x3_p) +
-                     pulse.sample_exterior_field_hi(H1, grid.time(), p, x3_p);
+          real_t s = pulse.sample_exterior_field(E1, grid.time(), p, x3_s) -
+                     pulse.sample_exterior_field(H2, grid.time(), p, x3_s);
+          real_t p = pulse.sample_exterior_field(E2, grid.time(), p, x3_p) +
+                     pulse.sample_exterior_field(H1, grid.time(), p, x3_p);
 
           F(H2, i3) = (-2.f * s + 2.f * F(E1, i3) +
                        dtdx[d2] * (F(H0, i3) - F(H0, i3 - d2hat)) -
