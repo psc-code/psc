@@ -8,6 +8,8 @@
 #include "input_params.hxx"
 #include "kg/include/kg/VecRange.hxx"
 #include "libpsc/psc_output_particles/output_particles_adios2_impl.hxx"
+#include "libpsc/psc_bnd_fields/radiating.hxx"
+#include "libpsc/axis.hxx"
 
 // ======================================================================
 // PSC configuration
@@ -876,6 +878,32 @@ struct AdvectedPeriodicFields : RadiatingBoundary<real_t>
     ip;
 };
 
+struct ConstantFields : RadiatingBoundary<real_t>
+{
+  ConstantFields(Real3 e, Real3 h) : e{e}, h{h} {}
+
+  real_t sample_exterior_field_lo(int m, double t, int p, Real3 x3) override
+  {
+    switch (m) {
+      case EX: return e[0];
+      case EY: return e[1];
+      case EZ: return e[2];
+      case HX: return h[0];
+      case HY: return h[1];
+      case HZ: return h[2];
+      default: return 0.0;
+    }
+  }
+
+  real_t sample_exterior_field_hi(int m, double t, int p, Real3 x3) override
+  {
+    return sample_exterior_field_lo(m, t, p, x3);
+  }
+
+  Real3 e;
+  Real3 h;
+};
+
 // ======================================================================
 // run
 
@@ -990,39 +1018,54 @@ static void run(int argc, char** argv)
 
   psc.add_gauss_corrector(&marder);
 
-  if (turb_db2 > 0.0 && v_upstream[1] > 0.0) {
-    if (checkpoint_filename.empty()) {
-      // mflds is currently just the pure, initial turbulence
-      psc.bndf.radiation =
-        new AdvectedPeriodicFields{mflds, v_upstream[1], e0, h0_upstream};
+  psc.add_diagnostic(&out_fields);
+  psc.add_diagnostic(&out_moments);
+  psc.add_diagnostic(&outp);
+  psc.add_diagnostic(&oute);
+
+  using psc::Axis;
+  using psc::bnd::LoHi;
+
+  if (shock_method != "none") {
+    psc.add_injector(&ion_injector_lo);
+    psc.add_injector(&electron_injector_lo);
+
+    if (turb_db2 > 0.0 && v_upstream[1] > 0.0) {
+      if (checkpoint_filename.empty()) {
+        // mflds is currently just the pure, initial turbulence
+        psc.add_field_bc(new psc::bnd::field::Radiating<Dim, MfieldsState,
+                                                        AdvectedPeriodicFields>(
+          AdvectedPeriodicFields{mflds, v_upstream[1], e0, h0_upstream},
+          Axis::Y, LoHi::Lo));
+      } else {
+        // mflds is completely unrelated; need to re-initialize turbulence
+        MfieldsState mflds2{grid};
+        initialize_turbulence(mflds2);
+        psc.add_field_bc(new psc::bnd::field::Radiating<Dim, MfieldsState,
+                                                        AdvectedPeriodicFields>(
+          AdvectedPeriodicFields{mflds2, v_upstream[1], e0, h0_upstream},
+          Axis::Y, LoHi::Lo));
+      }
     } else {
-      // mflds is completely unrelated; need to re-initialize turbulence
-      MfieldsState mflds2{grid};
-      initialize_turbulence(mflds2);
-      psc.bndf.radiation =
-        new AdvectedPeriodicFields{mflds2, v_upstream[1], e0, h0_upstream};
+      psc.add_field_bc(
+        new psc::bnd::field::Radiating<Dim, MfieldsState, ConstantFields>(
+          ConstantFields{e0, h0_upstream}, Axis::Y, LoHi::Lo));
     }
+  }
+
+  if (shock_method == "relaxation") {
+    psc.add_injector(&ion_injector_hi);
+    psc.add_injector(&electron_injector_hi);
+
+    psc.add_field_bc(
+      new psc::bnd::field::Radiating<Dim, MfieldsState, ConstantFields>(
+        ConstantFields{e0, h0_downstream}, Axis::Y, LoHi::Hi));
   }
 
   if (checkpoint_filename.empty()) {
     // add background after initializing radiation inflow, which only wants
     // the perturbations to B
     add_background_fields(mflds);
-  }
-
-  psc.add_diagnostic(&out_fields);
-  psc.add_diagnostic(&out_moments);
-  psc.add_diagnostic(&outp);
-  psc.add_diagnostic(&oute);
-
-  if (shock_method != "none") {
-    psc.add_injector(&ion_injector_lo);
-    psc.add_injector(&electron_injector_lo);
-  }
-
-  if (shock_method == "relaxation") {
-    psc.add_injector(&ion_injector_hi);
-    psc.add_injector(&electron_injector_hi);
   }
 
   psc.integrate();
