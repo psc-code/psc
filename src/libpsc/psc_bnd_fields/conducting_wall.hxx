@@ -30,7 +30,87 @@ struct ConductingWall : FieldBcBase<MfieldsState>
 
   void apply_j_bcs(MfieldsState& mflds) override
   {
-    // todo
+    const Grid_t& grid = mflds.grid();
+
+    for (int p = 0; p < mflds.n_patches(); p++) {
+      if (lohi == Lo && grid.atBoundaryLo(p, d)) {
+        auto F = make_Fields3d<dim_t>(mflds[p]);
+        const int* ldims = mflds.grid().ldims;
+        Int3 ib = mflds.ib(), im = mflds.im();
+
+        if (d == 1) {
+          for (int iz = -2; iz < ldims[2] + 2; iz++) {
+            for (int ix = std::max(-2, ib[0]);
+                 ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
+              F(JXI, ix, 1, iz) += F(JXI, ix, -1, iz);
+              F(JXI, ix, -1, iz) = 0.;
+
+              F(JYI, ix, 0, iz) -= F(JYI, ix, -1, iz);
+              F(JYI, ix, -1, iz) = 0.;
+
+              F(JZI, ix, 1, iz) += F(JZI, ix, -1, iz);
+              F(JZI, ix, -1, iz) = 0.;
+            }
+          }
+        } else if (d == 2) {
+          for (int iy = -2; iy < ldims[1] + 2; iy++) {
+            for (int ix = std::max(-2, ib[0]);
+                 ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
+              F(JXI, ix, iy, 1) += F(JXI, ix, iy, -1);
+              F(JXI, ix, iy, -1) = 0.;
+
+              F(JYI, ix, iy, 1) += F(JYI, ix, iy, -1);
+              F(JYI, ix, iy, -1) = 0.;
+
+              F(JZI, ix, iy, 0) -= F(JZI, ix, iy, -1);
+              F(JZI, ix, iy, -1) = 0.;
+            }
+          }
+        } else {
+          assert(0);
+        }
+      }
+
+      if (lohi == Hi && grid.atBoundaryHi(p, d)) {
+        auto F = make_Fields3d<dim_t>(mflds[p]);
+        const int* ldims = mflds.grid().ldims;
+        Int3 ib = mflds.ib(), im = mflds.im();
+
+        if (d == 1) {
+          int my _mrc_unused = ldims[1];
+          for (int iz = -2; iz < ldims[2] + 2; iz++) {
+            for (int ix = std::max(-2, ib[0]);
+                 ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
+              F(JXI, ix, my - 1, iz) += F(JXI, ix, my + 1, iz);
+              F(JXI, ix, my + 1, iz) = 0.;
+
+              F(JYI, ix, my - 1, iz) -= F(JYI, ix, my, iz);
+              F(JYI, ix, my, iz) = 0.;
+
+              F(JZI, ix, my - 1, iz) += F(JZI, ix, my + 1, iz);
+              F(JZI, ix, my + 1, iz) = 0.;
+            }
+          }
+        } else if (d == 2) {
+          int mz = ldims[2];
+          for (int iy = -2; iy < ldims[1] + 2; iy++) {
+            for (int ix = std::max(-2, ib[0]);
+                 ix < std::min(ldims[0] + 2, ib[0] + im[0]); ix++) {
+              F(JXI, ix, iy, mz - 1) += F(JXI, ix, iy, mz + 1);
+              F(JXI, ix, iy, mz + 1) = 0.;
+
+              F(JYI, ix, iy, mz - 1) += F(JYI, ix, iy, mz + 1);
+              F(JYI, ix, iy, mz + 1) = 0.;
+
+              F(JZI, ix, iy, mz - 1) -= F(JZI, ix, iy, mz);
+              F(JZI, ix, iy, mz) = 0.;
+            }
+          }
+        } else {
+          assert(0);
+        }
+      }
+    }
   }
 
   /**
