@@ -139,51 +139,7 @@ struct BndFields_ : BndFieldsBase
   // ----------------------------------------------------------------------
   // add_ghosts_J
 
-  void add_ghosts_J(MfieldsState& mflds)
-  {
-    const auto& grid = mflds.grid();
-
-    for (int p = 0; p < mflds.n_patches(); p++) {
-      // lo
-      for (int d = 0; d < 3; d++) {
-        if (grid.atBoundaryLo(p, d)) {
-          switch (grid.bc.fld_lo[d]) {
-            case BND_FLD_PERIODIC: {
-              break;
-            }
-            case BND_FLD_CONDUCTING_WALL: {
-              break;
-            }
-            case BND_FLD_OPEN: {
-              break;
-            }
-            default: {
-              assert(0);
-            }
-          }
-        }
-      }
-      // hi
-      for (int d = 0; d < 3; d++) {
-        if (grid.atBoundaryHi(p, d)) {
-          switch (grid.bc.fld_hi[d]) {
-            case BND_FLD_PERIODIC: {
-              break;
-            }
-            case BND_FLD_CONDUCTING_WALL: {
-              break;
-            }
-            case BND_FLD_OPEN: {
-              break;
-            }
-            default: {
-              assert(0);
-            }
-          }
-        }
-      }
-    }
-  }
+  void add_ghosts_J(MfieldsState& mflds) {}
 
   void radiative_H_lo(MfieldsState& mflds, int p, int d)
   {
