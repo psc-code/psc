@@ -132,6 +132,30 @@ struct PulseBase
   virtual void tick(double t) {}
 };
 
+template <typename real_t>
+struct ConstantPulse : PulseBase<real_t>
+{
+  using Real3 = Vec3<real_t>;
+
+  ConstantPulse(Real3 e, Real3 h) : e{e}, h{h} {}
+
+  real_t sample_exterior_field(int m, double t, int p, Real3 x3) override
+  {
+    switch (m) {
+      case EX: return e[0];
+      case EY: return e[1];
+      case EZ: return e[2];
+      case HX: return h[0];
+      case HY: return h[1];
+      case HZ: return h[2];
+      default: return 0.0;
+    }
+  }
+
+  Real3 e;
+  Real3 h;
+};
+
 } // namespace field
 } // namespace bnd
 } // namespace psc
