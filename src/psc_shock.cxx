@@ -865,27 +865,6 @@ struct AdvectedPeriodicFields : psc::bnd::field::PulseBase<real_t>
     ip;
 };
 
-struct ConstantFields : psc::bnd::field::PulseBase<real_t>
-{
-  ConstantFields(Real3 e, Real3 h) : e{e}, h{h} {}
-
-  real_t sample_exterior_field(int m, double t, int p, Real3 x3) override
-  {
-    switch (m) {
-      case EX: return e[0];
-      case EY: return e[1];
-      case EZ: return e[2];
-      case HX: return h[0];
-      case HY: return h[1];
-      case HZ: return h[2];
-      default: return 0.0;
-    }
-  }
-
-  Real3 e;
-  Real3 h;
-};
-
 // ======================================================================
 // run
 
@@ -1007,6 +986,7 @@ static void run(int argc, char** argv)
 
   using psc::Axis;
   using psc::bnd::LoHi;
+  using ConstantPulse = psc::bnd::field::ConstantPulse<real_t>;
 
   if (shock_method != "none") {
     psc.add_injector(&ion_injector_lo);
@@ -1030,8 +1010,8 @@ static void run(int argc, char** argv)
       }
     } else {
       psc.add_field_bc(
-        new psc::bnd::field::Radiating<Dim, MfieldsState, ConstantFields>(
-          ConstantFields{e0, h0_upstream}, Axis::Y, LoHi::Lo));
+        new psc::bnd::field::Radiating<Dim, MfieldsState, ConstantPulse>(
+          ConstantPulse{e0, h0_upstream}, Axis::Y, LoHi::Lo));
     }
   }
 
@@ -1040,8 +1020,8 @@ static void run(int argc, char** argv)
     psc.add_injector(&electron_injector_hi);
 
     psc.add_field_bc(
-      new psc::bnd::field::Radiating<Dim, MfieldsState, ConstantFields>(
-        ConstantFields{e0, h0_downstream}, Axis::Y, LoHi::Hi));
+      new psc::bnd::field::Radiating<Dim, MfieldsState, ConstantPulse>(
+        ConstantPulse{e0, h0_downstream}, Axis::Y, LoHi::Hi));
   }
 
   if (checkpoint_filename.empty()) {
