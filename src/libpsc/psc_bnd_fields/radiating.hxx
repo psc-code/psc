@@ -15,6 +15,13 @@ namespace bnd
 namespace field
 {
 
+/**
+ * @brief "Radiating" open boundary. Prescribe an arbitrary inflowing
+ * electromagnetic pulse. See Ruhl 2006 for details.
+ * @tparam Dim dimension type
+ * @tparam MfieldsState fields type
+ * @tparam P pulse type (i.e. a type that implements `PulseBase`)
+ */
 template <typename Dim, typename MfieldsState, typename P>
 struct Radiating : FieldBcBase<MfieldsState>
 {
@@ -25,10 +32,30 @@ struct Radiating : FieldBcBase<MfieldsState>
 
   Radiating(Pulse pulse, Axis d, LoHi lohi) : pulse{pulse}, d{d}, lohi{lohi} {}
 
+  /**
+   * @brief Don't do anything to the current.
+   * @param mflds fields
+   */
   void apply_j_bcs(MfieldsState& mflds) override {}
 
+  /**
+   * @brief Don't do anything to the electric field. This is technically wrong
+   * for higher-order particles, which can feel deeper into the ghost region.
+   * Even for 1st-order particles, which can feel the first layer of the
+   * transverse E ghosts, it's unclear if doing nothing is correct. Those ghosts
+   * are self-consistently evolved from the transverse H ghosts and interior
+   * particle motion, at least.
+   * @param mflds fields
+   */
   void apply_e_bcs(MfieldsState& mflds) override {}
 
+  /**
+   * @brief Set the first layer of transverse H ghosts such that the inflowing S
+   * and P waves are prescribed at the boundary. The definitions of S and P
+   * differ from Ruhl 2006 by a factor of 2, and Ruhl's definitions aren't
+   * invariant under an x->y-z->x rotation.
+   * @param mflds fields
+   */
   void apply_h_bcs(MfieldsState& mflds) override
   {
     const Grid_t& grid = mflds.grid();
@@ -122,16 +149,40 @@ private:
   Pulse pulse;
 };
 
+/**
+ * @brief The archetypal Pulse type used by the `Radiating` boundary condition.
+ * This type isn't used polymorphically, so extending it isn't strictly
+ * required.
+ * @tparam real_t real type
+ */
 template <typename real_t>
 struct PulseBase
 {
   using Real3 = Vec3<real_t>;
 
+  /**
+   * @brief Sample a component of an out-of-domain field at a location and time.
+   * The field value will be used as part of a boundary condition calculation.
+   * @param m field component (e.g. `EX`)
+   * @param t time
+   * @param p patch index
+   * @param x3 cell-normalized location within the patch
+   * @return the field value
+   */
   virtual real_t sample_exterior_field(int m, double t, int p, Real3 x3) = 0;
 
+  /**
+   * @brief Perform any operations that occur once per time step.
+   * @param t time
+   */
   virtual void tick(double t) {}
 };
 
+/**
+ * @brief A constant pulse. Use this for open boundaries that have constant
+ * external fields.
+ * @tparam real_t
+ */
 template <typename real_t>
 struct ConstantPulse : PulseBase<real_t>
 {
