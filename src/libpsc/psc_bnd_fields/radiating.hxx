@@ -39,15 +39,48 @@ struct Radiating : FieldBcBase<MfieldsState>
   void apply_j_bcs(MfieldsState& mflds) override {}
 
   /**
-   * @brief Don't do anything to the electric field. This is technically wrong
-   * for higher-order particles, which can feel deeper into the ghost region.
-   * Even for 1st-order particles, which can feel the first layer of the
-   * transverse E ghosts, it's unclear if doing nothing is correct. Those ghosts
-   * are self-consistently evolved from the transverse H ghosts and interior
-   * particle motion, at least.
+   * @brief Set the normal E to 0. They could be self-consistently evolved
+   * instead, but ghost corners aren't handled yet. Transverse components are
+   * deep enough to not affect 1st-order particles.
    * @param mflds fields
    */
-  void apply_e_bcs(MfieldsState& mflds) override {}
+  void apply_e_bcs(MfieldsState& mflds) override
+  {
+    const Grid_t& grid = mflds.grid();
+    int d0 = d;
+
+    for (int p = 0; p < mflds.n_patches(); p++) {
+      if (lohi == Lo && grid.atBoundaryLo(p, d)) {
+        auto F = make_Fields3d<dim_t>(mflds[p]);
+
+        Int3 start = mflds.ib();
+        Int3 stop = mflds.ib() + mflds.im();
+        start[d0] = -1;
+        stop[d0] = start[d0] + 1;
+
+        int E0 = EX + d0;
+
+        for (Int3 i3 : VecRange(start, stop)) {
+          F(E0, i3) = 0.0;
+        }
+      }
+
+      if (lohi == Hi && grid.atBoundaryHi(p, d)) {
+        auto F = make_Fields3d<dim_t>(mflds[p]);
+
+        Int3 start = mflds.ib();
+        Int3 stop = mflds.ib() + mflds.im();
+        start[d0] = grid.ldims[d0];
+        stop[d0] = start[d0] + 1;
+
+        int E0 = EX + d0;
+
+        for (Int3 i3 : VecRange(start, stop)) {
+          F(E0, i3) = 0.0;
+        }
+      }
+    }
+  }
 
   /**
    * @brief Set the first layer of transverse H ghosts such that the inflowing S
