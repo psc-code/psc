@@ -295,6 +295,19 @@ struct Vec : gt::sarray<T, N>
     return res;
   }
 
+  /**
+   * @brief Returns a copy of this vec but with one component value replaced.
+   * @param d component index
+   * @param val new component value
+   * @return the copy
+   */
+  KG_INLINE Vec with_component(int d, T val) const
+  {
+    Vec res = *this;
+    res[d] = val;
+    return res;
+  }
+
   // conversion to pointer
 
   KG_INLINE operator const T*() const { return this->data(); }
