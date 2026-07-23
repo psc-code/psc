@@ -836,7 +836,7 @@ struct AdvectedPeriodicFields : psc::bnd::field::PulseBase<real_t>
 
   void cycle_turbulence(int n_patches)
   {
-    LOG_INFO("cycling turbulence...\n");
+    LOG_INFO("cycling turbulence... (t=%f)\n", grid.time());
 
     // hack: guess the rank based on how mrc does it for simple domains
     // (can't use mrc, because it wouldn't apply periodicity)
