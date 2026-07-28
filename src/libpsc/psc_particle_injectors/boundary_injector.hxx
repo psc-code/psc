@@ -10,8 +10,8 @@
 #include "dim.hxx"
 #include "setup_particles.hxx"
 #include "kg/VecRange.hxx"
-#include "../libpsc/psc_push_particles/inc_push.cxx"
-#include "../libpsc/psc_bnd/psc_bnd_util.hxx"
+#include "../psc_push_particles/inc_push.cxx"
+#include "../psc_bnd/psc_bnd_util.hxx"
 #include "injector_base.hxx"
 
 using psc::bnd::LoHi;

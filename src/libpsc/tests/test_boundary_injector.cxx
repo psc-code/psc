@@ -2,11 +2,10 @@
 
 #include "test_common.hxx"
 
-#include "boundary_injector.hxx"
-
 #include "psc.hxx"
 #include "output_fields.hxx"
 #include "../psc_config.hxx"
+#include "../psc_particle_injectors/boundary_injector.hxx"
 
 TEST(BoundaryInjectorTest, ParticleGeneratorMaxwellianTest)
 {

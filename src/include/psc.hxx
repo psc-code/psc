@@ -9,9 +9,9 @@
 
 #include "../libpsc/psc_bnd_fields/field_bc_base.hxx"
 #include "../libpsc/psc_bnd_fields/conducting_wall.hxx"
+#include "../libpsc/psc_particle_injectors/injector_base.hxx"
 #include "gauss_corrector_base.hxx"
 #include "diagnostic_base.hxx"
-#include "injector_base.hxx"
 #include "external_current_base.hxx"
 #include <checks_params.hxx>
 #include <output_particles.hxx>

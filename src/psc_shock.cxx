@@ -4,11 +4,11 @@
 
 #include "output_fields.hxx"
 #include "psc_config.hxx"
-#include "include/boundary_injector.hxx"
 #include "input_params.hxx"
 #include "kg/include/kg/VecRange.hxx"
 #include "libpsc/psc_output_particles/output_particles_adios2_impl.hxx"
 #include "libpsc/psc_bnd_fields/radiating.hxx"
+#include "libpsc/psc_particle_injectors/boundary_injector.hxx"
 #include "libpsc/axis.hxx"
 
 // ======================================================================
