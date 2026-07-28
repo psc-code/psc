@@ -155,7 +155,8 @@ public:
             if (preaccelerate) {
               real_t E_interp;
 
-              ip.set_coeffs(initial_normalized_pos);
+              ip.set_coeffs(initial_normalized_pos.with_component(
+                INJECT_DIM_IDX_, start[INJECT_DIM_IDX_] + (lo ? 1 : 0)));
               switch (INJECT_DIM_IDX_) {
                 case 0: E_interp = ip.ex(EM); break;
                 case 1: E_interp = ip.ey(EM); break;
