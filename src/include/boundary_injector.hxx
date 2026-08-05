@@ -164,8 +164,7 @@ public:
                 default: assert(false);
               }
 
-              real_t gamma = sqrt(1 + prt.u.mag2()); // time dilation
-              prt.u[INJECT_DIM_IDX_] += (t_accel * gamma) * q * E_interp / m;
+              prt.u[INJECT_DIM_IDX_] += t_accel * q * E_interp / m;
             }
 
             // push normal x
