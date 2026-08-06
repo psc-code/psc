@@ -90,8 +90,8 @@ public:
 
   static const bool lo = LOHI == LoHi::Lo;
 
-  BoundaryInjector(ParticleGenerator particle_generator)
-    : particle_generator_{particle_generator}
+  BoundaryInjector(ParticleGenerator particle_generator, real_t density = 1.0)
+    : particle_generator_{particle_generator}, density{density}
   {}
 
   /// Injects particles at specified y-bounds as if there were a population of
@@ -191,7 +191,7 @@ public:
   }
 
 public:
-  real_t density = 1.0;
+  real_t density;
 
 private:
   ParticleGenerator particle_generator_;
