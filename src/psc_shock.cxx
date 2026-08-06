@@ -932,34 +932,29 @@ static void run(int argc, char** argv)
   int oute_interval = -100;
   DiagEnergies<Mparticles, MfieldsState> oute{grid.comm(), oute_interval};
 
-  auto ion_injector_lo =
-    BoundaryInjector<ParticleGeneratorMaxwellian, PscConfig::PushParticles>(
-      ParticleGeneratorMaxwellian(KIND_ION, grid.kinds[KIND_ION], v_upstream,
-                                  {ti_upstream, ti_upstream, ti_upstream}));
+  auto ion_injector_lo = BoundaryInjector<LoHi::Lo, ParticleGeneratorMaxwellian,
+                                          PscConfig::PushParticles>(
+    ParticleGeneratorMaxwellian(KIND_ION, grid.kinds[KIND_ION], v_upstream,
+                                {ti_upstream, ti_upstream, ti_upstream}));
   ion_injector_lo.density = n_upstream;
   auto electron_injector_lo =
-    BoundaryInjector<ParticleGeneratorMaxwellian, PscConfig::PushParticles>(
-      ParticleGeneratorMaxwellian(KIND_ELECTRON, grid.kinds[KIND_ELECTRON],
-                                  v_upstream,
-                                  {te_upstream, te_upstream, te_upstream}));
+    BoundaryInjector<LoHi::Lo, ParticleGeneratorMaxwellian,
+                     PscConfig::PushParticles>(ParticleGeneratorMaxwellian(
+      KIND_ELECTRON, grid.kinds[KIND_ELECTRON], v_upstream,
+      {te_upstream, te_upstream, te_upstream}));
   electron_injector_lo.density = n_upstream;
 
-  auto ion_injector_hi =
-    BoundaryInjector<ParticleGeneratorMaxwellian, PscConfig::PushParticles>(
-      ParticleGeneratorMaxwellian(
-        KIND_ION, grid.kinds[KIND_ION], v_downstream,
-        {ti_downstream, ti_downstream, ti_downstream}));
+  auto ion_injector_hi = BoundaryInjector<LoHi::Hi, ParticleGeneratorMaxwellian,
+                                          PscConfig::PushParticles>(
+    ParticleGeneratorMaxwellian(KIND_ION, grid.kinds[KIND_ION], v_downstream,
+                                {ti_downstream, ti_downstream, ti_downstream}));
   ion_injector_hi.density = n_downstream;
-  ion_injector_hi.inject_lo = false;
-  ion_injector_hi.inject_hi = true;
   auto electron_injector_hi =
-    BoundaryInjector<ParticleGeneratorMaxwellian, PscConfig::PushParticles>(
-      ParticleGeneratorMaxwellian(
-        KIND_ELECTRON, grid.kinds[KIND_ELECTRON], v_downstream,
-        {te_downstream, te_downstream, te_downstream}));
+    BoundaryInjector<LoHi::Hi, ParticleGeneratorMaxwellian,
+                     PscConfig::PushParticles>(ParticleGeneratorMaxwellian(
+      KIND_ELECTRON, grid.kinds[KIND_ELECTRON], v_downstream,
+      {te_downstream, te_downstream, te_downstream}));
   electron_injector_hi.density = n_downstream;
-  electron_injector_hi.inject_lo = false;
-  electron_injector_hi.inject_hi = true;
 
   // ----------------------------------------------------------------------
   // set up initial conditions
