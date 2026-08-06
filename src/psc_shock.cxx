@@ -628,7 +628,9 @@ struct AdvectedPeriodicFields : RadiatingBoundary<real_t>
   {
     real_t patch_size = grid.domain.length[DIM_Y] / grid.domain.np[DIM_Y];
     int n_patches_to_the_left = 0;
-    while (x3_advected[DIM_Y] < grid.domain.corner[DIM_Y]) {
+    // note: input x3 is already patch-local; we are just shifting to a
+    // *different* patch
+    while (x3_advected[DIM_Y] < 0.0) {
       x3_advected[DIM_Y] += patch_size;
       n_patches_to_the_left += 1;
     }
