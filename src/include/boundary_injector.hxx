@@ -82,8 +82,8 @@ public:
   using real_t = typename PushParticles::real_t;
   using Real3 = Vec3<real_t>;
 
-  BoundaryInjector(ParticleGenerator particle_generator, real_t density = 1.0)
-    : particle_generator_{particle_generator}, density{density}
+  BoundaryInjector(ParticleGenerator particle_generator)
+    : particle_generator_{particle_generator}
   {}
 
   /// Injects particles at the lower y-bound as if there were a population of
