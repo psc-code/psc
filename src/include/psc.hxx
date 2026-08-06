@@ -149,6 +149,7 @@ struct Psc
       }
     }
 
+#ifndef USE_CUDA
     for (int d = 0; d < 3; d++) {
       using psc::bnd::LoHi;
       using psc::bnd::field::ConductingWall;
@@ -160,6 +161,7 @@ struct Psc
         add_field_bc(new ConductingWall<Dim, MfieldsState>{d, LoHi::Hi});
       }
     }
+#endif
 
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
