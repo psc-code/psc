@@ -81,6 +81,7 @@ public:
   using MfieldsState = typename PushParticles::MfieldsState;
   using Current = typename PushParticles::Current;
   using real_t = typename PushParticles::real_t;
+  using InterpolateEM_t = typename PushParticles::InterpolateEM_t;
   using Real3 = Vec3<real_t>;
 
   BoundaryInjector(ParticleGenerator particle_generator)
@@ -115,29 +116,89 @@ public:
         auto&& injector = injectors_by_patch[p];
         auto flds = mflds[p];
         typename Current::fields_t J(flds);
+        typename InterpolateEM_t::fields_t EM(flds.storage(), flds.ib());
+        InterpolateEM_t ip;
+        AdvanceParticle<real_t, dim_y> advance{grid.dt};
 
         for (Int3 initial_idx : VecRange(ilo, ihi)) {
           Real3 cell_corner = Real3(initial_idx) * grid.domain.dx;
           int n_prts_to_try_inject =
             get_n_in_cell(density, grid.norm.prts_per_unit_density, true);
 
-          Int3 inner_idx = initial_idx + Int3::unit(INJECT_DIM_IDX_);
-          real_t inner_e = mflds(EX + INJECT_DIM_IDX_, inner_idx[0],
-                                 inner_idx[1], inner_idx[2], p);
-
           for (int prt_count = 0; prt_count < n_prts_to_try_inject;
                prt_count++) {
+            // 1. sample position uniformly from first ghost layer, and velocity
+            // from vdf at x=infty
             psc::particle::Inject prt =
               particle_generator_.get(cell_corner, grid.domain.dx);
 
-            // FIXME no factor of dt - why does this work? can it be better?
-            real_t du_from_e =
-              inner_e * grid.kinds[prt.kind].q / grid.kinds[prt.kind].m;
-            prt.u[INJECT_DIM_IDX_] += du_from_e;
+            real_t m = grid.kinds[prt.kind].m;
+            real_t q = grid.kinds[prt.kind].q;
 
-            AdvanceParticle<real_t, dim_y> advance{grid.dt};
-            Real3 v = advance.calc_v(prt.u);
             Real3 initial_normalized_pos = prt.x * dxi;
+
+            bool preaccelerate = true;
+            if (preaccelerate) {
+              // 2. calculate change in energy from traveling from -infty to xp
+              real_t xp = initial_normalized_pos[INJECT_DIM_IDX_];
+              // x0 < xp < x1 and E0=E(x0), E1=E(x1)
+              real_t x0, x1;
+              real_t E0, E1;
+
+              if (xp < -0.5) {
+                x0 = -1.5;
+                E0 = 0.0;
+
+                x1 = -0.5;
+              } else {
+                x0 = -0.5;
+                ip.set_coeffs(
+                  initial_normalized_pos.with_component(INJECT_DIM_IDX_, x0));
+                switch (INJECT_DIM_IDX_) {
+                  case 0: E0 = ip.ex(EM); break;
+                  case 1: E0 = ip.ey(EM); break;
+                  case 2: E0 = ip.ez(EM); break;
+                  default: assert(false);
+                }
+
+                x1 = 0.5;
+              }
+              ip.set_coeffs(
+                initial_normalized_pos.with_component(INJECT_DIM_IDX_, x1));
+              switch (INJECT_DIM_IDX_) {
+                case 0: E1 = ip.ex(EM); break;
+                case 1: E1 = ip.ey(EM); break;
+                case 2: E1 = ip.ez(EM); break;
+                default: assert(false);
+              }
+
+              real_t dx = grid.domain.dx[INJECT_DIM_IDX_];
+              real_t work =
+                0.5f * q * dx *
+                (E0 * (2 - sqr(xp - x0 - 1)) + E1 * sqr(xp - x1 + 1));
+
+              // 3. recalculate normal velocity based on work already done
+              real_t u_inf = prt.u[INJECT_DIM_IDX_];
+              real_t gamma_inf = sqrt(1 + prt.u.mag2());
+              real_t gamma_inf_perp =
+                sqrt(1 + prt.u.with_component(INJECT_DIM_IDX_, 0).mag2());
+              real_t gamma_p = gamma_inf + work / m;
+              if (gamma_p < gamma_inf_perp) {
+                // particle didn't have enough energy to reach xp
+                continue;
+              }
+              // sign is a hack
+              prt.u[INJECT_DIM_IDX_] =
+                sqrt(sqr(gamma_p) - sqr(gamma_inf_perp)) * (u_inf < 0 ? -1 : 1);
+              prt.w *= u_inf * gamma_p / (prt.u[INJECT_DIM_IDX_] * gamma_inf);
+
+              // 4. push normal u a half step
+              real_t E_interp = E0 * (1 - xp + x0) + E1 * (1 + xp - x1);
+              prt.u[INJECT_DIM_IDX_] += 0.5f * grid.dt * q * E_interp / m;
+            }
+
+            // 5. push normal x
+            Real3 v = advance.calc_v(prt.u);
             advance.push_x(prt.x, v);
 
             if (prt.x[INJECT_DIM_IDX_] < 0.0) {
