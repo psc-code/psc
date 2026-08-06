@@ -827,8 +827,10 @@ static void run(int argc, char** argv)
 
   psc.bndf.background_e_lo = background_e;
   psc.bndf.background_h_lo = background_h;
-  psc.bndf.radiation = new AdvectedPeriodicFields{mflds, v_upstream[1],
-                                                  background_e, background_h};
+  if (turb_db2 > 0.0) {
+    psc.bndf.radiation = new AdvectedPeriodicFields{mflds, v_upstream[1],
+                                                    background_e, background_h};
+  }
 
   // add background after initializing radiation inflow, which only wants the
   // perturbations to B
