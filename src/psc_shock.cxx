@@ -581,7 +581,7 @@ void inject_turbulence_dense(MfieldsState& mflds)
   set_mean_b2(mflds, turb_db2);
 }
 
-void initializeFields(MfieldsState& mflds)
+void initialize_turbulence(MfieldsState& mflds)
 {
   if (turb_db2 > 0.0) {
     if (turb_method == "alfven_dense") {
@@ -593,8 +593,6 @@ void initializeFields(MfieldsState& mflds)
       LOG_ERROR("Unrecognized turbulence method: %s\n", turb_method.c_str());
     }
   }
-
-  add_background_fields(mflds);
 }
 
 struct AdvectedPeriodicFields : RadiatingBoundary<real_t>
@@ -605,18 +603,12 @@ struct AdvectedPeriodicFields : RadiatingBoundary<real_t>
                          Real3 background_e, Real3 background_h)
     : v_advect(v_advect), grid(mflds.grid())
   {
+    // mflds must NOT include background fields at this point
     // FIXME would be better to exclude J, but the interpolator uses EX, etc.
     auto&& e_b_fields = mflds.storage().view(_all, _all, _all, _all, _all);
     // FIXME this probably isn't the best way to copy a gtensor array
     cycled_fields = gt::zeros_like(e_b_fields);
     cycled_fields.view(_all, _all, _all, _all, _all) = e_b_fields;
-
-    for (int d = 0; d < 3; d++) {
-      cycled_fields.view(_all, _all, _all, EX + d, _all) =
-        cycled_fields.view(_all, _all, _all, EX + d, _all) - background_e[d];
-      cycled_fields.view(_all, _all, _all, HX + d, _all) =
-        cycled_fields.view(_all, _all, _all, HX + d, _all) - background_h[d];
-    }
   }
 
   Real3 advect_x3(Real3 x3, double t)
@@ -823,7 +815,7 @@ static void run(int argc, char** argv)
   // set up initial conditions
 
   initializeParticles(balance, grid_ptr, mprts);
-  initializeFields(mflds);
+  initialize_turbulence(mflds);
 
   // ----------------------------------------------------------------------
   // run the simulation
@@ -837,6 +829,10 @@ static void run(int argc, char** argv)
   psc.bndf.background_h_lo = background_h;
   psc.bndf.radiation = new AdvectedPeriodicFields{mflds, v_upstream[1],
                                                   background_e, background_h};
+
+  // add background after initializing radiation inflow, which only wants the
+  // perturbations to B
+  add_background_fields(mflds);
 
   psc.add_diagnostic(&out_fields);
   psc.add_diagnostic(&out_moments);
