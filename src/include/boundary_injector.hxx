@@ -117,7 +117,7 @@ public:
         typename Current::fields_t J(flds);
 
         for (Int3 initial_idx : VecRange(ilo, ihi)) {
-          Real3 cell_corner = Double3(initial_idx) * grid.domain.dx;
+          Real3 cell_corner = Real3(initial_idx) * grid.domain.dx;
           int n_prts_to_try_inject =
             get_n_in_cell(density, grid.norm.prts_per_unit_density, true);
 
@@ -169,7 +169,7 @@ public:
         typename Current::fields_t J(flds);
 
         for (Int3 initial_idx : VecRange(ilo, ihi)) {
-          Real3 cell_corner = Double3(initial_idx) * grid.domain.dx;
+          Real3 cell_corner = Real3(initial_idx) * grid.domain.dx;
           int n_prts_to_try_inject =
             get_n_in_cell(density, grid.norm.prts_per_unit_density, true);
 
