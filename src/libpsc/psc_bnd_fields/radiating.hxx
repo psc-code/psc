@@ -47,7 +47,14 @@ struct Radiating : FieldBcBase<MfieldsState>
   void apply_e_bcs(MfieldsState& mflds) override
   {
     const Grid_t& grid = mflds.grid();
-    int d0 = d;
+    pulse.tick(grid.time());
+
+    int d0 = d, d1 = d.next(), d2 = d.prev();
+    int E0 = EX + d0, E1 = EX + d1, E2 = EX + d2;
+
+    Int3 d0hat = Int3::unit(d0);
+    Int3 d1hat = Int3::unit(d1);
+    Int3 d2hat = Int3::unit(d2);
 
     for (int p = 0; p < mflds.n_patches(); p++) {
       if (lohi == Lo && grid.atBoundaryLo(p, d)) {
@@ -58,25 +65,34 @@ struct Radiating : FieldBcBase<MfieldsState>
         start[d0] = -1;
         stop[d0] = start[d0] + 1;
 
-        int E0 = EX + d0;
-
         for (Int3 i3 : VecRange(start, stop)) {
-          F(E0, i3) = 0.0;
+          Real3 x_e1 =
+            (Real3(i3) + Real3(d1hat) * real_t(0.5)) * Real3(grid.domain.dx);
+          Real3 x_e2 =
+            (Real3(i3) + Real3(d2hat) * real_t(0.5)) * Real3(grid.domain.dx);
+
+          F(E0, i3 - d0hat) = 0.0;
+          F(E1, i3) = pulse.sample_exterior_field(E1, grid.time(), p, x_e1);
+          F(E2, i3) = pulse.sample_exterior_field(E2, grid.time(), p, x_e2);
         }
       }
-
       if (lohi == Hi && grid.atBoundaryHi(p, d)) {
         auto F = make_Fields3d<dim_t>(mflds[p]);
 
         Int3 start = mflds.ib();
         Int3 stop = mflds.ib() + mflds.im();
-        start[d0] = grid.ldims[d0];
+        start[d0] = grid.ldims[d0] + 1;
         stop[d0] = start[d0] + 1;
 
-        int E0 = EX + d0;
-
         for (Int3 i3 : VecRange(start, stop)) {
+          Real3 x_e1 =
+            (Real3(i3) + Real3(d1hat) * real_t(0.5)) * Real3(grid.domain.dx);
+          Real3 x_e2 =
+            (Real3(i3) + Real3(d2hat) * real_t(0.5)) * Real3(grid.domain.dx);
+
           F(E0, i3) = 0.0;
+          F(E1, i3) = pulse.sample_exterior_field(E1, grid.time(), p, x_e1);
+          F(E2, i3) = pulse.sample_exterior_field(E2, grid.time(), p, x_e2);
         }
       }
     }
