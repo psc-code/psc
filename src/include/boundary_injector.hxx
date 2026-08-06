@@ -192,6 +192,9 @@ public:
         auto&& injector = injectors_by_patch[p];
         auto flds = mflds[p];
         typename Current::fields_t J(flds);
+        typename InterpolateEM_t::fields_t EM(flds.storage(), flds.ib());
+        InterpolateEM_t ip;
+        AdvanceParticle<real_t, dim_y> advance{grid.dt};
 
         for (Int3 initial_idx : VecRange(ilo, ihi)) {
           Real3 cell_corner = Real3(initial_idx) * grid.domain.dx;
@@ -200,8 +203,15 @@ public:
 
           for (int prt_count = 0; prt_count < n_prts_to_try_inject;
                prt_count++) {
+            // sample position uniformly from first ghost layer, and velocity
+            // from vdf at x=infty
             psc::particle::Inject prt =
               particle_generator_.get(cell_corner, grid.domain.dx);
+
+            real_t m = grid.kinds[prt.kind].m;
+            real_t q = grid.kinds[prt.kind].q;
+
+            Real3 initial_normalized_pos = prt.x * dxi;
 
             if (preaccelerate) {
               real_t E_interp;
@@ -218,10 +228,10 @@ public:
               prt.u[INJECT_DIM_IDX_] += (t_accel * gamma) * q * E_interp / m;
             }
 
-            AdvanceParticle<real_t, dim_y> advance{grid.dt};
+            // push normal x
             Real3 v = advance.calc_v(prt.u);
-            Real3 initial_normalized_pos = prt.x * dxi;
             advance.push_x(prt.x, v);
+
             Real3 final_normalized_pos = prt.x * dxi;
             Int3 final_idx = final_normalized_pos.fint();
 
@@ -232,9 +242,8 @@ public:
 
             injector.inject_local(prt);
 
-            real_t qni_wni = grid.kinds[prt.kind].q * prt.w;
             current.calc_j(J, initial_normalized_pos, final_normalized_pos,
-                           final_idx, initial_idx, qni_wni, v);
+                           final_idx, initial_idx, q * prt.w, v);
           }
         }
       }
