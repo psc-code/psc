@@ -831,8 +831,8 @@ static void run(int argc, char** argv)
 
   psc.add_gauss_corrector(&marder);
 
-  psc.bndf.background_e = background_e;
-  psc.bndf.background_h = background_h;
+  psc.bndf.background_e_lo = background_e;
+  psc.bndf.background_h_lo = background_h;
   psc.bndf.radiation = new AdvectedPeriodicFields{mflds, v_upstream[1],
                                                   background_e, background_h};
 

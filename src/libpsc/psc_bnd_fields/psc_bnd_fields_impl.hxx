@@ -41,7 +41,7 @@ struct BndFields_ : BndFieldsBase
               break;
             }
             case BND_FLD_OPEN: {
-              set_lower_ghosts(mflds, p, d, EX, background_e, false);
+              set_lower_ghosts(mflds, p, d, EX, background_e_lo, false);
               break;
             }
             default: {
@@ -63,7 +63,7 @@ struct BndFields_ : BndFieldsBase
               break;
             }
             case BND_FLD_OPEN: {
-              set_upper_ghosts(mflds, p, d, EX, background_e, false);
+              set_upper_ghosts(mflds, p, d, EX, background_e_hi, false);
               break;
             }
             default: {
@@ -566,19 +566,19 @@ struct BndFields_ : BndFieldsBase
       }
 
       F(H2, i3) =
-        (4.f * s - 2.f * (F(E1, edge_idx) - background_e[d1]) -
+        (4.f * s - 2.f * (F(E1, edge_idx) - background_e_lo[d1]) -
          dtdx[d2] * (F(H0, edge_idx) - F(H0, edge_idx - Int3::unit(d2))) -
-         (1.f - dtdx[d0]) * (F(H2, edge_idx) - background_h[d2]) +
+         (1.f - dtdx[d0]) * (F(H2, edge_idx) - background_h_lo[d2]) +
          dt * F(J1, edge_idx)) /
           (1.f + dtdx[d0]) +
-        background_h[d2];
+        background_h_lo[d2];
       F(H1, i3) =
-        (-4.f * p + 2.f * (F(E2, edge_idx) - background_e[d2]) -
+        (-4.f * p + 2.f * (F(E2, edge_idx) - background_e_lo[d2]) -
          dtdx[d1] * (F(H0, edge_idx) - F(H0, edge_idx - Int3::unit(d1))) -
-         (1.f - dtdx[d0]) * (F(H1, edge_idx) - background_h[d1]) +
+         (1.f - dtdx[d0]) * (F(H1, edge_idx) - background_h_lo[d1]) +
          dt * F(J2, edge_idx)) /
           (1.f + dtdx[d0]) +
-        background_h[d1];
+        background_h_lo[d1];
     }
   }
 
@@ -616,23 +616,26 @@ struct BndFields_ : BndFieldsBase
         p = radiation->pulse_p_upper(grid.time(), d0, p, x3_p);
       }
 
-      F(H2, i3) = (-4.f * s + 2.f * (F(E1, i3) - background_e[d1]) +
+      F(H2, i3) = (-4.f * s + 2.f * (F(E1, i3) - background_e_hi[d1]) +
                    dtdx[d2] * (F(H0, i3) - F(H0, i3 - Int3::unit(d2))) -
-                   (1.f - dtdx[d0]) * (F(H2, edge_idx) - background_h[d2]) -
+                   (1.f - dtdx[d0]) * (F(H2, edge_idx) - background_h_hi[d2]) -
                    dt * F(J1, i3)) /
                     (1.f + dtdx[d0]) +
-                  background_h[d2];
-      F(H1, i3) = (4.f * p - 2.f * (F(E2, i3) - background_e[d2]) +
+                  background_h_hi[d2];
+      F(H1, i3) = (4.f * p - 2.f * (F(E2, i3) - background_e_hi[d2]) +
                    dtdx[d1] * (F(H0, i3) - F(H0, i3 - Int3::unit(d1))) -
-                   (1.f - dtdx[d0]) * (F(H1, edge_idx) - background_h[d1]) -
+                   (1.f - dtdx[d0]) * (F(H1, edge_idx) - background_h_hi[d1]) -
                    dt * F(J2, i3)) /
                     (1.f + dtdx[d0]) +
-                  background_h[d1];
+                  background_h_hi[d1];
     }
   }
 
-  Vec3<real_t> background_e = {0.0, 0.0, 0.0};
-  Vec3<real_t> background_h = {0.0, 0.0, 0.0};
+  Vec3<real_t> background_e_lo = {0.0, 0.0, 0.0};
+  Vec3<real_t> background_e_hi = {0.0, 0.0, 0.0};
+
+  Vec3<real_t> background_h_lo = {0.0, 0.0, 0.0};
+  Vec3<real_t> background_h_hi = {0.0, 0.0, 0.0};
 
   RadiatingBoundary<real_t>* radiation = nullptr;
 };
