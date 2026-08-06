@@ -82,8 +82,7 @@ public:
   using real_t = typename PushParticles::real_t;
   using Real3 = Vec3<real_t>;
 
-  BoundaryInjector(ParticleGenerator particle_generator, Grid_t& grid,
-                   real_t density = 1.0)
+  BoundaryInjector(ParticleGenerator particle_generator, real_t density = 1.0)
     : particle_generator_{particle_generator}, density_{density}
   {}
 
