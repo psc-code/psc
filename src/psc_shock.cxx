@@ -810,13 +810,12 @@ static void run(int argc, char** argv)
     BoundaryInjector<ParticleGeneratorMaxwellian, PscConfig::PushParticles>(
       ParticleGeneratorMaxwellian(
         KIND_ION, grid.kinds[KIND_ION], v_upstream,
-        {ion_temperature, ion_temperature, ion_temperature}, true));
+        {ion_temperature, ion_temperature, ion_temperature}));
   auto electron_injector =
     BoundaryInjector<ParticleGeneratorMaxwellian, PscConfig::PushParticles>(
       ParticleGeneratorMaxwellian(
         KIND_ELECTRON, grid.kinds[KIND_ELECTRON], v_upstream,
-        {electron_temperature, electron_temperature, electron_temperature},
-        true));
+        {electron_temperature, electron_temperature, electron_temperature}));
 
   // ----------------------------------------------------------------------
   // set up initial conditions
