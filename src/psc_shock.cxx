@@ -935,26 +935,28 @@ static void run(int argc, char** argv)
   auto ion_injector_lo = BoundaryInjector<LoHi::Lo, ParticleGeneratorMaxwellian,
                                           PscConfig::PushParticles>(
     ParticleGeneratorMaxwellian(KIND_ION, grid.kinds[KIND_ION], v_upstream,
-                                {ti_upstream, ti_upstream, ti_upstream}));
-  ion_injector_lo.density = n_upstream;
+                                {ti_upstream, ti_upstream, ti_upstream}),
+    n_upstream);
   auto electron_injector_lo =
     BoundaryInjector<LoHi::Lo, ParticleGeneratorMaxwellian,
-                     PscConfig::PushParticles>(ParticleGeneratorMaxwellian(
-      KIND_ELECTRON, grid.kinds[KIND_ELECTRON], v_upstream,
-      {te_upstream, te_upstream, te_upstream}));
-  electron_injector_lo.density = n_upstream;
+                     PscConfig::PushParticles>(
+      ParticleGeneratorMaxwellian(KIND_ELECTRON, grid.kinds[KIND_ELECTRON],
+                                  v_upstream,
+                                  {te_upstream, te_upstream, te_upstream}),
+      n_upstream);
 
   auto ion_injector_hi = BoundaryInjector<LoHi::Hi, ParticleGeneratorMaxwellian,
                                           PscConfig::PushParticles>(
     ParticleGeneratorMaxwellian(KIND_ION, grid.kinds[KIND_ION], v_downstream,
-                                {ti_downstream, ti_downstream, ti_downstream}));
-  ion_injector_hi.density = n_downstream;
+                                {ti_downstream, ti_downstream, ti_downstream}),
+    n_downstream);
   auto electron_injector_hi =
     BoundaryInjector<LoHi::Hi, ParticleGeneratorMaxwellian,
-                     PscConfig::PushParticles>(ParticleGeneratorMaxwellian(
-      KIND_ELECTRON, grid.kinds[KIND_ELECTRON], v_downstream,
-      {te_downstream, te_downstream, te_downstream}));
-  electron_injector_hi.density = n_downstream;
+                     PscConfig::PushParticles>(
+      ParticleGeneratorMaxwellian(
+        KIND_ELECTRON, grid.kinds[KIND_ELECTRON], v_downstream,
+        {te_downstream, te_downstream, te_downstream}),
+      n_downstream);
 
   // ----------------------------------------------------------------------
   // set up initial conditions
