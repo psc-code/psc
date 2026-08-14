@@ -155,8 +155,11 @@ public:
             if (preaccelerate) {
               real_t E_interp;
 
+              // sample interior E, which works for all interpolators
+              real_t sample_coord =
+                lo ? 0.5 : grid.ldims[INJECT_DIM_IDX_] - 0.5;
               ip.set_coeffs(initial_normalized_pos.with_component(
-                INJECT_DIM_IDX_, start[INJECT_DIM_IDX_] + (lo ? 1 : 0)));
+                INJECT_DIM_IDX_, sample_coord));
               switch (INJECT_DIM_IDX_) {
                 case 0: E_interp = ip.ex(EM); break;
                 case 1: E_interp = ip.ey(EM); break;
