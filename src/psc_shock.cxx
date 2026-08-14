@@ -766,7 +766,8 @@ struct AdvectedPeriodicFields : psc::bnd::field::PulseBase<real_t>
 
   AdvectedPeriodicFields(MfieldsState& mflds, real_t v_advect,
                          Real3 background_e, Real3 background_h)
-    : v_advect(v_advect), grid(mflds.grid())
+    : v_advect_cell_normalized(v_advect / mflds.grid().domain.dx[DIM_Y]),
+      grid(mflds.grid())
   {
     // mflds must NOT include background fields at this point
     // FIXME would be better to exclude J, but the interpolator uses EX, etc.
@@ -778,17 +779,16 @@ struct AdvectedPeriodicFields : psc::bnd::field::PulseBase<real_t>
 
   Real3 advect_x3(Real3 x3, double t)
   {
-    return x3 - Real3::unit(DIM_Y) * real_t(t * v_advect);
+    return x3 - Real3::unit(DIM_Y) * real_t(t * v_advect_cell_normalized);
   }
 
   int shift_to_patch_local(Real3& x3_advected)
   {
-    real_t patch_size = grid.domain.length[DIM_Y] / grid.domain.np[DIM_Y];
     int n_patches_to_the_left = 0;
     // note: input x3 is already patch-local; we are just shifting to a
     // *different* patch
     while (x3_advected[DIM_Y] < 0.0) {
-      x3_advected[DIM_Y] += patch_size;
+      x3_advected[DIM_Y] += grid.ldims[DIM_Y];
       n_patches_to_the_left += 1;
     }
     return n_patches_to_the_left;
@@ -803,7 +803,7 @@ struct AdvectedPeriodicFields : psc::bnd::field::PulseBase<real_t>
                 n_patches_to_the_left, n_patch_cycles);
     }
 
-    ip.set_coeffs(x3_advected * grid.domain.dx_inv);
+    ip.set_coeffs(x3_advected);
     auto em = decltype(ip)::fields_t(
       cycled_fields.view(_all, _all, _all, _all, p), -grid.ibn);
 
@@ -858,7 +858,7 @@ struct AdvectedPeriodicFields : psc::bnd::field::PulseBase<real_t>
   const Grid_t& grid;
   gt::gtensor<real_t, 5> cycled_fields;
   int n_patch_cycles = 0;
-  real_t v_advect;
+  real_t v_advect_cell_normalized;
   InterpolateEM<
     Fields3d<decltype(cycled_fields.view(_all, _all, _all, _all, 0)), Dim>,
     opt_ip_1st_ec, Dim>
