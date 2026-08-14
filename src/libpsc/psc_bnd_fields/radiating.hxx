@@ -140,16 +140,18 @@ struct Radiating : FieldBcBase<MfieldsState>
           Real3 x3_p =
             (Real3(i3) + Real3(d2hat) * real_t(0.5)) * Real3(grid.domain.dx);
 
-          real_t s = pulse.sample_exterior_field(E1, grid.time(), p, x3_s) +
-                     pulse.sample_exterior_field(H2, grid.time(), p, x3_s);
-          real_t p = pulse.sample_exterior_field(E2, grid.time(), p, x3_p) -
-                     pulse.sample_exterior_field(H1, grid.time(), p, x3_p);
+          real_t pulse_s =
+            pulse.sample_exterior_field(E1, grid.time(), p, x3_s) +
+            pulse.sample_exterior_field(H2, grid.time(), p, x3_s);
+          real_t pulse_p =
+            pulse.sample_exterior_field(E2, grid.time(), p, x3_p) -
+            pulse.sample_exterior_field(H1, grid.time(), p, x3_p);
 
-          F(H2, i3 - d0hat) = (2.f * s - 2.f * F(E1, i3) -
+          F(H2, i3 - d0hat) = (2.f * pulse_s - 2.f * F(E1, i3) -
                                dtdx[d2] * (F(H0, i3) - F(H0, i3 - d2hat)) -
                                (1.f - dtdx[d0]) * F(H2, i3) + dt * F(J1, i3)) /
                               (1.f + dtdx[d0]);
-          F(H1, i3 - d0hat) = (-2.f * p + 2.f * F(E2, i3) -
+          F(H1, i3 - d0hat) = (-2.f * pulse_p + 2.f * F(E2, i3) -
                                dtdx[d1] * (F(H0, i3) - F(H0, i3 - d1hat)) -
                                (1.f - dtdx[d0]) * F(H1, i3) - dt * F(J2, i3)) /
                               (1.f + dtdx[d0]);
@@ -173,16 +175,18 @@ struct Radiating : FieldBcBase<MfieldsState>
           Real3 x3_p =
             (Real3(i3) + Real3(d2hat) * real_t(0.5)) * Real3(grid.domain.dx);
 
-          real_t s = pulse.sample_exterior_field(E1, grid.time(), p, x3_s) -
-                     pulse.sample_exterior_field(H2, grid.time(), p, x3_s);
-          real_t p = pulse.sample_exterior_field(E2, grid.time(), p, x3_p) +
-                     pulse.sample_exterior_field(H1, grid.time(), p, x3_p);
+          real_t pulse_s =
+            pulse.sample_exterior_field(E1, grid.time(), p, x3_s) -
+            pulse.sample_exterior_field(H2, grid.time(), p, x3_s);
+          real_t pulse_p =
+            pulse.sample_exterior_field(E2, grid.time(), p, x3_p) +
+            pulse.sample_exterior_field(H1, grid.time(), p, x3_p);
 
-          F(H2, i3) = (-2.f * s + 2.f * F(E1, i3) +
+          F(H2, i3) = (-2.f * pulse_s + 2.f * F(E1, i3) +
                        dtdx[d2] * (F(H0, i3) - F(H0, i3 - d2hat)) -
                        (1.f - dtdx[d0]) * F(H2, i3 - d0hat) - dt * F(J1, i3)) /
                       (1.f + dtdx[d0]);
-          F(H1, i3) = (2.f * p - 2.f * F(E2, i3) +
+          F(H1, i3) = (2.f * pulse_p - 2.f * F(E2, i3) +
                        dtdx[d1] * (F(H0, i3) - F(H0, i3 - d1hat)) -
                        (1.f - dtdx[d0]) * F(H1, i3 - d0hat) + dt * F(J2, i3)) /
                       (1.f + dtdx[d0]);
