@@ -129,7 +129,7 @@ struct Radiating : FieldBcBase<MfieldsState>
 
         auto F = make_Fields3d<dim_t>(mflds[p]);
 
-        Int3 start = mflds.ib();
+        Int3 start = mflds.ib() + dim_t::get_noninvariant_mask();
         Int3 stop = mflds.ib() + mflds.im();
         start[d0] = 0;
         stop[d0] = start[d0] + 1;
@@ -164,7 +164,7 @@ struct Radiating : FieldBcBase<MfieldsState>
 
         auto F = make_Fields3d<dim_t>(mflds[p]);
 
-        Int3 start = mflds.ib();
+        Int3 start = mflds.ib() + dim_t::get_noninvariant_mask();
         Int3 stop = mflds.ib() + mflds.im();
         start[d0] = grid.ldims[d0];
         stop[d0] = start[d0] + 1;
