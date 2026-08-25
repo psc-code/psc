@@ -153,13 +153,15 @@ public:
             Real3 initial_normalized_pos = prt.x * dxi;
 
             if (preaccelerate) {
-              // sample interior E, which works for all interpolators
+              // sample interior E and B, which works for all interpolators
               real_t sample_coord =
                 lo ? 0.5 : grid.ldims[INJECT_DIM_IDX_] - 0.5;
               ip.set_coeffs(initial_normalized_pos.with_component(
                 INJECT_DIM_IDX_, sample_coord));
               Real3 e_inner = {ip.ex(EM), ip.ey(EM), ip.ez(EM)};
-              prt.u += t_accel * q * e_inner / m;
+              Real3 h_inner = {ip.hx(EM), ip.hy(EM), ip.hz(EM)};
+              real_t dq = .5f * grid.norm.eta * t_accel * q / m;
+              advance.push_p(prt.u, e_inner, h_inner, dq);
             }
 
             // push normal x
