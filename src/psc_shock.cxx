@@ -109,7 +109,6 @@ void setupParameters(int argc, char** argv)
   te_upstream = inputParams.get<double>("T_e");
   ti_upstream = inputParams.get<double>("T_i");
 
-  double v_shock = inputParams.get<double>("v_shock");
   double theta_bn_deg = inputParams.get<double>("θ_Bn_deg");
   double b0 = inputParams.get<double>("B_0");
 
@@ -119,18 +118,15 @@ void setupParameters(int argc, char** argv)
                       sin(theta_bn) * sin(theta_xz)} *
                 b0;
 
-  if (shock_method == "wall" || shock_method == "none") {
-    v_upstream = {0.0, v_shock / 1.5, 0.0}; // factor is empirical
-    e0 = -v_upstream.cross(h0_upstream);
+  v_upstream = {0.0, inputParams.get<double>("v_upstream"), 0.0};
+  e0 = -v_upstream.cross(h0_upstream);
 
+  if (shock_method == "wall" || shock_method == "none") {
     // relativistic correction
     double gamma = 1 / sqrt(1 - v_upstream.mag2());
     e0 *= gamma;
     h0_upstream *= Real3{gamma, 1.0, gamma};
   } else if (shock_method == "relaxation") {
-    v_upstream = {0.0, v_shock, 0.0};
-    e0 = -v_upstream.cross(h0_upstream); // upstream and downstream are the same
-
     // for perpendicular shock (2013 Balogh eq.3.36 and normalization in
     // sec.3.3.1)
     if (theta_bn_deg != 90.0) {
