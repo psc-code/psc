@@ -7,9 +7,11 @@
 #include <particles.hxx>
 #include <setup_particles.hxx>
 
+#include "../libpsc/psc_bnd_fields/field_bc_base.hxx"
+#include "../libpsc/psc_bnd_fields/conducting_wall.hxx"
+#include "../libpsc/psc_particle_injectors/injector_base.hxx"
 #include "gauss_corrector_base.hxx"
 #include "diagnostic_base.hxx"
-#include "injector_base.hxx"
 #include "external_current_base.hxx"
 #include <checks_params.hxx>
 #include <output_particles.hxx>
@@ -117,6 +119,7 @@ struct Psc
   using BndFields = typename PscConfig::BndFields;
   using BndParticles = typename PscConfig::BndParticles;
   using Dim = typename PscConfig::Dim;
+  using FieldBcBaseT = FieldBcBase<MfieldsState>;
   using GaussCorrectorBaseT = GaussCorrectorBase<MfieldsState, Mparticles>;
   using DiagnosticBaseT = DiagnosticBase<Mparticles, MfieldsState>;
   using InjectorBaseT = InjectorBase<Mparticles, MfieldsState>;
@@ -146,6 +149,20 @@ struct Psc
       }
     }
 
+#ifndef USE_CUDA
+    for (int d = 0; d < 3; d++) {
+      using psc::bnd::LoHi;
+      using psc::bnd::field::ConductingWall;
+
+      if (grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL) {
+        add_field_bc(new ConductingWall<Dim, MfieldsState>{d, LoHi::Lo});
+      }
+      if (grid.bc.fld_hi[d] == BND_FLD_CONDUCTING_WALL) {
+        add_field_bc(new ConductingWall<Dim, MfieldsState>{d, LoHi::Hi});
+      }
+    }
+#endif
+
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     log_.open("mem-" + std::to_string(rank) + ".log");
@@ -161,6 +178,13 @@ struct Psc
   // API for modifying various internal components
   // TODO: improve ownership model: we should own these objects (i.e., use
   // unique_ptr), but don't want to burden the user with C++ boilerplate.
+
+  void add_field_bc(FieldBcBaseT* field_bc)
+  {
+    if (field_bc) {
+      field_bcs_.push_back(field_bc);
+    }
+  }
 
   void add_gauss_corrector(GaussCorrectorBaseT* corrector)
   {
@@ -219,11 +243,17 @@ struct Psc
 
   void pre_first_step()
   {
+    for (auto field_bc : field_bcs_) {
+      field_bc->apply_h_bcs(mflds_);
+    }
     bndf.fill_ghosts_H(mflds_);
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
 
     bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
 
+    for (auto field_bc : field_bcs_) {
+      field_bc->apply_e_bcs(mflds_);
+    }
     bndf.fill_ghosts_E(mflds_);
     bnd_.fill_ghosts(mflds_, EX, EX + 3);
 
@@ -286,7 +316,7 @@ struct Psc
 
       psc_stats_val[st_nr_particles] = mprts_.size();
 
-      if (grid().timestep() % p_.stats_every == 0) {
+      if (p_.stats_every > 0 && grid().timestep() % p_.stats_every == 0) {
         print_status();
       }
 
@@ -414,6 +444,9 @@ struct Psc
 
     mpi_printf(comm, "***** Bnd fields J...\n");
     prof_start(pr_bndf);
+    for (auto field_bc : field_bcs_) {
+      field_bc->apply_j_bcs(mflds_);
+    }
     bndf.add_ghosts_J(mflds_);
     bnd_.add_ghosts(mflds_, JXI, JXI + 3);
     bnd_.fill_ghosts(mflds_, JXI, JXI + 3);
@@ -428,6 +461,9 @@ struct Psc
 
     mpi_printf(comm, "***** Bnd fields B (1 of 2)...\n");
     prof_restart(pr_bndf);
+    for (auto field_bc : field_bcs_) {
+      field_bc->apply_h_bcs(mflds_);
+    }
     bndf.fill_ghosts_H(mflds_);
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
     prof_stop(pr_bndf);
@@ -441,6 +477,9 @@ struct Psc
 
     mpi_printf(comm, "***** Bnd fields E...\n");
     prof_restart(pr_bndf);
+    for (auto field_bc : field_bcs_) {
+      field_bc->apply_e_bcs(mflds_);
+    }
     bndf.fill_ghosts_E(mflds_);
     bnd_.fill_ghosts(mflds_, EX, EX + 3);
     prof_stop(pr_bndf);
@@ -463,6 +502,9 @@ struct Psc
 
     mpi_printf(comm, "***** Bnd fields B (2 of 2)...\n");
     prof_restart(pr_bndf);
+    for (auto field_bc : field_bcs_) {
+      field_bc->apply_h_bcs(mflds_);
+    }
     bndf.fill_ghosts_H(mflds_);
     bnd_.fill_ghosts(mflds_, HX, HX + 3);
     prof_stop(pr_bndf);
@@ -555,6 +597,7 @@ protected:
   Balance& balance_;
   Collision& collision_;
   Checks& checks_;
+  std::vector<FieldBcBaseT*> field_bcs_;
   std::vector<GaussCorrectorBaseT*> gauss_correctors_;
   std::vector<DiagnosticBaseT*> diagnostics_;
   std::vector<InjectorBaseT*> injectors_;

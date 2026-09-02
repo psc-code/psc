@@ -75,7 +75,9 @@ TYPED_TEST(MfieldsTest, WriteRead)
   auto mflds2 = Mfields{grid, NR_FIELDS, {}};
   {
     auto reader = io.open("test.bp", kg::io::Mode::Read);
+    reader.beginStep(kg::io::StepMode::Read);
     reader.get("mflds", mflds2);
+    reader.endStep();
     reader.close();
   }
 
@@ -106,7 +108,9 @@ TYPED_TEST(MfieldsTest, WriteWithGhostsRead)
   auto mflds2 = Mfields{grid, NR_FIELDS, {}};
   {
     auto reader = io.open("test.bp", kg::io::Mode::Read);
+    reader.beginStep(kg::io::StepMode::Read);
     reader.get("mflds", mflds2);
+    reader.endStep();
     reader.close();
   }
 
@@ -137,7 +141,9 @@ TYPED_TEST(MfieldsTest, WriteReadWithGhosts)
   auto mflds2 = Mfields{grid, NR_FIELDS, {2, 2, 2}};
   {
     auto reader = io.open("test.bp", kg::io::Mode::Read);
+    reader.beginStep(kg::io::StepMode::Read);
     reader.get("mflds", mflds2);
+    reader.endStep();
     reader.close();
   }
 

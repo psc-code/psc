@@ -36,6 +36,18 @@ struct InjectorSimple
       mprts_.push_back(p_, prt);
     }
 
+    void inject_local(const psc::particle::Inject& new_prt)
+    {
+      auto prt =
+        Particle{Real3(new_prt.x),
+                 Real3(new_prt.u),
+                 real_t(new_prt.w * mprts_.grid().kinds[new_prt.kind].q),
+                 new_prt.kind,
+                 mprts_.uid_gen(),
+                 new_prt.tag};
+      mprts_.push_back(p_, prt);
+    }
+
     void reweight(const psc::particle::Inject& new_prt)
     {
       auto& grid = mprts_.grid();

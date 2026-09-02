@@ -29,19 +29,6 @@ struct psc_particle_np
   psc::particle::Tag tag;
 };
 
-/**
- * @brief Calculates gamma * v for the given velocity v.
- * @tparam Real real type
- * @param v the actual velocity
- * @return the spatial components of the corresponding 4-velocity
- */
-template <typename Real>
-Vec3<Real> vel_to_4vel(Vec3<Real> v)
-{
-  Real gamma = 1.0 / sqrt(1.0 - v.mag2());
-  return v * gamma;
-}
-
 struct InitNptFunc
 {
   // Initialize particles according to a Maxwellian.
@@ -120,6 +107,51 @@ int get_n_in_cell(real_t density, real_t prts_per_unit_density,
   }
   return std::max(1, int(density * prts_per_unit_density + .5));
 }
+
+/**
+ * @brief Boosts velocities using cached intermediate values for a particular
+ * Lorentz frame.
+ */
+struct VelocityBooster
+{
+  VelocityBooster(Double3 frame_v)
+    : frame_gamma(1.0 / std::sqrt(1.0 - frame_v.mag2())),
+      frame_u(frame_v * frame_gamma),
+      frame_dir(frame_v / frame_v.mag())
+  {
+    // FIXME kind of hacky
+    if (frame_v.mag2() == 0.0) {
+      frame_dir = {1, 0, 0};
+    }
+  }
+
+  /**
+   * @param prt_v a particle's "unprimed" proper velocity
+   * @return its "primed" proper velocity
+   */
+  Double3 boost(Double3 prt_u)
+  {
+    double prt_gamma = std::sqrt(1.0 + prt_u.mag2());
+    return prt_u + (frame_gamma - 1.0) * prt_u.dot(frame_dir) * frame_dir -
+           frame_u * prt_gamma;
+  }
+
+  /**
+   * @param prt_v a particle's "unprimed" non-proper velocity
+   * @return its "primed" proper velocity
+   */
+  Double3 boost_and_make_proper(Double3 prt_v)
+  {
+    double prt_gamma = 1.0 / std::sqrt(1.0 - prt_v.mag2());
+    Double3 prt_u = prt_v * prt_gamma;
+    return prt_u + (frame_gamma - 1.0) * prt_u.dot(frame_dir) * frame_dir -
+           frame_u * prt_gamma;
+  }
+
+  double frame_gamma;
+  Double3 frame_u;
+  Double3 frame_dir;
+};
 
 // ======================================================================
 // SetupParticles
@@ -213,13 +245,27 @@ struct SetupParticles
     return [=]() {
       static rng::Normal<double> dist;
 
+      if (initial_momentum_gamma_correction) {
+        // FIXME cache this (static doesn't work)
+        VelocityBooster booster{-npt.p};
+
+        Double3 prt_v;
+        for (int d = 0; d < 3; d++) {
+          // sample velocity in plasma frame
+          prt_v[d] = dist.get(0.0, std::sqrt(npt.T[d] / m));
+        }
+
+        // boost to lab frame
+        // FIXME should really sample from Maxwell-Juttner
+        // this hack interprests v as u to handle rare case when v>1
+        // v<<1 => v~= u anyways
+        return booster.boost(prt_v);
+      }
+
       Double3 p;
       for (int i = 0; i < 3; i++)
         p[i] = dist.get(npt.p[i], beta * std::sqrt(npt.T[i] / m));
 
-      if (initial_momentum_gamma_correction) {
-        p = vel_to_4vel(p);
-      }
       return p;
     };
   }
@@ -287,8 +333,8 @@ struct SetupParticles
           "have the exact same initial position distribution. This results in "
           "a charge density of 0 if there are two species with opposite "
           "charges, but the resulting charge density is nonzero in general. In "
-          "the latter, case, take special care to ensure Gauss' law isn't "
-          "violated.");
+          "the latter case, take special care to ensure Gauss' law isn't "
+          "violated.\n");
       }
 
       int seed = rng::detail::get_process_seed();

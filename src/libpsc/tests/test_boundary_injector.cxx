@@ -2,29 +2,29 @@
 
 #include "test_common.hxx"
 
-#include "boundary_injector.hxx"
-
 #include "psc.hxx"
 #include "output_fields.hxx"
 #include "../psc_config.hxx"
+#include "../psc_particle_injectors/boundary_injector.hxx"
 
 TEST(BoundaryInjectorTest, ParticleGeneratorMaxwellianTest)
 {
   int kind_idx = 15;
   Grid_t::Kind kind{1.0, 1836.0, "ion"};
   ParticleGeneratorMaxwellian::Real w = 1.0;
-  ParticleGeneratorMaxwellian::Real3 mean_u{0.0, 5.0, 15.0};
+  ParticleGeneratorMaxwellian::Real3 mean_v{0.0, .05, .15};
   ParticleGeneratorMaxwellian::Real3 temperature{0.0, 0.0, 0.0};
   ParticleGeneratorMaxwellian::Real3 pos{1.0, 2.0, 5.0};
 
-  ParticleGeneratorMaxwellian gen{kind_idx, kind, mean_u, temperature};
+  ParticleGeneratorMaxwellian gen{kind_idx, kind, mean_v, temperature};
 
   auto prt = gen.get(pos, {0.0, 0.0, 0.0});
 
   ASSERT_EQ(prt.kind, kind_idx);
   ASSERT_EQ(prt.w, w);
   ASSERT_EQ(prt.tag, 0);
-  ASSERT_EQ(prt.u, mean_u); // zero temperature => exact velocity
+  ASSERT_EQ(prt.u / sqrt(1 + prt.u.mag2()),
+            mean_v); // zero temperature => exact velocity
   ASSERT_EQ(prt.x, pos);
 }
 
@@ -130,9 +130,9 @@ TEST(BoundaryInjectorTest, Integration1Particle)
   auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
                                           balance, collision, checks);
 
-  psc.add_injector(
-    new BoundaryInjector<ParticleGenerator, typename PscConfig::PushParticles>(
-      ParticleGenerator(1, 1), grid));
+  psc.add_injector(new BoundaryInjector<LoHi::Lo, ParticleGenerator,
+                                        typename PscConfig::PushParticles>(
+    ParticleGenerator(1, 1)));
 
   // ----------------------------------------------------------------------
   // set up initial conditions
@@ -188,8 +188,8 @@ TEST(BoundaryInjectorTest, IntegrationManyParticles)
                                           balance, collision, checks);
 
   psc.add_injector(
-    new BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>(
-      ParticleGenerator(-1, 1), grid));
+    new BoundaryInjector<LoHi::Lo, ParticleGenerator, PscConfig::PushParticles>(
+      ParticleGenerator(-1, 1)));
 
   // ----------------------------------------------------------------------
   // set up initial conditions
@@ -242,11 +242,11 @@ TEST(BoundaryInjectorTest, IntegrationManySpecies)
   Collision collision{grid, 0, 0.1};
 
   auto inject_electrons =
-    BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>{
-      ParticleGenerator(-1, 0), grid};
+    BoundaryInjector<LoHi::Lo, ParticleGenerator, PscConfig::PushParticles>{
+      ParticleGenerator(-1, 0)};
   auto inject_ions =
-    BoundaryInjector<ParticleGenerator, PscConfig::PushParticles>{
-      ParticleGenerator(-1, 1), grid};
+    BoundaryInjector<LoHi::Lo, ParticleGenerator, PscConfig::PushParticles>{
+      ParticleGenerator(-1, 1)};
 
   auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
                                           balance, collision, checks);

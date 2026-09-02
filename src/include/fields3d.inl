@@ -39,8 +39,6 @@ public:
     // FIXME, should just check for consistency? (# ghosts might differ, too)
     // reader.get("ib", mflds.ib, launch);
     // reader.get("im", mflds.im, launch);
-    reader.beginStep(kg::io::StepMode::Read);
-
     auto n_comps = mflds.n_comps();
     auto shape = makeDims(n_comps, mflds.gdims());
     assert(reader.variableShape<DataType>() == shape);
@@ -55,7 +53,6 @@ public:
                          {}); //{ib, im});
     }
     reader.performGets();
-    reader.endStep();
 
     for (int p = 0; p < mflds.n_patches(); p++) {
       auto h_flds = make_Fields3d<dim_xyz>(h_mflds[p]);

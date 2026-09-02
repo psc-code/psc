@@ -26,7 +26,7 @@ struct PushParticlesVb
 
   static void push_mprts(Mparticles& mprts, MfieldsState& mflds)
   {
-    const auto& grid = mprts.grid();
+    const Grid_t& grid = mprts.grid();
     Real3 dxi = Real3(grid.domain.dx).inv();
     real_t dq_kind[MAX_NR_KINDS];
     auto& kinds = grid.kinds;

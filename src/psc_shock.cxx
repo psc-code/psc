@@ -4,10 +4,12 @@
 
 #include "output_fields.hxx"
 #include "psc_config.hxx"
-#include "include/boundary_injector.hxx"
 #include "input_params.hxx"
 #include "kg/include/kg/VecRange.hxx"
 #include "libpsc/psc_output_particles/output_particles_adios2_impl.hxx"
+#include "libpsc/psc_bnd_fields/radiating.hxx"
+#include "libpsc/psc_particle_injectors/boundary_injector.hxx"
+#include "libpsc/axis.hxx"
 
 // ======================================================================
 // PSC configuration
@@ -41,17 +43,27 @@ using Real3 = Vec3<real_t>;
 
 PscParams psc_params;
 
-double electron_temperature;
-double ion_temperature;
 double electron_mass;
 double ion_mass;
 
+double n_upstream;
 Double3 v_upstream;
+double te_upstream;
+double ti_upstream;
+Real3 h0_upstream;
+Real3 e0; // e0 is constant
 
-Real3 background_h_upstream;
+// ----------------------------
+// standing shock params
+double n_downstream;
+Double3 v_downstream;
+double te_downstream;
+double ti_downstream;
+Real3 h0_downstream;
 
-Real3 background_e;
-Real3 background_h;
+double transition_half_width;
+double transition_steepness = 2.0; // at least sqrt(3)~1.74
+// ----------------------------
 
 Int3 gdims;
 Double3 lengths;
@@ -64,9 +76,12 @@ int out_interval;
 int marder_interval;
 
 std::string turb_method;
+std::string shock_method;
 
 int nicell;
 int seed;
+
+std::string checkpoint_filename;
 
 // ======================================================================
 // setupParameters
@@ -79,56 +94,122 @@ void setupParameters(int argc, char** argv)
   std::string path_to_params(argv[1]);
   InputParams inputParams(path_to_params);
 
-  psc_params.stats_every = 1000;
+  shock_method = inputParams.getOrDefault<std::string>("shock_method", "wall");
+
+  psc_params.stats_every =
+    inputParams.getOrDefault<int>("stats_interval", 1000);
   psc_params.cfl = inputParams.getOrDefault<double>("cfl", .75);
-  psc_params.write_checkpoint_every_step = 0;
+  checkpoint_filename =
+    inputParams.getOrDefault<std::string>("checkpoint_filename", "");
 
-  electron_temperature = inputParams.get<double>("electron_temperature");
-  ion_temperature = inputParams.get<double>("ion_temperature");
-  electron_mass = inputParams.get<double>("electron_mass");
-  ion_mass = inputParams.get<double>("ion_mass");
+  electron_mass = inputParams.get<double>("m_e");
+  ion_mass = inputParams.get<double>("m_i");
 
-  inputParams.errIfPresentAndNotEqual("v_upstream_x", 0.0, "");
-  v_upstream = {0.0, inputParams.get<double>("v_upstream_y"), 0.0};
-  inputParams.errIfPresentAndNotEqual("v_upstream_z", 0.0, "");
+  n_upstream = 1.0;
+  te_upstream = inputParams.get<double>("T_e");
+  ti_upstream = inputParams.get<double>("T_i");
 
-  double b_angle_y_to_x_rad = inputParams.get<double>("b_angle_y_to_x_rad");
-  double b_mag = inputParams.get<double>("b_mag");
-  background_h_upstream =
-    b_mag * Real3{sin(b_angle_y_to_x_rad), cos(b_angle_y_to_x_rad), 0.0};
+  double theta_bn_deg = inputParams.get<double>("θ_Bn_deg");
+  double b0 = inputParams.get<double>("B_0");
 
-  double gamma = 1 / sqrt(1 - v_upstream.mag2());
-  background_e = -gamma * v_upstream.cross(background_h_upstream);
-  // note: this only holds for vx=vz=0
-  background_h = background_h_upstream * Real3{gamma, 0.0, gamma};
+  double theta_bn = theta_bn_deg * M_PI / 180.0;
+  double theta_xz = inputParams.get<double>("θ_xz_deg") * M_PI / 180.0;
+  h0_upstream = Real3{sin(theta_bn) * cos(theta_xz), cos(theta_bn),
+                      sin(theta_bn) * sin(theta_xz)} *
+                b0;
+
+  v_upstream = {0.0, inputParams.get<double>("v_upstream"), 0.0};
+  e0 = -v_upstream.cross(h0_upstream);
+
+  if (shock_method == "wall" || shock_method == "none") {
+    // relativistic correction
+    double gamma = 1 / sqrt(1 - v_upstream.mag2());
+    e0 *= gamma;
+    h0_upstream *= Real3{gamma, 1.0, gamma};
+  } else if (shock_method == "relaxation") {
+    // for perpendicular shock (2013 Balogh eq.3.36 and normalization in
+    // sec.3.3.1)
+    if (theta_bn_deg != 90.0) {
+      LOG_ERROR("θ_Bn must be 90° for relaxation method; got %f°\n",
+                theta_bn_deg);
+    }
+
+    // no relativistic correction, since these aren't relativistic RH conditions
+
+    double b_norm = sqrt(ion_mass * n_upstream * v_upstream.mag2());
+    double t_norm = 0.5 * ion_mass * v_upstream.mag2();
+    double beta1 =
+      2.0 * n_upstream * (te_upstream + ti_upstream) / h0_upstream.mag2();
+    Double3 B1 = h0_upstream / b_norm;
+    double T1 = (te_upstream + ti_upstream) / t_norm;
+
+    double MA_sq =
+      v_upstream.mag2() * ion_mass * n_upstream / h0_upstream.mag2();
+
+    double tmp = 1.0 + (1.0 + 2.5 * beta1) * B1.mag2();
+    double r = 8.0 / (tmp + sqrt(sqr(tmp) + 2 * B1.mag2()));
+    r = inputParams.getOrDefault<double>("r", r);
+
+    double heating_factor =
+      1.0 +
+      4.0 / (5.0 * T1) * ((sqr(r) - 1.0) / (2.0 * sqr(r)) + (1.0 - r) / MA_sq);
+
+    n_downstream = n_upstream * r;
+    v_downstream = v_upstream / r;
+    h0_downstream = h0_upstream * r;
+
+    te_downstream =
+      inputParams.getOrDefault<double>("T_e2", te_upstream * heating_factor);
+    ti_downstream =
+      inputParams.getOrDefault<double>("T_i2", ti_upstream * heating_factor);
+  }
 
   gdims[0] = inputParams.get<int>("nx");
   gdims[1] = inputParams.get<int>("ny");
   gdims[2] = inputParams.get<int>("nz");
   psc_params.nmax = inputParams.get<int>("nt");
 
-  n_patches[0] = inputParams.get<int>("n_patches_x");
-  n_patches[1] = inputParams.get<int>("n_patches_y");
-  n_patches[2] = inputParams.get<int>("n_patches_z");
+  n_patches[0] = inputParams.get<int>("npx");
+  n_patches[1] = inputParams.get<int>("npy");
+  n_patches[2] = inputParams.get<int>("npz");
 
-  Double3 dx = {inputParams.get<double>("dx"), inputParams.get<double>("dy"),
-                inputParams.get<double>("dz")};
-
-  lengths = Double3(gdims) * dx;
-
-  if (inputParams.warnIfPresent("turb_dB^2", "set turb_dB instead")) {
-    turb_db2 = inputParams.get<double>("turb_dB^2");
+  if (inputParams.has("lx")) {
+    lengths[0] = inputParams.get<double>("lx");
   } else {
-    turb_db2 = sqr(inputParams.get<double>("turb_dB"));
+    lengths[0] = inputParams.get<double>("dx") * gdims[0];
   }
-  turb_correlation_length = inputParams.get<double>("turb_correlation_length");
+  if (inputParams.has("ly")) {
+    lengths[1] = inputParams.get<double>("ly");
+  } else {
+    lengths[1] = inputParams.get<double>("dy") * gdims[1];
+  }
+  if (inputParams.has("lz")) {
+    lengths[2] = inputParams.get<double>("lz");
+  } else {
+    lengths[2] = inputParams.get<double>("dz") * gdims[2];
+  }
+
+  transition_half_width = lengths[1] / 8.0;
+
+  turb_db2 = sqr(inputParams.get<double>("dB"));
+  turb_correlation_length = inputParams.get<double>("L_c");
+
+  if (inputParams.has("checkpoint_interval")) {
+    psc_params.write_checkpoint_every_step =
+      inputParams.get<int>("checkpoint_interval");
+    inputParams.errIfPresent(
+      "n_checkpoints",
+      "n_checkpoints is mutually exclusive with checkpoint_interval");
+  } else if (inputParams.has("n_checkpoints")) {
+    int n_checkpoints = inputParams.get<int>("n_checkpoints");
+    if (n_checkpoints > 0) {
+      psc_params.write_checkpoint_every_step = psc_params.nmax / n_checkpoints;
+    }
+  }
 
   int n_writes = inputParams.getOrDefault<int>("n_writes", 100);
   out_interval = psc_params.nmax / n_writes;
   marder_interval = inputParams.getOrDefault<int>("marder_interval", -1);
-
-  inputParams.errIfPresentAndEqual("mirror_domain", true,
-                                   "only 'false' is permitted");
 
   turb_method =
     inputParams.getOrDefault<std::string>("turb_method", "alfven_dense");
@@ -139,6 +220,23 @@ void setupParameters(int argc, char** argv)
   std::ifstream src(path_to_params, std::ios::binary);
   std::ofstream dst("params_record.txt", std::ios::binary);
   dst << src.rdbuf();
+}
+
+template <typename T>
+T interpolate_across_shock(T upstream, T downstream, double y)
+{
+  if (transition_half_width == 0.0) {
+    return y > 0.0 ? downstream : upstream;
+  } else {
+    // smooth transition function
+    y /= transition_half_width;
+    double sigmoid_val = abs(y) >= 1.0
+                           ? (y > 0.0 ? 1.0 : -1.0)
+                           : tanh(transition_steepness * y / (1.0 - y * y));
+    double weight_downstream = (sigmoid_val + 1.0) / 2.0;
+    double weight_upstream = 1.0 - weight_downstream;
+    return upstream * weight_upstream + downstream * weight_downstream;
+  }
 }
 
 // ======================================================================
@@ -152,14 +250,39 @@ void setupParameters(int argc, char** argv)
 Grid_t* setupGrid()
 {
   // FIXME add a check to catch mismatch between Dim and n grid points early
-  Double3 corner = {0.0, 0.0, 0.0};
+
+  Double3 corner;
+  int bnd_fld_lower;
+  int bnd_fld_upper;
+  int bnd_prt_lower;
+  int bnd_prt_upper;
+
+  if (shock_method == "wall") {
+    corner = {0.0, 0.0, 0.0};
+    bnd_fld_lower = BND_FLD_OPEN;
+    bnd_fld_upper = BND_FLD_CONDUCTING_WALL;
+    bnd_prt_lower = BND_PRT_OPEN;
+    bnd_prt_upper = BND_PRT_REFLECTING;
+  } else if (shock_method == "none") {
+    corner = {0.0, 0.0, 0.0};
+    bnd_fld_lower = BND_FLD_PERIODIC;
+    bnd_fld_upper = BND_FLD_PERIODIC;
+    bnd_prt_lower = BND_PRT_PERIODIC;
+    bnd_prt_upper = BND_PRT_PERIODIC;
+  } else if (shock_method == "relaxation") {
+    corner = {0.0, -lengths[1] / 2.0, 0.0};
+    bnd_fld_lower = BND_FLD_OPEN;
+    bnd_fld_upper = BND_FLD_OPEN;
+    bnd_prt_lower = BND_PRT_OPEN;
+    bnd_prt_upper = BND_PRT_OPEN;
+  }
+
   auto domain = Grid_t::Domain{gdims, lengths, corner, n_patches};
 
-  auto bc =
-    psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_OPEN, BND_FLD_PERIODIC},
-                  {BND_FLD_PERIODIC, BND_FLD_CONDUCTING_WALL, BND_FLD_PERIODIC},
-                  {BND_PRT_PERIODIC, BND_PRT_OPEN, BND_PRT_PERIODIC},
-                  {BND_PRT_PERIODIC, BND_PRT_REFLECTING, BND_PRT_PERIODIC}};
+  auto bc = psc::grid::BC{{BND_FLD_PERIODIC, bnd_fld_lower, BND_FLD_PERIODIC},
+                          {BND_FLD_PERIODIC, bnd_fld_upper, BND_FLD_PERIODIC},
+                          {BND_PRT_PERIODIC, bnd_prt_lower, BND_PRT_PERIODIC},
+                          {BND_PRT_PERIODIC, bnd_prt_upper, BND_PRT_PERIODIC}};
 
   auto kinds = Grid_t::Kinds(NR_KINDS);
   kinds[KIND_ELECTRON] = {-1.0, electron_mass, "e"};
@@ -188,21 +311,33 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
   setup_particles.random_offsets = true;
   setup_particles.initial_momentum_gamma_correction = true;
 
-  auto init_np = [&](int kind, Double3 crd, int p, Int3 idx,
-                     psc_particle_np& np) {
-    double temperature =
-      np.kind == KIND_ION ? ion_temperature : electron_temperature;
-    np.n = 1.0;
-    np.p =
-      setup_particles.createMaxwellian({np.kind,
-                                        np.n,
-                                        v_upstream,
-                                        {temperature, temperature, temperature},
-                                        np.tag});
-  };
+  if (shock_method == "wall" || shock_method == "none") {
+    auto init_np = [&](int kind, Double3 pos, int p, Int3 idx,
+                       psc_particle_np& np) {
+      double t = np.kind == KIND_ION ? ti_upstream : te_upstream;
+      np.n = 1.0;
+      np.p = setup_particles.createMaxwellian(
+        {np.kind, np.n, v_upstream, {t, t, t}, np.tag});
+    };
 
-  partitionAndSetupParticles(setup_particles, balance, grid_ptr, mprts,
-                             init_np);
+    partitionAndSetupParticles(setup_particles, balance, grid_ptr, mprts,
+                               init_np);
+  } else if (shock_method == "relaxation") {
+    auto init_np = [&](int kind, Double3 pos, int p, Int3 idx,
+                       psc_particle_np& np) {
+      np.n = interpolate_across_shock(n_upstream, n_downstream, pos[1]);
+      // interpolate v_thermal, not T itself
+      double t = sqr(interpolate_across_shock(
+        sqrt(np.kind == KIND_ION ? ti_upstream : te_upstream),
+        sqrt(np.kind == KIND_ION ? ti_downstream : te_downstream), pos[1]));
+      Double3 v = interpolate_across_shock(v_upstream, v_downstream, pos[1]);
+      np.p =
+        setup_particles.createMaxwellian({np.kind, np.n, v, {t, t, t}, np.tag});
+    };
+
+    partitionAndSetupParticles(setup_particles, balance, grid_ptr, mprts,
+                               init_np);
+  }
 }
 
 // ======================================================================
@@ -218,13 +353,22 @@ void add_background_fields(MfieldsState& mflds)
 
     int n_ghosts = mflds.ibn().max();
     grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
-      field_patch(HX, jx, jy, jz) += background_h[0];
-      field_patch(HY, jx, jy, jz) += background_h[1];
-      field_patch(HZ, jx, jy, jz) += background_h[2];
+      Real3 h0;
+      if (shock_method == "wall" || shock_method == "none") {
+        h0 = h0_upstream;
+      } else if (shock_method == "relaxation") {
+        Double3 pos = centering::get_pos(patch, {jx, jy, jz}, centering::NC, 0);
+        h0 = interpolate_across_shock(h0_upstream, h0_downstream, pos[1]);
+        h0[1] = h0_upstream[1]; // parallel B isn't compressed
+      }
 
-      field_patch(EX, jx, jy, jz) += background_e[0];
-      field_patch(EY, jx, jy, jz) += background_e[1];
-      field_patch(EZ, jx, jy, jz) += background_e[2];
+      field_patch(HX, jx, jy, jz) += h0[0];
+      field_patch(HY, jx, jy, jz) += h0[1];
+      field_patch(HZ, jx, jy, jz) += h0[2];
+
+      field_patch(EX, jx, jy, jz) += e0[0];
+      field_patch(EY, jx, jy, jz) += e0[1];
+      field_patch(EZ, jx, jy, jz) += e0[2];
     });
   }
 }
@@ -275,24 +419,40 @@ void inject_b_from_potential(MfieldsState& mflds,
                              PscConfig::Mfields& vector_potential)
 {
   const auto& grid = mflds.grid();
+  Real3 dx = grid.domain.dx;
 
   for (int p = 0; p < mflds.n_patches(); ++p) {
     auto field_patch = make_Fields3d<dim_xyz>(mflds[p]);
     auto vector_potential_patch = make_Fields3d<dim_xyz>(vector_potential[p]);
 
     grid.Foreach_3d(2, 1, [&](int jx, int jy, int jz) {
-      field_patch(HX, jx, jy, jz) = vector_potential_patch(AZ, jx, jy + 1, jz) -
-                                    vector_potential_patch(AZ, jx, jy, jz) -
-                                    vector_potential_patch(AY, jx, jy, jz + 1) +
-                                    vector_potential_patch(AY, jx, jy, jz);
-      field_patch(HY, jx, jy, jz) = vector_potential_patch(AX, jx, jy, jz + 1) -
-                                    vector_potential_patch(AX, jx, jy, jz) -
-                                    vector_potential_patch(AZ, jx + 1, jy, jz) +
-                                    vector_potential_patch(AZ, jx, jy, jz);
-      field_patch(HZ, jx, jy, jz) = vector_potential_patch(AY, jx + 1, jy, jz) -
-                                    vector_potential_patch(AY, jx, jy, jz) -
-                                    vector_potential_patch(AX, jx, jy + 1, jz) +
-                                    vector_potential_patch(AX, jx, jy, jz);
+      field_patch(HX, jx, jy, jz) =
+        (Dim::is_invar(1) ? 0
+                          : vector_potential_patch(AZ, jx, jy + 1, jz) -
+                              vector_potential_patch(AZ, jx, jy, jz)) /
+          dx[1] -
+        (Dim::is_invar(2) ? 0
+                          : vector_potential_patch(AY, jx, jy, jz + 1) -
+                              vector_potential_patch(AY, jx, jy, jz)) /
+          dx[2];
+      field_patch(HY, jx, jy, jz) =
+        (Dim::is_invar(2) ? 0
+                          : vector_potential_patch(AX, jx, jy, jz + 1) -
+                              vector_potential_patch(AX, jx, jy, jz)) /
+          dx[2] -
+        (Dim::is_invar(0) ? 0
+                          : vector_potential_patch(AZ, jx + 1, jy, jz) -
+                              vector_potential_patch(AZ, jx, jy, jz)) /
+          dx[0];
+      field_patch(HZ, jx, jy, jz) =
+        (Dim::is_invar(0) ? 0
+                          : vector_potential_patch(AY, jx + 1, jy, jz) -
+                              vector_potential_patch(AY, jx, jy, jz)) /
+          dx[0] -
+        (Dim::is_invar(1) ? 0
+                          : vector_potential_patch(AX, jx, jy + 1, jz) -
+                              vector_potential_patch(AX, jx, jy, jz)) /
+          dx[1];
     });
   }
 }
@@ -320,7 +480,7 @@ void inject_plane_alfven_wave(PscConfig::Mfields& vector_potential, double db,
   }
 
   Double3 xp_hat{cos_theta * cos_phi, cos_theta * sin_phi, -sin_theta};
-  Double3 yp_hat{sin_phi, -cos_phi, 0};
+  Double3 yp_hat{-sin_phi, cos_phi, 0};
 
   Double3 a_vec = db * cos(polarization) / k2 * xp_hat.cross(k_vec);
   Double3 b_vec = db * sin(polarization) / k2 * yp_hat.cross(k_vec);
@@ -495,7 +655,8 @@ void inject_turbulence_dense(MfieldsState& mflds)
   Int3 i3_min = (1 - gdims) / 2;
   Int3 i3_max = gdims / 2;
 
-  // inject in only half of k-space, since +k and -k modes are indistinguishable
+  // inject in only half of k-space, since +k and -k modes are
+  // indistinguishable
   for (int d = 0; d < 3; d++) {
     if (gdims[d] > 2) {
       i3_min[d] = 0;
@@ -581,7 +742,7 @@ void inject_turbulence_dense(MfieldsState& mflds)
   set_mean_b2(mflds, turb_db2);
 }
 
-void initializeFields(MfieldsState& mflds)
+void initialize_turbulence(MfieldsState& mflds)
 {
   if (turb_db2 > 0.0) {
     if (turb_method == "alfven_dense") {
@@ -593,50 +754,43 @@ void initializeFields(MfieldsState& mflds)
       LOG_ERROR("Unrecognized turbulence method: %s\n", turb_method.c_str());
     }
   }
-
-  add_background_fields(mflds);
 }
 
-struct AdvectedPeriodicFields : RadiatingBoundary<real_t>
+struct AdvectedPeriodicFields : psc::bnd::field::PulseBase<real_t>
 {
   static const int DIM_Y = 1;
 
   AdvectedPeriodicFields(MfieldsState& mflds, real_t v_advect,
                          Real3 background_e, Real3 background_h)
-    : v_advect(v_advect), grid(mflds.grid())
+    : v_advect_cell_normalized(v_advect / mflds.grid().domain.dx[DIM_Y]),
+      grid(mflds.grid())
   {
+    // mflds must NOT include background fields at this point
     // FIXME would be better to exclude J, but the interpolator uses EX, etc.
     auto&& e_b_fields = mflds.storage().view(_all, _all, _all, _all, _all);
     // FIXME this probably isn't the best way to copy a gtensor array
     cycled_fields = gt::zeros_like(e_b_fields);
     cycled_fields.view(_all, _all, _all, _all, _all) = e_b_fields;
-
-    for (int d = 0; d < 3; d++) {
-      cycled_fields.view(_all, _all, _all, EX + d, _all) =
-        cycled_fields.view(_all, _all, _all, EX + d, _all) - background_e[d];
-      cycled_fields.view(_all, _all, _all, HX + d, _all) =
-        cycled_fields.view(_all, _all, _all, HX + d, _all) - background_h[d];
-    }
   }
 
   Real3 advect_x3(Real3 x3, double t)
   {
-    return x3 - Real3::unit(DIM_Y) * real_t(t * v_advect);
+    return x3 - Real3::unit(DIM_Y) * real_t(t * v_advect_cell_normalized);
   }
 
   int shift_to_patch_local(Real3& x3_advected)
   {
-    real_t patch_size = grid.domain.length[DIM_Y] / grid.domain.np[DIM_Y];
     int n_patches_to_the_left = 0;
-    while (x3_advected[DIM_Y] < grid.domain.corner[DIM_Y]) {
-      x3_advected[DIM_Y] += patch_size;
+    // note: input x3 is already patch-local; we are just shifting to a
+    // *different* patch
+    while (x3_advected[DIM_Y] < 0.0) {
+      x3_advected[DIM_Y] += grid.ldims[DIM_Y];
       n_patches_to_the_left += 1;
     }
     return n_patches_to_the_left;
   }
 
-  void calc_e_h(double t, int p, Real3 x3, int d_e, real_t& e, int d_h,
-                real_t& h)
+  real_t sample_exterior_field(int m, double t, int p, Real3 x3) override
   {
     Real3 x3_advected = advect_x3(x3, t);
     int n_patches_to_the_left = shift_to_patch_local(x3_advected);
@@ -645,60 +799,23 @@ struct AdvectedPeriodicFields : RadiatingBoundary<real_t>
                 n_patches_to_the_left, n_patch_cycles);
     }
 
-    ip.set_coeffs(x3_advected * grid.domain.dx_inv);
+    ip.set_coeffs(x3_advected);
     auto em = decltype(ip)::fields_t(
       cycled_fields.view(_all, _all, _all, _all, p), -grid.ibn);
 
-    switch (d_e) {
-      case 0: e = ip.ex(em); break;
-      case 1: e = ip.ey(em); break;
-      case 2: e = ip.ez(em); break;
+    switch (m) {
+      case EX: return ip.ex(em) + e0[0];
+      case EY: return ip.ey(em) + e0[1];
+      case EZ: return ip.ez(em) + e0[2];
+      case HX: return ip.hx(em) + h0_upstream[0];
+      case HY: return ip.hy(em) + h0_upstream[1];
+      case HZ: return ip.hz(em) + h0_upstream[2];
+      default: return 0.0;
     }
-    switch (d_h) {
-      case 0: h = ip.hx(em); break;
-      case 1: h = ip.hy(em); break;
-      case 2: h = ip.hz(em); break;
-    }
   }
 
-  real_t pulse_s_lower(double t, int d, int p, Real3 x3) override
+  void tick(double t) override
   {
-    int d1 = (d + 1) % 3;
-    int d2 = (d + 2) % 3;
-
-    real_t e, h;
-    calc_e_h(t, p, x3, d1, e, d2, h);
-
-    return (e + h) / 2.0;
-  }
-
-  real_t pulse_p_lower(double t, int d, int p, Real3 x3) override
-  {
-    int d1 = (d + 1) % 3;
-    int d2 = (d + 2) % 3;
-
-    real_t e, h;
-    calc_e_h(t, p, x3, d2, e, d1, h);
-
-    return (e - h) / 2.0;
-  }
-
-  real_t pulse_s_upper(double t, int d, int p, Real3 x3) override
-  {
-    return 0.0;
-  }
-
-  real_t pulse_p_upper(double t, int d, int p, Real3 x3) override
-  {
-    return 0.0;
-  }
-
-  void update_cache_lower(double t, int d) override
-  {
-    if (d != DIM_Y) {
-      return;
-    }
-
     // TODO make this work with >1 patch per process?
     assert(grid.n_patches() == 1);
 
@@ -710,15 +827,20 @@ struct AdvectedPeriodicFields : RadiatingBoundary<real_t>
       return;
     }
 
-    LOG_INFO("cycling turbulence...\n");
+    cycle_turbulence(n_patches_to_the_left - n_patch_cycles);
+  }
+
+  void cycle_turbulence(int n_patches)
+  {
+    LOG_INFO("cycling turbulence... (t=%f)\n", grid.time());
 
     // hack: guess the rank based on how mrc does it for simple domains
     // (can't use mrc, because it wouldn't apply periodicity)
     Int3 np = grid.domain.np;
     Int3 proc = grid.localPatchInfo(0).idx3;
-    Int3 dest_proc = (proc + Int3::unit(DIM_Y)) % np;
+    Int3 dest_proc = (proc + Int3::unit(DIM_Y) * n_patches) % np;
     int dest_rank = flatten_index(dest_proc.reverse(), np.reverse());
-    Int3 source_proc = (proc - Int3::unit(DIM_Y) + np) % np;
+    Int3 source_proc = ((proc - Int3::unit(DIM_Y) * n_patches) % np + np) % np;
     int source_rank = flatten_index(source_proc.reverse(), np.reverse());
 
     MPI_Status status;
@@ -726,13 +848,13 @@ struct AdvectedPeriodicFields : RadiatingBoundary<real_t>
                                    MpiDtypeTraits<real_t>::value(), dest_rank,
                                    0, source_rank, 0, grid.comm(), &status);
 
-    n_patch_cycles += 1;
+    n_patch_cycles += n_patches;
   }
 
   const Grid_t& grid;
   gt::gtensor<real_t, 5> cycled_fields;
   int n_patch_cycles = 0;
-  real_t v_advect;
+  real_t v_advect_cell_normalized;
   InterpolateEM<
     Fields3d<decltype(cycled_fields.view(_all, _all, _all, _all, 0)), Dim>,
     opt_ip_1st_ec, Dim>
@@ -806,25 +928,41 @@ static void run(int argc, char** argv)
   int oute_interval = -100;
   DiagEnergies<Mparticles, MfieldsState> oute{grid.comm(), oute_interval};
 
-  auto ion_injector =
-    BoundaryInjector<ParticleGeneratorMaxwellian, PscConfig::PushParticles>(
+  auto ion_injector_lo = BoundaryInjector<LoHi::Lo, ParticleGeneratorMaxwellian,
+                                          PscConfig::PushParticles>(
+    ParticleGeneratorMaxwellian(KIND_ION, grid.kinds[KIND_ION], v_upstream,
+                                {ti_upstream, ti_upstream, ti_upstream}),
+    n_upstream);
+  auto electron_injector_lo =
+    BoundaryInjector<LoHi::Lo, ParticleGeneratorMaxwellian,
+                     PscConfig::PushParticles>(
+      ParticleGeneratorMaxwellian(KIND_ELECTRON, grid.kinds[KIND_ELECTRON],
+                                  v_upstream,
+                                  {te_upstream, te_upstream, te_upstream}),
+      n_upstream);
+
+  auto ion_injector_hi = BoundaryInjector<LoHi::Hi, ParticleGeneratorMaxwellian,
+                                          PscConfig::PushParticles>(
+    ParticleGeneratorMaxwellian(KIND_ION, grid.kinds[KIND_ION], v_downstream,
+                                {ti_downstream, ti_downstream, ti_downstream}),
+    n_downstream);
+  auto electron_injector_hi =
+    BoundaryInjector<LoHi::Hi, ParticleGeneratorMaxwellian,
+                     PscConfig::PushParticles>(
       ParticleGeneratorMaxwellian(
-        KIND_ION, grid.kinds[KIND_ION], v_upstream,
-        {ion_temperature, ion_temperature, ion_temperature}, true),
-      grid);
-  auto electron_injector =
-    BoundaryInjector<ParticleGeneratorMaxwellian, PscConfig::PushParticles>(
-      ParticleGeneratorMaxwellian(
-        KIND_ELECTRON, grid.kinds[KIND_ELECTRON], v_upstream,
-        {electron_temperature, electron_temperature, electron_temperature},
-        true),
-      grid);
+        KIND_ELECTRON, grid.kinds[KIND_ELECTRON], v_downstream,
+        {te_downstream, te_downstream, te_downstream}),
+      n_downstream);
 
   // ----------------------------------------------------------------------
   // set up initial conditions
 
-  initializeParticles(balance, grid_ptr, mprts);
-  initializeFields(mflds);
+  if (checkpoint_filename.empty()) {
+    initializeParticles(balance, grid_ptr, mprts);
+    initialize_turbulence(mflds);
+  } else {
+    read_checkpoint(checkpoint_filename, *grid_ptr, mprts, mflds);
+  }
 
   // ----------------------------------------------------------------------
   // run the simulation
@@ -834,18 +972,56 @@ static void run(int argc, char** argv)
 
   psc.add_gauss_corrector(&marder);
 
-  psc.bndf.background_e = background_e;
-  psc.bndf.background_h = background_h;
-  psc.bndf.radiation = new AdvectedPeriodicFields{mflds, v_upstream[1],
-                                                  background_e, background_h};
-
   psc.add_diagnostic(&out_fields);
   psc.add_diagnostic(&out_moments);
   psc.add_diagnostic(&outp);
   psc.add_diagnostic(&oute);
 
-  psc.add_injector(&ion_injector);
-  psc.add_injector(&electron_injector);
+  using psc::Axis;
+  using psc::bnd::LoHi;
+  using ConstantPulse = psc::bnd::field::ConstantPulse<real_t>;
+
+  if (shock_method != "none") {
+    psc.add_injector(&ion_injector_lo);
+    psc.add_injector(&electron_injector_lo);
+
+    if (turb_db2 > 0.0 && v_upstream[1] > 0.0) {
+      if (checkpoint_filename.empty()) {
+        // mflds is currently just the pure, initial turbulence
+        psc.add_field_bc(new psc::bnd::field::Radiating<Dim, MfieldsState,
+                                                        AdvectedPeriodicFields>(
+          AdvectedPeriodicFields{mflds, v_upstream[1], e0, h0_upstream},
+          Axis::Y, LoHi::Lo));
+      } else {
+        // mflds is completely unrelated; need to re-initialize turbulence
+        MfieldsState mflds2{grid};
+        initialize_turbulence(mflds2);
+        psc.add_field_bc(new psc::bnd::field::Radiating<Dim, MfieldsState,
+                                                        AdvectedPeriodicFields>(
+          AdvectedPeriodicFields{mflds2, v_upstream[1], e0, h0_upstream},
+          Axis::Y, LoHi::Lo));
+      }
+    } else {
+      psc.add_field_bc(
+        new psc::bnd::field::Radiating<Dim, MfieldsState, ConstantPulse>(
+          ConstantPulse{e0, h0_upstream}, Axis::Y, LoHi::Lo));
+    }
+  }
+
+  if (shock_method == "relaxation") {
+    psc.add_injector(&ion_injector_hi);
+    psc.add_injector(&electron_injector_hi);
+
+    psc.add_field_bc(
+      new psc::bnd::field::Radiating<Dim, MfieldsState, ConstantPulse>(
+        ConstantPulse{e0, h0_downstream}, Axis::Y, LoHi::Hi));
+  }
+
+  if (checkpoint_filename.empty()) {
+    // add background after initializing radiation inflow, which only wants
+    // the perturbations to B
+    add_background_fields(mflds);
+  }
 
   psc.integrate();
 }
