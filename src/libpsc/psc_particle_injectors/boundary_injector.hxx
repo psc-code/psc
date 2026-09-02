@@ -158,8 +158,13 @@ public:
                 lo ? 0.5 : grid.ldims[INJECT_DIM_IDX_] - 0.5;
               ip.set_coeffs(initial_normalized_pos.with_component(
                 INJECT_DIM_IDX_, sample_coord));
-              Real3 e_inner = {ip.ex(EM), ip.ey(EM), ip.ez(EM)};
-              Real3 h_inner = {ip.hx(EM), ip.hy(EM), ip.hz(EM)};
+
+              // FIXME: determine how best to preaccelerate
+              // Real3 e_inner = {ip.ex(EM), ip.ey(EM), ip.ez(EM)};
+              // Real3 h_inner = {ip.hx(EM), ip.hy(EM), ip.hz(EM)};
+              Real3 e_inner = {0.f, ip.ey(EM), 0.f};
+              Real3 h_inner = {0.f, 0.f, 0.f};
+
               real_t dq = .5f * grid.norm.eta * t_accel * q / m;
               advance.push_p(prt.u, e_inner, h_inner, dq);
             }
