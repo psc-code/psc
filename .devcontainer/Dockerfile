@@ -35,4 +35,10 @@ RUN apt-get update \
     && echo "Etc/UTC" > /etc/timezone \
     && rm -rf /var/lib/apt/lists/*
 
+# Remove NVIDIA CUDA apt sources to prevent devcontainer feature installation failures.
+# CUDA is already provided by the base image; the apt repo is not needed and causes
+# intermittent "mirror sync in progress" errors when devcontainer features run apt-get update.
+RUN rm -f /etc/apt/sources.list.d/cuda*.list /etc/apt/sources.list.d/nvidia*.list \
+    && apt-get clean
+
 
