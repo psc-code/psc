@@ -78,6 +78,9 @@ int marder_interval;
 std::string turb_method;
 std::string shock_method;
 
+PreaccelerateMethod preaccelerate_method;
+double preaccelerate_time_plasma_periods;
+
 int nicell;
 int seed;
 
@@ -206,6 +209,16 @@ void setupParameters(int argc, char** argv)
       psc_params.write_checkpoint_every_step = psc_params.nmax / n_checkpoints;
     }
   }
+
+  preaccelerate_time_plasma_periods =
+    inputParams.getOrDefault<double>("preaccelerate_time_plasma_periods", 0.5);
+  std::string pre_method_str =
+    inputParams.getOrDefault<std::string>("preaccelerate_method", "normal_e");
+  preaccelerate_method =
+    pre_method_str == "normal_e"  ? PreaccelerateMethod::NormalE
+    : pre_method_str == "all_e"   ? PreaccelerateMethod::AllE
+    : pre_method_str == "all_e_h" ? PreaccelerateMethod::AllEH
+                                  : PreaccelerateMethod::None;
 
   int n_writes = inputParams.getOrDefault<int>("n_writes", 100);
   out_interval = psc_params.nmax / n_writes;
@@ -933,6 +946,10 @@ static void run(int argc, char** argv)
     ParticleGeneratorMaxwellian(KIND_ION, grid.kinds[KIND_ION], v_upstream,
                                 {ti_upstream, ti_upstream, ti_upstream}),
     n_upstream);
+  ion_injector_lo.preaccelerate_method = preaccelerate_method;
+  ion_injector_lo.preaccelerate_time = preaccelerate_time_plasma_periods * 2.0 *
+                                       M_PI / std::sqrt(n_upstream / ion_mass);
+
   auto electron_injector_lo =
     BoundaryInjector<LoHi::Lo, ParticleGeneratorMaxwellian,
                      PscConfig::PushParticles>(
@@ -940,12 +957,21 @@ static void run(int argc, char** argv)
                                   v_upstream,
                                   {te_upstream, te_upstream, te_upstream}),
       n_upstream);
+  electron_injector_lo.preaccelerate_method = preaccelerate_method;
+  electron_injector_lo.preaccelerate_time =
+    preaccelerate_time_plasma_periods * 2.0 * M_PI /
+    std::sqrt(n_upstream / electron_mass);
 
   auto ion_injector_hi = BoundaryInjector<LoHi::Hi, ParticleGeneratorMaxwellian,
                                           PscConfig::PushParticles>(
     ParticleGeneratorMaxwellian(KIND_ION, grid.kinds[KIND_ION], v_downstream,
                                 {ti_downstream, ti_downstream, ti_downstream}),
     n_downstream);
+  ion_injector_hi.preaccelerate_method = preaccelerate_method;
+  ion_injector_hi.preaccelerate_time = preaccelerate_time_plasma_periods * 2.0 *
+                                       M_PI /
+                                       std::sqrt(n_downstream / ion_mass);
+
   auto electron_injector_hi =
     BoundaryInjector<LoHi::Hi, ParticleGeneratorMaxwellian,
                      PscConfig::PushParticles>(
@@ -953,6 +979,10 @@ static void run(int argc, char** argv)
         KIND_ELECTRON, grid.kinds[KIND_ELECTRON], v_downstream,
         {te_downstream, te_downstream, te_downstream}),
       n_downstream);
+  electron_injector_hi.preaccelerate_method = preaccelerate_method;
+  electron_injector_hi.preaccelerate_time =
+    preaccelerate_time_plasma_periods * 2.0 * M_PI /
+    std::sqrt(n_downstream / electron_mass);
 
   // ----------------------------------------------------------------------
   // set up initial conditions

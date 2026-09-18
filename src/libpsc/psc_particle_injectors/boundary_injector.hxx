@@ -163,10 +163,9 @@ public:
               Real3 h_inner = {0.f, 0.f, 0.f};
 
               if (preaccelerate_method == PreaccelerateMethod::NormalE) {
-                Real3 e_inner[INJECT_DIM_IDX_] =
-                  INJECT_DIM_IDX_ == 0   ? ip.ex(EM)
-                  : INJECT_DIM_IDX_ == 1 ? ip.ey(EM)
-                                         : ip.ez(EM)
+                e_inner[INJECT_DIM_IDX_] = INJECT_DIM_IDX_ == 0   ? ip.ex(EM)
+                                           : INJECT_DIM_IDX_ == 1 ? ip.ey(EM)
+                                                                  : ip.ez(EM);
               } else if (preaccelerate_method == PreaccelerateMethod::AllE) {
                 e_inner = {ip.ex(EM), ip.ey(EM), ip.ez(EM)};
               } else if (preaccelerate_method == PreaccelerateMethod::AllEH) {
