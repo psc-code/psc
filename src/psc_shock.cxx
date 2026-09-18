@@ -167,6 +167,14 @@ void setupParameters(int argc, char** argv)
       inputParams.getOrDefault<double>("T_i2", ti_upstream * heating_factor);
   }
 
+  if (shock_method == "none") {
+    n_downstream = n_upstream;
+    v_downstream = v_upstream;
+    h0_downstream = h0_upstream;
+    te_downstream = te_upstream;
+    ti_downstream = ti_upstream;
+  }
+
   gdims[0] = inputParams.get<int>("nx");
   gdims[1] = inputParams.get<int>("ny");
   gdims[2] = inputParams.get<int>("nz");
@@ -276,13 +284,7 @@ Grid_t* setupGrid()
     bnd_fld_upper = BND_FLD_CONDUCTING_WALL;
     bnd_prt_lower = BND_PRT_OPEN;
     bnd_prt_upper = BND_PRT_REFLECTING;
-  } else if (shock_method == "none") {
-    corner = {0.0, 0.0, 0.0};
-    bnd_fld_lower = BND_FLD_PERIODIC;
-    bnd_fld_upper = BND_FLD_PERIODIC;
-    bnd_prt_lower = BND_PRT_PERIODIC;
-    bnd_prt_upper = BND_PRT_PERIODIC;
-  } else if (shock_method == "relaxation") {
+  } else if (shock_method == "relaxation" || shock_method == "none") {
     corner = {0.0, -lengths[1] / 2.0, 0.0};
     bnd_fld_lower = BND_FLD_OPEN;
     bnd_fld_upper = BND_FLD_OPEN;
@@ -1011,34 +1013,32 @@ static void run(int argc, char** argv)
   using psc::bnd::LoHi;
   using ConstantPulse = psc::bnd::field::ConstantPulse<real_t>;
 
-  if (shock_method != "none") {
-    psc.add_injector(&ion_injector_lo);
-    psc.add_injector(&electron_injector_lo);
+  psc.add_injector(&ion_injector_lo);
+  psc.add_injector(&electron_injector_lo);
 
-    if (turb_db2 > 0.0 && v_upstream[1] > 0.0) {
-      if (checkpoint_filename.empty()) {
-        // mflds is currently just the pure, initial turbulence
-        psc.add_field_bc(new psc::bnd::field::Radiating<Dim, MfieldsState,
-                                                        AdvectedPeriodicFields>(
-          AdvectedPeriodicFields{mflds, v_upstream[1], e0, h0_upstream},
-          Axis::Y, LoHi::Lo));
-      } else {
-        // mflds is completely unrelated; need to re-initialize turbulence
-        MfieldsState mflds2{grid};
-        initialize_turbulence(mflds2);
-        psc.add_field_bc(new psc::bnd::field::Radiating<Dim, MfieldsState,
-                                                        AdvectedPeriodicFields>(
-          AdvectedPeriodicFields{mflds2, v_upstream[1], e0, h0_upstream},
-          Axis::Y, LoHi::Lo));
-      }
+  if (turb_db2 > 0.0 && v_upstream[1] > 0.0) {
+    if (checkpoint_filename.empty()) {
+      // mflds is currently just the pure, initial turbulence
+      psc.add_field_bc(new psc::bnd::field::Radiating<Dim, MfieldsState,
+                                                      AdvectedPeriodicFields>(
+        AdvectedPeriodicFields{mflds, v_upstream[1], e0, h0_upstream}, Axis::Y,
+        LoHi::Lo));
     } else {
-      psc.add_field_bc(
-        new psc::bnd::field::Radiating<Dim, MfieldsState, ConstantPulse>(
-          ConstantPulse{e0, h0_upstream}, Axis::Y, LoHi::Lo));
+      // mflds is completely unrelated; need to re-initialize turbulence
+      MfieldsState mflds2{grid};
+      initialize_turbulence(mflds2);
+      psc.add_field_bc(new psc::bnd::field::Radiating<Dim, MfieldsState,
+                                                      AdvectedPeriodicFields>(
+        AdvectedPeriodicFields{mflds2, v_upstream[1], e0, h0_upstream}, Axis::Y,
+        LoHi::Lo));
     }
+  } else {
+    psc.add_field_bc(
+      new psc::bnd::field::Radiating<Dim, MfieldsState, ConstantPulse>(
+        ConstantPulse{e0, h0_upstream}, Axis::Y, LoHi::Lo));
   }
 
-  if (shock_method == "relaxation") {
+  if (shock_method == "relaxation" || shock_method == "none") {
     psc.add_injector(&ion_injector_hi);
     psc.add_injector(&electron_injector_hi);
 
