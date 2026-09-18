@@ -110,16 +110,6 @@ public:
     Real3 dxi = grid.domain.dx_inv;
     Current current(grid);
 
-    bool preaccelerate = true;
-    real_t npp = 0.5; // number of plasma periods
-
-    real_t plasma_freq_sq = 0.0;
-    for (Grid_t::Kind kind : grid.kinds) {
-      plasma_freq_sq += density / kind.m;
-    }
-    real_t plasma_period = 2.f * M_PI / sqrt(plasma_freq_sq);
-    real_t t_accel = npp * plasma_period;
-
     for (int p = 0; p < grid.n_patches(); p++) {
       if (lo ? grid.atBoundaryLo(p, INJECT_DIM_IDX_)
              : grid.atBoundaryHi(p, INJECT_DIM_IDX_)) {
@@ -152,7 +142,7 @@ public:
 
             Real3 initial_normalized_pos = prt.x * dxi;
 
-            if (preaccelerate) {
+            if (preaccelerate_time != 0) {
               // sample interior E and B, which works for all interpolators
               real_t sample_coord =
                 lo ? 0.5 : grid.ldims[INJECT_DIM_IDX_] - 0.5;
@@ -165,7 +155,7 @@ public:
               Real3 e_inner = {0.f, ip.ey(EM), 0.f};
               Real3 h_inner = {0.f, 0.f, 0.f};
 
-              real_t dq = .5f * grid.norm.eta * t_accel * q / m;
+              real_t dq = .5f * grid.norm.eta * preaccelerate_time * q / m;
               advance.push_p(prt.u, e_inner, h_inner, dq);
             }
 
@@ -194,6 +184,7 @@ public:
 
 public:
   real_t density;
+  real_t preaccelerate_time = 0.0;
 
 private:
   ParticleGenerator particle_generator_;
