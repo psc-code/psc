@@ -885,7 +885,7 @@ static void run(int argc, char** argv)
   // Set up various objects needed to run this case
 
   // -- Balance
-  psc_params.balance_interval = 0;
+  psc_params.balance_interval = 1000;
   Balance balance{.1};
 
   // -- Sort
