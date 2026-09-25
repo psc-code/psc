@@ -40,6 +40,56 @@ static Grid_t make_grid()
   return Grid_t{domain, bc, kinds, norm, dt, -1, {2, 2, 2}};
 }
 
+#ifdef PSC_HAVE_ADIOS2
+using WriterTestTypes = ::testing::Types<WriterMRC, WriterADIOS2>;
+#else
+using WriterTestTypes = ::testing::Types<WriterMRC>;
+#endif
+
+template <typename T>
+class WriterTest : public ::testing::Test
+{};
+
+TYPED_TEST_SUITE(WriterTest, WriterTestTypes);
+
+TYPED_TEST(WriterTest, WriterSingle)
+{
+  using Writer = TypeParam;
+  auto grid = make_grid();
+  auto mflds = MfieldsSingle{grid, NR_FIELDS, {2, 2, 2}};
+
+  setupFields(mflds, [](int m, double crd[3]) {
+    return m + crd[0] + 100 * crd[1] + 10000 * crd[2];
+  });
+
+  Writer writer;
+  writer.open("test1", ".");
+  writer.write_step(grid, {}, {},
+                    mflds.gt().view(_s(2, -2), _s(2, -2), _s(2, -2)), "mflds",
+                    {"c0", "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8"});
+  writer.close();
+}
+
+TYPED_TEST(WriterTest, WriterMultiple)
+// test writing multiple fields, with different numbers of components, to the
+// same file
+{
+  using Writer = TypeParam;
+  auto grid = make_grid();
+  auto mflds1 = MfieldsSingle{grid, 1, {2, 2, 2}};
+  auto mflds2 = MfieldsSingle{grid, 2, {2, 2, 2}};
+
+  Writer writer;
+  writer.open("test2", ".");
+  writer.begin_step(grid);
+  writer.write(mflds1.gt().view(_s(2, -2), _s(2, -2), _s(2, -2)), grid,
+               "mflds1", {"comp"});
+  writer.write(mflds2.gt().view(_s(2, -2), _s(2, -2), _s(2, -2)), grid,
+               "mflds2", {"comp1", "comp2"});
+  writer.end_step();
+  writer.close();
+}
+
 template <typename T>
 class MfieldsTest : public ::testing::Test
 {};

@@ -18,19 +18,13 @@ public:
   void put(kg::io::Engine& writer, const Mfields& mflds,
            const kg::io::Mode launch = kg::io::Mode::NonBlocking)
   {
-    writer.put("ib", mflds.box().ib(), launch);
-    writer.put("im", mflds.box().im(), launch);
-
-    auto n_comps = mflds.n_comps();
-    auto shape = makeDims(n_comps, mflds.gdims());
+    const Grid_t& grid = mflds.grid();
+    std::vector<Int3> patchOffsets;
     for (int p = 0; p < mflds.n_patches(); p++) {
-      auto start = makeDims(0, mflds.patchOffset(p));
-      auto count = makeDims(n_comps, mflds.ldims());
-      auto ib = makeDims(0, -mflds.box().ib());
-      auto im = makeDims(n_comps, mflds.box().im());
-      writer.putVariable(const_cast<Mfields&>(mflds)[p].storage().data(),
-                         launch, shape, {start, count}, {ib, im}); // FIXME cast
+      patchOffsets.push_back(mflds.patchOffset(p));
     }
+
+    write_4d(writer, grid.ldims, grid.domain.gdims, patchOffsets, mflds.gt());
   }
 
   void get(kg::io::Engine& reader, Mfields& mflds,

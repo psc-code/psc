@@ -71,24 +71,11 @@ public:
 
   void begin_step(const Grid_t& grid)
   {
-    int step = grid.timestep();
-    double time = grid.time();
-
-    int len = dir_.size() + pfx_.size() + 20;
-    char filename[len];
-    snprintf(filename, len, "%s/%s.%09d.bp", dir_.c_str(), pfx_.c_str(), step);
-    file_ = io_.open(filename, kg::io::Mode::Write, comm_, pfx_);
-    file_.beginStep(kg::io::StepMode::Append);
-    file_.put("step", step);
-    file_.put("time", time);
-    file_.put("length", grid.domain.length);
-    file_.put("corner", grid.domain.corner);
-    file_.performPuts();
+    _begin_step(file_, grid.timestep(), grid.time(), grid.domain.length,
+                grid.domain.corner, grid.domain.gdims);
   }
 
-  void end_step() { file_.close(); }
-
-  void set_subset(const Grid_t& grid, Int3 rn, Int3 rx) {}
+  void end_step() { _end_step(file_); }
 
   template <typename E>
   void write(const E& expr, const Grid_t& grid, const std::string& name,
@@ -105,14 +92,37 @@ public:
     auto&& evaluated = gt::eval(const_cast<E&>(expr));
     auto&& h_expr = gt::host_mirror(evaluated);
     gt::copy(evaluated, h_expr);
-    Mfields<gt::expr_value_type<E>> h_mflds(grid, h_expr.shape(3), {});
-    h_mflds.gt() = h_expr;
     prof_stop(pr_eval);
 
     prof_start(pr_write);
-    file_.put(name, h_mflds);
-    file_.performPuts();
+    std::vector<Int3> patch_off(grid.n_patches());
+    for (int p = 0; p < grid.n_patches(); p++) {
+      patch_off[p] = grid.patches[p].off;
+    }
+    write(file_, grid.ldims, grid.domain.gdims, patch_off, h_expr, name,
+          comp_names);
     prof_stop(pr_write);
+  }
+
+  template <typename E>
+  static void write(kg::io::Engine& file, const Int3& ldims, const Int3& gdims,
+                    const std::vector<Int3>& patch_off, const E& h_expr,
+                    const std::string& name,
+                    const std::vector<std::string>& comp_names)
+  {
+#if 0
+    file.prefixes_.push_back(name);
+    write_4d(file, ldims, gdims, patch_off, h_expr);
+    file.prefixes_.pop_back();
+#else
+    int n_comps = h_expr.shape(3);
+    assert(n_comps == comp_names.size());
+
+    for (int m = 0; m < n_comps; m++) {
+      write_3d(file, ldims, gdims, patch_off,
+               h_expr.view(_all, _all, _all, m, _all), comp_names[m]);
+    }
+#endif
   }
 
   template <typename E>
@@ -121,15 +131,13 @@ public:
                   const std::vector<std::string>& comp_names)
   {
 
-    static int pr, pr_copy, pr_wait, pr_write, pr_thread, pr_lock, pr_adios2;
+    static int pr, pr_copy, pr_write, pr_thread, pr_lock;
     if (!pr) {
       pr = prof_register("write_step", 1., 0, 0);
       pr_copy = prof_register("ws copy", 1., 0, 0);
-      pr_wait = prof_register("ws wait", 1., 0, 0);
       pr_write = prof_register("ws write", 1., 0, 0);
       pr_thread = prof_register("ws thread", 1., 0, 0);
       pr_lock = prof_register("ws lock", 1., 0, 0);
-      pr_adios2 = prof_register("ws adios2", 1., 0, 0);
     }
 
     prof_start(pr);
@@ -145,7 +153,7 @@ public:
 #ifdef PSC_USE_IO_THREADS
     prof_start(pr_write);
     int step = grid.timestep();
-    double time = step * grid.dt;
+    double time = grid.time();
 
     assert(grid.n_patches() == h_expr.shape(4));
     Int3 ldims = grid.ldims;
@@ -165,51 +173,19 @@ public:
 
       prof_start(pr_thread);
 
-      int n_comps = h_expr.shape(3);
-      int n_patches = h_expr.shape(4);
-      Int3 im = {h_expr.shape(0), h_expr.shape(1), h_expr.shape(2)};
-      Int3 ib = {-(im[0] - ldims[0]) / 2, -(im[1] - ldims[1]) / 2,
-                 -(im[2] - ldims[2]) / 2};
-
-      int len = dir_.size() + pfx_.size() + 20;
-      char filename[len];
-      snprintf(filename, len, "%s/%s.%09d.bp", dir_.c_str(), pfx_.c_str(),
-               step);
       {
-        auto launch = kg::io::Mode::Blocking;
-
         // FIXME not sure how necessary this lock really is, it certainly could
         // spin for a long time if another thread is writing another file
         prof_start(pr_lock);
         // std::lock_guard<std::mutex> guard(writer_mutex);
         prof_stop(pr_lock);
-        auto file = io_.open(filename, kg::io::Mode::Write, comm_, pfx_);
 
-        file.beginStep(kg::io::StepMode::Append);
-        file.put("step", step);
-        file.put("time", time);
-        file.put("length", length);
-        file.put("corner", corner);
-
-        prof_start(pr_adios2);
-        file.put("ib", ib, launch);
-        file.put("im", im, launch);
-
-        file.prefixes_.push_back(name);
-        auto shape = makeDims(n_comps, gdims);
-        for (int p = 0; p < n_patches; p++) {
-          auto start = makeDims(0, patch_off[p]);
-          auto count = makeDims(n_comps, ldims);
-          auto _ib = makeDims(0, -ib);
-          auto _im = makeDims(n_comps, im);
-          file.putVariable(&h_expr(ib[0], ib[1], ib[2], 0, p), launch, shape,
-                           {start, count}, {_ib, _im}); // FIXME cast
-        }
-        file.prefixes_.pop_back();
-        file.performPuts();
-        file.endStep();
-        file.close();
-        prof_stop(pr_adios2);
+        prof_start(pr_write);
+        kg::io::Engine file;
+        _begin_step(file, step, time, length, corner, gdims);
+        write(file, ldims, gdims, patch_off, h_expr, name, comp_names);
+        _end_step(file);
+        prof_stop(pr_write);
       }
 
       prof_stop(pr_thread);
@@ -222,7 +198,6 @@ public:
 #else
     prof_start(pr_write);
     begin_step(grid);
-    set_subset(grid, rn, rx);
     write(expr, grid, name, comp_names);
     end_step();
     prof_stop(pr_write);
@@ -231,6 +206,51 @@ public:
   }
 
 private:
+  void _begin_step(kg::io::Engine& file, int step, double time,
+                   const Double3& length, const Double3& corner,
+                   const Int3& gdims)
+  {
+    int len = dir_.size() + pfx_.size() + 20;
+    char filename[len];
+    snprintf(filename, len, "%s/%s.%09d.bp", dir_.c_str(), pfx_.c_str(), step);
+    file = io_.open(filename, kg::io::Mode::Write, comm_, pfx_);
+
+    file.beginStep(kg::io::StepMode::Append);
+    file.put("psc_output_version", std::string("1.0.0"));
+    file.put("step", step);
+    file.put("time", time);
+    // additionally, write time as a variable (above writes it as an attribute)
+    // so that xarray-adios2 can use it as a dimension coordinate
+    file.file_.putVariable("time", time);
+    file.put("length", length);
+    file.put("corner", corner);
+    file.put("step_dimension", std::string("time"));
+
+    if (file.mpi_rank_ == 0) {
+      Double3 dx = length / Double3(gdims);
+      for (int d = 0; d < 3; d++) {
+        auto crd = gt::zeros<double>({gdims[d]});
+        for (int i = 0; i < gdims[d]; i++) {
+          crd(i) = corner[d] + (i + .5) * dx[d];
+        }
+        std::string name = d == 0 ? "x" : d == 1 ? "y" : "z";
+        file.prefixes_.push_back(name);
+        file.putVariable(crd.data(), kg::io::Mode::Blocking,
+                         kg::io::Dims({size_t(gdims[d])}), {}, {});
+        file.prefixes_.pop_back();
+        file.put(std::string(name) + "/dimensions", name);
+      }
+    }
+
+    file_.performPuts();
+  }
+
+  static void _end_step(kg::io::Engine& file)
+  {
+    file.endStep();
+    file.close();
+  }
+
 #ifdef PSC_USE_IO_THREADS
   void thread_func()
   {
