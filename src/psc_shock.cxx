@@ -124,7 +124,8 @@ void setupParameters(int argc, char** argv)
   v_upstream = {0.0, inputParams.get<double>("v_upstream"), 0.0};
   e0 = -v_upstream.cross(h0_upstream);
 
-  if (shock_method == "wall" || shock_method == "none") {
+  if (shock_method == "wall" || shock_method == "none" ||
+      shock_method == "periodic") {
     // relativistic correction
     double gamma = 1 / sqrt(1 - v_upstream.mag2());
     e0 *= gamma;
@@ -167,7 +168,7 @@ void setupParameters(int argc, char** argv)
       inputParams.getOrDefault<double>("T_i2", ti_upstream * heating_factor);
   }
 
-  if (shock_method == "none") {
+  if (shock_method == "none" || shock_method == "periodic") {
     n_downstream = n_upstream;
     v_downstream = v_upstream;
     h0_downstream = h0_upstream;
@@ -290,6 +291,12 @@ Grid_t* setupGrid()
     bnd_fld_upper = BND_FLD_OPEN;
     bnd_prt_lower = BND_PRT_OPEN;
     bnd_prt_upper = BND_PRT_OPEN;
+  } else if (shock_method == "periodic") {
+    corner = {0.0, 0.0, 0.0};
+    bnd_fld_lower = BND_FLD_PERIODIC;
+    bnd_fld_upper = BND_FLD_PERIODIC;
+    bnd_prt_lower = BND_PRT_PERIODIC;
+    bnd_prt_upper = BND_PRT_PERIODIC;
   }
 
   auto domain = Grid_t::Domain{gdims, lengths, corner, n_patches};
@@ -326,7 +333,8 @@ void initializeParticles(Balance& balance, Grid_t*& grid_ptr, Mparticles& mprts)
   setup_particles.random_offsets = true;
   setup_particles.initial_momentum_gamma_correction = true;
 
-  if (shock_method == "wall" || shock_method == "none") {
+  if (shock_method == "wall" || shock_method == "none" ||
+      shock_method == "periodic") {
     auto init_np = [&](int kind, Double3 pos, int p, Int3 idx,
                        psc_particle_np& np) {
       double t = np.kind == KIND_ION ? ti_upstream : te_upstream;
@@ -369,7 +377,8 @@ void add_background_fields(MfieldsState& mflds)
     int n_ghosts = mflds.ibn().max();
     grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
       Real3 h0;
-      if (shock_method == "wall" || shock_method == "none") {
+      if (shock_method == "wall" || shock_method == "none" ||
+          shock_method == "periodic") {
         h0 = h0_upstream;
       } else if (shock_method == "relaxation") {
         Double3 pos = centering::get_pos(patch, {jx, jy, jz}, centering::NC, 0);
@@ -1013,29 +1022,31 @@ static void run(int argc, char** argv)
   using psc::bnd::LoHi;
   using ConstantPulse = psc::bnd::field::ConstantPulse<real_t>;
 
-  psc.add_injector(&ion_injector_lo);
-  psc.add_injector(&electron_injector_lo);
+  if (shock_method != "periodic") {
+    psc.add_injector(&ion_injector_lo);
+    psc.add_injector(&electron_injector_lo);
 
-  if (turb_db2 > 0.0 && v_upstream[1] > 0.0) {
-    if (checkpoint_filename.empty()) {
-      // mflds is currently just the pure, initial turbulence
-      psc.add_field_bc(new psc::bnd::field::Radiating<Dim, MfieldsState,
-                                                      AdvectedPeriodicFields>(
-        AdvectedPeriodicFields{mflds, v_upstream[1], e0, h0_upstream}, Axis::Y,
-        LoHi::Lo));
+    if (turb_db2 > 0.0 && v_upstream[1] > 0.0) {
+      if (checkpoint_filename.empty()) {
+        // mflds is currently just the pure, initial turbulence
+        psc.add_field_bc(new psc::bnd::field::Radiating<Dim, MfieldsState,
+                                                        AdvectedPeriodicFields>(
+          AdvectedPeriodicFields{mflds, v_upstream[1], e0, h0_upstream},
+          Axis::Y, LoHi::Lo));
+      } else {
+        // mflds is completely unrelated; need to re-initialize turbulence
+        MfieldsState mflds2{grid};
+        initialize_turbulence(mflds2);
+        psc.add_field_bc(new psc::bnd::field::Radiating<Dim, MfieldsState,
+                                                        AdvectedPeriodicFields>(
+          AdvectedPeriodicFields{mflds2, v_upstream[1], e0, h0_upstream},
+          Axis::Y, LoHi::Lo));
+      }
     } else {
-      // mflds is completely unrelated; need to re-initialize turbulence
-      MfieldsState mflds2{grid};
-      initialize_turbulence(mflds2);
-      psc.add_field_bc(new psc::bnd::field::Radiating<Dim, MfieldsState,
-                                                      AdvectedPeriodicFields>(
-        AdvectedPeriodicFields{mflds2, v_upstream[1], e0, h0_upstream}, Axis::Y,
-        LoHi::Lo));
+      psc.add_field_bc(
+        new psc::bnd::field::Radiating<Dim, MfieldsState, ConstantPulse>(
+          ConstantPulse{e0, h0_upstream}, Axis::Y, LoHi::Lo));
     }
-  } else {
-    psc.add_field_bc(
-      new psc::bnd::field::Radiating<Dim, MfieldsState, ConstantPulse>(
-        ConstantPulse{e0, h0_upstream}, Axis::Y, LoHi::Lo));
   }
 
   if (shock_method == "relaxation" || shock_method == "none") {
