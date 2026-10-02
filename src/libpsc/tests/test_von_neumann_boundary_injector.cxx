@@ -101,7 +101,7 @@ std::vector<double> run(std::vector<std::pair<double, double>> ys_uys, int nmax)
 
 // v = 2 / sqrt(5) ~ .894 and dt ~ .53, so particles move ~.47 cells per step
 
-TEST(VonNeumannInjectorTest, InwardsLo)
+TEST(VonNeumannBoundaryInjectorTest, InwardsLo)
 {
   auto ys = run<LoHi::Lo>({{.75, 2.}}, 1);
   ASSERT_EQ(ys.size(), 3);
@@ -110,7 +110,7 @@ TEST(VonNeumannInjectorTest, InwardsLo)
   EXPECT_GT(ys[2], 1.);                  // ion
 }
 
-TEST(VonNeumannInjectorTest, InwardsHi)
+TEST(VonNeumannBoundaryInjectorTest, InwardsHi)
 {
   auto ys = run<LoHi::Hi>({{7.25, -2.}}, 1);
   ASSERT_EQ(ys.size(), 3);
@@ -122,7 +122,7 @@ TEST(VonNeumannInjectorTest, InwardsHi)
 // note: each run creates a psc integrator, and creating more than 4 in one
 // process currently crashes at exit, so keep the number of tests small
 
-TEST(VonNeumannInjectorTest, NoCopies)
+TEST(VonNeumannBoundaryInjectorTest, NoCopies)
 {
   auto ys = run<LoHi::Lo>({{.25, 1.},    // stays in edge cell
                            {.25, -2.},   // leaves domain
@@ -131,7 +131,7 @@ TEST(VonNeumannInjectorTest, NoCopies)
   ASSERT_EQ(ys.size(), 5); // outgoing ion was dropped
 }
 
-TEST(VonNeumannInjectorTest, ManySteps)
+TEST(VonNeumannBoundaryInjectorTest, ManySteps)
 {
   // each copy is itself copied when it leaves the edge cell
   auto ys = run<LoHi::Lo>({{.75, 2.}}, 6);
