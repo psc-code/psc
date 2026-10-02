@@ -9,6 +9,7 @@
 #include "libpsc/psc_output_particles/output_particles_adios2_impl.hxx"
 #include "libpsc/psc_bnd_fields/radiating.hxx"
 #include "libpsc/psc_particle_injectors/boundary_injector.hxx"
+#include "libpsc/psc_particle_injectors/von_neumann_injector.hxx"
 #include "libpsc/axis.hxx"
 
 // ======================================================================
@@ -101,7 +102,8 @@ void setupParameters(int argc, char** argv)
   shock_method = inputParams.getOrDefault<std::string>("shock_method", "wall");
   injection_method =
     inputParams.getOrDefault<std::string>("injection_method", "dirichlet");
-  if (injection_method != "dirichlet" && injection_method != "periodic") {
+  if (injection_method != "dirichlet" && injection_method != "von_neumann" &&
+      injection_method != "periodic") {
     LOG_ERROR("unknown injection_method: %s\n", injection_method.c_str());
   }
   if (injection_method == "periodic" && shock_method == "wall") {
@@ -1003,6 +1005,11 @@ static void run(int argc, char** argv)
     preaccelerate_time_plasma_periods * 2.0 * M_PI /
     std::sqrt(n_downstream / electron_mass);
 
+  auto von_neumann_injector_lo =
+    VonNeumannInjector<LoHi::Lo, PscConfig::PushParticles>{};
+  auto von_neumann_injector_hi =
+    VonNeumannInjector<LoHi::Hi, PscConfig::PushParticles>{};
+
   // ----------------------------------------------------------------------
   // set up initial conditions
 
@@ -1030,10 +1037,14 @@ static void run(int argc, char** argv)
   using psc::bnd::LoHi;
   using ConstantPulse = psc::bnd::field::ConstantPulse<real_t>;
 
-  if (injection_method != "periodic") {
+  if (injection_method == "dirichlet") {
     psc.add_injector(&ion_injector_lo);
     psc.add_injector(&electron_injector_lo);
+  } else if (injection_method == "von_neumann") {
+    psc.add_injector(&von_neumann_injector_lo);
+  }
 
+  if (injection_method != "periodic") {
     if (turb_db2 > 0.0 && v_upstream[1] > 0.0) {
       if (checkpoint_filename.empty()) {
         // mflds is currently just the pure, initial turbulence
@@ -1059,8 +1070,12 @@ static void run(int argc, char** argv)
 
   if ((shock_method == "relaxation" || shock_method == "none") &&
       injection_method != "periodic") {
-    psc.add_injector(&ion_injector_hi);
-    psc.add_injector(&electron_injector_hi);
+    if (injection_method == "dirichlet") {
+      psc.add_injector(&ion_injector_hi);
+      psc.add_injector(&electron_injector_hi);
+    } else if (injection_method == "von_neumann") {
+      psc.add_injector(&von_neumann_injector_hi);
+    }
 
     psc.add_field_bc(
       new psc::bnd::field::Radiating<Dim, MfieldsState, ConstantPulse>(
