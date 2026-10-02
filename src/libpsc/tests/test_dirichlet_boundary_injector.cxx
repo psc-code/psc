@@ -7,7 +7,7 @@
 #include "../psc_config.hxx"
 #include "../psc_particle_injectors/boundary_injector.hxx"
 
-TEST(BoundaryInjectorTest, ParticleGeneratorMaxwellianTest)
+TEST(DirichletBoundaryInjectorTest, ParticleGeneratorMaxwellianTest)
 {
   int kind_idx = 15;
   Grid_t::Kind kind{1.0, 1836.0, "ion"};
@@ -102,7 +102,7 @@ struct ParticleGenerator
   int kind_idx;
 };
 
-TEST(BoundaryInjectorTest, Integration1Particle)
+TEST(DirichletBoundaryInjectorTest, Integration1Particle)
 {
   // ----------------------------------------------------------------------
   // setup
@@ -160,7 +160,7 @@ TEST(BoundaryInjectorTest, Integration1Particle)
   ASSERT_EQ(prts.size(), 1);
 }
 
-TEST(BoundaryInjectorTest, IntegrationManyParticles)
+TEST(DirichletBoundaryInjectorTest, IntegrationManyParticles)
 {
   // ----------------------------------------------------------------------
   // setup
@@ -217,7 +217,7 @@ TEST(BoundaryInjectorTest, IntegrationManyParticles)
   ASSERT_GT(prts.size(), 1);
 }
 
-TEST(BoundaryInjectorTest, IntegrationManySpecies)
+TEST(DirichletBoundaryInjectorTest, IntegrationManySpecies)
 {
   // ----------------------------------------------------------------------
   // setup
