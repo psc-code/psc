@@ -962,18 +962,19 @@ static void run(int argc, char** argv)
   int oute_interval = -100;
   DiagEnergies<Mparticles, MfieldsState> oute{grid.comm(), oute_interval};
 
-  auto ion_injector_lo = BoundaryInjector<LoHi::Lo, ParticleGeneratorMaxwellian,
-                                          PscConfig::PushParticles>(
-    ParticleGeneratorMaxwellian(KIND_ION, grid.kinds[KIND_ION], v_upstream,
-                                {ti_upstream, ti_upstream, ti_upstream}),
-    n_upstream);
+  auto ion_injector_lo =
+    DirichletBoundaryInjector<LoHi::Lo, ParticleGeneratorMaxwellian,
+                              PscConfig::PushParticles>(
+      ParticleGeneratorMaxwellian(KIND_ION, grid.kinds[KIND_ION], v_upstream,
+                                  {ti_upstream, ti_upstream, ti_upstream}),
+      n_upstream);
   ion_injector_lo.preaccelerate_method = preaccelerate_method;
   ion_injector_lo.preaccelerate_time = preaccelerate_time_plasma_periods * 2.0 *
                                        M_PI / std::sqrt(n_upstream / ion_mass);
 
   auto electron_injector_lo =
-    BoundaryInjector<LoHi::Lo, ParticleGeneratorMaxwellian,
-                     PscConfig::PushParticles>(
+    DirichletBoundaryInjector<LoHi::Lo, ParticleGeneratorMaxwellian,
+                              PscConfig::PushParticles>(
       ParticleGeneratorMaxwellian(KIND_ELECTRON, grid.kinds[KIND_ELECTRON],
                                   v_upstream,
                                   {te_upstream, te_upstream, te_upstream}),
@@ -983,8 +984,8 @@ static void run(int argc, char** argv)
     preaccelerate_time_plasma_periods * 2.0 * M_PI /
     std::sqrt(n_upstream / electron_mass);
 
-  auto ion_injector_hi = BoundaryInjector<LoHi::Hi, ParticleGeneratorMaxwellian,
-                                          PscConfig::PushParticles>(
+  auto ion_injector_hi = DirichletBoundaryInjector<
+    LoHi::Hi, ParticleGeneratorMaxwellian, PscConfig::PushParticles>(
     ParticleGeneratorMaxwellian(KIND_ION, grid.kinds[KIND_ION], v_downstream,
                                 {ti_downstream, ti_downstream, ti_downstream}),
     n_downstream);
@@ -994,8 +995,8 @@ static void run(int argc, char** argv)
                                        std::sqrt(n_downstream / ion_mass);
 
   auto electron_injector_hi =
-    BoundaryInjector<LoHi::Hi, ParticleGeneratorMaxwellian,
-                     PscConfig::PushParticles>(
+    DirichletBoundaryInjector<LoHi::Hi, ParticleGeneratorMaxwellian,
+                              PscConfig::PushParticles>(
       ParticleGeneratorMaxwellian(
         KIND_ELECTRON, grid.kinds[KIND_ELECTRON], v_downstream,
         {te_downstream, te_downstream, te_downstream}),

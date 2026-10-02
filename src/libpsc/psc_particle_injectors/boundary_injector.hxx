@@ -24,8 +24,8 @@ enum class PreaccelerateMethod
   AllEH,
 };
 
-/// @brief A particle generator for use with @ref BoundaryInjector. Samples
-/// particles from a (possibly shifted) Maxwellian distribution.
+/// @brief A particle generator for use with @ref DirichletBoundaryInjector.
+/// Samples particles from a (possibly shifted) Maxwellian distribution.
 class ParticleGeneratorMaxwellian
 {
 public:
@@ -71,7 +71,7 @@ private:
 
 /// @brief Injects particles on a given boundary, sampling from a given particle
 /// generator. For precise control over multiple particle species, use one
-/// BoundaryInjector per species.
+/// DirichletBoundaryInjector per species.
 /// @tparam LOHI whether to inject at the lower or upper boundary
 /// @tparam PARTICLE_GENERATOR a type that defines `get(min_pos, pos_range)` and
 /// returns an injectable particle within that range of positions (usually a
@@ -79,7 +79,7 @@ private:
 /// @tparam PUSH_PARTICLES type that provides the types `Mparticles`,
 /// `MfieldsState`, `Current`, `real_t`, etc.
 template <LoHi LOHI, typename PARTICLE_GENERATOR, typename PUSH_PARTICLES>
-class BoundaryInjector
+class DirichletBoundaryInjector
   : public InjectorBase<typename PUSH_PARTICLES::Mparticles,
                         typename PUSH_PARTICLES::MfieldsState>
 {
@@ -98,7 +98,8 @@ public:
 
   static const bool lo = LOHI == LoHi::Lo;
 
-  BoundaryInjector(ParticleGenerator particle_generator, real_t density = 1.0)
+  DirichletBoundaryInjector(ParticleGenerator particle_generator,
+                            real_t density = 1.0)
     : particle_generator_{particle_generator}, density{density}
   {}
 
