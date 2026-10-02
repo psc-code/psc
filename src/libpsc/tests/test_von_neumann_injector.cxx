@@ -45,11 +45,10 @@ Grid_t* setupGrid(double cfl)
 
 // For each (y, uy), places a stationary electron and a moving ion at the same
 // position (to satisfy Gauss' law at t=0), runs the simulation for `nmax` steps
-// with a VonNeumannInjector at the given boundary, and returns the final
-// particles' y positions, sorted.
+// with a VonNeumannBoundaryInjector at the given boundary, and returns the
+// final particles' y positions, sorted.
 template <LoHi LOHI>
-std::vector<double> run(std::vector<std::pair<double, double>> ys_uys,
-                        int nmax)
+std::vector<double> run(std::vector<std::pair<double, double>> ys_uys, int nmax)
 {
   PscParams psc_params;
   psc_params.nmax = nmax;
@@ -73,7 +72,7 @@ std::vector<double> run(std::vector<std::pair<double, double>> ys_uys,
   auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
                                           balance, collision, checks);
 
-  VonNeumannInjector<LOHI, PscConfig::PushParticles> injector;
+  VonNeumannBoundaryInjector<LOHI, PscConfig::PushParticles> injector;
   psc.add_injector(&injector);
 
   {

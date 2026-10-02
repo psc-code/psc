@@ -1007,9 +1007,9 @@ static void run(int argc, char** argv)
     std::sqrt(n_downstream / electron_mass);
 
   auto von_neumann_injector_lo =
-    VonNeumannInjector<LoHi::Lo, PscConfig::PushParticles>{};
+    VonNeumannBoundaryInjector<LoHi::Lo, PscConfig::PushParticles>{};
   auto von_neumann_injector_hi =
-    VonNeumannInjector<LoHi::Hi, PscConfig::PushParticles>{};
+    VonNeumannBoundaryInjector<LoHi::Hi, PscConfig::PushParticles>{};
 
   // ----------------------------------------------------------------------
   // set up initial conditions

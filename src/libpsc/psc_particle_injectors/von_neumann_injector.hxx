@@ -24,7 +24,7 @@ using psc::bnd::LoHi;
 /// @tparam PUSH_PARTICLES type that provides the types `Mparticles`,
 /// `MfieldsState`, `Current`, `real_t`, `AdvanceParticle_t`
 template <LoHi LOHI, typename PUSH_PARTICLES>
-class VonNeumannInjector
+class VonNeumannBoundaryInjector
   : public InjectorBase<typename PUSH_PARTICLES::Mparticles,
                         typename PUSH_PARTICLES::MfieldsState>
 {
