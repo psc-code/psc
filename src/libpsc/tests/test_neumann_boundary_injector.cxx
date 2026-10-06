@@ -4,7 +4,7 @@
 
 #include "psc.hxx"
 #include "../psc_config.hxx"
-#include "../psc_particle_injectors/von_neumann_injector.hxx"
+#include "../psc_particle_injectors/neumann_injector.hxx"
 
 using Dim = dim_yz;
 using PscConfig = PscConfig1vbecDouble<Dim>;
@@ -45,7 +45,7 @@ Grid_t* setupGrid(double cfl)
 
 // For each (y, uy), places a stationary electron and a moving ion at the same
 // position (to satisfy Gauss' law at t=0), runs the simulation for `nmax` steps
-// with a VonNeumannBoundaryInjector at the given boundary, and returns the
+// with a NeumannBoundaryInjector at the given boundary, and returns the
 // final particles' y positions, sorted.
 template <LoHi LOHI>
 std::vector<double> run(std::vector<std::pair<double, double>> ys_uys, int nmax)
@@ -72,7 +72,7 @@ std::vector<double> run(std::vector<std::pair<double, double>> ys_uys, int nmax)
   auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
                                           balance, collision, checks);
 
-  VonNeumannBoundaryInjector<LOHI, PscConfig::PushParticles> injector;
+  NeumannBoundaryInjector<LOHI, PscConfig::PushParticles> injector;
   psc.add_injector(&injector);
 
   {
