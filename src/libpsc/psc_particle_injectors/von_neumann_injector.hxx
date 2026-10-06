@@ -65,15 +65,21 @@ public:
       // collect copies first, since injecting invalidates the accessor
       std::vector<psc::particle::Inject> copies;
       for (auto prt : accessor[p]) {
+        int final_idx = (prt.x() * dxi).fint()[INJECT_DIM_IDX_];
+
+        if (final_idx != edge_idx + (lo ? 1 : -1)) {
+          // particles can't move more than one cell at a time (v<c<dx/dt),
+          // so only need to check particles in the second-innermost layer
+          continue;
+        }
+
         Real3 v = advance.calc_v(prt.u());
         Real3 initial_pos = prt.x();
         advance.push_x(initial_pos, v, -1);
 
         int initial_idx = (initial_pos * dxi).fint()[INJECT_DIM_IDX_];
-        int final_idx = (prt.x() * dxi).fint()[INJECT_DIM_IDX_];
-        bool moved_inwards = lo ? final_idx > edge_idx : final_idx < edge_idx;
 
-        if (initial_idx == edge_idx && moved_inwards) {
+        if (initial_idx == edge_idx) {
           using InjectReal3 = psc::particle::Inject::Real3;
           copies.emplace_back(InjectReal3(prt.x() + ghost_offset),
                               InjectReal3(prt.u()), prt.w(), prt.kind(),
