@@ -92,7 +92,8 @@ std::vector<double> run(std::vector<std::pair<double, double>> ys_uys, int nmax)
   }
 
   std::vector<double> ys;
-  for (auto prt : mprts.accessor()[0]) {
+  auto accessor = mprts.accessor();
+  for (auto prt : accessor[0]) {
     ys.push_back(prt.position()[1]);
   }
   std::sort(ys.begin(), ys.end());
