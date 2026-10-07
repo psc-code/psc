@@ -233,15 +233,17 @@ void setupParameters(int argc, char** argv)
     }
   }
 
-  preaccelerate_time_plasma_periods =
-    inputParams.getOrDefault<double>("preaccelerate_time_plasma_periods", 0.5);
-  std::string pre_method_str =
-    inputParams.getOrDefault<std::string>("preaccelerate_method", "normal_e");
-  preaccelerate_method =
-    pre_method_str == "normal_e"  ? PreaccelerateMethod::NormalE
-    : pre_method_str == "all_e"   ? PreaccelerateMethod::AllE
-    : pre_method_str == "all_e_h" ? PreaccelerateMethod::AllEH
-                                  : PreaccelerateMethod::None;
+  if (injection_method == "dirichlet") {
+    preaccelerate_time_plasma_periods = inputParams.getOrDefault<double>(
+      "preaccelerate_time_plasma_periods", 0.5);
+    std::string pre_method_str =
+      inputParams.getOrDefault<std::string>("preaccelerate_method", "normal_e");
+    preaccelerate_method =
+      pre_method_str == "normal_e"  ? PreaccelerateMethod::NormalE
+      : pre_method_str == "all_e"   ? PreaccelerateMethod::AllE
+      : pre_method_str == "all_e_h" ? PreaccelerateMethod::AllEH
+                                    : PreaccelerateMethod::None;
+  }
 
   int n_writes = inputParams.getOrDefault<int>("n_writes", 100);
   out_interval = psc_params.nmax / n_writes;
