@@ -39,6 +39,9 @@ using OutputParticles = PscConfig::OutputParticles;
 using real_t = PscConfig::Mfields::real_t;
 using Real3 = Vec3<real_t>;
 
+template <typename PULSE>
+using RadiatingBC = psc::bnd::field::Radiating<Dim, MfieldsState, PULSE>;
+
 // ======================================================================
 // Global parameters
 
@@ -1024,25 +1027,25 @@ static void run(int argc, char** argv)
 
   if (injection_method != "periodic") {
     if (turb_db2 > 0.0 && v_upstream[1] > 0.0) {
+      MfieldsState* mflds_advect;
       if (checkpoint_filename.empty()) {
         // mflds is currently just the pure, initial turbulence
-        psc.add_field_bc(new psc::bnd::field::Radiating<Dim, MfieldsState,
-                                                        AdvectedPeriodicFields>(
-          AdvectedPeriodicFields{mflds, v_upstream[1], e0, h0_upstream},
-          Axis::Y, LoHi::Lo));
+        mflds_advect = &mflds;
       } else {
         // mflds is completely unrelated; need to re-initialize turbulence
-        MfieldsState mflds2{grid};
-        initialize_turbulence(mflds2);
-        psc.add_field_bc(new psc::bnd::field::Radiating<Dim, MfieldsState,
-                                                        AdvectedPeriodicFields>(
-          AdvectedPeriodicFields{mflds2, v_upstream[1], e0, h0_upstream},
-          Axis::Y, LoHi::Lo));
+        MfieldsState* mflds2 = new MfieldsState{grid};
+        initialize_turbulence(*mflds2);
+        mflds_advect = mflds2;
       }
+
+      auto radiating_lo = new RadiatingBC<AdvectedPeriodicFields>(
+        AdvectedPeriodicFields{*mflds_advect, v_upstream[1], e0, h0_upstream},
+        Axis::Y, LoHi::Lo);
+
+      psc.add_field_bc(radiating_lo);
     } else {
-      psc.add_field_bc(
-        new psc::bnd::field::Radiating<Dim, MfieldsState, ConstantPulse>(
-          ConstantPulse{e0, h0_upstream}, Axis::Y, LoHi::Lo));
+      psc.add_field_bc(new RadiatingBC<ConstantPulse>(
+        ConstantPulse{e0, h0_upstream}, Axis::Y, LoHi::Lo));
     }
   }
 
@@ -1082,9 +1085,10 @@ static void run(int argc, char** argv)
       psc.add_injector(neumann_injector_hi);
     }
 
-    psc.add_field_bc(
-      new psc::bnd::field::Radiating<Dim, MfieldsState, ConstantPulse>(
-        ConstantPulse{e0, h0_downstream}, Axis::Y, LoHi::Hi));
+    auto radiating_hi = new RadiatingBC<ConstantPulse>(
+      ConstantPulse{e0, h0_downstream}, Axis::Y, LoHi::Hi);
+
+    psc.add_field_bc(radiating_hi);
   }
 
   if (checkpoint_filename.empty()) {
