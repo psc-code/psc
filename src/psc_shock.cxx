@@ -829,6 +829,12 @@ struct AdvectedPeriodicFields : psc::bnd::field::PulseBase<real_t>
 
   real_t sample_exterior_field(int m, double t, int p, Real3 x3) override
   {
+    if (EX <= m && m <= EZ) {
+      // FIXME: E is sampled in ghost cells, which are in unloaded patches.
+      // If initial E is ever nonzero, this shortcut will be invalid.
+      return e0[m - EX];
+    }
+
     Real3 x3_advected = advect_x3(x3, t);
     int n_patches_to_the_left = shift_to_patch_local(x3_advected);
     if (n_patches_to_the_left != n_patch_cycles) {
@@ -841,9 +847,6 @@ struct AdvectedPeriodicFields : psc::bnd::field::PulseBase<real_t>
       cycled_fields.view(_all, _all, _all, _all, p), -grid.ibn);
 
     switch (m) {
-      case EX: return ip.ex(em) + e0[0];
-      case EY: return ip.ey(em) + e0[1];
-      case EZ: return ip.ez(em) + e0[2];
       case HX: return ip.hx(em) + h0_upstream[0];
       case HY: return ip.hy(em) + h0_upstream[1];
       case HZ: return ip.hz(em) + h0_upstream[2];
