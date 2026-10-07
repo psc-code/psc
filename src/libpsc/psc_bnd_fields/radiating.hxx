@@ -66,10 +66,8 @@ struct Radiating : FieldBcBase<MfieldsState>
         stop[d0] = start[d0] + 1;
 
         for (Int3 i3 : VecRange(start, stop)) {
-          Real3 x_e1 =
-            (Real3(i3) + Real3(d1hat) * real_t(0.5)) * Real3(grid.domain.dx);
-          Real3 x_e2 =
-            (Real3(i3) + Real3(d2hat) * real_t(0.5)) * Real3(grid.domain.dx);
+          Real3 x_e1 = Real3(i3) + Real3(d1hat) * real_t(0.5);
+          Real3 x_e2 = Real3(i3) + Real3(d2hat) * real_t(0.5);
 
           F(E0, i3 - d0hat) = 0.0;
           F(E1, i3) = pulse.sample_exterior_field(E1, grid.time(), p, x_e1);
@@ -85,10 +83,8 @@ struct Radiating : FieldBcBase<MfieldsState>
         stop[d0] = start[d0] + 1;
 
         for (Int3 i3 : VecRange(start, stop)) {
-          Real3 x_e1 =
-            (Real3(i3) + Real3(d1hat) * real_t(0.5)) * Real3(grid.domain.dx);
-          Real3 x_e2 =
-            (Real3(i3) + Real3(d2hat) * real_t(0.5)) * Real3(grid.domain.dx);
+          Real3 x_e1 = Real3(i3) + Real3(d1hat) * real_t(0.5);
+          Real3 x_e2 = Real3(i3) + Real3(d2hat) * real_t(0.5);
 
           F(E0, i3) = 0.0;
           F(E1, i3) = pulse.sample_exterior_field(E1, grid.time(), p, x_e1);
