@@ -8,8 +8,8 @@
 #include "kg/include/kg/VecRange.hxx"
 #include "libpsc/psc_output_particles/output_particles_adios2_impl.hxx"
 #include "libpsc/psc_bnd_fields/radiating.hxx"
-#include "libpsc/psc_particle_injectors/boundary_injector.hxx"
-#include "libpsc/psc_particle_injectors/neumann_injector.hxx"
+#include "libpsc/psc_particle_injectors/dirichlet_boundary_injector.hxx"
+#include "libpsc/psc_particle_injectors/neumann_boundary_injector.hxx"
 #include "libpsc/axis.hxx"
 
 // ======================================================================
@@ -82,6 +82,7 @@ int marder_interval;
 std::string turb_method;
 std::string shock_method;
 std::string injection_method;
+std::string neumann_resample_method;
 
 PreaccelerateMethod preaccelerate_method;
 double preaccelerate_time_plasma_periods;
@@ -112,6 +113,14 @@ void setupParameters(int argc, char** argv)
   if (injection_method == "periodic" && shock_method == "wall") {
     LOG_ERROR("injection_method=periodic is incompatible with "
               "shock_method=wall\n");
+  }
+  neumann_resample_method =
+    inputParams.getOrDefault<std::string>("neumann_resample_method", "none");
+  if (neumann_resample_method != "none" &&
+      neumann_resample_method != "maxwellian" &&
+      neumann_resample_method != "rotate") {
+    LOG_ERROR("unknown neumann_resample_method: %s\n",
+              neumann_resample_method.c_str());
   }
 
   psc_params.stats_every =
@@ -904,6 +913,31 @@ struct AdvectedPeriodicFields : psc::bnd::field::PulseBase<real_t>
 };
 
 // ======================================================================
+// makeNeumannInjector
+
+template <LoHi LOHI>
+InjectorBase<Mparticles, MfieldsState>* makeNeumannInjector(const Grid_t& grid,
+                                                            double te,
+                                                            double ti)
+{
+  using PushParticles = PscConfig::PushParticles;
+
+  if (neumann_resample_method == "maxwellian") {
+    std::vector<double> temperatures(NR_KINDS);
+    temperatures[KIND_ELECTRON] = te;
+    temperatures[KIND_ION] = ti;
+    return new NeumannBoundaryInjector<LOHI, PushParticles,
+                                       NeumannResamplerMaxwellian>{
+      NeumannResamplerMaxwellian{grid.kinds, temperatures}};
+  } else if (neumann_resample_method == "rotate") {
+    return new NeumannBoundaryInjector<LOHI, PushParticles,
+                                       NeumannResamplerRotate>{};
+  }
+
+  return new NeumannBoundaryInjector<LOHI, PushParticles>{};
+}
+
+// ======================================================================
 // run
 
 static void run(int argc, char** argv)
@@ -1024,10 +1058,8 @@ static void run(int argc, char** argv)
     psc.add_injector(ion_injector_lo);
     psc.add_injector(electron_injector_lo);
   } else if (injection_method == "neumann") {
-    auto neumann_injector_lo =
-      new NeumannBoundaryInjector<LoHi::Lo, PscConfig::PushParticles>{};
-
-    psc.add_injector(neumann_injector_lo);
+    psc.add_injector(
+      makeNeumannInjector<LoHi::Lo>(grid, te_upstream, ti_upstream));
   }
 
   if (injection_method != "periodic") {
@@ -1084,10 +1116,8 @@ static void run(int argc, char** argv)
       psc.add_injector(ion_injector_hi);
       psc.add_injector(electron_injector_hi);
     } else if (injection_method == "neumann") {
-      auto neumann_injector_hi =
-        new NeumannBoundaryInjector<LoHi::Hi, PscConfig::PushParticles>{};
-
-      psc.add_injector(neumann_injector_hi);
+      psc.add_injector(
+        makeNeumannInjector<LoHi::Hi>(grid, te_downstream, ti_downstream));
     }
 
     auto radiating_hi = new RadiatingBC<ConstantPulse>(

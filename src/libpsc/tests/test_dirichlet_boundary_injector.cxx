@@ -5,7 +5,7 @@
 #include "psc.hxx"
 #include "output_fields.hxx"
 #include "../psc_config.hxx"
-#include "../psc_particle_injectors/boundary_injector.hxx"
+#include "../psc_particle_injectors/dirichlet_boundary_injector.hxx"
 
 TEST(DirichletBoundaryInjectorTest, ParticleGeneratorMaxwellianTest)
 {

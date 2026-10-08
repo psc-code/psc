@@ -4,7 +4,7 @@
 
 #include "psc.hxx"
 #include "../psc_config.hxx"
-#include "../psc_particle_injectors/neumann_injector.hxx"
+#include "../psc_particle_injectors/neumann_boundary_injector.hxx"
 
 using Dim = dim_yz;
 using PscConfig = PscConfig1vbecDouble<Dim>;
@@ -47,8 +47,9 @@ Grid_t* setupGrid(double cfl)
 // position (to satisfy Gauss' law at t=0), runs the simulation for `nmax` steps
 // with a NeumannBoundaryInjector at the given boundary, and returns the
 // final particles' y positions, sorted.
-template <LoHi LOHI>
-std::vector<double> run(std::vector<std::pair<double, double>> ys_uys, int nmax)
+template <LoHi LOHI, typename Resampler = NeumannResamplerNone>
+std::vector<double> run(std::vector<std::pair<double, double>> ys_uys, int nmax,
+                        Resampler resampler = {})
 {
   PscParams psc_params;
   psc_params.nmax = nmax;
@@ -72,7 +73,8 @@ std::vector<double> run(std::vector<std::pair<double, double>> ys_uys, int nmax)
   auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
                                           balance, collision, checks);
 
-  NeumannBoundaryInjector<LOHI, PscConfig::PushParticles> injector;
+  NeumannBoundaryInjector<LOHI, PscConfig::PushParticles, Resampler> injector{
+    resampler};
   psc.add_injector(&injector);
 
   {
@@ -134,9 +136,22 @@ TEST(NeumannBoundaryInjectorTest, NoCopies)
 
 TEST(NeumannBoundaryInjectorTest, ManySteps)
 {
-  // each copy is itself copied when it leaves the edge cell
-  auto ys = run<LoHi::Lo>({{.75, 2.}}, 6);
+  // each copy is itself copied when it leaves the edge cell; resampling with a
+  // high temperature checks that the copies still conserve charge
+  std::unique_ptr<Grid_t> grid{setupGrid(.75)};
+  auto ys = run<LoHi::Lo>({{.75, 2.}}, 6,
+                          NeumannResamplerMaxwellian{grid->kinds, {9., 9.}});
   ASSERT_GT(ys.size(), 3);
+}
+
+TEST(NeumannResamplerTest, Rotate)
+{
+  NeumannResamplerRotate resampler;
+  psc::particle::Inject prt{{0, 0, 0}, {.3, .5, .4}, 1, KIND_ION};
+  auto u = resampler.resample(prt, 1);
+  EXPECT_EQ(u[1], .5);
+  EXPECT_NEAR(sqr(u[0]) + sqr(u[2]), .25, 1e-12);
+  EXPECT_NE(u[0], .3);
 }
 
 // ======================================================================
