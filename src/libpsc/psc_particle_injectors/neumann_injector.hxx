@@ -44,18 +44,29 @@ public:
     }
   }
 
+  /// Resampling the transverse momentum changes gamma, and therefore the
+  /// normal velocity if the normal momentum were kept. The current deposited
+  /// for the copy assumes it moved from the ghost cell into the domain over the
+  /// last step, i.e., it pushes the copy back by its velocity. With a different
+  /// normal velocity, that back-push may not cross the boundary, which would
+  /// violate charge conservation. So the normal momentum is instead adjusted to
+  /// preserve the normal velocity.
   Real3 resample(const psc::particle::Inject& prt, int normal_dim)
   {
+    Real v_normal = prt.u[normal_dim] / sqrt(1 + prt.u.mag2());
+
     auto& vdf = vdfs[prt.kind];
     // FIXME should really sample from Maxwell-Juttner
     // this hack interprets v as u to handle rare case when v>1
     // v<<1 => v~= u anyways
-    Real3 u = prt.u;
+    Real3 u{0, 0, 0};
     for (int d = 0; d < 3; d++) {
       if (d != normal_dim) {
         u[d] = vdf.get();
       }
     }
+
+    u[normal_dim] = v_normal * sqrt((1 + u.mag2()) / (1 - sqr(v_normal)));
     return u;
   }
 
@@ -99,15 +110,13 @@ private:
 /// Must run after the particle push and before particle boundary exchange, so
 /// that the pushed particles are still in their original patches.
 ///
-/// The copies' transverse velocities can optionally be resampled. Their normal
-/// momenta are then adjusted to preserve normal velocities, so that the copies
-/// still enter from the ghost cell.
+/// The copies' transverse velocities can optionally be resampled.
 /// @tparam LOHI whether to inject at the lower or upper boundary
 /// @tparam PUSH_PARTICLES type that provides the types `Mparticles`,
 /// `MfieldsState`, `Current`, `real_t`, `AdvanceParticle_t`
 /// @tparam RESAMPLER type that defines `resample(prt, normal_dim)`, which takes
 /// a copy (as a `psc::particle::Inject`) and the index of the normal dimension,
-/// and returns a momentum, of which only the transverse components are used; see @ref NeumannResamplerMaxwellian
+/// and returns the copy's new momentum; see @ref NeumannResamplerMaxwellian
 template <LoHi LOHI, typename PUSH_PARTICLES,
           typename RESAMPLER = NeumannResamplerNone>
 class NeumannBoundaryInjector
@@ -173,7 +182,8 @@ public:
           copies.emplace_back(InjectReal3(prt.x() + ghost_offset),
                               InjectReal3(prt.u()), prt.w(), prt.kind(),
                               prt.tag());
-          resample(copies.back());
+          auto& copy = copies.back();
+          copy.u = resampler.resample(copy, INJECT_DIM_IDX_);
         }
       }
 
@@ -202,17 +212,5 @@ public:
   }
 
 private:
-  void resample(psc::particle::Inject& copy)
-  {
-    auto u = copy.u;
-    auto v_normal = u[INJECT_DIM_IDX_] / sqrt(1 + u.mag2());
-
-    u = resampler.resample(copy, INJECT_DIM_IDX_);
-    u[INJECT_DIM_IDX_] = 0;
-    u[INJECT_DIM_IDX_] =
-      v_normal * sqrt((1 + u.mag2()) / (1 - v_normal * v_normal));
-    copy.u = u;
-  }
-
   Resampler resampler;
 };
