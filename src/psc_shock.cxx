@@ -117,7 +117,8 @@ void setupParameters(int argc, char** argv)
   neumann_resample_method =
     inputParams.getOrDefault<std::string>("neumann_resample_method", "none");
   if (neumann_resample_method != "none" &&
-      neumann_resample_method != "maxwellian") {
+      neumann_resample_method != "maxwellian" &&
+      neumann_resample_method != "rotate") {
     LOG_ERROR("unknown neumann_resample_method: %s\n",
               neumann_resample_method.c_str());
   }
@@ -928,6 +929,9 @@ InjectorBase<Mparticles, MfieldsState>* makeNeumannInjector(const Grid_t& grid,
     return new NeumannBoundaryInjector<LOHI, PushParticles,
                                        NeumannResamplerMaxwellian>{
       NeumannResamplerMaxwellian{grid.kinds, temperatures}};
+  } else if (neumann_resample_method == "rotate") {
+    return new NeumannBoundaryInjector<LOHI, PushParticles,
+                                       NeumannResamplerRotate>{};
   }
 
   return new NeumannBoundaryInjector<LOHI, PushParticles>{};
