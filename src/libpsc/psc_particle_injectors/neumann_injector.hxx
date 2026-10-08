@@ -20,7 +20,10 @@ class NeumannResamplerNone
 public:
   using Real3 = psc::particle::Inject::Real3;
 
-  Real3 resample(const psc::particle::Inject& prt) { return prt.u; }
+  Real3 resample(const psc::particle::Inject& prt, int normal_dim)
+  {
+    return prt.u;
+  }
 };
 
 /// @brief A resampler for use with @ref NeumannBoundaryInjector that samples
@@ -41,13 +44,19 @@ public:
     }
   }
 
-  Real3 resample(const psc::particle::Inject& prt)
+  Real3 resample(const psc::particle::Inject& prt, int normal_dim)
   {
     auto& vdf = vdfs[prt.kind];
     // FIXME should really sample from Maxwell-Juttner
     // this hack interprets v as u to handle rare case when v>1
     // v<<1 => v~= u anyways
-    return {vdf.get(), vdf.get(), vdf.get()};
+    Real3 u = prt.u;
+    for (int d = 0; d < 3; d++) {
+      if (d != normal_dim) {
+        u[d] = vdf.get();
+      }
+    }
+    return u;
   }
 
 private:
@@ -69,9 +78,9 @@ private:
 /// @tparam LOHI whether to inject at the lower or upper boundary
 /// @tparam PUSH_PARTICLES type that provides the types `Mparticles`,
 /// `MfieldsState`, `Current`, `real_t`, `AdvanceParticle_t`
-/// @tparam RESAMPLER type that defines `resample(prt)`, which takes a copy (as
-/// a `psc::particle::Inject`) and returns a momentum, of which only the
-/// transverse components are used; see @ref NeumannResamplerMaxwellian
+/// @tparam RESAMPLER type that defines `resample(prt, normal_dim)`, which takes
+/// a copy (as a `psc::particle::Inject`) and the index of the normal dimension,
+/// and returns a momentum, of which only the transverse components are used; see @ref NeumannResamplerMaxwellian
 template <LoHi LOHI, typename PUSH_PARTICLES,
           typename RESAMPLER = NeumannResamplerNone>
 class NeumannBoundaryInjector
@@ -171,7 +180,7 @@ private:
     auto u = copy.u;
     auto v_normal = u[INJECT_DIM_IDX_] / sqrt(1 + u.mag2());
 
-    u = resampler.resample(copy);
+    u = resampler.resample(copy, INJECT_DIM_IDX_);
     u[INJECT_DIM_IDX_] = 0;
     u[INJECT_DIM_IDX_] =
       v_normal * sqrt((1 + u.mag2()) / (1 - v_normal * v_normal));
