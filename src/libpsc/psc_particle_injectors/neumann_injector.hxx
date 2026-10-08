@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "grid.hxx"
+#include "rng.hxx"
 #include "particle.h"
 #include <psc.hxx>
 #include "pushp.hxx"
@@ -22,6 +23,37 @@ public:
   Real3 resample(const psc::particle::Inject& prt) { return prt.u; }
 };
 
+/// @brief A resampler for use with @ref NeumannBoundaryInjector that samples
+/// injected copies' transverse velocities from a non-drifting Maxwellian.
+class NeumannResamplerMaxwellian
+{
+public:
+  using Real = psc::particle::Inject::Real;
+  using Real3 = psc::particle::Inject::Real3;
+
+  /// @param temperatures the temperature of each kind, indexed by kind
+  NeumannResamplerMaxwellian(const Grid_t::Kinds& kinds,
+                             std::vector<Real> temperatures)
+  {
+    assert(temperatures.size() == kinds.size());
+    for (int k = 0; k < kinds.size(); k++) {
+      vdfs.emplace_back(0.0, sqrt(temperatures[k] / kinds[k].m));
+    }
+  }
+
+  Real3 resample(const psc::particle::Inject& prt)
+  {
+    auto& vdf = vdfs[prt.kind];
+    // FIXME should really sample from Maxwell-Juttner
+    // this hack interprets v as u to handle rare case when v>1
+    // v<<1 => v~= u anyways
+    return {vdf.get(), vdf.get(), vdf.get()};
+  }
+
+private:
+  std::vector<rng::Normal<Real>> vdfs;
+};
+
 /// @brief Injects particles on a given boundary such that the particle
 /// distribution satisfies a zero-gradient (von Neumann) boundary condition.
 /// Whenever a particle moves from the edge cell inwards to a non-edge cell, a
@@ -39,7 +71,7 @@ public:
 /// `MfieldsState`, `Current`, `real_t`, `AdvanceParticle_t`
 /// @tparam RESAMPLER type that defines `resample(prt)`, which takes a copy (as
 /// a `psc::particle::Inject`) and returns a momentum, of which only the
-/// transverse components are used
+/// transverse components are used; see @ref NeumannResamplerMaxwellian
 template <LoHi LOHI, typename PUSH_PARTICLES,
           typename RESAMPLER = NeumannResamplerNone>
 class NeumannBoundaryInjector
