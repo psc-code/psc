@@ -144,6 +144,16 @@ TEST(NeumannBoundaryInjectorTest, ManySteps)
   ASSERT_GT(ys.size(), 3);
 }
 
+TEST(NeumannResamplerTest, Rotate)
+{
+  NeumannResamplerRotate resampler;
+  psc::particle::Inject prt{{0, 0, 0}, {.3, .5, .4}, 1, KIND_ION};
+  auto u = resampler.resample(prt, 1);
+  EXPECT_EQ(u[1], .5);
+  EXPECT_NEAR(sqr(u[0]) + sqr(u[2]), .25, 1e-12);
+  EXPECT_NE(u[0], .3);
+}
+
 // ======================================================================
 // main
 
