@@ -63,6 +63,33 @@ private:
   std::vector<rng::Normal<Real>> vdfs;
 };
 
+/// @brief A resampler for use with @ref NeumannBoundaryInjector that rotates
+/// injected copies' transverse velocities by a random angle, preserving their
+/// magnitudes.
+class NeumannResamplerRotate
+{
+public:
+  using Real = psc::particle::Inject::Real;
+  using Real3 = psc::particle::Inject::Real3;
+
+  Real3 resample(const psc::particle::Inject& prt, int normal_dim)
+  {
+    int d1 = (normal_dim + 1) % 3;
+    int d2 = (normal_dim + 2) % 3;
+
+    Real u_transverse = sqrt(sqr(prt.u[d1]) + sqr(prt.u[d2]));
+    Real angle = angle_dist.get();
+
+    Real3 u = prt.u;
+    u[d1] = u_transverse * cos(angle);
+    u[d2] = u_transverse * sin(angle);
+    return u;
+  }
+
+private:
+  rng::Uniform<Real> angle_dist{0.0, 2.0 * M_PI};
+};
+
 /// @brief Injects particles on a given boundary such that the particle
 /// distribution satisfies a zero-gradient (von Neumann) boundary condition.
 /// Whenever a particle moves from the edge cell inwards to a non-edge cell, a
