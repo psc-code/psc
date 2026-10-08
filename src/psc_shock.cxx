@@ -9,7 +9,7 @@
 #include "libpsc/psc_output_particles/output_particles_adios2_impl.hxx"
 #include "libpsc/psc_bnd_fields/radiating.hxx"
 #include "libpsc/psc_particle_injectors/dirichlet_boundary_injector.hxx"
-#include "libpsc/psc_particle_injectors/neumann_injector.hxx"
+#include "libpsc/psc_particle_injectors/neumann_boundary_injector.hxx"
 #include "libpsc/axis.hxx"
 
 // ======================================================================

@@ -4,7 +4,7 @@
 
 #include "psc.hxx"
 #include "../psc_config.hxx"
-#include "../psc_particle_injectors/neumann_injector.hxx"
+#include "../psc_particle_injectors/neumann_boundary_injector.hxx"
 
 using Dim = dim_yz;
 using PscConfig = PscConfig1vbecDouble<Dim>;
