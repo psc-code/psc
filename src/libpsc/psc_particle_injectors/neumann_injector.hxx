@@ -12,6 +12,16 @@
 
 using psc::bnd::LoHi;
 
+/// @brief A resampler for use with @ref NeumannBoundaryInjector that leaves
+/// injected copies' velocities unchanged.
+class NeumannResamplerNone
+{
+public:
+  using Real3 = psc::particle::Inject::Real3;
+
+  Real3 resample(const psc::particle::Inject& prt) { return prt.u; }
+};
+
 /// @brief Injects particles on a given boundary such that the particle
 /// distribution satisfies a zero-gradient (von Neumann) boundary condition.
 /// Whenever a particle moves from the edge cell inwards to a non-edge cell, a
@@ -20,10 +30,18 @@ using psc::bnd::LoHi;
 ///
 /// Must run after the particle push and before particle boundary exchange, so
 /// that the pushed particles are still in their original patches.
+///
+/// The copies' transverse velocities can optionally be resampled. Their normal
+/// momenta are then adjusted to preserve normal velocities, so that the copies
+/// still enter from the ghost cell.
 /// @tparam LOHI whether to inject at the lower or upper boundary
 /// @tparam PUSH_PARTICLES type that provides the types `Mparticles`,
 /// `MfieldsState`, `Current`, `real_t`, `AdvanceParticle_t`
-template <LoHi LOHI, typename PUSH_PARTICLES>
+/// @tparam RESAMPLER type that defines `resample(prt)`, which takes a copy (as
+/// a `psc::particle::Inject`) and returns a momentum, of which only the
+/// transverse components are used
+template <LoHi LOHI, typename PUSH_PARTICLES,
+          typename RESAMPLER = NeumannResamplerNone>
 class NeumannBoundaryInjector
   : public InjectorBase<typename PUSH_PARTICLES::Mparticles,
                         typename PUSH_PARTICLES::MfieldsState>
@@ -32,6 +50,7 @@ class NeumannBoundaryInjector
 
 public:
   using PushParticles = PUSH_PARTICLES;
+  using Resampler = RESAMPLER;
 
   using Mparticles = typename PushParticles::Mparticles;
   using MfieldsState = typename PushParticles::MfieldsState;
@@ -41,6 +60,8 @@ public:
   using Real3 = Vec3<real_t>;
 
   static const bool lo = LOHI == LoHi::Lo;
+
+  NeumannBoundaryInjector(Resampler resampler = {}) : resampler{resampler} {}
 
   void inject(Mparticles& mprts, MfieldsState& mflds) override
   {
@@ -84,6 +105,7 @@ public:
           copies.emplace_back(InjectReal3(prt.x() + ghost_offset),
                               InjectReal3(prt.u()), prt.w(), prt.kind(),
                               prt.tag());
+          resample(copies.back());
         }
       }
 
@@ -110,4 +132,19 @@ public:
       }
     }
   }
+
+private:
+  void resample(psc::particle::Inject& copy)
+  {
+    auto u = copy.u;
+    auto v_normal = u[INJECT_DIM_IDX_] / sqrt(1 + u.mag2());
+
+    u = resampler.resample(copy);
+    u[INJECT_DIM_IDX_] = 0;
+    u[INJECT_DIM_IDX_] =
+      v_normal * sqrt((1 + u.mag2()) / (1 - v_normal * v_normal));
+    copy.u = u;
+  }
+
+  Resampler resampler;
 };
