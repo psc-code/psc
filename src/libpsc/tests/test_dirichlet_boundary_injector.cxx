@@ -7,7 +7,7 @@
 #include "../psc_config.hxx"
 #include "../psc_particle_injectors/boundary_injector.hxx"
 
-TEST(BoundaryInjectorTest, ParticleGeneratorMaxwellianTest)
+TEST(DirichletBoundaryInjectorTest, ParticleGeneratorMaxwellianTest)
 {
   int kind_idx = 15;
   Grid_t::Kind kind{1.0, 1836.0, "ion"};
@@ -102,64 +102,7 @@ struct ParticleGenerator
   int kind_idx;
 };
 
-TEST(BoundaryInjectorTest, Integration1Particle)
-{
-  // ----------------------------------------------------------------------
-  // setup
-
-  PscParams psc_params;
-
-  psc_params.nmax = 2;
-  psc_params.stats_every = 1;
-  psc_params.cfl = .75;
-
-  auto grid_ptr = setupGrid();
-  auto& grid = *grid_ptr;
-
-  MfieldsState mflds{grid};
-  Mparticles mprts{grid};
-
-  ChecksParams checks_params{};
-  checks_params.continuity.check_interval = 1;
-  checks_params.gauss.check_interval = 1;
-  Checks checks{grid, MPI_COMM_WORLD, checks_params};
-
-  Balance balance{.1};
-  Collision collision{grid, 0, 0.1};
-
-  auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
-                                          balance, collision, checks);
-
-  psc.add_injector(new BoundaryInjector<LoHi::Lo, ParticleGenerator,
-                                        typename PscConfig::PushParticles>(
-    ParticleGenerator(1, 1)));
-
-  // ----------------------------------------------------------------------
-  // set up initial conditions
-
-  ASSERT_EQ(grid.n_patches(), 1);
-  int p = 0;
-
-  // ----------------------------------------------------------------------
-  // run the simulation
-
-  auto accessor = mprts.accessor();
-  auto prts = accessor[p];
-
-  ASSERT_EQ(prts.size(), 0);
-
-  psc.pre_first_step();
-  for (; grid.timestep_ < psc_params.nmax;) {
-    psc.step();
-
-    ASSERT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
-    ASSERT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
-  }
-
-  ASSERT_EQ(prts.size(), 1);
-}
-
-TEST(BoundaryInjectorTest, IntegrationManyParticles)
+TEST(DirichletBoundaryInjectorTest, Integration1Particle)
 {
   // ----------------------------------------------------------------------
   // setup
@@ -188,8 +131,66 @@ TEST(BoundaryInjectorTest, IntegrationManyParticles)
                                           balance, collision, checks);
 
   psc.add_injector(
-    new BoundaryInjector<LoHi::Lo, ParticleGenerator, PscConfig::PushParticles>(
-      ParticleGenerator(-1, 1)));
+    new DirichletBoundaryInjector<LoHi::Lo, ParticleGenerator,
+                                  typename PscConfig::PushParticles>(
+      ParticleGenerator(1, 1)));
+
+  // ----------------------------------------------------------------------
+  // set up initial conditions
+
+  ASSERT_EQ(grid.n_patches(), 1);
+  int p = 0;
+
+  // ----------------------------------------------------------------------
+  // run the simulation
+
+  auto accessor = mprts.accessor();
+  auto prts = accessor[p];
+
+  ASSERT_EQ(prts.size(), 0);
+
+  psc.pre_first_step();
+  for (; grid.timestep_ < psc_params.nmax;) {
+    psc.step();
+
+    ASSERT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
+    ASSERT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
+  }
+
+  ASSERT_EQ(prts.size(), 1);
+}
+
+TEST(DirichletBoundaryInjectorTest, IntegrationManyParticles)
+{
+  // ----------------------------------------------------------------------
+  // setup
+
+  PscParams psc_params;
+
+  psc_params.nmax = 2;
+  psc_params.stats_every = 1;
+  psc_params.cfl = .75;
+
+  auto grid_ptr = setupGrid();
+  auto& grid = *grid_ptr;
+
+  MfieldsState mflds{grid};
+  Mparticles mprts{grid};
+
+  ChecksParams checks_params{};
+  checks_params.continuity.check_interval = 1;
+  checks_params.gauss.check_interval = 1;
+  Checks checks{grid, MPI_COMM_WORLD, checks_params};
+
+  Balance balance{.1};
+  Collision collision{grid, 0, 0.1};
+
+  auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
+                                          balance, collision, checks);
+
+  psc.add_injector(new DirichletBoundaryInjector<LoHi::Lo, ParticleGenerator,
+                                                 PscConfig::PushParticles>(
+    ParticleGenerator(-1, 1)));
 
   // ----------------------------------------------------------------------
   // set up initial conditions
@@ -216,7 +217,7 @@ TEST(BoundaryInjectorTest, IntegrationManyParticles)
   ASSERT_GT(prts.size(), 1);
 }
 
-TEST(BoundaryInjectorTest, IntegrationManySpecies)
+TEST(DirichletBoundaryInjectorTest, IntegrationManySpecies)
 {
   // ----------------------------------------------------------------------
   // setup
@@ -241,12 +242,12 @@ TEST(BoundaryInjectorTest, IntegrationManySpecies)
   Balance balance{.1};
   Collision collision{grid, 0, 0.1};
 
-  auto inject_electrons =
-    BoundaryInjector<LoHi::Lo, ParticleGenerator, PscConfig::PushParticles>{
-      ParticleGenerator(-1, 0)};
-  auto inject_ions =
-    BoundaryInjector<LoHi::Lo, ParticleGenerator, PscConfig::PushParticles>{
-      ParticleGenerator(-1, 1)};
+  auto inject_electrons = DirichletBoundaryInjector<LoHi::Lo, ParticleGenerator,
+                                                    PscConfig::PushParticles>{
+    ParticleGenerator(-1, 0)};
+  auto inject_ions = DirichletBoundaryInjector<LoHi::Lo, ParticleGenerator,
+                                               PscConfig::PushParticles>{
+    ParticleGenerator(-1, 1)};
 
   auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
                                           balance, collision, checks);

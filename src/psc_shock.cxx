@@ -9,6 +9,7 @@
 #include "libpsc/psc_output_particles/output_particles_adios2_impl.hxx"
 #include "libpsc/psc_bnd_fields/radiating.hxx"
 #include "libpsc/psc_particle_injectors/boundary_injector.hxx"
+#include "libpsc/psc_particle_injectors/neumann_injector.hxx"
 #include "libpsc/axis.hxx"
 
 // ======================================================================
@@ -37,6 +38,9 @@ using Marder = PscConfig::Marder;
 using OutputParticles = PscConfig::OutputParticles;
 using real_t = PscConfig::Mfields::real_t;
 using Real3 = Vec3<real_t>;
+
+template <typename PULSE>
+using RadiatingBC = psc::bnd::field::Radiating<Dim, MfieldsState, PULSE>;
 
 // ======================================================================
 // Global parameters
@@ -77,6 +81,10 @@ int marder_interval;
 
 std::string turb_method;
 std::string shock_method;
+std::string injection_method;
+
+PreaccelerateMethod preaccelerate_method;
+double preaccelerate_time_plasma_periods;
 
 int nicell;
 int seed;
@@ -95,6 +103,16 @@ void setupParameters(int argc, char** argv)
   InputParams inputParams(path_to_params);
 
   shock_method = inputParams.getOrDefault<std::string>("shock_method", "wall");
+  injection_method =
+    inputParams.getOrDefault<std::string>("injection_method", "dirichlet");
+  if (injection_method != "dirichlet" && injection_method != "neumann" &&
+      injection_method != "periodic") {
+    LOG_ERROR("unknown injection_method: %s\n", injection_method.c_str());
+  }
+  if (injection_method == "periodic" && shock_method == "wall") {
+    LOG_ERROR("injection_method=periodic is incompatible with "
+              "shock_method=wall\n");
+  }
 
   psc_params.stats_every =
     inputParams.getOrDefault<int>("stats_interval", 1000);
@@ -164,6 +182,14 @@ void setupParameters(int argc, char** argv)
       inputParams.getOrDefault<double>("T_i2", ti_upstream * heating_factor);
   }
 
+  if (shock_method == "none") {
+    n_downstream = n_upstream;
+    v_downstream = v_upstream;
+    h0_downstream = h0_upstream;
+    te_downstream = te_upstream;
+    ti_downstream = ti_upstream;
+  }
+
   gdims[0] = inputParams.get<int>("nx");
   gdims[1] = inputParams.get<int>("ny");
   gdims[2] = inputParams.get<int>("nz");
@@ -205,6 +231,18 @@ void setupParameters(int argc, char** argv)
     if (n_checkpoints > 0) {
       psc_params.write_checkpoint_every_step = psc_params.nmax / n_checkpoints;
     }
+  }
+
+  if (injection_method == "dirichlet") {
+    preaccelerate_time_plasma_periods = inputParams.getOrDefault<double>(
+      "preaccelerate_time_plasma_periods", 0.5);
+    std::string pre_method_str =
+      inputParams.getOrDefault<std::string>("preaccelerate_method", "normal_e");
+    preaccelerate_method =
+      pre_method_str == "normal_e"  ? PreaccelerateMethod::NormalE
+      : pre_method_str == "all_e"   ? PreaccelerateMethod::AllE
+      : pre_method_str == "all_e_h" ? PreaccelerateMethod::AllEH
+                                    : PreaccelerateMethod::None;
   }
 
   int n_writes = inputParams.getOrDefault<int>("n_writes", 100);
@@ -263,18 +301,19 @@ Grid_t* setupGrid()
     bnd_fld_upper = BND_FLD_CONDUCTING_WALL;
     bnd_prt_lower = BND_PRT_OPEN;
     bnd_prt_upper = BND_PRT_REFLECTING;
-  } else if (shock_method == "none") {
-    corner = {0.0, 0.0, 0.0};
-    bnd_fld_lower = BND_FLD_PERIODIC;
-    bnd_fld_upper = BND_FLD_PERIODIC;
-    bnd_prt_lower = BND_PRT_PERIODIC;
-    bnd_prt_upper = BND_PRT_PERIODIC;
-  } else if (shock_method == "relaxation") {
+  } else if (shock_method == "relaxation" || shock_method == "none") {
     corner = {0.0, -lengths[1] / 2.0, 0.0};
     bnd_fld_lower = BND_FLD_OPEN;
     bnd_fld_upper = BND_FLD_OPEN;
     bnd_prt_lower = BND_PRT_OPEN;
     bnd_prt_upper = BND_PRT_OPEN;
+  }
+
+  if (injection_method == "periodic") {
+    bnd_fld_lower = BND_FLD_PERIODIC;
+    bnd_fld_upper = BND_FLD_PERIODIC;
+    bnd_prt_lower = BND_PRT_PERIODIC;
+    bnd_prt_upper = BND_PRT_PERIODIC;
   }
 
   auto domain = Grid_t::Domain{gdims, lengths, corner, n_patches};
@@ -792,6 +831,12 @@ struct AdvectedPeriodicFields : psc::bnd::field::PulseBase<real_t>
 
   real_t sample_exterior_field(int m, double t, int p, Real3 x3) override
   {
+    if (EX <= m && m <= EZ) {
+      // FIXME: E is sampled in ghost cells, which are in unloaded patches.
+      // If initial E is ever nonzero, this shortcut will be invalid.
+      return e0[m - EX];
+    }
+
     Real3 x3_advected = advect_x3(x3, t);
     int n_patches_to_the_left = shift_to_patch_local(x3_advected);
     if (n_patches_to_the_left != n_patch_cycles) {
@@ -804,9 +849,6 @@ struct AdvectedPeriodicFields : psc::bnd::field::PulseBase<real_t>
       cycled_fields.view(_all, _all, _all, _all, p), -grid.ibn);
 
     switch (m) {
-      case EX: return ip.ex(em) + e0[0];
-      case EY: return ip.ey(em) + e0[1];
-      case EZ: return ip.ez(em) + e0[2];
       case HX: return ip.hx(em) + h0_upstream[0];
       case HY: return ip.hy(em) + h0_upstream[1];
       case HZ: return ip.hz(em) + h0_upstream[2];
@@ -885,7 +927,7 @@ static void run(int argc, char** argv)
   // Set up various objects needed to run this case
 
   // -- Balance
-  psc_params.balance_interval = 0;
+  psc_params.balance_interval = 1000;
   Balance balance{.1};
 
   // -- Sort
@@ -928,32 +970,6 @@ static void run(int argc, char** argv)
   int oute_interval = -100;
   DiagEnergies<Mparticles, MfieldsState> oute{grid.comm(), oute_interval};
 
-  auto ion_injector_lo = BoundaryInjector<LoHi::Lo, ParticleGeneratorMaxwellian,
-                                          PscConfig::PushParticles>(
-    ParticleGeneratorMaxwellian(KIND_ION, grid.kinds[KIND_ION], v_upstream,
-                                {ti_upstream, ti_upstream, ti_upstream}),
-    n_upstream);
-  auto electron_injector_lo =
-    BoundaryInjector<LoHi::Lo, ParticleGeneratorMaxwellian,
-                     PscConfig::PushParticles>(
-      ParticleGeneratorMaxwellian(KIND_ELECTRON, grid.kinds[KIND_ELECTRON],
-                                  v_upstream,
-                                  {te_upstream, te_upstream, te_upstream}),
-      n_upstream);
-
-  auto ion_injector_hi = BoundaryInjector<LoHi::Hi, ParticleGeneratorMaxwellian,
-                                          PscConfig::PushParticles>(
-    ParticleGeneratorMaxwellian(KIND_ION, grid.kinds[KIND_ION], v_downstream,
-                                {ti_downstream, ti_downstream, ti_downstream}),
-    n_downstream);
-  auto electron_injector_hi =
-    BoundaryInjector<LoHi::Hi, ParticleGeneratorMaxwellian,
-                     PscConfig::PushParticles>(
-      ParticleGeneratorMaxwellian(
-        KIND_ELECTRON, grid.kinds[KIND_ELECTRON], v_downstream,
-        {te_downstream, te_downstream, te_downstream}),
-      n_downstream);
-
   // ----------------------------------------------------------------------
   // set up initial conditions
 
@@ -981,40 +997,103 @@ static void run(int argc, char** argv)
   using psc::bnd::LoHi;
   using ConstantPulse = psc::bnd::field::ConstantPulse<real_t>;
 
-  if (shock_method != "none") {
-    psc.add_injector(&ion_injector_lo);
-    psc.add_injector(&electron_injector_lo);
+  if (injection_method == "dirichlet") {
+    auto ion_injector_lo =
+      new DirichletBoundaryInjector<LoHi::Lo, ParticleGeneratorMaxwellian,
+                                    PscConfig::PushParticles>(
+        ParticleGeneratorMaxwellian(KIND_ION, grid.kinds[KIND_ION], v_upstream,
+                                    {ti_upstream, ti_upstream, ti_upstream}),
+        n_upstream);
+    ion_injector_lo->preaccelerate_method = preaccelerate_method;
+    ion_injector_lo->preaccelerate_time = preaccelerate_time_plasma_periods *
+                                          2.0 * M_PI /
+                                          std::sqrt(n_upstream / ion_mass);
 
+    auto electron_injector_lo =
+      new DirichletBoundaryInjector<LoHi::Lo, ParticleGeneratorMaxwellian,
+                                    PscConfig::PushParticles>(
+        ParticleGeneratorMaxwellian(KIND_ELECTRON, grid.kinds[KIND_ELECTRON],
+                                    v_upstream,
+                                    {te_upstream, te_upstream, te_upstream}),
+        n_upstream);
+    electron_injector_lo->preaccelerate_method = preaccelerate_method;
+    electron_injector_lo->preaccelerate_time =
+      preaccelerate_time_plasma_periods * 2.0 * M_PI /
+      std::sqrt(n_upstream / electron_mass);
+
+    psc.add_injector(ion_injector_lo);
+    psc.add_injector(electron_injector_lo);
+  } else if (injection_method == "neumann") {
+    auto neumann_injector_lo =
+      new NeumannBoundaryInjector<LoHi::Lo, PscConfig::PushParticles>{};
+
+    psc.add_injector(neumann_injector_lo);
+  }
+
+  if (injection_method != "periodic") {
     if (turb_db2 > 0.0 && v_upstream[1] > 0.0) {
+      MfieldsState* mflds_advect;
       if (checkpoint_filename.empty()) {
         // mflds is currently just the pure, initial turbulence
-        psc.add_field_bc(new psc::bnd::field::Radiating<Dim, MfieldsState,
-                                                        AdvectedPeriodicFields>(
-          AdvectedPeriodicFields{mflds, v_upstream[1], e0, h0_upstream},
-          Axis::Y, LoHi::Lo));
+        mflds_advect = &mflds;
       } else {
         // mflds is completely unrelated; need to re-initialize turbulence
-        MfieldsState mflds2{grid};
-        initialize_turbulence(mflds2);
-        psc.add_field_bc(new psc::bnd::field::Radiating<Dim, MfieldsState,
-                                                        AdvectedPeriodicFields>(
-          AdvectedPeriodicFields{mflds2, v_upstream[1], e0, h0_upstream},
-          Axis::Y, LoHi::Lo));
+        MfieldsState* mflds2 = new MfieldsState{grid};
+        initialize_turbulence(*mflds2);
+        mflds_advect = mflds2;
       }
+
+      auto radiating_lo = new RadiatingBC<AdvectedPeriodicFields>(
+        AdvectedPeriodicFields{*mflds_advect, v_upstream[1], e0, h0_upstream},
+        Axis::Y, LoHi::Lo);
+
+      psc.add_field_bc(radiating_lo);
     } else {
-      psc.add_field_bc(
-        new psc::bnd::field::Radiating<Dim, MfieldsState, ConstantPulse>(
-          ConstantPulse{e0, h0_upstream}, Axis::Y, LoHi::Lo));
+      psc.add_field_bc(new RadiatingBC<ConstantPulse>(
+        ConstantPulse{e0, h0_upstream}, Axis::Y, LoHi::Lo));
     }
   }
 
-  if (shock_method == "relaxation") {
-    psc.add_injector(&ion_injector_hi);
-    psc.add_injector(&electron_injector_hi);
+  if ((shock_method == "relaxation" || shock_method == "none") &&
+      injection_method != "periodic") {
+    if (injection_method == "dirichlet") {
+      auto ion_injector_hi =
+        new DirichletBoundaryInjector<LoHi::Hi, ParticleGeneratorMaxwellian,
+                                      PscConfig::PushParticles>(
+          ParticleGeneratorMaxwellian(
+            KIND_ION, grid.kinds[KIND_ION], v_downstream,
+            {ti_downstream, ti_downstream, ti_downstream}),
+          n_downstream);
+      ion_injector_hi->preaccelerate_method = preaccelerate_method;
+      ion_injector_hi->preaccelerate_time = preaccelerate_time_plasma_periods *
+                                            2.0 * M_PI /
+                                            std::sqrt(n_downstream / ion_mass);
 
-    psc.add_field_bc(
-      new psc::bnd::field::Radiating<Dim, MfieldsState, ConstantPulse>(
-        ConstantPulse{e0, h0_downstream}, Axis::Y, LoHi::Hi));
+      auto electron_injector_hi =
+        new DirichletBoundaryInjector<LoHi::Hi, ParticleGeneratorMaxwellian,
+                                      PscConfig::PushParticles>(
+          ParticleGeneratorMaxwellian(
+            KIND_ELECTRON, grid.kinds[KIND_ELECTRON], v_downstream,
+            {te_downstream, te_downstream, te_downstream}),
+          n_downstream);
+      electron_injector_hi->preaccelerate_method = preaccelerate_method;
+      electron_injector_hi->preaccelerate_time =
+        preaccelerate_time_plasma_periods * 2.0 * M_PI /
+        std::sqrt(n_downstream / electron_mass);
+
+      psc.add_injector(ion_injector_hi);
+      psc.add_injector(electron_injector_hi);
+    } else if (injection_method == "neumann") {
+      auto neumann_injector_hi =
+        new NeumannBoundaryInjector<LoHi::Hi, PscConfig::PushParticles>{};
+
+      psc.add_injector(neumann_injector_hi);
+    }
+
+    auto radiating_hi = new RadiatingBC<ConstantPulse>(
+      ConstantPulse{e0, h0_downstream}, Axis::Y, LoHi::Hi);
+
+    psc.add_field_bc(radiating_hi);
   }
 
   if (checkpoint_filename.empty()) {

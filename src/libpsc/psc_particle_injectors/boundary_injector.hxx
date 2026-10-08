@@ -16,8 +16,16 @@
 
 using psc::bnd::LoHi;
 
-/// @brief A particle generator for use with @ref BoundaryInjector. Samples
-/// particles from a (possibly shifted) Maxwellian distribution.
+enum class PreaccelerateMethod
+{
+  None,
+  NormalE,
+  AllE,
+  AllEH,
+};
+
+/// @brief A particle generator for use with @ref DirichletBoundaryInjector.
+/// Samples particles from a (possibly shifted) Maxwellian distribution.
 class ParticleGeneratorMaxwellian
 {
 public:
@@ -63,7 +71,7 @@ private:
 
 /// @brief Injects particles on a given boundary, sampling from a given particle
 /// generator. For precise control over multiple particle species, use one
-/// BoundaryInjector per species.
+/// DirichletBoundaryInjector per species.
 /// @tparam LOHI whether to inject at the lower or upper boundary
 /// @tparam PARTICLE_GENERATOR a type that defines `get(min_pos, pos_range)` and
 /// returns an injectable particle within that range of positions (usually a
@@ -71,7 +79,7 @@ private:
 /// @tparam PUSH_PARTICLES type that provides the types `Mparticles`,
 /// `MfieldsState`, `Current`, `real_t`, etc.
 template <LoHi LOHI, typename PARTICLE_GENERATOR, typename PUSH_PARTICLES>
-class BoundaryInjector
+class DirichletBoundaryInjector
   : public InjectorBase<typename PUSH_PARTICLES::Mparticles,
                         typename PUSH_PARTICLES::MfieldsState>
 {
@@ -90,7 +98,8 @@ public:
 
   static const bool lo = LOHI == LoHi::Lo;
 
-  BoundaryInjector(ParticleGenerator particle_generator, real_t density = 1.0)
+  DirichletBoundaryInjector(ParticleGenerator particle_generator,
+                            real_t density = 1.0)
     : particle_generator_{particle_generator}, density{density}
   {}
 
@@ -109,16 +118,8 @@ public:
 
     Real3 dxi = grid.domain.dx_inv;
     Current current(grid);
-
-    bool preaccelerate = true;
-    real_t npp = 0.5; // number of plasma periods
-
-    real_t plasma_freq_sq = 0.0;
-    for (Grid_t::Kind kind : grid.kinds) {
-      plasma_freq_sq += density / kind.m;
-    }
-    real_t plasma_period = 2.f * M_PI / sqrt(plasma_freq_sq);
-    real_t t_accel = npp * plasma_period;
+    bool preaccelerate = preaccelerate_method != PreaccelerateMethod::None &&
+                         preaccelerate_time != 0;
 
     for (int p = 0; p < grid.n_patches(); p++) {
       if (lo ? grid.atBoundaryLo(p, INJECT_DIM_IDX_)
@@ -159,13 +160,21 @@ public:
               ip.set_coeffs(initial_normalized_pos.with_component(
                 INJECT_DIM_IDX_, sample_coord));
 
-              // FIXME: determine how best to preaccelerate
-              // Real3 e_inner = {ip.ex(EM), ip.ey(EM), ip.ez(EM)};
-              // Real3 h_inner = {ip.hx(EM), ip.hy(EM), ip.hz(EM)};
-              Real3 e_inner = {0.f, ip.ey(EM), 0.f};
+              Real3 e_inner = {0.f, 0.f, 0.f};
               Real3 h_inner = {0.f, 0.f, 0.f};
 
-              real_t dq = .5f * grid.norm.eta * t_accel * q / m;
+              if (preaccelerate_method == PreaccelerateMethod::NormalE) {
+                e_inner[INJECT_DIM_IDX_] = INJECT_DIM_IDX_ == 0   ? ip.ex(EM)
+                                           : INJECT_DIM_IDX_ == 1 ? ip.ey(EM)
+                                                                  : ip.ez(EM);
+              } else if (preaccelerate_method == PreaccelerateMethod::AllE) {
+                e_inner = {ip.ex(EM), ip.ey(EM), ip.ez(EM)};
+              } else if (preaccelerate_method == PreaccelerateMethod::AllEH) {
+                e_inner = {ip.ex(EM), ip.ey(EM), ip.ez(EM)};
+                h_inner = {ip.hx(EM), ip.hy(EM), ip.hz(EM)};
+              }
+
+              real_t dq = .5f * grid.norm.eta * preaccelerate_time * q / m;
               advance.push_p(prt.u, e_inner, h_inner, dq);
             }
 
@@ -194,6 +203,8 @@ public:
 
 public:
   real_t density;
+  real_t preaccelerate_time = 0.0;
+  PreaccelerateMethod preaccelerate_method = PreaccelerateMethod::NormalE;
 
 private:
   ParticleGenerator particle_generator_;
