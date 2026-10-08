@@ -1,6 +1,6 @@
 # PSC
 
-The Plasma Simulation Code: a 3D fully electromagnetic particle-in-cell code for high-performance kinetic plasma simulations, used in academic research. It began in Fortran, mainly for laser-plasma interactions, and was ported to C++ to get GPU support. It uses CMake and gtensor, with optional CUDA/HIP. `psc` itself only requires `cxx_std_11`, but gtensor pulls in C++17, so in practice it builds as C++17.
+The Plasma Simulation Code: a 3D fully electromagnetic particle-in-cell code for high-performance kinetic plasma simulations, used in academic research. Production runs are generally on Linux supercomputer clusters, so that is the platform to target. It began in Fortran, mainly for laser-plasma interactions, and was ported to C++ to get GPU support. It uses CMake and gtensor, with optional CUDA/HIP. `psc` itself only requires `cxx_std_11`, but gtensor pulls in C++17, so in practice it builds as C++17.
 
 ## Priorities
 
@@ -15,7 +15,7 @@ When these conflict, the earlier one wins:
 ## Commands
 
 ```bash
-# Local build (existing ./build: Release, Unix Makefiles, PSC_GPU=host, Apple Clang)
+# Build (assumes an already-configured ./build)
 cmake --build build -j                                  # everything
 cmake --build build -t test_neumann_boundary_injector   # one test binary
 ./build/src/libpsc/tests/test_neumann_boundary_injector --gtest_filter='*.InwardsLo'
