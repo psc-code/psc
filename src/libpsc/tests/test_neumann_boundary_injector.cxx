@@ -47,8 +47,9 @@ Grid_t* setupGrid(double cfl)
 // position (to satisfy Gauss' law at t=0), runs the simulation for `nmax` steps
 // with a NeumannBoundaryInjector at the given boundary, and returns the
 // final particles' y positions, sorted.
-template <LoHi LOHI>
-std::vector<double> run(std::vector<std::pair<double, double>> ys_uys, int nmax)
+template <LoHi LOHI, typename Resampler = NeumannResamplerNone>
+std::vector<double> run(std::vector<std::pair<double, double>> ys_uys, int nmax,
+                        Resampler resampler = {})
 {
   PscParams psc_params;
   psc_params.nmax = nmax;
@@ -72,7 +73,8 @@ std::vector<double> run(std::vector<std::pair<double, double>> ys_uys, int nmax)
   auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
                                           balance, collision, checks);
 
-  NeumannBoundaryInjector<LOHI, PscConfig::PushParticles> injector;
+  NeumannBoundaryInjector<LOHI, PscConfig::PushParticles, Resampler> injector{
+    resampler};
   psc.add_injector(&injector);
 
   {
@@ -134,8 +136,11 @@ TEST(NeumannBoundaryInjectorTest, NoCopies)
 
 TEST(NeumannBoundaryInjectorTest, ManySteps)
 {
-  // each copy is itself copied when it leaves the edge cell
-  auto ys = run<LoHi::Lo>({{.75, 2.}}, 6);
+  // each copy is itself copied when it leaves the edge cell; resampling with a
+  // high temperature checks that the copies still conserve charge
+  std::unique_ptr<Grid_t> grid{setupGrid(.75)};
+  auto ys = run<LoHi::Lo>({{.75, 2.}}, 6,
+                          NeumannResamplerMaxwellian{grid->kinds, {9., 9.}});
   ASSERT_GT(ys.size(), 3);
 }
 
