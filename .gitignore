@@ -101,3 +101,4 @@ spack-configure-args.txt
 .vscode/
 **/psc*params.txt
 .venv/
+CLAUDE.local.md
