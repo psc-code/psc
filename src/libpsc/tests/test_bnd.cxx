@@ -300,6 +300,85 @@ TYPED_TEST(BndTest, AddGhosts)
 }
 
 // ======================================================================
+// Non-periodic y, 2 periodic patches in z. Since there are no neighbors in y,
+// the y-ghost rows are exchanged along z like interior rows; in particular, the
+// (y-ghost, z-ghost) corners must be communicated.
+
+static Grid_t make_grid_open_y()
+{
+  auto domain = Grid_t::Domain{{1, 4, 16}, {10., 40., 160.}, {}, {1, 1, 2}};
+  auto bc = psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_OPEN, BND_FLD_PERIODIC},
+                          {BND_FLD_PERIODIC, BND_FLD_OPEN, BND_FLD_PERIODIC},
+                          {BND_PRT_PERIODIC, BND_PRT_OPEN, BND_PRT_PERIODIC},
+                          {BND_PRT_PERIODIC, BND_PRT_OPEN, BND_PRT_PERIODIC}};
+  auto kinds = Grid_t::Kinds{};
+  auto norm = Grid_t::Normalization{};
+  double dt = .1;
+  int n_patches = -1;
+  auto ibn = Int3{0, B, B};
+  return Grid_t{domain, bc, kinds, norm, dt, n_patches, ibn};
+}
+
+TEST(Bnd, FillGhostsOpenY)
+{
+  auto grid = make_grid_open_y();
+  auto mflds = MfieldsC{grid, 1, grid.ibn};
+  auto& ldims = grid.ldims;
+  auto& gdims = grid.domain.gdims;
+
+  // y ghosts are not touched by the exchange along y, so give them values too
+  auto value = [&](int jj, int kk) { return 100 * (jj + B) + kk; };
+
+  for (int p = 0; p < mflds.n_patches(); p++) {
+    auto flds = make_Fields3d<dim_xyz>(mflds[p]);
+    Int3 off = grid.patches[p].off;
+    grid.Foreach_3d(B, B, [&](int i, int j, int k) {
+      bool interior_z = k >= 0 && k < ldims[2];
+      flds(0, i, j, k) = interior_z ? value(j + off[1], k + off[2]) : 0;
+    });
+  }
+
+  Bnd_ bnd;
+  bnd.fill_ghosts(mflds, 0, 1);
+
+  for (int p = 0; p < mflds.n_patches(); p++) {
+    auto flds = make_Fields3d<dim_xyz>(mflds[p]);
+    Int3 off = grid.patches[p].off;
+    grid.Foreach_3d(B, B, [&](int i, int j, int k) {
+      int kk = (k + off[2] + gdims[2]) % gdims[2];
+      EXPECT_EQ(flds(0, i, j, k), value(j + off[1], kk))
+        << "p " << p << " jk " << j << " " << k;
+    });
+  }
+}
+
+TEST(Bnd, AddGhostsOpenY)
+{
+  auto grid = make_grid_open_y();
+  auto mflds = MfieldsC{grid, 1, grid.ibn};
+  auto& ldims = grid.ldims;
+
+  for (int p = 0; p < mflds.n_patches(); p++) {
+    auto flds = make_Fields3d<dim_xyz>(mflds[p]);
+    grid.Foreach_3d(B, B, [&](int i, int j, int k) { flds(0, i, j, k) = 1; });
+  }
+
+  Bnd_ bnd;
+  bnd.add_ghosts(mflds, 0, 1);
+
+  for (int p = 0; p < mflds.n_patches(); p++) {
+    auto flds = make_Fields3d<dim_xyz>(mflds[p]);
+    grid.Foreach_3d(B, B, [&](int i, int j, int k) {
+      bool interior_z = k >= 0 && k < ldims[2];
+      bool near_edge_z = k < B || k >= ldims[2] - B;
+      int expected = 1 + (interior_z && near_edge_z);
+      EXPECT_EQ(flds(0, i, j, k), expected)
+        << "p " << p << " jk " << j << " " << k;
+    });
+  }
+}
+
+// ======================================================================
 // main
 
 int main(int argc, char** argv)
