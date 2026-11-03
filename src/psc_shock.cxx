@@ -810,7 +810,16 @@ void inject_turbulence_dense(MfieldsState& mflds)
 
   PscConfig::Mfields vector_potential{mflds._grid(), 3, mflds.ibn()};
 
-  auto inject_at_n = [&](Int3 n) { return n != Int3{0, 0, 0}; };
+  // +n and -n are the same real mode, so inject only one of them: the one
+  // whose first nonzero component is positive
+  auto inject_at_n = [&](Int3 n) {
+    for (int d = 0; d < 3; d++) {
+      if (n[d] != 0) {
+        return n[d] > 0;
+      }
+    }
+    return false;
+  };
 
   // 1. compute values of |k|
 
@@ -819,8 +828,7 @@ void inject_turbulence_dense(MfieldsState& mflds)
   Int3 i3_min = (1 - gdims) / 2;
   Int3 i3_max = gdims / 2;
 
-  // inject in only half of k-space, since +k and -k modes are
-  // indistinguishable
+  // skip the half of k-space that inject_at_n rejects anyway
   for (int d = 0; d < 3; d++) {
     if (gdims[d] > 2) {
       i3_min[d] = 0;
