@@ -446,7 +446,7 @@ void add_background_fields(MfieldsState& mflds)
   }
 }
 
-void set_mean_b2(MfieldsState& mflds, double mean_b2)
+double get_mean_b2(MfieldsState& mflds)
 {
   const auto& grid = mflds.grid();
 
@@ -471,8 +471,14 @@ void set_mean_b2(MfieldsState& mflds, double mean_b2)
   double sum_b2 = 0.0;
   MPI_Allreduce(&sum_b2_local, &sum_b2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
-  double target_sum_b2 = gdims.prod() * mean_b2;
-  double scale_factor = sqrt(target_sum_b2 / sum_b2);
+  return sum_b2 / gdims.prod();
+}
+
+void set_mean_b2(MfieldsState& mflds, double mean_b2)
+{
+  const auto& grid = mflds.grid();
+
+  double scale_factor = sqrt(mean_b2 / get_mean_b2(mflds));
 
   for (int p = 0; p < mflds.n_patches(); ++p) {
     auto field_patch = make_Fields3d<dim_xyz>(mflds[p]);
