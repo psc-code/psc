@@ -671,8 +671,9 @@ double sample_noise(Int2 d_igrid, Double3 pos, Int5 hyperdims, KERNEL& kernel)
 {
   Int3 i3 = pos.fint();
   double sum = 0.0;
-  // kernels vanish beyond r = 1, so only neighboring cells contribute
-  for (Int3 cell_idx : VecRange(i3 - 1, i3 + 2)) {
+  // kernels vanish beyond r = 1, so only neighboring cells contribute, and
+  // only along varying dims
+  for (Int3 cell_idx : VecRange(i3 - kernel.varying, i3 + 1 + kernel.varying)) {
     Int5 hyperindex{d_igrid[0], d_igrid[1], cell_idx[0], cell_idx[1],
                     cell_idx[2]};
     sum +=
