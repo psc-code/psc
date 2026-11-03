@@ -614,7 +614,13 @@ int get_cell_seed(Int5 cell_hyperidx, Int5 hyperdims)
   while (cell_hyperidx.min() < 0) {
     cell_hyperidx += hyperdims;
   }
-  int cell_seed = flatten_index(cell_hyperidx % hyperdims, hyperdims) + seed;
+  int flat_idx = flatten_index(cell_hyperidx % hyperdims, hyperdims);
+  // mix, since an LCG's draws for adjacent seeds are strongly correlated
+  std::seed_seq seq{static_cast<uint32_t>(flat_idx),
+                    static_cast<uint32_t>(seed)};
+  uint32_t mixed;
+  seq.generate(&mixed, &mixed + 1);
+  int cell_seed = mixed & 0x7fffffff;
   if (cell_seed == 0) {
     cell_seed = 1;
   }
