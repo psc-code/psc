@@ -673,9 +673,17 @@ void inject_turbulence_noise(MfieldsState& mflds, KERNEL& kernel)
     Int3 grid_dims = Int3::min({grid_size, grid_size, grid_size}, gdims);
     Double3 pos_scale = Double3(grid_dims) / grid.domain.length;
 
+    // wavenumber of this level's kernels; invariant dimensions don't count,
+    // since e.g. lx = dx would otherwise dominate
+    double k = 0.0;
+    for (int d = 0; d < 3; d++) {
+      if (gdims[d] > 1) {
+        k = std::max(k, 2.0 * M_PI * pos_scale[d]);
+      }
+    }
+
     double shell_power =
-      1.0 / (1.0 + pow(turb_correlation_length * pos_scale.max() * 2.0 * M_PI,
-                       5.0 / 3.0));
+      1.0 / (1.0 + pow(turb_correlation_length * k, 5.0 / 3.0));
 
     for (int p = 0; p < grid.n_patches(); ++p) {
       auto vp_patch = make_Fields3d<dim_xyz>(vector_potential[p]);
