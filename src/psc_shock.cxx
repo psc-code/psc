@@ -586,12 +586,20 @@ void inject_plane_alfven_wave(PscConfig::Mfields& vector_potential, double db,
 
 struct GaborKernel
 {
+  // varying[d] is 0 for invariant dimensions, else 1
+  GaborKernel(Int3 varying) : varying(varying) {}
+
   void randomize(rng::Uniform<double>& uni)
   {
-    double theta = std::acos(uni.get(-1.0, 1.0));
-    double phi = uni.get(0.0, 2.0 * M_PI);
-    wave_dir = Double3{std::cos(phi) * std::sin(theta),
-                       std::sin(phi) * std::sin(theta), std::cos(theta)};
+    // isotropic within the varying dimensions: draw uniformly in the unit
+    // ball (or disk, or segment) by rejection, then normalize
+    Double3 dir;
+    do {
+      for (int d = 0; d < 3; d++) {
+        dir[d] = varying[d] ? uni.get(-1.0, 1.0) : 0.0;
+      }
+    } while (dir.mag2() > 1.0 || dir.mag2() == 0.0);
+    wave_dir = dir / dir.mag();
 
     wave_phase = uni.get(0.0, 2.0 * M_PI);
   }
@@ -609,6 +617,7 @@ struct GaborKernel
            std::cos(2.0 * M_PI * x.dot(wave_dir) + wave_phase);
   }
 
+  Int3 varying;
   Double3 wave_dir;
   double wave_phase;
 };
@@ -846,7 +855,8 @@ void initialize_turbulence(MfieldsState& mflds)
     if (turb_method == "alfven_dense") {
       inject_turbulence_dense(mflds);
     } else if (turb_method == "noise_gabor") {
-      GaborKernel kernel;
+      Int3 gdims = mflds.grid().domain.gdims;
+      GaborKernel kernel{{gdims[0] > 1, gdims[1] > 1, gdims[2] > 1}};
       inject_turbulence_noise(mflds, kernel);
     } else {
       LOG_ERROR("Unrecognized turbulence method: %s\n", turb_method.c_str());
