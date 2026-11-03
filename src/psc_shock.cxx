@@ -598,7 +598,14 @@ struct GaborKernel
 
   double sample(Double3 x)
   {
-    return std::exp(-M_PI * x.mag2()) *
+    // the Gaussian is still exp(-pi) ~ 4% at r = 1, so window it smoothly to
+    // 0 there; then only kernels from neighboring cells contribute, and the
+    // noise and its gradient stay continuous across cell edges
+    double r2 = x.mag2();
+    if (r2 >= 1.0) {
+      return 0.0;
+    }
+    return sqr(1.0 - r2) * std::exp(-M_PI * r2) *
            std::cos(2.0 * M_PI * x.dot(wave_dir) + wave_phase);
   }
 
@@ -653,6 +660,7 @@ double sample_noise(Int2 d_igrid, Double3 pos, Int5 hyperdims, KERNEL& kernel)
 {
   Int3 i3 = pos.fint();
   double sum = 0.0;
+  // kernels vanish beyond r = 1, so only neighboring cells contribute
   for (Int3 cell_idx : VecRange(i3 - 1, i3 + 2)) {
     Int5 hyperindex{d_igrid[0], d_igrid[1], cell_idx[0], cell_idx[1],
                     cell_idx[2]};
