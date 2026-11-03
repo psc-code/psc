@@ -645,9 +645,12 @@ int get_cell_seed(Int5 cell_hyperidx, Int5 hyperdims)
   return cell_seed;
 }
 
+// Positions and cell_extent are in units of the kernel radius; cells may be
+// longer than that.
 template <typename KERNEL>
 double sample_noise_cell(Int5 cell_hyperidx, Int5 hyperdims,
-                         Double3 pos_in_cell, KERNEL& kernel)
+                         Double3 pos_in_cell, Double3 cell_extent,
+                         KERNEL& kernel)
 {
   rng::Uniform uniform{0.0, 1.0, get_cell_seed(cell_hyperidx, hyperdims)};
 
@@ -656,8 +659,10 @@ double sample_noise_cell(Int5 cell_hyperidx, Int5 hyperdims,
 
   double sum = 0.0;
   for (int i = 0; i < n_impulses; i++) {
-    Double3 kernel_pos_in_cell{uniform.get(0.0, 1.0), uniform.get(0.0, 1.0),
-                               uniform.get(0.0, 1.0)};
+    Double3 kernel_pos_in_cell =
+      Double3{uniform.get(0.0, 1.0), uniform.get(0.0, 1.0),
+              uniform.get(0.0, 1.0)} *
+      cell_extent;
     kernel.randomize(uniform);
     sum += kernel.sample(pos_in_cell - kernel_pos_in_cell);
     // double weight = uniform.get(-1.0, 1.0);
@@ -667,52 +672,71 @@ double sample_noise_cell(Int5 cell_hyperidx, Int5 hyperdims,
 }
 
 template <typename KERNEL>
-double sample_noise(Int2 d_igrid, Double3 pos, Int5 hyperdims, KERNEL& kernel)
+double sample_noise(Int2 d_ilevel, Double3 pos, Double3 cell_extent,
+                    Int5 hyperdims, KERNEL& kernel)
 {
-  Int3 i3 = pos.fint();
+  Int3 i3 = (pos / cell_extent).fint();
   double sum = 0.0;
-  // kernels vanish beyond r = 1, so only neighboring cells contribute, and
-  // only along varying dims
+  // kernels vanish beyond r = 1, which is at most one cell, so only
+  // neighboring cells contribute, and only along varying dims
   for (Int3 cell_idx : VecRange(i3 - kernel.varying, i3 + 1 + kernel.varying)) {
-    Int5 hyperindex{d_igrid[0], d_igrid[1], cell_idx[0], cell_idx[1],
+    Int5 hyperindex{d_ilevel[0], d_ilevel[1], cell_idx[0], cell_idx[1],
                     cell_idx[2]};
-    sum +=
-      sample_noise_cell(hyperindex, hyperdims, pos - Double3(cell_idx), kernel);
+    sum += sample_noise_cell(hyperindex, hyperdims,
+                             pos - Double3(cell_idx) * cell_extent, cell_extent,
+                             kernel);
   }
   return sum;
 }
 
+// Sum of Gabor noise levels evenly spaced in k. Each level's kernels are
+// isotropic, with radius = wavelength = s. They sit in a periodic lattice of
+// cells at least s long, so the noise is periodic on any box.
 template <typename KERNEL>
 void inject_turbulence_noise(MfieldsState& mflds, KERNEL& kernel)
 {
   const auto& grid = mflds.grid();
   Int3 ibn = mflds.ibn();
-  Int3 gdims(grid.domain.gdims);
+  Double3 length = grid.domain.length;
+  Int3 varying = kernel.varying;
 
   PscConfig::Mfields vector_potential{grid, 3, ibn};
 
-  int n_grids = gdims.max() / 2;
+  double max_length = 0.0;
+  double min_dx = std::numeric_limits<double>::max();
+  for (int d = 0; d < 3; d++) {
+    if (varying[d]) {
+      max_length = std::max(max_length, length[d]);
+      min_dx = std::min(min_dx, double(grid.domain.dx[d]));
+    }
+  }
+  // down to wavelengths of 2 grid cells
+  int n_levels = std::floor(max_length / (2.0 * min_dx) + 1e-9);
   int n_dims = 3;
 
-  for (int i_grid = 0; i_grid < n_grids; i_grid++) {
-    int grid_size = i_grid + 1;
-    Int3 grid_dims = Int3::min({grid_size, grid_size, grid_size}, gdims);
-    Double3 pos_scale = Double3(grid_dims) / grid.domain.length;
+  for (int i_level = 0; i_level < n_levels; i_level++) {
+    double s = max_length / (i_level + 1);
+    double k = 2.0 * M_PI / s;
 
-    // wavenumber of this level's kernels; invariant dimensions don't count,
-    // since e.g. lx = dx would otherwise dominate
-    double k = 0.0;
+    // Dims shorter than s can't fit this wavelength, so they are invariant at
+    // this level (k_d = 0). Otherwise, fit as many cells as possible.
+    Int3 n_cells;
+    Int3 level_varying;
     for (int d = 0; d < 3; d++) {
-      if (gdims[d] > 1) {
-        k = std::max(k, 2.0 * M_PI * pos_scale[d]);
-      }
+      int n = varying[d] ? std::floor(length[d] / s + 1e-9) : 0;
+      level_varying[d] = n > 0;
+      n_cells[d] = std::max(n, 1);
     }
+    Double3 cell_extent = length / Double3(n_cells) / s;
+    kernel.varying = level_varying;
 
     double shell_power =
       1.0 / (1.0 + pow(turb_correlation_length * k, 5.0 / 3.0));
     // B = curl A ~ k A, so this gives each level a B power ~ shell_power.
     // Levels are evenly spaced in k, so dk is absorbed by set_mean_b2.
     double a_amplitude = std::sqrt(shell_power) / k;
+
+    Int5 hyperdims{n_dims, n_levels, n_cells[0], n_cells[1], n_cells[2]};
 
     for (int p = 0; p < grid.n_patches(); ++p) {
       auto vp_patch = make_Fields3d<dim_xyz>(vector_potential[p]);
@@ -723,21 +747,19 @@ void inject_turbulence_noise(MfieldsState& mflds, KERNEL& kernel)
         Double3 pos_ec_y = centering::get_pos(patch, i3, centering::EC, 1);
         Double3 pos_ec_z = centering::get_pos(patch, i3, centering::EC, 2);
 
-        Int5 hyperdims{n_dims, n_grids, grid_dims[0], grid_dims[1],
-                       grid_dims[2]};
-
         vp_patch(AX, i3[0], i3[1], i3[2]) +=
-          a_amplitude *
-          sample_noise({AX, i_grid}, pos_ec_x * pos_scale, hyperdims, kernel);
+          a_amplitude * sample_noise({AX, i_level}, pos_ec_x / s, cell_extent,
+                                     hyperdims, kernel);
         vp_patch(AY, i3[0], i3[1], i3[2]) +=
-          a_amplitude *
-          sample_noise({AY, i_grid}, pos_ec_y * pos_scale, hyperdims, kernel);
+          a_amplitude * sample_noise({AY, i_level}, pos_ec_y / s, cell_extent,
+                                     hyperdims, kernel);
         vp_patch(AZ, i3[0], i3[1], i3[2]) +=
-          a_amplitude *
-          sample_noise({AZ, i_grid}, pos_ec_z * pos_scale, hyperdims, kernel);
+          a_amplitude * sample_noise({AZ, i_level}, pos_ec_z / s, cell_extent,
+                                     hyperdims, kernel);
       }
     }
   }
+  kernel.varying = varying;
 
   inject_b_from_potential(mflds, vector_potential);
 
