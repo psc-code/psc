@@ -593,7 +593,7 @@ struct GaborKernel
     wave_dir = Double3{std::cos(phi) * std::sin(theta),
                        std::sin(phi) * std::sin(theta), std::cos(theta)};
 
-    double wave_phase = uni.get(0.0, 2.0 * M_PI);
+    wave_phase = uni.get(0.0, 2.0 * M_PI);
   }
 
   double sample(Double3 x)
