@@ -55,6 +55,36 @@ static void mrc_ddc_multi_get_nei_rank_patch(struct mrc_ddc* ddc, int p,
 }
 
 // ----------------------------------------------------------------------
+// ddc_widen_at_open_boundary
+//
+// Along a dimension d with dir[d] == 0, the region normally spans only the
+// interior [0, ldims). On a side where the patch is at a non-periodic domain
+// boundary, there is no neighbor in d (nor diagonal neighbor) to exchange the
+// ghosts there with, so the corners formed with those ghosts would never be
+// exchanged. Instead, include those ghosts, treating them like interior points.
+// The neighbor in this direction has the same patch index along d, so it widens
+// its region the same way.
+
+static void ddc_widen_at_open_boundary(struct mrc_ddc* ddc, int p, int d,
+                                       int ibn[3], int* ilo, int* ihi)
+{
+  struct mrc_ddc_multi* sub = mrc_ddc_multi(ddc);
+
+  if (sub->bc[d] == BC_PERIODIC) {
+    return;
+  }
+
+  struct mrc_patch_info info;
+  mrc_domain_get_local_patch_info(sub->domain, p, &info);
+  if (info.idx3[d] == 0) {
+    *ilo -= ibn[d];
+  }
+  if (info.idx3[d] == sub->np[d] - 1) {
+    *ihi += ibn[d];
+  }
+}
+
+// ----------------------------------------------------------------------
 // ddc_init_outside
 
 static void ddc_init_outside(struct mrc_ddc* ddc, int p,
@@ -85,6 +115,7 @@ static void ddc_init_outside(struct mrc_ddc* ddc, int p,
       case 0:
         sr->ilo[d] = ilo[d];
         sr->ihi[d] = ihi[d];
+        ddc_widen_at_open_boundary(ddc, p, d, ibn, &sr->ilo[d], &sr->ihi[d]);
         break;
       case 1:
         sr->ilo[d] = ihi[d];
@@ -125,6 +156,7 @@ static void ddc_init_inside(struct mrc_ddc* ddc, int p,
       case 0:
         sr->ilo[d] = ilo[d];
         sr->ihi[d] = ihi[d];
+        ddc_widen_at_open_boundary(ddc, p, d, ibn, &sr->ilo[d], &sr->ihi[d]);
         break;
       case 1:
         sr->ilo[d] = ihi[d] - ibn[d];
