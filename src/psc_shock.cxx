@@ -684,6 +684,9 @@ void inject_turbulence_noise(MfieldsState& mflds, KERNEL& kernel)
 
     double shell_power =
       1.0 / (1.0 + pow(turb_correlation_length * k, 5.0 / 3.0));
+    // B = curl A ~ k A, so this gives each level a B power ~ shell_power.
+    // Levels are evenly spaced in k, so dk is absorbed by set_mean_b2.
+    double a_amplitude = std::sqrt(shell_power) / k;
 
     for (int p = 0; p < grid.n_patches(); ++p) {
       auto vp_patch = make_Fields3d<dim_xyz>(vector_potential[p]);
@@ -698,13 +701,13 @@ void inject_turbulence_noise(MfieldsState& mflds, KERNEL& kernel)
                        grid_dims[2]};
 
         vp_patch(AX, i3[0], i3[1], i3[2]) +=
-          shell_power *
+          a_amplitude *
           sample_noise({AX, i_grid}, pos_ec_x * pos_scale, hyperdims, kernel);
         vp_patch(AY, i3[0], i3[1], i3[2]) +=
-          shell_power *
+          a_amplitude *
           sample_noise({AY, i_grid}, pos_ec_y * pos_scale, hyperdims, kernel);
         vp_patch(AZ, i3[0], i3[1], i3[2]) +=
-          shell_power *
+          a_amplitude *
           sample_noise({AZ, i_grid}, pos_ec_z * pos_scale, hyperdims, kernel);
       }
     }
