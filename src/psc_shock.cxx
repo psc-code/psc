@@ -656,12 +656,11 @@ int get_cell_seed(Int5 cell_hyperidx, Int5 hyperdims)
 template <typename KERNEL>
 double sample_noise_cell(Int5 cell_hyperidx, Int5 hyperdims,
                          Double3 pos_in_cell, Double3 cell_extent,
-                         KERNEL& kernel)
+                         int n_impulses, KERNEL& kernel)
 {
   rng::Uniform uniform{0.0, 1.0, get_cell_seed(cell_hyperidx, hyperdims)};
 
   // TODO randomize number of impulses
-  int n_impulses = 10;
 
   double sum = 0.0;
   for (int i = 0; i < n_impulses; i++) {
@@ -679,7 +678,7 @@ double sample_noise_cell(Int5 cell_hyperidx, Int5 hyperdims,
 
 template <typename KERNEL>
 double sample_noise(Int2 d_ilevel, Double3 pos, Double3 cell_extent,
-                    Int5 hyperdims, KERNEL& kernel)
+                    int n_impulses, Int5 hyperdims, KERNEL& kernel)
 {
   Int3 i3 = (pos / cell_extent).fint();
   double sum = 0.0;
@@ -690,7 +689,7 @@ double sample_noise(Int2 d_ilevel, Double3 pos, Double3 cell_extent,
                     cell_idx[2]};
     sum += sample_noise_cell(hyperindex, hyperdims,
                              pos - Double3(cell_idx) * cell_extent, cell_extent,
-                             kernel);
+                             n_impulses, kernel);
   }
   return sum;
 }
@@ -707,6 +706,7 @@ void inject_turbulence_noise(MfieldsState& mflds, KERNEL& kernel)
   Int3 varying = kernel.varying;
 
   PscConfig::Mfields vector_potential{grid, 3, ibn};
+  MfieldsState level_fields{grid};
 
   double max_length = 0.0;
   double min_dx = std::numeric_limits<double>::max();
@@ -719,6 +719,7 @@ void inject_turbulence_noise(MfieldsState& mflds, KERNEL& kernel)
   // down to wavelengths of 2 grid cells
   int n_levels = std::floor(max_length / (2.0 * min_dx) + 1e-9);
   int n_dims = 3;
+  double impulses_per_volume = 10.0;
 
   for (int i_level = 0; i_level < n_levels; i_level++) {
     double s = max_length / (i_level + 1);
@@ -736,16 +737,22 @@ void inject_turbulence_noise(MfieldsState& mflds, KERNEL& kernel)
     Double3 cell_extent = length / Double3(n_cells) / s;
     kernel.varying = level_varying;
 
-    double shell_power =
-      1.0 / (1.0 + pow(turb_correlation_length * k, 5.0 / 3.0));
-    // B = curl A ~ k A, so this gives each level a B power ~ shell_power.
-    // Levels are evenly spaced in k, so dk is absorbed by set_mean_b2.
-    double a_amplitude = std::sqrt(shell_power) / k;
+    // keep the kernel density, and so the noise statistics, the same at every
+    // level, though cells may be longer than s and have fewer varying dims
+    double cell_volume = 1.0;
+    for (int d = 0; d < 3; d++) {
+      if (level_varying[d]) {
+        cell_volume *= cell_extent[d];
+      }
+    }
+    int n_impulses =
+      std::max(1, int(std::round(impulses_per_volume * cell_volume)));
 
     Int5 hyperdims{n_dims, n_levels, n_cells[0], n_cells[1], n_cells[2]};
+    PscConfig::Mfields level_potential{grid, 3, ibn};
 
     for (int p = 0; p < grid.n_patches(); ++p) {
-      auto vp_patch = make_Fields3d<dim_xyz>(vector_potential[p]);
+      auto vp_patch = make_Fields3d<dim_xyz>(level_potential[p]);
       auto& patch = grid.patches[p];
 
       for (Int3 i3 : VecRange(-ibn, grid.ldims + ibn)) {
@@ -753,15 +760,34 @@ void inject_turbulence_noise(MfieldsState& mflds, KERNEL& kernel)
         Double3 pos_ec_y = centering::get_pos(patch, i3, centering::EC, 1);
         Double3 pos_ec_z = centering::get_pos(patch, i3, centering::EC, 2);
 
-        vp_patch(AX, i3[0], i3[1], i3[2]) +=
-          a_amplitude * sample_noise({AX, i_level}, pos_ec_x / s, cell_extent,
-                                     hyperdims, kernel);
-        vp_patch(AY, i3[0], i3[1], i3[2]) +=
-          a_amplitude * sample_noise({AY, i_level}, pos_ec_y / s, cell_extent,
-                                     hyperdims, kernel);
-        vp_patch(AZ, i3[0], i3[1], i3[2]) +=
-          a_amplitude * sample_noise({AZ, i_level}, pos_ec_z / s, cell_extent,
-                                     hyperdims, kernel);
+        vp_patch(AX, i3[0], i3[1], i3[2]) =
+          sample_noise({AX, i_level}, pos_ec_x / s, cell_extent, n_impulses,
+                       hyperdims, kernel);
+        vp_patch(AY, i3[0], i3[1], i3[2]) =
+          sample_noise({AY, i_level}, pos_ec_y / s, cell_extent, n_impulses,
+                       hyperdims, kernel);
+        vp_patch(AZ, i3[0], i3[1], i3[2]) =
+          sample_noise({AZ, i_level}, pos_ec_z / s, cell_extent, n_impulses,
+                       hyperdims, kernel);
+      }
+    }
+
+    // Give each level's B a mean power of exactly shell_power, measured with
+    // the same discrete curl as the final field. Levels are evenly spaced in
+    // k, so dk is absorbed by set_mean_b2.
+    double shell_power =
+      1.0 / (1.0 + pow(turb_correlation_length * k, 5.0 / 3.0));
+    inject_b_from_potential(level_fields, level_potential);
+    double scale = std::sqrt(shell_power / get_mean_b2(level_fields));
+
+    for (int p = 0; p < grid.n_patches(); ++p) {
+      auto vp_patch = make_Fields3d<dim_xyz>(vector_potential[p]);
+      auto level_patch = make_Fields3d<dim_xyz>(level_potential[p]);
+      for (Int3 i3 : VecRange(-ibn, grid.ldims + ibn)) {
+        for (int m = 0; m < 3; m++) {
+          vp_patch(m, i3[0], i3[1], i3[2]) +=
+            scale * level_patch(m, i3[0], i3[1], i3[2]);
+        }
       }
     }
   }
