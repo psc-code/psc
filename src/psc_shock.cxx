@@ -829,8 +829,12 @@ void inject_turbulence_dense(MfieldsState& mflds)
   }
 
   double dk = dk_vec.min();
+  // modes on shell boundaries (e.g. on-axis) give k / dk just below an
+  // integer, e.g. 3 * dk -> 2.9999999999999996, so truncating alone would put
+  // them in the shell below
+  auto shell_index = [&](double k) { return int(k / dk + 1e-9); };
   double kmax = ((Double3)Int3::max(-i3_min, i3_max) * dk_vec).mag();
-  int nk = kmax / dk + 1;
+  int nk = shell_index(kmax) + 1;
 
   int rank;
   MPI_Comm_rank(mflds.grid().comm(), &rank);
@@ -854,7 +858,7 @@ void inject_turbulence_dense(MfieldsState& mflds)
 
     Double3 k_vec = Double3(i3) * dk_vec;
     double k = k_vec.mag();
-    int idx = k / dk;
+    int idx = shell_index(k);
 
     if (idx >= nk) {
       LOG_ERROR("k=%f > kmax at idx=(%d, %d, %d)\n", k, i3[0], i3[1], i3[2]);
@@ -886,7 +890,7 @@ void inject_turbulence_dense(MfieldsState& mflds)
     }
 
     Double3 k_vec = Double3(i3) * dk_vec;
-    int idx = k_vec.mag() / dk;
+    int idx = shell_index(k_vec.mag());
 
     double proportion_of_shell_db2_in_cell = 1.0 / n_cells_per_shell[idx];
     double shell_db2 = shell_db2s[idx];
