@@ -606,6 +606,8 @@ struct GaborKernel
 
   double sample(Double3 x)
   {
+    // invariant dimensions don't count toward distance
+    x *= Double3(varying);
     // the Gaussian is still exp(-pi) ~ 4% at r = 1, so window it smoothly to
     // 0 there; then only kernels from neighboring cells contribute, and the
     // noise and its gradient stay continuous across cell edges
