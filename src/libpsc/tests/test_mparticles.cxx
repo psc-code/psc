@@ -509,7 +509,7 @@ TEST(TestSetupParticles, RandomOffsets)
   auto kinds = Grid_t::Kinds{{1., 100., "i"}, {-1., 1., "e"}};
   auto prm = Grid_t::NormalizationParams::dimensionless();
   prm.nicell = 10;
-  Grid_t grid{domain, {}, kinds, {prm}, .1};
+  Grid_t grid{domain, {}, kinds, {prm}, .1, -1, {0, 1, 1}};
   Mparticles mprts{grid};
 
   SetupParticles<Mparticles> setup_particles(grid);
