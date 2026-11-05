@@ -14,7 +14,7 @@ namespace rng
 
 namespace detail
 {
-using Generator = std::default_random_engine;
+using Generator = std::mt19937;
 using GeneratorPtr = std::shared_ptr<Generator>;
 inline GeneratorPtr process_generator;
 inline int base_seed = 0;
