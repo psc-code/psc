@@ -2,9 +2,7 @@
 
 #include <vector>
 #include <cmath>
-#include "stdlib.h"
 #include <random>
-#include <chrono>
 #include <functional>
 #include <memory>
 #include "mpi.h"
@@ -16,16 +14,16 @@ namespace detail
 {
 using Generator = std::default_random_engine;
 using GeneratorPtr = std::shared_ptr<Generator>;
-GeneratorPtr process_generator;
+inline GeneratorPtr process_generator;
 
-int get_process_seed()
+inline int get_process_seed()
 {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   return 10000 * (rank + 1);
 }
 
-GeneratorPtr get_process_generator()
+inline GeneratorPtr get_process_generator()
 {
   if (!process_generator) {
     process_generator = std::make_shared<Generator>(get_process_seed());
@@ -33,9 +31,8 @@ GeneratorPtr get_process_generator()
   return process_generator;
 }
 
-GeneratorPtr get_constant_generator(int seed)
+inline GeneratorPtr get_constant_generator(int seed)
 {
-  // FIXME this doesn't need to be a shared pointer
   return std::make_shared<Generator>(seed);
 }
 
