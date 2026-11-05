@@ -75,6 +75,17 @@ if(BUILD_TESTING)
     "gtest_force_shared_crt ON"
   )
   include(GoogleTest)
+
+  # Many tests write files with fixed names (test.bp, pfd.*, ...), so give
+  # each test its own directory; otherwise parallel ctest runs collide.
+  function(psc_set_test_working_dirs)
+    foreach(test ${ARGN})
+      string(MAKE_C_IDENTIFIER ${test} test_dir)
+      set(test_dir ${CMAKE_CURRENT_BINARY_DIR}/test_output/${test_dir})
+      file(MAKE_DIRECTORY ${test_dir})
+      set_tests_properties(${test} PROPERTIES WORKING_DIRECTORY ${test_dir})
+    endforeach()
+  endfunction()
 endif()
 
 set(MPI_CXX_SKIP_MPICXX ON)

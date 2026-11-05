@@ -13,7 +13,9 @@ macro(add_psc_test name)
   if(USE_GTEST_DISCOVER_TESTS)
     gtest_discover_tests(${name} EXEC_WRAPPER ${MPIEXEC_COMMAND})
   else()
-    gtest_add_tests(TARGET ${name} EXEC_WRAPPER ${MPIEXEC_COMMAND})
+    gtest_add_tests(TARGET ${name} EXEC_WRAPPER ${MPIEXEC_COMMAND}
+      TEST_LIST tests)
+    psc_set_test_working_dirs(${tests})
   endif()
 endmacro()
 
