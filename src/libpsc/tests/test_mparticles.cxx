@@ -1,5 +1,6 @@
 
 #include <gtest/gtest.h>
+#include <set>
 #include <gtensor/reductions.h>
 
 #include "test_common.hxx"
@@ -519,6 +520,16 @@ TEST(TestSetupParticles, RandomOffsets)
   auto n_cells =
     grid.domain.gdims[0] * grid.domain.gdims[1] * grid.domain.gdims[2];
   EXPECT_EQ(mprts.size(), n_cells * kinds.size() * prm.nicell);
+
+  // every particle of a kind gets its own offset
+  std::set<double> ys;
+  auto accessor = mprts.accessor();
+  for (auto prt : accessor[0]) {
+    if (prt.kind() == 0) {
+      ys.insert(prt.x()[1]);
+    }
+  }
+  EXPECT_EQ(ys.size(), n_cells * prm.nicell);
 
   auto rho =
     psc::mflds::zeros<double, gt::space::host>(mprts.grid(), 1, -grid.ibn);
