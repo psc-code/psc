@@ -5,6 +5,7 @@
 #include "binary_collision.hxx"
 #include "fields.hxx"
 #include "fields3d.hxx"
+#include "rng.hxx"
 
 #include <cmath>
 #include <numeric>
@@ -21,17 +22,20 @@ struct RngC
   // ----------------------------------------------------------------------
   // uniform
   //
-  // returns random number in ]0:1]
+  // returns random number in ]0:1[
 
   real_t uniform()
   {
     real_t ran;
     do {
-      ran = real_t(random()) / real_t(RAND_MAX);
+      ran = dist.get();
     } while (ran == real_t(0.f));
 
     return ran;
   }
+
+private:
+  rng::Uniform<real_t> dist;
 };
 
 // ======================================================================
