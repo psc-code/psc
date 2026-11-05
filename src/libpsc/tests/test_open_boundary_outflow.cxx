@@ -125,6 +125,43 @@ TEST(OpenBoundaryOutflowTest, Corner)
            });
 }
 
+TEST(OpenBoundaryOutflowTest, MarderAtOpenBoundaries)
+{
+  // Marder corrects open boundary nodes; with nothing to correct, it must leave
+  // the fields (ghosts included) finite and Gauss's law intact
+  PscParams psc_params;
+  psc_params.nmax = 3;
+  psc_params.marder_interval = 1;
+
+  auto grid_ptr = setupGrid();
+  auto& grid = *grid_ptr;
+  MfieldsState mflds{grid};
+  Mparticles mprts{grid};
+  Checks checks{grid, MPI_COMM_WORLD, ChecksParams{}};
+  Balance balance{.1};
+  Collision collision{grid, 0, 0.1};
+  PscConfig::Marder marder(grid, .9, 3, false);
+
+  auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
+                                          balance, collision, checks);
+  psc.add_gauss_corrector(&marder);
+  {
+    auto injector = mprts.injector();
+    auto inj = injector[0];
+    inj({{.5, .3, 4.5}, {0, -2, 0}, 1, KIND_ELECTRON});
+    inj({{.5, .3, 4.5}, {0, 0, 0}, 1, KIND_ION});
+  }
+
+  psc.pre_first_step();
+  for (; grid.timestep_ < psc_params.nmax;) {
+    psc.step();
+  }
+
+  auto E = mflds.storage().view(_all, _all, _all, _s(EX, EX + 3), _all);
+  EXPECT_LT(gt::norm_linf(E), 1.);
+  EXPECT_LT(gauss_err(mprts, mflds), 1e-10);
+}
+
 // ======================================================================
 // main
 

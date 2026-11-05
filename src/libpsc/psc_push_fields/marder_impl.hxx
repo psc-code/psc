@@ -220,17 +220,20 @@ public:
       auto dive = psc::mflds::interior(grid, psc::item::div_nc(grid, efield));
 
       Int3 res_ib = -grid.ibn;
+      // zero, since ghosts at domain boundaries aren't filled below; the
+      // upper boundary nodes are among them, so they're left uncorrected
       auto res = storage_type{psc::mflds::make_shape(grid, 1, res_ib)};
+      res.view(_all, _all, _all, _all, _all) = 0.0;
       psc::mflds::interior(grid, res) = dive - rho;
 
-      // Gauss' law is ostensibly violated at some boundaries, where virtual
-      // charges (i.e., charges that aren't associated with actual particles)
-      // implicitly shape the electric field. To account for virtual charges,
-      // simply set the error at those boundaries to 0.
+      // Gauss' law is ostensibly violated at conducting walls, whose surface
+      // charge (i.e., charge that isn't associated with actual particles)
+      // shapes the electric field. To account for it, simply set the error at
+      // those boundaries to 0. (Open boundaries leave no such charge on their
+      // nodes; see OpenBoundaryOutflow.)
       for (int p = 0; p < grid.n_patches(); p++) {
         for (int d = 0; d < 3; d++) {
-          if ((grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL ||
-               grid.bc.fld_lo[d] == BND_FLD_OPEN) &&
+          if (grid.bc.fld_lo[d] == BND_FLD_CONDUCTING_WALL &&
               grid.atBoundaryLo(p, d)) {
 
             gt::gslice slices[3] = {_s(grid.ibn[0], -grid.ibn[0]),
@@ -240,8 +243,7 @@ public:
             res.view(slices[0], slices[1], slices[2], 0, p) = 0.0;
           }
 
-          if ((grid.bc.fld_hi[d] == BND_FLD_CONDUCTING_WALL ||
-               grid.bc.fld_hi[d] == BND_FLD_OPEN) &&
+          if (grid.bc.fld_hi[d] == BND_FLD_CONDUCTING_WALL &&
               grid.atBoundaryHi(p, d)) {
             gt::gslice slices[3] = {_s(grid.ibn[0], -grid.ibn[0]),
                                     _s(grid.ibn[1], -grid.ibn[1]),
