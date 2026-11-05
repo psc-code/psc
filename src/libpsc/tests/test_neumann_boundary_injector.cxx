@@ -3,6 +3,7 @@
 #include "test_common.hxx"
 
 #include "psc.hxx"
+#include "output_fields.hxx"
 #include "../psc_config.hxx"
 #include "../psc_particle_injectors/neumann_boundary_injector.hxx"
 
@@ -15,12 +16,17 @@ using Balance = PscConfig::Balance;
 using Collision = PscConfig::Collision;
 using Checks = PscConfig::Checks;
 
-Grid_t* setupGrid(double cfl)
+Grid_t::Domain makeDomain()
 {
-  auto domain = Grid_t::Domain{{1, 8, 2},  // n grid points
-                               {1, 8, 2},  // physical lengths
-                               {0, 0, 0},  // location of lower corner
-                               {1, 1, 1}}; // n patches
+  return Grid_t::Domain{{1, 8, 2},  // n grid points
+                        {1, 8, 2},  // physical lengths
+                        {0, 0, 0},  // location of lower corner
+                        {1, 1, 1}}; // n patches
+}
+
+Grid_t* setupGridWithDt(double dt)
+{
+  auto domain = makeDomain();
 
   auto bc = psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_OPEN, BND_FLD_PERIODIC},
                           {BND_FLD_PERIODIC, BND_FLD_OPEN, BND_FLD_PERIODIC},
@@ -34,13 +40,17 @@ Grid_t* setupGrid(double cfl)
   auto norm_params = Grid_t::NormalizationParams::dimensionless();
   norm_params.nicell = 1;
 
-  double dt = cfl * courant_length(domain);
   Grid_t::Normalization norm{norm_params};
 
   int n_ghosts = 2;
   Int3 ibn = n_ghosts * Dim::get_noninvariant_mask();
 
   return new Grid_t{domain, bc, kinds, norm, dt, -1, ibn};
+}
+
+Grid_t* setupGrid(double cfl)
+{
+  return setupGridWithDt(cfl * courant_length(makeDomain()));
 }
 
 // For each (y, uy), places a stationary electron and a moving ion at the same
@@ -122,9 +132,6 @@ TEST(NeumannBoundaryInjectorTest, InwardsHi)
   EXPECT_NEAR(ys[2], ys[0] + 1., 1e-10); // copy, one cell behind the ion
 }
 
-// note: each run creates a psc integrator, and creating more than 4 in one
-// process currently crashes at exit, so keep the number of tests small
-
 TEST(NeumannBoundaryInjectorTest, NoCopies)
 {
   auto ys = run<LoHi::Lo>({{.25, 1.},    // stays in edge cell
@@ -142,6 +149,110 @@ TEST(NeumannBoundaryInjectorTest, ManySteps)
   auto ys = run<LoHi::Lo>({{.75, 2.}}, 6,
                           NeumannResamplerMaxwellian{grid->kinds, {9., 9.}});
   ASSERT_GT(ys.size(), 3);
+}
+
+// ======================================================================
+// Gauss's law at the lower boundary node (y = 0)
+//
+// The gauss check exempts boundary nodes, since injected and deleted particles
+// leave virtual charge in the ghost cell. The injector must make that virtual
+// charge sit entirely beyond the boundary node, so Gauss's law holds there for
+// the real particles alone.
+
+template <typename Mparticles, typename MfieldsState>
+double gauss_err_at_lo_node(Mparticles& mprts, MfieldsState& mflds)
+{
+  const auto& grid = mprts.grid();
+  using ItemRho = Checks::item_rho_type;
+  auto rho = psc::mflds::interior(grid, ItemRho{grid}(mprts));
+  auto dive = psc::mflds::interior(grid, Item_dive<MfieldsState>{}(mflds));
+  auto diff = gt::eval(dive - rho);
+  return gt::norm_linf(diff.view(_all, _s(0, 1), _all, _all, _all));
+}
+
+TEST(NeumannBoundaryInjectorTest, GaussAtBoundaryNodeAfterCopy)
+{
+  PscParams psc_params;
+  psc_params.nmax = 1;
+
+  auto grid_ptr = setupGridWithDt(1.);
+  auto& grid = *grid_ptr;
+  MfieldsState mflds{grid};
+  Mparticles mprts{grid};
+  Checks checks{grid, MPI_COMM_WORLD, ChecksParams{}};
+  Balance balance{.1};
+  Collision collision{grid, 0, 0.1};
+
+  auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
+                                          balance, collision, checks);
+  psc.add_injector(
+    new NeumannBoundaryInjector<LoHi::Lo, PscConfig::PushParticles>{});
+
+  {
+    // a neutral pair; the ion moves from the edge cell inward, so a copy of it
+    // is injected that starts in the ghost cell, at y = -.1
+    auto injector = mprts.injector();
+    auto inj = injector[0];
+    inj({{.5, .9, .5}, {0, 0, 0}, 1, KIND_ELECTRON});
+    inj({{.5, .9, .5}, {0, 2, 0}, 1, KIND_ION});
+  }
+
+  psc.pre_first_step();
+  psc.step();
+
+  ASSERT_EQ(mprts.size(), 3);
+  EXPECT_LT(gauss_err_at_lo_node(mprts, mflds), 1e-10);
+}
+
+TEST(NeumannBoundaryInjectorTest, CopyAcrossPeriodicBoundary)
+{
+  // the ion moves inward and across the periodic z boundary in the same step,
+  // so its copy starts outside the patch in z, until particle exchange wraps
+  // it; injecting it must not move it
+  PscParams psc_params;
+  psc_params.nmax = 1;
+
+  auto grid_ptr = setupGridWithDt(1.);
+  auto& grid = *grid_ptr;
+  MfieldsState mflds{grid};
+  Mparticles mprts{grid};
+  ChecksParams checks_params{};
+  checks_params.continuity.check_interval = 1;
+  checks_params.gauss.check_interval = 1;
+  Checks checks{grid, MPI_COMM_WORLD, checks_params};
+  Balance balance{.1};
+  Collision collision{grid, 0, 0.1};
+
+  auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
+                                          balance, collision, checks);
+  psc.add_injector(
+    new NeumannBoundaryInjector<LoHi::Lo, PscConfig::PushParticles>{});
+
+  {
+    auto injector = mprts.injector();
+    auto inj = injector[0];
+    inj({{.5, .9, .1}, {0, 0, 0}, 1, KIND_ELECTRON});
+    inj({{.5, .9, .1}, {0, 1, -1}, 1, KIND_ION});
+  }
+
+  psc.pre_first_step();
+  psc.step();
+
+  ASSERT_EQ(mprts.size(), 3);
+  EXPECT_LT(checks.continuity.last_max_err, checks.continuity.err_threshold);
+  EXPECT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
+
+  // the copy is one cell behind the ion
+  auto accessor = mprts.accessor();
+  std::vector<Vec3<double>> ions;
+  for (auto prt : accessor[0]) {
+    if (prt.kind() == KIND_ION) {
+      ions.push_back(Vec3<double>(prt.x()));
+    }
+  }
+  ASSERT_EQ(ions.size(), 2);
+  EXPECT_NEAR(std::abs(ions[0][1] - ions[1][1]), 1., 1e-10);
+  EXPECT_NEAR(ions[0][2], ions[1][2], 1e-10);
 }
 
 TEST(NeumannResamplerTest, Rotate)

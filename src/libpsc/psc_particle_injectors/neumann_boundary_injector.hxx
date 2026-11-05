@@ -204,6 +204,12 @@ public:
         Int3 initial_idx = initial_normalized_pos.fint();
         Int3 final_idx = final_normalized_pos.fint();
 
+        // deposit as if the copy came from the outer edge of the ghost cell,
+        // so its virtual charge lies entirely beyond the boundary node and
+        // Gauss's law holds there
+        initial_normalized_pos[INJECT_DIM_IDX_] =
+          lo ? -1 : grid.ldims[INJECT_DIM_IDX_] + 1;
+
         current.calc_j(J, initial_normalized_pos, final_normalized_pos,
                        final_idx, initial_idx,
                        grid.kinds[copy.kind].q * real_t(copy.w), v);
