@@ -263,6 +263,7 @@ void setupParameters(int argc, char** argv)
 
   nicell = inputParams.getOrDefault<int>("nicell", 100);
   seed = inputParams.getOrDefault<int>("seed", 5);
+  rng::set_base_seed(seed);
 
   std::ifstream src(path_to_params, std::ios::binary);
   std::ofstream dst("params_record.txt", std::ios::binary);
