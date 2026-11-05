@@ -13,6 +13,28 @@
 extern void* global_collision; // FIXME
 
 // ======================================================================
+// RngC
+
+template <typename real_t>
+struct RngC
+{
+  // ----------------------------------------------------------------------
+  // uniform
+  //
+  // returns random number in ]0:1]
+
+  real_t uniform()
+  {
+    real_t ran;
+    do {
+      ran = real_t(random()) / real_t(RAND_MAX);
+    } while (ran == real_t(0.f));
+
+    return ran;
+  }
+};
+
+// ======================================================================
 // CollisionHost
 
 template <typename _Mparticles, typename _MfieldsState, typename _Mfields,
