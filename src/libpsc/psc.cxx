@@ -94,11 +94,6 @@ void psc_init(int& argc, char**& argv)
 #ifdef USE_CUDA
   cuda_base_init();
 #endif
-
-  // FIXME, we should use RngPool consistently throughout
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  srandom(rank);
 }
 
 void psc_finalize()
