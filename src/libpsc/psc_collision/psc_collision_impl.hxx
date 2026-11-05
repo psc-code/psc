@@ -7,9 +7,9 @@
 #include "fields3d.hxx"
 #include "rng.hxx"
 
+#include <algorithm>
 #include <cmath>
 #include <numeric>
-#include <random>
 
 extern void* global_collision; // FIXME
 
@@ -192,7 +192,8 @@ struct CollisionHost
   {
     std::vector<int> permute(n_end - n_start);
     std::iota(permute.begin(), permute.end(), n_start);
-    std::shuffle(permute.begin(), permute.end(), rng_);
+    std::shuffle(permute.begin(), permute.end(),
+                 *rng::detail::get_process_generator());
     return permute;
   }
 
@@ -286,8 +287,6 @@ private:
   // parameters
   double nu_;
   int interval_;
-
-  std::mt19937 rng_;
 
 public: // FIXME
   // for output
