@@ -359,7 +359,7 @@ struct SetupParticles
 
             Double3 prt_pos = cell_pos_cc;
             if (random_offsets) {
-              auto rng = offset_rngs[np.kind];
+              auto& rng = offset_rngs[np.kind];
               for (int d = 0; d < 3; d++) {
                 if (!grid.isInvar(d)) {
                   prt_pos[d] += rng.get() * grid.domain.dx[d];
