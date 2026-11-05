@@ -19,3 +19,5 @@ jobs:
       run: cmake --build build
     - name: test
       run: cmake --build build -t test
+      env:
+        CTEST_OUTPUT_ON_FAILURE: 1
