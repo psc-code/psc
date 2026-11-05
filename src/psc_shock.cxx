@@ -12,7 +12,12 @@
 #include "libpsc/psc_particle_injectors/neumann_boundary_injector.hxx"
 #include "libpsc/psc_turbulence/alfven_turbulence.hxx"
 #include "libpsc/psc_turbulence/noise_turbulence.hxx"
+#include "libpsc/psc_turbulence/turbulence_io.hxx"
 #include "libpsc/axis.hxx"
+
+#include <sys/stat.h>
+#include <climits>
+#include <cstdlib>
 
 // ======================================================================
 // PSC configuration
@@ -467,6 +472,70 @@ void initialize_turbulence(MfieldsState& mflds)
   generator->generate(mflds);
 }
 
+// ----------------------------------------------------------------------
+// saving the initial turbulence for restarts
+//
+// The lower boundary keeps feeding in the initial turbulence, so a restart
+// needs it too. With checkpoints enabled, it is written to turbulence.bp in
+// the run directory; a restart reads it from the checkpoint's directory.
+
+const std::string turbulence_filename = "turbulence.bp";
+
+std::string get_dirname(std::string path)
+{
+  // .bp "files" are directories, so may be given with a trailing slash
+  while (path.size() > 1 && path.back() == '/') {
+    path.pop_back();
+  }
+  auto slash = path.find_last_of('/');
+  if (slash == std::string::npos) {
+    return ".";
+  }
+  return slash == 0 ? "/" : path.substr(0, slash);
+}
+
+bool path_exists(const std::string& path)
+{
+  struct stat buf;
+  return stat(path.c_str(), &buf) == 0;
+}
+
+bool is_same_dir(const std::string& a, const std::string& b)
+{
+  char real_a[PATH_MAX], real_b[PATH_MAX];
+  return realpath(a.c_str(), real_a) && realpath(b.c_str(), real_b) &&
+         std::string(real_a) == std::string(real_b);
+}
+
+bool checkpoints_enabled()
+{
+  return psc_params.write_checkpoint_every_step > 0;
+}
+
+// Restores the initial turbulence of the run `checkpoint_filename` belongs to,
+// or regenerates it if that run didn't save it.
+void restore_turbulence(MfieldsState& mflds)
+{
+  std::string checkpoint_dir = get_dirname(checkpoint_filename);
+  std::string path = checkpoint_dir + "/" + turbulence_filename;
+  if (path_exists(path)) {
+    mpi_printf(mflds.grid().comm(), "**** Reading turbulence from %s\n",
+               path.c_str());
+    psc::turbulence::read_turbulence(path, mflds);
+  } else {
+    mpi_printf(mflds.grid().comm(),
+               "WARNING: %s not found; regenerating turbulence, which only "
+               "matches the original run if its parameters and seed do\n",
+               path.c_str());
+    initialize_turbulence(mflds);
+  }
+
+  // keep it next to this run's checkpoints, too, for the next restart
+  if (checkpoints_enabled() && !is_same_dir(checkpoint_dir, ".")) {
+    psc::turbulence::write_turbulence(turbulence_filename, mflds);
+  }
+}
+
 struct AdvectedPeriodicFields : psc::bnd::field::PulseBase<real_t>
 {
   static const int DIM_Y = 1;
@@ -694,9 +763,17 @@ static void run(int argc, char** argv)
   // ----------------------------------------------------------------------
   // set up initial conditions
 
+  // the lower boundary injects the initial turbulence, advected in
+  bool advect_turbulence =
+    injection_method != "periodic" && turb_db2 > 0.0 && v_upstream[1] > 0.0;
+
   if (checkpoint_filename.empty()) {
     initializeParticles(balance, grid_ptr, mprts);
     initialize_turbulence(mflds);
+    if (advect_turbulence && checkpoints_enabled()) {
+      // before the background fields are added
+      psc::turbulence::write_turbulence(turbulence_filename, mflds);
+    }
   } else {
     read_checkpoint(checkpoint_filename, *grid_ptr, mprts, mflds);
   }
@@ -731,15 +808,15 @@ static void run(int argc, char** argv)
   }
 
   if (injection_method != "periodic") {
-    if (turb_db2 > 0.0 && v_upstream[1] > 0.0) {
+    if (advect_turbulence) {
       MfieldsState* mflds_advect;
       if (checkpoint_filename.empty()) {
         // mflds is currently just the pure, initial turbulence
         mflds_advect = &mflds;
       } else {
-        // mflds is completely unrelated; need to re-initialize turbulence
+        // mflds is completely unrelated; need the initial turbulence
         MfieldsState* mflds2 = new MfieldsState{mprts.grid()};
-        initialize_turbulence(*mflds2);
+        restore_turbulence(*mflds2);
         mflds_advect = mflds2;
       }
 
