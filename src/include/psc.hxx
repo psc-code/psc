@@ -10,6 +10,7 @@
 #include "../libpsc/psc_bnd_fields/field_bc_base.hxx"
 #include "../libpsc/psc_bnd_fields/conducting_wall.hxx"
 #include "../libpsc/psc_particle_injectors/injector_base.hxx"
+#include "../libpsc/psc_particle_injectors/open_boundary_outflow.hxx"
 #include "gauss_corrector_base.hxx"
 #include "diagnostic_base.hxx"
 #include "external_current_base.hxx"
@@ -159,6 +160,15 @@ struct Psc
       }
       if (grid.bc.fld_hi[d] == BND_FLD_CONDUCTING_WALL) {
         add_field_bc(new ConductingWall<Dim, MfieldsState>{d, LoHi::Hi});
+      }
+    }
+
+    // complete the current of particles leaving through open boundaries
+    for (int d = 0; d < 3; d++) {
+      if (grid.bc.prt_lo[d] == BND_PRT_OPEN ||
+          grid.bc.prt_hi[d] == BND_PRT_OPEN) {
+        add_injector(new OpenBoundaryOutflow<PushParticles>{});
+        break;
       }
     }
 #endif
