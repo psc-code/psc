@@ -289,6 +289,72 @@ TEST(DirichletBoundaryInjectorTest, IntegrationManySpecies)
 }
 
 // ======================================================================
+// Gauss's law at the lower boundary node (y = 0)
+//
+// The gauss check exempts boundary nodes, since injected and deleted particles
+// leave virtual charge in the ghost cell. The injector must make that virtual
+// charge sit entirely beyond the boundary node, so Gauss's law holds there for
+// the real particles alone.
+
+template <typename Mparticles, typename MfieldsState>
+double gauss_err_at_lo_node(Mparticles& mprts, MfieldsState& mflds)
+{
+  const auto& grid = mprts.grid();
+  using ItemRho = Checks::item_rho_type;
+  auto rho = psc::mflds::interior(grid, ItemRho{grid}(mprts));
+  auto dive = psc::mflds::interior(grid, Item_dive<MfieldsState>{}(mflds));
+  auto diff = gt::eval(dive - rho);
+  return gt::norm_linf(diff.view(_all, _s(0, 1), _all, _all, _all));
+}
+
+// Places particles at a given fractional depth into the ghost cell
+struct ParticleGeneratorAtDepth
+{
+  using Real = psc::particle::Inject::Real;
+  using Real3 = psc::particle::Inject::Real3;
+
+  psc::particle::Inject get(Real3 min_pos, Real3 pos_range)
+  {
+    Real uy = n_injected++ < max_n_injected ? 2.0 : 0.0;
+    Real3 x = min_pos + pos_range * Real3{.5, 1 - depth, .5};
+    return {x, {0.0, uy, 0.0}, 1.0, kind_idx, 0};
+  }
+
+  Real depth;
+  int kind_idx;
+  int max_n_injected;
+  int n_injected = 0;
+};
+
+TEST(DirichletBoundaryInjectorTest, GaussAtBoundaryNodeAfterInjection)
+{
+  PscParams psc_params;
+  psc_params.nmax = 1;
+
+  auto grid_ptr = setupGrid();
+  auto& grid = *grid_ptr;
+  MfieldsState mflds{grid};
+  Mparticles mprts{grid};
+  Checks checks{grid, MPI_COMM_WORLD, ChecksParams{}};
+  Balance balance{.1};
+  Collision collision{grid, 0, 0.1};
+
+  auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
+                                          balance, collision, checks);
+  // deep enough that half the charge starts on the ghost node
+  psc.add_injector(
+    new DirichletBoundaryInjector<LoHi::Lo, ParticleGeneratorAtDepth,
+                                  PscConfig::PushParticles>(
+      ParticleGeneratorAtDepth{.5, KIND_ION, 1}));
+
+  psc.pre_first_step();
+  psc.step();
+
+  ASSERT_EQ(mprts.size(), 1);
+  EXPECT_LT(gauss_err_at_lo_node(mprts, mflds), 1e-10);
+}
+
+// ======================================================================
 // main
 
 int main(int argc, char** argv)

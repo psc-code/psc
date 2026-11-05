@@ -193,12 +193,24 @@ public:
 
             injector.inject_local(prt);
 
-            current.calc_j(J, initial_normalized_pos, final_normalized_pos,
+            // deposit as if the particle came from the outer edge of the
+            // ghost cell, so its virtual charge lies entirely beyond the
+            // boundary node and Gauss's law holds there
+            Real3 virtual_initial_pos = initial_normalized_pos.with_component(
+              INJECT_DIM_IDX_, outer_ghost_edge(grid));
+            current.calc_j(J, virtual_initial_pos, final_normalized_pos,
                            final_idx, initial_idx, q * prt.w, v);
           }
         }
       }
     }
+  }
+
+private:
+  /// normalized coordinate of the ghost cell's face away from the domain
+  real_t outer_ghost_edge(const Grid_t& grid) const
+  {
+    return lo ? -1 : grid.ldims[INJECT_DIM_IDX_] + 1;
   }
 
 public:
