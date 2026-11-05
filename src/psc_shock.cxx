@@ -77,6 +77,9 @@ double turb_db2;
 double turb_correlation_length;
 
 int out_interval;
+int out_moments_interval;
+int out_prt_interval;
+int checks_interval;
 int marder_interval;
 
 std::string turb_method;
@@ -255,7 +258,15 @@ void setupParameters(int argc, char** argv)
   }
 
   int n_writes = inputParams.getOrDefault<int>("n_writes", 100);
-  out_interval = psc_params.nmax / n_writes;
+  // n_writes_* default to n_writes; 0 disables that output
+  auto interval = [&](int n) { return n > 0 ? psc_params.nmax / n : 0; };
+  out_interval = interval(n_writes);
+  out_moments_interval =
+    interval(inputParams.getOrDefault<int>("n_writes_moments", n_writes));
+  out_prt_interval =
+    interval(inputParams.getOrDefault<int>("n_writes_prt", n_writes));
+  checks_interval =
+    interval(inputParams.getOrDefault<int>("n_writes_checks", n_writes));
   marder_interval = inputParams.getOrDefault<int>("marder_interval", -1);
 
   turb_method =
@@ -975,8 +986,8 @@ static void run(int argc, char** argv)
 
   // -- Checks
   ChecksParams checks_params{};
-  checks_params.gauss.check_interval = out_interval;
-  checks_params.continuity.check_interval = out_interval;
+  checks_params.gauss.check_interval = checks_interval;
+  checks_params.continuity.check_interval = checks_interval;
 
   Checks checks{grid, MPI_COMM_WORLD, checks_params};
 
@@ -995,11 +1006,11 @@ static void run(int argc, char** argv)
   out_fields.pfield.out_interval = out_interval;
 
   OutputMoments<MfieldsState, Mparticles, Dim> out_moments;
-  out_moments.pfield.out_interval = out_interval;
+  out_moments.pfield.out_interval = out_moments_interval;
 
   // -- output particles
   OutputParticlesAdios2Params outp_params{};
-  outp_params.every_step = out_interval;
+  outp_params.every_step = out_prt_interval;
   OutputParticlesAdios2<Mparticles, float> outp{grid, outp_params};
 
   int oute_interval = -100;
