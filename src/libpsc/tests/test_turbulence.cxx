@@ -3,6 +3,7 @@
 #include "psc_fields_c.h"
 #include "../psc_turbulence/alfven_turbulence.hxx"
 #include "../psc_turbulence/noise_turbulence.hxx"
+#include "../psc_turbulence/turbulence_io.hxx"
 
 #include <memory>
 
@@ -246,6 +247,62 @@ TYPED_TEST(TurbulenceTest, ShorterCorrelationLengthIsRougher)
 
   EXPECT_GT(roughness(0.1), 1.5 * roughness(3.0));
 }
+
+#ifdef PSC_HAVE_ADIOS2
+
+// max |H_a - H_b| over the cells H is generated in, ghosts included
+double max_diff_with_ghosts(MfieldsState& a, MfieldsState& b)
+{
+  const auto& grid = a.grid();
+  double max_diff = 0.0;
+  for (int p = 0; p < a.n_patches(); p++) {
+    auto fa = make_Fields3d<dim_xyz>(a[p]);
+    auto fb = make_Fields3d<dim_xyz>(b[p]);
+    grid.Foreach_3d(2, 1, [&](int jx, int jy, int jz) {
+      for (int m = HX; m <= HZ; m++) {
+        max_diff =
+          std::max(max_diff, std::abs(fa(m, jx, jy, jz) - fb(m, jx, jy, jz)));
+      }
+    });
+  }
+  return max_diff;
+}
+
+TEST(TurbulenceIOTest, RoundTrip)
+{
+  auto grid = setupGrid();
+  MfieldsState mflds{*grid};
+  AlfvenTurbulence<MfieldsState>{default_params}.generate(mflds);
+  psc::turbulence::write_turbulence("test_turbulence_io.bp", mflds);
+
+  MfieldsState mflds_read{*grid};
+  psc::turbulence::read_turbulence("test_turbulence_io.bp", mflds_read);
+
+  EXPECT_EQ(gather_h(mflds_read), gather_h(mflds));
+  // the ghosts come from the periodic image, so match to roundoff
+  EXPECT_LT(max_diff_with_ghosts(mflds_read, mflds), 1e-10 * max_abs_h(mflds));
+}
+
+TEST(TurbulenceIOTest, ReadOnOtherDecomposition)
+{
+  auto grid_1 = setupGrid({1, 1, 1});
+  MfieldsState mflds_1{*grid_1};
+  AlfvenTurbulence<MfieldsState>{default_params}.generate(mflds_1);
+  psc::turbulence::write_turbulence("test_turbulence_io.bp", mflds_1);
+
+  auto grid_4 = setupGrid({1, 2, 2});
+  MfieldsState mflds_4{*grid_4};
+  AlfvenTurbulence<MfieldsState>{default_params}.generate(mflds_4);
+  MfieldsState mflds_4_read{*grid_4};
+  psc::turbulence::read_turbulence("test_turbulence_io.bp", mflds_4_read);
+
+  EXPECT_EQ(gather_h(mflds_4_read), gather_h(mflds_1));
+  // ghosts between patches, too
+  EXPECT_LT(max_diff_with_ghosts(mflds_4_read, mflds_4),
+            1e-10 * max_abs_h(mflds_4));
+}
+
+#endif
 
 int main(int argc, char** argv)
 {
