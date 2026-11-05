@@ -40,6 +40,7 @@ add_psc_test(test_push_particles_2)
 add_psc_test(test_push_fields)
 add_psc_test(test_moments)
 add_psc_test(test_collision)
+add_psc_test(test_rng)
 
 if(USE_CUDA)
   add_psc_test(test_collision_cuda)
