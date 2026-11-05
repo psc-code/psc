@@ -56,10 +56,10 @@ Grid_t* setupGrid(double cfl)
 // For each (y, uy), places a stationary electron and a moving ion at the same
 // position (to satisfy Gauss' law at t=0), runs the simulation for `nmax` steps
 // with a NeumannBoundaryInjector at the given boundary, and returns the
-// final particles' y positions, sorted.
+// final particles' y positions, sorted. Copies are made at `copy_depth`.
 template <LoHi LOHI, typename Resampler = NeumannResamplerNone>
 std::vector<double> run(std::vector<std::pair<double, double>> ys_uys, int nmax,
-                        Resampler resampler = {})
+                        Resampler resampler = {}, int copy_depth = 1)
 {
   PscParams psc_params;
   psc_params.nmax = nmax;
@@ -84,7 +84,7 @@ std::vector<double> run(std::vector<std::pair<double, double>> ys_uys, int nmax,
                                           balance, collision, checks);
 
   NeumannBoundaryInjector<LOHI, PscConfig::PushParticles, Resampler> injector{
-    resampler};
+    resampler, copy_depth};
   psc.add_injector(&injector);
 
   {
@@ -148,6 +148,40 @@ TEST(NeumannBoundaryInjectorTest, ManySteps)
   std::unique_ptr<Grid_t> grid{setupGrid(.75)};
   auto ys = run<LoHi::Lo>({{.75, 2.}}, 6,
                           NeumannResamplerMaxwellian{grid->kinds, {9., 9.}});
+  ASSERT_GT(ys.size(), 3);
+}
+
+// Copies made deeper than the edge cell (copy_depth > 1).
+
+TEST(NeumannBoundaryInjectorDepthTest, Lo)
+{
+  // staggered so that a copy of the first ion would sit elsewhere
+  auto ys = run<LoHi::Lo>({{.6, 2.},    // crosses y = 1: not copied
+                           {2.75, 2.}}, // crosses y = 3: copied
+                          1, {}, 3);
+  ASSERT_EQ(ys.size(), 5);
+  EXPECT_LT(ys[0], 1.);                  // copy, three cells behind the ion
+  EXPECT_EQ(ys[1], .6);                  // electron
+  EXPECT_GT(ys[2], 1.);                  // first ion
+  EXPECT_EQ(ys[3], 2.75);                // electron
+  EXPECT_NEAR(ys[0], ys[4] - 3., 1e-10); // second ion
+}
+
+TEST(NeumannBoundaryInjectorDepthTest, Hi)
+{
+  auto ys = run<LoHi::Hi>({{5.25, -2.}}, 1, {}, 3); // crosses y = 5: copied
+  ASSERT_EQ(ys.size(), 3);
+  EXPECT_LT(ys[0], 5.);                  // ion
+  EXPECT_EQ(ys[1], 5.25);                // electron
+  EXPECT_NEAR(ys[2], ys[0] + 3., 1e-10); // copy, three cells behind the ion
+}
+
+TEST(NeumannBoundaryInjectorDepthTest, ManySteps)
+{
+  // copies of copies, resampled hot, still conserve charge
+  std::unique_ptr<Grid_t> grid{setupGrid(.75)};
+  auto ys = run<LoHi::Lo>({{2.75, 2.}}, 10,
+                          NeumannResamplerMaxwellian{grid->kinds, {9., 9.}}, 3);
   ASSERT_GT(ys.size(), 3);
 }
 

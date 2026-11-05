@@ -103,9 +103,12 @@ private:
 
 /// @brief Injects particles on a given boundary such that the particle
 /// distribution satisfies a zero-gradient (von Neumann) boundary condition.
-/// Whenever a particle moves from the edge cell inwards to a non-edge cell, a
-/// copy of it is injected one cell closer to the boundary, as if there had been
-/// an identical particle in the ghost cell. Applies to all particle species.
+/// Whenever a particle moves inwards across the cell face `copy_depth` cells
+/// from the boundary, a copy of it is injected `copy_depth` cells closer to the
+/// boundary, as if there had been an identical particle in the ghost cell. With
+/// `copy_depth` = 1 (the default) that face is the edge cell's inner face; a
+/// deeper face copies from a larger, less inbred population. Applies to all
+/// particle species.
 ///
 /// Must run after the particle push and before particle boundary exchange, so
 /// that the pushed particles are still in their original patches.
@@ -138,7 +141,11 @@ public:
 
   static const bool lo = LOHI == LoHi::Lo;
 
-  NeumannBoundaryInjector(Resampler resampler = {}) : resampler{resampler} {}
+  NeumannBoundaryInjector(Resampler resampler = {}, int copy_depth = 1)
+    : resampler{resampler}, copy_depth{copy_depth}
+  {
+    assert(copy_depth >= 1);
+  }
 
   void inject(Mparticles& mprts, MfieldsState& mflds) override
   {
@@ -150,9 +157,12 @@ public:
     Current current(grid);
     AdvanceParticle_t advance{grid.dt};
 
+    assert(copy_depth < grid.ldims[INJECT_DIM_IDX_]);
     int edge_idx = lo ? 0 : grid.ldims[INJECT_DIM_IDX_] - 1;
+    int inwards = lo ? 1 : -1;
+    // the copy crosses the boundary face as the particle crosses the copy face
     Real3 ghost_offset = Real3{0, 0, 0}.with_component(
-      INJECT_DIM_IDX_, (lo ? -1 : 1) * grid.domain.dx[INJECT_DIM_IDX_]);
+      INJECT_DIM_IDX_, -inwards * copy_depth * grid.domain.dx[INJECT_DIM_IDX_]);
 
     for (int p = 0; p < grid.n_patches(); p++) {
       if (!(lo ? grid.atBoundaryLo(p, INJECT_DIM_IDX_)
@@ -165,9 +175,9 @@ public:
       for (auto prt : accessor[p]) {
         int final_idx = (prt.x() * dxi).fint()[INJECT_DIM_IDX_];
 
-        if (final_idx != edge_idx + (lo ? 1 : -1)) {
+        if (final_idx != edge_idx + inwards * copy_depth) {
           // particles can't move more than one cell at a time (v<c<dx/dt),
-          // so only need to check particles in the second-innermost layer
+          // so only need to check particles just inside the copy face
           continue;
         }
 
@@ -177,7 +187,7 @@ public:
 
         int initial_idx = (initial_pos * dxi).fint()[INJECT_DIM_IDX_];
 
-        if (initial_idx == edge_idx) {
+        if (initial_idx == edge_idx + inwards * (copy_depth - 1)) {
           using InjectReal3 = psc::particle::Inject::Real3;
           copies.emplace_back(InjectReal3(prt.x() + ghost_offset),
                               InjectReal3(prt.u()), prt.w(), prt.kind(),
@@ -219,4 +229,5 @@ public:
 
 private:
   Resampler resampler;
+  int copy_depth;
 };
