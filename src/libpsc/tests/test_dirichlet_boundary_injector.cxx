@@ -288,6 +288,39 @@ TEST(DirichletBoundaryInjectorTest, IntegrationManySpecies)
   ASSERT_TRUE(found_ions);
 }
 
+// Preacceleration sampling E_y at the boundary (y = 0) must average the ghost
+// and edge values, which straddle it.
+TEST(DirichletBoundaryInjectorTest, PreaccelerateSamplesBoundary)
+{
+  auto grid_ptr = setupGrid();
+  auto& grid = *grid_ptr;
+  MfieldsState mflds{grid};
+  Mparticles mprts{grid};
+
+  auto F = make_Fields3d<Dim>(mflds[0]);
+  for (int k = -1; k < grid.ldims[2] + 1; k++) {
+    F(EY, 0, -1, k) = .2;
+    F(EY, 0, 0, k) = .1;
+  }
+
+  DirichletBoundaryInjector<LoHi::Lo, ParticleGenerator,
+                            PscConfig::PushParticles>
+    injector{ParticleGenerator(1, KIND_ION)};
+  injector.preaccelerate_method = PreaccelerateMethod::NormalE;
+  injector.preaccelerate_time = 1.; // q/m = 1, so the kick is du_y = E_y
+  injector.preaccelerate_sample_boundary = true;
+  injector.inject(mprts, mflds);
+
+  // the generator's second particle (u_y = 0) is kicked in too
+  auto accessor = mprts.accessor();
+  auto prts = accessor[0];
+  ASSERT_EQ(prts.size(), 2);
+  std::vector<double> uy{prts[0].u()[1], prts[1].u()[1]};
+  std::sort(uy.begin(), uy.end());
+  EXPECT_NEAR(uy[0], .15, 1e-6);
+  EXPECT_NEAR(uy[1], 2. + .15, 1e-6);
+}
+
 // ======================================================================
 // Gauss's law at the lower boundary node (y = 0)
 //

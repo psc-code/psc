@@ -129,6 +129,7 @@ public:
         typename Current::fields_t J(flds);
         typename InterpolateEM_t::fields_t EM(flds.storage(), flds.ib());
         InterpolateEM_t ip;
+        InterpolateEMBoundary_t ip_boundary;
         AdvanceParticle<real_t, dim_y> advance{grid.dt};
 
         Int3 start = Int3{0, 0, 0}.with_component(
@@ -154,24 +155,25 @@ public:
             Real3 initial_normalized_pos = prt.x * dxi;
 
             if (preaccelerate) {
-              // sample interior E and B, which works for all interpolators
-              real_t sample_coord =
-                lo ? 0.5 : grid.ldims[INJECT_DIM_IDX_] - 0.5;
-              ip.set_coeffs(initial_normalized_pos.with_component(
-                INJECT_DIM_IDX_, sample_coord));
-
               Real3 e_inner = {0.f, 0.f, 0.f};
               Real3 h_inner = {0.f, 0.f, 0.f};
 
-              if (preaccelerate_method == PreaccelerateMethod::NormalE) {
-                e_inner[INJECT_DIM_IDX_] = INJECT_DIM_IDX_ == 0   ? ip.ex(EM)
-                                           : INJECT_DIM_IDX_ == 1 ? ip.ey(EM)
-                                                                  : ip.ez(EM);
-              } else if (preaccelerate_method == PreaccelerateMethod::AllE) {
-                e_inner = {ip.ex(EM), ip.ey(EM), ip.ez(EM)};
-              } else if (preaccelerate_method == PreaccelerateMethod::AllEH) {
-                e_inner = {ip.ex(EM), ip.ey(EM), ip.ez(EM)};
-                h_inner = {ip.hx(EM), ip.hy(EM), ip.hz(EM)};
+              if (preaccelerate_sample_boundary) {
+                // the standard 1st-order interpolator really interpolates
+                // across the boundary, averaging ghost and edge cells
+                real_t sample_coord = lo ? 0 : grid.ldims[INJECT_DIM_IDX_];
+                sample_fields(ip_boundary, EM,
+                              initial_normalized_pos.with_component(
+                                INJECT_DIM_IDX_, sample_coord),
+                              e_inner, h_inner);
+              } else {
+                // sample interior E and B, which works for all interpolators
+                real_t sample_coord =
+                  lo ? 0.5 : grid.ldims[INJECT_DIM_IDX_] - 0.5;
+                sample_fields(ip, EM,
+                              initial_normalized_pos.with_component(
+                                INJECT_DIM_IDX_, sample_coord),
+                              e_inner, h_inner);
               }
 
               real_t dq = .5f * grid.norm.eta * preaccelerate_time * q / m;
@@ -207,6 +209,27 @@ public:
   }
 
 private:
+  using InterpolateEMBoundary_t =
+    InterpolateEM<typename InterpolateEM_t::fields_t, opt_ip_1st,
+                  typename PushParticles::Dim>;
+
+  /// fields at normalized position `pos`, as selected by preaccelerate_method
+  template <typename IP, typename F>
+  void sample_fields(IP& ip, const F& EM, Real3 pos, Real3& e, Real3& h) const
+  {
+    ip.set_coeffs(pos);
+    if (preaccelerate_method == PreaccelerateMethod::NormalE) {
+      e[INJECT_DIM_IDX_] = INJECT_DIM_IDX_ == 0   ? ip.ex(EM)
+                           : INJECT_DIM_IDX_ == 1 ? ip.ey(EM)
+                                                  : ip.ez(EM);
+    } else if (preaccelerate_method == PreaccelerateMethod::AllE) {
+      e = {ip.ex(EM), ip.ey(EM), ip.ez(EM)};
+    } else if (preaccelerate_method == PreaccelerateMethod::AllEH) {
+      e = {ip.ex(EM), ip.ey(EM), ip.ez(EM)};
+      h = {ip.hx(EM), ip.hy(EM), ip.hz(EM)};
+    }
+  }
+
   /// normalized coordinate of the ghost cell's face away from the domain
   real_t outer_ghost_edge(const Grid_t& grid) const
   {
@@ -217,6 +240,9 @@ public:
   real_t density;
   real_t preaccelerate_time = 0.0;
   PreaccelerateMethod preaccelerate_method = PreaccelerateMethod::NormalE;
+  /// sample the preaccelerating fields at the boundary itself, averaging the
+  /// ghost and edge cells, instead of at the center of the edge cell
+  bool preaccelerate_sample_boundary = false;
 
 private:
   ParticleGenerator particle_generator_;
