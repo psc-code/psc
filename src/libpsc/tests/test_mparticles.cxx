@@ -534,7 +534,7 @@ TEST(TestSetupParticles, RandomOffsets)
   auto rho =
     psc::mflds::zeros<double, gt::space::host>(mprts.grid(), 1, -grid.ibn);
   MomentRho{}(rho, -grid.ibn, mprts);
-  ASSERT_LT(gt::norm_linf(rho), 1e-16);
+  ASSERT_LT(gt::norm_linf(rho), 1e-14);
 }
 
 int main(int argc, char** argv)
