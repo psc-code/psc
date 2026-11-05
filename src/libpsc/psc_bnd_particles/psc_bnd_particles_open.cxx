@@ -1,4 +1,5 @@
 
+#include "rng.hxx"
 #include "fields.hxx"
 
 using real_t = mparticles_t::real_t;
@@ -7,8 +8,6 @@ static const int debug_every_step = 10;
 
 static inline bool at_lo_boundary(int p, int d);
 static inline bool at_hi_boundary(int p, int d);
-
-static inline double random1() { return random() / (double)RAND_MAX; }
 
 static void copy_to_mrc_fld(struct mrc_fld* m3, struct psc_mfields* mflds)
 {
@@ -472,8 +471,9 @@ static inline double inject_particles(int p, struct psc_mparticles* mprts,
       do {
         nnm++;
         // FIXME, shouldn't have to loop here
+        rng::Uniform<double> uniform_distr;
         do {
-          double sr = random1();
+          double sr = uniform_distr.get();
 
           pxi[Z] = 0.;
           for (int k = 0; k < nvdx - 1; k++) {
@@ -485,26 +485,24 @@ static inline double inject_particles(int p, struct psc_mparticles* mprts,
           }
         } while (pxi[Z] == 0);
 
-        double sr = random1();
         double yya = 0.;
         double yy0;
         int icount = 0;
         do {
           icount++;
           yy0 = yya;
-          yya = yy0 - (erf(yy0) - (2. * sr - 1.)) /
+          yya = yy0 - (erf(yy0) - (2. * uniform_distr.get() - 1.)) /
                         (2. / sqrt(M_PI) * exp(-sqr(yy0)));
         } while (fabs(yya - yy0) > 1.e-15 && icount != 100);
         pxi[X] = v[X] + yya * sqrt(W[YY] / (W[XX] * W[YY] - sqr(W[XY]))) +
                  (pxi[Z] - v[Z]) * vv[ZX] / vv[ZZ];
 
-        sr = random1();
         yya = 0.0;
         icount = 0;
         do {
           icount++;
           yy0 = yya;
-          yya = yy0 - (erf(yy0) - (2. * sr - 1.)) /
+          yya = yy0 - (erf(yy0) - (2. * uniform_distr.get() - 1.)) /
                         (2. / sqrt(M_PI) * exp(-sqr(yy0)));
         } while (fabs(yya - yy0) > 1.e-15 && icount != 100);
         pxi[Y] = v[Y] + 1. / W[YY] *
@@ -517,11 +515,11 @@ static inline double inject_particles(int p, struct psc_mparticles* mprts,
         }
       } while (sqr(pxi[X]) + sqr(pxi[Y]) + sqr(pxi[Z]) > 1.);
 
-      double xr = random1();
+      double xr = uniform_distr.get();
       xi[X] = pos[X] + xr * grid.dx[X];
-      double yr = random1();
+      double yr = uniform_distr.get();
       xi[Y] = pos[Y] + yr * grid.dx[Y];
-      double zr = random1();
+      double zr = uniform_distr.get();
       double dz = dir * zr * pxi[Z] * ppsc->dt;
       xi[Z] = pos[Z] + dz;
 
