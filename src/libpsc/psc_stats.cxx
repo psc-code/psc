@@ -1,6 +1,10 @@
 
 #include "psc.h"
 
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+
 // ======================================================================
 // psc_stats: simple statistics
 
@@ -9,9 +13,21 @@ int nr_psc_stats = 1;
 
 static const char* psc_stats_name[MAX_PSC_STATS + 1];
 
+// Returns the existing slot if `name` is already registered, so that
+// repeatedly constructing integrators doesn't grow the table.
 int psc_stats_register(const char* name)
 {
-  assert(nr_psc_stats <= MAX_PSC_STATS);
+  for (int i = 1; i < nr_psc_stats; i++) {
+    if (strcmp(psc_stats_name[i], name) == 0) {
+      return i;
+    }
+  }
+
+  if (nr_psc_stats > MAX_PSC_STATS) {
+    fprintf(stderr, "psc_stats_register: too many stats (MAX_PSC_STATS = %d)\n",
+            MAX_PSC_STATS);
+    abort();
+  }
   psc_stats_name[nr_psc_stats] = name;
   psc_stats_val[nr_psc_stats] = 0.;
   return nr_psc_stats++;
