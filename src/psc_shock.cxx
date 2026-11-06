@@ -82,6 +82,8 @@ Int3 n_patches;
 
 double turb_db2;
 double turb_correlation_length;
+// noise_gabor only: 0 spaces the noise levels evenly in k, slower in big boxes
+double turb_levels_per_octave;
 
 int out_interval;
 int out_moments_interval;
@@ -291,6 +293,8 @@ void setupParameters(int argc, char** argv)
 
   turb_method =
     inputParams.getOrDefault<std::string>("turb_method", "alfven_dense");
+  turb_levels_per_octave =
+    inputParams.getOrDefault<double>("turb_levels_per_octave", 4.0);
 
   nicell = inputParams.getOrDefault<int>("nicell", 100);
   seed = inputParams.getOrDefault<int>("seed", 5);
@@ -465,7 +469,9 @@ void initialize_turbulence(MfieldsState& mflds)
   if (turb_method == "alfven_dense") {
     generator.reset(new AlfvenTurbulence<MfieldsState>{params});
   } else if (turb_method == "noise_gabor") {
-    generator.reset(new NoiseTurbulence<MfieldsState>{params});
+    auto noise = new NoiseTurbulence<MfieldsState>{params};
+    noise->levels_per_octave = turb_levels_per_octave;
+    generator.reset(noise);
   } else {
     LOG_ERROR("Unrecognized turbulence method: %s\n", turb_method.c_str());
   }
