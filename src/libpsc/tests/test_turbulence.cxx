@@ -305,6 +305,82 @@ TEST(LevelWavenumbersTest, LogSpacedOnShortBoxIsEven)
             psc::turbulence::detail::get_level_wavenumbers(3.0, 0.0));
 }
 
+TEST(KernelPowerSpectrumTest, SatisfiesParseval)
+{
+  // the phase-averaged kernel has half the window's power, and the table is
+  // twice the phase-averaged |FT|^2, so both integrate to that of window^2
+  using psc::turbulence::GaborKernel;
+  psc::turbulence::detail::KernelPowerSpectrum<GaborKernel> power;
+  for (int n_dims = 1; n_dims <= 3; n_dims++) {
+    auto weight = [&](double x) { return std::pow(x, n_dims - 1); };
+    double k_space = psc::turbulence::detail::integrate(
+      [&](double q) { return power(q, n_dims) * weight(q); }, 0.0,
+      power.q_max, 1024);
+    double x_space = psc::turbulence::detail::integrate(
+      [&](double r) { return sqr(GaborKernel::window(r * r)) * weight(r); },
+      0.0, 1.0, 1024);
+    EXPECT_NEAR(k_space / x_space, 1.0, 1e-3) << "n_dims " << n_dims;
+    EXPECT_EQ(power(power.q_max, n_dims), 0.0);
+  }
+}
+
+TEST(LevelSpectraTest, FitMatchesTarget)
+{
+  // 2d, 128 x 64 cells
+  Double3 length{1.0, 12.8, 6.4};
+  Int3 gdims{1, 128, 64};
+  double correlation_length = 5.0;
+  auto xs = psc::turbulence::detail::get_level_wavenumbers(64.0, 4.0);
+  std::vector<double> radii;
+  for (double x : xs) {
+    radii.push_back(length[1] / x);
+  }
+  auto spectra = psc::turbulence::detail::get_level_spectra<
+    psc::turbulence::GaborKernel>(radii, length, gdims, correlation_length);
+  EXPECT_EQ(spectra.n_fit, 64);
+
+  for (int i = 0; i < xs.size(); i++) {
+    double total = 0.0;
+    for (int j = 0; j < spectra.n_shells; j++) {
+      total += spectra.at(i, j);
+    }
+    EXPECT_NEAR(total, 1.0, 1e-12);
+  }
+
+  std::vector<double> ones(xs.size(), 1.0);
+  auto weights = psc::turbulence::detail::fit_level_weights(spectra, ones);
+
+  // relative error, after normalizing over the shells checked, in bands of
+  // shells [lo, 1.6 lo), from k/dk 8 up, where modes are dense enough for
+  // the levels to follow the target
+  auto get_max_error = [&](const std::vector<double>& w) {
+    auto get_band = [&](const std::vector<double>* w, int lo, int hi) {
+      double sum = 0.0;
+      for (int j = lo; j < hi; j++) {
+        if (w) {
+          for (int i = 0; i < w->size(); i++) {
+            sum += (*w)[i] * spectra.at(i, j);
+          }
+        } else {
+          sum += spectra.target[j];
+        }
+      }
+      return sum;
+    };
+    double norm = get_band(&w, 8, spectra.n_fit) /
+                  get_band(nullptr, 8, spectra.n_fit);
+    double max_error = 0.0;
+    for (int lo = 8; lo < spectra.n_fit; lo = std::ceil(1.6 * lo)) {
+      int hi = std::min(int(std::ceil(1.6 * lo)), spectra.n_fit);
+      double ratio = get_band(&w, lo, hi) / get_band(nullptr, lo, hi) / norm;
+      max_error = std::max(max_error, std::abs(ratio - 1.0));
+    }
+    return max_error;
+  };
+  EXPECT_LT(get_max_error(weights), 0.01);
+  EXPECT_GT(get_max_error(ones), 0.1);
+}
+
 #ifdef PSC_HAVE_ADIOS2
 
 // max |H_a - H_b| over the cells H is generated in, ghosts included
