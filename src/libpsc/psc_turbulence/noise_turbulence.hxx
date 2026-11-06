@@ -198,10 +198,12 @@ inline std::vector<double> get_level_wavenumbers(double x_max,
 /// any box. Each level's B is normalized to mean power shell_power(k) dk,
 /// where dk is the spacing of levels around it.
 ///
-/// Levels are evenly spaced in k by default, so the cost per cell grows with
-/// the box length. With levels_per_octave > 0, they are evenly spaced in log k
-/// above the wavenumber where that's sparser (see get_level_wavenumbers), so
-/// the cost per cell grows only with its log.
+/// With levels_per_octave > 0, levels are evenly spaced in log k above the
+/// wavenumber where that's sparser than even spacing in k (see
+/// get_level_wavenumbers), so the cost per cell grows only with the log of the
+/// box length, not linearly as with levels_per_octave = 0. The default, 4, is
+/// the sparsest spacing tested whose spectrum matches even spacing's to within
+/// the noise; 2 shows ripples.
 /// @tparam KERNEL copyable and constructible from an Int3 of varying dims,
 /// with `randomize(rng::Uniform<double>&)`, `sample(Double3) const` and a
 /// `varying` member; see GaborKernel
@@ -216,7 +218,7 @@ public:
   using Base::params;
 
   /// see get_level_wavenumbers
-  double levels_per_octave = 0.0;
+  double levels_per_octave = 4.0;
 
   void generate_potential(Mfields& vector_potential) override
   {
