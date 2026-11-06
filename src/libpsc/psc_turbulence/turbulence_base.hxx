@@ -32,24 +32,6 @@ inline double shell_power(double k, double correlation_length)
   return 1.0 / (1.0 + std::pow(k * correlation_length, 5.0 / 3.0));
 }
 
-/// @brief Generates magnetic turbulence in an MfieldsState.
-///
-/// `generate` overwrites H (interior and ghosts) with a divergence-free random
-/// field whose mean |H|^2 over the domain is `params.db2`. E and J are left
-/// alone. It is deterministic given `params.seed`, independent of the
-/// decomposition.
-template <typename MfieldsState>
-class TurbulenceGenerator
-{
-public:
-  explicit TurbulenceGenerator(TurbulenceParams params) : params(params) {}
-  virtual ~TurbulenceGenerator() = default;
-
-  virtual void generate(MfieldsState& mflds) = 0;
-
-  TurbulenceParams params;
-};
-
 // ======================================================================
 // helpers shared by the generators
 
@@ -141,6 +123,39 @@ void set_b_from_potential(MfieldsState& mflds, Mfields& vector_potential)
     });
   }
 }
+
+/// @brief Generates magnetic turbulence in an MfieldsState.
+///
+/// `generate` overwrites H (interior and ghosts) with a divergence-free random
+/// field whose mean |H|^2 over the domain is `params.db2`. E and J are left
+/// alone. It is deterministic given `params.seed`, independent of the
+/// decomposition.
+///
+/// Subclasses implement `generate_potential`, which sets the edge-centered
+/// vector potential A, interior and ghosts, up to normalization; `generate`
+/// takes its curl and normalizes it.
+template <typename MfieldsState>
+class TurbulenceGenerator
+{
+public:
+  using Mfields = ::Mfields<typename MfieldsState::real_t>;
+
+  explicit TurbulenceGenerator(TurbulenceParams params) : params(params) {}
+  virtual ~TurbulenceGenerator() = default;
+
+  void generate(MfieldsState& mflds)
+  {
+    Mfields vector_potential{mflds.grid(), 3, mflds.ibn()};
+    generate_potential(vector_potential);
+    set_b_from_potential(mflds, vector_potential);
+    set_mean_b2(mflds, params.db2);
+  }
+
+  /// adds A to `vector_potential`, which must start at 0
+  virtual void generate_potential(Mfields& vector_potential) = 0;
+
+  TurbulenceParams params;
+};
 
 } // namespace turbulence
 } // namespace psc

@@ -80,16 +80,14 @@ class AlfvenTurbulence : public TurbulenceGenerator<MfieldsState>
 {
 public:
   using Base = TurbulenceGenerator<MfieldsState>;
-  using Mfields = ::Mfields<typename MfieldsState::real_t>;
+  using Mfields = typename Base::Mfields;
   using Base::Base;
   using Base::params;
 
-  void generate(MfieldsState& mflds) override
+  void generate_potential(Mfields& vector_potential) override
   {
-    const auto& grid = mflds.grid();
+    const auto& grid = vector_potential.grid();
     Int3 gdims = grid.domain.gdims;
-
-    Mfields vector_potential{grid, 3, mflds.ibn()};
 
     // +n and -n are the same real mode, so inject only one of them: the one
     // whose first nonzero component is positive
@@ -189,12 +187,6 @@ public:
 
       add_plane_alfven_wave(vector_potential, db, k_vec, polarization, phase);
     }
-
-    // 5. take the curl
-    set_b_from_potential(mflds, vector_potential);
-
-    // 6. normalize
-    set_mean_b2(mflds, params.db2);
   }
 };
 

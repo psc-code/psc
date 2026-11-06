@@ -139,23 +139,22 @@ class NoiseTurbulence : public TurbulenceGenerator<MfieldsState>
 {
 public:
   using Base = TurbulenceGenerator<MfieldsState>;
-  using Mfields = ::Mfields<typename MfieldsState::real_t>;
+  using Mfields = typename Base::Mfields;
   using Kernel = KERNEL;
   using Base::Base;
   using Base::params;
 
-  void generate(MfieldsState& mflds) override
+  void generate_potential(Mfields& vector_potential) override
   {
     using detail::Int5;
 
-    const auto& grid = mflds.grid();
-    Int3 ibn = mflds.ibn();
+    const auto& grid = vector_potential.grid();
+    Int3 ibn = vector_potential.ibn();
     Double3 length = grid.domain.length;
     Int3 gdims = grid.domain.gdims;
     Int3 varying{gdims[0] > 1, gdims[1] > 1, gdims[2] > 1};
     Kernel kernel{varying};
 
-    Mfields vector_potential{grid, 3, ibn};
     MfieldsState level_fields{grid};
 
     double max_length = 0.0;
@@ -234,10 +233,6 @@ public:
         }
       }
     }
-
-    set_b_from_potential(mflds, vector_potential);
-
-    set_mean_b2(mflds, params.db2);
   }
 };
 
