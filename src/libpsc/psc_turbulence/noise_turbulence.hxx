@@ -156,14 +156,52 @@ private:
   std::vector<Impulse> impulses_;
 };
 
+/// @brief Wavenumbers of the noise levels, in units of the lowest one: the
+/// integers up to floor(x_max), like evenly spaced levels, but above the one
+/// where a factor of 2^(1 / levels_per_octave) is a step of at least 1, evenly
+/// spaced in log k instead, by the largest factor up to that which lands on
+/// floor(x_max). levels_per_octave <= 0 means evenly spaced throughout.
+inline std::vector<double> get_level_wavenumbers(double x_max,
+                                                 double levels_per_octave)
+{
+  // the tolerance keeps e.g. x_max = 128 - 1e-14 from losing level 128
+  int x_top = std::floor(x_max + 1e-9);
+  int x_log = x_top;
+  if (levels_per_octave > 0.0) {
+    double ratio = std::pow(2.0, 1.0 / levels_per_octave);
+    x_log = std::min(x_top, int(std::ceil(1.0 / (ratio - 1.0))));
+  }
+
+  std::vector<double> xs;
+  for (int x = 1; x <= x_log; x++) {
+    xs.push_back(x);
+  }
+  if (x_log < x_top) {
+    int n_steps =
+      std::ceil(levels_per_octave * std::log2(double(x_top) / x_log));
+    for (int i = 1; i < n_steps; i++) {
+      xs.push_back(x_log *
+                   std::pow(double(x_top) / x_log, double(i) / n_steps));
+    }
+    xs.push_back(x_top);
+  }
+  return xs;
+}
+
 } // namespace detail
 
-/// @brief Turbulence as a sum of sparse-convolution noise levels evenly spaced
-/// in k, each A component drawn independently, then B = curl A.
+/// @brief Turbulence as a sum of sparse-convolution noise levels, each A
+/// component drawn independently, then B = curl A.
 ///
 /// Each level's kernels are isotropic, with radius = wavelength = s. They sit
 /// in a periodic lattice of cells at least s long, so the noise is periodic on
-/// any box. Each level's B is normalized to mean power shell_power(k).
+/// any box. Each level's B is normalized to mean power shell_power(k) dk,
+/// where dk is the spacing of levels around it.
+///
+/// Levels are evenly spaced in k by default, so the cost per cell grows with
+/// the box length. With levels_per_octave > 0, they are evenly spaced in log k
+/// above the wavenumber where that's sparser (see get_level_wavenumbers), so
+/// the cost per cell grows only with its log.
 /// @tparam KERNEL copyable and constructible from an Int3 of varying dims,
 /// with `randomize(rng::Uniform<double>&)`, `sample(Double3) const` and a
 /// `varying` member; see GaborKernel
@@ -176,6 +214,9 @@ public:
   using Kernel = KERNEL;
   using Base::Base;
   using Base::params;
+
+  /// see get_level_wavenumbers
+  double levels_per_octave = 0.0;
 
   void generate_potential(Mfields& vector_potential) override
   {
@@ -198,14 +239,24 @@ public:
         min_dx = std::min(min_dx, double(grid.domain.dx[d]));
       }
     }
-    // down to wavelengths of 2 grid cells
-    int n_levels = std::floor(max_length / (2.0 * min_dx) + 1e-9);
+    // down to wavelengths of 2 grid cells, in units of 2 pi / max_length
+    std::vector<double> xs = detail::get_level_wavenumbers(
+      max_length / (2.0 * min_dx), levels_per_octave);
+    int n_levels = xs.size();
     int n_dims = 3;
     double impulses_per_volume = 10.0;
 
     for (int i_level = 0; i_level < n_levels; i_level++) {
-      double s = max_length / (i_level + 1);
+      double s = max_length / xs[i_level];
       double k = 2.0 * M_PI / s;
+      // the width of k this level stands for, in units of 2 pi / max_length:
+      // from midway to the previous level to midway to the next, and from
+      // 1/2 for the first level and to 1/2 past it for the last, as with
+      // evenly spaced levels (where it's always 1)
+      double x_prev = i_level > 0 ? xs[i_level - 1] : 0.0;
+      double x_next =
+        i_level + 1 < n_levels ? xs[i_level + 1] : xs[i_level] + 1.0;
+      double level_dk = 0.5 * (x_next - x_prev);
 
       // Dims shorter than s can't fit this wavelength, so they are invariant
       // at this level (k_d = 0). Otherwise, fit as many cells as possible.
@@ -267,12 +318,12 @@ public:
         }
       }
 
-      // Give each level's B a mean power of exactly shell_power, measured
-      // with the same discrete curl as the final field. Levels are evenly
-      // spaced in k, so dk is absorbed by the final set_mean_b2.
+      // Give each level's B a mean power of exactly shell_power dk, measured
+      // with the same discrete curl as the final field. dk's units are
+      // absorbed by the final set_mean_b2.
       set_b_from_potential(level_fields, level_potential);
-      double scale = std::sqrt(shell_power(k, params.correlation_length) /
-                               get_mean_b2(level_fields));
+      double scale = std::sqrt(shell_power(k, params.correlation_length) *
+                               level_dk / get_mean_b2(level_fields));
 
       for (int p = 0; p < grid.n_patches(); ++p) {
         auto vp_patch = make_Fields3d<dim_xyz>(vector_potential[p]);
