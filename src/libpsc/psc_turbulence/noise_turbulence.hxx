@@ -570,8 +570,10 @@ inline std::vector<double> fit_level_weights(const LevelSpectra& spectra,
 ///
 /// Each level's kernels are isotropic, with radius = wavelength = s. They sit
 /// in a periodic lattice of cells at least s long, so the noise is periodic on
-/// any box. Each level's B is normalized to mean power shell_power(k) dk,
-/// where dk is the spacing of levels around it.
+/// any box. Each level's B is normalized to a mean power fit so the levels'
+/// expected spectra sum to shell_power per mode, up to the lowest axis Nyquist
+/// wavenumber (see get_level_spectra); a level's spectrum is a band ~40% wide,
+/// so just giving it shell_power(k) dk would be off by up to ~30% per band.
 ///
 /// With levels_per_octave > 0, levels are evenly spaced in log k above the
 /// wavenumber where that's sparser than even spacing in k (see
@@ -623,26 +625,36 @@ public:
     int n_dims = 3;
     double impulses_per_volume = 10.0;
 
+    // Start from shell_power(k) dk, with dk the width of k a level stands for,
+    // in units of 2 pi / max_length: from midway to the previous level to
+    // midway to the next, and from 1/2 for the first level and to 1/2 past it
+    // for the last, as with evenly spaced levels (where it's always 1). Then
+    // fit to the target, since each level's power is spread over a band.
+    std::vector<double> radii(n_levels), weights(n_levels);
     for (int i_level = 0; i_level < n_levels; i_level++) {
-      double s = max_length / xs[i_level];
-      double k = 2.0 * M_PI / s;
-      // the width of k this level stands for, in units of 2 pi / max_length:
-      // from midway to the previous level to midway to the next, and from
-      // 1/2 for the first level and to 1/2 past it for the last, as with
-      // evenly spaced levels (where it's always 1)
+      radii[i_level] = max_length / xs[i_level];
       double x_prev = i_level > 0 ? xs[i_level - 1] : 0.0;
       double x_next =
         i_level + 1 < n_levels ? xs[i_level + 1] : xs[i_level] + 1.0;
-      double level_dk = 0.5 * (x_next - x_prev);
+      weights[i_level] =
+        shell_power(2.0 * M_PI / radii[i_level], params.correlation_length) *
+        0.5 * (x_next - x_prev);
+    }
+    weights = detail::fit_level_weights(
+      detail::get_level_spectra<Kernel>(radii, length, gdims,
+                                        params.correlation_length),
+      weights);
+
+    for (int i_level = 0; i_level < n_levels; i_level++) {
+      double s = radii[i_level];
 
       // Dims shorter than s can't fit this wavelength, so they are invariant
       // at this level (k_d = 0). Otherwise, fit as many cells as possible.
-      Int3 n_cells;
+      Int3 n_cells = detail::get_level_n_cells(length, varying, s);
       Int3 level_varying;
       for (int d = 0; d < 3; d++) {
-        int n = varying[d] ? std::floor(length[d] / s + 1e-9) : 0;
-        level_varying[d] = n > 0;
-        n_cells[d] = std::max(n, 1);
+        level_varying[d] = n_cells[d] > 0;
+        n_cells[d] = std::max(n_cells[d], 1);
       }
       Double3 cell_extent = length / Double3(n_cells) / s;
       kernel.varying = level_varying;
@@ -695,12 +707,13 @@ public:
         }
       }
 
-      // Give each level's B a mean power of exactly shell_power dk, measured
-      // with the same discrete curl as the final field. dk's units are
-      // absorbed by the final set_mean_b2.
+      // Give each level's B a mean power of exactly its weight, measured with
+      // the same discrete curl as the final field, rather than its expected
+      // power, which keeps the spectrum from varying with the seed as much.
+      // The weights' units are absorbed by the final set_mean_b2.
       set_b_from_potential(level_fields, level_potential);
-      double scale = std::sqrt(shell_power(k, params.correlation_length) *
-                               level_dk / get_mean_b2(level_fields));
+      double scale =
+        std::sqrt(weights[i_level] / get_mean_b2(level_fields));
 
       for (int p = 0; p < grid.n_patches(); ++p) {
         auto vp_patch = make_Fields3d<dim_xyz>(vector_potential[p]);
