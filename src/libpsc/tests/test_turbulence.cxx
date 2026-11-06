@@ -80,8 +80,29 @@ struct TurbulenceTest : ::testing::Test
   }
 };
 
+template <typename MfieldsState>
+struct EvenlySpacedNoiseTurbulence : NoiseTurbulence<MfieldsState>
+{
+  EvenlySpacedNoiseTurbulence(TurbulenceParams params)
+    : NoiseTurbulence<MfieldsState>{params}
+  {
+    this->levels_per_octave = 0.0;
+  }
+};
+
+template <typename MfieldsState>
+struct LogSpacedNoiseTurbulence : NoiseTurbulence<MfieldsState>
+{
+  LogSpacedNoiseTurbulence(TurbulenceParams params)
+    : NoiseTurbulence<MfieldsState>{params}
+  {
+    this->levels_per_octave = 4.0;
+  }
+};
+
 using Generators = ::testing::Types<AlfvenTurbulence<MfieldsState>,
-                                    NoiseTurbulence<MfieldsState>>;
+                                    EvenlySpacedNoiseTurbulence<MfieldsState>,
+                                    LogSpacedNoiseTurbulence<MfieldsState>>;
 TYPED_TEST_SUITE(TurbulenceTest, Generators);
 
 TYPED_TEST(TurbulenceTest, MeanB2MatchesTarget)
@@ -246,6 +267,42 @@ TYPED_TEST(TurbulenceTest, ShorterCorrelationLengthIsRougher)
   };
 
   EXPECT_GT(roughness(0.1), 1.5 * roughness(3.0));
+}
+
+TEST(LevelWavenumbersTest, EvenlySpacedAreTheIntegers)
+{
+  auto xs = psc::turbulence::detail::get_level_wavenumbers(5.0, 0.0);
+  EXPECT_EQ(xs, (std::vector<double>{1, 2, 3, 4, 5}));
+  // tolerates roundoff in x_max
+  EXPECT_EQ(
+    psc::turbulence::detail::get_level_wavenumbers(5.0 - 1e-14, 0.0).size(), 5);
+}
+
+TEST(LevelWavenumbersTest, LogSpacedAreIntegersThenGeometric)
+{
+  double levels_per_octave = 4.0;
+  double ratio = std::pow(2.0, 1.0 / levels_per_octave);
+  auto xs =
+    psc::turbulence::detail::get_level_wavenumbers(128.0, levels_per_octave);
+
+  // integers while the ratio would step by less than 1
+  for (int i = 0; i < 6; i++) {
+    EXPECT_EQ(xs[i], i + 1);
+  }
+  // then a constant ratio, at most the nominal one, ending at x_max
+  double first_ratio = xs[6] / xs[5];
+  EXPECT_LE(first_ratio, ratio);
+  for (int i = 6; i < xs.size(); i++) {
+    EXPECT_NEAR(xs[i] / xs[i - 1], first_ratio, 1e-12);
+  }
+  EXPECT_EQ(xs.back(), 128.0);
+  EXPECT_LT(xs.size(), 30);
+}
+
+TEST(LevelWavenumbersTest, LogSpacedOnShortBoxIsEven)
+{
+  EXPECT_EQ(psc::turbulence::detail::get_level_wavenumbers(3.0, 4.0),
+            psc::turbulence::detail::get_level_wavenumbers(3.0, 0.0));
 }
 
 #ifdef PSC_HAVE_ADIOS2
