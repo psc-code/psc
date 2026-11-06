@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <limits>
 #include <random>
+#include <vector>
 
 namespace psc
 {
@@ -37,7 +38,7 @@ struct GaborKernel
     wave_phase = uni.get(0.0, 2.0 * M_PI);
   }
 
-  double sample(Double3 x)
+  double sample(Double3 x) const
   {
     // invariant dimensions don't count toward distance
     x *= Double3(varying);
@@ -81,47 +82,79 @@ inline int get_cell_seed(Int5 cell_hyperidx, Int5 hyperdims, int seed)
   return cell_seed;
 }
 
-// Positions and cell_extent are in units of the kernel radius; cells may be
-// longer than that.
+/// @brief The impulses of the noise cells [lo, hi) of one A component at one
+/// level, each cell's drawn once.
+///
+/// A cell's impulses depend only on its hyperindex and the seed, so they come
+/// out the same no matter which patch draws them. Positions and cell_extent
+/// are in units of the kernel radius; cells may be longer than that.
 template <typename KERNEL>
-double sample_noise_cell(Int5 cell_hyperidx, Int5 hyperdims,
-                         Double3 pos_in_cell, Double3 cell_extent,
-                         int n_impulses, int seed, KERNEL& kernel)
+class NoiseCells
 {
-  rng::Uniform<double> uniform{0.0, 1.0,
-                               get_cell_seed(cell_hyperidx, hyperdims, seed)};
-
-  // TODO randomize number of impulses
-
-  double sum = 0.0;
-  for (int i = 0; i < n_impulses; i++) {
-    Double3 kernel_pos_in_cell =
-      Double3{uniform.get(0.0, 1.0), uniform.get(0.0, 1.0),
-              uniform.get(0.0, 1.0)} *
-      cell_extent;
-    kernel.randomize(uniform);
-    sum += kernel.sample(pos_in_cell - kernel_pos_in_cell);
+public:
+  NoiseCells(Int2 d_ilevel, Int3 lo, Int3 hi, Double3 cell_extent,
+             int n_impulses, Int5 hyperdims, int seed, KERNEL kernel)
+    : lo_(lo),
+      dims_(hi - lo),
+      cell_extent_(cell_extent),
+      n_impulses_(n_impulses),
+      varying_(kernel.varying)
+  {
+    // TODO randomize number of impulses
+    impulses_.reserve(size_t(dims_.prod()) * n_impulses);
+    // row-major, like flatten_index
+    for (Int3 cell_idx : VecRange(lo, hi)) {
+      Int5 hyperindex{d_ilevel[0], d_ilevel[1], cell_idx[0], cell_idx[1],
+                      cell_idx[2]};
+      rng::Uniform<double> uniform{0.0, 1.0,
+                                   get_cell_seed(hyperindex, hyperdims, seed)};
+      for (int i = 0; i < n_impulses; i++) {
+        Double3 pos_in_cell =
+          Double3{uniform.get(0.0, 1.0), uniform.get(0.0, 1.0),
+                  uniform.get(0.0, 1.0)} *
+          cell_extent;
+        kernel.randomize(uniform);
+        impulses_.push_back({pos_in_cell, kernel});
+      }
+    }
   }
-  return sum;
-}
 
-template <typename KERNEL>
-double sample_noise(Int2 d_ilevel, Double3 pos, Double3 cell_extent,
-                    int n_impulses, Int5 hyperdims, int seed, KERNEL& kernel)
-{
-  Int3 i3 = (pos / cell_extent).fint();
-  double sum = 0.0;
-  // kernels vanish beyond r = 1, which is at most one cell, so only
-  // neighboring cells contribute, and only along varying dims
-  for (Int3 cell_idx : VecRange(i3 - kernel.varying, i3 + 1 + kernel.varying)) {
-    Int5 hyperindex{d_ilevel[0], d_ilevel[1], cell_idx[0], cell_idx[1],
-                    cell_idx[2]};
-    sum += sample_noise_cell(hyperindex, hyperdims,
-                             pos - Double3(cell_idx) * cell_extent, cell_extent,
-                             n_impulses, seed, kernel);
+  /// noise at `pos`, whose cell and its neighbors along varying dims must be
+  /// in [lo, hi)
+  double sample(Double3 pos) const
+  {
+    Int3 i3 = (pos / cell_extent_).fint();
+    double sum = 0.0;
+    // kernels vanish beyond r = 1, which is at most one cell, so only
+    // neighboring cells contribute, and only along varying dims
+    for (Int3 cell_idx : VecRange(i3 - varying_, i3 + 1 + varying_)) {
+      Double3 pos_in_cell = pos - Double3(cell_idx) * cell_extent_;
+      const Impulse* impulses =
+        &impulses_[size_t(flatten_index(cell_idx - lo_, dims_)) * n_impulses_];
+      double cell_sum = 0.0;
+      for (int i = 0; i < n_impulses_; i++) {
+        cell_sum +=
+          impulses[i].kernel.sample(pos_in_cell - impulses[i].pos_in_cell);
+      }
+      sum += cell_sum;
+    }
+    return sum;
   }
-  return sum;
-}
+
+private:
+  struct Impulse
+  {
+    Double3 pos_in_cell;
+    KERNEL kernel;
+  };
+
+  Int3 lo_;
+  Int3 dims_;
+  Double3 cell_extent_;
+  int n_impulses_;
+  Int3 varying_;
+  std::vector<Impulse> impulses_;
+};
 
 } // namespace detail
 
@@ -131,9 +164,9 @@ double sample_noise(Int2 d_ilevel, Double3 pos, Double3 cell_extent,
 /// Each level's kernels are isotropic, with radius = wavelength = s. They sit
 /// in a periodic lattice of cells at least s long, so the noise is periodic on
 /// any box. Each level's B is normalized to mean power shell_power(k).
-/// @tparam KERNEL constructible from an Int3 of varying dims, with
-/// `randomize(rng::Uniform<double>&)`, `sample(Double3)` and a `varying`
-/// member; see GaborKernel
+/// @tparam KERNEL copyable and constructible from an Int3 of varying dims,
+/// with `randomize(rng::Uniform<double>&)`, `sample(Double3) const` and a
+/// `varying` member; see GaborKernel
 template <typename MfieldsState, typename KERNEL = GaborKernel>
 class NoiseTurbulence : public TurbulenceGenerator<MfieldsState>
 {
@@ -205,12 +238,31 @@ public:
         auto vp_patch = make_Fields3d<dim_xyz>(level_potential[p]);
         auto& patch = grid.patches[p];
 
-        for (Int3 i3 : VecRange(-ibn, grid.ldims + ibn)) {
-          for (int m : {AX, AY, AZ}) {
-            Double3 pos_ec = centering::get_pos(patch, i3, centering::EC, m);
-            vp_patch(m, i3[0], i3[1], i3[2]) =
-              detail::sample_noise({m, i_level}, pos_ec / s, cell_extent,
-                                   n_impulses, hyperdims, params.seed, kernel);
+        for (int m : {AX, AY, AZ}) {
+          // in units of s
+          auto get_pos = [&](Int3 i3) {
+            return centering::get_pos(patch, i3, centering::EC, m) / s;
+          };
+
+          // draw only the cells this patch's points sample from: their own
+          // and their neighbors along varying dims. Positions increase with
+          // the index, so the first and last points bound the cells.
+          auto get_cell = [&](Int3 i3) {
+            return (get_pos(i3) / cell_extent).fint();
+          };
+          Int3 lo = get_cell(-ibn);
+          Int3 hi = get_cell(grid.ldims + ibn - 1);
+          detail::NoiseCells<Kernel> cells{{m, i_level},
+                                           lo - level_varying,
+                                           hi + 1 + level_varying,
+                                           cell_extent,
+                                           n_impulses,
+                                           hyperdims,
+                                           params.seed,
+                                           kernel};
+
+          for (Int3 i3 : VecRange(-ibn, grid.ldims + ibn)) {
+            vp_patch(m, i3[0], i3[1], i3[2]) = cells.sample(get_pos(i3));
           }
         }
       }
