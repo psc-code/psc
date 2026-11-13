@@ -9,7 +9,7 @@
 #include "pushp.hxx"
 #include "kg/Vec3.h"
 #include "../psc_bnd/psc_bnd_util.hxx"
-#include "injector_base.hxx"
+#include "boundary_injector_base.hxx"
 
 using psc::bnd::LoHi;
 
@@ -114,35 +114,32 @@ private:
 /// that the pushed particles are still in their original patches.
 ///
 /// The copies' transverse velocities can optionally be resampled.
-/// @tparam LOHI whether to inject at the lower or upper boundary
 /// @tparam PUSH_PARTICLES type that provides the types `Mparticles`,
 /// `MfieldsState`, `Current`, `real_t`, `AdvanceParticle_t`
 /// @tparam RESAMPLER type that defines `resample(prt, normal_dim)`, which takes
 /// a copy (as a `psc::particle::Inject`) and the index of the normal dimension,
 /// and returns the copy's new momentum; see @ref NeumannResamplerMaxwellian
-template <LoHi LOHI, typename PUSH_PARTICLES,
-          typename RESAMPLER = NeumannResamplerNone>
-class NeumannBoundaryInjector
-  : public InjectorBase<typename PUSH_PARTICLES::Mparticles,
-                        typename PUSH_PARTICLES::MfieldsState>
+template <typename PUSH_PARTICLES, typename RESAMPLER = NeumannResamplerNone>
+class NeumannBoundaryInjector : public BoundaryInjectorBase<PUSH_PARTICLES>
 {
-  static const int INJECT_DIM_IDX_ = 1;
+  using Base = BoundaryInjectorBase<PUSH_PARTICLES>;
+  using Base::d;
 
 public:
   using PushParticles = PUSH_PARTICLES;
   using Resampler = RESAMPLER;
 
-  using Mparticles = typename PushParticles::Mparticles;
-  using MfieldsState = typename PushParticles::MfieldsState;
-  using Current = typename PushParticles::Current;
-  using real_t = typename PushParticles::real_t;
+  using typename Base::Current;
+  using typename Base::MfieldsState;
+  using typename Base::Mparticles;
+  using typename Base::Real3;
+  using typename Base::real_t;
   using AdvanceParticle_t = typename PushParticles::AdvanceParticle_t;
-  using Real3 = Vec3<real_t>;
 
-  static const bool lo = LOHI == LoHi::Lo;
-
-  NeumannBoundaryInjector(Resampler resampler = {}, int copy_depth = 1)
-    : resampler{resampler}, copy_depth{copy_depth}
+  /// injects at the lower or upper (`lohi`) boundary normal to `d`
+  NeumannBoundaryInjector(psc::Axis d, LoHi lohi, Resampler resampler = {},
+                          int copy_depth = 1)
+    : Base{d, lohi}, resampler{resampler}, copy_depth{copy_depth}
   {
     assert(copy_depth >= 1);
   }
@@ -150,6 +147,7 @@ public:
   void inject(Mparticles& mprts, MfieldsState& mflds) override
   {
     const Grid_t& grid = mprts.grid();
+    this->check_axis(grid);
     auto injectors_by_patch = mprts.injector();
     auto accessor = mprts.accessor();
 
@@ -157,23 +155,22 @@ public:
     Current current(grid);
     AdvanceParticle_t advance{grid.dt};
 
-    assert(copy_depth < grid.ldims[INJECT_DIM_IDX_]);
-    int edge_idx = lo ? 0 : grid.ldims[INJECT_DIM_IDX_] - 1;
-    int inwards = lo ? 1 : -1;
+    assert(copy_depth < grid.ldims[d]);
+    int edge_idx = this->edge_idx(grid);
+    int inwards = this->inwards();
     // the copy crosses the boundary face as the particle crosses the copy face
     Real3 ghost_offset = Real3{0, 0, 0}.with_component(
-      INJECT_DIM_IDX_, -inwards * copy_depth * grid.domain.dx[INJECT_DIM_IDX_]);
+      d, -inwards * copy_depth * grid.domain.dx[d]);
 
     for (int p = 0; p < grid.n_patches(); p++) {
-      if (!(lo ? grid.atBoundaryLo(p, INJECT_DIM_IDX_)
-               : grid.atBoundaryHi(p, INJECT_DIM_IDX_))) {
+      if (!this->at_boundary(grid, p)) {
         continue;
       }
 
       // collect copies first, since injecting invalidates the accessor
       std::vector<psc::particle::Inject> copies;
       for (auto prt : accessor[p]) {
-        int final_idx = (prt.x() * dxi).fint()[INJECT_DIM_IDX_];
+        int final_idx = (prt.x() * dxi).fint()[d];
 
         if (final_idx != edge_idx + inwards * copy_depth) {
           // particles can't move more than one cell at a time (v<c<dx/dt),
@@ -185,7 +182,7 @@ public:
         Real3 initial_pos = prt.x();
         advance.push_x(initial_pos, v, -1);
 
-        int initial_idx = (initial_pos * dxi).fint()[INJECT_DIM_IDX_];
+        int initial_idx = (initial_pos * dxi).fint()[d];
 
         if (initial_idx == edge_idx + inwards * (copy_depth - 1)) {
           using InjectReal3 = psc::particle::Inject::Real3;
@@ -193,7 +190,7 @@ public:
                               InjectReal3(prt.u()), prt.w(), prt.kind(),
                               prt.tag());
           auto& copy = copies.back();
-          copy.u = resampler.resample(copy, INJECT_DIM_IDX_);
+          copy.u = resampler.resample(copy, d);
         }
       }
 
@@ -202,27 +199,15 @@ public:
       typename Current::fields_t J(flds);
 
       for (auto& copy : copies) {
-        injector.inject_local_unchecked(copy);
-
         Real3 v = advance.calc_v(Real3(copy.u));
-        Real3 final_pos = Real3(copy.x);
-        Real3 initial_pos = final_pos;
+        Real3 initial_pos = Real3(copy.x);
         advance.push_x(initial_pos, v, -1);
-
         Real3 initial_normalized_pos = initial_pos * dxi;
-        Real3 final_normalized_pos = final_pos * dxi;
-        Int3 initial_idx = initial_normalized_pos.fint();
-        Int3 final_idx = final_normalized_pos.fint();
 
-        // deposit as if the copy came from the outer edge of the ghost cell,
-        // so its virtual charge lies entirely beyond the boundary node and
-        // Gauss's law holds there
-        initial_normalized_pos[INJECT_DIM_IDX_] =
-          lo ? -1 : grid.ldims[INJECT_DIM_IDX_] + 1;
-
-        current.calc_j(J, initial_normalized_pos, final_normalized_pos,
-                       final_idx, initial_idx,
-                       grid.kinds[copy.kind].q * real_t(copy.w), v);
+        this->inject_with_current(grid, injector, current, J, copy,
+                                  initial_normalized_pos,
+                                  initial_normalized_pos.fint(), v,
+                                  grid.kinds[copy.kind].q * real_t(copy.w));
       }
     }
   }
