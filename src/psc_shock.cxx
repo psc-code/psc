@@ -1062,7 +1062,8 @@ static void run(int argc, char** argv)
     auto ion_injector_lo =
       new DirichletBoundaryInjector<LoHi::Lo, ParticleGeneratorMaxwellian,
                                     PscConfig::PushParticles>(
-        ParticleGeneratorMaxwellian(KIND_ION, grid.kinds[KIND_ION], v_upstream,
+        ParticleGeneratorMaxwellian(KIND_ION, mprts.grid().kinds[KIND_ION],
+                                    v_upstream,
                                     {ti_upstream, ti_upstream, ti_upstream}),
         n_upstream);
     ion_injector_lo->preaccelerate_method = preaccelerate_method;
@@ -1075,9 +1076,9 @@ static void run(int argc, char** argv)
     auto electron_injector_lo =
       new DirichletBoundaryInjector<LoHi::Lo, ParticleGeneratorMaxwellian,
                                     PscConfig::PushParticles>(
-        ParticleGeneratorMaxwellian(KIND_ELECTRON, grid.kinds[KIND_ELECTRON],
-                                    v_upstream,
-                                    {te_upstream, te_upstream, te_upstream}),
+        ParticleGeneratorMaxwellian(
+          KIND_ELECTRON, mprts.grid().kinds[KIND_ELECTRON], v_upstream,
+          {te_upstream, te_upstream, te_upstream}),
         n_upstream);
     electron_injector_lo->preaccelerate_method = preaccelerate_method;
     electron_injector_lo->preaccelerate_sample_boundary =
@@ -1090,7 +1091,7 @@ static void run(int argc, char** argv)
     psc.add_injector(electron_injector_lo);
   } else if (injection_method == "neumann") {
     psc.add_injector(
-      makeNeumannInjector<LoHi::Lo>(grid, te_upstream, ti_upstream));
+      makeNeumannInjector<LoHi::Lo>(mprts.grid(), te_upstream, ti_upstream));
   }
 
   if (injection_method != "periodic") {
@@ -1101,7 +1102,7 @@ static void run(int argc, char** argv)
         mflds_advect = &mflds;
       } else {
         // mflds is completely unrelated; need to re-initialize turbulence
-        MfieldsState* mflds2 = new MfieldsState{grid};
+        MfieldsState* mflds2 = new MfieldsState{mprts.grid()};
         initialize_turbulence(*mflds2);
         mflds_advect = mflds2;
       }
@@ -1124,7 +1125,7 @@ static void run(int argc, char** argv)
         new DirichletBoundaryInjector<LoHi::Hi, ParticleGeneratorMaxwellian,
                                       PscConfig::PushParticles>(
           ParticleGeneratorMaxwellian(
-            KIND_ION, grid.kinds[KIND_ION], v_downstream,
+            KIND_ION, mprts.grid().kinds[KIND_ION], v_downstream,
             {ti_downstream, ti_downstream, ti_downstream}),
           n_downstream);
       ion_injector_hi->preaccelerate_method = preaccelerate_method;
@@ -1138,7 +1139,7 @@ static void run(int argc, char** argv)
         new DirichletBoundaryInjector<LoHi::Hi, ParticleGeneratorMaxwellian,
                                       PscConfig::PushParticles>(
           ParticleGeneratorMaxwellian(
-            KIND_ELECTRON, grid.kinds[KIND_ELECTRON], v_downstream,
+            KIND_ELECTRON, mprts.grid().kinds[KIND_ELECTRON], v_downstream,
             {te_downstream, te_downstream, te_downstream}),
           n_downstream);
       electron_injector_hi->preaccelerate_method = preaccelerate_method;
@@ -1151,8 +1152,8 @@ static void run(int argc, char** argv)
       psc.add_injector(ion_injector_hi);
       psc.add_injector(electron_injector_hi);
     } else if (injection_method == "neumann") {
-      psc.add_injector(
-        makeNeumannInjector<LoHi::Hi>(grid, te_downstream, ti_downstream));
+      psc.add_injector(makeNeumannInjector<LoHi::Hi>(
+        mprts.grid(), te_downstream, ti_downstream));
     }
 
     auto radiating_hi = new RadiatingBC<ConstantPulse>(
