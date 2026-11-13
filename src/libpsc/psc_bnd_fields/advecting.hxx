@@ -28,7 +28,11 @@ namespace field
  *
  * Each patch keeps a copy of the snapshot of whichever patch the advected
  * sample positions currently fall in. When the advection crosses a patch
- * boundary, the copies are passed on to the next patch along the axis.
+ * boundary, the copies are passed on to the next patch along the axis. So
+ * `tick` communicates and must be called on all ranks, and H may only be
+ * sampled on the inflow boundary plane (`x3[axis]` = 0 for `v` > 0, ldims for
+ * `v` < 0), as `Radiating` does. The snapshot's ghosts must hold its periodic
+ * image, since interpolation near patch edges reads them.
  *
  * Only H is advected: sampled E is just the background. (E is sampled in
  * ghost cells, which a snapshot doesn't hold in general.)
