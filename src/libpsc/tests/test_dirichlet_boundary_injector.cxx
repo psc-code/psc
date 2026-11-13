@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "test_common.hxx"
+#include "open_boundary_test_grid.hxx"
 
 #include "psc.hxx"
 #include "../psc_config.hxx"
@@ -43,35 +44,9 @@ using psc::Axis;
 // periodic
 Grid_t* setupGrid(Axis d)
 {
-  Int3 gdims = Int3{1, 2, 2}.with_component(d, 8);
-  auto domain = Grid_t::Domain{gdims,          // n grid points
-                               Double3(gdims), // physical lengths
-                               {0, 0, 0},      // location of lower corner
-                               {1, 1, 1}};     // n patches
-
-  Int3 fld =
-    Int3{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC}.with_component(
-      d, BND_FLD_OPEN);
-  Int3 prt =
-    Int3{BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC}.with_component(
-      d, BND_PRT_OPEN);
-  auto bc = psc::grid::BC{fld, fld, prt, prt};
-
-  auto kinds = Grid_t::Kinds(NR_KINDS);
-  kinds[KIND_ELECTRON] = {-1.0, 1.0, "e"};
-  kinds[KIND_ION] = {1.0, 1.0, "i"};
-
-  // --- generic setup
-  auto norm_params = Grid_t::NormalizationParams::dimensionless();
-  norm_params.nicell = 1;
-
-  double dt = 1;
-  Grid_t::Normalization norm{norm_params};
-
-  int n_ghosts = 2;
-  Int3 ibn = n_ghosts * Dim::get_noninvariant_mask();
-
-  return new Grid_t{domain, bc, kinds, norm, dt, -1, ibn};
+  return makeOpenBoundaryTestGrid(
+    Int3{1, 2, 2}.with_component(d, 8),
+    Vec3<bool>{false, false, false}.with_component(d, true), 1.);
 }
 
 struct ParticleGenerator
