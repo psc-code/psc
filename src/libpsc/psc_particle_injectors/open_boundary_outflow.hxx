@@ -35,8 +35,7 @@ public:
   void inject(Mparticles& mprts, MfieldsState& mflds) override
   {
     const Grid_t& grid = mprts.grid();
-    Real3 dxi{real_t(grid.domain.dx_inv[0]), real_t(grid.domain.dx_inv[1]),
-              real_t(grid.domain.dx_inv[2])};
+    Real3 dxi = Real3(grid.domain.dx_inv);
     Current current(grid);
     auto accessor = mprts.accessor();
 
@@ -78,11 +77,10 @@ public:
             }
           }
 
-          Real3 initial_pos = pos;
           Real3 final_pos = pos.with_component(d, outer_face);
           Real3 no_v{0.f, 0.f, 0.f};
-          current.calc_j(J, initial_pos, final_pos, idx, idx,
-                         real_t(prt.q() * prt.w()), no_v);
+          current.calc_j(J, pos, final_pos, idx, idx, real_t(prt.q() * prt.w()),
+                         no_v);
           pos[d] = outer_face;
         }
       }
