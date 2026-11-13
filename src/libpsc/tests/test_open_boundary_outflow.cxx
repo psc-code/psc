@@ -3,7 +3,6 @@
 #include "test_common.hxx"
 
 #include "psc.hxx"
-#include "output_fields.hxx"
 #include "../psc_config.hxx"
 
 // Particles leaving through open boundaries, with no injectors: their virtual
@@ -47,19 +46,15 @@ Grid_t* setupGrid()
   return new Grid_t{domain, bc, kinds, norm, dt, -1, ibn};
 }
 
-// max |div E - rho| over the domain's nodes, lower boundary nodes included
-template <typename Mparticles, typename MfieldsState>
-double gauss_err(Mparticles& mprts, MfieldsState& mflds)
+ChecksParams makeChecksParams()
 {
-  const auto& grid = mprts.grid();
-  using ItemRho = Checks::item_rho_type;
-  auto rho = psc::mflds::interior(grid, ItemRho{grid}(mprts));
-  auto dive = psc::mflds::interior(grid, Item_dive<MfieldsState>{}(mflds));
-  return gt::norm_linf(gt::eval(dive - rho));
+  ChecksParams checks_params{};
+  checks_params.gauss.check_interval = 1;
+  return checks_params;
 }
 
-// Places a neutral pair at `x`, gives each particle its momentum, and steps
-// once.
+// Places a neutral pair at `x`, gives each particle its momentum, steps once,
+// and checks Gauss's law.
 template <typename Check>
 void run_pair(Vec3<double> x, Vec3<double> u_e, Vec3<double> u_i, Check check)
 {
@@ -70,7 +65,7 @@ void run_pair(Vec3<double> x, Vec3<double> u_e, Vec3<double> u_i, Check check)
   auto& grid = *grid_ptr;
   MfieldsState mflds{grid};
   Mparticles mprts{grid};
-  Checks checks{grid, MPI_COMM_WORLD, ChecksParams{}};
+  Checks checks{grid, MPI_COMM_WORLD, makeChecksParams()};
   Balance balance{.1};
   Collision collision{grid, 0, 0.1};
 
@@ -85,6 +80,7 @@ void run_pair(Vec3<double> x, Vec3<double> u_e, Vec3<double> u_i, Check check)
 
   psc.pre_first_step();
   psc.step();
+  EXPECT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
   check(grid, mprts, mflds);
 }
 
@@ -94,7 +90,6 @@ TEST(OpenBoundaryOutflowTest, Lower)
   run_pair({.5, .3, 4.5}, {0, -2, 0}, {0, 0, 0},
            [](const Grid_t& grid, Mparticles& mprts, MfieldsState& mflds) {
              ASSERT_EQ(mprts.size(), 1);
-             EXPECT_LT(gauss_err(mprts, mflds), 1e-10);
            });
 }
 
@@ -121,7 +116,6 @@ TEST(OpenBoundaryOutflowTest, Corner)
   run_pair({.5, .3, .3}, {0, -2, -2}, {0, 0, 0},
            [](const Grid_t& grid, Mparticles& mprts, MfieldsState& mflds) {
              ASSERT_EQ(mprts.size(), 1);
-             EXPECT_LT(gauss_err(mprts, mflds), 1e-10);
            });
 }
 
@@ -137,7 +131,7 @@ TEST(OpenBoundaryOutflowTest, MarderAtOpenBoundaries)
   auto& grid = *grid_ptr;
   MfieldsState mflds{grid};
   Mparticles mprts{grid};
-  Checks checks{grid, MPI_COMM_WORLD, ChecksParams{}};
+  Checks checks{grid, MPI_COMM_WORLD, makeChecksParams()};
   Balance balance{.1};
   Collision collision{grid, 0, 0.1};
   PscConfig::Marder marder(grid, .9, 3, false);
@@ -155,11 +149,11 @@ TEST(OpenBoundaryOutflowTest, MarderAtOpenBoundaries)
   psc.pre_first_step();
   for (; grid.timestep_ < psc_params.nmax;) {
     psc.step();
+    EXPECT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
   }
 
   auto E = mflds.storage().view(_all, _all, _all, _s(EX, EX + 3), _all);
   EXPECT_LT(gt::norm_linf(E), 1.);
-  EXPECT_LT(gauss_err(mprts, mflds), 1e-10);
 }
 
 // ======================================================================
