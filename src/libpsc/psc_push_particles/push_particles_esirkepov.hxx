@@ -28,7 +28,8 @@ struct PushParticlesEsirkepov
   using real_t = typename Mparticles::real_t;
   using Real3 = Vec3<real_t>;
   using OpenBoundaryOutflow_t =
-    OpenBoundaryOutflowUnsupported<Mparticles, MfieldsState>;
+    psc::bnd::particle::OpenBoundaryOutflowUnsupported<Mparticles,
+                                                       MfieldsState>;
 
   using checks_order =
     checks_order_2nd; // FIXME, sometimes 1st even with Esirkepov

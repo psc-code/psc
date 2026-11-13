@@ -5,6 +5,13 @@
 #include "boundary_injector_base.hxx"
 #include "../bits.hxx"
 
+namespace psc
+{
+namespace bnd
+{
+namespace particle
+{
+
 /// @brief Completes the current of particles leaving through open boundaries.
 ///
 /// After the push, an outgoing particle sits in the first ghost cell, at a
@@ -61,11 +68,9 @@ public:
         for (int d = 0; d < 3; d++) {
           real_t outer_face;
           if (open_lo[d] && pos[d] < 0) {
-            outer_face =
-              psc::bnd::particle::outer_ghost_face(grid, d, psc::bnd::LoHi::Lo);
+            outer_face = outer_ghost_face(grid, d, LoHi::Lo);
           } else if (open_hi[d] && pos[d] >= grid.ldims[d]) {
-            outer_face =
-              psc::bnd::particle::outer_ghost_face(grid, d, psc::bnd::LoHi::Hi);
+            outer_face = outer_ghost_face(grid, d, LoHi::Hi);
           } else {
             continue;
           }
@@ -105,3 +110,7 @@ public:
 
   void inject(MPARTICLES& mprts, MFIELDS_STATE& mflds) override {}
 };
+
+} // namespace particle
+} // namespace bnd
+} // namespace psc
