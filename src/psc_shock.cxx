@@ -480,13 +480,13 @@ void initialize_turbulence(MfieldsState& mflds)
 }
 
 // ----------------------------------------------------------------------
-// saving the initial turbulence for restarts
+// saving the advected fields for restarts
 //
-// The lower boundary keeps feeding in the initial turbulence, so a restart
-// needs it too. With checkpoints enabled, it is written to turbulence.bp in
-// the run directory; a restart reads it from the checkpoint's directory.
+// The lower boundary keeps advecting in the initial turbulence, so a restart
+// needs it too. With checkpoints enabled, it is written to advected_fields.bp
+// in the run directory; a restart reads it from the checkpoint's directory.
 
-const std::string turbulence_filename = "turbulence.bp";
+const std::string advected_fields_filename = "advected_fields.bp";
 
 std::string get_dirname(std::string path)
 {
@@ -519,14 +519,15 @@ bool checkpoints_enabled()
   return psc_params.write_checkpoint_every_step > 0;
 }
 
-// Restores the initial turbulence of the run `checkpoint_filename` belongs to,
-// or regenerates it if that run didn't save it.
-void restore_turbulence(MfieldsState& mflds)
+// Restores the advected fields (the initial turbulence) of the run
+// `checkpoint_filename` belongs to, or regenerates them if that run didn't
+// save them.
+void restore_advected_fields(MfieldsState& mflds)
 {
   std::string checkpoint_dir = get_dirname(checkpoint_filename);
-  std::string path = checkpoint_dir + "/" + turbulence_filename;
+  std::string path = checkpoint_dir + "/" + advected_fields_filename;
   if (path_exists(path)) {
-    mpi_printf(mflds.grid().comm(), "**** Reading turbulence from %s\n",
+    mpi_printf(mflds.grid().comm(), "**** Reading advected fields from %s\n",
                path.c_str());
     psc::turbulence::read_turbulence(path, mflds);
   } else {
@@ -539,7 +540,7 @@ void restore_turbulence(MfieldsState& mflds)
 
   // keep it next to this run's checkpoints, too, for the next restart
   if (checkpoints_enabled() && !is_same_dir(checkpoint_dir, ".")) {
-    psc::turbulence::write_turbulence(turbulence_filename, mflds);
+    psc::turbulence::write_turbulence(advected_fields_filename, mflds);
   }
 }
 
@@ -671,7 +672,7 @@ static void run(int argc, char** argv)
     initialize_turbulence(mflds);
     if (advect_turbulence && checkpoints_enabled()) {
       // before the background fields are added
-      psc::turbulence::write_turbulence(turbulence_filename, mflds);
+      psc::turbulence::write_turbulence(advected_fields_filename, mflds);
     }
   } else {
     read_checkpoint(checkpoint_filename, *grid_ptr, mprts, mflds);
@@ -715,7 +716,7 @@ static void run(int argc, char** argv)
       } else {
         // mflds is completely unrelated; need the initial turbulence
         MfieldsState* mflds2 = new MfieldsState{mprts.grid()};
-        restore_turbulence(*mflds2);
+        restore_advected_fields(*mflds2);
         mflds_advect = mflds2;
       }
 
