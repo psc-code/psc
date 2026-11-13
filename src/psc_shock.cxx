@@ -7,6 +7,7 @@
 #include "input_params.hxx"
 #include "kg/include/kg/VecRange.hxx"
 #include "libpsc/psc_output_particles/output_particles_adios2_impl.hxx"
+#include "libpsc/psc_bnd_fields/advecting.hxx"
 #include "libpsc/psc_bnd_fields/radiating.hxx"
 #include "libpsc/psc_particle_injectors/dirichlet_boundary_injector.hxx"
 #include "libpsc/psc_particle_injectors/neumann_boundary_injector.hxx"
@@ -542,139 +543,6 @@ void restore_turbulence(MfieldsState& mflds)
   }
 }
 
-// Samples the initial turbulence advected in along y, periodically wrapped.
-// Each patch keeps a copy of the turbulence of the patch the advected
-// position currently lands in. Every time the advection crosses a patch
-// boundary, the copies are passed one patch up in y, wrapping around.
-struct AdvectedPeriodicFields : psc::bnd::field::PulseBase<real_t>
-{
-  using Mfields = PscConfig::Mfields;
-  static const int DIM_Y = 1;
-
-  AdvectedPeriodicFields(MfieldsState& mflds, real_t v_advect,
-                         Real3 background_e, Real3 background_h)
-    : v_advect_cell_normalized(v_advect / mflds.grid().domain.dx[DIM_Y]),
-      // an Mfields, so that load balancing moves it with its patches
-      cycled_fields(new Mfields{mflds.grid(), mflds.n_comps(), mflds.ibn()})
-  {
-    // mflds must NOT include background fields at this point
-    // FIXME would be better to exclude J, but the interpolator uses EX, etc.
-    cycled_fields->storage().view(_all, _all, _all, _all, _all) =
-      mflds.storage().view(_all, _all, _all, _all, _all);
-  }
-
-  const Grid_t& grid() const { return cycled_fields->grid(); }
-
-  Real3 advect_x3(Real3 x3, double t)
-  {
-    return x3 - Real3::unit(DIM_Y) * real_t(t * v_advect_cell_normalized);
-  }
-
-  int shift_to_patch_local(Real3& x3_advected)
-  {
-    int n_patches_to_the_left = 0;
-    // note: input x3 is already patch-local; we are just shifting to a
-    // *different* patch
-    while (x3_advected[DIM_Y] < 0.0) {
-      x3_advected[DIM_Y] += grid().ldims[DIM_Y];
-      n_patches_to_the_left += 1;
-    }
-    return n_patches_to_the_left;
-  }
-
-  real_t sample_exterior_field(int m, double t, int p, Real3 x3) override
-  {
-    if (EX <= m && m <= EZ) {
-      // FIXME: E is sampled in ghost cells, which are in unloaded patches.
-      // If initial E is ever nonzero, this shortcut will be invalid.
-      return e0[m - EX];
-    }
-
-    Real3 x3_advected = advect_x3(x3, t);
-    int n_patches_to_the_left = shift_to_patch_local(x3_advected);
-    if (n_patches_to_the_left != n_patch_cycles) {
-      LOG_ERROR("%d patches to the left after %d cycles\n",
-                n_patches_to_the_left, n_patch_cycles);
-    }
-
-    ip.set_coeffs(x3_advected);
-    auto em = decltype(ip)::fields_t(
-      cycled_fields->storage().view(_all, _all, _all, _all, p), -grid().ibn);
-
-    switch (m) {
-      case HX: return ip.hx(em) + h0_upstream[0];
-      case HY: return ip.hy(em) + h0_upstream[1];
-      case HZ: return ip.hz(em) + h0_upstream[2];
-      default: return 0.0;
-    }
-  }
-
-  void tick(double t) override
-  {
-    Real3 x3_advected = advect_x3({0.0, 0.0, 0.0}, t);
-    int n_patches_to_the_left = shift_to_patch_local(x3_advected);
-
-    if (n_patches_to_the_left == n_patch_cycles) {
-      // "cache hit"; no need to cycle
-      return;
-    }
-
-    cycle_turbulence(n_patches_to_the_left - n_patch_cycles);
-  }
-
-  // Rank and local index of the patch at `idx3`, wrapped periodically
-  mrc_patch_info patch_info_at(Int3 idx3)
-  {
-    Int3 np = grid().domain.np;
-    idx3 = (idx3 % np + np) % np;
-    return grid().mrc_domain().levelIdx3PatchInfo(0, idx3);
-  }
-
-  // Moves each patch's copy `n_patches` patches up in y, wrapping around
-  void cycle_turbulence(int n_patches)
-  {
-    const Grid_t& grid = this->grid();
-    LOG_INFO("cycling turbulence... (t=%f)\n", grid.time());
-
-    Int3 shift = Int3::unit(DIM_Y) * n_patches;
-    auto& storage = cycled_fields->storage();
-    auto received = gt::empty_like(storage);
-    int n_local = grid.n_patches();
-    int patch_size = storage.size() / std::max(n_local, 1);
-    auto mpi_dtype = MpiDtypeTraits<real_t>::value();
-
-    // tag = the receiving patch's local index, which is unique per
-    // (sender, receiver) pair since each patch receives exactly one copy
-    std::vector<MPI_Request> reqs(2 * n_local);
-    for (int p = 0; p < n_local; p++) {
-      Int3 idx3 = grid.localPatchInfo(p).idx3;
-      auto source = patch_info_at(idx3 - shift);
-      MPI_Irecv(received.data() + p * patch_size, patch_size, mpi_dtype,
-                source.rank, p, grid.comm(), &reqs[p]);
-    }
-    for (int p = 0; p < n_local; p++) {
-      Int3 idx3 = grid.localPatchInfo(p).idx3;
-      auto dest = patch_info_at(idx3 + shift);
-      MPI_Isend(storage.data() + p * patch_size, patch_size, mpi_dtype,
-                dest.rank, dest.patch, grid.comm(), &reqs[n_local + p]);
-    }
-    MPI_Waitall(reqs.size(), reqs.data(), MPI_STATUSES_IGNORE);
-    storage = std::move(received);
-
-    n_patch_cycles += n_patches;
-  }
-
-  // shared, since Radiating copies its pulse
-  std::shared_ptr<Mfields> cycled_fields;
-  int n_patch_cycles = 0;
-  real_t v_advect_cell_normalized;
-  InterpolateEM<Fields3d<decltype(std::declval<Mfields&>().storage().view(
-                           _all, _all, _all, _all, 0)),
-                         Dim>,
-                opt_ip_1st_ec, Dim>
-    ip;
-};
-
 // ======================================================================
 // makeNeumannInjector
 
@@ -851,8 +719,11 @@ static void run(int argc, char** argv)
         mflds_advect = mflds2;
       }
 
-      auto radiating_lo = new RadiatingBC<AdvectedPeriodicFields>(
-        AdvectedPeriodicFields{*mflds_advect, v_upstream[1], e0, h0_upstream},
+      using AdvectingPulse =
+        psc::bnd::field::AdvectingPulse<Dim, PscConfig::Mfields>;
+      auto radiating_lo = new RadiatingBC<AdvectingPulse>(
+        AdvectingPulse{*mflds_advect, Axis::Y, real_t(v_upstream[1]), e0,
+                       h0_upstream},
         Axis::Y, LoHi::Lo);
 
       psc.add_field_bc(radiating_lo);
