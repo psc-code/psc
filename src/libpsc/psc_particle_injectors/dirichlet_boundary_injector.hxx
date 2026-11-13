@@ -111,7 +111,7 @@ public:
     auto injectors_by_patch = mprts.injector();
     bool lo = this->lo();
 
-    Real3 dxi = grid.domain.dx_inv;
+    Real3 dxi = Real3(grid.domain.dx_inv);
     Current current(grid);
     bool preaccelerate = preaccelerate_method != PreaccelerateMethod::None &&
                          preaccelerate_time != 0;
@@ -127,15 +127,15 @@ public:
       typename InterpolateEM_t::fields_t EM(flds.storage(), flds.ib());
       InterpolateEM_t ip;
       InterpolateEMBoundary_t ip_boundary;
-      AdvanceParticle_t advance{grid.dt};
+      AdvanceParticle_t advance{real_t(grid.dt)};
 
       Int3 start = Int3{0, 0, 0}.with_component(d, lo ? -1 : grid.ldims[d]);
       Int3 stop = grid.ldims.with_component(d, start[d] + 1);
 
       for (Int3 initial_idx : VecRange(start, stop)) {
-        Real3 cell_corner = Real3(initial_idx) * grid.domain.dx;
+        Double3 cell_corner = Double3(initial_idx) * grid.domain.dx;
         int n_prts_to_try_inject =
-          get_n_in_cell(density, grid.norm.prts_per_unit_density, true);
+          get_n_in_cell(density, real_t(grid.norm.prts_per_unit_density), true);
 
         for (int prt_count = 0; prt_count < n_prts_to_try_inject; prt_count++) {
           // sample position uniformly from first ghost layer, and velocity
@@ -146,7 +146,7 @@ public:
           real_t m = grid.kinds[prt.kind].m;
           real_t q = grid.kinds[prt.kind].q;
 
-          Real3 initial_normalized_pos = prt.x * dxi;
+          Real3 initial_normalized_pos = Real3(prt.x) * dxi;
 
           if (preaccelerate) {
             Real3 e_inner = {0.f, 0.f, 0.f};
@@ -169,14 +169,16 @@ public:
             }
 
             real_t dq = .5f * grid.norm.eta * preaccelerate_time * q / m;
-            advance.push_p(prt.u, e_inner, h_inner, dq);
+            Real3 u = Real3(prt.u);
+            advance.push_p(u, e_inner, h_inner, dq);
+            prt.u = psc::particle::Inject::Real3(u);
           }
 
           // push along the normal only, with the relativistic velocity
-          Real3 v = advance.calc_v(prt.u);
+          Real3 v = advance.calc_v(Real3(prt.u));
           prt.x[d] += grid.dt * v[d];
 
-          int final_idx = (prt.x * dxi).fint()[d];
+          int final_idx = (Real3(prt.x) * dxi).fint()[d];
           if (lo ? final_idx <= start[d] : final_idx >= start[d]) {
             // don't inject a particle that fails to enter the patch
             continue;
