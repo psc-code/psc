@@ -2,6 +2,7 @@
 
 #include "grid.hxx"
 #include "injector_base.hxx"
+#include "../bits.hxx"
 
 /// @brief Completes the current of particles leaving through open boundaries.
 ///
@@ -86,4 +87,20 @@ public:
       }
     }
   }
+};
+
+/// @brief Stands in for OpenBoundaryOutflow with particle pushers that don't
+/// support open boundaries: constructing it is an error.
+template <typename MPARTICLES, typename MFIELDS_STATE>
+class OpenBoundaryOutflowUnsupported
+  : public InjectorBase<MPARTICLES, MFIELDS_STATE>
+{
+public:
+  OpenBoundaryOutflowUnsupported()
+  {
+    LOG_ERROR("open particle boundaries need a particle pusher with open "
+              "boundary outflow\n");
+  }
+
+  void inject(MPARTICLES& mprts, MFIELDS_STATE& mflds) override {}
 };
