@@ -406,6 +406,21 @@ TEST(DirichletBoundaryInjectorZTest, NormalPushIsRelativistic)
   EXPECT_NEAR(prts[0].x()[2], -.001 + grid.dt * 2. / gamma, 1e-12);
 }
 
+TEST(DirichletBoundaryInjectorTest, SinglePrecision)
+{
+  using PscConfigSingle = PscConfig1vbecSingle<Dim>;
+  auto grid_ptr = setupGrid(Axis::Y);
+  auto& grid = *grid_ptr;
+  PscConfigSingle::MfieldsState mflds{grid};
+  PscConfigSingle::Mparticles mprts{grid};
+
+  DirichletBoundaryInjector<ParticleGenerator, PscConfigSingle::PushParticles>
+    injector{enteringGenerator(Axis::Y, LoHi::Lo), Axis::Y, LoHi::Lo};
+  injector.inject(mprts, mflds);
+
+  EXPECT_EQ(mprts.size(), 1);
+}
+
 // ======================================================================
 // main
 
