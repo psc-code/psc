@@ -3,7 +3,6 @@
 #include "test_common.hxx"
 
 #include "psc.hxx"
-#include "output_fields.hxx"
 #include "../psc_config.hxx"
 #include "../psc_particle_injectors/dirichlet_boundary_injector.hxx"
 
@@ -38,7 +37,6 @@ using Mparticles = PscConfig::Mparticles;
 using Balance = PscConfig::Balance;
 using Collision = PscConfig::Collision;
 using Checks = PscConfig::Checks;
-using OutputParticles = PscConfig::OutputParticles;
 using psc::Axis;
 
 // 8 cells along `d` (y or z), open there; 2 cells along the other axis,
