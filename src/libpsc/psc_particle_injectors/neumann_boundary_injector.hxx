@@ -151,9 +151,9 @@ public:
     auto injectors_by_patch = mprts.injector();
     auto accessor = mprts.accessor();
 
-    Real3 dxi = grid.domain.dx_inv;
+    Real3 dxi = Real3(grid.domain.dx_inv);
     Current current(grid);
-    AdvanceParticle_t advance{grid.dt};
+    AdvanceParticle_t advance{real_t(grid.dt)};
 
     assert(copy_depth < grid.ldims[d]);
     int edge_idx = this->edge_idx(grid);
