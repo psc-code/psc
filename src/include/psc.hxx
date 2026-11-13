@@ -10,7 +10,6 @@
 #include "../libpsc/psc_bnd_fields/field_bc_base.hxx"
 #include "../libpsc/psc_bnd_fields/conducting_wall.hxx"
 #include "../libpsc/psc_particle_injectors/injector_base.hxx"
-#include "../libpsc/psc_particle_injectors/open_boundary_outflow.hxx"
 #include "gauss_corrector_base.hxx"
 #include "diagnostic_base.hxx"
 #include "external_current_base.hxx"
@@ -167,7 +166,7 @@ struct Psc
     for (int d = 0; d < 3; d++) {
       if (grid.bc.prt_lo[d] == BND_PRT_OPEN ||
           grid.bc.prt_hi[d] == BND_PRT_OPEN) {
-        add_injector(new OpenBoundaryOutflow<PushParticles>{});
+        add_injector(new typename PushParticles::OpenBoundaryOutflow_t{});
         break;
       }
     }

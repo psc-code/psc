@@ -2,6 +2,8 @@
 // J. Villasenor and O. Buneman, "Rigorous charge conservation for local
 // electromagnetic field solvers", Computer Physics Communications 69 (1992) 306
 
+#include "../psc_particle_injectors/open_boundary_outflow.hxx"
+
 // ======================================================================
 // PushParticlesVb
 
@@ -15,6 +17,7 @@ struct PushParticlesVb
   using AdvanceParticle_t = typename C::AdvanceParticle_t;
   using InterpolateEM_t = typename C::InterpolateEM_t;
   using Current = typename C::Current_t;
+  using OpenBoundaryOutflow_t = OpenBoundaryOutflow<PushParticlesVb>;
   using Dim = typename C::Dim;
   using real_t = typename Mparticles::real_t;
   using Real3 = Vec3<real_t>;

@@ -18,17 +18,20 @@ using Balance = PscConfig::Balance;
 using Collision = PscConfig::Collision;
 using Checks = PscConfig::Checks;
 
-Grid_t* setupGrid()
+// open in y and z, unless `open` is false (then periodic everywhere)
+Grid_t* setupGrid(bool open = true)
 {
   auto domain = Grid_t::Domain{{1, 8, 8},  // n grid points
                                {1, 8, 8},  // physical lengths
                                {0, 0, 0},  // location of lower corner
                                {1, 1, 1}}; // n patches
 
-  auto bc = psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_OPEN, BND_FLD_OPEN},
-                          {BND_FLD_PERIODIC, BND_FLD_OPEN, BND_FLD_OPEN},
-                          {BND_PRT_PERIODIC, BND_PRT_OPEN, BND_PRT_OPEN},
-                          {BND_PRT_PERIODIC, BND_PRT_OPEN, BND_PRT_OPEN}};
+  auto fld = open ? BND_FLD_OPEN : BND_FLD_PERIODIC;
+  auto prt = open ? BND_PRT_OPEN : BND_PRT_PERIODIC;
+  auto bc = psc::grid::BC{{BND_FLD_PERIODIC, fld, fld},
+                          {BND_FLD_PERIODIC, fld, fld},
+                          {BND_PRT_PERIODIC, prt, prt},
+                          {BND_PRT_PERIODIC, prt, prt}};
 
   auto kinds = Grid_t::Kinds(NR_KINDS);
   kinds[KIND_ELECTRON] = {-1.0, 1.0, "e"};
@@ -154,6 +157,37 @@ TEST(OpenBoundaryOutflowTest, MarderAtOpenBoundaries)
 
   auto E = mflds.storage().view(_all, _all, _all, _s(EX, EX + 3), _all);
   EXPECT_LT(gt::norm_linf(E), 1.);
+}
+
+TEST(OpenBoundaryOutflowTest, SecondOrderPscWithPeriodicBoundaries)
+{
+  // the 2nd-order pusher has no open boundary outflow, which mustn't keep it
+  // from building or running without open boundaries
+  using PscConfig2nd = PscConfig2ndDouble<Dim>;
+
+  PscParams psc_params;
+  psc_params.nmax = 1;
+
+  auto grid_ptr = setupGrid(false);
+  auto& grid = *grid_ptr;
+  PscConfig2nd::MfieldsState mflds{grid};
+  PscConfig2nd::Mparticles mprts{grid};
+  PscConfig2nd::Checks checks{grid, MPI_COMM_WORLD, ChecksParams{}};
+  PscConfig2nd::Balance balance{.1};
+  PscConfig2nd::Collision collision{grid, 0, 0.1};
+
+  auto psc = makePscIntegrator<PscConfig2nd>(psc_params, grid, mflds, mprts,
+                                             balance, collision, checks);
+  {
+    auto injector = mprts.injector();
+    auto inj = injector[0];
+    inj({{.5, 4.5, 4.5}, {0, 1, 0}, 1, KIND_ELECTRON});
+    inj({{.5, 4.5, 4.5}, {0, 0, 0}, 1, KIND_ION});
+  }
+
+  psc.pre_first_step();
+  psc.step();
+  EXPECT_EQ(mprts.size(), 2);
 }
 
 // ======================================================================

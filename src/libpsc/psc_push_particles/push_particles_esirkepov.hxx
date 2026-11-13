@@ -6,6 +6,7 @@
 // 135 (2001) 144
 
 #include "pushp_current_esirkepov.hxx"
+#include "../psc_particle_injectors/open_boundary_outflow.hxx"
 #include "../libpsc/psc_checks/checks_impl.hxx"
 
 namespace
@@ -50,6 +51,8 @@ struct PushParticlesEsirkepov
                      InterpolateEM_t>;
   using real_t = typename Mparticles::real_t;
   using Real3 = Vec3<real_t>;
+  using OpenBoundaryOutflow_t =
+    OpenBoundaryOutflowUnsupported<Mparticles, MfieldsState>;
 
   using checks_order =
     checks_order_2nd; // FIXME, sometimes 1st even with Esirkepov
