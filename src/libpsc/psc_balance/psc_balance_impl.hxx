@@ -223,7 +223,12 @@ inline void write_loads(const input& input,
 class get_loads
 {
 public:
-  get_loads(double factor_fields) : factor_fields_{factor_fields} {}
+  /// `factor_open_boundary`: extra cost per particle, relative to the push, of
+  /// patches at open particle boundaries, whose particles OpenBoundaryOutflow
+  /// scans every step (measured at ~.1 for the 1vb pusher)
+  get_loads(double factor_fields, double factor_open_boundary = .1)
+    : factor_fields_{factor_fields}, factor_open_boundary_{factor_open_boundary}
+  {}
 
   // given the number of particles for each patch (even though they don't
   // actually exist yet), figure out the load for each patch
@@ -235,8 +240,9 @@ public:
     loads.reserve(n_prts_by_patch.size());
 
     auto& ldims = grid.ldims;
-    for (auto n_prts : n_prts_by_patch) {
-      loads.push_back(n_prts + factor_fields_ * ldims[0] * ldims[1] * ldims[2]);
+    for (int p = 0; p < n_prts_by_patch.size(); p++) {
+      loads.push_back(particle_load(grid, p, n_prts_by_patch[p]) +
+                      factor_fields_ * ldims[0] * ldims[1] * ldims[2]);
     }
 
     return loads;
@@ -252,8 +258,8 @@ public:
       double load;
       if (factor_fields_ >= 0.) {
         const int* ldims = grid.ldims;
-        load =
-          n_prts_by_patch[p] + factor_fields_ * ldims[0] * ldims[1] * ldims[2];
+        load = particle_load(grid, p, n_prts_by_patch[p]) +
+               factor_fields_ * ldims[0] * ldims[1] * ldims[2];
         // mprintf("loads p %d %g %g ratio %g\n", p, loads[p], comp_time,
         // loads[p] / comp_time);
       } else {
@@ -270,7 +276,19 @@ public:
   }
 
 private:
+  double particle_load(const Grid_t& grid, int p, double n_prts) const
+  {
+    for (int d = 0; d < 3; d++) {
+      if ((grid.atBoundaryLo(p, d) && grid.bc.prt_lo[d] == BND_PRT_OPEN) ||
+          (grid.atBoundaryHi(p, d) && grid.bc.prt_hi[d] == BND_PRT_OPEN)) {
+        return (1. + factor_open_boundary_) * n_prts;
+      }
+    }
+    return n_prts;
+  }
+
   double factor_fields_;
+  double factor_open_boundary_;
 };
 
 inline std::vector<double> gather_loads(const Grid_t& grid,
