@@ -202,7 +202,7 @@ public:
       typename Current::fields_t J(flds);
 
       for (auto& copy : copies) {
-        injector.inject_local(copy);
+        injector.inject_local_unchecked(copy);
 
         Real3 v = advance.calc_v(Real3(copy.u));
         Real3 final_pos = Real3(copy.x);

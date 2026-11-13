@@ -193,7 +193,7 @@ public:
               continue;
             }
 
-            injector.inject_local(prt);
+            injector.inject_local_unchecked(prt);
 
             // deposit as if the particle came from the outer edge of the
             // ghost cell, so its virtual charge lies entirely beyond the

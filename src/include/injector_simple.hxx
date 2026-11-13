@@ -36,11 +36,9 @@ struct InjectorSimple
       mprts_.push_back(p_, prt);
     }
 
-    /// Injects at a patch-relative position, which may lie outside the patch
-    /// (as after a push): only for injection between the particle push and
-    /// particle exchange. The position is kept as is, since moving it would
-    /// move charge without current.
-    void inject_local(const psc::particle::Inject& new_prt)
+    /// Raw injection in a patch-relative position and no patch checking.
+    /// Safe to use between particle push and exchange.
+    void inject_local_unchecked(const psc::particle::Inject& new_prt)
     {
       auto prt =
         Particle{Real3(new_prt.x),
