@@ -263,6 +263,26 @@ TEST(NeumannBoundaryInjectorTest, CopyAcrossPeriodicBoundary)
   EXPECT_NEAR(ions[0][2], ions[1][2], 1e-10);
 }
 
+TEST(NeumannBoundaryInjectorTest, SinglePrecision)
+{
+  // an ion just pushed out of the edge cell, at y = 1.2 from y ~ .73
+  using PscConfigSingle = PscConfig1vbecSingle<Dim>;
+  auto grid_ptr = setupGrid(Axis::Y, .75);
+  auto& grid = *grid_ptr;
+  PscConfigSingle::MfieldsState mflds{grid};
+  PscConfigSingle::Mparticles mprts{grid};
+  {
+    auto injector = mprts.injector();
+    injector[0]({{.5, 1.2, .5}, {0, 2, 0}, 1, KIND_ION});
+  }
+
+  NeumannBoundaryInjector<PscConfigSingle::PushParticles> injector{Axis::Y,
+                                                                   LoHi::Lo};
+  injector.inject(mprts, mflds);
+
+  EXPECT_EQ(mprts.size(), 2);
+}
+
 TEST(NeumannResamplerTest, Rotate)
 {
   NeumannResamplerRotate resampler;
