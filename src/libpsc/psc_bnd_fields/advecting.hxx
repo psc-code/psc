@@ -61,8 +61,11 @@ struct AdvectingPulse : PulseBase<typename Mfields::real_t>
       background_h{background_h},
       held_fields(new Mfields{fields.grid(), fields.n_comps(), fields.ibn()})
   {
-    held_fields->storage().view(_all, _all, _all, _all, _all) =
-      fields.storage().view(_all, _all, _all, _all, _all);
+    // a view of a rank's empty patch range throws
+    if (fields.n_patches() > 0) {
+      held_fields->storage().view(_all, _all, _all, _all, _all) =
+        fields.storage().view(_all, _all, _all, _all, _all);
+    }
   }
 
   const Grid_t& grid() const { return held_fields->grid(); }
