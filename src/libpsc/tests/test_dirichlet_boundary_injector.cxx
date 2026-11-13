@@ -39,20 +39,25 @@ using Balance = PscConfig::Balance;
 using Collision = PscConfig::Collision;
 using Checks = PscConfig::Checks;
 using OutputParticles = PscConfig::OutputParticles;
+using psc::Axis;
 
-Grid_t* setupGrid()
+// 8 cells along `d` (y or z), open there; 2 cells along the other axis,
+// periodic
+Grid_t* setupGrid(Axis d)
 {
-  auto domain = Grid_t::Domain{{1, 8, 2},  // n grid points
-                               {1, 8, 2},  // physical lengths
-                               {0, 0, 0},  // location of lower corner
-                               {1, 1, 1}}; // n patches
+  Int3 gdims = Int3{1, 2, 2}.with_component(d, 8);
+  auto domain = Grid_t::Domain{gdims,          // n grid points
+                               Double3(gdims), // physical lengths
+                               {0, 0, 0},      // location of lower corner
+                               {1, 1, 1}};     // n patches
 
-  auto bc =
-    // FIXME wrong BCs
-    psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_OPEN, BND_FLD_PERIODIC},
-                  {BND_FLD_PERIODIC, BND_FLD_OPEN, BND_FLD_PERIODIC},
-                  {BND_PRT_PERIODIC, BND_PRT_OPEN, BND_PRT_PERIODIC},
-                  {BND_PRT_PERIODIC, BND_PRT_OPEN, BND_PRT_PERIODIC}};
+  Int3 fld =
+    Int3{BND_FLD_PERIODIC, BND_FLD_PERIODIC, BND_FLD_PERIODIC}.with_component(
+      d, BND_FLD_OPEN);
+  Int3 prt =
+    Int3{BND_PRT_PERIODIC, BND_PRT_PERIODIC, BND_PRT_PERIODIC}.with_component(
+      d, BND_PRT_OPEN);
+  auto bc = psc::grid::BC{fld, fld, prt, prt};
 
   auto kinds = Grid_t::Kinds(NR_KINDS);
   kinds[KIND_ELECTRON] = {-1.0, 1.0, "e"};
@@ -76,21 +81,23 @@ struct ParticleGenerator
   using Real = psc::particle::Inject::Real;
   using Real3 = psc::particle::Inject::Real3;
 
-  ParticleGenerator(int max_n_injected, int kind_idx)
-    : max_n_injected(max_n_injected), kind_idx(kind_idx)
+  /// places particles at fraction `x_frac` of the given range, with momentum
+  /// `u`; by default just inside the lower y boundary, moving in
+  ParticleGenerator(int max_n_injected, int kind_idx,
+                    Real3 x_frac = {0, .999, 0}, Real3 u = {0, 2, 0})
+    : max_n_injected(max_n_injected), kind_idx(kind_idx), x_frac{x_frac}, u{u}
   {}
 
   psc::particle::Inject get(Real3 min_pos, Real3 pos_range)
   {
-    Real uy = 2.0;
+    Real3 u = this->u;
     if (max_n_injected > 0 && n_injected++ >= max_n_injected) {
-      // Setting uy=0 means the particle won't enter the domain, and thus won't
+      // Setting u=0 means the particle won't enter the domain, and thus won't
       // be injected
-      uy = 0.0;
+      u = {0, 0, 0};
     }
 
-    Real3 x = min_pos + pos_range * Real3{0, .999, 0.};
-    Real3 u{0.0, uy, 0.0};
+    Real3 x = min_pos + pos_range * x_frac;
     Real w = 1.0;
     psc::particle::Tag tag = 0;
 
@@ -100,20 +107,30 @@ struct ParticleGenerator
   int n_injected = 0;
   int max_n_injected;
   int kind_idx;
+  Real3 x_frac;
+  Real3 u;
 };
 
-TEST(DirichletBoundaryInjectorTest, Integration1Particle)
+// generator for one particle entering through the given boundary normal to `d`
+ParticleGenerator enteringGenerator(Axis d, LoHi lohi)
 {
-  // ----------------------------------------------------------------------
-  // setup
+  bool lo = lohi == LoHi::Lo;
+  return {1, KIND_ION,
+          ParticleGenerator::Real3{0, 0, 0}.with_component(d, lo ? .999 : .001),
+          ParticleGenerator::Real3{0, 0, 0}.with_component(d, lo ? 2 : -2)};
+}
 
+// Injects one particle through the given boundary and runs two steps, checking
+// continuity and Gauss's law every step.
+void integration_1_particle(Axis d, LoHi lohi)
+{
   PscParams psc_params;
 
   psc_params.nmax = 2;
   psc_params.stats_every = 1;
   psc_params.cfl = .75;
 
-  auto grid_ptr = setupGrid();
+  auto grid_ptr = setupGrid(d);
   auto& grid = *grid_ptr;
 
   MfieldsState mflds{grid};
@@ -131,23 +148,11 @@ TEST(DirichletBoundaryInjectorTest, Integration1Particle)
                                           balance, collision, checks);
 
   psc.add_injector(
-    new DirichletBoundaryInjector<LoHi::Lo, ParticleGenerator,
-                                  typename PscConfig::PushParticles>(
-      ParticleGenerator(1, 1)));
-
-  // ----------------------------------------------------------------------
-  // set up initial conditions
+    new DirichletBoundaryInjector<ParticleGenerator, PscConfig::PushParticles>(
+      enteringGenerator(d, lohi), d, lohi));
 
   ASSERT_EQ(grid.n_patches(), 1);
-  int p = 0;
-
-  // ----------------------------------------------------------------------
-  // run the simulation
-
-  auto accessor = mprts.accessor();
-  auto prts = accessor[p];
-
-  ASSERT_EQ(prts.size(), 0);
+  ASSERT_EQ(mprts.size(), 0);
 
   psc.pre_first_step();
   for (; grid.timestep_ < psc_params.nmax;) {
@@ -157,7 +162,12 @@ TEST(DirichletBoundaryInjectorTest, Integration1Particle)
     ASSERT_LT(checks.gauss.last_max_err, checks.gauss.err_threshold);
   }
 
-  ASSERT_EQ(prts.size(), 1);
+  ASSERT_EQ(mprts.size(), 1);
+}
+
+TEST(DirichletBoundaryInjectorTest, Integration1Particle)
+{
+  integration_1_particle(Axis::Y, LoHi::Lo);
 }
 
 TEST(DirichletBoundaryInjectorTest, IntegrationManyParticles)
@@ -171,7 +181,7 @@ TEST(DirichletBoundaryInjectorTest, IntegrationManyParticles)
   psc_params.stats_every = 1;
   psc_params.cfl = .75;
 
-  auto grid_ptr = setupGrid();
+  auto grid_ptr = setupGrid(Axis::Y);
   auto& grid = *grid_ptr;
 
   MfieldsState mflds{grid};
@@ -188,9 +198,9 @@ TEST(DirichletBoundaryInjectorTest, IntegrationManyParticles)
   auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
                                           balance, collision, checks);
 
-  psc.add_injector(new DirichletBoundaryInjector<LoHi::Lo, ParticleGenerator,
-                                                 PscConfig::PushParticles>(
-    ParticleGenerator(-1, 1)));
+  psc.add_injector(
+    new DirichletBoundaryInjector<ParticleGenerator, PscConfig::PushParticles>(
+      ParticleGenerator(-1, 1), Axis::Y, LoHi::Lo));
 
   // ----------------------------------------------------------------------
   // set up initial conditions
@@ -228,7 +238,7 @@ TEST(DirichletBoundaryInjectorTest, IntegrationManySpecies)
   psc_params.stats_every = 1;
   psc_params.cfl = .75;
 
-  auto grid_ptr = setupGrid();
+  auto grid_ptr = setupGrid(Axis::Y);
   auto& grid = *grid_ptr;
 
   MfieldsState mflds{grid};
@@ -242,12 +252,10 @@ TEST(DirichletBoundaryInjectorTest, IntegrationManySpecies)
   Balance balance{.1};
   Collision collision{grid, 0, 0.1};
 
-  auto inject_electrons = DirichletBoundaryInjector<LoHi::Lo, ParticleGenerator,
-                                                    PscConfig::PushParticles>{
-    ParticleGenerator(-1, 0)};
-  auto inject_ions = DirichletBoundaryInjector<LoHi::Lo, ParticleGenerator,
-                                               PscConfig::PushParticles>{
-    ParticleGenerator(-1, 1)};
+  using Injector =
+    DirichletBoundaryInjector<ParticleGenerator, PscConfig::PushParticles>;
+  auto inject_electrons = Injector{ParticleGenerator(-1, 0), Axis::Y, LoHi::Lo};
+  auto inject_ions = Injector{ParticleGenerator(-1, 1), Axis::Y, LoHi::Lo};
 
   auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
                                           balance, collision, checks);
@@ -288,37 +296,83 @@ TEST(DirichletBoundaryInjectorTest, IntegrationManySpecies)
   ASSERT_TRUE(found_ions);
 }
 
-// Preacceleration sampling E_y at the boundary (y = 0) must average the ghost
-// and edge values, which straddle it.
-TEST(DirichletBoundaryInjectorTest, PreaccelerateSamplesBoundary)
+// Preacceleration sampling the normal E at the lower boundary must average the
+// ghost and edge values, which straddle it.
+void preaccelerate_samples_boundary(Axis d)
 {
-  auto grid_ptr = setupGrid();
+  auto grid_ptr = setupGrid(d);
   auto& grid = *grid_ptr;
   MfieldsState mflds{grid};
   Mparticles mprts{grid};
 
+  int other = d == Axis::Y ? 2 : 1;
   auto F = make_Fields3d<Dim>(mflds[0]);
-  for (int k = -1; k < grid.ldims[2] + 1; k++) {
-    F(EY, 0, -1, k) = .2;
-    F(EY, 0, 0, k) = .1;
+  for (int t = -1; t < grid.ldims[other] + 1; t++) {
+    Int3 i = Int3{0, 0, 0}.with_component(other, t);
+    i[d] = -1;
+    F(EX + d, i[0], i[1], i[2]) = .2;
+    i[d] = 0;
+    F(EX + d, i[0], i[1], i[2]) = .1;
   }
 
-  DirichletBoundaryInjector<LoHi::Lo, ParticleGenerator,
-                            PscConfig::PushParticles>
-    injector{ParticleGenerator(1, KIND_ION)};
+  // the generator's second particle (u = 0) is kicked in too
+  DirichletBoundaryInjector<ParticleGenerator, PscConfig::PushParticles>
+    injector{enteringGenerator(d, LoHi::Lo), d, LoHi::Lo};
   injector.preaccelerate_method = PreaccelerateMethod::NormalE;
-  injector.preaccelerate_time = 1.; // q/m = 1, so the kick is du_y = E_y
+  injector.preaccelerate_time = 1.; // q/m = 1, so the kick is du = E
   injector.preaccelerate_sample_boundary = true;
   injector.inject(mprts, mflds);
 
-  // the generator's second particle (u_y = 0) is kicked in too
   auto accessor = mprts.accessor();
   auto prts = accessor[0];
   ASSERT_EQ(prts.size(), 2);
-  std::vector<double> uy{prts[0].u()[1], prts[1].u()[1]};
-  std::sort(uy.begin(), uy.end());
-  EXPECT_NEAR(uy[0], .15, 1e-6);
-  EXPECT_NEAR(uy[1], 2. + .15, 1e-6);
+  std::vector<double> u{prts[0].u()[d], prts[1].u()[d]};
+  std::sort(u.begin(), u.end());
+  EXPECT_NEAR(u[0], .15, 1e-6);
+  EXPECT_NEAR(u[1], 2. + .15, 1e-6);
+}
+
+TEST(DirichletBoundaryInjectorTest, PreaccelerateSamplesBoundary)
+{
+  preaccelerate_samples_boundary(Axis::Y);
+}
+
+// The same at z boundaries.
+
+TEST(DirichletBoundaryInjectorZTest, Integration1ParticleLo)
+{
+  integration_1_particle(Axis::Z, LoHi::Lo);
+}
+
+TEST(DirichletBoundaryInjectorZTest, Integration1ParticleHi)
+{
+  integration_1_particle(Axis::Z, LoHi::Hi);
+}
+
+TEST(DirichletBoundaryInjectorZTest, PreaccelerateSamplesBoundary)
+{
+  preaccelerate_samples_boundary(Axis::Z);
+}
+
+TEST(DirichletBoundaryInjectorZTest, NormalPushIsRelativistic)
+{
+  // the particle moves only along the normal, by dt * u_z / gamma
+  auto grid_ptr = setupGrid(Axis::Z);
+  auto& grid = *grid_ptr;
+  MfieldsState mflds{grid};
+  Mparticles mprts{grid};
+
+  ParticleGenerator generator{1, KIND_ION, {0, .5, .999}, {0, .5, 2}};
+  DirichletBoundaryInjector<ParticleGenerator, PscConfig::PushParticles>
+    injector{generator, Axis::Z, LoHi::Lo};
+  injector.inject(mprts, mflds);
+
+  auto accessor = mprts.accessor();
+  auto prts = accessor[0];
+  ASSERT_EQ(prts.size(), 1);
+  double gamma = std::sqrt(1 + sqr(.5) + sqr(2.));
+  EXPECT_NEAR(prts[0].x()[1], .5, 1e-12);
+  EXPECT_NEAR(prts[0].x()[2], -.001 + grid.dt * 2. / gamma, 1e-12);
 }
 
 // ======================================================================

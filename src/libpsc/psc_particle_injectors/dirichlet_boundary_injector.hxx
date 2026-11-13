@@ -12,7 +12,7 @@
 #include "kg/VecRange.hxx"
 #include "../psc_push_particles/inc_push.cxx"
 #include "../psc_bnd/psc_bnd_util.hxx"
-#include "injector_base.hxx"
+#include "boundary_injector_base.hxx"
 
 using psc::bnd::LoHi;
 
@@ -72,49 +72,44 @@ private:
 /// @brief Injects particles on a given boundary, sampling from a given particle
 /// generator. For precise control over multiple particle species, use one
 /// DirichletBoundaryInjector per species.
-/// @tparam LOHI whether to inject at the lower or upper boundary
 /// @tparam PARTICLE_GENERATOR a type that defines `get(min_pos, pos_range)` and
 /// returns an injectable particle within that range of positions (usually a
 /// grid cell); see @ref ParticleGeneratorMaxwellian
 /// @tparam PUSH_PARTICLES type that provides the types `Mparticles`,
 /// `MfieldsState`, `Current`, `real_t`, etc.
-template <LoHi LOHI, typename PARTICLE_GENERATOR, typename PUSH_PARTICLES>
-class DirichletBoundaryInjector
-  : public InjectorBase<typename PUSH_PARTICLES::Mparticles,
-                        typename PUSH_PARTICLES::MfieldsState>
+template <typename PARTICLE_GENERATOR, typename PUSH_PARTICLES>
+class DirichletBoundaryInjector : public BoundaryInjectorBase<PUSH_PARTICLES>
 {
-  static const int INJECT_DIM_IDX_ = 1;
+  using Base = BoundaryInjectorBase<PUSH_PARTICLES>;
+  using Base::d;
 
 public:
   using ParticleGenerator = PARTICLE_GENERATOR;
   using PushParticles = PUSH_PARTICLES;
 
-  using Mparticles = typename PushParticles::Mparticles;
-  using MfieldsState = typename PushParticles::MfieldsState;
-  using Current = typename PushParticles::Current;
-  using real_t = typename PushParticles::real_t;
+  using typename Base::Current;
+  using typename Base::MfieldsState;
+  using typename Base::Mparticles;
+  using typename Base::Real3;
+  using typename Base::real_t;
   using InterpolateEM_t = typename PushParticles::InterpolateEM_t;
-  using Real3 = Vec3<real_t>;
+  using AdvanceParticle_t = typename PushParticles::AdvanceParticle_t;
 
-  static const bool lo = LOHI == LoHi::Lo;
-
-  DirichletBoundaryInjector(ParticleGenerator particle_generator,
-                            real_t density = 1.0)
-    : particle_generator_{particle_generator}, density{density}
+  /// injects at the lower or upper (`lohi`) boundary normal to `d`
+  DirichletBoundaryInjector(ParticleGenerator particle_generator, psc::Axis d,
+                            LoHi lohi, real_t density = 1.0)
+    : Base{d, lohi}, particle_generator_{particle_generator}, density{density}
   {}
 
-  /// Injects particles at specified y-bounds as if there were a population of
+  /// Injects particles at the boundary as if there were a population of
   /// particles just beyond the edge. The imaginary particle population is
   /// sampled using the given ParticleGenerator.
-  ///
-  /// The dimensional limitations may be removed in the future.
   void inject(Mparticles& mprts, MfieldsState& mflds) override
   {
-    static_assert(INJECT_DIM_IDX_ == 1,
-                  "only injection at lower bound of y is supported");
-
     const Grid_t& grid = mprts.grid();
+    this->check_axis(grid);
     auto injectors_by_patch = mprts.injector();
+    bool lo = this->lo();
 
     Real3 dxi = grid.domain.dx_inv;
     Current current(grid);
@@ -122,87 +117,74 @@ public:
                          preaccelerate_time != 0;
 
     for (int p = 0; p < grid.n_patches(); p++) {
-      if (lo ? grid.atBoundaryLo(p, INJECT_DIM_IDX_)
-             : grid.atBoundaryHi(p, INJECT_DIM_IDX_)) {
-        auto&& injector = injectors_by_patch[p];
-        auto flds = mflds[p];
-        typename Current::fields_t J(flds);
-        typename InterpolateEM_t::fields_t EM(flds.storage(), flds.ib());
-        InterpolateEM_t ip;
-        InterpolateEMBoundary_t ip_boundary;
-        AdvanceParticle<real_t, dim_y> advance{grid.dt};
+      if (!this->at_boundary(grid, p)) {
+        continue;
+      }
 
-        Int3 start = Int3{0, 0, 0}.with_component(
-          INJECT_DIM_IDX_, lo ? -1 : grid.ldims[INJECT_DIM_IDX_]);
-        Int3 stop = grid.ldims.with_component(INJECT_DIM_IDX_,
-                                              start[INJECT_DIM_IDX_] + 1);
+      auto&& injector = injectors_by_patch[p];
+      auto flds = mflds[p];
+      typename Current::fields_t J(flds);
+      typename InterpolateEM_t::fields_t EM(flds.storage(), flds.ib());
+      InterpolateEM_t ip;
+      InterpolateEMBoundary_t ip_boundary;
+      AdvanceParticle_t advance{grid.dt};
 
-        for (Int3 initial_idx : VecRange(start, stop)) {
-          Real3 cell_corner = Real3(initial_idx) * grid.domain.dx;
-          int n_prts_to_try_inject =
-            get_n_in_cell(density, grid.norm.prts_per_unit_density, true);
+      Int3 start = Int3{0, 0, 0}.with_component(d, lo ? -1 : grid.ldims[d]);
+      Int3 stop = grid.ldims.with_component(d, start[d] + 1);
 
-          for (int prt_count = 0; prt_count < n_prts_to_try_inject;
-               prt_count++) {
-            // sample position uniformly from first ghost layer, and velocity
-            // from vdf at x=infty
-            psc::particle::Inject prt =
-              particle_generator_.get(cell_corner, grid.domain.dx);
+      for (Int3 initial_idx : VecRange(start, stop)) {
+        Real3 cell_corner = Real3(initial_idx) * grid.domain.dx;
+        int n_prts_to_try_inject =
+          get_n_in_cell(density, grid.norm.prts_per_unit_density, true);
 
-            real_t m = grid.kinds[prt.kind].m;
-            real_t q = grid.kinds[prt.kind].q;
+        for (int prt_count = 0; prt_count < n_prts_to_try_inject; prt_count++) {
+          // sample position uniformly from first ghost layer, and velocity
+          // from vdf at x=infty
+          psc::particle::Inject prt =
+            particle_generator_.get(cell_corner, grid.domain.dx);
 
-            Real3 initial_normalized_pos = prt.x * dxi;
+          real_t m = grid.kinds[prt.kind].m;
+          real_t q = grid.kinds[prt.kind].q;
 
-            if (preaccelerate) {
-              Real3 e_inner = {0.f, 0.f, 0.f};
-              Real3 h_inner = {0.f, 0.f, 0.f};
+          Real3 initial_normalized_pos = prt.x * dxi;
 
-              if (preaccelerate_sample_boundary) {
-                // the standard 1st-order interpolator really interpolates
-                // across the boundary, averaging ghost and edge cells
-                real_t sample_coord = lo ? 0 : grid.ldims[INJECT_DIM_IDX_];
-                sample_fields(ip_boundary, EM,
-                              initial_normalized_pos.with_component(
-                                INJECT_DIM_IDX_, sample_coord),
-                              e_inner, h_inner);
-              } else {
-                // sample interior E and B, which works for all interpolators
-                real_t sample_coord =
-                  lo ? 0.5 : grid.ldims[INJECT_DIM_IDX_] - 0.5;
-                sample_fields(ip, EM,
-                              initial_normalized_pos.with_component(
-                                INJECT_DIM_IDX_, sample_coord),
-                              e_inner, h_inner);
-              }
+          if (preaccelerate) {
+            Real3 e_inner = {0.f, 0.f, 0.f};
+            Real3 h_inner = {0.f, 0.f, 0.f};
 
-              real_t dq = .5f * grid.norm.eta * preaccelerate_time * q / m;
-              advance.push_p(prt.u, e_inner, h_inner, dq);
+            if (preaccelerate_sample_boundary) {
+              // the standard 1st-order interpolator really interpolates
+              // across the boundary, averaging ghost and edge cells
+              real_t sample_coord = lo ? 0 : grid.ldims[d];
+              sample_fields(
+                ip_boundary, EM,
+                initial_normalized_pos.with_component(d, sample_coord), e_inner,
+                h_inner);
+            } else {
+              // sample interior E and B, which works for all interpolators
+              real_t sample_coord = lo ? 0.5 : grid.ldims[d] - 0.5;
+              sample_fields(
+                ip, EM, initial_normalized_pos.with_component(d, sample_coord),
+                e_inner, h_inner);
             }
 
-            // push normal x
-            Real3 v = advance.calc_v(prt.u);
-            advance.push_x(prt.x, v);
-
-            Real3 final_normalized_pos = prt.x * dxi;
-            Int3 final_idx = final_normalized_pos.fint();
-
-            if (lo ? final_idx[INJECT_DIM_IDX_] <= start[INJECT_DIM_IDX_]
-                   : final_idx[INJECT_DIM_IDX_] >= start[INJECT_DIM_IDX_]) {
-              // don't inject a particle that fails to enter the patch
-              continue;
-            }
-
-            injector.inject_local_unchecked(prt);
-
-            // deposit as if the particle came from the outer edge of the
-            // ghost cell, so its virtual charge lies entirely beyond the
-            // boundary node and Gauss's law holds there
-            Real3 virtual_initial_pos = initial_normalized_pos.with_component(
-              INJECT_DIM_IDX_, outer_ghost_edge(grid));
-            current.calc_j(J, virtual_initial_pos, final_normalized_pos,
-                           final_idx, initial_idx, q * prt.w, v);
+            real_t dq = .5f * grid.norm.eta * preaccelerate_time * q / m;
+            advance.push_p(prt.u, e_inner, h_inner, dq);
           }
+
+          // push along the normal only, with the relativistic velocity
+          Real3 v = advance.calc_v(prt.u);
+          prt.x[d] += grid.dt * v[d];
+
+          int final_idx = (prt.x * dxi).fint()[d];
+          if (lo ? final_idx <= start[d] : final_idx >= start[d]) {
+            // don't inject a particle that fails to enter the patch
+            continue;
+          }
+
+          this->inject_with_current(grid, injector, current, J, prt,
+                                    initial_normalized_pos, initial_idx, v,
+                                    q * prt.w);
         }
       }
     }
@@ -219,21 +201,13 @@ private:
   {
     ip.set_coeffs(pos);
     if (preaccelerate_method == PreaccelerateMethod::NormalE) {
-      e[INJECT_DIM_IDX_] = INJECT_DIM_IDX_ == 0   ? ip.ex(EM)
-                           : INJECT_DIM_IDX_ == 1 ? ip.ey(EM)
-                                                  : ip.ez(EM);
+      e[d] = d == 0 ? ip.ex(EM) : d == 1 ? ip.ey(EM) : ip.ez(EM);
     } else if (preaccelerate_method == PreaccelerateMethod::AllE) {
       e = {ip.ex(EM), ip.ey(EM), ip.ez(EM)};
     } else if (preaccelerate_method == PreaccelerateMethod::AllEH) {
       e = {ip.ex(EM), ip.ey(EM), ip.ez(EM)};
       h = {ip.hx(EM), ip.hy(EM), ip.hz(EM)};
     }
-  }
-
-  /// normalized coordinate of the ghost cell's face away from the domain
-  real_t outer_ghost_edge(const Grid_t& grid) const
-  {
-    return lo ? -1 : grid.ldims[INJECT_DIM_IDX_] + 1;
   }
 
 public:

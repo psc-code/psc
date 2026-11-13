@@ -1061,12 +1061,12 @@ static void run(int argc, char** argv)
 
   if (injection_method == "dirichlet") {
     auto ion_injector_lo =
-      new DirichletBoundaryInjector<LoHi::Lo, ParticleGeneratorMaxwellian,
+      new DirichletBoundaryInjector<ParticleGeneratorMaxwellian,
                                     PscConfig::PushParticles>(
         ParticleGeneratorMaxwellian(KIND_ION, mprts.grid().kinds[KIND_ION],
                                     v_upstream,
                                     {ti_upstream, ti_upstream, ti_upstream}),
-        n_upstream);
+        Axis::Y, LoHi::Lo, n_upstream);
     ion_injector_lo->preaccelerate_method = preaccelerate_method;
     ion_injector_lo->preaccelerate_sample_boundary =
       preaccelerate_sample_boundary;
@@ -1075,12 +1075,12 @@ static void run(int argc, char** argv)
       std::sqrt(n_upstream / ion_mass);
 
     auto electron_injector_lo =
-      new DirichletBoundaryInjector<LoHi::Lo, ParticleGeneratorMaxwellian,
+      new DirichletBoundaryInjector<ParticleGeneratorMaxwellian,
                                     PscConfig::PushParticles>(
         ParticleGeneratorMaxwellian(
           KIND_ELECTRON, mprts.grid().kinds[KIND_ELECTRON], v_upstream,
           {te_upstream, te_upstream, te_upstream}),
-        n_upstream);
+        Axis::Y, LoHi::Lo, n_upstream);
     electron_injector_lo->preaccelerate_method = preaccelerate_method;
     electron_injector_lo->preaccelerate_sample_boundary =
       preaccelerate_sample_boundary;
@@ -1123,12 +1123,12 @@ static void run(int argc, char** argv)
       injection_method != "periodic") {
     if (injection_method == "dirichlet") {
       auto ion_injector_hi =
-        new DirichletBoundaryInjector<LoHi::Hi, ParticleGeneratorMaxwellian,
+        new DirichletBoundaryInjector<ParticleGeneratorMaxwellian,
                                       PscConfig::PushParticles>(
           ParticleGeneratorMaxwellian(
             KIND_ION, mprts.grid().kinds[KIND_ION], v_downstream,
             {ti_downstream, ti_downstream, ti_downstream}),
-          n_downstream);
+          Axis::Y, LoHi::Hi, n_downstream);
       ion_injector_hi->preaccelerate_method = preaccelerate_method;
       ion_injector_hi->preaccelerate_sample_boundary =
         preaccelerate_sample_boundary;
@@ -1137,12 +1137,12 @@ static void run(int argc, char** argv)
         std::sqrt(n_downstream / ion_mass);
 
       auto electron_injector_hi =
-        new DirichletBoundaryInjector<LoHi::Hi, ParticleGeneratorMaxwellian,
+        new DirichletBoundaryInjector<ParticleGeneratorMaxwellian,
                                       PscConfig::PushParticles>(
           ParticleGeneratorMaxwellian(
             KIND_ELECTRON, mprts.grid().kinds[KIND_ELECTRON], v_downstream,
             {te_downstream, te_downstream, te_downstream}),
-          n_downstream);
+          Axis::Y, LoHi::Hi, n_downstream);
       electron_injector_hi->preaccelerate_method = preaccelerate_method;
       electron_injector_hi->preaccelerate_sample_boundary =
         preaccelerate_sample_boundary;
