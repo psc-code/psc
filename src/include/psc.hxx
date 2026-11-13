@@ -161,6 +161,15 @@ struct Psc
         add_field_bc(new ConductingWall<Dim, MfieldsState>{d, LoHi::Hi});
       }
     }
+
+    // complete the current of particles leaving through open boundaries
+    for (int d = 0; d < 3; d++) {
+      if (grid.bc.prt_lo[d] == BND_PRT_OPEN ||
+          grid.bc.prt_hi[d] == BND_PRT_OPEN) {
+        add_injector(new typename PushParticles::OpenBoundaryOutflow_t{});
+        break;
+      }
+    }
 #endif
 
     int rank;

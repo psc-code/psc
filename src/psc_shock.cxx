@@ -77,15 +77,21 @@ double turb_db2;
 double turb_correlation_length;
 
 int out_interval;
+int out_moments_interval;
+int out_prt_interval;
+int checks_interval;
 int marder_interval;
 
 std::string turb_method;
 std::string shock_method;
 std::string injection_method;
 std::string neumann_resample_method;
+int neumann_copy_depth;
 
 PreaccelerateMethod preaccelerate_method;
 double preaccelerate_time_plasma_periods;
+double preaccelerate_ion_time_plasma_periods;
+bool preaccelerate_sample_boundary;
 
 int nicell;
 int seed;
@@ -122,6 +128,8 @@ void setupParameters(int argc, char** argv)
     LOG_ERROR("unknown neumann_resample_method: %s\n",
               neumann_resample_method.c_str());
   }
+  // copy particles as they cross the face this many cells from the boundary
+  neumann_copy_depth = inputParams.getOrDefault<int>("neumann_copy_depth", 1);
 
   psc_params.stats_every =
     inputParams.getOrDefault<int>("stats_interval", 1000);
@@ -245,6 +253,10 @@ void setupParameters(int argc, char** argv)
   if (injection_method == "dirichlet") {
     preaccelerate_time_plasma_periods = inputParams.getOrDefault<double>(
       "preaccelerate_time_plasma_periods", 0.5);
+    // ions may be kicked differently (in ion plasma periods); 0 disables
+    preaccelerate_ion_time_plasma_periods =
+      inputParams.getOrDefault<double>("preaccelerate_ion_time_plasma_periods",
+                                       preaccelerate_time_plasma_periods);
     std::string pre_method_str =
       inputParams.getOrDefault<std::string>("preaccelerate_method", "normal_e");
     preaccelerate_method =
@@ -252,10 +264,22 @@ void setupParameters(int argc, char** argv)
       : pre_method_str == "all_e"   ? PreaccelerateMethod::AllE
       : pre_method_str == "all_e_h" ? PreaccelerateMethod::AllEH
                                     : PreaccelerateMethod::None;
+    // "cell": at the edge cell's center; "boundary": at the boundary itself
+    preaccelerate_sample_boundary =
+      inputParams.getOrDefault<std::string>("preaccelerate_sample", "cell") ==
+      "boundary";
   }
 
   int n_writes = inputParams.getOrDefault<int>("n_writes", 100);
-  out_interval = psc_params.nmax / n_writes;
+  // n_writes_* default to n_writes; 0 disables that output
+  auto interval = [&](int n) { return n > 0 ? psc_params.nmax / n : 0; };
+  out_interval = interval(n_writes);
+  out_moments_interval =
+    interval(inputParams.getOrDefault<int>("n_writes_moments", n_writes));
+  out_prt_interval =
+    interval(inputParams.getOrDefault<int>("n_writes_prt", n_writes));
+  checks_interval =
+    interval(inputParams.getOrDefault<int>("n_writes_checks", n_writes));
   marder_interval = inputParams.getOrDefault<int>("marder_interval", -1);
 
   turb_method =
@@ -263,6 +287,7 @@ void setupParameters(int argc, char** argv)
 
   nicell = inputParams.getOrDefault<int>("nicell", 100);
   seed = inputParams.getOrDefault<int>("seed", 5);
+  rng::set_base_seed(seed);
 
   std::ifstream src(path_to_params, std::ios::binary);
   std::ofstream dst("params_record.txt", std::ios::binary);
@@ -915,26 +940,50 @@ struct AdvectedPeriodicFields : psc::bnd::field::PulseBase<real_t>
 // ======================================================================
 // makeNeumannInjector
 
-template <LoHi LOHI>
 InjectorBase<Mparticles, MfieldsState>* makeNeumannInjector(const Grid_t& grid,
+                                                            LoHi lohi,
                                                             double te,
                                                             double ti)
 {
   using PushParticles = PscConfig::PushParticles;
+  using psc::Axis;
 
   if (neumann_resample_method == "maxwellian") {
     std::vector<double> temperatures(NR_KINDS);
     temperatures[KIND_ELECTRON] = te;
     temperatures[KIND_ION] = ti;
-    return new NeumannBoundaryInjector<LOHI, PushParticles,
+    return new NeumannBoundaryInjector<PushParticles,
                                        NeumannResamplerMaxwellian>{
-      NeumannResamplerMaxwellian{grid.kinds, temperatures}};
+      Axis::Y, lohi, NeumannResamplerMaxwellian{grid.kinds, temperatures},
+      neumann_copy_depth};
   } else if (neumann_resample_method == "rotate") {
-    return new NeumannBoundaryInjector<LOHI, PushParticles,
-                                       NeumannResamplerRotate>{};
+    return new NeumannBoundaryInjector<PushParticles, NeumannResamplerRotate>{
+      Axis::Y, lohi, NeumannResamplerRotate{}, neumann_copy_depth};
   }
 
-  return new NeumannBoundaryInjector<LOHI, PushParticles>{};
+  return new NeumannBoundaryInjector<PushParticles>{
+    Axis::Y, lohi, NeumannResamplerNone{}, neumann_copy_depth};
+}
+
+// ======================================================================
+// makeDirichletInjector
+
+// injects one species, Maxwellian with temperature `t` drifting at `v`, at
+// density `n`, through the given y boundary; preacceleration time is given in
+// plasma periods of that species
+InjectorBase<Mparticles, MfieldsState>* makeDirichletInjector(
+  const Grid_t& grid, LoHi lohi, int kind, double n, Double3 v, double t,
+  double mass, double preaccelerate_plasma_periods)
+{
+  auto injector = new DirichletBoundaryInjector<ParticleGeneratorMaxwellian,
+                                                PscConfig::PushParticles>(
+    ParticleGeneratorMaxwellian(kind, grid.kinds[kind], v, {t, t, t}),
+    psc::Axis::Y, lohi, n);
+  injector->preaccelerate_method = preaccelerate_method;
+  injector->preaccelerate_sample_boundary = preaccelerate_sample_boundary;
+  injector->preaccelerate_time =
+    preaccelerate_plasma_periods * 2.0 * M_PI / std::sqrt(n / mass);
+  return injector;
 }
 
 // ======================================================================
@@ -974,8 +1023,8 @@ static void run(int argc, char** argv)
 
   // -- Checks
   ChecksParams checks_params{};
-  checks_params.gauss.check_interval = out_interval;
-  checks_params.continuity.check_interval = out_interval;
+  checks_params.gauss.check_interval = checks_interval;
+  checks_params.continuity.check_interval = checks_interval;
 
   Checks checks{grid, MPI_COMM_WORLD, checks_params};
 
@@ -994,11 +1043,11 @@ static void run(int argc, char** argv)
   out_fields.pfield.out_interval = out_interval;
 
   OutputMoments<MfieldsState, Mparticles, Dim> out_moments;
-  out_moments.pfield.out_interval = out_interval;
+  out_moments.pfield.out_interval = out_moments_interval;
 
   // -- output particles
   OutputParticlesAdios2Params outp_params{};
-  outp_params.every_step = out_interval;
+  outp_params.every_step = out_prt_interval;
   OutputParticlesAdios2<Mparticles, float> outp{grid, outp_params};
 
   int oute_interval = -100;
@@ -1032,34 +1081,15 @@ static void run(int argc, char** argv)
   using ConstantPulse = psc::bnd::field::ConstantPulse<real_t>;
 
   if (injection_method == "dirichlet") {
-    auto ion_injector_lo =
-      new DirichletBoundaryInjector<LoHi::Lo, ParticleGeneratorMaxwellian,
-                                    PscConfig::PushParticles>(
-        ParticleGeneratorMaxwellian(KIND_ION, grid.kinds[KIND_ION], v_upstream,
-                                    {ti_upstream, ti_upstream, ti_upstream}),
-        n_upstream);
-    ion_injector_lo->preaccelerate_method = preaccelerate_method;
-    ion_injector_lo->preaccelerate_time = preaccelerate_time_plasma_periods *
-                                          2.0 * M_PI /
-                                          std::sqrt(n_upstream / ion_mass);
-
-    auto electron_injector_lo =
-      new DirichletBoundaryInjector<LoHi::Lo, ParticleGeneratorMaxwellian,
-                                    PscConfig::PushParticles>(
-        ParticleGeneratorMaxwellian(KIND_ELECTRON, grid.kinds[KIND_ELECTRON],
-                                    v_upstream,
-                                    {te_upstream, te_upstream, te_upstream}),
-        n_upstream);
-    electron_injector_lo->preaccelerate_method = preaccelerate_method;
-    electron_injector_lo->preaccelerate_time =
-      preaccelerate_time_plasma_periods * 2.0 * M_PI /
-      std::sqrt(n_upstream / electron_mass);
-
-    psc.add_injector(ion_injector_lo);
-    psc.add_injector(electron_injector_lo);
+    psc.add_injector(makeDirichletInjector(
+      mprts.grid(), LoHi::Lo, KIND_ION, n_upstream, v_upstream, ti_upstream,
+      ion_mass, preaccelerate_ion_time_plasma_periods));
+    psc.add_injector(makeDirichletInjector(
+      mprts.grid(), LoHi::Lo, KIND_ELECTRON, n_upstream, v_upstream,
+      te_upstream, electron_mass, preaccelerate_time_plasma_periods));
   } else if (injection_method == "neumann") {
     psc.add_injector(
-      makeNeumannInjector<LoHi::Lo>(grid, te_upstream, ti_upstream));
+      makeNeumannInjector(mprts.grid(), LoHi::Lo, te_upstream, ti_upstream));
   }
 
   if (injection_method != "periodic") {
@@ -1070,7 +1100,7 @@ static void run(int argc, char** argv)
         mflds_advect = &mflds;
       } else {
         // mflds is completely unrelated; need to re-initialize turbulence
-        MfieldsState* mflds2 = new MfieldsState{grid};
+        MfieldsState* mflds2 = new MfieldsState{mprts.grid()};
         initialize_turbulence(*mflds2);
         mflds_advect = mflds2;
       }
@@ -1089,35 +1119,15 @@ static void run(int argc, char** argv)
   if ((shock_method == "relaxation" || shock_method == "none") &&
       injection_method != "periodic") {
     if (injection_method == "dirichlet") {
-      auto ion_injector_hi =
-        new DirichletBoundaryInjector<LoHi::Hi, ParticleGeneratorMaxwellian,
-                                      PscConfig::PushParticles>(
-          ParticleGeneratorMaxwellian(
-            KIND_ION, grid.kinds[KIND_ION], v_downstream,
-            {ti_downstream, ti_downstream, ti_downstream}),
-          n_downstream);
-      ion_injector_hi->preaccelerate_method = preaccelerate_method;
-      ion_injector_hi->preaccelerate_time = preaccelerate_time_plasma_periods *
-                                            2.0 * M_PI /
-                                            std::sqrt(n_downstream / ion_mass);
-
-      auto electron_injector_hi =
-        new DirichletBoundaryInjector<LoHi::Hi, ParticleGeneratorMaxwellian,
-                                      PscConfig::PushParticles>(
-          ParticleGeneratorMaxwellian(
-            KIND_ELECTRON, grid.kinds[KIND_ELECTRON], v_downstream,
-            {te_downstream, te_downstream, te_downstream}),
-          n_downstream);
-      electron_injector_hi->preaccelerate_method = preaccelerate_method;
-      electron_injector_hi->preaccelerate_time =
-        preaccelerate_time_plasma_periods * 2.0 * M_PI /
-        std::sqrt(n_downstream / electron_mass);
-
-      psc.add_injector(ion_injector_hi);
-      psc.add_injector(electron_injector_hi);
+      psc.add_injector(makeDirichletInjector(
+        mprts.grid(), LoHi::Hi, KIND_ION, n_downstream, v_downstream,
+        ti_downstream, ion_mass, preaccelerate_ion_time_plasma_periods));
+      psc.add_injector(makeDirichletInjector(
+        mprts.grid(), LoHi::Hi, KIND_ELECTRON, n_downstream, v_downstream,
+        te_downstream, electron_mass, preaccelerate_time_plasma_periods));
     } else if (injection_method == "neumann") {
-      psc.add_injector(
-        makeNeumannInjector<LoHi::Hi>(grid, te_downstream, ti_downstream));
+      psc.add_injector(makeNeumannInjector(mprts.grid(), LoHi::Hi,
+                                           te_downstream, ti_downstream));
     }
 
     auto radiating_hi = new RadiatingBC<ConstantPulse>(
