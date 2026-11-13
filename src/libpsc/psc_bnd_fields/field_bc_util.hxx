@@ -2,6 +2,7 @@
 
 #include <limits>
 
+#include "fields.hxx"
 #include "kg/VecRange.hxx"
 
 namespace psc
