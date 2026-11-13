@@ -1,8 +1,8 @@
 
 #include "heating.hxx"
+#include "rng.hxx"
 
 #include <functional>
-#include <stdlib.h>
 
 // ======================================================================
 // Heating__
@@ -28,20 +28,9 @@ struct Heating__ : HeatingBase
 
   void kick_particle(Particle& prt, real_t H)
   {
-    float ran1, ran2, ran3, ran4, ran5, ran6;
-    do {
-      ran1 = random() / ((float)RAND_MAX + 1);
-      ran2 = random() / ((float)RAND_MAX + 1);
-      ran3 = random() / ((float)RAND_MAX + 1);
-      ran4 = random() / ((float)RAND_MAX + 1);
-      ran5 = random() / ((float)RAND_MAX + 1);
-      ran6 = random() / ((float)RAND_MAX + 1);
-    } while (ran1 >= 1.f || ran2 >= 1.f || ran3 >= 1.f || ran4 >= 1.f ||
-             ran5 >= 1.f || ran6 >= 1.f);
-
-    real_t ranx = sqrtf(-2.f * logf(1.0 - ran1)) * cosf(2.f * M_PI * ran2);
-    real_t rany = sqrtf(-2.f * logf(1.0 - ran3)) * cosf(2.f * M_PI * ran4);
-    real_t ranz = sqrtf(-2.f * logf(1.0 - ran5)) * cosf(2.f * M_PI * ran6);
+    real_t ranx = normal_.get();
+    real_t rany = normal_.get();
+    real_t ranz = normal_.get();
 
     real_t Dpxi = sqrtf(H * heating_dt_);
     real_t Dpyi = sqrtf(H * heating_dt_);
@@ -74,6 +63,7 @@ struct Heating__ : HeatingBase
 private:
   real_t heating_dt_;
   std::function<double(const double*, const int)> get_H_;
+  rng::Normal<real_t> normal_;
 };
 
 // ======================================================================

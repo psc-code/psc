@@ -102,3 +102,4 @@ spack-configure-args.txt
 **/psc*params.txt
 .venv/
 CLAUDE.local.md
+.cache/

@@ -50,6 +50,7 @@ Migrations in progress (there may be others). New code should follow the target 
 - The conversion functions between container types are mostly legacy. Some are still needed, e.g. GPU particles ↔ CPU particles.
 - Cases are moving toward parameter files (see `psc_bgk.cxx`, `psc_shock.cxx`) instead of fully hardcoded setups.
 - Parts of VPIC (another PIC code) used to be included; they have mostly been removed.
+- Host randomness → `src/include/rng.hxx` (`rng::Uniform`, `rng::Normal`, `rng::InvertedCdf`), not `random()`/`rand()` or standalone `std::` engines; legacy uses remain only in unbuilt cases and dead CUDA code. Unseeded distributions share one per-rank generator (cheap, not thread-safe), and copies of a distribution share its generator. Pass a seed only for streams that must not depend on the rank (same on all ranks, or per cell); each one heap-allocates a 2.5–5 KB `mt19937`. Device code uses `RngStateCuda`, tests use `RngFake`.
 
 Planned, longer-term: finish the migrations above; make `Mparticles` struct-of-arrays instead of array-of-structs; simplify `MfieldsState`/`Mfields`; formally move to C++17 or newer; improve the test framework, including integration tests for parameter-file cases; GPU support via Kokkos; general cleanup.
 

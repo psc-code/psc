@@ -13,7 +13,9 @@ macro(add_psc_test name)
   if(USE_GTEST_DISCOVER_TESTS)
     gtest_discover_tests(${name} EXEC_WRAPPER ${MPIEXEC_COMMAND})
   else()
-    gtest_add_tests(TARGET ${name} EXEC_WRAPPER ${MPIEXEC_COMMAND})
+    gtest_add_tests(TARGET ${name} EXEC_WRAPPER ${MPIEXEC_COMMAND}
+      TEST_LIST tests)
+    psc_set_test_working_dirs(${tests})
   endif()
 endmacro()
 
@@ -38,6 +40,7 @@ add_psc_test(test_push_particles_2)
 add_psc_test(test_push_fields)
 add_psc_test(test_moments)
 add_psc_test(test_collision)
+add_psc_test(test_rng)
 
 if(USE_CUDA)
   add_psc_test(test_collision_cuda)

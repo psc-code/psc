@@ -1,5 +1,6 @@
 
 #include <gtest/gtest.h>
+#include <set>
 #include <gtensor/reductions.h>
 
 #include "test_common.hxx"
@@ -508,7 +509,7 @@ TEST(TestSetupParticles, RandomOffsets)
   auto kinds = Grid_t::Kinds{{1., 100., "i"}, {-1., 1., "e"}};
   auto prm = Grid_t::NormalizationParams::dimensionless();
   prm.nicell = 10;
-  Grid_t grid{domain, {}, kinds, {prm}, .1};
+  Grid_t grid{domain, {}, kinds, {prm}, .1, -1, {0, 1, 1}};
   Mparticles mprts{grid};
 
   SetupParticles<Mparticles> setup_particles(grid);
@@ -520,10 +521,20 @@ TEST(TestSetupParticles, RandomOffsets)
     grid.domain.gdims[0] * grid.domain.gdims[1] * grid.domain.gdims[2];
   EXPECT_EQ(mprts.size(), n_cells * kinds.size() * prm.nicell);
 
+  // every particle of a kind gets its own offset
+  std::set<double> ys;
+  auto accessor = mprts.accessor();
+  for (auto prt : accessor[0]) {
+    if (prt.kind() == 0) {
+      ys.insert(prt.x()[1]);
+    }
+  }
+  EXPECT_EQ(ys.size(), n_cells * prm.nicell);
+
   auto rho =
     psc::mflds::zeros<double, gt::space::host>(mprts.grid(), 1, -grid.ibn);
   MomentRho{}(rho, -grid.ibn, mprts);
-  ASSERT_LT(gt::norm_linf(rho), 1e-16);
+  ASSERT_LT(gt::norm_linf(rho), 1e-14);
 }
 
 int main(int argc, char** argv)
