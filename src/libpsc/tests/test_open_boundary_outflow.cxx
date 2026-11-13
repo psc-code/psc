@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "test_common.hxx"
+#include "open_boundary_test_grid.hxx"
 
 #include "psc.hxx"
 #include "../psc_config.hxx"
@@ -18,35 +19,11 @@ using Balance = PscConfig::Balance;
 using Collision = PscConfig::Collision;
 using Checks = PscConfig::Checks;
 
-// open in y and z, unless `open` is false (then periodic everywhere)
+// 8 x 8 cells, open in y and z, unless `open` is false (then periodic
+// everywhere)
 Grid_t* setupGrid(bool open = true)
 {
-  auto domain = Grid_t::Domain{{1, 8, 8},  // n grid points
-                               {1, 8, 8},  // physical lengths
-                               {0, 0, 0},  // location of lower corner
-                               {1, 1, 1}}; // n patches
-
-  auto fld = open ? BND_FLD_OPEN : BND_FLD_PERIODIC;
-  auto prt = open ? BND_PRT_OPEN : BND_PRT_PERIODIC;
-  auto bc = psc::grid::BC{{BND_FLD_PERIODIC, fld, fld},
-                          {BND_FLD_PERIODIC, fld, fld},
-                          {BND_PRT_PERIODIC, prt, prt},
-                          {BND_PRT_PERIODIC, prt, prt}};
-
-  auto kinds = Grid_t::Kinds(NR_KINDS);
-  kinds[KIND_ELECTRON] = {-1.0, 1.0, "e"};
-  kinds[KIND_ION] = {1.0, 1.0, "i"};
-
-  auto norm_params = Grid_t::NormalizationParams::dimensionless();
-  norm_params.nicell = 1;
-
-  double dt = 1;
-  Grid_t::Normalization norm{norm_params};
-
-  int n_ghosts = 2;
-  Int3 ibn = n_ghosts * Dim::get_noninvariant_mask();
-
-  return new Grid_t{domain, bc, kinds, norm, dt, -1, ibn};
+  return makeOpenBoundaryTestGrid({1, 8, 8}, {false, open, open}, 1.);
 }
 
 ChecksParams makeChecksParams()
