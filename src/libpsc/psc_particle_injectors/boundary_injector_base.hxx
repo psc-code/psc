@@ -72,7 +72,7 @@ protected:
   {
     injector.inject_local_unchecked(prt);
 
-    Real3 dxi = grid.domain.dx_inv;
+    Real3 dxi = Real3(grid.domain.dx_inv);
     Real3 final_normalized_pos = Real3(prt.x) * dxi;
     Int3 final_idx = final_normalized_pos.fint();
     initial_normalized_pos[d] = outer_ghost_face(grid, d, lohi);
