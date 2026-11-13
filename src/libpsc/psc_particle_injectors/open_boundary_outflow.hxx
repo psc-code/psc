@@ -61,9 +61,11 @@ public:
         for (int d = 0; d < 3; d++) {
           real_t outer_face;
           if (open_lo[d] && pos[d] < 0) {
-            outer_face = outer_ghost_face(grid, d, psc::bnd::LoHi::Lo);
+            outer_face =
+              psc::bnd::particle::outer_ghost_face(grid, d, psc::bnd::LoHi::Lo);
           } else if (open_hi[d] && pos[d] >= grid.ldims[d]) {
-            outer_face = outer_ghost_face(grid, d, psc::bnd::LoHi::Hi);
+            outer_face =
+              psc::bnd::particle::outer_ghost_face(grid, d, psc::bnd::LoHi::Hi);
           } else {
             continue;
           }

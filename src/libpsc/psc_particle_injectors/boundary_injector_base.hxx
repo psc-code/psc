@@ -7,11 +7,18 @@
 #include "../bits.hxx"
 #include "../psc_bnd/psc_bnd_util.hxx"
 
+namespace psc
+{
+namespace bnd
+{
+namespace particle
+{
+
 /// normalized coordinate along `d` of the first ghost cell's face away from the
 /// domain, at the given boundary
-inline double outer_ghost_face(const Grid_t& grid, int d, psc::bnd::LoHi lohi)
+inline double outer_ghost_face(const Grid_t& grid, int d, LoHi lohi)
 {
-  return lohi == psc::bnd::LoHi::Lo ? -1 : grid.ldims[d] + 1;
+  return lohi == LoHi::Lo ? -1 : grid.ldims[d] + 1;
 }
 
 /// @brief Common base of injectors that inject particles through one boundary,
@@ -31,10 +38,10 @@ public:
   using real_t = typename PushParticles::real_t;
   using Real3 = Vec3<real_t>;
 
-  BoundaryInjectorBase(psc::Axis d, psc::bnd::LoHi lohi) : d{d}, lohi{lohi} {}
+  BoundaryInjectorBase(Axis d, LoHi lohi) : d{d}, lohi{lohi} {}
 
 protected:
-  bool lo() const { return lohi == psc::bnd::LoHi::Lo; }
+  bool lo() const { return lohi == LoHi::Lo; }
 
   /// +1 or -1, whichever points from the boundary into the domain
   int inwards() const { return lo() ? 1 : -1; }
@@ -81,6 +88,10 @@ protected:
                    initial_idx, charge, v);
   }
 
-  psc::Axis d;
-  psc::bnd::LoHi lohi;
+  Axis d;
+  LoHi lohi;
 };
+
+} // namespace particle
+} // namespace bnd
+} // namespace psc

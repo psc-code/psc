@@ -78,9 +78,10 @@ private:
 /// @tparam PUSH_PARTICLES type that provides the types `Mparticles`,
 /// `MfieldsState`, `Current`, `real_t`, etc.
 template <typename PARTICLE_GENERATOR, typename PUSH_PARTICLES>
-class DirichletBoundaryInjector : public BoundaryInjectorBase<PUSH_PARTICLES>
+class DirichletBoundaryInjector
+  : public psc::bnd::particle::BoundaryInjectorBase<PUSH_PARTICLES>
 {
-  using Base = BoundaryInjectorBase<PUSH_PARTICLES>;
+  using Base = psc::bnd::particle::BoundaryInjectorBase<PUSH_PARTICLES>;
   using Base::d;
 
 public:

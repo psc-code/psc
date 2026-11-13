@@ -120,9 +120,10 @@ private:
 /// a copy (as a `psc::particle::Inject`) and the index of the normal dimension,
 /// and returns the copy's new momentum; see @ref NeumannResamplerMaxwellian
 template <typename PUSH_PARTICLES, typename RESAMPLER = NeumannResamplerNone>
-class NeumannBoundaryInjector : public BoundaryInjectorBase<PUSH_PARTICLES>
+class NeumannBoundaryInjector
+  : public psc::bnd::particle::BoundaryInjectorBase<PUSH_PARTICLES>
 {
-  using Base = BoundaryInjectorBase<PUSH_PARTICLES>;
+  using Base = psc::bnd::particle::BoundaryInjectorBase<PUSH_PARTICLES>;
   using Base::d;
 
 public:
