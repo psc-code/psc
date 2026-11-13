@@ -190,6 +190,27 @@ TEST(OpenBoundaryOutflowTest, SecondOrderPscWithPeriodicBoundaries)
   EXPECT_EQ(mprts.size(), 2);
 }
 
+TEST(OpenBoundaryOutflowTest, SinglePrecision)
+{
+  // an electron in the lower y ghost cell deposits its exit current
+  using PscConfigSingle = PscConfig1vbecSingle<Dim>;
+  auto grid_ptr = setupGrid();
+  auto& grid = *grid_ptr;
+  PscConfigSingle::MfieldsState mflds{grid};
+  PscConfigSingle::Mparticles mprts{grid};
+  {
+    auto injector = mprts.injector();
+    injector[0].inject_local_unchecked(
+      {{.5, -.3, 4.5}, {0, -2, 0}, 1, KIND_ELECTRON});
+  }
+
+  PscConfigSingle::PushParticles::OpenBoundaryOutflow_t outflow;
+  outflow.inject(mprts, mflds);
+
+  auto F = make_Fields3d<Dim>(mflds[0]);
+  EXPECT_NE(F(JXI + 1, 0, -1, 4), 0.f);
+}
+
 // ======================================================================
 // main
 
