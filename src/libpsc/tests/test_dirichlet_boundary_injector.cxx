@@ -349,6 +349,39 @@ TEST(DirichletBoundaryInjectorZTest, Integration1ParticleHi)
   integration_1_particle(Axis::Z, LoHi::Hi);
 }
 
+TEST(DirichletBoundaryInjectorZTest, UpperDepositStartsAtOuterGhostFace)
+{
+  // The checks don't cover the upper boundary node, so check the current
+  // directly: depositing from the ghost cell's outer face (z = ldims + 1), all
+  // of the charge crosses the face at ldims + 1/2, and the fraction that ends
+  // up on node ldims - 1 crosses the face at ldims - 1/2.
+  auto grid_ptr = setupGrid(Axis::Z);
+  auto& grid = *grid_ptr;
+  MfieldsState mflds{grid};
+  Mparticles mprts{grid};
+
+  DirichletBoundaryInjector<ParticleGenerator, PscConfig::PushParticles>
+    injector{enteringGenerator(Axis::Z, LoHi::Hi), Axis::Z, LoHi::Hi};
+  injector.inject(mprts, mflds);
+
+  auto accessor = mprts.accessor();
+  auto prts = accessor[0];
+  ASSERT_EQ(prts.size(), 1);
+  int nz = grid.ldims[2];
+  double z_final = prts[0].x()[2];
+  ASSERT_GT(z_final, nz - 1);
+
+  // J_z at index k is on the edge between nodes k and k + 1
+  auto F = make_Fields3d<Dim>(mflds[0]);
+  double jz_outer = 0, jz_inner = 0;
+  for (int j = -1; j < grid.ldims[1] + 1; j++) {
+    jz_outer += F(JXI + 2, 0, j, nz);
+    jz_inner += F(JXI + 2, 0, j, nz - 1);
+  }
+  ASSERT_NE(jz_outer, 0.);
+  EXPECT_NEAR(jz_inner / jz_outer, nz - z_final, 1e-10);
+}
+
 TEST(DirichletBoundaryInjectorZTest, PreaccelerateSamplesBoundary)
 {
   preaccelerate_samples_boundary(Axis::Z);
