@@ -41,8 +41,8 @@ struct Axis
   int axis;
 };
 
-Axis Axis::X = Axis(0);
-Axis Axis::Y = Axis(1);
-Axis Axis::Z = Axis(2);
+inline Axis Axis::X = Axis(0);
+inline Axis Axis::Y = Axis(1);
+inline Axis Axis::Z = Axis(2);
 
 } // namespace psc
