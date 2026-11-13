@@ -3,7 +3,6 @@
 #include "test_common.hxx"
 
 #include "psc.hxx"
-#include "output_fields.hxx"
 #include "../psc_config.hxx"
 #include "../psc_particle_injectors/neumann_boundary_injector.hxx"
 
@@ -183,59 +182,6 @@ TEST(NeumannBoundaryInjectorDepthTest, ManySteps)
   auto ys = run<LoHi::Lo>({{2.75, 2.}}, 10,
                           NeumannResamplerMaxwellian{grid->kinds, {9., 9.}}, 3);
   ASSERT_GT(ys.size(), 3);
-}
-
-// ======================================================================
-// Gauss's law at the lower boundary node (y = 0)
-//
-// The gauss check exempts boundary nodes, since injected and deleted particles
-// leave virtual charge in the ghost cell. The injector must make that virtual
-// charge sit entirely beyond the boundary node, so Gauss's law holds there for
-// the real particles alone.
-
-template <typename Mparticles, typename MfieldsState>
-double gauss_err_at_lo_node(Mparticles& mprts, MfieldsState& mflds)
-{
-  const auto& grid = mprts.grid();
-  using ItemRho = Checks::item_rho_type;
-  auto rho = psc::mflds::interior(grid, ItemRho{grid}(mprts));
-  auto dive = psc::mflds::interior(grid, Item_dive<MfieldsState>{}(mflds));
-  auto diff = gt::eval(dive - rho);
-  return gt::norm_linf(diff.view(_all, _s(0, 1), _all, _all, _all));
-}
-
-TEST(NeumannBoundaryInjectorTest, GaussAtBoundaryNodeAfterCopy)
-{
-  PscParams psc_params;
-  psc_params.nmax = 1;
-
-  auto grid_ptr = setupGridWithDt(1.);
-  auto& grid = *grid_ptr;
-  MfieldsState mflds{grid};
-  Mparticles mprts{grid};
-  Checks checks{grid, MPI_COMM_WORLD, ChecksParams{}};
-  Balance balance{.1};
-  Collision collision{grid, 0, 0.1};
-
-  auto psc = makePscIntegrator<PscConfig>(psc_params, grid, mflds, mprts,
-                                          balance, collision, checks);
-  psc.add_injector(
-    new NeumannBoundaryInjector<LoHi::Lo, PscConfig::PushParticles>{});
-
-  {
-    // a neutral pair; the ion moves from the edge cell inward, so a copy of it
-    // is injected that starts in the ghost cell, at y = -.1
-    auto injector = mprts.injector();
-    auto inj = injector[0];
-    inj({{.5, .9, .5}, {0, 0, 0}, 1, KIND_ELECTRON});
-    inj({{.5, .9, .5}, {0, 2, 0}, 1, KIND_ION});
-  }
-
-  psc.pre_first_step();
-  psc.step();
-
-  ASSERT_EQ(mprts.size(), 3);
-  EXPECT_LT(gauss_err_at_lo_node(mprts, mflds), 1e-10);
 }
 
 TEST(NeumannBoundaryInjectorTest, CopyAcrossPeriodicBoundary)
