@@ -1,0 +1,83 @@
+# Run the CUDA gtest binaries on a simulated NVIDIA H100.
+#
+# psc-cuda-devcontainer.yml only compiles the CUDA configuration, so no CUDA
+# code is executed in CI. This job builds a few CUDA test binaries and runs
+# them under PantheonSim (https://github.com/pantheongpu/pantheonsim), a
+# functional GPU simulator. It has no timing model, so it complements
+# real-GPU testing and does not replace it.
+name: PSC CI CUDA (simulated H100)
+
+on:
+  workflow_dispatch: {}
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'src/**'
+      - 'cmake/**'
+      - 'CMakeLists.txt'
+      - '.github/workflows/gpu-sim.yml'
+
+concurrency:
+  group: gpu-sim-${{ github.event.number || github.ref_name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  cuda-h100:
+    name: cuda-13.0-simulated-h100
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Set up the simulated H100 and CUDA toolkit
+        uses: pantheongpu/setup-pantheonsim@a1b9d4237411f9b2b0e0bb895b4d83377f336a7b # v0.1.9
+        with:
+          gpu: nvidia/h100
+          cuda-toolkit: "13.0"
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libopenmpi-dev openmpi-bin libhdf5-dev ninja-build cuda-cccl-13-0
+
+      # PSC calls find_package(Thrust), which the toolkit's CCCL package
+      # installs under a versioned directory, so look it up.
+      # The simulator runs PTX (90-virtual embeds PTX only) and needs a shared
+      # CUDA runtime.
+      - name: Configure
+        run: |
+          thrust_cfg=$(find /usr/local/cuda-13.0 -name 'thrust-config.cmake' | head -n1)
+          echo "Thrust config: $thrust_cfg"
+          test -n "$thrust_cfg"
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+            -DPSC_GPU=cuda -DGTENSOR_DEVICE=cuda \
+            -DCMAKE_CUDA_ARCHITECTURES=90-virtual \
+            -DCMAKE_CUDA_RUNTIME_LIBRARY=Shared \
+            -DThrust_DIR="$(dirname "$thrust_cfg")" \
+            -DCUDAToolkit_ROOT=/usr/local/cuda-13.0 \
+            -DCMAKE_CUDA_COMPILER=/usr/local/cuda-13.0/bin/nvcc
+
+      - name: Build
+        run: |
+          vgpu run --preload cmake --build build -j3 \
+            -t test_mparticles_cuda test_mfields_cuda test_collision_cuda
+
+      # ctest names are the gtest names and each test runs through mpirun
+      # with a single rank. Only the tests of the three binaries built above
+      # are selected.
+      - name: Test on the simulated H100
+        run: |
+          set -o pipefail
+          cd build
+          vgpu run --gpu nvidia/h100 ctest \
+            -R '^(MparticlesCudaTest|TestMfieldsCuda|RngStateCuda|cuda_mparticles_sort|cuda_mparticles_randomize_sort|CollisionTest\.Test2)' \
+            --timeout 900 --output-on-failure --no-tests=error \
+            | tee ../ctest.log
+          grep -q "100% tests passed" ../ctest.log
