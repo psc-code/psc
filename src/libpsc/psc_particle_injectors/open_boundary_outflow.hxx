@@ -50,10 +50,8 @@ public:
       bool open_lo[3], open_hi[3];
       bool any_open = false;
       for (int d = 0; d < 3; d++) {
-        open_lo[d] =
-          grid.atBoundaryLo(p, d) && grid.bc.prt_lo[d] == BND_PRT_OPEN;
-        open_hi[d] =
-          grid.atBoundaryHi(p, d) && grid.bc.prt_hi[d] == BND_PRT_OPEN;
+        open_lo[d] = at_open_particle_boundary(grid, p, d, LoHi::Lo);
+        open_hi[d] = at_open_particle_boundary(grid, p, d, LoHi::Hi);
         any_open |= open_lo[d] || open_hi[d];
       }
       if (!any_open) {
