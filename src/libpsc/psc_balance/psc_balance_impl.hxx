@@ -6,6 +6,7 @@
 #include "balance.hxx"
 #include "bnd.hxx"
 #include "mpi_dtype_traits.hxx"
+#include "../psc_bnd/psc_bnd_util.hxx"
 
 #ifdef USE_CUDA
 #include "psc_fields_cuda.h"
@@ -279,8 +280,8 @@ private:
   double particle_load(const Grid_t& grid, int p, double n_prts) const
   {
     for (int d = 0; d < 3; d++) {
-      if ((grid.atBoundaryLo(p, d) && grid.bc.prt_lo[d] == BND_PRT_OPEN) ||
-          (grid.atBoundaryHi(p, d) && grid.bc.prt_hi[d] == BND_PRT_OPEN)) {
+      if (bnd::at_open_particle_boundary(grid, p, d, bnd::Lo) ||
+          bnd::at_open_particle_boundary(grid, p, d, bnd::Hi)) {
         return (1. + factor_open_boundary_) * n_prts;
       }
     }
