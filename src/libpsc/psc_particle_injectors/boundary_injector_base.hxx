@@ -48,7 +48,7 @@ protected:
 
   bool at_boundary(const Grid_t& grid, int p) const
   {
-    return lo() ? grid.atBoundaryLo(p, d) : grid.atBoundaryHi(p, d);
+    return psc::bnd::at_boundary(grid, p, d, lohi);
   }
 
   /// index along `d` of the cells adjacent to the boundary
