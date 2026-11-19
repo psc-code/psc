@@ -6,31 +6,8 @@
 // 135 (2001) 144
 
 #include "pushp_current_esirkepov.hxx"
+#include "../psc_particle_injectors/open_boundary_outflow.hxx"
 #include "../libpsc/psc_checks/checks_impl.hxx"
-
-namespace
-{
-/**
- * @brief Handle exiting particles. When a particle crosses an open boundary, it
- * is dropped. Before that happens, an exiting current needs to be deposited, or
- * else virtual charge will accumulate at the boundary.
- *
- * This function currently asserts that there are no open boundaries (and is
- * thus a noop in release builds). See `push_particles_1vb.hxx` for an actual
- * implementation for 1st-order particles.
- * @tparam Real 'float' or 'double'
- * @param grid the grid
- * @param p the patch index
- */
-template <typename Real>
-void handle_exiting(const Grid_<Real>& grid, int p)
-{
-  for (int d = 0; d < 3; d++) {
-    assert(grid.bc.prt_lo[d] != BND_PRT_OPEN);
-    assert(grid.bc.prt_hi[d] != BND_PRT_OPEN);
-  }
-}
-} // namespace
 
 // ======================================================================
 // PushParticlesEsirkepov
@@ -50,6 +27,9 @@ struct PushParticlesEsirkepov
                      InterpolateEM_t>;
   using real_t = typename Mparticles::real_t;
   using Real3 = Vec3<real_t>;
+  using OpenBoundaryOutflow_t =
+    psc::bnd::particle::OpenBoundaryOutflowUnsupported<Mparticles,
+                                                       MfieldsState>;
 
   using checks_order =
     checks_order_2nd; // FIXME, sometimes 1st even with Esirkepov
@@ -110,8 +90,6 @@ struct PushParticlesEsirkepov
         // CURRENT DENSITY AT (n+1.0)*dt
         current.prep(prt.qni_wni(), v);
         current.calc(J);
-
-        handle_exiting(grid, p);
       }
     }
   }
