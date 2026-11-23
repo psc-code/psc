@@ -129,11 +129,6 @@ public:
       LOG_INFO("nk = %d, kmax = %f\n", nk, kmax);
     }
 
-    auto k_mins = std::vector<double>(nk);
-    for (int i = 0; i < nk; i++) {
-      k_mins[i] = dk * i;
-    }
-
     // 2. compute number of degeneracies of each k-shell
 
     auto n_cells_per_shell = std::vector<int>(nk);
@@ -154,18 +149,7 @@ public:
       n_cells_per_shell[idx] += 1;
     }
 
-    // 3. compute powers for each shell
-
-    auto shell_db2s = std::vector<double>(nk);
-
-    for (int i = 0; i < nk; i++) {
-      if (n_cells_per_shell[i] > 0) {
-        double k_shell = k_mins[i] + 0.5 * dk;
-        shell_db2s[i] = shell_power(k_shell, params.correlation_length) * dk;
-      }
-    }
-
-    // 4. inject each mode at a random phase and polarization
+    // 3. inject each mode at a random phase and polarization
 
     auto rng = rng::Uniform<double>(0.0, 1.0, params.seed);
 
@@ -178,7 +162,8 @@ public:
       int idx = shell_index(k_vec.mag());
 
       double proportion_of_shell_db2_in_cell = 1.0 / n_cells_per_shell[idx];
-      double shell_db2 = shell_db2s[idx];
+      double k_shell = dk * idx + 0.5 * dk;
+      double shell_db2 = shell_power(k_shell, params.correlation_length) * dk;
       double cell_db2 = proportion_of_shell_db2_in_cell * shell_db2;
       double db = sqrt(cell_db2);
 
