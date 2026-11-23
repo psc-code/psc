@@ -7,10 +7,18 @@
 #include "input_params.hxx"
 #include "kg/include/kg/VecRange.hxx"
 #include "libpsc/psc_output_particles/output_particles_adios2_impl.hxx"
+#include "libpsc/psc_bnd_fields/advecting.hxx"
 #include "libpsc/psc_bnd_fields/radiating.hxx"
 #include "libpsc/psc_particle_injectors/dirichlet_boundary_injector.hxx"
 #include "libpsc/psc_particle_injectors/neumann_boundary_injector.hxx"
+#include "libpsc/psc_turbulence/alfven_turbulence.hxx"
+#include "libpsc/psc_turbulence/noise_turbulence.hxx"
+#include "libpsc/psc_turbulence/turbulence_io.hxx"
 #include "libpsc/axis.hxx"
+
+#include <sys/stat.h>
+#include <climits>
+#include <cstdlib>
 
 // ======================================================================
 // PSC configuration
@@ -75,6 +83,8 @@ Int3 n_patches;
 
 double turb_db2;
 double turb_correlation_length;
+// noise_gabor only: 0 spaces the noise levels evenly in k, slower in big boxes
+double turb_levels_per_octave;
 
 int out_interval;
 int out_moments_interval;
@@ -284,6 +294,8 @@ void setupParameters(int argc, char** argv)
 
   turb_method =
     inputParams.getOrDefault<std::string>("turb_method", "alfven_dense");
+  turb_levels_per_octave =
+    inputParams.getOrDefault<double>("turb_levels_per_octave", 4.0);
 
   nicell = inputParams.getOrDefault<int>("nicell", 100);
   seed = inputParams.getOrDefault<int>("seed", 5);
@@ -446,496 +458,91 @@ void add_background_fields(MfieldsState& mflds)
   }
 }
 
-void set_mean_b2(MfieldsState& mflds, double mean_b2)
-{
-  const auto& grid = mflds.grid();
-
-  double sum_b2_local = 0.0;
-
-  for (int p = 0; p < mflds.n_patches(); ++p) {
-    auto field_patch = make_Fields3d<dim_xyz>(mflds[p]);
-
-    grid.Foreach_3d(0, 0, [&](int jx, int jy, int jz) {
-      // magnetic energy density is cell-centered (H^2)
-      // note: this is not the most efficient calculation method
-      sum_b2_local += 0.5 * (sqr(field_patch(HX, jx, jy, jz)) +
-                             sqr(field_patch(HX, jx + 1, jy, jz)) +
-                             sqr(field_patch(HY, jx, jy, jz)) +
-                             sqr(field_patch(HY, jx, jy + 1, jz)) +
-                             sqr(field_patch(HZ, jx, jy, jz)) +
-                             sqr(field_patch(HZ, jx, jy, jz + 1)));
-      ;
-    });
-  }
-
-  double sum_b2 = 0.0;
-  MPI_Allreduce(&sum_b2_local, &sum_b2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-
-  double target_sum_b2 = gdims.prod() * mean_b2;
-  double scale_factor = sqrt(target_sum_b2 / sum_b2);
-
-  for (int p = 0; p < mflds.n_patches(); ++p) {
-    auto field_patch = make_Fields3d<dim_xyz>(mflds[p]);
-
-    int n_ghosts = mflds.ibn().max();
-    grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
-      field_patch(HX, jx, jy, jz) *= scale_factor;
-      field_patch(HY, jx, jy, jz) *= scale_factor;
-      field_patch(HZ, jx, jy, jz) *= scale_factor;
-    });
-  }
-}
-
-int AX = 0, AY = 1, AZ = 2;
-
-void inject_b_from_potential(MfieldsState& mflds,
-                             PscConfig::Mfields& vector_potential)
-{
-  const auto& grid = mflds.grid();
-  Real3 dx = grid.domain.dx;
-
-  for (int p = 0; p < mflds.n_patches(); ++p) {
-    auto field_patch = make_Fields3d<dim_xyz>(mflds[p]);
-    auto vector_potential_patch = make_Fields3d<dim_xyz>(vector_potential[p]);
-
-    grid.Foreach_3d(2, 1, [&](int jx, int jy, int jz) {
-      field_patch(HX, jx, jy, jz) =
-        (Dim::is_invar(1) ? 0
-                          : vector_potential_patch(AZ, jx, jy + 1, jz) -
-                              vector_potential_patch(AZ, jx, jy, jz)) /
-          dx[1] -
-        (Dim::is_invar(2) ? 0
-                          : vector_potential_patch(AY, jx, jy, jz + 1) -
-                              vector_potential_patch(AY, jx, jy, jz)) /
-          dx[2];
-      field_patch(HY, jx, jy, jz) =
-        (Dim::is_invar(2) ? 0
-                          : vector_potential_patch(AX, jx, jy, jz + 1) -
-                              vector_potential_patch(AX, jx, jy, jz)) /
-          dx[2] -
-        (Dim::is_invar(0) ? 0
-                          : vector_potential_patch(AZ, jx + 1, jy, jz) -
-                              vector_potential_patch(AZ, jx, jy, jz)) /
-          dx[0];
-      field_patch(HZ, jx, jy, jz) =
-        (Dim::is_invar(0) ? 0
-                          : vector_potential_patch(AY, jx + 1, jy, jz) -
-                              vector_potential_patch(AY, jx, jy, jz)) /
-          dx[0] -
-        (Dim::is_invar(1) ? 0
-                          : vector_potential_patch(AX, jx, jy + 1, jz) -
-                              vector_potential_patch(AX, jx, jy, jz)) /
-          dx[1];
-    });
-  }
-}
-
-void inject_plane_alfven_wave(PscConfig::Mfields& vector_potential, double db,
-                              Double3& k_vec, double polarization, double phase)
-{
-  const auto& grid = vector_potential.grid();
-
-  double k2 = k_vec.mag2();
-  double k = std::sqrt(k2);
-  double kxy = std::sqrt(sqr(k_vec[0]) + sqr(k_vec[1]));
-
-  double cos_theta = k_vec[2] / k;
-  double sin_theta = kxy / k;
-
-  double cos_phi = k_vec[0] / kxy;
-  double sin_phi = k_vec[1] / kxy;
-
-  if (kxy == 0.0) {
-    // shouldn't matter given random phase and polarization, just want to
-    // avoid nans
-    cos_phi = 1.0;
-    sin_phi = 0.0;
-  }
-
-  Double3 xp_hat{cos_theta * cos_phi, cos_theta * sin_phi, -sin_theta};
-  Double3 yp_hat{-sin_phi, cos_phi, 0};
-
-  Double3 a_vec = db * cos(polarization) / k2 * xp_hat.cross(k_vec);
-  Double3 b_vec = db * sin(polarization) / k2 * yp_hat.cross(k_vec);
-
-  for (int p = 0; p < vector_potential.n_patches(); ++p) {
-    auto& patch = grid.patches[p];
-    auto vector_potential_patch = make_Fields3d<dim_xyz>(vector_potential[p]);
-
-    int n_ghosts = vector_potential.ibn().max();
-    grid.Foreach_3d(n_ghosts, n_ghosts, [&](int jx, int jy, int jz) {
-      Int3 index{jx, jy, jz};
-
-      Double3 pos_ec_x = centering::get_pos(patch, index, centering::EC, 0);
-      Double3 pos_ec_y = centering::get_pos(patch, index, centering::EC, 1);
-      Double3 pos_ec_z = centering::get_pos(patch, index, centering::EC, 2);
-
-      double arg_x = k_vec.dot(pos_ec_x) + phase;
-      double arg_y = k_vec.dot(pos_ec_y) + phase;
-      double arg_z = k_vec.dot(pos_ec_z) + phase;
-
-      vector_potential_patch(AX, jx, jy, jz) +=
-        a_vec[0] * sin(arg_x) - b_vec[0] * cos(arg_x);
-      vector_potential_patch(AY, jx, jy, jz) +=
-        a_vec[1] * sin(arg_y) - b_vec[1] * cos(arg_y);
-      vector_potential_patch(AZ, jx, jy, jz) +=
-        a_vec[2] * sin(arg_z) - b_vec[2] * cos(arg_z);
-    });
-  }
-}
-
-struct GaborKernel
-{
-  void randomize(rng::Uniform<double>& uni)
-  {
-    double theta = std::acos(uni.get(-1.0, 1.0));
-    double phi = uni.get(0.0, 2.0 * M_PI);
-    wave_dir = Double3{std::cos(phi) * std::sin(theta),
-                       std::sin(phi) * std::sin(theta), std::cos(theta)};
-
-    double wave_phase = uni.get(0.0, 2.0 * M_PI);
-  }
-
-  double sample(Double3 x)
-  {
-    return std::exp(-M_PI * x.mag2()) *
-           std::cos(2.0 * M_PI * x.dot(wave_dir) + wave_phase);
-  }
-
-  Double3 wave_dir;
-  double wave_phase;
-};
-
-using Int2 = kg::Vec<int, 2>;
-using Int5 = kg::Vec<int, 5>;
-
-int get_cell_seed(Int5 cell_hyperidx, Int5 hyperdims)
-{
-  while (cell_hyperidx.min() < 0) {
-    cell_hyperidx += hyperdims;
-  }
-  int cell_seed = flatten_index(cell_hyperidx % hyperdims, hyperdims) + seed;
-  if (cell_seed == 0) {
-    cell_seed = 1;
-  }
-  return cell_seed;
-}
-
-template <typename KERNEL>
-double sample_noise_cell(Int5 cell_hyperidx, Int5 hyperdims,
-                         Double3 pos_in_cell, KERNEL& kernel)
-{
-  rng::Uniform uniform{0.0, 1.0, get_cell_seed(cell_hyperidx, hyperdims)};
-
-  // TODO randomize number of impulses
-  int n_impulses = 10;
-
-  double sum = 0.0;
-  for (int i = 0; i < n_impulses; i++) {
-    Double3 kernel_pos_in_cell{uniform.get(0.0, 1.0), uniform.get(0.0, 1.0),
-                               uniform.get(0.0, 1.0)};
-    kernel.randomize(uniform);
-    sum += kernel.sample(pos_in_cell - kernel_pos_in_cell);
-    // double weight = uniform.get(-1.0, 1.0);
-    // sum += weight * kernel.sample(pos_in_cell - kernel_pos_in_cell);
-  }
-  return sum;
-}
-
-template <typename KERNEL>
-double sample_noise(Int2 d_igrid, Double3 pos, Int5 hyperdims, KERNEL& kernel)
-{
-  Int3 i3 = pos.fint();
-  double sum = 0.0;
-  for (Int3 cell_idx : VecRange(i3 - 1, i3 + 2)) {
-    Int5 hyperindex{d_igrid[0], d_igrid[1], cell_idx[0], cell_idx[1],
-                    cell_idx[2]};
-    sum +=
-      sample_noise_cell(hyperindex, hyperdims, pos - Double3(cell_idx), kernel);
-  }
-  return sum;
-}
-
-template <typename KERNEL>
-void inject_turbulence_noise(MfieldsState& mflds, KERNEL& kernel)
-{
-  const auto& grid = mflds.grid();
-  Int3 ibn = mflds.ibn();
-  Int3 gdims(grid.domain.gdims);
-
-  PscConfig::Mfields vector_potential{grid, 3, ibn};
-
-  int n_grids = gdims.max() / 2;
-  int n_dims = 3;
-
-  for (int i_grid = 0; i_grid < n_grids; i_grid++) {
-    int grid_size = i_grid + 1;
-    Int3 grid_dims = Int3::min({grid_size, grid_size, grid_size}, gdims);
-    Double3 pos_scale = Double3(grid_dims) / grid.domain.length;
-
-    double shell_power =
-      1.0 / (1.0 + pow(turb_correlation_length * pos_scale.max() * 2.0 * M_PI,
-                       5.0 / 3.0));
-
-    for (int p = 0; p < grid.n_patches(); ++p) {
-      auto vp_patch = make_Fields3d<dim_xyz>(vector_potential[p]);
-      auto& patch = grid.patches[p];
-
-      for (Int3 i3 : VecRange(-ibn, grid.ldims + ibn)) {
-        Double3 pos_ec_x = centering::get_pos(patch, i3, centering::EC, 0);
-        Double3 pos_ec_y = centering::get_pos(patch, i3, centering::EC, 1);
-        Double3 pos_ec_z = centering::get_pos(patch, i3, centering::EC, 2);
-
-        Int5 hyperdims{n_dims, n_grids, grid_dims[0], grid_dims[1],
-                       grid_dims[2]};
-
-        vp_patch(AX, i3[0], i3[1], i3[2]) +=
-          shell_power *
-          sample_noise({AX, i_grid}, pos_ec_x * pos_scale, hyperdims, kernel);
-        vp_patch(AY, i3[0], i3[1], i3[2]) +=
-          shell_power *
-          sample_noise({AY, i_grid}, pos_ec_y * pos_scale, hyperdims, kernel);
-        vp_patch(AZ, i3[0], i3[1], i3[2]) +=
-          shell_power *
-          sample_noise({AZ, i_grid}, pos_ec_z * pos_scale, hyperdims, kernel);
-      }
-    }
-  }
-
-  inject_b_from_potential(mflds, vector_potential);
-
-  set_mean_b2(mflds, turb_db2);
-}
-
-void inject_turbulence_dense(MfieldsState& mflds)
-{
-  // literally the power of each shell, such that
-  // 1/2 <dB^2> = int_{k=0}^\infty shellpower(k) dk.
-  // Note that regardless of dimensionality, shellpower(k) ~ k^{-5/3},
-  // i.e., shellpower(k) includes the Jacobian.
-  auto shell_power = [&](double k) {
-    return 1.0 / (1.0 + pow(k * turb_correlation_length, 5.0 / 3.0));
-  };
-
-  PscConfig::Mfields vector_potential{mflds._grid(), 3, mflds.ibn()};
-
-  auto inject_at_n = [&](Int3 n) { return n != Int3{0, 0, 0}; };
-
-  // 1. compute values of |k|
-
-  Double3 dk_vec = 2.0 * M_PI / lengths;
-
-  Int3 i3_min = (1 - gdims) / 2;
-  Int3 i3_max = gdims / 2;
-
-  // inject in only half of k-space, since +k and -k modes are
-  // indistinguishable
-  for (int d = 0; d < 3; d++) {
-    if (gdims[d] > 2) {
-      i3_min[d] = 0;
-      break;
-    }
-  }
-
-  double dk = dk_vec.min();
-  double kmax = ((Double3)Int3::max(-i3_min, i3_max) * dk_vec).mag();
-  int nk = kmax / dk + 1;
-
-  int rank;
-  MPI_Comm_rank(mflds.grid().comm(), &rank);
-  if (rank == 0) {
-    LOG_INFO("nk = %d, kmax = %f\n", nk, kmax);
-  }
-
-  auto k_mins = std::vector<double>(nk);
-  for (int i = 0; i < nk; i++) {
-    k_mins[i] = dk * i;
-  }
-
-  // 2. compute number of degeneracies of each k-shell
-
-  auto n_cells_per_shell = std::vector<int>(nk);
-
-  for (Int3 i3 : VecRange(i3_min, i3_max)) {
-    if (!inject_at_n(i3)) {
-      continue;
-    }
-
-    Double3 k_vec = Double3(i3) * dk_vec;
-    double k = k_vec.mag();
-    int idx = k / dk;
-
-    if (idx >= nk) {
-      LOG_ERROR("k=%f > kmax at idx=(%d, %d, %d)\n", k, i3[0], i3[1], i3[2]);
-    }
-
-    n_cells_per_shell[idx] += 1;
-  }
-
-  // 3. compute powers for each shell
-
-  auto shell_db2s = std::vector<double>(nk);
-
-  for (int i = 0; i < nk; i++) {
-    if (n_cells_per_shell[i] > 0) {
-      double k_shell = k_mins[i] + 0.5 * dk;
-      shell_db2s[i] = shell_power(k_shell) * dk;
-    }
-  }
-
-  // 4. inject each mode at a random phase and polarization
-
-  // all processes must use same seed to ensure B is continuous
-  auto rng = rng::Uniform<double>(0.0, 1.0, seed);
-  const auto& grid = mflds.grid();
-
-  for (Int3 i3 : VecRange(i3_min, i3_max)) {
-    if (!inject_at_n(i3)) {
-      continue;
-    }
-
-    Double3 k_vec = Double3(i3) * dk_vec;
-    int idx = k_vec.mag() / dk;
-
-    double proportion_of_shell_db2_in_cell = 1.0 / n_cells_per_shell[idx];
-    double shell_db2 = shell_db2s[idx];
-    double cell_db2 = proportion_of_shell_db2_in_cell * shell_db2;
-    double db = sqrt(cell_db2);
-
-    double phase = rng.get(0.0, 2.0 * M_PI);
-    double polarization = rng.get(0.0, 2.0 * M_PI);
-
-    inject_plane_alfven_wave(vector_potential, db, k_vec, polarization, phase);
-  }
-
-  // step 5: take curl (or something proportional to it)
-  inject_b_from_potential(mflds, vector_potential);
-
-  // step 6: normalize db2
-  set_mean_b2(mflds, turb_db2);
-}
-
 void initialize_turbulence(MfieldsState& mflds)
 {
-  if (turb_db2 > 0.0) {
-    if (turb_method == "alfven_dense") {
-      inject_turbulence_dense(mflds);
-    } else if (turb_method == "noise_gabor") {
-      GaborKernel kernel;
-      inject_turbulence_noise(mflds, kernel);
-    } else {
-      LOG_ERROR("Unrecognized turbulence method: %s\n", turb_method.c_str());
-    }
+  if (turb_db2 <= 0.0) {
+    return;
   }
+
+  using namespace psc::turbulence;
+  TurbulenceParams params{turb_db2, turb_correlation_length, seed};
+  std::unique_ptr<TurbulenceGenerator<MfieldsState>> generator;
+  if (turb_method == "alfven_dense") {
+    generator.reset(new AlfvenTurbulence<MfieldsState>{params});
+  } else if (turb_method == "noise_gabor") {
+    auto noise = new NoiseTurbulence<MfieldsState>{params};
+    noise->levels_per_octave = turb_levels_per_octave;
+    generator.reset(noise);
+  } else {
+    LOG_ERROR("Unrecognized turbulence method: %s\n", turb_method.c_str());
+  }
+  generator->generate(mflds);
 }
 
-struct AdvectedPeriodicFields : psc::bnd::field::PulseBase<real_t>
+// ----------------------------------------------------------------------
+// saving the advected fields for restarts
+//
+// The lower boundary keeps advecting in the initial turbulence, so a restart
+// needs it too. With checkpoints enabled, it is written to advected_fields.bp
+// in the run directory; a restart reads it from the checkpoint's directory.
+
+const std::string advected_fields_filename = "advected_fields.bp";
+
+std::string get_dirname(std::string path)
 {
-  static const int DIM_Y = 1;
+  // .bp "files" are directories, so may be given with a trailing slash
+  while (path.size() > 1 && path.back() == '/') {
+    path.pop_back();
+  }
+  auto slash = path.find_last_of('/');
+  if (slash == std::string::npos) {
+    return ".";
+  }
+  return slash == 0 ? "/" : path.substr(0, slash);
+}
 
-  AdvectedPeriodicFields(MfieldsState& mflds, real_t v_advect,
-                         Real3 background_e, Real3 background_h)
-    : v_advect_cell_normalized(v_advect / mflds.grid().domain.dx[DIM_Y]),
-      grid(mflds.grid())
-  {
-    // mflds must NOT include background fields at this point
-    // FIXME would be better to exclude J, but the interpolator uses EX, etc.
-    auto&& e_b_fields = mflds.storage().view(_all, _all, _all, _all, _all);
-    // FIXME this probably isn't the best way to copy a gtensor array
-    cycled_fields = gt::zeros_like(e_b_fields);
-    cycled_fields.view(_all, _all, _all, _all, _all) = e_b_fields;
+bool path_exists(const std::string& path)
+{
+  struct stat buf;
+  return stat(path.c_str(), &buf) == 0;
+}
+
+bool is_same_dir(const std::string& a, const std::string& b)
+{
+  char real_a[PATH_MAX], real_b[PATH_MAX];
+  return realpath(a.c_str(), real_a) && realpath(b.c_str(), real_b) &&
+         std::string(real_a) == std::string(real_b);
+}
+
+bool checkpoints_enabled()
+{
+  return psc_params.write_checkpoint_every_step > 0;
+}
+
+// Restores the advected fields (the initial turbulence) of the run
+// `checkpoint_filename` belongs to, or regenerates them if that run didn't
+// save them.
+void restore_advected_fields(MfieldsState& mflds)
+{
+  std::string checkpoint_dir = get_dirname(checkpoint_filename);
+  std::string path = checkpoint_dir + "/" + advected_fields_filename;
+  if (path_exists(path)) {
+    mpi_printf(mflds.grid().comm(), "**** Reading advected fields from %s\n",
+               path.c_str());
+    psc::turbulence::read_turbulence(path, mflds);
+  } else {
+    mpi_printf(mflds.grid().comm(),
+               "WARNING: %s not found; regenerating turbulence, which only "
+               "matches the original run if its parameters and seed do\n",
+               path.c_str());
+    initialize_turbulence(mflds);
   }
 
-  Real3 advect_x3(Real3 x3, double t)
-  {
-    return x3 - Real3::unit(DIM_Y) * real_t(t * v_advect_cell_normalized);
+  // keep it next to this run's checkpoints, too, for the next restart
+  if (checkpoints_enabled() && !is_same_dir(checkpoint_dir, ".")) {
+    psc::turbulence::write_turbulence(advected_fields_filename, mflds);
   }
-
-  int shift_to_patch_local(Real3& x3_advected)
-  {
-    int n_patches_to_the_left = 0;
-    // note: input x3 is already patch-local; we are just shifting to a
-    // *different* patch
-    while (x3_advected[DIM_Y] < 0.0) {
-      x3_advected[DIM_Y] += grid.ldims[DIM_Y];
-      n_patches_to_the_left += 1;
-    }
-    return n_patches_to_the_left;
-  }
-
-  real_t sample_exterior_field(int m, double t, int p, Real3 x3) override
-  {
-    if (EX <= m && m <= EZ) {
-      // FIXME: E is sampled in ghost cells, which are in unloaded patches.
-      // If initial E is ever nonzero, this shortcut will be invalid.
-      return e0[m - EX];
-    }
-
-    Real3 x3_advected = advect_x3(x3, t);
-    int n_patches_to_the_left = shift_to_patch_local(x3_advected);
-    if (n_patches_to_the_left != n_patch_cycles) {
-      LOG_ERROR("%d patches to the left after %d cycles\n",
-                n_patches_to_the_left, n_patch_cycles);
-    }
-
-    ip.set_coeffs(x3_advected);
-    auto em = decltype(ip)::fields_t(
-      cycled_fields.view(_all, _all, _all, _all, p), -grid.ibn);
-
-    switch (m) {
-      case HX: return ip.hx(em) + h0_upstream[0];
-      case HY: return ip.hy(em) + h0_upstream[1];
-      case HZ: return ip.hz(em) + h0_upstream[2];
-      default: return 0.0;
-    }
-  }
-
-  void tick(double t) override
-  {
-    // TODO make this work with >1 patch per process?
-    assert(grid.n_patches() == 1);
-
-    Real3 x3_advected = advect_x3({0.0, 0.0, 0.0}, t);
-    int n_patches_to_the_left = shift_to_patch_local(x3_advected);
-
-    if (n_patches_to_the_left == n_patch_cycles) {
-      // "cache hit"; no need to cycle
-      return;
-    }
-
-    cycle_turbulence(n_patches_to_the_left - n_patch_cycles);
-  }
-
-  void cycle_turbulence(int n_patches)
-  {
-    LOG_INFO("cycling turbulence... (t=%f)\n", grid.time());
-
-    // hack: guess the rank based on how mrc does it for simple domains
-    // (can't use mrc, because it wouldn't apply periodicity)
-    Int3 np = grid.domain.np;
-    Int3 proc = grid.localPatchInfo(0).idx3;
-    Int3 dest_proc = (proc + Int3::unit(DIM_Y) * n_patches) % np;
-    int dest_rank = flatten_index(dest_proc.reverse(), np.reverse());
-    Int3 source_proc = ((proc - Int3::unit(DIM_Y) * n_patches) % np + np) % np;
-    int source_rank = flatten_index(source_proc.reverse(), np.reverse());
-
-    MPI_Status status;
-    int err = MPI_Sendrecv_replace(cycled_fields.data(), cycled_fields.size(),
-                                   MpiDtypeTraits<real_t>::value(), dest_rank,
-                                   0, source_rank, 0, grid.comm(), &status);
-
-    n_patch_cycles += n_patches;
-  }
-
-  const Grid_t& grid;
-  gt::gtensor<real_t, 5> cycled_fields;
-  int n_patch_cycles = 0;
-  real_t v_advect_cell_normalized;
-  InterpolateEM<
-    Fields3d<decltype(cycled_fields.view(_all, _all, _all, _all, 0)), Dim>,
-    opt_ip_1st_ec, Dim>
-    ip;
-};
+}
 
 // ======================================================================
 // makeNeumannInjector
@@ -1056,9 +663,17 @@ static void run(int argc, char** argv)
   // ----------------------------------------------------------------------
   // set up initial conditions
 
+  // the lower boundary injects the initial turbulence, advected in
+  bool advect_turbulence =
+    injection_method != "periodic" && turb_db2 > 0.0 && v_upstream[1] > 0.0;
+
   if (checkpoint_filename.empty()) {
     initializeParticles(balance, grid_ptr, mprts);
     initialize_turbulence(mflds);
+    if (advect_turbulence && checkpoints_enabled()) {
+      // before the background fields are added
+      psc::turbulence::write_turbulence(advected_fields_filename, mflds);
+    }
   } else {
     read_checkpoint(checkpoint_filename, *grid_ptr, mprts, mflds);
   }
@@ -1093,20 +708,23 @@ static void run(int argc, char** argv)
   }
 
   if (injection_method != "periodic") {
-    if (turb_db2 > 0.0 && v_upstream[1] > 0.0) {
-      MfieldsState* mflds_advect;
-      if (checkpoint_filename.empty()) {
-        // mflds is currently just the pure, initial turbulence
-        mflds_advect = &mflds;
-      } else {
-        // mflds is completely unrelated; need to re-initialize turbulence
-        MfieldsState* mflds2 = new MfieldsState{mprts.grid()};
-        initialize_turbulence(*mflds2);
-        mflds_advect = mflds2;
+    if (advect_turbulence) {
+      // mflds is currently just the pure, initial turbulence
+      MfieldsState* mflds_advect = &mflds;
+      // the pulse copies it, so a restored one need only outlive this block
+      std::unique_ptr<MfieldsState> mflds_restored;
+      if (!checkpoint_filename.empty()) {
+        // mflds is completely unrelated; need the initial turbulence
+        mflds_restored.reset(new MfieldsState{mprts.grid()});
+        restore_advected_fields(*mflds_restored);
+        mflds_advect = mflds_restored.get();
       }
 
-      auto radiating_lo = new RadiatingBC<AdvectedPeriodicFields>(
-        AdvectedPeriodicFields{*mflds_advect, v_upstream[1], e0, h0_upstream},
+      using AdvectingPulse =
+        psc::bnd::field::AdvectingPulse<Dim, PscConfig::Mfields>;
+      auto radiating_lo = new RadiatingBC<AdvectingPulse>(
+        AdvectingPulse{*mflds_advect, Axis::Y, real_t(v_upstream[1]), e0,
+                       h0_upstream},
         Axis::Y, LoHi::Lo);
 
       psc.add_field_bc(radiating_lo);

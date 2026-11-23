@@ -42,6 +42,8 @@ add_psc_test(test_push_fields)
 add_psc_test(test_moments)
 add_psc_test(test_collision)
 add_psc_test(test_rng)
+add_psc_test(test_turbulence)
+add_psc_test(test_advecting)
 
 if(USE_CUDA)
   add_psc_test(test_collision_cuda)
