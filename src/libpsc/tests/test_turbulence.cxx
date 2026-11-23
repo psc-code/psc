@@ -314,8 +314,8 @@ TEST(KernelPowerSpectrumTest, SatisfiesParseval)
   for (int n_dims = 1; n_dims <= 3; n_dims++) {
     auto weight = [&](double x) { return std::pow(x, n_dims - 1); };
     double k_space = psc::turbulence::detail::integrate(
-      [&](double q) { return power(q, n_dims) * weight(q); }, 0.0,
-      power.q_max, 1024);
+      [&](double q) { return power(q, n_dims) * weight(q); }, 0.0, power.q_max,
+      1024);
     double x_space = psc::turbulence::detail::integrate(
       [&](double r) { return sqr(GaborKernel::window(r * r)) * weight(r); },
       0.0, 1.0, 1024);
@@ -335,8 +335,9 @@ TEST(LevelSpectraTest, FitMatchesTarget)
   for (double x : xs) {
     radii.push_back(length[1] / x);
   }
-  auto spectra = psc::turbulence::detail::get_level_spectra<
-    psc::turbulence::GaborKernel>(radii, length, gdims, correlation_length);
+  auto spectra =
+    psc::turbulence::detail::get_level_spectra<psc::turbulence::GaborKernel>(
+      radii, length, gdims, correlation_length);
   EXPECT_EQ(spectra.n_fit, 64);
 
   for (int i = 0; i < xs.size(); i++) {
@@ -367,8 +368,8 @@ TEST(LevelSpectraTest, FitMatchesTarget)
       }
       return sum;
     };
-    double norm = get_band(&w, 8, spectra.n_fit) /
-                  get_band(nullptr, 8, spectra.n_fit);
+    double norm =
+      get_band(&w, 8, spectra.n_fit) / get_band(nullptr, 8, spectra.n_fit);
     double max_error = 0.0;
     for (int lo = 8; lo < spectra.n_fit; lo = std::ceil(1.6 * lo)) {
       int hi = std::min(int(std::ceil(1.6 * lo)), spectra.n_fit);
