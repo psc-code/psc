@@ -245,11 +245,10 @@ public:
         if (n_dims == 1) {
           projection[i] = KERNEL::window(x * x);
         } else if (n_dims == 2) {
-          projection[i] = 2.0 * integrate(
-                                  [&](double y) {
-                                    return KERNEL::window(x * x + y * y);
-                                  },
-                                  0.0, rest);
+          projection[i] =
+            2.0 *
+            integrate([&](double y) { return KERNEL::window(x * x + y * y); },
+                      0.0, rest);
         } else {
           projection[i] = 2.0 * M_PI *
                           integrate(
@@ -264,15 +263,16 @@ public:
       std::vector<double> window_ft(n_ft + 1);
       for (int iq = 0; iq <= n_ft; iq++) {
         double q = double(iq) / n_per_unit;
-        window_ft[iq] =
-          2.0 * integrate(
-                  [&](double x) {
-                    return projection[std::lround(x * n_r)] *
-                           std::cos(2.0 * M_PI * q * x);
-                  },
-                  0.0, 1.0, n_r);
+        window_ft[iq] = 2.0 * integrate(
+                                [&](double x) {
+                                  return projection[std::lround(x * n_r)] *
+                                         std::cos(2.0 * M_PI * q * x);
+                                },
+                                0.0, 1.0, n_r);
       }
-      auto window_ft2 = [&](double q) { return sqr(interpolate(window_ft, q)); };
+      auto window_ft2 = [&](double q) {
+        return sqr(interpolate(window_ft, q));
+      };
 
       // The phase average of |FT|^2 is the mean of |window FT|^2 centered at
       // +-dir, so averaging over directions, |FT|^2 at q e is the mean of
@@ -282,15 +282,16 @@ public:
       for (int iq = 0; iq < table.size(); iq++) {
         double q = double(iq) / n_per_unit;
         auto at_cos = [&](double c) {
-          return window_ft2(std::sqrt(std::max(0.0, q * q + 1.0 - 2.0 * q * c)));
+          return window_ft2(
+            std::sqrt(std::max(0.0, q * q + 1.0 - 2.0 * q * c)));
         };
         if (n_dims == 1) {
           table[iq] = 0.5 * (at_cos(1.0) + at_cos(-1.0));
         } else if (n_dims == 2) {
-          table[iq] = integrate(
-                        [&](double theta) { return at_cos(std::cos(theta)); },
-                        0.0, M_PI, 256) /
-                      M_PI;
+          table[iq] =
+            integrate([&](double theta) { return at_cos(std::cos(theta)); },
+                      0.0, M_PI, 256) /
+            M_PI;
         } else {
           table[iq] = 0.5 * integrate(at_cos, -1.0, 1.0, 256);
         }
@@ -388,7 +389,9 @@ LevelSpectra get_level_spectra(const std::vector<double>& s, Double3 length,
   }
   // like AlfvenTurbulence's, so modes on shell boundaries land in the upper
   auto shell_index = [&](double k) { return int(k / dk + 1e-9); };
-  double sphere_area = n_dims == 1 ? 2.0 : n_dims == 2 ? 2.0 * M_PI : 4.0 * M_PI;
+  double sphere_area = n_dims == 1   ? 2.0
+                       : n_dims == 2 ? 2.0 * M_PI
+                                     : 4.0 * M_PI;
   auto get_mode_density = [&](double k) {
     return sphere_area * std::pow(k, n_dims - 1) / dk_volume;
   };
@@ -712,8 +715,7 @@ public:
       // power, which keeps the spectrum from varying with the seed as much.
       // The weights' units are absorbed by the final set_mean_b2.
       set_b_from_potential(level_fields, level_potential);
-      double scale =
-        std::sqrt(weights[i_level] / get_mean_b2(level_fields));
+      double scale = std::sqrt(weights[i_level] / get_mean_b2(level_fields));
 
       for (int p = 0; p < grid.n_patches(); ++p) {
         auto vp_patch = make_Fields3d<dim_xyz>(vector_potential[p]);
