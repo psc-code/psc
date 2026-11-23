@@ -36,7 +36,9 @@ struct InjectorSimple
       mprts_.push_back(p_, prt);
     }
 
-    void inject_local(const psc::particle::Inject& new_prt)
+    /// Raw injection in a patch-relative position and no patch checking.
+    /// Safe to use between particle push and exchange.
+    void inject_local_unchecked(const psc::particle::Inject& new_prt)
     {
       auto prt =
         Particle{Real3(new_prt.x),
@@ -45,7 +47,7 @@ struct InjectorSimple
                  new_prt.kind,
                  mprts_.uid_gen(),
                  new_prt.tag};
-      mprts_.push_back(p_, prt);
+      mprts_.push_back_unchecked(p_, prt);
     }
 
     void reweight(const psc::particle::Inject& new_prt)

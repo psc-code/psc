@@ -253,6 +253,29 @@ TEST(Balance, best_mapping)
   psc::balance::print_stats({capability, loads}, n_patches_all, true);
 }
 
+TEST(Balance, LoadsAtOpenBoundary)
+{
+  // 4 patches along y, open there: the outer two cost more per particle
+  auto domain = Grid_t::Domain{{1, 16, 4}, {1., 16., 4.}, {}, {1, 4, 1}};
+  auto bc = psc::grid::BC{{BND_FLD_PERIODIC, BND_FLD_OPEN, BND_FLD_PERIODIC},
+                          {BND_FLD_PERIODIC, BND_FLD_OPEN, BND_FLD_PERIODIC},
+                          {BND_PRT_PERIODIC, BND_PRT_OPEN, BND_PRT_PERIODIC},
+                          {BND_PRT_PERIODIC, BND_PRT_OPEN, BND_PRT_PERIODIC}};
+  Grid_t grid{domain, bc, {}, {}, .1};
+
+  double factor_fields = .5, factor_open_boundary = .1;
+  psc::balance::get_loads get_loads{factor_fields, factor_open_boundary};
+  std::vector<uint> n_prts_by_patch(grid.n_patches(), 100);
+  auto loads = get_loads.initial(grid, n_prts_by_patch);
+
+  ASSERT_EQ(loads.size(), 4);
+  double load_fields = factor_fields * 4 * 4;
+  for (int p = 0; p < grid.n_patches(); p++) {
+    bool open = grid.atBoundaryLo(p, 1) || grid.atBoundaryHi(p, 1);
+    EXPECT_DOUBLE_EQ(loads[p], (open ? 110. : 100.) + load_fields) << p;
+  }
+}
+
 int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
