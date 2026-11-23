@@ -20,6 +20,26 @@ namespace bnd
 namespace field
 {
 
+namespace detail
+{
+
+// Fields that hold just HX, HY, HZ, as components 0, 1, 2, read under their
+// usual indices, which is what InterpolateEM reads them by
+template <typename F>
+struct HComponents
+{
+  using value_type = typename F::value_type;
+
+  value_type operator()(int m, int i, int j, int k) const
+  {
+    return f(m - HX, i, j, k);
+  }
+
+  F f;
+};
+
+} // namespace detail
+
 /**
  * @brief A pulse for `Radiating` that advects a fixed snapshot of H into the
  * domain along one axis at a constant velocity, on top of constant background
@@ -63,12 +83,12 @@ struct AdvectingPulse : PulseBase<typename Mfields::real_t>
       v_cell_normalized(v / fields.grid().domain.dx[axis]),
       background_e{background_e},
       background_h{background_h},
-      held_fields(new Mfields{fields.grid(), fields.n_comps(), fields.ibn()})
+      held_fields(new Mfields{fields.grid(), 3, fields.ibn()})
   {
     // a view of a rank's empty patch range throws
     if (fields.n_patches() > 0) {
       held_fields->storage().view(_all, _all, _all, _all, _all) =
-        fields.storage().view(_all, _all, _all, _all, _all);
+        fields.storage().view(_all, _all, _all, _s(HX, HX + 3), _all);
     }
   }
 
@@ -88,8 +108,8 @@ struct AdvectingPulse : PulseBase<typename Mfields::real_t>
     }
 
     ip.set_coeffs(x3_advected);
-    auto em = typename decltype(ip)::fields_t(
-      held_fields->storage().view(_all, _all, _all, _all, p), -grid().ibn);
+    typename decltype(ip)::fields_t em{
+      {held_fields->storage().view(_all, _all, _all, _all, p), -grid().ibn}};
 
     switch (m) {
       case HX: return ip.hx(em) + background_h[0];
@@ -186,13 +206,14 @@ struct AdvectingPulse : PulseBase<typename Mfields::real_t>
   real_t v_cell_normalized;
   Real3 background_e;
   Real3 background_h;
-  // shared, since Radiating copies its pulse
+  // H only, as components 0, 1, 2; shared, since Radiating copies its pulse
   std::shared_ptr<Mfields> held_fields;
   // each patch holds the snapshot of the patch this many patches away
   int held_shift = 0;
-  InterpolateEM<Fields3d<decltype(std::declval<Mfields&>().storage().view(
-                           _all, _all, _all, _all, 0)),
-                         Dim>,
+  InterpolateEM<detail::HComponents<
+                  Fields3d<decltype(std::declval<Mfields&>().storage().view(
+                             _all, _all, _all, _all, 0)),
+                           Dim>>,
                 opt_ip_1st_ec, Dim>
     ip;
 };
