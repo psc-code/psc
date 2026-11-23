@@ -460,7 +460,7 @@ void add_background_fields(MfieldsState& mflds)
 
 void initialize_turbulence(MfieldsState& mflds)
 {
-  if (turb_db2 == 0.0) {
+  if (turb_db2 <= 0.0) {
     return;
   }
 
