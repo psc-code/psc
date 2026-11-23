@@ -709,15 +709,15 @@ static void run(int argc, char** argv)
 
   if (injection_method != "periodic") {
     if (advect_turbulence) {
-      MfieldsState* mflds_advect;
-      if (checkpoint_filename.empty()) {
-        // mflds is currently just the pure, initial turbulence
-        mflds_advect = &mflds;
-      } else {
+      // mflds is currently just the pure, initial turbulence
+      MfieldsState* mflds_advect = &mflds;
+      // the pulse copies it, so a restored one need only outlive this block
+      std::unique_ptr<MfieldsState> mflds_restored;
+      if (!checkpoint_filename.empty()) {
         // mflds is completely unrelated; need the initial turbulence
-        MfieldsState* mflds2 = new MfieldsState{mprts.grid()};
-        restore_advected_fields(*mflds2);
-        mflds_advect = mflds2;
+        mflds_restored.reset(new MfieldsState{mprts.grid()});
+        restore_advected_fields(*mflds_restored);
+        mflds_advect = mflds_restored.get();
       }
 
       using AdvectingPulse =
