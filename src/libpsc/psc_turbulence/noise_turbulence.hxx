@@ -623,7 +623,7 @@ public:
     std::vector<double> xs = detail::get_level_wavenumbers(
       max_length / (2.0 * min_dx), levels_per_octave);
     int n_levels = xs.size();
-    int n_dims = 3;
+    int n_comps = 3;
     double impulses_per_volume = 10.0;
 
     // Start from shell_power(k) dk, with dk the width of k a level stands for,
@@ -672,7 +672,7 @@ public:
       int n_impulses =
         std::max(1, int(std::round(impulses_per_volume * cell_volume)));
 
-      Int5 hyperdims{n_dims, n_levels, n_cells[0], n_cells[1], n_cells[2]};
+      Int5 hyperdims{n_comps, n_levels, n_cells[0], n_cells[1], n_cells[2]};
       Mfields level_potential{grid, 3, ibn};
 
       for (int p = 0; p < grid.n_patches(); ++p) {
