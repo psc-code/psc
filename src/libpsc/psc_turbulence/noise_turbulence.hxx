@@ -342,7 +342,6 @@ private:
 /// directions per shell, so the cost doesn't grow with the number of cells.
 struct LevelSpectra
 {
-  double dk;
   int n_shells;
   /// shells [1, n_fit) have a target
   int n_fit;
@@ -397,7 +396,6 @@ LevelSpectra get_level_spectra(const std::vector<double>& s, Double3 length,
   };
 
   LevelSpectra res;
-  res.dk = dk;
   res.n_shells = shell_index(std::sqrt(k_corner2)) + 1;
   res.n_fit = std::min(res.n_shells, shell_index(k_fit));
   res.spectra.resize(n_levels * res.n_shells);
