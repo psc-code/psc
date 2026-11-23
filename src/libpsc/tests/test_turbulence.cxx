@@ -401,21 +401,6 @@ double max_diff_with_ghosts(MfieldsState& a, MfieldsState& b)
   return max_diff;
 }
 
-TEST(TurbulenceIOTest, RoundTrip)
-{
-  auto grid = setupGrid();
-  MfieldsState mflds{*grid};
-  AlfvenTurbulence<MfieldsState>{default_params}.generate(mflds);
-  psc::turbulence::write_turbulence("test_turbulence_io.bp", mflds);
-
-  MfieldsState mflds_read{*grid};
-  psc::turbulence::read_turbulence("test_turbulence_io.bp", mflds_read);
-
-  EXPECT_EQ(gather_h(mflds_read), gather_h(mflds));
-  // the ghosts come from the periodic image, so match to roundoff
-  EXPECT_LT(max_diff_with_ghosts(mflds_read, mflds), 1e-10 * max_abs_h(mflds));
-}
-
 TEST(TurbulenceIOTest, ReadOnOtherDecomposition)
 {
   auto grid_1 = setupGrid({1, 1, 1});
@@ -430,7 +415,8 @@ TEST(TurbulenceIOTest, ReadOnOtherDecomposition)
   psc::turbulence::read_turbulence("test_turbulence_io.bp", mflds_4_read);
 
   EXPECT_EQ(gather_h(mflds_4_read), gather_h(mflds_1));
-  // ghosts between patches, too
+  // the ghosts, between patches and at the domain edges, come from the
+  // periodic image, so match the generated ones to roundoff
   EXPECT_LT(max_diff_with_ghosts(mflds_4_read, mflds_4),
             1e-10 * max_abs_h(mflds_4));
 }
