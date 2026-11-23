@@ -131,9 +131,8 @@ void set_b_from_potential(MfieldsState& mflds, Mfields& vector_potential)
 /// alone. It is deterministic given `params.seed`, independent of the
 /// decomposition.
 ///
-/// Subclasses implement `generate_potential`, which sets the edge-centered
-/// vector potential A, interior and ghosts, up to normalization; `generate`
-/// takes its curl and normalizes it.
+/// Subclasses implement `generate_potential`; `generate` takes the curl of
+/// that A and normalizes it.
 template <typename MfieldsState>
 class TurbulenceGenerator
 {
@@ -151,7 +150,8 @@ public:
     set_mean_b2(mflds, params.db2);
   }
 
-  /// adds A to `vector_potential`, which must start at 0
+  /// adds the edge-centered vector potential A, interior and ghosts, up to
+  /// normalization, to `vector_potential`, which must start at 0
   virtual void generate_potential(Mfields& vector_potential) = 0;
 
   TurbulenceParams params;
